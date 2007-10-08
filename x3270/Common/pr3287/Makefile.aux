@@ -1,0 +1,71 @@
+# Copyright 2000, 2001, 2002, 2003, 2004, 2005 by Paul Mattes.
+#  Permission to use, copy, modify, and distribute this software and its
+#  documentation for any purpose and without fee is hereby granted,
+#  provided that the above copyright notice appear in all copies and that
+#  both that copyright notice and this permission notice appear in
+#  supporting documentation.
+#
+# pr3287 is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+
+# Auxiliary makefile for pr3287
+
+TARDIR=pr3287-3.3
+RM=rm -f
+
+all:
+	@echo "Must pick a specific make target."
+
+# Development tools.
+
+SOURCES = charset.c ctlr.c pr3287.c proxy.c resolver.c see.c sf.c tables.c \
+	telnet.c trace_ds.c wide.c
+HEADERS = 3270ds.h ctlrc.h globals.h localdefs.h popupsc.h proxyc.h \
+	resolverc.h seec.h sfc.h tablesc.h telnetc.h tn3270e.h trace_dsc.h \
+	w3miscc.h widec.h arpa_telnet.h
+MISC = Makefile.in mkversion.sh pr3287.man README pr3287.lsm \
+	version.txt pr3287.lsm.tmpl configure install-sh config.sub \
+	config.guess configure.in LICENSE
+DEVKIT = gen_lsm pr3287.man.m4 m42man instlist.base instlist.man
+HTML = html/pr3287-man.html html/Build.html html/New.html
+
+FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML) 
+
+tarlist: Makefile.aux
+	$(RM) tarlist
+	for i in $(FILES); \
+	do echo $(TARDIR)/$$i; \
+	done >$@
+
+pr3287.tar: $(FILES) tarlist
+	$(RM) $(TARDIR)
+	ln -s . $(TARDIR)
+	$(RM) $@
+	#tar -cof $@ -I tarlist
+	tar -ch -T tarlist -f $@
+	$(RM) $(TARDIR)
+
+pr3287.tgz: pr3287.tar
+	gzip <pr3287.tar >$@
+
+lsm:
+	./gen_lsm pr3287
+
+man: pr3287.man html/pr3287-man.html
+pr3287.man: pr3287.man.m4 man.m4 version.txt
+	./m42man pr3287 pr3287.man.m4 >$@
+html/pr3287-man.html: pr3287.man.m4 html.m4 version.txt
+	./m42html pr3287 pr3287.man.m4 >$@
+
+configure: configure.in
+	autoconf
+
+ID: $(SOURCES) $(HEADERS)
+	mkid $(SOURCES) $(HEADERS)
+
+tags: $(SOURCES) $(HEADERS)
+	ctags $(SOURCES) $(HEADERS)
+
+lessman:
+	tbl pr3287.man | nroff -man | less

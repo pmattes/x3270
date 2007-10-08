@@ -1,0 +1,242 @@
+dnl Copyright 2000, 2001, 2002, 2003, 2004, 2005 by Paul Mattes.
+dnl  Permission to use, copy, modify, and distribute this software and its
+dnl  documentation for any purpose and without fee is hereby granted,
+dnl  provided that the above copyright notice appear in all copies and that
+dnl  both that copyright notice and this permission notice appear in
+dnl  supporting documentation.
+dnl
+dnl pr3287 is distributed in the hope that it will be useful, but WITHOUT ANY
+dnl WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+dnl FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(pr3287.c)
+AC_PREREQ(2.50)
+
+dnl Checks for programs.
+AC_PROG_INSTALL
+AC_PROG_CC
+
+dnl Figure out what sort of host this is.
+dnl If it's solaris, then pass the -D__EXTENSIONS__ flag to cc, so that
+dnl all of usual Unix functions are visible to strict ANSI compilers.
+AC_CANONICAL_HOST
+case "$host_os" in
+solaris2*)	XANSI=-D__EXTENSIONS__
+		;;
+darwin*)	XPRECOMP=-no-cpp-precomp
+		;;
+linux*)		XANSI="-D_BSD_SOURCE -D_POSIX_SOURCE -D_XOPEN_SOURCE"
+		;;
+*)		XANSI=""
+		;;
+esac
+AC_SUBST(XANSI)
+AC_SUBST(XPRECOMP)
+
+# Set up the configuration directory.
+LIBX3270DIR='${sysconfdir}/x3270'
+AC_SUBST(LIBX3270DIR)
+
+dnl Check for libraries.
+dnl Note that the order here is important.  The last libraries should appear
+dnl first, so that objects in them can be used by subsequent libraries.
+AC_CHECK_LIB(nsl, gethostbyname)
+AC_CHECK_LIB(socket, socket)
+
+dnl Check for SSL libraries.
+if test "$enable_ssl" != no
+then	orig_LDFLAGS="$LDFLAGS"
+	unset any
+	for dir in "$with_ssl" /usr/local /usr/pkg /usr /var /opt
+	do	lib_fail=0
+		if test -n "$dir" -a ! -d "$dir/ssl/lib"
+		then	lib_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -L$dir/ssl/lib)
+		fi
+		if test -n "$dir"
+		then	LDFLAGS="$orig_LDFLAGS -L$dir/ssl/lib"
+		fi
+		AC_CHECK_LIB(crypto, CRYPTO_malloc, , [lib_fail=1])
+		if test "$lib_fail" -eq 0
+		then	AC_CHECK_LIB(ssl, SSL_new, , [lib_fail=1])
+		fi
+		if test "$lib_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_lib_crypto_CRYPTO_malloc | $as_tr_sh`
+		unset `echo ac_cv_lib_ssl_SSL_new | $as_tr_sh`
+		LDFLAGS="$orig_LDFLAGS"
+		any=1
+	done
+	if test $lib_fail -eq 1
+	then	AC_MSG_WARN(Disabling OpenSSL)
+		enable_ssl="no"
+	fi
+fi
+
+dnl Check for SSL header file.
+AC_ARG_WITH(ssl,[  --with-ssl=DIR          specify OpenSSL install directory])
+if test "$enable_ssl" != no
+then	orig_CPPFLAGS="$CPPFLAGS"
+	unset any
+	for dir in "$with_ssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl
+	do	header_fail=0
+		if test -n "$dir" -a ! -d "$dir/include"
+		then	header_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -I$dir/include)
+		fi
+		if test -n "$dir"
+		then	CPPFLAGS="$orig_CPPFLAGS -I$dir/include"
+		fi
+		AC_CHECK_HEADERS(openssl/ssl.h, ,[header_fail=1])
+		if test "$header_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_header_openssl/ssl_h | $as_tr_sh`
+		CPPFLAGS="$orig_CPPFLAGS"
+		any=1
+	done
+	if test $header_fail -eq 1
+	then	AC_MSG_WARN(Disabling OpenSSL)
+		enable_ssl="no"
+		unset HAVE_LIBSSL
+	fi
+fi
+
+dnl Check for ICU header file.
+AC_ARG_WITH(icu,[  --with-icu=DIR          specify ICU install directory])
+if test "$enable_dbcs" != no
+then	orig_CPPFLAGS="$CPPFLAGS"
+	unset any
+	for dir in "$with_icu" /usr/local /usr/local/icu /usr/lib/icu /usr/pkg/icu /usr/icu /var/icu /opt/icu
+	do	header_fail=0
+		if test -n "$dir" -a ! -d "$dir/include"
+		then	header_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -I$dir/include)
+		fi
+		if test -n "$dir"
+		then	CPPFLAGS="$orig_CPPFLAGS -I$dir/include"
+		fi
+		AC_CHECK_HEADERS(unicode/ucnv.h, ,[header_fail=1])
+		if test "$header_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_header_unicode/ucnv_h | $as_tr_sh`
+		CPPFLAGS="$orig_CPPFLAGS"
+		any=1
+	done
+	if test $header_fail -eq 1
+	then	AC_MSG_WARN(Disabling DBCS)
+		enable_dbcs="no"
+	fi
+fi
+
+# Figure out the ICU version, which depends on having found the ICU header
+# files above.
+if test "$enable_dbcs" != no
+then	AC_MSG_CHECKING([for ICU version strings])
+	cat >/tmp/icutst$$.c <<EOF
+#include <stdio.h>
+#include "unicode/ucnv.h"
+#define xstr(s)	str(s)
+#define str(s)	#s
+int
+main(int argc, char *argv[])
+{
+	printf("%s %s\n", xstr(U_ICU_VERSION_SUFFIX), U_ICUDATA_NAME);
+	return 0;
+}
+EOF
+	fail=0
+	${CC} ${CPPFLAGS} -o /tmp/icutst$$ /tmp/icutst$$.c || fail=1
+	rm -f /tmp/icutst$$.c
+	if test "$fail" != 1
+	then	icu_suffix=`/tmp/icutst$$ | awk '{print $1}'`
+		ICU_DATA_PREFIX=`/tmp/icutst$$ | awk '{print $2}'`
+		rm -f /tmp/icutst$$
+		if test -z "$icu_suffix" -o -z "$ICU_DATA_PREFIX"
+		then	fail=1
+		fi
+	fi
+	if test "$fail" -eq 0
+	then	AC_MSG_RESULT([$icu_suffix, $ICU_DATA_PREFIX])
+	else	AC_MSG_RESULT([not found])
+		AC_MSG_WARN(Disabling DBCS)
+		enable_dbcs="no"
+	fi
+	if test "$enable_dbcs" != "no"
+	then	icu_enough=`expr $icu_suffix '>=' _2_2`
+		if test $icu_enough -eq 0
+		then    AC_MSG_WARN(ICU version must be 2.2 or later)
+			AC_MSG_WARN(Disabling DBCS)
+			enable_dbcs="no"
+		fi
+	fi
+fi
+
+# Check for ICU libraries.
+if test "$enable_dbcs" != no
+then	orig_LDFLAGS="$LDFLAGS"
+	unset any
+	for dir in "$with_icu" /usr/local /usr/local/icu /usr/pkg/icu /usr/icu /var/icu /opt/icu
+	do	lib_fail=0
+		if test -n "$dir" -a ! -d "$dir/lib"
+		then	lib_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -L$dir/lib)
+		fi
+		if test -n "$dir"
+		then	LDFLAGS="$orig_LDFLAGS -L$dir/lib"
+		fi
+		AC_CHECK_LIB(icui18n, ucnv_open${icu_suffix}, , [lib_fail=1])
+		if test "$lib_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_lib_icui18n_ucnv_open${icu_suffix} | $as_tr_sh`
+		LDFLAGS="$orig_LDFLAGS"
+		any=1
+	done
+	if test $lib_fail -eq 1
+	then	AC_MSG_WARN(Disabling DBCS)
+		enable_dbcs="no"
+	fi
+fi
+
+AC_ARG_ENABLE(dbcs,[  --disable-dbcs          leave out DBCS support])
+case "$enable_dbcs" in
+no)	CNV="#"
+	;;
+*)	AC_DEFINE(X3270_DBCS,1)
+	DBCS_C="wide.c"
+	DBCS_O="wide.o"
+	CNV=""
+	DBCS=-DX3270_DBCS=1
+	;;
+esac
+AC_SUBST(DBCS_C)
+AC_SUBST(DBCS_O)
+AC_SUBST(CNV)
+AC_SUBST(ICU_DATA_PREFIX)
+AC_SUBST(DBCS)
+AC_ARG_ENABLE(ssl,[  --disable-ssl           leave out OpenSSL support])
+case "$enable_ssl" in
+no)	;;
+*) 	SSL=-DHAVE_LIBSSL
+	;;
+esac
+AC_SUBST(SSL)
+
+dnl Generate the Makefile.
+AC_OUTPUT(Makefile)
