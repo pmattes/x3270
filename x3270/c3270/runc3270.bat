@@ -1,0 +1,3 @@
+@ECHO OFF
+SET TERMINFO=.
+c3270.exe %1%

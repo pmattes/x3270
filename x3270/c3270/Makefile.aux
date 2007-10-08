@@ -1,0 +1,115 @@
+# Copyright 1995, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007 by Paul
+#   Mattes.
+#  Permission to use, copy, modify, and distribute this software and its
+#  documentation for any purpose and without fee is hereby granted,
+#  provided that the above copyright notice appear in all copies and that
+#  both that copyright notice and this permission notice appear in
+#  supporting documentation.
+#
+# c3270 is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+
+# Auxiliary makefile for c3270
+
+TARDIR=c3270-3.3
+RM=rm -f
+
+all:
+	@echo "Must pick a specific make target."
+
+# Development tools.
+
+SOURCES = XtGlue.c actions.c ansi.c apl.c c3270.c charset.c child.c ctlr.c \
+	ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c idle.c keymap.c \
+	kybd.c macros.c print.c printer.c proxy.c resolver.c resources.c \
+	rpq.c screen.c see.c sf.c tables.c telnet.c toggles.c trace_ds.c \
+	utf8.c util.c xio.c wide.c
+HEADERS = 3270ds.h actionsc.h ansic.h aplc.h appres.h cg.h charsetc.h \
+	childc.h ctlr.h ctlrc.h dialogc.h ftc.h ft_cutc.h ft_cut_ds.h \
+	ft_dftc.h ft_dft_ds.h globals.h gluec.h hostc.h icmdc.h idlec.h \
+	keymapc.h keypadc.h kybdc.h localdefs.h macrosc.h menubarc.h \
+	objects.h popupsc.h printc.h printerc.h proxyc.h resolverc.h \
+	resources.h savec.h screen.h screenc.h scrollc.h seec.h selectc.h \
+	sfc.h statusc.h tablesc.h arpa_telnet.h telnetc.h tn3270e.h \
+	togglesc.h trace_dsc.h utf8c.h utilc.h w3miscc.h widec.h xioc.h xl.h \
+	X11/keysym.h
+MISC = version.txt c3270.man x3270if.man x3270-script.man ibm_hosts.man \
+	mkversion.sh Makefile.in README LICENSE c3270.lsm \
+	x3270if.c x3270_glue.expect configure configure.in conf.h.in \
+	install-sh config.sub config.guess ibm_hosts X3270.xad mkfb.c \
+	ibm-1027_P100-1995.ucm ibm-300_P110-1997.ucm ibm-837_P100-2000.ucm \
+	ibm-1385_P100-1997.ucm x3270hist.pl \
+	make-cygwin-standalone runc3270.bat
+DEVKIT = Makefile.aux c3270.lsm.tmpl gen_lsm x3270.man.m4 html.m4 man.m4 \
+	ft.inc keymaps.inc m42man m42html instlist.base instlist.man
+HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
+	html/Lineage.html html/New.html html/README.html html/Wishlist.html \
+	html/c3270-man.html html/x3270-script.html html/x3270if.html
+PR3287 = pr3287/README pr3287/ctlr.c pr3287/telnet.c pr3287/sfc.h pr3287/sf.c \
+	pr3287/ctlrc.h pr3287/tablesc.h pr3287/3270ds.h pr3287/tn3270e.h \
+	pr3287/pr3287.c pr3287/Makefile.aux pr3287/tables.c \
+	pr3287/version.txt pr3287/trace_ds.c pr3287/globals.h \
+	pr3287/localdefs.h pr3287/telnetc.h pr3287/trace_dsc.h \
+	pr3287/Makefile.in pr3287/mkversion.sh pr3287/popupsc.h \
+	pr3287/pr3287.man pr3287/pr3287.lsm pr3287/proxyc.h pr3287/proxy.c \
+	pr3287/resolverc.h pr3287/resolver.c pr3287/configure \
+	pr3287/install-sh pr3287/config.sub pr3287/config.guess \
+	pr3287/arpa_telnet.h pr3287/charset.c pr3287/configure.in \
+	pr3287/see.c pr3287/seec.h pr3287/w3miscc.h pr3287/wide.c \
+	pr3287/widec.h
+
+FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML) $(PR3287)
+
+tarlist: Makefile.aux
+	$(RM) tarlist
+	for i in $(FILES); \
+	do echo $(TARDIR)/$$i; \
+	done >$@
+
+c3270.tar: $(FILES) tarlist
+	$(RM) $(TARDIR)
+	ln -s . $(TARDIR)
+	$(RM) $@
+	#tar -cof $@ -I tarlist
+	tar -ch -T tarlist -f $@
+	$(RM) $(TARDIR)
+
+c3270.tgz: c3270.tar
+	gzip <c3270.tar >$@
+
+lsm:
+	./gen_lsm c3270
+configure: configure.in
+	autoconf
+
+man: c3270.man x3270if.man ibm_hosts.man x3270-script.man \
+	html/c3270-man.html html/x3270if.html html/ibm_hosts.html \
+	html/x3270-script.html
+c3270.man: x3270.man.m4 ft.inc resources.inc keymaps.inc man.m4 version.txt
+	./m42man c3270 x3270.man.m4 >$@
+html/c3270-man.html: x3270.man.m4 ft.inc resources.inc keymaps.inc html.m4 version.txt
+	./m42html c3270 x3270.man.m4 >$@
+x3270if.man: x3270if.man.m4 man.m4 version.txt
+	./m42man x3270if x3270if.man.m4 >$@
+html/x3270if.html: x3270if.man.m4 ft.inc html.m4 version.txt
+	./m42html x3270if x3270if.man.m4 >$@
+ibm_hosts.man: ibm_hosts.man.m4 man.m4 version.txt
+	./m42man ibm_hosts ibm_hosts.man.m4 >$@
+html/ibm_hosts.html: ibm_hosts.man.m4 ft.inc html.m4 version.txt
+	./m42html ibm_hosts ibm_hosts.man.m4 >$@
+x3270-script.man: x3270-script.man.m4 man.m4 version.txt
+	./m42man x3270-script x3270-script.man.m4 >$@
+html/x3270-script.html: x3270-script.man.m4 ft.inc html.m4 version.txt
+	./m42html x3270-script x3270-script.man.m4 >$@
+
+ibm1027.c: ibm-1027_P100-1995.ucm mktbl
+	./stripucm.sh ibm-1027_P100-1995.ucm ibm1027 >ibm1027.c
+ibm300.c: ibm-300_P110-1997.ucm mktbl
+	./stripucm.sh ibm-300_P110-1997.ucm ibm300 >ibm300.c
+ibm837.c: ibm-837_P100-2000.ucm mktbl
+	./stripucm.sh ibm-837_P100-2000.ucm ibm837 >ibm837.c
+ibm1385.c: ibm-1385_P100-1997.ucm mktbl
+	./stripucm.sh ibm-1385_P100-1997.ucm ibm1385 >ibm1385.c
+mktbl: mktbl.c
+	$(CC) -o mktbl mktbl.c
