@@ -1,0 +1,287 @@
+/*
+ * Copyright 1995, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007 by Paul
+ *   Mattes.
+ *  Permission to use, copy, modify, and distribute this software and its
+ *  documentation for any purpose and without fee is hereby granted,
+ *  provided that the above copyright notice appear in all copies and that
+ *  both that copyright notice and this permission notice appear in
+ *  supporting documentation.
+ *
+ * x3270 is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+ *
+ *  Imake template for x3270.
+ *  @configure_input@
+ */
+
+       PROGRAMS = x3270 x3270if
+LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
+          SRCS1 = Cme.c CmeBSB.c CmeLine.c CmplxMenu.c Husk.c about.c \
+		  actions.c ansi.c apl.c charset.c child.c ctlr.c \
+		  dialog.c ft.c ft_cut.c ft_dft.c host.c idle.c keymap.c \
+		  keypad.c kybd.c macros.c main.c menubar.c popups.c \
+		  printer.c print.c proxy.c resolver.c resources.c rpq.c \
+		  save.c screen.c scroll.c see.c select.c sf.c status.c \
+		  tables.c toggles.c telnet.c trace_ds.c utf8.c util.c xio.c \
+		  @DBCS_C@
+          VOBJS = Cme.o CmeBSB.o CmeLine.o CmplxMenu.o Husk.o about.o \
+		  actions.o ansi.o apl.o charset.o child.o ctlr.o dialog.o \
+		  @FALLBACKS_O@ ft.o ft_cut.o ft_dft.o host.o idle.o keymap.o \
+		  keypad.o kybd.o macros.o main.o menubar.o popups.o \
+		  printer.o print.o proxy.o resolver.o resources.o rpq.o \
+		  save.o screen.o scroll.o see.o select.o sf.o status.o \
+		  tables.o telnet.o toggles.o trace_ds.o utf8.o util.o xio.o \
+		  @LIBOBJS@ @DBCS_O@ 
+          OBJS1 = $(VOBJS) version.o
+          FONTS = FontObj(3270-12) FontObj(3270-12b) FontObj(3270-20) \
+		  FontObj(3270-20b) FontObj(3270) FontObj(3270b) \
+		  FontObj(3270e-12) FontObj(3270e-12b) \
+		  FontObj(3270e-20) FontObj(3270e-20b) FontObj(3270e) \
+		  FontObj(3270eb) FontObj(3270egt12) FontObj(3270egt12b) \
+		  FontObj(3270egt16) FontObj(3270egt16b) FontObj(3270egt24) \
+		  FontObj(3270egt24b) FontObj(3270egt32) FontObj(3270egt32b) \
+		  FontObj(3270egt8) FontObj(3270gr) FontObj(3270gt12) \
+		  FontObj(3270gt12b) FontObj(3270gt16) FontObj(3270gt16b) \
+		  FontObj(3270gt24) FontObj(3270gt24b) FontObj(3270gt32) \
+		  FontObj(3270gt32b) FontObj(3270gt8) FontObj(3270h)
+      HOSTSFILE = ibm_hosts
+@INSTALL_CNV@
+#ifdef INSTALL_CNV
+            IDP = @ICU_DATA_PREFIX_@
+        ICU_UCM = ibm-837_P100-2000.ucm ibm-300_P110-1997.ucm \
+                  ibm-1027_P100-1995.ucm ibm-1388_P103-2001.ucm
+        ICU_CNV = $(IDP)ibm-837_P100-2000.cnv $(IDP)ibm-300_P110-1997.cnv \
+                  $(IDP)ibm-1027_P100-1995.cnv $(IDP)ibm-1388_P103-2001.cnv
+#endif
+
+/* Variables set by autoconf. */
+    FONTINSTDIR = @IFONTDIR@
+         prefix = @prefix@
+    exec_prefix = @exec_prefix@
+     sysconfdir = @sysconfdir@
+autoconf_bindir = @bindir@
+autoconf_mandir = @mandir@
+autoconf_fontinstdir = @CIFONTDIR@
+    LIBX3270DIR = @LIBX3270DIR@
+EXTRA_LDOPTIONS = @LDFLAGS@
+EXTRA_LIBRARIES = @LIBS@
+ EXTRA_INCLUDES = @CPPFLAGS@
+             CC = @CC@
+        INSTALL = @INSTALL@
+@NIXCCOPTIONS@
+
+/* Add HP/UX #define. */
+#ifdef HPArchitecture
+HP_DEFINE = -D_HPUX_SOURCE
+#endif
+
+/* Add Cygwin hack, where Xaw depends on Xpm. */
+#ifdef cygwinArchitecture
+EXTRA_LOAD_FLAGS=-lXpm
+#endif
+
+/* ProgramTargetName isn't defined in R5. */
+#if !defined(ProgramTargetName)
+#define ProgramTargetName(x)x
+#endif
+
+/*
+ * Pass -I/usr/local/include to makedepend.  This very unpleasant hack is
+ * needed in case one or more header files is in /usr/local/include -- gcc
+ * sometimes includes this by default, and complains when it appears in an
+ * explicit -I option, but makedepend does not.
+ */
+DEPENDFLAGS = -I/usr/local/include
+
+/* Main targets: x3270 and x3270if. */
+AllTarget($(FONTS) ProgramTargetName(x3270) ProgramTargetName(x3270if))
+
+/* Build/install/man target for x3720.  Requires extra libraries. */
+ComplexProgramTarget_1(x3270,,$(LOCAL_LIBRARIES))
+
+/* Fonts. */
+FontTarget(3270-12)
+FontTarget(3270-12b)
+FontTarget(3270-20)
+FontTarget(3270-20b)
+FontTarget(3270)
+FontTarget(3270b)
+FontTarget(3270e-12)
+FontTarget(3270e-12b)
+FontTarget(3270e-20)
+FontTarget(3270e-20b)
+FontTarget(3270e)
+FontTarget(3270eb)
+FontTarget(3270egt12)
+FontTarget(3270egt12b)
+FontTarget(3270egt16)
+FontTarget(3270egt16b)
+FontTarget(3270egt24)
+FontTarget(3270egt24b)
+FontTarget(3270egt32)
+FontTarget(3270egt32b)
+FontTarget(3270egt8)
+FontTarget(3270gr)
+FontTarget(3270gt12)
+FontTarget(3270gt12b)
+FontTarget(3270gt16)
+FontTarget(3270gt16b)
+FontTarget(3270gt24)
+FontTarget(3270gt24b)
+FontTarget(3270gt32)
+FontTarget(3270gt32b)
+FontTarget(3270gt8)
+FontTarget(3270h)
+InstallMultipleFlags($(FONTS),$(FONTINSTDIR),$(INSTDATFLAGS))
+
+/* Extra directories. */
+MakeDirectories(install,$(LIBX3270DIR))
+MakeDirectories(install,$(autoconf_bindir))
+MakeDirectories(install.man,$(autoconf_mandir)/man1)
+MakeDirectories(install.man,$(autoconf_mandir)/man5)
+MakeDirectories(install.byprefix,$(LIBX3270DIR))
+MakeDirectories(install.byprefix,$(autoconf_bindir))
+MakeDirectories(install.byprefix,$(autoconf_mandir)/man1)
+MakeDirectories(install.byprefix,$(autoconf_mandir)/man5)
+MakeDirectories(install.byprefix,$(autoconf_fontinstdir))
+
+/* Non-default build rules for certain C modules. */
+version.o: $(VOBJS) version.txt mkversion.sh
+	@chmod +x mkversion.sh version.txt
+	sh ./mkversion.sh $(CC)
+
+fallbacks.c: mkfb X3270.xad
+	$(RM) $@
+	./mkfb X3270.xad $@
+
+mkfb: mkfb.c
+	$(CC) $(CDEBUGFLAGS) -o mkfb mkfb.c
+
+/* Build rule for x3270if.  This is specified explicitly instead of using
+   ComplexProgramTarget, because we may want to install it somewhere other
+   than under PROJECTROOT. */
+ProgramTargetName(x3270if): x3270if.c conf.h
+	$(CC) $(CDEBUGFLAGS) $(ALLDEFINES) -o x3270if x3270if.c $(EXTRA_LDOPTIONS) $(EXTRA_LIBRARIES)
+
+/* Rules for using and installing a separate app-defaults file. */
+@DEFINE_UAD@
+#ifdef USE_APP_DEFAULTS
+AD_DEFINE = -DUSE_APP_DEFAULTS
+InstallAppDefaults(X3270)
+all:: X3270.ad
+X3270.ad: X3270.xad qcpp conf.h qcpp-defs.sh
+	$(RM) $@
+	./qcpp @UAD_FLAGS@ `./qcpp-defs.sh` X3270.xad $@
+qcpp: qcpp.c
+	$(CC) $(CFLAGS) -o $@ qcpp.c
+#endif
+
+/* Combined EXTRA_DEFINES definition. */
+EXTRA_DEFINES = $(HP_DEFINE) $(AD_DEFINE) @XANSI@ -DLIBX3270DIR=\"$(LIBX3270DIR)\"
+
+/* Rule for building pr3287. */
+@DEFINE_PR3287@
+#ifdef PR3287
+all::
+	-cd pr3287 && $(MAKE) PROJECTROOT=$(PROJECTROOT)
+#endif
+
+#ifdef INSTALL_CNV
+all:: $(ICU_CNV)
+$(IDP)ibm-837_P100-2000.cnv: ibm-837_P100-2000.ucm
+	makeconv -d . @ICU_DASHP@ ibm-837_P100-2000.ucm
+$(IDP)ibm-300_P110-1997.cnv: ibm-300_P110-1997.ucm
+	makeconv -d . @ICU_DASHP@ ibm-300_P110-1997.ucm
+$(IDP)ibm-1027_P100-1995.cnv: ibm-1027_P100-1995.ucm
+	makeconv -d . @ICU_DASHP@ ibm-1027_P100-1995.ucm
+$(IDP)ibm-1388_P103-2001.cnv: ibm-1388_P103-2001.ucm
+	makeconv -d . @ICU_DASHP@ ibm-1388_P103-2001.ucm
+#endif
+
+/******************************************************************************
+ * Install rules.                                                             *
+ ******************************************************************************/
+
+/* Install rule for x3270if. */
+install:: ProgramTargetName(x3270if)
+	$(INSTALL) $(INSTALLFLAGS) $(INSTPGMFLAGS) ProgramTargetName(x3270if) $(DESTDIR)$(autoconf_bindir)/ProgramTargetName(x3270if)
+
+/* Extra install rule to regenerate fonts.dir. */
+install:: $(DESTDIR)$(FONTINSTDIR)/fonts.dir
+$(DESTDIR)$(FONTINSTDIR)/fonts.dir::
+	-chmod u+w $(DESTDIR)$(FONTINSTDIR) $(DESTDIR)$(FONTINSTDIR)/fonts.dir
+	$(MKFONTDIR) $(DESTDIR)$(FONTINSTDIR)
+	chmod u=rwx,go=rx $(DESTDIR)$(FONTINSTDIR)
+	chmod a=r $(DESTDIR)$(FONTINSTDIR)/fonts.dir
+
+/* Extra install rule for the sample ibm_hosts file (runs only if there is
+   no ibm_hosts file installed yet). */
+install:: $(HOSTSFILE)
+	@[ -r $(DESTDIR)$(LIBX3270DIR)/$(HOSTSFILE) ] || \
+		$(INSTALL) -c $(INSTDATFLAGS) $(HOSTSFILE) $(DESTDIR)$(LIBX3270DIR)/$(HOSTSFILE)
+
+#ifdef INSTALL_CNV
+/* Extra install rule for the ICU conversion tables. */
+install:: $(ICU_CNV)
+	$(INSTALL) -c $(INSTDATAFLAGS) $(ICU_CNV) $(DESTDIR)$(LIBX3270DIR)
+#endif
+
+/*
+ * Install rules for x3270if, x3270-script and ibm_hosts man pages.
+ * These are specified explicitly, instead of using the standard Imake macros,
+ * because we may want to install in a directory other than PROJECTROOT.
+ */
+install.man:: x3270if.man x3270-script.man ibm_hosts.man
+	$(INSTALL) -c $(INSTMANFLAGS) x3270if.man $(DESTDIR)$(autoconf_mandir)/man1/x3270if.1
+	$(INSTALL) -c $(INSTMANFLAGS) x3270-script.man $(DESTDIR)$(autoconf_mandir)/man1/x3270-script.1
+	$(INSTALL) -c $(INSTMANFLAGS) ibm_hosts.man $(DESTDIR)$(autoconf_mandir)/man5/ibm_hosts.5
+
+#ifdef PR3287
+/* Rules for installing pr3287. */
+install::
+	-cd pr3287 && $(MAKE) install PROJECTROOT=$(PROJECTROOT)
+install.man::
+	-cd pr3287 && $(MAKE) install.man PROJECTROOT=$(PROJECTROOT)
+#endif
+
+XCOMM Rules for installing everything in $(PREFIX), rather than in the system
+XCOMM X11 directory.  This is hideous, but I see no way around it.
+install.byprefix::
+	$(INSTALL) -c $(INSTBINFLAGS) ProgramTargetName(x3270) $(DESTDIR)$(autoconf_bindir)/ProgramTargetName(x3270)
+#	$(INSTALL) -c $(INSTBINFLAGS) ProgramTargetName(x3270hist.pl) $(DESTDIR)$(autoconf_bindir)/ProgramTargetName(x3270hist.pl)
+	$(INSTALL) -c $(INSTBINFLAGS) ProgramTargetName(x3270if) $(DESTDIR)$(autoconf_bindir)/ProgramTargetName(x3270if)
+	$(INSTALL) -c $(INSTMANFLAGS) x3270.man $(DESTDIR)$(autoconf_mandir)/man1/x3270.1
+	$(INSTALL) -c $(INSTMANFLAGS) x3270if.man $(DESTDIR)$(autoconf_mandir)/man1/x3270if.1
+	$(INSTALL) -c $(INSTMANFLAGS) x3270-script.man $(DESTDIR)$(autoconf_mandir)/man1/x3270-script.1
+	$(INSTALL) -c $(INSTMANFLAGS) ibm_hosts.man $(DESTDIR)$(autoconf_mandir)/man5/ibm_hosts.5
+	@for i in $(FONTS); \
+	do	(set -x; $(INSTALL) -c $(INSTDATFLAGS) $$i $(DESTDIR)$(autoconf_fontinstdir)/$$i); \
+	done
+	-chmod u+w $(DESTDIR)$(autoconf_fontinstdir) $(DESTDIR)$(autoconf_fontinstdir)/fonts.dir
+	$(MKFONTDIR) $(DESTDIR)$(autoconf_fontinstdir)
+	chmod u=rwx,go=rx $(DESTDIR)$(autoconf_fontinstdir)
+	chmod a=r $(DESTDIR)$(autoconf_fontinstdir)/fonts.dir
+	@[ -r $(DESTDIR)$(LIBX3270DIR)/$(HOSTSFILE) ] || \
+		(set -x; $(INSTALL) -c $(INSTDATFLAGS) $(HOSTSFILE) $(DESTDIR)$(LIBX3270DIR)/$(HOSTSFILE))
+#ifdef PR3287
+install.byprefix::
+	-cd pr3287 && $(MAKE) install
+#endif
+#ifdef INSTALL_CNV
+/* Extra install rule for the ICU conversion tables. */
+install.byprefix:: $(ICU_CNV)
+	$(INSTALL) -c $(INSTDATAFLAGS) $(ICU_CNV) $(DESTDIR)$(LIBX3270DIR)
+#endif
+
+/******************************************************************************
+ * Clean rules.                                                               *
+ ******************************************************************************/
+clean:: 
+	$(RM) $(FONTS) qcpp mkfb fallbacks.c
+#ifdef INSTALL_CNV
+	$(RM) $(ICU_CNV)
+#endif
+#ifdef PR3287
+	-cd pr3287 && $(MAKE) clean
+#endif

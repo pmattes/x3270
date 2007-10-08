@@ -1,0 +1,178 @@
+# Copyright 1995, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007 by Paul Mattes.
+#  Permission to use, copy, modify, and distribute this software and its
+#  documentation for any purpose and without fee is hereby granted,
+#  provided that the above copyright notice appear in all copies and that
+#  both that copyright notice and this permission notice appear in
+#  supporting documentation.
+#
+# x3270 is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+
+# Auxiliary makefile for x3270
+
+TARDIR=x3270-3.3
+RM=rm -f
+
+all:
+	@echo "Must pick a specific make target."
+
+# Development tools.
+
+SOURCES = Cme.c CmeBSB.c CmeLine.c CmplxMenu.c Husk.c about.c actions.c \
+	ansi.c apl.c charset.c child.c ctlr.c dialog.c ft.c ft_cut.c \
+	ft_dft.c host.c idle.c keymap.c keypad.c kybd.c macros.c main.c \
+	menubar.c popups.c printer.c print.c proxy.c resolver.c resources.c \
+	rpq.c save.c screen.c scroll.c see.c select.c sf.c status.c \
+	strtok_r.c tables.c telnet.c toggles.c trace_ds.c utf8.c util.c \
+	wide.c xio.c x3270if.c qcpp.c
+HEADERS = 3270ds.h Cme.h CmeBSB.h CmeBSBP.h CmeLine.h CmeLineP.h CmeP.h \
+	CmplxMenu.h CmplxMenuP.h Husk.h HuskP.h aboutc.h actionsc.h ansic.h \
+	aplc.h appres.h cg.h charsetc.h childc.h ctlr.h ctlrc.h \
+	dialogc.h ftc.h ft_cut_ds.h ft_cutc.h ft_dftc.h ft_dft_ds.h globals.h \
+	hostc.h idlec.h keymapc.h keypadc.h kybdc.h localdefs.h macrosc.h \
+	mainc.h menubarc.h objects.h popupsc.h printerc.h printc.h \
+	proxyc.h resolverc.h resources.h resourcesc.h savec.h screen.h \
+	screenc.h scrollc.h seec.h selectc.h sfc.h statusc.h tablesc.h \
+	arpa_telnet.h telnetc.h tn3270e.h togglesc.h trace_dsc.h utf8c.h \
+	utilc.h w3miscc.h widec.h xioc.h
+BITMAPS = keypad.bm dot.bm arrow.bm diamond.bm ky.bm no_diamond.bm no_dot.bm \
+	null.bm locked.bm unlocked.bm wait.bm x3270.bm
+FONTS = 3270-12.bdf 3270-12b.bdf 3270-20.bdf 3270-20b.bdf 3270.bdf 3270b.bdf \
+	3270e-12.bdf 3270e-12b.bdf 3270e-20.bdf 3270e-20b.bdf \
+	3270e.bdf 3270eb.bdf 3270egt12.bdf 3270egt12b.bdf 3270egt16.bdf \
+	3270egt16b.bdf 3270egt24.bdf 3270egt24b.bdf 3270egt32.bdf \
+	3270egt32b.bdf 3270egt8.bdf 3270gr.bdf 3270gt12.bdf 3270gt12b.bdf \
+	3270gt16.bdf 3270gt16b.bdf 3270gt24.bdf 3270gt24b.bdf 3270gt32.bdf \
+	3270gt32b.bdf 3270gt8.bdf 3270h.bdf
+MISC = LICENSE README X3270.xad dryrun ibm_hosts ibm_hosts.man install-sh \
+	mkfb.c mkversion.sh version.txt x3270-script.man x3270.lsm x3270.man \
+	x3270_glue.expect x3270if.man README.dbcs \
+	ibm-837_P100-2000.ucm ibm-1027_P100-1995.ucm ibm-300_P110-1997.ucm \
+	ibm-1388_P103-2001.ucm qcpp-defs.sh x3270hist.pl \
+	x3270-icon2.xpm
+EXAMPLES = Examples/child_script.bash Examples/child_script.ksh \
+	Examples/child_script.sh Examples/cms_logon.bash \
+	Examples/cms_logon.sh Examples/ibm_hosts Examples/peer_script.bash \
+	Examples/peer_script.expect Examples/peer_script.ksh \
+	Examples/peer_script.sh
+PLAYBACK = Playback/Makefile Playback/playback.c Playback/playback.man
+CONFIG = Imakefile.in conf.h.in config.guess config.sub configure configure.in
+HTML = html/Attributes.html html/Brackets.html html/Bugs.html html/Build.html \
+	html/Charset.html html/FAQ.html html/Intro.html html/Keymap.html \
+	html/Lineage.html html/New.html html/README.html html/Resources.html \
+	html/Wishlist.html html/del.jpg html/delta.jpg \
+	html/ibm_hosts.html html/x3270-man.html html/x3270-script.html \
+	html/x3270.jpg html/x3270.xbm html/x3270if.html
+FT = ft/all.chars ft/print.chars
+DEVKIT = Makefile.aux apl.inc ft.inc gen_lsm html.m4 m42html m42man man.m4 \
+	menus.inc x3270.lsm.tmpl x3270.man.m4 xkeymaps.inc \
+	instlist.all-xinstall instlist.base instlist.byprefix \
+	x3270/instlist.man
+PR3287 = pr3287/3270ds.h pr3287/Makefile.aux pr3287/Makefile.in pr3287/README \
+	pr3287/arpa_telnet.h pr3287/charset.c pr3287/config.guess \
+	pr3287/config.sub pr3287/configure pr3287/ctlr.c pr3287/ctlrc.h \
+	pr3287/globals.h pr3287/install-sh pr3287/localdefs.h \
+	pr3287/mkversion.sh pr3287/pr3287.c pr3287/pr3287.lsm \
+	pr3287/pr3287.man pr3287/proxyc.h pr3287/proxy.c pr3287/resolverc.h \
+	pr3287/resolver.c pr3287/sf.c pr3287/sfc.h pr3287/tables.c \
+	pr3287/tablesc.h pr3287/telnet.c pr3287/telnetc.h pr3287/tn3270e.h \
+	pr3287/trace_ds.c pr3287/trace_dsc.h pr3287/version.txt \
+	pr3287/configure.in pr3287/see.c pr3287/seec.h pr3287/w3miscc.h \
+	pr3287/widec.h pr3287/wide.c pr3287/popupsc.h
+
+FILES = $(SOURCES) $(HEADERS) $(BITMAPS) $(FONTS) $(MISC) $(EXAMPLES) \
+	$(PLAYBACK) $(CONFIG) $(HTML) $(FT) $(PR3287)
+
+tarlist: Makefile.aux
+	$(RM) tarlist
+	for i in $(FILES); \
+	do echo $(TARDIR)/$$i; \
+	done >$@
+
+x3270.tar: $(FILES) tarlist
+	$(RM) $(TARDIR)
+	ln -s . $(TARDIR)
+	$(RM) $@
+	#tar -cof $@ -I tarlist
+	tar -ch -T tarlist -f $@
+	$(RM) $(TARDIR)
+
+x3270.tgz: x3270.tar
+	gzip <x3270.tar >$@
+
+# x3270.lsm depends circularly on x3270.tgz.  Rather than confusing 'make',
+# we will simply state that it has no dependencies, and use a pseudo-target to
+# generate it.
+lsm:
+	./gen_lsm x3270
+
+configure: configure.in
+	autoconf
+
+MANSRC = x3270.man.m4 menus.inc apl.inc xkeymaps.inc hostname.inc
+man: x3270.man x3270if.man ibm_hosts.man x3270-script.man \
+	html/x3270-man.html html/x3270if.html html/ibm_hosts.html \
+	html/x3270-script.html
+
+x3270.man: $(MANSRC) version.txt man.m4 m42man
+	@rm -f man.tmp
+	./m42man x3270 x3270.man.m4 >man.tmp
+	mv man.tmp $@
+	@rm -f man.tmp
+html/x3270-man.html: $(MANSRC) version.txt html.m4 m42html
+	@rm -f man.tmp
+	./m42html x3270 x3270.man.m4 >man.tmp
+	mv man.tmp $@
+	@rm -f man.tmp
+x3270if.man: x3270if.man.m4 man.m4 version.txt m42man
+	@rm -f man.tmp
+	./m42man x3270if x3270if.man.m4 >man.tmp
+	mv man.tmp $@
+	@rm -f man.tmp
+html/x3270if.html: x3270if.man.m4 ft.inc html.m4 version.txt m42html
+	@rm -f man.tmp
+	./m42html x3270if x3270if.man.m4 >man.tmp
+	mv man.tmp $@
+	@rm -f man.tmp
+ibm_hosts.man: ibm_hosts.man.m4 man.m4 version.txt m42man
+	@rm -f man.tmp
+	./m42man ibm_hosts ibm_hosts.man.m4 >man.tmp
+	mv man.tmp $@
+	@rm -f man.tmp
+html/ibm_hosts.html: ibm_hosts.man.m4 ft.inc html.m4 version.txt m42html
+	@rm -f man.tmp
+	./m42html ibm_hosts ibm_hosts.man.m4 >man.tmp
+	mv man.tmp $@
+	@rm -f man.tmp
+x3270-script.man: x3270-script.man.m4 ft.inc man.m4 version.txt m42man
+	@rm -f man.tmp
+	./m42man x3270-script x3270-script.man.m4 >man.tmp
+	mv man.tmp $@
+	@rm -f man.tmp
+html/x3270-script.html: x3270-script.man.m4 ft.inc html.m4 version.txt m42html
+	@rm -f man.tmp
+	./m42html x3270-script x3270-script.man.m4 >man.tmp
+	mv man.tmp $@
+	@rm -f man.tmp
+
+html/FAQ.html: mkstand.bash html/documentation-faq-body.html 
+	@rm -f html.tmp
+	./mkstand.bash 'x3270 Frequently Asked Questions' html/documentation-faq-body.html html.tmp
+	mv html.tmp html/FAQ.html
+	@rm -f html.tmp
+
+html/Lineage.html: mkstand.bash html/license-body.html 
+	@rm -f html.tmp
+	./mkstand.bash 'x3270 Licensing' html/license-body.html html.tmp
+	mv html.tmp html/Lineage.html
+	@rm -f html.tmp
+
+ID: $(SOURCES) $(HEADERS)
+	mkid $(SOURCES) $(HEADERS)
+
+tags: $(SOURCES) $(HEADERS)
+	ctags $(SOURCES) $(HEADERS)
+
+lessman:
+	tbl x3270.man | nroff -man | less

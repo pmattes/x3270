@@ -1,0 +1,13 @@
+usr
+usr/X11R6
+usr/X11R6/man
+usr/X11R6/man/man1
+usr/X11R6/man/man1/x3270.1x
+usr/local
+usr/local/man
+usr/local/man/man1
+usr/local/man/man1/pr3287.1
+usr/local/man/man1/x3270-script.1
+usr/local/man/man1/x3270if.1
+usr/local/man/man5
+usr/local/man/man5/ibm_hosts.5

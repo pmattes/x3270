@@ -1,0 +1,41 @@
+#!/usr/local/bin/bash
+# Copyright 2000 by Paul Mattes.
+#  Permission to use, copy, modify, and distribute this software and its
+#  documentation for any purpose and without fee is hereby granted,
+#  provided that the above copyright notice appear in all copies and that
+#  both that copyright notice and this permission notice appear in
+#  supporting documentation.
+#
+# x3270 is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+
+# Generate a .man or -man.html file.
+
+if [ $# -ne 1 ]
+then	echo >&2 "usage: $0 <filename>"
+	exit 1
+fi
+if [ ! -f $1.tmpl ]
+then	echo >&2 "$1.tmpl not found"
+	exit 1
+fi
+
+# Set up the temp file
+tf=/tmp/tgz$$
+
+# Set up the variables
+source version.txt
+VERSION=$version
+DATE=$(date "+%d %B %Y" | sed 's/^0//')
+
+sed <$1.tmpl \
+	-e "s/\$VERSION/$VERSION/g" \
+	-e "s/\$DATE/$DATE/g" >$tf
+
+if [ -r $1 ] && diff $1 $tf >/dev/null
+then	:
+else	[ -r $1 -a ! -w $1 ] && co -l $1
+	cp $tf $1
+fi
+rm -f $tf

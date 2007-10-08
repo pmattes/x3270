@@ -1,0 +1,50 @@
+#! /bin/sh
+# Copyright 1995, 1999, 2000, 2001, 2002, 2005 by Paul Mattes.
+#  Permission to use, copy, modify, and distribute this software and its
+#  documentation for any purpose and without fee is hereby granted,
+#  provided that the above copyright notice appear in all copies and that
+#  both that copyright notice and this permission notice appear in
+#  supporting documentation.
+#
+# x3270 is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+#
+# Run x3270 from the current directory
+
+# Bomb on any error
+set -e
+d=`pwd`
+
+# Say what you're doing
+set -x
+
+# Set up the fonts
+mkfontdir .
+xset +fp $d/
+xset fp rehash
+
+# Set up the dynamic library path
+if [ -d /usr/openwin/lib ]
+then  LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/openwin/lib
+fi
+if [ -d /usr/ucblib ]
+then  LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/ucblib
+fi
+export LD_LIBRARY_PATH
+
+# Set up the PATH to include pr3287.
+PATH=$PATH:$d/pr3287
+export PATH
+
+# Set up ICU_DATA, for DBCS translations.
+ICU_DATA=.:$ICU_DATA
+export ICU_DATA
+
+# Run x3270, pointing it to the current directory for its configuration files
+set +e
+./x3270 -xrm "x3270.confDir: $d" "$@"
+
+# Clean up
+xset -fp $d/
+xset fp rehash
