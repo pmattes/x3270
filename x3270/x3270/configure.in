@@ -1,0 +1,434 @@
+dnl Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006 by Paul Mattes.
+dnl  Permission to use, copy, modify, and distribute this software and its
+dnl  documentation for any purpose and without fee is hereby granted,
+dnl  provided that the above copyright notice appear in all copies and that
+dnl  both that copyright notice and this permission notice appear in
+dnl  supporting documentation.
+dnl 
+dnl x3270 is distributed in the hope that it will be useful, but WITHOUT ANY
+dnl WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+dnl FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(main.c)
+AC_PREREQ(2.50)
+AC_CONFIG_HEADER(conf.h)
+
+dnl Checks for programs.
+AC_PROG_INSTALL
+AC_PROG_CC
+
+dnl Compute host-specific flags.
+dnl If it's solaris, then pass the -D__EXTENSIONS__ flag to cc, so that
+dnl all of usual Unix functions are visible to strict ANSI compilers.
+AC_CANONICAL_HOST
+case "$host_os" in
+solaris2*)	XANSI=-D__EXTENSIONS__
+		if test "$GCC" = yes
+		then	NIXCCOPTIONS="CCOPTIONS ="
+		fi
+		;;
+darwin*)	XPRECOMP=-no-cpp-precomp
+		;;
+linux*)		XANSI="-D_POSIX_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE"
+		;;
+esac
+AC_SUBST(XANSI)
+AC_SUBST(XPRECOMP)
+AC_SUBST(NIXCCOPTIONS)
+
+dnl Check for X
+AC_PATH_X
+if test "$no_x" = "yes"; then AC_MSG_ERROR('Cannot find X utilities or libraries'); fi
+
+dnl Check for --with-all-xinstall
+AC_ARG_WITH(all_xinstall,[  --with-all-xinstall     install all components in system X11 directory])
+case "$with_all_xinstall" in
+yes)	prefix='$(PROJECTROOT)'
+	;;
+esac
+
+dnl Check for --enable-app-defaults
+AC_ARG_ENABLE(app-defaults,
+    [  --enable-app-defaults   use a separate app-defaults file],
+    [DEFINE_UAD="#define USE_APP_DEFAULTS 1"; if test "$enable_app_defaults" = "yes"; then UAD_FLAGS="-DCOLOR"; else UAD_FLAGS="$enable_app_defaults"; fi],
+    [DEFINE_UAD=""; UAD_FLAGS="-DCOLOR"; FALLBACKS_O=fallbacks.o])
+AC_SUBST(UAD_FLAGS)
+AC_SUBST(DEFINE_UAD)
+AC_SUBST(FALLBACKS_O)
+
+dnl Check for --without-pr3287
+AC_ARG_WITH(pr3287,[  --without-pr3287        don't build pr3287])
+if test -d pr3287 -a "$with_pr3287" != "no"
+then	DEFINE_PR3287="#define PR3287 1"
+	pr3mf=pr3287/Makefile
+else	DEFINE_PR3287="#undef PR3287"
+	pr3mf=""
+fi
+AC_SUBST(DEFINE_PR3287)
+
+dnl Check for --with-fontdir=DIR
+AC_ARG_WITH(fontdir,[  --with-fontdir=DIR      install fonts in directory DIR [DIR=misc]])
+case "$with_fontdir" in
+""|yes|no)
+	IFONTDIR='$'"(FONTDIR)/misc"
+	CIFONTDIR='$'"(exec_prefix)/fonts/misc"
+	;;
+/*)
+	IFONTDIR="$with_fontdir"
+	CIFONTDIR="$with_fontdir"
+	;;
+*)
+	IFONTDIR='$'"(FONTDIR)/$with_fontdir"
+	CIFONTDIR='$'"(exec_prefix)/fonts/$with_fontdir"
+	;;
+esac
+AC_SUBST(IFONTDIR)
+AC_SUBST(CIFONTDIR)
+
+# Set up the configuration directory.
+LIBX3270DIR='${sysconfdir}/x3270'
+AC_SUBST(LIBX3270DIR)
+
+dnl Check for other libraries.
+dnl Note that the order here is important.  The last libraries should appear
+dnl first, so that objects in them can be used by subsequent libraries.
+AC_CHECK_LIB(util, forkpty)
+AC_CHECK_LIB(nsl_s, gethostbyname)
+AC_CHECK_LIB(nsl, gethostbyname)
+AC_CHECK_LIB(socket, socket)
+
+dnl Checks for header files.
+dnl AC_HEADER_STDC
+dnl AC_HEADER_SYS_WAIT
+dnl AC_CHECK_HEADERS(fcntl.h sys/ioctl.h sys/time.h unistd.h)
+AC_CHECK_HEADERS(sys/select.h)
+AC_CHECK_HEADERS(pty.h)
+AC_CHECK_HEADERS(libutil.h)
+AC_CHECK_HEADERS(util.h)
+AC_CHECK_HEADERS(getopt.h)
+
+dnl Check for SSL header file.
+AC_ARG_WITH(ssl,[  --with-ssl=DIR          specify OpenSSL install directory])
+if test "$enable_ssl" != no
+then	orig_CPPFLAGS="$CPPFLAGS"
+	unset any
+	for dir in "$with_ssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl
+	do	header_fail=0
+		if test -n "$dir" -a ! -d "$dir/include"
+		then	header_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -I$dir/include)
+		fi
+		if test -n "$dir"
+		then	CPPFLAGS="$orig_CPPFLAGS -I$dir/include"
+		fi
+		AC_CHECK_HEADERS(openssl/ssl.h, ,[header_fail=1])
+		if test "$header_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_header_openssl/ssl_h | $as_tr_sh`
+		CPPFLAGS="$orig_CPPFLAGS"
+		any=1
+	done
+	if test $header_fail -eq 1
+	then	AC_MSG_WARN(Disabling OpenSSL)
+		enable_ssl="no"
+		unset HAVE_LIBSSL
+	fi
+fi
+
+dnl Check for ICU header file.
+AC_ARG_WITH(icu,[  --with-icu=DIR          specify ICU install directory])
+if test "$enable_dbcs" != no
+then	orig_CPPFLAGS="$CPPFLAGS"
+	unset any
+	for dir in "$with_icu" /usr/local /usr/local/icu /usr/lib/icu /usr/pkg/icu /usr/icu /var/icu /opt/icu
+	do	header_fail=0
+		if test -n "$dir" -a ! -d "$dir/include"
+		then	header_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -I$dir/include)
+		fi
+		if test -n "$dir"
+		then	CPPFLAGS="$orig_CPPFLAGS -I$dir/include"
+		fi
+		AC_CHECK_HEADERS(unicode/ucnv.h, ,[header_fail=1])
+		if test "$header_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_header_unicode/ucnv_h | $as_tr_sh`
+		CPPFLAGS="$orig_CPPFLAGS"
+		any=1
+	done
+	if test $header_fail -eq 1
+	then	AC_MSG_WARN(Disabling DBCS)
+		enable_dbcs="no"
+	fi
+fi
+
+# Figure out the ICU version, which depends on having found the ICU header
+# files above.
+if test "$enable_dbcs" != "no"
+then	AC_MSG_CHECKING([for ICU version strings])
+	cat >/tmp/icutst$$.c <<EOF
+#include <stdio.h>
+#include "unicode/ucnv.h"
+#define xstr(s)	str(s)
+#define str(s)	#s
+int
+main(int argc, char *argv[])
+{
+	printf("%s %s\n", xstr(U_ICU_VERSION_SUFFIX), U_ICUDATA_NAME);
+	return 0;
+}
+EOF
+	fail=0
+	${CC} ${CPPFLAGS} -o /tmp/icutst$$ /tmp/icutst$$.c || fail=1
+	rm -f /tmp/icutst$$.c
+	if test "$fail" != 1
+	then	icu_suffix=`/tmp/icutst$$ | awk '{print $1}'`
+		ICU_DATA_PREFIX=`/tmp/icutst$$ | awk '{print $2}'`
+		rm -f /tmp/icutst$$
+		if test -z "$icu_suffix" -o -z "$ICU_DATA_PREFIX"
+		then	fail=1
+		fi
+	fi
+	if test "$fail" -eq 0
+	then	AC_MSG_RESULT([$icu_suffix, $ICU_DATA_PREFIX])
+	else	AC_MSG_RESULT([not found])
+		AC_MSG_WARN(Disabling DBCS)
+		enable_dbcs="no"
+	fi
+	if test "$enable_dbcs" != "no"
+	then	icu_enough=`expr $icu_suffix '>=' _2_2`
+		if test $icu_enough -eq 0
+		then	AC_MSG_WARN(ICU version must be 2.2 or later)
+			AC_MSG_WARN(Disabling DBCS)
+			enable_dbcs="no"
+		fi
+	fi
+	if test "$enable_dbcs" != "no"
+	then	icu_needp=`expr $icu_suffix '<' _3_6`
+		if test $icu_needp -eq 1
+		then	ICU_DASHP="-p $ICU_DATA_PREFIX"
+		    	ICU_DATA_PREFIX_=${ICU_DATA_PREFIX}_
+		else	ICU_DASHP=""
+		    	ICU_DATA_PREFIX_=""
+		fi
+	fi
+fi
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+dnl AC_C_CONST
+dnl AC_TYPE_PID_T
+dnl AC_TYPE_SIZE_T
+dnl AC_HEADER_TIME
+
+dnl Checks for library functions.
+dnl AC_PROG_GCC_TRADITIONAL
+dnl AC_FUNC_MEMCMP
+dnl AC_TYPE_SIGNAL
+dnl AC_FUNC_VPRINTF
+dnl AC_CHECK_FUNCS(gettimeofday putenv select socket strerror strstr strtol strtoul)
+AC_CHECK_FUNCS(vasprintf)
+dnl AC_CHECK_FUNC(strtok_r,,AC_LIBOBJ(strtok_r))
+AC_CHECK_FUNCS(strtok_r)
+dnl AC_DEFINE(NEED_STRTOK_R))
+AC_FUNC_FSEEKO
+
+dnl Check for SSL libraries.
+if test "$enable_ssl" != no
+then	orig_LDFLAGS="$LDFLAGS"
+	unset any
+	for dir in "$with_ssl" /usr/local /usr/pkg /usr /var /opt
+	do	lib_fail=0
+		if test -n "$dir" -a ! -d "$dir/ssl/lib"
+		then	lib_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -L$dir/ssl/lib)
+		fi
+		if test -n "$dir"
+		then	LDFLAGS="$orig_LDFLAGS -L$dir/ssl/lib"
+		fi
+		AC_CHECK_LIB(crypto, CRYPTO_malloc, , [lib_fail=1])
+		if test "$lib_fail" -eq 0
+		then	AC_CHECK_LIB(ssl, SSL_new, , [lib_fail=1])
+		fi
+		if test "$lib_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_lib_crypto_CRYPTO_malloc | $as_tr_sh`
+		unset `echo ac_cv_lib_ssl_SSL_new | $as_tr_sh`
+		LDFLAGS="$orig_LDFLAGS"
+		any=1
+	done
+	if test $lib_fail -eq 1
+	then	AC_MSG_WARN(Disabling OpenSSL)
+		enable_ssl="no"
+	fi
+fi
+
+# Check for ICU libraries.
+if test "$enable_dbcs" != no
+then	orig_LDFLAGS="$LDFLAGS"
+	unset any
+	is_icu3=`expr $icu_suffix '>=' _3_0`
+	if test $is_icu3 -eq 1
+	then	iculib=icuuc
+		icudata=-licudata
+	else	iculib=icui18n
+		icudata=""
+	fi
+	for dir in "$with_icu" /usr/local /usr/local/icu /usr/pkg/icu /usr/icu /var/icu /opt/icu
+	do	lib_fail=0
+		if test -n "$dir" -a ! -d "$dir/lib"
+		then	lib_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -L$dir/lib)
+		fi
+		if test -n "$dir"
+		then	LDFLAGS="$orig_LDFLAGS -L$dir/lib"
+		fi
+		# Try with the suffix
+		AC_CHECK_LIB($iculib, ucnv_open${icu_suffix}, , [lib_fail=1], $icudata)
+		if test "$lib_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_lib_lib${iculib}_ucnv_open${icu_suffix} | $as_tr_sh`
+		LDFLAGS="$orig_LDFLAGS"
+		# Try without the suffix
+		lib_fail=0
+		AC_CHECK_LIB($iculib, ucnv_open, , [lib_fail=1], $icudata)
+		if test "$lib_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_lib_lib${iculib}_ucnv_open | $as_tr_sh`
+		LDFLAGS="$orig_LDFLAGS"
+		any=1
+	done
+	if test $lib_fail -eq 1
+	then	AC_MSG_WARN(Disabling DBCS)
+		enable_dbcs="no"
+	fi
+fi
+
+dnl Check for xmkmkf
+AC_CHECK_PROG(xmkmf_found,xmkmf,found,notfound)
+if test "$xmkmf_found" = "notfound"
+then	AC_MSG_ERROR('Cannot find xmkmf')
+fi
+
+dnl Check for unwanted parts.
+AC_ARG_ENABLE(ansi,[  --disable-ansi          leave out NVT (ANSI) support])
+case "$enable_ansi" in
+""|yes)	AC_DEFINE(X3270_ANSI,1)
+	;;
+esac
+AC_ARG_ENABLE(apl,[  --disable-apl           leave out APL character support])
+case "$enable_apl" in
+""|yes)	AC_DEFINE(X3270_APL,1)
+	;;
+esac
+AC_ARG_ENABLE(dbcs,[  --disable-dbcs          leave out DBCS support])
+case "$enable_dbcs" in
+no)	;;
+*)	AC_DEFINE(X3270_DBCS,1)
+	DBCS_C="wide.c"
+	DBCS_O="wide.o"
+	INSTALL_CNV="#define INSTALL_CNV 1"
+	DBCS=-DX3270_DBCS=1
+	;;
+esac
+AC_SUBST(DBCS_C)
+AC_SUBST(DBCS_O)
+AC_SUBST(INSTALL_CNV)
+AC_SUBST(ICU_DATA_PREFIX_)
+AC_SUBST(ICU_DASHP)
+AC_SUBST(DBCS)
+AC_ARG_ENABLE(ft,[  --disable-ft            leave out file transfer support])
+case "$enable_ft" in
+""|yes)	AC_DEFINE(X3270_FT,1)
+	;;
+esac
+AC_ARG_ENABLE(keypad,[  --disable-keypad        leave out pop-up keypad support])
+case "$enable_keypad" in
+""|yes)	AC_DEFINE(X3270_KEYPAD,1)
+	;;
+esac
+AC_ARG_ENABLE(local_process,[  --disable-local-process leave out local process support])
+case "$enable_local_process" in
+""|yes)	AC_DEFINE(X3270_LOCAL_PROCESS,1)
+	;;
+esac
+AC_ARG_ENABLE(menus,[  --disable-menus         leave out menu support])
+case "$enable_menus" in
+""|yes)	AC_DEFINE(X3270_MENUS,1)
+	;;
+esac
+AC_ARG_ENABLE(printer,[  --disable-printer       leave out printer session support])
+case "$enable_printer" in
+""|yes)	AC_DEFINE(X3270_PRINTER,1)
+	;;
+esac
+AC_ARG_ENABLE(script,[  --disable-script        leave out scripting support])
+case "$enable_script" in
+""|yes)	AC_DEFINE(X3270_SCRIPT,1)
+	;;
+*)	X3270_SCRIPT="#undef X3270_SCRIPT" ;;
+esac
+AC_ARG_ENABLE(ssl,[  --disable-ssl           leave out OpenSSL support])
+case "$enable_ssl" in
+no)	;;
+*)	SSL=-DHAVE_LIBSSL=1
+	;;
+esac
+AC_SUBST(SSL)
+AC_ARG_ENABLE(tn3270e,[  --disable-tn3270e       leave out TN3270E support])
+case "$enable_tn3270e" in
+""|yes)	AC_DEFINE(X3270_TN3270E,1)
+	;;
+esac
+AC_ARG_ENABLE(trace,[  --disable-trace         leave out tracing support])
+case "$enable_trace" in
+""|yes)	AC_DEFINE(X3270_TRACE,1)
+	;;
+esac
+AC_ARG_ENABLE(history,[  --enable-history        include experimental history support])
+case "$enable_history" in
+yes)	AC_DEFINE(X3270_PLUGIN,1)
+	;;
+esac
+
+dnl Save a copy of Imakefile
+if test -f Imakefile
+then	cp Imakefile Imakefile.old
+fi
+
+dnl Generate the Imakefile and the pr3287 Makefile.
+AC_OUTPUT(Imakefile $pr3mf)
+
+dnl Generate the Makefile
+gen_Makefile=""
+if test ! -f Makefile; then gen_Makefile=1; fi
+if cmp Imakefile.old Imakefile 1>/dev/null 2>/dev/null; then :; else gen_Makefile=1; fi
+if test "$gen_Makefile"
+then	echo "generating Makefile"
+	xmkmf || exit 1
+	# Get rid of the @ that AIX puts in the Makefile
+	sed 's/@@*for/for/' Makefile >Makefile.aixfix
+	if cmp -s Makefile Makefile.aixfix
+	then	rm Makefile.aixfix
+	else	mv Makefile.aixfix Makefile
+	fi
+else	echo "Makefile is unchanged"
+fi
+rm -f Imakefile.old

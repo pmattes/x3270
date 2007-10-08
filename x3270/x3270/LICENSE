@@ -1,0 +1,88 @@
+Modifications and Original Code Copyright 1993, 1994, 1995, 1996, 1997, 1999,
+ 2000, 2001, 2002, 2004, 2006, 2007 by Paul Mattes.
+Original X11 Port Copyright 1990 by Jeff Sparkes.
+  Permission to use, copy, modify, and distribute this software and its
+  documentation for any purpose and without fee is hereby granted,
+  provided that the above copyright notice appear in all copies and that
+  both that copyright notice and this permission notice appear in
+  supporting documentation.
+
+                            NO WARRANTY
+
+  BECAUSE X3270 ("THE PROGRAM") IS LICENSED FREE OF CHARGE, THERE IS NO
+  WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  EXCEPT
+  WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
+  PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED
+  OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS TO
+  THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE PROGRAM
+  PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING, REPAIR OR
+  CORRECTION.
+
+  IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING WILL
+  ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR REDISTRIBUTE
+  THE PROGRAM, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL,
+  INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO
+  USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
+  RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A FAILURE
+  OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS), EVEN IF SUCH HOLDER OR
+  OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+Copyright 1989 by Georgia Tech Research Corporation, Atlanta, GA 30332.
+  All Rights Reserved.  GTRC hereby grants public use of this software.
+  Derivative works based on this software must incorporate this copyright
+  notice.
+
+The Georgia Tech fonts (the fonts with the name "gt" in them), carry an
+additional notice:
+ Copyright 1990 by the Georgia Institute of Technology.
+  All rights reserved except for those rights explicitly mentioned
+  below.
+  Permission is granted to distribute freely or to modify and distribute
+  freely any materials and information contained herein as long as the
+  above copyright and all terms associated with it remain intact.
+
+The 3270-20 font is derived from an NCD font, so it carries an additional
+notice:
+ Copyright 1989-1991 Network Computing Devices, Inc.
+ NCD is a registered trademark of Network Computing Devices, Inc.
+
+  Permission to use, copy, modify, and distribute this software and
+  its documentation for any purpose and without fee is hereby
+  granted, provided that the above copyright notice appear in all
+  copies and that both that copyright notice and this permission
+  notice appear in supporting documentation, and that the name of
+  NCD may not be used in advertising or publicity pertaining to
+  distribution of the software without specific, written prior
+  permission.  NCD makes no representations about the
+  suitability of this software for any purpose.  It is provided ``as
+  is'' without express or implied warranty.
+
+  NCD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
+  NO EVENT SHALL NCD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+  CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+  OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+  NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+  CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+The ComplexMenu sources are derived from the MIT X11R5 Athena SimpleMenu
+widget, and carry an additional notice:
+ Copyright 1989 Massachusetts Institute of Technology
+
+  Permission to use, copy, modify, distribute, and sell this software and its
+  documentation for any purpose is hereby granted without fee, provided that
+  the above copyright notice appear in all copies and that both that
+  copyright notice and this permission notice appear in supporting
+  documentation, and that the name of M.I.T. not be used in advertising or
+  publicity pertaining to distribution of the software without specific,
+  written prior permission.  M.I.T. makes no representations about the
+  suitability of this software for any purpose.  It is provided "as is"
+  without express or implied warranty.
+  
+  M.I.T. DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL M.I.T.
+  BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+  OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+  CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
