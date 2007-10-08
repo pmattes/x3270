@@ -1,0 +1,86 @@
+'\" t
+.TH X3270 1 "$DATE"
+.SH NAME
+pr3287 \-
+.SM IBM
+host printing tool
+.SH SYNOPSIS
+.B pr3287
+.RI [ options ]       
+.RI [[ prefix :]...[ LUname [, LUname ...]@] hostname [: port ]] 
+.SH DESCRIPTION
+.B pr3287
+opens a telnet connection to an
+.SM IBM
+host, and emulates an IBM 3287 printer.
+It implements RFCs 2355 (TN3270E), 1576 (TN3270) and 1646 (LU name selection).
+.LP
+A specific LU name to use may be specified by prepending it to the
+.I hostname
+with an
+.RB `` @ ''.
+Multiple LU names to try can be separated by commas.
+An empty LU can be placed in the list with an extra comma.
+.LP
+The port to connect to defaults to
+.BR telnet .
+This can be overridden by appending a
+.I port
+to the
+.I hostname
+with a colon
+.RB `` : ''.
+.SH OPTIONS
+.B pr3287 
+understands the following options:
+.TP
+.BI \-assoc " LUname"
+Causes the session to be associated with the specified
+.IR LUname .
+.TP
+.BI \-command " command"
+Specifies the command to run for each print job.
+The default is
+.BR lpr .
+.TP
+.B \-daemon
+Causes
+.I pr3287
+to become a daemon process, once the connection to the host is established.
+.TP
+.B \-trace
+Turns on data stream tracing.
+Trace information is saved in the file
+.RI /tmp/x3trc. pid .
+.SH "SEE ALSO"
+x3270(1), telnet(1), tn3270(1)
+.br
+Data Stream Programmer's Reference, IBM GA23\-0059
+.br
+Character Set Reference, IBM GA27\-3831
+.br
+RFC 1576, TN3270 Current Practices
+.br
+RFC 1646, TN3270 Extensions for LUname and Printer Selection
+.br
+RFC 2355, TN3270 Enhancements
+.SH COPYRIGHTS
+.LP
+Modifications Copyright 1993, 1994, 1995, 1996, 1997, 1999, 2000 by Paul Mattes.
+.br
+Original X11 Port Copyright 1990 by Jeff Sparkes.
+.RS
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice appear in all copies and that
+both that copyright notice and this permission notice appear in
+supporting documentation.
+.RE
+Copyright 1989 by Georgia Tech Research Corporation, Atlanta, GA 30332.
+.RS
+All Rights Reserved.  GTRC hereby grants public use of this software.
+Derivative works based on this software must incorporate this copyright
+notice.
+.RE
+.SH VERSION
+pr3287 $VERSION

@@ -1,0 +1,19 @@
+pr3287 is an IBM 3287 printer emulator.  It connects to an IBM host via TELNET,
+using TN3270 or TN3270E.  It supports SCS (SNA Character Stream).
+
+To build pr3287, type:
+
+    ./configure
+    make
+
+To install pr3287 in /usr/local/bin, type (as root):
+
+    make install
+
+If you are running Sun Solaris and have Sun's unbundled C compiler installed,
+_do_not_ use it to build pr3287.  Instead, type:
+
+    make CC=/usr/ccs/bin/cc
+
+If you have any questions or comments on pr3287, please contact
+Paul.Mattes@usa.net.
