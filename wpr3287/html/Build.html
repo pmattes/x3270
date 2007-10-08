@@ -1,0 +1,48 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>wpr3287 Build Instructions</title>
+  <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
+</head>
+<body>
+<h1> wpr3287 Build Instructions</h1>
+<i>wpr3287</i> is built on Windows using the MinGW tools under Cygwin.
+For more information about MinGW, visit the <a href="http://www.mingw.org/">
+MinGW webpage</a>.
+For more information about Cygwin, visit the <a href="http://www.cygwin.com/">
+Cygwin webpage</a>.
+<p>
+The minimum set of Cygwin packages needed to build <i>wpr3287</i> are:
+ <ul>
+     <li>The default set (bash, etc.)</li>
+     <li>The <b>make</b> package from the <b>Devel</b> group.</li>
+     <li>The <b>gcc-core</b> package from the </b>Devel</b> group.</li>
+ </ul>
+</p>
+<p>
+<b>[optional]</b> If you want SSL support, you will need to build a MinGW OpenSSL library.
+ That requres the following packages:
+ <ul>
+     <li>The <b>openssl</b> package from the <b>Net</b> group.  Note that you
+     want the <i>source</i> for <b>openssl</b>, not just the binaries.</li>
+     <li>The <b>perl</b> package from the <b>Interpreters</b> group.</li>
+ </ul>
+ <b>[optional]</b> To build and install the OpenSSL library, use the following
+ Cygwin shell commands:
+ <pre>&nbsp;&nbsp;&nbsp;cd /usr/src/openssl-*
+&nbsp;&nbsp;&nbsp;./Configure --prefix=/usr/local/mingw-openssl mingw
+&nbsp;&nbsp;&nbsp;make
+&nbsp;&nbsp;&nbsp;make install</pre>
+</p>
+<p>
+To build <i>wpr3287</i> (with or without SSL support) start a Cygwin shell, <b>cd</b> to the directory where
+  the source code resides, and type:  
+<pre>&nbsp;&nbsp;&nbsp;make</pre>
+</p>
+  <i>wpr3287</i> was developed primarily on 32-bit Windows XP, but should be
+  buildable on Windows Server 2003 or Windows 2000.  It has not been built
+  or tested on 64-bit Windows or on Windows Vista.
+</p>
+</body>
+</html>
