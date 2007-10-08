@@ -1,0 +1,30 @@
+# Sample x3270 ibm_hosts file.
+#
+# The format of each entry is:
+#
+#   name type [prefix]hostname[:port] [actions]
+#
+# where
+#
+#	name		is a name you wish to give to the host.  This name
+#			can be used on the x3270 command line, and is the
+#			name that will appear on the x3270 "Connect" menu.
+#
+#	type		is one of two keywords.  The value "primary" means
+#			the entry will appear on the "Connect" menu.  The
+#			value "alias" means it will not.
+#
+#	hostname	is the hostname or Internet address of the host to
+#			to connect to.  It can be preceded by a prefix such
+#			as "s:" or "p:" or an LU name (see the x3270 man
+#			page), and it can be followed by a "/" or ":" and a
+#			port number to indicate a TCP port other than the
+#			x3270 default (usually "telnet").
+#
+#	actions		is an x3270 action or actions to execute once the
+#			connection is made and a data-entry field is defined.
+#			If the text looks like x3270 actions, e.g., PF(1),
+#			it is unmodified; otherwise the text is used as a
+#			parameter to the String() action.
+#
+#localhost primary 127.0.0.1
