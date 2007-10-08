@@ -70,6 +70,7 @@
 #define ResFtCharset		"ftCharset"
 #define ResFtCommand		"ftCommand"
 #define ResHighlightBold	"highlightBold"
+#define ResHighlightUnderline	"highlightUnderline"
 #define ResHostsFile		"hostsFile"
 #define ResIconFont		"iconFont"
 #define ResIconLabelFont	"iconLabelFont"

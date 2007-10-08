@@ -192,6 +192,11 @@ extern char		*user_title;
 extern unsigned char	xk_selector;
 #endif /*]*/
 
+#if defined(C3270) && defined(_WIN32) /*[*/
+extern char		*instdir;
+extern char		*myappdata;
+#endif /*]*/
+
 /* Data types and complex global variables */
 
 /*   connection state */

@@ -124,7 +124,7 @@ printer_start(const char *lu)
 	char *tmp;
 	STARTUPINFO startupinfo;
 	PROCESS_INFORMATION process_information;
-	char subcommand[124];
+	char *subcommand;
 	char *space;
 #else /*][*/
 	int stdout_pipe[2];
@@ -386,11 +386,27 @@ printer_start(const char *lu)
 	(void) memset(&startupinfo, '\0', sizeof(STARTUPINFO));
 	startupinfo.cb = sizeof(STARTUPINFO);
 	(void) memset(&process_information, '\0', sizeof(PROCESS_INFORMATION));
+
+	subcommand = NewString(cmd_text);
 	strcpy(subcommand, cmd_text);
 	space = strchr(subcommand, ' ');
 	if (space) {
 		*space = '\0';
 	}
+
+	if (!strcasecmp(subcommand, "wpr3287.exe") || 
+	    !strcasecmp(subcommand, "wpr3287")) {
+	    	char *pc;
+
+	    	pc = xs_buffer("%s%s", instdir, subcommand);
+		Free(subcommand);
+		subcommand = pc;
+
+		pc = xs_buffer("%s%s", instdir, cmd_text);
+		Free(cmd_text);
+		cmd_text = pc;
+	}
+
 	trace_dsn("Printer command line: %s\n", cmd_text);
 	if (CreateProcess(
 	    subcommand,
@@ -409,6 +425,8 @@ printer_start(const char *lu)
 	printer_handle = process_information.hProcess;
 	CloseHandle(process_information.hThread);
 	printer_pid = process_information.dwProcessId;
+
+	Free(subcommand);
 	
 #endif /*]*/
 
