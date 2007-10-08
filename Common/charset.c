@@ -43,7 +43,9 @@
 
 #include <errno.h>
 #include <locale.h>
+#if !defined(_WIN32) /*[*/
 #include <langinfo.h>
+#endif /*]*/
 
 #define EURO_SUFFIX	"-euro"
 #define ES_SIZE		(sizeof(EURO_SUFFIX) - 1)

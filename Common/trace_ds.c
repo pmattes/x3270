@@ -221,10 +221,11 @@ vwtrace(const char *fmt, va_list args)
 		tracef_bufptr += vsprintf(tracef_bufptr, fmt, args);
 	} else if (tracef != NULL) {
 		int n2w, nw;
-		char buf[4096];
+		char buf[16384];
 
 		buf[0] = 0;
-		(void) vsprintf(buf, fmt, args);
+		(void) vsnprintf(buf, sizeof(buf), fmt, args);
+		buf[sizeof(buf) - 1] = '\0';
 		n2w = strlen(buf);
 
 		nw = fwrite(buf, n2w, 1, tracef);
@@ -704,6 +705,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data unused)
 	if (tracef != stdout && appres.trace_monitor) {
 		STARTUPINFO startupinfo;
 		PROCESS_INFORMATION process_information;
+		char *path;
 		char *args;
 
 	    	(void) memset(&startupinfo, '\0', sizeof(STARTUPINFO));
@@ -711,10 +713,10 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data unused)
 		startupinfo.lpTitle = tfn;
 		(void) memset(&process_information, '\0',
 			      sizeof(PROCESS_INFORMATION));
-		args = Malloc(32 + strlen(tfn));
-		sprintf(args, "catf.exe %s", tfn);
+		path = xs_buffer("%scatf.exe", instdir);
+		args = xs_buffer("\"%scatf.exe\" \"%s\"", instdir, tfn);
 		if (CreateProcess(
-		    "catf.exe",
+		    path,
 		    args,
 		    NULL,
 		    NULL,
@@ -724,10 +726,12 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data unused)
 		    NULL,
 		    &startupinfo,
 		    &process_information) == 0) {
-		    	popup_an_error("CreateProcess(catf) failed: %s",
-				win32_strerror(GetLastError()));
+		    	popup_an_error("CreateProcess(%s) failed: %s",
+				path, win32_strerror(GetLastError()));
+			Free(path);
 			Free(args);
 		} else {
+			Free(path);
 		    	Free(args);
 			tracewindow_handle = process_information.hProcess;
 			CloseHandle(process_information.hThread);
@@ -769,7 +773,7 @@ no_tracefile_callback(Widget w, XtPointer client_data,
 static void
 tracefile_on(int reason, enum toggle_type tt)
 {
-	char tracefile_buf[256];
+	char *tracefile_buf = NULL;
 	char *tracefile;
 
 	if (tracef != (FILE *)NULL)
@@ -784,9 +788,10 @@ tracefile_on(int reason, enum toggle_type tt)
 		tracefile = appres.trace_file;
 	else {
 #if defined(_WIN32) /*[*/
-		(void) sprintf(tracefile_buf, "x3trc.%d.txt", getpid());
+		tracefile_buf = xs_buffer("%sx3trc.%u.txt", myappdata,
+			getpid());
 #else /*][*/
-		(void) sprintf(tracefile_buf, "%s/x3trc.%d", appres.trace_dir,
+		tracefile_buf = xs_buffer("%s/x3trc.%u", appres.trace_dir,
 			getpid());
 #endif /*]*/
 		tracefile = tracefile_buf;
@@ -797,6 +802,8 @@ tracefile_on(int reason, enum toggle_type tt)
 #endif /*]*/
 	{
 		tracefile_callback((Widget)NULL, tracefile, PN);
+		if (tracefile_buf != NULL)
+		    	Free(tracefile_buf);
 		return;
 	}
 #if defined(X3270_DISPLAY) /*[*/
@@ -816,6 +823,9 @@ tracefile_on(int reason, enum toggle_type tt)
 
 	popup_popup(trace_shell, XtGrabExclusive);
 #endif /*]*/
+
+	if (tracefile_buf != NULL)
+		Free(tracefile_buf);
 }
 
 /* Close the trace file. */
@@ -1002,7 +1012,7 @@ onescreen_callback(Widget w, XtPointer client_data, XtPointer call_data unused)
 void
 toggle_screenTrace(struct toggle *t unused, enum toggle_type tt)
 {
-	char tracefile_buf[256];
+	char *tracefile_buf = NULL;
 	char *tracefile;
 
 	if (toggled(SCREEN_TRACE)) {
@@ -1010,16 +1020,18 @@ toggle_screenTrace(struct toggle *t unused, enum toggle_type tt)
 			tracefile = appres.screentrace_file;
 		else {
 #if defined(_WIN32) /*[*/
-			(void) sprintf(tracefile_buf, "x3scr.%d.txt",
-				       getpid());
+			tracefile_buf = xs_buffer("%sx3scr.%u.txt",
+				myappdata, getpid());
 #else /*][*/
-			(void) sprintf(tracefile_buf, "%s/x3scr.%d",
+			tracefile_buf = xs_buffer("%s/x3scr.%u",
 				appres.trace_dir, getpid());
 #endif /*]*/
 			tracefile = tracefile_buf;
 		}
 		if (tt == TT_INITIAL || tt == TT_ACTION) {
 			(void) screentrace_cb(NewString(tracefile));
+			if (tracefile_buf != NULL)
+				Free(tracefile_buf);
 			return;
 		}
 #if defined(X3270_DISPLAY) /*[*/
@@ -1041,6 +1053,9 @@ toggle_screenTrace(struct toggle *t unused, enum toggle_type tt)
 			do_screentrace();
 		(void) fclose(screentracef);
 	}
+
+	if (tracefile_buf != NULL)
+		Free(tracefile_buf);
 }
 
 #endif /*]*/

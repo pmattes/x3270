@@ -126,6 +126,9 @@ typedef struct {
 #if defined(X3270_SCRIPT) /*[*/
 	Boolean socket;
 #endif /*]*/
+#if defined(C3270) && defined(_WIN32) /*[*/
+	Boolean highlight_underline;
+#endif /*]*/
 
 	/* Named resources */
 #if defined(X3270_KEYPAD) /*[*/

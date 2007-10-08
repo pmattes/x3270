@@ -343,7 +343,8 @@ Turns on data stream ifelse(XX_PRODUCT,x3270,,`and event ')tracing at startup.
 ifelse(XX_PRODUCT,x3270,`Unlike turning it on from a menu option,
 there is no pop-up to confirm the file name, which defaults to',
 `The default trace file name is')
-ifelse(XX_PRODUCT,wc3270,`XX_FB(w3trc.)`'XX_FI(process_id)',`XX_FB(/tmp/x3trc.)`'XX_FI(process_id)').
+ifelse(XX_PRODUCT,wc3270,`XX_FB(x3trc.)`'XX_FI(process_id)XX_FB(.txt) in the
+XX_FB(wc3270) XX_FI(Application Data) directory',`XX_FB(/tmp/x3trc.)`'XX_FI(process_id)').
 XX_TP(XX_FB(XX_DASHED(tracefile)) XX_FI(file))
 Specifies a file to save data stream and event traces into.
 ifelse(XX_PRODUCT,x3270,`If the value XX_FB(stdout)
