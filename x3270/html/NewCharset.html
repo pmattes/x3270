@@ -1,0 +1,298 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <title>How to Add a Character Set to x3270</title>
+   <link HREF="http://www.w3.org/StyleSheets/Core/Steely" TYPE="text/css" REL="stylesheet">
+</head>
+<body>
+
+<h1>
+How to Add a Character Set to x3270</h1>
+<i>x3270</i> can be configured to use any 8-bit character set. Here's how
+to add the definition for a new one.
+<h2>
+What You Need</h2>
+
+<h3>
+A Name</h3>
+You must pick a name for your character set. We will use the ficticious
+names <i>west-fredonian</i> and <i>east-fredonian </i>in the examples below.
+<h3>
+The IBM Base Character Set, Code Page and CGCSGID</h3>
+An <font size=-1>IBM</font> host uses two 16-bit numbers to describe a
+character set:
+<ul>
+<li>
+The <i>base character set</i> describes the range of glyphs (images of
+each character) that can be displayed. It is like a character generator
+<font size=-1>ROM</font>. The default base character set used by <i>x3270</i>
+is 697 decimal, which corresponds to the <font size=-1>ISO</font> Latin-1
+character set. Another example of a base character set is 1152 decimal,
+used for Turkish and corresponding to the <font size=-1>ISO</font> Latin-5
+character set.</li>
+
+<li>
+A <i>code page</i> maps each <font size=-1>EBCDIC</font> code to a glyph
+in the base character set. The default code page used by <i>x3270</i> is
+37 decimal, which is the U.S. English code page.</li>
+</ul>
+These two numbers are combined into a 32-bit number, called the <font size=-1>CGCSGID</font>.
+The base character set is in the upper 16 bits, and the code page is in
+the lower 16 bits. These are usually expressed in hexadecimal. For example,
+the default <i>x3270</i> <font size=-1>CGCSGID</font> is 0x02b90025.
+<p>You will need to configure <i>x3270</i> with the <font size=-1>CGCSGID</font>
+for the new character set (or just the code page number, if it uses the
+default base character set). You will also need a copy of the code page
+table, which is a printed chart or online image showing the glyph displayed
+for each printable <font size=-1>EBCDIC</font> character. This table will
+allow you to verify that you have correctly configured the character set
+in <i>x3270</i>.
+<p>Many code pages are documented in the <i>3174 Character Set Reference</i>,
+<font size=-1>IBM</font>
+document <a href="http://www.s390.ibm.com:80/bookmgr-cgi/bookmgr.exe/BOOKS/CN7H6001/CCONTENTS?SHELF=EZ2HW120">GA27-3831-06</a>.
+<p>For this example, we find that <font size=-1>IBM</font> hosts use base
+character set 697 for West Fredonian (the same as the <i>x3270</i> default),
+and code page 9991. For East Fredonian, however, they use base character
+set 4992 (containing some unique symbols used only in East Fredonia) and
+code page 9992. This becomes <font size=-1>CGCSGID</font> 0x13802708.
+<h3>
+The Standard X11 Font Registry and Encoding</h3>
+x3270 uses standard X11 fonts in its emulator window.&nbsp; (It can also
+use its own proprietary fonts, but we will not discuss that here.)&nbsp;
+The character set implemented by an X11 font is described by two parameters:
+a <i>registry</i> and an <i>encoding</i>. These are expressed as strings
+separated by a dash; for example, the default display character set used
+by <i>x3270</i> is <font size=-1>ISO</font> Latin-1; its registry and encoding
+is <tt>iso8859-1</tt>. Another example is the display character set used
+for Turkish; it's <tt>iso8859-9</tt>.
+<p>There may be multiple registries and encodings for the same character
+set; this is often an historical artifact of the standards process.&nbsp;
+For example, the Thai character set was originally called <tt>tis620.2529-0</tt>;
+it was later standardized to <tt>iso8859-11</tt>. You may configure <i>x3270</i>
+to accept either name.
+<p>A good reference for non-English font standards is <i><a href="http://czyborra.com/charsets/iso8859.html">The
+ISO 8859 Alphabet Soup</a></i>.
+<p>For this example, we learn that the <font size=-1>ISO</font> standard
+font for East Fredonian is Latin-43, with a registry and encoding of <tt>iso8859-43</tt>.
+(West Fredonian does not require a special font.)
+<h3>
+An X11 Font</h3>
+If your character set is not based on <font size=-1>ISO</font> Latin-1,
+you will need to find one or more X11 fonts which display your character
+set. The character sets must have <i>font properties</i> that match the
+registry and encoding you found above.&nbsp; For example, fonts which implement
+<tt>iso8859-1</tt>
+have a <i>registry</i> font propery value of <tt>iso8859</tt> and an <i>encoding</i>
+font property value of <tt>1</tt>.
+<p>In this example we search the web and discover that on the East Fredonian
+X User's Organization webpage, there is a 12-point Latin-43 font, called
+<tt>eastfredonian-12</tt>. We install it on our server.
+<h3>
+A Translation Table</h3>
+Here's the fun part. You need a table which translates <font size=-1>EBCDIC</font>
+codes to the display character set. These tables are often available from
+file translation utilities such as <i><a href="http://www.iro.umontreal.ca/contrib/recode/HTML/">recode</a></i>.
+For example, to use <i>recode</i> to obtain a translation table for Russian
+(<font size=-1>IBM</font> code page 880 to the KOI8-R Internet standard),
+use the command:
+<blockquote>
+<pre>recode -h IBM880..KOI8-R</pre>
+</blockquote>
+A more difficult situation is when no translation table is available. You
+will need to construct it by hand, by comparing the <font size=-1>EBCDIC</font>
+code page table to a table of your display character set. You can obtain
+a table for any X font with the <i>xfd</i> utility.
+<p>The format of the translation table is simple.&nbsp; It is an <i>x3270</i>
+resource definition with 256 elements, one for each <font size=-1>EBCDIC</font>
+code. The value of each element is a number, representing the display code
+to use for the corresponding <font size=-1>EBCDIC</font> code. For example,
+the value of the 194th entry (corresponding to <font size=-1>EBCDIC</font>
+code X'C1') will probably be 0x41, the display code for a capital 'A'.
+<p>Here is an example for <i>west-fredonian</i>:
+<blockquote>
+<pre>*charset.west-fredonian: #table \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x20 0x01 0x02 0x03 0x9c 0x09 0x86 0x7f \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x97 0x8d 0x8e 0x0b 0x0c 0x0d 0x0e 0x0f \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x10 0x11 0x12 0x13 0x9d 0x85 0x08 0x87 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x18 0x19 0x92 0x8f 0x1c 0x1d 0x1e 0x1f \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x80 0x81 0x82 0x83 0x84 0x0a 0x17 0x1b \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x88 0x89 0x8a 0x8b 0x8c 0x05 0x06 0x07 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x90 0x91 0x16 0x93 0x94 0x95 0x96 0x04 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x98 0x99 0x9a 0x9b 0x14 0x15 0x9e 0x1a \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x20 0xa0 0xa1 0xa2 0xa3 0xa4 0xa5 0xa6 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0xa7 0xa8 0xd5 0x2e 0x3c 0x28 0x2b 0x7c \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x26 0xa9 0xa8 0xa9 0xaa 0xab 0xac 0xad \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0xae 0xb1 0x21 0x24 0x2a 0x29 0x3b 0x7e \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x2d 0x2f 0xaf 0xb0 0xb1 0xb2 0xb3 0xb4 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0xb5 0xb9 0xcb 0x2c 0x25 0x5f 0x3e 0x3f \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0xdf 0xee 0xb6 0xb7 0xb8 0xb9 0xba 0xbb \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0xbc 0x60 0x3a 0x23 0x40 0x27 0x3d 0x22 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0xef 0x61 0x62 0x63 0x64 0x65 0x66 0x67 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x68 0x69 0xbd 0xbe 0xbf 0xc0 0xc1 0xc2 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0xfa 0x6a 0x6b 0x6c 0x6d 0x6e 0x6f 0x70 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x71 0x72 0xc3 0xc4 0xc5 0xc6 0xc7 0xc8 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0xfb 0xe5 0x73 0x74 0x75 0x76 0x77 0x78 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x79 0x7a 0xc9 0xca 0xcb 0xcc 0xcd 0xce \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0xf0 0xf1 0xf2 0xf3 0xf4 0xf5 0xf6 0xf7 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0xf8 0xf9 0xcf 0xd0 0xd1 0xd2 0xd3 0xd4 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x7b 0x41 0x42 0x43 0x44 0x45 0x46 0x47 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x48 0x49 0xe8 0xd5 0xd6 0xd7 0xd8 0xd9 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x7d 0x4a 0x4b 0x4c 0x4d 0x4e 0x4f 0x50 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x51 0x52 0xda 0xe0 0xe1 0xe2 0xe3 0xe4 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x5c 0x9f 0x53 0x54 0x55 0x56 0x57 0x58 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x59 0x5a 0xe5 0xe6 0xe7 0xe8 0xe9 0xea \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x30 0x31 0x32 0x33 0x34 0x35 0x36 0x37 \n\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x38 0x39 0xeb 0xec 0xed 0xfd *0x41 0xff</pre>
+</blockquote>
+The <tt>#table</tt> keyword tells <i>x3270</i> that the definition is a
+full 256-element table (other possibilites are covered in the <i>x3270</i>
+resource documentation). The <tt>\n\</tt> sequence must appear at the end
+of each line, except for the last; it tells <i>x3270</i> to continue the
+entry onto the next line.
+<p>If an <font size=-1>EBCDIC</font> code does not have a translation,
+you should specify 0x00 for it in the table. Note also that <font size=-1>EBCDIC</font>
+codes X'00' through X'3F' are ignored.
+<h4>
+Duplicate Translations</h4>
+Your table may contain duplicate translations, i.e., the same value may
+appear in multiple locations. However, the last instance of the value to
+appear is the one that will be used to do the reverse translation -- translating
+keyboard codes to <font size=-1>EBCDIC</font>. This can cause some confusion.
+For example, the value 0x41 ('A') appears twice in the example above, once
+for <font size=-1>EBCDIC</font> code X'C1', and once for <font size=-1>EBCDIC</font>
+code X'FE'. The last-instance rule says that the display code 0x41 (the
+'A' key on your keyboard) will be translated to <font size=-1>EBCDIC</font>
+code X'FE'. This is probably not what you want.
+<p>The correction for this problem is the asterisk <tt>*</tt> that appears
+before the second entry in the example above. The asterisk means that this
+is a one-way translation, that is, it is used when translating <font size=-1>EBCDIC</font>
+codes for display, but it is not used when translating keyboard input to
+<font size=-1>EBCDIC</font>.
+Thus the above table would translate a keyboard 0x41 ('A') to <font size=-1>EBCDIC</font>
+X'C1', though it would display both <font size=-1>EBCDIC</font> X'C1' and
+X'FE' as an 'A'.
+<h3>
+The print.chars File</h3>
+<tt>print.chars</tt> is an <font size=-1>EBCDIC</font> file which contains
+a grid of all printable <font size=-1>EBCDIC</font> characters. This grid
+has the same layout as the <font size=-1>IBM</font> code page tables. When
+it is uploaded to your host (using the <i>x3270</i> File Transfer facility),
+you can display it to verify the character set mappings. Be sure to upload
+it as a binary file -- it is already in <font size=-1>EBCDIC</font>.
+<p>This file is available in the <tt>Examples/</tt> directory of recent
+<i>x3270</i>
+distributions. It is also available from the <a href="http://www.geocities.com/SiliconValley/Peaks/7814/download/print_chars.tgz"><i>x3270</i>
+web page</a>.
+<h2>
+Steps</h2>
+
+<ol>
+<li>
+Gather the parts listed above.</li>
+
+<li>
+Upload <tt>print.chars</tt> to your host. Be sure to transfer it as a binary
+file (it is already in <font size=-1>EBCDIC</font>).</li>
+
+<li>
+Create a file called <tt>.x3270pro</tt> in your home directory, if there
+isn't one there already.
+<li>
+In that file, put the following information (gathered above), or add this to
+the end of the file:</li>
+
+<br><tt>*codepage.east-fredonian: 0x13802708</tt>
+<br><tt>*displayCharset.east-fredonian: iso8859-43</tt>
+<br><tt>*charset.east-fredonian: #table \n\</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; 0x20 0x01 0x02 ....</tt>
+<br>For West Fredonian, the file <tt>charset/west-fredonain </tt>would
+be a bit simpler. The code page does not need to be a full <font size=-1>CGCSGID</font>,
+and the displayCharset need not be specified:
+<br><tt>*codepage.west-fredonian: 9991</tt>
+<br><tt>*charset.west-fredonian: #table \n\</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; 0x20 0x01 0x02 ....</tt>
+<br>&nbsp;
+<li>
+Run <i>x3270</i>, using your display font and character set definition:</li>
+
+<br><tt>x3270 -efont eastfredonian-12 -charset east-fredonian</tt>
+<br>Or, for West Fredonian (which uses Latin-1):
+<br><tt>x3270 -charset west-fredonian</tt>
+<br>&nbsp;
+<li>
+Log on to your host, and display the <tt>print.chars</tt> file. Compare
+its appearance to the <font size=-1>IBM</font> code page table for your
+character set.</li>
+</ol>
+
+<h3>
+What Might Go Wrong</h3>
+
+<h4>
+Display Font Problems</h4>
+When <i>x3270</i> starts, it may complain about your font:
+<blockquote>Font does not implement 'iso8859-43'
+<br>Assuming ascii-7</blockquote>
+This means that the X11 font you used did not have the proper font properties
+defined. The <b>File->About x3270</b> pop-up will tell you what properties
+were actually found. For example:
+<blockquote><b>Display character set: </b><tt>ascii-7 (require iso8859-43,
+have fso1974-1)</tt></blockquote>
+This can be corrected in one of two ways. First, you can add the registry/encoding
+that the font actually implements to your character set definition.&nbsp;
+In our example, this would mean the following change (entries separated
+by commas mean that any of those listed will be allowed):
+<blockquote>
+<pre>*displayCharset.east-fredonian: iso8859-43,fso1974-1</pre>
+</blockquote>
+Second, you can correct the font itself by editing the font definition
+(the
+<b>.bdf</b> file). To match the example, the <b>.bdf</b> file would
+need to have the following entries:
+<blockquote>
+<pre>CHARSET_REGISTRY "iso8859"
+CHARSET_ENCODING "43"</pre>
+</blockquote>
+
+<h4>
+Wrong Characters Displayed</h4>
+If the wrong glyph is being displayed for one or two characters, you can
+correct it by modifying the <b>charset.<i>xxx</i></b> resource in the character
+set definition file. (Note that the <font size=-1>CMS XEDIT</font> program
+displays a quote character <tt>"</tt> for <font size=-1>EBCDIC</font> code
+X'FF', and the <tt>CMS TYPE</tt> command displays it as a blank, so it
+can be difficult to tell if this character is correct.)
+<p>If the glyphs for the basic characters (A-Z, a-z, 0-9 and some basic
+punctuation) are correctly displayed, but other characters are not, then
+your X11 font probably doesn't implement the character set you want. Try
+<i>xfd</i>
+to verify that the font really includes the right glyphs in the right order
+(as described by the relevant standard).
+<p>If even the most basic characters are incorrectly displayed, then your
+translation table is probably wrong. Make sure that some of the common
+<font size=-1>EBCDIC</font>
+codes are correct, e.g., X'40' is a space (0x20), and X'F0' through X'F9'
+are the digits 0 through 9 (0x30 through 0x39).
+<h4>
+Wrong Characters Transmitted</h4>
+This is a subtle problem, that usually comes from having duplicate entries
+in the <b>charset.<i>xxx</i></b> resource. A common symptom is something
+like this in a host session:
+<blockquote>
+<pre>type print chars
+DMSOPN026E Invalid character y in fileid type module
+Invalid CMS command</pre>
+</blockquote>
+I.e., the host seems to be confused by ordinary printable characters. The
+cause of this problem is multiple <font size=-1>EBCDIC</font> codes being
+displayed as the same character (in this example, 'y' (0x79)). The correct
+<font size=-1>EBCDIC</font>
+code for 'y' is X'A8'. You can verify this by examining the <b>charset.<i>xxx</i></b>
+resource and searching for multiple instances of 0x79. Then you can correct
+the problem by putting an asterisk
+<tt>*</tt> in front of all of the 0x79
+entries except for the one that corresponds to <font size=-1>EBCDIC</font>
+X'A8'.
+</body>
+</html>

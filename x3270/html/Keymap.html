@@ -1,0 +1,166 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <title>Creating a Custom x3270 Keymap</title>
+   <link HREF="http://www.w3.org/StyleSheets/Core/Steely" TYPE="text/css" REL="stylesheet">
+</head>
+<body>
+
+<h1>
+How to Create a Custom x3270 Keymap</h1>
+
+<h2>
+It Might Already be Defined</h2>
+First, you might want to make sure that the action you want isn't already
+defined in the default keymap. The default keymap, documented on the <a href="x3270-man.html#default-keymap"><b>x3270</b>
+manual page</a>, defines common actions using the <b>Meta</b> key. For
+example, the <b>Reset</b> action, which unlocks the keyboard, is defined
+as <b>Meta</b>-R.
+<h2>
+You Might Just Need the <tt>Alt</tt> Keymap</h2>
+If your keyboard does not have a <b>Meta</b> key, it probably has an <b>Alt</b>
+key. For such keyboards, there is an alternate version of the default keymap,
+called <tt>alt</tt>; it defines the same actions using the <b>Alt</b> key
+instead.&nbsp; You can also specify the <tt>alt</tt> keymap at start-up
+with the command:
+<blockquote>
+<pre>x3270 -keymap alt</pre>
+</blockquote>
+You can also select the <tt>alt</tt> keymap at runtime with the <b>Options->Change
+Keymap...</b> menu option; type <tt>alt</tt> in the pop-up window.
+<h2>
+Defining a Simple Keymap in <tt>.x3270pro</tt></h2>
+If the action you want isn't defined in the default keymap or the <tt>alt</tt>
+keymap, then you need to create a custom keymap.&nbsp; The easiest way
+to do this is as follows. Using your favorite editor, create a file called
+<tt>.x3270pro</tt>
+in your home directory.&nbsp; In that file, put the following:
+<blockquote>
+<pre>! Use the 'mine' keymap, defined below
+x3270.keymap: mine
+! Definition of the 'mine' keymap
+x3270.keymap.mine: #override \
+&nbsp;&nbsp;&nbsp; &lt;Key>Prior: PF(7)\n\
+&nbsp;&nbsp;&nbsp; &lt;Key>Next: PF(8)</pre>
+</blockquote>
+The first entry (<tt>x3270.keymap</tt>) tells <b>x3270</b> to use the keymap
+named <tt>mine</tt>.&nbsp; The second entry (<tt>x3270.keymap.mine</tt>)
+is the definition of the <tt>mine</tt> keymap itself.
+<p>Now, run <b>x3270</b>, and do not specify a <b>-keymap</b> option.&nbsp;
+The <b>Page Up</b> key will now emulate the 3270 <b>PF7</b> key, and the
+<b>Page
+Down</b> key will emulate the 3270 <b>PF8</b> key.&nbsp; (If you do not
+have a <b>Page Up</b> or <b>Page Down</b> key, or if these keys do not
+generate the X11 <tt>Prior</tt> and <tt>Next</tt> keysyms, this will not
+work, but for most PC-based systems, it will.)
+<h2>
+Rules for Keymap Definitions</h2>
+You may now edit the keymap to create your own custom definition. The full
+set of rules for keymaps (which are actually X11 <i>Translation Tables</i>)
+takes a couple of chapters in a book -- I would suggest two O'Reilly's
+books (<a href="http://www.oreilly.com/catalog/v4m/">Volume 4M: X Toolkit
+Intrinsics Programming Manual</a>, and <a href="http://www.oreilly.com/catalog/v5/">Volume
+5: X Toolkit Intrinsics Reference Manual</a>) -- but here are the basics:
+<ul>
+<li>
+The first line is always:</li>
+
+<ul>
+<pre>x3270.keymap.<i>name</i>: #override \</pre>
+</ul>
+where <i>name</i> is replaced by the name of the keymap you want to define.
+(Note the backslash, which <b>must</b> be the last character on the line).
+<li>
+The body (middle) lines always have the format:</li>
+
+<ul>
+<pre><i>modifier</i> &lt;Key> <i>keysym</i> : <i>Action</i>(<i>args</i>)\n\</pre>
+</ul>
+where:
+<ul><i>modifier</i> is an optional keyboard modifier such as <tt>Shift</tt>
+or <tt>Ctrl</tt>
+<br><i>keysym</i> is an X11 keysym: a symbolic name for a key, such as
+<tt>semicolon</tt>
+(the ';' key) or <tt>BackSpace</tt> (the Backspace key)
+<br><i>Action</i> is an <b>x3270</b> action such as <tt>Enter</tt> or <tt>PF</tt>
+<br><i>args</i> are the optional action arguments, such as a number to
+specify which PF key to transmit.</ul>
+Note that each body line <b>must</b> end with the three characters '<tt>\n\</tt>'.
+<li>
+The last line is the same as the body lines, but <b>must not</b> have the
+'<tt>\n\</tt>' at the end:</li>
+
+<ul>
+<pre><i>modifier</i> &lt;Key> <i>keysym</i> : <i>Action</i>(<i>args</i>)</pre>
+</ul>
+
+<li>
+More-specific definitions must come before less-specific definitions.&nbsp;
+For example, the definition for <tt>Shift&lt;Key>Backspace</tt> must come
+before the definition for <tt>&lt;Key>BackSpace</tt> (which also 'matches'
+the BackSpace key with the Shift key pressed).</li>
+</ul>
+
+<h2>
+How to Find the Keysyms</h2>
+To find out which keysym is being generated for any given key on your keyboard,
+start <b>x3270</b>, but do not connect to a host.&nbsp; Then select the
+<b>File->Trace
+Keyboard and Mouse Events</b> menu option, and press the
+<b>No File</b>
+button on the pop-up.
+<p>An <i>xterm</i> window will appear.&nbsp; In that window, several lines
+of text will appear for each key you press.&nbsp; Each entry will begin
+with the text for the left-hand side of a keymap entry that will match
+the key you pressed.&nbsp; You can cut and paste the text into your keymap
+definition.
+<h2>
+How to Find the Actions</h2>
+These are documented on the <a href="x3270-man.html#actions"><b>x3270</b>
+manual page</a>.
+<h2>
+How to Debug Your Keymap</h2>
+There are two <b>x3270</b> options to aid with keymap debugging.&nbsp;
+The <b>File->Trace Keyboard and Mouse Events</b> menu option pops up an
+<i>xterm</i>
+window which traces each keyboard and mouse event that <b>x3270</b> processes.&nbsp;
+The information traced includes the keymap (and line within the keymap)
+that matched the event, the <b>x3270</b> action that was run in response,
+and if for some reason the action did not work, why it did not work.
+<p>The <b>Options->Display Current Keymap</b> menu option pops up a window
+which displays the current keymap. This pop-up tells you exactly which
+keymap entries are active, and can be sorted by keymap name, event, or
+action name.&nbsp; Often times it will point out that <b>x3270</b> isn't
+using the keymap you thought it was, or that some of your keymap entries
+are interfering with one another (such as the more-specific rule described
+above).
+<p>Note that one of the commonest problems in configuring <b>x3270</b>
+is figuring out where resources are being defined. Keymaps are defined
+using resources, so this problem can complicate keymap definitions.&nbsp;
+X11 resources can be defined in a number of different places:
+<ul>
+<li>
+In your X server, by reading them in with the <i>xrdb</i> command</li>
+
+<li>
+In the file <tt>.Xdefaults</tt> in your home directory</li>
+
+<li>
+In the file <tt>.Xdefaults-<i>hostname</i></tt> in your home directory</li>
+
+<li>
+In the file <tt>/usr/X11R6/lib/X11/app-defaults/X3270</tt> (this is disabled
+by default, but <b>x3270</b> can be built to consult this file)</li>
+
+<li>
+In the definitions compiled into <b>x3270</b> from the file <tt>X3270.xad</tt></li>
+
+<li>
+In the file <tt>.x3270pro</tt> in your home directory</li>
+</ul>
+Note that of the above list, <tt>.x3270pro</tt> is guaranteed to be consulted
+last, and its definitions override anything that appears in any of the
+other places.&nbsp; This is why the example in this document uses <tt>.x3270pro</tt>.
+</body>
+</html>
