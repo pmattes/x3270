@@ -1,0 +1,12 @@
+#!/bin/bash
+# Create a Cygwin standalone zip file
+set -e
+set -x
+rm -rf standalone/ c3270-standalone.zip
+mkdir standalone
+mkdir standalone/c
+dlls=$(strings c3270.exe | grep '^cyg.*\.dll' | sed 's@^@/bin/@')
+cp -p c3270.exe runc3270.bat $dlls standalone/
+cp -p /usr/share/terminfo/c/cygwin standalone/c/
+zip -j c3270-standalone standalone/*
+rm -rf standalone/

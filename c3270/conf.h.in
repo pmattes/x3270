@@ -1,0 +1,66 @@
+/*
+ * Copyright 2000, 2001, 2002, 2005, 2006 by Paul Mattes.
+ *   Permission to use, copy, modify, and distribute this software and its
+ *   documentation for any purpose and without fee is hereby granted,
+ *   provided that the above copyright notice appear in all copies and that
+ *   both that copyright notice and this permission notice appear in
+ *   supporting documentation.
+ *
+ * c3270 is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+ *
+ */
+
+/*
+ *	conf.h
+ *              System-specific #defines for libraries and library functions.
+ *		Automatically generated from conf.h.in by configure.
+ */
+
+
+/* Libraries. */
+#undef HAVE_LIBNCURSESW
+#undef HAVE_LIBNCURSES
+#undef HAVE_LIBCURSES
+#undef HAVE_LIBUTIL
+#undef HAVE_LIBSOCKET
+#undef HAVE_LIBREADLINE
+#undef HAVE_LIBSSL
+
+/* Header files. */
+#undef HAVE_NCURSESW_H
+#undef HAVE_NCURSES_H
+#undef HAVE_CURSES_H
+#undef HAVE_SYS_SELECT_H
+#undef HAVE_READLINE_HISTORY_H
+#undef HAVE_PTY_H
+#undef HAVE_LIBUTIL_H
+#undef HAVE_UTIL_H
+#undef HAVE_GETOPT_H
+
+/* Uncommon functions. */
+#undef HAVE_VASPRINTF
+#undef HAVE_FSEEKO
+
+/* Default pager. */
+#define LESSPATH ""
+#define MOREPATH ""
+
+/* Wide curses. */
+#undef CURSES_WIDE
+
+/* Broken stuff. */
+#undef BROKEN_NEWTERM
+
+/* Optional parts. */
+#undef X3270_ANSI
+#undef X3270_APL
+#undef X3270_DBCS
+#undef X3270_FT
+#undef X3270_LOCAL_PROCESS
+#undef X3270_PRINTER
+#undef X3270_SCRIPT
+#undef X3270_TN3270E
+#undef X3270_TRACE
+#undef X3270_PLUGIN

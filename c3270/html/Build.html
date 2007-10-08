@@ -1,0 +1,153 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css"
+ rel="stylesheet">
+  <title>c3270 Build and Install Instructions</title>
+</head>
+<body>
+    
+<h1> c3270 Build and Install Instructions</h1>
+  To build <i>c3270</i>, type:  
+<pre>&nbsp;&nbsp;&nbsp; ./configure<br>&nbsp;&nbsp;&nbsp; make</pre>
+  To install <i>c3270</i> in the default install directory (<tt>/usr/local</tt>),
+ type:  
+<pre>&nbsp;&nbsp;&nbsp; make install</pre>
+
+<h3>Notes for Cygwin</h3>
+The minimum set of Cygwin packages needed to compile <i>c3270</i> are:
+<ul>
+    <li>The default set (bash, etc.)</li>
+    <li>The <b>make</b> package from the <b>Devel</b> group</li>
+    <li>The <b>gcc-core</b> package from the <b>Devel</b> group</li>
+    <li>The <b>libncurses-devel</b> package from the <b>Devel</b> group</li>
+</ul>
+Optional features require some additional packages:
+<ul>
+    <li>For SSL support, you need the <b>openssl-devel</b> package from the
+    <b>Devel</b> group</li>
+    <li>For command-line editing and history, you need the <b>readline</b>
+    package from the <b>Devel</b> group</li>
+    <li>To build a standalone ZIP file (see below), you need the <b>zip</b>
+    package from the <b>Archive</b> group</li>
+</ul>
+To build a standalone version of <i>c3270</i> (a ZIP file containing
+<tt>c3270.exe</tt> and the minimum set of Cygwin libraries and configuration
+files -- thus allowing c3270 to be installed and run without a
+full Cygwin installation), type:
+<pre>&nbsp;&nbsp;&nbsp; make c3270-standalone-zip</pre>
+    
+<h3> Notes for Sun's C Compiler</h3>
+  <font size="+0">Do not use Sun's BSD-compatibility compiler, <tt>/usr/ucb/cc</tt>.
+ This is good advice in general, but in particular, <i>c3270</i> will not
+build with it. In general, you must have a directory containing <tt>gcc</tt>
+(preferred) or Sun's ANSI C compiler (usually in <tt>/usr/ccs/bin</tt>) in
+your $PATH ahead of <tt>/usr/ucb</tt>.</font>  
+<h2> Summary of <tt>configure</tt> Options</h2>
+  The <i>c3270</i> <tt>configure</tt> script accepts the following options:
+ <br>
+ &nbsp;  
+<table border="3" cellspacing="3" cellpadding="3">
+  <tbody>
+     <tr>
+  <td><tt>--help</tt></td>
+   <td>Print a help message.</td>
+  </tr>
+   <tr>
+  <td><tt>--prefix=<i>prefix</i></tt></td>
+   <td>Install architecture-independent files under <i>prefix</i> (defaults
+ to <tt>/usr/local</tt>)</td>
+  </tr>
+   <tr>
+  <td><tt>--exec-prefix=<i>eprefix</i></tt></td>
+   <td>Install architecture-dependent files (executables) under <i>eprefix</i>
+ (defaults to same as <i>prefix</i>)</td>
+  </tr>
+   <tr>
+  <td><tt>--bindir=<i>dir</i></tt></td>
+   <td>Install user executables (<i>c3270</i>, <i>x3270if</i>, <i>pr3287</i>)
+ in <i>dir</i> (defaults to <i>eprefix</i><tt>/bin</tt>)&nbsp;</td>
+  </tr>
+   <tr>
+  <td><tt>--sysconfdir=<i>dir</i></tt></td>
+   <td>Install configuration files (<tt>ibm_hosts</tt>, character sets) in
+       <i>dir</i> (defaults to <i>prefix</i><tt>/etc</tt>).</td>
+  </tr>
+   <tr>
+  <td><tt>--without-readline</tt></td>
+   <td>Don't use the <i>readline</i> command-line editing library, even if
+ it is found on the system.</td>
+  </tr>
+   <tr>
+  <td><tt>--without-pr3287</tt></td>
+   <td>Don't build <i>pr3287</i>. <br>
+ Useful if you don't need printer session support, or if you want to build 
+      <i>pr3287</i> separately or with different configuration options.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-ansi</tt></td>
+   <td>Leave out NVT (ANSI) support. <br>
+ Note that NVT support is required for TN3270E support.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-apl</tt></td>
+   <td>Leave out APL character support.</td>
+  </tr>
+   <tr>
+       <td valign="top"><tt>--enable-dbcs</tt><br>
+       </td>
+       <td valign="top">Build in DBCS (Double Byte Character Set) support.<br>
+       </td>
+     </tr>
+          <tr>
+  <td><tt>--disable-ft</tt></td>
+   <td>Leave out IND$FILE file transfer support.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-local-process</tt></td>
+   <td>Leave out local process (connecting to "-e <i>shell_command</i>")
+support.        <br>
+ This will be automatically disabled if the local system does not support
+the       <i>forkpty</i>() library call.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-printer</tt></td>
+   <td>Leave out printer session (<i>pr3287</i>) support.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-script</tt></td>
+   <td>Leave out scripting support.</td>
+  </tr>
+   <tr>
+       <td valign="top"><tt>--disable-ssl</tt><br>
+       </td>
+       <td valign="top">Leave out SSL (Secure Sockets Layer) support. &nbsp;SSL
+ support requires the OpenSSL library.<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top"><tt>--with-ssl=<i>dir</i></tt><br>
+       </td>
+       <td valign="top">Specify the directory where the OpenSSL library is
+ installed.<br>
+       </td>
+     </tr>
+     <tr>
+  <td><tt>--disable-tn3270e</tt></td>
+   <td>Leave out TN3270E support.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-trace</tt></td>
+   <td>Leave out tracing support.</td>
+  </tr>
+     
+  </tbody> 
+</table>
+    
+<p>Leaving out all of the optional features will result in a smaller binary.
+ </p>
+ <br>
+ <br>
+</body>
+</html>
