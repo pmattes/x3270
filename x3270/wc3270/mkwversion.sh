@@ -1,0 +1,28 @@
+#! /bin/sh
+#
+# Copyright 1999, 2005, 2007 by Paul Mattes.
+#  Permission to use, copy, modify, and distribute this software and its
+#  documentation for any purpose and without fee is hereby granted,
+#  provided that the above copyright notice appear in all copies and that
+#  both that copyright notice and this permission notice appear in
+#  supporting documentation.
+#
+# wc3270 is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the file LICENSE
+# for more details.
+#
+# Create wversion.o from version.txt
+#set -x
+
+set -e
+
+. ./version.txt
+
+trap 'rm -f wversion.c' 0 1 2 15
+
+cat <<EOF >wversion.c
+char *wversion = "v$version";
+EOF
+
+${1-cc} -c wversion.c
