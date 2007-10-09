@@ -1,0 +1,123 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <title>Creating a Custom wc3270 Keymap</title>
+   <link HREF="http://www.w3.org/StyleSheets/Core/Steely" TYPE="text/css" REL="stylesheet">
+</head>
+<body>
+
+<h1>How to Create a Custom wc3270 Keymap</h1>
+
+<h2>It Might Already be Defined</h2>
+First, you might want to make sure that the action you want isn't already
+defined in the default keymap. The default keymap, documented on the
+<a href="wc3270-man.html#default-keymap"><b>wc3270</b>
+manual page</a>, defines many common actions.
+For example, the <b>Reset</b> action, which unlocks the keyboard, is defined
+as <b>Alt</b>-r.
+<h2>Defining a Keymap in a File</h2>
+If the mappings you want aren't defined in the default keymap,
+you can create a custom keymap.
+The easiest way to do this is to follow this example -- a custom keymap that
+maps <b>Page Up</b> to <b>PF7</b> and <b>Page Down</b> to <b>PF8</b>.
+<p>
+First, pick a unique name for your keymap, e.g., <i>mine</i>.
+Using a text editor such as <b>notepad</b>, create a file called
+<tt>mine.wc3270km</tt> in the <b>wc3270</b> installation directory.
+(The <b>wc3270</b> installation directory is usually <tt>C:\Program Files\wc3270</tt>, but can vary depending on your Windows installation and the options
+you chose when you installed <b>wc3270</b>.)
+In that file, put the following:
+<blockquote>
+<pre>
+! Definition of the 'mine' keymap
+&lt;Key>PRIOR: PF(7)
+&lt;Key>NEXT: PF(8)</pre>
+</blockquote>
+<p>To use the keymap, you can either create a new <b>wc3270</b>
+session, or you can modify an existing one.
+<p>
+To create a new one, run the <i>wc3270 New Session Wizard</i>.
+The list of available keymaps should now include <b>mine</b>.
+<p>To modify an existing session, use <b>notepad</b> to edit the session
+file.
+(Session files are located in the <b>wc3270</b> installation directory, and
+have the suffix <b>.wc3270</b>, so the session file for <b>foo</b> is called
+<tt>foo.wc3270</tt>.)
+If the session already uses a keymap, it will have a line that starts with
+<tt>wc3270.keymap:</tt>.
+If it has this line, modify it to specify <b>mine</b> instead.
+If it does not have this line, add it:
+<blockquote>
+    <pre>
+    wc3270.keymap: mine
+    </pre>
+</blockquote>
+<p>Now, run your <b>wc3270</b> session.
+The <b>Page Up</b> key should now emulate the 3270 <b>PF7</b> key, and the
+<b>Page Down</b> key should now emulate the 3270 <b>PF8</b> key.
+</p>
+<h2>Rules for Keymap Definition Files</h2>
+You may now edit the keymap to create your own custom definition.
+Here is the full set of rules.
+Each line has the format:
+<ul>
+<pre>[<i>modifier...</i>] &lt;Key> <i>keyname</i>... : <i>action</i>[(<i>args</i>)]...</pre>
+</ul>
+where:
+	<ul>
+		<i>modifier</i> is a keyboard modifier such as
+		<tt>Ctrl</tt> or <tt>Alt</tt><br>
+		<i>keyname</i> is a key name: a symbolic name for a key,
+		such as <tt>semicolon</tt> (the ';' key) or a Windows
+		key name such as <tt>HOME</tt> (the <b>Home</b> key)<br>
+		<i>action</i> is a <b>wc3270</b> action such as <tt>Enter</tt>
+		or <tt>PF</tt><br>
+		<i>args</i> are the optional action arguments, such as a number
+		to specify which PF key to transmit.
+	</ul>
+</ul>
+
+<h2>How to Find the Modifiers</h2>
+The list of modifiers is on the
+<a href="wc3270-man.html#Keymaps">wc3270 manual page</a>.
+<h2>How to Find the Key Names</h2>
+The names for alphanumeric keys are their ISO 8859-1 standard names, e.g.,
+<tt>a</tt> for the <tt>a</tt> key, or <tt>semicolon</tt> for the <tt>;</tt>
+key.
+The list of names for special Windows keys, such as PRIOR, NEXT and HOME,
+is on the <a href="wc3270-man.html#Keymaps">wc3270 manual page</a>.
+<p>
+To find out which key or sequence of keys is being generated for any
+given key on your keyboard, start <b>wc3270</b> with the <b>-set eventTrace</b>
+option.
+<b>wc3270</b> will create a pop-up window showing a trace file, which will
+include several lines of text for each key that is pressed.
+Each entry will include the text for the left-hand side of a keymap entry
+that will match that key.
+You can copy and paste the text into a keymap definition.
+The trace file is <tt>x3trc.<i>pid</i></tt> in the current directory.
+
+<h2>How to Find the Actions</h2>
+These are documented on the <a href="wc3270-man.html#actions"><b>wc3270</b>
+manual page</a>.
+
+<h2>How to Debug Your Keymap</h2>
+There are two <b>wc3270</b> options to aid with keymap debugging.
+The first is the <b>-set eventTrace</b> option described above.
+The information traced includes the keymap (and line within the keymap)
+that matched the event, the <b>wc3270</b> action that was run in response,
+and if for some reason the action did not work, why it did not work.
+<p>The second is the <b>show keymap</b> command at the <b>wc3270></b> prompt,
+which displays the current keymap.
+This tells you exactly which keymap entries are active.
+Often times it will point out that <b>wc3270</b> isn't using the keymap you
+thought it was, or that some of your keymap entries
+are interfering with one another.
+
+<h2>More Information</h2>
+This document is not an exhaustive definition of keymaps -- the complete
+reference is the <a href="wc3270-man.html#Keymaps">wc3270 manual page</a>.
+It describes the many possible, subtle variations of the rules described above.
+</body>
+</html>

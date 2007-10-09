@@ -1,0 +1,67 @@
+# Copyright 1995, 1999, 2000, 2001, 2002, 2004, 2006, 2007 by Paul Mattes.
+#  Permission to use, copy, modify, and distribute this software and its
+#  documentation for any purpose and without fee is hereby granted,
+#  provided that the above copyright notice appear in all copies and that
+#  both that copyright notice and this permission notice appear in
+#  supporting documentation.
+#
+# wc3270 is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+
+# Auxiliary makefile for wc3270
+
+TARDIR=wc3270-3.3
+RM=rm -f
+
+all:
+	@echo "Must pick a specific make target."
+
+# Development tools.
+
+SOURCES = XtGlue.c actions.c ansi.c apl.c c3270.c catf.c charset.c ctlr.c \
+	ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c idle.c keymap.c \
+	kybd.c macros.c print.c printer.c proxy.c resolver.c resources.c \
+	rpq.c screen.c see.c sf.c shortcut.c tables.c telnet.c toggles.c \
+	trace_ds.c utf8.c util.c w3misc.c wide.c winvers.c xio.c
+HEADERS = 3270ds.h actionsc.h ansic.h aplc.h appres.h cg.h charsetc.h \
+	childc.h conf.h ctlr.h ctlrc.h dialogc.h ftc.h ft_cutc.h ft_cut_ds.h \
+	ft_dftc.h ft_dft_ds.h globals.h gluec.h hostc.h icmdc.h idlec.h \
+	keymapc.h keypadc.h kybdc.h localdefs.h macrosc.h menubarc.h \
+	objects.h popupsc.h printc.h printerc.h proxyc.h resolverc.h \
+	resources.h savec.h screen.h screenc.h scrollc.h seec.h selectc.h \
+	sfc.h shlobj_missing.h shortcutc.h statusc.h tablesc.h arpa_telnet.h \
+	telnetc.h tn3270e.h togglesc.h trace_dsc.h utf8c.h utilc.h w3miscc.h \
+	widec.h winversc.h xioc.h xl.h X11/keysym.h
+MISC = version.txt mkversion.sh mkwversion.sh README.txt LICENSE.txt \
+       install-sh X3270.xad mkfb.c Makefile wc3270.rc x3270-icon2.bmp \
+       x3270-icon2.ico wc3270.iss mkshort.c wizard.c
+HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
+	html/Keymap.html html/Lineage.html html/New.html html/README.html \
+	html/Wishlist.html html/wc3270-man.html
+
+FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
+
+tarlist: Makefile.aux
+	$(RM) tarlist
+	for i in $(FILES); \
+	do echo $(TARDIR)/$$i; \
+	done >$@
+
+wc3270.tar: $(FILES) tarlist
+	$(RM) $(TARDIR)
+	ln -s . $(TARDIR)
+	$(RM) $@
+	tar -ch -T tarlist -f $@
+	$(RM) $(TARDIR)
+
+wc3270.tgz: wc3270.tar
+	gzip <wc3270.tar >$@
+
+man: html/wc3270-man.html 
+
+html/wc3270-man.html: x3270.man.m4 ft.inc resources.inc hostname.inc keymaps.inc m42html html.m4 version.txt
+	@rm -f man.tmp
+	./m42html wc3270 x3270.man.m4 >man.tmp
+	mv man.tmp $@
+	@rm -f man.tmp
