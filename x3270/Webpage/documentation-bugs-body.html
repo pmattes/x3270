@@ -1,0 +1,45 @@
+<h1>Known Bugs in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3.6</h1>
+<h2>Bugs Fixed in the Current Patch Release</h2>
+(none)
+<h2>Bugs Fixed but not yet in a Patch Release</h2>
+<ul>
+  <li>The 3270 code cannot be compiled unless <b>struct in6_addr</b> is defined.
+  <br>An <b>x3270</b> fix for this issue is <a href="http://x3270.bgp.nu/download/x3270-3.3.6-01.txt">here</a>.
+  <br>A <b>c3270</b> fix for this issue is <a href="http://x3270.bgp.nu/download/c3270-3.3.6-01.txt">here</a>.
+  <br>A <b>wc3270</b> fix for this issue is <a href="http://x3270.bgp.nu/download/wc3270-3.3.6-01.txt">here</a>.
+  <br>A <b>s3270</b> fix for this issue is <a href="http://x3270.bgp.nu/download/s3270-3.3.6-01.txt">here</a>.
+  <br>A <b>tcl3270</b> fix for this issue is <a href="http://tcl3270.bgp.nu/download/tcl3270-3.3.6-01.txt">here</a>.</li>
+  <li><b>x3270</b> can sometimes crash or hang in a tight loop if the
+  <b>-script</b> option is used.
+  <br>A fix for this issue is
+  <a href="http://x3270.bgp.nu/download/x3270-3.3.6-02.txt">here</a>.</li>
+  <li>Shifted function keys did not always work in <b>x3270</b>.  (They're
+  supposed to map onto PF13-PF24.)
+  <br>A fix for this issue is
+  <a href="http://x3270.bgp.nu/download/x3270-3.3.6-03.txt">here</a>.</li>
+  <li>The <b>x3270</b> window could be resized smaller, but not larger.
+  (Thanks to Navid Sheikhol-Eslami and Karsten Hopp for the fix.)
+  <br>A fix for this issue is
+  <a href="http://x3270.bgp.nu/download/x3270-3.3.6-04.txt">here</a>.</li>
+  <li><b>x3270</b> would crash if tracing was enabled on IBM s390 platforms,
+   and possibly other platforms.
+  <br>A fix for this issue is
+  <a href="http://x3270.bgp.nu/download/x3270-3.3.6-05.txt">here</a>.</li>
+</ul>
+<h2>Outstanding Bugs</h2>
+<ul>
+ <li><b>c3270</b> does not work correctly in UTF-8 locales.
+  In particular, characters in the range 0x80..0xff are displayed incorrectly
+  (note that these refer to display character codes, not host EBCDIC codes).
+  <p>A simple workaround is to ensure that the terminal emulator running
+  <b>c3270</b> (<b>xterm</b>, <b>gnome-terminal</b>, etc.) is not using a
+  UTF-8 locale.
+  For example, you can set the environment variable LANG or LC_CTYPE to
+  <tt>en_US.ISO8859-1</tt> before starting the terminal emulator.</p>
+  <p>A fix for this is in progress, but will be too large to release as a
+  patch.</p>
+ <li>'Flipped' mode (for right-to-left languages) is disabled.</li>
+ <li>File transfer does not support DBCS.</li>
+</ul>
+If you discover any other problems in this software, please contact
+<a href="mailto:Paul.Mattes@usa.net">Paul Mattes</a>.
