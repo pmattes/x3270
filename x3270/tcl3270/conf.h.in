@@ -1,0 +1,44 @@
+/*
+ * Copyright 2000, 2001, 2002, 2005 by Paul Mattes.
+ *   Permission to use, copy, modify, and distribute this software and its
+ *   documentation for any purpose and without fee is hereby granted,
+ *   provided that the above copyright notice appear in all copies and that
+ *   both that copyright notice and this permission notice appear in
+ *   supporting documentation.
+ *
+ * tcl3270 is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+ *
+ */
+
+/*
+ *	conf.h
+ *              System-specific #defines for libraries and library functions.
+ */
+
+
+/* Libraries. */
+#undef HAVE_LIBUTIL
+#undef HAVE_LIBICUI18N
+#undef HAVE_LIBSSL
+
+/* Header files. */
+#undef HAVE_SYS_SELECT_H
+#undef HAVE_PTY_H
+#undef HAVE_LIBUTIL_H
+#undef HAVE_UTIL_H
+#undef HAVE_TCLEXTEND_H
+
+/* Uncommon functions. */
+#undef HAVE_VASPRINTF
+#undef HAVE_FSEEKO
+
+/* Optional parts. */
+#undef X3270_ANSI
+#undef X3270_APL
+#undef X3270_DBCS
+#undef X3270_FT
+#undef X3270_LOCAL_PROCESS
+#undef X3270_TN3270E
+#undef X3270_TRACE

@@ -1,0 +1,163 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>tcl3270 Build and Install Instructions</title>
+  <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css"
+ rel="stylesheet">
+</head>
+<body>
+    
+<h1> tcl3270 Build and Install Instructions</h1>
+  To build <i>tcl3270</i>, type:  
+<pre>&nbsp;&nbsp;&nbsp; ./configure<br>&nbsp;&nbsp;&nbsp; make</pre>
+  To install <i>tcl3270</i> in the default install directory (<tt>/usr/local/bin</tt>),
+ type:  
+<pre>&nbsp;&nbsp;&nbsp; make install</pre>
+    
+<h2> Notes on the Tcl Library</h2>
+  <i>tcl3270</i> uses Tcl 8.4 by default. It assumes that the header file
+<tt>tcl.h</tt>  has been installed in the directory <tt>/usr/local/include</tt>,
+and that  the Tcl library <tt>libtcl8.4.a</tt> has been installed in the
+directory <tt>/usr/local/lib</tt>.  If you have a different version of Tcl,
+or it is installed in different directories, you will need to pass additional
+options to the <tt>configure</tt> script.  
+<p>To use a different version of Tcl, pass the <tt>--with-tcl=</tt> option
+ to <tt>configure</tt>, specifying the other version, e.g: </p>
+ 
+<pre>&nbsp;&nbsp;&nbsp; ./configure --with-tcl=8.2</pre>
+  If you have the Tcl header files or libraries installed in directories
+other than those selected by default, you must pass these options to <tt>configure</tt>. 
+To specify a different header file directory, put a <tt>-I</tt> option in 
+the <tt>CPPFLAGS</tt> variable. To specify a different library directory, 
+put a <tt>-L</tt> option in the <tt>LDFLAGS</tt> variable.&nbsp; For example 
+(using bash, ksh, or sh):  
+<pre>&nbsp;&nbsp;&nbsp; ./configure CPPFLAGS=-I/auto/unsupported/tcl LDFLAGS=-L/auto/unsupported/lib</pre>
+ 
+<pre></pre>
+  <i>tcl3270</i> has <b>not</b> been tested with versions of tcl other than
+ 8.2, 8.3 and 8.4.  
+<h2> Using Extended Tcl (TclX)</h2>
+  <i>tcl3270</i> can also use Extended Tcl (TclX).&nbsp; To use Extended
+Tcl, pass the <tt>--with-tclx</tt> option to <tt>configure</tt>, e.g.:  
+<blockquote>    
+  <pre>./configure --with-tclx</pre>
+  </blockquote>
+  Note that Extended Tcl releases tend to lag behind standard Tcl releases;
+ when this was written, the current release of Extended Tcl was 8.2.&nbsp;
+ So, to build <i>tcl3270</i> with Extended Tcl 8.2, you must have Tcl 8.2
+installed on your system, and you must explicitly specify the version of
+TclX with <tt>configure</tt>:  
+<blockquote>    
+  <pre>./configure --with-tclx=8.2</pre>
+  </blockquote>
+    
+<h2> Notes for Solaris 2.x and Sun's C Compiler</h2>
+  Do not use Sun's BSD-compatibility compiler, <tt>/usr/ucb/cc</tt>. This
+is good advice in general, but in particular, <i>tcl3270</i> will not build
+with it. You must have a directory containing <tt>gcc</tt> (preferred) or
+Sun's standard compiler in your $PATH ahead of <tt>/usr/ucb</tt>.  
+<h2> Summary of <tt>configure</tt> Options</h2>
+  The <i>tcl3270</i> <tt>configure</tt> script accepts the following options:
+ <br>
+ &nbsp;  
+<table border="3" cellspacing="3" cellpadding="3">
+  <tbody>
+     <tr>
+  <td><tt>--help</tt></td>
+   <td>Print a help message.</td>
+  </tr>
+   <tr>
+  <td><tt>--prefix=<i>prefix</i></tt></td>
+   <td>Install architecture-independent files under <i>prefix</i> (defaults
+ to <tt>/usr/local</tt>)</td>
+  </tr>
+   <tr>
+  <td><tt>--exec-prefix=<i>eprefix</i></tt></td>
+   <td>Install architecture-dependent files (executables) under <i>eprefix</i>
+ (defaults to same as <i>prefix</i>)</td>
+  </tr>
+   <tr>
+  <td><tt>--bindir=<i>dir</i></tt></td>
+   <td>Install user executables (<i>tcl3270</i>) in <i>dir</i> (defaults
+to        <i>eprefix</i><tt>/bin</tt>)</td>
+  </tr>
+   <tr>
+  <td><tt>--sysconfdir=<i>dir</i></tt></td>
+   <td>Install configuration files (character sets) in <i>dir</i><tt>/x3270</tt>
+ (defaults to <i>prefix</i><tt>/etc</tt>).</td>
+  </tr>
+   <tr>
+  <td><tt>--with-tcl=<i>version</i></tt></td>
+   <td>Use a different version of the Tcl library. The default is <tt>8.4</tt>.</td>
+  </tr>
+   <tr>
+  <td><tt>--with-tclx</tt> <br>
+       <tt>--with-tclx=<i>version</i></tt></td>
+   <td>Use the Extended Tcl library. The TclX library must be the same version
+ as the Tcl library. <br>
+ If an explicit <i>version</i> is specified, this changes the Tcl library
+version as well.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-ansi</tt></td>
+   <td>Leave out NVT (ANSI) support. <br>
+ Note that NVT support is required for TN3270E support.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-apl</tt></td>
+   <td>Leave out APL character support.</td>
+  </tr>
+   <tr>
+       <td valign="top"><tt>--enable-dbcs</tt><br>
+       </td>
+       <td valign="top">Build in DBCS (Double Byte Character Set) support.<br>
+       </td>
+     </tr>
+          <tr>
+  <td><tt>--disable-ft</tt></td>
+   <td>Leave out IND$FILE file transfer support.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-local-process</tt></td>
+   <td>Leave out local process (connecting to "-e <i>shell_command</i>")
+support.        <br>
+ This will be automatically disabled if the local system does not support
+the       <i>forkpty</i>() library call.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-printer</tt></td>
+   <td>Leave out printer session (<i>pr3287</i>) support.</td>
+  </tr>
+   <tr>
+       <td valign="top"><tt>--disable-ssl</tt><br>
+       </td>
+       <td valign="top">Leave out SSL (Secure Sockets Layer) support. &nbsp;SSL
+ support requires the OpenSSL library.<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top"><tt>--with-ssl=<i>dir</i></tt><br>
+       </td>
+       <td valign="top">Specify the directory where the OpenSSL library is
+ installed.<br>
+       </td>
+     </tr>
+     <tr>
+  <td><tt>--disable-tn3270e</tt></td>
+   <td>Leave out TN3270E support.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-trace</tt></td>
+   <td>Leave out tracing support.</td>
+  </tr>
+     
+  </tbody> 
+</table>
+    
+<p>Leaving out all of the optional features will result in a smaller binary.
+ </p>
+ <br>
+ <br>
+</body>
+</html>

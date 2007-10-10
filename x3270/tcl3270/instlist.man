@@ -1,0 +1,5 @@
+usr
+usr/local
+usr/local/man
+usr/local/man/man1
+usr/local/man/man1/tcl3270.1

@@ -1,0 +1,10 @@
+usr
+usr/local
+usr/local/bin
+usr/local/bin/tcl3270
+usr/local/etc
+usr/local/etc/x3270
+usr/local/etc/x3270/icudt34l_ibm-1027_P100-1995.cnv
+usr/local/etc/x3270/icudt34l_ibm-1385_P100-1997.cnv
+usr/local/etc/x3270/icudt34l_ibm-300_P110-1997.cnv
+usr/local/etc/x3270/icudt34l_ibm-837_P100-2000.cnv

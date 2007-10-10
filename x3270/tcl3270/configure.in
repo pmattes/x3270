@@ -1,0 +1,371 @@
+dnl Copyright 2000, 2001, 2002, 2003, 2005, 2007 by Paul Mattes.
+dnl  Permission to use, copy, modify, and distribute this software and its
+dnl  documentation for any purpose and without fee is hereby granted,
+dnl  provided that the above copyright notice appear in all copies and that
+dnl  both that copyright notice and this permission notice appear in
+dnl  supporting documentation.
+dnl
+dnl tcl3270 is distributed in the hope that it will be useful, but WITHOUT ANY
+dnl WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+dnl FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(tcl3270.c)
+AC_PREREQ(2.50)
+
+dnl Checks for programs.
+AC_PROG_INSTALL
+AC_PROG_CC
+
+dnl Figure out what sort of host this is.
+dnl If it's solaris, then pass the -D__EXTENSIONS__ flag to cc, so that
+dnl all of usual Unix functions are visible to strict ANSI compilers.
+AC_CANONICAL_HOST
+case "$host_os" in
+solaris2*)	XANSI=-D__EXTENSIONS__
+		;;
+darwin*)	XPRECOMP=-no-cpp-precomp
+		;;
+linux*)		XANSI=-D_BSD_SOURCE
+		;;
+*)		XANSI=""
+		;;
+esac
+AC_SUBST(XANSI)
+AC_SUBST(XPRECOMP)
+
+dnl Allow the tcl version to change
+AC_ARG_WITH(tcl, [  --with-tcl=VERSION      Specify Tcl library version [8.3]],
+tclver=$with_tcl, tclver=8.4)
+
+dnl Allow TclX
+AC_ARG_WITH(tclx, [  --with-tclx[=VERSION]   Use TclX], , with_tclx=no)
+
+dnl Set up tclvr (tclver without the period, for BSD)
+dnl Note that --with-tclx=VERSION overrides --with-tcl=VERSION.
+if test "$with_tclx" = no
+then	:
+elif test "$with_tclx" != yes
+then	tclver=$with_tclx
+fi
+tclvr=`echo $tclver | tr -d .`
+
+dnl Checks for header files.
+dnl AC_HEADER_STDC
+dnl AC_HEADER_SYS_WAIT
+dnl AC_CHECK_HEADERS(fcntl.h sys/ioctl.h sys/time.h unistd.h)
+AC_CONFIG_HEADER(conf.h)
+AC_CHECK_HEADERS(sys/select.h)
+AC_CHECK_HEADERS(pty.h)
+AC_CHECK_HEADERS(libutil.h)
+AC_CHECK_HEADERS(util.h)
+
+dnl Check for TCL header files.
+orig_CPPFLAGS="$CPPFLAGS"
+for dir in "" -I/usr/local/include -I/usr/local/include/tcl$tclver -I/usr/local/include/tcl$tclvr
+do	header_fail=0
+	if test -n "$dir"
+	then	AC_MSG_NOTICE(retrying with $dir)
+	fi
+	CPPFLAGS="$orig_CPPFLAGS $dir"
+	AC_CHECK_HEADERS(tcl.h, ,[header_fail=1])
+	if test "$header_fail" -eq 0
+	then	break
+	fi
+	unset `echo ac_cv_header_tcl.h | $as_tr_sh`
+	CPPFLAGS="$orig_CPPFLAGS"
+done
+if test $header_fail -eq 1
+then	AC_ERROR(Can't find tcl header file)
+fi
+if test "$with_tclx" != no
+then	AC_CHECK_HEADERS(tclExtend.h, ,AC_ERROR(Can't find TclX header file))
+fi
+
+dnl Check for SSL header file.
+if test "$enable_ssl" != no
+then	orig_CPPFLAGS="$CPPFLAGS"
+	unset any
+	for dir in "$with_ssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/sssl /usr/ssl /var/ssl /opt/ssl
+	do	header_fail=0
+		if test -n "$dir" -a ! -d "$dir/include"
+		then	header_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -I$dir/include)
+		fi
+		if test -n "$dir"
+		then	CPPFLAGS="$orig_CPPFLAGS -I$dir/include"
+		fi
+		AC_CHECK_HEADERS(openssl/ssl.h, ,[header_fail=1])
+		if test "$header_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_header_openssl/ssl_h | $as_tr_sh`
+		CPPFLAGS="$orig_CPPFLAGS"
+		any=1
+	done
+	if test $header_fail -eq 1
+	then	AC_MSG_WARN(Disabling OpenSSL)
+		enable_ssl="no"
+		unset HAVE_LIBSSL
+	fi
+fi
+
+dnl Check for ICU header file.
+AC_ARG_WITH(icu,[  --with-icu=DIR          specify ICU install directory])
+if test "$enable_dbcs" != no
+then	orig_CPPFLAGS="$CPPFLAGS"
+	unset any
+	for dir in "$with_icu" /usr/local /usr/local/icu /usr/lib/icu /usr/pkg/icu /usr/icu /var/icu /opt/icu
+	do	header_fail=0
+		if test -n "$dir" -a ! -d "$dir/include"
+		then	header_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -I$dir/include)
+		fi
+		if test -n "$dir"
+		then	CPPFLAGS="$orig_CPPFLAGS -I$dir/include"
+		fi
+		AC_CHECK_HEADERS(unicode/ucnv.h, ,[header_fail=1])
+		if test "$header_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_header_unicode/ucnv_h | $as_tr_sh`
+		CPPFLAGS="$orig_CPPFLAGS"
+		any=1
+	done
+	if test $header_fail -eq 1
+	then	AC_MSG_WARN(Disabling DBCS)
+		enable_dbcs="no"
+	fi
+fi
+
+# Figure out the ICU version, which depends on having found the ICU header
+# files above.
+if test "$enable_dbcs" != no
+then	AC_MSG_CHECKING([for ICU version strings])
+	cat >/tmp/icutst$$.c <<EOF
+#include <stdio.h>
+#include "unicode/ucnv.h"
+#define xstr(s)	str(s)
+#define str(s)	#s
+int
+main(int argc, char *argv[])
+{
+	printf("%s %s\n", xstr(U_ICU_VERSION_SUFFIX), U_ICUDATA_NAME);
+	return 0;
+}
+EOF
+	fail=0
+	${CC} ${CPPFLAGS} -o /tmp/icutst$$ /tmp/icutst$$.c || fail=1
+	rm -f /tmp/icutst$$.c
+	if test "$fail" != 1
+	then	icu_suffix=`/tmp/icutst$$ | awk '{print $1}'`
+		ICU_DATA_PREFIX=`/tmp/icutst$$ | awk '{print $2}'`
+		rm -f /tmp/icutst$$
+		if test -z "$icu_suffix" -o -z "$ICU_DATA_PREFIX"
+		then	fail=1
+		fi
+	fi
+	if test "$fail" -eq 0
+	then	AC_MSG_RESULT([$icu_suffix, $ICU_DATA_PREFIX])
+	else	AC_MSG_RESULT([not found])
+		AC_MSG_WARN(Disabling DBCS)
+		enable_dbcs="no"
+	fi
+	if test "$enable_dbcs" != "no"
+	then	icu_enough=`expr $icu_suffix '>=' _2_2`
+		if test $icu_enough -eq 0
+		then	AC_MSG_WARN(ICU version must be 2.2 or later)
+			AC_MSG_WARN(Disabling DBCS)
+			enable_dbcs="no"
+		fi
+	fi
+	if test "$enable_dbcs" != "no"
+	then	icu_needp=`expr $icu_suffix '<' _3_6`
+		if test $icu_needp -eq 1
+		then	ICU_DASHP="-p $ICU_DATA_PREFIX"
+		    	ICU_DATA_PREFIX_=${ICU_DATA_PREFIX}_
+		else	ICU_DASHP=""
+		    	ICU_DATA_PREFIX_=""
+		fi
+	fi
+fi
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+dnl AC_C_CONST
+dnl AC_TYPE_PID_T
+dnl AC_TYPE_SIZE_T
+dnl AC_HEADER_TIME
+
+dnl Checks for orindary library functions.
+dnl AC_PROG_GCC_TRADITIONAL
+dnl AC_FUNC_MEMCMP
+dnl AC_TYPE_SIGNAL
+dnl AC_FUNC_VPRINTF
+dnl AC_CHECK_FUNCS(gettimeofday putenv select socket strerror strstr strtol strtoul)
+AC_CHECK_FUNCS(vasprintf)
+AC_FUNC_FSEEKO
+
+dnl Check for libraries.
+dnl Note that the order here is important.  The last libraries should appear
+dnl first, so that objects in them can be used by subsequent libraries.
+LDFLAGS="$LDFLAGS -lm"
+AC_CHECK_LIB(util, forkpty)
+ORIG_LDFLAGS="$LDFLAGS"
+for dir in "" -L/usr/local/lib
+do	LDFLAGS="$ORIG_LDFLAGS $dir"
+	tcl_failed=0
+	if test -n "$dir"
+	then	AC_MSG_NOTICE(retrying with $dir)
+	fi
+	AC_CHECK_LIB(tcl$tclver, Tcl_Init, , [tcl_failed=1])
+	if test "$tcl_failed" -eq 0
+	then	break
+	fi
+	unset `echo ac_cv_lib_tcl${tclver}___Tcl_Init | $as_tr_sh`
+	tcl_failed=0
+	AC_CHECK_LIB(tcl$tclvr, Tcl_Init, , [tcl_failed=1])
+	if test "$tcl_failed" = 0
+	then	break
+	fi
+	unset `echo ac_cv_lib_tcl${tclvr}___Tcl_Init | $as_tr_sh`
+	LDFLAGS="$ORIG_LDFLAGS"
+done
+if test "$tcl_failed" = 1
+then	AC_ERROR(Can't find TCL library)
+fi
+if test "$with_tclx" != no
+then	AC_CHECK_LIB(tclx$tclver, Tclx_Init, ,
+ AC_CHECK_LIB(tclx$tclvr, Tclx_Init, ,AC_ERROR(Can't find TclX library)))
+fi
+AC_CHECK_LIB(nsl, gethostbyname)
+AC_CHECK_LIB(socket, socket)
+
+dnl Check for SSL libraries.
+if test "$enable_ssl" != no
+then	orig_LDFLAGS="$LDFLAGS"
+	unset any
+	for dir in "$with_ssl" /usr/local /usr/pkg /usr /var /opt
+	do	lib_fail=0
+		if test -n "$dir" -a ! -d "$dir/ssl/lib"
+		then	lib_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -L$dir/ssl/lib)
+		fi
+		if test -n "$dir"
+		then	LDFLAGS="$orig_LDFLAGS -L$dir/ssl/lib"
+		fi
+		AC_CHECK_LIB(crypto, CRYPTO_malloc, , [lib_fail=1])
+		if test "$lib_fail" -eq 0
+		then	AC_CHECK_LIB(ssl, SSL_new, , [lib_fail=1])
+		fi
+		if test "$lib_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_lib_crypto_CRYPTO_malloc | $as_tr_sh`
+		unset `echo ac_cv_lib_ssl_SSL_new | $as_tr_sh`
+		LDFLAGS="$orig_LDFLAGS"
+		any=1
+	done
+	if test $lib_fail -eq 1
+	then	AC_MSG_WARN(Disabling OpenSSL)
+		enable_ssl="no"
+	fi
+fi
+
+# Check for ICU libraries.
+if test "$enable_dbcs" != no
+then	orig_LDFLAGS="$LDFLAGS"
+	unset any
+	for dir in "$with_icu" /usr/local /usr/local/icu /usr/pkg/icu /usr/icu /var/icu /opt/icu
+	do	lib_fail=0
+		if test -n "$dir" -a ! -d "$dir/lib"
+		then	lib_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -L$dir/lib)
+		fi
+		if test -n "$dir"
+		then	LDFLAGS="$orig_LDFLAGS -L$dir/lib"
+		fi
+		AC_CHECK_LIB(icui18n, ucnv_open${icu_suffix}, , [lib_fail=1])
+		if test "$lib_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_lib_icui18n_ucnv_open${icu_suffix} | $as_tr_sh`
+		LDFLAGS="$orig_LDFLAGS"
+		any=1
+	done
+	if test $lib_fail -eq 1
+	then	AC_MSG_WARN(Disabling DBCS)
+		enable_dbcs="no"
+	fi
+fi
+
+dnl Set up the configuration directory.
+LIBX3270DIR='${sysconfdir}/x3270'
+AC_SUBST(LIBX3270DIR)
+
+dnl Check for unwanted parts.
+AC_ARG_ENABLE(ansi,[  --disable-ansi          leave out NVT (ANSI) support])
+case "$enable_ansi" in
+""|yes)	AC_DEFINE(X3270_ANSI,1)
+	;;
+esac
+AC_ARG_ENABLE(apl,[  --disable-apl           leave out APL character support])
+case "$enable_apl" in
+""|yes)	AC_DEFINE(X3270_APL,1)
+	;;
+esac
+AC_ARG_ENABLE(dbcs,[  --disable-dbcs          leave out DBCS support])
+case "$enable_dbcs" in
+no)	CNV="#"
+	;;
+*)	AC_DEFINE(X3270_DBCS,1)
+	DBCS_C="wide.c"
+	DBCS_O="wide.o"
+	CNV=""
+	;;
+esac
+AC_SUBST(DBCS_C)
+AC_SUBST(DBCS_O)
+AC_SUBST(CNV)
+AC_SUBST(ICU_DATA_PREFIX_)
+AC_SUBST(ICU_DASHP)
+AC_ARG_ENABLE(ft,[  --disable-ft            leave out file transfer support])
+case "$enable_ft" in
+""|yes)	AC_DEFINE(X3270_FT,1)
+	;;
+esac
+AC_ARG_ENABLE(local_process,[  --disable-local-process leave out local process support])
+case "$enable_local_process" in
+""|yes)	AC_DEFINE(X3270_LOCAL_PROCESS,1)
+	;;
+esac
+AC_ARG_ENABLE(menus,[  --disable-menus         leave out menu support])
+case "$enable_menus" in
+""|yes)	AC_DEFINE(X3270_MENUS,1)
+	;;
+esac
+AC_ARG_ENABLE(ssl,[  --disable-ssl           leave out OpenSSL support])
+AC_ARG_ENABLE(tn3270e,[  --disable-tn3270e       leave out TN3270E support])
+case "$enable_tn3270e" in
+""|yes)	AC_DEFINE(X3270_TN3270E,1)
+	;;
+esac
+AC_ARG_ENABLE(trace,[  --disable-trace         leave out tracing support])
+case "$enable_trace" in
+""|yes)	AC_DEFINE(X3270_TRACE,1)
+	;;
+esac
+
+dnl Generate the Makefile.
+AC_OUTPUT(Makefile)
