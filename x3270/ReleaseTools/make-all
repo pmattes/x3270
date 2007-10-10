@@ -63,7 +63,7 @@ done
 #set -x
 
 # Pull in the version.
-source x3270/version.txt
+source Common/version.txt
 
 for prod in $prods
 do
@@ -83,8 +83,6 @@ do
 	echo "============================================================"
 	echo "Packaging $prod..."
 	echo "============================================================"
-
-	yresync
 
 	# Make the man page.
 	make -f Makefile.aux man
