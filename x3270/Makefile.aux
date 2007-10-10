@@ -46,7 +46,7 @@ FONTS = 3270-12.bdf 3270-12b.bdf 3270-20.bdf 3270-20b.bdf 3270.bdf 3270b.bdf \
 	3270gt16.bdf 3270gt16b.bdf 3270gt24.bdf 3270gt24b.bdf 3270gt32.bdf \
 	3270gt32b.bdf 3270gt8.bdf 3270h.bdf
 MISC = LICENSE README X3270.xad dryrun ibm_hosts ibm_hosts.man install-sh \
-	mkfb.c mkversion.sh version.txt x3270-script.man x3270.lsm x3270.man \
+	mkfb.c mkversion.sh version.txt x3270-script.man x3270.man \
 	x3270_glue.expect x3270if.man README.dbcs \
 	ibm-837_P100-2000.ucm ibm-1027_P100-1995.ucm ibm-300_P110-1997.ucm \
 	ibm-1388_P103-2001.ucm qcpp-defs.sh x3270hist.pl \
@@ -65,15 +65,15 @@ HTML = html/Attributes.html html/Brackets.html html/Bugs.html html/Build.html \
 	html/ibm_hosts.html html/x3270-man.html html/x3270-script.html \
 	html/x3270.jpg html/x3270.xbm html/x3270if.html
 FT = ft/all.chars ft/print.chars
-DEVKIT = Makefile.aux apl.inc ft.inc gen_lsm html.m4 m42html m42man man.m4 \
-	menus.inc x3270.lsm.tmpl x3270.man.m4 xkeymaps.inc \
+DEVKIT = Makefile.aux apl.inc ft.inc html.m4 m42html m42man man.m4 \
+	menus.inc x3270.man.m4 xkeymaps.inc \
 	instlist.all-xinstall instlist.base instlist.byprefix \
 	x3270/instlist.man
 PR3287 = pr3287/3270ds.h pr3287/Makefile.aux pr3287/Makefile.in pr3287/README \
 	pr3287/arpa_telnet.h pr3287/charset.c pr3287/config.guess \
 	pr3287/config.sub pr3287/configure pr3287/ctlr.c pr3287/ctlrc.h \
 	pr3287/globals.h pr3287/install-sh pr3287/localdefs.h \
-	pr3287/mkversion.sh pr3287/pr3287.c pr3287/pr3287.lsm \
+	pr3287/mkversion.sh pr3287/pr3287.c \
 	pr3287/pr3287.man pr3287/proxyc.h pr3287/proxy.c pr3287/resolverc.h \
 	pr3287/resolver.c pr3287/sf.c pr3287/sfc.h pr3287/tables.c \
 	pr3287/tablesc.h pr3287/telnet.c pr3287/telnetc.h pr3287/tn3270e.h \
@@ -100,12 +100,6 @@ x3270.tar: $(FILES) tarlist
 
 x3270.tgz: x3270.tar
 	gzip <x3270.tar >$@
-
-# x3270.lsm depends circularly on x3270.tgz.  Rather than confusing 'make',
-# we will simply state that it has no dependencies, and use a pseudo-target to
-# generate it.
-lsm:
-	./gen_lsm x3270
 
 configure: configure.in
 	autoconf

@@ -24,10 +24,10 @@ SOURCES = charset.c ctlr.c pr3287.c proxy.c resolver.c see.c sf.c tables.c \
 HEADERS = 3270ds.h ctlrc.h globals.h localdefs.h popupsc.h proxyc.h \
 	resolverc.h seec.h sfc.h tablesc.h telnetc.h tn3270e.h trace_dsc.h \
 	w3miscc.h widec.h arpa_telnet.h
-MISC = Makefile.in mkversion.sh pr3287.man README pr3287.lsm \
-	version.txt pr3287.lsm.tmpl configure install-sh config.sub \
+MISC = Makefile.in mkversion.sh pr3287.man README \
+	version.txt configure install-sh config.sub \
 	config.guess configure.in LICENSE
-DEVKIT = gen_lsm pr3287.man.m4 m42man instlist.base instlist.man
+DEVKIT = pr3287.man.m4 m42man instlist.base instlist.man
 HTML = html/pr3287-man.html html/Build.html html/New.html
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML) 
@@ -48,9 +48,6 @@ pr3287.tar: $(FILES) tarlist
 
 pr3287.tgz: pr3287.tar
 	gzip <pr3287.tar >$@
-
-lsm:
-	./gen_lsm pr3287
 
 man: pr3287.man html/pr3287-man.html
 pr3287.man: pr3287.man.m4 man.m4 version.txt

@@ -35,13 +35,13 @@ HEADERS = 3270ds.h actionsc.h ansic.h aplc.h appres.h cg.h charsetc.h \
 	togglesc.h trace_dsc.h utf8c.h utilc.h w3miscc.h widec.h xioc.h xl.h \
 	X11/keysym.h
 MISC = version.txt c3270.man x3270if.man x3270-script.man ibm_hosts.man \
-	mkversion.sh Makefile.in README LICENSE c3270.lsm \
+	mkversion.sh Makefile.in README LICENSE \
 	x3270if.c x3270_glue.expect configure configure.in conf.h.in \
 	install-sh config.sub config.guess ibm_hosts X3270.xad mkfb.c \
 	ibm-1027_P100-1995.ucm ibm-300_P110-1997.ucm ibm-837_P100-2000.ucm \
 	ibm-1385_P100-1997.ucm x3270hist.pl \
 	make-cygwin-standalone runc3270.bat
-DEVKIT = Makefile.aux c3270.lsm.tmpl gen_lsm x3270.man.m4 html.m4 man.m4 \
+DEVKIT = Makefile.aux x3270.man.m4 html.m4 man.m4 \
 	ft.inc keymaps.inc m42man m42html instlist.base instlist.man
 HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
 	html/Lineage.html html/New.html html/README.html html/Wishlist.html \
@@ -52,7 +52,7 @@ PR3287 = pr3287/README pr3287/ctlr.c pr3287/telnet.c pr3287/sfc.h pr3287/sf.c \
 	pr3287/version.txt pr3287/trace_ds.c pr3287/globals.h \
 	pr3287/localdefs.h pr3287/telnetc.h pr3287/trace_dsc.h \
 	pr3287/Makefile.in pr3287/mkversion.sh pr3287/popupsc.h \
-	pr3287/pr3287.man pr3287/pr3287.lsm pr3287/proxyc.h pr3287/proxy.c \
+	pr3287/pr3287.man pr3287/proxyc.h pr3287/proxy.c \
 	pr3287/resolverc.h pr3287/resolver.c pr3287/configure \
 	pr3287/install-sh pr3287/config.sub pr3287/config.guess \
 	pr3287/arpa_telnet.h pr3287/charset.c pr3287/configure.in \
@@ -78,8 +78,6 @@ c3270.tar: $(FILES) tarlist
 c3270.tgz: c3270.tar
 	gzip <c3270.tar >$@
 
-lsm:
-	./gen_lsm c3270
 configure: configure.in
 	autoconf
 
