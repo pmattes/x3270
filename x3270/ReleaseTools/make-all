@@ -92,15 +92,6 @@ do
 	# Make the tarball.  This may be just for size.
 	make -f Makefile.aux $prod.tgz
 
-	# Make the LSM file.  If it changed, remake the tarball.
-	if [ "$islinux" ]
-	then	make -f Makefile.aux lsm
-		if [ -w $prod.lsm ]
-		then	ci -u -m"$version" $prod.lsm
-			make -f Makefile.aux $prod.tgz
-		fi
-	fi
-
 	# Build it.
 	d2=$PWD
 	if [ "$build" ]
