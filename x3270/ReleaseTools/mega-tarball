@@ -1,0 +1,47 @@
+#!/bin/bash
+# Make a mega-tarball for a given release.
+# Must be run from the Release directorty.
+if [ $# -ne 1 ]
+then	echo >&2 "usage: $0 release-num"
+	exit 1
+fi
+if [ ${PWD##*/} != Release ]
+then	echo >&2 "must be run from the Release directory"
+	exit 1
+fi
+set -e
+#set -x
+if [[ "$1" = *p? ]]
+then	typeset -i patch=${1##*p}
+	echo "Is patch $patch."
+	rev=${1%p*}
+else	echo "Is a base release."
+	typeset -i patch=0
+	rev=$1
+fi
+td=/usr/tmp/mt$$
+rm -rf $td
+mkdir $td
+cd $td
+for i in x3270 c3270 s3270 tcl3270 wc3270 pr3287 wpr3287
+do	typeset -i pp=$patch
+	while (( pp >= 0 ))
+	do	if [ $pp -eq 0 ]
+		then	f=~-/$i-$rev.tgz
+		else	f=~-/$i-${rev}p$pp.tgz
+		fi
+		[ -f $f ] && break
+		if [ $pp -eq 0 ]
+		then	echo >&2 "Can't find a matching rev of $i"
+			exit 1
+		fi
+		pp=pp-1
+	done
+
+	echo "Using $f"
+	tar -xzf $f
+	rm -rf $i-3.3/pr3287/
+done
+tar -czf ~-/suite3270-$1.tgz *
+cd -
+rm -rf $td

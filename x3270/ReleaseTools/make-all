@@ -1,0 +1,176 @@
+#!/bin/bash
+# Make everything.  Really.
+# Must be run in the top-level directory.
+# By default, builds but does not release.
+#  With -nobuild, does not build.
+#  With -release, releases.
+# By default, builds everything.
+#  Can specify individual products as arguments.
+
+# If anything fails, stop.
+set -e
+
+# Make sure 'sort' works correctly.
+export LC_ALL="C"
+
+build=1
+release=""
+
+function usage
+{
+	echo >&2 "Usage: $0 [-nobuild] [-release] [<product>...]"
+	exit 0
+}
+
+# Parse the options.
+while [ $# -gt 0 ]
+do	case "$1" in
+	-help|--help)
+		usage
+		;;
+	-nobuild|--nobuild)
+		build=""
+		shift
+		;;
+	-release|--release)
+		release=1
+		shift
+		;;
+	-*)
+		usage
+		;;
+	*)	break
+		;;
+	esac
+done
+
+# Set up the product list.
+if [ $# -gt 0 ]
+then	prods=$*
+#else	prods="x3270 tcl3270 s3270 pr3287 c3270 lib3270"
+else	prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287"
+fi
+
+# Make sure the product directories exist.
+for i in $prods
+do	if [ ! -d "$i" ]
+	then	echo >&2 "No $i directory -- must be run from top-level dir."
+		exit 1
+	fi
+done
+
+# Trace whatever we do.
+#set -x
+
+# Pull in the version.
+source x3270/version.txt
+
+for prod in $prods
+do
+    	# Some products don't get built on Linux.
+	case "$prod" in
+	wc3270|wpr3287)
+		islinux=""
+		;;
+	*)
+		islinux=1
+		;;
+	esac
+
+	# Save the current directory and go to the product directory
+	d=$PWD
+	cd $prod
+	echo "============================================================"
+	echo "Packaging $prod..."
+	echo "============================================================"
+
+	yresync
+
+	# Make the man page.
+	make -f Makefile.aux man
+
+	# Make the tarball.  This may be just for size.
+	make -f Makefile.aux $prod.tgz
+
+	# Make the LSM file.  If it changed, remake the tarball.
+	if [ "$islinux" ]
+	then	make -f Makefile.aux lsm
+		if [ -w $prod.lsm ]
+		then	ci -u -m"$version" $prod.lsm
+			make -f Makefile.aux $prod.tgz
+		fi
+	fi
+
+	# Build it.
+	d2=$PWD
+	if [ "$build" ]
+	then	echo "============================================================"
+		echo "Building $prod..."
+		echo "============================================================"
+		cd /usr/tmp
+		rm -rf $prod-3.3
+		tar -xzf $d2/$prod.tgz
+		cd $prod-3.3
+		if [ -f configure ]
+		then	./configure LDFLAGS=-lstdc++
+		fi
+		#if [ -f Imakefile ]
+		#then	xmkmf
+		#fi
+		if [ "$islinux" ]
+		then	make -j4 CDEBUGFLAGS="-g -Wall -ansi -pedantic -Werror"
+		else	PATH=$PATH:/usr/local/mingw32/bin make CROSS=1 -j4
+		fi
+		if [ -f $d2/instlist.base ]
+		then	echo "============================================================"
+			echo "Installing $prod..."
+			echo "============================================================"
+			mkdir i
+			make install DESTDIR=$PWD/i
+			find i -print | tail +2 | sed 's/^..//' | sort >cmp.files
+			diff $d2/instlist.base cmp.files || exit 1
+			rm -rf i
+		fi
+		if [ -f $d2/instlist.man ]
+		then	mkdir i
+			make install.man DESTDIR=$PWD/i
+			find i -print | tail +2 | sed 's/^..//' | sort >cmp.files
+			diff $d2/instlist.man cmp.files || exit 1
+			rm -rf i
+		fi
+		if [ -f $d2/instlist.byprefix ]
+		then	mkdir i
+			make install.byprefix DESTDIR=$PWD/i
+			find i -print | tail +2 | sed 's/^..//' | sort >cmp.files
+			diff $d2/instlist.byprefix cmp.files || exit 1
+			rm -rf i
+		fi
+		if [ -f $d2/instlist.all-xinstall ]
+		then	mkdir i
+			./configure --with-all-xinstall LDFLAGS=-lstdc++
+			make install install.man DESTDIR=$PWD/i
+			find i -print | tail +2 | sed 's/^..//' | sort >cmp.files
+			diff $d2/instlist.all-xinstall cmp.files || exit 1
+			rm -rf i
+		fi
+		cd /usr/tmp
+		rm -rf $prod-3.3
+		cd $d2
+	fi
+
+	# Release it.
+	if [ "$release" ]
+	then	echo "============================================================"
+		echo "Releasing $prod..."
+		echo "============================================================"
+		tarball=../../../Release/$prod-$version.tgz
+		if [ -r $tarball ]
+		then	echo >&2 "Error: $tarball already exists"
+			exit 1
+		fi
+		cp -p $prod.tgz $tarball
+		chmod -w $tarball
+	fi
+
+	cd $d
+done

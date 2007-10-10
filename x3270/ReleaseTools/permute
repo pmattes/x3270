@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# Needs to be run from the top of a source tree (where x3270, s3270, tcl3270
+# and c3270 can be seen).
+
+if [ $# -eq 0 ]
+then	progs="x3270 s3270 tcl3270 c3270"
+else	progs="$@"
+fi
+
+for prog in $progs
+do	echo "Trying $prog"
+	rm -rf /usr/tmp/$prog-3.3/
+	p=$PWD
+	cd $prog
+	yresync
+	make -f Makefile.aux $prog.tgz
+	cd /usr/tmp/
+	tar -xzf ~-/$prog.tgz
+	cd $prog-3.3/
+
+	typeset -i b=1
+	unset opts[@]
+	typeset -a opts masks
+	typeset -i n_opts=0
+	for opt in ansi apl local-process printer script tn3270e trace menus keypad ft ssl dbcs
+	do	unset ok
+		case $opt in
+		ansi|apl|local-process|tn3270e|trace|ft|ssl)
+			ok=1
+			;;
+		printer)
+			if [ $prog = x3270 -o $prog = c3270 ]
+			then	ok=1
+			fi
+			;;
+		script)
+			if [ $prog != s3270 -a $prog != tcl3270 ]
+			then	ok=1
+			fi
+			;;
+		menus|keypad)
+			if [ $prog = x3270 ]
+			then	ok=1
+			fi
+			;;
+		dbcs)
+			if [ $prog != c3270 ]
+			then	ok=1
+			fi
+			;;
+		esac
+		if [ "$ok" ]
+		then	opts[$n_opts]=$opt
+			masks[$n_opts]=$b
+			b=b*2
+			n_opts=n_opts+1
+		fi
+	done
+	echo "$prog: possible options are ${opts[@]} ($b combinations)"
+
+	typeset -i x=0
+	while (( x < b ))
+	do	c=""
+		hack=""
+		typeset -i j=0
+		while (( j < n_opts ))
+		do	if (( x & ${masks[$j]} ))
+			then	c="$c --disable-${opts[$j]}"
+			elif	[ ${opts[$j]} = dbcs ]
+			then	hack=LDFLAGS=-lstdc++
+			fi
+			j=j+1
+		done
+		#echo "$c $hack"
+		./configure --without-pr3287 $c $hack >/dev/null 2>&1 || (echo "$prog configure --without-pr3287 $c $hack failed"; exit 1)
+		make clean >/dev/null 2>&1
+		if make -j4 >/tmp/mk$$ 2>&1
+		then	echo -n "."
+		else	echo
+			echo "$prog failed:$c"
+		fi
+		if grep 'warning:' /tmp/mk$$
+		then	echo "Warnings:$c"
+		fi
+		rm /tmp/mk$$
+		x=x+1
+	done
+	echo
+
+	cd ..
+	rm -rf $prog-3.3/
+	cd $p
+done
