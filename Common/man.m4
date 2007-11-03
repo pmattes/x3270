@@ -55,5 +55,6 @@ define(XX_LINK,$2)dnl
 define(XX_COPY,` ')dnl
 define(XX_NOT,notsign)dnl
 define(XX_BACKSLASH,\\$1)dnl
+define(XX_HO)dnl
 dnl Make sure it gets run through tbl first.
 '\" t

@@ -385,7 +385,7 @@ XX_LP
 Note that XX_FB(XX_DASHED(xrm)) options override any definitions in
 the XX_FB(.x3270pro) file.
 ')dnl
-ifelse(XX_PRODUCT,x3270,`XX_SH(Fonts)
+XX_HO(`ifelse(XX_PRODUCT,x3270,`XX_SH(Fonts)
 XX_FB(XX_PRODUCT) does not use the "*font" resource for its main
 window.
 Instead, it uses a custom 14-point font called
@@ -1316,7 +1316,7 @@ XX_TE()
 XX_LP()
 The special types XX_FB(socks4a) and XX_FB(socks5d) can also be used to force
 the proxy server to do the hostname resolution for the SOCKS protocol.
-ifelse(XX_PRODUCT,x3270,,`include(resources.inc)')dnl
+ifelse(XX_PRODUCT,x3270,,`include(resources.inc)')')dnl
 ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_PRODUCT,wc3270,,`XX_SH(Files)
 ifelse(XX_PRODUCT,x3270,/usr/lib/X11,/usr/local/lib)/x3270/ibm_hosts
 XX_BR
