@@ -1,4 +1,4 @@
-dnl Copyright 2000, 2001, 2002, 2007 by Paul Mattes.
+snl Copyright 2000, 2001, 2002, 2007 by Paul Mattes.
 dnl  Permission to use, copy, modify, and distribute this software and its
 dnl  documentation for any purpose and without fee is hereby granted,
 dnl  provided that the above copyright notice appear in all copies and that
@@ -59,6 +59,12 @@ XX_TR(XX_TD(charset)	XX_TD(bracket)	XX_TD(XX_DASHED(charset))	XX_TD(XX_SM(EBCDIC
 XX_TR(XX_TD(charset.`'XX_FI(foo))	XX_TD(XX_NBSP)	XX_TD(XX_NBSP)	XX_TD(Definition of character set XX_FI(foo)))
 ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(composeMap)	XX_TD(latin1)	XX_TD(XX_NBSP)	XX_TD(Name of composed-character map))
 ')dnl
+ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(consoleColorForHostColor`'XX_FI(n))	XX_TD(XX_LINK(#rn4,`(note 6)'))	XX_TD(XX_NBSP)	XX_TD(Color mapping))')dnl
+ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(cursesColorForHostColor`'XX_FI(n))	XX_TD(XX_LINK(#rn4,`(note 6)'))	XX_TD(XX_NBSP)	XX_TD(Color mapping))')dnl
+ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(cursesColorForDefault)	XX_TD(green)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))')dnl
+ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(cursesColorForIntensified)	XX_TD(red)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))')dnl
+ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(cursesColorForProtected)	XX_TD(blue)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))')dnl
+ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(cursesColorForProtectedIntensified)	XX_TD(white)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))')dnl
 ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(cursesKeymap)	XX_TD(True)	XX_TD(XX_NBSP)	XX_TD(Set curses keymap option))
 ')dnl
 ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(defScreen)	XX_TD(XX_NBSP)	XX_TD(XX_DASHED(defscreen))	XX_TD(80-col screen definition))
@@ -69,6 +75,10 @@ XX_TR(XX_TD(erase)	XX_TD(^H)	XX_TD(XX_NBSP)	XX_TD(XX_SM(NVT)-mode erase characte
 XX_TR(XX_TD(extended)	XX_TD(True)	XX_TD(XX_NBSP)	XX_TD(Use 3270 extended data stream))
 XX_TR(XX_TD(eventTrace)	XX_TD(False)	XX_TD(XX_DASHED(trace))	XX_TD(Event tracing))
 XX_TR(XX_TD(ftCommand)	XX_TD(ind$file)	XX_TD(XX_NBSP)	XX_TD(Host file transfer command))
+ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(hostColorForDefault)	XX_TD(green)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))')dnl
+ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(hostColorForIntensified)	XX_TD(red)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))')dnl
+ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(hostColorForProtected)	XX_TD(blue)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))')dnl
+ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(hostColorForProtectedIntensified)	XX_TD(neutralWhite)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))')dnl
 ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(hostsFile)	XX_TD(XX_NBSP)	XX_TD(XX_DASHED(hostsfile))	XX_TD(Host alias/macro file))
 ')dnl
 XX_TR(XX_TD(icrnl)	XX_TD(False)	XX_TD(XX_NBSP)	XX_TD(Map XX_SM(CR) to XX_SM(NL) on XX_SM(NVT)-mode input))
@@ -148,7 +158,17 @@ ifelse(XX_PRODUCT,wc3270,`XX_LP
 XX_TARGET(rn4)XX_FI(Note 4): See XX_LINK(#Printer-Support,XX_SM(PRINTER SUPPORT)) for details.')'
 ifelse(XX_PRODUCT,c3270,`XX_LP
 XX_TARGET(rn5)XX_FI(Note 5): XX_FB(mono) defaults to XX_FB(false) if the
-terminal supports at least 8 colors and to XX_FB(true) otherwise.'))
+terminal supports at least 8 colors and to XX_FB(true) otherwise.')
+ifelse(XX_PRODUCT,wc3270,`XX_LP
+XX_TARGET(rn6)`XX_FI(Note 6): The default console color mappings for host colors
+0 through 15 are: 0, 9, 12, 13, 10, 11, 14, 15, 0, 1, 12, 5, 2, 3, 7, and 15.'
+')dnl
+ifelse(XX_PRODUCT,c3270,`XX_LP
+XX_TARGET(rn6)`XX_FI(Note 6): The default curses color mappings for host colors
+0 through 15 are: black, blue, red, magenta, green, cyan, yellow, white, black,
+blue, yellow, blue, green, cyan, black and white.'
+')dnl
+)dnl
 XX_LP
 ifelse(XX_PRODUCT,c3270,`In XX_FB(.c3270pro), lines are continued with a
 backslash character.

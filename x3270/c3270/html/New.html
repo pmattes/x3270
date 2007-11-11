@@ -29,6 +29,21 @@ c3270 3.3 is the current development line for c3270.
       In addition, the NVT-mode xterm/VT100 emulator will expect UTF-8.</li>
       <li>Added display of the host code page and locale codeset to the
        <b>show status</b> command.</li>
+      <li>Added support for changing the color mappings.  The curses color
+       for a given host color can be specified with the resource
+       <b>c3270.cursesColorForHostColor<i>n</i></b>, where <i>n</i> is a
+       host color number (0 through 15), and the value of the resource is a
+       curses color number (0 through 7).
+       <br>In addition, the field-attribute-based colors used when the host
+       does not specify a particular color can be changed via the following
+       resources:
+       <pre>
+c3270.cursesColorForDefault
+c3270.cursesColorForIntensified
+c3270.cursesColorForProtected
+c3270.cursesColorForProtectedIntensified
+       </pre>
+       The value for each of these is a curses color number (0 through 7).</li>
     </ul>
   </li>
 </ul>
