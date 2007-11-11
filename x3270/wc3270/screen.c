@@ -45,7 +45,7 @@
 extern int screen_changed;
 extern char *profile_name;
 
-#define MAX_COLORS	8
+#define MAX_COLORS	16
 static int cmap_fg[MAX_COLORS] = {
 	0,						/* neutral black */
 	FOREGROUND_INTENSITY | FOREGROUND_BLUE,		/* blue */
@@ -58,6 +58,15 @@ static int cmap_fg[MAX_COLORS] = {
 	FOREGROUND_INTENSITY | FOREGROUND_GREEN | FOREGROUND_RED,
 							/* yellow */
 	FOREGROUND_INTENSITY | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE,
+	0,						/* black */
+	FOREGROUND_BLUE,				/* deep blue */
+	FOREGROUND_INTENSITY | FOREGROUND_RED,		/* orange */
+	FOREGROUND_RED | FOREGROUND_BLUE,		/* purple */
+	FOREGROUND_GREEN,				/* pale green */
+	FOREGROUND_GREEN | FOREGROUND_BLUE,		/* pale turquoise */
+	FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE, /* gray */
+	FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE,							/* white */
+
 							/* neutral white */
 };
 static int cmap_bg[MAX_COLORS] = {
@@ -73,6 +82,43 @@ static int cmap_bg[MAX_COLORS] = {
 							/* yellow */
 	BACKGROUND_INTENSITY | BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_BLUE,
 							/* neutral white */
+	0,						/* black */
+	BACKGROUND_BLUE,				/* deep blue */
+	BACKGROUND_INTENSITY | BACKGROUND_RED,		/* orange */
+	BACKGROUND_RED | BACKGROUND_BLUE,		/* purple */
+	BACKGROUND_GREEN,				/* pale green */
+	BACKGROUND_GREEN | BACKGROUND_BLUE,		/* pale turquoise */
+	BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE, /* gray */
+	BACKGROUND_INTENSITY | BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE,							/* white */
+};
+static int field_colors[4] = {
+	COLOR_GREEN,		/* default */
+	COLOR_RED,		/* intensified */
+	COLOR_BLUE,		/* protected */
+	COLOR_NEUTRAL_WHITE	/* protected, intensified */
+};
+static struct {
+	char *name;
+	int index;
+} host_color[] = {
+	{ "NeutralBlack",	COLOR_NEUTRAL_BLACK },
+	{ "Blue",		COLOR_BLUE },
+	{ "Red",		COLOR_RED },
+	{ "Pink",		COLOR_PINK },
+	{ "Green",		COLOR_GREEN },
+	{ "Turquoise",		COLOR_TURQUOISE },
+	{ "Yellow",		COLOR_YELLOW },
+	{ "NeutralWhite",	COLOR_NEUTRAL_WHITE },
+	{ "Black",		COLOR_BLACK },
+	{ "DeepBlue",		COLOR_DEEP_BLUE },
+	{ "Orange",		COLOR_ORANGE },
+	{ "Purple",		COLOR_PURPLE },
+	{ "PaleGreen",		COLOR_PALE_GREEN },
+	{ "PaleTurquoise",	COLOR_PALE_TURQUOISE },
+	{ "Grey",		COLOR_GREY },
+	{ "Gray",		COLOR_GREY }, /* alias */
+	{ "White",		COLOR_WHITE },
+	{ CN,			0 }
 };
 
 static int defattr = 0;
@@ -121,6 +167,8 @@ static int linedraw_to_acs(unsigned char c);
 static int apl_to_acs(unsigned char c);
 static void relabel(Boolean ignored);
 static void check_aplmap(int codepage);
+static void init_user_colors(void);
+static void init_user_attribute_colors(void);
 
 static HANDLE chandle;	/* console input handle */
 static HANDLE cohandle;	/* console screen buffer handle */
@@ -817,6 +865,10 @@ screen_init(void)
 			defattr |= FOREGROUND_INTENSITY;
 	}
 
+	/* Pull in the user's color mappings. */
+	init_user_colors();
+	init_user_attribute_colors();
+
 	/* Set up the controller. */
 	ctlr_init(-1);
 	ctlr_reinit(-1);
@@ -903,20 +955,54 @@ get_color_pair(int fg, int bg)
 }
 
 /*
+ * Initialize the user-specified attribute color mappings.
+ */
+static void
+init_user_attribute_color(int *a, const char *resname)
+{
+	char *r;
+	unsigned long l;
+	char *ptr;
+	int i;
+
+	if ((r = get_resource(resname)) == CN)
+		return;
+	for (i = 0; host_color[i].name != CN; i++) {
+	    	if (!strcasecmp(r, host_color[i].name)) {
+		    	*a = host_color[i].index;
+			return;
+		}
+	}
+	l = strtoul(r, &ptr, 0);
+	if (ptr == r || *ptr != '\0' || l >= MAX_COLORS) {
+		xs_warning("Invalid %s value: %s", resname, r);
+		return;
+	}
+	*a = (int)l;
+}
+
+static void
+init_user_attribute_colors(void)
+{
+	init_user_attribute_color(&field_colors[0],
+		ResHostColorForDefault);
+	init_user_attribute_color(&field_colors[1],
+		ResHostColorForIntensified);
+	init_user_attribute_color(&field_colors[2],
+		ResHostColorForProtected);
+	init_user_attribute_color(&field_colors[3],
+		ResHostColorForProtectedIntensified);
+}
+
+/*
  * Map a field attribute to a 3270 color index.
  * Applies only to m3270 mode -- does not work for mono.
  */
 static int
 color3270_from_fa(unsigned char fa)
 {
-	static int field_colors[4] = {
-	    COLOR_GREEN,	/* default */
-	    COLOR_RED,		/* intensified */
-	    COLOR_BLUE,		/* protected */
-	    COLOR_NEUTRAL_WHITE		/* protected, intensified */
 #	define DEFCOLOR_MAP(f) \
 		((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
-	};
 
 	return field_colors[DEFCOLOR_MAP(fa)];
 }
@@ -962,6 +1048,42 @@ reverse_colors(int a)
 	    	rv |= FOREGROUND_INTENSITY;
 
 	return rv;
+}
+
+/*
+ * Set up the user-specified color mappings.
+ */
+static void
+init_user_color(const char *name, int ix)
+{
+    	char *r;
+	unsigned long l;
+	char *ptr;
+
+	r = get_fresource("%s%s", ResConsoleColorForHostColor, name);
+	if (r == CN)
+		r = get_fresource("%s%d", ResConsoleColorForHostColor, ix);
+	if (r == CN)
+	    	return;
+
+	l = strtoul(r, &ptr, 0);
+	if (ptr != r && *ptr == '\0' && l <= 15) {
+	    	cmap_fg[ix] = (int)l;
+	    	cmap_bg[ix] = (int)l + 16;
+		return;
+	}
+
+	xs_warning("Invalid %s value '%s'", ResConsoleColorForHostColor, r);
+}
+
+static void
+init_user_colors(void)
+{
+	int i;
+
+	for (i = 0; host_color[i].name != CN; i++) {
+	    	init_user_color(host_color[i].name, host_color[i].index);
+	}
 }
 
 /*
