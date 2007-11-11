@@ -9,7 +9,7 @@
 <h1>New Features in wc3270 3.3
 <hr width="100%"></h1>
 wc3270 3.3 is the current development line for wc3270.
-<h2>Changes in wc3270 3.3.7, Nn. October 2007</h2>
+<h2>Changes in wc3270 3.3.7, Nn. November 2007</h2>
 <ul>
   <li>Bug Fixes:
     <ul>
@@ -30,7 +30,25 @@ wc3270 3.3 is the current development line for wc3270.
        directory for session files and keymaps, after first searching the
        Application Data directory.)
        This makes <b>wc3270</b> a better Windows citizen in general, and a
-       better Vista citizen in general.</li>
+       better Vista citizen in particular.</li>
+      <li>Added support for changing the color mappings.  The console color
+       for a given host color can be specified with the resource
+       <b>wc3270.consoleColorForHostColor<i>n</i></b>, where <i>n</i> is a
+       host color number (0 through 15), and the value of the resource is a
+       console color number (0 through 15).
+       <br>In addition, the
+       field-attribute-based colors used when the host does not specify a
+       particular color can be changed via the following resources:
+       <pre>
+wc3270.hostColorForDefault
+wc3270.hostColorForIntensified
+wc3270.hostColorForProtected
+wc3270.hostColorForProtectedIntensified
+       </pre>
+       The value for each of these is a host color number; the actual color
+       displayed is defined by the corresponding
+       <b>wc3270.consoleColorForHostColor<i>n</i></b>
+       resource.</li>
     </ul>
   </li>
 </ul>
