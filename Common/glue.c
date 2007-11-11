@@ -907,7 +907,17 @@ parse_xrm(const char *arg, const char *where)
 		    !strncasecmp(ResCodepage ".", arg + match_len,
 		                 strlen(ResCodepage ".")) ||
 		    !strncasecmp("host.", arg + match_len, 5) ||
-		    !strncasecmp("printer.", arg + match_len, 8)) {
+		    !strncasecmp("printer.", arg + match_len, 8) ||
+#if defined(_WIN32) /*[*/
+		    !strncasecmp(ResHostColorFor, arg + match_len,
+			    strlen(ResHostColorFor)) ||
+		    !strncasecmp(ResConsoleColorForHostColor, arg + match_len,
+			    strlen(ResConsoleColorForHostColor))
+#else /*][*/
+		    !strncasecmp(ResCursesColorFor, arg + match_len,
+			    strlen(ResCursesColorFor))
+#endif /*]*/
+		    ) {
 			add_buf = Malloc(strlen(s) + 1);
 			address = add_buf;
 			type = XRM_STRING;

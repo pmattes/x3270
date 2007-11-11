@@ -742,11 +742,7 @@ do_qr_color(void)
 
 	trace_ds("> QueryReply(Color)\n");
 
-#if defined(WC3270) /*[*/
-	color_max = 8;
-#else /*][*/
 	color_max = appres.color8? 8: 16; /* report on 8 or 16 colors */
-#endif /*]*/
 
 	space3270out(4 + 2*15);
 	*obptr++ = 0x00;	/* no options */

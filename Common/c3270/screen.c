@@ -78,6 +78,12 @@ static int cmap[16] = {
 	COLOR_BLACK,	/* gray */
 	COLOR_WHITE	/* white */
 };
+static int field_colors[4] = {
+	COLOR_GREEN,	/* default */
+	COLOR_RED,		/* intensified */
+	COLOR_BLUE,		/* protected */
+	COLOR_WHITE		/* protected, intensified */
+};
 static int defattr = A_NORMAL;
 static unsigned long input_id;
 
@@ -98,6 +104,21 @@ static SCREEN *cur_screen = NULL;
 static void parse_screen_spec(const char *str, struct screen_spec *spec);
 #endif /*]*/
 
+static struct {
+	char *name;
+	int index;
+} cc_name[] = {
+	{ "black",	COLOR_BLACK },
+	{ "red",	COLOR_RED },
+	{ "green",	COLOR_GREEN },
+	{ "yellow",	COLOR_YELLOW },
+	{ "blue",	COLOR_BLUE },
+	{ "magenta", COLOR_MAGENTA },
+	{ "cyan",	COLOR_CYAN },
+	{ "white",	COLOR_WHITE },
+	{ CN,	0 }
+};
+
 static int status_row = 0;	/* Row to display the status line on */
 static int status_skip = 0;	/* Row to blank above the status line */
 
@@ -116,6 +137,8 @@ static void set_status_row(int screen_rows, int emulator_rows);
 static Boolean ts_value(const char *s, enum ts *tsp);
 static int linedraw_to_acs(unsigned char c);
 static int apl_to_acs(unsigned char c);
+static void init_user_colors(void);
+static void init_user_attribute_colors(void);
 
 /* Initialize the screen. */
 void
@@ -319,6 +342,10 @@ screen_init(void)
 	if (ab_mode == TS_ON)
 		defattr |= A_BOLD;
 
+	/* Pull in the user's color mappings. */
+	init_user_colors();
+	init_user_attribute_colors();
+
 	/* Set up the controller. */
 	ctlr_init(-1);
 	ctlr_reinit(-1);
@@ -457,21 +484,54 @@ get_color_pair(int fg, int bg)
 }
 
 /*
- * Map a field attribute to a 3270 color index.
+ * Initialize the user-specified attribute color mappings.
+ */
+static void
+init_user_attribute_color(int *a, const char *resname)
+{
+    	char *r;
+	unsigned long l;
+	char *ptr;
+	int i;
+
+    	if ((r = get_resource(resname)) == CN)
+		return;
+	for (i = 0; cc_name[i].name != CN; i++) {
+	    	if (!strcasecmp(r, cc_name[i].name)) {
+		    	*a = cc_name[i].index;
+			return;
+		}
+	}
+	l = strtoul(r, &ptr, 0);
+	if (ptr == r || *ptr != '\0' || l > 7) {
+	    	xs_warning("Invalid %s value: %s", resname, r);
+	    	return;
+	}
+	*a = (int)l;
+}
+
+static void
+init_user_attribute_colors(void)
+{
+	init_user_attribute_color(&field_colors[0],
+		ResCursesColorForDefault);
+	init_user_attribute_color(&field_colors[1],
+		ResCursesColorForIntensified);
+	init_user_attribute_color(&field_colors[2],
+		ResCursesColorForProtected);
+	init_user_attribute_color(&field_colors[3],
+		ResCursesColorForProtectedIntensified);
+}
+
+/*
+ * Map a field attribute to a curses color index.
  * Applies only to m3270 mode -- does not work for mono.
  */
 static int
-color3270_from_fa(unsigned char fa)
+default_color_from_fa(unsigned char fa)
 {
-	static int field_colors[4] = {
-	    COLOR_GREEN,	/* default */
-	    COLOR_RED,		/* intensified */
-	    COLOR_BLUE,		/* protected */
-	    COLOR_WHITE		/* protected, intensified */
 #	define DEFCOLOR_MAP(f) \
 		((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
-
-	};
 
 	return field_colors[DEFCOLOR_MAP(fa)];
 }
@@ -482,7 +542,7 @@ color_from_fa(unsigned char fa)
 	if (appres.m3279) {
 		int fg;
 
-		fg = color3270_from_fa(fa);
+		fg = default_color_from_fa(fa);
 		return get_color_pair(fg, COLOR_BLACK) |
 		    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
 	} else if (!appres.mono) {
@@ -491,6 +551,72 @@ color_from_fa(unsigned char fa)
 	} else {
 	    	/* No color at all. */
 		return ((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL;
+	}
+}
+
+/*
+ * Set up the user-specified color mappings.
+ */
+static void
+init_user_color(const char *name, int ix)
+{
+    	char *r;
+	int i;
+	unsigned long l;
+	char *ptr;
+
+	r = get_fresource("%s%s", ResCursesColorForHostColor, name);
+	if (r == CN)
+		r = get_fresource("%s%d", ResCursesColorForHostColor, ix);
+	if (r == CN)
+	    	return;
+
+	for (i = 0; cc_name[i].name != CN; i++) {
+	    	if (!strcasecmp(r, cc_name[i].name)) {
+		    	cmap[ix] = cc_name[i].index;
+			return;
+		}
+	}
+
+	l = strtoul(r, &ptr, 0);
+	if (ptr != r && *ptr == '\0' && l <= 7) {
+	    	cmap[ix] = (int)l;
+		return;
+	}
+
+	xs_warning("Invalid %s value '%s'", ResCursesColorForHostColor, r);
+}
+
+static void
+init_user_colors(void)
+{
+	static struct {
+		char *name;
+		int index;
+	} host_color[] = {
+	    	{ "NeutralBlack",	COLOR_NEUTRAL_BLACK },
+	    	{ "Blue",		COLOR_BLUE },
+	    	{ "Red",		COLOR_RED },
+	    	{ "Pink",		COLOR_PINK },
+	    	{ "Green",		COLOR_GREEN },
+	    	{ "Turquoise",		COLOR_TURQUOISE },
+	    	{ "Yellow",		COLOR_YELLOW },
+	    	{ "NeutralWhite",	COLOR_NEUTRAL_WHITE },
+	    	{ "Black",		COLOR_BLACK },
+	    	{ "DeepBlue",		COLOR_DEEP_BLUE },
+	    	{ "Orange",		COLOR_ORANGE },
+	    	{ "Purple",		COLOR_PURPLE },
+	    	{ "PaleGreen",		COLOR_PALE_GREEN },
+	    	{ "PaleTurquoise",	COLOR_PALE_TURQUOISE },
+	    	{ "Grey",		COLOR_GREY },
+	    	{ "Gray",		COLOR_GREY }, /* alias */
+	    	{ "White",		COLOR_WHITE },
+		{ CN,			0 }
+	};
+	int i;
+
+	for (i = 0; host_color[i].name != CN; i++) {
+	    	init_user_color(host_color[i].name, host_color[i].index);
 	}
 }
 
@@ -525,7 +651,7 @@ calc_attrs(int baddr, int fa_addr, int fa)
 		else if (ea_buf[fa_addr].fg)
 			fg = cmap[ea_buf[fa_addr].fg & 0x0f];
 		else
-			fg = color3270_from_fa(fa);
+			fg = default_color_from_fa(fa);
 
 		if (ea_buf[baddr].bg)
 			bg = cmap[ea_buf[baddr].bg & 0x0f];
