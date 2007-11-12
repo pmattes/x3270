@@ -45,6 +45,7 @@
 
 #include "winversc.h"
 #include "shortcutc.h"
+#include "windirsc.h"
 
 #define STR_SIZE	256
 #define LEGAL_CNAME	"ABCDEFGHIJKLMNOPQRSTUVWXYZ" \
@@ -1064,7 +1065,6 @@ session_wizard(void)
 	char linkpath[MAX_PATH];
 	char exepath[MAX_PATH];
 	char args[MAX_PATH];
-	char *appdata;
 	HRESULT hres;
 
 	/* Start with nothing. */
@@ -1076,49 +1076,9 @@ session_wizard(void)
 		return -1;
 	}
 
-	/* Figure out where the desktop is. */
-	if (is_nt) {
-		char *userprof;
-
-		userprof = getenv("USERPROFILE");
-		if (userprof == NULL) {
-			printf("Sorry, I can't figure out where your user "
-				"profile is.\n");
-			return -1;
-		}
-		sprintf(desktop, "%s\\Desktop", userprof);
-	} else {
-		char *windir;
-
-		windir = getenv("WINDIR");
-		if (windir == NULL) {
-			printf("Sorry, I can't figure out where %%WINDIR%% "
-				"is.\n");
-			return -1;
-		}
-		sprintf(desktop, "%s\\Desktop", windir);
-	}
-
-	/* Figure out where session files go. */
-	appdata = getenv("APPDATA");
-	if (appdata != NULL) {
-	    sprintf(mya, "%s\\wc3270\\", appdata);
-	} else {
-	    char *windir;
-
-	    if (is_nt) {
-		printf("Cannot determine %%APPDATA%%.\n");
-		return -1;
-	    }
-
-	    /* On Win98, we get to infer it. */
-	    windir = getenv("WINDIR");
-	    if (windir == NULL) {
-		printf("Cannot determine %%WINDIR%%.\n");
-		return -1;
-	    }
-	    sprintf(mya, "%s\\Application Data\\wc3270\\", windir);
-	}
+	/* Get some paths from Windows. */
+	if (get_dirs(desktop, mya) < 0)
+	    	return -1;
 
 	/* Intro screen. */
 	if (intro(&session) < 0)

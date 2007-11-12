@@ -66,6 +66,7 @@
 #if defined(_WIN32) /*[*/
 #include <windows.h>
 #include "winversc.h"
+#include "windirsc.h"
 #endif /*]*/
 
 static void interact(void);
@@ -276,7 +277,6 @@ static void
 save_dirs(char *argv0)
 {
     	char *bsl;
-	char *appdata;
 
 	/* Extract the installation directory from argv[0]. */
 	bsl = strrchr(argv0, '\\');
@@ -287,26 +287,8 @@ save_dirs(char *argv0)
 	    	instdir = "";
 
 	/* Figure out the application data directory. */
-	appdata = getenv("APPDATA");
-	if (appdata != NULL) {
-	    myappdata = xs_buffer("%s\\wc3270\\", appdata);
-	    return;
-	} else {
-	    char *windir;
-
-	    if (is_nt) {
-		fprintf(stderr, "Cannot determine APPDATA.\n");
-		x3270_exit(1);
-	    }
-
-	    /* On Win98, we get to infer it. */
-	    windir = getenv("WINDIR");
-	    if (windir == NULL) {
-		fprintf(stderr, "Cannot determine WINDIR.\n");
-		x3270_exit(1);
-	    }
-	    myappdata = xs_buffer("%s\\Application Data\\wc3270\\", windir);
-	}
+	if (get_dirs(NULL, myappdata) < 0)
+	    	x3270_exit(1);
 }
 #endif /*]*/
 
