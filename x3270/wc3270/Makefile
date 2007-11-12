@@ -39,12 +39,12 @@ SRCS = XtGlue.c actions.c ansi.c apl.c c3270.c charset.c ctlr.c \
 	ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c idle.c kybd.c \
 	macros.c print.c printer.c proxy.c resources.c rpq.c screen.c see.c \
 	sf.c tables.c telnet.c toggles.c trace_ds.c utf8.c util.c \
-	xio.c fallbacks.c keymap.c w3misc.c winvers.c resolver.c
+	xio.c fallbacks.c keymap.c w3misc.c winvers.c windirs.c resolver.c
 VOBJS = XtGlue.o actions.o ansi.o apl.o c3270.o charset.o ctlr.o \
 	fallbacks.o ft.o ft_cut.o ft_dft.o glue.o help.o host.o icmd.o idle.o \
 	keymap.o kybd.o macros.o print.o printer.o proxy.o resolver.o \
 	resources.o rpq.o screen.o see.o sf.o tables.o telnet.o toggles.o \
-	trace_ds.o utf8.o util.o xio.o w3misc.c winvers.o wc3270res.o
+	trace_ds.o utf8.o util.o xio.o w3misc.c winvers.o windirs.o wc3270res.o
 OBJECTS = $(VOBJS) version.o
 LIBS = $(SSLLIB) -lws2_32
 SHRTLIBS = -lole32 -luuid
@@ -79,9 +79,10 @@ wversion.o: version.txt mkwversion.sh
 	@chmod +x mkwversion.sh version.txt
 	sh ./mkwversion.sh $(CC)
 
-wc3270wiz.exe: wizard.o wc3270res.o wversion.o shortcut.o winvers.o
+wc3270wiz.exe: wizard.o wc3270res.o wversion.o shortcut.o winvers.o windirs.o
 	$(CC) -o wc3270wiz.exe $(CFLAGS) \
-		wizard.o wc3270res.o wversion.o shortcut.o winvers.o $(WIZLIBS)
+		wizard.o wc3270res.o wversion.o shortcut.o winvers.o \
+		windirs.o $(WIZLIBS)
 
 catf.exe: catf.c
 	$(CC) -o catf.exe $(CFLAGS) catf.c
