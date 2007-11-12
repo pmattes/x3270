@@ -194,7 +194,7 @@ extern unsigned char	xk_selector;
 
 #if defined(C3270) && defined(_WIN32) /*[*/
 extern char		*instdir;
-extern char		*myappdata;
+extern char		myappdata[];
 #endif /*]*/
 
 /* Data types and complex global variables */
