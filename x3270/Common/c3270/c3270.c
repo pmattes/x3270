@@ -257,7 +257,7 @@ Boolean dont_return = False;
 
 #if defined(_WIN32) /*[*/
 char *instdir = NULL;
-char *myappdata = NULL;
+char myappdata[MAX_PATH];
 #endif /*]*/
 
 void
