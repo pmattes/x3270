@@ -84,6 +84,7 @@
 #include "telnetc.h"
 #if defined(_WIN32) /*[*/
 #include "wsc.h"
+#include "windirsc.h"
 #endif /*]*/
 
 #if defined(_IOLBF) /*[*/
@@ -140,6 +141,10 @@ static int proxy_type = 0;
 static char *proxy_host = CN;
 static char *proxy_portname = CN;
 static unsigned short proxy_port = 0;
+
+#if defined(_WIN32) /*[*/
+char appdata[MAX_PATH];
+#endif /* ]*/
 
 void pr3287_exit(int);
 
@@ -352,6 +357,9 @@ main(int argc, char *argv[])
 	if ((printer = getenv("PRINTER")) == NULL) {
 		printer = ws_default_printer();
 	}
+
+	if (get_dirs(NULL, appdata) < 0)
+	    	exit(1);
 #endif /*]*/
 
 	/* Gather the options. */
@@ -523,7 +531,7 @@ main(int argc, char *argv[])
 		int i;
 
 #if defined(_WIN32) /*[*/
-		(void) sprintf(tracefile, "x3trc.%d.txt", getpid());
+		(void) sprintf(tracefile, "%sx3trc.%d.txt", appdata, getpid());
 #else /*][*/
 		(void) sprintf(tracefile, "%s/x3trc.%d", tracedir, getpid());
 #endif /*]*/
