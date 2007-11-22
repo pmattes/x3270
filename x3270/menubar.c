@@ -302,6 +302,16 @@ add_menu_hier(struct menu_hier *root, char **parents, ArgList args,
 	return h->menu_shell;
 }
 
+static void
+free_menu_hier(struct menu_hier *root)
+{
+    	if (root->sibling)
+	    	free_menu_hier(root->sibling);
+	if (root->child)
+	    	free_menu_hier(root->child);
+	XtFree((char *)root);
+}
+
 /*
  * Compute the potential height of the menu bar.
  */
@@ -1103,7 +1113,7 @@ connect_menu_init(Boolean regen, Position x, Position y)
 	Boolean need_line = False;
 	int n_primary = 0;
 	int n_recent = 0;
-	struct menu_hier *root;
+	static struct menu_hier *root = NULL;
 
 	if (regen && (connect_menu != (Widget)NULL)) {
 		XtDestroyWidget(connect_menu);
@@ -1112,6 +1122,8 @@ connect_menu_init(Boolean regen, Position x, Position y)
 			XtDestroyWidget(connect_button);
 			connect_button = (Widget)NULL;
 		}
+		free_menu_hier(root);
+		root = NULL;
 	}
 	if (connect_menu != (Widget)NULL)
 		return;
@@ -1240,7 +1252,7 @@ macros_menu_init(Boolean regen, Position x, Position y)
 	Widget w;
 	struct macro_def *m;
 	Boolean any = False;
-	struct menu_hier *root;
+	static struct menu_hier *root = NULL;
 
 	if (regen && (macros_menu != (Widget)NULL)) {
 		XtDestroyWidget(macros_menu);
@@ -1249,6 +1261,10 @@ macros_menu_init(Boolean regen, Position x, Position y)
 			XtDestroyWidget(macros_button);
 			macros_button = (Widget)NULL;
 		}
+	}
+	if (regen && root != NULL) {
+		free_menu_hier(root);
+		root = NULL;
 	}
 	if (macros_menu != (Widget)NULL || !PCONNECTED)
 		return;
@@ -1735,7 +1751,7 @@ create_font_menu(Boolean regen, Boolean even_if_unknown)
 
 	if (root != NULL) {
 		XtDestroyWidget(root->menu_shell);
-		XtFree((XtPointer)root);
+		free_menu_hier(root);
 		root = NULL;
 	}
 	Free(font_widgets);
@@ -1850,7 +1866,8 @@ options_menu_init(Boolean regen, Position x, Position y)
 	int ix;
 	static Widget options_menu_button = NULL;
 	Widget dummy_font_menu, dummy_font_element;
-	struct menu_hier *root = NULL;
+	static struct menu_hier *scheme_root = NULL;
+	static struct menu_hier *charset_root = NULL;
 	Boolean spaced = False;
 	Boolean any = False;
 	Widget w;
@@ -2101,16 +2118,18 @@ options_menu_init(Boolean regen, Position x, Position y)
 
 		scheme_widgets = (Widget *)XtCalloc(scheme_count,
 		    sizeof(Widget));
-		root = (struct menu_hier *)XtCalloc(1,
+		if (scheme_root != NULL)
+		    	free_menu_hier(scheme_root);
+		scheme_root = (struct menu_hier *)XtCalloc(1,
 				sizeof(struct menu_hier));
-		root->menu_shell = XtVaCreatePopupShell(
+		scheme_root->menu_shell = XtVaCreatePopupShell(
 		    "colorsMenu", complexMenuWidgetClass, menu_parent,
 		    NULL);
 		s = schemes;
 		for (ix = 0, s = schemes; ix < scheme_count; ix++, s = s->next) {
 			scheme_widgets[ix] = XtVaCreateManagedWidget(
 			    s->label, cmeBSBObjectClass,
-			    add_menu_hier(root, s->parents, NULL, 0),
+			    add_menu_hier(scheme_root, s->parents, NULL, 0),
 			    XtNleftBitmap,
 				!strcmp(appres.color_scheme, s->scheme) ?
 				    diamond : no_diamond,
@@ -2134,9 +2153,11 @@ options_menu_init(Boolean regen, Position x, Position y)
 	if (charset_count && !item_suppressed(options_menu, "charsetOption")) {
 		struct charset *cs;
 
-		root = (struct menu_hier *)XtCalloc(1,
+		if (charset_root != NULL)
+		    	free_menu_hier(charset_root);
+		charset_root = (struct menu_hier *)XtCalloc(1,
 				sizeof(struct menu_hier));
-		root->menu_shell = XtVaCreatePopupShell(
+		charset_root->menu_shell = XtVaCreatePopupShell(
 		    "charsetMenu", complexMenuWidgetClass, menu_parent,
 		    NULL);
 
@@ -2145,7 +2166,7 @@ options_menu_init(Boolean regen, Position x, Position y)
 		for (ix = 0, cs = charsets;
                      ix < charset_count;
                      ix++, cs = cs->next) {
-			t = add_menu_hier(root, cs->parents, NULL, 0);
+			t = add_menu_hier(charset_root, cs->parents, NULL, 0);
 			charset_widgets[ix] = XtVaCreateManagedWidget(
 			    cs->label, cmeBSBObjectClass, t,
 			    XtNleftBitmap,
