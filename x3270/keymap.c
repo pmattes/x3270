@@ -97,6 +97,8 @@ static void km_regen(void);
 #define km_regen()
 #endif /*]*/
 
+char *current_keymap = CN;
+
 /* Keymap initialization. */
 void
 keymap_init(const char *km, Boolean interactive)
@@ -161,7 +163,7 @@ setup_keymaps(const char *km, Boolean do_popup)
 		keymap_changed = True;
 
 	/* Clear out any existing translations. */
-	appres.key_map = (char *)NULL;
+	Replace(current_keymap, CN);
 	for (t = trans_list; t != (struct trans_list *)NULL; t = next) {
 		next = t->next;
 		Free(t->name);
@@ -250,13 +252,12 @@ add_keymap(const char *name, Boolean do_popup)
 	Boolean is_from_server = False;
 
 	if (strcmp(name, "base")) {
-		if (appres.key_map == (char *)NULL)
-			appres.key_map = XtNewString(name);
+		if (current_keymap == CN)
+			current_keymap = XtNewString(name);
 		else {
-			char *t = xs_buffer("%s,%s", appres.key_map, name);
 
-			XtFree(appres.key_map);
-			appres.key_map = t;
+			Replace(current_keymap,
+				xs_buffer("%s,%s", current_keymap, name));
 		}
 	}
 
