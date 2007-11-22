@@ -1911,62 +1911,91 @@ linedraw_to_acs(unsigned char c)
 	switch (c) {
 	case 0x0:	/* '_', block */
 		r = -1;
+		break;
 	case 0x1:	/* '`', diamond */
 		r = 0x25c6;
+		break;
 	case 0x2:	/* 'a', checkerboard */
 		r = -1;
+		break;
 	case 0x7:	/* 'f', degree */
 		r = 0xb0;
+		break;
 	case 0x8:	/* 'g', plusminus */
 		r = 0xb1;
+		break;
 	case 0x9:	/* 'h', board? */
 		r = -1;
+		break;
 	case 0xa:	/* 'i', lantern? */
 		r = -1;
+		break;
 	case 0xb:	/* 'j', LR corner */
 		r = 0x2518;
+		break;
 	case 0xc:	/* 'k', UR corner */
 		r = 0x2510;
+		break;
 	case 0xd:	/* 'l', UL corner */
 		r = 0x250c;
+		break;
 	case 0xe:	/* 'm', LL corner */
 		r = 0x2514;
+		break;
 	case 0xf:	/* 'n', plus */
 		r = 0x253c;
+		break;
 	case 0x10:	/* 'o', top horizontal */
 		r = '-';
+		break;
 	case 0x11:	/* 'p', row 3 horizontal */
 		r = '-';
+		break;
 	case 0x12:	/* 'q', middle horizontal */
 		r = 0x2500;
+		break;
 	case 0x13:	/* 'r', row 7 horizontal */
 		r = '-';
+		break;
 	case 0x14:	/* 's', bottom horizontal */
 		r = '_';
+		break;
 	case 0x15:	/* 't', left tee */
 		r = 0x251c;
+		break;
 	case 0x16:	/* 'u', right tee */
 		r = 0x2524;
+		break;
 	case 0x17:	/* 'v', bottom tee */
 		r = 0x2534;
+		break;
 	case 0x18:	/* 'w', top tee */
 		r = 0x252c;
+		break;
 	case 0x19:	/* 'x', vertical line */
 		r = 0x2502;
+		break;
 	case 0x1a:	/* 'y', less or equal */
 		r = 0x2264;
+		break;
 	case 0x1b:	/* 'z', greater or equal */
 		r = 0x2265;
+		break;
 	case 0x1c:	/* '{', pi */
 		r = 0x03c0;
+		break;
 	case 0x1d:	/* '|', not equal */
 		r = 0x2260;
+		break;
 	case 0x1e:	/* '}', sterling */
 		r = 0xa3;
+		break;
 	case 0x1f:	/* '~', bullet */
 		r = 0x2022;
+		break;
 	default:
 		r = -1;
+		break;
 	}
 
 	/* If we're pre-NT, we can't assume that Unicode works. */
@@ -1995,42 +2024,61 @@ apl_to_acs(unsigned char c)
 	case 0xaf: /* CG 0xd1, degree */
 		r = 0xb0;	/* XXX may not map to bullet in current
 				       codepage */
+		break;
 	case 0xd4: /* CG 0xac, LR corner */
 		r = 0x2518;
+		break;
 	case 0xd5: /* CG 0xad, UR corner */
 		r = 0x2510;
+		break;
 	case 0xc5: /* CG 0xa4, UL corner */
 		r = 0x250c;
+		break;
 	case 0xc4: /* CG 0xa3, LL corner */
 		r = 0x2514;
+		break;
 	case 0xd3: /* CG 0xab, plus */
 		r = 0x253c;
+		break;
 	case 0xa2: /* CG 0x92, horizontal line */
 		r = 0x2500;
+		break;
 	case 0xc6: /* CG 0xa5, left tee */
 		r = 0x251c;
+		break;
 	case 0xd6: /* CG 0xae, right tee */
 		r = 0x2524;
+		break;
 	case 0xc7: /* CG 0xa6, bottom tee */
 		r = 0x2534;
+		break;
 	case 0xd7: /* CG 0xaf, top tee */
 		r = 0x252c;
+		break;
 	case 0x85: /* CG 0xa84?, vertical line */
 		r = 0x2502;
+		break;
 	case 0x8c: /* CG 0xf7, less or equal */
 		r = 0x2264;
+		break;
 	case 0xae: /* CG 0xd9, greater or equal */
 		r = 0x2265;
+		break;
 	case 0xbe: /* CG 0x3e, not equal */
 		r = 0x2260;
+		break;
 	case 0xa3: /* CG 0x93, bullet */
 		r = 0x2022;
+		break;
 	case 0xad:
 		r = '[';
+		break;
 	case 0xbd:
 		r = ']';
+		break;
 	default:
 		r = -1;
+		break;
 	}
 
 	/* If pre-NT, we can't assume that Unicode works. */
