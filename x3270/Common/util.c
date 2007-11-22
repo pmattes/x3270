@@ -889,6 +889,7 @@ to_fn(XtPointer closure, XtIntervalId *id)
 {
 	torec_t *torec;
 	torec_t *prev = NULL;
+	voidfn *fn = NULL;
 
 	for (torec = torecs; torec != NULL; torec = torec->next) {
 		if (torec->id == *id) {
@@ -898,12 +899,19 @@ to_fn(XtPointer closure, XtIntervalId *id)
 	}
 
 	if (torec != NULL) {
-		(*torec->fn)();
+
+	    	/* Remember the record. */
+		fn = torec->fn;
+
+		/* Free the record. */
 		if (prev != NULL)
 			prev->next = torec->next;
 		else
 			torecs = torec->next;
 		XtFree((XtPointer)torec);
+
+		/* Call the function. */
+		(*fn)();
 	}
 }
 
@@ -940,6 +948,8 @@ RemoveTimeOut(unsigned long cookie)
 		else
 			torecs = torec->next;
 		XtFree((XtPointer)torec);
+	} else {
+		Error("RemoveTimeOut: Can't find");
 	}
 }
 

@@ -155,18 +155,21 @@ ctlr_init(unsigned cmask unused)
 void
 ctlr_reinit(unsigned cmask)
 {
+	static struct ea *real_ea_buf = NULL;
+	static struct ea *real_aea_buf = NULL;
+
 	if (cmask & MODEL_CHANGE) {
 		/* Allocate buffers */
-		if (ea_buf)
-			Free((char *)(ea_buf - 1));
-		ea_buf = (struct ea *)Calloc(sizeof(struct ea),
+		if (real_ea_buf)
+			Free((char *)real_ea_buf);
+		real_ea_buf = (struct ea *)Calloc(sizeof(struct ea),
 					     (maxROWS * maxCOLS) + 1);
-		ea_buf++;
-		if (aea_buf)
-			Free((char *)(aea_buf - 1));
-		aea_buf = (struct ea *)Calloc(sizeof(struct ea),
+		ea_buf = real_ea_buf + 1;
+		if (real_aea_buf)
+			Free((char *)real_aea_buf);
+		real_aea_buf = (struct ea *)Calloc(sizeof(struct ea),
 					      (maxROWS * maxCOLS) + 1);
-		aea_buf++;
+		aea_buf = real_aea_buf + 1;
 		Replace(zero_buf, (unsigned char *)Calloc(sizeof(struct ea),
 							  maxROWS * maxCOLS));
 		cursor_addr = 0;
