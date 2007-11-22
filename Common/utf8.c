@@ -411,6 +411,7 @@ utf8_set_display_charsets(char *cslist, char *csname)
 		return False;
 	}
 	utf8_ix = i;
+	Free(dup);
 	return True;
 }
 
