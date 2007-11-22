@@ -44,6 +44,8 @@ extern Boolean	scheme_changed;
 extern Boolean	keymap_changed;
 extern Boolean	charset_changed;
 
+extern char    *current_keymap;
+
 char           *command_string = CN;
 
 static char    *cmd;
@@ -227,9 +229,9 @@ save_keymap(void)
 	  I'm sure I'll regret this.  */
 
 #if defined(notdef) /*[*/
-	if (appres.keymap) {
+	if (current_keymap) {
 		add_string(v, OptKeymap);
-		add_string(v, appres.keymap);
+		add_string(v, current_keymap);
 	}
 #endif /*]*/
 }
@@ -664,8 +666,8 @@ save_options(char *n)
 	if (scheme_changed && appres.color_scheme != CN)
 		save_opt(f, "color scheme", OptColorScheme, ResColorScheme,
 		    appres.color_scheme);
-	if (keymap_changed && appres.key_map != (char *)NULL)
-		save_opt(f, "keymap", OptKeymap, ResKeymap, appres.key_map);
+	if (keymap_changed && current_keymap != CN)
+		save_opt(f, "keymap", OptKeymap, ResKeymap, current_keymap);
 	if (charset_changed)
 		save_opt(f, "charset", OptCharset, ResCharset,
 		    get_charset_name());
