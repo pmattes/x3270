@@ -1586,11 +1586,12 @@ charsets_init(void)
 	char *label;
 	char *charset;
 	struct charset *s;
+	static char *vgcm;
 
 	cm = get_resource(ResCharsetList);
 	if (cm == CN)
 		return;
-	cm = XtNewString(cm);
+	vgcm = cm = XtNewString(cm);
 
 	charset_count = 0;
 	while (split_dresource(&cm, &label, &charset) == 1) {
