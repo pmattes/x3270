@@ -834,6 +834,8 @@ parse_xrm(const char *arg, const char *where)
 	enum resource_type type = XRM_STRING;
 #if defined(C3270) /*[*/
 	char *add_buf = CN;
+	char *hide;
+	Boolean arbitrary = False;
 #endif /*]*/
 
 	/* Enforce "-3270." or "-3270*" or "*". */
@@ -918,9 +920,9 @@ parse_xrm(const char *arg, const char *where)
 			    strlen(ResCursesColorFor))
 #endif /*]*/
 		    ) {
-			add_buf = Malloc(strlen(s) + 1);
-			address = add_buf;
+			address = &hide;
 			type = XRM_STRING;
+			arbitrary = True;
 		}
 	}
 #endif /*]*/
@@ -997,13 +999,13 @@ parse_xrm(const char *arg, const char *where)
 
 #if defined(C3270) /*[*/
 	/* Add a new, arbitrarily-named resource. */
-	{
+	if (arbitrary) {
 		char *rsname;
 
 		rsname = Malloc(rnlen + 1);
 		(void) strncpy(rsname, arg + match_len, rnlen);
 		rsname[rnlen] = '\0';
-		add_resource(rsname, NewString(s));
+		add_resource(rsname, hide);
 	}
 #endif /*]*/
 }
