@@ -3399,6 +3399,7 @@ query_window_state(void)
 			keypad_first_up();
 		}
 	}
+	XFree(data);
 }
 
 void
