@@ -461,6 +461,7 @@ learn_modifiers(void)
 			skeymask[i].name[0] = default_modname[i];
 		}
 	}
+	XFreeModifiermap(mm);
 }
 
 #if defined(X3270_TRACE) /*[*/
