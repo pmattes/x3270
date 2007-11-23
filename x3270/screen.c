@@ -4696,6 +4696,7 @@ add_font_to_menu(char *label, char *font)
 	}
 	f->font = NewString(font);
 	f->next = NULL;
+	f->label = label;
 	if (font_list)
 		font_last->next = f;
 	else
