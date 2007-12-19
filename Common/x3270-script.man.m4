@@ -134,7 +134,7 @@ XX_SH(Differences)
 When an action is initiated by a script, the emulators
 behave in several different ways:
 XX_PP
-If an error occurs in processing an ection, the usual pop-up window does not
+If an error occurs in processing an action, the usual pop-up window does not
 appear.
 Instead, the text is written to standard error output.
 XX_PP
