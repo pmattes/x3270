@@ -41,12 +41,21 @@ To build <i>wc3270</i> (with or without SSL support), start a Cygwin shell,
 <pre>&nbsp;&nbsp;&nbsp;make</pre>
 </p>
   <i>wc3270</i> was developed primarily on 32-bit Windows XP, but should be
-  buildable on Windows Server 2003 or Windows 2000.  It has not been built
-  or tested on 64-bit Windows or on Windows Vista.
+  buildable on Windows Server 2003 or Windows 2000 (though Windows 2000 has
+  been known to build defective <i>wc3270</i> DLLs).  It has not been built
+  on 64-bit Windows or on Windows Vista.
 <p>
   The source tarball also includes an <b>.iss</b> file for use with Inno
   Setup.  This is used to construct the install executable.  See the
   <a href="http://www.jrsoftware.org/isinfo.php">Inno Setup webpage</a> for details.
+</p>
+<p>
+  <i>wc3270</i> can also be built on Linux, using the MinGW cross-compiler.
+  (This is how public releases of <i>wc3270</i> are built.)
+  The precise method for building a cross-compiler varies with gcc, Binutils
+  and MinGW releases, but
+  <a href="http://www.mingw.org/mingwfaq.shtml#faq-cross">this link</a> should
+  get you started.
 </p>
 </body>
 </html>

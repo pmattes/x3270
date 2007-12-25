@@ -34,7 +34,7 @@ WINDRES = windres
 endif
 
 XCPPFLAGS = -D_WIN32 -DWC3270 -D_WIN32_WINNT=0x0500
-CFLAGS = -mno-cygwin -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
+CFLAGS = $(EXTRA_FLAGS) -mno-cygwin -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
 SRCS = XtGlue.c actions.c ansi.c apl.c c3270.c charset.c ctlr.c \
 	ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c idle.c kybd.c \
 	macros.c print.c printer.c proxy.c resources.c rpq.c screen.c see.c \
@@ -49,7 +49,7 @@ OBJECTS = $(VOBJS) version.o
 LIBS = $(SSLLIB) -lws2_32
 SHRTLIBS = -lole32 -luuid
 WIZLIBS = -lole32 -luuid -lwinspool
-DLLFLAGS = -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
+DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
 PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe w3n4.dll w3n46.dll
 all: $(PROGS)
