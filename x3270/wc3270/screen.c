@@ -2055,7 +2055,8 @@ apl_to_acs(unsigned char c)
 	case 0xd7: /* CG 0xaf, top tee */
 		r = 0x252c;
 		break;
-	case 0x85: /* CG 0xa84?, vertical line */
+	case 0xbf: /* CG 0x15b, stile */
+	case 0x85: /* CG 0x184, vertical line */
 		r = 0x2502;
 		break;
 	case 0x8c: /* CG 0xf7, less or equal */

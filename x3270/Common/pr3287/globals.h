@@ -1,5 +1,5 @@
 /*              
- * Copyright 2000, 2004 by Paul Mattes.
+ * Copyright 2000, 2004, 2007 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -11,9 +11,15 @@
  * FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <stdio.h>			/* Unix standard I/O library */
+#include <stdlib.h>			/* Other Unix library functions */
+#include <unistd.h>			/* Unix system calls */
+#include <ctype.h>			/* Character classes */
+#include <string.h>			/* String manipulations */
+#include <sys/types.h>			/* Basic system data types */
+#include <sys/time.h>			/* System time-related data types */
+#include <time.h>			/* C library time functions */
+
 #include "localdefs.h"
 
 #define CN	(char *)NULL
