@@ -52,7 +52,7 @@ extern int cCOLS;
 #include <ncursesw/ncurses.h>
 #else /*][*/
 #if defined(HAVE_NCURSES_H) /*[*/
-#include <ncursesw/ncurses.h>
+#include <ncurses/ncurses.h>
 #else /*][*/ 
 #include <curses.h>
 #endif /*]*/
