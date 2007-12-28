@@ -85,12 +85,13 @@ AC_CHECK_HEADERS(pty.h)
 AC_CHECK_HEADERS(libutil.h)
 AC_CHECK_HEADERS(util.h)
 AC_CHECK_HEADERS(getopt.h)
-AC_CHECK_HEADERS(ncursesw/ncurses.h, , [AC_CHECK_HEADERS(ncurses.h, , [AC_CHECK_HEADERS(curses.h, , [AC_MSG_ERROR(Can't find ncurses.h or curses.h)])])])
-
-dnl Check for libncurses/ncurses.h inconsistency
-dnl if test $ac_cv_lib_ncurses_newterm != $ac_cv_header_ncurses_h
-dnl then	AC_MSG_ERROR(Found libncurses but not ncurses.h or vice-versa)
-dnl fi
+dnl Check for curses library / header file consistency.
+if test $ac_cv_lib_ncursesw_newterm
+then	AC_CHECK_HEADERS(ncursesw/ncurses.h, , [AC_MSG_ERROR(Found ncursesw library but not <ncursesw/ncurses.h>)])
+elif test $ac_cv_lib_ncurses_newterm
+then	AC_CHECK_HEADERS(ncurses/ncurses.h, , [AC_MSG_ERROR(Found ncurses library but not <ncurses/ncurses.h>)])
+else	AC_CHECK_HEADERS(curses.h, , [AC_MSG_ERROR(Found curses library but not <curses.h>)])
+fi
 
 dnl Check for SSL header file.
 AC_ARG_WITH(ssl,[  --with-ssl=DIR          specify OpenSSL install directory])
