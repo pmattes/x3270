@@ -757,6 +757,8 @@ screen_disp(Boolean erasing unused)
 		if (!flipped)
 			move(row, 0);
 		for (col = 0; col < cCOLS; col++) {
+		    	Boolean underlined = False;
+
 			if (flipped)
 				move(row, cCOLS-1 - col);
 			baddr = row*cCOLS+col;
@@ -767,21 +769,27 @@ screen_disp(Boolean erasing unused)
 				(void) attrset(defattr);
 				myaddch(' ');
 			} else if (FA_IS_ZERO(fa)) {
-				(void) attrset(field_attrs);
+				(void) attrset(field_attrs & ~A_UNDERLINE);
+				if (field_attrs & A_UNDERLINE)
+				    underlined = True;
 				myaddch(' ');
 			} else {
 				if (!(ea_buf[baddr].gr ||
 				      ea_buf[baddr].fg ||
 				      ea_buf[baddr].bg)) {
 
-					(void) attrset(field_attrs);
+					(void) attrset(field_attrs & ~A_UNDERLINE);
+					if (field_attrs & A_UNDERLINE)
+					    underlined = True;
 
 				} else {
 				    	int buf_attrs;
 		
 				    	buf_attrs = calc_attrs(baddr, fa_addr,
 						fa);
-					(void) attrset(buf_attrs);
+					(void) attrset(buf_attrs & ~A_UNDERLINE);
+					if (buf_attrs & A_UNDERLINE)
+					    underlined = True;
 				}
 #if defined(X3270_DBCS) /*[*/
 				d = ctlr_dbcs_state(baddr);
@@ -810,10 +818,16 @@ screen_disp(Boolean erasing unused)
 						else
 							myaddch(' ');
 					} else {
+					    	unsigned char ac;
+
+						ac = ebc2asc[ea_buf[baddr].cc];
+						if (underlined && ac == ' ')
+							ac = '_';
+
 						if (toggled(MONOCASE))
-							myaddch(asc2uc[ebc2asc[ea_buf[baddr].cc]]);
+							myaddch(asc2uc[ac]);
 						else
-							myaddch(ebc2asc[ea_buf[baddr].cc]);
+							myaddch(ac);
 					}
 #if defined(X3270_DBCS) /*[*/
 				}
