@@ -402,7 +402,10 @@ printer_start(const char *lu)
 		Free(subcommand);
 		subcommand = pc;
 
-		pc = xs_buffer("%s%s", instdir, cmd_text);
+		if (space)
+			pc = xs_buffer("\"%s\" %s", subcommand, space + 1);
+		else
+			pc = xs_buffer("\"%s%s\"", instdir, cmd_text);
 		Free(cmd_text);
 		cmd_text = pc;
 	}
