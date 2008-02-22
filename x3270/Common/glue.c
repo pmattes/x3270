@@ -221,12 +221,32 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	      !strcasecmp(*cl_hostname + sl - PROFILE_SFX_LEN, PROFILE_SFX)) ||
 	     ((sl = strlen(*cl_hostname)) > PROFILE_SSFX_LEN &&
 	      !strcasecmp(*cl_hostname + sl - PROFILE_SSFX_LEN, PROFILE_SSFX)))) {
+
+		const char *pname;
+
 		(void) read_resource_file(*cl_hostname, False);
 		if (appres.hostname == CN) {
 		    Error("Hostname not specified in session file.");
 		}
-		profile_name = NewString(*cl_hostname);
-		profile_name[sl - PROFILE_SFX_LEN] = '\0';
+
+		pname = strrchr(*cl_hostname, '\\');
+		if (pname != CN)
+		    	pname++;
+		else
+		    	pname = *cl_hostname;
+		profile_name = NewString(pname);
+
+		sl = strlen(profile_name);
+		if (sl > PROFILE_SFX_LEN &&
+			!strcmp(profile_name + sl - PROFILE_SFX_LEN,
+				PROFILE_SFX)) {
+			profile_name[sl - PROFILE_SFX_LEN] = '\0';
+		} else if (sl > PROFILE_SSFX_LEN &&
+			!strcmp(profile_name + sl - PROFILE_SSFX_LEN,
+				PROFILE_SSFX)) {
+			profile_name[sl - PROFILE_SSFX_LEN] = '\0';
+		}
+
 		*cl_hostname = appres.hostname;
 	}
 #endif /*]*/
