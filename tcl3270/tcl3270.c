@@ -545,7 +545,7 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 		waiting = AWAITING_FT;
 	else
 #endif /*]*/
-	if (CKBWAIT)
+	if ((waiting == NOT_WAITING) && CKBWAIT)
 		waiting = AWAITING_RESET;
 
 	if (waiting != NOT_WAITING)
@@ -788,7 +788,7 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 			if (!c)
 				c = ' ';
 			xs = utf8_expand(c);
-			Tcl_AppendToObj(row, xs, strlen(xs));
+			Tcl_AppendToObj(row, xs, -1);
 		} else {
 			char s[5];
 
@@ -844,6 +844,7 @@ dump_rectangle(int start_row, int start_col, int rows, int cols,
 
 			if (in_ascii) {
 				unsigned char ch;
+				char *xs;
 
 				if (FA_IS_ZERO(get_field_attribute(loc)))
 					ch = ' ';
@@ -869,7 +870,8 @@ dump_rectangle(int start_row, int start_col, int rows, int cols,
 				}
 				if (!ch)
 					ch = ' ';
-				Tcl_AppendToObj(row, (char *)&ch, 1);
+				xs = utf8_expand(ch);
+				Tcl_AppendToObj(row, xs, -1);
 			} else {
 				char s[5];
 
