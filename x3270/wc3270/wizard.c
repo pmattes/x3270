@@ -39,6 +39,7 @@
 #include "xioc.h"
 
 #include <windows.h>
+#include <direct.h>
 #include <wincon.h>
 #include <shlobj.h>
 #include "shlobj_missing.h"
@@ -1206,6 +1207,12 @@ create_session_file(session_t *session)
     	FILE *f;
 	time_t t;
 	int bracket;
+
+	/*
+	 * Create the AppData directory if it doesn't exist.  (If wc3270 was
+	 * installed by a different user, it won't.)
+	 */
+	(void) _mkdir(mya);
 
 	f = fopen(session->path, "w");
 	if (f == NULL) {
