@@ -321,12 +321,22 @@ static char *utf8_tab[U_MAX][96] = {
 void
 set_codeset(char *codeset_name)
 {
-    	is_utf8 = (!strcasecmp(codeset_name, "utf-8") ||
-	           !strcasecmp(codeset_name, "utf8") ||
-		   !strcasecmp(codeset_name, "utf_8"));
 #if defined(X3270_DBCS) /*[*/
     	is_gb18030 = !strcasecmp(codeset_name, "gb18030");
 #endif /*]*/
+
+#if !defined(TCL3270) /*[*/
+    	is_utf8 = (!strcasecmp(codeset_name, "utf-8") ||
+	           !strcasecmp(codeset_name, "utf8") ||
+		   !strcasecmp(codeset_name, "utf_8"));
+#else /*][*/
+	/*
+	 * tcl3270 is always in UTF-8 mode, because it needs to
+	 * supply UTF-8 strings to libtcl.
+	 */
+	is_utf8 = 1;
+#endif /*]*/
+
 	Replace(locale_codeset, NewString(codeset_name));
 }
 
