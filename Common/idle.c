@@ -224,6 +224,7 @@ static void
 idle_timeout(void)
 {
 	trace_event("Idle timeout\n");
+	idle_ticking = FALSE;
 	push_idle(idle_command);
 	reset_idle_timer();
 }
