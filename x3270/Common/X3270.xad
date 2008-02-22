@@ -145,6 +145,7 @@ x3270.charsetList:			U.S. English (CP 37): us-intl\n\
 					Japanese>CP 1399: japanese-1399\n\
 #endif
 					Norwegian (CP 277): norwegian\n\
+					Open Systems (CP 1047): cp1047\n\
 					Polish (CP 870): cp870\n\
 					Russian (CP 880): russian\n\
 					Slovenian (CP 870): cp870\n\
