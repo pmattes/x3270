@@ -657,6 +657,8 @@ key_Character(int code, Boolean with_ge, Boolean pasting, Boolean *skipped)
 	register unsigned char	fa;
 	enum dbcs_why why;
 
+	reset_idle_timer();
+
 	if (skipped != NULL)
 		*skipped = False;
 
@@ -911,6 +913,8 @@ key_WCharacter(unsigned char code[], Boolean *skipped)
 	Boolean done = False;
 	Boolean no_si = False;
 	extern unsigned char reply_mode; /* XXX */
+
+	reset_idle_timer();
 
 	if (kybdlock) {
 		char codename[64];
@@ -1197,6 +1201,8 @@ key_ACharacter(unsigned char c, enum keytype keytype, enum iaction cause,
 {
 	register int i;
 	struct akeysym ak;
+
+	reset_idle_timer();
 
 	if (skipped != NULL)
 		*skipped = False;
