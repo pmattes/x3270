@@ -1077,7 +1077,7 @@ session_wizard(void)
 	}
 
 	/* Get some paths from Windows. */
-	if (get_dirs(desktop, mya) < 0)
+	if (get_dirs(desktop, mya, "wc3270") < 0)
 	    	return -1;
 
 	/* Intro screen. */
