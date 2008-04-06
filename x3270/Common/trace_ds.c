@@ -700,7 +700,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data unused)
 	}
 #endif /*]*/
 
-#if defined(_WIN32) /*[*/
+#if defined(_WIN32) && defined(C3270) /*[*/
 	/* Start the monitor window. */
 	if (tracef != stdout && appres.trace_monitor) {
 		STARTUPINFO startupinfo;
