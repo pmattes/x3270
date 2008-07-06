@@ -1,5 +1,5 @@
 /*
- * Copyright 2000, 2001, 2002, 2004, 2005, 2006, 2007 by Paul Mattes.
+ * Copyright 2000, 2001, 2002, 2004, 2005, 2006, 2007, 2008 by Paul Mattes.
  *   Permission to use, copy, modify, and distribute this software and its
  *   documentation for any purpose and without fee is hereby granted,
  *   provided that the above copyright notice appear in all copies and that
@@ -33,6 +33,7 @@
 #include "screenc.h"
 #include "tablesc.h"
 #include "trace_dsc.h"
+#include "unicodec.h"
 #include "utilc.h"
 #include "w3miscc.h"
 #include "widec.h"
@@ -163,17 +164,17 @@ static int color_from_fa(unsigned char fa);
 static void screen_init2(void);
 static void set_status_row(int screen_rows, int emulator_rows);
 static Boolean ts_value(const char *s, enum ts *tsp);
-static int linedraw_to_acs(unsigned char c);
-static int apl_to_acs(unsigned char c);
 static void relabel(Boolean ignored);
-static void check_aplmap(int codepage);
 static void init_user_colors(void);
 static void init_user_attribute_colors(void);
+static HWND GetConsoleHwnd(void);
 
 static HANDLE chandle;	/* console input handle */
 static HANDLE cohandle;	/* console screen buffer handle */
 
 static HANDLE *sbuf;	/* dynamically-allocated screen buffer */
+
+static HWND console_window;
 
 static int console_rows;
 static int console_cols;
@@ -230,7 +231,8 @@ initscr(void)
 			win32_strerror(GetLastError()));
 		return NULL;
 	}
-	if (SetConsoleMode(chandle, ENABLE_PROCESSED_INPUT) == 0) {
+	if (SetConsoleMode(chandle, ENABLE_PROCESSED_INPUT |
+		    		    ENABLE_MOUSE_INPUT) == 0) {
 		fprintf(stderr, "SetConsoleMode failed: %s\n",
 			win32_strerror(GetLastError()));
 		return NULL;
@@ -243,6 +245,8 @@ initscr(void)
 			win32_strerror(GetLastError()));
 		return NULL;
 	}
+
+	console_window = GetConsoleHwnd();
 
 	/* Get its dimensions. */
 	if (GetConsoleScreenBufferInfo(cohandle, &info) == 0) {
@@ -328,20 +332,6 @@ set_display_charset(char *dcs)
 		}
 	}
 	free(copy);
-
-	if (want_cp != 0 && windows_cp != want_cp) {
-	    	if (SetConsoleOutputCP(want_cp)) {
-			(void)SetConsoleCP(want_cp);
-		    	windows_cp = want_cp;
-		} else {
-			fprintf(stderr,
-				"Unable to set output character set to '%s' "
-				"(Windows code page %d).\n",
-				dcs, want_cp);
-		}
-	}
-
-	check_aplmap(windows_cp);
 }
 
 /*
@@ -452,11 +442,7 @@ mark_done(int start_row, int end_row, int start_col, int end_col)
 static int
 tos_a(int row, int col)
 {
-    	/*return toscreen[ix(row, col)].Attributes;*/
-	if (toscreen[ix(row, col)].Char.UnicodeChar & ~0xff)
-		return toscreen[ix(row, col)].Attributes | 0x80000000;
-	else
-	    	return toscreen[ix(row, col)].Attributes;
+    	return toscreen[ix(row, col)].Attributes;
 }
 
 #if defined(DEBUG_SCREEN_DRAW) /*[*/
@@ -468,6 +454,56 @@ changed(int row, int col)
 		       sizeof(CHAR_INFO));
 }
 #endif /*]*/
+
+/* Windows 98 version of WriteConsoleOutputW(). */
+static BOOL
+Win98WriteConsoleOutputW(HANDLE hConsoleOutput, const CHAR_INFO* lpBuffer,
+    COORD dwBufferSize, COORD dwBufferCoord, PSMALL_RECT lpWriteRegion)
+{
+	CHAR_INFO *lpCopy;
+	size_t s;
+	int row, col;
+	BOOL rc;
+
+	/* Copy lpBuffer. */
+	s = dwBufferSize.X * dwBufferSize.Y * sizeof(CHAR_INFO);
+	lpCopy = (CHAR_INFO *)Malloc(s);
+
+	/*
+	 * Scan the specified region, translating Unicode to the OEM code
+	 * page (what console output expects).
+	 */
+	for (row = lpWriteRegion->Top;
+	     row <= lpWriteRegion->Bottom;
+	     row++) {
+		for (col = lpWriteRegion->Left;
+		     col <= lpWriteRegion->Right;
+		     col++) {
+		    const CHAR_INFO *c = &lpBuffer[ix(row, col)];
+		    CHAR_INFO *d = &lpCopy[ix(row, col)];
+		    unsigned char ch;
+		    int nc;
+		    BOOL udc;
+
+		    nc = WideCharToMultiByte(CP_OEMCP, 0,
+			    &c->Char.UnicodeChar, 1,
+			    &ch, 1,
+			    "?",
+			    &udc);
+		    *d = *c;
+		    d->Char.UnicodeChar = 0;
+		    d->Char.AsciiChar = ch;
+	    }
+    }
+
+    /* Do the Ascii version. */
+    rc = WriteConsoleOutputA(hConsoleOutput, lpCopy, dwBufferSize,
+	    dwBufferCoord, lpWriteRegion);
+
+    /* Done. */
+    Free(lpCopy);
+    return rc;
+}
 
 /*
  * Draw a rectangle of homogeneous text.
@@ -515,11 +551,11 @@ hdraw(int row, int lrow, int col, int lcol)
 	writeRegion.Top = row;
 	writeRegion.Right = lcol;
 	writeRegion.Bottom = lrow;
-	if (toscreen[ix(row, col)].Char.UnicodeChar & ~0xff)
-	    	rc = WriteConsoleOutputW(sbuf, toscreen, bufferSize,
+	if (is_nt)
+		rc = WriteConsoleOutputW(sbuf, toscreen, bufferSize,
 			bufferCoord, &writeRegion);
 	else
-	    	rc = WriteConsoleOutputA(sbuf, toscreen, bufferSize,
+		rc = Win98WriteConsoleOutputW(sbuf, toscreen, bufferSize,
 			bufferCoord, &writeRegion);
 	if (rc == 0) {
 
@@ -750,7 +786,8 @@ endwin(void)
 {
 	if (SetConsoleMode(chandle, ENABLE_ECHO_INPUT |
 				    ENABLE_LINE_INPUT |
-				    ENABLE_PROCESSED_INPUT) == 0) {
+				    ENABLE_PROCESSED_INPUT |
+				    ENABLE_MOUSE_INPUT) == 0) {
 		fprintf(stderr, "\nSetConsoleMode(CONIN$) failed: %s\n",
 			win32_strerror(GetLastError()));
 		x3270_exit(1);
@@ -1090,7 +1127,7 @@ init_user_colors(void)
  * Find the display attributes for a baddr, fa_addr and fa.
  */
 static int
-calc_attrs(int baddr, int fa_addr, int fa)
+calc_attrs(int baddr, int fa_addr, int fa, Boolean *underlined)
 {
     	int fg, bg, gr, a;
 
@@ -1134,7 +1171,7 @@ calc_attrs(int baddr, int fa_addr, int fa)
 	else
 		gr = 0;
 
-	if (appres.highlight_underline &&
+	if (!toggled(UNDERSCORE) &&
 		appres.m3279 &&
 		(gr & (GR_BLINK | GR_UNDERLINE)) &&
 		!(gr & GR_REVERSE) &&
@@ -1152,6 +1189,11 @@ calc_attrs(int baddr, int fa_addr, int fa)
 	if (gr & GR_REVERSE)
 		a = reverse_colors(a);
 
+	if (toggled(UNDERSCORE) && (gr & GR_UNDERLINE))
+	    *underlined = True;
+	else
+	    *underlined = False;
+
 	return a;
 }
 
@@ -1161,6 +1203,7 @@ screen_disp(Boolean erasing unused)
 {
 	int row, col;
 	int a;
+	Boolean a_underlined = False;
 	int c;
 	unsigned char fa;
 #if defined(X3270_DBCS) /*[*/
@@ -1216,6 +1259,8 @@ screen_disp(Boolean erasing unused)
 		if (!flipped)
 			move(row, 0);
 		for (col = 0; col < cCOLS; col++) {
+		    	Boolean underlined = False;
+
 			if (flipped)
 				move(row, cCOLS-1 - col);
 			baddr = row*cCOLS+col;
@@ -1223,7 +1268,7 @@ screen_disp(Boolean erasing unused)
 			    	/* Field attribute. */
 			    	fa_addr = baddr;
 				fa = ea_buf[baddr].fa;
-				a = calc_attrs(baddr, baddr, fa);
+				a = calc_attrs(baddr, baddr, fa, &a_underlined);
 				attrset(defattr);
 				addch(' ');
 			} else if (FA_IS_ZERO(fa)) {
@@ -1236,15 +1281,19 @@ screen_disp(Boolean erasing unused)
 				      ea_buf[baddr].fg ||
 				      ea_buf[baddr].bg)) {
 					attrset(a);
+					underlined = a_underlined;
 				} else {
 					int b;
+					Boolean b_underlined;
 
 					/*
 					 * Override some of the field
 					 * attributes.
 					 */
-					b = calc_attrs(baddr, fa_addr, fa);
+					b = calc_attrs(baddr, fa_addr, fa,
+						&b_underlined);
 					attrset(b);
+					underlined = b_underlined;
 				}
 #if defined(X3270_DBCS) /*[*/
 				d = ctlr_dbcs_state(baddr);
@@ -1264,23 +1313,28 @@ screen_disp(Boolean erasing unused)
 				} else if (!IS_RIGHT(d)) {
 #endif /*]*/
 					if (ea_buf[baddr].cs == CS_LINEDRAW) {
-						c = linedraw_to_acs(ea_buf[baddr].cc);
+						c = linedraw_to_unicode(ea_buf[baddr].cc);
 						if (c != -1)
 							addch(c);
 						else
 							addch(' ');
 					} else if (ea_buf[baddr].cs == CS_APL ||
 						   (ea_buf[baddr].cs & CS_GE)) {
-						c = apl_to_acs(ea_buf[baddr].cc);
+						c = apl_to_unicode(ea_buf[baddr].cc);
 						if (c != -1)
 							addch(c);
 						else
 							addch(' ');
 					} else {
-						if (toggled(MONOCASE))
-							addch(asc2uc[ebc2asc[ea_buf[baddr].cc]]);
-						else
-							addch(ebc2asc[ea_buf[baddr].cc]);
+						unsigned short ac;
+
+						ac = ebcdic_to_unicode(ea_buf[baddr].cc, True);
+						if (underlined && ac == ' ')
+						    ac = '_';
+						if (toggled(MONOCASE) &&
+							    iswlower(ac))
+						    	ac = towupper(ac);
+						addch(ac);
 					}
 #if defined(X3270_DBCS) /*[*/
 				}
@@ -1377,16 +1431,51 @@ decode_state(int state, Boolean limited, const char *skip)
 	return buf;
 }
 
+/* Windows 98 version of ReadConsoleInputW(). */
+static BOOL
+Win98ReadConsoleInputW(HANDLE h, INPUT_RECORD *ir, DWORD len, DWORD *nr)
+{
+	BOOL r;
+
+	/* Call the 8-bit version. */
+	r = ReadConsoleInputA(h, ir, len, nr);
+	if (!r)
+		return r;
+
+	/*
+	 * Translate the 8-bit input character to Unicode.
+	 * We assume that console input uses the OEM code page.
+	 */
+	if ((ir->EventType == KEY_EVENT) &&
+	    (ir->Event.KeyEvent.uChar.AsciiChar)) {
+		int nc;
+		WCHAR w;
+
+		nc = MultiByteToWideChar(CP_OEMCP, 0,
+			&ir->Event.KeyEvent.uChar.AsciiChar, 1,
+			&w, 1);
+		if (nc != 1)
+		    return 1;
+		ir->Event.KeyEvent.uChar.UnicodeChar = w;
+	}
+	return r;
+}
+
 /* Keyboard input. */
 static void
 kybd_input(void)
 {
+    	int rc;
 	INPUT_RECORD ir;
 	DWORD nr;
 	const char *s;
 
 	/* Get the next input event. */
-	if (ReadConsoleInput(chandle, &ir, 1, &nr) == 0) {
+	if (is_nt)
+		rc = ReadConsoleInputW(chandle, &ir, 1, &nr);
+	else
+		rc = Win98ReadConsoleInputW(chandle, &ir, 1, &nr);
+	if (rc == 0) {
 		fprintf(stderr, "ReadConsoleInput failed: %s\n",
 			win32_strerror(GetLastError()));
 		x3270_exit(1);
@@ -1397,7 +1486,7 @@ kybd_input(void)
 	switch (ir.EventType) {
 	case FOCUS_EVENT:
 		/*trace_event("Focus\n");*/
-		return;
+		break;
 	case KEY_EVENT:
 		if (!ir.Event.KeyEvent.bKeyDown) {
 			/*trace_event("KeyUp\n");*/
@@ -1407,34 +1496,51 @@ kybd_input(void)
 			False);
 		if (s == NULL)
 			s = "?";
-		trace_event("Key%s vkey 0x%x (%s) scan 0x%x char 0x%x state 0x%x (%s)\n",
+		trace_event("Key%s vkey 0x%x (%s) scan 0x%x char U+%04x state 0x%x (%s)\n",
 			ir.Event.KeyEvent.bKeyDown? "Down": "Up",
 			ir.Event.KeyEvent.wVirtualKeyCode, s,
 			ir.Event.KeyEvent.wVirtualScanCode,
-			ir.Event.KeyEvent.uChar.AsciiChar & 0xff,
+			ir.Event.KeyEvent.uChar.UnicodeChar,
 			(int)ir.Event.KeyEvent.dwControlKeyState,
 			decode_state(ir.Event.KeyEvent.dwControlKeyState,
 			    False, CN));
+		if (!ir.Event.KeyEvent.bKeyDown) {
+			return;
+		}
+		kybd_input2(&ir);
 		break;
 	case MENU_EVENT:
 		trace_event("Menu\n");
-		return;
+		break;
 	case MOUSE_EVENT:
-		trace_event("Mouse\n");
-		return;
+		trace_event("Mouse (%d,%d) ButtonState 0x%lx ControlKeyState 0x%lx EventFlags 0x%lx\n",
+			ir.Event.MouseEvent.dwMousePosition.X,
+			ir.Event.MouseEvent.dwMousePosition.Y,
+			ir.Event.MouseEvent.dwButtonState,
+			ir.Event.MouseEvent.dwControlKeyState,
+			ir.Event.MouseEvent.dwEventFlags);
+
+		/*
+		 * Really simple -- if it's a simple left-click, move the
+		 * cursor.  We can get fancier later.
+		 */
+		if ((ir.Event.MouseEvent.dwButtonState ==
+			FROM_LEFT_1ST_BUTTON_PRESSED) &&
+		    (ir.Event.MouseEvent.dwControlKeyState == 0) &&
+		    (ir.Event.MouseEvent.dwEventFlags == 0) &&
+		    (ir.Event.MouseEvent.dwMousePosition.X < COLS) &&
+		    (ir.Event.MouseEvent.dwMousePosition.Y < ROWS)) {
+			cursor_move(ir.Event.MouseEvent.dwMousePosition.X +
+				(ir.Event.MouseEvent.dwMousePosition.Y * COLS));
+		}
+		break;
 	case WINDOW_BUFFER_SIZE_EVENT:
 		trace_event("WindowBufferSize\n");
-		return;
+		break;
 	default:
 		trace_event("Unknown input event %d\n", ir.EventType);
-		return;
+		break;
 	}
-
-	if (!ir.Event.KeyEvent.bKeyDown) {
-		return;
-	}
-
-	kybd_input2(&ir);
 }
 
 static void
@@ -1483,26 +1589,39 @@ kybd_input2(INPUT_RECORD *ir)
 	char buf[16];
 	unsigned long xk;
 	char *action;
+	unsigned char c = 0;	/* translated ASCII character */
 
 	/*
 	 * Translate the INPUT_RECORD into an integer we can match keymaps
 	 * against.
-	 * In theory, this is simple -- if it's a VK_xxx, put it in the high
-	 * 16 bits and leave the low 16 clear; otherwise if there's an ASCII
-	 * value, put it in the low 16; otherwise give up.
 	 *
-	 * In practice, this is harder, because some of the VK_ codes are
-	 * aliases for ASCII characters and you get both.  So the rule becomes
-	 * that if you get both VK_xxx and ASCII, and they are equal, ignore
-	 * the VK.
+	 * If VK and ASCII are the same, use VK.
+	 * If VK is 0x6x, use VK.  These are aliases like ADD and NUMPAD0.
+	 * Otherwise, if there's ASCII, use it.
+	 * Otherwise, use VK.
 	 */
-	if (ir->Event.KeyEvent.uChar.AsciiChar != 0)
-		xk = ir->Event.KeyEvent.uChar.AsciiChar & 0xffff;
-	else if (ir->Event.KeyEvent.wVirtualKeyCode != 0)
-		xk = (ir->Event.KeyEvent.wVirtualKeyCode << 16) & 0xffff0000;
-	else
-		xk = 0;
+	if (ir->Event.KeyEvent.uChar.UnicodeChar != 0) {
+	    	wchar_t w;
+		BOOL udc;
 
+		/*
+		 * Translate to multi-byte for keymap look-up.
+		 * We use the ANSI code page, on the assumption that keymaps
+		 * are edited using GUI tools, not DOS tools.
+		 */
+		w = ir->Event.KeyEvent.uChar.UnicodeChar;
+		(void) WideCharToMultiByte(CP_ACP, 0, &w, 1, &c, 1, "?", &udc);
+	}
+	if (ir->Event.KeyEvent.wVirtualKeyCode == c)
+		xk = (ir->Event.KeyEvent.wVirtualKeyCode << 16) & 0xffff0000;
+	else if ((ir->Event.KeyEvent.wVirtualKeyCode & 0xf0) == 0x60)
+		xk = (ir->Event.KeyEvent.wVirtualKeyCode << 16) & 0xffff0000;
+	else if (c)
+		xk = c;
+	else
+		xk = (ir->Event.KeyEvent.wVirtualKeyCode << 16) & 0xffff0000;
+
+	trace_event("xk is 0x%lx\n", xk);
 	if (xk) {
 	    	trace_as_keymap(&ir->Event.KeyEvent);
 		action = lookup_key(xk, ir->Event.KeyEvent.dwControlKeyState);
@@ -1537,6 +1656,42 @@ kybd_input2(INPUT_RECORD *ir)
 	case VK_HOME:
 		action_internal(Home_action, IA_DEFAULT, CN, CN);
 		return;
+	case VK_ADD:
+		k = '+';
+		break;
+	case VK_SUBTRACT:
+		k = '+';
+		break;
+	case VK_NUMPAD0:
+		k = '0';
+		break;
+	case VK_NUMPAD1:
+		k = '1';
+		break;
+	case VK_NUMPAD2:
+		k = '2';
+		break;
+	case VK_NUMPAD3:
+		k = '3';
+		break;
+	case VK_NUMPAD4:
+		k = '4';
+		break;
+	case VK_NUMPAD5:
+		k = '5';
+		break;
+	case VK_NUMPAD6:
+		k = '6';
+		break;
+	case VK_NUMPAD7:
+		k = '7';
+		break;
+	case VK_NUMPAD8:
+		k = '8';
+		break;
+	case VK_NUMPAD9:
+		k = '9';
+		break;
 	default:
 		break;
 	}
@@ -1544,17 +1699,6 @@ kybd_input2(INPUT_RECORD *ir)
 	/* Then look for 3270-only cases. */
 	if (IN_3270) switch(k) {
 	/* These cases apply only to 3270 mode. */
-#if 0
-	case VK_OEM_CLEAR:
-		action_internal(Clear_action, IA_DEFAULT, CN, CN);
-		return;
-	case 0x12:
-		action_internal(Reset_action, IA_DEFAULT, CN, CN);
-		return;
-	case 'L' & 0x1f:
-		action_internal(Redraw_action, IA_DEFAULT, CN, CN);
-		return;
-#endif
 	case VK_TAB:
 		action_internal(Tab_action, IA_DEFAULT, CN, CN);
 		return;
@@ -1567,11 +1711,6 @@ kybd_input2(INPUT_RECORD *ir)
 	case VK_RETURN:
 		action_internal(Enter_action, IA_DEFAULT, CN, CN);
 		return;
-#if 0
-	case '\n':
-		action_internal(Newline_action, IA_DEFAULT, CN, CN);
-		return;
-#endif
 	default:
 		break;
 	}
@@ -1593,26 +1732,21 @@ kybd_input2(INPUT_RECORD *ir)
 		return;
 	}
 
-	/* Then any other 8-bit ASCII character. */
-	k = ir->Event.KeyEvent.uChar.AsciiChar & 0xff;
-	if (k && !(k & ~0xff)) {
-		char ks[6];
+	/* Then any other character. */
+	if (ir->Event.KeyEvent.uChar.UnicodeChar) {
+		char ks[7];
 		String params[2];
 		Cardinal one;
 
-		if (k >= ' ') {
-			ks[0] = k;
-			ks[1] = '\0';
-		} else {
-			(void) sprintf(ks, "0x%x", k);
-		}
+		(void) sprintf(ks, "U+%04X",
+			       ir->Event.KeyEvent.uChar.UnicodeChar);
 		params[0] = ks;
 		params[1] = CN;
 		one = 1;
 		Key_action(NULL, NULL, params, &one);
-		return;
+	} else {
+		trace_event(" dropped (no default)\n");
 	}
-	trace_event(" dropped (no default)\n");
 }
 
 void
@@ -1651,6 +1785,14 @@ cursor_move(int baddr)
 void
 toggle_monocase(struct toggle *t unused, enum toggle_type tt unused)
 {
+    	screen_changed = True;
+	screen_disp(False);
+}
+
+void
+toggle_underscore(struct toggle *t unused, enum toggle_type tt unused)
+{
+    	screen_changed = True;
 	screen_disp(False);
 }
 
@@ -1874,13 +2016,16 @@ Redraw_action(Widget w unused, XEvent *event unused, String *params unused,
 void
 ring_bell(void)
 {
-	/*Beep(750, 300);*/
+    	/* Flash the console window -- it's much kinder. */
+	if (console_window != NULL)
+	    	FlashWindow(console_window, TRUE);
 }
 
 void
 screen_flip(void)
 {
 	flipped = !flipped;
+	screen_changed = True;
 	screen_disp(False);
 }
 
@@ -1892,228 +2037,6 @@ screen_132(void)
 void
 screen_80(void)
 {
-}
-
-/*
- * Translate an x3270 font line-drawing character (the first two rows of a
- * standard X11 fixed-width font) to an ASCII-art equivalent.
- *
- * Returns -1 if there is no translation.
- */
-static int
-linedraw_to_acs(unsigned char c)
-{
-    	int r;
-
-	/* FIXME: Need aplmap equivalent functionality for xterm linedraw. */
-
-	/* Use Unicode. */
-	switch (c) {
-	case 0x0:	/* '_', block */
-		r = -1;
-		break;
-	case 0x1:	/* '`', diamond */
-		r = 0x25c6;
-		break;
-	case 0x2:	/* 'a', checkerboard */
-		r = -1;
-		break;
-	case 0x7:	/* 'f', degree */
-		r = 0xb0;
-		break;
-	case 0x8:	/* 'g', plusminus */
-		r = 0xb1;
-		break;
-	case 0x9:	/* 'h', board? */
-		r = -1;
-		break;
-	case 0xa:	/* 'i', lantern? */
-		r = -1;
-		break;
-	case 0xb:	/* 'j', LR corner */
-		r = 0x2518;
-		break;
-	case 0xc:	/* 'k', UR corner */
-		r = 0x2510;
-		break;
-	case 0xd:	/* 'l', UL corner */
-		r = 0x250c;
-		break;
-	case 0xe:	/* 'm', LL corner */
-		r = 0x2514;
-		break;
-	case 0xf:	/* 'n', plus */
-		r = 0x253c;
-		break;
-	case 0x10:	/* 'o', top horizontal */
-		r = '-';
-		break;
-	case 0x11:	/* 'p', row 3 horizontal */
-		r = '-';
-		break;
-	case 0x12:	/* 'q', middle horizontal */
-		r = 0x2500;
-		break;
-	case 0x13:	/* 'r', row 7 horizontal */
-		r = '-';
-		break;
-	case 0x14:	/* 's', bottom horizontal */
-		r = '_';
-		break;
-	case 0x15:	/* 't', left tee */
-		r = 0x251c;
-		break;
-	case 0x16:	/* 'u', right tee */
-		r = 0x2524;
-		break;
-	case 0x17:	/* 'v', bottom tee */
-		r = 0x2534;
-		break;
-	case 0x18:	/* 'w', top tee */
-		r = 0x252c;
-		break;
-	case 0x19:	/* 'x', vertical line */
-		r = 0x2502;
-		break;
-	case 0x1a:	/* 'y', less or equal */
-		r = 0x2264;
-		break;
-	case 0x1b:	/* 'z', greater or equal */
-		r = 0x2265;
-		break;
-	case 0x1c:	/* '{', pi */
-		r = 0x03c0;
-		break;
-	case 0x1d:	/* '|', not equal */
-		r = 0x2260;
-		break;
-	case 0x1e:	/* '}', sterling */
-		r = 0xa3;
-		break;
-	case 0x1f:	/* '~', bullet */
-		r = 0x2022;
-		break;
-	default:
-		r = -1;
-		break;
-	}
-
-	/* If we're pre-NT, we can't assume that Unicode works. */
-	if (!is_nt && (r & ~0xff))
-	    	r = -1;
-
-	return r;
-}
-
-int have_aplmap = 0;
-unsigned char aplmap[256];
-
-static int
-apl_to_acs(unsigned char c)
-{
-    	int r;
-
-	/* If there's an explicit map for this Windows code page, use it. */
-	if (have_aplmap) {
-	    	r = aplmap[c];
-		return r? r: -1;
-	}
-
-	/* Use Unicode. */
-	switch (c) {
-	case 0xaf: /* CG 0xd1, degree */
-		r = 0xb0;	/* XXX may not map to bullet in current
-				       codepage */
-		break;
-	case 0xd4: /* CG 0xac, LR corner */
-		r = 0x2518;
-		break;
-	case 0xd5: /* CG 0xad, UR corner */
-		r = 0x2510;
-		break;
-	case 0xc5: /* CG 0xa4, UL corner */
-		r = 0x250c;
-		break;
-	case 0xc4: /* CG 0xa3, LL corner */
-		r = 0x2514;
-		break;
-	case 0xd3: /* CG 0xab, plus */
-		r = 0x253c;
-		break;
-	case 0xa2: /* CG 0x92, horizontal line */
-		r = 0x2500;
-		break;
-	case 0xc6: /* CG 0xa5, left tee */
-		r = 0x251c;
-		break;
-	case 0xd6: /* CG 0xae, right tee */
-		r = 0x2524;
-		break;
-	case 0xc7: /* CG 0xa6, bottom tee */
-		r = 0x2534;
-		break;
-	case 0xd7: /* CG 0xaf, top tee */
-		r = 0x252c;
-		break;
-	case 0xbf: /* CG 0x15b, stile */
-	case 0x85: /* CG 0x184, vertical line */
-		r = 0x2502;
-		break;
-	case 0x8c: /* CG 0xf7, less or equal */
-		r = 0x2264;
-		break;
-	case 0xae: /* CG 0xd9, greater or equal */
-		r = 0x2265;
-		break;
-	case 0xbe: /* CG 0x3e, not equal */
-		r = 0x2260;
-		break;
-	case 0xa3: /* CG 0x93, bullet */
-		r = 0x2022;
-		break;
-	case 0xad:
-		r = '[';
-		break;
-	case 0xbd:
-		r = ']';
-		break;
-	default:
-		r = -1;
-		break;
-	}
-
-	/* If pre-NT, we can't assume that Unicode works. */
-	if (!is_nt && (r & ~0xff))
-	    	r = -1;
-
-	return r;
-}
-
-/* Read the aplMap.<windows-codepage> resource into aplmap[]. */
-static void
-check_aplmap(int codepage)
-{
-	char *r = get_fresource("%s.%d", ResAplMap, codepage);
-	char *s;
-	char *left, *right;
-
-	if (r == CN) {
-	    	return;
-	}
-
-	have_aplmap = 1;
-	r = NewString(r);
-	s = r;
-	while (split_dresource(&s, &left, &right) == 1) {
-	    	unsigned long l, r;
-
-		l = strtoul(left, NULL, 0);
-		r = strtoul(right, NULL, 0);
-		if (l > 0 && l <= 0xff && r > 0 && r <= 0xff) {
-		    	aplmap[l] = (unsigned char)r;
-		}
-	}
-	Free(r);
 }
 
 /*
@@ -2187,4 +2110,31 @@ relabel(Boolean ignored unused)
 	} else {
 	    	screen_title("wc3270");
 	}
+}
+
+/* Get the window handle for the console. */
+static HWND
+GetConsoleHwnd(void)
+{
+#define MY_BUFSIZE 1024 // Buffer size for console window titles.
+	HWND hwndFound;         // This is what is returned to the caller.
+	char pszNewWindowTitle[MY_BUFSIZE]; // Contains fabricated
+					    // WindowTitle.
+	char pszOldWindowTitle[MY_BUFSIZE]; // Contains original
+					    // WindowTitle.
+					    //
+	// Fetch current window title.
+	GetConsoleTitle(pszOldWindowTitle, MY_BUFSIZE);
+	// Format a "unique" NewWindowTitle.
+	wsprintf(pszNewWindowTitle,"%d/%d",
+		GetTickCount(), GetCurrentProcessId());
+	// Change current window title.
+	SetConsoleTitle(pszNewWindowTitle);
+	// Ensure window title has been updated.
+	Sleep(40);
+	// Look for NewWindowTitle.
+	hwndFound=FindWindow(NULL, pszNewWindowTitle);
+	// Restore original window title.
+	SetConsoleTitle(pszOldWindowTitle);
+	return(hwndFound);
 }
