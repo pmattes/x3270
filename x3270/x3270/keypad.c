@@ -243,9 +243,6 @@ static Dimension pa_width;
 static Dimension key_width;
 static Dimension large_key_width;
 
-static Position sm_x, sm_y;
-static Dimension sm_w, sm_h;
-
 static Widget keypad_container = (Widget) NULL;
 static XtTranslations keypad_t00 = (XtTranslations) NULL;
 static XtTranslations keypad_t0 = (XtTranslations) NULL;
@@ -601,8 +598,13 @@ keypad_shift(void)
  */
 Widget keypad_shell = NULL;
 Boolean keypad_popped = False;
-Boolean keypad_moving = False;
 static Boolean up_once = False;
+
+static Boolean TrueD = True;
+static Boolean *TrueP = &TrueD;
+static Boolean FalseD = False;
+static Boolean *FalseP = &FalseD;
+static enum placement *pp;
 
 /*
  * Called when the main screen is first exposed, to pop up the keypad the
@@ -619,25 +621,23 @@ keypad_first_up(void)
 
 /* Called when the keypad popup pops up or down */
 static void
-keypad_updown(Widget w unused, XtPointer client_data,
-		XtPointer call_data unused)
+keypad_updown(Widget w unused, XtPointer client_data, XtPointer call_data)
 {
+    	if (!up_once) {
+	    	/* First-time placement. */
+	    	place_popup(w, (XtPointer)pp, call_data);
+	}
 	appres.keypad_on = keypad_popped = *(Boolean *)client_data;
 	if (keypad_popped) {
-		up_once = True;
-		toplevel_geometry(&sm_x, &sm_y, &sm_w, &sm_h);
-	} else if (keypad_moving) {
-		keypad_moving = False;
-		XtPopup(keypad_shell, XtGrabNone);
+
+	    	if (up_once)
+			/* Subsequent placement. */
+			replace_popup(w, (XtPointer)pp, call_data);
+		else
+			up_once = True;
 	}
 	menubar_keypad_changed();
 }
-
-static Boolean TrueD = True;
-static Boolean *TrueP = &TrueD;
-static Boolean FalseD = False;
-static Boolean *FalseP = &FalseD;
-static enum placement *pp;
 
 /* Create the pop-up keypad */
 void
@@ -676,8 +676,8 @@ keypad_popup_init(void)
 	keypad_shell = XtVaCreatePopupShell(
 	    "keypadPopup", transientShellWidgetClass, toplevel,
 	    NULL);
-	XtAddCallback(keypad_shell, XtNpopupCallback, place_popup,
-	    (XtPointer)pp);
+	/*XtAddCallback(keypad_shell, XtNpopupCallback, place_popup,
+	    (XtPointer)pp);*/
 	XtAddCallback(keypad_shell, XtNpopupCallback, keypad_updown,
 	    (XtPointer) TrueP);
 	XtAddCallback(keypad_shell, XtNpopdownCallback, keypad_updown,
@@ -758,8 +758,25 @@ keypad_move(void)
 {
 	if (!keypad_popped)
 		return;
-	keypad_moving = True;
-	XtPopdown(keypad_shell);
+
+	move_popup(keypad_shell, pp, NULL);
+}
+
+void
+keypad_popdown(Boolean *was_up)
+{
+    	if (keypad_popped) {
+	    	*was_up = True;
+		XtPopdown(keypad_shell);
+	} else
+	    	*was_up = False;
+}
+
+void
+keypad_popup(void)
+{
+    	if (keypad_shell != NULL)
+	    	XtPopup(keypad_shell, XtGrabNone);
 }
 
 #endif /*]*/
