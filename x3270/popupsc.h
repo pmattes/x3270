@@ -43,6 +43,7 @@ extern void info_popup_init(void);
 extern void PA_confirm_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void place_popup(Widget w, XtPointer client_data, XtPointer call_data);
+extern void move_popup(Widget w, XtPointer client_data, XtPointer call_data);
 extern void popdown_an_error(void);
 extern void popup_an_errno(int errn, const char *fmt, ...) printflike(2, 3);
 extern void popup_an_error(const char *fmt, ...) printflike(1, 2);
