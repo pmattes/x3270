@@ -20,13 +20,13 @@ SRCS = actions.c ansi.c apl.c c3270.c charset.c child.c ctlr.c \
 	ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c idle.c keymap.c \
 	kybd.c macros.c print.c printer.c proxy.c resolver.c resources.c \
 	rpq.c screen.c see.c sf.c tables.c telnet.c toggles.c trace_ds.c \
-	utf8.c util.c xio.c XtGlue.c \
+	unicode.c utf8.c util.c xio.c XtGlue.c \
 	@DBCS_C@
 VOBJS = actions.o ansi.o apl.o c3270.o charset.o child.o ctlr.o fallbacks.o \
 	ft.o ft_cut.o ft_dft.o glue.o help.o host.o icmd.o idle.o keymap.o \
 	kybd.o macros.o print.o printer.o proxy.o resolver.c resources.o \
 	rpq.o screen.o see.o sf.o tables.o telnet.o toggles.o trace_ds.o \
-	utf8.o util.o xio.o XtGlue.o \
+	unicode.o utf8.o util.o xio.o XtGlue.o \
 	@DBCS_O@
 OBJS1 = $(VOBJS) version.o
 @CNV@IDP = @ICU_DATA_PREFIX_@

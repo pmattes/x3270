@@ -1,5 +1,5 @@
 dnl Modifications Copyright 1993, 1994, 1995, 1996, 1997, 1999,
-dnl   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 by Paul Mattes.
+dnl   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 by Paul Mattes.
 dnl  Permission to use, copy, modify, and distribute this software and its
 dnl  documentation for any purpose and without fee is hereby granted,
 dnl  provided that the above copyright notice appear in all copies and that
@@ -14,6 +14,9 @@ define(XX_LA,ifelse(XX_PRODUCT,lib3270,a))dnl
 define(XX_VOID,ifelse(XX_PRODUCT,lib3270,`(l3h_t XX_FI(h))'))dnl
 define(XX_INT,ifelse(XX_PRODUCT,lib3270,`int '))dnl
 define(XX_CCHAR,ifelse(XX_PRODUCT,lib3270,`const char *'))dnl
+define(XX_PLATFORM,ifelse(XX_PRODUCT,wc3270,windows,XX_PRODUCT,ws3270,windows,unix))dnl
+define(XX_MODE,ifelse(XX_PRODUCT,c3270,console,XX_PRODUCT,wc3270,console,XX_PRODUCT,s3270,script,XX_PRODUCT,wc3270,script,XX_PRODUCT))dnl
+define(XX_INTERACTIVE,ifelse(XX_PRODUCT,x3270,yes,XX_PRODUCT,c3270,yes,XX_PRODUCT,wc3270,yes,no))dnl
 XX_TH(XX_PRODUCT,ifelse(XX_PRODUCT,lib3270,3,1),XX_DATE)
 XX_SH(Name)
 XX_PRODUCT XX_DASH
@@ -41,13 +44,13 @@ XX_PRODUCT,s3270,`host, then allows a script to control the host login session.
 It is derived from
 XX_LINK(x3270-man.html,XX_FI(x3270)(1)),
 an X-windows IBM 3270 emulator.',
+XX_PRODUCT,ws3270,`host, then allows a script to control the host login session.',
 XX_PRODUCT,tcl3270,`host, then allows a tcl script to control the host login
 session.
 It is derived from
 XX_LINK(x3270-man.html,XX_FI(x3270)(1)),
 an X-windows IBM 3270 emulator.',
-XX_PRODUCT,c3270,`host in a console window.',
-XX_PRODUCT,wc3270,`host in a console window.',
+XX_MODE,console,`host in a console window.',
 XX_PRODUCT,lib3270,`host, then allows the program to control the host login
 session.
 It is derived from
@@ -153,7 +156,7 @@ Specifies the initial x coordinate for the program icon.
 XX_TP(XX_FB(XX_DASHED(icony)) XX_FI(y))
 Specifies the initial y coordinate for the program icon.
 ')dnl
-ifelse(XX_PRODUCT,wc3270,,`XX_TP(XX_FB(XX_DASHED(im)) XX_FI(method))
+ifelse(XX_PLATFORM,unix,`XX_TP(XX_FB(XX_DASHED(im)) XX_FI(method))
 Specifies the name of the input method to use for multi-byte input.
 (Supported only when XX_PRODUCT is compiled with DBCS support.)
 ')dnl
@@ -169,7 +172,7 @@ See XX_LINK(#Keymaps,XX_SM(KEYMAPS)) below for details.
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(keypad)))
 Turns on the keypad as soon as XX_FB(XX_PRODUCT) starts.
 ')dnl
-ifelse(XX_PRODUCT,wc3270,,`XX_TP(XX_FB(XX_DASHED(km)) XX_FI(name))
+ifelse(XX_PLATFORM,unix,`XX_TP(XX_FB(XX_DASHED(km)) XX_FI(name))
 Specifies the local encoding method for multi-byte text.
 XX_FI(name) is an encoding name recognized by the ICU library.
 (Supported only when XX_PRODUCT is compiled with DBCS support, and necessary
@@ -303,7 +306,7 @@ XX_TP(XX_FB(XX_DASHED(set)) XX_FI(toggle))
 Sets the initial value of XX_FI(toggle) to XX_FB(true).
 The list of toggle names is under XX_LINK(`#'XX_TOGGLEREF,XX_SM(XX_TOGGLEREFNM))
 below.
-ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,wc3270,,
+ifelse(XX_PRODUCT,tcl3270,,XX_PLATFORM,windows,,
 `XX_TP(XX_FB(XX_DASHED(socket)))
 Causes the emulator to create a Unix-domain socket when it starts, for use
 by script processes to send commands to the emulator.
@@ -343,8 +346,8 @@ Turns on data stream ifelse(XX_PRODUCT,x3270,,`and event ')tracing at startup.
 ifelse(XX_PRODUCT,x3270,`Unlike turning it on from a menu option,
 there is no pop-up to confirm the file name, which defaults to',
 `The default trace file name is')
-ifelse(XX_PRODUCT,wc3270,`XX_FB(x3trc.)`'XX_FI(process_id)XX_FB(.txt) in the
-XX_FB(wc3270) XX_FI(Application Data) directory',`XX_FB(/tmp/x3trc.)`'XX_FI(process_id)').
+ifelse(XX_PLATFORM,windows,`XX_FB(x3trc.)`'XX_FI(process_id)XX_FB(.txt) in the
+XX_FB(XX_PRODUCT) XX_FI(Application Data) directory',`XX_FB(/tmp/x3trc.)`'XX_FI(process_id)').
 XX_TP(XX_FB(XX_DASHED(tracefile)) XX_FI(file))
 Specifies a file to save data stream and event traces into.
 ifelse(XX_PRODUCT,x3270,`If the value XX_FB(stdout)
@@ -361,6 +364,8 @@ If specified, the trace file cannot already exist, and the (silently enforced)
 minimum size is 64 Kbytes.
 The value of XX_FI(size) can have a XX_FB(K) or XX_FB(M) suffix, indicating
 kilobytes or megabytes respectively.
+XX_TP(XX_FB(XX_DASHED(v))
+Display the version and build options for XX_FB(XX_PRODUCT)) and exit.
 ifelse(XX_PRODUCT,x3270,,
 `XX_TP(XX_FB(XX_DASHED(xrm)) "XX_PRODUCT.XX_FI(resource): XX_FI(value)")
 Sets the value of the named XX_FI(resource) to XX_FI(value).
@@ -424,7 +429,7 @@ change to a larger font, and vice-versa.
 ifelse(XX_PRODUCT,lib3270,
 `XX_SH(Hostname Syntax)
 include(hostname.inc)')dnl
-ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,tcl3270,,`XX_SH(Modes)
+ifelse(XX_MODE,console,`XX_SH(Modes)
 XX_FB(XX_PRODUCT) has two basic modes: XX_FI(command-prompt) and XX_FI(session).
 XX_PP
 XX_FI(Command-prompt) mode is where the XX_FB(XX_PRODUCT`'>) prompt is
@@ -458,19 +463,19 @@ define(XX_CG9,ifelse(XX_PRODUCT,x3270,3270cg-9))dnl
 define(XX_CG11,ifelse(XX_PRODUCT,x3270,3270cg-11))dnl
 define(XX_CG15A,ifelse(XX_PRODUCT,x3270,3270cg-15a))dnl
 define(XX_CG15,ifelse(XX_PRODUCT,x3270,3270cg-15))dnl
-define(XX_88591,ifelse(XX_PRODUCT,wc3270,28591,iso8859-1))dnl
-define(XX_88592,ifelse(XX_PRODUCT,wc3270,28592,iso8859-2))dnl
-define(XX_88597,ifelse(XX_PRODUCT,wc3270,28597,iso8859-7))dnl
-define(XX_88598,ifelse(XX_PRODUCT,wc3270,28598,iso8859-8))dnl
-define(XX_88599,ifelse(XX_PRODUCT,wc3270,28599,iso8859-9))dnl
-define(XX_885911,ifelse(XX_PRODUCT,wc3270,28601,iso8859-11))dnl
-define(XX_885915,ifelse(XX_PRODUCT,wc3270,28605,iso8859-15))dnl
-define(XX_KOI8R,ifelse(XX_PRODUCT,wc3270,20866,koi8-r))dnl
-define(XX_TIS,ifelse(XX_PRODUCT,wc3270,`',tis620.2529-0))dnl
+define(XX_88591,ifelse(XX_PLATFORM,windows,28591,iso8859-1))dnl
+define(XX_88592,ifelse(XX_PLATFORM,windows,28592,iso8859-2))dnl
+define(XX_88597,ifelse(XX_PLATFORM,windows,28597,iso8859-7))dnl
+define(XX_88598,ifelse(XX_PLATFORM,windows,28598,iso8859-8))dnl
+define(XX_88599,ifelse(XX_PLATFORM,windows,28599,iso8859-9))dnl
+define(XX_885911,ifelse(XX_PLATFORM,windows,28601,iso8859-11))dnl
+define(XX_885915,ifelse(XX_PLATFORM,windows,28605,iso8859-15))dnl
+define(XX_KOI8R,ifelse(XX_PLATFORM,windows,20866,koi8-r))dnl
+define(XX_TIS,ifelse(XX_PLATFORM,windows,`',tis620.2529-0))dnl
 XX_TS(3,`center;
 l l l
 lfB l l.')
-XX_TR(XX_TD(XX_TC(Charset Name))	XX_TD(XX_TC(Host Code Page))	XX_TD(XX_TC(ifelse(XX_PRODUCT,x3270,Display Character Sets,XX_PRODUCT,c3270,Display Character Set,XX_PRODUCT,wc3270,Windows Code Page,Character Set))))
+XX_TR(XX_TD(XX_TC(Charset Name))	XX_TD(XX_TC(Host Code Page))	XX_TD(XX_TC(ifelse(XX_PRODUCT,x3270,Display Character Sets,XX_PRODUCT,c3270,Display Character Set,XX_PLATFORM,windows,Windows Code Page,Character Set))))
 XX_T_()
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TD(XX_TC(apl))	XX_TD(XX_TC(37))	XX_TD(XX_TC(XX_CG1A)))
 ')dnl
@@ -479,7 +484,7 @@ XX_TR(XX_TD(XX_TC(belgian-euro))	XX_TD(XX_TC(1148))	XX_TD(XX_TC(XX_CG15A XX_CG15
 XX_TR(XX_TD(XX_TC(bracket))	XX_TD(XX_TC(37))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TR(XX_TD(XX_TC(brazilian))	XX_TD(XX_TC(275))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TR(XX_TD(XX_TC(cp1047))	XX_TD(XX_TC(1047))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
-ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(XX_TC(cp1153))	XX_TD(XX_TC(1153))	XX_TD(XX_TC(1250)))
+ifelse(XX_PLATFORM,windows,`XX_TR(XX_TD(XX_TC(cp1153))	XX_TD(XX_TC(1153))	XX_TD(XX_TC(1250)))
 ')dnl
 XX_TR(XX_TD(XX_TC(cp870))	XX_TD(XX_TC(870))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88592)))
 XX_TR(XX_TD(XX_TC(finnish))	XX_TD(XX_TC(278))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
@@ -494,12 +499,12 @@ XX_TR(XX_TD(XX_TC(icelandic))	XX_TD(XX_TC(871))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88
 XX_TR(XX_TD(XX_TC(icelandic-euro))	XX_TD(XX_TC(1149))	XX_TD(XX_TC(XX_CG15A XX_CG15 XX_885915)))
 XX_TR(XX_TD(XX_TC(italian))	XX_TD(XX_TC(280))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TR(XX_TD(XX_TC(italian-euro))	XX_TD(XX_TC(1144))	XX_TD(XX_TC(XX_CG15A XX_CG15 XX_885915)))
-ifelse(XX_PRODUCT,wc3270,,`XX_TR(XX_TD(XX_TC(japanese))	XX_TD(XX_TC(1027+300))	XX_TD(XX_TC(jisx0201.1976-0 + jisx0208.1983-0)))
+ifelse(XX_PLATFORM,windows,,`XX_TR(XX_TD(XX_TC(japanese))	XX_TD(XX_TC(1027+300))	XX_TD(XX_TC(jisx0201.1976-0 + jisx0208.1983-0)))
 ')dnl
 XX_TR(XX_TD(XX_TC(norwegian))	XX_TD(XX_TC(277))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TR(XX_TD(XX_TC(norwegian-euro))	XX_TD(XX_TC(1142))	XX_TD(XX_TC(XX_CG15A XX_CG15 XX_885915)))
 XX_TR(XX_TD(XX_TC(russian))	XX_TD(XX_TC(880))	XX_TD(XX_TC(XX_KOI8R)))
-ifelse(XX_PRODUCT,wc3270,,`XX_TR(XX_TD(XX_TC(simplified-chinese))	XX_TD(XX_TC(836+837))	XX_TD(XX_TC(XX_CG1A XX_88591 + gb2312.1980-0)))
+ifelse(XX_PLATFORM,windows,,`XX_TR(XX_TD(XX_TC(simplified-chinese))	XX_TD(XX_TC(836+837))	XX_TD(XX_TC(XX_CG1A XX_88591 + gb2312.1980-0)))
 ')dnl
 XX_TR(XX_TD(XX_TC(slovenian))	XX_TD(XX_TC(870))	XX_TD(XX_TC(XX_88592)))
 XX_TR(XX_TD(XX_TC(spanish))	XX_TD(XX_TC(284))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
@@ -569,7 +574,7 @@ If the "XX_PRODUCT.keypadOn" resource is set to
 XX_FB(true),
 the keypad will be displayed at startup.
 ')dnl
-ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_PRODUCT,wc3270,,
+ifelse(XX_MODE,script,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_PLATFORM,windows,,
 `XX_SH(Hosts Database)
 XX_FB(XX_PRODUCT) uses the XX_FI(ibm_hosts) database to
 ifelse(XX_PRODUCT,x3270,`construct a pull-down menu of hosts to connect to.
@@ -629,7 +634,7 @@ XX_TR(XX_TD(Interrupt)	XX_TD(XX_PRODUCT.intr)	XX_TD(^C))
 XX_TR(XX_TD(Quit)	XX_TD(XX_PRODUCT.quit)	XX_TD(^XX_BS()))
 XX_TR(XX_TD(End of file)	XX_TD(XX_PRODUCT.eof)	XX_TD(^D))
 XX_TE()
-ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,
+ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,
 `XX_LP
 Separate keymaps can be defined for use only when XX_FB(XX_PRODUCT) is in
 3270 mode or XX_SM(NVT) mode.
@@ -657,6 +662,18 @@ If set, pasting multi-line input via the XX_FB(Paste) action will maintain a
 left margin (it will not move the cursor further left than where the paste
 begins).
 ')dnl
+ifelse(XX_MODE,console,`XX_TP(XX_FB(underscore))
+If set, XX_PRODUCT will display underlined fields by substituting
+underscore XX_DQUOTED(_) characters for blanks or nulls in the field.
+Otherwise, these fields will be displayed
+ifelse(XX_PRODUCT,c3270,`using the XX_POSESSIVE(terminal) native
+unerlining mode, if one is defined.
+',`with a highlighted background.
+Note that setting XX_FB(underscore) also disables the highlighted background
+for blinking fields.
+XX_FB(underscore) is set by default.
+')dnl
+')dnl
 XX_TPE()dnl
 XX_LP
 ')dnl
@@ -681,10 +698,13 @@ XX_TR(XX_TD(Save Screen(s) in File)	XX_TD(screenTrace))
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TD(Scrollbar)	XX_TD(scrollBar))
 ')dnl
 XX_TR(XX_TD(Wraparound)	XX_TD(lineWrap))
-ifelse(XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,tcl3270,,`XX_TR(XX_TD(Paste with Left Margin)	XX_TD(marginedPaste))
+ifelse(XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,tcl3270,,`XX_TR(XX_TD(Paste with Left Margin)	XX_TD(marginedPaste))
 ')dnl
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TD(Select by Rectangles)	XX_TD(rectangleSelect))
 XX_TR(XX_TD(Crosshair Cursor)	XX_TD(crosshair))
+')dnl
+ifelse(XX_MODE,console,`XX_TR(XX_TD(Underscore Mode)	XX_TD(underscore))
+')dnl
 ')dnl
 XX_TE()
 ifelse(XX_PRODUCT,x3270,
@@ -704,8 +724,7 @@ XX_BR
 XX_LP
 These names are also used as the first parameter to the XX_FB(Toggle)
 ifelse(XX_PRODUCT,lib3270,function,action).
-ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,
-`XX_SH(Status Line)
+ifelse(XX_INTERACTIVE,yes,`XX_SH(Status Line)
 ifelse(XX_PRODUCT,c3270,`If the terminal that XX_FB(XX_PRODUCT) is running on
 has at least one more row that the 3270 model requires (e.g., 25 rows for a
 model 2), XX_FB(XX_PRODUCT) will display a status line.
@@ -834,11 +853,11 @@ possibly waiting for a response.
 ')dnl
 XX_PP
 XX_TS(2,center; lw(3i) lw(3i).)
-ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,wc3270,,`XX_TR(XX_TDH(XX_CCHAR()XX_LS()`Ascii'ifelse(XX_PRODUCT,lib3270,All)`'XX_VOID())	XX_TD(return entire screen contents in XX_SM(ASCII)))
-XX_TR(XX_TDH(XX_CCHAR()XX_LS()`Ascii'ifelse(XX_PRODUCT,lib3270,FromCursor)`'XX_LPAREN`'XX_INT()XX_FI(length)`'XX_RPAREN`')	XX_TD(return screen contents at cursor in XX_SM(ASCII)))
-XX_TR(XX_TDH(XX_CCHAR()XX_LS()`Ascii'ifelse(XX_PRODUCT,lib3270,Line)`'XX_LPAREN`'XX_INT()XX_FI(row)`'XX_COMMA`'XX_INT()XX_FI(col)`'XX_COMMA`'XX_INT()XX_FI(length)`'XX_RPAREN)	XX_TD(return screen contents in XX_SM(ASCII)))
-XX_TR(XX_TDH(XX_CCHAR()XX_LS()`Ascii'ifelse(XX_PRODUCT,lib3270,Block)`'XX_LPAREN`'XX_INT()XX_FI(row)`'XX_COMMA`'XX_INT()XX_FI(col)`'XX_COMMA`'XX_INT()XX_FI(rows)`'XX_COMMA`'XX_INT()XX_FI(cols)`'XX_RPAREN`')	XX_TD(return screen region in XX_SM(ASCII)))
-XX_TR(XX_TDH(XX_CCHAR()XX_INT()`AsciiField'XX_VOID())	XX_TD(return current field in XX_SM(ASCII)))
+ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,wc3270,,`XX_TR(XX_TDH(XX_CCHAR()XX_LS()`Ascii'ifelse(XX_PRODUCT,lib3270,All)`'XX_VOID())	XX_TD(return entire screen contents as text))
+XX_TR(XX_TDH(XX_CCHAR()XX_LS()`Ascii'ifelse(XX_PRODUCT,lib3270,FromCursor)`'XX_LPAREN`'XX_INT()XX_FI(length)`'XX_RPAREN`')	XX_TD(return screen contents at cursor as text))
+XX_TR(XX_TDH(XX_CCHAR()XX_LS()`Ascii'ifelse(XX_PRODUCT,lib3270,Line)`'XX_LPAREN`'XX_INT()XX_FI(row)`'XX_COMMA`'XX_INT()XX_FI(col)`'XX_COMMA`'XX_INT()XX_FI(length)`'XX_RPAREN)	XX_TD(return screen contents as text))
+XX_TR(XX_TDH(XX_CCHAR()XX_LS()`Ascii'ifelse(XX_PRODUCT,lib3270,Block)`'XX_LPAREN`'XX_INT()XX_FI(row)`'XX_COMMA`'XX_INT()XX_FI(col)`'XX_COMMA`'XX_INT()XX_FI(rows)`'XX_COMMA`'XX_INT()XX_FI(cols)`'XX_RPAREN`')	XX_TD(return screen region as text))
+XX_TR(XX_TDH(XX_CCHAR()XX_INT()`AsciiField'XX_VOID())	XX_TD(return current field as text))
 ')dnl
 XX_TR(XX_TDH(XX_INT()XX_LS()XX_BLOCK()`Attn'XX_VOID())	XX_TD(attention key))
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(AltCursor)	XX_TD(switch between block and underscore cursor))
@@ -848,9 +867,9 @@ XX_TR(XX_TDH(XX_INT()XX_LS()`BackTab'XX_VOID())	XX_TD(tab to start of previous i
 ifelse(XX_PRODUCT,lib3270,,`XX_TR(`XX_TDH(CircumNot)	XX_TD(`input "^" in XX_SM(NVT) mode, or "XX_NOT" in 3270 mode''))
 ')dnl
 XX_TR(XX_TDH(XX_INT()XX_LA()XX_BLOCK()`Clear'XX_VOID())	XX_TD(clear screen))
-ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,c3270,,`XX_TR(XX_TDH(XX_INT()XX_LS()`Cols'XX_VOID())	XX_TD(report screen size))
+ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,c3270,,`XX_TR(XX_TDH(XX_INT()XX_LS()`Cols'XX_VOID())	XX_TD(report screen size))
 ')dnl
-ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,`XX_TR(XX_TDH(Compose)	XX_TD(next two keys form a special symbol))
+ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,`XX_TR(XX_TDH(Compose)	XX_TD(next two keys form a special symbol))
 ')dnl
 XX_TR(XX_TDH(XX_INT()XX_LA()XX_BLOCK()Connect`'XX_LPAREN`'XX_CCHAR()XX_FI(host)`'XX_RPAREN)	XX_TD(connect to XX_FI(host)))
 XX_TR(XX_TDH(XX_INT()XX_LA()XX_BLOCK()`CursorSelect'XX_VOID())	XX_TD(Cursor Select XX_SM(AID)))
@@ -863,7 +882,7 @@ XX_TR(XX_TDH(XX_INT()XX_LS()`DeleteWord'XX_VOID())	XX_TD(delete the current or p
 XX_TR(XX_TDH(XX_INT()XX_LS()XX_BLOCK()`Disconnect'XX_VOID())	XX_TD(disconnect from host))
 XX_TR(XX_TDH(XX_INT()XX_LS()`Down'XX_VOID())	XX_TD(move cursor down))
 XX_TR(XX_TDH(XX_INT()XX_LS()`Dup'XX_VOID())	XX_TD(duplicate field))
-ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,wc3270,,`XX_TR(XX_TDH(XX_CCHAR()XX_LS()`Ebcdic'ifelse(XX_PRODUCT,lib3270,All)`'XX_VOID())	XX_TD(return entire screen contents in XX_SM(EBCDIC)))
+ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,wc3270,,`XX_TR(XX_TDH(XX_CCHAR()XX_LS()`Ebcdic'ifelse(XX_PRODUCT,lib3270,All)`'XX_VOID())	XX_TD(return entire screen contents in XX_SM(EBCDIC)))
 XX_TR(XX_TDH(XX_CCHAR()XX_LS()`Ebcdic'ifelse(XX_PRODUCT,lib3270,FromCursor)`'XX_LPAREN`'XX_INT()XX_FI(length)`'XX_RPAREN`')	XX_TD(return screen contents at cursor in XX_SM(EBCDIC)))
 XX_TR(XX_TDH(XX_CCHAR()XX_LS()`Ebcdic'ifelse(XX_PRODUCT,lib3270,Line)`'XX_LPAREN`'XX_INT()XX_FI(row)`'XX_COMMA`'XX_INT()XX_FI(col)`'XX_COMMA`'XX_INT()XX_FI(length)`'XX_RPAREN)	XX_TD(return screen contents in XX_SM(EBCDIC)))
 XX_TR(XX_TDH(XX_CCHAR()XX_LS()`Ebcdic'ifelse(XX_PRODUCT,lib3270,Block)`'XX_LPAREN`'XX_INT()XX_FI(row)`'XX_COMMA`'XX_INT()XX_FI(col)`'XX_COMMA`'XX_INT()XX_FI(rows)`'XX_COMMA`'XX_INT()XX_FI(cols)`'XX_RPAREN`')	XX_TD(return screen region in XX_SM(EBCDIC)))
@@ -886,7 +905,7 @@ XX_TR(XX_TDH(XX_INT()XX_LS()`Home'XX_VOID())	XX_TD(move cursor to first input fi
 XX_TR(XX_TDH(XX_INT()XX_LS()`Insert'XX_VOID())	XX_TD(set insert mode))
 XX_TR(XX_TDH(XX_INT()XX_LS()XX_BLOCK()`Interrupt'XX_VOID())	XX_TD(send XX_SM(TELNET IP) to host))
 XX_TR(XX_TDH(XX_INT()XX_LA()Key`'XX_LPAREN`'XX_CCHAR()XX_FI(keysym)`'XX_RPAREN)	XX_TD(insert key XX_FI(keysym)))
-ifelse(XX_PRODUCT,lib3270,,`XX_TR(XX_TDH(Key`'XX_LPAREN`'0x`'XX_FI(xx)`'XX_RPAREN)	XX_TD(insert key with XX_SM(ASCII) code XX_FI(xx)))
+ifelse(XX_PRODUCT,lib3270,,`XX_TR(XX_TDH(Key`'XX_LPAREN`'0x`'XX_FI(xx)`'XX_RPAREN)	XX_TD(insert key with character code XX_FI(xx)))
 ')dnl
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(Keymap(XX_FI(keymap)))	XX_TD(toggle alternate XX_FI(keymap) (or remove with XX_FB(None))))
 XX_TR(XX_TDH(KybdSelect(XX_FI(direction)[,XX_FI(atom)...]))	XX_TD(Extend selection by one row or column))
@@ -907,8 +926,9 @@ XX_TR(XX_TDH(XX_INT()XX_LA()XX_BLOCK()PA`'XX_LPAREN`'XX_INT()XX_FI(n)`'XX_RPAREN
 XX_TR(XX_TDH(XX_INT()XX_LA()XX_BLOCK()PF`'XX_LPAREN`'XX_FI(XX_INT()n)`'XX_RPAREN)	XX_TD(Program Function XX_SM(AID) (XX_FI(n) from 1 to 24)))
 XX_TR(XX_TDH(XX_INT()XX_LS()`PreviousWord'XX_VOID())	XX_TD(move cursor to previous word))
 ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(XX_INT()XX_LS()`Paste'XX_VOID())	XX_TD(insert clipboard contents))')dnl
-ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,`XX_TR(XX_TDH(Printer(Start[,XX_FI(lu)]|Stop))	XX_TD(start or stop printer session))
-XX_TR(XX_TDH(PrintText(XX_FI(command)))	XX_TD(print screen text on printer))
+ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,`XX_TR(XX_TDH(Printer(Start[,XX_FI(lu)]|Stop))	XX_TD(start or stop printer session))
+ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(PrintText(XX_FI([printer-name])))	XX_TD(print screen text on printer))',
+`XX_TR(XX_TDH(PrintText(XX_FI(command)))	XX_TD(print screen text on printer))')
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(PrintWindow(XX_FI(command)))	XX_TD(print screen image (bitmap) on printer))
 ')')dnl
 ifelse(XX_PRODUCT,lib3270,,`XX_TR(XX_TDH(Quit)	XX_TD(exit XX_FB(XX_PRODUCT)))
@@ -919,10 +939,10 @@ XX_TR(XX_TDH(XX_INT()XX_LS()`Redraw'XX_VOID())	XX_TD(redraw window))
 XX_TR(XX_TDH(XX_INT()XX_LS()`Reset'XX_VOID())	XX_TD(reset locked keyboard))
 XX_TR(XX_TDH(XX_INT()XX_LS()`Right'XX_VOID())	XX_TD(move cursor right))
 XX_TR(XX_TDH(XX_INT()XX_LS()`Right2'XX_VOID())	XX_TD(move cursor right 2 positions))
-ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,c3270,,XX_PRODUCT,wc3270,,`XX_TR(XX_TDH(XX_INT()XX_LS()ReadBuffer`'XX_SPACE`'Ascii`'XX_VOID())	XX_TD(dump screen buffer in ASCII))
+ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,c3270,,XX_PRODUCT,wc3270,,`XX_TR(XX_TDH(XX_INT()XX_LS()ReadBuffer`'XX_SPACE`'Ascii`'XX_VOID())	XX_TD(dump screen buffer as text))
 XX_TR(XX_TDH(XX_INT()XX_LS()ReadBuffer`'XX_SPACE`'Ebcdic`'XX_VOID())	XX_TD(dump screen buffer in EBCDIC))
 ')dnl
-ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,c3270,,`XX_TR(XX_TDH(XX_INT()XX_LS()`Rows'XX_VOID())	XX_TD(report screen size))
+ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,c3270,,`XX_TR(XX_TDH(XX_INT()XX_LS()`Rows'XX_VOID())	XX_TD(report screen size))
 ')dnl
 ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_PRODUCT,wc3270,,`XX_TR(XX_TDH(XX_BLOCK()Script(XX_FI(command)[,XX_FI(arg)...]))	XX_TD(run a script))
 ')dnl
@@ -930,7 +950,7 @@ ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(SelectAll(XX_FI(atom)))	XX_TD(select entir
 ')dnl
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(SetFont(XX_FI(font)))	XX_TD(change emulator font))
 ')dnl
-ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,wc3270,,
+ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,wc3270,,
 `ifelse(XX_PRODUCT,tcl3270,`XX_TR(XX_TDH(Snap)	XX_TD(same as XX_FB(Snap Save)))
 ')dnl
 XX_TR(XX_TDH(XX_CCHAR()XX_LS()Snap`'XX_SPACE`'Ascii`'ifelse(XX_PRODUCT,lib3270,...))	XX_TD(report saved screen data (see XX_FB(XX_LS()Ascii))))
@@ -942,6 +962,8 @@ XX_TR(XX_TDH(XX_INT()XX_LS()Snap`'XX_SPACE`'Save`'XX_VOID())	XX_TD(save screen i
 XX_TR(XX_TDH(XX_CCHAR()XX_LS()Snap`'XX_SPACE`'Status`'XX_VOID())	XX_TD(report saved connection status))
 XX_TR(XX_TDH(`ifelse(XX_PRODUCT,tcl3270,`XX_BLOCK()Snap Wait [XX_FI(timeout)] Output',
 `XX_INT()XX_LA()XX_BLOCK()SnapWaitOuput(XX_INT()XX_FI(timeout))')')	XX_TD(wait for host output and save screen image))
+ifelse(XX_PRODUCT,tcl3270,,`XX_TR(XX_TDH(XX_LS()XX_BLOCK()Source(XX_FI(file)))	XX_TD(read commands from XX_FI(file)))
+')dnl
 XX_TR(XX_TDH(XX_CCHAR()XX_LS()Status`'XX_VOID())	XX_TD(report connection status))
 ')dnl
 XX_TR(XX_TDH(XX_INT()XX_LA()XX_BLOCK()String`'XX_LPAREN`'XX_CCHAR()XX_FI(string)`'XX_RPAREN)	XX_TD(insert string (simple macro facility)))
@@ -956,7 +978,7 @@ ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(Unselect)	XX_TD(release selection))
 XX_TR(XX_TDH(XX_INT()XX_LS()`Up'XX_VOID())	XX_TD(move cursor up))
 ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TDH(ignore)	XX_TD(do nothing))
 ')dnl
-ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,wc3270,,
+ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,wc3270,,
 `XX_TR(XX_TDH(XX_BLOCK()XX_WAIT(3270mode))	XX_TD(wait for 3270 mode))
 XX_TR(XX_TDH(XX_BLOCK()XX_WAIT(Disconnect))	XX_TD(wait for host to disconnect))
 XX_TR(XX_TDH(XX_BLOCK()XX_WAIT(InputField))	XX_TD(wait for valid input field))
@@ -1029,7 +1051,7 @@ XX_PRODUCT,c3270,`scripting ',
 XX_PRODUCT,lib3270,`scripting ',
 `nested scripts ')dnl
 is provided via the XX_FB(XX_LA()String)
-XX_action`'ifelse(XX_PRODUCT,s3270,,tcl3270,,`, which
+XX_action`'ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,tcl3270,,`, which
 can be bound to any key in a keymap').
 The arguments to XX_FB(XX_LA()String) are one or more double-quoted strings which are
 inserted directly as if typed.
@@ -1039,6 +1061,7 @@ XX_FB(XX_PRODUCT) will wait for the host to unlock the keyboard before further
 processing the string.)
 XX_TS(2,l l.)
 XX_TR(XX_TD(XX_BS()b)	XX_TD(Left))
+XX_TR(XX_TD(XX_BS()`e'XX_FI(xx))	XX_TD(EBCDIC character in hex))
 XX_TR(XX_TD(XX_BS()f)	XX_TD(Clear*))
 XX_TR(XX_TD(XX_BS()n)	XX_TD(Enter*))
 XX_TR(XX_TD(XX_BS()`pa'XX_FI(n))	XX_TD(PA(XX_FI(n))*))
@@ -1046,8 +1069,9 @@ XX_TR(XX_TD(XX_BS()`pf'XX_FI(nn))	XX_TD(PF(XX_FI(nn))*))
 XX_TR(XX_TD(XX_BS()r)	XX_TD(Newline))
 XX_TR(XX_TD(XX_BS()t)	XX_TD(Tab))
 XX_TR(XX_TD(XX_BS()T)	XX_TD(BackTab))
+XX_TR(XX_TD(XX_BS()`x'XX_FI(xx))	XX_TD(ASCII character in hex))
 XX_TE()
-ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_PRODUCT,wc3270,
+ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_PRODUCT,wc3270,
 `XX_IP
 An example keymap entry would be:
 XX_RS(XX_KEY(Alt,p): String("probs clearrdr`'XX_BS()n"))
@@ -1073,7 +1097,7 @@ In 3270 mode, the hexadecimal data represent XX_SM(EBCDIC) characters, which
 are entered into the current field.
 In XX_SM(NVT) mode, the hexadecimal data represent XX_SM(ASCII) characters,
 which are sent directly to the host.
-ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_PRODUCT,wc3270,,`XX_TP(XX_FB(The Script Action))
+ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_PRODUCT,wc3270,,XX_PRODUCT,ws3270,,`XX_TP(XX_FB(The Script Action))
 This action causes XX_FB(XX_PRODUCT) to start a child process which can
 execute XX_FB(XX_PRODUCT) actions.
 Standard input and output from the child process are piped back to
@@ -1117,7 +1141,7 @@ The XX_FB(XX_DASHED(script)) option is fully documented in
 XX_LINK(x3270-script.html,XX_FI(x3270-script)(1)).
 ')dnl
 XX_TPE()dnl
-ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_PRODUCT,wc3270,,`XX_SH(Composite Characters)
+ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_PRODUCT,wc3270,,`XX_SH(Composite Characters)
 XX_FB(XX_PRODUCT)
 allows the direct entry of accented letters and special symbols.
 Pressing and releasing the "Compose" key, followed by two other keys, causes
@@ -1208,6 +1232,7 @@ print each job.
 It defaults to the value of the XX_FB($PRINTER) environment
 variable, if set.
 Otherwise the default system printer is used.
+This resource also controls the printer used by the XX_FB(PrintText) action.
 XX_LP
 The resource XX_FB(wc3270.printer.assocCommandLine) specifies the command
 used to start an associated printer session.  It defaults to:
@@ -1317,7 +1342,7 @@ XX_LP()
 The special types XX_FB(socks4a) and XX_FB(socks5d) can also be used to force
 the proxy server to do the hostname resolution for the SOCKS protocol.
 ifelse(XX_PRODUCT,x3270,,`include(resources.inc)')')dnl
-ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_PRODUCT,wc3270,,`XX_SH(Files)
+ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_PRODUCT,wc3270,,XX_PRODUCT,ws3270,,`XX_SH(Files)
 ifelse(XX_PRODUCT,x3270,/usr/lib/X11,/usr/local/lib)/x3270/ibm_hosts
 XX_BR
 ifelse(XX_PRODUCT,x3270,`$HOME/.x3270pro
@@ -1348,7 +1373,7 @@ ifelse(XX_PRODUCT,c3270,,XX_LINK(c3270-man.html,c3270(1))`, ')dnl
 ifelse(XX_PRODUCT,tcl3270,,XX_LINK(tcl3270-man.html,tcl3270(1))`, ')dnl
 ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_LINK(ibm_hosts.html,ibm_hosts(5))`, ')dnl
 ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_LINK(x3270-script.html,x3270-script(1))`, ')dnl
-ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,tcl3270,,XX_LINK(pr3287-man.html,pr3287(1))`, ')dnl
+ifelse(XX_PLATFORM,windows,,XX_MODE,interactive,XX_LINK(pr3287-man.html,pr3287(1))`, ')dnl
 telnet(1), tn3270(1)
 ifelse(XX_PRODUCT,x3270,`XX_BR
 X Toolkit Intrinsics
@@ -1366,7 +1391,7 @@ XX_BR
 RFC 2355, TN3270 Enhancements
 XX_SH(Copyrights)
 XX_LP
-Modifications and original code Copyright`'XX_COPY()1993, 1994, 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 by Paul Mattes.
+Modifications and original code Copyright`'XX_COPY()1993, 1994, 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 by Paul Mattes.
 XX_BR
 DFT File Transfer Code Copyright `'XX_COPY()October 1995 by Dick Altenbern.
 XX_BR

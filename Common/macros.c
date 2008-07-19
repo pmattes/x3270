@@ -1,6 +1,6 @@
 /*
  * Copyright 1993, 1994, 1995, 1996, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
- *   2006, 2007 by Paul Mattes.
+ *   2006, 2007, 2008 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -38,6 +38,7 @@
 #include <stdarg.h>
 #include "3270ds.h"
 #include "appres.h"
+#include "charsetc.h"
 #include "ctlr.h"
 #include "screen.h"
 #include "resources.h"
@@ -65,6 +66,10 @@
 #include "utilc.h"
 #include "xioc.h"
 #include "widec.h"
+
+#if defined(_WIN32) /*[*/
+#include "windows.h"
+#endif /*]*/
 
 #define ANSI_SAVE_SIZE	4096
 
@@ -108,7 +113,8 @@ typedef struct sms {
 		ST_KEYMAP,	/* keyboard map */
 		ST_IDLE,	/* idle command */
 		ST_CHILD,	/* child process */
-		ST_PEER		/* peer (external) process */
+		ST_PEER,	/* peer (external) process */
+		ST_FILE		/* read commands from file */
 	} type;
 	Boolean	success;
 	Boolean	need_prompt;
@@ -121,6 +127,9 @@ typedef struct sms {
 	unsigned long msec;	/* total accumulated time */
 	FILE   *outfile;
 	int	infd;
+#if defined(_WIN32) /*[*/
+	HANDLE	inhandle;
+#endif /*]*/
 	int	pid;
 	unsigned long expect_id;
 	unsigned long wait_id;
@@ -166,7 +175,8 @@ static int      ansi_save_ix = 0;
 static char    *expect_text = CN;
 static int	expect_len = 0;
 static const char *st_name[] = { "String", "Macro", "Command", "KeymapAction",
-				 "IdleCommand", "ChildScript", "PeerScript" };
+				 "IdleCommand", "ChildScript", "PeerScript",
+				 "File" };
 static enum iaction st_cause[] = { IA_MACRO, IA_MACRO, IA_COMMAND, IA_KEYMAP,
 				 IA_IDLE, IA_MACRO, IA_MACRO };
 #define ST_sNAME(s)	st_name[(int)(s)->type]
@@ -182,6 +192,8 @@ static void sms_pop(Boolean can_exit);
 static void socket_connection(void);
 #endif /*]*/
 static void wait_timed_out(void);
+static void read_from_file(void);
+static sms_t *sms_redirect_to(void);
 
 /* Macro that defines that the keyboard is locked due to user input. */
 #define KBWAIT	(kybdlock & (KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK))
@@ -197,13 +209,6 @@ static void wait_timed_out(void);
     (IN_3270 && (no_login_host || (formatted && cursor_addr)) && !CKBWAIT) || \
     (IN_ANSI && !(kybdlock & KL_AWAITING_FIRST)) \
 )
-
-static unsigned char ldtoasc[] = {
-	0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0xad,
-	0x3e, 0x3c, 0x5b, 0x5d, 0x29, 0x28, 0x7d, 0x7b,
-	0x20, 0x3d, 0x27, 0x22, 0x2f, 0x5c, 0x7c, 0xa6,
-	0x3f, 0x21, 0x24, 0xa2, 0xa3, 0xa5, 0xb6
-};
 
 #if defined(X3270_SCRIPT) && defined(X3270_PLUGIN) /*[*/
 static int plugin_pid = 0;		/* process ID if running, or 0 */
@@ -379,7 +384,11 @@ script_enable(void)
 {
 	if (sms->infd >= 0 && stdin_id == 0) {
 		trace_dsn("Enabling input for %s[%d]\n", ST_NAME, sms_depth);
+#if defined(_WIN32) /*[*/
+		stdin_id = AddInput((int)sms->inhandle, script_input);
+#else /*][*/
 		stdin_id = AddInput(sms->infd, script_input);
+#endif /*]*/
 	}
 }
 
@@ -412,6 +421,9 @@ new_sms(enum sms_type type)
 	s->is_login = False;
 	s->outfile = (FILE *)NULL;
 	s->infd = -1;
+#if defined(_WIN32) /*[*/
+	s->inhandle = INVALID_HANDLE_VALUE;
+#endif /*]*/
 	s->pid = -1;
 	s->expect_id = 0L;
 	s->wait_id = 0L;
@@ -518,6 +530,9 @@ sms_pop(Boolean can_exit)
 		(void) fclose(sms->outfile);
 		(void) close(sms->infd);
 	}
+	if (sms->type == ST_FILE) {
+	    	(void) close(sms->infd);
+	}
 
 	/* Cancel any pending timeouts. */
 	if (sms->expect_id != 0L)
@@ -554,9 +569,11 @@ sms_pop(Boolean can_exit)
 		sms->state = SS_KBWAIT;
 		trace_dsn("%s[%d] implicitly paused %s\n",
 			    ST_NAME, sms_depth, sms_state_name[sms->state]);
-	} else if (sms->state == SS_IDLE) {
+	} else if (sms->state == SS_IDLE && sms->type != ST_FILE) {
 		/* The parent needs to be restarted. */
 		script_enable();
+	} else if (sms->type == ST_FILE) {
+	    	read_from_file();
 	}
 }
 
@@ -625,6 +642,9 @@ peer_script_init(void)
 	}
 
 	s->infd = fileno(stdin);
+#if defined(_WIN32) /*[*/
+	s->inhandle = GetStdHandle(STD_INPUT_HANDLE);
+#endif /*]*/
 	s->outfile = stdout;
 	(void) SETLINEBUF(s->outfile);	/* even if it's a pipe */
 
@@ -1167,6 +1187,16 @@ push_string(char *s, Boolean is_login, Boolean is_hex)
 		sms_continue();
 }
 
+/* Push a Source'd file on the stack. */
+static void
+push_file(int fd)
+{
+    	if (!sms_push(ST_FILE))
+	    	return;
+	sms->infd = fd;
+	read_from_file();
+}
+
 /* Set a pending string. */
 void
 ps_set(char *s, Boolean is_hex)
@@ -1297,6 +1327,50 @@ run_script(void)
 	}
 }
 
+/* Read the next command from a file. */
+static void
+read_from_file(void)
+{
+	char *dptr;
+	int len_left = sizeof(sms->msc);
+
+	sms->msc_len = 0;
+	dptr = sms->msc;
+
+	while (len_left) {
+		int nr;
+
+		nr = read(sms->infd, dptr, 1);
+		if (nr < 0) {
+			sms_pop(False);
+			return;
+		}
+		if (nr == 0) {
+		    	if (sms->msc_len == 0) {
+			    	sms_pop(False);
+				return;
+			} else {
+			    	*++dptr = '\0';
+			    	break;
+			}
+		}
+		if (*dptr == '\n') {
+		    	if (sms->msc_len) {
+			    	*dptr = '\0';
+				break;
+			}
+		}
+		dptr++;
+		sms->msc_len++;
+		len_left--;
+	}
+
+	/* Run the command as a macro. */
+	trace_dsn("%s[%d] read '%s'\n", ST_NAME, sms_depth, sms->msc);
+	sms->state = SS_INCOMPLETE;
+	push_macro(sms->dptr, False);
+}
+
 /* Handle an error generated during the execution of a script or macro. */
 void
 sms_error(const char *msg)
@@ -1305,23 +1379,19 @@ sms_error(const char *msg)
 	Boolean is_script = False;
 
 	/* Print the error message. */
-	for (s = sms; s != NULL; s = s->next) {
-		if (sms->type == ST_PEER || sms->type == ST_CHILD) {
-			is_script = True;
-			break;
-		}
-	}
+	s = sms_redirect_to();
+	is_script = (s != NULL);
 	if (is_script) {
 		char c;
 
-		fprintf(sms->outfile, "data: ");
+		fprintf(s->outfile, "data: ");
 		while ((c = *msg++)) {
 			if (c == '\n')
-				(void) putc(' ', sms->outfile);
+				(void) putc(' ', s->outfile);
 			else
-				(void) putc(c, sms->outfile);
+				(void) putc(c, s->outfile);
 		}
-		putc('\n', sms->outfile);
+		putc('\n', s->outfile);
 	} else
 		(void) fprintf(stderr, "%s\n", msg);
 
@@ -1348,6 +1418,7 @@ sms_info(const char *fmt, ...)
 	char msgbuf[4096];
 	char *msg = msgbuf;
 	va_list args;
+	sms_t *s;
 
 	va_start(args, fmt);
 	vsprintf(msgbuf, fmt, args);
@@ -1362,16 +1433,11 @@ sms_info(const char *fmt, ...)
 		else
 			nc = strlen(msg);
 		if (nc || (nl != CN)) {
-			switch (sms->type) {
-			case ST_PEER:
-			case ST_CHILD:
-				(void) fprintf(sms->outfile, "data: %.*s\n",
+		    	if ((s = sms_redirect_to()) != NULL)
+				(void) fprintf(s->outfile, "data: %.*s\n",
 				    nc, msg);
-				break;
-			default:
+			else
 				(void) printf("%.*s\n", nc, msg);
-				break;
-			}
 		}
 		msg = nl + 1;
 	} while (nl);
@@ -1557,6 +1623,9 @@ sms_continue(void)
 			script_enable();
 			run_script();
 			break;
+		    case ST_FILE:
+			read_from_file();
+			break;
 		}
 	}
 
@@ -1614,19 +1683,21 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 			any = False;
 		}
 		if (in_ascii) {
-			unsigned char c;
+			char mb[16];
+			unsigned long uc;
+#if defined(X3270_DBCS) /*[*/
+			int len;
+			int j;
+#endif /*]*/
 
 			if (buf[first + i].fa) {
 				is_zero = FA_IS_ZERO(buf[first + i].fa);
-				c = ' ';
+				s += sprintf(s, " ");
 			} else if (is_zero)
-				c = ' ';
+				s += sprintf(s, " ");
 			else
 #if defined(X3270_DBCS) /*[*/
 			if (IS_LEFT(ctlr_dbcs_state(first + i))) {
-				int len;
-				char mb[16];
-				int j;
 
 				len = dbcs_to_mb(buf[first + i].cc,
 					      buf[first + i + 1].cc,
@@ -1640,28 +1711,15 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 			} else
 #endif /*]*/
 			{
-				switch (buf[first + i].cs) {
-				case CS_BASE:
-					c = ebc2asc[buf[first + i].cc];
-					break;
-				case CS_APL:
-				case CS_BASE | CS_GE:
-					c = ge2asc[buf[first + i].cc];
-					if (c < ' ')
-						c = ' ';
-					break;
-				case CS_LINEDRAW:
-					if (buf[first + i].cc <= 0x1f)
-						c = ldtoasc[buf[first + i].cc];
-					else
-						c = ' ';
-					break;
-				default:
-					c = ' ';
-					break;
-				}
+				(void) ebcdic_to_multibyte(
+						       buf[first + i].cc,
+						       buf[first + i].cs,
+						       mb, sizeof(mb),
+						       False,
+						       TRANS_LOCAL,
+						       &uc);
 			}
-			s += sprintf(s, "%s", c ? utf8_expand(c) : " ");
+			s += sprintf(s, "%s", mb);
 		} else {
 			s += sprintf(s, "%s%02x",
 				i ? " " : "",
@@ -1819,7 +1877,6 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf, int fd)
 	unsigned char	current_fg = 0x00;
 	unsigned char	current_gr = 0x00;
 	unsigned char	current_cs = 0x00;
-	unsigned char c;
 	Boolean in_ebcdic = False;
 	rpf_t r;
 
@@ -1901,12 +1958,13 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf, int fd)
 					rpf(&r, " %02x", buf[baddr].cc);
 			} else {
 			    	Boolean done = False;
+				char mb[16];
+				int j;
+				unsigned long uc;
 #if defined(X3270_DBCS) /*[*/
-				if (IS_LEFT(ctlr_dbcs_state(baddr))) {
-					int len;
-					char mb[16];
-					int j;
+				int len;
 
+				if (IS_LEFT(ctlr_dbcs_state(baddr))) {
 					len = dbcs_to_mb(buf[baddr].cc,
 						buf[baddr + 1].cc,
 						mb);
@@ -1920,41 +1978,38 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf, int fd)
 				}
 #endif /*]*/
 
-				switch (buf[baddr].cs & CS_MASK) {
-				case CS_BASE:
+				switch (buf[baddr].cc) {
+				case EBC_null:
+					mb[0] = '\0';
+					break;
+				case EBC_so:
+					mb[0] = 0x0e;
+					mb[1] = '\0';
+					break;
+				case EBC_si:
+					mb[0] = 0x0f;
+					mb[1] = '\0';
+					break;
 				default:
-					if (buf[baddr].cs & CS_GE) {
-						c = ge2asc[buf[baddr].cc];
-						if (c < ' ')
-							c = ' ';
-					} else if (buf[baddr].cc == EBC_null)
-						c = 0;
-					else if (buf[baddr].cc == EBC_so)
-					    	c = 0x0e;
-					else if (buf[baddr].cc == EBC_si)
-					    	c = 0x0f;
-					else
-						c = ebc2asc[buf[baddr].cc];
-					break;
-				case CS_APL:
-					c = ge2asc[buf[baddr].cc];
-					if (c < ' ')
-						c = ' ';
-					break;
-				case CS_LINEDRAW:
-					c = ' ';
-					break;
+					(void) ebcdic_to_multibyte(
+							       buf[baddr].cc,
+							       buf[baddr].cs,
+							       mb, sizeof(mb),
+							       False,
+							       TRANS_LOCAL,
+							       &uc);
+				    break;
 				}
 
 				if (!done) {
 					rpf(&r, " ");
-					if (c == 0)
+					if (mb[0] == '\0')
 						rpf(&r, "00");
 					else {
-						char *expanded = utf8_expand(c);
-
-						while ((c = *expanded++))
-							rpf(&r, "%02x", c);
+					    	for (j = 0; mb[j]; j++) {
+						    	rpf(&r, "%02x",
+								mb[j] & 0xff);
+						}
 					}
 				}
 			}
@@ -2429,15 +2484,29 @@ sms_host_output(void)
 	}
 }
 
-/* Return whether error pop-ups should be short-circuited. */
+/* Return whether error pop-ups and acition output should be short-circuited. */
+static sms_t *
+sms_redirect_to(void)
+{
+    	sms_t *s;
+
+	for (s = sms; s != SN; s = s->next) {
+	    	if ((s->type == ST_CHILD || s->type == ST_PEER) &&
+		    (s->state == SS_RUNNING ||
+		     s->state == SS_CONNECT_WAIT ||
+		     s->state == SS_WAIT_OUTPUT ||
+		     s->state == SS_SWAIT_OUTPUT ||
+		     s->wait_id != 0L))
+			return s;
+	}
+	return NULL;
+}
+
+/* Return whether error pop-ups and acition output should be short-circuited. */
 Boolean
 sms_redirect(void)
 {
-	return sms != SN &&
-	       (sms->type == ST_CHILD || sms->type == ST_PEER) &&
-	       (sms->state == SS_RUNNING || sms->state == SS_CONNECT_WAIT ||
-		sms->state == SS_WAIT_OUTPUT || sms->state == SS_SWAIT_OUTPUT ||
-		sms->wait_id != 0L);
+    	return sms_redirect_to() != NULL;
 }
 
 #if defined(X3270_MENUS) || defined(C3270) /*[*/
@@ -3011,7 +3080,6 @@ sms_accumulate_time(struct timeval *t0, struct timeval *t1)
 }
 #endif /*]*/
 
-#if defined(X3270_SCRIPT) /*[*/
 void
 Query_action(Widget w unused, XEvent *event unused, String *params,
     Cardinal *num_params)
@@ -3054,6 +3122,8 @@ Query_action(Widget w unused, XEvent *event unused, String *params,
 		break;
 	}
 }
+
+#if defined(X3270_SCRIPT) /*[*/
 
 #if defined(X3270_PLUGIN) /*[*/
 
@@ -3487,3 +3557,20 @@ Bell_action(Widget w unused, XEvent *event unused, String *params,
 #endif /*]*/
 
 #endif /*]*/
+
+void
+Source_action(Widget w unused, XEvent *event, String *params,
+    Cardinal *num_params)
+{
+    	int fd;
+
+	action_debug(Source_action, event, params, num_params);
+	if (check_usage(Source_action, *num_params, 1, 1) < 0)
+		return;
+	fd = open(params[0], O_RDONLY);
+	if (fd < 0) {
+	    	popup_an_errno(errno, params[0]);
+		return;
+	}
+	push_file(fd);
+}

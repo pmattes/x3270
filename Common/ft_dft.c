@@ -414,7 +414,7 @@ dft_get_request(void)
 
 	if (total_read) {
 		trace_ds("> WriteStructuredField FileTransferData Data(rec=%lu) %d bytes\n",
-		    recnum, total_read);
+		    recnum, (int)total_read);
 		SET16(obptr, TR_GET_REPLY);
 		SET16(obptr, TR_RECNUM_HDR);
 		SET32(obptr, recnum);

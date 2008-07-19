@@ -94,6 +94,8 @@ XtResource resources[] = {
 	  offset(modified_sel), XtRString, ResFalse },
 	{ ResUnlockDelay, ClsUnlockDelay, XtRBoolean, sizeof(Boolean),
 	  offset(unlock_delay), XtRString, ResTrue },
+	{ ResUnlockDelayMs, ClsUnlockDelayMs, XtRInt, sizeof(Int),
+	  offset(unlock_delay), XtRString, "350" },
 #if defined(X3270_SCRIPT) /*[*/
 	{ ResSocket, ClsSocket, XtRBoolean, sizeof(Boolean),
 	  offset(socket), XtRString, ResFalse },

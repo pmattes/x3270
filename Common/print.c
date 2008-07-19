@@ -1,5 +1,5 @@
 /*
- * Copyright 1994, 1995, 1999, 2000, 2001, 2002, 2004, 2005, 2007 by Paul
+ * Copyright 1994, 1995, 1999, 2000, 2001, 2002, 2004, 2005, 2007, 2008 by Paul
  *   Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
@@ -38,6 +38,7 @@
 #include "resources.h"
 
 #include "actionsc.h"
+#include "charsetc.h"
 #include "popupsc.h"
 #include "printc.h"
 #include "utf8c.h"
@@ -46,6 +47,7 @@
 #include "widec.h"
 #endif /*]*/
 #if defined(_WIN32) /*[*/
+#include <windows.h>
 #include <io.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -119,14 +121,17 @@ html_color(int color)
  * Print the ASCIIfied contents of the screen onto a stream.
  * Returns True if anything printed, False otherwise.
  * 
- * If 'use_html' is True, then HTML is generated, which preserves colors, but
- * little else (for now).
+ * 'ptype' can specify:
+ *  P_TEXT: Ordinary text
+ *  P_HTML: HTML
+ *  P_RTF: Windows rich text
  */
 Boolean
-fprint_screen(FILE *f, Boolean even_if_empty, Boolean use_html)
+fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 {
 	register int i;
 	char c;
+	unsigned long uc;
 	int ns = 0;
 	int nr = 0;
 	Boolean any = False;
@@ -135,7 +140,7 @@ fprint_screen(FILE *f, Boolean even_if_empty, Boolean use_html)
 	int fa_color, current_color;
 	Bool fa_high, current_high;
 
-	if (use_html) {
+	if (ptype != P_TEXT) {
 		even_if_empty = True;
 	}
 
@@ -151,11 +156,25 @@ fprint_screen(FILE *f, Boolean even_if_empty, Boolean use_html)
 		fa_high = FA_IS_HIGH(fa);
 	current_high = fa_high;
 
+#if defined(_WIN32) /*[*/
+	if (ptype == P_RTF) {
+		fprintf(f, "{\\rtf1\\ansi\\ansicpg%u\\deff0\\deflang1033{\\fonttbl{\\f0\\fmodern\\fprq1\\fcharset0 Courier New;}}\n"
+			    "\\viewkind4\\uc1\\pard\\f0\\fs18 ",
+			    GetACP());
+		if (current_high)
+		    	fprintf(f, "\\b ");
+	}
+#endif /*]*/
+
 	for (i = 0; i < ROWS*COLS; i++) {
 #if defined(X3270_DBCS) /*[*/
-		char mb[16];
 		Boolean is_dbcs = False;
 #endif /*]*/
+		char mb[16];
+		int nmb;
+
+		c = 0;
+		uc = 0;
 
 		if (i && !(i % COLS)) {
 			nr++;
@@ -181,7 +200,13 @@ fprint_screen(FILE *f, Boolean even_if_empty, Boolean use_html)
 			switch (ctlr_dbcs_state(i)) {
 			case DBCS_NONE:
 			case DBCS_SB:
-				c = ebc2asc[ea_buf[i].cc];
+				nmb = ebcdic_to_multibyte(ea_buf[i].cc,
+					ea_buf[i].cs, mb, sizeof(mb), True,
+					TRANS_LOCAL, &uc);
+				if (nmb == 0)
+				    c = ' ';
+				else
+				    c = mb[0];
 				break;
 			case DBCS_LEFT:
 				dbcs_to_mb(ea_buf[i].cc, ea_buf[i + 1].cc, mb);
@@ -194,21 +219,54 @@ fprint_screen(FILE *f, Boolean even_if_empty, Boolean use_html)
 			}
 		}
 #else /*][*/
-		else
-			c = ebc2asc[ea_buf[i].cc];
+		else {
+			nmb = ebcdic_to_multibyte(ea_buf[i].cc,
+				ea_buf[i].cs, mb, sizeof(mb), True,
+				TRANS_LOCAL, &uc);
+			if (nmb == 0)
+			    c = ' ';
+			else
+			    c = mb[0];
+		}
 #endif /*]*/
 		if (c == ' ')
 			ns++;
 		else {
 			while (nr) {
+#if defined(_WIN32) /*[*/
+			    	if (ptype == P_RTF)
+				    	fprintf(f, "\\par");
+#endif /*]*/
 				(void) fputc('\n', f);
 				nr--;
 			}
 			while (ns) {
-				(void) fputc(' ', f);
+#if defined(_WIN32) /*[*/
+			    	if (ptype == P_RTF)
+				    	fprintf(f, "\\~");
+				else
+#endif /*]*/
+					(void) fputc(' ', f);
 				ns--;
 			}
-			if (use_html) {
+#if defined(_WIN32) /*[*/
+			if (ptype == P_RTF) {
+				Bool high;
+
+				if (ea_buf[i].gr & GR_INTENSIFY)
+					high = True;
+				else
+					high = fa_high;
+				if (high != current_high) {
+					if (high)
+						fprintf(f, "\\b ");
+					else
+						fprintf(f, "\\b0 ");
+					current_high = high;
+				}
+			}
+#endif /*]*/
+			if (ptype == P_HTML) {
 				int color;
 				Bool high;
 
@@ -258,7 +316,25 @@ fprint_screen(FILE *f, Boolean even_if_empty, Boolean use_html)
 			else
 #endif /*]*/
 			{
-				if (use_html && c == '<')
+#if defined(_WIN32) /*[*/
+			    	if (ptype == P_RTF) {
+				    	if (uc & ~0xff)
+					    	fprintf(f, "\\u%ld", uc);
+					if (c & 0x80) {
+					    	fprintf(f, "\\'%2x", c & 0xff);
+					} else if (c == '\\' || c == '{' ||
+							c == '}') {
+					    	fprintf(f, "\\%c", c);
+					} else if (c == '-') {
+					    	fprintf(f, "\\_");
+					} else if (c == ' ') {
+					    	fprintf(f, "\\~");
+					} else {
+					    	fputc(c, f);
+					}
+				} else
+#endif /*]*/
+				if ((ptype == P_HTML) && c == '<')
 					fprintf(f, "&lt;");
 				else
 					(void) fputs(utf8_expand(c), f);
@@ -269,10 +345,19 @@ fprint_screen(FILE *f, Boolean even_if_empty, Boolean use_html)
 	if (!any && !even_if_empty)
 		return False;
 	while (nr) {
+#if defined(_WIN32) /*[*/
+	    	if (ptype == P_RTF)
+		    	fprintf(f, "\\par");
+#endif /*]*/
 		(void) fputc('\n', f);
 		nr--;
 	}
-	if (use_html && any) {
+#if defined(_WIN32) /*[*/
+	if (ptype == P_RTF) {
+	    	fprintf(f, "\n}\n%c", 0);
+	}
+#endif /*]*/
+	if ((ptype == P_HTML) && any) {
 		fprintf(f, "%s</font></pre></td></tr>\n"
 		           "  </table>\n"
 			   " </body>\n"
@@ -282,6 +367,7 @@ fprint_screen(FILE *f, Boolean even_if_empty, Boolean use_html)
 	return True;
 }
 
+#if !defined(_WIN32) /*[*/
 /* Termination code for print text process. */
 static void
 print_text_done(FILE *f, Boolean do_popdown
@@ -306,6 +392,7 @@ print_text_done(FILE *f, Boolean do_popdown
 	}
 
 }
+#endif /*]*/
 
 #if defined(X3270_DISPLAY) /*[*/
 /* Callback for "OK" button on the print text popup. */
@@ -325,7 +412,7 @@ print_text_callback(Widget w unused, XtPointer client_data,
 		popup_an_errno(errno, "popen(%s)", filter);
 		return;
 	}
-	(void) fprint_screen(f, True, False);
+	(void) fprint_screen(f, True, P_TEXT);
 	print_text_done(f, True);
 }
 
@@ -346,7 +433,7 @@ save_text_plain_callback(Widget w unused, XtPointer client_data,
 		popup_an_errno(errno, "%s", filename);
 		return;
 	}
-	(void) fprint_screen(f, True, False);
+	(void) fprint_screen(f, True, P_TEXT);
 	fclose(f);
 	XtPopdown(save_text_shell);
 	if (appres.do_confirms)
@@ -370,7 +457,7 @@ save_text_html_callback(Widget w unused, XtPointer client_data,
 		popup_an_errno(errno, "%s", filename);
 		return;
 	}
-	(void) fprint_screen(f, True, True);
+	(void) fprint_screen(f, True, P_HTML);
 	fclose(f);
 	XtPopdown(save_text_shell);
 	if (appres.do_confirms)
@@ -410,6 +497,106 @@ popup_save_text(char *filename)
 }
 #endif /*]*/
 
+#if defined(_WIN32) /*[*/
+/*
+ * A Windows version of something like mkstemp().  Creates a temporary
+ * file in $TEMP, returning its path and an open file descriptor.
+ */
+int
+win_mkstemp(char **path, ptype_t ptype)
+{
+	char *s;
+	int fd;
+
+	s = getenv("TEMP");
+	if (s == NULL)
+		s = getenv("TMP");
+	if (s == NULL)
+		s = "C:";
+	*path = xs_buffer("%s\\x3h%u.%s", s, getpid(),
+			    (ptype == P_RTF)? "rtf": "txt");
+	fd = open(*path, O_CREAT | O_RDWR, S_IREAD | S_IWRITE);
+	if (fd < 0) {
+	    Free(*path);
+	    *path = NULL;
+	}
+	return fd;
+}
+
+/*
+ * Find WORDPAD.EXE.
+ */
+#define PROGRAMFILES "%ProgramFiles%"
+char *
+find_wordpad(void)
+{
+	char data[1024];
+	DWORD dlen;
+	char *slash;
+	static char *wp = NULL;
+	HKEY key;
+
+	if (wp != NULL)
+	    return wp;
+
+	/* Get the shell print command for RTF files. */
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		    "Software\\Classes\\rtffile\\shell\\print\\command",
+		    0,
+		    KEY_READ,
+		    &key) != ERROR_SUCCESS) {
+	    	return NULL;
+	}
+	dlen = sizeof(data);
+    	if (RegQueryValueEx(key,
+		    NULL,
+		    NULL,
+		    NULL,
+		    (LPVOID)data,
+		    &dlen) != ERROR_SUCCESS) {
+		RegCloseKey(key);
+	    	return NULL;
+	}
+	RegCloseKey(key);
+
+	if (data[0] == '"') {
+	    char data2[1024];
+	    char *q2;
+
+	    /* The first token is quoted; that's the path. */
+	    strcpy(data2, data + 1);
+	    q2 = strchr(data2, '"');
+	    if (q2 == NULL) {
+		return NULL;
+	    }
+	    *q2 = '\0';
+	    strcpy(data, data2);
+	} else if ((slash = strchr(data, '/')) != NULL) {
+	    /* Find the "/p". */
+	    *slash = '\0';
+	    if (*(slash - 1) == ' ')
+		*(slash - 1) = '\0';
+	}
+
+	if (!strncasecmp(data, PROGRAMFILES, strlen(PROGRAMFILES))) {
+	    char *pf = getenv("PROGRAMFILES");
+
+	    /* Substitute %ProgramFiles%. */
+	    if (pf == NULL) {
+		return NULL;
+	    }
+	    wp = xs_buffer("%s\\%s", pf, data + strlen(PROGRAMFILES));
+	} else {
+	    wp = NewString(data);
+	}
+	if (GetShortPathName(wp, data, sizeof(data)) != 0) {
+	    Free(wp);
+	    wp = NewString(data);
+	}
+	return wp;
+}
+#endif /*]*/
+
 /* Print or save the contents of the screen as text. */
 void
 PrintText_action(Widget w unused, XEvent *event, String *params,
@@ -418,9 +605,10 @@ PrintText_action(Widget w unused, XEvent *event, String *params,
 	int i;
 	char *filter = CN;
 	Boolean secure = appres.secure;
-	Boolean use_html = False;
+	ptype_t ptype = P_TEXT;
 	Boolean use_file = False;
 	Boolean use_string = False;
+	char *temp_name = NULL;
 
 	action_debug(PrintText_action, event, params, num_params);
 
@@ -443,12 +631,17 @@ PrintText_action(Widget w unused, XEvent *event, String *params,
 			i++;
 			break;
 		} else if (!strcasecmp(params[i], "html")) {
-			use_html = True;
+			ptype = P_HTML;
 			use_file = True;
+#if defined(_WIN32) /*[*/
+		} else if (!strcasecmp(params[i], "rtf")) {
+			ptype = P_RTF;
+			use_file = True;
+#endif /*]*/
 		} else if (!strcasecmp(params[i], "secure")) {
 			secure = True;
 		} else if (!strcasecmp(params[i], "command")) {
-			if (use_html || use_file) {
+			if ((ptype != P_TEXT) || use_file) {
 				popup_an_error("%s: contradictory options",
 				    action_name(PrintText_action));
 				return;
@@ -472,7 +665,11 @@ PrintText_action(Widget w unused, XEvent *event, String *params,
 	case 0:
 		/* Use the default. */
 		if (!use_file)
+#if !defined(_WIN32) /*[*/
 			filter = get_resource(ResPrintTextCommand);
+#else /*][*/
+			filter = get_resource(ResPrinterName); /* XXX */
+#endif /*]*/
 		break;
 	case 1:
 		if (use_string) {
@@ -488,6 +685,12 @@ PrintText_action(Widget w unused, XEvent *event, String *params,
 		return;
 	}
 
+#if defined(_WIN32) /*[*/
+	/* On Windows, use rich text. */
+	if (!use_string && !use_file && ptype != P_HTML)
+	    ptype = P_RTF;
+#endif /*]*/
+
 	if (filter != CN && filter[0] == '@') {
 		/*
 		 * Starting the PrintTextCommand resource value with '@'
@@ -498,7 +701,11 @@ PrintText_action(Widget w unused, XEvent *event, String *params,
 		filter++;
 	}
 	if (!use_file && (filter == CN || !*filter))
+#if !defined(_WIN32) /*[*/
 		filter = "lpr";
+#else /*][*/
+		filter = CN;
+#endif /*]*/
 
 #if defined(X3270_DISPLAY) /*[*/
 	if (secure ||
@@ -513,22 +720,16 @@ PrintText_action(Widget w unused, XEvent *event, String *params,
 		/* Invoked non-interactively. */
 		if (use_file) {
 			if (use_string) {
-				char temp_name[15];
-
 #if defined(_WIN32) /*[*/
-				strcpy(temp_name, "x3hXXXXXX");
-				mktemp(temp_name);
-				fd = _open(temp_name, _O_RDWR,
-					_S_IREAD | _S_IWRITE);
+				fd = win_mkstemp(&temp_name, ptype);
 #else /*][*/
-				strcpy(temp_name, "/tmp/x3hXXXXXX");
+				temp_name = NewString("/tmp/x3hXXXXX");
 				fd = mkstemp(temp_name);
 #endif /*]*/
 				if (fd < 0) {
 					popup_an_errno(errno, "mkstemp");
 					return;
 				}
-				(void) unlink(temp_name);
 				f = fdopen(fd, "w+");
 			} else {
 				if (filter == CN || !*filter) {
@@ -538,8 +739,18 @@ PrintText_action(Widget w unused, XEvent *event, String *params,
 				}
 				f = fopen(filter, "a");
 			}
-		} else
+		} else {
+#if !defined(_WIN32) /*[*/
 			f = popen(filter, "w");
+#else /*][*/
+			fd = win_mkstemp(&temp_name, ptype);
+			if (fd < 0) {
+				popup_an_errno(errno, "mkstemp");
+				return;
+			}
+			f = fdopen(fd, "w+");
+#endif /*]*/
+		}
 		if (f == NULL) {
 			popup_an_errno(errno, "%s: %s",
 					action_name(PrintText_action),
@@ -547,9 +758,13 @@ PrintText_action(Widget w unused, XEvent *event, String *params,
 			if (fd >= 0) {
 				(void) close(fd);
 			}
+			if (temp_name) {
+				unlink(temp_name);
+				Free(temp_name);
+			}
 			return;
 		}
-		(void) fprint_screen(f, True, use_html);
+		(void) fprint_screen(f, True, ptype);
 		if (use_string) {
 			char buf[8192];
 
@@ -559,8 +774,35 @@ PrintText_action(Widget w unused, XEvent *event, String *params,
 		}
 		if (use_file)
 			fclose(f);
-		else
+		else {
+#if !defined(_WIN32) /*[*/
 			print_text_done(f, False);
+#else /*][*/
+			char *wp;
+
+			fclose(f);
+			wp = find_wordpad();
+			if (wp == NULL) {
+				popup_an_error("%s: Can't find WORDPAD.EXE",
+					action_name(PrintText_action));
+			} else {
+				char *cmd;
+
+				if (filter != CN)
+				    cmd = xs_buffer("start /wait %s /pt \"%s\" \"%s\"", wp,
+					    temp_name, filter);
+				else
+				    cmd = xs_buffer("start /wait %s /p \"%s\"", wp,
+					    temp_name);
+				system(cmd);
+				Free(cmd);
+			}
+#endif /*]*/
+		}
+		if (temp_name) {
+		    	unlink(temp_name);
+			Free(temp_name);
+		}
 		return;
 	}
 
@@ -585,7 +827,7 @@ print_text_option(Widget w, XtPointer client_data unused,
 {
 	char *filter = get_resource(ResPrintTextCommand);
 	Boolean secure = appres.secure;
-	Boolean use_html = False;
+	ptype_t ptype = P_TEXT;
 
 	/* Decode the filter. */
 	if (filter != CN && *filter == '@') {
@@ -603,7 +845,7 @@ print_text_option(Widget w, XtPointer client_data unused,
 			popup_an_errno(errno, "popen(%s)", filter);
 			return;
 		}
-		(void) fprint_screen(f, True, use_html);
+		(void) fprint_screen(f, True, ptype);
 		print_text_done(f, False);
 	} else {
 		/* Pop up a dialog to confirm or modify their choice. */
@@ -727,3 +969,4 @@ print_window_option(Widget w, XtPointer client_data unused,
 #endif /*]*/
 
 #endif /*]*/
+

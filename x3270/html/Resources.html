@@ -184,6 +184,10 @@ x3270.colorScheme.greenScreen
      21 IBM color index (0..15) to use for protected, unhighlighted fields
      22 IBM color index (0..15) to use for protected, highlighted fields
 
+x3270.commandTimeout
+    (tcl3270 only) Defines the number of seconds to wait for a command to
+    complete before failing it with a timeout error.
+
 x3270.composeMap	Default latin1
     Gives the name of the map used to define the pairs of characters that
     form composite characters with the Compose key.
@@ -833,10 +837,17 @@ x3270.typeahead		Default true
     When true, x3270 will store keystrokes in a buffer when the keyboard is
     locked.  When false, these keystrokes will be dropped.
 
-x3270.unlockDelay	Default false
-    When true, x3270 will delay actually unlocking the keyboard for 50ms
-    after the host permits it.  This was a hack in earlier versions of x3270
-    to allow easier scripting of hosts that permaturely unlock the keyboard.
+x3270.unlockDelay	Default true
+    When true, x3270 will delay actually unlocking the keyboard for 350ms
+    after the host permits it.  This is a hack to allow easier scripting of
+    hosts that permaturely unlock the keyboard.  Setting unlockDelay to false
+    disables this delay, except for when executing a macro.
+
+x3270.unlockDelayMs	Default 350
+    Overrides the default value for the unlock delay (the delay between the
+    host unlocking the keyboard and x3270 actually performing the unlock).
+    The value is in milliseconds; use 0 to turn off the delay completely,
+    including for macros.
 
 x3270.useCursorColor	Default false
     If set to false, the cursor is drawn using the same color as the text

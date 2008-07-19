@@ -1,6 +1,6 @@
 /*
  * Modifications Copyright 1993, 1994, 1995, 1996, 1999, 2000, 2001, 2002,
- *  2004, 2005 by Paul Mattes.
+ *  2004, 2005, 2008 by Paul Mattes.
  * Original X11 Port Copyright 1990 by Jeff Sparkes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
@@ -35,3 +35,15 @@ extern char *default_display_charset;
 enum cs_result { CS_OKAY, CS_NOTFOUND, CS_BAD, CS_PREREQ, CS_ILLEGAL };
 extern enum cs_result charset_init(char *csname);
 extern char *get_charset_name(void);
+
+typedef enum {
+    TRANS_DISPLAY,	/* generating display output,
+			   interpreting keyboard input */
+    TRANS_LOCAL		/* generating logfiles or interactive output,
+			   interpreting configuration information */
+} trans_t;
+
+extern int ebcdic_to_multibyte(unsigned short ebc, unsigned char cs,
+	char mb[], int mb_len, int blank_undef, trans_t purpose,
+	unsigned long *uc);
+extern int mb_max_len(int len);

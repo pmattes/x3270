@@ -121,6 +121,8 @@ static struct {
 	{ "String", "<text>", P_3270|P_SCRIPTING, "Input a string" },
 	{ "SysReq", CN, P_3270, "Send 3270 Attention (TELNET ABORT or SYSREQ AID)" },
 	{ "Tab", CN, P_3270, "Move cursor to next field" },
+	{ "Toggle", "<toggle-name> [set|clear]", P_INTERACTIVE|P_SCRIPTING,
+	    "Change a toggle" },
 	{ "ToggleInsert", CN, P_3270, "Set or clear 3270 insert mode" },
 #if 0
 	{ "ToggleReverse", CN, P_3270, "Set or clear reverse-input mode" },

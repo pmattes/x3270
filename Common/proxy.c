@@ -306,7 +306,7 @@ proxy_passthru(int fd, char *host, unsigned short port)
 	(void) sprintf(buf, "%s %u\r\n", host, port);
 
 #if defined(X3270_TRACE) /*[*/
-	trace_dsn("Passthru Proxy: xmit '%.*s'", strlen(buf) - 2, buf);
+	trace_dsn("Passthru Proxy: xmit '%.*s'", (int)(strlen(buf) - 2), buf);
 	trace_netdata('>', (unsigned char *)buf, strlen(buf));
 #endif /*]*/
 
@@ -341,7 +341,7 @@ proxy_http(int fd, char *host, unsigned short port)
 		port);
 
 #if defined(X3270_TRACE) /*[*/
-	trace_dsn("HTTP Proxy: xmit '%.*s'\n", strlen(buf) - 2, buf);
+	trace_dsn("HTTP Proxy: xmit '%.*s'\n", (int)(strlen(buf) - 2), buf);
 	trace_netdata('>', (unsigned char *)buf, strlen(buf));
 #endif /*]*/
 
@@ -358,7 +358,7 @@ proxy_http(int fd, char *host, unsigned short port)
 		port);
 
 #if defined(X3270_TRACE) /*[*/
-	trace_dsn("HTTP Proxy: xmit '%.*s'\n", strlen(buf) - 2, buf);
+	trace_dsn("HTTP Proxy: xmit '%.*s'\n", (int)(strlen(buf) - 2), buf);
 	trace_netdata('>', (unsigned char *)buf, strlen(buf));
 #endif /*]*/
 
@@ -457,7 +457,7 @@ proxy_telnet(int fd, char *host, unsigned short port)
 	(void) sprintf(buf, "connect %s %u\r\n", host, port);
 
 #if defined(X3270_TRACE) /*[*/
-	trace_dsn("TELNET Proxy: xmit '%.*s'", strlen(buf) - 2, buf);
+	trace_dsn("TELNET Proxy: xmit '%.*s'", (int)(strlen(buf) - 2), buf);
 	trace_netdata('>', (unsigned char *)buf, strlen(buf));
 #endif /*]*/
 

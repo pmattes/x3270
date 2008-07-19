@@ -70,39 +70,37 @@ extern char *wversion;
 struct {
     	char *name;
 	char *hostcp;
-	char *wincp;
 } charsets[] = {
-	{ "belgian",		"500",	"28591"	},
-	{ "belgian-euro",	"1148",	"28605"	},
-	{ "bracket",		"37+",	"28591"	},
-	{ "bracket437",		"37+",	"437"	},
-	{ "brazilian",		"275",	"28591"	},
-	{ "cp1047",		"1047",	"28591"	},
-	{ "cp1153",		"1153",	"1250"	},
-	{ "cp870",		"870",	"28592"	},
-	{ "finnish",		"278",	"28591"	},
-	{ "finnish-euro",	"1143",	"28605"	},
-	{ "french",		"297",	"28591"	},
-	{ "french-euro",	"1147",	"28605"	},
-	{ "german",		"273",	"28591"	},
-	{ "german-euro",	"1141",	"28605"	},
-	{ "greek",		"875",	"28597"	},
-	{ "hebrew",		"424",	"28598"	},
-	{ "icelandic",		"871",	"28591"	},
-	{ "icelandic-euro",	"1149",	"28605"	},
-	{ "italian",		"280",	"28591"	},
-	{ "italian-euro",	"1144",	"28605"	},
-	{ "norwegian",		"277",	"28591"	},
-	{ "norwegian-euro",	"1142",	"28605"	},
-	{ "russian",		"880",	"20866"	},
-	{ "spanish",		"284",	"28591"	},
-	{ "spanish-euro",	"1145",	"28605"	},
-	{ "thai",		"838",	"28601"	},
-	{ "turkish",		"1026",	"28599"	},
-	{ "uk",			"285",	"28591"	},
-	{ "uk-euro",		"1146",	"28605"	},
-	{ "us-euro",		"1140",	"28605"	},
-	{ "us-intl",		"37",	"28591"	},
+	{ "belgian",		"500"   },
+	{ "belgian-euro",	"1148"  },
+	{ "bracket",		"37+"   },
+	{ "brazilian",		"275"   },
+	{ "cp1047",		"1047"  },
+	{ "cp1153",		"1153"  },
+	{ "cp870",		"870"   },
+	{ "finnish",		"278"   },
+	{ "finnish-euro",	"1143"  },
+	{ "french",		"297"   },
+	{ "french-euro",	"1147"  },
+	{ "german",		"273"   },
+	{ "german-euro",	"1141"  },
+	{ "greek",		"875"   },
+	{ "hebrew",		"424"   },
+	{ "icelandic",		"871"   },
+	{ "icelandic-euro",	"1149"  },
+	{ "italian",		"280"   },
+	{ "italian-euro",	"1144"  },
+	{ "norwegian",		"277"   },
+	{ "norwegian-euro",	"1142"  },
+	{ "russian",		"880"   },
+	{ "spanish",		"284"   },
+	{ "spanish-euro",	"1145"  },
+	{ "thai",		"838"   },
+	{ "turkish",		"1026"  },
+	{ "uk",			"285"   },
+	{ "uk-euro",		"1146"  },
+	{ "us-euro",		"1140"  },
+	{ "us-intl",		"37"    },
 	{ NULL,			NULL	}
 };
 #define CS_WIDTH	14
@@ -631,8 +629,8 @@ This specifies the EBCDIC character set used by the host.");
 
 	printf("\
 \nAvailable character sets:\n\n\
-     Name           Host CP Win CP        Name           Host CP Win CP\n\
-     -------------- ------- ------        -------------- ------- ------\n");
+     Name           Host CP        Name           Host CP\n\
+     -------------- -------        -------------- -------\n");
 	k = 0;
 	for (i = 0; i < NCS; i++) {
 	    	int j;
@@ -649,26 +647,21 @@ This specifies the EBCDIC character set used by the host.");
 		    	j += NCS / 2;
 			k++;
 		}
-		printf(" %2d. %-*s %-*s %-*s",
+		printf(" %2d. %-*s %-*s",
 			j + 1,
 			CS_WIDTH,
 			charsets[j].name,
 			CP_WIDTH,
-			charsets[j].hostcp,
-			WP_WIDTH,
-			charsets[j].wincp);
+			charsets[j].hostcp);
 	}
 	printf("\n");
 	for (;;) {
-		printf("\nCharacter set: [bracket%s] ", is_nt? "": "437");
+		printf("\nCharacter set: [bracket] ");
 		if (get_input(s->charset, sizeof(s->charset)) == NULL) {
 			return -1;
 		}
 		if (!s->charset[0]) {
-		    	if (is_nt)
-				strcpy(s->charset, "bracket");
-			else
-				strcpy(s->charset, "bracket437");
+			strcpy(s->charset, "bracket");
 			break;
 		}
 		u = strtoul(s->charset, &ptr, 10);

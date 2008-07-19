@@ -1,6 +1,6 @@
 /*
  * Modifications Copyright 1993, 1994, 1995, 1996, 1999, 2000, 2001, 2002,
- *  2003, 2004, 2005, 2006, 2007 by Paul Mattes.
+ *  2003, 2004, 2005, 2006, 2007, 2008 by Paul Mattes.
  * Original X11 Port Copyright 1990 by Jeff Sparkes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
@@ -37,6 +37,7 @@
 #include "screenc.h"
 #endif /*]*/
 #include "tablesc.h"
+#include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
 #include "widec.h"
@@ -47,10 +48,14 @@
 #include <langinfo.h>
 #endif /*]*/
 
+#if defined(_WIN32) /*[*/
+#include <windows.h>
+#endif /*]*/
+
 #define EURO_SUFFIX	"-euro"
 #define ES_SIZE		(sizeof(EURO_SUFFIX) - 1)
 
-#if defined(_WIN32) /*[*/
+#if defined(_WIN32) && defined(C3270) /*[*/
 extern void set_display_charset(char *dcs);
 #endif /*]*/
 
@@ -201,12 +206,13 @@ charset_init(char *csname)
 		(void) screen_new_display_charsets(default_display_charset,
 		    "us");
 #else /*][*/
-#if defined(_WIN32) /*[*/
+#if defined(_WIN32) && defined(C3270) /*[*/
 		set_display_charset("iso8859-1");
 #else /*][*/
 		utf8_set_display_charsets(default_display_charset, "us");
 #endif /*]*/
 #endif /*]*/
+		(void) set_uni("us");
 		return CS_OKAY;
 	}
 
@@ -218,11 +224,14 @@ charset_init(char *csname)
 		char *basename;
 
 		/* Grab the non-Euro definition. */
-		basename = xs_buffer("%.*s", strlen(csname) - ES_SIZE, csname);
+		basename = xs_buffer("%.*s", (int)(strlen(csname) - ES_SIZE),
+			csname);
 		cs = get_charset_def(basename);
 		Free(basename);
 	}
 	if (cs == CN)
+		return CS_NOTFOUND;
+	if (set_uni(csname) < 0)
 		return CS_NOTFOUND;
 
 	/* Grab the File Transfer character set. */
@@ -369,7 +378,7 @@ resource_charset(char *csname, char *cs, char *ftcs)
 	int ne = 0;
 	char *rcs = CN;
 	int n_rcs = 0;
-#if defined(_WIN32) /*[*/
+#if defined(_WIN32) && defined(C3270) /*[*/
 	char *dcs;
 #endif /*]*/
 
@@ -436,7 +445,7 @@ resource_charset(char *csname, char *cs, char *ftcs)
 	/* Set up the cgcsgid. */
 	set_cgcsgids(get_fresource("%s.%s", ResCodepage, csname));
 
-#if defined(_WIN32) /*[*/
+#if defined(_WIN32) && defined(C3270) /*[*/
        /* See about changing the console output code page. */
        dcs = get_fresource("%s.%s", ResDisplayCharset, csname);
        if (dcs != NULL) {
@@ -736,4 +745,201 @@ get_charset_name(void)
 {
 	return (charset_name != CN)? charset_name:
 	    ((appres.charset != CN)? appres.charset: "us");
+}
+
+/*
+ * Translate an EBCDIC character to the current locale's multi-byte
+ * representation.
+ *
+ * Returns the number of bytes in the multi-byte representation, including
+ * the terminating NULL.  mb[] should be big enough to include the NULL
+ * in the result.
+ *
+ * Also returns in 'ucp' the UCS-4 Unicode value of the EBCDIC character.
+ *
+ * If 'purpose' is TRANS_DISPLAY, the target of the translation is the
+ * display window.  If it is TRANS_LOCAL, the target is the local file
+ * system.  TRANS_DISPLAY is used only on Windows where the local file system
+ * uses the ANSI code page, but the console uses the OEM code page.
+ *
+ * Note that 'ebc' is an unsigned short, not an unsigned char.  This is
+ * so that DBCS values can be passed in as 16 bits (with the first byte
+ * in the high-order bits).  There is no ambiguity because all valid EBCDIC
+ * DBCS characters have a nonzero first byte.
+ *
+ * Returns 0 if 'blank_undef' is set and there is no printable EBCDIC
+ * translation for 'ebc'.
+ *
+ * Returns '?' in mb[] if there is no local multi-byte representation of
+ * the EBCDIC character.
+ *
+ * XXX: For Tcl3270, this should always be a simple UTF-8 conversion.
+ */
+int
+ebcdic_to_multibyte(unsigned short ebc, unsigned char cs, char mb[],
+	int mb_len, int blank_undef, trans_t purpose, unsigned long *ucp)
+{
+    int xuc;
+    unsigned long uc;
+
+#if defined(_WIN32) /*[*/
+    int nc;
+    BOOL udc;
+    wchar_t wuc;
+#elif defined(UNICODE_WCHAR) /*][*/
+    int nc;
+    wchar_t wuc;
+#else /*][*/
+    char u8b[7];
+    char *inbuf, *outbuf;
+    size_t inbytesleft, outbytesleft;
+    int nu8;
+    size_t nc;
+#endif /*]*/
+
+    *ucp = 0;
+
+    /* Control characters become blanks. */
+    if (ebc <= 0x41 || ebc == 0xff) {
+	mb[0] = ' ';
+	mb[1] = '\0';
+	return 2;
+    }
+
+    /* Do the initial translation from EBCDIC to Unicode. */
+    if ((cs & CS_GE) || ((cs & CS_MASK) == CS_APL)) {
+	xuc = apl_to_unicode(ebc);
+	if (xuc == -1)
+	    uc = 0;
+	else {
+	    uc = xuc;
+	    *ucp = xuc;
+	}
+    } else if (cs == CS_LINEDRAW) {
+	xuc = linedraw_to_unicode(ebc);
+	if (xuc == -1)
+	    uc = 0;
+	else {
+	    uc = xuc;
+	    *ucp = xuc;
+	}
+    } else if (cs != CS_BASE) {
+	uc = 0;
+    } else {
+	uc = ebcdic_to_unicode(ebc, blank_undef);
+	*ucp = uc;
+    }
+    if (uc == 0)
+	return 0;
+
+#if defined(_WIN32) /*[*/
+    /*
+     * wchar_t's are Unicode.
+     * If TRANS_DISPLAY, use the OEM code page.
+     * If TRANS_LOCAL, use the ANSI code page.  (Trace files are converted
+     *  from ANSI to OEM by 'catf' for display in the pop-up console window.)
+     */
+    wuc = uc;
+    nc = WideCharToMultiByte((purpose == TRANS_LOCAL)? CP_ACP: CP_OEMCP,
+	    0, &wuc, 1, mb, 1, "?", &udc);
+    if (nc != 0) {
+	mb[1] = '\0';
+	return 2;
+    } else {
+	mb[0] = '?';
+	mb[1] = '\0';
+	return 2;
+    }
+
+#elif defined(UNICODE_WCHAR) /*][*/
+    /* wchar_t's are Unicode, so use wctomb(). */
+
+    /*
+     * N.B.: This code assumes TRANS_LOCAL.
+     * TRANS_DISPLAY will need special translation tables (and a different
+     * function?) to go from Unicode to the various display character sets
+     * supported by x3270.
+     */
+    wuc = uc;
+    nc = wctomb(mb, uc);
+    if (nc > 0) {
+	/* Return to the initial shift state and null-terminate. */
+	nc += wctomb(mb + nc, 0);
+	return nc;
+    } else {
+	mb[0] = '?';
+	mb[1] = '\0';
+	return 2;
+    }
+#else /*][*/
+    /*
+     * Use iconv.
+     * As with the UNICODE_WCHAR case above, this code assumes TRANS_LOCAL.
+     */
+
+    /* Translate the wchar_t we got from UCS-4 to UTF-8. */
+    nu8 = ucs4_to_utf8(uc, u8b);
+    if (nu8 < 0)
+	return 0;
+
+    /* Local multi-byte might be UTF-8, in which case, we're done. */
+    if (is_utf8) {
+	memcpy(mb, u8b, nu8);
+	mb[nu8++] = '\0';
+	return nu8;
+    }
+
+    /* Let iconv translate from UTF-8 to local multi-byte. */
+    inbuf = u8b;
+    inbytesleft = nu8;
+    outbuf = mb;
+    outbytesleft = mb_len;
+    nc = iconv(i_u2mb, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
+    if (nc < 0) {
+	mb[0] = '?';
+	mb[1] = '\0';
+	return 2;
+    }
+
+    /* Return to the initial shift state. */
+    nc = iconv(i_u2mb, NULL, NULL, &outbuf, &outbytesleft);
+    if (nc < 0) {
+	mb[0] = '?';
+	mb[1] = '\0';
+	return 0;
+    }
+
+    /* Null-terminate the return the length. */
+    mb[mb_len - outbytesleft--] = '\0';
+    return mb_len - outbytesleft;
+
+#endif /*]*/
+}
+
+/*
+ * Return the maximum buffer length needed to translate 'len' EBCDIC characters
+ * in the current locale.
+ */
+int
+mb_max_len(int len)
+{
+#if defined(_WIN32) /*[*/
+    /*
+     * On Windows, it's 1:1 (we don't do DBCS, and we don't support locales
+     * like UTF-8).
+     */
+    return len + 1;
+#elif defined(UNICODE_WCHAR) /*][*/
+    /* Allocate enough space for shift-state transitions. */
+    return (MB_CUR_MAX * (len * 2)) + 1;
+#else /*]*/
+    if (is_utf8)
+	return (len * 6) + 1;
+    else
+	/*
+	 * We don't actually know.  Guess that MB_CUR_MAX is 16, and compute
+	 * as for UNICODE_WCHAR.
+	 */
+	return (16 * (len * 2)) + 1;
+#endif /*]*/
 }

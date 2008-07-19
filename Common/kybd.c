@@ -63,10 +63,15 @@
 #include "telnetc.h"
 #include "togglesc.h"
 #include "trace_dsc.h"
+#include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
 #if defined(X3270_DBCS) /*[*/
 #include "widec.h"
+#endif /*]*/
+
+#if defined(_WIN32) /*[*/
+#include <windows.h>
 #endif /*]*/
 
 /*#define KYBDLOCK_TRACE	1*/
@@ -87,7 +92,7 @@ static unsigned char pa_xlate[] = {
 static unsigned long unlock_id;
 static time_t unlock_delay_time;
 #define UNLOCK_MS		350	/* 0.35s after last unlock */
-static Boolean key_Character(int code, Boolean with_ge, Boolean pasting,
+Boolean key_Character(int code, Boolean with_ge, Boolean pasting,
 			     Boolean *skipped);
 static Boolean flush_ta(void);
 static void key_AID(unsigned char aid_code);
@@ -243,12 +248,82 @@ flush_ta(void)
 	return any;
 }
 
+/* Decode keyboard lock bits. */
+static char *
+kybdlock_decode(char *how, unsigned int bits)
+{
+    	static char buf[1024];
+	char *s = buf;
+	char *space = "";
+
+	if (bits == -1)
+	    	return "all";
+	if (bits & KL_OERR_MASK) {
+	    	s += sprintf(s, "%sOERR(", how);
+	    	switch(bits & KL_OERR_MASK) {
+		    case KL_OERR_PROTECTED:
+			s += sprintf(s, "PROTECTED");
+			break;
+		    case KL_OERR_NUMERIC:
+			s += sprintf(s, "NUMERIC");
+			break;
+		    case KL_OERR_OVERFLOW:
+			s += sprintf(s, "OVERFLOW");
+			break;
+		    case KL_OERR_DBCS:
+			s += sprintf(s, "DBCS");
+			break;
+		    default:
+			s += sprintf(s, "?%d", bits & KL_OERR_MASK);
+			break;
+		}
+		s += sprintf(s, ")");
+		space = " ";
+	}
+	if (bits & KL_NOT_CONNECTED) {
+	    s += sprintf(s, "%s%sNOT_CONNECTED", space, how);
+	    space = " ";
+	}
+	if (bits & KL_AWAITING_FIRST) {
+	    s += sprintf(s, "%s%sAWAITING_FIRST", space, how);
+	    space = " ";
+	}
+	if (bits & KL_OIA_TWAIT) {
+	    s += sprintf(s, "%s%sOIA_TWAIT", space, how);
+	    space = " ";
+	}
+	if (bits & KL_OIA_LOCKED) {
+	    s += sprintf(s, "%s%sOIA_LOCKED", space, how);
+	    space = " ";
+	}
+	if (bits & KL_DEFERRED_UNLOCK) {
+	    s += sprintf(s, "%s%sDEFERRED_UNLOCK", space, how);
+	    space = " ";
+	}
+	if (bits & KL_ENTER_INHIBIT) {
+	    s += sprintf(s, "%s%sENTER_INHIBIT", space, how);
+	    space = " ";
+	}
+	if (bits & KL_SCROLLED) {
+	    s += sprintf(s, "%s%sSCROLLED", space, how);
+	    space = " ";
+	}
+	if (bits & KL_OIA_MINUS) {
+	    s += sprintf(s, "%s%sOIA_MINUS", space, how);
+	    space = " ";
+	}
+
+	return buf;
+}
+
 /* Set bits in the keyboard lock. */
 static void
 kybdlock_set(unsigned int bits, const char *cause unused)
 {
 	unsigned int n;
 
+	trace_event("Keyboard lock(%s) %s\n", cause,
+		kybdlock_decode("+", bits));
 	n = kybdlock | bits;
 	if (n != kybdlock) {
 #if defined(KYBDLOCK_TRACE) /*[*/
@@ -270,6 +345,9 @@ kybdlock_clr(unsigned int bits, const char *cause unused)
 {
 	unsigned int n;
 
+	if (kybdlock & bits)
+		trace_event("Keyboard unlock(%s) %s\n", cause,
+			kybdlock_decode("-", kybdlock & bits));
 	n = kybdlock & ~bits;
 	if (n != kybdlock) {
 #if defined(KYBDLOCK_TRACE) /*[*/
@@ -650,7 +728,7 @@ key_Character_wrapper(Widget w unused, XEvent *event unused, String *params,
  * Handle an ordinary displayable character key.  Lots of stuff to handle
  * insert-mode, protected fields and etc.
  */
-static Boolean
+/*static*/ Boolean
 key_Character(int code, Boolean with_ge, Boolean pasting, Boolean *skipped)
 {
 	register int	baddr, faddr, xaddr;
@@ -1443,13 +1521,16 @@ do_reset(Boolean explicit)
 	    || ft_state != FT_NONE
 #endif /*]*/
 	    || (!appres.unlock_delay && !sms_in_macro())
-	    || (unlock_delay_time != 0 && (time(NULL) - unlock_delay_time) > 1)) {
+	    || (unlock_delay_time != 0 && (time(NULL) - unlock_delay_time) > 1)
+	    || !appres.unlock_delay_ms) {
 		kybdlock_clr(-1, "do_reset");
 	} else if (kybdlock &
   (KL_DEFERRED_UNLOCK | KL_OIA_TWAIT | KL_OIA_LOCKED | KL_AWAITING_FIRST)) {
 		kybdlock_clr(~KL_DEFERRED_UNLOCK, "do_reset");
 		kybdlock_set(KL_DEFERRED_UNLOCK, "do_reset");
-		unlock_id = AddTimeOut(UNLOCK_MS, defer_unlock);
+		unlock_id = AddTimeOut(appres.unlock_delay_ms, defer_unlock);
+		trace_event("Deferring keyboard unlock %dms\n",
+			appres.unlock_delay_ms);
 	}
 
 	/* Clean up other modes. */
@@ -2887,6 +2968,51 @@ Key_action(Widget w unused, XEvent *event, String *params, Cardinal *num_params)
 	for (i = 0; i < *num_params; i++) {
 		char *s = params[i];
 
+#if defined(_WIN32) /*[*/
+		if (!strncasecmp(s, "U+", 2)) {
+			char *ptr;
+			unsigned long uu;
+			unsigned char e;
+
+			uu = strtoul(s + 2, &ptr, 16);
+			if (uu == 0 || uu > 0xffff || *ptr != '\0') {
+				popup_an_error("%s: Nonexistent or invalid "
+					"KeySym: %s",
+					action_name(Key_action), s);
+				cancel_if_idle_command();
+				continue;
+			}
+			if (IN_3270) {
+				e = unicode_to_ebcdic(uu);
+				if (e) {
+					(void) key_Character(e, False, False,
+							     NULL);
+				} else {
+					trace_event(" No EBCDIC translation "
+						"(dropped)\n");
+				}
+			} else {
+				wchar_t w;
+				char c;
+				BOOL udc;
+				int nc;
+
+				w = uu;
+				nc = WideCharToMultiByte(CP_ACP, 0, &w, 1,
+					&c, 1, ">", &udc);
+				if (nc) {
+					key_ACharacter(
+						(unsigned char)(c & 0xff),
+						KT_STD, IA_KEY, NULL);
+				} else {
+					trace_event(" No ASCII translation "
+						"(dropped)\n");
+				}
+			}
+			continue;
+		}
+#endif /*]*/
+
 		k = MyStringToKeysym(s, &keytype);
 		if (k == NoSymbol) {
 			popup_an_error("%s: Nonexistent or invalid KeySym: %s",
@@ -3123,7 +3249,8 @@ int
 emulate_input(char *s, int len, Boolean pasting)
 {
 	enum {
-	    BASE, BACKSLASH, BACKX, BACKP, BACKPA, BACKPF, OCTAL, HEX, XGE
+	    BASE, BACKSLASH, BACKX, BACKE, BACKP, BACKPA, BACKPF, OCTAL, HEX,
+	    EBC, XGE
 	} state = BASE;
 	int literal = 0;
 	int nc = 0;
@@ -3341,6 +3468,9 @@ emulate_input(char *s, int len, Boolean pasting)
 			    case 'x':
 				state = BACKX;
 				break;
+			    case 'e':
+				state = BACKE;
+				break;
 			    case '\\':
 				key_ACharacter((unsigned char) c, KT_STD, ia,
 						&skipped);
@@ -3435,6 +3565,19 @@ emulate_input(char *s, int len, Boolean pasting)
 				state = BASE;
 				continue;
 			}
+		    case BACKE:	/* last two characters were "\x" */
+			if (isxdigit(c)) {
+				state = EBC;
+				literal = 0;
+				nc = 0;
+				continue;
+			} else {
+				popup_an_error("%s: Missing hex digits after \\e",
+				    action_name(String_action));
+				cancel_if_idle_command();
+				state = BASE;
+				continue;
+			}
 		    case OCTAL:	/* have seen \ and one or more octal digits */
 			if (nc < 3 && isdigit(c) && c < '8') {
 				literal = (literal * 8) + FROM_HEX(c);
@@ -3446,7 +3589,7 @@ emulate_input(char *s, int len, Boolean pasting)
 				state = BASE;
 				continue;
 			}
-		    case HEX:	/* have seen \ and one or more hex digits */
+		    case HEX:	/* have seen \x and one or more hex digits */
 			if (nc < 2 && isxdigit(c)) {
 				literal = (literal * 16) + FROM_HEX(c);
 				nc++;
@@ -3454,6 +3597,19 @@ emulate_input(char *s, int len, Boolean pasting)
 			} else {
 				key_ACharacter((unsigned char) literal, KT_STD,
 				    ia, &skipped);
+				state = BASE;
+				continue;
+			}
+		    case EBC:	/* have seen \e and one or more hex digits */
+			if (nc < 2 && isxdigit(c)) {
+				literal = (literal * 16) + FROM_HEX(c);
+				nc++;
+				break;
+			} else {
+			    	trace_event(" %s -> Key(X'%02X')\n",
+					ia_name[(int) ia], literal);
+				key_Character((unsigned char) literal, False,
+					True, &skipped);
 				state = BASE;
 				continue;
 			}
@@ -3487,6 +3643,17 @@ emulate_input(char *s, int len, Boolean pasting)
 	    case OCTAL:
 	    case HEX:
 		key_ACharacter((unsigned char) literal, KT_STD, ia, &skipped);
+		state = BASE;
+		if (toggled(MARGINED_PASTE) &&
+		    BA_TO_COL(cursor_addr) < orig_col) {
+			(void) remargin(orig_col);
+		}
+		break;
+	    case EBC:
+		/* XXX: line below added after 3.3.7p7 */
+		trace_event(" %s -> Key(X'%02X')\n", ia_name[(int) ia],
+			literal);
+		key_Character((unsigned char) literal, False, True, &skipped);
 		state = BASE;
 		if (toggled(MARGINED_PASTE) &&
 		    BA_TO_COL(cursor_addr) < orig_col) {
@@ -3936,6 +4103,22 @@ Default_action(Widget w unused, XEvent *event, String *params, Cardinal *num_par
 			return;
 #endif /*]*/
 		ll = XLookupString(kevent, buf, 32, &ks, (XComposeStatus *) 0);
+		if (ll > 1) {
+			char tmp[33];
+
+			/*
+			 * Translate from (local) UTF-8 to the implied
+			 * 8-bit character set.
+			 */
+			strncpy(tmp, buf, ll);
+			tmp[ll] = '\0';
+			buf[0] = utf8_lookup(tmp, NULL, NULL);
+			if (buf[0]) {
+				key_ACharacter((unsigned char) buf[0], KT_STD,
+				    IA_DEFAULT, NULL);
+				return;
+			}
+		}
 		if (ll == 1) {
 			/* Add Meta; XLookupString won't. */
 			if (event_is_meta(kevent->state))

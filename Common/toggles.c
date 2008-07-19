@@ -94,6 +94,9 @@ initialize_toggles(void)
 #if defined(X3270_SCRIPT) || defined(TCL3270) /*[*/
 	appres.toggle[AID_WAIT].upcall =         toggle_nop;
 #endif /*]*/
+#if defined(C3270) /*[*/
+	appres.toggle[UNDERSCORE].upcall =	 toggle_underscore;
+#endif /*]*/
 
 #if defined(X3270_TRACE) /*[*/
 	if (toggled(DS_TRACE))
