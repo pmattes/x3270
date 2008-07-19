@@ -86,6 +86,16 @@ esac
 AC_SUBST(IFONTDIR)
 AC_SUBST(CIFONTDIR)
 
+dnl Check for --with-iconv
+AC_ARG_WITH(iconv,[  --with-iconv            ignore __STDC_ISO_10646__ and use iconv() instead])
+case "$with_iconv" in
+no|"")	;;
+yes|*)
+	AC_DEFINE(USE_ICONV,1)
+	;;
+esac
+AC_SUBST(USE_ICONV)
+
 # Set up the configuration directory.
 LIBX3270DIR='${sysconfdir}/x3270'
 AC_SUBST(LIBX3270DIR)
@@ -93,10 +103,11 @@ AC_SUBST(LIBX3270DIR)
 dnl Check for other libraries.
 dnl Note that the order here is important.  The last libraries should appear
 dnl first, so that objects in them can be used by subsequent libraries.
-AC_CHECK_LIB(util, forkpty)
-AC_CHECK_LIB(nsl_s, gethostbyname)
-AC_CHECK_LIB(nsl, gethostbyname)
-AC_CHECK_LIB(socket, socket)
+AC_SEARCH_LIBS(forkpty, util)
+AC_SEARCH_LIBS(gethostbyname, nsl_s)
+AC_SEARCH_LIBS(gethostbyname, nsl)
+AC_SEARCH_LIBS(socket, socket)
+AC_SEARCH_LIBS(iconv, iconv, , AC_MSG_ERROR("No iconv library function"))
 
 dnl Checks for header files.
 dnl AC_HEADER_STDC
@@ -107,6 +118,7 @@ AC_CHECK_HEADERS(pty.h)
 AC_CHECK_HEADERS(libutil.h)
 AC_CHECK_HEADERS(util.h)
 AC_CHECK_HEADERS(getopt.h)
+AC_CHECK_HEADERS(iconv.h)
 
 dnl Check for SSL header file.
 AC_ARG_WITH(ssl,[  --with-ssl=DIR          specify OpenSSL install directory])

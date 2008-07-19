@@ -48,14 +48,14 @@ extern int cCOLS;
 #undef COLOR_YELLOW
 #undef COLOR_BLUE
 #undef COLOR_WHITE
-#if defined(HAVE_LIBNCURSESW) /*[*/
+#if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
 #include <ncursesw/ncurses.h>
-#else /*][*/
-#if defined(HAVE_NCURSES_H) /*[*/
+#elif defined(HAVE_NCURSES_NCURSES_H) /*][*/
 #include <ncurses/ncurses.h>
-#else /*][*/ 
+#elif defined(HAVE_NCURSES_H) /*][*/
+#include <ncurses.h>
+#else /*][*/
 #include <curses.h>
-#endif /*]*/
 #endif /*]*/
 
 static int cp[8][8][2];
@@ -758,6 +758,7 @@ screen_disp(Boolean erasing unused)
 			move(row, 0);
 		for (col = 0; col < cCOLS; col++) {
 		    	Boolean underlined = False;
+			int attr_mask = toggled(UNDERSCORE)? ~A_UNDERLINE: -1;
 
 			if (flipped)
 				move(row, cCOLS-1 - col);
@@ -769,7 +770,7 @@ screen_disp(Boolean erasing unused)
 				(void) attrset(defattr);
 				myaddch(' ');
 			} else if (FA_IS_ZERO(fa)) {
-				(void) attrset(field_attrs & ~A_UNDERLINE);
+				(void) attrset(field_attrs & attr_mask);
 				if (field_attrs & A_UNDERLINE)
 				    underlined = True;
 				myaddch(' ');
@@ -778,7 +779,7 @@ screen_disp(Boolean erasing unused)
 				      ea_buf[baddr].fg ||
 				      ea_buf[baddr].bg)) {
 
-					(void) attrset(field_attrs & ~A_UNDERLINE);
+					(void) attrset(field_attrs & attr_mask);
 					if (field_attrs & A_UNDERLINE)
 					    underlined = True;
 
@@ -787,7 +788,7 @@ screen_disp(Boolean erasing unused)
 		
 				    	buf_attrs = calc_attrs(baddr, fa_addr,
 						fa);
-					(void) attrset(buf_attrs & ~A_UNDERLINE);
+					(void) attrset(buf_attrs & attr_mask);
 					if (buf_attrs & A_UNDERLINE)
 					    underlined = True;
 				}
@@ -821,9 +822,11 @@ screen_disp(Boolean erasing unused)
 					    	unsigned char ac;
 
 						ac = ebc2asc[ea_buf[baddr].cc];
-						if (underlined && ac == ' ')
+						if (toggled(UNDERSCORE) &&
+							underlined &&
+							ac == ' ') {
 							ac = '_';
-
+						}
 						if (toggled(MONOCASE))
 							myaddch(asc2uc[ac]);
 						else
@@ -1176,6 +1179,12 @@ cursor_move(int baddr)
 
 void
 toggle_monocase(struct toggle *t unused, enum toggle_type tt unused)
+{
+	screen_disp(False);
+}
+
+void
+toggle_underscore(struct toggle *t unused, enum toggle_type tt unused)
 {
 	screen_disp(False);
 }

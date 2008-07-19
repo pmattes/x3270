@@ -102,7 +102,7 @@ extern void sms_init(void);
 extern Boolean sms_in_macro(void);
 extern Boolean sms_redirect(void);
 extern void sms_store(unsigned char c);
-#if defined(X3270_SCRIPT) || defined(TCL3270) /*[*/
+#if defined(X3270_SCRIPT) || defined(TCL3270) || defined(S3270) /*[*/
 extern void Snap_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 #endif /*]*/
@@ -110,5 +110,7 @@ extern void Snap_action(Widget w, XEvent *event, String *params,
 extern void Status_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 #endif /*]*/
+extern void Source_action(Widget w, XEvent *event, String *params,
+    Cardinal *num_params);
 extern void Wait_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);

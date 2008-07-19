@@ -1,6 +1,6 @@
 /*
  * Modifications and original code Copyright 1993, 1994, 1995, 1996,
- *    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 by Paul Mattes.
+ *    2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 by Paul Mattes.
  * Original X11 Port Copyright 1990 by Jeff Sparkes.
  *   Permission to use, copy, modify, and distribute this software and its
  *   documentation for any purpose and without fee is hereby granted,
@@ -151,103 +151,57 @@ static char *base_3270_keymap =
 #else /*][*/
 
 /* Base keymap. */
-static char *base_keymap1 =
-"Alt Ctrl<Key>]: Key(0x1d)\n"
-"Ctrl<Key>]: Escape\n"
-"Alt <Key>c: Clear\n"
-"Alt <Key>i: Insert\n"
-"Alt <Key>r: Reset\n"
-"Alt <Key>l: Redraw\n"
-"Alt <Key>m: Compose\n"
-"Alt <Key>^: Key(notsign)\n"
-"<Key>Delete: Delete\n"
-"<Key>Up: Up\n"
-"<Key>Down: Down\n"
-"<Key>Left: Left\n"
-"<Key>Right: Right\n"
-"<Key>Home: Home\n"
-"Alt <Key>1: PA(1)\n"
-"Alt <Key>2: PA(2)\n"
-"Alt <Key>3: PA(3)\n"
-"<Key>Insert: ToggleInsert\n"
-"<Key>Numpad0: Key(0)\n"
-"<Key>Numpad1: Key(1)\n"
-"<Key>Numpad2: Key(2)\n"
-"<Key>Numpad3: Key(3)\n"
-"<Key>Numpad4: Key(4)\n"
-"<Key>Numpad5: Key(5)\n"
-"<Key>Numpad6: Key(6)\n"
-"<Key>Numpad7: Key(7)\n"
-"<Key>Numpad8: Key(8)\n"
-"<Key>Numpad9: Key(9)\n"
-"<Key>Multiply: Key(*)\n"
-"<Key>Add: Key(+)\n"
-"<Key>Separator: Key(|)\n"
-"<Key>Subtract: Key(-)\n"
-"<Key>Decimal: Key(.)\n"
-"<Key>Divide: Key(/)\n";
-static char *base_keymap2 =
-"Shift <Key>F1: PF(13)\n"
-"<Key>F1: PF(1)\n"
-"Shift <Key>F2: PF(14)\n"
-"<Key>F2: PF(2)\n"
-"Shift <Key>F3: PF(15)\n"
-"<Key>F3: PF(3)\n"
-"Shift <Key>F4: PF(16)\n"
-"<Key>F4: PF(4)\n"
-"Shift <Key>F5: PF(17)\n"
-"<Key>F5: PF(5)\n"
-"Shift <Key>F6: PF(18)\n"
-"<Key>F6: PF(6)\n";
-static char *base_keymap3 =
-"Shift <Key>F7: PF(19)\n"
-"<Key>F7: PF(7)\n"
-"Shift <Key>F8: PF(20)\n"
-"<Key>F8: PF(8)\n"
-"Shift <Key>F9: PF(21)\n"
-"<Key>F9: PF(9)\n"
-"Shift <Key>F10: PF(22)\n"
-"<Key>F10: PF(10)\n"
-"Shift <Key>F11: PF(23)\n"
-"<Key>F11: PF(11)\n"
-"Shift <Key>F12: PF(24)\n"
-"<Key>F12: PF(12)\n"
-"<Key>F13: PF(13)\n"
-"<Key>F14: PF(14)\n"
-"<Key>F15: PF(15)\n"
-"<Key>F16: PF(16)\n"
-"<Key>F17: PF(17)\n"
-"<Key>F18: PF(18)\n"
-"<Key>F19: PF(19)\n"
-"<Key>F20: PF(20)\n"
-"<Key>F21: PF(21)\n"
-"<Key>F22: PF(22)\n"
-"<Key>F23: PF(23)\n"
-"<Key>F24: PF(24)\n";
+static char *base_keymap =
+       "Alt <Key>1:      PA(1)\n"
+       "Alt <Key>2:      PA(2)\n"
+       "Alt <Key>3:      PA(3)\n"
+  "Alt Ctrl <Key>]:      Key(0x1d)\n"
+      "Ctrl <Key>]:      Escape\n"
+       "Alt <Key>^:      Key(notsign)\n"
+       "Alt <Key>c:      Clear\n"
+       "Alt <Key>l:      Redraw\n"
+       "Alt <Key>m:      Compose\n"
+       "Alt <Key>p:      PrintText\n"
+     "Shift <Key>F1:     PF(13)\n"
+     "Shift <Key>F2:     PF(14)\n"
+     "Shift <Key>F3:     PF(15)\n"
+     "Shift <Key>F4:     PF(16)\n"
+     "Shift <Key>F5:     PF(17)\n"
+     "Shift <Key>F6:     PF(18)\n"
+     "Shift <Key>F7:     PF(19)\n"
+     "Shift <Key>F8:     PF(20)\n"
+     "Shift <Key>F9:     PF(21)\n"
+     "Shift <Key>F10:    PF(22)\n"
+     "Shift <Key>F11:    PF(23)\n"
+     "Shift <Key>F12:    PF(24)\n";
 
 /* Base keymap, 3270 mode. */
 static char *base_3270_keymap =
-"Ctrl <Key>[: Escape\n"
-"Ctrl <Key>c: Clear\n"
-"Ctrl <Key>r: Reset\n"
-"Ctrl <Key>l: Redraw\n"
-"Shift Ctrl <Key>i: BackTab\n"
-"Ctrl <Key>i: Tab\n"
-"<Key> Delete: Delete\n"
-"Ctrl <Key>h: Erase\n"
-"Ctrl <Key>j: Newline\n"
-"Ctrl <Key>m: Enter\n"
-"<Key> Home: Home\n"
-"Ctrl <Key>a: Attn\n"
-"Alt <Key>a: Attn\n"
-"Shift <Key> End: EraseEOF\n"
-"<Key> End: FieldEnd\n"
-"Ctrl <Key>v: Paste\n"
-"Ctrl <Key>f: FieldMark\n"
-"Ctrl <Key>d: Dup\n"
-"Ctrl <Key>u: DeleteField\n"
-"Shift <Key>Left: PreviousWord\n"
-"Shift <Key>Right: NextWord\n";
+      "Ctrl <Key>a:      Attn\n"
+       "Alt <Key>a:      Attn\n"
+      "Ctrl <Key>c:      Clear\n"
+      "Ctrl <Key>d:      Dup\n"
+       "Alt <Key>d:      Dup\n"
+      "Ctrl <Key>f:      FieldMark\n"
+       "Alt <Key>f:      FieldMark\n"
+      "Ctrl <Key>h:      Erase\n"
+       "Alt <Key>i:      Insert\n"
+"Shift Ctrl <Key>i:      BackTab\n"
+      "Ctrl <Key>i:      Tab\n"
+      "Ctrl <Key>j:      Newline\n"
+      "Ctrl <Key>l:      Redraw\n"
+      "Ctrl <Key>m:      Enter\n"
+      "Ctrl <Key>r:      Reset\n"
+       "Alt <Key>r:      Reset\n"
+      "Ctrl <Key>u:      DeleteField\n"
+      "Ctrl <Key>v:      Paste\n"
+           "<Key>INSERT: ToggleInsert\n"
+     "Shift <Key>TAB:    BackTab\n"
+           "<Key>BACK:   Erase\n"
+     "Shift <Key>END:    EraseEOF\n"
+           "<Key>END:    FieldEnd\n"
+     "Shift <Key>LEFT:   PreviousWord\n"
+     "Shift <Key>RIGHT:  NextWord\n";
 #endif /*]*/
 
 Boolean any_error_output = False;
@@ -287,8 +241,14 @@ save_dirs(char *argv0)
 	    	instdir = "";
 
 	/* Figure out the application data directory. */
-	if (get_dirs(NULL, myappdata) < 0)
+	if (get_dirs(NULL, myappdata, "wc3270") < 0)
 	    	x3270_exit(1);
+
+	/*
+	 * Create the application data directory, in case we are being run
+	 * by someone other than the user that installed us.
+	 */
+	(void) _mkdir(myappdata);
 }
 #endif /*]*/
 
@@ -352,13 +312,18 @@ main(int argc, char *argv[])
 #endif /*]*/
 
 	printf("%s\n\n"
-		"Copyright 1989-2007 by Paul Mattes, GTRC and others.\n"
+		"Copyright 1989-2008 by Paul Mattes, GTRC and others.\n"
 		"Type 'show copyright' for full copyright information.\n"
 		"Type 'help' for help information.\n\n",
 		build);
 
 	add_resource("keymap.base",
-	    xs_buffer("%s%s%s", base_keymap1, base_keymap2, base_keymap3));
+#if defined(_WIN32) /*[*/
+	    base_keymap
+#else /*][*/
+	    xs_buffer("%s%s%s", base_keymap1, base_keymap2, base_keymap3)
+#endif /*]*/
+	    );
 	add_resource("keymap.base.3270", NewString(base_3270_keymap));
 
 	argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
@@ -1034,7 +999,7 @@ copyright_dump(void)
 {
 	action_output(" ");
 	action_output("Modifications and original code Copyright 1993, 1994, 1995, 1996,");
-	action_output(" 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 by Paul Mattes.");
+	action_output(" 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 by Paul Mattes.");
 	action_output("Original X11 Port Copyright 1990 by Jeff Sparkes.");
 	action_output("DFT File Transfer Code Copyright October 1995 by Dick Altenbern.");
 	action_output("RPQNAMES Code Copyright 2004, 2005 by Don Russell.");

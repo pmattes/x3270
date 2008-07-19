@@ -65,7 +65,11 @@ struct toggle {
 #define AID_WAIT	15
 #endif /*]*/
 
-#define N_TOGGLES	16
+#if defined(C3270) /*[*/
+#define UNDERSCORE	16
+#endif /*]*/
+
+#define N_TOGGLES	17
 
 #define toggled(ix)		(appres.toggle[ix].value)
 #define toggle_toggle(t) \
@@ -125,9 +129,6 @@ typedef struct {
 	Boolean unlock_delay;
 #if defined(X3270_SCRIPT) /*[*/
 	Boolean socket;
-#endif /*]*/
-#if defined(C3270) && defined(_WIN32) /*[*/
-	Boolean highlight_underline;
 #endif /*]*/
 
 	/* Named resources */
@@ -207,6 +208,10 @@ typedef struct {
 	char	*cert_file;
 #endif /*]*/
 	char	*proxy;
+#if defined(TCL3270) /*[*/
+	int	command_timeout;
+#endif /*]*/
+	int	unlock_delay_ms;
 
 	/* Toggles */
 	struct toggle toggle[N_TOGGLES];

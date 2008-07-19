@@ -1,4 +1,5 @@
-dnl Copyright 1999, 2000, 2002, 2001, 2003, 2004, 2005, 2006 by Paul Mattes.
+dnl Copyright 1999, 2000, 2002, 2001, 2003, 2004, 2005, 2006, 2008
+dnl   by Paul Mattes.
 dnl  Permission to use, copy, modify, and distribute this software and its
 dnl  documentation for any purpose and without fee is hereby granted,
 dnl  provided that the above copyright notice appear in all copies and that
@@ -7,22 +8,27 @@ dnl  supporting documentation.
 define(XX_LA,ifelse(XX_PRODUCT,lib3270,a))dnl
 XX_TH(X3270-SCRIPT,1,XX_DATE)
 XX_SH(Name)
-Scripting Facilities for x3270, s3270 and c3270
+Scripting Facilities for x3270, s3270, ws3270 and c3270
 XX_SH(Synopsis)
 XX_FB(x3270) XX_FB(XX_DASHED(script)) [ XX_FI(x3270-options) ]
 XX_BR
-XX_FB(s3270) [ XX_FI(x3270-options) ]
+XX_FB(s3270) [ XX_FI(s3270-options) ]
+XX_BR
+XX_FB(ws3270) [ XX_FI(ws3270-options) ]
 XX_BR
 XX_FB(`Script') ( XX_FI(command) [ `,'XX_FI(arg)... ] )
 XX_SH(Description)
 The XX_FB(x3270) scripting facilities allow the interactive 3270 emulators
 XX_FB(x3270) and XX_FB(c3270) to be operated under the control of another
-program, and form the basis for the script-only emulator XX_FB(s3270).
+program, and form the basis for the script-only emulators XX_FB(s3270)
+and XX_FB(ws3270).
 XX_PP
 There are two basic scripting methods.
 The first is the XX_FB(peer script) facility, invoked by the XX_FB(x3270)
-XX_FB(XX_DASHED(script)) switch, and the default mode for XX_FB(s3270).
-This runs XX_FB(x3270) or XX_FB(s3270) as a child of another process.
+XX_FB(XX_DASHED(script)) switch, and the default mode for XX_FB(s3270) and
+XX_FB(ws3270).
+This runs XX_FB(x3270), XX_FB(s3270) or XX_FB(ws3270) as a child of another
+process.
 Typically this would be a script using
 XX_FI(expect)(1), XX_FI(perl)(1),
 or the co-process facility of the Korn Shell
@@ -123,7 +129,7 @@ XX_FB(x3270)
 window, in hexadecimal preceded by
 XX_FB(0x).
 For
-XX_FB(s3270) and XX_FB(c3270),
+XX_FB(s3270), XX_FB(ws3270) and XX_FB(c3270),
 this is zero.
 XX_TP(12 Command Execution Time)
 The time that it took for the host to respond to the previous commnd, in
@@ -413,6 +419,11 @@ fully processed the last command.
 XX_IP
 The optional XX_FI(timeout) parameter specifies a number of seconds to wait
 before failing the XX_FB(Snap) action.  The default is to wait indefinitely.
+XX_TP(XX_FB(Source)(XX_FI(file)))
+Read and execute commands from XX_FI(file).
+Any output from those commands will become the output from XX_FB(Source).
+If any of the commands fails, the XX_FB(Source) command will XX_FI(not) abort;
+it will continue reading commands until EOF.
 XX_TP(XX_FB(Title)(XX_FI(text)))
 Changes the x3270 window title to XX_FI(text).
 XX_TP(XX_FB(Transfer)(XX_FI(keyword)=XX_FI(value),...))
@@ -516,5 +527,7 @@ XX_BR
 XX_LINK(c3270-man.html,c3270(1))
 XX_BR
 XX_LINK(s3270-man.html,s3270(1))
+XX_BR
+XX_LINK(ws3270-man.html,ws3270(1))
 XX_SH(Version)
 Version XX_VERSION_NUMBER

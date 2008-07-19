@@ -164,9 +164,11 @@ popup_move_again(XtPointer closure, XtIntervalId *id unused)
     	Position x, y;
 
 	XtVaGetValues(wx->w, XtNx, &x, XtNy, &y, NULL);
+#if defined(POPUP_DEBUG) /*[*/
 	printf("want x %d got x %d, want y %d, got y %d\n",
 		wx->x, x,
 		wx->y, y);
+#endif /*]*/
 
 	if (x != wx->x || y != wx->y) {
 	    	Position main_x, main_y;
@@ -181,7 +183,9 @@ popup_move_again(XtPointer closure, XtIntervalId *id unused)
 		 */
 		wm_width = x - wx->x;
 		wm_height = y - wx->y;
+#if defined(POPUP_DEBUG) /*[*/
 		printf("wm width %u height %u\n", wm_width, wm_height);
+#endif /*]*/
 
 		XtVaGetValues(toplevel, XtNx, &main_x, XtNy, &main_y,
 			XtNwidth, &main_width, XtNheight, &main_height, NULL);
@@ -209,7 +213,9 @@ popup_move_again(XtPointer closure, XtIntervalId *id unused)
 			return;
 		}
 
+#if defined(POPUP_DEBUG) /*[*/
 		printf(" re-setting x %d y %d\n", x, y);
+#endif /*]*/
 	    	XtVaSetValues(wx->w, XtNx, x, XtNy, y, NULL);
 	}
 	XtFree((XtPointer)wx);
@@ -251,25 +257,21 @@ place_popup(Widget w, XtPointer client_data, XtPointer call_data unused)
 	if (x < 0 || y < 0)
 		return;
 
+#if defined(POPUP_DEBUG) /*[*/
 	printf("place_popup: toplevel x %d y %d width %u height %u\n",
 		x, y, win_width, win_height);
+#endif /*]*/
 	if (parent_of(XtWindow(toplevel)) == root_of(XtWindow(toplevel))) {
-#if 0
-	    if (wm_width) {
-		wa.x = x - wm_width;
-		wa.y = y - wm_height;
-		wa.width = win_width + (2 * wm_width);
-		wa.height = win_height + wm_height + wm_width;
-	    } else
-#endif
-	    {
+#if defined(POPUP_DEBUG) /*[*/
 		printf("parent is root!\n");
+#endif /*]*/
 		parent_is_root = True;
-	    }
 	} else {
 	    XGetWindowAttributes(display, parent_of(XtWindow(toplevel)), &wa);
+#if defined(POPUP_DEBUG) /*[*/
 	    printf("parent x %d y %d width %u height %u\n",
 		    wa.x, wa.y, wa.width, wa.height);
+#endif /*]*/
 	}
 
 
@@ -302,7 +304,9 @@ place_popup(Widget w, XtPointer client_data, XtPointer call_data unused)
 			/* Do it precisely. */
 			x = wa.x;
 			y = wa.y + wa.height;
+#if defined(POPUP_DEBUG) /*[*/
 			printf("setting x %d y %d\n", x, y);
+#endif /*]*/
 			XtVaSetValues(w, XtNx, x, XtNy, y, NULL);
 		}
 		break;
@@ -320,7 +324,9 @@ place_popup(Widget w, XtPointer client_data, XtPointer call_data unused)
 			XtVaGetValues(w, XtNwidth, &popup_width, NULL);
 			x = wa.x - popup_width - (wa.width - main_width);
 			y = wa.y;
+#if defined(POPUP_DEBUG) /*[*/
 			printf("setting x %d y %d\n", x, y);
+#endif /*]*/
 			XtVaSetValues(w, XtNx, x, XtNy, y, NULL);
 		}
 		break;
@@ -337,7 +343,9 @@ place_popup(Widget w, XtPointer client_data, XtPointer call_data unused)
 		} else {
 			x = wa.x + wa.width;
 			y = wa.y;
+#if defined(POPUP_DEBUG) /*[*/
 			printf("setting x %d y %d\n", x, y);
+#endif /*]*/
 			XtVaSetValues(w, XtNx, x, XtNy, y, NULL);
 		}
 		break;
@@ -355,7 +363,9 @@ place_popup(Widget w, XtPointer client_data, XtPointer call_data unused)
 			XtVaGetValues(w, XtNwidth, &popup_width, NULL);
 			x = wa.x + win_width - popup_width;
 			y = wa.y + menubar_qheight(win_width) + (y - wa.y);
+#if defined(POPUP_DEBUG) /*[*/
 			printf("setting x %d y %d\n", x, y);
+#endif /*]*/
 			XtVaSetValues(w, XtNx, x, XtNy, y, NULL);
 		}
 		break;
@@ -378,19 +388,26 @@ move_popup(Widget w, XtPointer client_data, XtPointer call_data unused)
 	if (x < 0 || y < 0)
 		return;
 
+#if defined(POPUP_DEBUG) /*[*/
 	printf("move_popup: toplevel x %d y %d width %u height %u\n",
 		x, y, win_width, win_height);
+#endif /*]*/
 	if (parent_of(XtWindow(toplevel)) == root_of(XtWindow(toplevel))) {
-	    /* Fake the parent window attributes. */
-	    printf("move_popup: parent is root\n");
-	    wa.x = x - wm_width;
-	    wa.y = y - wm_height;
-	    wa.width = win_width + (2 * wm_width);
-	    wa.height = win_height + wm_height + wm_width;
+		/* Fake the parent window attributes. */
+#if defined(POPUP_DEBUG) /*[*/
+		printf("move_popup: parent is root\n");
+#endif /*]*/
+		wa.x = x - wm_width;
+		wa.y = y - wm_height;
+		wa.width = win_width + (2 * wm_width);
+		wa.height = win_height + wm_height + wm_width;
 	} else {
-	    XGetWindowAttributes(display, parent_of(XtWindow(toplevel)), &wa);
-	    printf("parent x %d y %d width %u height %u\n",
-		    wa.x, wa.y, wa.width, wa.height);
+		XGetWindowAttributes(display, parent_of(XtWindow(toplevel)),
+			&wa);
+#if defined(POPUP_DEBUG) /*[*/
+		printf("parent x %d y %d width %u height %u\n",
+			wa.x, wa.y, wa.width, wa.height);
+#endif /*]*/
 	}
 
 	switch (p) {
@@ -410,27 +427,35 @@ move_popup(Widget w, XtPointer client_data, XtPointer call_data unused)
 	    case Bottom:
 		x = wa.x;
 		y = wa.y + wa.height;
+#if defined(POPUP_DEBUG) /*[*/
 		printf("setting x %d y %d\n", x, y);
+#endif /*]*/
 		XtVaSetValues(w, XtNx, x, XtNy, y, NULL);
 		break;
 	    case Left:
 		XtVaGetValues(w, XtNwidth, &popup_width, NULL);
 		x = wa.x - popup_width - (wa.width - main_width);
 		y = wa.y;
+#if defined(POPUP_DEBUG) /*[*/
 		printf("setting x %d y %d\n", x, y);
+#endif /*]*/
 		XtVaSetValues(w, XtNx, x, XtNy, y, NULL);
 		break;
 	    case Right:
 		x = wa.x + wa.width;
 		y = wa.y;
+#if defined(POPUP_DEBUG) /*[*/
 		printf("setting x %d y %d\n", x, y);
+#endif /*]*/
 		XtVaSetValues(w, XtNx, x, XtNy, y, NULL);
 		break;
 	    case InsideRight:
 		XtVaGetValues(w, XtNwidth, &popup_width, NULL);
 		x = wa.x + win_width - popup_width;
 		y = wa.y + menubar_qheight(win_width) + (y - wa.y);
+#if defined(POPUP_DEBUG) /*[*/
 		printf("setting x %d y %d\n", x, y);
+#endif /*]*/
 		XtVaSetValues(w, XtNx, x, XtNy, y, NULL);
 		break;
 	}

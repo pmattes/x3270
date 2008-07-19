@@ -26,7 +26,6 @@
 #define ResAllowResize		"allowResize"
 #define ResAltCursor		"altCursor"
 #define ResAltScreen		"altScreen"
-#define ResAplMap		"aplMap"
 #define ResAplMode		"aplMode"
 #define ResAssocCommand		"printer.assocCommandLine"
 #define ResAutoKeymap		"autoKeymap"
@@ -44,6 +43,7 @@
 #define ResColor8		"color8"
 #define ResColorBackground	"colorBackground"
 #define ResColorScheme		"colorScheme"
+#define ResCommandTimeout	"commandTimeout"
 #define ResComposeMap		"composeMap"
 #define ResConfDir		"confDir"
 #define ResConnectFileName	"connectFileName"
@@ -158,8 +158,11 @@
 #define ResTraceFileSize	"traceFileSize"
 #define ResTraceMonitor		"traceMonitor"
 #define ResTypeahead		"typeahead"
+#define ResUnderscore		"underscore"
 #define ResUnlockDelay		"unlockDelay"
+#define ResUnlockDelayMs	"unlockDelayMs"
 #define ResUseCursorColor	"useCursorColor"
+#define ResV			"v"
 #define ResVisibleControl	"visibleControl"
 #define ResVisualBell		"visualBell"
 #define ResVisualSelect		"visualSelect"
@@ -201,6 +204,7 @@
 #define DotTitle		"." ResTitle
 #define DotTraceFile		"." ResTraceFile
 #define DotTraceFileSize	"." ResTraceFileSize
+#define DotV			"." ResV
 
 /* Resource classes. */
 #define ClsActiveIcon		"ActiveIcon"
@@ -310,6 +314,7 @@
 #define ClsTraceMonitor		"TraceMonitor"
 #define ClsTypeahead		"Typeahead"
 #define ClsUnlockDelay		"UnlockDelay"
+#define ClsUnlockDelayMs	"UnlockDelayMs"
 #define ClsUseCursorColor	"UseCursorColor"
 #define ClsVisibleControl	"VisibleControl"
 #define ClsVisualBell		"VisualBell"
@@ -363,6 +368,7 @@
 #define OptTitle		"-title"
 #define OptTraceFile		"-tracefile"
 #define OptTraceFileSize	"-tracefilesize"
+#define OptV			"-v"
 
 /* Miscellaneous values. */
 #define ResTrue			"true"

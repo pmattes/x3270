@@ -56,3 +56,4 @@ extern void rpf_init(rpf_t *r);
 extern void rpf_reset(rpf_t *r);
 extern void rpf(rpf_t *r, char *fmt, ...) printflike(2, 3);
 extern void rpf_free(rpf_t *r);
+extern const char *build_options(void);

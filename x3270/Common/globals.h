@@ -59,8 +59,6 @@
 #define printflike(s, f) /* nothing */
 #endif /*]*/
 
-
-
 /*
  * Prerequisite #includes.
  */
@@ -73,6 +71,18 @@
 #include <sys/time.h>			/* System time-related data types */
 #include <time.h>			/* C library time functions */
 #include "localdefs.h"			/* {s,tcl,c}3270-specific defines */
+
+/*
+ * Locale-related definitions.
+ * Note that USE_ICONV can be used to override __STDC_ISO_10646__, so that
+ * development of iconv-based logic can be done on 10646-compliant systems.
+ */
+#if defined(__STDC_ISO_10646__) && !defined(USE_ICONV) /*[*/
+#define UNICODE_WCHAR	1
+#endif /*]*/
+#if defined(USE_ICONV) /*[*/
+#include <iconv.h>
+#endif /*]*/
 
 /*
  * Cancel out contradictory parts.
@@ -192,7 +202,7 @@ extern char		*user_title;
 extern unsigned char	xk_selector;
 #endif /*]*/
 
-#if defined(C3270) && defined(_WIN32) /*[*/
+#if defined(_WIN32) && (defined(C3270) || defined(S3270)) /*[*/
 extern char		*instdir;
 extern char		myappdata[];
 #endif /*]*/

@@ -58,3 +58,7 @@ extern void Title_action(Widget w, XEvent *event, String *params,
 extern void screen_title(char *text);
 extern int windows_cp;
 #endif /*]*/
+
+#if defined(C3270) /*[*/
+extern void toggle_underscore(struct toggle *t, enum toggle_type type);
+#endif /*]*/

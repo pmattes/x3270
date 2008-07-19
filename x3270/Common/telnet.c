@@ -57,6 +57,7 @@
 #include "appres.h"
 
 #include "ansic.h"
+#include "charsetc.h"
 #include "ctlrc.h"
 #include "hostc.h"
 #include "kybdc.h"
@@ -157,7 +158,7 @@ static char     vlnext;
 static int	tn3270e_negotiated = 0;
 static enum { E_NONE, E_3270, E_NVT, E_SSCP } tn3270e_submode = E_NONE;
 static int	tn3270e_bound = 0;
-static char	plu_name[BIND_PLU_NAME_MAX+1];
+static char	*plu_name = NULL;
 static char	**lus = (char **)NULL;
 static char	**curr_lu = (char **)NULL;
 static char	*try_lu = CN;
@@ -1476,7 +1477,7 @@ tn3270e_request(void)
 
 	trace_dsn("SENT %s %s DEVICE-TYPE REQUEST %.*s%s%s "
 		   "%s\n",
-	    cmd(SB), opt(TELOPT_TN3270E), strlen(termtype), tt_out + 5,
+	    cmd(SB), opt(TELOPT_TN3270E), (int)strlen(termtype), tt_out + 5,
 	    (try_lu != CN && *try_lu) ? " CONNECT " : "",
 	    (try_lu != CN && *try_lu) ? try_lu : "",
 	    cmd(SE));
@@ -1783,8 +1784,11 @@ static void
 process_bind(unsigned char *buf, int buflen)
 {
 	int namelen, i;
+	int dest_ix = 0;
 
-	(void) memset(plu_name, '\0', sizeof(plu_name));
+	if (plu_name == CN)
+	    	plu_name = Malloc(mb_max_len(BIND_PLU_NAME_MAX));
+	(void) memset(plu_name, '\0', mb_max_len(BIND_PLU_NAME_MAX));
 
 	/* Make sure it's a BIND. */
 	if (buflen < 1 || buf[0] != BIND_RU) {
@@ -1800,7 +1804,14 @@ process_bind(unsigned char *buf, int buflen)
 	if (namelen > BIND_PLU_NAME_MAX)
 		namelen = BIND_PLU_NAME_MAX;
 	for (i = 0; i < namelen; i++) {
-		plu_name[i] = ebc2asc0[buf[BIND_OFF_PLU_NAME + i]];
+	    	int nx;
+		unsigned long uc;
+
+		nx = ebcdic_to_multibyte(buf[BIND_OFF_PLU_NAME + i],
+			CS_BASE, plu_name + dest_ix, mb_max_len(1),
+			TRUE, TRANS_LOCAL, &uc);
+		if (nx > 1)
+			dest_ix += nx - 1;
 	}
 }
 #endif /*]*/
@@ -3310,8 +3321,6 @@ continue_tls(unsigned char *sbbuf, int len)
 
 #endif /*]*/
 
-#if defined(X3270_SCRIPT) || defined(TCL3270) /*[*/
-
 /* Return the current BIND application name, if any. */
 const char *
 net_query_bind_plu_name(void)
@@ -3323,7 +3332,7 @@ net_query_bind_plu_name(void)
 	 */
 	if ((cstate == CONNECTED_TN3270E) &&
 	    (e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE)))
-		return plu_name;
+		return plu_name? plu_name: "";
 	else
 		return "";
 #else /*][*/
@@ -3404,8 +3413,6 @@ net_query_host(void)
 	} else
 		return "";
 }
-
-#endif /*]*/
 
 /* Return the local address for the socket. */
 int

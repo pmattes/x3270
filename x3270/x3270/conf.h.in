@@ -40,6 +40,9 @@
 /* Functions we may need to supply. */
 #undef NEED_STRTOK_R
 
+/* Config options. */
+#undef USE_ICONV
+
 /* Optional parts. */
 #undef X3270_ANSI
 #undef X3270_APL

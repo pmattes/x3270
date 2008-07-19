@@ -1,5 +1,5 @@
 /*
- * Copyright 1995, 1999, 2000, 2002, 2004, 2005 by Paul Mattes.
+ * Copyright 1995, 1999, 2000, 2002, 2004, 2005, 2008 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -17,7 +17,8 @@
  *		Global declarations for print.c.
  */
 
-extern Boolean fprint_screen(FILE *f, Boolean even_if_empty, Boolean use_html);
+typedef enum { P_TEXT, P_HTML, P_RTF } ptype_t;
+extern Boolean fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype);
 extern void PrintText_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void PrintWindow_action(Widget w, XEvent *event, String *params,
@@ -28,3 +29,4 @@ extern void print_window_option(Widget w, XtPointer client_data,
     XtPointer call_data);
 extern void save_text_option(Widget w, XtPointer client_data,
     XtPointer call_data);
+

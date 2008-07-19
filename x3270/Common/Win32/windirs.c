@@ -24,7 +24,7 @@
 
 /* Locate the desktop and session directories from the Windows registry. */
 int
-get_dirs(char *desktop, char *appdata)
+get_dirs(char *desktop, char *appdata, char *appname)
 {
 	HRESULT hres;
 	HKEY hkey;
@@ -67,7 +67,9 @@ get_dirs(char *desktop, char *appdata)
 		    	strcpy(desktop, value);
 		else if (appdata != NULL && !strcmp(name, "AppData")) {
 		    	strcpy(appdata, value);
-			strcat(appdata, "\\wc3270\\");
+			strcat(appdata, "\\");
+			strcat(appdata, appname);
+			strcat(appdata, "\\");
 		}
 
 		if ((desktop == NULL || desktop[0]) &&

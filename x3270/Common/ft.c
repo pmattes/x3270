@@ -152,6 +152,7 @@ static Boolean ft_is_cut;		/* File transfer is CUT-style */
 static Widget overwrite_shell;
 #endif /*]*/
 static Boolean ft_is_action;
+static unsigned long ft_start_id = 0;
 
 #if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
 static void ft_cancel(Widget w, XtPointer client_data, XtPointer call_data);
@@ -199,6 +200,38 @@ ft_init(void)
 	register_schange(ST_3270_MODE, ft_in3270);
 }
 #endif /*]*/
+
+/* Return the right value for fopen()ing the local file. */
+static char *
+local_fflag(void)
+{
+	static char ret[3];
+	int nr = 0;
+
+	ret[nr++] = receive_flag? (append_flag? 'a': 'w' ): 'r';
+#if defined(_WIN32) /*[*/
+	if (!ascii_flag)
+		ret[nr++] = 'b';
+#endif /*]*/
+	ret[nr] = '\0';
+	return ret;
+}
+
+/* Timeout function for stalled transfers. */
+static void
+ft_didnt_start(void)
+{
+	if (ft_local_file != NULL) {
+		fclose(ft_local_file);
+		ft_local_file = NULL;
+		if (receive_flag && !append_flag)
+		    unlink(ft_local_filename);
+	}
+	allow_overwrite = False;
+
+	ft_complete(get_message("ftStartTimeout"));
+	sms_continue();
+}
 
 #if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
 /* "File Transfer" dialog. */
@@ -973,7 +1006,8 @@ ft_start(void)
 
 	/* See if the local file can be overwritten. */
 	if (receive_flag && !append_flag && !allow_overwrite) {
-		ft_local_file = fopen(ft_local_filename, "r");
+		ft_local_file = fopen(ft_local_filename,
+			ascii_flag? "r": "rb");
 		if (ft_local_file != (FILE *)NULL) {
 			(void) fclose(ft_local_file);
 			ft_local_file = (FILE *)NULL;
@@ -983,10 +1017,7 @@ ft_start(void)
 	}
 
 	/* Open the local file. */
-	ft_local_file = fopen(ft_local_filename,
-	    receive_flag ?
-		(append_flag ? "a" : "w" ) :
-		"r");
+	ft_local_file = fopen(ft_local_filename, local_fflag());
 	if (ft_local_file == (FILE *)NULL) {
 		allow_overwrite = False;
 		popup_an_errno(errno, "Open(%s)", ft_local_filename);
@@ -1123,6 +1154,12 @@ ft_start(void)
 	flen = kybd_prime();
 	if (!flen || flen < strlen(cmd) - 1) {
 		XtFree(cmd);
+		if (ft_local_file != NULL) {
+		    	fclose(ft_local_file);
+			ft_local_file = NULL;
+			if (receive_flag && !append_flag)
+			    unlink(ft_local_filename);
+		}
 		popup_an_error(get_message("ftUnable"));
 		allow_overwrite = False;
 		return 0;
@@ -1131,6 +1168,7 @@ ft_start(void)
 	XtFree(cmd);
 
 	/* Get this thing started. */
+	/*ft_start_id = AddTimeOut(10 * 1000, ft_didnt_start);*/
 	ft_state = FT_AWAIT_ACK;
 	ft_is_cut = False;
 	ft_last_cr = False;
@@ -1486,8 +1524,11 @@ ft_update_length(void)
 void
 ft_running(Boolean is_cut)
 {
-	if (ft_state == FT_AWAIT_ACK)
+	if (ft_state == FT_AWAIT_ACK) {
 		ft_state = FT_RUNNING;
+		RemoveTimeOut(ft_start_id);
+		ft_start_id = 0;
+	}
 	ft_is_cut = is_cut;
 	(void) gettimeofday(&t0, (struct timezone *)NULL);
 	ft_length = 0;
@@ -1748,7 +1789,8 @@ Transfer_action(Widget w unused, XEvent *event, String *params,
 
 	/* See if the local file can be overwritten. */
 	if (receive_flag && !append_flag && !allow_overwrite) {
-		ft_local_file = fopen(ft_local_filename, "r");
+		ft_local_file = fopen(ft_local_filename,
+			ascii_flag? "r": "rb");
 		if (ft_local_file != (FILE *)NULL) {
 			(void) fclose(ft_local_file);
 			popup_an_error("File exists");
@@ -1757,10 +1799,7 @@ Transfer_action(Widget w unused, XEvent *event, String *params,
 	}
 
 	/* Open the local file. */
-	ft_local_file = fopen(ft_local_filename,
-	    receive_flag ?
-		(append_flag ? "a" : "w" ) :
-		"r");
+	ft_local_file = fopen(ft_local_filename, local_fflag());
 	if (ft_local_file == (FILE *)NULL) {
 		popup_an_errno(errno, "Open(%s)", ft_local_filename);
 		return;
@@ -1884,6 +1923,12 @@ Transfer_action(Widget w unused, XEvent *event, String *params,
 	flen = kybd_prime();
 	if (!flen || flen < strlen(cmd) - 1) {
 		Free(cmd);
+		if (ft_local_file != NULL) {
+		    	fclose(ft_local_file);
+			ft_local_file = NULL;
+			if (receive_flag && !append_flag)
+			    unlink(ft_local_filename);
+		}
 		popup_an_error(get_message("ftUnable"));
 		return;
 	}
@@ -1891,6 +1936,7 @@ Transfer_action(Widget w unused, XEvent *event, String *params,
 	Free(cmd);
 
 	/* Get this thing started. */
+	ft_start_id = AddTimeOut(10 * 1000, ft_didnt_start);
 	ft_state = FT_AWAIT_ACK;
 	ft_is_cut = False;
 }

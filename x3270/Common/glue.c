@@ -132,6 +132,11 @@ struct toggle_name toggle_names[N_TOGGLES] = {
 #else /*][*/
 	{ ResAidWait,         -1 },
 #endif /*]*/
+#if defined(C3270) /*[*/
+	{ ResUnderscore,      UNDERSCORE },
+#else /*][*/
+	{ ResUnderscore,      -1 },
+#endif /*]*/
 };
 
 
@@ -238,11 +243,11 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 
 		sl = strlen(profile_name);
 		if (sl > PROFILE_SFX_LEN &&
-			!strcmp(profile_name + sl - PROFILE_SFX_LEN,
+			!strcasecmp(profile_name + sl - PROFILE_SFX_LEN,
 				PROFILE_SFX)) {
 			profile_name[sl - PROFILE_SFX_LEN] = '\0';
 		} else if (sl > PROFILE_SSFX_LEN &&
-			!strcmp(profile_name + sl - PROFILE_SSFX_LEN,
+			!strcasecmp(profile_name + sl - PROFILE_SSFX_LEN,
 				PROFILE_SSFX)) {
 			profile_name[sl - PROFILE_SSFX_LEN] = '\0';
 		}
@@ -357,7 +362,7 @@ parse_options(int *argcp, const char **argv)
 		const char *name;
 		enum {
 		    OPT_BOOLEAN, OPT_STRING, OPT_XRM, OPT_SKIP2, OPT_NOP,
-		    OPT_DONE
+		    OPT_INT, OPT_V, OPT_DONE
 		} type;
 		Boolean flag;
 		const char *res_name;
@@ -420,6 +425,7 @@ parse_options(int *argcp, const char **argv)
     { OptTraceFile,OPT_STRING,  False, ResTraceFile, offset(trace_file) },
     { OptTraceFileSize,OPT_STRING,False,ResTraceFileSize,offset(trace_file_size) },
 #endif /*]*/
+    { OptV,        OPT_V,	False, NULL,	     NULL },
     { "-xrm",      OPT_XRM,     False, NULL,         NULL },
     { LAST_ARG,    OPT_DONE,    False, NULL,         NULL },
     { CN,          OPT_SKIP2,   False, NULL,         NULL }
@@ -498,6 +504,7 @@ parse_options(int *argcp, const char **argv)
 #endif /*]*/
 
 	appres.unlock_delay = True;
+	appres.unlock_delay_ms = 350;
 
 #if defined(X3270_FT) /*[*/
 	appres.dft_buffer_size = DFT_BUF;
@@ -509,13 +516,12 @@ parse_options(int *argcp, const char **argv)
 #if defined(X3270_SCRIPT) || defined(TCL3270) /*[*/
 	appres.toggle[AID_WAIT].value = True;
 #endif /*]*/
+#if defined(C3270) && defined(_WIN32) /*[*/
+	appres.toggle[UNDERSCORE].value = True;
+#endif /*]*/
 
 #if defined(C3270) && defined(X3270_SCRIPT) /*[*/
 	appres.plugin_command = "x3270hist.pl";
-#endif /*]*/
-
-#if defined(C3270) && defined(_WIN32) /*[*/
-	appres.highlight_underline = True;
 #endif /*]*/
 
 #if defined(C3270) && !defined(_WIN32) /*[*/
@@ -562,6 +568,21 @@ parse_options(int *argcp, const char **argv)
 				argv_out[argc_out++] = argv[i];
 			break;
 		    case OPT_NOP:
+			break;
+		    case OPT_INT:
+			if (i == *argcp - 1)	/* missing arg */
+				continue;
+			*(int *)opts[j].aoff = atoi(argv[++i]);
+			if (opts[j].res_name != CN)
+				add_resource(NewString(opts[j].name),
+					     NewString(argv[i]));
+			break;
+		    case OPT_V:
+#if !defined(C3270) /*[*/
+			printf("%s\n", build);
+#endif /*[*/
+			printf("%s\n", build_options());
+			exit(0);
 			break;
 		    case OPT_DONE:
 			while (i < *argcp)
@@ -719,6 +740,9 @@ static struct {
 #endif /*]*/
 	{ ResCharset,	offset(charset),	XRM_STRING },
 	{ ResColor8,	offset(color8),		XRM_BOOLEAN },
+#if defined(TCL3270) /*[*/
+	{ ResCommandTimeout, offset(command_timeout), XRM_INT },
+#endif /*]*/
 	{ ResConfDir,	offset(conf_dir),	XRM_STRING },
 #if defined(C3270) /*[*/
 	{ ResDefScreen,	offset(defscreen),	XRM_STRING },
@@ -745,10 +769,7 @@ static struct {
 #if defined(X3270_SCRIPT) /*[*/
 	{ ResPluginCommand, offset(plugin_command), XRM_STRING },
 #endif /*]*/
-#if defined(C3270) && defined(_WIN32) /*[*/
-	{ ResHighlightUnderline, offset(highlight_underline), XRM_BOOLEAN },
-#endif /*]*/
-#if defined(C3270) && defined(X3270_SCRIPT) /*[*/
+#if defined(C3270) /*[*/
 	{ ResIdleCommand,offset(idle_command),	XRM_STRING },
 	{ ResIdleCommandEnabled,offset(idle_command_enabled),	XRM_BOOLEAN },
 	{ ResIdleTimeout,offset(idle_timeout),	XRM_STRING },
@@ -800,6 +821,7 @@ static struct {
 #endif /*]*/
 	{ ResTypeahead,	offset(typeahead),	XRM_BOOLEAN },
 	{ ResUnlockDelay,offset(unlock_delay),	XRM_BOOLEAN },
+	{ ResUnlockDelayMs,offset(unlock_delay_ms),XRM_INT },
 #if defined(X3270_ANSI) /*[*/
 	{ ResWerase,	offset(werase),		XRM_STRING },
 #endif /*]*/

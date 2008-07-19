@@ -34,7 +34,7 @@ characters XX_DQUOTED(XX_FB([)) and XX_DQUOTED(XX_FB(])).
 This will prevent any colon XX_DQUOTED(XX_FB(:)) characters in the hostname
 from being interpreted as indicating option prefixes or port numbers.
 This allows numeric IPv6 addresses to be used as hostnames.
-ifelse(XX_PRODUCT,wc3270,,`XX_LP
+ifelse(XX_PRODUCT,wc3270,,XX_PRODUCT,ws3270,,`XX_LP
 On systems that support the XX_FI(forkpty) library call, the
 XX_FI(hostname) may be replaced with XX_FB(XX_DASHED(e)) and a command string.
 This will cause XX_FB(XX_PRODUCT) to connect to a local child process, such as

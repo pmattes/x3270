@@ -85,13 +85,12 @@ AC_CHECK_HEADERS(pty.h)
 AC_CHECK_HEADERS(libutil.h)
 AC_CHECK_HEADERS(util.h)
 AC_CHECK_HEADERS(getopt.h)
-dnl Check for curses library / header file consistency.
-if test "$ac_cv_lib_ncursesw_newterm" = yes
-then	AC_CHECK_HEADERS(ncursesw/ncurses.h, , [AC_MSG_ERROR(Found ncursesw library but not <ncursesw/ncurses.h>)])
-elif test "$ac_cv_lib_ncurses_newterm" = yes
-then	AC_CHECK_HEADERS(ncurses/ncurses.h, , [AC_MSG_ERROR(Found ncurses library but not <ncurses/ncurses.h>)])
-else	AC_CHECK_HEADERS(curses.h, , [AC_MSG_ERROR(Found curses library but not <curses.h>)])
-fi
+dnl Find the best curses header file and hope it's consistent with the library
+dnl we found.
+AC_CHECK_HEADERS(ncursesw/ncurses.h, ,
+ [AC_CHECK_HEADERS(ncurses/ncurses.h, ,
+  [AC_CHECK_HEADERS(ncurses.h, ,
+   [AC_CHECK_HEADERS(curses.h, , [AC_MSG_ERROR(No curses header file)])])])])
 
 dnl Check for SSL header file.
 AC_ARG_WITH(ssl,[  --with-ssl=DIR          specify OpenSSL install directory])
@@ -288,13 +287,16 @@ then	orig_LDFLAGS="$LDFLAGS"
 fi
 
 dnl Check for curses wide character support.
-if test "ac_cv_lib_ncursesw_newterm" = yes
-then	AC_CHECK_LIB(ncursesw, wadd_wch, [AC_DEFINE(CURSES_WIDE,1)])
-elif test "ac_cv_lib_ncurses_newterm" = yes
+echo "*** checking for wadd_wch ***"
+if test "$ac_cv_lib_ncursesw_newterm" = yes
+then	echo "Hey!"; AC_CHECK_LIB(ncursesw, wadd_wch, [AC_DEFINE(CURSES_WIDE,1)])
+elif test "$ac_cv_lib_ncurses_newterm" = yes
 then	AC_CHECK_LIB(ncurses, wadd_wch, [AC_DEFINE(CURSES_WIDE,1)])
-elif test "ac_cv_lib_curses_newterm" = yes
+elif test "$ac_cv_lib_curses_newterm" = yes
 then	AC_CHECK_LIB(curses, wadd_wch, [AC_DEFINE(CURSES_WIDE,1)])
+else	echo "What??? "
 fi
+echo "*** done with wadd_wch ***"
 AC_SUBST(CURSES_WIDE)
 
 dnl Check for default pager

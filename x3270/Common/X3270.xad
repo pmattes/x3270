@@ -1138,6 +1138,7 @@ x3270.message.statusConnecting:			Connecting
 x3270.message.ftComplete:			Transfer complete, %i bytes transferred\n\
 %.2lg Kbytes/sec in %s mode
 x3270.message.ftUnable:				Cannot begin transfer
+x3270.message.ftStartTimeout:			Transfer did not start within 10s
 x3270.message.ftUserCancel:			Transfer cancelled by user
 x3270.message.ftHostCancel:			Transfer cancelled by host
 x3270.message.ftCutUnknownFrame:		Unknown frame type from host
@@ -2123,12 +2124,6 @@ x3270.charset.bracket437: #table\n\
 125  74  75  76  77  78  79  80  81  82   0 150 129 151 163 152 \
  92 246  83  84  85  86  87  88  89  90 253   0 153   0   0   0 \
  48  49  50  51  52  53  54  55  56  57   0   0 154   0   0   0 
-x3270.aplMap.437: \
-	0xaf: 0xf8\n	0xd4: 0xd9\n	0xd5: 0xbf\n	0xc5: 0xda\n\
-	0xc4: 0xc0\n	0xd3: 0xc5\n	0xa2: 0xc4\n	0xc6: 0xc3\n\
-	0xd6: 0xb4\n	0xc7: 0xc1\n	0xd7: 0xc2\n	0x85: 0xb3\n\
-	0x8c: 0xf3\n	0xae: 0xf2\n	0xbe: 0x00\n	0xa3: 0xf9\n\
-	0xad: 0x5b\n	0xbd: 0x5d
 ! Host codepage 1153/1375 / Windows codepage 1250 (Central Europe)
 x3270.codepage.cp1153: 0x055f0481
 x3270.displayCharset.cp1153: windows-1250

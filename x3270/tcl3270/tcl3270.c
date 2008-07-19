@@ -130,6 +130,7 @@ static const char *unwait_name[] = {
 	"keyboard unlocked"
 };
 static unsigned long wait_id = 0L;
+static unsigned long command_timeout_id = 0L;
 static int cmd_ret;
 static char *action = NULL;
 static Boolean interactive = False;
@@ -473,6 +474,18 @@ ps_clear(void)
 	}
 }
 
+/* Command timeout function. */
+static void
+command_timed_out(void)
+{
+    	popup_an_error("Command timed out after %ds.\n",
+		appres.command_timeout);
+	command_timeout_id = 0L;
+
+	/* Let the command complete unsuccessfully. */
+	UNBLOCK();
+}
+
 /* The tcl "x3270" command: The root of all 3270 access. */
 static int
 x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
@@ -548,8 +561,14 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	if ((waiting == NOT_WAITING) && CKBWAIT)
 		waiting = AWAITING_RESET;
 
-	if (waiting != NOT_WAITING)
+	if (waiting != NOT_WAITING) {
 		trace_event("Blocked %s (%s)\n", action, wait_name[waiting]);
+		if (appres.command_timeout) {
+			command_timeout_id = AddTimeOut(
+				appres.command_timeout * 1000,
+				command_timed_out);
+		}
+	}
 
 	/*
 	 * Process responses and push any pending string, until
@@ -590,6 +609,10 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 		/* Push more string text in. */
 		process_pending_string();
 	}
+	if (command_timeout_id != 0L) {
+	    	RemoveTimeOut(command_timeout_id);
+		command_timeout_id = 0L;
+	}
 #if defined(X3270_TRACE) /*[*/
 	if (toggled(EVENT_TRACE)) {
 		const char *s;
@@ -615,6 +638,8 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	(void) Tcl_SetServiceMode(old_mode);
 	in_cmd = False;
 	sms_interp = NULL;
+	if (argv)
+		Free(argv);
 	return cmd_ret;
 }
 

@@ -181,6 +181,12 @@ static int console_cols;
 
 static int screen_swapped = FALSE;
 
+static Boolean blink_on = True;		/* are we displaying them or not? */
+static Boolean blink_ticking = False;	/* is the timeout pending? */
+static unsigned long blink_id = 0;	/* timeout ID */
+static Boolean blink_wasticking = False;
+static void blink_em(void);
+
 /*
  * Console event handler.
  */
@@ -778,12 +784,26 @@ refresh(void)
 		}
 		screen_swapped = TRUE;
 	}
+
+	/* Start blinking again. */
+	if (blink_wasticking) {
+	    	blink_wasticking = False;
+		blink_id = AddTimeOut(750, blink_em);
+	}
 }
 
 /* Go back to the original screen. */
 static void
 endwin(void)
 {
+    	if (blink_ticking) {
+		RemoveTimeOut(blink_id);
+		blink_id = 0;
+		blink_ticking = False;
+		blink_on = True;
+		blink_wasticking = True;
+	}
+
 	if (SetConsoleMode(chandle, ENABLE_ECHO_INPUT |
 				    ENABLE_LINE_INPUT |
 				    ENABLE_PROCESSED_INPUT |
@@ -1127,7 +1147,8 @@ init_user_colors(void)
  * Find the display attributes for a baddr, fa_addr and fa.
  */
 static int
-calc_attrs(int baddr, int fa_addr, int fa, Boolean *underlined)
+calc_attrs(int baddr, int fa_addr, int fa, Boolean *underlined,
+	Boolean *blinking)
 {
     	int fg, bg, gr, a;
 
@@ -1194,7 +1215,49 @@ calc_attrs(int baddr, int fa_addr, int fa, Boolean *underlined)
 	else
 	    *underlined = False;
 
+	if (toggled(UNDERSCORE) && (gr & GR_BLINK))
+	    *blinking = True;
+	else
+	    *blinking = False;
+
 	return a;
+}
+
+/*
+ * Blink timeout handler.
+ */
+static void
+blink_em(void)
+{
+    	trace_event("blink timeout\n");
+
+    	/* We're not ticking any more. */
+    	blink_id = 0;
+	blink_ticking = False;
+	blink_wasticking = False;
+
+	/* Swap blink state and redraw the screen. */
+	blink_on = !blink_on;
+	screen_changed = True;
+	screen_disp(False);
+}
+
+/*
+ * Map a character onto itself or a space, depending on whether it is supposed
+ * to blink and the current global blink state.
+ * Note that blinked-off spaces are underscores, if in underscore mode.
+ * Also sets up the timeout for the next blink if needed.
+ */
+static int
+blinkmap(Boolean blinking, Boolean underlined, int c)
+{
+	if (!blinking)
+		return c;
+	if (!blink_ticking) {
+		blink_id = AddTimeOut(500, blink_em);
+		blink_ticking = True;
+	}
+	return blink_on? c: (underlined? '_': ' ');
 }
 
 /* Display what's in the buffer. */
@@ -1204,6 +1267,7 @@ screen_disp(Boolean erasing unused)
 	int row, col;
 	int a;
 	Boolean a_underlined = False;
+	Boolean a_blinking = False;
 	int c;
 	unsigned char fa;
 #if defined(X3270_DBCS) /*[*/
@@ -1260,6 +1324,7 @@ screen_disp(Boolean erasing unused)
 			move(row, 0);
 		for (col = 0; col < cCOLS; col++) {
 		    	Boolean underlined = False;
+			Boolean blinking = False;
 
 			if (flipped)
 				move(row, cCOLS-1 - col);
@@ -1268,7 +1333,8 @@ screen_disp(Boolean erasing unused)
 			    	/* Field attribute. */
 			    	fa_addr = baddr;
 				fa = ea_buf[baddr].fa;
-				a = calc_attrs(baddr, baddr, fa, &a_underlined);
+				a = calc_attrs(baddr, baddr, fa, &a_underlined,
+					&a_blinking);
 				attrset(defattr);
 				addch(' ');
 			} else if (FA_IS_ZERO(fa)) {
@@ -1282,18 +1348,21 @@ screen_disp(Boolean erasing unused)
 				      ea_buf[baddr].bg)) {
 					attrset(a);
 					underlined = a_underlined;
+					blinking = a_blinking;
 				} else {
 					int b;
 					Boolean b_underlined;
+					Boolean b_blinking;
 
 					/*
 					 * Override some of the field
 					 * attributes.
 					 */
 					b = calc_attrs(baddr, fa_addr, fa,
-						&b_underlined);
+						&b_underlined, &b_blinking);
 					attrset(b);
 					underlined = b_underlined;
+					blinking = b_blinking;
 				}
 #if defined(X3270_DBCS) /*[*/
 				d = ctlr_dbcs_state(baddr);
@@ -1312,17 +1381,20 @@ screen_disp(Boolean erasing unused)
 					}
 				} else if (!IS_RIGHT(d)) {
 #endif /*]*/
+				    /* XXX: Need to do undescroe mode for
+				     * linedraw and APL.
+				     */
 					if (ea_buf[baddr].cs == CS_LINEDRAW) {
 						c = linedraw_to_unicode(ea_buf[baddr].cc);
 						if (c != -1)
-							addch(c);
+							addch(blinkmap(blinking, underlined, c));
 						else
 							addch(' ');
 					} else if (ea_buf[baddr].cs == CS_APL ||
 						   (ea_buf[baddr].cs & CS_GE)) {
 						c = apl_to_unicode(ea_buf[baddr].cc);
 						if (c != -1)
-							addch(c);
+							addch(blinkmap(blinking, underlined, c));
 						else
 							addch(' ');
 					} else {
@@ -1334,7 +1406,7 @@ screen_disp(Boolean erasing unused)
 						if (toggled(MONOCASE) &&
 							    iswlower(ac))
 						    	ac = towupper(ac);
-						addch(ac);
+						addch(blinkmap(blinking, underlined, ac));
 					}
 #if defined(X3270_DBCS) /*[*/
 				}

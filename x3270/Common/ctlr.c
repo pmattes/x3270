@@ -128,7 +128,7 @@ static unsigned char	code_table[64] = {
 	(((c1) & 0x3F) << 6) | ((c2) & 0x3F))
 
 #define ENCODE_BADDR(ptr, addr) { \
-	if ((addr) > 0xfff) { \
+    	if ((ROWS * COLS) > 0x1000) { \
 		*(ptr)++ = ((addr) >> 8) & 0x3F; \
 		*(ptr)++ = (addr) & 0xFF; \
 	} else { \
@@ -483,22 +483,22 @@ process_ds(unsigned char *buf, int buflen)
 	switch (buf[0]) {	/* 3270 command */
 	case CMD_EAU:	/* erase all unprotected */
 	case SNA_CMD_EAU:
-		trace_ds("EraseAllUnprotected\n");
 		ctlr_erase_all_unprotected();
+		trace_ds("EraseAllUnprotected\n");
 		return PDS_OKAY_NO_OUTPUT;
 		break;
 	case CMD_EWA:	/* erase/write alternate */
 	case SNA_CMD_EWA:
-		trace_ds("EraseWriteAlternate");
 		ctlr_erase(True);
+		trace_ds("EraseWriteAlternate");
 		if ((rv = ctlr_write(buf, buflen, True)) < 0)
 			return rv;
 		return PDS_OKAY_NO_OUTPUT;
 		break;
 	case CMD_EW:	/* erase/write */
 	case SNA_CMD_EW:
-		trace_ds("EraseWrite");
 		ctlr_erase(False);
+		trace_ds("EraseWrite");
 		if ((rv = ctlr_write(buf, buflen, True)) < 0)
 			return rv;
 		return PDS_OKAY_NO_OUTPUT;
@@ -711,11 +711,19 @@ ctlr_read_modified(unsigned char aid_byte, Boolean all)
 						}
 						space3270out(1);
 						*obptr++ = ea_buf[baddr].cc;
-						if (!any)
-							trace_ds(" '");
-						trace_ds("%s",
-						    see_ebc(ea_buf[baddr].cc));
-						any = True;
+						if (ea_buf[baddr].cc <= 0x3f ||
+						    ea_buf[baddr].cc == 0xff) {
+							if (any)
+								trace_ds("'");
+
+							trace_ds(" %s", see_ebc(ea_buf[baddr].cc));
+							any = False;
+						} else {
+							if (!any)
+								trace_ds(" '");
+							trace_ds("%s", see_ebc(ea_buf[baddr].cc));
+							any = True;
+						}
 					}
 					INC_BA(baddr);
 				}
@@ -757,10 +765,19 @@ ctlr_read_modified(unsigned char aid_byte, Boolean all)
 				}
 				space3270out(1);
 				*obptr++ = ea_buf[baddr].cc;
-				if (!any)
-					trace_ds("'");
-				trace_ds(see_ebc(ea_buf[baddr].cc));
-				any = True;
+				if (ea_buf[baddr].cc <= 0x3f ||
+				    ea_buf[baddr].cc == 0xff) {
+					if (any)
+						trace_ds("'");
+
+					trace_ds(" %s", see_ebc(ea_buf[baddr].cc));
+					any = False;
+				} else {
+					if (!any)
+						trace_ds(" '");
+					trace_ds("%s", see_ebc(ea_buf[baddr].cc));
+					any = True;
+				}
 				nbytes++;
 			}
 			INC_BA(baddr);
@@ -1716,7 +1733,6 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			last_zpt = False;
 			break;
 		case FCORDER_NULL:	/* NULL or DBCS control char */
-			previous = NULLCH;
 			add_dbcs = False;
 			d = ctlr_lookleft_state(buffer_addr, &why);
 			if (d == DBCS_RIGHT) {
@@ -1759,6 +1775,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				END_TEXT("NULL");
 				add_c1 = *cp;
 			}
+			previous = NULLCH;
 			ctlr_add(buffer_addr, add_c1, default_cs);
 			ctlr_add_fg(buffer_addr, default_fg);
 			ctlr_add_bg(buffer_addr, default_bg);

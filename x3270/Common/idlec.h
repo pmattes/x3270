@@ -23,7 +23,7 @@ enum idle_enum {
 	IDLE_PERM = 2
 };
 
-#if defined(X3270_SCRIPT) /*[*/
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 extern void cancel_idle_timer(void);
 extern void idle_init(void);
 extern void reset_idle_timer(void);

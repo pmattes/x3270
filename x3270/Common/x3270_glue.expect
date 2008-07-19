@@ -1,14 +1,14 @@
-# Copyright 2000, 2003, 2004, 2006 by Paul Mattes.
+# Copyright 2000, 2003, 2004, 2006, 2008 by Paul Mattes.
 #  Permission to use, copy, modify, and distribute this software and its
 #  documentation for any purpose and without fee is hereby granted,
 #  provided that the above copyright notice appear in all copies and that
 #  both that copyright notice and this permission notice appear in
 #  supporting documentation.
 #
-# x3270, c3270, s3270 and tcl3270 are distributed in the hope that they will
-# be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the file LICENSE
-# for more details.
+# x3270, c3270, s3270, ws3270 and tcl3270 are distributed in the hope that
+# they will be useful, but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# file LICENSE for more details.
 
 # Glue functions between 'expect' and x3270
 # Usage: source x3270_glue.expect
@@ -60,7 +60,11 @@ namespace eval x3270 {
 			if {[info exists env(X3270INPUT)]} {
 				set args [concat x3270if -i $args]
 			} {
-				set args [concat s3270 $args]
+				if {$::tcl_platform(platform) == "windows"} {
+					set args [concat ws3270 $args]
+				} {
+					set args [concat s3270 $args]
+				}
 			}
 		}
 
@@ -93,14 +97,14 @@ namespace eval x3270 {
 
 		send "$cmd\r"
 		expect {
-			-re "data: (.*)\r\n.*\r\nok\r\n$" {
+			-re "data: (.*)\r?\n.*\r?\nok\r?\n$" {
 				set r $expect_out(buffer)
 			}
-			"*ok\r\n" { return {} }
-			-re "(.*)\r\n.*?\r\nerror\r\n" {
+			-re ".*ok\r?\n" { return {} }
+			-re "(.*)\r?\n.*?\r?\nerror\r?\n" {
 				return -code error "$expect_out(1,string)"
 			}
-			"*error\r\n" {
+			-re ".*error\r?\n" {
 				return -code error \
 					"$cmd failed: $expect_out(buffer)"
 			}
@@ -111,7 +115,7 @@ namespace eval x3270 {
 		set ret {}
 		set iter 0
 		while {1} {
-			if {! [regexp "data: (.*?)\r\n" $r dummy elt]} {break}
+			if {! [regexp "data: (.*?)\r?\n" $r dummy elt]} {break}
 			if {$iter==1} {set ret [list $ret]}
 			set r [string range $r [expr [string length $elt]+7] \
 				end]
@@ -222,7 +226,7 @@ namespace eval x3270 {
 		if {$verbose} {puts "+(nothing)"}
 		send "\r"
 		expect {
-			"*ok\r\n" { set r $expect_out(buffer) }
+			-re ".*ok\r?\n" { set r $expect_out(buffer) }
 			eof { set pid 0; error "process died" }
 		}
 		return [string range $r 0 [expr [string length $r]-7]]

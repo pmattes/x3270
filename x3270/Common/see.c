@@ -1,5 +1,5 @@
 /*
- * Copyright 1993, 1994, 1995, 1999, 2000, 2001, 2002, 2004, 2005 by Paul
+ * Copyright 1993, 1994, 1995, 1999, 2000, 2001, 2002, 2004, 2005, 2008 by Paul
  *   Mattes.
  * RPQNAMES modifications copyright 2004 by Don Russell.
  *  Permission to use, copy, modify, and distribute this software and its
@@ -35,6 +35,9 @@
 #include "utf8c.h"
 #endif /*]*/
 #include "seec.h"
+#if !defined(PR3287) /*[*/
+#include "charsetc.h"
+#endif /*]*/
 
 const char *
 unknown(unsigned char value)
@@ -49,6 +52,12 @@ const char *
 see_ebc(unsigned char ch)
 {
 	static char buf[8];
+#if defined(PR3287) /*[*/
+	unsigned char e;
+#else /*][*/
+	char mb[16];
+	unsigned long uc;
+#endif /*]*/
 
 	switch (ch) {
 	    case FCORDER_NULL:
@@ -74,16 +83,17 @@ see_ebc(unsigned char ch)
 	    case FCORDER_SO:
 		return "SO";
 	}
-	if (ebc2asc[ch])
-		(void) sprintf(buf,
-#if !defined(PR3287) /*[*/
-			       "%s", utf8_expand(ebc2asc[ch])
+#if defined(PR3287) /*[*/
+	e = ebc2asc[ch];
+	if (e && (e != ' ' || ch == 0x40))
+		(void) sprintf(buf, "%c", e);
 #else /*][*/
-			       "%c", ebc2asc[ch]
+	if (ebcdic_to_multibyte(ch, 0, mb, sizeof(mb), False, TRANS_LOCAL, &uc)
+		    && (mb[0] != ' ' || ch == 0x40))
+		strcpy(buf, mb);
 #endif /*]*/
-			       );
 	else
-		(void) sprintf(buf, "\\%o", ch);
+	    	(void) sprintf(buf, "X'%02X'", ch);
 	return buf;
 }
 

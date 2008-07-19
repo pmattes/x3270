@@ -146,6 +146,7 @@ XrmOptionDescRec options[]= {
 	{ OptLocalEncoding,DotLocalEncoding,XrmoptionSepArg,	NULL },
 	{ OptPreeditType,DotPreeditType,XrmoptionSepArg,	NULL },
 #endif /*]*/
+	{ OptV,		DotV,		XrmoptionNoArg,		ResTrue },
 	{ "-xrm",	NULL,		XrmoptionResArg,	NULL }
 };
 int num_options = XtNumber(options);
@@ -273,6 +274,11 @@ main(int argc, char *argv[])
 	    NULL);
 	display = XtDisplay(toplevel);
 	rdb = XtDatabase(display);
+
+	if (get_resource(ResV)) {
+		printf("%s\n%s\n", build, build_options());
+		exit(0);
+	}
 
 	/*
 	 * Add the base translations to the toplevel object.

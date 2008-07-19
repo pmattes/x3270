@@ -22,6 +22,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#define BUFFER_SIZE	16384
+
 static int catf(char *filename);
 
 int
@@ -52,7 +54,8 @@ catf(char *filename)
 	struct stat buf;
 	off_t size;
 	off_t fp = 0;
-	char rbuf[16384];
+	char rbuf[BUFFER_SIZE];
+	wchar_t rbuf_w[BUFFER_SIZE];
 
 	fd = open(filename, O_RDONLY | O_BINARY);
 	if (fd < 0) {
@@ -70,9 +73,10 @@ catf(char *filename)
 	for (;;) {
 	    	while (fp < size) {
 		    	int n2r, nr;
+			BOOL udc;
 
-		    	if (size - fp > sizeof(rbuf))
-			    	n2r = sizeof(rbuf);
+		    	if (size - fp > BUFFER_SIZE)
+			    	n2r = BUFFER_SIZE;
 			else
 			    	n2r = size - fp;
 			nr = read(fd, rbuf, n2r);
@@ -86,6 +90,13 @@ catf(char *filename)
 			    	close(fd);
 				return 0;
 			}
+
+			/* Translate ANSI to OEM. */
+			(void) MultiByteToWideChar(CP_ACP, 0, rbuf, nr, rbuf_w,
+				BUFFER_SIZE);
+			(void) WideCharToMultiByte(CP_OEMCP, 0, rbuf_w,
+				BUFFER_SIZE, rbuf, nr, "?", &udc);
+
 			(void) write(1, rbuf, nr);
 			fp += nr;
 		}

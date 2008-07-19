@@ -41,6 +41,9 @@ AC_CHECK_LIB(util, forkpty)
 AC_CHECK_LIB(nsl, gethostbyname)
 AC_CHECK_LIB(socket, socket)
 
+dnl Check for the iconv function.
+AC_SEARCH_LIBS(iconv, iconv, , AC_MSG_ERROR("No iconv library function"))
+
 dnl Checks for header files.
 dnl AC_HEADER_STDC
 dnl AC_HEADER_SYS_WAIT
@@ -51,6 +54,7 @@ AC_CHECK_HEADERS(pty.h)
 AC_CHECK_HEADERS(libutil.h)
 AC_CHECK_HEADERS(util.h)
 AC_CHECK_HEADERS(getopt.h)
+AC_CHECK_HEADERS(iconv.h)
 
 dnl Check for SSL header file.
 AC_ARG_WITH(ssl,[  --with-ssl=DIR          specify OpenSSL install directory])

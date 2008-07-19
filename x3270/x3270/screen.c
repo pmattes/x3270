@@ -924,7 +924,7 @@ static void
 screen_scroll_proc(Widget w unused, XtPointer client_data unused,
     XtPointer position)
 {
-	scroll_proc((int)position, (int)nss.screen_height);
+	scroll_proc((long)position, (int)nss.screen_height);
 }
 
 static void
@@ -3381,22 +3381,24 @@ query_window_state(void)
 	unsigned long nitems;
 	unsigned long leftover;
 	unsigned char *data = NULL;
-
-	/* If using an active icon, the expose events are more reliable. */
-	if (appres.active_icon)
-		return;
+	static Boolean was_up = False;
 
 	if (XGetWindowProperty(display, XtWindow(toplevel), a_state, 0L,
 	    (long)BUFSIZ, False, a_state, &actual_type, &actual_format,
 	    &nitems, &leftover, &data) != Success)
 		return;
 	if (actual_type == a_state && actual_format == 32) {
-		if (*(unsigned long *)data == IconicState)
+		if (*(unsigned long *)data == IconicState) {
 			iconic = True;
-		else {
+			keypad_popdown(&was_up);
+		} else {
 			iconic = False;
 			invert_icon(False);
 			keypad_first_up();
+			if (was_up) {
+			    	keypad_popup();
+				was_up = False;
+			}
 		}
 	}
 	XFree(data);

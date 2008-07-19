@@ -1,5 +1,27 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
 3.3 is the current development line for the x3270 suite.
+<h2>Changes in x3270 3.3.8, Nn. Mon 2008</h2>
+<ul>
+  <li>New Features:
+    <ul>
+     <li>Added a <b>-v</b> option to display the version and build options.</li>
+     <li>Added a <b>Source</b> action to read script commands from a file.</li>
+     <li>Added a 10 second timeout to the start of the <b>Transfer</b>
+      action.</li>
+     <li>Added an <b>unlockDelayMs</b> resource to change the number of
+      milliseconds of delay before atually unlocking the keyboard after the
+      host requests it. The default is 350; use 0 to disable the delay
+      altogether.</li>
+    </ul>
+  </li>
+  <li>Bug Fixes:
+   <ul>
+    <li><b>x3270</b> no longer uses the <b>ICU</b> library.</li>
+    <li>Fixed some bad interactions between the pop-up keypad and the GNOME
+     window manager.</li>
+   </ul>
+  </li>
+</ul>
 <h2>Changes in x3270 3.3.7, 25. December 2007</h2>
 <ul>
   <li>Bug Fixes:
@@ -27,6 +49,28 @@
       <b>Key</b> and <b>String</b> actions, etc.) must be UTF-8 encoded.
       In addition, the NVT-mode xterm/VT100 emulator will expect UTF-8.</li>
       <li>Added a <b>SelectAll</b> action, mapped to Ctrl-A.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in c3270 3.3.8, Nn. Mon 2008</h2>
+<ul>
+  <li>New Features:
+    <ul>
+      <li>Added an <b>underscore</b> toggle to allow underlined fields to be
+       displayed even on consoles with no native underlining support.</li>
+     <li>Added a <b>-v</b> option to display the version and build options.</li>
+     <li>Added a <b>Source</b> action to read script commands from a file.</li>
+     <li>Added a 10 second timeout to the start of the <b>Transfer</b>
+      action.</li>
+     <li>Added an <b>unlockDelayMs</b> resource to change the number of
+      milliseconds of delay before atually unlocking the keyboard after the
+      host requests it. The default is 350; use 0 to disable the delay
+      altogether.</li>
+    </ul>
+   </li>
+   <li>Bug Fixes:
+    <ul>
+     <li><b>x3270</b> no longer uses the <b>ICU</b> library.</li>
     </ul>
   </li>
 </ul>
@@ -76,6 +120,44 @@ c3270.cursesColorForProtectedIntensified
        </pre>
        The value for each of these is a curses color number (0 through 7).</li>
     </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.8, Nn. Mon 2008</h2>
+<ul>
+  <li>New Features:
+    <ul>
+      <li>Added an <b>underscore</b> toggle to control how underlined and
+       blinking fields are displayed.  If it is set (the default),
+       underlined fields are displayed by substituting underscore (_)
+       characters for blanks and nulls; blinking fields actually blink.
+       If it is clear, underlined and blinking fields are displayed with
+       highlighted backgrounds, which is compatible with previous verions of
+       <b>wc3270</b>.</li>
+      <li>Left-clicking with the mouse will now move the cursor to that
+       location.</li>
+      <li>The <b>PrintText</b> action can now be used to produce a RichText
+       snapshot of the screen contents, via the <b>rtf</b> keyword.</li>
+     <li>Added a <b>-v</b> option to display the version and build options.</li>
+     <li>Added a <b>Source</b> action to read script commands from a file.</li>
+     <li>Added a 10 second timeout to the start of the <b>Transfer</b>
+      action.</li>
+     <li>Added an <b>unlockDelayMs</b> resource to change the number of
+      milliseconds of delay before atually unlocking the keyboard after the
+      host requests it. The default is 350; use 0 to disable the delay
+      altogether.</li>
+    </ul>
+  </li>
+  <li>Bug Fixes:
+   <ul>
+    <li><b>wc3270</b> no longer attempts to set the console code page, which
+     was error-prone and unnecessary.</li>
+    <li>The <b>PrintText</b> action now works, and is mapped by default to
+     the sequence <b>Alt &lt;Key&gt;p</b>.
+     The <b>printer.name</b> resource defines the default printer to use.</li>
+    <li>The <i>idle command</i> feature now works, controlled by the
+     <b>idleCommand</b>, <b>idleCommandEnabled</b> and <b>idleTimeout</b>
+     resources.</li>
+   </ul>
   </li>
 </ul>
 <h2>Changes in wc3270 3.3.7, 25. December 2007</h2>
@@ -132,6 +214,26 @@ wc3270.hostColorForProtectedIntensified
     </ul>
   </li>
 </ul>
+<h2>Changes in s3270 3.3.8, Nn. Mon 2008</h2>
+<ul>
+  <li>New Features:
+    <ul>
+     <li>Added a <b>-v</b> option to display the version and build options.</li>
+     <li>Added a <b>Source</b> action to read script commands from a file.</li>
+     <li>Added a 10 second timeout to the start of the <b>Transfer</b>
+      action.</li>
+     <li>Added an <b>unlockDelayMs</b> resource to change the number of
+      milliseconds of delay before atually unlocking the keyboard after the
+      host requests it. The default is 350; use 0 to disable the delay
+      altogether.</li>
+    </ul>
+  </li>
+  <li>Bug Fixes:
+   <ul>
+    <li><b>s3270</b> no longer uses the <b>ICU</b> library.</li>
+   </ul>
+  </li>
+</ul>
 <h2>Changes in s3270 3.3.7, 25. December 2007</h2>
 <ul>
   <li>Bug Fixes:
@@ -154,6 +256,29 @@ wc3270.hostColorForProtectedIntensified
     </ul>
   </li>
 </ul>
+<h2>Changes in tcl3270 3.3.8, Nn. Mon 2008</h2>
+<ul>
+  <li>New Features:
+    <ul>
+     <li>Added a <b>-v</b> option to display the version and build options.</li>
+     <li>Added a <b>commandTimeout</b> resource to force any <b>Tcl3270</b>
+      command to time out after the specified number of seconds. (Thanks to
+      Mark Young.)</li>
+     <li>Added an <b>unlockDelayMs</b> resource to change the number of
+      milliseconds of delay before atually unlocking the keyboard after the
+      host requests it. The default is 350; use 0 to disable the delay
+      altogether.</li>
+    </ul>
+  </li>
+  <li>Bug Fixes:
+   <ul>
+    <li><b>tcl3270</b> no longer uses the <b>ICU</b> library.</li>
+    <li>Added a 10 second timeout to the start of the <b>Transfer</b>
+     action.</li>
+    <li>Fixed a per-command memory leak (thanks to Mark Young).</li>
+   </ul>
+  </li>
+</ul>
 <h2>Changes in tcl3270 3.3.7, 25. December 2007</h2>
 <ul>
   <li>Bug Fixes:</li>
@@ -173,7 +298,7 @@ wc3270.hostColorForProtectedIntensified
 </ul>
 <h2>Changes in pr3287 3.3.7, 25. December 2007</h2>
 <ul>
- <li>Enhancements:
+ <li>New Features:
   <ul>
    <li>Added proxy support via the <b>-proxy</b> option.</li>
   </ul>
@@ -713,7 +838,7 @@ wc3270.hostColorForProtectedIntensified
 <h2>Changes in  pr3287 3.3.1alpha10, 10. August 2003</h2>
 
 <ul>
- <li>Enhancements:
+    <li>New Features:
   <ul>
    <li>Added support for the <b>-tracedir</b> option, to specify a directory
     to store trace files in.</li>
@@ -763,7 +888,7 @@ wc3270.hostColorForProtectedIntensified
    <li>Fixed the SCS HT order, which was completely broken.</li>
   </ul>
  </li>
- <li>Enhancements:
+ <li>New Features:
   <ul>
    <li>Added support for SIGUSR1 to flush the print job.</li>
    <li>Added support for the TELNET START-TLS option.</li>

@@ -3,12 +3,12 @@
 
 [Setup]
 AppName=wc3270
-AppVerName=wc3270 3.3.7
+AppVerName=wc3270 3.3.8a5
 AppPublisher=Paul Mattes
 AppPublisherURL=http://x3270.bgp.nu
 AppSupportURL=http://x3270.bgp.nu
 AppUpdatesURL=http://x3270.bgp.nu
-AppCopyright=Copyright (C) 1989-2007 by Paul Mattes, GTRC and others
+AppCopyright=Copyright (C) 1989-2008 by Paul Mattes, GTRC and others
 WizardSmallImageFile=x3270-icon2.bmp
 DefaultDirName={pf}\wc3270
 DisableDirPage=no
@@ -30,10 +30,11 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\w3n4.dll"; DestDir: "{app}"; Flags: ignoreversion; OnlyBelowVersion: 0.0,5.01
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\w3n46.dll"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.01
-Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wpr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\catf.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall
+Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\html\Bugs.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\html\Build.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\html\FAQ.html"; DestDir: "{app}\html"; Flags: ignoreversion
@@ -63,6 +64,7 @@ end;
 Name: "{group}\New wc3270 Session"; Filename: "{app}\wc3270wiz.exe"; WorkingDir: "{app}"
 Name: "{group}\Run wc3270"; Filename: "{app}\wc3270.exe"; WorkingDir: "{app}"
 Name: "{group}\wc3270 Documentation"; Filename: "{app}\html\README.html"
+Name: "{group}\wc3270 Explore AppData"; Filename: "{app}\ead3270.exe"; Flags: runminimized; IconFilename: "{app}\wc3270.exe"
 
 [Registry]
 Root: HKCR; Subkey: ".wc3270"; ValueType: string; ValueName: ""; ValueData: "wc3270"; Flags: uninsdeletevalue
