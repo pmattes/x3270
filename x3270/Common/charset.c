@@ -761,6 +761,8 @@ get_charset_name(void)
  * display window.  If it is TRANS_LOCAL, the target is the local file
  * system.  TRANS_DISPLAY is used only on Windows where the local file system
  * uses the ANSI code page, but the console uses the OEM code page.
+ * At some point, TRANS_DISPLAY will apply to x3270 as well, indicating
+ * translation to the current font's encoding.
  *
  * Note that 'ebc' is an unsigned short, not an unsigned char.  This is
  * so that DBCS values can be passed in as 16 bits (with the first byte
@@ -942,4 +944,105 @@ mb_max_len(int len)
 	 */
 	return (16 * (len * 2)) + 1;
 #endif /*]*/
+}
+
+/*
+ * Translate a multi-byte character in the current locale to an EBCDIC
+ * character.
+ *
+ * Returns an 8-bit (SBCS) or 16-bit (DBCS) EBCDIC character, or 0, indicating
+ * an error in translation.  Also returns the number of characters consumed.
+ *
+ * Unlike ebcdic_to_multibyte, there is no 'purpose' parameter.  On Windows,
+ * this function is only used to translate local file system strings to
+ * EBCDIC (TRANS_LOCAL).  Input keystrokes (which would use TRANS_DISPLAY)
+ * are UTF-16 strings, not OEM-codepage bytes.
+ */
+unsigned short
+multibyte_to_ebcdic(char *mb, size_t mb_len, int *consumedp,
+	enum me_fail *errorp)
+{
+    wchar_t wc[3];
+    size_t nw;
+    unsigned long ucs4;
+#if defined(_WIN32) /*[*/
+
+    /*
+     * Use MultiByteToWideChar() to get from the ANSI codepage to UTF-16.
+     * Note that we pass in 1 for the MB length because we assume 8-bit code
+     * pages.  If someone somehow sets the ANSI codepage to UTF-7 or UTF-8,
+     * this won't work.
+     */
+    nw = MultiByteToWideChar(CP_ACP, 0, mb, 1, wc, 3);
+    if (nw == 0) {
+	*errorp = ME_INVALID;
+	return 0;
+    }
+    *consumedp = 1;
+    ucs4 = wc[0];
+#elif defined(UNICODE_WCHAR) /*][*/
+    /* wchar_t's are Unicode. */
+
+    /* mbtowc() will translate to Unicode. */
+    nw = mbtowc(wc, mb, mb_len);
+    if (nw < 0) {
+	if (errno == EILSEQ)
+	    *errorp = ME_INVALID;
+	else
+	    *errorp = ME_SHORT;
+	return 0;
+    }
+
+    /*
+     * Reset the shift state.
+     * XXX: Doing this will ruin the shift state if this function is called
+     * repeatedly to process a string.  There should probably be a parameter
+     * passed in to control whether or not to reset the shift state, or
+     * perhaps there should be a function to translate a string.
+     */
+    (void) mbtowc(NULL, NULL, 0);
+    *consumedp = nw;
+
+    ucs4 = wc[0];
+#else /*][*/
+    /* wchar_t's have unknown encoding. */
+    if (!is_utf8) {
+	char *inbuf, *outbuf;
+	size_t inbytesleft, outbytesleft;
+	char utf8buf[16];
+
+	/* Translate from local MB to UTF-8 using iconv(). */
+	inbuf = mb;
+	outbuf = utf8buf;
+	inbytesleft = mb_len;
+	outbytesleft = sizeof(utf8buf);
+	nw = iconv(i_mb2u, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
+	if (nw < 0) {
+	    if (errno == EILSEQ)
+		*errorp = ME_INVALID;
+	    else
+		*errorp = ME_SHORT;
+	    return 0;
+	}
+	*consumedp = mb_len - inbytesleft;
+
+	/* Translate from UTF-8 to UCS-4. */
+	(void) utf8_to_ucs4(utf8buf, sizeof(utf8buf) - outbytesleft, &ucs4);
+    } else {
+	/* Translate from UTF-8 to UCS-4. */
+	nw = utf8_to_ucs4(mb, mb_len, &ucs4);
+	if (nw < 0) {
+	    *errorp = ME_INVALID;
+	    return 0;
+	}
+	if (nw == 0) {
+	    *errorp = ME_SHORT;
+	    return 0;
+	}
+	*consumedp = nw;
+    }
+#endif /*]*/
+
+    /* Translate from UCS4 to EBCDIC. */
+    return unicode_to_ebcdic(ucs4);
 }

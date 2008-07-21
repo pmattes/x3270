@@ -226,7 +226,7 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 			if (nmb == 0)
 			    c = ' ';
 			else
-			    c = mb[0];
+			    c = mb[0]; /* XXX: What about multi-byte? */
 		}
 #endif /*]*/
 		if (c == ' ')
@@ -318,9 +318,9 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 			{
 #if defined(_WIN32) /*[*/
 			    	if (ptype == P_RTF) {
-				    	if (uc & ~0xff)
+				    	if (uc & ~0xff) {
 					    	fprintf(f, "\\u%ld", uc);
-					if (c & 0x80) {
+					} else if (c & 0x80) {
 					    	fprintf(f, "\\'%2x", c & 0xff);
 					} else if (c == '\\' || c == '{' ||
 							c == '}') {
@@ -337,7 +337,7 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 				if ((ptype == P_HTML) && c == '<')
 					fprintf(f, "&lt;");
 				else
-					(void) fputs(utf8_expand(c), f);
+					(void) fputs(mb, f);
 			}
 		}
 	}
