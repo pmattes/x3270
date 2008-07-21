@@ -40,6 +40,7 @@
 
 #include "appres.h"
 #include "actionsc.h"
+#include "charsetc.h"
 #include "ft_cutc.h"
 #include "ft_dftc.h"
 #include "ftc.h"
@@ -980,6 +981,17 @@ ft_start(void)
 	char updated_buffersize[128];
 	unsigned flen;
 	char *ft_command;
+	static unsigned char ind_file[] = {
+	    0x89, /* i */
+	    0x95, /* n */
+	    0x84, /* d */
+	    0x5b, /* $ */
+	    0x86, /* f */
+	    0x89, /* i */
+	    0x93, /* l */
+	    0x85, /* e */
+	    0x00
+	};
 
 	ft_is_action = False;
 
@@ -1123,32 +1135,30 @@ ft_start(void)
 	}
 
 	/*
-	 * Unless the user specified a particular file transfer command,
-	 * translate 'ind$file' so that it will have the proper EBCDIC value,
-	 * regardless of the local character set.
+	 * Translate 'ind$file' so that it will have the proper EBCDIC value,
+	 * regardless of the host character set.
 	 */
-	if (appres.ft_command != CN) {
-		ft_command = appres.ft_command;
-	} else {
-		char *s = "ind$file";
-		char *t;
-		unsigned char c;
+	ft_command = Malloc(sizeof(ind_file) * 2);
+	{
+	    	unsigned char *s;
+		int i = 0;
+		unsigned long uc;
 
-		ft_command = Malloc(strlen(s) + 1);
-		t = ft_command;
-
-		while ((c = *s++)) {
-			*t++ = ebc2asc[asc2ebc0[c & 0xff]];
+		for (s = ind_file; *s != 0x00; s++) {
+		    	(void) ebcdic_to_multibyte(*s, CS_BASE, &ft_command[i],
+				sizeof(ft_command) - i, False, TRANS_LOCAL,
+				&uc);
+			i++;
 		}
-		*t = '\0';
+		ind_file[i] = '\0';
+
 	}
 
 	/* Build the whole command. */
 	cmd = xs_buffer("%s %s %s%s\\n",
 	    ft_command,
 	    receive_flag ? "get" : "put", ft_host_filename, op);
-	if (appres.ft_command == CN)
-		Free(ft_command);
+	Free(ft_command);
 
 	/* Erase the line and enter the command. */
 	flen = kybd_prime();
@@ -1168,7 +1178,6 @@ ft_start(void)
 	XtFree(cmd);
 
 	/* Get this thing started. */
-	/*ft_start_id = AddTimeOut(10 * 1000, ft_didnt_start);*/
 	ft_state = FT_AWAIT_ACK;
 	ft_is_cut = False;
 	ft_last_cr = False;
@@ -1526,8 +1535,10 @@ ft_running(Boolean is_cut)
 {
 	if (ft_state == FT_AWAIT_ACK) {
 		ft_state = FT_RUNNING;
-		RemoveTimeOut(ft_start_id);
-		ft_start_id = 0;
+		if (ft_start_id) {
+			RemoveTimeOut(ft_start_id);
+			ft_start_id = 0;
+		}
 	}
 	ft_is_cut = is_cut;
 	(void) gettimeofday(&t0, (struct timezone *)NULL);

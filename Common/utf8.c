@@ -332,7 +332,7 @@ set_codeset(char *codeset_name)
 #else /*][*/
 	/*
 	 * tcl3270 is always in UTF-8 mode, because it needs to
-	 * supply UTF-8 strings to libtcl.
+	 * supply UTF-8 strings to libtcl and vice-versa.
 	 */
 	is_utf8 = 1;
 #endif /*]*/
@@ -423,35 +423,6 @@ utf8_set_display_charsets(char *cslist, char *csname)
 	utf8_ix = i;
 	Free(dup);
 	return True;
-}
-
-/* Expand an 8-bit character in the 'implied' character set. */
-char *
-utf8_expand(unsigned char c)
-{
-    	static char nox[2];
-
-	if (c & 0x80) {
-	    	if (utf8_ix >= 0) {
-			if (c >= 0xa0)
-				return utf8_tab[utf8_ix][c - 0xa0];
-			else
-				return " ";
-#if defined(X3270_DBCS) /*[*/
-		} else if (dbcs) {
-		    	/*
-			 * GB18030 it treated as a special case of UTF-8,
-			 * above.  GB2312 does not support these characters.
-			 * Other DBCS encodings will need to be added as they
-			 * are better understood.
-			 */
-		    	return " ";
-#endif /*]*/
-		}
-	}
-	nox[0] = c;
-	nox[1] = '\0';
-	return nox;
 }
 
 /*

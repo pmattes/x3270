@@ -28,7 +28,6 @@ extern char *locale_codeset;
 
 extern void set_codeset(char *codeset_name);
 extern Boolean utf8_set_display_charsets(char *cslist, char *csname);
-extern char *utf8_expand(unsigned char c);
 extern unsigned char utf8_lookup(char *mbs, enum ulfail *fail, int *consumed);
 extern int ucs4_to_utf8(unsigned long ucs4, char *utf8);
 extern int utf8_to_ucs4(char *utf8, int len, unsigned long *ucs4);

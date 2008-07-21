@@ -3039,7 +3039,7 @@ String_action(Widget w unused, XEvent *event, String *params, Cardinal *num_para
 {
 	Cardinal i;
 	int len = 0;
-	char *s0, *s;
+	char *s;
 
 	action_debug(String_action, event, params, num_params);
 	reset_idle_timer();
@@ -3051,42 +3051,13 @@ String_action(Widget w unused, XEvent *event, String *params, Cardinal *num_para
 		return;
 
 	/* Allocate a block of memory and copy them in. */
-	s0 = s = Malloc(len + 1);
-	*s = '\0';
+	s = Malloc(len + 1);
 	for (i = 0; i < *num_params; i++) {
-	    	char *t = params[i];
-		unsigned char c;
-
-		while ((c = (unsigned char)*t) != '\0') {
-		    	if (c & 0x80) {
-			    	unsigned char xc;
-			    	enum ulfail fail;
-				int consumed;
-
-				xc = utf8_lookup(t, &fail, &consumed);
-				if (xc == 0) {
-					switch (fail) {
-					case ULFAIL_NOUTF8:
-					    	*s++ = (char)c;
-						break;
-					case ULFAIL_INCOMPLETE:
-					case ULFAIL_INVALID:
-						*s++ = ' ';
-						break;
-					}
-				} else {
-				    	*s++ = (char)xc;
-					t += (consumed - 1);
-				}
-			} else
-				*s++ = (char)c;
-			t++;
-		}
+	    	strcat(s, params[i]);
 	}
-	*s = '\0';
 
 	/* Set a pending string. */
-	ps_set(s0, False);
+	ps_set(s, False);
 }
 
 /*
@@ -4109,6 +4080,7 @@ Default_action(Widget w unused, XEvent *event, String *params, Cardinal *num_par
 			/*
 			 * Translate from (local) UTF-8 to the implied
 			 * 8-bit character set.
+			 * XXX: Needs modernization.
 			 */
 			strncpy(tmp, buf, ll);
 			tmp[ll] = '\0';

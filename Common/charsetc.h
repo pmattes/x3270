@@ -47,3 +47,9 @@ extern int ebcdic_to_multibyte(unsigned short ebc, unsigned char cs,
 	char mb[], int mb_len, int blank_undef, trans_t purpose,
 	unsigned long *uc);
 extern int mb_max_len(int len);
+enum me_fail {
+    ME_INVALID,		/* invalid sequence */
+    ME_SHORT		/* incomplete sequence */
+};
+extern unsigned short multibyte_to_ebcdic(char *mb, size_t mb_len, 
+	int *consumedp, enum me_fail *errorp);
