@@ -39,11 +39,15 @@
 #include "3270ds.h"
 #include "appres.h"
 #include "ctlr.h"
+#if defined(X3270_DISPLAY) /*[*/
+#include "keysym2ucs.h"
+#endif /*]*/
 #include "resources.h"
 
 #include "actionsc.h"
 #include "ansic.h"
 #include "aplc.h"
+#include "charsetc.h"
 #include "ctlrc.h"
 #include "ftc.h"
 #include "hostc.h"
@@ -91,13 +95,13 @@ static unsigned char pa_xlate[] = {
 #define PA_SZ	(sizeof(pa_xlate)/sizeof(pa_xlate[0]))
 static unsigned long unlock_id;
 static time_t unlock_delay_time;
-#define UNLOCK_MS		350	/* 0.35s after last unlock */
 Boolean key_Character(int code, Boolean with_ge, Boolean pasting,
 			     Boolean *skipped);
 static Boolean flush_ta(void);
 static void key_AID(unsigned char aid_code);
 static void kybdlock_set(unsigned int bits, const char *cause);
-static KeySym MyStringToKeysym(char *s, enum keytype *keytypep);
+static KeySym MyStringToKeysym(char *s, enum keytype *keytypep,
+	unsigned long *ucs4);
 
 #if defined(X3270_DBCS) /*[*/
 Boolean key_WCharacter(unsigned char code[], Boolean *skipped);
@@ -1271,10 +1275,10 @@ retry:
 #endif /*]*/
 
 /*
- * Handle an ordinary character key, given an ASCII code.
+ * Handle an ordinary character key, given its Unicode value.
  */
-void
-key_ACharacter(unsigned char c, enum keytype keytype, enum iaction cause,
+static void
+key_UCharacter(unsigned long ucs4, enum keytype keytype, enum iaction cause,
 	       Boolean *skipped)
 {
 	register int i;
@@ -1285,7 +1289,7 @@ key_ACharacter(unsigned char c, enum keytype keytype, enum iaction cause,
 	if (skipped != NULL)
 		*skipped = False;
 
-	ak.keysym = c;
+	ak.keysym = ucs4;
 	ak.keytype = keytype;
 
 	switch (composing) {
@@ -1297,10 +1301,10 @@ key_ACharacter(unsigned char c, enum keytype keytype, enum iaction cause,
 			    ak_eq(composites[i].k2, ak))
 				break;
 		if (i < n_composites) {
-			cc_first.keysym = c;
+			cc_first.keysym = ucs4;
 			cc_first.keytype = keytype;
 			composing = FIRST;
-			status_compose(True, c, keytype);
+			status_compose(True, ucs4, keytype);
 		} else {
 			ring_bell();
 			composing = NONE;
@@ -1317,7 +1321,7 @@ key_ACharacter(unsigned char c, enum keytype keytype, enum iaction cause,
 			     ak_eq(composites[i].k2, cc_first)))
 				break;
 		if (i < n_composites) {
-			c = composites[i].translation.keysym;
+			ucs4 = composites[i].translation.keysym;
 			keytype = composites[i].translation.keytype;
 		} else {
 			ring_bell();
@@ -1326,24 +1330,70 @@ key_ACharacter(unsigned char c, enum keytype keytype, enum iaction cause,
 		break;
 	}
 
-	trace_event(" %s -> Key(\"%s\")\n",
-	    ia_name[(int) cause], ctl_see((int) c));
+	trace_event(" %s -> Key(U+%04lx)\n", ia_name[(int) cause], ucs4);
 	if (IN_3270) {
-		if (c < ' ') {
+	    	unsigned short ebc;
+
+		if (ucs4 < ' ') {
 			trace_event("  dropped (control char)\n");
 			return;
 		}
-		(void) key_Character((int) asc2ebc[c], keytype == KT_GE, False,
-				     skipped);
+		ebc = unicode_to_ebcdic(ucs4);
+		if (ebc == 0) {
+			trace_event("  dropped (no EBCDIC translation)\n");
+			return;
+		}
+#if defined(X3270_DBCS) /*[*/
+		if (ebc & 0xff00) {
+		    	unsigned char code[2];
+
+			code[0] = (ebc & 0xff00)>> 8;
+			code[1] = ebc & 0xff;
+			(void) key_WCharacter(code, skipped);
+		} else
+#endif /*]*/
+			(void) key_Character(ebc, keytype == KT_GE, False,
+					     skipped);
 	}
 #if defined(X3270_ANSI) /*[*/
 	else if (IN_ANSI) {
-		net_sendc((char) c);
+	    	char mb[16];
+
+		unicode_to_multibyte(ucs4, mb, sizeof(mb));
+		net_sends(mb);
 	}
 #endif /*]*/
 	else {
 		trace_event("  dropped (not connected)\n");
 	}
+}
+
+/*
+ * Handle an ordinary character key, given its NULL-terminated multibyte
+ * representation.
+ */
+static void
+key_ACharacter(char *mb, enum keytype keytype, enum iaction cause,
+	       Boolean *skipped)
+{
+	unsigned long ucs4;
+	int consumed;
+	enum me_fail error;
+
+	reset_idle_timer();
+
+	if (skipped != NULL)
+		*skipped = False;
+
+	/* Convert the multibyte string to UCS4. */
+	ucs4 = multibyte_to_unicode(mb, strlen(mb), &consumed, &error);
+	if (ucs4 == 0) {
+		trace_event(" %s -> Key(?)\n", ia_name[(int) cause]);
+		trace_event("  dropped (invalid multibyte sequence)\n");
+		return;
+	}
+
+	key_UCharacter(ucs4, keytype, cause, skipped);
 }
 
 
@@ -2928,10 +2978,14 @@ xim_lookup(XKeyEvent *event)
 			unsigned char ebc[2];
 
 			if (dbcs_map8(Ubuf[i], &asc)) {
+			    	char mb[16];
+
 				trace_event("  U+%04x -> "
 				    "EBCDIC SBCS X'%02x'\n",
-				    Ubuf[i] & 0xffff, asc2ebc[asc]);
-				key_ACharacter(asc, KT_STD, ia_cause, NULL);
+				    Ubuf[i] & 0xffff, asc2ebc[asc]); /* XXX */
+				strncpy(mb, buf, rlen);
+				mb[rlen] = '\0';
+				key_ACharacter(mb, KT_STD, ia_cause, NULL);
 			} else if (dbcs_map16(Ubuf[i], ebc)) {
 				trace_event("  U+%04x -> "
 				    "EBCDIC DBCS X'%02x%02x'\n",
@@ -2961,6 +3015,7 @@ Key_action(Widget w unused, XEvent *event, String *params, Cardinal *num_params)
 	Cardinal i;
 	KeySym k;
 	enum keytype keytype;
+	unsigned long ucs4;
 
 	action_debug(Key_action, event, params, num_params);
 	reset_idle_timer();
@@ -2968,66 +3023,27 @@ Key_action(Widget w unused, XEvent *event, String *params, Cardinal *num_params)
 	for (i = 0; i < *num_params; i++) {
 		char *s = params[i];
 
-#if defined(_WIN32) /*[*/
-		if (!strncasecmp(s, "U+", 2)) {
-			char *ptr;
-			unsigned long uu;
-			unsigned char e;
-
-			uu = strtoul(s + 2, &ptr, 16);
-			if (uu == 0 || uu > 0xffff || *ptr != '\0') {
-				popup_an_error("%s: Nonexistent or invalid "
-					"KeySym: %s",
-					action_name(Key_action), s);
-				cancel_if_idle_command();
-				continue;
-			}
-			if (IN_3270) {
-				e = unicode_to_ebcdic(uu);
-				if (e) {
-					(void) key_Character(e, False, False,
-							     NULL);
-				} else {
-					trace_event(" No EBCDIC translation "
-						"(dropped)\n");
-				}
-			} else {
-				wchar_t w;
-				char c;
-				BOOL udc;
-				int nc;
-
-				w = uu;
-				nc = WideCharToMultiByte(CP_ACP, 0, &w, 1,
-					&c, 1, ">", &udc);
-				if (nc) {
-					key_ACharacter(
-						(unsigned char)(c & 0xff),
-						KT_STD, IA_KEY, NULL);
-				} else {
-					trace_event(" No ASCII translation "
-						"(dropped)\n");
-				}
-			}
-			continue;
-		}
-#endif /*]*/
-
-		k = MyStringToKeysym(s, &keytype);
-		if (k == NoSymbol) {
+		k = MyStringToKeysym(s, &keytype, &ucs4);
+		if (k == NoSymbol && !ucs4) {
 			popup_an_error("%s: Nonexistent or invalid KeySym: %s",
 			    action_name(Key_action), s);
 			cancel_if_idle_command();
 			continue;
 		}
 		if (k & ~0xff) {
+		    	/*
+			 * Can't pass symbolic KeySyms that aren't in the
+			 * range 0x01..0xff.
+			 */
 			popup_an_error("%s: Invalid KeySym: %s",
 			    action_name(Key_action), s);
 			cancel_if_idle_command();
 			continue;
 		}
-		key_ACharacter((unsigned char)(k & 0xff), keytype, IA_KEY,
-			       NULL);
+		if (k != NoSymbol)
+			key_UCharacter(k, keytype, IA_KEY, NULL);
+		else
+			key_UCharacter(ucs4, keytype, IA_KEY, NULL);
 	}
 }
 
@@ -3112,9 +3128,9 @@ CircumNot_action(Widget w unused, XEvent *event, String *params, Cardinal *num_p
 	reset_idle_timer();
 
 	if (IN_3270 && composing == NONE)
-		key_ACharacter(0xac, KT_STD, IA_KEY, NULL);
+		key_UCharacter(0xac, KT_STD, IA_KEY, NULL);
 	else
-		key_ACharacter('^', KT_STD, IA_KEY, NULL);
+		key_UCharacter('^', KT_STD, IA_KEY, NULL);
 }
 
 /* PA key action for String actions */
@@ -3232,31 +3248,25 @@ emulate_input(char *s, int len, Boolean pasting)
 #if defined(X3270_DBCS) /*[*/
 	unsigned char ebc[2];
 	unsigned char cx;
-	static UChar *w_ibuf = NULL;
-	static size_t w_ibuf_len = 0;
-	UChar c;
-	UChar *ws;
-#else /*][*/
-	char c;
-	char *ws;
 #endif /*]*/
+	static unsigned long *w_ibuf = NULL;
+	static size_t w_ibuf_len = 0;
+	unsigned long c;
+	unsigned long *ws;
 
 	/*
 	 * Convert from a multi-byte string to a Unicode string.
 	 */
-#if defined(X3270_DBCS) /*[*/
 	if (len > w_ibuf_len) {
 		w_ibuf_len = len;
-		w_ibuf = (UChar *)Realloc(w_ibuf, w_ibuf_len * sizeof(UChar));
+		w_ibuf = (unsigned long *)Realloc(w_ibuf,
+			w_ibuf_len * sizeof(UChar));
 	}
-	len = mb_to_unicode(s, len, w_ibuf, w_ibuf_len, NULL);
+	len = multibyte_to_unicode_string(s, len, w_ibuf, w_ibuf_len);
 	if (len < 0) {
 		return 0; /* failed */
 	}
 	ws = w_ibuf;
-#else /*][*/
-	ws = s;
-#endif /*]*/
 
 	/*
 	 * In the switch statements below, "break" generally means "consume
@@ -3299,8 +3309,8 @@ emulate_input(char *s, int len, Boolean pasting)
 				break;
 			    case '\f':
 				if (pasting) {
-					key_ACharacter((unsigned char) ' ',
-					    KT_STD, ia, &skipped);
+					key_UCharacter(' ', KT_STD, ia,
+						&skipped);
 				} else {
 					action_internal(Clear_action, ia, CN,
 							CN);
@@ -3334,8 +3344,8 @@ emulate_input(char *s, int len, Boolean pasting)
 				if (!pasting)
 					state = BACKSLASH;
 				else
-					key_ACharacter((unsigned char) c,
-					    KT_STD, ia, &skipped);
+					key_UCharacter((unsigned char)c,
+						KT_STD, ia, &skipped);
 				break;
 			    case '\033': /* ESC is special only when pasting */
 				if (pasting)
@@ -3343,21 +3353,20 @@ emulate_input(char *s, int len, Boolean pasting)
 				break;
 			    case '[':	/* APL left bracket */
 				if (pasting && appres.apl_mode)
-					key_ACharacter(
-					    (unsigned char) XK_Yacute,
-					    KT_GE, ia, &skipped);
+					key_UCharacter(XK_Yacute, KT_GE, ia,
+						&skipped);
 				else
-					key_ACharacter((unsigned char) c,
-					    KT_STD, ia, &skipped);
+					key_UCharacter((unsigned char)c,
+						KT_STD, ia, &skipped);
 				break;
 			    case ']':	/* APL right bracket */
 				if (pasting && appres.apl_mode)
-					key_ACharacter(
-					    (unsigned char) XK_diaeresis,
-					    KT_GE, ia, &skipped);
+					key_UCharacter(XK_diaeresis, KT_GE, ia,
+						&skipped);
 				else
-					key_ACharacter((unsigned char) c,
-					    KT_STD, ia, &skipped);
+					key_UCharacter((unsigned char)c,
+						KT_STD, ia,
+						&skipped);
 				break;
 			default:
 #if defined(X3270_DBCS) /*[*/
@@ -3366,19 +3375,19 @@ emulate_input(char *s, int len, Boolean pasting)
 				 * otherwise to the 16-bit character set.
 				 */
 				if (dbcs_map8(c, &cx)) {
-					key_ACharacter((unsigned char)cx,
+					key_UCharacter((unsigned char)cx,
 					    KT_STD, ia_cause, &skipped);
 					break;
 				} else if (dbcs_map16(c, ebc)) {
 					(void) key_WCharacter(ebc, &skipped);
 					break;
 				} else {
-					trace_event("Cannot convert U+%04x to "
-					    "EBCDIC\n", c & 0xffff);
+					trace_event("Cannot convert U+%04lx "
+						"to EBCDIC\n", c & 0xffff);
 					break;
 				}
 #endif /*]*/
-				key_ACharacter((unsigned char) c, KT_STD,
+				key_UCharacter((unsigned char) c, KT_STD,
 				    ia, &skipped);
 				break;
 			}
@@ -3443,7 +3452,7 @@ emulate_input(char *s, int len, Boolean pasting)
 				state = BACKE;
 				break;
 			    case '\\':
-				key_ACharacter((unsigned char) c, KT_STD, ia,
+				key_UCharacter((unsigned char) c, KT_STD, ia,
 						&skipped);
 				state = BASE;
 				break;
@@ -3555,7 +3564,7 @@ emulate_input(char *s, int len, Boolean pasting)
 				nc++;
 				break;
 			} else {
-				key_ACharacter((unsigned char) literal, KT_STD,
+				key_UCharacter((unsigned char) literal, KT_STD,
 				    ia, &skipped);
 				state = BASE;
 				continue;
@@ -3566,7 +3575,7 @@ emulate_input(char *s, int len, Boolean pasting)
 				nc++;
 				break;
 			} else {
-				key_ACharacter((unsigned char) literal, KT_STD,
+				key_UCharacter((unsigned char) literal, KT_STD,
 				    ia, &skipped);
 				state = BASE;
 				continue;
@@ -3593,7 +3602,7 @@ emulate_input(char *s, int len, Boolean pasting)
 				key_Character(EBC_dup, False, True, &skipped);
 				break;
 			    default:
-				key_ACharacter((unsigned char) c, KT_GE, ia,
+				key_UCharacter((unsigned char) c, KT_GE, ia,
 						&skipped);
 				break;
 			}
@@ -3613,7 +3622,7 @@ emulate_input(char *s, int len, Boolean pasting)
 		break;
 	    case OCTAL:
 	    case HEX:
-		key_ACharacter((unsigned char) literal, KT_STD, ia, &skipped);
+		key_UCharacter((unsigned char) literal, KT_STD, ia, &skipped);
 		state = BASE;
 		if (toggled(MARGINED_PASTE) &&
 		    BA_TO_COL(cursor_addr) < orig_col) {
@@ -3819,14 +3828,17 @@ kybd_prime(void)
  * characters.
  */
 static KeySym
-MyStringToKeysym(char *s, enum keytype *keytypep)
+MyStringToKeysym(char *s, enum keytype *keytypep, unsigned long *ucs4)
 {
 	KeySym k;
-	int cc;
-	char *ptr;
-	unsigned char xc;
+	int consumed;
+	enum me_fail error;
+
+	/* No UCS-4 yet. */
+	*ucs4 = 0L;
 
 #if defined(X3270_APL) /*[*/
+	/* Look for my contrived APL symbols. */
 	if (!strncmp(s, "apl_", 4)) {
 		int is_ge;
 
@@ -3835,41 +3847,34 @@ MyStringToKeysym(char *s, enum keytype *keytypep)
 			*keytypep = KT_GE;
 		else
 			*keytypep = KT_STD;
+		return k;
 	} else
 #endif /*]*/
 	{
+		/* Look for a standard X11 keysym. */
 		k = StringToKeysym(s);
 		*keytypep = KT_STD;
-	}
-	if (k == NoSymbol && ((xc = utf8_lookup(s, NULL, NULL)) != 0))
-		k = xc;
-	if (k == NoSymbol && !strcasecmp(s, "euro"))
-		k = 0xa4;
-	if (k == NoSymbol && strlen(s) == 1)
-		k = s[0] & 0xff;
-	if (k < ' ')
-		k = NoSymbol;
-	else if (k > 0xff) {
-		int i;
-
-		for (i = 0; i < nxk; i++)
-			if (xk[i].key == k) {
-				k = xk[i].assoc;
-				break;
-			}
-		if (k > 0xff)
-			k &= 0xff;
+		if (k != NoSymbol)
+		    	return k;
 	}
 
-	/* Allow arbitrary values, e.g., 0x03 for ^C. */
-	if (k == NoSymbol &&
-	    (cc = strtoul(s, &ptr, 0)) > 0 &&
-	    cc < 0xff &&
-	    ptr != s &&
-	    *ptr == '\0')
-		k = cc;
+	/* Look for "euro". */
+	if (!strcasecmp(s, "euro")) {
+	    	*ucs4 = 0x20ac;
+		return NoSymbol;
+	}
 
-	return k;
+	/* Look for U+nnnn of 0xXXXX. */
+	if (!strncasecmp(s, "U+", 2) || !strncasecmp(s, "0x", 2)) {
+	    	*ucs4 = strtoul(s + 2, NULL, 16);
+		return NoSymbol;
+	}
+
+	/* Look for a valid local multibyte character. */
+	*ucs4 = multibyte_to_unicode(s, strlen(s), &consumed, &error);
+	if (consumed != strlen(s))
+	    	*ucs4 = 0;
+	return NoSymbol;
 }
 
 /* Add a key to the extended association table. */
@@ -4002,8 +4007,11 @@ build_composites(void)
 			continue;
 		}
 		for (i = 0; i < 3; i++) {
-			k[i] = MyStringToKeysym(ksname[i], &a[i]);
+		    	unsigned long ucs4;
+
+			k[i] = MyStringToKeysym(ksname[i], &a[i], &ucs4);
 			if (k[i] == NoSymbol) {
+				/* For now, ignore UCS4.  XXX: Fix this. */
 				popup_an_error("%s: Invalid KeySym: \"%s\"",
 				    action_name(Compose_action), ksname[i]);
 				okay = False;
@@ -4074,27 +4082,12 @@ Default_action(Widget w unused, XEvent *event, String *params, Cardinal *num_par
 			return;
 #endif /*]*/
 		ll = XLookupString(kevent, buf, 32, &ks, (XComposeStatus *) 0);
+		buf[ll] = '\0';
 		if (ll > 1) {
-			char tmp[33];
-
-			/*
-			 * Translate from (local) UTF-8 to the implied
-			 * 8-bit character set.
-			 * XXX: Needs modernization.
-			 */
-			strncpy(tmp, buf, ll);
-			tmp[ll] = '\0';
-			buf[0] = utf8_lookup(tmp, NULL, NULL);
-			if (buf[0]) {
-				key_ACharacter((unsigned char) buf[0], KT_STD,
-				    IA_DEFAULT, NULL);
-				return;
-			}
+			key_ACharacter(buf, KT_STD, IA_DEFAULT, NULL);
+			return;
 		}
 		if (ll == 1) {
-			/* Add Meta; XLookupString won't. */
-			if (event_is_meta(kevent->state))
-				buf[0] |= 0x80;
 			/* Remap certain control characters. */
 			if (!IN_ANSI) switch (buf[0]) {
 			    case '\t':
@@ -4117,12 +4110,10 @@ Default_action(Widget w unused, XEvent *event, String *params, Cardinal *num_par
 				    CN);
 				break;
 			    default:
-				key_ACharacter((unsigned char) buf[0], KT_STD,
-				    IA_DEFAULT, NULL);
+				key_ACharacter(buf, KT_STD, IA_DEFAULT, NULL);
 				break;
 			} else {
-				key_ACharacter((unsigned char) buf[0], KT_STD,
-				    IA_DEFAULT, NULL);
+				key_ACharacter(buf, KT_STD, IA_DEFAULT, NULL);
 			}
 			return;
 		}
@@ -4298,22 +4289,19 @@ Default_action(Widget w unused, XEvent *event, String *params, Cardinal *num_par
 			if (ks >= XK_F1 && ks <= XK_F24) {
 				(void) sprintf(buf, "%ld", ks - XK_F1 + 1);
 				action_internal(PF_action, IA_DEFAULT, buf, CN);
-#if defined(XK_CYRILLIC) /*[*/
-			} else if (ks == XK_Cyrillic_io ||
-				   ks == XK_Cyrillic_IO ||
-				   (ks >= XK_Cyrillic_yu &&
-				    ks <= XK_Cyrillic_HARDSIGN)) {
-				/* Map XK to KOI8-R. */
-				(void) sprintf(buf, "%ld", ks & 0xff);
-				action_internal(Key_action, IA_DEFAULT, buf,
-						CN);
-#endif /*]*/
-			} else if (xk_selector && ((ks >> 8) == xk_selector)) {
-				key_ACharacter((unsigned char)(ks & 0xff),
-						KT_STD, IA_KEY, NULL);
-			} else
-				trace_event(" %s: dropped (unknown keysym)\n",
-				    action_name(Default_action));
+			} else {
+				unsigned long ucs4;
+
+			    	ucs4 = keysym2ucs(ks);
+				if (ucs4 != -1) {
+				    	key_UCharacter(ucs4, KT_STD, IA_KEY,
+						NULL);
+				} else {
+					trace_event(
+					    " %s: dropped (unknown keysym)\n",
+					    action_name(Default_action));
+				}
+			}
 			break;
 		}
 		break;
