@@ -208,8 +208,6 @@ charset_init(char *csname)
 #else /*][*/
 #if defined(_WIN32) && defined(C3270) /*[*/
 		set_display_charset("iso8859-1");
-#else /*][*/
-		utf8_set_display_charsets(default_display_charset, "us");
 #endif /*]*/
 #endif /*]*/
 		(void) set_uni("us");
@@ -431,9 +429,6 @@ resource_charset(char *csname, char *cs, char *ftcs)
 		return CS_PREREQ;
 	}
 #else /*][*/
-#if !defined(_WIN32) /*[*/
-	utf8_set_display_charsets(rcs? rcs: default_display_charset, csname);
-#endif /*]*/
 #if defined(X3270_DBCS) /*[*/
 	if (n_rcs > 1)
 		dbcs = True;
@@ -880,7 +875,7 @@ ebcdic_to_multibyte(unsigned short ebc, unsigned char cs, char mb[],
      */
 
     /* Translate the wchar_t we got from UCS-4 to UTF-8. */
-    nu8 = ucs4_to_utf8(uc, u8b);
+    nu8 = unicode_to_utf8(uc, u8b);
     if (nu8 < 0)
 	return 0;
 
@@ -947,19 +942,13 @@ mb_max_len(int len)
 }
 
 /*
- * Translate a multi-byte character in the current locale to an EBCDIC
- * character.
+ * Translate a multi-byte character in the current locale to UCS-4.
  *
- * Returns an 8-bit (SBCS) or 16-bit (DBCS) EBCDIC character, or 0, indicating
- * an error in translation.  Also returns the number of characters consumed.
- *
- * Unlike ebcdic_to_multibyte, there is no 'purpose' parameter.  On Windows,
- * this function is only used to translate local file system strings to
- * EBCDIC (TRANS_LOCAL).  Input keystrokes (which would use TRANS_DISPLAY)
- * are UTF-16 strings, not OEM-codepage bytes.
+ * Returns a UCS-4 character or 0, indicating an error in translation.
+ * Also returns the number of characters consumed.
  */
-unsigned short
-multibyte_to_ebcdic(char *mb, size_t mb_len, int *consumedp,
+unsigned long
+multibyte_to_unicode(char *mb, size_t mb_len, int *consumedp,
 	enum me_fail *errorp)
 {
     wchar_t wc[3];
@@ -1027,10 +1016,10 @@ multibyte_to_ebcdic(char *mb, size_t mb_len, int *consumedp,
 	*consumedp = mb_len - inbytesleft;
 
 	/* Translate from UTF-8 to UCS-4. */
-	(void) utf8_to_ucs4(utf8buf, sizeof(utf8buf) - outbytesleft, &ucs4);
+	(void) utf8_to_unicode(utf8buf, sizeof(utf8buf) - outbytesleft, &ucs4);
     } else {
 	/* Translate from UTF-8 to UCS-4. */
-	nw = utf8_to_ucs4(mb, mb_len, &ucs4);
+	nw = utf8_to_unicode(mb, mb_len, &ucs4);
 	if (nw < 0) {
 	    *errorp = ME_INVALID;
 	    return 0;
@@ -1044,5 +1033,133 @@ multibyte_to_ebcdic(char *mb, size_t mb_len, int *consumedp,
 #endif /*]*/
 
     /* Translate from UCS4 to EBCDIC. */
+    return ucs4;
+}
+
+/*
+ * Convert a multi-byte string to a UCS-4 string.
+ * Returns the number of UCS-4 characters stored.
+ */
+int
+multibyte_to_unicode_string(char *mb, size_t mb_len, unsigned long *ucs4,
+	size_t u_len)
+{
+    int consumed;
+    enum me_fail error;
+    int nr = 0;
+
+    error = ME_NONE;
+
+    while (u_len && (*ucs4++ = multibyte_to_unicode(mb, mb_len, &consumed,
+		    &error)) != 0) {
+	u_len--;
+	mb += consumed;
+	mb_len -= consumed;
+	nr++;
+    }
+    if (u_len) {
+	*ucs4 = 0;
+	nr++;
+    }
+
+    if (error != ME_NONE)
+	return -1;
+    else
+	return nr;
+}
+
+/*
+ * Translate a multi-byte character in the current locale to an EBCDIC
+ * character.
+ *
+ * Returns an 8-bit (SBCS) or 16-bit (DBCS) EBCDIC character, or 0, indicating
+ * an error in translation.  Also returns the number of characters consumed.
+ *
+ * Unlike ebcdic_to_multibyte, there is no 'purpose' parameter.  On Windows,
+ * this function is only used to translate local file system strings to
+ * EBCDIC (TRANS_LOCAL).  Input keystrokes (which would use TRANS_DISPLAY)
+ * are UTF-16 strings, not OEM-codepage bytes.
+ */
+unsigned short
+multibyte_to_ebcdic(char *mb, size_t mb_len, int *consumedp,
+	enum me_fail *errorp)
+{
+    unsigned long ucs4;
+
+    ucs4 = multibyte_to_unicode(mb, mb_len, consumedp, errorp);
+    if (ucs4 == 0)
+	return 0;
     return unicode_to_ebcdic(ucs4);
+}
+
+/*
+ * Translate a UCS-4 character to a local multi-byte string.
+ */
+int
+unicode_to_multibyte(unsigned long ucs4, char *mb, size_t mb_len)
+{
+#if defined(_WIN32) /*[*/
+    wchar_t wuc = ucs4;
+    BOOL udc;
+    int nc;
+
+    nc = WideCharToMultiByte(CP_ACP, 0, &wuc, 1, mb, mb_len, "?", &udc);
+    return nc;
+#elif defined(UNICODE_WCHAR) /*][*/
+    int nc;
+
+    nc = wctomb(mb, ucs4);
+    if (nc > 0) {
+	/* Return to the initial shift state and null-terminate. */
+	nc += wctomb(mb + nc, 0);
+	return nc;
+    } else {
+	mb[0] = '?';
+	mb[1] = '\0';
+	return 2;
+    }
+#else /*][*/
+    int nu8;
+    char u8b[16];
+    char *inbuf, *outbuf;
+    size_t inbytesleft, outbytesleft;
+
+    /* Use iconv. */
+
+    /* Translate the wchar_t we got from UCS-4 to UTF-8. */
+    nu8 = unicode_to_utf8(ucs4, u8b);
+    if (nu8 < 0)
+	return 0;
+
+    /* Local multi-byte might be UTF-8, in which case, we're done. */
+    if (is_utf8) {
+	memcpy(mb, u8b, nu8);
+	mb[nu8++] = '\0';
+	return nu8;
+    }
+
+    /* Let iconv translate from UTF-8 to local multi-byte. */
+    inbuf = u8b;
+    inbytesleft = nu8;
+    outbuf = mb;
+    outbytesleft = mb_len;
+    nc = iconv(i_u2mb, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
+    if (nc < 0) {
+	mb[0] = '?';
+	mb[1] = '\0';
+	return 2;
+    }
+
+    /* Return to the initial shift state. */
+    nc = iconv(i_u2mb, NULL, NULL, &outbuf, &outbytesleft);
+    if (nc < 0) {
+	mb[0] = '?';
+	mb[1] = '\0';
+	return 0;
+    }
+
+    /* Null-terminate the return the length. */
+    mb[mb_len - outbytesleft--] = '\0';
+    return mb_len - outbytesleft;
+#endif /*]*/
 }

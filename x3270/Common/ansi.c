@@ -33,6 +33,7 @@
 #endif /*]*/
 
 #include "ansic.h"
+#include "charsetc.h"
 #include "ctlrc.h"
 #include "hostc.h"
 #include "screenc.h"
@@ -1015,28 +1016,25 @@ ansi_printing(int ig1 unused, int ig2 unused)
 
 	if ((pmi == 0) && (ansi_ch & 0x80)) {
 	    	char mbs[2];
-		enum ulfail fail;
-		unsigned char ch;
+		int consumed;
+		enum me_fail fail;
+		unsigned long ucs4;
 
 		mbs[0] = (char)ansi_ch;
 		mbs[1] = '\0';
-		ch = utf8_lookup(mbs, &fail, NULL);
-		if (ch == 0) {
+		ucs4 = multibyte_to_unicode(mbs, 1, &consumed, &fail);
+		if (ucs4 == 0) {
 			switch (fail) {
-			case ULFAIL_NOUTF8:
-			    	/* Leave it alone. */
-				break;
-			case ULFAIL_INCOMPLETE:
+			case ME_SHORT:
 				/* Start munching multi-byte. */
 				pmi = 0;
 				pending_mbs[pmi++] = (char)ansi_ch;
 				return MBPEND;
-			case ULFAIL_INVALID:
+			case ME_INVALID:
 				/* Invalid multi-byte -> '?' */
 				ansi_ch = '?';
-				/* XXX: If DBCS, we should let
-				 * ICU have a crack at it
-				 */
+				break;
+			default:
 				break;
 			}
 		}
@@ -1181,8 +1179,9 @@ static enum state
 ansi_multibyte(int ig1, int ig2)
 {
     	char mbs[MB_MAX];
-	unsigned char ch;
-	enum ulfail fail;
+	unsigned long ucs4;
+	int consumed;
+	enum me_fail fail;
 	afn_t fn;
 
 	if (pmi >= MB_MAX - 2) {
@@ -1196,13 +1195,13 @@ ansi_multibyte(int ig1, int ig2)
 	mbs[pmi] = (char)ansi_ch;
 	mbs[pmi + 1] = '\0';
 
-	ch = utf8_lookup(mbs, &fail, NULL);
-	if (ch != 0) {
+	ucs4 = multibyte_to_unicode(mbs, pmi, &consumed, &fail);
+	if (ucs4 != 0) {
 	    	/* Success! */
-	    	ansi_ch = ch;
+	    	ansi_ch = ucs4;
 		return ansi_printing(ig1, ig2);
 	}
-	if (fail == ULFAIL_INCOMPLETE) {
+	if (fail == ME_SHORT) {
 	    	/* Go get more. */
 	    	pending_mbs[pmi++] = (char)ansi_ch;
 		return MBPEND;
@@ -1211,13 +1210,13 @@ ansi_multibyte(int ig1, int ig2)
 	/* Failure. */
 
 	/* Replace the sequence with '?'. */
-	ch = ansi_ch; /* save for later */
+	ucs4 = ansi_ch; /* save for later */
 	pmi = 0;
 	ansi_ch = '?';
 	(void) ansi_printing(ig1, ig2);
 
 	/* Reprocess whatever we choked on. */
-	ansi_ch = ch;
+	ansi_ch = ucs4;
 	state = DATA;
 	fn = ansi_fn[st[(int)DATA][ansi_ch]];
 	return (*fn)(n[0], n[1]);

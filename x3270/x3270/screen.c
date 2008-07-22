@@ -3692,10 +3692,6 @@ screen_new_display_charsets(const char *display_charsets, const char *csnames)
 	allow_resize = appres.allow_resize;
 
     done:
-	if (!utf8_set_display_charsets((char *)display_charsets,
-		    (char *)csnames))
-		return False;
-
 	/* Set the appropriate global. */
 	Replace(required_display_charsets,
 	    display_charsets? NewString(display_charsets): CN);

@@ -18,17 +18,8 @@
  *		UTF-8 conversions
  */
 
-enum ulfail {
-    	ULFAIL_NOUTF8,		/* not using UTF-8 */
-	ULFAIL_INCOMPLETE,	/* incomplete sequence */
-	ULFAIL_INVALID		/* invalid sequence */
-};
-
 extern char *locale_codeset;
 
 extern void set_codeset(char *codeset_name);
-extern Boolean utf8_set_display_charsets(char *cslist, char *csname);
-extern unsigned char utf8_lookup(char *mbs, enum ulfail *fail, int *consumed);
-extern int ucs4_to_utf8(unsigned long ucs4, char *utf8);
-extern int utf8_to_ucs4(char *utf8, int len, unsigned long *ucs4);
-
+extern int unicode_to_utf8(unsigned long ucs4, char *utf8);
+extern int utf8_to_unicode(char *utf8, int len, unsigned long *ucs4);
