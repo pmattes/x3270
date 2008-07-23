@@ -1,5 +1,5 @@
 /*
- * Modifications Copyright 1993-1996, 1999-2004, 2005, 2006, 2007
+ * Modifications Copyright 1993-1996, 1999-2004, 2005, 2006, 2007, 2008
  *   by Paul Mattes.
  * Original X11 Port Copyright 1990 by Jeff Sparkes.
  *  Permission to use, copy, modify, and distribute this software and its
@@ -50,6 +50,7 @@
 #include "ansic.h"
 #include "charsetc.h"
 #include "ctlrc.h"
+#include "display8c.h"
 #include "hostc.h"
 #include "keymapc.h"
 #include "keypadc.h"
@@ -63,6 +64,7 @@
 #include "statusc.h"
 #include "tablesc.h"
 #include "trace_dsc.h"
+#include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
 #include "xioc.h"
@@ -275,10 +277,11 @@ struct sstate {
 	Boolean         standard_font;
 	Boolean		extended_3270font;
 	Boolean         font_8bit;
+	Boolean		font_16bit;
 	Boolean		funky_font;
 	Boolean         obscured;
 	Boolean         copied;
-	unsigned short  *xfmap;	/* standard font CG-to-ASCII map */
+	int		d8_ix;
 	unsigned long	odd_width[256 / BPW];
 	unsigned long	odd_lbearing[256 / BPW];
 };
@@ -307,6 +310,7 @@ int            *ascent = &nss.ascent;
 int            *descent = &nss.descent;
 Boolean        *standard_font = &nss.standard_font;
 Boolean        *font_8bit = &nss.font_8bit;
+Boolean        *font_16bit = &nss.font_16bit;
 Boolean        *extended_3270font = &nss.extended_3270font;
 Boolean        *funky_font = &nss.funky_font;
 int            *xtra_width = &nss.xtra_width;
@@ -1731,6 +1735,72 @@ resync_text(int baddr, int len, union sp *buffer)
 }
 
 /*
+ * Get a font index for an EBCDIC character.
+ * Returns a blank if there is no mapping.
+ *
+ * Note that the EBCDIC character can be 16 bits (DBCS), and the output might
+ * be 16 bits as well.
+ */
+static unsigned short
+font_index(unsigned short ebc, int d8_ix)
+{
+	unsigned long ucs4;
+
+	ucs4 = ebcdic_to_unicode(ebc, True, True);
+	return display8_lookup(d8_ix, ucs4);
+}
+
+/*
+ * Attempt to map an APL character to a DEC line-drawing character in the
+ * first 32 bytes of an old 8-bit X11 font.
+ */
+static int
+apl_to_linedraw(unsigned short c)
+{
+    	switch (c) {
+	case 0xaf:	/* degree */
+	    return 0x7;
+	case 0xd4:	/* LR corner */
+	    return 0xb;
+	case 0xd5:	/* UR corner */
+	    return 0xc;
+	case 0xc5:	/* UL corner */
+	    return 0xd;
+	case 0xc4:	/* LL corner */
+	    return 0xe;
+	case 0xd3:	/* plus */
+	    return 0xf;
+	case 0xa2:	/* middle horizontal */
+	    return 0x12;
+	case 0xc6:	/* left tee */
+	    return 0x15;
+	case 0xd6:	/* right tee */
+	    return 0x16;
+	case 0xc7:	/* bottom tee */
+	    return 0x17;
+	case 0xd7:	/* top tee */
+	    return 0x18;
+	case 0xbf:	/* stile */
+	case 0x85:	/* vertical line */
+	    return 0x19;
+	case 0x8c:	/* less or equal */
+	    return 0x1a;
+	case 0xae:	/* greater or equal */
+	    return 0x1b;
+	case 0xbe:	/* not equal */
+	    return 0x1d;
+	case 0xa3:	/* bullet */
+	    return 0x1f;
+	case 0xad:
+	    return '[';
+	case 0xbd:
+	    return ']';
+	default:
+	    return -1;
+	}
+}
+
+/*
  * Render text onto the X display.  The region must not span lines.
  */
 static void
@@ -1744,7 +1814,7 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 	int sel = attrs->bits.sel;
 	register int i, j;
 	Boolean one_at_a_time = False;
-	register unsigned short *xfmap = ss->xfmap;
+	int d8_ix = ss->d8_ix;
 	XTextItem16 text[64]; /* fixed size is a hack */
 	int n_texts = -1;
 	Boolean in_dbcs = False;
@@ -1825,46 +1895,81 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 			rt_buf[j].byte1 = 0;
 			if (toggled(MONOCASE))
 				rt_buf[j].byte2 =
-				    xfmap[ebc2uc[buffer[i].bits.cc]];
+				    font_index(ebc2uc[buffer[i].bits.cc],
+					    d8_ix);
 			else {
 				if (visible_control) {
 					if (buffer[i].bits.cc == EBC_so) {
 						rt_buf[j].byte1 = 0;
 						rt_buf[j].byte2 =
-						    xfmap[asc2ebc['<']];
+						    font_index(EBC_less, d8_ix);
 					} else if (buffer[i].bits.cc == EBC_si) {
 						rt_buf[j].byte1 = 0;
 						rt_buf[j].byte2 =
-						    xfmap[asc2ebc['>']];
+						    font_index(EBC_greater,
+							    d8_ix);
 					} else {
+					    	unsigned short c = font_index(
+							buffer[i].bits.cc,
+							d8_ix);
+
 						rt_buf[j].byte1 =
-						  xfmap[buffer[i].bits.cc] >> 8;
-						rt_buf[j].byte2 =
-						    xfmap[buffer[i].bits.cc];
+						    (c >> 8) & 0xff;
+						rt_buf[j].byte2 = c & 0xff;
 					}
 				} else {
+				    	unsigned short c = font_index(
+						buffer[i].bits.cc, d8_ix);
+
 					rt_buf[j].byte1 =
-					    xfmap[buffer[i].bits.cc] >> 8;
-					rt_buf[j].byte2 =
-					    xfmap[buffer[i].bits.cc];
+					    (c >> 8) & 0xff;
+					rt_buf[j].byte2 = c & 0xff;
 				}
 			}
 			j++;
 			break;
 		    case CS_APL:	/* GE (apl) */
+		    case CS_BASE | CS_GE:
 			if (ss->extended_3270font) {
 				rt_buf[j].byte1 = 1;
 				rt_buf[j].byte2 = ebc2cg0[buffer[i].bits.cc];
 			} else {
-				rt_buf[j].byte1 = 0;
-				rt_buf[j].byte2 = ge2asc[buffer[i].bits.cc];
+			    	if (ss->font_16bit) {
+					unsigned short c =
+					    display8_lookup(d8_ix,
+						    apl_to_unicode(
+							buffer[i].bits.cc));
+
+					rt_buf[j].byte1 = (c >> 8) & 0xff;
+					rt_buf[j].byte2 = c & 0xff;
+				} else {
+				    	int c =
+					    apl_to_linedraw(buffer[i].bits.cc);
+
+					rt_buf[j].byte1 = 0;
+					rt_buf[j].byte2 = (c == -1)? 0: c;
+				}
 			}
 			j++;
 			break;
 		    case CS_LINEDRAW:	/* DEC line drawing */
 			if (ss->standard_font) {
-				rt_buf[j].byte1 = 0;
-				rt_buf[j].byte2 = buffer[i].bits.cc;
+			    	if (ss->font_16bit) {
+					unsigned short c =
+					    display8_lookup(d8_ix,
+						    linedraw_to_unicode(
+							buffer[i].bits.cc));
+
+					rt_buf[j].byte1 = (c >> 8) & 0xff;
+					rt_buf[j].byte2 = c & 0xff;
+				} else {
+				    	/*
+					 * Assume the first 32 characters are
+					 * line-drawing.
+					 */
+					rt_buf[j].byte1 = 0;
+					rt_buf[j].byte2 = buffer[i].bits.cc;
+				}
 			} else {
 				if (ss->extended_3270font) {
 					rt_buf[j].byte1 = 2;
@@ -1886,11 +1991,11 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 				i++;
 			} else {
 				rt_buf[j].byte1 = 0;
-				rt_buf[j].byte2 = xfmap[EBC_space];
+				rt_buf[j].byte2 = font_index(EBC_space, d8_ix);
 			}
 #else /*][*/
 			rt_buf[j].byte1 = 0;
-			rt_buf[j].byte2 = xfmap[EBC_space];
+			rt_buf[j].byte2 = font_index(EBC_space, d8_ix);
 #endif /*]*/
 			j++;
 			break;
@@ -4134,31 +4239,39 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 {
 	unsigned long svalue;
 	int i;
+	char *family_name = NULL;
+	char *font_encoding = NULL;
+	char *font_charset = NULL;
+
+	if (XGetFontProperty(f, a_registry, &svalue))
+		family_name = XGetAtomName(display, svalue);
+	if (family_name == NULL)
+	    	Error("Cannot get font family_name");
+	if (XGetFontProperty(f, a_encoding, &svalue))
+		font_encoding = XGetAtomName(display, svalue);
+	if (font_encoding == NULL)
+	    	Error("Cannot get font encoding");
 
 #if defined(X3270_DBCS) /*[*/
 	if (is_dbcs) {
 		/* Hack. */
 		dbcs_font.font_struct = f;
 		dbcs_font.font = f->fid;
-		if (XGetFontProperty(f, a_registry, &svalue)) {
-			char *family_name;
-
-			family_name = XGetAtomName(display, svalue);
-			if (family_name != CN) {
-				dbcs_font.unicode = !strcasecmp(family_name,
-				    "iso10646");
-				XFree(family_name);
-			}
-		}
+		dbcs_font.unicode = !strcasecmp(family_name, "iso10646");
 		dbcs_font.ascent = f->max_bounds.ascent;
 		dbcs_font.descent = f->max_bounds.descent;
 		dbcs_font.char_width  = fCHAR_WIDTH(f);
 		dbcs_font.char_height = dbcs_font.ascent + dbcs_font.descent;
 		dbcs = True;
 		Replace(full_efontname_dbcs, XtNewString(fef));
+		Free(family_name);
+		Free(font_encoding);
 		return;
 	}
 #endif /*]*/
+	font_charset = xs_buffer("%s-%s", family_name, font_encoding);
+	Free(family_name);
+	Free(font_encoding);
 	Replace(efontname, XtNewString(ef));
 	Replace(full_efontname, XtNewString(fef));
 
@@ -4184,7 +4297,9 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 	if (nss.standard_font) {
 		nss.extended_3270font = False;
 		nss.font_8bit = efont_matches;
-		nss.xfmap = nss.font_8bit ? ebc2asc : ebc2asc7;
+		nss.font_16bit = (f->max_byte1 > 0);
+		nss.d8_ix = display8_init(nss.font_8bit? font_charset:
+							 "ascii-7");
 	} else {
 #if defined(BROKEN_MACH32)
 		nss.extended_3270font = False;
@@ -4193,8 +4308,11 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 			f->max_char_or_byte2 > 255;
 #endif
 		nss.font_8bit = False;
-		nss.xfmap = ebc2cg;
+		nss.font_16bit = False;
+		nss.d8_ix = display8_init(font_charset);
 	}
+	Free(font_charset);
+	font_charset = NULL;
 
 	/* See if this font has any unusually-shaped characters. */
 	INIT_ODD(nss.odd_width);
@@ -4492,7 +4610,7 @@ aicon_font_init(void)
 	iss.extended_3270font = False;
 	iss.font_8bit = False;
 	iss.obscured = True;
-	iss.xfmap = ebc2asc7;
+	iss.d8_ix = display8_init("ascii-7");
 	if (appres.label_icon) {
 		matches = XListFontsWithInfo(display, appres.icon_label_font,
 		    1, &count, &ailabel_font);
