@@ -199,7 +199,6 @@ extern Pixel		keypadbg_pixel;
 extern XrmDatabase	rdb;
 extern Window		root_window;
 extern char		*user_title;
-extern unsigned char	xk_selector;
 #endif /*]*/
 
 #if defined(_WIN32) && (defined(C3270) || defined(S3270)) /*[*/

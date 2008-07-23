@@ -68,10 +68,6 @@ unsigned long cgcsgid_dbcs = 0L;
 char *default_display_charset = "3270cg-1a,3270cg-1,iso8859-1";
 char *converter_names;
 char *encoding;
-#if defined(X3270_DISPLAY) /*[*/
-unsigned char xk_selector = 0;
-#endif
-unsigned char auto_keymap = 0;
 
 /* Statics. */
 static enum cs_result resource_charset(char *csname, char *cs, char *ftcs);
@@ -102,7 +98,6 @@ charset_defaults(void)
 	(void) memcpy((char *)ft2asc, (char *)ft2asc0, 256);
 	(void) memcpy((char *)asc2ft, (char *)asc2ft0, 256);
 #endif /*]*/
-	clear_xks();
 }
 
 static unsigned char save_ebc2cg[256];
@@ -180,10 +175,6 @@ charset_init(char *csname)
 	char *cs, *ftcs;
 	enum cs_result rc;
 	char *ccs, *cftcs;
-#if defined(X3270_DISPLAY) /*[*/
-	char *xks;
-#endif /*]*/
-	char *ak;
 #if !defined(_WIN32) /*[*/
 	char *codeset_name;
 #endif /*]*/
@@ -243,13 +234,6 @@ charset_init(char *csname)
 	save_charset();
 	charset_defaults();
 
-	/* Check for auto-keymap. */
-	ak = get_fresource("%s.%s", ResAutoKeymap, csname);
-	if (ak != NULL)
-		auto_keymap = !strcasecmp(ak, "true");
-	else
-		auto_keymap = 0;
-
 	/* Interpret them. */
 	rc = resource_charset(csname, ccs, cftcs);
 
@@ -269,15 +253,6 @@ charset_init(char *csname)
 		restore_charset();
 		return CS_NOTFOUND;
 	}
-#endif /*]*/
-
-#if defined(X3270_DISPLAY) /*[*/
-	/* Check for an XK selector. */
-	xks = get_fresource("%s.%s", ResXkSelector, csname);
-	if (xks != NULL)
-		xk_selector = (unsigned char) strtoul(xks, NULL, 0);
-	else
-		xk_selector = 0;
 #endif /*]*/
 
 	return rc;
@@ -502,7 +477,7 @@ remap_one(unsigned char ebc, KeySym iso, remap_scope scope, Boolean one_way)
 	if (iso == 0x20)
 		one_way = True;
 
-	if (!auto_keymap || iso <= 0xff) {
+	if (iso <= 0xff) {
 #if defined(X3270_FT) /*[*/
 		unsigned char aa;
 #endif /*]*/
@@ -560,9 +535,6 @@ remap_one(unsigned char ebc, KeySym iso, remap_scope scope, Boolean one_way)
 			}
 		}
 #endif /*]*/
-	} else {
-		/* Auto-keymap. */
-		add_xk(iso, (KeySym)ebc2asc[ebc]);
 	}
 }
 
@@ -823,7 +795,7 @@ ebcdic_to_multibyte(unsigned short ebc, unsigned char cs, char mb[],
     } else if (cs != CS_BASE) {
 	uc = 0;
     } else {
-	uc = ebcdic_to_unicode(ebc, blank_undef);
+	uc = ebcdic_to_unicode(ebc, blank_undef, (purpose == TRANS_DISPLAY));
 	*ucp = uc;
     }
     if (uc == 0)
