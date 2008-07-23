@@ -325,6 +325,8 @@
 #define EBC_0		0xf0    
 #define EBC_9		0xf9    
 #define EBC_eo		0xff
+#define EBC_less	0x4c
+#define EBC_greaer	0x6e
 
 /* BIND definitions. */
 #define BIND_RU			0x31

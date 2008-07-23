@@ -141,7 +141,7 @@ ebcdic_to_unicode(unsigned short c, Boolean blank_undef, Boolean for_display)
 	case EBC_fm:
 	    return for_display? 0xf8fe: ';';
 	case EBC_eo:
-	    return 0x25c0; /* solid circle */
+	    return 0x25cf; /* solid circle */
 	default:
 	    if (blank_undef)
 		return ' ';
@@ -250,13 +250,13 @@ linedraw_to_unicode(unsigned short c)
 	/* Use Unicode. */
 	switch (c) {
 	case 0x0:	/* '_', block */
-		r = -1;
+		r = 0x2588;
 		break;
 	case 0x1:	/* '`', diamond */
 		r = 0x25c6;
 		break;
 	case 0x2:	/* 'a', checkerboard */
-		r = -1;
+		r = 0x2592;
 		break;
 	case 0x7:	/* 'f', degree */
 		r = 0xb0;
@@ -346,6 +346,7 @@ apl_to_unicode(unsigned short c)
 {
     	int r;
 
+	/* XXX: There's lots more that's defined that APL can use.  Add them. */
 	/* Use Unicode. */
 	switch (c) {
 	case 0xaf: /* CG 0xd1, degree */
