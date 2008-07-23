@@ -132,8 +132,6 @@ extern void Up_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 
 /* other functions */
-extern void add_xk(KeySym key, KeySym assoc);
-extern void clear_xks(void);
 extern void do_reset(Boolean explicit);
 extern int emulate_input(char *s, int len, Boolean pasting);
 extern void hex_input(char *s);

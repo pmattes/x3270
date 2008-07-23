@@ -736,35 +736,6 @@ x3270.keymap.apl:	#override \
 	:Alt<Key>X:		Key(apl_Xunderbar)\n\
 	:Alt<Key>Y:		Key(apl_Yunderbar)\n\
 	:Alt<Key>Z:		Key(apl_Zunderbar)\n
-! Temporary keymap for entering Hebrew characters
-x3270.keymap.hebrew: \
-	~Ctrl ~Alt ~Meta <Key>t:		Key(hebrew_aleph)\n\
-	~Ctrl ~Alt ~Meta <Key>c:		Key(hebrew_bet)\n\
-	~Ctrl ~Alt ~Meta <Key>d:		Key(hebrew_gimel)\n\
-	~Ctrl ~Alt ~Meta <Key>s:		Key(hebrew_dalet)\n\
-	~Ctrl ~Alt ~Meta <Key>v:		Key(hebrew_he)\n\
-	~Ctrl ~Alt ~Meta <Key>u:		Key(hebrew_waw)\n\
-	~Ctrl ~Alt ~Meta <Key>z:		Key(hebrew_zain)\n\
-	~Ctrl ~Alt ~Meta <Key>j:		Key(hebrew_chet)\n\
-	~Ctrl ~Alt ~Meta <Key>y:		Key(hebrew_tet)\n\
-	~Ctrl ~Alt ~Meta <Key>h:		Key(hebrew_yod)\n\
-	~Ctrl ~Alt ~Meta <Key>l:		Key(hebrew_finalkaph)\n\
-	~Ctrl ~Alt ~Meta <Key>f:		Key(hebrew_kaph)\n\
-	~Ctrl ~Alt ~Meta <Key>k:		Key(hebrew_lamed)\n\
-	~Ctrl ~Alt ~Meta <Key>o:		Key(hebrew_finalmem)\n\
-	~Ctrl ~Alt ~Meta <Key>n:		Key(hebrew_mem)\n\
-	~Ctrl ~Alt ~Meta <Key>i:		Key(hebrew_finalnun)\n\
-	~Ctrl ~Alt ~Meta <Key>b:		Key(hebrew_nun)\n\
-	~Ctrl ~Alt ~Meta <Key>x:		Key(hebrew_samech)\n\
-	~Ctrl ~Alt ~Meta <Key>g:		Key(hebrew_ayin)\n\
-	: ~Ctrl ~Alt ~Meta <Key>semicolon:	Key(hebrew_finalpe)\n\
-	~Ctrl ~Alt ~Meta <Key>p:		Key(hebrew_pe)\n\
-	: ~Ctrl ~Alt ~Meta <Key>comma:		Key(hebrew_finalzade)\n\
-	~Ctrl ~Alt ~Meta <Key>m:		Key(hebrew_zade)\n\
-	~Ctrl ~Alt ~Meta <Key>e:		Key(hebrew_qoph)\n\
-	~Ctrl ~Alt ~Meta <Key>r:		Key(hebrew_resh)\n\
-	~Ctrl ~Alt ~Meta <Key>a:		Key(hebrew_shin)\n\
-	: ~Ctrl ~Alt ~Meta <Key>period:		Key(hebrew_taw)\n
 !
 ! Keymap for the "not" key, assumed to be above the "6" key on U.S.
 ! keyboards.  This used to be part of the 3270 base keymap, but does not
@@ -1999,8 +1970,6 @@ x3270.charset.hebrew: #table\n\
 x3270.codepage.hebrew: 0x03ad01a8
 x3270.displayCharset.hebrew: 3270cg-8,iso8859-8
 x3270.emulatorFontList.3270cg-8,iso8859-8: Hebrew 14-point 3270 Font: 3270h
-x3270.xkSelector.hebrew: 0x0c
-x3270.autoKeymap.hebrew: true
 ! Brazilian character set for x3270.
 ! With invaluable help from Ricardo Dias de Pinho - Rio de Janeiro(RJ) BRAZIL.
 x3270.codepage.brazilian: 275
@@ -2059,12 +2028,10 @@ x3270.charset.greek: #table \
  48  49  50  51  52  53  54  55  56  57 179 169 165 160 187 159
 x3270.codepage.greek: 0x0464036b
 x3270.displayCharset.greek: 3270cg-7,iso8859-7
-x3270.xkSelector.greek: 0x07
 x3270.emulatorFontList.3270cg-7,iso8859-7: 3270gr
 ! Russian character set for x3270.
 x3270.codepage.russian: 880
 x3270.displayCharset.russian: koi8-r
-x3270.xkSelector.russian: 0x06
 x3270.charset.russian: #table\n\
    0   1   2   3 158   9 170 127 182  96 147  11  12  13  14  15 \
   16  17  18  19 171 126   8 175  24  25 150 125  28  29  30  31 \
@@ -2085,7 +2052,6 @@ x3270.charset.russian: #table\n\
 ! Code page 870 for Slovenian, Croatian, Serbian (Latin) and Polish.
 x3270.codepage.cp870: 0x03bf0366
 x3270.displayCharset.cp870: iso8859-2
-x3270.xkSelector.cp870: 0x01
 x3270.charset.cp870: #table\n\
    0   1   2   3 156   9 134 127 151 141 142  11  12  13  14  15 \
   16  17  18  19 157 133   8 135  24  25 146 143  28  29  30  31 \
@@ -2148,7 +2114,6 @@ x3270.charset.cp1153: #table\n\
 ! Thai character set for x3270
 x3270.codepage.thai: 0x03aa0346
 x3270.displayCharset.thai: iso8859-11,tis620.2529-0
-x3270.xkSelector.thai: 0x0d
 x3270.charset.thai: #table\n\
   32   1   2   3 156   9 134 127 151 141 142  11  12  13  14  15 \
   16  17  18  19 157 133   8 135  24  25 146 143  28  29  30  31 \

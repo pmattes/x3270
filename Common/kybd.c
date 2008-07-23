@@ -107,12 +107,6 @@ static KeySym MyStringToKeysym(char *s, enum keytype *keytypep,
 Boolean key_WCharacter(unsigned char code[], Boolean *skipped);
 #endif /*]*/
 
-static int nxk = 0;
-static struct xks {
-	KeySym key;
-	KeySym assoc;
-} *xk;
-
 static Boolean		insert = False;		/* insert mode */
 static Boolean		reverse = False;	/* reverse-input mode */
 
@@ -3875,34 +3869,6 @@ MyStringToKeysym(char *s, enum keytype *keytypep, unsigned long *ucs4)
 	if (consumed != strlen(s))
 	    	*ucs4 = 0;
 	return NoSymbol;
-}
-
-/* Add a key to the extended association table. */
-void
-add_xk(KeySym key, KeySym assoc)
-{
-	int i;
-
-	for (i = 0; i < nxk; i++)
-		if (xk[i].key == key) {
-			xk[i].assoc = assoc;
-			return;
-		}
-	xk = (struct xks *)Realloc(xk, (nxk + 1) * sizeof(struct xks));
-	xk[nxk].key = key;
-	xk[nxk].assoc = assoc;
-	nxk++;
-}
-
-/* Clear the extended association table. */
-void
-clear_xks(void)
-{
-	if (nxk) {
-		Free(xk);
-		xk = (struct xks *)NULL;
-		nxk = 0;
-	}
 }
 
 #if defined(X3270_DISPLAY) /*[*/

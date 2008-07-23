@@ -28,7 +28,6 @@
 #define ResAltScreen		"altScreen"
 #define ResAplMode		"aplMode"
 #define ResAssocCommand		"printer.assocCommandLine"
-#define ResAutoKeymap		"autoKeymap"
 #define ResBaselevelTranslations	"baselevelTranslations"
 #define ResBellVolume		"bellVolume"
 #define ResBlankFill		"blankFill"
@@ -169,7 +168,6 @@
 #define ResVisualSelectColor	"visualSelectColor"
 #define ResWaitCursor		"waitCursor"
 #define ResWerase		"werase"
-#define ResXkSelector		"xkSelector"
 
 /* Dotted resource names. */
 #define DotActiveIcon		"." ResActiveIcon
