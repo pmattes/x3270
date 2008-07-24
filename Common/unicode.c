@@ -346,11 +346,230 @@ apl_to_unicode(unsigned short c)
 {
     	int r;
 
-	/* XXX: There's lots more that's defined that APL can use.  Add them. */
 	/* Use Unicode. */
 	switch (c) {
-	case 0xaf: /* CG 0xd1, degree */
+	case 0x40: /* CG 0x10, space */
+	    	r = ' ';
+		break;
+	case 0x70: /* CG 0x9b, diamond */
+	    	r = 0x25c6;
+		break;
+	case 0x71: /* CG 0x7b, up caret */
+	    	r = 0x22c0;
+		break;
+	case 0x72: /* CG 0x76, diaereses */
+	    	r = 0xa8;
+		break;
+	case 0x73: /* CG 0x71, quad jot */
+	    	r = 0x223b;
+		break;
+	case 0x74: /* CG 0x61, iota underbar */
+	    	r = 0x2378;
+		break;
+	case 0x75: /* CG 0x7c, epsilon underbar */
+	    	r = 0x2377;
+		break;
+	case 0x76: /* CG 0x77, left tack */
+		r = 0x22a2;
+		break;
+	case 0x77: /* CG 0x72, right tack */
+		r = 0x22a3;
+		break;
+	case 0x78: /* CG 0x62, down caret */
+		r = 0x2228;
+		break;
+	case 0x80: /* CG 0xbb, tilde */
+		r = '~';
+		break;
+	case 0x83: /* CG 0x82, left vertical bar */
+		r = 0x23b8;
+		break;
+	case 0x84: /* CG 0x83, right vertical bar */
+		r = 0x23b9;
+		break;
+	case 0x8a: /* CG 0x6c, up arrow */
+		r = 0x2191;
+		break;
+	case 0x8b: /* CG 0x6d, down arrow */
+		r = 0x2193;
+		break;
+	case 0x8c: /* CG 0xf7, less or equal */
+		r = 0x2264;
+		break;
+	case 0x8d: /* CG 0x49, up stile */
+		r = 0x2308;
+		break;
+	case 0x8e: /* CG 0xf9, down stile */
+		r = 0x230a;
+		break;
+	case 0x8f: /* CG 0xd6, right arrow */
+		r = 0x2192;
+		break;
+	case 0x90: /* CG 0x38, quad */
+		r = 0x2395;
+		break;
+	case 0x91: /* CG 0x89, left solid */
+		r = 0x258c;
+		break;
+	case 0x92: /* CG 0x8a, right solid */
+		r = 0x2590;
+		break;
+	case 0x93: /* CG 0x8b, top solid */
+		r = 0x2580;
+		break;
+	case 0x94: /* CG 0x8c, bottom solid */
+		r = 0x2584;
+		break;
+	case 0x95: /* CG 0x8d, solid */
+		r = 0x25a0;
+		break;
+	case 0x9a: /* CG 0x6a, right shoe */
+		r = 0x2283;
+		break;
+	case 0x9b: /* CG 0x6b, left shoe */
+		r = 0x2282;
+		break;
+	case 0x9c: /* CG 0x9a, splat */
+		r = 0xa4;
+		break;
+	case 0x9d: /* CG 3f, circle */
+		r = 0x25cb;
+		break;
+	case 0x9e: /* CG ba, plusminus */
+		r = 0xb1;
+		break;
+	case 0x9f: /* CG 0x1f, left arrow */
+		r = 0x2190;
+		break;
+	case 0xa0: /* CG 0x54, overbar */
+		r = 0x203e;
+		break;
+	case 0xa1: /* CG 0x3b, degree */
 		r = 0xb0;
+		break;
+	case 0xa2: /* CG 0x92, horizontal line */
+		r = 0x2500;
+		break;
+	case 0xa3: /* CG 0x0x93, bullet */
+		r = 0x2022;
+		break;
+	case 0xaa: /* CG 0x6e, up shoe */
+		r = 0x22c2;
+		break;
+	case 0xab: /* CG 0x6f, down shoe */
+		r = 0x22c3;
+		break;
+	case 0xac: /* CG 0xd7, down tack */
+		r = 0x22a5;
+		break;
+	case 0xad:
+		r = '[';
+		break;
+	case 0xae: /* CG 0xd9, greater or equal */
+		r = 0x2265;
+		break;
+	case 0xaf: /* CG 0xd1, jot */
+		r = 0x2218;
+		break;
+	case 0xb0: /* CG 0x3a, alpha */
+		r = 0x03b1;
+		break;
+	case 0xb1: /* CG 0x1b, epsilon */
+		r = 0x03b5;
+		break;
+	case 0xb2: /* CG 0x1b, iota */
+		r = 0x03b9;
+		break;
+	case 0xb3: /* CG 0x39, rho */
+		r = 0x03c1;
+		break;
+	case 0xb4: /* CG 0xd0, omega */
+		r = 0x03c9;
+		break;
+	case 0xb6: /* CG 0x1e, multiply */
+		r = 0xd7;
+		break;
+	case 0xb7: /* CG 0x4b, slope */
+		r = '\\';
+		break;
+	case 0xb8: /* CG 044c, divide */
+		r = 0xf7;
+		break;
+	case 0xba: /* CG 0x0a, del */
+		r = 0x2207;
+		break;
+	case 0xbb: /* CG 0x0b, delta */
+	    	r = 0x2206;
+		break;
+	case 0xbc: /* CG 0x37, up tack */
+		r = 0x22a4;
+		break;
+	case 0xbd:
+		r = ']';
+		break;
+	case 0xbe: /* CG 0x3e, not equal */
+		r = 0x2260;
+		break;
+	case 0xbf: /* CG 0x15b, stile */
+	case 0x85: /* CG 0x184, vertical line */
+		r = 0x2502;
+		break;
+	case 0xc0: /* CG 0x0f, brace left */
+		r = '{';
+		break;
+	case 0xc1: /* CG 0xa0, superscript left paren */
+		r = 0x207c;
+		break;
+	case 0xc2: /* CG 0xa1, plus2 */
+		r = '+';
+		break;
+	case 0xc3: /* CG 0xa2, solid box */
+		r = 0x220e;
+		break;
+	case 0xc4: /* CG 0xa3, LL corner */
+		r = 0x2514;
+		break;
+	case 0xc5: /* CG 0xa4, UL corner */
+		r = 0x250c;
+		break;
+	case 0xc6: /* CG 0xa5, left tee */
+		r = 0x251c;
+		break;
+	case 0xc7: /* CG 0xa6, bottom tee */
+		r = 0x2534;
+		break;
+	case 0xc8: /* CG 0xa7, section */
+		r = 0xa7;
+		break;
+	case 0xca: /* CG 0x07, up caret tilde */
+		r = 0x2372;
+		break;
+	case 0xcb: /* CG 0x4c, down caret tilde */
+		r = 0x2371;
+		break;
+	case 0xcc: /* CG 0x53, squish quad */
+		r = 0x2337;
+		break;
+	case 0xcd: /* CG 0x43, circle stile */
+		r = 0x233d;
+		break;
+	case 0xce: /* CG 5d, quad slope */
+		r = 0x2342;
+		break;
+	case 0xcf: /* CG 0x46, circle slope */
+		r = 0x2349;
+		break;
+	case 0xd0: /* CG 0x0e, brace right */
+		r = '}';
+		break;
+	case 0xd1: /* CG 0xa9, superscript right paren */
+		r = 0x207e;
+		break;
+	case 0xd2: /* CG 0xaa, minus2 */
+		r = '-';
+		break;
+	case 0xd3: /* CG 0xab, plus */
+		r = 0x253c;
 		break;
 	case 0xd4: /* CG 0xac, LR corner */
 		r = 0x2518;
@@ -358,51 +577,116 @@ apl_to_unicode(unsigned short c)
 	case 0xd5: /* CG 0xad, UR corner */
 		r = 0x2510;
 		break;
-	case 0xc5: /* CG 0xa4, UL corner */
-		r = 0x250c;
-		break;
-	case 0xc4: /* CG 0xa3, LL corner */
-		r = 0x2514;
-		break;
-	case 0xd3: /* CG 0xab, plus */
-		r = 0x253c;
-		break;
-	case 0xa2: /* CG 0x92, horizontal line */
-		r = 0x2500;
-		break;
-	case 0xc6: /* CG 0xa5, left tee */
-		r = 0x251c;
-		break;
 	case 0xd6: /* CG 0xae, right tee */
 		r = 0x2524;
-		break;
-	case 0xc7: /* CG 0xa6, bottom tee */
-		r = 0x2534;
 		break;
 	case 0xd7: /* CG 0xaf, top tee */
 		r = 0x252c;
 		break;
-	case 0xbf: /* CG 0x15b, stile */
-	case 0x85: /* CG 0x184, vertical line */
-		r = 0x2502;
+	case 0xd8: /* CG 0xb0, paragraph */
+		r = 0xb6;
 		break;
-	case 0x8c: /* CG 0xf7, less or equal */
-		r = 0x2264;
+	case 0xda: /* CG 0x67, down tack up (I-beam) */
+		r = 0x2336;
 		break;
-	case 0xae: /* CG 0xd9, greater or equal */
-		r = 0x2265;
+	case 0xdb: /* CG 0x59, quote dot */
+		r = '!';
 		break;
-	case 0xbe: /* CG 0x3e, not equal */
-		r = 0x2260;
+	case 0xdc: /* CG 0x4e, del stile */
+		r = 0x2352;
 		break;
-	case 0xa3: /* CG 0x93, bullet */
-		r = 0x2022;
+	case 0xdd: /* CG 0x44, delta stile */
+		r = 0x234b;
 		break;
-	case 0xad:
-		r = '[';
+	case 0xde: /* CG 0x5e, quad quote */
+		r = 0x235e;
 		break;
-	case 0xbd:
-		r = ']';
+	case 0xdf: /* CG 0x47: up shoe jot */
+		r = 0x235d;
+		break;
+	case 0xe0: /* CG 0x15, equivalent */
+		r = 0x2261;
+		break;
+	case 0xe1: /* CG 0x9d, subscript 1 */
+		r = 0x2081;
+		break;
+	case 0xe2: /* CG 0xb2, subscript 2 */
+		r = 0x0282;
+		break;
+	case 0xe3: /* CG 0xb3, subscript 3 */
+		r = 0x0283;
+		break;
+	case 0xe4: /* CG 0xb4, diaeresis jot */
+		r = 0x2364;
+		break;
+	case 0xe5: /* CG 0xb5, diaeresis circle */
+		r = 0x2365;
+		break;
+	case 0xe6: /* CG 0xb6, comma bar */
+		r = 0x236a;
+		break;
+	case 0xe7: /* CG 0xb7, euro */
+		r = 0x20ac;
+		break;
+	case 0xea: /* CG 0x68, slash bar */
+		r = 0x233f;
+		break;
+	case 0xeb: /* CG 0x78, slope bar */
+		r = 0x2240;
+		break;
+	case 0xec: /* CG 0x73, diaeresis dot */
+		r = 0x2235;
+		break;
+	case 0xed: /* CG 0x63, circle bar */
+		r = 0x2296;
+		break;
+	case 0xee: /* CG 0x7d, quad divide */
+		r = 0x2339;
+		break;
+	case 0xef: /* CG 0x66, up tack jot */
+		r = 0x2355;
+		break;
+	case 0xf0: /* CG 0x20, super 0 */
+		r = 0x2070;
+		break;
+	case 0xf1: /* CG 0x21, super 1 */
+		r = 0xb9;
+		break;
+	case 0xf2: /* CG 0x22, super 2 */
+		r = 0xb2;
+		break;
+	case 0xf3: /* CG 0x23, super 3 */
+		r = 0xb3;
+		break;
+	case 0xf4: /* CG 0x24, super 4 */
+		r = 0x2074;
+		break;
+	case 0xf5: /* CG 0x25, super 5 */
+		r = 0x2075;
+		break;
+	case 0xf6: /* CG 0x26, super 6 */
+		r = 0x2076;
+		break;
+	case 0xf7: /* CG 0x27, super 7 */
+		r = 0x2077;
+		break;
+	case 0xf8: /* CG 0x28, super 8 */
+		r = 0x2078;
+		break;
+	case 0xf9: /* CG 0x29, super 9 */
+		r = 0x2079;
+		break;
+	case 0xfb: /* CG 0x79, del tilde */
+		r = 0x236b;
+		break;
+	case 0xfc: /* CG 0x74, delta underbar */
+		r = 0x2359;
+		break;
+	case 0xfd: /* CG 0x64, circle star */
+		r = 0x235f;
+		break;
+	case 0xfe: /* CG 0x7e, down tack jot */
+		r = 0x24e;
 		break;
 	default:
 		r = -1;
