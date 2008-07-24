@@ -1362,6 +1362,7 @@ key_UCharacter(unsigned long ucs4, enum keytype keytype, enum iaction cause,
 	}
 }
 
+#if !defined(_WIN32) /*[*/
 /*
  * Handle an ordinary character key, given its NULL-terminated multibyte
  * representation.
@@ -1389,6 +1390,7 @@ key_ACharacter(char *mb, enum keytype keytype, enum iaction cause,
 
 	key_UCharacter(ucs4, keytype, cause, skipped);
 }
+#endif /*]*/
 
 
 /*
@@ -3254,7 +3256,7 @@ emulate_input(char *s, int len, Boolean pasting)
 	if (len > w_ibuf_len) {
 		w_ibuf_len = len;
 		w_ibuf = (unsigned long *)Realloc(w_ibuf,
-			w_ibuf_len * sizeof(UChar));
+			w_ibuf_len * sizeof(unsigned long));
 	}
 	len = multibyte_to_unicode_string(s, len, w_ibuf, w_ibuf_len);
 	if (len < 0) {

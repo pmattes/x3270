@@ -1745,9 +1745,14 @@ static unsigned short
 font_index(unsigned short ebc, int d8_ix)
 {
 	unsigned long ucs4;
+	int d;
 
 	ucs4 = ebcdic_to_unicode(ebc, True, True);
-	return display8_lookup(d8_ix, ucs4);
+	d = display8_lookup(d8_ix, ucs4);
+	if (d == 0) {
+	    	d = display8_lookup(d8_ix, ' ');
+	}
+	return d;
 }
 
 /*
@@ -1798,6 +1803,70 @@ apl_to_linedraw(unsigned short c)
 	default:
 	    return -1;
 	}
+}
+
+/* Map an APL character to the current display character set. */
+static XChar2b
+apl_to_udisplay(int d8_ix, unsigned char c)
+{
+	XChar2b x;
+	int u = -1;
+	int d = 0;
+
+	/* Look it up. */
+	u = apl_to_unicode(c);
+	if (u != -1)
+	    	d = display8_lookup(d8_ix, u);
+
+	/* Default to a space. */
+	if (d == 0)
+		d = display8_lookup(d8_ix, ' ');
+
+	/* Return it. */
+	x.byte1 = (d >> 8) & 0xff;
+	x.byte2 = d & 0xff;
+	return x;
+}
+
+/* Map an APL character to the old first-32 8-bit X11 display character set. */
+static XChar2b
+apl_to_ldisplay(unsigned char c)
+{
+	XChar2b x;
+	int u = -1;
+
+	/* Look it up, defaulting to a space. */
+	u = apl_to_linedraw(c);
+	if (u == -1)
+	    	u = ' ';
+
+	/* Return it. */
+	x.byte1 = 0;
+	x.byte2 = u;
+	return x;
+}
+
+/* Map a line-drawing character to the current display character set. */
+static XChar2b
+linedraw_to_udisplay(int d8_ix, unsigned char c)
+{
+	XChar2b x;
+	int u = -1;
+	int d = 0;
+
+	/* Look it up. */
+	u = linedraw_to_unicode(c);
+	if (u != -1)
+	    	d = display8_lookup(d8_ix, u);
+
+	/* Default to a space. */
+	if (d == 0)
+		d = display8_lookup(d8_ix, ' ');
+
+	/* Return it. */
+	x.byte1 = (d >> 8) & 0xff;
+	x.byte2 = d & 0xff;
+	return x;
 }
 
 /*
@@ -1935,19 +2004,11 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 				rt_buf[j].byte2 = ebc2cg0[buffer[i].bits.cc];
 			} else {
 			    	if (ss->font_16bit) {
-					unsigned short c =
-					    display8_lookup(d8_ix,
-						    apl_to_unicode(
-							buffer[i].bits.cc));
-
-					rt_buf[j].byte1 = (c >> 8) & 0xff;
-					rt_buf[j].byte2 = c & 0xff;
+				    	rt_buf[j] = apl_to_udisplay(d8_ix,
+						buffer[i].bits.cc);
 				} else {
-				    	int c =
-					    apl_to_linedraw(buffer[i].bits.cc);
-
-					rt_buf[j].byte1 = 0;
-					rt_buf[j].byte2 = (c == -1)? 0: c;
+				    	rt_buf[j] = apl_to_ldisplay(
+						buffer[i].bits.cc);
 				}
 			}
 			j++;
@@ -1955,13 +2016,8 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 		    case CS_LINEDRAW:	/* DEC line drawing */
 			if (ss->standard_font) {
 			    	if (ss->font_16bit) {
-					unsigned short c =
-					    display8_lookup(d8_ix,
-						    linedraw_to_unicode(
-							buffer[i].bits.cc));
-
-					rt_buf[j].byte1 = (c >> 8) & 0xff;
-					rt_buf[j].byte2 = c & 0xff;
+				    	rt_buf[j] = linedraw_to_udisplay(
+						d8_ix, buffer[i].bits.cc);
 				} else {
 				    	/*
 					 * Assume the first 32 characters are
@@ -2306,11 +2362,11 @@ draw_fields(union sp *buffer, int first, int last)
 				field_color = fa_color(fa);
 			if (visible_control) {
 				if (FA_IS_PROTECTED(fa))
-					b.bits.cc = asc2ebc['P'];
+					b.bits.cc = EBC_P;
 				else if (FA_IS_MODIFIED(fa))
-					b.bits.cc = asc2ebc['M'];
+					b.bits.cc = EBC_M;
 				else
-					b.bits.cc = asc2ebc['U'];
+					b.bits.cc = EBC_U;
 				b.bits.gr = GR_UNDERLINE;
 			}
 		} else {
@@ -2361,13 +2417,13 @@ draw_fields(union sp *buffer, int first, int last)
 					b.bits.cc = EBC_space;
 				else {
 					if (visible_control && c == EBC_null) {
-						b.bits.cc = asc2ebc['.'];
+						b.bits.cc = EBC_period;
 						is_vc = True;
 					} else if (visible_control &&
 					    (c == EBC_so || c == EBC_si)) {
 						b.bits.cc = (c == EBC_so)?
-						    asc2ebc['<']:
-						    asc2ebc['>'];
+						    EBC_less:
+						    EBC_greater;
 						is_vc = True;
 					} else
 						b.bits.cc = c;

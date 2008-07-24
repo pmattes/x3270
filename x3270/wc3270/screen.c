@@ -1381,7 +1381,7 @@ screen_disp(Boolean erasing unused)
 					}
 				} else if (!IS_RIGHT(d)) {
 #endif /*]*/
-				    /* XXX: Need to do undescroe mode for
+				    /* XXX: Need to do undescore mode for
 				     * linedraw and APL.
 				     */
 					if (ea_buf[baddr].cs == CS_LINEDRAW) {
@@ -1400,7 +1400,7 @@ screen_disp(Boolean erasing unused)
 					} else {
 						unsigned short ac;
 
-						ac = ebcdic_to_unicode(ea_buf[baddr].cc, True);
+						ac = ebcdic_to_unicode(ea_buf[baddr].cc, True, False);
 						if (underlined && ac == ' ')
 						    ac = '_';
 						if (toggled(MONOCASE) &&
