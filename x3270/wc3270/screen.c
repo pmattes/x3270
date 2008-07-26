@@ -310,36 +310,6 @@ initscr(void)
 	return chandle;
 }
 
-/* Try to set the console output character set. */
-void
-set_display_charset(char *dcs)
-{
-	char *copy;
-	char *s;
-	char *cs;
-	int want_cp = 0;
-
-	windows_cp = GetConsoleCP();
-
-	copy = strdup(dcs);
-	s = copy;
-	while ((cs = strtok(s, ",")) != NULL) {
-		s = NULL;
-
-		if (!strncmp(cs, "windows-", 8)) {
-			want_cp = atoi(cs + 8);
-			break;
-		} else if (!strncmp(cs, "iso8859-", 8)) {
-			want_cp = 28590 + atoi(cs + 8);
-			break;
-		} else if (!strcmp(cs, "koi8-r")) {
-			want_cp = 20866;
-			break;
-		}
-	}
-	free(copy);
-}
-
 /*
  * Vitrual curses functions.
  */
@@ -847,6 +817,7 @@ screen_init(void)
 		(void) fprintf(stderr, "Can't initialize terminal.\n");
 		x3270_exit(1);
 	}
+	windows_cp = GetConsoleCP();
 
 	/*
 	 * Respect the console size we are given.

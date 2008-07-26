@@ -14,6 +14,9 @@
 # Create version.o from version.txt
 #set -x
 
+# Ensure that 'date' emits 7-bit U.S. ASCII.
+export LANG=C LC_ALL=C
+
 set -e
 
 . ./version.txt

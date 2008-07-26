@@ -1,6 +1,6 @@
 /*
  * Copyright 2004, 2005 by Don Russell.
- * Modifications Copyright 2005, 2007 by Paul Mattes.
+ * Modifications Copyright 2005, 2007, 2008 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -35,6 +35,7 @@
 #include "3270ds.h"
 #include "appres.h"
 
+#include "charsetc.h"
 #include "popupsc.h"
 #include "tablesc.h"
 #include "telnetc.h"
@@ -122,9 +123,12 @@ do_qr_rpqnames(void)
 
 	rpql = obptr++;			/* Save address to place data length. */
 
-	/* Create fixed length portion - program id: x3270 */
+	/*
+	 * Create fixed length portion - program id: x3270
+	 * This is known 8-bit text so we can use asc2ebc0 to translate it.
+	 */
 	for (j = 0; j < 5; j++) {
-		*obptr++ = asc2ebc[(int)"x3270"[j]];
+		*obptr++ = asc2ebc0[(int)"x3270"[j]];
 		remaining--;
 	}
 
@@ -171,11 +175,16 @@ do_qr_rpqnames(void)
 			break;
 
 		case RPQ_VERSION:	/* program version */
+			/*
+			 * Note: It is legal to use asc2ebc0 to translate the
+			 * build string from ASCII to EBCDIC because the build
+			 * string is always generated in the "C" locale.
+			 */
 			x = strlen(build_rpq_version);
 			omit_due_space_limit = (x > remaining);
 			if (!omit_due_space_limit) {
 				for (i = 0; i < x; i++) {
-					*obptr++ = asc2ebc[(int)(*(build_rpq_version+i) & 0xff)];
+					*obptr++ = asc2ebc0[(int)(*(build_rpq_version+i) & 0xff)];
 				}
 			}
 			break;
@@ -451,6 +460,10 @@ get_rpq_user(unsigned char buf[], const int buflen)
 	const char *rpqtext = CN;
 	int x;
 	struct rpq_keyword *kw;
+	char *sbuf, *sbuf0;
+	const char *s;
+	enum me_fail error;
+	int xlen;
 
 	/* id isn't necessarily the table index... locate item */	
 	for (kw = &rpq_keywords[0]; kw -> id != RPQ_USER; kw++) {
@@ -526,28 +539,34 @@ get_rpq_user(unsigned char buf[], const int buflen)
 	}
 
 	/* plain text - subject to ascii/ebcdic translation */
-	for (x=0; ; rpqtext++) {
-		/* colon ends term (unless preceded by \) */
-		if ((*rpqtext == ':') || (*rpqtext == '\0'))
-			break;
 
-		if ( x >= buflen) {
-			x = buflen;
-			rpq_warning("RPQ USER term truncated after %d "
-					"characters", x);
-			break;
-		}
-			
-		/*
-		 * \ means take next char as literal. Skip \ take next char.
-		 * If there is no next char, then we'll take the \
-		 */
-		if ((*rpqtext == '\\') && (*(rpqtext+1) != '\0'))
-			rpqtext++;
-
-		*buf++ = asc2ebc[(int)(*rpqtext & 0xff)];
-		x++;
+	/*
+	 * Copy the source string to a temporary buffer, terminating on 
+	 * ':', unless preceded by '\'.
+	 */
+	sbuf = sbuf0 = Malloc(strlen(rpqtext) + 1);
+	for (s = rpqtext; *s && (*s != ':'); s++) {
+		if (*s == '\\' && *(s + 1)) {
+		    	*sbuf++ = *++s;
+		} else
+		    	*sbuf++ = *s;
 	}
+	*sbuf = '\0';
+
+	/* Translate multibyte to EBCDIC in the target buffer. */
+	xlen = multibyte_to_ebcdic_string(sbuf0, strlen(sbuf0), buf, buflen,
+		&error);
+	if (xlen < 0) {
+		rpq_warning("RPQ USER term translation error");
+		if (buflen) {
+			*buf = asc2ebc0['?'];
+			x = 1;
+		}
+	} else {
+	    	x = xlen;
+	}
+	Free(sbuf0);
+
 	return x;
 }
 

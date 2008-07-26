@@ -21,7 +21,7 @@ all:
 # Development tools.
 
 SOURCES = Cme.c CmeBSB.c CmeLine.c CmplxMenu.c Husk.c about.c actions.c \
-	ansi.c apl.c charset.c child.c ctlr.c dialog.c displau8.c ft.c \
+	ansi.c apl.c charset.c child.c ctlr.c dialog.c display8.c ft.c \
 	ft_cut.c ft_dft.c host.c idle.c keymap.c keypad.c keysym2ucs.c kybd.c \
 	macros.c main.c menubar.c popups.c printer.c print.c proxy.c \
 	resolver.c resources.c rpq.c save.c screen.c scroll.c see.c select.c \
@@ -30,13 +30,14 @@ SOURCES = Cme.c CmeBSB.c CmeLine.c CmplxMenu.c Husk.c about.c actions.c \
 HEADERS = 3270ds.h Cme.h CmeBSB.h CmeBSBP.h CmeLine.h CmeLineP.h CmeP.h \
 	CmplxMenu.h CmplxMenuP.h Husk.h HuskP.h aboutc.h actionsc.h ansic.h \
 	aplc.h appres.h cg.h charsetc.h childc.h ctlr.h ctlrc.h \
-	dialogc.h ftc.h ft_cut_ds.h ft_cutc.h ft_dftc.h ft_dft_ds.h globals.h \
-	hostc.h idlec.h keymapc.h keypadc.h kybdc.h localdefs.h macrosc.h \
-	mainc.h menubarc.h objects.h popupsc.h printerc.h printc.h \
-	proxyc.h resolverc.h resources.h resourcesc.h savec.h screen.h \
-	screenc.h scrollc.h seec.h selectc.h sfc.h statusc.h tablesc.h \
-	arpa_telnet.h telnetc.h tn3270e.h togglesc.h trace_dsc.h unicodec.h \
-	utf8c.h utilc.h w3miscc.h widec.h xioc.h
+	dialogc.h display8c.h ftc.h ft_cut_ds.h ft_cutc.h ft_dftc.h \
+	ft_dft_ds.h globals.h hostc.h idlec.h keymapc.h keypadc.h \
+	keysym2ucs.h kybdc.h localdefs.h macrosc.h mainc.h menubarc.h \
+	objects.h popupsc.h printerc.h printc.h proxyc.h resolverc.h \
+	resources.h resourcesc.h savec.h screen.h screenc.h scrollc.h seec.h \
+	selectc.h sfc.h statusc.h tablesc.h arpa_telnet.h telnetc.h tn3270e.h \
+	togglesc.h trace_dsc.h unicodec.h utf8c.h utilc.h w3miscc.h widec.h \
+	xioc.h
 BITMAPS = keypad.bm dot.bm arrow.bm diamond.bm ky.bm no_diamond.bm no_dot.bm \
 	null.bm locked.bm unlocked.bm wait.bm x3270.bm
 FONTS = 3270-12.bdf 3270-12b.bdf 3270-20.bdf 3270-20b.bdf 3270.bdf 3270b.bdf \
