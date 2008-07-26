@@ -1,5 +1,5 @@
 /*
- * Copyright 1996, 1999, 2000, 2001, 2002, 2003, 2005 by Paul Mattes.
+ * Copyright 1996, 1999, 2000, 2001, 2002, 2003, 2005, 2008 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -28,6 +28,7 @@
 #include "3270ds.h"
 
 #include "actionsc.h"
+#include "charsetc.h"
 #include "ctlrc.h"
 #include "ft_cutc.h"
 #include "ft_cut_ds.h"
@@ -155,7 +156,7 @@ upload_convert(unsigned char *buf, int len)
 		}
 
 		/* Translate to a quadrant index. */
-		ixp = strchr(alphas, ebc2asc[c]);
+		ixp = strchr(alphas, ebc2asc0[c]);
 		if (ixp == (char *)NULL) {
 			/* Try a different quadrant. */
 			oq = quadrant;
@@ -181,7 +182,7 @@ upload_convert(unsigned char *buf, int len)
 		if (ascii_flag && cr_flag && (c == '\r' || c == 0x1a))
 			continue;
 		if (ascii_flag && remap_flag)
-			c = ft2asc[c];
+			c = ft2asc[c]; /* XXX: fix me */
 		*ob++ = c;
 	}
 
@@ -213,7 +214,7 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 
 		/* Translate. */
 		if (ascii_flag && remap_flag)
-			c = asc2ft[c];
+			c = asc2ft[c]; /* XXX: fix me */
 
 		/* Quadrant already defined. */
 		if (quadrant >= 0) {
@@ -221,7 +222,7 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 							NE);
 			if (ixp != (unsigned char *)NULL) {
 				ix = ixp - conv[quadrant].xlate;
-				*ob++ = asc2ebc[(int)alphas[ix]];
+				*ob++ = asc2ebc0[(int)alphas[ix]];
 				continue;
 			}
 		}
@@ -237,7 +238,7 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 				continue;
 			ix = ixp - conv[quadrant].xlate;
 			*ob++ = conv[quadrant].selector;
-			*ob++ = asc2ebc[(int)alphas[ix]];
+			*ob++ = asc2ebc0[(int)alphas[ix]];
 			break;
 		}
 		if (quadrant >= NQ) {
@@ -315,9 +316,23 @@ cut_control_code(void)
 			buf = saved_errmsg;
 			saved_errmsg = CN;
 		} else {
-			bp = buf = Malloc(81);
-			for (i = 0; i < 80; i++)
-				*bp++ = ebc2asc[ea_buf[O_CC_MESSAGE + i].cc];
+		    	int mb_len = 161;
+
+			bp = buf = Malloc(mb_len);
+			for (i = 0; i < 80; i++) {
+			    	int xlen;
+				unsigned long uc;
+
+				xlen = ebcdic_to_multibyte(
+					ea_buf[O_CC_MESSAGE + i].cc,
+					CS_BASE, bp, mb_len, True,
+					TRANS_LOCAL, &uc);
+				if (xlen) {
+				    	bp += xlen - 1;
+					mb_len -= xlen - 1;
+					bp += xlen - 1;
+				}
+			}
 			*bp-- = '\0';
 			while (bp >= buf && *bp == ' ')
 				*bp-- = '\0';
@@ -393,9 +408,9 @@ cut_data_request(void)
 	cs = 0;
 	for (i = 0; i < count; i++)
 		cs ^= ea_buf[O_UP_DATA + i].cc;
-	ctlr_add(O_UP_CSUM, asc2ebc[(int)table6[cs & 0x3f]], 0);
-	ctlr_add(O_UP_LEN, asc2ebc[(int)table6[(count >> 6) & 0x3f]], 0);
-	ctlr_add(O_UP_LEN+1, asc2ebc[(int)table6[count & 0x3f]], 0);
+	ctlr_add(O_UP_CSUM, asc2ebc0[(int)table6[cs & 0x3f]], 0);
+	ctlr_add(O_UP_LEN, asc2ebc0[(int)table6[(count >> 6) & 0x3f]], 0);
+	ctlr_add(O_UP_LEN+1, asc2ebc0[(int)table6[count & 0x3f]], 0);
 
 	/* XXX: Change the data field attribute so it doesn't display. */
 	attr = ea_buf[O_DR_SF].fa;
@@ -427,7 +442,7 @@ from6(unsigned char c)
 {
 	char *p;
 
-	c = ebc2asc[c];
+	c = ebc2asc0[c];
 	p = strchr(table6, c);
 	if (p == CN)
 		return 0;

@@ -1362,7 +1362,7 @@ key_UCharacter(unsigned long ucs4, enum keytype keytype, enum iaction cause,
 	}
 }
 
-#if !defined(_WIN32) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 /*
  * Handle an ordinary character key, given its NULL-terminated multibyte
  * representation.
@@ -2977,8 +2977,8 @@ xim_lookup(XKeyEvent *event)
 			    	char mb[16];
 
 				trace_event("  U+%04x -> "
-				    "EBCDIC SBCS X'%02x'\n",
-				    Ubuf[i] & 0xffff, asc2ebc[asc]); /* XXX */
+				    "EBCDIC SBCS\n",
+				    Ubuf[i] & 0xffff);
 				strncpy(mb, buf, rlen);
 				mb[rlen] = '\0';
 				key_ACharacter(mb, KT_STD, ia_cause, NULL);

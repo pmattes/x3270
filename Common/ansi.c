@@ -1,6 +1,6 @@
 /*
  * Copyright 1993, 1994, 1995, 1996, 1999, 2000, 2001, 2002, 2003, 2005,
- *  2006 by Paul Mattes.
+ *   2006, 2008 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -41,6 +41,7 @@
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace_dsc.h"
+#include "unicodec.h"
 #include "utf8c.h"
 #if defined(X3270_DBCS) /*[*/
 #include "widec.h"
@@ -1054,16 +1055,18 @@ ansi_printing(int ig1 unused, int ig2 unused)
 			ctlr_add(cursor_addr, (unsigned char)(ansi_ch - 0x5f),
 			    CS_LINEDRAW);
 		else
-			ctlr_add(cursor_addr, asc2ebc[ansi_ch], CS_BASE);
+			ctlr_add(cursor_addr, unicode_to_ebcdic(ansi_ch),
+				CS_BASE);
 		break;
 	    case CSD_UK:	/* UK "A" */
 		if (ansi_ch == '#')
 			ctlr_add(cursor_addr, 0x1e, CS_LINEDRAW);
 		else
-			ctlr_add(cursor_addr, asc2ebc[ansi_ch], CS_BASE);
+			ctlr_add(cursor_addr, unicode_to_ebcdic(ansi_ch),
+				CS_BASE);
 		break;
 	    case CSD_US:	/* US "B" */
-		ebc_ch = asc2ebc[ansi_ch];
+		ebc_ch = unicode_to_ebcdic(ansi_ch);
 #if defined(X3270_DBCS) /*[*/
 		d = ctlr_dbcs_state(cursor_addr);
 		if (dbcs) {

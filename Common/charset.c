@@ -26,6 +26,7 @@
 
 #include "globals.h"
 
+#include "3270ds.h"
 #include "resources.h"
 #include "appres.h"
 #include "cg.h"
@@ -55,10 +56,6 @@
 #define EURO_SUFFIX	"-euro"
 #define ES_SIZE		(sizeof(EURO_SUFFIX) - 1)
 
-#if defined(_WIN32) && defined(C3270) /*[*/
-extern void set_display_charset(char *dcs);
-#endif /*]*/
-
 /* Globals. */
 Boolean charset_changed = False;
 #define DEFAULT_CGEN	0x02b90000
@@ -70,77 +67,12 @@ char *converter_names;
 char *encoding;
 
 /* Statics. */
-static enum cs_result resource_charset(char *csname, char *cs, char *ftcs);
-typedef enum { CS_ONLY, FT_ONLY, BOTH } remap_scope;
-static enum cs_result remap_chars(char *csname, char *spec, remap_scope scope,
-    int *ne);
-static void remap_one(unsigned char ebc, KeySym iso, remap_scope scope,
-    Boolean one_way);
-#if defined(DEBUG_CHARSET) /*[*/
-static enum cs_result check_charset(void);
-static char *char_if_ascii7(unsigned long l);
-#endif /*]*/
+static enum cs_result charset_init2(char *csname);
 static void set_cgcsgids(char *spec);
 static int set_cgcsgid(char *spec, unsigned long *idp);
 static void set_charset_name(char *csname);
 
 static char *charset_name = CN;
-
-static void
-charset_defaults(void)
-{
-	/* Go to defaults first. */
-	(void) memcpy((char *)ebc2cg, (char *)ebc2cg0, 256);
-	(void) memcpy((char *)cg2ebc, (char *)cg2ebc0, 256);
-	(void) memcpy((char *)ebc2asc, (char *)ebc2asc0, 256);
-	(void) memcpy((char *)asc2ebc, (char *)asc2ebc0, 256);
-#if defined(X3270_FT) /*[*/
-	(void) memcpy((char *)ft2asc, (char *)ft2asc0, 256);
-	(void) memcpy((char *)asc2ft, (char *)asc2ft0, 256);
-#endif /*]*/
-}
-
-static unsigned char save_ebc2cg[256];
-static unsigned char save_cg2ebc[256];
-static unsigned char save_ebc2asc[256];
-static unsigned char save_asc2ebc[256];
-#if defined(X3270_FT) /*[*/
-static unsigned char save_ft2asc[256];
-static unsigned char save_asc2ft[256];
-#endif /*]*/
-
-static void
-save_charset(void)
-{
-	(void) memcpy((char *)save_ebc2cg, (char *)ebc2cg, 256);
-	(void) memcpy((char *)save_cg2ebc, (char *)cg2ebc, 256);
-	(void) memcpy((char *)save_ebc2asc, (char *)ebc2asc, 256);
-	(void) memcpy((char *)save_asc2ebc, (char *)asc2ebc, 256);
-#if defined(X3270_FT) /*[*/
-	(void) memcpy((char *)save_ft2asc, (char *)ft2asc, 256);
-	(void) memcpy((char *)save_asc2ft, (char *)asc2ft, 256);
-#endif /*]*/
-}
-
-static void
-restore_charset(void)
-{
-	(void) memcpy((char *)ebc2cg, (char *)save_ebc2cg, 256);
-	(void) memcpy((char *)cg2ebc, (char *)save_cg2ebc, 256);
-	(void) memcpy((char *)ebc2asc, (char *)save_ebc2asc, 256);
-	(void) memcpy((char *)asc2ebc, (char *)save_asc2ebc, 256);
-#if defined(X3270_FT) /*[*/
-	(void) memcpy((char *)ft2asc, (char *)save_ft2asc, 256);
-	(void) memcpy((char *)asc2ft, (char *)save_asc2ft, 256);
-#endif /*]*/
-}
-
-/* Get a character set definition. */
-static char *
-get_charset_def(const char *csname)
-{
-	return get_fresource("%s.%s", ResCharset, csname);
-}
 
 #if defined(X3270_DBCS) /*[*/
 /*
@@ -172,9 +104,7 @@ wide_resource_init(char *csname)
 enum cs_result
 charset_init(char *csname)
 {
-	char *cs, *ftcs;
-	enum cs_result rc;
-	char *ccs, *cftcs;
+    	enum cs_result rc;
 #if !defined(_WIN32) /*[*/
 	char *codeset_name;
 #endif /*]*/
@@ -190,72 +120,32 @@ charset_init(char *csname)
 
 	/* Do nothing, successfully. */
 	if (csname == CN || !strcasecmp(csname, "us")) {
-		charset_defaults();
 		set_cgcsgids(CN);
 		set_charset_name(CN);
 #if defined(X3270_DISPLAY) || (defined(C3270) && !defined(_WIN32)) /*[*/
 		(void) screen_new_display_charsets(default_display_charset,
 		    "us");
-#else /*][*/
-#if defined(_WIN32) && defined(C3270) /*[*/
-		set_display_charset("iso8859-1");
-#endif /*]*/
 #endif /*]*/
 		(void) set_uni("us");
 		return CS_OKAY;
 	}
 
-	/* Figure out if it's already in a resource or in a file. */
-	cs = get_charset_def(csname);
-	if (cs == CN &&
-	    strlen(csname) > ES_SIZE &&
-	    !strcasecmp(csname + strlen(csname) - ES_SIZE, EURO_SUFFIX)) {
-		char *basename;
-
-		/* Grab the non-Euro definition. */
-		basename = xs_buffer("%.*s", (int)(strlen(csname) - ES_SIZE),
-			csname);
-		cs = get_charset_def(basename);
-		Free(basename);
+	rc = charset_init2(csname);
+	if (rc != CS_OKAY) {
+	    	/* XXX: Is there more to do here? */
+		return rc;
 	}
-	if (cs == CN)
-		return CS_NOTFOUND;
+
 	if (set_uni(csname) < 0)
 		return CS_NOTFOUND;
 
-	/* Grab the File Transfer character set. */
-	ftcs = get_fresource("%s.%s", ResFtCharset, csname);
-
-	/* Copy strings. */
-	ccs = NewString(cs);
-	cftcs = (ftcs == NULL)? NULL: NewString(ftcs);
-
-	/* Save the current definitions, and start over with the defaults. */
-	save_charset();
-	charset_defaults();
-
-	/* Interpret them. */
-	rc = resource_charset(csname, ccs, cftcs);
-
-	/* Free them. */
-	Free(ccs);
-	Free(cftcs);
-
-#if defined(DEBUG_CHARSET) /*[*/
-	if (rc == CS_OKAY)
-		rc = check_charset();
-#endif /*]*/
-
-	if (rc != CS_OKAY)
-		restore_charset();
 #if defined(X3270_DBCS) /*[*/
-	else if (wide_resource_init(csname) < 0) {
-		restore_charset();
+	if (wide_resource_init(csname) < 0) {
 		return CS_NOTFOUND;
 	}
 #endif /*]*/
 
-	return rc;
+	return CS_OKAY;
 }
 
 /* Set a CGCSGID.  Return 0 for success, -1 for failure. */
@@ -343,27 +233,12 @@ set_charset_name(char *csname)
 	}
 }
 
-/* Define a charset from resources. */
+/* Character set init, part 2. */
 static enum cs_result
-resource_charset(char *csname, char *cs, char *ftcs)
+charset_init2(char *csname)
 {
-	enum cs_result rc;
-	int ne = 0;
 	char *rcs = CN;
 	int n_rcs = 0;
-#if defined(_WIN32) && defined(C3270) /*[*/
-	char *dcs;
-#endif /*]*/
-
-	/* Interpret the spec. */
-	rc = remap_chars(csname, cs, (ftcs == NULL)? BOTH: CS_ONLY, &ne);
-	if (rc != CS_OKAY)
-		return rc;
-	if (ftcs != NULL) {
-		rc = remap_chars(csname, ftcs, FT_ONLY, &ne);
-		if (rc != CS_OKAY)
-			return rc;
-	}
 
 	rcs = get_fresource("%s.%s", ResDisplayCharset, csname);
 
@@ -404,6 +279,9 @@ resource_charset(char *csname, char *cs, char *ftcs)
 		return CS_PREREQ;
 	}
 #else /*][*/
+#if !defined(_WIN32) /*[*/
+	utf8_set_display_charsets(rcs? rcs: default_display_charset, csname);
+#endif /*]*/
 #if defined(X3270_DBCS) /*[*/
 	if (n_rcs > 1)
 		dbcs = True;
@@ -415,296 +293,11 @@ resource_charset(char *csname, char *cs, char *ftcs)
 	/* Set up the cgcsgid. */
 	set_cgcsgids(get_fresource("%s.%s", ResCodepage, csname));
 
-#if defined(_WIN32) && defined(C3270) /*[*/
-       /* See about changing the console output code page. */
-       dcs = get_fresource("%s.%s", ResDisplayCharset, csname);
-       if (dcs != NULL) {
-	       set_display_charset(dcs);
-       } else {
-	       set_display_charset("iso8859-1");
-       }
-#endif /*]*/
-
 	/* Set up the character set name. */
 	set_charset_name(csname);
 
 	return CS_OKAY;
 }
-
-/*
- * Map a keysym name or literal string into a character.
- * Returns NoSymbol if there is a problem.
- */
-static KeySym
-parse_keysym(char *s, Boolean extended)
-{
-	KeySym	k;
-
-	k = StringToKeysym(s);
-	if (k == NoSymbol) {
-		if (strlen(s) == 1)
-			k = *s & 0xff;
-		else if (s[0] == '0' && s[1] == 'x') {
-			unsigned long l;
-			char *ptr;
-
-			l = strtoul(s, &ptr, 16);
-			if (*ptr != '\0' || (l & ~0xffff))
-				return NoSymbol;
-			return (KeySym)l;
-		} else
-			return NoSymbol;
-	}
-	if (k < ' ' || (!extended && k > 0xff))
-		return NoSymbol;
-	else
-		return k;
-}
-
-/* Process a single character definition. */
-static void
-remap_one(unsigned char ebc, KeySym iso, remap_scope scope, Boolean one_way)
-{
-	unsigned char cg;
-
-	/* Ignore mappings of EBCDIC control codes and the space character. */
-	if (ebc <= 0x40)
-		return;
-
-	/* If they want to map to a NULL or a blank, make it a one-way blank. */
-	if (iso == 0x0)
-		iso = 0x20;
-	if (iso == 0x20)
-		one_way = True;
-
-	if (iso <= 0xff) {
-#if defined(X3270_FT) /*[*/
-		unsigned char aa;
-#endif /*]*/
-
-		if (scope == BOTH || scope == CS_ONLY) {
-			if (iso <= 0xff) {
-				cg = asc2cg[iso];
-
-				if (cg2asc[cg] == iso || iso == 0) {
-					/* well-defined */
-					ebc2cg[ebc] = cg;
-					if (!one_way)
-						cg2ebc[cg] = ebc;
-				} else {
-					/* into a hole */
-					ebc2cg[ebc] = CG_boxsolid;
-				}
-			}
-			if (ebc > 0x40) {
-				ebc2asc[ebc] = iso;
-				if (!one_way)
-					asc2ebc[iso] = ebc;
-			}
-		}
-#if defined(X3270_FT) /*[*/
-		if (iso <= 0xff && ebc > 0x40) {
-			/* Change the file transfer translation table. */
-			if (scope == BOTH) {
-				/*
-				 * We have an alternate mapping of an EBCDIC
-				 * code to an ASCII code.  Modify the existing
-				 * ASCII(ft)-to-ASCII(desired) maps.
-				 *
-				 * This is done by figuring out which ASCII
-				 * code the host usually translates the given
-				 * EBCDIC code to (asc2ft0[ebc2asc0[ebc]]).
-				 * Now we want to translate that code to the
-				 * given ISO code, and vice-versa.
-				 */
-				aa = asc2ft0[ebc2asc0[ebc]];
-				if (aa != ' ') {
-					ft2asc[aa] = iso;
-					asc2ft[iso] = aa;
-				}
-			} else if (scope == FT_ONLY) {
-				/*
-				 * We have a map of how the host translates
-				 * the given EBCDIC code to an ASCII code.
-				 * Generate the translation between that code
-				 * and the ISO code that we would normally
-				 * use to display that EBCDIC code.
-				 */
-				ft2asc[iso] = ebc2asc[ebc];
-				asc2ft[ebc2asc[ebc]] = iso;
-			}
-		}
-#endif /*]*/
-	}
-}
-
-/*
- * Parse an EBCDIC character set map, a series of pairs of numeric EBCDIC codes
- * and keysyms.
- *
- * If the keysym is in the range 1..255, it is a remapping of the EBCDIC code
- * for a standard Latin-1 graphic, and the CG-to-EBCDIC map will be modified
- * to match.
- *
- * Otherwise (keysym > 255), it is a definition for the EBCDIC code to use for
- * a multibyte keysym.  This is intended for 8-bit fonts that with special
- * characters that replace certain standard Latin-1 graphics.  The keysym
- * will be entered into the extended keysym translation table.
- */
-static enum cs_result
-remap_chars(char *csname, char *spec, remap_scope scope, int *ne)
-{
-	char *s;
-	char *ebcs, *isos;
-	unsigned char ebc;
-	KeySym iso;
-	int ns;
-	enum cs_result rc = CS_OKAY;
-	Boolean is_table = False;
-	Boolean one_way = False;
-
-	/* Pick apart a copy of the spec. */
-	s = spec = NewString(spec);
-	while (isspace(*s)) {
-		s++;
-	}
-	if (!strncmp(s, "#table", 6)) {
-		is_table = True;
-		s += 6;
-	}
-
-	if (is_table) {
-		int ebc = 0;
-		char *tok;
-		char *ptr;
-
-		while ((tok = strtok(s, " \t\n")) != CN) {
-			if (ebc >= 256) {
-				popup_an_error("Charset has more than 256 "
-				    "entries");
-				rc = CS_BAD;
-				break;
-			}
-			if (tok[0] == '*') {
-				one_way = True;
-				tok++;
-			} else
-				one_way = False;
-			iso = strtoul(tok, &ptr, 0);
-			if (ptr == tok || *ptr != '\0' || iso > 256L) {
-				if (strlen(tok) == 1)
-					iso = tok[0] & 0xff;
-				else {
-					popup_an_error("Invalid charset "
-					    "entry '%s' (#%d)",
-					    tok, ebc);
-					rc = CS_BAD;
-					break;
-				}
-			}
-			remap_one(ebc, iso, scope, one_way);
-
-			ebc++;
-			s = CN;
-		}
-		if (ebc != 256) {
-			popup_an_error("Charset has %d entries, need 256", ebc);
-			rc = CS_BAD;
-		} else {
-			/*
-			 * The entire EBCDIC-to-ASCII mapping has been defined.
-			 * Make sure that any printable ASCII character that
-			 * doesn't now map back onto itself is mapped onto an
-			 * EBCDIC NUL.
-			 */
-			int i;
-
-			for (i = 0; i < 256; i++) {
-				if ((i & 0x7f) > 0x20 && i != 0x7f &&
-						asc2ebc[i] != 0 &&
-						ebc2asc[asc2ebc[i]] != i) {
-					asc2ebc[i] = 0;
-				}
-			}
-		}
-	} else {
-		while ((ns = split_dresource(&s, &ebcs, &isos))) {
-			char *ptr;
-
-			(*ne)++;
-			if (ebcs[0] == '*') {
-				one_way = True;
-				ebcs++;
-			} else
-				one_way = False;
-			if (ns < 0 ||
-			    ((ebc = strtoul(ebcs, &ptr, 0)),
-			     ptr == ebcs || *ptr != '\0') ||
-			    (iso = parse_keysym(isos, True)) == NoSymbol) {
-				popup_an_error("Cannot parse %s \"%s\", entry %d",
-				    ResCharset, csname, *ne);
-				rc = CS_BAD;
-				break;
-			}
-			remap_one(ebc, iso, scope, one_way);
-		}
-	}
-	Free(spec);
-	return rc;
-}
-
-#if defined(DEBUG_CHARSET) /*[*/
-static char *
-char_if_ascii7(unsigned long l)
-{
-	static char buf[6];
-
-	if (((l & 0x7f) > ' ' && (l & 0x7f) < 0x7f) || l == 0xff) {
-		(void) sprintf(buf, " ('%c')", (char)l);
-		return buf;
-	} else
-		return "";
-}
-#endif /*]*/
-
-
-#if defined(DEBUG_CHARSET) /*[*/
-/*
- * Verify that a character set is not ambiguous.
- * (All this checks is that multiple EBCDIC codes map onto the same ISO code.
- *  Hmm.  God, I find the CG stuff confusing.)
- */
-static enum cs_result
-check_charset(void)
-{
-	unsigned long iso;
-	unsigned char ebc;
-	enum cs_result rc = CS_OKAY;
-
-	for (iso = 1; iso <= 255; iso++) {
-		unsigned char multi[256];
-		int n_multi = 0;
-
-		if (iso == ' ')
-			continue;
-
-		for (ebc = 0x41; ebc < 0xff; ebc++) {
-			if (cg2asc[ebc2cg[ebc]] == iso) {
-				multi[n_multi] = ebc;
-				n_multi++;
-			}
-		}
-		if (n_multi > 1) {
-			xs_warning("Display character 0x%02x%s has multiple "
-			    "EBCDIC definitions: X'%02X', X'%02X'%s",
-			    iso, char_if_ascii7(iso),
-			    multi[0], multi[1], (n_multi > 2)? ", ...": "");
-			rc = CS_BAD;
-		}
-	}
-	return rc;
-}
-#endif /*]*/
 
 /* Return the current character set name. */
 char *
@@ -736,7 +329,7 @@ get_charset_name(void)
  * in the high-order bits).  There is no ambiguity because all valid EBCDIC
  * DBCS characters have a nonzero first byte.
  *
- * Returns 0 if 'blank_undef' is set and there is no printable EBCDIC
+ * Returns 0 if 'blank_undef' is clear and there is no printable EBCDIC
  * translation for 'ebc'.
  *
  * Returns '?' in mb[] if there is no local multi-byte representation of
@@ -883,6 +476,34 @@ ebcdic_to_multibyte(unsigned short ebc, unsigned char cs, char mb[],
     return mb_len - outbytesleft;
 
 #endif /*]*/
+}
+
+/*
+ * Convert an EBCDIC string to a multibyte string.
+ * Makes lots of assumptions: standard character set, TRANS_LOCAL, blank_undef.
+ * Returns the length of the multibyte string.
+ */
+int
+ebcdic_to_multibyte_string(unsigned char *ebc, size_t ebc_len, char mb[],
+	size_t mb_len)
+{
+    	int nmb = 0;
+
+    	while (ebc_len && mb_len) {
+	    	int xlen;
+		unsigned long uc;
+
+		xlen = ebcdic_to_multibyte(*ebc, CS_BASE, mb, mb_len, True,
+			TRANS_LOCAL, &uc);
+		if (xlen) {
+		    	mb += xlen - 1;
+			mb_len -= (xlen - 1);
+			nmb += xlen - 1;
+		}
+		ebc++;
+		ebc_len--;
+	}
+	return nmb;
 }
 
 /*
@@ -1062,6 +683,76 @@ multibyte_to_ebcdic(char *mb, size_t mb_len, int *consumedp,
     if (ucs4 == 0)
 	return 0;
     return unicode_to_ebcdic(ucs4);
+}
+
+/*
+ * Convert a local multi-byte string to an EBCDIC string.
+ * Returns the length of the resulting EBCDIC string, or -1 if there is a
+ * conversion error.
+ */
+int
+multibyte_to_ebcdic_string(char *mb, size_t mb_len, unsigned char *ebc,
+	size_t ebc_len, enum me_fail *errorp)
+{
+    int ne = 0;
+    Boolean in_dbcs = False;
+
+    while (mb_len > 0 && ebc_len > 0) {
+	unsigned short e;
+	int consumed;
+
+	e = multibyte_to_ebcdic(mb, mb_len, &consumed, errorp);
+	if (e == 0)
+	    return -1;
+	if (e & 0xff00) {
+	    /* DBCS. */
+	    if (!in_dbcs) {
+		/* Make sure there's room for SO, b1, b2, SI. */
+		if (ebc_len < 4)
+		    return ne;
+		*ebc++ = EBC_so;
+		ebc_len++;
+		ne++;
+		in_dbcs = True;
+	    }
+	    /* Make sure there's room for b1, b2, SI. */
+	    if (ebc_len < 3) {
+		*ebc++ = EBC_si;
+		ne++;
+		return ne;
+	    }
+	    *ebc++ = (e >> 8) & 0xff;
+	    *ebc++ = e & 0xff;
+	    ebc_len -= 2;
+	    ne += 2;
+	} else {
+	    /* SBCS. */
+	    if (in_dbcs) {
+		*ebc++ = EBC_si;
+		ne++;
+		if (!--ebc_len)
+		    return ne;
+		in_dbcs = False;
+	    }
+	    *ebc++ = e & 0xff;
+	    ebc_len--;
+	    ne++;
+	}
+	mb += consumed;
+	mb_len -= consumed;
+    }
+
+    /*
+     * Terminate the DBCS string, if we end inside it.
+     * We're guaranteed to have space for the SI; we checked before adding
+     * the last DBCS character.
+     */
+    if (in_dbcs) {
+	*ebc++ = EBC_si;
+	ne++;
+    }
+
+    return ne;
 }
 
 /*

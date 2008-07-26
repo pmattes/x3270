@@ -1070,7 +1070,7 @@ do_scrolled(void)
 		(void) memcpy((char *)&scrolled[11], (char *)spaces,
 		    sizeof(spaces));
 		for (i = 0; nnn[i]; i++)
-			scrolled[11 + i] = asc2cg[(int)nnn[i]];
+			scrolled[11 + i] = asc2cg0[(int)nnn[i]];
 		status_msg_set(scrolled, sizeof(scrolled));
 	}
 }
@@ -1144,7 +1144,7 @@ do_compose(Boolean on, unsigned char c, enum keytype keytype)
 		status_add(COMPOSE,
 		    (unsigned char)(*standard_font ? 'C' : CG_C), KT_STD);
 		status_add(COMPOSE+1,
-		    c ? (*standard_font ? c : asc2cg[c]) : nullblank, keytype);
+		    c ? (*standard_font ? c : asc2cg0[c]) : nullblank, keytype);
 	} else {
 		status_add(COMPOSE, nullblank, KT_STD);
 		status_add(COMPOSE+1, nullblank, KT_STD);
@@ -1158,7 +1158,7 @@ do_lu(const char *lu)
 
 	for (i = 0; i < LUCNT; i++) {
 		status_add(LU+i,
-		    lu[i]? (*standard_font? lu[i]: asc2cg[(int)lu[i]]):
+		    lu[i]? (*standard_font? lu[i]: asc2cg0[(int)lu[i]]):
 			nullblank,
 		    KT_STD);
 	}
@@ -1179,7 +1179,7 @@ do_timing(char *buf)
 			status_add(T0+1, CG_clockright, KT_STD);
 		}
 		for (i = 0; i < (int) strlen(buf); i++)
-			status_add(T0+2+i, *standard_font ? buf[i] : asc2cg[(unsigned char) buf[i]], KT_STD);
+			status_add(T0+2+i, *standard_font ? buf[i] : asc2cg0[(unsigned char) buf[i]], KT_STD);
 	} else
 		for (i = 0; i < TCNT; i++)
 			status_add(T0+i, nullblank, KT_STD);
@@ -1193,7 +1193,7 @@ do_cursor(char *buf)
 
 	if (buf)
 		for (i = 0; i < (int) strlen(buf); i++)
-			status_add(C0+i, *standard_font ? buf[i] : asc2cg[(unsigned char) buf[i]], KT_STD);
+			status_add(C0+i, *standard_font ? buf[i] : asc2cg0[(unsigned char) buf[i]], KT_STD);
 	else
 		for (i = 0; i < CCNT; i++)
 			status_add(C0+i, nullblank, KT_STD);
@@ -1215,7 +1215,7 @@ make_emsg(unsigned char prefix[], const char *key, int *len)
 
 	(void) memmove(buf, prefix, *len);
 	while (*text)
-		buf[(*len)++] = asc2cg[(int)*text++];
+		buf[(*len)++] = asc2cg0[(int)*text++];
 
 	return buf;
 }
