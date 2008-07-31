@@ -67,8 +67,9 @@ char *converter_names;
 char *encoding;
 
 /* Statics. */
-static enum cs_result charset_init2(char *csname);
-static void set_cgcsgids(char *spec);
+static enum cs_result charset_init2(char *csname, const char *codepage,
+	const char *display_charsets);
+static void set_cgcsgids(const char *spec);
 static int set_cgcsgid(char *spec, unsigned long *idp);
 static void set_charset_name(char *csname);
 
@@ -108,6 +109,8 @@ charset_init(char *csname)
 #if !defined(_WIN32) /*[*/
 	char *codeset_name;
 #endif /*]*/
+	const char *codepage;
+	const char *display_charsets;
 
 #if !defined(_WIN32) /*[*/
 	/* Get all of the locale stuff right. */
@@ -126,18 +129,17 @@ charset_init(char *csname)
 		(void) screen_new_display_charsets(default_display_charset,
 		    "us");
 #endif /*]*/
-		(void) set_uni("us");
+		(void) set_uni("us", &codepage, &display_charsets);
 		return CS_OKAY;
 	}
 
-	rc = charset_init2(csname);
+	if (set_uni(csname, &codepage, &display_charsets) < 0)
+		return CS_NOTFOUND;
+
+	rc = charset_init2(csname, codepage, display_charsets);
 	if (rc != CS_OKAY) {
-	    	/* XXX: Is there more to do here? */
 		return rc;
 	}
-
-	if (set_uni(csname) < 0)
-		return CS_NOTFOUND;
 
 #if defined(X3270_DBCS) /*[*/
 	if (wide_resource_init(csname) < 0) {
@@ -170,7 +172,7 @@ set_cgcsgid(char *spec, unsigned long *r)
 
 /* Set the CGCSGIDs. */
 static void
-set_cgcsgids(char *spec)
+set_cgcsgids(const char *spec)
 {
 	int n_ids = 0;
 	char *spec_copy;
@@ -235,33 +237,28 @@ set_charset_name(char *csname)
 
 /* Character set init, part 2. */
 static enum cs_result
-charset_init2(char *csname)
+charset_init2(char *csname, const char *codepage, const char *display_charsets)
 {
-	char *rcs = CN;
+	const char *rcs = display_charsets;
 	int n_rcs = 0;
-
-	rcs = get_fresource("%s.%s", ResDisplayCharset, csname);
+	char *rcs_copy, *buf, *token;
 
 	/* Isolate the pieces. */
-	if (rcs != CN) {
-		char *rcs_copy, *buf, *token;
-
-		buf = rcs_copy = NewString(rcs);
-		while ((token = strtok(buf, "+")) != CN) {
-			buf = CN;
-			switch (n_rcs) {
-			case 0:
+	buf = rcs_copy = NewString(rcs);
+	while ((token = strtok(buf, "+")) != CN) {
+		buf = CN;
+		switch (n_rcs) {
+		case 0:
 #if defined(X3270_DBCS) /*[*/
-			case 1:
+		case 1:
 #endif /*]*/
-			    break;
-			default:
-			    popup_an_error("Extra %s value(s), ignoring",
-				ResDisplayCharset);
-			    break;
-			}
-			n_rcs++;
+		    break;
+		default:
+		    popup_an_error("Extra %s value(s), ignoring",
+			ResDisplayCharset);
+		    break;
 		}
+		n_rcs++;
 	}
 
 #if defined(X3270_DBCS) /*[*/
@@ -291,7 +288,7 @@ charset_init2(char *csname)
 #endif /*]*/
 
 	/* Set up the cgcsgid. */
-	set_cgcsgids(get_fresource("%s.%s", ResCodepage, csname));
+	set_cgcsgids(codepage);
 
 	/* Set up the character set name. */
 	set_charset_name(csname);
