@@ -105,7 +105,8 @@ do_qr_rpqnames(void)
 					   byte id */
 
 	unsigned char *rpql, *p_term;
-	int term_id,i,j,x;
+	unsigned j;
+	int term_id,i,x;
 	int remaining = 254;	/* maximum data area for rpqname reply */
 	Boolean omit_due_space_limit;
 
@@ -252,7 +253,9 @@ do_qr_rpqnames(void)
 static Boolean
 select_rpq_terms(void) 
 {
-	int i,j,k,len;
+    	size_t i;
+	unsigned j,k;
+	int len;
 	char *uplist;
 	char *p1, *p2;
 	char *kw;

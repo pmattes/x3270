@@ -625,7 +625,7 @@ query_reply_start(void)
 static void
 do_query_reply(unsigned char code)
 {
-	int i;
+	unsigned i;
 	unsigned subindex = 0;
 	Boolean more = False;
 
@@ -682,7 +682,7 @@ do_qr_null(void)
 static void
 do_qr_summary(void)
 {
-	int i;
+	unsigned i;
 	const char *comma = "";
 
 	trace_ds("> QueryReply(Summary(");

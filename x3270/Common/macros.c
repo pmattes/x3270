@@ -2236,7 +2236,7 @@ Snap_action(Widget w unused, XEvent *event unused, String *params,
 	if (!strcasecmp(params[0], action_name(Wait_action))) {
 		long tmo = -1;
 		char *ptr;
-		int maxp = 0;
+		Cardinal maxp = 0;
 
 		if (*num_params > 1 &&
 		    (tmo = strtol(params[1], &ptr, 10)) >= 0 &&

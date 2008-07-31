@@ -1792,7 +1792,7 @@ ansi_send_pf(int nn)
 		35, 36, 37, 38
 	};
 
-	if (nn < 1 || nn > sizeof(code)/sizeof(code[0]))
+	if (nn < 1 || (unsigned)nn > sizeof(code)/sizeof(code[0]))
 		return;
 	(void) sprintf(fn_buf, "\033[%d~", code[nn-1]);
 	net_sends(fn_buf);
