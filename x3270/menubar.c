@@ -268,7 +268,7 @@ add_menu_hier(struct menu_hier *root, char **parents, ArgList args,
 			 */
 			sprintf(namebuf, "csMenu%d", menu_num++);
 			for (i = 0, m = namebuf + strlen(namebuf);
-			     (*parents)[i] && (m - namebuf < sizeof(namebuf));
+			     (*parents)[i] && ((size_t)(m - namebuf) < sizeof(namebuf));
 			     i++) {
 				if (isalnum((*parents)[i])) {
 					*m++ = (*parents)[i];

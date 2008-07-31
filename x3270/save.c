@@ -726,7 +726,7 @@ subst_name(unsigned char *fallbacks)
 	char *s, *t;
 	Boolean eol = True;
 	int nname = 0;
-	int nlen;
+	size_t nlen;
 	int flen;
 	char *new_fallbacks;
 

@@ -544,10 +544,10 @@ unsigned long
 multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 	enum me_fail *errorp)
 {
-    wchar_t wc[3];
     size_t nw;
     unsigned long ucs4;
 #if defined(_WIN32) /*[*/
+    wchar_t wc[3];
 
     /*
      * Use MultiByteToWideChar() to get from the ANSI codepage to UTF-16.
@@ -563,6 +563,7 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
     *consumedp = 1;
     ucs4 = wc[0];
 #elif defined(UNICODE_WCHAR) /*][*/
+    wchar_t wc[3];
     /* wchar_t's are Unicode. */
 
     /* mbtowc() will translate to Unicode. */
@@ -595,7 +596,7 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 	char utf8buf[16];
 
 	/* Translate from local MB to UTF-8 using iconv(). */
-	inbuf = mb;
+	inbuf = (char *)mb;
 	outbuf = utf8buf;
 	inbytesleft = mb_len;
 	outbytesleft = sizeof(utf8buf);
@@ -605,6 +606,7 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 		*errorp = ME_INVALID;
 	    else
 		*errorp = ME_SHORT;
+	    (void) iconv(i_mb2u, NULL, NULL, NULL, NULL);
 	    return 0;
 	}
 	*consumedp = mb_len - inbytesleft;
@@ -787,6 +789,7 @@ unicode_to_multibyte(unsigned long ucs4, char *mb, size_t mb_len)
     char u8b[16];
     char *inbuf, *outbuf;
     size_t inbytesleft, outbytesleft;
+    size_t nc;
 
     /* Use iconv. */
 
@@ -808,7 +811,7 @@ unicode_to_multibyte(unsigned long ucs4, char *mb, size_t mb_len)
     outbuf = mb;
     outbytesleft = mb_len;
     nc = iconv(i_u2mb, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
-    if (nc < 0) {
+    if (nc == (size_t)-1) {
 	mb[0] = '?';
 	mb[1] = '\0';
 	return 2;
@@ -816,7 +819,7 @@ unicode_to_multibyte(unsigned long ucs4, char *mb, size_t mb_len)
 
     /* Return to the initial shift state. */
     nc = iconv(i_u2mb, NULL, NULL, &outbuf, &outbytesleft);
-    if (nc < 0) {
+    if (nc == (size_t)-1) {
 	mb[0] = '?';
 	mb[1] = '\0';
 	return 0;

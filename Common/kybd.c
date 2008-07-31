@@ -254,7 +254,7 @@ kybdlock_decode(char *how, unsigned int bits)
 	char *s = buf;
 	char *space = "";
 
-	if (bits == -1)
+	if (bits == (unsigned int)-1)
 	    	return "all";
 	if (bits & KL_OERR_MASK) {
 	    	s += sprintf(s, "%sOERR(", how);
@@ -3253,7 +3253,7 @@ emulate_input(char *s, int len, Boolean pasting)
 	/*
 	 * Convert from a multi-byte string to a Unicode string.
 	 */
-	if (len > w_ibuf_len) {
+	if ((size_t)len > w_ibuf_len) {
 		w_ibuf_len = len;
 		w_ibuf = (unsigned long *)Realloc(w_ibuf,
 			w_ibuf_len * sizeof(unsigned long));
@@ -3868,7 +3868,7 @@ MyStringToKeysym(char *s, enum keytype *keytypep, unsigned long *ucs4)
 
 	/* Look for a valid local multibyte character. */
 	*ucs4 = multibyte_to_unicode(s, strlen(s), &consumed, &error);
-	if (consumed != strlen(s))
+	if ((size_t)consumed != strlen(s))
 	    	*ucs4 = 0;
 	return NoSymbol;
 }
@@ -4261,7 +4261,7 @@ Default_action(Widget w unused, XEvent *event, String *params, Cardinal *num_par
 				unsigned long ucs4;
 
 			    	ucs4 = keysym2ucs(ks);
-				if (ucs4 != -1) {
+				if (ucs4 != (unsigned long)-1) {
 				    	key_UCharacter(ucs4, KT_STD, IA_KEY,
 						NULL);
 				} else {

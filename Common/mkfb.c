@@ -55,7 +55,7 @@ struct {
 	unsigned long ifndefs;
 	unsigned lno;
 } ss[SSSZ];
-int ssp = 0;
+unsigned ssp = 0;
 
 struct {
 	const char *name;
@@ -157,7 +157,7 @@ main(int argc, char *argv[])
 	char buf[BUFSZ];
 	int lno = 0;
 	int cc = 0;
-	int i;
+	unsigned i;
 	int continued = 0;
 	const char *filename = "standard input";
 	FILE *u, *t, *tc = NULL, *tm = NULL, *o;
@@ -206,7 +206,7 @@ main(int argc, char *argv[])
 	while (fgets(buf, BUFSZ, stdin) != (char *)NULL) {
 		char *s = buf;
 		int sl;
-		int i;
+		unsigned i;
 
 		lno++;
 

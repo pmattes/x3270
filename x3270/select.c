@@ -665,7 +665,7 @@ SelectUp_action(Widget w unused, XEvent *event, String *params,
 {
 	int x, y;
 	register int baddr;
-	int i;
+	Cardinal i;
 
 	action_debug(SelectUp_action, event, params, num_params);
 	if (event == NULL) {
@@ -830,7 +830,7 @@ KybdSelect_action(Widget w unused, XEvent *event, String *params,
 {
 	enum { UP, DOWN, LEFT, RIGHT } direction;
 	int x_start, x_end;
-	int i;
+	Cardinal i;
 
 	action_debug(KybdSelect_action, event, params, num_params);
 	if (event == NULL) {
@@ -932,7 +932,7 @@ void
 SelectAll_action(Widget w unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
-	int i;
+	Cardinal i;
 
 	action_debug(SelectUp_action, event, params, num_params);
 	if (event == NULL) {

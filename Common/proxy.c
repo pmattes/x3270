@@ -423,7 +423,7 @@ proxy_http(int fd, char *host, unsigned short port)
 		    	continue;
 		if (rbuf[nread] == '\n')
 		    	break;
-		if (++nread >= sizeof(rbuf)) {
+		if ((size_t)++nread >= sizeof(rbuf)) {
 			nread = sizeof(rbuf) - 1;
 		    	break;
 		}
@@ -495,7 +495,7 @@ proxy_socks4(int fd, char *host, unsigned short port, int force_a)
 			memcpy(&ipaddr, hp->h_addr, hp->h_length);
 		} else {
 			ipaddr.s_addr = inet_addr(host);
-			if (ipaddr.s_addr == -1)
+			if (ipaddr.s_addr == (in_addr_t)-1)
 				use_4a = 1;
 		}
 	}
@@ -583,7 +583,7 @@ proxy_socks4(int fd, char *host, unsigned short port, int force_a)
 		}
 		if (nr == 0)
 		    	break;
-		if (++nread >= sizeof(rbuf))
+		if ((size_t)++nread >= sizeof(rbuf))
 		    	break;
 	}
 

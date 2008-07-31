@@ -22,4 +22,4 @@ extern char *locale_codeset;
 
 extern void set_codeset(char *codeset_name);
 extern int unicode_to_utf8(unsigned long ucs4, char *utf8);
-extern int utf8_to_unicode(char *utf8, int len, unsigned long *ucs4);
+extern int utf8_to_unicode(const char *utf8, int len, unsigned long *ucs4);

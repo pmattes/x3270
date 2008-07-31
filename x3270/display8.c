@@ -1116,7 +1116,7 @@ display8_lookup(int d8_ix, unsigned long ucs4)
 	}
 
 	/* Handle more errors. */
-	if (d8_ix >= ND8)
+	if ((unsigned)d8_ix >= ND8)
 	    	return 0;
 
 	/* Check for a match in the proper table. */

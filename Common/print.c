@@ -602,7 +602,7 @@ void
 PrintText_action(Widget w unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
-	int i;
+	Cardinal i;
 	char *filter = CN;
 	Boolean secure = appres.secure;
 	ptype_t ptype = P_TEXT;

@@ -4298,7 +4298,7 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
     Boolean is_dbcs)
 {
 	unsigned long svalue;
-	int i;
+	unsigned i;
 	char *family_name = NULL;
 	char *font_encoding = NULL;
 	char *font_charset = NULL;

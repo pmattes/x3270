@@ -116,7 +116,7 @@ unicode_to_utf8(unsigned long ucs4, char *utf8)
  * encoding length (often used to get past spam filters and such).
  */
 int
-utf8_to_unicode(char *utf8, int len, unsigned long *ucs4)
+utf8_to_unicode(const char *utf8, int len, unsigned long *ucs4)
 {
     /* No input is by definition incomplete. */
     if (!len)
