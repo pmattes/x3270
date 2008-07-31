@@ -352,12 +352,12 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 			ob += store_download(i_ft2asc[e & 0xff], ob);
 			ob += store_download(EBC_si, ob);
 #else /*][*/
-			ob += store_download('?');
+			ob += store_download('?', ob);
 #endif /*]*/
+		} else if (e == 0) {
+		    	ob += store_download('?', ob);
 		} else {
-			unsigned char a = i_ft2asc[e];
-
-			ob += store_download(a, ob);
+			ob += store_download(i_ft2asc[e], ob);
 		}
 		buf += consumed;
 		len -= consumed;

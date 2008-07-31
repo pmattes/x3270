@@ -510,6 +510,9 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 		*bufptr = '?';
 		return 1;
 #endif /*]*/
+	} else if (e == 0) {
+		*bufptr = '?';
+		return 1;
 	} else {
 	    	*bufptr = i_ft2asc[e];
 		return 1;
