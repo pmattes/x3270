@@ -24,7 +24,3 @@ extern unsigned short ebc2asc[256];
 extern unsigned short ebc2asc0[256];
 extern unsigned short asc2ebc0[256];
 extern unsigned short ebc2uc[256];
-extern unsigned short ft2asc[256];
-extern unsigned short ft2asc0[256];
-extern unsigned short asc2ft[256];
-extern unsigned short asc2ft0[256];

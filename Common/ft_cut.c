@@ -38,6 +38,7 @@
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace_dsc.h"
+#include "unicodec.h"
 #include "utilc.h"
 
 static Boolean cut_xfer_in_progress = False;
@@ -100,7 +101,7 @@ static int quadrant = -1;
 static unsigned long expanded_length;
 static char *saved_errmsg = CN;
 
-#define XLATE_NBUF	4
+#define XLATE_NBUF	32
 static int xlate_buffered = 0;			/* buffer count */
 static int xlate_buf_ix = 0;			/* buffer index */
 static unsigned char xlate_buf[XLATE_NBUF];	/* buffer */
@@ -117,17 +118,19 @@ static unsigned from6(unsigned char c);
 static int xlate_getc(void);
 
 /*
- * Convert a buffer for uploading (host->local).  Overwrites the buffer.
+ * Convert a buffer for uploading (host->local).
  * Returns the length of the converted data.
  * If there is a conversion error, calls cut_abort() and returns -1.
  */
 static int
-upload_convert(unsigned char *buf, int len)
+upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 {
-	unsigned char *ob0 = buf;
+	unsigned char *ob0 = obuf;
 	unsigned char *ob = ob0;
+	int nx;
+	unsigned long uc;
 
-	while (len--) {
+	while (len-- && obuf_len) {
 		unsigned char c = *buf++;
 		char *ixp;
 		int ix;
@@ -181,12 +184,116 @@ upload_convert(unsigned char *buf, int len)
 		c = conv[quadrant].xlate[ix];
 		if (ascii_flag && cr_flag && (c == '\r' || c == 0x1a))
 			continue;
-		if (ascii_flag && remap_flag)
-			c = ft2asc[c]; /* XXX: fix me */
-		*ob++ = c;
+		if (!(ascii_flag && remap_flag)) {
+		    	/* No further translation necessary. */
+		    	*ob++ = c;
+			obuf_len--;
+			continue;
+		}
+
+		/*
+		 * Convert to local multi-byte.
+		 * We do that by inverting the host's EBCDIC-to-ASCII map,
+		 * getting back to EBCDIC, and converting to multi-byte from
+		 * there.
+		 */
+
+#if defined(X3270_DBCS) /*[*/
+		switch (ft_dbcs_state) {
+		    case FT_DBCS_NONE:
+			if (c == EBC_so) {
+			    	ft_dbcs_state = FT_DBCS_SO;
+				continue;
+			}
+			/* fall through to non-DBCS case below */
+			break;
+		    case FT_DBCS_SO:
+			if (c == EBC_si)
+			    	ft_dbcs_state = FT_DBCS_NONE;
+			else {
+			    	ft_dbcs_byte1 = c;
+				ft_dbcs_state = FT_DBCS_LEFT;
+			}
+			continue;
+		    case FT_DBCS_LEFT:
+			if (c == EBC_si) {
+			    	ft_dbcs_state = FT_DBCS_NONE;
+				continue;
+			}
+			nx = ebcdic_to_multibyte((ft_dbcs_byte1 << 8) | c,
+				CS_DBCS, (char *)ob, obuf_len, True,
+				TRANS_LOCAL, &uc);
+			if (nx && (ob[nx - 1] == '\0'))
+				nx--;
+			ob += nx;
+			obuf_len -= nx;
+			ft_dbcs_state = FT_DBCS_SO;
+			continue;
+		}
+#endif /*]*/
+
+		if (c < 0x20 || ((c >= 0x80 && c < 0xa0 && c != 0x9f))) {
+		    	/*
+			 * Control code, treat it as Unicode.
+			 *
+			 * Note that IND$FILE and the VM 'TYPE' command think
+			 * that EBCDIC X'E1' is a control code; IND$FILE maps
+			 * it onto ASCII 0x9f.  So we skip it explicitly and
+			 * treat it as printable here.
+			 */
+		    	nx = unicode_to_multibyte(c, (char *)ob, obuf_len);
+		} else {
+		    	/* Displayable character, remap. */
+			c = i_asc2ft[c];
+			nx = ebcdic_to_multibyte(c, CS_BASE, (char *)ob,
+				obuf_len, True, TRANS_LOCAL, &uc);
+		}
+		if (nx && (ob[nx - 1] == '\0'))
+			nx--;
+		ob += nx;
+		obuf_len -= nx;
 	}
 
 	return ob - ob0;
+}
+
+/*
+ * Store a download (local->host) character.
+ * Returns the number of bytes stored.
+ */
+static int
+store_download(unsigned char c, unsigned char *ob)
+{
+	unsigned char *ixp;
+	unsigned ix;
+	int oq;
+
+	/* Quadrant already defined. */
+	if (quadrant >= 0) {
+		ixp = (unsigned char *)memchr(conv[quadrant].xlate, c, NE);
+		if (ixp != (unsigned char *)NULL) {
+			ix = ixp - conv[quadrant].xlate;
+			*ob++ = asc2ebc0[(int)alphas[ix]];
+			return 1;
+		}
+	}
+
+	/* Locate a quadrant. */
+	oq = quadrant;
+	for (quadrant = 0; quadrant < NQ; quadrant++) {
+		if (quadrant == oq)
+			continue;
+		ixp = (unsigned char *)memchr(conv[quadrant].xlate, c, NE);
+		if (ixp == (unsigned char *)NULL)
+			continue;
+		ix = ixp - conv[quadrant].xlate;
+		*ob++ = conv[quadrant].selector;
+		*ob++ = asc2ebc0[(int)alphas[ix]];
+		return 2;
+	}
+	quadrant = -1;
+	fprintf(stderr, "Oops\n");
+	return 0;
 }
 
 /* Convert a buffer for downloading (local->host). */
@@ -196,11 +303,12 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 	unsigned char *ob0 = xobuf;
 	unsigned char *ob = ob0;
 
-	while (len--) {
-		unsigned char c = *buf++;
-		unsigned char *ixp;
-		unsigned ix;
-		int oq;
+	while (len) {
+		unsigned char c = *buf;
+		int consumed;
+		enum me_fail error;
+		unsigned short e;
+		unsigned long u;
 
 		/* Handle nulls separately. */
 		if (!c) {
@@ -209,44 +317,52 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 				*ob++ = conv[quadrant].selector;
 			}
 			*ob++ = XLATE_NULL;
+			len--;
 			continue;
 		}
 
-		/* Translate. */
-		if (ascii_flag && remap_flag)
-			c = asc2ft[c]; /* XXX: fix me */
-
-		/* Quadrant already defined. */
-		if (quadrant >= 0) {
-			ixp = (unsigned char *)memchr(conv[quadrant].xlate, c,
-							NE);
-			if (ixp != (unsigned char *)NULL) {
-				ix = ixp - conv[quadrant].xlate;
-				*ob++ = asc2ebc0[(int)alphas[ix]];
-				continue;
-			}
-		}
-
-		/* Locate a quadrant. */
-		oq = quadrant;
-		for (quadrant = 0; quadrant < NQ; quadrant++) {
-			if (quadrant == oq)
-				continue;
-			ixp = (unsigned char *)memchr(conv[quadrant].xlate, c,
-				    NE);
-			if (ixp == (unsigned char *)NULL)
-				continue;
-			ix = ixp - conv[quadrant].xlate;
-			*ob++ = conv[quadrant].selector;
-			*ob++ = asc2ebc0[(int)alphas[ix]];
-			break;
-		}
-		if (quadrant >= NQ) {
-			quadrant = -1;
-			fprintf(stderr, "Oops\n");
+		if (!(ascii_flag && remap_flag)) {
+			ob += store_download(c, ob);
+			buf++;
+			len--;
 			continue;
 		}
+
+		/*
+		 * Translate.
+		 *
+		 * The host uses a fixed EBCDIC-to-ASCII translation table,
+		 * which was derived empirically into i_ft2asc/i_asc2ft.
+		 * Invert that so that when the host applies its conversion,
+		 * it gets the right EBCDIC code.
+		 *
+		 * DBCS is a guess at this point, assuming that SO and SI
+		 * are unmodified by IND$FILE.
+		 */
+		u = multibyte_to_unicode((const char *)buf, len, &consumed,
+			&error);
+		if (u < 0x20 || ((u >= 0x80 && u < 0xa0)))
+		    	e = i_asc2ft[u];
+		else
+		    	e = unicode_to_ebcdic(u);
+		if (e & 0xff00) {
+#if defined(X3270_DBCS) /*[*/
+			ob += store_download(EBC_so, ob);
+			ob += store_download(i_ft2asc[(e >> 8) & 0xff], ob);
+			ob += store_download(i_ft2asc[e & 0xff], ob);
+			ob += store_download(EBC_si, ob);
+#else /*][*/
+			ob += store_download('?');
+#endif /*]*/
+		} else {
+			unsigned char a = i_ft2asc[e];
+
+			ob += store_download(a, ob);
+		}
+		buf += consumed;
+		len -= consumed;
 	}
+
 	return ob - ob0;
 }
 
@@ -330,7 +446,6 @@ cut_control_code(void)
 				if (xlen) {
 				    	bp += xlen - 1;
 					mb_len -= xlen - 1;
-					bp += xlen - 1;
 				}
 			}
 			*bp-- = '\0';
@@ -456,6 +571,7 @@ static void
 cut_data(void)
 {
 	static unsigned char cvbuf[O_RESPONSE - O_DT_DATA];
+	static unsigned char cvobuf[4 * (O_RESPONSE - O_DT_DATA)];
 	unsigned short raw_length;
 	int conv_length;
 	register int i;
@@ -481,12 +597,12 @@ cut_data(void)
 		cut_ack();
 		return;
 	}
-	conv_length = upload_convert(cvbuf, raw_length);
+	conv_length = upload_convert(cvbuf, raw_length, cvobuf, sizeof(cvobuf));
 	if (conv_length < 0)
 		return;
 
 	/* Write it to the file. */
-	if (fwrite((char *)cvbuf, conv_length, 1, ft_local_file) == 0) {
+	if (fwrite((char *)cvobuf, conv_length, 1, ft_local_file) == 0) {
 		char *msg;
 
 		msg = xs_buffer("write(%s): %s", ft_local_filename,
@@ -540,9 +656,12 @@ xlate_getc(void)
 {
 	int r;
 	int c;
-	unsigned char cc;
-	unsigned char cbuf[4];
+	unsigned char cbuf[32];
 	int nc;
+	int consumed;
+	enum me_fail error;
+	char mb[16];
+	int mb_len = 0;
 
 	/* If there is a data buffered, return it. */
 	if (xlate_buffered) {
@@ -552,11 +671,18 @@ xlate_getc(void)
 		return r;
 	}
 
-	/* Get the next byte from the file. */
-	c = fgetc(ft_local_file);
-	if (c == EOF)
-		return c;
-	ft_length++;
+	/* Get the next (possibly multi-byte) character from the file. */
+	do {
+		c = fgetc(ft_local_file);
+		if (c == EOF)
+			return c;
+		ft_length++;
+		mb[mb_len++] = c;
+		error = ME_NONE;
+		(void) multibyte_to_unicode(mb, mb_len, &consumed, &error);
+		if (error == ME_INVALID)
+		    	return -1;
+	} while (error == ME_SHORT);
 
 	/* Expand it. */
 	if (ascii_flag && cr_flag && !ft_last_cr && c == '\n') {
@@ -567,8 +693,7 @@ xlate_getc(void)
 	}
 
 	/* Convert it. */
-	cc = (unsigned char)c;
-	nc += download_convert(&cc, 1, &cbuf[nc]);
+	nc += download_convert((unsigned char *)mb, mb_len, &cbuf[nc]);
 
 	/* Return it and buffer what's left. */
 	r = cbuf[0];
