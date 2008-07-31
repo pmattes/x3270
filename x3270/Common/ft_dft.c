@@ -432,7 +432,6 @@ store_inbyte(unsigned char c, unsigned char **bufptr, size_t *numbytes)
 static size_t
 dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 {
-    	unsigned char *bp0 = bufptr;
     	char inbuf[16];
 	int in_ix = 0;
 	char c;
@@ -501,6 +500,8 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 		e = unicode_to_ebcdic(u);
 	if (e & 0xff00) {
 #if defined(X3270_DBCS) /*[*/
+		unsigned char *bp0 = bufptr;
+
 	    	store_inbyte(EBC_so,                    &bufptr, &numbytes);
 		store_inbyte(i_ft2asc[(e >> 8) & 0xff], &bufptr, &numbytes);
 		store_inbyte(i_ft2asc[e & 0xff],        &bufptr, &numbytes);
