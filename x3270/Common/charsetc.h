@@ -54,11 +54,11 @@ enum me_fail {
     ME_INVALID,		/* invalid sequence */
     ME_SHORT		/* incomplete sequence */
 };
-extern unsigned long multibyte_to_unicode(char *mb, size_t mb_len, 
+extern unsigned long multibyte_to_unicode(const char *mb, size_t mb_len, 
 	int *consumedp, enum me_fail *errorp);
 extern int multibyte_to_unicode_string(char *mb, size_t mb_len,
 	unsigned long *ucs4, size_t u_len);
-extern unsigned short multibyte_to_ebcdic(char *mb, size_t mb_len, 
+extern unsigned short multibyte_to_ebcdic(const char *mb, size_t mb_len, 
 	int *consumedp, enum me_fail *errorp);
 extern int multibyte_to_ebcdic_string(char *mb, size_t mb_len, 
 	unsigned char *ebc, size_t ebc_len, enum me_fail *errorp);

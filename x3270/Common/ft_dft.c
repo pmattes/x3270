@@ -29,12 +29,14 @@
 #include "ft_dft_ds.h"
 
 #include "actionsc.h"
+#include "charsetc.h"
 #include "kybdc.h"
 #include "ft_dftc.h"
 #include "ftc.h"
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace_dsc.h"
+#include "unicodec.h"
 #include "utilc.h"
 
 #include <errno.h>
@@ -47,6 +49,8 @@ extern unsigned char aid;
 
 #define DFT_MIN_BUF	256
 #define DFT_MAX_BUF	32768
+
+#define DFT_MAX_UNGETC	32
 
 /* Typedefs. */
 struct data_buffer {
@@ -70,6 +74,8 @@ static char *abort_string = CN;
 static unsigned char *dft_savebuf = NULL;
 static int dft_savebuf_len = 0;
 static int dft_savebuf_max = 0;
+static unsigned char dft_ungetc_cache[DFT_MAX_UNGETC];
+static size_t dft_ungetc_count = 0;
 
 static void dft_abort(const char *s, unsigned short code);
 static void dft_close_request(void);
@@ -78,7 +84,6 @@ static void dft_get_request(void);
 static void dft_insert_request(void);
 static void dft_open_request(unsigned short len, unsigned char *cp);
 static void dft_set_cur_req(void);
-static int filter_len(char *s, register int len);
 
 /* Process a Transfer Data structured field from the host. */
 void
@@ -169,6 +174,7 @@ dft_open_request(unsigned short len, unsigned char *cp)
 	}
 	dft_eof = False;
 	recnum = 1;
+	dft_ungetc_count = 0;
 
 	/* Acknowledge the Open. */
 	trace_ds("> WriteStructuredField FileTransferData OpenAck\n");
@@ -247,40 +253,120 @@ dft_data_insert(struct data_buffer *data_bufr)
 			Free(msgp);
 		}
 	} else if (my_length > 0) {
-		/* Write the data out to the file. */
 		int rv = 1;
 
-		if (ascii_flag && remap_flag) {
-			/* Filter. */
+		/* Write the data out to the file. */
+	    	if (ascii_flag && (remap_flag | cr_flag)) {
+			size_t obuf_len = 4 * my_length;
+			char *ob0 = Malloc(obuf_len);
+			char *ob = ob0;
 			unsigned char *s = (unsigned char *)data_bufr->data;
 			unsigned len = my_length;
+			int nx;
+			unsigned long uc;
 
-			while (len--) {
-				*s = ft2asc[*s];
-				s++;
-			}
-		}
-		if (ascii_flag && cr_flag) {
-			char *s = (char *)data_bufr->data;
-			unsigned len = my_length;
+			/* Copy and convert data_bufr->data to ob0. */
+			while (len-- && obuf_len) {
+			    	unsigned char c = *s++;
 
-			/* Delete CRs and ^Zs. */
-			while (len) {
-				unsigned l = filter_len(s, len);
-
-				if (l) {
-					rv = fwrite(s, l, (size_t)1,
-					    ft_local_file);
-					if (rv == 0)
-						break;
-					ft_length += l;
+				/* Strip CR's and ^Z's. */
+				if (cr_flag && ((c == '\r' || c == 0x1a))) {
+					continue;
 				}
-				if (l < len)
-					l++;
-				s += l;
-				len -= l;
+
+				if (!remap_flag) {
+				    	*ob++ = c;
+					obuf_len--;
+					continue;
+				}
+
+				/* XXX: Apply the control-code exemption
+				 * to the upload case and to both cases in
+				 * the CUT-mode code.  Then test with a real
+				 * multi-byte file on the workstation.
+				 */
+
+				/*
+				 * Convert to local multi-byte.
+				 * We do that by inverting the host's
+				 * EBCDIC-to-ASCII map, getting back to
+				 * EBCDIC, and converting to multi-byte
+				 * from there.
+				 */
+
+#if defined(X3270_DBCS) /*[*/
+				switch (ft_dbcs_state) {
+				    case FT_DBCS_NONE:
+					if (c == EBC_so) {
+						ft_dbcs_state = FT_DBCS_SO;
+						continue;
+					}
+					/*
+					 * fall through to non-DBCS case below
+					 */
+					break;
+				    case FT_DBCS_SO:
+					if (c == EBC_si)
+						ft_dbcs_state = FT_DBCS_NONE;
+					else {
+						ft_dbcs_byte1 = c;
+						ft_dbcs_state = FT_DBCS_LEFT;
+					}
+					continue;
+				    case FT_DBCS_LEFT:
+					if (c == EBC_si) {
+						ft_dbcs_state = FT_DBCS_NONE;
+						continue;
+					}
+					nx = ebcdic_to_multibyte(
+						(ft_dbcs_byte1 << 8) | c,
+						CS_DBCS, (char *)ob, obuf_len,
+						True, TRANS_LOCAL, &uc);
+					if (nx && (ob[nx - 1] == '\0'))
+						nx--;
+					ob += nx;
+					obuf_len -= nx;
+					ft_dbcs_state = FT_DBCS_SO;
+					continue;
+				}
+#endif /*]*/
+
+				if (c < 0x20 ||
+				    (c >= 0x80 && c < 0xa0 && c != 0x9f)) {
+				    	/*
+					 * Control code, treat it as Unicode.
+					 *
+					 * Note that IND$FILE and the VM 'TYPE'
+					 * command think that EBCDIC X'E1' is
+					 * a control code; IND$FILE maps it
+					 * onto ASCII 0x9f.  So we skip it
+					 * explicitly and treat it as printable
+					 * here.
+					 */
+				    	nx = unicode_to_multibyte(c, ob,
+						obuf_len);
+				} else {
+				    	/* Displayable character, remap. */
+					c = i_asc2ft[c];
+					nx = ebcdic_to_multibyte(c, CS_BASE,
+						(char *)ob, obuf_len, True,
+						TRANS_LOCAL, &uc);
+				}
+				if (nx && (ob[nx - 1] == '\0'))
+					nx--;
+				ob += nx;
+				obuf_len -= nx;
 			}
+
+			/* Write the result to the file. */
+			if (ob - ob0) {
+				rv = fwrite(ob0, ob - ob0, (size_t)1,
+				    ft_local_file);
+				ft_length += ob - ob0;
+			}
+			Free(ob0);
 		} else {
+		    	/* Write the buffer to the file directly. */
 			rv = fwrite((char *)data_bufr->data, my_length,
 				(size_t)1, ft_local_file);
 			ft_length += my_length;
@@ -323,11 +409,118 @@ dft_set_cur_req(void)
 	/* Currently doesn't do anything. */
 }
 
+#if defined(X3270_DBCS) /*[*/
+/* Store a byte inthe input buffer or ungetc cache. */
+static void
+store_inbyte(unsigned char c, unsigned char **bufptr, size_t *numbytes)
+{
+    	if (*numbytes) {
+	    	*(*bufptr) = c;
+		(*bufptr)++;
+		*numbytes--;
+	} else {
+	    	dft_ungetc_cache[dft_ungetc_count++] = c;
+	}
+}
+#endif /*]*/
+
+/*
+ * Read a character from a local file in ASCII mode.
+ * Stores the data in 'bufptr' and returns the number of bytes stored.
+ * Returns -1 for EOF.
+ */
+static size_t
+dft_ascii_read(unsigned char *bufptr, size_t numbytes)
+{
+    	unsigned char *bp0 = bufptr;
+    	char inbuf[16];
+	int in_ix = 0;
+	char c;
+	enum me_fail error;
+	unsigned short e;
+	int consumed;
+	unsigned long u;
+
+	/* Belt-n-suspenders. */
+	if (!numbytes)
+	    	return 0;
+
+	/* Return data from the ungetc cache first. */
+    	if (dft_ungetc_count) {
+	    	size_t nm = dft_ungetc_count;
+
+		if (nm > numbytes)
+		    	nm = numbytes;
+		memcpy(bufptr, dft_ungetc_cache, nm);
+		if (dft_ungetc_count > nm)
+		    	memmove(dft_ungetc_cache, &dft_ungetc_cache[nm],
+				dft_ungetc_count - nm);
+		dft_ungetc_count -= nm;
+		return nm;
+	}
+
+	/* Read bytes until we have a legal multibyte sequence. */
+	do {
+	    	int consumed;
+
+	    	c = fgetc(ft_local_file);
+		if (c == EOF)
+		    	return -1;
+		error = ME_NONE;
+		inbuf[in_ix++] = c;
+		(void) multibyte_to_unicode(inbuf, in_ix, &consumed, &error);
+		if (error == ME_INVALID) {
+#if defined(EILSEQ) /*[*/
+		    	errno = EILSEQ;
+#else /*][*/
+			errno = EINVAL;
+#endif /*]*/
+		    	return -1;
+		}
+	} while (error == ME_SHORT);
+
+	/* Expand NL to CR/LF. */
+	if (cr_flag && !ft_last_cr && c == '\n') {
+	    	*bufptr = '\r';
+	    	dft_ungetc_cache[0] = '\n';
+		dft_ungetc_count = 1;
+		return 1;
+	}
+	ft_last_cr = (c == '\r');
+
+	/*
+	 * Translate, inverting the host's fixed EBCDIC-to-ASCII conversion
+	 * table and applying the host code page.
+	 * Control codes are treated as Unicode and mapped directly.
+	 * We also handle DBCS here.
+	 */
+	u = multibyte_to_unicode(inbuf, in_ix, &consumed, &error);
+	if (u < 0x20 || ((u >= 0x80 && u < 0xa0)))
+	    	e = i_asc2ft[u];
+	else
+		e = unicode_to_ebcdic(u);
+	if (e & 0xff00) {
+#if defined(X3270_DBCS) /*[*/
+	    	store_inbyte(EBC_so,                    &bufptr, &numbytes);
+		store_inbyte(i_ft2asc[(e >> 8) & 0xff], &bufptr, &numbytes);
+		store_inbyte(i_ft2asc[e & 0xff],        &bufptr, &numbytes);
+	    	store_inbyte(EBC_si,                    &bufptr, &numbytes);
+		return bp0 - bufptr;
+#else /*][*/
+		*bufptr = '?';
+		return 1;
+#endif /*]*/
+	} else {
+	    	*bufptr = i_ft2asc[e];
+		return 1;
+	}
+}
+
 /* Process a Get request. */
 static void
 dft_get_request(void)
 {
-	int numbytes;
+	size_t numbytes;
 	size_t numread;
 	size_t total_read = 0;
 	unsigned char *bufptr;
@@ -342,56 +535,33 @@ dft_get_request(void)
 	/* Read a buffer's worth. */
 	set_dft_buffersize();
 	space3270out(dft_buffersize);
-	numbytes = dft_buffersize - 27; /* always read 5 bytes less than we're allowed */
+	numbytes = dft_buffersize - 27; /* always read 5 bytes less than we're
+					   allowed */
 	bufptr = obuf + 17;
 	while (!dft_eof && numbytes) {
-		if (ascii_flag && cr_flag) {
-			int c;
-
-			/* Read one byte and do CR/LF translation. */
-			c = fgetc(ft_local_file);
-			if (c == EOF) {
-				break;
+	    	if (ascii_flag) {
+		    	numread = dft_ascii_read(bufptr, numbytes);
+			if (numread == (size_t)-1) {
+				dft_eof = True;
+			    	break;
 			}
-			if (!ft_last_cr && c == '\n') {
-				if (numbytes < 2) {
-					/*
-					 * Not enough room to expand NL to
-					 * CR/LF.
-					 */
-					ungetc(c, ft_local_file);
-					break;
-				}
-				*bufptr++ = '\r';
-				numbytes--;
-				total_read++;
-			}
-			ft_last_cr = (c == '\r');
-			*bufptr++ = remap_flag? asc2ft[c]: c;
-			numbytes--;
-			total_read++;
+			bufptr += numread;
+			numbytes -= numread;
+			total_read += numread;
 		} else {
 			/* Binary read. */
 			numread = fread(bufptr, 1, numbytes, ft_local_file);
 			if (numread <= 0) {
 				break;
 			}
-			if (ascii_flag && remap_flag) {
-				unsigned char *s = bufptr;
-				int i = numread;
-
-				while (i) {
-					*s = asc2ft[*s];
-					s++;
-					i--;
-				}
-			}
 			bufptr += numread;
 			numbytes -= numread;
 			total_read += numread;
-		}
-		if (feof(ft_local_file) || ferror(ft_local_file)) {
-			break;
+			if (feof(ft_local_file))
+				dft_eof = True;
+			if (feof(ft_local_file) || ferror(ft_local_file)) {
+				break;
+			}
 		}
 	}
 
@@ -425,10 +595,6 @@ dft_get_request(void)
 		obptr += total_read;
 
 		ft_length += total_read;
-
-		if (feof(ft_local_file)) {
-			dft_eof = True;
-		}
 	} else {
 		trace_ds("> WriteStructuredField FileTransferData EOF\n");
 		*obptr++ = HIGH8(TR_GET_REQ);
@@ -497,19 +663,6 @@ dft_abort(const char *s, unsigned short code)
 
 	/* Update the pop-up and state. */
 	ft_aborting();
-}
-
-/* Returns the number of bytes in s, limited by len, that aren't CRs or ^Zs. */
-static int
-filter_len(char *s, register int len)
-{
-	register char *t = s;
-
-	while (len && *t != '\r' && *t != 0x1a) {
-		len--;
-		t++;
-	}
-	return t - s;
 }
 
 /* Processes a Read Modified command when there is upload data pending. */

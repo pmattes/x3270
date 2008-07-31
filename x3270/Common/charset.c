@@ -541,7 +541,7 @@ mb_max_len(int len)
  * Also returns the number of characters consumed.
  */
 unsigned long
-multibyte_to_unicode(char *mb, size_t mb_len, int *consumedp,
+multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 	enum me_fail *errorp)
 {
     wchar_t wc[3];
@@ -567,11 +567,12 @@ multibyte_to_unicode(char *mb, size_t mb_len, int *consumedp,
 
     /* mbtowc() will translate to Unicode. */
     nw = mbtowc(wc, mb, mb_len);
-    if (nw < 0) {
+    if (nw == (size_t)-1) {
 	if (errno == EILSEQ)
 	    *errorp = ME_INVALID;
 	else
 	    *errorp = ME_SHORT;
+	(void) mbtowc(NULL, NULL, 0);
 	return 0;
     }
 
@@ -674,7 +675,7 @@ multibyte_to_unicode_string(char *mb, size_t mb_len, unsigned long *ucs4,
  * are UTF-16 strings, not OEM-codepage bytes.
  */
 unsigned short
-multibyte_to_ebcdic(char *mb, size_t mb_len, int *consumedp,
+multibyte_to_ebcdic(const char *mb, size_t mb_len, int *consumedp,
 	enum me_fail *errorp)
 {
     unsigned long ucs4;
