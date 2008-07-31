@@ -1742,12 +1742,14 @@ resync_text(int baddr, int len, union sp *buffer)
  * be 16 bits as well.
  */
 static unsigned short
-font_index(unsigned short ebc, int d8_ix)
+font_index(unsigned short ebc, int d8_ix, Boolean upper)
 {
 	unsigned long ucs4;
 	int d;
 
 	ucs4 = ebcdic_to_unicode(ebc, True, True);
+	if (upper && ucs4 < 0x80 && islower(ucs4))
+	    	ucs4 = toupper(ucs4);
 	d = display8_lookup(d8_ix, ucs4);
 	if (d == 0) {
 	    	d = display8_lookup(d8_ix, ' ');
@@ -1964,23 +1966,23 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 			rt_buf[j].byte1 = 0;
 			if (toggled(MONOCASE))
 				rt_buf[j].byte2 =
-				    font_index(ebc2uc[buffer[i].bits.cc],
-					    d8_ix);
+				    font_index(buffer[i].bits.cc, d8_ix, True);
 			else {
 				if (visible_control) {
 					if (buffer[i].bits.cc == EBC_so) {
 						rt_buf[j].byte1 = 0;
 						rt_buf[j].byte2 =
-						    font_index(EBC_less, d8_ix);
+						    font_index(EBC_less, d8_ix,
+							    False);
 					} else if (buffer[i].bits.cc == EBC_si) {
 						rt_buf[j].byte1 = 0;
 						rt_buf[j].byte2 =
 						    font_index(EBC_greater,
-							    d8_ix);
+							    d8_ix, False);
 					} else {
 					    	unsigned short c = font_index(
 							buffer[i].bits.cc,
-							d8_ix);
+							d8_ix, False);
 
 						rt_buf[j].byte1 =
 						    (c >> 8) & 0xff;
@@ -1988,7 +1990,8 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 					}
 				} else {
 				    	unsigned short c = font_index(
-						buffer[i].bits.cc, d8_ix);
+						buffer[i].bits.cc, d8_ix,
+						False);
 
 					rt_buf[j].byte1 =
 					    (c >> 8) & 0xff;
@@ -2047,11 +2050,12 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 				i++;
 			} else {
 				rt_buf[j].byte1 = 0;
-				rt_buf[j].byte2 = font_index(EBC_space, d8_ix);
+				rt_buf[j].byte2 = font_index(EBC_space, d8_ix,
+					False);
 			}
 #else /*][*/
 			rt_buf[j].byte1 = 0;
-			rt_buf[j].byte2 = font_index(EBC_space, d8_ix);
+			rt_buf[j].byte2 = font_index(EBC_space, d8_ix, False);
 #endif /*]*/
 			j++;
 			break;
