@@ -149,6 +149,18 @@ static String status_string;
 static struct timeval t0;		/* Starting time */
 static Boolean ft_is_cut;		/* File transfer is CUT-style */
 
+static unsigned char ind_file[] = {
+    0x89, /* i */
+    0x95, /* n */
+    0x84, /* d */
+    0x5b, /* $ */
+    0x86, /* f */
+    0x89, /* i */
+    0x93, /* l */
+    0x85, /* e */
+    0x00
+};
+
 /* Translation table: "ASCII" to EBCDIC, as seen by IND$FILE. */
 unsigned char i_asc2ft[256] = {
 0x00,0x01,0x02,0x03,0x37,0x2d,0x2e,0x2f,0x16,0x05,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,
@@ -1024,17 +1036,6 @@ ft_start(void)
 	char updated_buffersize[128];
 	unsigned flen;
 	char *ft_command;
-	static unsigned char ind_file[] = {
-	    0x89, /* i */
-	    0x95, /* n */
-	    0x84, /* d */
-	    0x5b, /* $ */
-	    0x86, /* f */
-	    0x89, /* i */
-	    0x93, /* l */
-	    0x85, /* e */
-	    0x00
-	};
 
 	ft_is_action = False;
 
@@ -1192,13 +1193,15 @@ ft_start(void)
 		unsigned long uc;
 
 		for (s = ind_file; *s != 0x00; s++) {
-		    	(void) ebcdic_to_multibyte(*s, CS_BASE, &ft_command[i],
+		    	int nx;
+
+		    	nx = ebcdic_to_multibyte(*s, CS_BASE, &ft_command[i],
 				sizeof(ft_command) - i, False, TRANS_LOCAL,
 				&uc);
-			i++;
+			if (nx)
+				i += nx - 1;
 		}
-		ind_file[i] = '\0';
-
+		ft_command[i] = '\0';
 	}
 
 	/* Build the whole command. */
@@ -1950,32 +1953,32 @@ Transfer_action(Widget w unused, XEvent *event, String *params,
 	}
 
 	/*
-	 * Unless the user specified a particular file transfer command,
-	 * translate 'ind$file' so that it will have the proper EBCDIC value,
-	 * regardless of the local character set.
+	 * Translate 'ind$file' so that it will have the proper EBCDIC value,
+	 * regardless of the host character set.
 	 */
-	if (appres.ft_command != CN) {
-		ft_command = appres.ft_command;
-	} else {
-		char *s = "ind$file";
-		char *t;
-		unsigned char c;
+	ft_command = Malloc(sizeof(ind_file) * 2);
+	{
+	    	unsigned char *s;
+		int i = 0;
+		unsigned long uc;
 
-		ft_command = Malloc(strlen(s) + 1);
-		t = ft_command;
+		for (s = ind_file; *s != 0x00; s++) {
+		    	int nx;
 
-		while ((c = *s++)) {
-			*t++ = ebc2asc[asc2ebc0[c & 0xff]];
+		    	nx = ebcdic_to_multibyte(*s, CS_BASE, &ft_command[i],
+				sizeof(ft_command) - i, False, TRANS_LOCAL,
+				&uc);
+			if (nx)
+			    	i += nx - 1;
 		}
-		*t = '\0';
+		ft_command[i] = '\0';
 	}
 
 	/* Build the whole command. */
 	cmd = xs_buffer("%s %s %s%s\\n",
 	    ft_command,
 	    receive_flag ? "get" : "put", ft_host_filename, op);
-	if (appres.ft_command == CN)
-		Free(ft_command);
+	Free(ft_command);
 
 	/* Erase the line and enter the command. */
 	flen = kybd_prime();
