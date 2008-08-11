@@ -1178,11 +1178,9 @@ osc_start(void)
  * Return a 'selection' version of a given character on the screen.
  * Returns a printable ASCII character, or 0 if the character is a NULL and
  * shouldn't be included in the selection.
- * Also returns in 'ge' whether or not an ESC (0x1b) should be included
- * in front of the character.
  */
 static void
-onscreen_char(int baddr, unsigned char *r, int *rlen, Boolean *ge)
+onscreen_char(int baddr, unsigned char *r, int *rlen)
 {
 	static int osc_baddr;
 	static unsigned char fa;
@@ -1213,9 +1211,6 @@ onscreen_char(int baddr, unsigned char *r, int *rlen, Boolean *ge)
 		osc_baddr = baddr;
 		osc_valid = True;
 	}
-
-	/* Assume it isn't a graphic escape. */
-	*ge = False;
 
 	/* If it isn't visible, then make it a blank. */
 	if (FA_IS_ZERO(fa)) {
@@ -1298,14 +1293,9 @@ onscreen_char(int baddr, unsigned char *r, int *rlen, Boolean *ge)
 			    	/*
 				 * No translation, or we're in APL mode and the
 				 * GE character maps back onto a non-GE
-				 * character.  Use the funky GE/ESC convention.
-				 * Eventually we may define private-use
-				 * characters for these instead, just like for
-				 * DUP and FM.
+				 * character.  Use private-use characters.
 				 */
-				*ge = True;
-				uc = ebcdic_to_unicode(ea_buf[baddr].cc,
-					True, False);
+				uc = UPRIV_GE_00 + ea_buf[baddr].cc;
 			}
 			*rlen = unicode_to_utf8(uc, (char *)r);
 			if (*rlen < 0)
@@ -1387,7 +1377,6 @@ grab_sel(int start, int end, Boolean really, Time t)
 {
 	register int i, j;
 	int start_row, end_row;
-	Boolean ge;
 	int nulls = 0;
 	unsigned char osc[16];
 	int len;
@@ -1420,16 +1409,12 @@ grab_sel(int start, int end, Boolean really, Time t)
 					nulls = 0;
 					store_sel('\n');
 				}
-				onscreen_char(i, osc, &len, &ge);
+				onscreen_char(i, osc, &len);
 				for (j = 0; j < len; j++) {
 					if (osc[j]) {
 						while (nulls) {
 							store_sel(' ');
 							nulls--;
-						}
-						if (ge) {
-							store_sel('\033');
-							ge = False;
 						}
 						store_sel((char)osc[j]);
 					} else
@@ -1442,7 +1427,7 @@ grab_sel(int start, int end, Boolean really, Time t)
 			Boolean all_blank = True;
 
 			for (i = end; i < end + (COLS - (end % COLS)); i++) {
-				onscreen_char(i, osc, &len, &ge);
+				onscreen_char(i, osc, &len);
 				for (j = 0; j < len; j++) {
 					if (osc[j]) {
 						all_blank = False;
@@ -1468,16 +1453,12 @@ grab_sel(int start, int end, Boolean really, Time t)
 			for (i = start; i <= end; i++) {
 				SET_SELECT(i);
 				if (really) {
-					onscreen_char(i, osc, &len, &ge);
+					onscreen_char(i, osc, &len);
 					for (j = 0; j < len; j++) {
 						if (osc[j]) {
 							while (nulls) {
 								store_sel(' ');
 								nulls--;
-							}
-							if (ge) {
-								store_sel('\033');
-								ge = False;
 							}
 							store_sel((char)osc[j]);
 						} else
@@ -1514,16 +1495,12 @@ grab_sel(int start, int end, Boolean really, Time t)
 					SET_SELECT(row*COLS + col);
 					if (really) {
 						onscreen_char(row*COLS + col,
-						    osc, &len, &ge);
+						    osc, &len);
 						for (j = 0; j < len; j++) {
 							if (osc[j]) {
 								while (nulls) {
 									store_sel(' ');
 									nulls--;
-								}
-								if (ge) {
-									store_sel('\033');
-									ge = False;
 								}
 								store_sel((char)osc[j]);
 							} else

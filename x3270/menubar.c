@@ -60,7 +60,7 @@
 
 #define MACROS_MENU	"macrosMenu"
 
-#define MAX_MENU_OPTIONS	30
+#define MAX_MENU_OPTIONS	/*30*/100
 
 extern Widget		keypad_shell;
 extern int		linemode;

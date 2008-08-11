@@ -125,6 +125,7 @@ static uni_t *cur_uni = NULL;
  *  is set, they are returned as U+f8fe and U+feff (private-use) respectively
  *  so they can be displayed with overscores in the special 3270 font;
  *  otherwise they are returned as '*' and ';'.
+ * EBCDIC 'EO' is also special-cased to U+25cf.
  *
  * If blank_undef is set, other undisplayable characters are returned as
  *  spaces; otherwise they are returned as 0.
@@ -142,10 +143,10 @@ ebcdic_to_unicode(unsigned short c, Boolean blank_undef, Boolean for_display)
 
     } else switch (c) {
 
-	case EBC_dup:
-	    return for_display? 0xf8ff: '*';
 	case EBC_fm:
-	    return for_display? 0xf8fe: ';';
+	    return for_display? UPRIV_fm: ';';
+	case EBC_dup:
+	    return for_display? UPRIV_dup: '*';
 	case EBC_eo:
 	    return 0x25cf; /* solid circle */
 	default:

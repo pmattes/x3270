@@ -19,6 +19,7 @@
 
 #include "globals.h"
 
+#include "3270ds.h"
 #include "display8c.h"
 
 #define ISO10646_IX	100
@@ -1107,9 +1108,9 @@ display8_lookup(int d8_ix, unsigned long ucs4)
 
 	/* Handle ISO 10646-1 (almost-direct mapping). */
 	if (d8_ix == ISO10646_IX) {
-		if (ucs4 == 0xf8fe)
+		if (ucs4 == UPRIV_fm)
 			return ';';
-		else if (ucs4 == 0xf8ff)
+		else if (ucs4 == UPRIV_dup)
 			return '*';
 		else
 			return (int)ucs4;
@@ -1126,9 +1127,9 @@ display8_lookup(int d8_ix, unsigned long ucs4)
 	}
 
 	/* Handle the private-use values for FM and DUP. */
-	if (ucs4 == 0xf8fe)
+	if (ucs4 == UPRIV_fm)
 	    	return ';';
-	if (ucs4 == 0xf8ff)
+	if (ucs4 == UPRIV_dup)
 	    	return '*';
 
 	/* Give up. */

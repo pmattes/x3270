@@ -3368,12 +3368,12 @@ emulate_input(char *s, int len, Boolean pasting)
 						KT_STD, ia,
 						&skipped);
 				break;
-			    case 0xf8fe: /* private-use FM */
+			    case UPRIV_fm: /* private-use FM */
 				if (pasting)
 					key_Character(EBC_fm, False, True,
 						&skipped);
 				break;
-			    case 0xf8ff: /* private-use DUP */
+			    case UPRIV_dup: /* private-use DUP */
 				if (pasting)
 					key_Character(EBC_dup, False, True,
 						&skipped);
@@ -3397,7 +3397,14 @@ emulate_input(char *s, int len, Boolean pasting)
 					break;
 				}
 #endif /*]*/
-				key_UCharacter(c, KT_STD, ia, &skipped);
+				if (pasting &&
+					(c >= UPRIV_GE_00 &&
+					 c <= UPRIV_GE_ff))
+					key_Character(c - UPRIV_GE_00, KT_GE,
+						ia, &skipped);
+				else
+					key_UCharacter(c, KT_STD, ia,
+						&skipped);
 				break;
 			}
 			break;

@@ -247,7 +247,7 @@ x3270.charsetList:			U.S. English (CP 37): us-intl\n\
 ! x3270.visualSelectColor:		6
 !
 ! Fonts listed on the Options menu and for screen resizing
-x3270.emulatorFontList.3270cg-1a,3270cg-1,iso8859-1: \
+x3270.emulatorFontList.3270cg-1a,3270cg-1,iso10646-1,iso8859-1: \
 					3270 Font (14 point): #resize 3270\n\
 					8-point Font: #resize 3270gt8\n\
 					12-point Font: #resize 3270-12\n\
@@ -255,7 +255,7 @@ x3270.emulatorFontList.3270cg-1a,3270cg-1,iso8859-1: \
 					20-point Font: #resize 3270-20\n\
 					24-point Font: #resize 3270gt24\n\
 					32-point Font: #resize 3270gt32
-x3270.emulatorFontList.3270cg-15a,3270cg-15,iso8859-15: \
+x3270.emulatorFontList.3270cg-15a,3270cg-15,iso10646-1,iso8859-15: \
 					3270 Font (14 point): #resize 3270e\n\
 					8-point Font: #resize 3270egt8\n\
 					12-point Font: #resize 3270e-12\n\

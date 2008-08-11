@@ -4144,7 +4144,7 @@ lff_single(const char *name, const char *reqd_display_charset, Boolean is_dbcs)
 	const char *font_csname = "?";
 	int i;
 	int best = -1;
-	const char *best_weight = CN;
+	char *best_weight = CN;
 	unsigned long best_pixel_size = 0L;
 	Boolean scalable;
 	char *wname = CN;
@@ -4252,7 +4252,8 @@ lff_single(const char *name, const char *reqd_display_charset, Boolean is_dbcs)
 			       strcasecmp(wname, "bold"))))) {
 				best = i;
 				if (w)
-					best_weight = wname;
+					Replace(best_weight,
+						XtNewString(wname));
 				best_pixel_size = pixel_size;
 #if defined(DEBUG_FONTPICK) /*[*/
 				printf("best pixel size: %ld '%s'\n", pixel_size, matches[i]);
@@ -4266,6 +4267,8 @@ lff_single(const char *name, const char *reqd_display_charset, Boolean is_dbcs)
 	}
 	if (wname != NULL)
 	    	XtFree(wname);
+	if (best_weight != NULL)
+	    	XtFree(best_weight);
 	if (best < 0) {
 	    XFreeFontInfo(matches, f, count);
 	    return xs_buffer("None of the %d fonts matching\n"
@@ -4872,7 +4875,7 @@ add_font_to_menu(char *label, char *font)
 	}
 	f->font = NewString(font);
 	f->next = NULL;
-	f->label = label;
+	/*f->label = label;*/
 	if (font_list)
 		font_last->next = f;
 	else
