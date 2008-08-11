@@ -331,6 +331,12 @@
 #define EBC_M		0xd4
 #define EBC_U		0xe4
 
+/* Unicode private-use definitions. */
+#define UPRIV_GE_00	0xf700	/* first GE */
+#define UPRIV_GE_ff	0xf7ff	/* last GE */
+#define UPRIV_fm	0xf8fe
+#define UPRIV_dup	0xf8ff
+
 /* BIND definitions. */
 #define BIND_RU			0x31
 #define BIND_OFF_PLU_NAME_LEN	26
