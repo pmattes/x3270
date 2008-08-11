@@ -72,8 +72,6 @@ static struct pr3o {
 	char buf[PRINTER_BUF];	/* input buffer */
 } printer_stdout = { -1, 0L, 0L, 0 },
   printer_stderr = { -1, 0L, 0L, 0 };
-static char charset_file[256];	/* /tmp/cs$PID */
-static Boolean need_cs = False;
 
 #if !defined(_WIN32) /*[*/
 static void	printer_output(void);
@@ -118,7 +116,7 @@ printer_start(const char *lu)
 	const char *s;
 	char *cmd_text;
 	char c;
-	char charset_cmd[256];	/* -charset @/tmp/cs$PID */
+	char charset_cmd[256];	/* -charset <csname> */
 	char *proxy_cmd = CN;	/* -proxy <spec> */
 #if defined(_WIN32) /*[*/
 	char *tmp;
@@ -187,17 +185,7 @@ printer_start(const char *lu)
 #endif /*]*/
 
 	/* Construct the charset option. */
-#if defined(_WIN32) /*[*/
-	if ((tmp = getenv("TMP"))) {
-		(void) sprintf(charset_file, "%s\\cs%u", tmp, getpid());
-	} else {
-		(void) sprintf(charset_file, "cs%u", getpid());
-	}
-#else /*][*/
-	(void) sprintf(charset_file, "/tmp/cs%u", getpid());
-#endif /*]*/
-	(void) sprintf(charset_cmd, "-charset @%s", charset_file);
-	need_cs = False;
+	(void) sprintf(charset_cmd, "-charset %s", get_charset_name());
 
 	/* Construct proxy option. */
 	if (appres.proxy != CN) {
@@ -231,13 +219,11 @@ printer_start(const char *lu)
 #endif /*]*/
 	s = cmdline;
 	while ((s = strstr(s, "%R%")) != CN) {
-		need_cs = True;
 		cmd_len += strlen(charset_cmd) - 3;
 		s += 3;
 	}
 	s = cmdline;
 	while ((s = strstr(s, "%P%")) != CN) {
-		need_cs = True;
 		cmd_len += (proxy_cmd? strlen(proxy_cmd): 0) - 3;
 		s += 3;
 	}
@@ -279,44 +265,6 @@ printer_start(const char *lu)
 		(void) strcat(cmd_text, buf1);
 	}
 	trace_dsn("Printer command line: %s\n", cmd_text);
-
-	/* Create the character set file. */
-	if (need_cs) {
-		FILE *f = fopen(charset_file, "w");
-		int i;
-
-		if (f == NULL) {
-		    popup_an_errno(errno, charset_file);
-		    Free(cmd_text);
-		    if (proxy_cmd != CN)
-			    Free(proxy_cmd);
-		    return;
-		}
-		(void) fprintf(f, "# EBCDIC-to-ASCII conversion file "
-		    "for pr3287\n");
-		(void) fprintf(f, "# Created by %s\n", build);
-		(void) fprintf(f, "# Chararter set is '%s'\n",
-		    get_charset_name());
-		(void) fprintf(f, "cgcsgid=0x%08lx\n", cgcsgid);
-#if defined(X3270_DBCS) /*[*/
-		if (dbcs) {
-			(void) fprintf(f, "cgcsgid_dbcs=0x%08lx\n",
-				       cgcsgid_dbcs);
-			if (encoding != CN)
-				(void) fprintf(f, "encoding=%s\n",
-					       encoding);
-			(void) fprintf(f, "converters=%s\n",
-				       converter_names);
-		}
-#endif /*]*/
-		for (i = 0x40; i <= 0xff; i++) {
-		    if (ebc2asc[i] != ebc2asc0[i]) {
-			(void) fprintf(f, " %u=%u", i, ebc2asc[i]);
-		    }
-		}
-		(void) fprintf(f, "\n");
-		(void) fclose(f);
-	}
 
 #if !defined(_WIN32) /*[*/
 	/* Make pipes for printer's stdout and stderr. */
@@ -581,9 +529,6 @@ printer_check(void)
 		CloseHandle(printer_handle);
 		printer_handle = NULL;
 
-		if (need_cs)
-		    (void) unlink(charset_file);
-
 		st_changed(ST_PRINTER, False);
 
 		popup_an_error("Printer process exited with status %d",
@@ -632,10 +577,6 @@ printer_stop(void)
 		printer_handle = NULL;
 #endif /*]*/
 	}
-
-	/* Delete the character set file. */
-	if (need_cs)
-	    (void) unlink(charset_file);
 
 	/* Tell everyone else. */
 	st_changed(ST_PRINTER, False);
