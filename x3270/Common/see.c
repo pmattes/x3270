@@ -83,15 +83,9 @@ see_ebc(unsigned char ch)
 	    case FCORDER_SO:
 		return "SO";
 	}
-#if defined(PR3287) /*[*/
-	e = ebc2asc[ch];
-	if (e && (e != ' ' || ch == 0x40))
-		(void) sprintf(buf, "%c", e);
-#else /*][*/
 	if (ebcdic_to_multibyte(ch, 0, mb, sizeof(mb), False, TRANS_LOCAL, &uc)
 		    && (mb[0] != ' ' || ch == 0x40))
 		strcpy(buf, mb);
-#endif /*]*/
 	else
 	    	(void) sprintf(buf, "X'%02X'", ch);
 	return buf;

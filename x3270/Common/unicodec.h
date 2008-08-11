@@ -14,6 +14,7 @@
 extern unsigned long ebcdic_to_unicode(unsigned short e, Boolean blank_undef,
 	Boolean for_display);
 extern unsigned short unicode_to_ebcdic(unsigned long u);
+extern unsigned short unicode_to_ebcdic_ge(unsigned long u, Boolean *ge);
 extern int set_uni(const char *csname, const char **codepage,
 	const char **display_charsets);
 extern int linedraw_to_unicode(unsigned short e);

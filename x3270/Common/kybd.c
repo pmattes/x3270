@@ -1,6 +1,6 @@
 /*
  * Modifications Copyright 1993, 1994, 1995, 1996, 1999, 2000, 2001, 2002,
- *   2003, 2004, 2005, 2006, 2007 by Paul Mattes.
+ *   2003, 2004, 2005, 2006, 2007, 2008 by Paul Mattes.
  * Original X11 Port Copyright 1990 by Jeff Sparkes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
@@ -705,6 +705,8 @@ key_Character_wrapper(Widget w unused, XEvent *event unused, String *params,
 	int code;
 	Boolean with_ge = False;
 	Boolean pasting = False;
+	char mb[16];
+	unsigned long uc;
 
 	code = atoi(params[0]);
 	if (code & GE_WFLAG) {
@@ -715,10 +717,11 @@ key_Character_wrapper(Widget w unused, XEvent *event unused, String *params,
 		pasting = True;
 		code &= ~PASTE_WFLAG;
 	}
+	ebcdic_to_multibyte(code, with_ge? CS_GE: CS_BASE,
+		mb, sizeof(mb), True, TRANS_LOCAL, &uc);
 	trace_event(" %s -> Key(%s\"%s\")\n",
 	    ia_name[(int) ia_cause],
-	    with_ge ? "GE " : "",
-	    ctl_see((int) ebc2asc[code]));
+	    with_ge ? "GE " : "", mb);
 	(void) key_Character(code, with_ge, pasting, NULL);
 }
 
@@ -1327,12 +1330,13 @@ key_UCharacter(unsigned long ucs4, enum keytype keytype, enum iaction cause,
 	trace_event(" %s -> Key(U+%04lx)\n", ia_name[(int) cause], ucs4);
 	if (IN_3270) {
 	    	unsigned short ebc;
+		Boolean ge;
 
 		if (ucs4 < ' ') {
 			trace_event("  dropped (control char)\n");
 			return;
 		}
-		ebc = unicode_to_ebcdic(ucs4);
+		ebc = unicode_to_ebcdic_ge(ucs4, &ge);
 		if (ebc == 0) {
 			trace_event("  dropped (no EBCDIC translation)\n");
 			return;
@@ -1346,8 +1350,8 @@ key_UCharacter(unsigned long ucs4, enum keytype keytype, enum iaction cause,
 			(void) key_WCharacter(code, skipped);
 		} else
 #endif /*]*/
-			(void) key_Character(ebc, keytype == KT_GE, False,
-					     skipped);
+			(void) key_Character(ebc, (keytype == KT_GE) || ge,
+					     False, skipped);
 	}
 #if defined(X3270_ANSI) /*[*/
 	else if (IN_ANSI) {
@@ -3241,7 +3245,7 @@ emulate_input(char *s, int len, Boolean pasting)
 	int orig_addr = cursor_addr;
 	int orig_col = BA_TO_COL(cursor_addr);
 	Boolean skipped = False;
-#if defined(X3270_DBCS) /*[*/
+#if defined(ONLY_DBCS) && defined(X3270_DBCS) /*[*/
 	unsigned char ebc[2];
 	unsigned char cx;
 #endif /*]*/
@@ -3364,8 +3368,18 @@ emulate_input(char *s, int len, Boolean pasting)
 						KT_STD, ia,
 						&skipped);
 				break;
+			    case 0xf8fe: /* private-use FM */
+				if (pasting)
+					key_Character(EBC_fm, False, True,
+						&skipped);
+				break;
+			    case 0xf8ff: /* private-use DUP */
+				if (pasting)
+					key_Character(EBC_dup, False, True,
+						&skipped);
+				break;
 			default:
-#if defined(X3270_DBCS) /*[*/
+#if defined(ONLY_DBCS) && defined(X3270_DBCS) /*[*/
 				/*
 				 * Try mapping it to the 8-bit character set,
 				 * otherwise to the 16-bit character set.
@@ -3383,8 +3397,7 @@ emulate_input(char *s, int len, Boolean pasting)
 					break;
 				}
 #endif /*]*/
-				key_UCharacter((unsigned char) c, KT_STD,
-				    ia, &skipped);
+				key_UCharacter(c, KT_STD, ia, &skipped);
 				break;
 			}
 			break;

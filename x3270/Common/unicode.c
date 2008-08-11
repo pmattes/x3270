@@ -121,8 +121,11 @@ static uni_t *cur_uni = NULL;
 /*
  * Translate a single EBCDIC character to Unicode for display purposes.
  *
- * EBCDIC 'FM' and 'DUP' characters are returned as '*' and ';' respectively;
- *  real 3270 terminals display these with an overscore.
+ * EBCDIC 'FM' and 'DUP' characters are treated specially.  If 'for_display'
+ *  is set, they are returned as U+f8fe and U+feff (private-use) respectively
+ *  so they can be displayed with overscores in the special 3270 font;
+ *  otherwise they are returned as '*' and ';'.
+ *
  * If blank_undef is set, other undisplayable characters are returned as
  *  spaces; otherwise they are returned as 0.
  */
@@ -170,6 +173,32 @@ unicode_to_ebcdic(unsigned long u)
     for (i = 0; i < UT_SIZE; i++) {
 	if (cur_uni->code[i] == u) {
 	    return UT_OFFSET + i;
+	}
+    }
+
+    return 0;
+}
+
+/*
+ * Map a UCS-4 character to an EBCDIC character, possibly including APL (GE)
+ * characters.
+ * Returns 0 for failure, nonzero for success.
+ */
+unsigned short
+unicode_to_ebcdic_ge(unsigned long u, Boolean *ge)
+{
+    unsigned short e;
+
+    *ge = False;
+    e = unicode_to_ebcdic(u);
+    if (e)
+	return e;
+
+    /* Handle GEs.  Yes, this is slow, but I'm lazy. */
+    for (e = 0x70; e <= 0xfe; e++) {
+	if ((unsigned long)apl_to_unicode(e) == u) {
+	    *ge = True;
+	    return e;
 	}
     }
 
