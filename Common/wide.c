@@ -1,5 +1,5 @@
 /*
- * Copyright 2002, 2003, 2004, 2005 by Paul Mattes.
+ * Copyright 2002, 2003, 2004, 2005, 2008 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -27,9 +27,11 @@
 #include "appres.h"
 #endif /*]*/
 
+#include "charsetc.h"
 #include "popupsc.h"
 #include "tablesc.h"
 #include "trace_dsc.h"
+#include "unicodec.h"
 #if !defined(PR3287) /*[*/
 #include "utilc.h"
 #endif /*]*/
@@ -386,16 +388,20 @@ sbcs_to_mb(unsigned char ebc, char *mb)
 	int len;
 
 	if (sbcs_converter == NULL) {
+	    	unsigned long uc;
+
 		/* No SBCS converter, do EBCDIC to latin-1. */
 		if (local_converter == NULL) {
 			/* No local converter either, latin-1 is it. */
-			*mb = ebc2asc[ebc];
-			*(mb + 1) = '\0';
-			return 1;
+		    	len = ebcdic_to_multibyte(ebc, CS_BASE, mb, 16,
+				True, TRANS_LOCAL, &uc);
+			if (len > 0)
+			    	len--;
+			return len;
 		}
 
 		/* Have a local converter; use it below. */
-		Ubuf = ebc2asc[ebc];
+		Ubuf = ebcdic_to_unicode(ebc, True, False);
 	} else {
 		/* Have an SBCS converter.  Convert from SBCS to Unicode. */
 		err = U_ZERO_ERROR;
@@ -473,7 +479,15 @@ dbcs_map8(UChar u, unsigned char *cp)
 		if ((err != U_ZERO_ERROR &&
 		     err != U_STRING_NOT_TERMINATED_WARNING) ||
 		    (*cp == '?' && u != '?')) {
-			*cp = ebc2asc[*cp];
+		    	unsigned long uc;
+			char mp[16];
+			int len;
+
+		    	len = ebcdic_to_multibyte(*cp, CS_BASE, mp, 16, True,
+				TRANS_LOCAL, &uc);
+			if (len <= 0)
+			    	return 1;
+			strcpy((char *)cp, mp); /* XXX: May not be big enough! */
 			return 0;
 		} else
 			return 1;
