@@ -493,7 +493,7 @@ screen_init(void)
 	/* Initialize the blank map. */
 	(void) memset((char *)blank_map, '\0', sizeof(blank_map));
 	for (i = 0; i < 256; i++) {
-		if (ebc2asc[i] == 0x20 || ebc2asc[i] == 0xa0)
+		if (ebc2asc0[i] == 0x20 || ebc2asc0[i] == 0xa0)
 			BKM_SET(i);
 	}
 
