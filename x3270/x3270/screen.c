@@ -1751,7 +1751,7 @@ font_index(unsigned short ebc, int d8_ix, Boolean upper)
 	if (upper && ucs4 < 0x80 && islower(ucs4))
 	    	ucs4 = toupper(ucs4);
 	d = display8_lookup(d8_ix, ucs4);
-	if (d == 0) {
+	if (d < 0) {
 	    	d = display8_lookup(d8_ix, ' ');
 	}
 	return d;
