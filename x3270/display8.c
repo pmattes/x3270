@@ -1160,7 +1160,7 @@ display8_init(char *cset)
 
 /*
  * Map a Unicode character onto the display character set.
- * Returns 0 if there is no mapping.
+ * Returns -1 if there is no mapping.
  */
 int
 display8_lookup(int d8_ix, unsigned long ucs4)
@@ -1169,7 +1169,7 @@ display8_lookup(int d8_ix, unsigned long ucs4)
 
 	/* Handle errors. */
     	if (d8_ix < 0)
-		return 0;
+		return -1;
 
 	/* Handle ISO 10646-1 (almost-direct mapping). */
 	if (d8_ix == ISO10646_IX) {
@@ -1183,7 +1183,7 @@ display8_lookup(int d8_ix, unsigned long ucs4)
 
 	/* Handle more errors. */
 	if ((unsigned)d8_ix >= ND8)
-	    	return 0;
+	    	return -1;
 
 	/* Check for a match in the proper table. */
 	for (i = 0; i < 256; i++) {
@@ -1198,5 +1198,5 @@ display8_lookup(int d8_ix, unsigned long ucs4)
 	    	return '*';
 
 	/* Give up. */
-	return 0;
+	return -1;
 }
