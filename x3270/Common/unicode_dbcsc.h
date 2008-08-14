@@ -11,8 +11,10 @@
  * FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
  */
 
+#if defined(X3270_DBCS) /*[*/
 extern unsigned long ebcdic_to_unicode_dbcs(unsigned short e,
 	Boolean blank_undef);
 extern unsigned short unicode_to_ebcdic_dbcs(unsigned long u);
 extern int set_uni_dbcs(const char *csname, const char **codepage,
 	const char **display_charsets);
+#endif /*]*/

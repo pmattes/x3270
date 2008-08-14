@@ -39,6 +39,7 @@
 #endif /*]*/
 #include "tablesc.h"
 #include "unicodec.h"
+#include "unicode_dbcsc.h"
 #include "utf8c.h"
 #include "utilc.h"
 #include "widec.h"
@@ -75,7 +76,7 @@ static void set_charset_name(char *csname);
 
 static char *charset_name = CN;
 
-#if defined(X3270_DBCS) /*[*/
+#if defined(X3270_DBCS) && defined(NEED_DBCS) /*[*/
 /*
  * Initialize the DBCS conversion functions, based on resource values.
  */
@@ -111,6 +112,11 @@ charset_init(char *csname)
 #endif /*]*/
 	const char *codepage;
 	const char *display_charsets;
+#if defined(X3270_DBCS) /*[*/
+	const char *dbcs_codepage = NULL;
+	const char *dbcs_display_charsets = NULL;
+	Boolean need_free = False;
+#endif /*]*/
 
 #if !defined(_WIN32) /*[*/
 	/* Get all of the locale stuff right. */
@@ -130,18 +136,36 @@ charset_init(char *csname)
 		    "us");
 #endif /*]*/
 		(void) set_uni("us", &codepage, &display_charsets);
+#if defined(X3270_DBCS) /*[*/
+		(void) set_uni_dbcs("", NULL, NULL);
+#endif /*]*/
 		return CS_OKAY;
 	}
 
 	if (set_uni(csname, &codepage, &display_charsets) < 0)
 		return CS_NOTFOUND;
+#if defined(X3270_DBCS) /*[*/
+	if (set_uni_dbcs(csname, &dbcs_codepage,
+			     &dbcs_display_charsets) <= 0) {
+	    codepage = xs_buffer("%s+%s", codepage, dbcs_codepage);
+	    display_charsets = xs_buffer("%s+%s", display_charsets,
+		    dbcs_display_charsets);
+	    need_free = True;
+	}
+#endif /*]*/
 
 	rc = charset_init2(csname, codepage, display_charsets);
+#if defined(X3270_DBCS) /*[*/
+	if (need_free) {
+	    Free(codepage);
+	    Free(display_charsets);
+	}
+#endif /*]*/
 	if (rc != CS_OKAY) {
 		return rc;
 	}
 
-#if defined(X3270_DBCS) /*[*/
+#if defined(X3270_DBCS) && defined(NEED_DBCS) /*[*/
 	if (wide_resource_init(csname) < 0) {
 		return CS_NOTFOUND;
 	}
@@ -631,6 +655,7 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 
 /*
  * Convert a multi-byte string to a UCS-4 string.
+ * Does not NULL-terminate the result.
  * Returns the number of UCS-4 characters stored.
  */
 int
@@ -648,10 +673,6 @@ multibyte_to_unicode_string(char *mb, size_t mb_len, unsigned long *ucs4,
 	u_len--;
 	mb += consumed;
 	mb_len -= consumed;
-	nr++;
-    }
-    if (u_len) {
-	*ucs4 = 0;
 	nr++;
     }
 

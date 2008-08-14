@@ -21,6 +21,7 @@
 #include <strings.h>
 #include "3270ds.h"
 #include "unicodec.h"
+#include "unicode_dbcsc.h"
 #include "utf8c.h"
 
 #if defined(USE_ICONV) /*[*/
@@ -115,6 +116,7 @@ cpalias_t cpaliases[] = {
     { "belgian",	"cp500" },
     { "belgian-euro",	"cp1148" },
     { "brazilian",	"cp275" },
+    { "chinese-gb18030", "cp1388" },
     { "finnish",	"cp278" },
     { "finnish-euro",	"cp1143" },
     { "french",		"cp297" },
@@ -127,12 +129,14 @@ cpalias_t cpaliases[] = {
     { "icelandic-euro",	"cp1149" },
     { "italian",	"cp280" },
     { "italian-euro",	"cp1144" },
+    { "japanese",	"cp1027" },
     { "norwegian-euro",	"cp1142" },
     { "oldibm",		"bracket" },
     { "bracket437",	"bracket" },
     { "polish",		"cp870" },
     { "russian",	"cp880" },
-    { "solvenian",	"cp870" },
+    { "simplified-chinese", "cp836" },
+    { "slovenian",	"cp870" },
     { "spanish",	"cp284" },
     { "spanish-euro",	"cp1145" },
     { "turkish",	"cp1026" },
@@ -161,6 +165,11 @@ static uni_t *cur_uni = NULL;
 unsigned long
 ebcdic_to_unicode(unsigned short c, Boolean blank_undef, Boolean for_display)
 {
+#if defined(X3270_DBCS) /*[*/
+    if (c & 0xff00)
+	return ebcdic_to_unicode_dbcs(c, blank_undef);
+#endif /*]*/
+
     if (c == 0x40)
 	return 0x0020;
 
@@ -193,6 +202,9 @@ unsigned short
 unicode_to_ebcdic(unsigned long u)
 {
     int i;
+#if defined(X3270_DBCS) /*[*/
+    unsigned short d;
+#endif /*]*/
 
     if (!u)
 	return 0;
@@ -204,6 +216,12 @@ unicode_to_ebcdic(unsigned long u)
 	    return UT_OFFSET + i;
 	}
     }
+#if defined(X3270_DBCS) /*[*/
+    /* See if it's DBCS. */
+    d = unicode_to_ebcdic_dbcs(u);
+    if (d)
+	return d;
+#endif /*]*/
 
     return 0;
 }

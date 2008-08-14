@@ -2927,14 +2927,12 @@ static Boolean
 xim_lookup(XKeyEvent *event)
 {
 	static char *buf = NULL;
-	static UChar *Ubuf = NULL;
 	static int buf_len = 0, rlen;
 	KeySym k;
 	Status status;
 	extern XIC ic;
 	int i;
 	Boolean rv = False;
-	int wlen;
 #define BASE_BUFSIZE 50
 
 	if (ic == NULL)
@@ -2943,7 +2941,6 @@ xim_lookup(XKeyEvent *event)
 	if (buf == NULL) {
 		buf_len = BASE_BUFSIZE;
 		buf = Malloc(buf_len);
-		Ubuf = (UChar *)Malloc(buf_len * sizeof(UChar));
 	}
 
 	for (;;) {
@@ -2954,7 +2951,6 @@ xim_lookup(XKeyEvent *event)
 			break;
 		buf_len += BASE_BUFSIZE;
 		buf = Realloc(buf, buf_len);
-		Ubuf = (UChar *)Realloc(Ubuf, buf_len * sizeof(UChar));
 	}
 
 	switch (status) {
@@ -2970,31 +2966,8 @@ xim_lookup(XKeyEvent *event)
 			trace_event(" %02x", buf[i] & 0xff);
 		}
 		trace_event("\n");
-		wlen = mb_to_unicode(buf, rlen, Ubuf, buf_len, NULL);
-		if (wlen < 0)
-			trace_event("  conversion failed\n");
-		for (i = 0; i < wlen; i++) {
-			unsigned char asc;
-			unsigned char ebc[2];
-
-			if (dbcs_map8(Ubuf[i], &asc)) {
-			    	char mb[16];
-
-				trace_event("  U+%04x -> "
-				    "EBCDIC SBCS\n",
-				    Ubuf[i] & 0xffff);
-				strncpy(mb, buf, rlen);
-				mb[rlen] = '\0';
-				key_ACharacter(mb, KT_STD, ia_cause, NULL);
-			} else if (dbcs_map16(Ubuf[i], ebc)) {
-				trace_event("  U+%04x -> "
-				    "EBCDIC DBCS X'%02x%02x'\n",
-				    Ubuf[i] & 0xffff, ebc[0], ebc[1]);
-				(void) key_WCharacter(ebc, NULL);
-			} else
-				trace_event("  Cannot convert U+%04x to "
-				    "EBCDIC\n", Ubuf[i] & 0xffff);
-		}
+		buf[rlen] = '\0';
+		key_ACharacter(buf, KT_STD, ia_cause, NULL);
 		rv = False;
 		break;
 	case XLookupBoth:
@@ -3253,17 +3226,18 @@ emulate_input(char *s, int len, Boolean pasting)
 	static size_t w_ibuf_len = 0;
 	unsigned long c;
 	unsigned long *ws;
+	int xlen;
 
 	/*
 	 * Convert from a multi-byte string to a Unicode string.
 	 */
-	if ((size_t)len > w_ibuf_len) {
-		w_ibuf_len = len;
+	if ((size_t)(len + 1) > w_ibuf_len) {
+		w_ibuf_len = len + 1;
 		w_ibuf = (unsigned long *)Realloc(w_ibuf,
 			w_ibuf_len * sizeof(unsigned long));
 	}
-	len = multibyte_to_unicode_string(s, len, w_ibuf, w_ibuf_len);
-	if (len < 0) {
+	xlen = multibyte_to_unicode_string(s, len, w_ibuf, w_ibuf_len);
+	if (xlen < 0) {
 		return 0; /* failed */
 	}
 	ws = w_ibuf;
@@ -3272,7 +3246,7 @@ emulate_input(char *s, int len, Boolean pasting)
 	 * In the switch statements below, "break" generally means "consume
 	 * this character," while "continue" means "rescan this character."
 	 */
-	while (len) {
+	while (xlen) {
 
 		/*
 		 * It isn't possible to unlock the keyboard from a string,
@@ -3287,13 +3261,13 @@ emulate_input(char *s, int len, Boolean pasting)
 
 			/* Check for cursor wrap to top of screen. */
 			if (cursor_addr < orig_addr)
-				return len-1;		/* wrapped */
+				return xlen-1;		/* wrapped */
 
 			/* Jump cursor over left margin. */
 			if (toggled(MARGINED_PASTE) &&
 			    BA_TO_COL(cursor_addr) < orig_col) {
 				if (!remargin(orig_col))
-					return len-1;
+					return xlen-1;
 				skipped = True;
 			}
 		}
@@ -3316,7 +3290,7 @@ emulate_input(char *s, int len, Boolean pasting)
 							CN);
 					skipped = False;
 					if (IN_3270)
-						return len-1;
+						return xlen-1;
 				}
 				break;
 			    case '\n':
@@ -3330,7 +3304,7 @@ emulate_input(char *s, int len, Boolean pasting)
 							CN);
 					skipped = False;
 					if (IN_3270)
-						return len-1;
+						return xlen-1;
 				}
 				break;
 			    case '\r':	/* ignored */
@@ -3426,7 +3400,7 @@ emulate_input(char *s, int len, Boolean pasting)
 				skipped = False;
 				state = BASE;
 				if (IN_3270)
-					return len-1;
+					return xlen-1;
 				else
 					break;
 			    case 'n':
@@ -3434,7 +3408,7 @@ emulate_input(char *s, int len, Boolean pasting)
 				skipped = False;
 				state = BASE;
 				if (IN_3270)
-					return len-1;
+					return xlen-1;
 				else
 					break;
 			    case 'p':
@@ -3524,7 +3498,7 @@ emulate_input(char *s, int len, Boolean pasting)
 				do_pf(literal);
 				skipped = False;
 				if (IN_3270)
-					return len-1;
+					return xlen-1;
 				state = BASE;
 				continue;
 			}
@@ -3543,7 +3517,7 @@ emulate_input(char *s, int len, Boolean pasting)
 				do_pa(literal);
 				skipped = False;
 				if (IN_3270)
-					return len-1;
+					return xlen-1;
 				state = BASE;
 				continue;
 			}
@@ -3626,7 +3600,7 @@ emulate_input(char *s, int len, Boolean pasting)
 			break;
 		}
 		ws++;
-		len--;
+		xlen--;
 	}
 
 	switch (state) {
@@ -3675,7 +3649,7 @@ emulate_input(char *s, int len, Boolean pasting)
 		break;
 	}
 
-	return len;
+	return xlen;
 }
 
 /*

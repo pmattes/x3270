@@ -2309,7 +2309,7 @@ display16_lookup(int d16_ix, unsigned long ucs4)
 	if (d16[d16_ix].u[row] == NULL)
 	    	return -1;
 
-	col = ucs4 & 0x7f;
+	col = (ucs4 & 0x7f) * 2;
 	ix = ((d16[d16_ix].u[row][col] & 0xff) << 8) |
 	      (d16[d16_ix].u[row][col + 1] & 0xff);
 	if (ix != 0)

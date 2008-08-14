@@ -33,8 +33,8 @@ typedef struct {
     char *name;
     const char *codepage;
     const char *display_charset;
-    const char *ebc2u[512];	/* EBCDIC to Unicode vectors */
     const char *u2ebc[512];	/* Unicode to EBCDIC vectors */
+    const char *ebc2u[512];	/* EBCDIC to Unicode vectors */
 } uni16_t;
 
 static uni16_t uni16[] = {
@@ -3162,7 +3162,7 @@ ebcdic_to_unicode_dbcs(unsigned short c, Boolean blank_undef)
 	row = (c >> 7) & 0x1ff;
 	if (cur_uni16->ebc2u[row] == NULL)
 	    	return blank_undef? 0x3000: 0;
-	col = c & 0x7f;
+	col = (c & 0x7f) * 2;
 	ix = ((cur_uni16->ebc2u[row][col] & 0xff) << 8) |
 	      (cur_uni16->ebc2u[row][col + 1] & 0xff);
 	if (ix)
@@ -3189,7 +3189,7 @@ unicode_to_ebcdic_dbcs(unsigned long u)
 	row = (u >> 7) & 0x1ff;
 	if (cur_uni16->u2ebc[row] == NULL)
 	    	return 0;
-	col = u & 0x7f;
+	col = (u & 0x7f) * 2;
 	ix = ((cur_uni16->u2ebc[row][col] & 0xff) << 8) |
 	      (cur_uni16->u2ebc[row][col + 1] & 0xff);
 	return ix;
@@ -3225,6 +3225,13 @@ set_uni_dbcs(const char *csname, const char **codepage,
 			break;
 		}
 	}
+
+	/*
+	 * If this fails (which we sometimes do on purpose), forget any
+	 * old setting.
+	 */
+	if (rc == -1)
+	    	cur_uni16 = NULL;
 
 	return rc;
 }
