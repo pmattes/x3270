@@ -506,7 +506,7 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 		store_inbyte(i_ft2asc[(e >> 8) & 0xff], &bufptr, &numbytes);
 		store_inbyte(i_ft2asc[e & 0xff],        &bufptr, &numbytes);
 	    	store_inbyte(EBC_si,                    &bufptr, &numbytes);
-		return bp0 - bufptr;
+		return bufptr - bp0;
 #else /*][*/
 		*bufptr = '?';
 		return 1;
