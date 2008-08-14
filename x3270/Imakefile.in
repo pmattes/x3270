@@ -24,7 +24,7 @@ LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
 		  menubar.c popups.c printer.c print.c proxy.c resolver.c \
 		  resources.c rpq.c save.c screen.c scroll.c see.c select.c \
 		  sf.c status.c tables.c toggles.c telnet.c trace_ds.c \
-		  unicode.c utf8.c util.c xio.c \
+		  unicode.c unicode_dbcs.c utf8.c util.c xio.c \
 		  @DBCS_C@
           VOBJS = Cme.o CmeBSB.o CmeLine.o CmplxMenu.o Husk.o about.o \
 		  actions.o ansi.o apl.o charset.o child.o ctlr.o dialog.o \
@@ -33,7 +33,7 @@ LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
 		  main.o menubar.o popups.o printer.o print.o proxy.o \
 		  resolver.o resources.o rpq.o save.o screen.o scroll.o see.o \
 		  select.o sf.o status.o tables.o telnet.o toggles.o \
-		  trace_ds.o unicode.o utf8.o util.o xio.o \
+		  trace_ds.o unicode.o unicode_dbcs.o utf8.o util.o xio.o \
 		  @LIBOBJS@ @DBCS_O@ 
           OBJS1 = $(VOBJS) version.o
           FONTS = FontObj(3270-12) FontObj(3270-12b) FontObj(3270-20) \
