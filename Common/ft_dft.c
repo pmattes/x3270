@@ -309,7 +309,7 @@ dft_data_insert(struct data_buffer *data_bufr)
 					if (c == EBC_si)
 						ft_dbcs_state = FT_DBCS_NONE;
 					else {
-						ft_dbcs_byte1 = c;
+						ft_dbcs_byte1 = i_asc2ft[c];
 						ft_dbcs_state = FT_DBCS_LEFT;
 					}
 					continue;
@@ -319,8 +319,9 @@ dft_data_insert(struct data_buffer *data_bufr)
 						continue;
 					}
 					nx = ebcdic_to_multibyte(
-						(ft_dbcs_byte1 << 8) | c,
-						CS_DBCS, (char *)ob, obuf_len,
+						(ft_dbcs_byte1 << 8) |
+						    i_asc2ft[c],
+						CS_BASE, (char *)ob, obuf_len,
 						True, TRANS_LOCAL, &uc);
 					if (nx && (ob[nx - 1] == '\0'))
 						nx--;

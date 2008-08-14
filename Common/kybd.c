@@ -3041,12 +3041,14 @@ String_action(Widget w unused, XEvent *event, String *params, Cardinal *num_para
 
 	/* Allocate a block of memory and copy them in. */
 	s = Malloc(len + 1);
+	s[0] = '\0';
 	for (i = 0; i < *num_params; i++) {
 	    	strcat(s, params[i]);
 	}
 
 	/* Set a pending string. */
 	ps_set(s, False);
+	Free(s);
 }
 
 /*

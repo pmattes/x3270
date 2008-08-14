@@ -35,6 +35,7 @@
 #include "screen.h"
 #include "resources.h"
 
+#include "charsetc.h"
 #include "ctlrc.h"
 #include "ftc.h"
 #include "ft_cutc.h"
@@ -1142,6 +1143,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 	Boolean		aborted = False;
 #if defined(X3270_DBCS) /*[*/
 	char		mb[16];
+	unsigned long	uc;
 #endif /*]*/
 
 #define END_TEXT0	{ if (previous == TEXT) trace_ds("'"); }
@@ -1355,9 +1357,12 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 					trace_ds(" [invalid DBCS RA character X'%02x%02x'; write aborted]",
 						add_c1, add_c2);
 					ABORT_WRITEx;
-			       }
-			       dbcs_to_mb(add_c1, add_c2, mb);
-			       trace_ds_nb("'%s'", mb);
+			        }
+				(void) ebcdic_to_multibyte(
+					   (add_c1 << 8) | add_c2, CS_BASE,
+					   mb, sizeof(mb), True, TRANS_LOCAL,
+					   &uc);
+			        trace_ds_nb("'%s'", mb);
 			} else
 #endif /*]*/
 			{
@@ -1823,10 +1828,13 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 					trace_ds(" [invalid DBCS character X'%02x%02x'; write aborted]",
 						add_c1, add_c2);
 					ABORT_WRITEx;
-			       }
-			       add_dbcs = True;
-			       dbcs_to_mb(add_c1, add_c2, mb);
-			       trace_ds_nb("%s", mb);
+			        }
+			        add_dbcs = True;
+				(void) ebcdic_to_multibyte(
+					   (add_c1 << 8) | add_c2, CS_BASE,
+					   mb, sizeof(mb), True, TRANS_LOCAL,
+					   &uc);
+			        trace_ds_nb("%s", mb);
 			} else {
 #endif /*]*/
 				add_c1 = *cp;
