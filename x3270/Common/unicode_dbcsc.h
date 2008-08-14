@@ -11,16 +11,8 @@
  * FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
  */
 
-extern unsigned long ebcdic_to_unicode(unsigned short e, Boolean blank_undef,
-	Boolean for_display);
-extern unsigned short unicode_to_ebcdic(unsigned long u);
-extern unsigned short unicode_to_ebcdic_ge(unsigned long u, Boolean *ge);
-extern int set_uni(const char *csname, const char **codepage,
+extern unsigned long ebcdic_to_unicode_dbcs(unsigned short e,
+	Boolean blank_undef);
+extern unsigned short unicode_to_ebcdic_dbcs(unsigned long u);
+extern int set_uni_dbcs(const char *csname, const char **codepage,
 	const char **display_charsets);
-extern int linedraw_to_unicode(unsigned short e);
-extern int apl_to_unicode(unsigned short e);
-extern Boolean is_utf8;
-#if defined(USE_ICONV) /*[*/
-extern iconv_t i_u2mb;
-extern iconv_t i_mb2u;
-#endif /*]*/

@@ -13,3 +13,7 @@
 
 int display8_init(char *cset);
 int display8_lookup(int d8_ix, unsigned long ucs4);
+#if defined(X3270_DBCS) /*[*/
+int display16_init(char *cset);
+int display16_lookup(int d16_ix, unsigned long ucs4);
+#endif /*]*/

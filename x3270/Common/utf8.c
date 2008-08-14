@@ -26,9 +26,6 @@
 char *locale_codeset = CN;
 
 static Boolean is_utf8 = False;
-#if defined(X3270_DBCS) /*[*/
-static Boolean is_gb18030 = False;
-#endif /*]*/
 
 /*
  * Save the codeset from the locale, and set globals based on known values.
@@ -36,10 +33,6 @@ static Boolean is_gb18030 = False;
 void
 set_codeset(char *codeset_name)
 {
-#if defined(X3270_DBCS) /*[*/
-    	is_gb18030 = !strcasecmp(codeset_name, "gb18030");
-#endif /*]*/
-
 #if !defined(TCL3270) /*[*/
     	is_utf8 = (!strcasecmp(codeset_name, "utf-8") ||
 	           !strcasecmp(codeset_name, "utf8") ||
