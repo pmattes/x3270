@@ -1699,10 +1699,12 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 #if defined(X3270_DBCS) /*[*/
 			if (IS_LEFT(ctlr_dbcs_state(first + i))) {
 
-				len = dbcs_to_mb(buf[first + i].cc,
-					      buf[first + i + 1].cc,
-					      mb);
-				for (j = 0; j < len; j++) {
+				len = ebcdic_to_multibyte(
+					(buf[first + i].cc << 8) |
+					 buf[first + i + 1].cc,
+					CS_BASE, mb, sizeof(mb),
+					TRUE, TRANS_LOCAL, &uc);
+				for (j = 0; j < len-1; j++) {
 					s += sprintf(s, "%c", mb[j]);
 				}
 				continue;
@@ -1965,11 +1967,13 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf, int fd)
 				int len;
 
 				if (IS_LEFT(ctlr_dbcs_state(baddr))) {
-					len = dbcs_to_mb(buf[baddr].cc,
-						buf[baddr + 1].cc,
-						mb);
+				    	len = ebcdic_to_multibyte(
+						(buf[baddr].cc << 8) |
+						 buf[baddr + 1].cc,
+						CS_BASE, mb, sizeof(mb),
+						True, TRANS_LOCAL, &uc);
 					rpf(&r, " ");
-					for (j = 0; j < len; j++)
+					for (j = 0; j < len-1; j++)
 						rpf(&r, "%02x", mb[j] & 0xff);
 					done = True;
 				} else if (IS_RIGHT(ctlr_dbcs_state(baddr))) {

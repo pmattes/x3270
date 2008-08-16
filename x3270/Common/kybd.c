@@ -1017,8 +1017,10 @@ key_WCharacter(unsigned char code[], Boolean *skipped)
 	/* In ANSI mode? */
 	if (IN_ANSI) {
 	    char mb[16];
+	    unsigned long uc;
 
-	    dbcs_to_mb(code[0], code[1], mb);
+	    (void) ebcdic_to_multibyte((code[0] << 8) | code[1], CS_BASE,
+				       mb, sizeof(mb), True, TRANS_LOCAL, &uc);
 	    net_sends(mb);
 	    return True;
 	}

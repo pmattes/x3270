@@ -393,9 +393,6 @@ parse_options(int *argcp, const char **argv)
 #if defined(C3270) /*[*/
     { OptKeymap,   OPT_STRING,  False, ResKeymap,    offset(key_map) },
 #endif /*]*/
-#if defined(X3270_DBCS) /*[*/
-    { OptLocalEncoding,OPT_STRING,False,ResLocalEncoding,offset(local_encoding) },
-#endif /*]*/
     { OptModel,    OPT_STRING,  False, ResKeymap,    offset(model) },
 #if defined(C3270) && !defined(_WIN32) /*[*/
     { OptMono,     OPT_BOOLEAN, True,  ResMono,      offset(mono) },

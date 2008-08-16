@@ -155,7 +155,6 @@ extern char		full_model_name[];
 extern char		*funky_font;
 extern char		*hostname;
 #if defined(X3270_DBCS) /*[*/
-extern char		*local_encoding;
 #if defined(X3270_DISPLAY) /*[*/
 extern char		*locale_name;
 #endif /*]*/

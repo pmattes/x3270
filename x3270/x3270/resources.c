@@ -293,8 +293,6 @@ XtResource resources[] = {
 	  offset(input_method), XtRString, 0 },
 	{ ResPreeditType, ClsPreeditType, XtRString, sizeof(char *),
 	  offset(preedit_type), XtRString, PT_OVER_THE_SPOT "+1" },
-	{ ResLocalEncoding, ClsLocalEncoding, XtRString, sizeof(char *),
-	  offset(local_encoding), XtRString, 0 },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 	{ ResCertFile, ClsCertFile, XtRString, sizeof(char *),
