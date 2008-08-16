@@ -28,8 +28,6 @@ extern Boolean charset_changed;
 extern unsigned long cgcsgid;
 #if defined(X3270_DBCS) /*[*/
 extern unsigned long cgcsgid_dbcs;
-extern char *converter_names;
-extern char *encoding;
 #endif /*]*/
 extern char *default_display_charset;
 enum cs_result { CS_OKAY, CS_NOTFOUND, CS_BAD, CS_PREREQ, CS_ILLEGAL };

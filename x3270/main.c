@@ -143,7 +143,6 @@ XrmOptionDescRec options[]= {
 #endif /*]*/
 #if defined(X3270_DBCS) /*[*/
 	{ OptInputMethod,DotInputMethod,XrmoptionSepArg,	NULL },
-	{ OptLocalEncoding,DotLocalEncoding,XrmoptionSepArg,	NULL },
 	{ OptPreeditType,DotPreeditType,XrmoptionSepArg,	NULL },
 #endif /*]*/
 	{ OptV,		DotV,		XrmoptionNoArg,		ResTrue },

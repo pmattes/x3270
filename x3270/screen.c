@@ -5507,12 +5507,8 @@ name2cs_3270(const char *name)
 static void
 xlate_dbcs(unsigned char c0, unsigned char c1, XChar2b *r)
 {
-#if defined(OLD_DBCS) /*[*/
-	unsigned char wc[2];
-#else /*][*/
 	unsigned long u;
 	int d;
-#endif /*]*/
 
 	/* Translate NULLs to spaces. */
 	if (c0 == EBC_null && c1 == EBC_null) {
@@ -5525,19 +5521,6 @@ xlate_dbcs(unsigned char c0, unsigned char c1, XChar2b *r)
 		r->byte1 = 0;
 		r->byte2 = 0;
 	}
-#if defined(OLD_DBCS) /*[*/
-	else if (dbcs_font.unicode) {
-		/* Translate from DBCS to Unicode. */
-		dbcs_to_unicode16(c0, c1, wc);
-		r->byte1 = wc[0];
-		r->byte2 = wc[1];
-	} else {
-		/* Translate from DBCS to the font encoding. */
-		dbcs_to_display(c0, c1, wc);
-		r->byte1 = wc[0] & 0x7f;
-		r->byte2 = wc[1] & 0x7f;
-	}
-#else /*][*/
 	u = ebcdic_to_unicode_dbcs((c0 << 8) | c1, True);
 	d = display16_lookup(dbcs_font.d16_ix, u);
 	if (d >= 0) {
@@ -5547,7 +5530,6 @@ xlate_dbcs(unsigned char c0, unsigned char c1, XChar2b *r)
 		r->byte1 = 0;
 		r->byte2 = 0;
 	}
-#endif /*]*/
 
 #if defined(_ST) /*[*/
 	printf("EBC %02x%02x -> X11 font %02x%02x\n",
@@ -5759,14 +5741,6 @@ xim_init(void)
 		xim_error = True;
 		return;
 	}
-#if 0
-	if (local_encoding == CN) {
-		popup_an_error("Local encoding not specified or unsuccessful\n"
-		    "XIM-based input disabled");
-		xim_error = True;
-		return;
-	}
-#endif
 
 	(void) memset(buf, '\0', sizeof(buf));
 	if (appres.input_method != CN)

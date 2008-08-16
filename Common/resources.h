@@ -58,7 +58,6 @@
 #define ResCursorBlink		"cursorBlink"
 #define ResCursorColor		"cursorColor"
 #define ResCursorPos		"cursorPos"
-#define ResDbcsConverters	"dbcsConverters"
 #define ResDebugFont		"debugFont"
 #define ResDebugTracing		"debugTracing"
 #define ResDefScreen		"defScreen"
@@ -102,7 +101,6 @@
 #define ResLabelIcon		"labelIcon"
 #define ResLineWrap		"lineWrap"
 #define ResLnext		"lnext"
-#define ResLocalEncoding	"localEncoding"
 #define ResLoginMacro		"loginMacro"
 #define ResLockedCursor		"lockedCursor"
 #define ResLuCommandLine	"printer.luCommandLine"
@@ -181,7 +179,6 @@
 #define DotEmulatorFont		"." ResEmulatorFont
 #define DotExtended		"." ResExtended
 #define DotInputMethod		"." ResInputMethod
-#define DotLocalEncoding	"." ResLocalEncoding
 #define DotKeymap		"." ResKeymap
 #define DotKeypadOn		"." ResKeypadOn
 #define DotM3279		"." ResM3279
@@ -265,7 +262,6 @@
 #define ClsLabelIcon		"LabelIcon"
 #define ClsLineWrap		"LineWrap"
 #define ClsLnext		"Lnext"
-#define ClsLocalEncoding	"LocalEncoding"
 #define ClsLockedCursor		"LockedCursor"
 #define ClsM3279		"M3279"
 #define ClsMacros		"Macros"
@@ -343,7 +339,6 @@
 #define OptInputMethod		"-im"
 #define OptKeymap		"-keymap"
 #define OptKeypadOn		"-keypad"
-#define OptLocalEncoding	"-km"
 #define OptLocalProcess		"-e"
 #define OptM3279		"-color"
 #define OptModel		"-model"

@@ -64,8 +64,6 @@ Boolean charset_changed = False;
 unsigned long cgcsgid = DEFAULT_CGEN | DEFAULT_CSET;
 unsigned long cgcsgid_dbcs = 0L;
 char *default_display_charset = "3270cg-1a,3270cg-1,iso8859-1";
-char *converter_names;
-char *encoding;
 
 /* Statics. */
 static enum cs_result charset_init2(char *csname, const char *codepage,
@@ -75,30 +73,6 @@ static int set_cgcsgid(char *spec, unsigned long *idp);
 static void set_charset_name(char *csname);
 
 static char *charset_name = CN;
-
-#if defined(X3270_DBCS) && defined(NEED_DBCS) /*[*/
-/*
- * Initialize the DBCS conversion functions, based on resource values.
- */
-static int
-wide_resource_init(char *csname)
-{
-	char *cn, *en;
-
-	cn = get_fresource("%s.%s", ResDbcsConverters, csname);
-	if (cn == CN)
-		return 0;
-
-	en = get_fresource("%s.%s", ResLocalEncoding, csname);
-	if (en == CN)
-		en = appres.local_encoding;
-	Replace(converter_names, cn);
-	Replace(encoding, en);
-
-	return wide_init(cn, en);
-
-}
-#endif /*]*/
 
 /*
  * Change character sets.
@@ -164,12 +138,6 @@ charset_init(char *csname)
 	if (rc != CS_OKAY) {
 		return rc;
 	}
-
-#if defined(X3270_DBCS) && defined(NEED_DBCS) /*[*/
-	if (wide_resource_init(csname) < 0) {
-		return CS_NOTFOUND;
-	}
-#endif /*]*/
 
 	return CS_OKAY;
 }

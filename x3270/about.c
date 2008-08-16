@@ -372,12 +372,6 @@ popup_about_config(void)
 		} else {
 			MAKE_VALUE("(error)");
 		}
-		MAKE_LABEL2(get_message("ximEncoding"));
-		if (local_encoding != CN) {
-			MAKE_VALUE(local_encoding);
-		} else {
-			MAKE_VALUE("(error)");
-		}
 	}
 #endif /*]*/
 	MAKE_LABEL(get_message("localeCodeset"), 4);
