@@ -11,8 +11,10 @@
  * FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
  */
 
-extern unsigned long ebcdic_to_unicode(unsigned short e, Boolean blank_undef,
+extern unsigned long ebcdic_to_unicode(unsigned short e, unsigned char cs,
 	Boolean for_display);
+extern unsigned long ebcdic_base_to_unicode(unsigned short e,
+	Boolean blank_undef, Boolean for_display);
 extern unsigned short unicode_to_ebcdic(unsigned long u);
 extern unsigned short unicode_to_ebcdic_ge(unsigned long u, Boolean *ge);
 extern int set_uni(const char *csname, const char **codepage,

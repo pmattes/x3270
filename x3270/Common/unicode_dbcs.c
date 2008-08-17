@@ -3148,7 +3148,7 @@ static uni16_t *cur_uni16 = NULL;
  *  wide spaces (U+3000); otherwise they are returned as 0.
  */
 unsigned long
-ebcdic_to_unicode_dbcs(unsigned short c, Boolean blank_undef)
+ebcdic_dbcs_to_unicode(unsigned short c, Boolean blank_undef)
 {
     	int row, col;
 	int ix;

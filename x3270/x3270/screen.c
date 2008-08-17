@@ -1749,7 +1749,7 @@ font_index(unsigned short ebc, int d8_ix, Boolean upper)
 	unsigned long ucs4;
 	int d;
 
-	ucs4 = ebcdic_to_unicode(ebc, True, True);
+	ucs4 = ebcdic_base_to_unicode(ebc, True, True);
 	if (upper && ucs4 < 0x80 && islower(ucs4))
 	    	ucs4 = toupper(ucs4);
 	d = display8_lookup(d8_ix, ucs4);
@@ -5521,7 +5521,7 @@ xlate_dbcs(unsigned char c0, unsigned char c1, XChar2b *r)
 		r->byte1 = 0;
 		r->byte2 = 0;
 	}
-	u = ebcdic_to_unicode_dbcs((c0 << 8) | c1, True);
+	u = ebcdic_dbcs_to_unicode((c0 << 8) | c1, True);
 	d = display16_lookup(dbcs_font.d16_ix, u);
 	if (d >= 0) {
 		r->byte1 = (d >> 8) & 0xff;
