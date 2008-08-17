@@ -41,6 +41,7 @@
 #include "charsetc.h"
 #include "popupsc.h"
 #include "printc.h"
+#include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
 #if defined(X3270_DBCS) /*[*/
@@ -130,7 +131,6 @@ Boolean
 fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 {
 	register int i;
-	char c;
 	unsigned long uc;
 	int ns = 0;
 	int nr = 0;
@@ -167,13 +167,9 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 #endif /*]*/
 
 	for (i = 0; i < ROWS*COLS; i++) {
-#if defined(X3270_DBCS) /*[*/
-		Boolean is_dbcs = False;
-#endif /*]*/
 		char mb[16];
 		int nmb;
 
-		c = 0;
 		uc = 0;
 
 		if (i && !(i % COLS)) {
@@ -181,7 +177,7 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 			ns = 0;
 		}
 		if (ea_buf[i].fa) {
-			c = ' ';
+			uc = ' ';
 			fa = ea_buf[i].fa;
 			if (ea_buf[i].fg)
 				fa_color = ea_buf[i].fg & 0x0f;
@@ -192,45 +188,54 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 			else
 				fa_high = FA_IS_HIGH(fa);
 		}
-		if (FA_IS_ZERO(fa))
-			c = ' ';
+		if (FA_IS_ZERO(fa)) {
 #if defined(X3270_DBCS) /*[*/
-		else {
-			/* XXX: DBCS/html interactions are not done */
+			if (ctlr_dbcs_state(i) == DBCS_LEFT)
+			    	uc = 0x3000;
+			else
+#endif /*]*/
+				uc = ' ';
+		} else {
+		    	/* Convert EBCDIC to Unicode. */
+#if defined(X3270_DBCS) /*[*/
 			switch (ctlr_dbcs_state(i)) {
 			case DBCS_NONE:
 			case DBCS_SB:
-				nmb = ebcdic_to_multibyte(ea_buf[i].cc,
-					ea_buf[i].cs, mb, sizeof(mb), True,
-					TRANS_LOCAL, &uc);
-				if (nmb == 0)
-				    c = ' ';
-				else
-				    c = mb[0];
+			    	uc = ebcdic_to_unicode(ea_buf[i].cc,
+					ea_buf[i].cs, False);
+				if (uc == 0)
+				    	uc = ' ';
 				break;
 			case DBCS_LEFT:
-				dbcs_to_mb(ea_buf[i].cc, ea_buf[i + 1].cc, mb);
-				is_dbcs = True;
-				c = 'x';
+				uc = ebcdic_to_unicode(
+					(ea_buf[i].cc << 8) |
+					 ea_buf[i + 1].cc,
+					CS_BASE, False);
+				if (uc == 0)
+				    	uc = 0x3000;
 				break;
+			case DBCS_RIGHT:
+				/* skip altogether, we took care of it above */
+				continue;
 			default:
-				c = ' ';
+				uc = ' ';
 				break;
 			}
-		}
 #else /*][*/
-		else {
-			nmb = ebcdic_to_multibyte(ea_buf[i].cc,
-				ea_buf[i].cs, mb, sizeof(mb), True,
-				TRANS_LOCAL, &uc);
-			if (nmb == 0)
-			    c = ' ';
-			else
-			    c = mb[0]; /* XXX: What about multi-byte? */
-		}
+			uc = ebcdic_to_unicode(ea_buf[i].cc, ea_buf[i].cs,
+				False);
+			if (uc == 0)
+				uc = ' ';
 #endif /*]*/
-		if (c == ' ')
+		}
+
+		/* Translate to a type-specific format and write it out. */
+		if (uc == ' ')
 			ns++;
+#if defined(X3270_DBCS) /*[*/
+		else if (uc == 0x3000)
+		    	ns += 2;
+#endif /*]*/
 		else {
 			while (nr) {
 #if defined(_WIN32) /*[*/
@@ -296,48 +301,58 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 				if (!any) {
 					fprintf(f, "<html>\n"
 						   "<head>\n"
-						   " <meta http-equiv=\"Content-Type\" content=\"text/html; charset=%s\">\n"
+						   " <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
 						   "</head>\n"
 						   " <body>\n"
 						   "  <table border=0>"
 						   "<tr bgcolor=black><td>"
 						   "<pre><font color=%s>%s",
-						   locale_codeset,
 						   html_color(current_color),
 						   current_high? "<b>": "");
 				}
 			}
 			any = True;
-#if defined(X3270_DBCS) /*[*/
-			if (is_dbcs) {
-				(void) fputs(mb, f);
-				i++;
-			}
-			else
-#endif /*]*/
-			{
 #if defined(_WIN32) /*[*/
-			    	if (ptype == P_RTF) {
-				    	if (uc & ~0xff) {
-					    	fprintf(f, "\\u%ld", uc);
-					} else if (c & 0x80) {
-					    	fprintf(f, "\\'%2x", c & 0xff);
-					} else if (c == '\\' || c == '{' ||
-							c == '}') {
-					    	fprintf(f, "\\%c", c);
-					} else if (c == '-') {
-					    	fprintf(f, "\\_");
-					} else if (c == ' ') {
-					    	fprintf(f, "\\~");
-					} else {
-					    	fputc(c, f);
-					}
-				} else
+			if (ptype == P_RTF) {
+				if (uc & ~0xff) {
+					fprintf(f, "\\u%ld", uc);
+				} else {
+					nmb = unicode_to_multibyte(uc,
+						mb, sizeof(mb));
+					if (mb[0] & 0x80)
+						fprintf(f, "\\'%2x",
+							mb[0] & 0xff);
+					else if (mb[0] == '\\' ||
+						mb[0] == '{' ||
+						mb[0] == '}')
+						fprintf(f, "\\%c",
+							mb[0]);
+					else if (mb[0] == '-')
+						fprintf(f, "\\_");
+					else if (mb[0] == ' ')
+						fprintf(f, "\\~");
+					else
+						fputc(mb[0], f);
+				}
+			} else
 #endif /*]*/
-				if ((ptype == P_HTML) && c == '<')
+			if (ptype == P_HTML) {
+				if (uc == '<')
 					fprintf(f, "&lt;");
-				else
-					(void) fputs(mb, f);
+				else {
+					nmb = unicode_to_utf8(uc, mb);
+					{
+					    int k;
+
+					    for (k = 0; k < nmb; k++) {
+						fputc(mb[k], f);
+					    }
+					}
+				}
+			} else {
+				nmb = unicode_to_multibyte(uc,
+					mb, sizeof(mb));
+				(void) fputs(mb, f);
 			}
 		}
 	}

@@ -178,7 +178,7 @@ sbcs_to_mb(unsigned char ebc, char *mb)
 		}
 
 		/* Have a local converter; use it below. */
-		Ubuf = ebcdic_to_unicode(ebc, True, False);
+		Ubuf = ebcdic_base_to_unicode(ebc, True, False);
 	} else {
 		/* Have an SBCS converter.  Convert from SBCS to Unicode. */
 		err = U_ZERO_ERROR;

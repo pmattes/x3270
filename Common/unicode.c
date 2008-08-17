@@ -151,7 +151,46 @@ cpalias_t cpaliases[] = {
 static uni_t *cur_uni = NULL;
 
 /*
- * Translate a single EBCDIC character to Unicode for display purposes.
+ * Translate a single EBCDIC character in an arbitrary character set to
+ * Unicode.  Note that CS_DBCS is never used -- use CS_BASE and pass an
+ * EBCDIC character > 0xff.
+ *
+ * Returns 0 for no translation.
+ */
+unsigned long
+ebcdic_to_unicode(unsigned short c, unsigned char cs, Boolean for_display)
+{
+	int iuc;
+	unsigned long uc;
+
+	/* Control characters become blanks. */
+    	if (c <= 0x41 || c == 0xff)
+	    	uc = 0;
+
+	/* Dispatch on the character set. */
+	else if ((cs & CS_GE) || ((cs & CS_MASK) == CS_APL)) {
+		iuc = apl_to_unicode(c);
+		if (iuc != -1)
+		    	uc = iuc;
+		else
+		    	uc = 0;
+	} else if (cs == CS_LINEDRAW) {
+	    	iuc = linedraw_to_unicode(c);
+		if (iuc != -1)
+		    	uc = iuc;
+		else
+		    	uc = 0;
+	} else if (cs != CS_BASE)
+	    	uc = 0;
+	else
+	    	uc = ebcdic_base_to_unicode(c, False, for_display);
+
+	return uc;
+}
+
+/*
+ * Translate a single EBCDIC character in the base or DBCS character sets to
+ *  Unicode.
  *
  * EBCDIC 'FM' and 'DUP' characters are treated specially.  If 'for_display'
  *  is set, they are returned as U+f8fe and U+feff (private-use) respectively
@@ -163,11 +202,12 @@ static uni_t *cur_uni = NULL;
  *  spaces; otherwise they are returned as 0.
  */
 unsigned long
-ebcdic_to_unicode(unsigned short c, Boolean blank_undef, Boolean for_display)
+ebcdic_base_to_unicode(unsigned short c, Boolean blank_undef,
+	Boolean for_display)
 {
 #if defined(X3270_DBCS) /*[*/
     if (c & 0xff00)
-	return ebcdic_to_unicode_dbcs(c, blank_undef);
+	return ebcdic_dbcs_to_unicode(c, blank_undef);
 #endif /*]*/
 
     if (c == 0x40)

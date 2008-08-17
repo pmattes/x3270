@@ -325,12 +325,14 @@ get_charset_name(void)
  * the EBCDIC character.
  *
  * XXX: For Tcl3270, this should always be a simple UTF-8 conversion.
+ *
+ * XXX: The control-code and character set processing should happen in
+ *  ebcdic_base_to_unicode, not here.
  */
 int
 ebcdic_to_multibyte(unsigned short ebc, unsigned char cs, char mb[],
 	int mb_len, int blank_undef, trans_t purpose, unsigned long *ucp)
 {
-    int xuc;
     unsigned long uc;
 
 #if defined(_WIN32) /*[*/
@@ -348,40 +350,20 @@ ebcdic_to_multibyte(unsigned short ebc, unsigned char cs, char mb[],
     size_t nc;
 #endif /*]*/
 
-    *ucp = 0;
-
-    /* Control characters become blanks. */
-    if (ebc <= 0x41 || ebc == 0xff) {
-	mb[0] = ' ';
-	mb[1] = '\0';
-	return 2;
+    /* Translate from EBCDIC to Unicode. */
+    uc = ebcdic_to_unicode(ebc, cs, (purpose == TRANS_DISPLAY));
+    *ucp = uc;
+    if (uc == 0) {
+	if (blank_undef) {
+	    mb[0] = ' ';
+	    mb[1] = '\0';
+	    return 2;
+	} else {
+	    return 0;
+	}
     }
 
-    /* Do the initial translation from EBCDIC to Unicode. */
-    if ((cs & CS_GE) || ((cs & CS_MASK) == CS_APL)) {
-	xuc = apl_to_unicode(ebc);
-	if (xuc == -1)
-	    uc = 0;
-	else {
-	    uc = xuc;
-	    *ucp = xuc;
-	}
-    } else if (cs == CS_LINEDRAW) {
-	xuc = linedraw_to_unicode(ebc);
-	if (xuc == -1)
-	    uc = 0;
-	else {
-	    uc = xuc;
-	    *ucp = xuc;
-	}
-    } else if (cs != CS_BASE) {
-	uc = 0;
-    } else {
-	uc = ebcdic_to_unicode(ebc, blank_undef, (purpose == TRANS_DISPLAY));
-	*ucp = uc;
-    }
-    if (uc == 0)
-	return 0;
+    /* Translae from Unicode to local multibyte. */
 
 #if defined(_WIN32) /*[*/
     /*

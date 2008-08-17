@@ -1261,13 +1261,13 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 		    default:
 			/*
 			 * Note that we use the 'for_display' flavor of
-			 * ebcdic_to_unicode here, so DUP and FM are translated
-			 * to special private-use Unicode values.  These will
-			 * (hopefully) be ignored by other applications, but
-			 * translated back to DUP and FM if pasted back into
-			 * x3270.
+			 * ebcdic_base_to_unicode here, so DUP and FM are
+			 * translated to special private-use Unicode values.
+			 * These will (hopefully) be ignored by other
+			 * applications, but translated back to DUP and FM if
+			 * pasted back into x3270.
 			 */
-			uc = ebcdic_to_unicode(ea_buf[baddr].cc, True,
+			uc = ebcdic_base_to_unicode(ea_buf[baddr].cc, True,
 				True);
 			*rlen = unicode_to_utf8(uc, (char *)r);
 			if (*rlen < 0)
