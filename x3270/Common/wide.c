@@ -122,38 +122,6 @@ dbcs_to_unicode16(unsigned char ebc1, unsigned char ebc2, unsigned char c[])
 }
 
 /*
- * Translate a DBCS EBCDIC character to a local multi-byte character.
- * Returns -1 for error, or the mb length.  NULL terminates.
- */
-int
-dbcs_to_mb(unsigned char ebc1, unsigned char ebc2, char *mb)
-{
-	UErrorCode err = U_ZERO_ERROR;
-	unsigned char w[2];
-	UChar Ubuf;
-	int len;
-
-	if (local_converter == NULL) {
-		*mb = '?';
-		*(mb + 1) = '\0';
-		return 1;
-	}
-
-	/* Translate to Unicode first. */
-	dbcs_to_unicode16(ebc1, ebc2, w);
-	Ubuf = (w[0] << 8) | w[1];
-
-	/* Then translate to the local encoding. */
-	len = ucnv_fromUChars(local_converter, mb, 16, &Ubuf, 1, &err);
-	if (err != U_ZERO_ERROR) {
-		trace_ds("[fromUnicode of U+%04x to local failed, ICU "
-		    "error %d]\n", Ubuf, (int)err);
-		return -1;
-	}
-	return len;
-}
-
-/*
  * Translate an SBCS EBCDIC character to a local multi-byte character.
  * Returns -1 for error, or the mb length.  NULL terminates.
  */
