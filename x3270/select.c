@@ -1224,7 +1224,9 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 	case DBCS_LEFT:
 	    baddr2 = baddr;
 	    INC_BA(baddr2);
-	    *rlen = dbcs_to_mb(ea_buf[baddr].cc, ea_buf[baddr2].cc, (char *)r);
+	    uc = ebcdic_to_unicode((ea_buf[baddr].cc << 8) | ea_buf[baddr2].cc,
+		    CS_BASE, False);
+	    *rlen = unicode_to_utf8(uc, (char *)r);
 	    return;
 	case DBCS_RIGHT:
 	    /* Returned the entire character when the left half was read. */
