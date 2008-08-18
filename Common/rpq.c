@@ -461,7 +461,7 @@ get_rpq_user(unsigned char buf[], const int buflen)
 	 *    accepted "as is" then translated from ASCII to EBCDIC.
 	 */
 	const char *rpqtext = CN;
-	int x;
+	int x = 0;
 	struct rpq_keyword *kw;
 	char *sbuf, *sbuf0;
 	const char *s;

@@ -130,8 +130,8 @@ charset_init(char *csname)
 	rc = charset_init2(csname, codepage, display_charsets);
 #if defined(X3270_DBCS) /*[*/
 	if (need_free) {
-	    Free(codepage);
-	    Free(display_charsets);
+	    Free((char *)codepage);
+	    Free((char *)display_charsets);
 	}
 #endif /*]*/
 	if (rc != CS_OKAY) {
@@ -267,9 +267,6 @@ charset_init2(char *csname, const char *codepage, const char *display_charsets)
 		return CS_PREREQ;
 	}
 #else /*][*/
-#if !defined(_WIN32) /*[*/
-	utf8_set_display_charsets(rcs? rcs: default_display_charset, csname);
-#endif /*]*/
 #if defined(X3270_DBCS) /*[*/
 	if (n_rcs > 1)
 		dbcs = True;

@@ -1702,32 +1702,32 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 					(buf[first + i].cc << 8) |
 					 buf[first + i + 1].cc,
 					CS_BASE, mb, sizeof(mb),
-					TRUE, TRANS_LOCAL, &uc);
+					True, TRANS_LOCAL, &uc);
 				for (j = 0; j < len-1; j++) {
 					s += sprintf(s, "%c", mb[j]);
 				}
-				continue;
 			} else if (IS_RIGHT(ctlr_dbcs_state(first + i))) {
 				continue;
 			} else
 #endif /*]*/
 			{
-				(void) ebcdic_to_multibyte(
+				len = ebcdic_to_multibyte(
 						       buf[first + i].cc,
 						       buf[first + i].cs,
 						       mb, sizeof(mb),
-						       False,
+						       True,
 						       TRANS_LOCAL,
 						       &uc);
+				for (j = 0; j < len-1; j++) {
+					s += sprintf(s, "%c", mb[j]);
+				}
 			}
-			s += sprintf(s, "%s", mb);
 		} else {
 			s += sprintf(s, "%s%02x",
 				i ? " " : "",
 				buf[first + i].cc);
 		}
-		if (!any)
-			any = True;
+		any = True;
 	}
 	if (any) {
 		*s = '\0';

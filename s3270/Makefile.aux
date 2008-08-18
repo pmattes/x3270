@@ -1,4 +1,4 @@
-# Copyright 1995, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007 by Paul
+# Copyright 1995, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008 by Paul
 #   Mattes.
 #  Permission to use, copy, modify, and distribute this software and its
 #  documentation for any purpose and without fee is hereby granted,
@@ -23,21 +23,20 @@ all:
 SOURCES = XtGlue.c actions.c ansi.c apl.c charset.c ctlr.c ft.c ft_cut.c \
 	ft_dft.c glue.c host.c idle.c kybd.c macros.c print.c proxy.c \
 	resolver.c resources.c rpq.c see.c sf.c smain.c tables.c telnet.c \
-	toggles.c trace_ds.c utf8.c util.c wide.c xio.c
+	toggles.c trace_ds.c unicode.c unicode_dbcs.c utf8.c util.c xio.c
 HEADERS = 3270ds.h actionsc.h ansic.h aplc.h appres.h cg.h charsetc.h \
 	childc.h ctlr.h ctlrc.h dialogc.h ftc.h ft_cutc.h ft_cut_ds.h \
 	ft_dftc.h ft_dft_ds.h globals.h gluec.h hostc.h idlec.h keymapc.h \
 	keypadc.h kybdc.h localdefs.h macrosc.h menubarc.h objects.h \
 	popupsc.h printc.h proxyc.h resolverc.h resources.h savec.h screen.h \
 	screenc.h scrollc.h seec.h selectc.h sfc.h statusc.h tablesc.h \
-	arpa_telnet.h telnetc.h tn3270e.h togglesc.h trace_dsc.h utf8c.h \
-	utilc.h w3miscc.h widec.h xioc.h xl.h X11/keysym.h
+	arpa_telnet.h telnetc.h tn3270e.h togglesc.h trace_dsc.h unicodec.h \
+	unicode_dbcs_c.h utf8c.h utilc.h w3miscc.h xioc.h xl.h X11/keysym.h
 MISC = version.txt s3270.man x3270if.man x3270-script.man \
 	mkversion.sh Makefile.in conf.h.in README x3270if.c \
 	Examples/cms_cmd.expect x3270_glue.expect configure install-sh \
 	config.sub config.guess parts.h.in configure.in mkfb.c X3270.xad \
-	LICENSE ibm-1027_P100-1995.ucm ibm-300_P110-1997.ucm \
-	ibm-837_P100-2000.ucm ibm-1385_P100-1997.ucm s3270_glue.bash
+	LICENSE s3270_glue.bash
 DEVKIT = Makefile.aux m42man m42html instlist.base \
 	instlist.man
 HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
