@@ -1052,6 +1052,9 @@ ansi_printing(int ig1 unused, int ig2 unused)
 
 	if (insert_mode)
 		(void) ansi_insert_chars(1, 0);
+#if defined(X3270_DBCS) /*[*/
+	d = ctlr_dbcs_state(cursor_addr);
+#endif /*]*/
 	switch (csd[(once_cset != -1) ? once_cset : cset]) {
 	    case CSD_LD:	/* line drawing "0" */
 		if (ansi_ch >= 0x5f && ansi_ch <= 0x7e)
@@ -1077,7 +1080,6 @@ ansi_printing(int ig1 unused, int ig2 unused)
 		else
 			ctlr_add(cursor_addr, ebc_ch, CS_BASE);
 #else /*][*/
-		d = ctlr_dbcs_state(cursor_addr);
 		if (ebc_ch & ~0xff) {
 
 		    	/* Add a DBCS character to the buffer. */

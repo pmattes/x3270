@@ -19,17 +19,14 @@ all:: s3270 x3270if
 SRCS = actions.c ansi.c apl.c charset.c ctlr.c ft.c ft_cut.c \
 	ft_dft.c glue.c host.c idle.c kybd.c macros.c print.c proxy.c \
 	resolver.c resources.c rpq.c see.c sf.c smain.c tables.c telnet.c \
-	toggles.c trace_ds.c unicode.c utf8.c util.c @DBCS_C@ xio.c XtGlue.c
+	toggles.c trace_ds.c unicode.c unicode_dbcs.c utf8.c util.c xio.c \
+	XtGlue.c
 VOBJS = actions.o ansi.o apl.o charset.o ctlr.o fallbacks.o ft.o ft_cut.o \
 	ft_dft.o glue.o host.o idle.o kybd.o macros.o print.o proxy.o \
 	resolver.o resources.o rpq.o see.o sf.o smain.o tables.o telnet.o \
-	toggles.o trace_ds.o unicode.o utf8.o util.o @DBCS_O@ xio.o XtGlue.o
+	toggles.o trace_ds.o unicode.o unicode_dbcs.o utf8.o util.o xio.o \
+	XtGlue.o
 OBJS1 = $(VOBJS) version.o
-@CNV@IDP = @ICU_DATA_PREFIX_@
-@CNV@ICU_UCM = ibm-837_P100-2000.ucm ibm-300_P110-1997.ucm \
-@CNV@	ibm-1027_P100-1995.ucm ibm-1385_P100-1997.ucm
-@CNV@ICU_CNV = $(IDP)ibm-837_P100-2000.cnv $(IDP)ibm-300_P110-1997.cnv \
-@CNV@	$(IDP)ibm-1027_P100-1995.cnv $(IDP)ibm-1385_P100-1997.cnv
 
 LIBDIR = @libdir@
 prefix = @prefix@
@@ -62,26 +59,11 @@ s3270: $(OBJS1)
 x3270if: x3270if.c
 	$(CC) $(CFLAGS) -o $@ x3270if.c $(LDFLAGS) $(LIBS)
 
-@CNV@all:: $(ICU_CNV)
-@CNV@$(IDP)ibm-837_P100-2000.cnv: ibm-837_P100-2000.ucm
-@CNV@	makeconv -d . @ICU_DASHP@ ibm-837_P100-2000.ucm
-@CNV@$(IDP)ibm-300_P110-1997.cnv: ibm-300_P110-1997.ucm
-@CNV@	makeconv -d . @ICU_DASHP@ ibm-300_P110-1997.ucm
-@CNV@$(IDP)ibm-1027_P100-1995.cnv: ibm-1027_P100-1995.ucm
-@CNV@	makeconv -d . @ICU_DASHP@ ibm-1027_P100-1995.ucm
-@CNV@$(IDP)ibm-1385_P100-1997.cnv: ibm-1385_P100-1997.ucm
-@CNV@	makeconv -d . @ICU_DASHP@ ibm-1385_P100-1997.ucm
-
 install:: s3270 x3270if
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)
 	$(INSTALL_PROGRAM) s3270 $(DESTDIR)$(BINDIR)/s3270
 	$(INSTALL_PROGRAM) x3270if $(DESTDIR)$(BINDIR)/x3270if
-
-@CNV@install:: $(ICU_CNV)
-@CNV@	[ -d $(DESTDIR)$(LIBX3270DIR) ] || \
-@CNV@		mkdir -p $(DESTDIR)$(LIBX3270DIR)
-@CNV@	$(INSTALL) $(INSTDATAFLAGS) $(ICU_CNV) $(DESTDIR)$(LIBX3270DIR)
 
 install.man:
 	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \
@@ -92,8 +74,6 @@ install.man:
 
 clean::
 	$(RM) s3270 *.o
-@CNV@clean::
-@CNV@	$(RM) $(ICU_CNV)
 
 depend:
 	gccmakedep $(XCPPFLAGS) -s "# DO NOT DELETE" $(SRCS)

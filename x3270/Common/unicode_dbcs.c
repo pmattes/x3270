@@ -3204,7 +3204,7 @@ set_uni_dbcs(const char *csname, const char **codepage,
 	const char **display_charsets)
 {
 	int i;
-	const char *realname;
+	const char *realname = csname;
 	int rc = -1;
 
 	/* Search for an alias. */

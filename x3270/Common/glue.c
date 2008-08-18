@@ -1124,7 +1124,7 @@ read_resource_file(const char *filename, Boolean fatal)
 		/* If this line is a continuation, try again. */
 		if (bsl) {
 			ilen += strlen(buf + ilen);
-			if (ilen >= sizeof(buf) - 1) {
+			if ((unsigned)ilen >= sizeof(buf) - 1) {
 				(void) sprintf(where, "%s:%d: Line too long\n",
 				    filename, lno);
 				Warning(where);

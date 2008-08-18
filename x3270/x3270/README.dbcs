@@ -1,6 +1,3 @@
-This is the seventh Alpha release of DBCS support for x3270.  It is for debug
-and integration purposes only.
-
 How to Run x3270 in DBCS Mode
 -----------------------------
 DBCS is an attribute of your locale and the host character set you select.
@@ -17,10 +14,7 @@ selected via the option '-charset simplified-chinese'.
 In order to get multi-byte input, you must run an X Input Method (e.g., xcin,
 kinput2).  The input method name can be automatically derived from
 the locale, or can be specified by the XMODIFIERS environment variable or by
-the '-im' command-line option.  You must also specify the local encoding
-method, which for various reasons cannot be automatically detected from the
-locale.  This is specified with the '-km' command-line option, and is an
-ICU converter name or alias (e.g., 'EUC-CN' or 'EUC-JP').
+the '-im' command-line option.
 
 The preedit type used by the input method can be specified by the '-pt' option,
 which takes the values 'Root' or 'OverTheSpot'.  The vertical offset of the

@@ -1099,7 +1099,7 @@ retry:
 		break;
 	case DBCS_NONE:
 		if (ea_buf[faddr].ic) {
-			Boolean extend_left = FALSE;
+			Boolean extend_left = False;
 
 			/* Is there room? */
 			if (insert) {
