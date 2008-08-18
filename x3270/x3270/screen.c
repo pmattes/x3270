@@ -69,9 +69,6 @@
 #include "utf8c.h"
 #include "utilc.h"
 #include "xioc.h"
-#if defined(X3270_DBCS) /*[*/
-#include "widec.h"
-#endif /*]*/
 
 #if defined(HAVE_SYS_SELECT_H) /*[*/
 #include <sys/select.h>		/* fd_set declaration */

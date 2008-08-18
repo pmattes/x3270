@@ -70,9 +70,6 @@
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
-#if defined(X3270_DBCS) /*[*/
-#include "widec.h"
-#endif /*]*/
 
 #if defined(_WIN32) /*[*/
 #include <windows.h>
@@ -3222,10 +3219,6 @@ emulate_input(char *s, int len, Boolean pasting)
 	int orig_addr = cursor_addr;
 	int orig_col = BA_TO_COL(cursor_addr);
 	Boolean skipped = False;
-#if defined(ONLY_DBCS) && defined(X3270_DBCS) /*[*/
-	unsigned char ebc[2];
-	unsigned char cx;
-#endif /*]*/
 	static unsigned long *w_ibuf = NULL;
 	static size_t w_ibuf_len = 0;
 	unsigned long c;
@@ -3357,24 +3350,6 @@ emulate_input(char *s, int len, Boolean pasting)
 						&skipped);
 				break;
 			default:
-#if defined(ONLY_DBCS) && defined(X3270_DBCS) /*[*/
-				/*
-				 * Try mapping it to the 8-bit character set,
-				 * otherwise to the 16-bit character set.
-				 */
-				if (dbcs_map8(c, &cx)) {
-					key_UCharacter((unsigned char)cx,
-					    KT_STD, ia_cause, &skipped);
-					break;
-				} else if (dbcs_map16(c, ebc)) {
-					(void) key_WCharacter(ebc, &skipped);
-					break;
-				} else {
-					trace_event("Cannot convert U+%04lx "
-						"to EBCDIC\n", c & 0xffff);
-					break;
-				}
-#endif /*]*/
 				if (pasting &&
 					(c >= UPRIV_GE_00 &&
 					 c <= UPRIV_GE_ff))

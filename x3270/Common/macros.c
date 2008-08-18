@@ -65,7 +65,6 @@
 #include "utf8c.h"
 #include "utilc.h"
 #include "xioc.h"
-#include "widec.h"
 
 #if defined(_WIN32) /*[*/
 #include "windows.h"

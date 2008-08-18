@@ -24,8 +24,7 @@ LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
 		  menubar.c popups.c printer.c print.c proxy.c resolver.c \
 		  resources.c rpq.c save.c screen.c scroll.c see.c select.c \
 		  sf.c status.c tables.c toggles.c telnet.c trace_ds.c \
-		  unicode.c unicode_dbcs.c utf8.c util.c xio.c \
-		  @DBCS_C@
+		  unicode.c unicode_dbcs.c utf8.c util.c xio.c
           VOBJS = Cme.o CmeBSB.o CmeLine.o CmplxMenu.o Husk.o about.o \
 		  actions.o ansi.o apl.o charset.o child.o ctlr.o dialog.o \
 		  display8.o @FALLBACKS_O@ ft.o ft_cut.o ft_dft.o host.o \
@@ -34,7 +33,7 @@ LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
 		  resolver.o resources.o rpq.o save.o screen.o scroll.o see.o \
 		  select.o sf.o status.o tables.o telnet.o toggles.o \
 		  trace_ds.o unicode.o unicode_dbcs.o utf8.o util.o xio.o \
-		  @LIBOBJS@ @DBCS_O@ 
+		  @LIBOBJS@
           OBJS1 = $(VOBJS) version.o
           FONTS = FontObj(3270-12) FontObj(3270-12b) FontObj(3270-20) \
 		  FontObj(3270-20b) FontObj(3270) FontObj(3270b) \
@@ -48,14 +47,6 @@ LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
 		  FontObj(3270gt24) FontObj(3270gt24b) FontObj(3270gt32) \
 		  FontObj(3270gt32b) FontObj(3270gt8) FontObj(3270h)
       HOSTSFILE = ibm_hosts
-@INSTALL_CNV@
-#ifdef INSTALL_CNV
-            IDP = @ICU_DATA_PREFIX_@
-        ICU_UCM = ibm-837_P100-2000.ucm ibm-300_P110-1997.ucm \
-                  ibm-1027_P100-1995.ucm ibm-1388_P103-2001.ucm
-        ICU_CNV = $(IDP)ibm-837_P100-2000.cnv $(IDP)ibm-300_P110-1997.cnv \
-                  $(IDP)ibm-1027_P100-1995.cnv $(IDP)ibm-1388_P103-2001.cnv
-#endif
 
 /* Variables set by autoconf. */
     FONTINSTDIR = @IFONTDIR@
@@ -189,18 +180,6 @@ all::
 	-cd pr3287 && $(MAKE) PROJECTROOT=$(PROJECTROOT)
 #endif
 
-#ifdef INSTALL_CNV
-all:: $(ICU_CNV)
-$(IDP)ibm-837_P100-2000.cnv: ibm-837_P100-2000.ucm
-	makeconv -d . @ICU_DASHP@ ibm-837_P100-2000.ucm
-$(IDP)ibm-300_P110-1997.cnv: ibm-300_P110-1997.ucm
-	makeconv -d . @ICU_DASHP@ ibm-300_P110-1997.ucm
-$(IDP)ibm-1027_P100-1995.cnv: ibm-1027_P100-1995.ucm
-	makeconv -d . @ICU_DASHP@ ibm-1027_P100-1995.ucm
-$(IDP)ibm-1388_P103-2001.cnv: ibm-1388_P103-2001.ucm
-	makeconv -d . @ICU_DASHP@ ibm-1388_P103-2001.ucm
-#endif
-
 /******************************************************************************
  * Install rules.                                                             *
  ******************************************************************************/
@@ -222,12 +201,6 @@ $(DESTDIR)$(FONTINSTDIR)/fonts.dir::
 install:: $(HOSTSFILE)
 	@[ -r $(DESTDIR)$(LIBX3270DIR)/$(HOSTSFILE) ] || \
 		$(INSTALL) -c $(INSTDATFLAGS) $(HOSTSFILE) $(DESTDIR)$(LIBX3270DIR)/$(HOSTSFILE)
-
-#ifdef INSTALL_CNV
-/* Extra install rule for the ICU conversion tables. */
-install:: $(ICU_CNV)
-	$(INSTALL) -c $(INSTDATAFLAGS) $(ICU_CNV) $(DESTDIR)$(LIBX3270DIR)
-#endif
 
 /*
  * Install rules for x3270if, x3270-script and ibm_hosts man pages.
@@ -270,20 +243,12 @@ install.byprefix::
 install.byprefix::
 	-cd pr3287 && $(MAKE) install
 #endif
-#ifdef INSTALL_CNV
-/* Extra install rule for the ICU conversion tables. */
-install.byprefix:: $(ICU_CNV)
-	$(INSTALL) -c $(INSTDATAFLAGS) $(ICU_CNV) $(DESTDIR)$(LIBX3270DIR)
-#endif
 
 /******************************************************************************
  * Clean rules.                                                               *
  ******************************************************************************/
 clean:: 
 	$(RM) $(FONTS) qcpp mkfb fallbacks.c
-#ifdef INSTALL_CNV
-	$(RM) $(ICU_CNV)
-#endif
 #ifdef PR3287
 	-cd pr3287 && $(MAKE) clean
 #endif

@@ -42,7 +42,6 @@
 #include "unicode_dbcsc.h"
 #include "utf8c.h"
 #include "utilc.h"
-#include "widec.h"
 
 #include <errno.h>
 #include <locale.h>

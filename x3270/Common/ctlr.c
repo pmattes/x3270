@@ -54,7 +54,6 @@
 #include "telnetc.h"
 #include "trace_dsc.h"
 #include "utilc.h"
-#include "widec.h"
 
 /* Externals: kybd.c */
 extern unsigned char aid;
