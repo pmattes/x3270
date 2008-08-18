@@ -45,6 +45,7 @@ enum ftd {
 };
 extern enum ftd ft_dbcs_state;
 extern unsigned char ft_dbcs_byte1;
+extern Boolean ft_last_dbcs;
 #endif /*]*/
 
 extern void ft_aborting(void);
