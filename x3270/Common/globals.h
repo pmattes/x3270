@@ -93,7 +93,7 @@
 #endif /*]*/
 
 /* Local process (-e) header files. */
-#if defined(X3270_LOCAL_PROCESS) && defined(HAVE_LIBUTIL) /*[*/
+#if defined(X3270_LOCAL_PROCESS) && defined(HAVE_FORKPTY) /*[*/
 #define LOCAL_PROCESS	1
 #include <termios.h>
 #if defined(HAVE_PTY_H) /*[*/

@@ -37,7 +37,8 @@ AC_SUBST(XPRECOMP)
 dnl Check for libraries.
 dnl Note that the order here is important.  The last libraries should appear
 dnl first, so that objects in them can be used by subsequent libraries.
-AC_CHECK_LIB(util, forkpty)
+AC_SEARCH_LIBS(forkpty, util)
+AC_CHECK_FUNCS(forkpty)
 AC_CHECK_LIB(nsl, gethostbyname)
 AC_CHECK_LIB(socket, socket)
 
