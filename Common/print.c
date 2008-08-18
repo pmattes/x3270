@@ -44,9 +44,6 @@
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
-#if defined(X3270_DBCS) /*[*/
-#include "widec.h"
-#endif /*]*/
 #if defined(_WIN32) /*[*/
 #include <windows.h>
 #include <io.h>
