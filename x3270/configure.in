@@ -104,6 +104,7 @@ dnl Check for other libraries.
 dnl Note that the order here is important.  The last libraries should appear
 dnl first, so that objects in them can be used by subsequent libraries.
 AC_SEARCH_LIBS(forkpty, util)
+AC_CHECK_FUNCS(forkpty)
 AC_SEARCH_LIBS(gethostbyname, nsl_s)
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)
