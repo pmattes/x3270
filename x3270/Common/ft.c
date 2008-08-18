@@ -190,6 +190,7 @@ unsigned char i_ft2asc[256] = {
 #if defined(X3270_DBCS) /*[*/
 enum ftd ft_dbcs_state = FT_DBCS_NONE;
 unsigned char ft_dbcs_byte1;
+Boolean ft_last_dbcs = False;
 #endif /*]*/
 
 #if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
@@ -1194,6 +1195,9 @@ ft_start(void)
 	ft_state = FT_AWAIT_ACK;
 	ft_is_cut = False;
 	ft_last_cr = False;
+#if defined(X3270_DBCS) /*[*/
+	ft_last_dbcs = False;
+#endif /*]*/
 
 	return 1;
 }

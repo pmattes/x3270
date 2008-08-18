@@ -464,8 +464,16 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 	    	int consumed;
 
 	    	c = fgetc(ft_local_file);
-		if (c == EOF)
+		if (c == EOF) {
+#if defined(X3270_DBCS) /*[*/
+		    	if (ft_last_dbcs) {
+				*bufptr = EBC_si;
+				ft_last_dbcs = False;
+				return 1;
+			}
+#endif /*]*/
 		    	return -1;
+		}
 		error = ME_NONE;
 		inbuf[in_ix++] = c;
 		(void) multibyte_to_unicode(inbuf, in_ix, &consumed, &error);
@@ -481,9 +489,21 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 
 	/* Expand NL to CR/LF. */
 	if (cr_flag && !ft_last_cr && c == '\n') {
-	    	*bufptr = '\r';
-	    	dft_ungetc_cache[0] = '\n';
-		dft_ungetc_count = 1;
+#if defined(X3270_DBCS) /*[*/
+	    	if (ft_last_dbcs) {
+		    	*bufptr = EBC_si;
+			dft_ungetc_cache[0] = '\r';
+			dft_ungetc_cache[1] = '\n';
+			dft_ungetc_count = 2;
+			ft_last_dbcs = False;
+			return 1;
+		} else
+#endif /*]*/
+		{
+			*bufptr = '\r';
+			dft_ungetc_cache[0] = '\n';
+			dft_ungetc_count = 1;
+		}
 		return 1;
 	}
 	ft_last_cr = (c == '\r');
@@ -503,20 +523,28 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 #if defined(X3270_DBCS) /*[*/
 		unsigned char *bp0 = bufptr;
 
-	    	store_inbyte(EBC_so,                    &bufptr, &numbytes);
+		if (!ft_last_dbcs)
+			store_inbyte(EBC_so, &bufptr, &numbytes);
 		store_inbyte(i_ft2asc[(e >> 8) & 0xff], &bufptr, &numbytes);
 		store_inbyte(i_ft2asc[e & 0xff],        &bufptr, &numbytes);
-	    	store_inbyte(EBC_si,                    &bufptr, &numbytes);
+		ft_last_dbcs = True;
 		return bufptr - bp0;
 #else /*][*/
 		*bufptr = '?';
 		return 1;
 #endif /*]*/
-	} else if (e == 0) {
-		*bufptr = '?';
-		return 1;
 	} else {
-	    	*bufptr = i_ft2asc[e];
+	    	unsigned char nc = e? i_ft2asc[e]: '?';
+
+#if defined(X3270_DBCS) /*[*/
+	    	if (ft_last_dbcs) {
+		    	*bufptr = EBC_si;
+			dft_ungetc_cache[0] = nc;
+			dft_ungetc_count = 1;
+			ft_last_dbcs = False;
+		} else
+#endif /*]*/
+			*bufptr = nc;
 		return 1;
 	}
 }

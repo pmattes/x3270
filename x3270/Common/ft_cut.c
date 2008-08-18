@@ -313,11 +313,19 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 
 		/* Handle nulls separately. */
 		if (!c) {
+#if defined(X3270_DBCS) /*[*/
+		    	if (ft_last_dbcs) {
+			    	ob += store_download(EBC_si, ob);
+				ft_last_dbcs = False;
+			}
+#endif /*]*/
 			if (quadrant != OTHER_2) {
 				quadrant = OTHER_2;
 				*ob++ = conv[quadrant].selector;
+				len--;
 			}
 			*ob++ = XLATE_NULL;
+			buf++;
 			len--;
 			continue;
 		}
@@ -348,17 +356,26 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 		    	e = unicode_to_ebcdic(u);
 		if (e & 0xff00) {
 #if defined(X3270_DBCS) /*[*/
-			ob += store_download(EBC_so, ob);
+		    	if (!ft_last_dbcs)
+				ob += store_download(EBC_so, ob);
 			ob += store_download(i_ft2asc[(e >> 8) & 0xff], ob);
 			ob += store_download(i_ft2asc[e & 0xff], ob);
-			ob += store_download(EBC_si, ob);
+			ft_last_dbcs = True;
 #else /*][*/
 			ob += store_download('?', ob);
 #endif /*]*/
-		} else if (e == 0) {
-		    	ob += store_download('?', ob);
 		} else {
-			ob += store_download(i_ft2asc[e], ob);
+#if defined(X3270_DBCS) /*[*/
+		    	if (ft_last_dbcs) {
+			    	ob += store_download(EBC_si, ob);
+				ft_last_dbcs = False;
+			}
+#endif /*]*/
+			if (e == 0) {
+				ob += store_download('?', ob);
+			} else {
+				ob += store_download(i_ft2asc[e], ob);
+			}
 		}
 		buf += consumed;
 		len -= consumed;
@@ -675,8 +692,15 @@ xlate_getc(void)
 	/* Get the next (possibly multi-byte) character from the file. */
 	do {
 		c = fgetc(ft_local_file);
-		if (c == EOF)
+		if (c == EOF) {
+#if defined(X3270_DBCS) /*[*/
+		    	if (ft_last_dbcs) {
+			    	ft_last_dbcs = False;
+				return EBC_si;
+			}
+#endif /*]*/
 			return c;
+		}
 		ft_length++;
 		mb[mb_len++] = c;
 		error = ME_NONE;
