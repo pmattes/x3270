@@ -137,12 +137,7 @@ x3270.charsetList:			U.S. English (CP 37): us-intl\n\
 					Icelandic (CP 871): icelandic\n\
 					Italian (CP 280): italian\n\
 #ifdef X3270_DBCS
-					Japanese>CP 1027+300: japanese\n\
-					Japanese>CP 290+300: japanese-290\n\
-					Japanese>CP 930: japanese-930\n\
-					Japanese>CP 939: japanese-939\n\
-					Japanese>CP 1390: japanese-1390\n\
-					Japanese>CP 1399: japanese-1399\n\
+					Japanese (CP 1027+300): japanese\n\
 #endif
 					Norwegian (CP 277): norwegian\n\
 					Open Systems (CP 1047): cp1047\n\
