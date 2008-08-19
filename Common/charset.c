@@ -119,7 +119,7 @@ charset_init(char *csname)
 		return CS_NOTFOUND;
 #if defined(X3270_DBCS) /*[*/
 	if (set_uni_dbcs(csname, &dbcs_codepage,
-			     &dbcs_display_charsets) <= 0) {
+			     &dbcs_display_charsets) == 0) {
 	    codepage = xs_buffer("%s+%s", codepage, dbcs_codepage);
 	    display_charsets = xs_buffer("%s+%s", display_charsets,
 		    dbcs_display_charsets);

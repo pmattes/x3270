@@ -5002,8 +5002,26 @@ init_rsfonts(char *charset_name)
 				if (check_charset(names[i], &fs[i], csn, False,
 					NULL, &scalable) &&
 				   !font_in_menu(names[i])) {
-					hier_name = xs_buffer("%s>%s",
-							csn, names[i]);
+				    	char *dash1 = NULL, *dash2 = NULL;
+
+					if (names[i][0] == '-') {
+					    	dash1 = strchr(names[i] + 1,
+							'-');
+						if (dash1 != NULL)
+						    	dash2 = strchr(
+								dash1 + 1,
+								'-');
+					}
+					if (dash2 != NULL) {
+					    	hier_name =
+						    xs_buffer("%s>%.*s>%s",
+							csn,
+							dash2 - names[i] - 1,
+							 names[i] + 1,
+							dash2 + 1);
+					} else
+						hier_name = xs_buffer("%s>%s",
+								csn, names[i]);
 					(void) add_font_to_menu(hier_name,
 								names[i]);
 					Free(hier_name);
@@ -5020,8 +5038,26 @@ init_rsfonts(char *charset_name)
 				if (check_charset(names[i], &fs[i], csn, False,
 					NULL, &scalable) &&
 				   !font_in_menu(names[i])) {
-					hier_name = xs_buffer("%s>%s",
-							csn, names[i]);
+				    	char *dash1 = NULL, *dash2 = NULL;
+
+					if (names[i][0] == '-') {
+					    	dash1 = strchr(names[i] + 1,
+							'-');
+						if (dash1 != NULL)
+						    	dash2 = strchr(
+								dash1 + 1,
+								'-');
+					}
+					if (dash2 != NULL) {
+					    	hier_name =
+						    xs_buffer("%s>%.*s>%s",
+							csn,
+							dash2 - names[i] - 1,
+							 names[i] + 1,
+							dash2 + 1);
+					} else
+						hier_name = xs_buffer("%s>%s",
+								csn, names[i]);
 					(void) add_font_to_menu(hier_name,
 								names[i]);
 					Free(hier_name);
