@@ -1765,8 +1765,10 @@ create_font_menu(Boolean regen, Boolean even_if_unknown)
 	    XtNbackground, fm_background,
 	    NULL);
 	count = font_count;
+#if 0
 	if (count > MAX_MENU_OPTIONS)
 		count = MAX_MENU_OPTIONS;
+#endif
 	if (font_count)
 		font_widgets = (Widget *)XtCalloc(count, sizeof(Widget));
 	else
@@ -1774,8 +1776,10 @@ create_font_menu(Boolean regen, Boolean even_if_unknown)
 	for (f = font_list, ix = 0; f; f = f->next, ix++) {
 		Arg args[3];
 
+#if 0
 		if (ix >= MAX_MENU_OPTIONS)
 			break;
+#endif
 		XtSetArg(args[0], XtNleftMargin, fm_leftMargin);
 		XtSetArg(args[1], XtNrightMargin, fm_rightMargin);
 		XtSetArg(args[2], XtNbackground, fm_background);
