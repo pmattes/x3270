@@ -27,7 +27,6 @@
 #if defined(USE_ICONV) /*[*/
 iconv_t i_u2mb = (iconv_t *)-1;
 iconv_t i_mb2u = (iconv_t *)-1;
-Boolean is_utf8 = False;
 #endif /*]*/
 
 /*
@@ -333,10 +332,7 @@ set_uni(const char *csname, const char **codepage,
 	 * appears to be the most broadly-supported translation.
 	 */
 	if (rc == 0) {
-		if (!strcasecmp(locale_codeset, "UTF8") ||
-			!strcasecmp(locale_codeset, "UTF-8")) {
-			is_utf8 = True;
-		} else {
+		if (!is_utf8) {
 			/*
 			 * If iconv doesn't support the locale's codeset, then
 			 * this box is hosed.

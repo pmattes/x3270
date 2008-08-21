@@ -340,9 +340,9 @@ ebcdic_to_multibyte(unsigned short ebc, unsigned char cs, char mb[],
     wchar_t wuc;
 #else /*][*/
     char u8b[7];
+    int nu8;
     char *inbuf, *outbuf;
     size_t inbytesleft, outbytesleft;
-    int nu8;
     size_t nc;
 #endif /*]*/
 
@@ -381,7 +381,19 @@ ebcdic_to_multibyte(unsigned short ebc, unsigned char cs, char mb[],
     }
 
 #elif defined(UNICODE_WCHAR) /*][*/
-    /* wchar_t's are Unicode, so use wctomb(). */
+    /*
+     * wchar_t's are Unicode.
+     * If 'is_utf8' is set, use unicode_to_utf8().  This allows us to set
+     *  'is_utf8' directly, ignoring the locale, for Tcl.
+     * Otherwise, use wctomb().
+     */
+    if (is_utf8) {
+	nc = unicode_to_utf8(uc, mb);
+	if (nc < 0)
+	    return 0;
+	mb[nc++] = '\0';
+	return nc;
+    }
 
     /*
      * N.B.: This code assumes TRANS_LOCAL.
@@ -533,6 +545,27 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
     wchar_t wc[3];
     /* wchar_t's are Unicode. */
 
+    if (is_utf8) {
+	int nc;
+
+	/*
+	 * Use utf8_to_unicode() instead of mbtowc(), so we can set is_utf8
+	 * directly and ignore the locale for Tcl.
+	 */
+	nc = utf8_to_unicode(mb, mb_len, &ucs4);
+	if (nc > 0) {
+	    *errorp = ME_NONE;
+	    *consumedp = nc;
+	    return ucs4;
+	} else if (nc == 0) {
+	    *errorp = ME_SHORT;
+	    return 0;
+	} else {
+	    *errorp = ME_INVALID;
+	    return 0;
+	}
+    }
+
     /* mbtowc() will translate to Unicode. */
     nw = mbtowc(wc, mb, mb_len);
     if (nw == (size_t)-1) {
@@ -614,8 +647,9 @@ multibyte_to_unicode_string(char *mb, size_t mb_len, unsigned long *ucs4,
 
     error = ME_NONE;
 
-    while (u_len && (*ucs4++ = multibyte_to_unicode(mb, mb_len, &consumed,
-		    &error)) != 0) {
+    while (u_len && mb_len &&
+	    (*ucs4++ = multibyte_to_unicode(mb, mb_len, &consumed,
+					    &error)) != 0) {
 	u_len--;
 	mb += consumed;
 	mb_len -= consumed;
@@ -737,6 +771,14 @@ unicode_to_multibyte(unsigned long ucs4, char *mb, size_t mb_len)
     return nc;
 #elif defined(UNICODE_WCHAR) /*][*/
     int nc;
+
+    if (is_utf8) {
+	nc = unicode_to_utf8(ucs4, mb);
+	if (nc < 0)
+	    return 0;
+	mb[nc++] = '\0';
+	return nc;
+    }
 
     nc = wctomb(mb, ucs4);
     if (nc > 0) {

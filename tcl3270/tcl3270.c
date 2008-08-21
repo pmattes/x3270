@@ -76,7 +76,6 @@
 #include "trace_dsc.h"
 #include "utf8c.h"
 #include "utilc.h"
-#include "widec.h"
 
 /*
  * The following variable is a special hack that is needed in order for
@@ -491,7 +490,8 @@ static int
 x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 		Tcl_Obj *CONST objv[])
 {
-	int i, j;
+	int i;
+	unsigned j;
 	unsigned count;
 	char **argv = NULL;
 	int old_mode;
@@ -683,7 +683,8 @@ sms_store(unsigned char c)
 void
 ps_set(char *s, Boolean is_hex)
 {
-	pending_string = pending_string_ptr = s;
+	Replace(pending_string, NewString(s));
+	pending_string_ptr = pending_string;
 	pending_hex = is_hex;
 }
 
@@ -747,7 +748,6 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 	is_zero = FA_IS_ZERO(get_field_attribute(first));
 
 	for (i = 0; i < len; i++) {
-		unsigned char c;
 
 		/* Check for a new row. */
 		if (i && !((first + i) % rel_cols)) {
@@ -764,56 +764,38 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 				row = Tcl_NewListObj(0, NULL);
 		}
 		if (in_ascii) {
-		    	char *xs;
+			int len;
+			char mb[16];
+			unsigned long uc;
 
+			mb[0] = ' ';
+			mb[1] = '\0';
+			len = 2;
 			if (buf[first + i].fa) {
 				is_zero = FA_IS_ZERO(buf[first + i].fa);
-				c = ' ';
-			} else if (is_zero)
-				c = ' ';
-			else
+				/* leave mb[] as " " */
+			} else if (is_zero) {
+				/* leave mb[] as " " */
+			} else
 #if defined(X3270_DBCS) /*[*/
 			if (IS_LEFT(ctlr_dbcs_state(first + i))) {
-				int len;
-				char mb[16];
-
-				len = dbcs_to_mb(buf[first + i].cc,
-					         buf[first + i + 1].cc,
-					         mb);
-				if (len > 0)
-					Tcl_AppendToObj(row, mb, len);
-				continue;
+				len = ebcdic_to_multibyte(
+					(buf[first + i].cc << 8) |
+					 buf[first + i + 1].cc,
+					CS_BASE, mb, sizeof(mb), True,
+					TRANS_LOCAL, &uc);
 			} else if (IS_RIGHT(ctlr_dbcs_state(first + i))) {
 				continue;
 			} else
 #endif /*]*/
 			{
-				switch (buf[first + i].cs & CS_MASK) {
-				case CS_BASE:
-				default:
-					if (buf[first + i].cs & CS_GE) {
-						c = ge2asc[buf[first + i].cc];
-						if (c < ' ')
-							c = ' ';
-					} else if (buf[first + i].cc == EBC_null)
-						c = 0;
-					else 
-						c = ebc2asc[buf[first + i].cc];
-					break;
-				case CS_APL:
-					c = ge2asc[buf[first + i].cc];
-					if (c < ' ')
-						c = ' ';
-					break;
-				case CS_LINEDRAW:
-					c = ' ';
-					break;
-				}
+			    	len = ebcdic_to_multibyte(buf[first + i].cc,
+					buf[first + i].cs & CS_MASK,
+					mb, sizeof(mb), True,
+					TRANS_LOCAL, &uc);
 			}
-			if (!c)
-				c = ' ';
-			xs = utf8_expand(c);
-			Tcl_AppendToObj(row, xs, -1);
+			if (len > 0)
+				Tcl_AppendToObj(row, mb, len - 1);
 		} else {
 			char s[5];
 
@@ -868,35 +850,36 @@ dump_rectangle(int start_row, int start_col, int rows, int cols,
 			int loc = (r * rel_cols) + c;
 
 			if (in_ascii) {
-				unsigned char ch;
-				char *xs;
+				int len;
+				char mb[16];
+				unsigned long uc;
 
-				if (FA_IS_ZERO(get_field_attribute(loc)))
-					ch = ' ';
-				else
+				if (FA_IS_ZERO(get_field_attribute(loc))) {
+					mb[0] = ' ';
+					mb[1] = '\0';
+					len = 2;
+				} else
 
 #if defined(X3270_DBCS) /*[*/
 				if (IS_LEFT(ctlr_dbcs_state(loc))) {
-					int len;
-					char mb[16];
-
-					len = dbcs_to_mb(buf[loc].cc,
-						      buf[loc + 1].cc,
-						      mb);
-					if (len > 0)
-						Tcl_AppendToObj(row, mb, len);
-					continue;
+				    	len = ebcdic_to_multibyte(
+						(buf[loc].cc << 8) |
+						 buf[loc + 1].cc,
+						CS_BASE, mb, sizeof(mb), True,
+						TRANS_LOCAL, &uc);
 				} else if (IS_RIGHT(ctlr_dbcs_state(loc))) {
 					continue;
 				} else
 #endif /*]*/
 				{
-					ch = ebc2asc[buf[loc].cc];
+				    	len = ebcdic_to_multibyte(
+						buf[loc].cc,
+						buf[loc].cs & CS_MASK,
+						mb, sizeof(mb), True,
+						TRANS_LOCAL, &uc);
 				}
-				if (!ch)
-					ch = ' ';
-				xs = utf8_expand(ch);
-				Tcl_AppendToObj(row, xs, -1);
+				if (len > 0)
+					Tcl_AppendToObj(row, mb, len - 1);
 			} else {
 				char s[5];
 
@@ -1136,7 +1119,6 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf)
 	unsigned char	current_gr = 0x00;
 	unsigned char	current_cs = 0x00;
 	char field_buf[1024];
-	unsigned char c;
 	Boolean in_ebcdic = False;
 
 	if (num_params > 0) {
@@ -1211,6 +1193,7 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf)
 				current_cs = buf[baddr].cs;
 			}
 			if (in_ebcdic) {
+			    	/* XXX: DBCS! */
 				if (buf[baddr].cs & CS_GE)
 					sprintf(field_buf, "GE(%02x)",
 							buf[baddr].cc);
@@ -1220,61 +1203,42 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf)
 				Tcl_ListObjAppendElement(sms_interp, row,
 					Tcl_NewStringObj(field_buf, -1));
 			} else {
-			    	Boolean done = False;
+				int len;
+				char mb[16];
+				int j;
+				unsigned long uc;
 
 #if defined(X3270_DBCS) /*[*/
 				if (IS_LEFT(ctlr_dbcs_state(baddr))) {
-					int len;
-					char mb[16];
-					int j;
-
-					len = dbcs_to_mb(buf[baddr].cc,
-						buf[baddr + 1].cc,
-						mb);
+					len = ebcdic_to_multibyte(
+						(buf[baddr].cc << 8) |
+						 buf[baddr + 1].cc,
+						CS_BASE, mb, sizeof(mb), True,
+						TRANS_LOCAL, &uc);
 					field_buf[0] = '\0';
-					for (j = 0; j < len; j++)
+					for (j = 0; j < len - 1; j++)
 					    	sprintf(strchr(field_buf, '\0'),
 							    "%02x",
 							    mb[j] & 0xff);
-					done = True;
 				} else if (IS_RIGHT(ctlr_dbcs_state(baddr))) {
 					strcpy(field_buf, " -");
-					done = True;
-				}
+				} else
 #endif /*]*/
-				switch (buf[baddr].cs & CS_MASK) {
-				case CS_BASE:
-				default:
-					if (buf[baddr].cs & CS_GE) {
-						c = ge2asc[buf[baddr].cc];
-						if (c < ' ')
-							c = ' ';
-					} else if (buf[baddr].cc == EBC_null)
-						c = 0;
-					else 
-						c = ebc2asc[buf[baddr].cc];
-					break;
-				case CS_APL:
-					c = ge2asc[buf[baddr].cc];
-					if (c < ' ')
-						c = ' ';
-					break;
-				case CS_LINEDRAW:
-					c = ' ';
-					break;
+				if (buf[baddr].cc == EBC_null)
+					strcpy(field_buf, "00");
+				else {
+					len = ebcdic_to_multibyte(
+						buf[baddr].cc,
+						buf[baddr].cs & CS_MASK,
+						mb, sizeof(mb), True,
+						TRANS_LOCAL, &uc);
+					field_buf[0] = '\0';
+					for (j = 0; j < len - 1; j++)
+					    	sprintf(strchr(field_buf, '\0'),
+							    "%02x",
+							    mb[j] & 0xff);
 				}
 
-				if (!done) {
-				    	if (c == 0)
-					    	sprintf(field_buf, "00");
-					else {
-					    	char *expanded = utf8_expand(c);
-
-						field_buf[0] = '\0';
-						while ((c = *expanded++))
-						    	sprintf(strchr(field_buf, '\0'), "%02x", c);
-					}
-				}
 				Tcl_ListObjAppendElement(sms_interp, row,
 					Tcl_NewStringObj(field_buf, -1));
 			}
@@ -1375,7 +1339,7 @@ Snap_action(Widget w unused, XEvent *event unused, String *params,
 	if (!strcasecmp(params[0], action_name(Wait_action))) {
 		long tmo = -1;
 		char *ptr;
-		int maxp = 0;
+		unsigned maxp = 0;
 
 		if (*num_params > 1 &&
 		    (tmo = strtol(params[1], &ptr, 10)) >= 0 &&

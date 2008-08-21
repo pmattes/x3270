@@ -24,8 +24,7 @@
 #include "utf8c.h"
 
 char *locale_codeset = CN;
-
-static Boolean is_utf8 = False;
+Boolean is_utf8 = False;
 
 /*
  * Save the codeset from the locale, and set globals based on known values.
@@ -42,7 +41,7 @@ set_codeset(char *codeset_name)
 	 * tcl3270 is always in UTF-8 mode, because it needs to
 	 * supply UTF-8 strings to libtcl and vice-versa.
 	 */
-	is_utf8 = 1;
+	is_utf8 = True;
 #endif /*]*/
 
 	Replace(locale_codeset, NewString(codeset_name));
