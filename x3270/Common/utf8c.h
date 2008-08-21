@@ -19,6 +19,7 @@
  */
 
 extern char *locale_codeset;
+extern Boolean is_utf8;
 
 extern void set_codeset(char *codeset_name);
 extern int unicode_to_utf8(unsigned long ucs4, char *utf8);

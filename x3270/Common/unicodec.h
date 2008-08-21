@@ -21,7 +21,6 @@ extern int set_uni(const char *csname, const char **codepage,
 	const char **display_charsets);
 extern int linedraw_to_unicode(unsigned short e);
 extern int apl_to_unicode(unsigned short e);
-extern Boolean is_utf8;
 #if defined(USE_ICONV) /*[*/
 extern iconv_t i_u2mb;
 extern iconv_t i_mb2u;
