@@ -1,5 +1,5 @@
 /*
- * Copyright 1999, 2000, 2002 by Paul Mattes.
+ * Copyright 1999, 2000, 2002, 2008 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -35,7 +35,6 @@ extern void screen_resume(void);
 extern void screen_suspend(void);
 extern FILE *start_pager(void);
 extern void toggle_monocase(struct toggle *t, enum toggle_type tt);
-extern Boolean screen_new_display_charsets(char *cslist, char *csname);
 
 extern Boolean escaped;
 

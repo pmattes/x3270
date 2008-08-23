@@ -162,12 +162,17 @@ ebcdic_to_unicode(unsigned short c, unsigned char cs, Boolean for_display)
 	int iuc;
 	unsigned long uc;
 
+#if 0	/* I'm not sure why this was put in, but it breaks display of DUP
+	   and FM.
+	   Hopefully I'll figure out why it was put in in the first place
+	   and I can put it back under the right conditions. */
 	/* Control characters become blanks. */
     	if (c <= 0x41 || c == 0xff)
 	    	uc = 0;
+#endif
 
 	/* Dispatch on the character set. */
-	else if ((cs & CS_GE) || ((cs & CS_MASK) == CS_APL)) {
+	if ((cs & CS_GE) || ((cs & CS_MASK) == CS_APL)) {
 		iuc = apl_to_unicode(c);
 		if (iuc != -1)
 		    	uc = iuc;
@@ -292,7 +297,7 @@ unicode_to_ebcdic_ge(unsigned long u, Boolean *ge)
 }
 
 /*
- * Set the EBCDIC-to-Unicode translation table.
+ * Set the SBCS EBCDIC-to-Unicode translation table.
  * Returns 0 for success, -1 for failure.
  */
 int

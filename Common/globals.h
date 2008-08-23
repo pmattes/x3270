@@ -28,6 +28,9 @@
 #if defined(HAVE_VASPRINTF) && !defined(_GNU_SOURCE) /*[*/
 #define _GNU_SOURCE		/* vasprintf isn't POSIX */
 #endif /*]*/
+#if defined(C3270) && defined(X3270_DBCS) && !defined(WIDE_CURSES) /*[*/
+#undef X3270_DBCS
+#endif /*]*/
 
 /*
  * OS-specific #defines.  Except for the blocking-connect workarounds, these
