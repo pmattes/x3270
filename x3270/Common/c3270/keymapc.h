@@ -14,9 +14,9 @@
 /* c3270 version of keymapc.h */
 
 #define KM_CTRL		0x0001
-#define KM_META		0x0002
+#define KM_ALT		0x0002
 
 extern void keymap_init(void);
-extern char *lookup_key(int k);
+extern char *lookup_key(int k, unsigned long ucs4, int alt);
 extern void keymap_dump(void);
-extern const char *decode_key(int k, int hint, char *buf);
+extern const char *decode_key(int k, unsigned long ucs4, int hint, char *buf);

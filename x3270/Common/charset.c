@@ -104,7 +104,7 @@ charset_init(char *csname)
 	if (csname == CN || !strcasecmp(csname, "us")) {
 		set_cgcsgids(CN);
 		set_charset_name(CN);
-#if defined(X3270_DISPLAY) || (defined(C3270) && !defined(_WIN32)) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 		(void) screen_new_display_charsets(default_display_charset,
 		    "us");
 #endif /*]*/
@@ -260,7 +260,7 @@ charset_init2(char *csname, const char *codepage, const char *display_charsets)
 	}
 #endif /*]*/
 
-#if defined(X3270_DISPLAY) || (defined(C3270) && !defined(_WIN32)) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 	if (!screen_new_display_charsets(
 		    rcs? rcs: default_display_charset,
 		    csname)) {

@@ -1193,7 +1193,6 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf)
 				current_cs = buf[baddr].cs;
 			}
 			if (in_ebcdic) {
-			    	/* XXX: DBCS! */
 				if (buf[baddr].cs & CS_GE)
 					sprintf(field_buf, "GE(%02x)",
 							buf[baddr].cc);

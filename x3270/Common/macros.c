@@ -1684,10 +1684,8 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 		if (in_ascii) {
 			char mb[16];
 			unsigned long uc;
-#if defined(X3270_DBCS) /*[*/
-			int len;
 			int j;
-#endif /*]*/
+			int xlen;
 
 			if (buf[first + i].fa) {
 				is_zero = FA_IS_ZERO(buf[first + i].fa);
@@ -1698,12 +1696,12 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 #if defined(X3270_DBCS) /*[*/
 			if (IS_LEFT(ctlr_dbcs_state(first + i))) {
 
-				len = ebcdic_to_multibyte(
+				xlen = ebcdic_to_multibyte(
 					(buf[first + i].cc << 8) |
 					 buf[first + i + 1].cc,
 					CS_BASE, mb, sizeof(mb),
 					True, TRANS_LOCAL, &uc);
-				for (j = 0; j < len-1; j++) {
+				for (j = 0; j < xlen - 1; j++) {
 					s += sprintf(s, "%c", mb[j]);
 				}
 			} else if (IS_RIGHT(ctlr_dbcs_state(first + i))) {
@@ -1711,14 +1709,14 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 			} else
 #endif /*]*/
 			{
-				len = ebcdic_to_multibyte(
+				xlen = ebcdic_to_multibyte(
 						       buf[first + i].cc,
 						       buf[first + i].cs,
 						       mb, sizeof(mb),
 						       True,
 						       TRANS_LOCAL,
 						       &uc);
-				for (j = 0; j < len-1; j++) {
+				for (j = 0; j < xlen - 1; j++) {
 					s += sprintf(s, "%c", mb[j]);
 				}
 			}
