@@ -41,9 +41,10 @@ typedef enum {
 			   interpreting configuration information */
 } trans_t;
 
-extern int ebcdic_to_multibyte(ebc_t ebc, unsigned char cs,
+extern int ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs,
 	char mb[], int mb_len, int blank_undef, trans_t purpose,
 	ucs4_t *uc);
+extern int ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len);
 extern int ebcdic_to_multibyte_string(unsigned char *ebc, size_t ebc_len,
 	char mb[], size_t mb_len);
 extern int mb_max_len(int len);

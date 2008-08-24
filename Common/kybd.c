@@ -714,7 +714,7 @@ key_Character_wrapper(Widget w unused, XEvent *event unused, String *params,
 		pasting = True;
 		code &= ~PASTE_WFLAG;
 	}
-	ebcdic_to_multibyte(code, with_ge? CS_GE: CS_BASE,
+	ebcdic_to_multibyte_x(code, with_ge? CS_GE: CS_BASE,
 		mb, sizeof(mb), True, TRANS_LOCAL, &uc);
 	trace_event(" %s -> Key(%s\"%s\")\n",
 	    ia_name[(int) ia_cause],
@@ -1014,10 +1014,9 @@ key_WCharacter(unsigned char code[], Boolean *skipped)
 	/* In ANSI mode? */
 	if (IN_ANSI) {
 	    char mb[16];
-	    ucs4_t uc;
 
-	    (void) ebcdic_to_multibyte((code[0] << 8) | code[1], CS_BASE,
-				       mb, sizeof(mb), True, TRANS_LOCAL, &uc);
+	    (void) ebcdic_to_multibyte((code[0] << 8) | code[1], mb,
+				       sizeof(mb));
 	    net_sends(mb);
 	    return True;
 	}

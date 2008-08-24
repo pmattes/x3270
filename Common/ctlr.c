@@ -1142,7 +1142,6 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 	Boolean		aborted = False;
 #if defined(X3270_DBCS) /*[*/
 	char		mb[16];
-	ucs4_t		uc;
 #endif /*]*/
 
 #define END_TEXT0	{ if (previous == TEXT) trace_ds("'"); }
@@ -1358,9 +1357,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 					ABORT_WRITEx;
 			        }
 				(void) ebcdic_to_multibyte(
-					   (add_c1 << 8) | add_c2, CS_BASE,
-					   mb, sizeof(mb), True, TRANS_LOCAL,
-					   &uc);
+					   (add_c1 << 8) | add_c2,
+					   mb, sizeof(mb));
 			        trace_ds_nb("'%s'", mb);
 			} else
 #endif /*]*/
@@ -1830,9 +1828,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			        }
 			        add_dbcs = True;
 				(void) ebcdic_to_multibyte(
-					   (add_c1 << 8) | add_c2, CS_BASE,
-					   mb, sizeof(mb), True, TRANS_LOCAL,
-					   &uc);
+					   (add_c1 << 8) | add_c2, mb,
+					   sizeof(mb));
 			        trace_ds_nb("%s", mb);
 			} else {
 #endif /*]*/
