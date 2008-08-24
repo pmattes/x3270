@@ -766,7 +766,7 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 		if (in_ascii) {
 			int len;
 			char mb[16];
-			unsigned long uc;
+			ucs4_t uc;
 
 			mb[0] = ' ';
 			mb[1] = '\0';
@@ -852,7 +852,7 @@ dump_rectangle(int start_row, int start_col, int rows, int cols,
 			if (in_ascii) {
 				int len;
 				char mb[16];
-				unsigned long uc;
+				ucs4_t uc;
 
 				if (FA_IS_ZERO(get_field_attribute(loc))) {
 					mb[0] = ' ';
@@ -1205,7 +1205,7 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf)
 				int len;
 				char mb[16];
 				int j;
-				unsigned long uc;
+				ucs4_t uc;
 
 #if defined(X3270_DBCS) /*[*/
 				if (IS_LEFT(ctlr_dbcs_state(baddr))) {

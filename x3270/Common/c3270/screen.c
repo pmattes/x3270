@@ -125,7 +125,7 @@ static int status_skip = 0;	/* Row to blank above the status line */
 static Boolean curses_alt = False;
 
 static void kybd_input(void);
-static void kybd_input2(int k, unsigned long ucs4, int alt);
+static void kybd_input2(int k, ucs4_t ucs4, int alt);
 static void draw_oia(void);
 static void status_connect(Boolean ignored);
 static void status_3270_mode(Boolean ignored);
@@ -774,7 +774,7 @@ screen_disp(Boolean erasing unused)
 			} else {
 				char mb[16];
 				int len;
-				unsigned long uc;
+				ucs4_t uc;
 
 				if (!(ea_buf[baddr].gr ||
 				      ea_buf[baddr].fg ||
@@ -879,7 +879,7 @@ static void
 kybd_input(void)
 {
 	int k = 0;		/* KEY_XXX, or 0 */
-	unsigned long ucs4 = 0;	/* input character, or 0 */
+	ucs4_t ucs4 = 0;	/* input character, or 0 */
 	Boolean first = True;
 	static Boolean failed_first = False;
 
@@ -970,7 +970,7 @@ kybd_input(void)
 			meta_escape = False;
 			alt = KM_ALT;
 		} else if (me_mode == TS_ON && ucs4 == 0x1b) {
-			trace_event("Key '%s' (curses key 0x%x, char code 0x%lx)\n",
+			trace_event("Key '%s' (curses key 0x%x, char code 0x%x)\n",
 				decode_key(k, ucs4, alt, dbuf), k, ucs4);
 			eto = AddTimeOut(100L, escape_timeout);
 			trace_event(" waiting to see if Escape is followed by"
@@ -978,7 +978,7 @@ kybd_input(void)
 			meta_escape = True;
 			continue;
 		}
-		trace_event("Key '%s' (curses key 0x%x, char code 0x%lx)\n",
+		trace_event("Key '%s' (curses key 0x%x, char code 0x%x)\n",
 			decode_key(k, ucs4, alt, dbuf), k, ucs4);
 		kybd_input2(k, ucs4, alt);
 		first = False;
@@ -986,7 +986,7 @@ kybd_input(void)
 }
 
 static void
-kybd_input2(int k, unsigned long ucs4, int alt)
+kybd_input2(int k, ucs4_t ucs4, int alt)
 {
 	char buf[16];
 	char *action;
@@ -1096,7 +1096,7 @@ kybd_input2(int k, unsigned long ucs4, int alt)
 		String params[2];
 		Cardinal one;
 
-		sprintf(ks, "U+%04lx", ucs4);
+		sprintf(ks, "U+%04x", ucs4);
 		params[0] = ks;
 		params[1] = CN;
 		one = 1;
@@ -1658,7 +1658,7 @@ display_linedraw(unsigned char ebc)
 {
     	int c;
 	char mb[16];
-	unsigned long uc;
+	ucs4_t uc;
 	int len;
 
 #if defined(CURSES_WIDE) /*[*/
@@ -1770,7 +1770,7 @@ display_ge(unsigned char ebc)
 {
     	int c;
 	char mb[16];
-	unsigned long uc;
+	ucs4_t uc;
 	int len;
 
 #if defined(CURSES_WIDE) /*[*/

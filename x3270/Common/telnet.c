@@ -1805,7 +1805,7 @@ process_bind(unsigned char *buf, int buflen)
 		namelen = BIND_PLU_NAME_MAX;
 	for (i = 0; i < namelen; i++) {
 	    	int nx;
-		unsigned long uc;
+		ucs4_t uc;
 
 		nx = ebcdic_to_multibyte(buf[BIND_OFF_PLU_NAME + i],
 			CS_BASE, plu_name + dest_ix, mb_max_len(1),

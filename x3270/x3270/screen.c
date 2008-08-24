@@ -1741,9 +1741,9 @@ resync_text(int baddr, int len, union sp *buffer)
  * be 16 bits as well.
  */
 static unsigned short
-font_index(unsigned short ebc, int d8_ix, Boolean upper)
+font_index(ebc_t ebc, int d8_ix, Boolean upper)
 {
-	unsigned long ucs4;
+	ucs4_t ucs4;
 	int d;
 
 	ucs4 = ebcdic_base_to_unicode(ebc, True, True);
@@ -1761,7 +1761,7 @@ font_index(unsigned short ebc, int d8_ix, Boolean upper)
  * first 32 bytes of an old 8-bit X11 font.
  */
 static int
-apl_to_linedraw(unsigned short c)
+apl_to_linedraw(ebc_t c)
 {
     	switch (c) {
 	case 0xaf:	/* degree */

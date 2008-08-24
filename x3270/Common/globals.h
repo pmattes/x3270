@@ -1,6 +1,6 @@
 /*
  * Modifications Copyright 1993, 1994, 1995, 1996, 1999, 2000, 2001, 2002,
- *  2003, 2004, 2005, 2006 by Paul Mattes.
+ *  2003, 2004, 2005, 2006, 2008 by Paul Mattes.
  * RPQNAMES modifications copyright 2005 by Don Russell.
  * Copyright 1990 by Jeff Sparkes.
  *  Permission to use, copy, modify, and distribute this software and its
@@ -27,9 +27,6 @@
 #endif /*]*/
 #if defined(HAVE_VASPRINTF) && !defined(_GNU_SOURCE) /*[*/
 #define _GNU_SOURCE		/* vasprintf isn't POSIX */
-#endif /*]*/
-#if defined(C3270) && defined(X3270_DBCS) && !defined(WIDE_CURSES) /*[*/
-#undef X3270_DBCS
 #endif /*]*/
 
 /*
@@ -88,11 +85,21 @@
 #endif /*]*/
 
 /*
+ * Unicode UCS-4 characters are 32 bits.
+ * EBCDIC (including DBCS) is 16 bits.
+ */
+typedef __uint32_t ucs4_t;
+typedef __uint16_t ebc_t;
+
+/*
  * Cancel out contradictory parts.
  */
 #if !defined(X3270_DISPLAY) /*[*/
 #undef X3270_KEYPAD
 #undef X3270_MENUS
+#endif /*]*/
+#if defined(C3270) && defined(X3270_DBCS) && !defined(WIDE_CURSES) /*[*/
+#undef X3270_DBCS
 #endif /*]*/
 
 /* Local process (-e) header files. */

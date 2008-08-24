@@ -263,7 +263,7 @@ dft_data_insert(struct data_buffer *data_bufr)
 			unsigned char *s = (unsigned char *)data_bufr->data;
 			unsigned len = my_length;
 			int nx;
-			unsigned long uc;
+			ucs4_t uc;
 
 			/* Copy and convert data_bufr->data to ob0. */
 			while (len-- && obuf_len) {
@@ -437,9 +437,9 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 	int in_ix = 0;
 	char c;
 	enum me_fail error;
-	unsigned short e;
+	ebc_t e;
 	int consumed;
-	unsigned long u;
+	ucs4_t u;
 
 	/* Belt-n-suspenders. */
 	if (!numbytes)

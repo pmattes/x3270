@@ -1006,7 +1006,7 @@ store_icccm_string(XtPointer value, const char *buf)
 
 	while (*buf) {
 	    	int nw;
-		unsigned long ucs;
+		ucs4_t ucs;
 
 		if (*buf == '\033') {
 		    	/* Funky GE sequence.  Skip it. */
@@ -1181,7 +1181,7 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 {
 	static int osc_baddr;
 	static unsigned char fa;
-	unsigned long uc;
+	ucs4_t uc;
 #if defined(X3270_DBCS) /*[*/
 	int baddr2;
 #endif /*]*/
@@ -1287,7 +1287,7 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 		    default:
 			/* Translate APL to Unicode. */
 			uc = apl_to_unicode(ea_buf[baddr].cc);
-			if (uc == (unsigned long)-1 ||
+			if (uc == (ucs4_t)-1 ||
 			    (appres.apl_mode && (uc < 0x100))) {
 			    	/*
 				 * No translation, or we're in APL mode and the
@@ -1594,7 +1594,7 @@ paste_callback(Widget w, XtPointer client_data unused, Atom *selection unused,
 	ei_len = 0;
 
 	while (s_len) {
-	    	unsigned long uc;
+	    	ucs4_t uc;
 		int nm;
 
 	    	if (paste_utf8) {

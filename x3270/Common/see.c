@@ -56,7 +56,7 @@ see_ebc(unsigned char ch)
 	unsigned char e;
 #else /*][*/
 	char mb[16];
-	unsigned long uc;
+	ucs4_t uc;
 #endif /*]*/
 
 	switch (ch) {

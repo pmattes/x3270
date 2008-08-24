@@ -156,11 +156,11 @@ static uni_t *cur_uni = NULL;
  *
  * Returns 0 for no translation.
  */
-unsigned long
-ebcdic_to_unicode(unsigned short c, unsigned char cs, Boolean for_display)
+ucs4_t
+ebcdic_to_unicode(ebc_t c, unsigned char cs, Boolean for_display)
 {
 	int iuc;
-	unsigned long uc;
+	ucs4_t uc;
 
 #if 0	/* I'm not sure why this was put in, but it breaks display of DUP
 	   and FM.
@@ -205,8 +205,8 @@ ebcdic_to_unicode(unsigned short c, unsigned char cs, Boolean for_display)
  * If blank_undef is set, other undisplayable characters are returned as
  *  spaces; otherwise they are returned as 0.
  */
-unsigned long
-ebcdic_base_to_unicode(unsigned short c, Boolean blank_undef,
+ucs4_t
+ebcdic_base_to_unicode(ebc_t c, Boolean blank_undef,
 	Boolean for_display)
 {
 #if defined(X3270_DBCS) /*[*/
@@ -218,7 +218,7 @@ ebcdic_base_to_unicode(unsigned short c, Boolean blank_undef,
 	return 0x0020;
 
     if (c >= UT_OFFSET && c < 0xff) {
-	unsigned short uc = cur_uni->code[c - UT_OFFSET];
+	ebc_t uc = cur_uni->code[c - UT_OFFSET];
 
 	return uc? uc: (blank_undef? ' ': 0);
 
@@ -242,12 +242,12 @@ ebcdic_base_to_unicode(unsigned short c, Boolean blank_undef,
  * Map a UCS-4 character to an EBCDIC character.
  * Returns 0 for failure, nonzero for success.
  */
-unsigned short
-unicode_to_ebcdic(unsigned long u)
+ebc_t
+unicode_to_ebcdic(ucs4_t u)
 {
     int i;
 #if defined(X3270_DBCS) /*[*/
-    unsigned short d;
+    ebc_t d;
 #endif /*]*/
 
     if (!u)
@@ -275,10 +275,10 @@ unicode_to_ebcdic(unsigned long u)
  * characters.
  * Returns 0 for failure, nonzero for success.
  */
-unsigned short
-unicode_to_ebcdic_ge(unsigned long u, Boolean *ge)
+ebc_t
+unicode_to_ebcdic_ge(ucs4_t u, Boolean *ge)
 {
-    unsigned short e;
+    ebc_t e;
 
     *ge = False;
     e = unicode_to_ebcdic(u);
@@ -287,7 +287,7 @@ unicode_to_ebcdic_ge(unsigned long u, Boolean *ge)
 
     /* Handle GEs.  Yes, this is slow, but I'm lazy. */
     for (e = 0x70; e <= 0xfe; e++) {
-	if ((unsigned long)apl_to_unicode(e) == u) {
+	if ((ucs4_t)apl_to_unicode(e) == u) {
 	    *ge = True;
 	    return e;
 	}
@@ -366,9 +366,9 @@ set_uni(const char *csname, const char **codepage,
  * Returns -1 if there is no translation.
  */
 int
-linedraw_to_unicode(unsigned short c)
+linedraw_to_unicode(ebc_t c)
 {
-	static unsigned short ld2uc[32] = {
+	static ebc_t ld2uc[32] = {
     /* 00 */	0x2588, 0x25c6, 0x2592, 0x0000, 0x0000, 0x0000, 0x0000, 0x00b0,
     /* 08 */	0x00b1, 0x0000, 0x0000, 0x2518, 0x2510, 0x250c, 0x2514, 0x253c,
     /* 10 */	0x002d, 0x002d, 0x2500, 0x002d, 0x005f, 0x251c, 0x2524, 0x2534,
@@ -382,9 +382,9 @@ linedraw_to_unicode(unsigned short c)
 }
 
 int
-apl_to_unicode(unsigned short c)
+apl_to_unicode(ebc_t c)
 {
-	static unsigned short apl2uc[256] = {
+	static ebc_t apl2uc[256] = {
     /* 00 */	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
     /* 08 */	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
     /* 10 */	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,

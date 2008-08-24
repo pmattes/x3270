@@ -18,7 +18,7 @@
  *		Global declarations for tables.c.
  */
 
-extern const unsigned short asc2cg0[256];
-extern const unsigned short ebc2cg0[256];
-extern const unsigned short ebc2asc0[256];
-extern const unsigned short asc2ebc0[256];
+extern const unsigned char asc2cg0[256];
+extern const unsigned char ebc2cg0[256];
+extern const unsigned char ebc2asc0[256];
+extern const unsigned char asc2ebc0[256];
