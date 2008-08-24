@@ -119,7 +119,6 @@ printer_start(const char *lu)
 	char charset_cmd[256];	/* -charset <csname> */
 	char *proxy_cmd = CN;	/* -proxy <spec> */
 #if defined(_WIN32) /*[*/
-	char *tmp;
 	STARTUPINFO startupinfo;
 	PROCESS_INFORMATION process_information;
 	char *subcommand;
