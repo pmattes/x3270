@@ -172,6 +172,7 @@ typedef struct {
 	char	*all_bold;
 	char	*altscreen;
 	char	*defscreen;
+	Boolean	acs;
 #endif /*]*/
 	char	*conf_dir;
 	char	*model;

@@ -66,11 +66,35 @@
       milliseconds of delay before atually unlocking the keyboard after the
       host requests it. The default is 350; use 0 to disable the delay
       altogether.</li>
+     <li>Overhauled <b>Meta</b> and <b>Alt</b> key support.  Removed support
+      for the archaic <b>Meta</b> modifier in keymaps (it was an alias for
+      setting bit 0x80 in each key).  Replaced it with an <b>Alt</b> modifier,
+      which matches the <b>ESC</b> sequence sent for the <b>Alt</b> key by
+      many terminals, and which can be combined with full 8-bit input
+      characters.<li>
+     <li>Changed the interpretation of keymaps so that keys and symbols are
+      matched in Unicode.  That is, keymap text is converted from the current
+      locale's encoding to Unicode before matching, and input character codes
+      are converted to Unicode before matching.  This eliminates the
+      difficulty in creating keymaps and interpreting traces in non-Latin-1
+      locales -- needing to translate from the accidental interpretation of
+      8-bit values as Latin-1 when they are not -- but with the side-effect
+      of rendering some carefully-crafted existing keymaps invalid.  The pain
+      is worth it, however.  Keymaps can now be freely written using the
+      current locale's encoding or with <b>U+<i>nnnn</i></b> notation; that
+      value now represents the actual key pressed and is now traced
+      consistently and correctly.</li>
+     <li>Changed the <b>metaEscape</b> resource so that <b>auto</b>
+      means <b>on</b>, instead of using the terminfo <b>km</b> resource.</li>
+     <li>Added an <b>acs</b> resource to control the use of curses ACS codes.
+      If <b>c3270.acs</b> is set to <b>true</b> (the default), <b>c3270</b>
+      will use curses ACS codes for line-drawing characters.  If set to
+      <b>false</b>, it will display line-drawing characters with Unicode.</li>
     </ul>
    </li>
    <li>Bug Fixes:
     <ul>
-     <li><b>x3270</b> no longer uses the <b>ICU</b> library.</li>
+     <li><b>c3270</b> no longer uses the <b>ICU</b> library.</li>
     </ul>
   </li>
 </ul>

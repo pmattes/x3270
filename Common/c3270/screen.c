@@ -136,8 +136,8 @@ static int color_from_fa(unsigned char);
 static void screen_init2(void);
 static void set_status_row(int screen_rows, int emulator_rows);
 static Boolean ts_value(const char *s, enum ts *tsp);
-static int linedraw_to_acs(unsigned char c);
-static int apl_to_acs(unsigned char c);
+static void display_linedraw(unsigned char ebc);
+static void display_ge(unsigned char ebc);
 static void init_user_colors(void);
 static void init_user_attribute_colors(void);
 
@@ -703,7 +703,6 @@ screen_disp(Boolean erasing unused)
 {
 	int row, col;
 	int field_attrs;
-	int c;
 	unsigned char fa;
 	extern Boolean screen_alt;
 	struct screen_spec *cur_spec;
@@ -774,11 +773,9 @@ screen_disp(Boolean erasing unused)
 				    underlined = True;
 				addch(' ');
 			} else {
-#if defined(X3270_DBCS) || defined(CURSES_WIDE) /*[*/
 				char mb[16];
 				int len;
 				unsigned long uc;
-#endif /*]*/
 
 				if (!(ea_buf[baddr].gr ||
 				      ea_buf[baddr].fg ||
@@ -814,31 +811,11 @@ screen_disp(Boolean erasing unused)
 				} else if (!IS_RIGHT(d)) {
 #endif /*]*/
 					if (ea_buf[baddr].cs == CS_LINEDRAW) {
-						c = linedraw_to_acs(ea_buf[baddr].cc);
-						if (c != -1)
-							addch(c);
-						else
-							addch(' ');
+					    	display_linedraw(
+							ea_buf[baddr].cc);
 					} else if (ea_buf[baddr].cs == CS_APL ||
 						   (ea_buf[baddr].cs & CS_GE)) {
-						c = apl_to_acs(ea_buf[baddr].cc);
-						if (c != -1)
-							addch(c);
-						else {
-#if defined(CURSES_WIDE) /*[*/
-							len =
-							    ebcdic_to_multibyte(
-								ea_buf[baddr].cc,
-								CS_GE, mb,
-								sizeof(mb),
-								True,
-								TRANS_LOCAL,
-								&uc);
-							addstr(mb);
-#else /*][*/
-							addch(' ');
-#endif /*]*/
-						}
+						display_ge(ea_buf[baddr].cc);
 					} else {
 						len = ebcdic_to_multibyte(
 							ea_buf[baddr].cc,
@@ -1677,6 +1654,41 @@ linedraw_to_acs(unsigned char c)
 	}
 }
 
+static void
+display_linedraw(unsigned char ebc)
+{
+    	int c;
+	char mb[16];
+	unsigned long uc;
+	int len;
+
+#if defined(CURSES_WIDE) /*[*/
+	if (appres.acs)
+#endif /*]*/
+	{
+	    	/* Try UCS first. */
+		c = linedraw_to_acs(ebc);
+		if (c != -1) {
+			addch(c);
+			return;
+		}
+	}
+
+	/* Then try Unicode. */
+	len = ebcdic_to_multibyte(ebc, CS_LINEDRAW, mb, sizeof(mb), True,
+		TRANS_LOCAL, &uc);
+	if (len > 0)
+		len--;
+#if defined(CURSES_WIDE) /*[*/
+	addstr(mb);
+#else /*][*/
+	if (len > 1)
+		addch(mb[0] & 0xff);
+	else
+		addch(' ');
+#endif /*]*/
+}
+
 static int
 apl_to_acs(unsigned char c)
 {
@@ -1752,4 +1764,39 @@ apl_to_acs(unsigned char c)
 	default:
 		return -1;
 	}
+}
+
+static void
+display_ge(unsigned char ebc)
+{
+    	int c;
+	char mb[16];
+	unsigned long uc;
+	int len;
+
+#if defined(CURSES_WIDE) /*[*/
+	if (appres.acs)
+#endif /*]*/
+	{
+	    	/* Try UCS first. */
+		c = apl_to_acs(ebc);
+		if (c != -1) {
+			addch(c);
+			return;
+		}
+	}
+
+	/* Then try Unicode. */
+	len = ebcdic_to_multibyte(ebc, CS_GE, mb, sizeof(mb), True,
+		TRANS_LOCAL, &uc);
+	if (len > 0)
+		len--;
+#if defined(CURSES_WIDE) /*[*/
+	addstr(mb);
+#else /*][*/
+	if (len > 1)
+		addch(mb[0] & 0xff);
+	else
+		addch(' ');
+#endif /*]*/
 }
