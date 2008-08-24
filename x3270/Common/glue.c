@@ -484,6 +484,9 @@ parse_options(int *argcp, const char **argv)
 	appres.meta_escape = "auto";
 	appres.curses_keypad = True;
 	appres.cbreak_mode = False;
+#if defined(CURSES_WIDE) /*[*/
+	appres.acs = True;
+#endif /*]*/
 #endif /*]*/
 
 #if defined(X3270_ANSI) /*[*/
@@ -776,6 +779,9 @@ static struct {
 	{ ResMetaEscape,offset(meta_escape),	XRM_STRING },
 	{ ResCursesKeypad,offset(curses_keypad),XRM_BOOLEAN },
 	{ ResCbreak,	offset(cbreak_mode),	XRM_BOOLEAN },
+#if defined(CURSES_WIDE) /*[*/
+	{ ResAcs,	offset(acs),		XRM_BOOLEAN },
+#endif /*]*/
 #endif /*]*/
 #if defined(X3270_ANSI) /*[*/
 	{ ResKill,	offset(kill),		XRM_STRING },
