@@ -59,9 +59,9 @@ extern int cCOLS;
 #define KM_HINTS	(KM_CTRL|KM_ALT)
 
 typedef struct {
-    	int key;		/* KEY_XXX or 0 */
-	int modifiers;		/* KM_ALT */
-	unsigned long ucs4;	/* character value */
+    	int key;	/* KEY_XXX or 0 */
+	int modifiers;	/* KM_ALT */
+	ucs4_t ucs4;	/* character value */
 } k_t;
 
 struct keymap {
@@ -197,11 +197,11 @@ parse_keydef(char **str, k_t *ccode, int *hint)
 		u = strtoul(s + 2, &ptr, 16);
 		if (u == 0 || *ptr != '\0')
 			return -7;
-		ccode->ucs4 = u;
+		ccode->ucs4 = (ucs4_t)u;
 		matched = True;
 	}
 	if (!matched) {
-	    	unsigned long u;
+	    	ucs4_t u;
 		int consumed;
 		enum me_fail error;
 
@@ -583,7 +583,7 @@ ambiguous(struct keymap *k, int nc)
  * It also handles keyboards that generate ESC for the Alt key.
  */
 char *
-lookup_key(int kcode, unsigned long ucs4, int modifiers)
+lookup_key(int kcode, ucs4_t ucs4, int modifiers)
 {
 	struct keymap *j, *k;
 	int n_shortest = 0;
@@ -925,7 +925,7 @@ keymap_3270_mode(Boolean ignored unused)
  * keymap definition.
  */
 const char *
-decode_key(int k, unsigned long ucs4, int hint, char *buf)
+decode_key(int k, ucs4_t ucs4, int hint, char *buf)
 {
 	const char *n;
 	int len;

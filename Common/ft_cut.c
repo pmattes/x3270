@@ -128,7 +128,7 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 	unsigned char *ob0 = obuf;
 	unsigned char *ob = ob0;
 	int nx;
-	unsigned long uc;
+	ucs4_t uc;
 
 	while (len-- && obuf_len) {
 		unsigned char c = *buf++;
@@ -308,8 +308,8 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 		unsigned char c = *buf;
 		int consumed;
 		enum me_fail error;
-		unsigned short e;
-		unsigned long u;
+		ebc_t e;
+		ucs4_t u;
 
 		/* Handle nulls separately. */
 		if (!c) {
@@ -455,7 +455,7 @@ cut_control_code(void)
 			bp = buf = Malloc(mb_len);
 			for (i = 0; i < 80; i++) {
 			    	int xlen;
-				unsigned long uc;
+				ucs4_t uc;
 
 				xlen = ebcdic_to_multibyte(
 					ea_buf[O_CC_MESSAGE + i].cc,

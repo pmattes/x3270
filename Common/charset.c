@@ -309,7 +309,7 @@ get_charset_name(void)
  * At some point, TRANS_DISPLAY will apply to x3270 as well, indicating
  * translation to the current font's encoding.
  *
- * Note that 'ebc' is an unsigned short, not an unsigned char.  This is
+ * Note that 'ebc' is an uint16_t, not an unsigned char.  This is
  * so that DBCS values can be passed in as 16 bits (with the first byte
  * in the high-order bits).  There is no ambiguity because all valid EBCDIC
  * DBCS characters have a nonzero first byte.
@@ -326,10 +326,10 @@ get_charset_name(void)
  *  ebcdic_base_to_unicode, not here.
  */
 int
-ebcdic_to_multibyte(unsigned short ebc, unsigned char cs, char mb[],
-	int mb_len, int blank_undef, trans_t purpose, unsigned long *ucp)
+ebcdic_to_multibyte(ebc_t ebc, unsigned char cs, char mb[],
+	int mb_len, int blank_undef, trans_t purpose, ucs4_t *ucp)
 {
-    unsigned long uc;
+    ucs4_t uc;
 
 #if defined(_WIN32) /*[*/
     int nc;
@@ -470,7 +470,7 @@ ebcdic_to_multibyte_string(unsigned char *ebc, size_t ebc_len, char mb[],
 
     	while (ebc_len && mb_len) {
 	    	int xlen;
-		unsigned long uc;
+		ucs4_t uc;
 
 		xlen = ebcdic_to_multibyte(*ebc, CS_BASE, mb, mb_len, True,
 			TRANS_LOCAL, &uc);
@@ -519,12 +519,12 @@ mb_max_len(int len)
  * Returns a UCS-4 character or 0, indicating an error in translation.
  * Also returns the number of characters consumed.
  */
-unsigned long
+ucs4_t
 multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 	enum me_fail *errorp)
 {
     size_t nw;
-    unsigned long ucs4;
+    ucs4_t ucs4;
 #if defined(_WIN32) /*[*/
     wchar_t wc[3];
 
@@ -638,7 +638,7 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
  * Returns the number of UCS-4 characters stored.
  */
 int
-multibyte_to_unicode_string(char *mb, size_t mb_len, unsigned long *ucs4,
+multibyte_to_unicode_string(char *mb, size_t mb_len, ucs4_t *ucs4,
 	size_t u_len)
 {
     int consumed;
@@ -674,11 +674,11 @@ multibyte_to_unicode_string(char *mb, size_t mb_len, unsigned long *ucs4,
  * EBCDIC (TRANS_LOCAL).  Input keystrokes (which would use TRANS_DISPLAY)
  * are UTF-16 strings, not OEM-codepage bytes.
  */
-unsigned short
+ebc_t
 multibyte_to_ebcdic(const char *mb, size_t mb_len, int *consumedp,
 	enum me_fail *errorp)
 {
-    unsigned long ucs4;
+    ucs4_t ucs4;
 
     ucs4 = multibyte_to_unicode(mb, mb_len, consumedp, errorp);
     if (ucs4 == 0)
@@ -699,7 +699,7 @@ multibyte_to_ebcdic_string(char *mb, size_t mb_len, unsigned char *ebc,
     Boolean in_dbcs = False;
 
     while (mb_len > 0 && ebc_len > 0) {
-	unsigned short e;
+	ebc_t e;
 	int consumed;
 
 	e = multibyte_to_ebcdic(mb, mb_len, &consumed, errorp);
@@ -760,7 +760,7 @@ multibyte_to_ebcdic_string(char *mb, size_t mb_len, unsigned char *ebc,
  * Translate a UCS-4 character to a local multi-byte string.
  */
 int
-unicode_to_multibyte(unsigned long ucs4, char *mb, size_t mb_len)
+unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len)
 {
 #if defined(_WIN32) /*[*/
     wchar_t wuc = ucs4;

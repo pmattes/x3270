@@ -1683,7 +1683,7 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 		}
 		if (in_ascii) {
 			char mb[16];
-			unsigned long uc;
+			ucs4_t uc;
 			int j;
 			int xlen;
 
@@ -1959,7 +1959,7 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf, int fd)
 			    	Boolean done = False;
 				char mb[16];
 				int j;
-				unsigned long uc;
+				ucs4_t uc;
 #if defined(X3270_DBCS) /*[*/
 				int len;
 

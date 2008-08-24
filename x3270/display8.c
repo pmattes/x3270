@@ -26,7 +26,7 @@
 
 typedef struct {
     char *cset;			/* Character set name */
-    unsigned long u[256];	/* UCS-4 values for each display position */
+    ucs4_t u[256];	/* UCS-4 values for each display position */
 } d8_t;
 
 static d8_t d8[] = {
@@ -1163,7 +1163,7 @@ display8_init(char *cset)
  * Returns -1 if there is no mapping.
  */
 int
-display8_lookup(int d8_ix, unsigned long ucs4)
+display8_lookup(int d8_ix, ucs4_t ucs4)
 {
     	int i;
 
@@ -2285,7 +2285,7 @@ display16_init(char *cset)
  * Returns -1 if there is no mapping.
  */
 int
-display16_lookup(int d16_ix, unsigned long ucs4)
+display16_lookup(int d16_ix, ucs4_t ucs4)
 {
     	int row, col;
 	int ix;

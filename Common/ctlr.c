@@ -1142,7 +1142,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 	Boolean		aborted = False;
 #if defined(X3270_DBCS) /*[*/
 	char		mb[16];
-	unsigned long	uc;
+	ucs4_t		uc;
 #endif /*]*/
 
 #define END_TEXT0	{ if (previous == TEXT) trace_ds("'"); }

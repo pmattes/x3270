@@ -98,7 +98,7 @@ static Boolean flush_ta(void);
 static void key_AID(unsigned char aid_code);
 static void kybdlock_set(unsigned int bits, const char *cause);
 static KeySym MyStringToKeysym(char *s, enum keytype *keytypep,
-	unsigned long *ucs4);
+	ucs4_t *ucs4);
 
 #if defined(X3270_DBCS) /*[*/
 Boolean key_WCharacter(unsigned char code[], Boolean *skipped);
@@ -703,7 +703,7 @@ key_Character_wrapper(Widget w unused, XEvent *event unused, String *params,
 	Boolean with_ge = False;
 	Boolean pasting = False;
 	char mb[16];
-	unsigned long uc;
+	ucs4_t uc;
 
 	code = atoi(params[0]);
 	if (code & GE_WFLAG) {
@@ -1014,7 +1014,7 @@ key_WCharacter(unsigned char code[], Boolean *skipped)
 	/* In ANSI mode? */
 	if (IN_ANSI) {
 	    char mb[16];
-	    unsigned long uc;
+	    ucs4_t uc;
 
 	    (void) ebcdic_to_multibyte((code[0] << 8) | code[1], CS_BASE,
 				       mb, sizeof(mb), True, TRANS_LOCAL, &uc);
@@ -1274,7 +1274,7 @@ retry:
  * Handle an ordinary character key, given its Unicode value.
  */
 static void
-key_UCharacter(unsigned long ucs4, enum keytype keytype, enum iaction cause,
+key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	       Boolean *skipped)
 {
 	register int i;
@@ -1326,9 +1326,9 @@ key_UCharacter(unsigned long ucs4, enum keytype keytype, enum iaction cause,
 		break;
 	}
 
-	trace_event(" %s -> Key(U+%04lx)\n", ia_name[(int) cause], ucs4);
+	trace_event(" %s -> Key(U+%04x)\n", ia_name[(int) cause], ucs4);
 	if (IN_3270) {
-	    	unsigned short ebc;
+	    	ebc_t ebc;
 		Boolean ge;
 
 		if (ucs4 < ' ') {
@@ -1374,7 +1374,7 @@ static void
 key_ACharacter(char *mb, enum keytype keytype, enum iaction cause,
 	       Boolean *skipped)
 {
-	unsigned long ucs4;
+	ucs4_t ucs4;
 	int consumed;
 	enum me_fail error;
 
@@ -2987,7 +2987,7 @@ Key_action(Widget w unused, XEvent *event, String *params, Cardinal *num_params)
 	Cardinal i;
 	KeySym k;
 	enum keytype keytype;
-	unsigned long ucs4;
+	ucs4_t ucs4;
 
 	action_debug(Key_action, event, params, num_params);
 	reset_idle_timer();
@@ -3219,10 +3219,10 @@ emulate_input(char *s, int len, Boolean pasting)
 	int orig_addr = cursor_addr;
 	int orig_col = BA_TO_COL(cursor_addr);
 	Boolean skipped = False;
-	static unsigned long *w_ibuf = NULL;
+	static ucs4_t *w_ibuf = NULL;
 	static size_t w_ibuf_len = 0;
-	unsigned long c;
-	unsigned long *ws;
+	ucs4_t c;
+	ucs4_t *ws;
 	int xlen;
 
 	/*
@@ -3230,8 +3230,7 @@ emulate_input(char *s, int len, Boolean pasting)
 	 */
 	if ((size_t)(len + 1) > w_ibuf_len) {
 		w_ibuf_len = len + 1;
-		w_ibuf = (unsigned long *)Realloc(w_ibuf,
-			w_ibuf_len * sizeof(unsigned long));
+		w_ibuf = (ucs4_t *)Realloc(w_ibuf, w_ibuf_len * sizeof(ucs4_t));
 	}
 	xlen = multibyte_to_unicode_string(s, len, w_ibuf, w_ibuf_len);
 	if (xlen < 0) {
@@ -3797,7 +3796,7 @@ kybd_prime(void)
  * characters.
  */
 static KeySym
-MyStringToKeysym(char *s, enum keytype *keytypep, unsigned long *ucs4)
+MyStringToKeysym(char *s, enum keytype *keytypep, ucs4_t *ucs4)
 {
 	KeySym k;
 	int consumed;
@@ -3948,7 +3947,7 @@ build_composites(void)
 			continue;
 		}
 		for (i = 0; i < 3; i++) {
-		    	unsigned long ucs4;
+		    	ucs4_t ucs4;
 
 			k[i] = MyStringToKeysym(ksname[i], &a[i], &ucs4);
 			if (k[i] == NoSymbol) {
@@ -4231,10 +4230,10 @@ Default_action(Widget w unused, XEvent *event, String *params, Cardinal *num_par
 				(void) sprintf(buf, "%ld", ks - XK_F1 + 1);
 				action_internal(PF_action, IA_DEFAULT, buf, CN);
 			} else {
-				unsigned long ucs4;
+				ucs4_t ucs4;
 
 			    	ucs4 = keysym2ucs(ks);
-				if (ucs4 != (unsigned long)-1) {
+				if (ucs4 != (ucs4_t)-1) {
 				    	key_UCharacter(ucs4, KT_STD, IA_KEY,
 						NULL);
 				} else {

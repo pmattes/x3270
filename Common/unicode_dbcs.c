@@ -3147,8 +3147,8 @@ static uni16_t *cur_uni16 = NULL;
  * If blank_undef is set, undisplayable characters are returned as
  *  wide spaces (U+3000); otherwise they are returned as 0.
  */
-unsigned long
-ebcdic_dbcs_to_unicode(unsigned short c, Boolean blank_undef)
+ucs4_t
+ebcdic_dbcs_to_unicode(ebc_t c, Boolean blank_undef)
 {
     	int row, col;
 	int ix;
@@ -3175,8 +3175,8 @@ ebcdic_dbcs_to_unicode(unsigned short c, Boolean blank_undef)
  * Map a UCS-4 character to a DBCS EBCDIC character.
  * Returns 0 for failure, nonzero for success.
  */
-unsigned short
-unicode_to_ebcdic_dbcs(unsigned long u)
+ebc_t
+unicode_to_ebcdic_dbcs(ucs4_t u)
 {
     	int row, col;
 	int ix;
