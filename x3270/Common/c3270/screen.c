@@ -37,7 +37,6 @@
 #include "trace_dsc.h"
 #include "utf8c.h"
 #include "utilc.h"
-#include "widec.h"
 #include "xioc.h"
 
 #undef COLS

@@ -36,7 +36,6 @@
 #include "unicodec.h"
 #include "utilc.h"
 #include "w3miscc.h"
-#include "widec.h"
 #include "xioc.h"
 
 #include <windows.h>
