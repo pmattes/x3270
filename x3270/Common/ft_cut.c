@@ -128,7 +128,6 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 	unsigned char *ob0 = obuf;
 	unsigned char *ob = ob0;
 	int nx;
-	ucs4_t uc;
 
 	while (len-- && obuf_len) {
 		unsigned char c = *buf++;
@@ -222,8 +221,7 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 			}
 			nx = ebcdic_to_multibyte((ft_dbcs_byte1 << 8) |
 				    i_asc2ft[c],
-				CS_BASE, (char *)ob, obuf_len, True,
-				TRANS_LOCAL, &uc);
+				(char *)ob, obuf_len);
 			if (nx && (ob[nx - 1] == '\0'))
 				nx--;
 			ob += nx;
@@ -246,8 +244,7 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 		} else {
 		    	/* Displayable character, remap. */
 			c = i_asc2ft[c];
-			nx = ebcdic_to_multibyte(c, CS_BASE, (char *)ob,
-				obuf_len, True, TRANS_LOCAL, &uc);
+			nx = ebcdic_to_multibyte(c, (char *)ob, obuf_len);
 		}
 		if (nx && (ob[nx - 1] == '\0'))
 			nx--;
@@ -455,12 +452,10 @@ cut_control_code(void)
 			bp = buf = Malloc(mb_len);
 			for (i = 0; i < 80; i++) {
 			    	int xlen;
-				ucs4_t uc;
 
 				xlen = ebcdic_to_multibyte(
 					ea_buf[O_CC_MESSAGE + i].cc,
-					CS_BASE, bp, mb_len, True,
-					TRANS_LOCAL, &uc);
+					bp, mb_len);
 				if (xlen) {
 				    	bp += xlen - 1;
 					mb_len -= xlen - 1;

@@ -319,14 +319,9 @@ get_charset_name(void)
  *
  * Returns '?' in mb[] if there is no local multi-byte representation of
  * the EBCDIC character.
- *
- * XXX: For Tcl3270, this should always be a simple UTF-8 conversion.
- *
- * XXX: The control-code and character set processing should happen in
- *  ebcdic_base_to_unicode, not here.
  */
 int
-ebcdic_to_multibyte(ebc_t ebc, unsigned char cs, char mb[],
+ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 	int mb_len, int blank_undef, trans_t purpose, ucs4_t *ucp)
 {
     ucs4_t uc;
@@ -457,6 +452,21 @@ ebcdic_to_multibyte(ebc_t ebc, unsigned char cs, char mb[],
 #endif /*]*/
 }
 
+/* Commonest version of ebcdic_to_multibyte_x:
+ *  cs is CS_BASE
+ *  blank_undef is True
+ *  purpose is TRANS_LOCAL
+ *  ucp is ignored
+ */
+int
+ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len)
+{
+	ucs4_t ucs4;
+
+    	return ebcdic_to_multibyte_x(ebc, CS_BASE, mb, mb_len, True,
+		TRANS_LOCAL, &ucs4);
+}
+
 /*
  * Convert an EBCDIC string to a multibyte string.
  * Makes lots of assumptions: standard character set, TRANS_LOCAL, blank_undef.
@@ -470,10 +480,8 @@ ebcdic_to_multibyte_string(unsigned char *ebc, size_t ebc_len, char mb[],
 
     	while (ebc_len && mb_len) {
 	    	int xlen;
-		ucs4_t uc;
 
-		xlen = ebcdic_to_multibyte(*ebc, CS_BASE, mb, mb_len, True,
-			TRANS_LOCAL, &uc);
+		xlen = ebcdic_to_multibyte(*ebc, mb, mb_len);
 		if (xlen) {
 		    	mb += xlen - 1;
 			mb_len -= (xlen - 1);

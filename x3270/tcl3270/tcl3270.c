@@ -782,14 +782,13 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 				len = ebcdic_to_multibyte(
 					(buf[first + i].cc << 8) |
 					 buf[first + i + 1].cc,
-					CS_BASE, mb, sizeof(mb), True,
-					TRANS_LOCAL, &uc);
+					mb, sizeof(mb));
 			} else if (IS_RIGHT(ctlr_dbcs_state(first + i))) {
 				continue;
 			} else
 #endif /*]*/
 			{
-			    	len = ebcdic_to_multibyte(buf[first + i].cc,
+			    	len = ebcdic_to_multibyte_x(buf[first + i].cc,
 					buf[first + i].cs & CS_MASK,
 					mb, sizeof(mb), True,
 					TRANS_LOCAL, &uc);
@@ -865,14 +864,13 @@ dump_rectangle(int start_row, int start_col, int rows, int cols,
 				    	len = ebcdic_to_multibyte(
 						(buf[loc].cc << 8) |
 						 buf[loc + 1].cc,
-						CS_BASE, mb, sizeof(mb), True,
-						TRANS_LOCAL, &uc);
+						mb, sizeof(mb));
 				} else if (IS_RIGHT(ctlr_dbcs_state(loc))) {
 					continue;
 				} else
 #endif /*]*/
 				{
-				    	len = ebcdic_to_multibyte(
+				    	len = ebcdic_to_multibyte_x(
 						buf[loc].cc,
 						buf[loc].cs & CS_MASK,
 						mb, sizeof(mb), True,
@@ -1212,8 +1210,7 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf)
 					len = ebcdic_to_multibyte(
 						(buf[baddr].cc << 8) |
 						 buf[baddr + 1].cc,
-						CS_BASE, mb, sizeof(mb), True,
-						TRANS_LOCAL, &uc);
+						mb, sizeof(mb));
 					field_buf[0] = '\0';
 					for (j = 0; j < len - 1; j++)
 					    	sprintf(strchr(field_buf, '\0'),
@@ -1226,7 +1223,7 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf)
 				if (buf[baddr].cc == EBC_null)
 					strcpy(field_buf, "00");
 				else {
-					len = ebcdic_to_multibyte(
+					len = ebcdic_to_multibyte_x(
 						buf[baddr].cc,
 						buf[baddr].cs & CS_MASK,
 						mb, sizeof(mb), True,

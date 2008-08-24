@@ -263,7 +263,6 @@ dft_data_insert(struct data_buffer *data_bufr)
 			unsigned char *s = (unsigned char *)data_bufr->data;
 			unsigned len = my_length;
 			int nx;
-			ucs4_t uc;
 
 			/* Copy and convert data_bufr->data to ob0. */
 			while (len-- && obuf_len) {
@@ -321,8 +320,7 @@ dft_data_insert(struct data_buffer *data_bufr)
 					nx = ebcdic_to_multibyte(
 						(ft_dbcs_byte1 << 8) |
 						    i_asc2ft[c],
-						CS_BASE, (char *)ob, obuf_len,
-						True, TRANS_LOCAL, &uc);
+						(char *)ob, obuf_len);
 					if (nx && (ob[nx - 1] == '\0'))
 						nx--;
 					ob += nx;
@@ -349,9 +347,8 @@ dft_data_insert(struct data_buffer *data_bufr)
 				} else {
 				    	/* Displayable character, remap. */
 					c = i_asc2ft[c];
-					nx = ebcdic_to_multibyte(c, CS_BASE,
-						(char *)ob, obuf_len, True,
-						TRANS_LOCAL, &uc);
+					nx = ebcdic_to_multibyte(c, (char *)ob,
+						obuf_len);
 				}
 				if (nx && (ob[nx - 1] == '\0'))
 					nx--;

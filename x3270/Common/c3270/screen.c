@@ -774,7 +774,6 @@ screen_disp(Boolean erasing unused)
 			} else {
 				char mb[16];
 				int len;
-				ucs4_t uc;
 
 				if (!(ea_buf[baddr].gr ||
 				      ea_buf[baddr].fg ||
@@ -818,10 +817,7 @@ screen_disp(Boolean erasing unused)
 					} else {
 						len = ebcdic_to_multibyte(
 							ea_buf[baddr].cc,
-							CS_BASE, mb,
-							sizeof(mb),
-							True, TRANS_LOCAL,
-							&uc);
+							mb, sizeof(mb));
 						if (len > 0)
 							len--;
 						if (toggled(UNDERSCORE) &&
@@ -1674,7 +1670,7 @@ display_linedraw(unsigned char ebc)
 	}
 
 	/* Then try Unicode. */
-	len = ebcdic_to_multibyte(ebc, CS_LINEDRAW, mb, sizeof(mb), True,
+	len = ebcdic_to_multibyte_x(ebc, CS_LINEDRAW, mb, sizeof(mb), True,
 		TRANS_LOCAL, &uc);
 	if (len > 0)
 		len--;
@@ -1786,7 +1782,7 @@ display_ge(unsigned char ebc)
 	}
 
 	/* Then try Unicode. */
-	len = ebcdic_to_multibyte(ebc, CS_GE, mb, sizeof(mb), True,
+	len = ebcdic_to_multibyte_x(ebc, CS_GE, mb, sizeof(mb), True,
 		TRANS_LOCAL, &uc);
 	if (len > 0)
 		len--;

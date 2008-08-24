@@ -1699,8 +1699,7 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 				xlen = ebcdic_to_multibyte(
 					(buf[first + i].cc << 8) |
 					 buf[first + i + 1].cc,
-					CS_BASE, mb, sizeof(mb),
-					True, TRANS_LOCAL, &uc);
+					mb, sizeof(mb));
 				for (j = 0; j < xlen - 1; j++) {
 					s += sprintf(s, "%c", mb[j]);
 				}
@@ -1709,7 +1708,7 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 			} else
 #endif /*]*/
 			{
-				xlen = ebcdic_to_multibyte(
+				xlen = ebcdic_to_multibyte_x(
 						       buf[first + i].cc,
 						       buf[first + i].cs,
 						       mb, sizeof(mb),
@@ -1967,8 +1966,7 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf, int fd)
 				    	len = ebcdic_to_multibyte(
 						(buf[baddr].cc << 8) |
 						 buf[baddr + 1].cc,
-						CS_BASE, mb, sizeof(mb),
-						True, TRANS_LOCAL, &uc);
+						mb, sizeof(mb));
 					rpf(&r, " ");
 					for (j = 0; j < len-1; j++)
 						rpf(&r, "%02x", mb[j] & 0xff);
@@ -1992,7 +1990,7 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf, int fd)
 					mb[1] = '\0';
 					break;
 				default:
-					(void) ebcdic_to_multibyte(
+					(void) ebcdic_to_multibyte_x(
 							       buf[baddr].cc,
 							       buf[baddr].cs,
 							       mb, sizeof(mb),
