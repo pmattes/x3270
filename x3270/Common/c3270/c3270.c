@@ -1115,6 +1115,8 @@ Trace_action(Widget w unused, XEvent *event unused, String *params,
 			appres.trace_file = NewString(params[2]);
 		do_toggle(tg);
 	}
+	if (tracefile_name != NULL)
+		action_output("Trace file is %s", tracefile_name);
 }
 #endif /*]*/
 

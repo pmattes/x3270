@@ -20,6 +20,7 @@
 #if defined(X3270_TRACE) /*[*/
 
 extern Boolean trace_skipping;
+extern char *tracefile_name;
 
 const char *rcba(int baddr);
 void toggle_dsTrace(struct toggle *t, enum toggle_type tt);
