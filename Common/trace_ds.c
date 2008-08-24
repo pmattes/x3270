@@ -1,6 +1,6 @@
 /*
- * Copyright 1993, 1994, 1995, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007
- *   by Paul Mattes.
+ * Copyright 1993, 1994, 1995, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007,
+ *   2007 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -86,8 +86,9 @@ static char    *create_tracefile_header(const char *mode);
 static void	stop_tracing(void);
 
 /* Globals */
-struct timeval  ds_ts;
-Boolean         trace_skipping = False;
+struct timeval   ds_ts;
+Boolean          trace_skipping = False;
+char		*tracefile_name = NULL;
 
 /* display a (row,col) */
 const char *
@@ -720,6 +721,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data unused)
 				Free(tfn);
 				return;
 			}
+			Replace(tracefile_name, NewString(tfn));
 			(void) SETLINEBUF(tracef);
 #if !defined(_WIN32) /*[*/
 			(void) fcntl(fileno(tracef), F_SETFD, 1);
