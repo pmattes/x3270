@@ -325,12 +325,23 @@ screen_init(void)
 		}
 	}
 
-	/* See about keyboard Meta-key behavior. */
+	/*
+	 * See about keyboard Meta-key behavior.
+	 *
+	 * Note: Formerly, "auto" meant to use the terminfo 'km' capability (if
+	 * set, then disable metaEscape).  But popular terminals like the
+	 * Linux console and xterms are actually configurable, though they have
+	 * fixed terminfo capabilities.  It is harmless to enable metaEscape
+	 * when the terminal supports it, so the default is now 'on'.
+	 *
+	 * Setting the high bit for the Meta key is a pretty achaic idea, IMO,
+	 * so we no loger support it.
+	 */
 	if (!ts_value(appres.meta_escape, &me_mode))
 		(void) fprintf(stderr, "invalid %s value: '%s', "
 		    "assuming 'auto'\n", ResMetaEscape, appres.meta_escape);
 	if (me_mode == TS_AUTO)
-		me_mode = tigetflag("km")? TS_OFF: TS_ON;
+		me_mode = TS_ON;
 
 	/* See about all-bold behavior. */
 	if (appres.all_bold_on)
@@ -897,7 +908,7 @@ kybd_input(void)
 	static Boolean failed_first = False;
 
 	for (;;) {
-		int alt = 0;
+		volatile int alt = 0;
 		char dbuf[128];
 #if defined(CURSES_WIDE) /*[*/
 		wint_t wch;
@@ -906,6 +917,7 @@ kybd_input(void)
 
 		if (isendwin())
 			return;
+		ucs4 = 0;
 #if defined(CURSES_WIDE) /*[*/
 		k = wget_wch(stdscr, &wch);
 #else /*][*/
@@ -926,8 +938,19 @@ kybd_input(void)
 #if !defined(CURSES_WIDE) /*[*/
 		/* Differentiate between KEY_XXX and regular input. */
 		if (!(k & ~0xff)) {
-		    ucs4 = k;
-		    k = 0;
+			char mb[2];
+			int consumed;
+			enum me_fail error;
+
+			/* Convert from local multi-byte to Unicode. */
+			mb[0] = k;
+			mb[1] = '\0';
+			ucs4 = multibyte_to_unicode(mb, 1, &consumed, &error);
+			if (ucs4 == 0) {
+				trace_event("Invalid input char 0x%x\n", k);
+				return;
+			}
+			k = 0;
 		}
 #endif /*]*/
 #if defined(CURSES_WIDE) /*[*/
@@ -942,7 +965,7 @@ kybd_input(void)
 			wcs[1] = 0;
 			sz = wcstombs(mbs, wcs, sizeof(mbs));
 			if (sz < 0) {
-				trace_event("Invalid input wchar %x\n", wch);
+				trace_event("Invalid input wchar 0x%x\n", wch);
 				return;
 			}
 			if (sz == 1) {
@@ -961,8 +984,6 @@ kybd_input(void)
 			}
 		}
 #endif /*]*/
-		trace_event("Key %s (key 0x%x, char 0x%lx)\n",
-			decode_key(k, ucs4, alt, dbuf), k, ucs4);
 
 		/* Handle Meta-Escapes. */
 		if (meta_escape) {
@@ -973,12 +994,16 @@ kybd_input(void)
 			meta_escape = False;
 			alt = KM_ALT;
 		} else if (me_mode == TS_ON && ucs4 == 0x1b) {
+			trace_event("Key '%s' (curses key 0x%x, char code 0x%lx)\n",
+				decode_key(k, ucs4, alt, dbuf), k, ucs4);
 			eto = AddTimeOut(100L, escape_timeout);
 			trace_event(" waiting to see if Escape is followed by"
 			    " another key\n");
 			meta_escape = True;
 			continue;
 		}
+		trace_event("Key '%s' (curses key 0x%x, char code 0x%lx)\n",
+			decode_key(k, ucs4, alt, dbuf), k, ucs4);
 		kybd_input2(k, ucs4, alt);
 		first = False;
 	}

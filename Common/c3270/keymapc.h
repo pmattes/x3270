@@ -17,6 +17,6 @@
 #define KM_ALT		0x0002
 
 extern void keymap_init(void);
-extern char *lookup_key(int k, unsigned long ucs4, int alt);
+extern char *lookup_key(int k, unsigned long ucs4, int modifiers);
 extern void keymap_dump(void);
 extern const char *decode_key(int k, unsigned long ucs4, int hint, char *buf);
