@@ -23,8 +23,6 @@
  *	    -command "string"
  *		command to use to print (default "lpr", POSIX only)
  *          -charset name
- *          -charset @file
- *          -charset =spec
  *		use the specified character set
  *          -crlf
  *		expand newlines to CR/LF (POSIX only)
@@ -76,6 +74,7 @@
 #include <signal.h>
 
 #include "globals.h"
+#include "charsetc.h"
 #include "trace_dsc.h"
 #include "ctlrc.h"
 #include "popupsc.h"
@@ -98,7 +97,6 @@
 #endif /*]*/
 
 /* Externals. */
-extern int charset_init(const char *csname);
 extern char *build;
 extern FILE *tracef;
 #if defined(_WIN32) /*[*/
@@ -158,10 +156,7 @@ usage(void)
 "  -daemon          become a daemon after connecting\n"
 #endif /*]*/
 "  -assoc <session> associate with a session (TN3270E only)\n"
-"  -charset <name>  use built-in alternate EBCDIC-to-ASCII mappings\n"
-"  -charset @<file> use alternate EBCDIC-to-ASCII mappings from file\n"
-"  -charset =\"<ebc>=<asc> ...\"\n"
-"                   specify alternate EBCDIC-to-ASCII mappings",
+"  -charset <name>  use built-in alternate EBCDIC-to-ASCII mappings",
 #if !defined(_WIN32) /*[*/
 "  -command \"<cmd>\" use <cmd> for printing (default \"lpr\")\n"
 #endif /*]*/
@@ -184,7 +179,7 @@ usage(void)
 "  -proxy \"<spec>\"\n"
 "                   connect to host via specified proxy\n"
 "  -reconnect       keep trying to reconnect\n"
-"  -trace           trace data stream to /tmp/x3trc.<pid>\n"
+"  -trace           trace data stream to /tmp/x3trc.<pid>"
 #if !defined(_WIN32) /*[*/
 "\n  -tracedir <dir>  directory to keep trace information in"
 #endif /*]*/
@@ -315,7 +310,7 @@ main(int argc, char *argv[])
 	int i;
 	char *at, *colon;
 	int len;
-	char const *charset = NULL;
+	char *charset = "us";
 	char *lu = NULL;
 	char *host = NULL;
 	char *port = "telnet";

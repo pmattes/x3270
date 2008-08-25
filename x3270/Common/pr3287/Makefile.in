@@ -32,9 +32,9 @@ LIBS = @LIBS@
 INSTALL = @INSTALL@
 
 SRCS = pr3287.c ctlr.c trace_ds.c tables.c telnet.c sf.c charset.c resolver.c \
-	see.c proxy.c @DBCS_C@
+	see.c proxy.c unicode.c unicode_dbcs.c utf8.c
 OBJECTS = pr3287.o ctlr.o trace_ds.o tables.o telnet.o sf.o charset.o \
-	resolver.o see.o proxy.o @DBCS_O@
+	resolver.o see.o proxy.o unicode.o unicode_dbcs.o utf8.o
 
 version.o: version.txt mkversion.sh
 	@chmod +x mkversion.sh version.txt

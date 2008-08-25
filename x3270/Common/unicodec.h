@@ -21,7 +21,7 @@ extern int set_uni(const char *csname, const char **codepage,
 	const char **display_charsets);
 extern int linedraw_to_unicode(ebc_t e);
 extern int apl_to_unicode(ebc_t e);
-#if defined(USE_ICONV) /*[*/
+#if !defined(_WIN32) && !defined(UNICODE_WCHAR) /*[*/
 extern iconv_t i_u2mb;
 extern iconv_t i_mb2u;
 #endif /*]*/

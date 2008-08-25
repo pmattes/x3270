@@ -25,8 +25,7 @@
  */
 
 
-#include <stdio.h>
-#include "localdefs.h"
+#include "globals.h"
 #if defined(_WIN32) /*[*/
 #include <winsock2.h>
 #include <ws2tcpip.h>

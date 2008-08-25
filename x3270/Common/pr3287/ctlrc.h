@@ -24,7 +24,7 @@ enum pds {
 	PDS_FAILED = -3		/* command failed */
 };
 
-extern void ctlr_add(unsigned char c, unsigned char cs, unsigned char gr);
+extern void ctlr_add(ucs4_t c, unsigned char cs, unsigned char gr);
 extern void ctlr_write(unsigned char buf[], int buflen, Boolean erase);
 extern int print_eoj(void);
 extern void print_unbind(void);

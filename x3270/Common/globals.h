@@ -80,7 +80,7 @@
 #if defined(__STDC_ISO_10646__) && !defined(USE_ICONV) /*[*/
 #define UNICODE_WCHAR	1
 #endif /*]*/
-#if defined(USE_ICONV) /*[*/
+#if !defined(_WIN32) && !defined(UNICODE_WCHAR) /*[*/
 #include <iconv.h>
 #endif /*]*/
 
