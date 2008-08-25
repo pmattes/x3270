@@ -31,13 +31,9 @@
 #include "3270ds.h"
 
 #include "tablesc.h"
-#if !defined(PR3287) /*[*/
 #include "utf8c.h"
-#endif /*]*/
 #include "seec.h"
-#if !defined(PR3287) /*[*/
 #include "charsetc.h"
-#endif /*]*/
 
 const char *
 unknown(unsigned char value)
@@ -52,12 +48,8 @@ const char *
 see_ebc(unsigned char ch)
 {
 	static char buf[8];
-#if defined(PR3287) /*[*/
-	unsigned char e;
-#else /*][*/
 	char mb[16];
 	ucs4_t uc;
-#endif /*]*/
 
 	switch (ch) {
 	    case FCORDER_NULL:

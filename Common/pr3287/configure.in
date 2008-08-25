@@ -216,18 +216,11 @@ fi
 
 AC_ARG_ENABLE(dbcs,[  --disable-dbcs          leave out DBCS support])
 case "$enable_dbcs" in
-no)	CNV="#"
-	;;
+no)	;;
 *)	AC_DEFINE(X3270_DBCS,1)
-	DBCS_C="wide.c"
-	DBCS_O="wide.o"
-	CNV=""
 	DBCS=-DX3270_DBCS=1
 	;;
 esac
-AC_SUBST(DBCS_C)
-AC_SUBST(DBCS_O)
-AC_SUBST(CNV)
 AC_SUBST(ICU_DATA_PREFIX)
 AC_SUBST(DBCS)
 AC_ARG_ENABLE(ssl,[  --disable-ssl           leave out OpenSSL support])
