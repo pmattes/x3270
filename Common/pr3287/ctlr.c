@@ -824,7 +824,10 @@ add_scs(ucs4_t c)
 	 * Store this character in the line buffer and advance the print
 	 * position.
 	 */
-	linebuf[pp++] = c;
+	if (c != ' ')
+		linebuf[pp++] = c;
+	else
+	    	pp++;
 	any_scs_output = True;
 	return 0;
 }
