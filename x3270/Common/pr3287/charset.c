@@ -60,9 +60,15 @@ charset_init(char *csname)
 
     	if (set_uni(csname, &codepage, &display_charsets) < 0)
 		return CS_NOTFOUND;
+	cgcsgid = strtoul(codepage, NULL, 0);
+	if (!(cgcsgid & ~0xffff))
+	    	cgcsgid |= 0x02b90000;
 
 #if defined(X3270_DBCS) /*[*/
-	(void) set_uni_dbcs(csname, &codepage, &display_charsets);
+	if (set_uni_dbcs(csname, &codepage, &display_charsets) == 0) {
+	    	dbcs = 1;
+		cgcsgid_dbcs = strtoul(codepage, NULL, 0);
+	}
 #endif /*]*/
 
 	return CS_OKAY;
