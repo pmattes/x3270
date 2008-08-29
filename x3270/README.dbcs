@@ -33,5 +33,4 @@ Languages and Code Pages Supported
 
 Known Limitations
 -----------------
-- pr3287 does not support DBCS character sets.
 - Flipped mode does not work, and is disabled.

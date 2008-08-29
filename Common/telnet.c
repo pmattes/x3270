@@ -57,7 +57,6 @@
 #include "appres.h"
 
 #include "ansic.h"
-#include "charsetc.h"
 #include "ctlrc.h"
 #include "hostc.h"
 #include "kybdc.h"
@@ -69,6 +68,7 @@
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace_dsc.h"
+#include "unicodec.h"
 #include "utilc.h"
 #include "w3miscc.h"
 #include "xioc.h"

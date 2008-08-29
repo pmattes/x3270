@@ -22,7 +22,6 @@
 #include "appres.h"
 #include "resources.h"
 
-#include "charsetc.h"
 #include "hostc.h"
 #include "keymapc.h"
 #include "macrosc.h"
@@ -30,6 +29,7 @@
 #include "screenc.h"
 #include "statusc.h"
 #include "trace_dsc.h"
+#include "unicodec.h"
 #include "utilc.h"
 
 #undef COLS

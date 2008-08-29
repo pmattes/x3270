@@ -353,7 +353,7 @@ main(int argc, char *argv[])
 		printer = ws_default_printer();
 	}
 
-	if (get_dirs(NULL, appdata) < 0)
+	if (get_dirs(NULL, appdata, "wc3270") < 0)
 	    	exit(1);
 #endif /*]*/
 

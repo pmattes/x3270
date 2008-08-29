@@ -35,6 +35,7 @@
 #include "screenc.h"
 #include "tablesc.h"
 #include "trace_dsc.h"
+#include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
 #include "xioc.h"

@@ -1,4 +1,4 @@
-dnl Copyright 2000, 2001, 2002, 2003, 2005, 2006, 2007 by Paul Mattes.
+dnl Copyright 2000, 2001, 2002, 2003, 2005, 2006, 2007, 2008 by Paul Mattes.
 dnl  Permission to use, copy, modify, and distribute this software and its
 dnl  documentation for any purpose and without fee is hereby granted,
 dnl  provided that the above copyright notice appear in all copies and that
@@ -45,6 +45,16 @@ AC_SUBST(BROKEN_NEWTERM)
 
 dnl Check for --without-readline
 AC_ARG_WITH(readline, [  --without-readline      Don't use the readline library])
+
+dnl Check for --with-iconv
+AC_ARG_WITH(iconv,[  --with-iconv            ignore __STDC_ISO_10646__ and use iconv() instead])
+case "$with_iconv" in
+no|"")	;;
+yes|*)
+	AC_DEFINE(USE_ICONV,1)
+	;;
+esac
+AC_SUBST(USE_ICONV)
 
 dnl Check for --without-pr3287
 AC_ARG_WITH(pr3287,[  --without-pr3287        don't build pr3287])

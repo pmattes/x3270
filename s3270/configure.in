@@ -138,6 +138,16 @@ then	orig_LDFLAGS="$LDFLAGS"
 	fi
 fi
 
+dnl Check for --with-iconv
+AC_ARG_WITH(iconv,[  --with-iconv            ignore __STDC_ISO_10646__ and use iconv() instead])
+case "$with_iconv" in
+no|"")	;;
+yes|*)
+	AC_DEFINE(USE_ICONV,1)
+	;;
+esac
+AC_SUBST(USE_ICONV)
+
 dnl Set up the configuration directory.
 LIBX3270DIR='${sysconfdir}/x3270'
 AC_SUBST(LIBX3270DIR)

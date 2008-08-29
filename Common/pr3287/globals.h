@@ -37,8 +37,13 @@ extern int dbcs;
 
 #define Replace(var, value) { Free(var); var = (value); }
 
+#if defined(_WIN32) /*[*/
+typedef unsigned int ucs4_t;
+typedef unsigned short ebc_t;
+#else /*][*/
 typedef __uint32_t ucs4_t;
 typedef __uint16_t ebc_t;
+#endif /*]*/
 
 #define CS_MASK		0x03	/* mask for specific character sets */
 #define CS_BASE		0x00	/*  base character set (X'00') */

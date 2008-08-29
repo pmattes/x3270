@@ -33,7 +33,7 @@
 #include "tablesc.h"
 #include "utf8c.h"
 #include "seec.h"
-#include "charsetc.h"
+#include "unicodec.h"
 
 const char *
 unknown(unsigned char value)

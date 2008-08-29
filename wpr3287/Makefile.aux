@@ -1,4 +1,4 @@
-# Copyright 2000, 2001, 2002, 2004, 2007 by Paul Mattes.
+# Copyright 2000, 2001, 2002, 2004, 2007, 2008 by Paul Mattes.
 #  Permission to use, copy, modify, and distribute this software and its
 #  documentation for any purpose and without fee is hereby granted,
 #  provided that the above copyright notice appear in all copies and that
@@ -20,10 +20,12 @@ all:
 # Development tools.
 
 SOURCES = charset.c ctlr.c pr3287.c proxy.c resolver.c see.c sf.c tables.c \
-	telnet.c trace_ds.c utf8.c w3misc.c windirs.c winvers.c ws.c
+	telnet.c trace_ds.c utf8.c w3misc.c windirs.c winvers.c ws.c \
+	unicode.c
 HEADERS = 3270ds.h ctlrc.h globals.h localdefs.h popupsc.h proxyc.h \
 	resolverc.h seec.h sfc.h tablesc.h telnetc.h tn3270e.h trace_dsc.h \
-	utf8c.h w3miscc.h widec.h windirsc.h winversc.h wsc.h arpa_telnet.h
+	utf8c.h w3miscc.h windirsc.h winversc.h wsc.h arpa_telnet.h \
+	charsetc.h unicodec.h unicode_dbcsc.h
 MISC = mkversion.sh version.txt LICENSE Makefile Makefile.aux \
 	pr3287.ico wpr3287.rc
 DEVKIT = pr3287.man.m4 m42man
