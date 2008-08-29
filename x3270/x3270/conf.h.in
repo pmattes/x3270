@@ -18,11 +18,6 @@
 
 
 /* Libraries. */
-#undef HAVE_LIBNCURSES
-#undef HAVE_LIBCURSES
-#undef HAVE_LIBUTIL
-#undef HAVE_LIBSOCKET
-#undef HAVE_LIBREADLINE
 #undef HAVE_LIBSSL
 
 /* Header files. */

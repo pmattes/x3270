@@ -65,8 +65,9 @@ AC_CHECK_LIB(ncursesw, newterm, , [AC_CHECK_LIB(ncurses, newterm, , [AC_CHECK_LI
 if test "$with_readline" != no; then
 AC_CHECK_LIB(readline, rl_initialize)
 fi
-AC_CHECK_LIB(nsl, gethostbyname)
-AC_CHECK_LIB(socket, socket)
+AC_SEARCH_LIBS(gethostbyname, nsl)
+AC_SEARCH_LIBS(socket, socket)
+AC_SEARCH_LIBS(iconv, iconv, , AC_MSG_ERROR("No iconv library function"))
 
 dnl If we're on AIX and have ncurses, cancel BROKEN_NEWTERM.
 if test -n "$BROKEN_NEWTERM"
@@ -206,12 +207,12 @@ case "$enable_apl" in
 ""|yes)	AC_DEFINE(X3270_APL,1)
 	;;
 esac
-AC_ARG_ENABLE(dbcs,[  --enable-dbcs           include DBCS support])
+AC_ARG_ENABLE(dbcs,[  --disable-dbcs          leave out DBCS support])
 case "$enable_dbcs" in
-yes)	AC_DEFINE(X3270_DBCS,1)
+no)	;;
+*)	AC_DEFINE(X3270_DBCS,1)
 	DBCS=-DX3270_DBCS=1
 	;;
-*)	;;
 esac
 AC_SUBST(DBCS)
 AC_ARG_ENABLE(ft,[  --disable-ft            leave out file transfer support])
