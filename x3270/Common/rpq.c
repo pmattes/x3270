@@ -35,11 +35,11 @@
 #include "3270ds.h"
 #include "appres.h"
 
-#include "charsetc.h"
 #include "popupsc.h"
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace_dsc.h"
+#include "unicodec.h"
 #include "utilc.h"
 
 /* Statics */

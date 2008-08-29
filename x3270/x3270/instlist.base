@@ -46,7 +46,3 @@ usr/local/bin/x3270if
 usr/local/etc
 usr/local/etc/x3270
 usr/local/etc/x3270/ibm_hosts
-usr/local/etc/x3270/icudt34l_ibm-1027_P100-1995.cnv
-usr/local/etc/x3270/icudt34l_ibm-1388_P103-2001.cnv
-usr/local/etc/x3270/icudt34l_ibm-300_P110-1997.cnv
-usr/local/etc/x3270/icudt34l_ibm-837_P100-2000.cnv

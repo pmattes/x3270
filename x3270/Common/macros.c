@@ -38,7 +38,6 @@
 #include <stdarg.h>
 #include "3270ds.h"
 #include "appres.h"
-#include "charsetc.h"
 #include "ctlr.h"
 #include "screen.h"
 #include "resources.h"
@@ -62,6 +61,7 @@
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace_dsc.h"
+#include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
 #include "xioc.h"

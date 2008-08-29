@@ -69,17 +69,18 @@ DEVKIT = Makefile.aux apl.inc ft.inc html.m4 m42html m42man man.m4 \
 	menus.inc x3270.man.m4 xkeymaps.inc \
 	instlist.all-xinstall instlist.base instlist.byprefix \
 	x3270/instlist.man
-PR3287 = pr3287/3270ds.h pr3287/Makefile.aux pr3287/Makefile.in pr3287/README \
-	pr3287/arpa_telnet.h pr3287/charset.c pr3287/config.guess \
-	pr3287/config.sub pr3287/configure pr3287/ctlr.c pr3287/ctlrc.h \
+PR3287 = pr3287/3270ds.h pr3287/arpa_telnet.h pr3287/charset.c \
+	pr3287/charsetc.h pr3287/config.guess pr3287/config.sub \
+	pr3287/configure pr3287/configure.in pr3287/ctlr.c pr3287/ctlrc.h \
 	pr3287/globals.h pr3287/install-sh pr3287/localdefs.h \
-	pr3287/mkversion.sh pr3287/pr3287.c \
-	pr3287/pr3287.man pr3287/proxyc.h pr3287/proxy.c pr3287/resolverc.h \
-	pr3287/resolver.c pr3287/sf.c pr3287/sfc.h pr3287/tables.c \
+	pr3287/Makefile.aux pr3287/Makefile.in pr3287/mkversion.sh \
+	pr3287/popupsc.h pr3287/pr3287.c pr3287/pr3287.man pr3287/proxy.c \
+	pr3287/proxyc.h pr3287/README pr3287/resolver.c pr3287/resolverc.h \
+	pr3287/see.c pr3287/seec.h pr3287/sf.c pr3287/sfc.h pr3287/tables.c \
 	pr3287/tablesc.h pr3287/telnet.c pr3287/telnetc.h pr3287/tn3270e.h \
-	pr3287/trace_ds.c pr3287/trace_dsc.h pr3287/version.txt \
-	pr3287/configure.in pr3287/see.c pr3287/seec.h pr3287/w3miscc.h \
-	pr3287/popupsc.h
+	pr3287/trace_ds.c pr3287/trace_dsc.h pr3287/unicode.c \
+	pr3287/unicodec.h pr3287/unicode_dbcs.c pr3287/unicode_dbcsc.h \
+	pr3287/utf8.c pr3287/utf8c.h pr3287/version.txt pr3287/w3miscc.h
 
 FILES = $(SOURCES) $(HEADERS) $(BITMAPS) $(FONTS) $(MISC) $(EXAMPLES) \
 	$(PLAYBACK) $(CONFIG) $(HTML) $(FT) $(PR3287)

@@ -53,6 +53,7 @@
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace_dsc.h"
+#include "unicodec.h"
 #include "utilc.h"
 
 /* Externals: kybd.c */

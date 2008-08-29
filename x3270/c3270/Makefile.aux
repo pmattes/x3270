@@ -1,4 +1,4 @@
-# Copyright 1995, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007 by Paul
+# Copyright 1995, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008 by Paul
 #   Mattes.
 #  Permission to use, copy, modify, and distribute this software and its
 #  documentation for any purpose and without fee is hereby granted,
@@ -24,7 +24,7 @@ SOURCES = XtGlue.c actions.c ansi.c apl.c c3270.c charset.c child.c ctlr.c \
 	ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c idle.c keymap.c \
 	kybd.c macros.c print.c printer.c proxy.c resolver.c resources.c \
 	rpq.c screen.c see.c sf.c tables.c telnet.c toggles.c trace_ds.c \
-	utf8.c util.c xio.c wide.c
+	utf8.c util.c xio.c unicode.c unicode_dbcs.c
 HEADERS = 3270ds.h actionsc.h ansic.h aplc.h appres.h cg.h charsetc.h \
 	childc.h ctlr.h ctlrc.h dialogc.h ftc.h ft_cutc.h ft_cut_ds.h \
 	ft_dftc.h ft_dft_ds.h globals.h gluec.h hostc.h icmdc.h idlec.h \
@@ -32,8 +32,8 @@ HEADERS = 3270ds.h actionsc.h ansic.h aplc.h appres.h cg.h charsetc.h \
 	objects.h popupsc.h printc.h printerc.h proxyc.h resolverc.h \
 	resources.h savec.h screen.h screenc.h scrollc.h seec.h selectc.h \
 	sfc.h statusc.h tablesc.h arpa_telnet.h telnetc.h tn3270e.h \
-	togglesc.h trace_dsc.h utf8c.h utilc.h w3miscc.h widec.h xioc.h xl.h \
-	X11/keysym.h
+	togglesc.h trace_dsc.h utf8c.h utilc.h w3miscc.h xioc.h xl.h \
+	X11/keysym.h unicodec.h unicode_dbcsc.h
 MISC = version.txt c3270.man x3270if.man x3270-script.man ibm_hosts.man \
 	mkversion.sh Makefile.in README LICENSE \
 	x3270if.c x3270_glue.expect configure configure.in conf.h.in \
@@ -46,18 +46,18 @@ DEVKIT = Makefile.aux x3270.man.m4 html.m4 man.m4 \
 HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
 	html/Lineage.html html/New.html html/README.html html/Wishlist.html \
 	html/c3270-man.html html/x3270-script.html html/x3270if.html
-PR3287 = pr3287/README pr3287/ctlr.c pr3287/telnet.c pr3287/sfc.h pr3287/sf.c \
-	pr3287/ctlrc.h pr3287/tablesc.h pr3287/3270ds.h pr3287/tn3270e.h \
-	pr3287/pr3287.c pr3287/Makefile.aux pr3287/tables.c \
-	pr3287/version.txt pr3287/trace_ds.c pr3287/globals.h \
-	pr3287/localdefs.h pr3287/telnetc.h pr3287/trace_dsc.h \
-	pr3287/Makefile.in pr3287/mkversion.sh pr3287/popupsc.h \
-	pr3287/pr3287.man pr3287/proxyc.h pr3287/proxy.c \
-	pr3287/resolverc.h pr3287/resolver.c pr3287/configure \
-	pr3287/install-sh pr3287/config.sub pr3287/config.guess \
-	pr3287/arpa_telnet.h pr3287/charset.c pr3287/configure.in \
-	pr3287/see.c pr3287/seec.h pr3287/w3miscc.h pr3287/wide.c \
-	pr3287/widec.h
+PR3287 = pr3287/3270ds.h pr3287/arpa_telnet.h pr3287/charset.c \
+	pr3287/charsetc.h pr3287/config.guess pr3287/config.sub \
+	pr3287/configure pr3287/configure.in pr3287/ctlr.c pr3287/ctlrc.h \
+	pr3287/globals.h pr3287/install-sh pr3287/localdefs.h \
+	pr3287/Makefile.aux pr3287/Makefile.in pr3287/mkversion.sh \
+	pr3287/popupsc.h pr3287/pr3287.c pr3287/pr3287.man pr3287/proxy.c \
+	pr3287/proxyc.h pr3287/README pr3287/resolver.c pr3287/resolverc.h \
+	pr3287/see.c pr3287/seec.h pr3287/sf.c pr3287/sfc.h pr3287/tables.c \
+	pr3287/tablesc.h pr3287/telnet.c pr3287/telnetc.h pr3287/tn3270e.h \
+	pr3287/trace_ds.c pr3287/trace_dsc.h pr3287/unicode.c \
+	pr3287/unicodec.h pr3287/unicode_dbcs.c pr3287/unicode_dbcsc.h \
+	pr3287/utf8.c pr3287/utf8c.h pr3287/version.txt pr3287/w3miscc.h
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML) $(PR3287)
 

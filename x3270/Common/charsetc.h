@@ -33,32 +33,3 @@ extern char *default_display_charset;
 enum cs_result { CS_OKAY, CS_NOTFOUND, CS_BAD, CS_PREREQ, CS_ILLEGAL };
 extern enum cs_result charset_init(char *csname);
 extern char *get_charset_name(void);
-
-typedef enum {
-    TRANS_DISPLAY,	/* generating display output,
-			   interpreting keyboard input */
-    TRANS_LOCAL		/* generating logfiles or interactive output,
-			   interpreting configuration information */
-} trans_t;
-
-extern int ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs,
-	char mb[], int mb_len, int blank_undef, trans_t purpose,
-	ucs4_t *uc);
-extern int ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len);
-extern int ebcdic_to_multibyte_string(unsigned char *ebc, size_t ebc_len,
-	char mb[], size_t mb_len);
-extern int mb_max_len(int len);
-enum me_fail {
-    ME_NONE,		/* no error */
-    ME_INVALID,		/* invalid sequence */
-    ME_SHORT		/* incomplete sequence */
-};
-extern ucs4_t multibyte_to_unicode(const char *mb, size_t mb_len, 
-	int *consumedp, enum me_fail *errorp);
-extern int multibyte_to_unicode_string(char *mb, size_t mb_len,
-	ucs4_t *ucs4, size_t u_len);
-extern ebc_t multibyte_to_ebcdic(const char *mb, size_t mb_len, 
-	int *consumedp, enum me_fail *errorp);
-extern int multibyte_to_ebcdic_string(char *mb, size_t mb_len, 
-	unsigned char *ebc, size_t ebc_len, enum me_fail *errorp);
-extern int unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len);
