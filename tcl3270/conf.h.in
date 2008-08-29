@@ -19,8 +19,6 @@
 
 
 /* Libraries. */
-#undef HAVE_LIBUTIL
-#undef HAVE_LIBICUI18N
 #undef HAVE_LIBSSL
 
 /* Header files. */
@@ -33,6 +31,7 @@
 /* Uncommon functions. */
 #undef HAVE_VASPRINTF
 #undef HAVE_FSEEKO
+#undef HAVE_FORKPTY
 
 /* Optional parts. */
 #undef X3270_ANSI

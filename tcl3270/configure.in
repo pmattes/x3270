@@ -59,6 +59,7 @@ AC_CHECK_HEADERS(sys/select.h)
 AC_CHECK_HEADERS(pty.h)
 AC_CHECK_HEADERS(libutil.h)
 AC_CHECK_HEADERS(util.h)
+AC_CHECK_HEADERS(iconv.h)
 
 dnl Check for TCL header files.
 orig_CPPFLAGS="$CPPFLAGS"
@@ -134,6 +135,9 @@ dnl first, so that objects in them can be used by subsequent libraries.
 LDFLAGS="$LDFLAGS -lm"
 AC_SEARCH_LIBS(forkpty, util)
 AC_CHECK_FUNCS(forkpty)
+AC_SEARCH_LIBS(gethostbyname, nsl)
+AC_SEARCH_LIBS(socket, socket)
+AC_SEARCH_LIBS(iconv, iconv, , AC_MSG_ERROR("No iconv library function"))
 ORIG_LDFLAGS="$LDFLAGS"
 for dir in "" -L/usr/local/lib
 do	LDFLAGS="$ORIG_LDFLAGS $dir"
@@ -161,8 +165,6 @@ if test "$with_tclx" != no
 then	AC_CHECK_LIB(tclx$tclver, Tclx_Init, ,
  AC_CHECK_LIB(tclx$tclvr, Tclx_Init, ,AC_ERROR(Can't find TclX library)))
 fi
-AC_CHECK_LIB(nsl, gethostbyname)
-AC_CHECK_LIB(socket, socket)
 
 dnl Check for SSL libraries.
 if test "$enable_ssl" != no

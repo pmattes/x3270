@@ -19,8 +19,6 @@
  */
 
 /* Libraries. */
-#undef HAVE_LIBUTIL
-#undef HAVE_LIBICUI18N
 #undef HAVE_LIBSSL
 
 /* Header files. */
