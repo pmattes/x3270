@@ -51,13 +51,19 @@
 #include <sys/stat.h>
 #endif /*]*/
 
+/* Globals */
+#if defined(X3270_DISPLAY) /*[*/
+char *print_text_command = NULL;
+Boolean ptc_changed = FALSE;
+#endif /*]*/
+
 /* Statics */
 
 #if defined(X3270_DISPLAY) /*[*/
 static Widget print_text_shell = (Widget)NULL;
 static Widget save_text_shell = (Widget)NULL;
 static Widget print_window_shell = (Widget)NULL;
-static char *print_window_command = CN;
+char *print_window_command = CN;
 #endif /*]*/
 
 
@@ -424,6 +430,11 @@ print_text_callback(Widget w unused, XtPointer client_data,
 		popup_an_errno(errno, "popen(%s)", filter);
 		return;
 	}
+	if (print_text_command == NULL ||
+		strcmp(print_text_command, filter)) {
+	    Replace(print_text_command, filter);
+	    ptc_changed = True;
+	}
 	(void) fprint_screen(f, True, P_TEXT);
 	print_text_done(f, True);
 }
@@ -676,12 +687,13 @@ PrintText_action(Widget w unused, XEvent *event, String *params,
 	switch (*num_params - i) {
 	case 0:
 		/* Use the default. */
-		if (!use_file)
+		if (!use_file) {
 #if !defined(_WIN32) /*[*/
 			filter = get_resource(ResPrintTextCommand);
 #else /*][*/
 			filter = get_resource(ResPrinterName); /* XXX */
 #endif /*]*/
+		}
 		break;
 	case 1:
 		if (use_string) {
@@ -841,6 +853,15 @@ print_text_option(Widget w, XtPointer client_data unused,
 	Boolean secure = appres.secure;
 	ptype_t ptype = P_TEXT;
 
+	if (print_text_command != NULL)
+	    	filter = print_text_command;
+	else {
+	    	filter = get_resource(ResPrintTextCommand);
+		if (filter == NULL || !*filter)
+		    	filter = "lpr";
+		print_text_command = XtNewString(filter);
+	}
+
 	/* Decode the filter. */
 	if (filter != CN && *filter == '@') {
 		secure = True;
@@ -914,7 +935,6 @@ snap_it(XtPointer closure unused, XtIntervalId *id unused)
 		return;
 	XSync(display, 0);
 	print_window_done(system(print_window_command));
-	print_window_command = CN;
 }
 
 /* Callback for "OK" button on print window popup. */

@@ -50,6 +50,7 @@
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace_dsc.h"
+#include "utf8c.h"
 #include "utilc.h"
 #include "w3miscc.h"
 
@@ -485,6 +486,17 @@ create_tracefile_header(const char *mode)
 	wtrace(", %s charset", get_charset_name());
 	if (appres.apl_mode)
 		wtrace(", APL mode");
+	wtrace("\n");
+#if !defined(_WIN32) /*[*/
+	wtrace(" Locale codeset: %s\n", locale_codeset);
+#else /*][*/
+	wtrace(" ANSI codepage: %d\n", GetACP());
+#endif /*]*/
+	wtrace(" Host codepage: %d", (int)(cgcsgid & 0xffff));
+#if defined(X3270_DBCS) /*[*/
+	if (dbcs)
+		wtrace("+%d", (int)(cgcsgid_dbcs & 0xffff));
+#endif /*]*/
 	wtrace("\n");
 	if (CONNECTED)
 		wtrace(" Connected to %s, port %u\n",

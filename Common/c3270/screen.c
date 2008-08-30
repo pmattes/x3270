@@ -802,10 +802,7 @@ screen_disp(Boolean erasing unused)
 					len = ebcdic_to_multibyte(
 						(ea_buf[baddr].cc << 8) |
 						 ea_buf[xaddr].cc,
-						CS_BASE, mb,
-						sizeof(mb),
-						True, TRANS_LOCAL,
-						&uc);
+						mb, sizeof(mb));
 					addstr(mb);
 				} else if (!IS_RIGHT(d)) {
 #endif /*]*/

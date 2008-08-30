@@ -12,6 +12,8 @@
       milliseconds of delay before atually unlocking the keyboard after the
       host requests it. The default is 350; use 0 to disable the delay
       altogether.</li>
+     <li>Commands entered into the <b>Print Screen Text</b> dialog are
+      now saved by the <b>Save Changed Options in File</b> option.
     </ul>
   </li>
   <li>Bug Fixes:
@@ -19,6 +21,7 @@
     <li><b>x3270</b> no longer uses the <b>ICU</b> library.</li>
     <li>Fixed some bad interactions between the pop-up keypad and the GNOME
      window manager.</li>
+    <li>IND$FILE file transfer now transfers DBCS text files properly.</li>.
    </ul>
   </li>
 </ul>
@@ -95,6 +98,7 @@
    <li>Bug Fixes:
     <ul>
      <li><b>c3270</b> no longer uses the <b>ICU</b> library.</li>
+     <li>IND$FILE file transfer now transfers DBCS text files properly.</li>.
     </ul>
   </li>
 </ul>
@@ -181,6 +185,7 @@ c3270.cursesColorForProtectedIntensified
     <li>The <i>idle command</i> feature now works, controlled by the
      <b>idleCommand</b>, <b>idleCommandEnabled</b> and <b>idleTimeout</b>
      resources.</li>
+    <li>IND$FILE file transfer now transfers DBCS text files properly.</li>.
    </ul>
   </li>
 </ul>
@@ -255,6 +260,7 @@ wc3270.hostColorForProtectedIntensified
   <li>Bug Fixes:
    <ul>
     <li><b>s3270</b> no longer uses the <b>ICU</b> library.</li>
+    <li>IND$FILE file transfer now transfers DBCS text files properly.</li>.
    </ul>
   </li>
 </ul>
@@ -300,6 +306,7 @@ wc3270.hostColorForProtectedIntensified
     <li>Added a 10 second timeout to the start of the <b>Transfer</b>
      action.</li>
     <li>Fixed a per-command memory leak (thanks to Mark Young).</li>
+    <li>IND$FILE file transfer now transfers DBCS text files properly.</li>.
    </ul>
   </li>
 </ul>
