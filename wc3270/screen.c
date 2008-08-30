@@ -1351,33 +1351,17 @@ screen_disp(Boolean erasing unused)
 					}
 				} else if (!IS_RIGHT(d)) {
 #endif /*]*/
-				    /* XXX: Need to do undescore mode for
-				     * linedraw and APL.
-				     */
-					if (ea_buf[baddr].cs == CS_LINEDRAW) {
-						c = linedraw_to_unicode(ea_buf[baddr].cc);
-						if (c != -1)
-							addch(blinkmap(blinking, underlined, c));
-						else
-							addch(' ');
-					} else if (ea_buf[baddr].cs == CS_APL ||
-						   (ea_buf[baddr].cs & CS_GE)) {
-						c = apl_to_unicode(ea_buf[baddr].cc);
-						if (c != -1)
-							addch(blinkmap(blinking, underlined, c));
-						else
-							addch(' ');
-					} else {
-						unsigned short ac;
-
-						ac = ebcdic_to_unicode(ea_buf[baddr].cc, True, False);
-						if (underlined && ac == ' ')
-						    ac = '_';
-						if (toggled(MONOCASE) &&
-							    iswlower(ac))
-						    	ac = towupper(ac);
-						addch(blinkmap(blinking, underlined, ac));
-					}
+					c = ebcdic_to_unicode(ea_buf[baddr].cc,
+						ea_buf[baddr].cs,
+						False);
+					if (c == 0)
+					    	c = ' ';
+					if (underlined && c == ' ')
+						c = '_';
+					if (toggled(MONOCASE) && iswlower(c))
+						c = towupper(c);
+					addch(blinkmap(blinking, underlined,
+						    c));
 #if defined(X3270_DBCS) /*[*/
 				}
 #endif /*]*/
