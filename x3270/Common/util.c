@@ -1049,8 +1049,6 @@ build_options(void)
 #endif /*]*/
 #if defined(USE_ICONV) /*[*/
 		" --with-iconv"
-#else /*][*/
-		" --without-iconv"
 #endif /*]*/
 		;
 }

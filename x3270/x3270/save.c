@@ -1,5 +1,6 @@
 /*
- * Copyright 1994, 1995, 1999, 2000, 2001, 2002, 2003, 2005 by Paul Mattes.
+ * Copyright 1994, 1995, 1999, 2000, 2001, 2002, 2003, 2005, 2008
+ *   by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -43,8 +44,11 @@ extern Boolean	oversize_changed;
 extern Boolean	scheme_changed;
 extern Boolean	keymap_changed;
 extern Boolean	charset_changed;
+extern Boolean  ptc_changed;
 
 extern char    *current_keymap;
+
+extern char    *print_text_command;
 
 char           *command_string = CN;
 
@@ -681,6 +685,9 @@ save_options(char *n)
 				    "True": "False");
 	}
 #endif /*]*/
+	if (ptc_changed)
+	    	save_opt(f, "print text command", CN, ResPrintTextCommand,
+			print_text_command);
 
 	/* Done. */
 	(void) fclose(f);

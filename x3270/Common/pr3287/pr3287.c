@@ -48,6 +48,8 @@
  *          -tracedir dir
  *              directory to write trace file in (POSIX only)
  *          -v
+ *              display version information and exit
+ *          -V
  *		verbose output about negotiation
  */
 #include <stdio.h>
@@ -81,6 +83,7 @@
 #include "proxyc.h"
 #include "resolverc.h"
 #include "telnetc.h"
+#include "utf8c.h"
 #if defined(_WIN32) /*[*/
 #include "wsc.h"
 #include "windirsc.h"
@@ -145,13 +148,14 @@ char appdata[MAX_PATH];
 #endif /* ]*/
 
 void pr3287_exit(int);
+const char *build_options(void);
 
 /* Print a usage message and exit. */
 static void
 usage(void)
 {
 	(void) fprintf(stderr, "usage: %s [options] [lu[,lu...]@]host[:port]\n"
-"Options:\n%s\n%s\n%s\n", programname,
+"Options:\n%s\n%s\n%s", programname,
 #if !defined(_WIN32) /*[*/
 "  -daemon          become a daemon after connecting\n"
 #endif /*]*/
@@ -179,10 +183,12 @@ usage(void)
 "  -proxy \"<spec>\"\n"
 "                   connect to host via specified proxy\n"
 "  -reconnect       keep trying to reconnect\n"
-"  -trace           trace data stream to /tmp/x3trc.<pid>"
+"  -trace           trace data stream to /tmp/x3trc.<pid>\n"
 #if !defined(_WIN32) /*[*/
-"\n  -tracedir <dir>  directory to keep trace information in"
+"  -tracedir <dir>  directory to keep trace information in\n"
 #endif /*]*/
+"  -v               display version information and exit\n"
+"  -V               log verbose information about connection negotiation\n"
 );
 	pr3287_exit(1);
 }
@@ -426,6 +432,9 @@ main(int argc, char *argv[])
 		} else if (!strcmp(argv[i], "-reconnect")) {
 			reconnect = 1;
 		} else if (!strcmp(argv[i], "-v")) {
+			printf("%s\n%s\n", build, build_options());
+			exit(0);
+		} else if (!strcmp(argv[i], "-V")) {
 			verbose = 1;
 		} else if (!strcmp(argv[i], "-trace")) {
 			tracing = 1;
@@ -538,8 +547,22 @@ main(int argc, char *argv[])
 		(void) SETLINEBUF(tracef);
 		clk = time((time_t *)0);
 		(void) fprintf(tracef, "Trace started %s", ctime(&clk));
-		(void) fprintf(tracef, " Version %s\n", build);
-		(void) fprintf(tracef, " Options:");
+		(void) fprintf(tracef, " Version: %s\n %s\n", build,
+			       build_options());
+#if !defined(_WIN32) /*[*/
+		(void) fprintf(tracef, " Locale codeset: %s\n", locale_codeset);
+#else /*][*/
+		(void) fprintf(tracef, " ANSI codepage: %d\n", GetACP());
+#endif /*]*/
+		(void) fprintf(tracef, " Host codepage: %d",
+			       (int)(cgcsgid & 0xffff));
+#if defined(X3270_DBCS) /*[*/
+		if (dbcs)
+			(void) fprintf(tracef, "+%d",
+				       (int)(cgcsgid_dbcs & 0xffff));
+#endif /*]*/
+		(void) fprintf(tracef, "\n");
+		(void) fprintf(tracef, " Command:");
 		for (i = 0; i < argc; i++) {
 			(void) fprintf(tracef, " %s", argv[i]);
 		}
@@ -763,4 +786,26 @@ popup_an_errno(int err, const char *fmt, ...)
 		(void) verrmsg(fmt, args);
 	}
 	va_end(args);
+}
+
+const char *
+build_options(void)
+{
+    	return "Options:"
+#if defined(X3270_DBCS) /*[*/
+	    " --enable-dbcs"
+#else /*][*/
+	    " --disable-dbcs"
+#endif /*]*/
+#if defined(HAVE_LIBSSL) /*[*/
+	    " --with-ssl"
+#else /*][*/
+	    " --without-ssl"
+#endif /*]*/
+#if defined(USE_ICONV) /*[*/
+	    " --with-iconv"
+#else /*][*/
+	    " --without-iconv"
+#endif /*]*/
+	    ;
 }

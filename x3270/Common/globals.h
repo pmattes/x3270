@@ -103,7 +103,7 @@ typedef __uint16_t ebc_t;
 #undef X3270_KEYPAD
 #undef X3270_MENUS
 #endif /*]*/
-#if defined(C3270) && defined(X3270_DBCS) && !defined(WIDE_CURSES) /*[*/
+#if defined(C3270) && defined(X3270_DBCS) && !defined(CURSES_WIDE) /*[*/
 #undef X3270_DBCS
 #endif /*]*/
 

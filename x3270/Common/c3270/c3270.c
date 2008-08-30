@@ -860,14 +860,20 @@ status_dump(void)
 	    "SBCS"
 #endif /*]*/
 	    );
-	action_output("%s %ld/%ld (CGCSGID X'%08lX')",
-		get_message("hostCodePage"),
-		cgcsgid & 0xffff,
-		(cgcsgid >> 16) & 0xffff,
-		cgcsgid);
+#if defined(X3270_DBCS) /*[*/
+	if (dbcs)
+		action_output("%s %ld+%ld",
+			get_message("hostCodePage"),
+			cgcsgid & 0xffff,
+			cgcsgid_dbcs & 0xffff);
+	else
+#endif /*]*/
+		action_output("%s %ld",
+			get_message("hostCodePage"),
+			cgcsgid & 0xffff);
 #if !defined(_WIN32) /*[*/
 	action_output("%s %s", get_message("localeCodeset"), locale_codeset);
-	action_output("%s DBCS %s, UTF-8 (wide curses) %s",
+	action_output("%s DBCS %s, wide curses %s",
 		get_message("buildOpts"),
 #if defined(X3270_DBCS) /*[*/
 		get_message("buildEnabled"),
@@ -881,7 +887,8 @@ status_dump(void)
 #endif /*]*/
 		);
 #else /*][*/
-	action_output("%s %d", get_message("windowsCodePage"), windows_cp);
+	action_output("%s OEM %d ANSI %d", get_message("windowsCodePage"),
+		windows_cp, GetACP());
 #endif /*]*/
 	if (appres.key_map) {
 		action_output("%s %s", get_message("keyboardMap"),
