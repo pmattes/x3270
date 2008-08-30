@@ -30,6 +30,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\w3n4.dll"; DestDir: "{app}"; Flags: ignoreversion; OnlyBelowVersion: 0.0,5.01
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\w3n46.dll"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.01
+Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\shf.dll"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.0
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wpr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\catf.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall

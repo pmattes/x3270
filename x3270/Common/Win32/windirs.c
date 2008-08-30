@@ -22,9 +22,14 @@
 
 #include "windirsc.h"
 
-/* Locate the desktop and session directories from the Windows registry. */
-int
-get_dirs(char *desktop, char *appdata, char *appname)
+
+/* XXX: If Win2K or later, use get_shell_folders from shf.dll.
+ * Otherwise, use the function below.
+ */
+
+/* Locate the desktop and appdata directories from the Windows registry. */
+static int
+old_get_dirs(char *desktop, char *appdata)
 {
 	HRESULT hres;
 	HKEY hkey;
@@ -65,12 +70,8 @@ get_dirs(char *desktop, char *appdata, char *appname)
 
 		if (desktop != NULL && !strcmp(name, "Desktop"))
 		    	strcpy(desktop, value);
-		else if (appdata != NULL && !strcmp(name, "AppData")) {
+		else if (appdata != NULL && !strcmp(name, "AppData"))
 		    	strcpy(appdata, value);
-			strcat(appdata, "\\");
-			strcat(appdata, appname);
-			strcat(appdata, "\\");
-		}
 
 		if ((desktop == NULL || desktop[0]) &&
 		    (appdata == NULL || appdata[0]))
@@ -86,6 +87,65 @@ get_dirs(char *desktop, char *appdata, char *appname)
 			"Application Data directories are.\n");
 		return -1;
 	}
+
+	return 0;
+}
+
+/* Locate the desktop and appdata directories via the ShGetFolderPath API. */
+static int
+new_get_dirs(char *desktop, char *appdata)
+{
+    	HMODULE handle;
+	static int loaded = FALSE;
+	static FARPROC p;
+	typedef int shfproc(char *, char *);
+
+	if (!loaded) {
+		handle = LoadLibrary("shf.dll");
+		if (handle == NULL) {
+			printf("Cannot find shf.dll to resolve the Desktop "
+				"and Application Data directories.\n");
+			return -1;
+		}
+		p = GetProcAddress(handle, "get_shell_folders");
+		if (p == NULL) {
+			printf("Cannot resolve get_shell_folders() in "
+				"shf.dll\n");
+			return -1;
+		}
+	}
+	return ((shfproc *)p)(desktop, appdata);
+}
+
+/* Locate the desktop and appdata directories. */
+int
+get_dirs(char *desktop, char *appdata, char *appname)
+{
+        OSVERSIONINFO info;
+
+	/* Figure out what version of Windows this is. */
+	memset(&info, '\0', sizeof(info));
+	info.dwOSVersionInfoSize = sizeof(info);
+	if (GetVersionEx(&info) == 0) {
+	    	fprintf(stderr, "Can't get Windows version\n");
+	    	return -1;
+	}
+
+	if ((info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) ||
+		    (info.dwMajorVersion < 5)) {
+	    	/* Use the registry. */
+		if (old_get_dirs(desktop, appdata) < 0)
+		    	return -1;
+	} else {
+	    	/* Use the API. */
+		if (new_get_dirs(desktop, appdata) < 0)
+		    	return -1;
+	}
+
+	/* Append the application name and trailing "\" to AppData. */
+	strcat(appdata, "\\");
+	strcat(appdata, appname);
+	strcat(appdata, "\\");
 
 	return 0;
 }

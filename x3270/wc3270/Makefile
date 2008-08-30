@@ -33,7 +33,7 @@ NATIVECC = gcc
 WINDRES = windres
 endif
 
-XCPPFLAGS = -D_WIN32 -DWC3270 -D_WIN32_WINNT=0x0500
+XCPPFLAGS = -D_WIN32 -DWC3270 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500
 CFLAGS = $(EXTRA_FLAGS) -mno-cygwin -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
 SRCS = XtGlue.c actions.c ansi.c apl.c c3270.c charset.c ctlr.c \
 	ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c idle.c kybd.c \
@@ -52,7 +52,7 @@ SHRTLIBS = -lole32 -luuid
 WIZLIBS = -lole32 -luuid -lwinspool
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
-PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe w3n4.dll w3n46.dll ead3270.exe
+PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe w3n4.dll w3n46.dll shf.dll ead3270.exe
 all: $(PROGS)
 
 version.o: $(VOBJS) version.txt mkversion.sh Makefile
@@ -99,6 +99,12 @@ w3n4.o: resolver.c
 
 w3n46.o: resolver.c
 	$(CC) $(CFLAGS) -DW3N46 -c -o w3n46.o resolver.c
+
+shf.dll: shellfolder.o
+	$(CC) $(DLLFLAGS) -o shf.dll shellfolder.o
+
+shellfolder.o: shellfolder.c
+	$(CC) $(CFLAGS) -c -o shellfolder.o shellfolder.c
 
 ead3270.exe: ead3270.o windirs.o
 	$(CC) -o $@ $(CFLAGS) ead3270.o windirs.o
