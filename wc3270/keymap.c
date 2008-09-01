@@ -32,6 +32,8 @@
 #include "utilc.h"
 #include <windows.h>
 
+#define ISREALLYSPACE(c) ((((c) & 0xff) <= ' ') && isspace(c))
+
 #define WC3270KM_SUFFIX	"wc3270km"
 #define SUFFIX_LEN	sizeof(WC3270KM_SUFFIX)
 
@@ -98,9 +100,10 @@ parse_keydef(char **str, int *ccode, int *hint)
 	char *ks;
 	int flags = 0;
 	KeySym Ks;
+	int xccode;
 
 	/* Check for nothing. */
-	while (isspace(*s))
+	while (ISREALLYSPACE(*s))
 		s++;
 	if (!*s)
 		return 0;
@@ -113,7 +116,7 @@ parse_keydef(char **str, int *ccode, int *hint)
 	*s = '\0';
 	s = *str;
 	while (*s) {
-		while (isspace(*s))
+		while (ISREALLYSPACE(*s))
 			s++;
 		if (!*s)
 			break;
@@ -142,26 +145,57 @@ parse_keydef(char **str, int *ccode, int *hint)
 			return PKE_UMOD;
 	}
 	s = ks;
-	while (isspace(*s))
+	while (ISREALLYSPACE(*s))
 		s++;
 	if (!*s)
 		return PKE_MSYM;
 
 	t = s;
-	while (*t && !isspace(*t))
+	while (*t && !ISREALLYSPACE(*t))
 		t++;
 	if (*t)
 		*t++ = '\0';
-	Ks = StringToKeysym(s);
-	if (Ks == NoSymbol) {
-		*ccode = lookup_ccode(s);
-		if (*ccode == -1)
-			return PKE_USYM;
-	} else
-		*ccode = (int)Ks;
+	xccode = lookup_ccode(s);
+	if (xccode != -1) {
+	    	*ccode = xccode;
+	} else {
+	    	if (!strncasecmp(s, "U+", 2) || !strncasecmp(s, "0x", 2)) {
+		    	unsigned long l;
+			char *ptr;
 
-	/* Canonicalize Ctrl for printable characters. */
-	if ((flags & KM_CTRL) && !(*ccode & ~0xff)) {
+		    	/*
+			 * Explicit Unicode.
+			 * We limit ourselves to UCS-2 for now, becuase of how
+			 * we represent keymaps and keys (VK_xxx in upper 16
+			 * bits, Unicode in lower 16 bits).
+			 */
+			l = strtoul(s, &ptr, 16);
+			if (!((l == 0) || (l & ~0xffff) || *ptr != '\0'))
+			    	*ccode = (int)l;
+			else
+			    	return PKE_USYM;
+		} else if (strlen(s) == 1) {
+		    	int nc;
+			WCHAR w;
+
+		    	/* Single (ANSI CP) character. */
+			nc = MultiByteToWideChar(CP_ACP, 0, s, 1, &w, 1);
+			if (nc == 1)
+			    	*ccode = (int)w;
+			else
+			    	return PKE_USYM;
+		} else {
+		    	/* Try for a Latin-1 name. */
+		    	Ks = StringToKeysym(s);
+			if (Ks != NoSymbol)
+			    	*ccode = (int)Ks;
+			else
+			    	return PKE_USYM;
+		}
+	}
+
+	/* Canonicalize Ctrl. */
+	if ((flags & KM_CTRL) && *ccode >= '@' && *ccode <= '~') {
 		*ccode &= 0x1f;
 		flags &= ~KM_CTRL;
 	}
@@ -416,7 +450,7 @@ read_one_keymap(const char *name, const char *fn, const char *r0, int flags)
 		/* Skip empty lines and comments. */
 		if (r == CN) {
 			s = buf;
-			while (isspace(*s))
+			while (ISREALLYSPACE(*s))
 				s++;
 			if (!*s || *s == '!' || *s == '#')
 				continue;
@@ -959,30 +993,37 @@ decode_hint(int hint)
 const char *
 decode_key(int k, int hint, char *buf)
 {
-	const char *n;
 	char *s = buf;
 
-	/* Try vkey first. */
-	if (k > 0xff) {
-		if ((n = lookup_cname(k, False)) != CN) {
-			(void) sprintf(buf, "%s<Key>%s", decode_hint(hint), n);
-			return buf;
-		} else
-			return "?";
-	}
-	n = KeysymToString((KeySym)k);
-	if (n != CN) {
-		(void) sprintf(s, "%s<Key>%s", decode_hint(hint), n);
-		return buf;
-	}
-	if ((k & 0x7f) < ' ') {
-		n = KeysymToString(k + '@');
+	if (k & 0xffff0000) {
+	    	const char *n;
 
-		(void) sprintf(s, "%sCtrl <Key>%s",
-			decode_hint(hint & ~KM_CTRL), n);
-		return buf;
-	} else
-		return "?";
+	    	/* VK_xxx */
+		n = lookup_cname(k, False);
+		(void) sprintf(buf, "%s<Key>%s", decode_hint(hint),
+			       n? n: "???");
+	} else if (k < ' ') {
+		(void) sprintf(s, "%sCtrl <Key>%c",
+			decode_hint(hint & ~KM_CTRL), k + '@');
+	} else if (k == ':') {
+		(void) sprintf(s, "%s<Key>colon", decode_hint(hint));
+	} else if (k == ' ') {
+		(void) sprintf(s, "%s<Key>space", decode_hint(hint));
+	} else {
+	    	wchar_t w = k;
+		char c;
+		BOOL udc = FALSE;
+
+		/* Try translating to OEM for display on the console. */
+		(void)WideCharToMultiByte(CP_OEMCP, 0, &w, 1, &c, 1, "?",
+					  &udc);
+		if (!udc)
+		    	(void) sprintf(s, "%s<Key>%c", decode_hint(hint), c);
+		else
+			(void) sprintf(s, "%s<Key>U+%04x", decode_hint(hint),
+				       k);
+	}
+	return buf;
 }
 
 /* Dump the current keymap. */
