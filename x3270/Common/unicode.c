@@ -914,6 +914,8 @@ unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len)
     int nc;
 
     nc = WideCharToMultiByte(CP_ACP, 0, &wuc, 1, mb, mb_len, "?", &udc);
+    if (nc > 0)
+	mb[nc++] = '\0';
     return nc;
 #elif defined(UNICODE_WCHAR) /*][*/
     int nc;
