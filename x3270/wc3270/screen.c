@@ -1570,42 +1570,50 @@ kybd_input(void)
 }
 
 static void
-trace_as_keymap(KEY_EVENT_RECORD *e)
+trace_as_keymap(unsigned long xk, KEY_EVENT_RECORD *e)
 {
-    	const char *s, *t;
+    	const char *s;
 	char buf[256];
 
 	buf[0] = '\0';
-	t = lookup_cname(e->wVirtualKeyCode << 16, /*True*/False);
-	s = decode_state(e->dwControlKeyState, True, t);
+	sprintf(buf, "[xk 0x%lx] ", xk);
+	s = decode_state(e->dwControlKeyState, True, NULL);
 	if (strcmp(s, "none")) {
 	    	strcat(buf, s);
 		strcat(buf, " ");
 	}
-	strcat(buf, "<Key>");
-	if (t != CN)
-		strcat(buf, t);
-	else if (e->uChar.AsciiChar) {
-	    	if (e->uChar.AsciiChar == ':')
-		    	strcat(buf, "colon");
-		else if (e->uChar.AsciiChar == ' ')
-		    	strcat(buf, "space");
-		else if (e->uChar.AsciiChar > ' ' && e->uChar.AsciiChar < '~')
-		    	sprintf(strchr(buf, '\0'), "%c",
-				e->uChar.AsciiChar);
-		else if (e->uChar.AsciiChar >= 0x1 &&
-			 e->uChar.AsciiChar <= 0x1a)
-		    	sprintf(strchr(buf, '\0'), "%c",
-				e->uChar.AsciiChar - 1 + 'a');
-		else
-		    	sprintf(strchr(buf, '\0'), "0x%x", e->uChar.AsciiChar);
+	if (xk & 0xffff0000) {
+	    	const char *n = lookup_cname(xk, False);
+
+		sprintf(strchr(buf, '\0'), "<Key>%s", n? n: "???");
+	} else if (xk > 0x7f) {
+	    	wchar_t w = xk;
+		char c;
+		BOOL udc = FALSE;
+
+		/*
+		 * Translate to the ANSI codepage for storage in the trace
+		 * file.  It will be converted to OEM by 'catf' for display
+		 * in the trace window.
+		 */
+		(void) WideCharToMultiByte(CP_ACP, 0, &w, 1, &c, 1, "?", &udc);
+		if (udc) {
+			sprintf(strchr(buf, '\0'), "<Key>U+%04lx", xk);
+		} else {
+			sprintf(strchr(buf, '\0'), "<Key>%c",
+				(unsigned char)xk);
+		}
+	} else if (xk < ' ') {
+	    	/* assume dwControlKeyState includes Ctrl... */
+		sprintf(strchr(buf, '\0'), "<Key>%c", (unsigned char)xk + '@');
+	} else if (xk == ' ') {
+		strcat(strchr(buf, '\0'), "<Key>space");
+	} else if (xk == ':') {
+		strcat(strchr(buf, '\0'), "<Key>colon");
 	} else {
-		strcat(buf, "???");
+	    	sprintf(strchr(buf, '\0'), "<Key>%c", (unsigned char)xk);
 	}
 	trace_event(" %s ->", buf);
-	/* Todo:
-	 *  get rid of redundant state (lctrl when lctrl is pressed)
-	 */
 }
 
 static void
@@ -1615,41 +1623,29 @@ kybd_input2(INPUT_RECORD *ir)
 	char buf[16];
 	unsigned long xk;
 	char *action;
-	unsigned char c = 0;	/* translated ASCII character */
 
 	/*
 	 * Translate the INPUT_RECORD into an integer we can match keymaps
 	 * against.
 	 *
-	 * If VK and ASCII are the same, use VK.
+	 * If VK and ASCII are the same and are a control char, use VK.
 	 * If VK is 0x6x, use VK.  These are aliases like ADD and NUMPAD0.
-	 * Otherwise, if there's ASCII, use it.
+	 * Otherwise, if there's Unicode, use it.
 	 * Otherwise, use VK.
 	 */
-	if (ir->Event.KeyEvent.uChar.UnicodeChar != 0) {
-	    	wchar_t w;
-		BOOL udc;
-
-		/*
-		 * Translate to multi-byte for keymap look-up.
-		 * We use the ANSI code page, on the assumption that keymaps
-		 * are edited using GUI tools, not DOS tools.
-		 */
-		w = ir->Event.KeyEvent.uChar.UnicodeChar;
-		(void) WideCharToMultiByte(CP_ACP, 0, &w, 1, &c, 1, "?", &udc);
-	}
-	if (ir->Event.KeyEvent.wVirtualKeyCode == c)
+	if ((ir->Event.KeyEvent.wVirtualKeyCode ==
+			ir->Event.KeyEvent.uChar.AsciiChar) &&
+		    ir->Event.KeyEvent.wVirtualKeyCode < ' ')
 		xk = (ir->Event.KeyEvent.wVirtualKeyCode << 16) & 0xffff0000;
 	else if ((ir->Event.KeyEvent.wVirtualKeyCode & 0xf0) == 0x60)
 		xk = (ir->Event.KeyEvent.wVirtualKeyCode << 16) & 0xffff0000;
-	else if (c)
-		xk = c;
+	else if (ir->Event.KeyEvent.uChar.UnicodeChar)
+		xk = ir->Event.KeyEvent.uChar.UnicodeChar;
 	else
 		xk = (ir->Event.KeyEvent.wVirtualKeyCode << 16) & 0xffff0000;
 
-	trace_event("xk is 0x%lx\n", xk);
 	if (xk) {
-	    	trace_as_keymap(&ir->Event.KeyEvent);
+	    	trace_as_keymap(xk, &ir->Event.KeyEvent);
 		action = lookup_key(xk, ir->Event.KeyEvent.dwControlKeyState);
 		if (action != CN) {
 			if (strcmp(action, "[ignore]"))
@@ -1764,7 +1760,7 @@ kybd_input2(INPUT_RECORD *ir)
 		String params[2];
 		Cardinal one;
 
-		(void) sprintf(ks, "U+%04X",
+		(void) sprintf(ks, "U+%04x",
 			       ir->Event.KeyEvent.uChar.UnicodeChar);
 		params[0] = ks;
 		params[1] = CN;

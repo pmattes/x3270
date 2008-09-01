@@ -155,8 +155,6 @@ static char *base_keymap =
        "Alt <Key>1:      PA(1)\n"
        "Alt <Key>2:      PA(2)\n"
        "Alt <Key>3:      PA(3)\n"
-  "Alt Ctrl <Key>]:      Key(0x1d)\n"
-      "Ctrl <Key>]:      Escape\n"
        "Alt <Key>^:      Key(notsign)\n"
        "Alt <Key>c:      Clear\n"
        "Alt <Key>l:      Redraw\n"
@@ -173,7 +171,8 @@ static char *base_keymap =
      "Shift <Key>F9:     PF(21)\n"
      "Shift <Key>F10:    PF(22)\n"
      "Shift <Key>F11:    PF(23)\n"
-     "Shift <Key>F12:    PF(24)\n";
+     "Shift <Key>F12:    PF(24)\n"
+     "Shift <Key>ESCAPE: Key(0x1d)\n";
 
 /* Base keymap, 3270 mode. */
 static char *base_3270_keymap =
@@ -186,7 +185,6 @@ static char *base_3270_keymap =
        "Alt <Key>f:      FieldMark\n"
       "Ctrl <Key>h:      Erase\n"
        "Alt <Key>i:      Insert\n"
-"Shift Ctrl <Key>i:      BackTab\n"
       "Ctrl <Key>i:      Tab\n"
       "Ctrl <Key>j:      Newline\n"
       "Ctrl <Key>l:      Redraw\n"
