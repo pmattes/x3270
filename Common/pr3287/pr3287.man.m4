@@ -127,6 +127,8 @@ ifelse(XX_PRODUCT,pr3287,`XX_FB(/tmp/x3trc.)`'XX_FI(pid).',
 `XX_FB(x3trc.)`'XX_FI(pid)`'XX_FB(.txt).')
 ifelse(XX_PRODUCT,pr3287,`XX_TP(XX_FB(XX_DASHED(tracedir)) XX_FI(dir))
 Specifies the directory to save trace files in, instead of XX_FB(/tmp).')
+XX_TP(XX_FB(XX_DASHED(v)))
+Display build and version information and exit.
 XX_TPE()dnl
 ifelse(XX_PRODUCT,pr3287,`XX_SH(Signals)
 SIGINT, SIGHUP and SIGTERM cause the current print job to be flushed (any
