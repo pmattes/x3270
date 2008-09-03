@@ -104,7 +104,10 @@ values of the MPL (maximum presentation line) and TM (top margin) parameters.
 ifelse(XX_PRODUCT,wpr3287,`XX_TP(XX_FB(XX_DASHED(printer)) XX_FI(printer))
 Specifies the Windows printer to use for each print job.
 The default is to use the printer specified by the XX_FB($PRINTER) environment
-variable, if defined, and otherwise to use the default Windows printer.')
+variable, if defined, and otherwise to use the default Windows printer.
+XX_TP(XX_FB(XX_DASHED(printercp)) XX_FI(codepage))
+Specifies the code page to use when generating printer output.
+The default is to use the system ANSI code page.')
 XX_LP
 The printer can be the name of a local printer, or a UNC path to a remote
 printer, e.g., <b>\\server\printer1</b>.

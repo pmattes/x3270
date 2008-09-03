@@ -1,5 +1,5 @@
 /*
- * Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2007 by Paul Mattes.
+ * Copyright 2000-2008 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -39,6 +39,8 @@
  *	    -printer "printer name"
  *	        printer to use (default is $PRINTER or system default,
  *	        Windows only)
+ *	    -printercp n
+ *	        Code page to use for output (Windows only)
  *	    -proxy "spec"
  *	    	proxy specification
  *          -reconnect
@@ -113,6 +115,7 @@ int ignoreeoj = 0;
 int reconnect = 0;
 #if defined(_WIN32) /*[*/
 int crlf = 1;
+int printercp = 0;
 #else /*][*/
 int crlf = 0;
 #endif /*]*/
@@ -179,6 +182,8 @@ usage(void)
 "  -printer \"printer name\"\n"
 "                   use specific printer (default is $PRINTER or the system\n"
 "                   default printer)\n"
+"  -printercp <codepage>\n"
+"                   code page for output (default is system ANSI code page)\n"
 #endif /*]*/
 "  -proxy \"<spec>\"\n"
 "                   connect to host via specified proxy\n"
@@ -428,6 +433,14 @@ main(int argc, char *argv[])
 			}
 			printer = argv[i + 1];
 			i++;
+		} else if (!strcmp(argv[i], "-printercp")) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for -printer\n");
+				usage();
+			}
+			printercp = (int)strtoul(argv[i + 1], NULL, 0);
+			i++;
 #endif /*]*/
 		} else if (!strcmp(argv[i], "-reconnect")) {
 			reconnect = 1;
@@ -524,6 +537,12 @@ main(int argc, char *argv[])
 		}
 	}
 
+#if defined(_WIN32) /*[*/
+	/* Set the printer code page. */
+	if (printercp == 0)
+	    	printercp = GetACP();
+#endif /*]*/
+
 	/* Remap the character set. */
 	if (charset_init(charset) < 0)
 		pr3287_exit(1);
@@ -552,7 +571,8 @@ main(int argc, char *argv[])
 #if !defined(_WIN32) /*[*/
 		(void) fprintf(tracef, " Locale codeset: %s\n", locale_codeset);
 #else /*][*/
-		(void) fprintf(tracef, " ANSI codepage: %d\n", GetACP());
+		(void) fprintf(tracef, " ANSI codepage: %d, "
+			       "printer codepage: %d\n", GetACP(), printercp);
 #endif /*]*/
 		(void) fprintf(tracef, " Host codepage: %d",
 			       (int)(cgcsgid & 0xffff));

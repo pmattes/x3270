@@ -1,6 +1,5 @@
 /*
- * Modifications Copyright 1993, 1994, 1995, 1996, 1999, 2000, 2001, 2002,
- *   2003, 2004, 2005, 2007 by Paul Mattes.
+ * Modifications Copyright 1993-2008 by Paul Mattes.
  * Original X11 Port Copyright 1990 by Jeff Sparkes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
@@ -46,12 +45,14 @@
 #include "unicodec.h"
 #if defined(_WIN32) /*[*/
 #include "wsc.h"
+#include <windows.h>
 #endif /*]*/
 
 #if !defined(_WIN32) /*[*/
 extern char *command;
 #else /*][*/
 extern char *printer;
+extern int printercp;
 #endif /*]*/
 extern int blanklines;	/* display blank lines even if empty (formatted LU3) */
 extern int ignoreeoj;	/* ignore PRINT-EOJ commands */
@@ -629,6 +630,21 @@ init_scs(void)
 	scs_initted = True;
 }
 
+#if defined(_WIN32) /*[*/
+static int
+unicode_to_printer(ucs4_t u, char mb[], int mb_len)
+{
+    	int nc;
+	wchar_t wuc = u;
+
+	nc = WideCharToMultiByte(printercp, 0, &wuc, 1, mb, mb_len, NULL,
+		NULL);
+	if (nc > 0)
+	    	mb[nc++] = '\0';
+	return nc;
+}
+#endif /*[*/
+
 /*
  * Our philosophy for automatic newlines and formfeeds is that we generate them
  * only if the user attempts to put data outside the MPP/MPL-defined area.
@@ -691,8 +707,13 @@ dump_scs_line(Boolean reset_pp, Boolean always_nl)
 				n_data++;
 				any_data = True;
 				scs_any = True;
+#if !defined(_WIN32) /*[*/
 				len = unicode_to_multibyte(linebuf[j],
 					mb, sizeof(mb));
+#else /*][*/
+				len = unicode_to_printer(linebuf[j],
+					mb, sizeof(mb));
+#endif /*]*/
 				if (len == 0) {
 				    	mb[0] = ' ';
 					len = 1;
@@ -1616,7 +1637,11 @@ dump_unformatted(void)
 			done = 1;
 			break;
 		default:	/* printable */
+#if !defined(_WIN32) /*[*/
 			len = unicode_to_multibyte(c, mb, sizeof(mb));
+#else /*][*/
+			len = unicode_to_printer(c, mb, sizeof(mb));
+#endif /*]*/
 			if (len == 0) {
 				mb[0] = ' ';
 				len = 1;
@@ -1746,8 +1771,13 @@ dump_formatted(void)
 					int len;
 					int j;
 
+#if !defined(_WIN32) /*[*/
 					len = unicode_to_multibyte(c,
 						mb, sizeof(mb));
+#else /*][*/
+					len = unicode_to_printer(c,
+						mb, sizeof(mb));
+#endif /*]*/
 					if (len == 0) {
 					    	mb[0] = ' ';
 						len = 1;
