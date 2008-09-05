@@ -111,7 +111,7 @@ AC_SEARCH_LIBS(gethostbyname, nsl_s)
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)
 AC_SEARCH_LIBS(iconv, iconv, , if test "$unkw"; then AC_MSG_ERROR("No iconv library function"); fi)
-x
+
 dnl Checks for header files.
 dnl AC_HEADER_STDC
 dnl AC_HEADER_SYS_WAIT
