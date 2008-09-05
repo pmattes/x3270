@@ -1669,7 +1669,7 @@ display_linedraw(unsigned char ebc)
 
 	/* Then try Unicode. */
 	len = ebcdic_to_multibyte_x(ebc, CS_LINEDRAW, mb, sizeof(mb), True,
-		TRANS_LOCAL, &uc);
+		&uc);
 	if (len > 0)
 		len--;
 #if defined(CURSES_WIDE) /*[*/
@@ -1781,7 +1781,7 @@ display_ge(unsigned char ebc)
 
 	/* Then try Unicode. */
 	len = ebcdic_to_multibyte_x(ebc, CS_GE, mb, sizeof(mb), True,
-		TRANS_LOCAL, &uc);
+		&uc);
 	if (len > 0)
 		len--;
 #if defined(CURSES_WIDE) /*[*/

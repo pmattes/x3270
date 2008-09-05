@@ -715,7 +715,7 @@ key_Character_wrapper(Widget w unused, XEvent *event unused, String *params,
 		code &= ~PASTE_WFLAG;
 	}
 	ebcdic_to_multibyte_x(code, with_ge? CS_GE: CS_BASE,
-		mb, sizeof(mb), True, TRANS_LOCAL, &uc);
+		mb, sizeof(mb), True, &uc);
 	trace_event(" %s -> Key(%s\"%s\")\n",
 	    ia_name[(int) ia_cause],
 	    with_ge ? "GE " : "", mb);

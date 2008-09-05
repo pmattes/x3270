@@ -1713,7 +1713,6 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 						       buf[first + i].cs,
 						       mb, sizeof(mb),
 						       True,
-						       TRANS_LOCAL,
 						       &uc);
 				for (j = 0; j < xlen - 1; j++) {
 					s += sprintf(s, "%c", mb[j]);
@@ -1995,7 +1994,6 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf, int fd)
 							       buf[baddr].cs,
 							       mb, sizeof(mb),
 							       False,
-							       TRANS_LOCAL,
 							       &uc);
 				    break;
 				}
