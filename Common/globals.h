@@ -81,20 +81,17 @@
 #define UNICODE_WCHAR	1
 #endif /*]*/
 #if !defined(_WIN32) && !defined(UNICODE_WCHAR) /*[*/
+#undef USE_ICONV
+#define USE_ICONV 1
 #include <iconv.h>
 #endif /*]*/
 
 /*
- * Unicode UCS-4 characters are 32 bits.
- * EBCDIC (including DBCS) is 16 bits.
+ * Unicode UCS-4 characters are (hopefully) 32 bits.
+ * EBCDIC (including DBCS) is (hopefully) 16 bits.
  */
-#if defined(_WIN32) /*[*/
 typedef unsigned int ucs4_t;
 typedef unsigned short ebc_t;
-#else /*][*/
-typedef __uint32_t ucs4_t;
-typedef __uint16_t ebc_t;
-#endif /*]*/
 
 /*
  * Cancel out contradictory parts.

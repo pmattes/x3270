@@ -17,7 +17,9 @@
 #set -x
 
 # Ensure that 'date' emits 7-bit U.S. ASCII.
-export LANG=C LC_ALL=C
+LANG=C
+LC_ALL=C
+export LANG LC_ALL
 
 set -e
 
