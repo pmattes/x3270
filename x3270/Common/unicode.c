@@ -440,14 +440,7 @@ apl_to_unicode(ebc_t c)
  *
  * Also returns in 'ucp' the UCS-4 Unicode value of the EBCDIC character.
  *
- * If 'purpose' is TRANS_DISPLAY, the target of the translation is the
- * display window.  If it is TRANS_LOCAL, the target is the local file
- * system.  TRANS_DISPLAY is used only on Windows where the local file system
- * uses the ANSI code page, but the console uses the OEM code page.
- * At some point, TRANS_DISPLAY will apply to x3270 as well, indicating
- * translation to the current font's encoding.
- *
- * Note that 'ebc' is an uint16_t, not an unsigned char.  This is
+ * Note that 'ebc' is an ebc_t (uint16_t), not an unsigned char.  This is
  * so that DBCS values can be passed in as 16 bits (with the first byte
  * in the high-order bits).  There is no ambiguity because all valid EBCDIC
  * DBCS characters have a nonzero first byte.
@@ -460,7 +453,7 @@ apl_to_unicode(ebc_t c)
  */
 int
 ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
-	int mb_len, int blank_undef, trans_t purpose, ucs4_t *ucp)
+	int mb_len, int blank_undef, ucs4_t *ucp)
 {
     ucs4_t uc;
 
@@ -480,7 +473,7 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 #endif /*]*/
 
     /* Translate from EBCDIC to Unicode. */
-    uc = ebcdic_to_unicode(ebc, cs, (purpose == TRANS_DISPLAY));
+    uc = ebcdic_to_unicode(ebc, cs, False);
     *ucp = uc;
     if (uc == 0) {
 	if (blank_undef) {
@@ -497,13 +490,9 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 #if defined(_WIN32) /*[*/
     /*
      * wchar_t's are Unicode.
-     * If TRANS_DISPLAY, use the OEM code page.
-     * If TRANS_LOCAL, use the ANSI code page.  (Trace files are converted
-     *  from ANSI to OEM by 'catf' for display in the pop-up console window.)
      */
     wuc = uc;
-    nc = WideCharToMultiByte((purpose == TRANS_LOCAL)? CP_ACP: CP_OEMCP,
-	    0, &wuc, 1, mb, 1, "?", &udc);
+    nc = WideCharToMultiByte(CP_ACP, 0, &wuc, 1, mb, 1, "?", &udc);
     if (nc != 0) {
 	mb[1] = '\0';
 	return 2;
@@ -528,12 +517,6 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 	return nc;
     }
 
-    /*
-     * N.B.: This code assumes TRANS_LOCAL.
-     * TRANS_DISPLAY will need special translation tables (and a different
-     * function?) to go from Unicode to the various display character sets
-     * supported by x3270.
-     */
     wuc = uc;
     nc = wctomb(mb, uc);
     if (nc > 0) {
@@ -548,7 +531,6 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 #else /*][*/
     /*
      * Use iconv.
-     * As with the UNICODE_WCHAR case above, this code assumes TRANS_LOCAL.
      */
 
     /* Translate the wchar_t we got from UCS-4 to UTF-8. */
@@ -593,7 +575,6 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 /* Commonest version of ebcdic_to_multibyte_x:
  *  cs is CS_BASE
  *  blank_undef is True
- *  purpose is TRANS_LOCAL
  *  ucp is ignored
  */
 int
@@ -602,12 +583,12 @@ ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len)
 	ucs4_t ucs4;
 
     	return ebcdic_to_multibyte_x(ebc, CS_BASE, mb, mb_len, True,
-		TRANS_LOCAL, &ucs4);
+		&ucs4);
 }
 
 /*
  * Convert an EBCDIC string to a multibyte string.
- * Makes lots of assumptions: standard character set, TRANS_LOCAL, blank_undef.
+ * Makes lots of assumptions: standard character set, blank_undef.
  * Returns the length of the multibyte string.
  */
 int
@@ -814,11 +795,6 @@ multibyte_to_unicode_string(char *mb, size_t mb_len, ucs4_t *ucs4,
  *
  * Returns an 8-bit (SBCS) or 16-bit (DBCS) EBCDIC character, or 0, indicating
  * an error in translation.  Also returns the number of characters consumed.
- *
- * Unlike ebcdic_to_multibyte, there is no 'purpose' parameter.  On Windows,
- * this function is only used to translate local file system strings to
- * EBCDIC (TRANS_LOCAL).  Input keystrokes (which would use TRANS_DISPLAY)
- * are UTF-16 strings, not OEM-codepage bytes.
  */
 ebc_t
 multibyte_to_ebcdic(const char *mb, size_t mb_len, int *consumedp,
