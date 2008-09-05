@@ -39,6 +39,12 @@
 /* Configuration options. */
 #undef USE_ICONV
 
+/* Standard types. */
+#undef HAVE_DECL___UINT32_T
+#undef HAVE_DECL_UINT32_T
+#undef HAVE_DECL___UINT16T
+#undef HAVE_DECL_UINT16_T
+
 /* Optional parts. */
 #undef X3270_ANSI
 #undef X3270_APL

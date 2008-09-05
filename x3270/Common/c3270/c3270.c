@@ -660,7 +660,7 @@ static char **next_match;
 
 /* Generate a match list. */
 static char **
-attempted_completion(char *text, int start, int end)
+attempted_completion(const char *text, int start, int end)
 {
 	char *s;
 	int i, j;

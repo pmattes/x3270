@@ -1,6 +1,5 @@
 /*
- * Copyright 1993, 1994, 1995, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
- *   2008 by Paul Mattes.
+ * Copyright 1993-2008 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -1054,13 +1053,19 @@ convert_sel(Widget w, Atom *selection, Atom *target, Atom *type,
 
 		XmuConvertStandardSelection(w, sel_time, selection,
 		    target, type, (caddr_t*) &std_targets, &std_length, format);
+#if defined(XA_UTF8_STRING) /*[*/
 		*length = std_length + 6;
+#else /*][*/
+		*length = std_length + 5;
+#endif /*]*/
 		*value = (XtPointer) XtMalloc(sizeof(Atom) * (*length));
 		targetP = *(Atom**)value;
 		*targetP++ = XA_STRING;
 		*targetP++ = XA_TEXT(display);
 		*targetP++ = XA_COMPOUND_TEXT(display);
+#if defined(XA_UTF8_STRING) /*[*/
 		*targetP++ = XA_UTF8_STRING(display);
+#endif /*]*/
 		*targetP++ = XA_LENGTH(display);
 		*targetP++ = XA_LIST_LENGTH(display);
 		(void) memmove(targetP,  std_targets,
@@ -1073,19 +1078,27 @@ convert_sel(Widget w, Atom *selection, Atom *target, Atom *type,
 
 	if (*target == XA_STRING ||
 	    *target == XA_TEXT(display) ||
-	    *target == XA_COMPOUND_TEXT(display) ||
-	    *target == XA_UTF8_STRING(display)) {
-		if (*target == XA_COMPOUND_TEXT(display) ||
-		    *target == XA_UTF8_STRING(display))
+	    *target == XA_COMPOUND_TEXT(display)
+#if defined(XA_UTF8_STRING) /*[*/
+	    || *target == XA_UTF8_STRING(display)
+#endif /*]*/
+	    ) {
+		if (*target == XA_COMPOUND_TEXT(display)
+#if defined(XA_UTF8_STRING) /*[*/
+		    || *target == XA_UTF8_STRING(display)
+#endif /*]*/
+			)
 			*type = *target;
 		else
 			*type = XA_STRING;
 		*length = strlen(own_sel[i].buffer);
 		*value = XtMalloc(*length);
+#if defined(XA_UTF8_STRING) /*[*/
 		if (*target == XA_UTF8_STRING(display))
 			(void) memmove(*value, own_sel[i].buffer,
 				       (int) *length);
 		else
+#endif /*]*/
 		    	/*
 			 * N.B.: We return a STRING for COMPOUND_TEXT.
 			 * Someday we may do real ISO 2022, but not today.
@@ -1557,7 +1570,9 @@ static Atom	paste_atom[NP];
 static int	n_pasting = 0;
 static int	pix = 0;
 static Time	paste_time;
+#if defined(XA_UTF8_STRING) /*[*/
 static Boolean	paste_utf8;
+#endif /*]*/
 
 static void
 paste_callback(Widget w, XtPointer client_data unused, Atom *selection unused,
@@ -1573,14 +1588,24 @@ paste_callback(Widget w, XtPointer client_data unused, Atom *selection unused,
 		XtFree(value);
 
 		/* Try the next one. */
+#if defined(XA_UTF8_STRING) /*[*/
 		if (paste_utf8) {
 		    	paste_utf8 = False;
 			XtGetSelectionValue(w, paste_atom[pix], XA_STRING,
 				paste_callback, NULL, paste_time);
-		} else if (n_pasting > pix) {
+		} else
+#endif /*]*/
+		if (n_pasting > pix) {
+#if defined(XA_UTF8_STRING) /*[*/
 		    	paste_utf8 = True;
+#endif /*]*/
 			XtGetSelectionValue(w, paste_atom[pix++],
-				XA_UTF8_STRING(display), paste_callback, NULL,
+#if defined(XA_UTF8_STRING) /*[*/
+				XA_UTF8_STRING(display),
+#else /*][*/
+				XA_STRING,
+#endif /*]*/
+				paste_callback, NULL,
 				paste_time);
 		}
 		return;
@@ -1597,6 +1622,7 @@ paste_callback(Widget w, XtPointer client_data unused, Atom *selection unused,
 	    	ucs4_t uc;
 		int nm;
 
+#if defined(XA_UTF8_STRING) /*[*/
 	    	if (paste_utf8) {
 		    	int nu;
 
@@ -1605,7 +1631,9 @@ paste_callback(Widget w, XtPointer client_data unused, Atom *selection unused,
 			    	break;
 			s += nu;
 			s_len -= nu;
-		} else {
+		} else
+#endif /*]*/
+		{
 		    	/* ISO 8859-1. */
 		    	uc = *s & 0xff;
 			s++;
@@ -1654,11 +1682,18 @@ insert_selection_action(Widget w, XEvent *event, String *params,
 			paste_atom[n_pasting++] = a;
 	}
 	pix = 0;
+#if defined(XA_UTF8_STRING) /*[*/
 	paste_utf8 = True;
+#endif /*]*/
 	if (n_pasting > pix) {
 		paste_time = be->time;
 		XtGetSelectionValue(w, paste_atom[pix++],
-			XA_UTF8_STRING(display), paste_callback, NULL,
+#if defined(XA_UTF8_STRING) /*[*/
+			XA_UTF8_STRING(display),
+#else /*][*/
+			XA_STRING,
+#endif /*]*/
+			paste_callback, NULL,
 			paste_time);
 	}
 }
