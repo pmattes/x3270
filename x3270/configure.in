@@ -86,12 +86,14 @@ esac
 AC_SUBST(IFONTDIR)
 AC_SUBST(CIFONTDIR)
 
-dnl Check for --with-iconv
+dnl Check for ISO 10646 (wchar_t is Unicode) and --with-iconv
+AC_CHECK_DECLS(__STDC_ISO_10646__, unset unkw, unkw=1)
 AC_ARG_WITH(iconv,[  --with-iconv            ignore __STDC_ISO_10646__ and use iconv() instead])
 case "$with_iconv" in
 no|"")	;;
 yes|*)
 	AC_DEFINE(USE_ICONV,1)
+	unkw=1
 	;;
 esac
 AC_SUBST(USE_ICONV)
@@ -108,8 +110,8 @@ AC_CHECK_FUNCS(forkpty)
 AC_SEARCH_LIBS(gethostbyname, nsl_s)
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)
-AC_SEARCH_LIBS(iconv, iconv, , AC_MSG_ERROR("No iconv library function"))
-
+AC_SEARCH_LIBS(iconv, iconv, , if test "$unkw"; then AC_MSG_ERROR("No iconv library function"); fi)
+x
 dnl Checks for header files.
 dnl AC_HEADER_STDC
 dnl AC_HEADER_SYS_WAIT
