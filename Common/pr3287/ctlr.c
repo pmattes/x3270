@@ -59,6 +59,10 @@ extern int ignoreeoj;	/* ignore PRINT-EOJ commands */
 extern int crlf;	/* expand newline to CR/LF */
 extern int ffthru;	/* pass through SCS FF orders */
 extern int ffskip;	/* skip FF orders at top of page */
+extern char *trnpre_data;
+extern char *trnpost_data;
+extern size_t trnpre_size;
+extern size_t trnpost_size;
 
 #define CS_GE 0x04	/* hack */
 
@@ -95,6 +99,7 @@ static FILE *prfile = NULL;
 static int prpid = -1;
 #else /*][*/
 static int ws_initted = 0;
+static int ws_needpre = 1;
 #endif /*]*/
 static unsigned char wcc_line_length;
 
@@ -1441,6 +1446,14 @@ stash(unsigned char c)
 		}
 		ws_initted = 1;
 	}
+	if (ws_needpre) {
+	    	if ((trnpre_data != NULL) &&
+			ws_write(trnpre_data, trnpre_size) < 0) {
+
+			return -1;
+		}
+		ws_needpre = 0;
+	}
 
 	if (ws_putc((char)c)) {
 	    	return -1;
@@ -1450,6 +1463,16 @@ stash(unsigned char c)
 		prfile = popen_no_sigint(command);
 		if (prfile == NULL) {
 			errmsg("%s: %s", command, strerror(errno));
+			return -1;
+		}
+		if ((trnpre_data != NULL) &&
+			fwrite(trnpre_data, 1, trnpre_size,
+					    prfile) != trnpre_size) {
+
+			errmsg("Write error to '%s': %s", command,
+				strerror(errno));
+			(void) pclose_no_sigint(prfile);
+			prfile = NULL;
 			return -1;
 		}
 	}
@@ -1830,14 +1853,27 @@ print_eoj(void)
 			rc = -1;
 	}
 
+
 	/* Close the stream to the print process. */
 #if defined(_WIN32) /*[*/
-	trace_ds("End of print job.\n");
-	if (ws_initted && ws_endjob() < 0)
-		rc = -1;
+	if (ws_initted) {
+		trace_ds("End of print job.\n");
+		if (trnpost_data != NULL &&
+			    ws_write(trnpost_data, trnpost_size) < 0) {
+		    	rc = -1;
+		}
+	    	if (ws_endjob() < 0)
+			rc = -1;
+		ws_needpre = 1;
+	}
 #else /*]*/
 	if (prfile != NULL) {
 		trace_ds("End of print job.\n");
+		if (trnpost_data != NULL &&
+			fwrite(trnpost_data, 1, trnpost_size,
+						    prfile) != trnpost_size) {
+		    rc = -1;
+		}
 		rc = pclose_no_sigint(prfile);
 		if (rc) {
 			if (rc < 0)
