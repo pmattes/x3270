@@ -49,6 +49,10 @@
  *		trace data stream to a file
  *          -tracedir dir
  *              directory to write trace file in (POSIX only)
+ *          -trnpre file
+ *          	file of transparent data to send before jobs
+ *          -trnpost file
+ *          	file of transparent data to send after jobs
  *          -v
  *              display version information and exit
  *          -V
@@ -76,6 +80,7 @@
 #endif /*]*/
 #include <time.h>
 #include <signal.h>
+#include <fcntl.h>
 
 #include "globals.h"
 #include "charsetc.h"
@@ -124,6 +129,10 @@ int ffskip = 0;
 int verbose = 0;
 int ssl_host = 0;
 unsigned long eoj_timeout = 0L; /* end of job timeout */
+char *trnpre_data = NULL;
+size_t trnpre_size = 0;
+char *trnpost_data = NULL;
+size_t trnpost_size = 0;
 
 /* User options. */
 #if !defined(_WIN32) /*[*/
@@ -158,12 +167,12 @@ static void
 usage(void)
 {
 	(void) fprintf(stderr, "usage: %s [options] [lu[,lu...]@]host[:port]\n"
-"Options:\n%s\n%s\n%s", programname,
+"Options:\n%s%s%s%s", programname,
 #if !defined(_WIN32) /*[*/
 "  -daemon          become a daemon after connecting\n"
 #endif /*]*/
 "  -assoc <session> associate with a session (TN3270E only)\n"
-"  -charset <name>  use built-in alternate EBCDIC-to-ASCII mappings",
+"  -charset <name>  use built-in alternate EBCDIC-to-ASCII mappings\n",
 #if !defined(_WIN32) /*[*/
 "  -command \"<cmd>\" use <cmd> for printing (default \"lpr\")\n"
 #endif /*]*/
@@ -176,7 +185,7 @@ usage(void)
 "  -eojtimeout <seconds>\n"
 "                   time out end of print job\n"
 "  -ffthru          pass through SCS FF orders\n"
-"  -ffskip          skip FF orders at top of page",
+"  -ffskip          skip FF orders at top of page\n",
 "  -ignoreeoj       ignore PRINT-EOJ commands\n"
 #if defined(_WIN32) /*[*/
 "  -printer \"printer name\"\n"
@@ -188,10 +197,12 @@ usage(void)
 "  -proxy \"<spec>\"\n"
 "                   connect to host via specified proxy\n"
 "  -reconnect       keep trying to reconnect\n"
-"  -trace           trace data stream to /tmp/x3trc.<pid>\n"
+"  -trace           trace data stream to /tmp/x3trc.<pid>\n",
 #if !defined(_WIN32) /*[*/
 "  -tracedir <dir>  directory to keep trace information in\n"
 #endif /*]*/
+"  -trnpre <file>   file of transparent data to send before each job\n"
+"  -trnpost <file>  file of transparent data to send after each job\n"
 "  -v               display version information and exit\n"
 "  -V               log verbose information about connection negotiation\n"
 );
@@ -315,6 +326,38 @@ pr3287_exit(int status)
 	exit(status);
 }
 
+/* Read a transparent data file into memory. */
+static void
+read_trn(char *filename, char **data, size_t *size)
+{
+    	int fd;
+	char buf[1024];
+	int nr;
+
+	if (filename == NULL)
+	    	return;
+	fd = open(filename, O_RDONLY);
+	if (fd < 0) {
+		perror(filename);
+		pr3287_exit(1);
+	}
+	*size = 0;
+	while ((nr = read(fd, buf, sizeof(buf))) > 0) {
+	    	*size += nr;
+	    	*data = realloc(*data, *size);
+		if (*data == NULL) {
+		    	fprintf(stderr, "Out of memory\n");
+			pr3287_exit(1);
+		}
+		memcpy(*data + *size - nr, buf, nr);
+	}
+	if (nr < 0) {
+		perror(filename);
+		pr3287_exit(1);
+	}
+	close(fd);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -340,6 +383,7 @@ main(int argc, char *argv[])
 #if defined(HAVE_LIBSSL) /*[*/
 	int any_prefixes = False;
 #endif /*]*/
+	char *trnpre = NULL, *trnpost = NULL;
 
 	/* Learn our name. */
 #if defined(_WIN32) /*[*/
@@ -461,6 +505,22 @@ main(int argc, char *argv[])
 			tracedir = argv[i + 1];
 			i++;
 #endif /*]*/
+		} else if (!strcmp(argv[i], "-trnpre")) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for -trnpre\n");
+				usage();
+			}
+			trnpre = argv[i + 1];
+			i++;
+		} else if (!strcmp(argv[i], "-trnpost")) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for -trnpost\n");
+				usage();
+			}
+			trnpost = argv[i + 1];
+			i++;
 		} else if (!strcmp(argv[i], "-proxy")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
@@ -543,9 +603,13 @@ main(int argc, char *argv[])
 	    	printercp = GetACP();
 #endif /*]*/
 
-	/* Remap the character set. */
+	/* Set up the character set. */
 	if (charset_init(charset) < 0)
 		pr3287_exit(1);
+
+	/* Read in the transparent pre- and post- files. */
+	read_trn(trnpre, &trnpre_data, &trnpre_size);
+	read_trn(trnpost, &trnpost_data, &trnpost_size);
 
 	/* Try opening the trace file, if there is one. */
 	if (tracing) {

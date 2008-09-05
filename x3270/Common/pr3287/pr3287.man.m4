@@ -48,33 +48,11 @@ characters.
 XX_TP(XX_FB(XX_DASHED(charset)) XX_FI(name))
 Specifies an alternate XX_SM(EBCDIC)-to-XX_SM(ASCII) mapping.
 The default maps the EBCDIC U.S. English character set to XX_SM(ISO) 8859-1.
-Other built-in character sets are XX_FB(bracket), which corresponds to
+Other built-in character sets include XX_FB(bracket), which corresponds to
 many older XX_SM(IBM) hosts' mapping of the XX_FB([) and XX_FB(]) characters,
 and the non-U.S. character sets XX_FB(german), XX_FB(finnish), XX_FB(uk),
 XX_FB(norwegian), XX_FB(french), XX_FB(icelandic) and XX_FB(belgian).
 These correspond to the XX_FB(x3270) character sets of the same names.
-XX_IP
-If XX_FI(name) begins with an XX_FB(@), then the balance is intepreted as
-the name of a file containing character mappings.
-The file contains whitespace-separated tokens.
-Each token is a number specifying an EBCDIC code, an XX_FB(=) character,
-and a number specifying the 8-bit ASCII character used to print that code.
-Blank lines and lines beginning with XX_FB(#) are ignored.
-XX_IP
-If XX_FI(name) begins with an XX_FB(=), then the balance is intepreted as
-a string containing mapping tokens, as in a file.
-XX_IP
-For example, a file defining the XX_FB(uk) character set would look like
-this:
-XX_IP
-XX_RS(XX_BR
-# UK character set
-XX_BR
-0x4a=0x24 0x5b=0xa3 0xa1=0xaf
-XX_BR
-0xb0=0xa2 0xb1=0x5b 0xba=0x5e
-XX_BR
-0xbc=0x7e)
 ifelse(XX_PRODUCT,pr3287,`XX_TP(XX_FB(XX_DASHED(command)) XX_FI(command))
 Specifies the command to run for each print job.
 The default is XX_FB(lpr).')
@@ -130,6 +108,16 @@ ifelse(XX_PRODUCT,pr3287,`XX_FB(/tmp/x3trc.)`'XX_FI(pid).',
 `XX_FB(x3trc.)`'XX_FI(pid)`'XX_FB(.txt).')
 ifelse(XX_PRODUCT,pr3287,`XX_TP(XX_FB(XX_DASHED(tracedir)) XX_FI(dir))
 Specifies the directory to save trace files in, instead of XX_FB(/tmp).')
+XX_TP(XX_FB(XX_DASHED(trnpre) XX_FI(file)))
+Specifies a file containing data that will be sent to the printer before each
+print job.
+The file contents are treated as transparent data, i.e., they are not
+translated in any way.
+XX_TP(XX_FB(XX_DASHED(trnpost) XX_FI(file)))
+Specifies a file containing data that will be sent to the printer after each
+print job.
+The file contents are treated as transparent data, i.e., they are not
+translated in any way.
 XX_TP(XX_FB(XX_DASHED(v)))
 Display build and version information and exit.
 XX_TPE()dnl
