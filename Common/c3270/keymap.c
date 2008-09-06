@@ -801,12 +801,14 @@ lookup_cname(int ccode)
 		if (ccode == ncurses_key[i].code)
 			return ncurses_key[i].name;
 	}
-	if (ccode >= KEY_F0 && ccode < KEY_F0 + 64) {
-		static char buf[10];
+	for (i = 0; i < 64; i++)
+		if (ccode == KEY_F(i)) {
+			static char buf[10];
 
-		(void) sprintf(buf, "F%d", ccode - KEY_F0);
-		return buf;
-	}
+			(void) sprintf(buf, "F%d", i);
+			return buf;
+		}
+
 	return CN;
 }
 

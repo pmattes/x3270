@@ -984,6 +984,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 {
 	char buf[16];
 	char *action;
+	int i;
 
 	action = lookup_key(k, ucs4, alt);
 	if (action != CN) {
@@ -1078,10 +1079,12 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	}
 
 	/* Catch PF keys. */
-	if (k >= KEY_F(1) && k <= KEY_F(24)) {
-		(void) sprintf(buf, "%d", k - KEY_F0);
-		action_internal(PF_action, IA_DEFAULT, buf, CN);
-		return;
+	for (i = 0; i < 63; i++) {
+		if (k == KEY_F(i)) {
+			(void) sprintf(buf, "%d", i);
+			action_internal(PF_action, IA_DEFAULT, buf, CN);
+			return;
+		}
 	}
 
 	/* Then any other 8-bit ASCII character. */
