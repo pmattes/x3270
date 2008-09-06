@@ -363,6 +363,7 @@
 #define OptTraceFile		"-tracefile"
 #define OptTraceFileSize	"-tracefilesize"
 #define OptV			"-v"
+#define OptVersion		"--version"
 
 /* Miscellaneous values. */
 #define ResTrue			"true"

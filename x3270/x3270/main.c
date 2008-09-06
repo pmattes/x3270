@@ -146,6 +146,7 @@ XrmOptionDescRec options[]= {
 	{ OptPreeditType,DotPreeditType,XrmoptionSepArg,	NULL },
 #endif /*]*/
 	{ OptV,		DotV,		XrmoptionNoArg,		ResTrue },
+	{ OptVersion,	DotV,		XrmoptionNoArg,		ResTrue },
 	{ "-xrm",	NULL,		XrmoptionResArg,	NULL }
 };
 int num_options = XtNumber(options);
@@ -234,6 +235,12 @@ main(int argc, char *argv[])
 	else
 		programname = argv[0];
 
+	/* Parse a lone "-v" first, without contacting a server. */
+	if (argc == 2 && (!strcmp(argv[1], OptV) ||
+		          !strcmp(argv[1], OptVersion))) {
+	    	dump_version();
+	}
+
 	/* Save a copy of the command-line args for merging later. */
 	save_args(argc, argv);
 
@@ -274,10 +281,8 @@ main(int argc, char *argv[])
 	display = XtDisplay(toplevel);
 	rdb = XtDatabase(display);
 
-	if (get_resource(ResV)) {
-		printf("%s\n%s\n", build, build_options());
-		exit(0);
-	}
+	if (get_resource(ResV))
+	    	dump_version();
 
 	/*
 	 * Add the base translations to the toplevel object.

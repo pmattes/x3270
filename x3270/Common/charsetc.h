@@ -33,3 +33,4 @@ extern char *default_display_charset;
 enum cs_result { CS_OKAY, CS_NOTFOUND, CS_BAD, CS_PREREQ, CS_ILLEGAL };
 extern enum cs_result charset_init(char *csname);
 extern char *get_charset_name(void);
+extern void charset_list(void);
