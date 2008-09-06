@@ -25,6 +25,7 @@
 #endif /*]*/
 #include <stdarg.h>
 #include "resources.h"
+#include "charsetc.h"
 
 #include "utilc.h"
 
@@ -1051,4 +1052,17 @@ build_options(void)
 		" --with-iconv"
 #endif /*]*/
 		;
+}
+
+void
+dump_version(void)
+{
+	printf("%s\n%s\n", build, build_options());
+	charset_list();
+	printf("\n"
+"Copyright 1989-2008 by Paul Mattes, GTRC and others.\n"
+"See the source code for licensing details.  Distributed WITHOUT ANY WARRANTY;\n"
+"without even the implied warranty of MERCHANTABILITY or FITNESS FOR A\n"
+"PARTICULAR PURPOSE.\n");
+	exit(0);
 }

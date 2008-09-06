@@ -423,6 +423,7 @@ parse_options(int *argcp, const char **argv)
     { OptTraceFileSize,OPT_STRING,False,ResTraceFileSize,offset(trace_file_size) },
 #endif /*]*/
     { OptV,        OPT_V,	False, NULL,	     NULL },
+    { OptVersion,  OPT_V,	False, NULL,	     NULL },
     { "-xrm",      OPT_XRM,     False, NULL,         NULL },
     { LAST_ARG,    OPT_DONE,    False, NULL,         NULL },
     { CN,          OPT_SKIP2,   False, NULL,         NULL }
@@ -578,11 +579,7 @@ parse_options(int *argcp, const char **argv)
 					     NewString(argv[i]));
 			break;
 		    case OPT_V:
-#if !defined(C3270) /*[*/
-			printf("%s\n", build);
-#endif /*[*/
-			printf("%s\n", build_options());
-			exit(0);
+			dump_version();
 			break;
 		    case OPT_DONE:
 			while (i < *argcp)

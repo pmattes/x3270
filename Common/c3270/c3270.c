@@ -309,12 +309,6 @@ main(int argc, char *argv[])
 	(void) save_dirs(argv[0]);
 #endif /*]*/
 
-	printf("%s\n\n"
-		"Copyright 1989-2008 by Paul Mattes, GTRC and others.\n"
-		"Type 'show copyright' for full copyright information.\n"
-		"Type 'help' for help information.\n\n",
-		build);
-
 	add_resource("keymap.base",
 #if defined(_WIN32) /*[*/
 	    base_keymap
@@ -325,6 +319,12 @@ main(int argc, char *argv[])
 	add_resource("keymap.base.3270", NewString(base_3270_keymap));
 
 	argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
+
+	printf("%s\n\n"
+		"Copyright 1989-2008 by Paul Mattes, GTRC and others.\n"
+		"Type 'show copyright' for full copyright information.\n"
+		"Type 'help' for help information.\n\n",
+		build);
 
 	if (charset_init(appres.charset) != CS_OKAY) {
 		xs_warning("Cannot find charset \"%s\"", appres.charset);
