@@ -304,11 +304,7 @@ x3270.printer.luCommandLine:		pr3287 -command "%C%" %R% %P% "%L%@%H%"
 ! vendor strings to keymap names.
 x3270.serverKeymapList: \
 	Sun Microsystems, Inc.: sun_k5\n\
-	Hewlett-Packard Company: hp-k1\n\
-	International Business Machines: alt\n\
-	Silicon Graphics: alt\n\
-	The XFree86 Project, Inc: alt\n\
-	AT&T Laboratories Cambridge: alt
+	Hewlett-Packard Company: hp-k1\n
 !
 ! Keymaps (keyboard and mouse mappings)
 !
@@ -345,17 +341,29 @@ x3270.keymap.base: \
 	Shift<Key>F11:			PF(23)\n\
 	Shift<Key>F12:			PF(24)\n\
 	Meta<Key>F1:			PF(13)\n\
+	Alt<Key>F1:			PF(13)\n\
 	Meta<Key>F2:			PF(14)\n\
+	Alt<Key>F2:			PF(14)\n\
 	Meta<Key>F3:			PF(15)\n\
+	Alt<Key>F3:			PF(15)\n\
 	Meta<Key>F4:			PF(16)\n\
+	Alt<Key>F4:			PF(16)\n\
 	Meta<Key>F5:			PF(17)\n\
+	Alt<Key>F5:			PF(17)\n\
 	Meta<Key>F6:			PF(18)\n\
+	Alt<Key>F6:			PF(18)\n\
 	Meta<Key>F7:			PF(19)\n\
+	Alt<Key>F7:			PF(19)\n\
 	Meta<Key>F8:			PF(20)\n\
+	Alt<Key>F8:			PF(20)\n\
 	Meta<Key>F9:			PF(21)\n\
+	Alt<Key>F9:			PF(21)\n\
 	Meta<Key>F10:			PF(22)\n\
+	Alt<Key>F10:			PF(22)\n\
 	Meta<Key>F11:			PF(23)\n\
+	Alt<Key>F11:			PF(23)\n\
 	Meta<Key>F12:			PF(24)\n\
+	Alt<Key>F12:			PF(24)\n\
 	:<Key>F1:			PF(1)\n\
 	:<Key>F2:			PF(2)\n\
 	:<Key>F3:			PF(3)\n\
@@ -393,22 +401,39 @@ x3270.keymap.base.3270: #override \
 	:<Key>BackSpace: 		Erase()\n\
 	Shift<Key>Tab:			BackTab()\n\
 	:Meta<Key>Left:			PreviousWord()\n\
+	:Alt<Key>Left:			PreviousWord()\n\
 	:Meta<Key>Right:		NextWord()\n\
+	:Alt<Key>Right:			NextWord()\n\
 	:Meta<Key>1:			PA(1)\n\
+	:Alt<Key>1:			PA(1)\n\
 	:Meta<Key>2:			PA(2)\n\
+	:Alt<Key>2:			PA(2)\n\
 	:Meta<Key>3:			PA(3)\n\
+	:Alt<Key>3:			PA(3)\n\
 	Meta<Key>a:			Attn()\n\
+	Alt<Key>a:			Attn()\n\
 	Meta<Key>b:			PrintWindow()\n\
+	Alt<Key>b:			PrintWindow()\n\
 	Meta<Key>c:			Clear()\n\
+	Alt<Key>c:			Clear()\n\
 	Meta<Key>d:			Delete()\n\
+	Alt<Key>d:			Delete()\n\
 	Meta<Key>e:			EraseEOF()\n\
+	Alt<Key>e:			EraseEOF()\n\
 	Meta<Key>f:			Flip()\n\
+	Alt<Key>f:			Flip()\n\
 	Meta<Key>h:			Home()\n\
+	Alt<Key>h:			Home()\n\
 	Meta<Key>i:			Insert()\n\
+	Alt<Key>i:			Insert()\n\
 	Meta<Key>l:			Redraw()\n\
+	Alt<Key>l:			Redraw()\n\
 	Meta<Key>p:			PrintText()\n\
+	Alt<Key>p:			PrintText()\n\
 	Meta<Key>r:			Reset()\n\
+	Alt<Key>r:			Reset()\n\
 	Meta<Key>u:			Unselect()\n\
+	Alt<Key>u:			Unselect()\n\
 	Ctrl<Key>a:			SelectAll(PRIMARY)\n\
 	Ctrl<Key>c:			set-select(CLIPBOARD)\n\
 	Ctrl<Key>u:			DeleteField()\n\
@@ -738,41 +763,10 @@ x3270.keymap.apl:	#override \
 ! work properly on non-U.S. keyboards.
 x3270.keymap.not.3270: \
 	:<Key>asciicircum:		Key(notsign)
-! Keymap modifier for keyboards which lack a Meta key, such as the RS/6000.
-x3270.keymap.alt: \
-	:Alt<Key>F1:		PF(13)\n\
-	:Alt<Key>F2:		PF(14)\n\
-	:Alt<Key>F3:		PF(15)\n\
-	:Alt<Key>F4:		PF(16)\n\
-	:Alt<Key>F5:		PF(17)\n\
-	:Alt<Key>F6:		PF(18)\n\
-	:Alt<Key>F7:		PF(19)\n\
-	:Alt<Key>F8:		PF(20)\n\
-	:Alt<Key>F9:		PF(21)\n\
-	:Alt<Key>F10:		PF(22)\n\
-	:Alt<Key>F11:		PF(23)\n\
-	:Alt<Key>F12:		PF(24)\n
-x3270.keymap.alt.3270: \
-	:Alt<Key>Left:		Left2()\n\
-	:Alt<Key>Right:		Right2()\n\
-	:Alt<Key>1:		PA(1)\n\
-	:Alt<Key>2:		PA(2)\n\
-	:Alt<Key>3:		PA(3)\n\
-	Alt<Key>a:		Attn()\n\
-	Alt<Key>b:		PrintWindow()\n\
-	Alt<Key>c:		Clear()\n\
-	Alt<Key>d:		Delete()\n\
-	Alt<Key>e:		EraseEOF()\n\
-	Alt<Key>h:		Home()\n\
-	Alt<Key>i:		Insert()\n\
-	Alt<Key>l:		Redraw()\n\
-	Alt<Key>p:		PrintText()\n\
-	Alt<Key>q:		Quit()\n\
-	Alt<Key>r:		Reset()\n\
-	Alt<Key>u:		Unselect()\n
 ! Helpful modifier to disply the translation table.
 x3270.keymap.t: \
-	Meta<Key>t:		XtDisplayTranslations()\n
+	Meta<Key>t:		XtDisplayTranslations()\n\
+	Alt<Key>t:		XtDisplayTranslations()\n
 ! International keymap modifiers.
 x3270.keymap.finnish7:	\
 	:<Key>bracketleft:	Key("adiaeresis")\n\
