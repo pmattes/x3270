@@ -121,7 +121,8 @@ yes|*)
 	;;
 esac
 AC_SUBST(USE_ICONV)
-AC_SEARCH_LIBS(iconv, iconv, , if test "$unkw"; then AC_MSG_ERROR("No iconv library function"); fi)
+AC_CHECK_HEADERS(iconv.h)
+AC_SEARCH_LIBS(iconv, iconv, , AC_SEARCH_LIBS(libiconv, iconv, , if test "$unkw"; then AC_MSG_ERROR("No iconv library function"); fi))
 
 AC_ARG_ENABLE(dbcs,[  --disable-dbcs          leave out DBCS support])
 case "$enable_dbcs" in
