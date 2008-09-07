@@ -952,9 +952,13 @@ decode_key(int k, ucs4_t ucs4, int hint, char *buf)
 		return buf;
 	}
 
-	/* Special-case ':' because of the keymap syntax. */
+	/* Special-case ':' and ' ' because of the keymap syntax. */
 	if (ucs4 == ':') {
 	    	strcpy(s, "colon");
+		return buf;
+	}
+	if (ucs4 == ' ') {
+	    	strcpy(s, "space");
 		return buf;
 	}
 
