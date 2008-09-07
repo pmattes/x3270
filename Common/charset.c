@@ -52,6 +52,11 @@
 #include <windows.h>
 #endif /*]*/
 
+#if defined(__CYGWIN__) /*[*/
+#include <w32api/windows.h>
+#undef _WIN32
+#endif /*]*/
+
 /* Globals. */
 Boolean charset_changed = False;
 #define DEFAULT_CGEN	0x02b90000
@@ -93,6 +98,19 @@ charset_init(char *csname)
 
 	/* Figure out the locale code set (character set encoding). */
 	codeset_name = nl_langinfo(CODESET);
+#if defined(__CYGWIN__) /*[*/
+	/*
+	 * Cygwin's locale support is quite limited.  If the locale
+	 * indicates "US-ASCII", which appears to be the only supported
+	 * encoding, ignore it and use the Windows ANSI code page, which
+	 * observation indicates is what is actually supported.
+	 *
+	 * Hopefully at some point Cygwin will start returning something
+	 * meaningful here and this logic will stop triggering.
+	 */
+	if (!strcmp(codeset_name, "US-ASCII"))
+	    	codeset_name = xs_buffer("CP%d", GetACP());
+#endif /*]*/
 	set_codeset(codeset_name);
 #endif /*]*/
 
