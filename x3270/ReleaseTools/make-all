@@ -69,7 +69,7 @@ for prod in $prods
 do
     	# Some products don't get built on Linux.
 	case "$prod" in
-	wc3270|wpr3287)
+	wc3270|wpr3287|ws3270)
 		islinux=""
 		;;
 	*)
@@ -142,10 +142,18 @@ do
 			diff $d2/instlist.all-xinstall cmp.files || exit 1
 			rm -rf i
 		fi
+
+		# If Windows, put the newly-built .exe's in Release/, where
+		# Inno Setup can find them.
+		if [ -f $d2/instlist.windows ]
+		then	cp -p $(<$d2/instlist.windows) $d2/../../../Release/Inno/
+		fi
+
 		cd /usr/tmp
 		rm -rf $prod-3.3
 		cd $d2
 	fi
+
 
 	# Release it.
 	if [ "$release" ]
