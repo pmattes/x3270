@@ -1,5 +1,4 @@
-dnl Modifications Copyright 1993, 1994, 1995, 1996, 1997, 1999, 2000, 2001,
-dnl   2003 by Paul Mattes.
+dnl Modifications Copyright 1993-2008 by Paul Mattes.
 dnl  Permission to use, copy, modify, and distribute this software and its
 dnl  documentation for any purpose and without fee is hereby granted,
 dnl  provided that the above copyright notice appear in all copies and that
@@ -28,9 +27,6 @@ XX_TP(XX_FB(ow))
 middle button performs the "Extend" function and the right-hand button
 performs the "Paste" function.
 Also changes the cut and `paste' actions to use the OpenWindows XX_SM(CLIPBOARD).
-XX_TP(XX_FB(alt))
-Replaces the default "Meta" key definitions with "Alt" definitions,
-for keyboards which do not have a "Meta" key.
 XX_TP(XX_FB(apl))
 Allows entry of XX_SM(APL) characters (see XX_LINK(#APL-Support,XX_SM(APL SUPPORT))
 below).
