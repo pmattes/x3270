@@ -583,7 +583,7 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
     outbuf = mb;
     outbytesleft = mb_len;
     nc = iconv(i_u2mb, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
-    if (nc < 0) {
+    if (nc < 0 || inbytesleft == nu8) {
 	mb[0] = '?';
 	mb[1] = '\0';
 	return 2;
