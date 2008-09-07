@@ -3,7 +3,7 @@
 
 [Setup]
 AppName=wc3270
-AppVerName=wc3270 3.3.8a5
+AppVerName=wc3270 3.3.8
 AppPublisher=Paul Mattes
 AppPublisherURL=http://x3270.bgp.nu
 AppSupportURL=http://x3270.bgp.nu
@@ -27,15 +27,15 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\w3n4.dll"; DestDir: "{app}"; Flags: ignoreversion; OnlyBelowVersion: 0.0,5.01
-Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\w3n46.dll"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.01
-Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\shf.dll"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.0
-Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wpr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\catf.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall
-Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "\\Melville\pdm\psrc\x3270\Release\Inno\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "\\Melville\pdm\psrc\x3270\Release\Inno\wc3270\w3n4.dll"; DestDir: "{app}"; Flags: ignoreversion; OnlyBelowVersion: 0.0,5.01
+Source: "\\Melville\pdm\psrc\x3270\Release\Inno\wc3270\w3n46.dll"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.01
+Source: "\\Melville\pdm\psrc\x3270\Release\Inno\wc3270\shf.dll"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.0
+Source: "\\Melville\pdm\psrc\x3270\Release\Inno\wpr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "\\Melville\pdm\psrc\x3270\Release\Inno\wc3270\catf.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "\\Melville\pdm\psrc\x3270\Release\Inno\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall
+Source: "\\Melville\pdm\psrc\x3270\Release\Inno\wc3270\ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "\\Melville\pdm\psrc\x3270\Release\Inno\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\html\Bugs.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\html\Build.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\html\FAQ.html"; DestDir: "{app}\html"; Flags: ignoreversion
