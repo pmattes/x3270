@@ -146,7 +146,7 @@ do
 		# If Windows, put the newly-built .exe's in Release/, where
 		# Inno Setup can find them.
 		if [ -f $d2/instlist.windows ]
-		then	cp -p $(<$d2/instlist.windows) $d2/../../../Release/Inno/
+		then	cp -p $(<$d2/instlist.windows) $d2/../../../Release/Inno/$prod/
 		fi
 
 		cd /usr/tmp
