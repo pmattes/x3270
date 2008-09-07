@@ -92,7 +92,7 @@ CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
 		p.nFont = 0;
 		p.nInputBufferSize = 0;
 		p.dwFontSize.X = 0;
-		p.dwFontSize.Y = 0;
+		p.dwFontSize.Y = 12;
 		p.uFontFamily = 54; /* ? */
 		p.uFontWeight = 400; /* ? */
 		wcscpy(p.FaceName, L"Lucida Console");
