@@ -44,6 +44,11 @@ full Cygwin installation), type:
 build with it. In general, you must have a directory containing <tt>gcc</tt>
 (preferred) or Sun's ANSI C compiler (usually in <tt>/usr/ccs/bin</tt>) in
 your $PATH ahead of <tt>/usr/ucb</tt>.</font>  
+<h3> Notes for Solaris</h3>
+<b>c3270</b> prefers wide curses, which on Solaris is in the <tt>/usr/xpg4</tt>
+directory.  To use this version of curses, set CPPFLAGS and LDFLAGS when running
+<tt>configure</tt>:
+<pre>&nbsp;&nbsp;&nbsp; CPPFLAGS=-I/usr/xpg4/include LDFLAGS=-L/usr/xpg4/lib ./configure</pre>
 <h2> Summary of <tt>configure</tt> Options</h2>
   The <i>c3270</i> <tt>configure</tt> script accepts the following options:
  <br>
