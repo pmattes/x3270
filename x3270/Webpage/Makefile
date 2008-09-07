@@ -12,7 +12,7 @@ SCREENS=c3270.png c3270-thumb.png cyrillic.png cyrillic-thumb.png \
 OTHERS=Brackets.html Build-c3270.html Build-pr3287.html Build-s3270.html \
 	Build-tcl3270.html Build-wc3270.html Build-x3270.html \
 	c3270Keymap.html c3270-man.html \
-	Charset.html ibm_hosts.html Keymap.html NewCharset.html \
+	Charset.html ibm_hosts.html Keymap.html \
 	pr3287-man.html Resources.html s3270-man.html \
 	tcl3270-man.html Wishlist.html x3270if.html x3270-man.html \
 	wc3270-man.html wc3270Keymap.html x3270-script.html del.jpg \
