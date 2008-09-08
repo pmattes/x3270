@@ -1,6 +1,5 @@
 /*
- * Modifications Copyright 1993-1996, 1999-2004, 2005, 2006, 2007, 2008
- *   by Paul Mattes.
+ * Modifications Copyright 1993-2008 by Paul Mattes.
  * Original X11 Port Copyright 1990 by Jeff Sparkes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
@@ -4974,17 +4973,14 @@ init_rsfonts(char *charset_name)
 		free(ns);
 	}
 
-	/*
-	 * If we've found at least one appropriate font from the list,
-	 * we're done.
-	 */
-	if (rsfonts != NULL
 #if defined(X3270_DBCS) /*[*/
-	                    || dbcs
-#endif /*]*/
-                                   ) {
+	/*
+	 * In DBCS mode, if we've found at least one appropriate font from the
+	 * list, we're done.
+	 */
+	if (dbcs)
 		return;
-	}
+#endif /*]*/
 
 	/* Add 'fixed' to the menu, so there's at least one alternative. */
 	(void) add_font_to_menu("fixed", "!fixed");
