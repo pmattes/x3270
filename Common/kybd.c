@@ -3347,6 +3347,16 @@ emulate_input(char *s, int len, Boolean pasting)
 					key_Character(EBC_dup, False, True,
 						&skipped);
 				break;
+			    case UPRIV_eo: /* private-use EO */
+				if (pasting)
+					key_Character(EBC_eo, False, True,
+						&skipped);
+				break;
+			    case UPRIV_sub: /* private-use SUB */
+				if (pasting)
+					key_Character(EBC_sub, False, True,
+						&skipped);
+				break;
 			default:
 				if (pasting &&
 					(c >= UPRIV_GE_00 &&
