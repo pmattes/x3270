@@ -266,7 +266,9 @@ ebcdic_base_to_unicode(ebc_t c, Boolean blank_undef,
 	case EBC_dup:
 	    return for_display? UPRIV_dup: '*';
 	case EBC_eo:
-	    return 0x25cf; /* solid circle */
+	    return for_display? UPRIV_eo: 0x25cf; /* solid circle */
+	case EBC_sub:
+	    return for_display? UPRIV_sub: 0x25a0; /* solid block */
 	default:
 	    if (blank_undef)
 		return ' ';

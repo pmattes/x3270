@@ -312,6 +312,7 @@
 #define EBC_em		0x19
 #define EBC_dup		0x1c
 #define EBC_fm		0x1e
+#define EBC_sub		0x3f
 #define EBC_space	0x40
 #define EBC_nobreakspace 0x41   
 #define EBC_period	0x4b    
@@ -334,6 +335,8 @@
 /* Unicode private-use definitions. */
 #define UPRIV_GE_00	0xf700	/* first GE */
 #define UPRIV_GE_ff	0xf7ff	/* last GE */
+#define UPRIV_sub	0xf8fc
+#define UPRIV_eo	0xf8fd
 #define UPRIV_fm	0xf8fe
 #define UPRIV_dup	0xf8ff
 
