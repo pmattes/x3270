@@ -1,39 +1,15 @@
 #!/bin/bash
-# Check each RCS file for properly updated copyrights
+# Check for out-of-date copyrights
 
-tf=/tmp/cc$$
-rm -f $tf
-
-# Get this year
-year=$(date +%Y)
-# echo "It's $year."
-
-for f in $(find RCS/ -name '*,v' -print)
-do	if rlog $f | grep $year >/dev/null
-	then	if co -p -rDBCS $f 2>/dev/null >$tf
-		then	co=-rDBCS
-		else	co -p $f 2>/dev/null >$tf
-			co=""
-		fi
-		if grep -i copyright $tf >/dev/null
-		then	if grep -i "copyright.*$year" $tf >/dev/null
-			then	:
-			else	ff=${f#RCS/}
-				ff=${ff%,v}
-				echo "$ff is NOT okay!"
-				echo -n "checkout? (y/n) [y] "
-				read x
-				case "$x" in
-				""|y|Y)
-					co -l $co $ff
-					vi $ff
-					ci -u -m'copyright' $ff
-					;;
-				*)
-					;;
-				esac
-			fi
+svn list -R | while read f
+do	case $f in
+    	*/)	continue
+		;;
+	esac
+    	if svn log $f | grep 2008- >/dev/null
+	then	if grep 'Copyright.*2008' $f >/dev/null
+		then :
+		else	echo $f
 		fi
 	fi
 done
-rm -f $tf

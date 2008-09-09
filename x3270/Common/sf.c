@@ -1,6 +1,5 @@
 /*
- * Copyright 1994, 1995, 1996, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007
- *   by Paul Mattes.
+ * Copyright 1994-2008 by Paul Mattes.
  * RPQNAMES modifications Copyright 2004 by Don Russell.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,

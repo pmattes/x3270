@@ -1,6 +1,5 @@
 /*
- * Modifications Copyright 1993, 1994, 1995, 1999, 2000, 2002, 2003, 2004,
- *   2005 by Paul Mattes.
+ * Modifications Copyright 1993-2008 by Paul Mattes.
  * RPQNAMES modifications Copyright 2004 by Don Russell.
  * Original X11 Port Copyright 1990 by Jeff Sparkes.
  *  Permission to use, copy, modify, and distribute this software and its

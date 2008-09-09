@@ -1,5 +1,5 @@
 #! /bin/sh
-# Copyright 1995, 1999, 2005 by Paul Mattes.
+# Copyright 1995-2008 by Paul Mattes.
 # RPQNAMES modifications copyright 2005 by Don Russell.
 #  Permission to use, copy, modify, and distribute this software and its
 #  documentation for any purpose and without fee is hereby granted,

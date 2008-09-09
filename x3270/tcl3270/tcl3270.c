@@ -1,6 +1,5 @@
 /*
- * Modifications Copyright 1993, 1994, 1995, 1996, 2000, 2001, 2002, 2003,
- *   2004, 2005, 2007 by Paul Mattes.
+ * Modifications Copyright 1993-2008 by Paul Mattes.
  * Original X11 Port Copyright 1990 by Jeff Sparkes.
  *   Permission to use, copy, modify, and distribute this software and its
  *   documentation for any purpose and without fee is hereby granted,
