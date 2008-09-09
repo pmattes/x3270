@@ -37,12 +37,7 @@ LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
           OBJS1 = $(VOBJS) version.o
           FONTS = FontObj(3270-12) FontObj(3270-12b) FontObj(3270-20) \
 		  FontObj(3270-20b) FontObj(3270) FontObj(3270b) \
-		  FontObj(3270e-12) FontObj(3270e-12b) \
-		  FontObj(3270e-20) FontObj(3270e-20b) FontObj(3270e) \
-		  FontObj(3270eb) FontObj(3270egt12) FontObj(3270egt12b) \
-		  FontObj(3270egt16) FontObj(3270egt16b) FontObj(3270egt24) \
-		  FontObj(3270egt24b) FontObj(3270egt32) FontObj(3270egt32b) \
-		  FontObj(3270egt8) FontObj(3270gr) FontObj(3270gt12) \
+		  FontObj(3270gr) FontObj(3270gt12) \
 		  FontObj(3270gt12b) FontObj(3270gt16) FontObj(3270gt16b) \
 		  FontObj(3270gt24) FontObj(3270gt24b) FontObj(3270gt32) \
 		  FontObj(3270gt32b) FontObj(3270gt8) FontObj(3270h)
@@ -100,21 +95,6 @@ FontTarget(3270-20)
 FontTarget(3270-20b)
 FontTarget(3270)
 FontTarget(3270b)
-FontTarget(3270e-12)
-FontTarget(3270e-12b)
-FontTarget(3270e-20)
-FontTarget(3270e-20b)
-FontTarget(3270e)
-FontTarget(3270eb)
-FontTarget(3270egt12)
-FontTarget(3270egt12b)
-FontTarget(3270egt16)
-FontTarget(3270egt16b)
-FontTarget(3270egt24)
-FontTarget(3270egt24b)
-FontTarget(3270egt32)
-FontTarget(3270egt32b)
-FontTarget(3270egt8)
 FontTarget(3270gr)
 FontTarget(3270gt12)
 FontTarget(3270gt12b)

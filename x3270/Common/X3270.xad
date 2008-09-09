@@ -1,5 +1,4 @@
-! Copyright 1995, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
- !   2008 by Paul Mattes.
+! Copyright 1995-2008 by Paul Mattes.
 !  Permission to use, copy, modify, and distribute this software and its
 !  documentation for any purpose and without fee is hereby granted,
 !  provided that the above copyright notice appear in all copies and that
@@ -250,14 +249,14 @@ x3270.emulatorFontList.3270cg-1a,3270cg-1,iso10646-1,iso8859-1: \
 					20-point Font: #resize 3270-20\n\
 					24-point Font: #resize 3270gt24\n\
 					32-point Font: #resize 3270gt32
-x3270.emulatorFontList.3270cg-15a,3270cg-15,iso10646-1,iso8859-15: \
-					3270 Font (14 point): #resize 3270e\n\
-					8-point Font: #resize 3270egt8\n\
-					12-point Font: #resize 3270e-12\n\
-					16-point Font: #resize 3270egt16\n\
-					20-point Font: #resize 3270e-20\n\
-					24-point Font: #resize 3270egt24\n\
-					32-point Font: #resize 3270egt32
+x3270.emulatorFontList.3270cg-1a,3270cg-1,iso10646-1,iso8859-15: \
+					3270 Font (14 point): #resize 3270\n\
+					8-point Font: #resize 3270gt8\n\
+					12-point Font: #resize 3270-12\n\
+					16-point Font: #resize 3270gt16\n\
+					20-point Font: #resize 3270-20\n\
+					24-point Font: #resize 3270gt24\n\
+					32-point Font: #resize 3270gt32
 x3270.emulatorFontList.3270cg-1a,iso10646-1:       3270
 x3270.emulatorFontList.3270cg-1a,3270cg-1,iso10646-1,iso8859-1+gb2312.1980-0,iso10646-1: \
 					14-point 3270: 3270+-isas-song ti-medium-r-normal--16-160-72-72-c-160-gb2312.1980-0\n\
