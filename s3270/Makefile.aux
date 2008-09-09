@@ -1,5 +1,4 @@
-# Copyright 1995, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008 by Paul
-#   Mattes.
+# Copyright 1995-2008 by Paul Mattes.
 #  Permission to use, copy, modify, and distribute this software and its
 #  documentation for any purpose and without fee is hereby granted,
 #  provided that the above copyright notice appear in all copies and that
@@ -80,15 +79,3 @@ x3270-script.man: x3270-script.man.m4 man.m4 version.txt
 	./m42man x3270-script x3270-script.man.m4 >$@
 html/x3270-script.html: x3270-script.man.m4 ft.inc html.m4 version.txt
 	./m42html x3270-script x3270-script.man.m4 >$@
-
-ibm1027.c: ibm-1027_P100-1995.ucm mktbl
-	./stripucm.sh ibm-1027_P100-1995.ucm ibm1027 >ibm1027.c
-ibm300.c: ibm-300_P110-1997.ucm mktbl
-	./stripucm.sh ibm-300_P110-1997.ucm ibm300 >ibm300.c
-ibm837.c: ibm-837_P100-2000.ucm mktbl
-	./stripucm.sh ibm-837_P100-2000.ucm ibm837 >ibm837.c
-ibm1385.c: ibm-1385_P100-1997.ucm mktbl
-	./stripucm.sh ibm-1385_P100-1997.ucm ibm1385 >ibm1385.c
-mktbl: mktbl.c
-	$(CC) -o mktbl mktbl.c
-
