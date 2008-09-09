@@ -69,7 +69,7 @@ man: s3270.man x3270if.man x3270-script.man html/s3270-man.html \
 
 s3270.man: x3270.man.m4 resources.inc version.txt man.m4
 	./m42man s3270 x3270.man.m4 >$@
-html/s3270-man.html: x3270.man.m4 version.txt html.m4
+html/s3270-man.html: x3270.man.m4 resources.inc version.txt html.m4
 	./m42html s3270 x3270.man.m4 >$@
 x3270if.man: x3270if.man.m4 man.m4 version.txt
 	./m42man x3270if x3270if.man.m4 >$@
