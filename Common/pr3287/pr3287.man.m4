@@ -170,7 +170,7 @@ XX_BR
 RFC 2355, TN3270 Enhancements
 XX_SH(Copyrights)
 XX_LP
-Modifications Copyright`' XX_COPY()1993-1996, 1997, 1999-2005, 2007 by Paul Mattes.
+Modifications Copyright`' XX_COPY()1993-2008 by Paul Mattes.
 XX_BR
 Original X11 Port Copyright`'XX_COPY()1990 by Jeff Sparkes.
 XX_RS(`Permission to use, copy, modify, and distribute this software and its
