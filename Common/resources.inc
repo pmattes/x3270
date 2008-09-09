@@ -1,4 +1,4 @@
-snl Copyright 2000, 2001, 2002, 2007 by Paul Mattes.
+dnl Copyright 2000-2008 by Paul Mattes.
 dnl  Permission to use, copy, modify, and distribute this software and its
 dnl  documentation for any purpose and without fee is hereby granted,
 dnl  provided that the above copyright notice appear in all copies and that
