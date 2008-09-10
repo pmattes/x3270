@@ -142,7 +142,6 @@ typedef struct {
 #if defined(X3270_DISPLAY) /*[*/
 	char	*efontname;
 	char	*fixed_size;
-	char	*debug_font;
 	char	*icon_font;
 	char	*icon_label_font;
 	int	save_lines;
