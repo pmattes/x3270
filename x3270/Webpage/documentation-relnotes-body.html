@@ -1,29 +1,128 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
 3.3 is the current development line for the x3270 suite.
-<h2>Changes in x3270 3.3.8, Nn. Mon 2008</h2>
+<h2>Changes in version 3.3.8, xx September 2008</h2>
+Version 3.3.8 includes a significant internal change, using Unicode for all
+translations between the host and the local workstation.
+This change should be
+transparent, but users who depended on certain behaviors of the old
+implementation may see unexpected differences.
+<h3>Common Changes</h3>
 <ul>
-  <li>New Features:
-    <ul>
-     <li>Added a <b>-v</b> option to display the version and build options.</li>
-     <li>Added a <b>Source</b> action to read script commands from a file.</li>
-     <li>Added a 10 second timeout to the start of the <b>Transfer</b>
-      action.</li>
-     <li>Added an <b>unlockDelayMs</b> resource to change the number of
-      milliseconds of delay before atually unlocking the keyboard after the
-      host requests it. The default is 350; use 0 to disable the delay
-      altogether.</li>
-     <li>Commands entered into the <b>Print Screen Text</b> dialog are
-      now saved by the <b>Save Changed Options in File</b> option.
-    </ul>
-  </li>
-  <li>Bug Fixes:
-   <ul>
-    <li><b>x3270</b> no longer uses the <b>ICU</b> library.</li>
-    <li>Fixed some bad interactions between the pop-up keypad and the GNOME
-     window manager.</li>
-    <li>IND$FILE file transfer now transfers DBCS text files properly.</li>.
-   </ul>
-  </li>
+ <li>Many more EBCDIC characters, such as Graphics Escape line-drawing and APL
+  characters, are now properly displayed (even without special 3270 fonts),
+  traced, cut/pasted with other applications, and returned by scripting actions
+  like <b>Ascii</b>.
+  local character set.</li>
+ <li>With two exceptions, the locale's encoding is now observed consistently
+  when reading keymaps, generating trace files, etc.
+  The exceptions are:
+  <ul>
+   <li><b>tcl3270</b> always uses UTF-8, per the internal Tcl convention.</li>
+   <li>Because Cygwin doesn't really support locales, the Windows ANSI code
+    page is used as the local encoding instead.</li>
+   <li>Stateful encodings such as ISO 2022 are untested and very likely do
+    not work.</li>
+  </ul>
+ <li>The ICU library is no longer used, and ICU <b>.cnv</b> files are no longer
+  included with the code.</li>
+ <li>Translation to/from the local encoding requires one of two facilities:
+  Either <b>libc</b> must support <tt>__STDC_ISO_10646__</tt> (<b>wchar_t</b>s
+  are defined to be unicode values, as on Linux and Windows), or there must be
+  an <b>iconv</b> library that can translate between UTF-8 and all local
+  encodings.</li>
+ <li>DBCS support is enabled by default, except on Windows.
+  It can be explicitly
+  disabled in the <b>configure</b> script to reduce the size of the
+  executable (removing several large translation tables).</li>
+ <li>The <b>-v</b>/<b>--verbose</b> option has been added to display build and
+  copyright information.</li>
+</ul>
+<h3>Changes Common to the 3270 Terminal Emulators</h3>
+<ul>
+ <li>The <b>Key</b> action now accepts Unicode arguments in the form
+  <b>U+<i>nnnn</i></b>, removing possible ambiguity from translating from the
+ <li>Added a <b>Source</b> action to read script commands from a file.</li>
+ <li> Added a 10 second timeout to the start of the <b>Transfer</b> action.</li>
+ <li>Added an <b>unlockDelayMs</b> resource to change the number of
+  milliseconds of delay before atually unlocking the keyboard after the
+  host requests it. The default is 350; use 0 to disable the delay
+  altogether.</li>
+ <li>IND$FILE file transfer now transfers DBCS text files properly.</li>
+</ul>
+<h3>Changes Common to 3287 Printer Emulators</h3>
+<ul>
+ <li>Added direct support for all <b>x3270</b> host character sets via the
+  <b>-charset</b> option.
+ <li>Added <b>-trnpre</b> and <b>-trnpost</b> options to specify files
+  containing transparent data to send to the printer before and after
+  each print job, respectively.</li>
+</ul>
+<h3>Product-Speific Changes</h3>
+<ul>
+ <li>[<i>x3270</i>] Commands entered into the <b>Print Screen Text</b> dialog
+  are now saved by the <b>Save Changed Options in File</b> option.
+ <li>[<i>x3270</i>] Fixed some bad interactions between the pop-up keypad and
+  the GNOME window manager.</li>
+ <li>[<i>x3270</i>] The Euro fonts have been folded into the standard
+  fonts.</li>
+ <li>[<i>x3270</i>] The font menu is now arranged hierarchically by
+  foundry and family.</li>
+ <li>[<i>c3270</i>] Added an <b>underscore</b> toggle to allow underlined
+  fields to be displayed even on consoles with no native underlining
+  support, by substituting underscore '_' characters for blanks and nulls
+  in underlined fields.</li>
+ <li>[<i>c3270</i>] Overhauled <b>Meta</b> and <b>Alt</b> key support.
+  Removed support for the archaic <b>Meta</b> modifier in keymaps (it was an
+  alias for setting bit 0x80 in each key).  Replaced it with an <b>Alt</b>
+  modifier, which matches the <b>ESC</b> sequence sent for the <b>Alt</b> key
+  by many terminals, and which can be combined with full 8-bit input
+  characters.<li>
+ <li>[<i>c3270</i>] Changed the interpretation of keymaps so that keys and
+  symbols are matched in Unicode.  That is, keymap text is converted from the
+  current locale's encoding to Unicode before matching, and input character
+  codes are converted to Unicode before matching.  This eliminates the
+  difficulty in creating keymaps and interpreting traces in non-Latin-1
+  locales -- needing to translate from the accidental interpretation of
+  8-bit values as Latin-1 when they are not -- but with the side-effect
+  of rendering some carefully-crafted existing keymaps invalid.  Keymaps
+  can also be written using Unicode <b>U+<i>nnnn</i></b> notation.</li>
+ <li>[<i>c3270</i>] Changed the <b>metaEscape</b> resource so that <b>auto</b>
+  means <b>on</b>, instead of using the terminfo <b>km</b> resource.</li>
+ <li>[<i>c3270</i>] Added an <b>acs</b> resource to control the use of curses
+  ACS codes.
+  If <b>c3270.acs</b> is set to <b>true</b> (the default), <b>c3270</b>
+  will use curses ACS codes for line-drawing characters.  If set to
+  <b>false</b>, it will display line-drawing characters with Unicode.</li>
+ <li>[<i>wc3270</i>] Added an <b>underscore</b> toggle to control how
+  underlined and blinking fields are displayed.  If it is set (the default),
+  underlined fields are displayed by substituting underscore (_)
+  characters for blanks and nulls, and blinking fields actually blink.
+  If it is clear, underlined and blinking fields are displayed with
+  highlighted backgrounds, which is compatible with previous verions of
+  <b>wc3270</b>.</li>
+ <li>[<i>wc3270</i>] Left-clicking with the mouse will now move the cursor
+  to that location.</li>
+ <li>[<i>wc3270</i>] The <b>PrintText</b> action now works, and is mapped by
+  default to the sequence <b>Alt &lt;Key&gt;p</b>.
+  The <b>printer.name</b> resource defines the default printer to use.</li>
+ <li>[<i>wc3270</i>] The <b>PrintText</b> action can now be used to produce
+  a RichText snapshot of the screen contents, via the <b>rtf</b> keyword.</li>
+ <li>[<i>wc3270</i>] The program longer attempts to set the console code page,
+  which was error-prone and unnecessary.</li>
+ <li>[<i>wc3270</i>] The <i>idle command</i> feature now works, controlled
+  by the <b>idleCommand</b>, <b>idleCommandEnabled</b> and <b>idleTimeout</b>
+  resources.</li>
+ <li>[<i>wc3270</i>] The program no longer attempts to set the console code
+  page, which could lead to hangs on Vista.</li>
+ <li>[<i>wc3270</i>] The installation now creates a program group item to
+  explore the <b>wc3270</b> Application Data directory.</li>
+ <li>[<i>tcl3270</i>] Added a <b>commandTimeout</b> resource to force any
+  <b>Tcl3270</b> command to time out after the specified number of seconds.
+  (Thanks to Mark Young.)</li>
+ <li>[<i>tcl3270</i>] Fixed a per-command memory leak. (Thanks to Mark
+  Young.)</li>
+ <li>[<i>wpr3287</i>] Added a <b>-printercp</b> option to specify a particular
+  code page for printer output.</li>
 </ul>
 <h2>Changes in x3270 3.3.7, 25. December 2007</h2>
 <ul>
@@ -52,53 +151,6 @@
       <b>Key</b> and <b>String</b> actions, etc.) must be UTF-8 encoded.
       In addition, the NVT-mode xterm/VT100 emulator will expect UTF-8.</li>
       <li>Added a <b>SelectAll</b> action, mapped to Ctrl-A.</li>
-    </ul>
-  </li>
-</ul>
-<h2>Changes in c3270 3.3.8, Nn. Mon 2008</h2>
-<ul>
-  <li>New Features:
-    <ul>
-      <li>Added an <b>underscore</b> toggle to allow underlined fields to be
-       displayed even on consoles with no native underlining support.</li>
-     <li>Added a <b>-v</b> option to display the version and build options.</li>
-     <li>Added a <b>Source</b> action to read script commands from a file.</li>
-     <li>Added a 10 second timeout to the start of the <b>Transfer</b>
-      action.</li>
-     <li>Added an <b>unlockDelayMs</b> resource to change the number of
-      milliseconds of delay before atually unlocking the keyboard after the
-      host requests it. The default is 350; use 0 to disable the delay
-      altogether.</li>
-     <li>Overhauled <b>Meta</b> and <b>Alt</b> key support.  Removed support
-      for the archaic <b>Meta</b> modifier in keymaps (it was an alias for
-      setting bit 0x80 in each key).  Replaced it with an <b>Alt</b> modifier,
-      which matches the <b>ESC</b> sequence sent for the <b>Alt</b> key by
-      many terminals, and which can be combined with full 8-bit input
-      characters.<li>
-     <li>Changed the interpretation of keymaps so that keys and symbols are
-      matched in Unicode.  That is, keymap text is converted from the current
-      locale's encoding to Unicode before matching, and input character codes
-      are converted to Unicode before matching.  This eliminates the
-      difficulty in creating keymaps and interpreting traces in non-Latin-1
-      locales -- needing to translate from the accidental interpretation of
-      8-bit values as Latin-1 when they are not -- but with the side-effect
-      of rendering some carefully-crafted existing keymaps invalid.  The pain
-      is worth it, however.  Keymaps can now be freely written using the
-      current locale's encoding or with <b>U+<i>nnnn</i></b> notation; that
-      value now represents the actual key pressed and is now traced
-      consistently and correctly.</li>
-     <li>Changed the <b>metaEscape</b> resource so that <b>auto</b>
-      means <b>on</b>, instead of using the terminfo <b>km</b> resource.</li>
-     <li>Added an <b>acs</b> resource to control the use of curses ACS codes.
-      If <b>c3270.acs</b> is set to <b>true</b> (the default), <b>c3270</b>
-      will use curses ACS codes for line-drawing characters.  If set to
-      <b>false</b>, it will display line-drawing characters with Unicode.</li>
-    </ul>
-   </li>
-   <li>Bug Fixes:
-    <ul>
-     <li><b>c3270</b> no longer uses the <b>ICU</b> library.</li>
-     <li>IND$FILE file transfer now transfers DBCS text files properly.</li>.
     </ul>
   </li>
 </ul>
@@ -148,45 +200,6 @@ c3270.cursesColorForProtectedIntensified
        </pre>
        The value for each of these is a curses color number (0 through 7).</li>
     </ul>
-  </li>
-</ul>
-<h2>Changes in wc3270 3.3.8, Nn. Mon 2008</h2>
-<ul>
-  <li>New Features:
-    <ul>
-      <li>Added an <b>underscore</b> toggle to control how underlined and
-       blinking fields are displayed.  If it is set (the default),
-       underlined fields are displayed by substituting underscore (_)
-       characters for blanks and nulls; blinking fields actually blink.
-       If it is clear, underlined and blinking fields are displayed with
-       highlighted backgrounds, which is compatible with previous verions of
-       <b>wc3270</b>.</li>
-      <li>Left-clicking with the mouse will now move the cursor to that
-       location.</li>
-      <li>The <b>PrintText</b> action can now be used to produce a RichText
-       snapshot of the screen contents, via the <b>rtf</b> keyword.</li>
-     <li>Added a <b>-v</b> option to display the version and build options.</li>
-     <li>Added a <b>Source</b> action to read script commands from a file.</li>
-     <li>Added a 10 second timeout to the start of the <b>Transfer</b>
-      action.</li>
-     <li>Added an <b>unlockDelayMs</b> resource to change the number of
-      milliseconds of delay before atually unlocking the keyboard after the
-      host requests it. The default is 350; use 0 to disable the delay
-      altogether.</li>
-    </ul>
-  </li>
-  <li>Bug Fixes:
-   <ul>
-    <li><b>wc3270</b> no longer attempts to set the console code page, which
-     was error-prone and unnecessary.</li>
-    <li>The <b>PrintText</b> action now works, and is mapped by default to
-     the sequence <b>Alt &lt;Key&gt;p</b>.
-     The <b>printer.name</b> resource defines the default printer to use.</li>
-    <li>The <i>idle command</i> feature now works, controlled by the
-     <b>idleCommand</b>, <b>idleCommandEnabled</b> and <b>idleTimeout</b>
-     resources.</li>
-    <li>IND$FILE file transfer now transfers DBCS text files properly.</li>.
-   </ul>
   </li>
 </ul>
 <h2>Changes in wc3270 3.3.7, 25. December 2007</h2>
@@ -243,27 +256,6 @@ wc3270.hostColorForProtectedIntensified
     </ul>
   </li>
 </ul>
-<h2>Changes in s3270 3.3.8, Nn. Mon 2008</h2>
-<ul>
-  <li>New Features:
-    <ul>
-     <li>Added a <b>-v</b> option to display the version and build options.</li>
-     <li>Added a <b>Source</b> action to read script commands from a file.</li>
-     <li>Added a 10 second timeout to the start of the <b>Transfer</b>
-      action.</li>
-     <li>Added an <b>unlockDelayMs</b> resource to change the number of
-      milliseconds of delay before atually unlocking the keyboard after the
-      host requests it. The default is 350; use 0 to disable the delay
-      altogether.</li>
-    </ul>
-  </li>
-  <li>Bug Fixes:
-   <ul>
-    <li><b>s3270</b> no longer uses the <b>ICU</b> library.</li>
-    <li>IND$FILE file transfer now transfers DBCS text files properly.</li>.
-   </ul>
-  </li>
-</ul>
 <h2>Changes in s3270 3.3.7, 25. December 2007</h2>
 <ul>
   <li>Bug Fixes:
@@ -286,30 +278,6 @@ wc3270.hostColorForProtectedIntensified
     </ul>
   </li>
 </ul>
-<h2>Changes in tcl3270 3.3.8, Nn. Mon 2008</h2>
-<ul>
-  <li>New Features:
-    <ul>
-     <li>Added a <b>-v</b> option to display the version and build options.</li>
-     <li>Added a <b>commandTimeout</b> resource to force any <b>Tcl3270</b>
-      command to time out after the specified number of seconds. (Thanks to
-      Mark Young.)</li>
-     <li>Added an <b>unlockDelayMs</b> resource to change the number of
-      milliseconds of delay before atually unlocking the keyboard after the
-      host requests it. The default is 350; use 0 to disable the delay
-      altogether.</li>
-    </ul>
-  </li>
-  <li>Bug Fixes:
-   <ul>
-    <li><b>tcl3270</b> no longer uses the <b>ICU</b> library.</li>
-    <li>Added a 10 second timeout to the start of the <b>Transfer</b>
-     action.</li>
-    <li>Fixed a per-command memory leak (thanks to Mark Young).</li>
-    <li>IND$FILE file transfer now transfers DBCS text files properly.</li>.
-   </ul>
-  </li>
-</ul>
 <h2>Changes in tcl3270 3.3.7, 25. December 2007</h2>
 <ul>
   <li>Bug Fixes:</li>
@@ -327,39 +295,12 @@ wc3270.hostColorForProtectedIntensified
     </ul>
   </li>
 </ul>
-<h2>Changes in pr3287 3.3.8, Nn. Mon 2008</h2>
-<ul>
- <li>New Features:
-  <ul>
-   <li>Added direct support for all <b>x3270</b> host character sets via the
-    <b>-charset</b> option.
-  </ul>
- </li>
- <li>Bug Fixes:
- </li>
-</ul>
 <h2>Changes in pr3287 3.3.7, 25. December 2007</h2>
 <ul>
  <li>New Features:
   <ul>
    <li>Added proxy support via the <b>-proxy</b> option.</li>
   </ul>
- </li>
-</ul>
-<h2>Changes in wpr3287 3.3.8, Nn. Mon 2008</h2>
-<ul>
- <li>New Features:
-  <ul>
-   <li>Added <b>-trnpre</b> and <b>-trnpost</b> options to specify files
-    containing transparent data to send to the printer before and after
-    each print job, respectively.</li>
-   <li>Added a <b>-printercp</b> option to specify a particular code page for
-    printer output.</li>
-   <li>Added direct support for all <b>wc3270</b> host character sets via the
-    <b>-charset</b> option.
-  </ul>
- </li>
- <li>Bug Fixes:
  </li>
 </ul>
 <h2>Changes in wpr3287 3.3.7, 25. December 2007</h2>
