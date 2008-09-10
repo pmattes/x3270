@@ -167,8 +167,6 @@ XtResource resources[] = {
 	  offset(charset), XtRString, "bracket" },
 	{ ResTermName, ClsTermName, XtRString, sizeof(char *),
 	  offset(termname), XtRString, 0 },
-	{ ResDebugFont, ClsDebugFont, XtRString, sizeof(char *),
-	  offset(debug_font), XtRString, "3270d" },
 	{ ResIconFont, ClsIconFont, XtRString, sizeof(char *),
 	  offset(icon_font), XtRString, "nil2" },
 	{ ResIconLabelFont, ClsIconLabelFont, XtRString, sizeof(char *),

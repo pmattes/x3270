@@ -74,42 +74,6 @@ x3270.charset		Default bracket		Switch -charset
     This defines the host EBCDIC character set, that is, what glyph (image) is
     displayed for each EBCDIC code sent by the host.
 
-    For each host character set <i>x</i>, an additional resource by the name of
-    charset.<i>x</i> must be defined.  Optionally, resources by the name of
-    codepage.<i>x</i> and displayCharset.<i>x</i> may be defined.
-
-x3270.charset.us-intl
-x3270.charset.us
-x3270.charset.apl
-x3270.charset.bracket
-x3270.charset.oldibm
-x3270.charset.german
-x3270.charset.finnish
-x3270.charset.uk
-x3270.charset.norwegian
-x3270.charset.french
-x3270.charset.hebrew
-    Individual host character set definitions.  These resources take one of two
-    forms: a set of exceptions (differences from the U.S. English host
-    character set), or a full EBCDIC-to-display-code translation table.
-
-    If the first token in the resouce is "#table", then it is interpreted as
-    a full table.  It must consist of 256 whitespace-separated values, each
-    giving the display code for the corresponding EBCDIC code.
-
-    If the first token is not "#table", then it is interpreted as a series
-    of newline-separated strings that define how an EBCDIC national character
-    set differs from IBM's standard U.S. English set (codepage 37).  Each
-    string is a number, a colon, and a symbol.  The number is the EBCDIC code
-    in decimal, and the symbol is a single character, the ISO Latin-1 name of
-    the graphic it represents, or a hexadecimal number in the form 0xnn.
-
-    In either style of definition, the display code can be preceded by an
-    asterisk "*" to indicate a one-way translation.  One-way translations
-    are used when multiple EBCDIC codes are displayed with the same display
-    code.  The entry without the asterisk is used to define how that one
-    display code is translated back to EBCDIC.
-
 x3270.charsetList	Default U.S. International: us-intl
 				Bracket: bracket
 				German: german
@@ -120,16 +84,6 @@ x3270.charsetList	Default U.S. International: us-intl
 				Hebrew: hebrew
     Defines the "Character Set" pull-right menu.  Can contain '>' characters
     to define a menu hierarchy.
-
-x3270.codepage.<i>hostCharset</i>	Default 37
-    Code page definitions for various host character sets.  If x3270.charset is
-    <i>x</i>, then x3270.codepage.<i>x</i> defines the IBM code page reported to the
-    host in a Query Reply.  The default code page is 37.  The base character
-    set and the code page are combined into a CGCSGID reported to the host.  If
-    the value of x3270.codepage.<i>x</i> is a 16-bit number (less than 65536), then
-    the code page is combined with the default base character set of 697 to
-    form the CGCSGID.  If the value of x3270.codepage.<i>x</i> is greater than 16
-    bits, then it specifies the entire CGCSGID reported to the host.
 
 x3270.color8		Default False
     If set to True, x3270 will respond to a Query(Color) with a list of 8
@@ -224,15 +178,6 @@ x3270.cursorPos		Default true		Switch -set cursorPos
     When set to true, causes x3270 to display the cursor location on the
     status line.
 
-x3270.debugFont		Default 3270d
-    The name of the font recognized as the "debug" font.  (When x3270 thinks
-    it is using a debug font, it uses a different, slower method to draw the
-    screen.)  It is assumed that this is a 3270 font (one with the same
-    ordering as 3270 and 3270-12), but with printable graphics in place of
-    the NULL and field attribute characters, which are normally blank.
-
-    Usually, the "Debug Font" menu option selects this font.
-
 x3270.debugTracing	Default true
     If set to true, options are available on the File menu to trace the 3270
     data stream and X events.  If set to false, these options are not
@@ -245,15 +190,6 @@ x3270.dftBufferSize	Default 4096
 
 x3270.disconnectClear	Default false
     If set to true, x3270 will clear the screen when a host disconnects.
-
-x3270.displayCharset.<i>hostCharset</i>	Default iso8859-1
-    Defines the display character set that the x3270.emulatorFont must
-    implement, in order for x3270 to display all characters that the host can
-    generate.  If x3270.charset is <i>x</i>, then x3270.displayCharset.<i>x</i> defines
-    the display character set.  If the x3270.emulatorFont does not implement
-    the specified display character set, x3270 will try to use a different
-    font, and if none is available, will reject the host character set
-    definition.
 
 x3270.doConfirms	Default true
     When set to true, x3270 will display a pop-up to report successful
