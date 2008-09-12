@@ -1,0 +1,66 @@
+# Copyright 1995-2008 by Paul Mattes.
+#  Permission to use, copy, modify, and distribute this software and its
+#  documentation for any purpose and without fee is hereby granted,
+#  provided that the above copyright notice appear in all copies and that
+#  both that copyright notice and this permission notice appear in
+#  supporting documentation.
+#
+# ws3270 is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+
+# Auxiliary makefile for ws3270
+
+TARDIR=ws3270-3.3
+RM=rm -f
+
+all:
+	@echo "Must pick a specific make target."
+
+# Development tools.
+
+SOURCES = XtGlue.c actions.c ansi.c apl.c charset.c ctlr.c ft.c ft_cut.c \
+	ft_dft.c glue.c host.c idle.c kybd.c macros.c print.c printer.c \
+	proxy.c resolver.c resources.c rpq.c see.c sf.c smain.c strtok_r.c \
+	tables.c telnet.c toggles.c trace_ds.c utf8.c util.c w3misc.c \
+	windirs.c winvers.c xio.c unicode.c shellfolder.c
+HEADERS = 3270ds.h actionsc.h ansic.h aplc.h appres.h cg.h charsetc.h \
+	childc.h conf.h ctlr.h ctlrc.h dialogc.h ftc.h ft_cutc.h ft_cut_ds.h \
+	ft_dftc.h ft_dft_ds.h globals.h gluec.h hostc.h idlec.h keymapc.h \
+	keypadc.h kybdc.h localdefs.h macrosc.h menubarc.h objects.h \
+	popupsc.h printc.h proxyc.h resolverc.h resources.h savec.h screen.h \
+	screenc.h scrollc.h seec.h selectc.h sfc.h statusc.h tablesc.h \
+	arpa_telnet.h telnetc.h tn3270e.h togglesc.h trace_dsc.h unicodec.h \
+	utf8c.h utilc.h w3miscc.h windirsc.h winversc.h xioc.h \
+	xl.h X11/keysym.h unicode_dbcsc.h shellfolderc.h
+MISC = Makefile version.txt mkversion.sh README.txt Examples/cms_cmd.expect \
+	x3270_glue.expect mkfb.c X3270.xad LICENSE.txt ws3270.rc ws3270.ico
+DEVKIT = Makefile.aux m42man m42html instlist.base
+HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
+	html/Lineage.html html/New.html html/README.html html/Wishlist.html \
+	html/ws3270-man.html html/x3270-script.html
+FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
+
+tarlist: Makefile.aux
+	$(RM) tarlist
+	for i in $(FILES); \
+	do echo $(TARDIR)/$$i; \
+	done >$@
+
+ws3270.tar: $(FILES) tarlist
+	$(RM) $(TARDIR)
+	ln -s . $(TARDIR)
+	$(RM) $@
+	#tar -cof $@ -I tarlist
+	tar -ch -T tarlist -f $@
+	$(RM) $(TARDIR)
+
+ws3270.tgz: ws3270.tar
+	gzip <ws3270.tar >$@
+
+man: html/ws3270-man.html html/x3270-script.html
+
+html/ws3270-man.html: x3270.man.m4 version.txt html.m4 hostname.inc
+	./m42html ws3270 x3270.man.m4 >$@
+html/x3270-script.html: x3270-script.man.m4 ft.inc html.m4 version.txt
+	./m42html x3270-script x3270-script.man.m4 >$@
