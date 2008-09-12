@@ -1,8 +1,5 @@
-#!/bin/sh
-# \
-exec tclsh "$0" ${1+"$@"}
-
-# Copyright 2000-2008 by Paul Mattes.
+#!/usr/bin/expect
+# Copyright 2000, 2001, 2004 by Paul Mattes.
 #  Permission to use, copy, modify, and distribute this software and its
 #  documentation for any purpose and without fee is hereby granted,
 #  provided that the above copyright notice appear in all copies and that
@@ -12,9 +9,6 @@ exec tclsh "$0" ${1+"$@"}
 # s3270 is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
-
-# Add the Expect module.
-package require Expect
 
 # Read in the glue functions.
 source x3270_glue.expect
@@ -114,7 +108,7 @@ proc cms_cmd {text} {
 # Set 'verbose' to 1 to get debug output from the glue functions.
 set verbose 0
 
-# Start ws3270
+# Start s3270
 Start
 # Setverbose 1
 
