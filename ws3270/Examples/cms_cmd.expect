@@ -1,0 +1,163 @@
+#!/bin/sh
+# \
+exec tclsh "$0" ${1+"$@"}
+
+# Copyright 2000-2008 by Paul Mattes.
+#  Permission to use, copy, modify, and distribute this software and its
+#  documentation for any purpose and without fee is hereby granted,
+#  provided that the above copyright notice appear in all copies and that
+#  both that copyright notice and this permission notice appear in
+#  supporting documentation.
+#
+# s3270 is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+
+# Add the Expect module.
+package require Expect
+
+# Read in the glue functions.
+source x3270_glue.expect
+
+# Pluck the username, password and command from the command line.
+if {$argc != 4} {
+	puts stderr "Usage: $argv0 hostname username password command"
+ 	exit 1
+}
+set hostname [lindex $argv 0]
+set username [lindex $argv 1]
+set password [lindex $argv 2]
+set command [lindex $argv 3]
+
+# Procedure to wait for a READ prompt from CMS or CP.
+proc waitread {} {
+	Snap Save
+	while {[Snap Ascii [expr [Snap Rows]-1] [expr [Snap Cols]-17] 4]
+			!= "READ"} {
+		Snap Wait Output
+	}
+}
+
+# Procedure to check for the CMS "Ready" prompt.
+# Returns its row number, or -1 for "MORE..." state, and leaves a screen with
+# data to read in the Snap buffer.
+proc cmd_done {} {
+	global verbose
+	Snap Save
+	while {1} {
+		if {[Snap Ascii [expr [Snap Rows]-1] [expr [Snap Cols]-20] 7]
+				== "MORE..."} {
+			if {$verbose} {puts "MORE..."}
+			return -1
+		}
+		set i [expr [Snap Rows]-2]
+		while {$i >= 0} {
+			set text [Snap Ascii $i 0 [Snap Cols]]
+			switch -regexp $text {
+				"Ready; T=.*" {return $i}
+				"Ready\(.*\); T=.*" {
+					error [Snap Ascii [expr $i-1] 0 \
+						[Snap Cols]]
+				}
+				"^ *\$" {}
+				default {
+					if {$verbose} {puts "Incomplete $i '[string trimright $text]'"}
+					set i 0
+				}
+			}
+			incr i -1
+		}
+		Snap Wait Output
+	}
+}
+
+# Execute a command, return the output.
+proc cms_cmd {text} {
+	global verbose
+
+	# Clear the screen.
+	Clear
+
+	# Send the command.
+	String "$text\n"
+
+	# 'first' is the row where the first line of output will appear.  For
+	# the first screenful it's 1; after that it's 0.
+	set first 1
+
+	# r is the result.
+	set r {}
+
+	while {1} {
+		# Wait for a screenful.
+		set d [cmd_done]
+
+		# Dump out what's there.
+		set i $first
+		set first 0
+		if {$d < 0} {set last [expr [Snap Rows]-2]} {set last $d}
+		while {$i < $last} {
+			set r [linsert $r end [string trimright \
+				[Snap Ascii $i 0 [Snap Cols]]]]
+			incr i
+		}
+		if {$d >= 0} {break}
+
+		# Clear the screen and go around again.
+		Clear
+	}
+	return $r
+}
+
+# Start of main procedure.
+
+# Set 'verbose' to 1 to get debug output from the glue functions.
+set verbose 0
+
+# Start ws3270
+Start
+# Setverbose 1
+
+# Connect to the host and wait for an input field.
+Connect $hostname
+Wait InputField
+
+# Log in and wait for CP READ or VM READ mode.
+String "$username\t$password\n"
+waitread
+
+# If we can't log on, we're hosed.
+if {[Ascii 1 11 7] == "Already"} {
+	puts stderr "Can't run -- already logged in."
+	exit 1
+}
+
+# If we're in CP mode, which means we disconnected last time, boot CMS.
+if {[Ascii [expr [Rows]-1] [expr [Cols]-20] 2] == "CP"} {
+	Clear
+	String "i cms\n"
+	waitread
+}
+
+# Enter an empty command to get a CMS prompt.  If we don't do this, there will
+# be a Ready prompt as the first line of output below.
+Clear
+Enter
+cmd_done
+
+# Get the output of the user's command and display it.
+if {[catch {cms_cmd $command} result]} {
+	puts stderr $result
+	set rc 1
+} {
+	for {set i 0} {$i < [llength $result]} {incr i} {
+		puts [lindex $result $i]
+	}
+	set rc 0
+}
+
+# Log off, and wait for the host to hang up on us, so we don't unintentionally
+# create a disconnected session.
+Clear
+if {! [catch {String "logoff\n"}]} {Wait Disconnect}
+exit $rc
