@@ -749,7 +749,6 @@ static struct {
 #endif /*]*/
 	{ ResExtended,	offset(extended),	XRM_BOOLEAN },
 #if defined(X3270_FT) /*[*/
-	{ ResFtCommand,	offset(ft_command),	XRM_STRING },
 	{ ResDftBufferSize,offset(dft_buffer_size),XRM_INT },
 #endif /*]*/
 #if defined(WC3270) /*[*/

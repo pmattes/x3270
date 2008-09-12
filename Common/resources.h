@@ -69,8 +69,6 @@
 #define ResEventTrace		"eventTrace"
 #define ResExtended		"extended"
 #define ResFixedSize		"fixedSize"
-#define ResFtCharset		"ftCharset"
-#define ResFtCommand		"ftCommand"
 #define ResHighlightBold	"highlightBold"
 #define ResHighlightUnderline	"highlightUnderline"
 #define ResHostColorFor		"hostColorFor"
