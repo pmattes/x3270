@@ -306,9 +306,6 @@ x3270.fixedSize
     for the x3270 display.  The 3270 emulator will float in the center of the
     window, if need be.
 
-x3270.ftCommand		Default ind$file
-    Defines the host command used to transfer files.
-
 x3270.foreground	Default black		Switches: -fg, -rv
     The foreground color for menus, buttons, and on monochrome X displays, the
     emulator display.
@@ -405,15 +402,12 @@ x3270.keymap.hp-pc
 
 x3270.keymap.ow
 x3270.keymap.apl
-x3270.keymap.alt
 x3270.keymap.t
 x3270.keymap.finnish7
 x3270.keymap.norwegian7
     These are predefined keymap modifiers:
     - "ow" makes the mouse work more like OpenWindows defaults
     - "apl" is automatically applied when in apl mode (the -apl switch is used)
-    - "alt" maps many of the "Meta" key actions to "Alt" key actions, for
-	keyboards which lack a "Meta" key
     - "t" is useful for keymap debugging; it maps Meta-z to an action that
 	displays the current keymap
     - "finnish7" and "norwegian7" are for compatibility with certain 7-bit

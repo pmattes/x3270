@@ -196,8 +196,6 @@ XtResource resources[] = {
 	{ ResColorScheme, ClsColorScheme, XtRString, sizeof(String),
 	  offset(color_scheme), XtRString, "default" },
 #if defined(X3270_FT) /*[*/
-	{ ResFtCommand, ClsFtCommand, XtRString, sizeof(String),
-	  offset(ft_command), XtRString, 0 },
 	{ ResDftBufferSize, ClsDftBufferSize, XtRInt, sizeof(int),
 	  offset(dft_buffer_size), XtRString, "4096" },
 #endif /*]*/
