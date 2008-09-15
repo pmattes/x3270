@@ -942,8 +942,6 @@ parse_xrm(const char *arg, const char *where)
 	if (address == NULL) {
 		if (!strncasecmp(ResKeymap ".", arg + match_len,
 		                 strlen(ResKeymap ".")) ||
-		    !strncasecmp(ResDisplayCharset ".", arg + match_len,
-		                 strlen(ResDisplayCharset ".")) ||
 		    !strncasecmp("host.", arg + match_len, 5) ||
 		    !strncasecmp("printer.", arg + match_len, 8) ||
 #if defined(_WIN32) /*[*/
