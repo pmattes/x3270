@@ -4135,6 +4135,62 @@ load_fixed_font(const char *names, const char *reqd_display_charsets)
 }
 
 /*
+ * Load a list of fonts, possibly from the local cache.
+ */
+static char **
+xlfwi(char *pattern, int max_names, int *count_return,
+	XFontStruct **info_return)
+{
+    	struct fi_cache {
+	    struct fi_cache *next;
+	    char *pattern;
+	    char **names;
+	    int count;
+	    XFontStruct *info;
+	};
+	static struct fi_cache *fi_cache = NULL, *fi_last = NULL;
+	struct fi_cache *f;
+	char **names;
+	int count;
+	XFontStruct *info;
+
+	/* Check the cache. */
+	for (f = fi_cache; f != NULL; f = f->next) {
+	    	if (!strcmp(pattern, f->pattern)) {
+#if defined(XLFWI_DEBUG) /*[*/
+		    	printf("xlfwi cache hit on %s\n", pattern);
+#endif /*]*/
+		    	*count_return = f->count;
+			*info_return = f->info;
+		    	return f->names;
+		}
+	}
+#if defined(XLFWI_DEBUG) /*[*/
+	printf("xlfwi no hit on %s\n", pattern);
+#endif /*]*/
+
+	/* Ask the server. */
+	names = XListFontsWithInfo(display, pattern, max_names, &count, &info);
+	if (names == NULL)
+	    	return NULL;
+
+	/* Save the answer and return it. */
+	f = (struct fi_cache *)XtMalloc(sizeof(struct fi_cache));
+	f->pattern = XtNewString(pattern);
+	f->names = names;
+	f->count = *count_return = count;
+	f->info = *info_return = info;
+	f->next = NULL;
+	if (fi_last != NULL)
+	    	fi_last->next = f;
+	else
+	    	fi_cache = f;
+	fi_last = f;
+
+	return names;
+}
+
+/*
  * Load and query one font.
  * Returns NULL (okay) or an error message.
  */
@@ -4164,7 +4220,7 @@ lff_single(const char *name, const char *reqd_display_charset, Boolean is_dbcs)
 		force = True;
 	}
 
-	matches = XListFontsWithInfo(display, name, 1000, &count, &f);
+	matches = xlfwi((char *)name, 1000, &count, &f);
 	if (matches == (char **)NULL) {
 #if defined(DEBUG_FONTPICK) /*[*/
 		printf("Font '%s' not found\n", name);
@@ -4207,7 +4263,6 @@ lff_single(const char *name, const char *reqd_display_charset, Boolean is_dbcs)
 					Free(font_csname);
 					Free(xp);
 				}
-				XFreeFontInfo(matches, f, count);
 				if (wname != CN)
 				    	XtFree(wname);
 				return r;
@@ -4275,7 +4330,6 @@ lff_single(const char *name, const char *reqd_display_charset, Boolean is_dbcs)
 	if (best_weight != NULL)
 	    	XtFree(best_weight);
 	if (best < 0) {
-	    XFreeFontInfo(matches, f, count);
 	    return xs_buffer("None of the %d fonts matching\n"
 			     "%s\n"
 			     "appears to be appropriate",
@@ -4284,7 +4338,6 @@ lff_single(const char *name, const char *reqd_display_charset, Boolean is_dbcs)
 
 	g = XLoadQueryFont(display, matches[best]);
 	set_font_globals(g, name, matches[best], g->fid, is_dbcs);
-	XFreeFontInfo(matches, f, count);
 	return CN;
 }
 
@@ -5000,7 +5053,7 @@ init_rsfonts(char *charset_name)
 		    	continue;
 		wild = xs_buffer("*-r-*-c-*-%s", csn);
 		count = 0;
-		names = XListFontsWithInfo(display, wild, 1000, &count, &fs);
+		names = xlfwi(wild, 1000, &count, &fs);
 		Free(wild);
 		if (count != 0) {
 			for (i = 0; i < count; i++) {
@@ -5032,11 +5085,10 @@ init_rsfonts(char *charset_name)
 					Free(hier_name);
 				}
 			}
-			XFreeFontInfo(names, fs, count);
 		}
 		wild = xs_buffer("*-r-*-m-*-%s", csn);
 		count = 0;
-		names = XListFontsWithInfo(display, wild, 1000, &count, &fs);
+		names = xlfwi(wild, 1000, &count, &fs);
 		Free(wild);
 		if (count != 0) {
 			for (i = 0; i < count; i++) {
@@ -5068,7 +5120,6 @@ init_rsfonts(char *charset_name)
 					Free(hier_name);
 				}
 			}
-			XFreeFontInfo(names, fs, count);
 		}
 	}
 	Free(dupcsn);
