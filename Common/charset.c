@@ -259,8 +259,7 @@ charset_init2(char *csname, const char *codepage, const char *display_charsets)
 #endif /*]*/
 		    break;
 		default:
-		    popup_an_error("Extra %s value(s), ignoring",
-			ResDisplayCharset);
+		    popup_an_error("Extra charset value(s), ignoring");
 		    break;
 		}
 		n_rcs++;
