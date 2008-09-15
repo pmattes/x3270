@@ -144,7 +144,7 @@ x3270.charsetList:			U.S. English (CP 37): us-intl\n\
 					Russian (CP 880): russian\n\
 					Slovenian (CP 870): cp870\n\
 					Spanish (CP 284): spanish\n\
-					Thai (CP 838): thai\n\
+					Thai (CP 1160): thai\n\
 					Turkish (CP 1026): turkish\n\
 					United Kingdom (CP 285): uk\n
 #endif
