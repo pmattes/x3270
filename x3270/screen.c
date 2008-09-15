@@ -3807,6 +3807,13 @@ screen_new_display_charsets(const char *display_charsets, const char *csnames)
 				buf = CN;
 				n_parts = split_dbcs_resource(cs, '+',
 					    &part1, &part2);
+
+				if (n_parts == 1 &&
+					!strncasecmp(cs, "3270cg", 6)) {
+				    	free(part1);
+					continue;
+				}
+
 				if (n_parts == 2) {
 					wild = xs_buffer(
 					    "*-r-*-c-*-%s+*-r-*-c-*-%s",
@@ -4989,6 +4996,8 @@ init_rsfonts(char *charset_name)
 	buf = dupcsn = NewString(charset_name);
 	while ((csn = strtok_r(buf, ",", &lasts)) != CN) {
 		buf = CN;
+	    	if (!strncasecmp(csn, "3270cg", 6))
+		    	continue;
 		wild = xs_buffer("*-r-*-c-*-%s", csn);
 		count = 0;
 		names = XListFontsWithInfo(display, wild, 1000, &count, &fs);
