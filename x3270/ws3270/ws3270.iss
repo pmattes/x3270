@@ -3,7 +3,7 @@
 
 [Setup]
 AppName=ws3270
-AppVerName=ws3270 3.3.8
+AppVerName=ws3270 3.3.8b1
 AppPublisher=Paul Mattes
 AppPublisherURL=http://x3270.bgp.nu
 AppSupportURL=http://x3270.bgp.nu
@@ -14,7 +14,8 @@ DefaultDirName={pf}\ws3270
 DisableDirPage=no
 DefaultGroupName=ws3270
 AllowNoIcons=yes
-OutputBaseFilename=setup
+OutputBaseFilename=ws3270-3.3.8b1-setup
+OutputDir=\\Melville\pdm\psrc\x3270\Release\Inno\ws3270
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
