@@ -67,7 +67,7 @@ DEVKIT = Makefile.aux apl.inc ft.inc html.m4 m42html m42man man.m4 \
 	x3270/instlist.man
 PR3287 = pr3287/3270ds.h pr3287/arpa_telnet.h pr3287/charset.c \
 	pr3287/charsetc.h pr3287/config.guess pr3287/config.sub \
-	pr3287/configure pr3287/configure.in pr3287/ctlr.c pr3287/ctlrc.h \
+	pr3287/configure.in pr3287/ctlr.c pr3287/ctlrc.h \
 	pr3287/globals.h pr3287/install-sh pr3287/localdefs.h \
 	pr3287/Makefile.aux pr3287/Makefile.in pr3287/mkversion.sh \
 	pr3287/popupsc.h pr3287/pr3287.c pr3287/pr3287.man pr3287/proxy.c \
@@ -111,6 +111,8 @@ x3270.man: $(MANSRC) version.txt man.m4 m42man
 	./m42man x3270 x3270.man.m4 >man.tmp
 	mv man.tmp $@
 	@rm -f man.tmp
+pr3287/pr3287.man: pr3287/pr3287.man.m4 man.m4 version.txt
+	cd pr3287 && $(MAKE) -f Makefile.aux pr3287.man
 html/x3270-man.html: $(MANSRC) version.txt html.m4 m42html
 	@rm -f man.tmp
 	./m42html x3270 x3270.man.m4 >man.tmp
