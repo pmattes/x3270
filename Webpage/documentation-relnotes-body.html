@@ -125,6 +125,41 @@ implementation may see unexpected differences.
  <li>[<i>wpr3287</i>] Added a <b>-printercp</b> option to specify a particular
   code page for printer output.</li>
 </ul>
+<h2>Changes in x3270 3.3.7p8, 28. August 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected the buffer addressing mode logic for oversize screens.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in x3270 3.3.7p7, 4. July 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected input of 8-bit characters when <b>x3270</b> is run in a
+       UTF-8 locale.</li>
+      <li>Corrected a bug which sometimes left the local file open after a
+       failed file transfer.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+      <li>Added <b>\e<i>XX</i></b> support to the <b>String()</b> action,
+       which allows an EBCDIC code to be entered.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in x3270 3.3.7p3, 22. February 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Fixed an issue with Idle commands, which would cause <b>x3270</b>
+       to exit with a <i>Not Found</i> error as soon as the idle command
+       fired.</li>
+    </ul>
+  </li>
+</ul>
 <h2>Changes in x3270 3.3.7, 25. December 2007</h2>
 <ul>
   <li>Bug Fixes:
@@ -152,6 +187,44 @@ implementation may see unexpected differences.
       <b>Key</b> and <b>String</b> actions, etc.) must be UTF-8 encoded.
       In addition, the NVT-mode xterm/VT100 emulator will expect UTF-8.</li>
       <li>Added a <b>SelectAll</b> action, mapped to Ctrl-A.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in c3270 3.3.7p8, 28. August 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected the buffer addressing mode logic for oversize screens.</li>
+    </ul>
+    <ul>
+     <li>Allowed <b>c3270</b> to build under SLES 10's unusual ncurses
+      configuration.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in c3270 3.3.7p7, 4. July 2008</h2>
+<ul>
+  <li>New Features:
+    <ul>
+      <li>Added <b>\e<i>XX</i></b> support to the <b>String()</b> action,
+       which allows an EBCDIC code to be entered.</li>
+    </ul>
+  </li>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected a bug which sometimes left the local file open after a
+       failed file transfer.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in c3270 3.3.7p4, 29. February 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Fixed <b>c3270</b>'s configure script again, so it will build on
+      systems without the ncurses library.</li>
+      <li>Enabled <i>idle command</i> functionality, which had been
+      accidentally disabled.</li>
     </ul>
   </li>
 </ul>
@@ -200,6 +273,64 @@ c3270.cursesColorForProtected
 c3270.cursesColorForProtectedIntensified
        </pre>
        The value for each of these is a curses color number (0 through 7).</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.7p8, 28. August 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Fixed <i>idle command</i> support.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.7p7, 4. July 2008</h2>
+<ul>
+  <li>New Features:
+    <ul>
+      <li>Added <b>\e<i>XX</i></b> support to the <b>String()</b> action,
+       which allows an EBCDIC code to be entered.</li>
+    </ul>
+  </li>
+  <li>Bug Fixes:
+    <ul>
+      <li>Fixed a problem with transferring binary files, where <b>0x0d</b>
+       characters might be acidentally added to or removed from the data.</li>
+      <li>Corrected a bug which sometimes left the local file open after a
+       failed file transfer.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.7p5, 11. April 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>After installation is complete, get rid of <b>mkshort.exe</b>, which
+       shares its name (but not its functionality) with a computer surveillance
+       application.</li>
+      <li>Corrected several issues with key event processing and the default
+       keymap.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.7p3, 22. February 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+     <li>Changed the New Session Wizard to create the Application Data
+      directory, so <b>wc3270</b> can be run by any user, not just the one
+      that installed it.</li>
+     <li>Changed the default window title from the pathname of the session
+      to just the session name.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.7p2, 15. January 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Fixed an embarassing problem that kept <b>wpr3287</b> from
+      starting.</li>
     </ul>
   </li>
 </ul>
@@ -257,6 +388,29 @@ wc3270.hostColorForProtectedIntensified
     </ul>
   </li>
 </ul>
+<h2>Changes in s3270 3.3.7p8, 28. August 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected the buffer addressing mode logic for oversize screens.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in s3270 3.3.7p7, 4. July 2008</h2>
+<ul>
+  <li>New Features:
+    <ul>
+      <li>Added <b>\e<i>XX</i></b> support to the <b>String()</b> action,
+       which allows an EBCDIC code to be entered.</li>
+    </ul>
+  </li>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected a bug which sometimes left the local file open after a
+       failed file transfer.</li>
+    </ul>
+  </li>
+</ul>
 <h2>Changes in s3270 3.3.7, 25. December 2007</h2>
 <ul>
   <li>Bug Fixes:
@@ -279,12 +433,47 @@ wc3270.hostColorForProtectedIntensified
     </ul>
   </li>
 </ul>
+<h2>Changes in tcl3270 3.3.7p8, 28. August 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected the buffer addressing mode logic for oversize screens.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in tcl3270 3.3.7p7, 4. July 2008</h2>
+<ul>
+  <li>New Features:
+    <ul>
+      <li>Added <b>\e<i>XX</i></b> support to the <b>String()</b> action,
+       which allows an EBCDIC code to be entered.</li>
+    </ul>
+  </li>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected a bug which sometimes left the local file open after a
+       failed file transfer.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in tcl3270 3.3.7p3, 22. Febuary 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Fixed a problem with non-ASCII characters returned by the <b>Ascii</b>
+       command.</li>
+      <li>Fixed a problem with the <b>Connect</b> command, which resulted in
+       subsequent actions not blocking properly.</li>
+    </ul>
+  </li>
+</ul>
 <h2>Changes in tcl3270 3.3.7, 25. December 2007</h2>
 <ul>
-  <li>Bug Fixes:</li>
+  <li>Bug Fixes:
     <ul>
       <li>(none)</li>
     </ul>
+  </li>
   <li>New Features:
     <ul>
       <li>Added UTF-8 support.  If the current locale specifies UTF-8 encoding,
@@ -296,11 +485,27 @@ wc3270.hostColorForProtectedIntensified
     </ul>
   </li>
 </ul>
+<h2>Changes in pr3287 3.3.7p8, 28. August 2008</h2>
+<ul>
+ <li>Bug Fixes:
+  <ul>
+   <li>Fixed the interpretation of SCS CR characters.<\li>
+  </ul>
+ </li>
+</ul>
 <h2>Changes in pr3287 3.3.7, 25. December 2007</h2>
 <ul>
- <li>New Features:
+ <li>Enhancements:
   <ul>
    <li>Added proxy support via the <b>-proxy</b> option.</li>
+  </ul>
+ </li>
+</ul>
+<h2>Changes in wpr3287 3.3.7p8, 28. August 2008</h2>
+<ul>
+ <li>Bug Fixes:
+  <ul>
+   <li>Fixed the interpretation of SCS CR characters.<\li>
   </ul>
  </li>
 </ul>
@@ -838,7 +1043,7 @@ wc3270.hostColorForProtectedIntensified
 <h2>Changes in  pr3287 3.3.1alpha10, 10. August 2003</h2>
 
 <ul>
-    <li>New Features:
+ <li>Enhancements:
   <ul>
    <li>Added support for the <b>-tracedir</b> option, to specify a directory
     to store trace files in.</li>
@@ -888,7 +1093,7 @@ wc3270.hostColorForProtectedIntensified
    <li>Fixed the SCS HT order, which was completely broken.</li>
   </ul>
  </li>
- <li>New Features:
+ <li>Enhancements:
   <ul>
    <li>Added support for SIGUSR1 to flush the print job.</li>
    <li>Added support for the TELNET START-TLS option.</li>
