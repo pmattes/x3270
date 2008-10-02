@@ -975,7 +975,14 @@ net_input(void)
 				return;
 			}
 #endif /*]*/
-			trace_dsn("RCVD socket error %d\n", errno);
+			trace_dsn("RCVD socket error %d (%s)\n",
+				socket_errno(),
+#if !defined(_WIN32) /*[*/
+				strerror(errno)
+#else /*][*/
+				win32_strerror(GetLastError())
+#endif /*]*/
+				);
 			if (HALF_CONNECTED) {
 				popup_a_sockerr("Connect to %s, port %d",
 				    hostname, current_port);
@@ -1984,7 +1991,14 @@ net_rawout(unsigned const char *buf, int len)
 				return;
 			}
 #endif /*]*/
-			trace_dsn("RCVD socket error %d\n", errno);
+			trace_dsn("RCVD socket error %d (%s)\n",
+				socket_errno(),
+#if !defined(_WIN32) /*[*/
+				strerror(errno)
+#else /*][*/
+				win32_strerror(GetLastError())
+#endif /*]*/
+				);
 			if (socket_errno() == SE_EPIPE || socket_errno() == SE_ECONNRESET) {
 				host_disconnect(False);
 				return;
