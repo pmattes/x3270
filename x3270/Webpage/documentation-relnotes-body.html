@@ -1,6 +1,6 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
 3.3 is the current development line for the x3270 suite.
-<h2>Changes in version 3.3.8, xx September 2008</h2>
+<h2>Changes in version 3.3.8, xx October 2008</h2>
 Version 3.3.8 includes a significant internal change, using Unicode for all
 translations between the host and the local workstation.
 This change should be
@@ -117,6 +117,13 @@ implementation may see unexpected differences.
   page, which could lead to hangs on Vista.</li>
  <li>[<i>wc3270</i>] The installation now creates a program group item to
   explore the <b>wc3270</b> Application Data directory.</li>
+ <li>[<i>wc3270</i>] Corrected a problem with console color overrides, which
+  prevented reverse-video mode (white background) from working properly.
+  For now, the recommended method for enabling reverse video mode is to add
+  these lines to your session file:
+  <pre>
+      wc3270.consoleColorForHostColor0: 15
+      wc3270.consoleColorForHostColor7: 0</pre></li>
  <li>[<i>tcl3270</i>] Added a <b>commandTimeout</b> resource to force any
   <b>Tcl3270</b> command to time out after the specified number of seconds.
   (Thanks to Mark Young.)</li>
