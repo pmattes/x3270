@@ -69,6 +69,10 @@
 #include "windows.h"
 #endif /*]*/
 
+#if defined(_MSC_VER) /*[*/
+#include "Msc/deprecated.h"
+#endif /*]*/
+
 #define ANSI_SAVE_SIZE	4096
 
 /* Externals */
@@ -689,7 +693,7 @@ socket_connection(void)
 
 /* Clean up the Unix-domain socket. */
 static void
-cleanup_socket(Boolean b unused)
+cleanup_socket(Boolean b _is_unused)
 {
 	char buf[1024];
 
@@ -1651,7 +1655,7 @@ sms_in_macro(void)
 
 static void
 dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
-    int rel_rows unused, int rel_cols)
+    int rel_rows _is_unused, int rel_cols)
 {
 	register int i;
 	Boolean any = False;
@@ -1817,7 +1821,7 @@ dump_field(Cardinal count, const char *name, Boolean in_ascii)
 }
 
 void
-Ascii_action(Widget w unused, XEvent *event unused, String *params,
+Ascii_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	dump_fixed(params, *num_params, action_name(Ascii_action), True,
@@ -1825,14 +1829,14 @@ Ascii_action(Widget w unused, XEvent *event unused, String *params,
 }
 
 void
-AsciiField_action(Widget w unused, XEvent *event unused, String *params unused,
+AsciiField_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_unused,
     Cardinal *num_params)
 {
 	dump_field(*num_params, action_name(AsciiField_action), True);
 }
 
 void
-Ebcdic_action(Widget w unused, XEvent *event unused, String *params,
+Ebcdic_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	dump_fixed(params, *num_params, action_name(Ebcdic_action), False,
@@ -1840,8 +1844,8 @@ Ebcdic_action(Widget w unused, XEvent *event unused, String *params,
 }
 
 void
-EbcdicField_action(Widget w unused, XEvent *event unused,
-    String *params unused, Cardinal *num_params)
+EbcdicField_action(Widget w _is_unused, XEvent *event _is_unused,
+    String *params _is_unused, Cardinal *num_params)
 {
 	dump_field(*num_params, action_name(EbcdicField_action), False);
 }
@@ -2024,7 +2028,7 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf, int fd)
  * ReadBuffer action.
  */
 void
-ReadBuffer_action(Widget w unused, XEvent *event unused,
+ReadBuffer_action(Widget w _is_unused, XEvent *event _is_unused,
     String *params, Cardinal *num_params)
 {
 	do_read_buffer(params, *num_params, ea_buf, -1);
@@ -2214,7 +2218,7 @@ snap_save(void)
  *      wait for the screen to change, then do a Snap Save
  */
 void
-Snap_action(Widget w unused, XEvent *event unused, String *params,
+Snap_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	if (sms == SN || sms->state != SS_RUNNING) {
@@ -2361,7 +2365,7 @@ Snap_action(Widget w unused, XEvent *event unused, String *params,
  * Wait for various conditions.
  */
 void
-Wait_action(Widget w unused, XEvent *event unused, String *params,
+Wait_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	enum sms_state next_state = SS_WAIT_IFIELD;
@@ -2653,8 +2657,8 @@ sms_store(unsigned char c)
 
 /* Dump whatever ANSI data has been sent by the host since last called. */
 void
-AnsiText_action(Widget w unused, XEvent *event unused, String *params unused,
-    Cardinal *num_params unused)
+AnsiText_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_unused,
+    Cardinal *num_params _is_unused)
 {
 	register int i;
 	int ix;
@@ -2693,8 +2697,8 @@ AnsiText_action(Widget w unused, XEvent *event unused, String *params unused,
 
 /* Pause a script. */
 void
-PauseScript_action(Widget w unused, XEvent *event unused, String *params unused,
-    Cardinal *num_params unused)
+PauseScript_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_unused,
+    Cardinal *num_params _is_unused)
 {
 	if (sms == SN || (sms->type != ST_PEER && sms->type != ST_CHILD)) {
 		popup_an_error("%s can only be called from a script",
@@ -2706,7 +2710,7 @@ PauseScript_action(Widget w unused, XEvent *event unused, String *params unused,
 
 /* Continue a script. */
 void
-ContinueScript_action(Widget w, XEvent *event unused, String *params,
+ContinueScript_action(Widget w, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	if (check_usage(ContinueScript_action, *num_params, 1, 1) < 0)
@@ -2733,7 +2737,7 @@ ContinueScript_action(Widget w, XEvent *event unused, String *params,
 
 /* Stop listening to stdin. */
 void
-CloseScript_action(Widget w unused, XEvent *event unused, String *params,
+CloseScript_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	if (sms != SN &&
@@ -2758,7 +2762,7 @@ CloseScript_action(Widget w unused, XEvent *event unused, String *params,
 
 /* Execute an arbitrary shell command. */
 void
-Execute_action(Widget w unused, XEvent *event unused, String *params,
+Execute_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	if (check_usage(Execute_action, *num_params, 1, 1) < 0)
@@ -2807,7 +2811,7 @@ wait_timed_out(void)
 
 /* Wait for a string from the host (ANSI mode only). */
 void
-Expect_action(Widget w unused, XEvent *event unused, String *params,
+Expect_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	int tmo;
@@ -2852,8 +2856,8 @@ static Widget execute_action_shell = (Widget)NULL;
 
 /* Callback for "OK" button on execute action popup */
 static void
-execute_action_callback(Widget w unused, XtPointer client_data,
-    XtPointer call_data unused)
+execute_action_callback(Widget w _is_unused, XtPointer client_data,
+    XtPointer call_data _is_unused)
 {
 	char *text;
 
@@ -2865,8 +2869,8 @@ execute_action_callback(Widget w unused, XtPointer client_data,
 }
 
 void
-execute_action_option(Widget w unused, XtPointer client_data unused,
-    XtPointer call_data unused)
+execute_action_option(Widget w _is_unused, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	if (execute_action_shell == NULL)
 		execute_action_shell = create_form_popup("ExecuteAction",
@@ -2880,7 +2884,7 @@ execute_action_option(Widget w unused, XtPointer client_data unused,
 #if defined(X3270_SCRIPT) /*[*/
 /* "Script" action, runs a script as a child process. */
 void
-Script_action(Widget w unused, XEvent *event unused, String *params,
+Script_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	int inpipe[2];
@@ -2977,7 +2981,7 @@ Script_action(Widget w unused, XEvent *event unused, String *params,
 
 /* "Macro" action, explicitly invokes a named macro. */
 void
-Macro_action(Widget w unused, XEvent *event unused, String *params,
+Macro_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	struct macro_def *m;
@@ -3017,7 +3021,7 @@ cancel_if_idle_command(void)
 #if defined(X3270_PRINTER) /*[*/
 /* "Printer" action, starts or stops a printer session. */
 void
-Printer_action(Widget w unused, XEvent *event unused, String *params,
+Printer_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	if (check_usage(Printer_action, *num_params, 1, 2) < 0)
@@ -3052,7 +3056,7 @@ abort_script(void)
 
 /* "Abort" action, stops pending scripts. */
 void
-Abort_action(Widget w unused, XEvent *event unused, String *params,
+Abort_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	child_ignore_output();
@@ -3077,7 +3081,7 @@ sms_accumulate_time(struct timeval *t0, struct timeval *t1)
 #endif /*]*/
 
 void
-Query_action(Widget w unused, XEvent *event unused, String *params,
+Query_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	static struct {
@@ -3366,7 +3370,7 @@ plugin_start(char *command, char *argv[], Boolean complain)
 }
 
 void
-Plugin_action(Widget w unused, XEvent *event unused, String *params,
+Plugin_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	if (*num_params == 0) {
@@ -3532,7 +3536,7 @@ plugin_aid(unsigned char aid)
 
 #else /*][*/
 void
-Plugin_action(Widget w unused, XEvent *event unused, String *params,
+Plugin_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
     /* Do nothing. */
@@ -3545,7 +3549,7 @@ Plugin_action(Widget w unused, XEvent *event unused, String *params,
  * into the trace log.
  */
 void
-Bell_action(Widget w unused, XEvent *event unused, String *params,
+Bell_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	ring_bell();
@@ -3555,7 +3559,7 @@ Bell_action(Widget w unused, XEvent *event unused, String *params,
 #endif /*]*/
 
 void
-Source_action(Widget w unused, XEvent *event, String *params,
+Source_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
     	int fd;

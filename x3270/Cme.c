@@ -1,7 +1,7 @@
 /* (from) $XConsortium: Sme.c,v 1.9 91/02/17 16:44:14 rws Exp $ */
 
 /*
- * Modifications Copyright 1995, 1999, 2000 by Paul Mattes.
+ * Modifications Copyright 1995-2008 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -167,8 +167,8 @@ ClassPartInitialize(WidgetClass class)
  */
 
 static void
-Initialize(Widget request unused, Widget new, ArgList args unused,
-	Cardinal *num_args unused)
+Initialize(Widget request _is_unused, Widget new, ArgList args _is_unused,
+	Cardinal *num_args _is_unused)
 {
     CmeObject entry = (CmeObject) new;
 
@@ -182,7 +182,7 @@ Initialize(Widget request unused, Widget new, ArgList args unused,
  */
 
 static void
-Highlight(Widget w unused)
+Highlight(Widget w _is_unused)
 {
 /* This space intentionally left blank. */
 }
@@ -194,7 +194,7 @@ Highlight(Widget w unused)
  */
 
 static void
-Unhighlight(Widget w unused)
+Unhighlight(Widget w _is_unused)
 {
 /* This space intentionally left blank. */
 }

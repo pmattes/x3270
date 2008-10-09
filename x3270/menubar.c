@@ -108,8 +108,8 @@ static void menubar_connect(Boolean ignored);
 #if defined(X3270_PRINTER) /*[*/
 static void menubar_printer(Boolean printer_on);
 #endif /*]*/
-static void menubar_remodel(Boolean ignored unused);
-static void menubar_charset(Boolean ignored unused);
+static void menubar_remodel(Boolean ignored _is_unused);
+static void menubar_charset(Boolean ignored _is_unused);
 
 #define NO_BANG(s)	(((s)[0] == '!')? (s) + 1: (s))
 
@@ -452,7 +452,7 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
  * Called when connected to or disconnected from a host.
  */
 static void
-menubar_connect(Boolean ignored unused)
+menubar_connect(Boolean ignored _is_unused)
 {
 	/* Set the disconnect button sensitivity. */
 	if (disconnect_button != (Widget)NULL)
@@ -685,15 +685,15 @@ static Widget save_shell = (Widget) NULL;
 
 /* Called from "Exit x3270" button on "File..." menu */
 static void
-Bye(Widget w unused, XtPointer client_data unused, XtPointer call_data unused)
+Bye(Widget w _is_unused, XtPointer client_data _is_unused, XtPointer call_data _is_unused)
 {
 	x3270_exit(0);
 }
 
 /* Called from the "Disconnect" button on the "File..." menu */
 static void
-disconnect(Widget w unused, XtPointer client_data unused,
-    XtPointer call_data unused)
+disconnect(Widget w _is_unused, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	host_disconnect(False);
 }
@@ -701,8 +701,8 @@ disconnect(Widget w unused, XtPointer client_data unused,
 #if defined(X3270_SCRIPT) /*[*/
 /* Called from the "Abort Script" button on the "File..." menu */
 static void
-script_abort_callback(Widget w unused, XtPointer client_data unused,
-    XtPointer call_data unused)
+script_abort_callback(Widget w _is_unused, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	abort_script();
 }
@@ -710,30 +710,30 @@ script_abort_callback(Widget w unused, XtPointer client_data unused,
 
 /* "About x3270" popups */
 static void
-show_about_copyright(Widget w unused, XtPointer userdata unused,
-    XtPointer calldata unused)
+show_about_copyright(Widget w _is_unused, XtPointer userdata _is_unused,
+    XtPointer calldata _is_unused)
 {
 	popup_about_copyright();
 }
 
 static void
-show_about_config(Widget w unused, XtPointer userdata unused,
-    XtPointer calldata unused)
+show_about_config(Widget w _is_unused, XtPointer userdata _is_unused,
+    XtPointer calldata _is_unused)
 {
 	popup_about_config();
 }
 
 static void
-show_about_status(Widget w unused, XtPointer userdata unused,
-    XtPointer calldata unused)
+show_about_status(Widget w _is_unused, XtPointer userdata _is_unused,
+    XtPointer calldata _is_unused)
 {
 	popup_about_status();
 }
 
 /* Called from the "Save" button on the save options dialog */
 static void
-save_button_callback(Widget w unused, XtPointer client_data,
-    XtPointer call_data unused)
+save_button_callback(Widget w _is_unused, XtPointer client_data,
+    XtPointer call_data _is_unused)
 {
 	char *s;
 
@@ -746,8 +746,8 @@ save_button_callback(Widget w unused, XtPointer client_data,
 
 /* Called from the "Save Options in File" button on the "File..." menu */
 static void
-do_save_options(Widget w unused, XtPointer client_data unused,
-    XtPointer call_data unused)
+do_save_options(Widget w _is_unused, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	if (save_shell == NULL)
 		save_shell = create_form_popup("SaveOptions",
@@ -761,7 +761,7 @@ do_save_options(Widget w unused, XtPointer client_data unused,
 #if defined(X3270_PRINTER) /*[*/
 /* Callback for printer session options. */
 static void
-do_printer(Widget w unused, XtPointer client_data, XtPointer call_data unused)
+do_printer(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_unused)
 {
 	if (client_data == NULL)
 		printer_start(CN);
@@ -1066,16 +1066,16 @@ static Widget connect_shell = NULL;
 
 /* Called from each button on the "Connect..." menu */
 static void
-host_connect_callback(Widget w unused, XtPointer client_data,
-    XtPointer call_data unused)
+host_connect_callback(Widget w _is_unused, XtPointer client_data,
+    XtPointer call_data _is_unused)
 {
 	(void) host_connect(client_data);
 }
 
 /* Called from the lone "Connect" button on the connect dialog */
 static void
-connect_button_callback(Widget w unused, XtPointer client_data,
-    XtPointer call_data unused)
+connect_button_callback(Widget w _is_unused, XtPointer client_data,
+    XtPointer call_data _is_unused)
 {
 	char *s;
 
@@ -1088,8 +1088,8 @@ connect_button_callback(Widget w unused, XtPointer client_data,
 
 /* Called from the "Other..." button on the "Connect..." menu */
 static void
-do_connect_popup(Widget w unused, XtPointer client_data unused,
-    XtPointer call_data unused)
+do_connect_popup(Widget w _is_unused, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	if (connect_shell == NULL)
 		connect_shell = create_form_popup("Connect",
@@ -1234,7 +1234,7 @@ connect_menu_init(Boolean regen, Position x, Position y)
  * Callback for macros
  */
 static void
-do_macro(Widget w unused, XtPointer client_data, XtPointer call_data unused)
+do_macro(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_unused)
 {
 	macro_command((struct macro_def *)client_data);
 }
@@ -1306,8 +1306,8 @@ macros_menu_init(Boolean regen, Position x, Position y)
 #if defined(X3270_KEYPAD) /*[*/
 /* Called toggle the keypad */
 static void
-toggle_keypad(Widget w unused, XtPointer client_data unused,
-    XtPointer call_data unused)
+toggle_keypad(Widget w _is_unused, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	switch (kp_placement) {
 	    case kp_integral:
@@ -1417,7 +1417,7 @@ menubar_resize(Dimension width)
  */
 
 static void
-toggle_callback(Widget w, XtPointer userdata, XtPointer calldata unused)
+toggle_callback(Widget w, XtPointer userdata, XtPointer calldata _is_unused)
 {
 	struct toggle *t = (struct toggle *) userdata;
 
@@ -1437,8 +1437,8 @@ static Widget oversize_shell = NULL;
 
 /* Called from the "Change" button on the oversize dialog */
 static void
-oversize_button_callback(Widget w unused, XtPointer client_data,
-    XtPointer call_data unused)
+oversize_button_callback(Widget w _is_unused, XtPointer client_data,
+    XtPointer call_data _is_unused)
 {
 	char *s;
 	int ovc, ovr;
@@ -1456,8 +1456,8 @@ oversize_button_callback(Widget w unused, XtPointer client_data,
 
 /* Called from the "Oversize..." button on the "Models..." menu */
 static void
-do_oversize_popup(Widget w unused, XtPointer client_data unused,
-    XtPointer call_data unused)
+do_oversize_popup(Widget w _is_unused, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	if (oversize_shell == NULL)
 		oversize_shell = create_form_popup("Oversize",
@@ -1506,7 +1506,7 @@ static Widget other_font;
 static Widget font_shell = NULL;
 
 static void
-do_newfont(Widget w unused, XtPointer userdata, XtPointer calldata unused)
+do_newfont(Widget w _is_unused, XtPointer userdata, XtPointer calldata _is_unused)
 {
 	screen_newfont((char *)userdata, True, False);
 }
@@ -1514,7 +1514,7 @@ do_newfont(Widget w unused, XtPointer userdata, XtPointer calldata unused)
 /* Called from the "Select Font" button on the font dialog */
 static void
 font_button_callback(Widget w, XtPointer client_data,
-    XtPointer call_data unused)
+    XtPointer call_data _is_unused)
 {
 	char *s;
 
@@ -1526,8 +1526,8 @@ font_button_callback(Widget w, XtPointer client_data,
 }
 
 static void
-do_otherfont(Widget w unused, XtPointer userdata unused,
-    XtPointer calldata unused)
+do_otherfont(Widget w _is_unused, XtPointer userdata _is_unused,
+    XtPointer calldata _is_unused)
 {
 	if (font_shell == NULL)
 		font_shell = create_form_popup("Font", font_button_callback,
@@ -1570,7 +1570,7 @@ scheme_init(void)
 }
 
 static void
-do_newscheme(Widget w unused, XtPointer userdata, XtPointer calldata unused)
+do_newscheme(Widget w _is_unused, XtPointer userdata, XtPointer calldata _is_unused)
 {
 	screen_newscheme((char *)userdata);
 }
@@ -1609,7 +1609,7 @@ charsets_init(void)
 }
 
 static void
-do_newcharset(Widget w unused, XtPointer userdata, XtPointer calldata unused)
+do_newcharset(Widget w _is_unused, XtPointer userdata, XtPointer calldata _is_unused)
 {
 	struct charset *s;
 	int i;
@@ -1630,8 +1630,8 @@ static Widget keymap_shell = NULL;
 
 /* Called from the "Set Keymap" button on the keymap dialog */
 static void
-keymap_button_callback(Widget w unused, XtPointer client_data,
-    XtPointer call_data unused)
+keymap_button_callback(Widget w _is_unused, XtPointer client_data,
+    XtPointer call_data _is_unused)
 {
 	char *s;
 
@@ -1644,7 +1644,7 @@ keymap_button_callback(Widget w unused, XtPointer client_data,
 
 /* Callback from the "Keymap" menu option */
 static void
-do_keymap(Widget w unused, XtPointer userdata unused, XtPointer calldata unused)
+do_keymap(Widget w _is_unused, XtPointer userdata _is_unused, XtPointer calldata _is_unused)
 {
 	if (keymap_shell == NULL)
 		keymap_shell = create_form_popup("Keymap",
@@ -1656,8 +1656,8 @@ do_keymap(Widget w unused, XtPointer userdata unused, XtPointer calldata unused)
 #if defined(X3270_SCRIPT) /*[*/
 /* Callback from the "Idle Command" menu option */
 static void
-do_idle_command(Widget w unused, XtPointer userdata unused,
-    XtPointer calldata unused)
+do_idle_command(Widget w _is_unused, XtPointer userdata _is_unused,
+    XtPointer calldata _is_unused)
 {
 	popup_idle();
 }
@@ -1665,14 +1665,14 @@ do_idle_command(Widget w unused, XtPointer userdata unused,
 
 /* Called to change telnet modes */
 static void
-linemode_callback(Widget w unused, XtPointer client_data unused, XtPointer call_data unused)
+linemode_callback(Widget w _is_unused, XtPointer client_data _is_unused, XtPointer call_data _is_unused)
 {
 	net_linemode();
 }
 
 static void
-charmode_callback(Widget w unused, XtPointer client_data unused, 
-    XtPointer call_data unused)
+charmode_callback(Widget w _is_unused, XtPointer client_data _is_unused, 
+    XtPointer call_data _is_unused)
 {
 	net_charmode();
 }
@@ -1680,7 +1680,7 @@ charmode_callback(Widget w unused, XtPointer client_data unused,
 /* Called to change models */
 static void
 change_model_callback(Widget w, XtPointer client_data,
-    XtPointer call_data unused)
+    XtPointer call_data _is_unused)
 {
 	int m;
 
@@ -1713,7 +1713,7 @@ change_model_callback(Widget w, XtPointer client_data,
 
 /* Called to when model changes outside our control */
 static void
-menubar_remodel(Boolean ignored unused)
+menubar_remodel(Boolean ignored _is_unused)
 {
 	if (model_2_button != NULL)
 		XtVaSetValues(model_2_button, XtNleftBitmap,
@@ -1796,7 +1796,7 @@ create_font_menu(Boolean regen, Boolean even_if_unknown)
 
 /* Called when the character set changes. */
 static void
-menubar_charset(Boolean ignored unused)
+menubar_charset(Boolean ignored _is_unused)
 {
 	if (!appres.suppress_font_menu)
 		create_font_menu(False, False);
@@ -1804,8 +1804,8 @@ menubar_charset(Boolean ignored unused)
 
 /* Called to change emulation modes */
 static void
-toggle_extended(Widget w unused, XtPointer client_data unused,
-    XtPointer call_data unused)
+toggle_extended(Widget w _is_unused, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	appres.extended = !appres.extended;
 	if (extended_button != NULL)
@@ -1822,7 +1822,7 @@ toggle_extended(Widget w unused, XtPointer client_data unused,
 }
 
 static void
-toggle_m3279(Widget w, XtPointer client_data unused, XtPointer call_data unused)
+toggle_m3279(Widget w, XtPointer client_data _is_unused, XtPointer call_data _is_unused)
 {
 	if (w == m3278_button)
 		appres.m3279 = False;
@@ -2246,7 +2246,7 @@ menubar_retoggle(struct toggle *t)
 }
 
 void
-HandleMenu_action(Widget w unused, XEvent *event, String *params,
+HandleMenu_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	String p;

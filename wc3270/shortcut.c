@@ -79,8 +79,13 @@ CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
 		}
 
 		memset(&p, '\0', sizeof(NT_CONSOLE_PROPS));
+#if defined(_MSC_VER) /*[*/
+		p.cbSize = sizeof(p);
+		p.dwSignature = NT_CONSOLE_PROPS_SIG;
+#else /*][*/
 		p.dbh.cbSize = sizeof(p);
 		p.dbh.dwSignature = NT_CONSOLE_PROPS_SIG;
+#endif /*]*/
 		p.wFillAttribute = 7;	/* ? */
 		p.wPopupFillAttribute = 245;	/* ? */
 		p.dwScreenBufferSize.X = cols;

@@ -54,6 +54,10 @@
 #include "utilc.h"
 #include "w3miscc.h"
 
+#if defined(_MSC_VER) /*[*/
+#include "Msc/deprecated.h"
+#endif /*]*/
+
 #define PRINTER_BUF	1024
 
 /* Statics */
@@ -80,8 +84,8 @@ static void	printer_otimeout(void);
 static void	printer_etimeout(void);
 static void	printer_dump(struct pr3o *p, Boolean is_err, Boolean is_dead);
 #endif /*]*/
-static void	printer_host_connect(Boolean connected unused);
-static void	printer_exiting(Boolean b unused);
+static void	printer_host_connect(Boolean connected _is_unused);
+static void	printer_exiting(Boolean b _is_unused);
 
 /* Globals */
 
@@ -583,7 +587,7 @@ printer_stop(void)
 
 /* The emulator is exiting.  Make sure the printer session is cleaned up. */
 static void
-printer_exiting(Boolean b unused)
+printer_exiting(Boolean b _is_unused)
 {
 	printer_stop();
 }
@@ -591,7 +595,7 @@ printer_exiting(Boolean b unused)
 #if defined(X3270_DISPLAY) /*[*/
 /* Callback for "OK" button on printer specific-LU popup */
 static void
-lu_callback(Widget w, XtPointer client_data, XtPointer call_data unused)
+lu_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
 {
 	char *lu;
 
@@ -610,7 +614,7 @@ lu_callback(Widget w, XtPointer client_data, XtPointer call_data unused)
 
 /* Host connect/disconnect/3270-mode event. */
 static void
-printer_host_connect(Boolean connected unused)
+printer_host_connect(Boolean connected _is_unused)
 {
 	if (IN_3270) {
 		char *printer_lu = appres.printer_lu;

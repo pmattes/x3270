@@ -27,7 +27,9 @@
 #include <errno.h>
 #include <X11/keysym.h>
 
+#if !defined(_MSC_VER) /*[*/
 #include <sys/time.h>
+#endif /*]*/
 #include <sys/types.h>
 #if defined(_WIN32) /*[*/
 #include <windows.h>

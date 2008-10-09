@@ -1,5 +1,5 @@
 /*
- * Modifications Copyright 1996, 1999, 2000, 2001, 2002, 2003 by Paul Mattes.
+ * Modifications Copyright 1996-2008 by Paul Mattes.
  * Copyright October 1995 by Dick Altenbern.
  * Based in part on code Copyright 1993, 1994, 1995 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
@@ -132,7 +132,7 @@ dialog_flip_toggles(struct toggle_list *toggle_list, Widget w)
  */
 void
 dialog_text_callback(Widget w, XtPointer client_data,
-    XtPointer call_data unused)
+    XtPointer call_data _is_unused)
 {
 	XawTextBlock b;		/* firstPos, length, ptr, format */
 	static XawTextBlock nullb = { 0, 0, NULL };
@@ -311,8 +311,8 @@ dialog_mark_toggle(Widget w, Pixmap p)
 
 /* Proceed to the next input field. */
 void
-PA_dialog_next_action(Widget w, XEvent *event unused, String *parms unused,
-	Cardinal *num_parms unused)
+PA_dialog_next_action(Widget w, XEvent *event _is_unused, String *parms _is_unused,
+	Cardinal *num_parms _is_unused)
 {
 	sr_t *s;
 
@@ -326,8 +326,8 @@ PA_dialog_next_action(Widget w, XEvent *event unused, String *parms unused,
 
 /* Set keyboard focus to an input field. */
 void
-PA_dialog_focus_action(Widget w, XEvent *event unused, String *parms unused,
-	Cardinal *num_parms unused)
+PA_dialog_focus_action(Widget w, XEvent *event _is_unused, String *parms _is_unused,
+	Cardinal *num_parms _is_unused)
 {
 	sr_t *s;
 

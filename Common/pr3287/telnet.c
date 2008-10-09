@@ -45,8 +45,12 @@
 #endif /*]*/
 #include <stdarg.h>
 #include <string.h>
+#if !defined(_MSC_VER) /*[*/
 #include <sys/time.h>
+#endif /*]*/
+#if !defined(_MSC_VER) /*[*/
 #include <unistd.h>
+#endif /*]*/
 #include <stdlib.h>
 #include <time.h>
 #if defined(HAVE_LIBSSL) /*[*/ 

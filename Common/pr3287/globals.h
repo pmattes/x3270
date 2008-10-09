@@ -13,14 +13,23 @@
 
 #include <stdio.h>			/* Unix standard I/O library */
 #include <stdlib.h>			/* Other Unix library functions */
+#if !defined(_MSC_VER) /*[*/
 #include <unistd.h>			/* Unix system calls */
+#endif /*]*/
 #include <ctype.h>			/* Character classes */
 #include <string.h>			/* String manipulations */
 #include <sys/types.h>			/* Basic system data types */
+#if !defined(_MSC_VER) /*[*/
 #include <sys/time.h>			/* System time-related data types */
+#endif /*]*/
 #include <time.h>			/* C library time functions */
 
 #include "localdefs.h"
+
+#if defined(_MSC_VER) /*[*/
+#define strcasecmp	_stricmp
+#define strncasecmp	_strnicmp
+#endif /*]*/
 
 #if defined(__STDC_ISO_10646__) && !defined(USE_ICONV) /*[*/
 #define UNICODE_WCHAR   1

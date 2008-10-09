@@ -77,7 +77,9 @@ static char *completion_entry(const char *, int);
 #endif /*]*/
 
 /* Pager state. */
+#if !defined(_WIN32) /*[*/
 static FILE *pager = NULL;
+#endif /*]*/
 
 #if !defined(_WIN32) /*[*/
 /* Base keymap. */
@@ -447,7 +449,7 @@ main(int argc, char *argv[])
  * c3270 will stop before the next prompt is printed.
  */
 static void
-running_sigtstp_handler(int ignored unused)
+running_sigtstp_handler(int ignored _is_unused)
 {
 	signal(SIGTSTP, SIG_IGN);
 	stop_pending = True;
@@ -460,7 +462,7 @@ running_sigtstp_handler(int ignored unused)
  * of input before resuming the connection.
  */
 static void
-prompt_sigtstp_handler(int ignored unused)
+prompt_sigtstp_handler(int ignored _is_unused)
 {
 	if (CONNECTED)
 		dont_return = True;
@@ -645,11 +647,13 @@ start_pager(void)
 static void
 stop_pager(void)
 {
+#if !defined(_WIN32) /*[*/
 	if (pager != NULL) {
 		if (pager != stdout)
 			pclose(pager);
 		pager = NULL;
 	}
+#endif /*]*/
 }
 
 #if defined(HAVE_LIBREADLINE) /*[*/
@@ -1031,7 +1035,7 @@ copyright_dump(void)
 }
 
 void
-Show_action(Widget w unused, XEvent *event unused, String *params,
+Show_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	action_debug(Show_action, event, params, num_params);
@@ -1056,7 +1060,7 @@ Show_action(Widget w unused, XEvent *event unused, String *params,
 #if defined(X3270_TRACE) /*[*/
 /* Trace([data|keyboard][on[filename]|off]) */
 void
-Trace_action(Widget w unused, XEvent *event unused, String *params,
+Trace_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	int tg = 0;
@@ -1126,8 +1130,8 @@ Trace_action(Widget w unused, XEvent *event unused, String *params,
 
 /* Break to the command prompt. */
 void
-Escape_action(Widget w unused, XEvent *event unused, String *params unused,
-    Cardinal *num_params unused)
+Escape_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_unused,
+    Cardinal *num_params _is_unused)
 {
 	action_debug(Escape_action, event, params, num_params);
 	if (!appres.secure)

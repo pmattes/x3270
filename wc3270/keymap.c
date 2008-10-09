@@ -949,7 +949,7 @@ set_inactive(void)
 
 /* 3270/NVT mode change. */
 static void
-keymap_3270_mode(Boolean ignored unused)
+keymap_3270_mode(Boolean ignored _is_unused)
 {
 	if (last_3270 != IN_3270 || last_nvt != IN_ANSI) {
 		last_3270 = IN_3270;

@@ -1024,7 +1024,7 @@ Reconnect_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 #endif /*]*/
 
 void
-Disconnect_action(Widget w unused, XEvent *event, String *params,
+Disconnect_action(Widget w _is_unused, XEvent *event, String *params,
 	Cardinal *num_params)
 {
 	action_debug(Disconnect_action, event, params, num_params);

@@ -28,7 +28,9 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#if !defined(_MSC_VER) /*[*/
 #include <unistd.h>
+#endif /*]*/
 #include <stdlib.h>
 #include <sys/types.h>
 #if !defined(_WIN32) /*[*/

@@ -43,11 +43,16 @@
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
+
 #if defined(_WIN32) /*[*/
 #include <windows.h>
 #include <io.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#endif /*]*/
+
+#if defined(_MSC_VER) /*[*/
+#include "Msc/deprecated.h"
 #endif /*]*/
 
 /* Globals */
@@ -389,7 +394,7 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 static void
 print_text_done(FILE *f, Boolean do_popdown
 #if defined(X3270_DISPLAY) /*[*/
-					    unused
+					    _is_unused
 #endif /*]*/
 						  )
 {
@@ -414,8 +419,8 @@ print_text_done(FILE *f, Boolean do_popdown
 #if defined(X3270_DISPLAY) /*[*/
 /* Callback for "OK" button on the print text popup. */
 static void
-print_text_callback(Widget w unused, XtPointer client_data,
-    XtPointer call_data unused)
+print_text_callback(Widget w _is_unused, XtPointer client_data,
+    XtPointer call_data _is_unused)
 {
 	char *filter;
 	FILE *f;
@@ -440,8 +445,8 @@ print_text_callback(Widget w unused, XtPointer client_data,
 
 /* Callback for "Plain Text" button on save text popup. */
 static void
-save_text_plain_callback(Widget w unused, XtPointer client_data,
-    XtPointer call_data unused)
+save_text_plain_callback(Widget w _is_unused, XtPointer client_data,
+    XtPointer call_data _is_unused)
 {
 	char *filename;
 	FILE *f;
@@ -464,8 +469,8 @@ save_text_plain_callback(Widget w unused, XtPointer client_data,
 
 /* Callback for "HTML" button on save text popup. */
 static void
-save_text_html_callback(Widget w unused, XtPointer client_data,
-    XtPointer call_data unused)
+save_text_html_callback(Widget w _is_unused, XtPointer client_data,
+    XtPointer call_data _is_unused)
 {
 	char *filename;
 	FILE *f;
@@ -621,7 +626,7 @@ find_wordpad(void)
 
 /* Print or save the contents of the screen as text. */
 void
-PrintText_action(Widget w unused, XEvent *event, String *params,
+PrintText_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	Cardinal i;
@@ -845,8 +850,8 @@ PrintText_action(Widget w unused, XEvent *event, String *params,
 
 /* Callback for Print Text menu option. */
 void
-print_text_option(Widget w, XtPointer client_data unused,
-    XtPointer call_data unused)
+print_text_option(Widget w, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	char *filter = get_resource(ResPrintTextCommand);
 	Boolean secure = appres.secure;
@@ -887,8 +892,8 @@ print_text_option(Widget w, XtPointer client_data unused,
 
 /* Callback for Save Text menu option. */
 void
-save_text_option(Widget w, XtPointer client_data unused,
-    XtPointer call_data unused)
+save_text_option(Widget w, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	/* Pop up a dialog to confirm or modify their choice. */
 	popup_save_text(CN);
@@ -928,7 +933,7 @@ print_window_done(int status)
 
 /* Timeout callback for window print. */
 static void
-snap_it(XtPointer closure unused, XtIntervalId *id unused)
+snap_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
 	if (!print_window_command)
 		return;
@@ -938,8 +943,8 @@ snap_it(XtPointer closure unused, XtIntervalId *id unused)
 
 /* Callback for "OK" button on print window popup. */
 static void
-print_window_callback(Widget w unused, XtPointer client_data,
-    XtPointer call_data unused)
+print_window_callback(Widget w _is_unused, XtPointer client_data,
+    XtPointer call_data _is_unused)
 {
 	print_window_command = XawDialogGetValueString((Widget)client_data);
 	XtPopdown(print_window_shell);
@@ -949,7 +954,7 @@ print_window_callback(Widget w unused, XtPointer client_data,
 
 /* Print the contents of the screen as a bitmap. */
 void
-PrintWindow_action(Widget w unused, XEvent *event, String *params,
+PrintWindow_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	char *filter = get_resource(ResPrintWindowCommand);
@@ -990,8 +995,8 @@ PrintWindow_action(Widget w unused, XEvent *event, String *params,
 #if defined(X3270_MENUS) /*[*/
 /* Callback for menu Print Window option. */
 void
-print_window_option(Widget w, XtPointer client_data unused,
-    XtPointer call_data unused)
+print_window_option(Widget w, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	Cardinal zero = 0;
 

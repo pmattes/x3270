@@ -66,7 +66,7 @@ fallbacks.c: $(MKFB) X3270.xad Makefile
 $(MKFB): mkfb.c Makefile
 	$(NATIVECC) -g -o $(MKFB) -D_WIN32 mkfb.c
 
-wc3270res.o: wc3270.rc x3270-icon2.ico Makefile
+wc3270res.o: wc3270.rc wc3270.ico Makefile
 	$(WINDRES) -i wc3270.rc -o wc3270res.o
 
 wc3270.exe: $(OBJECTS) Makefile

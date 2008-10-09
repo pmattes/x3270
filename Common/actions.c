@@ -306,7 +306,7 @@ const char *ia_name[] = {
 
 /* No-op action for suppressed actions. */
 static void
-suppressed_action(Widget w unused, XEvent *event, String *params, Cardinal *num_params)
+suppressed_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
 {
 	action_debug(suppressed_action, event, params, num_params);
 }

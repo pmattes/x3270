@@ -88,3 +88,27 @@ win32_strerror(int e)
 
 	return buffer;
 }
+
+#if defined(_MSC_VER) /*[*/
+
+#include <windows.h>
+#define SECS_BETWEEN_EPOCHS	11644473600ULL
+#define SECS_TO_100NS		10000000ULL /* 10^7 */
+
+int
+gettimeofday(struct timeval *tv, void *ignored)
+{
+	FILETIME t;
+	ULARGE_INTEGER u;
+
+	GetSystemTimeAsFileTime(&t);
+	memcpy(&u, &t, sizeof(ULARGE_INTEGER));
+
+	/* Isolate seconds and move epochs. */
+	tv->tv_sec = (DWORD)((u.QuadPart / SECS_TO_100NS) -
+			       	SECS_BETWEEN_EPOCHS);
+	tv->tv_usec = (u.QuadPart % SECS_TO_100NS) / 10ULL;
+	return 0;
+}
+
+#endif /*]*/

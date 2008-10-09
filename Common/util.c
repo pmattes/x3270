@@ -791,7 +791,7 @@ typedef struct iorec {
 static iorec_t *iorecs = NULL;
 
 static void
-io_fn(XtPointer closure, int *source unused, XtInputId *id)
+io_fn(XtPointer closure, int *source _is_unused, XtInputId *id)
 {
 	iorec_t *iorec;
 

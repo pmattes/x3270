@@ -51,16 +51,16 @@ extern Pixmap icon;
 
 /* Called when OK is pressed on the about popup */
 static void
-saw_about(Widget w unused, XtPointer client_data unused,
-	XtPointer call_data unused)
+saw_about(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
 {
 	XtPopdown(about_shell);
 }
 
 /* Called when the about popup is popped down */
 static void
-destroy_about(Widget w unused, XtPointer client_data unused,
-	XtPointer call_data unused)
+destroy_about(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
 {
 	XtDestroyWidget(about_shell);
 	about_shell = NULL;

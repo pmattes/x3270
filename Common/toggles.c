@@ -136,7 +136,7 @@ shutdown_toggles(void)
 }
 
 void
-Toggle_action(Widget w unused, XEvent *event, String *params,
+Toggle_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	int j;

@@ -489,7 +489,7 @@ select_extend_action(Widget w, XEvent *event, String *params,
  * Usually bound to <BtnUp>.
  */
 void
-select_end_action(Widget w unused, XEvent *event, String *params,
+select_end_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	Cardinal i;
@@ -571,7 +571,7 @@ select_end_action(Widget w unused, XEvent *event, String *params,
  */
 
 void
-SelectDown_action(Widget w unused, XEvent *event, String *params,
+SelectDown_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	int x, y;
@@ -602,7 +602,7 @@ SelectDown_action(Widget w unused, XEvent *event, String *params,
 }
 
 void
-SelectMotion_action(Widget w unused, XEvent *event, String *params,
+SelectMotion_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	int x, y;
@@ -659,7 +659,7 @@ SelectMotion_action(Widget w unused, XEvent *event, String *params,
 }
 
 void
-SelectUp_action(Widget w unused, XEvent *event, String *params,
+SelectUp_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	int x, y;
@@ -742,7 +742,7 @@ SelectUp_action(Widget w unused, XEvent *event, String *params,
  * Usually bound to the Copy key.
  */
 void
-set_select_action(Widget w unused, XEvent *event, String *params,
+set_select_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	Cardinal i;
@@ -789,7 +789,7 @@ mouse_baddr(Widget w, XEvent *event)
 #define ULBS	(ULS * 8)
 
 void
-Cut_action(Widget w unused, XEvent *event, String *params, Cardinal *num_params)
+Cut_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
 {
 	register int baddr;
 	unsigned char fa = get_field_attribute(0);
@@ -824,7 +824,7 @@ Cut_action(Widget w unused, XEvent *event, String *params, Cardinal *num_params)
  * KybdSelect action.  Extends the selection area in the indicated direction.
  */
 void
-KybdSelect_action(Widget w unused, XEvent *event, String *params,
+KybdSelect_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	enum { UP, DOWN, LEFT, RIGHT } direction;
@@ -918,7 +918,7 @@ KybdSelect_action(Widget w unused, XEvent *event, String *params,
  * unselect action.  Removes a selection.
  */
 void
-Unselect_action(Widget w unused, XEvent *event, String *params,
+Unselect_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	action_debug(Unselect_action, event, params, num_params);
@@ -928,7 +928,7 @@ Unselect_action(Widget w unused, XEvent *event, String *params,
 }
 
 void
-SelectAll_action(Widget w unused, XEvent *event, String *params,
+SelectAll_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	Cardinal i;
@@ -1153,7 +1153,7 @@ convert_sel(Widget w, Atom *selection, Atom *target, Atom *type,
 }
 
 static void
-lose_sel(Widget w unused, Atom *selection)
+lose_sel(Widget w _is_unused, Atom *selection)
 {
 	int i;
 
@@ -1555,7 +1555,7 @@ area_is_selected(int baddr, int len)
  * Unhighlight the region of selected text -- but don't give up the selection.
  */
 void
-unselect(int baddr unused, int len unused)
+unselect(int baddr _is_unused, int len _is_unused)
 {
 	if (any_selected) {
 		(void) memset((char *) selected, 0, (ROWS*COLS + 7) / 8);
@@ -1575,9 +1575,9 @@ static Boolean	paste_utf8;
 #endif /*]*/
 
 static void
-paste_callback(Widget w, XtPointer client_data unused, Atom *selection unused,
-    Atom *type unused, XtPointer value, unsigned long *length,
-    int *format unused)
+paste_callback(Widget w, XtPointer client_data _is_unused, Atom *selection _is_unused,
+    Atom *type _is_unused, XtPointer value, unsigned long *length,
+    int *format _is_unused)
 {
 	char *s, *t;
 	unsigned long s_len, t_len;

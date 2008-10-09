@@ -868,7 +868,7 @@ read_resource_file(const char *filename, Boolean fatal)
  * Safe routine for querying window attributes
  */
 static int
-dummy_error_handler(Display *d unused, XErrorEvent *e unused)
+dummy_error_handler(Display *d _is_unused, XErrorEvent *e _is_unused)
 {
 	return 0;
 }

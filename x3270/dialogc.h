@@ -1,5 +1,5 @@
 /*
- * Modifications Copyright 1996, 1999, 2000, 2001, 2002, 2003 by Paul Mattes.
+ * Modifications Copyright 1996-2008 by Paul Mattes.
  * Copyright October 1995 by Dick Altenbern
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
@@ -51,7 +51,7 @@ extern void dialog_register_sensitivity(Widget w, Boolean *bvar1,
     Boolean bval3);
 extern void dialog_flip_toggles(struct toggle_list *toggle_list, Widget w);
 extern void dialog_text_callback(Widget w, XtPointer client_data,
-    XtPointer call_data unused);
+    XtPointer call_data _is_unused);
 extern void dialog_match_dimension(Widget w1, Widget w2, const char *n);
 extern void dialog_mark_toggle(Widget w, Pixmap p);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 1996, 1999 by Paul Mattes.
+ * Copyright 1996-2008 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -85,15 +85,15 @@ HuskClassRec huskClassRec = {
 WidgetClass huskWidgetClass = (WidgetClass)&huskClassRec;
 
 static XtGeometryResult 
-QueryGeometry(Widget widget unused, XtWidgetGeometry *constraint unused,
-	XtWidgetGeometry *preferred unused)
+QueryGeometry(Widget widget _is_unused, XtWidgetGeometry *constraint _is_unused,
+	XtWidgetGeometry *preferred _is_unused)
 {
 	return XtGeometryYes;
 }
 
 static XtGeometryResult 
 GeometryManager(Widget w, XtWidgetGeometry *request,
-    XtWidgetGeometry *reply unused)
+    XtWidgetGeometry *reply _is_unused)
 {
 	/* Always succeed. */
 	if (!(request->request_mode & XtCWQueryOnly)) {
@@ -112,7 +112,7 @@ GeometryManager(Widget w, XtWidgetGeometry *request,
 }
 
 static void 
-ChangeManaged(Widget w unused)
+ChangeManaged(Widget w _is_unused)
 {
 }
 
@@ -123,8 +123,8 @@ ClassInitialize(void)
 }
 
 static void 
-Initialize(Widget request unused, Widget new unused, ArgList args unused,
-	Cardinal *num_args unused)
+Initialize(Widget request _is_unused, Widget new _is_unused, ArgList args _is_unused,
+	Cardinal *num_args _is_unused)
 {
 }
 
@@ -139,8 +139,8 @@ Realize(register Widget w, Mask *valueMask, XSetWindowAttributes *attributes)
 }
 
 static Boolean 
-SetValues(Widget current unused, Widget request unused, Widget new unused,
-	ArgList args unused, Cardinal *num_args unused)
+SetValues(Widget current _is_unused, Widget request _is_unused, Widget new _is_unused,
+	ArgList args _is_unused, Cardinal *num_args _is_unused)
 {
 	return False;
 }

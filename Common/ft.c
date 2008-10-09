@@ -56,6 +56,9 @@
 #include "tablesc.h"
 #include "telnetc.h"
 #include "utilc.h"
+#if defined(_MSC_VER) /*[*/
+#include "Msc/deprecated.h"
+#endif /*]*/
 
 /* Macros. */
 #define eos(s)	strchr((s), '\0')
@@ -116,14 +119,14 @@ static struct toggle_list units_toggles = { units_options };
 #endif /*]*/
 
 static enum recfm {
-	DEFAULT_RECFM, FIXED, VARIABLE, UNDEFINED
+	DEFAULT_RECFM, RECFM_FIXED, RECFM_VARIABLE, RECFM_UNDEFINED
 } recfm = DEFAULT_RECFM;
 #if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
 static Boolean recfm_default = True;
 static enum recfm r_default_recfm = DEFAULT_RECFM;
-static enum recfm r_fixed = FIXED;
-static enum recfm r_variable = VARIABLE;
-static enum recfm r_undefined = UNDEFINED;
+static enum recfm r_fixed = RECFM_FIXED;
+static enum recfm r_variable = RECFM_VARIABLE;
+static enum recfm r_undefined = RECFM_UNDEFINED;
 #endif /*]*/
 
 static enum units {
@@ -285,8 +288,8 @@ ft_didnt_start(void)
  * Called back from the "File Transfer" option on the File menu.
  */
 void
-popup_ft(Widget w unused, XtPointer call_parms unused,
-	XtPointer call_data unused)
+popup_ft(Widget w _is_unused, XtPointer call_parms _is_unused,
+	XtPointer call_data _is_unused)
 {
 	/* Initialize it. */
 	if (ft_shell == (Widget)NULL)
@@ -486,7 +489,7 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
 	dialog_apply_bitmap(recfm_options[1],
-	    (recfm == FIXED) ? diamond : no_diamond);
+	    (recfm == RECFM_FIXED) ? diamond : no_diamond);
 	XtAddCallback(recfm_options[1], XtNcallback, recfm_callback,
 	    (XtPointer)&r_fixed);
 	dialog_register_sensitivity(recfm_options[1],
@@ -502,7 +505,7 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
 	dialog_apply_bitmap(recfm_options[2],
-	    (recfm == VARIABLE) ? diamond : no_diamond);
+	    (recfm == RECFM_VARIABLE) ? diamond : no_diamond);
 	XtAddCallback(recfm_options[2], XtNcallback, recfm_callback,
 	    (XtPointer)&r_variable);
 	dialog_register_sensitivity(recfm_options[2],
@@ -518,7 +521,7 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
 	dialog_apply_bitmap(recfm_options[3],
-	    (recfm == UNDEFINED) ? diamond : no_diamond);
+	    (recfm == RECFM_UNDEFINED) ? diamond : no_diamond);
 	XtAddCallback(recfm_options[3], XtNcallback, recfm_callback,
 	    (XtPointer)&r_undefined);
 	dialog_register_sensitivity(recfm_options[3],
@@ -874,8 +877,8 @@ ft_popup_init(void)
 
 /* Transfer pop-up popping up. */
 static void
-ft_popup_callback(Widget w unused, XtPointer client_data unused,
-	XtPointer call_data unused)
+ft_popup_callback(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
 {
 	/* Set the focus to the local file widget. */
 	PA_dialog_focus_action(local_file, (XEvent *)NULL, (String *)NULL,
@@ -887,15 +890,15 @@ ft_popup_callback(Widget w unused, XtPointer client_data unused,
 
 /* Cancel button pushed. */
 static void
-ft_cancel(Widget w unused, XtPointer client_data unused,
-	XtPointer call_data unused)
+ft_cancel(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
 {
 	XtPopdown(ft_shell);
 }
 
 /* recfm options. */
 static void
-recfm_callback(Widget w, XtPointer user_data, XtPointer call_data unused)
+recfm_callback(Widget w, XtPointer user_data, XtPointer call_data _is_unused)
 {
 	recfm = *(enum recfm *)user_data;
 	recfm_default = (recfm == DEFAULT_RECFM);
@@ -905,7 +908,7 @@ recfm_callback(Widget w, XtPointer user_data, XtPointer call_data unused)
 
 /* Units options. */
 static void
-units_callback(Widget w, XtPointer user_data, XtPointer call_data unused)
+units_callback(Widget w, XtPointer user_data, XtPointer call_data _is_unused)
 {
 	units = *(enum units *)user_data;
 	units_default = (units == DEFAULT_UNITS);
@@ -915,8 +918,8 @@ units_callback(Widget w, XtPointer user_data, XtPointer call_data unused)
 
 /* OK button pushed. */
 static void
-ft_start_callback(Widget w unused, XtPointer call_parms unused,
-	XtPointer call_data unused)
+ft_start_callback(Widget w _is_unused, XtPointer call_parms _is_unused,
+	XtPointer call_data _is_unused)
 {
 	if (ft_start()) {
 		XtPopdown(ft_shell);
@@ -926,8 +929,8 @@ ft_start_callback(Widget w unused, XtPointer call_parms unused,
 
 /* Send/receive options. */
 static void
-toggle_receive(Widget w unused, XtPointer client_data,
-	XtPointer call_data unused)
+toggle_receive(Widget w _is_unused, XtPointer client_data,
+	XtPointer call_data _is_unused)
 {
 	/* Toggle the flag */
 	receive_flag = *(Boolean *)client_data;
@@ -940,7 +943,7 @@ toggle_receive(Widget w unused, XtPointer client_data,
 
 /* Ascii/binary options. */
 static void
-toggle_ascii(Widget w unused, XtPointer client_data, XtPointer call_data unused)
+toggle_ascii(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_unused)
 {
 	/* Toggle the flag. */
 	ascii_flag = *(Boolean *)client_data;
@@ -957,7 +960,7 @@ toggle_ascii(Widget w unused, XtPointer client_data, XtPointer call_data unused)
 
 /* CR option. */
 static void
-toggle_cr(Widget w, XtPointer client_data unused, XtPointer call_data unused)
+toggle_cr(Widget w, XtPointer client_data _is_unused, XtPointer call_data _is_unused)
 {
 	/* Toggle the cr flag */
 	cr_flag = !cr_flag;
@@ -967,8 +970,8 @@ toggle_cr(Widget w, XtPointer client_data unused, XtPointer call_data unused)
 
 /* Append option. */
 static void
-toggle_append(Widget w, XtPointer client_data unused,
-	XtPointer call_data unused)
+toggle_append(Widget w, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
 {
 	/* Toggle Append Flag */
 	append_flag = !append_flag;
@@ -978,8 +981,8 @@ toggle_append(Widget w, XtPointer client_data unused,
 
 /* Remap option. */
 static void
-toggle_remap(Widget w, XtPointer client_data unused,
-	XtPointer call_data unused)
+toggle_remap(Widget w, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
 {
 	/* Toggle Remap Flag */
 	remap_flag = !remap_flag;
@@ -989,8 +992,8 @@ toggle_remap(Widget w, XtPointer client_data unused,
 
 /* TSO/VM option. */
 static void
-toggle_vm(Widget w unused, XtPointer client_data unused,
-    XtPointer call_data unused)
+toggle_vm(Widget w _is_unused, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	/* Toggle the flag. */
 	vm_flag = *(Boolean *)client_data;
@@ -1000,7 +1003,7 @@ toggle_vm(Widget w unused, XtPointer client_data unused,
 	dialog_mark_toggle(tso_toggle, vm_flag ? no_diamond : diamond);
 
 	if (vm_flag) {
-		if (recfm == UNDEFINED) {
+		if (recfm == RECFM_UNDEFINED) {
 			recfm = DEFAULT_RECFM;
 			recfm_default = True;
 			dialog_flip_toggles(&recfm_toggles,
@@ -1085,13 +1088,13 @@ ft_start(void)
 				/* RECFM Entered, process */
 				strcat(op, " recfm(");
 				switch (recfm) {
-				    case FIXED:
+				    case RECFM_FIXED:
 					strcat(op, "f");
 					break;
-				    case VARIABLE:
+				    case RECFM_VARIABLE:
 					strcat(op, "v");
 					break;
-				    case UNDEFINED:
+				    case RECFM_UNDEFINED:
 					strcat(op, "u");
 					break;
 				    default:
@@ -1143,10 +1146,10 @@ ft_start(void)
 			if (recfm != DEFAULT_RECFM) {
 				strcat(op, " recfm ");
 				switch (recfm) {
-				    case FIXED:
+				    case RECFM_FIXED:
 					strcat(op, "f");
 					break;
-				    case VARIABLE:
+				    case RECFM_VARIABLE:
 					strcat(op, "v");
 					break;
 				    default:
@@ -1314,8 +1317,8 @@ progress_popup_init(void)
 
 /* In-progress pop-up popped up. */
 static void
-progress_popup_callback(Widget w unused, XtPointer client_data unused,
-	XtPointer call_data unused)
+progress_popup_callback(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
 {
 	XtVaSetValues(from_file, XtNlabel,
 	    receive_flag ? ft_host_filename : ft_local_filename, NULL);
@@ -1346,8 +1349,8 @@ progress_popup_callback(Widget w unused, XtPointer client_data unused,
 
 /* In-progress "cancel" button. */
 static void
-progress_cancel_callback(Widget w unused, XtPointer client_data unused,
-	XtPointer call_data unused)
+progress_cancel_callback(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
 {
 	if (ft_state == FT_RUNNING) {
 		ft_state = FT_ABORT_WAIT;
@@ -1440,8 +1443,8 @@ overwrite_popup_init(void)
 
 /* Overwrite "okay" button. */
 static void
-overwrite_okay_callback(Widget w unused, XtPointer client_data unused,
-	XtPointer call_data unused)
+overwrite_okay_callback(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
 {
 	XtPopdown(overwrite_shell);
 
@@ -1454,16 +1457,16 @@ overwrite_okay_callback(Widget w unused, XtPointer client_data unused,
 
 /* Overwrite "cancel" button. */
 static void
-overwrite_cancel_callback(Widget w unused, XtPointer client_data unused,
-	XtPointer call_data unused)
+overwrite_cancel_callback(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
 {
 	XtPopdown(overwrite_shell);
 }
 
 /* Overwrite pop-up popped down. */
 static void
-overwrite_popdown(Widget w unused, XtPointer client_data unused,
-	XtPointer call_data unused)
+overwrite_popdown(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
 {
 	XtDestroyWidget(overwrite_shell);
 	overwrite_shell = (Widget)NULL;
@@ -1587,7 +1590,7 @@ ft_aborting(void)
 
 /* Process a disconnect abort. */
 static void
-ft_connected(Boolean ignored unused)
+ft_connected(Boolean ignored _is_unused)
 {
 	if (!CONNECTED && ft_state != FT_NONE)
 		ft_complete(get_message("ftDisconnected"));
@@ -1595,7 +1598,7 @@ ft_connected(Boolean ignored unused)
 
 /* Process an abort from no longer being in 3270 mode. */
 static void
-ft_in3270(Boolean ignored unused)
+ft_in3270(Boolean ignored _is_unused)
 {
 	if (!IN_3270 && ft_state != FT_NONE)
 		ft_complete(get_message("ftNot3270"));
@@ -1661,7 +1664,7 @@ enum ft_parm_name {
 };
 
 void  
-Transfer_action(Widget w unused, XEvent *event, String *params,
+Transfer_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	int i, k;
@@ -1845,13 +1848,13 @@ Transfer_action(Widget w unused, XEvent *event, String *params,
 				/* RECFM Entered, process */
 				strcat(op, " recfm(");
 				switch (recfm) {
-				    case FIXED:
+				    case RECFM_FIXED:
 					strcat(op, "f");
 					break;
-				    case VARIABLE:
+				    case RECFM_VARIABLE:
 					strcat(op, "v");
 					break;
-				    case UNDEFINED:
+				    case RECFM_UNDEFINED:
 					strcat(op, "u");
 					break;
 				    default:
@@ -1893,10 +1896,10 @@ Transfer_action(Widget w unused, XEvent *event, String *params,
 			if (recfm != DEFAULT_RECFM) {
 				strcat(op, " recfm ");
 				switch (recfm) {
-				    case FIXED:
+				    case RECFM_FIXED:
 					strcat(op, "f");
 					break;
-				    case VARIABLE:
+				    case RECFM_VARIABLE:
 					strcat(op, "v");
 					break;
 				    default:

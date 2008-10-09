@@ -364,7 +364,7 @@ static void lock_icon(enum mcursor_state state);
 static char *expand_cslist(const char *s);
 static const char *name2cs_3270(const char *name);
 static void hollow_cursor(int baddr);
-static void revert_later(XtPointer closure unused, XtIntervalId *id unused);
+static void revert_later(XtPointer closure _is_unused, XtIntervalId *id _is_unused);
 #if defined(X3270_DBCS) /*[*/
 static void xlate_dbcs(unsigned char, unsigned char, XChar2b *);
 #endif /*]*/
@@ -923,14 +923,14 @@ screen_set_thumb(float top, float shown)
 }
 
 static void
-screen_scroll_proc(Widget w unused, XtPointer client_data unused,
+screen_scroll_proc(Widget w _is_unused, XtPointer client_data _is_unused,
     XtPointer position)
 {
 	scroll_proc((long)position, (int)nss.screen_height);
 }
 
 static void
-screen_jump_proc(Widget w unused, XtPointer client_data unused,
+screen_jump_proc(Widget w _is_unused, XtPointer client_data _is_unused,
     XtPointer percent_ptr)
 {
 	jump_proc(*(float *)percent_ptr);
@@ -994,7 +994,7 @@ scrollbar_init(Boolean is_reset)
 
 /* Turn the scrollbar on or off */
 void
-toggle_scrollBar(struct toggle *t unused, enum toggle_type tt unused)
+toggle_scrollBar(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 {
 	scrollbar_changed = True;
 
@@ -1015,7 +1015,7 @@ toggle_scrollBar(struct toggle *t unused, enum toggle_type tt unused)
  * Called when a host connects, disconnects or changes ANSI/3270 mode.
  */
 static void
-screen_connect(Boolean ignored unused)
+screen_connect(Boolean ignored _is_unused)
 {
 	if (ea_buf == NULL)
 		return;		/* too soon */
@@ -1132,7 +1132,7 @@ blink_start(void)
  * Restore blanked blinking text
  */
 static void
-text_blink_it(XtPointer closure unused, XtIntervalId *id unused)
+text_blink_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
 	/* Flip the state. */
 	text_blinking_on = !text_blinking_on;
@@ -1179,7 +1179,7 @@ cursor_off(void)
  * Blink the cursor
  */
 static void
-cursor_blink_it(XtPointer closure unused, XtIntervalId *id unused)
+cursor_blink_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
 	cursor_blink_pending = False;
 	if (!CONNECTED || !toggled(CURSOR_BLINK))
@@ -1220,7 +1220,7 @@ cancel_blink(void)
  * Toggle cursor blinking (called from menu)
  */
 void
-toggle_cursorBlink(struct toggle *t unused, enum toggle_type tt unused)
+toggle_cursorBlink(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 {
 	if (!CONNECTED)
 		return;
@@ -1250,7 +1250,7 @@ cursor_on(void)
  * Toggle the cursor (block/underline).
  */
 void
-toggle_altCursor(struct toggle *t, enum toggle_type tt unused)
+toggle_altCursor(struct toggle *t, enum toggle_type tt _is_unused)
 {
 	Boolean was_on;
 
@@ -1292,7 +1292,7 @@ cursor_pos(void)
  * Toggle the display of the cursor position
  */
 void
-toggle_cursorPos(struct toggle *t unused, enum toggle_type tt unused)
+toggle_cursorPos(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 {
 	if (toggled(CURSOR_POS))
 		cursor_pos();
@@ -1318,7 +1318,7 @@ enable_cursor(Boolean on)
  * Toggle the crosshair cursor.
  */
 void
-toggle_crosshair(struct toggle *t, enum toggle_type tt unused)
+toggle_crosshair(struct toggle *t, enum toggle_type tt _is_unused)
 {
 	screen_changed = True;
 	first_changed = 0;
@@ -1331,7 +1331,7 @@ toggle_crosshair(struct toggle *t, enum toggle_type tt unused)
  * Toggle visible control characters.
  */
 void
-toggle_visible_control(struct toggle *t, enum toggle_type tt unused)
+toggle_visible_control(struct toggle *t, enum toggle_type tt _is_unused)
 {
 	visible_control = toggled(VISIBLE_CONTROL);
 	screen_changed = True;
@@ -1345,8 +1345,8 @@ toggle_visible_control(struct toggle *t, enum toggle_type tt unused)
  * Redraw the screen.
  */
 static void
-do_redraw(Widget w, XEvent *event, String *params unused,
-    Cardinal *num_params unused)
+do_redraw(Widget w, XEvent *event, String *params _is_unused,
+    Cardinal *num_params _is_unused)
 {
 	int	x, y, width, height;
 	int	startcol, ncols;
@@ -2274,7 +2274,7 @@ screen_scroll(void)
  * Toggle mono-/dual-case mode.
  */
 void
-toggle_monocase(struct toggle *t unused, enum toggle_type tt unused)
+toggle_monocase(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 {
 	(void) memset((char *) ss->image, 0,
 		      (ROWS*COLS) * sizeof(union sp));
@@ -3479,8 +3479,8 @@ static Boolean toplevel_focused = False;
 static Boolean keypad_entered = False;
 
 void
-PA_Focus_action(Widget w unused, XEvent *event, String *params unused,
-    Cardinal *num_params unused)
+PA_Focus_action(Widget w _is_unused, XEvent *event, String *params _is_unused,
+    Cardinal *num_params _is_unused)
 {
 	XFocusChangeEvent *fe = (XFocusChangeEvent *)event;
 
@@ -3503,8 +3503,8 @@ PA_Focus_action(Widget w unused, XEvent *event, String *params unused,
 }
 
 void
-PA_EnterLeave_action(Widget w unused, XEvent *event unused,
-    String *params unused, Cardinal *num_params unused)
+PA_EnterLeave_action(Widget w _is_unused, XEvent *event _is_unused,
+    String *params _is_unused, Cardinal *num_params _is_unused)
 {
 	XCrossingEvent *ce = (XCrossingEvent *)event;
 
@@ -3525,8 +3525,8 @@ PA_EnterLeave_action(Widget w unused, XEvent *event unused,
 }
 
 void
-PA_KeymapNotify_action(Widget w unused, XEvent *event, String *params unused,
-    Cardinal *num_params unused)
+PA_KeymapNotify_action(Widget w _is_unused, XEvent *event, String *params _is_unused,
+    Cardinal *num_params _is_unused)
 {
 	XKeymapEvent *k = (XKeymapEvent *)event;
 
@@ -3568,7 +3568,7 @@ query_window_state(void)
 }
 
 void
-PA_StateChanged_action(Widget w unused, XEvent *event, String *params,
+PA_StateChanged_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 #if defined(INTERNAL_ACTION_DEBUG) /*[*/
@@ -3652,7 +3652,7 @@ screen_focus(Boolean in)
  * Change fonts.
  */
 void
-SetFont_action(Widget w unused, XEvent *event, String *params,
+SetFont_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	action_debug(SetFont_action, event, params, num_params);
@@ -4507,14 +4507,14 @@ screen_change_model(int mn, int ovc, int ovr)
  * Change emulation modes.
  */
 void
-screen_extended(Boolean extended unused)
+screen_extended(Boolean extended _is_unused)
 {
 	set_rows_cols(model_num, ov_cols, ov_rows);
 	model_changed = True;
 }
 
 void
-screen_m3279(Boolean m3279 unused)
+screen_m3279(Boolean m3279 _is_unused)
 {
 	destroy_pixels();
 	screen_reinit(COLOR_CHANGE);
@@ -5144,7 +5144,7 @@ static Position main_x = 0, main_y = 0;
  * size.
  */
 static void
-configure_stable(XtPointer closure unused, XtIntervalId *id unused)
+configure_stable(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
 	trace_event("Reconfigure timer expired\n");
 	configure_ticking = False;
@@ -5375,7 +5375,7 @@ revert_screen(void)
 }
 
 static void
-revert_later(XtPointer closure unused, XtIntervalId *id unused)
+revert_later(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
 	revert_screen();
 }
@@ -5387,7 +5387,7 @@ revert_later(XtPointer closure unused, XtIntervalId *id unused)
  */
 
 static void
-stream_end(XtPointer closure unused, XtIntervalId *id unused)
+stream_end(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
 	Boolean needs_moving = False;
 
@@ -5444,8 +5444,8 @@ stream_end(XtPointer closure unused, XtIntervalId *id unused)
 }
 
 void
-PA_ConfigureNotify_action(Widget w unused, XEvent *event, String *params unused,
-    Cardinal *num_params unused)
+PA_ConfigureNotify_action(Widget w _is_unused, XEvent *event, String *params _is_unused,
+    Cardinal *num_params _is_unused)
 {
 	XConfigureEvent *re = (XConfigureEvent *) event;
 	Position xx, yy;
@@ -5485,8 +5485,8 @@ PA_ConfigureNotify_action(Widget w unused, XEvent *event, String *params unused,
  * This will switch the behavior of screen scrolling.
  */
 void
-PA_VisibilityNotify_action(Widget w unused, XEvent *event unused,
-    String *params unused, Cardinal *num_params unused)
+PA_VisibilityNotify_action(Widget w _is_unused, XEvent *event _is_unused,
+    String *params _is_unused, Cardinal *num_params _is_unused)
 {
 	XVisibilityEvent *e;
 
@@ -5502,8 +5502,8 @@ PA_VisibilityNotify_action(Widget w unused, XEvent *event unused,
  * one or more failed XCopyArea calls.
  */
 void
-PA_GraphicsExpose_action(Widget w unused, XEvent *event unused,
-    String *params unused, Cardinal *num_params unused)
+PA_GraphicsExpose_action(Widget w _is_unused, XEvent *event _is_unused,
+    String *params _is_unused, Cardinal *num_params _is_unused)
 {
 	int i;
 
@@ -5800,7 +5800,7 @@ im_callback(Display *display, XPointer client_data, XPointer call_data)
 }
 
 static void
-cleanup_xim(Boolean b unused)
+cleanup_xim(Boolean b _is_unused)
 {
 	if (ic != NULL)
 		XDestroyIC(ic);
@@ -5864,7 +5864,7 @@ send_spot_loc(void)
 
 /* Change the window title. */
 void
-Title_action(Widget w unused, XEvent *event, String *params,
+Title_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	action_debug(Title_action, event, params, num_params);
@@ -5878,7 +5878,7 @@ Title_action(Widget w unused, XEvent *event, String *params,
 
 /* Change the window state. */
 void
-WindowState_action(Widget w unused, XEvent *event, String *params,
+WindowState_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	int state;
