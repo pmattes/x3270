@@ -1,7 +1,7 @@
 /* (from) $XConsortium: SmeLine.c,v 1.13 91/07/23 12:23:21 rws Exp $ */
 
 /*
- * Modifications Copyright 1995, 1999, 2000 by Paul Mattes.
+ * Modifications Copyright 1995-2008 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -146,8 +146,8 @@ WidgetClass cmeLineObjectClass = (WidgetClass) &cmeLineClassRec;
  */
 
 static void
-Initialize(Widget request unused, Widget new, ArgList args unused,
-	Cardinal *num_args unused)
+Initialize(Widget request _is_unused, Widget new, ArgList args _is_unused,
+	Cardinal *num_args _is_unused)
 {
     CmeLineObject entry = (CmeLineObject) new;
 
@@ -215,7 +215,7 @@ DestroyGC(Widget w)
  */
 
 static void
-Redisplay(Widget w, XEvent *event unused, Region region unused)
+Redisplay(Widget w, XEvent *event _is_unused, Region region _is_unused)
 {
     CmeLineObject entry = (CmeLineObject) w;
     int y = entry->rectangle.y + 
@@ -239,8 +239,8 @@ Redisplay(Widget w, XEvent *event unused, Region region unused)
  */
 
 static Boolean
-SetValues(Widget current, Widget request unused, Widget new,
-	ArgList args unused, Cardinal *num_args unused)
+SetValues(Widget current, Widget request _is_unused, Widget new,
+	ArgList args _is_unused, Cardinal *num_args _is_unused)
 {
     CmeLineObject entry = (CmeLineObject) new;
     CmeLineObject old_entry = (CmeLineObject) current;

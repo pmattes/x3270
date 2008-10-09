@@ -1,7 +1,7 @@
 /* (from) $XConsortium: SmeBSB.c,v 1.16 91/03/15 15:59:41 gildea Exp $ */
 
 /*
- * Modifications Copyright 1995, 1999, 2000, 2002, 2003, 2005 by Paul Mattes.
+ * Modifications Copyright 1995-2008 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -193,7 +193,7 @@ ClassInitialize(void)
  */
 
 static void
-Initialize(Widget request unused, Widget new)
+Initialize(Widget request _is_unused, Widget new)
 {
     CmeBSBObject entry = (CmeBSBObject) new;
 
@@ -241,7 +241,7 @@ Destroy(Widget w)
  */
 
 static void
-Redisplay(Widget w, XEvent *event unused, Region region unused)
+Redisplay(Widget w, XEvent *event _is_unused, Region region _is_unused)
 {
     GC gc;
     CmeBSBObject entry = (CmeBSBObject) w;
@@ -311,7 +311,7 @@ Redisplay(Widget w, XEvent *event unused, Region region unused)
  */
 
 static Boolean
-SetValues(Widget current, Widget request unused, Widget new)
+SetValues(Widget current, Widget request _is_unused, Widget new)
 {
     CmeBSBObject entry = (CmeBSBObject) new;
     CmeBSBObject old_entry = (CmeBSBObject) current;
@@ -409,7 +409,7 @@ QueryGeometry(Widget w, XtWidgetGeometry *intended,
  */
 
 static void
-OnCallback(XtPointer closure, XtIntervalId *id unused)
+OnCallback(XtPointer closure, XtIntervalId *id _is_unused)
 {
     Widget w = (Widget) closure;
     CmeBSBObject entry = (CmeBSBObject) w;

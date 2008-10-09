@@ -53,6 +53,10 @@
 #include "utilc.h"
 #include "w3miscc.h"
 
+#if defined(_MSC_VER) /*[*/
+#include "Msc/deprecated.h"
+#endif /*]*/
+
 /* Maximum size of a tracefile header. */
 #define MAX_HEADER_SIZE		(10*1024)
 
@@ -433,18 +437,23 @@ trace_rollover_check(void)
 #if defined(ROLLOVER_DEBUG) /*[*/
 		printf("final wpos = %lld\n", wpos);
 #endif /*]*/
+#if !defined(_MSC_VER) /*[*/
 		if (ftruncate(fileno(tracef), wpos) < 0) {
 			popup_an_errno(errno, "trace file ftruncate(%ld) "
 			    "failed", (long)wpos);
 			stop_tracing();
 			return;
 		}
+#endif /*]*/
 		if (fseeko(tracef, wpos, SEEK_SET) < 0) {
 			popup_an_errno(errno, "trace file fseeko(%ld) failed",
 			    (long)wpos);
 			stop_tracing();
 			return;
 		}
+#if defined(_MSC_VER) /*[*/
+		SetEndOfFile((HANDLE)_get_osfhandle(fileno(tracef)));
+#endif /*]*/
 		tracef_size = wpos;
 		tracef_midpoint = wpos;
 		Replace(tracef_midpoint_header,
@@ -631,7 +640,7 @@ get_devfd(const char *pathname)
 
 /* Callback for "OK" button on trace popup */
 static void
-tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data unused)
+tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
 {
 	char *tfn = CN;
 	int devfd = -1;
@@ -829,7 +838,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data unused)
 /* Callback for "No File" button on trace popup */
 static void
 no_tracefile_callback(Widget w, XtPointer client_data,
-	XtPointer call_data unused)
+	XtPointer call_data _is_unused)
 {
 	tracefile_callback((Widget)NULL, "", PN);
 	XtPopdown(trace_shell);
@@ -919,7 +928,7 @@ tracefile_off(void)
 }
 
 void
-toggle_dsTrace(struct toggle *t unused, enum toggle_type tt)
+toggle_dsTrace(struct toggle *t _is_unused, enum toggle_type tt)
 {
 	/* If turning on trace and no trace file, open one. */
 	if (toggled(DS_TRACE) && tracef == NULL)
@@ -935,7 +944,7 @@ toggle_dsTrace(struct toggle *t unused, enum toggle_type tt)
 }
 
 void
-toggle_eventTrace(struct toggle *t unused, enum toggle_type tt)
+toggle_eventTrace(struct toggle *t _is_unused, enum toggle_type tt)
 {
 	/* If turning on event debug, and no trace file, open one. */
 	if (toggled(EVENT_TRACE) && tracef == NULL)
@@ -1037,8 +1046,8 @@ screentrace_cb(char *tfn)
 #if defined(X3270_DISPLAY) /*[*/
 /* Callback for "OK" button on screentrace popup */
 static void
-screentrace_callback(Widget w unused, XtPointer client_data,
-    XtPointer call_data unused)
+screentrace_callback(Widget w _is_unused, XtPointer client_data,
+    XtPointer call_data _is_unused)
 {
 	if (screentrace_cb(XawDialogGetValueString((Widget)client_data)))
 		XtPopdown(screentrace_shell);
@@ -1046,7 +1055,7 @@ screentrace_callback(Widget w unused, XtPointer client_data,
 
 /* Callback for second "OK" button on screentrace popup */
 static void
-onescreen_callback(Widget w, XtPointer client_data, XtPointer call_data unused)
+onescreen_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
 {
 	char *tfn;
 
@@ -1077,7 +1086,7 @@ onescreen_callback(Widget w, XtPointer client_data, XtPointer call_data unused)
 #endif /*]*/
 
 void
-toggle_screenTrace(struct toggle *t unused, enum toggle_type tt)
+toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 {
 	char *tracefile_buf = NULL;
 	char *tracefile;

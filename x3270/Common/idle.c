@@ -204,7 +204,7 @@ process_timeout_value(char *t)
 
 /* Called when a host connects or disconnects. */
 static void
-idle_in3270(Boolean in3270 unused)
+idle_in3270(Boolean in3270 _is_unused)
 {
 	if (IN_3270) {
 		reset_idle_timer();
@@ -556,8 +556,8 @@ idle_popup_init(void)
 
 /* Idle pop-up popping up. */
 static void
-idle_popup_callback(Widget w unused, XtPointer client_data unused,
-	XtPointer call_data unused)
+idle_popup_callback(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
 {
 	/* Set the focus to the command widget. */
 	PA_dialog_focus_action(command_value, (XEvent *)NULL, (String *)NULL,
@@ -566,16 +566,16 @@ idle_popup_callback(Widget w unused, XtPointer client_data unused,
 
 /* Cancel button pushed. */
 static void
-idle_cancel(Widget w unused, XtPointer client_data unused,
-	XtPointer call_data unused)
+idle_cancel(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
 {
 	XtPopdown(idle_shell);
 }
 
 /* OK button pushed. */
 static void
-okay_callback(Widget w unused, XtPointer call_parms unused,
-	XtPointer call_data unused)
+okay_callback(Widget w _is_unused, XtPointer call_parms _is_unused,
+	XtPointer call_data _is_unused)
 {
 	if (idle_start() == 0) {
 		idle_changed = True;
@@ -592,8 +592,8 @@ mark_toggle(Widget w, Pixmap p)
 
 /* Hour/minute/second options. */
 static void
-toggle_hms(Widget w unused, XtPointer client_data,
-	XtPointer call_data unused)
+toggle_hms(Widget w _is_unused, XtPointer client_data,
+	XtPointer call_data _is_unused)
 {
 	/* Toggle the flag */
 	hms = *(char *)client_data;
@@ -606,8 +606,8 @@ toggle_hms(Widget w unused, XtPointer client_data,
 
 /* Fuzz option. */
 static void
-toggle_fuzz(Widget w unused, XtPointer client_data,
-	XtPointer call_data unused)
+toggle_fuzz(Widget w _is_unused, XtPointer client_data,
+	XtPointer call_data _is_unused)
 {
 	/* Toggle the flag */
 	fuzz = !fuzz;
@@ -618,8 +618,8 @@ toggle_fuzz(Widget w unused, XtPointer client_data,
 
 /* Enable/disable options. */
 static void
-toggle_enable(Widget w unused, XtPointer client_data,
-	XtPointer call_data unused)
+toggle_enable(Widget w _is_unused, XtPointer client_data,
+	XtPointer call_data _is_unused)
 {
 	/* Toggle the flag */
 	idle_user_enabled = *(enum idle_enum *)client_data;

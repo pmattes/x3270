@@ -66,6 +66,10 @@
 #include "resolverc.h"
 #include "w3miscc.h"
 
+#if defined(_MSC_VER) /*[*/
+#include "Msc/deprecated.h"
+#endif /*]*/
+
 #if defined(_WIN32) && !defined(ISDLL) /*[*/
 typedef int rhproc(const char *, char *, unsigned short *, struct sockaddr *,
 	socklen_t *, char *, int);

@@ -86,7 +86,7 @@ static void dft_set_cur_req(void);
 
 /* Process a Transfer Data structured field from the host. */
 void
-ft_dft_data(unsigned char *data, int length unused)
+ft_dft_data(unsigned char *data, int length _is_unused)
 {
 	struct data_buffer *data_bufr = (struct data_buffer *)data;
 	unsigned short data_length, data_type;

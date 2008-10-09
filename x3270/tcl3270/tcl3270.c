@@ -729,7 +729,7 @@ sms_continue(void)
 
 static void
 dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
-    int rel_rows unused, int rel_cols)
+    int rel_rows _is_unused, int rel_cols)
 {
 	register int i;
 	Tcl_Obj *o = NULL;
@@ -976,7 +976,7 @@ dump_field(Cardinal count, const char *name, Boolean in_ascii)
 }
 
 void
-Ascii_action(Widget w unused, XEvent *event unused, String *params,
+Ascii_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	dump_fixed(params, *num_params, action_name(Ascii_action), True,
@@ -984,14 +984,14 @@ Ascii_action(Widget w unused, XEvent *event unused, String *params,
 }
 
 void
-AsciiField_action(Widget w unused, XEvent *event unused, String *params unused,
+AsciiField_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_unused,
     Cardinal *num_params)
 {
 	dump_field(*num_params, action_name(AsciiField_action), True);
 }
 
 void
-Ebcdic_action(Widget w unused, XEvent *event unused, String *params,
+Ebcdic_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	dump_fixed(params, *num_params, action_name(Ebcdic_action), False,
@@ -999,8 +999,8 @@ Ebcdic_action(Widget w unused, XEvent *event unused, String *params,
 }
 
 void
-EbcdicField_action(Widget w unused, XEvent *event unused,
-    String *params unused, Cardinal *num_params)
+EbcdicField_action(Widget w _is_unused, XEvent *event _is_unused,
+    String *params _is_unused, Cardinal *num_params)
 {
 	dump_field(*num_params, action_name(EbcdicField_action), False);
 }
@@ -1077,7 +1077,7 @@ status_string(void)
 }
 
 void
-Status_action(Widget w unused, XEvent *event unused, String *params,
+Status_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	char *s;
@@ -1255,7 +1255,7 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf)
  * ReadBuffer action.
  */
 void
-ReadBuffer_action(Widget w unused, XEvent *event unused, String *params,
+ReadBuffer_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	do_read_buffer(params, *num_params, ea_buf);
@@ -1321,7 +1321,7 @@ snap_save(void)
 }
 
 void
-Snap_action(Widget w unused, XEvent *event unused, String *params,
+Snap_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	char nbuf[16];
@@ -1465,7 +1465,7 @@ wait_timed_out(void)
 }
 
 void
-Wait_action(Widget w unused, XEvent *event unused, String *params,
+Wait_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	long tmo = -1;

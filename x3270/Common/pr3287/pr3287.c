@@ -68,7 +68,9 @@
 #include <netdb.h>
 #endif /*]*/
 #include <sys/types.h>
+#if !defined(_MSC_VER) /*[*/
 #include <unistd.h>
+#endif /*]*/
 #if !defined(_WIN32) /*[*/
 #include <sys/socket.h>
 #include <netinet/in.h>

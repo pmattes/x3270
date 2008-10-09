@@ -25,10 +25,10 @@
 int
 main(int argc, char *argv[])
 {
-    char appdata[PATH_MAX];
+    char appdata[MAX_PATH];
     int sl;
-    char short_ad[PATH_MAX];
-    char cmd[7 + PATH_MAX];
+    char short_ad[MAX_PATH];
+    char cmd[7 + MAX_PATH];
 
     /* Get the application data directory. */
     if (get_dirs(NULL, appdata, "wc3270") < 0) {

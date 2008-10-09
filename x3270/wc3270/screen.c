@@ -1244,7 +1244,7 @@ blinkmap(Boolean blinking, Boolean underlined, int c)
 
 /* Display what's in the buffer. */
 void
-screen_disp(Boolean erasing unused)
+screen_disp(Boolean erasing _is_unused)
 {
 	int row, col;
 	int a;
@@ -1817,14 +1817,14 @@ cursor_move(int baddr)
 }
 
 void
-toggle_monocase(struct toggle *t unused, enum toggle_type tt unused)
+toggle_monocase(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 {
     	screen_changed = True;
 	screen_disp(False);
 }
 
 void
-toggle_underscore(struct toggle *t unused, enum toggle_type tt unused)
+toggle_underscore(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 {
     	screen_changed = True;
 	screen_disp(False);
@@ -1955,7 +1955,7 @@ status_connect(Boolean connected)
 }
 
 static void
-status_3270_mode(Boolean ignored unused)
+status_3270_mode(Boolean ignored _is_unused)
 {
 	oia_boxsolid = IN_3270 && !IN_SSCP;
 	if (oia_boxsolid)
@@ -2037,8 +2037,8 @@ draw_oia(void)
 }
 
 void
-Redraw_action(Widget w unused, XEvent *event unused, String *params unused,
-    Cardinal *num_params unused)
+Redraw_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_unused,
+    Cardinal *num_params _is_unused)
 {
 	if (!escaped) {
 		endwin();
@@ -2077,7 +2077,7 @@ screen_80(void)
  * instrastructure for multi-line paste.
  */
 void
-Paste_action(Widget w unused, XEvent *event, String *params,
+Paste_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
     	HGLOBAL hglb;
@@ -2110,7 +2110,7 @@ screen_title(char *text)
 }
 
 void
-Title_action(Widget w unused, XEvent *event, String *params,
+Title_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
     	action_debug(Title_action, event, params, num_params);
@@ -2121,7 +2121,7 @@ Title_action(Widget w unused, XEvent *event, String *params,
 }
 
 static void
-relabel(Boolean ignored unused)
+relabel(Boolean ignored _is_unused)
 {
 	char *title;
 

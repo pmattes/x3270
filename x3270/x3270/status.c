@@ -455,7 +455,7 @@ status_3270_mode(Boolean connected)
 
 /* Resolving */
 static void
-status_resolving(Boolean ignored unused)
+status_resolving(Boolean ignored _is_unused)
 {
 	oia_boxsolid = False;
 	do_ctlr();
@@ -466,7 +466,7 @@ status_resolving(Boolean ignored unused)
 
 /* Half connected */
 static void
-status_half_connect(Boolean ignored unused)
+status_half_connect(Boolean ignored _is_unused)
 {
 	oia_boxsolid = False;
 	do_ctlr();

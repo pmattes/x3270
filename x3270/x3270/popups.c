@@ -157,7 +157,7 @@ typedef struct {
 } want_t;
 
 static void
-popup_move_again(XtPointer closure, XtIntervalId *id unused)
+popup_move_again(XtPointer closure, XtIntervalId *id _is_unused)
 {
 	want_t *wx = (want_t *)closure;
     	Position x, y;
@@ -222,7 +222,7 @@ popup_move_again(XtPointer closure, XtIntervalId *id unused)
 
 /* Place a newly popped-up shell */
 void
-place_popup(Widget w, XtPointer client_data, XtPointer call_data unused)
+place_popup(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
 {
 	Dimension width, height;
 	Position x = 0, y = 0;
@@ -373,7 +373,7 @@ place_popup(Widget w, XtPointer client_data, XtPointer call_data unused)
 
 /* Move an existing popped-up shell */
 void
-move_popup(Widget w, XtPointer client_data, XtPointer call_data unused)
+move_popup(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
 {
 	Position x = 0, y = 0;
 	Position xnew, ynew;
@@ -485,8 +485,8 @@ PA_confirm_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 /* Callback for "Cancel" button in data entry popup */
 static void
-cancel_button_callback(Widget w unused, XtPointer client_data,
-    XtPointer call_data unused)
+cancel_button_callback(Widget w _is_unused, XtPointer client_data,
+    XtPointer call_data _is_unused)
 {
 	XtPopdown((Widget) client_data);
 }
@@ -497,7 +497,7 @@ cancel_button_callback(Widget w unused, XtPointer client_data,
  */
 static void
 popup_dialog_callback(Widget w, XtPointer client_data,
-    XtPointer call_data unused)
+    XtPointer call_data _is_unused)
 {
 	static Boolean called_back = False;
 	XawTextBlock b, nullb;	/* firstPos, length, ptr, format */
@@ -691,7 +691,7 @@ static struct rop child_info_popup = {
 
 /* Called when OK is pressed in a read-only popup */
 static void
-rop_ok(Widget w unused, XtPointer client_data, XtPointer call_data unused)
+rop_ok(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_unused)
 {
 	struct rop *rop = (struct rop *)client_data;
 	struct rsm *r;
@@ -708,7 +708,7 @@ rop_ok(Widget w unused, XtPointer client_data, XtPointer call_data unused)
 
 /* Called when Cancel is pressed in a read-only popup */
 static void
-rop_cancel(Widget w unused, XtPointer client_data, XtPointer call_data unused)
+rop_cancel(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_unused)
 {
 	struct rop *rop = (struct rop *)client_data;
 
@@ -719,7 +719,7 @@ rop_cancel(Widget w unused, XtPointer client_data, XtPointer call_data unused)
 
 /* Called when a read-only popup is closed */
 static void
-rop_popdown(Widget w unused, XtPointer client_data, XtPointer call_data unused)
+rop_popdown(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_unused)
 {
 	struct rop *rop = (struct rop *)client_data;
 
@@ -924,7 +924,7 @@ action_output(const char *fmt, ...)
 
 /* Callback for x3270 exit.  Dumps any undisplayed error messages to stderr. */
 static void
-dump_errmsgs(Boolean b unused)
+dump_errmsgs(Boolean b _is_unused)
 {
 	while (error_popup.rsms != NULL) {
 		fprintf(stderr, "Error: %s\n", error_popup.rsms->text);
@@ -1026,7 +1026,7 @@ popup_child_output(Boolean is_err, abort_callback_t *a, const char *fmt, ...)
  * Script actions
  */
 void
-Info_action(Widget w unused, XEvent *event, String *params,
+Info_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	action_debug(Info_action, event, params, num_params);

@@ -1,3 +1,5 @@
+#if !defined(_MSC_VER) /*[*/
+
 /* IShellLinkDataList, missing from mingw's <shlobj.h>. */
 
 extern const GUID IID_IShellLinkDataList;
@@ -46,3 +48,5 @@ typedef struct {
 } NT_CONSOLE_PROPS, *LPNT_CONSOLE_PROPS;
 
 #define NT_CONSOLE_PROPS_SIG 0xA0000002
+
+#endif /*]*/

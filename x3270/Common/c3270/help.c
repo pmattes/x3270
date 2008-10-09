@@ -213,7 +213,7 @@ static struct {
 
 /* c3270-specific actions. */
 void
-Help_action(Widget w unused, XEvent *event unused, String *params,
+Help_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	int i;

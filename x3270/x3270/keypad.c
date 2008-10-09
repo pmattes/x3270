@@ -277,7 +277,7 @@ keypad_placement_init(void)
  * client data.
  */
 static void
-callfn(Widget w unused, XtPointer client_data, XtPointer call_data unused)
+callfn(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_unused)
 {
 	struct button_list *keyd = (struct button_list *) client_data;
 
@@ -621,7 +621,7 @@ keypad_first_up(void)
 
 /* Called when the keypad popup pops up or down */
 static void
-keypad_updown(Widget w unused, XtPointer client_data, XtPointer call_data)
+keypad_updown(Widget w _is_unused, XtPointer client_data, XtPointer call_data)
 {
 	appres.keypad_on = keypad_popped = *(Boolean *)client_data;
 	if (!keypad_popped) {

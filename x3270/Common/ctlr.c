@@ -142,7 +142,7 @@ static unsigned char	code_table[64] = {
  * Initialize the emulated 3270 hardware.
  */
 void
-ctlr_init(unsigned cmask unused)
+ctlr_init(unsigned cmask _is_unused)
 {
 	/* Register callback routines. */
 	register_schange(ST_HALF_CONNECT, ctlr_half_connect);
@@ -291,7 +291,7 @@ set_formatted(void)
  * Called when a host is half connected.
  */
 static void
-ctlr_half_connect(Boolean ignored unused)
+ctlr_half_connect(Boolean ignored _is_unused)
 {
 	ticking_start(True);
 }
@@ -301,7 +301,7 @@ ctlr_half_connect(Boolean ignored unused)
  * Called when a host connects, disconnects, or changes ANSI/3270 modes.
  */
 static void
-ctlr_connect(Boolean ignored unused)
+ctlr_connect(Boolean ignored _is_unused)
 {
 	ticking_stop();
 	status_untiming();
@@ -2781,7 +2781,7 @@ ticking_stop(void)
 }
 
 void
-toggle_showTiming(struct toggle *t unused, enum toggle_type tt unused)
+toggle_showTiming(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 {
 	if (!toggled(SHOW_TIMING))
 		status_untiming();
@@ -2792,6 +2792,6 @@ toggle_showTiming(struct toggle *t unused, enum toggle_type tt unused)
  * No-op toggle.
  */
 void
-toggle_nop(struct toggle *t unused, enum toggle_type tt unused)
+toggle_nop(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 {
 }

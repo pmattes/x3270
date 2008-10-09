@@ -47,6 +47,10 @@
 #include "shortcutc.h"
 #include "windirsc.h"
 
+#if defined(_MSC_VER) /*[*/
+#include "Msc/deprecated.h"
+#endif /*]*/
+
 #define STR_SIZE	256
 #define LEGAL_CNAME	"ABCDEFGHIJKLMNOPQRSTUVWXYZ" \
 			"abcedfghijklmnopqrstuvwxyz" \

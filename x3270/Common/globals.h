@@ -49,12 +49,12 @@
  * Compiler-specific #defines.
  */
 
-/* 'unused' explicitly flags an unused parameter */
+/* '_is_unused' explicitly flags an unused parameter */
 #if defined(__GNUC__) /*[*/
-#define unused __attribute__((__unused__))
+#define _is_unused __attribute__((__unused__))
 #define printflike(s,f) __attribute__ ((__format__ (__printf__, s, f)))
 #else /*][*/
-#define unused /* nothing */
+#define _is_unused /* nothing */
 #define printflike(s, f) /* nothing */
 #endif /*]*/
 
@@ -63,13 +63,28 @@
  */
 #include <stdio.h>			/* Unix standard I/O library */
 #include <stdlib.h>			/* Other Unix library functions */
+#if !defined(_MSC_VER) /*[*/
 #include <unistd.h>			/* Unix system calls */
+#endif /*]*/
 #include <ctype.h>			/* Character classes */
 #include <string.h>			/* String manipulations */
 #include <sys/types.h>			/* Basic system data types */
+#if !defined(_MSC_VER) /*[*/
 #include <sys/time.h>			/* System time-related data types */
+#endif /*]*/
 #include <time.h>			/* C library time functions */
 #include "localdefs.h"			/* {s,tcl,c}3270-specific defines */
+
+/*
+ * MSC glue.
+ */
+#if defined(_MSC_VER) /*[*/
+#include <winsock2.h>			/* for struct timeval */
+extern int gettimeofday(struct timeval *, void *);
+#define R_OK	4
+#define strcasecmp      _stricmp
+#define strncasecmp     _strnicmp
+#endif /*]*/
 
 /*
  * Locale-related definitions.

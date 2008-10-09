@@ -623,7 +623,7 @@ parse_model_number(char *m)
 
 /* Change the window and icon labels. */
 static void
-relabel(Boolean ignored unused)
+relabel(Boolean ignored _is_unused)
 {
 	char *title;
 	char icon_label[8];

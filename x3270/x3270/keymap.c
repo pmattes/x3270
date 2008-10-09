@@ -1,5 +1,5 @@
 /*
- * Copyright 1996, 1999, 2000, 2001, 2002, 2003, 2005 by Paul Mattes.
+ * Copyright 1996-2008 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -132,7 +132,7 @@ keymap_init(const char *km, Boolean interactive)
  * 3270/NVT mode change.
  */
 static void
-keymap_3270_mode(Boolean ignored unused)
+keymap_3270_mode(Boolean ignored _is_unused)
 {
 	if (last_nvt != IN_ANSI || last_3270 != IN_3270) {
 		last_nvt = IN_ANSI;
@@ -539,7 +539,7 @@ expand_table(const char *name, char *table)
  * by the action_debug function when subsequent actions are called.
  */
 void
-PA_KeymapTrace_action(Widget w unused, XEvent *event unused, String *params,
+PA_KeymapTrace_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
 	if (!toggled(EVENT_TRACE) || *num_params != 2)
@@ -556,8 +556,8 @@ PA_KeymapTrace_action(Widget w unused, XEvent *event unused, String *params,
  * This function clears the value in the global "keymap_trace".
  */
 void
-PA_End_action(Widget w unused, XEvent *event unused, String *params unused,
-    Cardinal *num_params unused)
+PA_End_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_unused,
+    Cardinal *num_params _is_unused)
 {
 	Replace(keymap_trace, CN);
 }
@@ -705,8 +705,8 @@ temporary_keymap(char *k)
 #if defined(X3270_MENUS) /*[*/
 /* Create and pop up the current keymap pop-up. */
 void
-do_keymap_display(Widget w unused, XtPointer userdata unused,
-    XtPointer calldata unused)
+do_keymap_display(Widget w _is_unused, XtPointer userdata _is_unused,
+    XtPointer calldata _is_unused)
 {
 	Widget form, label, done;
 
@@ -787,7 +787,7 @@ do_keymap_display(Widget w unused, XtPointer userdata unused,
 
 /* Called when x3270 is exiting. */
 static void
-remove_keymap_file(Boolean ignored unused)
+remove_keymap_file(Boolean ignored _is_unused)
 {
 	(void) unlink(km_file);
 }
@@ -839,31 +839,31 @@ km_regen(void)
 
 /* Popup callback. */
 static void
-km_up(Widget w unused, XtPointer client_data unused, XtPointer call_data unused)
+km_up(Widget w _is_unused, XtPointer client_data _is_unused, XtPointer call_data _is_unused)
 {
 	km_isup = True;
 }
 
 /* Popdown callback. */
 static void
-km_down(Widget w unused, XtPointer client_data unused,
-    XtPointer call_data unused)
+km_down(Widget w _is_unused, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	km_isup = False;
 }
 
 /* Done button callback.  Pop down the widget. */
 static void
-km_done(Widget w unused, XtPointer client_data unused,
-    XtPointer call_data unused)
+km_done(Widget w _is_unused, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	XtPopdown(km_shell);
 }
 
 /* "Sort-by-event" button callback. */
 static void
-do_sort_event(Widget w unused, XtPointer client_data unused,
-    XtPointer call_data unused)
+do_sort_event(Widget w _is_unused, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	if (sort != SORT_EVENT) {
 		sort = SORT_EVENT;
@@ -876,8 +876,8 @@ do_sort_event(Widget w unused, XtPointer client_data unused,
 
 /* "Sort-by-keymap" button callback. */
 static void
-do_sort_keymap(Widget w unused, XtPointer client_data unused,
-    XtPointer call_data unused)
+do_sort_keymap(Widget w _is_unused, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	if (sort != SORT_KEYMAP) {
 		sort = SORT_KEYMAP;
@@ -890,8 +890,8 @@ do_sort_keymap(Widget w unused, XtPointer client_data unused,
 
 /* "Sort-by-action" button callback. */
 static void
-do_sort_action(Widget w unused, XtPointer client_data unused,
-    XtPointer call_data unused)
+do_sort_action(Widget w _is_unused, XtPointer client_data _is_unused,
+    XtPointer call_data _is_unused)
 {
 	if (sort != SORT_ACTION) {
 		sort = SORT_ACTION;

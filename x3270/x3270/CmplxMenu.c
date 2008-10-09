@@ -1,7 +1,7 @@
 /* (from) $XConsortium: SimpleMenu.c,v 1.41 92/09/10 16:25:07 converse Exp $ */
 
 /*
- * Modifications Copyright 1995, 1999, 2000, 2002, 2003, 2005 by Paul Mattes.
+ * Modifications Copyright 1995-2008 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -279,8 +279,8 @@ ClassPartInitialize(WidgetClass wc)
  */
 
 static void
-Initialize(Widget request unused, Widget new, ArgList args unused,
-	Cardinal *num_args unused)
+Initialize(Widget request _is_unused, Widget new, ArgList args _is_unused,
+	Cardinal *num_args _is_unused)
 {
   ComplexMenuWidget cmw = (ComplexMenuWidget) new;
 
@@ -333,7 +333,7 @@ Initialize(Widget request unused, Widget new, ArgList args unused,
  */
 
 static void
-Redisplay(Widget w, XEvent *event unused, Region region)
+Redisplay(Widget w, XEvent *event _is_unused, Region region)
 {
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
     CmeObject * entry;
@@ -424,8 +424,8 @@ Resize(Widget w)
  */
 
 static Boolean
-SetValues(Widget current, Widget request unused, Widget new,
-	ArgList args unused, Cardinal *num_args unused)
+SetValues(Widget current, Widget request _is_unused, Widget new,
+	ArgList args _is_unused, Cardinal *num_args _is_unused)
 {
     ComplexMenuWidget cmw_old = (ComplexMenuWidget) current;
     ComplexMenuWidget cmw_new = (ComplexMenuWidget) new;
@@ -683,8 +683,8 @@ PositionMenuAction(Widget w, XEvent *event, String *params,
  */
 
 static void
-Unhighlight(Widget w, XEvent *event unused, String *params unused,
-	Cardinal *num_params unused)
+Unhighlight(Widget w, XEvent *event _is_unused, String *params _is_unused,
+	Cardinal *num_params _is_unused)
 { 
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
     CmeObject entry = cmw->complex_menu.entry_set;
@@ -702,8 +702,8 @@ Unhighlight(Widget w, XEvent *event unused, String *params unused,
 }
 
 static void
-SaveUnhighlight(Widget w, XEvent *event unused, String *params unused,
-	Cardinal *num_params unused)
+SaveUnhighlight(Widget w, XEvent *event _is_unused, String *params _is_unused,
+	Cardinal *num_params _is_unused)
 { 
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
     CmeObject entry = cmw->complex_menu.entry_set;
@@ -728,8 +728,8 @@ SaveUnhighlight(Widget w, XEvent *event unused, String *params unused,
  */
 
 static void
-LeftWindow(Widget w, XEvent *event, String *params unused,
-	Cardinal *num_params unused)
+LeftWindow(Widget w, XEvent *event, String *params _is_unused,
+	Cardinal *num_params _is_unused)
 { 
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
     CmeObject entry = cmw->complex_menu.entry_set;
@@ -758,8 +758,8 @@ LeftWindow(Widget w, XEvent *event, String *params unused,
  */
 
 static void
-MyMenuPopdown(Widget w, XEvent *event, String *params unused,
-	Cardinal *num_params unused)
+MyMenuPopdown(Widget w, XEvent *event, String *params _is_unused,
+	Cardinal *num_params _is_unused)
 { 
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
 
@@ -862,7 +862,7 @@ Highlight(Widget w, XEvent *event, String *params, Cardinal *num_params)
 }
 
 static void
-NotifyCallback(XtPointer closure, XtIntervalId *id unused)
+NotifyCallback(XtPointer closure, XtIntervalId *id _is_unused)
 {
     CmeObject entry = closure;
     CmeObjectClass class;
@@ -883,8 +883,8 @@ NotifyCallback(XtPointer closure, XtIntervalId *id unused)
  */
 
 static void
-Notify(Widget w, XEvent *event unused, String *params unused,
-	Cardinal *num_params unused)
+Notify(Widget w, XEvent *event _is_unused, String *params _is_unused,
+	Cardinal *num_params _is_unused)
 {
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
     CmeObject entry = cmw->complex_menu.entry_set;
@@ -1102,7 +1102,7 @@ Layout(Widget w, Dimension *width_ret, Dimension *height_ret)
  */
 
 static void
-AddPositionAction(XtAppContext app_con, caddr_t data unused)
+AddPositionAction(XtAppContext app_con, caddr_t data _is_unused)
 {
     static XtActionsRec pos_action[] = {
         { "XawPositionComplexMenu", PositionMenuAction },
@@ -1230,7 +1230,7 @@ MoveMenu(Widget w, Position x, Position y)
  */
 
 static void
-ChangeCursorOnGrab(Widget w, XtPointer junk unused, XtPointer garbage unused)
+ChangeCursorOnGrab(Widget w, XtPointer junk _is_unused, XtPointer garbage _is_unused)
 {
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
     
@@ -1256,7 +1256,7 @@ ChangeCursorOnGrab(Widget w, XtPointer junk unused, XtPointer garbage unused)
 }
 
 static void
-ClearParent(Widget w, XtPointer junk unused, XtPointer garbage unused)
+ClearParent(Widget w, XtPointer junk _is_unused, XtPointer garbage _is_unused)
 {
 #if defined(CmeDebug)
     ComplexMenuWidget cmw = (ComplexMenuWidget) w;
