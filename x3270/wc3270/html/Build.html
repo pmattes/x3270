@@ -6,8 +6,9 @@
   <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
 </head>
 <body>
-<h1> wc3270 Build Instructions</h1>
-<i>wc3270</i> is built on Windows using the MinGW tools under Cygwin.
+<h1>wc3270 Build Instructions</h1>
+<h2>Using MinGW</h2>
+<i>wc3270</i> can be built on Windows using the MinGW tools under Cygwin.
 For more information about MinGW, visit the <a href="http://www.mingw.org/">
 MinGW webpage</a>.
 For more information about Cygwin, visit the <a href="http://www.cygwin.com/">
@@ -56,6 +57,22 @@ To build <i>wc3270</i> (with or without SSL support), start a Cygwin shell,
   and MinGW releases, but
   <a href="http://www.mingw.org/mingwfaq.shtml#faq-cross">this link</a> should
   get you started.
+</p>
+<h2>Using Microsoft Tools</h2>
+To build <i>wc3270</i> using Microsoft Visual C++, start a Command Prompt
+window.
+At the command prompt, 'cd' to the <i>wc3270</i> source directory, and type:
+<pre>&nbsp;&nbsp;&nbsp;nmake /f Msc\Makefile</pre>
+<p>
+This will build <tt>wc3270.exe</tt> and the DLLs and utilities needed to
+install and run it.
+</p>
+<p>
+Note that the resulting version of <i>wc3270</i> will not
+include SSL support.
+To build <i>wc3270</i> with a statically-linked OpenSSL library, you must
+modify <tt>Msc\Makefile</tt>; instructions for doing that are included in
+the file.
 </p>
 </body>
 </html>

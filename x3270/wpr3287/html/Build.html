@@ -7,7 +7,8 @@
 </head>
 <body>
 <h1> wpr3287 Build Instructions</h1>
-<i>wpr3287</i> is built on Windows using the MinGW tools under Cygwin.
+<h2>Using MinGW</h2>
+<i>wpr3287</i> can be built on Windows using the MinGW tools under Cygwin.
 For more information about MinGW, visit the <a href="http://www.mingw.org/">
 MinGW webpage</a>.
 For more information about Cygwin, visit the <a href="http://www.cygwin.com/">
@@ -43,6 +44,22 @@ To build <i>wpr3287</i> (with or without SSL support) start a Cygwin shell, <b>c
   <i>wpr3287</i> was developed primarily on 32-bit Windows XP, but should be
   buildable on Windows Server 2003 or Windows 2000.  It has not been built
   or tested on 64-bit Windows or on Windows Vista.
+</p>
+<h2>Using Microsoft Tools</h2>
+To build <i>wpr3287</i> using Microsoft Visual C++, start a Command Prompt 
+window. 
+At the command prompt, 'cd' to the <i>wpr3287</i> source directory, and type:
+<pre>&nbsp;&nbsp;&nbsp;nmake /f Msc\Makefile</pre>
+<p>
+This will build <tt>wpr3287.exe</tt>.  The DLLs it depends on are part of
+the <i>wc3270</i> package and need to be built separately.
+</p>
+<p>
+Note that the resulting version of <i>wpr3287</i> will not
+include SSL support.
+To build <i>wpr3287</i> with a statically-linked OpenSSL library, you must
+modify <tt>Msc\Makefile</tt>; instructions for doing that are included in
+the file.
 </p>
 </body>
 </html>
