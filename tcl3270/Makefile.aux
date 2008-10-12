@@ -39,7 +39,7 @@ MISC = version.txt tcl3270.man mkversion.sh install-sh \
 DEVKIT = Makefile.aux m42man m42html instlist.base \
 	instlist.man
 HTML = html/Build.html html/FAQ.html html/Intro.html html/Lineage.html \
-	html/New.html html/README.html html/tcl3270-man.html
+	html/ReleaseNotes.html html/README.html html/tcl3270-man.html
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
 tarlist: Makefile.aux
@@ -68,3 +68,5 @@ tcl3270.man: x3270.man.m4 resources.inc version.txt man.m4
 	./m42man tcl3270 x3270.man.m4 >$@
 html/tcl3270-man.html: x3270.man.m4 resources.inc version.txt html.m4
 	./m42html tcl3270 x3270.man.m4 >$@
+html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
+	./mkstand.bash "tcl3270 Release Notes" html/documentation-relnotes-body.html $@

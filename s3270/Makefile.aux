@@ -39,8 +39,8 @@ MISC = version.txt s3270.man x3270if.man x3270-script.man \
 DEVKIT = Makefile.aux m42man m42html instlist.base \
 	instlist.man
 HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
-	html/Lineage.html html/New.html html/README.html html/Wishlist.html \
-	html/s3270-man.html html/x3270-script.html \
+	html/Lineage.html html/ReleaseNotes.html html/README.html \
+	html/Wishlist.html html/s3270-man.html html/x3270-script.html \
 	html/x3270.xbm html/x3270if.html
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
@@ -79,3 +79,5 @@ x3270-script.man: x3270-script.man.m4 man.m4 version.txt
 	./m42man x3270-script x3270-script.man.m4 >$@
 html/x3270-script.html: x3270-script.man.m4 ft.inc html.m4 version.txt
 	./m42html x3270-script x3270-script.man.m4 >$@
+html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
+	./mkstand.bash "s3270 Release Notes" html/documentation-relnotes-body.html $@

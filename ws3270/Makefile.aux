@@ -37,8 +37,8 @@ MISC = Makefile version.txt mkversion.sh README.txt Examples/cms_cmd.expect \
 	x3270_glue.expect mkfb.c X3270.xad LICENSE.txt ws3270.rc ws3270.ico
 DEVKIT = Makefile.aux m42man m42html instlist.base
 HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
-	html/Lineage.html html/New.html html/README.html html/Wishlist.html \
-	html/ws3270-man.html html/x3270-script.html
+	html/Lineage.html html/ReleaseNotes.html html/README.html \
+	html/Wishlist.html html/ws3270-man.html html/x3270-script.html
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
 tarlist: Makefile.aux
@@ -64,3 +64,5 @@ html/ws3270-man.html: x3270.man.m4 version.txt html.m4 hostname.inc
 	./m42html ws3270 x3270.man.m4 >$@
 html/x3270-script.html: x3270-script.man.m4 ft.inc html.m4 version.txt
 	./m42html x3270-script x3270-script.man.m4 >$@
+html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
+	./mkstand.bash "ws3270 Release Notes" html/documentation-relnotes-body.html $@
