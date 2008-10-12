@@ -56,7 +56,8 @@ PLAYBACK = Playback/Makefile Playback/playback.c Playback/playback.man
 CONFIG = Imakefile.in conf.h.in config.guess config.sub configure configure.in
 HTML = html/Attributes.html html/Brackets.html html/Bugs.html html/Build.html \
 	html/Charset.html html/FAQ.html html/Intro.html html/Keymap.html \
-	html/Lineage.html html/New.html html/README.html html/Resources.html \
+	html/Lineage.html html/ReleaseNotes.html html/README.html \
+	html/Resources.html \
 	html/Wishlist.html html/del.jpg html/delta.jpg \
 	html/ibm_hosts.html html/x3270-man.html html/x3270-script.html \
 	html/x3270.jpg html/x3270.xbm html/x3270if.html
@@ -160,6 +161,9 @@ html/Lineage.html: mkstand.bash html/license-body.html
 	./mkstand.bash 'x3270 Licensing' html/license-body.html html.tmp
 	mv html.tmp html/Lineage.html
 	@rm -f html.tmp
+
+html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
+	./mkstand.bash "x3270 Release Notes" html/documentation-relnotes-body.html $@
 
 ID: $(SOURCES) $(HEADERS)
 	mkid $(SOURCES) $(HEADERS)

@@ -29,7 +29,7 @@ MISC = Makefile.in mkversion.sh pr3287.man README \
 	version.txt configure install-sh config.sub \
 	config.guess configure.in LICENSE
 DEVKIT = pr3287.man.m4 m42man instlist.base instlist.man
-HTML = html/pr3287-man.html html/Build.html html/New.html
+HTML = html/pr3287-man.html html/Build.html html/ReleaseNotes.html
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML) 
 
@@ -55,6 +55,8 @@ pr3287.man: pr3287.man.m4 man.m4 version.txt
 	./m42man pr3287 pr3287.man.m4 >$@
 html/pr3287-man.html: pr3287.man.m4 html.m4 version.txt
 	./m42html pr3287 pr3287.man.m4 >$@
+html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
+	./mkstand.bash "pr3287 Release Notes" html/documentation-relnotes-body.html $@
 
 configure: configure.in
 	autoconf

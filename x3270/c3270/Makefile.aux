@@ -41,8 +41,9 @@ MISC = version.txt c3270.man x3270if.man x3270-script.man ibm_hosts.man \
 DEVKIT = Makefile.aux x3270.man.m4 html.m4 man.m4 \
 	ft.inc keymaps.inc m42man m42html instlist.base instlist.man
 HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
-	html/Lineage.html html/New.html html/README.html html/Wishlist.html \
-	html/c3270-man.html html/x3270-script.html html/x3270if.html
+	html/Lineage.html html/ReleaseNotes.html html/README.html \
+	html/Wishlist.html html/c3270-man.html html/x3270-script.html \
+	html/x3270if.html
 PR3287 = pr3287/3270ds.h pr3287/arpa_telnet.h pr3287/charset.c \
 	pr3287/charsetc.h pr3287/config.guess pr3287/config.sub \
 	pr3287/configure pr3287/configure.in pr3287/ctlr.c pr3287/ctlrc.h \
@@ -97,6 +98,8 @@ x3270-script.man: x3270-script.man.m4 man.m4 version.txt
 	./m42man x3270-script x3270-script.man.m4 >$@
 html/x3270-script.html: x3270-script.man.m4 ft.inc html.m4 version.txt
 	./m42html x3270-script x3270-script.man.m4 >$@
+html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
+	./mkstand.bash "c3270 Release Notes" html/documentation-relnotes-body.html $@
 
 ibm1027.c: ibm-1027_P100-1995.ucm mktbl
 	./stripucm.sh ibm-1027_P100-1995.ucm ibm1027 >ibm1027.c
@@ -106,5 +109,5 @@ ibm837.c: ibm-837_P100-2000.ucm mktbl
 	./stripucm.sh ibm-837_P100-2000.ucm ibm837 >ibm837.c
 ibm1385.c: ibm-1385_P100-1997.ucm mktbl
 	./stripucm.sh ibm-1385_P100-1997.ucm ibm1385 >ibm1385.c
-mktbl: mktbl.c
+	mktbl: mktbl.c
 	$(CC) -o mktbl mktbl.c
