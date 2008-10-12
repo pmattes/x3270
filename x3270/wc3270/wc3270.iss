@@ -3,7 +3,7 @@
 
 [Setup]
 AppName=wc3270
-AppVerName=wc3270 3.3.8b1
+AppVerName=wc3270 3.3.9a1
 AppPublisher=Paul Mattes
 AppPublisherURL=http://x3270.bgp.nu
 AppSupportURL=http://x3270.bgp.nu
@@ -14,7 +14,7 @@ DefaultDirName={pf}\wc3270
 DisableDirPage=no
 DefaultGroupName=wc3270
 AllowNoIcons=yes
-OutputBaseFilename=wc3270-3.3.8b1-setup
+OutputBaseFilename=wc3270-3.3.9a1-setup
 OutputDir=\\Melville\pdm\psrc\x3270\Release\Inno\wc3270
 Compression=lzma
 SolidCompression=yes
@@ -43,7 +43,7 @@ Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\html\FAQ.html"; DestDir:
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\html\Intro.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\html\Keymap.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\html\Lineage.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\html\New.html"; DestDir: "{app}\html"; Flags: ignoreversion
+Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\html\ReleaseNotes.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\html\README.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\html\wc3270-man.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\wc3270\html\Wishlist.html"; DestDir: "{app}\html"; Flags: ignoreversion
