@@ -3,7 +3,7 @@
 
 [Setup]
 AppName=ws3270
-AppVerName=ws3270 3.3.8b1
+AppVerName=ws3270 3.3.9a1
 AppPublisher=Paul Mattes
 AppPublisherURL=http://x3270.bgp.nu
 AppSupportURL=http://x3270.bgp.nu
@@ -14,7 +14,7 @@ DefaultDirName={pf}\ws3270
 DisableDirPage=no
 DefaultGroupName=ws3270
 AllowNoIcons=yes
-OutputBaseFilename=ws3270-3.3.8b1-setup
+OutputBaseFilename=ws3270-3.3.9a1-setup
 OutputDir=\\Melville\pdm\psrc\x3270\Release\Inno\ws3270
 Compression=lzma
 SolidCompression=yes
@@ -34,7 +34,7 @@ Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\ws3270\html\Build.html"; DestDi
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\ws3270\html\FAQ.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\ws3270\html\Intro.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\ws3270\html\Lineage.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\ws3270\html\New.html"; DestDir: "{app}\html"; Flags: ignoreversion
+Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\ws3270\html\ReleaseNotes.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\ws3270\html\README.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\ws3270\html\ws3270-man.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\ws3270\html\Wishlist.html"; DestDir: "{app}\html"; Flags: ignoreversion
