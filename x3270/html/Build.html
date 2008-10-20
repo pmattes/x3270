@@ -180,6 +180,10 @@ example, for to build an NCD font on a Sun-4, the command is: </p>
 <h2> SCO Open Desktop 3</h2>
   <i>x3270</i> requires the Athena Widgets library, which is available from
  sosco.sco.com.  
+<h2>Building on FreeBSD</h2>
+FreeBSD's <b>iconv</b> library is installed in <tt>/usr/local</tt>, so
+the the following options must be passed to the <tt>configure</tt> script:
+  <pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;./configure LDFLAGS=-L/usr/local/lib CPPFLAGS=-I/usr/local/include</pre>
 <h2> Using an app-defaults File</h2>
   Earlier versions of <i>x3270</i> required a separate <b>app-defaults</b>
  file. The app-defaults file contains definitions for options, text strings,

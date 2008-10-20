@@ -1022,10 +1022,10 @@ store_icccm_string(XtPointer value, const char *buf)
 		    	skip = False;
 			continue;
 		}
-		if (nw == '\n' ||
-		    (nw >= 0x20 && nw <= 0x7f) ||
-		    (nw >= 0xa0 && nw <= 0xff)) {
-			*dst++ = nw & 0xff;
+		if (ucs == '\n' ||
+		    (ucs >= 0x20 && ucs <= 0x7f) ||
+		    (ucs >= 0xa0 && ucs <= 0xff)) {
+			*dst++ = ucs & 0xff;
 			len++;
 		}
 		buf += nw;

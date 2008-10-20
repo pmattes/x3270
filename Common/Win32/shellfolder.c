@@ -34,13 +34,27 @@ get_shell_folders(char *desktop, char *appdata)
 {
     	HRESULT r;
 
-    	r = SHGetFolderPath(NULL, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, 
-		desktop);
-	if (r != S_OK)
-	    	return -1;
-    	r = SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, 
-		appdata);
-	if (r != S_OK)
-	    	return -1;
+	if (desktop != NULL) {
+		r = SHGetFolderPath(NULL, CSIDL_DESKTOPDIRECTORY, NULL,
+			SHGFP_TYPE_CURRENT, desktop);
+		if (r != S_OK) {
+			printf("SHGetFolderPath(DESKTOPDIRECTORY) failed: "
+				"0x%x\n", (int)r);
+			fflush(stdout);
+			return -1;
+		}
+	}
+
+	if (appdata != NULL) {
+		r = SHGetFolderPath(NULL, CSIDL_APPDATA, NULL,
+			SHGFP_TYPE_CURRENT, appdata);
+		if (r != S_OK) {
+			printf("SHGetFolderPath(APPDATA) failed: 0x%x\n",
+				(int)r);
+			fflush(stdout);
+			return -1;
+		}
+	    }
+
 	return 0;
 }

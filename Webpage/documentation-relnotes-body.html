@@ -1,6 +1,19 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
 3.3 is the current development line for the x3270 suite.
-<h2>Changes in version 3.3.8, xx October 2008</h2>
+<h2>Changes in version 3.3.8p1, 20 October 2008</h2>
+<ul>
+ <li>[<i>wc3270</i>] Restored the <b>Ctrl-]</b> mapping for the
+  <b>Escape</b> action, which had been inadvertently removed.</li>
+ <li>[<i>wc3270</i>] <b>wc3270</b> now starts successfully on Windows
+  Vista.</li>
+ <li>[<i>c3270</i>] On platforms that require the <b>iconv</b> library,
+  <b>c3270</b> once again recognizes <b>ncurses</b> names in keymaps.</li>
+ <li>[<i>x3270</i>] The module <tt>keysym2ucs.c</tt> now builds on
+  FreeBSD.</li>
+ <li>[<i>x3270</i>] Selections now work properly on platforms that do not
+  support <tt>XA_UTF8_STRING</tt>.</li>
+</ul>
+<h2>Changes in version 3.3.8, 11 October 2008</h2>
 Version 3.3.8 includes a significant internal change, using Unicode for all
 translations between the host and the local workstation.
 This change should be
