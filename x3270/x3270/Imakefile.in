@@ -27,7 +27,7 @@ LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
           VOBJS = Cme.o CmeBSB.o CmeLine.o CmplxMenu.o Husk.o about.o \
 		  actions.o ansi.o apl.o charset.o child.o ctlr.o dialog.o \
 		  display8.o @FALLBACKS_O@ ft.o ft_cut.o ft_dft.o host.o \
-		  idle.o keymap.o keypad.o keysym2ucs.c kybd.o macros.o \
+		  idle.o keymap.o keypad.o keysym2ucs.o kybd.o macros.o \
 		  main.o menubar.o popups.o printer.o print.o proxy.o \
 		  resolver.o resources.o rpq.o save.o screen.o scroll.o see.o \
 		  select.o sf.o status.o tables.o telnet.o toggles.o \

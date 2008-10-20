@@ -161,6 +161,7 @@ static char *base_keymap =
        "Alt <Key>l:      Redraw\n"
        "Alt <Key>m:      Compose\n"
        "Alt <Key>p:      PrintText\n"
+      "Ctrl <Key>]:      Escape\n"
      "Shift <Key>F1:     PF(13)\n"
      "Shift <Key>F2:     PF(14)\n"
      "Shift <Key>F3:     PF(15)\n"

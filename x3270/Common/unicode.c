@@ -507,7 +507,7 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
     wchar_t wuc;
 #else /*][*/
     char u8b[7];
-    int nu8;
+    size_t nu8;
     char *inbuf, *outbuf;
     size_t inbytesleft, outbytesleft;
     size_t nc;
@@ -762,22 +762,31 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 	char *inbuf, *outbuf;
 	size_t inbytesleft, outbytesleft;
 	char utf8buf[16];
+	size_t ibl;
 
 	/* Translate from local MB to UTF-8 using iconv(). */
-	inbuf = (char *)mb;
-	outbuf = utf8buf;
-	inbytesleft = mb_len;
-	outbytesleft = sizeof(utf8buf);
-	nw = iconv(i_mb2u, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
-	if (nw < 0) {
-	    if (errno == EILSEQ)
-		*errorp = ME_INVALID;
-	    else
-		*errorp = ME_SHORT;
-	    (void) iconv(i_mb2u, NULL, NULL, NULL, NULL);
-	    return 0;
+	for (ibl = 1; ibl <= mb_len; ibl++) {
+	    inbuf = (char *)mb;
+	    outbuf = utf8buf;
+	    inbytesleft = ibl;
+	    outbytesleft = sizeof(utf8buf);
+	    nw = iconv(i_mb2u, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
+	    if (nw < 0) {
+		if (errno == EILSEQ) {
+		    *errorp = ME_INVALID;
+		    (void) iconv(i_mb2u, NULL, NULL, NULL, NULL);
+		    return 0;
+		} else {
+		    if (ibl == mb_len) {
+			*errorp = ME_SHORT;
+			(void) iconv(i_mb2u, NULL, NULL, NULL, NULL);
+			return 0;
+		    }
+		}
+	    } else
+	    	break;
 	}
-	*consumedp = mb_len - inbytesleft;
+	*consumedp = ibl - inbytesleft;
 
 	/* Translate from UTF-8 to UCS-4. */
 	(void) utf8_to_unicode(utf8buf, sizeof(utf8buf) - outbytesleft, &ucs4);

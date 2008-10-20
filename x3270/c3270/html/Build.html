@@ -15,7 +15,7 @@
  type:  
 <pre>&nbsp;&nbsp;&nbsp; make install</pre>
 
-<h3>Notes for Cygwin</h3>
+<h2>Notes for Cygwin</h2>
 The minimum set of Cygwin packages needed to compile <i>c3270</i> are:
 <ul>
     <li>The default set (bash, etc.)</li>
@@ -38,17 +38,21 @@ files -- thus allowing c3270 to be installed and run without a
 full Cygwin installation), type:
 <pre>&nbsp;&nbsp;&nbsp; make c3270-standalone-zip</pre>
     
-<h3> Notes for Sun's C Compiler</h3>
+<h2> Notes for Sun's C Compiler</h2>
   <font size="+0">Do not use Sun's BSD-compatibility compiler, <tt>/usr/ucb/cc</tt>.
  This is good advice in general, but in particular, <i>c3270</i> will not
 build with it. In general, you must have a directory containing <tt>gcc</tt>
 (preferred) or Sun's ANSI C compiler (usually in <tt>/usr/ccs/bin</tt>) in
 your $PATH ahead of <tt>/usr/ucb</tt>.</font>  
-<h3> Notes for Solaris</h3>
+<h2> Notes for Solaris</h2>
 <b>c3270</b> prefers wide curses, which on Solaris is in the <tt>/usr/xpg4</tt>
 directory.  To use this version of curses, set CPPFLAGS and LDFLAGS when running
 <tt>configure</tt>:
-<pre>&nbsp;&nbsp;&nbsp; CPPFLAGS=-I/usr/xpg4/include LDFLAGS=-L/usr/xpg4/lib ./configure</pre>
+<pre>&nbsp;&nbsp;&nbsp; ./configure CPPFLAGS=-I/usr/xpg4/include LDFLAGS=-L/usr/xpg4/lib</pre>
+<h2>Building on FreeBSD</h2>
+FreeBSD's <b>iconv</b> library is installed in <tt>/usr/local</tt>, so
+the the following options must be passed to the <tt>configure</tt> script:
+  <pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;./configure LDFLAGS=-L/usr/local/lib CPPFLAGS=-I/usr/local/include</pre>
 <h2> Summary of <tt>configure</tt> Options</h2>
   The <i>c3270</i> <tt>configure</tt> script accepts the following options:
  <br>

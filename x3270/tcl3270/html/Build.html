@@ -57,6 +57,10 @@ TclX with <tt>configure</tt>:
 is good advice in general, but in particular, <i>tcl3270</i> will not build
 with it. You must have a directory containing <tt>gcc</tt> (preferred) or
 Sun's standard compiler in your $PATH ahead of <tt>/usr/ucb</tt>.  
+<h2>Building on FreeBSD</h2>
+FreeBSD's <b>iconv</b> library is installed in <tt>/usr/local</tt>, so
+the the following options must be passed to the <tt>configure</tt> script:
+  <pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;./configure LDFLAGS=-L/usr/local/lib CPPFLAGS=-I/usr/local/include</pre>
 <h2> Summary of <tt>configure</tt> Options</h2>
   The <i>tcl3270</i> <tt>configure</tt> script accepts the following options:
  <br>
