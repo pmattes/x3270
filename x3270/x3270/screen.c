@@ -3971,9 +3971,15 @@ check_charset(const char *name, XFontStruct *f, const char *dcsname,
 		else
 			font_charset = NewString("unknown-unknown");
 	} else {
+		char *encoding;
+
+		if (font_encoding != CN && font_encoding[0] == '-')
+			encoding = font_encoding + 1;
+		else
+			encoding = font_encoding;
 		font_charset = xs_buffer("%s-%s",
 		    font_registry? font_registry: "unknown",
-		    font_encoding? font_encoding: "unknown");
+		    encoding? encoding: "unknown");
 	}
 
 	ptr = csn0 = NewString(dcsname);
@@ -4104,6 +4110,10 @@ load_fixed_font(const char *names, const char *reqd_display_charsets)
 		Free(charset1);
 		Free(charset2);
 		return NewString("Must specify two font names (SBCS+DBCS)");
+	}
+	if (num_names == 2 && num_cs < 2) {
+		Free(name2);
+		name2 = CN;
 	}
 
 #if defined(X3270_DBCS) /*[*/
@@ -4362,6 +4372,7 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 	unsigned i;
 	char *family_name = NULL;
 	char *font_encoding = NULL;
+	char *fe = NULL;
 	char *font_charset = NULL;
 
 	if (XGetFontProperty(f, a_registry, &svalue))
@@ -4372,6 +4383,10 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 		font_encoding = XGetAtomName(display, svalue);
 	if (font_encoding == NULL)
 	    	Error("Cannot get font encoding");
+	if (font_encoding[0] == '-')
+		fe = font_encoding + 1;
+	else
+		fe = font_encoding;
 
 #if defined(X3270_DBCS) /*[*/
 	if (is_dbcs) {
@@ -4384,7 +4399,7 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 		dbcs_font.char_width  = fCHAR_WIDTH(f);
 		dbcs_font.char_height = dbcs_font.ascent + dbcs_font.descent;
 		dbcs_font.d16_ix = display16_init(xs_buffer("%s-%s",
-			    family_name, font_encoding));
+			    family_name, fe));
 		dbcs = True;
 		Replace(full_efontname_dbcs, XtNewString(fef));
 		Free(family_name);
@@ -4392,7 +4407,7 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 		return;
 	}
 #endif /*]*/
-	font_charset = xs_buffer("%s-%s", family_name, font_encoding);
+	font_charset = xs_buffer("%s-%s", family_name, fe);
 	Free(family_name);
 	Free(font_encoding);
 	Replace(efontname, XtNewString(ef));
