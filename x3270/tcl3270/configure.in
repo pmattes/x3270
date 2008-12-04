@@ -34,20 +34,19 @@ esac
 AC_SUBST(XANSI)
 AC_SUBST(XPRECOMP)
 
-dnl Allow the tcl version to change
-AC_ARG_WITH(tcl, [  --with-tcl=VERSION      Specify Tcl library version [8.3]],
-tclver=$with_tcl, tclver=8.4)
-
-dnl Allow TclX
-AC_ARG_WITH(tclx, [  --with-tclx[=VERSION]   Use TclX], , with_tclx=no)
+dnl Figure out what version of Tcl they've got
+AC_CHECK_PROG(tclsh,tclsh,yes,no)
+if test "$tclsh" = no
+then	AC_ERROR(Can't find tclsh)
+fi
+AC_MSG_CHECKING(Tcl version)
+tclver=`echo "puts [[set tcl_version]]" | tclsh`
+if test -z "$tclver"
+then	AC_ERROR(Can't figure out Tcl version)
+fi
+AC_MSG_RESULT($tclver)
 
 dnl Set up tclvr (tclver without the period, for BSD)
-dnl Note that --with-tclx=VERSION overrides --with-tcl=VERSION.
-if test "$with_tclx" = no
-then	:
-elif test "$with_tclx" != yes
-then	tclver=$with_tclx
-fi
 tclvr=`echo $tclver | tr -d .`
 
 dnl Checks for header files.
@@ -78,9 +77,6 @@ do	header_fail=0
 done
 if test $header_fail -eq 1
 then	AC_ERROR(Can't find tcl header file)
-fi
-if test "$with_tclx" != no
-then	AC_CHECK_HEADERS(tclExtend.h, ,AC_ERROR(Can't find TclX header file))
 fi
 
 dnl Check for SSL header file.
@@ -159,10 +155,6 @@ do	LDFLAGS="$ORIG_LDFLAGS $dir"
 done
 if test "$tcl_failed" = 1
 then	AC_ERROR(Can't find TCL library)
-fi
-if test "$with_tclx" != no
-then	AC_CHECK_LIB(tclx$tclver, Tclx_Init, ,
- AC_CHECK_LIB(tclx$tclvr, Tclx_Init, ,AC_ERROR(Can't find TclX library)))
 fi
 
 dnl Check for SSL libraries.

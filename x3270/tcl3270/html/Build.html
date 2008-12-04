@@ -16,42 +16,11 @@
 <pre>&nbsp;&nbsp;&nbsp; make install</pre>
     
 <h2> Notes on the Tcl Library</h2>
-  <i>tcl3270</i> uses Tcl 8.4 by default. It assumes that the header file
-<tt>tcl.h</tt>  has been installed in the directory <tt>/usr/local/include</tt>,
-and that  the Tcl library <tt>libtcl8.4.a</tt> has been installed in the
-directory <tt>/usr/local/lib</tt>.  If you have a different version of Tcl,
-or it is installed in different directories, you will need to pass additional
-options to the <tt>configure</tt> script.  
-<p>To use a different version of Tcl, pass the <tt>--with-tcl=</tt> option
- to <tt>configure</tt>, specifying the other version, e.g: </p>
- 
-<pre>&nbsp;&nbsp;&nbsp; ./configure --with-tcl=8.2</pre>
-  If you have the Tcl header files or libraries installed in directories
-other than those selected by default, you must pass these options to <tt>configure</tt>. 
-To specify a different header file directory, put a <tt>-I</tt> option in 
-the <tt>CPPFLAGS</tt> variable. To specify a different library directory, 
-put a <tt>-L</tt> option in the <tt>LDFLAGS</tt> variable.&nbsp; For example 
-(using bash, ksh, or sh):  
-<pre>&nbsp;&nbsp;&nbsp; ./configure CPPFLAGS=-I/auto/unsupported/tcl LDFLAGS=-L/auto/unsupported/lib</pre>
- 
-<pre></pre>
-  <i>tcl3270</i> has <b>not</b> been tested with versions of tcl other than
- 8.2, 8.3 and 8.4.  
-<h2> Using Extended Tcl (TclX)</h2>
-  <i>tcl3270</i> can also use Extended Tcl (TclX).&nbsp; To use Extended
-Tcl, pass the <tt>--with-tclx</tt> option to <tt>configure</tt>, e.g.:  
-<blockquote>    
-  <pre>./configure --with-tclx</pre>
-  </blockquote>
-  Note that Extended Tcl releases tend to lag behind standard Tcl releases;
- when this was written, the current release of Extended Tcl was 8.2.&nbsp;
- So, to build <i>tcl3270</i> with Extended Tcl 8.2, you must have Tcl 8.2
-installed on your system, and you must explicitly specify the version of
-TclX with <tt>configure</tt>:  
-<blockquote>    
-  <pre>./configure --with-tclx=8.2</pre>
-  </blockquote>
-    
+<i>tcl3270</i> uses the <b>tclsh</b> command to determine the version of the
+Tcl library to use.  When you run the <tt>configure</tt> script, make sure that
+your <tt>$PATH</tt> points to the version of <b>tclsh</b> that corresponds
+to the version of the Tcl library you want <i>tcl3270</i> to use.
+
 <h2> Notes for Solaris 2.x and Sun's C Compiler</h2>
   Do not use Sun's BSD-compatibility compiler, <tt>/usr/ucb/cc</tt>. This
 is good advice in general, but in particular, <i>tcl3270</i> will not build
