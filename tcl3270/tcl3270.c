@@ -42,9 +42,6 @@
 #include "tcl.h"
 
 #include "globals.h"
-#if defined(HAVE_TCLEXTEND_H) /*[*/
-#include "tclExtend.h"
-#endif /*]*/
 
 #include <sys/wait.h>
 #include <signal.h>
@@ -196,11 +193,7 @@ Boolean macro_output = False;
 int
 main(int argc, char **argv)
 {
-#if defined(HAVE_TCLEXTEND_H) /*[*/
-    TclX_Main(argc, argv, Tcl_AppInit);
-#else /*][*/
     Tcl_Main(argc, argv, Tcl_AppInit);
-#endif /*]*/
     return 0;
 }
 
@@ -238,12 +231,6 @@ Tcl_AppInit(Tcl_Interp *interp)
     if (Tcl_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
-#if defined(HAVE_TCLEXTEND_H) /*[*/
-    if (Tclx_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-#endif /*]*/
-
 
     /* Use argv and argv0 to figure out our command-line arguments. */
     s0 = Tcl_GetVar(interp, "argv0", 0);
