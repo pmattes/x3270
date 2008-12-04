@@ -1564,7 +1564,7 @@ kybd_input(void)
 		 */
 		if ((ir.Event.MouseEvent.dwButtonState ==
 			FROM_LEFT_1ST_BUTTON_PRESSED) &&
-		    (ir.Event.MouseEvent.dwControlKeyState == 0) &&
+		    /*(ir.Event.MouseEvent.dwControlKeyState == 0) &&*/
 		    (ir.Event.MouseEvent.dwEventFlags == 0) &&
 		    (ir.Event.MouseEvent.dwMousePosition.X < COLS) &&
 		    (ir.Event.MouseEvent.dwMousePosition.Y < ROWS)) {
