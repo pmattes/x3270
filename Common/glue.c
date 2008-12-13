@@ -820,6 +820,9 @@ static struct {
 	{ ResTypeahead,	offset(typeahead),	XRM_BOOLEAN },
 	{ ResUnlockDelay,offset(unlock_delay),	XRM_BOOLEAN },
 	{ ResUnlockDelayMs,offset(unlock_delay_ms),XRM_INT },
+#if defined(WC3270) /*[*/
+	{ ResVisualBell,offset(visual_bell),	XRM_BOOLEAN },
+#endif /*]*/
 #if defined(X3270_ANSI) /*[*/
 	{ ResWerase,	offset(werase),		XRM_STRING },
 #endif /*]*/
