@@ -1,12 +1,18 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
 3.3 is the current development line for the x3270 suite.
-<h2>Changes in version 3.3.8p2, xx December 2008</h2>
+<h2>Changes in version 3.3.8p2, 13 December 2008</h2>
 <ul>
  <li>[<i>wc3270</i>] Corrected the handling of 8-bit and DBCS characters in
   the <b>PrintText</b> action.</li>
- <li>[<i>tcl3270</i>] Find the Tcl library version automatically.</li>
- <li>[<i>wc3270</i>] Allow mouse clicks to move the cursor even with
-  <b>NumLock</b> set.</li>
+ <li>[<i>tcl3270</i>] Extended <tt>configure</tt> to find the <b>Tcl</b>
+  library version automatically.</li>
+ <li>[<i>wc3270</i>] Corrected a problem which caused mouse clicks not to be
+  recognized (not moving the cursor) if <b>NumLock</b> was set.</li>
+ <li>[<i>all</i>] Corrected the <tt>configure</tt> script to recognize
+  a separately-installed <b>iconv</b> library even if the <i>iconv()</i>
+  function is defined in <b>libc</b>.</li>
+ <li>[<i>wc3270</i>] Restored the bell sound, and added a <b>visualBell</b>
+  resource to disable it.</li>
 </ul>
 <h2>Changes in version 3.3.8p1, 20 October 2008</h2>
 <ul>
