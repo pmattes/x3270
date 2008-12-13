@@ -103,6 +103,7 @@ struct screen_spec altscreen_spec, defscreen_spec;
 static SCREEN *def_screen = NULL, *alt_screen = NULL;
 static SCREEN *cur_screen = NULL;
 static void parse_screen_spec(const char *str, struct screen_spec *spec);
+int regurg;
 #endif /*]*/
 
 static struct {
@@ -391,6 +392,7 @@ swap_screens(SCREEN *new_screen)
 {
 	set_term(new_screen);
 	cur_screen = new_screen;
+	/*regurg = TRUE;*/
 }
 #endif /*]*/
 
@@ -403,6 +405,8 @@ screen_init2(void)
 	 * will send anything to the terminal.
 	 */
 	escaped = False;
+
+	trace(TRACE_IEVENT);
 
 	/* Set up the keyboard. */
 	setup_tty();
@@ -893,6 +897,7 @@ kybd_input(void)
 #else /*][*/
 		k = wgetch(stdscr);
 #endif /*]*/
+		trace_event("k=%d wch=%u regurg=%u\n", k, wch, regurg);
 		if (k == ERR) {
 			if (first) {
 				if (failed_first) {
@@ -901,10 +906,26 @@ kybd_input(void)
 				}
 				failed_first = True;
 			}
+			trace_event("k == ERR, return\n");
 			return;
 		} else {
 			failed_first = False;
 		}
+#if defined(C3270_80_132) /*[*/
+		if (regurg) {
+		    regurg = FALSE;
+#if defined(CURSES_WIDE) /*[*/
+		    if (k != KEY_CODE_YES) {
+			trace_event("pushing back %u\n", wch);
+			unget_wch(wch);
+			continue;
+		    }
+#else /*][*/
+		    ungetch(k);
+		    continue;
+#endif /*]*/
+		}
+#endif /*]*/
 #if !defined(CURSES_WIDE) /*[*/
 		/* Differentiate between KEY_XXX and regular input. */
 		if (!(k & ~0xff)) {

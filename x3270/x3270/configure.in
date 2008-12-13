@@ -110,7 +110,7 @@ AC_CHECK_FUNCS(forkpty)
 AC_SEARCH_LIBS(gethostbyname, nsl_s nsl)
 AC_SEARCH_LIBS(socket, socket)
 AC_CHECK_HEADERS(iconv.h)
-AC_SEARCH_LIBS(iconv, iconv, , AC_SEARCH_LIBS(libiconv, iconv, , if test "$unkw"; then AC_MSG_ERROR("No iconv library function"); fi))
+AC_SEARCH_LIBS(libiconv, iconv, , AC_SEARCH_LIBS(iconv, iconv, , if test "$unkw"; then AC_MSG_ERROR("No iconv library function"); fi))
 
 dnl Checks for header files.
 dnl AC_HEADER_STDC

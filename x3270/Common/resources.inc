@@ -119,6 +119,8 @@ ifelse(XX_PRODUCT,wc3270,,`XX_TR(XX_TD(traceDir)	XX_TD(/tmp)	XX_TD(XX_NBSP)	XX_T
 XX_TR(XX_TD(traceFile)	XX_TD(XX_LINK(#rn3,`(note 3)'))	XX_TD(XX_DASHED(tracefile))	XX_TD(File for trace output))
 ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(typeahead)	XX_TD(True)	XX_TD(XX_NBSP)	XX_TD(Allow typeahead))
 ')dnl
+ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(visualBell)	XX_TD(False)	XX_TD(XX_NBSP)	XX_TD(Disable bell sound))
+')dnl
 XX_TR(XX_TD(werase)	XX_TD(^W)	XX_TD(XX_NBSP)	XX_TD(XX_SM(NVT)-mode word-erase character))
 XX_TE()
 XX_LP

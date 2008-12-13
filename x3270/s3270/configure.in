@@ -148,7 +148,7 @@ yes|*)
 	;;
 esac
 AC_SUBST(USE_ICONV)
-AC_SEARCH_LIBS(iconv, iconv, , AC_SEARCH_LIBS(libiconv, iconv, , if test "$unkw"; then AC_MSG_ERROR("No iconv library function"); fi))
+AC_SEARCH_LIBS(libiconv, iconv, , AC_SEARCH_LIBS(iconv, iconv, , if test "$unkw"; then AC_MSG_ERROR("No iconv library function"); fi))
 
 dnl Set up the configuration directory.
 LIBX3270DIR='${sysconfdir}/x3270'

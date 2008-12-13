@@ -91,8 +91,10 @@ typedef struct {
 	Boolean m3279;
 	Boolean modified_sel;
 	Boolean	once;
-#if defined(X3270_DISPLAY) /*[*/
+#if defined(X3270_DISPLAY) || (defined(C3270) && defined(_WIN32)) /*[*/
 	Boolean visual_bell;
+#endif /*]*/
+#if defined(X3270_DISPLAY) /*[*/
 	Boolean menubar;
 	Boolean active_icon;
 	Boolean label_icon;
