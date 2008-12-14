@@ -406,8 +406,6 @@ screen_init2(void)
 	 */
 	escaped = False;
 
-	trace(TRACE_IEVENT);
-
 	/* Set up the keyboard. */
 	setup_tty();
 	scrollok(stdscr, FALSE);
