@@ -1096,7 +1096,7 @@ x3270.message.statusConnecting:			Connecting
 #endif
 #ifdef X3270_FT
 x3270.message.ftComplete:			Transfer complete, %i bytes transferred\n\
-%.2lg Kbytes/sec in %s mode
+%.2g Kbytes/sec in %s mode
 x3270.message.ftUnable:				Cannot begin transfer
 x3270.message.ftStartTimeout:			Transfer did not start within 10s
 x3270.message.ftUserCancel:			Transfer cancelled by user
