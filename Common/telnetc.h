@@ -60,3 +60,4 @@ extern void popup_a_sockerr(char *fmt, ...) printflike(1, 2);
 extern char *net_proxy_type(void);
 extern char *net_proxy_host(void);
 extern char *net_proxy_port(void);
+extern Boolean net_bound(void);
