@@ -574,7 +574,17 @@ Attn_action(Widget w _is_unused, XEvent *event, String *params,
 	if (!IN_3270)
 		return;
 	reset_idle_timer();
-	net_interrupt();
+
+	if (IN_E) {
+	    if (net_bound()) {
+		net_interrupt();
+	    } else {
+		status_minus();
+		kybdlock_set(KL_OIA_MINUS, "Attn_action");
+	    }
+	} else {
+	    net_break();
+	}
 }
 
 /*

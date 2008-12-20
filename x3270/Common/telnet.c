@@ -3463,3 +3463,10 @@ net_proxy_port(void)
 	else
 	    	return NULL;
 }
+
+/* Return the SNA binding state. */
+Boolean
+net_bound(void)
+{
+    	return (IN_E && tn3270e_bound);
+}
