@@ -462,19 +462,19 @@ define(XX_CG9,ifelse(XX_PRODUCT,x3270,3270cg-9))dnl
 define(XX_CG11,ifelse(XX_PRODUCT,x3270,3270cg-11))dnl
 define(XX_CG15A,ifelse(XX_PRODUCT,x3270,3270cg-15a))dnl
 define(XX_CG15,ifelse(XX_PRODUCT,x3270,3270cg-15))dnl
-define(XX_88591,ifelse(XX_PLATFORM,windows,28591,iso8859-1))dnl
-define(XX_88592,ifelse(XX_PLATFORM,windows,28592,iso8859-2))dnl
-define(XX_88597,ifelse(XX_PLATFORM,windows,28597,iso8859-7))dnl
-define(XX_88598,ifelse(XX_PLATFORM,windows,28598,iso8859-8))dnl
-define(XX_88599,ifelse(XX_PLATFORM,windows,28599,iso8859-9))dnl
-define(XX_885911,ifelse(XX_PLATFORM,windows,28601,iso8859-11))dnl
-define(XX_885915,ifelse(XX_PLATFORM,windows,28605,iso8859-15))dnl
-define(XX_KOI8R,ifelse(XX_PLATFORM,windows,20866,koi8-r))dnl
+define(XX_88591,ifelse(XX_PLATFORM,windows,`',iso8859-1))dnl
+define(XX_88592,ifelse(XX_PLATFORM,windows,`',iso8859-2))dnl
+define(XX_88597,ifelse(XX_PLATFORM,windows,`',iso8859-7))dnl
+define(XX_88598,ifelse(XX_PLATFORM,windows,`',iso8859-8))dnl
+define(XX_88599,ifelse(XX_PLATFORM,windows,`',iso8859-9))dnl
+define(XX_885911,ifelse(XX_PLATFORM,windows,`',iso8859-11))dnl
+define(XX_885915,ifelse(XX_PLATFORM,windows,`',iso8859-15))dnl
+define(XX_KOI8R,ifelse(XX_PLATFORM,windows,`',koi8-r))dnl
 define(XX_TIS,ifelse(XX_PLATFORM,windows,`',tis620.2529-0))dnl
 XX_TS(3,`center;
 l l l
 lfB l l.')
-XX_TR(XX_TD(XX_TC(Charset Name))	XX_TD(XX_TC(Host Code Page))	XX_TD(XX_TC(ifelse(XX_PRODUCT,x3270,Display Character Sets,XX_PRODUCT,c3270,Display Character Set,XX_PLATFORM,windows,Windows Code Page,Character Set))))
+XX_TR(XX_TD(XX_TC(Charset Name))	XX_TD(XX_TC(Host Code Page))	XX_TD(XX_TC(ifelse(XX_PRODUCT,x3270,Display Character Sets,XX_PRODUCT,c3270,Display Character Set,XX_PLATFORM,windows,`',Character Set))))
 XX_T_()
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TD(XX_TC(apl))	XX_TD(XX_TC(37))	XX_TD(XX_TC(XX_CG1A)))
 ')dnl
@@ -483,8 +483,6 @@ XX_TR(XX_TD(XX_TC(belgian-euro))	XX_TD(XX_TC(1148))	XX_TD(XX_TC(XX_CG15A XX_CG15
 XX_TR(XX_TD(XX_TC(bracket))	XX_TD(XX_TC(37))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TR(XX_TD(XX_TC(brazilian))	XX_TD(XX_TC(275))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TR(XX_TD(XX_TC(cp1047))	XX_TD(XX_TC(1047))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
-ifelse(XX_PLATFORM,windows,`XX_TR(XX_TD(XX_TC(cp1153))	XX_TD(XX_TC(1153))	XX_TD(XX_TC(1250)))
-')dnl
 XX_TR(XX_TD(XX_TC(cp870))	XX_TD(XX_TC(870))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88592)))
 XX_TR(XX_TD(XX_TC(finnish))	XX_TD(XX_TC(278))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TR(XX_TD(XX_TC(finnish-euro))	XX_TD(XX_TC(1143))	XX_TD(XX_TC(XX_CG15A XX_CG15 XX_885915)))
