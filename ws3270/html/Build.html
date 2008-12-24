@@ -57,5 +57,21 @@ To build <i>ws3270</i> (with or without SSL support), start a Cygwin shell,
   <a href="http://www.mingw.org/mingwfaq.shtml#faq-cross">this link</a> should
   get you started.
 </p>
+<h2>Using Microsoft Tools</h2>
+To build <i>ws3270</i> using Microsoft Visual C++, start a Command Prompt
+window.
+At the command prompt, 'cd' to the <i>ws3270</i> source directory, and type:
+<pre>&nbsp;&nbsp;&nbsp;nmake /f Msc\Makefile</pre>
+<p>
+This will build <tt>ws3270.exe</tt> and the DLLs and utilities needed to
+install and run it.
+</p>
+<p>
+Note that the resulting version of <i>ws3270</i> will not
+include SSL support.
+To build <i>ws3270</i> with a statically-linked OpenSSL library, you must
+modify <tt>Msc\Makefile</tt>; instructions for doing that are included in
+the file.
+</p>
 </body>
 </html>
