@@ -244,6 +244,10 @@ typedef struct {
 	char	*title;
 #endif /*]*/
 
+#if defined(_WIN32) /*[*/
+	int	local_cp;
+#endif /*]*/
+
 #if defined(USE_APP_DEFAULTS) /*[*/
 	/* App-defaults version */
 	char	*ad_version;

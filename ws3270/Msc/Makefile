@@ -23,15 +23,14 @@ RM = erase
 #SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
 #SSLLIB = $(SSLDIR)\lib\ssleay32.lib $(SSLDIR)\lib\libeay32.lib gdi32.lib
 
-XCPPFLAGS = /D_WIN32 /DWS3270 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /D_CRT_SECURE_NO_DEPRECATE
+XCPPFLAGS = /D_WIN32 /DWS3270 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /D_CRT_SECURE_NO_DEPRECATE /DWIN32_LEAN_AND_MEAN
 CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I. $(SSLCPP)
-VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj charset.obj \
-	ctlr.obj fallbacks.obj ft.obj ft_cut.obj ft_dft.obj glue.obj \
-	host.obj idle.obj kybd.obj macros.obj print.obj \
-	printer.obj proxy.obj resolver.obj resources.obj rpq.obj \
-	see.obj sf.obj smain.obj tables.obj telnet.obj toggles.obj trace_ds.obj \
-	unicode.obj utf8.obj util.obj xio.obj w3misc.obj winvers.obj \
-	windirs.obj ws3270.RES
+VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj charset.obj ctlr.obj \
+	fallbacks.obj ft.obj ft_cut.obj ft_dft.obj glue.obj host.obj idle.obj \
+	kybd.obj macros.obj print.obj printer.obj proxy.obj resolver.obj \
+	resources.obj rpq.obj see.obj sf.obj smain.obj tables.obj telnet.obj \
+	toggles.obj trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj \
+	util.obj xio.obj w3misc.obj winvers.obj windirs.obj ws3270.RES
 OBJECTS = $(VOBJS) version.obj
 LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib
 SHRTLIBS = ole32.lib
@@ -143,6 +142,8 @@ trace_ds.obj: trace_ds.c
 	$(CC) $(CFLAGS) /c trace_ds.c
 unicode.obj: unicode.c
 	$(CC) $(CFLAGS) /c unicode.c
+unicode_dbcs.obj: unicode_dbcs.c
+	$(CC) $(CFLAGS) /c unicode_dbcs.c
 utf8.obj: utf8.c
 	$(CC) $(CFLAGS) /c utf8.c
 util.obj: util.c

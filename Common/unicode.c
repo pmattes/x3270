@@ -23,6 +23,7 @@
 #endif /*]*/
 #include <errno.h>
 #include "3270ds.h"
+#include "appres.h"
 #include "unicodec.h"
 #include "unicode_dbcsc.h"
 #include "utf8c.h"
@@ -35,6 +36,7 @@
 iconv_t i_u2mb = (iconv_t *)-1;
 iconv_t i_mb2u = (iconv_t *)-1;
 #endif /*]*/
+
 
 /*
  * EBCDIC-to-Unicode translation tables.
@@ -533,10 +535,11 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
      * wchar_t's are Unicode.
      */
     wuc = uc;
-    nc = WideCharToMultiByte(CP_ACP, 0, &wuc, 1, mb, 1, "?", &udc);
+    nc = WideCharToMultiByte(appres.local_cp, 0, &wuc, 1, mb, mb_len, "?",
+	    &udc);
     if (nc != 0) {
-	mb[1] = '\0';
-	return 2;
+	mb[nc++] = '\0';
+	return nc;
     } else {
 	mb[0] = '?';
 	mb[1] = '\0';
@@ -695,19 +698,20 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
     ucs4_t ucs4;
 #if defined(_WIN32) /*[*/
     wchar_t wc[3];
+    int i;
 
-    /*
-     * Use MultiByteToWideChar() to get from the ANSI codepage to UTF-16.
-     * Note that we pass in 1 for the MB length because we assume 8-bit code
-     * pages.  If someone somehow sets the ANSI codepage to UTF-7 or UTF-8,
-     * this won't work.
-     */
-    nw = MultiByteToWideChar(CP_ACP, 0, mb, 1, wc, 3);
-    if (nw == 0) {
+    /* Use MultiByteToWideChar() to get from the ANSI codepage to UTF-16. */
+    for (i = 1; i <= mb_len; i++) {
+	nw = MultiByteToWideChar(appres.local_cp, MB_ERR_INVALID_CHARS, mb, i,
+		wc, 3);
+	if (nw != 0)
+	    break;
+    }
+    if (i > mb_len) {
 	*errorp = ME_INVALID;
 	return 0;
     }
-    *consumedp = 1;
+    *consumedp = i;
     ucs4 = wc[0];
 #elif defined(UNICODE_WCHAR) /*][*/
     wchar_t wc[3];
@@ -939,7 +943,8 @@ unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len)
     BOOL udc;
     int nc;
 
-    nc = WideCharToMultiByte(CP_ACP, 0, &wuc, 1, mb, mb_len, "?", &udc);
+    nc = WideCharToMultiByte(appres.local_cp, 0, &wuc, 1, mb, mb_len, "?",
+	    &udc);
     if (nc > 0)
 	mb[nc++] = '\0';
     return nc;

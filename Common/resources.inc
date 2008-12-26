@@ -74,7 +74,6 @@ XX_TR(XX_TD(eof)	XX_TD(^D)	XX_TD(XX_NBSP)	XX_TD(XX_SM(NVT)-mode XX_SM(EOF) chara
 XX_TR(XX_TD(erase)	XX_TD(^H)	XX_TD(XX_NBSP)	XX_TD(XX_SM(NVT)-mode erase character))
 XX_TR(XX_TD(extended)	XX_TD(True)	XX_TD(XX_NBSP)	XX_TD(Use 3270 extended data stream))
 XX_TR(XX_TD(eventTrace)	XX_TD(False)	XX_TD(XX_DASHED(trace))	XX_TD(Event tracing))
-XX_TR(XX_TD(ftCommand)	XX_TD(ind$file)	XX_TD(XX_NBSP)	XX_TD(Host file transfer command))
 ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(hostColorForDefault)	XX_TD(green)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))')dnl
 ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(hostColorForIntensified)	XX_TD(red)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))')dnl
 ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(hostColorForProtected)	XX_TD(blue)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))')dnl
@@ -90,6 +89,8 @@ XX_TR(XX_TD(keymap.XX_FI(foo))	XX_TD(XX_NBSP)	XX_TD(XX_NBSP)	XX_TD(Definition of
 XX_TR(XX_TD(kill)	XX_TD(^U)	XX_TD(XX_NBSP)	XX_TD(XX_SM(NVT)-mode kill character))
 XX_TR(XX_TD(lineWrap)	XX_TD(False)	XX_TD(XX_DASHED(set) lineWrap)	XX_TD(XX_SM(NVT) line wrap mode))
 XX_TR(XX_TD(lnext)	XX_TD(^V)	XX_TD(XX_NBSP)	XX_TD(XX_SM(NVT)-mode lnext character))
+ifelse(XX_PLATFORM,windows,`XX_TR(XX_TD(localCp)	XX_TD((system ANSI code page))	XX_TD(XX_DASHED(localcp))	XX_TD(Windows code page for local I/O))
+')dnl
 XX_TR(XX_TD(m3279)	XX_TD(XX_LINK(#rn1,`(note 1)'))	XX_TD(XX_DASHED(model))	XX_TD(3279 (color) emulation))
 ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(metaEscape)	XX_TD(Auto)	XX_TD(XX_NBSP)	XX_TD(Interpret ESC-x as Meta-x))
 ')dnl
@@ -114,7 +115,7 @@ XX_TR(XX_TD(secure)	XX_TD(False)	XX_TD(XX_NBSP)	XX_TD(Disable "dangerous" option
 XX_TR(XX_TD(termName)	XX_TD(XX_LINK(#rn2,`(note 2)'))	XX_TD(XX_DASHED(tn))	XX_TD(XX_SM(TELNET) terminal type string))
 ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(title)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP)	XX_TD(Console window title))
 ')dnl
-ifelse(XX_PRODUCT,wc3270,,`XX_TR(XX_TD(traceDir)	XX_TD(/tmp)	XX_TD(XX_NBSP)	XX_TD(Directory for trace files))
+ifelse(XX_PLATFORM,windows,,`XX_TR(XX_TD(traceDir)	XX_TD(/tmp)	XX_TD(XX_NBSP)	XX_TD(Directory for trace files))
 ')dnl
 XX_TR(XX_TD(traceFile)	XX_TD(XX_LINK(#rn3,`(note 3)'))	XX_TD(XX_DASHED(tracefile))	XX_TD(File for trace output))
 ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(typeahead)	XX_TD(True)	XX_TD(XX_NBSP)	XX_TD(Allow typeahead))
@@ -150,7 +151,7 @@ mode is used, the terminal type is always sent as 3278, but this does not
 affect color capabilities.
 XX_LP
 XX_TARGET(rn3)XX_FI(Note 3): The default trace file is
-ifelse(XX_PRODUCT,wc3270,`XX_FB(x3trc.)`'XX_FI(pid)`'XX_FB(.txt) in the
+ifelse(XX_PLATFORM,windows,`XX_FB(x3trc.)`'XX_FI(pid)`'XX_FB(.txt) in the
 directory where XX_PRODUCT was started.',
 `XX_FB(x3trc.)`'XX_FI(pid) in the directory specified by
 the XX_FB(traceDir) resource.')
