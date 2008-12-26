@@ -54,6 +54,7 @@
 #include "utilc.h"
 
 #if defined(_WIN32) /*[*/
+#include <windows.h>
 #include "winversc.h"
 #endif /*]*/
 
@@ -392,6 +393,9 @@ parse_options(int *argcp, const char **argv)
 #if defined(C3270) /*[*/
     { OptKeymap,   OPT_STRING,  False, ResKeymap,    offset(key_map) },
 #endif /*]*/
+#if defined(_WIN32) /*[*/
+    { OptLocalCp,  OPT_INT,	False, ResLocalCp,   offset(local_cp) },
+#endif /*]*/
     { OptModel,    OPT_STRING,  False, ResKeymap,    offset(model) },
 #if defined(C3270) && !defined(_WIN32) /*[*/
     { OptMono,     OPT_BOOLEAN, True,  ResMono,      offset(mono) },
@@ -522,6 +526,10 @@ parse_options(int *argcp, const char **argv)
 
 #if defined(C3270) && defined(X3270_SCRIPT) /*[*/
 	appres.plugin_command = "x3270hist.pl";
+#endif /*]*/
+
+#if defined(_WIN32) /*[*/
+	appres.local_cp = GetACP();
 #endif /*]*/
 
 #if defined(C3270) && !defined(_WIN32) /*[*/
@@ -781,6 +789,9 @@ static struct {
 #if defined(X3270_ANSI) /*[*/
 	{ ResKill,	offset(kill),		XRM_STRING },
 	{ ResLnext,	offset(lnext),		XRM_STRING },
+#endif /*]*/
+#if defined(_WIN32) /*[*/
+	{ ResLocalCp,	offset(local_cp),	XRM_INT },
 #endif /*]*/
 	{ ResLoginMacro,offset(login_macro),	XRM_STRING },
 	{ ResM3279,	offset(m3279),		XRM_BOOLEAN },

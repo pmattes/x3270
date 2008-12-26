@@ -45,7 +45,7 @@ VOBJS = actions.o ansi.o apl.o charset.o ctlr.o fallbacks.o ft.o \
 	print.o printer.o proxy.o resolver.o resources.o rpq.o see.o sf.o \
 	smain.o strtok_r.o tables.o telnet.o toggles.o trace_ds.o utf8.o \
 	util.o w3misc.o windirs.o winvers.o xio.o XtGlue.o \
-	ws3270res.o unicode.o
+	ws3270res.o unicode.o unicode_dbcs.o
 OBJECTS = $(VOBJS) version.o
 LIBS = $(SSLLIB) -lws2_32
 SHRTLIBS = -lole32 -luuid

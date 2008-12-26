@@ -177,6 +177,10 @@ XX_FI(name) is an encoding name recognized by the ICU library.
 (Supported only when XX_PRODUCT is compiled with DBCS support, and necessary
 only when XX_PRODUCT cannot figure it out from the locale.)
 ')dnl
+ifelse(XX_PLATFORM,windows,`XX_TP(XX_FB(XX_DASHED(localcp) XX_FI(codepage)))
+Specifies the Windows code page to use for local I/O.
+The default is to use the XX_POSESSIVE(system) ANSI code page.
+')dnl
 XX_TP(XX_FB(XX_DASHED(model)) XX_FI(name))
 The model of 3270 display to be emulated.
 The model name is in two parts, either of which may be omitted:
