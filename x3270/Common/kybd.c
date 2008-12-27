@@ -3215,7 +3215,7 @@ remargin(int lmargin)
  * Returns the number of unprocessed characters.
  */
 int
-emulate_input(char *s, int len, Boolean pasting)
+emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 {
 	enum {
 	    BASE, BACKSLASH, BACKX, BACKE, BACKP, BACKPA, BACKPF, OCTAL, HEX,
@@ -3227,24 +3227,7 @@ emulate_input(char *s, int len, Boolean pasting)
 	int orig_addr = cursor_addr;
 	int orig_col = BA_TO_COL(cursor_addr);
 	Boolean skipped = False;
-	static ucs4_t *w_ibuf = NULL;
-	static size_t w_ibuf_len = 0;
 	ucs4_t c;
-	ucs4_t *ws;
-	int xlen;
-
-	/*
-	 * Convert from a multi-byte string to a Unicode string.
-	 */
-	if ((size_t)(len + 1) > w_ibuf_len) {
-		w_ibuf_len = len + 1;
-		w_ibuf = (ucs4_t *)Realloc(w_ibuf, w_ibuf_len * sizeof(ucs4_t));
-	}
-	xlen = multibyte_to_unicode_string(s, len, w_ibuf, w_ibuf_len);
-	if (xlen < 0) {
-		return 0; /* failed */
-	}
-	ws = w_ibuf;
 
 	/*
 	 * In the switch statements below, "break" generally means "consume
@@ -3646,6 +3629,28 @@ emulate_input(char *s, int len, Boolean pasting)
 	}
 
 	return xlen;
+}
+
+/* Multibyte version of emulate_uinput. */
+int
+emulate_input(char *s, int len, Boolean pasting)
+{
+	static ucs4_t *w_ibuf = NULL;
+	static size_t w_ibuf_len = 0;
+	int xlen;
+
+	/* Convert from a multi-byte string to a Unicode string. */
+	if ((size_t)(len + 1) > w_ibuf_len) {
+		w_ibuf_len = len + 1;
+		w_ibuf = (ucs4_t *)Realloc(w_ibuf, w_ibuf_len * sizeof(ucs4_t));
+	}
+	xlen = multibyte_to_unicode_string(s, len, w_ibuf, w_ibuf_len);
+	if (xlen < 0) {
+		return 0; /* failed */
+	}
+
+	/* Process it as Unicode. */
+	return emulate_uinput(w_ibuf, xlen, pasting);
 }
 
 /*
