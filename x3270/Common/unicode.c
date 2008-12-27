@@ -23,7 +23,9 @@
 #endif /*]*/
 #include <errno.h>
 #include "3270ds.h"
+#if defined(_WIN32) && !defined(PR3287) /*[*/
 #include "appres.h"
+#endif /*]*/
 #include "unicodec.h"
 #include "unicode_dbcsc.h"
 #include "utf8c.h"
@@ -35,6 +37,14 @@
 #if defined(USE_ICONV) /*[*/
 iconv_t i_u2mb = (iconv_t *)-1;
 iconv_t i_mb2u = (iconv_t *)-1;
+#endif /*]*/
+
+#if defined(_WIN32) /*[*/
+# if defined(PR3287) /*[*/
+#  define LOCAL_CODEPAGE	CP_ACP
+# else /*][*/
+#  define LOCAL_CODEPAGE	appres.local_cp
+# endif /*]*/
 #endif /*]*/
 
 
@@ -535,8 +545,8 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
      * wchar_t's are Unicode.
      */
     wuc = uc;
-    nc = WideCharToMultiByte(appres.local_cp, 0, &wuc, 1, mb, mb_len, "?",
-	    &udc);
+    nc = WideCharToMultiByte(LOCAL_CODEPAGE, 0, &wuc, 1, mb, mb_len,
+	    "?", &udc);
     if (nc != 0) {
 	mb[nc++] = '\0';
 	return nc;
@@ -702,8 +712,8 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 
     /* Use MultiByteToWideChar() to get from the ANSI codepage to UTF-16. */
     for (i = 1; i <= mb_len; i++) {
-	nw = MultiByteToWideChar(appres.local_cp, MB_ERR_INVALID_CHARS, mb, i,
-		wc, 3);
+	nw = MultiByteToWideChar(LOCAL_CODEPAGE, MB_ERR_INVALID_CHARS,
+		mb, i, wc, 3);
 	if (nw != 0)
 	    break;
     }
@@ -943,8 +953,8 @@ unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len)
     BOOL udc;
     int nc;
 
-    nc = WideCharToMultiByte(appres.local_cp, 0, &wuc, 1, mb, mb_len, "?",
-	    &udc);
+    nc = WideCharToMultiByte(LOCAL_CODEPAGE, 0, &wuc, 1, mb, mb_len,
+	    "?", &udc);
     if (nc > 0)
 	mb[nc++] = '\0';
     return nc;
