@@ -33,7 +33,7 @@ NATIVECC = gcc
 WINDRES = windres
 endif
 
-XCPPFLAGS = -D_WIN32 -DWS3270 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500
+XCPPFLAGS = -D_WIN32 -DWS3270 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWIN32_LEAN_AND_MEAN
 CFLAGS = $(EXTRA_FLAGS) -mno-cygwin -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
 SRCS = actions.c ansi.c apl.c charset.c ctlr.c fallbacks.c ft.c \
 	ft_cut.c ft_dft.c glue.c host.c idle.c kybd.c macros.c \

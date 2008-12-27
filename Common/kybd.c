@@ -1646,8 +1646,14 @@ do_left(void)
 	baddr = cursor_addr;
 	DEC_BA(baddr);
 	d = ctlr_dbcs_state(baddr);
-	if (IS_LEFT(d))
+	if (IS_RIGHT(d)) {
 		DEC_BA(baddr);
+	} else if (IS_LEFT(d)) {
+		DEC_BA(baddr);
+		d = ctlr_dbcs_state(baddr);
+		if (IS_RIGHT(d))
+			DEC_BA(baddr);
+	}
 	cursor_move(baddr);
 }
 
@@ -1679,7 +1685,6 @@ Left_action(Widget w _is_unused, XEvent *event, String *params,
 
 		baddr = cursor_addr;
 		INC_BA(baddr);
-		/* XXX: DBCS? */
 		cursor_move(baddr);
 	}
 }
