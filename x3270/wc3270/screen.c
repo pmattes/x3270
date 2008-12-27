@@ -45,11 +45,13 @@
 extern int screen_changed;
 extern char *profile_name;
 
-#if !defined(COMMON_LVB_LEAD_BYTE) /*[*/
-#define COMMON_LVB_LEAD_BYTE		0x100
-#endif /*]*/
-#if !defined(COMMON_LVB_TRAILING_BYTE) /*[*/
-#define COMMON_LVB_TRAILING_BYTE	0x200
+#if defined(X3270_DBCS) /*[*/
+# if !defined(COMMON_LVB_LEAD_BYTE) /*[*/
+#  define COMMON_LVB_LEAD_BYTE		0x100
+# endif /*]*/
+# if !defined(COMMON_LVB_TRAILING_BYTE) /*[*/
+#  define COMMON_LVB_TRAILING_BYTE	0x200
+# endif /*]*/
 #endif /*]*/
 
 #define MAX_COLORS	16
@@ -750,6 +752,12 @@ refresh(void)
 	/* Move the cursor. */
 	coord.X = cur_col;
 	coord.Y = cur_row;
+#if defined(X3270_DBCS) /*[*/
+	if (onscreen[ix(cur_row, cur_col)].Attributes &
+		COMMON_LVB_TRAILING_BYTE) {
+	    coord.X--;
+	}
+#endif /*]*/
 	if (SetConsoleCursorPosition(sbuf, coord) == 0) {
 		fprintf(stderr,
 			"\nrefresh: SetConsoleCursorPosition(x=%d,y=%d) "
@@ -1293,6 +1301,12 @@ screen_disp(Boolean erasing _is_unused)
 
 			coord.X = cur_col;
 			coord.Y = cur_row;
+#if defined(X3270_DBCS) /*[*/
+			if (onscreen[ix(cur_row, cur_col)].Attributes &
+				COMMON_LVB_TRAILING_BYTE) {
+			    coord.X--;
+			}
+#endif /*]*/
 			if (SetConsoleCursorPosition(sbuf, coord) == 0) {
 				fprintf(stderr,
 					"\nscreen_disp: "
@@ -1539,6 +1553,12 @@ kybd_input(void)
 	switch (ir.EventType) {
 	case FOCUS_EVENT:
 		trace_event("Focus\n");
+		/*
+		 * When we get a focus event, the system may have (incorrectly)
+		 * redrawn our window.  Do it again ourselves.
+		 */
+		onscreen_valid = FALSE;
+		refresh();
 		break;
 	case KEY_EVENT:
 		if (!ir.Event.KeyEvent.bKeyDown) {
@@ -2057,8 +2077,7 @@ Redraw_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_
     Cardinal *num_params _is_unused)
 {
 	if (!escaped) {
-		/*endwin();*/
-		onscreen_valid = FALSE; /* doesn't appear to work */
+		onscreen_valid = FALSE;
 		refresh();
 	}
 }
