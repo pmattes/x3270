@@ -1,10 +1,16 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
 3.3 is the current development line for the x3270 suite.
+<h2>Changes in version 3.3.9a4, 31. December 2008</h2>
+<ul>
+ <li>[<i>wc3270</i>] Added DBCS support.</li>
+</ul>
 <h2>Changes in version 3.3.9a3, 26. December 2008</h2>
 <ul>
- <li>[<i>wc3270</i> and <i>ws3270</i>] Added the <b>-localcp</b> option and
+ <li>[<i>ws3270</i>] Added the <b>-localcp</b> option and
   <b>localCP</b> resource to change the Windows code page used for local
   workstation I/O.</li>
+ <li>[<i>ws3270</i>] Added DBCS support and support for building using
+  Microsoft tools.</li>
  <li>[<i>all</i>] Changed the <b>Attn</b> action so that it sends an IAC
   BREAK in TN3270 mode, and locks the keyboard in TN3270E mode when the
   session is not SNA bound.</i>
@@ -22,6 +28,11 @@
   function is defined in <b>libc</b>.</li>
  <li>[<i>wc3270</i>] Restored the bell sound, and added a <b>visualBell</b>
   resource to disable it.</li>
+</ul>
+<h2>Changes in version 3.3.9a1, 20. October 2008</h2>
+<ul>
+ <li>[all but <i>wc3270</i>] Added Traditional Chinese (host code page 937)
+  support.</li>
 </ul>
 <h2>Changes in version 3.3.8p1, 20 October 2008</h2>
 <ul>

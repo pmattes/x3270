@@ -635,8 +635,8 @@ This specifies the EBCDIC character set used by the host.");
 
 	printf("\
 \nAvailable character sets:\n\n\
-     Name                Host CP     Name                Host CP\n\
-     ------------------- ---------   ------------------- ---------\n");
+  #  Name                Host CP      #  Name                Host CP\n\
+ --- ------------------- --------    --- ------------------- --------\n");
 	k = 0;
 	for (i = 0; i < NCS; i++) {
 	    	int j;

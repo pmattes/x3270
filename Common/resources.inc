@@ -89,7 +89,7 @@ XX_TR(XX_TD(keymap.XX_FI(foo))	XX_TD(XX_NBSP)	XX_TD(XX_NBSP)	XX_TD(Definition of
 XX_TR(XX_TD(kill)	XX_TD(^U)	XX_TD(XX_NBSP)	XX_TD(XX_SM(NVT)-mode kill character))
 XX_TR(XX_TD(lineWrap)	XX_TD(False)	XX_TD(XX_DASHED(set) lineWrap)	XX_TD(XX_SM(NVT) line wrap mode))
 XX_TR(XX_TD(lnext)	XX_TD(^V)	XX_TD(XX_NBSP)	XX_TD(XX_SM(NVT)-mode lnext character))
-ifelse(XX_PLATFORM,windows,`XX_TR(XX_TD(localCp)	XX_TD((system ANSI code page))	XX_TD(XX_DASHED(localcp))	XX_TD(Windows code page for local I/O))
+ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(localCp)	XX_TD((system ANSI code page))	XX_TD(XX_DASHED(localcp))	XX_TD(Windows code page for local I/O))
 ')dnl
 XX_TR(XX_TD(m3279)	XX_TD(XX_LINK(#rn1,`(note 1)'))	XX_TD(XX_DASHED(model))	XX_TD(3279 (color) emulation))
 ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(metaEscape)	XX_TD(Auto)	XX_TD(XX_NBSP)	XX_TD(Interpret ESC-x as Meta-x))

@@ -177,7 +177,7 @@ XX_FI(name) is an encoding name recognized by the ICU library.
 (Supported only when XX_PRODUCT is compiled with DBCS support, and necessary
 only when XX_PRODUCT cannot figure it out from the locale.)
 ')dnl
-ifelse(XX_PLATFORM,windows,`XX_TP(XX_FB(XX_DASHED(localcp) XX_FI(codepage)))
+ifelse(XX_PRODUCT,ws3270,`XX_TP(XX_FB(XX_DASHED(localcp) XX_FI(codepage)))
 Specifies the Windows code page to use for local I/O.
 The default is to use the XX_POSESSIVE(system) ANSI code page.
 ')dnl
@@ -475,6 +475,9 @@ define(XX_885911,ifelse(XX_PLATFORM,windows,`',iso8859-11))dnl
 define(XX_885915,ifelse(XX_PLATFORM,windows,`',iso8859-15))dnl
 define(XX_KOI8R,ifelse(XX_PLATFORM,windows,`',koi8-r))dnl
 define(XX_TIS,ifelse(XX_PLATFORM,windows,`',tis620.2529-0))dnl
+define(XX_GB,ifelse(XX_PLATFORM,windows,`',XX_CG1A XX_88591 + gb2312.1980-0))dnl
+define(XX_BIG5,ifelse(XX_PLATFORM,windows,`',XX_CG1A XX_88591 + Big5-0))dnl
+define(XX_JIS,ifelse(XX_PLATFORM,windows,`',jisx0201.1976-0 + jisx0208.1983-0))dnl
 XX_TS(3,`center;
 l l l
 lfB l l.')
@@ -500,17 +503,16 @@ XX_TR(XX_TD(XX_TC(icelandic))	XX_TD(XX_TC(871))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88
 XX_TR(XX_TD(XX_TC(icelandic-euro))	XX_TD(XX_TC(1149))	XX_TD(XX_TC(XX_CG15A XX_CG15 XX_885915)))
 XX_TR(XX_TD(XX_TC(italian))	XX_TD(XX_TC(280))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TR(XX_TD(XX_TC(italian-euro))	XX_TD(XX_TC(1144))	XX_TD(XX_TC(XX_CG15A XX_CG15 XX_885915)))
-ifelse(XX_PLATFORM,windows,,`XX_TR(XX_TD(XX_TC(japanese))	XX_TD(XX_TC(1027+300))	XX_TD(XX_TC(jisx0201.1976-0 + jisx0208.1983-0)))
-')dnl
+XX_TR(XX_TD(XX_TC(japanese))	XX_TD(XX_TC(1027+300))	XX_TD(XX_TC(XX_JIS)))
 XX_TR(XX_TD(XX_TC(norwegian))	XX_TD(XX_TC(277))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TR(XX_TD(XX_TC(norwegian-euro))	XX_TD(XX_TC(1142))	XX_TD(XX_TC(XX_CG15A XX_CG15 XX_885915)))
 XX_TR(XX_TD(XX_TC(russian))	XX_TD(XX_TC(880))	XX_TD(XX_TC(XX_KOI8R)))
-ifelse(XX_PLATFORM,windows,,`XX_TR(XX_TD(XX_TC(simplified-chinese))	XX_TD(XX_TC(836+837))	XX_TD(XX_TC(XX_CG1A XX_88591 + gb2312.1980-0)))
-')dnl
+XX_TR(XX_TD(XX_TC(simplified-chinese))	XX_TD(XX_TC(836+837))	XX_TD(XX_TC(XX_GB)))
 XX_TR(XX_TD(XX_TC(slovenian))	XX_TD(XX_TC(870))	XX_TD(XX_TC(XX_88592)))
 XX_TR(XX_TD(XX_TC(spanish))	XX_TD(XX_TC(284))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TR(XX_TD(XX_TC(spanish-euro))	XX_TD(XX_TC(1145))	XX_TD(XX_TC(XX_CG15A XX_CG15 XX_885915)))
 XX_TR(XX_TD(XX_TC(thai))	XX_TD(XX_TC(1160))	XX_TD(XX_TC(XX_885911 XX_TIS)))
+XX_TR(XX_TD(XX_TC(traditional-chinese))	XX_TD(XX_TC(937))	XX_TD(XX_TC(XX_BIG5)))
 XX_TR(XX_TD(XX_TC(turkish))	XX_TD(XX_TC(1026))	XX_TD(XX_TC(XX_88599)))
 XX_TR(XX_TD(XX_TC(uk))	XX_TD(XX_TC(285))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TR(XX_TD(XX_TC(uk-euro))	XX_TD(XX_TC(1146))	XX_TD(XX_TC(XX_CG15A XX_CG15 XX_885915)))

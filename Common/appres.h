@@ -244,7 +244,7 @@ typedef struct {
 	char	*title;
 #endif /*]*/
 
-#if defined(_WIN32) /*[*/
+#if defined(WS3270) /*[*/
 	int	local_cp;
 #endif /*]*/
 
