@@ -393,7 +393,7 @@ parse_options(int *argcp, const char **argv)
 #if defined(C3270) /*[*/
     { OptKeymap,   OPT_STRING,  False, ResKeymap,    offset(key_map) },
 #endif /*]*/
-#if defined(_WIN32) /*[*/
+#if defined(WS3270) /*[*/
     { OptLocalCp,  OPT_INT,	False, ResLocalCp,   offset(local_cp) },
 #endif /*]*/
     { OptModel,    OPT_STRING,  False, ResKeymap,    offset(model) },
@@ -528,7 +528,7 @@ parse_options(int *argcp, const char **argv)
 	appres.plugin_command = "x3270hist.pl";
 #endif /*]*/
 
-#if defined(_WIN32) /*[*/
+#if defined(WS3270) /*[*/
 	appres.local_cp = GetACP();
 #endif /*]*/
 
@@ -790,7 +790,7 @@ static struct {
 	{ ResKill,	offset(kill),		XRM_STRING },
 	{ ResLnext,	offset(lnext),		XRM_STRING },
 #endif /*]*/
-#if defined(_WIN32) /*[*/
+#if defined(WS3270) /*[*/
 	{ ResLocalCp,	offset(local_cp),	XRM_INT },
 #endif /*]*/
 	{ ResLoginMacro,offset(login_macro),	XRM_STRING },

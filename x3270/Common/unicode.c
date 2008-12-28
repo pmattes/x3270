@@ -40,13 +40,12 @@ iconv_t i_mb2u = (iconv_t *)-1;
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-# if defined(PR3287) /*[*/
-#  define LOCAL_CODEPAGE	CP_ACP
-# else /*][*/
+# if defined(WS3270) /*[*/
 #  define LOCAL_CODEPAGE	appres.local_cp
+# else /*[*/
+#  define LOCAL_CODEPAGE	CP_ACP
 # endif /*]*/
 #endif /*]*/
-
 
 /*
  * EBCDIC-to-Unicode translation tables.
@@ -162,6 +161,7 @@ cpalias_t cpaliases[] = {
     { "spanish",	"cp284" },
     { "spanish-euro",	"cp1145" },
     { "thai",		"cp1160" },
+    { "traditional-chinese", "cp937" },
     { "turkish",	"cp1026" },
     { "uk",		"cp285" },
     { "uk-euro",	"cp1146" },

@@ -33,7 +33,7 @@ NATIVECC = gcc
 WINDRES = windres
 endif
 
-XCPPFLAGS = -D_WIN32 -DWC3270 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWINVER=0x500 -DWIN32_LEAN_AND_MEAN
+XCPPFLAGS = -D_WIN32 -DWC3270 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWINVER=0x500
 CFLAGS = $(EXTRA_FLAGS) -mno-cygwin -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
 SRCS = XtGlue.c actions.c ansi.c apl.c c3270.c charset.c ctlr.c \
 	ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c idle.c kybd.c \
@@ -54,6 +54,8 @@ DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--ena
 
 PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe w3n4.dll w3n46.dll shf.dll ead3270.exe
 all: $(PROGS)
+
+wc3270.exe : XCPPFLAGS += -DWIN32_LEAN_AND_MEAN
 
 version.o: $(VOBJS) version.txt mkversion.sh Makefile
 	@chmod +x mkversion.sh version.txt

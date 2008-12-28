@@ -127,6 +127,7 @@ x3270.charsetList:			U.S. English (CP 37): us-intl\n\
 #ifdef X3270_DBCS
 					Chinese Simplified (CP 836+837): simplified-chinese\n\
 					Chinese GB 18030 (CP 1388): chinese-gb18030\n\
+					Chinese Traditional (CP 937): traditional-chinese\n\
 #endif
 					Finnish (CP 278): finnish\n\
 					French (CP 297): french\n\
