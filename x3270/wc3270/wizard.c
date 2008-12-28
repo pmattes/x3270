@@ -76,11 +76,11 @@ struct {
 } charsets[] = {
 	{ "belgian",		"500"   },
 	{ "belgian-euro",	"1148"  },
-	{ "bracket",		"37+"   },
+	{ "bracket",		"37*"   },
 	{ "brazilian",		"275"   },
 	{ "cp1047",		"1047"  },
-	{ "cp1153",		"1153"  },
 	{ "cp870",		"870"   },
+	{ "chinese-gb18030",	"1388"	},
 	{ "finnish",		"278"   },
 	{ "finnish-euro",	"1143"  },
 	{ "french",		"297"   },
@@ -93,12 +93,15 @@ struct {
 	{ "icelandic-euro",	"1149"  },
 	{ "italian",		"280"   },
 	{ "italian-euro",	"1144"  },
+	{ "japanese",		"1027+300" },
 	{ "norwegian",		"277"   },
 	{ "norwegian-euro",	"1142"  },
 	{ "russian",		"880"   },
+	{ "simplified-chinese",	"836+837" },
 	{ "spanish",		"284"   },
 	{ "spanish-euro",	"1145"  },
 	{ "thai",		"838"   },
+	{ "traditional-chinese","937"	},
 	{ "turkish",		"1026"  },
 	{ "uk",			"285"   },
 	{ "uk-euro",		"1146"  },
@@ -106,8 +109,8 @@ struct {
 	{ "us-intl",		"37"    },
 	{ NULL,			NULL	}
 };
-#define CS_WIDTH	14
-#define CP_WIDTH	7
+#define CS_WIDTH	19
+#define CP_WIDTH	8
 #define WP_WIDTH	6
 #define	CS_COLS		2
 
@@ -632,8 +635,8 @@ This specifies the EBCDIC character set used by the host.");
 
 	printf("\
 \nAvailable character sets:\n\n\
-     Name           Host CP        Name           Host CP\n\
-     -------------- -------        -------------- -------\n");
+     Name                Host CP     Name                Host CP\n\
+     ------------------- ---------   ------------------- ---------\n");
 	k = 0;
 	for (i = 0; i < NCS; i++) {
 	    	int j;
