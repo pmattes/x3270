@@ -24,8 +24,6 @@ RM = erase
 
 XCPPFLAGS = /D_WIN32 /DPR3287 /DWPR3287 /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 $(SSLDEF)
 CFLAGS = $(XCPPFLAGS) -I.
-SRCS = charset.c ctlr.c pr3287.c proxy.c resolver.c see.c sf.c tables.c \
-	telnet.c trace_ds.c utf8.c w3misc.c windirs.c winvers.c unicode.c
 VOBJS = charset.obj ctlr.obj pr3287.obj proxy.obj resolver.obj see.obj sf.obj \
 	tables.obj telnet.obj trace_ds.obj utf8.obj wpr3287.RES ws.obj \
 	w3misc.obj windirs.obj winvers.obj unicode.obj
