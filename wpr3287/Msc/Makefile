@@ -22,11 +22,11 @@ RM = erase
 #SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
 #SSLLIB = $(SSLDIR)\lib\ssleay32.lib $(SSLDIR)\lib\libeay32.lib gdi32.lib user32.lib
 
-XCPPFLAGS = /D_WIN32 /DPR3287 /DWPR3287 /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 $(SSLDEF)
+XCPPFLAGS = /D_WIN32 /DPR3287 /DWPR3287 /DX3270_DBCS=1 /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 $(SSLDEF)
 CFLAGS = $(XCPPFLAGS) -I.
 VOBJS = charset.obj ctlr.obj pr3287.obj proxy.obj resolver.obj see.obj sf.obj \
 	tables.obj telnet.obj trace_ds.obj utf8.obj wpr3287.RES ws.obj \
-	w3misc.obj windirs.obj winvers.obj unicode.obj
+	w3misc.obj windirs.obj winvers.obj unicode.obj unicode_dbcs.obj
 OBJECTS = $(VOBJS) version.obj
 LIBS = $(SSLLIB) ws2_32.lib winspool.lib advapi32.lib
 
@@ -72,6 +72,8 @@ trace_ds.obj: trace_ds.c
 	$(CC) $(CFLAGS) /c trace_ds.c
 unicode.obj: unicode.c
 	$(CC) $(CFLAGS) /c unicode.c
+unicode_dbcs.obj: unicode_dbcs.c
+	$(CC) $(CFLAGS) /c unicode_dbcs.c
 utf8.obj: utf8.c
 	$(CC) $(CFLAGS) /c utf8.c
 w3misc.obj: w3misc.c
