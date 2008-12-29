@@ -23,20 +23,15 @@ RM = erase
 #SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
 #SSLLIB = $(SSLDIR)\lib\ssleay32.lib $(SSLDIR)\lib\libeay32.lib gdi32.lib
 
-XCPPFLAGS = /D_WIN32 /DWC3270 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /DWINVER=0x500 /D_CRT_SECURE_NO_DEPRECATE /DWIN32_LEAN_AND_MEAN $(SSLDEF)
-CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I. $(SSLCPP)
-SRCS = XtGlue.c actions.c ansi.c apl.c c3270.c charset.c ctlr.c \
-	ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c idle.c kybd.c \
-	macros.c print.c printer.c proxy.c resources.c rpq.c screen.c see.c \
-	sf.c tables.c telnet.c toggles.c trace_ds.c unicode.c utf8.c util.c \
-	xio.c fallbacks.c keymap.c w3misc.c winvers.c windirs.c resolver.c
+XCPPFLAGS = /D_WIN32 /DWC3270 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /DWINVER=0x500 /D_CRT_SECURE_NO_DEPRECATE $(SSLDEF)
+CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I.
 VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj c3270.obj charset.obj \
 	ctlr.obj fallbacks.obj ft.obj ft_cut.obj ft_dft.obj glue.obj help.obj \
 	host.obj icmd.obj idle.obj keymap.obj kybd.obj macros.obj print.obj \
 	printer.obj proxy.obj resolver.obj resources.obj rpq.obj screen.obj \
 	see.obj sf.obj tables.obj telnet.obj toggles.obj trace_ds.obj \
-	unicode.obj utf8.obj util.obj xio.obj w3misc.obj winvers.obj \
-	windirs.obj wc3270.RES
+	unicode.obj unicode_dbcs.obj utf8.obj util.obj xio.obj w3misc.obj \
+	winvers.obj windirs.obj wc3270.RES
 OBJECTS = $(VOBJS) version.obj
 LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib
 SHRTLIBS = ole32.lib
@@ -175,6 +170,8 @@ trace_ds.obj: trace_ds.c
 	$(CC) $(CFLAGS) /c trace_ds.c
 unicode.obj: unicode.c
 	$(CC) $(CFLAGS) /c unicode.c
+unicode_dbcs.obj: unicode_dbcs.c
+	$(CC) $(CFLAGS) /c unicode_dbcs.c
 utf8.obj: utf8.c
 	$(CC) $(CFLAGS) /c utf8.c
 util.obj: util.c

@@ -23,8 +23,8 @@ RM = erase
 #SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
 #SSLLIB = $(SSLDIR)\lib\ssleay32.lib $(SSLDIR)\lib\libeay32.lib gdi32.lib
 
-XCPPFLAGS = /D_WIN32 /DWS3270 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /D_CRT_SECURE_NO_DEPRECATE /DWIN32_LEAN_AND_MEAN
-CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I. $(SSLCPP)
+XCPPFLAGS = /D_WIN32 /DWS3270 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /D_CRT_SECURE_NO_DEPRECATE /DWIN32_LEAN_AND_MEAN $(SSLDEF)
+CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I.
 VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj charset.obj ctlr.obj \
 	fallbacks.obj ft.obj ft_cut.obj ft_dft.obj glue.obj host.obj idle.obj \
 	kybd.obj macros.obj print.obj printer.obj proxy.obj resolver.obj \
