@@ -525,6 +525,10 @@ XX_FB(bracket),
 which is useful for common XX_SM(IBM) hosts which use XX_SM(EBCDIC)
 codes 0xAD and 0xBD for the XX_DQUOTED([) and XX_DQUOTED(]) characters,
 respectively.
+ifelse(XX_PRODUCT,wc3270,`XX_PP
+Note that DBCS character sets (Chinese, Japanese) will not display properly on
+Windows 98 or Windows 2000.
+')dnl
 ifelse(XX_PRODUCT,x3270,
 `XX_PP
 Most 3270 fonts implement the 3270cg-1 display
