@@ -3250,8 +3250,8 @@ int
 emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 {
 	enum {
-	    BASE, BACKSLASH, BACKX, BACKE, BACKP, BACKPA, BACKPF, OCTAL, HEX,
-	    EBC, XGE
+	    BASE, BACKSLASH, BACKX, BACKE, BACKP, BACKPA, BACKPF, OCTAL,
+	    HEX, EBC, XGE
 	} state = BASE;
 	int literal = 0;
 	int nc = 0;
@@ -3451,6 +3451,7 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 				cancel_if_idle_command();
 				state = BASE;
 				break;
+			    case 'u':
 			    case 'x':
 				state = BACKX;
 				break;
@@ -3538,7 +3539,7 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 				continue;
 			}
 			break;
-		    case BACKX:	/* last two characters were "\x" */
+		    case BACKX:	/* last two characters were "\x" or "\u" */
 			if (isxdigit(c)) {
 				state = HEX;
 				literal = 0;
@@ -3551,7 +3552,7 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 				state = BASE;
 				continue;
 			}
-		    case BACKE:	/* last two characters were "\x" */
+		    case BACKE:	/* last two characters were "\e" */
 			if (isxdigit(c)) {
 				state = EBC;
 				literal = 0;
@@ -3576,7 +3577,7 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 				continue;
 			}
 		    case HEX:	/* have seen \x and one or more hex digits */
-			if (nc < 2 && isxdigit(c)) {
+			if (nc < 4 && isxdigit(c)) {
 				literal = (literal * 16) + FROM_HEX(c);
 				nc++;
 				break;
@@ -3587,15 +3588,29 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 				continue;
 			}
 		    case EBC:	/* have seen \e and one or more hex digits */
-			if (nc < 2 && isxdigit(c)) {
+			if (nc < 4 && isxdigit(c)) {
 				literal = (literal * 16) + FROM_HEX(c);
 				nc++;
 				break;
 			} else {
 			    	trace_event(" %s -> Key(X'%02X')\n",
 					ia_name[(int) ia], literal);
-				key_Character((unsigned char) literal, False,
-					True, &skipped);
+				if (!(literal & ~0xff))
+					key_Character((unsigned char) literal,
+						False, True, &skipped);
+				else {
+#if defined(X3270_DBCS) /*[*/
+				    	unsigned char code[2];
+
+					code[0] = (literal >> 8) & 0xff;
+					code[1] = literal & 0xff;
+					key_WCharacter(code, &skipped);
+#else /*][*/
+					popup_an_error("%s: EBCDIC code > 255",
+					    action_name(String_action));
+					cancel_if_idle_command();
+#endif /*]*/
+				}
 				state = BASE;
 				continue;
 			}
