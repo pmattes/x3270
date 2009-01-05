@@ -3326,7 +3326,12 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 						return xlen-1;
 				}
 				break;
-			    case '\r':	/* ignored */
+			    case '\r':
+				if (!pasting) {
+					action_internal(Newline_action, ia, CN,
+							CN);
+					skipped = False;
+				}
 				break;
 			    case '\t':
 				action_internal(Tab_action, ia, CN, CN);
