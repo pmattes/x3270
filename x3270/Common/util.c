@@ -1,5 +1,5 @@
 /*
- * Copyright 1993-2008 by Paul Mattes.
+ * Copyright 1993-2009 by Paul Mattes.
  * Parts Copyright 1990 by Jeff Sparkes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
@@ -1059,7 +1059,7 @@ dump_version(void)
 	printf("%s\n%s\n", build, build_options());
 	charset_list();
 	printf("\n"
-"Copyright 1989-2008 by Paul Mattes, GTRC and others.\n"
+"Copyright 1989-2009 by Paul Mattes, GTRC and others.\n"
 "See the source code for licensing details.  Distributed WITHOUT ANY WARRANTY;\n"
 "without even the implied warranty of MERCHANTABILITY or FITNESS FOR A\n"
 "PARTICULAR PURPOSE.\n");
