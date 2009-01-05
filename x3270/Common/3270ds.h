@@ -1,5 +1,5 @@
 /*
- * Modifications Copyright 1993-2008 by Paul Mattes.
+ * Modifications Copyright 1993-2009 by Paul Mattes.
  * RPQNAMES modifications Copyright 2004 by Don Russell.
  * Original X11 Port Copyright 1990 by Jeff Sparkes.
  *  Permission to use, copy, modify, and distribute this software and its
@@ -341,6 +341,13 @@
 
 /* BIND definitions. */
 #define BIND_RU			0x31
-#define BIND_OFF_PLU_NAME_LEN	26
-#define BIND_OFF_PLU_NAME	27
+#define BIND_OFF_MAXRU_SEC	10
+#define BIND_OFF_MAXRU_PRI	11
+#define BIND_OFF_RD		20
+#define BIND_OFF_CD		21
+#define BIND_OFF_RA		22
+#define BIND_OFF_CA		23
+#define BIND_OFF_SSIZE		24
+#define BIND_OFF_PLU_NAME_LEN	27
 #define BIND_PLU_NAME_MAX	8
+#define BIND_OFF_PLU_NAME	28

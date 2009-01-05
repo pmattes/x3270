@@ -3,18 +3,18 @@
 
 [Setup]
 AppName=wc3270
-AppVerName=wc3270 3.3.9a4
+AppVerName=wc3270 3.3.9a5
 AppPublisher=Paul Mattes
 AppPublisherURL=http://x3270.bgp.nu
 AppSupportURL=http://x3270.bgp.nu
 AppUpdatesURL=http://x3270.bgp.nu
-AppCopyright=Copyright (C) 1989-2008 by Paul Mattes, GTRC and others
+AppCopyright=Copyright (C) 1989-2009 by Paul Mattes, GTRC and others
 WizardSmallImageFile=x3270-icon2.bmp
 DefaultDirName={pf}\wc3270
 DisableDirPage=no
 DefaultGroupName=wc3270
 AllowNoIcons=yes
-OutputBaseFilename=wc3270-3.3.9a4-setup
+OutputBaseFilename=wc3270-3.3.9a5-setup
 OutputDir=\\Melville\pdm\psrc\x3270\Release\Inno\wc3270
 Compression=lzma
 SolidCompression=yes

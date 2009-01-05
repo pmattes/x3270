@@ -1,5 +1,5 @@
 /*
- * Modifications Copyright 1993-2008 by Paul Mattes.
+ * Modifications Copyright 1993-2009 by Paul Mattes.
  * Original X11 Port Copyright 1990 by Jeff Sparkes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
@@ -246,7 +246,7 @@ XtActionsRec all_actions[] = {
 	{ "SelectMotion",	SelectMotion_action },
 	{ "SelectUp",		SelectUp_action },
 #endif /*]*/
-#if defined(X3270_SCRIPT) /*[*/
+#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
 	{ "Script",		Script_action },
 #endif /*]*/
 #if defined(C3270) /*[*/

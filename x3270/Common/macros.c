@@ -1,5 +1,5 @@
 /*
- * Copyright 1993-2008 by Paul Mattes.
+ * Copyright 1993-2009 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -139,7 +139,7 @@ typedef struct sms {
 #define SN	((sms_t *)NULL)
 static sms_t *sms = SN;
 static int sms_depth = 0;
-#if defined(X3270_SCRIPT) /*[*/
+#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
 static int socketfd = -1;
 static unsigned long socket_id = 0L;
 #endif /*]*/
@@ -184,13 +184,13 @@ static enum iaction st_cause[] = { IA_MACRO, IA_MACRO, IA_COMMAND, IA_KEYMAP,
 #define ST_sNAME(s)	st_name[(int)(s)->type]
 #define ST_NAME		ST_sNAME(sms)
 
-#if defined(X3270_SCRIPT) /*[*/
+#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
 static void cleanup_socket(Boolean b);
 #endif /*]*/
 static void script_prompt(Boolean success);
 static void script_input(void);
 static void sms_pop(Boolean can_exit);
-#if defined(X3270_SCRIPT) /*[*/
+#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
 static void socket_connection(void);
 #endif /*]*/
 static void wait_timed_out(void);
@@ -550,7 +550,7 @@ sms_pop(Boolean can_exit)
 	if (sms->idle_error)
 		popup_an_error("Idle command disabled due to error");
 
-#if defined(X3270_SCRIPT) /*[*/
+#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
 	/* If this was a socket peer, get ready for another connection. */
 	if (sms->type == ST_PEER && appres.socket)
 		socket_id = AddInput(socketfd, socket_connection);
@@ -591,7 +591,7 @@ peer_script_init(void)
 	sms_t *s;
 	Boolean on_top;
 
-#if defined(X3270_SCRIPT) /*[*/
+#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
 	if (appres.socket) {
 		struct sockaddr_un ssun;
 
@@ -659,7 +659,7 @@ peer_script_init(void)
 	}
 }
 
-#if defined(X3270_SCRIPT) /*[*/
+#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
 /* Accept a new socket connection. */
 static void
 socket_connection(void)
@@ -2881,7 +2881,7 @@ execute_action_option(Widget w _is_unused, XtPointer client_data _is_unused,
 
 #endif /*]*/
 
-#if defined(X3270_SCRIPT) /*[*/
+#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
 /* "Script" action, runs a script as a child process. */
 void
 Script_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
@@ -3042,7 +3042,7 @@ Printer_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 }
 #endif /*]*/
 
-#if defined(X3270_SCRIPT) /*[*/
+#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
 /* Abort all running scripts. */
 void
 abort_script(void)
