@@ -1,5 +1,5 @@
 /*
- * Copyright 1994, 2001, 2005 by Paul Mattes.
+ * Copyright 1994-2009 by Paul Mattes.
  *   Permission to use, copy, modify, and distribute this software and its
  *   documentation for any purpose and without fee is hereby granted,
  *   provided that the above copyright notice appear in all copies and that
@@ -289,6 +289,7 @@ step(FILE *f, int s, int to_eor)
 	char obuf[BSIZE];
 	char *cp = obuf;
 	int at_mark = 0;
+	int stop_eor = 0;
 #	define NO_FDISP { if (fdisp) { printf("\n"); fdisp = 0; } }
 
     top:
@@ -395,6 +396,8 @@ step(FILE *f, int s, int to_eor)
 					break;
 				}
 				cp++;
+				if (at_eor && (to_eor == 1))
+				    	stop_eor = 1;
 				if (at_eor || (cp - obuf >= BUFSIZ))
 					goto run_it;
 			} else {
@@ -432,14 +435,11 @@ step(FILE *f, int s, int to_eor)
 		return 0;
 	}
 
-	if ((to_eor == 1) &&
-	    (cp - obuf < 2 ||
-	    (unsigned char)obuf[cp - obuf - 2] != IAC ||
-	    (unsigned char)obuf[cp - obuf - 1] != EOR)) {
+	if ((to_eor == 1) && !stop_eor) {
 		cp = obuf;
 		goto top;
 	}
-	if (to_eor == 2 && !at_mark) {
+	if ((to_eor == 2) && !at_mark) {
 		cp = obuf;
 		goto top;
 	}

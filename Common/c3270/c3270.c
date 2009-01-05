@@ -1,5 +1,5 @@
 /*
- * Modifications and original code Copyright 1993-2008 by Paul Mattes.
+ * Modifications and original code Copyright 1993-2009 by Paul Mattes.
  * Original X11 Port Copyright 1990 by Jeff Sparkes.
  *   Permission to use, copy, modify, and distribute this software and its
  *   documentation for any purpose and without fee is hereby granted,
@@ -323,7 +323,7 @@ main(int argc, char *argv[])
 	argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
 	printf("%s\n\n"
-		"Copyright 1989-2008 by Paul Mattes, GTRC and others.\n"
+		"Copyright 1989-2009 by Paul Mattes, GTRC and others.\n"
 		"Type 'show copyright' for full copyright information.\n"
 		"Type 'help' for help information.\n\n",
 		build);
@@ -1007,8 +1007,7 @@ static void
 copyright_dump(void)
 {
 	action_output(" ");
-	action_output("Modifications and original code Copyright 1993, 1994, 1995, 1996,");
-	action_output(" 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 by Paul Mattes.");
+	action_output("Modifications and original code Copyright 1993-2009 by Paul Mattes.");
 	action_output("Original X11 Port Copyright 1990 by Jeff Sparkes.");
 	action_output("DFT File Transfer Code Copyright October 1995 by Dick Altenbern.");
 	action_output("RPQNAMES Code Copyright 2004, 2005 by Don Russell.");

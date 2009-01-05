@@ -1,5 +1,5 @@
 /*
- * Copyright 2000, 2002 by Paul Mattes.
+ * Copyright 2000-2009 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -62,3 +62,6 @@ extern void *Realloc(void *, size_t);
 extern char *NewString(const char *);
 extern void Error(const char *);
 extern void Warning(const char *);
+
+/* "Required" optional parts. */
+#define X3270_SCRIPT	1

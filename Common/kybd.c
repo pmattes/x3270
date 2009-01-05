@@ -1,5 +1,5 @@
 /*
- * Modifications Copyright 1993-2008 by Paul Mattes.
+ * Modifications Copyright 1993-2009 by Paul Mattes.
  * Original X11 Port Copyright 1990 by Jeff Sparkes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
@@ -401,7 +401,34 @@ kybd_in3270(Boolean in3270 _is_unused)
 {
 	if (kybdlock & KL_DEFERRED_UNLOCK)
 		RemoveTimeOut(unlock_id);
-	kybdlock_clr(~KL_AWAITING_FIRST, "kybd_in3270");
+
+	switch ((int)cstate) {
+	case CONNECTED_INITIAL_E:
+		/*
+		 * Either we just negotiated TN3270E, or we just processed
+		 * and UNBIND from the host.  In either case, we are now
+		 * awaiting a first unlock from the host, or a transition to
+		 * 3270, NVT or SSCP-LU mode.
+		 */
+		kybdlock_set(KL_AWAITING_FIRST, "kybd_in3270");
+		break;
+	case CONNECTED_ANSI:
+	case CONNECTED_NVT:
+	case CONNECTED_SSCP:
+		/*
+		 * We just transitioned to ANSI, TN3270E NVT or TN3270E SSCP-LU
+		 * mode.  Remove all lock bits.
+		 */
+		kybdlock_clr(-1, "kybd_in3270");
+		break;
+	default:
+		/*
+		 * We just transitioned into or out of 3270 mode.
+		 * Remove all lock bits except AWAITING_FIRST.
+		 */
+		kybdlock_clr(~KL_AWAITING_FIRST, "kybd_in3270");
+		break;
+	}
 
 	/* There might be a macro pending. */
 	if (CONNECTED)

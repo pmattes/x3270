@@ -1,4 +1,4 @@
-dnl Modifications Copyright 1993-2008 by Paul Mattes.
+dnl Modifications Copyright 1993-2009 by Paul Mattes.
 dnl  Permission to use, copy, modify, and distribute this software and its
 dnl  documentation for any purpose and without fee is hereby granted,
 dnl  provided that the above copyright notice appear in all copies and that
@@ -1398,7 +1398,7 @@ XX_BR
 RFC 2355, TN3270 Enhancements
 XX_SH(Copyrights)
 XX_LP
-Modifications and original code Copyright`'XX_COPY()1993-2008 by Paul Mattes.
+Modifications and original code Copyright`'XX_COPY()1993-2009 by Paul Mattes.
 XX_BR
 DFT File Transfer Code Copyright `'XX_COPY()October 1995 by Dick Altenbern.
 XX_BR

@@ -1,5 +1,5 @@
 /*
- * Modifications Copyright 1993-2008 by Paul Mattes.
+ * Modifications Copyright 1993-2009 by Paul Mattes.
  * RPQNAMES modifications Copyright 2004 by Don Russell.
  * Original X11 Port Copyright 1990 by Jeff Sparkes.
  *  Permission to use, copy, modify, and distribute this software and its
@@ -158,6 +158,13 @@ static int	tn3270e_negotiated = 0;
 static enum { E_NONE, E_3270, E_NVT, E_SSCP } tn3270e_submode = E_NONE;
 static int	tn3270e_bound = 0;
 static char	*plu_name = NULL;
+static int	maxru_sec = 0;
+static int	maxru_pri = 0;
+static int	bind_ss = 0;
+static int	bind_rd = 0;
+static int	bind_cd = 0;
+static int	bind_ra = 0;
+static int	bind_ca = 0;
 static char	**lus = (char **)NULL;
 static char	**curr_lu = (char **)NULL;
 static char	*try_lu = CN;
@@ -1786,6 +1793,14 @@ tn3270e_fdecode(const unsigned char *buf, int len)
 #endif /*]*/
 
 #if defined(X3270_TN3270E) /*[*/
+static int
+maxru(unsigned char c)
+{
+    	if (!(c & 0x80))
+	    	return 0;
+	return ((c >> 4) & 0x0f) * (1 << (c & 0xf));
+}
+
 static void
 process_bind(unsigned char *buf, int buflen)
 {
@@ -1795,27 +1810,75 @@ process_bind(unsigned char *buf, int buflen)
 	if (plu_name == CN)
 	    	plu_name = Malloc(mb_max_len(BIND_PLU_NAME_MAX));
 	(void) memset(plu_name, '\0', mb_max_len(BIND_PLU_NAME_MAX));
+	maxru_sec = 0;
+	maxru_pri = 0;
+	bind_ss = 0;
+	bind_rd = 0;
+	bind_cd = 0;
+	bind_ra = 0;
+	bind_ca = 0;
 
 	/* Make sure it's a BIND. */
 	if (buflen < 1 || buf[0] != BIND_RU) {
 		return;
 	}
-	buf++;
-	buflen--;
+
+	/* Extract the maximum RUs. */
+	if (buflen > BIND_OFF_MAXRU_SEC)
+		maxru_sec = maxru(buf[BIND_OFF_MAXRU_SEC]);
+	if (buflen > BIND_OFF_MAXRU_PRI)
+		maxru_pri = maxru(buf[BIND_OFF_MAXRU_PRI]);
+
+	/* Extract the screen size. */
+	if (buflen > BIND_OFF_SSIZE) {
+	    	bind_ss = buf[BIND_OFF_SSIZE];
+	    	switch(bind_ss) {
+		case 0x00:
+		case 0x02:
+			bind_rd = 24;
+			bind_cd = 80;
+			bind_ra = 24;
+			bind_ca = 80;
+			break;
+		case 0x03:
+			bind_rd = 24;
+			bind_cd = 80;
+			bind_ra = maxROWS;
+			bind_ca = maxCOLS;
+			break;
+		case 0x7e:
+			bind_rd = buf[BIND_OFF_RD];
+			bind_cd = buf[BIND_OFF_CD];
+			bind_ra = buf[BIND_OFF_RD];
+			bind_ca = buf[BIND_OFF_CD];
+			break;
+		case 0x7f:
+			bind_rd = buf[BIND_OFF_RD];
+			bind_cd = buf[BIND_OFF_CD];
+			bind_ra = buf[BIND_OFF_RA];
+			bind_ca = buf[BIND_OFF_CA];
+			break;
+		default:
+			break;
+		}
+	}
 
 	/* Extract the PLU name. */
-	if (buflen < BIND_OFF_PLU_NAME + BIND_PLU_NAME_MAX)
-		return;
-	namelen = buf[BIND_OFF_PLU_NAME_LEN];
-	if (namelen > BIND_PLU_NAME_MAX)
-		namelen = BIND_PLU_NAME_MAX;
-	for (i = 0; i < namelen; i++) {
-	    	int nx;
+	if (buflen > BIND_OFF_PLU_NAME_LEN) {
+		namelen = buf[BIND_OFF_PLU_NAME_LEN];
+		if (namelen > BIND_PLU_NAME_MAX)
+			namelen = BIND_PLU_NAME_MAX;
+		if ((namelen > 0) && (buflen > BIND_OFF_PLU_NAME + namelen)) {
+			for (i = 0; i < namelen; i++) {
+				int nx;
 
-		nx = ebcdic_to_multibyte(buf[BIND_OFF_PLU_NAME + i],
-			plu_name + dest_ix, mb_max_len(1));
-		if (nx > 1)
-			dest_ix += nx - 1;
+				nx = ebcdic_to_multibyte(
+					buf[BIND_OFF_PLU_NAME + i],
+					plu_name + dest_ix, mb_max_len(1));
+				if (nx > 1)
+					dest_ix += nx - 1;
+			}
+		}
 	}
 }
 #endif /*]*/
@@ -1860,7 +1923,11 @@ process_eor(void)
 			if (!(e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE)))
 				return 0;
 			process_bind(ibuf + EH_SIZE, (ibptr - ibuf) - EH_SIZE);
-			trace_dsn("< BIND PLU-name '%s'\n", plu_name);
+			trace_dsn("< BIND PLU-name '%s' "
+				"MaxSec-RU %d MaxPri-RU %d "
+				"SS X'%02X' D(%dx%d) A(%dx%d)\n",
+				plu_name, maxru_sec, maxru_pri,
+				bind_ss, bind_rd, bind_cd, bind_ra, bind_ca);
 			tn3270e_bound = 1;
 			check_in3270();
 			return 0;
