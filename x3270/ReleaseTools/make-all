@@ -48,7 +48,7 @@ done
 if [ $# -gt 0 ]
 then	prods=$*
 #else	prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270 lib3270"
-else	prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287"
+else	prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270"
 fi
 
 # Make sure the product directories exist.
