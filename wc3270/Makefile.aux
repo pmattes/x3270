@@ -70,3 +70,6 @@ html/wc3270-man.html: x3270.man.m4 ft.inc resources.inc hostname.inc keymaps.inc
 	@rm -f man.tmp
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "wc3270 Release Notes" html/documentation-relnotes-body.html $@
+
+wc3270.iss: version.txt wc3270.iss.tmpl
+	./mkiss <wc3270.iss.tmpl >wc3270.iss
