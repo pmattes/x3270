@@ -35,8 +35,8 @@
 #endif /*]*/
 
 #if defined(USE_ICONV) /*[*/
-iconv_t i_u2mb = (iconv_t *)-1;
-iconv_t i_mb2u = (iconv_t *)-1;
+iconv_t i_u2mb = (iconv_t)-1;
+iconv_t i_mb2u = (iconv_t)-1;
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
