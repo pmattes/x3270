@@ -137,7 +137,8 @@ x3270.charsetList:			U.S. English (CP 37): us-intl\n\
 					Icelandic (CP 871): icelandic\n\
 					Italian (CP 280): italian\n\
 #ifdef X3270_DBCS
-					Japanese (CP 1027+300): japanese\n\
+					Japanese (CP 1027+300): japanese-1027\n\
+					Japanese (CP 290+300): japanese-290\n\
 #endif
 					Norwegian (CP 277): norwegian\n\
 					Open Systems (CP 1047): cp1047\n\
@@ -264,7 +265,7 @@ x3270.emulatorFontList.3270cg-1a,3270cg-1,iso10646-1,iso8859-1+gb2312.1980-0,iso
 					20-point 3270: 3270-20+-isas-song ti-medium-r-normal--16-160-72-72-c-160-gb2312.1980-0\n\
 					8x16: 8x16+-isas-song ti-medium-r-normal--16-160-72-72-c-160-gb2312.1980-0\n\
 					12x24: 12x24+-isas-song ti-medium-r-normal--24-240-72-72-c-240-gb2312.1980-0
-x3270.emulatorFontList.jisx0201.1976-0+jisx0208.1983-0,iso10646-1: \
+x3270.emulatorFontList.iso10646-1,jisx0201.1976-0+jisx0208.1983-0,iso10646-1: \
 					14-point: -misc-fixed-medium-r-normal--14-130-75-75-c-70-jisx0201.1976-0+-misc-fixed-medium-r-normal--14-130-75-75-c-140-jisx0208.1983-0\n\
 					16-point: -sony-fixed-medium-r-normal--16-150-75-75-c-80-jisx0201.1976-0+-jis-fixed-medium-r-normal--16-150-75-75-c-160-jisx0208.1983-0\n\
 					18-point: -sony-fixed-medium-r-normal--16-150-75-75-c-80-jisx0201.1976-0+-misc-fixed-medium-r-normal-ja-18-120-100-100-c-180-iso10646-1\n\

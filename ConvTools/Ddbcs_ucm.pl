@@ -27,7 +27,7 @@ while (<TABLE>) {
 
 # Dump Unicode-to-DBCS. */
 print "/* Unicode-to-DBCS translation table for $file */\n";
-print "unsigned char *u2d[256] = {\n";
+print "unsigned char *u2d[] = {\n";
 my $row = "";
 my $i;
 my $any = 0;
