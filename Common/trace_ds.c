@@ -1,5 +1,5 @@
 /*
- * Copyright 1993-2008 by Paul Mattes.
+ * Copyright 1993-2009 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -552,13 +552,14 @@ create_tracefile_header(const char *mode)
 #if defined(X3270_TN3270E) /*[*/
 		else if (IN_E) {
 			obptr = obuf;
-			if (net_add_dummy_tn3270e()) {
-				wtrace(" Screen contents:\n");
-				space3270out(2);
-				net_add_eor(obuf, obptr - obuf);
-				obptr += 2;
-				trace_netdata('<', obuf, obptr - obuf);
-			}
+			(void) net_add_dummy_tn3270e();
+			wtrace(" Screen contents:\n");
+			if (IN_SSCP) 
+			    	ctlr_snap_buffer_sscp_lu();
+			space3270out(2);
+			net_add_eor(obuf, obptr - obuf);
+			obptr += 2;
+			trace_netdata('<', obuf, obptr - obuf);
 		}
 #endif /*]*/
 	}
