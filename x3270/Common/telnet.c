@@ -157,6 +157,8 @@ static char     vlnext;
 static int	tn3270e_negotiated = 0;
 static enum { E_NONE, E_3270, E_NVT, E_SSCP } tn3270e_submode = E_NONE;
 static int	tn3270e_bound = 0;
+static unsigned char *bind_image = NULL;
+static int	bind_image_len = 0;
 static char	*plu_name = NULL;
 static int	maxru_sec = 0;
 static int	maxru_pri = 0;
@@ -1807,6 +1809,14 @@ process_bind(unsigned char *buf, int buflen)
 	int namelen, i;
 	int dest_ix = 0;
 
+	/* Save the raw image. */
+	if (bind_image != NULL)
+	    Free(bind_image);
+	bind_image = (unsigned char *)Malloc(buflen);
+	memcpy(bind_image, buf, buflen);
+	bind_image_len = buflen;
+
+	/* Clean up the derived state. */
 	if (plu_name == CN)
 	    	plu_name = Malloc(mb_max_len(BIND_PLU_NAME_MAX));
 	(void) memset(plu_name, '\0', mb_max_len(BIND_PLU_NAME_MAX));
@@ -3190,8 +3200,15 @@ net_snap_options(void)
 
 		if (tn3270e_bound) {
 			tn3270e_header *h;
+			int i;
+			int xlen = 0;
 
-			space3270out(EH_SIZE + 3);
+			for (i = 0; i < bind_image_len; i++)  {
+			    if (bind_image[i] == 0xff)
+				xlen++;
+			}
+
+			space3270out(EH_SIZE + bind_image_len + xlen + 3);
 			h = (tn3270e_header *)obptr;
 			h->data_type = TN3270E_DT_BIND_IMAGE;
 			h->request_flag = 0;
@@ -3199,7 +3216,11 @@ net_snap_options(void)
 			h->seq_number[0] = 0;
 			h->seq_number[1] = 0;
 			obptr += EH_SIZE;
-			*obptr++ = 1; /* dummy */
+			for (i = 0; i < bind_image_len; i++) {
+			    if (bind_image[i] == 0xff)
+				*obptr++ = 0xff;
+			    *obptr++ = bind_image[i];
+			}
 			*obptr++ = IAC;
 			*obptr++ = EOR;
 		}
