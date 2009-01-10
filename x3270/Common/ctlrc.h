@@ -1,5 +1,5 @@
 /*
- * Copyright 1995, 1999, 2000, 2002, 2003, 2005 by Paul Mattes.
+ * Copyright 1995-2009 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -45,6 +45,7 @@ void ctlr_reinit(unsigned cmask);
 void ctlr_scroll(void);
 void ctlr_shrink(void);
 void ctlr_snap_buffer(void);
+void ctlr_snap_buffer_sscp_lu(void);
 Boolean ctlr_snap_modes(void);
 void ctlr_wrapping_memmove(int baddr_to, int baddr_from, int count);
 enum pds ctlr_write(unsigned char buf[], int buflen, Boolean erase);

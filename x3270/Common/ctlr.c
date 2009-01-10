@@ -1,5 +1,5 @@
 /*
- * Modifications Copyright 1993-2008 by Paul Mattes.
+ * Modifications Copyright 1993-2009 by Paul Mattes.
  * Original X11 Port Copyright 1990 by Jeff Sparkes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
@@ -926,7 +926,8 @@ ctlr_read_buffer(unsigned char aid_byte)
 
 #if defined(X3270_TRACE) /*[*/
 /*
- * Construct a 3270 command to reproduce the current state of the display.
+ * Construct a 3270 command to reproduce the current state of the display, if
+ * formatted.
  */
 void
 ctlr_snap_buffer(void)
@@ -1051,6 +1052,40 @@ ctlr_snap_modes(void)
 		for (i = 0; i < crm_nattr; i++)
 			*obptr++ = crm_attr[i];
 	return True;
+}
+
+/*
+ * Construct a 3270 command to reproduce the current state of the display
+ * in SSCP-LU mode.
+ */
+void
+ctlr_snap_buffer_sscp_lu(void)
+{
+	register int	baddr = 0;
+
+	/* Write out the screen contents once. */
+	do {
+	    	if (ea_buf[baddr].cc == 0xff) {
+			space3270out(1);
+			*obptr++ = 0xff;
+		}
+		space3270out(1);
+		*obptr++ = ea_buf[baddr].cc;
+		INC_BA(baddr);
+	} while (baddr != 0);
+
+	/* Write them out again, until we hit where the cursor is. */
+	if (cursor_addr != baddr) {
+		do {
+			if (ea_buf[baddr].cc == 0xff) {
+				space3270out(1);
+				*obptr++ = 0xff;
+			}
+			space3270out(1);
+			*obptr++ = ea_buf[baddr].cc;
+			INC_BA(baddr);
+		} while (baddr != cursor_addr);
+	}
 }
 #endif /*]*/
 
