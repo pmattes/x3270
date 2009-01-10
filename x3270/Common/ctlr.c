@@ -1907,6 +1907,7 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 	int s_row;
 	unsigned char c;
 	int baddr;
+	int text = FALSE;
 
 	/*
 	 * The 3174 Functionl Description says that anything but NL, NULL, FM,
@@ -1915,7 +1916,7 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 	 * we display other control codes as spaces.
 	 */
 
-	trace_ds("SSCP-LU data\n");
+	trace_ds("SSCP-LU data\n< ");
 	for (i = 0; i < buflen; cp++, i++) {
 		switch (*cp) {
 		case FCORDER_NL:
@@ -1923,6 +1924,11 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 			 * Insert NULLs to the end of the line and advance to
 			 * the beginning of the next line.
 			 */
+		        if (text) {
+			    trace_ds("'");
+			    text = False;
+			}
+		        trace_ds(" NL");
 			s_row = buffer_addr / COLS;
 			while ((buffer_addr / COLS) == s_row) {
 				ctlr_add(buffer_addr, EBC_null, default_cs);
@@ -1938,7 +1944,11 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 			/* Some hosts forget they're talking SSCP-LU. */
 			cp++;
 			i++;
-			trace_ds(" StartField%s %s [translated to space]\n",
+			if (text) {
+			    trace_ds("'");
+			    text = FALSE;
+			}
+			trace_ds(" SF%s %s [translated to space]\n",
 			    rcba(buffer_addr), see_attr(*cp));
 			ctlr_add(buffer_addr, EBC_space, default_cs);
 			ctlr_add_fg(buffer_addr, default_fg);
@@ -1948,12 +1958,16 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 			INC_BA(buffer_addr);
 			break;
 		case ORDER_IC:
-			trace_ds(" InsertCursor%s [ignored]\n",
+			if (text) {
+			    trace_ds("'");
+			    text = FALSE;
+			}
+			trace_ds(" IC%s [ignored]\n",
 			    rcba(buffer_addr));
 			break;
 		case ORDER_SBA:
 			baddr = DECODE_BADDR(*(cp+1), *(cp+2));
-			trace_ds(" SetBufferAddress%s [ignored]\n", rcba(baddr));
+			trace_ds(" SBA%s [ignored]\n", rcba(baddr));
 			cp += 2;
 			i += 2;
 			break;
@@ -1966,6 +1980,11 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 				c = EBC_space;
 			else
 				c = *cp;
+			if (text) {
+			    trace_ds("'");
+			    text = FALSE;
+			}
+			trace_ds(" GE '%s'", see_ebc(c));
 			ctlr_add(buffer_addr, c, CS_GE);
 			ctlr_add_fg(buffer_addr, default_fg);
 			ctlr_add_bg(buffer_addr, default_bg);
@@ -1975,6 +1994,11 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 			break;
 
 		default:
+			if (!text) {
+			    trace_ds(" '");
+			    text = 1;
+			}
+			trace_ds(see_ebc(*cp));
 			ctlr_add(buffer_addr, *cp, default_cs);
 			ctlr_add_fg(buffer_addr, default_fg);
 			ctlr_add_bg(buffer_addr, default_bg);
@@ -1984,6 +2008,9 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 			break;
 		}
 	}
+	if (text)
+	    trace_ds("'");
+	trace_ds("\n");
 	cursor_move(buffer_addr);
 	sscp_start = buffer_addr;
 
