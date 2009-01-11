@@ -1,5 +1,5 @@
 /*
- * Copyright 1993-2008 by Paul Mattes.
+ * Copyright 1993-2009 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -1818,5 +1818,191 @@ toggle_lineWrap(struct toggle *t _is_unused, enum toggle_type type _is_unused)
 	else
 		wraparound_mode = 0;
 }
+
+#if defined(X3270_TRACE) /*[*/
+/* Snap the contents of the screen buffer in NVT mode. */
+void
+ansi_snap(void)
+{
+    	int baddr;
+	int cur_gr = 0;
+	int cur_fg = 0;
+	int cur_bg = 0;
+	static char uncolor_table[16] = {
+	    /* 0xf0 */ '0',
+	    /* 0xf1 */ '4',
+	    /* 0xf2 */ '1',
+	    /* 0xf3 */ '5',
+	    /* 0xf4 */ '2',
+	    /* 0xf5 */ '0', /* can't happen */
+#if defined(WC3270) /*[*/
+	    /* 0xf6 */ '6',
+#else /*][*/
+	    /* 0xf6 */ '3',
+#endif /*]*/
+#if defined(WC3270) /*[*/
+	    /* 0xf7 */ '7',
+#else /*][*/
+	    /* 0xf7 */ '0', /* can't happen */
+#endif /*]*/
+	    /* 0xf8 */ '0', /* can't happen */
+	    /* 0xf9 */ '0', /* can't happen */
+	    /* 0xfa */ '0', /* can't happen */
+	    /* 0xfb */ '0', /* can't happen */
+	    /* 0xfc */ '0', /* can't happen */
+#if defined(WC3270) /*[*/
+	    /* 0xfd */ '0', /* can't happen */
+#else /*][*/
+	    /* 0xfd */ '6', /* can't happen */
+#endif /*]*/
+	    /* 0xfe */ '0', /* can't happen */
+#if defined(WC3270) /*[*/
+	    /* 0xff */ '0', /* can't happen */
+#else /*][*/
+	    /* 0xff */ '7', /* can't happen */
+#endif /*]*/
+	};
+	char mb[16];
+	int len;
+	int xlen;
+	int i;
+	enum dbcs_state d;
+	char c;
+
+	/* Draw what's on the screen. */
+	baddr = 0;
+	do {
+	    	int xgr = ea_buf[baddr].gr;
+
+		/* Set the attributes. */
+	    	if (xgr != cur_gr) {
+		    	if ((xgr ^ cur_gr) & cur_gr) {
+				/*
+				 * Something turned off. Turn everything off,
+				 * then turn the new modes on below.
+				 */
+				space3270out(4);
+				*obptr++ = 0x1b;
+				*obptr++ = '[';
+				*obptr++ = '0';
+				*obptr++ = 'm';
+				xgr = 0;
+			} else {
+			    	/*
+				 * Clear the bits in xgr that are already set
+				 * in cur_gr.
+				 */
+			    	xgr &= ~cur_gr;
+			}
+			/* Turn on the attributes remaining in xgr. */
+		    	if (xgr & GR_INTENSIFY) {
+				space3270out(4);
+				*obptr++ = 0x1b;
+				*obptr++ = '[';
+				*obptr++ = '1';
+				*obptr++ = 'm';
+			}
+		    	if (xgr & GR_UNDERLINE) {
+				space3270out(4);
+				*obptr++ = 0x1b;
+				*obptr++ = '[';
+				*obptr++ = '4';
+				*obptr++ = 'm';
+			}
+		    	if (xgr & GR_BLINK) {
+				space3270out(4);
+				*obptr++ = 0x1b;
+				*obptr++ = '[';
+				*obptr++ = '5';
+				*obptr++ = 'm';
+			}
+		    	if (xgr & GR_REVERSE) {
+				space3270out(4);
+				*obptr++ = 0x1b;
+				*obptr++ = '[';
+				*obptr++ = '7';
+				*obptr++ = 'm';
+			}
+		    	cur_gr = ea_buf[baddr].gr;
+		}
+
+		/* Set the colors. */
+		if (ea_buf[baddr].fg != cur_fg) {
+		    	if (ea_buf[baddr].fg)
+			    	c = uncolor_table[ea_buf[baddr].fg & 0x0f];
+			else
+			    	c = '9';
+		    	space3270out(5);
+			*obptr++ = 0x1b;
+			*obptr++ = '[';
+			*obptr++ = '3';
+			*obptr++ = c;
+			*obptr++ = 'm';
+			cur_fg = ea_buf[baddr].fg;
+		}
+		if (ea_buf[baddr].bg != cur_bg) {
+		    	if (ea_buf[baddr].bg)
+			    	c = uncolor_table[ea_buf[baddr].bg & 0x0f];
+			else
+			    	c = '9';
+		    	space3270out(5);
+			*obptr++ = 0x1b;
+			*obptr++ = '[';
+			*obptr++ = '4';
+			*obptr++ = c;
+			*obptr++ = 'm';
+			cur_bg = ea_buf[baddr].bg;
+		}
+
+		/* Expand the current character to multibyte. */
+		d = ctlr_dbcs_state(baddr);
+		if (IS_LEFT(d)) {
+		    	int xaddr = baddr;
+			INC_BA(xaddr);
+			len = ebcdic_to_multibyte(ea_buf[baddr].cc << 8 |
+					    ea_buf[xaddr].cc,
+					    mb, sizeof(mb));
+		} else if (IS_RIGHT(d)) {
+		    	len = 0;
+		} else {
+			len = ebcdic_to_multibyte(ea_buf[baddr].cc,
+					    mb, sizeof(mb));
+		}
+		if (len > 0)
+			len--; /* terminating NUL */
+		xlen = 0;
+		for (i = 0; i < len; i++) {
+			if ((mb[i] & 0xff) == 0xff)
+				xlen++;
+		}
+		space3270out(len + xlen);
+		for (i = 0; i < len; i++) {
+			if ((mb[i] & 0xff) == 0xff)
+				*obptr++ = 0xff;
+			*obptr++ = mb[i];
+		}
+
+		INC_BA(baddr);
+	} while (baddr != 0);
+
+    	/*
+	 * Set up the modes that have been negotiated.
+	 * XXX: TBD, this could be a tremendous amount of work to get
+	 * just right.
+	 */
+
+    	/* Move the cursor. */
+	space3270out(11);
+	obptr += sprintf((char *)obptr, "\033[%d;%dH",
+		(cursor_addr / COLS) + 1, (cursor_addr % COLS) + 1);
+
+	/*
+	 * Now spit out whatever partial escape sequence is pending.
+	 * Really.
+	 * XXX: TBD.
+	 */
+}
+
+#endif /*]*/
 
 #endif /*]*/
