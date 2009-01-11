@@ -1,5 +1,5 @@
 /*
- * Copyright 1995, 1999, 2000 by Paul Mattes.
+ * Copyright 1995-2009 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -29,6 +29,7 @@ extern void ansi_send_pa(int nn);
 extern void ansi_send_pf(int nn);
 extern void ansi_send_right(void);
 extern void ansi_send_up(void);
+extern void ansi_snap(void);
 extern void toggle_lineWrap(struct toggle *t, enum toggle_type type);
 
 #else /*][*/
@@ -43,5 +44,6 @@ extern void toggle_lineWrap(struct toggle *t, enum toggle_type type);
 #define ansi_send_pf(n)
 #define ansi_send_right()
 #define ansi_send_up()
+#define ansi_snap()
 
 #endif /*]*/

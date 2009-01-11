@@ -39,6 +39,7 @@
 #include "resources.h"
 #include "ctlr.h"
 
+#include "ansic.h"
 #include "charsetc.h"
 #include "childc.h"
 #include "ctlrc.h"
@@ -526,7 +527,7 @@ create_tracefile_header(const char *mode)
 		 * mode.
 		 */
 		if (formatted) {
-			wtrace(" Screen contents:\n");
+			wtrace(" Screen contents (3270):\n");
 			obptr = obuf;
 #if defined(X3270_TN3270E) /*[*/
 			(void) net_add_dummy_tn3270e();
@@ -553,12 +554,23 @@ create_tracefile_header(const char *mode)
 		else if (IN_E) {
 			obptr = obuf;
 			(void) net_add_dummy_tn3270e();
-			wtrace(" Screen contents:\n");
+			wtrace(" Screen contents (%s):\n",
+				IN_SSCP? "SSCP-LU": "NVT");
 			if (IN_SSCP) 
 			    	ctlr_snap_buffer_sscp_lu();
+			else if (IN_ANSI)
+			    	ansi_snap();
 			space3270out(2);
 			net_add_eor(obuf, obptr - obuf);
 			obptr += 2;
+			trace_netdata('<', obuf, obptr - obuf);
+		}
+#endif /*]*/
+#if defined(X3270_ANSI) /*[*/
+		else if (IN_ANSI) {
+			obptr = obuf;
+			wtrace(" Screen contents (NVT):\n");
+			ansi_snap();
 			trace_netdata('<', obuf, obptr - obuf);
 		}
 #endif /*]*/
