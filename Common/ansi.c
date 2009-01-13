@@ -1835,6 +1835,56 @@ toggle_lineWrap(struct toggle *t _is_unused, enum toggle_type type _is_unused)
 
 #if defined(X3270_TRACE) /*[*/
 
+/* Emit an SGR command. */
+static void
+emit_sgr(int mode)
+{
+    	space3270out((mode < 10)? 4: 5);
+	*obptr++ = 0x1b;
+	*obptr++ = '[';
+	if (mode > 9)
+	    	*obptr++ = '0' + (mode / 10);
+	*obptr++ = '0' + (mode % 10);
+	*obptr++ = 'm';
+}
+
+/* Emit a DEC Private Mode command. */
+static void
+emit_decpriv(int mode, char op)
+{
+    	space3270out((mode < 10)? 5: 6);
+	*obptr++ = 0x1b;
+	*obptr++ = '[';
+	*obptr++ = '?';
+	if (mode > 9)
+	    	*obptr++ = '0' + (mode / 10);
+	*obptr++ = '0' + (mode % 10);
+	*obptr++ = op;
+}
+
+/* Emit a CUP (cursor position) command. */
+static void
+emit_cup(int baddr)
+{
+    	if (baddr) {
+		char cup_buf[11];
+		int sl;
+
+		sl = sprintf(cup_buf, "\033[%d;%dH",
+			(baddr / COLS) + 1,
+			(baddr % COLS) + 1);
+		space3270out(sl);
+		strcpy((char *)obptr, cup_buf);
+		obptr += sl;
+	} else {
+	    	space3270out(3);
+		*obptr++ = 0x1b;
+		*obptr++ = '[';
+		*obptr++ = 'H';
+	}
+}
+
+/* Emit <n> spaces or a CUP, whichever is shorter. */
 static int
 ansi_dump_spaces(int spaces, int baddr)
 {
@@ -1845,8 +1895,8 @@ ansi_dump_spaces(int spaces, int baddr)
 		/*
 		 * Move the cursor, if it takes less space than
 		 * expanding the spaces.
-		 * Yes, it is possible to optimize this further
-		 * with clever CU[UDFB] sequences.
+		 * It is possible to optimize this further with clever
+		 * CU[UDFB] sequences, but not (yet) worth the effort.
 		 */
 		sl = sprintf(cup_buf, "\033[%d;%dH",
 			(baddr / COLS) + 1,
@@ -1866,7 +1916,7 @@ ansi_dump_spaces(int spaces, int baddr)
 
 /*
  * Snap the provided screen buffer (primary or alternate).
- * Clearly this should be optimized to draw the minimum necessary, assuming a
+ * This is (mostly) optimized to draw the minimum necessary, assuming a
  * blank screen.
  */
 static void
@@ -1877,38 +1927,38 @@ ansi_snap_one(struct ea *buf)
 	int cur_fg = 0;
 	int cur_bg = 0;
 	int spaces = 0;
-	static char uncolor_table[16] = {
-	    /* 0xf0 */ '0',
-	    /* 0xf1 */ '4',
-	    /* 0xf2 */ '1',
-	    /* 0xf3 */ '5',
-	    /* 0xf4 */ '2',
-	    /* 0xf5 */ '0', /* can't happen */
+	static int uncolor_table[16] = {
+	    /* 0xf0 */ 0,
+	    /* 0xf1 */ 4,
+	    /* 0xf2 */ 1,
+	    /* 0xf3 */ 5,
+	    /* 0xf4 */ 2,
+	    /* 0xf5 */ 0, /* can't happen */
 #if defined(WC3270) /*[*/
-	    /* 0xf6 */ '6',
+	    /* 0xf6 */ 6,
 #else /*][*/
-	    /* 0xf6 */ '3',
+	    /* 0xf6 */ 3,
 #endif /*]*/
 #if defined(WC3270) /*[*/
-	    /* 0xf7 */ '7',
+	    /* 0xf7 */ 7,
 #else /*][*/
-	    /* 0xf7 */ '0', /* can't happen */
+	    /* 0xf7 */ 0, /* can't happen */
 #endif /*]*/
-	    /* 0xf8 */ '0', /* can't happen */
-	    /* 0xf9 */ '0', /* can't happen */
-	    /* 0xfa */ '0', /* can't happen */
-	    /* 0xfb */ '0', /* can't happen */
-	    /* 0xfc */ '0', /* can't happen */
+	    /* 0xf8 */ 0, /* can't happen */
+	    /* 0xf9 */ 0, /* can't happen */
+	    /* 0xfa */ 0, /* can't happen */
+	    /* 0xfb */ 0, /* can't happen */
+	    /* 0xfc */ 0, /* can't happen */
 #if defined(WC3270) /*[*/
-	    /* 0xfd */ '0', /* can't happen */
+	    /* 0xfd */ 0, /* can't happen */
 #else /*][*/
-	    /* 0xfd */ '6', /* can't happen */
+	    /* 0xfd */ 6, /* can't happen */
 #endif /*]*/
-	    /* 0xfe */ '0', /* can't happen */
+	    /* 0xfe */ 0, /* can't happen */
 #if defined(WC3270) /*[*/
-	    /* 0xff */ '0', /* can't happen */
+	    /* 0xff */ 0, /* can't happen */
 #else /*][*/
-	    /* 0xff */ '7', /* can't happen */
+	    /* 0xff */ 7, /* can't happen */
 #endif /*]*/
 	};
 	char mb[16];
@@ -1916,7 +1966,7 @@ ansi_snap_one(struct ea *buf)
 	int xlen;
 	int i;
 	enum dbcs_state d;
-	char c;
+	int c;
 
 	/* Draw what's on the screen. */
 	baddr = 0;
@@ -1931,11 +1981,7 @@ ansi_snap_one(struct ea *buf)
 				 * Something turned off. Turn everything off,
 				 * then turn the remaining modes on below.
 				 */
-				space3270out(4);
-				*obptr++ = 0x1b;
-				*obptr++ = '[';
-				*obptr++ = '0';
-				*obptr++ = 'm';
+			    	emit_sgr(0);
 				xgr = 0;
 			} else {
 			    	/*
@@ -1945,34 +1991,14 @@ ansi_snap_one(struct ea *buf)
 			    	xgr &= ~cur_gr;
 			}
 			/* Turn on the attributes remaining in xgr. */
-		    	if (xgr & GR_INTENSIFY) {
-				space3270out(4);
-				*obptr++ = 0x1b;
-				*obptr++ = '[';
-				*obptr++ = '1';
-				*obptr++ = 'm';
-			}
-		    	if (xgr & GR_UNDERLINE) {
-				space3270out(4);
-				*obptr++ = 0x1b;
-				*obptr++ = '[';
-				*obptr++ = '4';
-				*obptr++ = 'm';
-			}
-		    	if (xgr & GR_BLINK) {
-				space3270out(4);
-				*obptr++ = 0x1b;
-				*obptr++ = '[';
-				*obptr++ = '5';
-				*obptr++ = 'm';
-			}
-		    	if (xgr & GR_REVERSE) {
-				space3270out(4);
-				*obptr++ = 0x1b;
-				*obptr++ = '[';
-				*obptr++ = '7';
-				*obptr++ = 'm';
-			}
+		    	if (xgr & GR_INTENSIFY)
+			    	emit_sgr(1);
+		    	if (xgr & GR_UNDERLINE)
+			    	emit_sgr(4);
+		    	if (xgr & GR_BLINK)
+			    	emit_sgr(5);
+		    	if (xgr & GR_REVERSE)
+			    	emit_sgr(7);
 		    	cur_gr = buf[baddr].gr;
 		}
 
@@ -1982,13 +2008,8 @@ ansi_snap_one(struct ea *buf)
 		    	if (buf[baddr].fg)
 			    	c = uncolor_table[buf[baddr].fg & 0x0f];
 			else
-			    	c = '9';
-		    	space3270out(5);
-			*obptr++ = 0x1b;
-			*obptr++ = '[';
-			*obptr++ = '3';
-			*obptr++ = c;
-			*obptr++ = 'm';
+			    	c = 9;
+			emit_sgr(30 + c);
 			cur_fg = buf[baddr].fg;
 		}
 		if (buf[baddr].bg != cur_bg) {
@@ -1996,13 +2017,8 @@ ansi_snap_one(struct ea *buf)
 		    	if (buf[baddr].bg)
 			    	c = uncolor_table[buf[baddr].bg & 0x0f];
 			else
-			    	c = '9';
-		    	space3270out(5);
-			*obptr++ = 0x1b;
-			*obptr++ = '[';
-			*obptr++ = '4';
-			*obptr++ = c;
-			*obptr++ = 'm';
+			    	c = 9;
+			emit_sgr(40 + c);
 			cur_bg = buf[baddr].bg;
 		}
 
@@ -2052,86 +2068,47 @@ ansi_snap_one(struct ea *buf)
 	} while (baddr != 0);
 
 	/* Remove any attributes we might have set above. */
-	space3270out(4);
-	*obptr++ = 0x1b;
-	*obptr++ = '[';
-	*obptr++ = '0';
-	*obptr++ = 'm';
+	emit_sgr(0);
 }
 
 /* Snap the contents of the screen buffers in NVT mode. */
 void
 ansi_snap(void)
 {
+    	/*
+	 * Note that ea_buf is the live buffer, and aea_buf is the other
+	 * buffer.  So the task here is to draw the other buffer first,
+	 * then switch modes and draw the live one.
+	 */
 	if (is_altbuffer) {
 	    	/* Draw the primary screen first. */
-	    	ansi_snap_one(ea_buf);
+	    	ansi_snap_one(aea_buf);
+		emit_cup(0);
+
 		/* Switch to the alternate. */
-		space3270out(6);
-		*obptr++ = 0x1b;
-		*obptr++ = '[';
-		*obptr++ = '?';
-		*obptr++ = '4';
-		*obptr++ = '7';
-		*obptr++ = 'h';
+		emit_decpriv(47, 'h');
+
 		/* Draw the secondary, and stay in alternate mode. */
-		ansi_snap_one(aea_buf);
+		ansi_snap_one(ea_buf);
 	} else {
 		/* Switch to the alternate. */
-		space3270out(6);
-		*obptr++ = 0x1b;
-		*obptr++ = '[';
-		*obptr++ = '?';
-		*obptr++ = '4';
-		*obptr++ = '7';
-		*obptr++ = 'h';
+	    	emit_decpriv(47, 'h');
+
 	    	/* Draw the alternate screen. */
 	    	ansi_snap_one(aea_buf);
+		emit_cup(0);
+
 		/* Switch to the primary. */
-		space3270out(6);
-		*obptr++ = 0x1b;
-		*obptr++ = '[';
-		*obptr++ = '?';
-		*obptr++ = '4';
-		*obptr++ = '7';
-		*obptr++ = 'l';
+		emit_decpriv(47, 'l');
+
 		/* Draw the primary, and stay in primary mode. */
 		ansi_snap_one(ea_buf);
 	}
 }
 
-/* Emit an SGR command. */
-static void
-emit_sgr(int mode)
-{
-    	space3270out((mode < 10)? 4: 5);
-	*obptr++ = 0x1b;
-	*obptr++ = '[';
-	if (mode > 9)
-	    	*obptr++ = '0' + (mode / 10);
-	*obptr++ = '0' + (mode % 10);
-	*obptr++ = 'm';
-}
-
-/* Emit a DEC Private Mode command. */
-static void
-decpriv(int mode, char op)
-{
-    	space3270out((mode < 10)? 5: 6);
-	*obptr++ = 0x1b;
-	*obptr++ = '[';
-	*obptr++ = '?';
-	if (mode > 9)
-	    	*obptr++ = '0' + (mode / 10);
-	*obptr++ = '0' + (mode % 10);
-	*obptr++ = op;
-}
-
 /*
  * Snap the non-default terminal modes.
- * This is a potentially very complex piece of logic, and it's likely
- * going to be incomplete.  What is definitely missing at the moment is
- * properly is partial escape sequences.
+ * This is a subtle piece of logic, and may harbor a few bugs yet.
  */
 void
 ansi_snap_modes(void)
@@ -2150,12 +2127,8 @@ ansi_snap_modes(void)
 	    saved_csd[2] != CSD_US ||
 	    saved_csd[3] != CSD_US) {
 
-	    	if (saved_cursor != 0) {
-			space3270out(11);
-			obptr += sprintf((char *)obptr, "\033[%d;%dH",
-				(saved_cursor / COLS) + 1,
-				(saved_cursor % COLS) + 1);
-		}
+	    	if (saved_cursor != 0)
+		    	emit_cup(saved_cursor);
 		if (saved_fg != 0)
 		    	emit_sgr(30 + saved_fg);
 		if (saved_bg != 0)
@@ -2260,50 +2233,50 @@ ansi_snap_modes(void)
 	 * the current ones.
 	 */
 	if (saved_appl_cursor) {
-	    	decpriv(1, 'h');		/* set */
-	    	decpriv(1, 's');		/* save */
+	    	emit_decpriv(1, 'h');		/* set */
+	    	emit_decpriv(1, 's');		/* save */
 		if (!appl_cursor)
-			decpriv(1, 'l');	/* reset */
+			emit_decpriv(1, 'l');	/* reset */
 	} else if (appl_cursor) {
-	    	decpriv(1, 'h');		/* set */
+	    	emit_decpriv(1, 'h');		/* set */
 	}
 	if (saved_wide_mode) {
-	    	decpriv(3, 'h');		/* set */
-		decpriv(3, 's');		/* save */
+	    	emit_decpriv(3, 'h');		/* set */
+		emit_decpriv(3, 's');		/* save */
 		if (!wide_mode)
-			decpriv(3, 'l');	/* reset */
+			emit_decpriv(3, 'l');	/* reset */
 	} else if (wide_mode) {
-	    	decpriv(3, 'h');		/* set */
+	    	emit_decpriv(3, 'h');		/* set */
 	}
 	if (saved_wraparound_mode == 0) {
-	    	decpriv(7, 'h');		/* set (no-wraparound mode) */
-		decpriv(7, 's');		/* save */
+	    	emit_decpriv(7, 'h');		/* set (no-wraparound mode) */
+		emit_decpriv(7, 's');		/* save */
 		if (wraparound_mode)
-			decpriv(7, 'l');	/* reset */
+			emit_decpriv(7, 'l');	/* reset */
 	} else if (!wraparound_mode) {
-	    	decpriv(7, 'h');		/* set (no-wraparound mode) */
+	    	emit_decpriv(7, 'h');		/* set (no-wraparound mode) */
 	}
 	if (saved_allow_wide_mode) {
-	    	decpriv(40, 'h');		/* set */
-		decpriv(40, 's');		/* save */
+	    	emit_decpriv(40, 'h');		/* set */
+		emit_decpriv(40, 's');		/* save */
 		if (!allow_wide_mode)
-			decpriv(40, 'l');	/* reset */
+			emit_decpriv(40, 'l');	/* reset */
 	} else if (allow_wide_mode) {
-	    	decpriv(40, 'h');		/* set */
+	    	emit_decpriv(40, 'h');		/* set */
 	}
 	if (saved_rev_wraparound_mode == 0) {
-	    	decpriv(45, 'h');		/* set (no-wraparound mode) */
-		decpriv(45, 's');		/* save */
+	    	emit_decpriv(45, 'h');		/* set (no-wraparound mode) */
+		emit_decpriv(45, 's');		/* save */
 		if (rev_wraparound_mode)
-			decpriv(45, 'l');	/* reset */
+			emit_decpriv(45, 'l');	/* reset */
 	} else if (!rev_wraparound_mode) {
-	    	decpriv(45, 'h');		/* set (no-wraparound mode) */
+	    	emit_decpriv(45, 'h');		/* set (no-wraparound mode) */
 	}
 	if (saved_altbuffer) {
-	    	decpriv(47, 'h');		/* set */
-		decpriv(47, 's');		/* save */
+	    	emit_decpriv(47, 'h');		/* set */
+		emit_decpriv(47, 's');		/* save */
 		if (!is_altbuffer)
-			decpriv(47, 'l');	/* reset */
+			emit_decpriv(47, 'l');	/* reset */
 	} /* else not necessary to set it now -- it was already set when the
 	     screen was drawn */
 
@@ -2370,10 +2343,7 @@ ansi_snap_modes(void)
 	 * We're done moving the cursor for other purposes (saving it,
 	 * messing with tabs).  Put it where it should be now.
 	 */
-	space3270out(11);
-	obptr += sprintf((char *)obptr, "\033[%d;%dH",
-		(cursor_addr / COLS) + 1,
-		(cursor_addr % COLS) + 1);
+	emit_cup(cursor_addr);
 
 	/* Now add any pending single-character CS change. */
 	switch (once_cset) {
