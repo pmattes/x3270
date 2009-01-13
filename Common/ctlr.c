@@ -1945,7 +1945,7 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 	int s_row;
 	unsigned char c;
 	int baddr;
-	int text = FALSE;
+	int text = False;
 
 	/*
 	 * The 3174 Functionl Description says that anything but NL, NULL, FM,
@@ -1984,7 +1984,7 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 			i++;
 			if (text) {
 			    trace_ds("'");
-			    text = FALSE;
+			    text = False;
 			}
 			trace_ds(" SF%s %s [translated to space]\n",
 			    rcba(buffer_addr), see_attr(*cp));
@@ -1998,7 +1998,7 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 		case ORDER_IC:
 			if (text) {
 			    trace_ds("'");
-			    text = FALSE;
+			    text = False;
 			}
 			trace_ds(" IC%s [ignored]\n",
 			    rcba(buffer_addr));
@@ -2020,7 +2020,7 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 				c = *cp;
 			if (text) {
 			    trace_ds("'");
-			    text = FALSE;
+			    text = False;
 			}
 			trace_ds(" GE '%s'", see_ebc(c));
 			ctlr_add(buffer_addr, c, CS_GE);
@@ -2034,7 +2034,7 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 		default:
 			if (!text) {
 			    trace_ds(" '");
-			    text = 1;
+			    text = True;
 			}
 			trace_ds(see_ebc(*cp));
 			ctlr_add(buffer_addr, *cp, default_cs);
