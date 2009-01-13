@@ -30,6 +30,7 @@ extern void ansi_send_pf(int nn);
 extern void ansi_send_right(void);
 extern void ansi_send_up(void);
 extern void ansi_snap(void);
+extern void ansi_snap_modes(void);
 extern void toggle_lineWrap(struct toggle *t, enum toggle_type type);
 
 #else /*][*/
