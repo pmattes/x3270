@@ -1967,6 +1967,8 @@ ansi_snap_one(struct ea *buf)
 	int i;
 	enum dbcs_state d;
 	int c;
+	int last_sgr = 0;
+#define	EMIT_SGR(n)	{ emit_sgr(n); last_sgr = (n); }
 
 	/* Draw what's on the screen. */
 	baddr = 0;
@@ -1981,7 +1983,7 @@ ansi_snap_one(struct ea *buf)
 				 * Something turned off. Turn everything off,
 				 * then turn the remaining modes on below.
 				 */
-			    	emit_sgr(0);
+			    	EMIT_SGR(0);
 				xgr = 0;
 			} else {
 			    	/*
@@ -1992,13 +1994,13 @@ ansi_snap_one(struct ea *buf)
 			}
 			/* Turn on the attributes remaining in xgr. */
 		    	if (xgr & GR_INTENSIFY)
-			    	emit_sgr(1);
+			    	EMIT_SGR(1);
 		    	if (xgr & GR_UNDERLINE)
-			    	emit_sgr(4);
+			    	EMIT_SGR(4);
 		    	if (xgr & GR_BLINK)
-			    	emit_sgr(5);
+			    	EMIT_SGR(5);
 		    	if (xgr & GR_REVERSE)
-			    	emit_sgr(7);
+			    	EMIT_SGR(7);
 		    	cur_gr = buf[baddr].gr;
 		}
 
@@ -2009,7 +2011,7 @@ ansi_snap_one(struct ea *buf)
 			    	c = uncolor_table[buf[baddr].fg & 0x0f];
 			else
 			    	c = 9;
-			emit_sgr(30 + c);
+			EMIT_SGR(30 + c);
 			cur_fg = buf[baddr].fg;
 		}
 		if (buf[baddr].bg != cur_bg) {
@@ -2018,7 +2020,7 @@ ansi_snap_one(struct ea *buf)
 			    	c = uncolor_table[buf[baddr].bg & 0x0f];
 			else
 			    	c = 9;
-			emit_sgr(40 + c);
+			EMIT_SGR(40 + c);
 			cur_bg = buf[baddr].bg;
 		}
 
@@ -2067,8 +2069,9 @@ ansi_snap_one(struct ea *buf)
 		INC_BA(baddr);
 	} while (baddr != 0);
 
-	/* Remove any attributes we might have set above. */
-	emit_sgr(0);
+	/* Remove any attributes we set above. */
+	if (last_sgr != 0)
+		emit_sgr(0);
 }
 
 /* Snap the contents of the screen buffers in NVT mode. */
@@ -2091,15 +2094,29 @@ ansi_snap(void)
 		/* Draw the secondary, and stay in alternate mode. */
 		ansi_snap_one(ea_buf);
 	} else {
-		/* Switch to the alternate. */
-	    	emit_decpriv(47, 'h');
+	    	int i;
+		int any = 0;
+		static struct ea zea = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-	    	/* Draw the alternate screen. */
-	    	ansi_snap_one(aea_buf);
-		emit_cup(0);
+		/* See if aea_buf has anything in it. */
+		for (i = 0; i < ROWS * COLS; i++) {
+		    	if (memcmp(&aea_buf[i], &zea, sizeof(struct ea))) {
+			    	any = 1;
+				break;
+			}
+		}
 
-		/* Switch to the primary. */
-		emit_decpriv(47, 'l');
+		if (any) {
+			/* Switch to the alternate. */
+			emit_decpriv(47, 'h');
+
+			/* Draw the alternate screen. */
+			ansi_snap_one(aea_buf);
+			emit_cup(0);
+
+			/* Switch to the primary. */
+			emit_decpriv(47, 'l');
+		}
 
 		/* Draw the primary, and stay in primary mode. */
 		ansi_snap_one(ea_buf);
@@ -2181,7 +2198,7 @@ ansi_snap_modes(void)
 	/* Now set the above to their current values, except for the cursor. */
 	if (fg != saved_fg)
 		emit_sgr(30 + fg);
-	if (bg != saved_bg);
+	if (bg != saved_bg)
 		emit_sgr(40 + bg);
 	if (gr != saved_gr) {
 	    	emit_sgr(0);
@@ -2264,13 +2281,13 @@ ansi_snap_modes(void)
 	} else if (allow_wide_mode) {
 	    	emit_decpriv(40, 'h');		/* set */
 	}
-	if (saved_rev_wraparound_mode == 0) {
-	    	emit_decpriv(45, 'h');		/* set (no-wraparound mode) */
+	if (saved_rev_wraparound_mode) {
+	    	emit_decpriv(45, 'h');		/* set (rev--wraparound mode) */
 		emit_decpriv(45, 's');		/* save */
-		if (rev_wraparound_mode)
+		if (!rev_wraparound_mode)
 			emit_decpriv(45, 'l');	/* reset */
-	} else if (!rev_wraparound_mode) {
-	    	emit_decpriv(45, 'h');		/* set (no-wraparound mode) */
+	} else if (rev_wraparound_mode) {
+	    	emit_decpriv(45, 'h');		/* set (rev-wraparound mode) */
 	}
 	if (saved_altbuffer) {
 	    	emit_decpriv(47, 'h');		/* set */
@@ -2299,7 +2316,7 @@ ansi_snap_modes(void)
 		*obptr++ = '0';
 		*obptr++ = 'h';
 	}
-	if (scroll_top != -1 || scroll_bottom != -1) {
+	if (scroll_top != 1 || scroll_bottom != ROWS) {
 	    	space3270out(10);
 		obptr += sprintf((char *)obptr, "\033[%d;%dr",
 			scroll_top, scroll_bottom);
