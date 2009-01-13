@@ -134,7 +134,7 @@ mkfb: mkfb.c
    ComplexProgramTarget, because we may want to install it somewhere other
    than under PROJECTROOT. */
 ProgramTargetName(x3270if): x3270if.c conf.h
-	$(CC) $(CDEBUGFLAGS) $(ALLDEFINES) -o x3270if x3270if.c $(EXTRA_LDOPTIONS) $(EXTRA_LIBRARIES)
+	$(CC) $(CFLAGS) -o x3270if x3270if.c $(EXTRA_LDOPTIONS) $(EXTRA_LIBRARIES)
 
 /* Rules for using and installing a separate app-defaults file. */
 @DEFINE_UAD@
