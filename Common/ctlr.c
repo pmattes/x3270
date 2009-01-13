@@ -69,6 +69,7 @@ Boolean         is_altbuffer = False;
 struct ea      *ea_buf;		/* 3270 device buffer */
 				/* ea_buf[-1] is the dummy default field
 				   attribute */
+struct ea      *aea_buf;	/* alternate 3270 extended attribute buffer */
 Boolean         formatted = False;	/* set in screen_disp */
 Boolean         screen_changed = False;
 int             first_changed = -1;
@@ -79,7 +80,6 @@ unsigned char   crm_attr[16];
 Boolean		dbcs = False;
 
 /* Statics */
-static struct ea *aea_buf;	/* alternate 3270 extended attribute buffer */
 static unsigned char *zero_buf;	/* empty buffer, for area clears */
 static void set_formatted(void);
 static void ctlr_blanks(void);
@@ -306,10 +306,13 @@ ctlr_connect(Boolean ignored _is_unused)
 	ticking_stop();
 	status_untiming();
 
-	if (ever_3270)
+	if (ever_3270) {
 		ea_buf[-1].fa = FA_PRINTABLE | FA_MODIFY;
-	else
+		aea_buf[-1].fa = FA_PRINTABLE | FA_MODIFY;
+	} else {
 		ea_buf[-1].fa = FA_PRINTABLE | FA_PROTECT;
+		aea_buf[-1].fa = FA_PRINTABLE | FA_PROTECT;
+	}
 	if (!IN_3270 || (IN_SSCP && (kybdlock & KL_OIA_TWAIT))) {
 		kybdlock_clr(KL_OIA_TWAIT, "ctlr_connect");
 		status_reset();

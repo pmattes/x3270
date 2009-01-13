@@ -555,7 +555,7 @@ create_tracefile_header(const char *mode)
 			obptr = obuf;
 			(void) net_add_dummy_tn3270e();
 			wtrace(" Screen contents (%s):\n",
-				IN_SSCP? "SSCP-LU": "NVT");
+				IN_SSCP? "SSCP-LU": "TN3270E-NVT");
 			if (IN_SSCP) 
 			    	ctlr_snap_buffer_sscp_lu();
 			else if (IN_ANSI)
@@ -564,6 +564,12 @@ create_tracefile_header(const char *mode)
 			net_add_eor(obuf, obptr - obuf);
 			obptr += 2;
 			trace_netdata('<', obuf, obptr - obuf);
+			if (IN_ANSI) {
+				wtrace(" NVT modes:\n");
+				obptr = obuf;
+				ansi_snap_modes();
+				trace_netdata('<', obuf, obptr - obuf);
+			}
 		}
 #endif /*]*/
 #if defined(X3270_ANSI) /*[*/
@@ -571,6 +577,10 @@ create_tracefile_header(const char *mode)
 			obptr = obuf;
 			wtrace(" Screen contents (NVT):\n");
 			ansi_snap();
+			trace_netdata('<', obuf, obptr - obuf);
+			wtrace(" NVT modes:\n");
+			obptr = obuf;
+			ansi_snap_modes();
 			trace_netdata('<', obuf, obptr - obuf);
 		}
 #endif /*]*/

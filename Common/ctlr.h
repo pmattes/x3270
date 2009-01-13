@@ -1,5 +1,5 @@
 /*
- * Copyright 1995, 1999, 2000, 2002, 2005 by Paul Mattes.
+ * Copyright 1995-2009 by Paul Mattes.
  *  Permission to use, copy, modify, and distribute this software and its
  *  documentation for any purpose and without fee is hereby granted,
  *  provided that the above copyright notice appear in all copies and that
@@ -20,5 +20,6 @@
 extern int		buffer_addr;	/* buffer address */
 extern int		cursor_addr;	/* cursor address */
 extern struct ea	*ea_buf;	/* 3270 device buffer */
+extern struct ea	*aea_buf;	/* alternate 3270 device buffer */
 extern Boolean		formatted;	/* contains at least one field? */
 extern Boolean		is_altbuffer;	/* in alternate-buffer mode? */
