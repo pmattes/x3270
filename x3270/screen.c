@@ -1027,7 +1027,7 @@ screen_connect(Boolean ignored _is_unused)
 		 * dimensions, otherwise go to the default 24x80 for 3270
 		 * or SSCP mode.
 		 */
-		ctlr_erase(IN_ANSI? True: False);
+		ctlr_erase((IN_ANSI || IN_SSCP)? True: False);
 		if (IN_3270)
 			scroll_round();
 		cursor_on();
