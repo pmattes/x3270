@@ -1,14 +1,28 @@
-! Copyright 1995-2009 by Paul Mattes.
-!  Permission to use, copy, modify, and distribute this software and its
-!  documentation for any purpose and without fee is hereby granted,
-!  provided that the above copyright notice appear in all copies and that
-!  both that copyright notice and this permission notice appear in
-!  supporting documentation.
 !
-! x3270, c3270, s3270 and tcl3270 are distributed in the hope that they will
-! be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the file LICENSE
-! for more details.
+! Copyright (c) 1995-2009, Paul Mattes.
+! All rights reserved.
+!
+! Redistribution and use in source and binary forms, with or without
+! modification, are permitted provided that the following conditions are met:
+!     * Redistributions of source code must retain the above copyright
+!       notice, this list of conditions and the following disclaimer.
+!     * Redistributions in binary form must reproduce the above copyright
+!       notice, this list of conditions and the following disclaimer in the
+!       documentation and/or other materials provided with the distribution.
+!     * Neither the names of Paul Mattes nor the names of his contributors
+!       may be used to endorse or promote products derived from this software
+!       without specific prior written permission.
+!
+! THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
+! WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+! MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+! EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+! SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+! PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+! OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+! WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+! OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+! ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 !
 ! x3270 app-defaults file.  This file is generally compiled into x3270, rather
 ! than installed.
@@ -270,6 +284,8 @@ x3270.emulatorFontList.iso10646-1,jisx0201.1976-0+jisx0208.1983-0,iso10646-1: \
 					16-point: -sony-fixed-medium-r-normal--16-150-75-75-c-80-jisx0201.1976-0+-jis-fixed-medium-r-normal--16-150-75-75-c-160-jisx0208.1983-0\n\
 					18-point: -sony-fixed-medium-r-normal--16-150-75-75-c-80-jisx0201.1976-0+-misc-fixed-medium-r-normal-ja-18-120-100-100-c-180-iso10646-1\n\
 					24-point: -sony-fixed-medium-r-normal--24-230-75-75-c-120-jisx0201.1976-0+-jis-fixed-medium-r-normal--24-230-75-75-c-240-jisx0208.1983-0
+x3270.emulatorFontList.3270cg-1a,3270cg-1,iso10646-1,iso8859-1+big5-0,iso10646-1: fixed+-wenquanyi-wenquanyi bitmap song-bold-r-normal--13-130-75-75-p-80-iso10646-1
+
 #endif
 !
 ! Print commands

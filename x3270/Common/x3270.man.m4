@@ -1,9 +1,29 @@
-dnl Modifications Copyright 1993-2009 by Paul Mattes.
-dnl  Permission to use, copy, modify, and distribute this software and its
-dnl  documentation for any purpose and without fee is hereby granted,
-dnl  provided that the above copyright notice appear in all copies and that
-dnl  both that copyright notice and this permission notice appear in
-dnl  supporting documentation.
+dnl Copyright (c) 1993-2009, Paul Mattes.
+dnl Copyright (c) 1990, Jeff Sparkes.
+dnl All rights reserved.
+dnl 
+dnl Redistribution and use in source and binary forms, with or without
+dnl modification, are permitted provided that the following conditions are met:
+dnl     * Redistributions of source code must retain the above copyright
+dnl       notice, this list of conditions and the following disclaimer.
+dnl     * Redistributions in binary form must reproduce the above copyright
+dnl       notice, this list of conditions and the following disclaimer in the
+dnl       documentation and/or other materials provided with the distribution.
+dnl     * Neither the names of Paul Mattes, Jeff Sparkes nor the names of their
+dnl       contributors may be used to endorse or promote products derived from
+dnl       this software without specific prior written permission.
+dnl 
+dnl THIS SOFTWARE IS PROVIDED BY PAUL MATTES AND JEFF SPARKES "AS IS" AND
+dnl ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+dnl IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+dnl ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES OR JEFF SPARKES BE LIABLE FOR
+dnl ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+dnl DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+dnl SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+dnl CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+dnl LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+dnl OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+dnl DAMAGE.
 define(XX_KEY,$1`'XX_LT()Key>$2)dnl
 define(XX_BTN,$1`'XX_LT()Btn$2>)dnl
 define(XX_action,`ifelse(XX_PRODUCT,tcl3270,command,XX_PRODUCT,lib3270,function,action)')dnl
@@ -1404,26 +1424,49 @@ RFC 1646, TN3270 Extensions for LUname and Printer Selection
 XX_BR
 RFC 2355, TN3270 Enhancements
 XX_SH(Copyrights)
+Copyright`'XX_COPY()1993-2009, Paul Mattes.
+XX_BR
+Copyright`'XX_COPY()2004-2005, Don Russell.
+XX_BR
+Copyright`'XX_COPY()2004, Dick Altenbern.
+XX_BR
+Copyright`'XX_COPY()1990, Jeff Sparkes.
+XX_BR
+Copyright`'XX_COPY()1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
+ 30332.
+XX_BR
+All rights reserved.
 XX_LP
-Modifications and original code Copyright`'XX_COPY()1993-2009 by Paul Mattes.
-XX_BR
-DFT File Transfer Code Copyright `'XX_COPY()October 1995 by Dick Altenbern.
-XX_BR
-RPQNAMES Code Copyright `'XX_COPY()2004, 2005 by Don Russell.
-XX_BR
-Original X11 Port Copyright`'XX_COPY()1990 by Jeff Sparkes.
-XX_RS(`Permission to use, copy, modify, and distribute this software and its
-documentation for any purpose and without fee is hereby granted,
-provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in
-supporting documentation.')
-Copyright`'XX_COPY()1989 by Georgia Tech Research Corporation, Atlanta, GA 30332.
-XX_RS(All Rights Reserved.  GTRC hereby grants public use of this software.
-Derivative works based on this software must incorporate this copyright
-notice.)
-XX_BR
-XX_PRODUCT is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+XX_TPS()
+XX_TP(*)
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+XX_TP(*)
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+XX_TP(*)
+Neither the names of Paul Mattes, Don Russell, Dick Altenbern, Jeff Sparkes,
+GTRC nor
+the names of their contributors may be used to endorse or promote
+products derived from this software without specific prior written
+permission.
+XX_TPE()
+XX_LP
+THIS SOFTWARE IS PROVIDED BY PAUL MATTES, DON RUSSELL, DICK ALTENBERN, JEFF
+SPARKES AND GTRC
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES, DON RUSSELL, DICK
+ALTENBERN, JEFF
+SPARKES OR GTRC BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 XX_SH(Version)
 XX_PRODUCT XX_VERSION_NUMBER
