@@ -1921,7 +1921,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	}
 
 	/* Build the whole command. */
-	cmd = xs_buffer("ind\\e5Bfile %s %s%s\\n",
+	cmd = xs_buffer("ind\\e005Bfile %s %s%s\\n",
 	    receive_flag ? "get" : "put", ft_host_filename, op);
 
 	/* Erase the line and enter the command. */
