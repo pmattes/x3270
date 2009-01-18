@@ -51,7 +51,7 @@
 //   shell link 
 HRESULT
 CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
-    LPSTR lpszArgs, LPSTR lpszDir, int rows, int cols)
+    LPSTR lpszArgs, LPSTR lpszDir, int rows, int cols, wchar_t *font)
 {
 	HRESULT			hres;
 	int	 		initialized;
@@ -116,7 +116,7 @@ CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
 		p.dwFontSize.Y = 12;
 		p.uFontFamily = 54; /* ? */
 		p.uFontWeight = 400; /* ? */
-		wcscpy(p.FaceName, L"Lucida Console");
+		wcscpy(p.FaceName, font);
 		p.uCursorSize = 0x19;
 		p.bFullScreen = 0;
 		p.bQuickEdit = 0;
@@ -426,7 +426,7 @@ typedef struct {
  */
 HRESULT
 Piffle(char *title, LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
-    LPSTR lpszArgs, LPSTR lpszDir, int rows, int cols)
+    LPSTR lpszArgs, LPSTR lpszDir, int rows, int cols, char *font)
 {
     	w98pif_t pif;
 	int sl;
@@ -469,6 +469,7 @@ Piffle(char *title, LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
 	pif.vmm.window_width.data[1] = 0;
 	pif.vmm.window_height.data[0] = 0;
 	pif.vmm.window_height.data[1] = 0;
+	strcpy(pif.vmm.tt_font, font);
 
 	/* Create the file. */
 	f = fopen(lpszPathLink, "wb");
