@@ -1,15 +1,31 @@
 /*
- * Copyright 1993-2009 by Paul Mattes.
- * RPQNAMES modifications copyright 2004 by Don Russell.
- *  Permission to use, copy, modify, and distribute this software and its
- *  documentation for any purpose and without fee is hereby granted,
- *  provided that the above copyright notice appear in all copies and that
- *  both that copyright notice and this permission notice appear in
- *  supporting documentation.
- *
- * x3270 is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+ * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 2004, Don Russell.
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the names of Paul Mattes, Don Russell nor their
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY PAUL MATTES AND DON RUSSELL "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES OR DON RUSSELL
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+ * OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+ * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+ * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 /*
@@ -163,6 +179,45 @@ popup_about_copyright(void)
 	Widget w = NULL, w_prev = NULL;
 	Widget left_anchor = NULL;
 	int vd = 4;
+	static Boolean catted = False;
+	static char *s1 = NULL;
+	static char *s2 = NULL;
+	static char *s1a =
+"* Redistributions of source code must retain the above copyright\n\
+notice, this list of conditions and the following disclaimer.\n\
+* Redistributions in binary form must reproduce the above copyright\n\
+notice, this list of conditions and the following disclaimer in the\n";
+	static char *s1b =
+"documentation and/or other materials provided with the distribution.\n\
+* Neither the names of Paul Mattes, Don Russell, Dick Altenbern,\n\
+Jeff Sparkes, GTRC nor their contributors may be used to endorse or\n\
+promote products derived from this software without specific prior\n\
+written permission.";
+	static char *s2a =
+"THIS SOFTWARE IS PROVIDED BY PAUL MATTES, DON RUSSELL, DICK ALTENBERN,\n\
+JEFF SPARKES AND GTRC \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES,\n\
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY\n\
+AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PAUL\n\
+MATTES, DON RUSSELL, DICK ALTENBERN, JEFF SPARKES OR GTRC BE LIABLE FOR ANY\n\
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n";
+	static char *s2b =
+"(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\n\
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\n\
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT\n\
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY\n\
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH\n\
+DAMAGE.";
+
+	if (!catted) {
+	    /* Make up for the ANSI C listerl string length limit. */
+	    s1 = Malloc(strlen(s1a) + strlen(s1b) + 1);
+	    strcpy(s1, s1a);
+	    strcat(s1, s1b);
+	    s2 = Malloc(strlen(s2a) + strlen(s2b) + 1);
+	    strcpy(s2, s2a);
+	    strcat(s2, s2b);
+	    catted = True;
+	}
 
 	/* Create the popup */
 
@@ -198,21 +253,19 @@ popup_about_copyright(void)
 	w = left_anchor;
 	left_anchor = NULL;
 
-	MAKE_SMALL("Modifications and original code Copyright \251 1993-2009 by Paul Mattes.\n\
-Original X11 Port Copyright \251 1990 by Jeff Sparkes.\n\
-File transfer code Copyright \251 1995 by Dick Altenbern.\n\
-Includes IAC IP patch by Carey Evans, 1998.\n\
-Includes RPQNAMES support by Don Russell, 2004.", 4);
-	MAKE_SMALL(" Permission to use, copy, modify, and distribute this software and its documentation\n\
- for any purpose and without fee is hereby granted, provided that the above copyright\n\
- notice appear in all copies and that both that copyright notice and this permission\n\
- notice appear in supporting documentation.", 0);
-	MAKE_SMALL("Copyright \251 1989 by Georgia Tech Research Corporation, Atlanta, GA 30332.\n\
- All Rights Reserved.  GTRC hereby grants public use of this software.  Derivative\n\
- works based on this software must incorporate this copyright notice.", 4);
-	MAKE_SMALL("x3270 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;\n\
-without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR\n\
-PURPOSE.  See the file LICENSE for more details.", 4);
+	MAKE_SMALL(
+"Copyright \251 1993-2009, Paul Mattes.\n\
+Copyright \251 2004-2005, Don Russell.\n\
+Copyright \251 1995, Dick Altenbern.\n\
+Copyright \251 1990, Jeff Sparkes.\n\
+Copyright \251 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA 30332.\n\
+All rights reserved.", 4);
+	MAKE_SMALL(
+"Redistribution and use in source and binary forms, with or without\n\
+modification, are permitted provided that the following conditions\n\
+are met:", 4);
+	MAKE_SMALL(s1, 4);
+	MAKE_SMALL(s2, 4);
 
 	/* Add "OK" button at the lower left */
 

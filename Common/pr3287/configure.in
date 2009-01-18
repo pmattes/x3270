@@ -1,13 +1,29 @@
-dnl Copyright 2000-2008 by Paul Mattes.
-dnl  Permission to use, copy, modify, and distribute this software and its
-dnl  documentation for any purpose and without fee is hereby granted,
-dnl  provided that the above copyright notice appear in all copies and that
-dnl  both that copyright notice and this permission notice appear in
-dnl  supporting documentation.
-dnl
-dnl pr3287 is distributed in the hope that it will be useful, but WITHOUT ANY
-dnl WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-dnl FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+dnl Copyright (c) 2000-2009, Paul Mattes.
+dnl All rights reserved.
+dnl 
+dnl Redistribution and use in source and binary forms, with or without
+dnl modification, are permitted provided that the following conditions
+dnl are met:
+dnl     * Redistributions of source code must retain the above copyright
+dnl       notice, this list of conditions and the following disclaimer.
+dnl     * Redistributions in binary form must reproduce the above copyright
+dnl       notice, this list of conditions and the following disclaimer in the
+dnl       documentation and/or other materials provided with the distribution.
+dnl     * Neither the name of Paul Mattes nor his contributors may be used
+dnl       to endorse or promote products derived from this software without
+dnl       specific prior written permission.
+dnl 
+dnl THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS
+dnl OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+dnl WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+dnl DISCLAIMED. IN NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT,
+dnl INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+dnl (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+dnl SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+dnl HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+dnl STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+dnl IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(pr3287.c)
