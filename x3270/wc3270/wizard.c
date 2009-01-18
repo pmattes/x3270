@@ -89,47 +89,61 @@ extern char *wversion;
 struct {
     	char *name;
 	char *hostcp;
+	int   is_dbcs;
 } charsets[] = {
-	{ "belgian",		"500"   },
-	{ "belgian-euro",	"1148"  },
-	{ "bracket",		"37*"   },
-	{ "brazilian",		"275"   },
-	{ "cp1047",		"1047"  },
-	{ "cp870",		"870"   },
-	{ "chinese-gb18030",	"1388"	},
-	{ "finnish",		"278"   },
-	{ "finnish-euro",	"1143"  },
-	{ "french",		"297"   },
-	{ "french-euro",	"1147"  },
-	{ "german",		"273"   },
-	{ "german-euro",	"1141"  },
-	{ "greek",		"875"   },
-	{ "hebrew",		"424"   },
-	{ "icelandic",		"871"   },
-	{ "icelandic-euro",	"1149"  },
-	{ "italian",		"280"   },
-	{ "italian-euro",	"1144"  },
-	{ "japanese-1027",	"1027+300" },
-	{ "japanese-290",	"290+300" },
-	{ "norwegian",		"277"   },
-	{ "norwegian-euro",	"1142"  },
-	{ "russian",		"880"   },
-	{ "simplified-chinese",	"836+837" },
-	{ "spanish",		"284"   },
-	{ "spanish-euro",	"1145"  },
-	{ "thai",		"838"   },
-	{ "traditional-chinese","937"	},
-	{ "turkish",		"1026"  },
-	{ "uk",			"285"   },
-	{ "uk-euro",		"1146"  },
-	{ "us-euro",		"1140"  },
-	{ "us-intl",		"37"    },
-	{ NULL,			NULL	}
+	{ "belgian",		"500",	0	},
+	{ "belgian-euro",	"1148",	0	},
+	{ "bracket",		"37*",	0	},
+	{ "brazilian",		"275",	0	},
+	{ "cp1047",		"1047",	0	},
+	{ "cp870",		"870",	0	},
+	{ "chinese-gb18030",	"1388",	1	},
+	{ "finnish",		"278",	0	},
+	{ "finnish-euro",	"1143",	0	},
+	{ "french",		"297",	0	},
+	{ "french-euro",	"1147",	0	},
+	{ "german",		"273",	0	},
+	{ "german-euro",	"1141",	0	},
+	{ "greek",		"875",	0	},
+	{ "hebrew",		"424",	0	},
+	{ "icelandic",		"871",	0	},
+	{ "icelandic-euro",	"1149",	0	},
+	{ "italian",		"280",	0	},
+	{ "italian-euro",	"1144",	0	},
+	{ "japanese-1027",	"1027+300", 1	},
+	{ "japanese-290",	"290+300", 1	},
+	{ "norwegian",		"277",	0	},
+	{ "norwegian-euro",	"1142",	0	},
+	{ "russian",		"880",	0	},
+	{ "simplified-chinese",	"836+837", 1	},
+	{ "spanish",		"284",	0	},
+	{ "spanish-euro",	"1145",	0	},
+	{ "thai",		"838",	0	},
+	{ "traditional-chinese","937",	1	},
+	{ "turkish",		"1026",	0	},
+	{ "uk",			"285",	0	},
+	{ "uk-euro",		"1146",	0	},
+	{ "us-euro",		"1140",	0	},
+	{ "us-intl",		"37",	0	},
+	{ NULL,			NULL,	0	}
 };
 #define CS_WIDTH	19
 #define CP_WIDTH	8
 #define WP_WIDTH	6
 #define	CS_COLS		2
+
+static struct {
+	char *csname;		/* character set name */
+	wchar_t *wincp;		/* Windows code page */
+	char *win98font;	/* Windows 98 font */
+} cpmap[] = {
+	{ "japanese-1027",	L"932", "MS Gothic"	},
+	{ "japanese-290",	L"932", "MS Gothic"	},
+    	{ "chinese-gb18030",	L"936", "MS Song"	},
+	{ "simplified-chinese",	L"936", "MS Song"	},
+	{ "traditional-chinese",L"950", "MingLiu"	},
+	{ NULL,			NULL,   NULL	  	},
+};
 
              /*  model  2   3   4   5 */
 int wrows[6] = { 0, 0, 25, 33, 44, 28  };
@@ -657,6 +671,8 @@ This specifies the EBCDIC character set used by the host.");
 	k = 0;
 	for (i = 0; i < NCS; i++) {
 	    	int j;
+		char *n, *h;
+
 
 	    	if (i) {
 			if (!(i % CS_COLS))
@@ -670,12 +686,17 @@ This specifies the EBCDIC character set used by the host.");
 		    	j += NCS / 2;
 			k++;
 		}
+		if (is_nt || !charsets[j].is_dbcs) {
+		    	n = charsets[j].name;
+		    	h = charsets[j].hostcp;
+		} else {
+		    	n = "";
+		    	h = "";
+		}
 		printf(" %2d. %-*s %-*s",
 			j + 1,
-			CS_WIDTH,
-			charsets[j].name,
-			CP_WIDTH,
-			charsets[j].hostcp);
+			CS_WIDTH, n,
+			CP_WIDTH, h);
 	}
 	printf("\n");
 	for (;;) {
@@ -688,17 +709,19 @@ This specifies the EBCDIC character set used by the host.");
 			break;
 		}
 		u = strtoul(s->charset, &ptr, 10);
-		if (u > 0 && u <= i && *ptr == '\0') {
+		if (u > 0 && u <= i && *ptr == '\0' &&
+			    (is_nt || !charsets[u - 1].is_dbcs)) {
 			strcpy(s->charset, charsets[u - 1].name);
 			break;
 		}
 		for (i = 0; charsets[i].name != NULL; i++) {
-			if (!strcmp(s->charset, charsets[i].name))
+			if (!strcmp(s->charset, charsets[i].name) &&
+				    (is_nt || !charsets[i].is_dbcs))
 				break;
 		}
 		if (charsets[i].name != NULL)
 			break;
-		printf("Ivalid character set name.\n");
+		printf("Invalid character set name.\n");
 	}
 	return 0;
 }
@@ -1072,6 +1095,88 @@ summarize_and_proceed(session_t *s)
 	return 0;
 }
 
+wchar_t *
+reg_font_from_cset(char *cset)
+{
+    	int i, j;
+	wchar_t *cpname = NULL;
+	wchar_t data[1024];
+	DWORD dlen;
+	HKEY key;
+	static wchar_t font[1024];
+
+    	/* Search the table for a match. */
+	for (i = 0; cpmap[i].csname != NULL; i++) {
+	    	if (!strcmp(cset, cpmap[i].csname)) {
+		    	cpname = cpmap[i].wincp;
+		    	break;
+		}
+	}
+
+	/* If no match, use Lucida Console. */
+	if (cpname == NULL)
+	    	return L"Lucida Console";
+
+	/*
+	 * Look in the registry for the console font associated with the
+	 * Windows code page.
+	 */
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		    "Software\\Microsoft\\Windows NT\\CurrentVersion\\"
+		    "Console\\TrueTypeFont",
+		    0,
+		    KEY_READ,
+		    &key) != ERROR_SUCCESS) {
+	    	printf("RegOpenKey failed -- cannot find font\n");
+		return L"Lucida Console";
+	}
+	dlen = sizeof(data);
+    	if (RegQueryValueExW(key,
+		    cpname,
+		    NULL,
+		    NULL,
+		    (LPVOID)data,
+		    &dlen) != ERROR_SUCCESS) {
+		RegCloseKey(key);
+	    	printf("RegQueryValueEx failed -- cannot find font\n");
+		return L"Lucida Console";
+	}
+	RegCloseKey(key);
+	for (i = 0; i < dlen/sizeof(wchar_t); i++) {
+		if (data[i] == 0x0000)
+		    	break;
+	}
+	if (i+1 >= dlen/sizeof(wchar_t) || data[i+1] == 0x0000) {
+	    	printf("Bad registry value -- cannot find font");
+		return L"Lucida Console";
+	}
+	i++;
+	for (j = 0; i < dlen; i++, j++) {
+	    	if ((font[j] = data[i]) == 0x0000)
+		    	break;
+	}
+	return font;
+}
+
+/*
+ * Find the Windows 98 console font for a character set.  This is, of course,
+ * silly, because Windows 98 console fonts can't be changed.
+ */
+char *
+win98_font_from_cset(char *cset)
+{
+    	int i;
+
+    	/* Search the table for a match. */
+	for (i = 0; cpmap[i].csname != NULL; i++) {
+	    	if (!strcmp(cset, cpmap[i].csname))
+		    	return cpmap[i].win98font;
+	}
+
+	/* If no match, use Lucida Console. */
+	return "Lucida Console";
+}
+
 int
 session_wizard(void)
 {
@@ -1192,8 +1297,10 @@ session_wizard(void)
 			"wc3270 session",	/* description */
 			args,			/* arguments */
 			installdir,		/* working directory */
-			wrows[session.model], wcols[session.model]);
+			wrows[session.model], wcols[session.model],
 						/* console rows, columns */
+			reg_font_from_cset(session.charset));
+						/* font */
 	else
 		hres = Piffle(
 			session.session,	/* window title */
@@ -1202,8 +1309,10 @@ session_wizard(void)
 			"wc3270 session",	/* description */
 			args,			/* arguments */
 			installdir,		/* working directory */
-			wrows[session.model], wcols[session.model]);
+			wrows[session.model], wcols[session.model],
 						/* console rows, columns */
+			win98_font_from_cset(session.charset));
+						/* font */
 
 	if (SUCCEEDED(hres)) {
 		printf("done\n");

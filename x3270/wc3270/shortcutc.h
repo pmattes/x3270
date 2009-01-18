@@ -28,6 +28,8 @@
  */
 
 extern HRESULT CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink,
-	LPSTR lpszDesc, LPSTR lpszArgs, LPSTR lpszDir, int rows, int cols);
+	LPSTR lpszDesc, LPSTR lpszArgs, LPSTR lpszDir, int rows, int cols,
+	wchar_t *font);
 extern HRESULT Piffle(char *title, LPCSTR lpszPathObj, LPSTR lpszPathLink,
-	LPSTR lpszDesc, LPSTR lpszArgs, LPSTR lpszDir, int rows, int cols);
+	LPSTR lpszDesc, LPSTR lpszArgs, LPSTR lpszDir, int rows, int cols,
+	char *font);
