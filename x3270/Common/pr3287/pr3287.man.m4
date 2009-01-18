@@ -169,18 +169,40 @@ RFC 1646, TN3270 Extensions for LUname and Printer Selection
 XX_BR
 RFC 2355, TN3270 Enhancements
 XX_SH(Copyrights)
-XX_LP
-Modifications Copyright`' XX_COPY()1993-2008 by Paul Mattes.
+Copyright`'XX_COPY()1993-2009, Paul Mattes.
 XX_BR
-Original X11 Port Copyright`'XX_COPY()1990 by Jeff Sparkes.
-XX_RS(`Permission to use, copy, modify, and distribute this software and its
-documentation for any purpose and without fee is hereby granted,
-provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in
-supporting documentation.')
-Copyright`'XX_COPY()1989 by Georgia Tech Research Corporation, Atlanta, GA 30332.
-XX_RS(`All Rights Reserved.  GTRC hereby grants public use of this software.
-Derivative works based on this software must incorporate this copyright
-notice.')
+Copyright`'XX_COPY()1990, Jeff Sparkes.
+XX_BR
+Copyright`'XX_COPY()1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
+ 30332.
+XX_BR
+All rights reserved.
+XX_LP()
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+XX_TPS()
+XX_TP(*)
+Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+XX_TP(*)
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+XX_TP(*)
+Neither the names of Paul Mattes, Jeff Sparkes, GTRC nor the names of
+their contributors may be used to endorse or promote products derived
+from this software without specific prior written permission.
+XX_LP()
+THIS SOFTWARE IS PROVIDED BY PAUL MATTES, JEFF SPARKES AND GTRC XX_DQUOTED(AS IS) AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES, JEFF SPARKES OR GTRC BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
 XX_SH(Version)
 XX_PRODUCT XX_VERSION_NUMBER

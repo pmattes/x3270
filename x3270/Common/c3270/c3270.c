@@ -1,20 +1,32 @@
 /*
- * Modifications and original code Copyright 1993-2009 by Paul Mattes.
- * Original X11 Port Copyright 1990 by Jeff Sparkes.
- *   Permission to use, copy, modify, and distribute this software and its
- *   documentation for any purpose and without fee is hereby granted,
- *   provided that the above copyright notice appear in all copies and that
- *   both that copyright notice and this permission notice appear in
- *   supporting documentation.
+ * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1990, Jeff Sparkes.
+ * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
+ *  30332.
+ * All rights reserved.
  *
- * Copyright 1989 by Georgia Tech Research Corporation, Atlanta, GA 30332.
- *   All Rights Reserved.  GTRC hereby grants public use of this software.
- *   Derivative works based on this software must incorporate this copyright
- *   notice.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the names of Paul Mattes, Jeff Sparkes, GTRC nor the names of
+ *       their contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
  *
- * c3270 and wc3270 are distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.
+ * THIS SOFTWARE IS PROVIDED BY PAUL MATTES, JEFF SPARKES AND GTRC "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES, JEFF SPARKES OR GTRC BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 /*
@@ -1007,30 +1019,34 @@ static void
 copyright_dump(void)
 {
 	action_output(" ");
-	action_output("Modifications and original code Copyright 1993-2009 by Paul Mattes.");
-	action_output("Original X11 Port Copyright 1990 by Jeff Sparkes.");
-	action_output("DFT File Transfer Code Copyright October 1995 by Dick Altenbern.");
-	action_output("RPQNAMES Code Copyright 2004, 2005 by Don Russell.");
-	action_output("  Permission to use, copy, modify, and distribute this software and its");
-	action_output("  documentation for any purpose and without fee is hereby granted,");
-	action_output("  provided that the above copyright notice appear in all copies and that");
-	action_output("  both that copyright notice and this permission notice appear in");
-	action_output("  supporting documentation.");
+	action_output("Copyright (c) 1993-2009, Paul Mattes.");
+	action_output("Copyright (c) 1990, Jeff Sparkes.");
+	action_output("Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA");
+	action_output(" 30332.");
+	action_output("All rights reserved.");
 	action_output(" ");
-	action_output("Copyright 1989 by Georgia Tech Research Corporation, Atlanta, GA 30332.");
-	action_output("  All Rights Reserved.  GTRC hereby grants public use of this software.");
-	action_output("  Derivative works based on this software must incorporate this copyright");
-	action_output("  notice.");
+	action_output("Redistribution and use in source and binary forms, with or without");
+	action_output("modification, are permitted provided that the following conditions are met:");
+	action_output("    * Redistributions of source code must retain the above copyright");
+	action_output("      notice, this list of conditions and the following disclaimer.");
+	action_output("    * Redistributions in binary form must reproduce the above copyright");
+	action_output("      notice, this list of conditions and the following disclaimer in the");
+	action_output("      documentation and/or other materials provided with the distribution.");
+	action_output("    * Neither the names of Paul Mattes, Jeff Sparkes, GTRC nor the names of");
+	action_output("      their contributors may be used to endorse or promote products derived");
+	action_output("      from this software without specific prior written permission.");
 	action_output(" ");
-	action_output(
-#if defined(_WIN32) /*[*/
-	"wc3270"
-#else /*][*/
-	"c3270"
-#endif /*]*/
-	" is distributed in the hope that it will be useful, but WITHOUT ANY");
-	action_output("WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS");
-	action_output("FOR A PARTICULAR PURPOSE.  See the file LICENSE for more details.");
+	action_output("THIS SOFTWARE IS PROVIDED BY PAUL MATTES, JEFF SPARKES AND GTRC \"AS IS\" AND");
+	action_output("ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE");
+	action_output("IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE");
+	action_output("ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES, JEFF SPARKES OR GTRC BE");
+	action_output("LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR");
+	action_output("CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF");
+	action_output("SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS");
+	action_output("INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN");
+	action_output("CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)");
+	action_output("ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE");
+	action_output("POSSIBILITY OF SUCH DAMAGE.");
 	action_output(" ");
 }
 
