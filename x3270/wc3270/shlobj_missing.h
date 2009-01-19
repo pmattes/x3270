@@ -49,4 +49,11 @@ typedef struct {
 
 #define NT_CONSOLE_PROPS_SIG 0xA0000002
 
+typedef struct {
+    	DATABLOCK_HEADER dbh;
+	UINT	uCodePage;
+} NT_FE_CONSOLE_PROPS, *LPNT_FE_CONSOLE_PROPS;
+
+#define NT_FE_CONSOLE_PROPS_SIG 0xA0000004
+
 #endif /*]*/

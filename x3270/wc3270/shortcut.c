@@ -51,7 +51,8 @@
 //   shell link 
 HRESULT
 CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
-    LPSTR lpszArgs, LPSTR lpszDir, int rows, int cols, wchar_t *font)
+    LPSTR lpszArgs, LPSTR lpszDir, int rows, int cols, wchar_t *font,
+    int pointsize, int codepage)
 {
 	HRESULT			hres;
 	int	 		initialized;
@@ -113,11 +114,11 @@ CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
 		p.nFont = 0;
 		p.nInputBufferSize = 0;
 		p.dwFontSize.X = 0;
-		p.dwFontSize.Y = 12;
+		p.dwFontSize.Y = pointsize? pointsize: 12;
 		p.uFontFamily = 54; /* ? */
 		p.uFontWeight = 400; /* ? */
 		wcscpy(p.FaceName, font);
-		p.uCursorSize = 0x19;
+		p.uCursorSize = /*0x19*/100;
 		p.bFullScreen = 0;
 		p.bQuickEdit = 0;
 		p.bInsertMode = 1;
@@ -144,8 +145,28 @@ CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
 
 		hres = psldl->lpVtbl->AddDataBlock(psldl, &p);
 		if (!SUCCEEDED(hres)) {
-			fprintf(stderr, "AddDataBlock failed\n");
+			fprintf(stderr, "AddDataBlock(1) failed\n");
 			goto out;
+		}
+
+		if (codepage) {
+			NT_FE_CONSOLE_PROPS pfe;
+
+			memset(&pfe, '\0', sizeof(pfe));
+#if defined(_MSC_VER) /*[*/
+			pfe.cbSize = sizeof(pfe);
+			pfe.dwSignature = NT_FE_CONSOLE_PROPS_SIG;
+#else /*][*/
+			pfe.dbh.cbSize = sizeof(pfe);
+			pfe.dbh.dwSignature = NT_FE_CONSOLE_PROPS_SIG;
+#endif /*]*/
+			pfe.uCodePage = codepage;
+
+			hres = psldl->lpVtbl->AddDataBlock(psldl, &pfe);
+			if (!SUCCEEDED(hres)) {
+				fprintf(stderr, "AddDataBlock(2) failed\n");
+				goto out;
+			}
 		}
 	}
 
