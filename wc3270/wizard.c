@@ -1096,7 +1096,7 @@ summarize_and_proceed(session_t *s)
 }
 
 wchar_t *
-reg_font_from_cset(char *cset)
+reg_font_from_cset(char *cset, int *codepage)
 {
     	int i, j;
 	wchar_t *cpname = NULL;
@@ -1104,6 +1104,8 @@ reg_font_from_cset(char *cset)
 	DWORD dlen;
 	HKEY key;
 	static wchar_t font[1024];
+
+	*codepage = 0;
 
     	/* Search the table for a match. */
 	for (i = 0; cpmap[i].csname != NULL; i++) {
@@ -1155,6 +1157,7 @@ reg_font_from_cset(char *cset)
 	    	if ((font[j] = data[i]) == 0x0000)
 		    	break;
 	}
+	*codepage = _wtoi(cpname);
 	return font;
 }
 
@@ -1290,7 +1293,12 @@ session_wizard(void)
 	fflush(stdout);
 	sprintf(exepath, "%s\\wc3270.exe", installdir);
 	sprintf(args, "\"%s\"", session.path);
-	if (is_nt)
+	if (is_nt) {
+	    	wchar_t *font;
+		int codepage = 0;
+
+		font = reg_font_from_cset(session.charset, &codepage);
+
 		hres = CreateLink(
 			exepath,		/* path to executable */
 			linkpath,		/* where to put the link */
@@ -1299,9 +1307,10 @@ session_wizard(void)
 			installdir,		/* working directory */
 			wrows[session.model], wcols[session.model],
 						/* console rows, columns */
-			reg_font_from_cset(session.charset));
-						/* font */
-	else
+			font,			/* font */
+			0,			/* point size */
+			codepage);		/* code page */
+	} else
 		hres = Piffle(
 			session.session,	/* window title */
 			exepath,		/* path to executable */
