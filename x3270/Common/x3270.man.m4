@@ -142,11 +142,13 @@ The XX_FB(susp) character (usually ^Z) cannot be seen by XX_FB(c3270) at all.
 ')dnl
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(cc)) XX_FI(range):XX_FI(value)[`,'...])
 Sets character classes.
-See XX_LINK(#Character-Classes,XX_SM(CHARACTER CLASSES)), below.
+XX_HO(`See XX_LINK(#Character-Classes,XX_SM(CHARACTER CLASSES)), below.
+')dnl
 ')dnl
 XX_TP(XX_FB(XX_DASHED(charset)) XX_FI(name))
 Specifies an XX_SM(EBCDIC) host character set.
-See XX_LINK(#Character-Sets,XX_SM(CHARACTER SETS)) below.
+XX_HO(`See XX_LINK(#Character-Sets,XX_SM(CHARACTER SETS)) below.
+')dnl
 XX_TP(XX_FB(XX_DASHED(clear)) XX_FI(toggle))
 Sets the initial value of XX_FI(toggle) to XX_FB(false).
 define(XX_TOGGLEREF,`ifelse(XX_PRODUCT,x3270,Menus,Toggles)')dnl
@@ -161,7 +163,8 @@ See XX_LINK(#Screen-Size-Switching,XX_SM(SCREEN SIZE SWITCHING)), below.
 ')dnl
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(efont)) XX_FI(name))
 Specifies a font for the emulator window.
-See XX_LINK(#Fonts,XX_SM(FONTS)) below.
+XX_HO(`See XX_LINK(#Fonts,XX_SM(FONTS)) below.
+')dnl
 ')dnl
 ifelse(XX_PRODUCT,c3270,`XX_TP(XX_FB(XX_DASHED(hostsfile)) XX_FI(file))
 Uses XX_FI(file) as the hosts file, which allows aliases for host names and
@@ -308,7 +311,8 @@ Turns the scrollbar off.
 XX_TP(XX_FB(XX_DASHED(scheme)) XX_FI(name))
 Specifes a color scheme to use in 3279 mode.
 This option has effect only in combination with 3279 emulation.
-See XX_LINK(#Color-Schemes,XX_SM(COLOR SCHEMES)) below.
+XX_HO(`See XX_LINK(#Color-Schemes,XX_SM(COLOR SCHEMES)) below.
+')dnl
 XX_TP(XX_FB(XX_DASHED(script)))
 Causes
 XX_FB(XX_PRODUCT)
