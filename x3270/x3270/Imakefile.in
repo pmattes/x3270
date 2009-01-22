@@ -146,7 +146,7 @@ fallbacks.c: mkfb X3270.xad
 	./mkfb X3270.xad $@
 
 mkfb: mkfb.c
-	$(CC) $(CDEBUGFLAGS) -o mkfb mkfb.c
+	$(CC) $(CFLAGS) -o mkfb mkfb.c
 
 /* Build rule for x3270if.  This is specified explicitly instead of using
    ComplexProgramTarget, because we may want to install it somewhere other
