@@ -204,12 +204,18 @@ fi
 
 dnl Check for curses wide character support.
 if test "$ac_cv_lib_ncursesw_newterm" = yes
-then	AC_CHECK_LIB(ncursesw, wadd_wch, [AC_DEFINE(CURSES_WIDE,1)])
+then	AC_CHECK_LIB(ncursesw, wadd_wch, [AC_DEFINE(CURSES_WIDE,1)
+Cw=1])
 elif test "$ac_cv_lib_ncurses_newterm" = yes
-then	AC_CHECK_LIB(ncurses, wadd_wch, [AC_DEFINE(CURSES_WIDE,1)])
+then	AC_CHECK_LIB(ncurses, wadd_wch, [AC_DEFINE(CURSES_WIDE,1)
+Cw=1])
 elif test "$ac_cv_lib_curses_newterm" = yes
-then	AC_CHECK_LIB(curses, wadd_wch, [AC_DEFINE(CURSES_WIDE,1)])
+then	AC_CHECK_LIB(curses, wadd_wch, [AC_DEFINE(CURSES_WIDE,1)
+Cw=1])
 else	echo "What??? "
+fi
+if test "$Cw" != "1"
+then	AC_MSG_WARN(Wide curses not found -- c3270 will not be able to support multi-byte character encodings)
 fi
 AC_SUBST(CURSES_WIDE)
 
