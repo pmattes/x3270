@@ -59,6 +59,9 @@
 #include "trace_dsc.h"
 #include "utilc.h"
 
+/* #define X3270_COMPAT 1	make x3270 compatible with all of the other
+			   emulators */
+
 /* Externals: ctlr.c */
 extern Boolean  screen_alt;
 extern unsigned char reply_mode;
@@ -727,24 +730,39 @@ do_qr_usable_area(void)
 	SET16(obptr, maxCOLS);	/* usable width */
 	SET16(obptr, maxROWS);	/* usable height */
 	*obptr++ = 0x01;	/* units (mm) */
+#if defined(X3270_COMPAT) /*[*/
+	num = 100;
+	denom = 1;
+#else /*][*/
 	num = display_widthMM();
 	denom = display_width();
+#endif /*]*/
 	while (!(num %2) && !(denom % 2)) {
 		num /= 2;
 		denom /= 2;
 	}
 	SET16(obptr, (int)num);	/* Xr numerator */
 	SET16(obptr, (int)denom); /* Xr denominator */
+#if defined(X3270_COMPAT) /*[*/
+	num = 100;
+	denom = 1;
+#else /*][*/
 	num = display_heightMM();
 	denom = display_height();
+#endif /*]*/
 	while (!(num %2) && !(denom % 2)) {
 		num /= 2;
 		denom /= 2;
 	}
 	SET16(obptr, (int)num);	/* Yr numerator */
 	SET16(obptr, (int)denom); /* Yr denominator */
+#if defined(X3270_COMPAT) /*[*/
+	*obptr++ = 7;		/* AW */
+	*obptr++ = 7;		/* AH */
+#else /*][*/
 	*obptr++ = *char_width;	/* AW */
 	*obptr++ = *char_height;/* AH */
+#endif /*]*/
 	SET16(obptr, maxCOLS*maxROWS);	/* buffer, questionable */
 }
 
@@ -756,7 +774,7 @@ do_qr_color(void)
 
 	trace_ds("> QueryReply(Color)\n");
 
-	color_max = appres.color8? 8: 16; /* report on 8 or 16 colors */
+	color_max = (appres.color8 || !appres.m3279)? 8: 16;
 
 	space3270out(4 + 2*15);
 	*obptr++ = 0x00;	/* no options */
@@ -771,7 +789,7 @@ do_qr_color(void)
 			*obptr++ = 0x00;
 	}
 
-#if !defined(X3270_DISPLAY) /*[*/
+#if defined(X3270_COMPAT) || !defined(X3270_DISPLAY) /*[*/
 	/* Add background color. */
 	if (appres.m3279) {
 		space3270out(4);
@@ -850,8 +868,13 @@ do_qr_charsets(void)
 #endif /*]*/
 		*obptr++ = 0x82;	/* flags: GE, CGCSGID present */
 	*obptr++ = 0x00;		/* more flags */
+#if defined(X3270_COMPAT) /*[*/
+	*obptr++ = 7;			/* SDW */
+	*obptr++ = 7;			/* SDW */
+#else /*][*/
 	*obptr++ = *char_width;		/* SDW */
 	*obptr++ = *char_height;	/* SDW */
+#endif /*]*/
 	*obptr++ = 0x00;		/* no load PS */
 	*obptr++ = 0x00;
 	*obptr++ = 0x00;
@@ -867,7 +890,7 @@ do_qr_charsets(void)
 #if defined(X3270_DBCS) /*[*/
 	if (dbcs)
 		*obptr++ = 0x00;	/*  FLAGS: non-load, single-
-					    plane, single-bute */
+					    plane, single-byte */
 	else
 #endif /*]*/
 		*obptr++ = 0x10;	/*  FLAGS: non-loadable,
@@ -883,29 +906,28 @@ do_qr_charsets(void)
 	}
 #endif /*]*/
 	SET32(obptr, cgcsgid);		/*  CGCSGID */
-	if (!*standard_font) {
-		/* special 3270 font, includes APL */
-		*obptr++ = 0x01;/* SET 1: */
-		if (appres.apl_mode)
-		    *obptr++ = 0x00;/*  FLAGS: non-loadable, single-plane,
-					 single-byte, no compare */
-		else
-		    *obptr++ = 0x10;/*  FLAGS: non-loadable, single-plane,
-					 single-byte, no compare */
-		*obptr++ = 0xf1;/*  LCID */
+
+	/* special 3270 font, includes APL */
+	*obptr++ = 0x01;/* SET 1: */
+	if (appres.apl_mode)
+		*obptr++ = 0x00;	/*  FLAGS: non-loadable, single-plane,
+					    single-byte, no compare */
+	else
+		*obptr++ = 0x10;	/*  FLAGS: non-loadable, single-plane,
+					    single-byte, no compare */
+	*obptr++ = 0xf1;		/*  LCID */
 #if defined(X3270_DBCS) /*[*/
-		if (dbcs) {
-			*obptr++ = 0x00;/*  SW 0 */
-			*obptr++ = 0x00;/*  SH 0 */
-			*obptr++ = 0x00;/*  SUBSN */
-			*obptr++ = 0x00;/*  SUBSN */
-		}
-#endif /*]*/
-		*obptr++ = 0x03;/*  CGCSGID: 3179-style APL2 */
-		*obptr++ = 0xc3;
-		*obptr++ = 0x01;
-		*obptr++ = 0x36;
+	if (dbcs) {
+		*obptr++ = 0x00;	/*  SW 0 */
+		*obptr++ = 0x00;	/*  SH 0 */
+		*obptr++ = 0x00;	/*  SUBSN */
+		*obptr++ = 0x00;	/*  SUBSN */
 	}
+#endif /*]*/
+	*obptr++ = 0x03;		/*  CGCSGID: 3179-style APL2 */
+	*obptr++ = 0xc3;
+	*obptr++ = 0x01;
+	*obptr++ = 0x36;
 #if defined(X3270_DBCS) /*[*/
 	if (dbcs) {
 		*obptr++ = 0x80;	/* SET 0x80: */
