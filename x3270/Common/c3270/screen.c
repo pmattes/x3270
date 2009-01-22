@@ -909,7 +909,16 @@ kybd_input(void)
 #else /*][*/
 		k = wgetch(stdscr);
 #endif /*]*/
-		trace_event("k=%d wch=%u regurg=%u\n", k, wch, regurg);
+		trace_event("k=%d "
+#if defined(CURSES_WIDE) /*[*/
+			"wch=%u "
+#endif /*]*/
+			"regurg=%u\n",
+			k,
+#if defined(CURSES_WIDE) /*[*/
+			wch,
+#endif /*]*/
+			regurg);
 		if (k == ERR) {
 			if (first) {
 				if (failed_first) {
