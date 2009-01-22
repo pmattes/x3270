@@ -15,6 +15,18 @@
  type:  
 <pre>&nbsp;&nbsp;&nbsp; make install</pre>
 
+<h2>Wide Curses Requirement</h2>
+<i>c3270</i> needs a 'wide' version of the curses or ncurses library (one
+that supports multi-byte character encodings).
+Without wide curses or ncurses, c3270 will be restricted to using the 7-bit
+basic ASCII character set.
+<p>
+On some platforms, the standard curses or ncurses library is the wide version
+and no extra packages need be installed.  On others, a special wide ncurses
+package is needed.
+On still others (such as on Solaris, documented below) the wide curses library
+is installed in a special location and <tt>configure</tt> must be told where to
+locate it using CPPFLAGS and LDFLAGS.
 <h2>Notes for Cygwin</h2>
 The minimum set of Cygwin packages needed to compile <i>c3270</i> are:
 <ul>
