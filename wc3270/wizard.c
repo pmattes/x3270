@@ -87,63 +87,51 @@
 extern char *wversion;
 
 struct {
-    	char *name;
-	char *hostcp;
-	int   is_dbcs;
+    	char    *name;
+	char    *hostcp;
+	int      is_dbcs;
+	wchar_t *codepage;
 } charsets[] = {
-	{ "belgian",		"500",	0	},
-	{ "belgian-euro",	"1148",	0	},
-	{ "bracket",		"37*",	0	},
-	{ "brazilian",		"275",	0	},
-	{ "cp1047",		"1047",	0	},
-	{ "cp870",		"870",	0	},
-	{ "chinese-gb18030",	"1388",	1	},
-	{ "finnish",		"278",	0	},
-	{ "finnish-euro",	"1143",	0	},
-	{ "french",		"297",	0	},
-	{ "french-euro",	"1147",	0	},
-	{ "german",		"273",	0	},
-	{ "german-euro",	"1141",	0	},
-	{ "greek",		"875",	0	},
-	{ "hebrew",		"424",	0	},
-	{ "icelandic",		"871",	0	},
-	{ "icelandic-euro",	"1149",	0	},
-	{ "italian",		"280",	0	},
-	{ "italian-euro",	"1144",	0	},
-	{ "japanese-1027",	"1027+300", 1	},
-	{ "japanese-290",	"290+300", 1	},
-	{ "norwegian",		"277",	0	},
-	{ "norwegian-euro",	"1142",	0	},
-	{ "russian",		"880",	0	},
-	{ "simplified-chinese",	"836+837", 1	},
-	{ "spanish",		"284",	0	},
-	{ "spanish-euro",	"1145",	0	},
-	{ "thai",		"838",	0	},
-	{ "traditional-chinese","937",	1	},
-	{ "turkish",		"1026",	0	},
-	{ "uk",			"285",	0	},
-	{ "uk-euro",		"1146",	0	},
-	{ "us-euro",		"1140",	0	},
-	{ "us-intl",		"37",	0	},
-	{ NULL,			NULL,	0	}
+	{ "belgian",		"500",	0, L"1252"	},
+	{ "belgian-euro",	"1148",	0, L"1252"	},
+	{ "bracket",		"37*",	0, L"1252"	},
+	{ "brazilian",		"275",	0, L"1252"	},
+	{ "cp1047",		"1047",	0, L"1252"	},
+	{ "cp870",		"870",	0, L"1250"	},
+	{ "chinese-gb18030",	"1388",	1, L"936"	},
+	{ "finnish",		"278",	0, L"1252"	},
+	{ "finnish-euro",	"1143",	0, L"1252"	},
+	{ "french",		"297",	0, L"1252"	},
+	{ "french-euro",	"1147",	0, L"1252"	},
+	{ "german",		"273",	0, L"1252"	},
+	{ "german-euro",	"1141",	0, L"1252"	},
+	{ "greek",		"875",	0, L"1253"	},
+	{ "hebrew",		"424",	0, L"1255"	},
+	{ "icelandic",		"871",	0, L"1252"	},
+	{ "icelandic-euro",	"1149",	0, L"1252"	},
+	{ "italian",		"280",	0, L"1252"	},
+	{ "italian-euro",	"1144",	0, L"1252"	},
+	{ "japanese-1027",	"1027+300", 1, L"932"	},
+	{ "japanese-290",	"290+300", 1, L"932"	},
+	{ "norwegian",		"277",	0, L"1252"	},
+	{ "norwegian-euro",	"1142",	0, L"1252"	},
+	{ "russian",		"880",	0, L"1251"	},
+	{ "simplified-chinese",	"836+837", 1, L"936"	},
+	{ "spanish",		"284",	0, L"1252"	},
+	{ "spanish-euro",	"1145",	0, L"1252"	},
+	{ "thai",		"838",	0, L"1252"	},
+	{ "traditional-chinese","937",	1, L"950"	},
+	{ "turkish",		"1026",	0, L"1254"	},
+	{ "uk",			"285",	0, L"1252"	},
+	{ "uk-euro",		"1146",	0, L"1252"	},
+	{ "us-euro",		"1140",	0, L"1252"	},
+	{ "us-intl",		"37",	0, L"1252"	},
+	{ NULL,			NULL,	0, NULL	}
 };
 #define CS_WIDTH	19
 #define CP_WIDTH	8
 #define WP_WIDTH	6
 #define	CS_COLS		2
-
-static struct {
-	char *csname;		/* character set name */
-	wchar_t *wincp;		/* Windows code page */
-	char *win98font;	/* Windows 98 font */
-} cpmap[] = {
-	{ "japanese-1027",	L"932", "MS Gothic"	},
-	{ "japanese-290",	L"932", "MS Gothic"	},
-    	{ "chinese-gb18030",	L"936", "MS Song"	},
-	{ "simplified-chinese",	L"936", "MS Song"	},
-	{ "traditional-chinese",L"950", "MingLiu"	},
-	{ NULL,			NULL,   NULL	  	},
-};
 
              /*  model  2   3   4   5 */
 int wrows[6] = { 0, 0, 25, 33, 44, 28  };
@@ -1104,13 +1092,14 @@ reg_font_from_cset(char *cset, int *codepage)
 	DWORD dlen;
 	HKEY key;
 	static wchar_t font[1024];
+	DWORD type;
 
 	*codepage = 0;
 
     	/* Search the table for a match. */
-	for (i = 0; cpmap[i].csname != NULL; i++) {
-	    	if (!strcmp(cset, cpmap[i].csname)) {
-		    	cpname = cpmap[i].wincp;
+	for (i = 0; charsets[i].name != NULL; i++) {
+	    	if (!strcmp(cset, charsets[i].name)) {
+		    	cpname = charsets[i].codepage;
 		    	break;
 		}
 	}
@@ -1136,48 +1125,39 @@ reg_font_from_cset(char *cset, int *codepage)
     	if (RegQueryValueExW(key,
 		    cpname,
 		    NULL,
-		    NULL,
+		    &type,
 		    (LPVOID)data,
 		    &dlen) != ERROR_SUCCESS) {
-		RegCloseKey(key);
-	    	printf("RegQueryValueEx failed -- cannot find font\n");
-		return L"Lucida Console";
+	    	/* No codepage-specific match, try the default. */
+	    	dlen = sizeof(data);
+	    	if (RegQueryValueExW(key, L"0", NULL, &type, (LPVOID)data,
+			    &dlen) != ERROR_SUCCESS) {
+			RegCloseKey(key);
+			printf("RegQueryValueEx failed -- cannot find font\n");
+			return L"Lucida Console";
+		}
 	}
 	RegCloseKey(key);
-	for (i = 0; i < dlen/sizeof(wchar_t); i++) {
-		if (data[i] == 0x0000)
-		    	break;
-	}
-	if (i+1 >= dlen/sizeof(wchar_t) || data[i+1] == 0x0000) {
-	    	printf("Bad registry value -- cannot find font");
-		return L"Lucida Console";
-	}
-	i++;
+	if (type == REG_MULTI_SZ) {
+		for (i = 0; i < dlen/sizeof(wchar_t); i++) {
+			if (data[i] == 0x0000)
+				break;
+		}
+		if (i+1 >= dlen/sizeof(wchar_t) || data[i+1] == 0x0000) {
+			printf("Bad registry value -- cannot find font\n");
+			return L"Lucida Console";
+		}
+		i++;
+	} else
+	    i = 0;
 	for (j = 0; i < dlen; i++, j++) {
+		if (j == 0 && data[i] == L'*')
+		    i++;
 	    	if ((font[j] = data[i]) == 0x0000)
 		    	break;
 	}
 	*codepage = _wtoi(cpname);
 	return font;
-}
-
-/*
- * Find the Windows 98 console font for a character set.  This is, of course,
- * silly, because Windows 98 console fonts can't be changed.
- */
-char *
-win98_font_from_cset(char *cset)
-{
-    	int i;
-
-    	/* Search the table for a match. */
-	for (i = 0; cpmap[i].csname != NULL; i++) {
-	    	if (!strcmp(cset, cpmap[i].csname))
-		    	return cpmap[i].win98font;
-	}
-
-	/* If no match, use Lucida Console. */
-	return "Lucida Console";
 }
 
 int
@@ -1320,8 +1300,7 @@ session_wizard(void)
 			installdir,		/* working directory */
 			wrows[session.model], wcols[session.model],
 						/* console rows, columns */
-			win98_font_from_cset(session.charset));
-						/* font */
+			"Lucida Console");	/* font */
 
 	if (SUCCEEDED(hres)) {
 		printf("done\n");

@@ -40,9 +40,7 @@
 
 #include "appres.h"
 #include "ctlr.h"
-#if defined(X3270_DBCS) /*[*/
 #include "3270ds.h"
-#endif /*]*/
 
 #include "ansic.h"
 #include "charsetc.h"
