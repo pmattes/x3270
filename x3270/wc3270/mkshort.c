@@ -99,7 +99,10 @@ main(int argc, char *argv[])
 			NULL,
 			install_dir,
 			44,
-			80);
+			80,
+			L"Lucida Console",
+			0,
+			0);
 	else
 	    	hres = Piffle(
 			linkname,
@@ -109,7 +112,8 @@ main(int argc, char *argv[])
 			"",
 			install_dir,
 			44,
-			80);
+			80,
+			"Lucida Console");
 
 	if (hres) {
 		fprintf(stderr, "Link creation failed.\n");
