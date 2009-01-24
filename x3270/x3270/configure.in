@@ -73,16 +73,6 @@ AC_SUBST(UAD_FLAGS)
 AC_SUBST(DEFINE_UAD)
 AC_SUBST(FALLBACKS_O)
 
-dnl Check for --without-pr3287
-AC_ARG_WITH(pr3287,[  --without-pr3287        don't build pr3287])
-if test -d pr3287 -a "$with_pr3287" != "no"
-then	DEFINE_PR3287="#define PR3287 1"
-	pr3mf=pr3287/Makefile
-else	DEFINE_PR3287="#undef PR3287"
-	pr3mf=""
-fi
-AC_SUBST(DEFINE_PR3287)
-
 dnl Check for --with-fontdir=DIR
 AC_ARG_WITH(fontdir,[  --with-fontdir=DIR      install fonts in directory DIR [DIR=misc]])
 case "$with_fontdir" in
@@ -243,10 +233,8 @@ AC_ARG_ENABLE(dbcs,[  --disable-dbcs          leave out DBCS support])
 case "$enable_dbcs" in
 no)	;;
 *)	AC_DEFINE(X3270_DBCS,1)
-	DBCS=-DX3270_DBCS=1
 	;;
 esac
-AC_SUBST(DBCS)
 AC_ARG_ENABLE(ft,[  --disable-ft            leave out file transfer support])
 case "$enable_ft" in
 ""|yes)	AC_DEFINE(X3270_FT,1)
@@ -306,8 +294,8 @@ if test -f Imakefile
 then	cp Imakefile Imakefile.old
 fi
 
-dnl Generate the Imakefile and the pr3287 Makefile.
-AC_OUTPUT(Imakefile $pr3mf)
+dnl Generate the Imakefile.
+AC_OUTPUT(Imakefile)
 
 dnl Generate the Makefile
 gen_Makefile=""

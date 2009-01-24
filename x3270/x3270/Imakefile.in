@@ -170,13 +170,6 @@ qcpp: qcpp.c
 /* Combined EXTRA_DEFINES definition. */
 EXTRA_DEFINES = $(HP_DEFINE) $(AD_DEFINE) @XANSI@ -DLIBX3270DIR=\"$(LIBX3270DIR)\"
 
-/* Rule for building pr3287. */
-@DEFINE_PR3287@
-#ifdef PR3287
-all::
-	-cd pr3287 && $(MAKE) PROJECTROOT=$(PROJECTROOT)
-#endif
-
 /******************************************************************************
  * Install rules.                                                             *
  ******************************************************************************/
@@ -209,14 +202,6 @@ install.man:: x3270if.man x3270-script.man ibm_hosts.man
 	$(INSTALL) -c $(INSTMANFLAGS) x3270-script.man $(DESTDIR)$(autoconf_mandir)/man1/x3270-script.1
 	$(INSTALL) -c $(INSTMANFLAGS) ibm_hosts.man $(DESTDIR)$(autoconf_mandir)/man5/ibm_hosts.5
 
-#ifdef PR3287
-/* Rules for installing pr3287. */
-install::
-	-cd pr3287 && $(MAKE) install PROJECTROOT=$(PROJECTROOT)
-install.man::
-	-cd pr3287 && $(MAKE) install.man PROJECTROOT=$(PROJECTROOT)
-#endif
-
 XCOMM Rules for installing everything in $(PREFIX), rather than in the system
 XCOMM X11 directory.  This is hideous, but I see no way around it.
 install.byprefix::
@@ -236,16 +221,9 @@ install.byprefix::
 	chmod a=r $(DESTDIR)$(autoconf_fontinstdir)/fonts.dir
 	@[ -r $(DESTDIR)$(LIBX3270DIR)/$(HOSTSFILE) ] || \
 		(set -x; $(INSTALL) -c $(INSTDATFLAGS) $(HOSTSFILE) $(DESTDIR)$(LIBX3270DIR)/$(HOSTSFILE))
-#ifdef PR3287
-install.byprefix::
-	-cd pr3287 && $(MAKE) install
-#endif
 
 /******************************************************************************
  * Clean rules.                                                               *
  ******************************************************************************/
 clean:: 
 	$(RM) $(FONTS) qcpp mkfb fallbacks.c
-#ifdef PR3287
-	-cd pr3287 && $(MAKE) clean
-#endif

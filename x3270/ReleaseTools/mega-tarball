@@ -23,7 +23,7 @@ td=/usr/tmp/mt$$
 rm -rf $td
 mkdir $td
 cd $td
-for i in x3270 c3270 s3270 tcl3270 wc3270 pr3287 wpr3287
+for i in x3270 c3270 s3270 tcl3270 wc3270 pr3287 wpr3287 ws3270
 do	typeset -i pp=$patch
 	while (( pp >= 0 ))
 	do	if [ $pp -eq 0 ]
@@ -40,8 +40,8 @@ do	typeset -i pp=$patch
 
 	echo "Using $f"
 	tar -xzf $f
-	rm -rf $i-3.3/pr3287/
 done
 tar -czf ~-/suite3270-$1.tgz *
+chmod -w ~-/suite3270-$1.tgz
 cd -
 rm -rf $td

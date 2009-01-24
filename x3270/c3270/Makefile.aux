@@ -60,20 +60,8 @@ HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
 	html/Lineage.html html/ReleaseNotes.html html/README.html \
 	html/Wishlist.html html/c3270-man.html html/x3270-script.html \
 	html/x3270if.html
-PR3287 = pr3287/3270ds.h pr3287/arpa_telnet.h pr3287/charset.c \
-	pr3287/charsetc.h pr3287/config.guess pr3287/config.sub \
-	pr3287/configure pr3287/configure.in pr3287/ctlr.c pr3287/ctlrc.h \
-	pr3287/globals.h pr3287/install-sh pr3287/localdefs.h \
-	pr3287/Makefile.aux pr3287/Makefile.in pr3287/mkversion.sh \
-	pr3287/popupsc.h pr3287/pr3287.c pr3287/pr3287.man pr3287/proxy.c \
-	pr3287/proxyc.h pr3287/README pr3287/resolver.c pr3287/resolverc.h \
-	pr3287/see.c pr3287/seec.h pr3287/sf.c pr3287/sfc.h pr3287/tables.c \
-	pr3287/tablesc.h pr3287/telnet.c pr3287/telnetc.h pr3287/tn3270e.h \
-	pr3287/trace_ds.c pr3287/trace_dsc.h pr3287/unicode.c \
-	pr3287/unicodec.h pr3287/unicode_dbcs.c pr3287/unicode_dbcsc.h \
-	pr3287/utf8.c pr3287/utf8c.h pr3287/version.txt pr3287/w3miscc.h
 
-FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML) $(PR3287)
+FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
 tarlist: Makefile.aux
 	$(RM) tarlist
