@@ -72,16 +72,6 @@ yes|*)
 esac
 AC_SUBST(USE_ICONV)
 
-dnl Check for --without-pr3287
-AC_ARG_WITH(pr3287,[  --without-pr3287        don't build pr3287])
-if test -d pr3287 -a "$with_pr3287" != "no"  
-then	PR="" 
-	pr3mf=pr3287/Makefile
-else	PR="#"
-	pr3mf=""
-fi 
-AC_SUBST(PR)
-
 dnl Check for libraries.
 dnl Note that the order here is important.  The last libraries should appear
 dnl first, so that objects in them can be used by subsequent libraries.
@@ -292,4 +282,4 @@ yes)	AC_DEFINE(X3270_PLUGIN,1)
 esac
 
 dnl Generate the Makefile.
-AC_OUTPUT(Makefile $pr3mf)
+AC_OUTPUT(Makefile)

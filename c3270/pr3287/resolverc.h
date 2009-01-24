@@ -1,1 +1,0 @@
-../../pr3287/resolverc.h
