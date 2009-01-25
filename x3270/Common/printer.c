@@ -136,6 +136,8 @@ printer_start(const char *lu)
 	char charset_cmd[256];	/* -charset <csname> */
 	char *proxy_cmd = CN;	/* -proxy <spec> */
 #if defined(_WIN32) /*[*/
+	char *pcp_res = CN;
+	char *printercp = CN;	/* -printercp <n> */
 	STARTUPINFO startupinfo;
 	PROCESS_INFORMATION process_information;
 	char *subcommand;
@@ -212,6 +214,12 @@ printer_start(const char *lu)
 #endif /*]*/
 	}
 
+#if defined(_WIN32) /*[*/
+	pcp_res = get_resource(ResPrinterCodepage);
+	if (pcp_res)
+	    	printercp = xs_buffer("-printercp %s", pcp_res);
+#endif /*]*/
+
 	/* Construct the command line. */
 
 	/* Figure out how long it will be. */
@@ -243,6 +251,13 @@ printer_start(const char *lu)
 		cmd_len += (proxy_cmd? strlen(proxy_cmd): 0) - 3;
 		s += 3;
 	}
+#if defined(_WIN32) /*[*/
+	s = cmdline;
+	while ((s = strstr(s, "%I%")) != CN) {
+		cmd_len += (printercp? strlen(printercp): 0) - 3;
+		s += 3;
+	}
+#endif /*]*/
 
 	/* Allocate a string buffer and substitute into it. */
 	cmd_text = Malloc(cmd_len);
@@ -274,6 +289,13 @@ printer_start(const char *lu)
 					(void) strcat(cmd_text, proxy_cmd);
 				s += 2;
 				continue;
+#if defined(_WIN32) /*[*/
+			} else if (!strncmp(s+1, "I%", 2)) {
+			    	if (printercp != CN)
+					(void) strcat(cmd_text, printercp);
+				s += 2;
+				continue;
+#endif /*]*/
 			}
 		}
 		buf1[0] = c;
@@ -400,6 +422,10 @@ printer_start(const char *lu)
 	Free(cmd_text);
 	if (proxy_cmd != CN)
 		Free(proxy_cmd);
+#if defined(_WIN32) /*[*/
+	if (printercp != CN)
+		Free(printercp);
+#endif /*]*/
 
 	/* Tell everyone else. */
 	st_changed(ST_PRINTER, True);
