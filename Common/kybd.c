@@ -391,8 +391,10 @@ kybd_inhibit(Boolean inhibit)
 static void
 kybd_connect(Boolean connected)
 {
-	if (kybdlock & KL_DEFERRED_UNLOCK)
+	if ((kybdlock & KL_DEFERRED_UNLOCK) && unlock_id) {
 		RemoveTimeOut(unlock_id);
+		unlock_id = 0;
+	}
 	kybdlock_clr(-1, "kybd_connect");
 
 	if (connected) {
@@ -410,8 +412,10 @@ kybd_connect(Boolean connected)
 static void
 kybd_in3270(Boolean in3270 _is_unused)
 {
-	if (kybdlock & KL_DEFERRED_UNLOCK)
+	if ((kybdlock & KL_DEFERRED_UNLOCK) && unlock_id) {
 		RemoveTimeOut(unlock_id);
+		unlock_id = 0;
+	}
 
 	switch ((int)cstate) {
 	case CONNECTED_INITIAL_E:
@@ -1604,8 +1608,10 @@ do_reset(Boolean explicit)
 	 * Remove any deferred keyboard unlock.  We will either unlock the
 	 * keyboard now, or want to defer further into the future.
 	 */
-	if (kybdlock & KL_DEFERRED_UNLOCK)
+	if ((kybdlock & KL_DEFERRED_UNLOCK) && unlock_id) {
 		RemoveTimeOut(unlock_id);
+		unlock_id = 0;
+	}
 
 	/*
 	 * If explicit (from the keyboard), unlock the keyboard now.
