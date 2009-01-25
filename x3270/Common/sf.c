@@ -721,8 +721,6 @@ do_qr_summary(void)
 static void
 do_qr_usable_area(void)
 {
-	unsigned short num, denom;
-
 	trace_ds("> QueryReply(UsableArea)\n");
 	space3270out(19);
 	*obptr++ = 0x01;	/* 12/14-bit addressing */
@@ -730,39 +728,16 @@ do_qr_usable_area(void)
 	SET16(obptr, maxCOLS);	/* usable width */
 	SET16(obptr, maxROWS);	/* usable height */
 	*obptr++ = 0x01;	/* units (mm) */
-#if defined(X3270_COMPAT) /*[*/
-	num = 100;
-	denom = 1;
-#else /*][*/
-	num = display_widthMM();
-	denom = display_width();
-#endif /*]*/
-	while (!(num %2) && !(denom % 2)) {
-		num /= 2;
-		denom /= 2;
-	}
-	SET16(obptr, (int)num);	/* Xr numerator */
-	SET16(obptr, (int)denom); /* Xr denominator */
-#if defined(X3270_COMPAT) /*[*/
-	num = 100;
-	denom = 1;
-#else /*][*/
-	num = display_heightMM();
-	denom = display_height();
-#endif /*]*/
-	while (!(num %2) && !(denom % 2)) {
-		num /= 2;
-		denom /= 2;
-	}
-	SET16(obptr, (int)num);	/* Yr numerator */
-	SET16(obptr, (int)denom); /* Yr denominator */
-#if defined(X3270_COMPAT) /*[*/
-	*obptr++ = 7;		/* AW */
-	*obptr++ = 7;		/* AH */
-#else /*][*/
-	*obptr++ = *char_width;	/* AW */
-	*obptr++ = *char_height;/* AH */
-#endif /*]*/
+	SET32(obptr, 0x000a02e5); /* Xr, canned from 3279-2 */
+	SET32(obptr, 0x0002006f); /* Yr, canned from 3279-2 */
+
+				/*
+				 * If we ever implement graphics, these will
+				 * need to change.
+				 */
+	*obptr++ = 0x09;	/* AW, canned from 3279-2 */
+	*obptr++ = 0x0c;	/* AH, canned from 3279-2 */
+
 	SET16(obptr, maxCOLS*maxROWS);	/* buffer, questionable */
 }
 
