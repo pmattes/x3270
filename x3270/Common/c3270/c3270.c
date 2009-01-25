@@ -849,6 +849,7 @@ status_dump(void)
 	const char *emode, *ftype, *ts;
 #if defined(X3270_TN3270E) /*[*/
 	const char *eopts;
+	const char *bplu;
 #endif /*]*/
 	const char *ptype;
 	extern int linemode; /* XXX */
@@ -866,6 +867,11 @@ status_dump(void)
 	action_output("%s %s", get_message("terminalName"), termtype);
 	if (connected_lu != CN && connected_lu[0])
 		action_output("%s %s", get_message("luName"), connected_lu);
+#if defined(X3270_TN3270E) /*[*/
+	bplu = net_query_bind_plu_name();
+	if (bplu != CN && bplu[0])
+	    	action_output("%s %s", get_message("bindPluName"), bplu);
+#endif /*]*/
 	action_output("%s %s (%s)", get_message("characterSet"),
 	    get_charset_name(),
 #if defined(X3270_DBCS) /*[*/

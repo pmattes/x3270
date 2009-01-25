@@ -45,6 +45,7 @@ static struct {
 	{ "message.hour",       "hour" },
 	{ "message.hours",      "hours" },
 	{ "message.minute",     "minute" },
+	{ "message.bindPluName", "BIND PLU name:" },
 	{ "message.buildDisabled",	"disabled" },
 	{ "message.buildEnabled",	"enabled" },
 	{ "message.buildOpts",	"Build options:" },
