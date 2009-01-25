@@ -171,13 +171,14 @@ typedef struct {
 	char luname[STR_SIZE];		/* LU name */
 	int  ssl;			/* SSL tunnel flag */
 	char proxy_type[STR_SIZE];	/* proxy type */
-	char proxy_host[STR_SIZE];	/* proxy host */
-	char proxy_port[STR_SIZE];	/* proxy port */
+	char proxy_host[STR_SIZE];	/*  proxy host */
+	char proxy_port[STR_SIZE];	/*  proxy port */
 	int  model;			/* model number */
 	char charset[STR_SIZE];		/* character set name */
 	int  wpr3287;			/* wpr3287 flag */
 	char printerlu[STR_SIZE];	/*  printer LU */
 	char printer[STR_SIZE];		/*  Windows printer name */
+	char printercp[STR_SIZE];	/*  wpr3287 code page */
 	char keymaps[STR_SIZE];		/* keymap names */
 } session_t;
 
@@ -268,15 +269,22 @@ enum_printers(void)
 
 /* Get an 'other' printer name. */
 int
-get_printer_name(char *printername)
+get_printer_name(char *defname, char *printername)
 {
 	for (;;) {
-		printf("\nEnter Windows printer name: [use system default] ");
+		printf("\nEnter Windows printer name: [%s] ",
+			defname[0]? defname: "use system default");
 		fflush(stdout);
 		if (get_input(printername, STR_SIZE) == NULL)
 			return -1;
-		if (!printername[0])
+		if (!printername[0]) {
+			if (defname[0])
+			    	strcpy(printername, defname);
 			break;
+		}
+		if (!strcmp(printername, "default")) {
+		    	printername[0] = '\0';
+		}
 		if (strchr(printername, '!') ||
 		    strchr(printername, ',')) {
 			printf("Invalid printer name.\n");
@@ -458,6 +466,7 @@ and dash '-')\n");
 int
 get_host(session_t *s)
 {
+    	char buf[STR_SIZE];
         OSVERSIONINFO info;
 	int has_ipv6 = 1;
 
@@ -490,36 +499,36 @@ an IPv6 address in colon notation, such as 'fec0:0:0:1::27'"
 	    	new_screen(s, COMMON_HOST_TEXT1 " or " COMMON_HOST_TEXT2 ".");
 
 	for (;;) {
-		if (strchr(s->session, ' ') == NULL)
+		if (s->host[0])
 			printf("\nEnter host name or IP address: [%s] ",
-				s->session);
+				s->host);
 		else
 			printf("\nEnter host name or IP address: ");
 		fflush(stdout);
-		if (get_input(s->host, sizeof(s->host)) == NULL) {
+		if (get_input(buf, sizeof(s->host)) == NULL) {
 			return -1;
 		}
-		if (strchr(s->host, ' ') != NULL) {
+		if (strchr(buf, ' ') != NULL) {
 			printf("\nHost names cannot contain spaces.\n");
 			continue;
 		}
-		if (strchr(s->host, '@') != NULL) {
+		if (strchr(buf, '@') != NULL) {
 			printf("\nHostnames cannot contain '@' characters.\n");
 			continue;
 		}
-		if (strchr(s->host, '[') != NULL) {
+		if (strchr(buf, '[') != NULL) {
 			printf("\nHostnames cannot contain '[' characters.\n");
 			continue;
 		}
-		if (strchr(s->host, ']') != NULL) {
+		if (strchr(buf, ']') != NULL) {
 			printf("\nHostnames cannot contain ']' characters.\n");
 			continue;
 		}
-		if (!s->host[0]) {
-			if (strchr(s->session, ' ') != NULL)
+		if (!buf[0]) {
+			if (!s->host[0])
 				continue;
-			strcpy(s->host, s->session);
-		}
+		} else
+			strcpy(s->host, buf);
 		break;
 	}
 	return 0;
@@ -538,15 +547,15 @@ TCP Port\n\
 This specifies the TCP Port to use to connect to the host.  It is a number from\n\
 1 to 65535 or the name 'telnet'.  The default is the 'telnet' port, port 23.");
 
-	s->port = 23;
 	for (;;) {
-		printf("\nTCP port: [telnet] ");
+		printf("\nTCP port: [%d] ", s->port);
 		if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 			return -1;
 		}
 		if (!inbuf[0])
 			break;
 		if (!strcasecmp(inbuf, "telnet")) {
+		    	s->port = 23;
 			break;
 		}
 		u = strtoul(inbuf, &ptr, 10);
@@ -563,6 +572,8 @@ This specifies the TCP Port to use to connect to the host.  It is a number from\
 int
 get_lu(session_t *s)
 {
+    	char buf[STR_SIZE];
+
     	new_screen(s, "\
 Logical Unit (LU) Name\n\
 \n\
@@ -570,27 +581,35 @@ This specifies a particular Logical Unit or Logical Unit group to connect to\n\
 on the host.  The default is to allow the host to select the Logical Unit.");
 
 	for (;;) {
-		printf("\nEnter Logical Unit (LU) name: [none] ");
+		printf("\nEnter Logical Unit (LU) name: [%s] ",
+			s->luname[0]? s->luname: "none");
 		fflush(stdout);
-		if (get_input(s->luname, sizeof(s->luname)) == NULL) {
+		if (get_input(buf, sizeof(buf)) == NULL) {
 			return -1;
 		}
-		if (strchr(s->luname, ':') != NULL) {
+		if (!buf[0])
+		    	break;
+		if (!strcmp(buf, "none")) {
+		    	s->luname[0] = '\0';
+			break;
+		}
+		if (strchr(buf, ':') != NULL) {
 		    	printf("\nLU name cannot contain ':' characters.\n");
 			continue;
 		}
-		if (strchr(s->luname, '@') != NULL) {
+		if (strchr(buf, '@') != NULL) {
 		    	printf("\nLU name cannot contain '@' characters.\n");
 			continue;
 		}
-		if (strchr(s->luname, '[') != NULL) {
+		if (strchr(buf, '[') != NULL) {
 		    	printf("\nLU name cannot contain '[' characters.\n");
 			continue;
 		}
-		if (strchr(s->luname, ']') != NULL) {
+		if (strchr(buf, ']') != NULL) {
 		    	printf("\nLU name cannot contain ']' characters.\n");
 			continue;
 		}
+		strcpy(s->luname, buf);
 		break;
 	}
 	return 0;
@@ -610,7 +629,6 @@ Model Number\n\
 \n\
 This specifies the dimensions of the screen.");
 
-	s->model = 4;
 	printf("\n");
 	for (i = 2; i <= max_model; i++) {
 		if (wrows[i]) {
@@ -619,8 +637,8 @@ This specifies the dimensions of the screen.");
 		}
 	}
 	for (;;) {
-		printf("\nEnter model number: (2, 3%s) [4] ",
-			is_nt? ", 4 or 5": " or 4");
+		printf("\nEnter model number: (2, 3%s) [%d] ",
+			is_nt? ", 4 or 5": " or 4", s->model);
 		fflush(stdout);
 		if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 			return -1;
@@ -642,6 +660,7 @@ This specifies the dimensions of the screen.");
 int
 get_charset(session_t *s)
 {
+    	char buf[STR_SIZE];
     	int i, k;
 	char *ptr;
 	unsigned long u;
@@ -688,24 +707,24 @@ This specifies the EBCDIC character set used by the host.");
 	}
 	printf("\n");
 	for (;;) {
-		printf("\nCharacter set: [bracket] ");
-		if (get_input(s->charset, sizeof(s->charset)) == NULL) {
+		printf("\nCharacter set: [%s] ", s->charset);
+		if (get_input(buf, sizeof(buf)) == NULL) {
 			return -1;
 		}
-		if (!s->charset[0]) {
-			strcpy(s->charset, "bracket");
+		if (!buf[0])
 			break;
-		}
-		u = strtoul(s->charset, &ptr, 10);
+		u = strtoul(buf, &ptr, 10);
 		if (u > 0 && u <= i && *ptr == '\0' &&
 			    (is_nt || !charsets[u - 1].is_dbcs)) {
 			strcpy(s->charset, charsets[u - 1].name);
 			break;
 		}
 		for (i = 0; charsets[i].name != NULL; i++) {
-			if (!strcmp(s->charset, charsets[i].name) &&
-				    (is_nt || !charsets[i].is_dbcs))
+			if (!strcmp(buf, charsets[i].name) &&
+				    (is_nt || !charsets[i].is_dbcs)) {
+				strcpy(s->charset, charsets[i].name);
 				break;
+			}
 		}
 		if (charsets[i].name != NULL)
 			break;
@@ -725,9 +744,10 @@ This option causes wc3270 to first create a tunnel to the host using the\n\
 Secure Sockets Layer (SSL), then to run the TN3270 session inside the tunnel.");
 
 	do {
-		printf("\nUse an SSL tunnel? (y/n) [n] ");
+		printf("\nUse an SSL tunnel? (y/n) [%s] ",
+			s->ssl? "y" : "n");
 		fflush(stdout);
-		s->ssl = getyn(0);
+		s->ssl = getyn(s->ssl);
 		if (s->ssl == -1)
 			return -1;
 	} while (s->ssl < 0);
@@ -736,12 +756,94 @@ Secure Sockets Layer (SSL), then to run the TN3270 session inside the tunnel.");
 #endif /*]*/
 
 int
+get_proxy_server(session_t *s)
+{
+    	char hbuf[STR_SIZE];
+
+	/* Get the hostname. */
+	for (;;) {
+	    	if (s->proxy_host[0]) {
+			printf("\nProxy server name: [%s] ", s->proxy_host);
+		} else {
+			printf("\nProxy server name: ");
+		}
+		if (get_input(hbuf, STR_SIZE) == NULL)
+		    	return -1;
+		if (!hbuf[0]) {
+		    	if (s->proxy_host[0])
+			    	break;
+			else
+				continue;
+		}
+		if (strchr(hbuf, '[') != NULL ||
+		    strchr(hbuf, ']') != NULL) {
+		    	printf("Server name cannot include '[' or ']'\n");
+			continue;
+		}
+		strcpy(s->proxy_host, hbuf);
+		break;
+	}
+    	return 0;
+}
+
+int
+get_proxy_server_port(session_t *s)
+{
+    	char pbuf[STR_SIZE];
+	int i;
+
+	for (i = 0; proxies[i].name != NULL; i++) {
+	    	if (!strcmp(s->proxy_type, proxies[i].name))
+		    	break;
+	}
+	if (proxies[i].name == NULL) {
+	    	printf("Internal error\n");
+		return -1;
+	}
+
+	for (;;) {
+	    	unsigned long l;
+		char *ptr;
+
+		if (s->proxy_port[0])
+			printf("\nProxy server TCP port: [%s] ", s->proxy_port);
+		else if (proxies[i].port != NULL)
+			printf("\nProxy server TCP port: [%s] ",
+				proxies[i].port);
+		else
+			printf("\nProxy server TCP port: ");
+		if (get_input(pbuf, STR_SIZE) == NULL)
+		    	return -1;
+		if (!strcmp(pbuf, "default") && proxies[i].port != NULL) {
+		    	strcpy(s->proxy_port, proxies[i].port);
+			break;
+		}
+		if (!pbuf[0]) {
+		    	if (s->proxy_port[0])
+			    	break;
+			else if (proxies[i].port != NULL) {
+			    	strcpy(s->proxy_port, proxies[i].port);
+				break;
+			} else
+				continue;
+		}
+		l = strtoul(pbuf, &ptr, 10);
+		if (l == 0 || *ptr != '\0' || (l & ~0xffffL))
+		    	printf("Invalid port\n");
+		else {
+			strcpy(s->proxy_port, pbuf);
+		    	break;
+		}
+	}
+    	return 0;
+}
+
+int
 get_proxy(session_t *s)
 {
-    	int i;
+    	int i, j;
 	char tbuf[STR_SIZE];
-	char hbuf[STR_SIZE];
-	char pbuf[STR_SIZE];
+	char old_proxy[STR_SIZE];
 
     	new_screen(s, "\
 Proxy\n\
@@ -750,72 +852,71 @@ If you do not have a direct connection to your host, this option allows\n\
 wc3270 to use a proxy server to make the connection.");
 
 	printf("\nProxy types available:\n");
-	printf(" none\n   Direct connection to host\n");
+	printf(" 1. none      Direct connection to host\n");
 	for (i = 0; proxies[i].name != NULL; i++) {
-	    	printf(" %s\n   %s\n",
+	    	printf(" %d. %-8s  %s\n",
+			i + 2,
 			proxies[i].name,
 			proxies[i].protocol);
 	}
 
+	strcpy(old_proxy, s->proxy_type);
+
 	/* Get the proxy type. */
 	for (;;) {
-	    	printf("\nProxy type: [none] ");
+	    	int n;
+
+	    	printf("\nProxy type: [%s] ",
+			s->proxy_type[0]? s->proxy_type: "none" );
 		if (get_input(tbuf, STR_SIZE) == NULL)
 		    	return -1;
-		if (!tbuf[0] || !strcasecmp(tbuf, "none"))
+		if (!tbuf[0])
 		    	return 0;
-		for (i = 0; proxies[i].name != NULL; i++) {
-		    	if (!strcasecmp(tbuf, proxies[i].name))
+		if (!strcasecmp(tbuf, "none")) {
+			s->proxy_type[0] = '\0';
+			s->proxy_host[0] = '\0';
+			s->proxy_port[0] = '\0';
+		    	return 0;
+		}
+		for (j = 0; proxies[j].name != NULL; j++) {
+		    	if (!strcasecmp(tbuf, proxies[j].name))
 			    	break;
 		}
-		if (proxies[i].name != NULL)
+		if (proxies[j].name != NULL) {
+		    	strcpy(s->proxy_type, tbuf);
 		    	break;
+		}
+		n = atoi(tbuf);
+		if (n > 0 && n <= i+1) {
+		    	if (n == 1) {
+				s->proxy_type[0] = '\0';
+				s->proxy_host[0] = '\0';
+				s->proxy_port[0] = '\0';
+				return 0;
+			} else {
+				j = n - 2;
+				strcpy(s->proxy_type, proxies[j].name);
+				break;
+			}
+		}
 		printf("Invalid proxy type.\n");
 	}
 
-	/* Get the hostname. */
-	for (;;) {
-	    	printf("\nProxy server name: ");
-		if (get_input(hbuf, STR_SIZE) == NULL)
-		    	return -1;
-		if (!hbuf[0])
-		    	continue;
-		if (strchr(hbuf, '[') != NULL ||
-		    strchr(hbuf, ']') != NULL) {
-		    	printf("Server name cannot include '[' or ']'\n");
-			continue;
+	/* If the type changed, the rest of the information is invalid. */
+	if (strcmp(old_proxy, s->proxy_type)) {
+	    	s->proxy_host[0] = '\0';
+		s->proxy_port[0] = '\0';
+
+	    	if (get_proxy_server(s) < 0) {
+			return -1;
 		}
-		break;
-	}
 
-	/* Get the port. */
-	for (;;) {
-	    	unsigned long l;
-		char *ptr;
-
-	    	printf("\nProxy server TCP port: ");
-		if (proxies[i].port != NULL)
-		    	printf("[%s] ", proxies[i].port);
-		if (get_input(pbuf, STR_SIZE) == NULL)
-		    	return -1;
-		if (!pbuf[0] && proxies[i].port == NULL)
-		    	continue;
-		if ((!pbuf[0] && proxies[i].port != NULL) ||
-		    (pbuf[1] && proxies[i].port != NULL &&
-		     !strcmp(pbuf, proxies[i].port))) {
-		    	pbuf[0] = '\0';
-			break;
+		if (proxies[j].port != NULL)
+		    	strcpy(s->proxy_port, proxies[j].port);
+		else if (get_proxy_server_port(s) < 0) {
+			return -1;
 		}
-		l = strtoul(pbuf, &ptr, 10);
-		if (l == 0 || *ptr != '\0' || (l & ~0xffffL))
-		    	printf("Invalid port\n");
-		else
-		    	break;
 	}
-
-	strcpy(s->proxy_type, tbuf);
-	strcpy(s->proxy_host, hbuf);
-	strcpy(s->proxy_port, pbuf);
 
 	return 0;
 }
@@ -833,10 +934,12 @@ Windows printer.");
 	do {
 		printf("\nAutomatically start a wpr3287 printer session? (y/n) [n] ");
 		fflush(stdout);
-		s->wpr3287 = getyn(0);
+		s->wpr3287 = getyn(s->wpr3287);
 		if (s->wpr3287 == -1)
 		    	return -1;
 	} while (s->wpr3287 < 0);
+	if (s->wpr3287 == 0)
+	    	strcpy(s->printerlu, ".");
 	return 0;
 }
 
@@ -854,9 +957,10 @@ session.  The second method specifies a particular Logical Unit (LU) to use\n\
 for the printer session.");
 
 	for (;;) {
-		printf("\nAssociate the printer session with the current login session (y/n) [y]: ");
+		printf("\nAssociate the printer session with the current login session (y/n) [%s]: ",
+			strcmp(s->printerlu, ".")? "n": "y");
 		fflush(stdout);
-		rc = getyn(1);
+		rc = getyn(!strcmp(s->printerlu, "."));
 		switch (rc) {
 		case -1:
 		    	return -1;
@@ -864,19 +968,36 @@ for the printer session.");
 		default:
 			continue;
 		case 0:
+			if (!strcmp(s->printerlu, "."))
+				s->printerlu[0] = '\0';
 			break;
 		case 1:
 			strcpy(s->printerlu, ".");
-			break;
+			return 0;
 		}
 		break;
 	}
 
-	while (!s->printerlu[0]) {
-		printf("\nEnter printer Logical Unit (LU) name: ");
+	for (;;) {
+		char tbuf[STR_SIZE];
+
+	    	if (s->printerlu[0])
+			printf("\nEnter printer Logical Unit (LU) name: [%s] ",
+				s->printerlu);
+		else
+			printf("\nEnter printer Logical Unit (LU) name: ");
 		fflush(stdout);
-		if (get_input(s->printerlu, sizeof(s->printerlu)) == NULL)
+		if (get_input(tbuf, STR_SIZE) == NULL)
 			return -1;
+		if (!tbuf[0]) {
+		    	if (s->printerlu[0])
+			    	break;
+			else
+			    	continue;
+		} else {
+		    	strcpy(s->printerlu, tbuf);
+			break;
+		}
 	}
 
 	return 0;
@@ -885,6 +1006,7 @@ for the printer session.");
 int
 get_printer(session_t *s)
 {
+	char tbuf[STR_SIZE];
     	int i;
 	char *ptr;
 	unsigned long u;
@@ -895,7 +1017,8 @@ wpr3287 Session -- Windows Printer Name\n\
 The wpr3287 session can use the Windows default printer as its real printer,\n\
 or you can specify a particular Windows printer.  You can specify a local\n\
 printer, or specify a remote printer with a UNC path, e.g.,\n\
-'\\\\server\\printer22'.");
+'\\\\server\\printer22'.  You can specify the Windows default printer with\n\
+the name 'default'.");
 
 	enum_printers();
 	if (num_printers) {
@@ -908,30 +1031,77 @@ printer, or specify a remote printer with a UNC path, e.g.,\n\
 		}
 		printf(" %2d.   Other\n", num_printers + 1);
 		for (;;) {
-			printf("\nEnter Windows printer (1-%d): [use system default] ",
-				num_printers + 1);
+			if (s->printer[0])
+				printf("\nEnter Windows printer (1-%d): [%s] ",
+				    num_printers + 1, s->printer);
+			else
+				printf("\nEnter Windows printer (1-%d): [use system default] ",
+					num_printers + 1);
 			fflush(stdout);
-			if (get_input(s->printer, sizeof(s->printer))
-				    == NULL)
+			if (get_input(tbuf, STR_SIZE) == NULL)
 				return -1;
-			if (!s->printer[0])
+			if (!tbuf[0])
 				break;
-			u = strtoul(s->printer, &ptr, 10);
+			if (!strcmp(tbuf, "default")) {
+			    	s->printer[0] = '\0';
+				break;
+			}
+			u = strtoul(tbuf, &ptr, 10);
 			if (*ptr != '\0' || u == 0 ||
 				    u > num_printers + 1)
 				continue;
 			if (u == num_printers + 1) {
-				if (get_printer_name(s->printer) < 0)
+				if (get_printer_name(s->printer, tbuf) < 0)
 					return -1;
+				strcpy(s->printer, tbuf);
 				break;
 			}
 			strcpy(s->printer, printer_info[u - 1].pName);
 			break;
 		}
 	} else {
-		if (get_printer_name(s->printer) < 0)
+		if (get_printer_name(s->printer, tbuf) < 0)
 			return -1;
+		strcpy(s->printer, tbuf);
 	}
+	return 0;
+}
+
+int
+get_printercp(session_t *s)
+{
+    	char buf[STR_SIZE];
+
+	new_screen(s, "\
+wpr3287 Session -- Printer Code Page\n\
+\n\
+By default, wpr3287 uses the system's default ANSI code page.  You can\n\
+override that code page here, or specify 'default' to use the system ANSI code\n\
+page.");
+
+	for (;;) {
+	    	int cp;
+
+		printf("\nPrinter code page [%s]: ",
+			s->printercp[0]? s->printercp: "default");
+		fflush(stdout);
+		if (get_input(buf, STR_SIZE) == NULL)
+			return -1;
+		if (!buf[0])
+		    	break;
+		if (!strcmp(buf, "default")) {
+		    	s->printercp[0] = '\0';
+			break;
+		}
+		cp = atoi(buf);
+		if (cp <= 0) {
+		    	printf("Invald code page\n");
+		} else {
+		    	strcpy(s->printercp, buf);
+			break;
+		}
+	}
+
 	return 0;
 }
 
@@ -1003,12 +1173,17 @@ user-defined keymaps, separated by commas.");
 		char *buf;
 		int wrong = FALSE;
 
-	    	printf("\nEnter keymap name(s) [none]: ");
+	    	printf("\nEnter keymap name(s) [%s]: ",
+			s->keymaps[0]? s->keymaps: "none");
 		fflush(stdout);
 		if (get_input(inbuf, sizeof(inbuf)) == NULL)
 			return -1;
 		if (!inbuf[0])
 		    	break;
+		if (!strcmp(inbuf, "none")) {
+		    	s->keymaps[0] = '\0';
+			break;
+		}
 		strcpy(tknbuf, inbuf);
 		wrong = FALSE;
 		buf = tknbuf;
@@ -1033,43 +1208,178 @@ user-defined keymaps, separated by commas.");
 }
 
 int
-summarize_and_proceed(session_t *s)
+summarize_and_proceed(session_t *s, char *installdir)
 {
     	int rc;
+	char choicebuf[32];
 
-	new_screen(s, "");
+	for (;;) {
+	    	int done = 0;
+		char *cp = "?";
+		int i;
 
-	printf("                      Host: %s\n", s->host);
-	if (s->luname[0])
-	    printf("         Logical Unit Name: %s\n", s->luname);
-	printf("                  TCP Port: %d\n", s->port);
-	printf("              Model Number: %d (%d rows x %d columns)\n",
-	    s->model, wrows[s->model] - 1, wcols[s->model]);
-	printf("             Character Set: %s\n", s->charset);
+		for (i = 0; charsets[i].name != NULL; i++)
+			if (!strcmp(charsets[i].name, s->charset)) {
+			    	cp = charsets[i].hostcp;
+				break;
+			}
+
+		new_screen(s, "");
+
+		printf("  1. Host ................... : %s\n", s->host);
+		printf("  2. Logical Unit Name ...... : %s\n",
+			s->luname[0]? s->luname: "(none)");
+		printf("  3. TCP Port ............... : %d\n", s->port);
+		printf("  4. Model Number ........... : %d (%d rows x %d columns)\n",
+		    s->model, wrows[s->model] - 1, wcols[s->model]);
+		printf("  5. Character Set .......... : %s (CP %s)\n",
+			s->charset, cp);
 #if defined(HAVE_LIBSSL) /*[*/
-	printf("                SSL Tunnel: %s\n", s->ssl? "Yes": "No");
+		printf("  6. SSL Tunnel ............. : %s\n",
+			s->ssl? "Yes": "No");
 #endif /*]*/
-	printf("                     Proxy: %s\n",
-		s->proxy_type[0]? s->proxy_type: "No");
-	if (s->proxy_type[0]) {
-		printf("              Proxy Server: %s\n",
-			s->proxy_host);
-		if (s->proxy_port[0])
-			printf("     Proxy Server TCP Port: %s\n",
-				s->proxy_port);
+		printf("  7. Proxy .................. : %s\n",
+			s->proxy_type[0]? s->proxy_type: "(none)");
+		if (s->proxy_type[0]) {
+			printf("  8.  Proxy Server .......... : %s\n",
+				s->proxy_host);
+			if (s->proxy_port[0])
+				printf("  9.  Proxy Server TCP Port . : %s\n",
+					s->proxy_port);
+		}
+		printf(" 10. wpr3287 Printer Session  : %s\n",
+			s->wpr3287? "Yes": "No");
+		if (s->wpr3287) {
+			printf(" 11.  wpr3287 Mode .......... : ");
+			if (!strcmp(s->printerlu, "."))
+				printf("Associate\n");
+			else
+				printf("LU %s\n", s->printerlu);
+			printf(" 12.  wpr3287 Windows printer : %s\n",
+				s->printer[0]? s->printer: "(system default)");
+			printf(" 13.  wpr3287 Code Page ..... : ");
+			if (s->printercp[0])
+			    	printf("%s\n", s->printercp);
+			else
+			    	printf("(system ANSI default of %d)\n",
+					GetACP());
+		}
+		printf(" 14. Keymaps ................ : %s\n",
+			s->keymaps[0]? s->keymaps: "(none)");
+
+		for (;;) {
+		    	int invalid = 0;
+			int was_wpr3287 = 0;
+
+			printf("\nEnter item number to change: [none] ");
+			fflush(stdout);
+			if (get_input(choicebuf, sizeof(choicebuf)) == NULL)
+				return -1;
+			if (!choicebuf[0]) {
+				done = 1;
+				break;
+			}
+			switch (atoi(choicebuf)) {
+			case 1:
+				if (get_host(s) < 0)
+					return -1;
+				break;
+			case 2:
+				if (get_lu(s) < 0)
+					return -1;
+				break;
+			case 3:
+				if (get_port(s) < 0)
+					return -1;
+				break;
+			case 4:
+				if (get_model(s) < 0)
+					return -1;
+				break;
+			case 5:
+				if (get_charset(s) < 0)
+					return -1;
+				break;
+#if defined(HAVE_LIBSSL) /*[*/
+			case 6:
+				if (get_ssl(s) < 0)
+					return -1;
+				break;
+#endif /*]*/
+			case 7:
+				if (get_proxy(s) < 0)
+					return -1;
+				break;
+			case 8:
+				if (s->proxy_type[0]) {
+					if (get_proxy_server(s) < 0)
+						return -1;
+				} else {
+					printf("Invalid entry.\n");
+					invalid = 1;
+				}
+				break;
+			case 9:
+				if (s->proxy_type[0]) {
+					if (get_proxy_server_port(s) < 0)
+						return -1;
+				} else {
+					printf("Invalid entry.\n");
+					invalid = 1;
+				}
+				break;
+			case 10:
+				was_wpr3287 = s->wpr3287;
+				if (get_wpr3287(s) < 0)
+					return -1;
+				if (s->wpr3287 && !was_wpr3287) {
+					if (get_printerlu(s) < 0)
+						return -1;
+				}
+				break;
+			case 11:
+				if (s->wpr3287) {
+					if (get_printerlu(s) < 0)
+						return -1;
+				} else {
+					printf("Invalid entry.\n");
+					invalid = 1;
+				}
+				break;
+			case 12:
+				if (s->wpr3287) {
+					if (get_printer(s) < 0)
+						return -1;
+				} else {
+					printf("Invalid entry.\n");
+					invalid = 1;
+				}
+				break;
+			case 13:
+				if (s->wpr3287) {
+					if (get_printercp(s) < 0)
+						return -1;
+				} else {
+					printf("Invalid entry.\n");
+					invalid = 1;
+				}
+				break;
+			case 14:
+				if (get_keymaps(s, installdir) < 0)
+					return -1;
+				break;
+			default:
+				printf("Invalid entry.\n");
+				invalid = 1;
+				break;
+			}
+
+			if (!invalid)
+				break;
+		}
+		if (done)
+			break;
 	}
-	printf("   wpr3287 Printer Session: %s\n", s->wpr3287? "Yes": "No");
-	if (s->wpr3287) {
-	        printf("              wpr3287 Mode: ");
-		if (!strcmp(s->printerlu, "."))
-			printf("Associate\n");
-		else
-		    	printf("LU %s\n", s->printerlu);
-		printf("   wpr3287 Windows printer: %s\n",
-			s->printer[0]? s->printer: "(system default)");
-	}
-	printf("                   Keymaps: %s\n",
-		s->keymaps[0]? s->keymaps: "none");
 
 	for (;;) {
 		printf("\nCreate the session? (y/n) [y] ");
@@ -1195,11 +1505,24 @@ session_wizard(void)
 	    	return -1;
 
 	if (rc == 0) {
+		if (strchr(session.session, ' ') == NULL)
+		    	strcpy(session.host, session.session);
 
 	    /* Get the host name, which defaults to the session name. */
 	    if (get_host(&session) < 0)
 		    return -1;
 
+	    /* Default eveything else. */
+	    session.port = 23;
+	    session.model = 4;
+	    strcpy(session.charset, "bracket");
+	    strcpy(session.printerlu, ".");
+
+	    /* See what they want to change. */
+	    if (summarize_and_proceed(&session, installdir) < 0)
+		    return -1;
+
+#if 0
 	    /* Get the port. */
 	    if (get_port(&session) < 0)
 		    return -1;
@@ -1244,6 +1567,7 @@ session_wizard(void)
 	    /* Summarize and make sure they want to proceed. */
 	    if (summarize_and_proceed(&session) < 0)
 		    return -1;
+#endif
 
 	    /* Create the session file. */
 	    printf("\nCreating session file '%s'... ", session.path);
@@ -1370,6 +1694,9 @@ create_session_file(session_t *session)
 		if (session->printer[0])
 		    	fprintf(f, "wc3270.printer.name: %s\n",
 				session->printer);
+		if (session->printercp[0])
+		    	fprintf(f, "wc3270.printer.codepage: %s\n",
+				session->printercp);
 	}
 
 	if (session->keymaps[0]) {

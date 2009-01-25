@@ -306,8 +306,8 @@ x3270.traceCommand:			tail -f
 ! Printer session options
 #endif
 #ifdef _WIN32
-x3270.printer.assocCommandLine:		wpr3287.exe -assoc %L% %R% %P% %H%
-x3270.printer.luCommandLine:		wpr3287.exe %R% %P% %L%@%H%
+x3270.printer.assocCommandLine:		wpr3287.exe -assoc %L% %R% %P% %I% %H%
+x3270.printer.luCommandLine:		wpr3287.exe %R% %P% %I% %L%@%H%
 ! x3270.printer.name:
 #else
 x3270.printer.command:			lpr

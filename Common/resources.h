@@ -134,6 +134,7 @@
 #define ResPluginCommand	"pluginCommand"
 #define ResPort			"port"
 #define ResPreeditType		"preeditType"
+#define ResPrinterCodepage	"printer.codepage"
 #define ResPrinterCommand	"printer.command"
 #define ResPrinterLu		"printerLu"
 #define ResPrinterName		"printer.name"
