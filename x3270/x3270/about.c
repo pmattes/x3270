@@ -347,10 +347,6 @@ popup_about_config(void)
 
 	MAKE_LABEL(get_message("terminalName"), 4);
 	MAKE_VALUE(termtype);
-	if (connected_lu != CN && connected_lu[0]) {
-		MAKE_LABEL2(get_message("luName"));
-		MAKE_VALUE(connected_lu);
-	}
 
 	MAKE_LABEL(get_message("emulatorFont"), 4);
 	MAKE_VALUE(full_efontname);
@@ -500,6 +496,7 @@ popup_about_status(void)
 	const char *eopts;
 #endif /*]*/
 	const char *ptype;
+	const char *bplu;
 
 	/* Create the popup */
 
@@ -596,6 +593,18 @@ popup_about_status(void)
 		(void) strcat(fbuf, hms(ns_time));
 
 		MAKE_LABEL(fbuf, 0);
+
+		if (connected_lu != CN && connected_lu[0]) {
+		    	sprintf(fbuf, "  %s", get_message("luName"));
+			MAKE_LABEL(fbuf, 0);
+			MAKE_VALUE(connected_lu);
+		}
+		bplu = net_query_bind_plu_name();
+		if (bplu != CN && bplu[0]) {
+		    	sprintf(fbuf, "  %s", get_message("bindPluName"));
+			MAKE_LABEL(fbuf, 0);
+			MAKE_VALUE(bplu);
+		}
 
 #if defined(X3270_TN3270E) /*[*/
 		eopts = tn3270e_current_opts();

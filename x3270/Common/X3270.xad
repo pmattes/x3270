@@ -1052,6 +1052,7 @@ x3270.message.extendedDs:			extended data stream
 x3270.message.standardDs:			standard data stream
 x3270.message.terminalName:			Terminal name:
 x3270.message.luName:				LU name:
+x3270.message.bindPluName:			BIND PLU name:
 x3270.message.emulatorFont:			Emulator font:
 x3270.message.emulatorFontDbcs:			DBCS emulator font:
 x3270.message.xFont:				standard X11 font
