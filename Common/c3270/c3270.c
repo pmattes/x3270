@@ -42,6 +42,7 @@
 #include <signal.h>
 #endif /*]*/
 #include <errno.h>
+#include <stdarg.h>
 #include "appres.h"
 #include "3270ds.h"
 #include "resources.h"
@@ -60,6 +61,7 @@
 #include "popupsc.h"
 #include "printerc.h"
 #include "screenc.h"
+#include "statusc.h"
 #include "telnetc.h"
 #include "togglesc.h"
 #include "trace_dsc.h"
@@ -80,7 +82,13 @@
 #include "windirsc.h"
 #endif /*]*/
 
-static void interact(void);
+#if defined(_WIN32) /*[*/
+# define PROGRAM_NAME	"wc3270"
+#else /*][*/
+# define PROGRAM_NAME	"c3270"
+#endif /*]*/
+
+/*static*/ void interact(void);
 static void stop_pager(void);
 
 #if defined(HAVE_LIBREADLINE) /*[*/
@@ -484,7 +492,7 @@ prompt_sigtstp_handler(int ignored _is_unused)
 }
 #endif /*]*/
 
-static void
+/*static*/ void
 interact(void)
 {
 	/* In case we got here because a command output, stop the pager. */
@@ -546,11 +554,7 @@ interact(void)
 			exit(0);
 		}
 #else /*][*/
-#if defined(_WIN32) /*[*/
-		(void) printf("wc3270> ");
-#else /*][*/
-		(void) printf("c3270> ");
-#endif /*]*/
+		(void) printf(PROGRAM_NAME "> ");
 		(void) fflush(stdout);
 
 		/* Get the command, and trim white space. */
@@ -1158,6 +1162,43 @@ Escape_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_
 	action_debug(Escape_action, event, params, num_params);
 	if (!appres.secure)
 		screen_suspend();
+}
+
+/* Popup an informational message. */
+void
+popup_an_info(const char *fmt, ...)
+{
+    	va_list args;
+	static char vmsgbuf[4096];
+	char *s, *t;
+
+	va_start(args, fmt);
+	(void) vsprintf(vmsgbuf, fmt, args);
+	va_end(args);
+
+	/* Filter out the junk. */
+	for (s = t = vmsgbuf; *s; s++) {
+	    if (*s == '\n') {
+		*t = '\0';
+		break;
+	    } else if (*s >= ' ' && *s <= '~')
+		*t++ = *s;
+	}
+
+	if (strlen(vmsgbuf))
+		status_push(vmsgbuf);
+}
+
+void
+Info_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
+	Cardinal *num_params)
+{
+	action_debug(Info_action, event, params, num_params);
+
+    	if (!*num_params)
+	    	return;
+
+	popup_an_info("%s", params[0]);
 }
 
 #if !defined(_WIN32) /*[*/

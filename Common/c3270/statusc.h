@@ -43,3 +43,5 @@ extern void status_reverse_mode(Boolean on);
 extern void status_syswait(void);
 extern void status_twait(void);
 extern void status_typeahead(Boolean on);
+
+extern void status_push(char *msg);
