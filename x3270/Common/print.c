@@ -356,6 +356,8 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 			if (ptype == P_HTML) {
 				if (uc == '<')
 					fprintf(f, "&lt;");
+				else if (uc == '&')
+				    	fprintf(f, "&amp;");
 				else {
 					nmb = unicode_to_utf8(uc, mb);
 					{
