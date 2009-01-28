@@ -303,7 +303,10 @@ above, except that it generates hexadecimal
 XX_SM(EBCDIC)
 codes.
 XX_TP(XX_FB(Info)(XX_FI(message)))
-Pops up an informational message.
+In x3270, pops up an informational message.
+In c3270 and wc3270, writes an informational message to the OIA (the line below
+the display).
+Not defined for s3270 or tcl3270.
 XX_TP(XX_FB(Expect)(XX_FI(text)[,XX_FI(timeout)]))
 Pauses the script until the specified
 XX_FI(text)
