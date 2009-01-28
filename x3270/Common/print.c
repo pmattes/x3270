@@ -418,6 +418,8 @@ print_text_done(FILE *f, Boolean do_popdown
 #if defined(X3270_DISPLAY) /*[*/
 		if (do_popdown)
 			XtPopdown(print_text_shell);
+#endif /*]*/
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 		if (appres.do_confirms)
 			popup_an_info("Screen image printed.");
 #endif /*]*/
@@ -835,6 +837,8 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 				system(cmd);
 				Free(cmd);
 			}
+			if (appres.do_confirms)
+				popup_an_info("Screen image printed.\n");
 #endif /*]*/
 		}
 		if (temp_name) {

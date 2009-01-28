@@ -471,6 +471,7 @@ parse_options(int *argcp, const char **argv)
 	appres.debug_tracing = True;
 #if defined(C3270) /*[*/
 	appres.compose_map = "latin1";
+	appres.do_confirms = True;
 #endif /*]*/
 
 	appres.model = "4";
@@ -817,7 +818,6 @@ static struct {
 	{ ResPort,	offset(port),		XRM_STRING },
 #if defined(C3270) /*[*/
 	{ ResPrinterLu,	offset(printer_lu),	XRM_STRING },
-	{ ResPrintTextCommand,	NULL,		XRM_STRING },
 #endif /*]*/
 	{ ResProxy,	offset(proxy),		XRM_STRING },
 #if defined(X3270_ANSI) /*[*/
@@ -898,7 +898,6 @@ parse_xrm(const char *arg, const char *where)
 	void *address = NULL;
 	enum resource_type type = XRM_STRING;
 #if defined(C3270) /*[*/
-	char *add_buf = CN;
 	char *hide;
 	Boolean arbitrary = False;
 #endif /*]*/
@@ -942,12 +941,6 @@ parse_xrm(const char *arg, const char *where)
 		if (!strncapcmp(resources[i].name, arg + match_len, rnlen)) {
 			address = resources[i].address;
 			type = resources[i].type;
-#if defined(C3270) /*[*/
-			if (address == NULL) {
-				add_buf = Malloc(strlen(s) + 1);
-				address = add_buf;
-			}
-#endif /*]*/
 			break;
 		}
 	}
@@ -975,6 +968,8 @@ parse_xrm(const char *arg, const char *where)
 		    !strncasecmp(ResConsoleColorForHostColor, arg + match_len,
 			    strlen(ResConsoleColorForHostColor))
 #else /*][*/
+		    !strncasecmp(ResPrintTextCommand, arg + match_len,
+			    strlen(ResPrintTextCommand)) ||
 		    !strncasecmp(ResCursesColorFor, arg + match_len,
 			    strlen(ResCursesColorFor))
 #endif /*]*/

@@ -58,6 +58,8 @@
 #include <wincon.h>
 #include "winversc.h"
 
+#define STATUS_PUSH_MS	5000
+
 extern int screen_changed;
 extern char *profile_name;
 
@@ -1898,6 +1900,18 @@ static enum keytype oia_compose_keytype = KT_STD;
 static char oia_lu[LUCNT+1];
 
 static char *status_msg = "";
+static char *saved_status_msg = NULL;
+static unsigned long saved_status_timeout;
+
+static void
+cancel_status_push(void)
+{
+    	saved_status_msg = NULL;
+	if (saved_status_timeout) {
+		RemoveTimeOut(saved_status_timeout);
+		saved_status_timeout = 0;
+	}
+}
 
 void
 status_ctlr_done(void)
@@ -1911,15 +1925,39 @@ status_insert_mode(Boolean on)
 	status_im = on;
 }
 
+static void
+status_pop(void)
+{
+	status_msg = saved_status_msg;
+	saved_status_msg = NULL;
+	saved_status_timeout = 0;
+}
+
+void
+status_push(char *msg)
+{
+	if (saved_status_msg != NULL) {
+		/* Already showing something. */
+		RemoveTimeOut(saved_status_timeout);
+	} else {
+		saved_status_msg = status_msg;
+	}
+
+	saved_status_timeout = AddTimeOut(STATUS_PUSH_MS, status_pop);
+	status_msg = msg;
+}
+
 void
 status_minus(void)
 {
+    	cancel_status_push();
 	status_msg = "X -f";
 }
 
 void
 status_oerr(int error_type)
 {
+    	cancel_status_push();
 	switch (error_type) {
 	case KL_OERR_PROTECTED:
 		status_msg = "X Protected";
@@ -1936,6 +1974,7 @@ status_oerr(int error_type)
 void
 status_reset(void)
 {
+    	cancel_status_push();
 	if (kybdlock & KL_ENTER_INHIBIT)
 		status_msg = "X Inhibit";
 	else if (kybdlock & KL_DEFERRED_UNLOCK)
@@ -1953,12 +1992,14 @@ status_reverse_mode(Boolean on)
 void
 status_syswait(void)
 {
+    	cancel_status_push();
 	status_msg = "X SYSTEM";
 }
 
 void
 status_twait(void)
 {
+    	cancel_status_push();
 	oia_undera = False;
 	status_msg = "X Wait";
 }
@@ -1990,6 +2031,8 @@ status_lu(const char *lu)
 static void
 status_connect(Boolean connected)
 {
+    	cancel_status_push();
+
 	if (connected) {
 		oia_boxsolid = IN_3270 && !IN_SSCP;
 		if (kybdlock & KL_AWAITING_FIRST)
@@ -2063,7 +2106,7 @@ draw_oia(void)
 	    	attrset(FOREGROUND_INTENSITY | cmap_bg[COLOR_NEUTRAL_BLACK]);
 	else
 		attrset(defattr);
-	mvprintw(status_row, 8, "%-11s", status_msg);
+	mvprintw(status_row, 8, "%-35.35s", status_msg);
 	mvprintw(status_row, rmargin-36,
 	    "%c%c %c  %c%c%c",
 	    oia_compose? 'C': ' ',

@@ -27,6 +27,11 @@
 
 /* c3270 version of popupsc.h */
 
+/* Note that these functions are in c3270.c, not popups.c. */
+
 extern void action_output(const char *fmt, ...) printflike(1, 2);
 extern void popup_an_errno(int errn, const char *fmt, ...) printflike(2, 3);
 extern void popup_an_error(const char *fmt, ...) printflike(1, 2);
+extern void popup_an_info(const char *fmt, ...) printflike(1, 2);
+extern void Info_action(Widget w, XEvent *event, String *params,
+    Cardinal *num_params);

@@ -116,7 +116,6 @@ typedef struct {
 	Boolean use_cursor_color;
 	Boolean allow_resize;
 	Boolean no_other;
-	Boolean do_confirms;
 	Boolean reconnect;
 	Boolean visual_select;
 	Boolean suppress_host;
@@ -124,6 +123,9 @@ typedef struct {
 # if defined(X3270_KEYPAD) /*[*/
 	Boolean	keypad_on;
 # endif /*]*/
+#endif /*]*/
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+	Boolean do_confirms;
 #endif /*]*/
 #if defined(C3270) /*[*/
 	Boolean all_bold_on;

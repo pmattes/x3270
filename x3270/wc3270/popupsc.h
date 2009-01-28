@@ -1,1 +1,1 @@
-../Common/Nodisplay/popupsc.h
+../Common/c3270/popupsc.h

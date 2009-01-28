@@ -106,7 +106,11 @@ XtActionsRec all_actions[] = {
 	{ "HandleMenu",		HandleMenu_action },
 	{ "HardPrint",		PrintText_action },
 	{ "HexString",		HexString_action },
+#endif /*]*/
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 	{ "Info",		Info_action },
+#endif /*]*/
+#if defined(X3270_DISPLAY) /*[*/
 	{ "Keymap",		TemporaryKeymap_action },
 	{ PA_PFX "ConfigureNotify", PA_ConfigureNotify_action },
 	{ PA_END,		PA_End_action },

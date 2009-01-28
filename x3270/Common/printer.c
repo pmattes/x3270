@@ -573,7 +573,7 @@ printer_check(void)
 
 		st_changed(ST_PRINTER, False);
 
-		popup_an_error("Printer process exited with status %d",
+		popup_an_error("Printer process exited with status %ld",
 		    exit_code);
 	}
 }
