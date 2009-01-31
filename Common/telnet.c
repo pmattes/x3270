@@ -2459,7 +2459,7 @@ check_in3270(void)
 		"unconnected",
 		"resolving",
 		"pending",
-		"connected initial",
+		"initial connection",
 		"TN3270 NVT",
 		"TN3270 3270",
 		"TN3270E",
@@ -2499,7 +2499,7 @@ check_in3270(void)
 		/* Nothing has happened, yet. */
 		return;
 	} else {
-		new_cstate = CONNECTED_ANSI;
+		new_cstate = CONNECTED_INITIAL;
 	}
 
 	if (new_cstate != cstate) {
