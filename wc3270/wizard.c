@@ -175,6 +175,7 @@ typedef struct {
 	char proxy_port[STR_SIZE];	/*  proxy port */
 	int  model;			/* model number */
 	char charset[STR_SIZE];		/* character set name */
+	int  is_dbcs;
 	int  wpr3287;			/* wpr3287 flag */
 	char printerlu[STR_SIZE];	/*  printer LU */
 	char printer[STR_SIZE];		/*  Windows printer name */
@@ -717,12 +718,14 @@ This specifies the EBCDIC character set used by the host.");
 		if (u > 0 && u <= i && *ptr == '\0' &&
 			    (is_nt || !charsets[u - 1].is_dbcs)) {
 			strcpy(s->charset, charsets[u - 1].name);
+			s->is_dbcs = charsets[u - 1].is_dbcs;
 			break;
 		}
 		for (i = 0; charsets[i].name != NULL; i++) {
 			if (!strcmp(buf, charsets[i].name) &&
 				    (is_nt || !charsets[i].is_dbcs)) {
 				strcpy(s->charset, charsets[i].name);
+				s->is_dbcs = charsets[i].is_dbcs;
 				break;
 			}
 		}
@@ -1522,53 +1525,6 @@ session_wizard(void)
 	    if (summarize_and_proceed(&session, installdir) < 0)
 		    return -1;
 
-#if 0
-	    /* Get the port. */
-	    if (get_port(&session) < 0)
-		    return -1;
-
-	    /* Get the LU name. */
-	    if (get_lu(&session) < 0)
-		    return -1;
-
-	    /* Get the model number. */
-	    if (get_model(&session) < 0)
-		    return -1;
-
-	    /* Get the character set name. */
-	    if (get_charset(&session) < 0)
-		    return -1;
-
-#if defined(HAVE_LIBSSL) /*[*/
-	    /* Get the SSL tunnel information. */
-	    if (get_ssl(&session) < 0)
-		    return -1;
-#endif /*]*/
-
-	    /* Get the proxy information. */
-	    if (get_proxy(&session) < 0)
-		    return -1;
-
-	    /* Ask about a wpr3287 session. */
-	    if (get_wpr3287(&session) < 0)
-		    return -1;
-
-	    if (session.wpr3287) {
-		    if (get_printerlu(&session) < 0)
-			    return -1;
-		    if (get_printer(&session) < 0)
-			    return -1;
-	    }
-
-	    /* Ask about keymaps. */
-	    if (get_keymaps(&session, installdir) < 0)
-		    return -1;
-
-	    /* Summarize and make sure they want to proceed. */
-	    if (summarize_and_proceed(&session) < 0)
-		    return -1;
-#endif
-
 	    /* Create the session file. */
 	    printf("\nCreating session file '%s'... ", session.path);
 	    fflush(stdout);
@@ -1688,6 +1644,8 @@ create_session_file(session_t *session)
 
 	fprintf(f, "wc3270.model: %d\n", session->model);
 	fprintf(f, "wc3270.charset: %s\n", session->charset);
+	if (session->is_dbcs)
+	    	fprintf(f, "wc3270.asciiBoxDraw: True\n");
 
 	if (session->wpr3287) {
 	    	fprintf(f, "wc3270.printerLu: %s\n", session->printerlu);
