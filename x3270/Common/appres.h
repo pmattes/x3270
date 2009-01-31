@@ -189,6 +189,7 @@ typedef struct {
 	char	*altscreen;
 	char	*defscreen;
 	Boolean	acs;
+	Boolean ascii_box_draw;
 #endif /*]*/
 	char	*conf_dir;
 	char	*model;
@@ -255,9 +256,11 @@ typedef struct {
 	char	*eof;
 #endif /*]*/
 
-#if defined(WC3270) /*[*/
+#if defined(C3270) /*[*/
 	char	*hostname;
+# if defined(_WIN32) /*[*/
 	char	*title;
+# endif /*]*/
 #endif /*]*/
 
 #if defined(WS3270) /*[*/

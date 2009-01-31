@@ -78,6 +78,9 @@ extern void usage(char *);
 #define PROFILE_SFX_LEN	(sizeof(PROFILE_SFX) - 1)
 #define PROFILE_SSFX	".wc3"
 #define PROFILE_SSFX_LEN (sizeof(PROFILE_SSFX) - 1)
+#elif defined(C3270) /*][*/
+#define PROFILE_SFX	".c3270"
+#define PROFILE_SFX_LEN	(int)(sizeof(PROFILE_SFX) - 1)
 #endif /*]*/
 
 #if defined(C3270) /*[*/
@@ -105,7 +108,7 @@ Boolean		exiting = False;
 char	       *command_string = CN;
 static Boolean	sfont = False;
 Boolean	       *standard_font = &sfont;
-#if defined(WC3270) /*[*/
+#if defined(C3270) /*[*/
 char	       *profile_name = CN;
 #endif /*]*/
 
@@ -159,7 +162,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	char junk;
 	int hn_argc;
 	int model_number;
-#if defined(WC3270) /*[*/
+#if defined(C3270) /*[*/
 	int sl;
 #endif /*]*/
 
@@ -230,13 +233,16 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 		}
 	}
 
-#if defined(WC3270) /*[*/
+#if defined(C3270) /*[*/
 	/* Merge in the profile. */
 	if (*cl_hostname != CN &&
 	    (((sl = strlen(*cl_hostname)) > PROFILE_SFX_LEN &&
-	      !strcasecmp(*cl_hostname + sl - PROFILE_SFX_LEN, PROFILE_SFX)) ||
-	     ((sl = strlen(*cl_hostname)) > PROFILE_SSFX_LEN &&
-	      !strcasecmp(*cl_hostname + sl - PROFILE_SSFX_LEN, PROFILE_SSFX)))) {
+	      !strcasecmp(*cl_hostname + sl - PROFILE_SFX_LEN, PROFILE_SFX))
+#if defined(_WIN32) /*[*/
+	     || ((sl = strlen(*cl_hostname)) > PROFILE_SSFX_LEN &&
+	      !strcasecmp(*cl_hostname + sl - PROFILE_SSFX_LEN, PROFILE_SSFX))
+#endif /*]*/
+	     )) {
 
 		const char *pname;
 
@@ -257,10 +263,12 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 			!strcasecmp(profile_name + sl - PROFILE_SFX_LEN,
 				PROFILE_SFX)) {
 			profile_name[sl - PROFILE_SFX_LEN] = '\0';
+#if defined(_WIN32) /*[*/
 		} else if (sl > PROFILE_SSFX_LEN &&
 			!strcasecmp(profile_name + sl - PROFILE_SSFX_LEN,
 				PROFILE_SSFX)) {
 			profile_name[sl - PROFILE_SSFX_LEN] = '\0';
+#endif /*]*/
 		}
 
 		*cl_hostname = appres.hostname;
@@ -500,6 +508,7 @@ parse_options(int *argcp, const char **argv)
 	appres.meta_escape = "auto";
 	appres.curses_keypad = True;
 	appres.cbreak_mode = False;
+	appres.ascii_box_draw = False;
 #if defined(CURSES_WIDE) /*[*/
 	appres.acs = True;
 #endif /*]*/
@@ -771,7 +780,7 @@ static struct {
 #if defined(X3270_FT) /*[*/
 	{ ResDftBufferSize,offset(dft_buffer_size),XRM_INT },
 #endif /*]*/
-#if defined(WC3270) /*[*/
+#if defined(C3270) /*[*/
 	{ "hostname",	offset(hostname),	XRM_STRING },
 #endif /*]*/
 	{ ResHostsFile,	offset(hostsfile),	XRM_STRING },
@@ -794,6 +803,7 @@ static struct {
 	{ ResMetaEscape,offset(meta_escape),	XRM_STRING },
 	{ ResCursesKeypad,offset(curses_keypad),XRM_BOOLEAN },
 	{ ResCbreak,	offset(cbreak_mode),	XRM_BOOLEAN },
+	{ ResAsciiBoxDraw,offset(ascii_box_draw),	XRM_BOOLEAN },
 #if defined(CURSES_WIDE) /*[*/
 	{ ResAcs,	offset(acs),		XRM_BOOLEAN },
 #endif /*]*/

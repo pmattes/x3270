@@ -40,6 +40,7 @@
 #define ResAltCursor		"altCursor"
 #define ResAltScreen		"altScreen"
 #define ResAplMode		"aplMode"
+#define ResAsciiBoxDraw		"asciiBoxDraw"
 #define ResAssocCommand		"printer.assocCommandLine"
 #define ResBaselevelTranslations	"baselevelTranslations"
 #define ResBellVolume		"bellVolume"
