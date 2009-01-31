@@ -146,9 +146,14 @@ html_color(int color)
  *  P_TEXT: Ordinary text
  *  P_HTML: HTML
  *  P_RTF: Windows rich text
+ *
+ * 'opts' is an OR of:
+ *  FPS_EVEN_IF_EMPTY	Create a file even if the screen is clear
+ *  FPS_MODIFIED_ITALIC	Print modified fields in italic
+ *    font-style:normal|italic
  */
 Boolean
-fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
+fprint_screen(FILE *f, ptype_t ptype, unsigned opts)
 {
 	register int i;
 	unsigned long uc;
@@ -160,9 +165,11 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 	int fa_fg, current_fg;
 	int fa_bg, current_bg;
 	Bool fa_high, current_high;
+	Bool fa_ital, current_ital;
+	Bool mi = ((opts & FPS_MODIFIED_ITALIC)) != 0;
 
 	if (ptype != P_TEXT) {
-		even_if_empty = True;
+		opts |= FPS_EVEN_IF_EMPTY;
 	}
 
 	if (ea_buf[fa_addr].fg)
@@ -182,6 +189,8 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 	else
 		fa_high = FA_IS_HIGH(fa);
 	current_high = fa_high;
+	fa_ital = mi && FA_IS_MODIFIED(fa);
+	current_ital = fa_ital;
 
 #if defined(_WIN32) /*[*/
 	if (ptype == P_RTF) {
@@ -195,15 +204,20 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 	if (ptype == P_HTML) {
 		fprintf(f, "<html>\n"
 			   "<head>\n"
-			   " <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+			   " <meta http-equiv=\"Content-Type\" "
+			     "content=\"text/html; charset=UTF-8\">\n"
 			   "</head>\n"
 			   " <body>\n"
 			   "  <table border=0>"
 			   "<tr bgcolor=black><td>"
-			   "<pre><span style=\"color:%s;background:%s;font-weight:%s\">",
+			   "<pre><span style=\"color:%s;"
+			                       "background:%s;"
+					       "font-weight:%s;"
+					       "font-style:%s\">",
 			   html_color(current_fg),
 			   html_color(current_bg),
-			   current_high? "bold": "normal");
+			   current_high? "bold": "normal",
+			   current_ital? "italic": "normal");
 	}
 
 	for (i = 0; i < ROWS*COLS; i++) {
@@ -234,6 +248,7 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 				fa_high = True;
 			else
 				fa_high = FA_IS_HIGH(fa);
+			fa_ital = mi && FA_IS_MODIFIED(fa);
 		}
 		if (FA_IS_ZERO(fa)) {
 #if defined(X3270_DBCS) /*[*/
@@ -334,6 +349,13 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 					bg_color = ea_buf[i].bg & 0x0f;
 				else
 					bg_color = fa_bg;
+				if (ea_buf[i].gr & GR_REVERSE) {
+				    	int tmp;
+
+					tmp = fg_color;
+					fg_color = bg_color;
+					bg_color = tmp;
+				}
 
 				if (i == cursor_addr) {
 				    	fg_color = (bg_color == COLOR_RED)?
@@ -347,18 +369,22 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 
 				if (fg_color != current_fg ||
 				    bg_color != current_bg ||
-				    high != current_high) {
+				    high != current_high ||
+				    fa_ital != current_ital) {
 					fprintf(f,
 						"</span><span "
 						"style=\"color:%s;"
 						"background:%s;"
-						"font-weight:%s\">",
+						"font-weight:%s;"
+						"font-style:%s\">",
 						html_color(fg_color),
 						html_color(bg_color),
-						high? "bold": "normal");
+						high? "bold": "normal",
+						fa_ital? "italic": "normal");
 					current_fg = fg_color;
 					current_bg = bg_color;
 					current_high = high;
+					current_ital = fa_ital;
 				}
 			}
 			any = True;
@@ -409,7 +435,7 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 	    	(void) fputc('\n', f);
 	else
 		nr++;
-	if (!any && !even_if_empty && ptype == P_TEXT)
+	if (!any && !(opts & FPS_EVEN_IF_EMPTY) && ptype == P_TEXT)
 		return False;
 	while (nr) {
 #if defined(_WIN32) /*[*/
@@ -487,7 +513,7 @@ print_text_callback(Widget w _is_unused, XtPointer client_data,
 	    Replace(print_text_command, filter);
 	    ptc_changed = True;
 	}
-	(void) fprint_screen(f, True, P_TEXT);
+	(void) fprint_screen(f, P_TEXT, FPS_EVEN_IF_EMPTY);
 	print_text_done(f, True);
 }
 
@@ -508,7 +534,7 @@ save_text_plain_callback(Widget w _is_unused, XtPointer client_data,
 		popup_an_errno(errno, "%s", filename);
 		return;
 	}
-	(void) fprint_screen(f, True, P_TEXT);
+	(void) fprint_screen(f, P_TEXT, FPS_EVEN_IF_EMPTY);
 	fclose(f);
 	XtPopdown(save_text_shell);
 	if (appres.do_confirms)
@@ -532,7 +558,7 @@ save_text_html_callback(Widget w _is_unused, XtPointer client_data,
 		popup_an_errno(errno, "%s", filename);
 		return;
 	}
-	(void) fprint_screen(f, True, P_HTML);
+	(void) fprint_screen(f, P_HTML, FPS_EVEN_IF_EMPTY);
 	fclose(f);
 	XtPopdown(save_text_shell);
 	if (appres.do_confirms)
@@ -684,6 +710,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	Boolean use_file = False;
 	Boolean use_string = False;
 	char *temp_name = NULL;
+	unsigned opts = FPS_EVEN_IF_EMPTY;
 
 	action_debug(PrintText_action, event, params, num_params);
 
@@ -695,6 +722,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	 *            'file')
 	 *  secure   disables the pop-up dialog, if this action is invoked from
 	 *            a keymap
+	 *  modi     print modified fields in italics
 	 *  command  directs the output to a command (this is the default, but
 	 *            allows the command to be one of the other keywords);
 	 *  	      must be the last keyword
@@ -732,6 +760,8 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 			}
 			use_string = True;
 			use_file = True;
+		} else if (!strcasecmp(params[i], "modi")) {
+		    	opts |= FPS_MODIFIED_ITALIC;
 		} else {
 			break;
 		}
@@ -840,7 +870,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 			}
 			return;
 		}
-		(void) fprint_screen(f, True, ptype);
+		(void) fprint_screen(f, ptype, opts);
 		if (use_string) {
 			char buf[8192];
 
@@ -932,7 +962,7 @@ print_text_option(Widget w, XtPointer client_data _is_unused,
 			popup_an_errno(errno, "popen(%s)", filter);
 			return;
 		}
-		(void) fprint_screen(f, True, ptype);
+		(void) fprint_screen(f, ptype, FPS_EVEN_IF_EMPTY);
 		print_text_done(f, False);
 	} else {
 		/* Pop up a dialog to confirm or modify their choice. */
