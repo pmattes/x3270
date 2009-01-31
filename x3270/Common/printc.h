@@ -31,7 +31,9 @@
  */
 
 typedef enum { P_TEXT, P_HTML, P_RTF } ptype_t;
-extern Boolean fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype);
+#define FPS_EVEN_IF_EMPTY	0x1
+#define FPS_MODIFIED_ITALIC	0x2
+extern Boolean fprint_screen(FILE *f, ptype_t ptype, unsigned opts);
 extern void PrintText_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void PrintWindow_action(Widget w, XEvent *event, String *params,
