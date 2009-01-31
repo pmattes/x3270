@@ -134,16 +134,48 @@
 /* Query replies */
 #define QR_SUMMARY	0x80	/* summary */
 #define QR_USABLE_AREA	0x81	/* usable area */
+#define QR_IMAGE	0x82	/* image */
+#define QR_TEXT_PART	0x83	/* text partitions */
 #define QR_ALPHA_PART	0x84	/* alphanumeric partitions */
 #define QR_CHARSETS	0x85	/* character sets */
 #define QR_COLOR	0x86	/* color */
 #define QR_HIGHLIGHTING	0x87	/* highlighting */
 #define QR_REPLY_MODES	0x88	/* reply modes */
+#define QR_FIELD_VAL	0x8a	/* field validation */
+#define QR_MSR_CTL	0x8b	/* MSR control */
+#define QR_OUTLINING	0x8c	/* field outlining */
+#define QR_PART_CHAR	0x8e	/* partition characteristics */
+#define QR_OEM_AUX	0x8f	/* OEM auxiliary device */
+#define QR_FMT_PRES	0x90	/* format presentation */
 #define QR_DBCS_ASIA	0x91	/* DBCS-Asia */
+#define QR_SAVE_RESTORE	0x92	/* save/restore format */
 #define QR_PC3270	0x93    /* PC3270 */
+#define QR_FMT_SAD	0x94    /* format storage auxiliary device */
 #define QR_DDM    	0x95    /* distributed data management */
+#define QR_STG_POOLS   	0x96    /* storage pools */
+#define QR_DIA   	0x97    /* document interchange architecture */
+#define QR_DATA_CHAIN  	0x98    /* data chaining */
+#define QR_AUX_DEVICE	0x99	/* auxiliary device */
+#define QR_3270_IPDS	0x9a	/* 3270 IPDS */
+#define QR_PDDS		0x9c	/* product defined data stream */
+#define QR_IBM_AUX	0x9e	/* IBM auxiliary device */
+#define QR_BEGIN_EOF	0x9f	/* begin/end of file */
+#define QR_DEVICE_CHAR	0xa0	/* device characteristics */
 #define QR_RPQNAMES	0xa1	/* RPQ names */
+#define QR_DATA_STREAMS	0xa2	/* data streams */
 #define QR_IMP_PART	0xa6	/* implicit partition */
+#define QR_PAPER_FEED	0xa7	/* paper feed techniques */
+#define QR_TRANSPARENCY	0xa8	/* transparency */
+#define QR_SPC		0xa9	/* settable printer characteristics */
+#define QR_IOCA_AD	0xaa	/* IOCA auxiliary device */
+#define QR_CPR		0xab	/* cooperative proc. requestor */
+#define QR_SEGMENT	0xb0	/* segment */
+#define QR_PROCEDURE	0xb1	/* procedure */
+#define QR_LINE_TYPE	0xb2	/* line type */
+#define QR_PORT		0xb3	/* port */
+#define QR_GCOLOR	0xb4	/* graphic color */
+#define QR_XDR		0xb5	/* extended drawing routine */
+#define QR_GSS		0xb6	/* graphic symbol sets */
 #define QR_NULL		0xff	/* null */
 
 #define BA_TO_ROW(ba)		((ba) / COLS)

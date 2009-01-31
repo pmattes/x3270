@@ -843,13 +843,8 @@ do_qr_charsets(void)
 #endif /*]*/
 		*obptr++ = 0x82;	/* flags: GE, CGCSGID present */
 	*obptr++ = 0x00;		/* more flags */
-#if defined(X3270_COMPAT) /*[*/
-	*obptr++ = 7;			/* SDW */
-	*obptr++ = 7;			/* SDW */
-#else /*][*/
-	*obptr++ = *char_width;		/* SDW */
-	*obptr++ = *char_height;	/* SDW */
-#endif /*]*/
+	*obptr++ = 0x09;		/* SDW, canned from 3279-2 */
+	*obptr++ = 0x0c;		/* SDW, canned from 3279-2 */
 	*obptr++ = 0x00;		/* no load PS */
 	*obptr++ = 0x00;
 	*obptr++ = 0x00;
