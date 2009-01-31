@@ -157,7 +157,8 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 	Boolean any = False;
 	int fa_addr = find_field_attribute(0);
 	unsigned char fa = ea_buf[fa_addr].fa;
-	int fa_color, current_color;
+	int fa_fg, current_fg;
+	int fa_bg, current_bg;
 	Bool fa_high, current_high;
 
 	if (ptype != P_TEXT) {
@@ -165,10 +166,16 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 	}
 
 	if (ea_buf[fa_addr].fg)
-		fa_color = ea_buf[fa_addr].fg & 0x0f;
+		fa_fg = ea_buf[fa_addr].fg & 0x0f;
 	else
-		fa_color = color_from_fa(fa);
-	current_color = fa_color;
+		fa_fg = color_from_fa(fa);
+	current_fg = fa_fg;
+
+	if (ea_buf[fa_addr].bg)
+		fa_bg = ea_buf[fa_addr].bg & 0x0f;
+	else
+		fa_bg = COLOR_BLACK;
+	current_bg = fa_bg;
 
 	if (ea_buf[fa_addr].gr & GR_INTENSIFY)
 		fa_high = True;
@@ -185,6 +192,19 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 		    	fprintf(f, "\\b ");
 	}
 #endif /*]*/
+	if (ptype == P_HTML) {
+		fprintf(f, "<html>\n"
+			   "<head>\n"
+			   " <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+			   "</head>\n"
+			   " <body>\n"
+			   "  <table border=0>"
+			   "<tr bgcolor=black><td>"
+			   "<pre><span style=\"color:%s;background:%s;font-weight:%s\">",
+			   html_color(current_fg),
+			   html_color(current_bg),
+			   current_high? "bold": "normal");
+	}
 
 	for (i = 0; i < ROWS*COLS; i++) {
 		char mb[16];
@@ -193,16 +213,23 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 		uc = 0;
 
 		if (i && !(i % COLS)) {
-			nr++;
+		    	if (ptype == P_HTML)
+			    	(void) fputc('\n', f);
+			else
+				nr++;
 			ns = 0;
 		}
 		if (ea_buf[i].fa) {
 			uc = ' ';
 			fa = ea_buf[i].fa;
 			if (ea_buf[i].fg)
-				fa_color = ea_buf[i].fg & 0x0f;
+				fa_fg = ea_buf[i].fg & 0x0f;
 			else
-				fa_color = color_from_fa(fa);
+				fa_fg = color_from_fa(fa);
+			if (ea_buf[i].bg)
+				fa_bg = ea_buf[i].bg & 0x0f;
+			else
+				fa_bg = COLOR_BLACK;
 			if (ea_buf[i].gr & GR_INTENSIFY)
 				fa_high = True;
 			else
@@ -250,11 +277,15 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 		}
 
 		/* Translate to a type-specific format and write it out. */
-		if (uc == ' ')
+		if (uc == ' ' && ptype != P_HTML)
 			ns++;
 #if defined(X3270_DBCS) /*[*/
-		else if (uc == 0x3000)
-		    	ns += 2;
+		else if (uc == 0x3000) {
+		    	if (ptype == P_HTML)
+			    	fprintf(f, "  ");
+			else
+				ns += 2;
+		}
 #endif /*]*/
 		else {
 			while (nr) {
@@ -292,43 +323,42 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 			}
 #endif /*]*/
 			if (ptype == P_HTML) {
-				int color;
+				int fg_color, bg_color;
 				Bool high;
 
 				if (ea_buf[i].fg)
-					color = ea_buf[i].fg & 0x0f;
+					fg_color = ea_buf[i].fg & 0x0f;
 				else
-					color = fa_color;
-				if (color != current_color) {
-					if (any)
-						fprintf(f, "</font><font color=%s>",
-							html_color(color));
-					current_color = color;
+					fg_color = fa_fg;
+				if (ea_buf[i].bg)
+					bg_color = ea_buf[i].bg & 0x0f;
+				else
+					bg_color = fa_bg;
+
+				if (i == cursor_addr) {
+				    	fg_color = (bg_color == COLOR_RED)?
+							COLOR_BLACK: bg_color;
+					bg_color = COLOR_RED;
 				}
 				if (ea_buf[i].gr & GR_INTENSIFY)
 					high = True;
 				else
 					high = fa_high;
-				if (high != current_high) {
-					if (any) {
-						if (high)
-							fprintf(f, "<b>");
-						else
-							fprintf(f, "</b>");
-					}
+
+				if (fg_color != current_fg ||
+				    bg_color != current_bg ||
+				    high != current_high) {
+					fprintf(f,
+						"</span><span "
+						"style=\"color:%s;"
+						"background:%s;"
+						"font-weight:%s\">",
+						html_color(fg_color),
+						html_color(bg_color),
+						high? "bold": "normal");
+					current_fg = fg_color;
+					current_bg = bg_color;
 					current_high = high;
-				}
-				if (!any) {
-					fprintf(f, "<html>\n"
-						   "<head>\n"
-						   " <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
-						   "</head>\n"
-						   " <body>\n"
-						   "  <table border=0>"
-						   "<tr bgcolor=black><td>"
-						   "<pre><font color=%s>%s",
-						   html_color(current_color),
-						   current_high? "<b>": "");
 				}
 			}
 			any = True;
@@ -375,15 +405,19 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 			}
 		}
 	}
-	nr++;
-	if (!any && !even_if_empty)
+	if (ptype == P_HTML)
+	    	(void) fputc('\n', f);
+	else
+		nr++;
+	if (!any && !even_if_empty && ptype == P_TEXT)
 		return False;
 	while (nr) {
 #if defined(_WIN32) /*[*/
 	    	if (ptype == P_RTF)
 		    	fprintf(f, "\\par");
 #endif /*]*/
-		(void) fputc('\n', f);
+		if (ptype == P_TEXT)
+			(void) fputc('\n', f);
 		nr--;
 	}
 #if defined(_WIN32) /*[*/
@@ -391,8 +425,8 @@ fprint_screen(FILE *f, Boolean even_if_empty, ptype_t ptype)
 	    	fprintf(f, "\n}\n%c", 0);
 	}
 #endif /*]*/
-	if ((ptype == P_HTML) && any) {
-		fprintf(f, "%s</font></pre></td></tr>\n"
+	if (ptype == P_HTML) {
+		fprintf(f, "%s</span></pre></td></tr>\n"
 		           "  </table>\n"
 			   " </body>\n"
 			   "</html>\n",
