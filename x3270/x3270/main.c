@@ -238,6 +238,7 @@ main(int argc, char *argv[])
 	char	junk;
 	int	model_number;
 	Boolean	mono = False;
+	char	*session = CN;
 
 	/* Figure out who we are */
 	programname = strrchr(argv[0], '/');
@@ -307,26 +308,6 @@ main(int argc, char *argv[])
 <FocusOut>:                     PA-Focus()\n\
 <ConfigureNotify>:              PA-ConfigureNotify()"), NULL);
 
-	/* Merge in the profile. */
-	merge_profile(&rdb, mono);
-
-	old_emh = XtAppSetWarningMsgHandler(appcontext,
-	    (XtErrorMsgHandler)trap_colormaps);
-	XtGetApplicationResources(toplevel, (XtPointer)&appres, resources,
-	    num_resources, 0, 0);
-	(void) XtAppSetWarningMsgHandler(appcontext, old_emh);
-
-#if defined(USE_APP_DEFAULTS) /*[*/
-	/* Check the app-defaults version. */
-	if (!appres.ad_version)
-		XtError("Outdated app-defaults file");
-	else if (!strcmp(appres.ad_version, "fallback"))
-		XtError("No app-defaults file");
-	else if (strcmp(appres.ad_version, app_defaults_version))
-		xs_error("app-defaults version mismatch: want %s, got %s",
-		    app_defaults_version, appres.ad_version);
-#endif /*]*/
-
 #if defined(LOCAL_PROCESS) /*[*/
 	/* Pick out the -e option. */
 	parse_local_process(&argc, argv, &cl_hostname);
@@ -360,6 +341,43 @@ main(int argc, char *argv[])
 		usage(CN);
 		break;
 	}
+
+	/* If the 'hostname' ends with .x3270, it is a session file. */
+	if (cl_hostname != CN &&
+	    strlen(cl_hostname) > strlen(".x3270") &&
+	    !strcmp(cl_hostname + strlen(cl_hostname) - strlen(".x3270"),
+		".x3270")) {
+		session = cl_hostname;
+		cl_hostname = CN;
+	}
+
+	/* Merge in the profile or session file. */
+	merge_profile(&rdb, session, mono);
+
+	/* Fill in appres. */
+	old_emh = XtAppSetWarningMsgHandler(appcontext,
+	    (XtErrorMsgHandler)trap_colormaps);
+	XtGetApplicationResources(toplevel, (XtPointer)&appres, resources,
+	    num_resources, 0, 0);
+	(void) XtAppSetWarningMsgHandler(appcontext, old_emh);
+
+	/*
+	 * If the hostname is specified as a resource and not specified as a
+	 * positional argument, use the resource value.
+	 */
+	if (cl_hostname == CN && appres.hostname != CN)
+	    	cl_hostname = appres.hostname;
+
+#if defined(USE_APP_DEFAULTS) /*[*/
+	/* Check the app-defaults version. */
+	if (!appres.ad_version)
+		XtError("Outdated app-defaults file");
+	else if (!strcmp(appres.ad_version, "fallback"))
+		XtError("No app-defaults file");
+	else if (strcmp(appres.ad_version, app_defaults_version))
+		xs_error("app-defaults version mismatch: want %s, got %s",
+		    app_defaults_version, appres.ad_version);
+#endif /*]*/
 
 	/*
 	 * Before the call to error_init(), errors are generally fatal.

@@ -803,7 +803,7 @@ subst_name(unsigned char *fallbacks)
 
 /* Merge in the options settings from a profile. */
 void
-merge_profile(XrmDatabase *d, Boolean mono)
+merge_profile(XrmDatabase *d, char *session, Boolean mono)
 {
 	const char *fname;
 	char *env_resources;
@@ -828,11 +828,14 @@ merge_profile(XrmDatabase *d, Boolean mono)
 	XrmMergeDatabases(dd, d);
 #endif /*]*/
 
-	if (getenv(NO_PROFILE_ENV) != CN) {
+	if (session == CN && getenv(NO_PROFILE_ENV) != CN) {
 		profile_name = do_subst(DEFAULT_PROFILE, True, True);
 	} else {
 		/* Open the file. */
-		fname = getenv(PROFILE_ENV);
+	    	if (session != CN)
+		    	fname = session;
+		else
+			fname = getenv(PROFILE_ENV);
 		if (fname == CN || *fname == '\0')
 			fname = DEFAULT_PROFILE;
 		profile_name = do_subst(fname, True, True);
@@ -842,6 +845,8 @@ merge_profile(XrmDatabase *d, Boolean mono)
 		if (dd != NULL) {
 			/* Merge in the profile options. */
 			XrmMergeDatabases(dd, d);
+		} else if (session != CN) {
+		    	Error("Session file not found");
 		}
 	}
 

@@ -781,7 +781,7 @@ static struct {
 	{ ResDftBufferSize,offset(dft_buffer_size),XRM_INT },
 #endif /*]*/
 #if defined(C3270) /*[*/
-	{ "hostname",	offset(hostname),	XRM_STRING },
+	{ ResHostname,	offset(hostname),	XRM_STRING },
 #endif /*]*/
 	{ ResHostsFile,	offset(hostsfile),	XRM_STRING },
 #if defined(X3270_ANSI) /*[*/

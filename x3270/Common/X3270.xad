@@ -886,7 +886,7 @@ x3270.executeActionPopup.title:			x3270 Execute Action
 x3270.executeActionPopup.dialog.label:		Enter Action and Parameters
 x3270.executeActionPopup*confirmButton.label:	Execute
 x3270.saveOptionsPopup.title:			x3270 Save Changed Options
-x3270.saveOptionsPopup.dialog.label:		Enter Profile File Name
+x3270.saveOptionsPopup.dialog.label:		Enter Profile/Session File Name
 x3270.saveOptionsPopup*confirmButton.label:	Save
 x3270.aboutCopyrightPopup.title:		x3270 Copyright
 x3270.aboutConfigPopup.title:			x3270 Configuration

@@ -224,6 +224,8 @@ XtResource resources[] = {
 #endif /*]*/
 	{ ResProxy, ClsProxy, XtRString, sizeof(String),
 	  offset(proxy), XtRString, 0 },
+	{ ResHostname, ClsHostname, XtRString, sizeof(String),
+	  offset(hostname), XtRString, 0 },
 
 	{ ResMonoCase, ClsMonoCase, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(MONOCASE), XtRString, ResFalse },
