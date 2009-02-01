@@ -99,6 +99,9 @@ static char *completion_entry(const char *, int);
 /* Pager state. */
 #if !defined(_WIN32) /*[*/
 static FILE *pager = NULL;
+#else /*][*/
+static int pager_rowcnt = 0;
+static Boolean pager_q = False;
 #endif /*]*/
 
 #if !defined(_WIN32) /*[*/
@@ -670,8 +673,59 @@ stop_pager(void)
 			pclose(pager);
 		pager = NULL;
 	}
+#else /*][*/
+	pager_rowcnt = 0;
+	pager_q = False;
 #endif /*]*/
 }
+
+#if defined(_WIN32) /*[*/
+void
+pager_output(const char *s)
+{
+    	if (pager_q)
+	    	return;
+
+	do {
+		char *nl;
+	    	int sl;
+
+		/* Pause for a screenful. */
+		if (pager_rowcnt >= maxROWS) {
+			printf("Press any key to continue . . . ");
+			fflush(stdout);
+			pager_q = screen_wait_for_key();
+			printf("\r                                \r");
+			pager_rowcnt = 0;
+			if (pager_q)
+			    	return;
+		}
+
+		/*
+		 * Look for an embedded newline.  If one is found, just print
+		 * up to it, so we can count the newline and possibly pause
+		 * partway through the string.
+		 */
+		nl = strchr(s, '\n');
+		if (nl != CN) {
+		    	sl = nl - s;
+			printf("%.*s\n", sl, s);
+			s = nl + 1;
+		} else {
+			printf("%s\n", s);
+			sl = strlen(s);
+			s = CN;
+		}
+
+		/* Account for the newline. */
+		pager_rowcnt++;
+
+		/* Account (conservatively) for any line wrap. */
+		pager_rowcnt += sl / maxCOLS;
+
+	} while (s != CN);
+}
+#endif /*]*/
 
 #if defined(HAVE_LIBREADLINE) /*[*/
 

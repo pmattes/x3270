@@ -1268,14 +1268,18 @@ action_output(const char *fmt, ...)
 	} else {
 		FILE *aout;
 
-#if defined(C3270) || defined(WC3270) /*[*/
+#if defined(C3270) /*[*/
 		screen_suspend();
 		aout = start_pager();
 		any_error_output = True;
 #else /*][*/
 		aout = stdout;
 #endif /*]*/
+#if defined(WC3270) /*[*/
+		pager_output(vmsgbuf);
+#else /*][*/
 		(void) fprintf(aout, "%s\n", vmsgbuf);
+#endif /*]*/
 		macro_output = True;
 	}
 }

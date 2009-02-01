@@ -2309,3 +2309,24 @@ GetConsoleHwnd(void)
 	SetConsoleTitle(pszOldWindowTitle);
 	return(hwndFound);
 }
+
+/*
+ * Read and discard a (printable) key-down event from the console.
+ * Returns True if the key is 'q'.
+ */
+Boolean
+screen_wait_for_key(void)
+{
+	INPUT_RECORD ir;
+	DWORD nr;
+
+	/* Get the next keyboard input event. */
+	do {
+	    	ReadConsoleInputA(chandle, &ir, 1, &nr);
+	} while ((ir.EventType != KEY_EVENT) ||
+		 !ir.Event.KeyEvent.bKeyDown ||
+		 (ir.Event.KeyEvent.uChar.AsciiChar & 0xff) < ' ');
+
+	return (ir.Event.KeyEvent.uChar.AsciiChar == 'q') ||
+	       (ir.Event.KeyEvent.uChar.AsciiChar == 'Q');
+}

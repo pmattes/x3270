@@ -48,6 +48,10 @@ extern void screen_flip(void);
 extern void screen_resume(void);
 extern void screen_suspend(void);
 extern FILE *start_pager(void);
+#if defined(WC3270) /*[*/
+extern void pager_output(const char *s);
+extern Boolean screen_wait_for_key(void);
+#endif /*]*/
 extern void toggle_monocase(struct toggle *t, enum toggle_type tt);
 
 extern Boolean escaped;
