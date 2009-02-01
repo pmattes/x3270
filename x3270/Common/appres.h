@@ -131,6 +131,7 @@ typedef struct {
 	Boolean all_bold_on;
 	Boolean	curses_keypad;
 	Boolean cbreak_mode;
+	Boolean no_prompt;
 #endif /*]*/
 	Boolean	apl_mode;
 	Boolean scripted;
