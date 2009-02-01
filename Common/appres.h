@@ -256,11 +256,12 @@ typedef struct {
 	char	*eof;
 #endif /*]*/
 
-#if defined(C3270) /*[*/
+#if defined(C3270) || defined(X3270_DISPLAY) /*[*/
 	char	*hostname;
-# if defined(_WIN32) /*[*/
+#endif /*]*/
+
+#if defined(WC3270) /*[*/
 	char	*title;
-# endif /*]*/
 #endif /*]*/
 
 #if defined(WS3270) /*[*/
