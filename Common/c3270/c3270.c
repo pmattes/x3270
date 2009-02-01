@@ -88,7 +88,7 @@
 # define PROGRAM_NAME	"c3270"
 #endif /*]*/
 
-/*static*/ void interact(void);
+static void interact(void);
 static void stop_pager(void);
 
 #if defined(HAVE_LIBREADLINE) /*[*/
@@ -444,17 +444,22 @@ main(int argc, char *argv[])
 			escape_pending = False;
 			screen_suspend();
 		}
-		if (!CONNECTED) {
+		if (!appres.no_prompt) {
+			if (!CONNECTED) {
+				screen_suspend();
+				(void) printf("Disconnected.\n");
+				if (appres.once)
+					x3270_exit(0);
+				interact();
+				screen_resume();
+			} else if (escaped) {
+				interact();
+				trace_event("Done interacting.\n");
+				screen_resume();
+			}
+		} else if (!CONNECTED) {
 			screen_suspend();
-			(void) printf("Disconnected.\n");
-			if (appres.once)
-				x3270_exit(0);
-			interact();
-			screen_resume();
-		} else if (escaped) {
-			interact();
-			trace_event("Done interacting.\n");
-			screen_resume();
+			x3270_exit(0);
 		}
 
 #if !defined(_WIN32) /*[*/
@@ -502,7 +507,7 @@ interact(void)
 	stop_pager();
 
 	trace_event("Interacting.\n");
-	if (appres.secure) {
+	if (appres.secure || appres.no_prompt) {
 		char s[10];
 
 		printf("[Press <Enter>] ");
@@ -1214,7 +1219,7 @@ Escape_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_
     Cardinal *num_params _is_unused)
 {
 	action_debug(Escape_action, event, params, num_params);
-	if (!appres.secure)
+	if (!appres.secure && !appres.no_prompt)
 		screen_suspend();
 }
 

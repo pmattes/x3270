@@ -416,8 +416,11 @@ parse_options(int *argcp, const char **argv)
     { OptLocalCp,  OPT_INT,	False, ResLocalCp,   offset(local_cp) },
 #endif /*]*/
     { OptModel,    OPT_STRING,  False, ResKeymap,    offset(model) },
-#if defined(C3270) && !defined(_WIN32) /*[*/
+#if defined(C3270) /*[*/
+# if !defined(_WIN32) /*[*/
     { OptMono,     OPT_BOOLEAN, True,  ResMono,      offset(mono) },
+# endif /*]*/
+    { OptNoPrompt, OPT_BOOLEAN, True,  ResNoPrompt,  offset(no_prompt) },
 #endif /*]*/
     { OptOnce,     OPT_BOOLEAN, True,  ResOnce,      offset(once) },
     { OptOversize, OPT_STRING,  False, ResOversize,  offset(oversize) },
@@ -819,8 +822,11 @@ static struct {
 	{ ResM3279,	offset(m3279),		XRM_BOOLEAN },
 	{ ResModel,	offset(model),		XRM_STRING },
 	{ ResModifiedSel, offset(modified_sel),	XRM_BOOLEAN },
-#if defined(C3270) && !defined(_WIN32) /*[*/
+#if defined(C3270) /*[*/
+# if !defined(_WIN32) /*[*/
 	{ ResMono,	offset(mono),		XRM_BOOLEAN },
+# endif /*]*/
+	{ ResNoPrompt,	offset(no_prompt),	XRM_BOOLEAN },
 #endif /*]*/
 	{ ResNumericLock, offset(numeric_lock),	XRM_BOOLEAN },
 	{ ResOerrLock,	offset(oerr_lock),	XRM_BOOLEAN },
