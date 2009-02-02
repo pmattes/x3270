@@ -400,6 +400,8 @@
 #define ResPaWidth		"paWidth"
 #define ResPfWidth		"pfWidth"
 #define ResPrintTextCommand	"printTextCommand"
+#define ResPrintTextFont	"printTextFont"
+#define ResPrintTextSize	"printTextSize"
 #define ResPrintWindowCommand	"printWindowCommand"
 #define ResTraceCommand		"traceCommand"
 #define ResUser			"user"
