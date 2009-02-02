@@ -74,10 +74,14 @@ char	       *qualified_host = CN;
 struct host *hosts = (struct host *)NULL;
 static struct host *last_host = (struct host *)NULL;
 static Boolean auto_reconnect_inprogress = False;
+static unsigned long reconnect_id = 0;
 static int net_sock = -1;
 
 #if defined(X3270_DISPLAY) /*[*/
 static void save_recent(const char *);
+#endif /*]*/
+
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 static void try_reconnect(void);
 #endif /*]*/
 
@@ -607,14 +611,17 @@ host_connect(const char *n)
 	net_sock = net_connect(chost, port, localprocess_cmd != CN, &resolving,
 	    &pending);
 	if (net_sock < 0 && !resolving) {
-#if defined(X3270_DISPLAY) /*[*/
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+# if defined(X3270_DISPLAY) /*[*/
 		if (appres.once) {
 			/* Exit when the error pop-up pops down. */
 			exiting = True;
-		}
-		else if (appres.reconnect) {
+		} else
+# endif /*]*/
+		if (appres.reconnect) {
 			auto_reconnect_inprogress = True;
-			(void) AddTimeOut(RECONNECT_ERR_MS, try_reconnect);
+			reconnect_id = AddTimeOut(RECONNECT_ERR_MS,
+				try_reconnect);
 		}
 #endif /*]*/
 		/* Redundantly signal a disconnect. */
@@ -656,7 +663,7 @@ host_connect(const char *n)
 	return 0;
 }
 
-#if defined(X3270_DISPLAY) /*[*/
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 /*
  * Reconnect to the last host.
  */
@@ -679,6 +686,18 @@ try_reconnect(void)
 	auto_reconnect_inprogress = False;
 	host_reconnect();
 }
+
+/*
+ * Cancel any pending reconnect attempt.
+ */
+void
+host_cancel_reconnect(void)
+{
+    	if (auto_reconnect_inprogress) {
+	    	RemoveTimeOut(reconnect_id);
+	    	auto_reconnect_inprogress = False;
+	}
+}
 #endif /*]*/
 
 void
@@ -688,7 +707,8 @@ host_disconnect(Boolean failed)
 		x_remove_input();
 		net_disconnect();
 		net_sock = -1;
-#if defined(X3270_DISPLAY) /*[*/
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+# if defined(X3270_DISPLAY) /*[*/
 		if (appres.once) {
 			if (error_popup_visible()) {
 				/*
@@ -701,10 +721,12 @@ host_disconnect(Boolean failed)
 				x3270_exit(0);
 				return;
 			}
-		} else if (appres.reconnect && !auto_reconnect_inprogress) {
+		} else
+# endif /*]*/
+		if (appres.reconnect && !auto_reconnect_inprogress) {
 			/* Schedule an automatic reconnection. */
 			auto_reconnect_inprogress = True;
-			(void) AddTimeOut(failed? RECONNECT_ERR_MS:
+			reconnect_id = AddTimeOut(failed? RECONNECT_ERR_MS:
 						   RECONNECT_MS,
 					  try_reconnect);
 		}

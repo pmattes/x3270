@@ -412,6 +412,14 @@ main(int argc, char *argv[])
 #endif /*]*/
 	initialize_toggles();
 
+#if 0
+	/* Can't have a prompt and aut-reconnect. */
+	if (appres.reconnect && !appres.no_prompt) {
+	    	Warning("Must have no-prompt mode for reconnect");
+		appres.reconnect = False;
+	}
+#endif
+
 	/* Connect to the host. */
 	screen_suspend();
 	if (cl_hostname != CN) {
@@ -445,7 +453,7 @@ main(int argc, char *argv[])
 			screen_suspend();
 		}
 		if (!appres.no_prompt) {
-			if (!CONNECTED) {
+			if (!CONNECTED && !appres.reconnect) {
 				screen_suspend();
 				(void) printf("Disconnected.\n");
 				if (appres.once)
@@ -457,7 +465,7 @@ main(int argc, char *argv[])
 				trace_event("Done interacting.\n");
 				screen_resume();
 			}
-		} else if (!CONNECTED) {
+		} else if (!CONNECTED && !appres.reconnect) {
 			screen_suspend();
 			x3270_exit(0);
 		}
@@ -1219,8 +1227,10 @@ Escape_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_
     Cardinal *num_params _is_unused)
 {
 	action_debug(Escape_action, event, params, num_params);
-	if (!appres.secure && !appres.no_prompt)
+	if (!appres.secure && !appres.no_prompt) {
+	    	host_cancel_reconnect();
 		screen_suspend();
+	}
 }
 
 /* Popup an informational message. */

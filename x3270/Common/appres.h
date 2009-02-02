@@ -116,7 +116,6 @@ typedef struct {
 	Boolean use_cursor_color;
 	Boolean allow_resize;
 	Boolean no_other;
-	Boolean reconnect;
 	Boolean visual_select;
 	Boolean suppress_host;
 	Boolean suppress_font_menu;
@@ -126,6 +125,7 @@ typedef struct {
 #endif /*]*/
 #if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 	Boolean do_confirms;
+	Boolean reconnect;
 #endif /*]*/
 #if defined(C3270) /*[*/
 	Boolean all_bold_on;
