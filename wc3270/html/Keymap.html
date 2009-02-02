@@ -30,10 +30,14 @@ you chose when you installed <b>wc3270</b>.)
 In that file, put the following:
 <blockquote>
 <pre>
-! Definition of the 'mine' keymap
+!description: Map PageUp and PageDown to PF7/PF8
 &lt;Key>PRIOR: PF(7)
 &lt;Key>NEXT: PF(8)</pre>
 </blockquote>
+<p>Note that in a keymap file, comment lines start with <b>!</b>.
+Comment lines are ignored, except for one special one (shown above): a
+comment line starting with <tt>!description:</tt> will be displayed by the
+<i>New Session Wizard</i> as the description of the keymap.
 <p>To use the keymap, you can either create a new <b>wc3270</b>
 session, or you can modify an existing one.
 <p>
@@ -77,6 +81,11 @@ where:
 		to specify which PF key to transmit.
 	</ul>
 </ul>
+<p>Note that order matters in the keymap.  More-specific rules must come
+before less-specific ones.
+For example, if you want to map both <b>F1</b> and <b>Shift-F1</b>, the rule
+for <b>Shift-F1</b> must come before the rule for <b>F1</b>.
+Otherwise, one or more of your rules will be ignored.
 
 <h2>How to Find the Modifiers</h2>
 The list of modifiers is on the
