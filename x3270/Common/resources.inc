@@ -123,11 +123,11 @@ XX_TR(XX_TD(numericLock)	XX_TD(False)	XX_TD(XX_NBSP)	XX_TD(Lock keyboard for num
 XX_TR(XX_TD(oerrLock)	XX_TD(ifelse(XX_PRODUCT,c3270,True,False))	XX_TD(XX_NBSP)	XX_TD(Lock keyboard for input error))
 XX_TR(XX_TD(oversize)	XX_TD(XX_NBSP)	XX_TD(XX_DASHED(oversize))	XX_TD(Oversize screen dimensions))
 XX_TR(XX_TD(port)	XX_TD(telnet)	XX_TD(XX_DASHED(port))	XX_TD(Non-default TCP port))
-ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(printer.*)	XX_TD(XX_LINK(#rn4,`(note 4)'))	XX_TD(XX_NBSP)	XX_TD(Printer session config))
+ifelse(XX_MODE,console,`XX_TR(XX_TD(printer.*)	XX_TD(XX_LINK(#rn4,`(note 4)'))	XX_TD(XX_NBSP)	XX_TD(Printer session config))
 XX_TR(XX_TD(printerLu)	XX_TD(XX_LINK(#rn4,`(note 4)'))	XX_TD(XX_NBSP)	XX_TD(Printer session config))
 ')dnl
-ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(printer.*)	XX_TD(XX_LINK(#rn4,`(note 4)'))	XX_TD(XX_NBSP)	XX_TD(Printer session config))
-XX_TR(XX_TD(printerLu)	XX_TD(XX_LINK(#rn4,`(note 4)'))	XX_TD(XX_NBSP)	XX_TD(Printer session config))
+ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(printTextFont)	XX_TD(Courier New)	XX_TD(XX_NBSP)	XX_TD(PrintText font name))
+XX_TR(XX_TD(printTextSize)	XX_TD(8)	XX_TD(XX_NBSP)	XX_TD(PrintText font size))
 ')dnl
 XX_TR(XX_TD(quit)	XX_TD(^XX_BS)	XX_TD(XX_NBSP)	XX_TD(XX_SM(NVT)-mode quit character))
 ifelse(XX_MODE,console,`XX_TR(XX_TD(reconnect)	XX_TD(False)	XX_TD(XX_DASHED(reconnect))	XX_TD(Automatically reconnect to host))
