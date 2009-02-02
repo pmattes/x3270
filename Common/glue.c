@@ -427,6 +427,7 @@ parse_options(int *argcp, const char **argv)
     { OptPort,     OPT_STRING,  False, ResPort,      offset(port) },
 #if defined(C3270) /*[*/
     { OptPrinterLu,OPT_STRING,  False, ResPrinterLu, offset(printer_lu) },
+    { OptReconnect,OPT_BOOLEAN, True,  ResReconnect, offset(reconnect) },
 #endif /*]*/
     { OptProxy,	   OPT_STRING,  False, ResProxy,     offset(proxy) },
 #if defined(S3270) /*[*/
@@ -483,6 +484,7 @@ parse_options(int *argcp, const char **argv)
 #if defined(C3270) /*[*/
 	appres.compose_map = "latin1";
 	appres.do_confirms = True;
+	appres.reconnect = False;
 #endif /*]*/
 
 	appres.model = "4";
@@ -839,6 +841,9 @@ static struct {
 #if defined(X3270_ANSI) /*[*/
 	{ ResQuit,	offset(quit),		XRM_STRING },
 	{ ResRprnt,	offset(rprnt),		XRM_STRING },
+#endif /*]*/
+#if defined(C3270) /*[*/
+	{ ResReconnect,	offset(reconnect),	XRM_BOOLEAN },
 #endif /*]*/
 	{ ResSecure,	offset(secure),		XRM_BOOLEAN },
 	{ ResTermName,	offset(termname),	XRM_STRING },
