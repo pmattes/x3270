@@ -117,6 +117,8 @@ ifelse(XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,tcl3270,,`XX_TR(XX_TD(marg
 ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(mono)	XX_TD(XX_LINK(#rn5, `(note 5)'))	XX_TD(XX_DASHED(mono))	XX_TD(Ignore terminal color capabilities))
 ')dnl
 XX_TR(XX_TD(monoCase)	XX_TD(False)	XX_TD(XX_DASHED(set) monoCase)	XX_TD(Mono-case mode))
+ifelse(XX_MODE,console,`XX_TR(XX_TD(noPrompt)	XX_TD(False)	XX_TD(XX_DASHED(noprompt))	XX_TD(Disable command-prompt mode))
+')dnl
 XX_TR(XX_TD(numericLock)	XX_TD(False)	XX_TD(XX_NBSP)	XX_TD(Lock keyboard for numeric field error))
 XX_TR(XX_TD(oerrLock)	XX_TD(ifelse(XX_PRODUCT,c3270,True,False))	XX_TD(XX_NBSP)	XX_TD(Lock keyboard for input error))
 XX_TR(XX_TD(oversize)	XX_TD(XX_NBSP)	XX_TD(XX_DASHED(oversize))	XX_TD(Oversize screen dimensions))
@@ -128,6 +130,8 @@ ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(printer.*)	XX_TD(XX_LINK(#rn4,`(note 4)'))
 XX_TR(XX_TD(printerLu)	XX_TD(XX_LINK(#rn4,`(note 4)'))	XX_TD(XX_NBSP)	XX_TD(Printer session config))
 ')dnl
 XX_TR(XX_TD(quit)	XX_TD(^XX_BS)	XX_TD(XX_NBSP)	XX_TD(XX_SM(NVT)-mode quit character))
+ifelse(XX_MODE,console,`XX_TR(XX_TD(reconnect)	XX_TD(False)	XX_TD(XX_DASHED(reconnect))	XX_TD(Automatically reconnect to host))
+')dnl
 XX_TR(XX_TD(rprnt)	XX_TD(^R)	XX_TD(XX_NBSP)	XX_TD(XX_SM(NVT)-mode reprint character))
 XX_TR(XX_TD(secure)	XX_TD(False)	XX_TD(XX_NBSP)	XX_TD(Disable "dangerous" options))
 XX_TR(XX_TD(termName)	XX_TD(XX_LINK(#rn2,`(note 2)'))	XX_TD(XX_DASHED(tn))	XX_TD(XX_SM(TELNET) terminal type string))

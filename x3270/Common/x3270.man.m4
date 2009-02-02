@@ -243,9 +243,11 @@ For a monochrome display, it is XX_FB(`3278'XX_DASHED(4)).',
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(mono)))
 Forces XX_FB(XX_PRODUCT) to believe it is running on a monochrome X display.
 ')dnl
-ifelse(XX_PRODUCT,c3270,`XX_TP(XX_FB(XX_DASHED(mono)))
+ifelse(XX_MODE,console,`XX_TP(XX_FB(XX_DASHED(mono)))
 Prevents XX_FB(XX_PRODUCT) from using color, ignoring any color capabilities
 reported by the terminal.
+XX_TP(XX_FB(XX_DASHED(noprompt)))
+Disables command-prompt mode.
 ')dnl
 ifelse(XX_PRODUCT,x3270,
 XX_TP(XX_FB(XX_DASHED(once)))
@@ -300,11 +302,13 @@ number indicating the vertical distance in rows of the preedit window from the
 cursor position, e.g. XX_FB(OverTheSpot+1) or XX_FB(OverTheSpot-2).
 The default value is XX_FB(OverTheSpot+1).
 (Supported only when XX_PRODUCT is compiled with DBCS support.)
-XX_TP(XX_FB(XX_DASHED(reconnect)))
+')dnl
+ifelse(XX_INTERACTIVE,yes,`XX_TP(XX_FB(XX_DASHED(reconnect)))
 Causes XX_FB(XX_PRODUCT)
 to automatically reconnect to the host if it ever disconnects.
 This option has effect only if a hostname is specified on the command line.
-XX_TP(XX_FB(XX_DASHED(sb)))
+')dnl
+ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(sb)))
 Turns on the scrollbar.
 XX_TP(XX_FB(+sb))
 Turns the scrollbar off.

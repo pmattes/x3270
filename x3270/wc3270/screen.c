@@ -1975,7 +1975,10 @@ void
 status_reset(void)
 {
     	cancel_status_push();
-	if (kybdlock & KL_ENTER_INHIBIT)
+
+	if (!CONNECTED)
+	    	status_msg = "X Disconnect";
+	else if (kybdlock & KL_ENTER_INHIBIT)
 		status_msg = "X Inhibit";
 	else if (kybdlock & KL_DEFERRED_UNLOCK)
 		status_msg = "X";
