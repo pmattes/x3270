@@ -987,7 +987,11 @@ parse_xrm(const char *arg, const char *where)
 		    !strncasecmp(ResHostColorFor, arg + match_len,
 			    strlen(ResHostColorFor)) ||
 		    !strncasecmp(ResConsoleColorForHostColor, arg + match_len,
-			    strlen(ResConsoleColorForHostColor))
+			    strlen(ResConsoleColorForHostColor)) ||
+		    !strncasecmp(ResPrintTextFont, arg + match_len,
+			    strlen(ResPrintTextFont)) ||
+		    !strncasecmp(ResPrintTextSize, arg + match_len,
+			    strlen(ResPrintTextSize))
 #else /*][*/
 		    !strncasecmp(ResPrintTextCommand, arg + match_len,
 			    strlen(ResPrintTextCommand)) ||

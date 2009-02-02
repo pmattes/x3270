@@ -194,9 +194,21 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts)
 
 #if defined(_WIN32) /*[*/
 	if (ptype == P_RTF) {
-		fprintf(f, "{\\rtf1\\ansi\\ansicpg%u\\deff0\\deflang1033{\\fonttbl{\\f0\\fmodern\\fprq1\\fcharset0 Courier New;}}\n"
-			    "\\viewkind4\\uc1\\pard\\f0\\fs16 ",
-			    GetACP());
+		char *pt_font = get_resource(ResPrintTextFont);
+		char *pt_size = get_resource(ResPrintTextSize);
+		int pt_nsize;
+
+		if (pt_font == CN)
+		    	pt_font = "Courier New";
+		if (pt_size == CN)
+		    	pt_size = "8";
+		pt_nsize = atoi(pt_size);
+		if (pt_nsize <= 0)
+		    	pt_nsize = 8;
+
+		fprintf(f, "{\\rtf1\\ansi\\ansicpg%u\\deff0\\deflang1033{\\fonttbl{\\f0\\fmodern\\fprq1\\fcharset0 %s;}}\n"
+			    "\\viewkind4\\uc1\\pard\\f0\\fs%d ",
+			    GetACP(), pt_font, pt_nsize * 2);
 		if (current_high)
 		    	fprintf(f, "\\b ");
 	}
