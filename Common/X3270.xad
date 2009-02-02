@@ -1035,7 +1035,7 @@ x3270*model3Option.label:			Model 3 (80x32)
 x3270*model4Option.label:			Model 4 (80x43)
 x3270*model5Option.label:			Model 5 (132x27)
 x3270*oversizeOption.label:			Oversize...
-x3270*saveOption.label:				Save Changed Options in File
+x3270*saveOption.label:				Save Changed Options
 #endif
 !
 ! Messages
