@@ -135,7 +135,7 @@ CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
 		p.ColorTable[6] =  0x00008080;
 		p.ColorTable[7] =  0x00c0c0c0;
 		p.ColorTable[8] =  0x00808080;
-		p.ColorTable[9] =  0x00ff0000;
+		p.ColorTable[9] =  0x00ff8000;
 		p.ColorTable[10] = 0x0000ff00;
 		p.ColorTable[11] = 0x00ffff00;
 		p.ColorTable[12] = 0x000000ff;
