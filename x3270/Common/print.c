@@ -192,7 +192,6 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts)
 	fa_ital = mi && FA_IS_MODIFIED(fa);
 	current_ital = fa_ital;
 
-#if defined(_WIN32) /*[*/
 	if (ptype == P_RTF) {
 		char *pt_font = get_resource(ResPrintTextFont);
 		char *pt_size = get_resource(ResPrintTextSize);
@@ -208,11 +207,16 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts)
 
 		fprintf(f, "{\\rtf1\\ansi\\ansicpg%u\\deff0\\deflang1033{\\fonttbl{\\f0\\fmodern\\fprq1\\fcharset0 %s;}}\n"
 			    "\\viewkind4\\uc1\\pard\\f0\\fs%d ",
-			    GetACP(), pt_font, pt_nsize * 2);
+#if defined(_WIN32) /*[*/
+			    GetACP(),
+#else /*][*/
+			    1252, /* the number doesn't matter */
+#endif /*]*/
+			    pt_font, pt_nsize * 2);
 		if (current_high)
 		    	fprintf(f, "\\b ");
 	}
-#endif /*]*/
+
 	if (ptype == P_HTML) {
 		fprintf(f, "<html>\n"
 			   "<head>\n"
@@ -316,23 +320,18 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts)
 #endif /*]*/
 		else {
 			while (nr) {
-#if defined(_WIN32) /*[*/
 			    	if (ptype == P_RTF)
 				    	fprintf(f, "\\par");
-#endif /*]*/
 				(void) fputc('\n', f);
 				nr--;
 			}
 			while (ns) {
-#if defined(_WIN32) /*[*/
 			    	if (ptype == P_RTF)
 				    	fprintf(f, "\\~");
 				else
-#endif /*]*/
 					(void) fputc(' ', f);
 				ns--;
 			}
-#if defined(_WIN32) /*[*/
 			if (ptype == P_RTF) {
 				Bool high;
 
@@ -348,7 +347,6 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts)
 					current_high = high;
 				}
 			}
-#endif /*]*/
 			if (ptype == P_HTML) {
 				int fg_color, bg_color;
 				Bool high;
@@ -400,7 +398,6 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts)
 				}
 			}
 			any = True;
-#if defined(_WIN32) /*[*/
 			if (ptype == P_RTF) {
 				if (uc & ~0x7f) {
 					fprintf(f, "\\u%ld?", uc);
@@ -419,9 +416,7 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts)
 					else
 						fputc(mb[0], f);
 				}
-			} else
-#endif /*]*/
-			if (ptype == P_HTML) {
+			} else if (ptype == P_HTML) {
 				if (uc == '<')
 					fprintf(f, "&lt;");
 				else if (uc == '&')
@@ -450,19 +445,15 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts)
 	if (!any && !(opts & FPS_EVEN_IF_EMPTY) && ptype == P_TEXT)
 		return False;
 	while (nr) {
-#if defined(_WIN32) /*[*/
 	    	if (ptype == P_RTF)
 		    	fprintf(f, "\\par");
-#endif /*]*/
 		if (ptype == P_TEXT)
 			(void) fputc('\n', f);
 		nr--;
 	}
-#if defined(_WIN32) /*[*/
 	if (ptype == P_RTF) {
 	    	fprintf(f, "\n}\n%c", 0);
 	}
-#endif /*]*/
 	if (ptype == P_HTML) {
 		fprintf(f, "%s</span></pre></td></tr>\n"
 		           "  </table>\n"
@@ -748,11 +739,9 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 		} else if (!strcasecmp(params[i], "html")) {
 			ptype = P_HTML;
 			use_file = True;
-#if defined(_WIN32) /*[*/
 		} else if (!strcasecmp(params[i], "rtf")) {
 			ptype = P_RTF;
 			use_file = True;
-#endif /*]*/
 		} else if (!strcasecmp(params[i], "secure")) {
 			secure = True;
 		} else if (!strcasecmp(params[i], "command")) {
