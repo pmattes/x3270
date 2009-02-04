@@ -983,15 +983,15 @@ parse_xrm(const char *arg, const char *where)
 		                 strlen(ResKeymap ".")) ||
 		    !strncasecmp("host.", arg + match_len, 5) ||
 		    !strncasecmp("printer.", arg + match_len, 8) ||
+		    !strncasecmp(ResPrintTextFont, arg + match_len,
+			    strlen(ResPrintTextFont)) ||
+		    !strncasecmp(ResPrintTextSize, arg + match_len,
+			    strlen(ResPrintTextSize)) ||
 #if defined(_WIN32) /*[*/
 		    !strncasecmp(ResHostColorFor, arg + match_len,
 			    strlen(ResHostColorFor)) ||
 		    !strncasecmp(ResConsoleColorForHostColor, arg + match_len,
-			    strlen(ResConsoleColorForHostColor)) ||
-		    !strncasecmp(ResPrintTextFont, arg + match_len,
-			    strlen(ResPrintTextFont)) ||
-		    !strncasecmp(ResPrintTextSize, arg + match_len,
-			    strlen(ResPrintTextSize))
+			    strlen(ResConsoleColorForHostColor))
 #else /*][*/
 		    !strncasecmp(ResPrintTextCommand, arg + match_len,
 			    strlen(ResPrintTextCommand)) ||
