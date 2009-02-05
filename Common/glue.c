@@ -918,6 +918,8 @@ parse_xrm(const char *arg, const char *where)
 	char *t;
 	void *address = NULL;
 	enum resource_type type = XRM_STRING;
+	Boolean quoted;
+	char c;
 #if defined(C3270) /*[*/
 	char *hide;
 	Boolean arbitrary = False;
@@ -979,6 +981,9 @@ parse_xrm(const char *arg, const char *where)
 	}
 #if defined(C3270) /*[*/
 	if (address == NULL) {
+		/*
+		 * Handle resources that are accessed only via get_resource().
+		 */
 		if (!strncasecmp(ResKeymap ".", arg + match_len,
 		                 strlen(ResKeymap ".")) ||
 		    !strncasecmp("host.", arg + match_len, 5) ||
@@ -1027,40 +1032,38 @@ parse_xrm(const char *arg, const char *where)
 	case XRM_STRING:
 		t = Malloc(strlen(s) + 1);
 		*(char **)address = t;
-		if (*s == '"') {
-			Boolean quoted = False;
-			char c;
+		quoted = False;
 
-			s++;
-			while ((c = *s++) != '\0') {
-				if (quoted) {
-					switch (c) {
-					case 'n':
-						*t++ = '\n';
-						break;
-					case 'r':
-						*t++ = '\r';
-						break;
-					case 'b':
-						*t++ = '\b';
-						break;
-					default:
-						*t++ = c;
-						break;
-					}
-					quoted = False;
-				} else if (c == '\\') {
-					quoted = True;
-				} else if (c == '"') {
+		while ((c = *s++) != '\0') {
+			if (quoted) {
+				switch (c) {
+				case 'b':
+					*t++ = '\b';
 					break;
-				} else {
+				case 'f':
+					*t++ = '\f';
+					break;
+				case 'n':
+					*t++ = '\n';
+					break;
+				case 'r':
+					*t++ = '\r';
+					break;
+				case 't':
+					*t++ = '\t';
+					break;
+				default:
 					*t++ = c;
+					break;
 				}
+				quoted = False;
+			} else if (c == '\\') {
+				quoted = True;
+			} else {
+				*t++ = c;
 			}
-			*t = '\0';
-		} else {
-			(void) strcpy(t, s);
 		}
+		*t = '\0';
 		break;
 	case XRM_INT: {
 		long n;
@@ -1131,8 +1134,11 @@ read_resource_file(const char *filename, Boolean fatal)
 			if (bsl) {
 				if (*s == 'n')
 					*t++ = '\n';
-				else
+				else {
+				    	/* Leave it alone. */
+				    	*t++ = '\\';
 					*t++ = *s;
+				}
 				bsl = False;
 			} else if (*s == '\\')
 				bsl = True;
