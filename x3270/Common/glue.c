@@ -588,7 +588,7 @@ parse_options(int *argcp, const char **argv)
 				continue;
 			*(const char **)opts[j].aoff = argv[++i];
 			if (opts[j].res_name != CN)
-				add_resource(NewString(opts[j].name),
+				add_resource(NewString(opts[j].res_name),
 					     NewString(argv[i]));
 			break;
 		    case OPT_XRM:
