@@ -62,6 +62,11 @@
 /* #define X3270_COMPAT 1	make x3270 compatible with all of the other
 			   emulators */
 
+#define SW_3279_2	0x09
+#define SH_3279_2	0x0c
+#define Xr_3279_2	0x000a02e5
+#define Yr_3279_2	0x0002006f
+
 /* Externals: ctlr.c */
 extern Boolean  screen_alt;
 extern unsigned char reply_mode;
@@ -728,15 +733,15 @@ do_qr_usable_area(void)
 	SET16(obptr, maxCOLS);	/* usable width */
 	SET16(obptr, maxROWS);	/* usable height */
 	*obptr++ = 0x01;	/* units (mm) */
-	SET32(obptr, 0x000a02e5); /* Xr, canned from 3279-2 */
-	SET32(obptr, 0x0002006f); /* Yr, canned from 3279-2 */
+	SET32(obptr, Xr_3279_2); /* Xr, canned from 3279-2 */
+	SET32(obptr, Yr_3279_2); /* Yr, canned from 3279-2 */
 
 				/*
 				 * If we ever implement graphics, these will
 				 * need to change.
 				 */
-	*obptr++ = 0x09;	/* AW, canned from 3279-2 */
-	*obptr++ = 0x0c;	/* AH, canned from 3279-2 */
+	*obptr++ = SW_3279_2;	/* AW, canned from 3279-2 */
+	*obptr++ = SH_3279_2;	/* AH, canned from 3279-2 */
 
 	SET16(obptr, maxCOLS*maxROWS);	/* buffer, questionable */
 }
@@ -843,8 +848,8 @@ do_qr_charsets(void)
 #endif /*]*/
 		*obptr++ = 0x82;	/* flags: GE, CGCSGID present */
 	*obptr++ = 0x00;		/* more flags */
-	*obptr++ = 0x09;		/* SDW, canned from 3279-2 */
-	*obptr++ = 0x0c;		/* SDW, canned from 3279-2 */
+	*obptr++ = SW_3279_2;		/* SDW, canned from 3279-2 */
+	*obptr++ = SH_3279_2;		/* SDW, canned from 3279-2 */
 	*obptr++ = 0x00;		/* no load PS */
 	*obptr++ = 0x00;
 	*obptr++ = 0x00;
@@ -903,8 +908,8 @@ do_qr_charsets(void)
 		*obptr++ = 0x80;	/* SET 0x80: */
 		*obptr++ = 0x20;	/*  FLAGS: DBCS */
 		*obptr++ = 0xf8;	/*  LCID: 0xf8 */
-		*obptr++ = *char_width * 2; /* SW */
-		*obptr++ = *char_height; /* SH */
+		*obptr++ = SW_3279_2 * 2; /* SW, canned from 3279-2 */
+		*obptr++ = SH_3279_2;	/* SH, canned from 3279-2 */
 		*obptr++ = 0x41;	/*  SUBSN */
 		*obptr++ = 0x7f;	/*  SUBSN */
 		SET32(obptr, cgcsgid_dbcs); /* CGCSGID */
