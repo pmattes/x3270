@@ -1,0 +1,1 @@
+../Common/readres.c
