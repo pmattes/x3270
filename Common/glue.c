@@ -62,6 +62,7 @@
 #include "telnetc.h"
 #include "togglesc.h"
 #include "trace_dsc.h"
+#include "unicodec.h"
 #include "utilc.h"
 
 #if defined(_WIN32) /*[*/
@@ -1090,6 +1091,80 @@ parse_xrm(const char *arg, const char *where)
 		add_resource(rsname, hide);
 	}
 #endif /*]*/
+}
+
+/*
+ * Clean up a string for display (undo what parse_xrm does).
+ */
+char *
+safe_string(const char *s)
+{
+    	char *t = Malloc(1);
+	int tlen = 1;
+
+	*t = '\0';
+
+    	/*
+	 * Translate the string to UCS4 a character at a time.
+	 * If the result is a control code or backslash, expand it.
+	 * Otherwise, translate it back to the local encoding and
+	 * append it to the output.
+	 */
+    	while (*s) {
+	    	ucs4_t u;
+		int consumed;
+		enum me_fail error;
+
+	    	u = multibyte_to_unicode(s, strlen(s), &consumed, &error);
+		if (u == 0)
+		    	break;
+		if (u < ' ') {
+		    	char c = 0;
+			int inc = 0;
+
+		    	switch (u) {
+			case '\b':
+			    	c = 'b';
+				inc = 2;
+				break;
+			case '\f':
+			    	c = 'f';
+				inc = 2;
+				break;
+			case '\n':
+			    	c = 'n';
+				inc = 2;
+				break;
+			case '\r':
+			    	c = 'r';
+				inc = 2;
+				break;
+			case '\t':
+			    	c = 't';
+				inc = 2;
+				break;
+			default:
+				inc = 6;
+				break;
+			}
+
+			t = Realloc(t, tlen + inc);
+			if (inc == 2) {
+				*(t + tlen - 1) = '\\';
+				*(t + tlen) = c;
+			} else {
+			    	sprintf(t, "\\u%04x", u);
+			}
+			tlen += inc;
+		} else {
+		    	t = Realloc(t, tlen + consumed);
+			memcpy(t + tlen - 1, s, consumed);
+			tlen += consumed;
+		}
+		s += consumed;
+	}
+	*(t + tlen - 1) = '\0';
+	return t;
 }
 
 /* Read resources from a file. */

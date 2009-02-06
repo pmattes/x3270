@@ -36,6 +36,7 @@
 #include "appres.h"
 #include "resources.h"
 
+#include "gluec.h"
 #include "hostc.h"
 #include "keymapc.h"
 #include "macrosc.h"
@@ -1000,6 +1001,7 @@ keymap_dump(void)
 			char buf[1024];
 			char *s = buf;
 			char dbuf[128];
+			char *t = safe_string(k->action);
 
 			for (i = 0; i < k->ncodes; i++) {
 				s += sprintf(s, " %s",
@@ -1011,7 +1013,8 @@ keymap_dump(void)
 					    dbuf));
 			}
 			action_output("[%s:%d]%s: %s", k->file, k->line,
-			    buf, k->action);
+			    buf, t);
+			Free(t);
 		}
 	}
 }
