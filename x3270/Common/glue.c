@@ -1190,7 +1190,7 @@ read_resource_file(const char *filename, Boolean fatal)
 
 	ilen = 0;
 	while (fgets(buf + ilen, sizeof(buf) - ilen, f) != CN || ilen) {
-		char *s, *t;
+		char *s;
 		unsigned sl;
 		Boolean bsl;
 
@@ -1201,28 +1201,9 @@ read_resource_file(const char *filename, Boolean fatal)
 		if (sl && (buf + ilen)[sl-1] == '\n')
 			(buf + ilen)[--sl] = '\0';
 
-		/*
-		 * Translate backslash-n to real newline characters, and
-		 * remember if the last character is a backslash.
-		 */
-		for (bsl = False, s = buf + ilen, t = s; *s; s++) {
-			if (bsl) {
-				if (*s == 'n')
-					*t++ = '\n';
-				else {
-				    	/* Leave it alone. */
-				    	*t++ = '\\';
-					*t++ = *s;
-				}
-				bsl = False;
-			} else if (*s == '\\')
-				bsl = True;
-			else {
-				*t++ = *s;
-				bsl = False;
-			}
-		}
-		*t = '\0';
+		/* Check for a trailing backslash. */
+		s = buf + ilen;
+		bsl = (sl > 0) && (s[sl - 1] == '\\');
 
 		/* Skip leading whitespace. */
 		s = buf;
