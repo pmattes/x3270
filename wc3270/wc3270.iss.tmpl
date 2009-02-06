@@ -65,7 +65,7 @@ begin
 end;
 
 [Icons]
-Name: "{group}\New wc3270 Session"; Filename: "{app}\wc3270wiz.exe"; WorkingDir: "{app}"
+Name: "{group}\wc3270 Session Wizard"; Filename: "{app}\wc3270wiz.exe"; WorkingDir: "{app}"
 Name: "{group}\Run wc3270"; Filename: "{app}\wc3270.exe"; WorkingDir: "{app}"
 Name: "{group}\wc3270 Documentation"; Filename: "{app}\html\README.html"
 Name: "{group}\wc3270 Explore AppData"; Filename: "{app}\ead3270.exe"; Flags: runminimized; IconFilename: "{app}\wc3270.exe"
@@ -77,13 +77,13 @@ Root: HKCR; Subkey: "wc3270\DefaultIcon"; ValueType: string; ValueName: ""; Valu
 Root: HKCR; Subkey: "wc3270\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\wc3270"" ""%1"""
 
 [Run]
-Filename: "{app}\wc3270wiz.exe"; Description: "{cm:LaunchProgram,wc3270 New Session Wizard}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\wc3270wiz.exe"; Description: "{cm:LaunchProgram,wc3270 Session Wizard}"; Flags: nowait postinstall skipifsilent
 Filename: "{cmd}"; Parameters: {code:MyHelp}; Description: "{cm:LaunchProgram,Online Documentation}"; Flags: nowait postinstall skipifsilent
 Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""wc3270"""; Flags: nowait skipifsilent runhidden; Tasks: desktopicon
-Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""New wc3270 Session"""; Flags: nowait skipifsilent runhidden; Tasks: desktopicon
+Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""wc3270 Session Wizard"""; Flags: nowait skipifsilent runhidden; Tasks: desktopicon
 
 [UninstallRun]
 Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\wc3270.lnk"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 0,4.0
-Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\New wc3270 Session.lnk"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 0,4.0
+Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\wc3270 Session Wizard.lnk"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 0,4.0
 Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\wc3270.pif"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 4.0,0
-Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\New wc3270 Session.pif"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 4.0,0
+Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\wc3270 Session Wizard.pif"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 4.0,0

@@ -84,6 +84,8 @@
 #define KM_DESC		"!description: "
 #define LEN_DESC	strlen(KM_DESC)
 
+#define WIZARD_VER	1
+
 extern char *wversion;
 
 struct {
@@ -165,7 +167,6 @@ static struct {
 
 typedef struct {
 	char session[STR_SIZE];		/* session name */
-	char path[MAX_PATH];		/* path to session file */
 	char host[STR_SIZE];		/* host name */
 	int  port;			/* TCP port */
 	char luname[STR_SIZE];		/* LU name */
@@ -183,9 +184,12 @@ typedef struct {
 	char keymaps[STR_SIZE];		/* keymap names */
 } session_t;
 
-int create_session_file(session_t *s);
+int create_session_file(session_t *s, char *path);
+static int read_session(FILE *f, session_t *s);
 
 static char mya[MAX_PATH];
+
+char *user_settings = NULL;
 
 char *
 get_input(char *buf, int bufsize)
@@ -412,12 +416,21 @@ shortcut on your desktop.");
 	return 0;
 }
 
-/* Session name screen. */
+/*
+ * Session name screen.
+ * Returns:  0 file does not exist
+ *           1 file does exist and is editable, edit it
+ *           2 file does exist and is editable, do not edit it
+ *           3 file exists but is uneditable, overwrite it
+ *          -1 bail, end of file
+ *          -2 bail, uneditable and they don't want to overwrite it
+ */
 int
-get_session(session_t *s)
+get_session(session_t *s, char *path)
 {
     	FILE *f;
 	int rc;
+	int editable;
 
 	/* Get the session name. */
 	new_screen(s, "\
@@ -444,24 +457,43 @@ and dash '-')\n");
 
 		break;
 	}
-	sprintf(s->path, "%s%s.wc3270", mya, s->session);
-	f = fopen(s->path, "r");
+	sprintf(path, "%s%s.wc3270", mya, s->session);
+	f = fopen(path, "r");
 	if (f != NULL) {
-		for (;;) {
-			printf("\nSession '%s' already exists.  "
-			    "Overwrite it? (y/n) [n] ", s->session);
-			fflush(stdout);
-			rc = getyn(0);
-			if (rc == -1)
-				return -1;
-			if (rc == 0)
-			    	return -2;
-			if (rc == 1)
-				break;
-		}
+	    	editable = read_session(f, s);
 		fclose(f);
+
+		if (editable) {
+			for (;;) {
+				printf("\nSession '%s' exists.  Edit it? "
+					"(y/n) [y] ", s->session);
+				fflush(stdout);
+				rc = getyn(1);
+				if (rc == -1)
+					return -1;
+				if (rc == 0)
+					return 2; /* do not edit */
+				if (rc == 1)
+					return 1; /* edit it */
+			}
+		} else {
+			for (;;) {
+				printf("\nSession '%s' already exists but "
+					"cannot be edited.  Replace it? "
+					"(y/n) [n] ", s->session);
+				fflush(stdout);
+				rc = getyn(0);
+				if (rc == -1)
+					return -1;
+				if (rc == 0)
+					return -2; /* don't overwrite */
+				if (rc == 1)
+					return 3; /* overwrite */
+			}
+		}
+	} else {
+	    	return 0; /* create it */
 	}
-	return 0;
 }
 
 int
@@ -1211,7 +1243,7 @@ user-defined keymaps, separated by commas.");
 }
 
 int
-summarize_and_proceed(session_t *s, char *installdir)
+summarize_and_proceed(session_t *s, char *installdir, char *how)
 {
     	int rc;
 	char choicebuf[32];
@@ -1385,7 +1417,7 @@ summarize_and_proceed(session_t *s, char *installdir)
 	}
 
 	for (;;) {
-		printf("\nCreate the session? (y/n) [y] ");
+		printf("\n%s the session file? (y/n) [y] ", how);
 		fflush(stdout);
 		rc = getyn(1);
 		if (rc == -1 || rc == 0)
@@ -1484,6 +1516,10 @@ session_wizard(void)
 	char exepath[MAX_PATH];
 	char args[MAX_PATH];
 	HRESULT hres;
+	char save_session_name[STR_SIZE];
+	FILE *f;
+	int shortcut_exists;
+	char path[MAX_PATH];
 
 	/* Start with nothing. */
 	(void) memset(&session, '\0', sizeof(session));
@@ -1503,40 +1539,64 @@ session_wizard(void)
 		return -1;
 
 	/* Get the session name. */
-	rc = get_session(&session);
-	if (rc == -1)
-	    	return -1;
+	rc = get_session(&session, path);
+	switch (rc) {
+	case -2: /* Uneditable, and they don't want to overwrite it. */
+	    	return 0;
+	default:
+	case -1: /* EOF */
+		return -1;
+	case 3: /* Overwrite old (uneditable). */
+		/* Clean out the session. */
+		strcpy(save_session_name, session.session);
+		memset(&session, '\0', sizeof(session));
+		strcpy(session.session, save_session_name);
+		/* fall through... */
+	case 0: /* New. */
 
-	if (rc == 0) {
+		/* Get the host name, which defaults to the session name. */
 		if (strchr(session.session, ' ') == NULL)
-		    	strcpy(session.host, session.session);
+			strcpy(session.host, session.session);
+		if (get_host(&session) < 0)
+			return -1;
 
-	    /* Get the host name, which defaults to the session name. */
-	    if (get_host(&session) < 0)
-		    return -1;
+		/* Default eveything else. */
+		session.port = 23;
+		session.model = 4;
+		strcpy(session.charset, "bracket");
+		strcpy(session.printerlu, ".");
+		/* fall through... */
+	case 1: /* Edit existing file. */
+		/* See what they want to change. */
+		if (summarize_and_proceed(&session, installdir,
+			    (rc == 3)? "Replace":
+			    ((rc == 0)? "Create": "Update")) < 0)
+			return -1;
 
-	    /* Default eveything else. */
-	    session.port = 23;
-	    session.model = 4;
-	    strcpy(session.charset, "bracket");
-	    strcpy(session.printerlu, ".");
-
-	    /* See what they want to change. */
-	    if (summarize_and_proceed(&session, installdir) < 0)
-		    return -1;
-
-	    /* Create the session file. */
-	    printf("\nCreating session file '%s'... ", session.path);
-	    fflush(stdout);
-	    if (create_session_file(&session) < 0)
-		    return -1;
-	    printf("done\n");
-	    fflush(stdout);
+		/* Create the session file. */
+		printf("\nWriting session file '%s'... ", path);
+		fflush(stdout);
+		if (create_session_file(&session, path) < 0)
+			return -1;
+		printf("done\n");
+		fflush(stdout);
+		break;
+	case 2: /* Don't edit existing file, but we do have a copy of the
+		   session. */
+		break;
 	}
 
 	/* Ask about the shortcut. */
+	if (is_nt)
+		sprintf(linkpath, "%s\\%s.lnk", desktop, session.session);
+	else
+		sprintf(linkpath, "%s\\%s.pif", desktop, session.session);
+	f = fopen(linkpath, "r");
+	if ((shortcut_exists = (f != NULL)))
+		fclose(f);
 	for (;;) {
-	    	printf("\nCreate desktop shortcut (y/n) [y]: ");
+	    	printf("\n%s desktop shortcut (y/n) [y]: ",
+			shortcut_exists? "Replace": "Create");
 		rc = getyn(1);
 		if (rc <= 0)
 		    	return -1;
@@ -1545,14 +1605,11 @@ session_wizard(void)
 	}
 
 	/* Create the desktop shorcut. */
-	if (is_nt)
-		sprintf(linkpath, "%s\\%s.lnk", desktop, session.session);
-	else
-		sprintf(linkpath, "%s\\%s.pif", desktop, session.session);
-	printf("\nCreating desktop shortcut '%s'... ", linkpath);
+	printf("\n%s desktop shortcut '%s'... ",
+		shortcut_exists? "Replacing": "Creating", linkpath);
 	fflush(stdout);
 	sprintf(exepath, "%s\\wc3270.exe", installdir);
-	sprintf(args, "\"%s\"", session.path);
+	sprintf(args, "\"%s\"", path);
 	if (is_nt) {
 	    	wchar_t *font;
 		int codepage = 0;
@@ -1595,11 +1652,15 @@ session_wizard(void)
 
 /* Create the session file. */
 int
-create_session_file(session_t *session)
+create_session_file(session_t *session, char *path)
 {
     	FILE *f;
 	time_t t;
 	int bracket;
+	long eot;
+	unsigned long csum;
+	int i;
+	char buf[1024];
 
 	/*
 	 * Create the AppData directory if it doesn't exist.  (If wc3270 was
@@ -1607,7 +1668,7 @@ create_session_file(session_t *session)
 	 */
 	(void) _mkdir(mya);
 
-	f = fopen(session->path, "w");
+	f = fopen(path, "w+");
 	if (f == NULL) {
 		perror("Cannot create session file");
 		return -1;
@@ -1661,9 +1722,196 @@ create_session_file(session_t *session)
 	    	fprintf(f, "wc3270.keymap: %s\n", session->keymaps);
 	}
 
+	/* Emit the warning. */
+	fprintf(f, "\
+!\n\
+! The following block of text is used to read the contents of this file back\n\
+! into the New Session Wizard.  If any of the text from the top of the file\n\
+! through the line below reading \"Additional resource definitions...\" is\n\
+! modified, the New Session Wizard will not be able to edit this file.\n\
+!");
+
+	/* Write out the session structure in hex. */
+	for (i = 0; i < sizeof(*session); i++) {
+	    	if (!(i % 32))
+		    	fprintf(f, "\n!x");
+		fprintf(f, "%02x", ((char *)session)[i]);
+	}
+	fprintf(f, "\n");
+
+	/* Save where we are in the file. */
+	fflush(f);
+	eot = ftell(f);
+
+	/* Go back and read what we wrote. */
+	rewind(f);
+	csum = 0;
+	while (fgets(buf, sizeof(buf), f) != NULL) {
+		for (i = 0; buf[i]; i++) {
+		    	csum += buf[i] & 0xff;
+		}
+		if (ftell(f) >= eot)
+		    	break;
+	}
+	fflush(f);
+
+	/* Write out the checksum and structure version. */
+	fseek(f, 0, SEEK_END);
+	fprintf(f, "!c%08lx %d\n", csum, WIZARD_VER);
+
+	fprintf(f, "!\n\
+!*Additional resource definitions can go after this line.\n");
+
+	/* Write out the user's previous extra settings. */
+	if (user_settings != NULL)
+	    	fprintf(f, "%s", user_settings);
+
 	fclose(f);
 
 	return 0;
+}
+
+/* Convert a hexadecimal digit to a nybble. */
+static unsigned
+hex(char c)
+{
+    	static char *digits = "0123456789abcdef";
+	char *pos;
+
+	pos = strchr(digits, c);
+	if (pos == NULL)
+	    	return 0; /* XXX */
+	return pos - digits;
+}
+
+#define DEBUG_EDIT 1
+
+/*
+ * Read an existing session file.
+ * Returns 1 for success (file read and editable), 0 for failure.
+ */
+static int
+read_session(FILE *f, session_t *s)
+{
+    	char buf[1024];
+	int saw_hex = 0;
+	int saw_star = 0;
+	unsigned long csum;
+	unsigned long fcsum = 0;
+	int ver;
+	int s_off = 0;
+
+	/*
+	 * Look for the checksum and version.  Verify the version.
+	 *
+	 * XXX: It might be a good idea to validate each '!x' line and
+	 * make sure that the length is right.
+	 */
+	while (fgets(buf, sizeof(buf), f) != NULL) {
+	    	if (buf[0] == '!' && buf[1] == 'x')
+		    	saw_hex = 1;
+		else if (buf[0] == '!' && buf[1] == '*')
+		    	saw_star = 1;
+		else if (buf[0] == '!' && buf[1] == 'c') {
+			if (sscanf(buf + 2, "%lx %d", &csum, &ver) != 2) {
+#if defined(DEBUG_EDIT) /*[*/
+				printf("[bad !c line '%s']\n", buf);
+#endif /*]*/
+				return 0;
+			}
+			if (ver > WIZARD_VER) {
+#if defined(DEBUG_EDIT) /*[*/
+				printf("[bad ver %d > %d]\n",
+					ver, WIZARD_VER);
+#endif /*]*/
+			    	return 0;
+			}
+		}
+	}
+	if (!saw_hex || !saw_star) {
+#if defined(DEBUG_EDIT) /*[*/
+	    	printf("[missing%s%s]\n",
+			saw_hex? "": "hex",
+			saw_star? "": "star");
+#endif /*]*/
+		return 0;
+	}
+
+	/* Checksum from the top up to the '!c' line. */
+	fflush(f);
+	fseek(f, 0, SEEK_SET);
+	fcsum = 0;
+	while (fgets(buf, sizeof(buf), f) != NULL) {
+	    	char *t;
+
+		if (buf[0] == '!' && buf[1] == 'c')
+		    	break;
+
+		for (t = buf; *t; t++)
+		    	fcsum += *t & 0xff;
+	}
+	if (fcsum != csum) {
+#if defined(DEBUG_EDIT) /*[*/
+	    	printf("[checksum mismatch, want 0x%08lx got 0x%08lx]\n",
+			csum, fcsum);
+#endif /*]*/
+	    	return 0;
+	}
+
+	/* Once more, with feeling.  Scribble onto the session structure. */
+	fflush(f);
+	fseek(f, 0, SEEK_SET);
+	s_off = 0;
+	while (fgets(buf, sizeof(buf), f) != NULL) {
+
+	    	if (buf[0] == '!' && buf[1] == 'x') {
+		    	char *t;
+
+			for (t = buf + 2; *t; t += 2) {
+			    	if (*t == '\n')
+				    	break;
+				if (s_off > sizeof(*s)) {
+#if defined(DEBUG_EDIT) /*[*/
+					printf("[s overflow: %d > %d]\n",
+						s_off, sizeof(*s));
+#endif /*]*/
+					return 0;
+				}
+			    	((char *)s)[s_off++] =
+				    (hex(*t) << 4) | hex(*(t + 1));
+			}
+		} else if (buf[0] == '!' && buf[1] == 'c')
+		    	break;
+	}
+
+	/*
+	 * Read the balance of the file into a temporary buffer, ignoring
+	 * the '!*' line.
+	 */
+	saw_star = 0;
+	while (fgets(buf, sizeof(buf), f) != NULL) {
+	    	if (!saw_star) {
+			if (buf[0] == '!' && buf[1] == '*')
+				saw_star = 1;
+			continue;
+		}
+		if (user_settings == NULL) {
+		    	user_settings = malloc(strlen(buf) + 1);
+			user_settings[0] = '\0';
+		} else
+		    	user_settings = realloc(user_settings,
+				strlen(user_settings) + strlen(buf) + 1);
+		if (user_settings == NULL) {
+#if defined(DEBUG_EDIT) /*[*/
+			printf("out of memory]\n");
+#endif /*]*/
+			return 0;
+		}
+		strcat(user_settings, buf);
+	}
+
+	/* Success */
+	return 1;
 }
 
 /* Make sure the console window is long enough. */
