@@ -56,6 +56,7 @@
 #include "macrosc.h"
 #include "menubarc.h"
 #include "popupsc.h"
+#include "readresc.h"
 #include "screenc.h"
 #include "selectc.h"
 #include "tablesc.h"
@@ -892,7 +893,6 @@ strncapcmp(const char *known, const char *unknown, unsigned unk_len)
 	return -1;
 }
 
-
 #if !defined(ME) /*[*/
 #if defined(C3270) /*[*/
 #if defined(WC3270) /*[*/
@@ -910,11 +910,9 @@ strncapcmp(const char *known, const char *unknown, unsigned unk_len)
 void
 parse_xrm(const char *arg, const char *where)
 {
-	static char me_dot[] = ME ".";
-	static char me_star[] = ME "*";
-	unsigned match_len;
-	const char *s;
+	const char *name;
 	unsigned rnlen;
+	const char *s;
 	int i;
 	char *t;
 	void *address = NULL;
@@ -926,43 +924,13 @@ parse_xrm(const char *arg, const char *where)
 	Boolean arbitrary = False;
 #endif /*]*/
 
-	/* Enforce "-3270." or "-3270*" or "*". */
-	if (!strncmp(arg, me_dot, sizeof(me_dot)-1))
-		match_len = sizeof(me_dot)-1;
-	else if (!strncmp(arg, me_star, sizeof(me_star)-1))
-		match_len = sizeof(me_star)-1;
-	else if (arg[0] == '*')
-		match_len = 1;
-	else {
-		xs_warning("%s: Invalid resource syntax '%.*s', name must "
-		    "begin with '%s'",
-		    where, sizeof(me_dot)-1, arg, me_dot);
-		return;
-	}
-
-	/* Separate the parts. */
-	s = arg + match_len;
-	while (*s && *s != ':' && !isspace(*s))
-		s++;
-	rnlen = s - (arg + match_len);
-	if (!rnlen) {
-		xs_warning("%s: Invalid resource syntax, missing resource "
-		    "name", where);
-		return;
-	}
-	while (isspace(*s))
-		s++;
-	if (*s != ':') {
-		xs_warning("%s: Invalid resource syntax, missing ':'", where);
-		return;
-	}
-	s++;
-	while (isspace(*s))
-		s++;
+	/* Validate and split. */
+	if (validate_and_split_resource(where, arg, &name, &rnlen, &s) < 0)
+	    	return;
 
 	/* Look up the name. */
 	for (i = 0; resources[i].name != CN; i++) {
-		if (!strncapcmp(resources[i].name, arg + match_len, rnlen)) {
+		if (!strncapcmp(resources[i].name, name, rnlen)) {
 			address = resources[i].address;
 			type = resources[i].type;
 			break;
@@ -971,8 +939,7 @@ parse_xrm(const char *arg, const char *where)
 	if (address == NULL) {
 		for (i = 0; i < N_TOGGLES; i++) {
 			if (toggle_names[i].index >= 0 &&
-			    !strncapcmp(toggle_names[i].name, arg + match_len,
-			    rnlen)) {
+			    !strncapcmp(toggle_names[i].name, name, rnlen)) {
 				address =
 				    &appres.toggle[toggle_names[i].index].value;
 				type = XRM_BOOLEAN;
@@ -985,23 +952,22 @@ parse_xrm(const char *arg, const char *where)
 		/*
 		 * Handle resources that are accessed only via get_resource().
 		 */
-		if (!strncasecmp(ResKeymap ".", arg + match_len,
-		                 strlen(ResKeymap ".")) ||
-		    !strncasecmp("host.", arg + match_len, 5) ||
-		    !strncasecmp("printer.", arg + match_len, 8) ||
-		    !strncasecmp(ResPrintTextFont, arg + match_len,
+		if (!strncasecmp(ResKeymap ".", name, strlen(ResKeymap ".")) ||
+		    !strncasecmp("host.", name, 5) ||
+		    !strncasecmp("printer.", name, 8) ||
+		    !strncasecmp(ResPrintTextFont, name,
 			    strlen(ResPrintTextFont)) ||
-		    !strncasecmp(ResPrintTextSize, arg + match_len,
+		    !strncasecmp(ResPrintTextSize, name,
 			    strlen(ResPrintTextSize)) ||
 #if defined(_WIN32) /*[*/
-		    !strncasecmp(ResHostColorFor, arg + match_len,
+		    !strncasecmp(ResHostColorFor, name,
 			    strlen(ResHostColorFor)) ||
-		    !strncasecmp(ResConsoleColorForHostColor, arg + match_len,
+		    !strncasecmp(ResConsoleColorForHostColor, name,
 			    strlen(ResConsoleColorForHostColor))
 #else /*][*/
-		    !strncasecmp(ResPrintTextCommand, arg + match_len,
+		    !strncasecmp(ResPrintTextCommand, name,
 			    strlen(ResPrintTextCommand)) ||
-		    !strncasecmp(ResCursesColorFor, arg + match_len,
+		    !strncasecmp(ResCursesColorFor, name,
 			    strlen(ResCursesColorFor))
 #endif /*]*/
 		    ) {
@@ -1013,7 +979,7 @@ parse_xrm(const char *arg, const char *where)
 #endif /*]*/
 	if (address == NULL) {
 		xs_warning("%s: Unknown resource name: %.*s",
-		    where, (int)rnlen, arg + match_len);
+		    where, (int)rnlen, name);
 		return;
 	}
 	switch (type) {
@@ -1086,7 +1052,7 @@ parse_xrm(const char *arg, const char *where)
 		char *rsname;
 
 		rsname = Malloc(rnlen + 1);
-		(void) strncpy(rsname, arg + match_len, rnlen);
+		(void) strncpy(rsname, name, rnlen);
 		rsname[rnlen] = '\0';
 		add_resource(rsname, hide);
 	}
@@ -1171,91 +1137,7 @@ safe_string(const char *s)
 int
 read_resource_file(const char *filename, Boolean fatal)
 {
-	FILE *f;
-	int ilen;
-	char buf[4096];
-	char *where;
-	int lno = 0;
-
-	f = fopen(filename, "r");
-	if (f == NULL) {
-		if (fatal)
-			xs_warning("Cannot open '%s': %s", filename,
-			    strerror(errno));
-		return -1;
-	}
-
-	/* Merge in what's in the file into the resource database. */
-	where = Malloc(strlen(filename) + 64);
-
-	ilen = 0;
-	while (fgets(buf + ilen, sizeof(buf) - ilen, f) != CN || ilen) {
-		char *s;
-		unsigned sl;
-		Boolean bsl = False;
-
-		lno++;
-
-		/* Stip any trailing newline. */
-		sl = strlen(buf + ilen);
-		if (sl && (buf + ilen)[sl-1] == '\n')
-			(buf + ilen)[--sl] = '\0';
-
-		/* Check for a trailing backslash. */
-		s = buf + ilen;
-		if ((sl > 0) && (s[sl - 1] == '\\')) {
-		    	s[sl - 1] = '\0';
-			bsl = True;
-		}
-
-		/* Skip leading whitespace. */
-		s = buf;
-		while (isspace(*s))
-			s++;
-
-		/* If this line is a continuation, try again. */
-		if (bsl) {
-			ilen += strlen(buf + ilen);
-			if ((unsigned)ilen >= sizeof(buf) - 1) {
-				(void) sprintf(where, "%s:%d: Line too long\n",
-				    filename, lno);
-				Warning(where);
-				break;
-			}
-			continue;
-		}
-
-		/* Skip comments. */
-		if (*s == '!') {
-		    ilen = 0;
-		    continue;
-		}
-		if (*s == '#') {
-			(void) sprintf(where, "%s:%d: Invalid profile "
-			    "syntax ('#' ignored)", filename, lno);
-			Warning(where);
-			ilen = 0;
-			continue;
-		}
-
-		/* Strip trailing whitespace and check for empty lines. */
-		sl = strlen(s);
-		while (sl && isspace(s[sl-1]))
-			s[--sl] = '\0';
-		if (!sl) {
-			ilen = 0;
-			continue;
-		}
-
-		/* Digest it. */
-		(void) sprintf(where, "%s:%d", filename, lno);
-		parse_xrm(s, where);
-
-		/* Get ready for the next iteration. */
-		ilen = 0;
-	}
-	Free(where);
-	return 0;
+    	return read_resource_filex(filename, fatal, parse_xrm);
 }
 
 /* Screen globals. */
