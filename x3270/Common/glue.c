@@ -1192,7 +1192,7 @@ read_resource_file(const char *filename, Boolean fatal)
 	while (fgets(buf + ilen, sizeof(buf) - ilen, f) != CN || ilen) {
 		char *s;
 		unsigned sl;
-		Boolean bsl;
+		Boolean bsl = False;
 
 		lno++;
 
@@ -1203,25 +1203,15 @@ read_resource_file(const char *filename, Boolean fatal)
 
 		/* Check for a trailing backslash. */
 		s = buf + ilen;
-		bsl = (sl > 0) && (s[sl - 1] == '\\');
+		if ((sl > 0) && (s[sl - 1] == '\\')) {
+		    	s[sl - 1] = '\0';
+			bsl = True;
+		}
 
 		/* Skip leading whitespace. */
 		s = buf;
 		while (isspace(*s))
 			s++;
-
-		/* Skip comments _before_ checking for line continuation. */
-		if (*s == '!') {
-		    ilen = 0;
-		    continue;
-		}
-		if (*s == '#') {
-			(void) sprintf(where, "%s:%d: Invalid profile "
-			    "syntax ('#' ignored)", filename, lno);
-			Warning(where);
-			ilen = 0;
-			continue;
-		}
 
 		/* If this line is a continuation, try again. */
 		if (bsl) {
@@ -1232,6 +1222,19 @@ read_resource_file(const char *filename, Boolean fatal)
 				Warning(where);
 				break;
 			}
+			continue;
+		}
+
+		/* Skip comments. */
+		if (*s == '!') {
+		    ilen = 0;
+		    continue;
+		}
+		if (*s == '#') {
+			(void) sprintf(where, "%s:%d: Invalid profile "
+			    "syntax ('#' ignored)", filename, lno);
+			Warning(where);
+			ilen = 0;
 			continue;
 		}
 
