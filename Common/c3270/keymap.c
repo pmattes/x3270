@@ -464,19 +464,19 @@ read_one_keymap(const char *name, const char *fn, const char *r0, int flags)
 		/* Split. */
 		if (rc < 0 ||
 		    (r == CN && split_dresource(&s, &left, &right) < 0)) {
-			popup_an_error("%s, line %d: syntax error",
+			popup_an_error("Keymap %s, line %d: syntax error",
 			    fn, line);
 			goto done;
 		}
 
 		pkr = parse_keydef(&left, &ccode, &hint);
 		if (pkr == 0) {
-			popup_an_error("%s, line %d: Missing <Key>",
+			popup_an_error("Keymap %s, line %d: Missing <Key>",
 			    fn, line);
 			goto done;
 		}
 		if (pkr < 0) {
-			popup_an_error("%s, line %d: %s",
+			popup_an_error("Keymap %s, line %d: %s",
 			    fn, line, pk_errmsg[-1 - pkr]);
 			goto done;
 		}
@@ -493,7 +493,7 @@ read_one_keymap(const char *name, const char *fn, const char *r0, int flags)
 			hints[ncodes - 1] = hint;
 			pkr = parse_keydef(&left, &ccode, &hint);
 			if (pkr < 0) {
-				popup_an_error("%s, line %d: %s",
+				popup_an_error("Keymap %s, line %d: %s",
 				    fn, line, pk_errmsg[-1 - pkr]);
 				goto done;
 			}
