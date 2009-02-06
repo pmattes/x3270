@@ -904,8 +904,10 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 				system(cmd);
 				Free(cmd);
 			}
+#if !defined(S3270) /*[*/
 			if (appres.do_confirms)
 				popup_an_info("Screen image printed.\n");
+#endif /*]*/
 #endif /*]*/
 		}
 		if (temp_name) {

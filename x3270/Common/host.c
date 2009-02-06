@@ -74,8 +74,10 @@ char	       *qualified_host = CN;
 struct host *hosts = (struct host *)NULL;
 static struct host *last_host = (struct host *)NULL;
 static Boolean auto_reconnect_inprogress = False;
-static unsigned long reconnect_id = 0;
 static int net_sock = -1;
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+static unsigned long reconnect_id = 0;
+#endif /*]*/
 
 #if defined(X3270_DISPLAY) /*[*/
 static void save_recent(const char *);
