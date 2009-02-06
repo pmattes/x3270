@@ -43,10 +43,10 @@ CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I.
 VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj c3270.obj charset.obj \
 	ctlr.obj fallbacks.obj ft.obj ft_cut.obj ft_dft.obj glue.obj help.obj \
 	host.obj icmd.obj idle.obj keymap.obj kybd.obj macros.obj print.obj \
-	printer.obj proxy.obj resolver.obj resources.obj rpq.obj screen.obj \
-	see.obj sf.obj tables.obj telnet.obj toggles.obj trace_ds.obj \
-	unicode.obj unicode_dbcs.obj utf8.obj util.obj xio.obj w3misc.obj \
-	winvers.obj windirs.obj wc3270.RES
+	printer.obj proxy.obj readres.obj resolver.obj resources.obj rpq.obj \
+	screen.obj see.obj sf.obj tables.obj telnet.obj toggles.obj \
+	trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj xio.obj \
+	w3misc.obj winvers.obj windirs.obj wc3270.RES
 OBJECTS = $(VOBJS) version.obj
 LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib
 SHRTLIBS = ole32.lib
@@ -163,6 +163,8 @@ printer.obj: printer.c
 	$(CC) $(CFLAGS) /c printer.c
 proxy.obj: proxy.c
 	$(CC) $(CFLAGS) /c proxy.c
+readres.obj: readres.c
+	$(CC) $(CFLAGS) /c readres.c
 resolver.obj: resolver.c
 	$(CC) $(CFLAGS) /c resolver.c
 resources.obj: resources.c
