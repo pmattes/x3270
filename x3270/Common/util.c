@@ -1075,7 +1075,7 @@ dump_version(void)
 	printf("\n"
 "Copyright 1989-2009, Paul Mattes, GTRC and others.\n"
 "See the source code or documentation for licensing details.\n"
-"Distributed WITHOUT ANY WARRANTY; without even the implied warranty of "
+"Distributed WITHOUT ANY WARRANTY; without even the implied warranty of\n"
 "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 	exit(0);
 }
