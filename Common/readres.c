@@ -67,17 +67,21 @@
 #endif /*]*/
 
 #if !defined(ME) /*[*/
-#if defined(C3270) /*[*/
-#if defined(WC3270) /*[*/
-#define ME	"wc3270"
-#else /*][*/
-#define ME	"c3270"
-#endif /*]*/
-#elif defined(TCL3270) /*][*/
-#define ME	"tcl3270"
-#else /*][*/
-#define ME	"s3270"
-#endif /*]*/
+# if defined(C3270) /*[*/
+#  if defined(WC3270) /*[*/
+#   define ME	"wc3270"
+#  else /*][*/
+#   define ME	"c3270"
+# endif /*]*/
+# elif defined(S3270) /*[*/
+#  if defined(WS3270) /*[*/
+#   define ME	"ws3270"
+#  else /*][*/
+#   define ME	"s3270"
+# endif /*]*/
+# elif defined(TCL3270) /*][*/
+#  define ME	"tcl3270"
+# endif /*]*/
 #endif /*]*/
 
 /*

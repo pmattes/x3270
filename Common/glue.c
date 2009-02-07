@@ -75,14 +75,27 @@ extern void usage(char *);
 
 #define LAST_ARG	"--"
 
-#if defined(WC3270) /*[*/
-#define PROFILE_SFX	".wc3270"
-#define PROFILE_SFX_LEN	(sizeof(PROFILE_SFX) - 1)
-#define PROFILE_SSFX	".wc3"
-#define PROFILE_SSFX_LEN (sizeof(PROFILE_SSFX) - 1)
-#elif defined(C3270) /*][*/
-#define PROFILE_SFX	".c3270"
+#if defined(C3270) /*[*/
+# if defined(WC3270) /*[*/
+#  define PROFILE_SFX	".wc3270"
+#  define PROFILE_SSFX	".wc3"
+# else /*][*/
+#  define PROFILE_SFX	".c3270"
+# endif /*]*/
+#elif defined(S3270) /*[*/
+# if defined(WS3270) /*[*/
+#  define PROFILE_SFX	".ws3270"
+#  define PROFILE_SSFX	".ws3"
+# else /*][*/
+#  define PROFILE_SFX	".s3270"
+# endif /*]*/
+#elif defined(TCL3270) /*[*/
+#  define PROFILE_SFX	".tcl3270"
+#endif /*]*/
+
 #define PROFILE_SFX_LEN	(int)(sizeof(PROFILE_SFX) - 1)
+#if defined(_WIN32) /*[*/
+# define PROFILE_SSFX_LEN (int)(sizeof(PROFILE_SSFX) - 1)
 #endif /*]*/
 
 #if defined(C3270) /*[*/
@@ -110,9 +123,7 @@ Boolean		exiting = False;
 char	       *command_string = CN;
 static Boolean	sfont = False;
 Boolean	       *standard_font = &sfont;
-#if defined(C3270) /*[*/
 char	       *profile_name = CN;
-#endif /*]*/
 
 struct toggle_name toggle_names[N_TOGGLES] = {
 	{ ResMonoCase,        MONOCASE },
@@ -164,9 +175,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	char junk;
 	int hn_argc;
 	int model_number;
-#if defined(C3270) /*[*/
 	int sl;
-#endif /*]*/
 
 	/* Figure out who we are */
 #if defined(_WIN32) /*[*/
@@ -235,7 +244,6 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 		}
 	}
 
-#if defined(C3270) /*[*/
 	/* Merge in the profile. */
 	if (*cl_hostname != CN &&
 	    (((sl = strlen(*cl_hostname)) > PROFILE_SFX_LEN &&
@@ -249,9 +257,11 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 		const char *pname;
 
 		(void) read_resource_file(*cl_hostname, False);
+#if 0
 		if (appres.hostname == CN) {
 		    Error("Hostname not specified in session file.");
 		}
+#endif
 
 		pname = strrchr(*cl_hostname, '\\');
 		if (pname != CN)
@@ -273,9 +283,8 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 #endif /*]*/
 		}
 
-		*cl_hostname = appres.hostname;
+		*cl_hostname = appres.hostname; /* might be NULL */
 	}
-#endif /*]*/
 
 	/*
 	 * Sort out model and color modes, based on the model number resource.
@@ -787,9 +796,7 @@ static struct {
 #if defined(X3270_FT) /*[*/
 	{ ResDftBufferSize,offset(dft_buffer_size),XRM_INT },
 #endif /*]*/
-#if defined(C3270) /*[*/
 	{ ResHostname,	offset(hostname),	XRM_STRING },
-#endif /*]*/
 	{ ResHostsFile,	offset(hostsfile),	XRM_STRING },
 #if defined(X3270_ANSI) /*[*/
 	{ ResIcrnl,	offset(icrnl),		XRM_BOOLEAN },
@@ -892,20 +899,6 @@ strncapcmp(const char *known, const char *unknown, unsigned unk_len)
 		return 0;
 	return -1;
 }
-
-#if !defined(ME) /*[*/
-#if defined(C3270) /*[*/
-#if defined(WC3270) /*[*/
-#define ME	"wc3270"
-#else /*][*/
-#define ME	"c3270"
-#endif /*]*/
-#elif defined(TCL3270) /*][*/
-#define ME	"tcl3270"
-#else /*][*/
-#define ME	"s3270"
-#endif /*]*/
-#endif /*]*/
 
 void
 parse_xrm(const char *arg, const char *where)
