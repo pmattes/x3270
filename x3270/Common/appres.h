@@ -257,9 +257,7 @@ typedef struct {
 	char	*eof;
 #endif /*]*/
 
-#if defined(C3270) || defined(X3270_DISPLAY) /*[*/
 	char	*hostname;
-#endif /*]*/
 
 #if defined(WC3270) /*[*/
 	char	*title;
