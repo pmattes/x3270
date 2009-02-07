@@ -399,10 +399,11 @@ intro(session_t *s)
 	new_screen(s, "\
 Overview\n\
 \n\
-This wizard sets up a new wc3270 session.\n\
+This wizard sets up a new wc3270 session, or allows you to modify an existing\n\
+session.\n\
 \n\
-It creates a session file in the wc3270 installation directory and a\n\
-shortcut on your desktop.");
+It creates or edits a session file in your wc3270 Application Data directory\n\
+and can create or re-create a shortcut on your desktop.");
 
 	for (;;) {
 		printf("\nContinue? (y/n) [y] ");
