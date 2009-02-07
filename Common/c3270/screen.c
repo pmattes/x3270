@@ -1244,7 +1244,7 @@ static enum keytype oia_compose_keytype = KT_STD;
 #define LUCNT	8
 static char oia_lu[LUCNT+1];
 
-static char *status_msg = "";
+static char *status_msg = "X Disconnected";
 static char *saved_status_msg = NULL;
 static unsigned long saved_status_timeout;
 

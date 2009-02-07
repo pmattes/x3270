@@ -438,7 +438,8 @@ main(int argc, char *argv[])
 			Error("Must specify hostname with secure option");
 		}
 		appres.once = False;
-		interact();
+		if (!appres.no_prompt)
+			interact();
 	}
 	screen_resume();
 	screen_disp(False);
@@ -465,7 +466,9 @@ main(int argc, char *argv[])
 				trace_event("Done interacting.\n");
 				screen_resume();
 			}
-		} else if (!CONNECTED && !appres.reconnect) {
+		} else if (!CONNECTED &&
+			   !appres.reconnect &&
+			   !appres.no_prompt) {
 			screen_suspend();
 			x3270_exit(0);
 		}
