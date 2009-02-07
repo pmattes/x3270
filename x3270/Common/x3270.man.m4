@@ -53,8 +53,10 @@ ifelse(XX_PRODUCT,tcl3270,`[XX_FI(script)]
 [XX_FI(host)]
 ifelse(XX_PRODUCT,tcl3270,`[XX_DASHED(XX_DASH) XX_FI(script-arg)...]
 ')')
-ifelse(XX_INTERACTIVE,yes,`XX_BR
-XX_FB(XX_PRODUCT) [XX_FI(options)] XX_FI(session-file).XX_PRODUCT')
+XX_BR
+XX_FB(XX_PRODUCT) [XX_FI(options)] ifelse(XX_PRODUCT,tcl3270,`[XX_FI(script)] ')XX_FI(session-file).XX_PRODUCT
+ifelse(XX_PRODUCT,tcl3270,`[XX_DASHED(XX_DASH) XX_FI(script-arg)...]
+')
 XX_SH(Description)
 XX_FB(XX_PRODUCT) ifelse(XX_PRODUCT,lib3270,`allows a C program to open',opens)
 a telnet connection to an XX_SM(IBM)
