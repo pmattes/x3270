@@ -1,7 +1,6 @@
 usr
 usr/X11R6
 usr/X11R6/bin
-usr/X11R6/bin/pr3287
 usr/X11R6/bin/x3270
 usr/X11R6/bin/x3270if
 usr/X11R6/etc
@@ -31,7 +30,6 @@ usr/X11R6/lib/X11/fonts/misc/3270h.pcf.gz
 usr/X11R6/lib/X11/fonts/misc/fonts.dir
 usr/X11R6/man
 usr/X11R6/man/man1
-usr/X11R6/man/man1/pr3287.1
 usr/X11R6/man/man1/x3270-script.1
 usr/X11R6/man/man1/x3270.1x
 usr/X11R6/man/man1/x3270if.1
