@@ -1010,7 +1010,7 @@ do_screentrace(void)
 {
 	register int i;
 
-	if (fprint_screen(screentracef, P_TEXT, 0)) {
+	if (fprint_screen(screentracef, P_TEXT, 0, NULL)) {
 		for (i = 0; i < COLS; i++)
 			(void) fputc('=', screentracef);
 		(void) fputc('\n', screentracef);
