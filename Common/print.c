@@ -137,6 +137,99 @@ html_color(int color)
 		return "black";
 }
 
+/* Convert a caption string to UTF-8 RTF. */
+static char *
+rtf_caption(const char *caption)
+{
+    	ucs4_t u;
+	int consumed;
+	enum me_fail error;
+	char *result = Malloc(1);
+	int rlen = 1;
+	char uubuf[64];
+	char mb[16];
+	int nmb;
+
+	result[0] = '\0';
+
+	while (*caption) {
+		u = multibyte_to_unicode(caption, strlen(caption), &consumed,
+			&error);
+		if (u == 0)
+		    	break;
+		if (u & ~0x7f) {
+			sprintf(uubuf, "\\u%u?", u);
+		} else {
+			nmb = unicode_to_multibyte(u, mb, sizeof(mb));
+			if (mb[0] == '\\' ||
+			    mb[0] == '{' ||
+			    mb[0] == '}')
+				sprintf(uubuf, "\\%c", mb[0]);
+			else if (mb[0] == '-')
+				sprintf(uubuf, "\\_");
+			else if (mb[0] == ' ')
+				sprintf(uubuf, "\\~");
+			else {
+			    	uubuf[0] = mb[0];
+				uubuf[1] = '\0';
+			}
+		}
+		result = Realloc(result, rlen + strlen(uubuf));
+		strcat(result, uubuf);
+		rlen += strlen(uubuf);
+
+		caption += consumed;
+	}
+	return result;
+}
+
+/* Convert a caption string to UTF-8 HTML. */
+static char *
+html_caption(const char *caption)
+{
+    	ucs4_t u;
+	int consumed;
+	enum me_fail error;
+	char *result = Malloc(1);
+	int rlen = 1;
+	char u8buf[16];
+	int nu8;
+
+	result[0] = '\0';
+
+	while (*caption) {
+		u = multibyte_to_unicode(caption, strlen(caption), &consumed,
+			&error);
+		if (u == 0)
+		    	break;
+		switch (u) {
+		case '<':
+		    	result = Realloc(result, rlen + 4);
+			strcat(result, "&lt;");
+			rlen += 4;
+			break;
+		case '>':
+		    	result = Realloc(result, rlen + 4);
+			strcat(result, "&gt;");
+			rlen += 4;
+			break;
+		case '&':
+		    	result = Realloc(result, rlen + 5);
+			strcat(result, "&amp;");
+			rlen += 5;
+			break;
+		default:
+			nu8 = unicode_to_utf8(u, u8buf);
+			result = Realloc(result, rlen + nu8);
+			memcpy(result + rlen - 1, u8buf, nu8);
+			rlen += nu8;
+			result[rlen - 1] = '\0';
+			break;
+		}
+		caption += consumed;
+	}
+	return result;
+}
 
 /*
  * Print the ASCIIfied contents of the screen onto a stream.
@@ -153,7 +246,7 @@ html_color(int color)
  *    font-style:normal|italic
  */
 Boolean
-fprint_screen(FILE *f, ptype_t ptype, unsigned opts)
+fprint_screen(FILE *f, ptype_t ptype, unsigned opts, char *caption)
 {
 	register int i;
 	unsigned long uc;
@@ -167,6 +260,30 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts)
 	Bool fa_high, current_high;
 	Bool fa_ital, current_ital;
 	Bool mi = ((opts & FPS_MODIFIED_ITALIC)) != 0;
+	char *xcaption = NULL;
+
+	if (caption != NULL) {
+	    	char *ts = strstr(caption, "%T%");
+
+		if (ts != NULL) {
+		    	time_t t = time(NULL);
+			struct tm *tm = localtime(&t);
+
+		    	xcaption = Malloc(strlen(caption) + 1 - 3 + 19);
+			strncpy(xcaption, caption, ts - caption);
+			sprintf(xcaption + (ts - caption),
+				"%04d-%02d-%02d %02d:%02d:%02d",
+				tm->tm_year + 1900,
+				tm->tm_mon + 1,
+				tm->tm_mday,
+				tm->tm_hour,
+				tm->tm_min,
+				tm->tm_sec);
+			strcat(xcaption, ts + 3);
+		} else {
+		    	xcaption = NewString(caption);
+		}
+	}
 
 	if (ptype != P_TEXT) {
 		opts |= FPS_EVEN_IF_EMPTY;
@@ -213,18 +330,33 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts)
 			    1252, /* the number doesn't matter */
 #endif /*]*/
 			    pt_font, pt_nsize * 2);
+		if (xcaption != NULL) {
+		    	char *hcaption = rtf_caption(xcaption);
+
+			fprintf(f, "%s\\par\\par\n", hcaption);
+			Free(hcaption);
+		}
 		if (current_high)
 		    	fprintf(f, "\\b ");
 	}
 
 	if (ptype == P_HTML) {
+	    	char *hcaption = NULL;
+
+	    	/* Make the caption HTML-safe. */
+	    	if (xcaption != NULL)
+			hcaption = html_caption(xcaption);
+
+	    	/* Print the preamble. */
 		fprintf(f, "<html>\n"
 			   "<head>\n"
 			   " <meta http-equiv=\"Content-Type\" "
 			     "content=\"text/html; charset=UTF-8\">\n"
 			   "</head>\n"
-			   " <body>\n"
-			   "  <table border=0>"
+			   " <body>\n");
+		if (hcaption)
+		    	fprintf(f, "<p>%s</p>\n", hcaption);
+		fprintf(f, "  <table border=0>"
 			   "<tr bgcolor=black><td>"
 			   "<pre><span style=\"color:%s;"
 			                       "background:%s;"
@@ -234,6 +366,13 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts)
 			   html_color(current_bg),
 			   current_high? "bold": "normal",
 			   current_ital? "italic": "normal");
+		if (hcaption != NULL)
+			Free(hcaption);
+	}
+
+	if (ptype == P_TEXT) {
+	    	if (xcaption != NULL)
+		    	fprintf(f, "%s\n\n", xcaption);
 	}
 
 	for (i = 0; i < ROWS*COLS; i++) {
@@ -421,6 +560,8 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts)
 					fprintf(f, "&lt;");
 				else if (uc == '&')
 				    	fprintf(f, "&amp;");
+				else if (uc == '>')
+				    	fprintf(f, "&gt;");
 				else {
 					nmb = unicode_to_utf8(uc, mb);
 					{
@@ -438,6 +579,10 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts)
 			}
 		}
 	}
+
+	if (xcaption != NULL)
+	    	Free(xcaption);
+
 	if (ptype == P_HTML)
 	    	(void) fputc('\n', f);
 	else
@@ -516,7 +661,7 @@ print_text_callback(Widget w _is_unused, XtPointer client_data,
 	    Replace(print_text_command, filter);
 	    ptc_changed = True;
 	}
-	(void) fprint_screen(f, P_TEXT, FPS_EVEN_IF_EMPTY);
+	(void) fprint_screen(f, P_TEXT, FPS_EVEN_IF_EMPTY, NULL);
 	print_text_done(f, True);
 }
 
@@ -537,7 +682,7 @@ save_text_plain_callback(Widget w _is_unused, XtPointer client_data,
 		popup_an_errno(errno, "%s", filename);
 		return;
 	}
-	(void) fprint_screen(f, P_TEXT, FPS_EVEN_IF_EMPTY);
+	(void) fprint_screen(f, P_TEXT, FPS_EVEN_IF_EMPTY, NULL);
 	fclose(f);
 	XtPopdown(save_text_shell);
 	if (appres.do_confirms)
@@ -561,7 +706,7 @@ save_text_html_callback(Widget w _is_unused, XtPointer client_data,
 		popup_an_errno(errno, "%s", filename);
 		return;
 	}
-	(void) fprint_screen(f, P_HTML, FPS_EVEN_IF_EMPTY);
+	(void) fprint_screen(f, P_HTML, FPS_EVEN_IF_EMPTY, NULL);
 	fclose(f);
 	XtPopdown(save_text_shell);
 	if (appres.do_confirms)
@@ -714,6 +859,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	Boolean use_string = False;
 	char *temp_name = NULL;
 	unsigned opts = FPS_EVEN_IF_EMPTY;
+	char *caption = NULL;
 
 	action_debug(PrintText_action, event, params, num_params);
 
@@ -723,9 +869,14 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	 *  	      must be the last keyword
 	 *  html     generates HTML output instead of ASCII text (and implies
 	 *            'file')
+	 *  rtf      generates RTF output instead of ASCII text (and implies
+	 *            'file')
+	 *  modi     print modified fields in italics
+	 *  caption "text"
+	 *           Adds caption text above the screen
+	 *           %T% is replaced by a timestamp
 	 *  secure   disables the pop-up dialog, if this action is invoked from
 	 *            a keymap
-	 *  modi     print modified fields in italics
 	 *  command  directs the output to a command (this is the default, but
 	 *            allows the command to be one of the other keywords);
 	 *  	      must be the last keyword
@@ -763,6 +914,13 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 			use_file = True;
 		} else if (!strcasecmp(params[i], "modi")) {
 		    	opts |= FPS_MODIFIED_ITALIC;
+		} else if (!strcasecmp(params[i], "caption")) {
+		    	if (i == *num_params - 1) {
+			    	popup_an_error("%s: mising caption parameter",
+					action_name(PrintText_action));
+				return;
+			}
+			caption = params[++i];
 		} else {
 			break;
 		}
@@ -871,7 +1029,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 			}
 			return;
 		}
-		(void) fprint_screen(f, ptype, opts);
+		(void) fprint_screen(f, ptype, opts, caption);
 		if (use_string) {
 			char buf[8192];
 
@@ -965,7 +1123,7 @@ print_text_option(Widget w, XtPointer client_data _is_unused,
 			popup_an_errno(errno, "popen(%s)", filter);
 			return;
 		}
-		(void) fprint_screen(f, ptype, FPS_EVEN_IF_EMPTY);
+		(void) fprint_screen(f, ptype, FPS_EVEN_IF_EMPTY, NULL);
 		print_text_done(f, False);
 	} else {
 		/* Pop up a dialog to confirm or modify their choice. */
