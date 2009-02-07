@@ -3,7 +3,6 @@ usr/local
 usr/local/man
 usr/local/man/man1
 usr/local/man/man1/c3270.1
-usr/local/man/man1/pr3287.1
 usr/local/man/man1/x3270-script.1
 usr/local/man/man1/x3270if.1
 usr/local/man/man5
