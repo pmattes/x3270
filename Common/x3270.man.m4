@@ -964,7 +964,7 @@ XX_TR(XX_TDH(XX_INT()XX_LA()XX_BLOCK()PF`'XX_LPAREN`'XX_FI(XX_INT()n)`'XX_RPAREN
 XX_TR(XX_TDH(XX_INT()XX_LS()`PreviousWord'XX_VOID())	XX_TD(move cursor to previous word))
 ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(XX_INT()XX_LS()`Paste'XX_VOID())	XX_TD(insert clipboard contents))')dnl
 ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,`XX_TR(XX_TDH(Printer(Start[,XX_FI(lu)]|Stop))	XX_TD(start or stop printer session))
-ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(PrintText(XX_FI([printer-name])))	XX_TD(print screen text on printer))',
+ifelse(XX_PLATFORM,windows,`XX_TR(XX_TDH(PrintText(XX_FI([printer-name])))	XX_TD(print screen text on printer))',
 `XX_TR(XX_TDH(PrintText(XX_FI(command)))	XX_TD(print screen text on printer))')
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(PrintWindow(XX_FI(command)))	XX_TD(print screen image (bitmap) on printer))
 ')')dnl
@@ -1035,8 +1035,8 @@ XX_TR(XX_TDH(set-select(XX_FI(atom)[,XX_FI(atom)...]]))	XX_TD(assign existing se
 XX_TR(XX_TDH(start-extend)	XX_TD(begin marking the end of a selection))
 ')dnl
 XX_TE()
-ifelse(XX_PRODUCT,c3270,`XX_LP
-Any of the above actions may be entered at the XX_FB(c3270>) prompt;
+ifelse(XX_MODE,console,`XX_LP
+Any of the above actions may be entered at the XX_FB(XX_PRODUCT>) prompt;
 these commands are also available for use in keymaps
 (see XX_LINK(#Keymaps,XX_SM(KEYMAPS))).
 Command names are case-insensitive.
@@ -1047,7 +1047,7 @@ XX_RS(PF 1)
 Parameters can be quoted with double-quote characters, to allow spaces,
 commas, and parentheses to be used.
 XX_LP
-XX_FB(c3270) also supports the following interactive commands:
+XX_FB(XX_PRODUCT) also supports the following interactive commands:
 XX_TPS()dnl
 XX_TP(XX_FB(Help))
 Displays a list of available commands.
@@ -1069,6 +1069,50 @@ ifelse(XX_PRODUCT,wc3270,`include(keymaps.inc)
 ')dnl
 ifelse(XX_PRODUCT,x3270,,`include(ft.inc)
 ')dnl
+XX_SH(The PrintText Action)
+The XX_FB(PrintText) produces screen snapshots in a number of different
+forms.
+The default form wth no arguments sends a copy of the screen to the default
+printer.
+A single argument is
+ifelse(XX_PLATFORM,windows,`the name of the printer to use',
+`the command to use to print, e.g., XX_FB(lpr)').
+ifelse(XX_PLATFORM,windows,`The font defaults to XX_FB(Courier New) and the
+point size defaults to 8.
+These can be overridden by the XX_FB(printer.font) and XX_FB(printer.size)
+resources, respectively.
+')dnl
+Multiple arguments can include keywords to control the output of
+XX_FB(PrintText):
+XX_TPS()dnl
+XX_TP(XX_FB(file) XX_FI(filename))
+Save the output in a file.
+XX_TP(XX_FB(html))
+Save the output as HTML.  This option implies XX_FB(file).
+XX_TP(XX_FB(rtf))
+Save the output as RichText.  This option implies XX_FB(file).
+The font defaults to XX_FB(Courier New) and the
+point size defaults to 8.
+These can be overridden by the XX_FB(printer.font) and XX_FB(printer.size)
+resources, respectively.
+ifelse(XX_PLATFORM,unix,`XX_TP(XX_FB(string))
+Return the output as a string.  This can only be used from scripts.
+')dnl
+XX_TP(XX_FB(modi))
+Render modified fields in italics.
+XX_TP(XX_FB(caption) XX_FI(text))
+Add the specified XX_FI(text) as a caption above the output.
+Within XX_FI(text), the special sequence XX_FB(%T%) will be replaced with
+a timestamp.
+ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(secure))
+Disables the pop-up dialog.
+')dnl
+ifelse(XX_PLATFORM,unix,`XX_TP(XX_FB(command) XX_FI(command))
+Directs the output to a command.
+This allows one or more of the other keywords to be specified, while still
+sending the output to the printer.
+')dnl
+XX_TPE()
 define(XX_SCRIPTS,`ifelse(XX_PRODUCT,x3270,Macros and Scripts,
 XX_PRODUCT,c3270,Scripts,
 XX_PRODUCT,lib3270,Scripts,
