@@ -988,7 +988,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 #if defined(_WIN32) /*[*/
 				fd = win_mkstemp(&temp_name, ptype);
 #else /*][*/
-				temp_name = NewString("/tmp/x3hXXXXX");
+				temp_name = NewString("/tmp/x3hXXXXXX");
 				fd = mkstemp(temp_name);
 #endif /*]*/
 				if (fd < 0) {
