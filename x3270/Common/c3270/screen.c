@@ -1123,7 +1123,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	}
 
 	/* Catch PF keys. */
-	for (i = 0; i < 63; i++) {
+	for (i = 1; i <= 24; i++) {
 		if (k == KEY_F(i)) {
 			(void) sprintf(buf, "%d", i);
 			action_internal(PF_action, IA_DEFAULT, buf, CN);
