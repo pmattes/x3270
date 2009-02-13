@@ -3531,8 +3531,9 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 			} else {
 				do_pf(literal);
 				skipped = False;
-				if (IN_3270)
-					return xlen-1;
+				if (IN_3270) {
+					return xlen;
+				}
 				state = BASE;
 				continue;
 			}

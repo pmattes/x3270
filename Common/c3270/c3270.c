@@ -1243,6 +1243,7 @@ popup_an_info(const char *fmt, ...)
     	va_list args;
 	static char vmsgbuf[4096];
 	char *s, *t;
+	Boolean quoted = False;
 
 	va_start(args, fmt);
 	(void) vsprintf(vmsgbuf, fmt, args);
@@ -1253,9 +1254,14 @@ popup_an_info(const char *fmt, ...)
 	    if (*s == '\n') {
 		*t = '\0';
 		break;
-	    } else if (*s >= ' ' && *s <= '~')
+	    } else if (!quoted && *s == '\\') {
+		quoted = True;
+	    } else if (*s >= ' ' && *s <= '~') {
 		*t++ = *s;
+		quoted = False;
+	    }
 	}
+	*t = '\0';
 
 	if (strlen(vmsgbuf))
 		status_push(vmsgbuf);
