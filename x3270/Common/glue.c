@@ -1013,6 +1013,8 @@ parse_xrm(const char *arg, const char *where)
 					*t++ = '\t';
 					break;
 				default:
+					/* Leave other backslashes intact. */
+					*t++ = '\\';
 					*t++ = c;
 					break;
 				}
