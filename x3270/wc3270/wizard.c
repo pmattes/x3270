@@ -113,12 +113,12 @@ struct {
 	{ "icelandic-euro",	"1149",	0, L"1252"	},
 	{ "italian",		"280",	0, L"1252"	},
 	{ "italian-euro",	"1144",	0, L"1252"	},
-	{ "japanese-1027",	"1027+300", 1, L"932"	},
-	{ "japanese-290",	"290+300", 1, L"932"	},
+	{ "japanese-kana",	"930",  1, L"932"	},
+	{ "japanese-latin",	"939",  1, L"932"	},
 	{ "norwegian",		"277",	0, L"1252"	},
 	{ "norwegian-euro",	"1142",	0, L"1252"	},
 	{ "russian",		"880",	0, L"1251"	},
-	{ "simplified-chinese",	"836+837", 1, L"936"	},
+	{ "simplified-chinese",	"935",  1, L"936"	},
 	{ "spanish",		"284",	0, L"1252"	},
 	{ "spanish-euro",	"1145",	0, L"1252"	},
 	{ "thai",		"838",	0, L"1252"	},
@@ -130,6 +130,17 @@ struct {
 	{ "us-intl",		"37",	0, L"1252"	},
 	{ NULL,			NULL,	0, NULL	}
 };
+
+/* Aliases for obsolete character set names. */
+struct {
+    	char	*alias;
+	char	*real;
+} charset_alias[] = {
+    	{ "japanese-290",  "japanese-kana" },
+    	{ "japanese-1027", "japanese-latin" },
+	{ NULL, NULL }
+};
+
 #define CS_WIDTH	19
 #define CP_WIDTH	8
 #define WP_WIDTH	6
@@ -747,6 +758,7 @@ This specifies the EBCDIC character set used by the host.");
 		}
 		if (!buf[0])
 			break;
+		/* Check for numeric value. */
 		u = strtoul(buf, &ptr, 10);
 		if (u > 0 && u <= i && *ptr == '\0' &&
 			    (is_nt || !charsets[u - 1].is_dbcs)) {
@@ -754,6 +766,14 @@ This specifies the EBCDIC character set used by the host.");
 			s->is_dbcs = charsets[u - 1].is_dbcs;
 			break;
 		}
+		/* Check for alias. */
+		for (i = 0; charset_alias[i].alias != NULL; i++) {
+		    	if (!strcmp(buf, charset_alias[i].alias)) {
+			    	strcpy(buf, charset_alias[i].real);
+				break;
+			}
+		}
+		/* Check for name match. */
 		for (i = 0; charsets[i].name != NULL; i++) {
 			if (!strcmp(buf, charsets[i].name) &&
 				    (is_nt || !charsets[i].is_dbcs)) {
@@ -1785,7 +1805,7 @@ hex(char c)
 	return pos - digits;
 }
 
-#define DEBUG_EDIT 1
+//#define DEBUG_EDIT 1
 
 /*
  * Read an existing session file.

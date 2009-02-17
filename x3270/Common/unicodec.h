@@ -31,8 +31,8 @@ extern ucs4_t ebcdic_base_to_unicode(ebc_t e,
 	Boolean blank_undef, Boolean for_display);
 extern ebc_t unicode_to_ebcdic(ucs4_t u);
 extern ebc_t unicode_to_ebcdic_ge(ucs4_t u, Boolean *ge);
-extern int set_uni(const char *csname, const char **codepage,
-	const char **display_charsets);
+extern int set_uni(const char *csname, const char **host_codepage,
+	const char **cgcsgid, const char **display_charsets);
 extern int linedraw_to_unicode(ebc_t e);
 extern int apl_to_unicode(ebc_t e);
 #if !defined(_WIN32) && !defined(UNICODE_WCHAR) /*[*/

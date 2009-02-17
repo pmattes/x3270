@@ -785,6 +785,7 @@ static struct {
 	{ ResCommandTimeout, offset(command_timeout), XRM_INT },
 #endif /*]*/
 	{ ResConfDir,	offset(conf_dir),	XRM_STRING },
+	{ ResDbcsCgcsgid, offset(dbcs_cgcsgid),	XRM_STRING },
 #if defined(C3270) /*[*/
 	{ ResDefScreen,	offset(defscreen),	XRM_STRING },
 #endif /*]*/
@@ -855,6 +856,7 @@ static struct {
 	{ ResReconnect,	offset(reconnect),	XRM_BOOLEAN },
 #endif /*]*/
 	{ ResSecure,	offset(secure),		XRM_BOOLEAN },
+	{ ResSbcsCgcsgid, offset(sbcs_cgcsgid),	XRM_STRING },
 	{ ResTermName,	offset(termname),	XRM_STRING },
 #if defined(WC3270) /*[*/
 	{ ResTitle,	offset(title),		XRM_STRING },

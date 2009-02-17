@@ -178,6 +178,8 @@ XtResource resources[] = {
 	  offset(port), XtRString, "telnet" },
 	{ ResCharset, ClsCharset, XtRString, sizeof(char *),
 	  offset(charset), XtRString, "bracket" },
+	{ ResSbcsCgcsgid, ClsSbcsCgcsgid, XtRString, sizeof(char *),
+	  offset(sbcs_cgcsgid), XtRString, 0 },
 	{ ResTermName, ClsTermName, XtRString, sizeof(char *),
 	  offset(termname), XtRString, 0 },
 	{ ResIconFont, ClsIconFont, XtRString, sizeof(char *),
@@ -303,6 +305,8 @@ XtResource resources[] = {
 	  offset(input_method), XtRString, 0 },
 	{ ResPreeditType, ClsPreeditType, XtRString, sizeof(char *),
 	  offset(preedit_type), XtRString, PT_OVER_THE_SPOT "+1" },
+	{ ResDbcsCgcsgid, ClsDbcsCgcsgid, XtRString, sizeof(char *),
+	  offset(dbcs_cgcsgid), XtRString, 0 },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 	{ ResCertFile, ClsCertFile, XtRString, sizeof(char *),

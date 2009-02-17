@@ -954,17 +954,20 @@ status_dump(void)
 	    "SBCS"
 #endif /*]*/
 	    );
+	action_output("%s %s",
+		get_message("hostCodePage"),
+		get_host_codepage());
+	action_output("%s GCSGID %u, CPGID %u",
+		get_message("sbcsCgcsgid"),
+		(unsigned short)((cgcsgid >> 16) & 0xffff),
+		(unsigned short)(cgcsgid & 0xffff));
 #if defined(X3270_DBCS) /*[*/
 	if (dbcs)
-		action_output("%s %ld+%ld",
-			get_message("hostCodePage"),
-			cgcsgid & 0xffff,
-			cgcsgid_dbcs & 0xffff);
-	else
+		action_output("%s GCSGID %u, CPGID %u",
+			get_message("dbcsCgcsgid"),
+			(unsigned short)((cgcsgid_dbcs >> 16) & 0xffff),
+			(unsigned short)(cgcsgid_dbcs & 0xffff));
 #endif /*]*/
-		action_output("%s %ld",
-			get_message("hostCodePage"),
-			cgcsgid & 0xffff);
 #if !defined(_WIN32) /*[*/
 	action_output("%s %s", get_message("localeCodeset"), locale_codeset);
 	action_output("%s DBCS %s, wide curses %s",

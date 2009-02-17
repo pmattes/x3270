@@ -3810,6 +3810,15 @@ screen_new_display_charsets(const char *display_charsets, const char *csnames)
 			char *buf;
 			char *lasts;
 
+			if (strchr(display_charsets, '+') != NULL) {
+			    /*
+			     * Despite what the code below appears to be
+			     * able to do, we don't know how to search for a
+			     * DBCS font.  Bail here.
+			     */
+			    return False;
+			}
+
 			buf = cs_dup = NewString(display_charsets);
 			while (!font_found &&
 			       (cs = strtok_r(buf, ",", &lasts)) != CN) {

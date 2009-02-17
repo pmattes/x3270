@@ -74,7 +74,6 @@ ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(altScreen)	XX_TD(XX_NBSP)	XX_TD(XX_DASHED(a
 ')dnl
 XX_TR(XX_TD(blankFill)	XX_TD(False)	XX_TD(XX_DASHED(set) blankFill)	XX_TD(Blank Fill mode))
 XX_TR(XX_TD(charset)	XX_TD(bracket)	XX_TD(XX_DASHED(charset))	XX_TD(XX_SM(EBCDIC) character set))
-XX_TR(XX_TD(charset.`'XX_FI(foo))	XX_TD(XX_NBSP)	XX_TD(XX_NBSP)	XX_TD(Definition of character set XX_FI(foo)))
 ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(composeMap)	XX_TD(latin1)	XX_TD(XX_NBSP)	XX_TD(Name of composed-character map))
 ')dnl
 ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(consoleColorForHostColor`'XX_FI(n))	XX_TD(XX_LINK(#rn4,`(note 6)'))	XX_TD(XX_NBSP)	XX_TD(Color mapping))')dnl
@@ -87,6 +86,7 @@ ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(cursesKeymap)	XX_TD(True)	XX_TD(XX_NBSP)	XX
 ')dnl
 ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(defScreen)	XX_TD(XX_NBSP)	XX_TD(XX_DASHED(defscreen))	XX_TD(80-col screen definition))
 ')dnl
+XX_TR(XX_TD(dbcsCgcsgid)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP)	XX_TD(Override DBCS CGCSGID))
 XX_TR(XX_TD(dsTrace)	XX_TD(False)	XX_TD(XX_DASHED(trace))	XX_TD(Data stream tracing))
 XX_TR(XX_TD(eof)	XX_TD(^D)	XX_TD(XX_NBSP)	XX_TD(XX_SM(NVT)-mode XX_SM(EOF) character))
 XX_TR(XX_TD(erase)	XX_TD(^H)	XX_TD(XX_NBSP)	XX_TD(XX_SM(NVT)-mode erase character))
@@ -133,6 +133,7 @@ XX_TR(XX_TD(quit)	XX_TD(^XX_BS)	XX_TD(XX_NBSP)	XX_TD(XX_SM(NVT)-mode quit charac
 ifelse(XX_MODE,console,`XX_TR(XX_TD(reconnect)	XX_TD(False)	XX_TD(XX_DASHED(reconnect))	XX_TD(Automatically reconnect to host))
 ')dnl
 XX_TR(XX_TD(rprnt)	XX_TD(^R)	XX_TD(XX_NBSP)	XX_TD(XX_SM(NVT)-mode reprint character))
+XX_TR(XX_TD(sbcsCgcsgid)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP)	XX_TD(Override SBCS CGCSGID))
 XX_TR(XX_TD(secure)	XX_TD(False)	XX_TD(XX_NBSP)	XX_TD(Disable "dangerous" options))
 XX_TR(XX_TD(termName)	XX_TD(XX_LINK(#rn2,`(note 2)'))	XX_TD(XX_DASHED(tn))	XX_TD(XX_SM(TELNET) terminal type string))
 ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(title)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP)	XX_TD(Console window title))

@@ -178,6 +178,14 @@ x3270.cursorPos		Default true		Switch -set cursorPos
     When set to true, causes x3270 to display the cursor location on the
     status line.
 
+x3270.dbcsCgcsgid
+    Overrides the compiled-in value of the CGCSGID for the current host
+    character set.  The value is an integer, which can be preceded with '0x'
+    to be in hexadecimal.  The upper 16 bits are the GCSGID (character
+    set) and the lower 16 bits are the CPGID (code page).  This value
+    applies only to the double-byte (DBCS) character set.  Use
+    x3270.sbcsCgcsgid for the single-byte (SBCS) character set.
+
 x3270.debugTracing	Default true
     If set to true, options are available on the File menu to trace the 3270
     data stream and X events.  If set to false, these options are not
@@ -668,6 +676,14 @@ x3270.rprnt		Default ^R
 
 x3270.saveLines		Default 64		Switch -sl
     The number of display lines to save for the scroll bar.
+
+x3270.sbcsCgcsgid
+    Overrides the compiled-in value of the CGCSGID for the current host
+    character set.  The value is an integer, which can be preceded with '0x'
+    to be in hexadecimal.  The upper 16 bits are the GCSGID (character
+    set) and the lower 16 bits are the CPGID (code page).  This value
+    applies only to the single-byte (SBCS) character set.  Use
+    x3270.dbcsCgcsgid for the double-byte (DBCS) character set.
 
 x3270.schemeList	Default Default 3279: default
 				Bright: bright

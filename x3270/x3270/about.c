@@ -383,16 +383,22 @@ popup_about_config(void)
 	}
 #endif /*]*/
 
-	MAKE_LABEL(get_message("characterSet"), 4);
-	xbuf = xs_buffer("%s (base %u, code page %u)",
-	    get_charset_name(), (unsigned short)((cgcsgid >> 16) & 0xffff),
+	MAKE_LABEL(get_message("charset"), 4);
+	xbuf = xs_buffer("%s (code page %s)", get_charset_name(),
+	     get_host_codepage());
+	MAKE_VALUE(xbuf);
+	XtFree(xbuf);
+
+	MAKE_LABEL(get_message("sbcsCgcsgid"), 4);
+	xbuf = xs_buffer("GCSGID %u, CPGID %u",
+	    (unsigned short)((cgcsgid >> 16) & 0xffff),
 	    (unsigned short)(cgcsgid & 0xffff));
 	MAKE_VALUE(xbuf);
 	XtFree(xbuf);
 #if defined(X3270_DBCS) /*[*/
 	if (dbcs) {
-		MAKE_LABEL(get_message("characterSetDbcs"), 4);
-		xbuf = xs_buffer("base %u, code page %u",
+		MAKE_LABEL(get_message("dbcsCgcsgid"), 4);
+		xbuf = xs_buffer("GCSGID %u, CPGID %u",
 		    (unsigned short)((cgcsgid_dbcs >> 16) & 0xffff),
 		    (unsigned short)(cgcsgid_dbcs & 0xffff));
 		MAKE_VALUE(xbuf);
