@@ -182,7 +182,7 @@ typedef struct {
 #endif /*]*/
 #endif /*]*/
 #if defined(X3270_DBCS) /*[*/
-	char	*local_encoding;
+	char	*dbcs_cgcsgid;
 #endif /*]*/
 #if defined(C3270) /*[*/
 	char	*meta_escape;
@@ -197,6 +197,7 @@ typedef struct {
 	char	*hostsfile;
 	char	*port;
 	char	*charset;
+	char	*sbcs_cgcsgid;
 	char	*termname;
 	char	*login_macro;
 	char	*macros;

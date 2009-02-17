@@ -78,11 +78,13 @@ char *default_display_charset = "3270cg-1a,3270cg-1,iso8859-1";
 
 /* Statics. */
 static enum cs_result charset_init2(char *csname, const char *codepage,
-	const char *display_charsets);
+	const char *cgcsgid, const char *display_charsets);
 static void set_cgcsgids(const char *spec);
 static int set_cgcsgid(char *spec, unsigned long *idp);
+static void set_host_codepage(char *codepage);
 static void set_charset_name(char *csname);
 
+static char *host_codepage = CN;
 static char *charset_name = CN;
 
 /*
@@ -96,9 +98,10 @@ charset_init(char *csname)
 	char *codeset_name;
 #endif /*]*/
 	const char *codepage;
+	const char *cgcsgid;
 	const char *display_charsets;
 #if defined(X3270_DBCS) /*[*/
-	const char *dbcs_codepage = NULL;
+	const char *dbcs_cgcsgid = NULL;
 	const char *dbcs_display_charsets = NULL;
 	Boolean need_free = False;
 #endif /*]*/
@@ -128,34 +131,38 @@ charset_init(char *csname)
 	/* Do nothing, successfully. */
 	if (csname == CN || !strcasecmp(csname, "us")) {
 		set_cgcsgids(CN);
+		set_host_codepage(CN);
 		set_charset_name(CN);
 #if defined(X3270_DISPLAY) /*[*/
 		(void) screen_new_display_charsets(default_display_charset,
 		    "us");
 #endif /*]*/
-		(void) set_uni("us", &codepage, &display_charsets);
+		(void) set_uni("us", &codepage, &cgcsgid, &display_charsets);
 #if defined(X3270_DBCS) /*[*/
 		(void) set_uni_dbcs("", NULL, NULL);
 #endif /*]*/
 		return CS_OKAY;
 	}
 
-	if (set_uni(csname, &codepage, &display_charsets) < 0)
+	if (set_uni(csname, &codepage, &cgcsgid, &display_charsets) < 0)
 		return CS_NOTFOUND;
+	if (appres.sbcs_cgcsgid != CN)
+	    	cgcsgid = appres.sbcs_cgcsgid; /* override */
 #if defined(X3270_DBCS) /*[*/
-	if (set_uni_dbcs(csname, &dbcs_codepage,
-			     &dbcs_display_charsets) == 0) {
-	    codepage = xs_buffer("%s+%s", codepage, dbcs_codepage);
+	if (set_uni_dbcs(csname, &dbcs_cgcsgid, &dbcs_display_charsets) == 0) {
+	    if (appres.dbcs_cgcsgid != CN)
+		    dbcs_cgcsgid = appres.dbcs_cgcsgid; /* override */
+	    cgcsgid = xs_buffer("%s+%s", cgcsgid, dbcs_cgcsgid);
 	    display_charsets = xs_buffer("%s+%s", display_charsets,
 		    dbcs_display_charsets);
 	    need_free = True;
 	}
 #endif /*]*/
 
-	rc = charset_init2(csname, codepage, display_charsets);
+	rc = charset_init2(csname, codepage, cgcsgid, display_charsets);
 #if defined(X3270_DBCS) /*[*/
 	if (need_free) {
-	    Free((char *)codepage);
+	    Free((char *)cgcsgid);
 	    Free((char *)display_charsets);
 	}
 #endif /*]*/
@@ -229,10 +236,29 @@ set_cgcsgids(const char *spec)
 			return;
 	}
 
-	cgcsgid = DEFAULT_CGEN | DEFAULT_CSET;
+	if (appres.sbcs_cgcsgid != CN)
+	    	cgcsgid = strtoul(appres.sbcs_cgcsgid, NULL, 0);
+	else
+		cgcsgid = DEFAULT_CGEN | DEFAULT_CSET;
 #if defined(X3270_DBCS) /*[*/
-	cgcsgid_dbcs = 0L;
+	if (appres.dbcs_cgcsgid != CN)
+	    	cgcsgid_dbcs = strtoul(appres.dbcs_cgcsgid, NULL, 0);
+	else
+		cgcsgid_dbcs = 0L;
 #endif /*]*/
+}
+
+/* Set the host codepage. */
+static void
+set_host_codepage(char *codepage)
+{
+	if (codepage == CN) {
+		Replace(host_codepage, NewString("037"));
+		return;
+	}
+	if (host_codepage == CN || strcmp(host_codepage, codepage)) {
+	    	Replace(host_codepage, codepage);
+	}
 }
 
 /* Set the global charset name. */
@@ -253,7 +279,8 @@ set_charset_name(char *csname)
 
 /* Character set init, part 2. */
 static enum cs_result
-charset_init2(char *csname, const char *codepage, const char *display_charsets)
+charset_init2(char *csname, const char *codepage, const char *cgcsgid,
+	const char *display_charsets)
 {
 	const char *rcs = display_charsets;
 	int n_rcs = 0;
@@ -299,13 +326,23 @@ charset_init2(char *csname, const char *codepage, const char *display_charsets)
 #endif /*]*/
 #endif /*]*/
 
-	/* Set up the cgcsgid. */
-	set_cgcsgids(codepage);
+	/* Set up the cgcsgids. */
+	set_cgcsgids(cgcsgid);
+
+	/* Set up the host code page. */
+	set_host_codepage((char *)codepage);
 
 	/* Set up the character set name. */
 	set_charset_name(csname);
 
 	return CS_OKAY;
+}
+
+/* Return the current host codepage. */
+char *
+get_host_codepage(void)
+{
+	return (host_codepage != CN)? host_codepage: "037";
 }
 
 /* Return the current character set name. */

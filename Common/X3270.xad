@@ -123,9 +123,9 @@ x3270.schemeList:			Default 3279: default\n\
 					Reverse: reverse\n\
 					Green Screen: greenScreen
 !   Character sets listed on the Options menu
-x3270.charsetList:			U.S. English (CP 37): us-intl\n\
-					Bracket (CP 37, modified): bracket\n\
-					APL (CP 37): apl\n\
+x3270.charsetList:			U.S. English (CP 037): us-intl\n\
+					Bracket (CP 037, modified): bracket\n\
+					APL (CP 037): apl\n\
 					Euro>U.S. English (CP 1140): us-euro\n\
 					Euro>Belgian (CP 1148): belgian-euro\n\
 					Euro>Finnish (CP 1143): finnish-euro\n\
@@ -139,7 +139,7 @@ x3270.charsetList:			U.S. English (CP 37): us-intl\n\
 					Belgian (CP 500): belgian\n\
 					Brazilian (CP 275): brazilian\n\
 #ifdef X3270_DBCS
-					Chinese Simplified (CP 836+837): simplified-chinese\n\
+					Chinese Simplified (CP 935): simplified-chinese\n\
 					Chinese GB 18030 (CP 1388): chinese-gb18030\n\
 					Chinese Traditional (CP 937): traditional-chinese\n\
 #endif
@@ -151,8 +151,8 @@ x3270.charsetList:			U.S. English (CP 37): us-intl\n\
 					Icelandic (CP 871): icelandic\n\
 					Italian (CP 280): italian\n\
 #ifdef X3270_DBCS
-					Japanese (CP 1027+300): japanese-1027\n\
-					Japanese (CP 290+300): japanese-290\n\
+					Japanese w/Kana (CP 930): japanese-kana\n\
+					Japanese w/Latin (CP 939): japanese-latin\n\
 #endif
 					Norwegian (CP 277): norwegian\n\
 					Open Systems (CP 1047): cp1047\n\
@@ -1057,8 +1057,9 @@ x3270.message.emulatorFont:			Emulator font:
 x3270.message.emulatorFontDbcs:			DBCS emulator font:
 x3270.message.xFont:				standard X11 font
 x3270.message.cgFont:				special 3270 CG font
-x3270.message.characterSet:			Host EBCDIC character set:
-x3270.message.characterSetDbcs:			Host EBCDIC DBCS character set:
+x3270.message.charset:				Host EBCDIC character set:
+x3270.message.sbcsCgcsgid:			Host SBCS CGCSGID:
+x3270.message.dbcsCgcsgid:			Host DBCS CGCSGID:
 x3270.message.defaultCharacterSet:		Default (us) EBCDIC character set
 x3270.message.displayCharacterSet:		Display character set:
 x3270.message.displayCharacterSetDbcs:		DBCS display character set:
