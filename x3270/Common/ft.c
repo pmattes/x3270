@@ -1519,6 +1519,10 @@ ft_complete(const char *errmsg)
 			if (s > msg_copy)
 				*s = '\n';	/* yikes! */
 		}
+#if defined(C3270) /*[*/
+		printf("\r%79s\n", "");
+		fflush(stdout);
+#endif /*]*/
 		popup_an_error(msg_copy);
 		Free(msg_copy);
 	} else {
@@ -1534,6 +1538,10 @@ ft_complete(const char *errmsg)
 		(void) sprintf(buf, get_message("ftComplete"), ft_length,
 		    kbytes_sec, ft_is_cut ? "CUT" : "DFT");
 		if (ft_is_action) {
+#if defined(C3270) /*[*/
+			printf("\r%79s\n", "");
+			fflush(stdout);
+#endif /*]*/
 			sms_info("%s", buf);
 			sms_continue();
 		}
@@ -1559,6 +1567,10 @@ ft_update_length(void)
 		XtVaSetValues(ft_status, XtNlabel, text_string, NULL);
 	}
 #endif /*]*/
+#if defined(C3270) /*[*/
+	printf("\r%79s\rTransferred %lu bytes. ", "", ft_length);
+	fflush(stdout);
+#endif /*]*/
 }
 
 /* Process a transfer acknowledgement. */
@@ -1582,6 +1594,9 @@ ft_running(Boolean is_cut)
 		ft_update_length();
 		XtMapWidget(ft_status);
 	}
+#endif /*]*/
+#if defined(C3270) /*[*/
+	ft_update_length();
 #endif /*]*/
 }
 
@@ -1707,6 +1722,9 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	/* Check for interactive mode. */
 	if (xnparams == 0 && escaped) {
 	    	if (interactive_transfer(&xparams, &xnparams) < 0) {
+		    	printf("\n");
+			fflush(stdout);
+		    	action_output("Aborted");
 		    	return;
 		}
 	}
@@ -1952,6 +1970,12 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	}
 	(void) emulate_input(cmd, strlen(cmd), False);
 	Free(cmd);
+#if defined(C3270) /*[*/
+	if (!escaped)
+	    	screen_suspend();
+	printf("Awaiting start of transfer... ");
+	fflush(stdout);
+#endif /*]*/
 
 	/* Get this thing started. */
 	ft_start_id = AddTimeOut(10 * 1000, ft_didnt_start);

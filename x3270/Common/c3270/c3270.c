@@ -39,8 +39,8 @@
 #include "globals.h"
 #if !defined(_WIN32) /*[*/
 #include <sys/wait.h>
-#include <signal.h>
 #endif /*]*/
+#include <signal.h>
 #include <errno.h>
 #include <stdarg.h>
 #include "appres.h"
@@ -447,7 +447,11 @@ main(int argc, char *argv[])
 
 	/* Process events forever. */
 	while (1) {
-		if (!escaped)
+		if (!escaped
+#if defined(X3270_FT) /*[*/
+			|| ft_state != FT_NONE
+#endif /*]*/
+			)
 			(void) process_events(True);
 		if (appres.cbreak_mode && escape_pending) {
 			escape_pending = False;
@@ -461,7 +465,11 @@ main(int argc, char *argv[])
 					x3270_exit(0);
 				interact();
 				screen_resume();
-			} else if (escaped) {
+			} else if (escaped
+#if defined(X3270_FT) /*[*/
+				    && ft_state == FT_NONE
+#endif /*]*/
+				    ) {
 				interact();
 				trace_event("Done interacting.\n");
 				screen_resume();
@@ -530,13 +538,13 @@ interact(void)
 #if !defined(_WIN32) /*[*/
 	/* Handle SIGTSTP differently at the prompt. */
 	signal(SIGTSTP, SIG_DFL);
+#endif /*]*/
 
 	/*
 	 * Ignore SIGINT at the prompt.
 	 * I'm sure there's more we could do.
 	 */
 	signal(SIGINT, SIG_IGN);
-#endif /*]*/
 
 	for (;;) {
 		int sl;
@@ -579,7 +587,11 @@ interact(void)
 		/* Get the command, and trim white space. */
 		if (fgets(buf, sizeof(buf), stdin) == CN) {
 			printf("\n");
+#if defined(_WIN32) /*[*/
+		    	continue;
+#else /*][*/
 			x3270_exit(0);
+#endif /*]*/
 		}
 		s = buf;
 #endif /*]*/
@@ -637,6 +649,9 @@ interact(void)
 	stop_pending = False;
 #if !defined(_WIN32) /*[*/
 	signal(SIGTSTP, SIG_IGN);
+#endif /*]*/
+#if defined(_WIN32) /*[*/
+	signal(SIGINT, SIG_DFL);
 #endif /*]*/
 }
 

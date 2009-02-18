@@ -2009,6 +2009,8 @@ main(int argc, char *argv[])
 	else
 	    	system("mode con lines=50");
 
+	signal(SIGINT, SIG_IGN);
+
 	rc = session_wizard();
 
 	printf("\nWizard %s.  [Press <Enter>] ",

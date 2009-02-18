@@ -263,24 +263,28 @@ ASCII on the workstation.\n\
 		}
 	}
 
-	printf("\
+	if (receive) {
+		printf("\
  If the destination file exists, you can choose to keep it (and abort the\n\
  transfer), replace it, or append the source file to it.\n");
-	for (;;) {
-	    	printf("Action if destination file exists: (keep/replace/append) [keep] ");
-		if (get_input(inbuf, sizeof(inbuf)) == NULL)
-		    	return -1;
-		if (!inbuf[0] || !strncasecmp(inbuf, "keep", strlen(inbuf)))
-		    	break;
-		if (!strncasecmp(inbuf, "replace", strlen(inbuf))) {
-		    	strcpy(kw[kw_ix++], "Exist=replace");
-			fe_mode = FE_REPLACE;
-			break;
-		}
-		if (!strncasecmp(inbuf, "append", strlen(inbuf))) {
-		    	strcpy(kw[kw_ix++], "Exist=append");
-			fe_mode = FE_APPEND;
-			break;
+		for (;;) {
+			printf("Action if destination file exists: "
+				"(keep/replace/append) [keep] ");
+			if (get_input(inbuf, sizeof(inbuf)) == NULL)
+				return -1;
+			if (!inbuf[0] ||
+			    !strncasecmp(inbuf, "keep", strlen(inbuf)))
+				break;
+			if (!strncasecmp(inbuf, "replace", strlen(inbuf))) {
+				strcpy(kw[kw_ix++], "Exist=replace");
+				fe_mode = FE_REPLACE;
+				break;
+			}
+			if (!strncasecmp(inbuf, "append", strlen(inbuf))) {
+				strcpy(kw[kw_ix++], "Exist=append");
+				fe_mode = FE_APPEND;
+				break;
+			}
 		}
 	}
 
@@ -391,18 +395,21 @@ ASCII on the workstation.\n\
 		case CR_KEEP:
 			break;
 		}
-	}
-	printf(" If destination file exists, ");
-	switch (fe_mode) {
-	case FE_KEEP:
-	    	printf("abort the transfer\n");
-		break;
-	case FE_REPLACE:
-	    	printf("replace it\n");
-		break;
-	case FE_APPEND:
-	    	printf("append to it\n");
-		break;
+	} else
+		printf("\n");
+	if (receive) {
+		printf(" If destination file exists, ");
+		switch (fe_mode) {
+		case FE_KEEP:
+			printf("abort the transfer\n");
+			break;
+		case FE_REPLACE:
+			printf("replace it\n");
+			break;
+		case FE_APPEND:
+			printf("append to it\n");
+			break;
+		}
 	}
 	if (!receive &&
 		(rf_mode != RF_NONE || lrecl ||

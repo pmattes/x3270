@@ -220,14 +220,17 @@ static void blink_em(void);
 /*
  * Console event handler.
  */
-static BOOL
+BOOL WINAPI
 cc_handler(DWORD type)
 {
 	if (type == CTRL_C_EVENT) {
 		char *action;
 
 		/* Process it as a Ctrl-C. */
-		trace_event("Control-C received via Console Event Handler\n");
+		trace_event("Control-C received via Console Event Handler%s\n",
+			escaped? " (should be ignored)": "");
+		if (escaped)
+		    	return TRUE;
 		action = lookup_key(0x03, LEFT_CTRL_PRESSED);
 		if (action != CN) {
 			if (strcmp(action, "[ignore]"))
@@ -322,7 +325,7 @@ initscr(void)
 	}
 
 	/* Define a console handler. */
-	if (!SetConsoleCtrlHandler((PHANDLER_ROUTINE)cc_handler, TRUE)) {
+	if (!SetConsoleCtrlHandler(cc_handler, TRUE)) {
 		fprintf(stderr, "SetConsoleCtrlHandler failed: %s\n",
 				win32_strerror(GetLastError()));
 		return NULL;
