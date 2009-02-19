@@ -68,7 +68,8 @@ charset_init(char *csname)
 #if !defined(_WIN32) /*[*/
 	char *codeset_name;
 #endif /*]*/
-    	const char *codepage;
+	const char *host_codepage;
+    	const char *cgcsgid_str;
 	const char *display_charsets;
 
 #if !defined(_WIN32) /*[*/
@@ -96,16 +97,17 @@ charset_init(char *csname)
 	set_codeset(codeset_name);
 #endif /*]*/
 
-    	if (set_uni(csname, &codepage, &display_charsets) < 0)
+    	if (set_uni(csname, &host_codepage, &cgcsgid_str,
+		    &display_charsets) < 0)
 		return CS_NOTFOUND;
-	cgcsgid = strtoul(codepage, NULL, 0);
+	cgcsgid = strtoul(cgcsgid_str, NULL, 0);
 	if (!(cgcsgid & ~0xffff))
 	    	cgcsgid |= 0x02b90000;
 
 #if defined(X3270_DBCS) /*[*/
-	if (set_uni_dbcs(csname, &codepage, &display_charsets) == 0) {
+	if (set_uni_dbcs(csname, &cgcsgid_str, &display_charsets) == 0) {
 	    	dbcs = 1;
-		cgcsgid_dbcs = strtoul(codepage, NULL, 0);
+		cgcsgid_dbcs = strtoul(cgcsgid_str, NULL, 0);
 	}
 #endif /*]*/
 
