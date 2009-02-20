@@ -65,7 +65,7 @@ begin
 end;
 
 [Icons]
-Name: "{group}\wc3270 Session Wizard"; Filename: "{app}\wc3270wiz.exe"; WorkingDir: "{app}"
+Name: "{group}\Session Wizard"; Filename: "{app}\wc3270wiz.exe"; WorkingDir: "{app}"
 Name: "{group}\Run wc3270"; Filename: "{app}\wc3270.exe"; WorkingDir: "{app}"
 Name: "{group}\wc3270 Documentation"; Filename: "{app}\html\README.html"
 Name: "{group}\wc3270 Explore AppData"; Filename: "{app}\ead3270.exe"; Flags: runminimized; IconFilename: "{app}\wc3270.exe"
@@ -77,13 +77,20 @@ Root: HKCR; Subkey: "wc3270\DefaultIcon"; ValueType: string; ValueName: ""; Valu
 Root: HKCR; Subkey: "wc3270\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\wc3270"" ""%1"""
 
 [Run]
-Filename: "{app}\wc3270wiz.exe"; Description: "{cm:LaunchProgram,wc3270 Session Wizard}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\wc3270wiz.exe"; Description: "{cm:LaunchProgram,Session Wizard}"; Flags: nowait postinstall skipifsilent
 Filename: "{cmd}"; Parameters: {code:MyHelp}; Description: "{cm:LaunchProgram,Online Documentation}"; Flags: nowait postinstall skipifsilent
 Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""wc3270"""; Flags: nowait skipifsilent runhidden; Tasks: desktopicon
-Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""wc3270 Session Wizard"""; Flags: nowait skipifsilent runhidden; Tasks: desktopicon
+Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""Session Wizard"""; Flags: nowait skipifsilent runhidden; Tasks: desktopicon
+; Get rid of the old New wc3270 Session desktop icon.
+Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\New wc3270 Session.lnk"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 0,4.0
+Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\New wc3270 Session.pif"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 4.0,0
+; Get rid of the old 'New wc3270 Session' start menu item.  It might be in
+; the common programs group or the user programs group.
+Filename: "{cmd}"; Parameters: "/c erase ""{commonprograms}\{groupname}\New wc3270 Session.lnk"""; Flags: runhidden
+Filename: "{cmd}"; Parameters: "/c erase ""{userprograms}\{groupname}\New wc3270 Session.lnk"""; Flags: runhidden
 
 [UninstallRun]
 Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\wc3270.lnk"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 0,4.0
-Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\wc3270 Session Wizard.lnk"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 0,4.0
+Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\Session Wizard.lnk"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 0,4.0
 Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\wc3270.pif"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 4.0,0
-Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\wc3270 Session Wizard.pif"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 4.0,0
+Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\Session Wizard.pif"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 4.0,0
