@@ -238,14 +238,11 @@ screen_init(void)
 
 	/* If they want 80/132 switching, then they want a model 5. */
 	if (def_screen != NULL && model_num != 5) {
-		appres.model = NewString("5");
 		set_rows_cols(5, 0, 0);
 	}
 #endif /*]*/
 
 	while (LINES < maxROWS || COLS < maxCOLS) {
-		char buf[2];
-
 		/*
 		 * First, cancel any oversize.  This will get us to the correct
 		 * model number, if there is any.
@@ -266,8 +263,6 @@ screen_init(void)
 		}
 
 		/* Try a smaller model. */
-		(void) sprintf(buf, "%d", model_num - 1);
-		appres.model = NewString(buf);
 		set_rows_cols(model_num - 1, 0, 0);
 	}
 
