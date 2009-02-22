@@ -302,6 +302,7 @@ charset_init2(char *csname, const char *codepage, const char *cgcsgid,
 		}
 		n_rcs++;
 	}
+	Free(rcs_copy);
 
 #if defined(X3270_DBCS) /*[*/
 	/* Can't swap DBCS modes while connected. */
