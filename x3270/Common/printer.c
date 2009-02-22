@@ -469,7 +469,7 @@ printer_data(struct pr3o *p, Boolean is_err)
 				p->count = PRINTER_BUF - 1;
 			printer_dump(p, True, True);
 		} else {
-			popup_an_error(exitmsg);
+			popup_an_error("%s", exitmsg);
 		}
 		printer_stop();
 		return;

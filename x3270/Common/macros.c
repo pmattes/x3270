@@ -1010,7 +1010,7 @@ execute_command(enum iaction cause, char *s, char **np)
 		return EM_CONTINUE;
 
     failure:
-	popup_an_error(fail_text[failreason-1]);
+	popup_an_error("%s", fail_text[failreason-1]);
 	return EM_ERROR;
 #undef fail
 #undef free_params
@@ -1913,11 +1913,14 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf, int fd)
 	}
 	if (fd >= 0) {
 		char *s;
+		int nw;
 
 		s = xs_buffer("rows %d cols %d cursor %d\n", ROWS, COLS,
 				cursor_addr);
-		(void) write(fd, s, strlen(s));
+		nw = write(fd, s, strlen(s));
 		Free(s);
+		if (nw < 0)
+			return;
 	}
 
 	rpf_init(&r);
@@ -1926,11 +1929,13 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf, int fd)
 		if (!(baddr % COLS)) {
 			if (baddr) {
 				if (fd >= 0) {
-					(void) write(fd, r.buf + 1,
-						     strlen(r.buf + 1));
-					(void) write(fd, "\n", 1);
+					if (write(fd, r.buf + 1,
+						     strlen(r.buf + 1)) < 0)
+						goto done;
+					if (write(fd, "\n", 1) < 0)
+						goto done;
 				} else
-					action_output(r.buf + 1);
+					action_output("%s", r.buf + 1);
 			}
 			rpf_reset(&r);
 		}
@@ -2030,10 +2035,13 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf, int fd)
 		INC_BA(baddr);
 	} while (baddr != 0);
 	if (fd >= 0) {
-		(void) write(fd, r.buf + 1, strlen(r.buf + 1));
-		(void) write(fd, "\n", 1);
+		if (write(fd, r.buf + 1, strlen(r.buf + 1)) < 0)
+		    	goto done;
+		if (write(fd, "\n", 1) < 0)
+		    	goto done;
 	} else
-		action_output(r.buf + 1);
+		action_output("%s", r.buf + 1);
+done:
 	rpf_free(&r);
 }
 
@@ -2778,9 +2786,25 @@ void
 Execute_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
+    	int status;
+
 	if (check_usage(Execute_action, *num_params, 1, 1) < 0)
 		return;
-	(void) system(params[0]);
+	status = system(params[0]);
+	if (status < 0) {
+	    	popup_an_errno(errno, "system(\"%s\") failed", params[0]);
+	} else if (status != 0) {
+	    	if (WIFEXITED(status)) {
+		    	popup_an_error("system(\"%s\") exited with status %d\n",
+				params[0], WEXITSTATUS(status));
+		} else if (WIFSIGNALED(status)) {
+		    	popup_an_error("system(\"%s\") killed by signal %d\n",
+				params[0], WTERMSIG(status));
+		} else if (WIFSTOPPED(status)) {
+		    	popup_an_error("system(\"%s\") stopped by signal %d\n",
+				params[0], WSTOPSIG(status));
+		}
+	}
 }
 
 /* Timeout for Expect action. */
@@ -3582,7 +3606,7 @@ Source_action(Widget w _is_unused, XEvent *event, String *params,
 		return;
 	fd = open(params[0], O_RDONLY);
 	if (fd < 0) {
-	    	popup_an_errno(errno, params[0]);
+	    	popup_an_errno(errno, "%s", params[0]);
 		return;
 	}
 	push_file(fd);

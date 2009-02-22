@@ -1199,7 +1199,7 @@ ft_start(void)
 			if (receive_flag && !append_flag)
 			    unlink(ft_local_filename);
 		}
-		popup_an_error(get_message("ftUnable"));
+		popup_an_error("%s", get_message("ftUnable"));
 		allow_overwrite = False;
 		return 0;
 	}
@@ -1523,7 +1523,7 @@ ft_complete(const char *errmsg)
 		printf("\r%79s\n", "");
 		fflush(stdout);
 #endif /*]*/
-		popup_an_error(msg_copy);
+		popup_an_error("%s", msg_copy);
 		Free(msg_copy);
 	} else {
 		struct timeval t1;
@@ -1547,7 +1547,7 @@ ft_complete(const char *errmsg)
 		}
 #if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
 		else
-			popup_an_info(buf);
+			popup_an_info("%s", buf);
 #endif /*]*/
 		Free(buf);
 	}
@@ -1965,7 +1965,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 			if (receive_flag && !append_flag)
 			    unlink(ft_local_filename);
 		}
-		popup_an_error(get_message("ftUnable"));
+		popup_an_error("%s", get_message("ftUnable"));
 		return;
 	}
 	(void) emulate_input(cmd, strlen(cmd), False);

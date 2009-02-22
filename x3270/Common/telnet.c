@@ -409,7 +409,7 @@ popup_a_sockerr(char *fmt, ...)
 	 va_start(args, fmt);
 	 vsprintf(buffer, fmt, args);
 	 va_end(args);
-	 popup_an_errno(errno, buffer);
+	 popup_an_errno(errno, "%s", buffer);
 }
 #endif /*]*/
 
@@ -518,7 +518,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	    	if (resolve_host_and_port(proxy_host, proxy_portname,
 			    &proxy_port, &haddr.sa, &ha_len, errmsg,
 			    sizeof(errmsg)) < 0) {
-		    	popup_an_error(errmsg);
+		    	popup_an_error("%s", errmsg);
 		    	return -1;
 		}
 	} else {
@@ -533,7 +533,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 			if (resolve_host_and_port(host, portname,
 				    &current_port, &haddr.sa, &ha_len,
 				    errmsg, sizeof(errmsg)) < 0) {
-			    	popup_an_error(errmsg);
+			    	popup_an_error("%s", errmsg);
 			    	return -1;
 			}
 #if defined(LOCAL_PROCESS) /*[*/
@@ -1178,7 +1178,7 @@ telnet_fsm(unsigned char c)
 				trace_dsn(" ...\n... ");
 				ansi_data = 4 + sl;
 			}
-			trace_dsn(see_chr);
+			trace_dsn("%s", see_chr);
 			if (!syncing) {
 				if (linemode && appres.onlcr && c == '\n')
 					ansi_process((unsigned int) '\r');
@@ -1208,7 +1208,7 @@ telnet_fsm(unsigned char c)
 					trace_dsn(" ...\n ...");
 					ansi_data = 4 + sl;
 				}
-				trace_dsn(see_chr);
+				trace_dsn("%s", see_chr);
 				ansi_process((unsigned int) c);
 				sms_store(c);
 #endif /*]*/

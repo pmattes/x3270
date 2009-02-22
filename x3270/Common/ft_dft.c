@@ -427,7 +427,7 @@ store_inbyte(unsigned char c, unsigned char **bufptr, size_t *numbytes)
     	if (*numbytes) {
 	    	*(*bufptr) = c;
 		(*bufptr)++;
-		*numbytes--;
+		(*numbytes)--;
 	} else {
 	    	dft_ungetc_cache[dft_ungetc_count++] = c;
 	}

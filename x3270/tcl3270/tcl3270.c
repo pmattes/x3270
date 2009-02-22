@@ -630,7 +630,7 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 			trace_event(" -> \"%s\"",
 			    scatv(s_trunc, buf, sizeof(buf)));
 			if (strlen(s) > TRUNC_LEN)
-				trace_event("...(%d chars)", strlen(s));
+				trace_event("...(%d chars)", (int)strlen(s));
 		}
 		trace_event("\n");
 	}

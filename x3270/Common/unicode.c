@@ -871,7 +871,7 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 	    *errorp = ME_INVALID;
 	else
 	    *errorp = ME_SHORT;
-	(void) mbtowc(NULL, NULL, 0);
+	nw = mbtowc(NULL, NULL, 0);
 	return 0;
     }
 
@@ -882,8 +882,8 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
      * passed in to control whether or not to reset the shift state, or
      * perhaps there should be a function to translate a string.
      */
-    (void) mbtowc(NULL, NULL, 0);
     *consumedp = nw;
+    nw = mbtowc(NULL, NULL, 0);
 
     ucs4 = wc[0];
 #else /*][*/

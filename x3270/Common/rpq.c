@@ -768,7 +768,7 @@ rpq_dump_warnings(void)
 {
 	/* If there's something to complain about, only complain once. */
 	if (!rpq_complained && rpq_wbcnt) {
-		popup_an_error(rpq_warnbuf);
+		popup_an_error("%s", rpq_warnbuf);
 		rpq_wbcnt = 0;
 		rpq_complained = True;
 
