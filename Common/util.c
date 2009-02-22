@@ -50,10 +50,12 @@
 static char *
 xs_vsprintf(const char *fmt, va_list args)
 {
-	char *r;
+	char *r = CN;
 #if defined(HAVE_VASPRINTF) /*[*/
-	(void) vasprintf(&r, fmt, args);
-	if (r == CN)
+	int nw;
+
+	nw = vasprintf(&r, fmt, args);
+	if (nw < 0 || r == CN)
 		Error("Out of memory");
 	return r;
 #else /*][*/

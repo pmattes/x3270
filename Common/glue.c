@@ -1209,7 +1209,7 @@ popup_an_errno(int errn, const char *fmt, ...)
 	if (errn > 0)
 		popup_an_error("%s:\n%s", s, strerror(errn));
 	else
-		popup_an_error(s);
+		popup_an_error("%s", s);
 	Free(s);
 }
 

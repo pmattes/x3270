@@ -214,8 +214,9 @@ screen_init(void)
 			    defscreen_spec.rows, defscreen_spec.cols);
 			exit(1);
 		}
-		(void) write(1, defscreen_spec.mode_switch,
-		    strlen(defscreen_spec.mode_switch));
+		if (write(1, defscreen_spec.mode_switch,
+		    strlen(defscreen_spec.mode_switch)) < 0)
+		    	exit(1);
 	}
 	if (appres.altscreen) {
 		char nbuf[64];
@@ -737,15 +738,17 @@ screen_disp(Boolean erasing _is_unused)
 	/* See if they've switched screens on us. */
 	if (def_screen != NULL && screen_alt != curses_alt) {
 		if (screen_alt) {
-			(void) write(1, altscreen_spec.mode_switch,
-			    strlen(altscreen_spec.mode_switch));
+			if (write(1, altscreen_spec.mode_switch,
+			    strlen(altscreen_spec.mode_switch)) < 0)
+			    	exit(1);
 			trace_event("Switching to alt (%dx%d) screen.\n",
 			    altscreen_spec.rows, altscreen_spec.cols);
 			swap_screens(alt_screen);
 			cur_spec = &altscreen_spec;
 		} else {
-			(void) write(1, defscreen_spec.mode_switch,
-			    strlen(defscreen_spec.mode_switch));
+			if (write(1, defscreen_spec.mode_switch,
+			    strlen(defscreen_spec.mode_switch)) < 0)
+			    	exit(1);
 			trace_event("Switching to default (%dx%d) screen.\n",
 			    defscreen_spec.rows, defscreen_spec.cols);
 			swap_screens(def_screen);
@@ -1182,8 +1185,9 @@ screen_suspend(void)
 			need_to_scroll = True;
 #if defined(C3270_80_132) /*[*/
 		if (curses_alt && def_screen != NULL) {
-			(void) write(1, defscreen_spec.mode_switch,
-			    strlen(defscreen_spec.mode_switch));
+			if (write(1, defscreen_spec.mode_switch,
+			    strlen(defscreen_spec.mode_switch)) < 0)
+			    	x3270_exit(1);
 		}
 #endif /*]*/
 		RemoveInput(input_id);
@@ -1202,8 +1206,9 @@ screen_resume(void)
 		 * that endwin() got called in the right order.  Switch back.
 		 */
 		swap_screens(alt_screen);
-		(void) write(1, altscreen_spec.mode_switch,
-		    strlen(altscreen_spec.mode_switch));
+		if (write(1, altscreen_spec.mode_switch,
+		    strlen(altscreen_spec.mode_switch)) < 0)
+		    	x3270_exit(1);
 	}
 #endif /*]*/
 	screen_disp(False);
@@ -1592,8 +1597,9 @@ screen_132(void)
 #if defined(C3270_80_132) /*[*/
 	if (cur_screen != alt_screen) {
 		swap_screens(alt_screen);
-		(void) write(1, altscreen_spec.mode_switch,
-		    strlen(altscreen_spec.mode_switch));
+		if (write(1, altscreen_spec.mode_switch,
+		    strlen(altscreen_spec.mode_switch)) < 0)
+		    	x3270_exit(1);
 		ctlr_erase(True);
 		screen_disp(True);
 	}
@@ -1606,8 +1612,9 @@ screen_80(void)
 #if defined(C3270_80_132) /*[*/
 	if (cur_screen != def_screen) {
 		swap_screens(def_screen);
-		(void) write(1, defscreen_spec.mode_switch,
-		    strlen(defscreen_spec.mode_switch));
+		if (write(1, defscreen_spec.mode_switch,
+		    strlen(defscreen_spec.mode_switch)) < 0)
+		    	x3270_exit(1);
 		ctlr_erase(False);
 		screen_disp(True);
 	}

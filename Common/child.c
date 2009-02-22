@@ -140,7 +140,7 @@ child_data(struct pr3o *p, Boolean is_err)
 	 * If we're discarding output, pull it in and drop it on the floor.
 	 */
 	if (child_discarding) {
-		(void) read(p->fd, p->buf, CHILD_BUF);
+		nr = read(p->fd, p->buf, CHILD_BUF);
 		return;
 	}
 
@@ -172,7 +172,7 @@ child_data(struct pr3o *p, Boolean is_err)
 				p->count = CHILD_BUF - 1;
 			child_dump(p, True);
 		} else {
-			popup_an_error(exitmsg);
+			popup_an_error("%s", exitmsg);
 		}
 		return;
 	}

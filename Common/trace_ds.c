@@ -771,7 +771,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 			else
 				tracef = fopen(tfn, tracef_max? "w+": "a");
 			if (tracef == (FILE *)NULL) {
-				popup_an_errno(errno, tfn);
+				popup_an_errno(errno, "%s", tfn);
 #if defined(X3270_DISPLAY) /*[*/
 				fclose(tracef_pipe);
 				(void) close(pipefd[0]);
@@ -1065,7 +1065,7 @@ screentrace_cb(char *tfn)
 	tfn = do_subst(tfn, True, True);
 	screentracef = fopen(tfn, "a");
 	if (screentracef == (FILE *)NULL) {
-		popup_an_errno(errno, tfn);
+		popup_an_errno(errno, "%s", tfn);
 		Free(tfn);
 		return False;
 	}
@@ -1105,7 +1105,7 @@ onescreen_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 	tfn = do_subst(tfn, True, True);
 	screentracef = fopen(tfn, "a");
 	if (screentracef == (FILE *)NULL) {
-		popup_an_errno(errno, tfn);
+		popup_an_errno(errno, "%s", tfn);
 		XtFree(tfn);
 		return;
 	}

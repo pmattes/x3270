@@ -272,7 +272,7 @@ Help_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 			}
 		}
 		if (help_subcommand[overall].text != CN) {
-			action_output(help_subcommand[overall].text);
+			action_output("%s", help_subcommand[overall].text);
 			return;
 		}
 		if (help_subcommand[overall].block != NULL) {
@@ -281,7 +281,8 @@ Help_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 			for (j = 0;
 			     help_subcommand[overall].block[j] != CN;
 			     j++) {
-				action_output(help_subcommand[overall].block[j]);
+				action_output("%s",
+					help_subcommand[overall].block[j]);
 			}
 			return;
 		}

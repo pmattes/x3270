@@ -1035,7 +1035,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 
 			rewind(f);
 			while (fgets(buf, sizeof(buf), f) != NULL)
-				action_output(buf);
+				action_output("%s", buf);
 		}
 		if (use_file)
 			fclose(f);

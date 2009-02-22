@@ -308,7 +308,8 @@ pause_for_errors(void)
 	if (any_error_output) {
 		printf("[Press <Enter>] ");
 		fflush(stdout);
-		(void) fgets(s, sizeof(s), stdin);
+		if (fgets(s, sizeof(s), stdin) == NULL)
+			x3270_exit(1);
 		any_error_output = False;
 	}
 }
@@ -531,7 +532,8 @@ interact(void)
 
 		printf("[Press <Enter>] ");
 		fflush(stdout);
-		(void) fgets(s, sizeof(s), stdin);
+		if (fgets(s, sizeof(s), stdin) == NULL)
+		    	x3270_exit(1);
 		return;
 	}
 
@@ -1094,7 +1096,7 @@ status_dump(void)
 			for (i = 0; c[i].name; i++) {
 				if (i && !(i % 4)) {
 					*s = '\0';
-					action_output(buf);
+					action_output("%s", buf);
 					s = buf;
 				}
 				s += sprintf(s, "  %s %s", c[i].name,
