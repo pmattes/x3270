@@ -4275,7 +4275,6 @@ lff_single(const char *name, const char *reqd_display_charset, Boolean is_dbcs)
 #endif /*]*/
 		if (!check_charset(matches[i], &f[i], reqd_display_charset,
 			    force, &font_csname, &scalable)) {
-			char *xp = expand_cslist(reqd_display_charset);
 
 			if (mod_count == 1) {
 				if (scalable) {
@@ -4285,6 +4284,9 @@ lff_single(const char *name, const char *reqd_display_charset, Boolean is_dbcs)
 						      "override)",
 						      name, name);
 				} else {
+					char *xp =
+					    expand_cslist(reqd_display_charset);
+
 					r = xs_buffer("Font '%s'\n"
 					    "implements %s, not %s\n"
 					    "(Specify '!%s' to override)",
@@ -4972,7 +4974,7 @@ add_font_to_menu(char *label, char *font)
 	}
 	f->font = NewString(font);
 	f->next = NULL;
-	/*f->label = label;*/
+	f->mlabel = label;
 	if (font_list)
 		font_last->next = f;
 	else
@@ -5010,7 +5012,7 @@ init_rsfonts(char *charset_name)
 		f = font_list->next;
 		if (font_list->parents)
 			Free(font_list->parents);
-		/*Free(font_list->label);  a leak! */
+		Free(font_list->mlabel);
 		Free(font_list->font);
 		Free(font_list);
 		font_list = f;
