@@ -866,8 +866,6 @@ screen_init(void)
 	 * Respect the console size we are given.
 	 */
 	while (console_rows < maxROWS || console_cols < maxCOLS) {
-		char buf[2];
-
 		/*
 		 * First, cancel any oversize.  This will get us to the correct
 		 * model number, if there is any.
@@ -888,8 +886,6 @@ screen_init(void)
 		}
 
 		/* Try a smaller model. */
-		(void) sprintf(buf, "%d", model_num - 1);
-		appres.model = NewString(buf);
 		set_rows_cols(model_num - 1, 0, 0);
 	}
 
