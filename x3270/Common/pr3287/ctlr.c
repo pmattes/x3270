@@ -1533,7 +1533,7 @@ void
 ctlr_add(ucs4_t c, unsigned char cs, unsigned char gr)
 {
 	/* Map control characters, according to the write mode. */
-	if ((c & 0x7f) < ' ') {
+	if (c < ' ') {
 		if (wcc_line_length) {
 			/*
 			 * When formatted, all control characters but FFs and
