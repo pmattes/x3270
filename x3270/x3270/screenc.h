@@ -121,6 +121,7 @@ struct font_list {
 	char			**parents;
 	char			*font;
 	struct font_list	*next;
+	char			*mlabel;
 };
 extern struct font_list *font_list;
 extern int font_count;
