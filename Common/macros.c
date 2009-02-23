@@ -2794,6 +2794,10 @@ Execute_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	if (status < 0) {
 	    	popup_an_errno(errno, "system(\"%s\") failed", params[0]);
 	} else if (status != 0) {
+#if defined(_WIN32) /*[*/
+		popup_an_error("system(\"%s\") exited with status %d\n",
+			params[0], status);
+#else /*][*/
 	    	if (WIFEXITED(status)) {
 		    	popup_an_error("system(\"%s\") exited with status %d\n",
 				params[0], WEXITSTATUS(status));
@@ -2804,6 +2808,7 @@ Execute_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 		    	popup_an_error("system(\"%s\") stopped by signal %d\n",
 				params[0], WSTOPSIG(status));
 		}
+#endif /*]*/
 	}
 }
 
