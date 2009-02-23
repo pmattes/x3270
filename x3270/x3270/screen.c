@@ -3754,7 +3754,7 @@ screen_new_display_charsets(const char *display_charsets, const char *csnames)
 		lff = load_fixed_font(appres.efontname, display_charsets);
 		if (lff != CN) {
 			if (strcmp(appres.efontname, "3270")) {
-				popup_an_error(lff);
+				popup_an_error("%s", lff);
 			}
 			Free(lff);
 		} else
@@ -3797,7 +3797,7 @@ screen_new_display_charsets(const char *display_charsets, const char *csnames)
 				font_found = True;
 			} else {
 				/* Fatal. */
-				xs_error(lff);
+				xs_error("%s", lff);
 				Free(lff);
 				/*NOTREACHED*/
 				return False;
@@ -3908,7 +3908,7 @@ screen_newfont(char *fontnames, Boolean do_popup, Boolean is_cs)
 	/* Try the new one. */
 	if ((lff = load_fixed_font(fontnames, required_display_charsets)) != CN) {
 		if (do_popup)
-			popup_an_error(lff);
+			popup_an_error("%s", lff);
 		Free(lff);
 		XtFree(old_font);
 		return;
@@ -5113,7 +5113,7 @@ init_rsfonts(char *charset_name)
 					    	hier_name =
 						    xs_buffer("%s>%.*s>%s",
 							csn,
-							dash2 - names[i] - 1,
+							(int)(dash2 - names[i] - 1),
 							 names[i] + 1,
 							dash2 + 1);
 					} else
@@ -5148,7 +5148,7 @@ init_rsfonts(char *charset_name)
 					    	hier_name =
 						    xs_buffer("%s>%.*s>%s",
 							csn,
-							dash2 - names[i] - 1,
+							(int)(dash2 - names[i] - 1),
 							 names[i] + 1,
 							dash2 + 1);
 					} else

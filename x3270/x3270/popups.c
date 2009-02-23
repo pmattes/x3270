@@ -903,7 +903,7 @@ popup_an_errno(int errn, const char *fmt, ...)
 	if (errn > 0)
 		popup_an_error("%s:\n%s", s, strerror(errn));
 	else
-		popup_an_error(s);
+		popup_an_error("%s", s);
 	XtFree(s);
 }
 
@@ -1048,7 +1048,7 @@ Info_action(Widget w _is_unused, XEvent *event, String *params,
 	action_debug(Info_action, event, params, num_params);
 	if (check_usage(Info_action, *num_params, 1, 1) < 0)
 		return;
-	popup_an_info(params[0]);
+	popup_an_info("%s", params[0]);
 }
 
 /*
