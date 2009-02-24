@@ -1607,7 +1607,7 @@ paste_callback(Widget w, XtPointer client_data _is_unused, Atom *selection _is_u
 #if defined(XA_UTF8_STRING) /*[*/
 		if (paste_utf8) {
 		    	paste_utf8 = False;
-			XtGetSelectionValue(w, paste_atom[pix], XA_STRING,
+			XtGetSelectionValue(w, paste_atom[(pix - 1)], XA_STRING,
 				paste_callback, NULL, paste_time);
 		} else
 #endif /*]*/
