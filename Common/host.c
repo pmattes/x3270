@@ -248,6 +248,244 @@ parse_localprocess(const char *s)
 }
 #endif /*]*/
 
+static char *pfxstr = "AaCcLlNnPpSs";
+
+/*
+ * A new hostname parser.  A bit more general.
+ * Allows backslashes to quote anything.
+ * Allows [ ] to quote : and @ inside any name (LU, host or port).
+ *
+ * Because the syntax is so awful, it needs to be picked apart explicitly.
+ * Returns 0 for success, -1 for syntax error.
+ */
+static int
+new_split_host(char *raw, char **lu, char **host, char **port,
+	unsigned *prefixes)
+{
+	char   *start     = raw;
+	int     sl        = strlen(raw);
+	char   *s;
+	char   *uq        = NULL;
+	int     uq_len    = 0;
+	char   *qmap      = NULL;
+	char   *rqmap;
+	char   *errmsg    = "nonspecific";
+	int     rc        = -1;
+	Boolean quoted    = False;
+	int     bracketed = 0;
+	int     n_ch      = 0;
+	int     n_at      = 0;
+	int     n_colon   = 0;
+	char   *part[3]   = { NULL, NULL, NULL };
+	int     part_ix   = 0;
+	char   *pfx;
+
+	*lu       = NULL;
+	*host     = NULL;
+	*port     = NULL;
+	*prefixes = 0;
+
+	/* Trim leading and trailing blanks. */
+	while (sl && isspace(*start)) {
+		start++;
+		sl--;
+	}
+	while (sl && isspace(start[sl - 1]))
+		sl--;
+	if (!sl) {
+		errmsg = "empty string";
+		goto done;
+	}
+
+	/*
+	 * 'start' now points to the start of the string, and sl is its length.
+	 */
+
+	/*
+	 * Create a bit-map of quoted characters.
+	 * This includes and character preceded by \, and any : or @ inside
+	 *  unquoted [ and ].
+	 * This can fail if an unquoted [ is found inside a [ ], or if an
+	 *  unquoted [ is not terminated, or if whitespace is found.
+	 * Backslashes and unquoted square brackets are deleted at this point.
+	 * Leaves a filtered copy of the string in uq[].
+	 */
+	uq = Malloc(sl + 1);
+	qmap = Malloc(sl + 1);
+	memset(qmap, ' ', sl);
+	qmap[sl] = '\0';
+	rqmap = qmap;
+	for (s = start; s - start < sl; s++) {
+		if (isspace(*s)) {
+			errmsg = "contains whitespace";
+			goto done;
+		}
+		if (quoted) {
+			qmap[uq_len] = '+';
+			quoted = False;
+			uq[uq_len++] = *s;
+			continue;
+		} else if (*s == '\\') {
+			quoted = True;
+			continue;
+		}
+		if (bracketed) {
+			if (*s == ':' || *s == '@')
+				qmap[uq_len] = '+';
+				/* add the character below */
+			else if (*s == '[') {
+				errmsg = "nested '['";
+				goto done;
+			} else if (*s == ']') {
+				/*
+				 * What follows has to be the end of the
+				 * string, or an unquoted ':' or a '@'.
+				 */
+				if ((s - start) == sl - 1 ||
+					*(s + 1) == '@' ||
+					*(s + 1) == ':')
+					bracketed = 0;
+				else {
+					errmsg = "text following ']'";
+					goto done;
+				}
+				continue;
+			}
+		} else if (*s == '[') {
+			/*
+			 * Make sure that what came before is the beginning of
+			 * the string or an unquoted : or @.
+			 */
+			if (uq_len == 0 ||
+				(qmap[uq_len - 1] == ' ' &&
+				 (uq[uq_len - 1] == ':' ||
+				  uq[uq_len - 1] == '@')))
+				bracketed = 1;
+			else {
+				errmsg = "text preceding '['";
+				goto done;
+			}
+			continue;
+		}
+		uq[uq_len++] = *s;
+	}
+	if (quoted) {
+		errmsg = "dangling '\\'";
+		goto done;
+	}
+	if (bracketed) {
+		errmsg = "missing ']'";
+		goto done;
+	}
+	if (!uq_len) {
+		errmsg = "empty hostname";
+		goto done;
+	}
+	uq[uq_len] = '\0';
+
+	/* Trim off prefixes. */
+	s = uq;
+	while ((pfx = strchr(pfxstr, *s)) != NULL &&
+		qmap[(s + 1) - uq] == ' ' &&
+		*(s + 1) == ':') {
+
+		*prefixes |= 1 << ((pfx - pfxstr) / 2);
+		s += 2;
+		rqmap += 2;
+	}
+	start = s;
+
+	/*
+	 * Now check for syntax: [LUname@]hostname[:port]
+	 * So more than one @, more than one :, : before @, or no text before @
+	 * or :, or no text after : are all syntax errors.
+	 * This also lets us figure out which elements are there.
+	 */
+	while (*s) {
+		if (rqmap[s - start] == ' ') {
+			if (*s == '@') {
+				if (n_ch == 0) {
+					errmsg = "empty LU name";
+					goto done;
+				}
+				if (n_colon > 0) {
+					errmsg = "'@' after ':'";
+					goto done;
+				}
+				if (n_at > 0) {
+					errmsg = "double '@'";
+					goto done;
+				}
+				n_at++;
+				n_ch = 0;
+			} else if (*s == ':') {
+				if (n_ch == 0) {
+					errmsg = "empty hostname";
+					goto done;
+				}
+				if (n_colon > 0) {
+					errmsg = "double ':'";
+					goto done;
+				}
+				n_colon++;
+				n_ch = 0;
+			} else
+			    n_ch++;
+		} else
+			n_ch++;
+		s++;
+	}
+	if (!n_ch) {
+		if (n_colon)
+			errmsg = "empty port";
+		else
+			errmsg = "empty hostname";
+		goto done;
+	}
+
+	/*
+	 * The syntax is clean, and we know what parts there are.
+	 * Split them out.
+	 */
+	if (n_at) {
+		*lu = Malloc(uq_len + 1);
+		part[0] = *lu;
+	}
+	*host = Malloc(uq_len + 1);
+	part[1] = *host;
+	if (n_colon) {
+		*port = Malloc(uq_len + 1);
+		part[2] = *port;
+	}
+	s = start;
+	n_ch = 0;
+	while (*s) {
+		if (rqmap[s - start] == ' ' && (*s == '@' || *s == ':')) {
+			part[part_ix][n_ch] = '\0';
+			part_ix++;
+			n_ch = 0;
+		} else {
+			while (part[part_ix] == NULL)
+				part_ix++;
+			part[part_ix][n_ch++] = *s;
+		}
+		s++;
+	}
+	part[part_ix][n_ch] = '\0';
+
+	/* Success! */
+	rc = 0;
+
+done:
+	if (uq != NULL)
+		Free(uq);
+	if (qmap != NULL)
+		Free(qmap);
+	if (rc < 0)
+		popup_an_error("Hostname syntax error: %s", errmsg);
+	return rc;
+}
+
 /*
  * Strip qualifiers from a hostname.
  * Returns the hostname part in a newly-malloc'd string.
@@ -259,236 +497,33 @@ split_host(char *s, Boolean *ansi, Boolean *std_ds, Boolean *passthru,
 	Boolean *non_e, Boolean *secure, Boolean *no_login, char *xluname,
 	char **port, Boolean *needed)
 {
-	char *lbracket = CN;
-	char *at = CN;
-	char *r = NULL;
-	Boolean colon = False;
+	char *lu;
+	char *host;
+    	unsigned prefixes;
+	Boolean *pfxptr[6];
+	int i;
 
-	*ansi = False;
-	*std_ds = False;
-	*passthru = False;
-	*non_e = False;
-	*secure = False;
-	*xluname = '\0';
-	*port = CN;
-
-	*needed = False;
-
-	/*
-	 * Hostname syntax is:
-	 *  Zero or more optional prefixes (A:, S:, P:, N:, L:, C:).
-	 *  An optional LU name separated by '@'.
-	 *  A hostname optionally in square brackets (which quote any colons
-	 *   in the name).
-	 *  An optional port name or number separated from the hostname by a
-	 *  space or colon.
-	 * No additional white space or colons are allowed.
-	 */
-
-	/* Strip leading whitespace. */
-	while (*s && isspace(*s))
-		s++;
-	if (!*s) {
-		popup_an_error("Empty hostname");
-		goto split_fail;
-	}
-
-	/* Strip trailing whitespace. */
-	while (isspace(*(s + strlen(s) - 1)))
-		*(s + strlen(s) - 1) = '\0';
-
-	/* Start with the prefixes. */
-	while (*s && *(s + 1) && isalpha(*s) && *(s + 1) == ':') {
-		switch (*s) {
-		case 'a':
-		case 'A':
-			*ansi = True;
-			break;
-		case 's':
-		case 'S':
-			*std_ds = True;
-			break;
-		case 'p':
-		case 'P':
-			*passthru = True;
-			break;
-		case 'n':
-		case 'N':
-			*non_e = True;
-			break;
-#if defined(HAVE_LIBSSL) /*[*/
-		case 'l':
-		case 'L':
-			*secure = True;
-			break;
-#endif /*]*/
-		case 'c':
-		case 'C':
-			*no_login = True;
-			break;
-		default:
-			popup_an_error("Hostname syntax error:\n"
-					"Option '%c:' not supported", *s);
-			goto split_fail;
-		}
+    	/* Call the sane, new version. */
+    	if (new_split_host(s, &lu, &host, port, &prefixes) < 0)
+	    	return NULL;
+	else {
+	    	if (lu) {
+		    	strncpy(xluname, lu, LUNAME_SIZE);
+			xluname[LUNAME_SIZE] = '\0';
+		} else
+		    	*xluname = '\0';
+		pfxptr[0] = ansi;	/* A: */
+		pfxptr[1] = no_login;	/* C: */
+		pfxptr[2] = secure;	/* L: */
+		pfxptr[3] = non_e;	/* N: */
+		pfxptr[4] = passthru;	/* P: */
+		pfxptr[5] = std_ds;	/* S: */
+		for (i = 0; i < 6; i++)
+		    	if (prefixes & (1 << i))
+			    	*pfxptr[i] = True;
 		*needed = True;
-		s += 2;
-
-		/* Allow whitespace around the prefixes. */
-		while (*s && isspace(*s))
-			s++;
+	    	return host;
 	}
-
-	/* Process the LU name. */
-	lbracket = strchr(s, '[');
-	at = strchr(s, '@');
-	if (at != CN && lbracket != CN && at > lbracket)
-		at = CN;
-	if (at != CN) {
-		char *t;
-		char *lu_last = at - 1;
-
-		if (at == s) {
-			popup_an_error("Hostname syntax error:\n"
-					"Empty LU name");
-			goto split_fail;
-		}
-		while (lu_last < s && isspace(*lu_last))
-			lu_last--;
-		for (t = s; t <= lu_last; t++) {
-			if (isspace(*t)) {
-				char *u = t + 1;
-
-				while (isspace(*u))
-					u++;
-				if (*u != '@') {
-					popup_an_error("Hostname syntax "
-							"error:\n"
-							"Space in LU name");
-					goto split_fail;
-				}
-				break;
-			}
-			if (t - s < LUNAME_SIZE) {
-				xluname[t - s] = *t;
-			}
-		}
-		xluname[t - s] = '\0';
-		s = at + 1;
-		while (*s && isspace(*s))
-			s++;
-		*needed = True;
-	}
-
-	/*
-	 * Isolate the hostname.
-	 * At this point, we've found its start, so we can malloc the buffer
-	 * that will hold the copy.
-	 */
-	if (lbracket != CN) {
-		char *rbracket;
-
-		/* Check for junk before the '['. */
-		if (lbracket != s) {
-			popup_an_error("Hostname syntax error:\n"
-					"Text before '['");
-			goto split_fail;
-		}
-
-		s = r = NewString(lbracket + 1);
-
-		/*
-		 * Take whatever is inside square brackets, including
-		 * whitespace, unmodified -- except for empty strings.
-		 */
-		rbracket = strchr(s, ']');
-		if (rbracket == CN) {
-			popup_an_error("Hostname syntax error:\n"
-					"Missing ']'");
-			goto split_fail;
-		}
-		if (rbracket == s) {
-			popup_an_error("Empty hostname");
-			goto split_fail;
-		}
-		*rbracket = '\0';
-
-		/* Skip over any whitespace after the bracketed name. */
-		s = rbracket + 1;
-		while (*s && isspace(*s))
-			s++;
-		if (!*s)
-			goto split_success;
-		colon = (*s == ':');
-	} else {
-		char *name_end;
-
-		/* Check for an empty string. */
-		if (!*s || *s == ':') {
-			popup_an_error("Empty hostname");
-			goto split_fail;
-		}
-
-		s = r = NewString(s);
-
-		/* Find the end of the hostname. */
-		while (*s && !isspace(*s) && *s != ':')
-			s++;
-		name_end = s;
-
-		/* If the terminator is whitespace, skip the rest of it. */
-		while (*s && isspace(*s))
-			s++;
-
-		/*
-		 * If there's nothing but whitespace (or nothing) after the
-		 * name, we're done.
-		 */
-		if (*s == '\0') {
-			*name_end = '\0';
-			goto split_success;
-		}
-		colon = (*s == ':');
-		*name_end = '\0';
-	}
-
-	/*
-	 * If 'colon' is set, 's' points at it (or where it was).  Skip
-	 * it and any whitespace that follows.
-	 */
-	if (colon) {
-		s++;
-		while (*s && isspace(*s))
-			s++;
-		if (!*s) {
-			popup_an_error("Hostname syntax error:\n"
-					"Empty port name");
-			goto split_fail;
-		}
-	}
-
-	/*
-	 * Set the portname and find its end.
-	 * Note that trailing spaces were already stripped, so the end of the
-	 * portname must be a NULL.
-	 */
-	*port = s;
-	*needed = True;
-	while (*s && !isspace(*s) && *s != ':')
-		s++;
-	if (*s != '\0') {
-		popup_an_error("Hostname syntax error:\n"
-				"Multiple port names");
-		goto split_fail;
-	}
-	goto split_success;
-
-split_fail:
-	Free(r);
-	r = CN;
-
-split_success:
-	return r;
 }
 
 
