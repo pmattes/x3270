@@ -23,7 +23,7 @@ td=/usr/tmp/mt$$
 rm -rf $td
 mkdir $td
 cd $td
-for i in x3270 c3270 s3270 tcl3270 wc3270 pr3287 wpr3287 ws3270
+for i in x3270 c3270 wc3270 s3270 ws3270 tcl3270 pr3287 wpr3287
 do	typeset -i pp=$patch
 	while (( pp >= 0 ))
 	do	if [ $pp -eq 0 ]
