@@ -1,108 +1,102 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
 3.3 is the current development line for the x3270 suite.
 <h2>Changes in version 3.3.9ga11, 27. February 2009</h2>
+<h3>Common Changes</h3>
 <ul>
- <li>[all] Improved hostname parsing.  Now backslashes can be used to quote
+ <li>Improved hostname parsing.  Now backslashes can be used to quote
   any character, and square brackets can be used to quote any element (LU name,
   host name, or port).</li>
- <li>[<i>x3270</i>] Fixed a crash when pasting an empty selection.</li>
- <li>[<i>pr3287</i> and <i>wpr3287</i> Fixed a serious character-mapping
-  bug.</li>
- <li>[all] Fixed a number of compiler warnings from newer versions of gcc and a
+ <li>Fixed a number of compiler warnings from newer versions of gcc and a
   number of small memory leaks.</li>
-</ul>
-<h2>Changes in version 3.3.9beta10, 20. February 2009</h2>
-<ul>
- <li>[<b>wc3270</b>] Corrected a problem with color mapping in the OIA.</li>
- <li>[<b>c3270</b> and <b>wc3270</b>] Added feedback for the progress of
-  file transfers.</li>
- <li>[all] Overhauled the host code pages and CGCSGIDs for DBCS.  Added
+ <li>Overhauled the host code pages and CGCSGIDs for DBCS.  Added
   <b>sbcsCgcsgid</b> and <b>dbcsCgcsgid</b> resources to override the
   compiled-in values.</li>
- <li>[<i>wc3270</i>] Changed the <i>New Session Wizard</i> to the <i>Session
-  Wizard</i> and gave it the ability to edit existing session files and
-  re-create missing session files.  Note that this ability is limited to
-  session files created with 3.3.9beta10 or later.</li>
-</ul>
-<h2>Changes in version 3.3.9beta9, 14. February 2009</h2>
-<ul>
- <li>[<b>x3270</b> and <b>c3270</b>] Removed the nested copy of <b>pr3287</b>.
-  from the source.  <b>pr3287</b> must now be built separately from its own
-  package.</li>
- <li>[<b>wc3270</b>] Added a <b>wc3270.printer.codepage</b> resource to set
-  the Windows code page for the associated <b>pr3287</b> printer session.
- <li>[<b>wc3270</b>] Simplified the operation of the New Session Wizard,
-  so it asks fewer questions.</li>
- <li>[<b>c3270</b> and <b>wc3270</b>] Implemented the <b>Info</b> action,
-  which writes a message to the OIA (the line below the display).</li>
-  <li>[<b>c3270</b>, <b>s3270</b>, <b>s3270</b>, <b>ws3270</b> and <b>x3270</b>] Added support for session files.</li>
- <li>[<b>wc3270</b>] Added a pager to interactive mode.</li>
- <li>[<b>c3270</b> and <b>x3270</b>] Added a <i>no-prompt</i> mode, via the
-  </b>-noprompt</b> command-line option and the <b>noPrompt</b> resource .</li>
- <li>[<b>c3270</b> and <b>x3270</b>] Added automatic reconnect, via the
-  </b>-reconnect</b> command-line option and the <b>reconnect</b> resource.
-  </li>
- <li>[<b>wc3270</b>] Made the <b>PrintText</b> font and point size
-  configurable via the <b>printTextFont</b> and <b>printTextSize</b>
-  resources.</li>
- <li>[<b>wc3270</b>] Changed the default 'blue' color for created shortcuts
-  to a somewhat lighter shade, to make it more readable.</li>
- <li>[All except <b>wc3270</b> and <b>ws3270</b>] Extended the <b>rtf</b>
-  option of the <b>PrintText</b> to non-Windows platforms.</li>
- <li>[All except <b>x3270</b>] Fixed a number of issues with <b>-xrm</b>
-  option processing and keymap display when backslash sequences were used.</li>
- <li>[<b>wc3270</b>] <i>Session Wizard</i> can now edit existing session files
-  and successfully re-create missing desktop shortcuts.  Note that this only
-  works for session files created by <b>wc3270</b> 3.3.9a9 or later.</li>
- <li>[all] Added a <b>caption <i>text</i></b> option to the <b>PrintText</b>
+ <li>Added a <b>caption <i>text</i></b> option to the <b>PrintText</b>
   action, which will place the specified caption above the screen image.
   Within the text, the string <tt>%T%</tt> is interpolated to a timestamp.</li>
-</ul>
-<h2>Changes in version 3.3.9a8, 23. January 2009</h2>
-<ul>
- <li>[<i>wc3270</i>] Changed the New Session Wizard to specify the code page
-  and proper font when creating shortcuts for DBCS sessions.  This should
-  allow DBCS to work on Windows 2000 and Vista.</li>
- <li>[all] Improved the state dump when tracing starts to include NVT and
+ <li>Improved the state dump when tracing starts to include NVT and
   SSCP-LU state and the SNA BIND image.</li>
-  <li>[all] Updated the copyright and licensing notices (now a standard BSD
-   license).</li>
-  <li>[<i>x3270</i>] Made the Query Reply response for <b>x3270</b> identical
-   to the other tools.</li>
-<h2>Changes in version 3.3.9a6, 15. January 2009</h2>
- <ul>
-  <li>[<i>wc3270</i>] Included <b>ws3270</b> in the <b>wc3270</b> release.</li>
-  <li>[<i>x3270</i>] Included fonts for Traditional Chinese.</li>
- </ul>
-<h2>Changes in version 3.3.9a5, 5. January 2009</h2>
-<ul>
- <li>[<i>ws3270</i>] Fixed a bug which resulted in all command timings
-  being displayed as '-'.</li>
- <li>[all] Added support for carriage-return (0x0d) characters in the
+ <li>Updated the copyright and licensing notices (now a standard BSD
+  license).</li>
+ <li>Added support for carriage-return (0x0d) characters in the
   <b>String</b> action, which imply the <b>Newline</b> action.</li>
+ <li>Changed the <b>Attn</b> action so that it sends an IAC
+  BREAK in TN3270 mode, and locks the keyboard in TN3270E mode when the
+  session is not SNA bound.</i>
+ <li>Added Traditional Chinese (host code page 937) support.</li>
  <li>Extended the <b>String</b> action's <b>\e</b> and <b>\x</b> sequences
   to accept 4-digit hex values, thus allowing EBCDIC DBCS input and arbitrary
   Unicode input.  Also added <b>\u</b> as an alias for <b>\x</b>.</li>
 </ul>
-<h2>Changes in version 3.3.9a4, 28. December 2008</h2>
+<h3>Changes to x3270</h3>
 <ul>
- <li>[<i>wc3270</i> and <i>wpr3287</i>] Added DBCS support.</li>
+ <li>Fixed a crash when pasting an empty selection.</li>
+ <li>Made the Query Reply response for <b>x3270</b> identical to the other
+  tools.</li>
+ <li>Included fonts for Traditional Chinese.</li>
 </ul>
-<h2>Changes in version 3.3.9a3, 26. December 2008</h2>
+<h3>Changes to x3270 and c3270</h3>
 <ul>
- <li>[<i>ws3270</i>] Added the <b>-localcp</b> option and
+ <li>Removed the nested copy of <b>pr3287</b>.
+  from the source.  <b>pr3287</b> must now be built separately from its own
+  package.</li>
+</ul>
+<ul>
+</ul>
+<h3>Changes to wc3270</h3>
+<ul>
+ <li>Corrected a problem with color mapping in the OIA.</li>
+ <li>Changed the <i>New Session Wizard</i> to the <i>Session
+  Wizard</i> and gave it the ability to edit existing session files and
+  re-create missing session files.  Note that this ability is limited to
+  session files created with 3.3.9beta10 or later.</li>
+ <li>Added a <b>wc3270.printer.codepage</b> resource to set
+  the Windows code page for the associated <b>pr3287</b> printer session.
+ <li>Simplified the operation of the New Session Wizard,
+  so it asks fewer questions.</li>
+ <li>Added a pager to interactive mode.</li>
+ <li>Made the <b>PrintText</b> font and point size
+  configurable via the <b>printTextFont</b> and <b>printTextSize</b>
+  resources.</li>
+ <li>Changed the default 'blue' color for created shortcuts
+  to a somewhat lighter shade, to make it more readable.</li>
+  <li>Changed the <i>Session Wizard</i> to specify the code page
+  and proper font when creating shortcuts for DBCS sessions.  This should
+  allow DBCS to work on Windows 2000 and Vista.</li>
+  <li>Included <b>ws3270</b> in the <b>wc3270</b> release.</li>
+</ul>
+<h3>Changes to c3270 and wc3270</h3>
+<ul>
+ <li>Added feedback for the progress of file transfers.</li>
+ <li> Implemented the <b>Info</b> action,
+  which writes a message to the OIA (the line below the display).</li>
+ <li>Added a <i>no-prompt</i> mode, via the
+  </b>-noprompt</b> command-line option and the <b>noPrompt</b> resource .</li>
+ <li>Added automatic reconnect, via the
+  </b>-reconnect</b> command-line option and the <b>reconnect</b> resource.
+  </li>
+</ul>
+<h3>Changes to ws3270 (formerly available as a pre-release)</h3>
+<ul>
+ <li>Fixed a bug which resulted in all command timings
+  being displayed as '-'.</li>
+ <li>Added the <b>-localcp</b> option and
   <b>localCP</b> resource to change the Windows code page used for local
   workstation I/O.</li>
- <li>[<i>ws3270</i>] Added DBCS support and support for building using
-  Microsoft tools.</li>
- <li>[<i>all</i>] Changed the <b>Attn</b> action so that it sends an IAC
-  BREAK in TN3270 mode, and locks the keyboard in TN3270E mode when the
-  session is not SNA bound.</i>
+ <li>Added DBCS support and support for building using Microsoft tools.</li>
 </ul>
-<h2>Changes in version 3.3.9a1, 20. October 2008</h2>
+<h3>Changes to pr3287 and wpr3287</h3>
 <ul>
- <li>[all but <i>wc3270</i>] Added Traditional Chinese (host code page 937)
-  support.</li>
+ <li>Fixed a serious character-mapping bug.</li>
+ <li>Added DBCS support.</li>
+</ul>
+<h3>Changes to specific versions</h3>
+<ul>
+  <li>[<b>c3270</b>, <b>s3270</b>, <b>s3270</b>, <b>ws3270</b> and <b>x3270</b>] Added support for session files.</li>
+ <li>[All except <b>wc3270</b> and <b>ws3270</b>] Extended the <b>rtf</b>
+  option of the <b>PrintText</b> to non-Windows platforms.</li>
+ <li>[All except <b>x3270</b>] Fixed a number of issues with <b>-xrm</b>
+  option processing and keymap display when backslash sequences were used.</li>
 </ul>
 <h2>Changes in version 3.3.8p2, 13 December 2008</h2>
 <ul>
