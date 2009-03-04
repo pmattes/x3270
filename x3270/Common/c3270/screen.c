@@ -57,12 +57,6 @@
 #undef COLS
 extern int cCOLS;
 
-#undef COLOR_BLACK
-#undef COLOR_RED
-#undef COLOR_GREEN
-#undef COLOR_YELLOW
-#undef COLOR_BLUE
-#undef COLOR_WHITE
 #if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
 #include <ncursesw/ncurses.h>
 #elif defined(HAVE_NCURSES_NCURSES_H) /*][*/
@@ -97,9 +91,9 @@ static int cmap[16] = {
 };
 static int field_colors[4] = {
 	COLOR_GREEN,	/* default */
-	COLOR_RED,		/* intensified */
-	COLOR_BLUE,		/* protected */
-	COLOR_WHITE		/* protected, intensified */
+	COLOR_RED,	/* intensified */
+	COLOR_BLUE,	/* protected */
+	COLOR_WHITE	/* protected, intensified */
 };
 static int defattr = A_NORMAL;
 static unsigned long input_id;
@@ -131,7 +125,7 @@ static struct {
 	{ "green",	COLOR_GREEN },
 	{ "yellow",	COLOR_YELLOW },
 	{ "blue",	COLOR_BLUE },
-	{ "magenta", COLOR_MAGENTA },
+	{ "magenta",    COLOR_MAGENTA },
 	{ "cyan",	COLOR_CYAN },
 	{ "white",	COLOR_WHITE },
 	{ CN,	0 }
@@ -583,7 +577,7 @@ color_from_fa(unsigned char fa)
 /*
  * Set up the user-specified color mappings.
  */
-static void
+/*static*/ void
 init_user_color(const char *name, int ix)
 {
     	char *r;
@@ -620,23 +614,23 @@ init_user_colors(void)
 		char *name;
 		int index;
 	} host_color[] = {
-	    	{ "NeutralBlack",	COLOR_NEUTRAL_BLACK },
-	    	{ "Blue",		COLOR_BLUE },
-	    	{ "Red",		COLOR_RED },
-	    	{ "Pink",		COLOR_PINK },
-	    	{ "Green",		COLOR_GREEN },
-	    	{ "Turquoise",		COLOR_TURQUOISE },
-	    	{ "Yellow",		COLOR_YELLOW },
-	    	{ "NeutralWhite",	COLOR_NEUTRAL_WHITE },
-	    	{ "Black",		COLOR_BLACK },
-	    	{ "DeepBlue",		COLOR_DEEP_BLUE },
-	    	{ "Orange",		COLOR_ORANGE },
-	    	{ "Purple",		COLOR_PURPLE },
-	    	{ "PaleGreen",		COLOR_PALE_GREEN },
-	    	{ "PaleTurquoise",	COLOR_PALE_TURQUOISE },
-	    	{ "Grey",		COLOR_GREY },
-	    	{ "Gray",		COLOR_GREY }, /* alias */
-	    	{ "White",		COLOR_WHITE },
+	    	{ "NeutralBlack",	HOST_COLOR_NEUTRAL_BLACK },
+	    	{ "Blue",		HOST_COLOR_BLUE },
+	    	{ "Red",		HOST_COLOR_RED },
+	    	{ "Pink",		HOST_COLOR_PINK },
+	    	{ "Green",		HOST_COLOR_GREEN },
+	    	{ "Turquoise",		HOST_COLOR_TURQUOISE },
+	    	{ "Yellow",		HOST_COLOR_YELLOW },
+	    	{ "NeutralWhite",	HOST_COLOR_NEUTRAL_WHITE },
+	    	{ "Black",		HOST_COLOR_BLACK },
+	    	{ "DeepBlue",		HOST_COLOR_DEEP_BLUE },
+	    	{ "Orange",		HOST_COLOR_ORANGE },
+	    	{ "Purple",		HOST_COLOR_PURPLE },
+	    	{ "PaleGreen",		HOST_COLOR_PALE_GREEN },
+	    	{ "PaleTurquoise",	HOST_COLOR_PALE_TURQUOISE },
+	    	{ "Grey",		HOST_COLOR_GREY },
+	    	{ "Gray",		HOST_COLOR_GREY }, /* alias */
+	    	{ "White",		HOST_COLOR_WHITE },
 		{ CN,			0 }
 	};
 	int i;
@@ -684,7 +678,7 @@ calc_attrs(int baddr, int fa_addr, int fa)
 		else if (ea_buf[fa_addr].bg)
 			bg = cmap[ea_buf[fa_addr].bg & 0x0f];
 		else
-			bg = COLOR_NEUTRAL_BLACK;
+			bg = HOST_COLOR_NEUTRAL_BLACK;
 
 		a = get_color_pair(fg, bg);
 
