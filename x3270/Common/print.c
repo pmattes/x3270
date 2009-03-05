@@ -93,10 +93,10 @@ static int
 color_from_fa(unsigned char fa)
 {
 	static int field_colors[4] = {
-		COLOR_GREEN,        /* default */
-		COLOR_RED,          /* intensified */
-		COLOR_BLUE,         /* protected */
-		COLOR_WHITE         /* protected, intensified */
+		HOST_COLOR_GREEN,        /* default */
+		HOST_COLOR_RED,          /* intensified */
+		HOST_COLOR_BLUE,         /* protected */
+		HOST_COLOR_WHITE         /* protected, intensified */
 #       define DEFCOLOR_MAP(f) \
 		((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
 	};
@@ -104,7 +104,7 @@ color_from_fa(unsigned char fa)
 	if (appres.m3279)
 		return field_colors[DEFCOLOR_MAP(fa)];
 	else
-		return COLOR_GREEN;
+		return HOST_COLOR_GREEN;
 }
 
 /*
@@ -131,7 +131,7 @@ html_color(int color)
 		"grey",
 		"white"
 	};
-	if (color >= COLOR_NEUTRAL_BLACK && color <= COLOR_WHITE)
+	if (color >= HOST_COLOR_NEUTRAL_BLACK && color <= HOST_COLOR_WHITE)
 		return html_color_map[color];
 	else
 		return "black";
@@ -298,7 +298,7 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts, char *caption)
 	if (ea_buf[fa_addr].bg)
 		fa_bg = ea_buf[fa_addr].bg & 0x0f;
 	else
-		fa_bg = COLOR_BLACK;
+		fa_bg = HOST_COLOR_BLACK;
 	current_bg = fa_bg;
 
 	if (ea_buf[fa_addr].gr & GR_INTENSIFY)
@@ -398,7 +398,7 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts, char *caption)
 			if (ea_buf[i].bg)
 				fa_bg = ea_buf[i].bg & 0x0f;
 			else
-				fa_bg = COLOR_BLACK;
+				fa_bg = HOST_COLOR_BLACK;
 			if (ea_buf[i].gr & GR_INTENSIFY)
 				fa_high = True;
 			else
@@ -507,9 +507,9 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts, char *caption)
 				}
 
 				if (i == cursor_addr) {
-				    	fg_color = (bg_color == COLOR_RED)?
-							COLOR_BLACK: bg_color;
-					bg_color = COLOR_RED;
+				    	fg_color = (bg_color == HOST_COLOR_RED)?
+							HOST_COLOR_BLACK: bg_color;
+					bg_color = HOST_COLOR_RED;
 				}
 				if (ea_buf[i].gr & GR_INTENSIFY)
 					high = True;

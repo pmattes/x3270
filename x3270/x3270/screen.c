@@ -403,7 +403,7 @@ static struct rsfont *rsfonts;
 #define INVERT_COLOR(c)		((c) ^ INVERT_MASK)
 #define NO_INVERT(c)		((c) & ~INVERT_MASK)
 
-#define DEFAULT_PIXEL		(appres.m3279 ? COLOR_BLUE : FA_INT_NORM_NSEL)
+#define DEFAULT_PIXEL		(appres.m3279 ? HOST_COLOR_BLUE : FA_INT_NORM_NSEL)
 #define PIXEL_INDEX(c)		((c) & BASE_MASK)
 
 
@@ -3172,10 +3172,10 @@ static void
 default_color_scheme(void)
 {
 	static int default_attrib_colors[4] = {
-	    GC_NONDEFAULT | COLOR_GREEN,/* default */
-	    GC_NONDEFAULT | COLOR_RED,	/* intensified */
-	    GC_NONDEFAULT | COLOR_BLUE,	/* protected */
-	    GC_NONDEFAULT | COLOR_WHITE	/* protected, intensified */
+	    GC_NONDEFAULT | HOST_COLOR_GREEN,	/* default */
+	    GC_NONDEFAULT | HOST_COLOR_RED,	/* intensified */
+	    GC_NONDEFAULT | HOST_COLOR_BLUE,	/* protected */
+	    GC_NONDEFAULT | HOST_COLOR_WHITE	/* protected, intensified */
 	};
 	int i;
 

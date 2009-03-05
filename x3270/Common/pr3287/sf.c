@@ -605,7 +605,7 @@ do_query_reply(unsigned char code)
 		*obptr++ = 0x00;	/* no options */
 		*obptr++ = 16;		/* report on 16 colors */
 		*obptr++ = 0x00;	/* default color: */
-		*obptr++ = 0xf0 + COLOR_GREEN;	/*  green */
+		*obptr++ = 0xf0 + HOST_COLOR_GREEN;	/*  green */
 		for (i = 0xf1; i <= 0xff; i++) {
 			*obptr++ = i;
 			*obptr++ = i;

@@ -760,7 +760,7 @@ do_qr_color(void)
 	*obptr++ = 0x00;	/* no options */
 	*obptr++ = color_max; /* report on 8 or 16 colors */
 	*obptr++ = 0x00;	/* default color: */
-	*obptr++ = 0xf0 + COLOR_GREEN;	/*  green */
+	*obptr++ = 0xf0 + HOST_COLOR_GREEN;	/*  green */
 	for (i = 0xf1; i < 0xf1 + color_max - 1; i++) {
 		*obptr++ = i;
 		if (appres.m3279)

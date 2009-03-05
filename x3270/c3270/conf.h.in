@@ -54,6 +54,7 @@
 /* Uncommon functions. */
 #undef HAVE_VASPRINTF
 #undef HAVE_FSEEKO
+#undef HAVE_FORKPTY
 
 /* Default pager. */
 #define LESSPATH ""

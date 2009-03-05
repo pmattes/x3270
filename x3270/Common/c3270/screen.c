@@ -130,6 +130,8 @@ static int field_colors16[4] = {
 
 static int *field_colors = field_colors8;
 
+static int bg_color = COLOR_BLACK;
+
 static int defattr = A_NORMAL;
 static unsigned long input_id;
 
@@ -326,6 +328,23 @@ screen_init(void)
 	register_schange(ST_3270_MODE, status_3270_mode);
 	register_schange(ST_PRINTER, status_printer);
 
+	/* Implement reverse video. */
+	if (appres.reverse_video) {
+	    	int c;
+
+		bg_color = COLOR_WHITE;
+
+		c = cmap8[HOST_COLOR_NEUTRAL_BLACK];
+		cmap8[HOST_COLOR_NEUTRAL_BLACK] =
+		    cmap8[HOST_COLOR_NEUTRAL_WHITE];
+		cmap8[HOST_COLOR_NEUTRAL_WHITE] = c;
+
+		c = cmap16[HOST_COLOR_NEUTRAL_BLACK];
+		cmap16[HOST_COLOR_NEUTRAL_BLACK] =
+		    cmap16[HOST_COLOR_NEUTRAL_WHITE];
+		cmap16[HOST_COLOR_NEUTRAL_WHITE] = c;
+	}
+
 	/* Play with curses color. */
 	if (!appres.mono) {
 		start_color();
@@ -334,17 +353,19 @@ screen_init(void)
 				cmap = cmap16;
 				field_colors = field_colors16;
 				defcolor_offset = 8;
+				if (appres.reverse_video)
+					bg_color += defcolor_offset;
 			}
 		    	if (appres.m3279)
 				defattr =
 				    get_color_pair(
 					    defcolor_offset + COLOR_BLUE,
-					    COLOR_BLACK);
+					    bg_color);
 			else
 				defattr =
 				    get_color_pair(
 					    defcolor_offset + COLOR_GREEN,
-					    COLOR_BLACK);
+					    bg_color);
 			if (COLORS < 16)
 			    	appres.color8 = True;
 #if defined(C3270_80_132) && defined(NCURSES_VERSION)  /*[*/
@@ -362,7 +383,7 @@ screen_init(void)
 				start_color();
 				curses_alt = !curses_alt;
 				(void) get_color_pair(field_colors[2],
-						      COLOR_BLACK);
+						      bg_color);
 				curses_alt = !curses_alt;
 				set_term(s);
 
@@ -609,11 +630,11 @@ color_from_fa(unsigned char fa)
 		int fg;
 
 		fg = default_color_from_fa(fa);
-		return get_color_pair(fg, COLOR_BLACK) |
+		return get_color_pair(fg, bg_color) |
 		    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
 	} else if (!appres.mono) {
 		return get_color_pair(defcolor_offset + COLOR_GREEN,
-			COLOR_BLACK) |
+			bg_color) |
 		    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
 	} else {
 	    	/* No color at all. */
@@ -725,7 +746,7 @@ calc_attrs(int baddr, int fa_addr, int fa)
 		else if (ea_buf[fa_addr].bg)
 			bg = cmap[ea_buf[fa_addr].bg & 0x0f];
 		else
-			bg = HOST_COLOR_NEUTRAL_BLACK;
+			bg = cmap[HOST_COLOR_NEUTRAL_BLACK];
 
 		a = get_color_pair(fg, bg);
 
@@ -1539,7 +1560,7 @@ draw_oia(void)
 	if (status_secure) {
 	    	if (appres.m3279)
 			attrset(get_color_pair(defcolor_offset + COLOR_GREEN,
-				    COLOR_BLACK) | A_BOLD);
+				    bg_color) | A_BOLD);
 		else
 		    	attrset(A_BOLD);
 		printw("S");

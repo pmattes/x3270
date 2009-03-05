@@ -50,12 +50,6 @@
 #undef COLS
 extern int cCOLS;
 
-#undef COLOR_BLACK
-#undef COLOR_RED    
-#undef COLOR_GREEN
-#undef COLOR_YELLOW
-#undef COLOR_BLUE   
-#undef COLOR_WHITE
 #if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
 #include <ncursesw/ncurses.h>
 #elif defined(HAVE_NCURSES_NCURSES_H) /*][*/
