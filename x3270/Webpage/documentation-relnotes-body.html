@@ -1,5 +1,20 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
 3.3 is the current development line for the x3270 suite.
+<h2>Changes in version 3.3.10, NN. Mmm Yyyy</h2>
+<ul>
+ <li>[<i>c3270</i>] Corrected a number of errors in parsing
+  <b>CursesColorFor<i>xxx</i></b> resources.</li>
+ <li>[<i>c3270</i>] Added support for <b>-rv</b>, which puts c3270 into
+  black-on-white mode.</li>
+ <li>[<i>c3270</i>] Added support for 16-color terminals, with the
+  <b>-color8</b> option overriding this and forcing 8-color support only.
+  On a 16-color terminal, <b>-allbold</b> is no longer the default.</li>
+ <li>[<i>c3270</i>, <i>wc3270</i>, <i>s3270</i> and <i>tcl3270</i>] Ensured
+  that command-line parameters override session files.</li>
+ <li>[<i>c3270</i>] Made session files replace profiles, rather than just
+  overridding any common definitions.  This is more intuitive and consistent
+  with x3270.</li>
+</ul>
 <h2>Changes in version 3.3.9ga11, 27. February 2009</h2>
 <h3>Common Changes</h3>
 <ul>
