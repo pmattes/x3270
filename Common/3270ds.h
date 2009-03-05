@@ -304,22 +304,22 @@
 #define SFID_QREPLY	0x81
 
 /* Colors */
-#define COLOR_NEUTRAL_BLACK	0
-#define COLOR_BLUE		1
-#define COLOR_RED		2
-#define COLOR_PINK		3
-#define COLOR_GREEN		4
-#define COLOR_TURQUOISE		5
-#define COLOR_YELLOW		6
-#define COLOR_NEUTRAL_WHITE	7
-#define COLOR_BLACK		8
-#define COLOR_DEEP_BLUE		9
-#define COLOR_ORANGE		10
-#define COLOR_PURPLE		11
-#define COLOR_PALE_GREEN	12
-#define COLOR_PALE_TURQUOISE	13
-#define COLOR_GREY		14
-#define COLOR_WHITE		15
+#define HOST_COLOR_NEUTRAL_BLACK	0
+#define HOST_COLOR_BLUE			1
+#define HOST_COLOR_RED			2
+#define HOST_COLOR_PINK			3
+#define HOST_COLOR_GREEN		4
+#define HOST_COLOR_TURQUOISE		5
+#define HOST_COLOR_YELLOW		6
+#define HOST_COLOR_NEUTRAL_WHITE	7
+#define HOST_COLOR_BLACK		8
+#define HOST_COLOR_DEEP_BLUE		9
+#define HOST_COLOR_ORANGE		10
+#define HOST_COLOR_PURPLE		11
+#define HOST_COLOR_PALE_GREEN		12
+#define HOST_COLOR_PALE_TURQUOISE	13
+#define HOST_COLOR_GREY			14
+#define HOST_COLOR_WHITE		15
 
 /* Data stream manipulation macros. */
 #define MASK32	0xff000000U

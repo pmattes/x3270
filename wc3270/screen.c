@@ -123,32 +123,32 @@ static int cmap_bg[MAX_COLORS] = {
 	BACKGROUND_INTENSITY | BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE,							/* white */
 };
 static int field_colors[4] = {
-	COLOR_GREEN,		/* default */
-	COLOR_RED,		/* intensified */
-	COLOR_BLUE,		/* protected */
-	COLOR_NEUTRAL_WHITE	/* protected, intensified */
+	HOST_COLOR_GREEN,		/* default */
+	HOST_COLOR_RED,			/* intensified */
+	HOST_COLOR_BLUE,		/* protected */
+	HOST_COLOR_NEUTRAL_WHITE	/* protected, intensified */
 };
 static struct {
 	char *name;
 	int index;
 } host_color[] = {
-	{ "NeutralBlack",	COLOR_NEUTRAL_BLACK },
-	{ "Blue",		COLOR_BLUE },
-	{ "Red",		COLOR_RED },
-	{ "Pink",		COLOR_PINK },
-	{ "Green",		COLOR_GREEN },
-	{ "Turquoise",		COLOR_TURQUOISE },
-	{ "Yellow",		COLOR_YELLOW },
-	{ "NeutralWhite",	COLOR_NEUTRAL_WHITE },
-	{ "Black",		COLOR_BLACK },
-	{ "DeepBlue",		COLOR_DEEP_BLUE },
-	{ "Orange",		COLOR_ORANGE },
-	{ "Purple",		COLOR_PURPLE },
-	{ "PaleGreen",		COLOR_PALE_GREEN },
-	{ "PaleTurquoise",	COLOR_PALE_TURQUOISE },
-	{ "Grey",		COLOR_GREY },
-	{ "Gray",		COLOR_GREY }, /* alias */
-	{ "White",		COLOR_WHITE },
+	{ "NeutralBlack",	HOST_COLOR_NEUTRAL_BLACK },
+	{ "Blue",		HOST_COLOR_BLUE },
+	{ "Red",		HOST_COLOR_RED },
+	{ "Pink",		HOST_COLOR_PINK },
+	{ "Green",		HOST_COLOR_GREEN },
+	{ "Turquoise",		HOST_COLOR_TURQUOISE },
+	{ "Yellow",		HOST_COLOR_YELLOW },
+	{ "NeutralWhite",	HOST_COLOR_NEUTRAL_WHITE },
+	{ "Black",		HOST_COLOR_BLACK },
+	{ "DeepBlue",		HOST_COLOR_DEEP_BLUE },
+	{ "Orange",		HOST_COLOR_ORANGE },
+	{ "Purple",		HOST_COLOR_PURPLE },
+	{ "PaleGreen",		HOST_COLOR_PALE_GREEN },
+	{ "PaleTurquoise",	HOST_COLOR_PALE_TURQUOISE },
+	{ "Grey",		HOST_COLOR_GREY },
+	{ "Gray",		HOST_COLOR_GREY }, /* alias */
+	{ "White",		HOST_COLOR_WHITE },
 	{ CN,			0 }
 };
 
@@ -1082,12 +1082,12 @@ color_from_fa(unsigned char fa)
 		int fg;
 
 		fg = color3270_from_fa(fa);
-		return get_color_pair(fg, COLOR_NEUTRAL_BLACK);
+		return get_color_pair(fg, HOST_COLOR_NEUTRAL_BLACK);
 	} else
 		return FOREGROUND_GREEN |
 		    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))?
 		     FOREGROUND_INTENSITY: 0) |
-		    cmap_bg[COLOR_NEUTRAL_BLACK];
+		    cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
 }
 
 static int
@@ -1154,11 +1154,11 @@ init_user_colors(void)
 	}
 
 	if (appres.m3279)
-		defattr = cmap_fg[COLOR_NEUTRAL_WHITE] |
-			  cmap_bg[COLOR_NEUTRAL_BLACK];
+		defattr = cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
+			  cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
 	else
-		defattr = cmap_fg[COLOR_PALE_GREEN] |
-			  cmap_bg[COLOR_NEUTRAL_BLACK];
+		defattr = cmap_fg[HOST_COLOR_PALE_GREEN] |
+			  cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
 }
 
 /*
@@ -1196,7 +1196,7 @@ calc_attrs(int baddr, int fa_addr, int fa, Boolean *underlined,
 		else if (ea_buf[fa_addr].bg)
 			bg = ea_buf[fa_addr].bg & 0x0f;
 		else
-			bg = COLOR_NEUTRAL_BLACK;
+			bg = HOST_COLOR_NEUTRAL_BLACK;
 
 		a = get_color_pair(fg, bg);
 	}
@@ -2087,7 +2087,8 @@ draw_oia(void)
 	}
 
 	if (appres.m3279)
-	    	attrset(cmap_fg[COLOR_NEUTRAL_BLACK] | cmap_bg[COLOR_GREY]);
+	    	attrset(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
+			cmap_bg[HOST_COLOR_GREY]);
 	else
 		attrset(reverse_colors(defattr));
 	mvprintw(status_row, 0, "4");
@@ -2105,7 +2106,8 @@ draw_oia(void)
 		printw("?");
 
 	if (appres.m3279)
-	    	attrset(cmap_fg[COLOR_GREY] | cmap_bg[COLOR_NEUTRAL_BLACK]);
+	    	attrset(cmap_fg[HOST_COLOR_GREY] |
+			cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
 	else
 		attrset(defattr);
 	mvprintw(status_row, 8, "%-35.35s", status_msg);
@@ -2118,11 +2120,12 @@ draw_oia(void)
 	    status_im? 'I': ' ',
 	    oia_printer? 'P': ' ');
 	if (status_secure) {
-	    	attrset(cmap_fg[COLOR_GREEN] | cmap_bg[COLOR_NEUTRAL_BLACK]);
+	    	attrset(cmap_fg[HOST_COLOR_GREEN] |
+			cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
 		printw("S");
 		if (appres.m3279)
-			attrset(cmap_fg[COLOR_GREY] |
-				cmap_bg[COLOR_NEUTRAL_BLACK]);
+			attrset(cmap_fg[HOST_COLOR_GREY] |
+				cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
 		else
 			attrset(defattr);
 	} else

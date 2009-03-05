@@ -81,9 +81,9 @@ static int colors[SSZ] =  {
 };
 
 static int colors3279[SSZ] =  {
-	COLOR_BLUE,
-	COLOR_WHITE,
-	COLOR_BLUE
+	HOST_COLOR_BLUE,
+	HOST_COLOR_WHITE,
+	HOST_COLOR_BLUE
 };
 
 #define CM	(60 * 10)	/* csec per minute */
@@ -228,19 +228,19 @@ static int      msg_color[] = {
 	FA_INT_NORM_SEL
 };
 static int      msg_color3279[] = {
-	COLOR_WHITE,
-	COLOR_WHITE,
-	COLOR_WHITE,
-	COLOR_WHITE,
-	COLOR_BLUE,
-	COLOR_WHITE,
-	COLOR_WHITE,
-	COLOR_RED,
-	COLOR_RED,
-	COLOR_RED,
-	COLOR_RED,
-	COLOR_WHITE,
-	COLOR_RED
+	HOST_COLOR_WHITE,
+	HOST_COLOR_WHITE,
+	HOST_COLOR_WHITE,
+	HOST_COLOR_WHITE,
+	HOST_COLOR_BLUE,
+	HOST_COLOR_WHITE,
+	HOST_COLOR_WHITE,
+	HOST_COLOR_RED,
+	HOST_COLOR_RED,
+	HOST_COLOR_RED,
+	HOST_COLOR_RED,
+	HOST_COLOR_WHITE,
+	HOST_COLOR_RED
 };
 static Boolean  oia_insert = False;
 static Boolean  oia_reverse = False;

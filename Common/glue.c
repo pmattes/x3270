@@ -426,7 +426,7 @@ parse_options(int *argcp, const char **argv)
 #if defined(WS3270) /*[*/
     { OptLocalCp,  OPT_INT,	False, ResLocalCp,   offset(local_cp) },
 #endif /*]*/
-    { OptModel,    OPT_STRING,  False, ResKeymap,    offset(model) },
+    { OptModel,    OPT_STRING,  False, ResModel,     offset(model) },
 #if defined(C3270) /*[*/
 # if !defined(_WIN32) /*[*/
     { OptMono,     OPT_BOOLEAN, True,  ResMono,      offset(mono) },
@@ -439,6 +439,9 @@ parse_options(int *argcp, const char **argv)
 #if defined(C3270) /*[*/
     { OptPrinterLu,OPT_STRING,  False, ResPrinterLu, offset(printer_lu) },
     { OptReconnect,OPT_BOOLEAN, True,  ResReconnect, offset(reconnect) },
+#if !defined(_WIN32) /*[*/
+    { OptReverseVideo,OPT_BOOLEAN,True,ResReverseVideo,offset(reverse_video) },
+#endif /*]*/
 #endif /*]*/
     { OptProxy,	   OPT_STRING,  False, ResProxy,     offset(proxy) },
 #if defined(S3270) /*[*/
@@ -854,6 +857,9 @@ static struct {
 #endif /*]*/
 #if defined(C3270) /*[*/
 	{ ResReconnect,	offset(reconnect),	XRM_BOOLEAN },
+#if !defined(_WIN32) /*[*/
+	{ ResReverseVideo,offset(reverse_video),XRM_BOOLEAN },
+#endif /*]*/
 #endif /*]*/
 	{ ResSecure,	offset(secure),		XRM_BOOLEAN },
 	{ ResSbcsCgcsgid, offset(sbcs_cgcsgid),	XRM_STRING },

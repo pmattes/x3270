@@ -132,6 +132,9 @@ typedef struct {
 	Boolean	curses_keypad;
 	Boolean cbreak_mode;
 	Boolean no_prompt;
+#if !defined(_WIN32) /*[*/
+	Boolean reverse_video;
+#endif /*]*/
 #endif /*]*/
 	Boolean	apl_mode;
 	Boolean scripted;
