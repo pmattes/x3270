@@ -329,7 +329,8 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 		parse_options(&xargc, xargv);
 		parse_set_clear(&xargc, xargv);
 	}
-	free(xcmd);
+	/* Can't free xcmd, parts of it are still in use. */
+	Free(xargv);
 
 	/*
 	 * All right, we have all of the resources defined.
