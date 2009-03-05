@@ -77,29 +77,29 @@ extern void usage(char *);
 
 #if defined(C3270) /*[*/
 # if defined(WC3270) /*[*/
-#  define PROFILE_SFX	".wc3270"
-#  define PROFILE_SSFX	".wc3"
+#  define SESSION_SFX	".wc3270"
+#  define SESSION_SSFX	".wc3"
 # else /*][*/
-#  define PROFILE_SFX	".c3270"
+#  define SESSION_SFX	".c3270"
 # endif /*]*/
 #elif defined(S3270) /*[*/
 # if defined(WS3270) /*[*/
-#  define PROFILE_SFX	".ws3270"
-#  define PROFILE_SSFX	".ws3"
+#  define SESSION_SFX	".ws3270"
+#  define SESSION_SSFX	".ws3"
 # else /*][*/
-#  define PROFILE_SFX	".s3270"
+#  define SESSION_SFX	".s3270"
 # endif /*]*/
 #elif defined(TCL3270) /*[*/
-#  define PROFILE_SFX	".tcl3270"
+#  define SESSION_SFX	".tcl3270"
 #endif /*]*/
 
-#define PROFILE_SFX_LEN	(int)(sizeof(PROFILE_SFX) - 1)
+#define SESSION_SFX_LEN	(int)(sizeof(SESSION_SFX) - 1)
 #if defined(_WIN32) /*[*/
-# define PROFILE_SSFX_LEN (int)(sizeof(PROFILE_SSFX) - 1)
+# define SESSION_SSFX_LEN (int)(sizeof(SESSION_SSFX) - 1)
 #endif /*]*/
 
 #if defined(C3270) /*[*/
-extern void merge_profile(void); /* XXX */
+extern Boolean merge_profile(void);
 extern Boolean any_error_output;
 #endif /*]*/
 
@@ -109,6 +109,7 @@ static void no_minus(const char *arg);
 static void parse_local_process(int *argcp, const char **argv,
     const char **cmds);
 #endif /*]*/
+static void set_appres_defaults(void);
 static void parse_options(int *argcp, const char **argv);
 static void parse_set_clear(int *argcp, const char **argv);
 static int parse_model_number(char *m);
@@ -176,6 +177,11 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	int hn_argc;
 	int model_number;
 	int sl;
+	int xcmd_len = 0;
+	char *xcmd;
+	int xargc;
+	const char **xargv;
+	Boolean read_session_or_profile = False;
 
 	/* Figure out who we are */
 #if defined(_WIN32) /*[*/
@@ -188,7 +194,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	else
 		programname = argv[0];
 
-	/* Save the command string. */
+	/* Save the command string for tracing purposes. */
 	cl = strlen(programname);
 	for (i = 0; i < argc; i++) {
 		cl += 1 + strlen(argv[i]);
@@ -200,10 +206,32 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 		(void) strcat(strcat(command_string, " "), argv[i]);
 	}
 
+	/*
+	 * Save the command-line options so they can be reapplied after
+	 * the session file or profile has been read in.
+	 */
+	xcmd_len = 0;
+	for (i = 0; i < argc; i++)
+		xcmd_len += strlen(argv[i]) + 1;
+	xcmd = Malloc(xcmd_len + 1);
+	xargv = (const char **)Malloc((argc + 1) * sizeof(char *));
+	xcmd_len = 0;
+	for (i = 0; i < argc; i++) {
+		xargv[i] = xcmd + xcmd_len;
+		(void) strcpy(xcmd + xcmd_len, argv[i]);
+		xcmd_len += strlen(argv[i]) + 1;
+	}
+	xargv[i] = CN;
+	*(xcmd + xcmd_len) = '\0';
+	xargc = argc;
+
 #if defined(LOCAL_PROCESS) /*[*/ 
         /* Pick out the -e option. */
         parse_local_process(&argc, argv, cl_hostname);
 #endif /*]*/    
+
+	/* Set the defaults. */
+	set_appres_defaults();
 
 	/* Parse command-line options. */
 	parse_options(&argc, argv);
@@ -244,19 +272,21 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 		}
 	}
 
-	/* Merge in the profile. */
+	/* Merge in the session. */
 	if (*cl_hostname != CN &&
-	    (((sl = strlen(*cl_hostname)) > PROFILE_SFX_LEN &&
-	      !strcasecmp(*cl_hostname + sl - PROFILE_SFX_LEN, PROFILE_SFX))
+	    (((sl = strlen(*cl_hostname)) > SESSION_SFX_LEN &&
+	      !strcasecmp(*cl_hostname + sl - SESSION_SFX_LEN, SESSION_SFX))
 #if defined(_WIN32) /*[*/
-	     || ((sl = strlen(*cl_hostname)) > PROFILE_SSFX_LEN &&
-	      !strcasecmp(*cl_hostname + sl - PROFILE_SSFX_LEN, PROFILE_SSFX))
+	     || ((sl = strlen(*cl_hostname)) > SESSION_SSFX_LEN &&
+	      !strcasecmp(*cl_hostname + sl - SESSION_SSFX_LEN, SESSION_SSFX))
 #endif /*]*/
 	     )) {
 
 		const char *pname;
 
-		(void) read_resource_file(*cl_hostname, False);
+		read_session_or_profile =
+		    (read_resource_file(*cl_hostname, False) >= 0);
+
 #if 0
 		if (appres.hostname == CN) {
 		    Error("Hostname not specified in session file.");
@@ -271,20 +301,40 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 		profile_name = NewString(pname);
 
 		sl = strlen(profile_name);
-		if (sl > PROFILE_SFX_LEN &&
-			!strcasecmp(profile_name + sl - PROFILE_SFX_LEN,
-				PROFILE_SFX)) {
-			profile_name[sl - PROFILE_SFX_LEN] = '\0';
+		if (sl > SESSION_SFX_LEN &&
+			!strcasecmp(profile_name + sl - SESSION_SFX_LEN,
+				SESSION_SFX)) {
+			profile_name[sl - SESSION_SFX_LEN] = '\0';
 #if defined(_WIN32) /*[*/
-		} else if (sl > PROFILE_SSFX_LEN &&
-			!strcasecmp(profile_name + sl - PROFILE_SSFX_LEN,
-				PROFILE_SSFX)) {
-			profile_name[sl - PROFILE_SSFX_LEN] = '\0';
+		} else if (sl > SESSION_SSFX_LEN &&
+			!strcasecmp(profile_name + sl - SESSION_SSFX_LEN,
+				SESSION_SSFX)) {
+			profile_name[sl - SESSION_SSFX_LEN] = '\0';
 #endif /*]*/
 		}
 
 		*cl_hostname = appres.hostname; /* might be NULL */
+#if defined(C3270) && !defined(_WIN32) /*[*/
+	} else {
+		/* Read in the profile only if there's no sesson file. */
+	    	read_session_or_profile = merge_profile();
+#endif /*]*/
 	}
+
+	/*
+	 * Now parse the command-line arguments again, so they take
+	 * precedence over the session file or profile.
+	 */
+	if (read_session_or_profile) {
+		parse_options(&xargc, xargv);
+		parse_set_clear(&xargc, xargv);
+	}
+	free(xcmd);
+
+	/*
+	 * All right, we have all of the resources defined.
+	 * Sort out the contradictory and implicit settings.
+	 */
 
 	/*
 	 * Sort out model and color modes, based on the model number resource.
@@ -376,99 +426,9 @@ parse_local_process(int *argcp, const char **argv, const char **cmds)
 }
 #endif /*]*/
 
-/*
- * Pick out command-line options and set up appres.
- */
 static void
-parse_options(int *argcp, const char **argv)
+set_appres_defaults(void)
 {
-	int i, j;
-	int argc_out = 0;
-	const char **argv_out =
-	    (const char **) Malloc((*argcp + 1) * sizeof(char *));
-#       define offset(n) (void *)&appres.n
-#       define toggle_offset(index) offset(toggle[index].value)
-	static struct {
-		const char *name;
-		enum {
-		    OPT_BOOLEAN, OPT_STRING, OPT_XRM, OPT_SKIP2, OPT_NOP,
-		    OPT_INT, OPT_V, OPT_DONE
-		} type;
-		Boolean flag;
-		const char *res_name;
-		void *aoff;
-	} opts[] = {
-#if defined(C3270) /*[*/
-    { OptAllBold,  OPT_BOOLEAN, True,  ResAllBold,   offset(all_bold_on) },
-#endif /*]*/
-#if defined(C3270) /*[*/
-    { OptAltScreen,OPT_STRING,  False, ResAltScreen, offset(altscreen) },
-#endif /*]*/
-    { OptAplMode,  OPT_BOOLEAN, True,  ResAplMode,   offset(apl_mode) },
-#if defined(C3270) /*[*/
-    { OptCbreak,   OPT_BOOLEAN, True,  ResCbreak,    offset(cbreak_mode) },
-#endif /*]*/
-#if defined(HAVE_LIBSSL) /*[*/
-    { OptCertFile, OPT_STRING,  False, ResCertFile,  offset(cert_file) },
-#endif /*]*/
-    { OptCharset,  OPT_STRING,  False, ResCharset,   offset(charset) },
-    { OptClear,    OPT_SKIP2,   False, NULL,         NULL },
-#if defined(C3270) /*[*/
-    { OptDefScreen,OPT_STRING,  False, ResDefScreen, offset(defscreen) },
-#endif /*]*/
-#if defined(X3270_TRACE) /*[*/
-    { OptDsTrace,  OPT_BOOLEAN, True,  ResDsTrace,   toggle_offset(DS_TRACE) },
-#endif /*]*/
-    { OptHostsFile,OPT_STRING,  False, ResHostsFile, offset(hostsfile) },
-#if defined(C3270) /*[*/
-    { OptKeymap,   OPT_STRING,  False, ResKeymap,    offset(key_map) },
-#endif /*]*/
-#if defined(WS3270) /*[*/
-    { OptLocalCp,  OPT_INT,	False, ResLocalCp,   offset(local_cp) },
-#endif /*]*/
-    { OptModel,    OPT_STRING,  False, ResModel,     offset(model) },
-#if defined(C3270) /*[*/
-# if !defined(_WIN32) /*[*/
-    { OptMono,     OPT_BOOLEAN, True,  ResMono,      offset(mono) },
-# endif /*]*/
-    { OptNoPrompt, OPT_BOOLEAN, True,  ResNoPrompt,  offset(no_prompt) },
-#endif /*]*/
-    { OptOnce,     OPT_BOOLEAN, True,  ResOnce,      offset(once) },
-    { OptOversize, OPT_STRING,  False, ResOversize,  offset(oversize) },
-    { OptPort,     OPT_STRING,  False, ResPort,      offset(port) },
-#if defined(C3270) /*[*/
-    { OptPrinterLu,OPT_STRING,  False, ResPrinterLu, offset(printer_lu) },
-    { OptReconnect,OPT_BOOLEAN, True,  ResReconnect, offset(reconnect) },
-#if !defined(_WIN32) /*[*/
-    { OptReverseVideo,OPT_BOOLEAN,True,ResReverseVideo,offset(reverse_video) },
-#endif /*]*/
-#endif /*]*/
-    { OptProxy,	   OPT_STRING,  False, ResProxy,     offset(proxy) },
-#if defined(S3270) /*[*/
-    { OptScripted, OPT_NOP,     False, ResScripted,  NULL },
-#endif /*]*/
-#if defined(C3270) /*[*/
-    { OptSecure,   OPT_BOOLEAN, True,  ResSecure,    offset(secure) },
-#endif /*]*/
-    { OptSet,      OPT_SKIP2,   False, NULL,         NULL },
-#if defined(X3270_SCRIPT) /*[*/
-    { OptSocket,   OPT_BOOLEAN, True,  ResSocket,    offset(socket) },
-#endif /*]*/
-    { OptTermName, OPT_STRING,  False, ResTermName,  offset(termname) },
-#if defined(WC3270) /*[*/
-    { OptTitle,    OPT_STRING,  False, ResTitle,     offset(title) },
-#endif /*]*/
-#if defined(X3270_TRACE) /*[*/
-    { OptTraceFile,OPT_STRING,  False, ResTraceFile, offset(trace_file) },
-    { OptTraceFileSize,OPT_STRING,False,ResTraceFileSize,offset(trace_file_size) },
-#endif /*]*/
-    { OptV,        OPT_V,	False, NULL,	     NULL },
-    { OptVersion,  OPT_V,	False, NULL,	     NULL },
-    { "-xrm",      OPT_XRM,     False, NULL,         NULL },
-    { LAST_ARG,    OPT_DONE,    False, NULL,         NULL },
-    { CN,          OPT_SKIP2,   False, NULL,         NULL }
-};
-
 	/* Set the defaults. */
 #if defined(C3270) && !defined(_WIN32) /*[*/
 	appres.mono = False;
@@ -571,11 +531,100 @@ parse_options(int *argcp, const char **argv)
 #if defined(WS3270) /*[*/
 	appres.local_cp = GetACP();
 #endif /*]*/
+}
 
-#if defined(C3270) && !defined(_WIN32) /*[*/
-	/* Merge in the profile. */
-	merge_profile();
+/*
+ * Pick out command-line options and set up appres.
+ */
+static void
+parse_options(int *argcp, const char **argv)
+{
+	int i, j;
+	int argc_out = 0;
+	const char **argv_out =
+	    (const char **) Malloc((*argcp + 1) * sizeof(char *));
+#       define offset(n) (void *)&appres.n
+#       define toggle_offset(index) offset(toggle[index].value)
+	static struct {
+		const char *name;
+		enum {
+		    OPT_BOOLEAN, OPT_STRING, OPT_XRM, OPT_SKIP2, OPT_NOP,
+		    OPT_INT, OPT_V, OPT_DONE
+		} type;
+		Boolean flag;
+		const char *res_name;
+		void *aoff;
+	} opts[] = {
+#if defined(C3270) /*[*/
+    { OptAllBold,  OPT_BOOLEAN, True,  ResAllBold,   offset(all_bold_on) },
 #endif /*]*/
+#if defined(C3270) /*[*/
+    { OptAltScreen,OPT_STRING,  False, ResAltScreen, offset(altscreen) },
+#endif /*]*/
+    { OptAplMode,  OPT_BOOLEAN, True,  ResAplMode,   offset(apl_mode) },
+#if defined(C3270) /*[*/
+    { OptCbreak,   OPT_BOOLEAN, True,  ResCbreak,    offset(cbreak_mode) },
+#endif /*]*/
+#if defined(HAVE_LIBSSL) /*[*/
+    { OptCertFile, OPT_STRING,  False, ResCertFile,  offset(cert_file) },
+#endif /*]*/
+    { OptCharset,  OPT_STRING,  False, ResCharset,   offset(charset) },
+    { OptClear,    OPT_SKIP2,   False, NULL,         NULL },
+#if defined(C3270) /*[*/
+    { OptDefScreen,OPT_STRING,  False, ResDefScreen, offset(defscreen) },
+#endif /*]*/
+#if defined(X3270_TRACE) /*[*/
+    { OptDsTrace,  OPT_BOOLEAN, True,  ResDsTrace,   toggle_offset(DS_TRACE) },
+#endif /*]*/
+    { OptHostsFile,OPT_STRING,  False, ResHostsFile, offset(hostsfile) },
+#if defined(C3270) /*[*/
+    { OptKeymap,   OPT_STRING,  False, ResKeymap,    offset(key_map) },
+#endif /*]*/
+#if defined(WS3270) /*[*/
+    { OptLocalCp,  OPT_INT,	False, ResLocalCp,   offset(local_cp) },
+#endif /*]*/
+    { OptModel,    OPT_STRING,  False, ResModel,     offset(model) },
+#if defined(C3270) /*[*/
+# if !defined(_WIN32) /*[*/
+    { OptMono,     OPT_BOOLEAN, True,  ResMono,      offset(mono) },
+# endif /*]*/
+    { OptNoPrompt, OPT_BOOLEAN, True,  ResNoPrompt,  offset(no_prompt) },
+#endif /*]*/
+    { OptOnce,     OPT_BOOLEAN, True,  ResOnce,      offset(once) },
+    { OptOversize, OPT_STRING,  False, ResOversize,  offset(oversize) },
+    { OptPort,     OPT_STRING,  False, ResPort,      offset(port) },
+#if defined(C3270) /*[*/
+    { OptPrinterLu,OPT_STRING,  False, ResPrinterLu, offset(printer_lu) },
+    { OptReconnect,OPT_BOOLEAN, True,  ResReconnect, offset(reconnect) },
+#if !defined(_WIN32) /*[*/
+    { OptReverseVideo,OPT_BOOLEAN,True,ResReverseVideo,offset(reverse_video) },
+#endif /*]*/
+#endif /*]*/
+    { OptProxy,	   OPT_STRING,  False, ResProxy,     offset(proxy) },
+#if defined(S3270) /*[*/
+    { OptScripted, OPT_NOP,     False, ResScripted,  NULL },
+#endif /*]*/
+#if defined(C3270) /*[*/
+    { OptSecure,   OPT_BOOLEAN, True,  ResSecure,    offset(secure) },
+#endif /*]*/
+    { OptSet,      OPT_SKIP2,   False, NULL,         NULL },
+#if defined(X3270_SCRIPT) /*[*/
+    { OptSocket,   OPT_BOOLEAN, True,  ResSocket,    offset(socket) },
+#endif /*]*/
+    { OptTermName, OPT_STRING,  False, ResTermName,  offset(termname) },
+#if defined(WC3270) /*[*/
+    { OptTitle,    OPT_STRING,  False, ResTitle,     offset(title) },
+#endif /*]*/
+#if defined(X3270_TRACE) /*[*/
+    { OptTraceFile,OPT_STRING,  False, ResTraceFile, offset(trace_file) },
+    { OptTraceFileSize,OPT_STRING,False,ResTraceFileSize,offset(trace_file_size) },
+#endif /*]*/
+    { OptV,        OPT_V,	False, NULL,	     NULL },
+    { OptVersion,  OPT_V,	False, NULL,	     NULL },
+    { "-xrm",      OPT_XRM,     False, NULL,         NULL },
+    { LAST_ARG,    OPT_DONE,    False, NULL,         NULL },
+    { CN,          OPT_SKIP2,   False, NULL,         NULL }
+};
 
 	/* Parse the command-line options. */
 	argv_out[argc_out++] = argv[0];
