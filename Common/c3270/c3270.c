@@ -1308,23 +1308,25 @@ Info_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 #define DEFAULT_PROFILE	"~/.c3270pro"
 
 /* Read in the .c3270pro file. */
-void
+Boolean
 merge_profile(void)
 {
 	const char *fname;
 	char *profile_name;
+	Boolean did_read = False;
 
 	/* Check for the no-profile environment variable. */
 	if (getenv(NO_PROFILE_ENV) != CN)
-		return;
+		return did_read;
 
 	/* Read the file. */
 	fname = getenv(PROFILE_ENV);
 	if (fname == CN || *fname == '\0')
 		fname = DEFAULT_PROFILE;
 	profile_name = do_subst(fname, True, True);
-	(void) read_resource_file(profile_name, False);
+	did_read = (read_resource_file(profile_name, False) >= 0);
 	Free(profile_name);
+	return did_read;
 }
 
 #endif /*]*/
