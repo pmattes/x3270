@@ -69,8 +69,9 @@ extern int cCOLS;
 
 #define STATUS_PUSH_MS	5000
 
-static int cp[8][8][2];
-static int cmap[16] = {
+static int cp[16][16][2];
+
+static int cmap8[16] = {
 	COLOR_BLACK,	/* neutral black */
 	COLOR_BLUE,	/* blue */
 	COLOR_RED,	/* red */
@@ -83,18 +84,52 @@ static int cmap[16] = {
 	COLOR_BLACK,	/* black */ /* alas, in bold, this may be gray */
 	COLOR_BLUE,	/* deep blue */
 	COLOR_YELLOW,	/* orange */
-	COLOR_BLUE,	/* deep blue */
+	COLOR_MAGENTA,	/* purple */
 	COLOR_GREEN,	/* pale green */
 	COLOR_CYAN,	/* pale turquoise */
 	COLOR_BLACK,	/* gray */
 	COLOR_WHITE	/* white */
 };
-static int field_colors[4] = {
+
+static int cmap16[16] = {
+	COLOR_BLACK,	/* neutral black */
+	8 + COLOR_BLUE,	/* blue */
+	COLOR_RED,	/* red */
+	8 + COLOR_MAGENTA,	/* pink */
+	8 + COLOR_GREEN,	/* green */
+	8 + COLOR_CYAN,	/* turquoise */
+	8 + COLOR_YELLOW,	/* yellow */
+	8 + COLOR_WHITE,	/* neutral white */
+
+	COLOR_BLACK,	/* black */ /* alas, in bold, this may be gray */
+	COLOR_BLUE,	/* deep blue */
+	8 + COLOR_RED,	/* orange */
+	COLOR_MAGENTA,	/* purple */
+	COLOR_GREEN,	/* pale green */
+	COLOR_CYAN,	/* pale turquoise */
+	COLOR_WHITE,	/* gray */
+	8 + COLOR_WHITE	/* white */
+};
+
+static int *cmap = cmap8;
+static int defcolor_offset = 0;
+
+static int field_colors8[4] = {
 	COLOR_GREEN,	/* default */
 	COLOR_RED,	/* intensified */
 	COLOR_BLUE,	/* protected */
 	COLOR_WHITE	/* protected, intensified */
 };
+
+static int field_colors16[4] = {
+	8 + COLOR_GREEN,/* default */
+	COLOR_RED,	/* intensified */
+	8 + COLOR_BLUE,	/* protected */
+	8 + COLOR_WHITE	/* protected, intensified */
+};
+
+static int *field_colors = field_colors8;
+
 static int defattr = A_NORMAL;
 static unsigned long input_id;
 
@@ -295,12 +330,21 @@ screen_init(void)
 	if (!appres.mono) {
 		start_color();
 		if (has_colors() && COLORS >= 8) {
+		    	if (!appres.color8 && COLORS >= 16) {
+				cmap = cmap16;
+				field_colors = field_colors16;
+				defcolor_offset = 8;
+			}
 		    	if (appres.m3279)
 				defattr =
-				    get_color_pair(COLOR_BLUE, COLOR_BLACK);
+				    get_color_pair(
+					    defcolor_offset + COLOR_BLUE,
+					    COLOR_BLACK);
 			else
 				defattr =
-				    get_color_pair(COLOR_GREEN, COLOR_BLACK);
+				    get_color_pair(
+					    defcolor_offset + COLOR_GREEN,
+					    COLOR_BLACK);
 			if (COLORS < 16)
 			    	appres.color8 = True;
 #if defined(C3270_80_132) && defined(NCURSES_VERSION)  /*[*/
@@ -317,7 +361,8 @@ screen_init(void)
 					set_term(def_screen);
 				start_color();
 				curses_alt = !curses_alt;
-				(void) get_color_pair(COLOR_BLUE, COLOR_BLACK);
+				(void) get_color_pair(field_colors[2],
+						      COLOR_BLACK);
 				curses_alt = !curses_alt;
 				set_term(s);
 
@@ -357,7 +402,8 @@ screen_init(void)
 		(void) fprintf(stderr, "invalid %s value: '%s', "
 		    "assuming 'auto'\n", ResAllBold, appres.all_bold);
 	if (ab_mode == TS_AUTO)
-		ab_mode = appres.m3279? TS_ON: TS_OFF;
+		ab_mode = (appres.m3279 && (appres.color8 || COLORS < 16))? 
+		    TS_ON: TS_OFF;
 	if (ab_mode == TS_ON)
 		defattr |= A_BOLD;
 
@@ -523,7 +569,7 @@ init_user_attribute_color(int *a, const char *resname)
 		}
 	}
 	l = strtoul(r, &ptr, 0);
-	if (ptr == r || *ptr != '\0' || l > 7) {
+	if (ptr == r || *ptr != '\0' || (int)l >= COLORS) {
 	    	xs_warning("Invalid %s value: %s", resname, r);
 	    	return;
 	}
@@ -566,7 +612,8 @@ color_from_fa(unsigned char fa)
 		return get_color_pair(fg, COLOR_BLACK) |
 		    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
 	} else if (!appres.mono) {
-		return get_color_pair(COLOR_GREEN, COLOR_BLACK) |
+		return get_color_pair(defcolor_offset + COLOR_GREEN,
+			COLOR_BLACK) |
 		    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
 	} else {
 	    	/* No color at all. */
@@ -599,7 +646,7 @@ init_user_color(const char *name, int ix)
 	}
 
 	l = strtoul(r, &ptr, 0);
-	if (ptr != r && *ptr == '\0' && l <= 7) {
+	if (ptr != r && *ptr == '\0' && (int)l < COLORS) {
 	    	cmap[ix] = (int)l;
 		return;
 	}
@@ -1491,8 +1538,8 @@ draw_oia(void)
 	    oia_printer? 'P': ' ');
 	if (status_secure) {
 	    	if (appres.m3279)
-			attrset(get_color_pair(COLOR_GREEN, COLOR_BLACK) |
-				A_BOLD);
+			attrset(get_color_pair(defcolor_offset + COLOR_GREEN,
+				    COLOR_BLACK) | A_BOLD);
 		else
 		    	attrset(A_BOLD);
 		printw("S");
