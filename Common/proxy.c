@@ -698,7 +698,7 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 	trace_dsn("SOCKS5 Proxy: xmit version 5 nmethods 1 (no auth)\n");
 	trace_netdata('>', rbuf, 3);
 #endif /*]*/
-	if (send(fd, rbuf, 3, 0) < 0) {
+	if (send(fd, (char *)rbuf, 3, 0) < 0) {
 		popup_a_sockerr("SOCKS5 Proxy: send error");
 		return -1;
 	}
@@ -725,7 +725,7 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 			return -1;
 		}
 
-	    	nr = recv(fd, &rbuf[nread], 1, 0);
+	    	nr = recv(fd, (char *)&rbuf[nread], 1, 0);
 		if (nr < 0) {
 			popup_a_sockerr("SOCKS5 Proxy: receive error");
 #if defined(X3270_TRACE) /*[*/
@@ -830,7 +830,7 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 			return -1;
 		}
 
-	    	nr = recv(fd, &r, 1, 0);
+	    	nr = recv(fd, (char *)&r, 1, 0);
 		if (nr < 0) {
 			popup_a_sockerr("SOCKS5 Proxy: receive error");
 #if defined(X3270_TRACE) /*[*/

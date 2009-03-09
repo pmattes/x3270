@@ -849,7 +849,7 @@ telnet_fsm(unsigned char c)
 				    IAC, SB, TELOPT_TTYPE, TELQUAL_IS,
 				    termtype,
 				    (try_lu != NULL && *try_lu) ? "@" : "",
-				    (try_lu != NULL && &try_lu) ? try_lu : "",
+				    (try_lu != NULL && *try_lu) ? try_lu : "",
 				    IAC, SE);
 				net_rawout((unsigned char *)tt_out, tb_len);
 

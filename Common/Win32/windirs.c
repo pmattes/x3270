@@ -77,8 +77,8 @@ old_get_dirs(char *desktop, char *appdata)
 		DWORD vlen = MAX_PATH;
 		DWORD type;
 
-		hres = RegEnumValue(hkey, index, name, &nlen, 0, &type, value,
-			&vlen);
+		hres = RegEnumValue(hkey, index, name, &nlen, 0, &type,
+			(unsigned char *)value, &vlen);
 		if (hres != ERROR_SUCCESS)
 			break;
 
