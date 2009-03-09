@@ -85,7 +85,6 @@
 #define ResExtended		"extended"
 #define ResFixedSize		"fixedSize"
 #define ResHighlightBold	"highlightBold"
-#define ResHighlightUnderline	"highlightUnderline"
 #define ResHostColorFor		"hostColorFor"
 #define ResHostColorForDefault ResHostColorFor "Default"
 #define ResHostColorForIntensified ResHostColorFor "Intensified"
