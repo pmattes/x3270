@@ -479,9 +479,9 @@ Piffle(char *title, LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
 	strncpy(pif.win386.parameters, args, sizeof(pif.win386.parameters));
 	strncpy(pif.vmm.icon_file, lpszPathObj, sizeof(pif.vmm.icon_file));
 	pif.vmm.text_lines.data[0] = screen_height & 0x00ff;
-	pif.vmm.text_lines.data[1] = (screen_height << 8) & 0xff00;
+	pif.vmm.text_lines.data[1] = (screen_height & 0xff00) >> 8;
 	pif.vmm.screen_height.data[0] = screen_height & 0x00ff;
-	pif.vmm.screen_height.data[1] = (screen_height << 8) & 0xff00;
+	pif.vmm.screen_height.data[1] = (screen_height & 0xff00) >> 8;
 	pif.vmm.client_width.data[0] = 0;
 	pif.vmm.client_width.data[1] = 0;
 	pif.vmm.client_height.data[0] = 0;

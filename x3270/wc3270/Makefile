@@ -38,18 +38,20 @@ endif
 # compiling natively on Cygwin, or cross-compiling on Linux.
 ifeq ($(CROSS),1)
 MKFB = mkfb
-CC = mingw32-gcc
+CC = i586-mingw32msvc-gcc
 NATIVECC = gcc
-WINDRES = mingw32-windres
+WINDRES = i586-mingw32msvc-windres
+NO_CYGWIN =
 else
 MKFB = mkfb.exe
 CC = gcc
 NATIVECC = gcc
 WINDRES = windres
+NO_CYGWIN = -mno-cygwin
 endif
 
 XCPPFLAGS = -D_WIN32 -DWC3270 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWINVER=0x500
-CFLAGS = $(EXTRA_FLAGS) -mno-cygwin -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
+CFLAGS = $(EXTRA_FLAGS) $(NO_CYGWIN) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
 SRCS = XtGlue.c actions.c ansi.c apl.c c3270.c charset.c ctlr.c \
 	ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c idle.c kybd.c \
 	macros.c print.c printer.c proxy.c readres.c resources.c rpq.c \

@@ -496,7 +496,7 @@ Win98WriteConsoleOutputW(HANDLE hConsoleOutput, const CHAR_INFO* lpBuffer,
 
 		    nc = WideCharToMultiByte(CP_OEMCP, 0,
 			    &c->Char.UnicodeChar, 1,
-			    &ch, 1,
+			    (char *)&ch, 1,
 			    "?",
 			    &udc);
 		    *d = *c;
