@@ -1,3 +1,10 @@
 #!/bin/bash
-. version.txt
-sed "s/%VERSION%/$version/g"
+
+if [ "$1" = "wine" ]
+then	prefix="Z:\\\\home2"
+    	shift
+else	prefix="\\\\\\\\Melville"
+fi
+. ./version.txt
+
+sed -e "s/%VERSION%/$version/g" -e "s/%SRC%/$prefix/g"

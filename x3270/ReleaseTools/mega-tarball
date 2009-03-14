@@ -19,7 +19,7 @@ else	echo "Is a base release."
 	typeset -i patch=0
 	rev=$1
 fi
-td=/usr/tmp/mt$$
+td=/tmp/mt$$
 rm -rf $td
 mkdir $td
 cd $td

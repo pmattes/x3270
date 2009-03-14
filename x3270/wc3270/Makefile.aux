@@ -52,7 +52,7 @@ HEADERS = 3270ds.h actionsc.h ansic.h aplc.h appres.h cg.h charsetc.h \
 	unicodec.h unicode_dbcsc.h shellfolderc.h
 MISC = version.txt mkversion.sh mkwversion.sh README.txt LICENSE.txt \
        install-sh X3270.xad mkfb.c Makefile wc3270.rc x3270-icon2.bmp \
-       wc3270.ico wc3270.iss ead3270.c mkshort.c wizard.c \
+       wc3270.ico wc3270.iss wc3270-wine.iss ead3270.c mkshort.c wizard.c \
        Msc/deprecated.h Msc/Makefile Msc/mkversion.c Msc/README.txt
 HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
        html/Keymap.html html/Lineage.html html/ReleaseNotes.html \
@@ -86,5 +86,7 @@ html/wc3270-man.html: x3270.man.m4 ft.inc resources.inc hostname.inc keymaps.inc
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "wc3270 Release Notes" html/documentation-relnotes-body.html $@
 
-wc3270.iss: version.txt wc3270.iss.tmpl
+wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 	./mkiss <wc3270.iss.tmpl >wc3270.iss
+wc3270-wine.iss: version.txt wc3270.iss.tmpl mkiss
+	./mkiss wine <wc3270.iss.tmpl >wc3270-wine.iss

@@ -49,6 +49,7 @@ if [ $# -gt 0 ]
 then	prods=$*
 #else	prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270 lib3270"
 else	prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270"
+    	all=1;
 fi
 
 # Make sure the product directories exist.
@@ -96,7 +97,7 @@ do
 	then	echo "============================================================"
 		echo "Building $prod..."
 		echo "============================================================"
-		cd /usr/tmp
+		cd /tmp
 		rm -rf $prod-3.3
 		tar -xzf $d2/$prod.tgz
 		cd $prod-3.3
@@ -149,7 +150,7 @@ do
 		then	cp -p $(<$d2/instlist.windows) $d2/../../../Release/Inno/$prod/
 		fi
 
-		cd /usr/tmp
+		cd /tmp
 		rm -rf $prod-3.3
 		cd $d2
 	fi
@@ -166,8 +167,29 @@ do
 			exit 1
 		fi
 		cp -p $prod.tgz $tarball
-		chmod -w $tarball
+		chmod ugo-w $tarball
 	fi
 
 	cd $d
 done
+
+. Common/version.txt
+
+# Release wc3270 via Inno Setup under Wine.
+if [[ "$release" && \
+      "$prods" =~ wc3270 && \
+      "$prods" =~ ws3270 && \
+      "$prods" =~ wpr3287 ]]
+then	
+    	if [ -f ../../Release/wc3270-$version-setup.exe ]
+	then	echo >&2 "Error: wc3270-$version-setup.exe already exists"
+	    	exit 1
+	fi
+    	wine c:\\Program\ Files\\Inno\ Setup\ 5\\ISCC.EXE Z:$PWD\\wc3270\\wc3270-wine.iss
+fi
+
+# Make a mega-tarball.
+if [ "$release" -a "$all" ]
+then	cd ../../Release
+    	~-/ReleaseTools/mega-tarball $version
+fi
