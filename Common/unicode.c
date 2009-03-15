@@ -43,7 +43,9 @@
 #include "unicodec.h"
 #include "unicode_dbcsc.h"
 #include "utf8c.h"
+#if !defined(PR3287) /*[*/
 #include "utilc.h"
+#endif /*]*/
 
 #if defined(_WIN32) /*[*/
 #include <windows.h>
@@ -500,8 +502,14 @@ set_uni(const char *csname, const char **host_codepage,
 
 		if (rc == -1 && cannot_fail) {
 		    	/* Try again with plain-old ASCII. */
-		    	xs_warning("Cannot find iconv translation for '%s', "
-				"using ASCII", locale_codeset);
+#if defined(PR3287) /*[*/
+		    	Warning("Cannot find iconv translation from locale "
+				"codeset to UTF-8, using ASCII");
+#else /*][*/
+		    	xs_warning("Cannot find iconv translation from locale "
+				"codeset '%s' to UTF-8, using ASCII",
+				locale_codeset);
+#endif /*]*/
 			i_u2mb = iconv_open("ASCII", "UTF-8");
 			if (i_u2mb == (iconv_t)-1)
 			    	Error("No iconv UTF-8 to ASCII translation");

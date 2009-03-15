@@ -305,6 +305,13 @@ NewString(const char *s)
 	return strcpy(p, s);
 }
 
+void
+Error(const char *msg)
+{
+    errmsg(msg);
+    pr3287_exit(1);
+}
+
 /* Signal handler for SIGTERM, SIGINT and SIGHUP. */
 static void
 fatal_signal(int sig)
