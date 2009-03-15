@@ -15,7 +15,7 @@ DisableDirPage=no
 DefaultGroupName=wc3270
 AllowNoIcons=yes
 OutputBaseFilename=wc3270-%VERSION%-setup
-OutputDir=%SRC%\pdm\psrc\x3270\Release
+OutputDir=.
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
@@ -28,30 +28,30 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-Source: "%SRC%\pdm\psrc\x3270\Release\Inno\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Release\Inno\ws3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Release\Inno\wc3270\w3n4.dll"; DestDir: "{app}"; Flags: ignoreversion; OnlyBelowVersion: 0.0,5.01
-Source: "%SRC%\pdm\psrc\x3270\Release\Inno\wc3270\w3n46.dll"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.01
-Source: "%SRC%\pdm\psrc\x3270\Release\Inno\wc3270\shf.dll"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.0
-Source: "%SRC%\pdm\psrc\x3270\Release\Inno\wpr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Release\Inno\wc3270\catf.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Release\Inno\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall
-Source: "%SRC%\pdm\psrc\x3270\Release\Inno\wc3270\ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Release\Inno\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Source\3.3svn\wc3270\html\Bugs.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Source\3.3svn\wc3270\html\Build.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Source\3.3svn\wc3270\html\FAQ.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Source\3.3svn\wc3270\html\Intro.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Source\3.3svn\wc3270\html\Keymap.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Source\3.3svn\wc3270\html\Lineage.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Source\3.3svn\wc3270\html\ReleaseNotes.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Source\3.3svn\wc3270\html\README.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Source\3.3svn\wc3270\html\wc3270-man.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Source\3.3svn\ws3270\html\ws3270-man.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Source\3.3svn\wc3270\html\Wishlist.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Source\3.3svn\wpr3287\html\wpr3287-man.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Source\3.3svn\wc3270\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "%SRC%\pdm\psrc\x3270\Source\3.3svn\wc3270\README.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\ws3270-3.3\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\wpr3287-3.3\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "w3n4.dll"; DestDir: "{app}"; Flags: ignoreversion; OnlyBelowVersion: 0.0,5.01
+Source: "w3n46.dll"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.01
+Source: "shf.dll"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.0
+Source: "catf.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall
+Source: "ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "html\Bugs.html"; DestDir: "{app}\html"; Flags: ignoreversion
+Source: "html\Build.html"; DestDir: "{app}\html"; Flags: ignoreversion
+Source: "html\FAQ.html"; DestDir: "{app}\html"; Flags: ignoreversion
+Source: "html\Intro.html"; DestDir: "{app}\html"; Flags: ignoreversion
+Source: "html\Keymap.html"; DestDir: "{app}\html"; Flags: ignoreversion
+Source: "html\Lineage.html"; DestDir: "{app}\html"; Flags: ignoreversion
+Source: "html\ReleaseNotes.html"; DestDir: "{app}\html"; Flags: ignoreversion
+Source: "html\README.html"; DestDir: "{app}\html"; Flags: ignoreversion
+Source: "html\wc3270-man.html"; DestDir: "{app}\html"; Flags: ignoreversion
+Source: "..\ws3270-3.3\html\ws3270-man.html"; DestDir: "{app}\html"; Flags: ignoreversion
+Source: "..\wpr3287-3.3\html\wpr3287-man.html"; DestDir: "{app}\html"; Flags: ignoreversion
+Source: "html\Wishlist.html"; DestDir: "{app}\html"; Flags: ignoreversion
+Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "README.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Dirs]
