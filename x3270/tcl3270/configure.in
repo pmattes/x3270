@@ -78,7 +78,7 @@ AC_CHECK_HEADERS(iconv.h)
 
 dnl Check for TCL header files.
 orig_CPPFLAGS="$CPPFLAGS"
-for dir in "" -I/usr/local/include -I/usr/local/include/tcl$tclver -I/usr/local/include/tcl$tclvr
+for dir in "" -I/usr/include/tcl$tclver /usr/include/tcl$tclvr -I/usr/local/include -I/usr/local/include/tcl$tclver -I/usr/local/include/tcl$tclvr
 do	header_fail=0
 	if test -n "$dir"
 	then	AC_MSG_NOTICE(retrying with $dir)
