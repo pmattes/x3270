@@ -503,6 +503,8 @@ split_host(char *s, Boolean *ansi, Boolean *std_ds, Boolean *passthru,
 	Boolean *pfxptr[6];
 	int i;
 
+	*needed = False;
+
     	/* Call the sane, new version. */
     	if (new_split_host(s, &lu, &host, port, &prefixes) < 0)
 	    	return NULL;
@@ -521,7 +523,7 @@ split_host(char *s, Boolean *ansi, Boolean *std_ds, Boolean *passthru,
 		for (i = 0; i < 6; i++)
 		    	if (prefixes & (1 << i))
 			    	*pfxptr[i] = True;
-		*needed = True;
+		*needed = (strcmp(s, host) != 0);
 	    	return host;
 	}
 }
