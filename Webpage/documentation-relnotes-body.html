@@ -2,7 +2,9 @@
 3.3 is the current development line for the x3270 suite.
 <h2>Changes in version 3.3.10, NN. Mmm Yyyy</h2>
 <ul>
- <li>[all but <i>wc3270</i>] Now properly handle when there is no <i>iconv</i>
+ <li>[<i>x3270</i> and <i>c3270</i>] Re-enable the <b>ibm_hosts</b> file
+  (it was accidentally being ignored).</li>
+ <li>[all but <i>wc3270</i>] Don't crash when there is no <i>iconv</i>
   translation for the locale codeset.</li>
  <li>[all but <i>x3270</i>] Fixed a build failure in glue.c when DBCS was
    disabled.</li>
