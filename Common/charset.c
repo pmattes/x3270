@@ -137,7 +137,7 @@ charset_init(char *csname)
 		(void) screen_new_display_charsets(default_display_charset,
 		    "us");
 #endif /*]*/
-		(void) set_uni("us", &codepage, &cgcsgid, &display_charsets);
+		(void) set_uni(CN, &codepage, &cgcsgid, &display_charsets);
 #if defined(X3270_DBCS) /*[*/
 		(void) set_uni_dbcs("", NULL, NULL);
 #endif /*]*/

@@ -1082,7 +1082,7 @@ ifelse(XX_PLATFORM,windows,`the name of the printer to use',
 `the command to use to print, e.g., XX_FB(lpr)').
 ifelse(XX_PLATFORM,windows,`The font defaults to XX_FB(Courier New) and the
 point size defaults to 8.
-These can be overridden by the XX_FB(printer.font) and XX_FB(printer.size)
+These can be overridden by the XX_FB(printTextFont) and XX_FB(printTextSize)
 resources, respectively.
 ')dnl
 Multiple arguments can include keywords to control the output of

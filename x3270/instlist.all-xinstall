@@ -5,12 +5,6 @@ usr/bin/x3270if
 usr/etc
 usr/etc/x3270
 usr/etc/x3270/ibm_hosts
-usr/man
-usr/man/man1
-usr/man/man1/x3270-script.1
-usr/man/man1/x3270if.1
-usr/man/man5
-usr/man/man5/ibm_hosts.5
 usr/share
 usr/share/fonts
 usr/share/fonts/X11
@@ -35,4 +29,8 @@ usr/share/fonts/X11/misc/3270h.pcf.gz
 usr/share/fonts/X11/misc/fonts.dir
 usr/share/man
 usr/share/man/man1
+usr/share/man/man1/x3270-script.1
 usr/share/man/man1/x3270.1x
+usr/share/man/man1/x3270if.1
+usr/share/man/man5
+usr/share/man/man5/ibm_hosts.5

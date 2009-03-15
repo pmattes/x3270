@@ -43,6 +43,7 @@
 #include "unicodec.h"
 #include "unicode_dbcsc.h"
 #include "utf8c.h"
+#include "utilc.h"
 
 #if defined(_WIN32) /*[*/
 #include <windows.h>
@@ -52,6 +53,8 @@
 iconv_t i_u2mb = (iconv_t)-1;
 iconv_t i_mb2u = (iconv_t)-1;
 #endif /*]*/
+
+#define DEFAULT_CSNAME	"us"
 
 #if defined(_WIN32) /*[*/
 # if defined(WS3270) /*[*/
@@ -227,7 +230,7 @@ cpalias_t cpaliases[] = {
     { "turkish",	"cp1026" },
     { "uk",		"cp285" },
     { "uk-euro",	"cp1146" },
-    { "us",		"cp037" },
+    { DEFAULT_CSNAME,	"cp037" },
     { "us-euro",	"cp1140" },
     { "us-intl",	"cp037" },
     { NULL,		NULL }
@@ -435,7 +438,16 @@ set_uni(const char *csname, const char **host_codepage,
 	int i;
 	const char *realname;
 	int rc = -1;
+	Boolean cannot_fail = False;
 
+	/*
+	 * If the csname is NULL, this is a fallback to the default
+	 * and the iconv lookup cannot fail.
+	 */
+	if (csname == NULL) {
+	    	csname = DEFAULT_CSNAME;
+		cannot_fail = True;
+	}
 	realname = csname;
 
 	/* Search for an alias. */
@@ -457,6 +469,9 @@ set_uni(const char *csname, const char **host_codepage,
 			break;
 		}
 	}
+
+	if (cannot_fail && rc == -1)
+		Error("Cannot find default charset definition");
 
 #if defined(USE_ICONV) /*[*/
 	/*
@@ -481,6 +496,19 @@ set_uni(const char *csname, const char **host_codepage,
 					rc = -1;
 				}
 			}
+		}
+
+		if (rc == -1 && cannot_fail) {
+		    	/* Try again with plain-old ASCII. */
+		    	xs_warning("Cannot find iconv translation for '%s', "
+				"using ASCII", locale_codeset);
+			i_u2mb = iconv_open("ASCII", "UTF-8");
+			if (i_u2mb == (iconv_t)-1)
+			    	Error("No iconv UTF-8 to ASCII translation");
+			i_mb2u = iconv_open("UTF-8", "ASCII");
+			if (i_mb2u == (iconv_t)-1)
+			    	Error("No iconv ASCII to UTF-8 translation");
+			rc = 0;
 		}
 	}
 #endif /*]*/

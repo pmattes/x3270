@@ -838,7 +838,9 @@ static struct {
 	{ ResCommandTimeout, offset(command_timeout), XRM_INT },
 #endif /*]*/
 	{ ResConfDir,	offset(conf_dir),	XRM_STRING },
+#if defined(X3270_DBCS) /*[*/
 	{ ResDbcsCgcsgid, offset(dbcs_cgcsgid),	XRM_STRING },
+#endif /*]*/
 #if defined(C3270) /*[*/
 	{ ResDefScreen,	offset(defscreen),	XRM_STRING },
 #endif /*]*/

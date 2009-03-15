@@ -2,6 +2,14 @@
 3.3 is the current development line for the x3270 suite.
 <h2>Changes in version 3.3.10, NN. Mmm Yyyy</h2>
 <ul>
+ <li>[all but <i>wc3270</i>] Now properly handle when there is no <i>iconv</i>
+  translation for the locale codeset.</li>
+ <li>[all but <i>x3270</i>] Fixed a build failure in glue.c when DBCS was
+   disabled.</li>
+ <li>[<i>wc3270</i>] Corrected the default keymap so that the uppercase
+  versions of the <b>Alt</b> mapping also work.</li>
+ <li>[<i>wc3270</i>] Corrected the documentation of the
+  <b>printTextFont</b> and <b>printTextSize</b> resources.</li>
  <li>[<i>c3270</i>] Corrected a number of errors in parsing
   <b>CursesColorFor<i>xxx</i></b> resources.</li>
  <li>[<i>c3270</i>] Added support for <b>-rv</b>, which puts c3270 into
