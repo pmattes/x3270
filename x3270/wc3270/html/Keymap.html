@@ -86,6 +86,10 @@ before less-specific ones.
 For example, if you want to map both <b>F1</b> and <b>Shift-F1</b>, the rule
 for <b>Shift-F1</b> must come before the rule for <b>F1</b>.
 Otherwise, one or more of your rules will be ignored.
+<p>Except for ones that use the <b>Ctrl</b> modifier, entries are
+case-sensitive.  For example, an entry for <b>Alt-p</b> will not be matched if
+the Shift key is down or Caps Lock is in effect.  To match both <b>Alt-p</b>
+and <b>Alt-P</b>, there must be two entries in your keymap.
 
 <h2>How to Find the Modifiers</h2>
 The list of modifiers is on the

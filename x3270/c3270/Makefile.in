@@ -48,6 +48,7 @@ LIBDIR = @libdir@
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 sysconfdir = @sysconfdir@
+datarootdir = @datarootdir@
 LIBX3270DIR = @LIBX3270DIR@
 MANDIR = @mandir@
 BINDIR = @bindir@

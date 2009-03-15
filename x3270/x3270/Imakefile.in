@@ -67,6 +67,7 @@ LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
      sysconfdir = @sysconfdir@
 autoconf_bindir = @bindir@
 autoconf_mandir = @mandir@
+    datarootdir = @datarootdir@
 autoconf_fontinstdir = @CIFONTDIR@
     LIBX3270DIR = @LIBX3270DIR@
 EXTRA_LDOPTIONS = @LDFLAGS@
