@@ -52,6 +52,12 @@ else	prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270"
     	all=1;
 fi
 
+if [[ "$prods" =~ wc3270 && \
+      "$prods" =~ ws3270 && \
+      "$prods" =~ wpr3287 ]]
+then	winrel=1;
+fi
+
 # Make sure the product directories exist.
 for i in $prods
 do	if [ ! -d "$i" ]
@@ -66,6 +72,62 @@ done
 # Pull in the version.
 source Common/version.txt
 
+d1=$PWD
+reldir=$d1/../../Release
+
+suite=suite3270-$version.tgz
+setup=wc3270-$version-setup.exe
+
+# Check for existing targets before we do any real work.
+if [ "$release" ]
+then	for prod in $prods
+	do	if [ -f $reldir/$prod-$version.tgz ]
+		then	echo >&2 "$prod-$version.tgz already exists"
+			exit 1
+		fi
+	done
+	if [ "$all" -a -f $reldir/$suite ]
+	then	echo >&2 "$suite already exists"
+		exit 1
+	fi
+	if [ "$winrel" -a -f $reldir/$setup ]
+	then	echo >&2 "$setup already exists"
+	    	exit 1
+	fi
+fi
+
+# Work in a clean temporary directory
+tmpdir=/tmp/mka
+rm -rf $tmpdir
+mkdir $tmpdir
+
+# Build each of the tarballs.
+echo "===== Building tarballs."
+for prod in $prods
+do	cd $prod
+    	make -f Makefile.aux $prod.tgz
+	cd ..
+done
+
+echo "===== Copying tarballs."
+# Copy then into the build directory.
+for prod in $prods
+do	cp $prod/$prod.tgz $tmpdir/
+done
+
+echo "===== Expanding tarballs."
+# Expand them.
+cd $tmpdir
+for prod in $prods
+do	tar -xzf $prod.tgz
+done
+
+if [ "$all" ]
+then	echo "===== Making mega-tarball."
+	# Make a mega-tarball.
+	tar -czf $suite *-3.3/
+fi
+
 for prod in $prods
 do
     	# Some products don't get built on Linux.
@@ -78,118 +140,86 @@ do
 		;;
 	esac
 
-	# Save the current directory and go to the product directory
-	d=$PWD
-	cd $prod
-	echo "============================================================"
-	echo "Packaging $prod..."
-	echo "============================================================"
-
-	# Make the man page.
-	make -f Makefile.aux man
-
-	# Make the tarball.  This may be just for size.
-	make -f Makefile.aux $prod.tgz
-
 	# Build it.
-	d2=$PWD
+	d2=$d1/$prod
 	if [ "$build" ]
-	then	echo "============================================================"
-		echo "Building $prod..."
-		echo "============================================================"
-		cd /tmp
-		rm -rf $prod-3.3
-		tar -xzf $d2/$prod.tgz
+	then	echo "===== Building $prod."
 		cd $prod-3.3
 		if [ -f configure ]
 		then	./configure LDFLAGS=-lstdc++
 		fi
-		#if [ -f Imakefile ]
-		#then	xmkmf
-		#fi
 		if [ "$islinux" ]
 		then	make -j4 CDEBUGFLAGS="-g -Wall -ansi -pedantic -Werror"
-		else	PATH=$PATH:/usr/local/mingw32/bin make CROSS=1 -j4
+		else	make CROSS=1 -j4
 		fi
 		if [ -f $d2/instlist.base ]
-		then	echo "============================================================"
-			echo "Installing $prod..."
-			echo "============================================================"
+		then	echo "===== Installing $prod (base)."
 			mkdir i
 			make install DESTDIR=$PWD/i
-			find i -print | tail +2 | sed 's/^..//' | sort >cmp.files
+			find i -print | tail -n +2 | sed 's/^..//' | sort >cmp.files
 			diff $d2/instlist.base cmp.files || exit 1
 			rm -rf i
 		fi
 		if [ -f $d2/instlist.man ]
-		then	mkdir i
+		then	echo "===== Installing $prod (man)."
+			mkdir i
 			make install.man DESTDIR=$PWD/i
-			find i -print | tail +2 | sed 's/^..//' | sort >cmp.files
+			find i -print | tail -n +2 | sed 's/^..//' | sort >cmp.files
 			diff $d2/instlist.man cmp.files || exit 1
 			rm -rf i
 		fi
 		if [ -f $d2/instlist.byprefix ]
-		then	mkdir i
+		then	echo "===== Installing $prod (byprefix)."
+			mkdir i
 			make install.byprefix DESTDIR=$PWD/i
-			find i -print | tail +2 | sed 's/^..//' | sort >cmp.files
+			find i -print | tail -n +2 | sed 's/^..//' | sort >cmp.files
 			diff $d2/instlist.byprefix cmp.files || exit 1
 			rm -rf i
 		fi
 		if [ -f $d2/instlist.all-xinstall ]
-		then	mkdir i
+		then	echo "===== Installing $prod (all-xinstall)."
+			mkdir i
 			./configure --with-all-xinstall LDFLAGS=-lstdc++
 			make install install.man DESTDIR=$PWD/i
-			find i -print | tail +2 | sed 's/^..//' | sort >cmp.files
+			find i -print | tail -n +2 | sed 's/^..//' | sort >cmp.files
 			diff $d2/instlist.all-xinstall cmp.files || exit 1
 			rm -rf i
 		fi
 
-		# If Windows, put the newly-built .exe's in Release/, where
-		# Inno Setup can find them.
-		if [ -f $d2/instlist.windows ]
-		then	cp -p $(<$d2/instlist.windows) $d2/../../../Release/Inno/$prod/
-		fi
-
-		cd /tmp
-		rm -rf $prod-3.3
-		cd $d2
 	fi
 
+	cd $tmpdir
 
-	# Release it.
-	if [ "$release" ]
-	then	echo "============================================================"
-		echo "Releasing $prod..."
-		echo "============================================================"
-		tarball=../../../Release/$prod-$version.tgz
-		if [ -r $tarball ]
-		then	echo >&2 "Error: $tarball already exists"
-			exit 1
-		fi
-		cp -p $prod.tgz $tarball
-		chmod ugo-w $tarball
-	fi
-
-	cd $d
 done
 
-. Common/version.txt
-
 # Release wc3270 via Inno Setup under Wine.
-if [[ "$release" && \
-      "$prods" =~ wc3270 && \
-      "$prods" =~ ws3270 && \
-      "$prods" =~ wpr3287 ]]
-then	
-    	if [ -f ../../Release/wc3270-$version-setup.exe ]
-	then	echo >&2 "Error: wc3270-$version-setup.exe already exists"
-	    	exit 1
-	fi
-    	wine c:\\Program\ Files\\Inno\ Setup\ 5\\ISCC.EXE Z:$PWD\\wc3270\\wc3270-wine.iss
+if [ "$winrel" ]
+then	echo "===== Building setup.exe."
+	cd $tmpdir/wc3270-3.3
+    	wine c:\\Program\ Files\\Inno\ Setup\ 5\\ISCC.EXE wc3270.iss
 fi
 
-# Make a mega-tarball.
-if [ "$release" -a "$all" ]
-then	cd ../../Release
-    	~-/ReleaseTools/mega-tarball $version
+cd $tmpdir
+
+# Release each product.
+if [ "$release" ]
+then	echo "===== Releasing."
+    	for prod in $prods
+    	do	tarball=$reldir/$prod-$version.tgz
+		cp -p $prod.tgz $tarball
+		chmod ugo-w $tarball
+	done
+
+	# Release the mega-tarball.
+	if [ "$all" ]
+	then	cp -p $suite $reldir/
+		chmod ugo-w $reldir/$suite
+	fi
+
+	# Release the setup.exe.
+	if [ "$winrel" ]
+	then	cp wc3270-3.3/$setup $reldir/
+		chmod ugo-w $reldir/$setup
+	fi
+
 fi
