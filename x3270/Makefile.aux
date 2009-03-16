@@ -165,6 +165,8 @@ html/Lineage.html: mkstand.bash html/license-body.html
 
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "x3270 Release Notes" html/documentation-relnotes-body.html $@
+html/Resources.html: resource-body make-resource-doc.pl
+	./make-resource-doc.pl x3270 <resource-body >$@
 
 ID: $(SOURCES) $(HEADERS)
 	mkid $(SOURCES) $(HEADERS)
