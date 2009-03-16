@@ -13,11 +13,17 @@ OTHERS=Brackets.html Build-c3270.html Build-pr3287.html Build-s3270.html \
 	Build-tcl3270.html Build-wc3270.html Build-x3270.html \
 	c3270Keymap.html c3270-man.html \
 	Charset.html ibm_hosts.html Keymap.html \
-	pr3287-man.html Resources.html s3270-man.html \
+	pr3287-man.html s3270-man.html \
 	tcl3270-man.html Wishlist.html x3270if.html x3270-man.html \
 	wc3270-man.html wc3270Keymap.html x3270-script.html del.jpg \
 	delta.jpg x3270.jpg x026.gif styles.css HotBugs.html \
-	man/FAQ.html $(SCREENS)
+	man/FAQ.html $(SCREENS) \
+	x3270-Resources.html \
+	tcl3270-Resources.html \
+	s3270-Resources.html \
+	ws3270-Resources.html \
+	c3270-Resources.html \
+	wc3270-Resources.html
 
 all: $(PAGES) geo/index.html webpage.tgz
 
