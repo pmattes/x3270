@@ -440,7 +440,8 @@ read_one_keymap(const char *name, const char *fn, const char *r0, int flags)
 			f = fopen(path, "r");
 			if (f == NULL) {
 				Free(path);
-				xs_warning("Cannot open file: %s", fn);
+				xs_warning("File '%s' exists but cannot open: "
+					"%s", path, strerror(errno));
 				return;
 			}
 		}
