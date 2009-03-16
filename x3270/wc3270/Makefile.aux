@@ -56,7 +56,8 @@ MISC = version.txt mkversion.sh mkwversion.sh README.txt LICENSE.txt \
        Msc/deprecated.h Msc/Makefile Msc/mkversion.c Msc/README.txt
 HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
        html/Keymap.html html/Lineage.html html/ReleaseNotes.html \
-       html/README.html html/Wishlist.html html/wc3270-man.html
+       html/README.html html/Resources.html html/Wishlist.html \
+       html/wc3270-man.html
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
@@ -85,6 +86,9 @@ html/wc3270-man.html: x3270.man.m4 ft.inc resources.inc hostname.inc keymaps.inc
 	@rm -f man.tmp
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "wc3270 Release Notes" html/documentation-relnotes-body.html $@
+
+html/Resources.html: resource-body make-resource-doc.pl
+	./make-resource-doc.pl wc3270 <resource-body >$@
 
 wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 	./mkiss <wc3270.iss.tmpl >wc3270.iss
