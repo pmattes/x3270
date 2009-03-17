@@ -1096,7 +1096,7 @@ XX_TP(XX_FB(rtf))
 Save the output as RichText.  This option implies XX_FB(file).
 The font defaults to XX_FB(Courier New) and the
 point size defaults to 8.
-These can be overridden by the XX_FB(printer.font) and XX_FB(printer.size)
+These can be overridden by the XX_FB(printTextFont) and XX_FB(printTextSize)
 resources, respectively.
 ifelse(XX_PLATFORM,unix,`XX_TP(XX_FB(string))
 Return the output as a string.  This can only be used from scripts.
