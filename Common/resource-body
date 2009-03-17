@@ -39,6 +39,37 @@ endif
  </pre>
  Note that <b>-xrm</b> is supported on all of the 3270 emulators, not just on
  x3270.
+
+ <h2>Resource File Syntax</h2>
+ A resource file
+if x
+ (app-defaults file, profile or session file)
+else
+if c
+ (profile or session file)
+else
+ (session file)
+endif
+ has the following syntax.
+ <ul>
+  <li>Each definition consists of:
+  <pre>
+    <b>%p%.</b><i>resource-name</i><b>:</b> <i>value</i>
+  </pre></li>
+  <li>Comment lines begin with <b>!</b>.</li>
+  <li>Line continuation is indicated by a backshash (<b>\</b>) character at
+   the end of a line.</li>
+if x C
+  <li>Multi-line resources, such as keymap definitions, are split with
+   newline characters, e.g.:
+  <pre>
+    <b>%p%.keymap.foo: \
+      &lt;Key>a: String("bob") \n\
+      &lt;Key>b: String("fred") \n\
+      &lt;Key>c: String("joe")</b>
+  </pre></li>
+endif
+ </ul>
 .
 
 name acs
@@ -547,7 +578,7 @@ desc
     resource would be used.
     <p class=indented>
     The value of the resource can be either a curses color name or color
-    index.  Curses colors are defined as follows:
+    index.  Curses color names are defined as follows:
     <ul>
     <li>0 black</li>
     <li>1 red</li>
@@ -557,6 +588,20 @@ desc
     <li>5 magenta</li>
     <li>6 cyan</li>
     <li>7 white</li>
+    </ul>
+    The default values for an 8-color terminal are:
+    <ul>
+    <li>Default: green</li>
+    <li>Intensified: red</li>
+    <li>Protected: blue</li>
+    <li>ProtectedIntensified: white</li>
+    </ul>
+    The default values for a 16-color terminal are:
+    <ul>
+    <li>Default: 10 (bright green)</li>
+    <li>Intensified: red</li>
+    <li>Protected: 12 (bright blue)</li>
+    <li>ProtectedIntensified: 15 (bright white)</li>
     </ul>
 .
 
