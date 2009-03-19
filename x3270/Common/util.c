@@ -980,7 +980,7 @@ StringToKeysym(char *s)
 const char *
 build_options(void)
 {
-    	return "Options:"
+    	return "Build options:"
 #if defined(X3270_ANSI) /*[*/
 		" --enable-ansi"
 #else /*][*/
