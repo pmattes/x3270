@@ -136,11 +136,11 @@ sub dump {
 	    }
 	}
 	$description =~ s/%p%/$product/g;
-	while ($description =~ /%-([\w.<>\/]+)%/) {
+	while ($description =~ /%-([\w.<>\/*]+)%/) {
 	    my $full = $1;
 	    my $clean = nix($1);
 	    $clean =~ s/<\/?i>//g;
-	    $description =~ s/%-[\w.<>\/]+%/<a href=#$clean>$product.$full<\/a>/;
+	    $description =~ s/%-[\w.<>\/*]+%/<a href=#$clean>$product.$full<\/a>/;
 	}
 	#$description =~ s/%-([\w.]+)%/<a href=#\1><tt>$product.\1<\/tt><\/a>/g;
 	print "<b>Description</b>:<br>\n";
@@ -226,11 +226,11 @@ while (<STDIN>) {
 	    print "<h2>Alphabetical Resource List</h2>\n";
 	} else {
 	    s/%p%/$product/g;
-	    while (/%-([\w.<>\/]+)%/) {
+	    while (/%-([\w.<>\/*]+)%/) {
 		my $full = $1;
 		my $clean = nix($1);
 		$clean =~ s/<\/?i>//g;
-		$_ =~ s/%-[\w.<>\/]+%/<a href=#$clean>$product.$full<\/a>/;
+		$_ =~ s/%-[\w.<>\/*]+%/<a href=#$clean>$product.$full<\/a>/;
 	    }
 	    print "$_\n";
 	}

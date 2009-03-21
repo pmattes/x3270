@@ -577,32 +577,38 @@ desc
     <i>intensified</i> attribute, the <b>%p%.cursesColorForIntensified</b>
     resource would be used.
     <p class=indented>
-    The value of the resource can be either a curses color name or color
-    index.  Curses color names are defined as follows:
-    <ul>
-    <li>0 black</li>
-    <li>1 red</li>
-    <li>2 green</li>
-    <li>3 yellow</li>
-    <li>4 blue</li>
-    <li>5 magenta</li>
-    <li>6 cyan</li>
-    <li>7 white</li>
-    </ul>
-    The default values for an 8-color terminal are:
-    <ul>
-    <li>Default: green</li>
-    <li>Intensified: red</li>
-    <li>Protected: blue</li>
-    <li>ProtectedIntensified: white</li>
-    </ul>
-    The default values for a 16-color terminal are:
-    <ul>
-    <li>Default: 10 (bright green)</li>
-    <li>Intensified: red</li>
-    <li>Protected: 12 (bright blue)</li>
-    <li>ProtectedIntensified: 15 (bright white)</li>
-    </ul>
+    The value of the resource can be either a curses color index or curses color
+    name.  These are are defined as follows:
+    <table cols=2 width="75%">
+    <tr> <th>Curses Color Index</th> <th>Curses Color Name</th> </tr>
+    <tr> <td>0</td> <td>black</td> </tr>
+    <tr> <td>1</td> <td>red</td> </tr>
+    <tr> <td>2</td> <td>green</td> </tr>
+    <tr> <td>3</td> <td>yellow</td> </tr>
+    <tr> <td>4</td> <td>blue</td> </tr>
+    <tr> <td>5</td> <td>magenta</td> </tr>
+    <tr> <td>6</td> <td>cyan</td> </tr>
+    <tr> <td>7</td> <td>white</td> </tr>
+    <tr> <td>8</td> <td><i>no name -- displays as grey</i></td> </tr>
+    <tr> <td>9</td> <td><i>no name -- displays as bright red</i></td> </tr>
+    <tr> <td>10</td> <td><i>no name -- displays as bright green</i></td> </tr>
+    <tr> <td>11</td> <td><i>no name -- displays as bright yellow</i></td> </tr>
+    <tr> <td>12</td> <td><i>no name -- displays as bright blue</i></td> </tr>
+    <tr> <td>13</td> <td><i>no name -- displays as bright magenta</i></td> </tr>
+    <tr> <td>14</td> <td><i>no name -- displays as bright cyan</i></td> </tr>
+    <tr> <td>15</td> <td><i>no name -- displays as bright white</i></td> </tr>
+    </table>
+    <p class=indented>
+    The default values are:
+    <table cols=3 width="75%" cellspacing=5>
+    <tr> <th>%p% Resource</th>
+         <th>Default Curses Color (8-color terminal)</th>
+	 <th><b>Default Curses Color (16-color terminal)</th> </tr>
+    <tr> <td>cursesColorForDefault</td> <td>green</td> <td>10 (bright green)</td> </tr>
+    <tr> <td>cursesColorForIntensified</td> <td>red</td> <td>red</td> </tr>
+    <tr> <td>cursesColorForProtected</td> <td>blue</td> <td>12 (bright blue)</td> </tr>
+    <tr> <td>cursesColorForProtectedIntensified</td> <td>white</td> <td>15 (bright white)</td> </tr>
+    </table>
 .
 
 name cursesColorForHostColor*
@@ -614,44 +620,56 @@ desc
     Host colors can be specified by name or number.  That is, to define the
     curses color to use when the host specifies <b>green</b>, which is host
     color 4, either the resource <b>%p%.cursesColorForHostColorGreen</b> or
-    the resource <b>%p%.cursesColorForHostColor4</b> can be used.
+    the resource <b>%p%.cursesColorForHostColor4</b> can be defined.
     <p class=indented>
-    Host colors are defined as follows:
-    <ul>
-     <li>0 NeutralBlack (also used for NVT color 0)</li>
-     <li>1 Blue (also used for NVT color 4)</li>
-     <li>2 Red (also used for NVT color 1)</li>
-     <li>3 Pink (also used for NVT color 5)</li>
-     <li>4 Green (also used for NVT color 2)</li>
-     <li>5 Turquoise</li>
-     <li>6 Yellow (also used for NVT color 3)</li>
-     <li>7 NeutralWhite</li>
-     <li>8 Black</li>
-     <li>9 DeepBlue</li>
-     <li>10 Orange</li>
-     <li>11 Purple</li>
-     <li>12 PaleGreen</li>
-     <li>13 PaleTurquoise (also used for NVT color 6)</li>
-     <li>14 Grey</li>
-     <li>15 White (also used for NVT color 7)</li>
-    </ul>
+    The default definitions are as follows.  Note that on an 8-color
+    terminal, %p% only displays 8 host colors.
+    <table cols=4 width="75%">
+    <tr> <th>Host Color Index</th>
+         <th>Host Color Name</th>
+         <th>Default Curses Color (8-color terminal)</th>
+         <th>Default Curses Color (16-color terminal)</th> </tr>
+    <tr> <td>0</td> <td>NeutralBlack</td> <td>black</td> <td>black</td> </tr>
+    <tr> <td>1</td> <td>Blue</td> <td>blue</td> <td>12 (bright blue)</td> </tr>
+    <tr> <td>2</td> <td>Red</td> <td>red</td> <td>red</td> </tr>
+    <tr> <td>3</td> <td>Pink</td> <td>red</td> <td>13 (bright magenta)</td> </tr>
+    <tr> <td>4</td> <td>Green</td> <td>green</td> <td>10 (bright green)</td> </tr>
+    <tr> <td>5</td> <td>Turquoise</td> <td>cyan</td> <td>14 (bright cyan)</td> </tr>
+    <tr> <td>6</td> <td>Yellow</td> <td>yellow</td> <td>11 (bright yellow)</td> </tr>
+    <tr> <td>7</td> <td>NeutralWhite</td> <td>white</td> <td>15 (bright white)</td> </tr>
+    <tr> <td>8</td> <td>Black</td> <td>-</td> <td>black</td> </tr>
+    <tr> <td>9</td> <td>DeepBlue</td> <td>-</td> <td>blue</td> </tr>
+    <tr> <td>10</td> <td>Orange</td> <td>-</td> <td>9 (bright red)</td> </tr>
+    <tr> <td>11</td> <td>Purple</td> <td>-</td> <td>magenta</td> </tr>
+    <tr> <td>12</td> <td>PaleGreen</td> <td>-</td> <td>green</td> </tr>
+    <tr> <td>13</td> <td>PaleTurquoise</td> <td>-</td> <td>cyan</td> </tr>
+    <tr> <td>14</td> <td>Grey</td> <td>-</td> <td>white</td> </tr>
+    <tr> <td>15</td> <td>White</td> <td>-</td> <td>15 (bright white)</td> </tr>
+    </table>
     <p class=indented>
     Note that "neutral black" means black on a display device and white on
     a printing device, and "neutral white" means white on a display device and
     black on a printing device.
     <p class=indented>
-    The value of the resource can be either a curses color name or color
-    index.  Curses colors are defined as follows:
-    <ul>
-    <li>0 black</li>
-    <li>1 red</li>
-    <li>2 green</li>
-    <li>3 yellow</li>
-    <li>4 blue</li>
-    <li>5 magenta</li>
-    <li>6 cyan</li>
-    <li>7 white</li>
-    </ul>
+    In NVT mode, %p% maps the ANSI-standard colors 0 through
+    7 to specific host colors, and thus to curses colors.  The mappings and
+    defaults are as follows:
+    <table cols=3 width="75%">
+    <tr><th>ANSI Color</th>
+        <th>Mapped Host Color</th>
+	<th>Default Curses Color (8-color terminal)</th>
+	<th>Default Curses Color (16-color terminal)</th> </tr>
+    <tr> <td>0</td> <td>0</td> <td>black</td> <td>black</td> </tr>
+    <tr> <td>1</td> <td>2</td> <td>red</td> <td>red</td> </tr>
+    <tr> <td>2</td> <td>4</td> <td>green</td> <td>10 (bright green)</td> </tr>
+    <tr> <td>3</td> <td>6</td> <td>yellow</td> <td>11 (bright yellow)</td> </tr>
+    <tr> <td>4</td> <td>1</td> <td>blue</td> <td>12 (bright blue)</td> </tr>
+    <tr> <td>5</td> <td>3</td> <td>red</td> <td>13 (bright magenta)</td> </tr>
+    <tr> <td>6</td> <td>13</td> <td>cyan</td> <td>cyan</td> </tr>
+    <tr> <td>7</td> <td>15</td> <td>white</td> <td>15 (bright white)</td> </tr>
+    </table>
+    <p class=indented>
+    See %-cursesColorFor*% for the definitions of curses colors.
 .
 
 name cursesKeypad
