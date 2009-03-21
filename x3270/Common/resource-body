@@ -465,13 +465,63 @@ applies x
 type s
 default ~/.x3270connect
 description
-    Gives the name of the file to consult and store the recently-connected
+    Gives the name of the file to store the recently-connected
     host list in.  If given the value <b>none</b>, no file will be read or
     written.  Note that by default, this file is shared among all instances
     of %p% that run under the same username.
 .
 
-name consoleColorForHostColor*
+name consoleColorForDefault consoleColorForIntensified consoleColorForProtected consoleColorForProtectedIntensified
+applies wc
+groups a
+type i
+desc
+    Defines the default color to use to render text based on its attributes,
+    when the host does not specify a particular color.
+    <p class=indented>
+    The value is a console color index.  Console colors are defined as
+    follows:
+    <table cols=3 width="75%">
+    <tr> <th>Index</th> <th>Sample</th> </tr>
+    <tr> <td>0</td>
+         <td><span style="color: #000000; background-color: black">[<b>sample</b>]<span></td> </tr>
+    <tr> <td>1</td>
+         <td><span style="color: #000080; background-color: black">[<b>sample</b>]<span></li>
+    <tr> <td>2</td>
+         <td><span style="color: #008000; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>3</td>
+         <td><span style="color: #008080; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>4</td>
+         <td><span style="color: #800000; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>5</td>
+         <td><span style="color: #800080; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>6</td>
+         <td><span style="color: #808000; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>7</td>
+         <td><span style="color: #c0c0c0; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>8</td>
+         <td><span style="color: #808080; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>9</td>
+         <td><span style="color: #0080ff; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>10</td>
+         <td><span style="color: #00ff00; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>11</td>
+         <td><span style="color: #00ffff; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>12</td>
+         <td><span style="color: #ff0000; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>13</td>
+         <td><span style="color: #ff00ff; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>14</td>
+         <td><span style="color: #ffff00; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>15</td>
+         <td><span style="color: #ffffff; background-color: black">[<b>sample</b>]<span></td>
+    </table>
+    <p class=indented>
+    The RGB values used to display console colors can also be changed using
+    the Colors tab on the Properties dialog of %p% desktop shortcuts.
+.
+
+name consoleColorForHostColor0 consoleColorForHostColorNeutralBlack consoleColorForHostColor1 consoleColorForHostColorBlue consoleColorForHostColor2 consoleColorForHostColorRed consoleColorForHostColor3 consoleColorForHostColorPink consoleColorForHostColor4 consoleColorForHostColorGreen consoleColorForHostColor5 consoleColorForHostColorTurquoise consoleColorForHostColor6 consoleColorForHostColorYellow consoleColorForHostColor7 consoleColorForHostColorNeutralWhite consoleColorForHostColor8 consoleColorForHostColorBlack consoleColorForHostColor9 consoleColorForHostColorDeepBlue consoleColorForHostColor10 consoleColorForHostColorOrange consoleColorForHostColor12 consoleColorForHostColorPurple consoleColorForHostColor13 consoleColorForHostColorPaleGreen consoleColorForHostColor14 consoleColorForHostColorPaleTurquoise consoleColorForHostColor15 consoleColorForHostColorGrey consoleColorForHostColor16 consoleColorForHostColorWhite
 applies wc
 groups a
 type i
@@ -482,73 +532,62 @@ desc
     color 4, either the resource <b>%p%.consoleColorForHostColorGreen</b> or
     the resource <b>%p%.consoleColorForHostColor4</b> can be used.
     <p class=indented>
-    Host colors are defined as follows:
-    <ul>
-     <li>0 NeutralBlack (also used for NVT color 0)</li>
-     <li>1 Blue (also used for NVT color 4)</li>
-     <li>2 Red (also used for NVT color 1)</li>
-     <li>3 Pink (also used for NVT color 5)</li>
-     <li>4 Green (also used for NVT color 2)</li>
-     <li>5 Turquoise</li>
-     <li>6 Yellow (also used for NVT color 3)</li>
-     <li>7 NeutralWhite</li>
-     <li>8 Black</li>
-     <li>9 DeepBlue</li>
-     <li>10 Orange</li>
-     <li>11 Purple</li>
-     <li>12 PaleGreen</li>
-     <li>13 PaleTurquoise (also used for NVT color 6)</li>
-     <li>14 Grey</li>
-     <li>15 White (also used for NVT color 7)</li>
-    </ul>
+    The default definitions are as follows.
+    <table cols=3 width="75%">
+    <tr> <th>Host Color Index</th>
+         <th>Host Color Name</th>
+         <th>Default Console Color</th>
+    <tr> <td>0</td> <td>NeutralBlack</td> <td>0</td> </tr>
+    <tr> <td>1</td> <td>Blue</td> <td>9</td> </tr>
+    <tr> <td>2</td> <td>Red</td> <td>12</td> </tr>
+    <tr> <td>3</td> <td>Pink</td> <td>13</td> </tr>
+    <tr> <td>4</td> <td>Green</td> <td>10</td> </tr>
+    <tr> <td>5</td> <td>Turquoise</td> <td>11</td> </tr>
+    <tr> <td>6</td> <td>Yellow</td> <td>14</td> </tr>
+    <tr> <td>7</td> <td>NeutralWhite</td> <td>15</td> </tr>
+    <tr> <td>8</td> <td>Black</td> <td>0</td> </tr>
+    <tr> <td>9</td> <td>DeepBlue</td> <td>1</td> </tr>
+    <tr> <td>10</td> <td>Orange</td> <td>12</td> </tr>
+    <tr> <td>11</td> <td>Purple</td> <td>5</td> </tr>
+    <tr> <td>12</td> <td>PaleGreen</td> <td>2</td> </tr>
+    <tr> <td>13</td> <td>PaleTurquoise</td> <td>3</td> </tr>
+    <tr> <td>14</td> <td>Grey</td> <td>7</td> </tr>
+    <tr> <td>15</td> <td>White</td> <td>15</td> </tr>
+    </table>
     <p class=indented>
     Note that "neutral black" means black on a display device and white on
     a printing device, and "neutral white" means white on a display device and
     black on a printing device.
     <p class=indented>
     The value of the resource is a console color index (0 through 15).
-    Console colors are defined as follows:
-    <ul>
-    <li>0 dim black
-     <span style="color: #000000; background-color: black">[<b>sample</b>]<span></li>
-    <li>1 dim blue
-     <span style="color: #000080; background-color: black">[<b>sample</b>]<span></li>
-    <li>2 dim green
-     <span style="color: #008000; background-color: black">[<b>sample</b>]<span></li>
-    <li>3 dim turquoise (purple)
-     <span style="color: #008080; background-color: black">[<b>sample</b>]<span></li>
-    <li>4 dim red (brown)
-     <span style="color: #800000; background-color: black">[<b>sample</b>]<span></li>
-    <li>5 dim pink (purple)
-     <span style="color: #800080; background-color: black">[<b>sample</b>]<span></li>
-    <li>6 dim yellow (olive)
-     <span style="color: #808000; background-color: black">[<b>sample</b>]<span></li>
-    <li>7 dim white (light gray)
-     <span style="color: #c0c0c0; background-color: black">[<b>sample</b>]<span></li>
-    <li>8 bright black (dim gray)
-     <span style="color: #808080; background-color: black">[<b>sample</b>]<span></li>
-    <li>9 bright blue
-     <span style="color: #0080ff; background-color: black">[<b>sample</b>]<span></li>
-    <li>10 bright green
-     <span style="color: #00ff00; background-color: black">[<b>sample</b>]<span></li>
-    <li>11 bright turquoise
-     <span style="color: #00ffff; background-color: black">[<b>sample</b>]<span></li>
-    <li>12 bright red
-     <span style="color: #ff0000; background-color: black">[<b>sample</b>]<span></li>
-    <li>13 bright pink
-     <span style="color: #ff00ff; background-color: black">[<b>sample</b>]<span></li>
-    <li>14 bright yellow
-     <span style="color: #ffff00; background-color: black">[<b>sample</b>]<span></li>
-    <li>15 bright white
-     <span style="color: #ffffff; background-color: black">[<b>sample</b>]<span></li>
-    </ul>
+    See %-consoleColorForDefault% for console color definitions.
     <p class=indented>
     For example, to change the display from white-on-black to black-on-white,
-    the following resources would be defined:
+    define the following resources:
     <pre>
      %p%.consoleColorForHostColor0: 15
      %p%.consoleColorForHostColor7: 0
     </pre>
+    <p class=indented>
+    In NVT mode, %p% maps the ANSI-standard colors 0 through
+    7 to host colors, and from host colors to console colors.
+    The mapping from ANSI colors to host colors cannot be changed, but the
+    mapping from host colors to console colors can be with
+    <b>%p%.consoleColorForHostColor*</b> resources.
+    The mappings and defaults are as follows:
+    <table cols=3 width="75%">
+    <tr><th>ANSI Color</th>
+        <th>Mapped Host Color (not configurable)</th>
+	<th>Default Console Color</th>
+    <tr> <td>0</td> <td>0</td> <td>0</td> </tr>
+    <tr> <td>1</td> <td>2</td> <td>12</td> </tr>
+    <tr> <td>2</td> <td>4</td> <td>10</td> </tr>
+    <tr> <td>3</td> <td>6</td> <td>14</td> </tr>
+    <tr> <td>4</td> <td>1</td> <td>9</td> </tr>
+    <tr> <td>5</td> <td>3</td> <td>13</td> </tr>
+    <tr> <td>6</td> <td>6</td> <td>14</td> </tr>
+    <tr> <td>7</td> <td>7</td> <td>15</td> </tr>
+    </table>
 .
 
 name crosshair
@@ -564,18 +603,13 @@ description
     cursor: lines extending with height and width of the screen.
 .
 
-name cursesColorFor*
+name cursesColorForDefault cursesColorForIntensified cursesColorForProtected cursesColorForProtectedIntensified
 applies c
 groups a
 type s
 desc
-    Defines the default color to use to render text with a particular
-    attribute, when the host does not specify a particular color.  The
-    attributes that can be selected are <b>Default</b>, <b>Intensified</b>,
-    <b>Protected</b> and <b>ProtectedIntensified</b>.  So for example,
-    to define the default color used to render fields with the
-    <i>intensified</i> attribute, the <b>%p%.cursesColorForIntensified</b>
-    resource would be used.
+    Defines the default color to use to render text based on its attributes,
+    when the host does not specify a particular color.
     <p class=indented>
     The value of the resource can be either a curses color index or curses color
     name.  These are are defined as follows:
@@ -611,7 +645,7 @@ desc
     </table>
 .
 
-name cursesColorForHostColor*
+name cursesColorForHostColor0 cursesColorForHostColorNeutralBlack cursesColorForHostColor1 cursesColorForHostColorBlue cursesColorForHostColor2 cursesColorForHostColorRed cursesColorForHostColor3 cursesColorForHostColorPink cursesColorForHostColor4 cursesColorForHostColorGreen cursesColorForHostColor5 cursesColorForHostColorTurquoise cursesColorForHostColor6 cursesColorForHostColorYellow cursesColorForHostColor7 cursesColorForHostColorNeutralWhite cursesColorForHostColor8 cursesColorForHostColorBlack cursesColorForHostColor9 cursesColorForHostColorDeepBlue cursesColorForHostColor10 cursesColorForHostColorOrange cursesColorForHostColor12 cursesColorForHostColorPurple cursesColorForHostColor13 cursesColorForHostColorPaleGreen cursesColorForHostColor14 cursesColorForHostColorPaleTurquoise cursesColorForHostColor15 cursesColorForHostColorGrey cursesColorForHostColor16 cursesColorForHostColorWhite
 applies c
 groups a
 type s
@@ -652,11 +686,14 @@ desc
     black on a printing device.
     <p class=indented>
     In NVT mode, %p% maps the ANSI-standard colors 0 through
-    7 to specific host colors, and thus to curses colors.  The mappings and
-    defaults are as follows:
-    <table cols=3 width="75%">
+    7 to host colors, and from host colors to curses colors.
+    The mapping from ANSI colors to host colors cannot be changed, but the
+    mapping from host colors to curses colors can be with
+    <b>%p%.cursesColorForHostColor*</b> resources.
+    The mappings and defaults are as follows:
+    <table cols=4 width="75%">
     <tr><th>ANSI Color</th>
-        <th>Mapped Host Color</th>
+        <th>Mapped Host Color (not configurable)</th>
 	<th>Default Curses Color (8-color terminal)</th>
 	<th>Default Curses Color (16-color terminal)</th> </tr>
     <tr> <td>0</td> <td>0</td> <td>black</td> <td>black</td> </tr>
@@ -669,7 +706,7 @@ desc
     <tr> <td>7</td> <td>15</td> <td>white</td> <td>15 (bright white)</td> </tr>
     </table>
     <p class=indented>
-    See %-cursesColorFor*% for the definitions of curses colors.
+    See %-cursesColorForDefault% for the definitions of curses colors.
 .
 
 name cursesKeypad
