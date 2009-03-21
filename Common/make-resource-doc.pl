@@ -41,6 +41,7 @@ my %types = (
     s => 'String'
 );
 
+# Remove HTML attributes from a resource name.
 sub nix
 {
     my $txt = shift(@_);
@@ -81,6 +82,7 @@ my @index_name = (
 
 # The elements of an entry.
 my $name;
+my @names;
 my $applies;
 my $type;
 my $default;
@@ -91,34 +93,41 @@ my $groups;
 
 sub dump {
     if ($name && $applies) {
+	# The minimum set of required attributes are type and description.
 	die "$name missing type\n" if (!$type);
 	die "$name missing description\n" if (!$description);
-	push @index, $name;
-	if (defined($groups)) {
-	    foreach (split /\s+/, $groups) {
-		if ($_ eq "c") {
-		    push @c_index, $name;
-		} elsif ($_ eq "a") {
-		    push @a_index, $name;
-		} elsif ($_ eq "n") {
-		    push @n_index, $name;
-		} elsif ($_ eq "p") {
-		    push @p_index, $name;
-		} elsif ($_ eq "i") {
-		    push @i_index, $name;
-		} elsif ($_ eq "s") {
-		    push @s_index, $name;
-		} elsif ($_ eq "t") {
-		    push @t_index, $name;
-		} else {
-		    die "Unknown group '$_'\n";
+	foreach my $n (@names) {
+	    # Add this name to the general index.
+	    push @index, $n;
+	    # Add this name to the specified indices...
+	    if (defined($groups)) {
+		foreach (split /\s+/, $groups) {
+		    if ($_ eq "c") {
+			push @c_index, $n;
+		    } elsif ($_ eq "a") {
+			push @a_index, $n;
+		    } elsif ($_ eq "n") {
+			push @n_index, $n;
+		    } elsif ($_ eq "p") {
+			push @p_index, $n;
+		    } elsif ($_ eq "i") {
+			push @i_index, $n;
+		    } elsif ($_ eq "s") {
+			push @s_index, $n;
+		    } elsif ($_ eq "t") {
+			push @t_index, $n;
+		    } else {
+			die "Unknown group '$_'\n";
+		    }
 		}
+	    } else {
+		# ... or to the 'other' index.
+		push @o_index, $n;
 	    }
-	} else {
-	    push @o_index, $name;
+	    my $tgt = nix($n);
+	    print "<a name=\"$tgt\"></a>\n<b>Name:</b> $product.$n<br>\n";
 	}
-	my $tgt = nix($name);
-	print "<a name=\"$tgt\"></a>\n<b>Name:</b> $product.$name<br>\n";
+
 	print "<b>Type</b>: $type<br>\n";
 	if ($default) { print "<b>Default</b>: $default<br>\n"; }
 	if (defined(@switch)) {
@@ -147,6 +156,7 @@ sub dump {
 	print "<p class=indented>$description</p>\n";
     }
     undef $name;
+    undef @names;
     undef $applies;
     undef $type;
     undef $default;
@@ -238,9 +248,10 @@ while (<STDIN>) {
     }
 
     # Handle normal keywords.
-    if (/name\s([^\s]*)/) {
+    if (/name\s(.*)/) {
 	&dump;
-	$name = $1;
+	@names = split /\s+/, $1;
+	$name = $names[0];
 	next;
     }
     if (/applies\s(.*)/) {
