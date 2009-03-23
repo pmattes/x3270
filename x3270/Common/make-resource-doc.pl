@@ -4,6 +4,15 @@ use strict;
 
 die "Must specify an argument.\n" unless ($#ARGV == 0);
 
+# Figure out the version name.
+my $version;
+open VERSION, "<version.txt" or die "No version.txt file.\n";
+while (<VERSION>) {
+    chomp;
+    if (/^version="(.*)"/) { $version=$1 }
+}
+close VERSION;
+
 # Sort out the product, and %approd.
 my %approd;
 $approd{'a'} = 1;
@@ -59,6 +68,7 @@ my @i_index;	# interaction index
 my @s_index;	# security index
 my @t_index;	# tracing index
 my @o_index;	# other index
+my @d_index;	# deprecated index
 my @indices = (
     \@c_index,
     \@a_index,
@@ -67,7 +77,8 @@ my @indices = (
     \@i_index,
     \@s_index,
     \@t_index,
-    \@o_index
+    \@o_index,
+    \@d_index
 );
 my @index_name = (
     "Basic Configuration",
@@ -77,7 +88,8 @@ my @index_name = (
     "Terminal Interaction",
     "Security",
     "Tracing",
-    "Other"
+    "Other",
+    "Deprecated"
 );
 
 # The elements of an entry.
@@ -116,6 +128,8 @@ sub dump {
 			push @s_index, $n;
 		    } elsif ($_ eq "t") {
 			push @t_index, $n;
+		    } elsif ($_ eq "d") {
+			push @d_index, $n;
 		    } else {
 			die "Unknown group '$_'\n";
 		    }
@@ -269,7 +283,7 @@ while (<STDIN>) {
 	$type = $types{$1};
 	next;
     }
-    if (/default\s([^\s]*)/) {
+    if (/default\s(.*)/) {
 	$default = $1;
 	next;
     }
@@ -327,5 +341,7 @@ foreach my $j (@indices) {
     }
     $q = $q + 1;
 }
+
+print "<p><i>$product verson $version ", `date`, "\n";
 
 print "</body>\n";
