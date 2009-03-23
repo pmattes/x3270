@@ -50,6 +50,7 @@ if c
 else
  (session file)
 endif
+endif
  has the following syntax.
  <ul>
   <li>Each definition consists of:
@@ -376,7 +377,7 @@ description
     An individual color scheme definition.
     I.e., to define color scheme <i>foo</i>, a resource named <b>%p%.colorScheme.<i>foo</i></b> must be defined.
     <p class=indented>
-    Each resource is a list of 23 items:
+    Each resource is a whitespace-separated list of 23 items:
 <ol>
  <li>X11 color for host color 0 NeutralBlack (also used for NVT color 0)</li>
  <li>X11 color for host color 1 Blue (also used for NVT color 4)</li>
@@ -403,9 +404,10 @@ description
  <li>Host color (0..15) for protected, highlighted fields</li>
 </ol>
 <p class=indented>
-<i>Note</i>: Host color 0 NeutralBlack means black on a display screen (a
+<i>Note</i>: Host color 0 (NeutralBlack) means black on a display screen (a
 white-on-black device) and white on a printer (a black-on-white device).
-Host color 7 NeutralWhite means white on a display screen and black on a printer.
+Host color 7 (NeutralWhite) means white on a display screen and black on a
+printer.
 .
 
 name commandTimeout
@@ -471,56 +473,6 @@ description
     of %p% that run under the same username.
 .
 
-name consoleColorForDefault consoleColorForIntensified consoleColorForProtected consoleColorForProtectedIntensified
-applies wc
-groups a
-type i
-desc
-    Defines the default color to use to render text based on its attributes,
-    when the host does not specify a particular color.
-    <p class=indented>
-    The value is a console color index.  Console colors are defined as
-    follows:
-    <table cols=3 width="75%">
-    <tr> <th>Index</th> <th>Sample</th> </tr>
-    <tr> <td>0</td>
-         <td><span style="color: #000000; background-color: black">[<b>sample</b>]<span></td> </tr>
-    <tr> <td>1</td>
-         <td><span style="color: #000080; background-color: black">[<b>sample</b>]<span></li>
-    <tr> <td>2</td>
-         <td><span style="color: #008000; background-color: black">[<b>sample</b>]<span></td>
-    <tr> <td>3</td>
-         <td><span style="color: #008080; background-color: black">[<b>sample</b>]<span></td>
-    <tr> <td>4</td>
-         <td><span style="color: #800000; background-color: black">[<b>sample</b>]<span></td>
-    <tr> <td>5</td>
-         <td><span style="color: #800080; background-color: black">[<b>sample</b>]<span></td>
-    <tr> <td>6</td>
-         <td><span style="color: #808000; background-color: black">[<b>sample</b>]<span></td>
-    <tr> <td>7</td>
-         <td><span style="color: #c0c0c0; background-color: black">[<b>sample</b>]<span></td>
-    <tr> <td>8</td>
-         <td><span style="color: #808080; background-color: black">[<b>sample</b>]<span></td>
-    <tr> <td>9</td>
-         <td><span style="color: #0080ff; background-color: black">[<b>sample</b>]<span></td>
-    <tr> <td>10</td>
-         <td><span style="color: #00ff00; background-color: black">[<b>sample</b>]<span></td>
-    <tr> <td>11</td>
-         <td><span style="color: #00ffff; background-color: black">[<b>sample</b>]<span></td>
-    <tr> <td>12</td>
-         <td><span style="color: #ff0000; background-color: black">[<b>sample</b>]<span></td>
-    <tr> <td>13</td>
-         <td><span style="color: #ff00ff; background-color: black">[<b>sample</b>]<span></td>
-    <tr> <td>14</td>
-         <td><span style="color: #ffff00; background-color: black">[<b>sample</b>]<span></td>
-    <tr> <td>15</td>
-         <td><span style="color: #ffffff; background-color: black">[<b>sample</b>]<span></td>
-    </table>
-    <p class=indented>
-    The RGB values used to display console colors can also be changed using
-    the Colors tab on the Properties dialog of %p% desktop shortcuts.
-.
-
 name consoleColorForHostColor0 consoleColorForHostColorNeutralBlack consoleColorForHostColor1 consoleColorForHostColorBlue consoleColorForHostColor2 consoleColorForHostColorRed consoleColorForHostColor3 consoleColorForHostColorPink consoleColorForHostColor4 consoleColorForHostColorGreen consoleColorForHostColor5 consoleColorForHostColorTurquoise consoleColorForHostColor6 consoleColorForHostColorYellow consoleColorForHostColor7 consoleColorForHostColorNeutralWhite consoleColorForHostColor8 consoleColorForHostColorBlack consoleColorForHostColor9 consoleColorForHostColorDeepBlue consoleColorForHostColor10 consoleColorForHostColorOrange consoleColorForHostColor12 consoleColorForHostColorPurple consoleColorForHostColor13 consoleColorForHostColorPaleGreen consoleColorForHostColor14 consoleColorForHostColorPaleTurquoise consoleColorForHostColor15 consoleColorForHostColorGrey consoleColorForHostColor16 consoleColorForHostColorWhite
 applies wc
 groups a
@@ -560,14 +512,47 @@ desc
     black on a printing device.
     <p class=indented>
     The value of the resource is a console color index (0 through 15).
-    See %-consoleColorForDefault% for console color definitions.
+    Console colors are defined as follows:
+    <table cols=3 width="75%">
+    <tr> <th>Index</th> <th>Sample</th> </tr>
+    <tr> <td>0</td>
+         <td><span style="color: #000000; background-color: black">[<b>sample</b>]<span></td> </tr>
+    <tr> <td>1</td>
+         <td><span style="color: #000080; background-color: black">[<b>sample</b>]<span></li>
+    <tr> <td>2</td>
+         <td><span style="color: #008000; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>3</td>
+         <td><span style="color: #008080; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>4</td>
+         <td><span style="color: #800000; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>5</td>
+         <td><span style="color: #800080; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>6</td>
+         <td><span style="color: #808000; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>7</td>
+         <td><span style="color: #c0c0c0; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>8</td>
+         <td><span style="color: #808080; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>9</td>
+         <td><span style="color: #0080ff; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>10</td>
+         <td><span style="color: #00ff00; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>11</td>
+         <td><span style="color: #00ffff; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>12</td>
+         <td><span style="color: #ff0000; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>13</td>
+         <td><span style="color: #ff00ff; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>14</td>
+         <td><span style="color: #ffff00; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>15</td>
+         <td><span style="color: #ffffff; background-color: black">[<b>sample</b>]<span></td>
+    </table>
     <p class=indented>
-    For example, to change the display from white-on-black to black-on-white,
-    define the following resources:
-    <pre>
-     %p%.consoleColorForHostColor0: 15
-     %p%.consoleColorForHostColor7: 0
-    </pre>
+    The color samples above are the default values used by the %p% Session
+    Wizard when it creates a desktop shortcut.  The RGB values for any of the
+    console colors can be changed later using the Colors tab on the Properties
+    dialog of the shortcut.
     <p class=indented>
     In NVT mode, %p% maps the ANSI-standard colors 0 through
     7 to host colors, and from host colors to console colors.
@@ -576,18 +561,25 @@ desc
     <b>%p%.consoleColorForHostColor*</b> resources.
     The mappings and defaults are as follows:
     <table cols=3 width="75%">
-    <tr><th>ANSI Color</th>
+    <tr><th>NVT ANSI Color</th>
         <th>Mapped Host Color (not configurable)</th>
 	<th>Default Console Color</th>
-    <tr> <td>0</td> <td>0</td> <td>0</td> </tr>
-    <tr> <td>1</td> <td>2</td> <td>12</td> </tr>
-    <tr> <td>2</td> <td>4</td> <td>10</td> </tr>
-    <tr> <td>3</td> <td>6</td> <td>14</td> </tr>
-    <tr> <td>4</td> <td>1</td> <td>9</td> </tr>
-    <tr> <td>5</td> <td>3</td> <td>13</td> </tr>
-    <tr> <td>6</td> <td>6</td> <td>14</td> </tr>
-    <tr> <td>7</td> <td>7</td> <td>15</td> </tr>
+    <tr> <td>0 (black)</td>     <td>0 (Black)</td> <td>0</td> </tr>
+    <tr> <td>1 (red)</td>       <td>2 (Red) </td> <td>12</td> </tr>
+    <tr> <td>2 (green)</td>     <td>4 (Green)</td> <td>10</td> </tr>
+    <tr> <td>3 (yellow)</td>    <td>6 (Yellow)</td> <td>14</td> </tr>
+    <tr> <td>4 (blue)</td>      <td>1 (Blue)</td> <td>9</td> </tr>
+    <tr> <td>5 (magenta)</td>   <td>3 (Pink)</td> <td>13</td> </tr>
+    <tr> <td>6 (turquoise)</td> <td>6 (Turquoise)</td> <td>14</td> </tr>
+    <tr> <td>7 (white)</td>     <td>7 (NeutralWhite)</td> <td>15</td> </tr>
     </table>
+    <p class=indented>
+    For example, to change the display from white-on-black to black-on-white,
+    define the following resources:
+    <pre>
+     %p%.consoleColorForHostColorNeutralBlack: 15
+     %p%.consoleColorForHostColorNeutralWhite: 0
+    </pre>
 .
 
 name crosshair
@@ -692,18 +684,18 @@ desc
     <b>%p%.cursesColorForHostColor*</b> resources.
     The mappings and defaults are as follows:
     <table cols=4 width="75%">
-    <tr><th>ANSI Color</th>
+    <tr><th>NVT ANSI Color</th>
         <th>Mapped Host Color (not configurable)</th>
 	<th>Default Curses Color (8-color terminal)</th>
 	<th>Default Curses Color (16-color terminal)</th> </tr>
-    <tr> <td>0</td> <td>0</td> <td>black</td> <td>black</td> </tr>
-    <tr> <td>1</td> <td>2</td> <td>red</td> <td>red</td> </tr>
-    <tr> <td>2</td> <td>4</td> <td>green</td> <td>10 (bright green)</td> </tr>
-    <tr> <td>3</td> <td>6</td> <td>yellow</td> <td>11 (bright yellow)</td> </tr>
-    <tr> <td>4</td> <td>1</td> <td>blue</td> <td>12 (bright blue)</td> </tr>
-    <tr> <td>5</td> <td>3</td> <td>red</td> <td>13 (bright magenta)</td> </tr>
-    <tr> <td>6</td> <td>13</td> <td>cyan</td> <td>cyan</td> </tr>
-    <tr> <td>7</td> <td>15</td> <td>white</td> <td>15 (bright white)</td> </tr>
+    <tr> <td>0 (black)</td> <td>0 (Black)</td> <td>black</td> <td>black</td> </tr>
+    <tr> <td>1 (red)</td> <td>2 (Red)</td> <td>red</td> <td>red</td> </tr>
+    <tr> <td>2 (green)</td> <td>4 (Green)</td> <td>green</td> <td>10 (bright green)</td> </tr>
+    <tr> <td>3 (yellow)</td> <td>6 (Yellow)</td> <td>yellow</td> <td>11 (bright yellow)</td> </tr>
+    <tr> <td>4 (blue)</td> <td>1 (Blue)</td> <td>blue</td> <td>12 (bright blue)</td> </tr>
+    <tr> <td>5 (magenta)</td> <td>3 (Pink)</td> <td>red</td> <td>13 (bright magenta)</td> </tr>
+    <tr> <td>6 (turquoise)</td> <td>13 (PaleTurquioise)</td> <td>cyan</td> <td>cyan</td> </tr>
+    <tr> <td>7 (white)</td> <td>15 (White)</td> <td>white</td> <td>15 (bright white)</td> </tr>
     </table>
     <p class=indented>
     See %-cursesColorForDefault% for the definitions of curses colors.
@@ -961,6 +953,7 @@ name extended
 type b
 applies a
 default false
+groups d
 switch -extended
 description
     <i>Deprecated resource -- replaced by %-model% syntax</i>
@@ -1002,43 +995,26 @@ description
     font.
 .
 
-name hostColorFor*
+name hostColorForDefault hostColorForIntensified hostColorForProtected hostColorForProtectedIntensified
 applies wc
 groups a
 type s
 desc
     Defines the default color to use to render text with a particular
-    attribute, when the host does not specify a particular color.  The
-    attributes that can be selected are <b>Default</b>, <b>Intensified</b>,
-    <b>Protected</b> and <b>ProtectedIntensified</b>.  So for example,
-    to define the default color used to render fields with the
-    <i>intensified</i> attribute, the <b>%p%.hostColorForIntensified</b>
-    resource would be used.
+    attribute, when the host does not specify a particular color.
     <p class=indented>
     The value of the resource is a host color name or color index.
-    Host colors are defined as follows:
-    <ul>
-     <li>0 NeutralBlack (also used for NVT color 0)</li>
-     <li>1 Blue (also used for NVT color 4)</li>
-     <li>2 Red (also used for NVT color 1)</li>
-     <li>3 Pink (also used for NVT color 5)</li>
-     <li>4 Green (also used for NVT color 2)</li>
-     <li>5 Turquoise</li>
-     <li>6 Yellow (also used for NVT color 3)</li>
-     <li>7 NeutralWhite</li>
-     <li>8 Black</li>
-     <li>9 DeepBlue</li>
-     <li>10 Orange</li>
-     <li>11 Purple</li>
-     <li>12 PaleGreen</li>
-     <li>13 PaleTurquoise (also used for NVT color 6)</li>
-     <li>14 Grey</li>
-     <li>15 White (also used for NVT color 7)</li>
-    </ul>
+    See %-consoleColorForHostColor0% for the definitions of host colors.
     <p class=indented>
-    Note that "neutral black" means black on a display device and white on
-    a printing device, and "neutral white" means white on a display device and
-    black on a printing device.
+    The default values are:
+    <table cols=2 width="75%">
+    <tr> <th>%p% Resource</th>
+         <th>Default Host Color</th>
+    <tr> <td>hostColorForDefault</td> <td>Green</td> </tr>
+    <tr> <td>hostColorForIntensified</td> <td>Red</td> </tr>
+    <tr> <td>hostColorForProtected</td> <td>Blue</td> </tr>
+    <tr> <td>hostColorForProtectedIntensified</td> <td>NeutralWhite</td> </tr>
+    </table>
 .
 
 name hostname
@@ -1243,17 +1219,17 @@ groups c
 type s
 switch -keymap
 description
-    The name or names of the keyboard map to use.
+    The name of the keyboard map to use.
     It can be a single keymap name or a comma-separated list of keymaps,
     which will be applied in order.
     <p class=indented>
-    Each keymap can actually be defined in three separate parts: a common
+    Each keymap can optionally be defined in three separate parts: a common
     keymap, which is applied at all times, an NVT-mode keymap, which is
     applied only in NVT mode, and a 3270-mode keymap, which is only applied
     in 3270 mode.
-    The NVT-mode keymap has the same name as the common keymap, but with the
+    The NVT-mode keymap has the same name as the common keymap, with the
     suffix <b>.nvt</b> appended.
-    The 3270-mode keymap has the suffix <b>.3270</b> applied.
+    The 3270-mode keymap has the suffix <b>.3270</b> appended.
     Thus specifying a %-keymap% value of <i>foo</i> implies the use of
     three different keymaps (if found): <b>foo</b>, <b>foo.nvt</b> and
     <b>foo.3270</b>.
@@ -1493,6 +1469,7 @@ name m3279
 applies a
 type b
 default false
+groups d
 switch -color
 description
     <i>Deprecated resource -- replaced by %-model% syntax</i>
@@ -1748,6 +1725,13 @@ default false
 switch -once
 desc
     When true, %p% will exit as soon as a host disconnects.
+    The default is <b>false</b> if no hostname is specified on the command
+if x C
+    line or in a session file,
+else
+    line,
+endif
+    <b>true</b> otherwise.
 .
 
 name oversize
@@ -1803,7 +1787,7 @@ desc
     Defines a proxy server that %p% will use to connect to hosts.
     The value is of the form
     <b><i>type</i>:<i>server</i></b>[<b>:<i>port</i></b>],
-    where the value of <i>type</i> is defined on the manual page.
+    where options for <i>type</i> are described on the %p% manual page.
 .
 
 name preeditType
@@ -1834,7 +1818,7 @@ else
 endif
     printer session
     when a host connection is established.
-    If the value is ".", the
+    If the value is "<b>.</b>", the
 if u
     pr3287
 else
@@ -1842,7 +1826,7 @@ else
 endif
     session will
     be associated with the interactive terminal session (this requires that
-    the host supports TN3270E).  Otherwise, the value is assumed to be the LU
+    the host supports TN3270E).  Otherwise, the value is taken as the LU
     name to associate with the printer session.
 .
 
@@ -1850,13 +1834,13 @@ name printer.assocCommandLine
 applies x C
 type s
 if x c
-default pr3287 -assoc %L% -command %C% %R% %p% %H%
+default pr3287 -assoc %L% -command %C% %R% %P% %H%
 else
-default wpr3287.exe -assoc %L% -command %R% %p% %I% %H%
+default wpr3287.exe -assoc %L% -command %R% %P% %I% %H%
 endif
 desc
     The shell command to use to start a printer session, when associated with
-    the current TN3270E session LU (when %-printerLU% is ".").
+    the current TN3270E session LU (when %-printerLU% is "<b>.</b>").
     Within the string, the following substitutions
     are made:
     <ul>
@@ -2076,11 +2060,11 @@ else
     <b>x3scr.<i>pid</i>.txt</b> in the %p% Application Data directory.
 endif
 if u
-    The directory prefix is defined by the traceDir resource.
+    The directory prefix is defined by the %-traceDir% resource.
 endif
-    If the screenTraceFile resource is defined, it explicitly defines the
+    If the %-screenTraceFile% resource is defined, it defines the
 if u
-    file name and traceDir is ignored.
+    file name and %-traceDir% is ignored.
 endif
 if w
     file name.
@@ -2093,7 +2077,7 @@ groups t
 type s
 desc
     If defined, gives the name of the file that screen traces will be
-    written to.
+    written into.
 .
 
 name scripted
@@ -2248,7 +2232,7 @@ groups t
 type s
 default /tmp
 desc
-    Defines the directory that trace files are written in.
+    Defines the directory that trace files are written into.
 .
 
 name traceFile
@@ -2258,7 +2242,7 @@ type s
 switch -tracefile
 desc
     If defined, gives the name of the file that data stream and event traces
-    will be written to.
+    will be written into.
 if x
     If given the value <b>stdout</b>, traces will
     be written to standard output.  If given the value <b>none</b>, then the
@@ -2274,7 +2258,7 @@ type s
 switch -tracefilesize
 desc
     If defined, gives a limit on the size of the file that data stream and
-    event traces will be written to.  If not defined, or defined as <b>0</b>,
+    event traces will be written into.  If not defined, or defined as <b>0</b>,
     there
     will be no limit on the size of the file.  The value is a number, followed
     by an optional suffix.  If the suffix is <b>K</b> (e.g., 128K),
@@ -2327,9 +2311,9 @@ switch -clear underscore
 desc
     When true, %p% will display fields with the <i>underlined</i>
     attribute in a special way: blank characters will be translated to
-    underscore characters.  This is needed
+    underscore (<b>_</b>) characters.  This is needed
 if c
-    on some terminals that
+    on terminals that
 else
     to overcome the fact that Windows consoles
 endif
