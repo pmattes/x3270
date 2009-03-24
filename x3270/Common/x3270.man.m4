@@ -310,6 +310,10 @@ Causes XX_FB(XX_PRODUCT)
 to automatically reconnect to the host if it ever disconnects.
 This option has effect only if a hostname is specified on the command line.
 ')dnl
+ifelse(XX_PRODUCT,c3270,`XX_TP(XX_FB(XX_DASHED(rv)))
+Switches XX_PRODUCT from a white-on-black display to a black-on-white
+display.
+')dnl
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(sb)))
 Turns on the scrollbar.
 XX_TP(XX_FB(+sb))
