@@ -46,13 +46,12 @@ In LU3 formatted mode, print blank lines even if they are all NULLs or control
 characters.
 (This is a violation of the 3270 printer protocol, but some hosts require it.)
 XX_TP(XX_FB(XX_DASHED(charset)) XX_FI(name))
-Specifies an alternate XX_SM(EBCDIC)-to-XX_SM(ASCII) mapping.
-The default maps the EBCDIC U.S. English character set to XX_SM(ISO) 8859-1.
-Other built-in character sets include XX_FB(bracket), which corresponds to
-many older XX_SM(IBM) hosts' mapping of the XX_FB([) and XX_FB(]) characters,
-and the non-U.S. character sets XX_FB(german), XX_FB(finnish), XX_FB(uk),
-XX_FB(norwegian), XX_FB(french), XX_FB(icelandic) and XX_FB(belgian).
-These correspond to the XX_FB(x3270) character sets of the same names.
+Specifies an alternate host code page (input XX_SM(EBCDIC) mapping).
+The default maps the U.S. English (037) code page to the
+ifelse(XX_PRODUCT,pr3287,`current locale character encoding.',
+`the system ANSI code page (unless overridden by the XX_DASHED(printercp) option).')
+XX_PRODUCT generally supports the same host character sets as
+ifelse(XX_PRODUCT,pr3287,x3270,wc3270).
 ifelse(XX_PRODUCT,pr3287,`XX_TP(XX_FB(XX_DASHED(command)) XX_FI(command))
 Specifies the command to run for each print job.
 The default is XX_FB(lpr).')
