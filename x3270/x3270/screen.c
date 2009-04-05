@@ -2301,11 +2301,11 @@ void
 screen_flip(void)
 {
 	/* Flip mode is broken in the DBCS version. */
-#if !defined(X3270_DBCS) /*[*/
-	flipped = !flipped;
+	if (!dbcs) {
+		flipped = !flipped;
 
-	action_internal(PA_Expose_action, IA_REDRAW, CN, CN);
-#endif /*]*/
+		action_internal(PA_Expose_action, IA_REDRAW, CN, CN);
+	}
 }
 
 /*

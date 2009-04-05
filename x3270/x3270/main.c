@@ -162,6 +162,63 @@ XrmOptionDescRec options[]= {
 };
 int num_options = XtNumber(options);
 
+static struct {
+    	char *opt;
+	char *args;
+	char *help;
+} option_help[] = {
+	{ OptActiveIcon, CN, "Make icon a miniature of the display" },
+	{ OptAplMode, CN,    "Turn on APL mode" },
+#if defined(HAVE_LIBSSL) /*[*/
+	{ OptCertFile, "<file>", "Specify OpenSSL certificate file" },
+#endif /*]*/
+	{ OptCharClass, "<spec>", "Define characters for word boundaries" },
+	{ OptCharset, "<name>", "Use host EBCDIC character set (code page) <name>" },
+	{ OptClear, "<toggle>", "Turn on <toggle>" },
+	{ OptColorScheme, "<name>", "Use color scheme <name>" },
+#if defined(X3270_TRACE) /*[*/
+#endif /*]*/
+	{ OptEmulatorFont, "<font>", "Font for emulator window" },
+	{ OptExtended, CN, "Extended 3270 data stream (deprecated)" },
+	{ OptIconName, "<name>", "Title for icon" },
+	{ OptIconX, "<x>", "X position for icon" },
+	{ OptIconY, "<y>", "Y position for icon" },
+	{ OptKeymap, "<name>[,<name>...]", "Keyboard map name(s)" },
+	{ OptKeypadOn, CN, "Turn on pop-up keypad at start-up" },
+	{ OptM3279, CN, "3279 emulation (deprecated)" },
+	{ OptModel, "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
+	{ OptMono, CN, "Do not use color" },
+	{ OptNoScrollBar, CN, "Disable scroll bar" },
+	{ OptOnce, CN, "Exit as soon as the host disconnects" },
+	{ OptOversize,  "<cols>x<rows>", "Specify larger screen" },
+	{ OptPort, "<port>", "Specify default TELNET port" },
+#if defined(X3270_PRINTER) /*[*/
+	{ OptPrinterLu,  "<luname>", "Automatically start a pr3287 printer session to <luname>" },
+#endif /*]*/
+	{ OptProxy, "<type>:<host>[:<port>]", "Secify proxy type and server" },
+	{ OptReconnect, CN, "Reconnect to host as soon as it disconnects" },
+	{ OptSaveLines, "<n>", "Number of lines to save for scroll bar" },
+	{ OptScripted, CN, "Accept commands on standard input" },
+	{ OptScrollBar, CN, "Turn on scroll bar" },
+	{ OptSet, "<toggle>", "Turn on <toggle>" },
+#if defined(X3270_SCRIPT) /*[*/
+	{ OptSocket,  CN, "Create socket for script control" },
+#endif /*]*/
+	{ OptTermName, "<name>", "Send <name> as TELNET terminal name" },
+#if defined(X3270_TRACE) /*[*/
+	{ OptDsTrace, CN, "Enable tracing" },
+	{ OptTraceFile, "<file>", "Write traces to <file>" },
+	{ OptTraceFileSize, "<n>[KM]", "Limit trace file to <n> bytes" },
+#endif /*]*/
+#if defined(X3270_DBCS) /*[*/
+	{ OptInputMethod, "<name>", "Specify multi-byte input method" },
+	{ OptPreeditType, "<style>", "Define input method pre-edit type" },
+#endif /*]*/
+	{ OptV, CN, "Display build options and character sets" },
+	{ OptVersion, CN, "Display build options and character sets" },
+	{ "-xrm", "'x3270.<resource>: <value>'", "Set <resource> to <vale>" }
+};
+
 /* Fallback resources. */
 static String fallbacks[] = {
 	/* This should be overridden by real app-defaults. */
@@ -209,13 +266,28 @@ struct toggle_name toggle_names[N_TOGGLES] = {
 static void
 usage(const char *msg)
 {
+	unsigned i;
+
 	if (msg != CN)
-		XtWarning(msg);
+	    	fprintf(stderr, "%s\n", msg);
+
 #if defined(X3270_MENUS) /*[*/
-	xs_error("Usage: %s [options] [[ps:][LUname@]hostname[:port]]", programname);
+	fprintf(stderr, "Usage: %s [options] [[ps:][LUname@]hostname[:port]]\n",
+		programname);
 #else /*][*/
-	xs_error("Usage: %s [options] [ps:][LUname@]hostname[:port]", programname);
+	fprintf(stderr, "Usage: %s [options] [ps:][LUname@]hostname[:port]\n",
+		programname);
 #endif /*]*/
+	fprintf(stderr, "Options:\n");
+	for (i = 0; i < XtNumber(option_help); i++) {
+		fprintf(stderr, " %s%s%s\n   %s\n",
+			option_help[i].opt,
+			option_help[i].args? " ": "",
+			option_help[i].args? option_help[i].args: "",
+			option_help[i].help);
+	}
+	fprintf(stderr, " Plus standard Xt options like '-title' and '-geometry'\n");
+	exit(1);
 }
 
 static void
@@ -239,6 +311,9 @@ main(int argc, char *argv[])
 	int	model_number;
 	Boolean	mono = False;
 	char	*session = CN;
+
+	if (XtNumber(options) != XtNumber(option_help))
+	    Error("Help mismatch");
 
 	/* Figure out who we are */
 	programname = strrchr(argv[0], '/');
