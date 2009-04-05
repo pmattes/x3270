@@ -36,6 +36,7 @@ extern int parse_command_line(int argc, const char **argv,
 extern void parse_xrm(const char *arg, const char *where);
 extern char *safe_string(const char *s);
 extern Boolean process_events(Boolean block);
+extern void cmdline_help(Boolean as_action);
 
 /* XtGlue.c */
 extern void (*Warning_redirect)(const char *);

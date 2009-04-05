@@ -259,7 +259,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 		*cl_hostname = xs_buffer("%s:%s", argv[1], argv[2]);
 		break;
 	    default:
-		usage(CN);
+		usage("Too many command-line arguments");
 		break;
 	}
 
@@ -534,6 +534,158 @@ set_appres_defaults(void)
 #endif /*]*/
 }
 
+#if defined (C3270) /*[*/
+# if defined(WIN32) /*[*/
+#  define APPNAME "wc3270"
+# else /*][*/
+#  define APPNAME "c3270"
+# endif /*]*/
+#elif defined(S3270) /*[*/
+# if defined(WIN32) /*[*/
+#  define APPNAME "ws3270"
+# else /*][*/
+#  define APPNAME "s3270"
+# endif /*]*/
+#elif defined(TCL3270) /*[*/
+# define APPNAME "tcl3270"
+#else
+# error "Unknwon application"
+#endif /*]*/
+#if defined(_WIN32) /*[*/
+# define PR3287_NAME "wpr3287"
+#else /*][*/
+# define PR3287_NAME "pr3287"
+#endif /*]*/
+
+#define offset(n) (void *)&appres.n
+#define toggle_offset(index) offset(toggle[index].value)
+static struct {
+	const char *name;
+	enum {
+	    OPT_BOOLEAN, OPT_STRING, OPT_XRM, OPT_SKIP2, OPT_NOP,
+	    OPT_INT, OPT_V, OPT_DONE
+	} type;
+	Boolean flag;
+	const char *res_name;
+	void *aoff;
+	char *help_opts;
+	char *help_text;
+} opts[] = {
+#if defined(C3270) /*[*/
+{ OptAllBold,  OPT_BOOLEAN, True,  ResAllBold,   offset(all_bold_on),
+    CN, "Display all text in bold" },
+#endif /*]*/
+#if defined(C3270) && !defined(_WIN32) /*[*/
+{ OptAltScreen,OPT_STRING,  False, ResAltScreen, offset(altscreen),
+    "<string>",
+    "Specify string to switch terminal from 80-column mode to 132-column mode"
+},
+#endif /*]*/
+{ OptAplMode,  OPT_BOOLEAN, True,  ResAplMode,   offset(apl_mode),
+    CN, "Turn on APL mode" },
+#if defined(C3270) && !defined(_WIN32) /*[*/
+{ OptCbreak,   OPT_BOOLEAN, True,  ResCbreak,    offset(cbreak_mode),
+    CN, "Force terminal CBREAK mode" },
+#endif /*]*/
+#if defined(HAVE_LIBSSL) /*[*/
+{ OptCertFile, OPT_STRING,  False, ResCertFile,  offset(cert_file),
+    "<file>", "Specify OpenSSL certificate file" },
+#endif /*]*/
+{ OptCharset,  OPT_STRING,  False, ResCharset,   offset(charset),
+    "<name>", "Use host ECBDIC character set (code page) <name>"},
+{ OptClear,    OPT_SKIP2,   False, NULL,         NULL,
+    "<toggle>", "Turn on <toggle>" },
+#if defined(C3270) && !defined(_WIN32) /*[*/
+{ OptDefScreen,OPT_STRING,  False, ResDefScreen, offset(defscreen),
+    "<string>",
+    "Specify string to switch terminal from 80-column mode to 132-column mode"
+},
+#endif /*]*/
+#if defined(LOCAL_PROCESS) /*[*/
+{ OptLocalProcess,OPT_SKIP2,False, NULL,         NULL,
+    "<command> [<arg>...]", "Run <command> instead of making TELNET conection"
+},
+#endif /*]*/
+{ OptHostsFile,OPT_STRING,  False, ResHostsFile, offset(hostsfile),
+    "<filename>", "Use <hostname> as the ibm_hosts file" },
+#if defined(C3270) /*[*/
+{ OptKeymap,   OPT_STRING,  False, ResKeymap,    offset(key_map),
+    "<name>[,<name>...]", "Keyboard map name(s)" },
+#endif /*]*/
+#if defined(WS3270) /*[*/
+{ OptLocalCp,  OPT_INT,	False, ResLocalCp,   offset(local_cp)
+    "<codepage>", "Use <codepage> instead of ANSI codepage for local I/O"
+},
+#endif /*]*/
+{ OptModel,    OPT_STRING,  False, ResModel,     offset(model),
+    "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
+#if defined(C3270) /*[*/
+# if !defined(_WIN32) /*[*/
+{ OptMono,     OPT_BOOLEAN, True,  ResMono,      offset(mono),
+    CN, "Do not use terminal color capabilities" },
+# endif /*]*/
+{ OptNoPrompt, OPT_BOOLEAN, True,  ResNoPrompt,  offset(no_prompt),
+    CN, "Suppress interactive mode (" APPNAME "> prompt)" },
+#endif /*]*/
+{ OptOnce,     OPT_BOOLEAN, True,  ResOnce,      offset(once),
+    CN, "Exit as soon as the host disconnects" },
+{ OptOversize, OPT_STRING,  False, ResOversize,  offset(oversize),
+    "<cols>x<rows>", "Specify larger screen" },
+{ OptPort,     OPT_STRING,  False, ResPort,      offset(port),
+    "<port>", "Specify default TELNET port" },
+#if defined(C3270) /*[*/
+{ OptPrinterLu,OPT_STRING,  False, ResPrinterLu, offset(printer_lu),
+    "<luname>", "Automatically start a "PR3287_NAME" printer session to <luname>" },
+{ OptReconnect,OPT_BOOLEAN, True,  ResReconnect, offset(reconnect),
+    CN, "Reconnect to host as soon as it disconnects" },
+#if !defined(_WIN32) /*[*/
+{ OptReverseVideo,OPT_BOOLEAN,True,ResReverseVideo,offset(reverse_video),
+    CN, "Switch to black-on-white mode" },
+#endif /*]*/
+#endif /*]*/
+{ OptProxy,	   OPT_STRING,  False, ResProxy,     offset(proxy),
+    "<type>:<host>[:<port>]", "Secify proxy type and server" },
+#if defined(S3270) /*[*/
+{ OptScripted, OPT_NOP,     False, ResScripted,  NULL,
+    CN, "Turn on scripting" },
+#endif /*]*/
+#if defined(C3270) /*[*/
+{ OptSecure,   OPT_BOOLEAN, True,  ResSecure,    offset(secure),
+    CN, "Restrict potentially-destructive user actions" },
+#endif /*]*/
+{ OptSet,      OPT_SKIP2,   False, NULL,         NULL,
+    "<toggle>", "Turn on <toggle>" },
+#if defined(X3270_SCRIPT) /*[*/
+{ OptSocket,   OPT_BOOLEAN, True,  ResSocket,    offset(socket),
+    CN, "Create socket for script control" },
+#endif /*]*/
+{ OptTermName, OPT_STRING,  False, ResTermName,  offset(termname),
+    "<name>", "Send <name> as TELNET terminal name" },
+#if defined(WC3270) /*[*/
+{ OptTitle,    OPT_STRING,  False, ResTitle,     offset(title),
+    "<string>", "Set window title to <string>" },
+#endif /*]*/
+#if defined(X3270_TRACE) /*[*/
+{ OptDsTrace,  OPT_BOOLEAN, True,  ResDsTrace,   toggle_offset(DS_TRACE),
+    CN, "Enable tracing" },
+{ OptTraceFile,OPT_STRING,  False, ResTraceFile, offset(trace_file),
+    "<file>", "Write traces to <file>" },
+{ OptTraceFileSize,OPT_STRING,False,ResTraceFileSize,offset(trace_file_size),
+    "<n>[KM]", "Limit trace file to <n> bytes" },
+#endif /*]*/
+{ OptV,        OPT_V,	False, NULL,	     NULL,
+    CN, "Display build options and character sets" },
+{ OptVersion,  OPT_V,	False, NULL,	     NULL,
+    CN, "Display build options and character sets" },
+{ "-xrm",      OPT_XRM,     False, NULL,         NULL,
+    "'" APPNAME ".<resource>: <value>'", "Set <resource> to <value>"
+},
+{ LAST_ARG,    OPT_DONE,    False, NULL,         NULL,
+    CN, "Terminate argument list" },
+{ CN,          OPT_SKIP2,   False, NULL,         NULL,
+    CN, CN }
+};
+
 /*
  * Pick out command-line options and set up appres.
  */
@@ -544,88 +696,6 @@ parse_options(int *argcp, const char **argv)
 	int argc_out = 0;
 	const char **argv_out =
 	    (const char **) Malloc((*argcp + 1) * sizeof(char *));
-#       define offset(n) (void *)&appres.n
-#       define toggle_offset(index) offset(toggle[index].value)
-	static struct {
-		const char *name;
-		enum {
-		    OPT_BOOLEAN, OPT_STRING, OPT_XRM, OPT_SKIP2, OPT_NOP,
-		    OPT_INT, OPT_V, OPT_DONE
-		} type;
-		Boolean flag;
-		const char *res_name;
-		void *aoff;
-	} opts[] = {
-#if defined(C3270) /*[*/
-    { OptAllBold,  OPT_BOOLEAN, True,  ResAllBold,   offset(all_bold_on) },
-#endif /*]*/
-#if defined(C3270) /*[*/
-    { OptAltScreen,OPT_STRING,  False, ResAltScreen, offset(altscreen) },
-#endif /*]*/
-    { OptAplMode,  OPT_BOOLEAN, True,  ResAplMode,   offset(apl_mode) },
-#if defined(C3270) /*[*/
-    { OptCbreak,   OPT_BOOLEAN, True,  ResCbreak,    offset(cbreak_mode) },
-#endif /*]*/
-#if defined(HAVE_LIBSSL) /*[*/
-    { OptCertFile, OPT_STRING,  False, ResCertFile,  offset(cert_file) },
-#endif /*]*/
-    { OptCharset,  OPT_STRING,  False, ResCharset,   offset(charset) },
-    { OptClear,    OPT_SKIP2,   False, NULL,         NULL },
-#if defined(C3270) /*[*/
-    { OptDefScreen,OPT_STRING,  False, ResDefScreen, offset(defscreen) },
-#endif /*]*/
-#if defined(X3270_TRACE) /*[*/
-    { OptDsTrace,  OPT_BOOLEAN, True,  ResDsTrace,   toggle_offset(DS_TRACE) },
-#endif /*]*/
-    { OptHostsFile,OPT_STRING,  False, ResHostsFile, offset(hostsfile) },
-#if defined(C3270) /*[*/
-    { OptKeymap,   OPT_STRING,  False, ResKeymap,    offset(key_map) },
-#endif /*]*/
-#if defined(WS3270) /*[*/
-    { OptLocalCp,  OPT_INT,	False, ResLocalCp,   offset(local_cp) },
-#endif /*]*/
-    { OptModel,    OPT_STRING,  False, ResModel,     offset(model) },
-#if defined(C3270) /*[*/
-# if !defined(_WIN32) /*[*/
-    { OptMono,     OPT_BOOLEAN, True,  ResMono,      offset(mono) },
-# endif /*]*/
-    { OptNoPrompt, OPT_BOOLEAN, True,  ResNoPrompt,  offset(no_prompt) },
-#endif /*]*/
-    { OptOnce,     OPT_BOOLEAN, True,  ResOnce,      offset(once) },
-    { OptOversize, OPT_STRING,  False, ResOversize,  offset(oversize) },
-    { OptPort,     OPT_STRING,  False, ResPort,      offset(port) },
-#if defined(C3270) /*[*/
-    { OptPrinterLu,OPT_STRING,  False, ResPrinterLu, offset(printer_lu) },
-    { OptReconnect,OPT_BOOLEAN, True,  ResReconnect, offset(reconnect) },
-#if !defined(_WIN32) /*[*/
-    { OptReverseVideo,OPT_BOOLEAN,True,ResReverseVideo,offset(reverse_video) },
-#endif /*]*/
-#endif /*]*/
-    { OptProxy,	   OPT_STRING,  False, ResProxy,     offset(proxy) },
-#if defined(S3270) /*[*/
-    { OptScripted, OPT_NOP,     False, ResScripted,  NULL },
-#endif /*]*/
-#if defined(C3270) /*[*/
-    { OptSecure,   OPT_BOOLEAN, True,  ResSecure,    offset(secure) },
-#endif /*]*/
-    { OptSet,      OPT_SKIP2,   False, NULL,         NULL },
-#if defined(X3270_SCRIPT) /*[*/
-    { OptSocket,   OPT_BOOLEAN, True,  ResSocket,    offset(socket) },
-#endif /*]*/
-    { OptTermName, OPT_STRING,  False, ResTermName,  offset(termname) },
-#if defined(WC3270) /*[*/
-    { OptTitle,    OPT_STRING,  False, ResTitle,     offset(title) },
-#endif /*]*/
-#if defined(X3270_TRACE) /*[*/
-    { OptTraceFile,OPT_STRING,  False, ResTraceFile, offset(trace_file) },
-    { OptTraceFileSize,OPT_STRING,False,ResTraceFileSize,offset(trace_file_size) },
-#endif /*]*/
-    { OptV,        OPT_V,	False, NULL,	     NULL },
-    { OptVersion,  OPT_V,	False, NULL,	     NULL },
-    { "-xrm",      OPT_XRM,     False, NULL,         NULL },
-    { LAST_ARG,    OPT_DONE,    False, NULL,         NULL },
-    { CN,          OPT_SKIP2,   False, NULL,         NULL }
-};
 
 	/* Parse the command-line options. */
 	argv_out[argc_out++] = argv[0];
@@ -695,6 +765,28 @@ parse_options(int *argcp, const char **argv)
 	if (appres.toggle[DS_TRACE].value)
 		appres.toggle[EVENT_TRACE].value = True;
 #endif /*]*/
+}
+
+/* Disply command-line help. */
+void
+cmdline_help (Boolean as_action)
+{
+    int i;
+    
+    for (i = 0; opts[i].name != CN; i++) {
+	if (as_action) {
+	    action_output("  %s%s%s",
+		    opts[i].name,
+		    opts[i].help_opts? " ": "",
+		    opts[i].help_opts? opts[i].help_opts: "");
+	    action_output("    %s", opts[i].help_text);
+	} else
+	    fprintf(stderr, "  %s%s%s\n     %s\n",
+		    opts[i].name,
+		    opts[i].help_opts? " ": "",
+		    opts[i].help_opts? opts[i].help_opts: "",
+		    opts[i].help_text);
+    }
 }
 
 /*

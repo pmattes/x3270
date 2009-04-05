@@ -166,6 +166,8 @@ static char *base_3270_keymap =
 "Ctrl<Key>m: Enter\n"
 "Ctrl<Key>r: Reset\n"
 "Ctrl<Key>u: DeleteField\n"
+"Ctrl<Key>a <Key>v: ToggleReverse\n"
+"Ctrl<Key>a <Key>f: Flip\n"
 "<Key>IC: ToggleInsert\n"
 "<Key>DC: Delete\n"
 "<Key>BACKSPACE: Erase\n"
@@ -227,6 +229,8 @@ static char *base_3270_keymap =
        "Alt <Key>R:      Reset\n"
       "Ctrl <Key>u:      DeleteField\n"
       "Ctrl <Key>v:      Paste\n"
+       "Alt <Key>v:      ToggleReverse\n"
+       "Alt <Key>x:      Flip\n"
            "<Key>INSERT: ToggleInsert\n"
      "Shift <Key>TAB:    BackTab\n"
            "<Key>BACK:   Erase\n"
@@ -250,9 +254,12 @@ void
 usage(char *msg)
 {
 	if (msg != CN)
-		Warning(msg);
-	xs_error("Usage: %s [options] [ps:][LUname@]hostname[:port]",
+		fprintf(stderr, "%s\n", msg);
+	fprintf(stderr, "Usage: %s [options] [ps:][LUname@]hostname[:port]\n",
 		programname);
+	fprintf(stderr, "Options:\n");
+	cmdline_help(False);
+	exit(1);
 }
 
 #if defined(_WIN32) /*[*/

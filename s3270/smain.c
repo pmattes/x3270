@@ -68,9 +68,12 @@ void
 usage(char *msg)
 {
 	if (msg != CN)
-		Warning(msg);
-	xs_error("Usage: %s [options] [ps:][LUname@]hostname[:port]",
+	    	fprintf(stderr, "%s\n", msg);
+	fprintf(stderr, "Usage: %s [options] [ps:][LUname@]hostname[:port]\n",
 		programname);
+	fprintf(stderr, "Options:\n");
+	cmdline_help(False);
+	exit(1);
 }
 
 static void

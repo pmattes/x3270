@@ -325,13 +325,17 @@ usage(char *msg)
 {
 	const char *sn = "";
 
-	if (msg != CN)
-		Warning(msg);
 	if (!strcmp(programname, "tcl3270"))
 		sn = " [scriptname]";
-	xs_error("Usage: %s%s [tcl3270-options] [host] [-- script-args]\n"
-"       <host> is [ps:][LUname@]hostname[:port]",
+
+	if (msg != CN)
+		fprintf(stderr, "%s\n", msg);
+	fprintf(stderr, "Usage: %s%s [tcl3270-options] [host] [-- script-args]\n"
+"       <host> is [ps:][LUname@]hostname[:port]\n",
 			programname, sn);
+	fprintf(stderr, "Options:\n");
+	cmdline_help(False);
+	exit(1);
 }
 
 /*

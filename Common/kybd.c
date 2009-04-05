@@ -477,8 +477,10 @@ insert_mode(Boolean on)
 static void
 reverse_mode(Boolean on)
 {
-	reverse = on;
-	status_reverse_mode(on);
+	if (!dbcs) {
+		reverse = on;
+		status_reverse_mode(on);
+	}
 }
 
 /*
@@ -653,7 +655,7 @@ Interrupt_action(Widget w _is_unused, XEvent *event, String *params,
  * Returns True if the insert is legal, False otherwise.
  */
 static Boolean
-ins_prep(int faddr, int baddr, int count)
+ins_prep(int faddr, int baddr, int count, Boolean *no_room)
 {
 	int next_faddr;
 	int xaddr;
@@ -661,6 +663,8 @@ ins_prep(int faddr, int baddr, int count)
 	int ntb;
 	int tb_start = -1;
 	int copy_len;
+
+	*no_room = False;
 
 	/* Find the end of the field. */
 	if (faddr == -1) {
@@ -697,8 +701,13 @@ ins_prep(int faddr, int baddr, int count)
 	printf("need %d at %d, tb_start at %d\n", count, baddr, tb_start);
 #endif /*]*/
 	if (need - ntb > 0) {
-		operator_error(KL_OERR_OVERFLOW);
-		return False;
+	    	if (!reverse) {
+			operator_error(KL_OERR_OVERFLOW);
+			return False;
+		} else {
+		    	*no_room = True;
+			return True;
+		}
 	}
 
 	/*
@@ -783,6 +792,7 @@ key_Character(int code, Boolean with_ge, Boolean pasting, Boolean *skipped)
 	register int	baddr, faddr, xaddr;
 	register unsigned char	fa;
 	enum dbcs_why why = DBCS_FIELD;
+	Boolean no_room = False;
 
 	reset_idle_timer();
 
@@ -831,7 +841,7 @@ key_Character(int code, Boolean with_ge, Boolean pasting, Boolean *skipped)
 	if (ea_buf[baddr].cc == EBC_so) {
 
 		if (insert) {
-			if (!ins_prep(faddr, baddr, 1))
+			if (!ins_prep(faddr, baddr, 1, &no_room))
 				return False;
 		} else {
 			Boolean was_si = False;
@@ -868,7 +878,7 @@ key_Character(int code, Boolean with_ge, Boolean pasting, Boolean *skipped)
 	case DBCS_LEFT:
 		if (why == DBCS_ATTRIBUTE) {
 			if (insert) {
-				if (!ins_prep(faddr, baddr, 1))
+				if (!ins_prep(faddr, baddr, 1, &no_room))
 					return False;
 			} else {
 				/*
@@ -898,10 +908,12 @@ key_Character(int code, Boolean with_ge, Boolean pasting, Boolean *skipped)
 				DEC_BA(xaddr);
 				if (ea_buf[xaddr].cc == EBC_so) {
 					DEC_BA(baddr);
-					if (!ins_prep(faddr, baddr, 1))
+					if (!ins_prep(faddr, baddr, 1,
+						    &no_room))
 						return False;
 				} else {
-					if (!ins_prep(faddr, baddr, 3))
+					if (!ins_prep(faddr, baddr, 3,
+						    &no_room))
 						return False;
 					xaddr = baddr;
 					ctlr_add(xaddr, EBC_si,
@@ -941,15 +953,22 @@ key_Character(int code, Boolean with_ge, Boolean pasting, Boolean *skipped)
 		break;
 	default:
 	case DBCS_NONE:
-		if (insert && !ins_prep(faddr, baddr, 1))
+		if ((reverse || insert) && !ins_prep(faddr, baddr, 1, &no_room))
 			return False;
 		break;
 	}
-	ctlr_add(baddr, (unsigned char)code,
-	    (unsigned char)(with_ge ? CS_GE : 0));
-	ctlr_add_fg(baddr, 0);
-	ctlr_add_gr(baddr, 0);
-	INC_BA(baddr);
+	if (no_room) {
+	    	do {
+		    	INC_BA(baddr);
+		} while (ea_buf[baddr].fa);
+	} else {
+		ctlr_add(baddr, (unsigned char)code,
+		    (unsigned char)(with_ge ? CS_GE : 0));
+		ctlr_add_fg(baddr, 0);
+		ctlr_add_gr(baddr, 0);
+		if (!reverse)
+			INC_BA(baddr);
+	}
 
 	/* Replace leading nulls with blanks, if desired. */
 	if (formatted && toggled(BLANK_FILL)) {
@@ -1039,6 +1058,7 @@ key_WCharacter(unsigned char code[], Boolean *skipped)
 	int xaddr;
 	Boolean done = False;
 	Boolean no_si = False;
+	Boolean no_room = False;
 	extern unsigned char reply_mode; /* XXX */
 
 	reset_idle_timer();
@@ -1104,7 +1124,7 @@ retry:
 	case DBCS_LEFT_WRAP:
 		/* Overwrite the existing character. */
 		if (insert) {
-			if (!ins_prep(faddr, baddr, 2)) {
+			if (!ins_prep(faddr, baddr, 2, &no_room)) {
 				return False;
 			}
 		}
@@ -1121,7 +1141,7 @@ retry:
 	case DBCS_SI:
 		/* Extend the subfield to the right. */
 		if (insert) {
-			if (!ins_prep(faddr, baddr, 2)) {
+			if (!ins_prep(faddr, baddr, 2, &no_room)) {
 				return False;
 			}
 		} else {
@@ -1153,7 +1173,7 @@ retry:
 
 			/* Is there room? */
 			if (insert) {
-				if (!ins_prep(faddr, baddr, 4)) {
+				if (!ins_prep(faddr, baddr, 4, &no_room)) {
 					return False;
 				}
 			} else {
@@ -1267,7 +1287,7 @@ retry:
 		} else if (reply_mode == SF_SRM_CHAR) {
 			/* Use the character attribute. */
 			if (insert) {
-				if (!ins_prep(faddr, baddr, 2)) {
+				if (!ins_prep(faddr, baddr, 2, &no_room)) {
 					return False;
 				}
 			} else {
@@ -1478,7 +1498,8 @@ Flip_action(Widget w _is_unused, XEvent *event, String *params,
 {
 	action_debug(Flip_action, event, params, num_params);
 	reset_idle_timer();
-	screen_flip();
+	if (!dbcs)
+	    screen_flip();
 }
 
 
@@ -1950,7 +1971,10 @@ Erase_action(Widget w _is_unused, XEvent *event, String *params,
 		return;
 	}
 #endif /*]*/
-	do_erase();
+	if (reverse)
+		do_delete();
+	else
+		do_erase();
 }
 
 

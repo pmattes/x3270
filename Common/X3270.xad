@@ -455,7 +455,9 @@ x3270.keymap.base.3270: #override \
 	Ctrl<Key>c:			set-select(CLIPBOARD)\n\
 	Ctrl<Key>u:			DeleteField()\n\
 	Ctrl<Key>w:			DeleteWord()\n\
-	Ctrl<Key>v:			insert-selection(CLIPBOARD)
+	Ctrl<Key>v:			insert-selection(CLIPBOARD)\n\
+	Alt<Key>v:			ToggleReverse()\n\
+	Meta<Key>v:			ToggleReverse()
 ! Keymap that exercises the optional history plugin.
 x3270.keymap.hist:
 	Shift<Key>Prior:		Plugin(command,prev)\n\
