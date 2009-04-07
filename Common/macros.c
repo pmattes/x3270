@@ -110,6 +110,7 @@ typedef struct sms {
 #if defined(X3270_FT) /*[*/
 		SS_FT_WAIT,	/* command awaiting file transfer to complete */
 #endif /*]*/
+		SS_TIME_WAIT,   /* command awaiting simple timeout */
 		SS_PAUSED,	/* stopped in PauseScript action */
 		SS_WAIT_NVT,	/* awaiting completion of Wait(NVTMode) */
 		SS_WAIT_3270,	/* awaiting completion of Wait(3270Mode) */
@@ -167,6 +168,7 @@ static const char *sms_state_name[] = {
 #if defined(X3270_FT) /*[*/
 	"FT_WAIT",
 #endif /*]*/
+	"TIME_WAIT",
 	"PAUSED",
 	"WAIT_NVT",
 	"WAIT_3270",
@@ -1583,6 +1585,10 @@ sms_continue(void)
 			}
 #endif /*]*/
 
+		    case SS_TIME_WAIT:
+			continuing = False;
+			return;
+
 		    case SS_WAIT_OUTPUT:
 		    case SS_SWAIT_OUTPUT:
 			if (!CONNECTED) {
@@ -2442,9 +2448,12 @@ Wait_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 				next_state = SS_WAIT_UNLOCK;
 			else
 				return;
+		} else if (tmo > 0 && !strcasecmp(pr[0], "Seconds")) {
+		    	next_state = SS_TIME_WAIT;
 		} else if (strcasecmp(pr[0], "InputField")) {
 			popup_an_error("%s argument must be InputField, "
-			    "NVTmode, 3270Mode, Output, Disconnect or Unlock",
+			    "NVTmode, 3270Mode, Output, Seconds, Disconnect "
+			    "or Unlock",
 			action_name(Wait_action));
 			return;
 		}
@@ -2834,6 +2843,14 @@ expect_timed_out(void)
 static void
 wait_timed_out(void)
 {
+    	/* If they just wanted a delay, succeed. */
+    	if (sms->state == SS_TIME_WAIT) {
+	    	sms->success = True;
+		sms->state = SS_INCOMPLETE;
+		sms_continue();
+		return;
+	}
+
 	/* Pop up the error message. */
 	popup_an_error("%s: Timed out", action_name(Wait_action));
 
