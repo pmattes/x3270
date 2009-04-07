@@ -532,6 +532,9 @@ See XX_LINK(#Differences,XX_SM(DIFFERENCES)) for details).
 XX_IP
 The optional XX_FI(timeout) parameter specifies a number of seconds to wait
 before failing the XX_FB(Wait) action.  The default is to wait indefinitely.
+XX_TP(XX_FB(Wait)(XX_FI(timeout)`,' XX_FB(Seconds)))
+Delays the script XX_FI(timeout) seconds.
+Unlike the other forms of XX_FB(Wait), the timeout is not optional.
 XX_TP(XX_FB(WindowState)(XX_FI(mode)))
 If XX_FI(mode) is XX_FB(Iconic), changes the x3270 window into an icon.
 If XX_FI(mode) is XX_FB(Normal), changes the x3270 window from an icon to a
