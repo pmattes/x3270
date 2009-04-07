@@ -513,6 +513,12 @@ main(int argc, char *argv[])
 			reconnect = 1;
 		} else if (!strcmp(argv[i], "-v")) {
 			printf("%s\n%s\n", build, build_options());
+			charset_list();
+			printf("\n\
+Copyright 1989-2009, Paul Mattes, GTRC and others.\n\
+See the source code or documentation for licensing details.\n\
+Distributed WITHOUT ANY WARRANTY; without even the implied warranty of\n\
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 			exit(0);
 		} else if (!strcmp(argv[i], "-V")) {
 			verbose = 1;
@@ -898,7 +904,7 @@ popup_an_errno(int err, const char *fmt, ...)
 const char *
 build_options(void)
 {
-    	return "Options:"
+    	return "Build options:"
 #if defined(X3270_DBCS) /*[*/
 	    " --enable-dbcs"
 #else /*][*/
