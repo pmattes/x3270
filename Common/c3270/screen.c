@@ -41,6 +41,7 @@
 #include "actionsc.h"
 #include "charsetc.h"
 #include "ctlrc.h"
+#include "gluec.h"
 #include "hostc.h"
 #include "keymapc.h"
 #include "kybdc.h"
@@ -678,29 +679,6 @@ init_user_color(const char *name, int ix)
 static void
 init_user_colors(void)
 {
-	static struct {
-		char *name;
-		int index;
-	} host_color[] = {
-	    	{ "NeutralBlack",	HOST_COLOR_NEUTRAL_BLACK },
-	    	{ "Blue",		HOST_COLOR_BLUE },
-	    	{ "Red",		HOST_COLOR_RED },
-	    	{ "Pink",		HOST_COLOR_PINK },
-	    	{ "Green",		HOST_COLOR_GREEN },
-	    	{ "Turquoise",		HOST_COLOR_TURQUOISE },
-	    	{ "Yellow",		HOST_COLOR_YELLOW },
-	    	{ "NeutralWhite",	HOST_COLOR_NEUTRAL_WHITE },
-	    	{ "Black",		HOST_COLOR_BLACK },
-	    	{ "DeepBlue",		HOST_COLOR_DEEP_BLUE },
-	    	{ "Orange",		HOST_COLOR_ORANGE },
-	    	{ "Purple",		HOST_COLOR_PURPLE },
-	    	{ "PaleGreen",		HOST_COLOR_PALE_GREEN },
-	    	{ "PaleTurquoise",	HOST_COLOR_PALE_TURQUOISE },
-	    	{ "Grey",		HOST_COLOR_GREY },
-	    	{ "Gray",		HOST_COLOR_GREY }, /* alias */
-	    	{ "White",		HOST_COLOR_WHITE },
-		{ CN,			0 }
-	};
 	int i;
 
 	for (i = 0; host_color[i].name != CN; i++) {
