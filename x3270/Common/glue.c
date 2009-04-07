@@ -1052,6 +1052,113 @@ strncapcmp(const char *known, const char *unknown, unsigned unk_len)
 	return -1;
 }
 
+#if defined(C3270) /*[*/
+struct host_color host_color[] = {
+    { "NeutralBlack",	HOST_COLOR_NEUTRAL_BLACK },
+    { "Blue",		HOST_COLOR_BLUE },
+    { "Red",		HOST_COLOR_RED },
+    { "Pink",		HOST_COLOR_PINK },
+    { "Green",		HOST_COLOR_GREEN },
+    { "Turquoise",	HOST_COLOR_TURQUOISE },
+    { "Yellow",		HOST_COLOR_YELLOW },
+    { "NeutralWhite",	HOST_COLOR_NEUTRAL_WHITE },
+    { "Black",		HOST_COLOR_BLACK },
+    { "DeepBlue",	HOST_COLOR_DEEP_BLUE },
+    { "Orange",		HOST_COLOR_ORANGE },
+    { "Purple",		HOST_COLOR_PURPLE },
+    { "PaleGreen",	HOST_COLOR_PALE_GREEN },
+    { "PaleTurquoise",	HOST_COLOR_PALE_TURQUOISE },
+    { "Grey",		HOST_COLOR_GREY },
+    { "Gray",		HOST_COLOR_GREY }, /* alias */
+    { "White",		HOST_COLOR_WHITE },
+    { CN,		0 }
+};
+
+/*
+ * Validate a resource that is fetched explicitly, rather than via appres.
+ */
+static int
+valid_explicit(const char *resname, unsigned len)
+{
+	static struct {
+	    char *name;
+	    enum { V_FLAT, V_WILD, V_COLOR } type;
+	} explicit_resources[] =  {
+	    { ResKeymap,			V_WILD },
+	    { ResAssocCommand,			V_FLAT },
+	    { ResLuCommandLine,			V_FLAT },
+#if defined(_WIN32) /*[*/
+	    { ResPrinterCodepage,		V_FLAT },
+	    { ResPrinterCommand,		V_FLAT },
+	    { ResPrinterName, 			V_FLAT },
+	    { ResPrintTextFont, 		V_FLAT },
+	    { ResPrintTextSize, 		V_FLAT },
+	    { ResHostColorForDefault,		V_FLAT },
+	    { ResHostColorForIntensified,	V_FLAT },
+	    { ResHostColorForProtected,		V_FLAT },
+	    { ResHostColorForProtectedIntensified,V_FLAT },
+	    { ResConsoleColorForHostColor,	V_COLOR },
+#else /*][*/
+	    { ResPrintTextCommand,		V_FLAT },
+	    { ResCursesColorForDefault,		V_FLAT },
+	    { ResCursesColorForIntensified,	V_FLAT },
+	    { ResCursesColorForProtected,	V_FLAT },
+	    { ResCursesColorForProtectedIntensified,V_FLAT },
+	    { ResCursesColorForHostColor,	V_COLOR },
+#endif /*]*/
+	    { NULL, V_WILD }
+	};
+	int i;
+	int j;
+
+	for (i = 0; explicit_resources[i].name != CN; i++) {
+		unsigned sl = strlen(explicit_resources[i].name);
+
+	    	switch (explicit_resources[i].type) {
+		case V_FLAT:
+		    /* Exact match. */
+		    if (len == sl &&
+			!strncmp(explicit_resources[i].name, resname, sl))
+			return 0;
+		    break;
+		case V_WILD:
+		    /* xxx.* match. */
+		    if (len > sl + 1 &&
+			resname[sl] == '.' &&
+			!strncmp(explicit_resources[i].name, resname, sl))
+			return 0;
+		    break;
+		case V_COLOR:
+		    /* xxx<host-color> or xxx<host-color-index> match. */
+		    for (j = 0; host_color[j].name != CN; j++) {
+			    char *x;
+
+			    x = xs_buffer("%s%s", explicit_resources[i].name,
+				    host_color[j].name);
+			    if (strlen(x) == len &&
+				!strncmp(x, resname, len)) {
+				    Free(x);
+				    return 0;
+			    }
+			    Free(x);
+			    x = xs_buffer("%s%d", explicit_resources[i].name,
+				    host_color[j].index);
+			    if (strlen(x) == len &&
+				!strncmp(x, resname, len)) {
+				    Free(x);
+				    return 0;
+			    }
+			    Free(x);
+		    }
+		    break;
+		}
+	}
+
+	return -1;
+
+}
+#endif /*]*/
+
 void
 parse_xrm(const char *arg, const char *where)
 {
@@ -1093,33 +1200,13 @@ parse_xrm(const char *arg, const char *where)
 		}
 	}
 #if defined(C3270) /*[*/
-	if (address == NULL) {
+	if (address == NULL && valid_explicit(name, rnlen) == 0) {
 		/*
 		 * Handle resources that are accessed only via get_resource().
 		 */
-		if (!strncasecmp(ResKeymap ".", name, strlen(ResKeymap ".")) ||
-		    !strncasecmp("host.", name, 5) ||
-		    !strncasecmp("printer.", name, 8) ||
-		    !strncasecmp(ResPrintTextFont, name,
-			    strlen(ResPrintTextFont)) ||
-		    !strncasecmp(ResPrintTextSize, name,
-			    strlen(ResPrintTextSize)) ||
-#if defined(_WIN32) /*[*/
-		    !strncasecmp(ResHostColorFor, name,
-			    strlen(ResHostColorFor)) ||
-		    !strncasecmp(ResConsoleColorForHostColor, name,
-			    strlen(ResConsoleColorForHostColor))
-#else /*][*/
-		    !strncasecmp(ResPrintTextCommand, name,
-			    strlen(ResPrintTextCommand)) ||
-		    !strncasecmp(ResCursesColorFor, name,
-			    strlen(ResCursesColorFor))
-#endif /*]*/
-		    ) {
-			address = &hide;
-			type = XRM_STRING;
-			arbitrary = True;
-		}
+		address = &hide;
+		type = XRM_STRING;
+		arbitrary = True;
 	}
 #endif /*]*/
 	if (address == NULL) {

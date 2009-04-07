@@ -37,6 +37,11 @@ extern void parse_xrm(const char *arg, const char *where);
 extern char *safe_string(const char *s);
 extern Boolean process_events(Boolean block);
 extern void cmdline_help(Boolean as_action);
+struct host_color {
+    char *name;
+    int index;
+};
+extern struct host_color host_color[];
 
 /* XtGlue.c */
 extern void (*Warning_redirect)(const char *);

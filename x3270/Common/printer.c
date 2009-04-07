@@ -195,7 +195,7 @@ printer_start(const char *lu)
 #if !defined(_WIN32) /*[*/
 	cmd = get_resource(ResPrinterCommand);
 	if (cmd == CN) {
-		popup_an_error("printer.command resource not defined");
+		popup_an_error(ResPrinterCommand " resource not defined");
 		return;
 	}
 #else /*][*/
