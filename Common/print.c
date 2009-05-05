@@ -1054,11 +1054,13 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 				char *cmd;
 
 				if (filter != CN)
-				    cmd = xs_buffer("start /wait %s /pt \"%s\" \"%s\"", wp,
-					    temp_name, filter);
+				    cmd = xs_buffer("start /wait /min %s "
+					    	    "/pt \"%s\" \"%s\"",
+						    wp, temp_name, filter);
 				else
-				    cmd = xs_buffer("start /wait %s /p \"%s\"", wp,
-					    temp_name);
+				    cmd = xs_buffer("start /wait /min %s "
+					    	    "/p \"%s\"",
+						    wp, temp_name);
 				system(cmd);
 				Free(cmd);
 			}
