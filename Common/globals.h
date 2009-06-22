@@ -158,8 +158,14 @@ extern char *strtok_r(char *str, const char *sep, char **last);
 
 /* Simple global variables */
 
-extern int		COLS;
+extern int		COLS;		/* current */
 extern int		ROWS;
+extern int		maxCOLS;	/* maximum */
+extern int		maxROWS;
+extern int		defROWS;	/* default (EraseWrite) */
+extern int		defCOLS;
+extern int		altROWS;	/* alternate (EraseWriteAlternate) */
+extern int		altCOLS;
 #if defined(X3270_DISPLAY) /*[*/
 extern Atom		a_3270, a_registry, a_encoding;
 extern XtAppContext	appcontext;
@@ -204,8 +210,6 @@ extern char		luname[];
 #if defined(LOCAL_PROCESS) /*[*/
 extern Boolean		local_process;
 #endif /*]*/
-extern int		maxCOLS;
-extern int		maxROWS;
 extern char		*model_name;
 extern int		model_num;
 extern Boolean		no_login_host;

@@ -72,6 +72,8 @@ extern unsigned char aid;
 /* Globals */
 int             ROWS, COLS;
 int             maxROWS, maxCOLS;
+int             defROWS, defCOLS;
+int             altROWS, altCOLS;
 int		ov_rows, ov_cols;
 int             model_num;
 int             cursor_addr, buffer_addr;
@@ -198,13 +200,13 @@ set_rows_cols(int mn, int ovc, int ovr)
 
 	switch (mn) {
 	case 2:
-		maxCOLS = 80;
-		maxROWS = 24; 
+		maxCOLS = MODEL_2_COLS;
+		maxROWS = MODEL_2_ROWS; 
 		model_num = 2;
 		break;
 	case 3:
-		maxCOLS = 80;
-		maxROWS = 32; 
+		maxCOLS = MODEL_3_COLS;
+		maxROWS = MODEL_3_ROWS; 
 		model_num = 3;
 		break;
 	case 4:
@@ -215,8 +217,8 @@ set_rows_cols(int mn, int ovc, int ovr)
 			return;
 		}
 #endif /*]*/
-		maxCOLS = 80;
-		maxROWS = 43; 
+		maxCOLS = MODEL_4_COLS;
+		maxROWS = MODEL_4_ROWS; 
 		model_num = 4;
 		break;
 	case 5:
@@ -227,8 +229,8 @@ set_rows_cols(int mn, int ovc, int ovr)
 			return;
 		}
 #endif /*]*/
-		maxCOLS = 132;
-		maxROWS = 27; 
+		maxCOLS = MODEL_5_COLS;
+		maxROWS = MODEL_5_ROWS; 
 		model_num = 5;
 		break;
 	default:
@@ -272,9 +274,13 @@ set_rows_cols(int mn, int ovc, int ovr)
 	    appres.extended ? "-E" : "");
 
 	/* Make sure that the current rows/cols are still 24x80. */
-	COLS = 80;
-	ROWS = 24;
+	COLS = defCOLS = MODEL_2_COLS;
+	ROWS = defROWS = MODEL_2_ROWS;
 	screen_alt = False;
+
+	/* Set the defaults for the alternate screen size. */
+	altROWS = maxROWS;
+	altCOLS = maxCOLS;
 }
 
 
@@ -336,6 +342,15 @@ ctlr_connect(Boolean ignored _is_unused)
 	default_ic = 0x00;
 	reply_mode = SF_SRM_FIELD;
 	crm_nattr = 0;
+
+	/* On disconnect, reset the default and alternate dimensions. */
+	if (!CONNECTED) {
+	    defROWS = MODEL_2_ROWS;
+	    defCOLS = MODEL_2_COLS;
+	    altROWS = maxROWS;
+	    altCOLS = maxCOLS;
+	    ctlr_erase(False);
+	}
 }
 
 
@@ -446,6 +461,8 @@ next_unprotected(int baddr0)
 void
 ctlr_erase(Boolean alt)
 {
+    	int newROWS, newCOLS;
+
 	kybd_inhibit(False);
 
 	ctlr_clear(True);
@@ -453,26 +470,32 @@ ctlr_erase(Boolean alt)
 	/* Let a script go. */
 	sms_host_output();
 
-	if (alt == screen_alt)
+	if (alt) {
+	    	newROWS = altROWS;
+		newCOLS = altCOLS;
+	} else {
+	    	newROWS = defROWS;
+		newCOLS = defCOLS;
+	}
+
+	if (alt == screen_alt && ROWS == newROWS && COLS == newCOLS)
 		return;
 
 	screen_disp(True);
-
-	if (alt) {
-		/* Going from 24x80 to maximum. */
-		screen_disp(False);
+	if (visible_control) {
+	    	/* Blank the entire display. */
+		ctlr_blanks();
 		ROWS = maxROWS;
 		COLS = maxCOLS;
-	} else {
-		/* Going from maximum to 24x80. */
-		if (maxROWS > 24 || maxCOLS > 80) {
-			if (visible_control) {
-				ctlr_blanks();
-				screen_disp(False);
-			}
-			ROWS = 24;
-			COLS = 80;
-		}
+		screen_disp(False);
+	}
+
+	ROWS = newROWS;
+	COLS = newCOLS;
+	if (visible_control) {
+		/* Fill the active part of the screen with NULLs again. */
+		ctlr_clear(False);
+		screen_disp(False);
 	}
 
 	screen_alt = alt;
@@ -1292,6 +1315,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			previous = SBA;
 			trace_ds("%s", rcba(buffer_addr));
 			if (buffer_addr >= COLS * ROWS) {
+			    	trace_ds("COLS %d ROWS %d\n", COLS, ROWS);
 				ABORT_WRITE("invalid SBA address");
 			}
 			current_fa = get_field_attribute(buffer_addr);
@@ -2430,9 +2454,8 @@ ctlr_blanks(void)
 {
 	int baddr;
 
-	for (baddr = 0; baddr < ROWS*COLS; baddr++) {
-		if (!ea_buf[baddr].fa)
-			ea_buf[baddr].cc = EBC_space;
+	for (baddr = 0; baddr < maxROWS*maxCOLS; baddr++) {
+		ea_buf[baddr].cc = EBC_space;
 	}
 	ALL_CHANGED;
 	cursor_move(0);
