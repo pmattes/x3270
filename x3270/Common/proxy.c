@@ -681,8 +681,8 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 		int rv;
 
 		/* Resolve the hostname. */
-		rv = resolve_host_and_port(host, CN, &rport, &ha.sa, &ha_len,
-			errmsg, sizeof(errmsg));
+		rv = resolve_host_and_port(host, CN, 0, &rport, &ha.sa,
+			&ha_len, errmsg, sizeof(errmsg), NULL);
 		if (rv == -2)
 		    	use_name = 1;
 		else if (rv < 0) {

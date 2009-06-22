@@ -84,8 +84,8 @@
 #endif /*]*/
 
 #if defined(_WIN32) && !defined(ISDLL) /*[*/
-typedef int rhproc(const char *, char *, unsigned short *, struct sockaddr *,
-	socklen_t *, char *, int);
+typedef int rhproc(const char *, char *, int, unsigned short *,
+	struct sockaddr *, socklen_t *, char *, int, int *);
 #define DLL_RESOLVER_NAME "dresolve_host_and_port"
 #endif /*]*/
 
@@ -96,19 +96,21 @@ typedef int rhproc(const char *, char *, unsigned short *, struct sockaddr *,
  */
 #if !defined(ISDLL) /*[*/
 int
-resolve_host_and_port(const char *host, char *portname, unsigned short *pport,
-	struct sockaddr *sa, socklen_t *sa_len, char *errmsg, int em_len)
+resolve_host_and_port(const char *host, char *portname, int ix _is_unused,
+	unsigned short *pport, struct sockaddr *sa, socklen_t *sa_len,
+	char *errmsg, int em_len, int *lastp)
 #else /*][*/
 int
-dresolve_host_and_port(const char *host, char *portname, unsigned short *pport,
-	struct sockaddr *sa, socklen_t *sa_len, char *errmsg, int em_len)
+dresolve_host_and_port(const char *host, char *portname, int ix _is_unused,
+	unsigned short *pport, struct sockaddr *sa, socklen_t *sa_len,
+	char *errmsg, int em_len, int *lastp)
 #endif /*]*/
 {
 #if !defined(_WIN32) || defined(ISDLL) /*[*/
 
     	/* Non-Windows version, or Windows DLL version. */
 #if defined(AF_INET6) /*[*/
-	struct addrinfo	 hints, *res;
+	struct addrinfo	 hints, *res0, *res;
 	int		 rc;
 
 	/* Use getaddrinfo() to resolve the hostname and port together. */
@@ -117,12 +119,32 @@ dresolve_host_and_port(const char *host, char *portname, unsigned short *pport,
 	hints.ai_family = PF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
-	rc = getaddrinfo(host, portname, &hints, &res);
+	rc = getaddrinfo(host, portname, &hints, &res0);
 	if (rc != 0) {
-		snprintf(errmsg, em_len, "%s/%s: %s", host, portname,
+		snprintf(errmsg, em_len, "%s/%s:\n%s", host,
+				portname? portname: "(none)",
 				gai_strerror(rc));
 		return -2;
 	}
+	res = res0;
+
+	/*
+	 * Return the reqested element.
+	 * Hopefully the list will not change between calls.
+	 */
+	while (ix && res->ai_next != NULL) {
+	    	res = res->ai_next;
+		ix--;
+	}
+	if (res == NULL) {
+	    	/* Ran off the end?  The list must have changed. */
+	    	snprintf(errmsg, em_len, "%s/%s:\n%s", host,
+			portname? portname: "(none)",
+			gai_strerror(EAI_AGAIN));
+		freeaddrinfo(res);
+		return -2;
+	}
+
 	switch (res->ai_family) {
 	case AF_INET:
 		*pport =
@@ -133,14 +155,16 @@ dresolve_host_and_port(const char *host, char *portname, unsigned short *pport,
 		    ntohs(((struct sockaddr_in6 *)res->ai_addr)->sin6_port);
 		break;
 	default:
-		snprintf(errmsg, em_len, "%s: unknown family %d", host,
+		snprintf(errmsg, em_len, "%s:\nunknown family %d", host,
 			res->ai_family);
 		freeaddrinfo(res);
 		return -1;
 	}
 	(void) memcpy(sa, res->ai_addr, res->ai_addrlen);
 	*sa_len = res->ai_addrlen;
-	freeaddrinfo(res);
+	if (lastp != NULL)
+		*lastp = (res->ai_next == NULL);
+	freeaddrinfo(res0);
 
 #else /*][*/
 
@@ -180,6 +204,8 @@ dresolve_host_and_port(const char *host, char *portname, unsigned short *pport,
 	}
 	sin->sin_port = port;
 	*sa_len = sizeof(struct sockaddr_in);
+	if (lastp != NULL)
+		*lastp = TRUE;
 
 #endif /*]*/
 #else /*][*/
@@ -234,7 +260,8 @@ dresolve_host_and_port(const char *host, char *portname, unsigned short *pport,
 	}
 
 	/* Use the DLL function to resolve the hostname and port. */
-	return ((rhproc *)p)(host, portname, pport, sa, sa_len, errmsg, em_len);
+	return ((rhproc *)p)(host, portname, ix, pport, sa, sa_len, errmsg,
+		em_len, lastp);
 #endif /*]*/
 
 	return 0;
