@@ -36,6 +36,7 @@
 #include "appres.h"
 #include "ctlr.h"
 
+#include "3270ds.h"
 #include "ctlrc.h"
 #include "kybdc.h"
 #include "screenc.h"
@@ -273,8 +274,8 @@ sync_scroll(int sb)
 		vscreen_swapped = True;
 	} else if (!sb && scrolled_back && vscreen_swapped) {
 		ctlr_shrink();
-		COLS = 80;
-		ROWS = 24;
+		COLS = MODEL_2_COLS;
+		ROWS = MODEL_2_ROWS;
 		vscreen_swapped = False;
 	}
 

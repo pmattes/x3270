@@ -395,3 +395,13 @@
 #define BIND_OFF_PLU_NAME_LEN	27
 #define BIND_PLU_NAME_MAX	8
 #define BIND_OFF_PLU_NAME	28
+
+/* Screen sizes. */
+#define MODEL_2_ROWS		24
+#define MODEL_2_COLS		80
+#define MODEL_3_ROWS		32
+#define MODEL_3_COLS		80
+#define MODEL_4_ROWS		43
+#define MODEL_4_COLS		80
+#define MODEL_5_ROWS		27
+#define MODEL_5_COLS		132
