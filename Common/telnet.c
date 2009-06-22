@@ -515,8 +515,8 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 		ha_len = sizeof(struct sockaddr_in);
 	} else if (proxy_type > 0) {
 	    	if (resolve_host_and_port(proxy_host, proxy_portname,
-			    &proxy_port, &haddr.sa, &ha_len, errmsg,
-			    sizeof(errmsg)) < 0) {
+			    0,&proxy_port, &haddr.sa, &ha_len, errmsg,
+			    sizeof(errmsg), NULL) < 0) {
 		    	popup_an_error("%s", errmsg);
 		    	return -1;
 		}
@@ -529,9 +529,9 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 #if defined(LOCAL_PROCESS) /*[*/
 			local_process = False;
 #endif /*]*/
-			if (resolve_host_and_port(host, portname,
+			if (resolve_host_and_port(host, portname, 0,
 				    &current_port, &haddr.sa, &ha_len,
-				    errmsg, sizeof(errmsg)) < 0) {
+				    errmsg, sizeof(errmsg), NULL) < 0) {
 			    	popup_an_error("%s", errmsg);
 			    	return -1;
 			}
