@@ -213,7 +213,11 @@ usage(void)
 "  -proxy \"<spec>\"\n"
 "                   connect to host via specified proxy\n"
 "  -reconnect       keep trying to reconnect\n"
+#if defined(_WIN32) /*[*/
+"  -trace           trace data stream to <wc3270appData>/x3trc.<pid>.txt\n",
+#else /*][*/
 "  -trace           trace data stream to /tmp/x3trc.<pid>\n",
+#endif /*]*/
 #if !defined(_WIN32) /*[*/
 "  -tracedir <dir>  directory to keep trace information in\n"
 #endif /*]*/
@@ -653,8 +657,16 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 #endif /*]*/
 		tracef = fopen(tracefile, "a");
 		if (tracef == NULL) {
-			perror(tracefile);
-			pr3287_exit(1);
+#if defined(_WIN32) /*[*/
+			(void) sprintf(tracefile, "x3trc.%d.txt", getpid());
+			tracef = fopen(tracefile, "a");
+			if (tracef == NULL) {
+#endif /*]*/
+				perror(tracefile);
+				pr3287_exit(1);
+#if defined(_WIN32) /*[*/
+			}
+#endif /*]*/
 		}
 		(void) SETLINEBUF(tracef);
 		clk = time((time_t *)0);
