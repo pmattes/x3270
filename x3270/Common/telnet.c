@@ -1915,7 +1915,7 @@ process_bind(unsigned char *buf, int buflen)
 		altROWS = bind_ra;
 		altCOLS = bind_ca;
 	}
-	ctlr_erase(FALSE);
+	ctlr_erase(False);
 
 	/* Extract the PLU name. */
 	if (buflen > BIND_OFF_PLU_NAME_LEN) {
@@ -1996,7 +1996,7 @@ process_eor(void)
 			defCOLS = MODEL_2_COLS;
 			altROWS = maxROWS;
 			altCOLS = maxCOLS;
-			ctlr_erase(FALSE);
+			ctlr_erase(False);
 			if (tn3270e_submode == E_3270)
 				tn3270e_submode = E_NONE;
 			check_in3270();
