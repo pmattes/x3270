@@ -322,6 +322,7 @@ pause_for_errors(void)
 	char s[10];
 
 	if (any_error_output) {
+	    	screen_suspend();
 		printf("[Press <Enter>] ");
 		fflush(stdout);
 		if (fgets(s, sizeof(s), stdin) == NULL)
@@ -386,11 +387,7 @@ main(int argc, char *argv[])
 #endif /*]*/
 #endif /*]*/
 
-	/*
-	 * If any error messages have been displayed, make sure the
-	 * user sees them -- before screen_init() clears the screen.
-	 */
-	pause_for_errors();
+	/* Get the screen set up as early as possible. */
 	screen_init();
 
 	kybd_init();
@@ -429,17 +426,9 @@ main(int argc, char *argv[])
 #endif /*]*/
 	initialize_toggles();
 
-#if 0
-	/* Can't have a prompt and aut-reconnect. */
-	if (appres.reconnect && !appres.no_prompt) {
-	    	Warning("Must have no-prompt mode for reconnect");
-		appres.reconnect = False;
-	}
-#endif
-
-	/* Connect to the host. */
-	screen_suspend();
 	if (cl_hostname != CN) {
+		pause_for_errors();
+		/* Connect to the host. */
 		appres.once = True;
 		if (host_connect(cl_hostname) < 0)
 			x3270_exit(1);
@@ -451,14 +440,16 @@ main(int argc, char *argv[])
 		}
 		pause_for_errors();
 	} else {
+	    	/* Drop to the prompt. */
 		if (appres.secure) {
 			Error("Must specify hostname with secure option");
 		}
 		appres.once = False;
 		if (!appres.no_prompt)
 			interact();
+		else
+			pause_for_errors();
 	}
-	screen_resume();
 	screen_disp(False);
 	peer_script_init();
 

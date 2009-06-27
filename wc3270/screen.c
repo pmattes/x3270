@@ -133,7 +133,7 @@ static int field_colors[4] = {
 static int defattr = 0;
 static unsigned long input_id;
 
-Boolean escaped = True;
+Boolean escaped = False;
 
 enum ts { TS_AUTO, TS_ON, TS_OFF };
 enum ts ab_mode = TS_AUTO;
@@ -169,7 +169,7 @@ static void status_3270_mode(Boolean ignored);
 static void status_printer(Boolean on);
 static int get_color_pair(int fg, int bg);
 static int color_from_fa(unsigned char fa);
-static void screen_init2(void);
+static void screen_connect(Boolean connected);
 static void set_status_row(int screen_rows, int emulator_rows);
 static Boolean ts_value(const char *s, enum ts *tsp);
 static void relabel(Boolean ignored);
@@ -886,6 +886,7 @@ screen_init(void)
 	set_status_row(console_rows, maxROWS);
 
 	/* Set up callbacks for state changes. */
+	register_schange(ST_CONNECT, screen_connect);
 	register_schange(ST_CONNECT, status_connect);
 	register_schange(ST_3270_MODE, status_3270_mode);
 	register_schange(ST_PRINTER, status_printer);
@@ -927,24 +928,18 @@ screen_init(void)
 		screen_title("wc3270");
 
 	/* Finish screen initialization. */
-	screen_init2();
-	screen_suspend();
+	endwin();
 }
 
-/* Secondary screen initialization. */
 static void
-screen_init2(void)
+screen_connect(Boolean connected)
 {
-	/*
-	 * Finish initializing ncurses.  This should be the first time that it
-	 * will send anything to the terminal.
-	 */
-	/* nothing to do... */
+    	static Boolean initted = False;
 
-	escaped = False;
-
-	/* Subscribe to input events. */
-	input_id = AddInput((int)chandle, kybd_input);
+    	if (!initted && connected) {
+	    	initted = True;
+		screen_resume();
+	}
 }
 
 /* Calculate where the status line goes now. */
