@@ -177,26 +177,25 @@ static Boolean curses_alt = False;
 static void kybd_input(void);
 static void kybd_input2(int k, ucs4_t ucs4, int alt);
 static void draw_oia(void);
+static void screen_connect(Boolean connected);
 static void status_connect(Boolean ignored);
 static void status_3270_mode(Boolean ignored);
 static void status_printer(Boolean on);
 static int get_color_pair(int fg, int bg);
 static int color_from_fa(unsigned char);
-static void screen_init2(void);
 static void set_status_row(int screen_rows, int emulator_rows);
 static Boolean ts_value(const char *s, enum ts *tsp);
 static void display_linedraw(unsigned char ebc);
 static void display_ge(unsigned char ebc);
 static void init_user_colors(void);
 static void init_user_attribute_colors(void);
+static void screen_init2(void);
 
 /* Initialize the screen. */
 void
 screen_init(void)
 {
-	int want_ov_rows = ov_rows;
-	int want_ov_cols = ov_cols;
-	Boolean oversize = False;
+	register_schange(ST_CONNECT, screen_connect);
 
 #if !defined(C3270_80_132) /*[*/
 	/* Disallow altscreen/defscreen. */
@@ -230,7 +229,63 @@ screen_init(void)
 		    exit(1);
 		}
 	}
+#endif /*]*/
 
+	/*
+	 * See about keyboard Meta-key behavior.
+	 *
+	 * Note: Formerly, "auto" meant to use the terminfo 'km' capability (if
+	 * set, then disable metaEscape).  But popular terminals like the
+	 * Linux console and xterms are actually configurable, though they have
+	 * fixed terminfo capabilities.  It is harmless to enable metaEscape
+	 * when the terminal supports it, so the default is now 'on'.
+	 *
+	 * Setting the high bit for the Meta key is a pretty achaic idea, IMO,
+	 * so we no loger support it.
+	 */
+	if (!ts_value(appres.meta_escape, &me_mode))
+		popup_an_error("Invalid %s value: '%s', "
+		    "assuming 'auto'\n", ResMetaEscape, appres.meta_escape);
+	if (me_mode == TS_AUTO)
+		me_mode = TS_ON;
+
+	/* See about all-bold behavior. */
+	if (appres.all_bold_on)
+		ab_mode = TS_ON;
+	else if (!ts_value(appres.all_bold, &ab_mode))
+		popup_an_error("Invalid %s value: '%s', "
+		    "assuming 'auto'\n", ResAllBold, appres.all_bold);
+	if (ab_mode == TS_AUTO)
+		ab_mode = (appres.m3279 && (appres.color8 || COLORS < 16))? 
+		    TS_ON: TS_OFF;
+	if (ab_mode == TS_ON)
+		defattr |= A_BOLD;
+
+	/* Pull in the user's color mappings. */
+	init_user_colors();
+	init_user_attribute_colors();
+}
+
+/* Really initialize the screen. */
+static void
+screen_connect(Boolean connected)
+{
+	static Boolean initted = False;
+	int want_ov_rows = ov_rows;
+	int want_ov_cols = ov_cols;
+	Boolean oversize = False;
+
+	if (initted || !connected)
+	    	return;
+	initted = True;
+
+#if !defined(C3270_80_132) /*[*/
+	/* Initialize curses. */
+	if (initscr() == NULL) {
+		(void) fprintf(stderr, "Can't initialize terminal.\n");
+		exit(1);
+	}
+#else /*][*/
 	/* Set up ncurses, and see if it's within bounds. */
 	if (appres.defscreen != CN) {
 		char nbuf[64];
@@ -247,8 +302,10 @@ screen_init(void)
 			exit(1);
 		}
 		if (write(1, defscreen_spec.mode_switch,
-		    strlen(defscreen_spec.mode_switch)) < 0)
+		    strlen(defscreen_spec.mode_switch)) < 0) {
+			endwin();
 		    	exit(1);
+		}
 	}
 	if (appres.altscreen) {
 		char nbuf[64];
@@ -260,8 +317,12 @@ screen_init(void)
 	}
 	alt_screen = newterm(NULL, stdout, stdin);
 	if (alt_screen == NULL) {
-		(void) fprintf(stderr, "Can't initialize terminal.\n");
+		popup_an_error("Can't initialize terminal.\n");
 		exit(1);
+	}
+	if (def_screen == NULL) {
+	    	def_screen = alt_screen;
+		cur_screen = def_screen;
 	}
 	if (appres.altscreen) {
 		set_term(alt_screen);
@@ -269,7 +330,7 @@ screen_init(void)
 	}
 
 	/* If they want 80/132 switching, then they want a model 5. */
-	if (def_screen != NULL && model_num != 5) {
+	if (def_screen != alt_screen && model_num != 5) {
 		set_rows_cols(5, 0, 0);
 	}
 #endif /*]*/
@@ -289,7 +350,7 @@ screen_init(void)
 
 		/* If we're at the smallest screen now, give up. */
 		if (model_num == 2) {
-			(void) fprintf(stderr, "Emulator won't fit on a %dx%d "
+			popup_an_error("Emulator won't fit on a %dx%d "
 			    "display.\n", LINES, COLS);
 			exit(1);
 		}
@@ -314,7 +375,7 @@ screen_init(void)
 
 	/* Figure out where the status line goes, if it fits. */
 #if defined(C3270_80_132) /*[*/
-	if (def_screen != NULL) {
+	if (def_screen != alt_screen) {
 		/* Start out in defscreen mode. */
 		set_status_row(defscreen_spec.rows, 24);
 	} else
@@ -370,7 +431,7 @@ screen_init(void)
 			if (COLORS < 16)
 			    	appres.color8 = True;
 #if defined(C3270_80_132) && defined(NCURSES_VERSION)  /*[*/
-			if (def_screen != NULL) {
+			if (def_screen != alt_screen) {
 				SCREEN *s = cur_screen;
 
 				/*
@@ -399,47 +460,12 @@ screen_init(void)
 		}
 	}
 
-	/*
-	 * See about keyboard Meta-key behavior.
-	 *
-	 * Note: Formerly, "auto" meant to use the terminfo 'km' capability (if
-	 * set, then disable metaEscape).  But popular terminals like the
-	 * Linux console and xterms are actually configurable, though they have
-	 * fixed terminfo capabilities.  It is harmless to enable metaEscape
-	 * when the terminal supports it, so the default is now 'on'.
-	 *
-	 * Setting the high bit for the Meta key is a pretty achaic idea, IMO,
-	 * so we no loger support it.
-	 */
-	if (!ts_value(appres.meta_escape, &me_mode))
-		(void) fprintf(stderr, "invalid %s value: '%s', "
-		    "assuming 'auto'\n", ResMetaEscape, appres.meta_escape);
-	if (me_mode == TS_AUTO)
-		me_mode = TS_ON;
-
-	/* See about all-bold behavior. */
-	if (appres.all_bold_on)
-		ab_mode = TS_ON;
-	else if (!ts_value(appres.all_bold, &ab_mode))
-		(void) fprintf(stderr, "invalid %s value: '%s', "
-		    "assuming 'auto'\n", ResAllBold, appres.all_bold);
-	if (ab_mode == TS_AUTO)
-		ab_mode = (appres.m3279 && (appres.color8 || COLORS < 16))? 
-		    TS_ON: TS_OFF;
-	if (ab_mode == TS_ON)
-		defattr |= A_BOLD;
-
-	/* Pull in the user's color mappings. */
-	init_user_colors();
-	init_user_attribute_colors();
 
 	/* Set up the controller. */
 	ctlr_init(-1);
 	ctlr_reinit(-1);
 
-	/* Finish screen initialization. */
 	screen_init2();
-	screen_suspend();
 }
 
 /* Configure the TTY settings for a curses screen. */
@@ -474,17 +500,22 @@ swap_screens(SCREEN *new_screen)
 static void
 screen_init2(void)
 {
+	escaped = False;
+
 	/*
 	 * Finish initializing ncurses.  This should be the first time that it
 	 * will send anything to the terminal.
 	 */
-	escaped = False;
 
 	/* Set up the keyboard. */
+#if defined(C3270_80_132) /*[*/
+	swap_screens(alt_screen);
+#endif /*]*/
 	setup_tty();
 	scrollok(stdscr, FALSE);
+
 #if defined(C3270_80_132) /*[*/
-	if (def_screen != NULL) {
+	if (def_screen != alt_screen) {
 		/*
 		 * The first setup_tty() set up altscreen.
 		 * Set up defscreen now, and leave it as the
@@ -505,7 +536,7 @@ screen_init2(void)
 
 #if defined(C3270_80_132) /*[*/
 	/* Ignore SIGWINCH -- it might happen when we do 80/132 changes. */
-	if (def_screen != NULL)
+	if (def_screen != alt_screen)
 		signal(SIGWINCH, SIG_IGN);
 #endif /*]*/
 }
@@ -771,7 +802,7 @@ screen_disp(Boolean erasing _is_unused)
 
 #if defined(C3270_80_132) /*[*/
 	/* See if they've switched screens on us. */
-	if (def_screen != NULL && screen_alt != curses_alt) {
+	if (def_screen != alt_screen && screen_alt != curses_alt) {
 		if (screen_alt) {
 			if (write(1, altscreen_spec.mode_switch,
 			    strlen(altscreen_spec.mode_switch)) < 0)
@@ -796,8 +827,7 @@ screen_disp(Boolean erasing _is_unused)
 		curses_alt = screen_alt;
 
 		/* Tell curses to forget what may be on the screen already. */
-		endwin();
-		erase();
+		clear();
 	}
 #endif /*]*/
 
@@ -1190,10 +1220,9 @@ screen_suspend(void)
 {
 	static Boolean need_to_scroll = False;
 
-	if (!escaped) {
-		escaped = True;
+	if (!isendwin()) {
 #if defined(C3270_80_132) /*[*/
-		if (def_screen != NULL) {
+		if (def_screen != alt_screen) {
 			/*
 			 * Call endwin() for the last-defined screen
 			 * (altscreen) first.  Note that this will leave
@@ -1213,13 +1242,17 @@ screen_suspend(void)
 #else /*][*/
 		endwin();
 #endif /*]*/
+	}
+
+	if (!escaped) {
+		escaped = True;
 
 		if (need_to_scroll)
 			printf("\n");
 		else
 			need_to_scroll = True;
 #if defined(C3270_80_132) /*[*/
-		if (curses_alt && def_screen != NULL) {
+		if (curses_alt && def_screen != alt_screen) {
 			if (write(1, defscreen_spec.mode_switch,
 			    strlen(defscreen_spec.mode_switch)) < 0)
 			    	x3270_exit(1);
@@ -1235,7 +1268,7 @@ screen_resume(void)
 	escaped = False;
 
 #if defined(C3270_80_132) /*[*/
-	if (def_screen != NULL && curses_alt) {
+	if (def_screen != alt_screen && curses_alt) {
 		/*
 		 * When we suspended the screen, we switched to defscreen so
 		 * that endwin() got called in the right order.  Switch back.
@@ -1461,7 +1494,7 @@ draw_oia(void)
 	static Boolean filled_extra[2] = { False, False };
 
 #if defined(C3270_80_132) /*[*/
-	if (def_screen != NULL) {
+	if (def_screen != alt_screen) {
 		if (curses_alt)
 			rmargin = altscreen_spec.cols - 1;
 		else
