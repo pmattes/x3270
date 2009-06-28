@@ -613,7 +613,7 @@ static struct {
     "<name>[,<name>...]", "Keyboard map name(s)" },
 #endif /*]*/
 #if defined(WS3270) /*[*/
-{ OptLocalCp,  OPT_INT,	False, ResLocalCp,   offset(local_cp)
+{ OptLocalCp,  OPT_INT,	False, ResLocalCp,   offset(local_cp),
     "<codepage>", "Use <codepage> instead of ANSI codepage for local I/O"
 },
 #endif /*]*/

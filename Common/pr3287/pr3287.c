@@ -748,8 +748,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 			struct servent *sp;
 
 			if (resolve_host_and_port(proxy_host, proxy_portname,
-				    &proxy_port, &ha.sa, &ha_len, errtxt,
-				    sizeof(errtxt)) < 0) {
+				    0, &proxy_port, &ha.sa, &ha_len, errtxt,
+				    sizeof(errtxt), NULL) < 0) {
 			    popup_an_error("%s/%s: %s", proxy_host,
 				    proxy_portname, errtxt);
 			    rc = 1;
@@ -769,8 +769,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 			} else
 				p = (unsigned short)lport;
 		} else {
-			if (resolve_host_and_port(host, port, &p, &ha.sa,
-				    &ha_len, errtxt, sizeof(errtxt)) < 0) {
+			if (resolve_host_and_port(host, port, 0, &p, &ha.sa,
+				    &ha_len, errtxt, sizeof(errtxt),
+				    NULL) < 0) {
 			    popup_an_error("%s/%s: %s", host, port, errtxt);
 			    rc = 1;
 			    goto retry;

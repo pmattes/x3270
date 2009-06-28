@@ -36,6 +36,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 #else /*][*/
 /* Expose IPv6 structures and calls. */
 #undef _WIN32_WINNT
@@ -66,15 +67,15 @@ static void win32_freeaddrinfo(struct addrinfo *res);
  *  -2 for simple error (cannot resolve the name).
  */
 int
-resolve_host_and_port(const char *host, char *portname, int ix _is_unused,
+resolve_host_and_port(const char *host, char *portname, int ix,
 	unsigned short *pport, struct sockaddr *sa, socklen_t *sa_len,
 	char *errmsg, int em_len, int *lastp)
 {
 #if defined(_WIN32) /*[*/
-    	/* Figure out if we should use gethostbyname() or getaddrinfo(). */
     	OSVERSIONINFO info;
 	Boolean has_getaddrinfo = False;
 
+    	/* Figure out if we should use gethostbyname() or getaddrinfo(). */
 	memset(&info, '\0', sizeof(info));
 	info.dwOSVersionInfoSize = sizeof(info);
 	if (GetVersionEx(&info) == 0) {
@@ -147,8 +148,8 @@ resolve_host_and_port(const char *host, char *portname, int ix _is_unused,
 		if (lastp != NULL)
 			*lastp = (res->ai_next == NULL);
 		freeaddrinfo(res0);
-	}
 #endif /*]*/
+	}
 #if defined(_WIN32) /*[*/
 	else
 #endif /*]*/
@@ -187,16 +188,27 @@ resolve_host_and_port(const char *host, char *portname, int ix _is_unused,
 					"Unknown host:\n%s", host);
 				return -2;
 			}
+			if (lastp != NULL)
+			    	*lastp = True;
 		} else {
-		    	/* Todo: index info h_addr_list. */
+		    	int i;
+
+			for (i = 0; i < ix; i++) {
+			    	if (hp->h_addr_list[i] == NULL) {
+					snprintf(errmsg, em_len,
+						"Unknown host:\n%s", host);
+					return -2;
+				}
+			}
 			sin->sin_family = hp->h_addrtype;
-			(void) memmove(&sin->sin_addr, hp->h_addr,
+			(void) memmove(&sin->sin_addr,
+				hp->h_addr_list[i],
 				hp->h_length);
+			if (lastp != NULL)
+			    	*lastp = (hp->h_addr_list[i + 1] == NULL);
 		}
 		sin->sin_port = port;
 		*sa_len = sizeof(struct sockaddr_in);
-		if (lastp != NULL)
-			*lastp = TRUE;
 	}
 
 #endif /*]*/

@@ -68,7 +68,7 @@ LIBS = $(SSLLIB) -lws2_32
 SHRTLIBS = -lole32 -luuid
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
-PROGS = ws3270.exe w3n4.dll w3n46.dll shf.dll
+PROGS = ws3270.exe
 all: $(PROGS)
 
 version.o: $(VOBJS) version.txt mkversion.sh Makefile
@@ -91,24 +91,6 @@ ws3270.exe: $(OBJECTS) Makefile
 wversion.o: version.txt mkwversion.sh
 	@chmod +x mkwversion.sh version.txt
 	sh ./mkwversion.sh $(CC)
-
-w3n4.dll: w3n4.o w3misc.o
-	$(CC) $(DLLFLAGS) -o w3n4.dll w3n4.o -lws2_32
-
-w3n46.dll: w3n46.o w3misc.o
-	$(CC) $(DLLFLAGS) -o w3n46.dll w3n46.o -lws2_32
-
-w3n4.o: resolver.c
-	$(CC) $(CFLAGS) -DW3N4 -c -o w3n4.o resolver.c
-
-w3n46.o: resolver.c
-	$(CC) $(CFLAGS) -DW3N46 -c -o w3n46.o resolver.c
-
-shf.dll: shellfolder.o
-	$(CC) $(DLLFLAGS) -o shf.dll shellfolder.o
-
-shellfolder.o: shellfolder.c
-	$(CC) $(CFLAGS) -c -o shellfolder.o shellfolder.c
 
 clean:
 	rm -f *.o mkfb mkfb.exe fallbacks.c

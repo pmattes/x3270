@@ -32,12 +32,14 @@
  */
 
 #include <windows.h>
+#include <shlobj.h>
 #include <stdio.h>
 
 #include "windirsc.h"
 
 
-/* XXX: If Win2K or later, use get_shell_folders from shf.dll.
+/*
+ * If Win2K or later, use SHGetFoldersA from shell32.dll.
  * Otherwise, use the function below.
  */
 
@@ -105,30 +107,64 @@ old_get_dirs(char *desktop, char *appdata)
 	return 0;
 }
 
-/* Locate the desktop and appdata directories via the ShGetFolderPath API. */
+/*
+ * dll_SHGetFolderPath explicitly pulls SHGetFolderPathA out of shell32.dll,
+ * so we won't get link errors on Win98.
+ */
+
+static HRESULT
+dll_SHGetFolderPath(HWND hwndOwner, int nFolder, HANDLE hToken, DWORD dwFlags,
+	LPTSTR pszPath)
+{
+    	static HMODULE handle = NULL;
+	static FARPROC p = NULL;
+	typedef HRESULT sgfp_fn(HWND, int, HANDLE, DWORD, LPSTR);
+
+	if (handle == NULL) {
+	    	handle = LoadLibrary("shell32.dll");
+		if (handle == NULL) {
+		    	fprintf(stderr, "Cannot find shell32.dll\n");
+			return E_FAIL;
+		}
+		p = GetProcAddress(handle, "SHGetFolderPathA");
+		if (p == NULL) {
+		    	fprintf(stderr, "Cannot find SHGetFolderPathA in "
+				"shell32.dll\n");
+			return E_FAIL;
+		}
+	}
+	return ((sgfp_fn *)p)(hwndOwner, nFolder, hToken, dwFlags, pszPath);
+}
+
+/* Locate the desktop and appdata directories via the SHGetFolderPath API. */
 static int
 new_get_dirs(char *desktop, char *appdata)
 {
-    	HMODULE handle;
-	static int loaded = FALSE;
-	static FARPROC p;
-	typedef int shfproc(char *, char *);
+    	HRESULT r;
 
-	if (!loaded) {
-		handle = LoadLibrary("shf.dll");
-		if (handle == NULL) {
-			printf("Cannot find shf.dll to resolve the Desktop "
-				"and Application Data directories.\n");
-			return -1;
-		}
-		p = GetProcAddress(handle, "get_shell_folders");
-		if (p == NULL) {
-			printf("Cannot resolve get_shell_folders() in "
-				"shf.dll\n");
+	if (desktop != NULL) {
+		r = dll_SHGetFolderPath(NULL, CSIDL_DESKTOPDIRECTORY, NULL,
+			SHGFP_TYPE_CURRENT, desktop);
+		if (r != S_OK) {
+			printf("SHGetFolderPath(DESKTOPDIRECTORY) failed: "
+				"0x%x\n", (int)r);
+			fflush(stdout);
 			return -1;
 		}
 	}
-	return ((shfproc *)p)(desktop, appdata);
+
+	if (appdata != NULL) {
+		r = dll_SHGetFolderPath(NULL, CSIDL_APPDATA, NULL,
+			SHGFP_TYPE_CURRENT, appdata);
+		if (r != S_OK) {
+			printf("SHGetFolderPath(APPDATA) failed: 0x%x\n",
+				(int)r);
+			fflush(stdout);
+			return -1;
+		}
+	    }
+
+	return 0;
 }
 
 /* Locate the desktop and appdata directories. */

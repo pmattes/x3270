@@ -52,7 +52,7 @@ LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib
 SHRTLIBS = ole32.lib
 WIZLIBS = ole32.lib winspool.lib advapi32.lib
 
-PROGS = ws3270.exe w3n4.dll w3n46.dll shf.dll
+PROGS = ws3270.exe
 all: $(PROGS)
 
 version.obj: $(VOBJS) version.txt mkversion.exe Msc\Makefile
@@ -78,21 +78,6 @@ ws3270.exe: $(OBJECTS) Msc\Makefile
 wversion.obj: version.txt mkversion.exe
 	mkversion.exe -w
 	$(CC) $(CFLAGS) /c wversion.c
-
-w3n4.dll: w3n4.obj w3misc.obj
-	$(CC) /LD /Few3n4.dll w3n4.obj ws2_32.lib /link /export:dresolve_host_and_port
-
-w3n46.dll: w3n46.obj w3misc.obj
-	$(CC) /LD /Few3n46.dll w3n46.obj ws2_32.lib /link /export:dresolve_host_and_port
-
-w3n4.obj: resolver.c
-	$(CC) $(CFLAGS) /DW3N4 /c /Fow3n4.obj resolver.c
-
-w3n46.obj: resolver.c
-	$(CC) $(CFLAGS) /DW3N46  /D_WIN32_WINNT=0x0501 /D_WIN32_IE=0x0501 /c /Fow3n46.obj resolver.c
-
-shf.dll: shellfolder.obj
-	$(CC) /LD /Feshf.dll shellfolder.obj shell32.lib /link /export:get_shell_folders
 
 clean:
 	erase *.obj *.RES *.exp *.lib $(MKFB) fallbacks.c mkversion.exe version.c wversion.c
@@ -146,8 +131,6 @@ see.obj: see.c
 	$(CC) $(CFLAGS) /c see.c
 sf.obj: sf.c
 	$(CC) $(CFLAGS) /c sf.c
-shellfolder.obj: shellfolder.c
-	$(CC) $(CFLAGS) /c shellfolder.c
 smain.obj: smain.c
 	$(CC) $(CFLAGS) /c smain.c
 tables.obj: tables.c

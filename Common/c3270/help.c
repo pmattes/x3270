@@ -196,8 +196,8 @@ static struct {
 	    "Change a toggle" },
 	{ "ToggleInsert", CN, P_3270, "Set or clear 3270 insert mode" },
 	{ "ToggleReverse", CN, P_3270, "Set or clear reverse-input mode" },
-	{ "Trace", "[data|keyboard]on|off [<file>]", P_INTERACTIVE, "Configure tracing" },
-	{ "Transfer", "<args>", P_INTERACTIVE, "IND$FILE file transfer (see 'help file-transfer')" },
+	{ "Trace", "[data|keyboard] on|off [<file>]", P_INTERACTIVE, "Configure tracing" },
+	{ "Transfer", "[<args>]", P_INTERACTIVE, "IND$FILE file transfer (see 'help file-transfer')" },
 	{ "Up", CN, P_3270, "Move cursor up" },
 #if defined(X3270_SCRIPT) /*[*/
 	{ "Wait", "<args>", P_SCRIPTING, "Wait for host events" },
