@@ -46,7 +46,7 @@ WINDRES = windres
 NO_CYGWIN = -mno-cygwin
 endif
 
-XCPPFLAGS = -D_WIN32 -DPR3287 -DWPR3287 -DX3270_DBCS=1
+XCPPFLAGS = -D_WIN32 -DPR3287 -DWPR3287 -DX3270_DBCS=1 -D_WIN32_WINNT=0x500 -D_WIN32_IE=0x0500 -DWINVER=0x500
 CFLAGS = $(NO_CYGWIN) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
 SRCS = charset.c ctlr.c pr3287.c proxy.c resolver.c see.c sf.c tables.c \
 	telnet.c trace_ds.c utf8.c w3misc.c windirs.c winvers.c unicode.c \

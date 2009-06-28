@@ -70,7 +70,7 @@ SHRTLIBS = -lole32 -luuid
 WIZLIBS = -lole32 -luuid -lwinspool
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
-PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe w3n4.dll w3n46.dll shf.dll ead3270.exe
+PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe
 all: $(PROGS)
 
 wc3270.exe : XCPPFLAGS += -DWIN32_LEAN_AND_MEAN
@@ -107,24 +107,6 @@ wc3270wiz.exe: wizard.o wc3270res.o wversion.o shortcut.o winvers.o windirs.o
 
 catf.exe: catf.c
 	$(CC) -o catf.exe $(CFLAGS) catf.c
-
-w3n4.dll: w3n4.o w3misc.o
-	$(CC) $(DLLFLAGS) -o w3n4.dll w3n4.o -lws2_32
-
-w3n46.dll: w3n46.o w3misc.o
-	$(CC) $(DLLFLAGS) -o w3n46.dll w3n46.o -lws2_32
-
-w3n4.o: resolver.c
-	$(CC) $(CFLAGS) -DW3N4 -c -o w3n4.o resolver.c
-
-w3n46.o: resolver.c
-	$(CC) $(CFLAGS) -DW3N46 -c -o w3n46.o resolver.c
-
-shf.dll: shellfolder.o
-	$(CC) $(DLLFLAGS) -o shf.dll shellfolder.o
-
-shellfolder.o: shellfolder.c
-	$(CC) $(CFLAGS) -c -o shellfolder.o shellfolder.c
 
 ead3270.exe: ead3270.o windirs.o
 	$(CC) -o $@ $(CFLAGS) ead3270.o windirs.o

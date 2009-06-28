@@ -26,9 +26,6 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "\\Melville\pdm\psrc\x3270\Release\Inno\ws3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "\\Melville\pdm\psrc\x3270\Release\Inno\ws3270\w3n4.dll"; DestDir: "{app}"; Flags: ignoreversion; OnlyBelowVersion: 0.0,5.01
-Source: "\\Melville\pdm\psrc\x3270\Release\Inno\ws3270\w3n46.dll"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.01
-Source: "\\Melville\pdm\psrc\x3270\Release\Inno\ws3270\shf.dll"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.0
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\ws3270\html\Bugs.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\ws3270\html\Build.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "\\Melville\pdm\psrc\x3270\Source\3.3svn\ws3270\html\FAQ.html"; DestDir: "{app}\html"; Flags: ignoreversion

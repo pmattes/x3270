@@ -52,7 +52,7 @@ LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib
 SHRTLIBS = ole32.lib
 WIZLIBS = ole32.lib winspool.lib advapi32.lib
 
-PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe w3n4.dll w3n46.dll shf.dll ead3270.exe
+PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe
 all: $(PROGS)
 
 version.obj: $(VOBJS) version.txt mkversion.exe Msc\Makefile
@@ -90,24 +90,6 @@ wc3270wiz.exe: wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj windi
 
 catf.exe: catf.c
 	$(CC) /Fecatf.exe $(CFLAGS) catf.c
-
-w3n4.dll: w3n4.obj w3misc.obj
-	$(CC) /LD /Few3n4.dll w3n4.obj ws2_32.lib /link /export:dresolve_host_and_port
-
-w3n46.dll: w3n46.obj w3misc.obj
-	$(CC) /LD /Few3n46.dll w3n46.obj ws2_32.lib /link /export:dresolve_host_and_port
-
-w3n4.obj: resolver.c
-	$(CC) $(CFLAGS) /DW3N4 /c /Fow3n4.obj resolver.c
-
-w3n46.obj: resolver.c
-	$(CC) $(CFLAGS) /DW3N46  /D_WIN32_WINNT=0x0501 /D_WIN32_IE=0x0501 /c /Fow3n46.obj resolver.c
-
-shf.dll: shellfolder.obj
-	$(CC) /LD /Feshf.dll shellfolder.obj shell32.lib /link /export:get_shell_folders
-
-shellfolder.obj: shellfolder.c
-	$(CC) $(CFLAGS) /c /Foshellfolder.obj shellfolder.c
 
 ead3270.exe: ead3270.obj windirs.obj
 	$(CC) /Fe$@ $(CFLAGS) ead3270.obj windirs.obj advapi32.lib
