@@ -237,9 +237,9 @@ static char *base_3270_keymap =
      "Shift <Key>END:    EraseEOF\n"
            "<Key>END:    FieldEnd\n"
      "Shift <Key>LEFT:   PreviousWord\n"
-     "Shift <Key>RIGHT:  NextWord\n
-            <Key>PRIOR:  PF(7)\n
-	    <Key>NEXT:   PF(8)";
+     "Shift <Key>RIGHT:  NextWord\n"
+           "<Key>PRIOR:  PF(7)\n"
+	   "<Key>NEXT:   PF(8)";
 #endif /*]*/
 
 Boolean any_error_output = False;
