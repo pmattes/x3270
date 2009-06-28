@@ -30,49 +30,18 @@
  *		Hostname resolution.
  */
 
-/*
- * This file is compiled three different ways:
- *
- * - With no special #defines, it defines hostname resolution for the main
- *   program: resolve_host_and_port().  On non-Windows platforms, the name
- *   look-up is directly in the function.  On Windows platforms, the name
- *   look-up is done by the function dresolve_host_and_port() in an
- *   OS-specific DLL.
- *
- * - With W3N4 #defined, it defines dresolve_host_and_port() as IPv4-only
- *   hostname resolution for a Windows DLL.  This is for Windows 2000 or
- *   earlier.
- *
- * - With W3N46 #defined, it defines dresolve_host_and_port() as IPv4/IPv6
- *   hostname resolution for a Windows DLL.  This is for Windows XP or
- *   later.
- */
-
 #include "globals.h"
-
-#if defined(W3N4) || defined(W3N46) /*[*/
-#if !defined(_WIN32)
-#error W3N4/W3N46 valid only on Windows.
-#endif /*]*/
-#define ISDLL 1
-#endif /*]*/
 
 #if !defined(_WIN32) /*[*/
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #else /*][*/
-#if defined(W3N46) /*[*/
-  /* Compiling DLL for WinXP or later: Expose getaddrinfo()/freeaddrinfo(). */
+/* Expose IPv6 structures and calls. */
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0501
-#endif /*]*/
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#if defined(W3N4) /*[*/
-  /* Compiling DLL for Win2K or earlier: No IPv6. */
-#undef AF_INET6
-#endif /*]*/
 #endif /*]*/
 
 #include <stdio.h>
@@ -83,10 +52,12 @@
 #include "Msc/deprecated.h"
 #endif /*]*/
 
-#if defined(_WIN32) && !defined(ISDLL) /*[*/
-typedef int rhproc(const char *, char *, int, unsigned short *,
-	struct sockaddr *, socklen_t *, char *, int, int *);
-#define DLL_RESOLVER_NAME "dresolve_host_and_port"
+#if defined(_WIN32) /*[*/
+static int win32_getaddrinfo(const char *node, const char *service,
+	const struct addrinfo *hints, struct addrinfo **res);
+static void win32_freeaddrinfo(struct addrinfo *res);
+#define getaddrinfo	win32_getaddrinfo
+#define freeaddrinfo	win32_freeaddrinfo
 #endif /*]*/
 
 /*
@@ -94,175 +65,199 @@ typedef int rhproc(const char *, char *, int, unsigned short *,
  * Returns 0 for success, -1 for fatal error (name resolution impossible),
  *  -2 for simple error (cannot resolve the name).
  */
-#if !defined(ISDLL) /*[*/
 int
 resolve_host_and_port(const char *host, char *portname, int ix _is_unused,
 	unsigned short *pport, struct sockaddr *sa, socklen_t *sa_len,
 	char *errmsg, int em_len, int *lastp)
-#else /*][*/
-int
-dresolve_host_and_port(const char *host, char *portname, int ix _is_unused,
-	unsigned short *pport, struct sockaddr *sa, socklen_t *sa_len,
-	char *errmsg, int em_len, int *lastp)
-#endif /*]*/
 {
-#if !defined(_WIN32) || defined(ISDLL) /*[*/
+#if defined(_WIN32) /*[*/
+    	/* Figure out if we should use gethostbyname() or getaddrinfo(). */
+    	OSVERSIONINFO info;
+	Boolean has_getaddrinfo = False;
 
-    	/* Non-Windows version, or Windows DLL version. */
+	memset(&info, '\0', sizeof(info));
+	info.dwOSVersionInfoSize = sizeof(info);
+	if (GetVersionEx(&info) == 0) {
+	    	fprintf(stderr, "Can't get Windows version\n");
+		exit(1);
+	}
+	has_getaddrinfo =
+	    (info.dwPlatformId != VER_PLATFORM_WIN32_WINDOWS &&
+	     info.dwMajorVersion >= 5 &&
+	     info.dwMinorVersion >= 1);
+
+	if (has_getaddrinfo)
+#endif /*]*/
+	{
 #if defined(AF_INET6) /*[*/
-	struct addrinfo	 hints, *res0, *res;
-	int		 rc;
+		struct addrinfo	 hints, *res0, *res;
+		int		 rc;
 
-	/* Use getaddrinfo() to resolve the hostname and port together. */
-	(void) memset(&hints, '\0', sizeof(struct addrinfo));
-	hints.ai_flags = 0;
-	hints.ai_family = PF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-	rc = getaddrinfo(host, portname, &hints, &res0);
-	if (rc != 0) {
-		snprintf(errmsg, em_len, "%s/%s:\n%s", host,
-				portname? portname: "(none)",
-				gai_strerror(rc));
-		return -2;
-	}
-	res = res0;
-
-	/*
-	 * Return the reqested element.
-	 * Hopefully the list will not change between calls.
-	 */
-	while (ix && res->ai_next != NULL) {
-	    	res = res->ai_next;
-		ix--;
-	}
-	if (res == NULL) {
-	    	/* Ran off the end?  The list must have changed. */
-	    	snprintf(errmsg, em_len, "%s/%s:\n%s", host,
-			portname? portname: "(none)",
-			gai_strerror(EAI_AGAIN));
-		freeaddrinfo(res);
-		return -2;
-	}
-
-	switch (res->ai_family) {
-	case AF_INET:
-		*pport =
-		    ntohs(((struct sockaddr_in *)res->ai_addr)->sin_port);
-		break;
-	case AF_INET6:
-		*pport =
-		    ntohs(((struct sockaddr_in6 *)res->ai_addr)->sin6_port);
-		break;
-	default:
-		snprintf(errmsg, em_len, "%s:\nunknown family %d", host,
-			res->ai_family);
-		freeaddrinfo(res);
-		return -1;
-	}
-	(void) memcpy(sa, res->ai_addr, res->ai_addrlen);
-	*sa_len = res->ai_addrlen;
-	if (lastp != NULL)
-		*lastp = (res->ai_next == NULL);
-	freeaddrinfo(res0);
-
-#else /*][*/
-
-	struct hostent	*hp;
-	struct servent	*sp;
-	unsigned short	 port;
-	unsigned long	 lport;
-	char		*ptr;
-	struct sockaddr_in *sin = (struct sockaddr_in *)sa;
-
-	/* Get the port number. */
-	lport = strtoul(portname, &ptr, 0);
-	if (ptr == portname || *ptr != '\0' || lport == 0L || lport & ~0xffff) {
-		if (!(sp = getservbyname(portname, "tcp"))) {
-			snprintf(errmsg, em_len,
-			    "Unknown port number or service: %s",
-			    portname);
-			return -1;
-		}
-		port = sp->s_port;
-	} else
-		port = htons((unsigned short)lport);
-	*pport = ntohs(port);
-
-	/* Use gethostbyname() to resolve the hostname. */
-	hp = gethostbyname(host);
-	if (hp == (struct hostent *) 0) {
-		sin->sin_family = AF_INET;
-		sin->sin_addr.s_addr = inet_addr(host);
-		if (sin->sin_addr.s_addr == (unsigned long)-1) {
-			snprintf(errmsg, em_len, "Unknown host:\n%s", host);
+		/* Use getaddrinfo() to resolve the hostname and port
+		 * together.
+		 */
+		(void) memset(&hints, '\0', sizeof(struct addrinfo));
+		hints.ai_flags = 0;
+		hints.ai_family = PF_UNSPEC;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_protocol = IPPROTO_TCP;
+		rc = getaddrinfo(host, portname, &hints, &res0);
+		if (rc != 0) {
+			snprintf(errmsg, em_len, "%s/%s:\n%s", host,
+					portname? portname: "(none)",
+					gai_strerror(rc));
 			return -2;
 		}
-	} else {
-		sin->sin_family = hp->h_addrtype;
-		(void) memmove(&sin->sin_addr, hp->h_addr, hp->h_length);
-	}
-	sin->sin_port = port;
-	*sa_len = sizeof(struct sockaddr_in);
-	if (lastp != NULL)
-		*lastp = TRUE;
-
-#endif /*]*/
-#else /*][*/
-
-	/* Win32 version: Use the right DLL. */
-	static int loaded = FALSE;
-	static FARPROC p = NULL;
-
-	if (!loaded) {
-		OSVERSIONINFO info;
-		HMODULE handle;
-		char *dllname;
-
-		/* Figure out if we are pre- or post XP. */
-		memset(&info, '\0', sizeof(info));
-		info.dwOSVersionInfoSize = sizeof(info);
-
-		if (GetVersionEx(&info) == 0) {
-			snprintf(errmsg, em_len,
-				"Can't retrieve OS version: %s",
-				win32_strerror(GetLastError()));
-			return -1;
-		}
+		res = res0;
 
 		/*
-		 * For pre-XP, load the IPv4-only DLL.
-		 * For XP and later, use the IPv4/IPv6 DLL.
+		 * Return the reqested element.
+		 * Hopefully the list will not change between calls.
 		 */
-		if (info.dwMajorVersion < 5 ||
-		    (info.dwMajorVersion == 5 && info.dwMinorVersion < 1))
-		    	dllname = "w3n4.dll";
-		else
-		    	dllname = "w3n46.dll";
-		handle = LoadLibrary(dllname);
-		if (handle == NULL) {
-			snprintf(errmsg, em_len, "Can't load %s: %s",
-				dllname, win32_strerror(GetLastError()));
+		while (ix && res->ai_next != NULL) {
+			res = res->ai_next;
+			ix--;
+		}
+		if (res == NULL) {
+			/* Ran off the end?  The list must have changed. */
+			snprintf(errmsg, em_len, "%s/%s:\n%s", host,
+				portname? portname: "(none)",
+				gai_strerror(EAI_AGAIN));
+			freeaddrinfo(res);
+			return -2;
+		}
+
+		switch (res->ai_family) {
+		case AF_INET:
+			*pport = ntohs(((struct sockaddr_in *)
+				    res->ai_addr)->sin_port);
+			break;
+		case AF_INET6:
+			*pport = ntohs(((struct sockaddr_in6 *)
+				    res->ai_addr)->sin6_port);
+			break;
+		default:
+			snprintf(errmsg, em_len, "%s:\nunknown family %d", host,
+				res->ai_family);
+			freeaddrinfo(res);
 			return -1;
 		}
+		(void) memcpy(sa, res->ai_addr, res->ai_addrlen);
+		*sa_len = res->ai_addrlen;
+		if (lastp != NULL)
+			*lastp = (res->ai_next == NULL);
+		freeaddrinfo(res0);
+	}
+#endif /*]*/
+#if defined(_WIN32) /*[*/
+	else
+#endif /*]*/
 
-		/* Look up the entry point we need. */
-		p = GetProcAddress(handle, DLL_RESOLVER_NAME);
-		if (p == NULL) {
-			snprintf(errmsg, em_len,
-				"Can't resolve " DLL_RESOLVER_NAME
-				" in %s: %s", dllname,
-				win32_strerror(GetLastError()));
-		    	return -1;
+#if defined(_WIN32) || !defined(AF_INET6) /*[*/
+	{
+		struct hostent	*hp;
+		struct servent	*sp;
+		unsigned short	 port;
+		unsigned long	 lport;
+		char		*ptr;
+		struct sockaddr_in *sin = (struct sockaddr_in *)sa;
+
+		/* Get the port number. */
+		lport = strtoul(portname, &ptr, 0);
+		if (ptr == portname || *ptr != '\0' || lport == 0L ||
+			    lport & ~0xffff) {
+			if (!(sp = getservbyname(portname, "tcp"))) {
+				snprintf(errmsg, em_len,
+				    "Unknown port number or service: %s",
+				    portname);
+				return -1;
+			}
+			port = sp->s_port;
+		} else
+			port = htons((unsigned short)lport);
+		*pport = ntohs(port);
+
+		/* Use gethostbyname() to resolve the hostname. */
+		hp = gethostbyname(host);
+		if (hp == (struct hostent *) 0) {
+			sin->sin_family = AF_INET;
+			sin->sin_addr.s_addr = inet_addr(host);
+			if (sin->sin_addr.s_addr == (unsigned long)-1) {
+				snprintf(errmsg, em_len,
+					"Unknown host:\n%s", host);
+				return -2;
+			}
+		} else {
+		    	/* Todo: index info h_addr_list. */
+			sin->sin_family = hp->h_addrtype;
+			(void) memmove(&sin->sin_addr, hp->h_addr,
+				hp->h_length);
 		}
-
-		loaded = TRUE;
+		sin->sin_port = port;
+		*sa_len = sizeof(struct sockaddr_in);
+		if (lastp != NULL)
+			*lastp = TRUE;
 	}
 
-	/* Use the DLL function to resolve the hostname and port. */
-	return ((rhproc *)p)(host, portname, ix, pport, sa, sa_len, errmsg,
-		em_len, lastp);
 #endif /*]*/
 
 	return 0;
 }
+
+#if defined(_WIN32) /*[*/
+/*
+ * Windows-specific versions of getaddrinfo(), freeaddrinfo() and
+ * gai_strerror().
+ * The symbols are resolved from ws2_32.dll at run-time, instead of
+ * by linking against ws2_32.lib, because they are not defined on all
+ * versions of Windows.
+ */
+typedef int gai_fn(const char *, const char *, const struct addrinfo *,
+	struct addrinfo **);
+typedef void fai_fn(struct addrinfo*);
+
+/* Resolve a symbol in ws2_32.dll. */
+static FARPROC
+get_ws2_32(const char *symbol)
+{
+	static HMODULE ws2_32_handle = NULL;
+    	FARPROC p;
+
+	if (ws2_32_handle == NULL) {
+		ws2_32_handle = LoadLibrary("ws2_32.dll");
+		if (ws2_32_handle == NULL) {
+			fprintf(stderr, "Can't load ws2_32.dll: %s\n",
+				win32_strerror(GetLastError()));
+			exit(1);
+		}
+	}
+	p = GetProcAddress(ws2_32_handle, symbol);
+	if (p == NULL) {
+		fprintf(stderr, "Can't resolve %s in ws2_32.dll: %s\n",
+			symbol, win32_strerror(GetLastError()));
+		exit(1);
+	}
+	return p;
+}
+
+static int
+win32_getaddrinfo(const char *node, const char *service,
+	const struct addrinfo *hints, struct addrinfo **res)
+{
+	static FARPROC gai_p = NULL;
+
+    	if (gai_p == NULL)
+		gai_p = get_ws2_32("getaddrinfo");
+	return (*(gai_fn *)gai_p)(node, service, hints, res);
+}
+
+static void
+win32_freeaddrinfo(struct addrinfo *res)
+{
+	static FARPROC fai_p = NULL;
+
+    	if (fai_p == NULL)
+		fai_p = get_ws2_32("freeaddrinfo");
+	(*(fai_fn *)fai_p)(res);
+}
+#endif /*]*/
