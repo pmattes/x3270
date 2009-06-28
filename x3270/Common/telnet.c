@@ -429,6 +429,9 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	unsigned short		passthru_port = 0;
 	int			on = 1;
 	char			errmsg[1024];
+	char			hn[256];
+	char			pn[256];
+
 #if defined(OMTU) /*[*/
 	int			mtu = OMTU;
 #endif /*]*/
@@ -625,6 +628,15 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 		if (ssl_host)
 			ssl_init();
 #endif /*]*/
+
+		if (numeric_host_and_port(&haddr.sa, ha_len, hn, sizeof(hn),
+			    pn, sizeof(pn), errmsg, sizeof(errmsg)) == 0) {
+		    	trace_dsn("Trying %s, port %s...\n", hn, pn);
+#if defined(C3270) /*[*/
+		    	printf("Trying %s, port %s...\n", hn, pn);
+			fflush(stdout);
+#endif /*]*/
+		}
 
 		/* connect */
 		if (connect(sock, &haddr.sa, ha_len) == -1) {

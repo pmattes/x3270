@@ -57,8 +57,11 @@
 static int win32_getaddrinfo(const char *node, const char *service,
 	const struct addrinfo *hints, struct addrinfo **res);
 static void win32_freeaddrinfo(struct addrinfo *res);
+static int win32_getnameinfo(const struct sockaddr *sa, socklen_t salen,
+	char *host, size_t hostlen, char *serv, size_t servlen, int flags);
 #define getaddrinfo	win32_getaddrinfo
 #define freeaddrinfo	win32_freeaddrinfo
+#define getnameinfo	win32_getnameinfo
 #endif /*]*/
 
 /*
@@ -94,7 +97,8 @@ resolve_host_and_port(const char *host, char *portname, int ix,
 		struct addrinfo	 hints, *res0, *res;
 		int		 rc;
 
-		/* Use getaddrinfo() to resolve the hostname and port
+		/*
+		 * Use getaddrinfo() to resolve the hostname and port
 		 * together.
 		 */
 		(void) memset(&hints, '\0', sizeof(struct addrinfo));
@@ -216,6 +220,63 @@ resolve_host_and_port(const char *host, char *portname, int ix,
 	return 0;
 }
 
+/*
+ * Resolve a sockaddr into a numeric hostname and port.
+ * Returns 0 for success, -1 for failure.
+ */
+int
+numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
+	size_t hostlen, char *serv, size_t servlen, char *errmsg, int em_len)
+{
+#if defined(_WIN32) /*[*/
+    	OSVERSIONINFO info;
+	Boolean has_getnameinfo = False;
+
+    	/* Figure out if we should use inet_ntoa() or getnameinfo(). */
+	memset(&info, '\0', sizeof(info));
+	info.dwOSVersionInfoSize = sizeof(info);
+	if (GetVersionEx(&info) == 0) {
+	    	fprintf(stderr, "Can't get Windows version\n");
+		exit(1);
+	}
+	has_getnameinfo =
+	    (info.dwPlatformId != VER_PLATFORM_WIN32_WINDOWS &&
+	     info.dwMajorVersion >= 5 &&
+	     info.dwMinorVersion >= 1);
+
+	if (has_getnameinfo)
+#endif /*]*/
+	{
+#if defined(AF_INET6) /*[*/
+		int	 rc;
+
+		/* Use getnameinfo(). */
+		rc = getnameinfo(sa, salen, host, hostlen, serv, servlen,
+			NI_NUMERICHOST | NI_NUMERICSERV);
+		if (rc != 0) {
+			snprintf(errmsg, em_len, "%s", gai_strerror(rc));
+			return -1;
+		}
+#endif /*]*/
+	}
+#if defined(_WIN32) /*[*/
+	else
+#endif /*]*/
+
+#if defined(_WIN32) || !defined(AF_INET6) /*[*/
+	{
+		struct sockaddr_in *sin = (struct sockaddr_in *)sa;
+
+		/* Use inet_ntoa() and snprintf(). */
+		snprintf(host, hostlen, "%s", inet_ntoa(sin->sin_addr));
+		snprintf(serv, servlen, "%u", ntohs(sin->sin_port));
+	}
+
+#endif /*]*/
+
+	return 0;
+}
+
 #if defined(_WIN32) /*[*/
 /*
  * Windows-specific versions of getaddrinfo(), freeaddrinfo() and
@@ -227,6 +288,8 @@ resolve_host_and_port(const char *host, char *portname, int ix,
 typedef int gai_fn(const char *, const char *, const struct addrinfo *,
 	struct addrinfo **);
 typedef void fai_fn(struct addrinfo*);
+typedef int gni_fn(const struct sockaddr *, socklen_t, char *, size_t,
+	char *, size_t, int);
 
 /* Resolve a symbol in ws2_32.dll. */
 static FARPROC
@@ -271,5 +334,17 @@ win32_freeaddrinfo(struct addrinfo *res)
     	if (fai_p == NULL)
 		fai_p = get_ws2_32("freeaddrinfo");
 	(*(fai_fn *)fai_p)(res);
+}
+
+static int
+win32_getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host,
+	size_t hostlen, char *serv, size_t servlen, int flags)
+{
+	static FARPROC gni_p = NULL;
+
+    	if (gni_p == NULL)
+		gni_p = get_ws2_32("getnameinfo");
+	return (*(gni_fn *)gni_p)(sa, salen, host, hostlen, serv, servlen,
+		flags);
 }
 #endif /*]*/
