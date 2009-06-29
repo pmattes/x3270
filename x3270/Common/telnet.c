@@ -377,14 +377,19 @@ sockstart(void)
 }
 #endif /*]*/
 
+#define NUM_HA	4
 static union {
 	struct sockaddr sa;
 	struct sockaddr_in sin;
 #if defined(AF_INET6) /*[*/
 	struct sockaddr_in6 sin6;
 #endif /*]*/
-} haddr;
-socklen_t ha_len = sizeof(haddr);
+} haddr[4];
+static socklen_t ha_len[NUM_HA] = {
+    sizeof(haddr[0]), sizeof(haddr[0]), sizeof(haddr[0]), sizeof(haddr[0])
+};
+static int num_ha = 0;
+static int ha_ix = 0;
 
 #if defined(_WIN32) /*[*/
 void
@@ -412,6 +417,123 @@ popup_a_sockerr(char *fmt, ...)
 }
 #endif /*]*/
 
+/* Connect to one of the addresses in haddr[]. */
+static int
+connect_to(int ix, Boolean noisy, Boolean *pending)
+{
+	int			on = 1;
+	char			hn[256];
+	char			pn[256];
+	char			errmsg[1024];
+#if defined(OMTU) /*[*/
+	int			mtu = OMTU;
+#endif /*]*/
+#	define close_fail	{ (void) SOCK_CLOSE(sock); sock = -1; return -1; }
+	/* create the socket */
+	if ((sock = socket(haddr[ix].sa.sa_family, SOCK_STREAM, 0)) == -1) {
+		popup_a_sockerr("socket");
+		return -1;
+	}
+
+	/* set options for inline out-of-band data and keepalives */
+	if (setsockopt(sock, SOL_SOCKET, SO_OOBINLINE, (char *)&on,
+		    sizeof(on)) < 0) {
+		popup_a_sockerr("setsockopt(SO_OOBINLINE)");
+		close_fail;
+	}
+	if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char *)&on,
+		    sizeof(on)) < 0) {
+		popup_a_sockerr("setsockopt(SO_KEEPALIVE)");
+		close_fail;
+	}
+#if defined(OMTU) /*[*/
+	if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char *)&mtu,
+		    sizeof(mtu)) < 0) {
+		popup_a_sockerr("setsockopt(SO_SNDBUF)");
+		close_fail;
+	}
+#endif /*]*/
+
+	/* set the socket to be non-delaying */
+#if defined(_WIN32) /*[*/
+	if (non_blocking(False) < 0)
+#else /*][*/
+	if (non_blocking(True) < 0)
+#endif /*]*/
+		close_fail;
+
+#if !defined(_WIN32) /*[*/
+	/* don't share the socket with our children */
+	(void) fcntl(sock, F_SETFD, 1);
+#endif /*]*/
+
+	/* init ssl */
+#if defined(HAVE_LIBSSL) /*[*/
+	if (ssl_host)
+		ssl_init();
+#endif /*]*/
+
+	if (numeric_host_and_port(&haddr[ix].sa, ha_len[ix], hn,
+		    sizeof(hn), pn, sizeof(pn), errmsg,
+		    sizeof(errmsg)) == 0) {
+		trace_dsn("Trying %s, port %s...\n", hn, pn);
+#if defined(C3270) /*[*/
+		printf("Trying %s, port %s...\n", hn, pn);
+		fflush(stdout);
+#endif /*]*/
+	}
+
+	/* connect */
+	if (connect(sock, &haddr[ix].sa, ha_len[ix]) == -1) {
+		if (socket_errno() == SE_EWOULDBLOCK
+#if defined(SE_EINPROGRESS) /*[*/
+		    || socket_errno() == SE_EINPROGRESS
+#endif /*]*/
+					   ) {
+			trace_dsn("Connection pending.\n");
+			*pending = True;
+#if !defined(_WIN32) /*[*/
+			output_id = AddOutput(sock, output_possible);
+#endif /*]*/
+		} else {
+			if (noisy)
+				popup_a_sockerr("Connect to %s, port %d",
+				    hostname, current_port);
+			close_fail;
+		}
+	} else {
+		if (non_blocking(False) < 0)
+			close_fail;
+		net_connected();
+	}
+
+	/* all done */
+#if defined(_WIN32) /*[*/
+	if (sock_handle == NULL) {
+		char ename[256];
+
+		sprintf(ename, "wc3270-%d", getpid());
+
+		sock_handle = CreateEvent(NULL, TRUE, FALSE, ename);
+		if (sock_handle == NULL) {
+			fprintf(stderr, "Cannot create socket handle: %s\n",
+			    win32_strerror(GetLastError()));
+			x3270_exit(1);
+		}
+	}
+	if (WSAEventSelect(sock, sock_handle, FD_READ | FD_CONNECT | FD_CLOSE)
+		    != 0) {
+		fprintf(stderr, "WSAEventSelect failed: %s\n",
+		    win32_strerror(GetLastError()));
+		x3270_exit(1);
+	}
+
+	return (int)sock_handle;
+#else /*][*/
+	return sock;
+#endif /*]*/
+}
+
 /*
  * net_connect
  *	Establish a telnet socket to the given host passed as an argument.
@@ -422,21 +544,13 @@ int
 net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
     Boolean *pending)
 {
-	struct servent	*sp;
-	struct hostent	*hp;
+	struct servent	       *sp;
+	struct hostent	       *hp;
 	char	        	passthru_haddr[8];
 	int			passthru_len = 0;
 	unsigned short		passthru_port = 0;
-	int			on = 1;
 	char			errmsg[1024];
-	char			hn[256];
-	char			pn[256];
-
-#if defined(OMTU) /*[*/
-	int			mtu = OMTU;
-#endif /*]*/
-
-#	define close_fail	{ (void) SOCK_CLOSE(sock); sock = -1; return -1; }
+	int			s;
 
 #if defined(_WIN32) /*[*/
 	sockstart();
@@ -463,6 +577,17 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	*pending = False;
 
 	Replace(hostname, NewString(host));
+
+	/* set up temporary termtype */
+	if (appres.termname == CN) {
+	    	if (std_ds_host) {
+			(void) sprintf(ttype_tmpval, "IBM-327%c-%d",
+			    appres.m3279 ? '9' : '8', model_num);
+			termtype = ttype_tmpval;
+		} else {
+			termtype = full_model_name;
+		}
+	}
 
 	/* get the passthru host and port number */
 	if (passthru_host) {
@@ -511,33 +636,53 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	/* fill in the socket address of the given host */
 	(void) memset((char *) &haddr, 0, sizeof(haddr));
 	if (passthru_host) {
-		haddr.sin.sin_family = AF_INET;
-		(void) memmove(&haddr.sin.sin_addr, passthru_haddr,
+	    	/*
+		 * XXX: We don't try multiple addresses for the passthru
+		 * host.
+		 */
+		haddr[0].sin.sin_family = AF_INET;
+		(void) memmove(&haddr[0].sin.sin_addr, passthru_haddr,
 			       passthru_len);
-		haddr.sin.sin_port = passthru_port;
-		ha_len = sizeof(struct sockaddr_in);
+		haddr[0].sin.sin_port = passthru_port;
+		ha_len[0] = sizeof(struct sockaddr_in);
+		num_ha = 1;
+		ha_ix = 0;
 	} else if (proxy_type > 0) {
+	    	/*
+		 * XXX: We don't try multiple addresses for a proxy
+		 * host.
+		 */
 	    	if (resolve_host_and_port(proxy_host, proxy_portname,
-			    0,&proxy_port, &haddr.sa, &ha_len, errmsg,
+			    0, &proxy_port, &haddr[0].sa, &ha_len[0], errmsg,
 			    sizeof(errmsg), NULL) < 0) {
 		    	popup_an_error("%s", errmsg);
 		    	return -1;
 		}
+		num_ha = 1;
+		ha_ix = 0;
 	} else {
 #if defined(LOCAL_PROCESS) /*[*/
 		if (ls) {
 			local_process = True;
 		} else {
 #endif /*]*/
+		    	int i;
+			int last = False;
+
 #if defined(LOCAL_PROCESS) /*[*/
 			local_process = False;
 #endif /*]*/
-			if (resolve_host_and_port(host, portname, 0,
-				    &current_port, &haddr.sa, &ha_len,
-				    errmsg, sizeof(errmsg), NULL) < 0) {
-			    	popup_an_error("%s", errmsg);
-			    	return -1;
+			num_ha = 0;
+			for (i = 0; i < NUM_HA && !last; i++) {
+				if (resolve_host_and_port(host, portname, i,
+				    &current_port, &haddr[i].sa, &ha_len[i],
+				    errmsg, sizeof(errmsg), &last) < 0) {
+					popup_an_error("%s", errmsg);
+					return -1;
+				}
+				num_ha++;
 			}
+			ha_ix = 0;
 #if defined(LOCAL_PROCESS) /*[*/
 		}
 #endif /*]*/
@@ -583,119 +728,20 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 			host_in3270(CONNECTED_ANSI);
 			break;
 		}
-	} else {
-#endif /*]*/
-		/* create the socket */
-		if ((sock = socket(haddr.sa.sa_family, SOCK_STREAM, 0)) == -1) {
-			popup_a_sockerr("socket");
-			return -1;
-		}
-
-		/* set options for inline out-of-band data and keepalives */
-		if (setsockopt(sock, SOL_SOCKET, SO_OOBINLINE, (char *)&on,
-			    sizeof(on)) < 0) {
-			popup_a_sockerr("setsockopt(SO_OOBINLINE)");
-			close_fail;
-		}
-		if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char *)&on,
-			    sizeof(on)) < 0) {
-			popup_a_sockerr("setsockopt(SO_KEEPALIVE)");
-			close_fail;
-		}
-#if defined(OMTU) /*[*/
-		if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char *)&mtu,
-			    sizeof(mtu)) < 0) {
-			popup_a_sockerr("setsockopt(SO_SNDBUF)");
-			close_fail;
-		}
-#endif /*]*/
-
-		/* set the socket to be non-delaying */
-#if defined(_WIN32) /*[*/
-		if (non_blocking(False) < 0)
-#else /*][*/
-		if (non_blocking(True) < 0)
-#endif /*]*/
-			close_fail;
-
-#if !defined(_WIN32) /*[*/
-		/* don't share the socket with our children */
-		(void) fcntl(sock, F_SETFD, 1);
-#endif /*]*/
-
-		/* init ssl */
-#if defined(HAVE_LIBSSL) /*[*/
-		if (ssl_host)
-			ssl_init();
-#endif /*]*/
-
-		if (numeric_host_and_port(&haddr.sa, ha_len, hn, sizeof(hn),
-			    pn, sizeof(pn), errmsg, sizeof(errmsg)) == 0) {
-		    	trace_dsn("Trying %s, port %s...\n", hn, pn);
-#if defined(C3270) /*[*/
-		    	printf("Trying %s, port %s...\n", hn, pn);
-			fflush(stdout);
-#endif /*]*/
-		}
-
-		/* connect */
-		if (connect(sock, &haddr.sa, ha_len) == -1) {
-			if (socket_errno() == SE_EWOULDBLOCK
-#if defined(SE_EINPROGRESS) /*[*/
-			    || socket_errno() == SE_EINPROGRESS
-#endif /*]*/
-						   ) {
-				trace_dsn("Connection pending.\n");
-				*pending = True;
-#if !defined(_WIN32) /*[*/
-				output_id = AddOutput(sock, output_possible);
-#endif /*]*/
-			} else {
-				popup_a_sockerr("Connect to %s, port %d",
-				    hostname, current_port);
-				close_fail;
-			}
-		} else {
-			if (non_blocking(False) < 0)
-				close_fail;
-			net_connected();
-		}
-#if defined(LOCAL_PROCESS) /*[*/
+		return sock;
 	}
 #endif /*]*/
 
-	/* set up temporary termtype */
-	if (appres.termname == CN && std_ds_host) {
-		(void) sprintf(ttype_tmpval, "IBM-327%c-%d",
-		    appres.m3279 ? '9' : '8', model_num);
-		termtype = ttype_tmpval;
+	/* Try each of the haddrs. */
+	while (ha_ix < num_ha) {
+		if ((s = connect_to(ha_ix, (ha_ix == num_ha - 1),
+				pending)) >= 0)
+			return s;
+		ha_ix++;
 	}
 
-	/* all done */
-#if defined(_WIN32) /*[*/
-	if (sock_handle == NULL) {
-		char ename[256];
-
-		sprintf(ename, "wc3270-%d", getpid());
-
-		sock_handle = CreateEvent(NULL, TRUE, FALSE, ename);
-		if (sock_handle == NULL) {
-			fprintf(stderr, "Cannot create socket handle: %s\n",
-			    win32_strerror(GetLastError()));
-			x3270_exit(1);
-		}
-	}
-	if (WSAEventSelect(sock, sock_handle, FD_READ | FD_CONNECT | FD_CLOSE)
-		    != 0) {
-		fprintf(stderr, "WSAEventSelect failed: %s\n",
-		    win32_strerror(GetLastError()));
-		x3270_exit(1);
-	}
-
-	return (int)sock_handle;
-#else /*][*/
-	return sock;
-#endif /*]*/
+	/* Ran out. */
+	return -1;
 }
 #undef close_fail
 
@@ -895,10 +941,6 @@ net_disconnect(void)
 	sock = -1;
 	trace_dsn("SENT disconnect\n");
 
-	/* Restore terminal type to its default. */
-	if (appres.termname == CN)
-		termtype = full_model_name;
-
 	/* We're not connected to an LU any more. */
 	status_lu(CN);
 
@@ -923,6 +965,9 @@ net_input(void)
 {
 	register unsigned char	*cp;
 	int	nr;
+#if defined(HAVE_LIBSSL) /*[*/
+	Boolean	ignore_ssl = False;
+#endif /*]*/
 
 #if defined(_WIN32) /*[*/
 	for (;;)
@@ -933,7 +978,7 @@ net_input(void)
 
 #if defined(_WIN32) /*[*/
 		if (HALF_CONNECTED) {
-			if (connect(sock, &haddr.sa, sizeof(haddr)) < 0) {
+			if (connect(sock, &haddr[ha_ix].sa, sizeof(haddr[0])) < 0) {
 				int err = GetLastError();
 
 				switch (err) {
@@ -964,9 +1009,20 @@ net_input(void)
 #endif /*]*/
 
 #if defined(HAVE_LIBSSL) /*[*/
-		if (ssl_con != NULL)
-			nr = SSL_read(ssl_con, (char *) netrbuf, BUFSZ);
-		else
+		if (ssl_con != NULL) {
+		    	/*
+			 * OpenSSL does not like getting refused connections
+			 * when it hasn't done any I/O yet.  So peek ahead to
+			 * see if it's worth getting it involved at all.
+			 */
+		    	if (HALF_CONNECTED &&
+			    (nr = recv(sock, (char *) netrbuf, 1,
+				       MSG_PEEK)) <= 0)
+			    	ignore_ssl = True;
+			else
+				nr = SSL_read(ssl_con, (char *) netrbuf,
+					BUFSZ);
+		} else
 #else /*][*/
 #endif /*]*/
 #if defined(LOCAL_PROCESS) /*[*/
@@ -980,7 +1036,7 @@ net_input(void)
 				return;
 			}
 #if defined(HAVE_LIBSSL) /*[*/
-			if (ssl_con != NULL) {
+			if (ssl_con != NULL && !ignore_ssl) {
 				unsigned long e;
 				char err_buf[120];
 
@@ -1016,8 +1072,28 @@ net_input(void)
 #endif /*]*/
 				);
 			if (HALF_CONNECTED) {
-				popup_a_sockerr("Connect to %s, port %d",
-				    hostname, current_port);
+			    	if (ha_ix == num_ha - 1) {
+					popup_a_sockerr("Connect to %s, "
+					    "port %d", hostname, current_port);
+				} else {
+				    	Boolean dummy;
+					int s;
+
+					net_disconnect();
+#if defined(HAVE_LIBSSL) /*[*/
+					if (ssl_host)
+						ssl_init();
+#endif /*]*/
+					while (++ha_ix < num_ha) {
+						s = connect_to(ha_ix,
+							(ha_ix == num_ha - 1),
+							&dummy);
+						if (s >= 0) {
+							host_newfd(s);
+							return;
+						}
+					}
+				}
 			} else if (socket_errno() != SE_ECONNRESET) {
 				popup_a_sockerr("Socket read");
 			}
