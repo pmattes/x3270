@@ -1935,6 +1935,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 	set_formatted();
 	END_TEXT0;
 	trace_ds("\n");
+	kybdlock_clr(KL_AWAITING_FIRST, "ctlr_write");
 	if (wcc_keyboard_restore) {
 		aid = AID_NO;
 		do_reset(False);

@@ -151,7 +151,6 @@ struct screen_spec altscreen_spec, defscreen_spec;
 static SCREEN *def_screen = NULL, *alt_screen = NULL;
 static SCREEN *cur_screen = NULL;
 static void parse_screen_spec(const char *str, struct screen_spec *spec);
-int regurg;
 #endif /*]*/
 
 static struct {
@@ -492,7 +491,6 @@ swap_screens(SCREEN *new_screen)
 {
 	set_term(new_screen);
 	cur_screen = new_screen;
-	/*regurg = TRUE;*/
 }
 #endif /*]*/
 
@@ -981,14 +979,13 @@ kybd_input(void)
 #endif /*]*/
 		trace_event("k=%d "
 #if defined(CURSES_WIDE) /*[*/
-			"wch=%u "
+			            "wch=%u "
 #endif /*]*/
-			"regurg=%u\n",
-			k,
+			                     , k
 #if defined(CURSES_WIDE) /*[*/
-			wch,
+			                        , wch
 #endif /*]*/
-			regurg);
+			                             );
 		if (k == ERR) {
 			if (first) {
 				if (failed_first) {
@@ -1002,21 +999,6 @@ kybd_input(void)
 		} else {
 			failed_first = False;
 		}
-#if defined(C3270_80_132) /*[*/
-		if (regurg) {
-		    regurg = FALSE;
-#if defined(CURSES_WIDE) /*[*/
-		    if (k != KEY_CODE_YES) {
-			trace_event("pushing back %u\n", wch);
-			unget_wch(wch);
-			continue;
-		    }
-#else /*][*/
-		    ungetch(k);
-		    continue;
-#endif /*]*/
-		}
-#endif /*]*/
 #if !defined(CURSES_WIDE) /*[*/
 		/* Differentiate between KEY_XXX and regular input. */
 		if (!(k & ~0xff)) {
