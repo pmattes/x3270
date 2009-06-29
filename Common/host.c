@@ -812,6 +812,18 @@ host_connected(void)
 #endif /*]*/
 }
 
+/* Swap out net_sock. */
+void
+host_newfd(int s)
+{
+    	/* Shut off the old. */
+	x_remove_input();
+
+	/* Turn on the new. */
+	net_sock = s;
+	x_add_input(net_sock);
+}
+
 #if defined(X3270_DISPLAY) /*[*/
 /* Comparison function for the qsort. */
 static int
