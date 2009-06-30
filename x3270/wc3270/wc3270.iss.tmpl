@@ -86,6 +86,10 @@ Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\New wc3270 Session.pif"
 ; the common programs group or the user programs group.
 Filename: "{cmd}"; Parameters: "/c erase ""{commonprograms}\{groupname}\New wc3270 Session.lnk"""; Flags: runhidden
 Filename: "{cmd}"; Parameters: "/c erase ""{userprograms}\{groupname}\New wc3270 Session.lnk"""; Flags: runhidden
+; Get rid of the old DLLs.
+Filename: "{cmd}"; Parameters: "/c erase ""{app}\w3n4.dll"""; Flags: runhidden
+Filename: "{cmd}"; Parameters: "/c erase ""{app}\w3n46.dll"""; Flags: runhidden
+Filename: "{cmd}"; Parameters: "/c erase ""{app}\shf.dll"""; Flags: runhidden
 
 [UninstallRun]
 Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\wc3270.lnk"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 0,4.0
