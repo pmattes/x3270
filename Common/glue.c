@@ -125,6 +125,7 @@ char	       *command_string = CN;
 static Boolean	sfont = False;
 Boolean	       *standard_font = &sfont;
 char	       *profile_name = CN;
+char	       *profile_path = CN;
 
 struct toggle_name toggle_names[N_TOGGLES] = {
 	{ ResMonoCase,        MONOCASE },
@@ -299,6 +300,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 		else
 		    	pname = *cl_hostname;
 		profile_name = NewString(pname);
+		Replace(profile_path, NewString(profile_name));
 
 		sl = strlen(profile_name);
 		if (sl > SESSION_SFX_LEN &&

@@ -80,6 +80,7 @@
 #include <windows.h>
 #include "winversc.h"
 #include "windirsc.h"
+#include "relinkc.h"
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
@@ -250,6 +251,7 @@ Boolean dont_return = False;
 #if defined(_WIN32) /*[*/
 char *instdir = NULL;
 char myappdata[MAX_PATH];
+static void start_standalone(void);
 #endif /*]*/
 
 void
@@ -272,14 +274,35 @@ static void
 save_dirs(char *argv0)
 {
     	char *bsl;
+	char *tmp_instdir;
+	DWORD rv;
 
 	/* Extract the installation directory from argv[0]. */
+	printf("argv0 is '%s'\n", argv0); fflush(stdout);
 	bsl = strrchr(argv0, '\\');
 	if (bsl != NULL) {
-	    	instdir = NewString(argv0);
-		instdir[(bsl - argv0) + 1] = '\0';
+	    	tmp_instdir = NewString(argv0);
+		if (bsl - argv0 > 0 && tmp_instdir[bsl - argv0 - 1] == ':')
+		    	/* X:\foo */
+			tmp_instdir[bsl - argv0 + 1] = '\0';
+		else
+		    	/* X:\foo\bar */
+			tmp_instdir[bsl - argv0] = '\0';
 	} else
-	    	instdir = "";
+	    	tmp_instdir = NewString(".");
+	printf("tmp_instdir is '%s'\n", tmp_instdir); fflush(stdout);
+	rv = GetFullPathName(tmp_instdir, 0, NULL, NULL);
+	instdir = Malloc(rv + 2);
+	if (GetFullPathName(tmp_instdir, rv + 1, instdir, NULL) == 0) {
+		fprintf(stderr, "GetFullPathName failed\n");
+		x3270_exit(1);
+	}
+	if (instdir[strlen(instdir) - 1] == '\\')
+	    	instdir[strlen(instdir) - 1] = '\0';
+	Free(tmp_instdir);
+	printf("instdir is '%s'\n", instdir); fflush(stdout);
+
+	/* Use GetFullPathName to add a drive letter, if needed */
 
 	/* Figure out the application data directory. */
 	if (get_dirs(NULL, myappdata, "wc3270") < 0)
@@ -348,6 +371,9 @@ int
 main(int argc, char *argv[])
 {
 	const char	*cl_hostname = CN;
+#if defined(_WIN32) /*[*/
+	char		*sa;
+#endif /*]*/
 
 #if defined(_WIN32) /*[*/
 	(void) get_version_info();
@@ -370,6 +396,13 @@ main(int argc, char *argv[])
 		"Type 'show copyright' for full copyright information.\n"
 		"Type 'help' for help information.\n\n",
 		build);
+
+#if defined(_WIN32) /*[*/
+	if ((sa = getenv("STANDALONE")) != CN && strlen(sa) > 0) {
+		start_standalone();
+		exit(0);
+	}
+#endif /*]*/
 
 	if (charset_init(appres.charset) != CS_OKAY) {
 		xs_warning("Cannot find charset \"%s\"", appres.charset);
@@ -1338,4 +1371,127 @@ merge_profile(void)
 	return did_read;
 }
 
+#endif /*]*/
+
+#if defined(_WIN32) /*[*/
+/* Start a standalone-mode copy of wc3270.exe. */
+static void
+start_standalone(void)
+{
+    	char *tempdir;
+	char mytempdir[1024];
+	FILE *f, *g;
+	session_t s;
+	HRESULT hres;
+	char exepath[1024];
+	char linkpath[1024];
+	char sesspath[1024];
+	char buf[1024];
+	char vbspath[1024];
+	extern char *profile_name; /* XXX */
+	extern char *profile_path; /* XXX */
+
+	printf("Running standalone\n"); fflush(stdout);
+
+	/* Make sure there is a session file. */
+	if (profile_path == CN) {
+		fprintf(stderr, "Can't use -standalone without a "
+			"session file\n");
+		x3270_exit(1);
+	}
+
+    	/* Make sure we're on NT. */
+    	if (!is_nt) {
+	    	fprintf(stderr, "Standalone does not work on Win9x\n");
+		x3270_exit(1);
+	}
+
+	/* Read the session file into 's'. */
+	f = fopen(profile_path, "r");
+	if (f == NULL) {
+	    	fprintf(stderr, "%s: %s\n", profile_path, strerror(errno));
+		x3270_exit(1);
+	}
+	if (read_session(f, &s) == 0) {
+	    	fprintf(stderr, "%s: invalid format\n", profile_path);
+		x3270_exit(1);
+	}
+	printf("Read session %s\n", profile_path); fflush(stdout);
+
+	/* Create a temporary directory to run in. */
+	tempdir = getenv("TEMP");
+	if (tempdir == CN) {
+	    	fprintf(stderr, "No %%TEMP%%?\n");
+		x3270_exit(1);
+	}
+	sprintf(mytempdir, "%s\\wcsa%u", tempdir, getpid());
+	if (mkdir(mytempdir) < 0) {
+	    	fprintf(stderr, "%s: %s\n", mytempdir, strerror(errno));
+		x3270_exit(1);
+	}
+	printf("Created directory %s\n", mytempdir); fflush(stdout);
+
+	/* Copy the profile into it. */
+	sprintf(sesspath, "%s\\%s.wc3270", mytempdir, profile_name);
+	g = fopen(sesspath, "w");
+	if (g == NULL) {
+	    	fprintf(stderr, "%s: %s\n", sesspath, strerror(errno));
+		x3270_exit(1);
+	}
+	rewind(f);
+	while (fgets(buf, sizeof(buf), f) != NULL) {
+	    	fputs(buf, g);
+	}
+	fclose(f);
+	fclose(g);
+	printf("Copied %s to %s\n", profile_path, sesspath); fflush(stdout);
+
+	/* Create the shortcut there. */
+	sprintf(exepath, "%s\\%s", instdir, "wc3270.exe");
+	printf("exepath is %s\n", exepath); fflush(stdout);
+	sprintf(linkpath, "%s\\%s", mytempdir, "wc3270.lnk");
+	hres = create_shortcut(&s,		/* session */
+			       exepath,		/* .exe    */
+			       linkpath,	/* .lnk    */
+			       sesspath,	/* args    */
+			       tempdir		/* cwd     */);
+	if (!SUCCEEDED(hres)) {
+	    	fprintf(stderr, "Cannot create link %s\n", linkpath);
+		x3270_exit(1);
+	}
+	printf("Created link %s\n", linkpath); fflush(stdout);
+
+	/* Create the VBScript file. */
+	sprintf(vbspath, "%s\\wc3270.vbs", mytempdir);
+	g = fopen(vbspath, "w");
+	if (g == NULL) {
+	    	fprintf(stderr, "%s: %s\n", vbspath, strerror(errno));
+		x3270_exit(1);
+	}
+	fprintf(g, "\
+dim ObjShell\n\
+set ObjShell = CreateObject(\"Shell.Application\")\n\
+ObjShell.ShellExecute \"wc3270.lnk\", \"\", \"\", \"open\", 1\n\
+set ObjShell = nothing\n");
+	fclose(g);
+	printf("Created script %s\n", vbspath); fflush(stdout);
+
+	/* Execute it. */
+	putenv("STANDALONE=");
+	if (chdir(mytempdir) < 0) {
+	    fprintf(stderr, "chdir(%s): %s\n", mytempdir, strerror(errno));
+	    x3270_exit(1);
+	}
+	system("START wc3270.vbs");
+	printf("Started\n"); fflush(stdout);
+
+	/* Clean up. */
+	Sleep(5 * 1000);
+	chdir("\\");
+	(void) unlink(linkpath);
+	(void) unlink(sesspath);
+	(void) unlink(vbspath);
+	(void) rmdir(mytempdir);
+	exit(0);
+}
 #endif /*]*/

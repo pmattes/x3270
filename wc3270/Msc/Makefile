@@ -48,6 +48,8 @@ VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj c3270.obj charset.obj \
 	trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj xio.obj \
 	w3misc.obj winvers.obj windirs.obj wc3270.RES
 OBJECTS = $(VOBJS) version.obj
+WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
+	windirs.obj relink.obj
 LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib
 SHRTLIBS = ole32.lib
 WIZLIBS = ole32.lib winspool.lib advapi32.lib
@@ -83,10 +85,8 @@ wversion.obj: version.txt mkversion.exe
 	mkversion.exe -w
 	$(CC) $(CFLAGS) /c wversion.c
 
-wc3270wiz.exe: wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj windirs.obj
-	$(CC) /Fewc3270wiz.exe $(CFLAGS) \
-		wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
-		windirs.obj $(WIZLIBS)
+wc3270wiz.exe: $(WOBJECTS)
+	$(CC) /Fewc3270wiz.exe $(CFLAGS) $(WOBJECTS) $(WIZLIBS)
 
 catf.exe: catf.c
 	$(CC) /Fecatf.exe $(CFLAGS) catf.c

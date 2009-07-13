@@ -62,12 +62,12 @@
 #include "winversc.h"
 #include "shortcutc.h"
 #include "windirsc.h"
+#include "relinkc.h"
 
 #if defined(_MSC_VER) /*[*/
 #include "Msc/deprecated.h"
 #endif /*]*/
 
-#define STR_SIZE	256
 #define LEGAL_CNAME	"ABCDEFGHIJKLMNOPQRSTUVWXYZ" \
 			"abcedfghijklmnopqrstuvwxyz" \
 			"0123456789_- "
@@ -84,52 +84,10 @@
 #define KM_DESC		"!description: "
 #define LEN_DESC	strlen(KM_DESC)
 
-#define WIZARD_VER	1
+#define SESS_SUFFIX	".wc3270"
+#define SESS_LEN	strlen(SESS_SUFFIX)
 
 extern char *wversion;
-
-struct {
-    	char    *name;
-	char    *hostcp;
-	int      is_dbcs;
-	wchar_t *codepage;
-} charsets[] = {
-	{ "belgian",		"500",	0, L"1252"	},
-	{ "belgian-euro",	"1148",	0, L"1252"	},
-	{ "bracket",		"37*",	0, L"1252"	},
-	{ "brazilian",		"275",	0, L"1252"	},
-	{ "cp1047",		"1047",	0, L"1252"	},
-	{ "cp870",		"870",	0, L"1250"	},
-	{ "chinese-gb18030",	"1388",	1, L"936"	},
-	{ "finnish",		"278",	0, L"1252"	},
-	{ "finnish-euro",	"1143",	0, L"1252"	},
-	{ "french",		"297",	0, L"1252"	},
-	{ "french-euro",	"1147",	0, L"1252"	},
-	{ "german",		"273",	0, L"1252"	},
-	{ "german-euro",	"1141",	0, L"1252"	},
-	{ "greek",		"875",	0, L"1253"	},
-	{ "hebrew",		"424",	0, L"1255"	},
-	{ "icelandic",		"871",	0, L"1252"	},
-	{ "icelandic-euro",	"1149",	0, L"1252"	},
-	{ "italian",		"280",	0, L"1252"	},
-	{ "italian-euro",	"1144",	0, L"1252"	},
-	{ "japanese-kana",	"930",  1, L"932"	},
-	{ "japanese-latin",	"939",  1, L"932"	},
-	{ "norwegian",		"277",	0, L"1252"	},
-	{ "norwegian-euro",	"1142",	0, L"1252"	},
-	{ "russian",		"880",	0, L"1251"	},
-	{ "simplified-chinese",	"935",  1, L"936"	},
-	{ "spanish",		"284",	0, L"1252"	},
-	{ "spanish-euro",	"1145",	0, L"1252"	},
-	{ "thai",		"838",	0, L"1252"	},
-	{ "traditional-chinese","937",	1, L"950"	},
-	{ "turkish",		"1026",	0, L"1254"	},
-	{ "uk",			"285",	0, L"1252"	},
-	{ "uk-euro",		"1146",	0, L"1252"	},
-	{ "us-euro",		"1140",	0, L"1252"	},
-	{ "us-intl",		"37",	0, L"1252"	},
-	{ NULL,			NULL,	0, NULL	}
-};
 
 /* Aliases for obsolete character set names. */
 struct {
@@ -176,29 +134,10 @@ static struct {
 	{ NULL,		NULL,					NULL   }
 };
 
-typedef struct {
-	char session[STR_SIZE];		/* session name */
-	char host[STR_SIZE];		/* host name */
-	int  port;			/* TCP port */
-	char luname[STR_SIZE];		/* LU name */
-	int  ssl;			/* SSL tunnel flag */
-	char proxy_type[STR_SIZE];	/* proxy type */
-	char proxy_host[STR_SIZE];	/*  proxy host */
-	char proxy_port[STR_SIZE];	/*  proxy port */
-	int  model;			/* model number */
-	char charset[STR_SIZE];		/* character set name */
-	int  is_dbcs;
-	int  wpr3287;			/* wpr3287 flag */
-	char printerlu[STR_SIZE];	/*  printer LU */
-	char printer[STR_SIZE];		/*  Windows printer name */
-	char printercp[STR_SIZE];	/*  wpr3287 code page */
-	char keymaps[STR_SIZE];		/* keymap names */
-} session_t;
-
 int create_session_file(session_t *s, char *path);
-static int read_session(FILE *f, session_t *s);
 
 static char mya[MAX_PATH];
+static char installdir[MAX_PATH];
 
 char *user_settings = NULL;
 
@@ -316,39 +255,50 @@ typedef struct km {
 	struct km *next;
     	char name[MAX_PATH];
 	char description[STR_SIZE];
+	char *def_both;
+	char *def_3270;
+	char *def_nvt;
 } km_t;
 km_t *km_first = NULL;
 km_t *km_last = NULL;
 
 /* Save a keymap name.  If it is unique, return its node. */
 km_t *
-save_keymap_name(char *path, char *keymap_name)
+save_keymap_name(char *path, char *keymap_name, char *description)
 {
 	km_t *km;
     	int sl;
 	km_t *kms;
 	FILE *f;
+	enum { KMF_BOTH, KMF_3270, KMF_NVT } km_mode = KMF_BOTH;
+	char **def = NULL;
 
 	km = (km_t *)malloc(sizeof(km_t));
 	if (km == NULL) {
 	    	fprintf(stderr, "Not enough memory\n");
 		return NULL;
 	}
+	memset(km, '\0', sizeof(km_t));
 	strcpy(km->name, keymap_name);
 	km->description[0] = '\0';
     	sl = strlen(km->name);
 
+	/* Slice off the '.wc3270km' suffix. */
 	if (sl > KS_LEN && !strcasecmp(km->name + sl - KS_LEN, KEYMAP_SUFFIX)) {
 		km->name[sl - KS_LEN] = '\0';
 		sl -= KS_LEN;
 	}
+
+	/* Slice off any '.3270' or '.nvt' before that. */
 	if (sl > LEN_3270 && !strcasecmp(km->name + sl - LEN_3270, KM_3270)) {
 		km->name[sl - LEN_3270] = '\0';
 		sl -= LEN_3270;
+		km_mode = KMF_3270;
 	} else if (sl > LEN_NVT &&
 		    !strcasecmp(km->name + sl - LEN_NVT, KM_NVT)) {
 		km->name[sl - LEN_NVT] = '\0';
 		sl -= LEN_NVT;
+		km_mode = KMF_NVT;
 	}
 
 	for (kms = km_first; kms != NULL; kms = kms->next) {
@@ -357,36 +307,112 @@ save_keymap_name(char *path, char *keymap_name)
 	}
 	if (kms != NULL) {
 	    	free(km);
-		return NULL;
+		km = kms;
+	} else {
+		km->next = NULL;
+		if (km_last != NULL)
+			km_last->next = km;
+		else
+			km_first = km;
+		km_last = km;
 	}
-	km->next = NULL;
-	if (km_last != NULL)
-	    	km_last->next = km;
-	else
-	    	km_first = km;
-	km_last = km;
 
-	/* Dig for a description. */
+	/* Check if we've already seen this keymap. */
+	switch (km_mode) {
+	    case KMF_BOTH:
+		def = &km->def_both;
+		break;
+	    case KMF_3270:
+		def = &km->def_3270;
+		break;
+	    case KMF_NVT:
+		def = &km->def_nvt;
+		break;
+	}
+	if (*def != NULL)
+	    	return km;
+
+	if (description != NULL) {
+	    	strcpy(km->description, description);
+		return km;
+	}
+
+	/* Dig for a description and save the definition. */
 	if (path != NULL) {
 		f = fopen(path, "r");
 		if (f != NULL) {
 			char buf[STR_SIZE];
 
 			while (fgets(buf, STR_SIZE, f) != NULL) {
+			    	int any = 0;
+
 				sl = strlen(buf);
 				if (sl > 0 && buf[sl - 1] == '\n')
 					buf[--sl] = '\0';
 				if (!strncasecmp(buf, KM_DESC, LEN_DESC)) {
 					strncpy(km->description, buf + LEN_DESC,
 						sl - LEN_DESC + 1);
-					break;
+					continue;
 				}
+				if (buf[0] == '!' || !buf[0])
+				    	continue;
+				if (*def == NULL)
+				    	*def = malloc(strlen(buf) + 2);
+				else {
+				    	*def = realloc(*def, strlen(*def) + 5 +
+						      strlen(buf) + 1);
+					any = 1;
+				}
+				if (*def == NULL) {
+				    	fprintf(stderr, "Out of memory\n");
+					exit(1);
+				}
+				if (!any)
+				    	strcat(strcpy(*def, " "), buf);
+				else
+				    	strcat(strcat(*def, "\\n\\\n "), buf);
 			}
 			fclose(f);
 		}
 	}
 
 	return km;
+}
+
+static void
+save_keymaps(void)
+{
+    	int i;
+	char dpath[MAX_PATH];
+	char fpath[MAX_PATH];
+	HANDLE h;
+	WIN32_FIND_DATA find_data;
+
+	for (i = 0; builtin_keymaps[i].name != NULL; i++) {
+		(void) save_keymap_name(NULL, builtin_keymaps[i].name,
+			builtin_keymaps[i].description);
+	}
+	sprintf(dpath, "%s*.wc3270km", mya);
+	h = FindFirstFile(dpath, &find_data);
+	if (h != INVALID_HANDLE_VALUE) {
+		do {
+			sprintf(fpath, "%s%s", mya, find_data.cFileName);
+			(void) save_keymap_name(fpath, find_data.cFileName,
+				NULL);
+		} while (FindNextFile(h, &find_data) != 0);
+		FindClose(h);
+	}
+	sprintf(dpath, "%s\\*.wc3270km", installdir);
+	h = FindFirstFile(dpath, &find_data);
+	if (h != INVALID_HANDLE_VALUE) {
+		do {
+			sprintf(fpath, "%s\\%s", installdir,
+				find_data.cFileName);
+			(void) save_keymap_name(fpath, find_data.cFileName,
+				NULL);
+		} while (FindNextFile(h, &find_data) != 0);
+		FindClose(h);
+	}
 }
 
 void
@@ -430,6 +456,17 @@ and can create or re-create a shortcut on your desktop.");
 
 /*
  * Session name screen.
+ * Parameters:
+ *   session_name[in]	If NULL, prompt for one
+ *   			If non-NULL and does not end in .wc3270, take this as
+ *   			the session name, and fail if it contains invalid
+ *   			characters
+ *   			If non-NULL and ends in .wc3270, take this as the path
+ *   			to the session file
+ *   s[out]		Session structure to fill in with name and (if the
+ *   			file exists) current contents
+ *   path[out]		Pathname of session file
+ *
  * Returns:  0 file does not exist
  *           1 file does exist and is editable, edit it
  *           2 file does exist and is editable, do not edit it
@@ -438,38 +475,104 @@ and can create or re-create a shortcut on your desktop.");
  *          -2 bail, uneditable and they don't want to overwrite it
  */
 int
-get_session(session_t *s, char *path)
+get_session(char *session_name, session_t *s, char *path)
 {
     	FILE *f;
 	int rc;
 	int editable;
 
-	/* Get the session name. */
-	new_screen(s, "\
-Session Name\n\
-\n\
-This is a unique name for the wc3270 session.  It is the name of the file\n\
-containing the session configuration parameters and the name of the desktop\n\
-shortcut.");
-	for (;;) {
-		printf("\nEnter session name: ");
-		fflush(stdout);
-		if (get_input(s->session, sizeof(s->session)) == NULL) {
-			return -1;
+	if (session_name != NULL) {
+	    	size_t sl = strlen(session_name);
+		size_t slen = sizeof(s->session);
+
+		/*
+		 * Session file pathname or session name specified on the
+		 * command line.
+		 */
+	    	if (sl > SESS_LEN &&
+		    !strcasecmp(session_name + sl - SESS_LEN,
+				SESS_SUFFIX)) {
+		    	char *bsl;
+			char *colon;
+
+		    	/* Pathname. */
+			path[MAX_PATH - 1] = '\0';
+			bsl = strrchr(session_name, '\\');
+			colon = strrchr(session_name, ':');
+			if (bsl == NULL && colon == NULL) {
+			    	/* No directory or drive prefix (cwd). */
+				if (sl - SESS_LEN + 1 < slen)
+				    	slen = sl - SESS_LEN + 1;
+			    	strncpy(s->session, session_name, slen);
+				s->session[slen - 1] = '\0';
+				snprintf(path, MAX_PATH, "%s\\%s", installdir,
+					session_name);
+				path[MAX_PATH - 1] = '\0';
+			} else {
+			    	/* Copy what's between [:\] and ".wc3270". */
+			    	char *start;
+
+				strncpy(path, session_name, MAX_PATH);
+				if (bsl != NULL && colon == NULL)
+				    	start = bsl + 1;
+				else if (bsl == NULL && colon != NULL)
+				    	start = colon + 1;
+				else if (bsl > colon)
+				    	start = bsl + 1;
+				else
+				    	start = colon + 1;
+				if (strlen(start) - SESS_LEN + 1 < slen)
+					slen = strlen(start) - SESS_LEN + 1;
+				strncpy(s->session, start, slen);
+				s->session[slen - 1] = '\0';
+			}
+
+		} else {
+		    	/* Session name. */
+		    	strncpy(s->session, session_name, slen);
+			s->session[slen - 1] = '\0';
+			sprintf(path, "%s%s.wc3270", mya, s->session);
 		}
-		if (!s->session[0])
-			continue;
+
+		/* Validate the session name. */
 		if (strspn(s->session, LEGAL_CNAME) != strlen(s->session)) {
 			fprintf(stdout, "\
 \nIllegal character(s).\n\
 Session names can only have letters, numbers, spaces, underscore '_'\n\
 and dash '-')\n");
-			continue;
+			return -1;
 		}
 
-		break;
+	} else {
+
+		/* Get the session name interactively. */
+		new_screen(s, "\
+Session Name\n\
+\n\
+This is a unique name for the wc3270 session.  It is the name of the file\n\
+containing the session configuration parameters and the name of the desktop\n\
+shortcut.");
+		for (;;) {
+			printf("\nEnter session name: ");
+			fflush(stdout);
+			if (get_input(s->session, sizeof(s->session)) == NULL) {
+				return -1;
+			}
+			if (!s->session[0])
+				continue;
+			if (strspn(s->session, LEGAL_CNAME) != strlen(s->session)) {
+				fprintf(stdout, "\
+\nIllegal character(s).\n\
+Session names can only have letters, numbers, spaces, underscore '_'\n\
+and dash '-')\n");
+				continue;
+			}
+
+			break;
+		}
+		sprintf(path, "%s%s.wc3270", mya, s->session);
 	}
-	sprintf(path, "%s%s.wc3270", mya, s->session);
+
 	f = fopen(path, "r");
 	if (f != NULL) {
 	    	editable = read_session(f, s);
@@ -709,7 +812,6 @@ get_charset(session_t *s)
     	int i, k;
 	char *ptr;
 	unsigned long u;
-#define NCS ((sizeof(charsets) / sizeof(charsets[0])) - 1)
 
 	new_screen(s, "\
 Character Set\n\
@@ -721,7 +823,7 @@ This specifies the EBCDIC character set used by the host.");
   #  Name                Host CP      #  Name                Host CP\n\
  --- ------------------- --------    --- ------------------- --------\n");
 	k = 0;
-	for (i = 0; i < NCS; i++) {
+	for (i = 0; charsets[i].name != NULL; i++) {
 	    	int j;
 		char *n, *h;
 
@@ -735,7 +837,7 @@ This specifies the EBCDIC character set used by the host.");
 		if (!(i % 2))
 		    	j = k;
 		else {
-		    	j += NCS / 2;
+		    	j += num_charsets / 2;
 			k++;
 		}
 		if (is_nt || !charsets[j].is_dbcs) {
@@ -1164,12 +1266,7 @@ page.");
 int
 get_keymaps(session_t *s, char *installdir)
 {
-    	int i;
-	HANDLE h;
-	WIN32_FIND_DATA find_data;
 	km_t *km;
-	char dpath[MAX_PATH];
-	char fpath[MAX_PATH];
 
 	new_screen(s, "\
 Keymaps\n\
@@ -1179,49 +1276,14 @@ You can override the default keymap and specify one or more built-in or \n\
 user-defined keymaps, separated by commas.");
 
 	printf("\n");
-	for (i = 0; builtin_keymaps[i].name != NULL; i++) {
-	    	printf(" %s\n    %s\n",
-			builtin_keymaps[i].name,
-			builtin_keymaps[i].description);
-		(void) save_keymap_name(NULL, builtin_keymaps[i].name);
-	}
-	sprintf(dpath, "%s*.wc3270km", mya);
-	h = FindFirstFile(dpath, &find_data);
-	if (h != INVALID_HANDLE_VALUE) {
-		do {
-		    	km_t *km;
 
-			sprintf(fpath, "%s%s", mya, find_data.cFileName);
-			km = save_keymap_name(fpath, find_data.cFileName);
-			if (km != NULL) {
-				printf(" %s\n    User-defined",
-					km->name);
-				if (km->description[0])
-				    	printf(": %s", km->description);
-				printf("\n");
-			}
-		} while (FindNextFile(h, &find_data) != 0);
-		FindClose(h);
+	for (km = km_first; km != NULL; km = km->next) {
+		printf(" %s\n", km->name);
+		if (km->description[0])
+			printf("  %s", km->description);
+		printf("\n");
 	}
-	sprintf(dpath, "%s\\*.wc3270km", installdir);
-	h = FindFirstFile(dpath, &find_data);
-	if (h != INVALID_HANDLE_VALUE) {
-		do {
-		    	km_t *km;
 
-			sprintf(fpath, "%s\\%s", installdir,
-				find_data.cFileName);
-			km = save_keymap_name(fpath, find_data.cFileName);
-			if (km != NULL) {
-				printf(" %s\n    User-defined",
-					km->name);
-				if (km->description[0])
-				    	printf(": %s", km->description);
-				printf("\n");
-			}
-		} while (FindNextFile(h, &find_data) != 0);
-		FindClose(h);
-	}
 	for (;;) {
 	    	char inbuf[STR_SIZE];
 	    	char tknbuf[STR_SIZE];
@@ -1263,8 +1325,32 @@ user-defined keymaps, separated by commas.");
 	return 0;
 }
 
+static int
+get_embed(session_t *s)
+{
+	new_screen(s, "\
+Embed Keymaps\n\
+\n\
+If selected, this option causes the keymap definitions to be included in the\n\
+session file, instead of having wc3270 search for them at run-time.");
+
+	for (;;) {
+	    	int rc;
+
+		printf("\nEmbed keymaps? (y/n) [%s] ",
+			s->embed_keymaps? "y": "n");
+		fflush(stdout);
+		rc = getyn(s->embed_keymaps);
+		if (rc == -1)
+			return -1;
+		s->embed_keymaps = rc;
+		break;
+	}
+	return 0;
+}
+
 int
-summarize_and_proceed(session_t *s, char *installdir, char *how)
+summarize_and_proceed(session_t *s, char *installdir, char *how, char *path)
 {
     	int rc;
 	char choicebuf[32];
@@ -1322,6 +1408,9 @@ summarize_and_proceed(session_t *s, char *installdir, char *how)
 		}
 		printf(" 14. Keymaps ................ : %s\n",
 			s->keymaps[0]? s->keymaps: "(none)");
+		if (s->keymaps[0])
+			printf(" 15.  Embed keymaps ......... : %s\n",
+				s->embed_keymaps? "Yes": "No");
 
 		for (;;) {
 		    	int invalid = 0;
@@ -1424,6 +1513,10 @@ summarize_and_proceed(session_t *s, char *installdir, char *how)
 				if (get_keymaps(s, installdir) < 0)
 					return -1;
 				break;
+			case 15:
+				if (get_embed(s) < 0)
+				    	return -1;
+				break;
 			default:
 				printf("Invalid entry.\n");
 				invalid = 1;
@@ -1438,7 +1531,7 @@ summarize_and_proceed(session_t *s, char *installdir, char *how)
 	}
 
 	for (;;) {
-		printf("\n%s the session file? (y/n) [y] ", how);
+		printf("\n%s the session file '%s'? (y/n) [y] ", how, path);
 		fflush(stdout);
 		rc = getyn(1);
 		if (rc == -1 || rc == 0)
@@ -1527,12 +1620,11 @@ reg_font_from_cset(char *cset, int *codepage)
 }
 
 int
-session_wizard(void)
+session_wizard(char *session_name)
 {
     	session_t session;
 	int rc;
 	char desktop[MAX_PATH];
-	char installdir[MAX_PATH];
 	char linkpath[MAX_PATH];
 	char exepath[MAX_PATH];
 	char args[MAX_PATH];
@@ -1556,11 +1648,11 @@ session_wizard(void)
 	    	return -1;
 
 	/* Intro screen. */
-	if (intro(&session) < 0)
+	if (session_name == NULL && intro(&session) < 0)
 		return -1;
 
 	/* Get the session name. */
-	rc = get_session(&session, path);
+	rc = get_session(session_name, &session, path);
 	switch (rc) {
 	case -2: /* Uneditable, and they don't want to overwrite it. */
 	    	return 0;
@@ -1591,7 +1683,7 @@ session_wizard(void)
 		/* See what they want to change. */
 		if (summarize_and_proceed(&session, installdir,
 			    (rc == 3)? "Replace":
-			    ((rc == 0)? "Create": "Update")) < 0)
+			    ((rc == 0)? "Create": "Update"), path) < 0)
 			return -1;
 
 		/* Create the session file. */
@@ -1671,6 +1763,51 @@ session_wizard(void)
 	}
 }
 
+/* Embed the selected keymaps in the session file. */
+static void
+embed_keymaps(session_t *session, FILE *f)
+{
+    	char keymaps[STR_SIZE];
+	char *keymap;
+	char *ptr = keymaps;
+	km_t *km;
+	char *pfx = "! Embedded user-defined keymaps\n";
+
+	strcpy(keymaps, session->keymaps);
+	while ((keymap = strtok(ptr, ",")) != NULL) {
+	    	ptr = NULL;
+		for (km = km_first; km != NULL; km = km->next) {
+		    	if (!strcasecmp(keymap, km->name)) {
+			    	if (km->def_both) {
+				    	fprintf(f,
+						"%swc3270.keymap.%s:"
+						"\\n\\\n%s\n",
+						pfx, keymap,
+						km->def_both);
+					pfx = "";
+				}
+			    	if (km->def_3270) {
+				    	fprintf(f,
+						"%swc3270.keymap.%s.3270:"
+						"\\n\\\n%s\n",
+						pfx, keymap,
+						km->def_3270);
+					pfx = "";
+				}
+			    	if (km->def_nvt) {
+				    	fprintf(f,
+						"%swc3270.keymap.%s.nvt:"
+						"\\n\\\n%s\n",
+						pfx, keymap,
+						km->def_nvt);
+					pfx = "";
+				}
+			    	break;
+			}
+		}
+	}
+}
+
 /* Create the session file. */
 int
 create_session_file(session_t *session, char *path)
@@ -1741,15 +1878,17 @@ create_session_file(session_t *session, char *path)
 
 	if (session->keymaps[0]) {
 	    	fprintf(f, "wc3270.keymap: %s\n", session->keymaps);
+		if (session->embed_keymaps)
+		    	embed_keymaps(session, f);
 	}
 
 	/* Emit the warning. */
 	fprintf(f, "\
 !\n\
 ! The following block of text is used to read the contents of this file back\n\
-! into the New Session Wizard.  If any of the text from the top of the file\n\
+! into the Session Wizard.  If any of the text from the top of the file\n\
 ! through the line below reading \"Additional resource definitions...\" is\n\
-! modified, the New Session Wizard will not be able to edit this file.\n\
+! modified, the Session Wizard will not be able to edit this file.\n\
 !");
 
 	/* Write out the session structure in hex. */
@@ -1790,149 +1929,6 @@ create_session_file(session_t *session, char *path)
 	fclose(f);
 
 	return 0;
-}
-
-/* Convert a hexadecimal digit to a nybble. */
-static unsigned
-hex(char c)
-{
-    	static char *digits = "0123456789abcdef";
-	char *pos;
-
-	pos = strchr(digits, c);
-	if (pos == NULL)
-	    	return 0; /* XXX */
-	return pos - digits;
-}
-
-//#define DEBUG_EDIT 1
-
-/*
- * Read an existing session file.
- * Returns 1 for success (file read and editable), 0 for failure.
- */
-static int
-read_session(FILE *f, session_t *s)
-{
-    	char buf[1024];
-	int saw_hex = 0;
-	int saw_star = 0;
-	unsigned long csum;
-	unsigned long fcsum = 0;
-	int ver;
-	int s_off = 0;
-
-	/*
-	 * Look for the checksum and version.  Verify the version.
-	 *
-	 * XXX: It might be a good idea to validate each '!x' line and
-	 * make sure that the length is right.
-	 */
-	while (fgets(buf, sizeof(buf), f) != NULL) {
-	    	if (buf[0] == '!' && buf[1] == 'x')
-		    	saw_hex = 1;
-		else if (buf[0] == '!' && buf[1] == '*')
-		    	saw_star = 1;
-		else if (buf[0] == '!' && buf[1] == 'c') {
-			if (sscanf(buf + 2, "%lx %d", &csum, &ver) != 2) {
-#if defined(DEBUG_EDIT) /*[*/
-				printf("[bad !c line '%s']\n", buf);
-#endif /*]*/
-				return 0;
-			}
-			if (ver > WIZARD_VER) {
-#if defined(DEBUG_EDIT) /*[*/
-				printf("[bad ver %d > %d]\n",
-					ver, WIZARD_VER);
-#endif /*]*/
-			    	return 0;
-			}
-		}
-	}
-	if (!saw_hex || !saw_star) {
-#if defined(DEBUG_EDIT) /*[*/
-	    	printf("[missing%s%s]\n",
-			saw_hex? "": "hex",
-			saw_star? "": "star");
-#endif /*]*/
-		return 0;
-	}
-
-	/* Checksum from the top up to the '!c' line. */
-	fflush(f);
-	fseek(f, 0, SEEK_SET);
-	fcsum = 0;
-	while (fgets(buf, sizeof(buf), f) != NULL) {
-	    	char *t;
-
-		if (buf[0] == '!' && buf[1] == 'c')
-		    	break;
-
-		for (t = buf; *t; t++)
-		    	fcsum += *t & 0xff;
-	}
-	if (fcsum != csum) {
-#if defined(DEBUG_EDIT) /*[*/
-	    	printf("[checksum mismatch, want 0x%08lx got 0x%08lx]\n",
-			csum, fcsum);
-#endif /*]*/
-	    	return 0;
-	}
-
-	/* Once more, with feeling.  Scribble onto the session structure. */
-	fflush(f);
-	fseek(f, 0, SEEK_SET);
-	s_off = 0;
-	while (fgets(buf, sizeof(buf), f) != NULL) {
-
-	    	if (buf[0] == '!' && buf[1] == 'x') {
-		    	char *t;
-
-			for (t = buf + 2; *t; t += 2) {
-			    	if (*t == '\n')
-				    	break;
-				if (s_off > sizeof(*s)) {
-#if defined(DEBUG_EDIT) /*[*/
-					printf("[s overflow: %d > %d]\n",
-						s_off, sizeof(*s));
-#endif /*]*/
-					return 0;
-				}
-			    	((char *)s)[s_off++] =
-				    (hex(*t) << 4) | hex(*(t + 1));
-			}
-		} else if (buf[0] == '!' && buf[1] == 'c')
-		    	break;
-	}
-
-	/*
-	 * Read the balance of the file into a temporary buffer, ignoring
-	 * the '!*' line.
-	 */
-	saw_star = 0;
-	while (fgets(buf, sizeof(buf), f) != NULL) {
-	    	if (!saw_star) {
-			if (buf[0] == '!' && buf[1] == '*')
-				saw_star = 1;
-			continue;
-		}
-		if (user_settings == NULL) {
-		    	user_settings = malloc(strlen(buf) + 1);
-			user_settings[0] = '\0';
-		} else
-		    	user_settings = realloc(user_settings,
-				strlen(user_settings) + strlen(buf) + 1);
-		if (user_settings == NULL) {
-#if defined(DEBUG_EDIT) /*[*/
-			printf("out of memory]\n");
-#endif /*]*/
-			return 0;
-		}
-		strcat(user_settings, buf);
-	}
-
-	/* Success */
-	return 1;
 }
 
 /* Make sure the console window is long enough. */
@@ -1994,15 +1990,39 @@ resize_window(int rows)
 	return rv;
 }
 
+static void
+usage(void)
+{
+    	fprintf(stderr, "Usage: wc3270wiz [session-name]\n"
+		        "       wc3270wiz [session-file]\n");
+	exit(1);
+}
+
 int
 main(int argc, char *argv[])
 {
 	int rc;
 	char buf[2];
+	char *session_name = NULL;
+
+	/*
+	 * Parse command-line arguments.
+	 * For now, there is only one -- the optional name of the session.
+	 */
+	switch (argc) {
+	    case 1:
+		break;
+	    case 2:
+		session_name = argv[1];
+		break;
+	    default:
+	    	usage();
+		break;
+	}
 
 	/* Figure out the version. */
 	if (get_version_info() < 0)
-	    	return -1;
+	    	return 1;
 
 	if (is_nt)
 		resize_window(44);
@@ -2011,7 +2031,9 @@ main(int argc, char *argv[])
 
 	signal(SIGINT, SIG_IGN);
 
-	rc = session_wizard();
+	save_keymaps();
+
+	rc = session_wizard(session_name);
 
 	printf("\nWizard %s.  [Press <Enter>] ",
 		    (rc < 0)? "aborted": "complete");
