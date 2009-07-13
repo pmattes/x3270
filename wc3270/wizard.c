@@ -1715,8 +1715,10 @@ session_wizard(char *session_name)
 	    	printf("\n%s desktop shortcut (y/n) [y]: ",
 			shortcut_exists? "Replace": "Create");
 		rc = getyn(1);
-		if (rc <= 0)
+		if (rc < 0)
 		    	return -1;
+		if (rc == 0)
+		    	return 0;
 		if (rc == 1)
 		    	break;
 	}

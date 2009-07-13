@@ -65,6 +65,7 @@
 #include "trace_dsc.h"
 #include "unicodec.h"
 #include "utilc.h"
+#include "xioc.h"
 
 #if defined(_WIN32) /*[*/
 #include <windows.h>
@@ -285,14 +286,10 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 
 		const char *pname;
 
-		read_session_or_profile =
-		    (read_resource_file(*cl_hostname, False) >= 0);
+		if (read_resource_file(*cl_hostname, True) < 0)
+		    	x3270_exit(1);
 
-#if 0
-		if (appres.hostname == CN) {
-		    Error("Hostname not specified in session file.");
-		}
-#endif
+		read_session_or_profile = True;
 
 		pname = strrchr(*cl_hostname, '\\');
 		if (pname != CN)
