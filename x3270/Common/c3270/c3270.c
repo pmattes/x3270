@@ -1377,24 +1377,22 @@ static void
 start_standalone(void)
 {
     	char *tempdir;
-	char mytempdir[1024];
-	FILE *f, *g;
+	char mytempdir[MAX_PATH];
+	FILE *f;
 	session_t s;
 	HRESULT hres;
-	char exepath[1024];
-	char linkpath[1024];
-	char sesspath[1024];
+	char exepath[MAX_PATH];
+	char linkpath[MAX_PATH];
+	char sesspath[MAX_PATH];
 	char args[1024];
-	char buf[1024];
 	HINSTANCE h;
-	extern char *profile_name; /* XXX */
 	extern char *profile_path; /* XXX */
 
 	printf("Running standalone\n"); fflush(stdout);
 
 	/* Make sure there is a session file. */
 	if (profile_path == CN) {
-		fprintf(stderr, "Can't use -standalone without a "
+		fprintf(stderr, "Can't use standalone mode without a "
 			"session file\n");
 		x3270_exit(1);
 	}
@@ -1430,26 +1428,16 @@ start_standalone(void)
 	}
 	printf("Created directory %s\n", mytempdir); fflush(stdout);
 
-	/* Copy the profile into it. */
-	sprintf(sesspath, "%s\\%s.wc3270", mytempdir, profile_name);
-	g = fopen(sesspath, "w");
-	if (g == NULL) {
-	    	fprintf(stderr, "%s: %s\n", sesspath, strerror(errno));
-		x3270_exit(1);
-	}
-	rewind(f);
-	while (fgets(buf, sizeof(buf), f) != NULL) {
-	    	fputs(buf, g);
-	}
-	fclose(f); f = NULL;
-	fclose(g); g = NULL;
-	printf("Copied %s to %s\n", profile_path, sesspath); fflush(stdout);
-
 	/* Create the shortcut there. */
 	sprintf(exepath, "%s\\%s", instdir, "wc3270.exe");
 	printf("Executable path is %s\n", exepath); fflush(stdout);
 	sprintf(linkpath, "%s\\%s", mytempdir, "wc3270.lnk");
-	sprintf(args, "+S %s", sesspath);
+	if (GetFullPathName(profile_path, MAX_PATH, sesspath, NULL) == 0) {
+	    	fprintf(stderr, "%s: Error %ld\n", profile_path,
+			GetLastError());
+		x3270_exit(1);
+	}
+	sprintf(args, "+S \"%s\"", sesspath);
 	hres = create_shortcut(&s,		/* session */
 			       exepath,		/* .exe    */
 			       linkpath,	/* .lnk    */
@@ -1478,7 +1466,6 @@ start_standalone(void)
 	Sleep(3 * 1000);
 	chdir("\\");
 	(void) unlink(linkpath);
-	(void) unlink(sesspath);
 	(void) rmdir(mytempdir);
 
 	printf("Cleaned up\n"); fflush(stdout);
