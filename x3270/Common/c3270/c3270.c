@@ -279,7 +279,6 @@ save_dirs(char *argv0)
 	DWORD rv;
 
 	/* Extract the installation directory from argv[0]. */
-	printf("argv0 is '%s'\n", argv0); fflush(stdout);
 	bsl = strrchr(argv0, '\\');
 	if (bsl != NULL) {
 	    	tmp_instdir = NewString(argv0);
@@ -291,7 +290,6 @@ save_dirs(char *argv0)
 			tmp_instdir[bsl - argv0] = '\0';
 	} else
 	    	tmp_instdir = NewString(".");
-	printf("tmp_instdir is '%s'\n", tmp_instdir); fflush(stdout);
 	rv = GetFullPathName(tmp_instdir, 0, NULL, NULL);
 	instdir = Malloc(rv + 2);
 	if (GetFullPathName(tmp_instdir, rv + 1, instdir, NULL) == 0) {
@@ -301,19 +299,12 @@ save_dirs(char *argv0)
 	if (instdir[strlen(instdir) - 1] == '\\')
 	    	instdir[strlen(instdir) - 1] = '\0';
 	Free(tmp_instdir);
-	printf("instdir is '%s'\n", instdir); fflush(stdout);
 
 	/* Use GetFullPathName to add a drive letter, if needed */
 
 	/* Figure out the application data directory. */
 	if (get_dirs(NULL, myappdata, "wc3270") < 0)
 	    	x3270_exit(1);
-
-	/*
-	 * Create the application data directory, in case we are being run
-	 * by someone other than the user that installed us.
-	 */
-	(void) _mkdir(myappdata);
 }
 #endif /*]*/
 
@@ -372,9 +363,6 @@ int
 main(int argc, char *argv[])
 {
 	const char	*cl_hostname = CN;
-#if defined(_WIN32) /*[*/
-	char		*sa;
-#endif /*]*/
 
 #if defined(_WIN32) /*[*/
 	(void) get_version_info();
@@ -399,10 +387,19 @@ main(int argc, char *argv[])
 		build);
 
 #if defined(_WIN32) /*[*/
-	if ((sa = getenv("STANDALONE")) != CN && strlen(sa) > 0) {
+	/* Check for standalone mode. */
+	if (appres.standalone) {
 		start_standalone();
 		exit(0);
 	}
+
+	/*
+	 * Create the application data directory, in case we are being run
+	 * by someone other than the user that installed us.
+	 * XXX: This is a good idea for tracing, but not a good idea for
+	 *  running the copy that is spawned by standalone mode.
+	 */
+	(void) _mkdir(myappdata);
 #endif /*]*/
 
 	if (charset_init(appres.charset) != CS_OKAY) {
@@ -1387,6 +1384,7 @@ start_standalone(void)
 	char exepath[1024];
 	char linkpath[1024];
 	char sesspath[1024];
+	char args[1024];
 	char buf[1024];
 	HINSTANCE h;
 	extern char *profile_name; /* XXX */
@@ -1451,10 +1449,11 @@ start_standalone(void)
 	sprintf(exepath, "%s\\%s", instdir, "wc3270.exe");
 	printf("Executable path is %s\n", exepath); fflush(stdout);
 	sprintf(linkpath, "%s\\%s", mytempdir, "wc3270.lnk");
+	sprintf(args, "+S %s", sesspath);
 	hres = create_shortcut(&s,		/* session */
 			       exepath,		/* .exe    */
 			       linkpath,	/* .lnk    */
-			       sesspath,	/* args    */
+			       args,		/* args    */
 			       tempdir		/* cwd     */);
 	if (!SUCCEEDED(hres)) {
 	    	fprintf(stderr, "Cannot create link %s\n", linkpath);
@@ -1463,7 +1462,6 @@ start_standalone(void)
 	printf("Created ShellLink %s\n", linkpath); fflush(stdout);
 
 	/* Execute it. */
-	putenv("STANDALONE=");
 	if (chdir(mytempdir) < 0) {
 	    fprintf(stderr, "chdir(%s): %s\n", mytempdir, strerror(errno));
 	    x3270_exit(1);
@@ -1482,6 +1480,8 @@ start_standalone(void)
 	(void) unlink(linkpath);
 	(void) unlink(sesspath);
 	(void) rmdir(mytempdir);
+
+	printf("Cleaned up\n"); fflush(stdout);
 	exit(0);
 }
 #endif /*]*/
