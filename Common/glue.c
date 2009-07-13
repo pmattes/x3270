@@ -661,6 +661,12 @@ static struct {
 { OptSocket,   OPT_BOOLEAN, True,  ResSocket,    offset(socket),
     CN, "Create socket for script control" },
 #endif /*]*/
+#if defined(WC3270) /*[*/
+{ OptStandalone,OPT_BOOLEAN, True, ResStandalone,offset(standalone),
+    CN, "Run in standalone (no-install) mode" },
+{ OptStandaloneNot,OPT_BOOLEAN,False,ResStandalone,offset(standalone),
+    CN, "Do not run in standalone (no-install) mode" },
+#endif /*]*/
 { OptTermName, OPT_STRING,  False, ResTermName,  offset(termname),
     "<name>", "Send <name> as TELNET terminal name" },
 #if defined(WC3270) /*[*/
@@ -1009,6 +1015,9 @@ static struct {
 #endif /*]*/
 	{ ResSecure,	offset(secure),		XRM_BOOLEAN },
 	{ ResSbcsCgcsgid, offset(sbcs_cgcsgid),	XRM_STRING },
+#if defined(WC3270) /*[*/
+	{ ResStandalone,offset(standalone),	XRM_BOOLEAN },
+#endif /*]*/
 	{ ResTermName,	offset(termname),	XRM_STRING },
 #if defined(WC3270) /*[*/
 	{ ResTitle,	offset(title),		XRM_STRING },

@@ -656,6 +656,10 @@ an IPv6 address in colon notation, such as 'fec0:0:0:1::27'"
 		if (get_input(buf, sizeof(s->host)) == NULL) {
 			return -1;
 		}
+		if (!strcmp(buf, "(none)")) {
+		    	strcpy(s->host, buf);
+			break;
+		}
 		if (strchr(buf, ' ') != NULL) {
 			printf("\nHost names cannot contain spaces.\n");
 			continue;
@@ -1838,19 +1842,22 @@ create_session_file(session_t *session, char *path)
 	fprintf(f, "! Created by the wc3270 %s session wizard %s",
 		wversion, ctime(&t));
 
-	bracket = (strchr(session->host, ':') != NULL);
-	fprintf(f, "wc3270.hostname: ");
-	if (session->ssl)
-	    	fprintf(f, "L:");
-	if (session->luname[0])
-	    	fprintf(f, "%s@", session->luname);
-	fprintf(f, "%s%s%s",
-		bracket? "[": "",
-		session->host,
-		bracket? "]": "");
-	if (session->port != 23)
-	    	fprintf(f, ":%d", session->port);
-	fprintf(f, "\n");
+	if (strcmp(session->host, "(none)")) {
+		bracket = (strchr(session->host, ':') != NULL);
+		fprintf(f, "wc3270.hostname: ");
+		if (session->ssl)
+			fprintf(f, "L:");
+		if (session->luname[0])
+			fprintf(f, "%s@", session->luname);
+		fprintf(f, "%s%s%s",
+			bracket? "[": "",
+			session->host,
+			bracket? "]": "");
+		if (session->port != 23)
+			fprintf(f, ":%d", session->port);
+		fprintf(f, "\n");
+	} else if (session->port != 23)
+	    	fprintf(f, "wc3270.port: %d\n", session->port);
 
 	if (session->proxy_type[0])
 	    	fprintf(f, "wc3270.proxy: %s:%s%s%s%s%s\n",
