@@ -81,6 +81,7 @@
 #include "winversc.h"
 #include "windirsc.h"
 #include "relinkc.h"
+#include <shellapi.h>
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
@@ -1387,7 +1388,7 @@ start_standalone(void)
 	char linkpath[1024];
 	char sesspath[1024];
 	char buf[1024];
-	char vbspath[1024];
+	HINSTANCE h;
 	extern char *profile_name; /* XXX */
 	extern char *profile_path; /* XXX */
 
@@ -1442,13 +1443,13 @@ start_standalone(void)
 	while (fgets(buf, sizeof(buf), f) != NULL) {
 	    	fputs(buf, g);
 	}
-	fclose(f);
-	fclose(g);
+	fclose(f); f = NULL;
+	fclose(g); g = NULL;
 	printf("Copied %s to %s\n", profile_path, sesspath); fflush(stdout);
 
 	/* Create the shortcut there. */
 	sprintf(exepath, "%s\\%s", instdir, "wc3270.exe");
-	printf("exepath is %s\n", exepath); fflush(stdout);
+	printf("Executable path is %s\n", exepath); fflush(stdout);
 	sprintf(linkpath, "%s\\%s", mytempdir, "wc3270.lnk");
 	hres = create_shortcut(&s,		/* session */
 			       exepath,		/* .exe    */
@@ -1459,22 +1460,7 @@ start_standalone(void)
 	    	fprintf(stderr, "Cannot create link %s\n", linkpath);
 		x3270_exit(1);
 	}
-	printf("Created link %s\n", linkpath); fflush(stdout);
-
-	/* Create the VBScript file. */
-	sprintf(vbspath, "%s\\wc3270.vbs", mytempdir);
-	g = fopen(vbspath, "w");
-	if (g == NULL) {
-	    	fprintf(stderr, "%s: %s\n", vbspath, strerror(errno));
-		x3270_exit(1);
-	}
-	fprintf(g, "\
-dim ObjShell\n\
-set ObjShell = CreateObject(\"Shell.Application\")\n\
-ObjShell.ShellExecute \"wc3270.lnk\", \"\", \"\", \"open\", 1\n\
-set ObjShell = nothing\n");
-	fclose(g);
-	printf("Created script %s\n", vbspath); fflush(stdout);
+	printf("Created ShellLink %s\n", linkpath); fflush(stdout);
 
 	/* Execute it. */
 	putenv("STANDALONE=");
@@ -1482,15 +1468,19 @@ set ObjShell = nothing\n");
 	    fprintf(stderr, "chdir(%s): %s\n", mytempdir, strerror(errno));
 	    x3270_exit(1);
 	}
-	system("START wc3270.vbs");
-	printf("Started\n"); fflush(stdout);
+	h = ShellExecute(NULL, "open", linkpath, "", tempdir, SW_SHOW);
+	if ((int)h <= 32) {
+	    fprintf(stderr, "ShellExecute failed, error %d\n", (int)h);
+	    x3270_exit(1);
+	}
+
+	printf("Started ShellLink\n"); fflush(stdout);
 
 	/* Clean up. */
-	Sleep(5 * 1000);
+	Sleep(3 * 1000);
 	chdir("\\");
 	(void) unlink(linkpath);
 	(void) unlink(sesspath);
-	(void) unlink(vbspath);
 	(void) rmdir(mytempdir);
 	exit(0);
 }
