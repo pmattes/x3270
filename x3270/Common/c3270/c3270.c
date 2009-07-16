@@ -365,7 +365,9 @@ int
 main(int argc, char *argv[])
 {
 	const char	*cl_hostname = CN;
+#if defined(_WIN32) /*[*/
 	char		*delenv;
+#endif /*]*/
 
 #if defined(_WIN32) /*[*/
 	(void) get_version_info();

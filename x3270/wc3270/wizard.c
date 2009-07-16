@@ -47,6 +47,8 @@
 #include "keymapc.h"
 #include "kybdc.h"
 #include "macrosc.h"
+#include "proxy.h"
+#include "resources.h"
 #include "screenc.h"
 #include "tablesc.h"
 #include "trace_dsc.h"
@@ -104,9 +106,11 @@ struct {
 #define WP_WIDTH	6
 #define	CS_COLS		2
 
-             /*  model  2   3   4   5 */
-int wrows[6] = { 0, 0, 25, 33, 44, 28  };
-int wcols[6] = { 0, 0, 80, 80, 80, 132 };
+/*  2                 3                 4                 5                 */
+int wrows[6] = { 0, 0,
+    MODEL_2_ROWS + 1, MODEL_3_ROWS + 1, MODEL_4_ROWS + 1, MODEL_5_ROWS + 1  };
+int wcols[6] = { 0, 0,
+    MODEL_2_COLS,     MODEL_3_COLS,     MODEL_4_COLS,     MODEL_5_COLS };
 
 #define MAX_PRINTERS	256
 PRINTER_INFO_1 printer_info[MAX_PRINTERS];
@@ -126,11 +130,11 @@ static struct {
 	char *protocol;
 	char *port;
 } proxies[] = {
-    	{ "http",	"HTTP tunnel (RFC 2817, e.g., squid)",	"3128" },
-	{ "passthru",	"Sun telnet-passthru",			NULL   },
-	{ "socks4",	"SOCKS version 4",			"1080" },
-	{ "socks5",	"SOCKS version 5 (RFC 1928)",		"1080" },
-	{ "telnet",	"None (just send 'connect host port')",	NULL   },
+    	{ PROXY_HTTP,	"HTTP tunnel (RFC 2817, e.g., squid)",	PORT_HTTP },
+	{ PROXY_PASSTHRU,"Sun telnet-passthru",			NULL   },
+	{ PROXY_SOCKS4,	"SOCKS version 4",			PORT_SOCKS4 },
+	{ PROXY_SOCKS5,	"SOCKS version 5 (RFC 1928)",		PORT_SOCKS5 },
+	{ PROXY_TELNET,	"None (just send 'connect host port')",	NULL   },
 	{ NULL,		NULL,					NULL   }
 };
 
@@ -1342,7 +1346,7 @@ static int
 get_noinstall(session_t *s)
 {
 	new_screen(s, "\
-No-Install Session\n\
+No-Install Mode\n\
 \n\
 If selected, this option allows the wc3270 session to run without installing\n\
 the wc3270 software.  The option prevents wc3270 from using its AppDefaults\n\
@@ -1427,7 +1431,7 @@ summarize_and_proceed(session_t *s, char *installdir, char *how, char *path)
 		}
 		printf(" 14. Keymaps ................ : %s\n",
 			s->keymaps[0]? s->keymaps: "(none)");
-		printf(" 15. No-install session ..... : %s\n",
+		printf(" 15. No-Install Mode ........ : %s\n",
 			(s->flags & WF_NO_INSTALL)? "Yes": "No");
 
 		for (;;) {
@@ -1742,7 +1746,7 @@ session_wizard(char *session_name)
 		shortcut_exists? "Replacing": "Creating", linkpath);
 	fflush(stdout);
 	sprintf(exepath, "%s\\wc3270.exe", installdir);
-	sprintf(args, "\"%s\"", path);
+	sprintf(args, "+S \"%s\"", path);
 	if (is_nt) {
 	    	wchar_t *font;
 		int codepage = 0;
@@ -1800,25 +1804,25 @@ embed_keymaps(session_t *session, FILE *f)
 		    	if (!strcasecmp(keymap, km->name)) {
 			    	if (km->def_both) {
 				    	fprintf(f,
-						"%swc3270.keymap.%s:"
+						"%swc3270.%s.%s:"
 						"\\n\\\n%s\n",
-						pfx, keymap,
+						pfx, ResKeymap, keymap,
 						km->def_both);
 					pfx = "";
 				}
 			    	if (km->def_3270) {
 				    	fprintf(f,
-						"%swc3270.keymap.%s.3270:"
+						"%swc3270.%s.%s.3270:"
 						"\\n\\\n%s\n",
-						pfx, keymap,
+						pfx, ResKeymap, keymap,
 						km->def_3270);
 					pfx = "";
 				}
 			    	if (km->def_nvt) {
 				    	fprintf(f,
-						"%swc3270.keymap.%s.nvt:"
+						"%swc3270.%s.%s.nvt:"
 						"\\n\\\n%s\n",
-						pfx, keymap,
+						pfx, ResKeymap, keymap,
 						km->def_nvt);
 					pfx = "";
 				}
@@ -1860,7 +1864,7 @@ create_session_file(session_t *session, char *path)
 
 	if (strcmp(session->host, "(none)")) {
 		bracket = (strchr(session->host, ':') != NULL);
-		fprintf(f, "wc3270.hostname: ");
+		fprintf(f, "wc3270.%s: ", ResHostname);
 		if (session->ssl)
 			fprintf(f, "L:");
 		if (session->luname[0])
@@ -1873,10 +1877,11 @@ create_session_file(session_t *session, char *path)
 			fprintf(f, ":%d", (int)session->port);
 		fprintf(f, "\n");
 	} else if (session->port != 23)
-	    	fprintf(f, "wc3270.port: %d\n", (int)session->port);
+	    	fprintf(f, "wc3270.%s: %d\n", ResPort, (int)session->port);
 
 	if (session->proxy_type[0])
-	    	fprintf(f, "wc3270.proxy: %s:%s%s%s%s%s\n",
+	    	fprintf(f, "wc3270.%s: %s:%s%s%s%s%s\n",
+			ResProxy,
 			session->proxy_type,
 			strchr(session->proxy_host, ':')? "[": "",
 			session->proxy_host,
@@ -1884,32 +1889,32 @@ create_session_file(session_t *session, char *path)
 			session->proxy_port[0]? ":": "",
 			session->proxy_port);
 
-	fprintf(f, "wc3270.model: %d\n", (int)session->model);
-	fprintf(f, "wc3270.charset: %s\n", session->charset);
+	fprintf(f, "wc3270.%s: %d\n", ResModel, (int)session->model);
+	fprintf(f, "wc3270.%s: %s\n", ResCharset, session->charset);
 	if (session->is_dbcs)
-	    	fprintf(f, "wc3270.asciiBoxDraw: True\n");
+	    	fprintf(f, "wc3270.%s: %s\n", ResAsciiBoxDraw, ResTrue);
 
 	if (session->wpr3287) {
-	    	fprintf(f, "wc3270.printerLu: %s\n", session->printerlu);
+	    	fprintf(f, "wc3270.%s: %s\n", ResPrinterLu, session->printerlu);
 		if (session->printer[0])
-		    	fprintf(f, "wc3270.printer.name: %s\n",
+		    	fprintf(f, "wc3270.%s: %s\n", ResPrinterName,
 				session->printer);
 		if (session->printercp[0])
-		    	fprintf(f, "wc3270.printer.codepage: %s\n",
+		    	fprintf(f, "wc3270.%s: %s\n", ResPrinterCodepage,
 				session->printercp);
 	}
 
 	if (session->keymaps[0]) {
-	    	fprintf(f, "wc3270.keymap: %s\n", session->keymaps);
+	    	fprintf(f, "wc3270.%s: %s\n", ResKeymap, session->keymaps);
 		if (session->flags & WF_NO_INSTALL)
 		    	embed_keymaps(session, f);
 	}
 
 	if (session->flags & WF_NO_INSTALL)
-	    	fprintf(f, "wc3270.noInstall: True\n");
+	    	fprintf(f, "wc3270.%s: %s\n", ResNoInstall, ResTrue);
 
 	if (session->flags & WF_AUTO_SHORTCUT)
-	    	fprintf(f, "wc3270.autoShortcut: True\n");
+	    	fprintf(f, "wc3270.%s: %s\n", ResAutoShortcut, ResTrue);
 
 	/* Emit the warning. */
 	fprintf(f, "\
