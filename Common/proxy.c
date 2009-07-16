@@ -52,6 +52,7 @@
 
 #include "3270ds.h"
 #include "popupsc.h"
+#include "proxy.h"
 #include "proxyc.h"
 #include "resolverc.h"
 #include "telnetc.h"
@@ -94,26 +95,6 @@ char *type_name[] = {
 	"SOCKS5",
 	"SOCKS5D"
 };
-
-#define PROXY_PASSTHRU	"passthru"
-#define PORT_PASSTHRU	"3514"
-
-#define PROXY_HTTP	"http"
-#define PORT_HTTP	"3128"
-
-#define PROXY_TELNET	"telnet"
-
-#define PROXY_SOCKS4	"socks4"
-#define PORT_SOCKS4	"1080"
-
-#define PROXY_SOCKS4A	"socks4a"
-#define PORT_SOCKS4A	"1080"
-
-#define PROXY_SOCKS5	"socks5"
-#define PORT_SOCKS5	"1080"
-
-#define PROXY_SOCKS5D	"socks5d"
-#define PORT_SOCKS5D	"1080"
 
 static int parse_host_port(char *s, char **phost, char **pport);
 
