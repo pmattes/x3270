@@ -136,7 +136,8 @@ typedef struct {
 	Boolean reverse_video;
 #endif /*]*/
 #if defined(_WIN32) /*[*/
-	Boolean standalone;
+	Boolean auto_shortcut;
+	Boolean no_install;
 #endif /*]*/
 #endif /*]*/
 	Boolean	apl_mode;

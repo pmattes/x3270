@@ -193,6 +193,32 @@ desc
     width.
 .
 
+name autoShortcut
+applies wc
+type b
+default false
+switch -S
+switch +S
+desc
+    When true, %p% will run in <i>auto-shortcut</i> mode.  In auto-shortcut
+    mode, %p% automatically creates a desktop shortcut (<b>.lnk</b> file)
+    in %TEMP% that is compatible with its session file, then starts it.  This
+    ensures that the console window's screen size, character set, font, etc.
+    will be correct.
+    <p>
+    Auto-shortcut mode requires the use of a session file; the session file
+    must have been created by the Session Wizard (release 3.3.9 or later) and
+    must not have been modified incorrectly.  All desktop shortcuts created
+    by the Session Wizard release 3.3.10 or later include setting autoShortcut
+    to true.
+    <p>
+    The <b>+S</b> command-line switch turns off auto-shortcut mode.  All
+    desktop shortcuts created by the Session Wizard release 3.3.10 or later
+    include this switch.
+    <p>
+    Auto-shortcut mode does not work on Windows 9x.
+.
+
 name background
 applies x
 groups a
@@ -1638,6 +1664,17 @@ switch -clear monoCase
 option Options -&gt; Toggles -&gt; Monocase
 description
     When true, causes %p% to run in uppercase-only mode.
+.
+
+name noInstall
+applies wc
+type b
+default false
+description
+    When true, %p% can run without being installed.
+    It will not search for keymaps in the AppData directory (they should be
+    embedded in session files instead), nor will it
+    write trace files there -- they will be written to %TEMP% instead.
 .
 
 name noOther
