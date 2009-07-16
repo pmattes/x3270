@@ -40,26 +40,29 @@
 
 typedef struct {
     	/* Fields for wc3270 3.3.9 (Wizard version 1) */
-	char session[STR_SIZE];		/* session name */
-	char host[STR_SIZE];		/* host name */
-	int  port;			/* TCP port */
-	char luname[STR_SIZE];		/* LU name */
-	int  ssl;			/* SSL tunnel flag */
-	char proxy_type[STR_SIZE];	/* proxy type */
-	char proxy_host[STR_SIZE];	/*  proxy host */
-	char proxy_port[STR_SIZE];	/*  proxy port */
-	int  model;			/* model number */
-	char charset[STR_SIZE];		/* character set name */
-	int  is_dbcs;
-	int  wpr3287;			/* wpr3287 flag */
-	char printerlu[STR_SIZE];	/*  printer LU */
-	char printer[STR_SIZE];		/*  Windows printer name */
-	char printercp[STR_SIZE];	/*  wpr3287 code page */
-	char keymaps[STR_SIZE];		/* keymap names */
+	char  session[STR_SIZE];	/* session name */
+	char  host[STR_SIZE];		/* host name */
+	DWORD port;			/* TCP port */
+	char  luname[STR_SIZE];		/* LU name */
+	DWORD ssl;			/* SSL tunnel flag */
+	char  proxy_type[STR_SIZE];	/* proxy type */
+	char  proxy_host[STR_SIZE];	/*  proxy host */
+	char  proxy_port[STR_SIZE];	/*  proxy port */
+	DWORD model;			/* model number */
+	char  charset[STR_SIZE];	/* character set name */
+	DWORD is_dbcs;
+	DWORD wpr3287;			/* wpr3287 flag */
+	char  printerlu[STR_SIZE];	/*  printer LU */
+	char  printer[STR_SIZE];	/*  Windows printer name */
+	char  printercp[STR_SIZE];	/*  wpr3287 code page */
+	char  keymaps[STR_SIZE];	/* keymap names */
 
 	/* Field added for wc3270 3.3.10 (Wizard version 2) */
-	int  embed_keymaps;		/* embed keymaps in file */
+	DWORD flags;			/* embed keymaps in file */
 } session_t;
+
+#define WF_NO_INSTALL		0x00000001	/* no-app-defaults mode */
+#define WF_AUTO_SHORTCUT	0x00000002	/* 'auto-shortcut' mode */
 
 typedef struct {
 	char *name;

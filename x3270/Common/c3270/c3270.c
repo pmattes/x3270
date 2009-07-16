@@ -252,7 +252,7 @@ Boolean dont_return = False;
 #if defined(_WIN32) /*[*/
 char *instdir = NULL;
 char myappdata[MAX_PATH];
-static void start_standalone(void);
+static void start_auto_shortcut(void);
 #endif /*]*/
 
 void
@@ -299,8 +299,6 @@ save_dirs(char *argv0)
 	if (instdir[strlen(instdir) - 1] == '\\')
 	    	instdir[strlen(instdir) - 1] = '\0';
 	Free(tmp_instdir);
-
-	/* Use GetFullPathName to add a drive letter, if needed */
 
 	/* Figure out the application data directory. */
 	if (get_dirs(NULL, myappdata, "wc3270") < 0)
@@ -387,17 +385,25 @@ main(int argc, char *argv[])
 		build);
 
 #if defined(_WIN32) /*[*/
-	/* Check for standalone mode. */
-	if (appres.standalone) {
-		start_standalone();
+	/* Check for no-install mode, which really means 'no app-defaults'. */
+	if (appres.no_install) {
+	    	char *td = getenv("TEMP");
+
+		if (td != NULL) {
+		    	strncpy(myappdata, td, MAX_PATH);
+			myappdata[MAX_PATH - 1] = '\0';
+		}
+	}
+
+	/* Check for auto-shortcut mode. */
+	if (appres.auto_shortcut) {
+		start_auto_shortcut();
 		exit(0);
 	}
 
 	/*
 	 * Create the application data directory, in case we are being run
 	 * by someone other than the user that installed us.
-	 * XXX: This is a good idea for tracing, but not a good idea for
-	 *  running the copy that is spawned by standalone mode.
 	 */
 	(void) _mkdir(myappdata);
 #endif /*]*/
@@ -1372,9 +1378,9 @@ merge_profile(void)
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-/* Start a standalone-mode copy of wc3270.exe. */
+/* Start a auto-shortcut-mode copy of wc3270.exe. */
 static void
-start_standalone(void)
+start_auto_shortcut(void)
 {
     	char *tempdir;
 	char mytempdir[MAX_PATH];
@@ -1388,20 +1394,20 @@ start_standalone(void)
 	HINSTANCE h;
 	extern char *profile_path; /* XXX */
 
-	printf("Running standalone\n"); fflush(stdout);
+    	/* Make sure we're on NT. */
+    	if (!is_nt) {
+	    	fprintf(stderr, "Auto-shortcut does not work on Win9x\n");
+		x3270_exit(1);
+	}
 
 	/* Make sure there is a session file. */
 	if (profile_path == CN) {
-		fprintf(stderr, "Can't use standalone mode without a "
+		fprintf(stderr, "Can't use auto-shortcut mode without a "
 			"session file\n");
 		x3270_exit(1);
 	}
 
-    	/* Make sure we're on NT. */
-    	if (!is_nt) {
-	    	fprintf(stderr, "Standalone does not work on Win9x\n");
-		x3270_exit(1);
-	}
+	printf("Running auto-shortcut\n"); fflush(stdout);
 
 	/* Read the session file into 's'. */
 	f = fopen(profile_path, "r");
@@ -1409,11 +1415,12 @@ start_standalone(void)
 	    	fprintf(stderr, "%s: %s\n", profile_path, strerror(errno));
 		x3270_exit(1);
 	}
+	memset(&s, '\0', sizeof(session_t));
 	if (read_session(f, &s) == 0) {
 	    	fprintf(stderr, "%s: invalid format\n", profile_path);
 		x3270_exit(1);
 	}
-	printf("Read session %s\n", profile_path); fflush(stdout);
+	printf("Read in session '%s'\n", profile_path); fflush(stdout);
 
 	/* Create a temporary directory to run in. */
 	tempdir = getenv("TEMP");
@@ -1426,11 +1433,11 @@ start_standalone(void)
 	    	fprintf(stderr, "%s: %s\n", mytempdir, strerror(errno));
 		x3270_exit(1);
 	}
-	printf("Created directory %s\n", mytempdir); fflush(stdout);
+	printf("Created directory '%s'\n", mytempdir); fflush(stdout);
 
 	/* Create the shortcut there. */
 	sprintf(exepath, "%s\\%s", instdir, "wc3270.exe");
-	printf("Executable path is %s\n", exepath); fflush(stdout);
+	printf("Executable path is '%s'\n", exepath); fflush(stdout);
 	sprintf(linkpath, "%s\\%s", mytempdir, "wc3270.lnk");
 	if (GetFullPathName(profile_path, MAX_PATH, sesspath, NULL) == 0) {
 	    	fprintf(stderr, "%s: Error %ld\n", profile_path,
@@ -1444,10 +1451,10 @@ start_standalone(void)
 			       args,		/* args    */
 			       tempdir		/* cwd     */);
 	if (!SUCCEEDED(hres)) {
-	    	fprintf(stderr, "Cannot create link %s\n", linkpath);
+	    	fprintf(stderr, "Cannot create ShellLink '%s'\n", linkpath);
 		x3270_exit(1);
 	}
-	printf("Created ShellLink %s\n", linkpath); fflush(stdout);
+	printf("Created ShellLink '%s'\n", linkpath); fflush(stdout);
 
 	/* Execute it. */
 	if (chdir(mytempdir) < 0) {
@@ -1463,7 +1470,7 @@ start_standalone(void)
 	printf("Started ShellLink\n"); fflush(stdout);
 
 	/* Clean up. */
-	Sleep(3 * 1000);
+	Sleep(500);
 	chdir("\\");
 	(void) unlink(linkpath);
 	(void) rmdir(mytempdir);

@@ -607,6 +607,15 @@ and dash '-')\n");
 			}
 		}
 	} else {
+	    	/*
+		 * Set the auto-shortcut flag in all new session files,
+		 * but not in old ones.  This will prevent unintended
+		 * interactions with old shortcuts that don't specify +S, but
+		 * will allow new session files to be started with a
+		 * double-click.
+		 */
+	    	s->flags |= WF_AUTO_SHORTCUT;
+
 	    	return 0; /* create it */
 	}
 }
@@ -700,7 +709,7 @@ This specifies the TCP Port to use to connect to the host.  It is a number from\
 1 to 65535 or the name 'telnet'.  The default is the 'telnet' port, port 23.");
 
 	for (;;) {
-		printf("\nTCP port: [%d] ", s->port);
+		printf("\nTCP port: [%d] ", (int)s->port);
 		if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 			return -1;
 		}
@@ -790,7 +799,7 @@ This specifies the dimensions of the screen.");
 	}
 	for (;;) {
 		printf("\nEnter model number: (2, 3%s) [%d] ",
-			is_nt? ", 4 or 5": " or 4", s->model);
+			is_nt? ", 4 or 5": " or 4", (int)s->model);
 		fflush(stdout);
 		if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 			return -1;
@@ -1330,24 +1339,30 @@ user-defined keymaps, separated by commas.");
 }
 
 static int
-get_embed(session_t *s)
+get_noinstall(session_t *s)
 {
 	new_screen(s, "\
-Embed Keymaps\n\
+No-Install Session\n\
 \n\
-If selected, this option causes the keymap definitions to be included in the\n\
-session file, instead of having wc3270 search for them at run-time.");
+If selected, this option allows the wc3270 session to run without installing\n\
+the wc3270 software.  The option prevents wc3270 from using its AppDefaults\n\
+directory, which is normally created as part of installation. Instead, any\n\
+selected keymaps will be copied into this session file, and trace files\n\
+will be written into the %%TEMP%% directory.");
 
 	for (;;) {
 	    	int rc;
 
 		printf("\nEmbed keymaps? (y/n) [%s] ",
-			s->embed_keymaps? "y": "n");
+			(s->flags & WF_NO_INSTALL)? "y": "n");
 		fflush(stdout);
-		rc = getyn(s->embed_keymaps);
+		rc = getyn((s->flags & WF_NO_INSTALL) != 0);
 		if (rc == -1)
 			return -1;
-		s->embed_keymaps = rc;
+		if (rc)
+		    	s->flags |= WF_NO_INSTALL;
+		else
+		    	s->flags &= ~WF_NO_INSTALL;
 		break;
 	}
 	return 0;
@@ -1375,9 +1390,9 @@ summarize_and_proceed(session_t *s, char *installdir, char *how, char *path)
 		printf("  1. Host ................... : %s\n", s->host);
 		printf("  2. Logical Unit Name ...... : %s\n",
 			s->luname[0]? s->luname: "(none)");
-		printf("  3. TCP Port ............... : %d\n", s->port);
+		printf("  3. TCP Port ............... : %d\n", (int)s->port);
 		printf("  4. Model Number ........... : %d (%d rows x %d columns)\n",
-		    s->model, wrows[s->model] - 1, wcols[s->model]);
+		    (int)s->model, wrows[s->model] - 1, wcols[s->model]);
 		printf("  5. Character Set .......... : %s (CP %s)\n",
 			s->charset, cp);
 #if defined(HAVE_LIBSSL) /*[*/
@@ -1412,9 +1427,8 @@ summarize_and_proceed(session_t *s, char *installdir, char *how, char *path)
 		}
 		printf(" 14. Keymaps ................ : %s\n",
 			s->keymaps[0]? s->keymaps: "(none)");
-		if (s->keymaps[0])
-			printf(" 15.  Embed keymaps ......... : %s\n",
-				s->embed_keymaps? "Yes": "No");
+		printf(" 15. No-install session ..... : %s\n",
+			(s->flags & WF_NO_INSTALL)? "Yes": "No");
 
 		for (;;) {
 		    	int invalid = 0;
@@ -1518,7 +1532,7 @@ summarize_and_proceed(session_t *s, char *installdir, char *how, char *path)
 					return -1;
 				break;
 			case 15:
-				if (get_embed(s) < 0)
+				if (get_noinstall(s) < 0)
 				    	return -1;
 				break;
 			default:
@@ -1856,10 +1870,10 @@ create_session_file(session_t *session, char *path)
 			session->host,
 			bracket? "]": "");
 		if (session->port != 23)
-			fprintf(f, ":%d", session->port);
+			fprintf(f, ":%d", (int)session->port);
 		fprintf(f, "\n");
 	} else if (session->port != 23)
-	    	fprintf(f, "wc3270.port: %d\n", session->port);
+	    	fprintf(f, "wc3270.port: %d\n", (int)session->port);
 
 	if (session->proxy_type[0])
 	    	fprintf(f, "wc3270.proxy: %s:%s%s%s%s%s\n",
@@ -1870,7 +1884,7 @@ create_session_file(session_t *session, char *path)
 			session->proxy_port[0]? ":": "",
 			session->proxy_port);
 
-	fprintf(f, "wc3270.model: %d\n", session->model);
+	fprintf(f, "wc3270.model: %d\n", (int)session->model);
 	fprintf(f, "wc3270.charset: %s\n", session->charset);
 	if (session->is_dbcs)
 	    	fprintf(f, "wc3270.asciiBoxDraw: True\n");
@@ -1887,9 +1901,15 @@ create_session_file(session_t *session, char *path)
 
 	if (session->keymaps[0]) {
 	    	fprintf(f, "wc3270.keymap: %s\n", session->keymaps);
-		if (session->embed_keymaps)
+		if (session->flags & WF_NO_INSTALL)
 		    	embed_keymaps(session, f);
 	}
+
+	if (session->flags & WF_NO_INSTALL)
+	    	fprintf(f, "wc3270.noInstall: True\n");
+
+	if (session->flags & WF_AUTO_SHORTCUT)
+	    	fprintf(f, "wc3270.autoShortcut: True\n");
 
 	/* Emit the warning. */
 	fprintf(f, "\

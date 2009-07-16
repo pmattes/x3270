@@ -580,6 +580,10 @@ static struct {
     "Specify string to switch terminal from 80-column mode to 132-column mode"
 },
 #endif /*]*/
+#if defined(WC3270) /*[*/
+{ OptAutoShortcut,OPT_BOOLEAN, True, ResAutoShortcut,offset(auto_shortcut),
+    CN, "Run in auto-shortcut mode" },
+#endif /*]*/
 { OptAplMode,  OPT_BOOLEAN, True,  ResAplMode,   offset(apl_mode),
     CN, "Turn on APL mode" },
 #if defined(C3270) && !defined(_WIN32) /*[*/
@@ -623,6 +627,10 @@ static struct {
 { OptMono,     OPT_BOOLEAN, True,  ResMono,      offset(mono),
     CN, "Do not use terminal color capabilities" },
 # endif /*]*/
+#if defined(WC3270) /*[*/
+{ OptNoAutoShortcut,OPT_BOOLEAN,False,ResAutoShortcut,offset(auto_shortcut),
+    CN, "Do not run in auto-shortcut mode" },
+#endif /*]*/
 { OptNoPrompt, OPT_BOOLEAN, True,  ResNoPrompt,  offset(no_prompt),
     CN, "Suppress interactive mode (" APPNAME "> prompt)" },
 #endif /*]*/
@@ -657,12 +665,6 @@ static struct {
 #if defined(X3270_SCRIPT) /*[*/
 { OptSocket,   OPT_BOOLEAN, True,  ResSocket,    offset(socket),
     CN, "Create socket for script control" },
-#endif /*]*/
-#if defined(WC3270) /*[*/
-{ OptStandalone,OPT_BOOLEAN, True, ResStandalone,offset(standalone),
-    CN, "Run in standalone (no-install) mode" },
-{ OptStandaloneNot,OPT_BOOLEAN,False,ResStandalone,offset(standalone),
-    CN, "Do not run in standalone (no-install) mode" },
 #endif /*]*/
 { OptTermName, OPT_STRING,  False, ResTermName,  offset(termname),
     "<name>", "Send <name> as TELNET terminal name" },
@@ -925,6 +927,9 @@ static struct {
 	{ ResAllBold,	offset(all_bold),	XRM_STRING },
 	{ ResAltScreen,	offset(altscreen),	XRM_STRING },
 #endif /*]*/
+#if defined(WC3270) /*[*/
+	{ ResAutoShortcut,offset(auto_shortcut),XRM_BOOLEAN },
+#endif /*]*/
 	{ ResBsdTm,	offset(bsd_tm),		XRM_BOOLEAN },
 #if defined(HAVE_LIBSSL) /*[*/
 	{ ResCertFile,	offset(cert_file),	XRM_STRING },
@@ -990,6 +995,9 @@ static struct {
 # if !defined(_WIN32) /*[*/
 	{ ResMono,	offset(mono),		XRM_BOOLEAN },
 # endif /*]*/
+#if defined(WC3270) /*[*/
+	{ ResNoInstall, offset(no_install),	XRM_BOOLEAN },
+#endif /*]*/
 	{ ResNoPrompt,	offset(no_prompt),	XRM_BOOLEAN },
 #endif /*]*/
 	{ ResNumericLock, offset(numeric_lock),	XRM_BOOLEAN },
@@ -1012,9 +1020,6 @@ static struct {
 #endif /*]*/
 	{ ResSecure,	offset(secure),		XRM_BOOLEAN },
 	{ ResSbcsCgcsgid, offset(sbcs_cgcsgid),	XRM_STRING },
-#if defined(WC3270) /*[*/
-	{ ResStandalone,offset(standalone),	XRM_BOOLEAN },
-#endif /*]*/
 	{ ResTermName,	offset(termname),	XRM_STRING },
 #if defined(WC3270) /*[*/
 	{ ResTitle,	offset(title),		XRM_STRING },
