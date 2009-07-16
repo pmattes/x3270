@@ -90,6 +90,10 @@
 # define PROGRAM_NAME	"c3270"
 #endif /*]*/
 
+#if defined(_WIN32) /*[*/
+# define DELENV		"WC3DEL"
+#endif /*]*/
+
 static void interact(void);
 static void stop_pager(void);
 
@@ -361,6 +365,7 @@ int
 main(int argc, char *argv[])
 {
 	const char	*cl_hostname = CN;
+	char		*delenv;
 
 #if defined(_WIN32) /*[*/
 	(void) get_version_info();
@@ -393,6 +398,13 @@ main(int argc, char *argv[])
 		    	strncpy(myappdata, td, MAX_PATH);
 			myappdata[MAX_PATH - 1] = '\0';
 		}
+	}
+
+	/* Delete the link file, if we've been told do. */
+	delenv = getenv(DELENV);
+	if (delenv != NULL) {
+		unlink(delenv);
+		putenv(DELENV "=");
 	}
 
 	/* Check for auto-shortcut mode. */
@@ -1383,13 +1395,13 @@ static void
 start_auto_shortcut(void)
 {
     	char *tempdir;
-	char mytempdir[MAX_PATH];
 	FILE *f;
 	session_t s;
 	HRESULT hres;
 	char exepath[MAX_PATH];
 	char linkpath[MAX_PATH];
 	char sesspath[MAX_PATH];
+	char delenv[32 + MAX_PATH];
 	char args[1024];
 	HINSTANCE h;
 	extern char *profile_path; /* XXX */
@@ -1422,23 +1434,15 @@ start_auto_shortcut(void)
 	}
 	printf("Read in session '%s'\n", profile_path); fflush(stdout);
 
-	/* Create a temporary directory to run in. */
+	/* Create the shortcut. */
 	tempdir = getenv("TEMP");
 	if (tempdir == CN) {
 	    	fprintf(stderr, "No %%TEMP%%?\n");
 		x3270_exit(1);
 	}
-	sprintf(mytempdir, "%s\\wcsa%u", tempdir, getpid());
-	if (mkdir(mytempdir) < 0) {
-	    	fprintf(stderr, "%s: %s\n", mytempdir, strerror(errno));
-		x3270_exit(1);
-	}
-	printf("Created directory '%s'\n", mytempdir); fflush(stdout);
-
-	/* Create the shortcut there. */
+	sprintf(linkpath, "%s\\wcsa%u.lnk", tempdir, getpid());
 	sprintf(exepath, "%s\\%s", instdir, "wc3270.exe");
 	printf("Executable path is '%s'\n", exepath); fflush(stdout);
-	sprintf(linkpath, "%s\\%s", mytempdir, "wc3270.lnk");
 	if (GetFullPathName(profile_path, MAX_PATH, sesspath, NULL) == 0) {
 	    	fprintf(stderr, "%s: Error %ld\n", profile_path,
 			GetLastError());
@@ -1457,10 +1461,8 @@ start_auto_shortcut(void)
 	printf("Created ShellLink '%s'\n", linkpath); fflush(stdout);
 
 	/* Execute it. */
-	if (chdir(mytempdir) < 0) {
-	    fprintf(stderr, "chdir(%s): %s\n", mytempdir, strerror(errno));
-	    x3270_exit(1);
-	}
+	sprintf(delenv, "%s=%s", DELENV, linkpath);
+	putenv(delenv);
 	h = ShellExecute(NULL, "open", linkpath, "", tempdir, SW_SHOW);
 	if ((int)h <= 32) {
 	    fprintf(stderr, "ShellExecute failed, error %d\n", (int)h);
@@ -1469,13 +1471,6 @@ start_auto_shortcut(void)
 
 	printf("Started ShellLink\n"); fflush(stdout);
 
-	/* Clean up. */
-	Sleep(500);
-	chdir("\\");
-	(void) unlink(linkpath);
-	(void) rmdir(mytempdir);
-
-	printf("Cleaned up\n"); fflush(stdout);
 	exit(0);
 }
 #endif /*]*/
