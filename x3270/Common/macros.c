@@ -550,6 +550,12 @@ sms_pop(Boolean can_exit)
 	if (sms->type == ST_FILE) {
 	    	(void) close(sms->infd);
 	}
+#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
+	if (sms->type == ST_PEER && appres.socket) {
+		(void) fclose(sms->outfile);
+		(void) close(sms->infd);
+	}
+#endif /*]*/
 
 	/* Cancel any pending timeouts. */
 	if (sms->expect_id != 0L)
