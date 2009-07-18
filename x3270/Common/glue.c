@@ -128,45 +128,31 @@ Boolean	       *standard_font = &sfont;
 char	       *profile_name = CN;
 char	       *profile_path = CN;
 
-struct toggle_name toggle_names[N_TOGGLES] = {
+struct toggle_name toggle_names[] = {
+#if defined(C3270) /*[*/
 	{ ResMonoCase,        MONOCASE },
-	{ ResAltCursor,       ALT_CURSOR },
-	{ ResCursorBlink,     CURSOR_BLINK },
-	{ ResShowTiming,      SHOW_TIMING },
-	{ ResCursorPos,       CURSOR_POS },
+#endif /*]*/
 #if defined(X3270_TRACE) /*[*/
 	{ ResDsTrace,         DS_TRACE },
-#else /*][*/
-	{ ResDsTrace,         -1 },
 #endif /*]*/
-	{ ResScrollBar,       SCROLL_BAR },
 #if defined(X3270_ANSI) /*[*/
 	{ ResLineWrap,        LINE_WRAP },
-#else /*][*/
-	{ ResLineWrap,        -1 },
 #endif /*]*/
 	{ ResBlankFill,       BLANK_FILL },
 #if defined(X3270_TRACE) /*[*/
 	{ ResScreenTrace,     SCREEN_TRACE },
 	{ ResEventTrace,      EVENT_TRACE },
-#else /*][*/
-	{ ResScreenTrace,     -1 },
-	{ ResEventTrace,      -1 },
 #endif /*]*/
+#if defined(C3270) /*[*/
 	{ ResMarginedPaste,   MARGINED_PASTE },
-	{ ResRectangleSelect, RECTANGLE_SELECT },
-	{ ResCrosshair,       -1 },
-	{ ResVisibleControl,  -1 },
+#endif /*]*/
 #if defined(X3270_SCRIPT) || defined(TCL3270) /*[*/
 	{ ResAidWait,         AID_WAIT },
-#else /*][*/
-	{ ResAidWait,         -1 },
 #endif /*]*/
 #if defined(C3270) /*[*/
 	{ ResUnderscore,      UNDERSCORE },
-#else /*][*/
-	{ ResUnderscore,      -1 },
 #endif /*]*/
+	{ NULL,               0 }
 };
 
 
@@ -825,14 +811,13 @@ parse_set_clear(int *argcp, const char **argv)
 		/* Delete the argument. */
 		i++;
 
-		for (j = 0; j < N_TOGGLES; j++)
-			if (toggle_names[j].index >= 0 &&
-			    !strcmp(argv[i], toggle_names[j].name)) {
+		for (j = 0; toggle_names[j].name != NULL; j++)
+			if (!strcmp(argv[i], toggle_names[j].name)) {
 				appres.toggle[toggle_names[j].index].value =
 				    is_set;
 				break;
 			}
-		if (j >= N_TOGGLES)
+		if (toggle_names[j].name == NULL)
 			usage("Unknown toggle name");
 
 	}
@@ -1202,9 +1187,8 @@ parse_xrm(const char *arg, const char *where)
 		}
 	}
 	if (address == NULL) {
-		for (i = 0; i < N_TOGGLES; i++) {
-			if (toggle_names[i].index >= 0 &&
-			    !strncapcmp(toggle_names[i].name, name, rnlen)) {
+		for (i = 0; toggle_names[i].name != NULL; i++) {
+			if (!strncapcmp(toggle_names[i].name, name, rnlen)) {
 				address =
 				    &appres.toggle[toggle_names[i].index].value;
 				type = XRM_BOOLEAN;
