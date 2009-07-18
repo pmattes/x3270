@@ -60,7 +60,8 @@ do_toggle_reason(int ix, enum toggle_type reason)
 	 * menu label(s).
 	 */
 	toggle_toggle(t);
-	t->upcall(t, reason);
+	if (t->upcall != NULL)
+		t->upcall(t, reason);
 #if defined(X3270_MENUS) /*[*/
 	menubar_retoggle(t);
 #endif /*]*/
@@ -151,30 +152,32 @@ Toggle_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	int j;
+	int ix;
 
 	action_debug(Toggle_action, event, params, num_params);
 	if (check_usage(Toggle_action, *num_params, 1, 2) < 0)
 		return;
-	for (j = 0; j < N_TOGGLES; j++)
-		if (toggle_names[j].index >= 0 &&
-		    !strcasecmp(params[0], toggle_names[j].name)) {
+	for (j = 0; toggle_names[j].name != NULL; j++) {
+		if (!strcasecmp(params[0], toggle_names[j].name)) {
+		    	ix = toggle_names[j].index;
 			break;
 		}
-	if (j >= N_TOGGLES) {
+	}
+	if (toggle_names[j].name == NULL) {
 		popup_an_error("%s: Unknown toggle name '%s'",
 		    action_name(Toggle_action), params[0]);
 		return;
 	}
 
 	if (*num_params == 1) {
-		do_toggle_reason(j, TT_ACTION);
+		do_toggle_reason(ix, TT_ACTION);
 	} else if (!strcasecmp(params[1], "set")) {
-		if (!toggled(j)) {
-			do_toggle_reason(j, TT_ACTION);
+		if (!toggled(ix)) {
+			do_toggle_reason(ix, TT_ACTION);
 		}
 	} else if (!strcasecmp(params[1], "clear")) {
-		if (toggled(j)) {
-			do_toggle_reason(j, TT_ACTION);
+		if (toggled(ix)) {
+			do_toggle_reason(ix, TT_ACTION);
 		}
 	} else {
 		popup_an_error("%s: Unknown keyword '%s' (must be 'set' or "

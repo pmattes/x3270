@@ -226,7 +226,7 @@ static String fallbacks[] = {
 	NULL
 };
 
-struct toggle_name toggle_names[N_TOGGLES] = {
+struct toggle_name toggle_names[] = {
 	{ ResMonoCase,        MONOCASE },
 	{ ResAltCursor,       ALT_CURSOR },
 	{ ResCursorBlink,     CURSOR_BLINK },
@@ -234,22 +234,15 @@ struct toggle_name toggle_names[N_TOGGLES] = {
 	{ ResCursorPos,       CURSOR_POS },
 #if defined(X3270_TRACE) /*[*/
 	{ ResDsTrace,         DS_TRACE },
-#else /*][*/
-	{ ResDsTrace,         -1 },
 #endif /*]*/
 	{ ResScrollBar,       SCROLL_BAR },
 #if defined(X3270_ANSI) /*[*/
 	{ ResLineWrap,        LINE_WRAP },
-#else /*][*/
-	{ ResLineWrap,        -1 },
 #endif /*]*/
 	{ ResBlankFill,       BLANK_FILL },
 #if defined(X3270_TRACE) /*[*/
 	{ ResScreenTrace,     SCREEN_TRACE },
 	{ ResEventTrace,      EVENT_TRACE },
-#else /*][*/
-	{ ResScreenTrace,     -1 },
-	{ ResEventTrace,      -1 },
 #endif /*]*/
 	{ ResMarginedPaste,   MARGINED_PASTE },
 	{ ResRectangleSelect, RECTANGLE_SELECT },
@@ -257,9 +250,8 @@ struct toggle_name toggle_names[N_TOGGLES] = {
 	{ ResVisibleControl,  VISIBLE_CONTROL },
 #if defined(X3270_SCRIPT) /*[*/
 	{ ResAidWait,         AID_WAIT },
-#else /*][*/
-	{ ResAidWait,         -1 },
 #endif /*]*/
+	{ NULL,               0 }
 };
 
 
@@ -868,9 +860,8 @@ parse_set_clear(int *argcp, char **argv)
 		/* Delete the argument. */
 		i++;
 
-		for (j = 0; j < N_TOGGLES; j++)
-			if (toggle_names[i].index >= 0 &&
-			    !strcmp(argv[i], toggle_names[j].name)) {
+		for (j = 0; toggle_names[j].name != NULL; j++)
+			if (!strcmp(argv[i], toggle_names[j].name)) {
 				appres.toggle[toggle_names[j].index].value =
 				    is_set;
 				break;
