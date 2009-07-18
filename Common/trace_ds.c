@@ -817,7 +817,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 
 #if defined(_WIN32) && defined(C3270) /*[*/
 	/* Start the monitor window. */
-	if (tracef != stdout && appres.trace_monitor) {
+	if (tracef != stdout && appres.trace_monitor && !appres.no_install) {
 		STARTUPINFO startupinfo;
 		PROCESS_INFORMATION process_information;
 		char *path;
