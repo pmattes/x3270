@@ -66,6 +66,9 @@ do	if [ ! -d "$i" ]
 	fi
 done
 
+# Put ReleaseTools in our path, so we can see zipit.
+export PATH=$PATH:$PWD/ReleaseTools
+
 # Trace whatever we do.
 #set -x
 
@@ -77,6 +80,7 @@ reldir=$d1/../../Release
 
 suite=suite3270-$version.tgz
 setup=wc3270-$version-setup.exe
+zip=wc3270-$version.zip
 
 # Check for existing targets before we do any real work.
 if [ "$release" ]
@@ -92,6 +96,10 @@ then	for prod in $prods
 	fi
 	if [ "$winrel" -a -f $reldir/$setup ]
 	then	echo >&2 "$setup already exists"
+	    	exit 1
+	fi
+	if [ "$winrel" -a -f $reldir/$zip ]
+	then	echo >&2 "$zip already exists"
 	    	exit 1
 	fi
 fi
@@ -201,6 +209,8 @@ if [ "$winrel" ]
 then	echo "===== Building setup.exe."
 	cd $tmpdir/wc3270-3.3
     	wine c:\\Program\ Files\\Inno\ Setup\ 5\\ISCC.EXE wc3270.iss
+	echo "===== Building wc3270.zip."
+	zipit -c "wc3270 $version" -o $zip wc3270.zipit
 fi
 
 cd $tmpdir
@@ -224,6 +234,12 @@ then	echo "===== Releasing."
 	if [ "$winrel" ]
 	then	cp wc3270-3.3/$setup $reldir/
 		chmod ugo-w $reldir/$setup
+	fi
+
+	# Release the zip file.
+	if [ "$winrel" ]
+	then	cp wc3270-3.3/$zip $reldir/
+		chmod ugo-w $reldir/$zip
 	fi
 
 fi
