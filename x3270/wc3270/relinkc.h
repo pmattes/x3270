@@ -61,7 +61,7 @@ typedef struct {
 	DWORD flags;			/* embed keymaps in file */
 } session_t;
 
-#define WF_NO_INSTALL		0x00000001	/* no-app-defaults mode */
+#define WF_EMBED_KEYMAPS	0x00000001	/* embed keymaps in session */
 #define WF_AUTO_SHORTCUT	0x00000002	/* 'auto-shortcut' mode */
 
 typedef struct {

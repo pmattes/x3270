@@ -250,6 +250,10 @@ extern char		*instdir;
 extern char		myappdata[];
 #endif /*]*/
 
+#if defined(_WIN32) && defined(C3270) /*[*/
+extern Boolean		is_installed;
+#endif /*]*/
+
 /* Data types and complex global variables */
 
 /*   connection state */

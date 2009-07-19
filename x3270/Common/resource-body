@@ -1666,17 +1666,6 @@ description
     When true, causes %p% to run in uppercase-only mode.
 .
 
-name noInstall
-applies wc
-type b
-default false
-description
-    When true, %p% can run without being installed.
-    It will not search for keymaps in the AppData directory (they should be
-    embedded in session files instead), nor will it
-    write trace files there -- they will be written to %TEMP% instead.
-.
-
 name noOther
 applies x
 groups s

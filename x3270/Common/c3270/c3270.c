@@ -256,6 +256,7 @@ Boolean dont_return = False;
 #if defined(_WIN32) /*[*/
 char *instdir = NULL;
 char myappdata[MAX_PATH];
+Boolean is_installed;
 static void start_auto_shortcut(void);
 #endif /*]*/
 
@@ -281,6 +282,7 @@ save_dirs(char *argv0)
     	char *bsl;
 	char *tmp_instdir;
 	DWORD rv;
+	HMODULE h;
 
 	/* Extract the installation directory from argv[0]. */
 	bsl = strrchr(argv0, '\\');
@@ -307,6 +309,16 @@ save_dirs(char *argv0)
 	/* Figure out the application data directory. */
 	if (get_dirs(NULL, myappdata, "wc3270") < 0)
 	    	x3270_exit(1);
+
+	/* Figure out if we're installed. */
+	h = LoadLibrary("CATF.EXE");
+	if (h != NULL) {
+	    	CloseHandle(h);
+		is_installed = True;
+	} else {
+	    	strcpy(myappdata, ".\\");
+		is_installed = False;
+	}
 }
 #endif /*]*/
 
@@ -392,16 +404,6 @@ main(int argc, char *argv[])
 		build);
 
 #if defined(_WIN32) /*[*/
-	/* Check for no-install mode, which really means 'no app-defaults'. */
-	if (appres.no_install) {
-	    	char *td = getenv("TEMP");
-
-		if (td != NULL) {
-		    	strncpy(myappdata, td, MAX_PATH);
-			myappdata[MAX_PATH - 1] = '\0';
-		}
-	}
-
 	/* Delete the link file, if we've been told do. */
 	delenv = getenv(DELENV);
 	if (delenv != NULL) {

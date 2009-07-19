@@ -137,7 +137,6 @@ typedef struct {
 #endif /*]*/
 #if defined(_WIN32) /*[*/
 	Boolean auto_shortcut;
-	Boolean no_install;
 #endif /*]*/
 #endif /*]*/
 	Boolean	apl_mode;

@@ -126,7 +126,6 @@
 #define ResModifiedSelColor	"modifiedSelColor"
 #define ResMono			"mono"
 #define ResMonoCase		"monoCase"
-#define ResNoInstall		"noInstall"
 #define ResNoOther		"noOther"
 #define ResNoPrompt		"noPrompt"
 #define ResNormalColor		"normalColor"
