@@ -1343,30 +1343,27 @@ user-defined keymaps, separated by commas.");
 }
 
 static int
-get_noinstall(session_t *s)
+get_embed(session_t *s)
 {
 	new_screen(s, "\
-No-Install Mode\n\
+Embed Keymaps\n\
 \n\
-If selected, this option allows the wc3270 session to run without installing\n\
-the wc3270 software.  The option prevents wc3270 from using its AppDefaults\n\
-directory, which is normally created as part of installation. Instead, any\n\
-selected keymaps will be copied into this session file, and trace files\n\
-will be written into the %%TEMP%% directory.");
+If selected, this option causes any selected keymaps to be copied into the\n\
+session file, instead of being found at runtime.");
 
 	for (;;) {
 	    	int rc;
 
 		printf("\nEmbed keymaps? (y/n) [%s] ",
-			(s->flags & WF_NO_INSTALL)? "y": "n");
+			(s->flags & WF_EMBED_KEYMAPS)? "y": "n");
 		fflush(stdout);
-		rc = getyn((s->flags & WF_NO_INSTALL) != 0);
+		rc = getyn((s->flags & WF_EMBED_KEYMAPS) != 0);
 		if (rc == -1)
 			return -1;
 		if (rc)
-		    	s->flags |= WF_NO_INSTALL;
+		    	s->flags |= WF_EMBED_KEYMAPS;
 		else
-		    	s->flags &= ~WF_NO_INSTALL;
+		    	s->flags &= ~WF_EMBED_KEYMAPS;
 		break;
 	}
 	return 0;
@@ -1431,8 +1428,9 @@ summarize_and_proceed(session_t *s, char *installdir, char *how, char *path)
 		}
 		printf(" 14. Keymaps ................ : %s\n",
 			s->keymaps[0]? s->keymaps: "(none)");
-		printf(" 15. No-Install Mode ........ : %s\n",
-			(s->flags & WF_NO_INSTALL)? "Yes": "No");
+		if (s->keymaps[0])
+			printf(" 15.  Embed Keymaps ......... : %s\n",
+				(s->flags & WF_EMBED_KEYMAPS)? "Yes": "No");
 
 		for (;;) {
 		    	int invalid = 0;
@@ -1536,7 +1534,7 @@ summarize_and_proceed(session_t *s, char *installdir, char *how, char *path)
 					return -1;
 				break;
 			case 15:
-				if (get_noinstall(s) < 0)
+				if (get_embed(s) < 0)
 				    	return -1;
 				break;
 			default:
@@ -1642,7 +1640,7 @@ reg_font_from_cset(char *cset, int *codepage)
 }
 
 int
-session_wizard(char *session_name)
+session_wizard(char *session_name, int installed)
 {
     	session_t session;
 	int rc;
@@ -1668,6 +1666,8 @@ session_wizard(char *session_name)
 	/* Get some paths from Windows. */
 	if (get_dirs(desktop, mya, "wc3270") < 0)
 	    	return -1;
+	if (!installed)
+	    	strcpy(mya, ".\\");
 
 	/* Intro screen. */
 	if (session_name == NULL && intro(&session) < 0)
@@ -1730,9 +1730,10 @@ session_wizard(char *session_name)
 	if ((shortcut_exists = (f != NULL)))
 		fclose(f);
 	for (;;) {
-	    	printf("\n%s desktop shortcut (y/n) [y]: ",
-			shortcut_exists? "Replace": "Create");
-		rc = getyn(1);
+	    	printf("\n%s desktop shortcut (y/n) [%s]: ",
+			shortcut_exists? "Replace": "Create",
+			installed? "y": "n");
+		rc = getyn(installed == TRUE);
 		if (rc < 0)
 		    	return -1;
 		if (rc == 0)
@@ -1906,12 +1907,9 @@ create_session_file(session_t *session, char *path)
 
 	if (session->keymaps[0]) {
 	    	fprintf(f, "wc3270.%s: %s\n", ResKeymap, session->keymaps);
-		if (session->flags & WF_NO_INSTALL)
+		if (session->flags & WF_EMBED_KEYMAPS)
 		    	embed_keymaps(session, f);
 	}
-
-	if (session->flags & WF_NO_INSTALL)
-	    	fprintf(f, "wc3270.%s: %s\n", ResNoInstall, ResTrue);
 
 	if (session->flags & WF_AUTO_SHORTCUT)
 	    	fprintf(f, "wc3270.%s: %s\n", ResAutoShortcut, ResTrue);
@@ -2038,6 +2036,8 @@ main(int argc, char *argv[])
 	int rc;
 	char buf[2];
 	char *session_name = NULL;
+	HMODULE h;
+	int installed = FALSE;
 
 	/*
 	 * Parse command-line arguments.
@@ -2058,16 +2058,24 @@ main(int argc, char *argv[])
 	if (get_version_info() < 0)
 	    	return 1;
 
+	/* Resize the console window. */
 	if (is_nt)
 		resize_window(44);
 	else
 	    	system("mode con lines=50");
 
+	/* Figure out if we're installed or not. */
+	h = LoadLibrary("CATF.EXE");
+	if (h != NULL) {
+	    	CloseHandle(h);
+		installed = TRUE;
+	}
+
 	signal(SIGINT, SIG_IGN);
 
 	save_keymaps();
 
-	rc = session_wizard(session_name);
+	rc = session_wizard(session_name, installed);
 
 	printf("\nWizard %s.  [Press <Enter>] ",
 		    (rc < 0)? "aborted": "complete");

@@ -980,9 +980,6 @@ static struct {
 # if !defined(_WIN32) /*[*/
 	{ ResMono,	offset(mono),		XRM_BOOLEAN },
 # endif /*]*/
-#if defined(WC3270) /*[*/
-	{ ResNoInstall, offset(no_install),	XRM_BOOLEAN },
-#endif /*]*/
 	{ ResNoPrompt,	offset(no_prompt),	XRM_BOOLEAN },
 #endif /*]*/
 	{ ResNumericLock, offset(numeric_lock),	XRM_BOOLEAN },
