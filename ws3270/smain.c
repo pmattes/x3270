@@ -73,7 +73,7 @@
 
 #if defined(_WIN32) /*[*/
 char *instdir = NULL;
-char myappdata[MAX_PATH];
+char *myappdata = NULL;
 #endif /*]*/
 
 void
@@ -84,29 +84,6 @@ usage(char *msg)
 	xs_error("Usage: %s [options] [ps:][LUname@]hostname[:port]",
 		programname);
 }
-
-#if defined(_WIN32) /*[*/
-/*
- * Figure out the install directory and our data directory.
- */
-static void
-save_dirs(char *argv0)
-{
-    	char *bsl;
-
-	/* Extract the installation directory from argv[0]. */
-	bsl = strrchr(argv0, '\\');
-	if (bsl != NULL) {
-	    	instdir = NewString(argv0);
-		instdir[(bsl - argv0) + 1] = '\0';
-	} else
-	    	instdir = "";
-
-	/* Figure out the application data directory. */
-	if (get_dirs(NULL, myappdata, "ws3270") < 0)
-	    	exit(1);
-}
-#endif /*]*/
 
 static void
 main_connect(Boolean ignored)
@@ -122,7 +99,10 @@ main(int argc, char *argv[])
 
 #if defined(_WIN32) /*[*/
 	(void) get_version_info();
-	(void) save_dirs(argv[0]);
+	if (get_dirs(argv[0], "ws3270", &instdir, NULL, &myappdata,
+		    NULL) < 0) {
+	    exit(1);
+	}
 #endif /*]*/
 
 	argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
