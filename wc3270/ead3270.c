@@ -41,13 +41,13 @@
 int
 main(int argc, char *argv[])
 {
-    char appdata[MAX_PATH];
+    char *appdata = NULL;
     int sl;
     char short_ad[MAX_PATH];
     char cmd[7 + MAX_PATH];
 
     /* Get the application data directory. */
-    if (get_dirs(NULL, appdata, "wc3270") < 0) {
+    if (get_dirs(NULL, "wc3270", NULL, NULL, &appdata, NULL) < 0) {
 	fprintf(stderr, "get_dirs failed\n");
 	return 1;
     }

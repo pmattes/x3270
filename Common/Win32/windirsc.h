@@ -25,4 +25,5 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern int get_dirs(char *desktop, char *appdata, char *appname);
+extern int get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
+	char **appdata, int *installed);

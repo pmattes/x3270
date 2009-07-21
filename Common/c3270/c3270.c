@@ -255,7 +255,7 @@ Boolean dont_return = False;
 
 #if defined(_WIN32) /*[*/
 char *instdir = NULL;
-char myappdata[MAX_PATH];
+char *myappdata = NULL;
 Boolean is_installed;
 static void start_auto_shortcut(void);
 #endif /*]*/
@@ -271,56 +271,6 @@ usage(char *msg)
 	cmdline_help(False);
 	exit(1);
 }
-
-#if defined(_WIN32) /*[*/
-/*
- * Figure out the install directory and our data directory.
- */
-static void
-save_dirs(char *argv0)
-{
-    	char *bsl;
-	char *tmp_instdir;
-	DWORD rv;
-	HMODULE h;
-
-	/* Extract the installation directory from argv[0]. */
-	bsl = strrchr(argv0, '\\');
-	if (bsl != NULL) {
-	    	tmp_instdir = NewString(argv0);
-		if (bsl - argv0 > 0 && tmp_instdir[bsl - argv0 - 1] == ':')
-		    	/* X:\foo */
-			tmp_instdir[bsl - argv0 + 1] = '\0';
-		else
-		    	/* X:\foo\bar */
-			tmp_instdir[bsl - argv0] = '\0';
-	} else
-	    	tmp_instdir = NewString(".");
-	rv = GetFullPathName(tmp_instdir, 0, NULL, NULL);
-	instdir = Malloc(rv + 2);
-	if (GetFullPathName(tmp_instdir, rv + 1, instdir, NULL) == 0) {
-		fprintf(stderr, "GetFullPathName failed\n");
-		x3270_exit(1);
-	}
-	if (instdir[strlen(instdir) - 1] == '\\')
-	    	instdir[strlen(instdir) - 1] = '\0';
-	Free(tmp_instdir);
-
-	/* Figure out the application data directory. */
-	if (get_dirs(NULL, myappdata, "wc3270") < 0)
-	    	x3270_exit(1);
-
-	/* Figure out if we're installed. */
-	h = LoadLibrary("CATF.EXE");
-	if (h != NULL) {
-	    	CloseHandle(h);
-		is_installed = True;
-	} else {
-	    	strcpy(myappdata, ".\\");
-		is_installed = False;
-	}
-}
-#endif /*]*/
 
 /* Callback for connection state changes. */
 static void
@@ -383,7 +333,8 @@ main(int argc, char *argv[])
 
 #if defined(_WIN32) /*[*/
 	(void) get_version_info();
-	(void) save_dirs(argv[0]);
+	if (get_dirs(argv[0], "wc3270", &instdir, NULL, &myappdata, NULL) < 0)
+	    	x3270_exit(1);
 #endif /*]*/
 
 	add_resource("keymap.base",
@@ -416,12 +367,6 @@ main(int argc, char *argv[])
 		start_auto_shortcut();
 		exit(0);
 	}
-
-	/*
-	 * Create the application data directory, in case we are being run
-	 * by someone other than the user that installed us.
-	 */
-	(void) _mkdir(myappdata);
 #endif /*]*/
 
 	if (charset_init(appres.charset) != CS_OKAY) {
