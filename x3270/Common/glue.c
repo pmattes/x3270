@@ -1000,6 +1000,9 @@ static struct {
 	{ ResReverseVideo,offset(reverse_video),XRM_BOOLEAN },
 #endif /*]*/
 #endif /*]*/
+#if defined(X3270_TRACE) /*[*/
+	{ ResScreenTraceFile,offset(screentrace_file),XRM_STRING },
+#endif /*]*/
 	{ ResSecure,	offset(secure),		XRM_BOOLEAN },
 	{ ResSbcsCgcsgid, offset(sbcs_cgcsgid),	XRM_STRING },
 	{ ResTermName,	offset(termname),	XRM_STRING },
