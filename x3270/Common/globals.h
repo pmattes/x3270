@@ -247,7 +247,7 @@ extern char		*user_title;
 
 #if defined(_WIN32) && (defined(C3270) || defined(S3270)) /*[*/
 extern char		*instdir;
-extern char		myappdata[];
+extern char		*myappdata;
 #endif /*]*/
 
 #if defined(_WIN32) && defined(C3270) /*[*/

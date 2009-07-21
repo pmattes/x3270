@@ -89,6 +89,9 @@
 #define SESS_SUFFIX	".wc3270"
 #define SESS_LEN	strlen(SESS_SUFFIX)
 
+#define CHOICE_NONE	"none"
+#define DISPLAY_NONE	"(none)"
+
 extern char *wversion;
 
 /* Aliases for obsolete character set names. */
@@ -140,8 +143,9 @@ static struct {
 
 int create_session_file(session_t *s, char *path);
 
-static char mya[MAX_PATH];
-static char installdir[MAX_PATH];
+static char *mya = NULL;
+static char *installdir = NULL;
+static char *desktop = NULL;
 
 char *user_settings = NULL;
 
@@ -406,11 +410,11 @@ save_keymaps(void)
 		} while (FindNextFile(h, &find_data) != 0);
 		FindClose(h);
 	}
-	sprintf(dpath, "%s\\*.wc3270km", installdir);
+	sprintf(dpath, "%s*.wc3270km", installdir);
 	h = FindFirstFile(dpath, &find_data);
 	if (h != INVALID_HANDLE_VALUE) {
 		do {
-			sprintf(fpath, "%s\\%s", installdir,
+			sprintf(fpath, "%s%s", installdir,
 				find_data.cFileName);
 			(void) save_keymap_name(fpath, find_data.cFileName,
 				NULL);
@@ -509,7 +513,7 @@ get_session(char *session_name, session_t *s, char *path)
 				    	slen = sl - SESS_LEN + 1;
 			    	strncpy(s->session, session_name, slen);
 				s->session[slen - 1] = '\0';
-				snprintf(path, MAX_PATH, "%s\\%s", installdir,
+				snprintf(path, MAX_PATH, "%s%s", installdir,
 					session_name);
 				path[MAX_PATH - 1] = '\0';
 			} else {
@@ -653,11 +657,18 @@ an IPv4 address in dotted-decimal notation such as\n\
 #define IPV6_HOST_TEXT "\
 an IPv6 address in colon notation, such as 'fec0:0:0:1::27'"
 
+#define COMMON_HOST_TEXT3 "\
+\n\
+\n\
+To create a session file with no hostname (one that just specifies the model\n\
+number, character set, etc.), enter '" CHOICE_NONE "'."
+
 	if (has_ipv6)
 	    	new_screen(s, COMMON_HOST_TEXT1 ", " COMMON_HOST_TEXT2 " or "
-			IPV6_HOST_TEXT ".");
+			IPV6_HOST_TEXT "." COMMON_HOST_TEXT3);
 	else
-	    	new_screen(s, COMMON_HOST_TEXT1 " or " COMMON_HOST_TEXT2 ".");
+	    	new_screen(s, COMMON_HOST_TEXT1 " or " COMMON_HOST_TEXT2 "."
+			COMMON_HOST_TEXT3);
 
 	for (;;) {
 		if (s->host[0])
@@ -669,7 +680,7 @@ an IPv6 address in colon notation, such as 'fec0:0:0:1::27'"
 		if (get_input(buf, sizeof(s->host)) == NULL) {
 			return -1;
 		}
-		if (!strcmp(buf, "(none)")) {
+		if (!strcmp(buf, CHOICE_NONE)) {
 		    	strcpy(s->host, buf);
 			break;
 		}
@@ -747,14 +758,14 @@ on the host.  The default is to allow the host to select the Logical Unit.");
 
 	for (;;) {
 		printf("\nEnter Logical Unit (LU) name: [%s] ",
-			s->luname[0]? s->luname: "none");
+			s->luname[0]? s->luname: CHOICE_NONE);
 		fflush(stdout);
 		if (get_input(buf, sizeof(buf)) == NULL) {
 			return -1;
 		}
 		if (!buf[0])
 		    	break;
-		if (!strcmp(buf, "none")) {
+		if (!strcmp(buf, CHOICE_NONE)) {
 		    	s->luname[0] = '\0';
 			break;
 		}
@@ -1042,12 +1053,12 @@ wc3270 to use a proxy server to make the connection.");
 	    	int n;
 
 	    	printf("\nProxy type: [%s] ",
-			s->proxy_type[0]? s->proxy_type: "none" );
+			s->proxy_type[0]? s->proxy_type: CHOICE_NONE );
 		if (get_input(tbuf, STR_SIZE) == NULL)
 		    	return -1;
 		if (!tbuf[0])
 		    	return 0;
-		if (!strcasecmp(tbuf, "none")) {
+		if (!strcasecmp(tbuf, CHOICE_NONE)) {
 			s->proxy_type[0] = '\0';
 			s->proxy_host[0] = '\0';
 			s->proxy_port[0] = '\0';
@@ -1281,7 +1292,7 @@ page.");
 }
 
 int
-get_keymaps(session_t *s, char *installdir)
+get_keymaps(session_t *s)
 {
 	km_t *km;
 
@@ -1309,13 +1320,13 @@ user-defined keymaps, separated by commas.");
 		int wrong = FALSE;
 
 	    	printf("\nEnter keymap name(s) [%s]: ",
-			s->keymaps[0]? s->keymaps: "none");
+			s->keymaps[0]? s->keymaps: CHOICE_NONE);
 		fflush(stdout);
 		if (get_input(inbuf, sizeof(inbuf)) == NULL)
 			return -1;
 		if (!inbuf[0])
 		    	break;
-		if (!strcmp(inbuf, "none")) {
+		if (!strcmp(inbuf, CHOICE_NONE)) {
 		    	s->keymaps[0] = '\0';
 			break;
 		}
@@ -1370,7 +1381,7 @@ session file, instead of being found at runtime.");
 }
 
 int
-summarize_and_proceed(session_t *s, char *installdir, char *how, char *path)
+summarize_and_proceed(session_t *s, char *how, char *path)
 {
     	int rc;
 	char choicebuf[32];
@@ -1388,9 +1399,10 @@ summarize_and_proceed(session_t *s, char *installdir, char *how, char *path)
 
 		new_screen(s, "");
 
-		printf("  1. Host ................... : %s\n", s->host);
+		printf("  1. Host ................... : %s\n",
+			strcmp(s->host, CHOICE_NONE)? s->host: DISPLAY_NONE);
 		printf("  2. Logical Unit Name ...... : %s\n",
-			s->luname[0]? s->luname: "(none)");
+			s->luname[0]? s->luname: DISPLAY_NONE);
 		printf("  3. TCP Port ............... : %d\n", (int)s->port);
 		printf("  4. Model Number ........... : %d (%d rows x %d columns)\n",
 		    (int)s->model, wrows[s->model] - 1, wcols[s->model]);
@@ -1401,7 +1413,7 @@ summarize_and_proceed(session_t *s, char *installdir, char *how, char *path)
 			s->ssl? "Yes": "No");
 #endif /*]*/
 		printf("  7. Proxy .................. : %s\n",
-			s->proxy_type[0]? s->proxy_type: "(none)");
+			s->proxy_type[0]? s->proxy_type: DISPLAY_NONE);
 		if (s->proxy_type[0]) {
 			printf("  8.  Proxy Server .......... : %s\n",
 				s->proxy_host);
@@ -1427,7 +1439,7 @@ summarize_and_proceed(session_t *s, char *installdir, char *how, char *path)
 					GetACP());
 		}
 		printf(" 14. Keymaps ................ : %s\n",
-			s->keymaps[0]? s->keymaps: "(none)");
+			s->keymaps[0]? s->keymaps: DISPLAY_NONE);
 		if (s->keymaps[0])
 			printf(" 15.  Embed Keymaps ......... : %s\n",
 				(s->flags & WF_EMBED_KEYMAPS)? "Yes": "No");
@@ -1530,7 +1542,7 @@ summarize_and_proceed(session_t *s, char *installdir, char *how, char *path)
 				}
 				break;
 			case 14:
-				if (get_keymaps(s, installdir) < 0)
+				if (get_keymaps(s) < 0)
 					return -1;
 				break;
 			case 15:
@@ -1644,7 +1656,6 @@ session_wizard(char *session_name, int installed)
 {
     	session_t session;
 	int rc;
-	char desktop[MAX_PATH];
 	char linkpath[MAX_PATH];
 	char exepath[MAX_PATH];
 	char args[MAX_PATH];
@@ -1656,18 +1667,6 @@ session_wizard(char *session_name, int installed)
 
 	/* Start with nothing. */
 	(void) memset(&session, '\0', sizeof(session));
-
-	/* Figure out where the install directory is. */
-	if (getcwd(installdir, MAX_PATH) == NULL) {
-		printf("getcwd failed: %s\n", strerror(errno));
-		return -1;
-	}
-
-	/* Get some paths from Windows. */
-	if (get_dirs(desktop, mya, "wc3270") < 0)
-	    	return -1;
-	if (!installed)
-	    	strcpy(mya, ".\\");
 
 	/* Intro screen. */
 	if (session_name == NULL && intro(&session) < 0)
@@ -1703,7 +1702,7 @@ session_wizard(char *session_name, int installed)
 		/* fall through... */
 	case 1: /* Edit existing file. */
 		/* See what they want to change. */
-		if (summarize_and_proceed(&session, installdir,
+		if (summarize_and_proceed(&session,
 			    (rc == 3)? "Replace":
 			    ((rc == 0)? "Create": "Update"), path) < 0)
 			return -1;
@@ -1723,9 +1722,9 @@ session_wizard(char *session_name, int installed)
 
 	/* Ask about the shortcut. */
 	if (is_nt)
-		sprintf(linkpath, "%s\\%s.lnk", desktop, session.session);
+		sprintf(linkpath, "%s%s.lnk", desktop, session.session);
 	else
-		sprintf(linkpath, "%s\\%s.pif", desktop, session.session);
+		sprintf(linkpath, "%s%s.pif", desktop, session.session);
 	f = fopen(linkpath, "r");
 	if ((shortcut_exists = (f != NULL)))
 		fclose(f);
@@ -1746,7 +1745,7 @@ session_wizard(char *session_name, int installed)
 	printf("\n%s desktop shortcut '%s'... ",
 		shortcut_exists? "Replacing": "Creating", linkpath);
 	fflush(stdout);
-	sprintf(exepath, "%s\\wc3270.exe", installdir);
+	sprintf(exepath, "%swc3270.exe", installdir);
 	sprintf(args, "+S \"%s\"", path);
 	if (is_nt) {
 	    	wchar_t *font;
@@ -1845,12 +1844,6 @@ create_session_file(session_t *session, char *path)
 	int i;
 	char buf[1024];
 
-	/*
-	 * Create the AppData directory if it doesn't exist.  (If wc3270 was
-	 * installed by a different user, it won't.)
-	 */
-	(void) _mkdir(mya);
-
 	f = fopen(path, "w+");
 	if (f == NULL) {
 		perror("Cannot create session file");
@@ -1863,7 +1856,7 @@ create_session_file(session_t *session, char *path)
 	fprintf(f, "! Created by the wc3270 %s session wizard %s",
 		wversion, ctime(&t));
 
-	if (strcmp(session->host, "(none)")) {
+	if (strcmp(session->host, CHOICE_NONE)) {
 		bracket = (strchr(session->host, ':') != NULL);
 		fprintf(f, "wc3270.%s: ", ResHostname);
 		if (session->ssl)
@@ -2036,7 +2029,6 @@ main(int argc, char *argv[])
 	int rc;
 	char buf[2];
 	char *session_name = NULL;
-	HMODULE h;
 	int installed = FALSE;
 
 	/*
@@ -2058,18 +2050,16 @@ main(int argc, char *argv[])
 	if (get_version_info() < 0)
 	    	return 1;
 
+	/* Get some paths from Windows. */
+	if (get_dirs(argv[0], "wc3270", &installdir, &desktop, &mya,
+		    &installed) < 0)
+	    	return -1;
+
 	/* Resize the console window. */
 	if (is_nt)
 		resize_window(44);
 	else
 	    	system("mode con lines=50");
-
-	/* Figure out if we're installed or not. */
-	h = LoadLibrary("CATF.EXE");
-	if (h != NULL) {
-	    	CloseHandle(h);
-		installed = TRUE;
-	}
 
 	signal(SIGINT, SIG_IGN);
 
