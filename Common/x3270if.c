@@ -44,6 +44,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <netinet/in.h>
 #if defined(HAVE_SYS_SELECT_H) /*[*/
 #include <sys/select.h>
 #endif /*]*/
@@ -64,13 +65,13 @@ static int verbose = 0;
 static char buf[IBS];
 
 static void iterative_io(int pid);
-static void single_io(int pid, int fn, char *cmd);
+static void single_io(int pid, unsigned short port, int fn, char *cmd);
 
 static void
 usage(void)
 {
 	(void) fprintf(stderr, "\
-usage: %s [-v] [-S] [-s field] [-p pid] [action[(param[,...])]]\n\
+usage: %s [-v] [-S] [-s field] [-p pid] [-t port] [action[(param[,...])]]\n\
        %s -i\n", me, me);
 	exit(2);
 }
@@ -105,6 +106,7 @@ main(int argc, char *argv[])
 	char *ptr;
 	int iterative = 0;
 	int pid = 0;
+	unsigned short port = 0;
 
 	/* Identify yourself. */
 	if ((me = strrchr(argv[0], '/')) != (char *)NULL)
@@ -113,7 +115,7 @@ main(int argc, char *argv[])
 		me = argv[0];
 
 	/* Parse options. */
-	while ((c = getopt(argc, argv, "ip:s:Sv")) != -1) {
+	while ((c = getopt(argc, argv, "ip:s:St:v")) != -1) {
 		switch (c) {
 		    case 'i':
 			if (fn >= 0)
@@ -145,6 +147,15 @@ main(int argc, char *argv[])
 				usage();
 			fn = ALL_FIELDS;
 			break;
+		    case 't':
+			port = (unsigned short)strtoul(optarg, &ptr, 0);
+			if (ptr == optarg || *ptr != '\0' || port <= 0) {
+				(void) fprintf(stderr,
+				    "%s: Invalid port: '%s'\n", me,
+				    optarg);
+				usage();
+			}
+			break;
 		    case 'v':
 			verbose++;
 			break;
@@ -164,13 +175,15 @@ main(int argc, char *argv[])
 		if (iterative)
 			usage();
 	}
+	if (pid && port)
+	    	usage();
 
 	/* Ignore broken pipes. */
 	(void) signal(SIGPIPE, SIG_IGN);
 
 	/* Do the I/O. */
 	if (!iterative) {
-		single_io(pid, fn, argv[optind]);
+		single_io(pid, port, fn, argv[optind]);
 	} else {
 		iterative_io(pid);
 	}
@@ -199,9 +212,32 @@ usock(int pid)
 	return fd;
 }
 
+/* Connect to a TCP socket. */
+static int
+tsock(unsigned short port)
+{
+	struct sockaddr_in sin;
+	int fd;
+
+	fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (fd < 0) {
+		perror("socket");
+		exit(2);
+	}
+	(void) memset(&sin, '\0', sizeof(struct sockaddr_in));
+	sin.sin_family = AF_INET;
+	sin.sin_port = htons(port);
+	sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	if (connect(fd, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+		perror("connect");
+		exit(2);
+	}
+	return fd;
+}
+
 /* Do a single command, and interpret the results. */
 static void
-single_io(int pid, int fn, char *cmd)
+single_io(int pid, unsigned short port, int fn, char *cmd)
 {
 	int sockfd;
 	FILE *inf = NULL, *outf = NULL;
@@ -211,6 +247,10 @@ single_io(int pid, int fn, char *cmd)
 	/* Verify the environment and open files. */
 	if (pid) {
 		sockfd = usock(pid);
+		inf = fdopen(sockfd, "r");
+		outf = fdopen(dup(sockfd), "w");
+	} else if (port) {
+		sockfd = tsock(port);
 		inf = fdopen(sockfd, "r");
 		outf = fdopen(dup(sockfd), "w");
 	} else {

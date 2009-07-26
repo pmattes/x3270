@@ -43,6 +43,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <netinet/in.h>
 #endif /*]*/
 #include <errno.h>
 #include <fcntl.h>
@@ -80,6 +81,7 @@
 
 #if defined(_WIN32) /*[*/
 #include "windows.h"
+#include <ws2tcpip.h>
 #endif /*]*/
 
 #if defined(_MSC_VER) /*[*/
@@ -140,6 +142,7 @@ typedef struct sms {
 	Boolean executing;	/* recursion avoidance */
 	Boolean accumulated;	/* accumulated time flag */
 	Boolean idle_error;	/* idle command caused an error */
+	Boolean is_socket;	/* I/O is via a socket */
 	unsigned long msec;	/* total accumulated time */
 	FILE   *outfile;
 	int	infd;
@@ -153,9 +156,12 @@ typedef struct sms {
 #define SN	((sms_t *)NULL)
 static sms_t *sms = SN;
 static int sms_depth = 0;
-#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
+#if defined(X3270_SCRIPT) /*[*/
 static int socketfd = -1;
 static unsigned long socket_id = 0L;
+# if defined(_WIN32) /*[*/
+static HANDLE socket_event = NULL;
+# endif /*]*/
 #endif /*]*/
 
 #if defined(X3270_TRACE) /*[*/
@@ -199,13 +205,13 @@ static enum iaction st_cause[] = { IA_MACRO, IA_MACRO, IA_COMMAND, IA_KEYMAP,
 #define ST_sNAME(s)	st_name[(int)(s)->type]
 #define ST_NAME		ST_sNAME(sms)
 
-#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
+#if defined(X3270_SCRIPT) /*[*/
 static void cleanup_socket(Boolean b);
 #endif /*]*/
 static void script_prompt(Boolean success);
 static void script_input(void);
 static void sms_pop(Boolean can_exit);
-#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
+#if defined(X3270_SCRIPT) /*[*/
 static void socket_connection(void);
 #endif /*]*/
 static void wait_timed_out(void);
@@ -534,7 +540,7 @@ sms_pop(Boolean can_exit)
 	/* When you pop the peer script, that's the end of x3270. */
 	if (sms->type == ST_PEER &&
 #if defined(X3270_SCRIPT) /*[*/
-	    !appres.socket &&
+	    (!appres.socket && !appres.script_port) &&
 #endif /*]*/
 	    can_exit)
 		x3270_exit(0);
@@ -550,9 +556,10 @@ sms_pop(Boolean can_exit)
 	if (sms->type == ST_FILE) {
 	    	(void) close(sms->infd);
 	}
-#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
-	if (sms->type == ST_PEER && appres.socket) {
-		(void) fclose(sms->outfile);
+#if defined(X3270_SCRIPT) /*[*/
+	if (sms->type == ST_PEER && (appres.socket || appres.script_port)) {
+	    	if (!sms->is_socket)
+			(void) fclose(sms->outfile);
 		(void) close(sms->infd);
 	}
 #endif /*]*/
@@ -571,10 +578,14 @@ sms_pop(Boolean can_exit)
 	if (sms->idle_error)
 		popup_an_error("Idle command disabled due to error");
 
-#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
+#if defined(X3270_SCRIPT) /*[*/
 	/* If this was a socket peer, get ready for another connection. */
-	if (sms->type == ST_PEER && appres.socket)
+	if (sms->type == ST_PEER && (appres.socket || appres.script_port))
+#if defined(_WIN32) /*[*/
+		socket_id = AddInput((int)socket_event, socket_connection);
+#else /*][*/
 		socket_id = AddInput(socketfd, socket_connection);
+#endif /*]*/
 #endif /*]*/
 
 	/* Release the memory. */
@@ -612,8 +623,63 @@ peer_script_init(void)
 	sms_t *s;
 	Boolean on_top;
 
+#if defined(X3270_SCRIPT) /*[*/
+	if (appres.script_port) {
+		struct sockaddr_in sin;
+
+#if !defined(_WIN32) /*[*/
+		if (appres.socket)
+		    	xs_warning("-scriptport overrides -socket");
+#endif /*]*/
+
+		/* -scriptport overrides -script */
+		appres.scripted = False;
+
+		/* Create the listening socket. */
+		socketfd = socket(AF_INET, SOCK_STREAM, 0);
+		if (socketfd < 0) {
+			popup_an_errno(errno, "socket()");
+			return;
+		}
+		(void) memset(&sin, '\0', sizeof(sin));
+		sin.sin_family = AF_INET;
+		sin.sin_port = htons(appres.script_port);
+		sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+		if (bind(socketfd, (struct sockaddr *)&sin, sizeof(sin))
+				< 0) {
+			popup_an_errno(errno, "socket bind");
+			close(socketfd);
+			socketfd = -1;
+			return;
+		}
+		if (listen(socketfd, 1) < 0) {
+			popup_an_errno(errno, "socket listen");
+			close(socketfd);
+			socketfd = -1;
+			return;
+		}
+#if defined(_WIN32) /*[*/
+		socket_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+		if (socket_event == NULL) {
+		    	fprintf(stderr,
+				"Cannot create listening socket event\n");
+			exit(1);
+		}
+		if (WSAEventSelect(socketfd, socket_event, FD_ACCEPT) != 0) {
+		    	fprintf(stderr,
+				"Cannot set listening socket events\n");
+			exit(1);
+		}
+		socket_id = AddInput((int)socket_event, socket_connection);
+#else /*][*/
+		socket_id = AddInput(socketfd, socket_connection);
+#endif/*]*/
+		register_schange(ST_EXITING, cleanup_socket);
+		return;
+	}
+#endif /*]*/
 #if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
-	if (appres.socket) {
+	if (appres.socket && !appres.script_port) {
 		struct sockaddr_un ssun;
 
 		/* -socket overrides -script */
@@ -680,22 +746,39 @@ peer_script_init(void)
 	}
 }
 
-#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
+#if defined(X3270_SCRIPT) /*[*/
 /* Accept a new socket connection. */
 static void
 socket_connection(void)
 {
 	int fd;
-	struct sockaddr_un ssun;
-	socklen_t len = sizeof(ssun);
 	sms_t *s;
 
 	/* Accept the connection. */
-	(void) memset(&ssun, '\0', sizeof(ssun));
-	ssun.sun_family = AF_UNIX;
-	fd = accept(socketfd, (struct sockaddr *)&ssun, &len);
+#if !defined(_WIN32) /*[*/
+	if (appres.script_port)
+#endif /*]*/
+	{
+		struct sockaddr_in sin;
+		socklen_t len = sizeof(sin);
+
+		(void) memset(&sin, '\0', sizeof(sin));
+		sin.sin_family = AF_INET;
+		fd = accept(socketfd, (struct sockaddr *)&sin, &len);
+	}
+#if !defined(_WIN32) /*[*/
+	else {
+		struct sockaddr_un ssun;
+		socklen_t len = sizeof(ssun);
+
+		(void) memset(&ssun, '\0', sizeof(ssun));
+		ssun.sun_family = AF_UNIX;
+		fd = accept(socketfd, (struct sockaddr *)&ssun, &len);
+	}
+#endif /*]*/
+
 	if (fd < 0) {
-		popup_an_errno(errno, "Unix-domain socket accept");
+		popup_an_errno(errno, "socket accept");
 		return;
 	}
 	trace_dsn("New script socket connection\n");
@@ -704,7 +787,21 @@ socket_connection(void)
 	(void) sms_push(ST_PEER);
 	s = sms;
 	s->infd = fd;
+#if !defined(_WIN32) /*[*/
 	s->outfile = fdopen(dup(fd), "w");
+#endif /*]*/
+#if defined(_WIN32) /*[*/
+	s->inhandle = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (s->inhandle == NULL) {
+	    	fprintf(stderr, "Can't create socket handle\n");
+		exit(1);
+	}
+	if (WSAEventSelect(s->infd, s->inhandle, FD_READ | FD_CLOSE) != 0) {
+	    	fprintf(stderr, "Can't set socket handle events\n");
+		exit(1);
+	}
+#endif /*]*/
+	s->is_socket = True;
 	script_enable();
 
 	/* Don't accept any more connections. */
@@ -716,10 +813,12 @@ socket_connection(void)
 static void
 cleanup_socket(Boolean b _is_unused)
 {
+#if !defined(_WIN32) /*[*/
 	char buf[1024];
 
 	(void) sprintf(buf, "/tmp/x3sck.%u", getpid());
 	(void) unlink(buf);
+#endif /*]*/
 }
 #endif /*]*/
 
@@ -1407,14 +1506,20 @@ sms_error(const char *msg)
 	if (is_script) {
 		char c;
 
-		fprintf(s->outfile, "data: ");
+		if (s->is_socket)
+			send(s->infd, "data: ", 6, 0);
+		else
+			fprintf(s->outfile, "data: ");
 		while ((c = *msg++)) {
-			if (c == '\n')
-				(void) putc(' ', s->outfile);
+		    	if (s->is_socket)
+			    	send(s->infd, (c == '\n')? " ": &c, 1, 0);
 			else
-				(void) putc(c, s->outfile);
+			    	putc((c == '\n')? ' ': c, s->outfile);
 		}
-		putc('\n', s->outfile);
+		if (s->is_socket)
+		    	send(s->infd, "\n", 1, 0);
+		else
+			putc('\n', s->outfile);
 	} else
 		(void) fprintf(stderr, "%s\n", msg);
 
@@ -1456,10 +1561,16 @@ sms_info(const char *fmt, ...)
 		else
 			nc = strlen(msg);
 		if (nc || (nl != CN)) {
-		    	if ((s = sms_redirect_to()) != NULL)
-				(void) fprintf(s->outfile, "data: %.*s\n",
-				    nc, msg);
-			else
+		    	if ((s = sms_redirect_to()) != NULL) {
+			    	if (s->is_socket) {
+				    	send(s->infd, "data: ", 6,  0);
+					send(s->infd, msg,      nc, 0);
+					send(s->infd, "\n",     1,  0);
+				} else
+					(void) fprintf(s->outfile,
+						"data: %.*s\n",
+						nc, msg);
+			} else
 				(void) printf("%.*s\n", nc, msg);
 		}
 		msg = nl + 1;
@@ -1480,7 +1591,10 @@ script_input(void)
 	trace_dsn("Input for %s[%d] %d\n", ST_NAME, sms_depth, sms->state);
 
 	/* Read in what you can. */
-	nr = read(sms->infd, buf, sizeof(buf));
+	if (sms->is_socket)
+		nr = recv(sms->infd, buf, sizeof(buf), 0);
+	else
+		nr = read(sms->infd, buf, sizeof(buf));
 	if (nr < 0) {
 		popup_an_errno(errno, "%s[%d] read", ST_NAME, sms_depth);
 		return;
@@ -2184,9 +2298,21 @@ script_prompt(Boolean success)
 		(void) strcpy(timing, "-");
 	}
 	s = status_string();
-	(void) fprintf(sms->outfile, "%s %s\n%s\n", s, timing,
-		       success ? "ok" : "error");
-	(void) fflush(sms->outfile);
+	if (sms->is_socket) {
+	    	send(sms->infd, s, strlen(s), 0);
+	    	send(sms->infd, " ", 1, 0);
+	    	send(sms->infd, timing, strlen(timing), 0);
+	    	send(sms->infd, "\n", 1, 0);
+		if (success)
+		    	send(sms->infd, "ok\n", 3, 0);
+		else
+		    	send(sms->infd, "error\n", 6, 0);
+	} else {
+		(void) fprintf(sms->outfile, "%s %s\n%s\n", s, timing,
+			       success ? "ok" : "error");
+	}
+	if (!sms->is_socket)
+		(void) fflush(sms->outfile);
 	Free(s);
 }
 
@@ -3107,14 +3233,16 @@ Printer_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 }
 #endif /*]*/
 
-#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
+#if defined(X3270_SCRIPT) /*[*/
 /* Abort all running scripts. */
 void
 abort_script(void)
 {
 	while (sms != SN) {
+#if !defined(_WIN32) /*[*/
 		if (sms->type == ST_CHILD && sms->pid > 0)
 			(void) kill(sms->pid, SIGTERM);
+#endif /*]*/
 		sms_pop(True);
 	}
 }
@@ -3124,7 +3252,9 @@ void
 Abort_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
+#if !defined(_WIN32) /*[*/
 	child_ignore_output();
+#endif /*]*/
 	abort_script();
 }
 #endif /*]*/

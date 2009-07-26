@@ -90,6 +90,11 @@ XX_TP(XX_FB(XX_DASHED(p)) XX_FI(process-id))
 Causes XX_FI(x3270if) to use a Unix-domain socket to connect to the emulator,
 rather than pipe file descriptors given in environment variables.
 The emulator must have been started with the XX_FB(XX_DASHED(socket)) option.
+XX_TP(XX_FB(XX_DASHED(t)) XX_FI(port))
+Causes XX_FI(x3270if) to use a TCP socket to connect to the emulator,
+rather than pipe file descriptors given in environment variables.
+The emulator must have been started with the XX_FB(XX_DASHED(scriptport))
+option.
 XX_TP(XX_FB(XX_DASHED(v)))
 Turns on verbose debug messages, showing on stderr the literal data that is
 passed between the emulator and XX_FB(x3270if).
