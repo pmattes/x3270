@@ -153,6 +153,7 @@ typedef struct {
 	Boolean unlock_delay;
 #if defined(X3270_SCRIPT) /*[*/
 	Boolean socket;
+	int	script_port;
 #endif /*]*/
 
 	/* Named resources */

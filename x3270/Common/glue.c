@@ -636,11 +636,15 @@ static struct {
     CN, "Switch to black-on-white mode" },
 #endif /*]*/
 #endif /*]*/
-{ OptProxy,	   OPT_STRING,  False, ResProxy,     offset(proxy),
+{ OptProxy,    OPT_STRING,  False, ResProxy,     offset(proxy),
     "<type>:<host>[:<port>]", "Secify proxy type and server" },
 #if defined(S3270) /*[*/
 { OptScripted, OPT_NOP,     False, ResScripted,  NULL,
     CN, "Turn on scripting" },
+#endif /*]*/
+#if defined(X3270_SCRIPT) /*[*/
+{ OptScriptPort,OPT_INT,    True, ResScriptPort, offset(script_port),
+    "<port>", "TCP port to listen on for script commands" },
 #endif /*]*/
 #if defined(C3270) /*[*/
 { OptSecure,   OPT_BOOLEAN, True,  ResSecure,    offset(secure),
@@ -1005,6 +1009,9 @@ static struct {
 #endif /*]*/
 	{ ResSecure,	offset(secure),		XRM_BOOLEAN },
 	{ ResSbcsCgcsgid, offset(sbcs_cgcsgid),	XRM_STRING },
+#if defined(X3270_SCRIPT) /*[*/
+	{ ResScriptPort,offset(script_port),	XRM_INT },
+#endif /*]*/
 	{ ResTermName,	offset(termname),	XRM_STRING },
 #if defined(WC3270) /*[*/
 	{ ResTitle,	offset(title),		XRM_STRING },
