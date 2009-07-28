@@ -288,6 +288,7 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 	char rbuf[IBS];
 	int sl = 0;
 	int done = 0;
+	int is_socket = 0;
 
 	/* Verify the environment and open files. */
 #if !defined(_WIN32) /*[*/
@@ -297,8 +298,10 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 #endif /*]*/
 	if (port) {
 		infd = outfd = tsock(port);
+		is_socket = 1;
 	} else if ((port_env = getenv("X3270PORT")) != NULL) {
 	    	infd = outfd = tsock(atoi(port_env));
+		is_socket = 1;
 	} else {
 		infd  = fd_env("X3270OUTPUT");
 		outfd = fd_env("X3270INPUT");
@@ -442,6 +445,15 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 	if (fflush(stdout) < 0) {
 		perror("x3270if: fflush");
 		exit(2);
+	}
+
+	if (is_socket) {
+	    	shutdown(infd, 2);
+#if defined(_WIN32) /*[*/
+		closesocket(infd);
+#else /*][*/
+		close(infd);
+#endif /*]*/
 	}
 
 	exit(xs);

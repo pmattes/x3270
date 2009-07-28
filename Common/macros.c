@@ -82,6 +82,7 @@
 #if defined(_WIN32) /*[*/
 #include "windows.h"
 #include <ws2tcpip.h>
+#include "w3miscc.h"
 #endif /*]*/
 
 #if defined(_MSC_VER) /*[*/
@@ -89,6 +90,12 @@
 #endif /*]*/
 
 #define ANSI_SAVE_SIZE	4096
+
+#if defined(_WIN32) /*[*/
+#define SOCK_CLOSE(s)	closesocket(s)
+#else /*][*/
+#define SOCK_CLOSE(s)	close(s)
+#endif /*[*/
 
 /* Externals */
 extern int      linemode;
@@ -560,7 +567,10 @@ sms_pop(Boolean can_exit)
 	if (sms->type == ST_PEER && (appres.socket || appres.script_port)) {
 	    	if (!sms->is_socket)
 			(void) fclose(sms->outfile);
-		(void) close(sms->infd);
+		if (sms->is_socket)
+		    	SOCK_CLOSE(sms->infd);
+		else
+			(void) close(sms->infd);
 	}
 #endif /*]*/
 
@@ -638,7 +648,12 @@ peer_script_init(void)
 		/* Create the listening socket. */
 		socketfd = socket(AF_INET, SOCK_STREAM, 0);
 		if (socketfd < 0) {
+#if !defined(_WIN32) /*[*/
 			popup_an_errno(errno, "socket()");
+#else /*][*/
+			popup_an_error("socket(): %s",
+				win32_strerror(GetLastError()));
+#endif /*]*/
 			return;
 		}
 		(void) memset(&sin, '\0', sizeof(sin));
@@ -647,28 +662,42 @@ peer_script_init(void)
 		sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 		if (bind(socketfd, (struct sockaddr *)&sin, sizeof(sin))
 				< 0) {
+#if !defined(_WIN32) /*[*/
 			popup_an_errno(errno, "socket bind");
-			close(socketfd);
+#else /*][*/
+			popup_an_error("socket bind: %s",
+				win32_strerror(GetLastError()));
+#endif /*]*/
+			SOCK_CLOSE(socketfd);
 			socketfd = -1;
 			return;
 		}
 		if (listen(socketfd, 1) < 0) {
+#if !defined(_WIN32) /*[*/
 			popup_an_errno(errno, "socket listen");
-			close(socketfd);
+#else /*][*/
+			popup_an_error("socket listen: %s",
+				win32_strerror(GetLastError()));
+#endif /*]*/
+			SOCK_CLOSE(socketfd);
 			socketfd = -1;
 			return;
 		}
 #if defined(_WIN32) /*[*/
 		socket_event = CreateEvent(NULL, FALSE, FALSE, NULL);
 		if (socket_event == NULL) {
-		    	fprintf(stderr,
-				"Cannot create listening socket event\n");
-			exit(1);
+			popup_an_error("CreateEvent: %s",
+				win32_strerror(GetLastError()));
+			SOCK_CLOSE(socketfd);
+			socketfd = -1;
+			return;
 		}
 		if (WSAEventSelect(socketfd, socket_event, FD_ACCEPT) != 0) {
-		    	fprintf(stderr,
-				"Cannot set listening socket events\n");
-			exit(1);
+			popup_an_error("WSAEventSelect: %s",
+				win32_strerror(GetLastError()));
+			SOCK_CLOSE(socketfd);
+			socketfd = -1;
+			return;
 		}
 		socket_id = AddInput((int)socket_event, socket_connection);
 #else /*][*/
@@ -1596,6 +1625,12 @@ script_input(void)
 	else
 		nr = read(sms->infd, buf, sizeof(buf));
 	if (nr < 0) {
+#if defined(_WIN32) /*[*/
+	    	if (sms->is_socket)
+		    	popup_an_error("%s[%d] recv: %s", ST_NAME, sms_depth,
+				win32_strerror(GetLastError()));
+		else
+#endif
 		popup_an_errno(errno, "%s[%d] read", ST_NAME, sms_depth);
 		return;
 	}
