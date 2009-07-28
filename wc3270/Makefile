@@ -72,7 +72,7 @@ SHRTLIBS = -lole32 -luuid
 WIZLIBS = -lole32 -luuid -lwinspool
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
-PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe
+PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe x3270if.exe
 all: $(PROGS)
 
 wc3270.exe : XCPPFLAGS += -DWIN32_LEAN_AND_MEAN
@@ -113,6 +113,9 @@ ead3270.exe: ead3270.o windirs.o
 
 ead3270.o: ead3270.c
 	$(CC) $(CFLAGS) -c ead3270.c
+
+x3270if.exe: x3270if.o w3misc.o
+	$(CC) -o $@ $(CFLAGS) x3270if.o w3misc.o -lws2_32
 
 clean:
 	rm -f *.o mkfb mkfb.exe fallbacks.c

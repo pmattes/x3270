@@ -348,35 +348,6 @@ static void output_possible(void);
 #endif /*]*/
 
 
-#if defined(_WIN32) /*[*/
-void
-sockstart(void)
-{
-	static int initted = 0;
-	WORD wVersionRequested;
-	WSADATA wsaData;
- 
-	if (initted)
-		return;
-
-	initted = 1;
-
-	wVersionRequested = MAKEWORD(2, 2);
- 
-	if (WSAStartup(wVersionRequested, &wsaData) != 0) {
-		fprintf(stderr, "WSAStartup failed: %s\n",
-			win32_strerror(GetLastError()));
-		x3270_exit(1);
-	}
- 
-	if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2) {
-		fprintf(stderr, "Bad winsock version: %d.%d\n",
-			LOBYTE(wsaData.wVersion), HIBYTE(wsaData.wVersion));
-		x3270_exit(1);
-	}
-}
-#endif /*]*/
-
 #define NUM_HA	4
 static union {
 	struct sockaddr sa;
@@ -551,10 +522,6 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	unsigned short		passthru_port = 0;
 	char			errmsg[1024];
 	int			s;
-
-#if defined(_WIN32) /*[*/
-	sockstart();
-#endif /*]*/
 
 	if (netrbuf == (unsigned char *)NULL)
 		netrbuf = (unsigned char *)Malloc(BUFSZ);

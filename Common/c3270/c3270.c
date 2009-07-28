@@ -78,6 +78,7 @@
 
 #if defined(_WIN32) /*[*/
 #include <windows.h>
+#include "w3miscc.h"
 #include "winversc.h"
 #include "windirsc.h"
 #include "relinkc.h"
@@ -334,6 +335,8 @@ main(int argc, char *argv[])
 #if defined(_WIN32) /*[*/
 	(void) get_version_info();
 	if (get_dirs(argv[0], "wc3270", &instdir, NULL, &myappdata, NULL) < 0)
+	    	x3270_exit(1);
+	if (sockstart())
 	    	x3270_exit(1);
 #endif /*]*/
 

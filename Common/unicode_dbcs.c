@@ -32,7 +32,9 @@
  */
 #include "globals.h"
 #include <stdio.h>
+#if !defined(_WIN32) /*[*/
 #include <strings.h>
+#endif /*]*/
 #include "3270ds.h"
 #include "unicode_dbcsc.h"
 #include "utf8c.h"
