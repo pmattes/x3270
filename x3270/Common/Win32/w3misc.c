@@ -43,6 +43,36 @@
 
 #include "w3miscc.h"
 
+/* Initialize Winsock. */
+int
+sockstart(void)
+{
+	static int initted = 0;
+	WORD wVersionRequested;
+	WSADATA wsaData;
+ 
+	if (initted)
+		return 0;
+
+	initted = 1;
+
+	wVersionRequested = MAKEWORD(2, 2);
+ 
+	if (WSAStartup(wVersionRequested, &wsaData) != 0) {
+		fprintf(stderr, "WSAStartup failed: %s\n",
+			win32_strerror(GetLastError()));
+		return -1;
+	}
+ 
+	if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2) {
+		fprintf(stderr, "Bad winsock version: %d.%d\n",
+			LOBYTE(wsaData.wVersion), HIBYTE(wsaData.wVersion));
+		return -1;
+	}
+
+	return 0;
+}
+
 /* Convert a network address to a string. */
 const char *
 inet_ntop(int af, const void *src, char *dst, socklen_t cnt)
@@ -105,6 +135,8 @@ win32_strerror(int e)
 
 #if defined(_MSC_VER) /*[*/
 
+/* MinGW has gettimofday(), but MSVC does not. */
+
 #include <windows.h>
 #define SECS_BETWEEN_EPOCHS	11644473600ULL
 #define SECS_TO_100NS		10000000ULL /* 10^7 */
@@ -123,6 +155,68 @@ gettimeofday(struct timeval *tv, void *ignored)
 			       	SECS_BETWEEN_EPOCHS);
 	tv->tv_usec = (u.QuadPart % SECS_TO_100NS) / 10ULL;
 	return 0;
+}
+
+/* MinGW has getopt(), but MSVC does not. */
+
+char *optarg;
+int optind = 1, opterr = 1, optopt;
+static const char *nextchar = NULL;
+
+int
+getopt(int argc, char * const argv[], const char *optstring)
+{
+    	char c;
+	const char *s;
+
+    	if (optind == 1)
+		nextchar = argv[optind++];
+
+	do {
+	    	if (nextchar == argv[optind - 1]) {
+			if (optind > argc) {
+				--optind; /* went too far */
+				return -1;
+			}
+			if (nextchar == NULL) {
+				--optind; /* went too far */
+				return -1;
+			}
+			if (!strcmp(nextchar, "--"))
+				return -1;
+			if (*nextchar++ != '-') {
+				--optind;
+				return -1;
+			}
+		}
+
+		if ((c = *nextchar++) == '\0')
+			nextchar = argv[optind++];
+	} while (nextchar == argv[optind - 1]);
+
+	s = strchr(optstring, c);
+	if (s == NULL) {
+	    	if (opterr)
+		    	fprintf(stderr, "Unknown option '%c'\n", c);
+		return '?';
+	}
+	if (*(s + 1) == ':') {
+	    	if (*nextchar) {
+		    	optarg = (char *)nextchar;
+			nextchar = argv[optind++];
+			return c;
+		} else if (optind < argc && argv[optind] != NULL) {
+		    	optarg = (char *)argv[optind++];
+			nextchar = argv[optind++];
+			return c;
+		} else {
+		    	if (opterr)
+			    	fprintf(stderr, "Missing value after '%c'\n",
+					c);
+			return -1;
+		}
+	} else
+	    	return c;
 }
 
 #endif /*]*/

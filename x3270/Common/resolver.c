@@ -38,9 +38,6 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #else /*][*/
-/* Expose IPv6 structures and calls. */
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0501
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #endif /*]*/
@@ -59,8 +56,11 @@ static int win32_getaddrinfo(const char *node, const char *service,
 static void win32_freeaddrinfo(struct addrinfo *res);
 static int win32_getnameinfo(const struct sockaddr *sa, socklen_t salen,
 	char *host, size_t hostlen, char *serv, size_t servlen, int flags);
+#undef getaddrinfo
 #define getaddrinfo	win32_getaddrinfo
+#undef freeaddrinfo
 #define freeaddrinfo	win32_freeaddrinfo
+#undef getnameinfo
 #define getnameinfo	win32_getnameinfo
 #endif /*]*/
 
@@ -285,11 +285,11 @@ numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
  * by linking against ws2_32.lib, because they are not defined on all
  * versions of Windows.
  */
-typedef int gai_fn(const char *, const char *, const struct addrinfo *,
-	struct addrinfo **);
-typedef void fai_fn(struct addrinfo*);
-typedef int gni_fn(const struct sockaddr *, socklen_t, char *, size_t,
-	char *, size_t, int);
+typedef int (__stdcall *gai_fn)(const char *, const char *,
+	const struct addrinfo *, struct addrinfo **);
+typedef void (__stdcall *fai_fn)(struct addrinfo*);
+typedef int (__stdcall *gni_fn)(const struct sockaddr *, socklen_t, char *,
+	size_t, char *, size_t, int);
 
 /* Resolve a symbol in ws2_32.dll. */
 static FARPROC
@@ -323,7 +323,7 @@ win32_getaddrinfo(const char *node, const char *service,
 
     	if (gai_p == NULL)
 		gai_p = get_ws2_32("getaddrinfo");
-	return (*(gai_fn *)gai_p)(node, service, hints, res);
+	return ((gai_fn)gai_p)(node, service, hints, res);
 }
 
 static void
@@ -333,7 +333,7 @@ win32_freeaddrinfo(struct addrinfo *res)
 
     	if (fai_p == NULL)
 		fai_p = get_ws2_32("freeaddrinfo");
-	(*(fai_fn *)fai_p)(res);
+	((fai_fn)fai_p)(res);
 }
 
 static int
@@ -344,7 +344,6 @@ win32_getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host,
 
     	if (gni_p == NULL)
 		gni_p = get_ws2_32("getnameinfo");
-	return (*(gni_fn *)gni_p)(sa, salen, host, hostlen, serv, servlen,
-		flags);
+	return ((gni_fn)gni_p)(sa, salen, host, hostlen, serv, servlen, flags);
 }
 #endif /*]*/

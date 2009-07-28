@@ -31,15 +31,25 @@
  * Accesses an x3270 command stream on the file descriptors defined by the
  * environment variables X3270OUTPUT (output from x3270, input to script) and
  * X3270INPUT (input to x3270, output from script).
+ *
+ * Can also access a command stream via a socket, whose TCP port is defined by
+ * the environment variable X3270PORT.
  */
 
 #include "conf.h"
+#if defined(_WIN32) /*[*/
+#include <windows.h>
+#include <io.h>
+#endif /*]*/
 #include <stdio.h>
+#if !defined(_MSC_VER) /*[*/
+#include <unistd.h>
+#endif /*]*/
+#if !defined(_WIN32) /*[*/
 #include <string.h>
 #include <signal.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -50,6 +60,11 @@
 #endif /*]*/
 #if defined(HAVE_GETOPT_H) /*[*/
 #include <getopt.h>
+#endif /*]*/
+#endif /*]*/
+
+#if defined(_WIN32) /*[*/
+#include "w3miscc.h"
 #endif /*]*/
 
 #define IBS	4096
@@ -64,7 +79,9 @@ static char *me;
 static int verbose = 0;
 static char buf[IBS];
 
+#if !defined(_WIN32) /*[*/
 static void iterative_io(int pid);
+#endif /*]*/
 static void single_io(int pid, unsigned short port, int fn, char *cmd);
 
 static void
@@ -108,6 +125,11 @@ main(int argc, char *argv[])
 	int pid = 0;
 	unsigned short port = 0;
 
+#if defined(_WIN32) /*[*/
+	if (sockstart() < 0)
+	    	exit(1);
+#endif /*]*/
+
 	/* Identify yourself. */
 	if ((me = strrchr(argv[0], '/')) != (char *)NULL)
 		me++;
@@ -117,6 +139,7 @@ main(int argc, char *argv[])
 	/* Parse options. */
 	while ((c = getopt(argc, argv, "ip:s:St:v")) != -1) {
 		switch (c) {
+#if !defined(_WIN32) /*[*/
 		    case 'i':
 			if (fn >= 0)
 				usage();
@@ -131,6 +154,7 @@ main(int argc, char *argv[])
 				usage();
 			}
 			break;
+#endif /*]*/
 		    case 's':
 			if (fn >= 0 || iterative)
 				usage();
@@ -178,18 +202,22 @@ main(int argc, char *argv[])
 	if (pid && port)
 	    	usage();
 
+#if !defined(_WIN32) /*[*/
 	/* Ignore broken pipes. */
 	(void) signal(SIGPIPE, SIG_IGN);
+#endif /*]*/
 
 	/* Do the I/O. */
-	if (!iterative) {
-		single_io(pid, port, fn, argv[optind]);
-	} else {
+#if !defined(_WIN32) /*[*/
+	if (iterative)
 		iterative_io(pid);
-	}
+	else
+#endif /*]*/
+		single_io(pid, port, fn, argv[optind]);
 	return 0;
 }
 
+#if !defined(_WIN32) /*[*/
 /* Connect to a Unix-domain socket. */
 static int
 usock(int pid)
@@ -211,6 +239,7 @@ usock(int pid)
 	}
 	return fd;
 }
+#endif /*]*/
 
 /* Connect to a TCP socket. */
 static int
@@ -221,7 +250,12 @@ tsock(unsigned short port)
 
 	fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (fd < 0) {
+#if defined(_WIN32) /*[*/
+	    	fprintf(stderr, "socket: %s\n",
+			win32_strerror(GetLastError()));
+#else /*][*/
 		perror("socket");
+#endif /*]*/
 		exit(2);
 	}
 	(void) memset(&sin, '\0', sizeof(struct sockaddr_in));
@@ -229,7 +263,12 @@ tsock(unsigned short port)
 	sin.sin_port = htons(port);
 	sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	if (connect(fd, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+#if defined(_WIN32) /*[*/
+	    	fprintf(stderr, "connect: %s\n",
+			win32_strerror(GetLastError()));
+#else /*][*/
 		perror("connect");
+#endif /*]*/
 		exit(2);
 	}
 	return fd;
@@ -239,75 +278,136 @@ tsock(unsigned short port)
 static void
 single_io(int pid, unsigned short port, int fn, char *cmd)
 {
-	int sockfd;
-	FILE *inf = NULL, *outf = NULL;
+    	char *port_env;
+	int infd;
+	int outfd;
 	char status[IBS] = "";
+	int nr;
 	int xs = -1;
+	int nw = 0;
+	char rbuf[IBS];
+	int sl = 0;
+	int done = 0;
 
 	/* Verify the environment and open files. */
+#if !defined(_WIN32) /*[*/
 	if (pid) {
-		sockfd = usock(pid);
-		inf = fdopen(sockfd, "r");
-		outf = fdopen(dup(sockfd), "w");
-	} else if (port) {
-		sockfd = tsock(port);
-		inf = fdopen(sockfd, "r");
-		outf = fdopen(dup(sockfd), "w");
+		infd = outfd = usock(pid);
+	} else
+#endif /*]*/
+	if (port) {
+		infd = outfd = tsock(port);
+	} else if ((port_env = getenv("X3270PORT")) != NULL) {
+	    	infd = outfd = tsock(atoi(port_env));
 	} else {
-		inf = fdopen(fd_env("X3270OUTPUT"), "r");
-		outf = fdopen(fd_env("X3270INPUT"), "w");
+		infd  = fd_env("X3270OUTPUT");
+		outfd = fd_env("X3270INPUT");
 	}
-	if (inf == (FILE *)NULL) {
+	if (infd < 0) {
 		perror("x3270if: input: fdopen");
 		exit(2);
 	}
-	if (outf == (FILE *)NULL) {
+	if (outfd < 0) {
 		perror("x3270if: output: fdopen");
 		exit(2);
 	}
 
 	/* Speak to x3270. */
-	if (fprintf(outf, "%s\n", (cmd != NULL)? cmd: "") < 0 ||
-	    fflush(outf) < 0) {
-		perror("x3270if: printf");
-		exit(2);
-	}
 	if (verbose)
 		(void) fprintf(stderr, "i+ out %s\n",
 		    (cmd != NULL) ? cmd : "");
 
-	/* Get the answer. */
-	while (fgets(buf, IBS, inf) != (char *)NULL) {
-		int sl = strlen(buf);
-
-		if (sl > 0 && buf[sl-1] == '\n')
-			buf[--sl] = '\0';
-		if (verbose)
-			(void) fprintf(stderr, "i+ in %s\n", buf);
-		if (!strcmp(buf, "ok")) {
-			(void) fflush(stdout);
-			xs = 0;
-			break;
-		} else if (!strcmp(buf, "error")) {
-			(void) fflush(stdout);
-			xs = 1;
-			break;
-		} else if (!strncmp(buf, "data: ", 6)) {
-			if (printf("%s\n", buf+6) < 0) {
-				perror("x3270if: printf");
-				exit(2);
-			}
-		} else
-			(void) strcpy(status, buf);
+	if (pid || port) {
+	    	if (cmd != NULL)
+			nw = send(outfd, cmd, strlen(cmd), 0);
+		if (nw >= 0)
+		    	nw = send(outfd, "\n", 1, 0);
+	} else {
+	    	if (cmd != NULL)
+			nw = write(outfd, cmd, strlen(cmd));
+		if (nw >= 0)
+		    	nw = write(outfd, "\n", 1);
+	}
+	if (nw < 0) {
+	    	if (pid || port)
+#if defined(_WIN32) /*[*/
+		    	fprintf(stderr, "x3270if: send: %s\n",
+				win32_strerror(GetLastError()));
+#else /*][*/
+		    	perror("x3270if: send");
+#endif /*]*/
+		else
+		    	perror("x3270if: write");
+		exit(2);
 	}
 
-	/* If fgets() failed, so should we. */
-	if (xs == -1) {
-		if (feof(inf))
-			(void) fprintf(stderr,
-				    "x3270if: input: unexpected EOF\n");
+	/* Get the answer. */
+	while (!done &&
+		(nr = ((pid || port)? recv(infd, rbuf, IBS, 0):
+				      read(infd, rbuf, IBS))) > 0) {
+	    	int i;
+		int get_more = 0;
+
+		i = 0;
+		do {
+			/* Copy from rbuf into buf until '\n'. */
+		    	while (i < nr && rbuf[i] != '\n') {
+				if (sl < IBS - 1)
+					buf[sl++] = rbuf[i++];
+			}
+			if (rbuf[i] == '\n')
+			    	i++;
+			else {
+			    	/* Go get more input. */
+			    	get_more = 1;
+				break;
+			}
+
+			/* Process one line of output. */
+			buf[sl] = '\0';
+
+			if (verbose)
+				(void) fprintf(stderr, "i+ in %s\n", buf);
+			if (!strcmp(buf, "ok")) {
+				(void) fflush(stdout);
+				xs = 0;
+				done = 1;
+				break;
+			} else if (!strcmp(buf, "error")) {
+				(void) fflush(stdout);
+				xs = 1;
+				done = 1;
+				break;
+			} else if (!strncmp(buf, "data: ", 6)) {
+				if (printf("%s\n", buf + 6) < 0) {
+					perror("x3270if: printf");
+					exit(2);
+				}
+			} else
+				(void) strcpy(status, buf);
+
+			/* Get ready for the next. */
+			sl = 0;
+		} while (i < nr);
+
+		if (get_more) {
+		    	get_more = 0;
+			continue;
+		}
+	}
+	if (nr < 0) {
+	    	if (pid || port)
+#if defined(_WIN32) /*[*/
+			fprintf(stderr, "x3270if: recv: %s\n",
+				win32_strerror(GetLastError()));
+#else /*][*/
+			perror("recv");
+#endif /*]*/
 		else
-			perror("x3270if: input");
+			perror("read");
+		exit(2);
+	} else if (nr == 0) {
+	    	fprintf(stderr, "x3270if: unexpected EOF\n");
 		exit(2);
 	}
 
@@ -347,6 +447,7 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 	exit(xs);
 }
 
+#if !defined(_WIN32) /*[*/
 /* Act as a passive pipe between 'expect' and x3270. */
 static void
 iterative_io(int pid)
@@ -473,3 +574,4 @@ iterative_io(int pid)
 		}
 	}
 }
+#endif /*]*/

@@ -127,7 +127,7 @@ dll_SHGetFolderPath(HWND hwndOwner, int nFolder, HANDLE hToken, DWORD dwFlags,
 {
     	static HMODULE handle = NULL;
 	static FARPROC p = NULL;
-	typedef HRESULT sgfp_fn(HWND, int, HANDLE, DWORD, LPSTR);
+	typedef HRESULT (__stdcall *sgfp_fn)(HWND, int, HANDLE, DWORD, LPSTR);
 
 	if (handle == NULL) {
 	    	handle = LoadLibrary("shell32.dll");
@@ -142,7 +142,7 @@ dll_SHGetFolderPath(HWND hwndOwner, int nFolder, HANDLE hToken, DWORD dwFlags,
 			return E_FAIL;
 		}
 	}
-	return ((sgfp_fn *)p)(hwndOwner, nFolder, hToken, dwFlags, pszPath);
+	return ((sgfp_fn)p)(hwndOwner, nFolder, hToken, dwFlags, pszPath);
 }
 
 /* Locate the desktop and appdata directories via the SHGetFolderPath API. */
@@ -238,7 +238,7 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 
 		h = LoadLibrary("CATF.EXE");
 		if (h != NULL) {
-		    	CloseHandle(h);
+		    	FreeLibrary(h);
 			is_installed = TRUE;
 		} else {
 		    	is_installed = FALSE;

@@ -67,6 +67,7 @@
 #include "utilc.h"
 
 #if defined(_WIN32) /*[*/
+#include "w3miscc.h"
 #include "windirsc.h"
 #include "winversc.h"
 #endif /*]*/
@@ -101,6 +102,9 @@ main(int argc, char *argv[])
 	(void) get_version_info();
 	if (get_dirs(argv[0], "ws3270", &instdir, NULL, &myappdata,
 		    NULL) < 0) {
+	    exit(1);
+	}
+	if (sockstart() < 0) {
 	    exit(1);
 	}
 #endif /*]*/

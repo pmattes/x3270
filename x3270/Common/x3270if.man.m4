@@ -110,17 +110,27 @@ itself, such as a command-line syntax error, missing environment
 variable, or an unexpectedly closed pipe,
 XX_FB(x3270if) exits with status 2.
 XX_SH(Environment)
-Unless the XX_FB(XX_DASHED(socket)) option is given when they are started,
-XX_FI(x3270), XX_FI(c3270), and XX_FI(s3270)
-use a pair of pipes for communication with each child script process.
+When a script is run as a child process of one of the emulators via the
+XX_FB(Script) action, the emulator passes information about how to control it
+in environment variables.
+XX_LP()
+On Unix, the emulator process creates a pair of pipes for communication with
+the child script process.
 The values of the file descriptors for these pipes are encoded as text
-in two environment variables, which are required by
-XX_FB(x3270if):
+in two environment variables:
 XX_TPS()dnl
 XX_TP(XX_FB(X3270OUTPUT))
 Output from the emulator, input to the child process.
 XX_TP(XX_FB(X3270INPUT))
 Input to the emulator, output from the child process.
+XX_LP()
+On Windows, or when a Unix emulator is started with the
+XX_FB(XX_DASHED(scriptport)) option, the emulator will pass the port number
+encoded as text in the XX_FB(X3270PORT) environment variable.
+XX_FI(x3270if) will use that value as if it had been passed to it via the
+XX_FB(XX_DASHED(t)) option.
+XX_FB(X3270PORT) takes precedence over XX_FB(X3270OUTPUT) and
+XX_FB(X3270INPUT).
 XX_TPE()dnl
 XX_SH(See Also)
 XX_LINK(x3270-man.html,x3270(1)),

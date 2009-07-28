@@ -43,18 +43,19 @@ CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I.
 VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj c3270.obj charset.obj \
 	ctlr.obj fallbacks.obj ft.obj ft_cut.obj ft_dft.obj glue.obj help.obj \
 	host.obj icmd.obj idle.obj keymap.obj kybd.obj macros.obj print.obj \
-	printer.obj proxy.obj readres.obj resolver.obj resources.obj rpq.obj \
-	screen.obj see.obj sf.obj tables.obj telnet.obj toggles.obj \
-	trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj xio.obj \
-	w3misc.obj winvers.obj windirs.obj wc3270.RES
+	printer.obj proxy.obj readres.obj relink.obj resolver.obj \
+	resources.obj rpq.obj screen.obj see.obj sf.obj shortcut.obj \
+	tables.obj telnet.obj toggles.obj trace_ds.obj unicode.obj \
+	unicode_dbcs.obj utf8.obj util.obj xio.obj w3misc.obj winvers.obj \
+	windirs.obj wc3270.RES
 OBJECTS = $(VOBJS) version.obj
 WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
 	windirs.obj relink.obj
-LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib
+LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib shell32.lib ole32.lib
 SHRTLIBS = ole32.lib
 WIZLIBS = ole32.lib winspool.lib advapi32.lib
 
-PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe
+PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe x3270if.exe
 all: $(PROGS)
 
 version.obj: $(VOBJS) version.txt mkversion.exe Msc\Makefile
@@ -96,6 +97,12 @@ ead3270.exe: ead3270.obj windirs.obj
 
 ead3270.obj: ead3270.c
 	$(CC) $(CFLAGS) /c ead3270.c
+
+x3270if.exe: x3270if.obj w3misc.obj
+	$(CC) /Fe$@ $(CFLAGS) x3270if.obj w3misc.obj ws2_32.lib
+
+x3270if.obj: x3270if.c
+	$(CC) $(CFLAGS) /c x3270if.c
 
 clean:
 	erase *.obj *.RES *.exp *.lib $(MKFB) fallbacks.c mkversion.exe version.c wversion.c
@@ -147,6 +154,8 @@ proxy.obj: proxy.c
 	$(CC) $(CFLAGS) /c proxy.c
 readres.obj: readres.c
 	$(CC) $(CFLAGS) /c readres.c
+relink.obj: relink.c
+	$(CC) $(CFLAGS) /c relink.c
 resolver.obj: resolver.c
 	$(CC) $(CFLAGS) /c resolver.c
 resources.obj: resources.c
