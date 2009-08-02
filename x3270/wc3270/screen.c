@@ -133,7 +133,8 @@ static int field_colors[4] = {
 static int defattr = 0;
 static unsigned long input_id;
 
-Boolean escaped = False;
+Boolean escaped = True;
+Boolean isendwin = True;
 
 enum ts { TS_AUTO, TS_ON, TS_OFF };
 enum ts ab_mode = TS_AUTO;
@@ -742,6 +743,8 @@ refresh(void)
 {
 	COORD coord;
 
+	isendwin = False;
+
 	/*
 	 * Draw the differences between 'onscreen' and 'toscreen' into
 	 * sbuf.
@@ -783,18 +786,10 @@ refresh(void)
 	}
 }
 
-/* Go back to the original screen. */
+/* Set the console to 'cooked' mode. */
 static void
-endwin(void)
+set_console_cooked(void)
 {
-    	if (blink_ticking) {
-		RemoveTimeOut(blink_id);
-		blink_id = 0;
-		blink_ticking = False;
-		blink_on = True;
-		blink_wasticking = True;
-	}
-
 	if (SetConsoleMode(chandle, ENABLE_ECHO_INPUT |
 				    ENABLE_LINE_INPUT |
 				    ENABLE_PROCESSED_INPUT |
@@ -809,6 +804,26 @@ endwin(void)
 			win32_strerror(GetLastError()));
 		x3270_exit(1);
 	}
+}
+
+/* Go back to the original screen. */
+static void
+endwin(void)
+{
+    	if (isendwin)
+	    	return;
+
+	isendwin = True;
+
+    	if (blink_ticking) {
+		RemoveTimeOut(blink_id);
+		blink_id = 0;
+		blink_ticking = False;
+		blink_on = True;
+		blink_wasticking = True;
+	}
+
+	set_console_cooked();
 
 	/* Swap in the original buffer. */
 	if (SetConsoleActiveScreenBuffer(cohandle) == 0) {
@@ -928,7 +943,7 @@ screen_init(void)
 		screen_title("wc3270");
 
 	/* Finish screen initialization. */
-	endwin();
+	set_console_cooked();
 }
 
 static void
@@ -1813,9 +1828,11 @@ screen_suspend(void)
 {
 	static Boolean need_to_scroll = False;
 
+	if (!isendwin)
+	    	endwin();
+
 	if (!escaped) {
 		escaped = True;
-		endwin();
 
 		if (need_to_scroll)
 			printf("\n");
