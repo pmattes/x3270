@@ -146,6 +146,7 @@ XrmOptionDescRec options[]= {
 	{ OptSet,	".xxx",		XrmoptionSkipArg,	NULL },
 #if defined(X3270_SCRIPT) /*[*/
 	{ OptSocket,	DotSocket,	XrmoptionNoArg,		ResTrue },
+	{ OptScriptPort,DotScriptPort,	XrmoptionSepArg,	NULL },
 #endif /*]*/
 	{ OptTermName,	DotTermName,	XrmoptionSepArg,	NULL },
 #if defined(X3270_TRACE) /*[*/
@@ -203,6 +204,7 @@ static struct {
 	{ OptSet, "<toggle>", "Turn on <toggle>" },
 #if defined(X3270_SCRIPT) /*[*/
 	{ OptSocket,  CN, "Create socket for script control" },
+	{ OptScriptPort, "<port>", "Listen on TCP port <port> for script connections" },
 #endif /*]*/
 	{ OptTermName, "<name>", "Send <name> as TELNET terminal name" },
 #if defined(X3270_TRACE) /*[*/

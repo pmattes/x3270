@@ -111,6 +111,8 @@ XtResource resources[] = {
 #if defined(X3270_SCRIPT) /*[*/
 	{ ResSocket, ClsSocket, XtRBoolean, sizeof(Boolean),
 	  offset(socket), XtRString, ResFalse },
+	{ ResScriptPort, ClsScriptPort, XtRInt, sizeof(int),
+	  offset(script_port), XtRString, "0" },
 	{ ResPluginCommand, ClsPluginCommand, XtRString, sizeof(String),
 	  offset(plugin_command), XtRString, "x3270hist.pl" },
 #endif /*]*/

@@ -3395,7 +3395,12 @@ Script_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	for (i = 1; i < *num_params; i++) {
 	    	char *t;
 
-		t = xs_buffer("%s %s", args, params[i]);
+		if (strchr(params[i], ' ') != NULL &&
+		    params[i][0] != '"' &&
+		    params[i][strlen(params[i]) - 1] != '"')
+			t = xs_buffer("%s \"%s\"", args, params[i]);
+		else
+			t = xs_buffer("%s %s", args, params[i]);
 		Free(args);
 		args = t;
 	}

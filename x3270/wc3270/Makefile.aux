@@ -57,7 +57,7 @@ MISC = version.txt mkversion.sh mkwversion.sh README.txt LICENSE.txt \
 HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
        html/Keymap.html html/Lineage.html html/ReleaseNotes.html \
        html/README.html html/Resources.html html/Wishlist.html \
-       html/wc3270-man.html
+       html/wc3270-man.html html/x3270if.html html/x3270-script.html
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
@@ -77,7 +77,7 @@ wc3270.tar: $(FILES) tarlist
 wc3270.tgz: wc3270.tar
 	gzip <wc3270.tar >$@
 
-man: html/wc3270-man.html 
+man: html/wc3270-man.html html/x3270if.html html/x3270-script.html
 
 html/wc3270-man.html: x3270.man.m4 ft.inc resources.inc hostname.inc keymaps.inc m42html html.m4 version.txt
 	@rm -f man.tmp
@@ -86,6 +86,10 @@ html/wc3270-man.html: x3270.man.m4 ft.inc resources.inc hostname.inc keymaps.inc
 	@rm -f man.tmp
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "wc3270 Release Notes" html/documentation-relnotes-body.html $@
+html/x3270if.html:  x3270if.man.m4 html.m4 version.txt
+	./m42html x3270if x3270if.man.m4 >$@
+html/x3270-script.html:  x3270-script.man.m4 html.m4 version.txt
+	./m42html x3270-script x3270-script.man.m4 >$@
 
 html/Resources.html: resource-body make-resource-doc.pl
 	./make-resource-doc.pl wc3270 <resource-body >$@

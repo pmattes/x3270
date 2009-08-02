@@ -1137,8 +1137,11 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 			tracefile = appres.screentrace_file;
 		else {
 #if defined(_WIN32) /*[*/
-			tracefile_buf = xs_buffer("%sx3scr.%u.txt",
-				myappdata, getpid());
+			tracefile_buf = xs_buffer("%s%sx3scr.%u.txt",
+				(appres.trace_dir != CN)?
+				    appres.trace_dir: myappdata,
+				(appres.trace_dir != CN)? "\\": "",
+				getpid());
 #else /*][*/
 			tracefile_buf = xs_buffer("%s/x3scr.%u",
 				appres.trace_dir, getpid());

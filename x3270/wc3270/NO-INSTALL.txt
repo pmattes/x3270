@@ -1,0 +1,50 @@
+Running wc3270 Without Installing It
+------------------------------------
+
+It is possible to run wc3270 without installing it.  This allows it to be run
+from a USB flash drive or CD without modifying the system it is run on, or to
+be bundled with another application without needing to include the full wc3270
+installation.
+
+When wc3270.exe or wc3270wiz.exe are run without doing a full software
+installation, they will not use the wc3270 Application Data directory.
+Instead, keymaps will be searched for in the working directory first, then in
+the directory where the executable file is.  wc3270wiz.exe will write new
+keymaps to the working directory.  wc3270 trace files will be written to the
+working directory as well.
+
+A new feature, auto-shortcut mode, also facilitates installation-free
+execution.
+
+Auto-shortcut mode is controlled by the wc3270.autoShortcut resource.  If this
+resource is set to True in a session file or via the -S command-line option,
+then wc3270.exe will automatically create a temporary shortcut file (.LNK file)
+that matches the parameters in a session file (model number, character set,
+font, etc.) and re-run itself from the shortcut.  (Without auto-shortcut mode,
+wc3270.exe will generally run as a Model 2 in a 25x80 console window, using the
+system default ANSI code page, and the system default font, which is usually
+not a Unicode font and thus cannot display all of the EBCDIC characters.)
+
+Note that auto-shortcut mode is set in all session files created by the
+Session Wizard, starting with version 3.3.10.  Also note that all shortcuts
+created by the Session Wizard and by wc3270 itself as part of auto-shortcut
+mode include the +S command-line switch, to turn auto-shortcut mode off and
+avoid infinite looping.
+
+Thus, the easiest way to create a 'standalone' copy of wc3270 is to simply
+create a session file with the Session Wizard.  Then you can run wc3270 via a
+1-line .BAT file (substituting your session name for the session file):
+     wc3270.exe xxx.wc3270
+This command can also be passed to the 'system' library call from an
+application.  Only wc3270.exe and the session file need to be present on the
+flash drive or copied to the target system.
+
+Note that custom keymaps can still be used in no-install mode.  Keymap files
+can either be placed in the same directory as wc3270.exe, or the definitions
+can be included in the session file via a Session Wizard option ('Embed
+Keymaps').
+
+Note also that it is possible to create a session file that does not specify
+a hostname.  This allows the creation of session files that define things like
+the model number and character set, but allow the hostname to be entered
+interactively.

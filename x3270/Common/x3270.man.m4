@@ -334,6 +334,11 @@ XX_TP(XX_FB(XX_DASHED(sl)) XX_FI(n))
 Specifies that XX_FI(n) lines should be saved for scrolling back.
 The default is 64.
 ')dnl 
+ifelse(XX_PRODUCT,tcl3270,,
+`XX_TP(XX_DASHED(scriptport) XX_FI(port))
+Causes XX_PRODUCT to listen for scripting connections on local TCP
+port XX_FI(port).
+')dnl
 ifelse(XX_PRODUCT,c3270,
 `XX_TP(XX_FB(XX_DASHED(secure)))
 Disables the interactive XX_FB(c3270>) prompt.
@@ -886,9 +891,8 @@ Functions which take a XX_FI(timeout) parameter specify the timeout in
 seconds.  A value of 0 is used to wait indefinitely.
 ',`XX_SH(Actions)
 Here is a complete list of basic XX_PRODUCT actions.
-ifelse(XX_PRODUCT,wc3270,,`Script-specific actions are described on the
+Script-specific actions are described on the
 XX_LINK(x3270-script.html,XX_FI(x3270-script)(1)) manual page.
-')dnl
 ')dnl
 ifelse(XX_PRODUCT,lib3270,,define(XX_BLOCK,*))dnl
 ifelse(XX_PRODUCT,lib3270,,`XX_PP
@@ -988,7 +992,7 @@ XX_TR(XX_TDH(XX_INT()XX_LS()ReadBuffer`'XX_SPACE`'Ebcdic`'XX_VOID())	XX_TD(dump 
 ')dnl
 ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,c3270,,`XX_TR(XX_TDH(XX_INT()XX_LS()`Rows'XX_VOID())	XX_TD(report screen size))
 ')dnl
-ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_PRODUCT,wc3270,,`XX_TR(XX_TDH(XX_BLOCK()Script(XX_FI(command)[,XX_FI(arg)...]))	XX_TD(run a script))
+ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,`XX_TR(XX_TDH(XX_BLOCK()Script(XX_FI(command)[,XX_FI(arg)...]))	XX_TD(run a script))
 ')dnl
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(SelectAll(XX_FI(atom)))	XX_TD(select entire screen))
 ')dnl
@@ -1192,11 +1196,16 @@ In 3270 mode, the hexadecimal data represent XX_SM(EBCDIC) characters, which
 are entered into the current field.
 In XX_SM(NVT) mode, the hexadecimal data represent XX_SM(ASCII) characters,
 which are sent directly to the host.
-ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_PRODUCT,wc3270,,XX_PRODUCT,ws3270,,`XX_TP(XX_FB(The Script Action))
+ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,`XX_TP(XX_FB(The Script Action))
 This action causes XX_FB(XX_PRODUCT) to start a child process which can
 execute XX_FB(XX_PRODUCT) actions.
-Standard input and output from the child process are piped back to
+ifelse(XX_PLATFORM,windows,
+`XX_FB(XX_PRODUCT) listens for connections from the child process on a
+dynamically-generated TCP port.
+',
+`Standard input and output from the child process are piped back to
 XX_FB(XX_PRODUCT).
+')dnl
 The XX_FB(Script) action is fully documented in
 XX_LINK(x3270-script.html,XX_FI(x3270-script)(1)).
 ')dnl
@@ -1459,7 +1468,8 @@ XX_BR
 XX_FB(KEYBD) Keymap name.
 ')dnl
 XX_SH(See Also)
-ifelse(XX_PRODUCT,wc3270,`XX_LINK(wpr3287-man.html,wpr3287(1))
+ifelse(XX_PRODUCT,wc3270,`XX_LINK(wpr3287-man.html,wpr3287(1)),
+XX_LINK(x3270-script.html,x3270-script(1))
 XX_BR
 ',`
 ifelse(XX_PRODUCT,x3270,,XX_LINK(x3270-man.html,x3270(1))`, ')dnl
