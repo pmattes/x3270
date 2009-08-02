@@ -334,6 +334,16 @@ XX_TP(XX_FB(XX_DASHED(sl)) XX_FI(n))
 Specifies that XX_FI(n) lines should be saved for scrolling back.
 The default is 64.
 ')dnl 
+ifelse(XX_PRODUCT,wc3270,`XX_TP(XX_FB(XX_DASHED(S)))
+Runs XX_PRODUCT in auto-shortcut mode.
+XX_PRODUCT will create a temporary shorcut (.LNK file) that matches the
+parameters in the session file (model number, characterset, etc.) and re-run
+itself from the shortcut.
+XX_TP(XX_FB(+S))
+Disables auto-shortcut mode.
+It is generally a good idea to put this option on the command lines of all
+shortcuts, to avoid infinite looping.
+')dnl
 ifelse(XX_PRODUCT,tcl3270,,
 `XX_TP(XX_DASHED(scriptport) XX_FI(port))
 Causes XX_PRODUCT to listen for scripting connections on local TCP
