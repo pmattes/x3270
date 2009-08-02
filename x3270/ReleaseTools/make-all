@@ -80,7 +80,7 @@ reldir=$d1/../../Release
 
 suite=suite3270-$version.tgz
 setup=wc3270-$version-setup.exe
-zip=wc3270-$version.zip
+zip=wc3270-$version-noinstall.zip
 
 # Check for existing targets before we do any real work.
 if [ "$release" ]
