@@ -903,7 +903,9 @@ tracefile_on(int reason, enum toggle_type tt)
 		tracefile = appres.trace_file;
 	else {
 #if defined(_WIN32) /*[*/
-		tracefile_buf = xs_buffer("%sx3trc.%u.txt", myappdata,
+		tracefile_buf = xs_buffer("%s%sx3trc.%u.txt",
+			(appres.trace_dir != CN)? appres.trace_dir: myappdata,
+			(appres.trace_dir != CN)? "\\": "",
 			getpid());
 #else /*][*/
 		tracefile_buf = xs_buffer("%s/x3trc.%u", appres.trace_dir,

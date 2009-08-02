@@ -1017,9 +1017,7 @@ static struct {
 	{ ResTitle,	offset(title),		XRM_STRING },
 #endif /*]*/
 #if defined(X3270_TRACE) /*[*/
-#if !defined(_WIN32) /*[*/
 	{ ResTraceDir,	offset(trace_dir),	XRM_STRING },
-#endif /*]*/
 	{ ResTraceFile,	offset(trace_file),	XRM_STRING },
 	{ ResTraceFileSize,offset(trace_file_size),XRM_STRING },
 #if defined(WC3270) /*[*/

@@ -261,7 +261,7 @@ XtActionsRec all_actions[] = {
 	{ "SelectMotion",	SelectMotion_action },
 	{ "SelectUp",		SelectUp_action },
 #endif /*]*/
-#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
+#if defined(X3270_SCRIPT) /*[*/
 	{ "Script",		Script_action },
 #endif /*]*/
 #if defined(C3270) /*[*/
