@@ -264,7 +264,7 @@ tsock(unsigned short port)
 	sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	if (connect(fd, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
 #if defined(_WIN32) /*[*/
-	    	fprintf(stderr, "connect: %s\n",
+	    	fprintf(stderr, "connect(%u): %s\n", port,
 			win32_strerror(GetLastError()));
 #else /*][*/
 		perror("connect");
@@ -289,6 +289,8 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 	int sl = 0;
 	int done = 0;
 	int is_socket = 0;
+	char *cmd_nl;
+	char *wstr;
 
 	/* Verify the environment and open files. */
 #if !defined(_WIN32) /*[*/
@@ -320,19 +322,26 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 		(void) fprintf(stderr, "i+ out %s\n",
 		    (cmd != NULL) ? cmd : "");
 
-	if (pid || port) {
-	    	if (cmd != NULL)
-			nw = send(outfd, cmd, strlen(cmd), 0);
-		if (nw >= 0)
-		    	nw = send(outfd, "\n", 1, 0);
+	if (cmd != NULL) {
+		cmd_nl = malloc(strlen(cmd) + 2);
+		if (cmd_nl == NULL) {
+			fprintf(stderr, "Out of memory\n");
+			exit(2);
+		}
+		sprintf(cmd_nl, "%s\n", cmd);
+		wstr = cmd_nl;
 	} else {
-	    	if (cmd != NULL)
-			nw = write(outfd, cmd, strlen(cmd));
-		if (nw >= 0)
-		    	nw = write(outfd, "\n", 1);
+	    	cmd_nl = NULL;
+	    	wstr = "\n";
+	}
+
+	if (is_socket) {
+		nw = send(outfd, wstr, strlen(wstr), 0);
+	} else {
+		nw = write(outfd, wstr, strlen(wstr));
 	}
 	if (nw < 0) {
-	    	if (pid || port)
+	    	if (is_socket)
 #if defined(_WIN32) /*[*/
 		    	fprintf(stderr, "x3270if: send: %s\n",
 				win32_strerror(GetLastError()));
@@ -343,11 +352,13 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 		    	perror("x3270if: write");
 		exit(2);
 	}
+	if (cmd_nl != NULL)
+	    	free(cmd_nl);
 
 	/* Get the answer. */
 	while (!done &&
-		(nr = ((pid || port)? recv(infd, rbuf, IBS, 0):
-				      read(infd, rbuf, IBS))) > 0) {
+		(nr = (is_socket? recv(infd, rbuf, IBS, 0):
+				  read(infd, rbuf, IBS))) > 0) {
 	    	int i;
 		int get_more = 0;
 
@@ -399,7 +410,7 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 		}
 	}
 	if (nr < 0) {
-	    	if (pid || port)
+	    	if (is_socket)
 #if defined(_WIN32) /*[*/
 			fprintf(stderr, "x3270if: recv: %s\n",
 				win32_strerror(GetLastError()));
