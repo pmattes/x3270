@@ -453,7 +453,6 @@ main(int argc, char *argv[])
 		else
 			pause_for_errors();
 	}
-	screen_disp(False);
 	peer_script_init();
 
 	/* Process events forever. */
