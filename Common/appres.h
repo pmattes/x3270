@@ -209,9 +209,7 @@ typedef struct {
 	char	*login_macro;
 	char	*macros;
 #if defined(X3270_TRACE) /*[*/
-#if !defined(_WIN32) /*[*/
 	char	*trace_dir;
-#endif /*]*/
 	char	*trace_file;
 	char	*screentrace_file;
 	char	*trace_file_size;

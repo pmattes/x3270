@@ -150,11 +150,16 @@ typedef struct sms {
 	Boolean accumulated;	/* accumulated time flag */
 	Boolean idle_error;	/* idle command caused an error */
 	Boolean is_socket;	/* I/O is via a socket */
+	Boolean is_transient;	/* I/O is via a transient socket */
+	Boolean is_external;	/* I/O is via a transient socket to -socket */
 	unsigned long msec;	/* total accumulated time */
 	FILE   *outfile;
 	int	infd;
 #if defined(_WIN32) /*[*/
 	HANDLE	inhandle;
+	HANDLE	child_handle;
+	unsigned long exit_id;
+	unsigned long listen_id;
 #endif /*]*/
 	int	pid;
 	unsigned long expect_id;
@@ -220,6 +225,10 @@ static void script_input(void);
 static void sms_pop(Boolean can_exit);
 #if defined(X3270_SCRIPT) /*[*/
 static void socket_connection(void);
+# if defined(_WIN32) /*[*/
+static void child_socket_connection(void);
+static void child_exited(void);
+# endif /*]*/
 #endif /*]*/
 static void wait_timed_out(void);
 static void read_from_file(void);
@@ -412,6 +421,15 @@ macros_init(void)
 static void
 script_enable(void)
 {
+#if defined(_WIN32) /*[*/
+	/* Windows child scripts are listening sockets. */
+	if (sms->type == ST_CHILD && sms->inhandle != INVALID_HANDLE_VALUE) {
+	    	sms->listen_id = AddInput((int)sms->inhandle,
+			child_socket_connection);
+		return;
+	}
+#endif /*]*/
+
 	if (sms->infd >= 0 && stdin_id == 0) {
 		trace_dsn("Enabling input for %s[%d]\n", ST_NAME, sms_depth);
 #if defined(_WIN32) /*[*/
@@ -420,6 +438,7 @@ script_enable(void)
 		stdin_id = AddInput(sms->infd, script_input);
 #endif /*]*/
 	}
+
 }
 
 /*
@@ -453,6 +472,7 @@ new_sms(enum sms_type type)
 	s->infd = -1;
 #if defined(_WIN32) /*[*/
 	s->inhandle = INVALID_HANDLE_VALUE;
+	s->child_handle = INVALID_HANDLE_VALUE;
 #endif /*]*/
 	s->pid = -1;
 	s->expect_id = 0L;
@@ -545,34 +565,21 @@ sms_pop(Boolean can_exit)
 	trace_dsn("%s[%d] complete\n", ST_NAME, sms_depth);
 
 	/* When you pop the peer script, that's the end of x3270. */
-	if (sms->type == ST_PEER &&
-#if defined(X3270_SCRIPT) /*[*/
-	    (!appres.socket && !appres.script_port) &&
-#endif /*]*/
-	    can_exit)
+	if (sms->type == ST_PEER && !sms->is_transient && can_exit)
 		x3270_exit(0);
 
 	/* Remove the input event. */
 	script_disable();
 
 	/* Close the files. */
-	if (sms->type == ST_CHILD) {
-		(void) fclose(sms->outfile);
-		(void) close(sms->infd);
-	}
-	if (sms->type == ST_FILE) {
-	    	(void) close(sms->infd);
-	}
-#if defined(X3270_SCRIPT) /*[*/
-	if (sms->type == ST_PEER && (appres.socket || appres.script_port)) {
-	    	if (!sms->is_socket)
-			(void) fclose(sms->outfile);
+	if (sms->outfile != NULL)
+	    	fclose(sms->outfile);
+	if (sms->infd >= 0) {
 		if (sms->is_socket)
-		    	SOCK_CLOSE(sms->infd);
+			SOCK_CLOSE(sms->infd);
 		else
-			(void) close(sms->infd);
+		    	close(sms->infd);
 	}
-#endif /*]*/
 
 	/* Cancel any pending timeouts. */
 	if (sms->expect_id != 0L)
@@ -589,13 +596,14 @@ sms_pop(Boolean can_exit)
 		popup_an_error("Idle command disabled due to error");
 
 #if defined(X3270_SCRIPT) /*[*/
-	/* If this was a socket peer, get ready for another connection. */
-	if (sms->type == ST_PEER && (appres.socket || appres.script_port))
+	/* If this was a -socket peer, get ready for another connection. */
+	if (sms->type == ST_PEER && sms->is_external) {
 #if defined(_WIN32) /*[*/
 		socket_id = AddInput((int)socket_event, socket_connection);
 #else /*][*/
 		socket_id = AddInput(socketfd, socket_connection);
 #endif /*]*/
+	}
 #endif /*]*/
 
 	/* Release the memory. */
@@ -619,6 +627,14 @@ sms_pop(Boolean can_exit)
 	} else if (sms->type == ST_FILE) {
 	    	read_from_file();
 	}
+
+#if defined(_WIN32) /*[*/
+	/* If the new top sms is an exited script, pop it, too. */
+	if (sms != SN &&
+	    sms->type == ST_CHILD &&
+	    sms->child_handle == INVALID_HANDLE_VALUE)
+	    	sms_pop(False);
+#endif /*]*/
 }
 
 /*
@@ -815,6 +831,8 @@ socket_connection(void)
 	/* Push on a peer script. */
 	(void) sms_push(ST_PEER);
 	s = sms;
+	s->is_transient = True;
+	s->is_external = True;
 	s->infd = fd;
 #if !defined(_WIN32) /*[*/
 	s->outfile = fdopen(dup(fd), "w");
@@ -838,6 +856,53 @@ socket_connection(void)
 	socket_id = 0L;
 }
 
+# if defined(_WIN32) /*[*/
+/* Accept a new socket connection from a child process. */
+static void
+child_socket_connection(void)
+{
+	int fd;
+	sms_t *old_sms;
+	sms_t *s;
+	struct sockaddr_in sin;
+	socklen_t len = sizeof(sin);
+
+	/* Accept the connection. */
+	(void) memset(&sin, '\0', sizeof(sin));
+	sin.sin_family = AF_INET;
+	fd = accept(sms->infd, (struct sockaddr *)&sin, &len);
+
+	if (fd < 0) {
+		popup_an_error("socket accept: %s",
+			win32_strerror(GetLastError()));
+		return;
+	}
+	trace_dsn("New child script socket connection\n");
+
+	/* Push on a peer script. */
+	old_sms = sms;
+	(void) sms_push(ST_PEER);
+	s = sms;
+	s->is_transient = True;
+	s->infd = fd;
+	s->inhandle = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (s->inhandle == NULL) {
+	    	fprintf(stderr, "Can't create socket handle\n");
+		exit(1);
+	}
+	if (WSAEventSelect(s->infd, s->inhandle, FD_READ | FD_CLOSE) != 0) {
+	    	fprintf(stderr, "Can't set socket handle events\n");
+		exit(1);
+	}
+	s->is_socket = True;
+	script_enable();
+
+	/* Don't accept any more connections on the global listen socket. */
+	RemoveInput(old_sms->listen_id);
+	old_sms->listen_id = 0L;
+}
+#endif /*]*/
+
 /* Clean up the Unix-domain socket. */
 static void
 cleanup_socket(Boolean b _is_unused)
@@ -848,6 +913,38 @@ cleanup_socket(Boolean b _is_unused)
 	(void) sprintf(buf, "/tmp/x3sck.%u", getpid());
 	(void) unlink(buf);
 #endif /*]*/
+}
+#endif /*]*/
+
+#if defined(_WIN32) /*[*/
+/* Process an event on a child script handle (presumably a process exit). */
+static void
+child_exited(void)
+{
+    	sms_t *s;
+	DWORD status;
+
+	for (s = sms; s != NULL; s = s->next) {
+	    	if (s->type == ST_CHILD) {
+		    	status = 0;
+		    	if (GetExitCodeProcess(s->child_handle, &status) == 0) {
+			    	popup_an_error("GetExitCodeProcess failed: %s",
+					win32_strerror(GetLastError()));
+			} else if (status != STILL_ACTIVE) {
+				trace_dsn("Child script exited with status "
+					"0x%x\n", (unsigned)status);
+			    	CloseHandle(s->child_handle);
+				s->child_handle = INVALID_HANDLE_VALUE;
+				RemoveInput(s->exit_id);
+				s->exit_id = 0;
+				if (s == sms) {
+				    	sms_pop(False);
+					sms_continue();
+				}
+				break;
+			}
+		}
+	}
 }
 #endif /*]*/
 
@@ -1533,22 +1630,26 @@ sms_error(const char *msg)
 	s = sms_redirect_to();
 	is_script = (s != NULL);
 	if (is_script) {
-		char c;
+	    	char *text = Malloc(strlen("data: ") + strlen(msg) + 2);
+		char *newline;
+		char *last_space;
+
+		sprintf(text, "data: %s", msg);
+		newline = text;
+		while ((newline = strchr(newline, '\n')) != NULL)
+		    	*newline++ = ' ';
+		last_space = strrchr(text, ' ');
+		if (last_space != NULL &&
+			last_space == text + strlen(text) - 1)
+		    	*last_space = '\n';
+		else
+		    	strcat(text, "\n");
 
 		if (s->is_socket)
-			send(s->infd, "data: ", 6, 0);
+			send(s->infd, text, strlen(text), 0);
 		else
-			fprintf(s->outfile, "data: ");
-		while ((c = *msg++)) {
-		    	if (s->is_socket)
-			    	send(s->infd, (c == '\n')? " ": &c, 1, 0);
-			else
-			    	putc((c == '\n')? ' ': c, s->outfile);
-		}
-		if (s->is_socket)
-		    	send(s->infd, "\n", 1, 0);
-		else
-			putc('\n', s->outfile);
+			fprintf(s->outfile, "%s", text);
+		Free(text);
 	} else
 		(void) fprintf(stderr, "%s\n", msg);
 
@@ -1591,14 +1692,14 @@ sms_info(const char *fmt, ...)
 			nc = strlen(msg);
 		if (nc || (nl != CN)) {
 		    	if ((s = sms_redirect_to()) != NULL) {
-			    	if (s->is_socket) {
-				    	send(s->infd, "data: ", 6,  0);
-					send(s->infd, msg,      nc, 0);
-					send(s->infd, "\n",     1,  0);
-				} else
-					(void) fprintf(s->outfile,
-						"data: %.*s\n",
-						nc, msg);
+			    	char *text = Malloc(strlen("data: ") + nc + 2);
+
+				sprintf(text, "data: %.*s\n", nc, msg);
+			    	if (s->is_socket)
+				    	send(s->infd, text, strlen(text), 0);
+				else
+					(void) fprintf(s->outfile, "%s", text);
+				Free(text);
 			} else
 				(void) printf("%.*s\n", nc, msg);
 		}
@@ -2325,30 +2426,27 @@ script_prompt(Boolean success)
 {
 	char *s;
 	char timing[64];
+	char *t;
 
-	if (sms != SN && sms->accumulated) {
+	s = status_string();
+
+	if (sms != SN && sms->accumulated)
 		(void) sprintf(timing, "%ld.%03ld", sms->msec / 1000L,
 			sms->msec % 1000L);
-	} else {
+	else
 		(void) strcpy(timing, "-");
-	}
-	s = status_string();
-	if (sms->is_socket) {
-	    	send(sms->infd, s, strlen(s), 0);
-	    	send(sms->infd, " ", 1, 0);
-	    	send(sms->infd, timing, strlen(timing), 0);
-	    	send(sms->infd, "\n", 1, 0);
-		if (success)
-		    	send(sms->infd, "ok\n", 3, 0);
-		else
-		    	send(sms->infd, "error\n", 6, 0);
-	} else {
-		(void) fprintf(sms->outfile, "%s %s\n%s\n", s, timing,
-			       success ? "ok" : "error");
-	}
-	if (!sms->is_socket)
-		(void) fflush(sms->outfile);
+
+	t = Malloc(strlen(s) + 1 + strlen(timing) + 1 + 6 + 1);
+	sprintf(t, "%s %s\n%s\n", s, timing, success ? "ok" : "error");
 	Free(s);
+
+	if (sms->is_socket) {
+	    	send(sms->infd, t, strlen(t), 0);
+	} else {
+		(void) fprintf(sms->outfile, "%s", t);
+		(void) fflush(sms->outfile);
+	}
+	free(t);
 }
 
 /* Save the state of the screen for Snap queries. */
@@ -3107,8 +3205,49 @@ execute_action_option(Widget w _is_unused, XtPointer client_data _is_unused,
 
 #endif /*]*/
 
-#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
+#if defined(X3270_SCRIPT) /*[*/
+
+# if defined(_WIN32) /*[*/
+/* Let the system pick a TCP port to bind to, and listen on it. */
+static unsigned short
+pick_port(int *sp)
+{
+    	int s;
+    	struct sockaddr_in sin;
+	socklen_t len;
+
+	s = socket(PF_INET, SOCK_STREAM, 0);
+	if (s < 0) {
+	    	popup_an_error("socket: %s\n", win32_strerror(GetLastError()));
+		return 0;
+	}
+	(void) memset(&sin, '\0', sizeof(sin));
+	sin.sin_family = AF_INET;
+	sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	if (bind(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+	    	popup_an_error("bind: %s\n", win32_strerror(GetLastError()));
+		closesocket(s);
+		return 0;
+	}
+	len = sizeof(sin);
+	if (getsockname(s, (struct sockaddr *)&sin, &len) < 0) {
+	    	popup_an_error("getsockaddr: %s\n",
+			win32_strerror(GetLastError()));
+		closesocket(s);
+		return 0;
+	}
+	if (listen(s, 10) < 0) {
+	    	popup_an_error("listen: %s\n", win32_strerror(GetLastError()));
+		closesocket(s);
+		return 0;
+	}
+	*sp = s;
+	return ntohs(sin.sin_port);
+}
+# endif /*]*/
+
 /* "Script" action, runs a script as a child process. */
+# if !defined(_WIN32) /*[*/
 void
 Script_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
@@ -3203,6 +3342,106 @@ Script_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	/* Set up to reap the child's exit status. */
 	++children;
 }
+# endif /*]*/
+
+# if defined(_WIN32) /*[*/
+/* "Script" action, runs a script as a child process. */
+void
+Script_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
+    Cardinal *num_params)
+{
+	int s = -1;
+	unsigned short port = 0;
+	HANDLE hevent;
+	char *pe;
+	STARTUPINFO startupinfo;
+	PROCESS_INFORMATION process_information;
+	char *args;
+	Cardinal i;
+
+	if (*num_params < 1) {
+		popup_an_error("%s requires at least one argument",
+		    action_name(Script_action));
+		return;
+	}
+
+	/* Set up X3270PORT for the child process. */
+	port = pick_port(&s);
+	if (port == 0)
+	    	return;
+	hevent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (hevent == NULL) {
+		popup_an_error("CreateEvent: %s",
+			win32_strerror(GetLastError()));
+		closesocket(s);
+		return;
+	}
+	if (WSAEventSelect(s, hevent, FD_ACCEPT) != 0) {
+		popup_an_error("WSAEventSelect: %s",
+			win32_strerror(GetLastError()));
+		closesocket(s);
+		return;
+	}
+
+	pe = xs_buffer("X3270PORT=%d", port);
+	putenv(pe);
+	Free(pe);
+
+	/* Start the child process. */
+	(void) memset(&startupinfo, '\0', sizeof(STARTUPINFO));
+	startupinfo.cb = sizeof(STARTUPINFO);
+	(void) memset(&process_information, '\0', sizeof(PROCESS_INFORMATION));
+	args = NewString(params[0]);
+	for (i = 1; i < *num_params; i++) {
+	    	char *t;
+
+		t = xs_buffer("%s %s", args, params[i]);
+		Free(args);
+		args = t;
+	}
+	if (CreateProcess(
+		    NULL,
+		    args,
+		    NULL,
+		    NULL,
+		    FALSE,
+		    0,
+		    NULL,
+		    NULL,
+		    &startupinfo,
+		    &process_information) == 0) {
+	    	popup_an_error("CreateProcess(%s) failed: %s",
+			params[0], win32_strerror(GetLastError()));
+		Free(args);
+		return;
+	} else {
+	    	Free(args);
+	    	CloseHandle(process_information.hThread);
+	}
+
+	/* Create a new script description. */
+	if (!sms_push(ST_CHILD))
+		return;
+	sms->child_handle = process_information.hProcess;
+	sms->inhandle = hevent;
+	sms->infd = s;
+
+	/*
+	 * Wait for the child process to exit.
+	 * Note that this is an asynchronous event -- exits for multiple
+	 * children can happen in any order.
+	 */
+	sms->exit_id = AddInput((int)process_information.hProcess,
+			    child_exited);
+
+	/* Allow the child script to connect back to us. */
+	sms->listen_id = AddInput((int)hevent, child_socket_connection);
+
+	/* Enable input. */
+	script_enable();
+
+}
+# endif /*]*/
 #endif /*]*/
 
 /* "Macro" action, explicitly invokes a named macro. */
