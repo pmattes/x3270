@@ -37,8 +37,10 @@
  */
 
 #include "globals.h"
+#if !defined(_WIN32) /*[*/
 #include <sys/wait.h>
 #include <signal.h>
+#endif /*]*/
 #include <errno.h>
 #include "appres.h"
 #include "3270ds.h"
@@ -64,6 +66,17 @@
 #include "trace_dsc.h"
 #include "utilc.h"
 
+#if defined(_WIN32) /*[*/
+#include "w3miscc.h"
+#include "windirsc.h"
+#include "winversc.h"
+#endif /*]*/
+
+#if defined(_WIN32) /*[*/
+char *instdir = NULL;
+char *myappdata = NULL;
+#endif /*]*/
+
 void
 usage(char *msg)
 {
@@ -88,6 +101,15 @@ main(int argc, char *argv[])
 {
 	const char	*cl_hostname = CN;
 
+#if defined(_WIN32) /*[*/
+	(void) get_version_info();
+	if (get_dirs(argv[0], "ws3270", &instdir, NULL, &myappdata,
+		    NULL) < 0)
+		exit(1);
+	if (sockstart() < 0)
+	    	exit(1);
+#endif /*]*/
+
 	argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
 	if (charset_init(appres.charset) != CS_OKAY) {
@@ -106,8 +128,10 @@ main(int argc, char *argv[])
 	ft_init();
 #endif /*]*/
 
+#if !defined(_WIN32) /*[*/
 	/* Make sure we don't fall over any SIGPIPEs. */
 	(void) signal(SIGPIPE, SIG_IGN);
+#endif /*]*/
 
 	/* Handle initial toggle settings. */
 #if defined(X3270_TRACE) /*[*/
@@ -137,7 +161,9 @@ main(int argc, char *argv[])
 	while (1) {
 		(void) process_events(True);
 
+#if !defined(_WIN32) /*[*/
 		if (children && waitpid(0, (int *)0, WNOHANG) > 0)
 			--children;
+#endif /*]*/
 	}
 }
