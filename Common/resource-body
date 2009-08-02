@@ -864,14 +864,9 @@ endif
 if x
     The command run in the window is defined by %-traceCommand%.
 endif
-if u
     The directory prefix is defined by %-traceDir%.
     If %-traceFile% is defined, it gives the entire pathname
     and %-traceDir% is ignored.
-else
-    If %-traceFile% is defined, it gives the pathname
-    of the file instead.
-endif
 .
 
 name emulatorFont
@@ -965,14 +960,9 @@ endif
 if x
     The command run in the window is defined by %-traceCommand%.
 endif
-if u
     The directory prefix is defined by %-traceDir%.
     If %-traceFile% is defined, it gives the entire pathname
     and %-traceDir% is ignored.
-else
-    If %-traceFile% is defined, it gives the pathname
-    of the file instead.
-endif
 .
 
 name extended
@@ -2085,13 +2075,9 @@ if u
 else
     <b>x3scr.<i>pid</i>.txt</b> in the %p% Application Data directory.
 endif
-if u
     The directory prefix is defined by the %-traceDir% resource.
-endif
     If the %-screenTraceFile% resource is defined, it defines the
-if u
     file name and %-traceDir% is ignored.
-endif
 if w
     file name.
 endif
@@ -2114,6 +2100,17 @@ switch -script
 desc
     When true, %p% will read commands from standard input.  The rules
     for these commands are documented in the <i>x3270-script</i> manual page.
+.
+
+name scriptPort
+applies a
+type i
+switch -scriptport
+desc
+    If defined, %p% will accept script connections on the specified local TCP
+    port.
+    The rules for the commands passed over these connections are documented
+    in the <i>x3270-script</i> manual page.
 .
 
 name scrollBar
@@ -2259,6 +2256,16 @@ type s
 default /tmp
 desc
     Defines the directory that trace files are written into.
+.
+
+name traceDir
+applies w
+groups t
+type s
+default <i>app-data</i>
+desc
+    Defines the directory that trace files are written into.
+    The default is the %p% Application Data directory.
 .
 
 name traceFile

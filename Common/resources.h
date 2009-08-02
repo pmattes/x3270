@@ -210,6 +210,7 @@
 #define DotReconnect		"." ResReconnect
 #define DotSaveLines		"." ResSaveLines
 #define DotScripted		"." ResScripted
+#define DotScriptPort		"." ResScriptPort
 #define DotScrollBar		"." ResScrollBar
 #define DotSocket		"." ResSocket
 #define DotTermName		"." ResTermName
@@ -313,6 +314,7 @@
 #define ClsScreenTrace		"ScreenTrace"
 #define ClsScreenTraceFile	"ScreenTraceFile"
 #define ClsScripted		"Scripted"
+#define ClsScriptPort		"ScriptPort"
 #define ClsScrollBar		"ScrollBar"
 #define ClsSecure		"Secure"
 #define ClsSelectBackground	"SelectBackground"
