@@ -502,6 +502,9 @@ main(int argc, char *argv[])
 		appres.compose_map = XtNewString(Apl);
 		appres.charset = XtNewString(Apl);
 	}
+
+	screen_preinit();
+
 	switch (charset_init(appres.charset)) {
 	    case CS_OKAY:
 		break;

@@ -332,6 +332,18 @@ enum mcursor_state { LOCKED, NORMAL, WAIT };
 static enum mcursor_state mcursor_state = LOCKED;
 static enum mcursor_state icon_cstate = NORMAL;
 
+/* Dumb font cache. */
+typedef struct dfc {
+    	struct dfc *next;
+    	char *name;
+	XFontStruct *info;
+	char *weight;
+	int points;
+	char *spacing;
+	char *charset;
+	Boolean good;
+} dfc_t;
+
 static void aicon_init(void);
 static void aicon_reinit(unsigned cmask);
 static void screen_focus(Boolean in);
@@ -375,12 +387,15 @@ static char *lff_single(const char *name, const char *reqd_display_charset,
 static char *load_fixed_font(const char *names, const char *reqd_charsets);
 static void lock_icon(enum mcursor_state state);
 static char *expand_cslist(const char *s);
-static const char *name2cs_3270(const char *name);
 static void hollow_cursor(int baddr);
 static void revert_later(XtPointer closure _is_unused, XtIntervalId *id _is_unused);
 #if defined(X3270_DBCS) /*[*/
 static void xlate_dbcs(unsigned char, unsigned char, XChar2b *);
 #endif /*]*/
+static void dfc_init(void);
+static const char *dfc_search_family(const char *charset, dfc_t **dfc,
+	void **cookie);
+static Boolean dfc_search_name(const char *name);
 
 /* Resize font list. */
 struct rsfont {
@@ -462,6 +477,14 @@ screen_set_keymap(void)
 	set_translations(container, &container_t00, &container_t0);
 }
 
+/*
+ * Screen pre-initialization (before charset init).
+ */
+void
+screen_preinit(void)
+{
+    	dfc_init();
+}
 
 /*
  * Initialize the screen.
@@ -3822,7 +3845,6 @@ screen_new_display_charsets(const char *display_charsets, const char *csnames)
 			buf = cs_dup = NewString(display_charsets);
 			while (!font_found &&
 			       (cs = strtok_r(buf, ",", &lasts)) != CN) {
-				char *wild;
 				char *part1 = CN, *part2 = CN;
 				int n_parts = 1;
 
@@ -3836,35 +3858,11 @@ screen_new_display_charsets(const char *display_charsets, const char *csnames)
 					continue;
 				}
 
-				if (n_parts == 2) {
-					wild = xs_buffer(
-					    "*-r-*-c-*-%s+*-r-*-c-*-%s",
-					    part1, part2);
-				} else {
-					wild = xs_buffer("*-r-*-c-*-%s", cs);
-				}
-				lff = load_fixed_font(wild, cs);
+				lff = load_fixed_font(NULL, cs);
 				if (lff != CN)
 					Free(lff);
 				else
 					font_found = True;
-				Free(wild);
-				if (!font_found) {
-					if (n_parts == 2) {
-						wild = xs_buffer(
-						    "*-r-*-c-*-%s+*-r-*-c-*-%s",
-						    part1, part2);
-					} else {
-						wild = xs_buffer("*-r-*-m-*-%s",
-								    cs);
-					}
-					lff = load_fixed_font(wild, cs);
-					if (lff != CN)
-						Free(lff);
-					else
-						font_found = True;
-					Free(wild);
-				}
 				if (part1 != CN)
 					Free(part1);
 				if (part2 != CN)
@@ -3922,114 +3920,6 @@ screen_newfont(char *fontnames, Boolean do_popup, Boolean is_cs)
 	efont_changed = True;
 }
 
-static Boolean
-seems_scalable(const char *name)
-{
-	int i = 0;
-	char *ndup = NewString(name);
-	char *buf = ndup;
-	char *dash;
-	Boolean scalable = False;
-
-	while ((dash = strchr(buf, '-')) != CN) {
-		*dash = '\0';
-		i++;
-		if ((i == 8 || i == 9 || i == 13) &&
-		    !strcmp(buf, "0")) {
-			scalable = True;
-			break;
-		}
-		buf = dash + 1;
-	}
-	Free(ndup);
-	return scalable;
-}
-
-/*
- * Make sure a font implements a desired display character set.
- * Returns True for success, False for failure.
- */
-static Boolean
-check_charset(const char *name, XFontStruct *f, const char *dcsname,
-    Boolean force, const char **font_csname, Boolean *scalable)
-{
-	unsigned long a_family_name, a_font_registry, a_font_encoding;
-	char *font_registry = CN, *font_encoding = CN;
-	const char *font_charset = CN;
-	Boolean r = False;
-	char *csn0, *ptr, *csn;
-	char *lasts;
-
-#if defined(DEBUG_FONTPICK) /*[*/
-	printf("checking '%s' against %s\n", name, dcsname);
-#endif /*]*/
-	/* Check for scalability. */
-	*scalable = False;
-	if (!force) {
-		*scalable = seems_scalable(name);
-		if (*scalable) {
-#if defined(DEBUG_FONTPICK) /*[*/
-		    printf("'%s' seems scalable\n", name);
-#endif /*]*/
-		    return False;
-		}
-	}
-
-	if (XGetFontProperty(f, a_registry, &a_font_registry))
-		font_registry = XGetAtomName(display, a_font_registry);
-	if (XGetFontProperty(f, a_encoding, &a_font_encoding))
-		font_encoding = XGetAtomName(display, a_font_encoding);
-
-	if ((font_registry != CN &&
-	     (!strcmp(font_registry, "IBM 3270") ||
-	     (!font_registry[0] &&
-	      (XGetFontProperty(f, XA_FAMILY_NAME, &a_family_name) &&
-	       !strcmp(XGetAtomName(display, a_family_name), "3270"))))) ||
-            (font_registry == CN && !strncmp(name, "3270", 4))) {
-		/* Old 3270 font. */
-		font_charset = name2cs_3270(name);
-		if (font_charset != CN)
-			font_charset = NewString(font_charset);
-		else
-			font_charset = NewString("unknown-unknown");
-	} else {
-		char *encoding;
-
-		if (font_encoding != CN && font_encoding[0] == '-')
-			encoding = font_encoding + 1;
-		else
-			encoding = font_encoding;
-		font_charset = xs_buffer("%s-%s",
-		    font_registry? font_registry: "unknown",
-		    encoding? encoding: "unknown");
-	}
-
-	ptr = csn0 = NewString(dcsname);
-	while (!r && (csn = strtok_r(ptr, ",", &lasts)) != CN) {
-		if (force || !strcasecmp(font_charset, csn)) {
-#if defined(DEBUG_FONTPICK) /*[*/
-			printf("'%s' says it implements '%s' (want '%s')%s\n", name, font_charset, csn, force? " (forced)": "");
-#endif /*]*/
-			r = True;
-		}
-		ptr = CN;
-	}
-	Free(csn0);
-	if (font_csname != NULL)
-		*font_csname = font_charset;
-	else
-		Free(font_charset);
-#if defined(DEBUG_FONTPICK) /*[*/
-	printf("'%s' seems %s\n", name, r? "okay": "bad");
-#endif /*]*/
-
-	if (font_registry != CN)
-	    	XtFree(font_registry);
-	if (font_encoding != CN)
-	    	XtFree(font_encoding);
-	return r;
-}
-
 /*
  * Expand a character set list into English.
  */
@@ -4065,46 +3955,6 @@ expand_cslist(const char *s)
 	return strcat(strcat(r, " or "), t);
 }
 
-/* Get the pixel size property from a font. */
-static unsigned long
-get_pixel_size(XFontStruct *f)
-{
-	Boolean initted = False;
-	static Atom a_pixel_size;
-	unsigned long v;
-
-	if (!initted) {
-		a_pixel_size = XInternAtom(display, "PIXEL_SIZE", True);
-		if (a_pixel_size == None)
-			return 0L;
-		initted = True;
-	}
-	if (XGetFontProperty(f, a_pixel_size, &v))
-		return v;
-	else
-		return 0L;
-}
-
-/* Get the weight property from a font. */
-static unsigned long
-get_weight(XFontStruct *f)
-{
-	Boolean initted = False;
-	static Atom a_weight_name;
-	unsigned long v;
-
-	if (!initted) {
-		a_weight_name = XInternAtom(display, "WEIGHT_NAME", True);
-		if (a_weight_name == None)
-			return 0L;
-		initted = True;
-	}
-	if (XGetFontProperty(f, a_weight_name, &v))
-		return v;
-	else
-		return 0L;
-}
-
 /*
  * Load and query a font.
  * Returns NULL (okay) or an error message.
@@ -4119,13 +3969,16 @@ load_fixed_font(const char *names, const char *reqd_display_charsets)
 
 #if defined(DEBUG_FONTPICK) /*[*/
 	fprintf(stderr, "load_fixed_font(%s, %s)\n",
-	    names, reqd_display_charsets);
+	    names? names: "(wild)", reqd_display_charsets);
 #endif /*]*/
 
 	/* Split out the names and character sets. */
-	num_names = split_dbcs_resource(names, '+', &name1, &name2);
+	if (names)
+		num_names = split_dbcs_resource(names, '+', &name1, &name2);
 	num_cs = split_dbcs_resource(reqd_display_charsets, '+', &charset1,
 			&charset2);
+	if (!names)
+	    	num_names = num_cs;
 	if (num_names == 1 && num_cs >= 2) {
 		Free(name1);
 		Free(name2);
@@ -4166,60 +4019,23 @@ load_fixed_font(const char *names, const char *reqd_display_charsets)
 	return r;
 }
 
-/*
- * Load a list of fonts, possibly from the local cache.
- */
-static char **
-xlfwi(char *pattern, int max_names, int *count_return,
-	XFontStruct **info_return)
+static Boolean
+charset_in_reqd(const char *charset, const char *reqd)
 {
-    	struct fi_cache {
-	    struct fi_cache *next;
-	    char *pattern;
-	    char **names;
-	    int count;
-	    XFontStruct *info;
-	};
-	static struct fi_cache *fi_cache = NULL, *fi_last = NULL;
-	struct fi_cache *f;
-	char **names;
-	int count;
-	XFontStruct *info;
+    	char *r = NewString(reqd);
+	char *str = r;
+    	char *tok;
+	Boolean rv = False;
 
-	/* Check the cache. */
-	for (f = fi_cache; f != NULL; f = f->next) {
-	    	if (!strcmp(pattern, f->pattern)) {
-#if defined(XLFWI_DEBUG) /*[*/
-		    	printf("xlfwi cache hit on %s\n", pattern);
-#endif /*]*/
-		    	*count_return = f->count;
-			*info_return = f->info;
-		    	return f->names;
+	while ((tok = strtok(str, ",")) != NULL) {
+	    	str = NULL;
+		if (!strcasecmp(charset, tok)) {
+		    	rv = True;
+			break;
 		}
 	}
-#if defined(XLFWI_DEBUG) /*[*/
-	printf("xlfwi no hit on %s\n", pattern);
-#endif /*]*/
-
-	/* Ask the server. */
-	names = XListFontsWithInfo(display, pattern, max_names, &count, &info);
-	if (names == NULL)
-	    	return NULL;
-
-	/* Save the answer and return it. */
-	f = (struct fi_cache *)XtMalloc(sizeof(struct fi_cache));
-	f->pattern = XtNewString(pattern);
-	f->names = names;
-	f->count = *count_return = count;
-	f->info = *info_return = info;
-	f->next = NULL;
-	if (fi_last != NULL)
-	    	fi_last->next = f;
-	else
-	    	fi_cache = f;
-	fi_last = f;
-
-	return names;
+	Free(r);
+	return rv;
 }
 
 /*
@@ -4229,149 +4045,95 @@ xlfwi(char *pattern, int max_names, int *count_return,
 static char *
 lff_single(const char *name, const char *reqd_display_charset, Boolean is_dbcs)
 {
-	XFontStruct *f, *g;
-	char **matches;
-	int count, mod_count;
+	XFontStruct *g;
 	Boolean force = False;
-	char *r;
-	const char *font_csname = "?";
-	int i;
-	int best = -1;
-	char *best_weight = CN;
-	unsigned long best_pixel_size = 0L;
-	Boolean scalable;
-	char *wname = CN;
+	const char *best = NULL;
 
 #if defined(DEBUG_FONTPICK) /*[*/
-	fprintf(stderr, "lff_single: name %s, cs %s, %s\n", name,
-	    reqd_display_charset, is_dbcs? "dbcs": "sbcs");
+	fprintf(stderr, "lff_single: name %s, cs %s, %s\n",
+		name? name: "(wild)",
+		reqd_display_charset, is_dbcs? "dbcs": "sbcs");
 #endif /*]*/
 
-	if (*name == '!') {
+	if (name && *name == '!') {
 		name++;
 		force = True;
 	}
 
-	matches = xlfwi((char *)name, 1000, &count, &f);
-	if (matches == (char **)NULL) {
-#if defined(DEBUG_FONTPICK) /*[*/
-		printf("Font '%s' not found\n", name);
-#endif /*]*/
-		return xs_buffer("Font %s\nnot found", name);
-	}
-#if defined(DEBUG_FONTPICK) /*[*/
-	printf("%d fonts found for '%s'\n", count, name);
-#endif /*]*/
-	if (count > 1 && (strchr(name, '*') == NULL)) {
-#if defined(DEBUG_FONTPICK) /*[*/
-		printf("pretending 1\n");
-#endif /*]*/
-		mod_count = 1;
-	} else
-		mod_count = count;
-	for (i = 0; i < mod_count; i++) {
-#if defined(DEBUG_FONTPICK) /*[*/
-		printf("  %s\n", matches[i]);
-#endif /*]*/
-		if (!check_charset(matches[i], &f[i], reqd_display_charset,
-			    force, &font_csname, &scalable)) {
+	if (name) {
+	    	char **names;
+		int count;
+		XFontStruct *f;
+		unsigned long svalue;
+		char *family_name, *font_encoding, *fe, *charset;
 
-			if (mod_count == 1) {
-				if (scalable) {
-					r = xs_buffer("Font '%s'\nappears to be "
-						      "scalable\n"
-						      "(Specify '!%s' to "
-						      "override)",
-						      name, name);
-				} else {
-					char *xp =
-					    expand_cslist(reqd_display_charset);
+	    	if (!dfc_search_name(name))
+			return xs_buffer("Font %s\nnot found", name);
 
-					r = xs_buffer("Font '%s'\n"
-					    "implements %s, not %s\n"
-					    "(Specify '!%s' to override)",
-					    name,
-					    font_csname,
-					    xp,
-					    name);
-					Free(font_csname);
-					Free(xp);
-				}
-				if (wname != CN)
-				    	XtFree(wname);
-				return r;
-			}
-		} else {
-			unsigned long pixel_size = get_pixel_size(&f[i]);
-			Atom w = get_weight(&f[i]);
+		/* Check the character set */
+		names = XListFontsWithInfo(display, name, 1, &count, &f);
+		if (names == NULL)
+			return xs_buffer("Font %s\nnot found", name);
+		if (XGetFontProperty(f, a_registry, &svalue))
+			family_name = XGetAtomName(display, svalue);
+		else {
+			XFreeFontInfo(names, f, count);
+		    	return xs_buffer("Font %s\nhas no registry property",
+				name);
+		}
+		if (XGetFontProperty(f, a_encoding, &svalue))
+			font_encoding = XGetAtomName(display, svalue);
+		else {
+			XFreeFontInfo(names, f, count);
+		    	return xs_buffer("Font %s\nhas no encoding property",
+				name);
+		}
+		if (font_encoding[0] == '-')
+			fe = font_encoding + 1;
+		else
+			fe = font_encoding;
+		XFreeFontInfo(names, f, count);
+		charset = xs_buffer("%s-%s", family_name, fe);
+		Free(family_name);
+		Free(font_encoding);
+		if (!charset_in_reqd(charset, reqd_display_charset)) {
+		    	char *r = xs_buffer("Font %s\nimplements %s, not %s\n",
+				name, charset, reqd_display_charset);
 
-			/* Correct. */
-			if (is_dbcs) {
-				Replace(efont_charset_dbcs, font_csname);
-			} else {
-				Replace(efont_charset, font_csname);
-			}
-			if (w) {
-				Replace(wname, XGetAtomName(display, w));
-#if defined(DEBUG_FONTPICK) /*[*/
-				printf("%s weight is %s\n", matches[i], wname);
-#endif /*]*/
-			}
+			Free(charset);
+			return r;
 
-#if defined(X3270_DBCS) /*[*/
-			if (!is_dbcs && dbcs_font.font_struct != NULL) {
-				/*
-				 * When searching, we will accept only a
-				 * perfect match.
-				 * When not searching, we'll take whatever
-				 * the user gives us, and adjust accordingly.
-				 */
-				if (mod_count == 1 ||
-				    (pixel_size ==
-					get_pixel_size(dbcs_font.font_struct) &&
-				     (2 * f[i].max_bounds.width) ==
-					dbcs_font.font_struct->max_bounds.width )) {
-					best = i;
-					break;
-				} else
-					continue;
-			}
-#endif /*]*/
-			if (best < 0 ||
-			    (labs(pixel_size - 14L) <
-			     labs(best_pixel_size - 14L)) ||
-			    (w &&
-			     (best_weight == CN ||
-			      (!strcasecmp(best_weight, "bold") &&
-			       strcasecmp(wname, "bold"))))) {
-				best = i;
-				if (w)
-					Replace(best_weight,
-						XtNewString(wname));
-				best_pixel_size = pixel_size;
-#if defined(DEBUG_FONTPICK) /*[*/
-				printf("best pixel size: %ld '%s'\n", pixel_size, matches[i]);
-#endif /*]*/
-			} else {
-#if defined(DEBUG_FONTPICK) /*[*/
-				printf("not so good: %ld '%s'\n", pixel_size, matches[i]);
-#endif /*]*/
+		}
+		Free(charset);
+
+		best = name;
+	} else {
+	    	void *cookie;
+		dfc_t *d;
+		int best_pixel_size = 0;
+		char *best_weight = NULL;
+
+		cookie = NULL;
+		while (dfc_search_family(reqd_display_charset, &d, &cookie)) {
+			if (best == NULL ||
+			    (labs(d->points - 14) <
+			     labs(best_pixel_size - 14)) ||
+			    (best_weight == CN ||
+			     (!strcasecmp(best_weight, "bold") &&
+			      strcasecmp(d->weight, "bold")))) {
+				best = d->name;
+				best_weight = d->weight;
+				best_pixel_size = d->points;
 			}
 		}
-	}
-	if (wname != NULL)
-	    	XtFree(wname);
-	if (best_weight != NULL)
-	    	XtFree(best_weight);
-	if (best < 0) {
-	    return xs_buffer("None of the %d fonts matching\n"
-			     "%s\n"
-			     "appears to be appropriate",
-			     count, name);
+		if (best == NULL) {
+			return xs_buffer("No %s fonts found",
+				reqd_display_charset);
+		}
 	}
 
-	g = XLoadQueryFont(display, matches[best]);
-	set_font_globals(g, name, matches[best], g->fid, is_dbcs);
+	g = XLoadQueryFont(display, best);
+	set_font_globals(g, /*name*/best, best, g->fid, is_dbcs);
 	return CN;
 }
 
@@ -4412,6 +4174,10 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 	else
 		fe = font_encoding;
 
+	font_charset = xs_buffer("%s-%s", family_name, fe);
+	Free(family_name);
+	Free(font_encoding);
+
 #if defined(X3270_DBCS) /*[*/
 	if (is_dbcs) {
 		/* Hack. */
@@ -4422,20 +4188,16 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 		dbcs_font.descent = f->max_bounds.descent;
 		dbcs_font.char_width  = fCHAR_WIDTH(f);
 		dbcs_font.char_height = dbcs_font.ascent + dbcs_font.descent;
-		dbcs_font.d16_ix = display16_init(xs_buffer("%s-%s",
-			    family_name, fe));
+		dbcs_font.d16_ix = display16_init(font_charset);
 		dbcs = True;
 		Replace(full_efontname_dbcs, XtNewString(fef));
-		Free(family_name);
-		Free(font_encoding);
+		Replace(efont_charset_dbcs, font_charset);
 		return;
 	}
 #endif /*]*/
-	font_charset = xs_buffer("%s-%s", family_name, fe);
-	Free(family_name);
-	Free(font_encoding);
 	Replace(efontname, XtNewString(ef));
 	Replace(full_efontname, XtNewString(fef));
+	Replace(efont_charset, font_charset);
 
 	/* Set the dimensions. */
 	nss.char_width  = fCHAR_WIDTH(f);
@@ -4473,8 +4235,6 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 		nss.font_16bit = False;
 		nss.d8_ix = display8_init(font_charset);
 	}
-	Free(font_charset);
-	font_charset = NULL;
 
 	/* See if this font has any unusually-shaped characters. */
 	INIT_ODD(nss.odd_width);
@@ -4949,7 +4709,7 @@ lock_icon(enum mcursor_state state)
 
 /* Check the font menu for an existing name. */
 static Boolean
-font_in_menu(char *font)
+font_in_menu(const char *font)
 {
 	struct font_list *g;
 
@@ -4962,7 +4722,7 @@ font_in_menu(char *font)
 
 /* Add a font to the font menu. */
 static Boolean
-add_font_to_menu(char *label, char *font)
+add_font_to_menu(char *label, const char *font)
 {
 	struct font_list *f;
 
@@ -4993,13 +4753,9 @@ init_rsfonts(char *charset_name)
 	char *ms;
 	struct rsfont *r;
 	struct font_list *f;
-	char *wild;
-	int count, i;
-	char **names;
 	char *dupcsn, *csn, *buf;
 	char *lasts;
 	XFontStruct *fs;
-	Boolean scalable;
 	char *hier_name;
 
 	/* Clear the old lists. */
@@ -5087,77 +4843,36 @@ init_rsfonts(char *charset_name)
 	/* Expand out wild-cards based on the display character set names. */
 	buf = dupcsn = NewString(charset_name);
 	while ((csn = strtok_r(buf, ",", &lasts)) != CN) {
+	    	void *cookie;
+		const char *name;
+
 		buf = CN;
 	    	if (!strncasecmp(csn, "3270cg", 6))
 		    	continue;
-		wild = xs_buffer("*-r-*-c-*-%s", csn);
-		count = 0;
-		names = xlfwi(wild, 1000, &count, &fs);
-		Free(wild);
-		if (count != 0) {
-			for (i = 0; i < count; i++) {
-				if (check_charset(names[i], &fs[i], csn, False,
-					NULL, &scalable) &&
-				   !font_in_menu(names[i])) {
-				    	char *dash1 = NULL, *dash2 = NULL;
 
-					if (names[i][0] == '-') {
-					    	dash1 = strchr(names[i] + 1,
-							'-');
-						if (dash1 != NULL)
-						    	dash2 = strchr(
-								dash1 + 1,
-								'-');
-					}
-					if (dash2 != NULL) {
-					    	hier_name =
-						    xs_buffer("%s>%.*s>%s",
-							csn,
-							(int)(dash2 - names[i] - 1),
-							 names[i] + 1,
-							dash2 + 1);
-					} else
-						hier_name = xs_buffer("%s>%s",
-								csn, names[i]);
-					(void) add_font_to_menu(hier_name,
-								names[i]);
-					Free(hier_name);
-				}
-			}
-		}
-		wild = xs_buffer("*-r-*-m-*-%s", csn);
-		count = 0;
-		names = xlfwi(wild, 1000, &count, &fs);
-		Free(wild);
-		if (count != 0) {
-			for (i = 0; i < count; i++) {
-				if (check_charset(names[i], &fs[i], csn, False,
-					NULL, &scalable) &&
-				   !font_in_menu(names[i])) {
-				    	char *dash1 = NULL, *dash2 = NULL;
+		cookie = NULL;
+		while ((name = dfc_search_family(csn, NULL, &cookie))
+			    != NULL) {
+			if (!font_in_menu(name)) {
+				char *dash1 = NULL, *dash2 = NULL;
 
-					if (names[i][0] == '-') {
-					    	dash1 = strchr(names[i] + 1,
-							'-');
-						if (dash1 != NULL)
-						    	dash2 = strchr(
-								dash1 + 1,
-								'-');
-					}
-					if (dash2 != NULL) {
-					    	hier_name =
-						    xs_buffer("%s>%.*s>%s",
-							csn,
-							(int)(dash2 - names[i] - 1),
-							 names[i] + 1,
-							dash2 + 1);
-					} else
-						hier_name = xs_buffer("%s>%s",
-								csn, names[i]);
-					(void) add_font_to_menu(hier_name,
-								names[i]);
-					Free(hier_name);
+				if (name[0] == '-') {
+					dash1 = strchr(name + 1, '-');
+					if (dash1 != NULL)
+						dash2 = strchr(dash1 + 1, '-');
 				}
+				if (dash2 != NULL) {
+					hier_name =
+					    xs_buffer("%s>%.*s>%s",
+						csn,
+						(int)(dash2 - name - 1),
+						 name + 1,
+						dash2 + 1);
+				} else
+					hier_name = xs_buffer("%s>%s",
+							csn, name);
+				(void) add_font_to_menu(hier_name, name);
+				Free(hier_name);
 			}
 		}
 	}
@@ -5591,45 +5306,6 @@ display_heightMM(void)
 	return XDisplayHeightMM(display, default_screen);
 }
 
-/* Charset mapping for older 3270 fonts. */
-static struct {
-	const char *name;
-	const char *cg;
-} name2cs[] = {
-	{ "3270",		"3270cg-1a" },
-	{ "3270-12",		"3270cg-1" },
-	{ "3270-12bold",	"3270cg-1" },
-	{ "3270-20",		"3270cg-1" },
-	{ "3270-20bold",	"3270cg-1" },
-	{ "3270bold",		"3270cg-1a" },
-	{ "3270d",		"3270cg-1a" },
-	{ "3270gr",		"3270cg-7" },
-	{ "3270gt12",		"3270cg-1" },
-	{ "3270gt12bold",	"3270cg-1" },
-	{ "3270gt16",		"3270cg-1" },
-	{ "3270gt16bold",	"3270cg-1" },
-	{ "3270gt24",		"3270cg-1" },
-	{ "3270gt24bold",	"3270cg-1" },
-	{ "3270gt32",		"3270cg-1" },
-	{ "3270gt32bold",	"3270cg-1" },
-	{ "3270gt8",		"3270cg-1" },
-	{ "3270h",		"3270cg-8" },
-	{ NULL,			NULL }
-
-};
-
-static const char *
-name2cs_3270(const char *name)
-{
-	int i;
-
-	for (i = 0; name2cs[i].name != NULL; i++) {
-		if (!strcasecmp(name, name2cs[i].name))
-			return name2cs[i].cg;
-	}
-	return NULL;
-}
-
 #if defined(X3270_DBCS) /*[*/
 /* Translate an EBCDIC DBCS character to a display character. */
 static void
@@ -5937,4 +5613,160 @@ WindowState_action(Widget w _is_unused, XEvent *event, String *params,
 	       return;
 	}
 	XtVaSetValues(toplevel, XtNiconic, state, NULL);
+}
+
+static dfc_t *dfc = NULL, *dfc_last = NULL;
+
+/* Split a font name into parts. */
+static int
+split_name(const char *name, char res[15][256])
+{
+    	int ns;
+	const char *dash;
+	const char *s;
+
+	ns = 0;
+	s = name;
+	while (ns < 14 && ((dash = strchr(s, '-')) != NULL)) {
+		int nc = dash - s;
+
+		if (nc >= 256)
+			nc = 255;
+		strncpy(res[ns], s, nc);
+		res[ns][nc] = '\0';
+		ns++;
+		s = dash + 1;
+	}
+	if (*s) {
+	    	int nc = strlen(s);
+
+		if (nc >= 256)
+		    	nc = 255;
+		strncpy(res[ns], s, nc);
+		res[ns][nc] = '\0';
+		ns++;
+	}
+
+	return ns;
+}
+
+/* Initialize the dumb font cache. */
+static void
+dfc_init(void)
+{
+    	char **namelist;
+	int count;
+	int i;
+	dfc_t *d, *e;
+	char nl_arr[15][256];
+	dfc_t *c_first = NULL;
+	dfc_t *c_last = NULL;
+	dfc_t *m_first = NULL;
+	dfc_t *m_last = NULL;
+
+	/* Get all of the font names. */
+	namelist = XListFonts(display, "*", 10000, &count);
+	if (namelist == NULL)
+	    	Error("No fonts");
+	for (i = 0; i < count; i++) {
+	    	/* Pick apart the font names. */
+	    	int nf = split_name(namelist[i], nl_arr);
+		int good = True;
+
+		if ((nf == 1 && strncmp(nl_arr[0], "3270", 4)) ||
+		    (nf != 15) ||
+		    (strcasecmp(nl_arr[4], "r") ||
+		     !strcmp(nl_arr[7], "0") ||
+		     !strcmp(nl_arr[8], "0") ||
+		     (strcasecmp(nl_arr[11], "c") &&
+		      strcasecmp(nl_arr[11], "m")) ||
+		     !strcmp(nl_arr[12], "0")))
+			good = False;
+
+		/* Make sure it isn't a dup. */
+		for (e = dfc; e != NULL; e = e->next)
+		    	if (!strcasecmp(namelist[i], e->name))
+			    	break;
+		if (e != NULL)
+		    	continue;
+
+	    	/* Append this entry to the cache. */
+	    	d = (dfc_t *)Malloc(sizeof(dfc_t));
+		d->next = NULL;
+		d->name = NewString(namelist[i]);
+		d->info = NULL;
+		d->weight = NewString(nl_arr[3]);
+		d->points = atoi(nl_arr[7]);
+		d->spacing = NewString(nl_arr[11]);
+		d->charset = xs_buffer("%s-%s", nl_arr[13], nl_arr[14]);
+		d->good = good;
+		if (!d->spacing[0] || !strcasecmp(d->spacing, "c")) {
+			if (c_last)
+				c_last->next = d;
+			else
+				c_first = d;
+			c_last = d;
+		} else {
+			if (m_last)
+				m_last->next = d;
+			else
+				m_first = d;
+			m_last = d;
+		}
+	}
+
+	if (c_first != NULL) {
+	    	c_last->next = m_first;
+		dfc = c_first;
+		if (m_last != NULL)
+		    	dfc_last = m_last;
+		else
+		    	dfc_last = c_last;
+	} else {
+	    	dfc = m_first;
+		dfc_last = m_last;
+	}
+}
+
+/* Search iteratively for fonts whose names specify a given character set. */
+static const char *
+dfc_search_family(const char *charset, dfc_t **dp, void **cookie)
+{
+    	dfc_t *d;
+
+	if (*cookie == NULL)
+	    	d = dfc;
+	else {
+	    	d = ((dfc_t *)*cookie)->next;
+		if (d == NULL) {
+		    	if (dp)
+			    	*dp = NULL;
+		    	*cookie = NULL;
+		    	return NULL;
+		}
+	}
+	while (d != NULL) {
+	    	if (d->good && !strcasecmp(charset, d->charset)) {
+		    	if (dp)
+			    	*dp = d;
+			*cookie = d;
+			return d->name;
+		}
+		d = d->next;
+	}
+	*cookie = NULL;
+	return NULL;
+}
+
+/* Search for a font by name. */
+static Boolean
+dfc_search_name(const char *name)
+{
+    	dfc_t *d;
+
+	for (d = dfc; d != NULL; d = d->next)
+	    	if (!strcasecmp(name, d->name))
+		    	return True;
+
+	return False;
 }
