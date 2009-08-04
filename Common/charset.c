@@ -257,7 +257,7 @@ set_host_codepage(char *codepage)
 		return;
 	}
 	if (host_codepage == CN || strcmp(host_codepage, codepage)) {
-	    	Replace(host_codepage, codepage);
+	    	Replace(host_codepage, NewString(codepage));
 	}
 }
 

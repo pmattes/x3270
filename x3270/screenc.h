@@ -97,6 +97,7 @@ extern void screen_newcharset(char *csname);
 extern void screen_newfont(char *fontname, Boolean do_popup, Boolean is_cs);
 extern void screen_newscheme(char *s);
 extern Boolean screen_obscured(void);
+extern void screen_preinit(void);
 extern void screen_scroll(void);
 extern void screen_set_keymap(void);
 extern void screen_set_temp_keymap(XtTranslations trans);
