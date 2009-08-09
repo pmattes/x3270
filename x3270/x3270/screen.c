@@ -336,7 +336,6 @@ static enum mcursor_state icon_cstate = NORMAL;
 typedef struct dfc {
     	struct dfc *next;
     	char *name;
-	XFontStruct *info;
 	char *weight;
 	int points;
 	char *spacing;
@@ -5694,7 +5693,6 @@ dfc_init(void)
 	    	d = (dfc_t *)Malloc(sizeof(dfc_t));
 		d->next = NULL;
 		d->name = NewString(namelist[i]);
-		d->info = NULL;
 		d->weight = NewString(nl_arr[3]);
 		d->points = atoi(nl_arr[7]);
 		d->spacing = NewString(nl_arr[11]);
