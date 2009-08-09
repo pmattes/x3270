@@ -161,7 +161,6 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 {
 	int cl, i;
 	int ovc, ovr;
-	char junk;
 	int hn_argc;
 	int model_number;
 	int sl;
@@ -348,10 +347,26 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	if (appres.m3279 && model_number == 4)
 		model_number = 3;
 #endif /*]*/
-	if (!appres.extended || appres.oversize == CN ||
-	    sscanf(appres.oversize, "%dx%d%c", &ovc, &ovr, &junk) != 2) {
-		ovc = 0;
-		ovr = 0;
+	ovc = 0;
+	ovr = 0;
+	if (appres.extended &&
+	    appres.oversize != CN) {
+#if defined(C3270) /*[*/
+	    	if (!strcasecmp(appres.oversize, "auto")) {
+		    	ovc = -1;
+			ovr = -1;
+		} else
+#endif /*]*/
+		{
+		    	int x_ovc, x_ovr;
+			char junk;
+
+			if (sscanf(appres.oversize, "%dx%d%c", &x_ovc, &x_ovr,
+				    &junk) == 2) {
+			    	ovc = x_ovc;
+				ovr = x_ovr;
+			}
+		}
 	}
 	set_rows_cols(model_number, ovc, ovr);
 	if (appres.termname != CN)

@@ -1758,6 +1758,16 @@ desc
     Sets the screen dimensions to be larger than the default for the
     chosen model.  Its value is a string in the format
     <b><i>cols</i>x<i>rows</i></b>.
+if C
+    It can also be the string <b>auto</b>, which will cause %p% to use the
+    entire screen area of the
+endif
+if c
+    terminal.
+endif
+if wc
+    console window it is running in.
+endif
     It is used only if the %-model% includes the "-E" (extended
     data stream) suffix, and only if the specified dimensions are larger than
     the model number defaults.  Also, only hosts that support the Query Reply
