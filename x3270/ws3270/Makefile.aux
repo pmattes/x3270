@@ -64,16 +64,15 @@ tarlist: Makefile.aux
 	do echo $(TARDIR)/$$i; \
 	done >$@
 
-ws3270.tar: $(FILES) tarlist
+ws3270-src.tar: $(FILES) tarlist
 	$(RM) $(TARDIR)
 	ln -s . $(TARDIR)
 	$(RM) $@
-	#tar -cof $@ -I tarlist
 	tar -ch -T tarlist -f $@
 	$(RM) $(TARDIR)
 
-ws3270.tgz: ws3270.tar
-	gzip <ws3270.tar >$@
+ws3270-src.tgz: ws3270-src.tar
+	gzip <ws3270-src.tar >$@
 
 man: html/ws3270-man.html html/x3270-script.html
 

@@ -53,16 +53,15 @@ tarlist: Makefile.aux
 	do echo $(TARDIR)/$$i; \
 	done >$@
 
-pr3287.tar: $(FILES) tarlist
+pr3287-src.tar: $(FILES) tarlist
 	$(RM) $(TARDIR)
 	ln -s . $(TARDIR)
 	$(RM) $@
-	#tar -cof $@ -I tarlist
 	tar -ch -T tarlist -f $@
 	$(RM) $(TARDIR)
 
-pr3287.tgz: pr3287.tar
-	gzip <pr3287.tar >$@
+pr3287-src.tgz: pr3287-src.tar
+	gzip <pr3287-src.tar >$@
 
 man: pr3287.man html/pr3287-man.html
 pr3287.man: pr3287.man.m4 man.m4 version.txt
