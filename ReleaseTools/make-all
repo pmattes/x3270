@@ -78,15 +78,15 @@ source Common/version.txt
 d1=$PWD
 reldir=$d1/../../Release
 
-suite=suite3270-$version.tgz
+suite=suite3270-$version-src.tgz
 setup=wc3270-$version-setup.exe
 zip=wc3270-$version-noinstall.zip
 
 # Check for existing targets before we do any real work.
 if [ "$release" ]
 then	for prod in $prods
-	do	if [ -f $reldir/$prod-$version.tgz ]
-		then	echo >&2 "$prod-$version.tgz already exists"
+	do	if [ -f $reldir/$prod-$version-src.tgz ]
+		then	echo >&2 "$prod-$version-src.tgz already exists"
 			exit 1
 		fi
 	done
@@ -113,21 +113,21 @@ mkdir $tmpdir
 echo "===== Building tarballs."
 for prod in $prods
 do	cd $prod
-    	make -f Makefile.aux $prod.tgz
+    	make -f Makefile.aux $prod-src.tgz
 	cd ..
 done
 
 echo "===== Copying tarballs."
 # Copy then into the build directory.
 for prod in $prods
-do	cp $prod/$prod.tgz $tmpdir/
+do	cp $prod/$prod-src.tgz $tmpdir/
 done
 
 echo "===== Expanding tarballs."
 # Expand them.
 cd $tmpdir
 for prod in $prods
-do	tar -xzf $prod.tgz
+do	tar -xzf $prod-src.tgz
 done
 
 if [ "$all" ]

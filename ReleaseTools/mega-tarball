@@ -27,8 +27,8 @@ for i in x3270 c3270 wc3270 s3270 ws3270 tcl3270 pr3287 wpr3287
 do	typeset -i pp=$patch
 	while (( pp >= 0 ))
 	do	if [ $pp -eq 0 ]
-		then	f=~-/$i-$rev.tgz
-		else	f=~-/$i-${rev}p$pp.tgz
+		then	f=~-/$i-$rev-src.tgz
+		else	f=~-/$i-${rev}p$pp-src.tgz
 		fi
 		[ -f $f ] && break
 		if [ $pp -eq 0 ]
@@ -41,7 +41,7 @@ do	typeset -i pp=$patch
 	echo "Using $f"
 	tar -xzf $f
 done
-tar -czf ~-/suite3270-$1.tgz *
-chmod -w ~-/suite3270-$1.tgz
+tar -czf ~-/suite3270-$1-src.tgz *
+chmod -w ~-/suite3270-$1-src.tgz
 cd -
 rm -rf $td

@@ -55,16 +55,15 @@ tarlist: Makefile.aux
 	do echo $(TARDIR)/$$i; \
 	done >$@
 
-wpr3287.tar: $(FILES) tarlist
+wpr3287-src.tar: $(FILES) tarlist
 	$(RM) $(TARDIR)
 	ln -s . $(TARDIR)
 	$(RM) $@
-	#tar -cof $@ -I tarlist
 	tar -ch -T tarlist -f $@
 	$(RM) $(TARDIR)
 
-wpr3287.tgz: wpr3287.tar
-	gzip <wpr3287.tar >$@
+wpr3287-src.tgz: wpr3287-src.tar
+	gzip <wpr3287-src.tar >$@
 
 man: html/wpr3287-man.html
 html/wpr3287-man.html: pr3287.man.m4 html.m4 version.txt

@@ -69,16 +69,15 @@ tarlist: Makefile.aux
 	do echo $(TARDIR)/$$i; \
 	done >$@
 
-c3270.tar: $(FILES) tarlist
+c3270-src.tar: $(FILES) tarlist
 	$(RM) $(TARDIR)
 	ln -s . $(TARDIR)
 	$(RM) $@
-	#tar -cof $@ -I tarlist
 	tar -ch -T tarlist -f $@
 	$(RM) $(TARDIR)
 
-c3270.tgz: c3270.tar
-	gzip <c3270.tar >$@
+c3270-src.tgz: c3270-src.tar
+	gzip <c3270-src.tar >$@
 
 configure: configure.in
 	autoconf
