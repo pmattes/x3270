@@ -107,7 +107,9 @@
 #include "resolverc.h"
 #include "telnetc.h"
 #include "utf8c.h"
+
 #if defined(_WIN32) /*[*/
+#include "w3miscc.h"
 #include "wsc.h"
 #include "windirsc.h"
 #endif /*]*/
@@ -125,9 +127,6 @@
 /* Externals. */
 extern char *build;
 extern FILE *tracef;
-#if defined(_WIN32) /*[*/
-extern void sockstart(void);
-#endif /*]*/
 
 /* Globals. */
 char *programname = NULL;	/* program name */
@@ -172,7 +171,7 @@ static char *proxy_portname = CN;
 static unsigned short proxy_port = 0;
 
 #if defined(_WIN32) /*[*/
-char appdata[MAX_PATH];
+char *appdata;
 #endif /* ]*/
 
 void pr3287_exit(int);
@@ -431,11 +430,13 @@ main(int argc, char *argv[])
 	 * Get the printer name via the environment, because Windows doesn't
 	 * let us put spaces in arguments.
 	 */
-	if ((printer = getenv("PRINTER")) == NULL) {
+	if ((printer = getenv("PRINTER")) == NULL)
 		printer = ws_default_printer();
-	}
 
-	if (get_dirs(NULL, appdata, "wc3270") < 0)
+	if (get_dirs(NULL, "wc3270", NULL, NULL, &appdata, NULL) < 0)
+	    	exit(1);
+
+	if (sockstart() < 0)
 	    	exit(1);
 #endif /*]*/
 
@@ -571,9 +572,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 		usage();
 
 	/* Pick apart the hostname, LUs and port. */
-#if defined(_WIN32) /*[*/
-	sockstart();
-#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 	do {
 		if (!strncasecmp(argv[i], "l:", 2)) {
