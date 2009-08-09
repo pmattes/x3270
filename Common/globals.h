@@ -215,6 +215,7 @@ extern int		model_num;
 extern Boolean		no_login_host;
 extern Boolean		non_tn3270e_host;
 extern int		ov_cols, ov_rows;
+extern Boolean		ov_auto;
 extern Boolean		passthru_host;
 extern const char	*programname;
 extern char		*qualified_host;

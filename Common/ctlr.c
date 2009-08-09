@@ -75,6 +75,7 @@ int             maxROWS, maxCOLS;
 int             defROWS, defCOLS;
 int             altROWS, altCOLS;
 int		ov_rows, ov_cols;
+Boolean		ov_auto;
 int             model_num;
 int             cursor_addr, buffer_addr;
 Boolean         screen_alt = False;	/* alternate screen? */
@@ -197,6 +198,12 @@ void
 set_rows_cols(int mn, int ovc, int ovr)
 {
 	int defmod;
+
+	if (ovc < 0 || ovr < 0) {
+	    	ov_auto = True;
+		ovc = 0;
+		ovr = 0;
+	}
 
 	switch (mn) {
 	case 2:

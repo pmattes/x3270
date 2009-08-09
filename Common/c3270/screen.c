@@ -372,6 +372,12 @@ screen_connect(Boolean connected)
 		set_rows_cols(model_num, want_ov_cols, want_ov_rows);
 	}
 
+	/*
+	 * Finally, if they want automatic oversize, see if that's possible.
+	 */
+	if (ov_auto && (maxROWS < LINES - 2 || maxCOLS < COLS))
+		set_rows_cols(model_num, COLS, LINES - 2);
+
 	/* Figure out where the status line goes, if it fits. */
 #if defined(C3270_80_132) /*[*/
 	if (def_screen != alt_screen) {

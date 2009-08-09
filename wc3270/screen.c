@@ -896,6 +896,12 @@ screen_init(void)
 		set_rows_cols(model_num, want_ov_cols, want_ov_rows);
 	}
 
+	/*
+	 * Finally, if they want automatic oversize, see if that's possible.
+	 */
+	if (ov_auto && (maxROWS < console_rows - 2 || maxCOLS < console_cols))
+	    	set_rows_cols(model_num, console_cols, console_rows - 2);
+
 	/* Figure out where the status line goes, if it fits. */
 	/* Start out in altscreen mode. */
 	set_status_row(console_rows, maxROWS);

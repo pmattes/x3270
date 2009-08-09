@@ -263,6 +263,10 @@ This option has effect only in combination with extended data stream support
 supports the Query Reply structured field.
 The number of columns multiplied by the number of rows must not exceed
 16383 (3fff hex), the limit of 14-bit 3270 buffer addressing.
+ifelse(XX_MODE,console,`XX_IP
+It can also be specified as XX_FB(auto), which causes XX_FB(XX_PRODUCT) to fill
+the entire terminal or console window.
+')dnl
 XX_TP(XX_FB(XX_DASHED(port)) XX_FI(n))
 Specifies a different XX_SM(TCP) port to connect to.
 XX_FI(n) can be a name from XX_FB(/etc/services) like XX_FB(telnet), or a
@@ -345,7 +349,7 @@ It is generally a good idea to put this option on the command lines of all
 shortcuts, to avoid infinite looping.
 ')dnl
 ifelse(XX_PRODUCT,tcl3270,,
-`XX_TP(XX_DASHED(scriptport) XX_FI(port))
+`XX_TP(XX_FB(XX_DASHED(scriptport)) XX_FI(port))
 Causes XX_PRODUCT to listen for scripting connections on local TCP
 port XX_FI(port).
 ')dnl
