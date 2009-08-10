@@ -477,7 +477,10 @@ insert_mode(Boolean on)
 static void
 reverse_mode(Boolean on)
 {
-	if (!dbcs) {
+#if defined(X3270_DBCS) /*[*/
+	if (!dbcs)
+#endif /*]*/
+	{
 		reverse = on;
 		status_reverse_mode(on);
 	}
@@ -1075,7 +1078,10 @@ key_WCharacter(unsigned char code[], Boolean *skipped)
 		*skipped = False;
 
 	/* In DBCS mode? */
-	if (!dbcs) {
+#if defined(X3270_DBCS) /*[*/
+	if (!dbcs)
+#endif /*]*/
+	{
 		trace_event("DBCS character received when not in DBCS mode, "
 		    "ignoring.\n");
 		return True;
@@ -1498,7 +1504,9 @@ Flip_action(Widget w _is_unused, XEvent *event, String *params,
 {
 	action_debug(Flip_action, event, params, num_params);
 	reset_idle_timer();
+#if defined(X3270_DBCS) /*[*/
 	if (!dbcs)
+#endif /*]*/
 	    screen_flip();
 }
 
