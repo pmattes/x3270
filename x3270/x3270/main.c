@@ -322,6 +322,9 @@ main(int argc, char *argv[])
 	    	dump_version();
 	}
 
+	/* Translate and validate -set and -clear toggle options. */
+	parse_set_clear(&argc, argv);
+
 	/* Save a copy of the command-line args for merging later. */
 	save_args(argc, argv);
 
@@ -381,9 +384,6 @@ main(int argc, char *argv[])
 	/* Pick out the -e option. */
 	parse_local_process(&argc, argv, &cl_hostname);
 #endif /*]*/
-
-	/* Pick out -set and -clear toggle options. */
-	parse_set_clear(&argc, argv);
 
 	/* Verify command-line syntax. */
 	switch (argc) {
@@ -862,17 +862,21 @@ parse_set_clear(int *argcp, char **argv)
 		if (i == *argcp - 1)	/* missing arg */
 			continue;
 
-		/* Delete the argument. */
+		/* Match the name. */
 		i++;
-
 		for (j = 0; toggle_names[j].name != NULL; j++)
 			if (!strcmp(argv[i], toggle_names[j].name)) {
 				appres.toggle[toggle_names[j].index].value =
 				    is_set;
 				break;
 			}
-		if (j >= N_TOGGLES)
+		if (toggle_names[j].name == NULL)
 			usage("Unknown toggle name");
+
+		/* Substitute. */
+		argv_out[argc_out++] = "-xrm";
+		argv_out[argc_out++] = xs_buffer("x3270.%s: %s",
+			toggle_names[j].name, is_set? ResTrue: ResFalse);
 
 	}
 	*argcp = argc_out;
