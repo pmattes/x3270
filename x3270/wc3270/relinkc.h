@@ -58,11 +58,14 @@ typedef struct {
 	char  keymaps[STR_SIZE];	/* keymap names */
 
 	/* Field added for wc3270 3.3.10 (Wizard version 2) */
-	DWORD flags;			/* embed keymaps in file */
+	unsigned char flags;		/* miscellaneous flags */
+	unsigned char ov_rows;		/* oversize rows */
+	unsigned char ov_cols;		/* oversize columns */
+	unsigned char point_size;	/* font point size */
 } session_t;
 
-#define WF_EMBED_KEYMAPS	0x00000001	/* embed keymaps in session */
-#define WF_AUTO_SHORTCUT	0x00000002	/* 'auto-shortcut' mode */
+#define WF_EMBED_KEYMAPS	0x01	/* embed keymaps in session */
+#define WF_AUTO_SHORTCUT	0x02	/* 'auto-shortcut' mode */
 
 typedef struct {
 	char *name;

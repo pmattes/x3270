@@ -827,7 +827,74 @@ This specifies the dimensions of the screen.");
 			printf("Invalid model number.\n");
 			continue;
 		}
-		s->model = (int)u;
+		if (s->model != (int)u) {
+			s->model = (int)u;
+			s->ov_rows = 0;
+			s->ov_cols = 0;
+		}
+		break;
+	}
+	return 0;
+}
+
+int
+get_oversize(session_t *s)
+{
+    	char inbuf[STR_SIZE];
+	unsigned r, c;
+	char xc;
+
+	new_screen(s, "\
+Oversize\n\
+\n\
+This specifies 'oversize' dimensions for the screen, beyond the number of\n\
+rows and columns specified by the model number.  Some hosts are able to use\n\
+this additional screen area; some are not.  Enter '"CHOICE_NONE"' to specify no\n\
+oversize.");
+
+	for (;;) {
+	    	printf("\nEnter oversize dimensions (rows x cols): ");
+		if (s->ov_rows || s->ov_cols)
+		    	printf("[%u x %u]", s->ov_rows, s->ov_cols);
+		else
+		    	printf("["CHOICE_NONE"] ");
+		fflush(stdout);
+		if (get_input(inbuf, sizeof(inbuf)) == NULL) {
+			return -1;
+		}
+		if (!inbuf[0]) {
+			break;
+		}
+		if (!strcasecmp(inbuf, CHOICE_NONE)) {
+		    	s->ov_rows = 0;
+		    	s->ov_cols = 0;
+			break;
+		}
+		if (sscanf(inbuf, "%u x %u%c", &r, &c, &xc) != 2) {
+			printf("Please enter oversize in the form "
+				"'rows x cols'.\n");
+			continue;
+		}
+		if (r < wrows[s->model] - 1 ||
+		    c < wcols[s->model]) {
+			printf("Oversize must be larger than the default for "
+				"a model %d (%u x %u).\n",
+				(int)s->model,
+				wrows[s->model] - 1,
+				wcols[s->model]);
+			continue;
+		}
+		if (r > 255 || c > 255) {
+		    	printf("Rows and columns must be 255 or less.\n");
+			continue;
+		}
+		if (r * c > 0x4000) {
+		    	printf("The total screen area (rows multiplied by "
+				"columns) must be less than 16384.\n");
+			continue;
+		}
+		s->ov_rows = (unsigned char)r;
+		s->ov_cols = (unsigned char)c;
 		break;
 	}
 	return 0;
@@ -1380,6 +1447,40 @@ session file, instead of being found at runtime.");
 	return 0;
 }
 
+static int
+get_fontsize(session_t *s)
+{
+	new_screen(s, "\
+Font Size\n\
+\n\
+Allows the font size (character height in pixels) to be specified for the\n\
+wc3270 window.  The size must be between 5 and 72.  The default is 12.");
+
+	for (;;) {
+	    	char inbuf[STR_SIZE];
+		unsigned long u;
+		char *ptr;
+
+		printf("\nFont size (5 to 72) [%u]: ",
+			s->point_size? s->point_size: 12);
+		fflush(stdout);
+		if (get_input(inbuf, sizeof(inbuf)) == NULL)
+			return -1;
+		if (!inbuf[0])
+		    	break;
+		if (!strcasecmp(inbuf, CHOICE_NONE)) {
+		    	s->point_size = 0;
+			break;
+		}
+		u = strtoul(inbuf, &ptr, 10);
+		if (*ptr != '\0' || u == 0 || u < 5 || u > 72)
+			continue;
+		s->point_size = (unsigned char)u;
+		break;
+	}
+	return 0;
+}
+
 int
 summarize_and_proceed(session_t *s, char *how, char *path)
 {
@@ -1406,43 +1507,54 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 		printf("  3. TCP Port ............... : %d\n", (int)s->port);
 		printf("  4. Model Number ........... : %d (%d rows x %d columns)\n",
 		    (int)s->model, wrows[s->model] - 1, wcols[s->model]);
-		printf("  5. Character Set .......... : %s (CP %s)\n",
+		if (is_nt) {
+			printf("  5.  Oversize .............. : ");
+			if (s->ov_rows || s->ov_cols)
+				printf("%u rows x %u columns\n",
+					s->ov_rows, s->ov_cols);
+			else
+				printf(DISPLAY_NONE"\n");
+		}
+		printf("  6. Character Set .......... : %s (CP %s)\n",
 			s->charset, cp);
 #if defined(HAVE_LIBSSL) /*[*/
-		printf("  6. SSL Tunnel ............. : %s\n",
+		printf("  7. SSL Tunnel ............. : %s\n",
 			s->ssl? "Yes": "No");
 #endif /*]*/
-		printf("  7. Proxy .................. : %s\n",
+		printf("  8. Proxy .................. : %s\n",
 			s->proxy_type[0]? s->proxy_type: DISPLAY_NONE);
 		if (s->proxy_type[0]) {
-			printf("  8.  Proxy Server .......... : %s\n",
+			printf("  9.  Proxy Server .......... : %s\n",
 				s->proxy_host);
 			if (s->proxy_port[0])
-				printf("  9.  Proxy Server TCP Port . : %s\n",
+				printf(" 10.  Proxy Server TCP Port . : %s\n",
 					s->proxy_port);
 		}
-		printf(" 10. wpr3287 Printer Session  : %s\n",
+		printf(" 11. wpr3287 Printer Session  : %s\n",
 			s->wpr3287? "Yes": "No");
 		if (s->wpr3287) {
-			printf(" 11.  wpr3287 Mode .......... : ");
+			printf(" 12.  wpr3287 Mode .......... : ");
 			if (!strcmp(s->printerlu, "."))
 				printf("Associate\n");
 			else
 				printf("LU %s\n", s->printerlu);
-			printf(" 12.  wpr3287 Windows printer : %s\n",
+			printf(" 13.  wpr3287 Windows printer : %s\n",
 				s->printer[0]? s->printer: "(system default)");
-			printf(" 13.  wpr3287 Code Page ..... : ");
+			printf(" 14.  wpr3287 Code Page ..... : ");
 			if (s->printercp[0])
 			    	printf("%s\n", s->printercp);
 			else
 			    	printf("(system ANSI default of %d)\n",
 					GetACP());
 		}
-		printf(" 14. Keymaps ................ : %s\n",
+		printf(" 15. Keymaps ................ : %s\n",
 			s->keymaps[0]? s->keymaps: DISPLAY_NONE);
 		if (s->keymaps[0])
-			printf(" 15.  Embed Keymaps ......... : %s\n",
+			printf(" 16.  Embed Keymaps ......... : %s\n",
 				(s->flags & WF_EMBED_KEYMAPS)? "Yes": "No");
+		if (is_nt)
+			printf(" 17. Font Size .............. : %u\n",
+				s->point_size? s->point_size: 12);
 
 		for (;;) {
 		    	int invalid = 0;
@@ -1474,20 +1586,29 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 					return -1;
 				break;
 			case 5:
+				if (is_nt) {
+					if (get_oversize(s) < 0)
+						return -1;
+				} else {
+					printf("Invalid entry.\n");
+					invalid = 1;
+				}
+				break;
+			case 6:
 				if (get_charset(s) < 0)
 					return -1;
 				break;
 #if defined(HAVE_LIBSSL) /*[*/
-			case 6:
+			case 7:
 				if (get_ssl(s) < 0)
 					return -1;
 				break;
 #endif /*]*/
-			case 7:
+			case 8:
 				if (get_proxy(s) < 0)
 					return -1;
 				break;
-			case 8:
+			case 9:
 				if (s->proxy_type[0]) {
 					if (get_proxy_server(s) < 0)
 						return -1;
@@ -1496,7 +1617,7 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 					invalid = 1;
 				}
 				break;
-			case 9:
+			case 10:
 				if (s->proxy_type[0]) {
 					if (get_proxy_server_port(s) < 0)
 						return -1;
@@ -1505,7 +1626,7 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 					invalid = 1;
 				}
 				break;
-			case 10:
+			case 11:
 				was_wpr3287 = s->wpr3287;
 				if (get_wpr3287(s) < 0)
 					return -1;
@@ -1514,7 +1635,7 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 						return -1;
 				}
 				break;
-			case 11:
+			case 12:
 				if (s->wpr3287) {
 					if (get_printerlu(s) < 0)
 						return -1;
@@ -1523,7 +1644,7 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 					invalid = 1;
 				}
 				break;
-			case 12:
+			case 13:
 				if (s->wpr3287) {
 					if (get_printer(s) < 0)
 						return -1;
@@ -1532,7 +1653,7 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 					invalid = 1;
 				}
 				break;
-			case 13:
+			case 14:
 				if (s->wpr3287) {
 					if (get_printercp(s) < 0)
 						return -1;
@@ -1541,13 +1662,22 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 					invalid = 1;
 				}
 				break;
-			case 14:
+			case 15:
 				if (get_keymaps(s) < 0)
 					return -1;
 				break;
-			case 15:
+			case 16:
 				if (get_embed(s) < 0)
 				    	return -1;
+				break;
+			case 17:
+				if (is_nt) {
+					if (get_fontsize(s) < 0)
+						return -1;
+				} else {
+					printf("Invalid entry.\n");
+					invalid = 1;
+				}
 				break;
 			default:
 				printf("Invalid entry.\n");
@@ -1759,10 +1889,12 @@ session_wizard(char *session_name, int installed)
 			"wc3270 session",	/* description */
 			args,			/* arguments */
 			installdir,		/* working directory */
-			wrows[session.model], wcols[session.model],
-						/* console rows, columns */
+			session.ov_rows?	/* console rows */
+			    session.ov_rows + 1: wrows[session.model],
+			session.ov_cols?	/* console cols */
+			    session.ov_cols: wcols[session.model],
 			font,			/* font */
-			0,			/* point size */
+			session.point_size,	/* point size */
 			codepage);		/* code page */
 	} else
 		hres = Piffle(
@@ -1884,6 +2016,9 @@ create_session_file(session_t *session, char *path)
 			session->proxy_port);
 
 	fprintf(f, "wc3270.%s: %d\n", ResModel, (int)session->model);
+	if (session->ov_rows || session->ov_cols)
+	    	fprintf(f, "wc3270.%s: %ux%u\n", ResOversize,
+			session->ov_cols, session->ov_rows);
 	fprintf(f, "wc3270.%s: %s\n", ResCharset, session->charset);
 	if (session->is_dbcs)
 	    	fprintf(f, "wc3270.%s: %s\n", ResAsciiBoxDraw, ResTrue);
