@@ -852,12 +852,19 @@ rows and columns specified by the model number.  Some hosts are able to use\n\
 this additional screen area; some are not.  Enter '"CHOICE_NONE"' to specify no\n\
 oversize.");
 
+	printf("\n\
+The oversize must be larger than the default for a model %d (%u rows x %u\n\
+columns).\n",
+		(int)s->model,
+		wrows[s->model] - 1,
+		wcols[s->model]);
+
 	for (;;) {
-	    	printf("\nEnter oversize dimensions (rows x cols): ");
+	    	printf("\nEnter oversize dimensions (rows x columns) ");
 		if (s->ov_rows || s->ov_cols)
-		    	printf("[%u x %u]", s->ov_rows, s->ov_cols);
+		    	printf("[%u x %u]: ", s->ov_rows, s->ov_cols);
 		else
-		    	printf("["CHOICE_NONE"] ");
+		    	printf("["CHOICE_NONE"]: ");
 		fflush(stdout);
 		if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 			return -1;
@@ -2055,7 +2062,7 @@ create_session_file(session_t *session, char *path)
 	for (i = 0; i < sizeof(*session); i++) {
 	    	if (!(i % 32))
 		    	fprintf(f, "\n!x");
-		fprintf(f, "%02x", ((char *)session)[i]);
+		fprintf(f, "%02x", ((unsigned char *)session)[i]);
 	}
 	fprintf(f, "\n");
 
