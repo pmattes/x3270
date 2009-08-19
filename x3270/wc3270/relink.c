@@ -114,7 +114,7 @@ size_t num_charsets = (sizeof(charsets) / sizeof(charsets[0])) - 1;
 static int wrows[6] = { 0, 0, 25, 33, 44, 28  };
 static int wcols[6] = { 0, 0, 80, 80, 80, 132 };
 
-static char *user_settings = NULL;
+char *user_settings = NULL;
 
 static wchar_t *
 reg_font_from_cset(char *cset, int *codepage)

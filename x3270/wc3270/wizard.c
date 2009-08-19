@@ -147,8 +147,6 @@ static char *mya = NULL;
 static char *installdir = NULL;
 static char *desktop = NULL;
 
-char *user_settings = NULL;
-
 char *
 get_input(char *buf, int bufsize)
 {
@@ -1488,6 +1486,36 @@ wc3270 window.  The size must be between 5 and 72.  The default is 12.");
 	return 0;
 }
 
+static int
+get_background(session_t *s)
+{
+	new_screen(s, "\
+Background Color\n\
+\n\
+This option selects whether the screen background is black (the default) or\n\
+white.");
+
+	for (;;) {
+	    	char inbuf[STR_SIZE];
+
+		printf("\nBackground color? (black/white) [%s] ",
+			(s->flags & WF_WHITE_BG)? "white": "black");
+		fflush(stdout);
+		if (get_input(inbuf, sizeof(inbuf)) == NULL)
+			return -1;
+		if (!inbuf[0])
+		    	break;
+		if (!strcasecmp(inbuf, "black")) {
+		    	s->flags &= ~WF_WHITE_BG;
+			break;
+		} else if (!strcasecmp(inbuf, "white")) {
+		    	s->flags |= WF_WHITE_BG;
+			break;
+		}
+	}
+	return 0;
+}
+
 int
 summarize_and_proceed(session_t *s, char *how, char *path)
 {
@@ -1562,6 +1590,8 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 		if (is_nt)
 			printf(" 17. Font Size .............. : %u\n",
 				s->point_size? s->point_size: 12);
+		printf(" 18. Background Color ....... : %s\n",
+			(s->flags & WF_WHITE_BG)? "white": "black");
 
 		for (;;) {
 		    	int invalid = 0;
@@ -1685,6 +1715,10 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 					printf("Invalid entry.\n");
 					invalid = 1;
 				}
+				break;
+			case 18:
+				if (get_background(s) < 0)
+				    	return -1;
 				break;
 			default:
 				printf("Invalid entry.\n");
@@ -2048,6 +2082,12 @@ create_session_file(session_t *session, char *path)
 
 	if (session->flags & WF_AUTO_SHORTCUT)
 	    	fprintf(f, "wc3270.%s: %s\n", ResAutoShortcut, ResTrue);
+
+	if (session->flags & WF_WHITE_BG)
+	    	fprintf(f, "\
+! These resources set the background to white\n\
+wc3270." ResConsoleColorForHostColor "NeutralBlack: 15\n\
+wc3270." ResConsoleColorForHostColor "NeutralWhite: 0\n");
 
 	/* Emit the warning. */
 	fprintf(f, "\
