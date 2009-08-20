@@ -511,11 +511,38 @@ get_session(char *session_name, session_t *s, char *path)
 				    	slen = sl - SESS_LEN + 1;
 			    	strncpy(s->session, session_name, slen);
 				s->session[slen - 1] = '\0';
-				snprintf(path, MAX_PATH, "%s%s", installdir,
+
+				/* Try AppData. */
+				snprintf(path, MAX_PATH, "%s%s", mya,
 					session_name);
 				path[MAX_PATH - 1] = '\0';
+				if (access(path, F_OK) < 0) {
+				    	/* Not there.  Try installdir. */
+					snprintf(path, MAX_PATH, "%s%s",
+						installdir, session_name);
+					path[MAX_PATH - 1] = '\0';
+					if (access(path, F_OK) < 0) {
+					    	/* Not there.  Try cwd. */
+					    	strncpy(path, session_name,
+							MAX_PATH);
+						path[MAX_PATH - 1] = '\0';
+						if (access(path, F_OK) < 0) {
+							/*
+							 * Put the new one in
+							 * AppData.
+							 */
+							snprintf(path, MAX_PATH,
+								"%s%s", mya,
+								session_name);
+							path[MAX_PATH - 1] = '\0';
+						} /* else use the one in '.' */
+					} /* else use the one in installdir */
+				} /* else use the one in AppData */
 			} else {
-			    	/* Copy what's between [:\] and ".wc3270". */
+			    	/*
+				 * Pathname.  Copy what's between [:\] and
+				 * ".wc3270".
+				 */
 			    	char *start;
 
 				strncpy(path, session_name, MAX_PATH);
