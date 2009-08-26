@@ -59,7 +59,7 @@
 #define KM_INACTIVE	0x0400	/* wrong NVT/3270 mode, or overridden */
 
 #define KM_KEYMAP	0x8000
-#define KM_HINTS	(KM_SHIFT | KM_CTRL | KM_ALT)
+#define KM_HINTS	(KM_SHIFT | KM_CTRL | KM_ALT | KM_ENHANCED)
 
 struct keymap {
 	struct keymap *next;		/* next element in the keymap */
@@ -157,6 +157,9 @@ parse_keydef(char **str, int *ccode, int *hint)
 			s += 7;
 		} else if (!strncasecmp(s, "RightAlt", 8)) {
 			flags |= KM_ALT;
+			s += 8;
+		} else if (!strncasecmp(s, "Enhanced", 8)) {
+			flags |= KM_ENHANCED;
 			s += 8;
 		} else
 			return PKE_UMOD;
@@ -675,6 +678,8 @@ lookup_key(unsigned long code, unsigned long state)
 		state_match |= KM_LCTRL;
 	if (state & RIGHT_CTRL_PRESSED)
 		state_match |= KM_RCTRL;
+	if (state & ENHANCED_KEY)
+		state_match |= KM_ENHANCED;
 
 	/* If there's no match pending, find the shortest one. */
 	if (current_match == NULL) {
@@ -830,6 +835,11 @@ static struct {
 	{ "SCROLL",	VK_SCROLL << 16 },
 	{ "LMENU",	VK_LMENU << 16 },
 	{ "RMENU",	VK_RMENU << 16 },
+
+	/* Some handy aliases */
+	{ "Enter",	VK_RETURN << 16 },
+	{ "PageUp",	VK_PRIOR << 16 },
+	{ "PageDown",	VK_NEXT << 16 },
 
 	{ CN, 0 }
 };
@@ -999,6 +1009,8 @@ decode_hint(int hint)
 		s += sprintf(s, "LeftAlt");
 	else if (hint & KM_RALT)
 		s += sprintf(s, "RightAlt");
+	else if (hint & KM_ENHANCED)
+		s += sprintf(s, "Enhanced");
 
 	return buf;
 }
