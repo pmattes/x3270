@@ -80,6 +80,8 @@ XX_FB(c3270) keymap).
 Unlike translation tables, action names are case-insensitive, can be
 uniquely abbreviated, and the parentheses may be omitted if there are
 no parameters.
+Any input line that begins with XX_FB(#) or XX_FB(!) is treaded as a comment
+and will be ignored.
 XX_PP
 Any emulator action may be specified.
 Several specific actions have been defined for use by scripts, and the behavior
