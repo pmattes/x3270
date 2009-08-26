@@ -36,6 +36,7 @@
 #define KM_LALT		0x0008
 #define KM_RALT		0x0010
 #define KM_ALT		(KM_LALT | KM_RALT)
+#define KM_ENHANCED	0x0020
 
 extern void keymap_init(void);
 extern char *lookup_key(unsigned long xk, unsigned long state);

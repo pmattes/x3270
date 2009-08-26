@@ -105,6 +105,9 @@ ifelse(XX_PRODUCT,wc3270,
 `The XX_FB(LeftCtrl), XX_FB(RightCtrl), XX_FB(LeftAlt), and XX_FB(RightAlt)
 modifiers specifify a particular XX_FB(Ctrl) or XX_FB(Alt) key.
 ')dnl
+ifelse(XX_PRODUCT,wc3270,`The XX_FB(Enhanced) modifier is also available;
+XX_FB(Enhanced XX_LT()Key>ENTER) is the keypad XX_FB(Enter) key.
+')dnl
 XX_FI(Key) is either an XX_SM(ISO) 8859-1 symbol name, such as XX_FB(equal)
 for XX_DQUOTED(=) and XX_FB(a) for XX_DQUOTED(a), or a symbolic
 ifelse(XX_PRODUCT,c3270,`XX_FB(ncurses)',XX_PRODUCT,wc3270,`Windows') key name,
@@ -134,6 +137,7 @@ XX_FB(DELETE),
 XX_FB(DIVIDE),
 XX_FB(DOWN),
 XX_FB(END),
+XX_FB(Enter) (alias for RETURN),
 XX_FB(ESCAPE),
 XX_FB(EXECUTE),
 XX_FB(F1),
@@ -179,6 +183,8 @@ XX_FB(NUMPAD6),
 XX_FB(NUMPAD7),
 XX_FB(NUMPAD8),
 XX_FB(NUMPAD9),
+XX_FB(PageUp) (alias for PRIOR),
+XX_FB(PageDown) (alias for Next),
 XX_FB(PAUSE),
 XX_FB(PRINT),
 XX_FB(PRIOR) (Page Up),
