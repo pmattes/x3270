@@ -957,6 +957,7 @@ execute_command(enum iaction cause, char *s, char **np)
 {
 	enum {
 		ME_GND,		/* before action name */
+		ME_COMMENT,	/* within a comment */
 		ME_FUNCTION,	/* within action name */
 		ME_FUNCTIONx,	/* saw whitespace after action name */
 		ME_LPAREN,	/* saw left paren */
@@ -1006,8 +1007,12 @@ execute_command(enum iaction cause, char *s, char **np)
 			state = ME_FUNCTION;
 			nx = 0;
 			aname[nx++] = c;
-		} else
+		} else if (c == '!' || c == '#')
+		    	state = ME_COMMENT;
+		else
 			fail(1);
+		break;
+	    case ME_COMMENT:
 		break;
 	    case ME_FUNCTION:	/* within function name */
 		if (c == '(' || isspace(c)) {
@@ -1155,6 +1160,7 @@ execute_command(enum iaction cause, char *s, char **np)
 	    case ME_FUNCTIONx:	/* space after function */
 		break;
 	    case ME_GND:	/* nothing */
+	    case ME_COMMENT:
 		if (np)
 			*np = s - 1;
 		return EM_CONTINUE;
