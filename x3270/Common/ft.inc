@@ -20,7 +20,7 @@ XX_LP
 XX_TS(4,l c l l.)
 XX_TR(XX_TD(Option)	XX_TD(Required?)	XX_TD(Default)	XX_TD(Other Values))
 XX_T_()
-XX_TR(XX_TD(Direction)	XX_TD(No)	XX_TD(send)	XX_TD(receive))
+XX_TR(XX_TD(Direction)	XX_TD(No)	XX_TD(send`'ifelse(XX_MODE,console,*))	XX_TD(receive))
 XX_TR(XX_TD(HostFile)	XX_TD(Yes)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP))
 XX_TR(XX_TD(LocalFile)	XX_TD(Yes)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP))
 XX_TR(XX_TD(Host)	XX_TD(No)	XX_TD(tso)	XX_TD(vm))
@@ -36,10 +36,15 @@ XX_TR(XX_TD(SecondarySpace)	XX_TD(No)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP))
 XX_TR(XX_TD(BufferSize)	XX_TD(No)	XX_TD(4096)	XX_TD(XX_NBSP))
 XX_TE()
 XX_LP
+ifelse(XX_MODE,console,`(*) When keywords are specified, the default for
+XX_FB(Direction) is XX_FB(send).
+When used interactively, the default for XX_FB(Direction) is XX_FB(receive).
+')dnl
+XX_LP
 The option details are as follows.
 XX_TPS()dnl
 XX_TP(XX_FB(Direction))
-XX_FB(send) (the default) to send a file to the host,
+XX_FB(send) to send a file to the host,
 XX_FB(receive) to receive a file from the host.
 XX_TP(XX_FB(HostFile))
 The name of the file on the host.
