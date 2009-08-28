@@ -1173,12 +1173,12 @@ x3270*keyPad*large*font: 	fixed
 x3270*keyPad*small*font:	-*-fixed-medium-r-semicondensed-*-12-*-*
 #endif
 x3270*value*font:		fixed
-x3270*dataLabel.font:		-*-terminal-medium-r-normal--14-*-iso8859-1
+x3270*dataLabel.font:		 -*-courier-medium-r-normal--14-*-100-100-m-*-iso8859-1
 !x3270*smallLabel.font:		5x7
 x3270*smallLabel.font:		6x13
 x3270*filename*font:		fixed
 x3270*kmPopup*text*font:	fixed
-x3270*font:			-*-helvetica-bold-r-normal--12-*-iso8859-1
+x3270*font:			-*-helvetica-bold-r-normal--14-*-100-100-p-*-iso8859-1
 !
 ! Menu configuration
 #ifdef X3270_MENUS
