@@ -618,6 +618,8 @@ Attn_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	action_debug(Attn_action, event, params, num_params);
+	if (check_usage(Attn_action, *num_params, 0, 0) < 0)
+		return;
 	if (!IN_3270)
 		return;
 	reset_idle_timer();
@@ -645,6 +647,8 @@ Interrupt_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	action_debug(Interrupt_action, event, params, num_params);
+	if (check_usage(Interrupt_action, *num_params, 0, 0) < 0)
+		return;
 	if (!IN_3270)
 		return;
 	reset_idle_timer();
@@ -1481,6 +1485,8 @@ AltCursor_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	action_debug(AltCursor_action, event, params, num_params);
+	if (check_usage(AltCursor_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	do_toggle(ALT_CURSOR);
 }
@@ -1491,6 +1497,8 @@ MonoCase_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	action_debug(MonoCase_action, event, params, num_params);
+	if (check_usage(MonoCase_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	do_toggle(MONOCASE);
 }
@@ -1503,6 +1511,8 @@ Flip_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	action_debug(Flip_action, event, params, num_params);
+	if (check_usage(Flip_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 #if defined(X3270_DBCS) /*[*/
 	if (!dbcs)
@@ -1519,6 +1529,8 @@ void
 Tab_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
 {
 	action_debug(Tab_action, event, params, num_params);
+	if (check_usage(Tab_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock) {
 		if (KYBDLOCK_IS_OERR) {
@@ -1550,6 +1562,8 @@ BackTab_action(Widget w _is_unused, XEvent *event, String *params,
 	int		sbaddr;
 
 	action_debug(BackTab_action, event, params, num_params);
+	if (check_usage(BackTab_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock) {
 		if (KYBDLOCK_IS_OERR) {
@@ -1675,6 +1689,8 @@ Reset_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	action_debug(Reset_action, event, params, num_params);
+	if (check_usage(Reset_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	do_reset(True);
 }
@@ -1688,6 +1704,8 @@ Home_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	action_debug(Home_action, event, params, num_params);
+	if (check_usage(Home_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock) {
 		enq_ta(Home_action, CN, CN);
@@ -1735,6 +1753,8 @@ Left_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	action_debug(Left_action, event, params, num_params);
+	if (check_usage(Left_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock) {
 		if (KYBDLOCK_IS_OERR) {
@@ -2355,6 +2375,8 @@ Newline_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
 	register unsigned char	fa;
 
 	action_debug(Newline_action, event, params, num_params);
+	if (check_usage(Newline_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock) {
 		enq_ta(Newline_action, CN, CN);
@@ -2384,6 +2406,8 @@ void
 Dup_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
 {
 	action_debug(Dup_action, event, params, num_params);
+	if (check_usage(Dup_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock) {
 		enq_ta(Dup_action, CN, CN);
@@ -2405,6 +2429,8 @@ void
 FieldMark_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
 {
 	action_debug(FieldMark_action, event, params, num_params);
+	if (check_usage(FieldMark_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock) {
 		enq_ta(FieldMark_action, CN, CN);
@@ -2425,6 +2451,8 @@ void
 Enter_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
 {
 	action_debug(Enter_action, event, params, num_params);
+	if (check_usage(Enter_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock & KL_OIA_MINUS)
 		return;
@@ -2439,6 +2467,8 @@ void
 SysReq_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
 {
 	action_debug(SysReq_action, event, params, num_params);
+	if (check_usage(SysReq_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (IN_ANSI)
 		return;
@@ -2465,6 +2495,8 @@ void
 Clear_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
 {
 	action_debug(Clear_action, event, params, num_params);
+	if (check_usage(Clear_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock & KL_OIA_MINUS)
 		return;
@@ -2579,6 +2611,8 @@ CursorSelect_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	action_debug(CursorSelect_action, event, params, num_params);
+	if (check_usage(CursorSelect_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock) {
 		enq_ta(CursorSelect_action, CN, CN);
@@ -2601,6 +2635,8 @@ MouseSelect_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	action_debug(MouseSelect_action, event, params, num_params);
+	if (check_usage(MouseSelect_action, *num_params, 0, 0) < 0)
+		return;
 	if (w != *screen)
 		return;
 	reset_idle_timer();
@@ -2627,6 +2663,8 @@ EraseEOF_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *nu
 	enum dbcs_why why = DBCS_FIELD;
 
 	action_debug(EraseEOF_action, event, params, num_params);
+	if (check_usage(EraseEOF_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock) {
 		enq_ta(EraseEOF_action, CN, CN);
@@ -2680,6 +2718,8 @@ EraseInput_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *
 	Boolean		f;
 
 	action_debug(EraseInput_action, event, params, num_params);
+	if (check_usage(EraseInput_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock) {
 		enq_ta(EraseInput_action, CN, CN);
@@ -2743,6 +2783,8 @@ DeleteWord_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *
 	register unsigned char	fa;
 
 	action_debug(DeleteWord_action, event, params, num_params);
+	if (check_usage(DeleteWord_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock) {
 		enq_ta(DeleteWord_action, CN, CN);
@@ -2809,6 +2851,8 @@ DeleteField_action(Widget w _is_unused, XEvent *event, String *params, Cardinal 
 	register unsigned char	fa;
 
 	action_debug(DeleteField_action, event, params, num_params);
+	if (check_usage(DeleteField_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock) {
 		enq_ta(DeleteField_action, CN, CN);
@@ -2849,6 +2893,8 @@ void
 Insert_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
 {
 	action_debug(Insert_action, event, params, num_params);
+	if (check_usage(Insert_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock) {
 		enq_ta(Insert_action, CN, CN);
@@ -2869,6 +2915,8 @@ void
 ToggleInsert_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
 {
 	action_debug(ToggleInsert_action, event, params, num_params);
+	if (check_usage(ToggleInsert_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock) {
 		enq_ta(ToggleInsert_action, CN, CN);
@@ -2892,6 +2940,8 @@ void
 ToggleReverse_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
 {
 	action_debug(ToggleReverse_action, event, params, num_params);
+	if (check_usage(ToggleReverse_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock) {
 		enq_ta(ToggleReverse_action, CN, CN);
@@ -2917,6 +2967,8 @@ FieldEnd_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *nu
 	int	last_nonblank = -1;
 
 	action_debug(FieldEnd_action, event, params, num_params);
+	if (check_usage(FieldEnd_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 	if (kybdlock) {
 		enq_ta(FieldEnd_action, CN, CN);
@@ -3188,6 +3240,8 @@ void
 CircumNot_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
 {
 	action_debug(CircumNot_action, event, params, num_params);
+	if (check_usage(CircumNot_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 
 	if (IN_3270 && composing == NONE)
@@ -4114,6 +4168,8 @@ void
 Compose_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
 {
 	action_debug(Compose_action, event, params, num_params);
+	if (check_usage(Compose_action, *num_params, 0, 0) < 0)
+		return;
 	reset_idle_timer();
 
 	if (!composites && !build_composites())
@@ -4140,6 +4196,8 @@ Default_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
 	int		ll;
 
 	action_debug(Default_action, event, params, num_params);
+	if (check_usage(Default_action, *num_params, 0, 0) < 0)
+		return;
 	switch (event->type) {
 	    case KeyPress:
 #if defined(X3270_DBCS) /*[*/
