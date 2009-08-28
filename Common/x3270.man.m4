@@ -537,11 +537,11 @@ l l l
 lfB l l.')
 XX_TR(XX_TD(XX_TC(Charset Name))	XX_TD(XX_TC(Host Code Page))	XX_TD(XX_TC(ifelse(XX_PRODUCT,x3270,Display Character Sets,XX_PRODUCT,c3270,Display Character Set,XX_PLATFORM,windows,`',Character Set))))
 XX_T_()
-ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TD(XX_TC(apl))	XX_TD(XX_TC(37))	XX_TD(XX_TC(XX_CG1A)))
+ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TD(XX_TC(apl))	XX_TD(XX_TC(037))	XX_TD(XX_TC(XX_CG1A)))
 ')dnl
 XX_TR(XX_TD(XX_TC(belgian))	XX_TD(XX_TC(500))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TR(XX_TD(XX_TC(belgian-euro))	XX_TD(XX_TC(1148))	XX_TD(XX_TC(XX_CG15A XX_CG15 XX_885915)))
-XX_TR(XX_TD(XX_TC(bracket))	XX_TD(XX_TC(37))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
+XX_TR(XX_TD(XX_TC(bracket))	XX_TD(XX_TC(037))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TR(XX_TD(XX_TC(brazilian))	XX_TD(XX_TC(275))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TR(XX_TD(XX_TC(chinese-gb18030))	XX_TD(XX_TC(1388))	XX_TD(XX_TC(XX_GBX)))
 XX_TR(XX_TD(XX_TC(cp1047))	XX_TD(XX_TC(1047))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
@@ -573,14 +573,19 @@ XX_TR(XX_TD(XX_TC(turkish))	XX_TD(XX_TC(1026))	XX_TD(XX_TC(XX_88599)))
 XX_TR(XX_TD(XX_TC(uk))	XX_TD(XX_TC(285))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TR(XX_TD(XX_TC(uk-euro))	XX_TD(XX_TC(1146))	XX_TD(XX_TC(XX_CG15A XX_CG15 XX_885915)))
 XX_TR(XX_TD(XX_TC(us-euro))	XX_TD(XX_TC(1140))	XX_TD(XX_TC(XX_CG15A XX_CG15 XX_885915)))
-XX_TR(XX_TD(XX_TC(us-intl))	XX_TD(XX_TC(37))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
+XX_TR(XX_TD(XX_TC(us-intl))	XX_TD(XX_TC(037))	XX_TD(XX_TC(XX_CG1A XX_CG1 XX_88591)))
 XX_TE()
 XX_PP
 The default character set is
 XX_FB(bracket),
-which is useful for common XX_SM(IBM) hosts which use XX_SM(EBCDIC)
-codes 0xAD and 0xBD for the XX_DQUOTED([) and XX_DQUOTED(]) characters,
+which is useful for common U.S. XX_SM(IBM) hosts which use XX_SM(EBCDIC)
+codes AD and BD for the XX_DQUOTED([) and XX_DQUOTED(]) characters,
 respectively.
+XX_PP
+Note that any of the host code pages listed above can be specified by adding
+XX_FB(cp) to the host code page, e.g., XX_FB(cp037) for host code page 037.
+Also note that the code pages available for a given version of XX_FB(XX_PRODUCT)
+are displayed by the XX_FB(XX_DASHED(v)) command-line option.
 ifelse(XX_PRODUCT,wc3270,`XX_PP
 Note that DBCS character sets (Chinese, Japanese) display properly only on
 32-bit Windows XP.  Work is proceeding on other platforms.
