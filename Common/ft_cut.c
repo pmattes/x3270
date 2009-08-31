@@ -128,7 +128,7 @@ static void cut_ack(void);
 static void cut_abort(const char *s, unsigned short reason);
 
 static unsigned from6(unsigned char c);
-static int xlate_getc(void);
+/*static*/ int xlate_getc(void);
 
 /*
  * Convert a buffer for uploading (host->local).
@@ -308,7 +308,7 @@ store_download(unsigned char c, unsigned char *ob)
 }
 
 /* Convert a buffer for downloading (local->host). */
-static int
+/*static*/ int
 download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 {
 	unsigned char *ob0 = xobuf;
@@ -332,7 +332,6 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 			if (quadrant != OTHER_2) {
 				quadrant = OTHER_2;
 				*ob++ = conv[quadrant].selector;
-				len--;
 			}
 			*ob++ = XLATE_NULL;
 			buf++;
@@ -677,7 +676,7 @@ cut_abort(const char *s, unsigned short reason)
  * Get the next translated character from the local file.
  * Returns the character (in EBCDIC), or EOF.
  */
-static int
+/*static*/ int
 xlate_getc(void)
 {
 	int r;
@@ -697,32 +696,48 @@ xlate_getc(void)
 		return r;
 	}
 
-	/* Get the next (possibly multi-byte) character from the file. */
-	do {
-		c = fgetc(ft_local_file);
-		if (c == EOF) {
+	if (ascii_flag) {
+		/*
+		 * Get the next (possibly multi-byte) character from the file.
+		 */
+		do {
+			c = fgetc(ft_local_file);
+			if (c == EOF) {
 #if defined(X3270_DBCS) /*[*/
-		    	if (ft_last_dbcs) {
-			    	ft_last_dbcs = False;
-				return EBC_si;
-			}
+				if (ft_last_dbcs) {
+					ft_last_dbcs = False;
+					return EBC_si;
+				}
 #endif /*]*/
-			return c;
-		}
-		ft_length++;
-		mb[mb_len++] = c;
-		error = ME_NONE;
-		(void) multibyte_to_unicode(mb, mb_len, &consumed, &error);
-		if (error == ME_INVALID)
-		    	return -1;
-	} while (error == ME_SHORT);
+				return c;
+			}
+			ft_length++;
+			mb[mb_len++] = c;
+			error = ME_NONE;
+			(void) multibyte_to_unicode(mb, mb_len, &consumed,
+				&error);
+			if (error == ME_INVALID)
+				return -1;
+		} while (error == ME_SHORT);
 
-	/* Expand it. */
-	if (ascii_flag && cr_flag && !ft_last_cr && c == '\n') {
-		nc = download_convert((unsigned const char *)"\r", 1, cbuf);
+		/* Expand it. */
+		if (ascii_flag && cr_flag && !ft_last_cr && c == '\n') {
+			nc = download_convert((unsigned const char *)"\r", 1,
+				cbuf);
+		} else {
+			nc = 0;
+			ft_last_cr = (c == '\r');
+		}
+
 	} else {
+		/* Binary, just read it. */
+	    	c = fgetc(ft_local_file);
+		if (c == EOF)
+			return c;
+		mb[0] = c;
+		mb_len = 1;
 		nc = 0;
-		ft_last_cr = (c == '\r');
+		ft_length++;
 	}
 
 	/* Convert it. */
