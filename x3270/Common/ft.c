@@ -269,10 +269,8 @@ local_fflag(void)
 	int nr = 0;
 
 	ret[nr++] = receive_flag? (append_flag? 'a': 'w' ): 'r';
-#if defined(_WIN32) /*[*/
 	if (!ascii_flag)
 		ret[nr++] = 'b';
-#endif /*]*/
 	ret[nr] = '\0';
 	return ret;
 }
