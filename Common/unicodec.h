@@ -25,8 +25,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern ucs4_t ebcdic_to_unicode(ebc_t e, unsigned char cs,
-	Boolean for_display);
+extern ucs4_t ebcdic_to_unicode(ebc_t e, unsigned char cs);
 extern ucs4_t ebcdic_base_to_unicode(ebc_t e,
 	Boolean blank_undef, Boolean for_display);
 extern ebc_t unicode_to_ebcdic(ucs4_t u);

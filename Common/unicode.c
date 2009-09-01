@@ -280,7 +280,7 @@ charset_list(void)
  * Returns 0 for no translation.
  */
 ucs4_t
-ebcdic_to_unicode(ebc_t c, unsigned char cs, Boolean for_display)
+ebcdic_to_unicode(ebc_t c, unsigned char cs)
 {
 	int iuc;
 	ucs4_t uc;
@@ -310,7 +310,7 @@ ebcdic_to_unicode(ebc_t c, unsigned char cs, Boolean for_display)
 	} else if (cs != CS_BASE)
 	    	uc = 0;
 	else
-	    	uc = ebcdic_base_to_unicode(c, False, for_display);
+	    	uc = ebcdic_base_to_unicode(c, False, False);
 
 	return uc;
 }
@@ -678,7 +678,7 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 #endif /*]*/
 
     /* Translate from EBCDIC to Unicode. */
-    uc = ebcdic_to_unicode(ebc, cs, False);
+    uc = ebcdic_to_unicode(ebc, cs);
     *ucp = uc;
     if (uc == 0) {
 	if (blank_undef) {

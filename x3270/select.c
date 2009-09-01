@@ -1251,7 +1251,7 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 	    baddr2 = baddr;
 	    INC_BA(baddr2);
 	    uc = ebcdic_to_unicode((ea_buf[baddr].cc << 8) | ea_buf[baddr2].cc,
-		    CS_BASE, False);
+		    CS_BASE);
 	    *rlen = unicode_to_utf8(uc, (char *)r);
 	    return;
 	case DBCS_RIGHT:
