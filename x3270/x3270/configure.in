@@ -104,6 +104,15 @@ yes|*)
 esac
 AC_SUBST(USE_ICONV)
 
+dnl Check for --without-xmkmf
+AC_ARG_WITH(xmkmf,[  --without-xmkmf         ignore xmkmf and imake])
+case "$with_xmkmf" in
+yes|"")
+	;;
+no|*)	no_xmkmf=1
+	;;
+esac
+
 # Set up the configuration directory.
 LIBX3270DIR='${sysconfdir}/x3270'
 AC_SUBST(LIBX3270DIR)
@@ -212,10 +221,23 @@ then	orig_LDFLAGS="$LDFLAGS"
 	fi
 fi
 
-dnl Check for xmkmkf
-AC_CHECK_PROG(xmkmf_found,xmkmf,found,notfound)
+dnl Check for xmkmkf or bdftopcf and mkfontdir
+if test "$no_xmkmf"
+then	xmkmf_found="notfound"
+else	AC_CHECK_PROG(xmkmf_found,xmkmf,found,notfound)
+	dnl if test "$xmkmf_found" = "notfound"
+	dnl then	AC_MSG_ERROR('Cannot find xmkmf')
+	dnl fi
+fi
 if test "$xmkmf_found" = "notfound"
-then	AC_MSG_ERROR('Cannot find xmkmf')
+then	AC_CHECK_PROG(bdftopcf_found,bdftopcf,found,notfound)
+	if test "$bdftopcf_found" = "notfound"
+	then	AC_MSG_ERROR('Cannot find bdftopcf')
+	fi
+	AC_CHECK_PROG(mkfontdir_found,mkfontdir,found,notfound)
+	if test "$mkfontdir_found" = "notfound"
+	then	AC_MSG_ERROR('Cannot find mkfontdir')
+	fi
 fi
 
 dnl Check for unwanted parts.
@@ -289,27 +311,41 @@ yes)	AC_DEFINE(X3270_PLUGIN,1)
 	;;
 esac
 
-dnl Save a copy of Imakefile
-if test -f Imakefile
-then	cp Imakefile Imakefile.old
-fi
-
-dnl Generate the Imakefile.
-AC_OUTPUT(Imakefile)
-
-dnl Generate the Makefile
-gen_Makefile=""
-if test ! -f Makefile; then gen_Makefile=1; fi
-if cmp Imakefile.old Imakefile 1>/dev/null 2>/dev/null; then :; else gen_Makefile=1; fi
-if test "$gen_Makefile"
-then	echo "generating Makefile"
-	xmkmf || exit 1
-	# Get rid of the @ that AIX puts in the Makefile
-	sed 's/@@*for/for/' Makefile >Makefile.aixfix
-	if cmp -s Makefile Makefile.aixfix
-	then	rm Makefile.aixfix
-	else	mv Makefile.aixfix Makefile
+if test "$xmkmf_found" = "notfound"
+then	dnl Generate the Makefile directly.
+	if test "$x_includes"
+	then	XINC=-I$x_includes
 	fi
-else	echo "Makefile is unchanged"
+	if test "$x_libraries"
+	then	XLIB=-I$x_libraries
+	fi
+	AC_SUBST(XINC)
+	AC_SUBST(XLIB)
+	AC_OUTPUT(Makefile)
+else
+
+    dnl Save a copy of Imakefile
+    if test -f Imakefile
+    then	cp Imakefile Imakefile.old
+    fi
+
+    dnl Generate the Imakefile.
+    AC_OUTPUT(Imakefile)
+
+    dnl Generate the Makefile
+    gen_Makefile=""
+    if test ! -f Makefile; then gen_Makefile=1; fi
+    if cmp Imakefile.old Imakefile 1>/dev/null 2>/dev/null; then :; else gen_Makefile=1; fi
+    if test "$gen_Makefile"
+    then	echo "generating Makefile"
+	    xmkmf || exit 1
+	    # Get rid of the @ that AIX puts in the Makefile
+	    sed 's/@@*for/for/' Makefile >Makefile.aixfix
+	    if cmp -s Makefile Makefile.aixfix
+	    then	rm Makefile.aixfix
+	    else	mv Makefile.aixfix Makefile
+	    fi
+    else	echo "Makefile is unchanged"
+    fi
+    rm -f Imakefile.old
 fi
-rm -f Imakefile.old
