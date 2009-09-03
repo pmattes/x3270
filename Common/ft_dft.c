@@ -291,12 +291,6 @@ dft_data_insert(struct data_buffer *data_bufr)
 					continue;
 				}
 
-				/* XXX: Apply the control-code exemption
-				 * to the upload case and to both cases in
-				 * the CUT-mode code.  Then test with a real
-				 * multi-byte file on the workstation.
-				 */
-
 				/*
 				 * Convert to local multi-byte.
 				 * We do that by inverting the host's
@@ -355,6 +349,13 @@ dft_data_insert(struct data_buffer *data_bufr)
 					 * here.
 					 */
 				    	nx = unicode_to_multibyte(c, ob,
+						obuf_len);
+				} else if (c == 0xff) {
+				    	/*
+					 * IND$FILE maps X'FF' to 0xff. We
+					 * want U+009F.
+					 */
+				    	nx = unicode_to_multibyte(0x9f, ob,
 						obuf_len);
 				} else {
 				    	/* Displayable character, remap. */
@@ -439,7 +440,7 @@ store_inbyte(unsigned char c, unsigned char **bufptr, size_t *numbytes)
  * Stores the data in 'bufptr' and returns the number of bytes stored.
  * Returns -1 for EOF.
  */
-static size_t
+/*static*/ size_t
 dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 {
     	char inbuf[16];
@@ -524,8 +525,10 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 	 * We also handle DBCS here.
 	 */
 	u = multibyte_to_unicode(inbuf, in_ix, &consumed, &error);
-	if (u < 0x20 || ((u >= 0x80 && u < 0xa0)))
+	if (u < 0x20 || ((u >= 0x80 && u < 0x9f)))
 	    	e = i_asc2ft[u];
+	else if (u == 0x9f)
+	    	e = 0xff;
 	else
 		e = unicode_to_ebcdic(u);
 	if (e & 0xff00) {

@@ -1391,8 +1391,7 @@ screen_disp(Boolean erasing _is_unused)
 					c = ebcdic_to_unicode(
 						(ea_buf[baddr].cc << 8) |
 						ea_buf[xaddr].cc,
-						CS_BASE,
-						False);
+						CS_BASE);
 					if (c == 0)
 					    	c = ' ';
 					cur_attr |= COMMON_LVB_LEAD_BYTE;
@@ -1404,8 +1403,7 @@ screen_disp(Boolean erasing _is_unused)
 				} else if (!IS_RIGHT(d)) {
 #endif /*]*/
 					c = ebcdic_to_unicode(ea_buf[baddr].cc,
-						ea_buf[baddr].cs,
-						False);
+						ea_buf[baddr].cs);
 					if (c == 0)
 					    	c = ' ';
 					if (underlined && c == ' ')

@@ -254,6 +254,8 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 			 * treat it as printable here.
 			 */
 		    	nx = unicode_to_multibyte(c, (char *)ob, obuf_len);
+		} else if (c == 0xff) {
+		    	nx = unicode_to_multibyte(0x9f, (char *)ob, obuf_len);
 		} else {
 		    	/* Displayable character, remap. */
 			c = i_asc2ft[c];
@@ -359,8 +361,10 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 		 */
 		u = multibyte_to_unicode((const char *)buf, len, &consumed,
 			&error);
-		if (u < 0x20 || ((u >= 0x80 && u < 0xa0)))
+		if (u < 0x20 || ((u >= 0x80 && u < 0x9f)))
 		    	e = i_asc2ft[u];
+		else if (u == 0x9f)
+		    	e = 0xff;
 		else
 		    	e = unicode_to_ebcdic(u);
 		if (e & 0xff00) {
