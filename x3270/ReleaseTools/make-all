@@ -219,8 +219,8 @@ cd $tmpdir
 if [ "$release" ]
 then	echo "===== Releasing."
     	for prod in $prods
-    	do	tarball=$reldir/$prod-$version.tgz
-		cp -p $prod.tgz $tarball
+    	do	tarball=$reldir/$prod-$version-src.tgz
+		cp -p $prod-src.tgz $tarball
 		chmod ugo-w $tarball
 	done
 
