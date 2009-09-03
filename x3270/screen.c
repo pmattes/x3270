@@ -3830,7 +3830,7 @@ screen_new_display_charsets(const char *display_charsets, const char *csnames)
 			char *cs_dup;
 			char *cs;
 			char *buf;
-			char *lasts;
+			char *lasts = CN;
 
 			if (strchr(display_charsets, '+') != NULL) {
 			    /*
@@ -4753,7 +4753,7 @@ init_rsfonts(char *charset_name)
 	struct rsfont *r;
 	struct font_list *f;
 	char *dupcsn, *csn, *buf;
-	char *lasts;
+	char *lasts = CN;
 	XFontStruct *fs;
 	char *hier_name;
 
