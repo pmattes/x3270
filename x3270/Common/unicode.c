@@ -54,6 +54,11 @@
 #if defined(USE_ICONV) /*[*/
 iconv_t i_u2mb = (iconv_t)-1;
 iconv_t i_mb2u = (iconv_t)-1;
+#if !defined(_LIBICONV_VERSION) || _LIBICONV_VERSION < 0x0108 /*[*/
+typedef char *ici_t;		/* old iconv */
+#else /*][*/
+typedef const char *ici_t;	/* new iconv */
+#endif /*]*/
 #endif /*]*/
 
 #define DEFAULT_CSNAME	"us"
@@ -672,7 +677,8 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 #else /*][*/
     char u8b[7];
     size_t nu8;
-    char *inbuf, *outbuf;
+    ici_t inbuf;
+    char *outbuf;
     size_t inbytesleft, outbytesleft;
     size_t nc;
 #endif /*]*/
@@ -925,14 +931,15 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 #else /*][*/
     /* wchar_t's have unknown encoding. */
     if (!is_utf8) {
-	char *inbuf, *outbuf;
+	ici_t inbuf;
+	char *outbuf;
 	size_t inbytesleft, outbytesleft;
 	char utf8buf[16];
 	size_t ibl;
 
 	/* Translate from local MB to UTF-8 using iconv(). */
 	for (ibl = 1; ibl <= mb_len; ibl++) {
-	    inbuf = (char *)mb;
+	    inbuf = (ici_t)mb;
 	    outbuf = utf8buf;
 	    inbytesleft = ibl;
 	    outbytesleft = sizeof(utf8buf);
@@ -1134,7 +1141,8 @@ unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len)
 #else /*][*/
     int nu8;
     char u8b[16];
-    char *inbuf, *outbuf;
+    ici_t inbuf;
+    char *outbuf;
     size_t inbytesleft, outbytesleft;
     size_t nc;
 
