@@ -33,7 +33,13 @@
 
 #include "globals.h"
 
+#include "charsetc.h"
 #include "icmdc.h"
+#include "utf8c.h"
+
+#if defined(_WIN32) /*[*/
+#include <windows.h>
+#endif /*]*/
 
 /* Support functions for interactive commands. */
 
@@ -136,6 +142,7 @@ interactive_transfer(String **params, Cardinal *num_params)
 	int receive = 1;
 	int tso = 1;
 	int ascii = 1;
+	int remap = 1;
 	int n;
 	enum { CR_REMOVE, CR_ADD, CR_KEEP } cr_mode = CR_REMOVE;
 	enum { FE_KEEP, FE_REPLACE, FE_APPEND } fe_mode = FE_KEEP;
@@ -258,6 +265,44 @@ ASCII on the workstation.\n\
 			if (!strncasecmp(inbuf, "keep", strlen(inbuf))) {
 				strcpy(kw[kw_ix++], "Cr=keep");
 				cr_mode = CR_KEEP;
+				break;
+			}
+		}
+	    	printf("\
+ For ASCII transfers, "
+#if defined(WC3270) /*[*/
+                       "wc3270"
+#else /*][*/
+                       "c3270"
+#endif /*]*/
+                               " can either translate the text to ensure as\n\
+ accurate a translation between "
+#if defined(WC3270) /*[*/
+                                "Windows code page %d"
+#else /*][*/
+                                "%s"
+#endif /*]*/
+                                                     " and EBCDIC code\n\
+ page %s as possible, or it can transfer text as-is and leave all\n\
+ translation to the IND$FILE program on the host.\n\
+  'remap' means that text will be translated.\n\
+  'keep' means that text will be transferred as-is.\n",
+#if defined(WC3270) /*[*/
+		    GetACP(),
+#else /*][*/
+		    locale_codeset,
+#endif /*]*/
+		    get_host_codepage());
+		for (;;) {
+			printf("Text translation: (remap/keep) [remap] ");
+			if (get_input(inbuf, sizeof(inbuf)) == NULL)
+				return -1;
+			if (!inbuf[0] || !strncasecmp(inbuf, "remap",
+				    strlen(inbuf)))
+				break;
+			if (!strncasecmp(inbuf, "keep", strlen(inbuf))) {
+				strcpy(kw[kw_ix++], "Translate=keep");
+				remap = 0;
 				break;
 			}
 		}
@@ -387,14 +432,18 @@ ASCII on the workstation.\n\
 	if (ascii) {
 		switch (cr_mode) {
 		case CR_REMOVE:
-		    	printf(", remove CRs\n");
+		    	printf(", remove CRs");
 			break;
 		case CR_ADD:
-		    	printf(", add CRs\n");
+		    	printf(", add CRs");
 			break;
 		case CR_KEEP:
 			break;
 		}
+		if (remap)
+		    	printf(", remap text\n");
+		else
+		    	printf(", don't remap text\n");
 	} else
 		printf("\n");
 	if (receive) {

@@ -268,7 +268,7 @@ dft_data_insert(struct data_buffer *data_bufr)
 		int rv = 1;
 
 		/* Write the data out to the file. */
-	    	if (ascii_flag && (remap_flag | cr_flag)) {
+	    	if (ascii_flag && (remap_flag || cr_flag)) {
 			size_t obuf_len = 4 * my_length;
 			char *ob0 = Malloc(obuf_len);
 			char *ob = ob0;
@@ -469,33 +469,40 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 		return nm;
 	}
 
-	/* Read bytes until we have a legal multibyte sequence. */
-	do {
-	    	int consumed;
+	if (remap_flag) {
+		/* Read bytes until we have a legal multibyte sequence. */
+		do {
+			int consumed;
 
-	    	c = fgetc(ft_local_file);
-		if (c == EOF) {
+			c = fgetc(ft_local_file);
+			if (c == EOF) {
 #if defined(X3270_DBCS) /*[*/
-		    	if (ft_last_dbcs) {
-				*bufptr = EBC_si;
-				ft_last_dbcs = False;
-				return 1;
+				if (ft_last_dbcs) {
+					*bufptr = EBC_si;
+					ft_last_dbcs = False;
+					return 1;
+				}
+#endif /*]*/
+				return -1;
 			}
-#endif /*]*/
-		    	return -1;
-		}
-		error = ME_NONE;
-		inbuf[in_ix++] = c;
-		(void) multibyte_to_unicode(inbuf, in_ix, &consumed, &error);
-		if (error == ME_INVALID) {
+			error = ME_NONE;
+			inbuf[in_ix++] = c;
+			(void) multibyte_to_unicode(inbuf, in_ix, &consumed, &error);
+			if (error == ME_INVALID) {
 #if defined(EILSEQ) /*[*/
-		    	errno = EILSEQ;
+				errno = EILSEQ;
 #else /*][*/
-			errno = EINVAL;
+				errno = EINVAL;
 #endif /*]*/
-		    	return -1;
-		}
-	} while (error == ME_SHORT);
+				return -1;
+			}
+		} while (error == ME_SHORT);
+	} else {
+	    	/* Get a byte from the file. */
+	    	c = fgetc(ft_local_file);
+		if (c == EOF)
+			return -1;
+	}
 
 	/* Expand NL to CR/LF. */
 	if (cr_flag && !ft_last_cr && c == '\n') {
@@ -517,6 +524,12 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 		return 1;
 	}
 	ft_last_cr = (c == '\r');
+
+	/* The no-remap case is pretty simple. */
+	if (!remap_flag) {
+	    	*bufptr = c;
+		return 1;
+	}
 
 	/*
 	 * Translate, inverting the host's fixed EBCDIC-to-ASCII conversion
@@ -584,7 +597,7 @@ dft_get_request(void)
 					   allowed */
 	bufptr = obuf + 17;
 	while (!dft_eof && numbytes) {
-	    	if (ascii_flag) {
+	    	if (ascii_flag && (remap_flag || cr_flag)) {
 		    	numread = dft_ascii_read(bufptr, numbytes);
 			if (numread == (size_t)-1) {
 				dft_eof = True;
