@@ -419,7 +419,7 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts, char *caption)
 			case DBCS_NONE:
 			case DBCS_SB:
 			    	uc = ebcdic_to_unicode(ea_buf[i].cc,
-					ea_buf[i].cs);
+					ea_buf[i].cs, EUO_NONE);
 				if (uc == 0)
 				    	uc = ' ';
 				break;
@@ -427,7 +427,7 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts, char *caption)
 				uc = ebcdic_to_unicode(
 					(ea_buf[i].cc << 8) |
 					 ea_buf[i + 1].cc,
-					CS_BASE);
+					CS_BASE, EUO_NONE);
 				if (uc == 0)
 				    	uc = 0x3000;
 				break;
@@ -439,7 +439,8 @@ fprint_screen(FILE *f, ptype_t ptype, unsigned opts, char *caption)
 				break;
 			}
 #else /*][*/
-			uc = ebcdic_to_unicode(ea_buf[i].cc, ea_buf[i].cs);
+			uc = ebcdic_to_unicode(ea_buf[i].cc, ea_buf[i].cs,
+				EUO_NONE);
 			if (uc == 0)
 				uc = ' ';
 #endif /*]*/

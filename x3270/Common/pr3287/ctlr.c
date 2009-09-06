@@ -392,7 +392,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 					ra_xlate = '\0';
 				} else {
 					ra_xlate = ebcdic_to_unicode(*cp,
-						ra_ge? CS_GE: CS_BASE);
+						ra_ge? CS_GE: CS_BASE,
+						EUO_NONE);
 				}
 				break;
 			}
@@ -420,8 +421,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			trace_ds(see_ebc(*cp));
 			if (*cp)
 				trace_ds("'");
-			ctlr_add(ebcdic_to_unicode(*cp, CS_GE), CS_GE,
-				default_gr);
+			ctlr_add(ebcdic_to_unicode(*cp, CS_GE, EUO_NONE),
+				CS_GE, default_gr);
 			last_cmd = False;
 			last_zpt = False;
 			break;
@@ -566,7 +567,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				trace_ds(" '");
 			previous = TEXT;
 			trace_ds(see_ebc(*cp));
-			ctlr_add(ebcdic_to_unicode(*cp, default_cs),
+			ctlr_add(ebcdic_to_unicode(*cp, default_cs, EUO_NONE),
 				default_cs, default_gr);
 			last_cmd = False;
 			last_zpt = False;
@@ -1290,7 +1291,7 @@ process_scs_contig(unsigned char *buf, int buflen)
 				} else {
 					uc = ebcdic_to_unicode(
 						(scs_dbcs_c1 << 8) | *cp,
-						CS_BASE);
+						CS_BASE, EUO_NONE);
 					if (uc == 0) {
 					    	/* No translation. */
 						trace_ds("?DBCS(X'%02x%02x')",
@@ -1320,7 +1321,7 @@ process_scs_contig(unsigned char *buf, int buflen)
 				break;
 			}
 #endif /*]*/
-			uc = ebcdic_to_unicode(*cp, CS_BASE);
+			uc = ebcdic_to_unicode(*cp, CS_BASE, EUO_NONE);
 			{
 			    	char mb[16];
 				int len;

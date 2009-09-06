@@ -88,7 +88,7 @@ see_ebc(unsigned char ch)
 	    case FCORDER_SO:
 		return "SO";
 	}
-	if (ebcdic_to_multibyte_x(ch, CS_BASE, mb, sizeof(mb), False, &uc)
+	if (ebcdic_to_multibyte_x(ch, CS_BASE, mb, sizeof(mb), EUO_NONE, &uc)
 		    && (mb[0] != ' ' || ch == 0x40))
 		strcpy(buf, mb);
 	else

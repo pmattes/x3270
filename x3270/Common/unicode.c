@@ -285,7 +285,7 @@ charset_list(void)
  * Returns 0 for no translation.
  */
 ucs4_t
-ebcdic_to_unicode(ebc_t c, unsigned char cs)
+ebcdic_to_unicode(ebc_t c, unsigned char cs, unsigned flags)
 {
 	int iuc;
 	ucs4_t uc;
@@ -299,15 +299,21 @@ ebcdic_to_unicode(ebc_t c, unsigned char cs)
 	    	uc = 0;
 #endif
 
+	/*
+	 * We do not pay attention to BLANK_UNDEF -- we always return 0
+	 * for undefined characters.
+	 */
+	flags &= ~EUO_BLANK_UNDEF;
+
 	/* Dispatch on the character set. */
 	if ((cs & CS_GE) || ((cs & CS_MASK) == CS_APL)) {
-		iuc = apl_to_unicode(c);
+		iuc = apl_to_unicode(c, flags);
 		if (iuc != -1)
 		    	uc = iuc;
 		else
 		    	uc = 0;
 	} else if (cs == CS_LINEDRAW) {
-	    	iuc = linedraw_to_unicode(c);
+	    	iuc = linedraw_to_unicode(c /* XXX: flags */);
 		if (iuc != -1)
 		    	uc = iuc;
 		else
@@ -315,7 +321,7 @@ ebcdic_to_unicode(ebc_t c, unsigned char cs)
 	} else if (cs != CS_BASE)
 	    	uc = 0;
 	else
-	    	uc = ebcdic_base_to_unicode(c, False, False);
+	    	uc = ebcdic_base_to_unicode(c, flags);
 
 	return uc;
 }
@@ -324,22 +330,21 @@ ebcdic_to_unicode(ebc_t c, unsigned char cs)
  * Translate a single EBCDIC character in the base or DBCS character sets to
  *  Unicode.
  *
- * EBCDIC 'FM' and 'DUP' characters are treated specially.  If 'for_display'
+ * EBCDIC 'FM' and 'DUP' characters are treated specially.  If EUO_UPRIV
  *  is set, they are returned as U+f8fe and U+feff (private-use) respectively
  *  so they can be displayed with overscores in the special 3270 font;
  *  otherwise they are returned as '*' and ';'.
  * EBCDIC 'EO' and 'SUB' are special-cased to U+25cf and U+25a0, respectively.
  *
- * If blank_undef is set, other undisplayable characters are returned as
+ * If EUO_BLANK_UNDEF is set, other undisplayable characters are returned as
  *  spaces; otherwise they are returned as 0.
  */
 ucs4_t
-ebcdic_base_to_unicode(ebc_t c, Boolean blank_undef,
-	Boolean for_display)
+ebcdic_base_to_unicode(ebc_t c, unsigned flags)
 {
 #if defined(X3270_DBCS) /*[*/
     if (c & 0xff00)
-	return ebcdic_dbcs_to_unicode(c, blank_undef);
+	return ebcdic_dbcs_to_unicode(c, flags);
 #endif /*]*/
 
     if (c == 0x40)
@@ -348,28 +353,28 @@ ebcdic_base_to_unicode(ebc_t c, Boolean blank_undef,
     if (c >= UT_OFFSET && c < 0xff) {
 	ebc_t uc = cur_uni->code[c - UT_OFFSET];
 
-	return uc? uc: (blank_undef? ' ': 0);
+	return uc? uc: ((flags & EUO_BLANK_UNDEF)? ' ': 0);
 
     } else switch (c) {
 
 	case EBC_fm:
-	    return for_display? UPRIV_fm: ';';
+	    return (flags & EUO_UPRIV)? UPRIV_fm: ';';
 	case EBC_dup:
-	    return for_display? UPRIV_dup: '*';
+	    return (flags & EUO_UPRIV)? UPRIV_dup: '*';
 	case EBC_eo:
 #if defined(C3270) /*[*/
-	    if (appres.ascii_box_draw)
-		    return blank_undef? ' ': 0;
+	    if (flags & EUO_ASCII_BOX)
+		    return (flags & EUO_BLANK_UNDEF)? ' ': 0;
 #endif /*]*/
-	    return for_display? UPRIV_eo: 0x25cf; /* solid circle */
+	    return (flags & EUO_UPRIV)? UPRIV_eo: 0x25cf; /* solid circle */
 	case EBC_sub:
 #if defined(C3270) /*[*/
-	    if (appres.ascii_box_draw)
-		    return blank_undef? ' ': 0;
+	    if (flags & EUO_ASCII_BOX)
+		    return (flags & EUO_BLANK_UNDEF)? ' ': 0;
 #endif /*]*/
-	    return for_display? UPRIV_sub: 0x25a0; /* solid block */
+	    return (flags & EUO_UPRIV)? UPRIV_sub: 0x25a0; /* solid block */
 	default:
-	    if (blank_undef)
+	    if (flags & EUO_BLANK_UNDEF)
 		return ' ';
 	    else
 		return 0;
@@ -425,7 +430,7 @@ unicode_to_ebcdic_ge(ucs4_t u, Boolean *ge)
 
     /* Handle GEs.  Yes, this is slow, but I'm lazy. */
     for (e = 0x70; e <= 0xfe; e++) {
-	if ((ucs4_t)apl_to_unicode(e) == u) {
+	if ((ucs4_t)apl_to_unicode(e, EUO_NONE) == u) {
 	    *ge = True;
 	    return e;
 	}
@@ -552,7 +557,7 @@ linedraw_to_unicode(ebc_t c)
 }
 
 int
-apl_to_unicode(ebc_t c)
+apl_to_unicode(ebc_t c, unsigned flags)
 {
 	static ebc_t apl2uc[256] = {
     /* 00 */	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
@@ -626,10 +631,15 @@ apl_to_unicode(ebc_t c)
 #endif /*]*/
 
 #if defined(C3270) /*[*/
-	if (appres.ascii_box_draw) {
-		if (c < 256 && apla2uc[c] != 0x0000)
+	if (flags & EUO_ASCII_BOX) {
+		if (c < 256 && apla2uc[c] != 0x0000) {
+#if defined(_WIN32) /*[*/
+		    	/* Windows DBCS fonts make U+0080..U+00ff wide, too. */
+		    	if (apla2uc[c] > 0x7f)
+			    	return -1;
+#endif /*]*/
 			return apla2uc[c];
-		else
+		} else
 			return -1;
 	}
 #endif /*]*/
@@ -655,7 +665,7 @@ apl_to_unicode(ebc_t c)
  * in the high-order bits).  There is no ambiguity because all valid EBCDIC
  * DBCS characters have a nonzero first byte.
  *
- * Returns 0 if 'blank_undef' is clear and there is no printable EBCDIC
+ * Returns 0 if EUO_BLANK_UNDEF is clear and there is no printable EBCDIC
  * translation for 'ebc'.
  *
  * Returns '?' in mb[] if there is no local multi-byte representation of
@@ -663,144 +673,143 @@ apl_to_unicode(ebc_t c)
  */
 int
 ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
-	int mb_len, int blank_undef, ucs4_t *ucp)
+	int mb_len, unsigned flags, ucs4_t *ucp)
 {
-    ucs4_t uc;
+	ucs4_t uc;
 
 #if defined(_WIN32) /*[*/
-    int nc;
-    BOOL udc;
-    wchar_t wuc;
+	int nc;
+	BOOL udc;
+	wchar_t wuc;
 #elif defined(UNICODE_WCHAR) /*][*/
-    int nc;
-    wchar_t wuc;
+	int nc;
+	wchar_t wuc;
 #else /*][*/
-    char u8b[7];
-    size_t nu8;
-    ici_t inbuf;
-    char *outbuf;
-    size_t inbytesleft, outbytesleft;
-    size_t nc;
+	char u8b[7];
+	size_t nu8;
+	ici_t inbuf;
+	char *outbuf;
+	size_t inbytesleft, outbytesleft;
+	size_t nc;
 #endif /*]*/
 
-    /* Translate from EBCDIC to Unicode. */
-    uc = ebcdic_to_unicode(ebc, cs);
-    *ucp = uc;
-    if (uc == 0) {
-	if (blank_undef) {
-	    mb[0] = ' ';
-	    mb[1] = '\0';
-	    return 2;
-	} else {
-	    return 0;
+	/* Translate from EBCDIC to Unicode. */
+	uc = ebcdic_to_unicode(ebc, cs, flags);
+	if (ucp != NULL)
+		*ucp = uc;
+	if (uc == 0) {
+		if (flags & EUO_BLANK_UNDEF) {
+			mb[0] = ' ';
+			mb[1] = '\0';
+			return 2;
+		} else {
+			return 0;
+		}
 	}
-    }
 
-    /* Translae from Unicode to local multibyte. */
+	/* Translate from Unicode to local multibyte. */
 
 #if defined(_WIN32) /*[*/
-    /*
-     * wchar_t's are Unicode.
-     */
-    wuc = uc;
-    nc = WideCharToMultiByte(LOCAL_CODEPAGE, 0, &wuc, 1, mb, mb_len,
-	    "?", &udc);
-    if (nc != 0) {
-	mb[nc++] = '\0';
-	return nc;
-    } else {
-	mb[0] = '?';
-	mb[1] = '\0';
-	return 2;
-    }
+	/*
+	 * wchar_t's are Unicode.
+	 */
+	wuc = uc;
+	nc = WideCharToMultiByte(LOCAL_CODEPAGE, 0, &wuc, 1, mb, mb_len,
+		"?", &udc);
+	if (nc != 0) {
+		mb[nc++] = '\0';
+		return nc;
+	} else {
+		mb[0] = '?';
+		mb[1] = '\0';
+		return 2;
+	}
 
 #elif defined(UNICODE_WCHAR) /*][*/
-    /*
-     * wchar_t's are Unicode.
-     * If 'is_utf8' is set, use unicode_to_utf8().  This allows us to set
-     *  'is_utf8' directly, ignoring the locale, for Tcl.
-     * Otherwise, use wctomb().
-     */
-    if (is_utf8) {
-	nc = unicode_to_utf8(uc, mb);
-	if (nc < 0)
-	    return 0;
-	mb[nc++] = '\0';
-	return nc;
-    }
+	/*
+	 * wchar_t's are Unicode.
+	 * If 'is_utf8' is set, use unicode_to_utf8().  This allows us to set
+	 *  'is_utf8' directly, ignoring the locale, for Tcl.
+	 * Otherwise, use wctomb().
+	 */
+	if (is_utf8) {
+		nc = unicode_to_utf8(uc, mb);
+		if (nc < 0)
+			return 0;
+		mb[nc++] = '\0';
+		return nc;
+	}
 
-    wuc = uc;
-    nc = wctomb(mb, uc);
-    if (nc > 0) {
-	/* Return to the initial shift state and null-terminate. */
-	nc += wctomb(mb + nc, 0);
-	return nc;
-    } else {
-	mb[0] = '?';
-	mb[1] = '\0';
-	return 2;
-    }
+	wuc = uc;
+	nc = wctomb(mb, uc);
+	if (nc > 0) {
+		/* Return to the initial shift state and null-terminate. */
+		nc += wctomb(mb + nc, 0);
+		return nc;
+	} else {
+		mb[0] = '?';
+		mb[1] = '\0';
+		return 2;
+	}
 #else /*][*/
-    /*
-     * Use iconv.
-     */
+	/*
+	 * Use iconv.
+	 */
 
-    /* Translate the wchar_t we got from UCS-4 to UTF-8. */
-    nu8 = unicode_to_utf8(uc, u8b);
-    if (nu8 < 0)
-	return 0;
+	/* Translate the wchar_t we got from UCS-4 to UTF-8. */
+	nu8 = unicode_to_utf8(uc, u8b);
+	if (nu8 < 0)
+		return 0;
 
-    /* Local multi-byte might be UTF-8, in which case, we're done. */
-    if (is_utf8) {
-	memcpy(mb, u8b, nu8);
-	mb[nu8++] = '\0';
-	return nu8;
-    }
+	/* Local multi-byte might be UTF-8, in which case, we're done. */
+	if (is_utf8) {
+	    memcpy(mb, u8b, nu8);
+	    mb[nu8++] = '\0';
+	    return nu8;
+	}
 
-    /* Let iconv translate from UTF-8 to local multi-byte. */
-    inbuf = u8b;
-    inbytesleft = nu8;
-    outbuf = mb;
-    outbytesleft = mb_len;
-    nc = iconv(i_u2mb, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
-    if (nc < 0 || inbytesleft == nu8) {
-	mb[0] = '?';
-	mb[1] = '\0';
-	return 2;
-    }
+	/* Let iconv translate from UTF-8 to local multi-byte. */
+	inbuf = u8b;
+	inbytesleft = nu8;
+	outbuf = mb;
+	outbytesleft = mb_len;
+	nc = iconv(i_u2mb, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
+	if (nc < 0 || inbytesleft == nu8) {
+		mb[0] = '?';
+		mb[1] = '\0';
+		return 2;
+	}
 
-    /* Return to the initial shift state. */
-    nc = iconv(i_u2mb, NULL, NULL, &outbuf, &outbytesleft);
-    if (nc < 0) {
-	mb[0] = '?';
-	mb[1] = '\0';
-	return 0;
-    }
+	/* Return to the initial shift state. */
+	nc = iconv(i_u2mb, NULL, NULL, &outbuf, &outbytesleft);
+	if (nc < 0) {
+		mb[0] = '?';
+		mb[1] = '\0';
+		return 0;
+	}
 
-    /* Null-terminate the return the length. */
-    mb[mb_len - outbytesleft--] = '\0';
-    return mb_len - outbytesleft;
+	/* Null-terminate the return the length. */
+	mb[mb_len - outbytesleft--] = '\0';
+	return mb_len - outbytesleft;
 
 #endif /*]*/
 }
 
 /* Commonest version of ebcdic_to_multibyte_x:
  *  cs is CS_BASE
- *  blank_undef is True
+ *  EUO_BLANK_UNDEF is set
  *  ucp is ignored
  */
 int
 ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len)
 {
-	ucs4_t ucs4;
-
-    	return ebcdic_to_multibyte_x(ebc, CS_BASE, mb, mb_len, True,
-		&ucs4);
+    	return ebcdic_to_multibyte_x(ebc, CS_BASE, mb, mb_len, EUO_BLANK_UNDEF,
+		NULL);
 }
 
 /*
  * Convert an EBCDIC string to a multibyte string.
- * Makes lots of assumptions: standard character set, blank_undef.
+ * Makes lots of assumptions: standard character set, EUO_BLANK_UNDEF.
  * Returns the length of the multibyte string.
  */
 int

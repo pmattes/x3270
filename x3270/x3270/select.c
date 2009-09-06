@@ -1251,7 +1251,7 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 	    baddr2 = baddr;
 	    INC_BA(baddr2);
 	    uc = ebcdic_to_unicode((ea_buf[baddr].cc << 8) | ea_buf[baddr2].cc,
-		    CS_BASE);
+		    CS_BASE, EUO_NONE);
 	    *rlen = unicode_to_utf8(uc, (char *)r);
 	    return;
 	case DBCS_RIGHT:
@@ -1295,8 +1295,8 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 			 * applications, but translated back to DUP and FM if
 			 * pasted back into x3270.
 			 */
-			uc = ebcdic_base_to_unicode(ea_buf[baddr].cc, True,
-				True);
+			uc = ebcdic_base_to_unicode(ea_buf[baddr].cc,
+				EUO_BLANK_UNDEF | EUO_UPRIV);
 			*rlen = unicode_to_utf8(uc, (char *)r);
 			if (*rlen < 0)
 			    	*rlen = 0;
@@ -1315,7 +1315,7 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 			return;
 		    default:
 			/* Translate APL to Unicode. */
-			uc = apl_to_unicode(ea_buf[baddr].cc);
+			uc = apl_to_unicode(ea_buf[baddr].cc, EUO_NONE);
 			if (uc == (ucs4_t)-1 ||
 			    (appres.apl_mode && (uc < 0x100))) {
 			    	/*

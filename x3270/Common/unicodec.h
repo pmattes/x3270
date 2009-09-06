@@ -25,22 +25,27 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern ucs4_t ebcdic_to_unicode(ebc_t e, unsigned char cs);
-extern ucs4_t ebcdic_base_to_unicode(ebc_t e,
-	Boolean blank_undef, Boolean for_display);
+/* EBCDIC-to-Unicode options */
+#define EUO_NONE	0x00000000	/* no options */
+#define EUO_BLANK_UNDEF	0x00000001	/* if undefined, return U+0020 */
+#define EUO_UPRIV	0x00000002	/* translate FM/DUP/SUB/EO to UPRIV */
+#define EUO_ASCII_BOX	0x00000004	/* use ASCII for box drawing */
+
+extern ucs4_t ebcdic_to_unicode(ebc_t e, unsigned char cs, unsigned flags);
+extern ucs4_t ebcdic_base_to_unicode(ebc_t e, unsigned flags);
 extern ebc_t unicode_to_ebcdic(ucs4_t u);
 extern ebc_t unicode_to_ebcdic_ge(ucs4_t u, Boolean *ge);
 extern int set_uni(const char *csname, const char **host_codepage,
 	const char **cgcsgid, const char **display_charsets);
 extern int linedraw_to_unicode(ebc_t e);
-extern int apl_to_unicode(ebc_t e);
+extern int apl_to_unicode(ebc_t e, unsigned flags);
 #if !defined(_WIN32) && !defined(UNICODE_WCHAR) /*[*/
 extern iconv_t i_u2mb;
 extern iconv_t i_mb2u;
 #endif /*]*/
 
 extern int ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs,
-	char mb[], int mb_len, int blank_undef, ucs4_t *uc);
+	char mb[], int mb_len, unsigned flags, ucs4_t *uc);
 extern int ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len);
 extern int ebcdic_to_multibyte_string(unsigned char *ebc, size_t ebc_len,
 	char mb[], size_t mb_len);

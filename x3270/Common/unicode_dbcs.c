@@ -36,6 +36,7 @@
 #include <strings.h>
 #endif /*]*/
 #include "3270ds.h"
+#include "unicodec.h"
 #include "unicode_dbcsc.h"
 #include "utf8c.h"
 
@@ -4224,31 +4225,31 @@ charset_list_dbcs(void)
 /*
  * Translate a single DBCS EBCDIC character to Unicode.
  *
- * If blank_undef is set, undisplayable characters are returned as
+ * If EUO_BLANK_UNDEF is set, undisplayable characters are returned as
  *  wide spaces (U+3000); otherwise they are returned as 0.
  */
 ucs4_t
-ebcdic_dbcs_to_unicode(ebc_t c, Boolean blank_undef)
+ebcdic_dbcs_to_unicode(ebc_t c, unsigned flags)
 {
     	int row, col;
 	int ix;
 
 	if (cur_uni16 == NULL || c < 0x100)
-	    	return blank_undef? 0x3000: 0;
+	    	return (flags & EUO_BLANK_UNDEF)? 0x3000: 0;
 
 	if (c == 0x4040)
 		return 0x3000;
 
 	row = (c >> 7) & 0x1ff;
 	if (cur_uni16->ebc2u[row] == NULL)
-	    	return blank_undef? 0x3000: 0;
+	    	return (flags & EUO_BLANK_UNDEF)? 0x3000: 0;
 	col = (c & 0x7f) * 2;
 	ix = ((cur_uni16->ebc2u[row][col] & 0xff) << 8) |
 	      (cur_uni16->ebc2u[row][col + 1] & 0xff);
 	if (ix)
 	    	return ix;
 	else
-	    	return blank_undef? 0x3000: 0;
+	    	return (flags & EUO_BLANK_UNDEF)? 0x3000: 0;
 }
 
 /*
