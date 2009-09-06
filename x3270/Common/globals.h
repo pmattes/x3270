@@ -252,7 +252,7 @@ extern char		*myappdata;
 #endif /*]*/
 
 #if defined(_WIN32) && defined(C3270) /*[*/
-extern Boolean		is_installed;
+extern int		is_installed;
 #endif /*]*/
 
 /* Data types and complex global variables */
