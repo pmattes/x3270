@@ -794,7 +794,7 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 			{
 			    	len = ebcdic_to_multibyte_x(buf[first + i].cc,
 					buf[first + i].cs & CS_MASK,
-					mb, sizeof(mb), True,
+					mb, sizeof(mb), EUO_BLANK_UNDEF,
 					&uc);
 			}
 			if (len > 0)
@@ -877,7 +877,7 @@ dump_rectangle(int start_row, int start_col, int rows, int cols,
 				    	len = ebcdic_to_multibyte_x(
 						buf[loc].cc,
 						buf[loc].cs & CS_MASK,
-						mb, sizeof(mb), True,
+						mb, sizeof(mb), EUO_BLANK_UNDEF,
 						&uc);
 				}
 				if (len > 0)
@@ -1230,7 +1230,7 @@ do_read_buffer(String *params, Cardinal num_params, struct ea *buf)
 					len = ebcdic_to_multibyte_x(
 						buf[baddr].cc,
 						buf[baddr].cs & CS_MASK,
-						mb, sizeof(mb), True,
+						mb, sizeof(mb), EUO_BLANK_UNDEF,
 						&uc);
 					field_buf[0] = '\0';
 					for (j = 0; j < len - 1; j++)

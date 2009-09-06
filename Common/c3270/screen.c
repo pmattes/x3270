@@ -903,9 +903,13 @@ screen_disp(Boolean erasing _is_unused)
 						   (ea_buf[baddr].cs & CS_GE)) {
 						display_ge(ea_buf[baddr].cc);
 					} else {
-						len = ebcdic_to_multibyte(
+						len = ebcdic_to_multibyte_x(
 							ea_buf[baddr].cc,
-							mb, sizeof(mb));
+							CS_BASE, mb,
+							sizeof(mb),
+							EUO_BLANK_UNDEF |
+				     (appres.ascii_box_draw? EUO_ASCII_BOX: 0),
+							NULL);
 						if (len > 0)
 							len--;
 						if (toggled(UNDERSCORE) &&
@@ -1809,7 +1813,6 @@ display_linedraw(unsigned char ebc)
 {
     	int c;
 	char mb[16];
-	ucs4_t uc;
 	int len;
 
 #if defined(CURSES_WIDE) /*[*/
@@ -1825,8 +1828,9 @@ display_linedraw(unsigned char ebc)
 	}
 
 	/* Then try Unicode. */
-	len = ebcdic_to_multibyte_x(ebc, CS_LINEDRAW, mb, sizeof(mb), True,
-		&uc);
+	len = ebcdic_to_multibyte_x(ebc, CS_LINEDRAW, mb, sizeof(mb),
+		EUO_BLANK_UNDEF | (appres.ascii_box_draw? EUO_ASCII_BOX: 0),
+		NULL);
 	if (len > 0)
 		len--;
 #if defined(CURSES_WIDE) /*[*/
@@ -1921,7 +1925,6 @@ display_ge(unsigned char ebc)
 {
     	int c;
 	char mb[16];
-	ucs4_t uc;
 	int len;
 
 #if defined(CURSES_WIDE) /*[*/
@@ -1937,8 +1940,9 @@ display_ge(unsigned char ebc)
 	}
 
 	/* Then try Unicode. */
-	len = ebcdic_to_multibyte_x(ebc, CS_GE, mb, sizeof(mb), True,
-		&uc);
+	len = ebcdic_to_multibyte_x(ebc, CS_GE, mb, sizeof(mb),
+		EUO_BLANK_UNDEF | (appres.ascii_box_draw? EUO_ASCII_BOX: 0),
+		NULL);
 	if (len > 0)
 		len--;
 #if defined(CURSES_WIDE) /*[*/

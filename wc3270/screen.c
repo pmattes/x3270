@@ -1391,7 +1391,7 @@ screen_disp(Boolean erasing _is_unused)
 					c = ebcdic_to_unicode(
 						(ea_buf[baddr].cc << 8) |
 						ea_buf[xaddr].cc,
-						CS_BASE);
+						CS_BASE, EUO_NONE);
 					if (c == 0)
 					    	c = ' ';
 					cur_attr |= COMMON_LVB_LEAD_BYTE;
@@ -1403,7 +1403,9 @@ screen_disp(Boolean erasing _is_unused)
 				} else if (!IS_RIGHT(d)) {
 #endif /*]*/
 					c = ebcdic_to_unicode(ea_buf[baddr].cc,
-						ea_buf[baddr].cs);
+						ea_buf[baddr].cs,
+						appres.ascii_box_draw?
+						    EUO_ASCII_BOX: 0);
 					if (c == 0)
 					    	c = ' ';
 					if (underlined && c == ' ')

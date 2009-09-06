@@ -26,7 +26,7 @@
  */
 
 #if defined(X3270_DBCS) /*[*/
-extern ucs4_t ebcdic_dbcs_to_unicode(ebc_t e, Boolean blank_undef);
+extern ucs4_t ebcdic_dbcs_to_unicode(ebc_t e, unsigned flags);
 extern ebc_t unicode_to_ebcdic_dbcs(ucs4_t u);
 extern int set_uni_dbcs(const char *csname, const char **codepage,
 	const char **display_charsets);
