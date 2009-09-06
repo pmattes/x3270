@@ -218,6 +218,7 @@ static const char *ft_help[] = {
 	"  Host=tso|vm                          default 'tso'",
 	"  Mode=ascii|binary                    default 'ascii'",
 	"  Cr=remove|add|keep                   default 'remove'",
+	"  Remap=yes|no                         default 'yes'",
 	"  Exist=keep|replace|append            default 'keep'",
 	"  Recfm=fixed|variable|undefined       for Direction=send",
 	"  Lrecl=<n>                            for Direction=send",

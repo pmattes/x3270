@@ -26,7 +26,7 @@ XX_TR(XX_TD(LocalFile)	XX_TD(Yes)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP))
 XX_TR(XX_TD(Host)	XX_TD(No)	XX_TD(tso)	XX_TD(vm))
 XX_TR(XX_TD(Mode)	XX_TD(No)	XX_TD(ascii)	XX_TD(binary))
 XX_TR(XX_TD(Cr)	XX_TD(No)	XX_TD(remove)	`XX_TD(`add, keep')')
-XX_TR(XX_TD(Translate)	XX_TD(No)	XX_TD(remap)	XX_TD(keep))
+XX_TR(XX_TD(Remap)	XX_TD(No)	XX_TD(yes)	XX_TD(no))
 XX_TR(XX_TD(Exist)	XX_TD(No)	XX_TD(keep)	`XX_TD(`replace, append')')
 XX_TR(XX_TD(Recfm)	XX_TD(No)	XX_TD(XX_NBSP)	`XX_TD(`fixed, variable, undefined')')
 XX_TR(XX_TD(Lrecl)	XX_TD(No)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP))
@@ -62,13 +62,13 @@ XX_FB(add) adds XX_FB(Newline) characters to each host file record before
 transferring it to the local workstation.
 XX_FB(keep) preserves XX_FB(Newline) characters when transferring a local file
 to the host.
-XX_TP(XX_FB(Translate))
+XX_TP(XX_FB(Remap))
 Controls text translation for XX_FB(Mode=ascii) files.
-XX_FB(remap) (the default) causes XX_PRODUCT to remap the text to ensure
+The value XX_FB(yes) (the default) causes XX_PRODUCT to remap the text to ensure
 maximum compatibility between the workstation's character set and encoding
 and the host's EBCDIC code page.
-XX_FB(keep) causes XX_PRODUCT to pass the text to or from the host as-is,
-leaving all translation to the XX_FB(IND$FILE) program on the host.
+The value XX_FB(no) causes XX_PRODUCT to pass the text to or from the host
+as-is, leaving all translation to the XX_FB(IND$FILE) program on the host.
 XX_TP(XX_FB(Exist))
 Controls what happens when the destination file already exists.
 XX_FB(keep) (the default) preserves the file, causing the
