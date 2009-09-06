@@ -275,7 +275,7 @@ ASCII on the workstation.\n\
 #else /*][*/
                        "c3270"
 #endif /*]*/
-                               " can either translate the text to ensure as\n\
+                               " can either remap the text to ensure as\n\
  accurate a translation between "
 #if defined(WC3270) /*[*/
                                 "Windows code page %d"
@@ -285,8 +285,8 @@ ASCII on the workstation.\n\
                                                      " and EBCDIC code\n\
  page %s as possible, or it can transfer text as-is and leave all\n\
  translation to the IND$FILE program on the host.\n\
-  'remap' means that text will be translated.\n\
-  'keep' means that text will be transferred as-is.\n",
+  'yes' means that text will be translated.\n\
+  'no' means that text will be transferred as-is.\n",
 #if defined(WC3270) /*[*/
 		    GetACP(),
 #else /*][*/
@@ -294,14 +294,14 @@ ASCII on the workstation.\n\
 #endif /*]*/
 		    get_host_codepage());
 		for (;;) {
-			printf("Text translation: (remap/keep) [remap] ");
+			printf("Remap character set: (yes/no) [yes] ");
 			if (get_input(inbuf, sizeof(inbuf)) == NULL)
 				return -1;
-			if (!inbuf[0] || !strncasecmp(inbuf, "remap",
+			if (!inbuf[0] || !strncasecmp(inbuf, "yes",
 				    strlen(inbuf)))
 				break;
-			if (!strncasecmp(inbuf, "keep", strlen(inbuf))) {
-				strcpy(kw[kw_ix++], "Translate=keep");
+			if (!strncasecmp(inbuf, "no", strlen(inbuf))) {
+				strcpy(kw[kw_ix++], "Remap=no");
 				remap = 0;
 				break;
 			}

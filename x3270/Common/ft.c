@@ -1081,7 +1081,7 @@ ft_start(void)
 	ft_local_file = fopen(ft_local_filename, local_fflag());
 	if (ft_local_file == (FILE *)NULL) {
 		allow_overwrite = False;
-		popup_an_errno(errno, "Open(%s)", ft_local_filename);
+		popup_an_errno(errno, "Local file '%s'", ft_local_filename);
 		return 0;
 	}
 
@@ -1640,7 +1640,7 @@ ft_in3270(Boolean ignored _is_unused)
  *   Host=[tso|vm]		default tso
  *   Mode=[ascii|binary]	default ascii
  *   Cr=[add|remove|keep]	default add/remove
- *   Translate=[remap|keep]     default remap
+ *   Remap=[yes|no]     	default yes
  *   Exist=[keep|replace|append]	default keep
  *   Recfm=[default|fixed|variable|undefined] default default
  *   Lrecl=n			no default
@@ -1660,7 +1660,7 @@ static struct {
 	{ "Host",		CN, { "tso", "vm" } },
 	{ "Mode",		CN, { "ascii", "binary" } },
 	{ "Cr",			CN, { "auto", "remove",	"add", "keep" } },
-	{ "Translate",		CN, { "remap", "keep" } },
+	{ "Remap",		CN, { "yes", "no" } },
 	{ "Exist",		CN, { "keep", "replace", "append" } },
 	{ "Recfm",		CN, { "default", "fixed", "variable",
 				      "undefined" } },
@@ -1680,7 +1680,7 @@ enum ft_parm_name {
 	PARM_HOST,
 	PARM_MODE,
 	PARM_CR,
-	PARM_TRANSLATE,
+	PARM_REMAP,
 	PARM_EXIST,
 	PARM_RECFM,
 	PARM_LRECL,
@@ -1828,7 +1828,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 			  !strcasecmp(tp[PARM_CR].value, "add");
 	}
 	if (ascii_flag)
-	    	remap_flag = !strcasecmp(tp[PARM_TRANSLATE].value, "remap");
+	    	remap_flag = !strcasecmp(tp[PARM_REMAP].value, "yes");
 	vm_flag = !strcasecmp(tp[PARM_HOST].value, "vm");
 	recfm = DEFAULT_RECFM;
 	for (k = 0; tp[PARM_RECFM].keyword[k] != CN && k < 4; k++) {
@@ -1864,7 +1864,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	/* Open the local file. */
 	ft_local_file = fopen(ft_local_filename, local_fflag());
 	if (ft_local_file == (FILE *)NULL) {
-		popup_an_errno(errno, "Open(%s)", ft_local_filename);
+		popup_an_errno(errno, "Local file '%s'", ft_local_filename);
 		return;
 	}
 
