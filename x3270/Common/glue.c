@@ -489,7 +489,9 @@ set_appres_defaults(void)
 	appres.curses_keypad = True;
 	appres.cbreak_mode = False;
 	appres.ascii_box_draw = False;
+# if !defined(C3270) /*[*/
 	appres.mouse = True;
+# endif /*]*/
 #if defined(CURSES_WIDE) /*[*/
 	appres.acs = True;
 #endif /*]*/

@@ -1614,8 +1614,17 @@ kybd_input(void)
 		    (ir.Event.MouseEvent.dwEventFlags == 0) &&
 		    (ir.Event.MouseEvent.dwMousePosition.X < COLS) &&
 		    (ir.Event.MouseEvent.dwMousePosition.Y < ROWS)) {
-			cursor_move(ir.Event.MouseEvent.dwMousePosition.X +
-				(ir.Event.MouseEvent.dwMousePosition.Y * COLS));
+		    	if (flipped)
+				cursor_move(
+				    (COLS -
+				      ir.Event.MouseEvent.dwMousePosition.X) +
+				    (ir.Event.MouseEvent.dwMousePosition.Y *
+				     COLS));
+			else
+				cursor_move(
+				    ir.Event.MouseEvent.dwMousePosition.X +
+				    (ir.Event.MouseEvent.dwMousePosition.Y *
+				     COLS));
 		}
 		break;
 	case WINDOW_BUFFER_SIZE_EVENT:
