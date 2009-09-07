@@ -126,6 +126,7 @@
 #define ResModifiedSelColor	"modifiedSelColor"
 #define ResMono			"mono"
 #define ResMonoCase		"monoCase"
+#define ResMouse		"mouse"
 #define ResNoOther		"noOther"
 #define ResNoPrompt		"noPrompt"
 #define ResNormalColor		"normalColor"

@@ -517,6 +517,10 @@ screen_init2(void)
 #endif /*]*/
 	setup_tty();
 	scrollok(stdscr, FALSE);
+#if defined(NCURSES_MOUSE_VERSION) /*[*/
+	if (appres.mouse)
+		mousemask(BUTTON1_PRESSED, NULL);
+#endif /*]*/
 
 #if defined(C3270_80_132) /*[*/
 	if (def_screen != alt_screen) {
@@ -528,6 +532,10 @@ screen_init2(void)
 		swap_screens(def_screen);
 		setup_tty();
 		scrollok(stdscr, FALSE);
+#if defined(NCURSES_MOUSE_VERSION) /*[*/
+		if (appres.mouse)
+			mousemask(BUTTON1_PRESSED, NULL);
+#endif /*]*/
 	}
 #endif /*]*/
 
@@ -1056,6 +1064,28 @@ kybd_input(void)
 					return;
 				}
 			}
+		}
+#endif /*]*/
+
+#if defined(NCURSES_MOUSE_VERSION) /*[*/
+		if (k == KEY_MOUSE) {
+		    	MEVENT m;
+
+			if (getmouse(&m) == OK) {
+			    	trace_event("Mouse BUTTON1_PRESSED "
+					"(x=%d,y=%d)\n",
+					m.x, m.y);
+				if (m.x < COLS && m.y < ROWS) {
+					if (flipped)
+						cursor_move((m.y * COLS) +
+							(COLS - m.x));
+					else
+						cursor_move((m.y * COLS) + m.x);
+					move(m.y, m.x);
+					refresh();
+				}
+			}
+			return;
 		}
 #endif /*]*/
 
