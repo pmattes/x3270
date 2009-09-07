@@ -55,6 +55,7 @@
 #include "utilc.h"
 #include "xioc.h"
 
+/* The usual x3270 'COLS' variable is cCOLS in c3270. */
 #undef COLS
 extern int cCOLS;
 
@@ -67,6 +68,10 @@ extern int cCOLS;
 #else /*][*/
 #include <curses.h>
 #endif /*]*/
+
+/* Curses' 'COLS' becomes cursesCOLS, to remove any ambiguity. */
+#define cursesCOLS	COLS
+#define cursesLINES	LINES
 
 #define STATUS_PUSH_MS	5000
 
@@ -334,13 +339,13 @@ screen_connect(Boolean connected)
 	}
 #endif /*]*/
 
-	while (LINES < maxROWS || COLS < maxCOLS) {
+	while (cursesLINES < maxROWS || cursesCOLS < maxCOLS) {
 		/*
 		 * First, cancel any oversize.  This will get us to the correct
 		 * model number, if there is any.
 		 */
-		if ((ov_cols && ov_cols > COLS) ||
-		    (ov_rows && ov_rows > LINES)) {
+		if ((ov_cols && ov_cols > cursesCOLS) ||
+		    (ov_rows && ov_rows > cursesLINES)) {
 			ov_cols = 0;
 			ov_rows = 0;
 			oversize = True;
@@ -350,7 +355,7 @@ screen_connect(Boolean connected)
 		/* If we're at the smallest screen now, give up. */
 		if (model_num == 2) {
 			popup_an_error("Emulator won't fit on a %dx%d "
-			    "display.\n", LINES, COLS);
+			    "display.\n", cursesLINES, cursesCOLS);
 			exit(1);
 		}
 
@@ -363,31 +368,31 @@ screen_connect(Boolean connected)
 	 * again.
 	 */
 	if (oversize) {
-		if (want_ov_rows > LINES - 2)
-			want_ov_rows = LINES - 2;
+		if (want_ov_rows > cursesLINES - 2)
+			want_ov_rows = cursesLINES - 2;
 		if (want_ov_rows < maxROWS)
 			want_ov_rows = maxROWS;
-		if (want_ov_cols > COLS)
-			want_ov_cols = COLS;
+		if (want_ov_cols > cursesCOLS)
+			want_ov_cols = cursesCOLS;
 		set_rows_cols(model_num, want_ov_cols, want_ov_rows);
 	}
 
 	/*
 	 * Finally, if they want automatic oversize, see if that's possible.
 	 */
-	if (ov_auto && (maxROWS < LINES - 2 || maxCOLS < COLS))
-		set_rows_cols(model_num, COLS, LINES - 2);
+	if (ov_auto && (maxROWS < cursesLINES - 2 || maxCOLS < cursesCOLS))
+		set_rows_cols(model_num, cursesCOLS, cursesLINES - 2);
 
 	/* Figure out where the status line goes, if it fits. */
 #if defined(C3270_80_132) /*[*/
 	if (def_screen != alt_screen) {
 		/* Start out in defscreen mode. */
-		set_status_row(defscreen_spec.rows, 24);
+		set_status_row(defscreen_spec.rows, MODEL_2_ROWS);
 	} else
 #endif /*]*/
 	{
 		/* Start out in altscreen mode. */
-		set_status_row(LINES, maxROWS);
+		set_status_row(cursesLINES, maxROWS);
 	}
 
 	/* Set up callbacks for state changes. */
@@ -1075,12 +1080,13 @@ kybd_input(void)
 			    	trace_event("Mouse BUTTON1_PRESSED "
 					"(x=%d,y=%d)\n",
 					m.x, m.y);
-				if (m.x < COLS && m.y < ROWS) {
+				if (m.x < cCOLS && m.y < ROWS) {
 					if (flipped)
-						cursor_move((m.y * COLS) +
-							(COLS - m.x));
+						cursor_move((m.y * cCOLS) +
+							(cCOLS - m.x));
 					else
-						cursor_move((m.y * COLS) + m.x);
+						cursor_move((m.y * cCOLS) +
+							m.x);
 					move(m.y, m.x);
 					refresh();
 				}
@@ -1540,7 +1546,7 @@ draw_oia(void)
 			else
 			    	c0 = maxCOLS;
 		    	move(r, c0);
-		    	for (c = c0; c < COLS; c++) {
+		    	for (c = c0; c < cursesCOLS; c++) {
 			    	printw(" ");
 			}
 		}
