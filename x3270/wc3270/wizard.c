@@ -516,17 +516,17 @@ get_session(char *session_name, session_t *s, char *path)
 				snprintf(path, MAX_PATH, "%s%s", mya,
 					session_name);
 				path[MAX_PATH - 1] = '\0';
-				if (access(path, F_OK) < 0) {
+				if (access(path, 0) < 0) {
 				    	/* Not there.  Try installdir. */
 					snprintf(path, MAX_PATH, "%s%s",
 						installdir, session_name);
 					path[MAX_PATH - 1] = '\0';
-					if (access(path, F_OK) < 0) {
+					if (access(path, 0) < 0) {
 					    	/* Not there.  Try cwd. */
 					    	strncpy(path, session_name,
 							MAX_PATH);
 						path[MAX_PATH - 1] = '\0';
-						if (access(path, F_OK) < 0) {
+						if (access(path, 0) < 0) {
 							/*
 							 * Put the new one in
 							 * AppData.
