@@ -489,6 +489,7 @@ set_appres_defaults(void)
 	appres.curses_keypad = True;
 	appres.cbreak_mode = False;
 	appres.ascii_box_draw = False;
+	appres.mouse = True;
 #if defined(CURSES_WIDE) /*[*/
 	appres.acs = True;
 #endif /*]*/
@@ -998,6 +999,7 @@ static struct {
 #if defined(C3270) /*[*/
 # if !defined(_WIN32) /*[*/
 	{ ResMono,	offset(mono),		XRM_BOOLEAN },
+	{ ResMouse,	offset(mouse),		XRM_BOOLEAN },
 # endif /*]*/
 	{ ResNoPrompt,	offset(no_prompt),	XRM_BOOLEAN },
 #endif /*]*/

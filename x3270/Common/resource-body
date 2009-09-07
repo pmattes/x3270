@@ -1656,6 +1656,20 @@ description
     When true, causes %p% to run in uppercase-only mode.
 .
 
+name mouse
+applies c
+groups i
+type b
+default true
+description
+    If true, enables %p% to accept mouse-control events on terminals and
+    emulators that support them.  This allows a left mouse click to move the
+    cursor.  On terminals like xterm and gnome-terminal, this means that the
+    usual mouse selection actions must be performed with the Shift key pressed.
+
+    If false, mouse-control events will not be enabled.
+.
+
 name noOther
 applies x
 groups s
