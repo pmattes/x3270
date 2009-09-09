@@ -443,6 +443,7 @@ main(int argc, char *argv[])
 				x3270_exit(1);
 		}
 		pause_for_errors();
+		screen_disp(False);
 	} else {
 	    	/* Drop to the prompt. */
 		if (appres.secure) {
