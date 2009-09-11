@@ -135,7 +135,7 @@ install::
 	[ -d $(DESTDIR)$(CIFONTDIR) ] || \
 		mkdir -p $(DESTDIR)$(CIFONTDIR)
 	@for i in $(FONTS); \
-	do	(set -x; $(INSTALL_DATA) $(DESTDIR)$(CIFONTDIR)/$i); \
+	do	(set -x; $(INSTALL_DATA) $$i $(DESTDIR)$(CIFONTDIR)/$$i); \
 	done
 	-chmod u+w $(DESTDIR)$(CIFONTDIR) $(DESTDIR)$(CIFONTDIR)/fonts.dir
 	mkfontdir $(DESTDIR)$(CIFONTDIR)
