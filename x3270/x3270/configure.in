@@ -317,7 +317,7 @@ then	dnl Generate the Makefile directly.
 	then	XINC=-I$x_includes
 	fi
 	if test "$x_libraries"
-	then	XLIB=-I$x_libraries
+	then	XLIB=-L$x_libraries
 	fi
 	AC_SUBST(XINC)
 	AC_SUBST(XLIB)
