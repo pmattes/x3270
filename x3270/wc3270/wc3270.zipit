@@ -1,0 +1,25 @@
+# zipit template for wc3270
+D html
+F LICENSE.txt
+F README.txt
+F NO-INSTALL.txt
+F html/Bugs.html
+F html/Build.html
+F html/FAQ.html
+F html/Intro.html
+F html/Keymap.html
+F html/Lineage.html
+F html/README.html
+F html/ReleaseNotes.html
+F html/Resources.html
+F html/wc3270-man.html
+F html/Wishlist.html
+F html/x3270if.html
+F html/x3270-script.html
+F ../wpr3287-3.3/html/wpr3287-man.html html/wpr3287.html
+F ../ws3270-3.3/html/ws3270-man.html html/ws3270-man.html
+F wc3270.exe
+F wc3270wiz.exe
+F ../wpr3287-3.3/wpr3287.exe wpr3287.exe
+F ../ws3270-3.3/ws3270.exe ws3270.exe
+F x3270if.exe

@@ -1,0 +1,48 @@
+x3270 3.3 General Release
+
+x3270 is an IBM 3278/3279 terminal emulator for X11.
+
+Documentation is in the html directory.  The files are:
+
+Intro
+     What x3270 is
+Lineage
+     Where x3270 came from (copyright stuff)
+Build
+     How to build and install x3270
+FAQ
+     Frequently Asked Questions (what to do when something goes wrong)
+Attributes
+     A translation table for 3270 field attributes
+Resources
+     Voluminous documentation of all the X resources used by x3270
+Charset
+     An explanation of x3270's use of fonts and character sets
+Keymap
+     How to create a custom x3270 keymap
+Brackets
+     How to get [ and ] to display correctly
+New
+     What's new in this release
+Bugs
+     What's broken in this release
+Wishlist
+     What isn't in this release
+
+There is also a hypertext version of the x3270 man page, and of the man
+pages for x3270if, x3270-script and ibm_hosts.
+
+Please read Build before going ahead and building the program. Also, if you
+have a problem, scan through FAQ; there are lots of interesting answers
+there.
+
+Updates to x3270, as well as the current status of development and bugs, are
+available from the x3270 Web Page, http://x3270.sourceforge.net/.
+
+Feel free to send comments, criticism, suggestions, complaints, etc., to
+Paul Mattes, Paul.Mattes@usa.net. Requests will be addressed as time and
+resources permit.
+
+There is also an x3270 mailing list, which receives news about new releases.
+Send a message to Paul.Mattes@usa.net (a real person, with an automatic
+responses for certain subject lines) to get on the list.

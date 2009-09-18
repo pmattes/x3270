@@ -1,0 +1,160 @@
+dnl Copyright (c) 2000-2009, Paul Mattes.
+dnl All rights reserved.
+dnl 
+dnl Redistribution and use in source and binary forms, with or without
+dnl modification, are permitted provided that the following conditions
+dnl are met:
+dnl     * Redistributions of source code must retain the above copyright
+dnl       notice, this list of conditions and the following disclaimer.
+dnl     * Redistributions in binary form must reproduce the above copyright
+dnl       notice, this list of conditions and the following disclaimer in the
+dnl       documentation and/or other materials provided with the distribution.
+dnl     * Neither the name of Paul Mattes nor his contributors may be used
+dnl       to endorse or promote products derived from this software without
+dnl       specific prior written permission.
+dnl 
+dnl THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS
+dnl OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+dnl WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+dnl DISCLAIMED. IN NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT,
+dnl INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+dnl (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+dnl SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+dnl HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+dnl STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+dnl IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+dnl POSSIBILITY OF SUCH DAMAGE.
+
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(pr3287.c)
+AC_PREREQ(2.50)
+
+dnl Checks for programs.
+AC_PROG_INSTALL
+AC_PROG_CC
+
+dnl Figure out what sort of host this is.
+dnl If it's solaris, then pass the -D__EXTENSIONS__ flag to cc, so that
+dnl all of usual Unix functions are visible to strict ANSI compilers.
+AC_CANONICAL_HOST
+case "$host_os" in
+solaris2*)	XANSI=-D__EXTENSIONS__
+		;;
+darwin*)	XPRECOMP=-no-cpp-precomp
+		;;
+linux*)		XANSI="-D_BSD_SOURCE -D_POSIX_SOURCE -D_XOPEN_SOURCE"
+		;;
+*)		XANSI=""
+		;;
+esac
+AC_SUBST(XANSI)
+AC_SUBST(XPRECOMP)
+
+# Set up the configuration directory.
+LIBX3270DIR='${sysconfdir}/x3270'
+AC_SUBST(LIBX3270DIR)
+
+dnl Check for libraries.
+dnl Note that the order here is important.  The last libraries should appear
+dnl first, so that objects in them can be used by subsequent libraries.
+AC_SEARCH_LIBS(gethostbyname, nsl)
+AC_SEARCH_LIBS(socket, socket)
+
+dnl Check for SSL libraries.
+if test "$enable_ssl" != no
+then	orig_LDFLAGS="$LDFLAGS"
+	unset any
+	for dir in "$with_ssl" /usr/local /usr/pkg /usr /var /opt
+	do	lib_fail=0
+		if test -n "$dir" -a ! -d "$dir/ssl/lib"
+		then	lib_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -L$dir/ssl/lib)
+		fi
+		if test -n "$dir"
+		then	LDFLAGS="$orig_LDFLAGS -L$dir/ssl/lib"
+		fi
+		AC_CHECK_LIB(crypto, CRYPTO_malloc, , [lib_fail=1])
+		if test "$lib_fail" -eq 0
+		then	AC_CHECK_LIB(ssl, SSL_new, , [lib_fail=1])
+		fi
+		if test "$lib_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_lib_crypto_CRYPTO_malloc | $as_tr_sh`
+		unset `echo ac_cv_lib_ssl_SSL_new | $as_tr_sh`
+		LDFLAGS="$orig_LDFLAGS"
+		any=1
+	done
+	if test $lib_fail -eq 1
+	then	AC_MSG_WARN(Disabling OpenSSL)
+		enable_ssl="no"
+	fi
+fi
+
+dnl Check for SSL header file.
+AC_ARG_WITH(ssl,[  --with-ssl=DIR          specify OpenSSL install directory])
+if test "$enable_ssl" != no
+then	orig_CPPFLAGS="$CPPFLAGS"
+	unset any
+	for dir in "$with_ssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl
+	do	header_fail=0
+		if test -n "$dir" -a ! -d "$dir/include"
+		then	header_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -I$dir/include)
+		fi
+		if test -n "$dir"
+		then	CPPFLAGS="$orig_CPPFLAGS -I$dir/include"
+		fi
+		AC_CHECK_HEADERS(openssl/ssl.h, ,[header_fail=1])
+		if test "$header_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_header_openssl/ssl_h | $as_tr_sh`
+		CPPFLAGS="$orig_CPPFLAGS"
+		any=1
+	done
+	if test $header_fail -eq 1
+	then	AC_MSG_WARN(Disabling OpenSSL)
+		enable_ssl="no"
+		unset HAVE_LIBSSL
+	fi
+fi
+
+dnl Check for ISO 10646 (wchar_t is Unicode) and --with-iconv
+AC_CHECK_DECLS(__STDC_ISO_10646__, unset unkw, unkw=1)
+AC_ARG_WITH(iconv,[  --with-iconv            ignore __STDC_ISO_10646__ and use iconv() instead])
+case "$with_iconv" in
+no|"")	;;
+yes|*)
+	AC_DEFINE(USE_ICONV,1)
+	unkw=1;
+	;;
+esac
+AC_SUBST(USE_ICONV)
+AC_CHECK_HEADERS(iconv.h)
+AC_SEARCH_LIBS(iconv, iconv, , AC_SEARCH_LIBS(libiconv, iconv, , if test "$unkw"; then AC_MSG_ERROR("No iconv library function"); fi))
+
+AC_ARG_ENABLE(dbcs,[  --disable-dbcs          leave out DBCS support])
+case "$enable_dbcs" in
+no)	;;
+*)	AC_DEFINE(X3270_DBCS,1)
+	DBCS=-DX3270_DBCS=1
+	;;
+esac
+AC_SUBST(DBCS)
+AC_ARG_ENABLE(ssl,[  --disable-ssl           leave out OpenSSL support])
+case "$enable_ssl" in
+no)	;;
+*) 	SSL=-DHAVE_LIBSSL
+	;;
+esac
+AC_SUBST(SSL)
+
+dnl Generate the Makefile.
+AC_OUTPUT(Makefile)

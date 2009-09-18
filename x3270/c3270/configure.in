@@ -1,0 +1,285 @@
+dnl Copyright (c) 2000-2009, Paul Mattes.
+dnl All rights reserved.
+dnl
+dnl Redistribution and use in source and binary forms, with or without
+dnl modification, are permitted provided that the following conditions are met:
+dnl     * Redistributions of source code must retain the above copyright
+dnl       notice, this list of conditions and the following disclaimer.
+dnl     * Redistributions in binary form must reproduce the above copyright
+dnl       notice, this list of conditions and the following disclaimer in the
+dnl       documentation and/or other materials provided with the distribution.
+dnl     * Neither the names of Paul Mattes nor the names of his contributors
+dnl       may be used to endorse or promote products derived from this software
+dnl       without specific prior written permission.
+dnl
+dnl THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
+dnl WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+dnl MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+dnl EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+dnl SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+dnl TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+dnl PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+dnl LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+dnl NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+dnl SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(c3270.c)
+AC_PREREQ(2.50)
+AC_CONFIG_HEADER(conf.h)
+
+dnl Checks for programs.
+AC_PROG_INSTALL
+AC_PROG_CC
+
+dnl Figure out what sort of host this is.
+dnl If it's hpux, then pass the -D_XOPEN_SOURCE_EXTENDED flag to cc, so that
+dnl all of the curses KEY_XXX definitions are visible.
+dnl If it's solaris2, then pass the -D__EXTENSIONS__ flas to cc, so that all
+dnl of the usual Unix functions are visible.
+AC_CANONICAL_HOST
+XPOSIX=""
+XANSI=""
+case "$host_os" in
+hpux)		XPOSIX=-D_XOPEN_SOURCE_EXTENDED
+		;;
+solaris2*)	XANSI=-D__EXTENSIONS__
+		;;
+darwin*)	XPRECOMP=-no-cpp-precomp
+		;;
+linux*)		XANSI="-D_POSIX_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE"
+		;;
+aix*)		BROKEN_NEWTERM=1
+		;;
+esac
+AC_SUBST(XPOSIX)
+AC_SUBST(XANSI)
+AC_SUBST(XPRECOMP)
+AC_SUBST(BROKEN_NEWTERM)
+
+dnl Check for --without-readline
+AC_ARG_WITH(readline, [  --without-readline      Don't use the readline library])
+
+dnl Check for ISO 10646 (wchar_t is Unicode) and --with-iconv
+AC_CHECK_DECLS(__STDC_ISO_10646__, unset unkw, unkw=1)
+AC_ARG_WITH(iconv,[  --with-iconv            ignore __STDC_ISO_10646__ and use iconv() instead])
+case "$with_iconv" in
+no|"")	;;
+yes|*)
+	AC_DEFINE(USE_ICONV,1)
+	unkw=1
+	;;
+esac
+AC_SUBST(USE_ICONV)
+
+dnl Check for libraries.
+dnl Note that the order here is important.  The last libraries should appear
+dnl first, so that objects in them can be used by subsequent libraries.
+AC_SEARCH_LIBS(forkpty, util)
+AC_CHECK_FUNCS(forkpty)
+AC_CHECK_LIB(ncursesw, newterm, , [AC_CHECK_LIB(ncurses, newterm, , [AC_CHECK_LIB(curses, newterm, , [AC_MSG_ERROR(Can't find libncurses or new-enough libcurses)])])])
+if test "$with_readline" != no; then
+AC_CHECK_LIB(readline, rl_initialize)
+fi
+AC_SEARCH_LIBS(gethostbyname, nsl)
+AC_SEARCH_LIBS(socket, socket)
+AC_CHECK_HEADERS(iconv.h)
+AC_SEARCH_LIBS(libiconv, iconv, , AC_SEARCH_LIBS(iconv, iconv, , if test "$unkw"; then AC_MSG_ERROR("No iconv library function"); fi))
+
+dnl If we're on AIX and have ncurses, cancel BROKEN_NEWTERM.
+if test -n "$BROKEN_NEWTERM"
+then	if test "$ac_cv_lib_ncurses_newterm" = yes
+	then	:
+	else	AC_DEFINE(BROKEN_NEWTERM,1)
+	fi
+fi
+
+dnl Checks for header files.
+dnl AC_HEADER_STDC
+dnl AC_HEADER_SYS_WAIT
+dnl AC_CHECK_HEADERS(fcntl.h sys/ioctl.h sys/time.h unistd.h)
+AC_CHECK_HEADERS(sys/select.h)
+AC_CHECK_HEADERS(readline/history.h)
+AC_CHECK_HEADERS(pty.h)
+AC_CHECK_HEADERS(libutil.h)
+AC_CHECK_HEADERS(util.h)
+AC_CHECK_HEADERS(getopt.h)
+dnl Find the best curses header file and hope it's consistent with the library
+dnl we found.
+AC_CHECK_HEADERS(ncursesw/ncurses.h, ,
+ [AC_CHECK_HEADERS(ncurses/ncurses.h, ,
+  [AC_CHECK_HEADERS(ncurses.h, ,
+   [AC_CHECK_HEADERS(curses.h, , [AC_MSG_ERROR(No curses header file)])])])])
+
+dnl Check for SSL header file.
+AC_ARG_WITH(ssl,[  --with-ssl=DIR          specify OpenSSL install directory])
+if test "$enable_ssl" != no
+then	orig_CPPFLAGS="$CPPFLAGS"
+	unset any
+	for dir in "$with_ssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl
+	do	header_fail=0
+		if test -n "$dir" -a ! -d "$dir/include"
+		then	header_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -I$dir/include)
+		fi
+		if test -n "$dir"
+		then	CPPFLAGS="$orig_CPPFLAGS -I$dir/include"
+		fi
+		AC_CHECK_HEADERS(openssl/ssl.h, ,[header_fail=1])
+		if test "$header_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_header_openssl/ssl_h | $as_tr_sh`
+		CPPFLAGS="$orig_CPPFLAGS"
+		any=1
+	done
+	if test $header_fail -eq 1
+	then	AC_MSG_WARN(Disabling OpenSSL)
+		enable_ssl="no"
+		unset HAVE_LIBSSL
+	fi
+fi
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+dnl AC_C_CONST
+dnl AC_TYPE_PID_T
+dnl AC_TYPE_SIZE_T
+dnl AC_HEADER_TIME
+
+dnl Checks for library functions.
+dnl AC_PROG_GCC_TRADITIONAL
+dnl AC_FUNC_MEMCMP
+dnl AC_TYPE_SIGNAL
+dnl AC_FUNC_VPRINTF
+dnl AC_CHECK_FUNCS(gettimeofday putenv select socket strerror strstr strtol strtoul)
+AC_CHECK_FUNCS(vasprintf)
+AC_FUNC_FSEEKO
+
+dnl Check for SSL libraries.
+if test "$enable_ssl" != no
+then	orig_LDFLAGS="$LDFLAGS"
+	unset any
+	for dir in "$with_ssl" /usr/local /usr/pkg /usr /var /opt
+	do	lib_fail=0
+		if test -n "$dir" -a ! -d "$dir/ssl/lib"
+		then	lib_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -L$dir/ssl/lib)
+		fi
+		if test -n "$dir"
+		then	LDFLAGS="$orig_LDFLAGS -L$dir/ssl/lib"
+		fi
+		AC_CHECK_LIB(crypto, CRYPTO_malloc, , [lib_fail=1])
+		if test "$lib_fail" -eq 0
+		then	AC_CHECK_LIB(ssl, SSL_new, , [lib_fail=1])
+		fi
+		if test "$lib_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_lib_crypto_CRYPTO_malloc | $as_tr_sh`
+		unset `echo ac_cv_lib_ssl_SSL_new | $as_tr_sh`
+		LDFLAGS="$orig_LDFLAGS"
+		any=1
+	done
+	if test $lib_fail -eq 1
+	then	AC_MSG_WARN(Disabling OpenSSL)
+		enable_ssl="no"
+	fi
+fi
+
+dnl Check for curses wide character support.
+if test "$ac_cv_lib_ncursesw_newterm" = yes
+then	AC_CHECK_LIB(ncursesw, wadd_wch, [AC_DEFINE(CURSES_WIDE,1)
+Cw=1])
+elif test "$ac_cv_lib_ncurses_newterm" = yes
+then	AC_CHECK_LIB(ncurses, wadd_wch, [AC_DEFINE(CURSES_WIDE,1)
+Cw=1])
+elif test "$ac_cv_lib_curses_newterm" = yes
+then	AC_CHECK_LIB(curses, wadd_wch, [AC_DEFINE(CURSES_WIDE,1)
+Cw=1])
+else	echo "What??? "
+fi
+if test "$Cw" != "1"
+then	AC_MSG_WARN(Wide curses not found -- c3270 will not be able to support multi-byte character encodings)
+fi
+AC_SUBST(CURSES_WIDE)
+
+dnl Check for default pager
+AC_PATH_PROG(LESSPATH, less)
+AC_DEFINE_UNQUOTED(LESSPATH,"$LESSPATH")
+AC_PATH_PROG(MOREPATH, more)
+AC_DEFINE_UNQUOTED(MOREPATH,"$MOREPATH")
+
+dnl Set up the configuration directory.
+LIBX3270DIR='${sysconfdir}/x3270'
+AC_SUBST(LIBX3270DIR)
+
+dnl Check for unwanted parts.
+AC_ARG_ENABLE(ansi,[  --disable-ansi          leave out NVT (ANSI) support])
+case "$enable_ansi" in
+""|yes)	AC_DEFINE(X3270_ANSI,1)
+	;;
+esac
+AC_ARG_ENABLE(apl,[  --disable-apl           leave out APL character support])
+case "$enable_apl" in
+""|yes)	AC_DEFINE(X3270_APL,1)
+	;;
+esac
+AC_ARG_ENABLE(dbcs,[  --disable-dbcs          leave out DBCS support])
+case "$enable_dbcs" in
+no)	;;
+*)	AC_DEFINE(X3270_DBCS,1)
+	DBCS=-DX3270_DBCS=1
+	;;
+esac
+AC_SUBST(DBCS)
+AC_ARG_ENABLE(ft,[  --disable-ft            leave out file transfer support])
+case "$enable_ft" in
+""|yes)	AC_DEFINE(X3270_FT,1)
+	;;
+esac
+AC_ARG_ENABLE(local_process,[  --disable-local-process leave out local process support])
+case "$enable_local_process" in
+""|yes)	AC_DEFINE(X3270_LOCAL_PROCESS,1)
+	;;
+esac
+AC_ARG_ENABLE(printer,[  --disable-printer       leave out printer session support])
+case "$enable_printer" in
+""|yes)	AC_DEFINE(X3270_PRINTER,1)
+	;;
+esac
+AC_ARG_ENABLE(script,[  --disable-script        leave out scripting support])
+case "$enable_script" in
+""|yes)	AC_DEFINE(X3270_SCRIPT,1)
+	;;
+esac
+AC_ARG_ENABLE(ssl,[  --disable-ssl           leave out OpenSSL support])
+case "$enable_ssl" in
+no)	;;
+*)	SSL=-DHAVE_LIBSSL
+	;;
+esac
+AC_SUBST(SSL)
+AC_ARG_ENABLE(tn3270e,[  --disable-tn3270e       leave out TN3270E support])
+case "$enable_tn3270e" in
+""|yes)	AC_DEFINE(X3270_TN3270E,1)
+	;;
+esac
+AC_ARG_ENABLE(trace,[  --disable-trace         leave out tracing support])
+case "$enable_trace" in
+""|yes)	AC_DEFINE(X3270_TRACE,1)
+	;;
+esac
+AC_ARG_ENABLE(history,[  --enable-history        include experimental history support])
+case "$enable_history" in
+yes)	AC_DEFINE(X3270_PLUGIN,1)
+	;;
+esac
+
+dnl Generate the Makefile.
+AC_OUTPUT(Makefile)

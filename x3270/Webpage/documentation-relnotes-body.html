@@ -1,0 +1,1391 @@
+<h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
+3.3 is the current development line for the x3270 suite.
+<h2>Changes in version 3.3.10ga3, 15. September 2009</h2>
+<ul>
+ <li>[<i>x3270</i>] Fixed some bugs in the xmkmf-free build.</li>
+</ul>
+<h2>Changes in version 3.3.10alpha2, 10. September 2009</h2>
+<ul>
+ <li>[<i>c3270</i>] Added the ability to move the 3270 cursor with the mouse,
+  if the terminal supports it.  Add a <b>Mouse</b> resource, which can be
+  set to <b>False</b> to disable it.</li>
+ <li>[all 3270] Added a <b>Translate</b> keyword to the <b>Transfer</b>
+  action's parameters and an additional question to the interactive
+  <b>c3270</b>/<b>wc3270</b> <b>Transfer</b> dialog, to allow the automatic
+  remapping of text (usually done to get the most accurate translation)
+  to be disabled.</li>
+ <li>Restored the pop-up window that displays trace files.</li>
+</ul>
+<h2>Changes in version 3.3.10alpha1, 3. September 2009</h2>
+<ul>
+ <li>[<i>3270</i>] Allow the program to be built without xmkmf.</li>
+ <li>[all 3270] Fixed the mapping of EBCDIC X'FF' to U+009F in ASCII-mode
+  file transfers.</li>
+ <li>[all 3270] Fixed a crash in CUT-mode binary file sends, and corrected the
+  local <i>fopen()</i> flags when receiving a binary file.</li>
+ <li>[<i>x3270</i>] Added the APL up- and down-arrow characters (&#8593; and
+  &#8595;) to the 12-point fonts (thanks to Paul Scott for the fix).</li>
+ <li>[all 3270] Script comments are now allowed (any input line beginning with
+  <b>#</b> or <b>!</b>).</li>
+ <li>[<i>wc3270</i>] Added support for the <b>Enhanced</b> keymap modifier
+  (<b>Enhanced<Key>Return</b> is the keypad <b>Enter</b> key.  Also added <b>Enter</b>,
+  <b>PageUp</b> and <b>PageDown</b> as aliases for the Windows keys <b>RETURN</b>,
+  <b>PRIOR</b> and </b>NEXT</b>.</li>
+ <li>[<i>wc3270</i>] Added <b>oversize</b>, font size and background color
+  support to the Session Wizard.</li>
+ <li>[<i>x3270</i>] Fixed a problem with ignored <b>-set</b> and <b>-clear</b>
+  options.</li>
+ <li>[<i>c3270</i> and <i>wc3270</i>] Added support for the
+ <b>-oversize auto</b> option, which allows the emulator to use the entire
+  area of the terminal or console window it is running in.</li>
+ <li>[<i>x3270</i>] Removed the huge delay at start-up.</li>
+ <li>[<i>x3270</i>, <i>c3270</i>, <i>s3270</i> and <i>wc3270</i>] Added support
+  for TCP-socket-based scripting via the <b>-scriptport</b> option.  For
+  <i>wc3270</i>, this is the first time that scripting has been available.</li>
+ <li>[all 3270 except <i>x3270</i>] Added support for the <b>screenTraceFile</b>
+  resource.</li>
+ <li>[all 3270] Fixed a file descriptor leak with the <b>-socket</b> option.
+  </li>
+ <li>[all 3270] Fixed a crash with the <b>Toggle</b> action and undefined
+  toggles.</li>
+ <li>[<i>wc3270</i>] Implemented no-install mode (allowing <i>wc3270</i> to run
+ without installing the software) and auto-shortcut mode (where <i>wc3270</i>
+ automatically creates a temporary shortcut file to match a session file and
+ runs it).</li>
+ <li>[all 3270] When a hostname resolves to multiple addresses, try each until
+  one works.</li>
+ <li>[all 3270] Corrected an issue where the keyboard would lock on the first
+  screen when connecting to hosts like Hercules.</li>
+ <li>[<i>wc3270</i>] Added mappings of the <b>Page Up</b> and <b>Page Down</b>
+  keys to <b>PF(7)</b> and <b>PF(8)</b> respectively.</li>
+ <li>[<i>wc3270</i>, <i>ws3270</i>] Removed the <b>.dll</b> files from the
+  distribution.</li>
+ <li>[<i>c3270</i>] Corrected an issue with cursor and function keys not
+  being recognized if they are the first key pressed.</li>
+ <li>[all 3270] BIND image screen sizing is now observed.</li>
+ <li>[<i>pr3287</i> and <i>wpr3287</i>] Corrected the <b>-charset</b>
+  documentation on the manual page.</li>
+ <li>[all 3270] Resurrected flipped-screen mode via the <b>Flip</b> and
+  <b>ToggleReverse</b> actions.</li>
+ <li>[all 3270] Added a <b>Seconds</b> form to the <b>Wait</b> action,
+  allowing a script or macro to delay itself an arbitrary length of time.</li>
+ <li>[<i>wc3270</i>] Modified the <b>PrintText</b> action so that
+  <b>Wordpad</b> is started minimized.</li>
+</ul>
+<h2>Changes in version 3.3.9ga11, 25. March 2009</h2>
+<ul>
+ <li>[<i>x3270</i> and <i>c3270</i>] Re-enable the <b>ibm_hosts</b> file
+  (it was accidentally being ignored).</li>
+ <li>[all but <i>wc3270</i>] Don't crash when there is no <i>iconv</i>
+  translation for the locale codeset.</li>
+ <li>[all but <i>x3270</i>] Fixed a build failure in glue.c when DBCS was
+   disabled.</li>
+ <li>[<i>wc3270</i>] Corrected the default keymap so that the uppercase
+  versions of the <b>Alt</b> mapping also work.</li>
+ <li>[<i>wc3270</i>] Corrected the documentation of the
+  <b>printTextFont</b> and <b>printTextSize</b> resources.</li>
+ <li>[<i>c3270</i>] Corrected a number of errors in parsing
+  <b>CursesColorFor<i>xxx</i></b> resources.</li>
+ <li>[<i>c3270</i>] Added support for <b>-rv</b>, which puts c3270 into
+  black-on-white mode.</li>
+ <li>[<i>c3270</i>] Added support for 16-color terminals, with the
+  <b>-color8</b> option overriding this and forcing 8-color support only.
+  On a 16-color terminal, <b>-allbold</b> is no longer the default.</li>
+ <li>[<i>c3270</i>, <i>wc3270</i>, <i>s3270</i> and <i>tcl3270</i>] Ensured
+  that command-line parameters override session files.</li>
+ <li>[<i>c3270</i>] Made session files replace profiles, rather than just
+  overridding any common definitions.  This is more intuitive and consistent
+  with x3270.</li>
+</ul>
+<h2>Changes in version 3.3.9ga11, 27. February 2009</h2>
+<h3>Common Changes</h3>
+<ul>
+ <li>Improved hostname parsing.  Now backslashes can be used to quote
+  any character, and square brackets can be used to quote any element (LU name,
+  host name, or port).</li>
+ <li>Fixed a number of compiler warnings from newer versions of gcc and a
+  number of small memory leaks.</li>
+ <li>Overhauled the host code pages and CGCSGIDs for DBCS.  Added
+  <b>sbcsCgcsgid</b> and <b>dbcsCgcsgid</b> resources to override the
+  compiled-in values.</li>
+ <li>Added a <b>caption <i>text</i></b> option to the <b>PrintText</b>
+  action, which will place the specified caption above the screen image.
+  Within the text, the string <tt>%T%</tt> is interpolated to a timestamp.</li>
+ <li>Improved the state dump when tracing starts to include NVT and
+  SSCP-LU state and the SNA BIND image.</li>
+ <li>Updated the copyright and licensing notices (now a standard BSD
+  license).</li>
+ <li>Added support for carriage-return (0x0d) characters in the
+  <b>String</b> action, which imply the <b>Newline</b> action.</li>
+ <li>Changed the <b>Attn</b> action so that it sends an IAC
+  BREAK in TN3270 mode, and locks the keyboard in TN3270E mode when the
+  session is not SNA bound.</i>
+ <li>Added Traditional Chinese (host code page 937) support.</li>
+ <li>Extended the <b>String</b> action's <b>\e</b> and <b>\x</b> sequences
+  to accept 4-digit hex values, thus allowing EBCDIC DBCS input and arbitrary
+  Unicode input.  Also added <b>\u</b> as an alias for <b>\x</b>.</li>
+</ul>
+<h3>Changes to x3270</h3>
+<ul>
+ <li>Fixed a crash when pasting an empty selection.</li>
+ <li>Made the Query Reply response for <b>x3270</b> identical to the other
+  tools.</li>
+ <li>Included fonts for Traditional Chinese.</li>
+</ul>
+<h3>Changes to x3270 and c3270</h3>
+<ul>
+ <li>Removed the nested copy of <b>pr3287</b>.
+  from the source.  <b>pr3287</b> must now be built separately from its own
+  package.</li>
+</ul>
+<ul>
+</ul>
+<h3>Changes to wc3270</h3>
+<ul>
+ <li>Corrected a problem with color mapping in the OIA.</li>
+ <li>Changed the <i>New Session Wizard</i> to the <i>Session
+  Wizard</i> and gave it the ability to edit existing session files and
+  re-create missing session files.  Note that this ability is limited to
+  session files created with 3.3.9beta10 or later.</li>
+ <li>Added a <b>wc3270.printer.codepage</b> resource to set
+  the Windows code page for the associated <b>pr3287</b> printer session.
+ <li>Simplified the operation of the New Session Wizard,
+  so it asks fewer questions.</li>
+ <li>Added a pager to interactive mode.</li>
+ <li>Made the <b>PrintText</b> font and point size
+  configurable via the <b>printTextFont</b> and <b>printTextSize</b>
+  resources.</li>
+ <li>Changed the default 'blue' color for created shortcuts
+  to a somewhat lighter shade, to make it more readable.</li>
+  <li>Changed the <i>Session Wizard</i> to specify the code page
+  and proper font when creating shortcuts for DBCS sessions.  This should
+  allow DBCS to work on Windows 2000 and Vista.</li>
+  <li>Included <b>ws3270</b> in the <b>wc3270</b> release.</li>
+</ul>
+<h3>Changes to c3270 and wc3270</h3>
+<ul>
+ <li>Added feedback for the progress of file transfers.</li>
+ <li> Implemented the <b>Info</b> action,
+  which writes a message to the OIA (the line below the display).</li>
+ <li>Added a <i>no-prompt</i> mode, via the
+  </b>-noprompt</b> command-line option and the <b>noPrompt</b> resource .</li>
+ <li>Added automatic reconnect, via the
+  </b>-reconnect</b> command-line option and the <b>reconnect</b> resource.
+  </li>
+</ul>
+<h3>Changes to ws3270 (formerly available as a pre-release)</h3>
+<ul>
+ <li>Fixed a bug which resulted in all command timings
+  being displayed as '-'.</li>
+ <li>Added the <b>-localcp</b> option and
+  <b>localCP</b> resource to change the Windows code page used for local
+  workstation I/O.</li>
+ <li>Added DBCS support and support for building using Microsoft tools.</li>
+</ul>
+<h3>Changes to pr3287 and wpr3287</h3>
+<ul>
+ <li>Fixed a serious character-mapping bug.</li>
+ <li>Added DBCS support.</li>
+</ul>
+<h3>Changes to specific versions</h3>
+<ul>
+  <li>[<b>c3270</b>, <b>s3270</b>, <b>s3270</b>, <b>ws3270</b> and <b>x3270</b>] Added support for session files.</li>
+ <li>[All except <b>wc3270</b> and <b>ws3270</b>] Extended the <b>rtf</b>
+  option of the <b>PrintText</b> to non-Windows platforms.</li>
+ <li>[All except <b>x3270</b>] Fixed a number of issues with <b>-xrm</b>
+  option processing and keymap display when backslash sequences were used.</li>
+</ul>
+<h2>Changes in version 3.3.8p2, 13 December 2008</h2>
+<ul>
+ <li>[<i>wc3270</i>] Corrected the handling of 8-bit and DBCS characters in
+  the <b>PrintText</b> action.</li>
+ <li>[<i>tcl3270</i>] Extended <tt>configure</tt> to find the <b>Tcl</b>
+  library version automatically.</li>
+ <li>[<i>wc3270</i>] Corrected a problem which caused mouse clicks not to be
+  recognized (not moving the cursor) if <b>NumLock</b> was set.</li>
+ <li>[<i>all</i>] Corrected the <tt>configure</tt> script to recognize
+  a separately-installed <b>iconv</b> library even if the <i>iconv()</i>
+  function is defined in <b>libc</b>.</li>
+ <li>[<i>wc3270</i>] Restored the bell sound, and added a <b>visualBell</b>
+  resource to disable it.</li>
+</ul>
+<h2>Changes in version 3.3.8p1, 20 October 2008</h2>
+<ul>
+ <li>[<i>wc3270</i>] Restored the <b>Ctrl-]</b> mapping for the
+  <b>Escape</b> action, which had been inadvertently removed.</li>
+ <li>[<i>wc3270</i>] <b>wc3270</b> now starts successfully on Windows
+  Vista.</li>
+ <li>[<i>c3270</i>] On platforms that require the <b>iconv</b> library,
+  <b>c3270</b> once again recognizes <b>ncurses</b> names in keymaps.</li>
+ <li>[<i>x3270</i>] The module <tt>keysym2ucs.c</tt> now builds on
+  FreeBSD.</li>
+ <li>[<i>x3270</i>] Selections now work properly on platforms that do not
+  support <tt>XA_UTF8_STRING</tt>.</li>
+</ul>
+<h2>Changes in version 3.3.8, 11 October 2008</h2>
+Version 3.3.8 includes a significant internal change, using Unicode for all
+translations between the host and the local workstation.
+This change should be
+transparent, but users who depended on certain behaviors of the old
+implementation may see unexpected differences.
+<h3>Common Changes</h3>
+<ul>
+ <li>Many more EBCDIC characters, such as Graphics Escape line-drawing and APL
+  characters, are now properly displayed (even without special 3270 fonts),
+  traced, cut/pasted with other applications, and returned by scripting actions
+  like <b>Ascii</b>.
+ <li>With two exceptions, the locale's encoding is now observed consistently
+  when reading keymaps, generating trace files, etc.
+  The exceptions are:
+  <ul>
+   <li><b>tcl3270</b> always uses UTF-8, per the internal Tcl convention.</li>
+   <li>Because Cygwin doesn't really support locales, the Windows ANSI code
+    page is used as the local encoding instead.</li>
+   <li>Stateful encodings such as ISO 2022 are untested and very likely do
+    not work.</li>
+  </ul>
+ <li>The ICU library is no longer used, and ICU <b>.cnv</b> files are no longer
+  included with the code.</li>
+ <li>Translation to/from the local encoding requires one of two facilities:
+  Either <b>libc</b> must support <tt>__STDC_ISO_10646__</tt> (<b>wchar_t</b>s
+  are defined to be unicode values, as on Linux and Windows), or there must be
+  an <b>iconv</b> library that can translate between UTF-8 and all local
+  encodings.</li>
+ <li>DBCS support is enabled by default, except on Windows.
+  It can be explicitly
+  disabled in the <b>configure</b> script to reduce the size of the
+  executable (removing several large translation tables).</li>
+ <li>The <b>-v</b>/<b>--verbose</b> option has been added to display build and
+  copyright information.</li>
+ <li>The Thai host code page has changed from 838 to 1160.</li>
+</ul>
+<h3>Changes Common to the 3270 Terminal Emulators</h3>
+<ul>
+ <li>The <b>Key</b> action now accepts Unicode arguments in the form
+  <b>U+<i>nnnn</i></b>, removing possible ambiguity from translating from the
+ <li>Added a <b>Source</b> action to read script commands from a file.</li>
+ <li> Added a 10 second timeout to the start of the <b>Transfer</b> action.</li>
+ <li>Added an <b>unlockDelayMs</b> resource to change the number of
+  milliseconds of delay before atually unlocking the keyboard after the
+  host requests it. The default is 350; use 0 to disable the delay
+  altogether.</li>
+ <li>IND$FILE file transfer now transfers DBCS text files properly.</li>
+</ul>
+<h3>Changes Common to 3287 Printer Emulators</h3>
+<ul>
+ <li>Added direct support for all <b>x3270</b> host character sets via the
+  <b>-charset</b> option.
+ <li>Added <b>-trnpre</b> and <b>-trnpost</b> options to specify files
+  containing transparent data to send to the printer before and after
+  each print job, respectively.</li>
+</ul>
+<h3>Product-Speific Changes</h3>
+<ul>
+ <li>[<i>x3270</i>] Commands entered into the <b>Print Screen Text</b> dialog
+  are now saved by the <b>Save Changed Options in File</b> option.
+ <li>[<i>x3270</i>] Fixed some bad interactions between the pop-up keypad and
+  the GNOME window manager.</li>
+ <li>[<i>x3270</i>] The Euro fonts have been folded into the standard
+  fonts.</li>
+ <li>[<i>x3270</i>] The font menu is now arranged hierarchically by
+  foundry and family.</li>
+ <li>[<i>c3270</i>] Added an <b>underscore</b> toggle to allow underlined
+  fields to be displayed even on consoles with no native underlining
+  support, by substituting underscore '_' characters for blanks and nulls
+  in underlined fields.</li>
+ <li>[<i>c3270</i>] Overhauled <b>Meta</b> and <b>Alt</b> key support.
+  Removed support for the archaic <b>Meta</b> modifier in keymaps (it was an
+  alias for setting bit 0x80 in each key).  Replaced it with an <b>Alt</b>
+  modifier, which matches the <b>ESC</b> sequence sent for the <b>Alt</b> key
+  by many terminals, and which can be combined with full 8-bit input
+  characters.<li>
+ <li>[<i>c3270</i>] Changed the interpretation of keymaps so that keys and
+  symbols are matched in Unicode.  That is, keymap text is converted from the
+  current locale's encoding to Unicode before matching, and input character
+  codes are converted to Unicode before matching.  This eliminates the
+  difficulty in creating keymaps and interpreting traces in non-Latin-1
+  locales -- needing to translate from the accidental interpretation of
+  8-bit values as Latin-1 when they are not -- but with the side-effect
+  of rendering some carefully-crafted existing keymaps invalid.  Keymaps
+  can also be written using Unicode <b>U+<i>nnnn</i></b> notation.</li>
+ <li>[<i>c3270</i>] Changed the <b>metaEscape</b> resource so that <b>auto</b>
+  means <b>on</b>, instead of using the terminfo <b>km</b> resource.</li>
+ <li>[<i>c3270</i>] Added an <b>acs</b> resource to control the use of curses
+  ACS codes.
+  If <b>c3270.acs</b> is set to <b>true</b> (the default), <b>c3270</b>
+  will use curses ACS codes for line-drawing characters.  If set to
+  <b>false</b>, it will display line-drawing characters with Unicode.</li>
+ <li>[<i>wc3270</i>] Added an <b>underscore</b> toggle to control how
+  underlined and blinking fields are displayed.  If it is set (the default),
+  underlined fields are displayed by substituting underscore (_)
+  characters for blanks and nulls, and blinking fields actually blink.
+  If it is clear, underlined and blinking fields are displayed with
+  highlighted backgrounds, which is compatible with previous verions of
+  <b>wc3270</b>.</li>
+ <li>[<i>wc3270</i>] Left-clicking with the mouse will now move the cursor
+  to that location.</li>
+ <li>[<i>wc3270</i>] The <b>PrintText</b> action now works, and is mapped by
+  default to the sequence <b>Alt &lt;Key&gt;p</b>.
+  The <b>printer.name</b> resource defines the default printer to use.</li>
+ <li>[<i>wc3270</i>] The <b>PrintText</b> action can now be used to produce
+  a RichText snapshot of the screen contents, via the <b>rtf</b> keyword.</li>
+ <li>[<i>wc3270</i>] The program longer attempts to set the console code page,
+  which was error-prone and unnecessary.</li>
+ <li>[<i>wc3270</i>] The <i>idle command</i> feature now works, controlled
+  by the <b>idleCommand</b>, <b>idleCommandEnabled</b> and <b>idleTimeout</b>
+  resources.</li>
+ <li>[<i>wc3270</i>] The program no longer attempts to set the console code
+  page, which could lead to hangs on Vista.</li>
+ <li>[<i>wc3270</i>] The installation now creates a program group item to
+  explore the <b>wc3270</b> Application Data directory.</li>
+ <li>[<i>wc3270</i>] Corrected a problem with console color overrides, which
+  prevented reverse-video mode (white background) from working properly.
+  For now, the recommended method for enabling reverse video mode is to add
+  these lines to your session file:
+  <pre>
+      wc3270.consoleColorForHostColor0: 15
+      wc3270.consoleColorForHostColor7: 0</pre></li>
+ <li>[<i>wc3270</i>] <b>wc3270</b> now builds with the Microsoft tools.
+  The file <tt>Msc/Makefile</tt> is a makefile for <b>nmake</b>.</li>
+ <li>[<i>tcl3270</i>] Added a <b>commandTimeout</b> resource to force any
+  <b>Tcl3270</b> command to time out after the specified number of seconds.
+  (Thanks to Mark Young.)</li>
+ <li>[<i>tcl3270</i>] Fixed a per-command memory leak. (Thanks to Mark
+  Young.)</li>
+ <li>[<i>wpr3287</i>] Added a <b>-printercp</b> option to specify a particular
+  code page for printer output.</li>
+ <li>[<i>wpr3287</i>] <b>wpr3287</b> now builds with the Microsoft tools.
+  The file <tt>Msc/Makefile</tt> is a makefile for <b>nmake</b>.</li>
+</ul>
+<h2>Changes in x3270 3.3.7p8, 28. August 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected the buffer addressing mode logic for oversize screens.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in x3270 3.3.7p7, 4. July 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected input of 8-bit characters when <b>x3270</b> is run in a
+       UTF-8 locale.</li>
+      <li>Corrected a bug which sometimes left the local file open after a
+       failed file transfer.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+      <li>Added <b>\e<i>XX</i></b> support to the <b>String()</b> action,
+       which allows an EBCDIC code to be entered.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in x3270 3.3.7p3, 22. February 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Fixed an issue with Idle commands, which would cause <b>x3270</b>
+       to exit with a <i>Not Found</i> error as soon as the idle command
+       fired.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in x3270 3.3.7, 25. December 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Fixed the annoying delay when x3270 starts with an error
+      pop-up.</li>
+      <li>Shortened the manpage so that it displays on non-groff platforms.
+      The full text is still available in the HTML version.</li>
+      <li>Plugged a number of memory leaks.</li>
+      <li><b>x3270</b> will now compile on platforms that do not support
+      IPv6, such as Cygwin.</li>
+      <li><b>x3270</b> will no longer crash or spin when the <b>-script</b>
+      option is used.</li>
+      <li>Shifted function keys should work again (they map to PF13-PF24).</li>
+      <li>The screen can now be resized larger, as well as smaller.</li>
+      <li>Removed the dependency on <tt>&lt;bitmaps/gray&gt;</tt>, which
+      required installing an obscure X11 development package on some
+      platforms.</li>
+    </ul>
+  <li>New Features:
+    <ul>
+      <li>Added UTF-8 support.  If the current locale specifies UTF-8 encoding,
+      then all text output (trace data, script interactions, screen snapshots,
+      etc.) will be UTF-8 encoded, and all text input (arguments to the
+      <b>Key</b> and <b>String</b> actions, etc.) must be UTF-8 encoded.
+      In addition, the NVT-mode xterm/VT100 emulator will expect UTF-8.</li>
+      <li>Added a <b>SelectAll</b> action, mapped to Ctrl-A.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in c3270 3.3.7p8, 28. August 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected the buffer addressing mode logic for oversize screens.</li>
+    </ul>
+    <ul>
+     <li>Allowed <b>c3270</b> to build under SLES 10's unusual ncurses
+      configuration.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in c3270 3.3.7p7, 4. July 2008</h2>
+<ul>
+  <li>New Features:
+    <ul>
+      <li>Added <b>\e<i>XX</i></b> support to the <b>String()</b> action,
+       which allows an EBCDIC code to be entered.</li>
+    </ul>
+  </li>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected a bug which sometimes left the local file open after a
+       failed file transfer.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in c3270 3.3.7p4, 29. February 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Fixed <b>c3270</b>'s configure script again, so it will build on
+      systems without the ncurses library.</li>
+      <li>Enabled <i>idle command</i> functionality, which had been
+      accidentally disabled.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in c3270 3.3.7p1, 28. December 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li><b>c3270</b>'s configure script would not detect missing ncurses
+      header files, and <b>c3270</b> would not build if ncursesw was not
+      installed.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in c3270 3.3.7, 25. December 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li><b>c3270</b> will now display characters such as
+      the <i>notsign</i> <b>&#172;</b> properly in terminal windows in UTF-8
+      locales.
+      Note that this display support requires an <i>ncurses</i> or
+      <i>curses</i> library that supports wide characters.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+      <li>Added UTF-8 support.  If the current locale specifies UTF-8 encoding,
+      then all text output (trace data, script interactions, screen snapshots,
+      etc.) will be UTF-8 encoded, and all text input (arguments to the
+      <b>Key</b> and <b>String</b> actions, etc.) must be UTF-8 encoded.
+      In addition, the NVT-mode xterm/VT100 emulator will expect UTF-8.</li>
+      <li>Added display of the host code page and locale codeset to the
+       <b>show status</b> command.</li>
+      <li>Added support for changing the color mappings.  The curses color
+       for a given host color can be specified with the resource
+       <b>c3270.cursesColorForHostColor<i>n</i></b>, where <i>n</i> is a
+       host color number (0 through 15), and the value of the resource is a
+       curses color number (0 through 7).
+       <br>In addition, the field-attribute-based colors used when the host
+       does not specify a particular color can be changed via the following
+       resources:
+       <pre>
+c3270.cursesColorForDefault
+c3270.cursesColorForIntensified
+c3270.cursesColorForProtected
+c3270.cursesColorForProtectedIntensified
+       </pre>
+       The value for each of these is a curses color number (0 through 7).</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.7p8, 28. August 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Fixed <i>idle command</i> support.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.7p7, 4. July 2008</h2>
+<ul>
+  <li>New Features:
+    <ul>
+      <li>Added <b>\e<i>XX</i></b> support to the <b>String()</b> action,
+       which allows an EBCDIC code to be entered.</li>
+    </ul>
+  </li>
+  <li>Bug Fixes:
+    <ul>
+      <li>Fixed a problem with transferring binary files, where <b>0x0d</b>
+       characters might be acidentally added to or removed from the data.</li>
+      <li>Corrected a bug which sometimes left the local file open after a
+       failed file transfer.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.7p5, 11. April 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>After installation is complete, get rid of <b>mkshort.exe</b>, which
+       shares its name (but not its functionality) with a computer surveillance
+       application.</li>
+      <li>Corrected several issues with key event processing and the default
+       keymap.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.7p3, 22. February 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+     <li>Changed the New Session Wizard to create the Application Data
+      directory, so <b>wc3270</b> can be run by any user, not just the one
+      that installed it.</li>
+     <li>Changed the default window title from the pathname of the session
+      to just the session name.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.7p2, 15. January 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Fixed an embarassing problem that kept <b>wpr3287</b> from
+      starting.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.7, 25. December 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Fixed line-drawing characters.</li>
+      <li>Enabled IPv6 support for Windows XP and later.</li>
+      <li>Set the input code page correctly, so that keyboard input works
+       correctly when there is a mismatch between the default Windows code
+       page and the code page implied by the wc3270 character set option.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+      <li>Added limited support for Windows 98.  wc3270 will install and run on
+       Windows 98, but internationalization support is limited -- the only
+       supported host code page is 37, and the only supported Windows code
+       page is 437.  This is expected to improve in the future.</li>
+      <li>Added a <b>wc3270.highlightUnderline</b> resource to control
+       highlighting of underlined and blinking text.  (Set to <b>false</b> to
+       disable background highlighting.)</li>
+      <li>Moved session files, keymaps and trace files to the Application
+       Data directory. (<b>wc3270</b> will still look in its installation
+       directory for session files and keymaps, after first searching the
+       Application Data directory.)
+       This makes <b>wc3270</b> a better Windows citizen in general, and a
+       better Vista citizen in particular.</li>
+      <li>Added support for changing the color mappings.  The console color
+       for a given host color can be specified with the resource
+       <b>wc3270.consoleColorForHostColor<i>n</i></b>, where <i>n</i> is a
+       host color number (0 through 15), and the value of the resource is a
+       console color number (0 through 15).
+       <br>In addition, the
+       field-attribute-based colors used when the host does not specify a
+       particular color can be changed via the following resources:
+       <pre>
+wc3270.hostColorForDefault
+wc3270.hostColorForIntensified
+wc3270.hostColorForProtected
+wc3270.hostColorForProtectedIntensified
+       </pre>
+       The value for each of these is a host color number; the actual color
+       displayed is defined by the corresponding
+       <b>wc3270.consoleColorForHostColor<i>n</i></b>
+       resource.</li>
+      <li>Added a new <b>cp1153</b> character set.
+       It implements host code page 1153 and uses Windows code page 1250,
+       used primarily in Central Europe.</li>
+      <li>Added display of the Windows code page to the character set
+       screen in the New Session Wizard.</li>
+      <li>Added display of the host and Windows code pages to the <b>show
+       status</b> command.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in s3270 3.3.7p8, 28. August 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected the buffer addressing mode logic for oversize screens.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in s3270 3.3.7p7, 4. July 2008</h2>
+<ul>
+  <li>New Features:
+    <ul>
+      <li>Added <b>\e<i>XX</i></b> support to the <b>String()</b> action,
+       which allows an EBCDIC code to be entered.</li>
+    </ul>
+  </li>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected a bug which sometimes left the local file open after a
+       failed file transfer.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in s3270 3.3.7, 25. December 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>(none)</li>
+    </ul>
+  <li>New Features:
+    <ul>
+      <li>Added UTF-8 support.  If the current locale specifies UTF-8 encoding,
+      then all text output (trace data, screen snapshots, the <b>Ascii</b>
+      and <b>ReadBuffer(Ascii)</b> actions, etc.) will be UTF-8 encoded, and
+      all text input (arguments to the <b>Key</b> and <b>String</b> actions,
+      etc.) must be UTF-8 encoded.
+      In addition, the NVT-mode xterm/VT100 emulator will expect UTF-8.
+      <p><b>NOTE</b>: If you were were previously running <b>s3270</b> in a
+      UTF-8 locale, <i>this is an incompatible change</i>.
+      To ensure the previous behavior, set your locale to <b>C</b> before
+      starting <b>s3270</b>.
+      </li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in tcl3270 3.3.7p8, 28. August 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected the buffer addressing mode logic for oversize screens.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in tcl3270 3.3.7p7, 4. July 2008</h2>
+<ul>
+  <li>New Features:
+    <ul>
+      <li>Added <b>\e<i>XX</i></b> support to the <b>String()</b> action,
+       which allows an EBCDIC code to be entered.</li>
+    </ul>
+  </li>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected a bug which sometimes left the local file open after a
+       failed file transfer.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in tcl3270 3.3.7p3, 22. Febuary 2008</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Fixed a problem with non-ASCII characters returned by the <b>Ascii</b>
+       command.</li>
+      <li>Fixed a problem with the <b>Connect</b> command, which resulted in
+       subsequent actions not blocking properly.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in tcl3270 3.3.7, 25. December 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>(none)</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+      <li>Added UTF-8 support.  If the current locale specifies UTF-8 encoding,
+      then all text output (trace data, screen snapshots, the <b>Ascii</b>
+      and <b>ReadBuffer</b> actions, etc.) will be UTF-8 encoded, and all text
+      input (arguments to the <b>Key</b> and <b>String</b> actions, etc.) must
+      be UTF-8 encoded.
+      In addition, the NVT-mode xterm/VT100 emulator will expect UTF-8.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in pr3287 3.3.7p8, 28. August 2008</h2>
+<ul>
+ <li>Bug Fixes:
+  <ul>
+   <li>Fixed the interpretation of SCS CR characters.<\li>
+  </ul>
+ </li>
+</ul>
+<h2>Changes in pr3287 3.3.7, 25. December 2007</h2>
+<ul>
+ <li>Enhancements:
+  <ul>
+   <li>Added proxy support via the <b>-proxy</b> option.</li>
+  </ul>
+ </li>
+</ul>
+<h2>Changes in wpr3287 3.3.7p8, 28. August 2008</h2>
+<ul>
+ <li>Bug Fixes:
+  <ul>
+   <li>Fixed the interpretation of SCS CR characters.<\li>
+  </ul>
+ </li>
+</ul>
+<h2>Changes in wpr3287 3.3.7, 25. December 2007</h2>
+(none)
+<h2>Changes in x3270 3.3.6, 23. June 2007</h2>
+<ul>
+  <li>Bug Fixes:</li>
+    <ul>
+      <li>Fixed the <b>highlighted</b> attribute for individual regions of the
+      screen (versus the <b>highlighted</b> field attribute); it had been
+      accidentally disabled.</li>
+    </ul>
+  <li>New Features:
+    <ul>
+      <li>Added support for IBM Code Page 1047 (<b>-charset cp1047</b>).</li>
+      <li>Added proxy support via the <b>-proxy</b> option or the <b>proxy</b>
+      resource.</li>
+      <li>Modified <i>Blank Fill</i> mode to treat trailing underscore
+      chararacters ('<b>_</b>') like blanks when checking for input
+      overflow.</li>
+      <li><i>Pseudo-Color</i> mode is no more.
+      This was the mode that x3270 used when a 3278 model was specified, or
+      if the <b>m3279</b> resource were set to <b>False</b>.
+      Pseudo-Color assigned colors to regions of the screen based on
+      intensity and light-pen selectability, and did not support 3279 colors.
+      Now turning off color or selecting a 3278 results in something that
+      looks like a 3278 (i.e., it's green).
+      To resurrect Pseudo-Color mode, set the following resources:
+      <preformat>
+      <br>&nbsp;&nbsp;x3270.inputColor: orange<br>
+      &nbsp;&nbsp;x3270.boldColor: cyan
+      </preformat>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in c3270 3.3.6, 23. June 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>The code now builds with ICU 3.6.</li>
+      <li>Got local process (<b>-e</b>) support to work again.</li>
+      <li>Fixed <b>-mono -allbold</b> mode.</li>
+      <li><b>c3270</b> now paints the entire screen, not just the areas it
+      intends to use, so there are no uninitialized regions.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+      <li>Added support for IBM Code Page 1047 (<b>-charset cp1047</b>).</li>
+      <li>Added proxy support via the <b>-proxy</b> option or the <b>proxy</b>
+      resource.</li>
+      <li>Added support for the 3270 background color attribute.</li>
+      <li>Added more mappings to the 3270 default keymap (<b>IC</b> -&gt;
+      <b>ToggleInsert</b>, <b>Ctrl&lt;Key&gt;U</b> -&gt; <b>DeleteField</b>,
+      etc.).</li>
+      <li>Modified <i>Blank Fill</i> mode to treat trailing underscore
+      chararacters ('<b>_</b>') like blanks when checking for input
+      overflow.</li>
+      <li>Like <b>x3270</b> and <b>wc3270</b>, <b>-model 3278</b> now
+      specifies a green-screen 3278 (if the terminal supports color), and
+      like <b>x3270</b>, <b>-mono</b> specifies that any color capabilities
+      reported by the terminal should be ignored.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.6, 23. June 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Restored line-drawing character support.</li>
+      <li>Restored background color support in NVT mode.</li>
+      <li>Corrected some screen rendering issues.</li>
+      <li>Fixed screen trace (<b>-set screenTrace</b>).</li>
+      <li>Removed the <b>-mono</b> option and <b>mono</b> resource.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+      <li>Added the Spanish character set, CP 284.</li>
+      <li>Added proxy support via the <b>-proxy</b> option or the <b>proxy</b>
+      resource.</li>
+      <li>Added support for setting the window title, either automatically,
+      or via the <b>-title</b> option or <b>wc3270.title</b> resource.</li>
+      <li>Added gray background highlighting of underlined and blinking
+      text.
+      Windows consoles don't support these attributes, but at least
+      they can be distinguished from other text now.</li>
+      <li>Added background color support in 3270 mode.</li>
+      <li>Added a window to monitor trace output.</li>
+      <li>Greatly improved key event tracing.</li>
+      <li>Modified <i>Blank Fill</i> mode to treat trailing underscore
+      chararacters ('<b>_</b>') like blanks when checking for input
+      overflow.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in s3270 3.3.6, 23. June 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>The code now builds with ICU 3.6.</li>
+      <li>Removed the <b>-mono</b> option and <b>mono</b> resource.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+      <li>Added proxy support via the <b>-proxy</b> option or the <b>proxy</b>
+      resource.</li>
+      <li>Modified <i>Blank Fill</i> mode to treat trailing underscore
+      chararacters ('<b>_</b>') like blanks when checking for input
+      overflow.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in tcl3270 3.3.6, 23. June 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>The code now builds with ICU 3.6.</li>
+      <li>Removed the <b>-mono</b> option and <b>mono</b> resource.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+      <li>Added proxy support via the <b>-proxy</b> option or the <b>proxy</b>
+      resource.</li>
+      <li>Modified <i>Blank Fill</i> mode to treat trailing underscore
+      chararacters ('<b>_</b>') like blanks when checking for input
+      overflow.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.5p9, 10. June 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>The shortcut cursor size property is now obeyed.</li>
+      <li>The <b>-model 3278</b> option now works correctly.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+      <li>Added secure connection status to the status line and the
+       <b>show status</b> command.</li>
+      <li>Reverse video is now supported.</li>
+      <li>Added support for IBM Code Page 1047 (<b>-charset cp1047</b>).</li>
+      <li>Added a keymap tutorial to the documentation.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.5p8, 29. April 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Fixed a hang when <b>wpr3287</b> exits unexpectedly.</li>
+      <li>Improved behavior when input comes from multiple sources, such
+       as when pasting text.</li>
+      <li>Greatly improved screen update speed.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+	<li>Added <b>wpr3287</b> support back to the wizard.  It was in the
+	GUI version, but was never in the text version.</li>
+	<li>Integrated new back-end printer support in <b>wpr3287</b>,
+	including a new <b>wc3270.printer.name</b> resource.</li>
+	<li>Added a <b>Paste()</b> action, mapped to Ctrl-V, to do multi-line
+	paste properly.</li>
+	<li>Added a <b>.wc3270km</b> suffix to keymap files.</li>
+	<li>Added keymap support to the wizard.</li>
+	<li>Added interactive prompting to the <b>Transfer()</b> action.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wpr3287 3.3.5p8, 29. April 2007</h2>
+<ul>
+  <li>New Features:
+    <ul>
+	<li>Added direct support for Windows printers, instead of relying
+	 on the DOS PRINT command.
+	 This included changing the <b>-command</b> option to a <b>-printer</b>
+	 option, to specify the Windows printer to use as a back end.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in x3270 3.3.5p6, 7. April 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li><b>x3270</b> will now build with ICU 3.6.</li>
+      <li>A long-standing screen update bug is finally fixed.</li>
+      <li>The unused <b>x3270hist.pl</b> script is no longer installed.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in c3270 3.3.5p4, 7. April 2007</h2>
+<ul>
+  <li>Bug Fixes:</li>
+    <ul>
+      <li><b>c3270</b> can now be built without File Transfer support.</li>
+      <li>The unused <b>x3270hist.pl</b> script is no longer installed.</li>
+    </ul>
+</ul>
+<h2>Changes in wc3270 3.3.5p3, 2. March 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Reverted the <b>wc3270</b> New Session Wizard to the non-GUI version, because
+       the GUI version, built with <i>Microsoft Visual C++ 2005
+       Express Edition</i>, had too many dependencies (latest service pack,
+       .NET framework) on the target machine.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.5p2, 16. February 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Ensured that the desktop shortcuts specify Lucida Console, so
+      non-ASCII-7 characters are displayed properly.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+      <li>Added a file association for the <b>.wc3270</b> suffix.</li>
+      <li>Replaced the console version of the New Session Wizard with a
+      proper GUI version.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in wc3270 3.3.5p1, 6. February 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Added the working directory to the desktop links created by the
+       setup program.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+      <li>Added printer session (<b>wpr3287</b>) support.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in x3270 3.3.5, 1. February 2007</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Fixed a crash when the user's home directory or the ~/.x3270connect
+       file wasn't writeable.</li>
+      <li>Fixed some endcases when pasting text that wraps lines and a field
+       skip is encountered.</li>
+      <li>Fixed the handling of SI characters in cut/pasted text.</li>
+      <li>Allow the use of ICU version 3.0 or greater.</li>
+      <li>Fixed a scripting hang when the host disconnects during
+       <b>Wait(output)</b>).</li>
+      <li>Turned the <b>unlockDelay</b> option back on by default.</li>
+      <li>Fixed a problem where <b>unlockDelay</b> could result in the
+       keyboard never unlocking, if the host unlocked the keyboard
+       often enough.</li>
+      <li>Added a workaround for very old <i>snprintf</i>()
+       implementations.</li>
+      <li>Fixed a problem with DBCS input corrupting existing DBCS
+       subfields.</li>
+      <li>Fixed a problem with the <i>Wait</i> action in the expect glue.
+      (Thanks to Jason Howk for the fix.)</li>
+      <li>Enlarged the input buffer in x3270if. (Thanks to Igor Klingen for the fix.)</li>
+      <li>Fixed a SIGCHLD handler issue on AIX.</li>
+      <li>Fixed a problem with CR/LF translation on ASCII file transfers.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+      <li>Added a <b>-socket</b> option to x3270, s3270 and c3270 to allow a
+        script to connect to a Unix-domain socket to control the emulator, and
+        added a <b>-p</b> option to x3270if to connect to the socket.</li>
+      <li>Added optional support for <b>plugins</b>, with a first plugin to
+        implement command history on VM/CMS and TSO hosts.</li>
+      <li>Allow arbitrary color names (#rrggbb) to be used in color
+	schemes.</li>
+      <li>Added support for hierarchical macro menus.</li>
+      <li>Added an <b>XkSelector</b> resource to allow transparent
+       support of non-English keyboards.</li>
+      <li>Added preliminary support the 16-bit display fonts and the Persian
+       character set.</li>
+      <li>Added <b>Title</b> and <b>WindowState</b> actions to allow the x3270
+       window title and icon state to bw changed respectively.</li>
+    </ul>
+  </li>
+</ul>
+<h2>Changes in x3270 3.3.4, 10. April 2005</h2>
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>The code once again builds on Cygwin and other systems not supporting
+       IPv6.</li>
+      <li>The <b>-xrm</b> option works again in x3270.</li>
+      <li>The <b>-name</b> X Toolkit option works with x3270, though
+       not yet with app-defaults files.</li>
+      <li>Removed spurious 'no child' error messages from pr3287 on some
+       systems.</li>
+      <li>Removed unintended blank-line suppression from the output of
+       <b>PrintText html string</b>.</li>
+      <li>Restored some missing keymap definitions (<b>rlx</b>, <b>ow</b>)
+      and some missing lines from other keymap definitions (<b>apl</b>).</li>
+      <li>Restored the automatic keyboard unlock delay when processing a
+       macro or string.  This allows macros and strings with embedded AID
+       sequences to work with hosts that unlock the keyboard before they
+       finish processing a command.  Scripts are presumed to be able to
+       figure out when the host is finished, or can set the <b>unlockDelay</b>
+       resource to <b>true</b> get the delay all the time.</li>
+      <li>Fixed an apparent hang (actually just extreme slowness) when the
+       host sends a message larger than 4 Kbytes on an SSL tunnel.</li>
+      <li>Removed spurious 'Wait timed out' errors in the <b>Wait</b>
+       action.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+     <li>Added a newer, more flexible version of Don Russell's RPQNAMES
+      support.</li>
+     <li>Added support for IPv6.</li>
+     <li>Added an <b>oldclick</b> keymap to restore the pre-3.3 mouse click
+      behavior.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>Changes in x3270, c3270, s3270 and tcl3270 3.3.3beta2, 1. February 2005</h2>
+
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Reduced the Resident Set Size (RSS) of x3270 from about 40 MBytes to
+       less than 4 MBytes.  This was a bug in how compiled-in app-defaults
+       files were generated.</li>
+      <li>Got separate app-defaults files (<b>configure --enable-app-defaults</b>)
+       to work again.</li>
+      <li>Fixed a crash when a login macro is used in NVT mode or when the
+       host un-negotiates TN3270E mode.</li>
+      <li>Fixed the titles of the Copyright and Configuration pop-ups.</li>
+      <li>Temporarily disabled the RPQNAMES Query Reply.  It was causing IBM
+       QMF to crash.  It can be re-enabled by adding <b>#define X3270_RPQNAMES
+       1</b> to <b>conf.h</b>.  Hopefully a proper fix can be found shortly.
+       </li>
+    </ul>
+  </li>
+  <li>New Features:
+  </li>
+</ul>
+
+<h2>Changes in x3270, c3270, s3270 and tcl3270 3.3.3beta1, 31. December 2004</h2>
+
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>The <b>Transfer()</b> action did not work at all -- it generated
+       (null) as the name of the <b>IND$FILE</b> command.
+       Also improved its behavior when invoked from a script or macro in
+       x3270 and c3270.</li>
+      <li>Corrected the definition of the <b>hebrew</b> (code page 424)
+       character set, removing undefined characters.</li>
+      <li>Corrected the display character set for the <b>brazilian</b> (code
+       page 275) character set.</li>
+      <li>Corrected the character set definition logic so that undefined
+       ASCII codes are truly undefined in NVT mode.</li>
+      <li>Corrected the <b>ibm_hosts</b> file (the <b>hostsFile</b> resource
+       or the <b>-hostsfile</b> option).
+       Variable and tilde substitution are now performed on the value, and if
+       a non-default value is specified and the file does not exist, an error
+       pop-up is generated.</li>
+      <li>Added a pause to make sure that c3270 start-up error messages will
+       be seen.</li>
+      <li>Got the c3270 default field colors right, and made all-bold mode
+       actually make all the fields bold.</li>
+      <li>Fixed the default primary/alternate screen size (it was alternate,
+       it's supposed to be primary).</li>
+      <li>Fixed c3270 color support with ncurses and 80/132 screen-size
+       switching.
+       Sometimes only one of the screen sizes had color.</li>
+      <li>Fixed a memory leak in pr3287 when the <b>-reconnect</b> option
+       is used. (<i>Thanks to Marcelo Lemos for the fix.</i>)</li>
+      <li>Fixed the output of NVT-mode ANSI line-drawing characters in the
+       <b>Ascii()</b> scripting action.
+       These were formerly all output as blanks; now they are output in
+       the same was as x3270 3.2.</li>
+      <li>Fixed the display of NVT-mode ANSI line-drawing characters when
+       x3270 is using a 3270 font.</li>
+      <li>Fixed the display of DBCS blanks, which sometimes displayed as
+       'undefined' characters.</li>
+      <li>Fixed DBCS character display with fonts whose maximum bounds are
+       larger than their reported line-spacing bounds.</li>
+      <li>Fixed <b>make depend</b>.</li>
+      <li>Fixed <b>x3270_glue.expect</b>, which got confused when there was
+       a whitespace-delimited double-quote in the emulator output.</li>
+      <li>Fixed crashes when the entire File or Options menus were suppressed.
+       </li>
+      <li>Fixed a scripting hang when an UNBIND command arrived while an AID
+       was pending.</li>
+      <li>Fixed a problem with the incomplete processing of a NULLing Program
+       Tab order, which could leave formatting artifacts on the screen.</li>
+      <li>Removed &lt;subchar1&gt; clauses in two of the <b>.ucm</b> files
+       that prevents later versions of ICU's <b>makeconv</b> from accepting
+       them, and removed DOS carriage-return characters from the CP837
+       <b>.ucm</b> file.</li>
+      <li>Corrected some DFT-mode file upload problems: corrected the data
+       length, and corrected an empty-buffer problem when the file size was
+       an even multiple of the buffer size.</li>
+      <li>Corrected a DBCS conversion problem with ICU 3.0.</li>
+      <li>Added variable buffer-size support to DFT file transfers.</li>
+      <li>Corrected a line-drawing character bug in c3270.</li>
+      <li>Fixed a buffer overflow problem in the <b>ReadBuffer</b> action.</li>
+      <li>Fixed garbage characters generated for APL data by the <b>Ascii</b>
+       and <b>ReadBuffer</b> actions.</li>
+      <li>Allow 0 timeouts in <b>Wait</b> actions.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+      <li>Added command-line options to the pr3287 trace file.</li>
+      <li>Added support for <i>dead</i> keys (acute, grave, circumflex, tilde,
+       diaeresis) to the x3270 default keymap, and improved the Latin-1 compose
+       map. (<i>Thanks to Marcelo Lemos for the change.</i>)</li>
+      <li>Added new actions for improved mouse interactions, and made them the
+       default.  Button 1 now moves the cursor, without the Shift key.</li>
+      <li>Added support for DBCS in pr3287, but only when started from an
+       x3270 or c3270 session.</li>
+      <li>Added Don Russell's RPQNAMES support.</li>
+      <li>Removed Minolta-copyrighted 5250 code, because of licensing
+       problems.</li>
+      <li>Added an <b>aidWait</b> toggle to allow AID script actions
+       (<b>Clear</b>, <b>Enter</b>, <b>PA</b> and <b>PF</b>) to complete
+       immediately without waiting for the host to unlock the keyboard, and a
+       <b>Wait(Unlock)</b> action action to block a script until the keyboard
+       is unlocked, regardless of the state of the new toggle.</li>
+      <li>Removed the old scripting hack that delayed actually unlocking the
+       keyboard for 50ms after the host indicates that it should be unlocked.
+       Added an <b>unlockDelay</b> resource, which can be set to <b>true</b> to
+       turn the delay hack back on.</li>
+      <li>Added a <b>dftBufferSize</b> resource to set the default DFT
+       buffer size.</li>
+      <li>Added an x3270  <b>Save Screen Text</b> menu option to save the
+       screen image in a file, optionally in HTML.</li>
+      <li>Added options to the PrintText action to save to a file, to save HTML,
+       and to return the text as script data.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>Changes in x3270, c3270, s3270 and tcl3270 3.3.2, 1. December 2003</h2>
+
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Corrected an x3270 screen-redraw crash when using <b>fixedSize</b>
+       and <b>xim</b>.</li>
+      <li>Corrected a problem in <b>x3270_glue.expect</b>, which caused
+       Tcl syntax errors if a string began with a dash. <i>Thanks to David
+       Taylor for the fix.</i></li>  
+      <li>Fixed a problem with x3270 DBCS input when using a single DBCS/SBCS
+       character set.</li>
+      <li>Made DBCS encoding recognition automatic wherever possible, leaving
+       the <b>-km</b> option for cases when x3270 can't figure it out from the
+       locale.</li>
+      <li>Made c3270's <b>configure</b> more robust when it can't find one or
+       the other of <b>libncurses</b> or <b>ncurses.h</b>.</li>
+      <li>Got automatic pr3287 start-up (<b>-printerlu</b>) working again in
+       c3270.</li>
+      <li>Fixed an s3270 crash which made s3270 3.3.1alpha10 pretty much
+       useless.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+     <li>Added support for Cyrillic keysyms to the x3270 <b>Default()</b>
+      action.</li>
+     <li>Added an 'unlocked' icon for unencrypted connections, if x3270 is
+      built with SSL/TLS support.</li>
+     <li>Error messages are now written to the trace file.</li>
+     <li>The response to the TELNET TIMING MARK option has been changed to
+      make it compatible with the majority of TELNET clients.
+      The response to DO TIMING MARK is now WONT TIMING MARK.
+      To restore the previous behavior (responding with WILL TIMING MARK,
+      originally derived from the BSD TELNET client), set the resource
+      <b>x3270.bsdTm</b> to <b>true</b>.
+    </ul>
+  </li>
+</ul>
+
+<h2>Changes in x3270, c3270, s3270 and tcl3270 3.3.1alpha10, 29. August 2003</h2>
+
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>Made nondisplay fields invisible to the <b>Ascii()</b> action.</li>
+      <li>Corrected start-field values at the beginning of data stream traces
+       and in the 3270 Read Buffer response.</li>
+      <li>Corrected a tight loop in the macro error cancellation logic.</li>
+      <li>Corrected a crash when connecting to a host and there is no menu
+       bar visible.</li>
+      <li>Corrected x3270 crashes in monochrome mode (<b>-mono</b>) and
+       pseudo-color mode (<b>-model 3278</b>).
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+     <li>Added a <b>ReadBuffer()</b> action to dump the entire contents of
+      the 3270 buffer, including field attributes and extended attributes.</li>
+     <li>Added support for <b>suppress</b> resources for each menu item.
+      If set to <b>True</b>, that menu item will not appear.</li>
+     <li>Added a <b>suppressActions</b> resource, a list of the names of
+      actions to disable.  This is primarily for controlled environments where
+      the user does not have access to the <b>x3270</b> command line, but can
+      edit keymap definitions.</li>
+     <li>Added a <b>Setverbose</b> function to <tt>x3270_glue.expect</tt>
+      to allow verbosity to be changed on the fly.
+      <i>(Courtesy of David Taylor.)</i></li>
+     <li>Added the ability to define resources in an environment variable,
+      <b>$X3270RDB</b>.  The environment variable overrides values set in
+      the profile file, but is overridden by command-line options.</li>
+     <li>Added a <b>fixedSize</b> resource to force the <b>x3270</b> main
+      window to a particular size.  <b>fixedSize</b> has the form
+      <i>width</i><b>x</b><i>height</i>, in pixels.
+      The 3270 display will float in the center of the window, if need
+      be.</li>
+     <li>Added a new x3270 keypad position (<b>x3270.keypad</b>):
+      <b>insideRight</b>.  This positions the keypad on top of the upper
+      right-hand corner of the <b>x3270</b> window, just under the keypad
+      button on the menu bar.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>Changes in  pr3287 3.3.1alpha10, 10. August 2003</h2>
+
+<ul>
+ <li>Enhancements:
+  <ul>
+   <li>Added support for the <b>-tracedir</b> option, to specify a directory
+    to store trace files in.</li>
+   <li>Added support the the <b>-eojtimeout</b> option, to automatically
+    flush any pending print job after a specified period of inactivity.</li>
+  </ul>
+ </li>
+</ul>
+
+<h2>Changes in x3270, c3270, s3270 and tcl3270 3.3.1alpha9, 24. July 2003</h2>
+
+<ul>
+  <li>Bug Fixes:
+    <ul>
+      <li>DBCS character set names are displayed in the x3270
+      <i>Options->Font</i> menu only when DBCS support is built into x3270.</li>
+      <li>Removed the concept of 'per-host' resources.  Use profiles for
+       this.</li>
+      <li>Fixed idle commands.  They were pretty much hopeless in 3.3.1alpha8
+       and 3.2.20.</li>
+      <li>Fixed a Unicode conversion crash.</li>
+      <li>Fixed a bug in processing the Modify Field order, which would cause
+       the character set attribute for the field to be accidentally reset to
+       the default.</li>
+    </ul>
+  </li>
+  <li>New Features:
+    <ul>
+      <li>x3270 user-specified lists (character sets, hosts, fonts,
+       color schemes) can now be organized into sub-lists.
+       The name <b>Bob>Fred>Tony</b> specifies that there is a sub-list called
+       <b>Bob</b>, which contains a sub-list <b>Fred</b>, which contains the
+       item <b>Tony</b>.</li>
+      <li>The TELNET START-TLS option is now supported.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>Changes in pr3287 3.3.1alpha9, 30. July 2003</h2>
+
+<ul>
+ <li>Bug Fixes:
+  <ul>
+   <li>Ignore SIGINT in the print job process, so that killing an
+    interactive pr3287 with ^C won't cause buffered data to be lost.</li>
+   <li>Fixed a problem with losing a byte of data after an SHF order.</li>
+   <li>Fixed the SCS HT order, which was completely broken.</li>
+  </ul>
+ </li>
+ <li>Enhancements:
+  <ul>
+   <li>Added support for SIGUSR1 to flush the print job.</li>
+   <li>Added support for the TELNET START-TLS option.</li>
+  </ul>
+ </li>
+</ul>
+
+<h2>Changes in x3270, c3270, s3270 and tcl3270 3.3.1alpha8, 15. April 2003</h2>
+
+<ul>
+  <li>Bug Fixes:
+  <ul>
+    <li>Builds cleanly on Linux with <tt>-Wall -ansi -pedantic</tt>.</li>
+    <li>Builds without OpenSSL libraries being present.</li>
+    <li>Correctly records Field Attributes in the initial screen snapshot
+in a Data Stream Trace file.</li>
+    <li>Auto-Skip fields work properly.</li>
+    <li>"Dead" positions in DBCS fields are handled correctly.</li>
+    <li>Invalid host DBCS characters are handled better and are displayed
+in the Data Stream Trace file.</li>
+    <li>The <b>Erase</b> action now works properly with DBCS characters.</li>
+    <li>The x3270 <b>Visible Control Characters</b> toggle now works
+     properly.
+    <li>The EBCDIC <i>notsign</i> '&not;' can now be entered in c3270 with
+     <tt>Ctrl-A, ^</tt> (it formerly caused an error message).</li>
+  </ul>
+</ul>
+<ul>
+  <li>New Features:
+  <ul>
+    <li>The <b>Erase</b> action is now the default for the <b>BackSpace</b>
+     key in x3270.</li>
+     <li><tt>Ctrl-A, a</tt> is now mapped onto the <b>Attn</b> action in the
+      c3270 default 3270 keymap.</li>
+    <li>Four more Japanese host code pages have been added: 930, 939, 1390
+and 1399. This uses new support for combined SBCS/DBCS code pages.
+    </li>
+  </ul>
+</ul>
+
+<h2>Changes in x3270, c3270, s3270 and tcl3270 3.3.1, 14. February 2003</h2>
+
+<ul>
+ <li>Bug Fixes:   
+    <ul>
+      <li>(Same as x3270 3.2.20)</li>
+    </ul>
+ </li>
+ <li>New Features:   
+   <ul>
+     <li>DBCS support for Simplfied Chinese and Japanese, including x3270
+      integration
+      with XIM.</li>
+     <li>Tunneled SSL support added (entire Telnet session inside of an SSL
+      tunnel).
+      Uses the OpenSSL library.
+      Toggled with an 'L:' prefix on the hostname.</li>
+     <li>A <i>Visible Control Characters</i> toggle replaces x3270's
+      <b>3270d</b> Debug Font.</li>
+     <li><b>About x3270</b> pop-up split into three smaller pieces.</li>
+    </ul>
+ </li>
+</ul>

@@ -1,0 +1,145 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <title>Creating a Custom c3270 Keymap</title>
+   <link HREF="http://www.w3.org/StyleSheets/Core/Steely" TYPE="text/css" REL="stylesheet">
+</head>
+<body>
+
+<h1>How to Create a Custom c3270 Keymap</h1>
+
+<h2>It Might Already be Defined</h2>
+First, you might want to make sure that the action you want isn't already
+defined in the default keymap. The default keymap, documented on the
+<a href="c3270-man.html#default-keymap"><b>c3270</b>
+manual page</a>, defines common actions using the <b>Control</b> key.
+For example, the <b>Reset</b> action, which unlocks the keyboard, is defined
+as <b>Control</b>-R.
+<h2>Defining a Simple Keymap in <tt>.c3270pro</tt></h2>
+If the action you want isn't defined in the default keymap or the <tt>alt</tt>
+keymap, then you need to create a custom keymap.
+The easiest way to do this is as follows.
+Using your favorite editor, create a file called
+<tt>.c3270pro</tt>
+in your home directory.
+In that file, put the following:
+<blockquote>
+<pre>! Use the 'mine' keymap, defined below
+c3270.keymap: mine
+! Definition of the 'mine' keymap
+c3270.keymap.mine: \
+&nbsp;&nbsp;&nbsp; &lt;Key>PPAGE: PF(7)\n\
+&nbsp;&nbsp;&nbsp; &lt;Key>NPAGE: PF(8)</pre>
+</blockquote>
+The first entry (<tt>c3270.keymap</tt>) tells <b>c3270</b> to use the keymap
+named <tt>mine</tt>.
+The second entry (<tt>c3270.keymap.mine</tt>)
+is the definition of the <tt>mine</tt> keymap itself.
+<p>Now, run <b>c3270</b>, and do not specify a <b>-keymap</b> option.
+The <b>PPAGE</b> key (usually lalbelled <b>Page Up</b>) will now emulate the
+3270 <b>PF7</b> key, and the
+<b>NPAGE</b> key (usually labelled <b>Page Down</b>) will emulate the 3270
+<b>PF8</b> key.
+(If you do not have a <b>Page Up</b> or <b>Page Down</b> key, or if these keys
+are not properly defined in your <b>terminfo</b> or <b>termcap</b> database,
+this will not work, but for most PC-based systems, it will.)
+</p>
+<h2>Rules for Keymap Definitions</h2>
+You may now edit the keymap to create your own custom definition.
+Here is the full set of rules.
+<ul>
+	<li>The first line is always:</li>
+	<ul>
+		<pre>c3270.keymap.<i>name</i>: \</pre>
+	</ul>
+	where <i>name</i> is replaced by the name of the keymap you want to
+	define.
+	(Note the backslash, which <b>must</b> be the last character on the
+	line).
+	<li>The body (middle) lines always have the format:</li>
+	<ul>
+		<pre><i>modifier</i> &lt;Key> <i>keyname</i>... : <i>Action</i>(<i>args</i>)\n\</pre>
+	</ul>
+	where:
+	<ul>
+		<i>modifier</i> is an optional keyboard modifier such as
+		<tt>Ctrl</tt> or <tt>Alt</tt><br>
+		<i>keyname</i> is a curses key name: a symbolic name for a key,
+		such as <tt>semicolon</tt> (the ';' key) or <tt>BACKSPACE</tt>
+		(the Backspace key)<br>
+		<i>Action</i> is a <b>c3270</b> action such as <tt>Enter</tt>
+		or <tt>PF</tt><br>
+		<i>args</i> are the optional action arguments, such as a number
+		to specify which PF key to transmit.
+	</ul>
+	Note that each body line <b>must</b> end with the three
+	characters '<tt>\n\</tt>'.
+	<li>The last line is the same as the body lines, but <b>must not</b>
+	have the '<tt>\n\</tt>' at the end:</li>
+	<ul>
+		<pre><i>modifier</i> &lt;Key> <i>keyname</i> : <i>Action</i>(<i>args</i>)</pre>
+	</ul>
+</ul>
+
+<h2>How to Find the Key Names</h2>
+The names for alphanumeric keys can be entered literally, e.g., <tt>a</tt>
+for the <tt>A</tt> key.
+They can also be entered using ISO 8859-1 standard names, such as
+<tt>colon</tt> for the <tt>:</tt> key (which would otherwise confuse the
+keymap syntax).
+Finally, Unicode values (<tt>U+</tt><i>nnnn</i>) can be used.
+<p>
+The list of names for special keys, such as NPAGE, PPAGE and BACKSPACE,
+is in the file <tt>/usr/include/ncurses.h</tt>
+or <tt>/usr/include/curses.h</tt> on your workstation.
+Look for macros starting with the prefix <tt>KEY_</tt>.
+<p>
+To find out which key name or sequence of key names is being generated for any
+given key on your keyboard, start <b>c3270</b> with the <b>-trace</b> option,
+and do not connect to a host.
+Then press the key(s) in question.
+Then exit <b>c3270</b>.
+<b>c3270</b> will create the file <tt>/tmp/x3trc.<i>pid</i></tt>.
+In that file, several lines of text will be generated for each key you press.
+Each entry will begin with the text for the left-hand side of a keymap entry
+that will match the key you pressed.
+You can cut and paste the text into your keymap definition.
+
+<h2>How to Find the Actions</h2>
+These are documented on the <a href="c3270-man.html#actions"><b>c3270</b>
+manual page</a>.
+
+<h2>How to Debug Your Keymap</h2>
+There are two <b>c3270</b> options to aid with keymap debugging.
+The <b>-trace</b> command-line option causes <b>c3270</b> to create a
+trace file, <tt>/tmp/x3trc.<i>pid</i></tt>.
+That file traces each keyboard and mouse event that <b>c3270</b> processes.
+The information traced includes the keymap (and line within the keymap)
+that matched the event, the <b>c3270</b> action that was run in response,
+and if for some reason the action did not work, why it did not work.
+<p>The <b>show keymap</b> command at the <b>c3270></b> prompt
+displays the current keymap.
+This tells you exactly which keymap entries are active.
+Often times it will point out that <b>c3270</b> isn't using the keymap you
+thought it was, or that some of your keymap entries
+are interfering with one another.
+<p>Note that one of the commonest problems in configuring <b>c3270</b>
+is figuring out where resources are being defined.
+Keymaps are defined
+using resources, so this problem can complicate keymap definitions.
+<b>c3270</b> resources can be defined in a number of different places:
+<ul>
+
+<li>
+In the definitions compiled into <b>c3270</b> from the files
+<tt>X3270.xad</tt> and <tt>c3270.c</tt>.</li>
+
+<li>
+In the file <tt>.c3270pro</tt> in your home directory</li>
+
+<li>
+From <b>-xrm</b> command-line options.</li>
+</ul>
+</body>
+</html>

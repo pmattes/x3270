@@ -1,0 +1,277 @@
+# Copyright (c) 2000-2009, Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Glue functions between 'expect' and x3270
+# Usage: source s3270.glue
+#
+# These can be used with:
+#  "x3270 -script" to drive an x3270 session
+#  "s3270" to drive a displayless 3270 session
+#  "x3270if -i" to run a child script of x3270
+
+# Basic interface command.  Used internally by the action functions below.
+proc x3270_cmd {cmd} {
+	global verbose
+	if {$verbose} {puts "+$cmd"}
+	send "$cmd\r"
+	expect {
+		-re "data: (.*)\r\n.*\r\nok\r\n$" { set r $expect_out(buffer) }
+		"*ok\r\n" { return {} }
+		"*error\r\n" { error "$cmd failed" }
+		eof { error "s3270 died" }
+	}
+	# Convert to a list.
+	set ret {}
+	while {1} {
+		if {! [regexp "data: (.*?)\r\n" $r dummy elt]} {break}
+		set r [string range $r [expr [string length $elt]+7] end]
+		if {[llength $ret] > 0} {
+			set ret [linsert $ret end $elt]
+		} {
+			set ret $elt
+		}
+	}
+	if {$verbose} {puts "ret llen [llength $ret]"}
+	return $ret
+}
+
+# User-accessible actions.
+# Some of these apply only to x3270 and x3270if, and not to s3270.
+proc AltCursor {} { return [x3270_cmd "AltCursor"] }
+proc Ascii {args} {
+	set i 0
+	set a ""
+	while {$i < [llength $args]} {
+		if {$i > 0} {
+			set a "$a,[lindex $args $i]"
+		} {
+			set a [lindex $args $i]
+		}
+		incr i
+	}
+	return [x3270_cmd "Ascii($a)"]
+}
+proc AsciiField {} { return [x3270_cmd "AsciiField"] }
+proc Attn {} { return [x3270_cmd "Attn"] }
+proc BackSpace {} { return [x3270_cmd "BackSpace"] }
+proc BackTab {} { return [x3270_cmd "BackTab"] }
+proc CircumNot {} { return [x3270_cmd "CircumNot"] }
+proc Clear {} { return [x3270_cmd "Clear"] }
+proc CloseScript {} { return [x3270_cmd "CloseScript"] }
+proc Cols {} { return [lindex [Status] 7] }
+proc Compose {} { return [x3270_cmd "Compose"] }
+proc Connect {host} { return [x3270_cmd "Connect($host)"] }
+proc CursorSelect {} { return [x3270_cmd "CursorSelect"] }
+proc Delete {} { return [x3270_cmd "Delete"] }
+proc DeleteField {} { return [x3270_cmd "DeleteField"] }
+proc DeleteWord {} { return [x3270_cmd "DeleteWord"] }
+proc Disconnect {} { return [x3270_cmd "Disconnect"] }
+proc Down {} { return [x3270_cmd "Down"] }
+proc Dup {} { return [x3270_cmd "Dup"] }
+proc Ebcdic {args} {
+	set i 0
+	set a ""
+	while {$i < [llength $args]} {
+		if {$i > 0} {
+			set a "$a,[lindex $args $i]"
+		} {
+			set a [lindex $args $i]
+		}
+		incr i
+	}
+	return [x3270_cmd "Ebcdic($a)"]
+}
+proc EbcdicField {} { return [x3270_cmd "EbcdicField"] }
+proc Enter {} { return [x3270_cmd "Enter"] }
+proc Erase {} { return [x3270_cmd "Erase"] }
+proc EraseEOF {} { return [x3270_cmd "EraseEOF"] }
+proc EraseInput {} { return [x3270_cmd "EraseInput"] }
+proc FieldEnd {} { return [x3270_cmd "FieldEnd"] }
+proc FieldMark {} { return [x3270_cmd "FieldMark"] }
+proc FieldExit {} { return [x3270_cmd "FieldExit"] }
+proc Flip {} { return [x3270_cmd "Flip"] }
+proc HexString {args} {
+	set i 0
+	set a ""
+	while {$i < [llength $args]} {
+		if {$i > 0} {
+			set a "$a,[lindex $args $i]"
+		} {
+			set a [lindex $args $i]
+		}
+		incr i
+	}
+	return [x3270_cmd "HexString($a)"]
+}
+proc Home {} { return [x3270_cmd "Home"] }
+proc Info {text} {
+	set a "\""
+	set i 0
+	while {$i < [string len $text]} {
+		set c [string range $text $i $i]
+		switch $c {
+			"\n" { set a "$a\\n" }
+			"\r" { set a "$a\\r" }
+			" " { set a "$a\\ " }
+			"\"" { set a "$a\\\"" }
+			default { set a "$a$c" }
+		}
+		incr i
+	}
+	set a "$a\""
+	return [x3270_cmd "Info($a)"]
+}
+proc Insert {} { return [x3270_cmd "Insert"] }
+proc Interrupt {} { return [x3270_cmd "Interrupt"] }
+proc Key {k} { return [x3270_cmd "Key($k)"] }
+proc Keymap {k} { return [x3270_cmd "Keymap($k)"] }
+proc Left {} { return [x3270_cmd "Left"] }
+proc Left2 {} { return [x3270_cmd "Left2"] }
+proc MonoCase {} { return [x3270_cmd "MonoCase"] }
+proc MoveCursor {r c} { return [x3270_cmd "MoveCursor($r,$c)"] }
+proc Newline {} { return [x3270_cmd "Newline"] }
+proc NextWord {} { return [x3270_cmd "NextWord"] }
+proc PA {n} { return [x3270_cmd "PA($n)"] }
+proc PF {n} { return [x3270_cmd "PF($n)"] }
+proc PreviousWord {} { return [x3270_cmd "PreviousWord"] }
+proc Reset {} { return [x3270_cmd "Reset"] }
+proc Right {} { return [x3270_cmd "Right"] }
+proc Right2 {} { return [x3270_cmd "Right2"] }
+proc Rows {} { return [lindex [Status] 6] }
+proc SetFont {font} { return [x3270_cmd "SetFont($font)"] }
+proc Snap {args} {
+	set i 0
+	set a ""
+	while {$i < [llength $args]} {
+		if {$i > 0} {
+			set a "$a,[lindex $args $i]"
+		} {
+			set a [lindex $args $i]
+		}
+		incr i
+	}
+	return [x3270_cmd "Snap($a)"]
+}
+proc Status {} {
+	global verbose
+	if {$verbose} {puts "+(nothing)"}
+	send "\r"
+	expect {
+		"*ok\r\n" { set r $expect_out(buffer) }
+	}
+	return [string range $r 0 [expr [string length $r]-7]]
+}
+proc String {text} {
+	set a "\""
+	set i 0
+	while {$i < [string len $text]} {
+		set c [string range $text $i $i]
+		switch $c {
+			"\n" { set a "$a\\n" }
+			"\r" { set a "$a\\r" }
+			" " { set a "$a\\ " }
+			"\"" { set a "$a\\\"" }
+			default { set a "$a$c" }
+		}
+		incr i
+	}
+	set a "$a\""
+	return [x3270_cmd "String($a)"]
+}
+proc SysReq {} { return [x3270_cmd "SysReq"] }
+proc Tab {} { return [x3270_cmd "Tab"] }
+proc ToggleInsert {} { return [x3270_cmd "ToggleInsert"] }
+proc ToggleReverse {} { return [x3270_cmd "ToggleReverse"] }
+proc TemporaryKeymap {args} { return [x3270_cmd "TemporaryKeymap($args)"] }
+proc Transfer {args} {
+	set i 0
+	set a ""
+	while {$i < [llength $args]} {
+		if {$i > 0} {
+			set a "$a,[lindex $args $i]"
+		} {
+			set a [lindex $args $i]
+		}
+		incr i
+	}
+	return [x3270_cmd "Transfer($a)"]
+}
+proc Up {} { return [x3270_cmd "Up"] }
+proc Wait {args} { return [x3270_cmd "Wait($args)"] }
+
+# Start function: Start ?-nohup? ?program? ?options?
+#
+# Sets up the 'expect' environment correctly and spawns a 3270 interface
+# process.
+# If "args" is empty, or starts with an option besides '-nohup', guesses which
+#  process to start.
+# It will only guess "x3270if -i" or "s3270"; if you want to start x3270, you
+#  need to specicity it explicitly.
+
+proc Start {args} {
+	global stty_init timeout spawn_id verbose env
+
+	# If the first argument is "-nohup", remember that as an argument to
+	# 'spawn'.
+	if {[lindex $args 0] == "-nohup"} {
+		set nohup {-ignore HUP}
+		set args [lrange $args 1 end]
+	} {
+		set nohup {}
+	}
+
+	# If there are no arguments, or the first argument is an option, guess
+	# what to start.
+	# If X3270INPUT is defined in the environment, this must be a child
+	# script; start x3270if.  Otherwise, this must be a peer script;
+	# start s3270.
+	if {$args == {} || [string index [lindex $args 0] 0] == "-"} {
+		if {[info exists env(X3270INPUT)]} {
+			set args [concat x3270if -i $args]
+		} {
+			set args [concat s3270 $args]
+		}
+	}
+
+	# If 'verbose' isn't set, set it to 0 now.
+	if {! [info exists verbose]} {set verbose 0}
+
+	# Set up the pty initialization default.
+	set stty_init -echo
+
+	# Spawn x3270.
+	if {$verbose} {
+		set pid [eval [concat spawn $nohup $args]]
+	} {
+		set pid [eval [concat spawn -noecho $nohup $args]]
+		log_user 0
+	}
+
+	# Set the 'expect' timeout.
+	set timeout -1
+
+	return $pid
+}

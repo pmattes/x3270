@@ -1,0 +1,2504 @@
+intro
+ <i>Resources</i> are used to configure %p%.  Resources are named items with
+ string, integer or Boolean values.
+ <p>
+ Resource definitions come from the following sources:
+ <ul>
+ <li>Default values are compiled into %p%.</li>
+if x
+ <li>Standard X11 methods can be used to override the compiled-in
+  defaults.  These methods include:
+  <ul>
+  <li>The %p% app-defaults file (only if %p% is built with app-defaults
+   support).  This can be a locale-specific or generic app-defaults file
+   located in the user's home directory or in the system X11 directory.</li>
+  <li>Definitions set by the <i>xrdb</i> command.
+  <li>The <b>~/.Xdefaults</b> file.
+ </ul>
+endif
+ <li>If a session file <b><i>foo</i>.%p%</b> is specified on the command line,
+ its contents are applied.
+if x c
+ Otherwise, if the %p% profile (<b>~/.%p%pro</b>) exists, it is read and its
+ contents are applied.
+endif
+ These definitions override resource values defined by
+if x
+ X11 methods and
+endif
+ compiled-in defaults.</li>
+ <li>Command-line options override all other resource definitions.  If more
+  than one command-line option sets a resource, the last one is used.</li>
+ </ul>
+ Many resources have their own command-line switches, which are listed below.
+ Those that do not can still be set from the command-line via the <b>-xrm</b>
+ command-line option.  For example the %-bsdTm% resource can be set by the
+ following command-line option:
+ <pre>
+     -xrm '%p%.bsdTm: true'
+ </pre>
+ Note that <b>-xrm</b> is supported on all of the 3270 emulators, not just on
+ x3270.
+
+ <h2>Resource File Syntax</h2>
+ A resource file
+if x
+ (app-defaults file, profile or session file)
+else
+if c
+ (profile or session file)
+else
+ (session file)
+endif
+endif
+ has the following syntax.
+ <ul>
+  <li>Each definition consists of:
+  <pre>
+    <b>%p%.</b><i>resource-name</i><b>:</b> <i>value</i>
+  </pre></li>
+  <li>Comment lines begin with <b>!</b>.</li>
+  <li>Line continuation is indicated by a backshash (<b>\</b>) character at
+   the end of a line.</li>
+if x C
+  <li>Multi-line resources, such as keymap definitions, are split with
+   newline characters, e.g.:
+  <pre>
+    <b>%p%.keymap.foo: \
+      &lt;Key>a: String("bob") \n\
+      &lt;Key>b: String("fred") \n\
+      &lt;Key>c: String("joe")</b>
+  </pre></li>
+endif
+ </ul>
+.
+
+name acs
+applies c
+type b
+default true
+desc
+    When true, %p% will use the curses Alternative Character Set (ACS) to
+    display box-drawing characters.
+    When false, %p% will use Unicode box-drawing characters.
+.
+
+name activeIcon
+applies x
+groups a
+type b
+default false
+switch -activeicon
+description
+    When true, %p%'s icon becomes a live miniature of the
+    screen display.
+.
+
+name aidWait
+applies x c s tcl
+type b
+default false
+switch -set aidWait
+switch -clear aidWait
+desc
+    When true, %p% will not block a script after executing
+    an AID action (<b>Enter</b>, <b>Clear</b>, <b>PF</b> or <b>PA</b>).
+    It is then script's responsibility to poll %p%'s status until it shows
+    that the keyboard is no longer unlocked.
+.
+
+name allBold
+applies c
+groups a
+type s
+default auto
+switch -allbold
+desc
+    When true, %p% will display all text in bold.  This is needed
+    for terminals like Linux consoles and xterms that display non-bold text
+    in unreadably-dim colors.  When false, text will be displayed in normal or
+    bold, depending on the host-specified highlighting attribute.
+    <p class=indented>
+    When set to <b>auto</b>, it will be assumed <b>true</b> for 3279 emulation,
+    and <b>false</b> for 3278 emulation.
+.
+
+name allowResize
+applies x
+type b
+default true
+description
+    When true, the %p% window can be resized by the mouse (actually,
+    by the
+    window manager).  When false, the window can only be resized from
+    menu
+    options.  The purpose of disabling mouse resizing is to allow a window
+    bigger than will fit on the screen, which some window managers (e.g., mwm)
+    will not allow if permitted to resize it.
+.
+
+name altCursor
+applies x
+groups a
+type b
+default false
+switch -set altCursor
+switch -clear altCursor
+option Options -&gt; Toggles -&gt; Underline Cursor
+option Options -&gt; Toggles -&gt; Block Cursor
+description
+    When true, this causes %p% to use the alternate
+    (underscore) cursor.  When false, it will use a block cursor.
+.
+
+name altScreen
+applies c
+type s
+switch -altscreen
+desc
+    Defines a character string that will be output to switch the terminal from
+    80-column mode to 132-column mode.
+    Within the string, the sequence <b>\E</b> is translated to the ASCII
+    ESC character (0x1b).
+    <p class=indented>
+    When %-model% is 5, and this and
+    %-defScreen% are defined, %p% will automatically change the
+    terminal size when the host switches between the default (24x80) screen
+    and the alternate (27x132) screen.
+.
+
+name aplMode
+applies x
+type b
+default false
+switch -apl
+desc
+    Enables %p% APL mode.  APL mode appends <b>apl</b> to the list of names
+    in %-keymap% (causing the <b>Alt</b> key plus many alphanumeric keys to
+    produce basic APL symbols), sets %-composeMap% to <b>apl</b> (allowing
+    <b>Compose</b> key sequences to construct complex APL symbols), and sets
+    %-charset% to <b>apl</b> (allowing the display of APL symbols using
+    several of the 3270 fonts).
+.
+
+name asciiBoxDraw
+applies C
+type b
+default false
+desc
+    When true, this causes box-drawing characters (the Unicode 2500 block) to
+    be drawn with ASCII-art characters (<b>+</b>, <b>-</b> and <b>|</b>).
+    This allows a readable representation of these characters on the screen
+    when using fonts that do not include them or have them with the wrong
+    width.
+.
+
+name autoShortcut
+applies wc
+type b
+default false
+switch -S
+switch +S
+desc
+    When true, %p% will run in <i>auto-shortcut</i> mode.  In auto-shortcut
+    mode, %p% automatically creates a desktop shortcut (<b>.lnk</b> file)
+    in %TEMP% that is compatible with its session file, then starts it.  This
+    ensures that the console window's screen size, character set, font, etc.
+    will be correct.
+    <p>
+    Auto-shortcut mode requires the use of a session file; the session file
+    must have been created by the Session Wizard (release 3.3.9 or later) and
+    must not have been modified incorrectly.  All desktop shortcuts created
+    by the Session Wizard release 3.3.10 or later include setting autoShortcut
+    to true.
+    <p>
+    The <b>+S</b> command-line switch turns off auto-shortcut mode.  All
+    desktop shortcuts created by the Session Wizard release 3.3.10 or later
+    include this switch.
+    <p>
+    Auto-shortcut mode does not work on Windows 9x.
+.
+
+name background
+applies x
+groups a
+type s
+default white
+switch -bg
+switch -rv
+description
+    The background color for menus, buttons, and on monochrome X11 displays, the
+    emulator window.
+.
+
+name bellVolume
+applies x
+type i
+default 0
+description
+    Controls the volume used when ringing the terminal bell.  The value
+    ranges from -100 (silent) through 0 (normal) to +100 (loud).  Not all
+    X11 servers can vary the bell volume, other than turning it on and off.
+    This resource can be overridden by %-visualBell%, which
+    if true, will replace the bell with a flash of the screen.
+.
+
+name blankFill
+applies a
+groups i
+type b
+default false
+option Options -&gt; Toggles -&gt; Blank Fill
+switch -set blankFill
+switch -clear blankFill
+description
+    When true, in 3270 mode %p% will automatically convert
+    trailing blanks in a field to NULLs in order to insert a character, and will
+    automatically convert leading NULLs to blanks so that input data is not
+    squeezed to the left.  This works around some of the quirkier behavior of
+    real 3270 terminals.
+.
+
+name boldColor
+applies x
+groups a
+default green
+type s
+description
+    This resource defines the X11 color used to display intensified text in
+    3278 mode.
+    <p class=indented>
+    Previous versions of %p% implemented something called <i>pseudo-color
+    mode</i>, where a monochrome (3278) terminal was emulated with various
+    colors assigned to different kinds of fields.
+    To emulate pseudo-color mode with the current version of %p%, select 3278
+    emulation with %-model%, set %-inputColor% to <b>orange</b> and set
+    %-boldColor% to <b>cyan</b>.
+.
+
+name bsdTm
+applies a
+groups p
+type b
+default false
+description
+    Defines %p%'s response to the TELNET DO TIMING MARK option.  When set
+    to false, %p% will respond to DO TIMING MARK with
+    WONT
+    TIMING MARK, which is consistent with most modern TELNET clients.  When
+    true, %p% will respond with WILL TIMING MARK, which is consistent
+    with the old BSD <i>telnet</i> command and with previous versions of
+    %p%.  In either case, %p% will never respond to a DONT TIMING MARK option.
+.
+
+name cbreak
+applies c
+type b
+default false
+switch -cbreak
+desc
+    If true, %p% will set up the terminal in <b>cbreak</b> mode
+    instead of the default <b>raw</b> mode.  <b>Cbreak</b> mode enables
+    flow-control processing in the TTY driver, and may be required for
+    certain terminals that use flow control to avoid dropping characters.
+.
+
+name certFile
+applies a
+groups s
+type s
+switch -certfile
+desc
+    Gives the name of a certificate file, used by the OpenSSL library.
+.
+
+name charClass
+applies x
+type s
+desc
+    Defines groups of characters that should be treated the same when doing
+    cut and paste of words.  Identical in use to the <i>xterm</i> resource
+    of the same name.
+.
+
+name charset
+applies a
+groups c
+type s
+default bracket
+switch -charset
+option Options -&gt; Character Set
+description
+    This defines the host EBCDIC character set, that is, what glyph (image) is
+    displayed for each EBCDIC code sent by the host, and what EBCDIC code is
+    sent to the host for each character typed on the keyboard.
+    This is more correctly referred to as the <i>host code page</i>.
+    <p class="indented">
+    To display the character sets supported by %p%, use the <b>-v</b>
+    command-line option.
+.
+
+name charsetList
+applies x
+type s
+description
+    Defines the <b>Options -&gt; Character Set</b> menu.
+    Can contain '<b>&gt;</b>' characters to define a menu hierarchy.
+    <p class="indented">
+    See the file <b>X3270.xad</b> for an example.
+.
+
+name color8
+applies a
+groups p
+type b
+default false
+description
+    If true, %p% will respond to a Query(Color) with a list of 8
+    supported colors.  If false, it will send a list
+    of 16 colors.  The 8-color setting is required for some hosts which
+    abort a session if 16 colors are reported.
+if c
+    <p class=indented>
+    This setting will also cause %p% to assume that the terminal supports
+    no more than 8 colors, and will use only the 8 basic curses colors to draw
+    the screen.
+endif
+.
+
+name colorBackground
+applies x
+groups a
+type s
+default black
+description
+    The background color for the emulator window.  This resource is used only
+    on color X11 displays when %-model% specifies 3278 mode.  On
+    monochrome X11 displays, the background color is <b>white</b>, unless
+    <b>-rv</b>
+    (reverse video) is selected on the command line; in 3279 mode, the screen
+    background is determined by %-colorScheme%.
+.
+
+name colorScheme
+applies x
+groups a
+type s
+default default
+option Options -&gt; Color Scheme
+description
+    Defines the colors used to paint the emulator window in 3279 (full-color)
+    mode.  This resource is used only when %-model% specifies a 3279
+    display.
+    %-colorScheme% is just the name of the color scheme.
+    The actual color scheme definition for color scheme <i>foo</i> is
+    %-colorScheme.<i>foo</i>%.
+.
+
+name colorScheme.<i>foo</i>
+applies x
+groups a
+type s
+description
+    An individual color scheme definition.
+    I.e., to define color scheme <i>foo</i>, a resource named <b>%p%.colorScheme.<i>foo</i></b> must be defined.
+    <p class=indented>
+    Each resource is a whitespace-separated list of 23 items:
+<ol>
+ <li>X11 color for host color 0 NeutralBlack (also used for NVT color 0)</li>
+ <li>X11 color for host color 1 Blue (also used for NVT color 4)</li>
+ <li>X11 color for host color 2 Red (also used for NVT color 1)</li>
+ <li>X11 color for host color 3 Pink (also used for NVT color 5)</li>
+ <li>X11 color for host color 4 Green (also used for NVT color 2)</li>
+ <li>X11 color for host color 5 Turquoise</li>
+ <li>X11 color for host color 6 Yellow (also used for NVT color 3)</li>
+ <li>X11 color for host color 7 NeutralWhite</li>
+ <li>X11 color for host color 8 Black</li>
+ <li>X11 color for host color 9 DeepBlue</li>
+ <li>X11 color for host color 10 Orange</li>
+ <li>X11 color for host color 11 Purple</li>
+ <li>X11 color for host color 12 PaleGreen</li>
+ <li>X11 color for host color 13 PaleTurquoise (also used for NVT color 6)</li>
+ <li>X11 color for host color 14 Grey</li>
+ <li>X11 color for host color 15 white (also used for NVT color 7)</li>
+ <li>X11 color to use if one of 0..15 cannot be allocated (white or black)</li>
+ <li>X11 color to use as the default screen background</li>
+ <li>X11 color to use as the select background</li>
+ <li>Host color (0..15) for unprotected, unhighlighted fields</li>
+ <li>Host color (0..15) for unprotected, highlighted fields</li>
+ <li>Host color (0..15) for protected, unhighlighted fields</li>
+ <li>Host color (0..15) for protected, highlighted fields</li>
+</ol>
+<p class=indented>
+<i>Note</i>: Host color 0 (NeutralBlack) means black on a display screen (a
+white-on-black device) and white on a printer (a black-on-white device).
+Host color 7 (NeutralWhite) means white on a display screen and black on a
+printer.
+.
+
+name commandTimeout
+applies tcl
+type i
+description
+    Defines the number of seconds to wait for a command to
+    complete before failing it with a timeout error.
+.
+
+name composeMap
+applies x C
+type s
+default latin1
+description
+    Gives the name of the map used to define the pairs of characters that
+    form composite characters with the <i>Compose</i> key.
+    The definition of compose map <i>foo</i> is the resource
+    %-composeMap.<i>foo</i>%.
+.
+
+name composeMap.<i>foo</i>
+applies x C
+type s
+description
+    An individual compose map definition.
+    Each line in the resource is of the form:
+<pre>
+         keysym1 + keysym2 = keysym3
+</pre>
+<p class=indented>
+    meaning "when the </i>Compose</i> key is pressed,
+    followed by keysym1 and keysym2 (in either order), interpret it as
+    keysym3."  The definitions are case-sensitive.
+.
+
+name confDir
+applies a
+type s
+if u
+default /usr/local/etc/x3270
+else
+default .
+endif
+desc
+    Defines the %p% configuration directory, where %p% will search for the
+    <b>ibm_hosts</b> file by default.  (See %-hostsFile%.)
+if w
+    <p class=indented>
+    The default is to search the directory where %p% was started, which
+    usually its installation directory.
+endif
+.
+
+name connectFileName
+applies x
+type s
+default ~/.x3270connect
+description
+    Gives the name of the file to store the recently-connected
+    host list in.  If given the value <b>none</b>, no file will be read or
+    written.  Note that by default, this file is shared among all instances
+    of %p% that run under the same username.
+.
+
+name consoleColorForHostColor0 consoleColorForHostColorNeutralBlack consoleColorForHostColor1 consoleColorForHostColorBlue consoleColorForHostColor2 consoleColorForHostColorRed consoleColorForHostColor3 consoleColorForHostColorPink consoleColorForHostColor4 consoleColorForHostColorGreen consoleColorForHostColor5 consoleColorForHostColorTurquoise consoleColorForHostColor6 consoleColorForHostColorYellow consoleColorForHostColor7 consoleColorForHostColorNeutralWhite consoleColorForHostColor8 consoleColorForHostColorBlack consoleColorForHostColor9 consoleColorForHostColorDeepBlue consoleColorForHostColor10 consoleColorForHostColorOrange consoleColorForHostColor12 consoleColorForHostColorPurple consoleColorForHostColor13 consoleColorForHostColorPaleGreen consoleColorForHostColor14 consoleColorForHostColorPaleTurquoise consoleColorForHostColor15 consoleColorForHostColorGrey consoleColorForHostColor16 consoleColorForHostColorWhite
+applies wc
+groups a
+type i
+desc
+    Defines what console color to use to render a particular host color.
+    Host colors can be specified by name or number.  That is, to define the
+    console color to use when the host specifies <b>green</b>, which is host
+    color 4, either the resource <b>%p%.consoleColorForHostColorGreen</b> or
+    the resource <b>%p%.consoleColorForHostColor4</b> can be used.
+    <p class=indented>
+    The default definitions are as follows.
+    <table cols=3 width="75%">
+    <tr> <th>Host Color Index</th>
+         <th>Host Color Name</th>
+         <th>Default Console Color</th>
+    <tr> <td>0</td> <td>NeutralBlack</td> <td>0</td> </tr>
+    <tr> <td>1</td> <td>Blue</td> <td>9</td> </tr>
+    <tr> <td>2</td> <td>Red</td> <td>12</td> </tr>
+    <tr> <td>3</td> <td>Pink</td> <td>13</td> </tr>
+    <tr> <td>4</td> <td>Green</td> <td>10</td> </tr>
+    <tr> <td>5</td> <td>Turquoise</td> <td>11</td> </tr>
+    <tr> <td>6</td> <td>Yellow</td> <td>14</td> </tr>
+    <tr> <td>7</td> <td>NeutralWhite</td> <td>15</td> </tr>
+    <tr> <td>8</td> <td>Black</td> <td>0</td> </tr>
+    <tr> <td>9</td> <td>DeepBlue</td> <td>1</td> </tr>
+    <tr> <td>10</td> <td>Orange</td> <td>12</td> </tr>
+    <tr> <td>11</td> <td>Purple</td> <td>5</td> </tr>
+    <tr> <td>12</td> <td>PaleGreen</td> <td>2</td> </tr>
+    <tr> <td>13</td> <td>PaleTurquoise</td> <td>3</td> </tr>
+    <tr> <td>14</td> <td>Grey</td> <td>7</td> </tr>
+    <tr> <td>15</td> <td>White</td> <td>15</td> </tr>
+    </table>
+    <p class=indented>
+    Note that "neutral black" means black on a display device and white on
+    a printing device, and "neutral white" means white on a display device and
+    black on a printing device.
+    <p class=indented>
+    The value of the resource is a console color index (0 through 15).
+    Console colors are defined as follows:
+    <table cols=3 width="75%">
+    <tr> <th>Index</th> <th>Sample</th> </tr>
+    <tr> <td>0</td>
+         <td><span style="color: #000000; background-color: black">[<b>sample</b>]<span></td> </tr>
+    <tr> <td>1</td>
+         <td><span style="color: #000080; background-color: black">[<b>sample</b>]<span></li>
+    <tr> <td>2</td>
+         <td><span style="color: #008000; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>3</td>
+         <td><span style="color: #008080; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>4</td>
+         <td><span style="color: #800000; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>5</td>
+         <td><span style="color: #800080; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>6</td>
+         <td><span style="color: #808000; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>7</td>
+         <td><span style="color: #c0c0c0; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>8</td>
+         <td><span style="color: #808080; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>9</td>
+         <td><span style="color: #0080ff; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>10</td>
+         <td><span style="color: #00ff00; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>11</td>
+         <td><span style="color: #00ffff; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>12</td>
+         <td><span style="color: #ff0000; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>13</td>
+         <td><span style="color: #ff00ff; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>14</td>
+         <td><span style="color: #ffff00; background-color: black">[<b>sample</b>]<span></td>
+    <tr> <td>15</td>
+         <td><span style="color: #ffffff; background-color: black">[<b>sample</b>]<span></td>
+    </table>
+    <p class=indented>
+    The color samples above are the default values used by the %p% Session
+    Wizard when it creates a desktop shortcut.  The RGB values for any of the
+    console colors can be changed later using the Colors tab on the Properties
+    dialog of the shortcut.
+    <p class=indented>
+    In NVT mode, %p% maps the ANSI-standard colors 0 through
+    7 to host colors, and from host colors to console colors.
+    The mapping from ANSI colors to host colors cannot be changed, but the
+    mapping from host colors to console colors can be with
+    <b>%p%.consoleColorForHostColor*</b> resources.
+    The mappings and defaults are as follows:
+    <table cols=3 width="75%">
+    <tr><th>NVT ANSI Color</th>
+        <th>Mapped Host Color (not configurable)</th>
+	<th>Default Console Color</th>
+    <tr> <td>0 (black)</td>     <td>0 (Black)</td> <td>0</td> </tr>
+    <tr> <td>1 (red)</td>       <td>2 (Red) </td> <td>12</td> </tr>
+    <tr> <td>2 (green)</td>     <td>4 (Green)</td> <td>10</td> </tr>
+    <tr> <td>3 (yellow)</td>    <td>6 (Yellow)</td> <td>14</td> </tr>
+    <tr> <td>4 (blue)</td>      <td>1 (Blue)</td> <td>9</td> </tr>
+    <tr> <td>5 (magenta)</td>   <td>3 (Pink)</td> <td>13</td> </tr>
+    <tr> <td>6 (turquoise)</td> <td>6 (Turquoise)</td> <td>14</td> </tr>
+    <tr> <td>7 (white)</td>     <td>7 (NeutralWhite)</td> <td>15</td> </tr>
+    </table>
+    <p class=indented>
+    For example, to change the display from white-on-black to black-on-white,
+    define the following resources:
+    <pre>
+     %p%.consoleColorForHostColorNeutralBlack: 15
+     %p%.consoleColorForHostColorNeutralWhite: 0
+    </pre>
+.
+
+name crosshair
+applies x
+groups a
+type b
+default false
+option Options -&gt; Toggles -&gt; Crosshair Cursor
+switch -set crosshair
+switch -clear crosshair
+description
+    When true, causes %p% to display a crosshair over the
+    cursor: lines extending with height and width of the screen.
+.
+
+name cursesColorForDefault cursesColorForIntensified cursesColorForProtected cursesColorForProtectedIntensified
+applies c
+groups a
+type s
+desc
+    Defines the default color to use to render text based on its attributes,
+    when the host does not specify a particular color.
+    <p class=indented>
+    The value of the resource can be either a curses color index or curses color
+    name.  These are are defined as follows:
+    <table cols=2 width="75%">
+    <tr> <th>Curses Color Index</th> <th>Curses Color Name</th> </tr>
+    <tr> <td>0</td> <td>black</td> </tr>
+    <tr> <td>1</td> <td>red</td> </tr>
+    <tr> <td>2</td> <td>green</td> </tr>
+    <tr> <td>3</td> <td>yellow</td> </tr>
+    <tr> <td>4</td> <td>blue</td> </tr>
+    <tr> <td>5</td> <td>magenta</td> </tr>
+    <tr> <td>6</td> <td>cyan</td> </tr>
+    <tr> <td>7</td> <td>white</td> </tr>
+    <tr> <td>8</td> <td><i>no name -- displays as grey</i></td> </tr>
+    <tr> <td>9</td> <td><i>no name -- displays as bright red</i></td> </tr>
+    <tr> <td>10</td> <td><i>no name -- displays as bright green</i></td> </tr>
+    <tr> <td>11</td> <td><i>no name -- displays as bright yellow</i></td> </tr>
+    <tr> <td>12</td> <td><i>no name -- displays as bright blue</i></td> </tr>
+    <tr> <td>13</td> <td><i>no name -- displays as bright magenta</i></td> </tr>
+    <tr> <td>14</td> <td><i>no name -- displays as bright cyan</i></td> </tr>
+    <tr> <td>15</td> <td><i>no name -- displays as bright white</i></td> </tr>
+    </table>
+    <p class=indented>
+    The default values are:
+    <table cols=3 width="75%" cellspacing=5>
+    <tr> <th>%p% Resource</th>
+         <th>Default Curses Color (8-color terminal)</th>
+	 <th><b>Default Curses Color (16-color terminal)</th> </tr>
+    <tr> <td>cursesColorForDefault</td> <td>green</td> <td>10 (bright green)</td> </tr>
+    <tr> <td>cursesColorForIntensified</td> <td>red</td> <td>red</td> </tr>
+    <tr> <td>cursesColorForProtected</td> <td>blue</td> <td>12 (bright blue)</td> </tr>
+    <tr> <td>cursesColorForProtectedIntensified</td> <td>white</td> <td>15 (bright white)</td> </tr>
+    </table>
+.
+
+name cursesColorForHostColor0 cursesColorForHostColorNeutralBlack cursesColorForHostColor1 cursesColorForHostColorBlue cursesColorForHostColor2 cursesColorForHostColorRed cursesColorForHostColor3 cursesColorForHostColorPink cursesColorForHostColor4 cursesColorForHostColorGreen cursesColorForHostColor5 cursesColorForHostColorTurquoise cursesColorForHostColor6 cursesColorForHostColorYellow cursesColorForHostColor7 cursesColorForHostColorNeutralWhite cursesColorForHostColor8 cursesColorForHostColorBlack cursesColorForHostColor9 cursesColorForHostColorDeepBlue cursesColorForHostColor10 cursesColorForHostColorOrange cursesColorForHostColor12 cursesColorForHostColorPurple cursesColorForHostColor13 cursesColorForHostColorPaleGreen cursesColorForHostColor14 cursesColorForHostColorPaleTurquoise cursesColorForHostColor15 cursesColorForHostColorGrey cursesColorForHostColor16 cursesColorForHostColorWhite
+applies c
+groups a
+type s
+desc
+    Defines what curses color to use to render a particular host color.
+    Host colors can be specified by name or number.  That is, to define the
+    curses color to use when the host specifies <b>green</b>, which is host
+    color 4, either the resource <b>%p%.cursesColorForHostColorGreen</b> or
+    the resource <b>%p%.cursesColorForHostColor4</b> can be defined.
+    <p class=indented>
+    The default definitions are as follows.  Note that on an 8-color
+    terminal, %p% only displays 8 host colors.
+    <table cols=4 width="75%">
+    <tr> <th>Host Color Index</th>
+         <th>Host Color Name</th>
+         <th>Default Curses Color (8-color terminal)</th>
+         <th>Default Curses Color (16-color terminal)</th> </tr>
+    <tr> <td>0</td> <td>NeutralBlack</td> <td>black</td> <td>black</td> </tr>
+    <tr> <td>1</td> <td>Blue</td> <td>blue</td> <td>12 (bright blue)</td> </tr>
+    <tr> <td>2</td> <td>Red</td> <td>red</td> <td>red</td> </tr>
+    <tr> <td>3</td> <td>Pink</td> <td>red</td> <td>13 (bright magenta)</td> </tr>
+    <tr> <td>4</td> <td>Green</td> <td>green</td> <td>10 (bright green)</td> </tr>
+    <tr> <td>5</td> <td>Turquoise</td> <td>cyan</td> <td>14 (bright cyan)</td> </tr>
+    <tr> <td>6</td> <td>Yellow</td> <td>yellow</td> <td>11 (bright yellow)</td> </tr>
+    <tr> <td>7</td> <td>NeutralWhite</td> <td>white</td> <td>15 (bright white)</td> </tr>
+    <tr> <td>8</td> <td>Black</td> <td>-</td> <td>black</td> </tr>
+    <tr> <td>9</td> <td>DeepBlue</td> <td>-</td> <td>blue</td> </tr>
+    <tr> <td>10</td> <td>Orange</td> <td>-</td> <td>9 (bright red)</td> </tr>
+    <tr> <td>11</td> <td>Purple</td> <td>-</td> <td>magenta</td> </tr>
+    <tr> <td>12</td> <td>PaleGreen</td> <td>-</td> <td>green</td> </tr>
+    <tr> <td>13</td> <td>PaleTurquoise</td> <td>-</td> <td>cyan</td> </tr>
+    <tr> <td>14</td> <td>Grey</td> <td>-</td> <td>white</td> </tr>
+    <tr> <td>15</td> <td>White</td> <td>-</td> <td>15 (bright white)</td> </tr>
+    </table>
+    <p class=indented>
+    Note that "neutral black" means black on a display device and white on
+    a printing device, and "neutral white" means white on a display device and
+    black on a printing device.
+    <p class=indented>
+    In NVT mode, %p% maps the ANSI-standard colors 0 through
+    7 to host colors, and from host colors to curses colors.
+    The mapping from ANSI colors to host colors cannot be changed, but the
+    mapping from host colors to curses colors can be with
+    <b>%p%.cursesColorForHostColor*</b> resources.
+    The mappings and defaults are as follows:
+    <table cols=4 width="75%">
+    <tr><th>NVT ANSI Color</th>
+        <th>Mapped Host Color (not configurable)</th>
+	<th>Default Curses Color (8-color terminal)</th>
+	<th>Default Curses Color (16-color terminal)</th> </tr>
+    <tr> <td>0 (black)</td> <td>0 (Black)</td> <td>black</td> <td>black</td> </tr>
+    <tr> <td>1 (red)</td> <td>2 (Red)</td> <td>red</td> <td>red</td> </tr>
+    <tr> <td>2 (green)</td> <td>4 (Green)</td> <td>green</td> <td>10 (bright green)</td> </tr>
+    <tr> <td>3 (yellow)</td> <td>6 (Yellow)</td> <td>yellow</td> <td>11 (bright yellow)</td> </tr>
+    <tr> <td>4 (blue)</td> <td>1 (Blue)</td> <td>blue</td> <td>12 (bright blue)</td> </tr>
+    <tr> <td>5 (magenta)</td> <td>3 (Pink)</td> <td>red</td> <td>13 (bright magenta)</td> </tr>
+    <tr> <td>6 (turquoise)</td> <td>13 (PaleTurquioise)</td> <td>cyan</td> <td>cyan</td> </tr>
+    <tr> <td>7 (white)</td> <td>15 (White)</td> <td>white</td> <td>15 (bright white)</td> </tr>
+    </table>
+    <p class=indented>
+    See %-cursesColorForDefault% for the definitions of curses colors.
+.
+
+name cursesKeypad
+applies c
+type b
+default false
+desc
+    When true, %p% will set up the terminal in curses keypad mode.
+.
+
+name cursorBlink
+applies x
+groups a
+type b
+default false
+option Options -&gt; Toggles -&gt; Blinking Cursor
+switch -set cursorBlink
+switch -clear cursorBlink
+description
+    When true, causes %p% to use a blinking cursor.
+.
+
+name cursorColor
+applies x
+groups a
+type s
+default red
+description
+    On color X11 displays, this is the color of the text cursor.  This resource
+    is used only if %-useCursorColor% is true.
+.
+
+name cursorPos
+applies x C
+groups a
+type b
+default true
+switch -set cursorPos
+switch -clear cursorPos
+option Options -&gt; Toggles -&gt; Track Cursor
+description
+    When true, causes %p% to display the cursor location in the OIA
+    (the status line).
+.
+
+name dbcsCgcsgid
+applies a
+groups p
+type s
+description
+    Overrides the compiled-in value of the CGCSGID for the current host
+    character set, which will be reported to the host in response to a
+    Query(Character Sets).  The value is an integer, which can be prefixed with
+    '0x' to be in hexadecimal.  The upper 16 bits are the GCSGID (character
+    set) and the lower 16 bits are the CPGID (code page).  This value
+    applies only to the double-byte (DBCS) character set.  Use
+    %-sbcsCgcsgid% for the single-byte (SBCS) character set.
+.
+
+name debugTracing
+applies x
+groups t s
+type b
+default true
+description
+    If true, options are available on the <b>File</b> menu
+    to trace the 3270 data stream and X11 events.  If false, these
+    options are not displayed.
+.
+
+name defScreen
+applies c
+type s
+switch -defscreen
+desc
+    Defines a character string that will be output to switch the terminal from
+    132-column mode to 80-column mode.
+    Within the string, the sequence <b>\E</b> is translated to the ASCII
+    ESC character (0x1b).
+    <p class=indented>
+    When %-model% is 5, and this and
+    %-altScreen% are defined, %p% will automatically change the
+    terminal size when the host switches between the default (24x80) screen
+    and the alternate (27x132) screen.
+.
+
+name dftBufferSize
+applies a
+groups p
+type i
+default 4096
+description
+    Specifies the default buffer size for DFT IND$FILE file transfers.  This
+    value can be overridden in the File Transfer dialog and by a parameter to
+    the <b>Transfer</b> action.
+.
+
+name disconnectClear
+applies x
+type b
+default false
+description
+    If true, %p% will clear the screen when a host disconnects.
+.
+
+name doConfirms
+applies x
+type b
+default true
+description
+    When true, %p% will display a pop-up to report successful
+    completion of certain operations, such as screen printing.  When
+    false, these pop-ups are not displayed.
+.
+
+name dsTrace
+applies a
+groups t
+type b
+default false
+switch -trace 
+switch -set dsTrace
+switch -clear dsTrace
+option File -&gt; Trace Data Stream
+description
+    When true, %p% writes a hexadecimal representation of all network
+    traffic (and its interpretation) into a file, which defaults to
+if u
+    <b>/tmp/x3trc.<i>pid</i></b>.
+else
+    <b>x3trc.<i>process-id</i>.txt</b> in the %p% Application Data directory.
+endif
+if x wc
+    It also pops up a window to watch the file as it
+    is created, with the pathname of the file as the window title.
+endif
+if x
+    The command run in the window is defined by %-traceCommand%.
+endif
+    The directory prefix is defined by %-traceDir%.
+    If %-traceFile% is defined, it gives the entire pathname
+    and %-traceDir% is ignored.
+.
+
+name emulatorFont
+type s
+applies x
+groups a
+default 3270
+switch -efont
+option Options -&gt; Font
+description
+    The font used for the emulator window.  By default it is <b>3270</b>,
+    a 14-pixel
+    clone of a real 3278 display font.  Other 3270-specific fonts are
+    available in 8-, 12-, 16-, 24- and 32-pixel sizes.
+    Any standard X11 constant-spaced font can also be used, provided that
+    it implements a display character set compatible with the host code page
+    (%-charset%).  However, the special
+    OIA (status line) symbols are only available with the 3270 fonts.
+.
+
+name emulatorFontList.<i>foo</i>
+type s
+applies x
+description
+A list of fonts for display character set <i>foo</i>.
+This list will be presented by the <b>Options -&gt; Font</b> menu when the
+host code page (%-charset%) requires display character set <i>foo</i>.
+    <p class="indented">
+The list can include '>' characters to present a hierarchy of options.
+    <p class="indented">
+See the file <b>X3270.xad</b> for an example.
+.
+
+name eof
+type s
+applies a
+groups n
+default ^D
+description
+    This setting is used only in NVT mode, and is similar in function to
+    the <i>stty</i> parameter of the same name.
+    <p class=indented>
+    When connected in line-at-a-time mode (when %p% gathers a line of input
+    before forwarding it to the host), entering this character at the
+    keyboard causes
+    the current line of
+    input to be forwarded to the host without a trailing CR/LF sequence.
+    <p class=indented>
+.
+
+name erase
+type s
+applies a
+groups n
+default ^?
+description
+    This setting is used only in NVT mode, and is similar in function to
+    the <i>stty</i> parameter of the same name.
+    <p class="indented">
+    When connected in line-at-a-time mode (%p% gathers a line of input
+    before forwarding it ot the host), entering this character at the keyboard
+    will cause %p% to discard the last character on the input line.
+    <p class="indented">
+    When connected in character-at-a-time mode (%p% sends each keystroke
+    to the host as it is entered), this is the character that will be sent
+    to the host by the <b>Erase</b> action.
+.
+
+name eventTrace
+groups t
+type b
+applies a
+default false
+switch -set eventTrace
+switch -clear eventTrace
+option File -&gt; Trace Keyboard/Mouse Events
+description
+    When true, %p% traces information about keyboard and mouse
+    events into a file.
+    The default file name is
+if u
+    <b>/tmp/x3trc.<i>pid</i></b>.
+else
+    <b>x3trc.<i>process-id</i>.txt</b> in the %p% Application Data directory.
+endif
+if x wc
+    It also pops up a
+    window to watch the file as it is created, with the pathname of the file
+    as the window title.
+endif
+if x
+    The command run in the window is defined by %-traceCommand%.
+endif
+    The directory prefix is defined by %-traceDir%.
+    If %-traceFile% is defined, it gives the entire pathname
+    and %-traceDir% is ignored.
+.
+
+name extended
+type b
+applies a
+default false
+groups d
+switch -extended
+description
+    <i>Deprecated resource -- replaced by %-model% syntax</i>
+    <p class="indented">
+    Indicates support for the 3270 Extended Data Stream.
+.
+
+name fixedSize
+type s
+applies x
+groups a
+description
+    Specifies a fixed size for the %p% display window.
+    If set, %p% will not allow its window to be resized by the window manager.
+    The syntax is <b><i>width</i>x<i>height</i></b>.
+    The 3270 display screen will float in the center of the window if necessary.
+.
+
+name foreground
+type s
+applies x
+groups a
+default black
+switch -fg
+switch -rv
+description
+    The foreground color for menus, buttons, and on monochrome X11 displays, the
+    emulator display.
+.
+
+name highlightBold
+type b
+applies x
+groups a
+default false
+description
+    If true, highlighted fields will be displayed in bold.  If
+    false, highlighted fields will be displayed in the normal
+    font.
+.
+
+name hostColorForDefault hostColorForIntensified hostColorForProtected hostColorForProtectedIntensified
+applies wc
+groups a
+type s
+desc
+    Defines the default color to use to render text with a particular
+    attribute, when the host does not specify a particular color.
+    <p class=indented>
+    The value of the resource is a host color name or color index.
+    See %-consoleColorForHostColor0% for the definitions of host colors.
+    <p class=indented>
+    The default values are:
+    <table cols=2 width="75%">
+    <tr> <th>%p% Resource</th>
+         <th>Default Host Color</th>
+    <tr> <td>hostColorForDefault</td> <td>Green</td> </tr>
+    <tr> <td>hostColorForIntensified</td> <td>Red</td> </tr>
+    <tr> <td>hostColorForProtected</td> <td>Blue</td> </tr>
+    <tr> <td>hostColorForProtectedIntensified</td> <td>NeutralWhite</td> </tr>
+    </table>
+.
+
+name hostname
+type s
+applies a
+groups c
+desc
+    Gives the name of the host to connect to.  The name can include the usual
+    options (prefixes to specify special connection options, LU names, and
+    port).  A hostname specified on the command line takes precedence over
+    %-hostName%.
+    <p class=indented>
+    The most common use of %-hostName% is in <i>session files</i>, where a
+    file is used to pass all of the options to establish a %p% session.
+.
+
+name hostsFile
+type s
+applies x
+default /usr/local/etc/x3270/ibm_hosts
+description
+    The pathname of a file listing the host names that appear on the
+    <b>File -&gt; Connect</b> menu.
+    The file can also be used to create hostname aliases and to define a set
+    of actions to perform when connecting to a host.
+    <p class="indented">
+    The format of the file is explained on the <i>ibm_hosts</i> manual page.
+    The default pathname is actually <b>ibm_hosts</b> in the directory
+    defined by %-confDir%.
+.
+
+name hostsFile
+type s
+applies C S tcl
+if u
+default /usr/local/etc/x3270/ibm_hosts
+else
+default ibm_hosts
+endif
+description
+    The pathname of a file containing hostname aliases.
+    The file can also be used to define a set of actions to perform when
+    connecting to a host.
+    <p class="indented">
+    The format of the file is explained on the <i>ibm_hosts</i> manual page.
+if u
+    The default pathname is actually <b>ibm_hosts</b> in the directory
+    defined by %-confDir%.
+endif
+.
+
+name iconFont
+type s
+applies x
+groups a
+default nil2
+description
+    The font used to paint the text inside the active icon (see %-activeIcon%).
+    The default of <b>nil2</b> is a one-by-two pixel font that produces a
+    "greeked" picture of the screen image.
+.
+
+name iconLabelFont
+type s
+applies x
+groups a
+default 8x13
+description
+    When %-activeIcon% and %-labelIcon% are true, this is the
+    name of the font used to paint the icon label.
+.
+
+name icrnl
+type b
+applies a
+groups n
+default true
+description
+    This setting is used only in NVT mode, and is similar in function to
+    the <i>stty</i> parameter of the same name.
+    It controls whether input carriage returns are mapped to newlines.
+.
+
+name idleCommand
+applies x C
+groups i
+type s
+description
+    When %-idleCommand% is defined, it specifies a command to execute after a
+    period of keyboard inactivity (no AID keys pressed).
+    The %-idleCommand% can be an arbitrary sequence of %p% actions, but it
+    should include an action which generates an AID (<b>Enter</b>, <b>Clear</b>,
+    <b>PF</b> or <b>PA</b>).
+    %-idleCommandEnabled% must be true in order for the
+    %-idleCommand% to take effect. (This is so an idle command can be defined,
+    but needs to be enabled explicitly at some point after login.)
+    %-idleTimeout% specifies the inactivity interval.
+.
+
+name idleCommandEnabled
+applies x C
+groups i
+type b
+default false
+description
+    Controls whether %-idleCommand% has effect as soon as a host session
+    is established.  (This is so an idle command can be defined, but needs to
+    be explicitly enabled at some point after login.)
+.
+
+name idleTimeout
+applies x C
+groups i
+type s
+default ~7m
+description
+    The timeout value for %-idleCommand%.
+    If the value ends in <b>h</b>, it specifies hours; if it ends in
+    <b>m</b> it specifies minutes; if it ends in <b>s</b> or does not have
+    an alphanumeric suffix, it specifies seconds.
+    <p class="indented">
+    If the value begins with a tilde <b>~</b>, the time will be randomly
+    varied +/-10% from the value specified.
+.
+
+name inlcr
+applies a
+groups n
+type b
+default false
+description
+    This setting is used only in NVT mode, and is similar in function to
+    the <i>stty</i> parameter of the same name.
+    It controls whether input newlines are mapped to carriage returns.
+.
+
+name inputColor
+applies x
+groups a
+type s
+default green
+description
+    This resource defines the color used to display light-pen selectable
+    text in 3278 (monochrome) emulation mode.
+    <p class=indented>
+    Previous versions of %p% implemented something called <i>pseudo-color
+    mode</i>, where a monochrome (3278) terminal was emulated with various
+    colors assigned to different kinds of fields.
+    To emulate pseudo-color mode with the current version of %p%, select 3278
+    emulation with %-model%, set %-inputColor% to <b>orange</b> and set
+    %-boldColor% to <b>cyan</b>.
+    <p class=indented>
+    If the resource %-modifiedSel% is true, modified fields
+    are also displayed using %-inputColor%.
+.
+
+name inputMethod
+applies x
+type s
+switch -im
+description
+    Specifies the name of the multi-byte input method.  The
+    default is specified by the XMODIFIERS environment variable, if set, or
+    will be constructed by Xlib based on the current locale.
+.
+
+name intr
+applies a
+groups n
+type s
+default ^C
+description
+    This setting is used only in NVT mode, and is similar in function to
+    the <i>stty</i> parameter of the same name.
+    When this character is typed on the keyboard, the TELNET IP
+    (Interrupt Process) sequence is sent to the host.
+.
+
+name invertKeypadShift
+applies x
+type b
+default false
+description
+    When true, causes the PF1-PF12 and PF13-PF24 keys on the
+    pop-up keypad to be swapped.  Normally, the low-numbered keys appear;
+    when Shift, Alt, Ctrl or Meta is pressed, the high-numbered keys appear.
+    With this resource true, that is reversed.
+.
+
+name keyHeight
+applies x
+groups a
+type i
+default 24
+desc
+    Defines the height of the keys on the pop-up keypad.
+.
+
+name keymap
+applies x C
+groups c
+type s
+switch -keymap
+description
+    The name of the keyboard map to use.
+    It can be a single keymap name or a comma-separated list of keymaps,
+    which will be applied in order.
+    <p class=indented>
+    Each keymap can optionally be defined in three separate parts: a common
+    keymap, which is applied at all times, an NVT-mode keymap, which is
+    applied only in NVT mode, and a 3270-mode keymap, which is only applied
+    in 3270 mode.
+    The NVT-mode keymap has the same name as the common keymap, with the
+    suffix <b>.nvt</b> appended.
+    The 3270-mode keymap has the suffix <b>.3270</b> appended.
+    Thus specifying a %-keymap% value of <i>foo</i> implies the use of
+    three different keymaps (if found): <b>foo</b>, <b>foo.nvt</b> and
+    <b>foo.3270</b>.
+if x
+    <p class=indented>
+    After that, the string <b>.user</b>
+    is appended to the keymap name and three more keymaps are searched
+    for: <b>foo.user</b>, <b>foo.user.nvt</b> and <b>foo.user.3270</b>,
+    for a total of six.
+endif
+    <p class=indented>
+if x
+    If no %-keymap% is defined, the environment variables $KEYMAP and
+    $KEYBD are checked, in that order, for the name.
+    %-keymap% is only the name; the keymap definition for name
+    <i>foo</i> is the resource %-keymap.<i>foo</i>%.
+endif
+if C
+    %-keymap% is only the name; the actual keymap for name
+    <i>foo</i> can be defined either by the resource %-keymap.<i>foo</i>%, or
+    by a
+    <i>keymap file</i>.
+if c
+    The keymap file is not searched for in any particular
+    location, nor does it have a special suffix, so %-keymap% can specify the
+    full pathname of the keymap file.
+else
+    Keymap files are located in the %p% Application
+    Data directory, and have the suffix <b>.wc3270km</b>.
+endif
+endif
+.
+
+name keymap.<i>foo</i>
+applies x C
+type s
+description
+    The definition of keymap <i>foo</i>.
+    Please refer to the <i>How To Create a Custom Keymap</i> document for a
+    full description of the syntax.
+.
+
+name keypad
+applies x
+groups a
+type s
+default right
+description.
+    This controls the position of the pop-up keypad.  It can have one of
+    five values:
+    <ul>
+    <li><b>left</b>, a pop-up window positioned to the left
+    of the main %p% window</li>
+    <li><b>right</b>, a pop-up window positioned
+    to the right of the main x3270 window</li>
+    <li><b>bottom</b>, a pop-up window positioned below
+    the main %p% window</li>
+    <li><b>integral</b>, making the keypad an extension of the
+    bottom of the main window itself</li>
+    <li><b>insideRight</b>, placing the keypad
+    over the upper-right corner of the emulator window, just below the keypad
+    button on the menu bar</li>
+    </ul>
+.
+
+name keypad.keyHeight
+applies x
+groups a
+type i
+default 24
+description
+    The height in pixels of all of the buttons on the keypad.
+.
+
+name keyWidth
+applies x
+groups a
+type i
+default 48
+description
+    The width in pixels of the lower tier of buttons on a horizontal keypad.
+.
+
+name keypad.largeKeyWidth
+applies x
+groups a
+type i
+default 56
+description
+    The width in pixels of the lower tier of buttons on a vertical keypad.
+.
+
+name keypad.paWidth
+applies x
+groups a
+type i
+default 36
+description
+    The width in pixels of PA and cursor keys on the keypad.
+.
+
+name keypad.pfWidth
+applies x
+groups a
+type i
+default 32
+description
+    The width in pixels of PF keys on the keypad.
+.
+
+name keypadBackground
+applies x
+groups a
+type s
+default grey70
+description
+    On color X11 displays, this is the color of the empty area behind the
+    buttons on the main window and keypad window.  On monochrome X11 displays,
+    these areas are filled with a 50% grey bitmap.
+.
+
+name keypadOn
+applies x
+type b
+default false
+description
+    If true, the keypad will automatically appear when %p% is
+    started.
+.
+
+name kill
+applies a
+groups n
+type s
+default ^U
+description
+    This setting is used only in NVT mode, and is similar in function to
+    the <i>stty</i> parameter of the same name.
+    <p class=indented>
+    When connected in line-at-a-time mode (when %p% gathers a line of input
+    before forwarding it to the host), entering this character at the
+    keyboard causes
+    the current input line to be erased.
+    <p class=indented>
+    When connected in character-at-a-time mode (when %p% sends each
+    keystroke to the host), this is the ASCII character that is sent to
+    the host by the <b>DeleteField</b>
+    action.
+.
+
+name labelIcon
+applies x
+groups a
+type b
+default false
+description
+    When %-activeIcon% is true, the <i>twm</i> window manager will
+    not put a label on %p%'s icon.
+    Setting %-labelIcon% to true causes
+    %p% to supply its own label for the icon.
+    <p class=indented>
+    The icon label is drawn using the font specified by %-iconLabelFont%.
+.
+
+name largeKeyWidth
+applies x
+groups a
+type i
+default 56
+desc
+    Defines the width of the "large" keys in the lower section of the pop-up
+    keypad.
+.
+
+name lineWrap
+applies a
+groups n
+type b
+default true
+switch -set lineWrap
+switch -clear lineWrap
+option Options -&gt; Toggles -&gt; Wraparound
+description
+    This setting is used only in NVT mode.
+    When true, %p% will automatically insert a 
+    CR/LF sequence when output reaches the end of a line.  When false,
+    output will pile up at the end of each line until the host sends a
+    CR/LF sequence.
+.
+
+name loginMacro
+applies a
+type s
+desc
+    Defines a sequence of commands to run as soon as a host connection is
+    established.  Usually these would be commands used to navigate through
+    login screens, such <b>String</b>, <b>Tab</b> and <b>Enter</b>.
+    <p class=indented>
+    If a %-hostsFile% is in use and a matching entry is found, the login
+    macro from that entry will be used in preference to the %-loginMacro%.
+.
+
+name lnext
+applies a
+groups n
+type s
+default ^V
+description
+    This setting is used only in NVT mode, and is similar in function to
+    the <i>stty</i> parameter of the same name.
+    <p class=indented>
+    When connected in line-at-a-time mode (when %p% gathers a line of input
+    before forwarding it to the host), entering this character at the
+    keyboard removes any special meaning from the next character entered.
+.
+
+name localCp
+applies wc
+type i
+desc
+    Forces %p% to use the specified codepage in place of the system ANSI
+    codepage.  This codepage is used when interpreting keymap files and
+    when generating trace files.
+.
+
+name lockedCursor
+applies x
+groups a
+type s
+default X_cursor
+description
+    The name of the mouse cursor displayed with %p% is not connected to a
+    host.
+.
+
+name m3279
+applies a
+type b
+default false
+groups d
+switch -color
+description
+    <i>Deprecated resource -- replaced by %-model% syntax</i>
+    <p class=indented>
+    Indicates support for color (a 3279 terminal).
+.
+
+name macros
+applies x
+type s
+description
+    Defines a set of macros assigned to the <b>Macros</b> menu that appears
+    when connected to a host.
+    The syntax is similar to a keymap (an X11 translation
+    table), except that rather than a keysym name, the left-hand side is a
+    name that will appear on the menu.  A list of actions can be specified
+    on the right-hand side.
+    <p class=indented>
+    %-macros% defines a set of macros for all hosts.
+    To specify a set of macros for host <i>foo</i>, use %-macros.<i>foo</i>%.
+.
+
+name macros.<i>foo</i>
+applies x
+type s
+description
+    Defines a set of macros assigned to the <b>Macros</b> menu that appears
+    when connected to host <i>foo</i>.
+    It overrides the contents of %-macros%.
+    See %-macros% for details on its syntax.
+.
+
+name marginedPaste
+applies x wc
+groups i
+type b
+default false
+switch -set marginedPaste
+switch -clear marginedPaste
+option Options -&gt; Toggles -&gt; Paste With Left Margin
+description
+    When true, %p% will use the current cursor position as a
+    left margin for pasted data: no pasted data will be input into an area to
+    the left of the current cursor positon.
+.
+
+name menuBar
+applies x
+groups a
+type b
+default true
+description
+    If false, the menu bar will not be displayed at the top of
+    the %p% main window.  The three pull-down menus are still available,
+    however, by pressing Ctrl and each of the mouse buttons.
+.
+
+name metaEscape
+applies c
+type b
+default true
+desc
+    When true, %p% will assume that pressing a key while holding down the
+    <b>Alt</b> key will cause the terminal to transmit the ASCII ESC character
+    (0x1b) before the key.  Thus %p% will interpret ESC-x as Alt-x.
+    <p class=indented>
+    When false, ESC is treated like any other input character.
+.
+
+name model
+applies a
+groups c
+type s
+default 3279-4-E
+switch -model
+option Options -&gt; Screen Size
+description
+    The terminal model that %p% is emulating.  The model is in three parts,
+    separated by dashes; each part is optional.
+    <ul>
+	<li>3278 or 3279<br>
+	    3278 specifies a monochrome (green) 3270 display.
+if x
+	    If used on a color
+	     X11 display, it will cause all fields to be drawn in green.
+	     3278 is the default for monochrome X11 displays.
+endif
+	     <br>
+	    3279 specifies a color 3270 display.
+if x
+	    This is the default for color X11 displays.
+endif
+	     </li>
+	<li>2, 3, 4 or 5</br>
+	    The model number, which determines the size of the screen.</br>
+	    Model 2 has 24 rows and 80 columns.</br>
+	    Model 3 has 32 rows and 80 columns.</br>
+	    Model 4 has 43 rows and 80 columns.</br>
+	    Model 5 has 27 rows and 132 columns.</br>
+	    The default is
+if C
+	     the largest model that will fit on the console or terminal
+	     emulator window where %p% is running.
+	     Displaying the OIA (status line) requires one more row than
+	     what is listed above.
+else
+	     4.
+endif
+	     </li>
+	<li>E</br>
+	    An optional suffix which indicates support for the 3270 Extended
+	     Data Stream (color, extended attributes, Query Reply).  3279
+	     implies E.</li>
+	     </ul>
+.
+
+name modifiedSel
+applies x
+groups a
+type b
+default false
+description
+    When true, modified fields are displayed in a different
+    color than other modifiable fields.
+    In 3278 mode, this color is the "input" (light pen selectable) color,
+    defined by %-inputColor%.
+    In 3279 mode, this is the color whose index is defined by
+    %-modifiedSelColor%.
+    When %-modifiedSel% is false,
+    modified fields are displayed in the same colors as unmodified fields.
+.
+
+name modifiedSelColor
+applies x
+groups a
+type i
+default 10
+description
+    In 3279 mode, when %-modifiedSel% is true,
+    this is index of the host color used to display modified fields.
+    The default value of 10 corresponds to "orange".
+    (See %-colorSchemes% for the host color index definitions.)
+.
+
+name mono
+applies x c
+type b
+default false
+switch -mono
+description
+if x
+    If true, %p% will operate as if it were running on a
+    monochrome X11 display.
+else
+    If true, %p% will emulate a 3278, and will not use any of the terminal's
+    color attributes.
+endif
+.
+
+name monoCase
+applies a
+type b
+default false
+switch -set monoCase
+switch -clear monoCase
+option Options -&gt; Toggles -&gt; Monocase
+description
+    When true, causes %p% to run in uppercase-only mode.
+.
+
+name mouse
+applies c
+groups i
+type b
+default true
+description
+    If true, enables %p% to accept mouse-control events on terminals and
+    emulators that support them.  This allows a left mouse click to move the
+    cursor.  On terminals like xterm and gnome-terminal, this means that the
+    usual mouse selection actions must be performed with the Shift key pressed.
+
+    If false, mouse-control events will not be enabled.
+.
+
+name noOther
+applies x
+groups s
+type b
+default false
+description
+    If true, the "Other" options are disabled for selecting
+    fonts and connecting to hosts, limiting users to the options provided on
+    the menus.
+.
+
+name noPrompt
+applies C
+groups s
+type b
+default false
+desc
+    If true, the interactive <b>%p%&gt;</b> prompt will be
+    disabled.  In particular, this means that when %p% is not connected to
+    a host, a keymap or an external script is the only way to start a new
+    host connection.
+.
+
+name normalCursor
+applies x
+type s
+groups a
+default top_left_arrow
+desc
+    Defines the mouse cursor that %p% uses when it is connected to a host, not
+    waiting for the host to complete a command, and the keyboard is not
+    locked.
+.
+
+name numericLock
+applies a
+groups i
+type b
+default false
+desc
+    When true, causes %p% to lock the keyboard when non-numeric data
+    is entered into fields with the Numeric attribute.
+.
+
+name normalColor
+applies x
+groups a
+type s
+default green
+desc
+    On color X11 displays in 3278 mode, this is the color of normal-intensity
+    text.  On monochrome X11 displays, normal text uses the foreground color.
+.
+
+name onlcr
+applies a
+groups n
+type b
+default true
+desc
+    Used only in NVT line-at-a-time mode; similar to the <i>stty</i> parameter
+    of the same name.
+    It controls whether output newlines are mapped to CR/LF sequences.
+.
+
+name oerrLock
+applies a
+groups i
+type b
+default true
+desc
+    If true, operator errors (typing into protected fields,
+    insert overflow, etc.) will cause the keyboard to lock with an error
+    message in the OIA (status line).  If false, these
+    errors will simply cause the terminal bell will ring, without any
+    keyboard lock or message.
+.
+
+name once
+applies a
+type b
+default false
+switch -once
+desc
+    When true, %p% will exit as soon as a host disconnects.
+    The default is <b>false</b> if no hostname is specified on the command
+if x C
+    line or in a session file,
+else
+    line,
+endif
+    <b>true</b> otherwise.
+.
+
+name oversize
+applies a
+type s
+switch -oversize
+desc
+    Sets the screen dimensions to be larger than the default for the
+    chosen model.  Its value is a string in the format
+    <b><i>cols</i>x<i>rows</i></b>.
+if C
+    It can also be the string <b>auto</b>, which will cause %p% to use the
+    entire screen area of the
+endif
+if c
+    terminal.
+endif
+if wc
+    console window it is running in.
+endif
+    It is used only if the %-model% includes the "-E" (extended
+    data stream) suffix, and only if the specified dimensions are larger than
+    the model number defaults.  Also, only hosts that support the Query Reply
+    structured field will function properly with %p% in this mode.
+.
+
+name paWidth
+applies x
+groups a
+type i
+default 36
+desc
+    Defines the width of the PA keys in the lower section of the pop-up
+    keypad.
+.
+
+name pfWidth
+applies x
+groups a
+type i
+default 32
+desc
+    Defines the width of the PF keys on the pop-up keypad.
+.
+
+name port
+applies a
+groups c
+type s
+default telnet
+switch -port
+desc
+    The name of the default TCP port for %p% to connect to.  This can be
+    either a symbolic name from /etc/services, or an integer.
+.
+
+name proxy
+applies a
+groups c
+type s
+switch -proxy
+desc
+    Defines a proxy server that %p% will use to connect to hosts.
+    The value is of the form
+    <b><i>type</i>:<i>server</i></b>[<b>:<i>port</i></b>],
+    where options for <i>type</i> are described on the %p% manual page.
+.
+
+name preeditType
+applies x
+type s
+default OverTheSpot+1
+switch -pt
+desc
+    The preedit type for the multi-byte input method.  Valid values are
+    <b>OverTheSpot</b>, <b>OffTheSpot</b>, <b>Root</b> and
+    <b>OnTheSpot</b>.  The value for
+    <b>OverTheSpot</b> can include an optional suffix, a signed number
+    indicating the vertical distance in rows of the preedit window from the
+    cursor position, e.g. <b>OverTheSpot+1</b> or <b>OverTheSpot-2</b>.
+.
+
+name printerLu
+type s
+applies x C
+groups c
+switch -printerlu
+desc
+    If a value is set, %p% will automatically start a
+if u
+    pr3287
+else
+    wpr3287
+endif
+    printer session
+    when a host connection is established.
+    If the value is "<b>.</b>", the
+if u
+    pr3287
+else
+    wpr3287
+endif
+    session will
+    be associated with the interactive terminal session (this requires that
+    the host supports TN3270E).  Otherwise, the value is taken as the LU
+    name to associate with the printer session.
+.
+
+name printer.assocCommandLine
+applies x C
+type s
+if x c
+default pr3287 -assoc %L% -command %C% %R% %P% %H%
+else
+default wpr3287.exe -assoc %L% -command %R% %P% %I% %H%
+endif
+desc
+    The shell command to use to start a printer session, when associated with
+    the current TN3270E session LU (when %-printerLU% is "<b>.</b>").
+    Within the string, the following substitutions
+    are made:
+    <ul>
+if x c
+	<li><b>%C%</b> is replaced with the %-printer.command%</li>
+endif
+	<li><b>%H%</b> is replaced with the current host name</li>
+if wc
+	<li><b>%I%</b> is replaced with an option to pass %-printer.codepage%</li>
+endif
+	<li><b>%L%</b> is replaced with the current session's LU</li>
+	<li><b>%P%</b> is replaced with the current session's proxy option (%-proxy%)</li>
+	<li><b>%R%</b> is replaced with an option to pass the current character set</li>
+    </ul>
+.
+
+name printer.codepage
+applies wc
+type i
+desc
+    The codepage used by the printer associated with wpr3287 printer sessions.
+    The default is to use the system's ANSI codepage.
+.
+
+name printer.command
+applies x c
+type s
+default lpr
+desc
+    The name of the command supplied to the "-command" option of the pr3287
+    program to print each job.  This is the text which is substituted for
+    <b>%C</b> in %-printer.assocCommandLine% and %-printer.luCommandLine%
+    resources.
+.
+
+name printer.luCommandLine
+applies x C
+type s
+if x c
+default pr3287 -command %C% %R% %p% %L%@%H%
+else
+default wpr3287.exe %R% %p% %I% %L%@%H%
+endif
+desc
+    The shell command to use to start a printer session, when associated with a
+    specific LU.  Within the string, the following substitutions are made:
+    <ul>
+if x c
+	<li><b>%C%</b> is replaced with %-printer.command%</li>
+endif
+	<li><b>%H%</b> is replaced with the current host name</li>
+if wc
+	<li><b>%I%</b> is replaced with an option to pass %-printer.codepage%</li>
+endif
+	<li><b>%L%</b> is replaced with the LU value entered into the dialog box</li>
+	<li><b>%P%</b> is replaced with current session's proxy option (%-proxy%)</li>
+	<li><b>%R%</b> is replaced with an option to pass the current character set</li>
+    </ul>
+.
+
+name printer.name
+applies wc
+type s
+desc
+    Defines the name of the printer used for wpr3287 sessions and by the
+    <b>PrintText</b> action.  The default is to use the system's default
+    printer.
+.
+
+name printTextCommand
+applies x c
+type s
+default lpr
+desc
+    The shell command used by the <b>PrintText</b> action.  An ASCII image of
+    the 3270 display becomes the standard input to this command.
+if x
+    If the first
+    character of the command is '@', the usual pop-up windows before and after
+    the text is printed will not appear.
+endif
+.
+
+name printTextFont
+applies wc
+type s
+default Courier New
+desc
+    The font used by the <b>PrintText</b> action.
+.
+
+name printTextSize
+applies wc
+type i
+default 8
+desc
+    The font size used by the <b>PrintText</b> action.
+.
+
+name printWindowCommand
+applies x
+type s
+default xwd -id %d | xpr | lpr
+desc
+    The shell command used by the <b>PrintWindow</b> action.
+    The X11 window identifier of the main x3270 window is substituted for
+    any <b>%d</b> in the command.
+    If the first character of the command is '<b>@</b>', the usual pop-up windows
+    before and after the window is printed will not appear.
+.
+
+name quit
+applies a
+groups n
+type s
+default ^\
+desc
+    This setting is used only in NVT mode, and is similar in function to
+    the <i>stty</i> parameter of the same name.
+    When connected in line-at-a-time mode (when %p%
+    gathers a line of input before forwarding it to the host),
+    entering this character at the keyboard causes the
+    TELNET BREAK sequence to be sent to the host.
+.
+
+name reconnect
+applies x C
+type b
+default false
+desc
+    When true, %p% will automatically reconnect to a host after it disconnects.
+.
+
+name rectangleSelect
+applies x
+groups i
+type b
+default false
+switch -set rectangleSelect
+switch -clear rectangleSelect
+option Options -&gt; Toggles -&gt; Select by Rectangles
+desc
+    When true, %p% will always select rectangular areas of the
+    screen.  When false, %p% will select rectangular areas in 3270
+    mode, but in NVT mode it will select continuous areas of the screen like
+    <i>xterm</i>.
+.
+
+name reverseVideo
+applies c
+type b
+groups a
+default false
+option -rv
+desc
+    When true, %p% will use a white background instead of a black one.
+.
+
+name rprnt
+applies a
+groups n
+type s
+default ^R
+desc
+    This setting is used only in NVT mode, and is similar in function to
+    the <i>stty</i> parameter of the same name.
+    When connected in line-at-a-time mode (when %p%
+    gathers a line of input before forwarding it to the host), entering this
+    character at the keyboard causes the current input line to be redisplayed.
+.
+
+name saveLines
+applies x
+type i
+default 64
+switch -sl
+desc
+    The number of display lines to save for the scroll bar.
+.
+
+name sbcsCgcsgid
+applies a
+groups p
+type s
+desc
+    Overrides the compiled-in value of the CGCSGID for the current host
+    character set.  The value is an integer, which can be prefixed with '0x'
+    to be in hexadecimal.  The upper 16 bits are the GCSGID (character
+    set) and the lower 16 bits are the CPGID (code page).  This value
+    applies only to the single-byte (SBCS) character set.  Use
+    %-dbcsCgcsgid% for the double-byte (DBCS) character set.
+.
+
+name schemeList
+applies x
+type s
+desc
+    Lists the options on the Color Scheme menu.  Can contain '>' characters to
+    indicate a menu hierarchy.  See the file X3270.xad for an example.
+.
+
+name screenTrace
+applies a
+groups t
+type b
+default false
+switch -set screenTrace
+switch -clear screenTrace
+option File -&gt; Save Screen(s) in File
+desc
+    When true, %p% will save an ASCII version of the screen image in
+    a file every time it changes.
+    The file name defaults to
+if u
+    <b>/tmp/x3scr.<i>pid</i></b>.
+else
+    <b>x3scr.<i>pid</i>.txt</b> in the %p% Application Data directory.
+endif
+    The directory prefix is defined by the %-traceDir% resource.
+    If the %-screenTraceFile% resource is defined, it defines the
+    file name and %-traceDir% is ignored.
+if w
+    file name.
+endif
+.
+
+name screenTraceFile
+applies a
+groups t
+type s
+desc
+    If defined, gives the name of the file that screen traces will be
+    written into.
+.
+
+name scripted
+applies x
+type b
+default false
+switch -script
+desc
+    When true, %p% will read commands from standard input.  The rules
+    for these commands are documented in the <i>x3270-script</i> manual page.
+.
+
+name scriptPort
+applies a
+type i
+switch -scriptport
+desc
+    If defined, %p% will accept script connections on the specified local TCP
+    port.
+    The rules for the commands passed over these connections are documented
+    in the <i>x3270-script</i> manual page.
+.
+
+name scrollBar
+applies x
+type b
+default false
+switch -sb
+switch +sb
+switch -set scrollBar
+switch -clear scrollBar
+desc
+    When true, %p% will display a scroll bar to the right of the emulator
+    window.
+.
+
+name secure
+applies x
+groups s
+type b
+default false
+desc
+    When true, %p% will prevent users from executing arbitrary
+    commands from within the program.
+    In particular, the <b>File -&gt; Execute an Action</b> menu option is
+    disabled, as are the pop-ups which allow editing the commands
+    for <b>File -&gt; Print Screen Text</b> and
+    <b>File -&gt; Print Window Bitmap</b>, and
+    %-disconnectClear% is true.
+    See %-noOther% and %-suppressActions% for additional security options.
+.
+
+name selectBackground
+applies x
+groups a
+type s
+default dimGrey
+desc
+    On color X11 displays, this is the background color used for selected text
+    (text highlighted with the mouse for cut and paste).  On monochrome
+    X11 displays, selected text is in reverse video.
+.
+
+name showTiming
+applies x
+groups a
+type b
+default false
+switch -set showTiming
+switch -clear showTiming
+option Options -&gt; Toggles -&gt; Show Timing
+desc
+    When true, %p% will display on the OIA (status line) the time
+    that the host takes to unlock the keyboard after an AID is sent.
+.
+
+name socket
+applies u
+type b
+default false
+switch -socket
+desc
+    When true, %p% will create a Unix-domain socket than can be used
+    by an external script to control the session.  The name of the socket is
+    <b>/tmp/x3sck.<i>pid</i></b>.  The <b>-p</b> option of the
+    <i>x3270if</i> command can be used to connect to this socket.
+.
+
+name *suppress
+applies x
+groups s
+type b
+desc
+    When true, suppresses a menu item.  For example, setting
+    <b>x3270*executeActionOption.suppress</b> to true will remove
+    the <b>Execute an Action</b> option on the <b>File</b> menu.
+    The names of the menu items generally end in 'Option' and have label
+    resources in X3270.xad.
+.
+
+name suppressActions
+applies a
+groups s
+type s
+desc
+    A list of whitespace-separated action names, with or without parentheses,
+    which are to be ignored.  The actions will be completely inaccessible,
+    whether by keymaps, scripts, macros or the Execute an Action menu option.
+    This resource is intended to be used as a security precaution for users
+    who can define their own keymaps, but who do not have access to resource
+    definitions or command-line options.
+.
+
+name suppressFontMenu
+applies x
+type b
+default false
+desc
+    If true, the <b>Options -&gt; Font</b> menu will not be displayed.
+.
+
+name suppressHost
+applies x
+type b
+default false
+desc
+    If true, %p% will omit the hostname from the
+    <b>File -&gt; About %p% -&gt; Connection Status</b> pop-up.
+.
+
+name termName
+applies a
+groups p
+type s
+switch -tn
+desc
+    An alternate name to be sent in response to the host's TELNET DO OPTION
+    TERMINAL-NAME request.  The default is <b>IBM-</b>, followed by the
+    value of %-model%.
+.
+
+name title
+applies x wc
+groups a
+type s
+switch -title
+desc
+    Sets the title for the %p% window, overriding the default of constructing
+    the name from the host that is connected to.
+.
+
+name traceCommand
+applies x
+type s
+default tail -f
+desc
+    Defines the command that runs in the trace window.
+.
+
+name traceDir
+applies u
+groups t
+type s
+default /tmp
+desc
+    Defines the directory that trace files are written into.
+.
+
+name traceDir
+applies w
+groups t
+type s
+default <i>app-data</i>
+desc
+    Defines the directory that trace files are written into.
+    The default is the %p% Application Data directory.
+.
+
+name traceFile
+applies a
+groups t
+type s
+switch -tracefile
+desc
+    If defined, gives the name of the file that data stream and event traces
+    will be written into.
+if x
+    If given the value <b>stdout</b>, traces will
+    be written to standard output.  If given the value <b>none</b>, then the
+    traces will be piped directory to the monitor window, and no file will
+    be created.
+endif
+.
+
+name traceFileSize
+applies a
+groups t
+type s
+switch -tracefilesize
+desc
+    If defined, gives a limit on the size of the file that data stream and
+    event traces will be written into.  If not defined, or defined as <b>0</b>,
+    there
+    will be no limit on the size of the file.  The value is a number, followed
+    by an optional suffix.  If the suffix is <b>K</b> (e.g., 128K),
+    the value will be multiplied by 1024.
+    If the suffix is <b>M</b>, the value will be multiplied
+    by (1024*1024).  The size limit enforced at operation boundaries, not per
+    byte, so the actual file may grow slightly larger.  When the file size
+    exceeds the limit, the second half of the file will be written over the
+    first, so that in steady state, the file size will vary between half the
+    %-traceFileSize% and the entire %-traceFileSize%.
+.
+
+name traceMonitor
+applies x wc
+groups t
+type b
+default true
+desc
+    When true, %p% will create a window to monitor data stream and
+    event traces.
+    When false, no monitor window will be
+if x
+    created (and the value of <b>none</b> for %-traceFile% will be
+    considered invalid).
+else
+    created.
+endif
+.
+
+name typeahead
+applies w C
+type b
+default true
+desc
+    When true, %p% will store keystrokes in a buffer when the
+    keyboard is locked.  When false, these keystrokes will be dropped.
+.
+
+name underscore
+applies C
+groups a
+type b
+if c
+default false
+else
+default true
+endif
+switch -set underscore
+switch -clear underscore
+desc
+    When true, %p% will display fields with the <i>underlined</i>
+    attribute in a special way: blank characters will be translated to
+    underscore (<b>_</b>) characters.  This is needed
+if c
+    on terminals that
+else
+    to overcome the fact that Windows consoles
+endif
+    are unable to display real underlined text.
+.
+
+name unlockDelay
+applies a
+type b
+default true
+desc
+    When %p% sends the host an AID (the <b>Enter</b>, <b>Clear</b>, <b>PF</b>
+    or <b>PA</b>
+    actions), it locks the keyboard until the host sends a reply to
+    unlock it.  Some hosts unlock the keyboard before they are actually
+    finished processing the command, which can cause scripts to malfunction
+    subtly.  To avoid this, %p% implements a hack to briefly delay actually
+    unlocking the keyboard.
+    When %-unlockDelay% is true, the keyboard unlock
+    will be delayed for %-unlockDelayMs% milliseconds.  Setting it to
+    false removes this delay, except when executing a macro.
+.
+
+name unlockDelayMs
+applies a
+type i
+default 350
+desc
+    Overrides the default value for the unlock delay (the delay between the
+    host unlocking the keyboard and %p% actually performing the unlock).
+    The value is in milliseconds; use 0 to turn off the delay completely,
+    including for macros.
+.
+
+name useCursorColor
+applies x
+groups a
+type b
+default false
+desc
+    If to false, the cursor will be drawn using the same color as
+    the text behind it.  If true, on color X11 displays the
+    cursor will be drawn with the color specified by %-cursorColor%.
+.
+
+name visibleControl
+applies x
+type b
+default false
+switch -set visibleControl
+switch -clear visibleControl
+option Options -&gt; Toggles -&gt; Visible Control Characters
+desc
+    If true, control characters will be displayed on the
+    screen (normally they are blank).  Control characters, displayed with
+    underlines, are as follows:
+    <ul>
+    <li><b>&lt;</b>: The EBCDIC SO character (begins a DBCS subfield)</li>
+    <li><b>&gt;</b>: The EBCDIC SI character (ends a DBCS subfield)</li>
+    <li><b>P</b>: The start of a protected field</li>
+    <li><b>M</b>: The start of a modified field</li>
+    <li><b>U</b>: The start of an unprotected field</li>
+    <li><b>.</b>: The EBCDIC NUL character</li>
+    </ul>
+.
+
+name visualBell
+applies x wc
+groups i
+type b
+default false
+desc
+    When true, %p% will flash the screen in response to an ALARM WCC
+    or BELL character, rather than ringing the terminal's bell.
+.
+
+name visualSelect
+applies x
+groups a
+type b
+default false
+desc
+    This resource controls how %p% displays light pen selectable fields
+    that do not have a color explicitly set by the host.
+    When true,
+    %p% will display these fields using the color defined by
+    %-visualSelectColor%.
+    When false, %p% will display these fields based on
+    their highlighting attribute.  This attribute is used only in 3279 mode.
+.
+
+name visualSelectColor
+applies x
+groups a
+type i
+default 6
+desc
+    The host color index of the color to use to display light pen
+    selectable fields.  This resource is used only if %-visualSelect% is
+    true.  The default is 6 (yellow).
+.
+
+name waitCursor
+applies x
+groups a
+type s
+default watch
+desc
+    The name of the mouse cursor displayed when %p% is connected to a host,
+    but is unable to process keyboard input.  Cursor names are in the file
+    <b>&lt;X11/cursorfont.h&gt;</b>.
+.
+
+name werase
+applies a
+groups n
+type s
+default ^W
+desc
+    This setting is used only in NVT mode, and is similar in function to
+    the <i>stty</i> parameter of the same name.
+    When connected in line-at-a-time mode (when %p%
+    gathers a line of input before forwarding it to the host), entering
+    this character at the keyboard erases the last word of input.
+    <p class=indented>
+    When connected in character-at-a-time mode (when %p% sends each
+    keystroke to the host), this is the ASCII character that is sent to
+    the host by the <b>DeleteWord</b> action.
+.
+
+EOF
