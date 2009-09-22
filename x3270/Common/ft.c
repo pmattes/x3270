@@ -1525,16 +1525,18 @@ ft_complete(const char *errmsg)
 		Free(msg_copy);
 	} else {
 		struct timeval t1;
-		double kbytes_sec;
+		double bytes_sec;
 		char *buf;
+		char kbuf[256];
 
 		(void) gettimeofday(&t1, (struct timezone *)NULL);
-		kbytes_sec = (double)ft_length / 1024.0 /
+		bytes_sec = (double)ft_length /
 			((double)(t1.tv_sec - t0.tv_sec) + 
 			 (double)(t1.tv_usec - t0.tv_usec) / 1.0e6);
 		buf = Malloc(256);
 		(void) sprintf(buf, get_message("ftComplete"), ft_length,
-		    kbytes_sec, ft_is_cut ? "CUT" : "DFT");
+			display_scale(bytes_sec, kbuf, sizeof(kbuf)),
+			ft_is_cut ? "CUT" : "DFT");
 		if (ft_is_action) {
 #if defined(C3270) /*[*/
 			printf("\r%79s\n", "");

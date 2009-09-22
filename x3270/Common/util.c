@@ -1081,3 +1081,20 @@ dump_version(void)
 "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 	exit(0);
 }
+
+/* Scale a number for display. */
+const char *
+display_scale(double d, char *buf, size_t buflen)
+{
+    if (d >= 1000000.0)
+	snprintf(buf, buflen, "%.3g M", d / 1000000.0);
+    else if (d >= 1000.0)
+	snprintf(buf, buflen, "%.3g K", d / 1000.0);
+    else
+	snprintf(buf, buflen, "%.3g ", d);
+
+    /* Don't trust snprintf. */
+    buf[buflen - 1] = '\0';
+
+    return buf;
+}
