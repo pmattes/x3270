@@ -55,6 +55,9 @@
 #include "utilc.h"
 #include "xioc.h"
 
+#include "menubarc.h"
+#include "ckeypadc.h"
+
 /* The usual x3270 'COLS' variable is cCOLS in c3270. */
 #undef COLS
 extern int cCOLS;
@@ -199,6 +202,7 @@ static void screen_init2(void);
 void
 screen_init(void)
 {
+    	menu_init();
 	register_schange(ST_CONNECT, screen_connect);
 
 #if !defined(C3270_80_132) /*[*/
@@ -524,7 +528,7 @@ screen_init2(void)
 	scrollok(stdscr, FALSE);
 #if defined(NCURSES_MOUSE_VERSION) /*[*/
 	if (appres.mouse)
-		mousemask(BUTTON1_PRESSED, NULL);
+		mousemask(BUTTON1_RELEASED, NULL);
 #endif /*]*/
 
 #if defined(C3270_80_132) /*[*/
@@ -539,7 +543,7 @@ screen_init2(void)
 		scrollok(stdscr, FALSE);
 #if defined(NCURSES_MOUSE_VERSION) /*[*/
 		if (appres.mouse)
-			mousemask(BUTTON1_PRESSED, NULL);
+			mousemask(BUTTON1_RELEASED, NULL);
 #endif /*]*/
 	}
 #endif /*]*/
@@ -860,6 +864,34 @@ screen_disp(Boolean erasing _is_unused)
 		    	Boolean underlined = False;
 			int attr_mask =
 			    toggled(UNDERSCORE)? (int)~A_UNDERLINE: -1;
+			Boolean is_menu = False;
+			ucs4_t u;
+			Boolean highlight;
+
+			is_menu = menu_char(row, col, &u, &highlight);
+			if (is_menu) {
+				if (!u)
+					abort();
+				if (appres.m3279) {
+					if (highlight)
+						(void) attrset(
+							get_color_pair(
+						    HOST_COLOR_NEUTRAL_BLACK,
+						    HOST_COLOR_NEUTRAL_WHITE));
+					else
+						(void) attrset(
+							get_color_pair(
+						    HOST_COLOR_NEUTRAL_WHITE,
+						    HOST_COLOR_NEUTRAL_BLACK));
+				} else {
+					if (highlight)
+						(void) attrset(defattr |
+							       A_BOLD);
+					else
+						(void) attrset(defattr);
+				}
+				addch(u);
+			}
 
 			if (flipped)
 				move(row, cCOLS-1 - col);
@@ -868,16 +900,23 @@ screen_disp(Boolean erasing _is_unused)
 			    	fa_addr = baddr;
 				fa = ea_buf[baddr].fa;
 				field_attrs = calc_attrs(baddr, baddr, fa);
-				(void) attrset(defattr);
-				addch(' ');
+				if (!is_menu) {
+					(void) attrset(defattr);
+					addch(' ');
+				}
 			} else if (FA_IS_ZERO(fa)) {
-				(void) attrset(field_attrs & attr_mask);
-				if (field_attrs & A_UNDERLINE)
-				    underlined = True;
-				addch(' ');
+			    	if (!is_menu) {
+					(void) attrset(field_attrs & attr_mask);
+					if (field_attrs & A_UNDERLINE)
+					    underlined = True;
+					addch(' ');
+				}
 			} else {
 				char mb[16];
 				int len;
+
+				if (is_menu)
+				    	continue;
 
 				if (!(ea_buf[baddr].gr ||
 				      ea_buf[baddr].fg ||
@@ -954,10 +993,15 @@ screen_disp(Boolean erasing _is_unused)
 	if (status_row)
 		draw_oia();
 	(void) attrset(defattr);
-	if (flipped)
-		move(cursor_addr / cCOLS, cCOLS-1 - (cursor_addr % cCOLS));
-	else
-		move(cursor_addr / cCOLS, cursor_addr % cCOLS);
+	if (menu_is_up || keypad_is_up) {
+		menu_cursor(&row, &col);
+		move(row, col);
+	} else {
+		if (flipped)
+			move(cursor_addr / cCOLS, cCOLS-1 - (cursor_addr % cCOLS));
+		else
+			move(cursor_addr / cCOLS, cursor_addr % cCOLS);
+	}
 	refresh();
 }
 
@@ -1076,11 +1120,17 @@ kybd_input(void)
 		if (k == KEY_MOUSE) {
 		    	MEVENT m;
 
-			if (getmouse(&m) == OK) {
-			    	trace_event("Mouse BUTTON1_PRESSED "
+			if (menu_is_up || keypad_is_up) {
+			    menu_key(k, 0);
+			    return;
+			}
+			if (getmouse(&m) != OK)
+			    return;
+			if ((m.bstate & BUTTON1_RELEASED)) {
+			    	trace_event("Mouse BUTTON1_RELEASED "
 					"(x=%d,y=%d)\n",
 					m.x, m.y);
-				if (m.x < cCOLS && m.y < ROWS) {
+				if (m.x < cCOLS && m.y > 0 && m.y < ROWS) {
 					if (flipped)
 						cursor_move((m.y * cCOLS) +
 							(cCOLS - m.x));
@@ -1089,6 +1139,9 @@ kybd_input(void)
 							m.x);
 					move(m.y, m.x);
 					refresh();
+				} else if (m.y == 0) {
+					popup_menu(m.x);
+					screen_disp(False);
 				}
 			}
 			return;
@@ -1125,6 +1178,12 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	char buf[16];
 	char *action;
 	int i;
+
+	if (menu_is_up || keypad_is_up) {
+	    menu_key(k, ucs4);
+	    screen_disp(False);
+	    return;
+	}
 
 	action = lookup_key(k, ucs4, alt);
 	if (action != CN) {
@@ -1608,8 +1667,9 @@ draw_oia(void)
 	    	printw(" ");
 
 	mvprintw(status_row, rmargin-25, "%s", oia_lu);
-	mvprintw(status_row, rmargin-7,
-	    "%03d/%03d ", cursor_addr/cCOLS + 1, cursor_addr%cCOLS + 1);
+	if (toggled(CURSOR_POS))
+		mvprintw(status_row, rmargin-7,
+		    "%03d/%03d ", cursor_addr/cCOLS + 1, cursor_addr%cCOLS + 1);
 }
 
 void

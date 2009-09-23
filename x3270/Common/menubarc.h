@@ -34,26 +34,37 @@
 
 extern void HandleMenu_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-#if defined(X3270_SCRIPT) /*[*/
+# if defined(X3270_SCRIPT) /*[*/
 extern void menubar_as_set(Boolean sensitive);
-#else /*][*/
-#define menubar_as_set(n)
-#endif /*]*/
+# else /*][*/
+#  define menubar_as_set(n)
+# endif /*]*/
 extern void menubar_init(Widget container, Dimension overall_width,
     Dimension current_width);
 extern void menubar_keypad_changed(void);
 extern Dimension menubar_qheight(Dimension container_width);
 extern void menubar_resize(Dimension width);
-extern void menubar_retoggle(struct toggle *t);
+extern void menubar_retoggle(struct toggle *t, int ix);
+
+#elif defined(C3270) /*][*/
+
+extern Boolean menu_is_up;
+extern void menu_init(void);
+extern Boolean menu_char(int row, int col, ucs4_t *u, Boolean *highlighted);
+void menu_key();
+extern void popup_menu(int x);
+extern void menu_cursor(int *row, int *col);
+extern void menubar_retoggle(struct toggle *t, int ix);
+# define menubar_as_set(n)
 
 #else /*][*/
 
-#define menubar_as_set(n)
-#define menubar_init(a, b, c)
-#define menubar_keypad_changed()
-#define menubar_qheight(n)	0
-#define menubar_resize(n)
-#define menubar_retoggle(t)
-#define HandleMenu_action ignore_action
+# define menubar_as_set(n)
+# define menubar_init(a, b, c)
+# define menubar_keypad_changed()
+# define menubar_qheight(n)	0
+# define menubar_resize(n)
+# define menubar_retoggle(t)
+# define HandleMenu_action ignore_action
 
 #endif /*]*/

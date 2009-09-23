@@ -62,8 +62,8 @@ do_toggle_reason(int ix, enum toggle_type reason)
 	toggle_toggle(t);
 	if (t->upcall != NULL)
 		t->upcall(t, reason);
-#if defined(X3270_MENUS) /*[*/
-	menubar_retoggle(t);
+#if defined(X3270_MENUS) || defined(C3270) /*[*/
+	menubar_retoggle(t, ix);
 #endif /*]*/
 }
 

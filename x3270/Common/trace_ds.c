@@ -354,11 +354,11 @@ stop_tracing(void)
 	}
 	if (toggled(DS_TRACE)) {
 		toggle_toggle(&appres.toggle[DS_TRACE]);
-		menubar_retoggle(&appres.toggle[DS_TRACE]);
+		menubar_retoggle(&appres.toggle[DS_TRACE], DS_TRACE);
 	}
 	if (toggled(EVENT_TRACE)) {
 		toggle_toggle(&appres.toggle[EVENT_TRACE]);
-		menubar_retoggle(&appres.toggle[EVENT_TRACE]);
+		menubar_retoggle(&appres.toggle[EVENT_TRACE],  EVENT_TRACE);
 	}
 }
 
@@ -859,7 +859,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 	/* We're really tracing, turn the flag on. */
 	appres.toggle[trace_reason].value = True;
 	appres.toggle[trace_reason].changed = True;
-	menubar_retoggle(&appres.toggle[trace_reason]);
+	menubar_retoggle(&appres.toggle[trace_reason], trace_reason);
 
 	/* Display current status. */
 	buf = create_tracefile_header("started");
@@ -1080,7 +1080,7 @@ screentrace_cb(char *tfn)
 	/* We're really tracing, turn the flag on. */
 	appres.toggle[SCREEN_TRACE].value = True;
 	appres.toggle[SCREEN_TRACE].changed = True;
-	menubar_retoggle(&appres.toggle[SCREEN_TRACE]);
+	menubar_retoggle(&appres.toggle[SCREEN_TRACE], SCREEN_TRACE);
 	return True;
 }
 

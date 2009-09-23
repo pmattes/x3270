@@ -2322,8 +2322,11 @@ toggle_monocase(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 void
 screen_flip(void)
 {
+#if defined(X3270_DBCS) /*[*/
 	/* Flip mode is broken in the DBCS version. */
-	if (!dbcs) {
+	if (!dbcs)
+#endif /*]*/
+	{
 		flipped = !flipped;
 
 		action_internal(PA_Expose_action, IA_REDRAW, CN, CN);
