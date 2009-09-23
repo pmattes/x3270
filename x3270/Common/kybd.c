@@ -536,25 +536,37 @@ key_AID(unsigned char aid_code)
 #if defined(X3270_PLUGIN) /*[*/
 	plugin_aid(aid_code);
 #endif /*]*/
+
 	if (IN_SSCP) {
 		if (kybdlock & KL_OIA_MINUS)
 			return;
-		if (aid_code != AID_ENTER && aid_code != AID_CLEAR) {
+		switch (aid_code) {
+		case AID_CLEAR:
+		    	/* Handled locally. */
+			break;
+		case AID_ENTER:
+			/*
+			 * Act as if the host had written our input, and
+			 * send it as a Read Modified.
+			 */
+			buffer_addr = cursor_addr;
+			aid = aid_code;
+			ctlr_read_modified(aid, False);
+			status_ctlr_done();
+			break;
+		default:
+			/* Everything else is invalid in SSCP-LU mode. */
 			status_minus();
 			kybdlock_set(KL_OIA_MINUS, "key_AID");
 			return;
 		}
+		return;
 	}
-	if (IN_SSCP && aid_code == AID_ENTER) {
-		/* Act as if the host had written our input. */
-		buffer_addr = cursor_addr;
-	}
-	if (!IN_SSCP || aid_code != AID_CLEAR) {
-		status_twait();
-		mcursor_waiting();
-		insert_mode(False);
-		kybdlock_set(KL_OIA_TWAIT | KL_OIA_LOCKED, "key_AID");
-	}
+
+	status_twait();
+	mcursor_waiting();
+	insert_mode(False);
+	kybdlock_set(KL_OIA_TWAIT | KL_OIA_LOCKED, "key_AID");
 	aid = aid_code;
 	ctlr_read_modified(aid, False);
 	ticking_start(False);
