@@ -788,7 +788,7 @@ lookup_ccode(const char *s)
 	char *ptr;
 
 	for (i = 0; ncurses_key[i].name != CN; i++) {
-		if (!strcmp(s, ncurses_key[i].name))
+		if (!strcasecmp(s, ncurses_key[i].name))
 			return ncurses_key[i].code;
 	}
 	if (s[0] == 'F' &&
