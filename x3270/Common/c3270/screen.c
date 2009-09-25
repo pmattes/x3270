@@ -1056,7 +1056,7 @@ kybd_input(void)
 				return;
 			}
 			if (sz == 1) {
-				ucs4 = mbs[0];
+				ucs4 = mbs[0] & 0xff;
 			} else {
 			    	int consumed;
 				enum me_fail error;
