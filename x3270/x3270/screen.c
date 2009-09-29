@@ -98,6 +98,8 @@
 #endif /*]*/
 #define BPW	(NBBY * sizeof(unsigned long))
 
+#define MAX_FONTS	50000
+
 /* Externals: main.c */
 extern int      default_screen;
 
@@ -5667,7 +5669,7 @@ dfc_init(void)
 	dfc_t *m_last = NULL;
 
 	/* Get all of the font names. */
-	namelist = XListFonts(display, "*", 10000, &count);
+	namelist = XListFonts(display, "*", MAX_FONTS, &count);
 	if (namelist == NULL)
 	    	Error("No fonts");
 	for (i = 0; i < count; i++) {
