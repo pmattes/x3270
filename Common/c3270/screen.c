@@ -397,6 +397,12 @@ screen_connect(Boolean connected)
 	if (ov_auto && (maxROWS < cursesLINES - 2 || maxCOLS < cursesCOLS))
 		set_rows_cols(model_num, cursesCOLS, cursesLINES - 2);
 
+#if defined(NCURSES_MOUSE_VERSION) /*[*/
+	if (appres.mouse)
+		if (mousemask(BUTTON1_RELEASED, NULL) == 0)
+		    	appres.mouse = False;
+#endif /*]*/
+
 	/* Figure out where the status line goes, if it fits. */
 #if defined(C3270_80_132) /*[*/
 	if (def_screen != alt_screen) {
@@ -536,10 +542,6 @@ screen_init2(void)
 #endif /*]*/
 	setup_tty();
 	scrollok(stdscr, FALSE);
-#if defined(NCURSES_MOUSE_VERSION) /*[*/
-	if (appres.mouse)
-		mousemask(BUTTON1_RELEASED, NULL);
-#endif /*]*/
 
 #if defined(C3270_80_132) /*[*/
 	if (def_screen != alt_screen) {
@@ -588,12 +590,14 @@ set_status_row(int screen_rows, int emulator_rows)
 	}
 
 	/* Then check for menubar room.  Use 2 rows, 1 in a pinch. */
-	if (screen_rows >= emulator_rows + (status_row != 0) + 2)
-	    	screen_yoffset = 2;
-	else if (screen_rows >= emulator_rows + (status_row != 0) + 1)
-	    	screen_yoffset = 1;
-	else
-	    	screen_yoffset = 0;
+	if (appres.mouse) {
+		if (screen_rows >= emulator_rows + (status_row != 0) + 2)
+			screen_yoffset = 2;
+		else if (screen_rows >= emulator_rows + (status_row != 0) + 1)
+			screen_yoffset = 1;
+		else
+			screen_yoffset = 0;
+	}
 }
 
 /*
