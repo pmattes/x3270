@@ -982,3 +982,9 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
        }
 #endif /*]*/
 }
+
+void
+Menu_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
+{
+	popup_menu(0, False);
+}
