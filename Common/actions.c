@@ -54,7 +54,7 @@
 #if defined(X3270_FT) /*[*/
 #include "ftc.h"
 #endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 #include "keypadc.h"
 #include "menubarc.h"
 #endif /*]*/
@@ -212,6 +212,9 @@ XtActionsRec all_actions[] = {
 	{ "Insert",		Insert_action },
 	{ "Interrupt",		Interrupt_action },
 	{ "Key",		Key_action },
+#if defined(C3270) /*[*/
+	{ "Keypad",		Keypad_action },
+#endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
 	{ "KybdSelect",		KybdSelect_action },
 #endif /*]*/
@@ -219,6 +222,9 @@ XtActionsRec all_actions[] = {
 	{ "Left2", 		Left2_action },
 #if defined(X3270_SCRIPT) || defined(S3270) /*[*/
 	{ "Macro", 		Macro_action },
+#endif /*]*/
+#if defined(C3270) /*[*/
+	{ "Menu",		Menu_action },
 #endif /*]*/
 	{ "MonoCase",		MonoCase_action },
 #if defined(X3270_DISPLAY) /*[*/

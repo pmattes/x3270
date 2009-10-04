@@ -469,3 +469,9 @@ keypad_key(int k, ucs4_t u)
 		break;
 	}
 }
+
+void
+Keypad_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
+{
+    pop_up_keypad(True);
+}

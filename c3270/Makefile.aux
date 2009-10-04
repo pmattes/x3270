@@ -39,7 +39,8 @@ SOURCES = XtGlue.c actions.c ansi.c apl.c c3270.c charset.c child.c ctlr.c \
 	ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c idle.c keymap.c \
 	kybd.c macros.c print.c printer.c proxy.c readres.c resolver.c \
 	resources.c rpq.c screen.c see.c sf.c tables.c telnet.c toggles.c \
-	trace_ds.c utf8.c util.c xio.c unicode.c unicode_dbcs.c
+	trace_ds.c utf8.c util.c xio.c unicode.c unicode_dbcs.c keypad.c \
+	menubar.c
 HEADERS = 3270ds.h actionsc.h ansic.h aplc.h appres.h cg.h charsetc.h \
 	childc.h ctlr.h ctlrc.h dialogc.h ftc.h ft_cutc.h ft_cut_ds.h \
 	ft_dftc.h ft_dft_ds.h globals.h gluec.h hostc.h icmdc.h idlec.h \
@@ -53,7 +54,8 @@ MISC = version.txt c3270.man x3270if.man x3270-script.man ibm_hosts.man \
 	mkversion.sh Makefile.in README LICENSE \
 	x3270if.c x3270_glue.expect configure configure.in conf.h.in \
 	install-sh config.sub config.guess ibm_hosts X3270.xad mkfb.c \
-	x3270hist.pl make-cygwin-standalone runc3270.bat
+	x3270hist.pl make-cygwin-standalone runc3270.bat mkkeypad.c \
+	keypad.callbacks keypad.full keypad.labels keypad.map keypad.outline
 DEVKIT = Makefile.aux x3270.man.m4 html.m4 man.m4 \
 	ft.inc keymaps.inc m42man m42html instlist.base instlist.man
 HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
