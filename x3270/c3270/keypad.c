@@ -3,6 +3,9 @@
 #include "globals.h"
 #include "macrosc.h"
 #include "3270ds.h"
+#include "appres.h"
+#include "menubarc.h"
+#include "keypadc.h"
 
 #if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
 #include <ncursesw/ncurses.h>
@@ -33,7 +36,6 @@ typedef struct {
 #define KEYPAD_HEIGHT	(sizeof(keypad_desc)/sizeof(keypad_desc[0]))
 #define NUM_SENSE	(sizeof(sens)/sizeof(sens[0]))
 
-Boolean keypad_is_up = False;
 static sens_t *current_sens = NULL;
 #if defined(XXX_DEBUG) || defined(YYY_DEBUG) || defined(ZZZ_DEBUG)
 static FILE *xxx = NULL;
@@ -66,6 +68,8 @@ map_acs(unsigned char c)
 	return ACS_VLINE;
     case 'n':
 	return ACS_PLUS;
+    case 's':
+	return ' ';
     default:
 	return '?';
     }
@@ -77,11 +81,11 @@ keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted)
 {
     keypad_desc_t *d;
 
-    if (keypad_is_up && (unsigned)row < KEYPAD_HEIGHT && col < MODEL_2_COLS) {
+    if ((menu_is_up & KEYPAD_IS_UP) && (unsigned)row < KEYPAD_HEIGHT && col < MODEL_2_COLS) {
 	d = &keypad_desc[row][col];
 	if (d->outline && d->outline != ' ') {
 	    *u = map_acs(d->outline);
-	    *highlighted = False;
+	    *highlighted = (d->sens != NULL) && (d->sens == current_sens);
 #ifdef XXX_DEBUG
 	    fprintf(xxx, "row %d col %d outline 0x%x !highlight\n",
 		    row, col, *u);
@@ -111,7 +115,7 @@ keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted)
 void
 keypad_cursor(int *row, int *col)
 {
-    if (keypad_is_up) {
+    if (menu_is_up & KEYPAD_IS_UP) {
 	*row = current_sens->ul_y;
 	*col = current_sens->ul_x;
     } else {
@@ -125,7 +129,7 @@ void
 pop_up_keypad(Boolean up)
 {
     if (up) {
-	keypad_is_up = True;
+	menu_is_up |= KEYPAD_IS_UP;
 	current_sens = &sens[0];
 #if defined(XXX_DEBUG) || defined(YYY_DEBUG) || defined(ZZZ_DEBUG)
 	if (xxx == NULL) {
@@ -137,7 +141,7 @@ pop_up_keypad(Boolean up)
 	}
 #endif
     } else {
-	keypad_is_up = False;
+	menu_is_up &= ~KEYPAD_IS_UP;
 	current_sens = NULL;
     }
 }

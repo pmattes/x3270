@@ -48,11 +48,14 @@ extern void menubar_retoggle(struct toggle *t, int ix);
 
 #elif defined(C3270) /*][*/
 
-extern Boolean menu_is_up;
+#define MENU_IS_UP	0x1
+#define KEYPAD_IS_UP	0x2
+extern unsigned menu_is_up;
 extern void menu_init(void);
-extern Boolean menu_char(int row, int col, ucs4_t *u, Boolean *highlighted);
+extern Boolean menu_char(int row, int col, Boolean persistent, ucs4_t *u,
+	Boolean *highlighted);
 void menu_key();
-extern void popup_menu(int x);
+extern void popup_menu(int x, int click);
 extern void menu_cursor(int *row, int *col);
 extern void menubar_retoggle(struct toggle *t, int ix);
 # define menubar_as_set(n)

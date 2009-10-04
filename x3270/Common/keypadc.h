@@ -54,6 +54,13 @@ extern void keypad_popup(void);
 
 #else /*][*/
 
+# if defined(C3270) /*[*/
+extern Boolean keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted);
+extern void keypad_cursor(int *row, int *col);
+extern void pop_up_keypad(Boolean up);
+extern void keypad_key(int k, ucs4_t u);
+# endif /*]*/
+
 #define keypad_qheight()	0
 #define min_keypad_width()	0
 #define keypad_first_up()

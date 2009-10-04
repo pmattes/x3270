@@ -44,6 +44,7 @@
 #include "gluec.h"
 #include "hostc.h"
 #include "keymapc.h"
+#include "keypadc.h"
 #include "kybdc.h"
 #include "macrosc.h"
 #include "popupsc.h"
@@ -57,8 +58,6 @@
 #include "xioc.h"
 
 #include "menubarc.h"
-
-#include "ckeypadc.h"
 
 #if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
 #include <ncursesw/ncurses.h>
@@ -118,7 +117,8 @@ void *after_param;
 
 ucs4_t menu_screen[MODEL_2_COLS * MODEL_2_ROWS];
 unsigned char menu_rv[MODEL_2_COLS * MODEL_2_ROWS];
-Boolean menu_is_up = False;
+ucs4_t menu_topline[MODEL_2_COLS];
+unsigned menu_is_up = 0;
 
 /* Add a menu. */
 cmenu_t *
@@ -201,8 +201,9 @@ basic_menu_init(void)
     memset(menu_rv, 0, sizeof(unsigned char) * MODEL_2_COLS * MODEL_2_ROWS);
     current_menu = NULL;
     current_item = NULL;
-    menu_is_up = False;
+    menu_is_up &= ~MENU_IS_UP;
     pop_up_keypad(False);
+
 }
 
 /* Undraw a menu. */
@@ -308,7 +309,7 @@ draw_menu(cmenu_t *cmenu)
 
 /* Pop up a menu. */
 void
-popup_menu(int x)
+popup_menu(int x, int click)
 {
     cmenu_t *cmenu;
     cmenu_t *c;
@@ -322,6 +323,17 @@ popup_menu(int x)
     }
     if (cmenu == NULL)
 	return;
+
+    /* If it was a direct click, see if the menu has a direct callback. */
+    if (click && cmenu->callback != NULL) {
+	(*cmenu->callback)(cmenu->param);
+	if (after_callback != NULL) {
+	    (*after_callback)(after_param);
+	    after_callback = NULL;
+	    after_param = NULL;
+	}
+	return;
+    }
 
     /* Start with nothing. */
     basic_menu_init();
@@ -359,7 +371,7 @@ popup_menu(int x)
     }
 
     /* We're up. */
-    menu_is_up = True;
+    menu_is_up |= MENU_IS_UP;
 }
 
 #if defined(NCURSES_MOUSE_VERSION) /*[*/
@@ -443,7 +455,7 @@ menu_key(int k, ucs4_t u)
     cmenu_item_t *i;
     Boolean selected = False;
 
-    if (keypad_is_up) {
+    if (menu_is_up & KEYPAD_IS_UP) {
 	keypad_key(k, u);
 	return;
     }
@@ -577,17 +589,21 @@ menu_key(int k, ucs4_t u)
 
 /* Report a character back to the screen drawing logic. */
 Boolean
-menu_char(int row, int col, ucs4_t *u, Boolean *highlighted)
+menu_char(int row, int col, Boolean persistent, ucs4_t *u,
+	Boolean *highlighted)
 {
-    if (keypad_is_up)
+    if (menu_is_up & KEYPAD_IS_UP)
 	return keypad_char(row, col, u, highlighted);
-
-    if (menu_is_up &&
+    else if ((menu_is_up & MENU_IS_UP) &&
 	    row < MODEL_2_ROWS &&
 	    col < MODEL_2_COLS &&
 	    menu_screen[(row * MODEL_2_COLS) + col]) {
 	*u = menu_screen[(row * MODEL_2_COLS) + col];
 	*highlighted = menu_rv[(row * MODEL_2_COLS) + col];
+	return True;
+    } else if (persistent && row == 0 && menu_topline[col]) {
+	*u = menu_topline[col];
+	*highlighted = 0;
 	return True;
     } else {
 	*u = 0;
@@ -600,12 +616,12 @@ menu_char(int row, int col, ucs4_t *u, Boolean *highlighted)
 void
 menu_cursor(int *row, int *col)
 {
-    if (keypad_is_up) {
+    if (menu_is_up & KEYPAD_IS_UP) {
 	keypad_cursor(row, col);
 	return;
     }
 
-    if (menu_is_up) {
+    if (menu_is_up & MENU_IS_UP) {
 	*row = 0;
 	*col = current_menu->offset;
     } else {
@@ -735,6 +751,8 @@ void
 menu_init(void)
 {
     int j;
+    int row, col, next_col;
+    cmenu_t *c;
 
     basic_menu_init();
 
@@ -760,6 +778,24 @@ menu_init(void)
     }
     keypad_menu = add_menu("Keypad");
     set_callback(keypad_menu, popup_keypad, NULL);
+
+    /* Draw the menu names on the top line. */
+    row = 0;
+    col = 0;
+    next_col = MENU_WIDTH;
+    for (c = menus; c != NULL; c = c->next) {
+	char *d;
+
+	for (d = c->title; *d; d++) {
+	    menu_topline[col] = *d & 0xff;
+	    col++;
+	}
+	while (col < next_col) {
+	    menu_topline[col] = ' ';
+	    col++;
+	}
+	next_col += MENU_WIDTH;
+    }
 }
 
 void

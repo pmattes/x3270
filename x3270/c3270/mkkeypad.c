@@ -212,7 +212,7 @@ main(int argc, char *argv[])
 	if (c == '\n') {
 	    if (d != '\n') {
 		fprintf(stderr, "labels and outline out of sync at line %d\n",
-			y);
+			y + 1);
 		exit(1);
 	    }
 	    y++;

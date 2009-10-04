@@ -56,7 +56,6 @@
 #include "xioc.h"
 
 #include "menubarc.h"
-#include "ckeypadc.h"
 
 /* The usual x3270 'COLS' variable is cCOLS in c3270. */
 #undef COLS
@@ -178,6 +177,10 @@ static struct {
 
 static int status_row = 0;	/* Row to display the status line on */
 static int status_skip = 0;	/* Row to blank above the status line */
+static int screen_yoffset = 0;	/* Vertical offset to top of screen.
+				   If 0, there is no menu bar.
+				   If nonzero (2, actually), menu bar is at the
+				    top of the display. */
 
 static Boolean curses_alt = False;
 
@@ -566,6 +569,7 @@ screen_init2(void)
 static void
 set_status_row(int screen_rows, int emulator_rows)
 {
+    	/* Check for OIA room first. */
 	if (screen_rows < emulator_rows + 1) {
 		status_row = status_skip = 0;
 	} else if (screen_rows == emulator_rows + 1) {
@@ -575,6 +579,14 @@ set_status_row(int screen_rows, int emulator_rows)
 		status_skip = screen_rows - 2;
 		status_row = screen_rows - 1;
 	}
+
+	/* Then check for menubar room.  Use 2 rows, 1 in a pinch. */
+	if (screen_rows >= emulator_rows + (status_row != 0) + 2)
+	    	screen_yoffset = 2;
+	else if (screen_rows >= emulator_rows + (status_row != 0) + 1)
+	    	screen_yoffset = 1;
+	else
+	    	screen_yoffset = 0;
 }
 
 /*
@@ -852,6 +864,41 @@ screen_disp(Boolean erasing _is_unused)
 	}
 #endif /*]*/
 
+	/* If the menubar is separate, draw it first. */
+	if (screen_yoffset) {
+	    	ucs4_t u;
+		Boolean highlight;
+		int norm, high;
+
+		if (menu_is_up) {
+			if (appres.m3279) {
+				norm = get_color_pair(HOST_COLOR_NEUTRAL_WHITE,
+					HOST_COLOR_NEUTRAL_BLACK);
+				high = get_color_pair(HOST_COLOR_NEUTRAL_BLACK,
+					HOST_COLOR_NEUTRAL_WHITE);
+			} else {
+				norm = defattr;
+				high = attrset(defattr | A_BOLD);
+			}
+		} else {
+			norm = defattr & ~A_BOLD;
+			high = defattr & ~A_BOLD;
+		}
+
+		for (row = 0; row < screen_yoffset; row++) {
+		    	move(row, 0);
+			for (col = 0; col < cCOLS; col++) {
+				if (menu_char(row, col, True, &u, &highlight)) {
+				    	attrset(highlight? high: norm);
+					addch(u);
+				} else {
+					attrset(norm);
+					addch(' ');
+				}
+			}
+		}
+	}
+
 	fa = get_field_attribute(0);
 	fa_addr = find_field_attribute(0);
 	field_attrs = calc_attrs(0, fa_addr, fa);
@@ -859,7 +906,7 @@ screen_disp(Boolean erasing _is_unused)
 		int baddr;
 
 		if (!flipped)
-			move(row, 0);
+			move(row + screen_yoffset, 0);
 		for (col = 0; col < cCOLS; col++) {
 		    	Boolean underlined = False;
 			int attr_mask =
@@ -868,7 +915,8 @@ screen_disp(Boolean erasing _is_unused)
 			ucs4_t u;
 			Boolean highlight;
 
-			is_menu = menu_char(row, col, &u, &highlight);
+			is_menu = menu_char(row + screen_yoffset, col, False,
+				&u, &highlight);
 			if (is_menu) {
 				if (!u)
 					abort();
@@ -894,7 +942,7 @@ screen_disp(Boolean erasing _is_unused)
 			}
 
 			if (flipped)
-				move(row, cCOLS-1 - col);
+				move(row + screen_yoffset, cCOLS-1 - col);
 			baddr = row*cCOLS+col;
 			if (ea_buf[baddr].fa) {
 			    	fa_addr = baddr;
@@ -993,14 +1041,16 @@ screen_disp(Boolean erasing _is_unused)
 	if (status_row)
 		draw_oia();
 	(void) attrset(defattr);
-	if (menu_is_up || keypad_is_up) {
+	if (menu_is_up) {
 		menu_cursor(&row, &col);
 		move(row, col);
 	} else {
 		if (flipped)
-			move(cursor_addr / cCOLS, cCOLS-1 - (cursor_addr % cCOLS));
+			move((cursor_addr / cCOLS + screen_yoffset),
+				cCOLS-1 - (cursor_addr % cCOLS));
 		else
-			move(cursor_addr / cCOLS, cursor_addr % cCOLS);
+			move((cursor_addr / cCOLS) + screen_yoffset,
+				cursor_addr % cCOLS);
 	}
 	refresh();
 }
@@ -1120,7 +1170,7 @@ kybd_input(void)
 		if (k == KEY_MOUSE) {
 		    	MEVENT m;
 
-			if (menu_is_up || keypad_is_up) {
+			if (menu_is_up) {
 			    menu_key(k, 0);
 			    return;
 			}
@@ -1130,17 +1180,22 @@ kybd_input(void)
 			    	trace_event("Mouse BUTTON1_RELEASED "
 					"(x=%d,y=%d)\n",
 					m.x, m.y);
-				if (m.x < cCOLS && m.y > 0 && m.y < ROWS) {
+				if (m.y == 0) {
+					popup_menu(m.x, (screen_yoffset != 0));
+					screen_disp(False);
+				} else if (m.x < cCOLS &&
+					   m.y - screen_yoffset > 0 &&
+					   m.y - screen_yoffset < ROWS) {
 					if (flipped)
-						cursor_move((m.y * cCOLS) +
+						cursor_move(((m.y - screen_yoffset) * cCOLS) +
 							(cCOLS - m.x));
 					else
-						cursor_move((m.y * cCOLS) +
+						cursor_move(((m.y - screen_yoffset) * cCOLS) +
 							m.x);
-					move(m.y, m.x);
+					move(m.y + screen_yoffset, m.x);
 					refresh();
 				} else if (m.y == 0) {
-					popup_menu(m.x);
+					popup_menu(m.x, (screen_yoffset != 0));
 					screen_disp(False);
 				}
 			}
@@ -1179,7 +1234,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	char *action;
 	int i;
 
-	if (menu_is_up || keypad_is_up) {
+	if (menu_is_up) {
 	    menu_key(k, ucs4);
 	    screen_disp(False);
 	    return;
@@ -1604,7 +1659,7 @@ draw_oia(void)
 			    	c0 = 0;
 			else
 			    	c0 = maxCOLS;
-		    	move(r, c0);
+		    	move(r + screen_yoffset, c0);
 		    	for (c = c0; c < cursesCOLS; c++) {
 			    	printw(" ");
 			}
@@ -1617,12 +1672,12 @@ draw_oia(void)
 
 		(void) attrset(defattr);
 		if (status_skip) {
-			move(status_skip, 0);
+			move(status_skip + screen_yoffset, 0);
 			for (i = 0; i < rmargin; i++) {
 				printw(" ");
 			}
 		}
-		move(status_row, 0);
+		move(status_row + screen_yoffset, 0);
 		for (i = 0; i < rmargin; i++) {
 			printw(" ");
 		}
