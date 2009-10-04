@@ -53,11 +53,12 @@ extern void menubar_retoggle(struct toggle *t, int ix);
 extern unsigned menu_is_up;
 extern void menu_init(void);
 extern Boolean menu_char(int row, int col, Boolean persistent, ucs4_t *u,
-	Boolean *highlighted);
+	Boolean *highlighted, unsigned char *acs);
 void menu_key();
 extern void popup_menu(int x, int click);
 extern void menu_cursor(int *row, int *col);
 extern void menubar_retoggle(struct toggle *t, int ix);
+extern void map_acs(unsigned char c, ucs4_t *u, unsigned char *acs);
 # define menubar_as_set(n)
 
 #else /*][*/

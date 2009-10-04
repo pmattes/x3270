@@ -272,6 +272,13 @@ screen_init(void)
 	if (ab_mode == TS_ON)
 		defattr |= A_BOLD;
 
+	/*
+	 * If they don't want ACS and they're not in a UTF-8 locale, switch
+	 * to ASCII-art mode for box drawing.
+	 */
+	if (!appres.acs && !is_utf8)
+		appres.ascii_box_draw = True;
+
 	/* Pull in the user's color mappings. */
 	init_user_colors();
 	init_user_attribute_colors();
@@ -868,6 +875,7 @@ screen_disp(Boolean erasing _is_unused)
 	if (screen_yoffset) {
 	    	ucs4_t u;
 		Boolean highlight;
+		unsigned char acs;
 		int norm, high;
 
 		if (menu_is_up) {
@@ -888,9 +896,22 @@ screen_disp(Boolean erasing _is_unused)
 		for (row = 0; row < screen_yoffset; row++) {
 		    	move(row, 0);
 			for (col = 0; col < cCOLS; col++) {
-				if (menu_char(row, col, True, &u, &highlight)) {
+				if (menu_char(row, col, True, &u, &highlight,
+					    &acs)) {
+					char mb[16];
+
 				    	attrset(highlight? high: norm);
+#if defined(CURSES_WIDE) /*[*/
+					if (u < 0x100 || acs)
+						addch(u);
+					else if (unicode_to_multibyte(u,
+						    mb, sizeof(mb)))
+						addstr(mb);
+					else
+					    	addch(' ');
+#else /*][*/
 					addch(u);
+#endif /*]*/
 				} else {
 					attrset(norm);
 					addch(' ');
@@ -914,10 +935,13 @@ screen_disp(Boolean erasing _is_unused)
 			Boolean is_menu = False;
 			ucs4_t u;
 			Boolean highlight;
+			unsigned char acs;
 
 			is_menu = menu_char(row + screen_yoffset, col, False,
-				&u, &highlight);
+				&u, &highlight, &acs);
 			if (is_menu) {
+			    	char mb[16];
+
 				if (!u)
 					abort();
 				if (appres.m3279) {
@@ -938,7 +962,17 @@ screen_disp(Boolean erasing _is_unused)
 					else
 						(void) attrset(defattr);
 				}
+#if defined(CURSES_WIDE) /*[*/
+				if (u < 0x100 || acs)
+					addch(u);
+				else if (unicode_to_multibyte(u,
+					    mb, sizeof(mb)))
+					addstr(mb);
+				else
+					addch(' ');
+#else /*][*/
 				addch(u);
+#endif /*]*/
 			}
 
 			if (flipped)
