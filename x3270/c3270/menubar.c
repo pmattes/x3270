@@ -117,6 +117,7 @@ void *after_param;
 
 ucs4_t menu_screen[MODEL_2_COLS * MODEL_2_ROWS];
 unsigned char menu_rv[MODEL_2_COLS * MODEL_2_ROWS];
+unsigned char menu_acs[MODEL_2_COLS * MODEL_2_ROWS];
 ucs4_t menu_topline[MODEL_2_COLS];
 unsigned menu_is_up = 0;
 
@@ -271,12 +272,14 @@ draw_menu(cmenu_t *cmenu)
 	for (col = cmenu->offset;
 	     (size_t)col < cmenu->offset + cmenu->width;
 	     col++) {
+	    	int ix = (row * MODEL_2_COLS) + col;
+
 		if (col == cmenu->offset)
-			menu_screen[(row * MODEL_2_COLS) + col] = ACS_ULCORNER;
+			map_acs('l', &menu_screen[ix], &menu_acs[ix]);
 		else if ((size_t)col < cmenu->offset + cmenu->width - 1)
-			menu_screen[(row * MODEL_2_COLS) + col] = ACS_HLINE;
+		    	map_acs('q', &menu_screen[ix], &menu_acs[ix]);
 		else
-			menu_screen[(row * MODEL_2_COLS) + col] = ACS_URCORNER;
+		    	map_acs('k', &menu_screen[ix], &menu_acs[ix]);
 	}
 
 	/* Draw the items. */
@@ -285,7 +288,8 @@ draw_menu(cmenu_t *cmenu)
 		char *d;
 
 		col = cmenu->offset;
-		menu_screen[(row * MODEL_2_COLS) + col] = ACS_VLINE;
+		map_acs('x', &menu_screen[(row * MODEL_2_COLS) + col],
+			&menu_acs[(row * MODEL_2_COLS) + col]);
 		col++; /* start at column one */
 		for (d = i->label; *d; d++) {
 			menu_screen[(row * MODEL_2_COLS) + col] = *d & 0xff;
@@ -299,7 +303,8 @@ draw_menu(cmenu_t *cmenu)
 			    (i == current_item);
 			col++;
 		}
-		menu_screen[(row * MODEL_2_COLS) + col] = ACS_VLINE;
+		map_acs('x', &menu_screen[(row * MODEL_2_COLS) + col],
+			&menu_acs[(row * MODEL_2_COLS) + col]);
 		row++;
 	}
 
@@ -307,12 +312,14 @@ draw_menu(cmenu_t *cmenu)
 	for (col = cmenu->offset;
 	     (size_t)col < cmenu->offset + cmenu->width;
 	     col++) {
+	    	int ix = (row * MODEL_2_COLS) + col;
+
 		if (col == cmenu->offset)
-			menu_screen[(row * MODEL_2_COLS) + col] = ACS_LLCORNER;
+			map_acs('m', &menu_screen[ix], &menu_acs[ix]);
 		else if ((size_t)col < cmenu->offset + cmenu->width - 1)
-			menu_screen[(row * MODEL_2_COLS) + col] = ACS_HLINE;
+			map_acs('q', &menu_screen[ix], &menu_acs[ix]);
 		else
-			menu_screen[(row * MODEL_2_COLS) + col] = ACS_LRCORNER;
+			map_acs('j', &menu_screen[ix], &menu_acs[ix]);
 	}
 }
 
@@ -602,16 +609,17 @@ menu_key(int k, ucs4_t u)
 /* Report a character back to the screen drawing logic. */
 Boolean
 menu_char(int row, int col, Boolean persistent, ucs4_t *u,
-	Boolean *highlighted)
+	Boolean *highlighted, unsigned char *acs)
 {
     if (menu_is_up & KEYPAD_IS_UP)
-	    return keypad_char(row, col, u, highlighted);
+	    return keypad_char(row, col, u, highlighted, acs);
     else if ((menu_is_up & MENU_IS_UP) &&
 	     row < MODEL_2_ROWS &&
 	     col < MODEL_2_COLS &&
 	     menu_screen[(row * MODEL_2_COLS) + col]) {
 	    *u = menu_screen[(row * MODEL_2_COLS) + col];
 	    *highlighted = menu_rv[(row * MODEL_2_COLS) + col];
+	    *acs = menu_acs[(row * MODEL_2_COLS) + col];
 	    return True;
     } else if (persistent && row == 0 && menu_topline[col]) {
 	    *u = menu_topline[col];
@@ -837,4 +845,140 @@ menubar_retoggle(struct toggle *t, int ix)
 		rename_item(file_menu_items[FM_TRACE], s);
 		Free(s);
 	}
+}
+
+/*
+ * Utility function to map ACS codes (l, m, j, etc.) to the right kind of
+ * line-drawing character.
+ */
+void
+map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
+{
+	if (appres.ascii_box_draw) {
+	    	/* ASCII art. */
+		*is_acs = 0;
+		switch (c) {
+		case 'l':
+		case 'm':
+		case 'k':
+		case 'j':
+		case 't':
+		case 'u':
+		case 'v':
+		case 'w':
+		case 'n':
+		    	*u = '+';
+			break;
+		case 'q':
+			*u = '-';
+			break;
+		case 'x':
+			*u = '|';
+			break;
+		case 's':
+			*u = ' ';
+			break;
+		default:
+			*u = '?';
+			break;
+		}
+		return;
+	} else
+#if defined(CURSES_WIDE) /*[*/
+	       if (appres.acs)
+#endif /*]*/
+	{
+		/* ncurses ACS. */
+	    	*is_acs = 1;
+		switch (c) {
+		case 'l':
+			*u = ACS_ULCORNER;
+			break;
+		case 'm':
+			*u = ACS_LLCORNER;
+			break;
+		case 'k':
+			*u = ACS_URCORNER;
+			break;
+		case 'j':
+			*u = ACS_LRCORNER;
+			break;
+		case 't':
+			*u = ACS_LTEE;
+			break;
+		case 'u':
+			*u = ACS_RTEE;
+			break;
+		case 'v':
+			*u = ACS_BTEE;
+			break;
+		case 'w':
+			*u = ACS_TTEE;
+			break;
+		case 'q':
+			*u = ACS_HLINE;
+			break;
+		case 'x':
+			*u = ACS_VLINE;
+			break;
+		case 'n':
+			*u = ACS_PLUS;
+			break;
+		case 's':
+			*u = ' ';
+			*is_acs = 0;
+			break;
+		default:
+			*u = '?';
+			*is_acs = 0;
+			break;
+		}
+	}
+#if defined(CURSES_WIDE) /*[*/
+       else {
+	   	/* Unicode. */
+		*is_acs = 0;
+	   	switch (c) {
+		case 'l':
+			*u = 0x250c;
+			break;
+		case 'm':
+			*u = 0x2514;
+			break;
+		case 'k':
+			*u = 0x2510;
+			break;
+		case 'j':
+			*u = 0x2518;
+			break;
+		case 't':
+			*u = 0x251c;
+			break;
+		case 'u':
+			*u = 0x2524;
+			break;
+		case 'v':
+			*u = 0x2534;
+			break;
+		case 'w':
+			*u = 0x252c;
+			break;
+		case 'q':
+			*u = 0x2500;
+			break;
+		case 'x':
+			*u = 0x2502;
+			break;
+		case 'n':
+			*u = 0x253c;
+			break;
+		case 's':
+			*u = ' ';
+			break;
+		default:
+			*u = '?';
+			break;
+		}
+       }
+#endif /*]*/
 }

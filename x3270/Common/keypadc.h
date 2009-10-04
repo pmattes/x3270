@@ -55,7 +55,8 @@ extern void keypad_popup(void);
 #else /*][*/
 
 # if defined(C3270) /*[*/
-extern Boolean keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted);
+extern Boolean keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted,
+	unsigned char *acs);
 extern void keypad_cursor(int *row, int *col);
 extern void pop_up_keypad(Boolean up);
 extern void keypad_key(int k, ucs4_t u);

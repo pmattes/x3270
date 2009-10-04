@@ -72,43 +72,10 @@ static sens_t *current_sens = NULL;
 static FILE *xxx = NULL;
 #endif
 
-/* Map an ACS character to an ncurses ACS code. */
-static int
-map_acs(unsigned char c)
-{
-	switch (c) {
-	case 'l':
-		return ACS_ULCORNER;
-	case 'm':
-		return ACS_LLCORNER;
-	case 'k':
-		return ACS_URCORNER;
-	case 'j':
-		return ACS_LRCORNER;
-	case 't':
-		return ACS_LTEE;
-	case 'u':
-		return ACS_RTEE;
-	case 'v':
-		return ACS_BTEE;
-	case 'w':
-		return ACS_TTEE;
-	case 'q':
-		return ACS_HLINE;
-	case 'x':
-		return ACS_VLINE;
-	case 'n':
-		return ACS_PLUS;
-	case 's':
-		return ' ';
-	default:
-		return '?';
-	}
-}
-
 /* Return the keypad character on top of the screen. */
 Boolean
-keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted)
+keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted,
+	unsigned char *acs)
 {
 	keypad_desc_t *d;
 
@@ -116,7 +83,7 @@ keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted)
 	    (unsigned)row < KEYPAD_HEIGHT && col < MODEL_2_COLS) {
 		d = &keypad_desc[row][col];
 		if (d->outline && d->outline != ' ') {
-			*u = map_acs(d->outline);
+			map_acs(d->outline, u, acs);
 			*highlighted = (d->sens != NULL) &&
 			    (d->sens == current_sens);
 #ifdef XXX_DEBUG
