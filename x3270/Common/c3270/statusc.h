@@ -29,8 +29,6 @@
 
 #define status_kybdlock()
 #define status_script(on)
-#define status_timing(t0, t1)
-#define status_untiming()
 
 extern void status_compose(Boolean on, unsigned char c, enum keytype keytype);
 extern void status_ctlr_done(void);
@@ -41,7 +39,9 @@ extern void status_oerr(int error_type);
 extern void status_reset(void);
 extern void status_reverse_mode(Boolean on);
 extern void status_syswait(void);
+extern void status_timing(struct timeval *t0, struct timeval *t1);
 extern void status_twait(void);
 extern void status_typeahead(Boolean on);
+extern void status_untiming(void);
 
 extern void status_push(char *msg);
