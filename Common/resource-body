@@ -1543,6 +1543,17 @@ description
     however, by pressing Ctrl and each of the mouse buttons.
 .
 
+name menuBar
+applies c
+groups a
+type b
+default true
+description
+    If false, the menu bar will not be displayed at the top of
+    the %p% display, even if the terminal supports a mouse.
+    The menu is still available by pressing Ctrl-N.
+.
+
 name metaEscape
 applies c
 type b
