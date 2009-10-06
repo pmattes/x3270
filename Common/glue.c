@@ -131,6 +131,7 @@ char	       *profile_path = CN;
 struct toggle_name toggle_names[] = {
 #if defined(C3270) /*[*/
 	{ ResMonoCase,        MONOCASE },
+	{ ResShowTiming,      SHOW_TIMING },
 #endif /*]*/
 #if defined(X3270_TRACE) /*[*/
 	{ ResDsTrace,         DS_TRACE },
