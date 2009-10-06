@@ -460,6 +460,7 @@ set_appres_defaults(void)
 #if defined(C3270) /*[*/
 	appres.compose_map = "latin1";
 	appres.do_confirms = True;
+	appres.menubar = True;
 	appres.reconnect = False;
 #endif /*]*/
 
@@ -997,6 +998,9 @@ static struct {
 #endif /*]*/
 	{ ResLoginMacro,offset(login_macro),	XRM_STRING },
 	{ ResM3279,	offset(m3279),		XRM_BOOLEAN },
+#if defined(C3270) /*[*/
+	{ ResMenuBar,	offset(menubar),	XRM_BOOLEAN },
+#endif /*]*/
 	{ ResModel,	offset(model),		XRM_STRING },
 	{ ResModifiedSel, offset(modified_sel),	XRM_BOOLEAN },
 #if defined(C3270) /*[*/
