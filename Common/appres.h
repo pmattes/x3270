@@ -108,8 +108,10 @@ typedef struct {
 #if defined(X3270_DISPLAY) || (defined(C3270) && defined(_WIN32)) /*[*/
 	Boolean visual_bell;
 #endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 	Boolean menubar;
+#endif /*]*/
+#if defined(X3270_DISPLAY) /*[*/
 	Boolean active_icon;
 	Boolean label_icon;
 	Boolean invert_kpshift;
