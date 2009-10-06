@@ -642,6 +642,24 @@ If the "XX_PRODUCT.keypadOn" resource is set to
 XX_FB(true),
 the keypad will be displayed at startup.
 ')dnl
+ifelse(XX_MODE,console,`XX_SH(Menu Bar and Keypad)
+XX_FB(XX_PRODUCT) supports a menu bar and pop-up keypad.
+The menu bar allows common functions to be executed without needing to switch
+to the XX_FB(XX_PRODUCT>) prompt.
+It is available by pressing Ctrl-N, or if the console supports a mouse, by
+clikcing on the menu titles displayed at the top of the screen.
+If there is not sufficient room on the screen to include the menu titles, the
+menu can also be selected by clicking on the top line of the 3270 display.
+XX_LP
+The on-screen menu title bar can be turned off via the "XX_PRODUCT.menuBar"
+resource.
+XX_LP
+The pop-up keypad allows the 3270-specific keys (PF keys, PA keys, Clear,
+Reset, etc.) to be invoked without memorizing their key mappings or switching
+to the XX_FB(XX_PRODUCT>) prompt.
+The keypad can be popped up by pressing Ctrl-K, or can be invoked via a menu
+option.
+')dnl
 ifelse(XX_MODE,script,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_PLATFORM,windows,,
 `XX_SH(Hosts Database)
 XX_FB(XX_PRODUCT) uses the XX_FI(ibm_hosts) database to
@@ -971,6 +989,8 @@ XX_TR(XX_TDH(XX_INT()XX_LA()`HexString'`'XX_LPAREN`'XX_CCHAR()XX_FI(hex_digits)`
 XX_TR(XX_TDH(XX_INT()XX_LS()`Home'XX_VOID())	XX_TD(move cursor to first input field))
 XX_TR(XX_TDH(XX_INT()XX_LS()`Insert'XX_VOID())	XX_TD(set insert mode))
 XX_TR(XX_TDH(XX_INT()XX_LS()XX_BLOCK()`Interrupt'XX_VOID())	XX_TD(send XX_SM(TELNET IP) to host))
+ifelse(XX_MODE,console,`XX_TR(XX_TDH(XX_INT()XX_LA()`Keypad'XX_VOID)	XX_TD(Display pop-up keypad))
+')dnl
 XX_TR(XX_TDH(XX_INT()XX_LA()Key`'XX_LPAREN`'XX_CCHAR()XX_FI(keysym)`'XX_RPAREN)	XX_TD(insert key XX_FI(keysym)))
 ifelse(XX_PRODUCT,lib3270,,`XX_TR(XX_TDH(Key`'XX_LPAREN`'0x`'XX_FI(xx)`'XX_RPAREN)	XX_TD(insert key with character code XX_FI(xx)))
 ')dnl
@@ -980,6 +1000,8 @@ XX_TR(XX_TDH(KybdSelect(XX_FI(direction)[,XX_FI(atom)...]))	XX_TD(Extend selecti
 XX_TR(XX_TDH(XX_INT()XX_LS()`Left'XX_VOID())	XX_TD(move cursor left))
 XX_TR(XX_TDH(XX_INT()XX_LS()`Left2'XX_VOID())	XX_TD(move cursor left 2 positions))
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(XX_BLOCK()Macro(XX_FI(macro)))	XX_TD(run a macro))
+')dnl
+ifelse(XX_MODE,console,`XX_TR(XX_TDH(XX_INT()XX_LA()`Menu'XX_VOID)	XX_TD(Display menu bar))
 ')dnl
 XX_TR(XX_TDH(XX_INT()XX_LS()`MonoCase'XX_VOID())	XX_TD(toggle uppercase-only mode))
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(MoveCursor)	XX_TD(move cursor to mouse position))
