@@ -38,14 +38,18 @@
 #include "menubarc.h"
 #include "keypadc.h"
 
-#if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
-#include <ncursesw/ncurses.h>
-#elif defined(HAVE_NCURSES_NCURSES_H) /*][*/
-#include <ncurses/ncurses.h>
-#elif defined(HAVE_NCURSES_H) /*][*/
-#include <ncurses.h>
+#if !defined(_WIN32) /*[*/
+# if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
+#  include <ncursesw/ncurses.h>
+# elif defined(HAVE_NCURSES_NCURSES_H) /*][*/
+#  include <ncurses/ncurses.h>
+# elif defined(HAVE_NCURSES_H) /*][*/
+#  include <ncurses.h>
+# else /*][*/
+#  include <curses.h>
+# endif /*]*/
 #else /*][*/
-#include <curses.h>
+# include "windows.h"
 #endif /*]*/
 
 /* Sensitivity map: A rectangular region and a callback function. */
@@ -421,33 +425,61 @@ keypad_key(int k, ucs4_t u)
 	    }
 #endif /*]*/
 
+#if !defined(_WIN32) /*[*/
 	case KEY_UP:
+#else /*][*/
+	case VK_UP:
+#endif /*]*/
 		find_adjacent(0, -1);
 		break;
 
+#if !defined(_WIN32) /*[*/
 	case KEY_DOWN:
+#else /*][*/
+	case VK_DOWN:
+#endif /*]*/
 		find_adjacent(0, 1);
 		break;
 
+#if !defined(_WIN32) /*[*/
 	case KEY_LEFT:
+#else /*][*/
+	case VK_LEFT:
+#endif /*]*/
 		find_adjacent(-1, 0);
 		break;
 
+#if !defined(_WIN32) /*[*/
 	case KEY_RIGHT:
+#else /*][*/
+	case VK_RIGHT:
+#endif /*]*/
 		find_adjacent(1, 0);
 		break;
 
+#if !defined(_WIN32) /*[*/
 	case KEY_HOME:
+#else /*][*/
+	case VK_HOME:
+#endif /*]*/
 		/* Find the first entry. */
 		current_sens = &sens[0];
 		break;
 
+#if !defined(_WIN32) /*[*/
 	case KEY_END:
+#else /*][*/
+	case VK_END:
+#endif /*]*/
 		/* Find the last entry. */
 		current_sens = &sens[NUM_SENSE - 1];
 		break;
 
+#if !defined(_WIN32) /*[*/
 	case KEY_ENTER:
+#else /*][*/
+	case VK_RETURN:
+#endif /*]*/
 		push_macro(current_sens->callback, False);
 		pop_up_keypad(False);
 		break;

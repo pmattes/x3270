@@ -38,12 +38,14 @@ endif
 # compiling natively on Cygwin, or cross-compiling on Linux.
 ifeq ($(CROSS),1)
 MKFB = mkfb
+MKKEYPAD = mkkeypad
 CC = i586-mingw32msvc-gcc
 NATIVECC = gcc
 WINDRES = i586-mingw32msvc-windres
 NO_CYGWIN =
 else
 MKFB = mkfb.exe
+MKKEYPAD = mkkeypad.exe
 CC = gcc
 NATIVECC = gcc
 WINDRES = windres
@@ -57,13 +59,15 @@ SRCS = XtGlue.c actions.c ansi.c apl.c c3270.c charset.c ctlr.c \
 	macros.c print.c printer.c proxy.c readres.c resources.c rpq.c \
 	screen.c see.c sf.c tables.c telnet.c toggles.c trace_ds.c unicode.c \
 	unicode_dbcs.c utf8.c util.c xio.c fallbacks.c keymap.c w3misc.c \
-	winvers.c windirs.c resolver.c relink.c shortcut.c
+	winvers.c windirs.c resolver.c relink.c shortcut.c menubar.c \
+	keypad.c
 VOBJS = XtGlue.o actions.o ansi.o apl.o c3270.o charset.o ctlr.o \
 	fallbacks.o ft.o ft_cut.o ft_dft.o glue.o help.o host.o icmd.o idle.o \
 	keymap.o kybd.o macros.o print.o printer.o proxy.o readres.o \
 	resolver.o resources.o rpq.o screen.o see.o sf.o tables.o telnet.o \
 	toggles.o trace_ds.o unicode.o unicode_dbcs.o utf8.o util.o xio.o \
-	w3misc.c winvers.o windirs.o wc3270res.o relink.o shortcut.o
+	w3misc.c winvers.o windirs.o wc3270res.o relink.o shortcut.o \
+	menubar.o keypad.o
 OBJECTS = $(VOBJS) version.o
 WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o winvers.o windirs.o \
 	relink.o
@@ -87,6 +91,14 @@ fallbacks.c: $(MKFB) X3270.xad Makefile
 
 $(MKFB): mkfb.c Makefile
 	$(NATIVECC) -g -o $(MKFB) -D_WIN32 mkfb.c
+
+keypad.o: keypad.c compiled_keypad.h
+
+compiled_keypad.h: keypad.full keypad.labels keypad.map keypad.outline keypad.callbacks $(MKKEYPAD)
+	./$(MKKEYPAD) >$@
+
+$(MKKEYPAD): mkkeypad.c
+	$(NATIVECC) -g -o $(MKKEYPAD) mkkeypad.c
 
 wc3270res.o: wc3270.rc wc3270.ico Makefile
 	$(WINDRES) -i wc3270.rc -o wc3270res.o
@@ -118,7 +130,7 @@ x3270if.exe: x3270if.o w3misc.o
 	$(CC) -o $@ $(CFLAGS) x3270if.o w3misc.o -lws2_32
 
 clean:
-	rm -f *.o mkfb mkfb.exe fallbacks.c
+	rm -f *.o $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c
 
 clobber: clean
 	rm -f $(PROGS)

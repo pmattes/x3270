@@ -61,6 +61,8 @@
 
 #define STATUS_PUSH_MS	5000
 
+#define CM (60*10)	/* csec per minute */
+
 extern int screen_changed;
 extern char *profile_name;
 
@@ -1902,6 +1904,7 @@ static unsigned char oia_compose_char = 0;
 static enum keytype oia_compose_keytype = KT_STD;
 #define LUCNT	8
 static char oia_lu[LUCNT+1];
+static char oia_timing[6]; /* :ss.s*/
 
 static char *status_msg = "";
 static char *saved_status_msg = NULL;
@@ -2070,6 +2073,33 @@ status_printer(Boolean on)
 	oia_printer = on;
 }
 
+void
+status_timing(struct timeval *t0, struct timeval *t1)
+{
+	static char	no_time[] = ":??.?";
+
+	if (t1->tv_sec - t0->tv_sec > (99*60)) {
+	    	strcpy(oia_timing, no_time);
+	} else {
+		unsigned long cs;	/* centiseconds */
+
+		cs = (t1->tv_sec - t0->tv_sec) * 10 +
+		     (t1->tv_usec - t0->tv_usec + 50000) / 100000;
+		if (cs < CM)
+			(void) sprintf(oia_timing,
+				":%02ld.%ld", cs / 10, cs % 10);
+		else
+			(void) sprintf(oia_timing,
+				"%02ld:%02ld", cs / CM, (cs % CM) / 10);
+	}
+}
+
+void
+status_untiming(void)
+{
+    	oia_timing[0] = '\0';
+}
+
 static void
 draw_oia(void)
 {
@@ -2116,7 +2146,7 @@ draw_oia(void)
 	else
 		attrset(defattr);
 	mvprintw(status_row, 8, "%-35.35s", status_msg);
-	mvprintw(status_row, rmargin-36,
+	mvprintw(status_row, rmargin-35,
 	    "%c%c %c  %c%c%c",
 	    oia_compose? 'C': ' ',
 	    oia_compose? oia_compose_char: ' ',
@@ -2137,6 +2167,10 @@ draw_oia(void)
 	    	printw(" ");
 
 	mvprintw(status_row, rmargin-25, "%s", oia_lu);
+
+	if (toggled(SHOW_TIMING))
+		mvprintw(status_row, rmargin-14, "%s", oia_timing);
+
 	mvprintw(status_row, rmargin-7,
 	    "%03d/%03d", cursor_addr/cCOLS + 1, cursor_addr%cCOLS + 1);
 }
