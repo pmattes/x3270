@@ -47,6 +47,7 @@
 #include "keymapc.h"
 #include "kybdc.h"
 #include "macrosc.h"
+#include "menubarc.h"
 #include "screenc.h"
 #include "tablesc.h"
 #include "trace_dsc.h"
@@ -163,6 +164,10 @@ static int onscreen_valid = FALSE; /* is onscreen valid? */
 
 static int status_row = 0;	/* Row to display the status line on */
 static int status_skip = 0;	/* Row to blank above the status line */
+static int screen_yoffset = 0;	/* Vertical offset to top of screen.
+				   If 0, there is no menu bar.
+				   If nonzero (2, actually), menu bar is at the
+				   top of the display. */
 
 static void kybd_input(void);
 static void kybd_input2(INPUT_RECORD *ir);
@@ -845,6 +850,8 @@ screen_init(void)
 	int want_ov_cols = ov_cols;
 	Boolean oversize = False;
 
+	menu_init();
+
 	/* Disallow altscreen/defscreen. */
 	if ((appres.altscreen != CN) || (appres.defscreen != CN)) {
 		(void) fprintf(stderr, "altscreen/defscreen not supported\n");
@@ -1345,6 +1352,29 @@ screen_disp(Boolean erasing _is_unused)
 		for (col = 0; col < cCOLS; col++) {
 		    	Boolean underlined = False;
 			Boolean blinking = False;
+			Boolean is_menu = False;
+			ucs4_t u;
+			Boolean highlight;
+			unsigned char acs;
+
+			is_menu = menu_char(row + screen_yoffset, col, False,
+				&u, &highlight, &acs);
+			if (is_menu) {
+			    	if (highlight) {
+					if (appres.m3279)
+						attrset(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
+							cmap_bg[HOST_COLOR_GREY]);
+					else
+						attrset(reverse_colors(defattr));
+				} else {
+					if (appres.m3279)
+						attrset(cmap_fg[HOST_COLOR_GREY] |
+							cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
+					else
+						attrset(defattr);
+				}
+				addch(u);
+			}
 
 			if (flipped)
 				move(row, cCOLS-1 - col);
@@ -1355,13 +1385,20 @@ screen_disp(Boolean erasing _is_unused)
 				fa = ea_buf[baddr].fa;
 				a = calc_attrs(baddr, baddr, fa, &a_underlined,
 					&a_blinking);
-				attrset(defattr);
-				addch(' ');
+				if (!is_menu) {
+					attrset(defattr);
+					addch(' ');
+				}
 			} else if (FA_IS_ZERO(fa)) {
 			    	/* Blank. */
-				attrset(a);
-				addch(' ');
+			    	if (!is_menu) {
+					attrset(a);
+					addch(' ');
+				}
 			} else {
+			    	if (is_menu)
+				    	continue;
+
 			    	/* Normal text. */
 				if (!(ea_buf[baddr].gr ||
 				      ea_buf[baddr].fg ||
@@ -1616,7 +1653,16 @@ kybd_input(void)
 		    (ir.Event.MouseEvent.dwEventFlags == 0) &&
 		    (ir.Event.MouseEvent.dwMousePosition.X < COLS) &&
 		    (ir.Event.MouseEvent.dwMousePosition.Y < ROWS)) {
-		    	if (flipped)
+		    	if (menu_is_up) {
+			    	menu_click(
+					ir.Event.MouseEvent.dwMousePosition.X,
+					ir.Event.MouseEvent.dwMousePosition.Y);
+			} else if (ir.Event.MouseEvent.dwMousePosition.Y == 0) {
+			    	popup_menu(
+					ir.Event.MouseEvent.dwMousePosition.X,
+					(screen_yoffset != 0));
+				screen_disp(False);
+			} else if (flipped)
 				cursor_move(
 				    (COLS -
 				      ir.Event.MouseEvent.dwMousePosition.X) +
@@ -1712,6 +1758,11 @@ kybd_input2(INPUT_RECORD *ir)
 		xk = ir->Event.KeyEvent.uChar.UnicodeChar;
 	else
 		xk = (ir->Event.KeyEvent.wVirtualKeyCode << 16) & 0xffff0000;
+
+	if (menu_is_up) {
+	    	menu_key(xk >> 16, xk & 0xffff);
+		return;
+	}
 
 	if (xk) {
 	    	trace_as_keymap(xk, &ir->Event.KeyEvent);

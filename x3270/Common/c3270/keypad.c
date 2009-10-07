@@ -52,6 +52,8 @@
 # include "windows.h"
 #endif /*]*/
 
+extern int screen_changed; /* XXX Hack! */
+
 /* Sensitivity map: A rectangular region and a callback function. */
 typedef struct {
     unsigned char ul_x, ul_y;	/* upper left corner */
@@ -150,6 +152,7 @@ pop_up_keypad(Boolean up)
 		menu_is_up &= ~KEYPAD_IS_UP;
 		current_sens = NULL;
 	}
+	screen_changed = True;
 }
 
 /*
@@ -397,10 +400,34 @@ find_adjacent(int xinc, int yinc)
 	}
 }
 
+#if defined(_WIN32) /*[*/
+void
+keypad_click(int x, int y)
+{
+	size_t i;
+
+	if (!(menu_is_up & KEYPAD_IS_UP))
+	    return;
+
+	/* Find it. */
+	for (i = 0; i < NUM_SENSE; i++) {
+		if (x >= sens[i].ul_x && y >= sens[i].ul_y &&
+		    x <= sens[i].lr_x && y <= sens[i].lr_y) {
+			push_macro(sens[i].callback, False);
+			break;
+		}
+	}
+	pop_up_keypad(False);
+}
+#endif /*]*/
+
 /* Process a key event while the keypad is up. */
 void
 keypad_key(int k, ucs4_t u)
 {
+	if (!(menu_is_up & KEYPAD_IS_UP))
+	    return;
+
 	switch (k) {
 
 #if defined(NCURSES_MOUSE_VERSION) /*[*/
@@ -500,6 +527,8 @@ keypad_key(int k, ucs4_t u)
 		pop_up_keypad(False);
 		break;
 	}
+
+	screen_changed = True;
 }
 
 void
