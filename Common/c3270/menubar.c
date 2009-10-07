@@ -59,14 +59,18 @@
 
 #include "menubarc.h"
 
-#if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
-#include <ncursesw/ncurses.h>
-#elif defined(HAVE_NCURSES_NCURSES_H) /*][*/
-#include <ncurses/ncurses.h>
-#elif defined(HAVE_NCURSES_H) /*][*/
-#include <ncurses.h>
+#if !defined(_WIN32) /*[*/
+# if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
+#  include <ncursesw/ncurses.h>
+# elif defined(HAVE_NCURSES_NCURSES_H) /*][*/
+#  include <ncurses/ncurses.h>
+# elif defined(HAVE_NCURSES_H) /*][*/
+#  include <ncurses.h>
+# else /*][*/
+#  include <curses.h>
+# endif /*]*/
 #else /*][*/
-#include <curses.h>
+# include "windows.h"
 #endif /*]*/
 
 /*
@@ -497,7 +501,11 @@ menu_key(int k, ucs4_t u)
 	}
 #endif /*]*/
 
+#if !defined(_WIN32) /*[*/
 	case KEY_UP:
+#else /*][*/
+	case VK_UP:
+#endif /*]*/
 		i = current_item;
 		if (current_item && current_item->prev) {
 			current_item = current_item->prev;
@@ -511,7 +519,11 @@ menu_key(int k, ucs4_t u)
 		}
 		break;
 
+#if !defined(_WIN32) /*[*/
 	case KEY_DOWN:
+#else /*][*/
+	case VK_DOWN:
+#endif /*]*/
 		i = current_item;
 		if (current_item && current_item->next) {
 			current_item = current_item->next;
@@ -525,7 +537,11 @@ menu_key(int k, ucs4_t u)
 		}
 		break;
 
+#if !defined(_WIN32) /*[*/
 	case KEY_LEFT:
+#else /*][*/
+	case VK_LEFT:
+#endif /*]*/
 		undraw_menu(current_menu);
 		if (current_menu->prev)
 			current_menu = current_menu->prev;
@@ -538,7 +554,11 @@ menu_key(int k, ucs4_t u)
 		draw_menu(current_menu);
 		break;
 
+#if !defined(_WIN32) /*[*/
 	case KEY_RIGHT:
+#else /*][*/
+	case VK_RIGHT:
+#endif /*]*/
 		undraw_menu(current_menu);
 		if (current_menu->next)
 			current_menu = current_menu->next;
@@ -551,7 +571,11 @@ menu_key(int k, ucs4_t u)
 		draw_menu(current_menu);
 		break;
 
+#if !defined(_WIN32) /*[*/
 	case KEY_HOME:
+#else /*][*/
+	case VK_HOME:
+#endif /*]*/
 		if (current_item) {
 			current_item = current_menu->items;
 			while (current_item && !current_item->enabled) {
@@ -561,7 +585,11 @@ menu_key(int k, ucs4_t u)
 		}
 		break;
 
+#if !defined(_WIN32) /*[*/
 	case KEY_END:
+#else /*][*/
+	case VK_END:
+#endif /*]*/
 		i = current_item;
 		while (current_item) {
 			current_item = current_item->next;
@@ -572,7 +600,11 @@ menu_key(int k, ucs4_t u)
 		draw_menu(current_menu);
 		break;
 
+#if !defined(_WIN32) /*[*/
 	case KEY_ENTER:
+#else /*][*/
+	case VK_RETURN:
+#endif /*]*/
 		selected = True;
 		break;
 
@@ -884,9 +916,10 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
 		}
 		return;
 	} else
-#if defined(CURSES_WIDE) /*[*/
+#if !defined(_WIN32) /*[*/
+# if defined(CURSES_WIDE) /*[*/
 	       if (appres.acs)
-#endif /*]*/
+# endif /*]*/
 	{
 		/* ncurses ACS. */
 	    	*is_acs = 1;
@@ -934,8 +967,12 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
 			break;
 		}
 	}
-#if defined(CURSES_WIDE) /*[*/
-       else {
+#endif /*]*/
+#if defined(CURSES_WIDE) || defined(_WIN32) /*[*/
+# if !defined(_WIN32) /*[*/
+       else
+# endif /*]*/
+       {
 	   	/* Unicode. */
 		*is_acs = 0;
 	   	switch (c) {
