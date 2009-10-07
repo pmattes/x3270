@@ -54,7 +54,10 @@ extern unsigned menu_is_up;
 extern void menu_init(void);
 extern Boolean menu_char(int row, int col, Boolean persistent, ucs4_t *u,
 	Boolean *highlighted, unsigned char *acs);
-void menu_key();
+extern void menu_key(int k, ucs4_t u);
+#if defined(_WIN32) /*[*/
+extern void menu_click(int x, int y);
+#endif /*]*/
 extern void popup_menu(int x, int click);
 extern void menu_cursor(int *row, int *col);
 extern void menubar_retoggle(struct toggle *t, int ix);

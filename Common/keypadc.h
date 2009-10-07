@@ -60,6 +60,9 @@ extern Boolean keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted,
 extern void keypad_cursor(int *row, int *col);
 extern void pop_up_keypad(Boolean up);
 extern void keypad_key(int k, ucs4_t u);
+#if defined(_WIN32) /*[*/
+extern void keypad_click(int x, int y);
+#endif /*]*/
 extern void Keypad_action(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
 # endif /*]*/

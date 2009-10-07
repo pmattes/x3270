@@ -73,6 +73,8 @@
 # include "windows.h"
 #endif /*]*/
 
+extern int screen_changed; /* XXX: Hack! */
+
 /*
  * The menus look like this:
  *
@@ -208,6 +210,7 @@ basic_menu_init(void)
 	current_item = NULL;
 	menu_is_up &= ~MENU_IS_UP;
 	pop_up_keypad(False);
+	screen_changed = True;
 }
 
 /* Undraw a menu. */
@@ -216,6 +219,8 @@ undraw_menu(cmenu_t *cmenu)
 {
 	int row, col;
 	cmenu_item_t *i;
+
+	screen_changed = True;
 
 	/* Unhighlight the menu title. */
 	for (col = cmenu->offset; col < cmenu->offset + MENU_WIDTH; col++)
@@ -259,6 +264,8 @@ draw_menu(cmenu_t *cmenu)
 	char *t;
 	int row, col;
 	cmenu_item_t *i;
+
+	screen_changed = True;
 
 	/* Highlight the title. */
 	row = 0;
@@ -395,7 +402,7 @@ popup_menu(int x, int click)
 	menu_is_up |= MENU_IS_UP;
 }
 
-#if defined(NCURSES_MOUSE_VERSION) /*[*/
+#if defined(NCURSES_MOUSE_VERSION) || defined(_WIN32) /*[*/
 /* Find a mouse click in the menu hierarchy and act on it. */
 Boolean
 find_mouse(int x, int y)
@@ -468,6 +475,19 @@ selected:
 		after_param = NULL;
 	}
 	return True;
+}
+#endif /*]*/
+
+#if defined(_WIN32) /*[*/
+void
+menu_click(int x, int y)
+{
+	if (menu_is_up & KEYPAD_IS_UP) {
+		keypad_click(x, y);
+		return;
+	}
+	if (!find_mouse(x, y))
+	    	basic_menu_init();
 }
 #endif /*]*/
 
@@ -636,6 +656,8 @@ menu_key(int k, ucs4_t u)
 			after_param = NULL;
 		}
 	}
+
+	screen_changed = True;
 }
 
 /* Report a character back to the screen drawing logic. */
