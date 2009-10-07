@@ -851,6 +851,7 @@ screen_init(void)
 	Boolean oversize = False;
 
 	menu_init();
+	appres.mouse = True;
 
 	/* Disallow altscreen/defscreen. */
 	if ((appres.altscreen != CN) || (appres.defscreen != CN)) {
@@ -984,6 +985,16 @@ set_status_row(int screen_rows, int emulator_rows)
 	} else {
 		status_skip = screen_rows - 2;
 		status_row = screen_rows - 1;
+	}
+
+	/* Then check for menubar room.  Use 2 rows, 1 in a pinch. */
+	if (appres.menubar && appres.mouse) {
+		if (screen_rows >= emulator_rows + (status_row != 0) + 2)
+			screen_yoffset = 2;
+		else if (screen_rows >= emulator_rows + (status_row != 0) + 1)
+			screen_yoffset = 1;
+		else
+			screen_yoffset = 0;
 	}
 }
 
@@ -1308,11 +1319,15 @@ screen_disp(Boolean erasing _is_unused)
 		}
 
 		/* Move the cursor. */
-		if (flipped)
-			move(cursor_addr / cCOLS,
+		if (menu_is_up) {
+		    	menu_cursor(&row, &col);
+			move(row, col);
+		} else if (flipped)
+			move((cursor_addr / cCOLS) + screen_yoffset,
 				cCOLS-1 - (cursor_addr % cCOLS));
 		else
-			move(cursor_addr / cCOLS, cursor_addr % cCOLS);
+			move((cursor_addr / cCOLS) + screen_yoffset,
+				cursor_addr % cCOLS);
 
 		if (status_row)
 		    	refresh();
@@ -1341,6 +1356,43 @@ screen_disp(Boolean erasing _is_unused)
 	    	return;
 	}
 
+	/* If the menubar is separate, draw it first. */
+	if (screen_yoffset) {
+	    	ucs4_t u;
+		Boolean highlight;
+		unsigned char acs;
+		int norm, high;
+
+		if (menu_is_up) {
+			if (appres.m3279) {
+				high = cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
+				       cmap_bg[HOST_COLOR_NEUTRAL_WHITE];
+				norm = cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
+				       cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
+			} else {
+				high = reverse_colors(defattr);
+				norm = defattr;
+			}
+		} else {
+			norm = high = cmap_fg[HOST_COLOR_GREY] |
+			              cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
+		}
+
+		for (row = 0; row < screen_yoffset; row++) {
+		    	move(row, 0);
+			for (col = 0; col < cCOLS; col++) {
+				if (menu_char(row, col, True, &u, &highlight,
+					    &acs)) {
+				    	attrset(highlight? high: norm);
+					addch(u);
+				} else {
+					attrset(norm);
+					addch(' ');
+				}
+			}
+		}
+	}
+
 	fa = get_field_attribute(0);
 	fa_addr = find_field_attribute(0); /* may be -1, that's okay */
 	a = calc_attrs(0, fa_addr, fa, &a_underlined, &a_blinking);
@@ -1348,7 +1400,7 @@ screen_disp(Boolean erasing _is_unused)
 		int baddr;
 
 		if (!flipped)
-			move(row, 0);
+			move(row + screen_yoffset, 0);
 		for (col = 0; col < cCOLS; col++) {
 		    	Boolean underlined = False;
 			Boolean blinking = False;
@@ -1357,18 +1409,23 @@ screen_disp(Boolean erasing _is_unused)
 			Boolean highlight;
 			unsigned char acs;
 
-			is_menu = menu_char(row + screen_yoffset, col, False,
+			if (flipped)
+				move(row + screen_yoffset, cCOLS-1 - col);
+
+			is_menu = menu_char(row + screen_yoffset,
+				flipped? (cCOLS-1 - col): col,
+				False,
 				&u, &highlight, &acs);
 			if (is_menu) {
 			    	if (highlight) {
 					if (appres.m3279)
 						attrset(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
-							cmap_bg[HOST_COLOR_GREY]);
+							cmap_bg[HOST_COLOR_WHITE]);
 					else
 						attrset(reverse_colors(defattr));
 				} else {
 					if (appres.m3279)
-						attrset(cmap_fg[HOST_COLOR_GREY] |
+						attrset(cmap_fg[HOST_COLOR_WHITE] |
 							cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
 					else
 						attrset(defattr);
@@ -1376,8 +1433,6 @@ screen_disp(Boolean erasing _is_unused)
 				addch(u);
 			}
 
-			if (flipped)
-				move(row, cCOLS-1 - col);
 			baddr = row*cCOLS+col;
 			if (ea_buf[baddr].fa) {
 			    	/* Field attribute. */
@@ -1463,9 +1518,11 @@ screen_disp(Boolean erasing _is_unused)
 		draw_oia();
 	attrset(defattr);
 	if (flipped)
-		move(cursor_addr / cCOLS, cCOLS-1 - (cursor_addr % cCOLS));
+		move((cursor_addr / cCOLS) + screen_yoffset,
+			cCOLS-1 - (cursor_addr % cCOLS));
 	else
-		move(cursor_addr / cCOLS, cursor_addr % cCOLS);
+		move((cursor_addr / cCOLS) + screen_yoffset,
+			cursor_addr % cCOLS);
 	refresh();
 
 	screen_changed = FALSE;
@@ -1586,6 +1643,7 @@ kybd_input(void)
 	INPUT_RECORD ir;
 	DWORD nr;
 	const char *s;
+	int x, y;
 
 	/* Get the next input event. */
 	if (is_nt)
@@ -1636,9 +1694,11 @@ kybd_input(void)
 		trace_event("Menu\n");
 		break;
 	case MOUSE_EVENT:
-		trace_event("Mouse (%d,%d) ButtonState 0x%lx ControlKeyState 0x%lx EventFlags 0x%lx\n",
-			ir.Event.MouseEvent.dwMousePosition.X,
-			ir.Event.MouseEvent.dwMousePosition.Y,
+		x = ir.Event.MouseEvent.dwMousePosition.X;
+		y = ir.Event.MouseEvent.dwMousePosition.Y;
+		trace_event("Mouse (%d,%d) ButtonState 0x%lx "
+			"ControlKeyState 0x%lx EventFlags 0x%lx\n",
+			x, y,
 			ir.Event.MouseEvent.dwButtonState,
 			ir.Event.MouseEvent.dwControlKeyState,
 			ir.Event.MouseEvent.dwEventFlags);
@@ -1650,29 +1710,22 @@ kybd_input(void)
 		if ((ir.Event.MouseEvent.dwButtonState ==
 			FROM_LEFT_1ST_BUTTON_PRESSED) &&
 		    /*(ir.Event.MouseEvent.dwControlKeyState == 0) &&*/
-		    (ir.Event.MouseEvent.dwEventFlags == 0) &&
-		    (ir.Event.MouseEvent.dwMousePosition.X < COLS) &&
-		    (ir.Event.MouseEvent.dwMousePosition.Y < ROWS)) {
+		    (ir.Event.MouseEvent.dwEventFlags == 0)) {
 		    	if (menu_is_up) {
-			    	menu_click(
-					ir.Event.MouseEvent.dwMousePosition.X,
-					ir.Event.MouseEvent.dwMousePosition.Y);
-			} else if (ir.Event.MouseEvent.dwMousePosition.Y == 0) {
-			    	popup_menu(
-					ir.Event.MouseEvent.dwMousePosition.X,
-					(screen_yoffset != 0));
+			    	menu_click(x, y);
+			} else if (y == 0) {
+			    	popup_menu(x, (screen_yoffset != 0));
 				screen_disp(False);
-			} else if (flipped)
-				cursor_move(
-				    (COLS -
-				      ir.Event.MouseEvent.dwMousePosition.X) +
-				    (ir.Event.MouseEvent.dwMousePosition.Y *
-				     COLS));
-			else
-				cursor_move(
-				    ir.Event.MouseEvent.dwMousePosition.X +
-				    (ir.Event.MouseEvent.dwMousePosition.Y *
-				     COLS));
+			} else if ((x < COLS) &&
+				   (y - screen_yoffset > 0) &&
+				   (y - screen_yoffset < ROWS)) {
+				if (flipped)
+					cursor_move((COLS - x) +
+						((y - screen_yoffset) * COLS));
+				else
+					cursor_move(x +
+						((y - screen_yoffset) * COLS));
+			}
 		}
 		break;
 	case WINDOW_BUFFER_SIZE_EVENT:
@@ -2161,8 +2214,8 @@ draw_oia(void)
 
 	/* Make sure the status line region is filled in properly. */
 	attrset(defattr);
-	move(maxROWS, 0);
-	for (i = maxROWS; i < status_row; i++) {
+	move(maxROWS + screen_yoffset, 0);
+	for (i = maxROWS + screen_yoffset; i < status_row; i++) {
 		for (j = 0; j <= rmargin; j++) {
 			printw(" ");
 		}

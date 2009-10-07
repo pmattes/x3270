@@ -943,7 +943,12 @@ screen_disp(Boolean erasing _is_unused)
 			Boolean highlight;
 			unsigned char acs;
 
-			is_menu = menu_char(row + screen_yoffset, col, False,
+			if (flipped)
+				move(row + screen_yoffset, cCOLS-1 - col);
+
+			is_menu = menu_char(row + screen_yoffset,
+				flipped? (cCOLS-1 - col): col,
+				False,
 				&u, &highlight, &acs);
 			if (is_menu) {
 			    	char mb[16];
@@ -981,8 +986,6 @@ screen_disp(Boolean erasing _is_unused)
 #endif /*]*/
 			}
 
-			if (flipped)
-				move(row + screen_yoffset, cCOLS-1 - col);
 			baddr = row*cCOLS+col;
 			if (ea_buf[baddr].fa) {
 			    	fa_addr = baddr;

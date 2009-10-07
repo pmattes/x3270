@@ -200,9 +200,7 @@ typedef struct {
 	char	*defscreen;
 	Boolean	acs;
 	Boolean ascii_box_draw;
-# if !defined(_WIN32) /*[*/
 	Boolean mouse;
-# endif /*]*/
 #endif /*]*/
 	char	*conf_dir;
 	char	*model;

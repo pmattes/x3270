@@ -759,7 +759,11 @@ typedef enum {
 cmenu_item_t *file_menu_items[FM_COUNT];
 char *file_menu_names[FM_COUNT] = {
     "Status",
+#if !defined(_WIN32) /*[*/
     "c3270> Prompt",
+#else /*][*/
+    "wc3270> Prompt",
+#endif /*]*/
     "Print Screen",
     "File Transfer",
     "Enable Tracing",
