@@ -735,9 +735,9 @@ static void
 fm_trace(void *ignored _is_unused)
 {
 	if (toggled(DS_TRACE) || toggled(EVENT_TRACE))
-		push_macro("Trace off", False);
+		push_macro("Trace(off)", False);
 	else
-		push_macro("Trace on", False);
+		push_macro("Trace(on)", False);
 }
 
 static void
