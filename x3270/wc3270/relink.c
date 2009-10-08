@@ -110,9 +110,11 @@ charsets_t charsets[] = {
 
 size_t num_charsets = (sizeof(charsets) / sizeof(charsets[0])) - 1;
 
-             /*  model  2   3   4   5 */
-static int wrows[6] = { 0, 0, 25, 33, 44, 28  };
-static int wcols[6] = { 0, 0, 80, 80, 80, 132 };
+/*  2             3             4             5                 */
+int wrows[6] = { 0, 0,
+    MODEL_2_ROWS, MODEL_3_ROWS, MODEL_4_ROWS, MODEL_5_ROWS };
+int wcols[6] = { 0, 0,
+    MODEL_2_COLS, MODEL_3_COLS, MODEL_4_COLS, MODEL_5_COLS };
 
 char *user_settings = NULL;
 
@@ -342,8 +344,12 @@ create_shortcut(session_t *session, char *exepath, char *linkpath,
 {
 	wchar_t *font;
 	int codepage = 0;
+	int extra_height = 1;
 
 	font = reg_font_from_cset(session->charset, &codepage);
+
+	if (!(session->flags & WF_NO_MENUBAR))
+	    	extra_height += 2;
 
 	return CreateLink(
 		exepath,		/* path to executable */
@@ -351,9 +357,11 @@ create_shortcut(session_t *session, char *exepath, char *linkpath,
 		"wc3270 session",	/* description */
 		args,			/* arguments */
 		workingdir,		/* working directory */
-		wrows[session->model], wcols[session->model],
-					/* console rows, columns */
+		(session->ov_rows? session->ov_rows: wrows[session->model])
+		    + extra_height,	/* console rows */
+		session->ov_cols? session->ov_cols: wcols[session->model],
+					/* console columns */
 		font,			/* font */
-		0,			/* point size */
+		session->point_size,	/* point size */
 		codepage);		/* code page */
 }
