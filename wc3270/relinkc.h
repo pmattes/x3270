@@ -67,6 +67,7 @@ typedef struct {
 #define WF_EMBED_KEYMAPS	0x01	/* embed keymaps in session */
 #define WF_AUTO_SHORTCUT	0x02	/* 'auto-shortcut' mode */
 #define WF_WHITE_BG		0x04	/* white background */
+#define WF_NO_MENUBAR		0x08	/* don't leave room for menu bar */
 
 typedef struct {
 	char *name;
@@ -77,6 +78,8 @@ typedef struct {
 extern charsets_t charsets[];
 extern size_t num_charsets;
 extern char *user_settings;
+extern int wrows[6];
+extern int wcols[6];
 
 extern int read_session(FILE *f, session_t *s);
 extern HRESULT create_shortcut(session_t *session, char *exepath,

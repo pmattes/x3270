@@ -109,12 +109,6 @@ struct {
 #define WP_WIDTH	6
 #define	CS_COLS		2
 
-/*  2                 3                 4                 5                 */
-int wrows[6] = { 0, 0,
-    MODEL_2_ROWS + 1, MODEL_3_ROWS + 1, MODEL_4_ROWS + 1, MODEL_5_ROWS + 1  };
-int wcols[6] = { 0, 0,
-    MODEL_2_COLS,     MODEL_3_COLS,     MODEL_4_COLS,     MODEL_5_COLS };
-
 #define MAX_PRINTERS	256
 PRINTER_INFO_1 printer_info[MAX_PRINTERS];
 int num_printers = 0;
@@ -834,7 +828,7 @@ This specifies the dimensions of the screen.");
 	for (i = 2; i <= max_model; i++) {
 		if (wrows[i]) {
 			printf(" Model %d has %2d rows and %3d columns.\n",
-			    i, wrows[i] - 1, wcols[i]);
+			    i, wrows[i], wcols[i]);
 		}
 	}
 	for (;;) {
@@ -881,7 +875,7 @@ oversize.");
 The oversize must be larger than the default for a model %d (%u rows x %u\n\
 columns).\n",
 		(int)s->model,
-		wrows[s->model] - 1,
+		wrows[s->model],
 		wcols[s->model]);
 
 	for (;;) {
@@ -907,12 +901,12 @@ columns).\n",
 				"'rows x cols'.\n");
 			continue;
 		}
-		if (r < wrows[s->model] - 1 ||
+		if (r < wrows[s->model] ||
 		    c < wcols[s->model]) {
 			printf("Oversize must be larger than the default for "
 				"a model %d (%u x %u).\n",
 				(int)s->model,
-				wrows[s->model] - 1,
+				wrows[s->model],
 				wcols[s->model]);
 			continue;
 		}
@@ -943,7 +937,7 @@ get_charset(session_t *s)
 	new_screen(s, "\
 Character Set\n\
 \n\
-This specifies the EBCDIC character set used by the host.");
+This specifies the EBCDIC character set (code page) used by the host.");
 
 	printf("\
 \nAvailable character sets:\n\n\
@@ -1543,6 +1537,32 @@ white.");
 	return 0;
 }
 
+static int
+get_menubar(session_t *s)
+{
+	new_screen(s, "\
+Menu Bar\n\
+\n\
+This option selects whether the menu bar is displayed on the screen.");
+
+	for (;;) {
+	    	int rc;
+
+		printf("\nDisplay menu bar? (y/n) [%s] ",
+			(s->flags & WF_NO_MENUBAR)? "n": "y");
+		fflush(stdout);
+		rc = getyn(!(s->flags & WF_NO_MENUBAR));
+		if (rc == -1)
+			return -1;
+		if (rc)
+		    	s->flags &= ~WF_NO_MENUBAR;
+		else
+		    	s->flags |= WF_NO_MENUBAR;
+		break;
+	}
+	return 0;
+}
+
 int
 summarize_and_proceed(session_t *s, char *how, char *path)
 {
@@ -1568,7 +1588,7 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 			s->luname[0]? s->luname: DISPLAY_NONE);
 		printf("  3. TCP Port ............... : %d\n", (int)s->port);
 		printf("  4. Model Number ........... : %d (%d rows x %d columns)\n",
-		    (int)s->model, wrows[s->model] - 1, wcols[s->model]);
+		    (int)s->model, wrows[s->model], wcols[s->model]);
 		if (is_nt) {
 			printf("  5.  Oversize .............. : ");
 			if (s->ov_rows || s->ov_cols)
@@ -1619,6 +1639,8 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 				s->point_size? s->point_size: 12);
 		printf(" 18. Background Color ....... : %s\n",
 			(s->flags & WF_WHITE_BG)? "white": "black");
+		printf(" 19. Menu Bar ............... : %s\n",
+			(s->flags & WF_NO_MENUBAR)? "No": "Yes");
 
 		for (;;) {
 		    	int invalid = 0;
@@ -1747,6 +1769,10 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 				if (get_background(s) < 0)
 				    	return -1;
 				break;
+			case 19:
+				if (get_menubar(s) < 0)
+				    	return -1;
+				break;
 			default:
 				printf("Invalid entry.\n");
 				invalid = 1;
@@ -1862,6 +1888,7 @@ session_wizard(char *session_name, int installed)
 	FILE *f;
 	int shortcut_exists;
 	char path[MAX_PATH];
+	int extra_height = 1;
 
 	/* Start with nothing. */
 	(void) memset(&session, '\0', sizeof(session));
@@ -1945,6 +1972,8 @@ session_wizard(char *session_name, int installed)
 	fflush(stdout);
 	sprintf(exepath, "%swc3270.exe", installdir);
 	sprintf(args, "+S \"%s\"", path);
+	if (!(session.flags & WF_NO_MENUBAR))
+	    	extra_height += 2;
 	if (is_nt) {
 	    	wchar_t *font;
 		int codepage = 0;
@@ -1957,8 +1986,9 @@ session_wizard(char *session_name, int installed)
 			"wc3270 session",	/* description */
 			args,			/* arguments */
 			installdir,		/* working directory */
-			session.ov_rows?	/* console rows */
-			    session.ov_rows + 1: wrows[session.model],
+			(session.ov_rows?	/* console rows */
+			    session.ov_rows: wrows[session.model]) +
+				extra_height,
 			session.ov_cols?	/* console cols */
 			    session.ov_cols: wcols[session.model],
 			font,			/* font */
@@ -1972,7 +2002,8 @@ session_wizard(char *session_name, int installed)
 			"wc3270 session",	/* description */
 			args,			/* arguments */
 			installdir,		/* working directory */
-			wrows[session.model], wcols[session.model],
+			wrows[session.model] + extra_height,
+			wcols[session.model],
 						/* console rows, columns */
 			"Lucida Console");	/* font */
 
