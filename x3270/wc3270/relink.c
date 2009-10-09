@@ -351,7 +351,9 @@ create_shortcut(session_t *session, char *exepath, char *linkpath,
 		"wc3270 session",	/* description */
 		args,			/* arguments */
 		workingdir,		/* working directory */
-		wrows[session->model], wcols[session->model],
+		session->ov_rows? session->ov_rows + 1:
+		                  wrows[session->model],
+		session->ov_cols? session->ov_cols: wcols[session->model],
 					/* console rows, columns */
 		font,			/* font */
 		session->point_size,	/* point size */
