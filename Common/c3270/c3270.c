@@ -458,9 +458,10 @@ main(int argc, char *argv[])
 			Error("Must specify hostname with secure option");
 		}
 		appres.once = False;
-		if (!appres.no_prompt)
+		if (!appres.no_prompt) {
 			interact();
-		else
+			screen_disp(False);
+		} else
 			pause_for_errors();
 	}
 	peer_script_init();
