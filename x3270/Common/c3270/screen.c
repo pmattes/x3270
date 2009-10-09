@@ -70,6 +70,7 @@ extern int cCOLS;
 #else /*][*/
 #include <curses.h>
 #endif /*]*/
+#include <term.h>
 
 /* Curses' 'COLS' becomes cursesCOLS, to remove any ambiguity. */
 #define cursesCOLS	COLS
@@ -294,10 +295,26 @@ screen_connect(Boolean connected)
 	int want_ov_rows = ov_rows;
 	int want_ov_cols = ov_cols;
 	Boolean oversize = False;
+	char *cl;
 
 	if (initted || !connected)
 	    	return;
 	initted = True;
+
+	/* Clear the (original) screen first. */
+#if defined(C3270_80_132) /*[*/
+	if (appres.defscreen != CN) {
+		char nbuf[64];
+
+		(void) sprintf(nbuf, "COLUMNS=%d", defscreen_spec.cols);
+		putenv(NewString(nbuf));
+		(void) sprintf(nbuf, "LINES=%d", defscreen_spec.rows);
+		putenv(NewString(nbuf));
+	}
+#endif /*]*/
+	(void) setupterm(NULL, fileno(stdout), NULL);
+	if ((cl = tigetstr("clear")) != NULL)
+	    	putp(cl);
 
 #if !defined(C3270_80_132) /*[*/
 	/* Initialize curses. */
@@ -1450,7 +1467,16 @@ screen_suspend(void)
 void
 screen_resume(void)
 {
+    	char *cl;
+
 	escaped = False;
+
+	/*
+	 * Clear the screen first, if possible, so future command output
+	 * starts at the bottom of the screen.
+	 */
+	if ((cl = tigetstr("clear")) != NULL)
+	    	putp(cl);
 
 #if defined(C3270_80_132) /*[*/
 	if (def_screen != alt_screen && curses_alt) {
