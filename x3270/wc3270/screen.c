@@ -840,6 +840,8 @@ endwin(void)
 	}
 
 	screen_swapped = FALSE;
+
+	system("cls");
 }
 
 /* Initialize the screen. */
@@ -1972,6 +1974,13 @@ screen_resume(void)
 	onscreen_valid = FALSE;
 	refresh();
 	input_id = AddInput((int)chandle, kybd_input);
+
+	if (SetConsoleMode(chandle, ENABLE_PROCESSED_INPUT |
+		    		    ENABLE_MOUSE_INPUT) == 0) {
+		fprintf(stderr, "SetConsoleMode failed: %s\n",
+			win32_strerror(GetLastError()));
+		return;
+	}
 }
 
 void
