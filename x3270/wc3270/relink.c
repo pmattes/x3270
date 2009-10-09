@@ -354,6 +354,6 @@ create_shortcut(session_t *session, char *exepath, char *linkpath,
 		wrows[session->model], wcols[session->model],
 					/* console rows, columns */
 		font,			/* font */
-		0,			/* point size */
+		session->point_size,	/* point size */
 		codepage);		/* code page */
 }
