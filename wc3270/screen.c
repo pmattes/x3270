@@ -842,6 +842,8 @@ endwin(void)
 	screen_swapped = FALSE;
 
 	system("cls");
+	printf("%s\n\n", build);
+	fflush(stdout);
 }
 
 /* Initialize the screen. */
