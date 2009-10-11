@@ -315,6 +315,7 @@ screen_connect(Boolean connected)
 	(void) setupterm(NULL, fileno(stdout), NULL);
 	if ((cl = tigetstr("clear")) != NULL)
 	    	putp(cl);
+	printf("%s\n\n", build);
 
 #if !defined(C3270_80_132) /*[*/
 	/* Initialize curses. */
@@ -1477,6 +1478,7 @@ screen_resume(void)
 	 */
 	if ((cl = tigetstr("clear")) != NULL)
 	    	putp(cl);
+	printf("%s\n\n", build);
 
 #if defined(C3270_80_132) /*[*/
 	if (def_screen != alt_screen && curses_alt) {

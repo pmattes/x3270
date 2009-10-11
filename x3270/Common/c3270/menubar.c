@@ -707,6 +707,13 @@ menu_cursor(int *row, int *col)
 /* Functions specific to c3270. */
 
 static void
+fm_copyright(void *ignored _is_unused)
+{
+	push_macro("Show(copyright)", False);
+	sms_continue();
+}
+
+static void
 fm_status(void *ignored _is_unused)
 {
 	push_macro("Show(status)", False);
@@ -748,6 +755,7 @@ fm_disconnect(void *ignored _is_unused)
 
 /* File menu. */
 typedef enum {
+    FM_COPYRIGHT,
     FM_STATUS,
     FM_PROMPT,
     FM_PRINT,
@@ -758,6 +766,7 @@ typedef enum {
 } file_menu_enum;
 cmenu_item_t *file_menu_items[FM_COUNT];
 char *file_menu_names[FM_COUNT] = {
+    "Copyright",
     "Status",
 #if !defined(_WIN32) /*[*/
     "c3270> Prompt",
@@ -770,6 +779,7 @@ char *file_menu_names[FM_COUNT] = {
     "Disconnect"
 };
 menu_callback file_menu_actions[FM_COUNT] = {
+    fm_copyright,
     fm_status,
     fm_prompt,
     fm_print,
