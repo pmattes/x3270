@@ -748,6 +748,18 @@ fm_trace(void *ignored _is_unused)
 }
 
 static void
+fm_screentrace(void *ignored _is_unused)
+{
+    	push_macro("Toggle(screenTrace)", False);
+}
+
+static void
+fm_keymap(void *ignored _is_unused)
+{
+    	push_macro("Show(keymap)", False);
+}
+
+static void
 fm_disconnect(void *ignored _is_unused)
 {
 	push_macro("Disconnect", False);
@@ -767,6 +779,8 @@ typedef enum {
     FM_PRINT,
     FM_XFER,
     FM_TRACE,
+    FM_KEYMAP,
+    FM_SCREENTRACE,
     FM_DISC,
     FM_QUIT,
     FM_COUNT
@@ -783,6 +797,8 @@ char *file_menu_names[FM_COUNT] = {
     "Print Screen",
     "File Transfer",
     "Enable Tracing",
+    "Save Screen Images in File",
+    "Display Keymap",
     "Disconnect",
     "Quit"
 };
@@ -793,6 +809,8 @@ menu_callback file_menu_actions[FM_COUNT] = {
     fm_print,
     fm_xfer,
     fm_trace,
+    fm_screentrace,
+    fm_keymap,
     fm_disconnect,
     fm_quit
 };
