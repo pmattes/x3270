@@ -1193,7 +1193,7 @@ Show_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 }
 
 #if defined(X3270_TRACE) /*[*/
-/* Trace([data|keyboard][on[filename]|off]) */
+/* Trace([data|keyboard][on [filename]|off]) */
 void
 Trace_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
@@ -1260,6 +1260,42 @@ Trace_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	}
 	if (tracefile_name != NULL)
 		action_output("Trace file is %s", tracefile_name);
+}
+
+/* ScreenTrace(on [filename]|off) */
+void
+ScreenTrace_action(Widget w _is_unused, XEvent *event _is_unused,
+	String *params, Cardinal *num_params)
+{
+	Boolean on = False;
+
+	action_debug(Trace_action, event, params, num_params);
+	if (*num_params == 0) {
+		action_output("Screen tracing is %sabled.",
+		    toggled(SCREEN_TRACE)? "en": "dis");
+		return;
+	}
+	if (!strcasecmp(params[0], "On")) {
+		on = True;
+	} else if (!strcasecmp(params[0], "Off")) {
+		on = False;
+		if (*num_params > 1) {
+			popup_an_error("ScreenTrace(): Too many arguments "
+				"for 'Off'");
+			return;
+		}
+	} else {
+		popup_an_error("ScreenTrace(): Must be 'On' or 'Off'");
+		return;
+	}
+
+	if ((on && !toggled(SCREEN_TRACE)) || (!on && toggled(SCREEN_TRACE))) {
+		if (on && *num_params > 2)
+			appres.screentrace_file = NewString(params[2]);
+		do_toggle(SCREEN_TRACE);
+	}
+	if (screentracefile_name != NULL)
+		action_output("Trace file is %s", screentracefile_name);
 }
 #endif /*]*/
 

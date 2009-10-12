@@ -107,6 +107,7 @@ static void	stop_tracing(void);
 struct timeval   ds_ts;
 Boolean          trace_skipping = False;
 char		*tracefile_name = NULL;
+char		*screentracefile_name = NULL;
 
 /* display a (row,col) */
 const char *
@@ -1071,6 +1072,7 @@ screentrace_cb(char *tfn)
 		Free(tfn);
 		return False;
 	}
+	Replace(screentracefile_name, NewString(tfn));
 	Free(tfn);
 	(void) SETLINEBUF(screentracef);
 #if !defined(_WIN32) /*[*/
@@ -1148,7 +1150,7 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 #endif /*]*/
 			tracefile = tracefile_buf;
 		}
-		if (tt == TT_INITIAL || tt == TT_ACTION) {
+		if (tt == TT_INITIAL || tt == TT_ACTION || tt == TT_INTERACTIVE) {
 			(void) screentrace_cb(NewString(tracefile));
 			if (tracefile_buf != NULL)
 				Free(tracefile_buf);
@@ -1172,6 +1174,7 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 		if (ctlr_any_data() && !trace_skipping)
 			do_screentrace();
 		(void) fclose(screentracef);
+		screentracef = NULL;
 	}
 
 	if (tracefile_buf != NULL)

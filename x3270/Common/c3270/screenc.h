@@ -62,9 +62,11 @@ extern void Help_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void Redraw_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void Trace_action(Widget w, XEvent *event, String *params,
+extern void ScreenTrace_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void Show_action(Widget w, XEvent *event, String *params,
+    Cardinal *num_params);
+extern void Trace_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 
 #if defined(WC3270) /*[*/

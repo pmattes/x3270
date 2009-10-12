@@ -261,14 +261,17 @@ XtActionsRec all_actions[] = {
 	{ "Reset",		Reset_action },
 	{ "Right",		Right_action },
 	{ "Right2",		Right2_action },
+#if defined(C3270) && defined(X3270_TRACE) /*[*/
+	{ "ScreenTrace",	ScreenTrace_action },
+#endif/*]*/
+#if defined(X3270_SCRIPT) /*[*/
+	{ "Script",		Script_action },
+#endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
 	{ "SelectAll",		SelectAll_action },
 	{ "SelectDown",		SelectDown_action },
 	{ "SelectMotion",	SelectMotion_action },
 	{ "SelectUp",		SelectUp_action },
-#endif /*]*/
-#if defined(X3270_SCRIPT) /*[*/
-	{ "Script",		Script_action },
 #endif /*]*/
 #if defined(C3270) /*[*/
 	{ "Show",		Show_action },
