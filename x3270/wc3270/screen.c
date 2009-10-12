@@ -1948,7 +1948,7 @@ kybd_input2(INPUT_RECORD *ir)
 	}
 }
 
-void
+Boolean
 screen_suspend(void)
 {
 	static Boolean need_to_scroll = False;
@@ -1965,6 +1965,8 @@ screen_suspend(void)
 			need_to_scroll = True;
 		RemoveInput(input_id);
 	}
+
+	return False;
 }
 
 void
@@ -2488,4 +2490,9 @@ screen_wait_for_key(void)
 
 	return (ir.Event.KeyEvent.uChar.AsciiChar == 'q') ||
 	       (ir.Event.KeyEvent.uChar.AsciiChar == 'Q');
+}
+
+void
+screen_final(void)
+{
 }

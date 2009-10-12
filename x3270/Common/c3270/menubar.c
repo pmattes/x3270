@@ -753,6 +753,12 @@ fm_disconnect(void *ignored _is_unused)
 	push_macro("Disconnect", False);
 }
 
+static void
+fm_quit(void *ignored _is_unused)
+{
+	push_macro("Quit", False);
+}
+
 /* File menu. */
 typedef enum {
     FM_COPYRIGHT,
@@ -762,6 +768,7 @@ typedef enum {
     FM_XFER,
     FM_TRACE,
     FM_DISC,
+    FM_QUIT,
     FM_COUNT
 } file_menu_enum;
 cmenu_item_t *file_menu_items[FM_COUNT];
@@ -776,7 +783,8 @@ char *file_menu_names[FM_COUNT] = {
     "Print Screen",
     "File Transfer",
     "Enable Tracing",
-    "Disconnect"
+    "Disconnect",
+    "Quit"
 };
 menu_callback file_menu_actions[FM_COUNT] = {
     fm_copyright,
@@ -785,7 +793,8 @@ menu_callback file_menu_actions[FM_COUNT] = {
     fm_print,
     fm_xfer,
     fm_trace,
-    fm_disconnect
+    fm_disconnect,
+    fm_quit
 };
 
 /* Options menu. */
@@ -846,6 +855,8 @@ menu_init(void)
 
 	file_menu = add_menu("File");
 	for (j = 0; j < FM_COUNT; j++) {
+	    	if (appres.no_prompt && j == FM_PROMPT)
+		    	continue;
 		file_menu_items[j] = add_item(file_menu, file_menu_names[j],
 			file_menu_actions[j], NULL);
 	}

@@ -1418,10 +1418,11 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	trace_event(" dropped (no default)\n");
 }
 
-void
+Boolean
 screen_suspend(void)
 {
 	static Boolean need_to_scroll = False;
+	Boolean needed = False;
 
 	if (!isendwin()) {
 #if defined(C3270_80_132) /*[*/
@@ -1445,6 +1446,7 @@ screen_suspend(void)
 #else /*][*/
 		endwin();
 #endif /*]*/
+		needed = True;
 	}
 
 	if (!escaped) {
@@ -1463,6 +1465,8 @@ screen_suspend(void)
 #endif /*]*/
 		RemoveInput(input_id);
 	}
+
+	return needed;
 }
 
 void
@@ -2217,4 +2221,13 @@ display_ge(unsigned char ebc)
 	else
 		addch(' ');
 #endif /*]*/
+}
+
+void
+screen_final()
+{
+    	char *cl;
+
+	if ((cl = tigetstr("clear")) != NULL)
+	    	putp(cl);
 }
