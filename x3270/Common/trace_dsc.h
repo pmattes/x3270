@@ -46,6 +46,8 @@ void trace_ds(const char *fmt, ...) printflike(1, 2);
 void trace_ds_nb(const char *fmt, ...) printflike(1, 2);
 void trace_dsn(const char *fmt, ...) printflike(1, 2);
 void trace_event(const char *fmt, ...) printflike(1, 2);
+void trace_set_trace_file(const char *path);
+void trace_set_screentrace_file(const char *path);
 void trace_screen(void);
 void trace_rollover_check(void);
 

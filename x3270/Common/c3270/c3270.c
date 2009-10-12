@@ -1247,7 +1247,7 @@ Trace_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 
 	if (both) {
 		if (on && *num_params > 1)
-			appres.trace_file = NewString(params[1]);
+		    	trace_set_trace_file(params[1]);
 		if ((on && !toggled(DS_TRACE)) || (!on && toggled(DS_TRACE)))
 			do_toggle(DS_TRACE);
 		if ((on && !toggled(EVENT_TRACE)) ||
@@ -1255,7 +1255,7 @@ Trace_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 			do_toggle(EVENT_TRACE);
 	} else if ((on && !toggled(tg)) || (!on && toggled(tg))) {
 		if (on && *num_params > 2)
-			appres.trace_file = NewString(params[2]);
+		    	trace_set_trace_file(params[2]);
 		do_toggle(tg);
 	}
 	if (tracefile_name != NULL)
@@ -1290,8 +1290,8 @@ ScreenTrace_action(Widget w _is_unused, XEvent *event _is_unused,
 	}
 
 	if ((on && !toggled(SCREEN_TRACE)) || (!on && toggled(SCREEN_TRACE))) {
-		if (on && *num_params > 2)
-			appres.screentrace_file = NewString(params[2]);
+		if (on && *num_params > 1)
+		    	trace_set_screentrace_file(params[1]);
 		do_toggle(SCREEN_TRACE);
 	}
 	if (screentracefile_name != NULL)

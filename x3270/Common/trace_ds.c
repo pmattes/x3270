@@ -98,6 +98,8 @@ static off_t	tracef_size = 0;
 static off_t	tracef_max = 0;
 static char    *tracef_midpoint_header = CN;
 static off_t	tracef_midpoint = 0;
+static char    *onetime_tracefile_name = CN;
+static char    *onetime_screentracefile_name = CN;
 static void	vwtrace(const char *fmt, va_list args);
 static void	wtrace(const char *fmt, ...);
 static char    *create_tracefile_header(const char *mode);
@@ -900,7 +902,10 @@ tracefile_on(int reason, enum toggle_type tt)
 		tracefile_callback((Widget)NULL, "none", PN);
 		return;
 	}
-	if (appres.trace_file)
+	if (onetime_tracefile_name != NULL) {
+	    	tracefile = tracefile_buf = onetime_tracefile_name;
+		onetime_tracefile_name = NULL;
+	} else if (appres.trace_file)
 		tracefile = appres.trace_file;
 	else {
 #if defined(_WIN32) /*[*/
@@ -967,6 +972,12 @@ tracefile_off(void)
 
 #endif /*]*/
 	stop_tracing();
+}
+
+void
+trace_set_trace_file(const char *path)
+{
+    	Replace(onetime_tracefile_name, NewString(path));
 }
 
 void
@@ -1129,13 +1140,23 @@ onescreen_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 #endif /*]*/
 
 void
+trace_set_screentrace_file(const char *path)
+{
+    	Replace(onetime_screentracefile_name, NewString(path));
+}
+
+void
 toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 {
 	char *tracefile_buf = NULL;
 	char *tracefile;
 
 	if (toggled(SCREEN_TRACE)) {
-		if (appres.screentrace_file)
+	    	if (onetime_screentracefile_name != NULL) {
+		    	tracefile = tracefile_buf =
+			    onetime_screentracefile_name;
+			onetime_screentracefile_name = NULL;
+		} else if (appres.screentrace_file)
 			tracefile = appres.screentrace_file;
 		else {
 #if defined(_WIN32) /*[*/
