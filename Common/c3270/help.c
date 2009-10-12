@@ -178,6 +178,9 @@ static struct {
 	{ "Reset", CN, P_3270, "Clear keyboard lock" },
 	{ "Right", CN, P_3270, "Move cursor right" },
 	{ "Right2", CN, P_3270, "Move cursor right 2 columns" },
+#if defined(X3270_TRACE) /*[*/
+	{ "ScreenTrace", "on [<file>]|off", P_INTERACTIVE, "Configure screen tracing" },
+#endif /*]*/
 #if defined(X3270_SCRIPT) /*[*/
 	{ "Script", "<path> [<arg>...]", P_SCRIPTING, "Run a child script" },
 #endif /*]*/
@@ -196,7 +199,9 @@ static struct {
 	    "Change a toggle" },
 	{ "ToggleInsert", CN, P_3270, "Set or clear 3270 insert mode" },
 	{ "ToggleReverse", CN, P_3270, "Set or clear reverse-input mode" },
-	{ "Trace", "[data|keyboard] on|off [<file>]", P_INTERACTIVE, "Configure tracing" },
+#if defined(X3270_TRACE) /*[*/
+	{ "Trace", "[data|keyboard] on [<file>]|off", P_INTERACTIVE, "Configure tracing" },
+#endif /*]*/
 	{ "Transfer", "[<args>]", P_INTERACTIVE, "IND$FILE file transfer (see 'help file-transfer')" },
 	{ "Up", CN, P_3270, "Move cursor up" },
 #if defined(X3270_SCRIPT) /*[*/

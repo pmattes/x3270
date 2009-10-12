@@ -34,6 +34,7 @@
 
 extern Boolean trace_skipping;
 extern char *tracefile_name;
+extern char *screentracefile_name;
 
 const char *rcba(int baddr);
 void toggle_dsTrace(struct toggle *t, enum toggle_type tt);

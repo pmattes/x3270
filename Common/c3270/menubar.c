@@ -750,7 +750,10 @@ fm_trace(void *ignored _is_unused)
 static void
 fm_screentrace(void *ignored _is_unused)
 {
-    	push_macro("Toggle(screenTrace)", False);
+	if (toggled(SCREEN_TRACE))
+		push_macro("ScreenTrace(off)", False);
+	else
+		push_macro("ScreenTrace(on)", False);
 }
 
 static void
@@ -779,8 +782,8 @@ typedef enum {
     FM_PRINT,
     FM_XFER,
     FM_TRACE,
-    FM_KEYMAP,
     FM_SCREENTRACE,
+    FM_KEYMAP,
     FM_DISC,
     FM_QUIT,
     FM_COUNT
@@ -941,6 +944,14 @@ menubar_retoggle(struct toggle *t, int ix)
 			"Dis": "En");
 		rename_item(file_menu_items[FM_TRACE], s);
 		Free(s);
+	}
+	if (ix == SCREEN_TRACE) {
+	    	if (toggled(SCREEN_TRACE))
+			rename_item(file_menu_items[FM_SCREENTRACE],
+				"Stop Saving Screen Images");
+		else
+			rename_item(file_menu_items[FM_SCREENTRACE],
+				"Save Screen Images in File");
 	}
 }
 
