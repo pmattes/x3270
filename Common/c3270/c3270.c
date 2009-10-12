@@ -302,7 +302,8 @@ main_exiting(Boolean ignored)
 	if (escaped)
 		stop_pager();
 	else
-		screen_suspend();
+		if (screen_suspend())
+		    	screen_final();
 } 
 
 /* Make sure error messages are seen. */
@@ -478,23 +479,21 @@ main(int argc, char *argv[])
 			escape_pending = False;
 			screen_suspend();
 		}
-		if (!appres.no_prompt) {
-			if (!CONNECTED && !appres.reconnect) {
-				screen_suspend();
-				(void) printf("Disconnected.\n");
-				if (appres.once)
-					x3270_exit(0);
-				interact();
-				screen_resume();
-			} else if (escaped
+		if (!appres.no_prompt && !CONNECTED && !appres.reconnect) {
+			screen_suspend();
+			(void) printf("Disconnected.\n");
+			if (appres.once)
+				x3270_exit(0);
+			interact();
+			screen_resume();
+		} else if (escaped
 #if defined(X3270_FT) /*[*/
 				    && ft_state == FT_NONE
 #endif /*]*/
 				    ) {
-				interact();
-				trace_event("Done interacting.\n");
-				screen_resume();
-			}
+			interact();
+			trace_event("Done interacting.\n");
+			screen_resume();
 		} else if (!CONNECTED &&
 			   !appres.reconnect &&
 			   !appres.no_prompt) {

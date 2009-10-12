@@ -46,7 +46,7 @@ extern void screen_disp(Boolean erasing);
 extern void screen_init(void);
 extern void screen_flip(void);
 extern void screen_resume(void);
-extern void screen_suspend(void);
+extern Boolean screen_suspend(void);
 extern FILE *start_pager(void);
 #if defined(WC3270) /*[*/
 extern void pager_output(const char *s);
@@ -78,4 +78,5 @@ extern int windows_cp;
 
 #if defined(C3270) /*[*/
 extern void toggle_underscore(struct toggle *t, enum toggle_type type);
+extern void screen_final(void);
 #endif /*]*/
