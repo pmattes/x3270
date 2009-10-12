@@ -1103,6 +1103,12 @@ XX_FB(XX_PRODUCT) also supports the following interactive commands:
 XX_TPS()dnl
 XX_TP(XX_FB(Help))
 Displays a list of available commands.
+XX_TP(XX_FB(ScreenTrace))
+Turns screen tracing (saving screen images to a file) on or off.
+The command XX_FB(screentrace on) enables screen tracing;
+the command XX_FB(screentrace off) disables it.
+After XX_FB(on), a filename may be specified to override the default
+trace file name of XX_FB(/tmp/x3scr.)`'XX_FI(pid)`'ifelse(XX_PRODUCT,wc3270,XX_FB(.txt)).
 XX_TP(XX_FB(Show))
 Displays statistics and settings.
 XX_TP(XX_FB(Trace))
@@ -1112,7 +1118,7 @@ the command XX_FB(trace off) disables it.
 The qualifier XX_FB(data) or XX_FB(keyboard) can be specified
 before XX_FB(on) or XX_FB(off) to enable or disable a particular trace.
 After XX_FB(on), a filename may be specified to override the default
-trace file name of XX_FB(/tmp/x3trc.)`'XX_FI(pid).
+trace file name of XX_FB(/tmp/x3trc.)`'XX_FI(pid)`'ifelse(XX_PRODUCT,wc3270,XX_FB(.txt)).
 XX_TPE()dnl
 ')dnl
 ifelse(XX_PRODUCT,c3270,`include(keymaps.inc)
