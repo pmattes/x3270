@@ -842,7 +842,7 @@ endwin(void)
 	screen_swapped = FALSE;
 
 	system("cls");
-	printf("%s\n\n", build);
+	printf("[wc3270]\n\n");
 	fflush(stdout);
 }
 

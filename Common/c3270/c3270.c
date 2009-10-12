@@ -1138,6 +1138,8 @@ static void
 copyright_dump(void)
 {
 	action_output(" ");
+	action_output("%s", build);
+	action_output(" ");
 	action_output("Copyright (c) 1993-2009, Paul Mattes.");
 	action_output("Copyright (c) 1990, Jeff Sparkes.");
 	action_output("Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA");
