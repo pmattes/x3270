@@ -1126,6 +1126,7 @@ valid_explicit(const char *resname, unsigned len)
 	    { ResHostColorForProtectedIntensified,V_FLAT },
 	    { ResConsoleColorForHostColor,	V_COLOR },
 #else /*][*/
+	    { ResPrinterCommand,		V_FLAT },
 	    { ResPrintTextCommand,		V_FLAT },
 	    { ResCursesColorForDefault,		V_FLAT },
 	    { ResCursesColorForIntensified,	V_FLAT },
