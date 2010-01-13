@@ -133,8 +133,18 @@ keymap_init(const char *km, Boolean interactive)
 		register_schange(ST_3270_MODE, keymap_3270_mode);
 		register_schange(ST_CONNECT, keymap_3270_mode);
 	} else {
+		struct trans_list *t;
+		XtTranslations trans;
+
 		screen_set_keymap();
 		keypad_set_keymap();
+
+		/* Re-apply any temporary keymaps. */
+		for (t = temp_keymaps; t != NULL; t = t->next) {
+			trans = lookup_tt(t->name, CN);
+			screen_set_temp_keymap(trans);
+			keypad_set_temp_keymap(trans);
+		}
 	}
 	km_regen();
 
