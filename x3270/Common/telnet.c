@@ -1185,6 +1185,34 @@ next_lu(void)
 		curr_lu = (char **)NULL;
 }
 
+#if defined(EBCDIC_HOST) /*[*/
+/*
+ * force_ascii
+ * 	Force the argument string to ASCII.  On ASCII (or ASCII-derived) hosts,
+ * 	this is a no-op.  On EBCDIC-based hosts, translation is necessary.
+ */
+static const char *
+force_ascii(const char *s)
+{
+    	static char buf[256];
+	unsigned char c, e;
+	int i;
+
+	i = 0;
+	while ((c = *s++) && i < sizeof(buf) - 1) {
+		e = ebc2asc0[c];
+		if (e)
+			buf[i++] = e;
+		else
+			buf[i++] = 0x3f; /* '?' */
+	}
+	buf[i] = '\0';
+	return buf;
+}
+#else /*][*/
+#define force_ascii(s) (s)
+#endif /*]*/
+
 /*
  * telnet_fsm
  *	Telnet finite-state machine.
@@ -1486,18 +1514,21 @@ telnet_fsm(unsigned char c)
 				tt_out = Malloc(tb_len + 1);
 				(void) sprintf(tt_out, "%c%c%c%c%s%s%s%c%c",
 				    IAC, SB, TELOPT_TTYPE, TELQUAL_IS,
+				    force_ascii(termtype),
+				    (try_lu != CN && *try_lu) ? "@" : "",
+				    (try_lu != CN && *try_lu) ?
+					force_ascii(try_lu) : "",
+				    IAC, SE);
+				net_rawout((unsigned char *)tt_out, tb_len);
+				Free(tt_out);
+
+				trace_dsn("SENT %s %s %s %s%s%s %s\n",
+				    cmd(SB), opt(TELOPT_TTYPE),
+				    telquals[TELQUAL_IS],
 				    termtype,
 				    (try_lu != CN && *try_lu) ? "@" : "",
 				    (try_lu != CN && *try_lu) ? try_lu : "",
-				    IAC, SE);
-				net_rawout((unsigned char *)tt_out, tb_len);
-
-				trace_dsn("SENT %s %s %s %.*s %s\n",
-				    cmd(SB), opt(TELOPT_TTYPE),
-				    telquals[TELQUAL_IS],
-				    tt_len, tt_out + 4,
 				    cmd(SE));
-				Free(tt_out);
 
 				/* Advance to the next LU name. */
 				next_lu();
@@ -1533,6 +1564,12 @@ tn3270e_request(void)
 	int tt_len, tb_len;
 	char *tt_out;
 	char *t;
+	char *xtn;
+
+	/* Convert 3279 to 3278, per the RFC. */
+	xtn = NewString(termtype);
+	if (!strncmp(xtn, "IBM-3279", 8))
+	    	xtn[7] = '8';
 
 	tt_len = strlen(termtype);
 	if (try_lu != CN && *try_lu)
@@ -1543,27 +1580,25 @@ tn3270e_request(void)
 	t = tt_out;
 	t += sprintf(tt_out, "%c%c%c%c%c%s",
 	    IAC, SB, TELOPT_TN3270E, TN3270E_OP_DEVICE_TYPE,
-	    TN3270E_OP_REQUEST, termtype);
-
-	/* Convert 3279 to 3278, per the RFC. */
-	if (tt_out[12] == '9')
-		tt_out[12] = '8';
+	    TN3270E_OP_REQUEST, force_ascii(xtn));
 
 	if (try_lu != CN && *try_lu)
-		t += sprintf(t, "%c%s", TN3270E_OP_CONNECT, try_lu);
+		t += sprintf(t, "%c%s", TN3270E_OP_CONNECT,
+			force_ascii(try_lu));
 
 	(void) sprintf(t, "%c%c", IAC, SE);
 
 	net_rawout((unsigned char *)tt_out, tb_len);
+	Free(tt_out);
 
-	trace_dsn("SENT %s %s DEVICE-TYPE REQUEST %.*s%s%s "
+	trace_dsn("SENT %s %s DEVICE-TYPE REQUEST %s%s%s "
 		   "%s\n",
-	    cmd(SB), opt(TELOPT_TN3270E), (int)strlen(termtype), tt_out + 5,
+	    cmd(SB), opt(TELOPT_TN3270E), xtn,
 	    (try_lu != CN && *try_lu) ? " CONNECT " : "",
 	    (try_lu != CN && *try_lu) ? try_lu : "",
 	    cmd(SE));
 
-	Free(tt_out);
+	Free(xtn);
 }
 
 /*
