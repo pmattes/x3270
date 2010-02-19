@@ -1213,6 +1213,33 @@ force_ascii(const char *s)
 #define force_ascii(s) (s)
 #endif /*]*/
 
+#if defined(EBCDIC_HOST) /*[*/
+/*
+ * force_local
+ * 	Force the argument string from ASCII to the local character set.  On
+ * 	ASCII (or ASCII-derived) hosts, this is a no-op.  On EBCDIC-based
+ * 	hosts, translation is necessary.
+ *
+ * 	Does the translation in-place.
+ */
+void
+force_local(char *s)
+{
+	unsigned char c, e;
+
+	while ((c = *s) != '\0') {
+		e = asc2ebc0[c];
+		if (e)
+			*s = e;
+		else
+			*s = '?';
+		s++;
+	}
+}
+#else /*][*/
+#define force_local(s)
+#endif /*]*/
+
 /*
  * telnet_fsm
  *	Telnet finite-state machine.
@@ -1679,9 +1706,6 @@ tn3270e_negotiate(void)
 				while(sbbuf[3+tnlen+1+snlen] != SE)
 					snlen++;
 			}
-			trace_dsn("IS %.*s CONNECT %.*s SE\n",
-				tnlen, &sbbuf[3],
-				snlen, &sbbuf[3+tnlen+1]);
 
 			/* Remember the LU. */
 			if (tnlen) {
@@ -1690,6 +1714,7 @@ tn3270e_negotiate(void)
 				(void)strncpy(reported_type,
 				    (char *)&sbbuf[3], tnlen);
 				reported_type[tnlen] = '\0';
+				force_local(reported_type);
 				connected_type = reported_type;
 			}
 			if (snlen) {
@@ -1698,9 +1723,14 @@ tn3270e_negotiate(void)
 				(void)strncpy(reported_lu,
 				    (char *)&sbbuf[3+tnlen+1], snlen);
 				reported_lu[snlen] = '\0';
+				force_local(reported_lu);
 				connected_lu = reported_lu;
 				status_lu(connected_lu);
 			}
+
+			trace_dsn("IS %s CONNECT %s SE\n",
+				tnlen? connected_type: "",
+				snlen? connected_lu: "");
 
 			/* Tell them what we can do. */
 			tn3270e_subneg_send(TN3270E_OP_REQUEST, e_funcs);
@@ -1907,7 +1937,7 @@ maxru(unsigned char c)
 static void
 process_bind(unsigned char *buf, int buflen)
 {
-	int namelen, i;
+	int namelen;
 	int dest_ix = 0;
 
 	/* Save the raw image. */
@@ -1919,8 +1949,8 @@ process_bind(unsigned char *buf, int buflen)
 
 	/* Clean up the derived state. */
 	if (plu_name == CN)
-	    	plu_name = Malloc(mb_max_len(BIND_PLU_NAME_MAX));
-	(void) memset(plu_name, '\0', mb_max_len(BIND_PLU_NAME_MAX));
+	    	plu_name = Malloc(mb_max_len(BIND_PLU_NAME_MAX + 1));
+	(void) memset(plu_name, '\0', mb_max_len(BIND_PLU_NAME_MAX + 1));
 	maxru_sec = 0;
 	maxru_pri = 0;
 	bind_rd = 0;
@@ -2013,6 +2043,12 @@ process_bind(unsigned char *buf, int buflen)
 		if (namelen > BIND_PLU_NAME_MAX)
 			namelen = BIND_PLU_NAME_MAX;
 		if ((namelen > 0) && (buflen > BIND_OFF_PLU_NAME + namelen)) {
+# if defined(EBCDIC_HOST) /*[*/
+			memcpy(plu_name, &buf[BIND_OFF_PLU_NAME], namelen);
+			plu_name[namelen] = '\0';
+# else /*][*/
+		    	int i;
+
 			for (i = 0; i < namelen; i++) {
 				int nx;
 
@@ -2022,6 +2058,7 @@ process_bind(unsigned char *buf, int buflen)
 				if (nx > 1)
 					dest_ix += nx - 1;
 			}
+# endif /*]*/
 		}
 	}
 }
