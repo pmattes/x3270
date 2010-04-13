@@ -771,7 +771,7 @@ do_qr_color(void)
 
 #if defined(X3270_COMPAT) || !defined(X3270_DISPLAY) /*[*/
 	/* Add background color. */
-	if (appres.m3279) {
+	if (appres.m3279 && appres.qr_bg_color) {
 		space3270out(4);
 		*obptr++ = 4;		/* length */
 		*obptr++ = 0x02;	/* background color */
