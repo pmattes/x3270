@@ -151,6 +151,7 @@ typedef struct {
 	Boolean color8;
 	Boolean bsd_tm;
 	Boolean unlock_delay;
+	Boolean qr_bg_color;
 #if defined(X3270_SCRIPT) /*[*/
 	Boolean socket;
 	int	script_port;

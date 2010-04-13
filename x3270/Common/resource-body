@@ -1992,6 +1992,17 @@ desc
     before and after the window is printed will not appear.
 .
 
+name qrBgColor
+applies C s tcl
+type b
+default false
+desc
+    When true, %p% will report in the QueryReply(color) that it supports
+    background color; when false, it will not.  It is disabled by default
+    because certain versions of GDDM are confused by this report and will
+    crash.
+.
+
 name quit
 applies a
 groups n

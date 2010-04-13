@@ -146,6 +146,7 @@
 
 #define ResProxy		"proxy"
 #define ResQuit			"quit"
+#define ResQrBgColor		"qrBgColor"
 #define ResReconnect		"reconnect"
 #define ResRectangleSelect	"rectangleSelect"
 #define ResReverseVideo		"reverseVideo"

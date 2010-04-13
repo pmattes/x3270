@@ -1013,6 +1013,7 @@ static struct {
 	{ ResPrinterLu,	offset(printer_lu),	XRM_STRING },
 #endif /*]*/
 	{ ResProxy,	offset(proxy),		XRM_STRING },
+	{ ResQrBgColor,	offset(qr_bg_color),	XRM_BOOLEAN },
 #if defined(X3270_ANSI) /*[*/
 	{ ResQuit,	offset(quit),		XRM_STRING },
 	{ ResRprnt,	offset(rprnt),		XRM_STRING },
