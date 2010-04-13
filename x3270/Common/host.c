@@ -520,9 +520,12 @@ split_host(char *s, Boolean *ansi, Boolean *std_ds, Boolean *passthru,
 		pfxptr[3] = non_e;	/* N: */
 		pfxptr[4] = passthru;	/* P: */
 		pfxptr[5] = std_ds;	/* S: */
-		for (i = 0; i < 6; i++)
+		for (i = 0; i < 6; i++) {
 		    	if (prefixes & (1 << i))
 			    	*pfxptr[i] = True;
+			else
+			    	*pfxptr[i] = False;
+		}
 		*needed = (strcmp(s, host) != 0);
 	    	return host;
 	}
