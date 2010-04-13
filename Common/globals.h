@@ -72,6 +72,9 @@
 #define _is_unused /* nothing */
 #define printflike(s, f) /* nothing */
 #endif /*]*/
+#if 'A' > 'a' /*[*/
+#define EBCDIC_HOST 1
+#endif /*]*/
 
 /*
  * Prerequisite #includes.
