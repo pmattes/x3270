@@ -422,6 +422,8 @@ find_mouse(int x, int y)
 		/* Menu title. */
 		for (c = menus; c != NULL; c = c->next) {
 			if (x >= c->offset && x < c->offset + MENU_WIDTH) {
+			    	if (c == current_menu)
+				    	return False;
 				if (c->items == NULL)
 					goto selected;
 				if (c == current_menu)
