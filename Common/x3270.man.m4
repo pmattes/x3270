@@ -1,4 +1,4 @@
-dnl Copyright (c) 1993-2009, Paul Mattes.
+dnl Copyright (c) 1993-2010, Paul Mattes.
 dnl Copyright (c) 1990, Jeff Sparkes.
 dnl All rights reserved.
 dnl 
@@ -1542,7 +1542,7 @@ RFC 1646, TN3270 Extensions for LUname and Printer Selection
 XX_BR
 RFC 2355, TN3270 Enhancements
 XX_SH(Copyrights)
-Copyright`'XX_COPY()1993-2009, Paul Mattes.
+Copyright`'XX_COPY()1993-2010, Paul Mattes.
 XX_BR
 Copyright`'XX_COPY()2004-2005, Don Russell.
 XX_BR
