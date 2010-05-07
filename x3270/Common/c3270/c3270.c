@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2010, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -362,7 +362,7 @@ main(int argc, char *argv[])
 	argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
 	printf("%s\n\n"
-		"Copyright 1989-2009 by Paul Mattes, GTRC and others.\n"
+		"Copyright 1989-2010 by Paul Mattes, GTRC and others.\n"
 		"Type 'show copyright' for full copyright information.\n"
 		"Type 'help' for help information.\n\n",
 		build);
@@ -1140,7 +1140,7 @@ copyright_dump(void)
 	action_output(" ");
 	action_output("%s", build);
 	action_output(" ");
-	action_output("Copyright (c) 1993-2009, Paul Mattes.");
+	action_output("Copyright (c) 1993-2010, Paul Mattes.");
 	action_output("Copyright (c) 1990, Jeff Sparkes.");
 	action_output("Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA");
 	action_output(" 30332.");

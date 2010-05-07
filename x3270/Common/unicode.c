@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009, Paul Mattes.
+ * Copyright (c) 2008-2010, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
