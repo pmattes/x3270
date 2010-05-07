@@ -2249,7 +2249,7 @@ options_menu_init(Boolean regen, Position x, Position y)
  * Change a menu checkmark
  */
 void
-menubar_retoggle(struct toggle *t)
+menubar_retoggle(struct toggle *t, int ix _is_unused)
 {
 	if (t->w[0] != NULL)
 		XtVaSetValues(t->w[0],
