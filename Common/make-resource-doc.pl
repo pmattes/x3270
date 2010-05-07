@@ -342,6 +342,6 @@ foreach my $j (@indices) {
     $q = $q + 1;
 }
 
-print "<p><i>$product verson $version ", `date`, "\n";
+print "<p><i>$product version $version ", `date`, "\n";
 
 print "</body>\n";
