@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2010, Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -254,7 +254,7 @@ DAMAGE.";
 	left_anchor = NULL;
 
 	MAKE_SMALL(
-"Copyright \251 1993-2009, Paul Mattes.\n\
+"Copyright \251 1993-2010, Paul Mattes.\n\
 Copyright \251 2004-2005, Don Russell.\n\
 Copyright \251 1995, Dick Altenbern.\n\
 Copyright \251 1990, Jeff Sparkes.\n\
