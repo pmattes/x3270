@@ -245,7 +245,7 @@ For a monochrome display, it is XX_FB(`3278'XX_DASHED(4)).',
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(mono)))
 Forces XX_FB(XX_PRODUCT) to believe it is running on a monochrome X display.
 ')dnl
-ifelse(XX_MODE,console,`XX_TP(XX_FB(XX_DASHED(mono)))
+ifelse(XX_PRODUCT,c3270,`XX_TP(XX_FB(XX_DASHED(mono)))
 Prevents XX_FB(XX_PRODUCT) from using color, ignoring any color capabilities
 reported by the terminal.
 XX_TP(XX_FB(XX_DASHED(noprompt)))
