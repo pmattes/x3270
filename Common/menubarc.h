@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2010, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -73,7 +73,7 @@ extern void Menu_action(Widget w, XEvent *event, String *params,
 # define menubar_keypad_changed()
 # define menubar_qheight(n)	0
 # define menubar_resize(n)
-# define menubar_retoggle(t)
+# define menubar_retoggle(t, ix)
 # define HandleMenu_action ignore_action
 
 #endif /*]*/
