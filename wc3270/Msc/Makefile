@@ -28,6 +28,7 @@
 
 # Set command paths.
 MKFB = mkfb.exe
+MKKEYPAD = mkkeypad.exe
 CC = cl /nologo
 RC = rc
 RM = erase
@@ -42,12 +43,12 @@ XCPPFLAGS = /D_WIN32 /DWC3270 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /DWINVER=
 CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I.
 VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj c3270.obj charset.obj \
 	ctlr.obj fallbacks.obj ft.obj ft_cut.obj ft_dft.obj glue.obj help.obj \
-	host.obj icmd.obj idle.obj keymap.obj kybd.obj macros.obj print.obj \
-	printer.obj proxy.obj readres.obj relink.obj resolver.obj \
-	resources.obj rpq.obj screen.obj see.obj sf.obj shortcut.obj \
-	tables.obj telnet.obj toggles.obj trace_ds.obj unicode.obj \
-	unicode_dbcs.obj utf8.obj util.obj xio.obj w3misc.obj winvers.obj \
-	windirs.obj wc3270.RES
+	host.obj icmd.obj idle.obj keymap.obj keypad.obj kybd.obj macros.obj \
+	menubar.obj print.obj printer.obj proxy.obj readres.obj relink.obj \
+	resolver.obj resources.obj rpq.obj screen.obj see.obj sf.obj \
+	shortcut.obj tables.obj telnet.obj toggles.obj trace_ds.obj \
+	unicode.obj unicode_dbcs.obj utf8.obj util.obj xio.obj w3misc.obj \
+	winvers.obj windirs.obj wc3270.RES
 OBJECTS = $(VOBJS) version.obj
 WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
 	windirs.obj relink.obj
@@ -71,6 +72,12 @@ fallbacks.obj: fallbacks.c
 
 $(MKFB): mkfb.c Msc\Makefile
 	$(CC) /Fe$(MKFB) /D_WIN32 /D_CRT_SECURE_NO_DEPRECATE mkfb.c
+
+compiled_keypad.h: keypad.full keypad.labels keypad.map keypad.outline keypad.callbacks $(MKKEYPAD)
+	$(MKKEYPAD) >$@
+
+$(MKKEYPAD): mkkeypad.c
+	$(CC) /Fe$(MKKEYPAD) /D_WIN32 /D_CRT_SECURE_NO_DEPRECATE mkkeypad.c
 
 wc3270.RES: wc3270.rc wc3270.ico Msc\Makefile
 	$(RC) wc3270.rc
@@ -105,7 +112,7 @@ x3270if.obj: x3270if.c
 	$(CC) $(CFLAGS) /c x3270if.c
 
 clean:
-	erase *.obj *.RES *.exp *.lib $(MKFB) fallbacks.c mkversion.exe version.c wversion.c
+	erase *.obj *.RES *.exp *.lib $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c mkversion.exe version.c wversion.c
 
 clobber: clean
 	erase $(PROGS)
@@ -142,10 +149,16 @@ idle.obj: idle.c
 	$(CC) $(CFLAGS) /c idle.c
 keymap.obj: keymap.c
 	$(CC) $(CFLAGS) /c keymap.c
+keypad.obj: keypad.c compiled_keypad.h
+	$(CC) $(CFLAGS) /c keypad.c
 kybd.obj: kybd.c
 	$(CC) $(CFLAGS) /c kybd.c
 macros.obj: macros.c
 	$(CC) $(CFLAGS) /c macros.c
+macros.obj: macros.c
+	$(CC) $(CFLAGS) /c macros.c
+menubar.obj: menubar.c
+	$(CC) $(CFLAGS) /c menubar.c
 print.obj: print.c
 	$(CC) $(CFLAGS) /c print.c
 printer.obj: printer.c
