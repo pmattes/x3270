@@ -258,6 +258,17 @@ description
     if true, will replace the bell with a flash of the screen.
 .
 
+name bindLimit
+applies a
+groups p
+type b
+default true
+description
+    When true, %p% will restrict its screen dimensions to those specified in
+    the BIND image sent by the host.
+    If false, it will not.
+.
+
 name blankFill
 applies a
 groups i

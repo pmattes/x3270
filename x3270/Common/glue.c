@@ -498,6 +498,7 @@ set_appres_defaults(void)
 	appres.acs = True;
 #endif /*]*/
 #endif /*]*/
+	appres.bind_limit = True;
 
 #if defined(X3270_ANSI) /*[*/
 	appres.icrnl = True;
@@ -940,6 +941,7 @@ static struct {
 	{ ResAutoShortcut,offset(auto_shortcut),XRM_BOOLEAN },
 	{ ResBellMode,offset(bell_mode),	XRM_STRING },
 #endif /*]*/
+	{ ResBindLimit,	offset(bind_limit),	XRM_BOOLEAN },
 	{ ResBsdTm,	offset(bsd_tm),		XRM_BOOLEAN },
 #if defined(HAVE_LIBSSL) /*[*/
 	{ ResCertFile,	offset(cert_file),	XRM_STRING },
