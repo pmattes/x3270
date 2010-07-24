@@ -70,7 +70,6 @@ extern int cCOLS;
 #else /*][*/
 #include <curses.h>
 #endif /*]*/
-#include <term.h>
 
 /* Curses' 'COLS' becomes cursesCOLS, to remove any ambiguity. */
 #define cursesCOLS	COLS

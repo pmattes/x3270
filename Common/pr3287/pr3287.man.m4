@@ -66,8 +66,13 @@ Causes
 XX_FI(XX_PRODUCT)
 to become a daemon (background) process.')
 XX_TP(XX_FB(XX_DASHED(eojtimeout)) XX_FI(seconds))
-Causes XX_FI(XX_PRODUCT) to flush the print job after XX_FI(seconds) seconds
+Causes XX_FI(XX_PRODUCT) to complete the print job after XX_FI(seconds) seconds
 of inactivity.
+XX_TP(XX_FB(XX_DASHED(emflush)))
+Causes XX_FI(XX_PRODUCT) to flush any pending printer output whenever an EM
+(End of Medium) order arrives in unformatted 3270 mode.
+This can help preserve multi-page output with hosts that do not clear the 3270
+buffer between pages.
 XX_TP(XX_FB(XX_DASHED(ignoreeoj)))
 Ignore TN3270E PRINT-EOJ commands, relying on UNBIND commands to indicate
 the ends of print jobs.
@@ -168,7 +173,7 @@ RFC 1646, TN3270 Extensions for LUname and Printer Selection
 XX_BR
 RFC 2355, TN3270 Enhancements
 XX_SH(Copyrights)
-Copyright`'XX_COPY()1993-2009, Paul Mattes.
+Copyright`'XX_COPY()1993-2010, Paul Mattes.
 XX_BR
 Copyright`'XX_COPY()1990, Jeff Sparkes.
 XX_BR
