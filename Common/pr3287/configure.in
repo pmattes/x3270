@@ -133,10 +133,12 @@ case "$with_iconv" in
 no|"")	;;
 yes|*)
 	AC_DEFINE(USE_ICONV,1)
+	ICONV=-DUSE_ICONV=1
 	unkw=1;
 	;;
 esac
 AC_SUBST(USE_ICONV)
+AC_SUBST(ICONV)
 AC_CHECK_HEADERS(iconv.h)
 AC_SEARCH_LIBS(iconv, iconv, , AC_SEARCH_LIBS(libiconv, iconv, , if test "$unkw"; then AC_MSG_ERROR("No iconv library function"); fi))
 
