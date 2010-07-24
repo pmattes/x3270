@@ -178,6 +178,10 @@ static int	bind_rd = 0;
 static int	bind_cd = 0;
 static int	bind_ra = 0;
 static int	bind_ca = 0;
+#define BIND_DIMS_PRESENT	0x1	/* BIND included screen dimensions */
+#define BIND_DIMS_ALT		0x2	/* BIND included alternate size */
+#define BIND_DIMS_VALID		0x4	/* BIND screen sizes were valid */
+static unsigned	bind_state = 0;
 static char	**lus = (char **)NULL;
 static char	**curr_lu = (char **)NULL;
 static char	*try_lu = CN;
@@ -1978,6 +1982,7 @@ process_bind(unsigned char *buf, int buflen)
 	bind_cd = 0;
 	bind_ra = 0;
 	bind_ca = 0;
+	bind_state = 0;
 
 	/* Make sure it's a BIND. */
 	if (buflen < 1 || buf[0] != BIND_RU) {
@@ -2001,61 +2006,80 @@ process_bind(unsigned char *buf, int buflen)
 			bind_cd = MODEL_2_COLS;
 			bind_ra = MODEL_2_ROWS;
 			bind_ca = MODEL_2_COLS;
+			bind_state =
+			    BIND_DIMS_PRESENT | BIND_DIMS_ALT | BIND_DIMS_VALID;
 			break;
 		case 0x03:
 			bind_rd = MODEL_2_ROWS;
 			bind_cd = MODEL_2_COLS;
 			bind_ra = maxROWS;
 			bind_ca = maxCOLS;
+			bind_state =
+			    BIND_DIMS_PRESENT | BIND_DIMS_VALID;
 			break;
 		case 0x7e:
 			bind_rd = buf[BIND_OFF_RD];
 			bind_cd = buf[BIND_OFF_CD];
 			bind_ra = buf[BIND_OFF_RD];
 			bind_ca = buf[BIND_OFF_CD];
+			bind_state =
+			    BIND_DIMS_PRESENT | BIND_DIMS_ALT | BIND_DIMS_VALID;
 			break;
 		case 0x7f:
 			bind_rd = buf[BIND_OFF_RD];
 			bind_cd = buf[BIND_OFF_CD];
 			bind_ra = buf[BIND_OFF_RA];
 			bind_ca = buf[BIND_OFF_CA];
+			bind_state =
+			    BIND_DIMS_PRESENT | BIND_DIMS_ALT | BIND_DIMS_VALID;
 			break;
 		default:
+			bind_state = 0;
 			break;
 		}
 	}
 
 	/* Validate and implement the screen size. */
-	if (bind_rd > maxROWS ||
-	    bind_cd > maxCOLS) {
-		popup_an_error("Ignoring invalid BIND image screen size "
-			"parameters:\n"
-			" BIND Default Rows-Cols %ux%u > Maximum %ux%u",
-			bind_rd, bind_cd, maxROWS, maxCOLS);
-	} else if (bind_rd < MODEL_2_ROWS ||
-		   bind_cd < MODEL_2_COLS) {
-		popup_an_error("Ignoring invalid BIND image screen size "
-			"parameters:\n"
-			" BIND Default Rows-Cols %ux%u < Minimum %ux%u",
-			bind_rd, bind_cd, MODEL_2_ROWS, MODEL_2_COLS);
-	} else if (bind_ra > maxROWS ||
-		   bind_ca > maxCOLS) {
-		popup_an_error("Ignoring invalid BIND image screen size "
-			"parameters:\n"
-			" BIND Alternate Rows-Cols %ux%u > Maximum %ux%u",
-			bind_ra, bind_ca, maxROWS, maxCOLS);
-	} else if (bind_ra < MODEL_2_ROWS ||
-		   bind_ca < MODEL_2_COLS) {
-		popup_an_error("Ignoring invalid BIND image screen size "
-			"parameters:\n"
-			" BIND Alternate Rows-Cols %ux%u < Minimum %ux%u",
-			bind_ra, bind_ca, MODEL_2_ROWS, MODEL_2_COLS);
-	} else {
-		defROWS = bind_rd;
-		defCOLS = bind_cd;
-		altROWS = bind_ra;
-		altCOLS = bind_ca;
+	if (appres.bind_limit && (bind_state & BIND_DIMS_PRESENT)) {
+		if (bind_rd > maxROWS ||
+		    bind_cd > maxCOLS) {
+			popup_an_error("Ignoring invalid BIND image screen "
+				"size parameters:\n"
+				" BIND Default Rows-Cols %ux%u > Maximum "
+				"%ux%u",
+				bind_rd, bind_cd, maxROWS, maxCOLS);
+			bind_state &= ~BIND_DIMS_VALID;
+		} else if (bind_rd < MODEL_2_ROWS ||
+			   bind_cd < MODEL_2_COLS) {
+			popup_an_error("Ignoring invalid BIND image screen "
+				"size parameters:\n"
+				" BIND Default Rows-Cols %ux%u < Minimum %ux%u",
+				bind_rd, bind_cd, MODEL_2_ROWS, MODEL_2_COLS);
+			bind_state &= ~BIND_DIMS_VALID;
+		} else if (bind_ra > maxROWS ||
+			   bind_ca > maxCOLS) {
+			popup_an_error("Ignoring invalid BIND image screen "
+				"size parameters:\n"
+				" BIND Alternate Rows-Cols %ux%u > Maximum "
+				"%ux%u",
+				bind_ra, bind_ca, maxROWS, maxCOLS);
+			bind_state &= ~BIND_DIMS_VALID;
+		} else if (bind_ra < MODEL_2_ROWS ||
+			   bind_ca < MODEL_2_COLS) {
+			popup_an_error("Ignoring invalid BIND image screen "
+				"size parameters:\n"
+				" BIND Alternate Rows-Cols %ux%u < Minimum "
+				"%ux%u",
+				bind_ra, bind_ca, MODEL_2_ROWS, MODEL_2_COLS);
+			bind_state &= ~BIND_DIMS_VALID;
+		} else {
+			defROWS = bind_rd;
+			defCOLS = bind_cd;
+			altROWS = bind_ra;
+			altCOLS = bind_ca;
+		}
 	}
+
 	ctlr_erase(False);
 
 	/* Extract the PLU name. */
@@ -2125,11 +2149,35 @@ process_eor(void)
 			if (!(e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE)))
 				return 0;
 			process_bind(ibuf + EH_SIZE, (ibptr - ibuf) - EH_SIZE);
-			trace_ds("< BIND PLU-name '%s' "
-				"MaxSec-RU %d MaxPri-RU %d "
-				"Rows-Cols Default %dx%d Alternate %dx%d\n",
-				plu_name, maxru_sec, maxru_pri,
-				bind_rd, bind_cd, bind_ra, bind_ca);
+			if (bind_state & BIND_DIMS_PRESENT) {
+				if (bind_state & BIND_DIMS_ALT) {
+					trace_ds("< BIND PLU-name '%s' "
+						"MaxSec-RU %d MaxPri-RU %d "
+						"Rows-Cols Default %dx%d "
+						"Alternate %dx%d%s%s\n",
+						plu_name, maxru_sec, maxru_pri,
+						bind_rd, bind_cd,
+						bind_ra, bind_ca,
+						(bind_state & BIND_DIMS_VALID)?
+						    "": " (invalid)",
+						appres.bind_limit?
+						    "": " (ignored)");
+				} else {
+					trace_ds("< BIND PLU-name '%s' "
+						"MaxSec-RU %d MaxPri-RU %d "
+						"Rows-Cols Default %dx%d%s%s\n",
+						plu_name, maxru_sec, maxru_pri,
+						bind_rd, bind_cd,
+						(bind_state & BIND_DIMS_VALID)?
+						    "": " (invalid)",
+						appres.bind_limit?
+						    "": " (ignored)");
+				}
+			} else {
+				trace_ds("< BIND PLU-name '%s' "
+					"MaxSec-RU %d MaxPri-RU %d\n",
+					plu_name, maxru_sec, maxru_pri);
+			}
 			tn3270e_bound = 1;
 			check_in3270();
 			return 0;
