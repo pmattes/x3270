@@ -32,7 +32,7 @@ endif
  </ul>
  Many resources have their own command-line switches, which are listed below.
  Those that do not can still be set from the command-line via the <b>-xrm</b>
- command-line option.  For example the %-bsdTm% resource can be set by the
+ command-line option.  For example %-bsdTm% can be set by the
  following command-line option:
  <pre>
      -xrm '%p%.bsdTm: true'
@@ -205,17 +205,17 @@ desc
     in %TEMP% that is compatible with its session file, then starts it.  This
     ensures that the console window's screen size, character set, font, etc.
     will be correct.
-    <p>
+    <p class="indented">
     Auto-shortcut mode requires the use of a session file; the session file
     must have been created by the Session Wizard (release 3.3.9 or later) and
     must not have been modified incorrectly.  All desktop shortcuts created
     by the Session Wizard release 3.3.10 or later include setting autoShortcut
     to true.
-    <p>
+    <p class="indented">
     The <b>+S</b> command-line switch turns off auto-shortcut mode.  All
     desktop shortcuts created by the Session Wizard release 3.3.10 or later
     include this switch.
-    <p>
+    <p class="indented">
     Auto-shortcut mode does not work on Windows 9x.
 .
 
@@ -229,6 +229,21 @@ switch -rv
 description
     The background color for menus, buttons, and on monochrome X11 displays, the
     emulator window.
+.
+
+name bellMode
+applies wc
+type s
+groups i
+description
+    Controls how %p% responds to an ALARM WCC or BELL character.
+    The value of <b>beepFlash</b> causes both the Windows console to
+    beep and the %p% window to flash; this is the default behavior.
+    The values of <b>beep</b> and <b>flash</b> cause just the beep and just
+    the window flash respectively.  The value <b>none</b> causes ALARM WCCs
+    and BELL characters to be ignored.
+    <p class="indented">
+    If this resource is defined, it overrides %-visualBell%.
 .
 
 name bellVolume
@@ -1885,9 +1900,9 @@ name printer.assocCommandLine
 applies x C
 type s
 if x c
-default pr3287 -assoc %L% -command %C% %R% %P% %H%
+default pr3287 -assoc %L% -command %C% %R% %P% %O% %H%
 else
-default wpr3287.exe -assoc %L% -command %R% %P% %I% %H%
+default wpr3287.exe -assoc %L% -command %R% %P% %O% %I% %H%
 endif
 desc
     The shell command to use to start a printer session, when associated with
@@ -1903,6 +1918,7 @@ if wc
 	<li><b>%I%</b> is replaced with an option to pass %-printer.codepage%</li>
 endif
 	<li><b>%L%</b> is replaced with the current session's LU</li>
+	<li><b>%O%</b> is replaced with the value of %-printer.options%</li>
 	<li><b>%P%</b> is replaced with the current session's proxy option (%-proxy%)</li>
 	<li><b>%R%</b> is replaced with an option to pass the current character set</li>
     </ul>
@@ -1931,9 +1947,9 @@ name printer.luCommandLine
 applies x C
 type s
 if x c
-default pr3287 -command %C% %R% %p% %L%@%H%
+default pr3287 -command %C% %R% %P% %O% %L%@%H%
 else
-default wpr3287.exe %R% %p% %I% %L%@%H%
+default wpr3287.exe %R% %P% %O% %I% %L%@%H%
 endif
 desc
     The shell command to use to start a printer session, when associated with a
@@ -1947,6 +1963,7 @@ if wc
 	<li><b>%I%</b> is replaced with an option to pass %-printer.codepage%</li>
 endif
 	<li><b>%L%</b> is replaced with the LU value entered into the dialog box</li>
+	<li><b>%O%</b> is replaced with the value of %-printer.options%</li>
 	<li><b>%P%</b> is replaced with current session's proxy option (%-proxy%)</li>
 	<li><b>%R%</b> is replaced with an option to pass the current character set</li>
     </ul>
@@ -1959,6 +1976,14 @@ desc
     Defines the name of the printer used for wpr3287 sessions and by the
     <b>PrintText</b> action.  The default is to use the system's default
     printer.
+.
+
+name printer.options
+applies x C
+type s
+desc
+    Defines extra parameters to substutute for the <b>%O%</b> token in the
+    printer command line.
 .
 
 name printTextCommand
@@ -2121,8 +2146,8 @@ if u
 else
     <b>x3scr.<i>pid</i>.txt</b> in the %p% Application Data directory.
 endif
-    The directory prefix is defined by the %-traceDir% resource.
-    If the %-screenTraceFile% resource is defined, it defines the
+    The directory prefix is defined by %-traceDir%.
+    If %-screenTraceFile% is defined, it defines the
     file name and %-traceDir% is ignored.
 if w
     file name.
@@ -2460,13 +2485,30 @@ desc
 .
 
 name visualBell
-applies x wc
+applies x
 groups i
 type b
 default false
 desc
     When true, %p% will flash the screen in response to an ALARM WCC
     or BELL character, rather than ringing the terminal's bell.
+.
+
+name visualBell
+applies wc
+groups i
+type b
+default false
+desc
+    <i>Deprecated resource -- replaced by %-bellMode%</i>
+    <p class="indented">
+    When true, %p% will just flash the screen in response to an ALARM WCC
+    or BELL character, rather than beeping the Windows console.  When false,
+    %p% will beep the console and flash the screen.
+    <p class="indented">
+    Note that this resource is overridden by %-bellMode%.
+    %-bellMode% is the preferred method of controlling the console bell
+    behavior.
 .
 
 name visualSelect

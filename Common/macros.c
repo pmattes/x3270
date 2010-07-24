@@ -3089,6 +3089,11 @@ Execute_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 				params[0], WSTOPSIG(status));
 		}
 #endif /*]*/
+	} else {
+#if defined(_WIN32) /*[*/
+	    	/* Get back mouse events; system() cancels them. */
+	    	screen_fixup();
+#endif /*]*/
 	}
 }
 

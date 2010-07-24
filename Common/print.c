@@ -62,6 +62,9 @@
 #include <io.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+# if defined(WC3270) /*[*/
+#  include <screenc.h>
+# endif /*]*/
 #endif /*]*/
 
 #if defined(_MSC_VER) /*[*/
@@ -1063,6 +1066,12 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 						    wp, temp_name);
 				system(cmd);
 				Free(cmd);
+
+				/*
+				 * Get back mouse events; system() gets rid of
+				 * them.
+				 */
+				screen_fixup();
 			}
 #if !defined(S3270) /*[*/
 			if (appres.do_confirms)

@@ -938,6 +938,7 @@ static struct {
 #endif /*]*/
 #if defined(WC3270) /*[*/
 	{ ResAutoShortcut,offset(auto_shortcut),XRM_BOOLEAN },
+	{ ResBellMode,offset(bell_mode),	XRM_STRING },
 #endif /*]*/
 	{ ResBsdTm,	offset(bsd_tm),		XRM_BOOLEAN },
 #if defined(HAVE_LIBSSL) /*[*/
@@ -1016,6 +1017,7 @@ static struct {
 	{ ResPort,	offset(port),		XRM_STRING },
 #if defined(C3270) /*[*/
 	{ ResPrinterLu,	offset(printer_lu),	XRM_STRING },
+	{ ResPrinterOptions,offset(printer_opts),XRM_STRING },
 #endif /*]*/
 	{ ResProxy,	offset(proxy),		XRM_STRING },
 	{ ResQrBgColor,	offset(qr_bg_color),	XRM_BOOLEAN },

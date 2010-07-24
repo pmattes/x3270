@@ -1970,6 +1970,19 @@ screen_suspend(void)
 }
 
 void
+screen_fixup(void)
+{
+    	if (!escaped) {
+		if (SetConsoleMode(chandle, ENABLE_PROCESSED_INPUT |
+					    ENABLE_MOUSE_INPUT) == 0) {
+			fprintf(stderr, "SetConsoleMode failed: %s\n",
+				win32_strerror(GetLastError()));
+			return;
+		}
+	}
+}
+
+void
 screen_resume(void)
 {
 	escaped = False;
@@ -2305,12 +2318,59 @@ Redraw_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_
 void
 ring_bell(void)
 {
-    	/*
-	 * Always flash the window.
-	 * Unless they specified visualBell, beep too.
-	 */
+    	static enum {
+	    	BELL_NOTHING = 0,	/* do nothing */
+	    	BELL_KNOWN = 0x1,	/* have we decoded the option? */
+		BELL_BEEP = 0x2,	/* ring the annoying console bell */
+		BELL_FLASH = 0x4	/* flash the screen or icon */
+	} bell_mode = 0;
 
-	if (console_window != NULL) {
+	if (!(bell_mode & BELL_KNOWN)) {
+	    	if (appres.bell_mode != CN) {
+			/*
+			 * New config: wc3270.bellMode
+			 * 		none		do nothing
+			 * 		beep		just beep
+			 * 		flash		just flash
+			 * 		beepFlash	beep and flash
+			 * 		flashBeep	beep and flash
+			 * 		anything else	do nothing
+			 */
+			if (!strcasecmp(appres.bell_mode, "none")) {
+			    	bell_mode = BELL_NOTHING;
+			} else if (!strcasecmp(appres.bell_mode, "beep")) {
+			    	bell_mode = BELL_BEEP;
+			} else if (!strcasecmp(appres.bell_mode, "flash")) {
+			    	bell_mode = BELL_FLASH;
+			} else if (!strcasecmp(appres.bell_mode, "beepFlash") ||
+				 !strcasecmp(appres.bell_mode, "flashBeep")) {
+			    	bell_mode = BELL_BEEP | BELL_FLASH;
+			} else {
+			    	/*
+				 * Should cough up a warning here, but it's
+				 * a bit late.
+				 */
+			    	bell_mode = BELL_NOTHING;
+			}
+		} else if (appres.visual_bell) {
+		    	/*
+			 * Old config: wc3270.visualBell
+			 * 		true		just flash
+			 * 		false		beep and flash
+			 */
+		    	bell_mode = BELL_FLASH;
+		} else {
+		    	/*
+			 * No config: beep and flash.
+			 */
+			bell_mode = BELL_BEEP | BELL_FLASH;
+		}
+
+		/* In any case, only do this once. */
+		bell_mode |= BELL_KNOWN;
+	}
+
+	if ((bell_mode & BELL_FLASH) && console_window != NULL) {
 		FLASHWINFO w;
 
 		memset(&w, '\0', sizeof(FLASHWINFO));
@@ -2323,7 +2383,7 @@ ring_bell(void)
 	    	FlashWindowEx(&w);
 	}
 
-	if (!appres.visual_bell) {
+	if (bell_mode & BELL_BEEP) {
 	    	MessageBeep(-1);
 	}
 }

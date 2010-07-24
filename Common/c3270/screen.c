@@ -62,13 +62,20 @@
 extern int cCOLS;
 
 #if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
-#include <ncursesw/ncurses.h>
+# include <ncursesw/ncurses.h>
 #elif defined(HAVE_NCURSES_NCURSES_H) /*][*/
-#include <ncurses/ncurses.h>
+# include <ncurses/ncurses.h>
 #elif defined(HAVE_NCURSES_H) /*][*/
-#include <ncurses.h>
+# include <ncurses.h>
 #else /*][*/
-#include <curses.h>
+# include <curses.h>
+#endif /*]*/
+#if defined(HAVE_NCURSESW_TERM_H) /*[*/
+# include <ncursesw/term.h>
+#elif defined(HAVE_NCURSES_TERM_H) /*][*/
+# include <ncurses/term.h>
+#elif defined(HAVE_TERM_H) /*][*/
+# include <term.h>
 #endif /*]*/
 
 /* Curses' 'COLS' becomes cursesCOLS, to remove any ambiguity. */

@@ -146,6 +146,7 @@ printer_start(const char *lu)
 	int stdout_pipe[2];
 	int stderr_pipe[2];
 #endif /*]*/
+	char *printer_opts;
 
 #if defined(X3270_DISPLAY) /*[*/
 	/* Make sure the popups are initted. */
@@ -215,9 +216,17 @@ printer_start(const char *lu)
 	}
 
 #if defined(_WIN32) /*[*/
+	/* Get the codepage for the printer. */
 	pcp_res = get_resource(ResPrinterCodepage);
 	if (pcp_res)
 	    	printercp = xs_buffer("-printercp %s", pcp_res);
+#endif /*]*/
+
+	/* Get printer options. */
+#if defined(C3270) /*[*/
+	printer_opts = appres.printer_opts;
+#else /*][*/
+	printer_opts = get_resource(ResPrinterOptions);
 #endif /*]*/
 
 	/* Construct the command line. */
@@ -258,6 +267,11 @@ printer_start(const char *lu)
 		s += 3;
 	}
 #endif /*]*/
+	s = cmdline;
+	while ((s = strstr(s, "%O%")) != CN) {
+		cmd_len += (printer_opts? strlen(printer_opts): 0) - 3;
+		s += 3;
+	}
 
 	/* Allocate a string buffer and substitute into it. */
 	cmd_text = Malloc(cmd_len);
@@ -296,6 +310,11 @@ printer_start(const char *lu)
 				s += 2;
 				continue;
 #endif /*]*/
+			} else if (!strncmp(s+1, "O%", 2)) {
+			    	if (printer_opts != CN)
+					(void) strcat(cmd_text, printer_opts);
+				s += 2;
+				continue;
 			}
 		}
 		buf1[0] = c;
@@ -326,7 +345,6 @@ printer_start(const char *lu)
 	(void) fcntl(stderr_pipe[0], F_SETFD, 1);
 
 	/* Fork and exec the printer session. */
-	trace_dsn("Printer command line: %s\n", cmd_text);
 	switch (printer_pid = fork()) {
 	    case 0:	/* child process */
 		(void) dup2(stdout_pipe[1], 1);
