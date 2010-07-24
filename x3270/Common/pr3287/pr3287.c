@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, Paul Mattes.
+ * Copyright (c) 2000-2010, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,8 @@
  *		expand newlines to CR/LF (Windows only)
  *          -blanklines
  *		display blank lines even if they're empty (formatted LU3)
+ *	    -emflush
+ *	        flush printer output when an unformatted EM order arrives
  *          -eojtimeout n
  *              time out end of job after n seconds
  *          -ffthru
@@ -131,6 +133,7 @@ extern FILE *tracef;
 /* Globals. */
 char *programname = NULL;	/* program name */
 int blanklines = 0;
+int emflush = 0;
 int ignoreeoj = 0;
 int reconnect = 0;
 #if defined(_WIN32) /*[*/
@@ -192,6 +195,7 @@ usage(void)
 "  -command \"<cmd>\" use <cmd> for printing (default \"lpr\")\n"
 #endif /*]*/
 "  -blanklines      display blank lines even if empty (formatted LU3)\n"
+"  -emflush         flush printer output when an unformatted EM order arrives\n"
 #if defined(_WIN32) /*[*/
 "  -nocrlf          don't expand newlines to CR/LF\n"
 #else /*][*/
@@ -475,6 +479,8 @@ main(int argc, char *argv[])
 			i++;
 		} else if (!strcmp(argv[i], "-blanklines")) {
 			blanklines = 1;
+		} else if (!strcmp(argv[i], "-emflush")) {
+			emflush = 1;
 #if defined(_WIN32) /*[*/
 		} else if (!strcmp(argv[i], "-nocrlf")) {
 			crlf = 0;
@@ -520,7 +526,7 @@ main(int argc, char *argv[])
 			printf("%s\n%s\n", build, build_options());
 			charset_list();
 			printf("\n\
-Copyright 1989-2009, Paul Mattes, GTRC and others.\n\
+Copyright 1989-2010, Paul Mattes, GTRC and others.\n\
 See the source code or documentation for licensing details.\n\
 Distributed WITHOUT ANY WARRANTY; without even the implied warranty of\n\
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");

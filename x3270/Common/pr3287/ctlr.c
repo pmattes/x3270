@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2010, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -69,6 +69,7 @@ extern char *printer;
 extern int printercp;
 #endif /*]*/
 extern int blanklines;	/* display blank lines even if empty (formatted LU3) */
+extern int emflush;	/* flush printer output when unformatted EM arrives */
 extern int ignoreeoj;	/* ignore PRINT-EOJ commands */
 extern int crlf;	/* expand newline to CR/LF */
 extern int ffthru;	/* pass through SCS FF orders */
@@ -1559,6 +1560,14 @@ ctlr_add(ucs4_t c, unsigned char cs, unsigned char gr)
 	page_buf[baddr] = c;
 	baddr = (baddr + 1) % MAX_BUF;
 	any_3270_output = 1;
+
+	/* Implement -emflush mode. */
+	if (emflush && !wcc_line_length && c == FCORDER_EM) {
+	    /* XXX: Unfortunately, we do not return error status here. */
+	    dump_unformatted();
+	    baddr = 1;
+	    any_3270_output = 0;
+	}
 }
 
 /*
