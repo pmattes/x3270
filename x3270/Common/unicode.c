@@ -513,7 +513,7 @@ set_uni(const char *csname, const char **host_codepage,
 		if (rc == -1 && cannot_fail) {
 		    	/* Try again with plain-old ASCII. */
 #if defined(PR3287) /*[*/
-		    	Warning("Cannot find iconv translation from locale "
+		    	errmsg("Cannot find iconv translation from locale "
 				"codeset to UTF-8, using ASCII");
 #else /*][*/
 		    	xs_warning("Cannot find iconv translation from locale "
