@@ -44,6 +44,7 @@
 #define ResAssocCommand		"printer.assocCommandLine"
 #define ResAutoShortcut		"autoShortcut"
 #define ResBaselevelTranslations	"baselevelTranslations"
+#define ResBellMode		"bellMode"
 #define ResBellVolume		"bellVolume"
 #define ResBlankFill		"blankFill"
 #define ResBoldColor		"boldColor"
@@ -143,6 +144,7 @@
 #define ResPrinterCommand	"printer.command"
 #define ResPrinterLu		"printerLu"
 #define ResPrinterName		"printer.name"
+#define ResPrinterOptions	"printer.options"
 
 #define ResProxy		"proxy"
 #define ResQuit			"quit"

@@ -167,6 +167,7 @@ typedef struct {
 	char	*key_map;
 	char	*compose_map;
 	char	*printer_lu;
+	char	*printer_opts;
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
 	char	*efontname;
@@ -241,6 +242,9 @@ typedef struct {
 	int	command_timeout;
 #endif /*]*/
 	int	unlock_delay_ms;
+#if defined(WC3270) /*[*/
+	char	*bell_mode;
+#endif /*]*/
 
 	/* Toggles */
 	struct toggle toggle[N_TOGGLES];

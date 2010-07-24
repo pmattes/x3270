@@ -49,6 +49,7 @@ extern void screen_resume(void);
 extern Boolean screen_suspend(void);
 extern FILE *start_pager(void);
 #if defined(WC3270) /*[*/
+extern void screen_fixup(void);
 extern void pager_output(const char *s);
 extern Boolean screen_wait_for_key(void);
 #endif /*]*/

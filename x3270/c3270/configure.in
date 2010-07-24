@@ -110,6 +110,9 @@ AC_CHECK_HEADERS(ncursesw/ncurses.h, ,
  [AC_CHECK_HEADERS(ncurses/ncurses.h, ,
   [AC_CHECK_HEADERS(ncurses.h, ,
    [AC_CHECK_HEADERS(curses.h, , [AC_MSG_ERROR(No curses header file)])])])])
+AC_CHECK_HEADERS(ncursesw/term.h, ,
+ [AC_CHECK_HEADERS(ncurses/term.h, ,
+  [AC_CHECK_HEADERS(term.h)])])
 
 dnl Check for SSL header file.
 AC_ARG_WITH(ssl,[  --with-ssl=DIR          specify OpenSSL install directory])

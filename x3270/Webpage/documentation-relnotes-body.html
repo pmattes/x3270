@@ -1,13 +1,30 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
 3.3 is the current development line for the x3270 suite.
-<h2>Changes in version 3.3.11b3, 7. July 2010</h2>
+<h2>Changes in version 3.3.11beta4, 23. July 2010</h2>
+<ul>
+ <li>[<i>wc3270</i>] Corrected a problem where mouse input would be ignored
+  after screen printing (Alt-P) or use of the <b>Execute()</b> action.</li>
+ <li>[<i>wc3270</i>] Added a <b>bellMode</b> resource to allow precise control
+  of what wc3270 does in response to ALARM WCCs and BELL characters.</li>
+ <li>[<i>c3270</i>] Fixed a problem with hangs when a connection fails on
+  recent versions of Cygwin.</li>
+ <li>[<i>x3270</i>, <i>c3270</i>, <i>wc3270</i>] Added a new token to the
+  <b>printer.assocCommandLine</b> and <b>printer.luCommandLine</b> resources:
+  <b>%O%</b> will be substituted with the value of the new
+  <b>printer.options</b> resource.  This allows extra options such as
+  <b>-emflush</b> to be passed easily to <i>pr3287</i> and <i>wpr3287</i>
+  sessions without having to redefine the rather ugly
+  <b>printer.assocCommandLine</b> and <b>printer.luCommandLine</b>
+  resources.</li>
+</ul>
+<h2>Changes in version 3.3.11beta3, 7. July 2010</h2>
 <ul>
  <li>[<i>pr3287</i> and <i>wpr3287</i>] Added the <b>-emflush</b> option, to
   flush pending printer output when an EM order is received in unformatted
   3270 mode.  This helps preserve multi-page output from hosts that to not
   clear the 3270 buffer between pages.</li>
 </ul>
-<h2>Changes in version 3.3.11b2, 6. May 2010</h2>
+<h2>Changes in version 3.3.11beta2, 6. May 2010</h2>
 <ul>
  <li>[<i>c3270</i>, <i>wc3270</i>] Added a menu bar and pop-up keypad,
   usually controlled by the mouse or by the new <b>Menu</b> and

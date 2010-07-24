@@ -348,14 +348,16 @@ static void output_possible(void);
 #endif /*]*/
 
 
-#define NUM_HA	4
-static union {
+typedef union {
 	struct sockaddr sa;
 	struct sockaddr_in sin;
 #if defined(AF_INET6) /*[*/
 	struct sockaddr_in6 sin6;
 #endif /*]*/
-} haddr[4];
+} sockaddr_46_t;
+
+#define NUM_HA	4
+static sockaddr_46_t haddr[4];
 static socklen_t ha_len[NUM_HA] = {
     sizeof(haddr[0]), sizeof(haddr[0]), sizeof(haddr[0]), sizeof(haddr[0])
 };
@@ -879,6 +881,23 @@ connection_complete(void)
 static void
 output_possible(void)
 {
+	sockaddr_46_t sa;
+	socklen_t len = sizeof(sa);
+
+
+	if (getpeername(sock, &sa.sa, &len) < 0) {
+		trace_dsn("RCVD socket error %d (%s)\n",
+			socket_errno(),
+#if !defined(_WIN32) /*[*/
+			strerror(errno)
+#else /*][*/
+			win32_strerror(GetLastError())
+#endif /*]*/
+			);
+		popup_a_sockerr("socket output");
+		host_disconnect(True);
+		return;
+	}
 	if (HALF_CONNECTED) {
 		connection_complete();
 	}
