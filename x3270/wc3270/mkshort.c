@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, Paul Mattes.
+ * Copyright (c) 2006-2010, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -98,7 +98,7 @@ main(int argc, char *argv[])
 			NULL,
 			NULL,
 			install_dir,
-			44,
+			46,
 			80,
 			L"Lucida Console",
 			0,
@@ -111,7 +111,7 @@ main(int argc, char *argv[])
 			"",
 			"",
 			install_dir,
-			44,
+			46,
 			80,
 			"Lucida Console");
 
