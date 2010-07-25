@@ -826,6 +826,7 @@ typedef enum {
     OM_BLANKFILL,
     OM_TIMING,
     OM_CURSOR,
+    OM_UNDERSCORE,
     OM_COUNT
 } options_menu_enum;
 cmenu_item_t *options_menu_items[OM_COUNT];
@@ -833,13 +834,15 @@ int option_index[OM_COUNT] = {
     MONOCASE,
     BLANK_FILL,
     SHOW_TIMING,
-    CURSOR_POS
+    CURSOR_POS,
+    UNDERSCORE
 };
 char *option_names[OM_COUNT] = {
     "Monocase",
     "Blank Fill",
     "Show Timing",
-    "Track Cursor"
+    "Track Cursor",
+    "Underscore Mode"
 };
 
 cmenu_t *file_menu;
