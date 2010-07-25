@@ -1080,6 +1080,7 @@ screen_disp(Boolean erasing _is_unused)
 						if (len > 0)
 							len--;
 						if (toggled(UNDERSCORE) &&
+							underlined &&
 							(len == 1) &&
 							mb[0] == ' ') {
 							mb[0] = '_';
