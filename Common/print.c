@@ -1067,11 +1067,13 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 				system(cmd);
 				Free(cmd);
 
+#if !defined(S3270) /*[*/
 				/*
 				 * Get back mouse events; system() gets rid of
 				 * them.
 				 */
 				screen_fixup();
+#endif /*]*/
 			}
 #if !defined(S3270) /*[*/
 			if (appres.do_confirms)

@@ -3090,7 +3090,7 @@ Execute_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 		}
 #endif /*]*/
 	} else {
-#if defined(_WIN32) /*[*/
+#if defined(_WIN32) && !defined(S3270) /*[*/
 	    	/* Get back mouse events; system() cancels them. */
 	    	screen_fixup();
 #endif /*]*/
