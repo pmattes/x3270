@@ -2301,8 +2301,9 @@ draw_oia(void)
 	if (toggled(SHOW_TIMING))
 		mvprintw(status_row, rmargin-14, "%s", oia_timing);
 
-	mvprintw(status_row, rmargin-7,
-	    "%03d/%03d", cursor_addr/cCOLS + 1, cursor_addr%cCOLS + 1);
+	if (toggled(CURSOR_POS))
+		mvprintw(status_row, rmargin-7,
+		    "%03d/%03d", cursor_addr/cCOLS + 1, cursor_addr%cCOLS + 1);
 }
 
 void
