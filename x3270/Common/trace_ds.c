@@ -96,8 +96,6 @@ static FILE    *tracef_pipe = NULL;
 static char    *tracef_bufptr = CN;
 static off_t	tracef_size = 0;
 static off_t	tracef_max = 0;
-static char    *tracef_midpoint_header = CN;
-static off_t	tracef_midpoint = 0;
 static char    *onetime_tracefile_name = CN;
 static char    *onetime_screentracefile_name = CN;
 static void	vwtrace(const char *fmt, va_list args);
@@ -110,6 +108,7 @@ struct timeval   ds_ts;
 Boolean          trace_skipping = False;
 char		*tracefile_name = NULL;
 char		*screentracefile_name = NULL;
+Boolean  	 do_ts = True;
 
 /* display a (row,col) */
 const char *
@@ -229,6 +228,7 @@ trace_ds(const char *fmt, ...)
 		tdsbuf = Malloc(4096);
 
 	/* print out remainder of message */
+	do_ts = False;
 	(void) vsprintf(tdsbuf, fmt, args);
 	trace_ds_s(tdsbuf, True);
 	va_end(args);
@@ -297,15 +297,41 @@ vwtrace(const char *fmt, va_list args)
 	} else if (tracef != NULL) {
 		int n2w, nw;
 		char buf[16384];
+		struct timeval tv;
+		time_t t;
+		struct tm *tm;
+
+		/* Start with a timestamp. */
+		if (do_ts) {
+			(void) gettimeofday(&tv, NULL);
+			t = tv.tv_sec;
+			tm = localtime(&t);
+			n2w = sprintf(buf, "%d%02d%02d.%02d%02d%02d.%03d ",
+				tm->tm_year + 1900,
+				tm->tm_mon + 1,
+				tm->tm_mday,
+				tm->tm_hour,
+				tm->tm_min,
+				tm->tm_sec,
+				(int)(tv.tv_usec / 1000L));
+			(void) fwrite(buf, n2w, 1, tracef);
+			fflush(tracef);
+			if (tracef_pipe != NULL) {
+				(void) fwrite(buf, n2w, 1, tracef_pipe);
+				fflush(tracef);
+			}
+			do_ts = False;
+		}
 
 		buf[0] = 0;
 		(void) vsnprintf(buf, sizeof(buf), fmt, args);
 		buf[sizeof(buf) - 1] = '\0';
 		n2w = strlen(buf);
+		if (n2w > 0 && buf[n2w - 1] == '\n')
+		    	do_ts = True;
 
 		nw = fwrite(buf, n2w, 1, tracef);
 		if (nw == 1) {
-			tracef_size += nw;
 			fflush(tracef);
 		} else {
 			if (errno != EPIPE
@@ -320,6 +346,7 @@ vwtrace(const char *fmt, va_list args)
 #endif /*]*/
 				stop_tracing();
 		}
+		tracef_size = ftello(tracef);
 		if (tracef_pipe != NULL) {
 			nw = fwrite(buf, n2w, 1, tracef_pipe);
 			if (nw != 1) {
@@ -372,109 +399,47 @@ trace_rollover_check(void)
 	if (tracef == NULL || tracef_max == 0)
 		return;
 
-	/* See if we've reached the midpoint. */
-	if (!tracef_midpoint) {
-		if (tracef_size >= tracef_max / 2) {
-			tracef_midpoint = ftello(tracef);
-#if defined(ROLLOVER_DEBUG) /*[*/
-			printf("midpoint is %lld\n", tracef_midpoint);
-#endif /*]*/
-			tracef_midpoint_header =
-			    create_tracefile_header("rolled over");
-		}
-		return;
-	}
-
 	/* See if we've reached a rollover point. */
 	if (tracef_size >= tracef_max) {
-		char buf[8*1024];
-		int nr;
-		off_t rpos = tracef_midpoint, wpos = 0;
+	    	char *alt_filename;
+		char *new_header;
+#if defined(_WIN32) /*[*/
+		char *dot;
+#endif /*]*/
 
-		if (!tracef_midpoint)
-			Error("Tracefile rollover logic error");
-#if defined(ROLLOVER_DEBUG) /*[*/
-		printf("rolling over at %lld\n", tracef_size);
+		/* Close up this file. */
+		wtrace("Trace rolled over\n");
+		fclose(tracef);
+		tracef = NULL;
+
+		/* Unlink and rename the alternate file. */
+#if defined(_WIN32) /*[*/
+		dot = strrchr(tracefile_name, '.');
+		if (dot != CN)
+			alt_filename = xs_buffer("%.*s-%s",
+				dot - tracefile_name,
+				tracefile_name,
+				dot);
+		else
 #endif /*]*/
-		/*
-		 * Overwrite the file with the midpoint header, and the data
-		 * which follows the midpoint.
-		 */
-		if (fseeko(tracef, 0, SEEK_SET) < 0) {
-			popup_an_errno(errno, "trace file fseeko(0) failed");
-			stop_tracing();
+			alt_filename = xs_buffer("%s-", tracefile_name);
+		(void) unlink(alt_filename);
+		(void) rename(tracefile_name, alt_filename);
+		Free(alt_filename);
+		alt_filename = CN;
+		tracef = fopen(tracefile_name, "w");
+		if (tracef == (FILE *)NULL) {
+			popup_an_errno(errno, "%s", tracefile_name);
 			return;
 		}
-		wtrace("%s", tracef_midpoint_header);
-		wpos = ftello(tracef);
-		if (wpos < 0) {
-			popup_an_errno(errno, "trace file ftello() failed");
-			stop_tracing();
-			return;
-		}
-		if (fseeko(tracef, rpos, SEEK_SET) < 0) {
-			popup_an_errno(errno, "trace file fseeko(%ld) failed",
-			    (long)rpos);
-			stop_tracing();
-			return;
-		}
-#if defined(ROLLOVER_DEBUG) /*[*/
-		printf("rpos = %lld, wpos = %lld\n", rpos, wpos);
-#endif /*]*/
-		while ((nr = fread(buf, 1, sizeof(buf), tracef)) > 0) {
-			rpos = ftello(tracef);
-			if (fseeko(tracef, wpos, SEEK_SET) < 0) {
-				popup_an_errno(errno, "trace file fseeko(%ld) "
-				    "failed", (long)wpos);
-				stop_tracing();
-				return;
-			}
-			if (fwrite(buf, nr, 1, tracef) < 1)
-				break;
-			wpos = ftello(tracef);
-			if (wpos < 0) {
-				popup_an_errno(errno, "trace file ftello() "
-				    "failed");
-				stop_tracing();
-				return;
-			}
-			if (fseeko(tracef, rpos, SEEK_SET) < 0) {
-				popup_an_errno(errno, "trace file fseeko(%ld)"
-				    "failed", (long)rpos);
-				stop_tracing();
-				return;
-			}
-		}
-		if (ferror(tracef)) {
-			popup_an_errno(errno, "trace file rollover copy "
-			    "failed");
-			stop_tracing();
-			return;
-		}
-#if defined(ROLLOVER_DEBUG) /*[*/
-		printf("final wpos = %lld\n", wpos);
-#endif /*]*/
-#if !defined(_MSC_VER) /*[*/
-		if (ftruncate(fileno(tracef), wpos) < 0) {
-			popup_an_errno(errno, "trace file ftruncate(%ld) "
-			    "failed", (long)wpos);
-			stop_tracing();
-			return;
-		}
-#endif /*]*/
-		if (fseeko(tracef, wpos, SEEK_SET) < 0) {
-			popup_an_errno(errno, "trace file fseeko(%ld) failed",
-			    (long)wpos);
-			stop_tracing();
-			return;
-		}
-#if defined(_MSC_VER) /*[*/
-		SetEndOfFile((HANDLE)_get_osfhandle(fileno(tracef)));
-#endif /*]*/
-		tracef_size = wpos;
-		tracef_midpoint = wpos;
-		Replace(tracef_midpoint_header,
-		    create_tracefile_header("rolled over"));
+
+		/* Initialize it. */
+		tracef_size = 0L;
+		(void) SETLINEBUF(tracef);
+		new_header = create_tracefile_header("rolled over");
+		do_ts = True;
+		wtrace(new_header);
+		Free(new_header);
 	}
 }
 
@@ -488,15 +453,13 @@ static char *
 create_tracefile_header(const char *mode)
 {
 	char *buf;
-	time_t clk;
 
 	/* Create a buffer and redirect output. */
 	buf = Malloc(MAX_HEADER_SIZE);
 	tracef_bufptr = buf;
 
 	/* Display current status */
-	clk = time((time_t *)0);
-	wtrace("Trace %s %s", mode, ctime(&clk));
+	wtrace("Trace %s\n", mode);
 	wtrace(" Version: %s\n", build);
 	wtrace(" %s\n", build_options());
 	save_yourself();
@@ -707,8 +670,6 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 	}
 
 	tracef_max = 0;
-	tracef_midpoint = 0;
-	Replace(tracef_midpoint_header, CN);
 
 	if (!strcmp(tfn, "stdout")) {
 		tracef = stdout;
@@ -749,30 +710,22 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 		} else
 #endif /*]*/
 		{
+		    	Boolean append = False;
+
 #if defined(X3270_DISPLAY) /*[*/
 			tracef_pipe = pipefile;
 #endif /*]*/
 			/* Get the trace file maximum. */
 			get_tracef_max();
 
-			/* If there's a limit, the file can't exist. */
-			if (tracef_max && !access(tfn, R_OK)) {
-				popup_an_error("Trace file '%s' already exists",
-				    tfn);
-#if defined(X3270_DISPLAY) /*[*/
-				fclose(tracef_pipe);
-				(void) close(pipefd[0]);
-				(void) close(pipefd[1]);
-#endif /*]*/
-				Free(tfn);
-				return;
-			}
-
 			/* Open and configure the file. */
 			if ((devfd = get_devfd(tfn)) >= 0)
 				tracef = fdopen(dup(devfd), "a");
-			else
-				tracef = fopen(tfn, tracef_max? "w+": "a");
+			else if (!strncmp(tfn, ">>", 2)) {
+			    	append = True;
+				tracef = fopen(tfn + 2, "a");
+			} else
+				tracef = fopen(tfn, "w");
 			if (tracef == (FILE *)NULL) {
 				popup_an_errno(errno, "%s", tfn);
 #if defined(X3270_DISPLAY) /*[*/
@@ -783,7 +736,9 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 				Free(tfn);
 				return;
 			}
-			Replace(tracefile_name, NewString(tfn));
+			tracef_size = ftello(tracef);
+			Replace(tracefile_name,
+				NewString(append? tfn + 2: tfn));
 			(void) SETLINEBUF(tracef);
 #if !defined(_WIN32) /*[*/
 			(void) fcntl(fileno(tracef), F_SETFD, 1);
@@ -866,6 +821,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 
 	/* Display current status. */
 	buf = create_tracefile_header("started");
+	do_ts = True;
 	wtrace("%s", buf);
 	Free(buf);
 
@@ -873,7 +829,6 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 	if (w)
 		XtPopdown(trace_shell);
 #endif /*]*/
-
 }
 
 #if defined(X3270_DISPLAY) /*[*/
@@ -955,10 +910,7 @@ tracefile_on(int reason, enum toggle_type tt)
 static void
 tracefile_off(void)
 {
-	time_t clk;
-
-	clk = time((time_t *)0);
-	wtrace("Trace stopped %s", ctime(&clk));
+	wtrace("Trace stopped\n");
 #if !defined(_WIN32) /*[*/
 	if (tracewindow_pid != -1)
 		(void) kill(tracewindow_pid, SIGKILL);

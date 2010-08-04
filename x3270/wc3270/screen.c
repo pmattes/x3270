@@ -373,14 +373,19 @@ printw(char *fmt, ...)
 {
 	va_list ap;
 	char buf[1024];
-	char *s;
+	WCHAR wbuf[1024];
+	int nc;
+	int i;
 
 	va_start(ap, fmt);
 	vsprintf(buf, fmt, ap);
-	for (s = buf; *s; s++) {
-		addch(*s);
-	}
 	va_end(ap);
+
+	nc = MultiByteToWideChar(CP_ACP, 0, buf, -1, wbuf,
+		sizeof(wbuf)/sizeof(WCHAR));
+	for (i = 0; i < nc - 1; i++) {
+		addch(wbuf[i]);
+	}
 }
 
 static void
@@ -388,16 +393,21 @@ mvprintw(int row, int col, char *fmt, ...)
 {
 	va_list ap;
 	char buf[1024];
-	char *s;
+	WCHAR wbuf[1024];
+	int nc;
+	int i;
 
-	va_start(ap, fmt);
 	cur_row = row;
 	cur_col = col;
+	va_start(ap, fmt);
 	vsprintf(buf, fmt, ap);
-	for (s = buf; *s; s++) {
-		addch(*s);
-	}
 	va_end(ap);
+
+	nc = MultiByteToWideChar(CP_ACP, 0, buf, -1, wbuf,
+		sizeof(wbuf)/sizeof(WCHAR));
+	for (i = 0; i < nc - 1; i++) {
+		addch(wbuf[i]);
+	}
 }
 
 static int

@@ -652,6 +652,7 @@ peer_script_init(void)
 #if defined(X3270_SCRIPT) /*[*/
 	if (appres.script_port) {
 		struct sockaddr_in sin;
+		int on = 1;
 
 #if !defined(_WIN32) /*[*/
 		if (appres.socket)
@@ -668,6 +669,16 @@ peer_script_init(void)
 			popup_an_errno(errno, "socket()");
 #else /*][*/
 			popup_an_error("socket(): %s",
+				win32_strerror(GetLastError()));
+#endif /*]*/
+			return;
+		}
+		if (setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, (char *)&on,
+			    sizeof(on)) < 0) {
+#if !defined(_WIN32) /*[*/
+			popup_an_errno(errno, "setsockopt(SO_REUSEADDR)");
+#else /*][*/
+			popup_an_error("setsockopt(SO_REUSEADDR): %s",
 				win32_strerror(GetLastError()));
 #endif /*]*/
 			return;
@@ -1243,6 +1254,7 @@ execute_command(enum iaction cause, char *s, char **np)
 	if (ft_state != FT_NONE)
 		sms->state = SS_FT_WAIT;
 #endif /*]*/
+	trace_rollover_check();
 	if (CKBWAIT)
 		return EM_PAUSE;
 	else
@@ -1724,7 +1736,10 @@ script_input(void)
 	char *ptr;
 	char c;
 
-	trace_dsn("Input for %s[%d] %d\n", ST_NAME, sms_depth, sms->state);
+	trace_dsn("Input for %s[%d] %s reading %s %d\n", ST_NAME, sms_depth,
+		sms_state_name[sms->state],
+		sms->is_socket? "socket": "fd",
+		sms->infd);
 
 	/* Read in what you can. */
 	if (sms->is_socket)
@@ -1741,6 +1756,8 @@ script_input(void)
 		popup_an_errno(errno, "%s[%d] read", ST_NAME, sms_depth);
 		return;
 	}
+	trace_dsn("Input for %s[%d] %s complete nr=%d\n", ST_NAME, sms_depth,
+		sms_state_name[sms->state], nr);
 	if (nr == 0) {	/* end of file */
 		trace_dsn("EOF %s[%d]\n", ST_NAME, sms_depth);
 		sms_pop(True);
@@ -3012,7 +3029,7 @@ PauseScript_action(Widget w _is_unused, XEvent *event _is_unused, String *params
 /* Continue a script. */
 void
 ContinueScript_action(Widget w, XEvent *event _is_unused, String *params,
-    Cardinal *num_params)
+	Cardinal *num_params)
 {
 	if (check_usage(ContinueScript_action, *num_params, 1, 1) < 0)
 		return;

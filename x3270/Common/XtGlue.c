@@ -30,9 +30,9 @@
 /* glue for missing Xt code */
 
 #include "globals.h"
-#if defined(_WIN32) /*[*/
 #include "appres.h"
 #include "trace_dsc.h"
+#if defined(_WIN32) /*[*/
 #include "xioc.h"
 #endif /*]*/
 
@@ -719,6 +719,7 @@ process_events(Boolean block)
 
 	if (!any_events)
 		return processed_any;
+	trace_dsn("Waiting for events\n");
 #if defined(_WIN32) /*[*/
 	ret = WaitForMultipleObjects(nha, ha, FALSE, tmo);
 	if (ret == WAIT_FAILED) {
@@ -730,6 +731,11 @@ process_events(Boolean block)
 #endif /*]*/
 		return processed_any;
 	}
+#if defined(_WIN32) /*[*/
+	trace_dsn("Got event 0x%lx\n", ret);
+#else /*][*/
+	trace_dsn("Got %u event%s\n", ns, (ns == 1)? "": "s");
+#endif /*]*/
 	inputs_changed = False;
 #if defined(_WIN32) /*[*/
 	for (i = 0, ip = inputs; ip != (input_t *)NULL; ip = ip_next, i++) {
