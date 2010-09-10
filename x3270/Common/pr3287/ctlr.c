@@ -556,7 +556,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			break;
 		default:	/* enter character */
 			if (*cp <= 0x3F) {
-				END_TEXT("ILLEGAL_ORDER");
+				END_TEXT("ILLEGAL-ORDER ");
 				previous = ORDER;
 				ctlr_add('\0', default_cs, default_gr);
 				trace_ds(see_ebc(*cp));
@@ -1750,6 +1750,7 @@ dump_formatted(void)
 	ucs4_t *cp = page_buf;
 	int visible = 1;
 	int newlines = 0;
+	Boolean data_without_newline = False;
 
 	if (!any_3270_output)
 		return 0;
@@ -1781,6 +1782,7 @@ dump_formatted(void)
 					if (stash('\n') < 0)
 						return -1;
 					newlines--;
+					data_without_newline = False;
 				}
 				if (any_3270_printable || !ffskip)
 					if (stash('\f') < 0)
@@ -1793,6 +1795,7 @@ dump_formatted(void)
 			case ' ':
 				blanks++;
 				any_data++;
+				data_without_newline = True;
 				break;
 			default:
 				while (newlines) {
@@ -1803,6 +1806,7 @@ dump_formatted(void)
 					if (stash('\n') < 0)
 						return -1;
 					newlines--;
+					data_without_newline = False;
 				}
 				while (blanks) {
 					if (stash(' ') < 0)
@@ -1810,6 +1814,7 @@ dump_formatted(void)
 					blanks--;
 				}
 				any_data++;
+				data_without_newline = True;
 				if (!visible) {
 				    	if (stash(' ') < 0)
 					    	return -1;
@@ -1845,6 +1850,18 @@ dump_formatted(void)
 		if (any_data || blanklines)
 			newlines++;
 	}
+
+	/* If there was data on the last line, put out a newline. */
+	if (data_without_newline) {
+		if (crlf) {
+			if (stash('\r') < 0)
+				return -1;
+		}
+		if (stash('\n') < 0)
+			return -1;
+	}
+
+	/* Clear the buffer. */
 	(void) memset(page_buf, '\0', MAX_BUF * sizeof(ucs4_t));
 #if defined(_WIN32) /*[*/
 	if (ws_initted)
