@@ -337,6 +337,7 @@ static void output_possible(void);
 #define SE_EINPROGRESS	WSAEINPROGRESS
 #define SOCK_CLOSE(s)	closesocket(s)
 #define SOCK_IOCTL(s, f, v)	ioctlsocket(s, f, (DWORD *)v)
+#define IOCTL_T		u_long
 #else /*][*/
 #define socket_errno()	errno
 #define SE_EWOULDBLOCK	EWOULDBLOCK
@@ -349,6 +350,7 @@ static void output_possible(void);
 #endif /*]*/
 #define SOCK_CLOSE(s)	close(s)
 #define SOCK_IOCTL	ioctl
+#define IOCTL_T		int
 #endif /*]*/
 
 
@@ -961,6 +963,18 @@ net_input(void)
 	Boolean	ignore_ssl = False;
 #endif /*]*/
 
+#if defined(_WIN32) /*[*/
+	/*
+	 * Make the socket non-blocking.
+	 * Note that WSAEventSelect does this automatically (and won't allow
+	 * us to change it back to blocking), except on Wine.
+	 */
+	if (sock >=0 && non_blocking(True) < 0) {
+		    host_disconnect(True);
+		    return;
+	}
+	for (;;) {
+#endif /*]*/
 	if (sock < 0)
 		return;
 
@@ -1023,7 +1037,7 @@ net_input(void)
 	trace_dsn("Host socket read complete nr=%d\n", nr);
 	if (nr < 0) {
 		if (socket_errno() == SE_EWOULDBLOCK) {
-			trace_dsn("EWOULDBLOCK somehow\n");
+			trace_dsn("EWOULDBLOCK\n");
 			return;
 		}
 #if defined(HAVE_LIBSSL) /*[*/
@@ -1153,6 +1167,9 @@ net_input(void)
 	trace_rollover_check();
 #endif /*]*/
 
+#if defined(_WIN32) /*[*/
+	}
+#endif /*]*/
 }
 
 
@@ -3488,18 +3505,22 @@ non_blocking(Boolean on)
 {
 #if !defined(BLOCKING_CONNECT_ONLY) /*[*/
 # if defined(FIONBIO) /*[*/
-	int i = on ? 1 : 0;
+	IOCTL_T i = on ? 1 : 0;
 
     	trace_dsn("Making host socket %sblocking\n", on? "non-": "");
+	if (sock < 0)
+		return 0;
 
 	if (SOCK_IOCTL(sock, FIONBIO, &i) < 0) {
-		popup_a_sockerr("ioctl(FIONBIO)");
+		popup_a_sockerr("ioctl(%d, FIONBIO, %d)", sock, on);
 		return -1;
 	}
 # else /*][*/
 	int f;
 
     	trace_dsn("Making host socket %sblocking\n", on? "non-": "");
+	if (sock < 0)
+		return 0;
 
 	if ((f = fcntl(sock, F_GETFL, 0)) == -1) {
 		popup_an_errno(errno, "fcntl(F_GETFL)");
