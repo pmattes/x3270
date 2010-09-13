@@ -2358,6 +2358,7 @@ switch -tracefile
 desc
     If defined, gives the name of the file that data stream and event traces
     will be written into.
+    If it begins with ">>", data will be appended to the file.
 if x
     If given the value <b>stdout</b>, traces will
     be written to standard output.  If given the value <b>none</b>, then the
@@ -2381,9 +2382,8 @@ desc
     If the suffix is <b>M</b>, the value will be multiplied
     by (1024*1024).  The size limit enforced at operation boundaries, not per
     byte, so the actual file may grow slightly larger.  When the file size
-    exceeds the limit, the second half of the file will be written over the
-    first, so that in steady state, the file size will vary between half the
-    %-traceFileSize% and the entire %-traceFileSize%.
+    exceeds the limit, the trace file will be renamed with a "-" appended and
+    a new file started.
 .
 
 name traceMonitor

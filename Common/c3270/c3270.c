@@ -1333,7 +1333,7 @@ popup_an_info(const char *fmt, ...)
 		break;
 	    } else if (!quoted && *s == '\\') {
 		quoted = True;
-	    } else if (*s >= ' ' && *s <= '~') {
+	    } else {
 		*t++ = *s;
 		quoted = False;
 	    }

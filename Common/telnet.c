@@ -337,6 +337,7 @@ static void output_possible(void);
 #define SE_EINPROGRESS	WSAEINPROGRESS
 #define SOCK_CLOSE(s)	closesocket(s)
 #define SOCK_IOCTL(s, f, v)	ioctlsocket(s, f, (DWORD *)v)
+#define IOCTL_T		u_long
 #else /*][*/
 #define socket_errno()	errno
 #define SE_EWOULDBLOCK	EWOULDBLOCK
@@ -349,6 +350,7 @@ static void output_possible(void);
 #endif /*]*/
 #define SOCK_CLOSE(s)	close(s)
 #define SOCK_IOCTL	ioctl
+#define IOCTL_T		int
 #endif /*]*/
 
 
@@ -962,199 +964,212 @@ net_input(void)
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-	for (;;)
+	/*
+	 * Make the socket non-blocking.
+	 * Note that WSAEventSelect does this automatically (and won't allow
+	 * us to change it back to blocking), except on Wine.
+	 */
+	if (sock >=0 && non_blocking(True) < 0) {
+		    host_disconnect(True);
+		    return;
+	}
+	for (;;) {
 #endif /*]*/
-	{
-		if (sock < 0)
-			return;
+	if (sock < 0)
+		return;
 
 #if defined(_WIN32) /*[*/
-		if (HALF_CONNECTED) {
-			if (connect(sock, &haddr[ha_ix].sa, sizeof(haddr[0])) < 0) {
-				int err = GetLastError();
+	if (HALF_CONNECTED) {
+		if (connect(sock, &haddr[ha_ix].sa, sizeof(haddr[0])) < 0) {
+			int err = GetLastError();
 
-				switch (err) {
-				case WSAEISCONN:
-					connection_complete();
-					/* and go get data...? */
-					break;
-				case WSAEALREADY:
-				case WSAEWOULDBLOCK:
-				case WSAEINVAL:
-					return;
-				default:
-					fprintf(stderr,
-					    "second connect() failed: %s\n",
-					    win32_strerror(err));
-					x3270_exit(1);
-				}
+			switch (err) {
+			case WSAEISCONN:
+				connection_complete();
+				/* and go get data...? */
+				break;
+			case WSAEALREADY:
+			case WSAEWOULDBLOCK:
+			case WSAEINVAL:
+				return;
+			default:
+				fprintf(stderr,
+				    "second connect() failed: %s\n",
+				    win32_strerror(err));
+				x3270_exit(1);
 			}
 		}
+	}
 #endif /*]*/
 
 #if defined(X3270_ANSI) /*[*/
-		ansi_data = 0;
+	ansi_data = 0;
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-		(void) ResetEvent(sock_handle);
+	(void) ResetEvent(sock_handle);
 #endif /*]*/
+	trace_dsn("Reading host socket\n");
 
 #if defined(HAVE_LIBSSL) /*[*/
-		if (ssl_con != NULL) {
-		    	/*
-			 * OpenSSL does not like getting refused connections
-			 * when it hasn't done any I/O yet.  So peek ahead to
-			 * see if it's worth getting it involved at all.
-			 */
-		    	if (HALF_CONNECTED &&
-			    (nr = recv(sock, (char *) netrbuf, 1,
-				       MSG_PEEK)) <= 0)
-			    	ignore_ssl = True;
-			else
-				nr = SSL_read(ssl_con, (char *) netrbuf,
-					BUFSZ);
-		} else
-#else /*][*/
-#endif /*]*/
-#if defined(LOCAL_PROCESS) /*[*/
-		if (local_process)
-		    	nr = read(sock, (char *) netrbuf, BUFSZ);
+	if (ssl_con != NULL) {
+		/*
+		 * OpenSSL does not like getting refused connections
+		 * when it hasn't done any I/O yet.  So peek ahead to
+		 * see if it's worth getting it involved at all.
+		 */
+		if (HALF_CONNECTED &&
+		    (nr = recv(sock, (char *) netrbuf, 1,
+			       MSG_PEEK)) <= 0)
+			ignore_ssl = True;
 		else
-#endif /*]*/
-			nr = recv(sock, (char *) netrbuf, BUFSZ, 0);
-		if (nr < 0) {
-			if (socket_errno() == SE_EWOULDBLOCK) {
-				return;
-			}
-#if defined(HAVE_LIBSSL) /*[*/
-			if (ssl_con != NULL && !ignore_ssl) {
-				unsigned long e;
-				char err_buf[120];
-
-				e = ERR_get_error();
-				if (e != 0)
-					(void) ERR_error_string(e, err_buf);
-				else
-					strcpy(err_buf, "unknown error");
-				trace_dsn("RCVD SSL_read error %ld (%s)\n", e,
-				    err_buf);
-				popup_an_error("SSL_read:\n%s", err_buf);
-				host_disconnect(True);
-				return;
-			}
-#endif /*]*/
-			if (HALF_CONNECTED && socket_errno() == SE_EAGAIN) {
-				connection_complete();
-				return;
-			}
-#if defined(LOCAL_PROCESS) /*[*/
-			if (errno == EIO && local_process) {
-				trace_dsn("RCVD local process disconnect\n");
-				host_disconnect(False);
-				return;
-			}
-#endif /*]*/
-			trace_dsn("RCVD socket error %d (%s)\n",
-				socket_errno(),
-#if !defined(_WIN32) /*[*/
-				strerror(errno)
+			nr = SSL_read(ssl_con, (char *) netrbuf,
+				BUFSZ);
+	} else
 #else /*][*/
-				win32_strerror(GetLastError())
 #endif /*]*/
-				);
-			if (HALF_CONNECTED) {
-			    	if (ha_ix == num_ha - 1) {
-					popup_a_sockerr("Connect to %s, "
-					    "port %d", hostname, current_port);
-				} else {
-				    	Boolean dummy;
-					int s;
-
-					net_disconnect();
+#if defined(LOCAL_PROCESS) /*[*/
+	if (local_process)
+		nr = read(sock, (char *) netrbuf, BUFSZ);
+	else
+#endif /*]*/
+		nr = recv(sock, (char *) netrbuf, BUFSZ, 0);
+	trace_dsn("Host socket read complete nr=%d\n", nr);
+	if (nr < 0) {
+		if (socket_errno() == SE_EWOULDBLOCK) {
+			trace_dsn("EWOULDBLOCK\n");
+			return;
+		}
 #if defined(HAVE_LIBSSL) /*[*/
-					if (ssl_host)
-						ssl_init();
-#endif /*]*/
-					while (++ha_ix < num_ha) {
-						s = connect_to(ha_ix,
-							(ha_ix == num_ha - 1),
-							&dummy);
-						if (s >= 0) {
-							host_newfd(s);
-							return;
-						}
-					}
-				}
-			} else if (socket_errno() != SE_ECONNRESET) {
-				popup_a_sockerr("Socket read");
-			}
+		if (ssl_con != NULL && !ignore_ssl) {
+			unsigned long e;
+			char err_buf[120];
+
+			e = ERR_get_error();
+			if (e != 0)
+				(void) ERR_error_string(e, err_buf);
+			else
+				strcpy(err_buf, "unknown error");
+			trace_dsn("RCVD SSL_read error %ld (%s)\n", e,
+			    err_buf);
+			popup_an_error("SSL_read:\n%s", err_buf);
 			host_disconnect(True);
 			return;
-		} else if (nr == 0) {
-			/* Host disconnected. */
-			trace_dsn("RCVD disconnect\n");
+		}
+#endif /*]*/
+		if (HALF_CONNECTED && socket_errno() == SE_EAGAIN) {
+			connection_complete();
+			return;
+		}
+#if defined(LOCAL_PROCESS) /*[*/
+		if (errno == EIO && local_process) {
+			trace_dsn("RCVD local process disconnect\n");
 			host_disconnect(False);
 			return;
 		}
-
-		/* Process the data. */
-
+#endif /*]*/
+		trace_dsn("RCVD socket error %d (%s)\n",
+			socket_errno(),
+#if !defined(_WIN32) /*[*/
+			strerror(errno)
+#else /*][*/
+			win32_strerror(GetLastError())
+#endif /*]*/
+			);
 		if (HALF_CONNECTED) {
-			if (non_blocking(False) < 0) {
+			if (ha_ix == num_ha - 1) {
+				popup_a_sockerr("Connect to %s, "
+				    "port %d", hostname, current_port);
+			} else {
+				Boolean dummy;
+				int s;
+
+				net_disconnect();
+#if defined(HAVE_LIBSSL) /*[*/
+				if (ssl_host)
+					ssl_init();
+#endif /*]*/
+				while (++ha_ix < num_ha) {
+					s = connect_to(ha_ix,
+						(ha_ix == num_ha - 1),
+						&dummy);
+					if (s >= 0) {
+						host_newfd(s);
+						return;
+					}
+				}
+			}
+		} else if (socket_errno() != SE_ECONNRESET) {
+			popup_a_sockerr("Socket read");
+		}
+		host_disconnect(True);
+		return;
+	} else if (nr == 0) {
+		/* Host disconnected. */
+		trace_dsn("RCVD disconnect\n");
+		host_disconnect(False);
+		return;
+	}
+
+	/* Process the data. */
+
+	if (HALF_CONNECTED) {
+		if (non_blocking(False) < 0) {
+			host_disconnect(True);
+			return;
+		}
+		host_connected();
+		net_connected();
+	}
+
+#if defined(X3270_TRACE) /*[*/
+	trace_netdata('<', netrbuf, nr);
+#endif /*]*/
+
+	ns_brcvd += nr;
+	for (cp = netrbuf; cp < (netrbuf + nr); cp++) {
+#if defined(LOCAL_PROCESS) /*[*/
+		if (local_process) {
+			/* More to do here, probably. */
+			if (IN_NEITHER) {	/* now can assume ANSI mode */
+				host_in3270(CONNECTED_ANSI);
+				hisopts[TELOPT_ECHO] = 1;
+				check_linemode(False);
+				kybdlock_clr(KL_AWAITING_FIRST, "telnet_fsm");
+				status_reset();
+				ps_process();
+			}
+			ansi_process((unsigned int) *cp);
+		} else {
+#endif /*]*/
+			if (telnet_fsm(*cp)) {
+				(void) ctlr_dbcs_postprocess();
 				host_disconnect(True);
 				return;
 			}
-			host_connected();
-			net_connected();
-		}
-
-#if defined(X3270_TRACE) /*[*/
-		trace_netdata('<', netrbuf, nr);
-#endif /*]*/
-
-		ns_brcvd += nr;
-		for (cp = netrbuf; cp < (netrbuf + nr); cp++) {
 #if defined(LOCAL_PROCESS) /*[*/
-			if (local_process) {
-				/* More to do here, probably. */
-				if (IN_NEITHER) {	/* now can assume ANSI mode */
-					host_in3270(CONNECTED_ANSI);
-					hisopts[TELOPT_ECHO] = 1;
-					check_linemode(False);
-					kybdlock_clr(KL_AWAITING_FIRST, "telnet_fsm");
-					status_reset();
-					ps_process();
-				}
-				ansi_process((unsigned int) *cp);
-			} else {
-#endif /*]*/
-				if (telnet_fsm(*cp)) {
-					(void) ctlr_dbcs_postprocess();
-					host_disconnect(True);
-					return;
-				}
-#if defined(LOCAL_PROCESS) /*[*/
-			}
-#endif /*]*/
 		}
+#endif /*]*/
+	}
 
 #if defined(X3270_ANSI) /*[*/
-		if (IN_ANSI) {
-			(void) ctlr_dbcs_postprocess();
-		}
-		if (ansi_data) {
-			trace_dsn("\n");
-			ansi_data = 0;
-		}
+	if (IN_ANSI) {
+		(void) ctlr_dbcs_postprocess();
+	}
+	if (ansi_data) {
+		trace_dsn("\n");
+		ansi_data = 0;
+	}
 #endif /*]*/
 
 #if defined(X3270_TRACE) /*[*/
-		/* See if it's time to roll over the trace file. */
-		trace_rollover_check();
+	/* See if it's time to roll over the trace file. */
+	trace_rollover_check();
 #endif /*]*/
 
+#if defined(_WIN32) /*[*/
 	}
+#endif /*]*/
 }
 
 
@@ -2925,14 +2940,17 @@ trace_netdata(char direction, unsigned const char *buf, int len)
 	int offset;
 	struct timeval ts;
 	double tdiff;
+	extern Boolean do_ts;
 
 	if (!toggled(DS_TRACE))
 		return;
+	do_ts = False;
 	(void) gettimeofday(&ts, (struct timezone *)NULL);
 	if (IN_3270) {
 		tdiff = ((1.0e6 * (double)(ts.tv_sec - ds_ts.tv_sec)) +
 			(double)(ts.tv_usec - ds_ts.tv_usec)) / 1.0e6;
 		trace_dsn("%c +%gs\n", direction, tdiff);
+		do_ts = False;
 	}
 	ds_ts = ts;
 	for (offset = 0; offset < len; offset++) {
@@ -3487,14 +3505,22 @@ non_blocking(Boolean on)
 {
 #if !defined(BLOCKING_CONNECT_ONLY) /*[*/
 # if defined(FIONBIO) /*[*/
-	int i = on ? 1 : 0;
+	IOCTL_T i = on ? 1 : 0;
+
+    	trace_dsn("Making host socket %sblocking\n", on? "non-": "");
+	if (sock < 0)
+		return 0;
 
 	if (SOCK_IOCTL(sock, FIONBIO, &i) < 0) {
-		popup_a_sockerr("ioctl(FIONBIO)");
+		popup_a_sockerr("ioctl(%d, FIONBIO, %d)", sock, on);
 		return -1;
 	}
 # else /*][*/
 	int f;
+
+    	trace_dsn("Making host socket %sblocking\n", on? "non-": "");
+	if (sock < 0)
+		return 0;
 
 	if ((f = fcntl(sock, F_GETFL, 0)) == -1) {
 		popup_an_errno(errno, "fcntl(F_GETFL)");

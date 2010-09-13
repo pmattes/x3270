@@ -667,25 +667,27 @@ Boolean
 menu_char(int row, int col, Boolean persistent, ucs4_t *u,
 	Boolean *highlighted, unsigned char *acs)
 {
-    if (menu_is_up & KEYPAD_IS_UP)
-	    return keypad_char(row, col, u, highlighted, acs);
-    else if ((menu_is_up & MENU_IS_UP) &&
-	     row < MODEL_2_ROWS &&
-	     col < MODEL_2_COLS &&
-	     menu_screen[(row * MODEL_2_COLS) + col]) {
-	    *u = menu_screen[(row * MODEL_2_COLS) + col];
-	    *highlighted = menu_rv[(row * MODEL_2_COLS) + col];
-	    *acs = menu_acs[(row * MODEL_2_COLS) + col];
-	    return True;
-    } else if (persistent && row == 0 && menu_topline[col]) {
-	    *u = menu_topline[col];
-	    *highlighted = 0;
-	    return True;
-    } else {
-	    *u = 0;
-	    *highlighted = False;
-	    return False;
-    }
+	if (menu_is_up & KEYPAD_IS_UP)
+		return keypad_char(row, col, u, highlighted, acs);
+	else if (col >= MODEL_2_COLS)
+		return False;
+	else if ((menu_is_up & MENU_IS_UP) &&
+		 row < MODEL_2_ROWS &&
+		 col < MODEL_2_COLS &&
+		 menu_screen[(row * MODEL_2_COLS) + col]) {
+		*u = menu_screen[(row * MODEL_2_COLS) + col];
+		*highlighted = menu_rv[(row * MODEL_2_COLS) + col];
+		*acs = menu_acs[(row * MODEL_2_COLS) + col];
+		return True;
+	} else if (persistent && row == 0 && menu_topline[col]) {
+		*u = menu_topline[col];
+		*highlighted = 0;
+		return True;
+	} else {
+		*u = 0;
+		*highlighted = False;
+		return False;
+	}
 }
 
 /* Report where to land the cursor when a menu is up. */

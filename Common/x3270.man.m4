@@ -406,6 +406,7 @@ ifelse(XX_PLATFORM,windows,`XX_FB(x3trc.)`'XX_FI(process_id)XX_FB(.txt) in the
 XX_FB(XX_PRODUCT) XX_FI(Application Data) directory',`XX_FB(/tmp/x3trc.)`'XX_FI(process_id)').
 XX_TP(XX_FB(XX_DASHED(tracefile)) XX_FI(file))
 Specifies a file to save data stream and event traces into.
+If the name starts with XX_DQUOTED(>>), data will be appended to the file.
 ifelse(XX_PRODUCT,x3270,`If the value XX_FB(stdout)
 is given, then traces will be written to standard output.
 If the value XX_FB(none)
@@ -415,11 +416,12 @@ file will be created.
 XX_TP(XX_FB(XX_DASHED(tracefilesize)) XX_FI(size))
 Places a limit on the size of a trace file.
 If this option is not specified, or is specified as XX_FB(0) or XX_FB(none),
-the trace file will be unlimited.
-If specified, the trace file cannot already exist, and the (silently enforced)
-minimum size is 64 Kbytes.
+the trace file size will be unlimited.
+The minimum size is 64 Kbytes.
 The value of XX_FI(size) can have a XX_FB(K) or XX_FB(M) suffix, indicating
 kilobytes or megabytes respectively.
+When the trace file reaches the size limit, it will be renamed with a 
+XX_DQUOTED(-) appended and a new file started.
 XX_TP(XX_FB(XX_DASHED(v))
 Display the version and build options for XX_FB(XX_PRODUCT)) and exit.
 ifelse(XX_PRODUCT,x3270,,
