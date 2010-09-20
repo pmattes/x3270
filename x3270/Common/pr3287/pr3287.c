@@ -147,10 +147,8 @@ int ffskip = 0;
 int verbose = 0;
 int ssl_host = 0;
 unsigned long eoj_timeout = 0L; /* end of job timeout */
-char *trnpre_data = NULL;
-size_t trnpre_size = 0;
-char *trnpost_data = NULL;
-size_t trnpost_size = 0;
+char *trnpre = NULL;
+char *trnpost = NULL;
 
 /* User options. */
 #if !defined(_WIN32) /*[*/
@@ -356,38 +354,6 @@ pr3287_exit(int status)
 	exit(status);
 }
 
-/* Read a transparent data file into memory. */
-static void
-read_trn(char *filename, char **data, size_t *size)
-{
-    	int fd;
-	char buf[1024];
-	int nr;
-
-	if (filename == NULL)
-	    	return;
-	fd = open(filename, O_RDONLY);
-	if (fd < 0) {
-		perror(filename);
-		pr3287_exit(1);
-	}
-	*size = 0;
-	while ((nr = read(fd, buf, sizeof(buf))) > 0) {
-	    	*size += nr;
-	    	*data = realloc(*data, *size);
-		if (*data == NULL) {
-		    	fprintf(stderr, "Out of memory\n");
-			pr3287_exit(1);
-		}
-		memcpy(*data + *size - nr, buf, nr);
-	}
-	if (nr < 0) {
-		perror(filename);
-		pr3287_exit(1);
-	}
-	close(fd);
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -413,7 +379,6 @@ main(int argc, char *argv[])
 #if defined(HAVE_LIBSSL) /*[*/
 	int any_prefixes = False;
 #endif /*]*/
-	char *trnpre = NULL, *trnpost = NULL;
 
 	/* Learn our name. */
 #if defined(_WIN32) /*[*/
@@ -643,10 +608,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 	/* Set up the character set. */
 	if (charset_init(charset) < 0)
 		pr3287_exit(1);
-
-	/* Read in the transparent pre- and post- files. */
-	read_trn(trnpre, &trnpre_data, &trnpre_size);
-	read_trn(trnpost, &trnpost_data, &trnpost_size);
 
 	/* Try opening the trace file, if there is one. */
 	if (tracing) {
