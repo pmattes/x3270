@@ -74,10 +74,8 @@ extern int ignoreeoj;	/* ignore PRINT-EOJ commands */
 extern int crlf;	/* expand newline to CR/LF */
 extern int ffthru;	/* pass through SCS FF orders */
 extern int ffskip;	/* skip FF orders at top of page */
-extern char *trnpre_data;
-extern char *trnpost_data;
-extern size_t trnpre_size;
-extern size_t trnpost_size;
+extern char *trnpre;	/* pathname from -trnpre */
+extern char *trnpost;	/* pathname from -trnpost */
 
 #define CS_GE 0x04	/* hack */
 
@@ -123,6 +121,7 @@ static int dump_formatted(void);
 static int dump_unformatted(void);
 static int stash(unsigned char c);
 static int prflush(void);
+static int copyfile(const char *filename);
 
 #define DECODE_BADDR(c1, c2) \
 	((((c1) & 0xC0) == 0x00) ? \
@@ -1463,11 +1462,8 @@ stash(unsigned char c)
 		ws_initted = 1;
 	}
 	if (ws_needpre) {
-	    	if ((trnpre_data != NULL) &&
-			ws_write(trnpre_data, trnpre_size) < 0) {
-
+	    	if ((trnpre != NULL) && copyfile(trnpre) < 0)
 			return -1;
-		}
 		ws_needpre = 0;
 	}
 
@@ -1481,12 +1477,7 @@ stash(unsigned char c)
 			errmsg("%s: %s", command, strerror(errno));
 			return -1;
 		}
-		if ((trnpre_data != NULL) &&
-			fwrite(trnpre_data, 1, trnpre_size,
-					    prfile) != trnpre_size) {
-
-			errmsg("Write error to '%s': %s", command,
-				strerror(errno));
+		if ((trnpre != NULL) && copyfile(trnpre) < 0) {
 			(void) pclose_no_sigint(prfile);
 			prfile = NULL;
 			return -1;
@@ -1899,10 +1890,8 @@ print_eoj(void)
 #if defined(_WIN32) /*[*/
 	if (ws_initted) {
 		trace_ds("End of print job.\n");
-		if (trnpost_data != NULL &&
-			    ws_write(trnpost_data, trnpost_size) < 0) {
+		if (trnpost != NULL && copyfile(trnpost) < 0)
 		    	rc = -1;
-		}
 	    	if (ws_endjob() < 0)
 			rc = -1;
 		ws_needpre = 1;
@@ -1910,11 +1899,8 @@ print_eoj(void)
 #else /*]*/
 	if (prfile != NULL) {
 		trace_ds("End of print job.\n");
-		if (trnpost_data != NULL &&
-			fwrite(trnpost_data, 1, trnpost_size,
-						    prfile) != trnpost_size) {
+		if (trnpost != NULL && copyfile(trnpost) < 0)
 		    rc = -1;
-		}
 		rc = pclose_no_sigint(prfile);
 		if (rc) {
 			if (rc < 0)
@@ -1979,4 +1965,35 @@ ctlr_erase(void)
 	any_3270_output = 0;
 	baddr = 0;
 	return 0;
+}
+
+/*
+ * Copy a -trnpre/-trnpost file to the printer.  We open and read the file
+ * for each print job, so someone can change their contents while we are
+ * running (hopefully between print jobs).
+ */
+static int
+copyfile(const char *filename)
+{
+	FILE *f;
+	char c;
+	int rc = 0;
+
+	if ((f = fopen(filename, "rb")) == NULL) {
+		errmsg("%s: %s", filename, strerror(errno));
+		return -1;
+	}
+	while ((c = fgetc(f)) != EOF) {
+#if defined(_WIN32) /*[*/
+		if (ws_putc(c) < 0) {
+#else /*][*/
+		if (fputc(c, prfile) < 0) {
+		    	errmsg("write(%s): %s", command, strerror(errno));
+#endif /*]*/
+			rc = -1;
+			break;
+		}
+	}
+	fclose(f);
+	return rc;
 }
