@@ -76,16 +76,21 @@ main(int argc, char *argv[])
 	FILE *f;
 	int s;
 	union {
-		struct sockaddr sa;
-		struct sockaddr_in sin;
+	    struct sockaddr sa;
 #if defined(AF_INET6) /*[*/
-		struct sockaddr_in6 sin6;
+	    struct sockaddr_in6 sin6;
+#else /*][*/
+	    struct sockaddr_in sin;
 #endif /*]*/
 	} addr;
-	int addrlen = sizeof(struct sockaddr_in);
+#if defined(AF_INET6) /*[*/
+	int proto = AF_INET6;
+#else /*][*/
+	int proto = AF_INET;
+#endif /*]*/
+	int addrlen = sizeof(addr);
 	int one = 1;
 	socklen_t len;
-	int proto = AF_INET;
 
 	/* Parse command-line arguments */
 
@@ -94,20 +99,15 @@ main(int argc, char *argv[])
 	else
 		me = argv[0];
 
-	while ((c = getopt(argc, argv, "p:x")) != -1)
+	while ((c = getopt(argc, argv, "p:")) != -1) {
 		switch (c) {
 		    case 'p':
 			port = atoi(optarg);
 			break;
-#if defined(AF_INET6) /*[*/
-		    case 'x':
-			proto = AF_INET6;
-			addrlen = sizeof(struct sockaddr_in6);
-			break;
-#endif /*]*/
 		    default:
 			usage();
 		}
+	}
 
 	if (argc - optind != 1)
 		usage();
@@ -133,14 +133,10 @@ main(int argc, char *argv[])
 	(void) memset(&addr, '\0', sizeof(addr));
 	addr.sa.sa_family = proto;
 #if defined(AF_INET6) /*[*/
-	if (proto == AF_INET6) {
-		addr.sin6.sin6_port = htons(port);
-	} else
+	addr.sin6.sin6_port = htons(port);
+#else /*][*/
+	addr.sin.sin_port = htons(port);
 #endif /*]*/
-	{
-		addr.sin.sin_addr.s_addr = htonl(INADDR_ANY);
-		addr.sin.sin_port = htons(port);
-	}
 	if (bind(s, &addr.sa, addrlen) < 0) {
 		perror("bind");
 		exit(1);
@@ -160,6 +156,7 @@ main(int argc, char *argv[])
 #endif /*]*/
 
 		(void) memset((char *)&addr, '\0', sizeof(addr));
+
 		addr.sa.sa_family = proto;
 		len = addrlen;
 		(void) printf("Waiting for connection.\n");
@@ -170,14 +167,9 @@ main(int argc, char *argv[])
 		}
 		(void) printf("Connection from %s %u.\n",
 #if defined(AF_INET6) /*[*/
-		    inet_ntop(proto,
-			      (proto == AF_INET)?
-				 (void *)&addr.sin.sin_addr:
-				 (void *)&addr.sin6.sin6_addr,
-			      buf, INET6_ADDRSTRLEN),
-		    ntohs((proto == AF_INET)?
-				addr.sin.sin_port:
-				addr.sin6.sin6_port)
+		    inet_ntop(proto, (void *)&addr.sin6.sin6_addr, buf,
+			INET6_ADDRSTRLEN),
+		    ntohs(addr.sin6.sin6_port)
 #else /*][*/
 		    inet_ntoa(addr.sin.sin_addr),
 		    ntohs(addr.sin.sin_port)
