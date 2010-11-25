@@ -74,6 +74,7 @@ extern int ignoreeoj;	/* ignore PRINT-EOJ commands */
 extern int crlf;	/* expand newline to CR/LF */
 extern int ffthru;	/* pass through SCS FF orders */
 extern int ffskip;	/* skip FF orders at top of page */
+extern int ffeoj;	/* assume FF at the end of each SCS page */
 extern char *trnpre;	/* pathname from -trnpre */
 extern char *trnpost;	/* pathname from -trnpost */
 
@@ -152,6 +153,7 @@ static int scs_dbcs_subfield = 0;
 static unsigned char scs_dbcs_c1 = 0;
 #endif /*]*/
 static unsigned scs_cs = 0;
+static Boolean ffeoj_last = False;
 
 
 /*
@@ -870,6 +872,7 @@ add_scs(ucs4_t c)
 	else
 	    	pp++;
 	any_scs_output = True;
+	ffeoj_last = False;
 	return 0;
 }
 
@@ -896,6 +899,7 @@ add_scs_trn(unsigned char *cp, int cnt)
 	(void) memcpy(trnbuf[pp].buf + trnbuf[pp].data_len, cp, cnt);
 	trnbuf[pp].data_len += cnt;
 	any_scs_output = True;
+	ffeoj_last = True;
 }
 
 /*
@@ -1551,6 +1555,7 @@ ctlr_add(ucs4_t c, unsigned char cs, unsigned char gr)
 	page_buf[baddr] = c;
 	baddr = (baddr + 1) % MAX_BUF;
 	any_3270_output = 1;
+	ffeoj_last = False;
 
 	/* Implement -emflush mode. */
 	if (emflush && !wcc_line_length && c == FCORDER_EM) {
@@ -1871,12 +1876,14 @@ print_eoj(void)
 	int rc = 0;
 
 	/* Dump any pending 3270-mode output. */
-	if (wcc_line_length) {
-		if (dump_formatted() < 0)
-			rc = -1;
-	} else {
-		if (dump_unformatted() < 0)
-			rc = -1;
+	if (any_3270_output) {
+		if (wcc_line_length) {
+			if (dump_formatted() < 0)
+				rc = -1;
+		} else {
+			if (dump_unformatted() < 0)
+				rc = -1;
+		}
 	}
 
 	/* Dump any pending SCS-mode output. */
@@ -1885,6 +1892,27 @@ print_eoj(void)
 			rc = -1;
 	}
 
+	/* Handle -ffeoj, which blindly adds a formfeed to every page. */
+	if (ffeoj && !ffeoj_last) {
+	    	if (scs_any) {
+			trace_ds("Automatic SCS EOJ formfeed.\n");
+		    	scs_formfeed(True);
+			if (dump_scs_line(True, False) < 0)
+				rc = -1;
+		} else {
+			trace_ds("Automatic 3270 %s EOJ formfeed.\n",
+				wcc_line_length? "formatted": "unformatted");
+			ctlr_add(FCORDER_FF, default_cs, default_gr);
+			if (wcc_line_length) {
+				if (dump_formatted() < 0)
+					rc = -1;
+			} else {
+				if (dump_unformatted() < 0)
+					rc = -1;
+			}
+		}
+		ffeoj_last = True;
+	}
 
 	/* Close the stream to the print process. */
 #if defined(_WIN32) /*[*/

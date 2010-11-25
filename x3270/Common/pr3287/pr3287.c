@@ -48,6 +48,8 @@
  *	        flush printer output when an unformatted EM order arrives
  *          -eojtimeout n
  *              time out end of job after n seconds
+ *          -ffeoj
+ *          	assume an FF at the end of each job
  *          -ffthru
  *		pass through SCS FF orders
  *          -ffskip
@@ -142,6 +144,7 @@ int printercp = 0;
 #else /*][*/
 int crlf = 0;
 #endif /*]*/
+int ffeoj = 0;
 int ffthru = 0;
 int ffskip = 0;
 int verbose = 0;
@@ -201,6 +204,7 @@ usage(void)
 #endif /*]*/
 "  -eojtimeout <seconds>\n"
 "                   time out end of print job\n"
+"  -ffeoj           assume FF at the end of each print job\n"
 "  -ffthru          pass through SCS FF orders\n"
 "  -ffskip          skip FF orders at top of page\n",
 "  -ignoreeoj       ignore PRINT-EOJ commands\n"
@@ -463,6 +467,8 @@ main(int argc, char *argv[])
 			i++;
 		} else if (!strcmp(argv[i], "-ignoreeoj")) {
 			ignoreeoj = 1;
+		} else if (!strcmp(argv[i], "-ffeoj")) {
+			ffeoj = 1;
 		} else if (!strcmp(argv[i], "-ffthru")) {
 			ffthru = 1;
 		} else if (!strcmp(argv[i], "-ffskip")) {

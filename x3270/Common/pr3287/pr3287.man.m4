@@ -76,6 +76,8 @@ buffer between pages.
 XX_TP(XX_FB(XX_DASHED(ignoreeoj)))
 Ignore TN3270E PRINT-EOJ commands, relying on UNBIND commands to indicate
 the ends of print jobs.
+XX_TP(XX_FB(XX_DASHED(ffeoj)))
+Causes XX_FI(XX_PRODUCT) to add a FF (formfeed) at the end of each print job.
 XX_TP(XX_FB(XX_DASHED(ffskip)))
 Causes XX_FI(XX_PRODUCT) to ignore a FF (formfeed) order if it occurs
 at the top of a page.
