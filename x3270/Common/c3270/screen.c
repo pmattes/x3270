@@ -930,7 +930,7 @@ screen_disp(Boolean erasing _is_unused)
 					    &acs)) {
 					char mb[16];
 
-				    	attrset(highlight? high: norm);
+				    	(void) attrset(highlight? high: norm);
 #if defined(CURSES_WIDE) /*[*/
 					if (u < 0x100 || acs)
 						addch(u);
@@ -943,7 +943,7 @@ screen_disp(Boolean erasing _is_unused)
 					addch(u);
 #endif /*]*/
 				} else {
-					attrset(norm);
+					(void) attrset(norm);
 					addch(' ');
 				}
 			}
@@ -1761,7 +1761,7 @@ draw_oia(void)
 	if (!appres.mono && !filled_extra[!!curses_alt]) {
 	    	int r, c;
 
-		attrset(defattr);
+		(void) attrset(defattr);
 		for (r = 0; r <= status_row; r++) {
 		    	int c0;
 
@@ -1832,12 +1832,12 @@ draw_oia(void)
 	    oia_printer? 'P': ' ');
 	if (status_secure) {
 	    	if (appres.m3279)
-			attrset(get_color_pair(defcolor_offset + COLOR_GREEN,
+			(void) attrset(get_color_pair(defcolor_offset + COLOR_GREEN,
 				    bg_color) | A_BOLD);
 		else
-		    	attrset(A_BOLD);
+		    	(void) attrset(A_BOLD);
 		printw("S");
-	    	attrset(defattr);
+	    	(void) attrset(defattr);
 	} else
 	    	printw(" ");
 
