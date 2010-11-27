@@ -450,6 +450,10 @@ main(int argc, char *argv[])
 			(void) process_events(True);
 			if (!PCONNECTED)
 				x3270_exit(1);
+			if (escaped) {
+			    	printf("Connection aborted.\n");
+				x3270_exit(1);
+			}
 		}
 		pause_for_errors();
 		screen_disp(False);
@@ -1071,7 +1075,8 @@ status_dump(void)
 			action_output("  %s%s, %s", emode,
 			    get_message("dsMode"), ts);
 		} else
-			action_output("  %s", ts);
+			action_output("  %s, %s",
+				get_message("unnegotiated"), ts);
 
 #if defined(X3270_TN3270E) /*[*/
 		eopts = tn3270e_current_opts();
@@ -1310,6 +1315,9 @@ Escape_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_
 	if (!appres.secure && !appres.no_prompt) {
 	    	host_cancel_reconnect();
 		screen_suspend();
+#if defined(X3270_SCRIPT) /*[*/
+		abort_script();
+#endif /*]*/
 	}
 }
 

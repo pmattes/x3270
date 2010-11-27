@@ -236,7 +236,14 @@ typedef struct {
 	char	*plugin_command;
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
+	char	*ca_dir;
+	char	*ca_file;
 	char	*cert_file;
+	char	*cert_file_type;
+	char	*chain_file;
+	char	*key_file;
+	char	*key_file_type;
+	char	*key_passwd;
 #endif /*]*/
 	char	*proxy;
 #if defined(TCL3270) /*[*/

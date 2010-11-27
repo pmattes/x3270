@@ -317,6 +317,31 @@ description
     %p%.  In either case, %p% will never respond to a DONT TIMING MARK option.
 .
 
+name caDir
+applies a
+type s
+groups s
+switch -cadir
+description
+    Defines a directory containing CA (root) certificates, used to validate
+    a certificate presented by the host during SSL negotiation.
+if w
+    The default is the <b>certs</b> subdirectory of the %p% install directory.
+else
+    The default is determined by the OpenSSL library on your workstation.
+endif
+.
+
+name caFile
+applies a
+type s
+groups s
+switch -cafile
+description
+    Defines a PEM-format file containing CA (root) certificates, used to
+    validate a certificate presented by the host during SSL negotiation.
+.
+
 name cbreak
 applies c
 type b
@@ -335,7 +360,37 @@ groups s
 type s
 switch -certfile
 desc
-    Gives the name of a certificate file, used by the OpenSSL library.
+    Gives the name of a certificate file, provided to the host if requested
+    during SSL negotiation.
+    The default file format is PEM; it can be overridden by %-certFileType%.
+    The private key for the certificate is specified by %-keyFile%.
+    If %-chainFile% is specified, it overrides %-certFile%.
+.
+
+name certFileType
+applies a
+groups s
+type s
+default pem
+switch -certfiletype
+desc
+    Gives the type of the certificate file specified by %-certFile%.
+    The value can be <b>pem</b> or <b>asn1</b>.
+.
+
+name chainFile
+applies a
+groups s
+type s
+switch -chainfile
+desc
+    Gives the name of a certificate chain file, provided to the host if
+    requested during SSL negotiation.
+    The file contains a PEM-format certificate, optionally followed by
+    any intermediate certificates used to sign it, and the CA (root)
+    certificate.
+    The private key for the certificate is specified by %-keyFile%.
+    If %-chainFile% is specified, it overrides %-certFile%.
 .
 
 name charClass
@@ -1246,6 +1301,29 @@ description
     With this resource true, that is reversed.
 .
 
+name keyFile
+applies a
+groups s
+type s
+switch -keyfile
+desc
+    Gives the name of a file containg the private key for the certificate
+    specified by %-certFile% or %-chainFile%.  The default file type is PEM;
+    it can be overridden by %-keyFileType%.  If the private key is encrypted,
+    the password is specified by %-keyPasswd%.
+.
+
+name keyFileType
+applies a
+groups s
+type s
+default pem
+switch -keyfileType
+desc
+    Gives the type of the private key file specified by %-keyFile%.
+    The value can be <b>pem</b> or <b>asn1</b>.
+.
+
 name keyHeight
 applies x
 groups a
@@ -1344,6 +1422,19 @@ type i
 default 24
 description
     The height in pixels of all of the buttons on the keypad.
+.
+
+name keyPasswd
+applies a
+groups s
+type s
+switch -keypasswd
+desc
+    Gives the password for the private key file specified by %-keyFile%, if it
+    is encrypted.
+    The value can take one of two forms. <b>file</b>:<i>filename</i> specifies
+    that the password is in a file. <b>string</b>:<i>string</i> gives the
+    password value in the resource itself.
 .
 
 name keyWidth

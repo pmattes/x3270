@@ -112,7 +112,11 @@ XrmOptionDescRec options[]= {
 	{ OptActiveIcon,DotActiveIcon,	XrmoptionNoArg,		ResTrue },
 	{ OptAplMode,	DotAplMode,	XrmoptionNoArg,		ResTrue },
 #if defined(HAVE_LIBSSL) /*[*/
+	{ OptCaDir,	DotCaDir,	XrmoptionSepArg,	NULL },
+	{ OptCaFile,	DotCaFile,	XrmoptionSepArg,	NULL },
 	{ OptCertFile,	DotCertFile,	XrmoptionSepArg,	NULL },
+	{ OptCertFileType,DotCertFileType,XrmoptionSepArg,	NULL },
+	{ OptChainFile,	DotChainFile,	XrmoptionSepArg,	NULL },
 #endif /*]*/
 	{ OptCharClass,	DotCharClass,	XrmoptionSepArg,	NULL },
 	{ OptCharset,	DotCharset,	XrmoptionSepArg,	NULL },
@@ -126,8 +130,15 @@ XrmOptionDescRec options[]= {
 	{ OptIconName,	".iconName",	XrmoptionSepArg,	NULL },
 	{ OptIconX,	".iconX",	XrmoptionSepArg,	NULL },
 	{ OptIconY,	".iconY",	XrmoptionSepArg,	NULL },
+#if defined(HAVE_LIBSSL) /*[*/
+	{ OptKeyFile,	DotKeyFile,	XrmoptionSepArg,	NULL },
+	{ OptKeyFileType,DotKeyFileType,XrmoptionSepArg,	NULL },
+#endif /*]*/
 	{ OptKeymap,	DotKeymap,	XrmoptionSepArg,	NULL },
 	{ OptKeypadOn,	DotKeypadOn,	XrmoptionNoArg,		ResTrue },
+#if defined(HAVE_LIBSSL) /*[*/
+	{ OptKeyPasswd,	DotKeyPasswd,	XrmoptionSepArg,	NULL },
+#endif /*]*/
 	{ OptM3279,	DotM3279,	XrmoptionNoArg,		ResTrue },
 	{ OptModel,	DotModel,	XrmoptionSepArg,	NULL },
 	{ OptMono,	DotMono,	XrmoptionNoArg,		ResTrue },
@@ -171,21 +182,30 @@ static struct {
 	{ OptActiveIcon, CN, "Make icon a miniature of the display" },
 	{ OptAplMode, CN,    "Turn on APL mode" },
 #if defined(HAVE_LIBSSL) /*[*/
+	{ OptCaDir, "<directory>", "Specify OpenSSL CA certificate database directory" },
+	{ OptCaFile, "<filename>", "Specify OpenSSL CA certificate file" },
 	{ OptCertFile, "<file>", "Specify OpenSSL certificate file" },
+	{ OptCertFileType, "pem|asn1", "Specify OpenSSL certificate file type" },
+	{ OptChainFile, "<filename>", "Specify OpenSSL certificate chain file" },
 #endif /*]*/
 	{ OptCharClass, "<spec>", "Define characters for word boundaries" },
 	{ OptCharset, "<name>", "Use host EBCDIC character set (code page) <name>" },
 	{ OptClear, "<toggle>", "Turn on <toggle>" },
 	{ OptColorScheme, "<name>", "Use color scheme <name>" },
-#if defined(X3270_TRACE) /*[*/
-#endif /*]*/
 	{ OptEmulatorFont, "<font>", "Font for emulator window" },
 	{ OptExtended, CN, "Extended 3270 data stream (deprecated)" },
 	{ OptIconName, "<name>", "Title for icon" },
 	{ OptIconX, "<x>", "X position for icon" },
 	{ OptIconY, "<y>", "Y position for icon" },
+#if defined(HAVE_LIBSSL) /*[*/
+	{ OptKeyFile, "<filename>", "Get OpenSSL private key from <filename>" },
+	{ OptKeyFileType, "pem|asn1", "Specify OpenSSL private key file type" },
+#endif /*]*/
 	{ OptKeymap, "<name>[,<name>...]", "Keyboard map name(s)" },
 	{ OptKeypadOn, CN, "Turn on pop-up keypad at start-up" },
+#if defined(HAVE_LIBSSL) /*[*/
+	{ OptKeyPasswd, "file:<filename>|string:<text>", "Specify OpenSSL private key password" },
+#endif /*]*/
 	{ OptM3279, CN, "3279 emulation (deprecated)" },
 	{ OptModel, "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
 	{ OptMono, CN, "Do not use color" },

@@ -313,8 +313,22 @@ XtResource resources[] = {
 	  offset(dbcs_cgcsgid), XtRString, 0 },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
+	{ ResCaDir, ClsCaDir, XtRString, sizeof(char *),
+	  offset(ca_dir), XtRString, 0 },
+	{ ResCaFile, ClsCaFile, XtRString, sizeof(char *),
+	  offset(ca_file), XtRString, 0 },
 	{ ResCertFile, ClsCertFile, XtRString, sizeof(char *),
 	  offset(cert_file), XtRString, 0 },
+	{ ResCertFileType, ClsCertFileType, XtRString, sizeof(char *),
+	  offset(cert_file_type), XtRString, 0 },
+	{ ResChainFile, ClsChainFile, XtRString, sizeof(char *),
+	  offset(chain_file), XtRString, 0 },
+	{ ResKeyFile, ClsKeyFile, XtRString, sizeof(char *),
+	  offset(key_file), XtRString, 0 },
+	{ ResKeyFileType, ClsKeyFileType, XtRString, sizeof(char *),
+	  offset(key_file_type), XtRString, 0 },
+	{ ResKeyPasswd, ClsKeyPasswd, XtRString, sizeof(char *),
+	  offset(key_passwd), XtRString, 0 },
 #endif /*]*/
 
 #if defined(USE_APP_DEFAULTS) /*[*/

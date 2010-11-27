@@ -50,8 +50,12 @@
 #define ResBlankFill		"blankFill"
 #define ResBoldColor		"boldColor"
 #define ResBsdTm		"bsdTm"
+#define ResCaDir		"caDir"
+#define ResCaFile		"caFile"
 #define ResCbreak		"cbreak"
 #define ResCertFile		"certFile"
+#define ResCertFileType		"certFileType"
+#define ResChainFile		"chainFile"
 #define ResCharClass		"charClass"
 #define ResCharset		"charset"
 #define ResCharsetList		"charsetList"
@@ -106,10 +110,13 @@
 #define ResInputMethod		"inputMethod"
 #define ResIntr			"intr"
 #define ResInvertKeypadShift	"invertKeypadShift"
+#define ResKeyFile		"keyFile"
+#define ResKeyFileType		"keyFileType"
 #define ResKeymap		"keymap"
 #define ResKeypad		"keypad"
 #define ResKeypadBackground	"keypadBackground"
 #define ResKeypadOn		"keypadOn"
+#define ResKeyPasswd		"keyPasswd"
 #define ResKill			"kill"
 #define ResLabelIcon		"labelIcon"
 #define ResLineWrap		"lineWrap"
@@ -192,7 +199,11 @@
 /* Dotted resource names. */
 #define DotActiveIcon		"." ResActiveIcon
 #define DotAplMode		"." ResAplMode
+#define DotCaDir		"." ResCaDir
+#define DotCaFile		"." ResCaFile
 #define DotCertFile		"." ResCertFile
+#define DotCertFileType		"." ResCertFileType
+#define DotChainFile		"." ResChainFile
 #define DotCbreak		"." ResCbreak
 #define DotCharClass		"." ResCharClass
 #define DotCharset		"." ResCharset
@@ -201,8 +212,11 @@
 #define DotEmulatorFont		"." ResEmulatorFont
 #define DotExtended		"." ResExtended
 #define DotInputMethod		"." ResInputMethod
+#define DotKeyFile		"." ResKeyFile
+#define DotKeyFileType		"." ResKeyFileType
 #define DotKeymap		"." ResKeymap
 #define DotKeypadOn		"." ResKeypadOn
+#define DotKeyPasswd		"." ResKeyPasswd
 #define DotM3279		"." ResM3279
 #define DotModel		"." ResModel
 #define DotMono			"." ResMono
@@ -238,8 +252,12 @@
 #define ClsBlankFill		"BlankFill"
 #define ClsBoldColor		"BoldColor"
 #define ClsBsdTm		"BsdTm"
+#define ClsCaDir		"CaDir"
+#define ClsCaFile		"CaFile"
 #define ClsCbreak		"Cbreak"
 #define ClsCertFile		"CertFile"
+#define ClsCertFileType		"CertFileType"
+#define ClsChainFile		"ChainFile"
 #define ClsCharClass		"CharClass"
 #define ClsCharset		"Charset"
 #define ClsColor8		"Color8"
@@ -279,10 +297,13 @@
 #define ClsInputMethod		"InputMethod"
 #define ClsIntr			"Intr"
 #define ClsInvertKeypadShift	"InvertKeypadShift"
+#define ClsKeyFile		"KeyFile"
+#define ClsKeyFileType		"KeyFileType"
 #define ClsKeymap		"Keymap"
 #define ClsKeypad		"Keypad"
 #define ClsKeypadBackground	"KeypadBackground"
 #define ClsKeypadOn		"KeypadOn"
+#define ClsKeyPasswd		"KeyPasswd"
 #define ClsKill			"Kill"
 #define ClsLabelIcon		"LabelIcon"
 #define ClsLineWrap		"LineWrap"
@@ -349,8 +370,12 @@
 #define OptAllBold		"-allbold"
 #define OptAltScreen		"-altscreen"
 #define OptAplMode		"-apl"
+#define OptCaDir		"-cadir"
+#define OptCaFile		"-cafile"
 #define OptCbreak		"-cbreak"
-#define OptCertFile		"-certificate"
+#define OptCertFile		"-certfile"
+#define OptCertFileType		"-certfiletype"
+#define OptChainFile		"-chainfile"
 #define OptCharClass		"-cc"
 #define OptCharset		"-charset"
 #define OptClear		"-clear"
@@ -364,8 +389,11 @@
 #define OptIconX		"-iconx"
 #define OptIconY		"-icony"
 #define OptInputMethod		"-im"
+#define OptKeyFile		"-keyfile"
+#define OptKeyFileType		"-keyfiletype"
 #define OptKeymap		"-keymap"
 #define OptKeypadOn		"-keypad"
+#define OptKeyPasswd		"-keypasswd"
 #define OptLocalCp		"-localcp"
 #define OptLocalProcess		"-e"
 #define OptM3279		"-color"

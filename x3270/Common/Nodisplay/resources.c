@@ -90,6 +90,7 @@ static struct {
 	{ "message.terminalName",       "Terminal name:" },
 	{ "message.tn3270eNoOpts",      "No TN3270E options" },
 	{ "message.tn3270eOpts",        "TN3270E options:" },
+	{ "message.unnegotiated",       "TELNET negotiation incomplete" },
 #if defined(_WIN32) /*[*/
 	{ "message.windowsCodePage",	"Windows code page:" },
 #endif /*][*/

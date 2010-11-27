@@ -593,13 +593,23 @@ static struct {
 #endif /*]*/
 { OptAplMode,  OPT_BOOLEAN, True,  ResAplMode,   offset(apl_mode),
     CN, "Turn on APL mode" },
+#if defined(HAVE_LIBSSL) /*[*/
+{ OptCaDir,    OPT_STRING,  False, ResCaDir,     offset(ca_dir),
+    "<directory>","Specify OpenSSL CA certificate database directory" },
+{ OptCaFile,   OPT_STRING,  False, ResCaFile,    offset(ca_file),
+    "<filename>", "Specify OpenSSL CA certificate file" },
+#endif /*]*/
 #if defined(C3270) && !defined(_WIN32) /*[*/
 { OptCbreak,   OPT_BOOLEAN, True,  ResCbreak,    offset(cbreak_mode),
     CN, "Force terminal CBREAK mode" },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 { OptCertFile, OPT_STRING,  False, ResCertFile,  offset(cert_file),
-    "<file>", "Specify OpenSSL certificate file" },
+    "<filename>", "Specify OpenSSL certificate file" },
+{ OptCertFileType,OPT_STRING,False,ResCertFileType,  offset(cert_file_type),
+    "pem|asn1",   "Specify OpenSSL certificate file type" },
+{ OptChainFile,OPT_STRING,  False,ResChainFile,  offset(chain_file),
+    "<filename>", "Specify OpenSSL certificate chain file" },
 #endif /*]*/
 { OptCharset,  OPT_STRING,  False, ResCharset,   offset(charset),
     "<name>", "Use host ECBDIC character set (code page) <name>"},
@@ -618,6 +628,14 @@ static struct {
 #endif /*]*/
 { OptHostsFile,OPT_STRING,  False, ResHostsFile, offset(hostsfile),
     "<filename>", "Use <hostname> as the ibm_hosts file" },
+#if defined(HAVE_LIBSSL) /*[*/
+{ OptKeyFile,  OPT_STRING,  False, ResKeyFile, offset(key_file),
+    "<filename>", "Get OpenSSL private key from <filename>" },
+{ OptKeyFileType,OPT_STRING,False, ResKeyFileType,offset(key_file_type),
+    "pem|asn1",   "Specify OpenSSL private key file type" },
+{ OptKeyPasswd,OPT_STRING,  False, ResKeyPasswd,offset(key_passwd),
+    "file:<filename>|string:<text>","Specify OpenSSL private key password" },
+#endif /*]*/
 #if defined(C3270) /*[*/
 { OptKeymap,   OPT_STRING,  False, ResKeymap,    offset(key_map),
     "<name>[,<name>...]", "Keyboard map name(s)" },
@@ -944,7 +962,11 @@ static struct {
 	{ ResBindLimit,	offset(bind_limit),	XRM_BOOLEAN },
 	{ ResBsdTm,	offset(bsd_tm),		XRM_BOOLEAN },
 #if defined(HAVE_LIBSSL) /*[*/
+	{ ResCaDir,	offset(ca_dir),		XRM_STRING },
+	{ ResCaFile,	offset(ca_file),	XRM_STRING },
 	{ ResCertFile,	offset(cert_file),	XRM_STRING },
+	{ ResCertFileType,offset(cert_file_type),XRM_STRING },
+	{ ResChainFile,	offset(chain_file),	XRM_STRING },
 #endif /*]*/
 	{ ResCharset,	offset(charset),	XRM_STRING },
 	{ ResColor8,	offset(color8),		XRM_BOOLEAN },
@@ -981,6 +1003,11 @@ static struct {
 	{ ResIdleCommand,offset(idle_command),	XRM_STRING },
 	{ ResIdleCommandEnabled,offset(idle_command_enabled),	XRM_BOOLEAN },
 	{ ResIdleTimeout,offset(idle_timeout),	XRM_STRING },
+#endif /*]*/
+#if defined(HAVE_LIBSSL) /*[*/
+	{ ResKeyFile,	offset(key_file),	XRM_STRING },
+	{ ResKeyFileType,offset(key_file_type),	XRM_STRING },
+	{ ResKeyPasswd,	offset(key_passwd),	XRM_STRING },
 #endif /*]*/
 #if defined(C3270) /*[*/
 	{ ResKeymap,	offset(key_map),	XRM_STRING },

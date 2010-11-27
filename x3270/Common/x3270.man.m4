@@ -130,6 +130,12 @@ ifelse(XX_PRODUCT,x3270,`This is actually an abbreviation for several options.
 ')dnl
 See XX_LINK(#APL-Support,XX_SM(APL SUPPORT)) below.
 ')dnl
+XX_TP(XX_FB(XX_DASHED(cadir)) XX_FI(directory))
+Specifies a directory containing CA (root) certificates to use when verifying a
+certificate provided by the host.
+XX_TP(XX_FB(XX_DASHED(cafile)) XX_FI(filename))
+Specifies a XX_SM(PEM)-format file containing CA (root) certificates to use
+when verifying a certificate provided by the host.
 ifelse(XX_PRODUCT,c3270,
 `XX_TP(XX_FB(XX_DASHED(cbreak)))
 Causes XX_FB(c3270) to operate in XX_FI(cbreak) mode, instead of XX_FI(raw)
@@ -147,6 +153,20 @@ Sets character classes.
 XX_HO(`See XX_LINK(#Character-Classes,XX_SM(CHARACTER CLASSES)), below.
 ')dnl
 ')dnl
+XX_TP(XX_FB(XX_DASHED(certfile)) XX_FI(filename))
+Specifies a file containing a certificate to provide to the host, if
+requested.
+The default file type is XX_SM(PEM).
+XX_TP(XX_FB(XX_DASHED(certfiletype)) XX_FI(type))
+Specifies the type of the certificate file specified
+by XX_FB(XX_DASHED(certfile)).
+XX_FI(Type) can be XX_FB(pem) or XX_FB(asn1).
+XX_TP(XX_FB(XX_DASHED(chainfile) XX_FI(filename)))
+Specifies a certificate chain file in XX_SM(PEM) format, containing a
+certificate to provide to the host if requested, as well as one or more
+intermediate certificates and the CA certificate used to sign that certificate.
+If XX_FB(XX_DASHED(chainfile)) is specified, it
+overrides XX_FB(XX_DASHED(certfile)).
 XX_TP(XX_FB(XX_DASHED(charset)) XX_FI(name))
 Specifies an XX_SM(EBCDIC) host character set.
 XX_HO(`See XX_LINK(#Character-Sets,XX_SM(CHARACTER SETS)) below.
@@ -184,6 +204,19 @@ ifelse(XX_PLATFORM,unix,`XX_TP(XX_FB(XX_DASHED(im)) XX_FI(method))
 Specifies the name of the input method to use for multi-byte input.
 (Supported only when XX_PRODUCT is compiled with DBCS support.)
 ')dnl
+XX_TP(XX_FB(XX_DASHED(keyfile)) XX_FI(filename))
+Specifies a file containing the private key for the certificate file
+(specified via XX_DASHED(certfile) or XX_DASHED(chainfile)).
+The default file type is XX_SM(PEM).
+XX_TP(XX_FB(XX_DASHED(keyfiletype)) XX_FI(type))
+Specifies the type of the private key file specified
+by XX_FB(XX_DASHED(keyfile)).
+XX_FI(Type) can be XX_FB(pem) or XX_FB(asn1).
+XX_TP(XX_FB(XX_DASHED(keypasswd)) XX_FI(type):XX_FI(value))
+Specifies the password for the private key file, if it is encrypted.
+The argument can be XX_FB(file):XX_FI(filename), specifying that the
+password is in a file, or XX_FB(string):XX_FI(string), specifying the
+password on the command-line directly.
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(keymap)) XX_FI(name))
 Specifies a keymap name and optional modifiers.
 See XX_LINK(#Keymaps,XX_SM(KEYMAPS)) below.
