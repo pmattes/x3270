@@ -96,6 +96,10 @@ extern char *key_file_type;
 extern char *key_passwd;
 #endif /*]*/
 
+#if defined(_WIN32) /*[*/
+extern char *appdata;
+#endif /*]*/
+
 /*   connection state */
 enum cstate {
 	NOT_CONNECTED,		/* no socket, unknown mode */
@@ -1956,7 +1960,38 @@ ssl_init(void)
 				goto fail;
 			}
 		} else {
+#if defined(_WIN32) /*[*/
+			char *certs;
+
+#if defined(USE_CERTS_DIR) /*[*/
+			certs = Malloc(strlen(instdir) + 7);
+			sprintf(certs, "%s\\certs", instdir);
+
+			if (SSL_CTX_load_verify_locations(ssl_ctx, NULL,
+				certs) != 1) {
+				errmsg("SSL_CTX_load_verify_locations("
+						"\"%s\", \"%s\") failed:\n%s",
+						"", certs,
+						get_ssl_error(err_buf));
+				goto fail;
+			}
+#else /*][*/
+			certs = Malloc(strlen(appdata) + 16);
+			sprintf(certs, "%s\\root_certs.txt", appdata);
+
+			if (SSL_CTX_load_verify_locations(ssl_ctx,
+				    certs, NULL) != 1) {
+				errmsg("SSL_CTX_load_verify_locations("
+						"\"%s\", \"%s\") failed:\n%s",
+						certs, "",
+						get_ssl_error(err_buf));
+				goto fail;
+			}
+#endif /*]*/
+			Free(certs);
+#else /*][*/
 			SSL_CTX_set_default_verify_paths(ssl_ctx);
+#endif /*]*/
 		}
 
 		/* Pull in the client certificate file. */

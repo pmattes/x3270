@@ -3672,7 +3672,7 @@ ssl_init(void)
 				goto fail;
 			}
 #else /*][*/
-			certs = xs_buffer("%s\\root_certs.txt", instdir);
+			certs = xs_buffer("%s\\root_certs.txt", myappdata);
 
 			if (SSL_CTX_load_verify_locations(ssl_ctx,
 				    certs, NULL) != 1) {
