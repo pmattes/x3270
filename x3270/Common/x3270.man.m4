@@ -206,7 +206,7 @@ Specifies the name of the input method to use for multi-byte input.
 ')dnl
 XX_TP(XX_FB(XX_DASHED(keyfile)) XX_FI(filename))
 Specifies a file containing the private key for the certificate file
-(specified via XX_DASHED(certfile) or XX_DASHED(chainfile)).
+(specified via XX_FB(XX_DASHED(certfile)) or XX_FB(XX_DASHED(chainfile))).
 The default file type is XX_SM(PEM).
 XX_TP(XX_FB(XX_DASHED(keyfiletype)) XX_FI(type))
 Specifies the type of the private key file specified

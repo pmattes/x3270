@@ -45,6 +45,26 @@ XX_TP(XX_FB(XX_DASHED(blanklines)))
 In LU3 formatted mode, print blank lines even if they are all NULLs or control
 characters.
 (This is a violation of the 3270 printer protocol, but some hosts require it.)
+XX_TP(XX_FB(XX_DASHED(cadir)) XX_FI(directory))
+Specifies a directory containing CA (root) certificates to use when verifying a
+certificate provided by the host.
+XX_TP(XX_FB(XX_DASHED(cafile)) XX_FI(filename))
+Specifies a XX_SM(PEM)-format file containing CA (root) certificates to use
+when verifying a certificate provided by the host.
+XX_TP(XX_FB(XX_DASHED(certfile)) XX_FI(filename))
+Specifies a file containing a certificate to provide to the host, if
+requested.
+The default file type is XX_SM(PEM).
+XX_TP(XX_FB(XX_DASHED(certfiletype)) XX_FI(type))
+Specifies the type of the certificate file specified
+by XX_FB(XX_DASHED(certfile)).
+XX_FI(Type) can be XX_FB(pem) or XX_FB(asn1).
+XX_TP(XX_FB(XX_DASHED(chainfile) XX_FI(filename)))
+Specifies a certificate chain file in XX_SM(PEM) format, containing a
+certificate to provide to the host if requested, as well as one or more
+intermediate certificates and the CA certificate used to sign that certificate.
+If XX_FB(XX_DASHED(chainfile)) is specified, it
+overrides XX_FB(XX_DASHED(certfile)).
 XX_TP(XX_FB(XX_DASHED(charset)) XX_FI(name))
 Specifies an alternate host code page (input XX_SM(EBCDIC) mapping).
 The default maps the U.S. English (037) code page to the
@@ -85,16 +105,29 @@ XX_TP(XX_FB(XX_DASHED(ffthru)))
 In SCS mode, causes XX_FI(XX_PRODUCT) to pass FF (formfeed) orders through to the
 printer as ASCII formfeed characters, rather than simulating them based on the
 values of the MPL (maximum presentation line) and TM (top margin) parameters.
+XX_TP(XX_FB(XX_DASHED(keyfile)) XX_FI(filename))
+Specifies a file containing the private key for the certificate file
+(specified via XX_FB(XX_DASHED(certfile)) or XX_FB(XX_DASHED(chainfile))).
+The default file type is XX_SM(PEM).
+XX_TP(XX_FB(XX_DASHED(keyfiletype)) XX_FI(type))
+Specifies the type of the private key file specified
+by XX_FB(XX_DASHED(keyfile)).
+XX_FI(Type) can be XX_FB(pem) or XX_FB(asn1).
+XX_TP(XX_FB(XX_DASHED(keypasswd)) XX_FI(type):XX_FI(value))
+Specifies the password for the private key file, if it is encrypted.
+The argument can be XX_FB(file):XX_FI(filename), specifying that the
+password is in a file, or XX_FB(string):XX_FI(string), specifying the
+password on the command-line directly.
 ifelse(XX_PRODUCT,wpr3287,`XX_TP(XX_FB(XX_DASHED(printer)) XX_FI(printer))
 Specifies the Windows printer to use for each print job.
 The default is to use the printer specified by the XX_FB($PRINTER) environment
 variable, if defined, and otherwise to use the default Windows printer.
 XX_TP(XX_FB(XX_DASHED(printercp)) XX_FI(codepage))
 Specifies the code page to use when generating printer output.
-The default is to use the system ANSI code page.')
+The default is to use the system ANSI code page.'
 XX_LP
 The printer can be the name of a local printer, or a UNC path to a remote
-printer, e.g., <b>\\server\printer1</b>.
+printer, e.g., <b>\\server\printer1</b>.)
 XX_TP(XX_FB(XX_DASHED(proxy) XX_FI(type):XX_FI(host)[:XX_FI(port)]))
 Causes XX_FB(XX_PRODUCT) to connect via the specified proxy, instead of
 using a direct connection.

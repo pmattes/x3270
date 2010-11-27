@@ -34,6 +34,11 @@
  *		become a daemon after negotiating
  *	    -assoc session
  *		associate with a session (TN3270E only)
+ *	    -cadir dir
+ *	    -cafile file
+ *	    -certfile file
+ *	    -certfiletype type
+ *	    -chainfile file
  *	    -command "string"
  *		command to use to print (default "lpr", POSIX only)
  *          -charset name
@@ -54,6 +59,9 @@
  *		pass through SCS FF orders
  *          -ffskip
  *		skip FF at top of page
+ *          -keyfile file
+ *          -keyfiletype type
+ *          -keypasswd type:text
  *	    -printer "printer name"
  *	        printer to use (default is $PRINTER or system default,
  *	        Windows only)
@@ -153,6 +161,17 @@ unsigned long eoj_timeout = 0L; /* end of job timeout */
 char *trnpre = NULL;
 char *trnpost = NULL;
 
+#if defined(HAVE_LIBSSL) /*[*/
+char *ca_dir;
+char *ca_file;
+char *cert_file;
+char *cert_file_type;
+char *chain_file;
+char *key_file;
+char *key_file_type;
+char *key_passwd;
+#endif /*]*/
+
 /* User options. */
 #if !defined(_WIN32) /*[*/
 static enum { NOT_DAEMON, WILL_DAEMON, AM_DAEMON } bdaemon = NOT_DAEMON;
@@ -187,15 +206,24 @@ usage(void)
 {
 	(void) fprintf(stderr, "usage: %s [options] [lu[,lu...]@]host[:port]\n"
 "Options:\n%s%s%s%s", programname,
-#if !defined(_WIN32) /*[*/
-"  -daemon          become a daemon after connecting\n"
-#endif /*]*/
 "  -assoc <session> associate with a session (TN3270E only)\n"
+#if defined(HAVE_LIBSSL) /*[*/
+"  -cadir <dir>     find CA certificate database in <dir>\n"
+"  -cafile <file>   find CA certificates in <file>\n"
+"  -certfile <file> find client certificate in <file>\n"
+"  -certfiletype pem|asn1\n"
+"                   specify client certificate file type\n"
+"  -chainfile <file>\n"
+"                   specify client certificate chain file\n"
+#endif /*]*/
 "  -charset <name>  use built-in alternate EBCDIC-to-ASCII mappings\n",
 #if !defined(_WIN32) /*[*/
 "  -command \"<cmd>\" use <cmd> for printing (default \"lpr\")\n"
 #endif /*]*/
 "  -blanklines      display blank lines even if empty (formatted LU3)\n"
+#if !defined(_WIN32) /*[*/
+"  -daemon          become a daemon after connecting\n"
+#endif /*]*/
 "  -emflush         flush printer output when an unformatted EM order arrives\n"
 #if defined(_WIN32) /*[*/
 "  -nocrlf          don't expand newlines to CR/LF\n"
@@ -205,8 +233,15 @@ usage(void)
 "  -eojtimeout <seconds>\n"
 "                   time out end of print job\n"
 "  -ffeoj           assume FF at the end of each print job\n"
-"  -ffthru          pass through SCS FF orders\n"
-"  -ffskip          skip FF orders at top of page\n",
+"  -ffthru          pass through SCS FF orders\n",
+"  -ffskip          skip FF orders at top of page\n"
+#if defined(HAVE_LIBSSL) /*[*/
+"  -keyfile <file>  find certificate private key in <file>\n"
+"  -keyfiletype pem|asn1\n"
+"                   specify private key file type\n"
+"  -keypasswd file:<file>|string:<string>\n"
+"                   specify private key password\n"
+#endif /*]*/
 "  -ignoreeoj       ignore PRINT-EOJ commands\n"
 #if defined(_WIN32) /*[*/
 "  -printer \"printer name\"\n"
@@ -436,6 +471,72 @@ main(int argc, char *argv[])
 				usage();
 			}
 			command = argv[i + 1];
+			i++;
+#endif /*]*/
+#if defined(HAVE_LIBSSL) /*[*/
+		} else if (!strcmp(argv[i], "-cadir")) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for -cadir\n");
+				usage();
+			}
+			ca_dir = argv[i + 1];
+			i++;
+		} else if (!strcmp(argv[i], "-cafile")) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for -cafile\n");
+				usage();
+			}
+			ca_file = argv[i + 1];
+			i++;
+		} else if (!strcmp(argv[i], "-certfile")) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for -certfile\n");
+				usage();
+			}
+			cert_file = argv[i + 1];
+			i++;
+		} else if (!strcmp(argv[i], "-certfiletype")) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for -certfiletype\n");
+				usage();
+			}
+			cert_file_type = argv[i + 1];
+			i++;
+		} else if (!strcmp(argv[i], "-chainfile")) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for -chainfile\n");
+				usage();
+			}
+			chain_file = argv[i + 1];
+			i++;
+		} else if (!strcmp(argv[i], "-keyfile")) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for -keyfile\n");
+				usage();
+			}
+			key_file = argv[i + 1];
+			i++;
+		} else if (!strcmp(argv[i], "-keyfiletype")) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for -keyfiletype\n");
+				usage();
+			}
+			key_file_type = argv[i + 1];
+			i++;
+		} else if (!strcmp(argv[i], "-keypasswd")) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for -keypasswd\n");
+				usage();
+			}
+			key_passwd = argv[i + 1];
 			i++;
 #endif /*]*/
 		} else if (!strcmp(argv[i], "-charset")) {

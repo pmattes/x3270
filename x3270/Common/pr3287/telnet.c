@@ -85,6 +85,17 @@ extern int ssl_host;
 extern unsigned long eoj_timeout;
 extern void pr3287_exit(int);
 
+#if defined(HAVE_LIBSSL) /*[*/
+extern char *ca_dir;
+extern char *ca_file;
+extern char *cert_file;
+extern char *cert_file_type;
+extern char *chain_file;
+extern char *key_file;
+extern char *key_file_type;
+extern char *key_passwd;
+#endif /*]*/
+
 /*   connection state */
 enum cstate {
 	NOT_CONNECTED,		/* no socket, unknown mode */
@@ -246,7 +257,7 @@ Boolean secure_connection = False;
 static SSL_CTX *ssl_ctx;
 static SSL *ssl_con;
 static Boolean need_tls_follows = False;
-static void ssl_init(void);
+static int ssl_init(void);
 #if OPENSSL_VERSION_NUMBER >= 0x00907000L /*[*/
 #define INFO_CONST const
 #else /*][*/
@@ -344,8 +355,7 @@ negotiate(int s, char *lu, char *assoc)
 	/* init ssl */
 #if defined(HAVE_LIBSSL) /*[*/
 	if (ssl_host && !secure_connection) {
-		ssl_init();
-		if (ssl_con == NULL)
+		if (ssl_init() < 0)
 			return -1;
 		SSL_set_fd(ssl_con, s);
 		if (!SSL_connect(ssl_con)) {
@@ -1848,38 +1858,198 @@ vtrace_str(const char *fmt, ...)
 
 #if defined(HAVE_LIBSSL) /*[*/
 
+/* Password callback. */
+static int
+passwd_cb(char *buf, int size, int rwflag, void *userdata)
+{
+    	if (key_passwd == CN) {
+		errmsg("No OpenSSL private key password specified");
+		return 0;
+	}
+
+	if (!strncasecmp(key_passwd, "string:", 7)) {
+	    	/* Plaintext in the resource. */
+		size_t len = strlen(key_passwd + 7);
+
+		if (len > (size_t)size - 1)
+		    	len = size - 1;
+		strncpy(buf, key_passwd + 7, len);
+		buf[len] = '\0';
+		return len;
+	} else if (!strncasecmp(key_passwd, "file:", 5)) {
+	    	/* In a file. */
+	    	FILE *f;
+		char *s;
+
+		f = fopen(key_passwd + 5, "r");
+		if (f == NULL) {
+		    	errmsg("OpenSSL private key file '%s': %s",
+				key_passwd + 5, strerror(errno));
+			return 0;
+		}
+		memset(buf, '\0', size);
+		s = fgets(buf, size - 1, f);
+		fclose(f);
+		return s? strlen(s): 0;
+	} else {
+		errmsg("Unknown OpenSSL private key syntax '%s'",
+			key_passwd);
+		return 0;
+	}
+}
+
+static int
+parse_file_type(const char *s)
+{
+    	if (s == CN || !strcasecmp(s, "pem"))
+		return SSL_FILETYPE_PEM;
+	else if (!strcasecmp(s, "asn1"))
+		return SSL_FILETYPE_ASN1;
+	else
+		return -1;
+}
+
+static char *
+get_ssl_error(char *buf)
+{
+	unsigned long e;
+
+	e = ERR_get_error();
+	(void) ERR_error_string(e, buf);
+	return buf;
+}
+
 /* Initialize the OpenSSL library. */
-static void
+static int
 ssl_init(void)
 {
 	static Boolean ssl_initted = False;
+	char err_buf[120];
 
 	if (!ssl_initted) {
+		int cft = SSL_FILETYPE_PEM;
+
 		SSL_load_error_strings();
 		SSL_library_init();
 		ssl_initted = True;
 		ssl_ctx = SSL_CTX_new(SSLv23_method());
 		if (ssl_ctx == NULL) {
 			errmsg("SSL_CTX_new failed");
-			ssl_host = False;
-			return;
+			goto fail;
 		}
 		SSL_CTX_set_options(ssl_ctx, SSL_OP_ALL);
+		SSL_CTX_set_info_callback(ssl_ctx, client_info_callback);
+		SSL_CTX_set_default_passwd_cb(ssl_ctx, passwd_cb);
+
+		/* Pull in the CA certificate file. */
+		if (ca_file != CN || ca_dir != CN) {
+			if (SSL_CTX_load_verify_locations(ssl_ctx,
+				    ca_file,
+				    ca_dir) != 1) {
+				errmsg("SSL_CTX_load_verify_locations("
+						"\"%s\", \"%s\") failed:\n%s",
+						ca_file? ca_file:
+						    "",
+						ca_dir? ca_dir:
+						    "",
+						get_ssl_error(err_buf));
+				goto fail;
+			}
+		} else {
+			SSL_CTX_set_default_verify_paths(ssl_ctx);
+		}
+
+		/* Pull in the client certificate file. */
+		if (chain_file != CN) {
+			if (SSL_CTX_use_certificate_chain_file(ssl_ctx,
+				    chain_file) != 1) {
+				errmsg("SSL_CTX_use_certificate_chain_file(\"%s\") failed:\n%s",
+					chain_file,
+					get_ssl_error(err_buf));
+				goto fail;
+			}
+		} else if (cert_file != CN) {
+		    	cft = parse_file_type(cert_file_type);
+			if (cft == -1) {
+				errmsg("Invalid OpenSSL certificate "
+					"file type '%s'",
+					cert_file_type);
+				goto fail;
+			}
+			if (SSL_CTX_use_certificate_file(ssl_ctx,
+				    cert_file,
+				    cft) != 1) {
+				errmsg("SSL_CTX_use_certificate_file(\"%s\") failed:\n%s",
+					cert_file,
+					get_ssl_error(err_buf));
+				goto fail;
+			}
+		}
+
+		/* Pull in the private key file. */
+		if (key_file != CN) {
+			int kft = parse_file_type(key_file_type);
+
+			if (kft == -1) {
+				errmsg("Invalid OpenSSL key file type "
+					"'%s'",
+					key_file_type);
+				goto fail;
+			}
+			if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
+				    key_file,
+				    kft) != 1) {
+				errmsg("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
+					key_file,
+					get_ssl_error(err_buf));
+				goto fail;
+			}
+		} else if (chain_file != CN) {
+			if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
+				    chain_file,
+				    SSL_FILETYPE_PEM) != 1) {
+				errmsg("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
+					chain_file,
+					get_ssl_error(err_buf));
+				goto fail;
+			}
+		} else if (cert_file != CN) {
+			if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
+				    cert_file,
+				    cft) != 1) {
+				errmsg("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
+					cert_file,
+					get_ssl_error(err_buf));
+				goto fail;
+			}
+		}
+
+		/* Check the key. */
+		if (key_file != CN &&
+		    SSL_CTX_check_private_key(ssl_ctx) != 1) {
+			errmsg("SSL_CTX_check_private_key failed:\n%s",
+				get_ssl_error(err_buf));
+			goto fail;
+		}
 	}
 
 	ssl_con = SSL_new(ssl_ctx);
 	if (ssl_con == NULL) {
 		errmsg("SSL_new failed");
-		return;
+		goto fail;
 	}
-	/* XXX: Get verify flags from a per-host resource. */
-	SSL_set_verify(ssl_con, 0/*xxx*/, NULL);
+	SSL_set_verify(ssl_con, SSL_VERIFY_PEER, NULL);
 
-	SSL_CTX_set_info_callback(ssl_ctx, client_info_callback);
+	return 0;
+fail:
+	if (ssl_ctx != NULL) {
+		SSL_CTX_free(ssl_ctx);
+		ssl_ctx = NULL;
+	}
+	ssl_initted = False;
+	ssl_host = False;
+	return -1;
 
-	/* XXX: Get cert_file and key_file from a per-host resource. */
-
-	SSL_CTX_set_default_verify_paths(ssl_ctx);
 }
 
 /* Callback for tracing protocol negotiation. */
@@ -1919,8 +2089,7 @@ continue_tls(unsigned char *sbbuf, int len)
 	vtrace_str("%s FOLLOWS %s\n", opt(TELOPT_STARTTLS), cmd(SE));
 
 	/* Initialize the SSL library. */
-	ssl_init();
-	if (ssl_con == NULL) {
+	if (ssl_init() < 0) {
 		/* Failed. */
 		return -1;
 	}
