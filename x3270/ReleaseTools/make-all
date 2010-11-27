@@ -163,6 +163,9 @@ do
 		if [ "$islinux" ]
 		then	make -j4 CDEBUGFLAGS="-g -Wall -ansi -pedantic $xflags -Werror"
 		else	make CROSS=1 -j4
+			# Make the insecure version, too.
+			make clean
+			make CROSS=1 NO_SSL=1 -j4
 		fi
 		if [ -f $d2/instlist.base ]
 		then	echo "===== Installing $prod (base)."
@@ -220,6 +223,7 @@ if [ "$release" ]
 then	echo "===== Releasing."
     	for prod in $prods
     	do	tarball=$reldir/$prod-$version-src.tgz
+		echo cp -p $prod-src.tgz $tarball
 		cp -p $prod-src.tgz $tarball
 		chmod ugo-w $tarball
 	done

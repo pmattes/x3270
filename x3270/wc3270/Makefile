@@ -33,6 +33,8 @@ ifeq ($(HAVE_OPENSSL),yes)
 ifndef NO_SSL
 SSLCPP = -DHAVE_LIBSSL=1 -I$(SSLDIR)/include
 SSLLIB = -L$(SSLDIR)/lib/MinGW $(SSLDIR)/lib/MinGW/ssleay32.a -leay32 -lwsock32 -ladvapi32 -lgdi32 -luser32
+else
+OSUFFIX = -insecure
 endif
 endif
 
@@ -106,7 +108,7 @@ wc3270res.o: wc3270.rc wc3270.ico Makefile
 	$(WINDRES) -i wc3270.rc -o wc3270res.o
 
 wc3270.exe: $(OBJECTS) Makefile
-	$(CC) -o wc3270.exe $(CFLAGS) $(OBJECTS) $(LIBS)
+	$(CC) -o wc3270$(OSUFFIX).exe $(CFLAGS) $(OBJECTS) $(LIBS)
 
 mkshort.exe: mkshort.o shortcut.o winvers.o Makefile
 	$(CC) -o mkshort.exe $(CFLAGS) \

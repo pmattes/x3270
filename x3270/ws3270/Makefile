@@ -33,6 +33,8 @@ ifeq ($(HAVE_OPENSSL),yes)
 ifndef NO_SSL
 SSLCPP = -DHAVE_LIBSSL=1 -I$(SSLDIR)/include
 SSLLIB = -L$(SSLDIR)/lib/MinGW $(SSLDIR)/lib/MinGW/ssleay32.a -leay32 -lwsock32 -ladvapi32 -lgdi32 -luser32
+else
+OSUFFIX = -insecure
 endif
 endif
 
@@ -88,7 +90,7 @@ ws3270res.o: ws3270.rc ws3270.ico Makefile
 	$(WINDRES) -i ws3270.rc -o ws3270res.o
 
 ws3270.exe: $(OBJECTS) Makefile
-	$(CC) -o ws3270.exe $(CFLAGS) $(OBJECTS) $(LIBS)
+	$(CC) -o ws3270$(OSUFFIX).exe $(CFLAGS) $(OBJECTS) $(LIBS)
 
 wversion.o: version.txt mkwversion.sh
 	@chmod +x mkwversion.sh version.txt

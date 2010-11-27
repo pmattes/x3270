@@ -25,12 +25,17 @@ MinVersion=4.0,5.0
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
+Name: "insecure"; Description: "Install standard version"; GroupDescription: "Installation Type"; Flags: exclusive
+Name: "secure"; Description: "Install secure version (requires separate OpenSSL library)"; GroupDescription: "Installation Type"; Flags: exclusive unchecked
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-Source: "wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\ws3270-3.3\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\wpr3287-3.3\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: secure
+Source: "wc3270-insecure.exe"; DestName: "wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: insecure
+Source: "..\ws3270-3.3\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: secure
+Source: "..\ws3270-3.3\ws3270-insecure.exe"; DestName: "wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: secure
+Source: "..\wpr3287-3.3\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: secure
+Source: "..\wpr3287-3.3\wpr3287-insecure.exe"; DestName: "wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: insecure
 Source: "catf.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall
 Source: "ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion

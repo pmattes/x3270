@@ -33,6 +33,8 @@ ifeq ($(HAVE_OPENSSL),yes)
 ifndef NO_SSL
 SSLCPP = -DHAVE_LIBSSL=1 -I$(SSLDIR)/include
 SSLLIB = -L$(SSLDIR)/lib/MinGW $(SSLDIR)/lib/MinGW/ssleay32.a -leay32 -lwsock32 -ladvapi32 -lgdi32 -luser32
+else
+OSUFFIX = -insecure
 endif
 endif
 
@@ -69,7 +71,7 @@ wpr3287res.o: wpr3287.rc pr3287.ico
 	$(WINDRES) -i wpr3287.rc -o wpr3287res.o
 
 wpr3287.exe: $(OBJECTS)
-	$(CC) -o wpr3287.exe $(CFLAGS) $(OBJECTS) $(LIBS)
+	$(CC) -o wpr3287$(OSUFFIX).exe $(CFLAGS) $(OBJECTS) $(LIBS)
 
 clean:
 	rm -f *.o
