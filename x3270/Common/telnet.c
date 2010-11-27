@@ -3657,7 +3657,36 @@ ssl_init(void)
 				goto fail;
 			}
 		} else {
+#if defined(_WIN32) /*[*/
+			char *certs;
+
+#if defined(USE_CERTS_DIR) /*[*/
+			certs = xs_buffer("%s\\certs", instdir);
+
+			if (SSL_CTX_load_verify_locations(ssl_ctx, NULL,
+				certs) != 1) {
+				popup_an_error("SSL_CTX_load_verify_locations("
+						"\"%s\", \"%s\") failed:\n%s",
+						"", certs,
+						get_ssl_error(err_buf));
+				goto fail;
+			}
+#else /*][*/
+			certs = xs_buffer("%s\\root_certs.txt", instdir);
+
+			if (SSL_CTX_load_verify_locations(ssl_ctx,
+				    certs, NULL) != 1) {
+				popup_an_error("SSL_CTX_load_verify_locations("
+						"\"%s\", \"%s\") failed:\n%s",
+						certs, "",
+						get_ssl_error(err_buf));
+				goto fail;
+			}
+#endif /*]*/
+			Free(certs);
+#else /*][*/
 			SSL_CTX_set_default_verify_paths(ssl_ctx);
+#endif /*]*/
 		}
 
 		/* Pull in the client certificate file. */
