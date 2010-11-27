@@ -308,12 +308,13 @@ static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
 #define XMIT_COLS	maxCOLS
 #endif /*]*/
 
+static int ssl_init(void);
+
 #if defined(HAVE_LIBSSL) /*[*/
 Boolean secure_connection = False;
 static SSL_CTX *ssl_ctx;
 static SSL *ssl_con;
 static Boolean need_tls_follows = False;
-static int ssl_init(void);
 #if OPENSSL_VERSION_NUMBER >= 0x00907000L /*[*/
 #define INFO_CONST const
 #else /*][*/
@@ -447,12 +448,10 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 #endif /*]*/
 
 	/* init ssl */
-#if defined(HAVE_LIBSSL) /*[*/
 	if (ssl_host) {
 		if (ssl_init() < 0)
 		    	close_fail;
 	}
-#endif /*]*/
 
 	if (numeric_host_and_port(&haddr[ix].sa, ha_len[ix], hn,
 		    sizeof(hn), pn, sizeof(pn), errmsg,
@@ -1101,14 +1100,12 @@ net_input(void)
 				int s;
 
 				net_disconnect();
-#if defined(HAVE_LIBSSL) /*[*/
 				if (ssl_host) {
 					if (ssl_init() < 0) {
 						host_disconnect(True);
 						return;
 					}
 				}
-#endif /*]*/
 				while (++ha_ix < num_ha) {
 					s = connect_to(ha_ix,
 						(ha_ix == num_ha - 1),
@@ -3860,6 +3857,13 @@ continue_tls(unsigned char *sbbuf, int len)
 	host_connected();
 }
 
+#else /*][*/
+static int
+ssl_init(void)
+{
+	popup_an_error("Secure connections not supported");
+	return -1;
+}
 #endif /*]*/
 
 /* Return the current BIND application name, if any. */

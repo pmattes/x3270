@@ -33,9 +33,9 @@ RM = erase
 
 # To build with a statically-linked OpenSSL library, uncomment the following
 #  three lines (substituting your OpenSSL install location in the first).
-#SSLDIR = C:\where\openssl\is\installed
+#SSLDIR = C:\OpenSSL-Win32
 #SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
-#SSLLIB = $(SSLDIR)\lib\ssleay32.lib $(SSLDIR)\lib\libeay32.lib gdi32.lib user32.lib
+#SSLLIB = $(SSLDIR)\lib\VC\ssleay32MD.lib $(SSLDIR)\lib\VC\libeay32MD.lib gdi32.lib user32.lib
 
 XCPPFLAGS = /D_WIN32 /DPR3287 /DWPR3287 /DX3270_DBCS=1 /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 $(SSLDEF)
 CFLAGS = $(XCPPFLAGS) -I.

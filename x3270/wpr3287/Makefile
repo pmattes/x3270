@@ -27,11 +27,13 @@
 # Makefile for wpr3287
 
 # Figure out if they've installed MinGW OpenSSL.
-SSLDIR = /usr/local/mingw-openssl
+SSLDIR = /usr/local/OpenSSL-Win32
 HAVE_OPENSSL = $(shell [ -d $(SSLDIR) ] && echo yes)
 ifeq ($(HAVE_OPENSSL),yes)
+ifndef NO_SSL
 SSLCPP = -DHAVE_LIBSSL=1 -I$(SSLDIR)/include
-SSLLIB = -L$(SSLDIR)/lib -lssl -lcrypto -lwsock32 -ladvapi32 -lgdi32 -luser32
+SSLLIB = -L$(SSLDIR)/lib/MinGW $(SSLDIR)/lib/MinGW/ssleay32.a -leay32 -lwsock32 -ladvapi32 -lgdi32 -luser32
+endif
 endif
 
 # Set command paths based on whether compiling natively on Cygwin, or
