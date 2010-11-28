@@ -42,6 +42,9 @@ documentation-misc)
 documentation-other)
 	title="x3270 -- Other 3270 Resources"
 	;;
+documentation-ssl)
+	title="x3270 -- Secure Connections Using SSL"
+	;;
 license)
 	title="x3270 -- License"
 	;;

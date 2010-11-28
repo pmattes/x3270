@@ -1,8 +1,8 @@
 PAGES=credits.html documentation.html documentation-bugs.html \
 	documentation-faq.html documentation-manpages.html \
 	documentation-misc.html documentation-other.html \
-	documentation-relnotes.html download.html index.html license.html \
-	screenshots.html x026.html
+	documentation-relnotes.html documentation-ssl.html download.html \
+	index.html license.html screenshots.html x026.html
 SCREENS=c3270.png c3270-thumb.png cyrillic.png cyrillic-thumb.png \
 	japanese.png japanese-thumb.png keypad.png keypad-thumb.png \
 	x3270_main.png x3270_main-thumb.png wc3270.png wc3270-thumb.png
@@ -44,6 +44,8 @@ documentation-other.html: documentation-other-body.html mkpages.bash
 	./mkpages.bash documentation-other
 documentation-relnotes.html: documentation-relnotes-body.html mkpages.bash
 	./mkpages.bash documentation-relnotes
+documentation-ssl.html: documentation-ssl-body.html mkpages.bash
+	./mkpages.bash documentation-ssl
 download.html: download-body.html mkpages.bash
 	./mkpages.bash download
 index.html: index-body.html mkpages.bash
