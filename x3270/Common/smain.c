@@ -142,6 +142,10 @@ main(int argc, char *argv[])
 #endif /*]*/
 	initialize_toggles();
 
+#if defined(HAVE_LIBSSL) /*[*/
+	ssl_base_init();
+#endif /*]*/
+
 	/* Connect to the host. */
 	if (cl_hostname != CN) {
 		if (host_connect(cl_hostname) < 0)

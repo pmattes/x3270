@@ -422,6 +422,10 @@ tcl3270_main(int argc, const char *argv[])
 #endif /*]*/
 	initialize_toggles();
 
+#if defined(HAVE_LIBSSL) /*[*/
+	ssl_base_init();
+#endif /*]*/
+
 	/* Connect to the host, and wait for negotiation to complete. */
 	if (cl_hostname != CN) {
 		action = NewString("[initial connection]");

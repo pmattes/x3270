@@ -766,6 +766,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 		(void) fprintf(tracef, "\n");
 	}
 
+#if defined(HAVE_LIBSSL) /*[*/
+	ssl_base_init();
+#endif /*]*/
+
 #if !defined(_WIN32) /*[*/
 	/* Become a daemon. */
 	if (bdaemon != NOT_DAEMON) {

@@ -44,3 +44,7 @@ extern int process(int s);
 extern void space3270out(int n);
 extern void trace_netdata(char direction, unsigned const char *buf, int len);
 extern void popup_a_sockerr(char *fmt, ...);
+
+#if defined(HAVE_LIBSSL) /*[*/
+extern void ssl_base_init(void);
+#endif /*]*/

@@ -1923,168 +1923,167 @@ get_ssl_error(char *buf)
 	return buf;
 }
 
-/* Initialize the OpenSSL library. */
-static int
-ssl_init(void)
+void
+ssl_base_init(void)
 {
-	static Boolean ssl_initted = False;
 	char err_buf[120];
+	int cft = SSL_FILETYPE_PEM;
 
-	if (!ssl_initted) {
-		int cft = SSL_FILETYPE_PEM;
+	SSL_load_error_strings();
+	SSL_library_init();
+	ssl_ctx = SSL_CTX_new(SSLv23_method());
+	if (ssl_ctx == NULL) {
+		errmsg("SSL_CTX_new failed");
+		goto fail;
+	}
+	SSL_CTX_set_options(ssl_ctx, SSL_OP_ALL);
+	SSL_CTX_set_info_callback(ssl_ctx, client_info_callback);
+	SSL_CTX_set_default_passwd_cb(ssl_ctx, passwd_cb);
 
-		SSL_load_error_strings();
-		SSL_library_init();
-		ssl_initted = True;
-		ssl_ctx = SSL_CTX_new(SSLv23_method());
-		if (ssl_ctx == NULL) {
-			errmsg("SSL_CTX_new failed");
+	/* Pull in the CA certificate file. */
+	if (ca_file != CN || ca_dir != CN) {
+		if (SSL_CTX_load_verify_locations(ssl_ctx,
+			    ca_file,
+			    ca_dir) != 1) {
+			errmsg("SSL_CTX_load_verify_locations("
+					"\"%s\", \"%s\") failed:\n%s",
+					ca_file? ca_file:
+					    "",
+					ca_dir? ca_dir:
+					    "",
+					get_ssl_error(err_buf));
 			goto fail;
 		}
-		SSL_CTX_set_options(ssl_ctx, SSL_OP_ALL);
-		SSL_CTX_set_info_callback(ssl_ctx, client_info_callback);
-		SSL_CTX_set_default_passwd_cb(ssl_ctx, passwd_cb);
-
-		/* Pull in the CA certificate file. */
-		if (ca_file != CN || ca_dir != CN) {
-			if (SSL_CTX_load_verify_locations(ssl_ctx,
-				    ca_file,
-				    ca_dir) != 1) {
-				errmsg("SSL_CTX_load_verify_locations("
-						"\"%s\", \"%s\") failed:\n%s",
-						ca_file? ca_file:
-						    "",
-						ca_dir? ca_dir:
-						    "",
-						get_ssl_error(err_buf));
-				goto fail;
-			}
-		} else {
+	} else {
 #if defined(_WIN32) /*[*/
-			char *certs;
+		char *certs;
 
 #if defined(USE_CERTS_DIR) /*[*/
-			certs = Malloc(strlen(instdir) + 7);
-			sprintf(certs, "%s\\certs", instdir);
+		certs = Malloc(strlen(instdir) + 7);
+		sprintf(certs, "%s\\certs", instdir);
 
-			if (SSL_CTX_load_verify_locations(ssl_ctx, NULL,
-				certs) != 1) {
-				errmsg("SSL_CTX_load_verify_locations("
-						"\"%s\", \"%s\") failed:\n%s",
-						"", certs,
-						get_ssl_error(err_buf));
-				goto fail;
-			}
+		if (SSL_CTX_load_verify_locations(ssl_ctx, NULL,
+			certs) != 1) {
+			errmsg("SSL_CTX_load_verify_locations("
+					"\"%s\", \"%s\") failed:\n%s",
+					"", certs,
+					get_ssl_error(err_buf));
+			goto fail;
+		}
 #else /*][*/
-			certs = Malloc(strlen(appdata) + 16);
-			sprintf(certs, "%s\\root_certs.txt", appdata);
+		certs = Malloc(strlen(appdata) + 16);
+		sprintf(certs, "%s\\root_certs.txt", appdata);
 
-			if (SSL_CTX_load_verify_locations(ssl_ctx,
-				    certs, NULL) != 1) {
-				errmsg("SSL_CTX_load_verify_locations("
-						"\"%s\", \"%s\") failed:\n%s",
-						certs, "",
-						get_ssl_error(err_buf));
-				goto fail;
-			}
+		if (SSL_CTX_load_verify_locations(ssl_ctx,
+			    certs, NULL) != 1) {
+			errmsg("SSL_CTX_load_verify_locations("
+					"\"%s\", \"%s\") failed:\n%s",
+					certs, "",
+					get_ssl_error(err_buf));
+			goto fail;
+		}
 #endif /*]*/
-			Free(certs);
+		Free(certs);
 #else /*][*/
-			SSL_CTX_set_default_verify_paths(ssl_ctx);
+		SSL_CTX_set_default_verify_paths(ssl_ctx);
 #endif /*]*/
+	}
+
+	/* Pull in the client certificate file. */
+	if (chain_file != CN) {
+		if (SSL_CTX_use_certificate_chain_file(ssl_ctx,
+			    chain_file) != 1) {
+			errmsg("SSL_CTX_use_certificate_chain_file(\"%s\") failed:\n%s",
+				chain_file,
+				get_ssl_error(err_buf));
+			goto fail;
 		}
-
-		/* Pull in the client certificate file. */
-		if (chain_file != CN) {
-			if (SSL_CTX_use_certificate_chain_file(ssl_ctx,
-				    chain_file) != 1) {
-				errmsg("SSL_CTX_use_certificate_chain_file(\"%s\") failed:\n%s",
-					chain_file,
-					get_ssl_error(err_buf));
-				goto fail;
-			}
-		} else if (cert_file != CN) {
-		    	cft = parse_file_type(cert_file_type);
-			if (cft == -1) {
-				errmsg("Invalid OpenSSL certificate "
-					"file type '%s'",
-					cert_file_type);
-				goto fail;
-			}
-			if (SSL_CTX_use_certificate_file(ssl_ctx,
-				    cert_file,
-				    cft) != 1) {
-				errmsg("SSL_CTX_use_certificate_file(\"%s\") failed:\n%s",
-					cert_file,
-					get_ssl_error(err_buf));
-				goto fail;
-			}
+	} else if (cert_file != CN) {
+		cft = parse_file_type(cert_file_type);
+		if (cft == -1) {
+			errmsg("Invalid OpenSSL certificate "
+				"file type '%s'",
+				cert_file_type);
+			goto fail;
 		}
-
-		/* Pull in the private key file. */
-		if (key_file != CN) {
-			int kft = parse_file_type(key_file_type);
-
-			if (kft == -1) {
-				errmsg("Invalid OpenSSL key file type "
-					"'%s'",
-					key_file_type);
-				goto fail;
-			}
-			if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
-				    key_file,
-				    kft) != 1) {
-				errmsg("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
-					key_file,
-					get_ssl_error(err_buf));
-				goto fail;
-			}
-		} else if (chain_file != CN) {
-			if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
-				    chain_file,
-				    SSL_FILETYPE_PEM) != 1) {
-				errmsg("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
-					chain_file,
-					get_ssl_error(err_buf));
-				goto fail;
-			}
-		} else if (cert_file != CN) {
-			if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
-				    cert_file,
-				    cft) != 1) {
-				errmsg("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
-					cert_file,
-					get_ssl_error(err_buf));
-				goto fail;
-			}
-		}
-
-		/* Check the key. */
-		if (key_file != CN &&
-		    SSL_CTX_check_private_key(ssl_ctx) != 1) {
-			errmsg("SSL_CTX_check_private_key failed:\n%s",
+		if (SSL_CTX_use_certificate_file(ssl_ctx,
+			    cert_file,
+			    cft) != 1) {
+			errmsg("SSL_CTX_use_certificate_file(\"%s\") failed:\n%s",
+				cert_file,
 				get_ssl_error(err_buf));
 			goto fail;
 		}
 	}
 
-	ssl_con = SSL_new(ssl_ctx);
-	if (ssl_con == NULL) {
-		errmsg("SSL_new failed");
+	/* Pull in the private key file. */
+	if (key_file != CN) {
+		int kft = parse_file_type(key_file_type);
+
+		if (kft == -1) {
+			errmsg("Invalid OpenSSL key file type "
+				"'%s'",
+				key_file_type);
+			goto fail;
+		}
+		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
+			    key_file,
+			    kft) != 1) {
+			errmsg("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
+				key_file,
+				get_ssl_error(err_buf));
+			goto fail;
+		}
+	} else if (chain_file != CN) {
+		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
+			    chain_file,
+			    SSL_FILETYPE_PEM) != 1) {
+			errmsg("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
+				chain_file,
+				get_ssl_error(err_buf));
+			goto fail;
+		}
+	} else if (cert_file != CN) {
+		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
+			    cert_file,
+			    cft) != 1) {
+			errmsg("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
+				cert_file,
+				get_ssl_error(err_buf));
+			goto fail;
+		}
+	}
+
+	/* Check the key. */
+	if (key_file != CN &&
+	    SSL_CTX_check_private_key(ssl_ctx) != 1) {
+		errmsg("SSL_CTX_check_private_key failed:\n%s",
+			get_ssl_error(err_buf));
 		goto fail;
 	}
-	SSL_set_verify(ssl_con, SSL_VERIFY_PEER, NULL);
 
-	return 0;
+	return;
+
 fail:
 	if (ssl_ctx != NULL) {
 		SSL_CTX_free(ssl_ctx);
 		ssl_ctx = NULL;
 	}
-	ssl_initted = False;
-	ssl_host = False;
-	return -1;
+	pr3287_exit(1);
+}
 
+/* Initialize the OpenSSL library. */
+static int
+ssl_init(void)
+{
+	ssl_con = SSL_new(ssl_ctx);
+	if (ssl_con == NULL) {
+		errmsg("SSL_new failed");
+		return -1;
+	}
+	SSL_set_verify(ssl_con, SSL_VERIFY_PEER, NULL);
+
+	return 0;
 }
 
 /* Callback for tracing protocol negotiation. */
