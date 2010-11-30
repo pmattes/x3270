@@ -75,6 +75,9 @@
 #include "popupsc.h"
 #include "proxyc.h"
 #include "resolverc.h"
+#if defined(C3270) /*[*/
+#include "screenc.h"
+#endif /*]*/
 #include "statusc.h"
 #include "tablesc.h"
 #include "telnetc.h"
@@ -3558,13 +3561,66 @@ non_blocking(Boolean on)
 
 #if defined(HAVE_LIBSSL) /*[*/
 
+#if defined(C3270) /*[*/
+static char *
+gets_noecho(char *buf, int size)
+{
+#if !defined(_WIN32) /*[*/
+    	char *s;
+	int e;
+	size_t sl;
+
+	e = system("stty -echo");
+	s = fgets(buf, size - 1, stdin);
+	e = system("stty echo");
+	if (s != NULL) {
+		sl = strlen(buf);
+		if (sl && buf[sl - 1] == '\n')
+			buf[sl - 1] = '\0';
+	}
+	return s;
+#else /*][*/
+	int cc = 0;
+
+	while (True) {
+		char c;
+
+		(void) screen_wait_for_key(&c);
+		if (c == '\r') {
+			buf[cc] = '\0';
+			return buf;
+		} else if (c == '\b' || c == 0x7f) {
+			if (cc)
+				cc--;
+		} else if (c == 0x1b) {
+			cc = 0;
+		} else if ((unsigned char)c >= ' ' && cc < size - 1) {
+		    	buf[cc++] = c;
+		}
+	}
+#endif /*]*/
+}
+#endif /*]*/
+
 /* Password callback. */
 static int
 passwd_cb(char *buf, int size, int rwflag _is_unused,
 	void *userdata _is_unused)
 {
     	if (appres.key_passwd == CN) {
+#if defined(C3270) /*[*/
+		char *s;
+
+		fprintf(stdout, "Enter password for Private Key: ");
+		fflush(stdout);
+		s = gets_noecho(buf, size);
+		return s? strlen(s): 0;
+#elif defined(X3270_DISPLAY) /*][*/
+		/* XXX for now */
 		popup_an_error("No OpenSSL private key password specified");
+#else /*][*/
+		popup_an_error("No OpenSSL private key password specified");
+#endif /*]*/
 		return 0;
 	}
 
@@ -3620,167 +3676,164 @@ get_ssl_error(char *buf)
 	return buf;
 }
 
-/* Initialize the OpenSSL library. */
-static int
-ssl_init(void)
+/*
+ * Base-level initialization.
+ * Happens once, before the screen switches modes (for c3270).
+ */
+void
+ssl_base_init(void)
 {
-	static Boolean ssl_initted = False;
 	char err_buf[120];
+	int cert_file_type = SSL_FILETYPE_PEM;
 
-	if (!ssl_initted) {
-		int cert_file_type = SSL_FILETYPE_PEM;
+	SSL_load_error_strings();
+	SSL_library_init();
+	ssl_ctx = SSL_CTX_new(SSLv23_method());
+	if (ssl_ctx == NULL) {
+		popup_an_error("SSL_CTX_new failed");
+		goto fail;
+	}
+	SSL_CTX_set_options(ssl_ctx, SSL_OP_ALL);
+	SSL_CTX_set_info_callback(ssl_ctx, client_info_callback);
+	SSL_CTX_set_default_passwd_cb(ssl_ctx, passwd_cb);
 
-		SSL_load_error_strings();
-		SSL_library_init();
-		ssl_initted = True;
-		ssl_ctx = SSL_CTX_new(SSLv23_method());
-		if (ssl_ctx == NULL) {
-			popup_an_error("SSL_CTX_new failed");
+	/* Pull in the CA certificate file. */
+	if (appres.ca_file != CN || appres.ca_dir != CN) {
+		if (SSL_CTX_load_verify_locations(ssl_ctx,
+			    appres.ca_file,
+			    appres.ca_dir) != 1) {
+			popup_an_error("SSL_CTX_load_verify_locations("
+					"\"%s\", \"%s\") failed:\n%s",
+					appres.ca_file? appres.ca_file:
+					    "",
+					appres.ca_dir? appres.ca_dir:
+					    "",
+					get_ssl_error(err_buf));
 			goto fail;
 		}
-		SSL_CTX_set_options(ssl_ctx, SSL_OP_ALL);
-		SSL_CTX_set_info_callback(ssl_ctx, client_info_callback);
-		SSL_CTX_set_default_passwd_cb(ssl_ctx, passwd_cb);
-
-		/* Pull in the CA certificate file. */
-		if (appres.ca_file != CN || appres.ca_dir != CN) {
-			if (SSL_CTX_load_verify_locations(ssl_ctx,
-				    appres.ca_file,
-				    appres.ca_dir) != 1) {
-				popup_an_error("SSL_CTX_load_verify_locations("
-						"\"%s\", \"%s\") failed:\n%s",
-						appres.ca_file? appres.ca_file:
-						    "",
-						appres.ca_dir? appres.ca_dir:
-						    "",
-						get_ssl_error(err_buf));
-				goto fail;
-			}
-		} else {
+	} else {
 #if defined(_WIN32) /*[*/
-			char *certs;
+		char *certs;
 
 #if defined(USE_CERTS_DIR) /*[*/
-			certs = xs_buffer("%s\\certs", instdir);
+		certs = xs_buffer("%s\\certs", instdir);
 
-			if (SSL_CTX_load_verify_locations(ssl_ctx, NULL,
-				certs) != 1) {
-				popup_an_error("SSL_CTX_load_verify_locations("
-						"\"%s\", \"%s\") failed:\n%s",
-						"", certs,
-						get_ssl_error(err_buf));
-				goto fail;
-			}
+		if (SSL_CTX_load_verify_locations(ssl_ctx, NULL,
+			certs) != 1) {
+			popup_an_error("SSL_CTX_load_verify_locations("
+					"\"%s\", \"%s\") failed:\n%s",
+					"", certs,
+					get_ssl_error(err_buf));
+			goto fail;
+		}
 #else /*][*/
-			certs = xs_buffer("%s\\root_certs.txt", myappdata);
+		certs = xs_buffer("%s\\root_certs.txt", myappdata);
 
-			if (SSL_CTX_load_verify_locations(ssl_ctx,
-				    certs, NULL) != 1) {
-				popup_an_error("SSL_CTX_load_verify_locations("
-						"\"%s\", \"%s\") failed:\n%s",
-						certs, "",
-						get_ssl_error(err_buf));
-				goto fail;
-			}
+		if (SSL_CTX_load_verify_locations(ssl_ctx,
+			    certs, NULL) != 1) {
+			popup_an_error("SSL_CTX_load_verify_locations("
+					"\"%s\", \"%s\") failed:\n%s",
+					certs, "",
+					get_ssl_error(err_buf));
+			goto fail;
+		}
 #endif /*]*/
-			Free(certs);
+		Free(certs);
 #else /*][*/
-			SSL_CTX_set_default_verify_paths(ssl_ctx);
+		SSL_CTX_set_default_verify_paths(ssl_ctx);
 #endif /*]*/
+	}
+
+	/* Pull in the client certificate file. */
+	if (appres.chain_file != CN) {
+		if (SSL_CTX_use_certificate_chain_file(ssl_ctx,
+			    appres.chain_file) != 1) {
+			popup_an_error("SSL_CTX_use_certificate_chain_file(\"%s\") failed:\n%s",
+				appres.chain_file,
+				get_ssl_error(err_buf));
+			goto fail;
 		}
-
-		/* Pull in the client certificate file. */
-		if (appres.chain_file != CN) {
-			if (SSL_CTX_use_certificate_chain_file(ssl_ctx,
-				    appres.chain_file) != 1) {
-				popup_an_error("SSL_CTX_use_certificate_chain_file(\"%s\") failed:\n%s",
-					appres.chain_file,
-					get_ssl_error(err_buf));
-				goto fail;
-			}
-		} else if (appres.cert_file != CN) {
-		    	cert_file_type = parse_file_type(appres.cert_file_type);
-			if (cert_file_type == -1) {
-				popup_an_error("Invalid OpenSSL certificate "
-					"file type '%s'",
-					appres.cert_file_type);
-				goto fail;
-			}
-			if (SSL_CTX_use_certificate_file(ssl_ctx,
-				    appres.cert_file,
-				    cert_file_type) != 1) {
-				popup_an_error("SSL_CTX_use_certificate_file(\"%s\") failed:\n%s",
-					appres.cert_file,
-					get_ssl_error(err_buf));
-				goto fail;
-			}
+	} else if (appres.cert_file != CN) {
+		cert_file_type = parse_file_type(appres.cert_file_type);
+		if (cert_file_type == -1) {
+			popup_an_error("Invalid OpenSSL certificate "
+				"file type '%s'",
+				appres.cert_file_type);
+			goto fail;
 		}
-
-		/* Pull in the private key file. */
-		if (appres.key_file != CN) {
-			int key_file_type =
-			    parse_file_type(appres.key_file_type);
-
-			if (key_file_type == -1) {
-				popup_an_error("Invalid OpenSSL key file type "
-					"'%s'",
-					appres.key_file_type);
-				goto fail;
-			}
-			if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
-				    appres.key_file,
-				    key_file_type) != 1) {
-				popup_an_error("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
-					appres.key_file,
-					get_ssl_error(err_buf));
-				goto fail;
-			}
-		} else if (appres.chain_file != CN) {
-			if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
-				    appres.chain_file,
-				    SSL_FILETYPE_PEM) != 1) {
-				popup_an_error("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
-					appres.chain_file,
-					get_ssl_error(err_buf));
-				goto fail;
-			}
-		} else if (appres.cert_file != CN) {
-			if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
-				    appres.cert_file,
-				    cert_file_type) != 1) {
-				popup_an_error("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
-					appres.cert_file,
-					get_ssl_error(err_buf));
-				goto fail;
-			}
-		}
-
-		/* Check the key. */
-		if (appres.key_file != CN &&
-		    SSL_CTX_check_private_key(ssl_ctx) != 1) {
-			popup_an_error("SSL_CTX_check_private_key failed:\n%s",
+		if (SSL_CTX_use_certificate_file(ssl_ctx,
+			    appres.cert_file,
+			    cert_file_type) != 1) {
+			popup_an_error("SSL_CTX_use_certificate_file(\"%s\") failed:\n%s",
+				appres.cert_file,
 				get_ssl_error(err_buf));
 			goto fail;
 		}
 	}
 
+	/* Pull in the private key file. */
+	if (appres.key_file != CN) {
+		int key_file_type =
+		    parse_file_type(appres.key_file_type);
+
+		if (key_file_type == -1) {
+			popup_an_error("Invalid OpenSSL key file type "
+				"'%s'",
+				appres.key_file_type);
+			goto fail;
+		}
+		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
+			    appres.key_file,
+			    key_file_type) != 1) {
+			popup_an_error("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
+				appres.key_file,
+				get_ssl_error(err_buf));
+			goto fail;
+		}
+	} else if (appres.chain_file != CN) {
+		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
+			    appres.chain_file,
+			    SSL_FILETYPE_PEM) != 1) {
+			popup_an_error("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
+				appres.chain_file,
+				get_ssl_error(err_buf));
+			goto fail;
+		}
+	} else if (appres.cert_file != CN) {
+		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
+			    appres.cert_file,
+			    cert_file_type) != 1) {
+			popup_an_error("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
+				appres.cert_file,
+				get_ssl_error(err_buf));
+			goto fail;
+		}
+	}
+
+	/* Check the key. */
+	if (appres.key_file != CN &&
+	    SSL_CTX_check_private_key(ssl_ctx) != 1) {
+		popup_an_error("SSL_CTX_check_private_key failed:\n%s",
+			get_ssl_error(err_buf));
+		goto fail;
+	}
+	return;
+
+fail:
+	x3270_exit(1);
+}
+
+/* Create a new OpenSSL connection. */
+static int
+ssl_init(void)
+{
 	ssl_con = SSL_new(ssl_ctx);
 	if (ssl_con == NULL) {
 		popup_an_error("SSL_new failed");
-		goto fail;
+		return -1;
 	}
 	SSL_set_verify(ssl_con, SSL_VERIFY_PEER, NULL);
-
 	return 0;
-
-fail:
-	if (ssl_ctx != NULL) {
-	    	SSL_CTX_free(ssl_ctx);
-		ssl_ctx = NULL;
-		ssl_initted = False;
-		ssl_host = False;
-	}
-	return -1;
 }
 
 /* Callback for tracing protocol negotiation. */

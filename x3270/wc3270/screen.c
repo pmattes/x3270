@@ -2547,7 +2547,7 @@ GetConsoleHwnd(void)
  * Returns True if the key is 'q'.
  */
 Boolean
-screen_wait_for_key(void)
+screen_wait_for_key(char *c)
 {
 	INPUT_RECORD ir;
 	DWORD nr;
@@ -2557,7 +2557,11 @@ screen_wait_for_key(void)
 	    	ReadConsoleInputA(chandle, &ir, 1, &nr);
 	} while ((ir.EventType != KEY_EVENT) ||
 		 !ir.Event.KeyEvent.bKeyDown ||
-		 (ir.Event.KeyEvent.uChar.AsciiChar & 0xff) < ' ');
+		 ((c == NULL) &&
+		  (ir.Event.KeyEvent.uChar.AsciiChar & 0xff) < ' '));
+
+	if (c != NULL)
+		*c = ir.Event.KeyEvent.uChar.AsciiChar;
 
 	return (ir.Event.KeyEvent.uChar.AsciiChar == 'q') ||
 	       (ir.Event.KeyEvent.uChar.AsciiChar == 'Q');

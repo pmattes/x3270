@@ -74,3 +74,6 @@ extern char *net_proxy_type(void);
 extern char *net_proxy_host(void);
 extern char *net_proxy_port(void);
 extern Boolean net_bound(void);
+#if defined(HAVE_LIBSSL) /*[*/
+extern void ssl_base_init(void);
+#endif /*]*/

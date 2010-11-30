@@ -153,6 +153,7 @@ static int defattr = A_NORMAL;
 static unsigned long input_id;
 
 Boolean escaped = True;
+Boolean initscr_done = False;
 
 enum ts { TS_AUTO, TS_ON, TS_OFF };
 enum ts me_mode = TS_AUTO;
@@ -221,11 +222,6 @@ screen_init(void)
 	/* Disallow altscreen/defscreen. */
 	if ((appres.altscreen != CN) || (appres.defscreen != CN)) {
 		(void) fprintf(stderr, "altscreen/defscreen not supported\n");
-		exit(1);
-	}
-	/* Initialize curses. */
-	if (initscr() == NULL) {
-		(void) fprintf(stderr, "Can't initialize terminal.\n");
 		exit(1);
 	}
 #else /*][*/
@@ -329,6 +325,7 @@ screen_connect(Boolean connected)
 		(void) fprintf(stderr, "Can't initialize terminal.\n");
 		exit(1);
 	}
+	initscr_done = True;
 #else /*][*/
 	/* Set up ncurses, and see if it's within bounds. */
 	if (appres.defscreen != CN) {
@@ -339,6 +336,7 @@ screen_connect(Boolean connected)
 		(void) sprintf(nbuf, "LINES=%d", defscreen_spec.rows);
 		putenv(NewString(nbuf));
 		def_screen = newterm(NULL, stdout, stdin);
+		initscr_done = True;
 		if (def_screen == NULL) {
 			(void) fprintf(stderr,
 			    "Can't initialize %dx%d defscreen terminal.\n",
@@ -364,6 +362,7 @@ screen_connect(Boolean connected)
 		popup_an_error("Can't initialize terminal.\n");
 		exit(1);
 	}
+	initscr_done = True;
 	if (def_screen == NULL) {
 	    	def_screen = alt_screen;
 		cur_screen = def_screen;
@@ -1430,6 +1429,10 @@ screen_suspend(void)
 {
 	static Boolean need_to_scroll = False;
 	Boolean needed = False;
+
+	if (!initscr_done) {
+		return False;
+	}
 
 	if (!isendwin()) {
 #if defined(C3270_80_132) /*[*/

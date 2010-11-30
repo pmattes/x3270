@@ -439,6 +439,11 @@ main(int argc, char *argv[])
 #endif /*]*/
 	initialize_toggles();
 
+#if defined(HAVE_LIBSSL) /*[*/
+	/* Initialize SSL and ask for the password, if needed. */
+	ssl_base_init();
+#endif /*]*/
+
 	if (cl_hostname != CN) {
 		pause_for_errors();
 		/* Connect to the host. */

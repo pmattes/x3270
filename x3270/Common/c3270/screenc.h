@@ -51,7 +51,7 @@ extern FILE *start_pager(void);
 #if defined(WC3270) /*[*/
 extern void screen_fixup(void);
 extern void pager_output(const char *s);
-extern Boolean screen_wait_for_key(void);
+extern Boolean screen_wait_for_key(char *c);
 #endif /*]*/
 extern void toggle_monocase(struct toggle *t, enum toggle_type tt);
 
