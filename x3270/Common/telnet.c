@@ -87,6 +87,12 @@
 #include "w3miscc.h"
 #include "xioc.h"
 
+#if defined(X3270_DISPLAY) && defined(HAVE_LIBSSL) /*[*/
+#include "objects.h"
+#include <X11/StringDefs.h>
+#include <X11/Xaw/Dialog.h>
+#endif /*]*/
+
 #if !defined(TELOPT_NAWS) /*[*/
 #define TELOPT_NAWS	31
 #endif /*]*/
@@ -318,6 +324,14 @@ Boolean secure_connection = False;
 static SSL_CTX *ssl_ctx;
 static SSL *ssl_con;
 static Boolean need_tls_follows = False;
+static char *ssl_cl_hostname;
+static Boolean *ssl_pending;
+#if defined(X3270_DISPLAY) /*[*/
+static char *ssl_password;
+#endif /*]*/
+#if defined(C3270) /*[*/
+extern Boolean any_error_output;
+#endif /*]*/
 #if OPENSSL_VERSION_NUMBER >= 0x00907000L /*[*/
 #define INFO_CONST const
 #else /*][*/
@@ -373,6 +387,11 @@ static socklen_t ha_len[NUM_HA] = {
 };
 static int num_ha = 0;
 static int ha_ix = 0;
+
+#if defined(X3270_DISPLAY) && defined(HAVE_LIBSSL) /*[*/
+static Widget password_shell = (Widget)NULL;
+static void popup_password(void);
+#endif /*]*/
 
 #if defined(_WIN32) /*[*/
 void
@@ -3611,13 +3630,26 @@ passwd_cb(char *buf, int size, int rwflag _is_unused,
 #if defined(C3270) /*[*/
 		char *s;
 
-		fprintf(stdout, "Enter password for Private Key: ");
+		fprintf(stdout, "\nEnter password for Private Key: ");
 		fflush(stdout);
 		s = gets_noecho(buf, size);
+		fprintf(stdout, "\n");
+		fflush(stdout);
 		return s? strlen(s): 0;
 #elif defined(X3270_DISPLAY) /*][*/
-		/* XXX for now */
-		popup_an_error("No OpenSSL private key password specified");
+		if (ssl_pending != NULL) {
+		    	*ssl_pending = True;
+			popup_password();
+			return 0;
+		} else if (ssl_password != CN) {
+		    	strcpy(buf, ssl_password);
+			Free(ssl_password);
+			ssl_password = CN;
+			return strlen(buf);
+		} else {
+			popup_an_error("No OpenSSL private key password specified");
+			return 0;
+		}
 #else /*][*/
 		popup_an_error("No OpenSSL private key password specified");
 #endif /*]*/
@@ -3681,13 +3713,23 @@ get_ssl_error(char *buf)
  * Happens once, before the screen switches modes (for c3270).
  */
 void
-ssl_base_init(void)
+ssl_base_init(char *cl_hostname, Boolean *pending)
 {
 	char err_buf[120];
 	int cert_file_type = SSL_FILETYPE_PEM;
 
+	if (cl_hostname != CN)
+	    	ssl_cl_hostname = NewString(cl_hostname);
+	if (pending != NULL) {
+		*pending = False;
+	    	ssl_pending = pending;
+	}
+
 	SSL_load_error_strings();
 	SSL_library_init();
+#if defined(C3270) /*[*/
+    try_again:
+#endif /*]*/
 	ssl_ctx = SSL_CTX_new(SSLv23_method());
 	if (ssl_ctx == NULL) {
 		popup_an_error("SSL_CTX_new failed");
@@ -3785,28 +3827,31 @@ ssl_base_init(void)
 		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
 			    appres.key_file,
 			    key_file_type) != 1) {
-			popup_an_error("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
-				appres.key_file,
-				get_ssl_error(err_buf));
-			goto fail;
+			if (pending == NULL || !*pending)
+				popup_an_error("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
+					appres.key_file,
+					get_ssl_error(err_buf));
+			goto password_fail;
 		}
 	} else if (appres.chain_file != CN) {
 		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
 			    appres.chain_file,
 			    SSL_FILETYPE_PEM) != 1) {
-			popup_an_error("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
-				appres.chain_file,
-				get_ssl_error(err_buf));
-			goto fail;
+			if (pending == NULL || !*pending)
+				popup_an_error("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
+					appres.chain_file,
+					get_ssl_error(err_buf));
+			goto password_fail;
 		}
 	} else if (appres.cert_file != CN) {
 		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
 			    appres.cert_file,
 			    cert_file_type) != 1) {
-			popup_an_error("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
-				appres.cert_file,
-				get_ssl_error(err_buf));
-			goto fail;
+			if (pending == NULL || !*pending)
+				popup_an_error("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
+					appres.cert_file,
+					get_ssl_error(err_buf));
+			goto password_fail;
 		}
 	}
 
@@ -3817,16 +3862,44 @@ ssl_base_init(void)
 			get_ssl_error(err_buf));
 		goto fail;
 	}
+	ssl_pending = NULL;
+
+#if defined(C3270) /*[*/
+	/* Forget about any diagnostics from bad passwords. */
+	any_error_output = False;
+#endif /*]*/
+
 	return;
 
+password_fail:
+#if defined(C3270) /*[*/
+	SSL_CTX_free(ssl_ctx);
+	ssl_ctx = NULL;
+	goto try_again;
+#endif /*]*/
+#if defined(X3270_DISPLAY) /*[*/
+	/* Pop up the password dialog again when the error pop-up pops down. */
+	add_error_popdown_callback(popup_password);
+#endif /*]*/
+
 fail:
-	x3270_exit(1);
+	ssl_pending = NULL;
+	if (ssl_ctx != NULL) {
+		SSL_CTX_free(ssl_ctx);
+		ssl_ctx = NULL;
+	}
+	return;
 }
 
 /* Create a new OpenSSL connection. */
 static int
 ssl_init(void)
 {
+	if (ssl_ctx == NULL) {
+	    	popup_an_error("Cannot connect:\nNo SSL private key password");
+		return -1;
+	}
+
 	ssl_con = SSL_new(ssl_ctx);
 	if (ssl_con == NULL) {
 		popup_an_error("SSL_new failed");
@@ -4086,3 +4159,73 @@ net_bound(void)
 {
     	return (IN_E && tn3270e_bound);
 }
+
+#if defined(X3270_DISPLAY) && defined(HAVE_LIBSSL) /*[*/
+/* Callback for "OK" button on the password popup. */
+static void
+password_callback(Widget w _is_unused, XtPointer client_data,
+    XtPointer call_data _is_unused)
+{
+	char *password;
+
+	password = XawDialogGetValueString((Widget)client_data);
+	ssl_password = NewString(password);
+	XtPopdown(password_shell);
+
+	/* Try init again, with the right password. */
+	ssl_base_init(NULL, NULL);
+
+	/*
+	 * Now try connecting to the command-line hostname, if SSL init
+	 *  succeeded and there is one.
+	 * If SSL init failed because of a password problem, the password
+	 *  dialog will be popped back up.
+	 */
+	if (ssl_ctx != NULL && ssl_cl_hostname) {
+	    	(void) host_connect(ssl_cl_hostname);
+		Free(ssl_cl_hostname);
+		ssl_cl_hostname = CN;
+	}
+}
+
+/* The password dialog was popped down. */
+static void
+password_popdown(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
+{
+	/* If there's no password (they cancelled), don't pop up again. */
+	if (ssl_password == CN) {
+		/* Don't pop up again. */
+		add_error_popdown_callback(NULL);
+
+		/* Try connecting to the command-line host. */
+		if (ssl_cl_hostname != CN) {
+			(void) host_connect(ssl_cl_hostname);
+			Free(ssl_cl_hostname);
+			ssl_cl_hostname = CN;
+		}
+	}
+}
+
+/* Pop up the password dialog. */
+static void
+popup_password(void)
+{
+	if (password_shell == NULL) {
+		password_shell = create_form_popup("Password",
+		    password_callback, (XtCallbackProc)NULL,
+		    FORM_AS_IS);
+		XtAddCallback(password_shell, XtNpopdownCallback,
+			password_popdown, (XtPointer)NULL);
+	}
+	XtVaSetValues(XtNameToWidget(password_shell, ObjDialog),
+		XtNvalue, "",
+		NULL);
+	if (ssl_password != CN) {
+		Free(ssl_password);
+		ssl_password = CN;
+	}
+
+	popup_popup(password_shell, XtGrabExclusive);
+}
+#endif /*]*/

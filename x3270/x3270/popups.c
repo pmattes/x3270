@@ -666,6 +666,7 @@ struct rop {
 	Boolean visible;			/* visibility flag */
 	Boolean moving;				/* move in progress */
 	struct rsm *rsms;			/* stored messages */
+	void (*popdown_callback)(void);		/* popdown_callback */
 };
 
 static struct rop error_popup = {
@@ -738,6 +739,7 @@ static void
 rop_popdown(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_unused)
 {
 	struct rop *rop = (struct rop *)client_data;
+	void (*callback)(void);
 
 	if (rop->moving) {
 		rop->moving = False;
@@ -747,6 +749,11 @@ rop_popdown(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_
 	rop->visible = False;
 	if (exiting && rop->is_error)
 		x3270_exit(1);
+
+	callback = rop->popdown_callback;
+	rop->popdown_callback = NULL;
+	if (callback)
+	    	(*callback)();
 }
 
 /* Initialize a read-only pop-up. */
@@ -916,6 +923,13 @@ popup_an_info(const char *fmt, ...)
 	va_start(args, fmt);
 	popup_rop(&info_popup, NULL, fmt, args);
 	va_end(args);
+}
+
+/* Add a callback to the error popup. */
+void
+add_error_popdown_callback(void (*callback)(void))
+{
+	error_popup.popdown_callback = callback;
 }
 
 /*

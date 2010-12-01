@@ -844,6 +844,7 @@ x3270.errorPopup.title:				x3270 Error
 x3270.errorPopup*cancelButton.label:		Exit
 x3270.printerErrorPopup.title:			x3270 Printer Error
 x3270.childErrorPopup.title:			x3270 Child Process Error
+x3270.passwordPopup.title:			x3270 Password
 #ifdef X3270_MENUS
 x3270.infoPopup.title:				x3270 Information
 x3270.printerInfoPopup.title:			x3270 Printer Information
@@ -872,6 +873,13 @@ x3270.saveTextPopup*confirm2Button.label:	Save as HTML
 x3270.printWindowPopup.title:			x3270 Window Print
 x3270.printWindowPopup.dialog.label:		Enter Print Command
 x3270.printWindowPopup*confirmButton.label:	Print
+#endif
+x3270.passwordPopup.dialog.label:		Enter Private Key Password
+#ifdef COLOR
+x3270.passwordPopup.dialog*value*foreground:	lavender
+#else
+x3270.passwordPopup.dialog*value*foreground:	white
+x3270.passwordPopup.dialog*value*background:	white
 #endif
 #ifdef X3270_TRACE
 x3270.tracePopup.title:				x3270 Tracing
@@ -1334,6 +1342,7 @@ x3270.tracePopup.width:				300
 x3270.screentracePopup.width:			300
 x3270.executeActionPopup.width:			300
 x3270.saveOptionsPopup.width:			300
+x3270.passwordPopup.width:			300
 !
 ! Nondefault definitions for complex pop-ups
 #ifdef COLOR
@@ -1462,6 +1471,8 @@ x3270.printerInfoPopup*translations:	#override \n\
 	<Key>Return:			PA-confirm()
 x3270.childInfoPopup*translations:	#override \n\
 	<Key>Return:			PA-confirm()
+x3270.passwordPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 #ifdef X3270_MENUS
 x3270.connectPopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()

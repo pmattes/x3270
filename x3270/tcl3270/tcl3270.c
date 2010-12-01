@@ -423,7 +423,7 @@ tcl3270_main(int argc, const char *argv[])
 	initialize_toggles();
 
 #if defined(HAVE_LIBSSL) /*[*/
-	ssl_base_init();
+	ssl_base_init(NULL, NULL);
 #endif /*]*/
 
 	/* Connect to the host, and wait for negotiation to complete. */

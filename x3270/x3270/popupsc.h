@@ -73,3 +73,6 @@ extern void popups_move(void);
 extern void printer_popup_init(void);
 extern void toplevel_geometry(Position *x, Position *y, Dimension *width,
     Dimension *height);
+
+extern void
+add_error_popdown_callback(void (*callback)(void));

@@ -143,7 +143,7 @@ main(int argc, char *argv[])
 	initialize_toggles();
 
 #if defined(HAVE_LIBSSL) /*[*/
-	ssl_base_init();
+	ssl_base_init(NULL, NULL);
 #endif /*]*/
 
 	/* Connect to the host. */

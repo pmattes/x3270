@@ -441,7 +441,7 @@ main(int argc, char *argv[])
 
 #if defined(HAVE_LIBSSL) /*[*/
 	/* Initialize SSL and ask for the password, if needed. */
-	ssl_base_init();
+	ssl_base_init(NULL, NULL);
 #endif /*]*/
 
 	if (cl_hostname != CN) {
@@ -755,7 +755,7 @@ pager_output(const char *s)
 		if (pager_rowcnt >= maxROWS) {
 			printf("Press any key to continue . . . ");
 			fflush(stdout);
-			pager_q = screen_wait_for_key();
+			pager_q = screen_wait_for_key(NULL);
 			printf("\r                                \r");
 			pager_rowcnt = 0;
 			if (pager_q)

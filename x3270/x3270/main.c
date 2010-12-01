@@ -325,6 +325,7 @@ main(int argc, char *argv[])
 	int	model_number;
 	Boolean	mono = False;
 	char	*session = CN;
+	Boolean pending;
 
 	if (XtNumber(options) != XtNumber(option_help))
 	    Error("Help mismatch");
@@ -637,8 +638,10 @@ main(int argc, char *argv[])
 #endif /*]*/
 	initialize_toggles();
 
+	ssl_base_init(cl_hostname, &pending);
+
 	/* Connect to the host. */
-	if (cl_hostname != CN)
+	if (cl_hostname != CN && !pending)
 		(void) host_connect(cl_hostname);
 
 	/* Prepare to run a peer script. */

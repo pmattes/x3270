@@ -217,6 +217,10 @@ Specifies the password for the private key file, if it is encrypted.
 The argument can be XX_FB(file):XX_FI(filename), specifying that the
 password is in a file, or XX_FB(string):XX_FI(string), specifying the
 password on the command-line directly.
+If the private key file is encrypted and no XX_FB(XX_DASHED(keypasswd))
+option is given,
+ifelse(XX_INTERACTIVE,yes,`the password will be prompted for interactively.',
+`secure connections will not be allowed.')
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(keymap)) XX_FI(name))
 Specifies a keymap name and optional modifiers.
 See XX_LINK(#Keymaps,XX_SM(KEYMAPS)) below.

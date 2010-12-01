@@ -767,7 +767,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 	}
 
 #if defined(HAVE_LIBSSL) /*[*/
-	ssl_base_init();
+	ssl_base_init(NULL, NULL);
 #endif /*]*/
 
 #if !defined(_WIN32) /*[*/
