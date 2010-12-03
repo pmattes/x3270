@@ -3783,7 +3783,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 			    certs, NULL) != 1) {
 			popup_an_error("CA database load (file \"%s\") "
 					"failed:\n%s",
-					certs, "",
+					certs,
 					get_ssl_error(err_buf));
 			goto fail;
 		}
