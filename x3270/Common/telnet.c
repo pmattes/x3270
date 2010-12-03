@@ -329,6 +329,9 @@ static Boolean *ssl_pending;
 #if defined(X3270_DISPLAY) /*[*/
 static char *ssl_password;
 #endif /*]*/
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+static Boolean ssl_password_prompted;
+#endif /*]*/
 #if defined(C3270) /*[*/
 extern Boolean any_error_output;
 #endif /*]*/
@@ -827,16 +830,11 @@ net_connected(void)
 		    	long v;
 
 			v = SSL_get_verify_result(ssl_con);
-			if (v != X509_V_OK) {
-				    trace_dsn("Certificate verification "
-					"failed: "
-					"%ld (%s)\n", v,
-					X509_verify_cert_error_string(v));
+			if (v != X509_V_OK)
 				    popup_an_error("Certificate verification "
 					"failed: "
 					"%ld (%s)\n", v,
 					X509_verify_cert_error_string(v));
-			}
 
 			/*
 			 * No need to trace the error, it was already
@@ -3635,11 +3633,13 @@ passwd_cb(char *buf, int size, int rwflag _is_unused,
 		s = gets_noecho(buf, size);
 		fprintf(stdout, "\n");
 		fflush(stdout);
+		ssl_password_prompted = True;
 		return s? strlen(s): 0;
 #elif defined(X3270_DISPLAY) /*][*/
 		if (ssl_pending != NULL) {
 		    	*ssl_pending = True;
 			popup_password();
+			ssl_password_prompted = True;
 			return 0;
 		} else if (ssl_password != CN) {
 		    	strcpy(buf, ssl_password);
@@ -3704,7 +3704,19 @@ get_ssl_error(char *buf)
 	unsigned long e;
 
 	e = ERR_get_error();
-	(void) ERR_error_string(e, buf);
+	if (getenv("SSL_VERBOSE_ERRORS"))
+		(void) ERR_error_string(e, buf);
+	else {
+		char xbuf[120];
+		char *colon;
+
+		(void) ERR_error_string(e, xbuf);
+		colon = strrchr(xbuf, ':');
+		if (colon != CN)
+			strcpy(buf, colon + 1);
+		else
+		    	strcpy(buf, xbuf);
+	}
 	return buf;
 }
 
@@ -3730,6 +3742,9 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 #if defined(C3270) /*[*/
     try_again:
 #endif /*]*/
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+	ssl_password_prompted = False;
+#endif /*]*/
 	ssl_ctx = SSL_CTX_new(SSLv23_method());
 	if (ssl_ctx == NULL) {
 		popup_an_error("SSL_CTX_new failed");
@@ -3744,42 +3759,34 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 		if (SSL_CTX_load_verify_locations(ssl_ctx,
 			    appres.ca_file,
 			    appres.ca_dir) != 1) {
-			popup_an_error("SSL_CTX_load_verify_locations("
-					"\"%s\", \"%s\") failed:\n%s",
-					appres.ca_file? appres.ca_file:
-					    "",
-					appres.ca_dir? appres.ca_dir:
-					    "",
-					get_ssl_error(err_buf));
+			popup_an_error("CA database load (%s%s%s%s%s%s%s%s%s) "
+				"failed:\n%s",
+				appres.ca_file? "file ": "",
+				appres.ca_file? "\"": "",
+				appres.ca_file? appres.ca_file: "",
+				appres.ca_file? "\"": "",
+				(appres.ca_file && appres.ca_dir)? ", ": "",
+				appres.ca_dir? "dir ": "",
+				appres.ca_dir? "\"": "",
+				appres.ca_dir? appres.ca_dir: "",
+				appres.ca_dir? "\"": "",
+			get_ssl_error(err_buf));
 			goto fail;
 		}
 	} else {
 #if defined(_WIN32) /*[*/
 		char *certs;
 
-#if defined(USE_CERTS_DIR) /*[*/
-		certs = xs_buffer("%s\\certs", instdir);
-
-		if (SSL_CTX_load_verify_locations(ssl_ctx, NULL,
-			certs) != 1) {
-			popup_an_error("SSL_CTX_load_verify_locations("
-					"\"%s\", \"%s\") failed:\n%s",
-					"", certs,
-					get_ssl_error(err_buf));
-			goto fail;
-		}
-#else /*][*/
 		certs = xs_buffer("%s\\root_certs.txt", myappdata);
 
 		if (SSL_CTX_load_verify_locations(ssl_ctx,
 			    certs, NULL) != 1) {
-			popup_an_error("SSL_CTX_load_verify_locations("
-					"\"%s\", \"%s\") failed:\n%s",
+			popup_an_error("CA database load (file \"%s\") "
+					"failed:\n%s",
 					certs, "",
 					get_ssl_error(err_buf));
 			goto fail;
 		}
-#endif /*]*/
 		Free(certs);
 #else /*][*/
 		SSL_CTX_set_default_verify_paths(ssl_ctx);
@@ -3790,7 +3797,8 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 	if (appres.chain_file != CN) {
 		if (SSL_CTX_use_certificate_chain_file(ssl_ctx,
 			    appres.chain_file) != 1) {
-			popup_an_error("SSL_CTX_use_certificate_chain_file(\"%s\") failed:\n%s",
+			popup_an_error("Client certificate chain file load "
+				"(\"%s\") failed:\n%s",
 				appres.chain_file,
 				get_ssl_error(err_buf));
 			goto fail;
@@ -3798,7 +3806,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 	} else if (appres.cert_file != CN) {
 		cert_file_type = parse_file_type(appres.cert_file_type);
 		if (cert_file_type == -1) {
-			popup_an_error("Invalid OpenSSL certificate "
+			popup_an_error("Invalid client certificate "
 				"file type '%s'",
 				appres.cert_file_type);
 			goto fail;
@@ -3806,7 +3814,8 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 		if (SSL_CTX_use_certificate_file(ssl_ctx,
 			    appres.cert_file,
 			    cert_file_type) != 1) {
-			popup_an_error("SSL_CTX_use_certificate_file(\"%s\") failed:\n%s",
+			popup_an_error("Client certificate file load "
+				"(\"%s\") failed:\n%s",
 				appres.cert_file,
 				get_ssl_error(err_buf));
 			goto fail;
@@ -3819,7 +3828,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 		    parse_file_type(appres.key_file_type);
 
 		if (key_file_type == -1) {
-			popup_an_error("Invalid OpenSSL key file type "
+			popup_an_error("Invalid private key file type "
 				"'%s'",
 				appres.key_file_type);
 			goto fail;
@@ -3828,7 +3837,8 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 			    appres.key_file,
 			    key_file_type) != 1) {
 			if (pending == NULL || !*pending)
-				popup_an_error("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
+				popup_an_error("Private key file load "
+					"(\"%s\") failed:\n%s",
 					appres.key_file,
 					get_ssl_error(err_buf));
 			goto password_fail;
@@ -3838,7 +3848,8 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 			    appres.chain_file,
 			    SSL_FILETYPE_PEM) != 1) {
 			if (pending == NULL || !*pending)
-				popup_an_error("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
+				popup_an_error("Private key file load "
+					"(\"%s\") failed:\n%s",
 					appres.chain_file,
 					get_ssl_error(err_buf));
 			goto password_fail;
@@ -3848,7 +3859,8 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 			    appres.cert_file,
 			    cert_file_type) != 1) {
 			if (pending == NULL || !*pending)
-				popup_an_error("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
+				popup_an_error("Private key file load "
+					"(\"%s\") failed:\n%s",
 					appres.cert_file,
 					get_ssl_error(err_buf));
 			goto password_fail;
@@ -3858,7 +3870,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 	/* Check the key. */
 	if (appres.key_file != CN &&
 	    SSL_CTX_check_private_key(ssl_ctx) != 1) {
-		popup_an_error("SSL_CTX_check_private_key failed:\n%s",
+		popup_an_error("Private key check failed:\n%s",
 			get_ssl_error(err_buf));
 		goto fail;
 	}
@@ -3875,11 +3887,13 @@ password_fail:
 #if defined(C3270) /*[*/
 	SSL_CTX_free(ssl_ctx);
 	ssl_ctx = NULL;
-	goto try_again;
+	if (ssl_password_prompted)
+		goto try_again;
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
 	/* Pop up the password dialog again when the error pop-up pops down. */
-	add_error_popdown_callback(popup_password);
+	if (ssl_password_prompted)
+		add_error_popdown_callback(popup_password);
 #endif /*]*/
 
 fail:

@@ -843,9 +843,9 @@ popup_rop(struct rop *rop, abort_callback_t *a, const char *fmt, va_list args)
 	/* Put the error in the trace file. */
 	if (rop->is_error) {
 		if (toggled(DS_TRACE))
-			trace_dsn("\nError: %s\n", vmsgbuf);
+			trace_dsn("Error: %s\n", vmsgbuf);
 		else if (toggled(EVENT_TRACE)) {
-			trace_event("\nError: %s\n", vmsgbuf);
+			trace_event("Error: %s\n", vmsgbuf);
 		}
 	}
 #endif /*]*/
