@@ -31,5 +31,5 @@
  *		Declarations for icmd.c.
  */
 
-int icmd_init(void);
+void icmd_init(void);
 int interactive_transfer(String **params, Cardinal *num_params);
