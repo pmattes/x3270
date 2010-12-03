@@ -34,6 +34,7 @@
 #include "globals.h"
 
 #include "charsetc.h"
+#include "hostc.h"
 #include "icmdc.h"
 #include "utf8c.h"
 
@@ -41,7 +42,25 @@
 #include <windows.h>
 #endif /*]*/
 
+static char host_type[4] = "tso";
+
 /* Support functions for interactive commands. */
+
+static void
+icmd_connected(Boolean ignored)
+{
+	/* Whenever we connect or disconnect, revert to the default. */
+	strcpy(host_type, "tso");
+}
+
+/*
+ * Initialize the interactive commands.
+ */
+void
+icmd_init(void)
+{
+	register_schange(ST_CONNECT, icmd_connected);
+}
 
 /*
  * Get a buffer full of input.
@@ -215,12 +234,17 @@ at VM/CMS or TSO command prompt.\n");
 	}
 
 	for (;;) {
-	    	printf("Host type: (tso/vm) [tso] ");
+	    	printf("Host type: (tso/vm) [%s] ", host_type);
 		if (get_input(inbuf, sizeof(inbuf)) == NULL)
 		    	return -1;
-		if (!inbuf[0] || !strncasecmp(inbuf, "tso", strlen(inbuf)))
+		if (!inbuf[0])
+			strcpy(inbuf, host_type);
+		if (!strncasecmp(inbuf, "tso", strlen(inbuf))) {
+			strcpy(host_type, inbuf);
 		    	break;
+		}
 		if (!strncasecmp(inbuf, "vm", strlen(inbuf))) {
+			strcpy(host_type, inbuf);
 		    	strcpy(kw[kw_ix++], "Host=vm");
 			tso = 0;
 			break;

@@ -54,6 +54,7 @@
 #include "ftc.h"
 #include "gluec.h"
 #include "hostc.h"
+#include "icmdc.h"
 #include "idlec.h"
 #include "keymapc.h"
 #include "kybdc.h"
@@ -438,6 +439,7 @@ main(int argc, char *argv[])
 	}
 #endif /*]*/
 	initialize_toggles();
+	icmd_init();
 
 #if defined(HAVE_LIBSSL) /*[*/
 	/* Initialize SSL and ask for the password, if needed. */
