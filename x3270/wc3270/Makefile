@@ -119,7 +119,7 @@ wversion.o: version.txt mkwversion.sh
 	sh ./mkwversion.sh $(CC)
 
 wc3270wiz.exe: $(WOBJECTS)
-	$(CC) -o wc3270wiz.exe $(CFLAGS) $(WOBJECTS) $(WIZLIBS)
+	$(CC) -o wc3270wiz$(OSUFFIX).exe $(CFLAGS) $(WOBJECTS) $(WIZLIBS)
 
 catf.exe: catf.c
 	$(CC) -o catf.exe $(CFLAGS) catf.c

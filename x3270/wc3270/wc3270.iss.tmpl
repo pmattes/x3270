@@ -39,7 +39,8 @@ Source: "..\wpr3287-3.3\wpr3287-insecure.exe"; DestName: "wpr3287.exe"; DestDir:
 Source: "catf.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall
 Source: "ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: secure
+Source: "wc3270wiz-insecure.exe"; DestName: "wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: insecure
 Source: "x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "root_certs.txt"; DestDir: "{app}"; Flags: ignoreversion; Tasks: secure
 Source: "html\Bugs.html"; DestDir: "{app}\html"; Flags: ignoreversion
