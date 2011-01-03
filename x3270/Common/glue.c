@@ -538,6 +538,7 @@ set_appres_defaults(void)
 #if defined(WS3270) /*[*/
 	appres.local_cp = GetACP();
 #endif /*]*/
+	appres.devname = "x3270";
 }
 
 #if defined (C3270) /*[*/
@@ -621,6 +622,8 @@ static struct {
     "Specify string to switch terminal from 80-column mode to 132-column mode"
 },
 #endif /*]*/
+{ OptDevName,  OPT_STRING,  False, ResDevName,   offset(devname),
+    "<name>", "Specify device name (workstation ID) for RFC 4777" },
 #if defined(LOCAL_PROCESS) /*[*/
 { OptLocalProcess,OPT_SKIP2,False, NULL,         NULL,
     "<command> [<arg>...]", "Run <command> instead of making TELNET conection"
@@ -709,6 +712,8 @@ static struct {
 { OptTraceFileSize,OPT_STRING,False,ResTraceFileSize,offset(trace_file_size),
     "<n>[KM]", "Limit trace file to <n> bytes" },
 #endif /*]*/
+{ OptUser,     OPT_STRING,  False, ResUser,      offset(user),
+    "<name>", "Specify user name for RFC 4777" },
 { OptV,        OPT_V,	False, NULL,	     NULL,
     CN, "Display build options and character sets" },
 { OptVersion,  OPT_V,	False, NULL,	     NULL,

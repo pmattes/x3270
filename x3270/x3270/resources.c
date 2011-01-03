@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2010, Paul Mattes.
+ * Copyright (c) 1993-2011, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -186,6 +186,10 @@ XtResource resources[] = {
 	  offset(sbcs_cgcsgid), XtRString, 0 },
 	{ ResTermName, ClsTermName, XtRString, sizeof(char *),
 	  offset(termname), XtRString, 0 },
+	{ ResDevName, ClsDevName, XtRString, sizeof(char *),
+	  offset(devname), XtRString, "x3270" },
+	{ ResUser, ClsUser, XtRString, sizeof(char *),
+	  offset(user), XtRString, 0 },
 	{ ResIconFont, ClsIconFont, XtRString, sizeof(char *),
 	  offset(icon_font), XtRString, "nil2" },
 	{ ResIconLabelFont, ClsIconLabelFont, XtRString, sizeof(char *),

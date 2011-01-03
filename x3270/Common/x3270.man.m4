@@ -1,4 +1,4 @@
-dnl Copyright (c) 1993-2010, Paul Mattes.
+dnl Copyright (c) 1993-2011, Paul Mattes.
 dnl Copyright (c) 1990, Jeff Sparkes.
 dnl All rights reserved.
 dnl 
@@ -183,6 +183,8 @@ Defines the dimensions and escape sequence for the default (80-column)
 screen mode.
 See XX_LINK(#Screen-Size-Switching,XX_SM(SCREEN SIZE SWITCHING)), below.
 ')dnl
+XX_TP(XX_FB(XX_DASHED(devname)) XX_FI(name))
+Specifies a device name (workstation ID) for RFC 4777 support.
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(efont)) XX_FI(name))
 Specifies a font for the emulator window.
 XX_HO(`See XX_LINK(#Fonts,XX_SM(FONTS)) below.
@@ -459,6 +461,8 @@ The value of XX_FI(size) can have a XX_FB(K) or XX_FB(M) suffix, indicating
 kilobytes or megabytes respectively.
 When the trace file reaches the size limit, it will be renamed with a 
 XX_DQUOTED(-) appended and a new file started.
+XX_TP(XX_FB(XX_DASHED(user)) XX_FI(name))
+Specifies the user name for RFC 4777 support.
 XX_TP(XX_FB(XX_DASHED(v))
 Display the version and build options for XX_FB(XX_PRODUCT)) and exit.
 ifelse(XX_PRODUCT,x3270,,
@@ -1581,7 +1585,7 @@ RFC 1646, TN3270 Extensions for LUname and Printer Selection
 XX_BR
 RFC 2355, TN3270 Enhancements
 XX_SH(Copyrights)
-Copyright`'XX_COPY()1993-2010, Paul Mattes.
+Copyright`'XX_COPY()1993-2011, Paul Mattes.
 XX_BR
 Copyright`'XX_COPY()2004-2005, Don Russell.
 XX_BR

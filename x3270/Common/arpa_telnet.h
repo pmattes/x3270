@@ -116,5 +116,12 @@ const char *telopts[NTELOPTS+1] = {
 /* sub-option qualifiers */
 #define	TELQUAL_IS	0	/* option is... */
 #define	TELQUAL_SEND	1	/* send option */
+#define TELQUAL_INFO	2
+
+/* new-environ objects */
+#define TELOBJ_VAR	0
+#define TELOBJ_VALUE	1
+#define TELOBJ_ESC	2
+#define TELOBJ_USERVAR	3
 
 #endif /*!_arpa_telnet_h*/

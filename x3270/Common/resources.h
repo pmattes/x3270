@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2010, Paul Mattes.
+ * Copyright (c) 1995-2011, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -80,6 +80,7 @@
 #define ResCursorPos		"cursorPos"
 #define ResDebugTracing		"debugTracing"
 #define ResDefScreen		"defScreen"
+#define ResDevName		"devName"
 #define ResDftBufferSize	"dftBufferSize"
 #define ResDisconnectClear	"disconnectClear"
 #define ResDoConfirms		"doConfirms"
@@ -188,6 +189,7 @@
 #define ResUnlockDelay		"unlockDelay"
 #define ResUnlockDelayMs	"unlockDelayMs"
 #define ResUseCursorColor	"useCursorColor"
+#define ResUser			"user"
 #define ResV			"v"
 #define ResVisibleControl	"visibleControl"
 #define ResVisualBell		"visualBell"
@@ -208,6 +210,7 @@
 #define DotCharClass		"." ResCharClass
 #define DotCharset		"." ResCharset
 #define DotColorScheme		"." ResColorScheme
+#define DotDevName		"." ResDevName
 #define DotDsTrace		"." ResDsTrace
 #define DotEmulatorFont		"." ResEmulatorFont
 #define DotExtended		"." ResExtended
@@ -236,6 +239,7 @@
 #define DotTitle		"." ResTitle
 #define DotTraceFile		"." ResTraceFile
 #define DotTraceFileSize	"." ResTraceFileSize
+#define DotUser			"." ResUser
 #define DotV			"." ResV
 
 /* Resource classes. */
@@ -272,6 +276,7 @@
 #define ClsCursorPos		"CursorPos"
 #define ClsDbcsCgcsgid		"DbcsCgcsgid"
 #define ClsDebugTracing		"DebugTracing"
+#define ClsDevName		"DevName"
 #define ClsDftBufferSize	"DftBufferSize"
 #define ClsDisconnectClear	"DisconnectClear"
 #define ClsDoConfirms		"DoConfirms"
@@ -358,6 +363,7 @@
 #define ClsUnlockDelay		"UnlockDelay"
 #define ClsUnlockDelayMs	"UnlockDelayMs"
 #define ClsUseCursorColor	"UseCursorColor"
+#define ClsUser			"User"
 #define ClsVisibleControl	"VisibleControl"
 #define ClsVisualBell		"VisualBell"
 #define ClsVisualSelect		"VisualSelect"
@@ -381,6 +387,7 @@
 #define OptClear		"-clear"
 #define OptColorScheme		"-scheme"
 #define OptDefScreen		"-defscreen"
+#define OptDevName		"-devname"
 #define OptDsTrace		"-trace"
 #define OptEmulatorFont		"-efont"
 #define OptExtended		"-extended"
@@ -422,6 +429,7 @@
 #define OptTitle		"-title"
 #define OptTraceFile		"-tracefile"
 #define OptTraceFileSize	"-tracefilesize"
+#define OptUser			"-user"
 #define OptV			"-v"
 #define OptVersion		"--version"
 

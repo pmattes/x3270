@@ -212,6 +212,8 @@ typedef struct {
 	char	*charset;
 	char	*sbcs_cgcsgid;
 	char	*termname;
+	char	*devname;	/* for 5250 */
+	char	*user;		/* for 5250 */
 	char	*login_macro;
 	char	*macros;
 #if defined(X3270_TRACE) /*[*/

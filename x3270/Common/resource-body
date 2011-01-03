@@ -903,6 +903,16 @@ description
     the <b>Transfer</b> action.
 .
 
+name devName
+applies a
+type s
+switch -devname
+groups p
+description
+    Specifies the device name (workstation ID) sent in response to a TELNET
+    NEW-ENVIRON sub-negotiation request, used by iSeries hosts (RFC 4777).
+.
+
 name disconnectClear
 applies x
 type b
@@ -2563,6 +2573,16 @@ desc
     If to false, the cursor will be drawn using the same color as
     the text behind it.  If true, on color X11 displays the
     cursor will be drawn with the color specified by %-cursorColor%.
+.
+
+name user
+applies a
+type s
+switch -user
+groups p
+description
+    Specifies the user name sent in response to a TELNET NEW-ENVIRON
+    sub-negotiation request, used by iSeries hosts (RFC 4777).
 .
 
 name visibleControl

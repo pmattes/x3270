@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2010, Paul Mattes.
+ * Copyright (c) 1993-2011, Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -274,7 +274,8 @@ static unsigned char	functions_req[] = {
 #endif /*]*/
 
 #if defined(X3270_TRACE) /*[*/
-static const char *telquals[2] = { "IS", "SEND" };
+static const char *telquals[3] = { "IS", "SEND", "INFO" };
+static const char *telobjs[4] = { "VAR", "VALUE", "ESC", "USERVAR" };
 #endif /*]*/
 #if defined(X3270_TN3270E) /*[*/
 #if defined(X3270_TRACE) /*[*/
@@ -1523,10 +1524,16 @@ telnet_fsm(unsigned char c)
 #if defined(HAVE_LIBSSL) /*[*/
 		    case TELOPT_STARTTLS:
 #endif /*]*/
+		    case TELOPT_NEW_ENVIRON:
 			if (c == TELOPT_TN3270E && non_tn3270e_host)
 				goto wont;
 			if (c == TELOPT_TM && !appres.bsd_tm)
 				goto wont;
+			if (c == TELOPT_TTYPE && myopts[TELOPT_NEW_ENVIRON]) {
+				/* ignore TTYPE until after NEW_ENVIRON */
+				myopts[c] = 1;
+				break;
+			}
 
 			if (!myopts[c]) {
 				if (c != TELOPT_TM)
@@ -1651,6 +1658,57 @@ telnet_fsm(unsigned char c)
 				continue_tls(sbbuf, sbptr - sbbuf);
 			}
 #endif /*]*/
+			else if (sbbuf[0] == TELOPT_NEW_ENVIRON &&
+			         sbbuf[1] == TELQUAL_SEND) {
+				int tb_len;
+				char *tt_out;
+				char *user;
+
+				trace_dsn("%s %s %s\n", opt(sbbuf[0]),
+				    telquals[sbbuf[1]],
+				    telobjs[sbbuf[2]]);
+
+				/* Send out NEW-ENVIRON. */
+				user = appres.user? appres.user: getenv("USER");
+				if (user == CN)
+					user = "unknown";
+				tb_len = 21 + strlen(user) +
+				    strlen(appres.devname);
+				tt_out = Malloc(tb_len + 1);
+				(void) sprintf(tt_out,
+					"%c%c%c%c%c%s%c%s%c%s%c%s%c%c",
+					IAC, SB, TELOPT_NEW_ENVIRON, TELQUAL_IS,
+					TELOBJ_VAR, force_ascii("USER"),
+					TELOBJ_VALUE, force_ascii(user),
+					TELOBJ_USERVAR, force_ascii("DEVNAME"),
+					TELOBJ_VALUE,
+					    force_ascii(appres.devname),
+					IAC, SE);
+				net_rawout((unsigned char *)tt_out, tb_len);
+				Free(tt_out);
+				trace_dsn("SENT %s %s "
+					"%s "
+					"%s \"%s\" "
+					"%s \"%s\" "
+					"%s \"%s\" "
+					"%s \"%s\"\n",
+					cmd(SB), opt(TELOPT_NEW_ENVIRON),
+					telquals[TELQUAL_IS],
+					telobjs[TELOBJ_VAR], "USER",
+					telobjs[TELOBJ_VALUE], user,
+					telobjs[TELOBJ_USERVAR], "DEVNAME",
+					telobjs[TELOBJ_VALUE], appres.devname);
+
+				/* Now respond to DO TERMINAL_TYPE. */
+				if (myopts[TELOPT_TTYPE]) {
+					will_opt[2] = TELOPT_TTYPE;
+					net_rawout(will_opt, sizeof(will_opt));
+					trace_dsn("SENT %s %s\n", cmd(WILL),
+						opt(TELOPT_TTYPE));
+					check_in3270();
+					check_linemode(False);
+				}
+			}
 
 		} else {
 			telnet_state = TNS_SB;

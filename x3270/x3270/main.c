@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2011, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -122,6 +122,7 @@ XrmOptionDescRec options[]= {
 	{ OptCharset,	DotCharset,	XrmoptionSepArg,	NULL },
 	{ OptClear,	".xxx",		XrmoptionSkipArg,	NULL },
 	{ OptColorScheme,DotColorScheme,XrmoptionSepArg,	NULL },
+	{ OptDevName,	DotDevName,	XrmoptionSepArg,	NULL },
 #if defined(X3270_TRACE) /*[*/
 	{ OptDsTrace,	DotDsTrace,	XrmoptionNoArg,		ResTrue },
 #endif /*]*/
@@ -168,6 +169,7 @@ XrmOptionDescRec options[]= {
 	{ OptInputMethod,DotInputMethod,XrmoptionSepArg,	NULL },
 	{ OptPreeditType,DotPreeditType,XrmoptionSepArg,	NULL },
 #endif /*]*/
+	{ OptUser,	DotUser,	XrmoptionSepArg,	NULL },
 	{ OptV,		DotV,		XrmoptionNoArg,		ResTrue },
 	{ OptVersion,	DotV,		XrmoptionNoArg,		ResTrue },
 	{ "-xrm",	NULL,		XrmoptionResArg,	NULL }
@@ -192,6 +194,7 @@ static struct {
 	{ OptCharset, "<name>", "Use host EBCDIC character set (code page) <name>" },
 	{ OptClear, "<toggle>", "Turn on <toggle>" },
 	{ OptColorScheme, "<name>", "Use color scheme <name>" },
+	{ OptDevName, "<name>", "Specify device name (workstation ID)" },
 	{ OptEmulatorFont, "<font>", "Font for emulator window" },
 	{ OptExtended, CN, "Extended 3270 data stream (deprecated)" },
 	{ OptIconName, "<name>", "Title for icon" },
@@ -236,6 +239,7 @@ static struct {
 	{ OptInputMethod, "<name>", "Specify multi-byte input method" },
 	{ OptPreeditType, "<style>", "Define input method pre-edit type" },
 #endif /*]*/
+	{ OptUser, "<name>", "Specify user name for RFC 4777" },
 	{ OptV, CN, "Display build options and character sets" },
 	{ OptVersion, CN, "Display build options and character sets" },
 	{ "-xrm", "'x3270.<resource>: <value>'", "Set <resource> to <vale>" }
