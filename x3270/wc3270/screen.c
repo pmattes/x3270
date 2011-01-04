@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2010, Paul Mattes.
+ * Copyright (c) 2000-2011, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -1727,11 +1727,11 @@ kybd_input(void)
 		    (ir.Event.MouseEvent.dwEventFlags == 0)) {
 		    	if (menu_is_up) {
 			    	menu_click(x, y);
-			} else if (y == 0) {
+			} else if (screen_yoffset != 0 && y == 0) {
 			    	popup_menu(x, (screen_yoffset != 0));
 				screen_disp(False);
 			} else if ((x < COLS) &&
-				   (y - screen_yoffset > 0) &&
+				   (y - screen_yoffset >= 0) &&
 				   (y - screen_yoffset < ROWS)) {
 				if (flipped)
 					cursor_move((COLS - x) +

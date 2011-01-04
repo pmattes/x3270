@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2010, Paul Mattes.
+ * Copyright (c) 2000-2011, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1247,11 +1247,11 @@ kybd_input(void)
 			    	trace_event("Mouse BUTTON1_RELEASED "
 					"(x=%d,y=%d)\n",
 					m.x, m.y);
-				if (m.y == 0) {
+				if (screen_yoffset != 0 && m.y == 0) {
 					popup_menu(m.x, (screen_yoffset != 0));
 					screen_disp(False);
 				} else if (m.x < cCOLS &&
-					   m.y - screen_yoffset > 0 &&
+					   m.y - screen_yoffset >= 0 &&
 					   m.y - screen_yoffset < ROWS) {
 					if (flipped)
 						cursor_move(((m.y - screen_yoffset) * cCOLS) +
@@ -1261,9 +1261,6 @@ kybd_input(void)
 							m.x);
 					move(m.y + screen_yoffset, m.x);
 					refresh();
-				} else if (m.y == 0) {
-					popup_menu(m.x, (screen_yoffset != 0));
-					screen_disp(False);
 				}
 			}
 			return;
