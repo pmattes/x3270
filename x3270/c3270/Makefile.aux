@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1995-2010, Paul Mattes.
+# Copyright (c) 1995-2011, Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -61,7 +61,7 @@ DEVKIT = Makefile.aux x3270.man.m4 html.m4 man.m4 \
 HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
 	html/Lineage.html html/ReleaseNotes.html html/README.html \
 	html/Wishlist.html html/c3270-man.html html/x3270-script.html \
-	html/x3270if.html html/Resources.html
+	html/x3270if.html html/Resources.html html/SSL.html
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
@@ -107,6 +107,8 @@ html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "c3270 Release Notes" html/documentation-relnotes-body.html $@
 html/Resources.html: resource-body make-resource-doc.pl version.txt
 	./make-resource-doc.pl c3270 <resource-body >$@
+html/SSL.html: html/documentation-ssl-body.html mkstand.bash
+	./mkstand.bash "c3270 and SSL" html/documentation-ssl-body.html $@
 
 ibm1027.c: ibm-1027_P100-1995.ucm mktbl
 	./stripucm.sh ibm-1027_P100-1995.ucm ibm1027 >ibm1027.c
