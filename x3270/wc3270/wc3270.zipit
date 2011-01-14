@@ -26,3 +26,4 @@ F ../wpr3287-3.3/wpr3287-insecure.exe wpr3287-insecure.exe
 F ../ws3270-3.3/ws3270.exe ws3270.exe
 F ../ws3270-3.3/ws3270-insecure.exe ws3270-insecure.exe
 F x3270if.exe
+F root-certs.txt
