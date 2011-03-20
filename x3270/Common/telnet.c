@@ -3835,7 +3835,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 #if defined(_WIN32) /*[*/
 		char *certs;
 
-		certs = xs_buffer("%s\\root_certs.txt", myappdata);
+		certs = xs_buffer("%sroot_certs.txt", myappdata);
 
 		if (SSL_CTX_load_verify_locations(ssl_ctx,
 			    certs, NULL) != 1) {

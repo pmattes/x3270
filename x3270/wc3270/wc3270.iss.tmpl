@@ -33,7 +33,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: secure
 Source: "wc3270-insecure.exe"; DestName: "wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: insecure
 Source: "..\ws3270-3.3\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: secure
-Source: "..\ws3270-3.3\ws3270-insecure.exe"; DestName: "wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: secure
+Source: "..\ws3270-3.3\ws3270-insecure.exe"; DestName: "ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: insecure
 Source: "..\wpr3287-3.3\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: secure
 Source: "..\wpr3287-3.3\wpr3287-insecure.exe"; DestName: "wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: insecure
 Source: "catf.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -42,7 +42,7 @@ Source: "ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: secure
 Source: "wc3270wiz-insecure.exe"; DestName: "wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: insecure
 Source: "x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "root_certs.txt"; DestDir: "{app}"; Flags: ignoreversion; Tasks: secure
+Source: "root_certs.txt"; DestDir: "{userappdata}\wc3270"; Flags: ignoreversion; Tasks: secure
 Source: "html\Bugs.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "html\Build.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "html\FAQ.html"; DestDir: "{app}\html"; Flags: ignoreversion
