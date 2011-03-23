@@ -299,11 +299,22 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 		}
 
 		*cl_hostname = appres.hostname; /* might be NULL */
-#if defined(C3270) && !defined(_WIN32) /*[*/
 	} else {
-		/* Read in the profile only if there's no sesson file. */
+	    	/* There is no session file. */
+
+#if defined(C3270) && !defined(_WIN32) /*[*/
+		/*
+		 * For c3270 only, read in the c3270 profile (~/.c3270pro).
+		 */
 	    	read_session_or_profile = merge_profile();
 #endif /*]*/
+		/*
+		 * If there was a hostname resource defined somewhere, but not
+		 * as a positional command-line argument, pretend it was one,
+		 * so we will connect to it at start-up.
+		 */
+		if (*cl_hostname == CN && appres.hostname != CN)
+		    	*cl_hostname = appres.hostname;
 	}
 
 	/*

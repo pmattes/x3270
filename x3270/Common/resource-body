@@ -1132,9 +1132,9 @@ desc
     Gives the name of the host to connect to.  The name can include the usual
     options (prefixes to specify special connection options, LU names, and
     port).  A hostname specified on the command line takes precedence over
-    %-hostName%.
+    %-hostname%.
     <p class=indented>
-    The most common use of %-hostName% is in <i>session files</i>, where a
+    The most common use of %-hostname% is in <i>session files</i>, where a
     file is used to pass all of the options to establish a %p% session.
 .
 
