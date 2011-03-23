@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2010, Paul Mattes.
+ * Copyright (c) 1993-2011, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
