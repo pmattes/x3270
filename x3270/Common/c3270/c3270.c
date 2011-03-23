@@ -126,6 +126,7 @@ static char *base_keymap1 =
 "Ctrl<Key>a <Key>l: Redraw\n"
 "Ctrl<Key>a <Key>m: Compose\n"
 "Ctrl<Key>a <Key>n: Menu\n"
+"Ctrl<Key>a <Key>p: PrintText\n"
 "Ctrl<Key>a <Key>^: Key(notsign)\n"
 "<Key>DC: Delete\n"
 "<Key>UP: Up\n"
@@ -134,9 +135,9 @@ static char *base_keymap1 =
 "<Key>RIGHT: Right\n"
 "<Key>HOME: Home\n"
 "Ctrl<Key>a <Key>1: PA(1)\n"
-"Ctrl<Key>a <Key>2: PA(2)\n"
-"Ctrl<Key>a <Key>3: PA(3)\n";
+"Ctrl<Key>a <Key>2: PA(2)\n";
 static char *base_keymap2 =
+"Ctrl<Key>a <Key>3: PA(3)\n"
 "<Key>F1: PF(1)\n"
 "Ctrl<Key>a <Key>F1: PF(13)\n"
 "<Key>F2: PF(2)\n"
