@@ -2351,7 +2351,7 @@ draw_fields(union sp *buffer, int first, int last)
 	Boolean	any_blink = False;
 	int	crossable = CROSSABLE;
 	enum dbcs_state d;
-	int	cursor_col, cursor_row;
+	int	cursor_col = 0, cursor_row = 0;
 
 	/* Set up cursor_col/cursor_row. */
 	if (crossable) {

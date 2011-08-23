@@ -72,7 +72,7 @@
 #endif /*]*/
 
 /* Maximum size of a tracefile header. */
-#define MAX_HEADER_SIZE		(10*1024)
+#define MAX_HEADER_SIZE		(32*1024)
 
 /* Minimum size of a trace file. */
 #define MIN_TRACEFILE_SIZE	(64*1024)
