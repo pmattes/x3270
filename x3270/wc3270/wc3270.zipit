@@ -28,3 +28,4 @@ F ../ws3270-3.3/ws3270.exe ws3270.exe
 F ../ws3270-3.3/ws3270-insecure.exe ws3270-insecure.exe
 F x3270if.exe
 F root_certs.txt
+F catf.exe
