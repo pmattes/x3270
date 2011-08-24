@@ -837,6 +837,7 @@ static struct {
 	{ "RMENU",	VK_RMENU << 16 },
 
 	/* Some handy aliases */
+	{ "BackSpace",	VK_BACK << 16 },
 	{ "Enter",	VK_RETURN << 16 },
 	{ "PageUp",	VK_PRIOR << 16 },
 	{ "PageDown",	VK_NEXT << 16 },

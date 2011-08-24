@@ -81,14 +81,30 @@ where:
 		to specify which PF key to transmit.
 	</ul>
 </ul>
-<p>Note that order matters in the keymap.  More-specific rules must come
-before less-specific ones.
-For example, if you want to map both <b>F1</b> and <b>Shift-F1</b>, the rule
-for <b>Shift-F1</b> must come before the rule for <b>F1</b>.
-Otherwise, one or more of your rules will be ignored.
-<p>Except for ones that use the <b>Ctrl</b> modifier, entries are
-case-sensitive.  For example, an entry for <b>Alt-p</b> will not be matched if
-the Shift key is down or Caps Lock is in effect.  To match both <b>Alt-p</b>
+<p>Note that order matters in the keymap.
+Three important rules apply:
+<ul>
+ <li>User-specified keymaps appear <i>after</i> the default keymap.</li>
+ <li>More-specific entries must come before less-specific ones.</li>
+ <li>If there is more than one entry mapping exactly the same key (with the
+  modifiers), the last one wins.</li>
+</ul>
+An example of the second rule is if you want to map both <b>BACK</b> (the
+<b>Backspace</b> key) and <b>Shift-BACK</b>.
+The entry for <b>Shift-BACK</b> must come before the entry for <b>BACK</b>,
+otherwise the entry for <b>Shift-BACK</b> will be ignored.
+<p>The first rule, combined with the second, means that a default key mapping
+may interfere with your keymap.
+For example, if you want to define a mapping for <b>Ctrl-Shift-F1</b>, the
+default mapping for <b>Shift-F1</b> (<b>PF13</b>) will override it.
+The way around this is to use the third rule: define your own mapping for
+<b>Shift-F1</b>.  Your entry will disable the one in the default keymap.
+But (because of the second rule) be sure to put it <i>after</i>
+your entry for <b>Ctrl-Shift-F1</b>.
+<p>Also note that except for entries that use the <b>Ctrl</b> modifier,
+mappings are case-sensitive.
+For example, an entry for <b>Alt-p</b> will not be matched if the Shift key
+is down or Caps Lock is in effect.  To match both <b>Alt-p</b>
 and <b>Alt-P</b>, there must be two entries in your keymap.
 
 <h2>How to Find the Modifiers</h2>

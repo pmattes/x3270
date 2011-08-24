@@ -113,83 +113,83 @@ static Boolean pager_q = False;
 #endif /*]*/
 
 #if !defined(_WIN32) /*[*/
-/* Base keymap. */
+/* Base keymap for c3270. */
 static char *base_keymap1 =
-"Ctrl<Key>]: Escape\n"
-"Ctrl<Key>a Ctrl<Key>a: Key(0x01)\n"
-"Ctrl<Key>a Ctrl<Key>]: Key(0x1d)\n"
-"Ctrl<Key>a <Key>c: Clear\n"
-"Ctrl<Key>a <Key>e: Escape\n"
-"Ctrl<Key>a <Key>i: Insert\n"
-"Ctrl<Key>a <Key>r: Reset\n"
-"Ctrl<Key>a <Key>k: Keypad\n"
-"Ctrl<Key>a <Key>l: Redraw\n"
-"Ctrl<Key>a <Key>m: Compose\n"
-"Ctrl<Key>a <Key>n: Menu\n"
-"Ctrl<Key>a <Key>p: PrintText\n"
-"Ctrl<Key>a <Key>^: Key(notsign)\n"
-"<Key>DC: Delete\n"
-"<Key>UP: Up\n"
-"<Key>DOWN: Down\n"
-"<Key>LEFT: Left\n"
-"<Key>RIGHT: Right\n"
-"<Key>HOME: Home\n"
-"Ctrl<Key>a <Key>1: PA(1)\n"
-"Ctrl<Key>a <Key>2: PA(2)\n";
+    "Ctrl<Key>]: Escape\n"
+    "Ctrl<Key>a Ctrl<Key>a: Key(0x01)\n"
+    "Ctrl<Key>a Ctrl<Key>]: Key(0x1d)\n"
+    "Ctrl<Key>a <Key>c: Clear\n"
+    "Ctrl<Key>a <Key>e: Escape\n"
+    "Ctrl<Key>a <Key>i: Insert\n"
+    "Ctrl<Key>a <Key>r: Reset\n"
+    "Ctrl<Key>a <Key>k: Keypad\n"
+    "Ctrl<Key>a <Key>l: Redraw\n"
+    "Ctrl<Key>a <Key>m: Compose\n"
+    "Ctrl<Key>a <Key>n: Menu\n"
+    "Ctrl<Key>a <Key>p: PrintText\n"
+    "Ctrl<Key>a <Key>^: Key(notsign)\n"
+    "<Key>DC: Delete\n"
+    "<Key>UP: Up\n"
+    "<Key>DOWN: Down\n"
+    "<Key>LEFT: Left\n"
+    "<Key>RIGHT: Right\n"
+    "<Key>HOME: Home\n"
+    "Ctrl<Key>a <Key>1: PA(1)\n"
+    "Ctrl<Key>a <Key>2: PA(2)\n";
 static char *base_keymap2 =
-"Ctrl<Key>a <Key>3: PA(3)\n"
-"<Key>F1: PF(1)\n"
-"Ctrl<Key>a <Key>F1: PF(13)\n"
-"<Key>F2: PF(2)\n"
-"Ctrl<Key>a <Key>F2: PF(14)\n"
-"<Key>F3: PF(3)\n"
-"Ctrl<Key>a <Key>F3: PF(15)\n"
-"<Key>F4: PF(4)\n"
-"Ctrl<Key>a <Key>F4: PF(16)\n"
-"<Key>F5: PF(5)\n"
-"Ctrl<Key>a <Key>F5: PF(17)\n"
-"<Key>F6: PF(6)\n"
-"Ctrl<Key>a <Key>F6: PF(18)\n";
+    "Ctrl<Key>a <Key>3: PA(3)\n"
+    "<Key>F1: PF(1)\n"
+    "Ctrl<Key>a <Key>F1: PF(13)\n"
+    "<Key>F2: PF(2)\n"
+    "Ctrl<Key>a <Key>F2: PF(14)\n"
+    "<Key>F3: PF(3)\n"
+    "Ctrl<Key>a <Key>F3: PF(15)\n"
+    "<Key>F4: PF(4)\n"
+    "Ctrl<Key>a <Key>F4: PF(16)\n"
+    "<Key>F5: PF(5)\n"
+    "Ctrl<Key>a <Key>F5: PF(17)\n"
+    "<Key>F6: PF(6)\n"
+    "Ctrl<Key>a <Key>F6: PF(18)\n";
 static char *base_keymap3 =
-"<Key>F7: PF(7)\n"
-"Ctrl<Key>a <Key>F7: PF(19)\n"
-"<Key>F8: PF(8)\n"
-"Ctrl<Key>a <Key>F8: PF(20)\n"
-"<Key>F9: PF(9)\n"
-"Ctrl<Key>a <Key>F9: PF(21)\n"
-"<Key>F10: PF(10)\n"
-"Ctrl<Key>a <Key>F10: PF(22)\n"
-"<Key>F11: PF(11)\n"
-"Ctrl<Key>a <Key>F11: PF(23)\n"
-"<Key>F12: PF(12)\n"
-"Ctrl<Key>a <Key>F12: PF(24)\n";
+    "<Key>F7: PF(7)\n"
+    "Ctrl<Key>a <Key>F7: PF(19)\n"
+    "<Key>F8: PF(8)\n"
+    "Ctrl<Key>a <Key>F8: PF(20)\n"
+    "<Key>F9: PF(9)\n"
+    "Ctrl<Key>a <Key>F9: PF(21)\n"
+    "<Key>F10: PF(10)\n"
+    "Ctrl<Key>a <Key>F10: PF(22)\n"
+    "<Key>F11: PF(11)\n"
+    "Ctrl<Key>a <Key>F11: PF(23)\n"
+    "<Key>F12: PF(12)\n"
+    "Ctrl<Key>a <Key>F12: PF(24)\n";
 
-/* Base keymap, 3270 mode. */
+/* Base keymap for c3270, 3270 mode. */
 static char *base_3270_keymap =
-"Ctrl<Key>a <Key>a: Attn\n"
-"Ctrl<Key>c: Clear\n"
-"Ctrl<Key>d: Dup\n"
-"Ctrl<Key>f: FieldMark\n"
-"Ctrl<Key>h: Erase\n"
-"Ctrl<Key>i: Tab\n"
-"Ctrl<Key>j: Newline\n"
-"Ctrl<Key>k: Keypad\n"
-"Ctrl<Key>l: Redraw\n"
-"Ctrl<Key>m: Enter\n"
-"Ctrl<Key>n: Menu\n"
-"Ctrl<Key>r: Reset\n"
-"Ctrl<Key>u: DeleteField\n"
-"Ctrl<Key>a <Key>v: ToggleReverse\n"
-"Ctrl<Key>a <Key>f: Flip\n"
-"<Key>IC: ToggleInsert\n"
-"<Key>DC: Delete\n"
-"<Key>BACKSPACE: Erase\n"
-"<Key>HOME: Home\n"
-"<Key>END: FieldEnd\n";
+    "Ctrl<Key>a <Key>a: Attn\n"
+    "Ctrl<Key>c: Clear\n"
+    "Ctrl<Key>d: Dup\n"
+    "Ctrl<Key>f: FieldMark\n"
+    "Ctrl<Key>h: Erase\n"
+    "Ctrl<Key>i: Tab\n"
+    "Ctrl<Key>j: Newline\n"
+    "Ctrl<Key>k: Keypad\n"
+    "Ctrl<Key>l: Redraw\n"
+    "Ctrl<Key>m: Enter\n"
+    "Ctrl<Key>n: Menu\n"
+    "Ctrl<Key>r: Reset\n"
+    "Ctrl<Key>u: DeleteField\n"
+    "Ctrl<Key>a <Key>v: ToggleReverse\n"
+    "Ctrl<Key>a <Key>f: Flip\n"
+    "<Key>IC: ToggleInsert\n"
+    "<Key>DC: Delete\n"
+    "<Key>BACKSPACE: Erase\n"
+    "<Key>HOME: Home\n"
+    "<Key>END: FieldEnd\n";
 
 #else /*][*/
 
-/* Base keymap. */
+/* Base keymap for wc3270. */
 static char *base_keymap =
        "Alt <Key>1:      PA(1)\n"
        "Alt <Key>2:      PA(2)\n"
@@ -222,7 +222,7 @@ static char *base_keymap =
      "Shift <Key>F12:    PF(24)\n"
      "Shift <Key>ESCAPE: Key(0x1d)\n";
 
-/* Base keymap, 3270 mode. */
+/* Base keymap for wc3270, 3270 mode. */
 static char *base_3270_keymap =
       "Ctrl <Key>a:      Attn\n"
        "Alt <Key>a:      Attn\n"
