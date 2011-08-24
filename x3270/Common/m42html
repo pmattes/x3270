@@ -1,0 +1,5 @@
+#!/bin/sh
+# generate an html man page from m4 source
+. ./version.txt
+date=`date "+%d %B %Y"`
+/usr/bin/m4 -DXX_PRODUCT=$1 -DXX_DATE="$date" -DXX_VERSION_NUMBER=$version html.m4 $2

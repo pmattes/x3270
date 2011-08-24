@@ -1,0 +1,1792 @@
+!
+! Copyright (c) 1995-2010, Paul Mattes.
+! All rights reserved.
+!
+! Redistribution and use in source and binary forms, with or without
+! modification, are permitted provided that the following conditions are met:
+!     * Redistributions of source code must retain the above copyright
+!       notice, this list of conditions and the following disclaimer.
+!     * Redistributions in binary form must reproduce the above copyright
+!       notice, this list of conditions and the following disclaimer in the
+!       documentation and/or other materials provided with the distribution.
+!     * Neither the names of Paul Mattes nor the names of his contributors
+!       may be used to endorse or promote products derived from this software
+!       without specific prior written permission.
+!
+! THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
+! WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+! MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+! EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+! SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+! PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+! OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+! WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+! OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+! ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+!
+! x3270 app-defaults file.  This file is generally compiled into x3270, rather
+! than installed.
+!
+! This file is in three sections:
+!
+!  (1) User-Modifiable Resources
+!      Resources that are likeliest to be modified by an end user.
+!
+!  (2) Labels and Messages
+!      Resources that are likely to be modified for translation into another
+!      language.
+!
+!  (3) Base-Level Resources
+!      Resources required for the basic operation of x3270, not for the
+!      faint-hearted to modify.
+!
+!=============================================================================
+! Section 1: User-Modifiable Resources
+!
+! Resources that are likeliest to be modified by an end user.
+!=============================================================================
+!
+! Many of the resource definitions are commented out, because they are
+! the defaults defined in x3270 itself.  They are listed here so you can
+! easily uncomment and change them.
+#ifndef STANDALONE
+!
+!   Fonts
+! *.emulatorFont:			3270
+!
+!   Color schemes for full-color (3279) mode
+!   Each scheme is a list of 23 items:
+!    0  X color to use for IBM "neutral/black" (also used as ANSI color 0)
+!    1	X color to use for IBM "blue" (also used for ANSI color 4)
+!    2	X color to use for IBM "red" (also used for ANSI color 1)
+!    3	X color to use for IBM "pink" (also used for ANSI color 5)
+!    4	X color to use for IBM "green" (also used for ANSI color 2)
+!    5	X color to use for IBM "turquoise"
+!    6	X color to use for IBM "yellow" (also used for ANSI color 3)
+!    7	X color to use for IBM "neutral/white"
+!    8	X color to use for IBM "black"
+!    9	X color to use for IBM "deep blue"
+!    10	X color to use for IBM "orange"
+!    11	X color to use for IBM "purple"
+!    12	X color to use for IBM "pale green"
+!    13	X color to use for IBM "pale turquoise" (also used for ANSI color 6)
+!    14	X color to use for IBM "grey"
+!    15	X color to use for IBM "white" (also used for ANSI color 7)
+!    16 X color to use if one of 0..15 cannot be allocated (white or black)
+!    17 X color to use as the default screen background
+!    18 X color to use as the select background
+!    19 IBM color index (0..15) to use for unprotected, unhighlighted fields
+!    20 IBM color index (0..15) to use for unprotected, highlighted fields
+!    21 IBM color index (0..15) to use for protected, unhighlighted fields
+!    22 IBM color index (0..15) to use for protected, highlighted fields
+!
+! x3270.colorScheme: default
+x3270.colorScheme.default: \
+	black deepSkyBlue red pink \
+	green turquoise yellow white \
+	black blue3 orange purple \
+	paleGreen paleTurquoise2 grey white \
+	white black dimGrey \
+	4 2 1 15
+x3270.colorScheme.reverse: \
+	black blue firebrick pink \
+	green4 cadetBlue goldenrod black \
+	black blue3 orange purple \
+	paleGreen darkTurquoise grey black \
+	black white dimGrey \
+	4 2 1 0
+x3270.colorScheme.bright: \
+	black blue red magenta \
+	green turquoise yellow white \
+	black blue3 orange purple \
+	paleGreen cyan grey white \
+	white black dimGrey \
+	4 2 1 15
+x3270.colorScheme.cpe: \
+	black LightBlue1 PaleVioletRed1 \
+	pink green turquoise yellow white \
+	black LightBlue3 orange MediumPurple1 \
+	paleGreen paleTurquoise2 grey80 white \
+	white black dimGrey \
+	4 2 1 15
+x3270.colorScheme.greenScreen: \
+	green green green green \
+	green green green green \
+	green green green green \
+	green green green green \
+	white black dimGrey \
+	4 15 4 15
+#ifdef X3270_MENUS
+!   Color schemes listed on the Options color menu
+x3270.schemeList:			Default 3279: default\n\
+					Bright: bright\n\
+					Reverse: reverse\n\
+					Green Screen: greenScreen
+!   Character sets listed on the Options menu
+x3270.charsetList:			U.S. English (CP 037): us-intl\n\
+					Bracket (CP 037, modified): bracket\n\
+					APL (CP 037): apl\n\
+					Euro>U.S. English (CP 1140): us-euro\n\
+					Euro>Belgian (CP 1148): belgian-euro\n\
+					Euro>Finnish (CP 1143): finnish-euro\n\
+					Euro>French (CP 1147): french-euro\n\
+					Euro>German (CP 1141): german-euro\n\
+					Euro>Icelandic (CP 1149): icelandic-euro\n\
+					Euro>Italian (CP 1144): italian-euro\n\
+					Euro>Norwegian (CP 1142): norwegian-euro\n\
+					Euro>Spanish (CP 1145): spanish-euro\n\
+					Euro>United Kingdom (CP 1146): uk-euro\n\
+					Belgian (CP 500): belgian\n\
+					Brazilian (CP 275): brazilian\n\
+#ifdef X3270_DBCS
+					Chinese Simplified (CP 935): simplified-chinese\n\
+					Chinese GB 18030 (CP 1388): chinese-gb18030\n\
+					Chinese Traditional (CP 937): traditional-chinese\n\
+#endif
+					Finnish (CP 278): finnish\n\
+					French (CP 297): french\n\
+					German (CP 273): german\n\
+					Greek (CP 875): greek\n\
+					Hebrew (CP 424): hebrew\n\
+					Icelandic (CP 871): icelandic\n\
+					Italian (CP 280): italian\n\
+#ifdef X3270_DBCS
+					Japanese w/Kana (CP 930): japanese-kana\n\
+					Japanese w/Latin (CP 939): japanese-latin\n\
+#endif
+					Norwegian (CP 277): norwegian\n\
+					Open Systems (CP 1047): cp1047\n\
+					Polish (CP 870): cp870\n\
+					Russian (CP 880): russian\n\
+					Slovenian (CP 870): cp870\n\
+					Spanish (CP 284): spanish\n\
+					Thai (CP 1160): thai\n\
+					Turkish (CP 1026): turkish\n\
+					United Kingdom (CP 285): uk\n
+#endif
+!
+!   Pseudo-colors for 3278 mode
+! x3270.colorBackground:		black
+! x3270.selectBackground:		dimGrey
+! x3270.normalColor:			green
+!    Note: the following values are the new defaults, which cause 3278's
+!     to display everything in green.
+! x3270.inputColor:			green
+! x3270.boldColor:			green
+!    To resurrect x3270's Pseudo-Color mode, which was how 3278's were
+!      displayed up through x3270 3.3.5, set the following resource values:
+! x3270.inputColor:			orange
+! x3270.boldColor:			cyan
+!
+!   Cursors
+! x3270.normalCursor:			top_left_arrow
+! x3270.waitCursor:			watch
+! x3270.lockedCursor:			X_cursor
+!
+!   Line-mode Telnet parameters
+! x3270.icrnl:				true
+! x3270.inlcr:				false
+! x3270.erase:				^?
+! x3270.kill:				^U
+! x3270.werase:				^W
+! x3270.rprnt:				^R
+! x3270.lnext:				^V
+! x3270.intr:				^C
+! x3270.quit:				^\\
+! x3270.eof:				^D
+!
+!   Toggles, using the same names as the "-set" and "-clear" options
+! x3270.altCursor:			false
+! x3270.blankFill:			false
+! x3270.crosshair:			false
+! x3270.cursorBlink:			false
+! x3270.cursorPos:			true
+! x3270.dsTrace:			false
+! x3270.eventTrace:			false
+! x3270.lineWrap:			true
+! x3270.marginedPaste:			false
+! x3270.monoCase:			false
+! x3270.rectangleSelect:		false
+! x3270.screenTrace:			false
+! x3270.scrollBar:			false
+! x3270.showTiming:			false
+!
+!   Miscellaneous configuration parameters
+! x3270.activeIcon:			false
+! x3270.allowResize:			true
+! x3270.bellVolume:			0
+! x3270.charset:			bracket
+! x3270.composeMap:			latin1
+! x3270.connectFileName:		~/.x3270connect
+! x3270.doConfirms:			true
+! x3270.debugTracing:			true
+! x3270.disconnectClear:		false
+! x3270.hostsFile:			/usr/lib/X11/x3270/ibm_hosts
+! x3270.highlightSelect:		true
+! x3270.idleCommand:
+! x3270.idleTimeout:			~7m
+! x3270.inputMethod:
+! x3270.invertKeypadShift:		false
+! x3270.keymap:
+! x3270.keypad:				right
+! x3270.keypadOn:			false
+! x3270.labelIcon:			false
+! x3270.m3279:				false
+! x3270.macros:
+! x3270.menuBar:			true
+! x3270.modifiedSel:			false
+! x3270.modifiedSelColor:		10
+! x3270.model:				4
+! x3270.mono:				false
+! x3270.numericLock:			false
+! x3270.once:				false
+! x3270.pluginCommand:			x3270hist.pl
+! x3270.port:				telnet
+! x3270.preeditType:			OverTheSpot+1
+! x3270.saveLines:			64
+! x3270.scripted:			false
+! x3270.suppressHost:			false
+! x3270.suppressFontMenu:		false
+! x3270.termName:
+! x3270.traceDir:			/tmp
+! x3270.cursorColor:			red
+!  (note: cursorColor is not used unless useCursorColor is true, below)
+! x3270.useCursorColor:			false
+! x3270.visualBell:			false
+! x3270.visualSelect:			false
+! x3270.visualSelectColor:		6
+!
+! Fonts listed on the Options menu and for screen resizing
+x3270.emulatorFontList.3270cg-1a,3270cg-1,iso10646-1,iso8859-1: \
+					3270 Font (14 point): #resize 3270\n\
+					8-point Font: #resize 3270gt8\n\
+					12-point Font: #resize 3270-12\n\
+					16-point Font: #resize 3270gt16\n\
+					20-point Font: #resize 3270-20\n\
+					24-point Font: #resize 3270gt24\n\
+					32-point Font: #resize 3270gt32
+x3270.emulatorFontList.3270cg-1a,3270cg-1,iso10646-1,iso8859-15: \
+					3270 Font (14 point): #resize 3270\n\
+					8-point Font: #resize 3270gt8\n\
+					12-point Font: #resize 3270-12\n\
+					16-point Font: #resize 3270gt16\n\
+					20-point Font: #resize 3270-20\n\
+					24-point Font: #resize 3270gt24\n\
+					32-point Font: #resize 3270gt32
+x3270.emulatorFontList.3270cg-1a,iso10646-1:       3270
+x3270.emulatorFontList.3270cg-1a,3270cg-1,iso10646-1,iso8859-1+gb2312.1980-0,iso10646-1: \
+					14-point 3270: 3270+-isas-song ti-medium-r-normal--16-160-72-72-c-160-gb2312.1980-0\n\
+					20-point 3270: 3270-20+-isas-song ti-medium-r-normal--16-160-72-72-c-160-gb2312.1980-0\n\
+					8x16: 8x16+-isas-song ti-medium-r-normal--16-160-72-72-c-160-gb2312.1980-0\n\
+					12x24: 12x24+-isas-song ti-medium-r-normal--24-240-72-72-c-240-gb2312.1980-0
+x3270.emulatorFontList.iso10646-1,jisx0201.1976-0+jisx0208.1983-0,iso10646-1: \
+					14-point: -misc-fixed-medium-r-normal--14-130-75-75-c-70-jisx0201.1976-0+-misc-fixed-medium-r-normal--14-130-75-75-c-140-jisx0208.1983-0\n\
+					16-point: -sony-fixed-medium-r-normal--16-150-75-75-c-80-jisx0201.1976-0+-jis-fixed-medium-r-normal--16-150-75-75-c-160-jisx0208.1983-0\n\
+					18-point: -sony-fixed-medium-r-normal--16-150-75-75-c-80-jisx0201.1976-0+-misc-fixed-medium-r-normal-ja-18-120-100-100-c-180-iso10646-1\n\
+					24-point: -sony-fixed-medium-r-normal--24-230-75-75-c-120-jisx0201.1976-0+-jis-fixed-medium-r-normal--24-230-75-75-c-240-jisx0208.1983-0
+x3270.emulatorFontList.3270cg-1a,3270cg-1,iso10646-1,iso8859-1+big5-0,iso10646-1: fixed+-wenquanyi-wenquanyi bitmap song-bold-r-normal--13-130-75-75-p-80-iso10646-1
+
+#endif
+!
+! Print commands
+x3270.printTextCommand:			lpr
+#ifndef STANDALONE
+x3270.printWindowCommand:		xwd -id %d | xpr | lpr
+!
+! System V versions of print commands
+! x3270.printTextCommand:		lp
+! x3270.printWindowCommand:		xwd -id %d | xpr | lp
+!
+! Trace window command
+x3270.traceCommand:			tail -f
+!
+! File transfer command
+! x3270.ftCommand:			ind$file
+!
+! Printer session options
+#endif
+#ifdef _WIN32
+x3270.printer.assocCommandLine:		wpr3287.exe -assoc %L% %R% %P% %O% %I% %H%
+x3270.printer.luCommandLine:		wpr3287.exe %R% %P% %O% %I% %L%@%H%
+! x3270.printer.name:
+#else
+x3270.printer.command:			lpr
+x3270.printer.assocCommandLine:		pr3287 -assoc %L% -command "%C%" %R% %P% %O% "%H%"
+x3270.printer.luCommandLine:		pr3287 -command "%C%" %R% %P% %O% "%L%@%H%"
+#endif
+#ifndef STANDALONE
+!
+! Translation table for the '@server' pseudo-keymap, which is the keymap
+! you get by default (in addition to the 'base' keymap, below).  Maps server
+! vendor strings to keymap names.
+x3270.serverKeymapList: \
+	Sun Microsystems, Inc.: sun_k5\n\
+	Hewlett-Packard Company: hp-k1\n
+!
+! Keymaps (keyboard and mouse mappings)
+!
+! Base keymap:  What you get by default, in both 3270 and NVT modes.  Any other
+! user-specified keymap is logically added to this keymap.
+x3270.keymap.base: \
+	:<Key>Multi_key:		Compose()\n\
+	Ctrl<Btn1Down>:			HandleMenu(fileMenu)\n\
+	Ctrl<Btn2Down>:			HandleMenu(optionsMenu)\n\
+	Ctrl<Btn3Down>:			HandleMenu(hostMenu,macrosMenu)\n\
+	<Btn1Down>:			SelectDown()\n\
+	~Shift<Btn1Motion>:		SelectMotion()\n\
+	<Btn2Down>:			ignore()\n\
+	<Btn2Motion>:			ignore()\n\
+	<Btn2Up>:			insert-selection(PRIMARY)\n\
+	<Btn3Down>:			start-extend()\n\
+	<Btn3Motion>:			select-extend()\n\
+	~Shift<BtnUp>:			SelectUp(PRIMARY)\n\
+	Shift<Key>Insert:		insert-selection(PRIMARY)\n\
+	Shift<Key>Up:			KybdSelect(Up,PRIMARY)\n\
+	Shift<Key>Down:			KybdSelect(Down,PRIMARY)\n\
+	Shift<Key>Left:			KybdSelect(Left,PRIMARY)\n\
+	Shift<Key>Right:		KybdSelect(Right,PRIMARY)\n\
+	Shift<Key>F1:			PF(13)\n\
+	Shift<Key>F2:			PF(14)\n\
+	Shift<Key>F3:			PF(15)\n\
+	Shift<Key>F4:			PF(16)\n\
+	Shift<Key>F5:			PF(17)\n\
+	Shift<Key>F6:			PF(18)\n\
+	Shift<Key>F7:			PF(19)\n\
+	Shift<Key>F8:			PF(20)\n\
+	Shift<Key>F9:			PF(21)\n\
+	Shift<Key>F10:			PF(22)\n\
+	Shift<Key>F11:			PF(23)\n\
+	Shift<Key>F12:			PF(24)\n\
+	Meta<Key>F1:			PF(13)\n\
+	Alt<Key>F1:			PF(13)\n\
+	Meta<Key>F2:			PF(14)\n\
+	Alt<Key>F2:			PF(14)\n\
+	Meta<Key>F3:			PF(15)\n\
+	Alt<Key>F3:			PF(15)\n\
+	Meta<Key>F4:			PF(16)\n\
+	Alt<Key>F4:			PF(16)\n\
+	Meta<Key>F5:			PF(17)\n\
+	Alt<Key>F5:			PF(17)\n\
+	Meta<Key>F6:			PF(18)\n\
+	Alt<Key>F6:			PF(18)\n\
+	Meta<Key>F7:			PF(19)\n\
+	Alt<Key>F7:			PF(19)\n\
+	Meta<Key>F8:			PF(20)\n\
+	Alt<Key>F8:			PF(20)\n\
+	Meta<Key>F9:			PF(21)\n\
+	Alt<Key>F9:			PF(21)\n\
+	Meta<Key>F10:			PF(22)\n\
+	Alt<Key>F10:			PF(22)\n\
+	Meta<Key>F11:			PF(23)\n\
+	Alt<Key>F11:			PF(23)\n\
+	Meta<Key>F12:			PF(24)\n\
+	Alt<Key>F12:			PF(24)\n\
+	:<Key>F1:			PF(1)\n\
+	:<Key>F2:			PF(2)\n\
+	:<Key>F3:			PF(3)\n\
+	:<Key>F4:			PF(4)\n\
+	:<Key>F5:			PF(5)\n\
+	:<Key>F6:			PF(6)\n\
+	:<Key>F7:			PF(7)\n\
+	:<Key>F8:			PF(8)\n\
+	:<Key>F9:			PF(9)\n\
+	:<Key>F10:			PF(10)\n\
+	:<Key>F11:			PF(11)\n\
+	:<Key>F12:			PF(12)\n\
+	:<Key>Print:			PrintText()\n\
+	Alt<Key>q:			Quit()\n\
+	:<Key>dead_acute:		Compose() Key(apostrophe)\n\
+	:<Key>dead_grave:	 	Compose() Key(grave)\n\
+        :<Key>dead_circumflex:          Compose() Key(asciicircum)\n\
+	:<Key>dead_tilde:	        Compose() Key(asciitilde)\n\
+	:<Key>dead_diaeresis:	        Compose() Key(quotedbl)\n
+!
+! Base keymap for 3270 mode.  These mappings are added to the base keymap,
+! but only when in 3270 mode.
+! These were originally part of the base keymap, but were moved here, because
+! they were no-ops in NVT mode, or interfered with NVT-mode data entry.
+!
+! Note that as yet, there is no x3270.keymap.base.nvt, which would define the
+! base keymap extensions for NVT mode.
+!
+x3270.keymap.base.3270: #override \
+	:Ctrl Shift<Btn1Down>:		MouseSelect()\n\
+	Shift<Btn1Down>:		MoveCursor()\n\
+	Shift<Key>Return:		Newline()\n\
+	:<Key>Return:			Enter()\n\
+	:<Key>Linefeed:			Newline()\n\
+	:<Key>BackSpace: 		Erase()\n\
+	Shift<Key>Tab:			BackTab()\n\
+	:Meta<Key>Left:			PreviousWord()\n\
+	:Alt<Key>Left:			PreviousWord()\n\
+	:Meta<Key>Right:		NextWord()\n\
+	:Alt<Key>Right:			NextWord()\n\
+	:Meta<Key>1:			PA(1)\n\
+	:Alt<Key>1:			PA(1)\n\
+	:Meta<Key>2:			PA(2)\n\
+	:Alt<Key>2:			PA(2)\n\
+	:Meta<Key>3:			PA(3)\n\
+	:Alt<Key>3:			PA(3)\n\
+	Meta<Key>a:			Attn()\n\
+	Alt<Key>a:			Attn()\n\
+	Meta<Key>b:			PrintWindow()\n\
+	Alt<Key>b:			PrintWindow()\n\
+	Meta<Key>c:			Clear()\n\
+	Alt<Key>c:			Clear()\n\
+	Meta<Key>d:			Delete()\n\
+	Alt<Key>d:			Delete()\n\
+	Meta<Key>e:			EraseEOF()\n\
+	Alt<Key>e:			EraseEOF()\n\
+	Meta<Key>f:			Flip()\n\
+	Alt<Key>f:			Flip()\n\
+	Meta<Key>h:			Home()\n\
+	Alt<Key>h:			Home()\n\
+	Meta<Key>i:			Insert()\n\
+	Alt<Key>i:			Insert()\n\
+	Meta<Key>l:			Redraw()\n\
+	Alt<Key>l:			Redraw()\n\
+	Meta<Key>p:			PrintText()\n\
+	Alt<Key>p:			PrintText()\n\
+	Meta<Key>r:			Reset()\n\
+	Alt<Key>r:			Reset()\n\
+	Meta<Key>u:			Unselect()\n\
+	Alt<Key>u:			Unselect()\n\
+	Ctrl<Key>a:			SelectAll(PRIMARY)\n\
+	Ctrl<Key>c:			set-select(CLIPBOARD)\n\
+	Ctrl<Key>u:			DeleteField()\n\
+	Ctrl<Key>w:			DeleteWord()\n\
+	Ctrl<Key>v:			insert-selection(CLIPBOARD)\n\
+	Alt<Key>v:			ToggleReverse()\n\
+	Meta<Key>v:			ToggleReverse()
+! Keymap that exercises the optional history plugin.
+x3270.keymap.hist:
+	Shift<Key>Prior:		Plugin(command,prev)\n\
+	Shift<Key>Next:			Plugin(command,next)
+! Keymap that restores the old (pre 3.3) mouse-click behavior.
+x3270.keymap.oldclick: #override\n\
+	Ctrl<Btn1Down>:                 HandleMenu(fileMenu)\n\
+	Ctrl<Btn2Down>:                 HandleMenu(optionsMenu)\n\
+	Ctrl<Btn3Down>:                 HandleMenu(hostMenu,macrosMenu)\n\
+	<Btn1Down>:                     select-start()\n\
+	~Shift<Btn1Motion>:             select-extend()\n\
+	<Btn2Down>:                     ignore()\n\
+	<Btn2Motion>:                   ignore()\n\
+	<Btn2Up>:                       insert-selection(PRIMARY)\n\
+	<Btn3Down>:                     start-extend()\n\
+	<Btn3Motion>:                   select-extend()\n\
+	~Shift<BtnUp>:                  select-end(PRIMARY)
+x3270.keymap.oldclick.3270: #override\n\
+	:Ctrl Shift<Btn1Down>:          MouseSelect()\n\
+	Shift<Btn1Down>:                MoveCursor()
+!
+! Start of keyboard-specific mappings.
+!
+! Sun Type 5 keyboard map.  Not compatible with earlier Type 3 and Type 4
+! keymaps, but does a better job of mapping intuitive functions to the
+! existing key labels, and has fewer surprises.
+x3270.keymap.sun_k5: \
+	Shift<Key>0x1005ff10:	PF(23)\n\
+	Shift<Key>0x1005ff11:	PF(24)\n\
+	:<Key>0x1005ff10:	PF(11)\n\
+	:<Key>0x1005ff11:	PF(12)\n\
+	~@Num_Lock<Key>F27:	Home()\n\
+	~@Num_Lock<Key>F33:	FieldEnd()\n\
+	:<Key>F18:		insert-selection(PRIMARY)\n\
+	Shift<Key>F22:		SysReq()\n\
+	:<Key>F22:		PrintText()\n\
+	<Key>KP_Enter:		Newline()\n
+! Sun Type 4 keyboard map, backwards-compatible with earlier versions of x3270.
+x3270.keymap.sun_k4: \
+	Shift<Key>0x1005ff10:	PF(23)\n\
+	Shift<Key>0x1005ff11:	PF(24)\n\
+	:<Key>0x1005ff10:	PF(11)\n\
+	:<Key>0x1005ff11:	PF(12)\n\
+	:<Key>KP_1:		Key(1)\n\
+	:<Key>KP_2:		Key(2)\n\
+	:<Key>KP_3:		Key(3)\n\
+	:<Key>KP_4:		Key(4)\n\
+	:<Key>KP_5:		Key(5)\n\
+	:<Key>KP_6:		Key(6)\n\
+	:<Key>KP_7:		Key(7)\n\
+	:<Key>KP_8:		Key(8)\n\
+	:<Key>KP_9:		Key(9)\n\
+	:<Key>KP_0:		Key(0)\n\
+	:<Key>KP_Decimal:	Key(.)\n\
+	:<Key>F18:		insert-selection(PRIMARY)\n\
+	:<Key>F19:		SysReq()\n\
+	:<Key>F20:		FieldMark()\n\
+	:<Key>F21:		PA(1)\n\
+	:<Key>F22:		PA(2)\n\
+	:<Key>F23:		Dup()\n\
+	:<Key>F24:		Reset()\n\
+	:<Key>F25:		EraseEOF()\n\
+	:<Key>F26:		EraseInput()\n\
+	:<Key>F27:		Clear()\n\
+	:<Key>F29:		Redraw()\n\
+	:<Key>F31:		Home()\n\
+	:<Key>KP_Enter:		Newline()\n\
+	:<Key>F35:		Delete()\n
+! Sun Type 3 keyboard.
+x3270.keymap.sun_k3: \
+	Shift<Key>F21:		PF(22)\n\
+	Shift<Key>F22:		PF(23)\n\
+	Shift<Key>F23:		PF(24)\n\
+	:Meta<Key>F21:		PA(1)\n\
+	:Meta<Key>F22:		PA(2)\n\
+	:Meta<Key>F23:		Dup()\n\
+	:<Key>F19:		SysReq()\n\
+	:<Key>0x0:		FieldMark()\n\
+	:<Key>F21:		PF(10)\n\
+	:<Key>F22:		PF(11)\n\
+	:<Key>F23:		PF(12)\n\
+	:<Key>F24:		Reset()\n\
+	:<Key>F25:		EraseEOF()\n\
+	:<Key>F26:		EraseInput()\n\
+	:<Key>F27:		Clear()\n\
+	:<Key>F31:		Home()\n\
+	:<Key>F29:		Redraw()\n\
+	:<Key>KP_Enter:		Newline()\n\
+	:<Key>F35:		Delete()\n
+x3270.keymap.ncd: \
+	:<Key>F13:		Dup()\n\
+	:<Key>Linefeed:		Dup()\n\
+	:<Key>F14:		FieldMark()\n\
+	:<Key>Break:		FieldMark()\n\
+	:<Key>Home:		Home()\n\
+	:<Key>F17:		Home()\n\
+	:<Key>End:		EraseEOF()\n\
+	:<Key>F15:		Reset()\n\
+	:<Key>Prior:		Reset()\n\
+	:<Key>F16:		Newline()\n\
+	:<Key>Next:		Newline()\n\
+	:<Key>KP_Add:		EraseInput()\n\
+	:<Key>Num_Lock:		PF(13)\n\
+	:<Key>KP_Space:		PF(13)\n\
+	:<Key>KP_Divide:		PF(14)\n\
+	:<Key>KP_Multiply:	PF(15)\n\
+	:<Key>KP_7:		PF(16)\n\
+	:<Key>KP_8:		PF(17)\n\
+	:<Key>KP_9:		PF(18)\n\
+	:<Key>KP_4:		PF(19)\n\
+	:<Key>KP_5:		PF(20)\n\
+	:<Key>KP_6:		PF(21)\n\
+	:<Key>KP_1:		PF(22)\n\
+	:<Key>KP_2:		PF(23)\n\
+	:<Key>KP_3:		PF(24)\n\
+	:<Key>KP_Subtract:	SysReq()\n\
+	:<Key>KP_0:		PA(2)\n\
+	:<Key>KP_Decimal:	PA(1)\n\
+	:<Key>KP_Enter:		Clear()\n
+x3270.keymap.hp-k1: \
+	:<Key>KP_Tab:		BackTab()\n\
+	:<Key>KP_Enter:		Home()\n\
+	:<Key>KP_Separator:	Delete()\n\
+	Shift<Key>Delete:	Delete()\n\
+	:<Key>Menu:		EraseEOF()\n\
+	:<Key>KP_Multiply:	PF(13)\n\
+	:<Key>KP_Divide:		PF(14)\n\
+	:<Key>KP_Add:		PF(15)\n\
+	:<Key>KP_7:		PF(16)\n\
+	:<Key>KP_8:		PF(17)\n\
+	:<Key>KP_9:		PF(18)\n\
+	:<Key>KP_4:		PF(19)\n\
+	:<Key>KP_5:		PF(20)\n\
+	:<Key>KP_6:		PF(21)\n\
+	:<Key>KP_1:		PF(22)\n\
+	:<Key>KP_2:		PF(23)\n\
+	:<Key>KP_3:		PF(24)\n\
+	:<Key>KP_0:		PA(2)\n\
+	:<Key>KP_Decimal:	PA(1)\n
+! Keymap for HP-PC101 workstation keyboard, Chris P-E
+x3270.keymap.hp-pc: \
+	:<Key>KP_Subtract:	Compose()\n\
+	:<Key>KP_Enter:		Enter()\n\
+	:<Key>Return:		Newline()\n\
+	!<Key>F1:		PF(1)\n\
+	!<Key>F2:		PF(2)\n\
+	!<Key>F3:		PF(3)\n\
+	!<Key>F4:		PF(4)\n\
+	!<Key>F5:		PF(5)\n\
+	!<Key>F6:		PF(6)\n\
+	!<Key>F7:		PF(7)\n\
+	!<Key>F8:		PF(8)\n\
+	!<Key>F9:		PF(9)\n\
+	!<Key>F10:		PF(10)\n\
+	!<Key>F11:		PF(11)\n\
+	!<Key>F12:		PF(12)\n\
+	!Shift<Key>hpSystem:	PF(13)\n\
+	!Shift<Key>KP_Divide:	PF(14)\n\
+	!Shift<Key>KP_Multiply:	PF(15)\n\
+	!Shift<Key>KP_7:	PF(16)\n\
+	!Shift<Key>KP_8:	PF(17)\n\
+	!Shift<Key>KP_9:	PF(18)\n\
+	!Shift<Key>KP_4:	PF(19)\n\
+	!Shift<Key>KP_5:	PF(20)\n\
+	!Shift<Key>KP_6:	PF(21)\n\
+	!Shift<Key>KP_1:	PF(22)\n\
+	!Shift<Key>KP_2:	PF(23)\n\
+	!Shift<Key>KP_3:	PF(24)\n\
+	!<Key>hpSystem:		PF(1)\n\
+	!<Key>KP_Divide:	PF(2)\n\
+	!<Key>KP_Multiply:	PF(3)\n\
+	!<Key>KP_7:		PF(4)\n\
+	!<Key>KP_8:		PF(5)\n\
+	!<Key>KP_9:		PF(6)\n\
+	!<Key>KP_4:		PF(7)\n\
+	!<Key>KP_5:		PF(8)\n\
+	!<Key>KP_6:		PF(9)\n\
+	!<Key>KP_1:		PF(10)\n\
+	!<Key>KP_2:		PF(11)\n\
+	!<Key>KP_3:		PF(12)\n\
+	!<Key>Break:		Reset()\n\
+	!Shift<Key>Break:	Attn()\n\
+	!Meta<Key>Break:	SysReq()\n\
+	!<Key>Prior:		Dup()\n\
+	!<Key>Next:		FieldMark()\n\
+	!<Key>Select:		EraseEOF()\n\
+	!Meta<Key>hpInsertChar:	PA(1)\n\
+	!Meta<Key>Home:		PA(2)\n\
+	!Meta<Key>Prior:	PA(3)\n\
+	!<Key>hpInsertChar:	Insert()\n\
+	!<Key>hpDeleteChar:	Delete()\n\
+	!Shift<Key>Menu:	PrintWindow()\n\
+	!<Key>Menu:		PrintText()\n
+! Keymap for IBM X Terminal, Allan L. Bazinet
+x3270.keymap.ibm-xterm: \
+	:<Key>Execute:		Enter()\n\
+	!<Key>Pause:		Clear()\n\
+	!<Key>BackSpace:	BackSpace()\Delete()\n\
+	!<Key>End:		FieldEnd()\n\
+	!Alt<Key>c:		Clear()\n\
+	!Alt<Key>Print:		SysReq()\n\
+	!Ctrl<Key>Home:		EraseInput()\n\
+	!Ctrl<Key>End:		EraseEOF()\n\
+	!Shift<Key>Tab:		BackTab()\n\
+	:<Key>KP_Subtract:	PA(1)\n\
+	:<Key>KP_Add:		PA(2)\n\
+	:<Key>KP_Enter:		Enter()\n\
+	:<Key>Prior:		PA(1)\n\
+	:<Key>Next:		PA(2)\n\
+	:<Key>Escape:		Reset()\n\
+	:<Key>Control_L:	Reset()\n\
+	:<Key>Insert:		Insert()\n\
+	!Shift<Key>Right:	Right2()\n\
+	!Shift<Key>Left:	Left2()\n
+! Keymap for common 3270 functions on a PC keyboard, from Richard Lennox.
+x3270.keymap.rlx: #override \
+	<Key>Prior:		PF(7)\n\
+	<Key>Next:		PF(8)\n\
+	<Key>Control_R:		Enter()\n\
+	<Key>Return: 		Newline()\n\
+	<Key>Pause: 		Clear()\n\
+	Shift<Key>Escape:	Attn()\n\
+	Shift<Key>Left:		PreviousWord()\n\
+	Shift<Key>Right:	NextWord()\n\
+	Ctrl<Key>Left:		PreviousWord()\n\
+	Ctrl<Key>Right:		NextWord()\n\
+	Shift<Key>End:		EraseEOF()\n\
+	<Key>End:		FieldEnd()
+! Keymap modifier for OpenWindows (makes button 2 the extend key; defines the
+! Paste and Cut keys; uses CLIPBOARD).
+x3270.keymap.ow:	#override \
+	~Shift<Btn1Down>:	select-start()\n\
+	~Shift<Btn1Motion>:	select-extend()\n\
+	<Btn2Down>:		start-extend()\n\
+	<Btn2Motion>:		select-extend()\n\
+	<Btn3Down>:		ignore()\n\
+	<Btn3Motion>:		ignore()\n\
+	<Btn3Up>:		insert-selection(CLIPBOARD,PRIMARY)\n\
+	<BtnUp>:		select-end(PRIMARY)\n\
+	:<Key>F16:		set-select(CLIPBOARD)\n\
+	Shift<Key>F18:		insert-selection(PRIMARY)\n\
+	:<Key>F18:		insert-selection(CLIPBOARD,PRIMARY)\n\
+	:<Key>F20:		set-select(CLIPBOARD) Cut()\n
+! APL keymap modifier.
+x3270.keymap.apl:	#override \
+	!:Alt<Key>bracketleft:	Key(apl_leftarrow)\n\
+	!:Alt<Key>bracketright: Key(apl_rightarrow)\n\
+	:<Key>bracketleft:	Key(apl_bracketleft)\n\
+	:<Key>bracketright:	Key(apl_bracketright)\n\
+	!:Alt<Key>1:		Key(apl_diaeresis)\n\
+	!:Alt<Key>2:		Key(apl_overbar)\n\
+	!:Alt<Key>3:		Key(less)\n\
+	!:Alt<Key>4:		Key(apl_notgreater)\n\
+	!:Alt<Key>5:		Key(equal)\n\
+	!:Alt<Key>6:		Key(apl_notless)\n\
+	!:Alt<Key>7:		Key(greater)\n\
+	!:Alt<Key>8:		Key(apl_notequal)\n\
+	!:Alt<Key>9:		Key(apl_downcaret)\n\
+	!:Alt<Key>0:		Key(apl_upcaret)\n\
+	!:Alt<Key>minus:	Key(apl_overbar)\n\
+	!:Alt<Key>underscore:	Key(underscore)\n\
+	!:Alt<Key>=:		Key(apl_multiply)\n\
+	!:Alt<Key>+:		Key(apl_divide)\n\
+	!:Alt<Key>asciitilde:	Key(apl_tilde)\n\
+	!:Alt<Key>backslash:	Key(apl_slope)\n\
+	!:Alt<Key>bar:		Key(apl_stile)\n\
+	:Alt<Key>a:		Key(apl_alpha)\n\
+	:Alt<Key>b:		Key(apl_downtack)\n\
+	:Alt<Key>c:		Key(apl_upshoe)\n\
+	:Alt<Key>d:		Key(apl_downstile)\n\
+	:Alt<Key>e:		Key(apl_epsilon)\n\
+	:Alt<Key>f:		Key(underscore)\n\
+	:Alt<Key>g:		Key(apl_del)\n\
+	:Alt<Key>h:		Key(apl_delta)\n\
+	:Alt<Key>i:		Key(apl_iota)\n\
+	:Alt<Key>j:		Key(apl_jot)\n\
+	:Alt<Key>k:		Key(apostrophe)\n\
+	:Alt<Key>l:		Key(apl_quad)\n\
+	:Alt<Key>m:		Key(apl_stile)\n\
+	:Alt<Key>n:		Key(apl_uptack)\n\
+	:Alt<Key>o:		Key(apl_circle)\n\
+	:Alt<Key>p:		Key(asterisk)\n\
+	:Alt<Key>q:		Key(question)\n\
+	:Alt<Key>r:		Key(apl_rho)\n\
+	:Alt<Key>s:		Key(apl_upstile)\n\
+	:Alt<Key>t:		Key(apl_tilde)\n\
+	:Alt<Key>u:		Key(apl_downarrow)\n\
+	:Alt<Key>v:		Key(apl_downshoe)\n\
+	:Alt<Key>w:		Key(apl_omega)\n\
+	:Alt<Key>x:		Key(apl_rightshoe)\n\
+	:Alt<Key>y:		Key(apl_uparrow)\n\
+	:Alt<Key>z:		Key(apl_leftshoe)\n\
+	:Alt<Key>A:		Key(apl_Aunderbar)\n\
+	:Alt<Key>B:		Key(apl_Bunderbar)\n\
+	:Alt<Key>C:		Key(apl_Cunderbar)\n\
+	:Alt<Key>D:		Key(apl_Dunderbar)\n\
+	:Alt<Key>E:		Key(apl_Eunderbar)\n\
+	:Alt<Key>F:		Key(apl_Funderbar)\n\
+	:Alt<Key>G:		Key(apl_Gunderbar)\n\
+	:Alt<Key>H:		Key(apl_Hunderbar)\n\
+	:Alt<Key>I:		Key(apl_Iunderbar)\n\
+	:Alt<Key>J:		Key(apl_Junderbar)\n\
+	:Alt<Key>K:		Key(apl_Kunderbar)\n\
+	:Alt<Key>L:		Key(apl_Lunderbar)\n\
+	:Alt<Key>M:		Key(apl_Munderbar)\n\
+	:Alt<Key>N:		Key(apl_Nunderbar)\n\
+	:Alt<Key>O:		Key(apl_Ounderbar)\n\
+	:Alt<Key>P:		Key(apl_Punderbar)\n\
+	:Alt<Key>Q:		Key(apl_Qunderbar)\n\
+	:Alt<Key>R:		Key(apl_Runderbar)\n\
+	:Alt<Key>S:		Key(apl_Sunderbar)\n\
+	:Alt<Key>T:		Key(apl_Tunderbar)\n\
+	:Alt<Key>U:		Key(apl_Uunderbar)\n\
+	:Alt<Key>V:		Key(apl_Vunderbar)\n\
+	:Alt<Key>W:		Key(apl_Wunderbar)\n\
+	:Alt<Key>X:		Key(apl_Xunderbar)\n\
+	:Alt<Key>Y:		Key(apl_Yunderbar)\n\
+	:Alt<Key>Z:		Key(apl_Zunderbar)\n
+!
+! Keymap for the "not" key, assumed to be above the "6" key on U.S.
+! keyboards.  This used to be part of the 3270 base keymap, but does not
+! work properly on non-U.S. keyboards.
+x3270.keymap.not.3270: \
+	:<Key>asciicircum:		Key(notsign)
+! Helpful modifier to disply the translation table.
+x3270.keymap.t: \
+	Meta<Key>t:		XtDisplayTranslations()\n\
+	Alt<Key>t:		XtDisplayTranslations()\n
+! International keymap modifiers.
+x3270.keymap.finnish7:	\
+	:<Key>bracketleft:	Key("adiaeresis")\n\
+	:<Key>bracketright:	Key("aring")\n\
+	:<Key>backslash:	Key("odiaeresis")\n\
+	:<Key>braceleft:	Key("Adiaeresis")\n\
+	:<Key>braceright:	Key("Aring")\n\
+	:<Key>bar:		Key("Odiaeresis")\n
+x3270.keymap.norwegian7:	\
+	:<Key>bracketleft:	Key("ae")\n\
+	:<Key>backslash:	Key("oslash")\n\
+	:<Key>bracketright:	Key("aring")\n\
+	:<Key>braceleft:	Key("AE")\n\
+	:<Key>bar:		Key("Ooblique")\n\
+	:<Key>braceright:	Key("Aring")\n\
+	:!Meta<Key>u:		Key("udiaeresis")\n\
+	:<Key>dollar:		Key("currency")\n\
+	:<Key>at:		Key("backslash")\n
+! "Old" Norwegian keymap, compatible with older versions of x3270.
+x3270.keymap.oldnorwegian7:	\
+	:<Key>bracketleft:	Key("AE")\n\
+	:<Key>bracketright:	Key("Aring")\n\
+	:<Key>backslash:	Key("Ooblique")\n\
+	:<Key>braceleft:	Key("ae")\n\
+	:<Key>braceright:	Key("aring")\n\
+	:<Key>bar:		Key("oslash")\n
+! German keymap courtesy of Karlheinz Kandler
+x3270.keymap.german7:	\
+	:<Key>bracketleft:	Key("adiaeresis")\n\
+	:<Key>bracketright:	Key("udiaeresis")\n\
+	:<Key>backslash:	Key("odiaeresis")\n\
+	:<Key>braceleft:	Key("Adiaeresis")\n\
+	:<Key>braceright:	Key("Udiaeresis")\n\
+	:<Key>bar:		Key("Odiaeresis")\n\
+	:<Key>asciicircum:	Key("^")\n\
+	:<Key>asciitilde:	Key("ssharp")\n\
+	:<Key>at:		Key("section")\n
+! Keymap modifier for RS/6000s with French AZERTY keyboards, which allows
+! the diaeresis and circumflex keys to work intuitively (press diaereses,
+! press "a", get "adiaeresis, etc.)
+x3270.keymap.fr6k:	\
+	Shift<Key>dead_diaeresis:	Compose() Key(quotedbl)\n\
+	:<Key>dead_circumflex:		Compose() Key(asciicircum)\n
+! Icelandic keymap, courtesy of Rikhardur Egilsson
+x3270.keymap.icelandic: \
+	:<Key>dead_acute:	Compose() Key(apostrophe)\n
+!
+!=============================================================================
+! Section 2: Labels and Messages
+!
+! These are resources that are likely to be modified for translation
+! into another language.
+!=============================================================================
+!
+x3270.errorPopup.title:				x3270 Error
+x3270.errorPopup*cancelButton.label:		Exit
+x3270.printerErrorPopup.title:			x3270 Printer Error
+x3270.childErrorPopup.title:			x3270 Child Process Error
+x3270.passwordPopup.title:			x3270 Password
+#ifdef X3270_MENUS
+x3270.infoPopup.title:				x3270 Information
+x3270.printerInfoPopup.title:			x3270 Printer Information
+x3270.childInfoPopup.title:			x3270 Child Process Information
+x3270.connectPopup.title:			x3270 Connect
+x3270.connectPopup.dialog.label:		Enter Hostname
+x3270.fontPopup.title:				x3270 Font
+x3270.fontPopup.dialog.label:			Enter Font Name
+x3270.keymapPopup.title:			x3270 Keymap
+x3270.keymapPopup.dialog.label:			Enter Keymap Name
+x3270.oversizePopup.title:			x3270 Oversize
+x3270.oversizePopup.dialog.label:		Enter Dimensions (cols x rows)
+x3270.oversizePopup*confirmButton.label:	Resize
+#endif
+#ifdef X3270_KEYPAD
+x3270.keypadPopup.title:			x3270 Keypad
+#endif
+#ifdef X3270_MENUS
+x3270.printTextPopup.title:			x3270 Screen Print
+x3270.printTextPopup.dialog.label:		Enter Print Command
+x3270.printTextPopup*confirmButton.label:	Print
+x3270.saveTextPopup.title:			x3270 Screen Save
+x3270.saveTextPopup.dialog.label:		Enter File Name
+x3270.saveTextPopup*confirmButton.label:	Save as Text
+x3270.saveTextPopup*confirm2Button.label:	Save as HTML
+x3270.printWindowPopup.title:			x3270 Window Print
+x3270.printWindowPopup.dialog.label:		Enter Print Command
+x3270.printWindowPopup*confirmButton.label:	Print
+#endif
+x3270.passwordPopup.dialog.label:		Enter Private Key Password
+#ifdef COLOR
+x3270.passwordPopup.dialog*value*foreground:	lavender
+#else
+x3270.passwordPopup.dialog*value*foreground:	white
+x3270.passwordPopup.dialog*value*background:	white
+#endif
+#ifdef X3270_TRACE
+x3270.tracePopup.title:				x3270 Tracing
+x3270.tracePopup.dialog.label:			Enter Trace File Name
+x3270.tracePopup*confirmButton.label:		Trace
+x3270.tracePopup*confirm2Button.label:		No File
+x3270.screentracePopup.title:			x3270 Screen Image Tracing
+x3270.screentracePopup.dialog.label:		Enter File Name
+x3270.screentracePopup*confirmButton.label:	Continuously
+x3270.screentracePopup*confirm2Button.label:	Once
+#endif
+#ifdef X3270_MENUS
+x3270.executeActionPopup.title:			x3270 Execute Action
+x3270.executeActionPopup.dialog.label:		Enter Action and Parameters
+x3270.executeActionPopup*confirmButton.label:	Execute
+x3270.saveOptionsPopup.title:			x3270 Save Changed Options
+x3270.saveOptionsPopup.dialog.label:		Enter Profile/Session File Name
+x3270.saveOptionsPopup*confirmButton.label:	Save
+x3270.aboutCopyrightPopup.title:		x3270 Copyright
+x3270.aboutConfigPopup.title:			x3270 Configuration
+x3270.aboutStatusPopup.title:			x3270 Connection Status
+x3270.connectPopup*confirmButton.label:		Connect
+x3270.fontPopup*confirmButton.label:		Select Font
+x3270.keymapPopup*confirmButton.label:		Select Keymap
+#endif
+#ifdef X3270_FT
+x3270.ftPopup.title:				x3270 File Transfer
+x3270.ftProgressPopup.title:			x3270 File Transfer
+x3270.ftOverwritePopup.title:			x3270 File Transfer
+#endif
+#ifdef X3270_SCRIPT
+x3270.idlePopup.title:				x3270 Idle Command
+#endif
+x3270.kmPopup.title:				x3270 Keymap
+x3270*confirmButton.label:			OK
+x3270.printerErrorPopup*cancelButton.label:	Abort Printer
+x3270.printerInfoPopup*cancelButton.label:	Abort Printer
+x3270.childErrorPopup*cancelButton.label:	Discard Output
+x3270.childInfoPopup*cancelButton.label:	Discard Output
+x3270*cancelButton.label:			Cancel
+#ifdef X3270_MENUS
+x3270*aboutOption.label:			About x3270...
+x3270*aboutCopyright.label:			Copyright
+x3270*aboutConfig.label:			Configuration
+x3270*aboutStatus.label:			Connection Status
+#ifdef X3270_FT
+x3270*ftOption.label:				File Transfer...
+#endif
+#ifdef X3270_PRINTER
+x3270*printerOption.label:			Printer Session
+x3270*assocButton.label:			Start, associate with current LU
+x3270*luButton.label:				Start, specific LU...
+x3270*printerOffButton.label:			Stop Printer
+#endif
+x3270*abortScriptOption.label:			Abort Scripts/Macros/Strings
+x3270*disconnectOption.label:			Disconnect
+x3270*exitOption.label:				Exit x3270
+x3270*exitReallyOption.label:			Disconnect and Exit
+x3270*printTextOption.label:			Print Screen Text
+x3270*saveTextOption.label:			Save Screen Text in File
+x3270*printWindowOption.label:			Print Window Bitmap
+x3270*executeActionOption.label:		Execute an Action
+x3270*fileMenuButton.label:			File
+x3270*fileMenu.label:				File
+#endif
+#ifdef X3270_FT
+x3270.ftPopup*justify:				left
+x3270.ftPopup*send.label:			Send to host
+x3270.ftPopup*receive.label:			Receive from host
+x3270.ftPopup*ascii.label:			Transfer ASCII file
+x3270.ftPopup*cr.label:				Add/remove CR at end of line
+x3270.ftPopup*binary.label:			Transfer binary file
+x3270.ftPopup*local.label:			Local File Name
+x3270.ftPopup*host.label:			Host File Name
+x3270.ftPopup*append.label:			Append to file
+x3270.ftPopup*remap.label:			Remap ASCII Characters
+x3270.ftPopup*vm.label:				Host is VM/CMS
+x3270.ftPopup*tso.label:			Host is TSO
+x3270.ftPopup*confirmButton.label:		Transfer File
+x3270.ftPopup*file.label:			Record Format
+x3270.ftPopup*recfmDefault.label:		Default
+x3270.ftPopup*fixed.label:			Fixed
+x3270.ftPopup*variable.label:			Variable
+x3270.ftPopup*undefined.label:			Undefined
+x3270.ftPopup*units.label:			Space Allocation Units
+x3270.ftPopup*spaceDefault.label:		Default
+x3270.ftPopup*tracks.label:			Tracks
+x3270.ftPopup*cylinders.label:			Cylinders
+x3270.ftPopup*avblock.label:			Avblock
+x3270.ftPopup*lrecl.label:			LRECL
+x3270.ftPopup*blksize.label:			BLKSIZE
+x3270.ftPopup*primspace.label:			Primary Space
+x3270.ftPopup*secspace.label:			Secondary Space
+x3270.ftPopup*buffersize.label:			DFT Buffer Size
+x3270.ftProgressPopup*fromLabel.label:		Source:
+x3270.ftProgressPopup*fromLabel.justify:	right
+x3270.ftProgressPopup*toLabel.label:		Destination:
+x3270.ftProgressPopup*toLabel.justify:		right
+x3270.ftProgressPopup*filename.justify:		left
+x3270.ftOverwritePopup*overwriteName.label:	Overwrite existing file %s?
+x3270.ftProgressPopup*waiting.label:		Waiting for host acknowledgment...
+x3270.ftProgressPopup*status.label:		%lu bytes transferred
+x3270.ftProgressPopup*aborting.label:		Aborting transfer...
+#endif
+#ifdef X3270_SCRIPT
+x3270.idlePopup*justify:			left
+x3270.idlePopup*command.label:			Command(s)
+x3270.idlePopup*timeout.label:			Timeout Value
+x3270.idlePopup*enable.label:			Enable for this session
+x3270.idlePopup*enablePerm.label:		Enable whenever connected
+x3270.idlePopup*disable.label:			Disable
+x3270.idlePopup*hours.label:			Hours
+x3270.idlePopup*minutes.label:			Minutes
+x3270.idlePopup*seconds.label:			Seconds
+x3270.idlePopup*fuzz.label:			Vary time 0..10%
+#endif
+#ifdef X3270_PRINTER
+x3270.printerLuPopup.title:			x3270 Printer Session
+x3270.printerLuPopup.dialog.label:		Enter LU Name
+x3270.printerLuPopup*confirmButton.label:	Start Session
+#endif
+#ifdef X3270_MENUS
+x3270*optionsMenuButton.label:			Options
+x3270*optionsMenu.label:			Options
+x3270*connectMenuButton.label:			Connect
+x3270*macrosMenuButton.label:			Macros
+x3270*macrosMenu.label:				Macros
+x3270*hostMenu.label:				Connect
+x3270*helpButton.label:				Help
+x3270*otherHostOption.label:			Other...
+x3270*togglesOption.label:			Toggles
+x3270*fontsOption.label:			Font
+x3270*modelsOption.label:			Screen Size
+x3270*colorsOption.label:			Color Scheme
+x3270*charsetOption.label:			Character Set
+x3270*keymapOption.label:			Change Keymap...
+x3270*idleCommandOption.label:			Configure Idle Command
+x3270*keypadOption.label:			Keypad
+x3270*monocaseOption.label:			Monocase
+x3270*cursorBlinkOption.label:			Blinking Cursor
+x3270*showTimingOption.label:			Show Timing
+x3270*cursorPosOption.label:			Track Cursor
+x3270*dsTraceOption.label:			Trace Data Stream
+x3270*eventTraceOption.label:			Trace Keyboard/Mouse Events
+x3270*screenTraceOption.label:			Save Screen(s) in File
+x3270*scrollBarOption.label:			Scrollbar
+x3270*lineWrapOption.label:			Wraparound
+x3270*marginedPasteOption.label:		Paste with Left Margin
+x3270*rectangleSelectOption.label:		Select by Rectangles
+x3270*blankFillOption.label:			Blank Fill
+x3270*crosshairOption.label:			Crosshair Cursor
+x3270*visibleControlOption.label:		Visible Control Chars
+x3270*underlineCursorOption.label:		Underline Cursor
+x3270*blockCursorOption.label:			Block Cursor
+x3270*otherFontOption.label:			Other...
+x3270*lineModeOption.label:			Line Mode
+x3270*characterModeOption.label:		Character Mode
+x3270*extendedDsOption.label:			Extended 3270 Data Stream
+x3270*m3278Option.label:			Monochrome (3278) Emulation
+x3270*m3279Option.label:			Color (3279) Emulation
+x3270*model2Option.label:			Model 2 (80x24)
+x3270*model3Option.label:			Model 3 (80x32)
+x3270*model4Option.label:			Model 4 (80x43)
+x3270*model5Option.label:			Model 5 (132x27)
+x3270*oversizeOption.label:			Oversize...
+x3270*saveOption.label:				Save Changed Options
+#endif
+!
+! Messages
+#ifdef X3270_MENUS
+x3270.message.processId:			Process ID:
+x3270.message.windowId:				Main window ID:
+x3270.message.model:				Model
+x3270.message.rows:				rows
+x3270.message.columns:				columns
+x3270.message.mono:				monochrome
+x3270.message.fullColor:			color
+x3270.message.pseudoColor:			pseudo-color
+x3270.message.extendedDs:			extended data stream
+x3270.message.standardDs:			standard data stream
+x3270.message.terminalName:			Terminal name:
+x3270.message.luName:				LU name:
+x3270.message.bindPluName:			BIND PLU name:
+x3270.message.emulatorFont:			Emulator font:
+x3270.message.emulatorFontDbcs:			DBCS emulator font:
+x3270.message.xFont:				standard X11 font
+x3270.message.cgFont:				special 3270 CG font
+x3270.message.charset:				Host EBCDIC character set:
+x3270.message.sbcsCgcsgid:			Host SBCS CGCSGID:
+x3270.message.dbcsCgcsgid:			Host DBCS CGCSGID:
+x3270.message.defaultCharacterSet:		Default (us) EBCDIC character set
+x3270.message.displayCharacterSet:		Display character set:
+x3270.message.displayCharacterSetDbcs:		DBCS display character set:
+x3270.message.localeCodeset:			Locale codeset:
+x3270.message.require:				require
+x3270.message.have:				have
+x3270.message.keyboardMap:			Keyboard map:
+x3270.message.defaultKeyboardMap:		Default keyboard map
+x3270.message.composeMap:			Compose-key map:
+x3270.message.noComposeMap:			No compose-key map
+x3270.message.activeIcon:			Active icon
+x3270.message.iconFont:				Icon font:
+x3270.message.iconLabelFont:			Icon label font:
+x3270.message.staticIcon:			Static bitmap icon
+x3270.message.connectedTo:			Connected to:
+x3270.message.port:				Port:
+x3270.message.secure:				via TLS/SSL
+x3270.message.proxyType:			Proxy type:
+x3270.message.server:				Server:
+x3270.message.charMode:				NVT character mode
+x3270.message.lineMode:				NVT line mode
+x3270.message.dsMode:				3270 mode
+x3270.message.sscpMode:				SSCP-LU mode
+x3270.message.tn3270eOpts:			TN3270E options:
+x3270.message.tn3270eNoOpts:			No TN3270E options
+x3270.message.connectionPending:		Connection pending to:
+x3270.message.notConnected:			Not connected
+x3270.message.specialCharacters:		Special characters:
+x3270.message.hour:				hour
+x3270.message.hours:				hours
+x3270.message.minute:				minute
+x3270.message.minutes:				minutes
+x3270.message.second:				second
+x3270.message.seconds:				seconds
+x3270.message.sent:				Sent
+x3270.message.Received:				Received
+x3270.message.received:				received
+x3270.message.byte:				byte
+x3270.message.bytes:				bytes
+x3270.message.record:				record
+x3270.message.records:				records
+x3270.message.statusDbcs:			DBCS
+x3270.message.statusNotConnected:		Not Connected
+x3270.message.statusTwait:			Wait
+x3270.message.statusSyswait:			System
+x3270.message.statusProtected:			Protected
+x3270.message.statusNumeric:			Numeric
+x3270.message.statusOverflow:			Overflow
+x3270.message.statusInhibit:			Inhibit
+x3270.message.statusScrolled:			Scrolled
+x3270.message.statusMinus:			No Function
+#endif
+x3270.message.statusConnecting:			Connecting
+#endif
+#ifdef X3270_FT
+x3270.message.ftComplete:			Transfer complete, %i bytes transferred\n\
+%sbytes/sec in %s mode
+x3270.message.ftUnable:				Cannot begin transfer
+x3270.message.ftStartTimeout:			Transfer did not start within 10s
+x3270.message.ftUserCancel:			Transfer cancelled by user
+x3270.message.ftHostCancel:			Transfer cancelled by host
+x3270.message.ftCutUnknownFrame:		Unknown frame type from host
+x3270.message.ftCutUnknownControl:		Unknown FT control code from host
+x3270.message.ftCutRetransmit:			Transmission error
+x3270.message.ftCutConversionError:		Data conversion error
+x3270.message.ftCutOversize:			Illegal frame length
+x3270.message.ftDisconnected:			Host disconnected, transfer cancelled
+x3270.message.ftNot3270:			Not in 3270 mode, transfer cancelled
+x3270.message.ftDftUnknownOpen:			Uknown DFT Open type from host
+#endif
+x3270.message.inputMethod:			X11 Input Method (XIM):
+x3270.message.ximState:				state:
+x3270.message.ximDisabled:			failed
+x3270.message.ximNotFound:			not found
+x3270.message.ximActive:			active
+x3270.message.ximLocale:			locale:
+x3270.message.ximEncoding:			encoding:
+#ifndef STANDALONE
+x3270.message.kmEvent:				Event
+x3270.message.kmKeymapLine:			Keymap:Line
+x3270.message.kmActions:			Actions
+x3270.message.kmOverridden:			\ -- overridden --
+x3270.message.kmKeymap:				Keymap
+x3270.message.kmTemporaryKeymap:		Temporary keymap
+
+x3270.message.kmFile:				from file
+x3270.message.kmResource:			from resource
+x3270.message.kmFromServer:			\ (expanded from '@server')
+!
+!=============================================================================
+! Section 3: Base-Level Resources
+!
+! Resources required for the basic operation of x3270, not for the
+! faint-hearted to modify.
+!=============================================================================
+!
+! App-defaults file version
+x3270.adVersion:		3.3.4
+!
+! Fonts
+#ifdef X3270_APL
+x3270.aplFont:			3270
+#endif
+x3270.debugFont:		3270d
+x3270.iconFont:			nil2
+x3270.iconLabelFont:		8x13
+#ifdef X3270_KEYPAD
+x3270*keyPad*large*font: 	fixed
+x3270*keyPad*small*font:	-*-fixed-medium-r-semicondensed-*-12-*-*
+#endif
+x3270*value*font:		fixed
+x3270*dataLabel.font:		 -*-courier-medium-r-normal--14-*-100-100-m-*-iso8859-1
+!x3270*smallLabel.font:		5x7
+x3270*smallLabel.font:		6x13
+x3270*filename*font:		fixed
+x3270*kmPopup*text*font:	fixed
+x3270*font:			-*-helvetica-bold-r-normal--14-*-100-100-p-*-iso8859-1
+!
+! Menu configuration
+#ifdef X3270_MENUS
+x3270*menuBarContainer.borderWidth:		2
+#endif
+#ifdef COLOR
+#ifdef X3270_KEYPAD
+x3270.keypadBackground:				grey
+#endif
+#ifdef X3270_MENUS
+x3270*menuBarContainer.background:		grey
+x3270*menuBarContainer.borderColor:		grey40
+x3270*fileMenuButton*background:		grey
+x3270*optionsMenuButton*background:		grey
+x3270*connectMenuButton*background:		grey
+x3270*macrosMenuButton*background:		grey
+x3270*helpButton*background:			grey
+x3270*keypadButton*background:			grey
+x3270*lockedIcon*background:			grey
+x3270*lockedIcon*foreground:			yellow4
+x3270*lockedIcon*borderColor:			grey
+x3270*unlockedIcon*background:			grey
+x3270*unlockedIcon*borderColor:			grey
+x3270*fileMenuButton*borderColor:		grey
+x3270*optionsMenuButton*borderColor:		grey
+x3270*connectMenuButton*borderColor:		grey
+x3270*macrosMenuButton*borderColor:		grey
+x3270*helpButton*borderColor:			grey
+#endif
+#else
+#ifdef X3270_MENUS
+x3270*fileMenuButton*borderColor:		XtDefaultBackground
+x3270*optionsMenuButton*borderColor:		XtDefaultBackground
+x3270*connectMenuButton*borderColor:		XtDefaultBackground
+x3270*macrosMenuButton*borderColor:		XtDefaultBackground
+x3270*helpButton*borderColor:			XtDefaultBackground
+#endif
+#endif
+#ifdef X3270_MENUS
+x3270*fileMenuButton*highlightThickness:	1
+x3270*optionsMenuButton*highlightThickness:	1
+x3270*connectMenuButton*highlightThickness:	1
+x3270*macrosMenuButton*highlightThickness:	1
+x3270*helpButton*highlightThickness:	1
+x3270*keypadButton*highlightThickness:		1
+#ifdef COLOR
+x3270*fileMenu*background:			grey
+x3270*exitMenu*background:			grey
+x3270*optionsMenu*background:			grey
+x3270*hostMenu*background:			grey
+x3270*macrosMenu*background:			grey
+x3270*togglesMenu*background:			grey
+x3270*fontsMenu*background:			grey
+x3270*modelsMenu*background:			grey
+x3270*colorsMenu*background:			grey
+x3270*charsetMenu*background:			grey
+x3270*printerMenu*background:			grey
+#endif
+x3270*fileMenu.borderWidth:			2
+x3270*exitMenu.borderWidth:			2
+x3270*optionsMenu.borderWidth:			2
+x3270*hostMenu.borderWidth:			2
+x3270*macrosMenu.borderWidth:			2
+x3270*togglesMenu.borderWidth:			2
+x3270*fontsMenu.borderWidth:			2
+x3270*modelsMenu.borderWidth:			2
+x3270*colorsMenu.borderWidth:			2
+x3270*charsetMenu.borderWidth:			2
+#ifdef COLOR
+x3270*fileMenu.borderColor:			grey40
+x3270*exitMenu.borderColor:			grey40
+x3270*optionsMenu.borderColor:			grey40
+x3270*hostMenu.borderColor:			grey40
+x3270*macrosMenu.borderColor:			grey40
+x3270*togglesMenu.borderColor:			grey40
+x3270*fontsMenu.borderColor:			grey40
+x3270*modelsMenu.borderColor:			grey40
+x3270*colorsMenu.borderColor:			grey40
+x3270*charsetMenu.borderColor:			grey40
+#endif
+x3270*fileMenu*leftMargin:			20
+x3270*fileMenu*rightMargin:			20
+x3270*optionsMenu*rightMargin:			20
+x3270*togglesMenu*leftMargin:			20
+x3270*fontsMenu*leftMargin:			20
+x3270*fontsMenu*rightMargin:			20
+x3270*modelsMenu*leftMargin:			20
+x3270*colorsMenu*leftMargin:			20
+x3270*colorsMenu*rightMargin:			20
+x3270*charsetMenu*leftMargin:			20
+x3270*charsetMenu*rightMargin:			20
+x3270*hostMenu*rightMargin:			20
+x3270*macrosMenu*rightMargin:			20
+#endif
+!
+! Confirm and cancel buttons
+!  borderWidth and borderColor are never specified anywhere else, so these
+!  always apply
+x3270*confirmButton.borderWidth:		2
+x3270*confirm2Button*borderWidth:		2
+x3270*cancelButton*borderWidth:			2
+#ifdef COLOR
+x3270**confirmButton.borderColor:		grey40
+x3270**confirmButton.borderColor:		grey40
+x3270**confirm2Button.borderColor:		grey40
+x3270**cancelButton.borderColor:		grey40
+#endif
+!  foreground and background are often overridden by other resources, so they
+!  must be specified explicitly for each instance
+#ifdef COLOR
+x3270*dialog*confirmButton.foreground:		black
+x3270*dialog*confirmButton.background:		grey80
+x3270*dialog*confirm2Button.background:		grey80
+x3270*dialog*cancelButton.foreground:		firebrick
+x3270*dialog*cancelButton.background:		grey80
+#endif
+!
+! Values
+!  borderWidth and borderColor are never specified anywhere else, so these
+!  always apply
+#ifdef COLOR
+x3270*value.borderWidth:			2
+x3270*value.borderColor:			grey40
+#endif
+!  background is overridden by dialog*background, so it must be specified
+!  explicitly
+#ifdef COLOR
+x3270*dialog*value*background:			lavender
+#endif
+!
+! Overall defaults for dialog boxes
+#ifdef COLOR
+x3270*dialog*background:			grey
+x3270*dialog*foreground:			black
+#endif
+!
+! Fixed popup sizes
+x3270.errorPopup.width:				500
+x3270.printerErrorPopup.width:			500
+x3270.childErrorPopup.width:			500
+x3270.infoPopup.width:				500
+x3270.printerInfoPopup.width:			500
+x3270.childInfoPopup.width:			500
+x3270.printerLuPopup.width:			300
+x3270.connectPopup.width:			300
+x3270.fontPopup.width:				300
+x3270.keymapPopup.width:			300
+x3270.oversizePopup.width:			300
+x3270.printTextPopup.width:			300
+x3270.saveTextPopup.width:			300
+x3270.printWindowPopup.width:			300
+x3270.tracePopup.width:				300
+x3270.screentracePopup.width:			300
+x3270.executeActionPopup.width:			300
+x3270.saveOptionsPopup.width:			300
+x3270.passwordPopup.width:			300
+!
+! Nondefault definitions for complex pop-ups
+#ifdef COLOR
+x3270.aboutCopyrightPopup*icon.foreground:	darkslateblue
+x3270.aboutConfigPopup*icon.foreground:		darkslateblue
+x3270.aboutStatusPopup*icon.foreground:		darkslateblue
+x3270.errorPopup*label.foreground:		firebrick
+x3270.printerErrorPopup*label.foreground:	firebrick
+x3270.childErrorPopup*label.foreground:		firebrick
+#ifdef X3270_FT
+x3270.ftProgressPopup*filename.borderWidth:	2
+x3270.ftProgressPopup*filename.borderColor:	grey40
+x3270.ftProgressPopup*filename.background:	lavender
+#endif
+#endif
+!
+#ifdef X3270_KEYPAD
+! Keypad key dimensions, in pixels
+x3270.keypad.keyHeight:		24
+x3270.keypad.keyWidth:		48
+x3270.keypad.pfWidth:		32
+x3270.keypad.paWidth:		36
+x3270.keypad.largeKeyWidth:	56
+#endif
+!
+! Keymap display pop-up
+!
+x3270*keymapDisplayOption.label:		Display Current Keymap
+x3270.kmPopup*label.label:			Current Keyboard Map
+x3270.kmPopup*sortActionOption.label:		Sort by Action
+x3270.kmPopup*sortKeymapOption.label:		Sort by Keymap
+x3270.kmPopup*sortEventOption.label:		Sort by Event
+x3270.kmPopup*text*background:			lavender
+x3270.kmPopup*text*foreground:			black
+x3270.kmPopup*text.height:			250
+x3270.kmPopup*text.width:			500
+!
+! Basic event translations -- these should NEVER be changed without significant
+! code changes
+x3270.translations: #override \n\
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()\n\
+	<KeymapNotify>:			PA-KeymapNotify()\n\
+	<PropertyNotify>WM_STATE:	PA-StateChanged()\n\
+	<FocusIn>:			PA-Focus()\n\
+	<FocusOut>:			PA-Focus()\n\
+	<ConfigureNotify>:		PA-ConfigureNotify()
+x3270.container.translations: #override \n\
+	<KeyPress>Shift_L:		PA-Shift()\n\
+	<KeyRelease>Shift_L:		PA-Shift()\n\
+	<KeyPress>Shift_R:		PA-Shift()\n\
+	<KeyRelease>Shift_R:		PA-Shift()\n\
+	<KeyPress>Meta_L:		PA-Shift()\n\
+	<KeyRelease>Meta_L:		PA-Shift()\n\
+	<KeyPress>Meta_R:		PA-Shift()\n\
+	<KeyRelease>Meta_R:		PA-Shift()\n\
+	<KeyPress>Alt_L:		PA-Shift()\n\
+	<KeyRelease>Alt_L:		PA-Shift()\n\
+	<KeyPress>Alt_R:		PA-Shift()\n\
+	<KeyRelease>Alt_R:		PA-Shift()\n\
+	:<Key>:				Default()\n\
+	:<BtnDown>:			Default()\n\
+	:<BtnUp>:			Default()
+x3270*screen.translations:		#override \n\
+	<Expose>:			PA-Expose()\n\
+	<VisibilityNotify>:		PA-VisibilityNotify()\n\
+	<GraphicsExpose>:		PA-GraphicsExpose()\n\
+	<KeyPress>Shift_L:		PA-Shift()\n\
+	<KeyRelease>Shift_L:		PA-Shift()\n\
+	<KeyPress>Shift_R:		PA-Shift()\n\
+	<KeyRelease>Shift_R:		PA-Shift()\n\
+	<KeyPress>Meta_L:		PA-Shift()\n\
+	<KeyRelease>Meta_L:		PA-Shift()\n\
+	<KeyPress>Meta_R:		PA-Shift()\n\
+	<KeyRelease>Meta_R:		PA-Shift()\n\
+	<KeyPress>Alt_L:		PA-Shift()\n\
+	<KeyRelease>Alt_L:		PA-Shift()\n\
+	<KeyPress>Alt_R:		PA-Shift()\n\
+	<KeyRelease>Alt_R:		PA-Shift()\n\
+	:<Key>:				Default()\n\
+	:<BtnDown>:			Default()\n\
+	:<BtnUp>:			Default()
+x3270icon.translations:			#override \n\
+	<Expose>:			PA-Expose()
+#ifdef X3270_KEYPAD
+x3270.keypadPopup.translations: #override \n\
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()\n\
+	<KeymapNotify>:			PA-KeymapNotify()\n\
+	<Enter>:			PA-EnterLeave()\n\
+	<Leave>:			PA-EnterLeave()
+x3270.keypadPopup.container.translations: #override \n\
+	<KeyPress>Shift_L:		PA-Shift()\n\
+	<KeyRelease>Shift_L:		PA-Shift()\n\
+	<KeyPress>Shift_R:		PA-Shift()\n\
+	<KeyRelease>Shift_R:		PA-Shift()\n\
+	<KeyPress>Meta_L:		PA-Shift()\n\
+	<KeyRelease>Meta_L:		PA-Shift()\n\
+	<KeyPress>Meta_R:		PA-Shift()\n\
+	<KeyRelease>Meta_R:		PA-Shift()\n\
+	<KeyPress>Alt_L:		PA-Shift()\n\
+	<KeyRelease>Alt_L:		PA-Shift()\n\
+	<KeyPress>Alt_R:		PA-Shift()\n\
+	<KeyRelease>Alt_R:		PA-Shift()\n\
+	:<Key>:				Default()
+#endif
+x3270.errorPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.printerErrorPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.childErrorPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.errorPopup*translations:		#override \n\
+	<Key>Return:			PA-confirm()
+x3270.printerErrorPopup*translations:	#override \n\
+	<Key>Return:			PA-confirm()
+x3270.childErrorPopup*translations:	#override \n\
+	<Key>Return:			PA-confirm()
+x3270.infoPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.printerInfoPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.childInfoPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.infoPopup*translations:		#override \n\
+	<Key>Return:			PA-confirm()
+x3270.printerInfoPopup*translations:	#override \n\
+	<Key>Return:			PA-confirm()
+x3270.childInfoPopup*translations:	#override \n\
+	<Key>Return:			PA-confirm()
+x3270.passwordPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+#ifdef X3270_MENUS
+x3270.connectPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.fontPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.keymapPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.printTextPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.saveTextPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.printWindowPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.tracePopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.screentracePopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.executeActionPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.saveOptionsPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.aboutCopyrightPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.aboutCopyrightPopup*translations:	#override \n\
+	<Key>Return:			PA-confirm()
+x3270.aboutConfigPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.aboutConfigPopup*translations:	#override \n\
+	<Key>Return:			PA-confirm()
+x3270.aboutStatusPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.aboutStatusPopup*translations:	#override \n\
+	<Key>Return:			PA-confirm()
+x3270.kmPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.kmPopup*translations:		#override \n\
+	<Key>Return:			PA-confirm()
+x3270.luPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+#endif
+#ifdef X3270_FT
+x3270.ftPopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+! Note: WM_PROTOCOLS is explicitly not defined for ftPopup, so that the user
+! can clear error conditions while a transfer is in progress.
+x3270.ftOverwritePopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.ftPopup*value.translations:	#override \n\
+	<Key>Return:			PA-dialog-next()\n\
+	<Key>Tab:			PA-dialog-next()\n\
+	<Btn1Down>:			PA-dialog-focus() select-start()\n\
+	Ctrl<Key>U:			select-all(DUMMY) delete-selection()
+#endif
+#ifdef X3270_SCRIPT
+x3270.idlePopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.idlePopup*value.translations:	#override \n\
+	<Key>Return:			PA-dialog-next()\n\
+	<Key>Tab:			PA-dialog-next()\n\
+	<Btn1Down>:			PA-dialog-focus() select-start()\n\
+	Ctrl<Key>U:			select-all(DUMMY) delete-selection()
+#endif
+x3270*value.translations:		#override \n\
+	<Key>Return:			PA-confirm()\n\
+	Ctrl<Key>U:			select-all(DUMMY) delete-selection()
+x3270*value.width:			200
+! Workaround for Xaw MenuButton bug that keeps menu items from highlighting
+! when CapsLock or NumLock are down.  Technically, this would require
+! translations for all permutations of all 8 modifiers: shift, lock, control,
+! mod1, mod2, mod3, mod4 and mod5.  However, we will leave out shift and
+! control, since they are "voluntary" key presses and would quadruple the
+! size of this resource.
+x3270*MenuButton.translations:	#override \n\
+	Lock<BtnDown>:				reset() PopupMenu()\n\
+	Mod1<BtnDown>:				reset() PopupMenu()\n\
+	Lock Mod1<BtnDown>:			reset() PopupMenu()\n\
+	Mod2<BtnDown>:				reset() PopupMenu()\n\
+	Lock Mod2<BtnDown>:			reset() PopupMenu()\n\
+	Mod1 Mod2<BtnDown>:			reset() PopupMenu()\n\
+	Lock Mod1 Mod2<BtnDown>:		reset() PopupMenu()\n\
+	Mod3<BtnDown>:				reset() PopupMenu()\n\
+	Lock Mod3<BtnDown>:			reset() PopupMenu()\n\
+	Mod1 Mod3<BtnDown>:			reset() PopupMenu()\n\
+	Lock Mod1 Mod3<BtnDown>:		reset() PopupMenu()\n\
+	Mod2 Mod3<BtnDown>:			reset() PopupMenu()\n\
+	Lock Mod2 Mod3<BtnDown>:		reset() PopupMenu()\n\
+	Mod1 Mod2 Mod3<BtnDown>:		reset() PopupMenu()\n\
+	Lock Mod1 Mod2 Mod3<BtnDown>:		reset() PopupMenu()\n\
+	Mod4<BtnDown>:				reset() PopupMenu()\n\
+	Lock Mod4<BtnDown>:			reset() PopupMenu()\n\
+	Mod1 Mod4<BtnDown>:			reset() PopupMenu()\n\
+	Lock Mod1 Mod4<BtnDown>:		reset() PopupMenu()\n\
+	Mod2 Mod4<BtnDown>:			reset() PopupMenu()\n\
+	Lock Mod2 Mod4<BtnDown>:		reset() PopupMenu()\n\
+	Mod1 Mod2 Mod4<BtnDown>:		reset() PopupMenu()\n\
+	Lock Mod1 Mod2 Mod4<BtnDown>:		reset() PopupMenu()\n\
+	Mod3 Mod4<BtnDown>:			reset() PopupMenu()\n\
+	Lock Mod3 Mod4<BtnDown>:		reset() PopupMenu()\n\
+	Mod1 Mod3 Mod4<BtnDown>:		reset() PopupMenu()\n\
+	Lock Mod1 Mod3 Mod4<BtnDown>:		reset() PopupMenu()\n\
+	Mod2 Mod3 Mod4<BtnDown>:		reset() PopupMenu()\n\
+	Lock Mod2 Mod3 Mod4<BtnDown>:		reset() PopupMenu()\n\
+	Mod1 Mod2 Mod3 Mod4<BtnDown>:		reset() PopupMenu()\n\
+	Lock Mod1 Mod2 Mod3 Mod4<BtnDown>:	reset() PopupMenu()\n\
+	Mod5<BtnDown>:				reset() PopupMenu()\n\
+	Lock Mod5<BtnDown>:			reset() PopupMenu()\n\
+	Mod1 Mod5<BtnDown>:			reset() PopupMenu()\n\
+	Lock Mod1 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Mod2 Mod5<BtnDown>:			reset() PopupMenu()\n\
+	Lock Mod2 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Mod1 Mod2 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Lock Mod1 Mod2 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Mod3 Mod5<BtnDown>:			reset() PopupMenu()\n\
+	Lock Mod3 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Mod1 Mod3 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Lock Mod1 Mod3 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Mod2 Mod3 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Lock Mod2 Mod3 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Mod1 Mod2 Mod3 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Lock Mod1 Mod2 Mod3 Mod5<BtnDown>:	reset() PopupMenu()\n\
+	Mod4 Mod5<BtnDown>:			reset() PopupMenu()\n\
+	Lock Mod4 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Mod1 Mod4 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Lock Mod1 Mod4 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Mod2 Mod4 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Lock Mod2 Mod4 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Mod1 Mod2 Mod4 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Lock Mod1 Mod2 Mod4 Mod5<BtnDown>:	reset() PopupMenu()\n\
+	Mod3 Mod4 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Lock Mod3 Mod4 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Mod1 Mod3 Mod4 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Lock Mod1 Mod3 Mod4 Mod5<BtnDown>:	reset() PopupMenu()\n\
+	Mod2 Mod3 Mod4 Mod5<BtnDown>:		reset() PopupMenu()\n\
+	Lock Mod2 Mod3 Mod4 Mod5<BtnDown>:	reset() PopupMenu()\n\
+	Mod1 Mod2 Mod3 Mod4 Mod5<BtnDown>:	reset() PopupMenu()\n\
+	Lock Mod1 Mod2 Mod3 Mod4 Mod5<BtnDown>:	reset() PopupMenu()
+#endif
+! Default compose-key map.
+! Each line is of the form "keysym1 + keysym2 = keysym3", meaning "when the
+! Compose key is pressed, followed by keysym1 and keysym2 (in either order),
+! interpret it as keysym3."  The definitions are case-sensitive.
+x3270.composeMap.latin1: \
+	c + bar		= cent			\n\
+	c + slash	= cent			\n\
+	L + minus	= sterling		\n\
+	Y + equal	= yen			\n\
+	S + S		= section		\n\
+	C + O		= copyright		\n\
+	a + underscore	= ordfeminine		\n\
+	less + less	= guillemotleft		\n\
+	R + O		= registered		\n\
+	plus + minus	= plusminus		\n\
+	o + underscore	= masculine		\n\
+	greater + greater = guillemotright	\n\
+	1 + 4		= onequarter		\n\
+	1 + 2		= onehalf		\n\
+	3 + 4		= threequarters		\n\
+	bar + bar	= brokenbar		\n\
+	A + grave	= Agrave		\n\
+	A + apostrophe	= Aacute		\n\
+	A + asciicircum	= Acircumflex		\n\
+	A + asciitilde	= Atilde		\n\
+	A + quotedbl	= Adiaeresis		\n\
+	A + asterisk	= Aring			\n\
+	A + E		= AE			\n\
+	C + comma	= Ccedilla		\n\
+	C + apostrophe	= Ccedilla		\n\
+	E + grave	= Egrave		\n\
+	E + apostrophe	= Eacute		\n\
+	E + asciicircum	= Ecircumflex		\n\
+	E + quotedbl	= Ediaeresis		\n\
+	I + grave	= Igrave		\n\
+	I + apostrophe	= Iacute		\n\
+	I + asciicircum	= Icircumflex		\n\
+	I + quotedbl	= Idiaeresis		\n\
+	N + asciitilde	= Ntilde		\n\
+	O + grave	= Ograve		\n\
+	O + apostrophe	= Oacute		\n\
+	O + asciicircum	= Ocircumflex		\n\
+	O + asciitilde	= Otilde		\n\
+	O + quotedbl	= Odiaeresis		\n\
+	O + slash	= Ooblique		\n\
+	U + grave	= Ugrave		\n\
+	U + apostrophe	= Uacute		\n\
+	U + asciicircum	= Ucircumflex		\n\
+	U + quotedbl	= Udiaeresis		\n\
+	Y + apostrophe	= Yacute		\n\
+	s + s		= ssharp		\n\
+	a + grave	= agrave		\n\
+	a + apostrophe	= aacute		\n\
+	a + asciicircum	= acircumflex		\n\
+	a + asciitilde	= atilde		\n\
+	a + quotedbl	= adiaeresis		\n\
+	a + asterisk	= aring			\n\
+	a + e		= ae			\n\
+	c + comma	= ccedilla		\n\
+	c + apostrophe	= ccedilla		\n\
+	e + grave	= egrave		\n\
+	e + apostrophe	= eacute		\n\
+	e + asciicircum	= ecircumflex		\n\
+	e + quotedbl	= ediaeresis		\n\
+	i + grave	= igrave		\n\
+	i + apostrophe	= iacute		\n\
+	i + asciicircum	= icircumflex		\n\
+	i + quotedbl	= idiaeresis		\n\
+	n + asciitilde	= ntilde		\n\
+	o + grave	= ograve		\n\
+	o + apostrophe	= oacute		\n\
+	o + asciicircum	= ocircumflex		\n\
+	o + asciitilde	= otilde		\n\
+	o + quotedbl	= odiaeresis		\n\
+	o + slash	= oslash		\n\
+	u + grave	= ugrave		\n\
+	u + apostrophe	= uacute		\n\
+	u + asciicircum	= ucircumflex		\n\
+	u + quotedbl	= udiaeresis		\n\
+	y + apostrophe	= yacute		\n\
+	y + quotedbl	= ydiaeresis		\n\
+	apostrophe + apostrophe  = apostrophe	\n\
+	apostrophe + space = apostrophe		\n\
+	asciicircum + asciicircum = asciicircum	\n\
+	asciicircum + space = asciicircum	\n\
+	asciitilde + asciitilde  = asciitilde	\n\
+	asciitilde + space = asciitilde		\n\
+	grave + grave   = grave			\n\
+	grave + space   = grave			\n\
+	quotedbl + quotedbl = quotedbl		\n\
+	quotedbl + space = quotedbl		\n
+#ifndef STANDALONE
+#ifdef X3270_APL
+!
+! Compose-key map for APL.
+x3270.composeMap.apl: \
+	A + underscore		= apl_Aunderbar		\n\
+	B + underscore		= apl_Bunderbar		\n\
+	C + underscore		= apl_Cunderbar		\n\
+	D + underscore		= apl_Dunderbar		\n\
+	E + underscore		= apl_Eunderbar		\n\
+	F + underscore		= apl_Funderbar		\n\
+	G + underscore		= apl_Gunderbar		\n\
+	H + underscore		= apl_Hunderbar		\n\
+	I + underscore		= apl_Iunderbar		\n\
+	J + underscore		= apl_Junderbar		\n\
+	K + underscore		= apl_Kunderbar		\n\
+	L + underscore		= apl_Lunderbar		\n\
+	M + underscore		= apl_Munderbar		\n\
+	N + underscore		= apl_Nunderbar		\n\
+	O + underscore		= apl_Ounderbar		\n\
+	P + underscore		= apl_Punderbar		\n\
+	Q + underscore		= apl_Qunderbar		\n\
+	R + underscore		= apl_Runderbar		\n\
+	S + underscore		= apl_Sunderbar		\n\
+	T + underscore		= apl_Tunderbar		\n\
+	U + underscore		= apl_Uunderbar		\n\
+	V + underscore		= apl_Vunderbar		\n\
+	W + underscore		= apl_Wunderbar		\n\
+	X + underscore		= apl_Xunderbar		\n\
+	Y + underscore		= apl_Yunderbar		\n\
+	Z + underscore		= apl_Zunderbar		\n\
+	apl_upcaret + apl_downcaret = apl_diamond	\n\
+	apl_quad + apl_jot	= apl_quadjot		\n\
+	apl_iota + underscore	= apl_iotaunderbar	\n\
+	apl_epsilon + underscore = apl_epsilonunderbar	\n\
+	less + equal		= apl_notgreater	\n\
+	plus + minus		= apl_plusminus		\n\
+	greater + equal		= apl_notless		\n\
+	equal + slash		= apl_notequal		\n\
+	apl_upcaret + apl_tilde	= apl_upcarettilde	\n\
+	apl_upcaret + asciitilde = apl_upcarettilde	\n\
+	apl_downcaret + apl_tilde = apl_downcarettilde	\n\
+	apl_downcaret + asciitilde = apl_downcarettilde	\n\
+	apl_circle + apl_stile	= apl_circlestile	\n\
+	apl_circle + bar	= apl_circlestile	\n\
+	apl_quad + apl_slope	= apl_slopequad		\n\
+	apl_quad + backslash	= apl_slopequad		\n\
+	apl_circle + apl_slope	= apl_circleslope	\n\
+	apl_circle + backslash	= apl_circleslope	\n\
+	apl_downtack + apl_uptack = apl_downtackup	\n\
+	apostrophe + period	= apl_quotedot		\n\
+	apl_del + apl_stile	= apl_delstile		\n\
+	apl_del + bar		= apl_delstile		\n\
+	apl_delta + apl_stile	= apl_deltastile	\n\
+	apl_delta + bar		= apl_deltastile	\n\
+	apl_quad + apostrophe	= apl_quadquote		\n\
+	apl_upshoe + apl_jot	= apl_upshoejot		\n\
+	slash + minus		= apl_slashbar		\n\
+	apl_slope + minus	= apl_slopebar		\n\
+	backslash + minus	= apl_slopebar		\n\
+	apl_diaeresis + period	= apl_diaeresisdot	\n\
+	apl_circle + minus	= apl_circlebar		\n\
+	apl_quad + apl_divide	= apl_quaddivide	\n\
+	apl_uptack + apl_jot	= apl_uptackjot		\n\
+	apl_del + apl_tilde	= apl_deltilde		\n\
+	apl_del + asciitilde	= apl_deltilde		\n\
+	apl_delta + underscore	= apl_deltaunderbar	\n\
+	apl_circle + asterisk	= apl_circlestar	\n\
+	apl_downtack + apl_jot	= apl_downtackjot	\n\
+	equal + underscore	= apl_equalunderbar	\n\
+	apl_quad + apl_quad	= apl_squad		\n\
+	apl_diaeresis + apl_jot	= apl_diaeresisjot	\n\
+	apl_diaeresis + apl_circle = apl_diaeresiscircle \n\
+	comma + minus		= apl_commabar		\n\
+	c + equal		= apl_euro		\n\
+	C + equal		= apl_euro		\n\
+	minus + parenleft	= apl_lefttack		\n\
+	minus + parenright	= apl_righttack		\n
+#endif
+#endif
+#ifdef STANDALONE
+#ifdef _WIN32
+! wc3270 keymap for more 3270-ish behavior: The Enter key is Newline and the
+! Right-Ctrl key is Enter.
+x3270.keymap.rctrl.3270: \
+	RightCtrl<Key>CTRL: Enter()\n\
+	<Key>Return: Newline()
+#endif
+#endif

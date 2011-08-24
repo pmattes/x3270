@@ -1,0 +1,77 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>ws3270 Build Instructions</title>
+  <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
+</head>
+<body>
+<h1> ws3270 Build Instructions</h1>
+<i>ws3270</i> is built on Windows using the MinGW tools under Cygwin.
+For more information about MinGW, visit the <a href="http://www.mingw.org/">
+MinGW webpage</a>.
+For more information about Cygwin, visit the <a href="http://www.cygwin.com/">
+Cygwin webpage</a>.
+<p>
+The minimum set of Cygwin packages needed to build <i>ws3270</i> are:
+ <ul>
+     <li>The default set (bash, etc.)</li>
+     <li>The <b>make</b> package from the <b>Devel</b> group.</li>
+     <li>The <b>gcc-core</b> package from the <b>Devel</b> group.</li>
+ </ul>
+</p>
+<p>
+<b>[optional]</b> If you want SSL support, you will need to build a MinGW OpenSSL library.
+ That requres the following packages:
+ <ul>
+     <li>The <b>openssl</b> package from the <b>Net</b> group.  Note that you
+     want the <i>source</i> for <b>openssl</b>, not just the binaries.</li>
+     <li>The <b>perl</b> package from the <b>Interpreters</b> group.</li>
+ </ul>
+ <b>[optional]</b> To build and install the OpenSSL library, use the following
+ Cygwin shell commands:
+ <pre>&nbsp;&nbsp;&nbsp;cd /usr/src/openssl-*
+&nbsp;&nbsp;&nbsp;./Configure --prefix=/usr/local/mingw-openssl mingw
+&nbsp;&nbsp;&nbsp;make
+&nbsp;&nbsp;&nbsp;make install</pre>
+</p>
+<p>
+To build <i>ws3270</i> (with or without SSL support), start a Cygwin shell,
+<b>cd</b> to the directory where the source code resides, and type:  
+<pre>&nbsp;&nbsp;&nbsp;make</pre>
+</p>
+  <i>ws3270</i> was developed primarily on 32-bit Windows XP, but should be
+  buildable on Windows Server 2003 or Windows 2000 (though Windows 2000 has
+  been known to build defective <i>ws3270</i> DLLs).  It has not been built
+  on 64-bit Windows or on Windows Vista.
+<p>
+  The source tarball also includes an <b>.iss</b> file for use with Inno
+  Setup.  This is used to construct the install executable.  See the
+  <a href="http://www.jrsoftware.org/isinfo.php">Inno Setup webpage</a> for details.
+</p>
+<p>
+  <i>ws3270</i> can also be built on Linux, using the MinGW cross-compiler.
+  (This is how public releases of <i>ws3270</i> are built.)
+  The precise method for building a cross-compiler varies with gcc, Binutils
+  and MinGW releases, but
+  <a href="http://www.mingw.org/mingwfaq.shtml#faq-cross">this link</a> should
+  get you started.
+</p>
+<h2>Using Microsoft Tools</h2>
+To build <i>ws3270</i> using Microsoft Visual C++, start a Command Prompt
+window.
+At the command prompt, 'cd' to the <i>ws3270</i> source directory, and type:
+<pre>&nbsp;&nbsp;&nbsp;nmake /f Msc\Makefile</pre>
+<p>
+This will build <tt>ws3270.exe</tt> and the DLLs and utilities needed to
+install and run it.
+</p>
+<p>
+Note that the resulting version of <i>ws3270</i> will not
+include SSL support.
+To build <i>ws3270</i> with a statically-linked OpenSSL library, you must
+modify <tt>Msc\Makefile</tt>; instructions for doing that are included in
+the file.
+</p>
+</body>
+</html>
