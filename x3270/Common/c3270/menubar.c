@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Paul Mattes.
+ * Copyright (c) 2010-2012, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -876,7 +876,7 @@ void
 menu_init(void)
 {
 	int j;
-	int row, col, next_col;
+	int col, next_col;
 	cmenu_t *c;
 
 	basic_menu_init();
@@ -909,7 +909,6 @@ menu_init(void)
 	set_callback(keypad_menu, popup_keypad, NULL);
 
 	/* Draw the menu names on the top line. */
-	row = 0;
 	col = 0;
 	next_col = MENU_WIDTH;
 	for (c = menus; c != NULL; c = c->next) {

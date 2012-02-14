@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2012, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -4050,7 +4050,6 @@ static char *
 lff_single(const char *name, const char *reqd_display_charset, Boolean is_dbcs)
 {
 	XFontStruct *g;
-	Boolean force = False;
 	const char *best = NULL;
 
 #if defined(DEBUG_FONTPICK) /*[*/
@@ -4061,7 +4060,6 @@ lff_single(const char *name, const char *reqd_display_charset, Boolean is_dbcs)
 
 	if (name && *name == '!') {
 		name++;
-		force = True;
 	}
 
 	if (name) {

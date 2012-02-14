@@ -1727,7 +1727,7 @@ kybd_input(void)
 		    (ir.Event.MouseEvent.dwEventFlags == 0)) {
 		    	if (menu_is_up) {
 			    	menu_click(x, y);
-			} else if (screen_yoffset != 0 && y == 0) {
+			} else if (y == 0) {
 			    	popup_menu(x, (screen_yoffset != 0));
 				screen_disp(False);
 			} else if ((x < COLS) &&

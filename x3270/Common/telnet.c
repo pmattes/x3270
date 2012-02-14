@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2011, Paul Mattes.
+ * Copyright (c) 1993-2012, Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -936,7 +936,7 @@ output_possible(void)
 			win32_strerror(GetLastError())
 #endif /*]*/
 			);
-		popup_a_sockerr("socket output");
+		popup_a_sockerr("Connection failed");
 		host_disconnect(True);
 		return;
 	}
@@ -3648,6 +3648,7 @@ gets_noecho(char *buf, int size)
 	e = system("stty -echo");
 	s = fgets(buf, size - 1, stdin);
 	e = system("stty echo");
+	e = e; /* keep gcc happy */
 	if (s != NULL) {
 		sl = strlen(buf);
 		if (sl && buf[sl - 1] == '\n')
@@ -3963,6 +3964,37 @@ fail:
 	return;
 }
 
+/* Verify function. */
+static int
+ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
+{
+	int err;
+
+	trace_dsn("SSL_preverify_callback: preverify_ok %d\n", preverify_ok);
+
+	/* If OpenSSL thinks it's okay, so do we. */
+	if (preverify_ok)
+		return 1;
+
+	/*
+	 * If it's a self-signed certificate and the user thinks that's okay,
+	 * so do we.
+	 */
+	err = X509_STORE_CTX_get_error(ctx);
+	if (appres.self_signed_ok) {
+	    if (err == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT ||
+		err == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN) {
+		    trace_dsn("SSL_preverify_callback: self-signed okay, "
+			      "error %d\n", err);
+		    return 1;
+	    }
+	}
+
+	/* Must not be okay. */
+	trace_dsn("SSL_preverify_callback: not okay, error %d\n", err);
+	return 0;
+}
+
 /* Create a new OpenSSL connection. */
 static int
 ssl_init(void)
@@ -3977,7 +4009,8 @@ ssl_init(void)
 		popup_an_error("SSL_new failed");
 		return -1;
 	}
-	SSL_set_verify(ssl_con, SSL_VERIFY_PEER, NULL);
+	SSL_set_verify_depth(ssl_con, 64);
+	SSL_set_verify(ssl_con, SSL_VERIFY_PEER, ssl_verify_callback);
 	return 0;
 }
 

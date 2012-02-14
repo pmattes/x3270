@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2012, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -873,7 +873,6 @@ add_menu_itemv(char *name, Widget menu, XtCallbackProc callback, XtPointer arg,
 static void
 file_menu_init(Boolean regen, Dimension x, Dimension y)
 {
-	Widget about_option;
 	Widget w;
 	Boolean spaced = False;
 	Boolean any = False;
@@ -907,7 +906,7 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 		any_about |= add_menu_itemv("aboutStatus", w,
 			show_about_status, NULL, NULL, NULL) != (Widget)NULL;
 		if (any_about) {
-			about_option = XtVaCreateManagedWidget(
+			(void) XtVaCreateManagedWidget(
 			    "aboutOption", cmeBSBObjectClass, file_menu,
 			    XtNrightBitmap, arrow,
 			    XtNmenuName, "aboutMenu",
@@ -1599,12 +1598,11 @@ charsets_init(void)
 	char *label;
 	char *charset;
 	struct charset *s;
-	static char *vgcm;
 
 	cm = get_resource(ResCharsetList);
 	if (cm == CN)
 		return;
-	vgcm = cm = XtNewString(cm);
+	cm = XtNewString(cm);
 
 	charset_count = 0;
 	while (split_dresource(&cm, &label, &charset) == 1) {

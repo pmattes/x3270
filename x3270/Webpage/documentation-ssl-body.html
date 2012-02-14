@@ -37,6 +37,9 @@ This directory contains files that use the naming convention of
 <i>hash</i>.<i>seq</i>, where <i>hash</i> is the hash of the certificate
 value and <i>seq</i> is a sequence number (since multiple certificates could
 have the same hash) starting with 0.
+<p>If your host uses a self-signed certificate, x3270 will not normally allow
+SSL authentication with it. To allow authentication with self-signed
+certificates, set the <b>selfSignedOk</b> resource to <b>true</b>.
 <h3>Updating the Root Certificate Database</h3>
 To avoid having to specify a root certificate for each invocation of x3270,
 one or more certificates can be added to the OpenSSL root certificate database.

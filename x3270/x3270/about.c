@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2011, Paul Mattes.
+ * Copyright (c) 1993-2012, Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -207,6 +207,9 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT\n\
 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY\n\
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH\n\
 DAMAGE.";
+
+	vd = vd;		/* make gcc happy */
+	w_prev = w_prev;	/* make gcc happy */
 
 	if (!catted) {
 	    /* Make up for the ANSI C listerl string length limit. */

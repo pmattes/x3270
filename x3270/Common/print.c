@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2010, Paul Mattes.
+ * Copyright (c) 1994-2012, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -151,7 +151,6 @@ rtf_caption(const char *caption)
 	int rlen = 1;
 	char uubuf[64];
 	char mb[16];
-	int nmb;
 
 	result[0] = '\0';
 
@@ -163,7 +162,7 @@ rtf_caption(const char *caption)
 		if (u & ~0x7f) {
 			sprintf(uubuf, "\\u%u?", u);
 		} else {
-			nmb = unicode_to_multibyte(u, mb, sizeof(mb));
+			(void) unicode_to_multibyte(u, mb, sizeof(mb));
 			if (mb[0] == '\\' ||
 			    mb[0] == '{' ||
 			    mb[0] == '}')
@@ -856,7 +855,9 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 {
 	Cardinal i;
 	char *filter = CN;
+#if defined(X3270_DISPLAY) /*[*/
 	Boolean secure = appres.secure;
+#endif /*]*/
 	ptype_t ptype = P_TEXT;
 	Boolean use_file = False;
 	Boolean use_string = False;
@@ -897,7 +898,9 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 			ptype = P_RTF;
 			use_file = True;
 		} else if (!strcasecmp(params[i], "secure")) {
+#if defined(X3270_DISPLAY) /*[*/
 			secure = True;
+#endif /*]*/
 		} else if (!strcasecmp(params[i], "command")) {
 			if ((ptype != P_TEXT) || use_file) {
 				popup_an_error("%s: contradictory options",
@@ -965,7 +968,9 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 		 * suppresses the pop-up dialog, as does setting the 'secure'
 		 * resource.
 		 */
+#if defined(X3270_DISPLAY) /*[*/
 		secure = True;
+#endif /*]*/
 		filter++;
 	}
 	if (!use_file && (filter == CN || !*filter))

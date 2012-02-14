@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2010, Paul Mattes.
+ * Copyright (c) 2008-2012, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -683,7 +683,6 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 	wchar_t wuc;
 #elif defined(UNICODE_WCHAR) /*][*/
 	int nc;
-	wchar_t wuc;
 #else /*][*/
 	char u8b[7];
 	size_t nu8;
@@ -740,7 +739,6 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 		return nc;
 	}
 
-	wuc = uc;
 	nc = wctomb(mb, uc);
 	if (nc > 0) {
 		/* Return to the initial shift state and null-terminate. */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2011, Paul Mattes.
+ * Copyright (c) 1995-2012, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -171,6 +171,7 @@
 #define ResScrollBar		"scrollBar"
 #define ResSecure		"secure"
 #define ResSelectBackground	"selectBackground"
+#define ResSelfSignedOk		"selfSignedOk"
 #define ResSbcsCgcsgid		"sbcsCgcsgid"
 #define ResShowTiming		"showTiming"
 #define ResSocket		"socket"
@@ -350,6 +351,7 @@
 #define ClsScrollBar		"ScrollBar"
 #define ClsSecure		"Secure"
 #define ClsSelectBackground	"SelectBackground"
+#define ClsSelfSignedOk		"SelfSignedOk"
 #define ClsShowTiming		"ShowTiming"
 #define ClsSocket		"Socket"
 #define ClsSuppressHost		"SuppressHost"

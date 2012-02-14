@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2012, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -137,6 +137,7 @@ x3270_exit(int n)
 		printf("\n[Press <Enter>] ");
 		fflush(stdout);
 		r = fgets(buf, sizeof(buf), stdin);
+		r = r; /* keep gcc happy */
 
 	}
 
