@@ -329,7 +329,7 @@ main(int argc, char *argv[])
 	int	model_number;
 	Boolean	mono = False;
 	char	*session = CN;
-	Boolean pending;
+	Boolean pending = False;
 
 	if (XtNumber(options) != XtNumber(option_help))
 	    Error("Help mismatch");
@@ -642,7 +642,9 @@ main(int argc, char *argv[])
 #endif /*]*/
 	initialize_toggles();
 
+#if defined(HAVE_LIBSSL) /*[*/
 	ssl_base_init(cl_hostname, &pending);
+#endif /*]*/
 
 	/* Connect to the host. */
 	if (cl_hostname != CN && !pending)

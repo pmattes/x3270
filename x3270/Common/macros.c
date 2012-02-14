@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2010, Paul Mattes.
+ * Copyright (c) 1993-2012, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -989,7 +989,6 @@ execute_command(enum iaction cause, char *s, char **np)
 	String params[64];
 	int i, any, exact;
 	int failreason = 0;
-	Boolean saw_paren = False;
 	static const char *fail_text[] = {
 		/*1*/ "Action name must begin with an alphanumeric character",
 		/*2*/ "Syntax error in action name",
@@ -1031,7 +1030,6 @@ execute_command(enum iaction cause, char *s, char **np)
 			if (c == '(') {
 				nx = 0;
 				state = ME_LPAREN;
-				saw_paren = True;
 			} else
 				state = ME_FUNCTIONx;
 		} else if (isalnum(c) || c == '_' || c == '-') {
@@ -2092,7 +2090,6 @@ static void
 dump_field(Cardinal count, const char *name, Boolean in_ascii)
 {
 	int faddr;
-	unsigned char fa;
 	int start, baddr;
 	int len = 0;
 
@@ -2105,7 +2102,6 @@ dump_field(Cardinal count, const char *name, Boolean in_ascii)
 		return;
 	}
 	faddr = find_field_attribute(cursor_addr);
-	fa = get_field_attribute(cursor_addr);
 	start = faddr;
 	INC_BA(start);
 	baddr = start;

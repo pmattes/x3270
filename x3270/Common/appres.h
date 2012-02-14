@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2011, Paul Mattes.
+ * Copyright (c) 1993-2012, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -246,6 +246,7 @@ typedef struct {
 	char	*key_file;
 	char	*key_file_type;
 	char	*key_passwd;
+	Boolean	 self_signed_ok;
 #endif /*]*/
 	char	*proxy;
 #if defined(TCL3270) /*[*/

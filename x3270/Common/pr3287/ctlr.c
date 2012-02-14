@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2010, Paul Mattes.
+ * Copyright (c) 1993-2012, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -237,8 +237,6 @@ void
 ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 {
 	register unsigned char	*cp;
-	Boolean		last_cmd;
-	Boolean		last_zpt;
 	Boolean		wcc_keyboard_restore, wcc_sound_alarm;
 	Boolean		wcc_start_printer;
 	Boolean		ra_ge;
@@ -309,8 +307,6 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 	if (strcmp(paren, "("))
 		trace_ds(")");
 
-	last_cmd = True;
-	last_zpt = False;
 	for (cp = &buf[2]; cp < (buf + buflen); cp++) {
 		switch (*cp) {
 		case ORDER_SF:	/* start field */
@@ -318,8 +314,6 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			previous = ORDER;
 			cp++;		/* skip field attribute */
 			START_FIELD(*cp);
-			last_cmd = True;
-			last_zpt = False;
 			break;
 		case ORDER_SBA:	/* set buffer address */
 			cp += 2;	/* skip buffer address */
@@ -345,19 +339,14 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				}
 			}
 			previous = SBA;
-			last_cmd = True;
-			last_zpt = False;
 			break;
 		case ORDER_IC:	/* insert cursor */
 			END_TEXT("InsertCursor");
 			previous = ORDER;
-			last_cmd = True;
-			last_zpt = False;
 			break;
 		case ORDER_PT:	/* program tab */
 			END_TEXT("ProgramTab");
 			previous = ORDER;
-			last_cmd = True;
 			break;
 		case ORDER_RA:	/* repeat to address */
 			cp += 2;	/* skip buffer address */
@@ -403,16 +392,12 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				ctlr_add(ra_xlate, ra_ge? CS_GE: default_cs,
 				    default_gr);
 			}
-			last_cmd = True;
-			last_zpt = False;
 			break;
 		case ORDER_EUA:	/* erase unprotected to address */
 			cp += 2;	/* skip buffer address */
 			xbaddr = DECODE_BADDR(*(cp-1), *cp);
 			END_TEXT("EraseUnprotectedAll");
 			previous = ORDER;
-			last_cmd = True;
-			last_zpt = False;
 			break;
 		case ORDER_GE:	/* graphic escape */
 			END_TEXT("GraphicEscape ");
@@ -425,8 +410,6 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				trace_ds("'");
 			ctlr_add(ebcdic_to_unicode(*cp, CS_GE, EUO_NONE),
 				CS_GE, default_gr);
-			last_cmd = False;
-			last_zpt = False;
 			break;
 		case ORDER_MF:	/* modify field */
 			END_TEXT("ModifyField");
@@ -434,8 +417,6 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			cp++;
 			na = *cp;
 			cp += na * 2;
-			last_cmd = True;
-			last_zpt = False;
 			break;
 		case ORDER_SFE:	/* start field extended */
 			END_TEXT("StartFieldExtended");
@@ -446,6 +427,12 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			efa_fg = 0;
 			efa_gr = 0;
 			efa_cs = 0;
+
+			/* make gcc happy for now */
+			efa_cs = efa_cs;
+			efa_gr = efa_gr;
+			efa_fg = efa_fg;
+
 			for (i = 0; i < (int)na; i++) {
 				cp++;
 				if (*cp == XA_3270) {
@@ -478,8 +465,6 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			if (!any_fa)
 				START_FIELD(0);
 			ctlr_add('\0', 0, default_gr);
-			last_cmd = True;
-			last_zpt = False;
 			break;
 		case ORDER_SA:	/* set attribute */
 			END_TEXT("SetAttribtue");
@@ -501,59 +486,43 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				trace_ds("%s[unsupported]",
 				    see_efa(*cp, *(cp + 1)));
 			cp++;
-			last_cmd = True;
-			last_zpt = False;
 			break;
 		case FCORDER_FF:	/* Form Feed */
 			END_TEXT("FF");
 			previous = ORDER;
 			ctlr_add(FCORDER_FF, default_cs, default_gr);
-			last_cmd = True;
-			last_zpt = False;
 			break;
 		case FCORDER_CR:	/* Carriage Return */
 			END_TEXT("CR");
 			previous = ORDER;
 			ctlr_add(FCORDER_CR, default_cs, default_gr);
-			last_cmd = True;
-			last_zpt = False;
 			break;
 		case FCORDER_NL:	/* New Line */
 			END_TEXT("NL");
 			previous = ORDER;
 			ctlr_add(FCORDER_NL, default_cs, default_gr);
-			last_cmd = True;
-			last_zpt = False;
 			break;
 		case FCORDER_EM:	/* End of Media */
 			END_TEXT("EM");
 			previous = ORDER;
 			ctlr_add(FCORDER_EM, default_cs, default_gr);
-			last_cmd = True;
-			last_zpt = False;
 			break;
 		case FCORDER_DUP:	/* Visible control characters */
 		case FCORDER_FM:
 			END_TEXT(see_ebc(*cp));
 			previous = ORDER;
 			ctlr_add(ebc2asc0[*cp], default_cs, default_gr);
-			last_cmd = True;
-			last_zpt = False;
 			break;
 		case FCORDER_SUB:	/* misc format control orders */
 		case FCORDER_EO:
 			END_TEXT(see_ebc(*cp));
 			previous = ORDER;
 			ctlr_add('\0', default_cs, default_gr);
-			last_cmd = True;
-			last_zpt = False;
 			break;
 		case FCORDER_NULL:
 			END_TEXT("NULL");
 			previous = NULLCH;
 			ctlr_add('\0', default_cs, default_gr);
-			last_cmd = False;
-			last_zpt = False;
 			break;
 		default:	/* enter character */
 			if (*cp <= 0x3F) {
@@ -561,8 +530,6 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				previous = ORDER;
 				ctlr_add('\0', default_cs, default_gr);
 				trace_ds(see_ebc(*cp));
-				last_cmd = True;
-				last_zpt = False;
 				break;
 			}
 			if (previous != TEXT)
@@ -571,8 +538,6 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			trace_ds(see_ebc(*cp));
 			ctlr_add(ebcdic_to_unicode(*cp, default_cs, EUO_NONE),
 				default_cs, default_gr);
-			last_cmd = False;
-			last_zpt = False;
 			break;
 		}
 	}
@@ -1328,9 +1293,8 @@ process_scs_contig(unsigned char *buf, int buflen)
 			uc = ebcdic_to_unicode(*cp, CS_BASE, EUO_NONE);
 			{
 			    	char mb[16];
-				int len;
 
-				len = unicode_to_multibyte(uc, mb, sizeof(mb));
+				(void) unicode_to_multibyte(uc, mb, sizeof(mb));
 				trace_ds("%s", mb);
 			}
 			if (add_scs(uc) < 0)

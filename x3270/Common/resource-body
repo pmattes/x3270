@@ -2336,6 +2336,16 @@ desc
     X11 displays, selected text is in reverse video.
 .
 
+name selfSignedOk
+applies a
+type b
+default false
+groups s
+description
+    When true, %p% will allow SSL authentication with a host that uses a
+    self-signed certificate.
+.
+
 name showTiming
 applies x
 groups a

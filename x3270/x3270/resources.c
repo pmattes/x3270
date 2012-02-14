@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2011, Paul Mattes.
+ * Copyright (c) 1993-2012, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -333,6 +333,8 @@ XtResource resources[] = {
 	  offset(key_file_type), XtRString, 0 },
 	{ ResKeyPasswd, ClsKeyPasswd, XtRString, sizeof(char *),
 	  offset(key_passwd), XtRString, 0 },
+	{ ResSelfSignedOk, ClsSelfSignedOk, XtRBoolean, sizeof(Boolean),
+	  offset(self_signed_ok), XtRString, ResFalse },
 #endif /*]*/
 
 #if defined(USE_APP_DEFAULTS) /*[*/

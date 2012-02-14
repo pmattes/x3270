@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, Paul Mattes.
+ * Copyright (c) 1996-2012, Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -1780,6 +1780,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 				    case PARM_SECONDARY_SPACE:
 				    case PARM_BUFFER_SIZE:
 					l = strtol(eq + 1, &ptr, 10);
+					l = l; /* keep gcc happy */
 					if (ptr == eq + 1 || *ptr) {
 						popup_an_error("Invalid option "
 							"value: '%s'", eq + 1);

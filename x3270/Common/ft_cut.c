@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, Paul Mattes.
+ * Copyright (c) 1996-2012, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -146,7 +146,6 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 		unsigned char c = *buf++;
 		char *ixp;
 		int ix;
-		int oq = -1;
 
 	    retry:
 		if (quadrant < 0) {
@@ -174,7 +173,6 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 		ixp = strchr(alphas, ebc2asc0[c]);
 		if (ixp == (char *)NULL) {
 			/* Try a different quadrant. */
-			oq = quadrant;
 			quadrant = -1;
 			goto retry;
 		}
@@ -187,7 +185,6 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 		if (quadrant != OTHER_2 && c != XLATE_NULL &&
 		    !conv[quadrant].xlate[ix]) {
 			/* Try a different quadrant. */
-			oq = quadrant;
 			quadrant = -1;
 			goto retry;
 		}

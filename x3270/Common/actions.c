@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2012, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -504,7 +504,9 @@ key_symbolic_state(unsigned int state, int *iteration)
 	static int ix[MAP_SIZE];
 	static int ix_ix[MAP_SIZE];
 	static int n_ix = 0;
+#if defined(VERBOSE_EVENTS) /*[*/
 	static int leftover = 0;
+#endif /*]*/
 	const char *comma = "";
 	int i;
 
@@ -525,7 +527,9 @@ key_symbolic_state(unsigned int state, int *iteration)
 			} else
 				ix[i] = MAX_MODS_PER;
 		}
+#if defined(VERBOSE_EVENTS) /*[*/
 		leftover = state;
+#endif /*]*/
 	}
 
 	/* Construct this result. */

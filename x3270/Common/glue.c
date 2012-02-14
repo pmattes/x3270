@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2011, Paul Mattes.
+ * Copyright (c) 1993-2012, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -1080,6 +1080,9 @@ static struct {
 	{ ResScreenTraceFile,offset(screentrace_file),XRM_STRING },
 #endif /*]*/
 	{ ResSecure,	offset(secure),		XRM_BOOLEAN },
+#if defined(HAVE_LIBSSL) /*[*/
+	{ ResSelfSignedOk,offset(self_signed_ok),XRM_BOOLEAN },
+#endif /*]*/
 	{ ResSbcsCgcsgid, offset(sbcs_cgcsgid),	XRM_STRING },
 #if defined(X3270_SCRIPT) /*[*/
 	{ ResScriptPort,offset(script_port),	XRM_INT },
