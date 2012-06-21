@@ -832,9 +832,9 @@ net_connected(void)
 
 			v = SSL_get_verify_result(ssl_con);
 			if (v != X509_V_OK)
-				    popup_an_error("Certificate verification "
-					"failed: "
-					"%ld (%s)\n", v,
+				    popup_an_error("Host certificate "
+					"verification failed:\n"
+					"%ld (%s)", v,
 					X509_verify_cert_error_string(v));
 
 			/*
@@ -3970,7 +3970,7 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 {
 	int err;
 
-	trace_dsn("SSL_preverify_callback: preverify_ok %d\n", preverify_ok);
+	trace_dsn("SSL_verify_callback: preverify_ok %d\n", preverify_ok);
 
 	/* If OpenSSL thinks it's okay, so do we. */
 	if (preverify_ok)
@@ -3984,14 +3984,15 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 	if (appres.self_signed_ok) {
 	    if (err == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT ||
 		err == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN) {
-		    trace_dsn("SSL_preverify_callback: self-signed okay, "
-			      "error %d\n", err);
+		    trace_dsn("SSL_verify_callback: self-signed okay, "
+			      "error %d, returning 1\n", err);
 		    return 1;
 	    }
 	}
 
 	/* Must not be okay. */
-	trace_dsn("SSL_preverify_callback: not okay, error %d\n", err);
+	trace_dsn("SSL_verify_callback: not okay, error %d, returning 0\n",
+		err);
 	return 0;
 }
 
@@ -3999,6 +4000,8 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 static int
 ssl_init(void)
 {
+    	int verify_flag;
+
 	if (ssl_ctx == NULL) {
 	    	popup_an_error("Cannot connect:\nNo SSL private key password");
 		return -1;
@@ -4010,7 +4013,11 @@ ssl_init(void)
 		return -1;
 	}
 	SSL_set_verify_depth(ssl_con, 64);
-	SSL_set_verify(ssl_con, SSL_VERIFY_PEER, ssl_verify_callback);
+	verify_flag = appres.verify_host_cert? SSL_VERIFY_PEER:
+	    				       SSL_VERIFY_NONE;
+	trace_dsn("SSL_init: %sverifying host (flag %d)\n",
+		appres.verify_host_cert? "": "not ", verify_flag);
+	SSL_set_verify(ssl_con, verify_flag, ssl_verify_callback);
 	return 0;
 }
 

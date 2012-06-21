@@ -192,6 +192,7 @@
 #define ResUseCursorColor	"useCursorColor"
 #define ResUser			"user"
 #define ResV			"v"
+#define ResVerifyHostCert	"verifyHostCert"
 #define ResVisibleControl	"visibleControl"
 #define ResVisualBell		"visualBell"
 #define ResVisualSelect		"visualSelect"
@@ -242,6 +243,7 @@
 #define DotTraceFileSize	"." ResTraceFileSize
 #define DotUser			"." ResUser
 #define DotV			"." ResV
+#define DotVerifyHostCert	"." ResVerifyHostCert
 
 /* Resource classes. */
 #define ClsActiveIcon		"ActiveIcon"
@@ -366,6 +368,7 @@
 #define ClsUnlockDelayMs	"UnlockDelayMs"
 #define ClsUseCursorColor	"UseCursorColor"
 #define ClsUser			"User"
+#define ClsVerifyHostCert	"VerifyHostCert"
 #define ClsVisibleControl	"VisibleControl"
 #define ClsVisualBell		"VisualBell"
 #define ClsVisualSelect		"VisualSelect"
@@ -410,6 +413,7 @@
 #define OptMono			"-mono"
 #define OptNoPrompt		"-noprompt"
 #define OptNoScrollBar		"+sb"
+#define OptNoVerifyHostCert	"-noverifycert"
 #define OptOnce			"-once"
 #define OptOversize		"-oversize"
 #define OptPort			"-port"

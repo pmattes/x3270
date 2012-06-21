@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2011, Paul Mattes.
+ * Copyright (c) 1993-2012, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -144,6 +144,9 @@ XrmOptionDescRec options[]= {
 	{ OptModel,	DotModel,	XrmoptionSepArg,	NULL },
 	{ OptMono,	DotMono,	XrmoptionNoArg,		ResTrue },
 	{ OptNoScrollBar,DotScrollBar,	XrmoptionNoArg,		ResFalse },
+#if defined(HAVE_LIBSSL) /*[*/
+	{ OptNoVerifyHostCert,DotVerifyHostCert,XrmoptionNoArg,	ResFalse },
+#endif /*]*/
 	{ OptOnce,	DotOnce,	XrmoptionNoArg,		ResTrue },
 	{ OptOversize,	DotOversize,	XrmoptionSepArg,	NULL },
 	{ OptPort,	DotPort,	XrmoptionSepArg,	NULL },
@@ -212,6 +215,9 @@ static struct {
 	{ OptM3279, CN, "3279 emulation (deprecated)" },
 	{ OptModel, "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
 	{ OptMono, CN, "Do not use color" },
+#if defined(HAVE_LIBSSL) /*[*/
+	{ OptNoVerifyHostCert, CN, "Don't verify OpenSSL host certificate" },
+#endif /*]*/
 	{ OptNoScrollBar, CN, "Disable scroll bar" },
 	{ OptOnce, CN, "Exit as soon as the host disconnects" },
 	{ OptOversize,  "<cols>x<rows>", "Specify larger screen" },

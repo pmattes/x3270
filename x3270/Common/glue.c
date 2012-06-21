@@ -550,6 +550,10 @@ set_appres_defaults(void)
 	appres.local_cp = GetACP();
 #endif /*]*/
 	appres.devname = "x3270";
+
+#if defined(HAVE_LIBSSL) /*[*/
+	appres.verify_host_cert = True;
+#endif /*]*/
 }
 
 #if defined (C3270) /*[*/
@@ -727,6 +731,10 @@ static struct {
     "<name>", "Specify user name for RFC 4777" },
 { OptV,        OPT_V,	False, NULL,	     NULL,
     CN, "Display build options and character sets" },
+#if defined(HAVE_LIBSSL) /*[*/
+{ OptNoVerifyHostCert,OPT_BOOLEAN,False,ResVerifyHostCert,offset(verify_host_cert),
+    CN, "Disable OpenSSL host certificate validation" },
+#endif /*]*/
 { OptVersion,  OPT_V,	False, NULL,	     NULL,
     CN, "Display build options and character sets" },
 { "-xrm",      OPT_XRM,     False, NULL,         NULL,
@@ -1102,6 +1110,9 @@ static struct {
 	{ ResTypeahead,	offset(typeahead),	XRM_BOOLEAN },
 	{ ResUnlockDelay,offset(unlock_delay),	XRM_BOOLEAN },
 	{ ResUnlockDelayMs,offset(unlock_delay_ms),XRM_INT },
+#if defined(HAVE_LIBSSL) /*[*/
+	{ ResVerifyHostCert,offset(verify_host_cert),XRM_BOOLEAN },
+#endif /*]*/
 #if defined(WC3270) /*[*/
 	{ ResVisualBell,offset(visual_bell),	XRM_BOOLEAN },
 #endif /*]*/
