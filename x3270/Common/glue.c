@@ -477,7 +477,7 @@ set_appres_defaults(void)
 
 	appres.model = "4";
 	appres.hostsfile = CN;
-	appres.port = "telnet";
+	appres.port = "23";
 
 #if !defined(_WIN32) /*[*/
 	appres.charset = "bracket";

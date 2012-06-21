@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2009, Paul Mattes.
+dnl Copyright (c) 2000-2012, Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -53,7 +53,7 @@ XX_FI(expect)(1), XX_FI(perl)(1),
 or the co-process facility of the Korn Shell
 XX_FI(ksh)(1).
 Inthis mode, the emulator process looks for commands on its standard input,
-and places the responses on standard output and standard error output.
+and places the responses on standard output.
 XX_PP
 The second method is the XX_FB(child script)
 facility, invoked by the XX_FB(Script) action in XX_FB(x3270), XX_FB(c3270),
@@ -163,7 +163,7 @@ behave in several different ways:
 XX_PP
 If an error occurs in processing an action, the usual pop-up window does not
 appear.
-Instead, the text is written to standard error output.
+Instead, the text is written to standard output.
 XX_PP
 If end-of-file is detected on standard input, the emulator exits.
 (A script can exit without killing the emulator
