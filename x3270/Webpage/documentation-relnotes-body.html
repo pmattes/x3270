@@ -1,6 +1,11 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
 3.3 is the current development line for the x3270 suite.
-<h2>Changes in version 3.3.12b8, 13. February 2012</h2>
+<h2>Changes in version 3.3.12ga10, 20. June 2012</h2>
+<ul>
+ <li>[all] Added a <b>verifyHostCert</b> resource and <b>-noverifycert</b>
+  option to disable SSL host certificate authentication.
+ </ul>
+<h2>Changes in version 3.3.12beta9, 13. February 2012</h2>
 <ul>
  <li>[all] Added a <b>selfSignedOk</b> resource to allow SSL authentication
   with hosts that use self-signed certificates.</li>
@@ -30,7 +35,7 @@
   </li>
  <li>[<i>c3270</i>, <i>wc3270</i>] Corrected a problem with mouse clicks on the
   top two lines on the screen.</li>
- <li>[<i>all</i>] Included SSL documentation.</li>
+ <li>[all] Included SSL documentation.</li>
 </ul>
 <h2>Changes in version 3.3.12a4, 8. December 2010</h2>
 <ul>
@@ -350,7 +355,7 @@
   library version automatically.</li>
  <li>[<i>wc3270</i>] Corrected a problem which caused mouse clicks not to be
   recognized (not moving the cursor) if <b>NumLock</b> was set.</li>
- <li>[<i>all</i>] Corrected the <tt>configure</tt> script to recognize
+ <li>[all] Corrected the <tt>configure</tt> script to recognize
   a separately-installed <b>iconv</b> library even if the <i>iconv()</i>
   function is defined in <b>libc</b>.</li>
  <li>[<i>wc3270</i>] Restored the bell sound, and added a <b>visualBell</b>

@@ -88,6 +88,14 @@ The password can have one of two formats.
 The format <b>file:</b><i>filename</i> specifies a file containing the password.
 The format <b>string:</b><i>string</i> specifies the password as a string in
 the option or resource directly.</p>
+<h3>Controlling Host Certificate Verification</h3>
+By default, host SSL certificates are verified, and self-signed certificates
+are not allowed.
+To allow self-signed host certificates, set the <b>selfSignedOk</b> resource
+to <b>true</b>.
+To disable host certificate verification completely, set the
+<b>verifyHostCert</b> resource to <b>false</b> or specify the
+<b>-noverifycert</b> option.
 <a name="Windows"></a>
 <h2>Windows and the OpenSSL DLLs</h2>
 There are two versions of each of the Windows

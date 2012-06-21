@@ -247,6 +247,7 @@ typedef struct {
 	char	*key_file_type;
 	char	*key_passwd;
 	Boolean	 self_signed_ok;
+	Boolean	 verify_host_cert;
 #endif /*]*/
 	char	*proxy;
 #if defined(TCL3270) /*[*/

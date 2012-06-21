@@ -2580,7 +2580,7 @@ groups a
 type b
 default false
 desc
-    If to false, the cursor will be drawn using the same color as
+    If false, the cursor will be drawn using the same color as
     the text behind it.  If true, on color X11 displays the
     cursor will be drawn with the color specified by %-cursorColor%.
 .
@@ -2593,6 +2593,18 @@ groups p
 description
     Specifies the user name sent in response to a TELNET NEW-ENVIRON
     sub-negotiation request, used by iSeries hosts (RFC 4777).
+.
+
+name verifyHostCert
+applies a
+type b
+groups s
+switch -noverifycert
+default true
+description
+    If true (the default), %p% will verify SSL host certificates.
+    If false, or if the <b>-noverifycert</b> option is given, %p% will not
+    verify SSL host certificates.
 .
 
 name visibleControl
