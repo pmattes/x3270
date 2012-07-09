@@ -552,7 +552,7 @@ set_appres_defaults(void)
 	appres.devname = "x3270";
 
 #if defined(HAVE_LIBSSL) /*[*/
-	appres.verify_host_cert = True;
+	appres.verify_host_cert = False;
 #endif /*]*/
 }
 
@@ -732,8 +732,8 @@ static struct {
 { OptV,        OPT_V,	False, NULL,	     NULL,
     CN, "Display build options and character sets" },
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptNoVerifyHostCert,OPT_BOOLEAN,False,ResVerifyHostCert,offset(verify_host_cert),
-    CN, "Disable OpenSSL host certificate validation" },
+{ OptVerifyHostCert,OPT_BOOLEAN,True,ResVerifyHostCert,offset(verify_host_cert),
+    CN, "Enable OpenSSL host certificate validation" },
 #endif /*]*/
 { OptVersion,  OPT_V,	False, NULL,	     NULL,
     CN, "Display build options and character sets" },

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, Paul Mattes.
+ * Copyright (c) 2006-2012, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -92,6 +92,32 @@
 #define CHOICE_NONE	"none"
 #define DISPLAY_NONE	"(none)"
 
+enum {
+    MN_NONE = 0,
+    MN_HOST,		/* host name */
+    MN_LU,		/* logical unit */
+    MN_PORT,		/* TCP port */
+    MN_MODEL,		/* model number */
+    MN_OVERSIZE,	/* oversize */
+    MN_CHARSET,		/* character set */
+    MN_SSL,		/* SSL tunnel */
+    MN_VERIFY,		/* verify host certificate */
+    MN_PROXY,		/* use proxy host */
+    MN_PROXY_SERVER,	/* proxy host name */
+    MN_PROXY_PORT,	/* proxy port number */
+    MN_3287,		/* printer session */
+    MN_3287_MODE,	/* printer mode */
+    MN_3287_LU,		/* printer logical unit */
+    MN_3287_PRINTER,	/* printer Windows printer */
+    MN_3287_CODEPAGE,	/* printer code page */
+    MN_KEYMAPS,		/* keymaps */
+    MN_EMBED_KEYMAPS,	/* embed keymaps */
+    MN_FONT_SIZE,	/* font size */
+    MN_BG,		/* background color */
+    MN_MENUBAR,		/* menu bar */
+    MN_N_OPTS
+} menu_option_t;
+
 extern char *wversion;
 
 /* Aliases for obsolete character set names. */
@@ -140,6 +166,8 @@ int create_session_file(session_t *s, char *path);
 static char *mya = NULL;
 static char *installdir = NULL;
 static char *desktop = NULL;
+
+int get_printerlu(session_t *s, int explain);
 
 char *
 get_input(char *buf, int bufsize)
@@ -1032,6 +1060,37 @@ Secure Sockets Layer (SSL), then to run the TN3270 session inside the tunnel.");
 	} while (s->ssl < 0);
 	return 0;
 }
+
+int
+get_verify(session_t *s)
+{
+	int rc;
+
+    	new_screen(s, "\
+Verify Host Certificates\n\
+\n\
+This option causes wc3270 to verify the certificates presented by the host\n\
+if an SSL tunnel is used, or if the TELNET TLS option is negotiated.  If the\n\
+certificates are not valid, the connection will be aborted.");
+
+	do {
+		printf("\nVerify host certificates? (y/n) [%s] ",
+			(s->flags & WF_VERIFY_HOST_CERTS)? "y" : "n");
+		fflush(stdout);
+		rc = getyn((s->flags & WF_VERIFY_HOST_CERTS) != 0);
+		switch (rc) {
+		case -1:
+			return -1;
+		case 1:
+			s->flags |= WF_VERIFY_HOST_CERTS;
+			break;
+		case 0:
+			s->flags &= ~WF_VERIFY_HOST_CERTS;
+			break;
+		}
+	} while (rc < 0);
+	return 0;
+}
 #endif /*]*/
 
 int
@@ -1223,19 +1282,19 @@ Windows printer.");
 }
 
 int
-get_printerlu(session_t *s)
+get_printer_mode(session_t *s)
 {
 	int rc;
 
 	new_screen(s, "\
-wpr3287 Session -- Printer Logical Unit (LU) Name\n\
+wpr3287 Session -- Printer Mode\n\
 \n\
 The wpr3287 printer session can be configured in one of two ways.  The first\n\
 method automatically associates the printer session with the current login\n\
 session.  The second method specifies a particular Logical Unit (LU) to use\n\
 for the printer session.");
 
-	for (;;) {
+	do {
 		printf("\nAssociate the printer session with the current login session (y/n) [%s]: ",
 			strcmp(s->printerlu, ".")? "n": "y");
 		fflush(stdout);
@@ -1243,18 +1302,31 @@ for the printer session.");
 		switch (rc) {
 		case -1:
 		    	return -1;
-		case -2:
-		default:
-			continue;
 		case 0:
 			if (!strcmp(s->printerlu, "."))
 				s->printerlu[0] = '\0';
 			break;
 		case 1:
 			strcpy(s->printerlu, ".");
-			return 0;
+			break;
 		}
-		break;
+	} while (rc < 0);
+
+
+	if (get_printerlu(s, 0) < 0)
+	    	return -1;
+	return 0;
+}
+
+int
+get_printerlu(session_t *s, int explain)
+{
+	if (explain) {
+	    new_screen(s, "\
+wpr3287 Session -- Printer Logical Unit (LU) Name\n\
+\n\
+If the wpr3287 printer session is associated with a particular Logical Unit,\n\
+then that Logical Unit must be configured explicitly.");
 	}
 
 	for (;;) {
@@ -1449,27 +1521,30 @@ user-defined keymaps, separated by commas.");
 static int
 get_embed(session_t *s)
 {
+	int rc;
+
 	new_screen(s, "\
 Embed Keymaps\n\
 \n\
 If selected, this option causes any selected keymaps to be copied into the\n\
 session file, instead of being found at runtime.");
 
-	for (;;) {
-	    	int rc;
-
+	do {
 		printf("\nEmbed keymaps? (y/n) [%s] ",
 			(s->flags & WF_EMBED_KEYMAPS)? "y": "n");
 		fflush(stdout);
 		rc = getyn((s->flags & WF_EMBED_KEYMAPS) != 0);
-		if (rc == -1)
+		switch (rc) {
+		case -1:
 			return -1;
-		if (rc)
+		case 1:
 		    	s->flags |= WF_EMBED_KEYMAPS;
-		else
+			break;
+		case 0:
 		    	s->flags &= ~WF_EMBED_KEYMAPS;
-		break;
-	}
+			break;
+		}
+	} while (rc < 0);
 	return 0;
 }
 
@@ -1540,26 +1615,29 @@ white.");
 static int
 get_menubar(session_t *s)
 {
+	int rc;
+
 	new_screen(s, "\
 Menu Bar\n\
 \n\
 This option selects whether the menu bar is displayed on the screen.");
 
-	for (;;) {
-	    	int rc;
-
+	do  {
 		printf("\nDisplay menu bar? (y/n) [%s] ",
 			(s->flags & WF_NO_MENUBAR)? "n": "y");
 		fflush(stdout);
 		rc = getyn(!(s->flags & WF_NO_MENUBAR));
-		if (rc == -1)
+		switch (rc) {
+		case -1:
 			return -1;
-		if (rc)
+		case 0:
 		    	s->flags &= ~WF_NO_MENUBAR;
-		else
+			break;
+		case 1:
 		    	s->flags |= WF_NO_MENUBAR;
-		break;
-	}
+			break;
+		}
+	} while (rc < 0);
 	return 0;
 }
 
@@ -1582,64 +1660,76 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 
 		new_screen(s, "");
 
-		printf("  1. Host ................... : %s\n",
+		printf("%3d. Host ................... : %s\n", MN_HOST,
 			strcmp(s->host, CHOICE_NONE)? s->host: DISPLAY_NONE);
-		printf("  2. Logical Unit Name ...... : %s\n",
+		printf("%3d. Logical Unit Name ...... : %s\n", MN_LU,
 			s->luname[0]? s->luname: DISPLAY_NONE);
-		printf("  3. TCP Port ............... : %d\n", (int)s->port);
-		printf("  4. Model Number ........... : %d (%d rows x %d columns)\n",
-		    (int)s->model, wrows[s->model], wcols[s->model]);
+		printf("%3d. TCP Port ............... : %d\n", MN_PORT,
+			(int)s->port);
+		printf("%3d. Model Number ........... : %d "
+			"(%d rows x %d columns)\n", MN_MODEL,
+			(int)s->model, wrows[s->model], wcols[s->model]);
 		if (is_nt) {
-			printf("  5.  Oversize .............. : ");
+			printf("%3d.  Oversize .............. : ", MN_OVERSIZE);
 			if (s->ov_rows || s->ov_cols)
 				printf("%u rows x %u columns\n",
 					s->ov_rows, s->ov_cols);
 			else
 				printf(DISPLAY_NONE"\n");
 		}
-		printf("  6. Character Set .......... : %s (CP %s)\n",
-			s->charset, cp);
+		printf("%3d. Character Set .......... : %s (CP %s)\n",
+			MN_CHARSET, s->charset, cp);
 #if defined(HAVE_LIBSSL) /*[*/
-		printf("  7. SSL Tunnel ............. : %s\n",
+		printf("%3d. SSL Tunnel ............. : %s\n", MN_SSL,
 			s->ssl? "Yes": "No");
+		printf("%3d. Verify host certificates : %s\n", MN_VERIFY,
+			(s->flags & WF_VERIFY_HOST_CERTS)? "Yes": "No");
 #endif /*]*/
-		printf("  8. Proxy .................. : %s\n",
+		printf("%3d. Proxy .................. : %s\n", MN_PROXY,
 			s->proxy_type[0]? s->proxy_type: DISPLAY_NONE);
 		if (s->proxy_type[0]) {
-			printf("  9.  Proxy Server .......... : %s\n",
-				s->proxy_host);
+			printf("%3d.  Proxy Server .......... : %s\n",
+				MN_PROXY_SERVER, s->proxy_host);
 			if (s->proxy_port[0])
-				printf(" 10.  Proxy Server TCP Port . : %s\n",
-					s->proxy_port);
+				printf("%3d.  Proxy Server TCP Port . : %s\n",
+					MN_PROXY_PORT, s->proxy_port);
 		}
-		printf(" 11. wpr3287 Printer Session  : %s\n",
+		printf("%3d. wpr3287 Printer Session  : %s\n", MN_3287,
 			s->wpr3287? "Yes": "No");
 		if (s->wpr3287) {
-			printf(" 12.  wpr3287 Mode .......... : ");
+			printf("%3d.  wpr3287 Mode .......... : ",
+				MN_3287_MODE);
 			if (!strcmp(s->printerlu, "."))
 				printf("Associate\n");
-			else
-				printf("LU %s\n", s->printerlu);
-			printf(" 13.  wpr3287 Windows printer : %s\n",
+			else {
+				printf("LU\n");
+				printf("%3d.  wpr3287 LU ............ : %s\n",
+					MN_3287_LU, s->printerlu);
+			}
+			printf("%3d.  wpr3287 Windows printer : %s\n",
+				MN_3287_PRINTER,
 				s->printer[0]? s->printer: "(system default)");
-			printf(" 14.  wpr3287 Code Page ..... : ");
+			printf("%3d.  wpr3287 Code Page ..... : ",
+				MN_3287_CODEPAGE);
 			if (s->printercp[0])
 			    	printf("%s\n", s->printercp);
 			else
 			    	printf("(system ANSI default of %d)\n",
 					GetACP());
 		}
-		printf(" 15. Keymaps ................ : %s\n",
+		printf("%3d. Keymaps ................ : %s\n", MN_KEYMAPS,
 			s->keymaps[0]? s->keymaps: DISPLAY_NONE);
 		if (s->keymaps[0])
-			printf(" 16.  Embed Keymaps ......... : %s\n",
+			printf("%3d.  Embed Keymaps ......... : %s\n",
+				MN_EMBED_KEYMAPS,
 				(s->flags & WF_EMBED_KEYMAPS)? "Yes": "No");
 		if (is_nt)
-			printf(" 17. Font Size .............. : %u\n",
+			printf("%3d. Font Size .............. : %u\n",
+				MN_FONT_SIZE,
 				s->point_size? s->point_size: 12);
-		printf(" 18. Background Color ....... : %s\n",
+		printf("%3d. Background Color ....... : %s\n", MN_BG,
 			(s->flags & WF_WHITE_BG)? "white": "black");
-		printf(" 19. Menu Bar ............... : %s\n",
+		printf("%3d. Menu Bar ............... : %s\n", MN_MENUBAR,
 			(s->flags & WF_NO_MENUBAR)? "No": "Yes");
 
 		for (;;) {
@@ -1655,23 +1745,23 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 				break;
 			}
 			switch (atoi(choicebuf)) {
-			case 1:
+			case MN_HOST:
 				if (get_host(s) < 0)
 					return -1;
 				break;
-			case 2:
+			case MN_LU:
 				if (get_lu(s) < 0)
 					return -1;
 				break;
-			case 3:
+			case MN_PORT:
 				if (get_port(s) < 0)
 					return -1;
 				break;
-			case 4:
+			case MN_MODEL:
 				if (get_model(s) < 0)
 					return -1;
 				break;
-			case 5:
+			case MN_OVERSIZE:
 				if (is_nt) {
 					if (get_oversize(s) < 0)
 						return -1;
@@ -1680,21 +1770,25 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 					invalid = 1;
 				}
 				break;
-			case 6:
+			case MN_CHARSET:
 				if (get_charset(s) < 0)
 					return -1;
 				break;
 #if defined(HAVE_LIBSSL) /*[*/
-			case 7:
+			case MN_SSL:
 				if (get_ssl(s) < 0)
 					return -1;
 				break;
+			case MN_VERIFY:
+				if (get_verify(s) < 0)
+					return -1;
+				break;
 #endif /*]*/
-			case 8:
+			case MN_PROXY:
 				if (get_proxy(s) < 0)
 					return -1;
 				break;
-			case 9:
+			case MN_PROXY_SERVER:
 				if (s->proxy_type[0]) {
 					if (get_proxy_server(s) < 0)
 						return -1;
@@ -1703,7 +1797,7 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 					invalid = 1;
 				}
 				break;
-			case 10:
+			case MN_PROXY_PORT:
 				if (s->proxy_type[0]) {
 					if (get_proxy_server_port(s) < 0)
 						return -1;
@@ -1712,25 +1806,34 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 					invalid = 1;
 				}
 				break;
-			case 11:
+			case MN_3287:
 				was_wpr3287 = s->wpr3287;
 				if (get_wpr3287(s) < 0)
 					return -1;
 				if (s->wpr3287 && !was_wpr3287) {
-					if (get_printerlu(s) < 0)
+					if (get_printer_mode(s) < 0)
 						return -1;
 				}
 				break;
-			case 12:
+			case MN_3287_MODE:
 				if (s->wpr3287) {
-					if (get_printerlu(s) < 0)
+					if (get_printer_mode(s) < 0)
 						return -1;
 				} else {
 					printf("Invalid entry.\n");
 					invalid = 1;
 				}
 				break;
-			case 13:
+			case MN_3287_LU:
+				if (s->wpr3287) {
+					if (get_printerlu(s, 1) < 0)
+						return -1;
+				} else {
+					printf("Invalid entry.\n");
+					invalid = 1;
+				}
+				break;
+			case MN_3287_PRINTER:
 				if (s->wpr3287) {
 					if (get_printer(s) < 0)
 						return -1;
@@ -1739,7 +1842,7 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 					invalid = 1;
 				}
 				break;
-			case 14:
+			case MN_3287_CODEPAGE:
 				if (s->wpr3287) {
 					if (get_printercp(s) < 0)
 						return -1;
@@ -1748,15 +1851,15 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 					invalid = 1;
 				}
 				break;
-			case 15:
+			case MN_KEYMAPS:
 				if (get_keymaps(s) < 0)
 					return -1;
 				break;
-			case 16:
+			case MN_EMBED_KEYMAPS:
 				if (get_embed(s) < 0)
 				    	return -1;
 				break;
-			case 17:
+			case MN_FONT_SIZE:
 				if (is_nt) {
 					if (get_fontsize(s) < 0)
 						return -1;
@@ -1765,11 +1868,11 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 					invalid = 1;
 				}
 				break;
-			case 18:
+			case MN_BG:
 				if (get_background(s) < 0)
 				    	return -1;
 				break;
-			case 19:
+			case MN_MENUBAR:
 				if (get_menubar(s) < 0)
 				    	return -1;
 				break;
@@ -2146,6 +2249,9 @@ create_session_file(session_t *session, char *path)
 ! These resources set the background to white\n\
 wc3270." ResConsoleColorForHostColor "NeutralBlack: 15\n\
 wc3270." ResConsoleColorForHostColor "NeutralWhite: 0\n");
+
+	if (session->flags & WF_VERIFY_HOST_CERTS)
+	    	fprintf(f, "wc3270.%s: %s\n", ResVerifyHostCert, ResTrue);
 
 	/* Emit the warning. */
 	fprintf(f, "\

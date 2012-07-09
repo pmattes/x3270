@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2010, Paul Mattes.
+ * Copyright (c) 1993-2012, Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -227,6 +227,8 @@ extern int		screen_depth;
 extern Boolean		scroll_initted;
 #if defined(HAVE_LIBSSL) /*[*/
 extern Boolean		secure_connection;
+extern Boolean		secure_unverified;
+extern char		**unverified_reasons;
 #endif /*]*/
 extern Boolean		shifted;
 extern Boolean		ssl_host;
@@ -264,8 +266,9 @@ extern int		is_installed;
 enum cstate {
 	NOT_CONNECTED,		/* no socket, unknown mode */
 	RESOLVING,		/* resolving hostname */
-	PENDING,		/* connection pending */
-	CONNECTED_INITIAL,	/* connected, no mode yet */
+	PENDING,		/* socket connection pending */
+	NEGOTIATING,		/* SSL/proxy negotiation in progress */
+	CONNECTED_INITIAL,	/* connected, no 3270 mode yet */
 	CONNECTED_ANSI,		/* connected in NVT ANSI mode */
 	CONNECTED_3270,		/* connected in old-style 3270 mode */
 	CONNECTED_INITIAL_E,	/* connected in TN3270E mode, unnegotiated */

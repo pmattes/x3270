@@ -413,7 +413,6 @@
 #define OptMono			"-mono"
 #define OptNoPrompt		"-noprompt"
 #define OptNoScrollBar		"+sb"
-#define OptNoVerifyHostCert	"-noverifycert"
 #define OptOnce			"-once"
 #define OptOversize		"-oversize"
 #define OptPort			"-port"
@@ -437,6 +436,7 @@
 #define OptTraceFileSize	"-tracefilesize"
 #define OptUser			"-user"
 #define OptV			"-v"
+#define OptVerifyHostCert	"-verifycert"
 #define OptVersion		"--version"
 
 /* Miscellaneous values. */

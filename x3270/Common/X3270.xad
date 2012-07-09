@@ -1,5 +1,5 @@
 !
-! Copyright (c) 1995-2010, Paul Mattes.
+! Copyright (c) 1995-2012, Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -1121,6 +1121,7 @@ x3270.message.statusOverflow:			Overflow
 x3270.message.statusInhibit:			Inhibit
 x3270.message.statusScrolled:			Scrolled
 x3270.message.statusMinus:			No Function
+x3270.message.unverified:			not verified
 #endif
 x3270.message.statusConnecting:			Connecting
 #endif
@@ -1206,8 +1207,11 @@ x3270*macrosMenuButton*background:		grey
 x3270*helpButton*background:			grey
 x3270*keypadButton*background:			grey
 x3270*lockedIcon*background:			grey
-x3270*lockedIcon*foreground:			yellow4
+x3270*lockedIcon*foreground:			green4
 x3270*lockedIcon*borderColor:			grey
+x3270*unverifiedIcon*background:		grey
+x3270*unverifiedIcon*foreground:		yellow4
+x3270*unverifiedIcon*borderColor:		grey
 x3270*unlockedIcon*background:			grey
 x3270*unlockedIcon*borderColor:			grey
 x3270*fileMenuButton*borderColor:		grey

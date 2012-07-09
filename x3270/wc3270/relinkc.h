@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, Paul Mattes.
+ * Copyright (c) 2006-2012, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -68,6 +68,7 @@ typedef struct {
 #define WF_AUTO_SHORTCUT	0x02	/* 'auto-shortcut' mode */
 #define WF_WHITE_BG		0x04	/* white background */
 #define WF_NO_MENUBAR		0x08	/* don't leave room for menu bar */
+#define WF_VERIFY_HOST_CERTS	0x10	/* verify host certificate */
 
 typedef struct {
 	char *name;

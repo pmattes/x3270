@@ -565,8 +565,19 @@ popup_about_status(void)
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 		if (secure_connection) {
-			(void) sprintf(fbuf, "%s", get_message("secure"));
+			(void) sprintf(fbuf, "%s%s%s", get_message("secure"),
+			    secure_unverified? ", ": "",
+			    secure_unverified? get_message("unverified"): "");
 			MAKE_LABEL2(fbuf);
+			if (secure_unverified) {
+			    	int i;
+
+				for (i = 0; unverified_reasons[i] != CN; i++) {
+				    	sprintf(fbuf, "   %s",
+						unverified_reasons[i]);
+					MAKE_LABEL(fbuf, 0);
+				}
+			}
 		}
 #endif /*]*/
 		ptype = net_proxy_type();

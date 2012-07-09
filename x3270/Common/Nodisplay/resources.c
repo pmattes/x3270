@@ -91,6 +91,7 @@ static struct {
 	{ "message.tn3270eNoOpts",      "No TN3270E options" },
 	{ "message.tn3270eOpts",        "TN3270E options:" },
 	{ "message.unnegotiated",       "TELNET negotiation incomplete" },
+	{ "message.unverified",       "not verified" },
 #if defined(_WIN32) /*[*/
 	{ "message.windowsCodePage",	"Windows code page:" },
 #endif /*][*/
