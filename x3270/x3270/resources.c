@@ -336,7 +336,7 @@ XtResource resources[] = {
 	{ ResSelfSignedOk, ClsSelfSignedOk, XtRBoolean, sizeof(Boolean),
 	  offset(self_signed_ok), XtRString, ResFalse },
 	{ ResVerifyHostCert, ClsVerifyHostCert, XtRBoolean, sizeof(Boolean),
-	  offset(verify_host_cert), XtRString, ResTrue },
+	  offset(verify_host_cert), XtRString, ResFalse },
 #endif /*]*/
 
 #if defined(USE_APP_DEFAULTS) /*[*/

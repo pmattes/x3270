@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2010, Paul Mattes.
+ * Copyright (c) 1993-2012, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -745,7 +745,7 @@ host_cancel_reconnect(void)
 void
 host_disconnect(Boolean failed)
 {
-	if (CONNECTED || HALF_CONNECTED) {
+	if (PCONNECTED) {
 		x_remove_input();
 		net_disconnect();
 		net_sock = -1;

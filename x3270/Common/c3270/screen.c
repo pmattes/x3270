@@ -193,7 +193,9 @@ static int screen_yoffset = 0;	/* Vertical offset to top of screen.
 				    top of the display. */
 
 static Boolean curses_alt = False;
+#if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
 static Boolean default_colors = False;
+#endif /*]*/
 
 static void kybd_input(void);
 static void kybd_input2(int k, ucs4_t ucs4, int alt);
@@ -1559,7 +1561,11 @@ toggle_underscore(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 static Boolean status_ta = False;
 static Boolean status_rm = False;
 static Boolean status_im = False;
-static Boolean status_secure = False;
+static enum {
+    SS_INSECURE,
+    SS_UNVERIFIED,
+    SS_SECURE
+} status_secure = SS_INSECURE;
 static Boolean oia_boxsolid = False;
 static Boolean oia_undera = True;
 static Boolean oia_compose = False;
@@ -1717,12 +1723,18 @@ status_connect(Boolean connected)
 		else
 			status_msg = "";
 #if defined(HAVE_LIBSSL) /*[*/
-		status_secure = secure_connection;
+		if (secure_connection) {
+		    	if (secure_unverified)
+			    	status_secure = SS_UNVERIFIED;
+			else
+			    	status_secure = SS_SECURE;
+		} else
+			status_secure = SS_INSECURE;
 #endif /*]*/
 	} else {
 		oia_boxsolid = False;
 		status_msg = "X Disconnected";
-		status_secure = False;
+		status_secure = SS_INSECURE;
 	}       
 }
 
@@ -1825,9 +1837,11 @@ draw_oia(void)
 
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
-4AN     Status-Message--------------------- Cn TRIS   LU-Name-   :ss.s  000/000
+4AN     Status-Message--------------------- Cn TRIPS  LU-Name-   :ss.s  000/000
+         7         6         5         4         3         2         1
+98765432109876543210987654321098765432109876543210987654321098765432109876543210
 
-   On wider displays, there is a bigger gap between TRIS and LU-Name.
+   On wider displays, there is a bigger gap between TRIPS and LU-Name.
 
 */
 
@@ -1851,16 +1865,18 @@ draw_oia(void)
 	(void) attrset(defattr);
 	mvprintw(status_row, 8, "%-35.35s", status_msg);
 	mvprintw(status_row, rmargin-35,
-	    "%c%c %c  %c%c%c",
+	    "%c%c %c%c%c%c",
 	    oia_compose? 'C': ' ',
 	    oia_compose? oia_compose_char: ' ',
 	    status_ta? 'T': ' ',
 	    status_rm? 'R': ' ',
 	    status_im? 'I': ' ',
 	    oia_printer? 'P': ' ');
-	if (status_secure) {
+	if (status_secure != SS_INSECURE) {
 	    	if (appres.m3279)
-			(void) attrset(get_color_pair(defcolor_offset + COLOR_GREEN,
+			(void) attrset(get_color_pair(defcolor_offset +
+				    (status_secure == SS_SECURE)?
+					COLOR_GREEN: COLOR_YELLOW,
 				    bg_color) | A_BOLD);
 		else
 		    	(void) attrset(A_BOLD);

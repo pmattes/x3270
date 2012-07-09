@@ -144,9 +144,6 @@ XrmOptionDescRec options[]= {
 	{ OptModel,	DotModel,	XrmoptionSepArg,	NULL },
 	{ OptMono,	DotMono,	XrmoptionNoArg,		ResTrue },
 	{ OptNoScrollBar,DotScrollBar,	XrmoptionNoArg,		ResFalse },
-#if defined(HAVE_LIBSSL) /*[*/
-	{ OptNoVerifyHostCert,DotVerifyHostCert,XrmoptionNoArg,	ResFalse },
-#endif /*]*/
 	{ OptOnce,	DotOnce,	XrmoptionNoArg,		ResTrue },
 	{ OptOversize,	DotOversize,	XrmoptionSepArg,	NULL },
 	{ OptPort,	DotPort,	XrmoptionSepArg,	NULL },
@@ -174,6 +171,9 @@ XrmOptionDescRec options[]= {
 #endif /*]*/
 	{ OptUser,	DotUser,	XrmoptionSepArg,	NULL },
 	{ OptV,		DotV,		XrmoptionNoArg,		ResTrue },
+#if defined(HAVE_LIBSSL) /*[*/
+	{ OptVerifyHostCert,DotVerifyHostCert,XrmoptionNoArg,	ResTrue },
+#endif /*]*/
 	{ OptVersion,	DotV,		XrmoptionNoArg,		ResTrue },
 	{ "-xrm",	NULL,		XrmoptionResArg,	NULL }
 };
@@ -215,9 +215,6 @@ static struct {
 	{ OptM3279, CN, "3279 emulation (deprecated)" },
 	{ OptModel, "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
 	{ OptMono, CN, "Do not use color" },
-#if defined(HAVE_LIBSSL) /*[*/
-	{ OptNoVerifyHostCert, CN, "Don't verify OpenSSL host certificate" },
-#endif /*]*/
 	{ OptNoScrollBar, CN, "Disable scroll bar" },
 	{ OptOnce, CN, "Exit as soon as the host disconnects" },
 	{ OptOversize,  "<cols>x<rows>", "Specify larger screen" },
@@ -247,6 +244,9 @@ static struct {
 #endif /*]*/
 	{ OptUser, "<name>", "Specify user name for RFC 4777" },
 	{ OptV, CN, "Display build options and character sets" },
+#if defined(HAVE_LIBSSL) /*[*/
+	{ OptVerifyHostCert, CN, "Verify OpenSSL host certificate" },
+#endif /*]*/
 	{ OptVersion, CN, "Display build options and character sets" },
 	{ "-xrm", "'x3270.<resource>: <value>'", "Set <resource> to <vale>" }
 };

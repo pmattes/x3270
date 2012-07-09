@@ -1,4 +1,4 @@
-dnl Copyright (c) 1993-2011, Paul Mattes.
+dnl Copyright (c) 1993-2012, Paul Mattes.
 dnl Copyright (c) 1990, Jeff Sparkes.
 dnl All rights reserved.
 dnl 
@@ -477,8 +477,11 @@ When the trace file reaches the size limit, it will be renamed with a
 XX_DQUOTED(-) appended and a new file started.
 XX_TP(XX_FB(XX_DASHED(user)) XX_FI(name))
 Specifies the user name for RFC 4777 support.
-XX_TP(XX_FB(XX_DASHED(v))
-Display the version and build options for XX_FB(XX_PRODUCT)) and exit.
+XX_TP(XX_FB(XX_DASHED(v)))
+Display the version and build options for XX_FB(XX_PRODUCT) and exit.
+XX_TP(XX_FB(XX_DASHED(verifycert)))
+For SSL or SSL/TLS connections, verify the host certificate, and do not allow
+the connection to complete unless it can be validated.
 ifelse(XX_PRODUCT,x3270,,
 `XX_TP(XX_FB(XX_DASHED(xrm)) "XX_PRODUCT.XX_FI(resource): XX_FI(value)")
 Sets the value of the named XX_FI(resource) to XX_FI(value).
@@ -1599,7 +1602,7 @@ RFC 1646, TN3270 Extensions for LUname and Printer Selection
 XX_BR
 RFC 2355, TN3270 Enhancements
 XX_SH(Copyrights)
-Copyright`'XX_COPY()1993-2011, Paul Mattes.
+Copyright`'XX_COPY()1993-2012, Paul Mattes.
 XX_BR
 Copyright`'XX_COPY()2004-2005, Don Russell.
 XX_BR

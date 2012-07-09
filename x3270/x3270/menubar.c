@@ -165,6 +165,7 @@ static Widget   connect_button;
 #if defined(HAVE_LIBSSL) /*[*/
 static Widget   locked_icon;
 static Widget   unlocked_icon;
+static Widget   unverified_icon;
 #endif /*]*/
 #if defined(X3270_KEYPAD) /*[*/
 static Widget   keypad_button;
@@ -572,14 +573,19 @@ menubar_connect(Boolean ignored _is_unused)
 	if (locked_icon != NULL) {
 		if (CONNECTED) {
 			if (secure_connection) {
-				XtMapWidget(locked_icon);
 				XtUnmapWidget(unlocked_icon);
+				if (secure_unverified)
+					XtMapWidget(unverified_icon);
+				else
+					XtMapWidget(locked_icon);
 			} else {
-				XtMapWidget(unlocked_icon);
 				XtUnmapWidget(locked_icon);
+				XtUnmapWidget(unverified_icon);
+				XtMapWidget(unlocked_icon);
 			}
 		} else {
 			XtUnmapWidget(locked_icon);
+			XtUnmapWidget(unverified_icon);
 			XtUnmapWidget(unlocked_icon);
 		}
 	}
@@ -1387,7 +1393,18 @@ ssl_icon_init(Position x, Position y)
 		    XtNy, y,
 		    XtNwidth, locked_width+8,
 		    XtNheight, KEY_HEIGHT,
-		    XtNmappedWhenManaged, CONNECTED && secure_connection,
+		    XtNmappedWhenManaged,
+			CONNECTED && secure_connection && !secure_unverified,
+		    NULL);
+		unverified_icon = XtVaCreateManagedWidget(
+		    "unverifiedIcon", labelWidgetClass, menu_parent,
+		    XtNbitmap, pixmap,
+		    XtNx, x,
+		    XtNy, y,
+		    XtNwidth, locked_width+8,
+		    XtNheight, KEY_HEIGHT,
+		    XtNmappedWhenManaged,
+			CONNECTED && secure_connection && secure_unverified,
 		    NULL);
 		pixmap = XCreateBitmapFromData(display, root_window,
 		    (char *) unlocked_bits, unlocked_width, unlocked_height);

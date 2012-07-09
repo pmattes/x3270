@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2011, Paul Mattes.
+ * Copyright (c) 2000-2012, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -2035,7 +2035,11 @@ toggle_underscore(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 static Boolean status_ta = False;
 static Boolean status_rm = False;
 static Boolean status_im = False;
-static Boolean status_secure = False;
+static enum {
+    SS_INSECURE,
+    SS_UNVERIFIED,
+    SS_SECURE
+} status_secure = SS_INSECURE;
 static Boolean oia_boxsolid = False;
 static Boolean oia_undera = True;
 static Boolean oia_compose = False;
@@ -2190,12 +2194,18 @@ status_connect(Boolean connected)
 		else
 			status_msg = "";
 #if defined(HAVE_LIBSSL) /*[*/
-		status_secure = secure_connection;
+		if (secure_connection) {
+			if (secure_unverified)
+				status_secure = SS_UNVERIFIED;
+			else
+			    	status_secure = SS_SECURE;
+		} else
+		    	status_secure = SS_INSECURE;
 #endif /*]*/
 	} else {
 		oia_boxsolid = False;
 		status_msg = "X Disconnected";
-		status_secure = False;
+		status_secure = SS_INSECURE;
 	}       
 }
 
@@ -2287,15 +2297,16 @@ draw_oia(void)
 		attrset(defattr);
 	mvprintw(status_row, 8, "%-35.35s", status_msg);
 	mvprintw(status_row, rmargin-35,
-	    "%c%c %c  %c%c%c",
+	    "%c%c %c%c%c%c",
 	    oia_compose? 'C': ' ',
 	    oia_compose? oia_compose_char: ' ',
 	    status_ta? 'T': ' ',
 	    status_rm? 'R': ' ',
 	    status_im? 'I': ' ',
 	    oia_printer? 'P': ' ');
-	if (status_secure) {
-	    	attrset(cmap_fg[HOST_COLOR_GREEN] |
+	if (status_secure != SS_INSECURE) {
+	    	attrset(cmap_fg[(status_secure == SS_SECURE)?
+				    HOST_COLOR_GREEN: HOST_COLOR_YELLOW] |
 			cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
 		printw("S");
 		if (appres.m3279)

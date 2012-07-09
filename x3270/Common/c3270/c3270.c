@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2011, Paul Mattes.
+ * Copyright (c) 1993-2012, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -364,7 +364,7 @@ main(int argc, char *argv[])
 	argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
 	printf("%s\n\n"
-		"Copyright 1989-2011 by Paul Mattes, GTRC and others.\n"
+		"Copyright 1989-2012 by Paul Mattes, GTRC and others.\n"
 		"Type 'show copyright' for full copyright information.\n"
 		"Type 'help' for help information.\n\n",
 		build);
@@ -1055,8 +1055,19 @@ status_dump(void)
 		}
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
-		if (secure_connection)
-			action_output("  %s", get_message("secure"));
+		if (secure_connection) {
+			action_output("  %s%s%s", get_message("secure"),
+			    secure_unverified? ", ": "",
+			    secure_unverified? get_message("unverified"): "");
+			if (secure_unverified) {
+				int i;
+
+				for (i = 0; unverified_reasons[i] != CN; i++) {
+					action_output("   %s",
+						unverified_reasons[i]);
+				}
+			}
+		}
 #endif /*]*/
 		ptype = net_proxy_type();
 		if (ptype) {
@@ -1153,7 +1164,7 @@ copyright_dump(void)
 	action_output(" ");
 	action_output("%s", build);
 	action_output(" ");
-	action_output("Copyright (c) 1993-2011, Paul Mattes.");
+	action_output("Copyright (c) 1993-2012, Paul Mattes.");
 	action_output("Copyright (c) 1990, Jeff Sparkes.");
 	action_output("Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA");
 	action_output(" 30332.");

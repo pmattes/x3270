@@ -2623,12 +2623,13 @@ name verifyHostCert
 applies a
 type b
 groups s
-switch -noverifycert
-default true
+switch -verifycert
+default false
 description
-    If true (the default), %p% will verify SSL host certificates.
-    If false, or if the <b>-noverifycert</b> option is given, %p% will not
-    verify SSL host certificates.
+    If false (the default), %p% will not verify SSL host certificates.
+    If true or if the <b>-verifycert</b> option is given, %p% will verify SSL
+    host certificates, and not allow an SSL or SSL/TLS connection to complete
+    unless the host certificate can be validated.
 .
 
 name visibleControl

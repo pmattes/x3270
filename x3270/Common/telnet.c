@@ -322,6 +322,9 @@ static int ssl_init(void);
 
 #if defined(HAVE_LIBSSL) /*[*/
 Boolean secure_connection = False;
+Boolean secure_unverified = False;
+char **unverified_reasons = NULL;
+static int n_unverified_reasons = 0;
 static SSL_CTX *ssl_ctx;
 static SSL *ssl_con;
 static Boolean need_tls_follows = False;
@@ -496,7 +499,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 		    || socket_errno() == SE_EINPROGRESS
 #endif /*]*/
 					   ) {
-			trace_dsn("Connection pending.\n");
+			trace_dsn("TCP connection pending.\n");
 			*pending = True;
 #if !defined(_WIN32) /*[*/
 			output_id = AddOutput(sock, output_possible);
@@ -511,6 +514,10 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 		if (non_blocking(False) < 0)
 			close_fail;
 		net_connected();
+
+		/* net_connected() can cause the connection to fail. */
+		if (sock < 0)
+			close_fail;
 	}
 
 	/* all done */
@@ -805,6 +812,14 @@ setup_lus(void)
 static void
 net_connected(void)
 {
+    	/*
+	 * If the connection went through on the first connect() call, then
+	 * our state is NOT_CONNECTED, so host_disconnect() will not call back
+	 * net_disconnect(). That would be bad. So set the state to something
+	 * non-zero.
+	 */
+	cstate = NEGOTIATING;
+
 	if (proxy_type > 0) {
 
 		/* Negotiate with the proxy. */
@@ -824,18 +839,21 @@ net_connected(void)
 #if defined(HAVE_LIBSSL) /*[*/
 	/* Set up SSL. */
 	if (ssl_host && !secure_connection) {
+	    	int rv;
+
 		if (SSL_set_fd(ssl_con, sock) != 1) {
 			trace_dsn("Can't set fd!\n");
 		}
-		if (SSL_connect(ssl_con) != 1) {
+		rv = SSL_connect(ssl_con);
+		if (rv != 1) {
 		    	long v;
 
 			v = SSL_get_verify_result(ssl_con);
 			if (v != X509_V_OK)
 				    popup_an_error("Host certificate "
 					"verification failed:\n"
-					"%ld (%s)", v,
-					X509_verify_cert_error_string(v));
+					"%s (%ld)",
+					X509_verify_cert_error_string(v), v);
 
 			/*
 			 * No need to trace the error, it was already
@@ -964,6 +982,17 @@ net_disconnect(void)
 		ssl_con = NULL;
 	}
 	secure_connection = False;
+	secure_unverified = False;
+	if (unverified_reasons != NULL) {
+		int i;
+
+		for (i = 0; unverified_reasons[i]; i++) {
+			Free(unverified_reasons[i]);
+		}
+		Free(unverified_reasons);
+		unverified_reasons = NULL;
+	}
+	n_unverified_reasons = 0;
 #endif /*]*/
 	if (CONNECTED)
 		(void) shutdown(sock, 2);
@@ -2803,9 +2832,10 @@ check_in3270(void)
 #if defined(X3270_TRACE) /*[*/
 	static const char *state_name[] = {
 		"unconnected",
-		"resolving",
-		"pending",
-		"initial connection",
+		"resolving hostname",
+		"TCP connection pending",
+		"negotiating SSL or proxy",
+		"connected; 3270 state unknown",
 		"TN3270 NVT",
 		"TN3270 3270",
 		"TN3270E",
@@ -3969,30 +3999,45 @@ static int
 ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 {
 	int err;
-
-	trace_dsn("SSL_verify_callback: preverify_ok %d\n", preverify_ok);
+	char *why_not = CN;
 
 	/* If OpenSSL thinks it's okay, so do we. */
 	if (preverify_ok)
 		return 1;
 
-	/*
-	 * If it's a self-signed certificate and the user thinks that's okay,
-	 * so do we.
-	 */
+	/* Fetch the error. */
 	err = X509_STORE_CTX_get_error(ctx);
-	if (appres.self_signed_ok) {
-	    if (err == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT ||
-		err == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN) {
-		    trace_dsn("SSL_verify_callback: self-signed okay, "
-			      "error %d, returning 1\n", err);
-		    return 1;
-	    }
+
+	/* We might not care. */
+	if (!appres.verify_host_cert) {
+		why_not = "not verifying";
+	} else if (appres.self_signed_ok &&
+		(err == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT ||
+		 err == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN)) {
+		why_not = "self-signed okay";
+	}
+	if (why_not != CN) {
+	    	char **s;
+		int i;
+
+		trace_dsn("SSL_verify_callback: %s, ignoring '%s' (%d)\n",
+			why_not, X509_verify_cert_error_string(err), err);
+		secure_unverified = True;
+		s = unverified_reasons;
+		unverified_reasons = (char **)Malloc(
+				(n_unverified_reasons + 2) * sizeof(char *));
+		for (i = 0; i < n_unverified_reasons; i++) {
+		    	unverified_reasons[i] = s[i];
+		}
+		unverified_reasons[n_unverified_reasons++] =
+		    xs_buffer("%s (%d)", X509_verify_cert_error_string(err),
+			    err);
+		unverified_reasons[n_unverified_reasons] = CN;
+		Free(s);
+		return 1;
 	}
 
-	/* Must not be okay. */
-	trace_dsn("SSL_verify_callback: not okay, error %d, returning 0\n",
-		err);
+	/* Then again, we might. */
 	return 0;
 }
 
@@ -4000,8 +4045,6 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 static int
 ssl_init(void)
 {
-    	int verify_flag;
-
 	if (ssl_ctx == NULL) {
 	    	popup_an_error("Cannot connect:\nNo SSL private key password");
 		return -1;
@@ -4013,11 +4056,9 @@ ssl_init(void)
 		return -1;
 	}
 	SSL_set_verify_depth(ssl_con, 64);
-	verify_flag = appres.verify_host_cert? SSL_VERIFY_PEER:
-	    				       SSL_VERIFY_NONE;
-	trace_dsn("SSL_init: %sverifying host (flag %d)\n",
-		appres.verify_host_cert? "": "not ", verify_flag);
-	SSL_set_verify(ssl_con, verify_flag, ssl_verify_callback);
+	trace_dsn("SSL_init: %sverifying host certificate\n",
+		appres.verify_host_cert? "": "not ");
+	SSL_set_verify(ssl_con, SSL_VERIFY_PEER, ssl_verify_callback);
 	return 0;
 }
 
@@ -4026,11 +4067,11 @@ static void
 client_info_callback(INFO_CONST SSL *s, int where, int ret)
 {
 	if (where == SSL_CB_CONNECT_LOOP) {
-		trace_dsn("SSL_connect: %s %s\n",
+		trace_dsn("SSL_connect trace: %s %s\n",
 		    SSL_state_string(s), SSL_state_string_long(s));
 	} else if (where == SSL_CB_CONNECT_EXIT) {
 		if (ret == 0) {
-			trace_dsn("SSL_connect: failed in %s\n",
+			trace_dsn("SSL_connect trace: failed in %s\n",
 			    SSL_state_string_long(s));
 		} else if (ret < 0) {
 			unsigned long e;
@@ -4050,10 +4091,7 @@ client_info_callback(INFO_CONST SSL *s, int where, int ret)
 #endif /*]*/
 			else
 				err_buf[0] = '\0';
-			trace_dsn("SSL_connect: error in %s%s\n",
-			    SSL_state_string_long(s),
-			    err_buf);
-			popup_an_error("SSL_connect: error in %s%s",
+			trace_dsn("SSL_connect trace: error in %s%s\n",
 			    SSL_state_string_long(s),
 			    err_buf);
 		}
