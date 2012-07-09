@@ -178,6 +178,20 @@ define(XX_TOGGLEREFNM,`ifelse(XX_PRODUCT,x3270,MENUS,TOGGLES)')dnl
 The list of toggle names is under XX_LINK(`#'XX_TOGGLEREF,XX_SM(XX_TOGGLEREFNM))
 below.
 ifelse(XX_PRODUCT,c3270,
+`XX_TP(XX_FB(XX_DASHED(defaultfgbg)))
+Causes XX_PRODUCT to use the XX_POSESSIVE(terminal) default foreground color
+instead of the curses color XX_FB(black), and the XX_POSESSIVE(terminal)
+default background color instead of the curses color XX_FB(white).
+This is helpful for emulators such as XX_FI(gnome-terminal) whose
+representation of a black background is a murky gray, and for emulators
+configured to use black text on a white background.
+It is set automatically if the environment variable XX_FB(COLORTERM) is
+set to XX_FB(gnome-terminal). It is available only if XX_PRODUCT was
+compiled with a version of XX_FI(ncurses) that supports default colors,
+if the emulator supports default colors, and if the termcap/terminfo entry
+indicates this capability.
+')dnl
+ifelse(XX_PRODUCT,c3270,
 `XX_TP(XX_FB(XX_DASHED(defscreen) XX_FI(rows)`'XX_FB(x)`'XX_FI(cols)`'XX_FB(=)`'XX_FI(init_string)))
 Defines the dimensions and escape sequence for the default (80-column)
 screen mode.

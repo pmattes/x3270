@@ -632,6 +632,12 @@ static struct {
 { OptClear,    OPT_SKIP2,   False, NULL,         NULL,
     "<toggle>", "Turn on <toggle>" },
 #if defined(C3270) && !defined(_WIN32) /*[*/
+# if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
+{ OptDefaultFgBg,OPT_BOOLEAN,True, ResDefaultFgBg,offset(default_fgbg),
+    CN,
+    "Use terminal's default foreground and background colors"
+},
+# endif /*]*/
 { OptDefScreen,OPT_STRING,  False, ResDefScreen, offset(defscreen),
     "<string>",
     "Specify string to switch terminal from 80-column mode to 132-column mode"
@@ -1002,6 +1008,9 @@ static struct {
 	{ ResDbcsCgcsgid, offset(dbcs_cgcsgid),	XRM_STRING },
 #endif /*]*/
 #if defined(C3270) /*[*/
+# if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
+	{ ResDefaultFgBg,offset(default_fgbg),	XRM_BOOLEAN },
+# endif /*]*/
 	{ ResDefScreen,	offset(defscreen),	XRM_STRING },
 #endif /*]*/
 #if defined(X3270_ANSI) /*[*/

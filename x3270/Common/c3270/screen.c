@@ -98,7 +98,7 @@ static int cmap8[16] = {
 	COLOR_YELLOW,	/* yellow */
 	COLOR_WHITE,	/* neutral white */
 
-	COLOR_BLACK,	/* black */ /* alas, in bold, this may be gray */
+	COLOR_BLACK,	/* black */ /* alas, this may be gray */
 	COLOR_BLUE,	/* deep blue */
 	COLOR_YELLOW,	/* orange */
 	COLOR_MAGENTA,	/* purple */
@@ -118,7 +118,7 @@ static int cmap16[16] = {
 	8 + COLOR_YELLOW,	/* yellow */
 	8 + COLOR_WHITE,	/* neutral white */
 
-	COLOR_BLACK,	/* black */ /* alas, in bold, this may be gray */
+	COLOR_BLACK,	/* black */ /* alas, this may be gray */
 	COLOR_BLUE,	/* deep blue */
 	8 + COLOR_RED,	/* orange */
 	COLOR_MAGENTA,	/* purple */
@@ -193,6 +193,9 @@ static int screen_yoffset = 0;	/* Vertical offset to top of screen.
 				    top of the display. */
 
 static Boolean curses_alt = False;
+#if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
+static Boolean default_colors = False;
+#endif /*]*/
 
 static void kybd_input(void);
 static void kybd_input2(int k, ucs4_t ucs4, int alt);
@@ -464,7 +467,19 @@ screen_connect(Boolean connected)
 
 	/* Play with curses color. */
 	if (!appres.mono) {
+#if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
+	    	char *colorterm;
+#endif /*]*/
 		start_color();
+#if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
+		if ((appres.default_fgbg ||
+		     ((colorterm = getenv("COLORTERM")) != CN &&
+		      !strcmp(colorterm, "gnome-terminal"))) &&
+		    use_default_colors() != ERR) {
+
+		    default_colors = True;
+		}
+#endif /*]*/
 		if (has_colors() && COLORS >= 8) {
 		    	if (!appres.color8 && COLORS >= 16) {
 				cmap = cmap16;
@@ -660,12 +675,27 @@ get_color_pair(int fg, int bg)
 		/* curses allocates colors globally. */
 	const int pair_index = 0;
 #endif /*]*/
+	int bg_arg = bg;
+	int fg_arg = fg;
 
 	if ((pair = cp[fg][bg][pair_index]))
 		return COLOR_PAIR(pair);
 	if (next_pair[pair_index] >= COLOR_PAIRS)
 		return 0;
-	if (init_pair(next_pair[pair_index], fg, bg) != OK)
+#if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
+	/*
+	 * Assume that by default, the terminal displays some sort of 'white'
+	 * against some sort of 'black', and that looks better than the
+	 * explicit curses COLOR_WHITE over COLOR_BLACK.
+	 */
+	if (default_colors) {
+	    if (bg == COLOR_BLACK)
+		bg_arg = -1; /* use the default background, not black */
+	    if (fg == COLOR_WHITE)
+		fg_arg = -1; /* use the default foreground, not white */
+	}
+#endif /*]*/
+	if (init_pair(next_pair[pair_index], fg_arg, bg_arg) != OK)
 		return 0;
 	pair = cp[fg][bg][pair_index] = next_pair[pair_index]++;
 	return COLOR_PAIR(pair);

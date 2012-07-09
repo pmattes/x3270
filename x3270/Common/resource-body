@@ -876,6 +876,30 @@ description
     options are not displayed.
 .
 
+name defaultFgBg
+applies c
+type b
+groups a
+default false
+switch -defaultfgbg
+description
+    If true, %p% will use the terminal's default foreground color instead of
+    specifying the curses color <b>white</b>, and it will use the terminal's
+    default background color instead of specifying the curses color
+    <b>black</b>. This is helpful in two cases: for emulators such as
+    <b>gnome-terminal</b> whose usual representation of a black background is
+    a murky gray, and for emulators configured with a black foreground and a
+    white background, so that %p%'s screen will appear the same way.
+    <p class=indented>
+    <b>defaultFgBg</b> will be set to true automatically if the environment
+    variable <b>COLORTERM</b> is set to <b>gnome-terminal</b>.
+    <p class=indented>
+    Note that this resource and option are available only if %p% has been
+    compiled with a version of ncurses that supports default foreground and
+    background colors, and if the terminal and its associated termcap/terminfo
+    entry also support it (it is usually implemented as ANSI color 9).
+.
+
 name defScreen
 applies c
 type s

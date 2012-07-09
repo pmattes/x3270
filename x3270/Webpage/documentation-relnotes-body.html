@@ -8,6 +8,11 @@
  <li>[<i>x3270, c3270, wc3270</i>] Changed the 'secure' icon to green when
   SSL/TLS is active and the host is verified, and yellow when SSL/TLS is
   active but the host is unverified.</li>
+ <li>[<i>c3270</i>] Added a <b>defaultFgBg</b> resource and <b>-defaultfgbg</b>
+  option to use the terminal's default foreground and background colors in
+  place of the curses colors <b>white</b> and <b>black</b> respectively -- if
+  the ncurses library, terminal and termcap/terminfo entry support default
+  color. It is automatically set for <b>gnome-terminal</b>.</li>
  </ul>
 <h2>Changes in version 3.3.12beta9, 13. February 2012</h2>
 <ul>
