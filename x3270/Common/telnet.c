@@ -132,6 +132,8 @@ static HANDLE	sock_handle = NULL;
 #endif /*]*/
 static unsigned char myopts[N_OPTS], hisopts[N_OPTS];
 			/* telnet option flags */
+static Boolean did_ne_send;
+static Boolean deferred_will_ttype;
 static unsigned char *ibuf = (unsigned char *) NULL;
 			/* 3270 input buffer */
 static unsigned char *ibptr;
@@ -464,11 +466,11 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 #endif /*]*/
 
 	/* set the socket to be non-delaying */
-#if defined(_WIN32) /*[*/
-	if (non_blocking(False) < 0)
-#else /*][*/
+//#if defined(_WIN32) /*[*/
+	//if (non_blocking(False) < 0)
+//#else /*][*/
 	if (non_blocking(True) < 0)
-#endif /*]*/
+//#endif /*]*/
 		close_fail;
 
 #if !defined(_WIN32) /*[*/
@@ -847,6 +849,8 @@ net_connected(void)
 		rv = SSL_connect(ssl_con);
 		if (rv != 1) {
 		    	long v;
+			/* Might be SSL_ERROR_WANT_READ or
+			 * SSL_ERROR_WANT_WRITE. */
 
 			v = SSL_get_verify_result(ssl_con);
 			if (v != X509_V_OK)
@@ -874,6 +878,8 @@ net_connected(void)
 	/* set up telnet options */
 	(void) memset((char *) myopts, 0, sizeof(myopts));
 	(void) memset((char *) hisopts, 0, sizeof(hisopts));
+	did_ne_send = False;
+	deferred_will_ttype = False;
 #if defined(X3270_TN3270E) /*[*/
 	e_funcs = E_OPT(TN3270E_FUNC_BIND_IMAGE) |
 		  E_OPT(TN3270E_FUNC_RESPONSES) |
@@ -1028,16 +1034,17 @@ net_input(void)
 	Boolean	ignore_ssl = False;
 #endif /*]*/
 
-#if defined(_WIN32) /*[*/
+//#if defined(_WIN32) /*[*/
 	/*
 	 * Make the socket non-blocking.
 	 * Note that WSAEventSelect does this automatically (and won't allow
 	 * us to change it back to blocking), except on Wine.
 	 */
-	if (sock >=0 && non_blocking(True) < 0) {
-		    host_disconnect(True);
-		    return;
-	}
+	//if (sock >=0 && non_blocking(True) < 0) {
+		    //host_disconnect(True);
+		    //return;
+	//}
+#if defined(_WIN32)
 	for (;;) {
 #endif /*]*/
 	if (sock < 0)
@@ -1558,9 +1565,15 @@ telnet_fsm(unsigned char c)
 				goto wont;
 			if (c == TELOPT_TM && !appres.bsd_tm)
 				goto wont;
-			if (c == TELOPT_TTYPE && myopts[TELOPT_NEW_ENVIRON]) {
-				/* ignore TTYPE until after NEW_ENVIRON */
+			if (c == TELOPT_TTYPE &&
+			    myopts[TELOPT_NEW_ENVIRON] &&
+			    !did_ne_send) {
+				/*
+				 * Defer sending WILL TTYPE until after the
+				 * host asks for SB NEW_ENVIRON SEND.
+				 * */
 				myopts[c] = 1;
+				deferred_will_ttype = True;
 				break;
 			}
 
@@ -1616,6 +1629,8 @@ telnet_fsm(unsigned char c)
 			check_in3270();
 			check_linemode(False);
 		}
+		if (c == TELOPT_TTYPE && deferred_will_ttype)
+			deferred_will_ttype = False;
 		telnet_state = TNS_DATA;
 		break;
 	    case TNS_SB:	/* telnet sub-option string command */
@@ -1728,14 +1743,22 @@ telnet_fsm(unsigned char c)
 					telobjs[TELOBJ_USERVAR], "DEVNAME",
 					telobjs[TELOBJ_VALUE], appres.devname);
 
-				/* Now respond to DO TERMINAL_TYPE. */
-				if (myopts[TELOPT_TTYPE]) {
+				/*
+				 * Remember that we did a NEW_ENVIRON SEND,
+				 * so we won't defer a future DO TTYPE.
+				 */
+				did_ne_send = True;
+
+				/* Now respond to DO TTYPE. */
+				if (deferred_will_ttype &&
+				    myopts[TELOPT_TTYPE]) {
 					will_opt[2] = TELOPT_TTYPE;
 					net_rawout(will_opt, sizeof(will_opt));
 					trace_dsn("SENT %s %s\n", cmd(WILL),
 						opt(TELOPT_TTYPE));
 					check_in3270();
 					check_linemode(False);
+					deferred_will_ttype = False;
 				}
 			}
 
@@ -4134,10 +4157,15 @@ continue_tls(unsigned char *sbbuf, int len)
 #if defined(_WIN32) /*[*/
 	/* Make the socket blocking for SSL. */
 	(void) WSAEventSelect(sock, sock_handle, 0);
-	(void) non_blocking(False);
+	//(void) non_blocking(False);
 #endif /*]*/
 
 	rv = SSL_connect(ssl_con);
+	/* On Windows, we could get SSL_ERROR_WANT_READ or
+	 * SSL_ERROR_WANT_WRITE. I could arrange to call SSL_connect
+	 * again when the appropriate condition is satisfied, if I
+	 * wanted to add that level of complexity.
+	 */
 
 #if defined(_WIN32) /*[*/
 	/* Make the socket non-blocking again for event processing. */
