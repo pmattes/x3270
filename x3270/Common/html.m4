@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2009, Paul Mattes.
+dnl Copyright (c) 2000-2012, Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -67,6 +67,7 @@ define(XX_COPY,` &copy; ')dnl
 define(XX_BACKSLASH,``&#92;''$1)dnl
 define(XX_NOT,&not;)dnl
 define(XX_HO,$1)dnl
+define(XX_HY,$1$2)dnl
 dnl Stream 1 has the table of contents, stream 2 the body, stream 3 the tail
 divert(1)dnl
 <html>

@@ -1055,7 +1055,7 @@ XX_TR(XX_TDH(XX_INT()XX_LA()Key`'XX_LPAREN`'XX_CCHAR()XX_FI(keysym)`'XX_RPAREN)	
 ifelse(XX_PRODUCT,lib3270,,`XX_TR(XX_TDH(Key`'XX_LPAREN`'0x`'XX_FI(xx)`'XX_RPAREN)	XX_TD(insert key with character code XX_FI(xx)))
 ')dnl
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(Keymap(XX_FI(keymap)))	XX_TD(toggle alternate XX_FI(keymap) (or remove with XX_FB(None))))
-XX_TR(XX_TDH(KybdSelect(XX_FI(direction)[,XX_FI(atom)...]))	XX_TD(Extend selection by one row or column))
+XX_TR(XX_TDH(KybdSelect(XX_FI(direction) [,XX_FI(atom)...]))	XX_TD(Extend selection by one row or column))
 ')dnl
 XX_TR(XX_TDH(XX_INT()XX_LS()`Left'XX_VOID())	XX_TD(move cursor left))
 XX_TR(XX_TDH(XX_INT()XX_LS()`Left2'XX_VOID())	XX_TD(move cursor left 2 positions))

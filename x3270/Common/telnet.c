@@ -132,6 +132,8 @@ static HANDLE	sock_handle = NULL;
 #endif /*]*/
 static unsigned char myopts[N_OPTS], hisopts[N_OPTS];
 			/* telnet option flags */
+static Boolean did_ne_send;
+static Boolean deferred_will_ttype;
 static unsigned char *ibuf = (unsigned char *) NULL;
 			/* 3270 input buffer */
 static unsigned char *ibptr;
@@ -874,6 +876,8 @@ net_connected(void)
 	/* set up telnet options */
 	(void) memset((char *) myopts, 0, sizeof(myopts));
 	(void) memset((char *) hisopts, 0, sizeof(hisopts));
+	did_ne_send = False;
+	deferred_will_ttype = False;
 #if defined(X3270_TN3270E) /*[*/
 	e_funcs = E_OPT(TN3270E_FUNC_BIND_IMAGE) |
 		  E_OPT(TN3270E_FUNC_RESPONSES) |
@@ -1558,9 +1562,15 @@ telnet_fsm(unsigned char c)
 				goto wont;
 			if (c == TELOPT_TM && !appres.bsd_tm)
 				goto wont;
-			if (c == TELOPT_TTYPE && myopts[TELOPT_NEW_ENVIRON]) {
-				/* ignore TTYPE until after NEW_ENVIRON */
+			if (c == TELOPT_TTYPE &&
+			    myopts[TELOPT_NEW_ENVIRON] &&
+			    !did_ne_send) {
+				/*
+				 * Defer sending WILL TTYPE until after the
+				 * host asks for SB NEW_ENVIRON SEND.
+				 * */
 				myopts[c] = 1;
+				deferred_will_ttype = True;
 				break;
 			}
 
@@ -1616,6 +1626,8 @@ telnet_fsm(unsigned char c)
 			check_in3270();
 			check_linemode(False);
 		}
+		if (c == TELOPT_TTYPE && deferred_will_ttype)
+			deferred_will_ttype = False;
 		telnet_state = TNS_DATA;
 		break;
 	    case TNS_SB:	/* telnet sub-option string command */
@@ -1728,14 +1740,22 @@ telnet_fsm(unsigned char c)
 					telobjs[TELOBJ_USERVAR], "DEVNAME",
 					telobjs[TELOBJ_VALUE], appres.devname);
 
-				/* Now respond to DO TERMINAL_TYPE. */
-				if (myopts[TELOPT_TTYPE]) {
+				/*
+				 * Remember that we did a NEW_ENVIRON SEND,
+				 * so we won't defer a future DO TTYPE.
+				 */
+				did_ne_send = True;
+
+				/* Now respond to DO TTYPE. */
+				if (deferred_will_ttype &&
+				    myopts[TELOPT_TTYPE]) {
 					will_opt[2] = TELOPT_TTYPE;
 					net_rawout(will_opt, sizeof(will_opt));
 					trace_dsn("SENT %s %s\n", cmd(WILL),
 						opt(TELOPT_TTYPE));
 					check_in3270();
 					check_linemode(False);
+					deferred_will_ttype = False;
 				}
 			}
 

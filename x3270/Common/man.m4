@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2009, Paul Mattes.
+dnl Copyright (c) 2000-2012, Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -75,5 +75,6 @@ define(XX_COPY,` ')dnl
 define(XX_NOT,notsign)dnl
 define(XX_BACKSLASH,\\$1)dnl
 define(XX_HO)dnl
+define(XX_HY,$1\%$2)dnl
 dnl Make sure it gets run through tbl first.
 '\" t

@@ -77,11 +77,16 @@ XX_TR(XX_TD(charset)	XX_TD(bracket)	XX_TD(XX_DASHED(charset))	XX_TD(XX_SM(EBCDIC
 ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(composeMap)	XX_TD(latin1)	XX_TD(XX_NBSP)	XX_TD(Name of composed-character map))
 ')dnl
 ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TD(consoleColorForHostColor`'XX_FI(n))	XX_TD(XX_LINK(#rn4,`(note 6)'))	XX_TD(XX_NBSP)	XX_TD(Color mapping))')dnl
-ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(cursesColorForHostColor`'XX_FI(n))	XX_TD(XX_LINK(#rn4,`(note 6)'))	XX_TD(XX_NBSP)	XX_TD(Color mapping))')dnl
-ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(cursesColorForDefault)	XX_TD(green)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))')dnl
-ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(cursesColorForIntensified)	XX_TD(red)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))')dnl
-ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(cursesColorForProtected)	XX_TD(blue)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))')dnl
-ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(cursesColorForProtectedIntensified)	XX_TD(white)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))')dnl
+ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(XX_HY(cursesColor,ForHostColor)`'XX_FI(n))	XX_TD(XX_LINK(#rn4,`(note 6)'))	XX_TD(XX_NBSP)	XX_TD(Color mapping))
+')dnl
+ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(XX_HY(cursesColor,ForDefault))	XX_TD(green)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))
+')dnl
+ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(XX_HY(cursesColor,ForIntensified))	XX_TD(red)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))
+')dnl
+ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(XX_HY(cursesColor,ForProtected))	XX_TD(blue)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))
+')dnl
+ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(XX_HY(cursesColor,ForProtectedIntensified))	XX_TD(white)	XX_TD(XX_NBSP)	XX_TD(Default color mapping))
+')dnl
 ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(cursesKeymap)	XX_TD(True)	XX_TD(XX_NBSP)	XX_TD(Set curses keymap option))
 ')dnl
 ifelse(XX_PRODUCT,c3270,`XX_TR(XX_TD(defScreen)	XX_TD(XX_NBSP)	XX_TD(XX_DASHED(defscreen))	XX_TD(80-col screen definition))
@@ -193,8 +198,7 @@ ifelse(XX_PRODUCT,c3270,`XX_LP
 XX_TARGET(rn6)`XX_FI(Note 6): The default curses color mappings for host colors
 0 through 15 are: black, blue, red, magenta, green, cyan, yellow, white, black,
 blue, yellow, blue, green, cyan, black and white.'
-')dnl
-)dnl
+'))
 XX_LP
 ifelse(XX_PRODUCT,c3270,`In XX_FB(.c3270pro), lines are continued with a
 backslash character.
