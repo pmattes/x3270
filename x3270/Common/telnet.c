@@ -466,11 +466,11 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 #endif /*]*/
 
 	/* set the socket to be non-delaying */
-//#if defined(_WIN32) /*[*/
-	//if (non_blocking(False) < 0)
-//#else /*][*/
+#if defined(_WIN32) /*[*/
+	if (non_blocking(False) < 0)
+#else /*][*/
 	if (non_blocking(True) < 0)
-//#endif /*]*/
+#endif /*]*/
 		close_fail;
 
 #if !defined(_WIN32) /*[*/
@@ -849,8 +849,6 @@ net_connected(void)
 		rv = SSL_connect(ssl_con);
 		if (rv != 1) {
 		    	long v;
-			/* Might be SSL_ERROR_WANT_READ or
-			 * SSL_ERROR_WANT_WRITE. */
 
 			v = SSL_get_verify_result(ssl_con);
 			if (v != X509_V_OK)
@@ -1034,17 +1032,16 @@ net_input(void)
 	Boolean	ignore_ssl = False;
 #endif /*]*/
 
-//#if defined(_WIN32) /*[*/
+#if defined(_WIN32) /*[*/
 	/*
 	 * Make the socket non-blocking.
 	 * Note that WSAEventSelect does this automatically (and won't allow
 	 * us to change it back to blocking), except on Wine.
 	 */
-	//if (sock >=0 && non_blocking(True) < 0) {
-		    //host_disconnect(True);
-		    //return;
-	//}
-#if defined(_WIN32)
+	if (sock >=0 && non_blocking(True) < 0) {
+		    host_disconnect(True);
+		    return;
+	}
 	for (;;) {
 #endif /*]*/
 	if (sock < 0)
@@ -4157,15 +4154,10 @@ continue_tls(unsigned char *sbbuf, int len)
 #if defined(_WIN32) /*[*/
 	/* Make the socket blocking for SSL. */
 	(void) WSAEventSelect(sock, sock_handle, 0);
-	//(void) non_blocking(False);
+	(void) non_blocking(False);
 #endif /*]*/
 
 	rv = SSL_connect(ssl_con);
-	/* On Windows, we could get SSL_ERROR_WANT_READ or
-	 * SSL_ERROR_WANT_WRITE. I could arrange to call SSL_connect
-	 * again when the appropriate condition is satisfied, if I
-	 * wanted to add that level of complexity.
-	 */
 
 #if defined(_WIN32) /*[*/
 	/* Make the socket non-blocking again for event processing. */
