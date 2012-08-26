@@ -343,6 +343,9 @@ popup_menu(int x, int click)
 	int row, col;
 	int next_col;
 
+	if (!appres.menubar)
+	    	return;
+
 	/* Find which menu to start with. */
 	for (cmenu = menus; cmenu != NULL; cmenu = cmenu->next) {
 		if (x >= cmenu->offset && x < cmenu->offset + MENU_WIDTH)

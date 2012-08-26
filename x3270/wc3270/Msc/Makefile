@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2010, Paul Mattes.
+# Copyright (c) 2007-2012, Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -153,8 +153,6 @@ keypad.obj: keypad.c compiled_keypad.h
 	$(CC) $(CFLAGS) /c keypad.c
 kybd.obj: kybd.c
 	$(CC) $(CFLAGS) /c kybd.c
-macros.obj: macros.c
-	$(CC) $(CFLAGS) /c macros.c
 macros.obj: macros.c
 	$(CC) $(CFLAGS) /c macros.c
 menubar.obj: menubar.c

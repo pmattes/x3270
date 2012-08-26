@@ -864,7 +864,8 @@ screen_init(void)
 	int want_ov_cols = ov_cols;
 	Boolean oversize = False;
 
-	menu_init();
+	if (appres.menubar)
+		menu_init();
 	appres.mouse = True;
 
 	/* Disallow altscreen/defscreen. */
@@ -1727,7 +1728,7 @@ kybd_input(void)
 		    (ir.Event.MouseEvent.dwEventFlags == 0)) {
 		    	if (menu_is_up) {
 			    	menu_click(x, y);
-			} else if (y == 0) {
+			} else if (appres.menubar && y == 0) {
 			    	popup_menu(x, (screen_yoffset != 0));
 				screen_disp(False);
 			} else if ((x < COLS) &&

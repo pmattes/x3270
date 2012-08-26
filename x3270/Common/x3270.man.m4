@@ -405,6 +405,13 @@ ifelse(XX_PRODUCT,tcl3270,,
 `XX_TP(XX_FB(XX_DASHED(scriptport)) XX_FI(port))
 Causes XX_PRODUCT to listen for scripting connections on local TCP
 port XX_FI(port).
+ifelse(XX_MODE,console,`Note that this is the only way to do peer scripting
+on XX_PRODUCT.
+')dnl
+ifelse(XX_PRODUCT,ws3270,`Note that this is the preferred way to do peer
+scripting on XX_PRODUCT. Windows stdin/stdout does not behave predictably and
+can cause a script to malfunction.
+')dnl
 ')dnl
 ifelse(XX_PRODUCT,c3270,
 `XX_TP(XX_FB(XX_DASHED(secure)))

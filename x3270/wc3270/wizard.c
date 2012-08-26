@@ -1631,10 +1631,10 @@ This option selects whether the menu bar is displayed on the screen.");
 		case -1:
 			return -1;
 		case 0:
-		    	s->flags &= ~WF_NO_MENUBAR;
+		    	s->flags |= WF_NO_MENUBAR;
 			break;
 		case 1:
-		    	s->flags |= WF_NO_MENUBAR;
+		    	s->flags &= ~WF_NO_MENUBAR;
 			break;
 		}
 	} while (rc < 0);
@@ -2252,6 +2252,9 @@ wc3270." ResConsoleColorForHostColor "NeutralWhite: 0\n");
 
 	if (session->flags & WF_VERIFY_HOST_CERTS)
 	    	fprintf(f, "wc3270.%s: %s\n", ResVerifyHostCert, ResTrue);
+
+	if (session->flags & WF_NO_MENUBAR)
+	    	fprintf(f, "wc3270.%s: %s\n", ResMenuBar, ResFalse);
 
 	/* Emit the warning. */
 	fprintf(f, "\
