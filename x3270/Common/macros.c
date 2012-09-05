@@ -217,6 +217,14 @@ static enum iaction st_cause[] = { IA_MACRO, IA_MACRO, IA_COMMAND, IA_KEYMAP,
 #define ST_sNAME(s)	st_name[(int)(s)->type]
 #define ST_NAME		ST_sNAME(sms)
 
+#if defined(_WIN32) /*[*/
+static HANDLE peer_thread;
+static HANDLE peer_enable_event, peer_done_event;
+static char peer_buf[256];
+int peer_nr;
+int peer_errno;
+#endif /*]*/
+
 #if defined(X3270_SCRIPT) /*[*/
 static void cleanup_socket(Boolean b);
 #endif /*]*/
@@ -235,7 +243,7 @@ static void read_from_file(void);
 static sms_t *sms_redirect_to(void);
 
 /* Macro that defines that the keyboard is locked due to user input. */
-#define KBWAIT	(kybdlock & (KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK))
+#define KBWAIT	(kybdlock & (KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK|KL_ENTER_INHIBIT))
 #if defined(X3270_SCRIPT) /*[*/
 #define CKBWAIT	(appres.toggle[AID_WAIT].value && KBWAIT)
 #else /*][*/
@@ -637,6 +645,35 @@ sms_pop(Boolean can_exit)
 #endif /*]*/
 }
 
+#if defined(_WIN32) /*[*/
+/* stdin input thread */
+static DWORD WINAPI
+peer_read(LPVOID lpParameter _is_unused)
+{
+	for (;;) {
+		DWORD rv;
+
+		rv = WaitForSingleObject(peer_enable_event, INFINITE);
+		switch (rv) {
+		case WAIT_ABANDONED:
+		case WAIT_TIMEOUT:
+		case WAIT_FAILED:
+			peer_nr = -1;
+			peer_errno = EINVAL;
+			SetEvent(peer_done_event);
+			break;
+		case WAIT_OBJECT_0:
+			peer_nr = read(0, peer_buf, sizeof(peer_buf));
+			if (peer_nr < 0)
+			    	peer_errno = errno;
+			SetEvent(peer_done_event);
+			break;
+		}
+	}
+	return 0;
+}
+#endif /*]*/
+
 /*
  * Peer script initialization.
  *
@@ -788,7 +825,19 @@ peer_script_init(void)
 
 	s->infd = fileno(stdin);
 #if defined(_WIN32) /*[*/
-	s->inhandle = GetStdHandle(STD_INPUT_HANDLE);
+	peer_enable_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+	peer_done_event = s->inhandle = CreateEvent(NULL, FALSE, FALSE, NULL);
+	peer_thread = CreateThread(NULL,
+				   0,
+				   peer_read,
+				   NULL,
+				   0,
+				   NULL);
+	if (peer_thread == NULL) {
+		popup_an_error("Cannot create peer thread: %s\n",
+			win32_strerror(GetLastError()));
+	}
+	SetEvent(peer_enable_event);
 #endif /*]*/
 	s->outfile = stdout;
 	(void) SETLINEBUF(s->outfile);	/* even if it's a pipe */
@@ -1742,6 +1791,16 @@ script_input(void)
 	/* Read in what you can. */
 	if (sms->is_socket)
 		nr = recv(sms->infd, buf, sizeof(buf), 0);
+#if defined(_WIN32) /*[*/
+	else if (sms->inhandle == peer_done_event) {
+	    	nr = peer_nr;
+		peer_nr = 0;
+		if (nr < 0)
+		    	errno = peer_errno;
+		SetEvent(peer_enable_event);
+		memcpy(buf, peer_buf, nr);
+	}
+#endif /*]*/
 	else
 		nr = read(sms->infd, buf, sizeof(buf));
 	if (nr < 0) {

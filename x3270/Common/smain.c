@@ -103,7 +103,7 @@ main(int argc, char *argv[])
 
 #if defined(_WIN32) /*[*/
 	(void) get_version_info();
-	if (get_dirs(argv[0], "ws3270", &instdir, NULL, &myappdata,
+	if (get_dirs(argv[0], "wc3270", &instdir, NULL, &myappdata,
 		    NULL) < 0)
 		exit(1);
 	if (sockstart() < 0)

@@ -1,8 +1,11 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
 3.3 is the current development line for the x3270 suite.
-<h2>Changes in version 3.3.12ga12, 26. August 2012</h2>
+<h2>Changes in version 3.3.12ga12, 5. September 2012</h2>
 <ul>
- <li>[<i>all</i>] Improved the documentation of <b>-scriptport</b>.</li>
+ <li>[<i>ws3270</i>] Corrected the behavior of stdin processing, so ws3270 is
+  not blocked trying to read stdin most of the time. Also fixed an issue where
+  the scripting prompt would start with <b>E</b> when the keyboard was in
+  inhibit mode.</li>
  <li>[<i>wc3270</i>] Removed a duplicated rule in Msc/Makefile.</li>
  <li>[all] Changed the CGCSGID for cp930 (Japanese) 0x080b012c (2059, 300) to
   0x0172012c (370, 300).</li>
