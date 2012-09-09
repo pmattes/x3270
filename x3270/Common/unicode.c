@@ -869,7 +869,7 @@ ucs4_t
 multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 	enum me_fail *errorp)
 {
-    size_t nw;
+    int nw;
     ucs4_t ucs4;
 #if defined(_WIN32) /*[*/
     wchar_t wc[3];
@@ -915,7 +915,7 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 
     /* mbtowc() will translate to Unicode. */
     nw = mbtowc(wc, mb, mb_len);
-    if (nw == (size_t)-1) {
+    if (nw == -1) {
 	if (errno == EILSEQ)
 	    *errorp = ME_INVALID;
 	else
@@ -946,12 +946,14 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 
 	/* Translate from local MB to UTF-8 using iconv(). */
 	for (ibl = 1; ibl <= mb_len; ibl++) {
+	    size_t xnw;
+
 	    inbuf = (ici_t)mb;
 	    outbuf = utf8buf;
 	    inbytesleft = ibl;
 	    outbytesleft = sizeof(utf8buf);
-	    nw = iconv(i_mb2u, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
-	    if (nw < 0) {
+	    xnw = iconv(i_mb2u, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
+	    if (xnw == (size_t)-1) {
 		if (errno == EILSEQ) {
 		    *errorp = ME_INVALID;
 		    (void) iconv(i_mb2u, NULL, NULL, NULL, NULL);

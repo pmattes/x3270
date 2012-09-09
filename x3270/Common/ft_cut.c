@@ -444,7 +444,7 @@ cut_control_code(void)
 		quadrant = -1;
 		xlate_buffered = 0;
 		xlate_buf_ix = 0;
-		cut_eof = FALSE;
+		cut_eof = False;
 		cut_ack();
 		ft_running(True);
 		break;
