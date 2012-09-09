@@ -47,7 +47,6 @@
 #include "ft_cut_ds.h"
 #include "ftc.h"
 #include "kybdc.h"
-#include "popupsc.h"
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace_dsc.h"
@@ -725,9 +724,9 @@ xlate_getc(void)
 			(void) multibyte_to_unicode(mb, mb_len, &consumed,
 				&error);
 			if (error == ME_INVALID) {
-			    	popup_an_error("Invalid Unicode character"
-					" in source file");
-				return -1;
+				mb[0] = '?';
+				mb_len = 1;
+				error = ME_NONE;
 			}
 		} while (error == ME_SHORT);
 

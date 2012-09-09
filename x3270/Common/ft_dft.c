@@ -490,14 +490,9 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 			inbuf[in_ix++] = c;
 			(void) multibyte_to_unicode(inbuf, in_ix, &consumed, &error);
 			if (error == ME_INVALID) {
-#if defined(EILSEQ) /*[*/
-				errno = EILSEQ;
-#else /*][*/
-				errno = EINVAL;
-#endif /*]*/
-				popup_an_error("Invalid Unicode character"
-					" in source file");
-				return -1;
+				inbuf[0] = '?';
+				in_ix = 1;
+				error = ME_NONE;
 			}
 		} while (error == ME_SHORT);
 	} else {
