@@ -344,7 +344,10 @@ vwtrace(const char *fmt, va_list args)
 #if defined(EILSEQ) /*[*/
 			if (errno != EILSEQ)
 #endif /*]*/
+			{
 				stop_tracing();
+				return;
+			}
 		}
 		tracef_size = ftello(tracef);
 		if (tracef_pipe != NULL) {
