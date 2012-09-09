@@ -118,6 +118,7 @@ static char *saved_errmsg = CN;
 static int xlate_buffered = 0;			/* buffer count */
 static int xlate_buf_ix = 0;			/* buffer index */
 static unsigned char xlate_buf[XLATE_NBUF];	/* buffer */
+static Boolean cut_eof = False;
 
 static void cut_control_code(void);
 static void cut_data_request(void);
@@ -442,6 +443,8 @@ cut_control_code(void)
 		expanded_length = 0;
 		quadrant = -1;
 		xlate_buffered = 0;
+		xlate_buf_ix = 0;
+		cut_eof = FALSE;
 		cut_ack();
 		ft_running(True);
 		break;
@@ -515,7 +518,11 @@ cut_data_request(void)
 
 	/* Copy data into the screen buffer. */
 	count = 0;
-	while (count < O_UP_MAX && (c = xlate_getc()) != EOF) {
+	while (count < O_UP_MAX && !cut_eof) {
+		if ((c = xlate_getc()) == EOF) {
+		    cut_eof = True;
+		    break;
+		}
 		ctlr_add(O_UP_DATA + count, c, 0);
 		count++;
 	}
@@ -538,7 +545,7 @@ cut_data_request(void)
 	}
 
 	/* Send special data for EOF. */
-	if (!count && feof(ft_local_file)) {
+	if (!count && cut_eof) {
 		ctlr_add(O_UP_DATA, EOF_DATA1, 0);
 		ctlr_add(O_UP_DATA+1, EOF_DATA2, 0);
 		count = 2;
@@ -717,8 +724,11 @@ xlate_getc(void)
 			error = ME_NONE;
 			(void) multibyte_to_unicode(mb, mb_len, &consumed,
 				&error);
-			if (error == ME_INVALID)
+			if (error == ME_INVALID) {
+			    	popup_an_error("Invalid Unicode character"
+					" in source file");
 				return -1;
+			}
 		} while (error == ME_SHORT);
 
 		/* Expand it. */
