@@ -45,6 +45,7 @@
 #include "kybdc.h"
 #include "ft_dftc.h"
 #include "ftc.h"
+#include "popupsc.h"
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace_dsc.h"
@@ -494,6 +495,8 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 #else /*][*/
 				errno = EINVAL;
 #endif /*]*/
+				popup_an_error("Invalid Unicode character"
+					" in source file");
 				return -1;
 			}
 		} while (error == ME_SHORT);
