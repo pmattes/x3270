@@ -186,10 +186,10 @@ dialog_text_callback(Widget w, XtPointer client_data,
 				break;
 			    case T_UNIXFILE:
 				/* Only printing characters. */
-				bad = !isgraph(c);
+				bad = !isprint(c);
 				break;
 			    default:
-				/* Only printing characters. */
+				/* Only printing characters, no spaces. */
 				bad = !isgraph(c);
 				break;
 			}
