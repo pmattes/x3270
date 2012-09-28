@@ -32,7 +32,8 @@ HAVE_OPENSSL = $(shell [ -d $(SSLDIR) ] && echo yes)
 ifeq ($(HAVE_OPENSSL),yes)
 ifndef NO_SSL
 SSLCPP = -DHAVE_LIBSSL=1 -I$(SSLDIR)/include
-SSLLIB = -L$(SSLDIR)/lib/MinGW $(SSLDIR)/lib/MinGW/ssleay32.a -leay32 -lwsock32 -ladvapi32 -lgdi32 -luser32
+#SSLLIB = -L$(SSLDIR)/lib/MinGW $(SSLDIR)/lib/MinGW/ssleay32.a -leay32 -lwsock32 -ladvapi32 -lgdi32 -luser32
+SSLLIB = -lwsock32 -ladvapi32 -lgdi32 -luser32
 else
 OSUFFIX = -insecure
 endif
@@ -60,13 +61,14 @@ SRCS = actions.c ansi.c apl.c charset.c ctlr.c fallbacks.c ft.c \
 	ft_cut.c ft_dft.c glue.c host.c idle.c kybd.c macros.c \
 	print.c printer.c proxy.c readres.c resolver.c resources.c rpq.c \
 	see.c sf.c smain.c strtok_r.c tables.c telnet.c toggles.c trace_ds.c \
-	utf8.c util.c w3misc.c windirs.c winvers.c xio.c XtGlue.c unicode.c
+	utf8.c util.c w3misc.c windirs.c winvers.c xio.c XtGlue.c unicode.c \
+	unicode_dbcs.c ssl_dll.c
 VOBJS = actions.o ansi.o apl.o charset.o ctlr.o fallbacks.o ft.o \
 	ft_cut.o ft_dft.o glue.o host.o idle.o kybd.o macros.o \
 	print.o printer.o proxy.o readres.o resolver.o resources.o rpq.o \
 	see.o sf.o smain.o strtok_r.o tables.o telnet.o toggles.o trace_ds.o \
 	utf8.o util.o w3misc.o windirs.o winvers.o xio.o XtGlue.o ws3270res.o \
-	unicode.o unicode_dbcs.o
+	unicode.o unicode_dbcs.o ssl_dll.o
 OBJECTS = $(VOBJS) version.o
 LIBS = $(SSLLIB) -lws2_32
 SHRTLIBS = -lole32 -luuid

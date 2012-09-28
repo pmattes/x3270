@@ -990,6 +990,11 @@ popup_an_errno(int err, const char *fmt, ...)
 	va_end(args);
 }
 
+#if defined(_MSC_VER) /*[*/
+#define xstr(s) str(s)
+#define str(s)  #s
+#endif /*]*/
+
 const char *
 build_options(void)
 {
@@ -1009,5 +1014,17 @@ build_options(void)
 #else /*][*/
 	    " --without-iconv"
 #endif /*]*/
+#if defined(_MSC_VER) /*[*/
+	    " via MSVC " xstr(_MSC_VER)
+#endif /*]*/
+#if defined(__GNUC__) /*[*/
+	    " via gcc " __VERSION__
+#endif /*]*/
+#if defined(__LP64__) || defined(__LLP64__) /*[*/
+	    " 64-bit"
+#else /*][*/
+	    " 32-bit"
+#endif /*]*/
+
 	    ;
 }

@@ -1008,6 +1008,7 @@ x3270*connectMenuButton.label:			Connect
 x3270*macrosMenuButton.label:			Macros
 x3270*macrosMenu.label:				Macros
 x3270*hostMenu.label:				Connect
+x3270*recentOption.label:			Recent
 x3270*helpButton.label:				Help
 x3270*otherHostOption.label:			Other...
 x3270*togglesOption.label:			Toggles

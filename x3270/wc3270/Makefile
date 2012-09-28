@@ -32,7 +32,8 @@ HAVE_OPENSSL = $(shell [ -d $(SSLDIR) ] && echo yes)
 ifeq ($(HAVE_OPENSSL),yes)
 ifndef NO_SSL
 SSLCPP = -DHAVE_LIBSSL=1 -I$(SSLDIR)/include
-SSLLIB = -L$(SSLDIR)/lib/MinGW $(SSLDIR)/lib/MinGW/ssleay32.a -leay32 -lwsock32 -ladvapi32 -lgdi32 -luser32
+#SSLLIB = -L$(SSLDIR)/lib/MinGW $(SSLDIR)/lib/MinGW/ssleay32.a -leay32 -lwsock32 -ladvapi32 -lgdi32 -luser32
+SSLLIB = -lwsock32 -ladvapi32 -lgdi32 -luser32
 else
 OSUFFIX = -insecure
 endif
@@ -64,14 +65,14 @@ SRCS = XtGlue.c actions.c ansi.c apl.c c3270.c charset.c ctlr.c \
 	screen.c see.c sf.c tables.c telnet.c toggles.c trace_ds.c unicode.c \
 	unicode_dbcs.c utf8.c util.c xio.c fallbacks.c keymap.c w3misc.c \
 	winvers.c windirs.c resolver.c relink.c shortcut.c menubar.c \
-	keypad.c
+	keypad.c ssl_dll.c
 VOBJS = XtGlue.o actions.o ansi.o apl.o c3270.o charset.o ctlr.o \
 	fallbacks.o ft.o ft_cut.o ft_dft.o glue.o help.o host.o icmd.o idle.o \
 	keymap.o kybd.o macros.o print.o printer.o proxy.o readres.o \
 	resolver.o resources.o rpq.o screen.o see.o sf.o tables.o telnet.o \
 	toggles.o trace_ds.o unicode.o unicode_dbcs.o utf8.o util.o xio.o \
 	w3misc.c winvers.o windirs.o wc3270res.o relink.o shortcut.o \
-	menubar.o keypad.o
+	menubar.o keypad.o ssl_dll.o
 OBJECTS = $(VOBJS) version.o
 WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o winvers.o windirs.o \
 	relink.o

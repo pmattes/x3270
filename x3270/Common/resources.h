@@ -217,6 +217,7 @@
 #define DotDsTrace		"." ResDsTrace
 #define DotEmulatorFont		"." ResEmulatorFont
 #define DotExtended		"." ResExtended
+#define DotHostsFile		"." ResHostsFile
 #define DotInputMethod		"." ResInputMethod
 #define DotKeyFile		"." ResKeyFile
 #define DotKeyFileType		"." ResKeyFileType

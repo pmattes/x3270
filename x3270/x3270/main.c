@@ -128,6 +128,9 @@ XrmOptionDescRec options[]= {
 #endif /*]*/
 	{ OptEmulatorFont,DotEmulatorFont,XrmoptionSepArg,	NULL },
 	{ OptExtended,	DotExtended,	XrmoptionNoArg,		ResTrue },
+#if defined(X3270_MENUS) /*[*/
+	{ OptHostsFile,	DotHostsFile,	XrmoptionSepArg,	NULL },
+#endif /*]*/
 	{ OptIconName,	".iconName",	XrmoptionSepArg,	NULL },
 	{ OptIconX,	".iconX",	XrmoptionSepArg,	NULL },
 	{ OptIconY,	".iconY",	XrmoptionSepArg,	NULL },
@@ -200,6 +203,9 @@ static struct {
 	{ OptDevName, "<name>", "Specify device name (workstation ID)" },
 	{ OptEmulatorFont, "<font>", "Font for emulator window" },
 	{ OptExtended, CN, "Extended 3270 data stream (deprecated)" },
+#if defined(X3270_MENUS) /*[*/
+	{ OptHostsFile, "<filename>", "Pathname of ibm_hosts file" },
+#endif /*]*/
 	{ OptIconName, "<name>", "Title for icon" },
 	{ OptIconX, "<x>", "X position for icon" },
 	{ OptIconY, "<y>", "Y position for icon" },
@@ -644,7 +650,8 @@ main(int argc, char *argv[])
 	if (!appres.debug_tracing) {
 		appres.toggle[DS_TRACE].value = False;
 		appres.toggle[EVENT_TRACE].value = False;
-	}
+	} else if (toggled(DS_TRACE))
+	    	appres.toggle[EVENT_TRACE].value = True;
 #endif /*]*/
 	initialize_toggles();
 

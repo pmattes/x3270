@@ -33,11 +33,11 @@ CC = cl /nologo
 RC = rc
 RM = erase
 
-# To build with a statically-linked OpenSSL library, uncomment the following
-#  three lines (substituting your OpenSSL install location in the first).
+# To build with the OpenSSL library, uncomment the following three lines
+# (substituting your OpenSSL install location in the first).
 #SSLDIR = C:\OpenSSL-Win32
 #SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
-#SSLLIB = $(SSLDIR)\lib\VC\ssleay32MD.lib $(SSLDIR)\lib\VC\libeay32MD.lib gdi32.lib
+#SSLLIB = gdi32.lib
 
 XCPPFLAGS = /D_WIN32 /DWC3270 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /DWINVER=0x500 /D_CRT_SECURE_NO_DEPRECATE $(SSLDEF)
 CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I.
@@ -46,9 +46,9 @@ VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj c3270.obj charset.obj \
 	host.obj icmd.obj idle.obj keymap.obj keypad.obj kybd.obj macros.obj \
 	menubar.obj print.obj printer.obj proxy.obj readres.obj relink.obj \
 	resolver.obj resources.obj rpq.obj screen.obj see.obj sf.obj \
-	shortcut.obj tables.obj telnet.obj toggles.obj trace_ds.obj \
-	unicode.obj unicode_dbcs.obj utf8.obj util.obj xio.obj w3misc.obj \
-	winvers.obj windirs.obj wc3270.RES
+	shortcut.obj ssl_dll.obj tables.obj telnet.obj toggles.obj \
+	trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj xio.obj \
+	w3misc.obj winvers.obj windirs.obj wc3270.RES
 OBJECTS = $(VOBJS) version.obj
 WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
 	windirs.obj relink.obj
@@ -179,6 +179,8 @@ see.obj: see.c
 	$(CC) $(CFLAGS) /c see.c
 sf.obj: sf.c
 	$(CC) $(CFLAGS) /c sf.c
+ssl_dll.obj: ssl_dll.c
+	$(CC) $(CFLAGS) /c ssl_dll.c
 tables.obj: tables.c
 	$(CC) $(CFLAGS) /c tables.c
 telnet.obj: telnet.c

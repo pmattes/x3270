@@ -39,6 +39,9 @@
 #include <stdarg.h>
 #include "resources.h"
 #include "charsetc.h"
+#if defined(_MSC_VER) /*[*/
+#include "Msc/deprecated.h"
+#endif /*]*/
 
 #include "utilc.h"
 
@@ -976,6 +979,11 @@ StringToKeysym(char *s)
 }
 #endif /*]*/
 
+#if defined(_MSC_VER) /*[*/
+#define xstr(s)	str(s)
+#define str(s)	#s
+#endif /*]*/
+
 /* Return configuration options. */
 const char *
 build_options(void)
@@ -1065,6 +1073,17 @@ build_options(void)
 #endif /*]*/
 #if defined(USE_ICONV) /*[*/
 		" --with-iconv"
+#endif /*]*/
+#if defined(_MSC_VER) /*[*/
+		" via MSVC " xstr(_MSC_VER)
+#endif /*]*/
+#if defined(__GNUC__) /*[*/
+		" via gcc " __VERSION__
+#endif /*]*/
+#if defined(__LP64__) || defined(__LLP64__) /*[*/
+		" 64-bit"
+#else /*][*/
+		" 32-bit"
 #endif /*]*/
 		;
 }

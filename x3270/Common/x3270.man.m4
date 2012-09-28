@@ -204,7 +204,7 @@ Specifies a font for the emulator window.
 XX_HO(`See XX_LINK(#Fonts,XX_SM(FONTS)) below.
 ')dnl
 ')dnl
-ifelse(XX_PRODUCT,c3270,`XX_TP(XX_FB(XX_DASHED(hostsfile)) XX_FI(file))
+ifelse(XX_INTERACTIVE,yes,`XX_TP(XX_FB(XX_DASHED(hostsfile)) XX_FI(file))
 Uses XX_FI(file) as the hosts file, which allows aliases for host names and
 scripts to be executed at login.
 See XX_LINK(ibm_hosts.html,XX_FI(ibm_hosts)(1)) for details.
@@ -407,10 +407,6 @@ Causes XX_PRODUCT to listen for scripting connections on local TCP
 port XX_FI(port).
 ifelse(XX_MODE,console,`Note that this is the only way to do peer scripting
 on XX_PRODUCT.
-')dnl
-ifelse(XX_PRODUCT,ws3270,`Note that this is the preferred way to do peer
-scripting on XX_PRODUCT. Windows stdin/stdout does not behave predictably and
-can cause a script to malfunction.
 ')dnl
 ')dnl
 ifelse(XX_PRODUCT,c3270,

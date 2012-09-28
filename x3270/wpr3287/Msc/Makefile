@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, Paul Mattes.
+# Copyright (c) 2007-2012, Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -31,17 +31,17 @@ CC = cl /nologo
 RC = rc
 RM = erase
 
-# To build with a statically-linked OpenSSL library, uncomment the following
-#  three lines (substituting your OpenSSL install location in the first).
+# To build with the OpenSSL library, uncomment the following three lines
+# (substituting your OpenSSL install location in the first).
 #SSLDIR = C:\OpenSSL-Win32
 #SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
-#SSLLIB = $(SSLDIR)\lib\VC\ssleay32MD.lib $(SSLDIR)\lib\VC\libeay32MD.lib gdi32.lib user32.lib
+#SSLLIB = gdi32.lib user32.lib
 
 XCPPFLAGS = /D_WIN32 /DPR3287 /DWPR3287 /DX3270_DBCS=1 /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 $(SSLDEF)
 CFLAGS = $(XCPPFLAGS) -I.
 VOBJS = charset.obj ctlr.obj pr3287.obj proxy.obj resolver.obj see.obj sf.obj \
-	tables.obj telnet.obj trace_ds.obj utf8.obj wpr3287.RES ws.obj \
-	w3misc.obj windirs.obj winvers.obj unicode.obj unicode_dbcs.obj
+	ssl_dll.obj tables.obj telnet.obj trace_ds.obj utf8.obj wpr3287.RES \
+	ws.obj w3misc.obj windirs.obj winvers.obj unicode.obj unicode_dbcs.obj
 OBJECTS = $(VOBJS) version.obj
 LIBS = $(SSLLIB) ws2_32.lib winspool.lib advapi32.lib
 
@@ -79,6 +79,8 @@ see.obj: see.c
 	$(CC) $(CFLAGS) /c see.c
 sf.obj: sf.c
 	$(CC) $(CFLAGS) /c sf.c
+ssl_dll.obj: ssl_dll.c
+	$(CC) $(CFLAGS) /c ssl_dll.c
 tables.obj: tables.c
 	$(CC) $(CFLAGS) /c tables.c
 telnet.obj: telnet.c

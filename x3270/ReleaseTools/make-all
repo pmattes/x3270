@@ -163,10 +163,6 @@ do
 		if [ "$islinux" ]
 		then	make -j4 CDEBUGFLAGS="-g -Wall -ansi -pedantic $xflags -Werror"
 		else	make CROSS=1 -j4
-			# Make the insecure version, too.
-			echo "===== Building $prod (insecure)."
-			make clean
-			make CROSS=1 NO_SSL=1 -j4
 		fi
 		if [ -f $d2/instlist.base ]
 		then	echo "===== Installing $prod (base)."

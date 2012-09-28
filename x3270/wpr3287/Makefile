@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, Paul Mattes.
+# Copyright (c) 2007-2012, Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@ HAVE_OPENSSL = $(shell [ -d $(SSLDIR) ] && echo yes)
 ifeq ($(HAVE_OPENSSL),yes)
 ifndef NO_SSL
 SSLCPP = -DHAVE_LIBSSL=1 -I$(SSLDIR)/include
-SSLLIB = -L$(SSLDIR)/lib/MinGW $(SSLDIR)/lib/MinGW/ssleay32.a -leay32 -lwsock32 -ladvapi32 -lgdi32 -luser32
+SSLLIB = -lwsock32 -ladvapi32 -lgdi32 -luser32
 else
 OSUFFIX = -insecure
 endif
@@ -52,12 +52,12 @@ endif
 
 XCPPFLAGS = -D_WIN32 -DPR3287 -DWPR3287 -DX3270_DBCS=1 -D_WIN32_WINNT=0x500 -D_WIN32_IE=0x0500 -DWINVER=0x500
 CFLAGS = $(NO_CYGWIN) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
-SRCS = charset.c ctlr.c pr3287.c proxy.c resolver.c see.c sf.c tables.c \
-	telnet.c trace_ds.c utf8.c w3misc.c windirs.c winvers.c unicode.c \
-	unicode_dbcs.c
-VOBJS = charset.o ctlr.o pr3287.o proxy.o resolver.o see.o sf.o tables.o \
-	telnet.o trace_ds.o utf8.o wpr3287res.o ws.o w3misc.o windirs.o \
-	winvers.o unicode.o unicode_dbcs.o
+SRCS = charset.c ctlr.c pr3287.c proxy.c resolver.c see.c sf.c ssl_dll.c \
+	tables.c telnet.c trace_ds.c utf8.c w3misc.c windirs.c winvers.c \
+	unicode.c unicode_dbcs.c
+VOBJS = charset.o ctlr.o pr3287.o proxy.o resolver.o see.o sf.o ssl_dll.o \
+	tables.o telnet.o trace_ds.o utf8.o wpr3287res.o ws.o w3misc.o \
+	windirs.o winvers.o unicode.o unicode_dbcs.o
 OBJECTS = $(VOBJS) version.o
 LIBS = $(SSLLIB) -lws2_32 -lwinspool
 

@@ -59,6 +59,9 @@
 #endif /*]*/
 #include <stdarg.h>
 #if defined(HAVE_LIBSSL) /*[*/
+#if defined(_WIN32) /*[*/
+#include "ssl_dll.h"
+#endif /*]*/
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #endif /*]*/
@@ -323,6 +326,7 @@ static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
 static int ssl_init(void);
 
 #if defined(HAVE_LIBSSL) /*[*/
+Boolean ssl_supported = True;
 Boolean secure_connection = False;
 Boolean secure_unverified = False;
 char **unverified_reasons = NULL;
@@ -1556,6 +1560,8 @@ telnet_fsm(unsigned char c)
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 		    case TELOPT_STARTTLS:
+			if (c == TELOPT_STARTTLS && !ssl_supported)
+			    	goto wont;
 #endif /*]*/
 		    case TELOPT_NEW_ENVIRON:
 			if (c == TELOPT_TN3270E && non_tn3270e_host)
@@ -3839,6 +3845,15 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 	char err_buf[120];
 	int cert_file_type = SSL_FILETYPE_PEM;
 
+#if defined(_WIN32) /*[*/
+    	if (ssl_dll_init() < 0) {
+	    	/* The DLLs may not be there, or may be the wrong ones. */
+		trace_dsn("SSL DLL init failed: %s\n", ssl_fail_reason);
+	    	ssl_supported = False;
+	    	return;
+	}
+#endif /*]*/
+
 	if (cl_hostname != CN)
 	    	ssl_cl_hostname = NewString(cl_hostname);
 	if (pending != NULL) {
@@ -4065,8 +4080,12 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 static int
 ssl_init(void)
 {
+	if (!ssl_supported) {
+	    	popup_an_error("Cannot connect:\nSSL DLLs not found\n");
+		return -1;
+	}
 	if (ssl_ctx == NULL) {
-	    	popup_an_error("Cannot connect:\nNo SSL private key password");
+	    	popup_an_error("Cannot connect:\nSSL initialization error");
 		return -1;
 	}
 

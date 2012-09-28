@@ -66,6 +66,9 @@
 #include <stdlib.h>
 #include <time.h>
 #if defined(HAVE_LIBSSL) /*[*/ 
+#if defined(_WIN32) /*[*/
+#include "ssl_dll.h"
+#endif /*]*/
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #endif /*]*/
@@ -257,6 +260,7 @@ const char *neg_type[4] = { "COMMAND-REJECT", "INTERVENTION-REQUIRED",
 			    neg_type[n]: "??")
 
 #if defined(HAVE_LIBSSL) /*[*/
+Boolean ssl_supported = True;
 Boolean secure_connection = False;
 static SSL_CTX *ssl_ctx;
 static SSL *ssl_con;
@@ -749,6 +753,8 @@ telnet_fsm(unsigned char c)
 		    case TELOPT_TN3270E:
 #if defined(HAVE_LIBSSL) /*[*/
 		    case TELOPT_STARTTLS:
+			if (c == TELOPT_STARTTLS && !ssl_supported)
+				goto wont;
 #endif /*]*/
 			if (!myopts[c]) {
 				if (c != TELOPT_TM)
@@ -777,6 +783,7 @@ telnet_fsm(unsigned char c)
 			}
 #endif /*]*/
 			break;
+		    wont:
 		    default:
 			wont_opt[2] = c;
 			net_rawout(wont_opt, sizeof(wont_opt));
@@ -1919,7 +1926,19 @@ get_ssl_error(char *buf)
 	unsigned long e;
 
 	e = ERR_get_error();
-	(void) ERR_error_string(e, buf);
+	if (getenv("SSL_VERBOSE_ERRORS"))
+		(void) ERR_error_string(e, buf);
+	else {
+		char xbuf[120];
+		char *colon;
+
+		(void) ERR_error_string(e, xbuf);
+		colon = strrchr(xbuf, ':');
+		if (colon != CN)
+			strcpy(buf, colon + 1);
+		else
+			strcpy(buf, xbuf);
+	}
 	return buf;
 }
 
@@ -1928,6 +1947,14 @@ ssl_base_init(void)
 {
 	char err_buf[120];
 	int cft = SSL_FILETYPE_PEM;
+
+#if defined(_WIN32) /*[*/
+	if (ssl_dll_init() < 0) {
+		/* The DLLs may not be there, or may be the wrong ones. */
+		ssl_supported = False;
+		return;
+	}
+#endif /*]*/
 
 	SSL_load_error_strings();
 	SSL_library_init();
@@ -1972,7 +1999,7 @@ ssl_base_init(void)
 		}
 #else /*][*/
 		certs = Malloc(strlen(appdata) + 16);
-		sprintf(certs, "%s\\root_certs.txt", appdata);
+		sprintf(certs, "%sroot_certs.txt", appdata);
 
 		if (SSL_CTX_load_verify_locations(ssl_ctx,
 			    certs, NULL) != 1) {
@@ -2076,6 +2103,11 @@ fail:
 static int
 ssl_init(void)
 {
+	if (!ssl_supported) {
+	    	errmsg("Canot connect: SSL DLLs not found");
+		return -1;
+	}
+
 	ssl_con = SSL_new(ssl_ctx);
 	if (ssl_con == NULL) {
 		errmsg("SSL_new failed");
