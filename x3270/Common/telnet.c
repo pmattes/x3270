@@ -4066,7 +4066,7 @@ static int
 ssl_init(void)
 {
 	if (ssl_ctx == NULL) {
-	    	popup_an_error("Cannot connect:\nNo SSL private key password");
+	    	popup_an_error("Cannot connect:\nSSL initialization error");
 		return -1;
 	}
 

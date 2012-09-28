@@ -87,8 +87,20 @@ static void save_recent(const char *);
 static void try_reconnect(void);
 #endif /*]*/
 
+/*
+ * Much like strtok, but allows '>' hierarchies.
+ * The command string cannot include the '>' character; this is a weakness of
+ * the syntax definition and is the cost of allowing spaces in hierarchy names.
+ * 
+ * A better syntax would be blocks of keyword=value pairs, like:
+ *     name=[hier>...]name
+ *     type=primary|alias
+ *     command=foo
+ *
+ * Sometime I could do this.
+ */
 static char *
-stoken(char **s)
+stoken(char **s, Boolean hier)
 {
 	char *r;
 	char *ss = *s;
@@ -96,6 +108,13 @@ stoken(char **s)
 	if (!*ss)
 		return NULL;
 	r = ss;
+	if (hier) {
+		char *gt = strrchr(ss, '>');
+
+		if (gt != NULL) {
+			ss = gt + 1;
+		}
+	}
 	while (*ss && *ss != ' ' && *ss != '\t')
 		ss++;
 	if (*ss) {
@@ -119,6 +138,7 @@ hostfile_init(void)
 	static Boolean hostfile_initted = False;
 	struct host *h;
 	char *hostfile_name;
+	int lno = 0;
 
 	if (hostfile_initted)
 		return;
@@ -136,6 +156,7 @@ hostfile_init(void)
 			char *name, *entry_type, *hostname;
 			char *slash;
 
+			lno++;
 			if (strlen(buf) > (unsigned)1 &&
 			    buf[strlen(buf) - 1] == '\n') {
 				buf[strlen(buf) - 1] = '\0';
@@ -144,12 +165,12 @@ hostfile_init(void)
 				s++;
 			if (!*s || *s == '#')
 				continue;
-			name = stoken(&s);
-			entry_type = stoken(&s);
-			hostname = stoken(&s);
+			name = stoken(&s, True);
+			entry_type = stoken(&s, False);
+			hostname = stoken(&s, False);
 			if (!name || !entry_type || !hostname) {
-				popup_an_error("Bad %s syntax, entry skipped",
-				    ResHostsFile);
+				popup_an_error("Bad %s syntax, entry %d "
+					"skipped", ResHostsFile, lno);
 				continue;
 			}
 			h = (struct host *)Malloc(sizeof(*h));
@@ -167,10 +188,17 @@ hostfile_init(void)
 			if ((slash = strchr(h->hostname, '/')))
 				*slash = ':';
 
-			if (!strcmp(entry_type, "primary"))
+			if (!strcasecmp(entry_type, "primary"))
 				h->entry_type = PRIMARY;
-			else
+			else if (!strcasecmp(entry_type, "alias"))
 				h->entry_type = ALIAS;
+			else {
+				popup_an_error("Bad %s syntax, entry %d "
+					"skipped", ResHostsFile, lno);
+				Free(h->hostname);
+				Free(h);
+				continue;
+			}
 			if (*s)
 				h->loginstring = NewString(s);
 			else

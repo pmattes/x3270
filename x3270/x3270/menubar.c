@@ -1132,6 +1132,7 @@ connect_menu_init(Boolean regen, Position x, Position y)
 	int n_primary = 0;
 	int n_recent = 0;
 	static struct menu_hier *root = NULL;
+	Widget recent_menu = NULL;
 
 	if (regen && (connect_menu != (Widget)NULL)) {
 		XtDestroyWidget(connect_menu);
@@ -1167,6 +1168,11 @@ connect_menu_init(Boolean regen, Position x, Position y)
 			break;
 		case RECENT:
 			n_recent++;
+			if (n_recent == 1 && n_primary) {
+				recent_menu = XtVaCreatePopupShell(
+					"recentMenu", complexMenuWidgetClass,
+					connect_menu, NULL);
+			}
 			break;
 		}
 		if ((need_line && !any_hosts) ||
@@ -1177,12 +1183,20 @@ connect_menu_init(Boolean regen, Position x, Position y)
 		any_hosts = True;
 		w = XtVaCreateManagedWidget(
 		    h->name, cmeBSBObjectClass,
-		    add_menu_hier(root, h->parents, NULL, 0), 
+		    (h->entry_type == PRIMARY || recent_menu == NULL)?
+			add_menu_hier(root, h->parents, NULL, 0):
+			recent_menu,
 		    NULL);
 		XtAddCallback(w, XtNcallback, host_connect_callback,
 		    XtNewString(h->name));
 		n_hosts++;
 	}
+	if (recent_menu)
+		(void) XtVaCreateManagedWidget(
+			"recentOption", cmeBSBObjectClass, connect_menu,
+			XtNrightBitmap, arrow,
+			XtNmenuName, "recentMenu",
+			NULL);
 	if (any_hosts)
 		need_line = True;
 

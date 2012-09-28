@@ -1528,6 +1528,7 @@ popup_an_error(const char *fmt, ...)
 		any_error_output = True;
 #endif /*]*/
 		(void) fprintf(stderr, "%s\n", vmsgbuf);
+		fflush(stderr); /* for Windows */
 		macro_output = True;
 	}
 }

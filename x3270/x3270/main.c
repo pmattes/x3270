@@ -650,7 +650,8 @@ main(int argc, char *argv[])
 	if (!appres.debug_tracing) {
 		appres.toggle[DS_TRACE].value = False;
 		appres.toggle[EVENT_TRACE].value = False;
-	}
+	} else if (toggled(DS_TRACE))
+		appres.toggle[EVENT_TRACE].value = True;
 #endif /*]*/
 	initialize_toggles();
 
