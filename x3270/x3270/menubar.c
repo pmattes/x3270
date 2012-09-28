@@ -1163,26 +1163,6 @@ connect_menu_init(Boolean regen, Position x, Position y)
 		case ALIAS:
 			continue;
 		case PRIMARY:
-			/*
-			 * If there's already a 'recent' entry with the same
-			 * name, skip this one.
-			 */
-			if (h->parents == NULL) {
-				struct host *j;
-
-				for (j = hosts;
-				     j != (struct host *)NULL;
-				     j = j->next) {
-					if (j->entry_type != RECENT) {
-						j = (struct host *)NULL;
-						break;
-					}
-					if (!strcmp(j->name, h->name))
-						break;
-				}
-				if (j != (struct host *)NULL)
-					continue;
-			}
 			n_primary++;
 			break;
 		case RECENT:
@@ -1190,7 +1170,7 @@ connect_menu_init(Boolean regen, Position x, Position y)
 			break;
 		}
 		if ((need_line && !any_hosts) ||
-		    (n_recent > 0 && n_primary == 1)) {
+		    (n_primary > 0 && n_recent == 1)) {
 			(void) XtVaCreateManagedWidget("space",
 			    cmeLineObjectClass, connect_menu, NULL);
 		}

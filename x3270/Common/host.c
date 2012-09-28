@@ -870,17 +870,37 @@ dump_array(const char *when, struct host **array, int nh)
 static void
 save_recent(const char *hn)
 {
-	char *lcf_name = CN;
-	FILE *lcf = (FILE *)NULL;
 	struct host *h;
-	struct host *rest = (struct host *)NULL;
-	int n_ent = 0;
-	struct host *h_array[(MAX_RECENT * 2) + 1];
+	int nih = 0;
+	struct host *r_start = NULL;
+	char *lcf_name = CN;
+	FILE *lcf = NULL;
+	struct host **h_array = NULL;
 	int nh = 0;
-	int i, j;
-	time_t t = time((time_t *)NULL);
+	int i;
+	time_t t = time(NULL);
+	int n_recent;
 
-	/* Allocate a new entry. */
+	/*
+	 * Copy the ibm_hosts into the array, and point r_start at the first
+	 * recent-host entry.
+	 */
+	for (h = hosts; h != NULL; h = h->next) {
+		if (h->entry_type == RECENT) {
+			r_start = h;
+			break;
+		}
+
+		h_array = (struct host **)
+		    Realloc(h_array, (nh + 1) * sizeof(struct host *));
+		h_array[nh++] = h;
+		nih++;
+	}
+
+	/*
+	 * Allocate a new entry and add it to the array, just under the
+	 * ibm_hosts and before the first recent entry.
+	 */
 	if (hn != CN) {
 		h = (struct host *)Malloc(sizeof(*h));
 		h->name = NewString(hn);
@@ -889,20 +909,17 @@ save_recent(const char *hn)
 		h->entry_type = RECENT;
 		h->loginstring = CN;
 		h->connect_time = t;
+		h_array = (struct host **)
+		    Realloc(h_array, (nh + 1) * sizeof(struct host *));
 		h_array[nh++] = h;
 	}
 
-	/* Put the existing entries into the array. */
-	for (h = hosts; h != (struct host *)NULL; h = h->next) {
-		if (h->entry_type != RECENT)
-			break;
+	/* Append the existing recent entries to the array. */
+	for (h = r_start; h != NULL; h = h->next) {
+		h_array = (struct host **)
+		    Realloc(h_array, (nh + 1) * sizeof(struct host *));
 		h_array[nh++] = h;
 	}
-
-	/* Save the ibm_hosts entries for later. */
-	rest = h;
-	if (rest != (struct host *)NULL)
-		rest->prev = (struct host *)NULL;
 
 	/*
 	 * Read the last-connection file, to capture the any changes made by
@@ -940,80 +957,86 @@ save_recent(const char *hn)
 			h->entry_type = RECENT;
 			h->loginstring = CN;
 			h->connect_time = connect_time;
+			h_array = (struct host **)
+			    Realloc(h_array, (nh + 1) * sizeof(struct host *));
 			h_array[nh++] = h;
-			if (nh > (MAX_RECENT * 2) + 1)
-				break;
 		}
 		fclose(lcf);
 	}
 
-	/* Sort the array, in reverse order by connect time. */
+	/*
+	 * Sort the recent hosts, in reverse order by connect time.
+	 */
 #if defined(CFDEBUG) /*[*/
 	dump_array("before", h_array, nh);
 #endif /*]*/
-	qsort(h_array, nh, sizeof(struct host *), host_compare);
+	qsort(h_array + nih, nh - nih, sizeof(struct host *), host_compare);
 #if defined(CFDEBUG) /*[*/
 	dump_array("after", h_array, nh);
 #endif /*]*/
 
 	/*
-	 * Filter out duplicate host names, and limit the array to
-	 * MAX_RECENT entries total.
+	 * Filter out duplicate names in the recent host list.
+	 * At the same time, limit the size of the recent list to MAX_RECENT.
 	 */
-	hosts = (struct host *)NULL;
-	last_host = (struct host *)NULL;
-	for (i = 0; i < nh; i++) {
-		h = h_array[i];
-		if (h == (struct host *)NULL)
-			continue;
-		h->next = (struct host *)NULL;
-		if (last_host != (struct host *)NULL)
-			last_host->next = h;
-		h->prev = last_host;
-		last_host = h;
-		if (hosts == (struct host *)NULL)
-			hosts = h;
-		n_ent++;
+	n_recent = 0;
+	for (i = nih; i < nh; i++) {
+		Boolean delete = False;
 
-		/* Zap the duplicates. */
-		for (j = i+1; j < nh; j++) {
-			if (h_array[j] &&
-			    (n_ent >= MAX_RECENT ||
-			     !strcmp(h_array[i]->name, h_array[j]->name))) {
-#if defined(CFDEBUG) /*[*/
-				printf("%s is a dup of %s\n",
-				    h_array[j]->name, h_array[i]->name);
-#endif /*]*/
-				Free(h_array[j]->name);
-				Free(h_array[j]->hostname);
-				Free(h_array[j]);
-				h_array[j] = (struct host *)NULL;
+		if (n_recent >= MAX_RECENT)
+			delete = TRUE;
+		else {
+			int j;
+
+			for (j = nih; j < i; j++) {
+				if (h_array[j] != NULL &&
+				    !strcmp(h_array[i]->name,
+					    h_array[j]->name)) {
+					delete = TRUE;
+					break;
+				}
 			}
 		}
+		if (delete) {
+			Free(h_array[i]->name);
+			Free(h_array[i]->hostname);
+			Free(h_array[i]);
+			h_array[i] = NULL;
+		} else
+			n_recent++;
 	}
 
-	/* Re-attach the ibm_hosts entries to the end. */
-	if (rest != (struct host *)NULL) {
-		if (last_host != (struct host *)NULL) {
-			last_host->next = rest;
-		} else {
-			hosts = rest;
+	/* Create a new host list from what's left. */
+	hosts = NULL;
+	last_host = NULL;
+	for (i = 0; i < nh; i++) {
+		if ((h = h_array[i]) != NULL) {
+			h->next = NULL;
+			if (last_host != NULL)
+				last_host->next = h;
+			h->prev = last_host;
+			last_host = h;
+			if (hosts == NULL)
+				hosts = h;
 		}
-		rest->prev = last_host;
 	}
 
-	/* If there's been a change, rewrite the file. */
-	if (hn != CN &&
-	    appres.connectfile_name != CN &&
-	    strcasecmp(appres.connectfile_name, "none")) {
+	/* No need for the array any more. */
+	Free(h_array);
+	h_array = NULL;
+
+	/* Rewrite the file. */
+	if (lcf_name != NULL) {
 		lcf = fopen(lcf_name, "w");
-		if (lcf != (FILE *)NULL) {
-			fprintf(lcf, "# Created %s# by %s\n", ctime(&t), build);
-			for (h = hosts; h != (struct host *)NULL; h = h->next) {
-				if (h->entry_type != RECENT)
-					break;
-				(void) fprintf(lcf, "%lu %s\n", h->connect_time,
-				    h->name);
+		if (lcf != NULL) {
+			fprintf(lcf,
+"# Automatically generated %s# by %s\n\
+# Do not edit!\n",
+				ctime(&t), build);
+			for (h = hosts; h != NULL; h = h->next) {
+				if (h->entry_type == RECENT)
+					(void) fprintf(lcf, "%lu %s\n",
+						h->connect_time, h->name);
 			}
 			fclose(lcf);
 		}
