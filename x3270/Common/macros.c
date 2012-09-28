@@ -285,6 +285,39 @@ static void plugin_start(char *command, char *argv[], Boolean complain);
 static void no_plugin(void);
 #endif /*]*/
 
+#if defined(X3270_SCRIPT) && defined(X3270_TRACE) /*[*/
+static void
+trace_script_output(const char *fmt, ...)
+{
+	va_list args;
+	char msgbuf[4096];
+	char *s;
+	char *m = msgbuf;
+	char c;
+
+	if (!toggled(EVENT_TRACE))
+		return;
+
+	va_start(args, fmt);
+	vsnprintf(msgbuf, sizeof(msgbuf), fmt, args);
+	va_end(args);
+
+	s = msgbuf;
+	while ((c = *s++)) {
+		if (c == '\n') {
+			trace_dsn("Output for %s[%d]: '%.*s'\n",
+				ST_NAME, sms_depth,
+				(int)((s - 1) - m),
+				m);
+			m = s;
+			continue;
+		}
+	}
+}
+#else /*][*/
+#define trace_script_output(fmt, args...)
+#endif /*]*/
+
 #if defined(X3270_SCRIPT) && defined(X3270_PLUGIN) /*[*/
 static void
 plugin_start_appres(Boolean complain)
@@ -1714,6 +1747,7 @@ sms_error(const char *msg)
 			send(s->infd, text, strlen(text), 0);
 		else
 			fprintf(s->outfile, "%s", text);
+		trace_script_output("%s", text);
 		Free(text);
 	} else {
 		(void) fprintf(stderr, "%s\n", msg);
@@ -1766,6 +1800,7 @@ sms_info(const char *fmt, ...)
 				    	send(s->infd, text, strlen(text), 0);
 				else
 					(void) fprintf(s->outfile, "%s", text);
+				trace_script_output("%s", text);
 				Free(text);
 			} else
 				(void) printf("%.*s\n", nc, msg);
@@ -2526,6 +2561,7 @@ script_prompt(Boolean success)
 		(void) fprintf(sms->outfile, "%s", t);
 		(void) fflush(sms->outfile);
 	}
+	trace_script_output("%s", t);
 	free(t);
 }
 
