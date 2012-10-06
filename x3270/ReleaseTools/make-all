@@ -154,14 +154,21 @@ do
 	then	echo "===== Building $prod."
 		cd $prod-3.3
 		if [ -f configure ]
-		then	./configure LDFLAGS=-lstdc++
+		then	./configure
 		fi
-		if [ $prod = tcl3270 ]
-		then	xflags=-Wno-long-long
-		else	xflags=
-		fi
+		case $prod in
+		    tcl3270)
+			xflags="-Wno-long-long"
+			;;
+		    x3270)
+			xflags="-Wno-deprecated-declarations"
+			;;
+		    *)
+			xflags=""
+			;;
+		esac
 		if [ "$islinux" ]
-		then	make -j4 CDEBUGFLAGS="-g -Wall -ansi -pedantic $xflags -Werror"
+		then	make -j4 CDEBUGFLAGS="-g -Wall -ansi -pedantic -Wsign-compare $xflags -Werror"
 		else	make CROSS=1 -j4
 			# Make the insecure version, too.
 			echo "===== Building $prod (insecure)."
