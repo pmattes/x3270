@@ -61,6 +61,8 @@
 #if defined(HAVE_LIBSSL) /*[*/
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <openssl/conf.h>
+#include <openssl/x509v3.h>
 #endif /*]*/
 #include "tn3270e.h"
 #include "3270ds.h"
@@ -842,6 +844,7 @@ net_connected(void)
 	/* Set up SSL. */
 	if (ssl_host && !secure_connection) {
 	    	int rv;
+		X509 *cert;
 
 		if (SSL_set_fd(ssl_con, sock) != 1) {
 			trace_dsn("Can't set fd!\n");
@@ -863,6 +866,17 @@ net_connected(void)
 			 */
 			host_disconnect(True);
 			return;
+		}
+		cert = SSL_get_peer_certificate(ssl_con);
+		if (cert != NULL) {
+			if (!spc_verify_cert_hostname(cert, hostname)) {
+				popup_an_error("Host certificate name(s) do "
+					"not match %s", hostname);
+				X509_free(cert);
+				host_disconnect(True);
+				return;
+			}
+			X509_free(cert);
 		}
 		secure_connection = True;
 		trace_dsn("TLS/SSL tunneled connection complete.  "
@@ -4059,6 +4073,73 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 
 	/* Then again, we might. */
 	return 0;
+}
+
+/* Hostname match function. */
+static int
+hostname_matches(const char *hostname, const char *cn)
+{
+	if (!strcasecmp(hostname, cn))
+	    	return 1;
+
+	if (!strncmp(cn, "*.", 2) &&
+	    strlen(hostname) > strlen(cn + 1) &&
+	    !strcasecmp(hostname + strlen(hostname) - strlen(cn + 1), cn + 1))
+		return 1;
+
+	return 0;
+}
+
+/* Hostname validation function. */
+int
+spc_verify_cert_hostname(X509 *cert, char *hostname)
+{
+	int extcount, i, j, ok = 0;
+	char name[256];
+	X509_NAME *subj;
+	const char *extstr;
+	CONF_VALUE *nval;
+	const unsigned char *data;
+	X509_EXTENSION *ext;
+	const X509V3_EXT_METHOD *meth;
+	STACK_OF(CONF_VALUE) *val;
+
+	if ((extcount = X509_get_ext_count(cert)) > 0) {
+		for (i = 0;  !ok && i < extcount;  i++) {
+			ext = X509_get_ext(cert, i);
+			extstr = OBJ_nid2sn(OBJ_obj2nid(
+				    X509_EXTENSION_get_object(ext)));
+			if (!strcasecmp(extstr, "subjectAltName")) {
+				if (!(meth = X509V3_EXT_get(ext)))
+					break;
+				data = ext->value->data;
+				val = meth->i2v(meth, X509V3_EXT_d2i(ext), 0);
+				for (j = 0;  j < sk_CONF_VALUE_num(val);  j++) {
+					nval = sk_CONF_VALUE_value(val, j);
+					if (!strcasecmp(nval->name, "DNS") &&
+					    hostname_matches(hostname,
+							     nval->value)) {
+						ok = 1;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	if (!ok &&
+	    (subj = X509_get_subject_name(cert)) &&
+	    X509_NAME_get_text_by_NID(subj, NID_commonName, name,
+		sizeof(name)) > 0) {
+	      name[sizeof(name) - 1] = '\0';
+	      if (hostname_matches(hostname, name))
+		      ok = 1;
+	}
+	return ok;
+
+	/* XXX: Apparently '*.nytimes.com' is supposed to match anything that
+	 *      ends with .nytimes.com. I'll need a match function for that.
+	 */
 }
 
 /* Create a new OpenSSL connection. */
