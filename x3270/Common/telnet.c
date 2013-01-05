@@ -350,6 +350,7 @@ extern Boolean any_error_output;
 #endif /*]*/
 static void client_info_callback(INFO_CONST SSL *s, int where, int ret);
 static void continue_tls(unsigned char *sbbuf, int len);
+static int spc_verify_cert_hostname(X509 *cert, char *hostname);
 #endif /*]*/
 
 #if !defined(_WIN32) /*[*/
@@ -813,6 +814,89 @@ setup_lus(void)
 	try_lu = *curr_lu;
 }
 
+#if defined(HAVE_LIBSSL) /*[*/
+/*
+ * Add a reason that the host certificate is unverified.
+ */
+static void
+add_unverified_reason(const char *reason)
+{
+	char **s;
+	int i;
+
+	s = unverified_reasons;
+	unverified_reasons = (char **)Malloc(
+		(n_unverified_reasons + 2) * sizeof(char *));
+	for (i = 0; i < n_unverified_reasons; i++) {
+	    unverified_reasons[i] = s[i];
+	}
+	unverified_reasons[n_unverified_reasons++] = xs_buffer("%s", reason);
+	unverified_reasons[n_unverified_reasons] = CN;
+	Free(s);
+}
+
+/*
+ * Clear the list of reasons the host certificate is unverified.
+ */
+static void
+free_unverified_reasons(void)
+{
+	if (unverified_reasons != NULL) {
+		int i;
+
+		for (i = 0; unverified_reasons[i]; i++) {
+			Free(unverified_reasons[i]);
+		}
+		Free(unverified_reasons);
+		unverified_reasons = NULL;
+	}
+	n_unverified_reasons = 0;
+}
+
+/*
+ * Check the name in the host certificate.
+ *
+ * Returns True if the certificate is okay (or doesn't need to be), False if
+ * the connection should fail because of a bad certificate.
+ */
+static Boolean
+check_cert_name(void)
+{
+	X509 *cert;
+
+	cert = SSL_get_peer_certificate(ssl_con);
+	if (cert == NULL) {
+		if (appres.verify_host_cert) {
+			popup_an_error("No host certificate");
+			return False;
+		} else {
+			secure_unverified = True;
+			trace_dsn("No host certificate.\n");
+			add_unverified_reason("No host certificate");
+			return True;
+		}
+	}
+
+	if (!spc_verify_cert_hostname(cert, hostname)) {
+		X509_free(cert);
+		if (appres.verify_host_cert) {
+			popup_an_error("Host certificate name(s) do not match "
+				"%s", hostname);
+			return False;
+		} else {
+			secure_unverified = True;
+			trace_dsn("Host certificate name(s) do not match "
+				"hostname.\n");
+			add_unverified_reason("Host certificate name(s) do "
+				"not match hostname");
+			return True;
+		}
+	}
+	X509_free(cert);
+	return True;
+}
+#endif /*]*/
+
 static void
 net_connected(void)
 {
@@ -844,7 +928,6 @@ net_connected(void)
 	/* Set up SSL. */
 	if (ssl_host && !secure_connection) {
 	    	int rv;
-		X509 *cert;
 
 		if (SSL_set_fd(ssl_con, sock) != 1) {
 			trace_dsn("Can't set fd!\n");
@@ -867,18 +950,15 @@ net_connected(void)
 			host_disconnect(True);
 			return;
 		}
-		cert = SSL_get_peer_certificate(ssl_con);
-		if (cert != NULL) {
-			if (!spc_verify_cert_hostname(cert, hostname)) {
-				popup_an_error("Host certificate name(s) do "
-					"not match %s", hostname);
-				X509_free(cert);
-				host_disconnect(True);
-				return;
-			}
-			X509_free(cert);
+
+		/* Check the host certificate. */
+		if (!check_cert_name()) {
+			host_disconnect(True);
+			return;
 		}
+
 		secure_connection = True;
+
 		trace_dsn("TLS/SSL tunneled connection complete.  "
 			  "Connection is now secure.\n");
 
@@ -986,6 +1066,7 @@ output_possible(void)
 }
 #endif /*]*/
 
+
 /*
  * net_disconnect
  *	Shut down the socket.
@@ -1001,16 +1082,7 @@ net_disconnect(void)
 	}
 	secure_connection = False;
 	secure_unverified = False;
-	if (unverified_reasons != NULL) {
-		int i;
-
-		for (i = 0; unverified_reasons[i]; i++) {
-			Free(unverified_reasons[i]);
-		}
-		Free(unverified_reasons);
-		unverified_reasons = NULL;
-	}
-	n_unverified_reasons = 0;
+	free_unverified_reasons();
 #endif /*]*/
 	if (CONNECTED)
 		(void) shutdown(sock, 2);
@@ -4051,22 +4123,14 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 		why_not = "self-signed okay";
 	}
 	if (why_not != CN) {
-	    	char **s;
-		int i;
+	    	char *s;
 
 		trace_dsn("SSL_verify_callback: %s, ignoring '%s' (%d)\n",
 			why_not, X509_verify_cert_error_string(err), err);
 		secure_unverified = True;
-		s = unverified_reasons;
-		unverified_reasons = (char **)Malloc(
-				(n_unverified_reasons + 2) * sizeof(char *));
-		for (i = 0; i < n_unverified_reasons; i++) {
-		    	unverified_reasons[i] = s[i];
-		}
-		unverified_reasons[n_unverified_reasons++] =
-		    xs_buffer("%s (%d)", X509_verify_cert_error_string(err),
-			    err);
-		unverified_reasons[n_unverified_reasons] = CN;
+		s = xs_buffer("%s (%d)", X509_verify_cert_error_string(err),
+			                            err);
+		add_unverified_reason(s);
 		Free(s);
 		return 1;
 	}
@@ -4091,55 +4155,51 @@ hostname_matches(const char *hostname, const char *cn)
 }
 
 /* Hostname validation function. */
-int
+static int
 spc_verify_cert_hostname(X509 *cert, char *hostname)
 {
-	int extcount, i, j, ok = 0;
-	char name[256];
+	int ok = 0;
 	X509_NAME *subj;
-	const char *extstr;
-	CONF_VALUE *nval;
-	const unsigned char *data;
-	X509_EXTENSION *ext;
-	const X509V3_EXT_METHOD *meth;
-	STACK_OF(CONF_VALUE) *val;
+	char name[256];
+	GENERAL_NAMES *values;
+	GENERAL_NAME *value;
+	int num_an, i;
+	unsigned char *dns;
 
-	if ((extcount = X509_get_ext_count(cert)) > 0) {
-		for (i = 0;  !ok && i < extcount;  i++) {
-			ext = X509_get_ext(cert, i);
-			extstr = OBJ_nid2sn(OBJ_obj2nid(
-				    X509_EXTENSION_get_object(ext)));
-			if (!strcasecmp(extstr, "subjectAltName")) {
-				if (!(meth = X509V3_EXT_get(ext)))
-					break;
-				data = ext->value->data;
-				val = meth->i2v(meth, X509V3_EXT_d2i(ext), 0);
-				for (j = 0;  j < sk_CONF_VALUE_num(val);  j++) {
-					nval = sk_CONF_VALUE_value(val, j);
-					if (!strcasecmp(nval->name, "DNS") &&
-					    hostname_matches(hostname,
-							     nval->value)) {
-						ok = 1;
-						break;
-					}
-				}
-			}
-		}
-	}
-
+	/* Check the common name. */
 	if (!ok &&
 	    (subj = X509_get_subject_name(cert)) &&
 	    X509_NAME_get_text_by_NID(subj, NID_commonName, name,
 		sizeof(name)) > 0) {
-	      name[sizeof(name) - 1] = '\0';
-	      if (hostname_matches(hostname, name))
-		      ok = 1;
-	}
-	return ok;
 
-	/* XXX: Apparently '*.nytimes.com' is supposed to match anything that
-	 *      ends with .nytimes.com. I'll need a match function for that.
-	 */
+		name[sizeof(name) - 1] = '\0';
+		if (hostname_matches(hostname, name))
+			ok = 1;
+		else
+			trace_dsn("SSL_connect: non-matching common name: %s\n",
+				name);
+	}
+
+	/* Check the alternate names. */
+	if (!ok &&
+	    (values = X509_get_ext_d2i(cert, NID_subject_alt_name, 0, 0))) {
+		num_an = sk_GENERAL_NAME_num(values);
+		for (i = 0; i < num_an && !ok; i++) {
+			value = sk_GENERAL_NAME_value(values, i);
+			if (value->type == GEN_DNS) {
+				ASN1_STRING_to_UTF8(&dns, value->d.dNSName);
+				if (hostname_matches(hostname, (char *)dns))
+					ok = 1;
+				else
+					trace_dsn("SSL_connect: non-matching "
+						"alternate name: %s\n",
+						(char *)dns);
+				OPENSSL_free(dns);
+			}
+		}
+	}
+
+	return ok;
 }
 
 /* Create a new OpenSSL connection. */
@@ -4247,9 +4307,26 @@ continue_tls(unsigned char *sbbuf, int len)
 #endif /*]*/
 
 	if (rv != 1) {
-		/* Error already displayed. */
-		trace_dsn("continue_tls: SSL_connect failed\n");
-		net_disconnect();
+		long v;
+
+		v = SSL_get_verify_result(ssl_con);
+		if (v != X509_V_OK)
+			    popup_an_error("Host certificate "
+				"verification failed:\n"
+				"%s (%ld)",
+				X509_verify_cert_error_string(v), v);
+
+		/*
+		 * No need to trace the error, it was already
+		 * displayed.
+		 */
+		host_disconnect(True);
+		return;
+	}
+
+	/* Check the host certificate. */
+	if (!check_cert_name()) {
+		host_disconnect(True);
 		return;
 	}
 
