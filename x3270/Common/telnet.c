@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, Paul Mattes.
+ * Copyright (c) 1993-2013, Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -4173,9 +4173,11 @@ spc_verify_cert_hostname(X509 *cert, char *hostname)
 		sizeof(name)) > 0) {
 
 		name[sizeof(name) - 1] = '\0';
-		if (hostname_matches(hostname, name))
+		if (hostname_matches(hostname, name)) {
 			ok = 1;
-		else
+			trace_dsn("SSL_connect: common_name %s matches "
+				"hostname %s\n", name, hostname);
+		} else
 			trace_dsn("SSL_connect: non-matching common name: %s\n",
 				name);
 	}
@@ -4188,9 +4190,14 @@ spc_verify_cert_hostname(X509 *cert, char *hostname)
 			value = sk_GENERAL_NAME_value(values, i);
 			if (value->type == GEN_DNS) {
 				ASN1_STRING_to_UTF8(&dns, value->d.dNSName);
-				if (hostname_matches(hostname, (char *)dns))
+				if (hostname_matches(hostname, (char *)dns)) {
 					ok = 1;
-				else
+					trace_dsn("SSL_connect: common_name "
+						"%s matches hostname %s\n",
+						name, hostname);
+					OPENSSL_free(dns);
+					break;
+				} else
 					trace_dsn("SSL_connect: non-matching "
 						"alternate name: %s\n",
 						(char *)dns);

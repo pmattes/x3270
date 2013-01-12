@@ -140,6 +140,8 @@ Causes XX_FI(XX_PRODUCT) to reconnect to the host, whenever the connection is
 broken.
 There is a 5-second delay between reconnect attempts, to reduce network
 thrashing for down or misconfigured hosts.
+XX_TP(XX_FB(XX_DASHED(selfsignedok)))
+Allow self-signed host certificates.
 XX_TP(XX_FB(XX_DASHED(trace)))
 Turns on data stream tracing.
 Trace information is usually saved in the file
@@ -159,6 +161,9 @@ The file contents are treated as transparent data, i.e., they are not
 translated in any way.
 XX_TP(XX_FB(XX_DASHED(v)))
 Display build and version information and exit.
+XX_TP(XX_FB(XX_DASHED(verifycert)))
+Verify the host certificate for tunneled SSL and negotiated SSL/TLS
+connections.
 XX_TPE()dnl
 ifelse(XX_PRODUCT,pr3287,`XX_SH(Signals)
 SIGINT, SIGHUP and SIGTERM cause the current print job to be flushed (any
@@ -208,7 +213,7 @@ RFC 1646, TN3270 Extensions for LUname and Printer Selection
 XX_BR
 RFC 2355, TN3270 Enhancements
 XX_SH(Copyrights)
-Copyright`'XX_COPY()1993-2010, Paul Mattes.
+Copyright`'XX_COPY()1993-2013, Paul Mattes.
 XX_BR
 Copyright`'XX_COPY()1990, Jeff Sparkes.
 XX_BR

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, Paul Mattes.
+ * Copyright (c) 1993-2013, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
