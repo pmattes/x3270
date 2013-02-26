@@ -2036,9 +2036,9 @@ name printer.assocCommandLine
 applies x C
 type s
 if x c
-default pr3287 -assoc %L% -command %C% %R% %P% %O% %H%
+default pr3287 -assoc %L% -command %C% %R% %P% %V% %O% %H%
 else
-default wpr3287.exe -assoc %L% -command %R% %P% %O% %I% %H%
+default wpr3287.exe -assoc %L% -command %R% %P% %V% %O% %I% %H%
 endif
 desc
     The shell command to use to start a printer session, when associated with
@@ -2057,6 +2057,7 @@ endif
 	<li><b>%O%</b> is replaced with the value of %-printer.options%</li>
 	<li><b>%P%</b> is replaced with the current session's proxy option (%-proxy%)</li>
 	<li><b>%R%</b> is replaced with an option to pass the current character set</li>
+	<li><b>%V%</b> is replaced with SSL-related options</li>
     </ul>
 .
 
@@ -2083,9 +2084,9 @@ name printer.luCommandLine
 applies x C
 type s
 if x c
-default pr3287 -command %C% %R% %P% %O% %L%@%H%
+default pr3287 -command %C% %R% %P% %V% %O% %L%@%H%
 else
-default wpr3287.exe %R% %P% %O% %I% %L%@%H%
+default wpr3287.exe %R% %P% %V% %O% %I% %L%@%H%
 endif
 desc
     The shell command to use to start a printer session, when associated with a
@@ -2102,6 +2103,7 @@ endif
 	<li><b>%O%</b> is replaced with the value of %-printer.options%</li>
 	<li><b>%P%</b> is replaced with current session's proxy option (%-proxy%)</li>
 	<li><b>%R%</b> is replaced with an option to pass the current character set</li>
+	<li><b>%V%</b> is replaced with SSL-related options</li>
     </ul>
 .
 

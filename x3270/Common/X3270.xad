@@ -1,5 +1,5 @@
 !
-! Copyright (c) 1995-2012, Paul Mattes.
+! Copyright (c) 1995-2013, Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -306,13 +306,13 @@ x3270.traceCommand:			tail -f
 ! Printer session options
 #endif
 #ifdef _WIN32
-x3270.printer.assocCommandLine:		wpr3287.exe -assoc %L% %R% %P% %O% %I% %H%
-x3270.printer.luCommandLine:		wpr3287.exe %R% %P% %O% %I% %L%@%H%
+x3270.printer.assocCommandLine:		wpr3287.exe -assoc %L% %R% %P% %V% %O% %I% %H%
+x3270.printer.luCommandLine:		wpr3287.exe %R% %P% %V% %O% %I% %L%@%H%
 ! x3270.printer.name:
 #else
 x3270.printer.command:			lpr
-x3270.printer.assocCommandLine:		pr3287 -assoc %L% -command "%C%" %R% %P% %O% "%H%"
-x3270.printer.luCommandLine:		pr3287 -command "%C%" %R% %P% %O% "%L%@%H%"
+x3270.printer.assocCommandLine:		pr3287 -assoc %L% -command "%C%" %R% %P% %V% %O% "%H%"
+x3270.printer.luCommandLine:		pr3287 -command "%C%" %R% %P% %V% %O% "%L%@%H%"
 #endif
 #ifndef STANDALONE
 !

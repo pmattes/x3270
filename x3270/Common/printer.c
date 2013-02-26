@@ -272,6 +272,17 @@ printer_start(const char *lu)
 		cmd_len += (printer_opts? strlen(printer_opts): 0) - 3;
 		s += 3;
 	}
+	s = cmdline;
+	while ((s = strstr(s, "%V%")) != CN) {
+#if defined(HAVE_LIBSSL) /*[*/
+		cmd_len += appres.verify_host_cert?
+				strlen(OptVerifyHostCert) + 1: 0;
+		cmd_len += appres.self_signed_ok?
+				strlen(OptSelfSignedOk) + 1: 0;
+#endif /*]*/
+		cmd_len -= 3;
+		s += 3;
+	}
 
 	/* Allocate a string buffer and substitute into it. */
 	cmd_text = Malloc(cmd_len);
@@ -313,6 +324,15 @@ printer_start(const char *lu)
 			} else if (!strncmp(s+1, "O%", 2)) {
 			    	if (printer_opts != CN)
 					(void) strcat(cmd_text, printer_opts);
+				s += 2;
+				continue;
+			} else if (!strncmp(s+1, "V%", 2)) {
+#if defined(HAVE_LIBSSL) /*[*/
+			if (appres.verify_host_cert)
+				(void) strcat(cmd_text, " " OptVerifyHostCert);
+			if (appres.self_signed_ok)
+				(void) strcat(cmd_text, " " OptSelfSignedOk);
+#endif /*]*/
 				s += 2;
 				continue;
 			}

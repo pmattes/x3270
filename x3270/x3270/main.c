@@ -158,6 +158,9 @@ XrmOptionDescRec options[]= {
 	{ OptSaveLines,	DotSaveLines,	XrmoptionSepArg,	NULL },
 	{ OptScripted,	DotScripted,	XrmoptionNoArg,		ResTrue },
 	{ OptScrollBar,	DotScrollBar,	XrmoptionNoArg,		ResTrue },
+#if defined(HAVE_LIBSSL) /*[*/
+	{ OptSelfSignedOk,DotSelfSignedOk,XrmoptionNoArg,	ResTrue },
+#endif /*]*/
 	{ OptSet,	".xxx",		XrmoptionSkipArg,	NULL },
 #if defined(X3270_SCRIPT) /*[*/
 	{ OptSocket,	DotSocket,	XrmoptionNoArg,		ResTrue },
@@ -233,6 +236,9 @@ static struct {
 	{ OptSaveLines, "<n>", "Number of lines to save for scroll bar" },
 	{ OptScripted, CN, "Accept commands on standard input" },
 	{ OptScrollBar, CN, "Turn on scroll bar" },
+#if defined(HAVE_LIBSSL) /*[*/
+	{ OptSelfSignedOk, CN, "Allow self-signed host certificates" },
+#endif /*]*/
 	{ OptSet, "<toggle>", "Turn on <toggle>" },
 #if defined(X3270_SCRIPT) /*[*/
 	{ OptSocket,  CN, "Create socket for script control" },

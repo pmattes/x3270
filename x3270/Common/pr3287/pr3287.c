@@ -260,7 +260,7 @@ usage(void)
 "                   connect to host via specified proxy\n"
 "  -reconnect       keep trying to reconnect\n",
 #if defined(HAVE_LIBSSL) /*[*/
-"  -selfsignedok    allow self-sigened host SSL certificates\n"
+"  -selfsignedok    allow self-signed host SSL certificates\n"
 #endif /*]*/
 #if defined(_WIN32) /*[*/
 "  -trace           trace data stream to <wc3270appData>/x3trc.<pid>.txt\n",

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, Paul Mattes.
+ * Copyright (c) 1993-2013, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -712,6 +712,10 @@ static struct {
 #if defined(C3270) /*[*/
 { OptSecure,   OPT_BOOLEAN, True,  ResSecure,    offset(secure),
     CN, "Restrict potentially-destructive user actions" },
+#endif /*]*/
+#if defined(HAVE_LIBSSL) /*[*/
+{ OptSelfSignedOk, OPT_BOOLEAN, True, ResSelfSignedOk, offset(self_signed_ok),
+    CN, "Allow self-signed host certificates" },
 #endif /*]*/
 { OptSet,      OPT_SKIP2,   False, NULL,         NULL,
     "<toggle>", "Turn on <toggle>" },
