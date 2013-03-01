@@ -2136,17 +2136,58 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 
 /* Hostname match function. */
 static int
-hostname_matches(const char *hostname, const char *cn)
+hostname_matches(const char *hostname, const char *cn, size_t len)
 {
+	/*
+	 * If the name from the certificate contains an embedded NUL, then by
+	 * definition it will not match the hostname.
+	 */
+	if (strlen(cn) < len)
+		return 0;
+
+	/*
+	 * Try a direct comparison.
+	 */
 	if (!strcasecmp(hostname, cn))
 	    	return 1;
 
+	/*
+	 * Try a wild-card comparison.
+	 */
 	if (!strncmp(cn, "*.", 2) &&
 	    strlen(hostname) > strlen(cn + 1) &&
 	    !strcasecmp(hostname + strlen(hostname) - strlen(cn + 1), cn + 1))
 		return 1;
 
 	return 0;
+}
+
+/*
+ * Certificate hostname expansion function.
+ * Mostly, this expands NULs.
+ */
+static char *
+expand_hostname(const char *cn, size_t len)
+{
+	static char buf[1024];
+	int ix = 0;
+
+	if (len > sizeof(buf) / 2 + 1)
+		len = sizeof(buf) / 2 + 1;
+
+	while (len--) {
+		char c = *cn++;
+
+		if (c)
+		    	buf[ix++] = c;
+		else {
+		    	buf[ix++] = '\\';
+		    	buf[ix++] = '0';
+		}
+	}
+	buf[ix] = '\0';
+
+	return buf;
 }
 
 /* Hostname validation function. */
@@ -2160,21 +2201,22 @@ spc_verify_cert_hostname(X509 *cert, const char *hostname)
 	GENERAL_NAME *value;
 	int num_an, i;
 	unsigned char *dns;
+	int len;
 
 	/* Check the common name. */
 	if (!ok &&
 	    (subj = X509_get_subject_name(cert)) &&
-	    X509_NAME_get_text_by_NID(subj, NID_commonName, name,
-		sizeof(name)) > 0) {
+	    (len = X509_NAME_get_text_by_NID(subj, NID_commonName, name,
+		sizeof(name))) > 0) {
 
 		name[sizeof(name) - 1] = '\0';
-		if (hostname_matches(hostname, name)) {
+		if (hostname_matches(hostname, name, len)) {
 			ok = 1;
 			vtrace_str("SSL_connect: common name %s matches "
 				"hostname %s\n", name, hostname);
 		} else
 			vtrace_str("SSL_connect: non-matching common name: "
-				"%s\n", name);
+				"%s\n", expand_hostname(name, len));
 	}
 
 	/* Check the alternate names. */
@@ -2184,8 +2226,10 @@ spc_verify_cert_hostname(X509 *cert, const char *hostname)
 		for (i = 0; i < num_an && !ok; i++) {
 			value = sk_GENERAL_NAME_value(values, i);
 			if (value->type == GEN_DNS) {
-				ASN1_STRING_to_UTF8(&dns, value->d.dNSName);
-				if (hostname_matches(hostname, (char *)dns)) {
+				len = ASN1_STRING_to_UTF8(&dns,
+					value->d.dNSName);
+				if (hostname_matches(hostname, (char *)dns,
+					    len)) {
 					ok = 1;
 					vtrace_str("SSL_connect: common name "
 						"%s matches hostname %s\n",
@@ -2195,7 +2239,8 @@ spc_verify_cert_hostname(X509 *cert, const char *hostname)
 				} else
 					vtrace_str("SSL_connect: non-matching "
 						"alternate name: %s\n",
-						(char *)dns);
+						expand_hostname((char *)dns,
+						    len));
 				OPENSSL_free(dns);
 			}
 		}
