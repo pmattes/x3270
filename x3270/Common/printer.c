@@ -276,9 +276,28 @@ printer_start(const char *lu)
 	while ((s = strstr(s, "%V%")) != CN) {
 #if defined(HAVE_LIBSSL) /*[*/
 		cmd_len += appres.verify_host_cert?
-				strlen(OptVerifyHostCert) + 1: 0;
+		    strlen(OptVerifyHostCert) + 1: 0;
 		cmd_len += appres.self_signed_ok?
-				strlen(OptSelfSignedOk) + 1: 0;
+		    strlen(OptSelfSignedOk) + 1: 0;
+		cmd_len += appres.ca_dir?
+		    strlen(OptCaDir) + 4 + strlen(appres.ca_dir): 0;
+		cmd_len += appres.ca_file?
+		    strlen(OptCaFile) + 4 + strlen(appres.ca_file): 0;
+		cmd_len += appres.cert_file?
+		    strlen(OptCertFile) + 4 + strlen(appres.cert_file): 0;
+		cmd_len += appres.cert_file_type?
+		    strlen(OptCertFileType) + 2 + strlen(appres.cert_file_type):
+		    0;
+		cmd_len += appres.chain_file?
+		    strlen(OptChainFile) + 4 + strlen(appres.chain_file): 0;
+		cmd_len += appres.key_file?
+		    strlen(OptChainFile) + 4 + strlen(appres.key_file): 0;
+		/*
+		 * XXX: I hope the key password has no double quotes. I could
+		 * fix it on Unix, but not on Windows.
+		 */
+		cmd_len += appres.key_passwd?
+		    strlen(OptKeyPasswd) + 4 + strlen(appres.key_passwd): 0;
 #endif /*]*/
 		cmd_len -= 3;
 		s += 3;
@@ -328,10 +347,58 @@ printer_start(const char *lu)
 				continue;
 			} else if (!strncmp(s+1, "V%", 2)) {
 #if defined(HAVE_LIBSSL) /*[*/
-			if (appres.verify_host_cert)
-				(void) strcat(cmd_text, " " OptVerifyHostCert);
-			if (appres.self_signed_ok)
-				(void) strcat(cmd_text, " " OptSelfSignedOk);
+				if (appres.verify_host_cert)
+					(void) strcat(cmd_text,
+						" " OptVerifyHostCert);
+				if (appres.self_signed_ok)
+					(void) strcat(cmd_text,
+						" " OptSelfSignedOk);
+				if (appres.ca_dir) {
+					(void) strcat(cmd_text, " " OptCaDir);
+					(void) strcat(cmd_text, " ");
+					(void) sprintf(strchr(cmd_text, '\0'),
+						"\"%s\"", appres.ca_dir);
+				}
+				if (appres.ca_file) {
+					(void) strcat(cmd_text, " " OptCaFile);
+					(void) strcat(cmd_text, " ");
+					(void) sprintf(strchr(cmd_text, '\0'),
+						"\"%s\"", appres.ca_file);
+				}
+				if (appres.cert_file) {
+					(void) strcat(cmd_text,
+						" " OptCertFile);
+					(void) strcat(cmd_text, " ");
+					(void) sprintf(strchr(cmd_text, '\0'),
+						"\"%s\"", appres.cert_file);
+				}
+				if (appres.cert_file_type) {
+					(void) strcat(cmd_text,
+						" " OptCertFileType);
+					(void) strcat(cmd_text, " ");
+					(void) strcat(cmd_text,
+						appres.cert_file_type);
+				}
+				if (appres.chain_file) {
+					(void) strcat(cmd_text,
+						" " OptChainFile);
+					(void) strcat(cmd_text, " ");
+					(void) sprintf(strchr(cmd_text, '\0'),
+						"\"%s\"", appres.chain_file);
+				}
+				if (appres.key_file) {
+					(void) strcat(cmd_text, " " OptKeyFile);
+					(void) strcat(cmd_text, " ");
+					(void) sprintf(strchr(cmd_text, '\0'),
+						"\"%s\"", appres.key_file);
+				}
+				if (appres.key_passwd) {
+					(void) strcat(cmd_text,
+						" " OptKeyPasswd);
+					(void) strcat(cmd_text, " ");
+					(void) sprintf(strchr(cmd_text, '\0'),
+						"\"%s\"", appres.key_passwd);
+				}
 #endif /*]*/
 				s += 2;
 				continue;
