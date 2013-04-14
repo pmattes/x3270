@@ -93,8 +93,8 @@ static struct pr3o {
 #if !defined(_WIN32) /*[*/
 static void	printer_output(unsigned long fd, ioid_t id);
 static void	printer_error(unsigned long fd, ioid_t id);
-static void	printer_otimeout(void);
-static void	printer_etimeout(void);
+static void	printer_otimeout(ioid_t id);
+static void	printer_etimeout(ioid_t id);
 static void	printer_dump(struct pr3o *p, Boolean is_err, Boolean is_dead);
 #endif /*]*/
 static void	printer_host_connect(Boolean connected _is_unused);
@@ -556,7 +556,7 @@ printer_data(struct pr3o *p, Boolean is_err)
 		return;
 	}
 	if (nr == 0) {
-		if (printer_stderr.timeout_id != 0L) {
+		if (printer_stderr.timeout_id != NULL_IOID) {
 			/*
 			 * Append a termination error message to whatever the
 			 * printer process said, and pop it up.
@@ -590,7 +590,7 @@ printer_data(struct pr3o *p, Boolean is_err)
 	 */
 	if (p->count >= PRINTER_BUF - 1) {
 		printer_dump(p, is_err, False);
-	} else if (p->timeout_id == 0L) {
+	} else if (p->timeout_id == NULL_IOID) {
 		p->timeout_id = AddTimeOut(1000,
 		    is_err? printer_etimeout: printer_otimeout);
 	}
@@ -615,7 +615,7 @@ static void
 printer_timeout(struct pr3o *p, Boolean is_err)
 {
 	/* Forget the timeout ID. */
-	p->timeout_id = 0L;
+	p->timeout_id = NULL_IOID;
 
 	/* Dump the output. */
 	printer_dump(p, is_err, False);
@@ -623,14 +623,14 @@ printer_timeout(struct pr3o *p, Boolean is_err)
 
 /* Timeout from printer output. */
 static void
-printer_otimeout(void)
+printer_otimeout(ioid_t id _is_unused)
 {
 	printer_timeout(&printer_stdout, False);
 }
 
 /* Timeout from printer error output. */
 static void
-printer_etimeout(void)
+printer_etimeout(ioid_t id _is_unused)
 {
 	printer_timeout(&printer_stderr, True);
 }
@@ -699,13 +699,13 @@ printer_stop(void)
 	}
 
 	/* Cancel timeouts. */
-	if (printer_stdout.timeout_id) {
+	if (printer_stdout.timeout_id != NULL_IOID) {
 		RemoveTimeOut(printer_stdout.timeout_id);
-		printer_stdout.timeout_id = 0L;
+		printer_stdout.timeout_id = NULL_IOID;
 	}
-	if (printer_stderr.timeout_id) {
+	if (printer_stderr.timeout_id != NULL_IOID) {
 		RemoveTimeOut(printer_stderr.timeout_id);
-		printer_stderr.timeout_id = 0L;
+		printer_stderr.timeout_id = NULL_IOID;
 	}
 
 	/* Clear buffers. */

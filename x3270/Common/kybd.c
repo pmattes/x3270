@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2013 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -100,7 +100,7 @@ static unsigned char pa_xlate[] = {
 };
 #define PF_SZ	(sizeof(pf_xlate)/sizeof(pf_xlate[0]))
 #define PA_SZ	(sizeof(pa_xlate)/sizeof(pa_xlate[0]))
-static unsigned long unlock_id;
+static ioid_t unlock_id = NULL_IOID;
 static time_t unlock_delay_time;
 Boolean key_Character(int code, Boolean with_ge, Boolean pasting,
 			     Boolean *skipped);
@@ -393,7 +393,7 @@ kybd_connect(Boolean connected)
 {
 	if ((kybdlock & KL_DEFERRED_UNLOCK) && unlock_id) {
 		RemoveTimeOut(unlock_id);
-		unlock_id = 0;
+		unlock_id = NULL_IOID;
 	}
 	kybdlock_clr(-1, "kybd_connect");
 
@@ -412,9 +412,9 @@ kybd_connect(Boolean connected)
 static void
 kybd_in3270(Boolean in3270 _is_unused)
 {
-	if ((kybdlock & KL_DEFERRED_UNLOCK) && unlock_id) {
+	if ((kybdlock & KL_DEFERRED_UNLOCK) && unlock_id != NULL_IOID) {
 		RemoveTimeOut(unlock_id);
-		unlock_id = 0;
+		unlock_id = NULL_IOID;
 	}
 
 	switch ((int)cstate) {
@@ -1616,7 +1616,7 @@ BackTab_action(Widget w _is_unused, XEvent *event, String *params,
  */
 
 static void
-defer_unlock(void)
+defer_unlock(ioid_t id _is_unused)
 {
 	kybdlock_clr(KL_DEFERRED_UNLOCK, "defer_unlock");
 	status_reset();
@@ -1663,9 +1663,9 @@ do_reset(Boolean explicit)
 	 * Remove any deferred keyboard unlock.  We will either unlock the
 	 * keyboard now, or want to defer further into the future.
 	 */
-	if ((kybdlock & KL_DEFERRED_UNLOCK) && unlock_id) {
+	if ((kybdlock & KL_DEFERRED_UNLOCK) && unlock_id != NULL_IOID) {
 		RemoveTimeOut(unlock_id);
-		unlock_id = 0;
+		unlock_id = NULL_IOID;
 	}
 
 	/*

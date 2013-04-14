@@ -56,8 +56,8 @@ static struct pr3o {
 
 static void child_output(unsigned long fd, ioid_t id);
 static void child_error(unsigned long fd, ioid_t id);
-static void child_otimeout(void);
-static void child_etimeout(void);
+static void child_otimeout(ioid_t id);
+static void child_etimeout(ioid_t id);
 static void child_dump(struct pr3o *p, Boolean is_err);
 
 static void
@@ -220,14 +220,14 @@ child_timeout(struct pr3o *p, Boolean is_err)
 
 /* Timeout from child output. */
 static void
-child_otimeout(void)
+child_otimeout(ioid_t id _is_unused)
 {
 	child_timeout(&child_stdout, False);
 }
 
 /* Timeout from child error output. */
 static void
-child_etimeout(void)
+child_etimeout(ioid_t id _is_unused)
 {
 	child_timeout(&child_stderr, True);
 }

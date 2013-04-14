@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2012, Paul Mattes.
+ * Copyright (c) 1996-2013, Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -212,7 +212,7 @@ Boolean ft_last_dbcs = False;
 static Widget overwrite_shell;
 #endif /*]*/
 static Boolean ft_is_action;
-static unsigned long ft_start_id = 0;
+static ioid_t ft_start_id = NULL_IOID;
 
 #if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
 static void ft_cancel(Widget w, XtPointer client_data, XtPointer call_data);
@@ -277,7 +277,7 @@ local_fflag(void)
 
 /* Timeout function for stalled transfers. */
 static void
-ft_didnt_start(void)
+ft_didnt_start(ioid_t id _is_unused)
 {
 	if (ft_local_file != NULL) {
 		fclose(ft_local_file);
@@ -1579,9 +1579,9 @@ ft_running(Boolean is_cut)
 {
 	if (ft_state == FT_AWAIT_ACK) {
 		ft_state = FT_RUNNING;
-		if (ft_start_id) {
+		if (ft_start_id != NULL_IOID) {
 			RemoveTimeOut(ft_start_id);
-			ft_start_id = 0;
+			ft_start_id = NULL_IOID;
 		}
 	}
 	ft_is_cut = is_cut;

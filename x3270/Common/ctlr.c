@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2013 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -2825,7 +2825,7 @@ ctlr_dbcs_state(int baddr)
 static struct timeval t_start;
 static Boolean ticking = False;
 static Boolean mticking = False;
-static unsigned long tick_id;
+static ioid_t tick_id;
 static struct timeval t_want;
 
 /* Return the difference in milliseconds between two timevals. */
@@ -2837,7 +2837,7 @@ delta_msec(struct timeval *t1, struct timeval *t0)
 }
 
 static void
-keep_ticking(void)
+keep_ticking(ioid_t id _is_unused)
 {
 	struct timeval t1;
 	long msec;

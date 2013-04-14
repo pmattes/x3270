@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, Paul Mattes.
+ * Copyright (c) 1993-2013, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -76,7 +76,7 @@ static struct host *last_host = (struct host *)NULL;
 static Boolean auto_reconnect_inprogress = False;
 static int net_sock = -1;
 #if defined(X3270_DISPLAY) || defined(C3270) /*[*/
-static unsigned long reconnect_id = 0;
+static ioid_t reconnect_id = NULL_IOID;
 #endif /*]*/
 
 #if defined(X3270_DISPLAY) /*[*/
@@ -84,7 +84,7 @@ static void save_recent(const char *);
 #endif /*]*/
 
 #if defined(X3270_DISPLAY) || defined(C3270) /*[*/
-static void try_reconnect(void);
+static void try_reconnect(ioid_t id);
 #endif /*]*/
 
 static char *
@@ -723,7 +723,7 @@ host_reconnect(void)
  * Called from timer to attempt an automatic reconnection.
  */
 static void
-try_reconnect(void)
+try_reconnect(ioid_t id _is_unused)
 {
 	auto_reconnect_inprogress = False;
 	host_reconnect();

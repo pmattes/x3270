@@ -240,7 +240,7 @@ static void child_socket_connection(unsigned long fd, ioid_t id);
 static void child_exited(unsigned long fd, ioid_t id);
 # endif /*]*/
 #endif /*]*/
-static void wait_timed_out(void);
+static void wait_timed_out(ioid_t id);
 static void read_from_file(void);
 static sms_t *sms_redirect_to(void);
 
@@ -3225,7 +3225,7 @@ Execute_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 
 /* Timeout for Expect action. */
 static void
-expect_timed_out(void)
+expect_timed_out(ioid_t id _is_unused)
 {
 	if (sms == SN || sms->state != SS_EXPECTING)
 		return;
@@ -3243,7 +3243,7 @@ expect_timed_out(void)
 
 /* Timeout for Wait action. */
 static void
-wait_timed_out(void)
+wait_timed_out(ioid_t id _is_unused)
 {
     	/* If they just wanted a delay, succeed. */
     	if (sms->state == SS_TIME_WAIT) {

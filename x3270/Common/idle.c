@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -94,7 +94,7 @@ enum idle_enum idle_user_enabled = IDLE_DISABLED;
 static Boolean idle_enabled = False;	/* validated and user-enabled */
 static unsigned long idle_n = 0L;
 static unsigned long idle_multiplier = IDLE_SEC;
-static unsigned long idle_id;
+static ioid_t idle_id;
 static unsigned long idle_ms;
 static Boolean idle_randomize = False;
 static Boolean idle_ticking = False;
@@ -238,7 +238,7 @@ idle_in3270(Boolean in3270 _is_unused)
  * Idle timeout.
  */
 static void
-idle_timeout(void)
+idle_timeout(ioid_t id _is_unused)
 {
 	trace_event("Idle timeout\n");
 	idle_ticking = False;

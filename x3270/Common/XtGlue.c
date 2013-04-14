@@ -400,14 +400,14 @@ typedef struct timeout {
 #else /*][*/
 	struct timeval tv;
 #endif /*]*/
-	void (*proc)(void);
+	tofn_t proc;
 	Boolean in_play;
 } timeout_t;
 #define TN	(timeout_t *)NULL
 static timeout_t *timeouts = TN;
 
 ioid_t
-AddTimeOut(unsigned long interval_ms, void (*proc)(void))
+AddTimeOut(unsigned long interval_ms, tofn_t proc)
 {
 	timeout_t *t_new;
 	timeout_t *t;
@@ -790,7 +790,7 @@ process_events(Boolean block)
 #endif /*]*/
 				timeouts = t->next;
 				t->in_play = True;
-				(*t->proc)();
+				(*t->proc)((ioid_t)t);
 				processed_any = True;
 				Free(t);
 			} else

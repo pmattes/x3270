@@ -896,7 +896,7 @@ RemoveInput(ioid_t cookie)
  */
 
 typedef struct torec {
-	voidfn		*fn;
+	tofn_t		 fn;
 	XtIntervalId	 id;
 	struct torec	*next;
 } torec_t;
@@ -908,7 +908,7 @@ to_fn(XtPointer closure, XtIntervalId *id)
 {
 	torec_t *torec;
 	torec_t *prev = NULL;
-	voidfn *fn = NULL;
+	tofn_t fn = NULL;
 
 	for (torec = torecs; torec != NULL; torec = torec->next) {
 		if (torec->id == *id) {
@@ -930,12 +930,12 @@ to_fn(XtPointer closure, XtIntervalId *id)
 		XtFree((XtPointer)torec);
 
 		/* Call the function. */
-		(*fn)();
+		(*fn)((ioid_t)id);
 	}
 }
 
 ioid_t
-AddTimeOut(unsigned long msec, voidfn *fn)
+AddTimeOut(unsigned long msec, tofn_t fn)
 {
 	torec_t *torec;
 
