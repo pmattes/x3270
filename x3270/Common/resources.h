@@ -224,6 +224,7 @@
 #define DotKeymap		"." ResKeymap
 #define DotKeypadOn		"." ResKeypadOn
 #define DotKeyPasswd		"." ResKeyPasswd
+#define DotLoginMacro		"." ResLoginMacro
 #define DotM3279		"." ResM3279
 #define DotModel		"." ResModel
 #define DotMono			"." ResMono
@@ -320,6 +321,7 @@
 #define ClsLineWrap		"LineWrap"
 #define ClsLnext		"Lnext"
 #define ClsLockedCursor		"LockedCursor"
+#define ClsLoginMacro		"LoginMacro"
 #define ClsM3279		"M3279"
 #define ClsMacros		"Macros"
 #define ClsMarginedPaste	"MarginedPaste"
@@ -412,6 +414,7 @@
 #define OptKeyPasswd		"-keypasswd"
 #define OptLocalCp		"-localcp"
 #define OptLocalProcess		"-e"
+#define OptLoginMacro		"-loginmacro"
 #define OptM3279		"-color"
 #define OptModel		"-model"
 #define OptMono			"-mono"

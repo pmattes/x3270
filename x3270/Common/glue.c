@@ -665,6 +665,11 @@ static struct {
     "<codepage>", "Use <codepage> instead of ANSI codepage for local I/O"
 },
 #endif /*]*/
+#if defined(X3270_SCRIPT) /*[*/
+{ OptLoginMacro, OPT_STRING, False, ResLoginMacro, offset(login_macro),
+    "Action([arg[,arg...]]) [...]"
+},
+#endif /*]*/
 { OptModel,    OPT_STRING,  False, ResModel,     offset(model),
     "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
 #if defined(C3270) /*[*/

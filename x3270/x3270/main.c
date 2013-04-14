@@ -143,6 +143,9 @@ XrmOptionDescRec options[]= {
 #if defined(HAVE_LIBSSL) /*[*/
 	{ OptKeyPasswd,	DotKeyPasswd,	XrmoptionSepArg,	NULL },
 #endif /*]*/
+#if defined(X3270_SCRIPT) /*[*/
+	{ OptLoginMacro,DotLoginMacro,	XrmoptionSepArg,	NULL },
+#endif /*]*/
 	{ OptM3279,	DotM3279,	XrmoptionNoArg,		ResTrue },
 	{ OptModel,	DotModel,	XrmoptionSepArg,	NULL },
 	{ OptMono,	DotMono,	XrmoptionNoArg,		ResTrue },
@@ -220,6 +223,9 @@ static struct {
 	{ OptKeypadOn, CN, "Turn on pop-up keypad at start-up" },
 #if defined(HAVE_LIBSSL) /*[*/
 	{ OptKeyPasswd, "file:<filename>|string:<text>", "Specify OpenSSL private key password" },
+#endif /*]*/
+#if defined(X3270_SCRIPT) /*[*/
+	{ OptLoginMacro, "Action([arg[,...]]) [...]", "Specify macro to run at login" },
 #endif /*]*/
 	{ OptM3279, CN, "3279 emulation (deprecated)" },
 	{ OptModel, "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },

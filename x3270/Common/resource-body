@@ -1590,6 +1590,7 @@ description
 name loginMacro
 applies a
 type s
+switch -loginmacro
 desc
     Defines a sequence of commands to run as soon as a host connection is
     established.  Usually these would be commands used to navigate through

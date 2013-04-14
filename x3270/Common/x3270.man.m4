@@ -255,6 +255,8 @@ XX_FI(name) is an encoding name recognized by the ICU library.
 (Supported only when XX_PRODUCT is compiled with DBCS support, and necessary
 only when XX_PRODUCT cannot figure it out from the locale.)
 ')dnl
+XX_TP(XX_FB(XX_DASHED(loginmacro)) XX_FI(Action(arg...) ...))
+Specifies a macro to run at login time.
 ifelse(XX_PRODUCT,ws3270,`XX_TP(XX_FB(XX_DASHED(localcp) XX_FI(codepage)))
 Specifies the Windows code page to use for local I/O.
 The default is to use the XX_POSESSIVE(system) ANSI code page.

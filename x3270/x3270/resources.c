@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, Paul Mattes.
+ * Copyright (c) 1993-2013, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -117,6 +117,8 @@ XtResource resources[] = {
 	  offset(script_port), XtRString, "0" },
 	{ ResPluginCommand, ClsPluginCommand, XtRString, sizeof(String),
 	  offset(plugin_command), XtRString, "x3270hist.pl" },
+	{ ResLoginMacro, ClsLoginMacro, XtRString, sizeof(String),
+	  offset(login_macro), XtRString, 0 },
 #endif /*]*/
 	{ ResUseCursorColor, ClsUseCursorColor, XtRBoolean, sizeof(Boolean),
 	  offset(use_cursor_color), XtRString, ResFalse },
