@@ -447,11 +447,7 @@ set_appres_defaults(void)
 	appres.mono = False;
 #endif /*]*/
 	appres.extended = True;
-#if defined(C3270) /*[*/
 	appres.m3279 = True;
-#else /*][*/
-	appres.m3279 = False;
-#endif /*]*/
 	appres.modified_sel = False;
 	appres.apl_mode = False;
 #if defined(C3270) || defined(TCL3270) /*[*/

@@ -294,7 +294,7 @@ For a monochrome X display, it is
 XX_FB(`3278'XX_DASHED(4)).',
 XX_PRODUCT,c3270,`for a color display is XX_FB(`3279'XX_DASHED(4)).
 For a monochrome display, it is XX_FB(`3278'XX_DASHED(4)).',
-`is XX_FB(`3278'XX_DASHED(4)).')
+`is XX_FB(`3279'XX_DASHED(4)).')
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(mono)))
 Forces XX_FB(XX_PRODUCT) to believe it is running on a monochrome X display.
 ')dnl

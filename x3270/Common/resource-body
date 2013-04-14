@@ -1635,7 +1635,7 @@ description
 name m3279
 applies a
 type b
-default false
+default true
 groups d
 switch -color
 description
