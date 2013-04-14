@@ -153,7 +153,7 @@ static unsigned char *sbptr;
 static unsigned char telnet_state;
 static int      syncing;
 #if !defined(_WIN32) /*[*/
-static unsigned long output_id = 0L;
+static ioid_t output_id = NULL_IOID;
 #endif /*]*/
 static char     ttype_tmpval[13];
 
@@ -1041,13 +1041,12 @@ connection_complete(void)
  *	pending, to determine that the connection is complete.
  */
 static void
-output_possible(unsigned long fd _is_unused, ioid_t id _is_unused)
+output_possible(unsigned long fd, ioid_t id _is_unused)
 {
 	sockaddr_46_t sa;
 	socklen_t len = sizeof(sa);
 
-
-	if (getpeername(sock, &sa.sa, &len) < 0) {
+	if (getpeername(fd, &sa.sa, &len) < 0) {
 		trace_dsn("RCVD socket error %d (%s)\n",
 			socket_errno(),
 #if !defined(_WIN32) /*[*/
@@ -1063,9 +1062,9 @@ output_possible(unsigned long fd _is_unused, ioid_t id _is_unused)
 	if (HALF_CONNECTED) {
 		connection_complete();
 	}
-	if (output_id) {
+	if (output_id != NULL_IOID) {
 		RemoveInput(output_id);
-		output_id = 0L;
+		output_id = NULL_IOID;
 	}
 }
 #endif /*]*/
@@ -1099,9 +1098,9 @@ net_disconnect(void)
 
 #if !defined(_WIN32) /*[*/
 	/* We have no more interest in output buffer space. */
-	if (output_id != 0L) {
+	if (output_id != NULL_IOID) {
 		RemoveInput(output_id);
-		output_id = 0L;
+		output_id = NULL_IOID;
 	}
 #endif /*]*/
 }
