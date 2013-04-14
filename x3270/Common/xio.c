@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, Paul Mattes.
+ * Copyright (c) 1993-2013, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -45,8 +45,8 @@
 #include "xioc.h"
 
 /* Statics. */
-static unsigned long ns_read_id;
-static unsigned long ns_exception_id;
+static ioid_t ns_read_id;
+static ioid_t ns_exception_id;
 static Boolean reading = False;
 static Boolean excepting = False;
 

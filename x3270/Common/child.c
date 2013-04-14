@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009, Paul Mattes.
+ * Copyright (c) 2001-2009, 2013, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,15 +47,15 @@ static int child_errpipe[2];
 
 static struct pr3o {
 	int fd;			/* file descriptor */
-	unsigned long input_id;	/* input ID */
-	unsigned long timeout_id; /* timeout ID */
+	ioid_t input_id;	/* input ID */
+	ioid_t timeout_id; 	/* timeout ID */
 	int count;		/* input count */
 	char buf[CHILD_BUF];	/* input buffer */
 } child_stdout = { -1, 0L, 0L, 0 },
   child_stderr = { -1, 0L, 0L, 0 };
 
-static void child_output(void);
-static void child_error(void);
+static void child_output(unsigned long fd, ioid_t id);
+static void child_error(unsigned long fd, ioid_t id);
 static void child_otimeout(void);
 static void child_etimeout(void);
 static void child_dump(struct pr3o *p, Boolean is_err);
@@ -195,14 +195,14 @@ child_data(struct pr3o *p, Boolean is_err)
 
 /* The child process has some output for us. */
 static void
-child_output(void)
+child_output(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
 	child_data(&child_stdout, False);
 }
 
 /* The child process has some error output for us. */
 static void
-child_error(void)
+child_error(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
 	child_data(&child_stderr, True);
 }

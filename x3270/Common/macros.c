@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, Paul Mattes.
+ * Copyright (c) 1993-2013, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -160,19 +160,19 @@ typedef struct sms {
 #if defined(_WIN32) /*[*/
 	HANDLE	inhandle;
 	HANDLE	child_handle;
-	unsigned long exit_id;
-	unsigned long listen_id;
+	ioid_t exit_id;
+	ioid_t listen_id;
 #endif /*]*/
 	int	pid;
-	unsigned long expect_id;
-	unsigned long wait_id;
+	ioid_t expect_id;
+	ioid_t wait_id;
 } sms_t;
 #define SN	((sms_t *)NULL)
 static sms_t *sms = SN;
 static int sms_depth = 0;
 #if defined(X3270_SCRIPT) /*[*/
 static int socketfd = -1;
-static unsigned long socket_id = 0L;
+static ioid_t socket_id = NULL_IOID;
 # if defined(_WIN32) /*[*/
 static HANDLE socket_event = NULL;
 # endif /*]*/
@@ -205,7 +205,7 @@ static const char *sms_state_name[] = {
 #if defined(X3270_MENUS) /*[*/
 static struct macro_def *macro_last = (struct macro_def *) NULL;
 #endif /*]*/
-static unsigned long stdin_id = 0L;
+static ioid_t stdin_id = NULL_IOID;
 static unsigned char *ansi_save_buf;
 static int      ansi_save_cnt = 0;
 static int      ansi_save_ix = 0;
@@ -231,13 +231,13 @@ int peer_errno;
 static void cleanup_socket(Boolean b);
 #endif /*]*/
 static void script_prompt(Boolean success);
-static void script_input(void);
+static void script_input(unsigned long fd, ioid_t id);
 static void sms_pop(Boolean can_exit);
 #if defined(X3270_SCRIPT) /*[*/
-static void socket_connection(void);
+static void socket_connection(unsigned long fd, ioid_t id);
 # if defined(_WIN32) /*[*/
-static void child_socket_connection(void);
-static void child_exited(void);
+static void child_socket_connection(unsigned long fd, ioid_t id);
+static void child_exited(unsigned long fd, ioid_t id);
 # endif /*]*/
 #endif /*]*/
 static void wait_timed_out(void);
@@ -264,8 +264,8 @@ static int plugin_pid = 0;		/* process ID if running, or 0 */
 static int plugin_outpipe = -1;		/* from emulator, to plugin */
 static int plugin_inpipe = -1;		/* from plugin, to emulator */
 static Bool plugin_started = False;	/* True after INIT ack'ed */
-static unsigned long plugin_input_id = 0L;	/* input event */
-static unsigned long plugin_timeout_id = 0L;	/* timeout event */
+static ioid_t plugin_input_id = NULL_IOID;	/* input event */
+static ioid_t plugin_timeout_id = NULL_IOID;	/* timeout event */
 #define PRB_MAX	1024			/* maximum reply size */
 static char plugin_buf[PRB_MAX];	/* reply buffer */
 static int prb_cnt = 0;			/* pending reply size */
@@ -493,7 +493,7 @@ script_disable(void)
 	if (stdin_id != 0) {
 		trace_dsn("Disabling input for %s[%d]\n", ST_NAME, sms_depth);
 		RemoveInput(stdin_id);
-		stdin_id = 0L;
+		stdin_id = NULL_IOID;
 	}
 }
 
@@ -518,8 +518,8 @@ new_sms(enum sms_type type)
 	s->child_handle = INVALID_HANDLE_VALUE;
 #endif /*]*/
 	s->pid = -1;
-	s->expect_id = 0L;
-	s->wait_id = 0L;
+	s->expect_id = NULL_IOID;
+	s->wait_id = NULL_IOID;
 	s->output_wait_needed = False;
 	s->executing = False;
 	s->accumulated = False;
@@ -625,9 +625,9 @@ sms_pop(Boolean can_exit)
 	}
 
 	/* Cancel any pending timeouts. */
-	if (sms->expect_id != 0L)
+	if (sms->expect_id != NULL_IOID)
 		RemoveTimeOut(sms->expect_id);
-	if (sms->wait_id != 0L)
+	if (sms->wait_id != NULL_IOID)
 		RemoveTimeOut(sms->wait_id);
 
 	/*
@@ -889,9 +889,9 @@ peer_script_init(void)
 #if defined(X3270_SCRIPT) /*[*/
 /* Accept a new socket connection. */
 static void
-socket_connection(void)
+socket_connection(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
-	int fd;
+	int accept_fd;
 	sms_t *s;
 
 	/* Accept the connection. */
@@ -904,7 +904,7 @@ socket_connection(void)
 
 		(void) memset(&sin, '\0', sizeof(sin));
 		sin.sin_family = AF_INET;
-		fd = accept(socketfd, (struct sockaddr *)&sin, &len);
+		accept_fd = accept(socketfd, (struct sockaddr *)&sin, &len);
 	}
 #if !defined(_WIN32) /*[*/
 	else {
@@ -913,11 +913,11 @@ socket_connection(void)
 
 		(void) memset(&ssun, '\0', sizeof(ssun));
 		ssun.sun_family = AF_UNIX;
-		fd = accept(socketfd, (struct sockaddr *)&ssun, &len);
+		accept_fd = accept(socketfd, (struct sockaddr *)&ssun, &len);
 	}
 #endif /*]*/
 
-	if (fd < 0) {
+	if (accept_fd < 0) {
 		popup_an_errno(errno, "socket accept");
 		return;
 	}
@@ -928,9 +928,9 @@ socket_connection(void)
 	s = sms;
 	s->is_transient = True;
 	s->is_external = True;
-	s->infd = fd;
+	s->infd = accept_fd;
 #if !defined(_WIN32) /*[*/
-	s->outfile = fdopen(dup(fd), "w");
+	s->outfile = fdopen(dup(accept_fd), "w");
 #endif /*]*/
 #if defined(_WIN32) /*[*/
 	s->inhandle = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -948,15 +948,15 @@ socket_connection(void)
 
 	/* Don't accept any more connections. */
 	RemoveInput(socket_id);
-	socket_id = 0L;
+	socket_id = NULL_IOID;
 }
 
 # if defined(_WIN32) /*[*/
 /* Accept a new socket connection from a child process. */
 static void
-child_socket_connection(void)
+child_socket_connection(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
-	int fd;
+	int accept_fd;
 	sms_t *old_sms;
 	sms_t *s;
 	struct sockaddr_in sin;
@@ -965,9 +965,9 @@ child_socket_connection(void)
 	/* Accept the connection. */
 	(void) memset(&sin, '\0', sizeof(sin));
 	sin.sin_family = AF_INET;
-	fd = accept(sms->infd, (struct sockaddr *)&sin, &len);
+	accept_fd = accept(sms->infd, (struct sockaddr *)&sin, &len);
 
-	if (fd < 0) {
+	if (accept_fd < 0) {
 		popup_an_error("socket accept: %s",
 			win32_strerror(GetLastError()));
 		return;
@@ -979,7 +979,7 @@ child_socket_connection(void)
 	(void) sms_push(ST_PEER);
 	s = sms;
 	s->is_transient = True;
-	s->infd = fd;
+	s->infd = accept_fd;
 	s->inhandle = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (s->inhandle == NULL) {
 	    	fprintf(stderr, "Can't create socket handle\n");
@@ -994,7 +994,7 @@ child_socket_connection(void)
 
 	/* Don't accept any more connections on the global listen socket. */
 	RemoveInput(old_sms->listen_id);
-	old_sms->listen_id = 0L;
+	old_sms->listen_id = NULL_IOID;
 }
 #endif /*]*/
 
@@ -1014,7 +1014,7 @@ cleanup_socket(Boolean b _is_unused)
 #if defined(_WIN32) /*[*/
 /* Process an event on a child script handle (presumably a process exit). */
 static void
-child_exited(void)
+child_exited(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
     	sms_t *s;
 	DWORD status;
@@ -1031,7 +1031,7 @@ child_exited(void)
 			    	CloseHandle(s->child_handle);
 				s->child_handle = INVALID_HANDLE_VALUE;
 				RemoveInput(s->exit_id);
-				s->exit_id = 0;
+				s->exit_id = NULL_IOID;
 				if (s == sms) {
 				    	sms_pop(False);
 					sms_continue();
@@ -1810,7 +1810,7 @@ sms_info(const char *fmt, ...)
 
 /* Process available input from a script. */
 static void
-script_input(void)
+script_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
 	char buf[128];
 	size_t n2r;
@@ -2013,9 +2013,9 @@ sms_continue(void)
 
 		sms->state = SS_IDLE;
 
-		if (sms->wait_id != 0L) {
+		if (sms->wait_id != NULL_IOID) {
 			RemoveTimeOut(sms->wait_id);
-			sms->wait_id = 0L;
+			sms->wait_id = NULL_IOID;
 		}
 
 		switch (sms->type) {
@@ -2911,7 +2911,7 @@ sms_host_output(void)
 	}
 }
 
-/* Return whether error pop-ups and acition output should be short-circuited. */
+/* Return whether error pop-ups and action output should be short-circuited. */
 static sms_t *
 sms_redirect_to(void)
 {
@@ -2923,7 +2923,7 @@ sms_redirect_to(void)
 		     s->state == SS_CONNECT_WAIT ||
 		     s->state == SS_WAIT_OUTPUT ||
 		     s->state == SS_SWAIT_OUTPUT ||
-		     s->wait_id != 0L))
+		     s->wait_id != NULL_IOID))
 			return s;
 	}
 	return NULL;
@@ -3076,7 +3076,7 @@ sms_store(unsigned char c)
 	/* If a script or macro is waiting to match a string, check now. */
 	if (sms->state == SS_EXPECTING && expect_matches()) {
 		RemoveTimeOut(sms->expect_id);
-		sms->expect_id = 0L;
+		sms->expect_id = NULL_IOID;
 		sms->state = SS_INCOMPLETE;
 		sms_continue();
 	}
@@ -3233,7 +3233,7 @@ expect_timed_out(void)
 	Free(expect_text);
 	expect_text = CN;
 	popup_an_error("%s: Timed out", action_name(Expect_action));
-	sms->expect_id = 0L;
+	sms->expect_id = NULL_IOID;
 	sms->state = SS_INCOMPLETE;
 	sms->success = False;
 	if (sms->is_login)
@@ -3257,7 +3257,7 @@ wait_timed_out(void)
 	popup_an_error("%s: Timed out", action_name(Wait_action));
 
 	/* Forget the ID. */
-	sms->wait_id = 0L;
+	sms->wait_id = NULL_IOID;
 
 	/* If this is a login macro, it has failed. */
 	if (sms->is_login)
@@ -3573,11 +3573,12 @@ Script_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	 * Note that this is an asynchronous event -- exits for multiple
 	 * children can happen in any order.
 	 */
-	sms->exit_id = AddInput((int)process_information.hProcess,
-			    child_exited);
+	sms->exit_id = AddInput((unsigned long)process_information.hProcess,
+		child_exited);
 
 	/* Allow the child script to connect back to us. */
-	sms->listen_id = AddInput((int)hevent, child_socket_connection);
+	sms->listen_id = AddInput((unsigned long)hevent,
+		child_socket_connection);
 
 	/* Enable input. */
 	script_enable();
@@ -3743,14 +3744,14 @@ Query_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 static void
 no_plugin(void)
 {
-	if (plugin_timeout_id != 0L) {
+	if (plugin_timeout_id != NULL_IOID) {
 		RemoveTimeOut(plugin_timeout_id);
-		plugin_timeout_id = 0L;
+		plugin_timeout_id = NULL_IOID;
 	}
 
-	if (plugin_input_id != 0L) {
+	if (plugin_input_id != NULL_IOID) {
 		RemoveInput(plugin_input_id);
-		plugin_input_id = 0L;
+		plugin_input_id = NULL_IOID;
 	}
 
 	if (plugin_inpipe != -1) {
@@ -3771,7 +3772,7 @@ no_plugin(void)
 
 /* Read a response from the plugin process. */
 static void
-plugin_input(void)
+plugin_input(unsigned long fd _is_inused, ioid_t id _is_unused)
 {
 	int nr;
 	char *nl;
@@ -3840,9 +3841,9 @@ plugin_input(void)
 		ptq_first = (ptq_first + 1) % PLUGIN_QMAX;
 		if (ptq_first == ptq_last) {
 			RemoveInput(plugin_input_id);
-			plugin_input_id = 0L;
+			plugin_input_id = NULL_IOID;
 			RemoveTimeOut(plugin_timeout_id);
-			plugin_timeout_id = 0L;
+			plugin_timeout_id = NULL_IOID;
 		}
 
 		xtra = (plugin_buf + prb_cnt + nr - 1) - nl;
@@ -3891,7 +3892,7 @@ plugin_timeout(void)
 				"Plugin %s timed out", s);
 	}
 
-	plugin_timeout_id = 0L;
+	plugin_timeout_id = NULL_IOID;
 	no_plugin();
 }
 
@@ -4089,9 +4090,9 @@ Plugin_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 		do_read_buffer(NULL, 0, ea_buf, plugin_outpipe);
 		plugin_tq[ptq_last] = PLUGIN_CMD;
 		ptq_last = (ptq_last + 1) % PLUGIN_QMAX;
-		if (plugin_timeout_id != 0L)
+		if (plugin_timeout_id != NULL_IOID)
 			RemoveTimeOut(plugin_timeout_id);
-		if (plugin_input_id == 0L)
+		if (plugin_input_id == NULL_IOID)
 			plugin_input_id = AddInput(plugin_inpipe,
 					plugin_input);
 		s = PLUGIN_BACKLOG * PLUGINWAIT_SECS;
@@ -4135,9 +4136,9 @@ plugin_aid(unsigned char aid)
 	 */
 	plugin_tq[ptq_last] = PLUGIN_AID;
 	ptq_last = (ptq_last + 1) % PLUGIN_QMAX;
-	if (plugin_timeout_id != 0L)
+	if (plugin_timeout_id != NULL_IOID)
 		RemoveTimeOut(plugin_timeout_id);
-	if (plugin_input_id == 0L)
+	if (plugin_input_id == NULL_IOID)
 		plugin_input_id = AddInput(plugin_inpipe, plugin_input);
 	s = PLUGIN_BACKLOG * PLUGINWAIT_SECS;
 	if (!plugin_started && s < PLUGINSTART_SECS)

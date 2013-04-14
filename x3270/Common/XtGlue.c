@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, Paul Mattes.
+ * Copyright (c) 1999-2009, 2013 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
 #include "globals.h"
 #include "appres.h"
 #include "trace_dsc.h"
+#include "utilc.h"
 #if defined(_WIN32) /*[*/
 #include "xioc.h"
 #endif /*]*/
@@ -405,7 +406,7 @@ typedef struct timeout {
 #define TN	(timeout_t *)NULL
 static timeout_t *timeouts = TN;
 
-unsigned long
+ioid_t
 AddTimeOut(unsigned long interval_ms, void (*proc)(void))
 {
 	timeout_t *t_new;
@@ -453,11 +454,11 @@ AddTimeOut(unsigned long interval_ms, void (*proc)(void))
 		prev->next = t_new;
 	}
 
-	return (unsigned long)t_new;
+	return (ioid_t)t_new;
 }
 
 void
-RemoveTimeOut(unsigned long timer)
+RemoveTimeOut(ioid_t timer)
 {
 	timeout_t *st = (timeout_t *)timer;
 	timeout_t *t;
@@ -481,15 +482,15 @@ RemoveTimeOut(unsigned long timer)
 /* Input events. */ 
 typedef struct input {  
         struct input *next;
-        int source; 
+        unsigned long source; 
         int condition;
-        void (*proc)(void);
+	iofn_t proc;
 } input_t;          
 static input_t *inputs = (input_t *)NULL;
 static Boolean inputs_changed = False;
 
-unsigned long
-AddInput(int source, void (*fn)(void))
+ioid_t
+AddInput(unsigned long source, iofn_t fn)
 {
 	input_t *ip;
 
@@ -500,11 +501,11 @@ AddInput(int source, void (*fn)(void))
 	ip->next = inputs;
 	inputs = ip;
 	inputs_changed = True;
-	return (unsigned long)ip;
+	return (ioid_t)ip;
 }
 
-unsigned long
-AddExcept(int source, void (*fn)(void))
+ioid_t
+AddExcept(unsigned long source, iofn_t fn)
 {
 #if defined(_WIN32) /*[*/
 	return 0;
@@ -518,13 +519,13 @@ AddExcept(int source, void (*fn)(void))
 	ip->next = inputs;
 	inputs = ip;
 	inputs_changed = True;
-	return (unsigned long)ip;
+	return (ioid_t)ip;
 #endif /*]*/
 }
 
 #if !defined(_WIN32) /*[*/
-unsigned long
-AddOutput(int source, void (*fn)(void))
+ioid_t
+AddOutput(unsigned long source, iofn_t fn)
 {
 	input_t *ip;
 
@@ -535,12 +536,12 @@ AddOutput(int source, void (*fn)(void))
 	ip->next = inputs;
 	inputs = ip;
 	inputs_changed = True;
-	return (unsigned long)ip;
+	return (ioid_t)ip;
 }
 #endif /*]*/
 
 void
-RemoveInput(unsigned long id)
+RemoveInput(ioid_t id)
 {
 	input_t *ip;
 	input_t *prev = (input_t *)NULL;
@@ -749,7 +750,7 @@ process_events(Boolean block)
 #else /*][*/
 		    FD_ISSET(ip->source, &rfds)) {
 #endif /*]*/
-			(*ip->proc)();
+			(*ip->proc)(ip->source, (ioid_t)ip);
 			processed_any = True;
 			if (inputs_changed)
 				goto retry;
@@ -757,14 +758,14 @@ process_events(Boolean block)
 #if !defined(_WIN32) /*[*/
 		if (((unsigned long)ip->condition & InputWriteMask) &&
 		    FD_ISSET(ip->source, &wfds)) {
-			(*ip->proc)();
+			(*ip->proc)(ip->source, (ioid_t)ip);
 			processed_any = True;
 			if (inputs_changed)
 				goto retry;
 		}
 		if (((unsigned long)ip->condition & InputExceptMask) &&
 		    FD_ISSET(ip->source, &xfds)) {
-			(*ip->proc)();
+			(*ip->proc)(ip->source, (ioid_t)ip);
 			processed_any = True;
 			if (inputs_changed)
 				goto retry;

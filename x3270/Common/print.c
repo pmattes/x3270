@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2012, Paul Mattes.
+ * Copyright (c) 1994-2013, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -75,17 +75,11 @@
 
 /* Typedefs */
 #if defined(WC3270) /*[*/
-typedef struct {
+typedef struct {		/* Windows screen print context */
 	char *filename;		/* Name of file to print (and unlink) */
 	char *wp;		/* Path of WORDPAD.EXE */
 	char *args;		/* Parameters for Wordpad */
 } wsp_t;
-
-typedef struct _wsh {
-	struct _wsh *next;	/* Next item */
-	HANDLE handle;		/* Handle for thread */
-	unsigned long id;	/* AddInput ID */
-} wsh_t;
 #endif /*]*/
 
 /* Globals */
@@ -100,10 +94,6 @@ static Widget print_text_shell = (Widget)NULL;
 static Widget save_text_shell = (Widget)NULL;
 static Widget print_window_shell = (Widget)NULL;
 char *print_window_command = CN;
-#endif /*]*/
-#if defined(WC3270) /*[*/
-static wsh_t *wsh_list;
-static wsh_t *wsh_last;
 #endif /*]*/
 
 
@@ -909,31 +899,15 @@ print_screen(LPVOID lpParameter)
 #endif /*]*/
 
 /*
- * Close completed thread handles.
- *
- * Since this callback does not take a parameter, we don't know which thread
- * exited, so we have to scan the list and close all of the ones that are done.
+ * Close a completed thread handle.
  */
 void
-close_wsh(void)
+close_wsh(unsigned long fd, ioid_t id)
 {
-	wsh_t *wsh, *next, *prev = NULL;
-
-	for (wsh = wsh_list; wsh != NULL; wsh = next) {
-		next = wsh->next;
-		if (WaitForSingleObject(wsh->handle, 0) == WAIT_OBJECT_0) {
-			CloseHandle(wsh->handle);
-			if (prev)
-				prev->next = wsh->next;
-			else
-				wsh_list = wsh->next;
-			if (wsh == wsh_last)
-				wsh_last = prev;
-			RemoveInput(wsh->id);
-			Free(wsh);
-		} else
-			prev = wsh;
-	}
+	CloseHandle((HANDLE)fd);
+	RemoveInput(id);
+	if (appres.do_confirms)
+		popup_an_info("Screen image printed.\n");
 }
 #endif /*]*/
 
@@ -1193,31 +1167,19 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 					    win32_strerror(GetLastError()));
 					Free(w);
 				} else {
-					wsh_t *wsh;
-
-					wsh = Malloc(sizeof(wsh_t));
-					wsh->next = wsh_last;
-					if (wsh_last)
-						wsh_last->next = wsh;
-					else
-						wsh_list = wsh;
-					wsh_last = wsh;
-					wsh->handle = print_thread;
-					wsh->id = AddInput((int)print_thread,
+					/*
+					 * Make sure the handle gets closed
+					 * when the screen printing is done.
+					 */
+					(void) AddInput(
+						(unsigned long)print_thread,
 						close_wsh);
 				}
-#endif /*]*/
-#if 0 /*[*/
-				/*
-				 * Get back mouse events; system() gets rid of
-				 * them.
-				 */
-				screen_fixup();
 #endif /*]*/
 			}
 #if !defined(S3270) /*[*/
 			if (appres.do_confirms)
-				popup_an_info("Screen image printed.\n");
+				popup_an_info("Screen image printing.\n");
 #endif /*]*/
 #endif /*]*/
 		}

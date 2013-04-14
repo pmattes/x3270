@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, Paul Mattes.
+ * Copyright (c) 1993-2013, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -802,7 +802,7 @@ get_resource(const char *name)
 typedef void voidfn(void);
 
 typedef struct iorec {
-	voidfn		*fn;
+	iofn_t 		 fn;
 	XtInputId	 id;
 	struct iorec	*next;
 } iorec_t;
@@ -810,20 +810,20 @@ typedef struct iorec {
 static iorec_t *iorecs = NULL;
 
 static void
-io_fn(XtPointer closure, int *source _is_unused, XtInputId *id)
+io_fn(XtPointer closure, int *source, XtInputId *id)
 {
 	iorec_t *iorec;
 
 	for (iorec = iorecs; iorec != NULL; iorec = iorec->next) {
-	    if (iorec->id == *id) {
-		(*iorec->fn)();
-		break;
-	    }
+		if (iorec->id == *id) {
+			(*iorec->fn)(*source, *id);
+			break;
+		}
 	}
 }
 
-unsigned long
-AddInput(int sock, voidfn *fn)
+ioid_t
+AddInput(unsigned long sock, iofn_t fn)
 {
 	iorec_t *iorec;
 
@@ -838,8 +838,8 @@ AddInput(int sock, voidfn *fn)
 	return iorec->id;
 }
 
-unsigned long
-AddExcept(int sock, voidfn *fn)
+ioid_t
+AddExcept(unsigned long sock, iofn_t fn)
 {
 	iorec_t *iorec;
 
@@ -853,8 +853,8 @@ AddExcept(int sock, voidfn *fn)
 	return iorec->id;
 }
 
-unsigned long
-AddOutput(int sock, voidfn *fn)
+ioid_t
+AddOutput(unsigned long sock, iofn_t fn)
 {
 	iorec_t *iorec;
 
@@ -869,20 +869,20 @@ AddOutput(int sock, voidfn *fn)
 }
 
 void
-RemoveInput(unsigned long cookie)
+RemoveInput(ioid_t cookie)
 {
 	iorec_t *iorec;
 	iorec_t *prev = NULL;
 
 	for (iorec = iorecs; iorec != NULL; iorec = iorec->next) {
-	    if (iorec->id == (XtInputId)cookie) {
+	    if (iorec->id == cookie) {
 		break;
 	    }
 	    prev = iorec;
 	}
 
 	if (iorec != NULL) {
-		XtRemoveInput((XtInputId)cookie);
+		XtRemoveInput(cookie);
 		if (prev != NULL)
 			prev->next = iorec->next;
 		else
@@ -934,7 +934,7 @@ to_fn(XtPointer closure, XtIntervalId *id)
 	}
 }
 
-unsigned long
+ioid_t
 AddTimeOut(unsigned long msec, voidfn *fn)
 {
 	torec_t *torec;
@@ -944,24 +944,24 @@ AddTimeOut(unsigned long msec, voidfn *fn)
 	torec->id = XtAppAddTimeOut(appcontext, msec, to_fn, NULL);
 	torec->next = torecs;
 	torecs = torec;
-	return (unsigned long)torec->id;
+	return torec->id;
 }
 
 void
-RemoveTimeOut(unsigned long cookie)
+RemoveTimeOut(ioid_t cookie)
 {
 	torec_t *torec;
 	torec_t *prev = NULL;
 
 	for (torec = torecs; torec != NULL; torec = torec->next) {
-		if (torec->id == (XtIntervalId)cookie) {
+		if (torec->id == cookie) {
 			break;
 		}
 		prev = torec;
 	}
 
 	if (torec != NULL) {
-		XtRemoveTimeOut((XtIntervalId)cookie);
+		XtRemoveTimeOut(cookie);
 		if (prev != NULL)
 			prev->next = torec->next;
 		else

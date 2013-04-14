@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2013 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *
@@ -48,10 +48,10 @@ extern void net_break(void);
 extern void net_charmode(void);
 extern int net_connect(const char *, char *, Boolean, Boolean *, Boolean *);
 extern void net_disconnect(void);
-extern void net_exception(void);
+extern void net_exception(unsigned long fd, ioid_t id);
 extern int net_getsockname(void *buf, int *len);
 extern void net_hexansi_out(unsigned char *buf, int len);
-extern void net_input(void);
+extern void net_input(unsigned long fd, ioid_t id);
 extern void net_interrupt(void);
 extern void net_linemode(void);
 extern struct ctl_char *net_linemode_chars(void);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2010, Paul Mattes.
+ * Copyright (c) 2000-2010, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -83,16 +83,16 @@ static Widget	lu_shell = (Widget)NULL;
 #endif /*]*/
 static struct pr3o {
 	int fd;			/* file descriptor */
-	unsigned long input_id;	/* input ID */
-	unsigned long timeout_id; /* timeout ID */
+	ioid_t input_id;	/* input ID */
+	ioid_t timeout_id; 	/* timeout ID */
 	int count;		/* input count */
 	char buf[PRINTER_BUF];	/* input buffer */
 } printer_stdout = { -1, 0L, 0L, 0 },
   printer_stderr = { -1, 0L, 0L, 0 };
 
 #if !defined(_WIN32) /*[*/
-static void	printer_output(void);
-static void	printer_error(void);
+static void	printer_output(unsigned long fd, ioid_t id);
+static void	printer_error(unsigned long fd, ioid_t id);
 static void	printer_otimeout(void);
 static void	printer_etimeout(void);
 static void	printer_dump(struct pr3o *p, Boolean is_err, Boolean is_dead);
@@ -598,14 +598,14 @@ printer_data(struct pr3o *p, Boolean is_err)
 
 /* The printer process has some output for us. */
 static void
-printer_output(void)
+printer_output(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
 	printer_data(&printer_stdout, False);
 }
 
 /* The printer process has some error output for us. */
 static void
-printer_error(void)
+printer_error(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
 	printer_data(&printer_stderr, True);
 }

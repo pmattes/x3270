@@ -169,7 +169,7 @@ static int screen_yoffset = 0;	/* Vertical offset to top of screen.
 				   If nonzero (2, actually), menu bar is at the
 				   top of the display. */
 
-static void kybd_input(void);
+static void kybd_input(unsigned long fd, ioid_t id);
 static void kybd_input2(INPUT_RECORD *ir);
 static void draw_oia(void);
 static void status_connect(Boolean ignored);
@@ -1652,7 +1652,7 @@ Win98ReadConsoleInputW(HANDLE h, INPUT_RECORD *ir, DWORD len, DWORD *nr)
 
 /* Keyboard input. */
 static void
-kybd_input(void)
+kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
     	int rc;
 	INPUT_RECORD ir;
@@ -2001,7 +2001,7 @@ screen_resume(void)
 	screen_disp(False);
 	onscreen_valid = FALSE;
 	refresh();
-	input_id = AddInput((int)chandle, kybd_input);
+	input_id = AddInput((unsigned long)chandle, kybd_input);
 
 	if (SetConsoleMode(chandle, ENABLE_PROCESSED_INPUT |
 		    		    ENABLE_MOUSE_INPUT) == 0) {

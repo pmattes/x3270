@@ -358,7 +358,7 @@ static int spc_verify_cert_hostname(X509 *cert, char *hostname);
 #endif /*]*/
 
 #if !defined(_WIN32) /*[*/
-static void output_possible(void);
+static void output_possible(unsigned long fd, ioid_t id);
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
@@ -1041,7 +1041,7 @@ connection_complete(void)
  *	pending, to determine that the connection is complete.
  */
 static void
-output_possible(void)
+output_possible(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
 	sockaddr_46_t sa;
 	socklen_t len = sizeof(sa);
@@ -1114,7 +1114,7 @@ net_disconnect(void)
  *	and calls process_ds to process the 3270 data stream.
  */
 void
-net_input(void)
+net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
 	register unsigned char	*cp;
 	int	nr;
@@ -2482,7 +2482,7 @@ process_eor(void)
  *	Called when there is an exceptional condition on the socket.
  */
 void
-net_exception(void)
+net_exception(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
 #if defined(LOCAL_PROCESS) /*[*/
 	if (local_process) {

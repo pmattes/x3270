@@ -395,3 +395,5 @@ enum keytype { KT_STD, KT_GE };
 #define PT_ON_THE_SPOT		"OnTheSpot"
 #endif /*]*/
 
+/* I/O ID typedef */
+typedef unsigned long ioid_t;
