@@ -62,6 +62,7 @@
 #include <io.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include "w3miscc.h"
 # if defined(WC3270) /*[*/
 #  include <screenc.h>
 # endif /*]*/
@@ -78,12 +79,20 @@ Boolean ptc_changed = FALSE;
 #endif /*]*/
 
 /* Statics */
-
 #if defined(X3270_DISPLAY) /*[*/
 static Widget print_text_shell = (Widget)NULL;
 static Widget save_text_shell = (Widget)NULL;
 static Widget print_window_shell = (Widget)NULL;
 char *print_window_command = CN;
+#endif /*]*/
+
+/* Typedefs */
+#if defined(WC3270) /*[*/
+typedef struct {
+    char *filename;	/* Name of file to print */
+    char *cmd;		/* Path to WORDPAD.EXE */
+    char *argv[5];	/* WORDPAD arguments */
+} wsp_t;
 #endif /*]*/
 
 
@@ -758,14 +767,16 @@ win_mkstemp(char **path, ptype_t ptype)
 {
 	char *s;
 	int fd;
+	static unsigned gen = 0;
 
 	s = getenv("TEMP");
 	if (s == NULL)
 		s = getenv("TMP");
 	if (s == NULL)
 		s = "C:";
-	*path = xs_buffer("%s\\x3h%u.%s", s, getpid(),
+	*path = xs_buffer("%s\\x3h%u-%u.%s", s, getpid(), gen,
 			    (ptype == P_RTF)? "rtf": "txt");
+	gen = (gen + 1) % 1000;
 	fd = open(*path, O_CREAT | O_RDWR, S_IREAD | S_IWRITE);
 	if (fd < 0) {
 	    Free(*path);
@@ -846,6 +857,31 @@ find_wordpad(void)
 	}
 	return wp;
 }
+
+#if defined(WC3270) /*[*/
+static DWORD WINAPI
+print_screen(LPVOID lpParameter)
+{
+	wsp_t *w = (wsp_t *)lpParameter;
+
+	/* Run the command and wait for it to complete. */
+	(void) _spawnvp(_P_WAIT, w->cmd, (const char * const *)w->argv);
+
+	/* Unlink the temporary file. */
+	(void) unlink(w->filename);
+
+	/*
+	 * Free the memory.
+	 * This is a bit scary, but I believe it's thread-safe.
+	 * If not, I'll just leak the memory.
+	 */
+	Free(w);
+
+	/* No more need for the thread. */
+	ExitThread(0);
+	return 0;
+}
+#endif /*]*/
 #endif /*]*/
 
 /* Print or save the contents of the screen as text. */
@@ -1059,20 +1095,70 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 				popup_an_error("%s: Can't find WORDPAD.EXE",
 					action_name(PrintText_action));
 			} else {
+#if defined(S3270) /*[*/
+			    	/* Do it synchrously. */
 				char *cmd;
 
 				if (filter != CN)
-				    cmd = xs_buffer("start /wait /min %s "
-					    	    "/pt \"%s\" \"%s\"",
-						    wp, temp_name, filter);
+					cmd = xs_buffer("start /wait /min %s "
+							"/pt \"%s\" \"%s\"",
+							wp, temp_name, filter);
 				else
-				    cmd = xs_buffer("start /wait /min %s "
-					    	    "/p \"%s\"",
-						    wp, temp_name);
+					cmd = xs_buffer("start /wait /min %s "
+							"/p \"%s\"",
+							wp, temp_name);
 				system(cmd);
 				Free(cmd);
+#else /*][*/
+			    	/* Do it asynchronously. */
+				wsp_t *w;
+				HANDLE print_thread;
 
-#if !defined(S3270) /*[*/
+				if (filter != CN) {
+					w = Malloc(sizeof(wsp_t) +
+						strlen(temp_name) + 1 +
+						strlen(temp_name) + 1 +
+						strlen(filter) + 1);
+					w->filename = (char *)(w + 1);
+					strcpy(w->filename, temp_name);
+					w->cmd = wp;
+					w->argv[0] = wp;
+					w->argv[1] = "/pt";
+					w->argv[2] = w->filename +
+					    strlen(temp_name) + 1;
+					strcpy(w->argv[2], temp_name);
+					w->argv[3] = w->argv[2] +
+					    strlen(w->argv[2]) + 1;
+					strcpy(w->argv[3], filter);
+					w->argv[4] = NULL;
+				} else {
+					w = Malloc(sizeof(wsp_t) +
+						strlen(temp_name) + 1 +
+						strlen(temp_name) + 1);
+					w->filename = (char *)(w + 1);
+					strcpy(w->filename, temp_name);
+					w->cmd = wp;
+					w->argv[0] = wp;
+					w->argv[1] = "/p";
+					w->argv[2] = w->filename +
+					    strlen(temp_name) + 1;
+					strcpy(w->argv[2], temp_name);
+					w->argv[3] = NULL;
+				}
+				print_thread = CreateThread(NULL,
+							    0,
+							    print_screen,
+							    w,
+							    0,
+							    NULL);
+				if (print_thread == NULL) {
+					popup_an_error("Cannot create printing "
+					    "thread: %s\n",
+					    win32_strerror(GetLastError()));
+					Free(w);
+				}
+#endif /*]*/
+#if 0 /*[*/
 				/*
 				 * Get back mouse events; system() gets rid of
 				 * them.
@@ -1086,10 +1172,12 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 #endif /*]*/
 #endif /*]*/
 		}
+#if !defined(WC3270) /*[*/
 		if (temp_name) {
 		    	unlink(temp_name);
 			Free(temp_name);
 		}
+#endif /*]*/
 		return;
 	}
 
