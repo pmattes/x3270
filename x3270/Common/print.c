@@ -59,6 +59,7 @@
 
 #if defined(_WIN32) /*[*/
 #include <windows.h>
+#include <shellapi.h>
 #include <io.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -89,9 +90,9 @@ char *print_window_command = CN;
 /* Typedefs */
 #if defined(WC3270) /*[*/
 typedef struct {
-    char *filename;	/* Name of file to print */
-    char *cmd;		/* Path to WORDPAD.EXE */
-    char *argv[5];	/* WORDPAD arguments */
+    char *filename;	/* Name of file to print (and unlink) */
+    char *wp;		/* Path of WORDPAD.EXE */
+    char *args;		/* Parameters for wordpad */
 } wsp_t;
 #endif /*]*/
 
@@ -863,9 +864,21 @@ static DWORD WINAPI
 print_screen(LPVOID lpParameter)
 {
 	wsp_t *w = (wsp_t *)lpParameter;
+	SHELLEXECUTEINFO info;
 
 	/* Run the command and wait for it to complete. */
-	(void) _spawnvp(_P_WAIT, w->cmd, (const char * const *)w->argv);
+	memset(&info, '\0', sizeof(info));
+	(void) ShellExecuteEx(&info);
+	info.cbSize = sizeof(info);
+	info.fMask = SEE_MASK_NOCLOSEPROCESS;
+	info.lpFile = w->wp;
+	info.lpParameters = w->args;
+	info.nShow = SW_MINIMIZE;
+	(void) ShellExecuteEx(&info);
+	if (info.hProcess) {
+		WaitForSingleObject(info.hProcess, INFINITE);
+		CloseHandle(info.hProcess);
+	}
 
 	/* Unlink the temporary file. */
 	(void) unlink(w->filename);
@@ -875,6 +888,7 @@ print_screen(LPVOID lpParameter)
 	 * This is a bit scary, but I believe it's thread-safe.
 	 * If not, I'll just leak the memory.
 	 */
+	Free(w->args);
 	Free(w);
 
 	/* No more need for the thread. */
@@ -1112,39 +1126,22 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 #else /*][*/
 			    	/* Do it asynchronously. */
 				wsp_t *w;
+				char *args;
 				HANDLE print_thread;
 
-				if (filter != CN) {
-					w = Malloc(sizeof(wsp_t) +
-						strlen(temp_name) + 1 +
-						strlen(temp_name) + 1 +
-						strlen(filter) + 1);
-					w->filename = (char *)(w + 1);
-					strcpy(w->filename, temp_name);
-					w->cmd = wp;
-					w->argv[0] = wp;
-					w->argv[1] = "/pt";
-					w->argv[2] = w->filename +
-					    strlen(temp_name) + 1;
-					strcpy(w->argv[2], temp_name);
-					w->argv[3] = w->argv[2] +
-					    strlen(w->argv[2]) + 1;
-					strcpy(w->argv[3], filter);
-					w->argv[4] = NULL;
-				} else {
-					w = Malloc(sizeof(wsp_t) +
-						strlen(temp_name) + 1 +
-						strlen(temp_name) + 1);
-					w->filename = (char *)(w + 1);
-					strcpy(w->filename, temp_name);
-					w->cmd = wp;
-					w->argv[0] = wp;
-					w->argv[1] = "/p";
-					w->argv[2] = w->filename +
-					    strlen(temp_name) + 1;
-					strcpy(w->argv[2], temp_name);
-					w->argv[3] = NULL;
-				}
+				if (filter != CN)
+					args = xs_buffer("/pt \"%s\" \"%s\"",
+							temp_name, filter);
+				else
+					args = xs_buffer("/p \"%s\"",
+							temp_name);
+
+				w = Malloc(sizeof(wsp_t) +
+					strlen(temp_name) + 1);
+				w->filename = (char *)(w + 1);
+				strcpy(w->filename, temp_name);
+				w->wp = wp;
+				w->args = args;
 				print_thread = CreateThread(NULL,
 							    0,
 							    print_screen,
