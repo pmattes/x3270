@@ -594,7 +594,7 @@ host_connect(const char *n)
 	}
 
 	/* Save in a modifiable buffer. */
-	(void) strcpy(nb, n);
+	(void) snprintf(nb, sizeof(nb), "%s", n);
 
 	/* Strip trailing blanks. */
 	s = nb + strlen(nb) - 1;
