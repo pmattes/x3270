@@ -97,6 +97,8 @@
 #define SOCK_CLOSE(s)	close(s)
 #endif /*[*/
 
+#define MSC_BUF	1024
+
 /* Externals */
 extern int      linemode;
 
@@ -107,8 +109,8 @@ Boolean		macro_output = False;
 /* Statics */
 typedef struct sms {
 	struct sms *next;	/* next sms on the stack */
-	char	msc[1024];	/* input buffer */
-	int	msc_len;	/* length of input buffer */
+	char	msc[MSC_BUF];	/* input buffer */
+	size_t	msc_len;	/* length of input buffer */
 	char   *dptr;		/* data pointer (macros only) */
 	enum sms_state {
 		SS_IDLE,	/* no command active (scripts only) */
@@ -1065,7 +1067,7 @@ execute_command(enum iaction cause, char *s, char **np)
 	} state = ME_GND;
 	char c;
 	char aname[64+1];
-	char parm[1024+1];
+	char parm[MSC_BUF+1];
 	int nx = 0;
 	Cardinal count = 0;
 	String params[64];
@@ -1165,17 +1167,17 @@ execute_command(enum iaction cause, char *s, char **np)
 			params[++count] = &parm[nx];
 			state = ME_LPAREN;
 		} else {
-			if (nx < 1024)
+			if (nx < MSC_BUF)
 				parm[nx++] = c;
 		}
 		break;
 	    case ME_P_BSL:
-		if (c == 'n' && nx < 1024)
+		if (c == 'n' && nx < MSC_BUF)
 			parm[nx++] = '\n';
 		else {
-			if (c != '"' && nx < 1024)
+			if (c != '"' && nx < MSC_BUF)
 				parm[nx++] = '\\';
-			if (nx < 1024)
+			if (nx < MSC_BUF)
 				parm[nx++] = c;
 		}
 		state = ME_P_QPARM;
@@ -1187,7 +1189,7 @@ execute_command(enum iaction cause, char *s, char **np)
 			state = ME_P_PARMx;
 		} else if (c == '\\') {
 			state = ME_P_BSL;
-		} else if (nx < 1024)
+		} else if (nx < MSC_BUF)
 			parm[nx++] = c;
 		break;
 	    case ME_P_PARMx:
@@ -1206,17 +1208,17 @@ execute_command(enum iaction cause, char *s, char **np)
 			params[++count] = &parm[nx];
 			state = ME_S_PARMx;
 		} else {
-			if (nx < 1024)
+			if (nx < MSC_BUF)
 				parm[nx++] = c;
 		}
 		break;
 	    case ME_S_BSL:
-		if (c == 'n' && nx < 1024)
+		if (c == 'n' && nx < MSC_BUF)
 			parm[nx++] = '\n';
 		else {
-			if (c != '"' && nx < 1024)
+			if (c != '"' && nx < MSC_BUF)
 				parm[nx++] = '\\';
-			if (nx < 1024)
+			if (nx < MSC_BUF)
 				parm[nx++] = c;
 		}
 		state = ME_S_QPARM;
@@ -1228,7 +1230,7 @@ execute_command(enum iaction cause, char *s, char **np)
 			state = ME_S_PARMx;
 		} else if (c == '\\') {
 			state = ME_S_BSL;
-		} else if (nx < 1024)
+		} else if (nx < MSC_BUF)
 			parm[nx++] = c;
 		break;
 	    case ME_S_PARMx:
@@ -1471,11 +1473,8 @@ push_xmacro(enum sms_type type, char *s, Boolean is_login)
 	macro_output = False;
 	if (!sms_push(type))
 		return;
-	(void) strncpy(sms->msc, s, 1023);
-	sms->msc[1023] = '\0';
-	sms->msc_len = strlen(s);
-	if (sms->msc_len > 1023)
-		sms->msc_len = 1023;
+	(void) snprintf(sms->msc, MSC_BUF, "%s", s);
+	sms->msc_len = strlen(sms->msc);
 	if (is_login) {
 		sms->state = SS_WAIT_IFIELD;
 		sms->is_login = True;
@@ -1518,11 +1517,8 @@ push_string(char *s, Boolean is_login, Boolean is_hex)
 {
 	if (!sms_push(ST_STRING))
 		return;
-	(void) strncpy(sms->msc, s, 1023);
-	sms->msc[1023] = '\0';
-	sms->msc_len = strlen(s);
-	if (sms->msc_len > 1023)
-		sms->msc_len = 1023;
+	(void) snprintf(sms->msc, MSC_BUF, "%s", s);
+	sms->msc_len = strlen(sms->msc);
 	if (is_login) {
 		sms->state = SS_WAIT_IFIELD;
 		sms->is_login = True;
@@ -1594,7 +1590,7 @@ run_script(void)
 
 	for (;;) {
 		char *ptr;
-		int cmd_len;
+		size_t cmd_len;
 		char *cmd;
 		sms_t *s;
 		enum em_stat es;
@@ -1634,6 +1630,7 @@ run_script(void)
 		if (cmd_len < s->msc_len) {
 			s->msc_len -= cmd_len;
 			(void) memmove(s->msc, ptr, s->msc_len);
+			s->msc[s->msc_len] = '\0';
 		} else
 			s->msc_len = 0;
 
@@ -1816,7 +1813,8 @@ static void
 script_input(void)
 {
 	char buf[128];
-	int nr;
+	size_t n2r;
+	ssize_t nr;
 	char *ptr;
 	char c;
 
@@ -1826,8 +1824,11 @@ script_input(void)
 		sms->infd);
 
 	/* Read in what you can. */
+	n2r = MSC_BUF - 1 - sms->msc_len;
+	if (n2r > sizeof(buf))
+		n2r = sizeof(buf);
 	if (sms->is_socket)
-		nr = recv(sms->infd, buf, sizeof(buf), 0);
+		nr = recv(sms->infd, buf, n2r, 0);
 #if defined(_WIN32) /*[*/
 	else if (sms->inhandle == peer_done_event) {
 	    	nr = peer_nr;
@@ -1839,7 +1840,7 @@ script_input(void)
 	}
 #endif /*]*/
 	else
-		nr = read(sms->infd, buf, sizeof(buf));
+		nr = read(sms->infd, buf, n2r);
 	if (nr < 0) {
 #if defined(_WIN32) /*[*/
 	    	if (sms->is_socket)
@@ -1850,20 +1851,35 @@ script_input(void)
 		popup_an_errno(errno, "%s[%d] read", ST_NAME, sms_depth);
 		return;
 	}
-	trace_dsn("Input for %s[%d] %s complete nr=%d\n", ST_NAME, sms_depth,
-		sms_state_name[sms->state], nr);
+	trace_dsn("Input for %s[%d] %s complete, nr=%d\n", ST_NAME, sms_depth,
+		sms_state_name[sms->state], (int)nr);
 	if (nr == 0) {	/* end of file */
 		trace_dsn("EOF %s[%d]\n", ST_NAME, sms_depth);
+		if (sms->msc_len)
+			popup_an_error("%s[%d]: missing newline",
+				ST_NAME, sms_depth);
 		sms_pop(True);
 		sms_continue();
 		return;
 	}
 
-	/* Append to the pending command, ignoring returns. */
+	/* Append to the pending command, stripping carriage returns. */
 	ptr = buf;
 	while (nr--)
 		if ((c = *ptr++) != '\r')
 			sms->msc[sms->msc_len++] = c;
+	sms->msc[sms->msc_len] = '\0';
+
+	/* Check for buffer overflow. */
+	if (sms->msc_len >= MSC_BUF - 1) {
+		if (strchr(sms->msc, '\n') == NULL) {
+			popup_an_error("%s[%d]: input line too long",
+				ST_NAME, sms_depth);
+			sms_pop(True);
+			sms_continue();
+			return;
+		}
+	}
 
 	/* Run the command(s). */
 	sms->state = SS_INCOMPLETE;
@@ -2514,7 +2530,7 @@ status_string(void)
 	} else
 		em_mode = 'N';
 
-	(void) sprintf(s,
+	(void) snprintf(s, sizeof(s),
 	    "%c %c %c %s %c %d %d %d %d %d 0x%lx",
 	    kb_stat,
 	    fmt_stat,
