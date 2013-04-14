@@ -7,14 +7,16 @@
   a single ws3270 .exe file; they each find the OpenSSL DLLs automatically if
   they are installed.
 </ul>
-<h2>Changes in version 3.3.12ga12, 5. October 2012</h2>
+<h2>Changes in version 3.3.12ga12, 1. March 2013</h2>
 <ul>
-  <li>[<i>x3270</i>] On the <b>Connect</b> menu, made the recent host list a
-   pull-right sub-menu, if there is an ibm_hosts file in use.</li>
-  <li>[<i>x3270</i>] The <b>-trace</b> option now implies event tracing as well.
-   </li>
-  <li>[<i>x3270</i>] Spaces are now allowed in the file transfer dialog local
-   file name.</li>
+ <li>[All] Added logic to verify the name in the host certificate.</li>
+ <li>[All] Pass all SSL-related parameters to the pr3287 session.</li>
+ <li>[<i>x3270</i>] On the <b>Connect</b> menu, made the recent host list a
+  pull-right sub-menu, if there is an ibm_hosts file in use.</li>
+ <li>[<i>x3270</i>] The <b>-trace</b> option now implies event tracing as well.
+  </li>
+ <li>[<i>x3270</i>] Spaces are now allowed in the file transfer dialog local
+  file name.</li>
  <li>[all] Corrected issues when invalid Unicode characters are encountered
   during a file transfer.</li>
  <li>[<i>x3270</i>, <i>wc3270</i>] Corrected a crash when tracing without a
@@ -39,12 +41,12 @@
 </ul>
 <h2>Changes in version 3.3.12ga10, 8. July 2012</h2>
 <ul>
- <li>[all] Turned off SSL host cerfication and Added a <b>verifyHostCert</b>
-  resource and <b>-verifycert</b> option to enable it.
+ <li>[all] Turned off automatic SSL host cerfication and added a
+  <b>verifyHostCert</b> resource and <b>-verifycert</b> option to enable it.
  <li>[<i>wc3270</i>] Improved behavior when SSL negotiation fails.</li>
  <li>[<i>x3270, c3270, wc3270</i>] Changed the 'secure' icon to green when
   SSL/TLS is active and the host is verified, and yellow when SSL/TLS is
-  active but the host is unverified.</li>
+  active but the host certificate is unverified.</li>
  <li>[<i>c3270</i>] Added a <b>defaultFgBg</b> resource and <b>-defaultfgbg</b>
   option to use the terminal's default foreground and background colors in
   place of the curses colors <b>white</b> and <b>black</b> respectively -- if

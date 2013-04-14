@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2012, Paul Mattes.
+ * Copyright (c) 1995-2013, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -238,6 +238,7 @@
 #define DotScripted		"." ResScripted
 #define DotScriptPort		"." ResScriptPort
 #define DotScrollBar		"." ResScrollBar
+#define DotSelfSignedOk		"." ResSelfSignedOk
 #define DotSocket		"." ResSocket
 #define DotTermName		"." ResTermName
 #define DotTitle		"." ResTitle
@@ -426,6 +427,7 @@
 #define OptReverseVideo		"-rv"
 #define OptSaveLines		"-sl"
 #define OptSecure		"-secure"
+#define OptSelfSignedOk		"-selfsignedok"
 #define OptScripted		"-script"
 #define OptScriptPort		"-scriptport"
 #define OptScrollBar		"-sb"

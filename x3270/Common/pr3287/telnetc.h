@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2013, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
 /* Output buffer. */
 extern unsigned char *obuf, *obptr;
 
-extern int negotiate(int s, char *lu, char *assoc);
+extern int negotiate(const char *host, int s, char *lu, char *assoc);
 extern Boolean net_add_dummy_tn3270e(void);
 extern void net_add_eor(unsigned char *buf, int len);
 extern void net_disconnect(void);

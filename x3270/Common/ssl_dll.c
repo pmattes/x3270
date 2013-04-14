@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Paul Mattes.
+ * Copyright (c) 2012, 2013 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -47,10 +47,13 @@ const char *ssl_fail_reason = NULL;
 
 /* Enumeration for each function type. */
 typedef enum {
-    T_ERR_error_string = 0,
+    T_ASN1_STRING_to_UTF8 = 0,
+    T_CRYPTO_free,
+    T_ERR_error_string,
     T_ERR_get_error,
     T_SSLv23_method,
     T_SSL_connect,
+    T_SSL_get_peer_certificate,
     T_SSL_CTX_check_private_key,
     T_SSL_CTX_ctrl,
     T_SSL_CTX_free,
@@ -75,17 +78,26 @@ typedef enum {
     T_SSL_state_string,
     T_SSL_state_string_long,
     T_SSL_write,
+    T_X509_NAME_get_text_by_NID,
     T_X509_STORE_CTX_get_error,
+    T_X509_free,
+    T_X509_get_ext_d2i,
+    T_X509_get_subject_name,
     T_X509_verify_cert_error_string,
+    T_sk_num,
+    T_sk_value,
     NUM_DLL_FUNCS
 } ssl_dll_t;
 
 /* DLL function names. */
 static const char *ssl_dll_name[NUM_DLL_FUNCS] = {
+    "ASN1_STRING_to_UTF8",
+    "CRYPTO_free",
     "ERR_error_string",
     "ERR_get_error",
     "SSLv23_method",
     "SSL_connect",
+    "SSL_get_peer_certificate",
     "SSL_CTX_check_private_key",
     "SSL_CTX_ctrl",
     "SSL_CTX_free",
@@ -110,15 +122,24 @@ static const char *ssl_dll_name[NUM_DLL_FUNCS] = {
     "SSL_state_string",
     "SSL_state_string_long",
     "SSL_write",
+    "X509_NAME_get_text_by_NID",
     "X509_STORE_CTX_get_error",
-    "X509_verify_cert_error_string"
+    "X509_free",
+    "X509_get_ext_d2i",
+    "X509_get_subject_name",
+    "X509_verify_cert_error_string",
+    "sk_num",
+    "sk_value"
 };
 
 /* Function prototypes. */
+typedef int (*ASN1_STRING_to_UTF8_t)(unsigned char **out, ASN1_STRING *in);
+typedef void (*CRYPTO_free_t)(void *);
 typedef char *(*ERR_error_string_t)(unsigned long e, char *buf);
 typedef unsigned long (*ERR_get_error_t)(void);
 typedef const SSL_METHOD *(*SSLv23_method_t)(void);
 typedef int (*SSL_connect_t)(SSL *ssl);
+typedef X509 *(*SSL_get_peer_certificate_t)(const SSL *ssl);
 typedef int (*SSL_CTX_check_private_key_t)(const SSL_CTX *ctx);
 typedef long (*SSL_CTX_ctrl_t)(SSL_CTX *ctx, int cmd, long larg, void *parg);
 typedef void (*SSL_CTX_free_t)(SSL_CTX *ctx);
@@ -150,8 +171,15 @@ typedef int (*SSL_shutdown_t)(SSL *s);
 typedef const char *(*SSL_state_string_t)(const SSL *s);
 typedef const char *(*SSL_state_string_long_t)(const SSL *s);
 typedef int  (*SSL_write_t)(SSL *ssl,const void *buf,int num);
+typedef int (*X509_NAME_get_text_by_NID_t)(X509_NAME *name, int nid,
+	char *buf, int len);
 typedef int (*X509_STORE_CTX_get_error_t)(X509_STORE_CTX *ctx);
+typedef void (*X509_free_t)(X509 *a);
+typedef void *(*X509_get_ext_d2i_t)(X509 *x, int nid, int *crit, int *idx);
+typedef X509_NAME *(*X509_get_subject_name_t)(X509 *a);
 typedef const char *(*X509_verify_cert_error_string_t)(long n);
+typedef int (*sk_num_t)(const _STACK *);
+typedef void *(*sk_value_t)(const _STACK *, int);
 
 /* DLL handles. */
 static HMODULE ssleay32_handle = NULL;
@@ -240,6 +268,21 @@ ssl_dll_init(void)
 
 /* OpenSSL functions used by wc370/ws3270/wpr3287. */
 
+int
+ASN1_STRING_to_UTF8(unsigned char **out, ASN1_STRING *in)
+{
+	REQUIRE_INIT;
+	return ((ASN1_STRING_to_UTF8_t)
+		ssl_dll_func[T_ASN1_STRING_to_UTF8])(out, in);
+}
+
+void
+CRYPTO_free(void *p)
+{
+	REQUIRE_INIT;
+	return ((CRYPTO_free_t)ssl_dll_func[T_CRYPTO_free])(p);
+}
+
 char *
 ERR_error_string(unsigned long e, char *buf)
 {
@@ -266,6 +309,14 @@ SSL_connect(SSL *ssl)
 {
 	REQUIRE_INIT;
 	return ((SSL_connect_t)ssl_dll_func[T_SSL_connect])(ssl);
+}
+
+X509 *
+SSL_get_peer_certificate(const SSL *ssl)
+{
+	REQUIRE_INIT;
+	return ((SSL_get_peer_certificate_t)
+		ssl_dll_func[T_SSL_get_peer_certificate])(ssl);
 }
 
 int
@@ -451,11 +502,43 @@ SSL_write(SSL *ssl, const void *buf, int num)
 }
 
 int
+X509_NAME_get_text_by_NID(X509_NAME *name, int nid, char *buf, int len)
+{
+	REQUIRE_INIT;
+	return ((X509_NAME_get_text_by_NID_t)
+		ssl_dll_func[T_X509_NAME_get_text_by_NID])(name, nid, buf,
+		    len);
+}
+
+int
 X509_STORE_CTX_get_error(X509_STORE_CTX *ctx)
 {
 	REQUIRE_INIT;
 	return ((X509_STORE_CTX_get_error_t)
 		ssl_dll_func[T_X509_STORE_CTX_get_error])(ctx);
+}
+
+void
+X509_free(X509 *a)
+{
+	REQUIRE_INIT;
+	return ((X509_free_t)ssl_dll_func[T_X509_free])(a);
+}
+
+void *
+X509_get_ext_d2i(X509 *x, int nid, int *crit, int *idx)
+{
+	REQUIRE_INIT;
+	return ((X509_get_ext_d2i_t)
+		ssl_dll_func[T_X509_get_ext_d2i])(x, nid, crit, idx);
+}
+
+X509_NAME *
+X509_get_subject_name(X509 *a)
+{
+	REQUIRE_INIT;
+	return ((X509_get_subject_name_t)
+		ssl_dll_func[T_X509_get_subject_name])(a);
 }
 
 const char *
@@ -464,6 +547,20 @@ X509_verify_cert_error_string(long n)
 	REQUIRE_INIT;
 	return ((X509_verify_cert_error_string_t)
 		ssl_dll_func[T_X509_verify_cert_error_string])(n);
+}
+
+int
+sk_num(const _STACK *s)
+{
+    	REQUIRE_INIT;
+	return ((sk_num_t)ssl_dll_func[T_sk_num])(s);
+}
+
+void *
+sk_value(const _STACK *s, int i)
+{
+    	REQUIRE_INIT;
+	return ((sk_value_t)ssl_dll_func[T_sk_value])(s, i);
 }
 
 #endif /*]*/

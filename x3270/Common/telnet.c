@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, Paul Mattes.
+ * Copyright (c) 1993-2013, Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -64,6 +64,8 @@
 #endif /*]*/
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <openssl/conf.h>
+#include <openssl/x509v3.h>
 #endif /*]*/
 #include "tn3270e.h"
 #include "3270ds.h"
@@ -352,6 +354,7 @@ extern Boolean any_error_output;
 #endif /*]*/
 static void client_info_callback(INFO_CONST SSL *s, int where, int ret);
 static void continue_tls(unsigned char *sbbuf, int len);
+static int spc_verify_cert_hostname(X509 *cert, char *hostname);
 #endif /*]*/
 
 #if !defined(_WIN32) /*[*/
@@ -815,6 +818,89 @@ setup_lus(void)
 	try_lu = *curr_lu;
 }
 
+#if defined(HAVE_LIBSSL) /*[*/
+/*
+ * Add a reason that the host certificate is unverified.
+ */
+static void
+add_unverified_reason(const char *reason)
+{
+	char **s;
+	int i;
+
+	s = unverified_reasons;
+	unverified_reasons = (char **)Malloc(
+		(n_unverified_reasons + 2) * sizeof(char *));
+	for (i = 0; i < n_unverified_reasons; i++) {
+	    unverified_reasons[i] = s[i];
+	}
+	unverified_reasons[n_unverified_reasons++] = xs_buffer("%s", reason);
+	unverified_reasons[n_unverified_reasons] = CN;
+	Free(s);
+}
+
+/*
+ * Clear the list of reasons the host certificate is unverified.
+ */
+static void
+free_unverified_reasons(void)
+{
+	if (unverified_reasons != NULL) {
+		int i;
+
+		for (i = 0; unverified_reasons[i]; i++) {
+			Free(unverified_reasons[i]);
+		}
+		Free(unverified_reasons);
+		unverified_reasons = NULL;
+	}
+	n_unverified_reasons = 0;
+}
+
+/*
+ * Check the name in the host certificate.
+ *
+ * Returns True if the certificate is okay (or doesn't need to be), False if
+ * the connection should fail because of a bad certificate.
+ */
+static Boolean
+check_cert_name(void)
+{
+	X509 *cert;
+
+	cert = SSL_get_peer_certificate(ssl_con);
+	if (cert == NULL) {
+		if (appres.verify_host_cert) {
+			popup_an_error("No host certificate");
+			return False;
+		} else {
+			secure_unverified = True;
+			trace_dsn("No host certificate.\n");
+			add_unverified_reason("No host certificate");
+			return True;
+		}
+	}
+
+	if (!spc_verify_cert_hostname(cert, hostname)) {
+		X509_free(cert);
+		if (appres.verify_host_cert) {
+			popup_an_error("Host certificate name(s) do not match "
+				"%s", hostname);
+			return False;
+		} else {
+			secure_unverified = True;
+			trace_dsn("Host certificate name(s) do not match "
+				"hostname.\n");
+			add_unverified_reason("Host certificate name(s) do "
+				"not match hostname");
+			return True;
+		}
+	}
+	X509_free(cert);
+	return True;
+}
+#endif /*]*/
+
 static void
 net_connected(void)
 {
@@ -868,7 +954,15 @@ net_connected(void)
 			host_disconnect(True);
 			return;
 		}
+
+		/* Check the host certificate. */
+		if (!check_cert_name()) {
+			host_disconnect(True);
+			return;
+		}
+
 		secure_connection = True;
+
 		trace_dsn("TLS/SSL tunneled connection complete.  "
 			  "Connection is now secure.\n");
 
@@ -976,6 +1070,7 @@ output_possible(void)
 }
 #endif /*]*/
 
+
 /*
  * net_disconnect
  *	Shut down the socket.
@@ -991,16 +1086,7 @@ net_disconnect(void)
 	}
 	secure_connection = False;
 	secure_unverified = False;
-	if (unverified_reasons != NULL) {
-		int i;
-
-		for (i = 0; unverified_reasons[i]; i++) {
-			Free(unverified_reasons[i]);
-		}
-		Free(unverified_reasons);
-		unverified_reasons = NULL;
-	}
-	n_unverified_reasons = 0;
+	free_unverified_reasons();
 #endif /*]*/
 	if (CONNECTED)
 		(void) shutdown(sock, 2);
@@ -4052,28 +4138,136 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 		why_not = "self-signed okay";
 	}
 	if (why_not != CN) {
-	    	char **s;
-		int i;
+	    	char *s;
 
 		trace_dsn("SSL_verify_callback: %s, ignoring '%s' (%d)\n",
 			why_not, X509_verify_cert_error_string(err), err);
 		secure_unverified = True;
-		s = unverified_reasons;
-		unverified_reasons = (char **)Malloc(
-				(n_unverified_reasons + 2) * sizeof(char *));
-		for (i = 0; i < n_unverified_reasons; i++) {
-		    	unverified_reasons[i] = s[i];
-		}
-		unverified_reasons[n_unverified_reasons++] =
-		    xs_buffer("%s (%d)", X509_verify_cert_error_string(err),
-			    err);
-		unverified_reasons[n_unverified_reasons] = CN;
+		s = xs_buffer("%s (%d)", X509_verify_cert_error_string(err),
+			                            err);
+		add_unverified_reason(s);
 		Free(s);
 		return 1;
 	}
 
 	/* Then again, we might. */
 	return 0;
+}
+
+/* Hostname match function. */
+static int
+hostname_matches(const char *hostname, const char *cn, size_t len)
+{
+	/*
+	 * If the name from the certificate contains an embedded NUL, then by
+	 * definition it will not match the hostname.
+	 */
+	if (strlen(cn) < len)
+		return 0;
+
+	/*
+	 * Try a direct comparison.
+	 */
+	if (!strcasecmp(hostname, cn))
+	    	return 1;
+
+	/*
+	 * Try a wild-card comparison.
+	 */
+	if (!strncmp(cn, "*.", 2) &&
+	    strlen(hostname) > strlen(cn + 1) &&
+	    !strcasecmp(hostname + strlen(hostname) - strlen(cn + 1), cn + 1))
+		return 1;
+
+	return 0;
+}
+
+/*
+ * Certificate hostname expansion function.
+ * Mostly, this expands NULs.
+ */
+static char *
+expand_hostname(const char *cn, size_t len)
+{
+	static char buf[1024];
+	int ix = 0;
+
+	if (len > sizeof(buf) / 2 + 1)
+		len = sizeof(buf) / 2 + 1;
+
+	while (len--) {
+		char c = *cn++;
+
+		if (c)
+		    	buf[ix++] = c;
+		else {
+		    	buf[ix++] = '\\';
+		    	buf[ix++] = '0';
+		}
+	}
+	buf[ix] = '\0';
+
+	return buf;
+}
+
+/* Hostname validation function. */
+static int
+spc_verify_cert_hostname(X509 *cert, char *hostname)
+{
+	int ok = 0;
+	X509_NAME *subj;
+	char name[256];
+	GENERAL_NAMES *values;
+	GENERAL_NAME *value;
+	int num_an, i;
+	unsigned char *dns;
+	int len;
+
+	/* Check the common name. */
+	if (!ok &&
+	    (subj = X509_get_subject_name(cert)) &&
+	    (len = X509_NAME_get_text_by_NID(subj, NID_commonName, name,
+		sizeof(name))) > 0) {
+
+		name[sizeof(name) - 1] = '\0';
+		if (hostname_matches(hostname, name, len)) {
+			ok = 1;
+			trace_dsn("SSL_connect: common_name %s matches "
+				"hostname %s\n", name, hostname);
+		} else
+			trace_dsn("SSL_connect: non-matching common name: %s\n",
+				expand_hostname(name, len));
+	}
+
+	/* Check the alternate names. */
+	if (!ok &&
+	    (values = X509_get_ext_d2i(cert, NID_subject_alt_name, 0, 0))) {
+		num_an = sk_GENERAL_NAME_num(values);
+		for (i = 0; i < num_an && !ok; i++) {
+			value = sk_GENERAL_NAME_value(values, i);
+			if (value->type == GEN_DNS) {
+				len = ASN1_STRING_to_UTF8(&dns,
+					value->d.dNSName);
+				if (hostname_matches(hostname, (char *)dns,
+					len)) {
+
+					ok = 1;
+					trace_dsn("SSL_connect: common_name "
+						"%s matches hostname %s\n",
+						name, hostname);
+					OPENSSL_free(dns);
+					break;
+				} else
+					trace_dsn("SSL_connect: non-matching "
+						"alternate name: %s\n",
+						expand_hostname((char *)dns,
+						    len));
+				OPENSSL_free(dns);
+			}
+		}
+	}
+
+	return ok;
 }
 
 /* Create a new OpenSSL connection. */
@@ -4185,9 +4379,26 @@ continue_tls(unsigned char *sbbuf, int len)
 #endif /*]*/
 
 	if (rv != 1) {
-		/* Error already displayed. */
-		trace_dsn("continue_tls: SSL_connect failed\n");
-		net_disconnect();
+		long v;
+
+		v = SSL_get_verify_result(ssl_con);
+		if (v != X509_V_OK)
+			    popup_an_error("Host certificate "
+				"verification failed:\n"
+				"%s (%ld)",
+				X509_verify_cert_error_string(v), v);
+
+		/*
+		 * No need to trace the error, it was already
+		 * displayed.
+		 */
+		host_disconnect(True);
+		return;
+	}
+
+	/* Check the host certificate. */
+	if (!check_cert_name()) {
+		host_disconnect(True);
 		return;
 	}
 

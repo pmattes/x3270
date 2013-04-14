@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2013, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -71,6 +71,8 @@
 #endif /*]*/
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <openssl/conf.h>
+#include <openssl/x509v3.h>
 #endif /*]*/
 #include "tn3270e.h"
 
@@ -97,6 +99,9 @@ extern char *chain_file;
 extern char *key_file;
 extern char *key_file_type;
 extern char *key_passwd;
+extern int self_signed_ok;
+extern int verify_cert;
+static Boolean check_cert_name(const char *host);
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
@@ -129,6 +134,7 @@ enum cstate cstate = NOT_CONNECTED;
 
 static char *connected_lu = NULL;
 static char *connected_type = NULL;
+static char *hostname = NULL;
 
 #define BUFSZ		4096
 
@@ -262,6 +268,7 @@ const char *neg_type[4] = { "COMMAND-REJECT", "INTERVENTION-REQUIRED",
 #if defined(HAVE_LIBSSL) /*[*/
 Boolean ssl_supported = True;
 Boolean secure_connection = False;
+Boolean secure_unverified = False;
 static SSL_CTX *ssl_ctx;
 static SSL *ssl_con;
 static Boolean need_tls_follows = False;
@@ -341,8 +348,13 @@ popup_a_sockerr(char *fmt, ...)
  *	Initialize the connection, and negotiate TN3270 options with the host.
  */
 int
-negotiate(int s, char *lu, char *assoc)
+negotiate(const char *host, int s, char *lu, char *assoc)
 {
+	/* Save the hostname. */
+    	char *h = Malloc(strlen(host) + 1);
+	strcpy(h, host);
+	Replace(hostname, h);
+
 	/* Set options for inline out-of-band data and keepalives. */
 	if (setsockopt(s, SOL_SOCKET, SO_OOBINLINE, (char *)&on,
 		    sizeof(on)) < 0) {
@@ -363,15 +375,31 @@ negotiate(int s, char *lu, char *assoc)
 	/* init ssl */
 #if defined(HAVE_LIBSSL) /*[*/
 	if (ssl_host && !secure_connection) {
+		int rv;
+
 		if (ssl_init() < 0)
 			return -1;
 		SSL_set_fd(ssl_con, s);
-		if (!SSL_connect(ssl_con)) {
-			popup_a_sockerr("SSL_connect failed");
+		rv = SSL_connect(ssl_con);
+		if (rv != 1) {
+			long v;
+
+			v = SSL_get_verify_result(ssl_con);
+			if (v != X509_V_OK)
+				errmsg("Host certificate "
+					"verification failed:\n"
+					"%s (%ld)",
+					X509_verify_cert_error_string(v), v);
 			return -1;
 		}       
+
+		/* Check the host connection. */
+		if (!check_cert_name(host)) {
+			return -1;
+		}
+
 		secure_connection = True;
-		vtrace_str("TLS/DDL tunneled connection complete.  "
+		vtrace_str("TLS/SSL tunneled connection complete.  "
 			   "Connection is now secure.\n");
 	}
 #endif /*]*/
@@ -471,6 +499,7 @@ net_disconnect(void)
 			ssl_con = NULL;
 		}               
 		secure_connection = False;
+		secure_unverified = False;
 #endif /*]*/
 	}
 }
@@ -2099,6 +2128,194 @@ fail:
 	pr3287_exit(1);
 }
 
+/* Verify function. */
+static int
+ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
+{
+	int err;
+	char *why_not = CN;
+
+	/* If OpenSSL thinks it's okay, so do we. */
+	if (preverify_ok)
+		return 1;
+
+	/* Fetch the error. */
+	err = X509_STORE_CTX_get_error(ctx);
+
+	/* We might not care. */
+	if (!verify_cert) {
+		why_not = "not verifying";
+	} else if (self_signed_ok &&
+		(err == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT ||
+		 err == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN)) {
+		why_not = "self-signed okay";
+	}
+	if (why_not != CN) {
+		vtrace_str("SSL_verify_callback: %s, ignoring '%s' (%d)\n",
+			why_not, X509_verify_cert_error_string(err), err);
+		secure_unverified = True;
+		return 1;
+	}
+
+	/* Then again, we might. */
+	return 0;
+}
+
+/* Hostname match function. */
+static int
+hostname_matches(const char *hostname, const char *cn, size_t len)
+{
+	/*
+	 * If the name from the certificate contains an embedded NUL, then by
+	 * definition it will not match the hostname.
+	 */
+	if (strlen(cn) < len)
+		return 0;
+
+	/*
+	 * Try a direct comparison.
+	 */
+	if (!strcasecmp(hostname, cn))
+	    	return 1;
+
+	/*
+	 * Try a wild-card comparison.
+	 */
+	if (!strncmp(cn, "*.", 2) &&
+	    strlen(hostname) > strlen(cn + 1) &&
+	    !strcasecmp(hostname + strlen(hostname) - strlen(cn + 1), cn + 1))
+		return 1;
+
+	return 0;
+}
+
+/*
+ * Certificate hostname expansion function.
+ * Mostly, this expands NULs.
+ */
+static char *
+expand_hostname(const char *cn, size_t len)
+{
+	static char buf[1024];
+	int ix = 0;
+
+	if (len > sizeof(buf) / 2 + 1)
+		len = sizeof(buf) / 2 + 1;
+
+	while (len--) {
+		char c = *cn++;
+
+		if (c)
+		    	buf[ix++] = c;
+		else {
+		    	buf[ix++] = '\\';
+		    	buf[ix++] = '0';
+		}
+	}
+	buf[ix] = '\0';
+
+	return buf;
+}
+
+/* Hostname validation function. */
+static int
+spc_verify_cert_hostname(X509 *cert, const char *hostname)
+{
+	int ok = 0;
+	X509_NAME *subj;
+	char name[256];
+	GENERAL_NAMES *values;
+	GENERAL_NAME *value;
+	int num_an, i;
+	unsigned char *dns;
+	int len;
+
+	/* Check the common name. */
+	if (!ok &&
+	    (subj = X509_get_subject_name(cert)) &&
+	    (len = X509_NAME_get_text_by_NID(subj, NID_commonName, name,
+		sizeof(name))) > 0) {
+
+		name[sizeof(name) - 1] = '\0';
+		if (hostname_matches(hostname, name, len)) {
+			ok = 1;
+			vtrace_str("SSL_connect: common name %s matches "
+				"hostname %s\n", name, hostname);
+		} else
+			vtrace_str("SSL_connect: non-matching common name: "
+				"%s\n", expand_hostname(name, len));
+	}
+
+	/* Check the alternate names. */
+	if (!ok &&
+	    (values = X509_get_ext_d2i(cert, NID_subject_alt_name, 0, 0))) {
+		num_an = sk_GENERAL_NAME_num(values);
+		for (i = 0; i < num_an && !ok; i++) {
+			value = sk_GENERAL_NAME_value(values, i);
+			if (value->type == GEN_DNS) {
+				len = ASN1_STRING_to_UTF8(&dns,
+					value->d.dNSName);
+				if (hostname_matches(hostname, (char *)dns,
+					    len)) {
+					ok = 1;
+					vtrace_str("SSL_connect: common name "
+						"%s matches hostname %s\n",
+						(char *)dns, hostname);
+					OPENSSL_free(dns);
+					break;
+				} else
+					vtrace_str("SSL_connect: non-matching "
+						"alternate name: %s\n",
+						expand_hostname((char *)dns,
+						    len));
+				OPENSSL_free(dns);
+			}
+		}
+	}
+
+	return ok;
+}
+
+/*
+ * Check the name in the host certificate.
+ *
+ * Returns True if the certificate is okay (or doesn't need to be), False if
+ * the connection should fail because of a bad certificate.
+ */
+static Boolean
+check_cert_name(const char *host)
+{
+	X509 *cert;
+
+	cert = SSL_get_peer_certificate(ssl_con);
+	if (cert == NULL) {
+		if (verify_cert) {
+			errmsg("No host certificate");
+			return False;
+		} else {
+			secure_unverified = True;
+			vtrace_str("No host certificate.\n");
+			return True;
+		}
+	}
+
+	if (!spc_verify_cert_hostname(cert, host)) {
+		X509_free(cert);
+		if (verify_cert) {
+			errmsg("Host certificate name(s) do not match "
+				"%s", host);
+			return False;
+		} else {
+			secure_unverified = True;
+			vtrace_str("Host certificate name(s) do not match "
+				"host.\n");
+			return True;
+		}
+	}
+	X509_free(cert);
+	return True;
+}
+
 /* Initialize the OpenSSL library. */
 static int
 ssl_init(void)
@@ -2113,7 +2330,8 @@ ssl_init(void)
 		errmsg("SSL_new failed");
 		return -1;
 	}
-	SSL_set_verify(ssl_con, SSL_VERIFY_PEER, NULL);
+	SSL_set_verify_depth(ssl_con, 64);
+	SSL_set_verify(ssl_con, SSL_VERIFY_PEER, ssl_verify_callback);
 
 	return 0;
 }
@@ -2162,10 +2380,23 @@ continue_tls(unsigned char *sbbuf, int len)
 
 	/* Set up the TLS/SSL connection. */
 	SSL_set_fd(ssl_con, sock);
-	if (!SSL_connect(ssl_con)) {
-		popup_a_sockerr("SSL_connect failed");
+	if (SSL_connect(ssl_con) != 1) {
+	    	long v;
+
+		v = SSL_get_verify_result(ssl_con);
+		if (v != X509_V_OK)
+			errmsg("Host certificate verification failed:\n"
+				"%s (%ld)",
+				X509_verify_cert_error_string(v), v);
+
 		return -1;
 	}
+
+	/* Check the host certificate. */
+	if (!check_cert_name(hostname)) {
+		return -1;
+	}
+
 	secure_connection = True;
 
 	/* Success. */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2010, Paul Mattes.
+ * Copyright (c) 2000-20103, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,8 +30,6 @@
  *
  *	pr3287 [options] [lu[,lu...]@]host[:port]
  *	Options are:
- *	    -dameon
- *		become a daemon after negotiating
  *	    -assoc session
  *		associate with a session (TN3270E only)
  *	    -cadir dir
@@ -45,8 +43,8 @@
  *		use the specified character set
  *          -crlf
  *		expand newlines to CR/LF (POSIX only)
- *          -nocrlf
- *		expand newlines to CR/LF (Windows only)
+ *	    -dameon
+ *		become a daemon after negotiating
  *          -blanklines
  *		display blank lines even if they're empty (formatted LU3)
  *	    -emflush
@@ -62,6 +60,8 @@
  *          -keyfile file
  *          -keyfiletype type
  *          -keypasswd type:text
+ *          -nocrlf
+ *		expand newlines to CR/LF (Windows only)
  *	    -printer "printer name"
  *	        printer to use (default is $PRINTER or system default,
  *	        Windows only)
@@ -71,6 +71,8 @@
  *	    	proxy specification
  *          -reconnect
  *		keep trying to reconnect
+ *	    -selfsignedok
+ *	        allow self-signed host certificates
  *	    -trace
  *		trace data stream to a file
  *          -tracedir dir
@@ -81,6 +83,8 @@
  *          	file of transparent data to send after jobs
  *          -v
  *              display version information and exit
+ *          -verifycert
+ *          	verify host certificates for SSL or SSL/TLS connections
  *          -V
  *		verbose output about negotiation
  */
@@ -170,6 +174,8 @@ char *chain_file;
 char *key_file;
 char *key_file_type;
 char *key_passwd;
+int self_signed_ok = 0;
+int verify_cert = 0;
 #endif /*]*/
 
 /* User options. */
@@ -205,7 +211,7 @@ static void
 usage(void)
 {
 	(void) fprintf(stderr, "usage: %s [options] [lu[,lu...]@]host[:port]\n"
-"Options:\n%s%s%s%s", programname,
+"Options:\n%s%s%s%s%s", programname,
 "  -assoc <session> associate with a session (TN3270E only)\n"
 #if defined(HAVE_LIBSSL) /*[*/
 "  -cadir <dir>     find CA certificate database in <dir>\n"
@@ -252,7 +258,10 @@ usage(void)
 #endif /*]*/
 "  -proxy \"<spec>\"\n"
 "                   connect to host via specified proxy\n"
-"  -reconnect       keep trying to reconnect\n"
+"  -reconnect       keep trying to reconnect\n",
+#if defined(HAVE_LIBSSL) /*[*/
+"  -selfsignedok    allow self-signed host SSL certificates\n"
+#endif /*]*/
 #if defined(_WIN32) /*[*/
 "  -trace           trace data stream to <wc3270appData>/x3trc.<pid>.txt\n",
 #else /*][*/
@@ -264,6 +273,9 @@ usage(void)
 "  -trnpre <file>   file of transparent data to send before each job\n"
 "  -trnpost <file>  file of transparent data to send after each job\n"
 "  -v               display version information and exit\n"
+#if defined(HAVE_LIBSSL) /*[*/
+"  -verfycert       verify host certificate for SSL and SSL/TLS connections\n"
+#endif /*]*/
 "  -V               log verbose information about connection negotiation\n"
 );
 	pr3287_exit(1);
@@ -402,7 +414,7 @@ main(int argc, char *argv[])
 	char *charset = "us";
 	char *lu = NULL;
 	char *host = NULL;
-	char *port = "telnet";
+	char *port = "23";
 	unsigned short p;
 	union {
 		struct sockaddr sa;
@@ -594,15 +606,23 @@ main(int argc, char *argv[])
 #endif /*]*/
 		} else if (!strcmp(argv[i], "-reconnect")) {
 			reconnect = 1;
+#if defined(HAVE_LIBSSL) /*[*/
+		} else if (!strcmp(argv[i], "-selfsignedok")) {
+		    	self_signed_ok = 1;
+#endif /*]*/
 		} else if (!strcmp(argv[i], "-v")) {
 			printf("%s\n%s\n", build, build_options());
 			charset_list();
 			printf("\n\
-Copyright 1989-2010, Paul Mattes, GTRC and others.\n\
+Copyright 1989-2013, Paul Mattes, GTRC and others.\n\
 See the source code or documentation for licensing details.\n\
 Distributed WITHOUT ANY WARRANTY; without even the implied warranty of\n\
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 			exit(0);
+#if defined(HAVE_LIBSSL) /*[*/
+		} else if (!strcmp(argv[i], "-verifycert")) {
+		    	verify_cert = 1;
+#endif /*]*/
 		} else if (!strcmp(argv[i], "-V")) {
 			verbose = 1;
 		} else if (!strcmp(argv[i], "-trace")) {
@@ -901,7 +921,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 		}
 
 		/* Negotiate. */
-		if (negotiate(s, lu, assoc) < 0) {
+		if (negotiate(host, s, lu, assoc) < 0) {
 			rc = 1;
 			goto retry;
 		}
