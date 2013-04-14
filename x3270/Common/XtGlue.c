@@ -576,19 +576,19 @@ select_setup(int *nfds, fd_set *readfds, fd_set *writefds,
 	for (ip = inputs; ip != (input_t *)NULL; ip = ip->next) {
 		if ((unsigned long)ip->condition & InputReadMask) {
 			FD_SET(ip->source, readfds);
-			if (ip->source >= *nfds)
+			if ((int)ip->source >= *nfds)
 				*nfds = ip->source + 1;
 			r = 1;
 		}
 		if ((unsigned long)ip->condition & InputWriteMask) {
 			FD_SET(ip->source, writefds);
-			if (ip->source >= *nfds)
+			if ((int)ip->source >= *nfds)
 				*nfds = ip->source + 1;
 			r = 1;
 		}
 		if ((unsigned long)ip->condition & InputExceptMask) {
 			FD_SET(ip->source, exceptfds);
-			if (ip->source >= *nfds)
+			if ((int)ip->source >= *nfds)
 				*nfds = ip->source + 1;
 			r = 1;
 		}
