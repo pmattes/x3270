@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2012, Paul Mattes.
+ * Copyright (c) 2000-2013, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -201,7 +201,7 @@ static Boolean blink_on = True;		/* are we displaying them or not? */
 static Boolean blink_ticking = False;	/* is the timeout pending? */
 static unsigned long blink_id = 0;	/* timeout ID */
 static Boolean blink_wasticking = False;
-static void blink_em(void);
+static void blink_em(ioid_t id);
 
 /*
  * Console event handler.
@@ -1274,7 +1274,7 @@ calc_attrs(int baddr, int fa_addr, int fa, Boolean *underlined,
  * Blink timeout handler.
  */
 static void
-blink_em(void)
+blink_em(ioid_t id _is_unused)
 {
     	trace_event("blink timeout\n");
 
@@ -2078,7 +2078,7 @@ status_insert_mode(Boolean on)
 }
 
 static void
-status_pop(void)
+status_pop(ioid_t id _is_unused)
 {
 	status_msg = saved_status_msg;
 	saved_status_msg = NULL;

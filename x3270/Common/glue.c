@@ -740,9 +740,11 @@ static struct {
 #endif /*]*/
 { OptUser,     OPT_STRING,  False, ResUser,      offset(user),
     "<name>", "Specify user name for RFC 4777" },
+#if defined(S3270) /*[*/
 { OptUtf8,     OPT_BOOLEAN, True,  ResUtf8,      offset(utf8),
     CN,       "Force local codeset to be UTF-8"
 },
+#endif /*]*/
 { OptV,        OPT_V,	False, NULL,	     NULL,
     CN, "Display build options and character sets" },
 #if defined(HAVE_LIBSSL) /*[*/

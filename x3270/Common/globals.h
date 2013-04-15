@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, Paul Mattes.
+ * Copyright (c) 1993-2013, Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -98,6 +98,7 @@
  */
 #if defined(_MSC_VER) /*[*/
 #include <winsock2.h>			/* for struct timeval */
+typedef signed long ssize_t;
 extern int gettimeofday(struct timeval *, void *);
 #define R_OK	4
 #define strcasecmp      _stricmp

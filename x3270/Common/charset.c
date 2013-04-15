@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2013 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -66,6 +66,10 @@
 #if defined(__CYGWIN__) /*[*/
 #include <w32api/windows.h>
 #undef _WIN32
+#endif /*]*/
+
+#if defined(_MSC_VER) /*[*/
+#include "Msc/deprecated.h"
 #endif /*]*/
 
 /* Globals. */

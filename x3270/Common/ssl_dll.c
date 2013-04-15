@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2013 Paul Mattes.
+ * Copyright (c) 2012-2013 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -280,7 +280,7 @@ void
 CRYPTO_free(void *p)
 {
 	REQUIRE_INIT;
-	return ((CRYPTO_free_t)ssl_dll_func[T_CRYPTO_free])(p);
+	((CRYPTO_free_t)ssl_dll_func[T_CRYPTO_free])(p);
 }
 
 char *
@@ -522,7 +522,7 @@ void
 X509_free(X509 *a)
 {
 	REQUIRE_INIT;
-	return ((X509_free_t)ssl_dll_func[T_X509_free])(a);
+	((X509_free_t)ssl_dll_func[T_X509_free])(a);
 }
 
 void *

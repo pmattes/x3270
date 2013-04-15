@@ -48,6 +48,10 @@
 
 #include <errno.h>
 
+#if defined(_MSC_VER) /*[*/
+#include "Msc/deprecated.h"
+#endif /*]*/
+
 #define RECONNECT_MS		2000	/* 2 sec before reconnecting to host */
 #define RECONNECT_ERR_MS	5000	/* 5 sec before reconnecting to host */
 
