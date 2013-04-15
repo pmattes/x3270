@@ -1230,7 +1230,7 @@ description
 .
 
 name idleCommand
-applies x C
+applies x C S
 groups i
 type s
 description
@@ -1246,7 +1246,7 @@ description
 .
 
 name idleCommandEnabled
-applies x C
+applies x C S
 groups i
 type b
 default false
@@ -1257,7 +1257,7 @@ description
 .
 
 name idleTimeout
-applies x C
+applies x C S
 groups i
 type s
 default ~7m

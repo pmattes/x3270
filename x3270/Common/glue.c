@@ -1042,7 +1042,7 @@ static struct {
 #if defined(X3270_SCRIPT) /*[*/
 	{ ResPluginCommand, offset(plugin_command), XRM_STRING },
 #endif /*]*/
-#if defined(C3270) /*[*/
+#if defined(C3270) || defined(S3270) /*[*/
 	{ ResIdleCommand,offset(idle_command),	XRM_STRING },
 	{ ResIdleCommandEnabled,offset(idle_command_enabled),	XRM_BOOLEAN },
 	{ ResIdleTimeout,offset(idle_timeout),	XRM_STRING },

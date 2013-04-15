@@ -53,6 +53,7 @@
 #include "ftc.h"
 #include "gluec.h"
 #include "hostc.h"
+#include "idlec.h"
 #include "keymapc.h"
 #include "kybdc.h"
 #include "macrosc.h"
@@ -120,6 +121,7 @@ main(int argc, char *argv[])
 	ctlr_init(-1);
 	ctlr_reinit(-1);
 	kybd_init();
+	idle_init();
 	ansi_init();
 	sms_init();
 	register_schange(ST_CONNECT, main_connect);
