@@ -716,8 +716,6 @@ The menu bar allows common functions to be executed without needing to switch
 to the XX_FB(XX_PRODUCT>) prompt.
 It is available by pressing Alt-N, or if the console supports a mouse, by
 clikcing on the menu titles displayed at the top of the screen.
-If there is not sufficient room on the screen to include the menu titles, the
-menu can also be selected by clicking on the top line of the 3270 display.
 XX_LP
 The on-screen menu title bar can be turned off via the "XX_PRODUCT.menuBar"
 resource.
