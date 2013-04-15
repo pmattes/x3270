@@ -714,7 +714,8 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 	 */
 	wuc = uc;
 	nc = WideCharToMultiByte(LOCAL_CODEPAGE, 0, &wuc, 1, mb, mb_len,
-		"?", &udc);
+		(LOCAL_CODEPAGE == CP_UTF8)? NULL: "?",
+		(LOCAL_CODEPAGE == CP_UTF8)? NULL: &udc);
 	if (nc != 0) {
 		mb[nc++] = '\0';
 		return nc;
@@ -842,6 +843,8 @@ mb_max_len(int len)
     /*
      * On Windows, it's 1:1 (we don't do DBCS, and we don't support locales
      * like UTF-8).
+     *
+     * XXX: On Windows, we *do* do DBCS. Should this change?
      */
     return len + 1;
 #elif defined(UNICODE_WCHAR) /*][*/
@@ -1122,7 +1125,8 @@ unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len)
     int nc;
 
     nc = WideCharToMultiByte(LOCAL_CODEPAGE, 0, &wuc, 1, mb, mb_len,
-	    "?", &udc);
+	    (LOCAL_CODEPAGE == CP_UTF8)? NULL: "?",
+	    (LOCAL_CODEPAGE == CP_UTF8)? NULL: &udc);
     if (nc > 0)
 	mb[nc++] = '\0';
     return nc;

@@ -906,8 +906,10 @@ close_wsh(unsigned long fd, ioid_t id)
 {
 	CloseHandle((HANDLE)fd);
 	RemoveInput(id);
+#if defined(C3270) /*[*/
 	if (appres.do_confirms)
 		popup_an_info("Screen image printed.\n");
+#endif /*]*/
 }
 #endif /*]*/
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, Paul Mattes.
+ * Copyright (c) 2007-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,13 @@
 
 #include "globals.h"
 
+#include "appres.h"
 #include "popupsc.h"
 #include "utf8c.h"
+
+#if defined(_WIN32) /*[*/
+#include <windows.h>
+#endif /*]*/
 
 char *locale_codeset = CN;
 Boolean is_utf8 = False;
@@ -45,19 +50,44 @@ Boolean is_utf8 = False;
 void
 set_codeset(char *codeset_name)
 {
-#if !defined(TCL3270) /*[*/
-    	is_utf8 = (!strcasecmp(codeset_name, "utf-8") ||
-	           !strcasecmp(codeset_name, "utf8") ||
-		   !strcasecmp(codeset_name, "utf_8"));
-#else /*][*/
+#if defined(S3270) /*[*/
+	/*
+	 * s3270 and ws3270 have a '-utf8' option and a utf8 resource to force
+	 * UTF-8 mode.
+	 */
+    	if (appres.utf8) {
+		is_utf8 = True;
+# if defined(WS3270) /*[*/
+		appres.local_cp = CP_UTF8;
+# endif /*]*/
+		codeset_name = "UTF-8";
+	}
+#elif defined(TCL3270) /*][*/
 	/*
 	 * tcl3270 is always in UTF-8 mode, because it needs to
 	 * supply UTF-8 strings to libtcl and vice-versa.
 	 */
 	is_utf8 = True;
+#else /*][*/
+	/*
+	 * We're in UTF-8 mode if the codeset looks like 'UTF8'.
+	 */
+	if (!is_utf8)
+		is_utf8 = (!strcasecmp(codeset_name, "utf-8") ||
+			   !strcasecmp(codeset_name, "utf8") ||
+			   !strcasecmp(codeset_name, "utf_8"));
 #endif /*]*/
 
 	Replace(locale_codeset, NewString(codeset_name));
+}
+
+/*
+ * Return the local codeset.
+ */
+const char *
+get_codeset(void)
+{
+	return locale_codeset;
 }
 
 /*

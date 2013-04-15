@@ -290,8 +290,11 @@ typedef struct {
 	char	*title;
 #endif /*]*/
 
-#if defined(WS3270) /*[*/
+#if defined(S3270) /*[*/
+# if defined(WS3270) /*[*/
 	int	local_cp;
+# endif /*]*/
+	Boolean	utf8;
 #endif /*]*/
 
 #if defined(USE_APP_DEFAULTS) /*[*/

@@ -3702,6 +3702,7 @@ Query_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	} queries[] = {
 		{ "BindPluName", net_query_bind_plu_name },
 		{ "ConnectionState", net_query_connection_state },
+		{ "Codeset", get_codeset },
 		{ "Host", net_query_host },
 		{ "LuName", net_query_lu_name },
 		{ CN, NULL }

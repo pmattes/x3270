@@ -94,9 +94,7 @@ enum cs_result
 charset_init(char *csname)
 {
     	enum cs_result rc;
-#if !defined(_WIN32) /*[*/
 	char *codeset_name;
-#endif /*]*/
 	const char *codepage;
 	const char *cgcsgid;
 	const char *display_charsets;
@@ -105,6 +103,9 @@ charset_init(char *csname)
 	const char *dbcs_display_charsets = NULL;
 	Boolean need_free = False;
 #endif /*]*/
+#if defined(_WIN32) /*[*/
+	char cpname[32];
+#endif /*]*/
 
 #if !defined(_WIN32) /*[*/
 	/* Get all of the locale stuff right. */
@@ -112,7 +113,7 @@ charset_init(char *csname)
 
 	/* Figure out the locale code set (character set encoding). */
 	codeset_name = nl_langinfo(CODESET);
-#if defined(__CYGWIN__) /*[*/
+# if defined(__CYGWIN__) /*[*/
 	/*
 	 * Cygwin's locale support is quite limited.  If the locale
 	 * indicates "US-ASCII", which appears to be the only supported
@@ -124,9 +125,18 @@ charset_init(char *csname)
 	 */
 	if (!strcmp(codeset_name, "US-ASCII"))
 	    	codeset_name = xs_buffer("CP%d", GetACP());
+# endif /*]*/
+#else /*][*/
+	snprintf(cpname, sizeof(cpname), "CP%d",
+# if defined(WS3270) /*[*/
+		appres.local_cp
+# else /*][*/
+		GetACP()
+# endif /*]*/
+		);
+	codeset_name = cpname;
 #endif /*]*/
 	set_codeset(codeset_name);
-#endif /*]*/
 
 	/* Do nothing, successfully. */
 	if (csname == CN || !strcasecmp(csname, "us")) {
