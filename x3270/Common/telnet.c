@@ -1043,22 +1043,14 @@ connection_complete(void)
 static void
 output_possible(unsigned long fd, ioid_t id _is_unused)
 {
-	sockaddr_46_t sa;
-	socklen_t len = sizeof(sa);
-
-	if (getpeername(fd, &sa.sa, &len) < 0) {
-		trace_dsn("RCVD socket error %d (%s)\n",
-			socket_errno(),
-#if !defined(_WIN32) /*[*/
-			strerror(errno)
-#else /*][*/
-			win32_strerror(GetLastError())
-#endif /*]*/
-			);
+	if (connect(sock, &haddr[ha_ix].sa, sizeof(haddr[0])) < 0) {
+		trace_dsn("RCVD socket error %d (%s)\n", socket_errno(),
+			strerror(errno));
 		popup_a_sockerr("Connection failed");
 		host_disconnect(True);
 		return;
 	}
+
 	if (HALF_CONNECTED) {
 		connection_complete();
 	}
