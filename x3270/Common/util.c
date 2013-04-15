@@ -1094,7 +1094,7 @@ dump_version(void)
 	printf("%s\n%s\n", build, build_options());
 	charset_list();
 	printf("\n"
-"Copyright 1989-2012, Paul Mattes, GTRC and others.\n"
+"Copyright 1989-2013, Paul Mattes, GTRC and others.\n"
 "See the source code or documentation for licensing details.\n"
 "Distributed WITHOUT ANY WARRANTY; without even the implied warranty of\n"
 "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
