@@ -1615,7 +1615,7 @@ description
 .
 
 name localCp
-applies wc
+applies ws
 type i
 desc
     Forces %p% to use the specified codepage in place of the system ANSI
@@ -2620,6 +2620,14 @@ groups p
 description
     Specifies the user name sent in response to a TELNET NEW-ENVIRON
     sub-negotiation request, used by iSeries hosts (RFC 4777).
+.
+
+name utf8
+applies S
+type b
+switch -utf8
+description
+    Forces local I/O to use UTF-8 encoding, regardless of the local codepage.
 .
 
 name verifyHostCert
