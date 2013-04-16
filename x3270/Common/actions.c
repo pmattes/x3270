@@ -167,9 +167,7 @@ XtActionsRec all_actions[] = {
 #endif /*]*/
 	{ "CircumNot",		CircumNot_action },
 	{ "Clear",		Clear_action },
-#if defined(C3270) /*[*/
 	{ "Close",		Disconnect_action },
-#endif /*]*/
 #if defined(X3270_SCRIPT) /*[*/
 	{ "CloseScript",	CloseScript_action },
 #endif /*]*/
@@ -233,9 +231,7 @@ XtActionsRec all_actions[] = {
 	{ "MoveCursor",		MoveCursor_action },
 	{ "Newline",		Newline_action },
 	{ "NextWord",		NextWord_action },
-#if defined(C3270) || defined(WC3270) /*[*/
 	{ "Open",		Connect_action },
-#endif /*]*/
 	{ "PA",			PA_action },
 	{ "PF",			PF_action },
 #if defined(WC3270) /*[*/
