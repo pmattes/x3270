@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2012, Paul Mattes.
+dnl Copyright (c) 2000-2013, Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -354,10 +354,10 @@ XX_T_
 XX_TR(XX_TD(BindPluName)	XX_TD(BIND PLU returned by the host))
 XX_TR(XX_TD(ConnectionState)	XX_TD(TN3270/TN3270E mode and submode))
 XX_TR(XX_TD(CodePage)	XX_TD(Host code page))
-XX_TR(XX_TD(CodeSet)	XX_TD(Local character encoding))
 XX_TR(XX_TD(Cursor)	XX_TD(Cursor position (row col)))
 XX_TR(XX_TD(Formatted)	XX_TD(3270 format state (formatted or unformatted)))
 XX_TR(XX_TD(Host)	XX_TD(Host name and port))
+XX_TR(XX_TD(LocalEncoding)	XX_TD(Local character encoding))
 XX_TR(XX_TD(LuName)	XX_TD(Host name LU name))
 XX_TR(XX_TD(Model)	XX_TD(3270 model name (IBM-327x-n)))
 XX_TR(XX_TD(ScreenCurSize)	XX_TD(Current screen size (rows cols)))
