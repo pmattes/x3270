@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, Paul Mattes.
+ * Copyright (c) 1993-2013, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -705,7 +705,8 @@ action_debug(XtActionProc action, XEvent *event, String *params,
 		if (ks == NoSymbol)
 			symname = "NoSymbol";
 		else if ((symname = XKeysymToString(ks)) == CN) {
-			(void) sprintf(snbuf, "0x%lx", (unsigned long)ks);
+			(void) snprintf(snbuf, sizeof(snbuf), "0x%lx",
+				(unsigned long)ks);
 			symname = snbuf;
 		}
 		do {

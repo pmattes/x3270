@@ -534,7 +534,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 	if (sock_handle == NULL) {
 		char ename[256];
 
-		sprintf(ename, "wc3270-%d", getpid());
+		(void) snprintf(ename, sizeof(ename), "wc3270-%d", getpid());
 
 		sock_handle = CreateEvent(NULL, TRUE, FALSE, ename);
 		if (sock_handle == NULL) {
@@ -601,8 +601,9 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	    	if (appres.oversize) {
 		    	termtype = "IBM-DYNAMIC";
 		} else if (std_ds_host) {
-			(void) sprintf(ttype_tmpval, "IBM-327%c-%d",
-			    appres.m3279 ? '9' : '8', model_num);
+			(void) snprintf(ttype_tmpval, sizeof(ttype_tmpval),
+				"IBM-327%c-%d",
+				appres.m3279? '9': '8', model_num);
 			termtype = ttype_tmpval;
 		} else {
 			termtype = full_model_name;
@@ -1356,7 +1357,8 @@ send_naws(void)
 	char naws_msg[14];
 	int naws_len = 0;
 
-	(void) sprintf(naws_msg, "%c%c%c", IAC, SB, TELOPT_NAWS);
+	(void) snprintf(naws_msg, sizeof(naws_msg), "%c%c%c",
+		IAC, SB, TELOPT_NAWS);
 	naws_len += 3;
 	naws_len += set16(naws_msg + naws_len, XMIT_COLS);
 	naws_len += set16(naws_msg + naws_len, XMIT_ROWS);
@@ -3123,7 +3125,7 @@ nnn(int c)
 {
 	static char	buf[64];
 
-	(void) sprintf(buf, "%d", c);
+	(void) snprintf(buf, sizeof(buf), "%d", c);
 	return buf;
 }
 

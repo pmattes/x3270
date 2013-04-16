@@ -828,7 +828,7 @@ create_text(void)
 	static Widget source = NULL;
 
 	/* Ready a file. */
-	(void) sprintf(km_file, "/tmp/km.%d", getpid());
+	(void) snprintf(km_file, sizeof(km_file), "/tmp/km.%d", getpid());
 	f = fopen(km_file, "w");
 	if (f == (FILE *)NULL) {
 		popup_an_errno(errno, "temporary file open");

@@ -861,7 +861,7 @@ ft_popup_init(void)
 	    BN, False,
 	    BN, False);
 	set_dft_buffersize();
-	(void) sprintf(buflen_buf, "%d", dft_buffersize);
+	(void) snprintf(buflen_buf, sizeof(buflen_buf), "%d", dft_buffersize);
 	XtVaSetValues(buffersize_widget, XtNstring, buflen_buf, NULL);
 
 	/* Set up the buttons at the bottom. */
@@ -1051,7 +1051,8 @@ ft_start(void)
 	else
 		dft_buffersize = 0;
 	set_dft_buffersize();
-	(void) sprintf(updated_buffersize, "%d", dft_buffersize);
+	(void) snprintf(updated_buffersize, sizeof(updated_buffersize), "%d",
+		dft_buffersize);
 	XtVaSetValues(buffersize_widget, XtNstring, updated_buffersize, NULL);
 
 	/* Get the host file from its widget */
@@ -1534,7 +1535,7 @@ ft_complete(const char *errmsg)
 			((double)(t1.tv_sec - t0.tv_sec) + 
 			 (double)(t1.tv_usec - t0.tv_usec) / 1.0e6);
 		buf = Malloc(256);
-		(void) sprintf(buf, get_message("ftComplete"), ft_length,
+		(void) snprintf(buf, 256, get_message("ftComplete"), ft_length,
 			display_scale(bytes_sec, kbuf, sizeof(kbuf)),
 			ft_is_cut ? "CUT" : "DFT");
 		if (ft_is_action) {
@@ -1562,7 +1563,8 @@ ft_update_length(void)
 
 	/* Format the message */
 	if (!ft_is_action) {
-		sprintf(text_string, status_string, ft_length);
+		(void) snprintf(text_string, sizeof(text_string),
+			status_string, ft_length);
 
 		XtVaSetValues(ft_status, XtNlabel, text_string, NULL);
 	}

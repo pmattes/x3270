@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1819,7 +1819,7 @@ ansi_send_pf(int nn)
 
 	if (nn < 1 || (unsigned)nn > sizeof(code)/sizeof(code[0]))
 		return;
-	(void) sprintf(fn_buf, "\033[%d~", code[nn-1]);
+	(void) snprintf(fn_buf, sizeof(fn_buf), "\033[%d~", code[nn-1]);
 	net_sends(fn_buf);
 }
 
@@ -1831,7 +1831,7 @@ ansi_send_pa(int nn)
 
 	if (nn < 1 || nn > 4)
 		return;
-	(void) sprintf(fn_buf, "\033O%c", code[nn-1]);
+	(void) snprintf(fn_buf, sizeof(fn_buf), "\033O%c", code[nn-1]);
 	net_sends(fn_buf);
 }
 

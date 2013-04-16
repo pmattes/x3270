@@ -821,7 +821,7 @@ key_Character(int code, Boolean with_ge, Boolean pasting, Boolean *skipped)
 	if (kybdlock) {
 		char codename[64];
 
-		(void) sprintf(codename, "%d", code |
+		(void) snprintf(codename, sizeof(codename), "%d", code |
 			(with_ge ? GE_WFLAG : 0) |
 			(pasting ? PASTE_WFLAG : 0));
 		enq_ta(key_Character_wrapper, codename, CN);
@@ -1085,7 +1085,8 @@ key_WCharacter(unsigned char code[], Boolean *skipped)
 	if (kybdlock) {
 		char codename[64];
 
-		(void) sprintf(codename, "%d", (code[0] << 8) | code[1]);
+		(void) snprintf(codename, sizeof(codename), "%d",
+			(code[0] << 8) | code[1]);
 		enq_ta(key_WCharacter_wrapper, codename, CN);
 		return False;
 	}
@@ -4422,7 +4423,8 @@ Default_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
 
 		    default:
 			if (ks >= XK_F1 && ks <= XK_F24) {
-				(void) sprintf(buf, "%ld", ks - XK_F1 + 1);
+				(void) snprintf(buf, sizeof(buf), "%ld",
+					ks - XK_F1 + 1);
 				action_internal(PF_action, IA_DEFAULT, buf, CN);
 			} else {
 				ucs4_t ucs4;

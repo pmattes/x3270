@@ -170,17 +170,18 @@ rtf_caption(const char *caption)
 		if (u == 0)
 		    	break;
 		if (u & ~0x7f) {
-			sprintf(uubuf, "\\u%u?", u);
+			(void) snprintf(uubuf, sizeof(uubuf), "\\u%u?", u);
 		} else {
 			(void) unicode_to_multibyte(u, mb, sizeof(mb));
 			if (mb[0] == '\\' ||
 			    mb[0] == '{' ||
 			    mb[0] == '}')
-				sprintf(uubuf, "\\%c", mb[0]);
+				(void) snprintf(uubuf, sizeof(uubuf), "\\%c",
+					mb[0]);
 			else if (mb[0] == '-')
-				sprintf(uubuf, "\\_");
+				(void) snprintf(uubuf, sizeof(uubuf), "\\_");
 			else if (mb[0] == ' ')
-				sprintf(uubuf, "\\~");
+				(void) snprintf(uubuf, sizeof(uubuf), "\\~");
 			else {
 			    	uubuf[0] = mb[0];
 				uubuf[1] = '\0';
