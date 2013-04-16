@@ -1,7 +1,7 @@
 /* (from) $XConsortium: SimpleMenu.c,v 1.41 92/09/10 16:25:07 converse Exp $ */
 
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2013 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -645,7 +645,7 @@ PositionMenuAction(Widget w, XEvent *event, String *params,
 
   if (*num_params != 1) {
     char error_buf[BUFSIZ];
-    (void) sprintf(error_buf, "%s %s",
+    (void) snprintf(error_buf, sizeof(error_buf), "%s %s",
 	    "Xaw - ComplexMenuWidget: position menu action expects only one",
 	    "parameter which is the name of the menu.");
     XtAppWarning(XtWidgetToApplicationContext(w), error_buf);
@@ -654,7 +654,7 @@ PositionMenuAction(Widget w, XEvent *event, String *params,
 
   if ( (menu = FindMenu(w, params[0])) == NULL) {
     char error_buf[BUFSIZ];
-    (void) sprintf(error_buf, "%s '%s'",
+    (void) snprintf(error_buf, sizeof(error_buf), "%s '%s'",
 	    "Xaw - ComplexMenuWidget: could not find menu named: ", params[0]);
     XtAppWarning(XtWidgetToApplicationContext(w), error_buf);
     return;
@@ -1000,7 +1000,8 @@ CreateLabel(Widget w)
 	 (cmw->complex_menu.label != NULL) ) {
 	char error_buf[BUFSIZ];
 
-	(void) sprintf(error_buf, "Xaw Complex Menu Widget: %s or %s, %s",
+	(void) snprintf(error_buf, sizeof(error_buf),
+		"Xaw Complex Menu Widget: %s or %s, %s",
 		"label string is NULL", "label already exists", 
 		"no label is being created.");
 	XtAppWarning(XtWidgetToApplicationContext(w), error_buf);
@@ -1168,7 +1169,8 @@ PositionMenu(Widget w, XPoint *location)
 	if (XQueryPointer(XtDisplay(w), XtWindow(w), &junk1, &junk2, 
 			  &root_x, &root_y, &junkX, &junkY, &junkM) == FALSE) {
 	    char error_buf[BUFSIZ];
-	    (void) sprintf(error_buf, "%s %s", "Xaw - ComplexMenuWidget:",
+	    (void) snprintf(error_buf, sizeof(error_buf),
+		    "%s %s", "Xaw - ComplexMenuWidget:",
 		    "Could not find location of mouse pointer");
 	    XtAppWarning(XtWidgetToApplicationContext(w), error_buf);
 	    return;

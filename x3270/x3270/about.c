@@ -98,7 +98,7 @@ hms(time_t ts)
 	sc = td % 60;
 
 	if (hr > 0)
-		(void) sprintf(buf, "%ld %s %ld %s %ld %s",
+		(void) snprintf(buf, sizeof(buf), "%ld %s %ld %s %ld %s",
 		    hr, (hr == 1) ?
 			get_message("hour") : get_message("hours"),
 		    mn, (mn == 1) ?
@@ -106,13 +106,13 @@ hms(time_t ts)
 		    sc, (sc == 1) ?
 			get_message("second") : get_message("seconds"));
 	else if (mn > 0)
-		(void) sprintf(buf, "%ld %s %ld %s",
+		(void) snprintf(buf, sizeof(buf), "%ld %s %ld %s",
 		    mn, (mn == 1) ?
 			get_message("minute") : get_message("minutes"),
 		    sc, (sc == 1) ?
 			get_message("second") : get_message("seconds"));
 	else
-		(void) sprintf(buf, "%ld %s",
+		(void) snprintf(buf, sizeof(buf), "%ld %s",
 		    sc, (sc == 1) ?
 			get_message("second") : get_message("seconds"));
 
@@ -327,17 +327,17 @@ popup_about_config(void)
 
 	MAKE_LABEL(build, 4);
 	MAKE_LABEL(get_message("processId"), 4);
-	(void) sprintf(fbuf, "%d", getpid());
+	(void) snprintf(fbuf, sizeof(fbuf), "%d", getpid());
 	MAKE_VALUE(fbuf);
 	MAKE_LABEL2(get_message("windowId"));
-	(void) sprintf(fbuf, "0x%lx", XtWindow(toplevel));
+	(void) snprintf(fbuf, sizeof(fbuf), "0x%lx", XtWindow(toplevel));
 	MAKE_VALUE(fbuf);
 
 	/* Everything else at the left margin under the bitmap */
 	w = left_anchor;
 	left_anchor = NULL;
 
-	(void) sprintf(fbuf, "%s %s: %d %s x %d %s, %s, %s",
+	(void) snprintf(fbuf, sizeof(fbuf), "%s %s: %d %s x %d %s, %s, %s",
 	    get_message("model"), model_name,
 	    maxCOLS, get_message("columns"),
 	    maxROWS, get_message("rows"),
@@ -556,24 +556,28 @@ popup_about_status(void)
 #if defined(LOCAL_PROCESS) /*[*/
 		if (!local_process) {
 #endif /*]*/
-			(void) sprintf(fbuf, "  %s", get_message("port"));
+			(void) snprintf(fbuf, sizeof(fbuf), "  %s",
+				get_message("port"));
 			MAKE_LABEL2(fbuf);
-			(void) sprintf(fbuf, "%d", current_port);
+			(void) snprintf(fbuf, sizeof(fbuf), "%d",
+				current_port);
 			MAKE_VALUE(fbuf);
 #if defined(LOCAL_PROCESS) /*[*/
 		}
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 		if (secure_connection) {
-			(void) sprintf(fbuf, "%s%s%s", get_message("secure"),
-			    secure_unverified? ", ": "",
-			    secure_unverified? get_message("unverified"): "");
+			(void) snprintf(fbuf, sizeof(fbuf), "%s%s%s",
+				get_message("secure"),
+				secure_unverified? ", ": "",
+				secure_unverified? get_message("unverified"):
+						   "");
 			MAKE_LABEL2(fbuf);
 			if (secure_unverified) {
 			    	int i;
 
 				for (i = 0; unverified_reasons[i] != CN; i++) {
-				    	sprintf(fbuf, "   %s",
+				    	snprintf(fbuf, sizeof(fbuf), "   %s",
 						unverified_reasons[i]);
 					MAKE_LABEL(fbuf, 0);
 				}
@@ -584,10 +588,12 @@ popup_about_status(void)
 		if (ptype) {
 		    	MAKE_LABEL(get_message("proxyType"), 4);
 			MAKE_VALUE(ptype);
-			(void) sprintf(fbuf, "  %s", get_message("server"));
+			(void) snprintf(fbuf, sizeof(fbuf), "  %s",
+				get_message("server"));
 			MAKE_LABEL2(fbuf);
 			MAKE_VALUE(net_proxy_host());
-			(void) sprintf(fbuf, "  %s", get_message("port"));
+			(void) snprintf(fbuf, sizeof(fbuf), "  %s",
+				get_message("port"));
 			MAKE_LABEL2(fbuf);
 			MAKE_VALUE(net_proxy_port());
 		}
@@ -601,12 +607,13 @@ popup_about_status(void)
 				ftype = get_message("lineMode");
 			else
 				ftype = get_message("charMode");
-			(void) sprintf(fbuf, "  %s%s, ", emode, ftype);
+			(void) snprintf(fbuf, sizeof(fbuf), "  %s%s, ",
+				emode, ftype);
 		} else if (IN_SSCP) {
-			(void) sprintf(fbuf, "  %s%s, ", emode,
+			(void) snprintf(fbuf, sizeof(fbuf), "  %s%s, ", emode,
 			    get_message("sscpMode"));
 		} else if (IN_3270) {
-			(void) sprintf(fbuf, "  %s%s, ", emode,
+			(void) snprintf(fbuf, sizeof(fbuf), "  %s%s, ", emode,
 			    get_message("dsMode"));
 		} else
 			(void) strcpy(fbuf, "  ");
@@ -615,13 +622,15 @@ popup_about_status(void)
 		MAKE_LABEL(fbuf, 0);
 
 		if (connected_lu != CN && connected_lu[0]) {
-		    	sprintf(fbuf, "  %s", get_message("luName"));
+		    	(void) snprintf(fbuf, sizeof(fbuf), "  %s",
+				get_message("luName"));
 			MAKE_LABEL(fbuf, 0);
 			MAKE_VALUE(connected_lu);
 		}
 		bplu = net_query_bind_plu_name();
 		if (bplu != CN && bplu[0]) {
-		    	sprintf(fbuf, "  %s", get_message("bindPluName"));
+		    	(void) snprintf(fbuf, sizeof(fbuf), "  %s",
+				get_message("bindPluName"));
 			MAKE_LABEL(fbuf, 0);
 			MAKE_VALUE(bplu);
 		}
@@ -629,37 +638,40 @@ popup_about_status(void)
 #if defined(X3270_TN3270E) /*[*/
 		eopts = tn3270e_current_opts();
 		if (eopts != CN) {
-			(void) sprintf(fbuf, "  %s",
+			(void) snprintf(fbuf, sizeof(fbuf), "  %s",
 	 			get_message("tn3270eOpts"));
 			MAKE_LABEL(fbuf, 0);
 			MAKE_VALUE(eopts);
 		} else if (IN_E) {
-			(void) sprintf(fbuf, "  %s",
+			(void) snprintf(fbuf, sizeof(fbuf), "  %s",
 				get_message("tn3270eNoOpts"));
 			MAKE_LABEL(fbuf, 0);
 		}
 #endif /*]*/
 
 		if (IN_3270)
-			(void) sprintf(fbuf, "%s %d %s, %d %s\n%s %d %s, %d %s",
-			    get_message("sent"),
-			    ns_bsent, (ns_bsent == 1) ?
-				get_message("byte") : get_message("bytes"),
-			    ns_rsent, (ns_rsent == 1) ?
+			(void) snprintf(fbuf, sizeof(fbuf),
+				"%s %d %s, %d %s\n%s %d %s, %d %s",
+				get_message("sent"),
+				ns_bsent, (ns_bsent == 1) ?
+				    get_message("byte") : get_message("bytes"),
+				    ns_rsent, (ns_rsent == 1) ?
 				get_message("record") : get_message("records"),
-			    get_message("Received"),
-			    ns_brcvd, (ns_brcvd == 1) ?
-				get_message("byte") : get_message("bytes"),
-			    ns_rrcvd, (ns_rrcvd == 1) ?
-				get_message("record") : get_message("records"));
+				get_message("Received"),
+				ns_brcvd, (ns_brcvd == 1) ?
+				    get_message("byte") : get_message("bytes"),
+				ns_rrcvd, (ns_rrcvd == 1) ?
+				    get_message("record") :
+				    get_message("records"));
 		else
-			(void) sprintf(fbuf, "%s %d %s, %s %d %s",
-			    get_message("sent"),
-			    ns_bsent, (ns_bsent == 1) ?
-				get_message("byte") : get_message("bytes"),
-			    get_message("received"),
-			    ns_brcvd, (ns_brcvd == 1) ?
-				get_message("byte") : get_message("bytes"));
+			(void) snprintf(fbuf, sizeof(fbuf),
+				"%s %d %s, %s %d %s",
+				get_message("sent"),
+				ns_bsent, (ns_bsent == 1) ?
+				    get_message("byte") : get_message("bytes"),
+				get_message("received"),
+				ns_brcvd, (ns_brcvd == 1) ?
+				    get_message("byte") : get_message("bytes"));
 		MAKE_LABEL(fbuf, 4);
 
 #if defined(X3270_ANSI) /*[*/
@@ -670,7 +682,8 @@ popup_about_status(void)
 			MAKE_LABEL(get_message("specialCharacters"), 4);
 			for (i = 0; c[i].name; i++) {
 				if (!i || !(i % 4)) {
-					(void) sprintf(fbuf, "  %s", c[i].name);
+					(void) snprintf(fbuf, sizeof(fbuf),
+						"  %s", c[i].name);
 					MAKE_LABEL(fbuf, 0);
 				} else {
 					MAKE_LABEL2(c[i].name);

@@ -204,7 +204,8 @@ printer_start(const char *lu)
 #endif /*]*/
 
 	/* Construct the charset option. */
-	(void) sprintf(charset_cmd, "-charset %s", get_charset_name());
+	(void) snprintf(charset_cmd, sizeof(charset_cmd), "-charset %s",
+		get_charset_name());
 
 	/* Construct proxy option. */
 	if (appres.proxy != CN) {
@@ -469,7 +470,8 @@ printer_start(const char *lu)
 	if (printerName != NULL) {
 		static char pn_buf[1024];
 
-		sprintf(pn_buf, "PRINTER=%s", printerName);
+		(void) snprintf(pn_buf, sizeof(pn_buf), "PRINTER=%s",
+			printerName);
 		putenv(pn_buf);
 	}
 

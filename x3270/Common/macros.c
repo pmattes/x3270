@@ -453,7 +453,7 @@ macros_init(void)
 	if (ns < 0) {
 		char buf[256];
 
-		(void) sprintf(buf, "Error in macro %d", ix);
+		(void) snprintf(buf, sizeof(buf), "Error in macro %d", ix);
 		Warning(buf);
 	}
 }
@@ -822,7 +822,8 @@ peer_script_init(void)
 		}
 		(void) memset(&ssun, '\0', sizeof(ssun));
 		ssun.sun_family = AF_UNIX;
-		(void) sprintf(ssun.sun_path, "/tmp/x3sck.%u", getpid());
+		(void) snprintf(ssun.sun_path, sizeof(ssun.sun_path),
+			"/tmp/x3sck.%u", getpid());
 		(void) unlink(ssun.sun_path);
 		if (bind(socketfd, (struct sockaddr *)&ssun, sizeof(ssun))
 				< 0) {
@@ -1006,7 +1007,7 @@ cleanup_socket(Boolean b _is_unused)
 #if !defined(_WIN32) /*[*/
 	char buf[1024];
 
-	(void) sprintf(buf, "/tmp/x3sck.%u", getpid());
+	(void) snprintf(buf, sizeof(buf), "/tmp/x3sck.%u", getpid());
 	(void) unlink(buf);
 #endif /*]*/
 }
@@ -2563,8 +2564,8 @@ script_prompt(Boolean success)
 	s = status_string();
 
 	if (sms != SN && sms->accumulated)
-		(void) sprintf(timing, "%ld.%03ld", sms->msec / 1000L,
-			sms->msec % 1000L);
+		(void) snprintf(timing, sizeof(timing), "%ld.%03ld",
+			sms->msec / 1000L, sms->msec % 1000L);
 	else
 		(void) strcpy(timing, "-");
 
@@ -3452,9 +3453,11 @@ Script_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 		(void) close(inpipe[0]);
 
 		/* Export the names of the pipes into the environment. */
-		(void) sprintf(env_buf[0], "X3270OUTPUT=%d", outpipe[0]);
+		(void) snprintf(env_buf[0], sizeof(env_buf[0]),
+			"X3270OUTPUT=%d", outpipe[0]);
 		(void) putenv(env_buf[0]);
-		(void) sprintf(env_buf[1], "X3270INPUT=%d", inpipe[1]);
+		(void) snprintf(env_buf[1], sizeof(env_buf[1]),
+			"X3270INPUT=%d", inpipe[1]);
 		(void) putenv(env_buf[1]);
 
 		/* Set up arguments. */

@@ -116,7 +116,8 @@ rcba(int baddr)
 {
 	static char buf[16];
 
-	(void) sprintf(buf, "(%d,%d)", baddr/COLS + 1, baddr%COLS + 1);
+	(void) snprintf(buf, sizeof(buf), "(%d,%d)",
+		baddr/COLS + 1, baddr%COLS + 1);
 	return buf;
 }
 
@@ -306,7 +307,8 @@ vwtrace(const char *fmt, va_list args)
 			(void) gettimeofday(&tv, NULL);
 			t = tv.tv_sec;
 			tm = localtime(&t);
-			n2w = sprintf(buf, "%d%02d%02d.%02d%02d%02d.%03d ",
+			n2w = snprintf(buf, sizeof(buf),
+				"%d%02d%02d.%02d%02d%02d.%03d ",
 				tm->tm_year + 1900,
 				tm->tm_mon + 1,
 				tm->tm_mday,
@@ -755,7 +757,8 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 			{
 				char cmd[64];
 
-				(void) sprintf(cmd, "cat <&%d", pipefd[0]);
+				(void) snprintf(cmd, sizeof(cmd), "cat <&%d",
+					pipefd[0]);
 				(void) execlp("xterm", "xterm",
 				    "-title", just_piped? "trace": tfn,
 				    "-sb", "-e", "/bin/sh", "-c",

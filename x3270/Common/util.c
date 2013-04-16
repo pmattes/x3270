@@ -168,7 +168,8 @@ scatv(const char *s, char *buf, size_t len)
 			break;
 		    default:
 			if ((c & 0x7f) < ' ')
-				(void) sprintf(cbuf, "\\%03o", c & 0xff);
+				(void) snprintf(cbuf, sizeof(cbuf), "\\%03o",
+					c & 0xff);
 			else {
 				cbuf[0] = c;
 				cbuf[1] = '\0';
@@ -396,11 +397,12 @@ get_message(const char *key)
 	static char namebuf[128];
 	char *r;
 
-	(void) sprintf(namebuf, "%s.%s", ResMessage, key);
+	(void) snprintf(namebuf, sizeof(namebuf), "%s.%s", ResMessage, key);
 	if ((r = get_resource(namebuf)) != CN)
 		return r;
 	else {
-		(void) sprintf(namebuf, "[missing \"%s\" message]", key);
+		(void) snprintf(namebuf, sizeof(namebuf),
+			"[missing \"%s\" message]", key);
 		return namebuf;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -232,7 +232,8 @@ usock(int pid)
 	}
 	(void) memset(&ssun, '\0', sizeof(struct sockaddr_un));
 	ssun.sun_family = AF_UNIX;
-	(void) sprintf(ssun.sun_path, "/tmp/x3sck.%d", pid);
+	(void) snprintf(ssun.sun_path, sizeof(ssun.sun_path), "/tmp/x3sck.%d",
+		pid);
 	if (connect(fd, (struct sockaddr *)&ssun, sizeof(ssun)) < 0) {
 		perror("connect");
 		exit(2);
