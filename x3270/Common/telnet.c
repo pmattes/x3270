@@ -416,10 +416,10 @@ popup_a_sockerr(char *fmt, ...)
 	va_list args;
 	char buffer[4096];
 
-	 va_start(args, fmt);
-	 vsprintf(buffer, fmt, args);
-	 va_end(args);
-	 popup_an_error("%s: %s", buffer, win32_strerror(socket_errno()));
+	va_start(args, fmt);
+	(void) vsnprintf(buffer, sizeof(buffer), fmt, args);
+	va_end(args);
+	popup_an_error("%s: %s", buffer, win32_strerror(socket_errno()));
 }
 #else /*][*/
 void
@@ -428,10 +428,10 @@ popup_a_sockerr(char *fmt, ...)
 	va_list args;
 	char buffer[4096];
 
-	 va_start(args, fmt);
-	 vsprintf(buffer, fmt, args);
-	 va_end(args);
-	 popup_an_errno(errno, "%s", buffer);
+	va_start(args, fmt);
+	(void) vsnprintf(buffer, sizeof(buffer), fmt, args);
+	va_end(args);
+	popup_an_errno(errno, "%s", buffer);
 }
 #endif /*]*/
 

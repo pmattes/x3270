@@ -1511,7 +1511,7 @@ popup_an_error(const char *fmt, ...)
 	int sl;
 
 	va_start(args, fmt);
-	(void) vsprintf(vmsgbuf, fmt, args);
+	(void) vspnrintf(vmsgbuf, sizeof(msgbuf) fmt, args);
 	va_end(args);
 
 	/*
@@ -1551,7 +1551,7 @@ popup_an_errno(int errn, const char *fmt, ...)
 	char *s;
 
 	va_start(args, fmt);
-	(void) vsprintf(vmsgbuf, fmt, args);
+	(void) vsnprintf(vmsgbuf, sizeof(msgbuf), fmt, args);
 	va_end(args);
 	s = NewString(vmsgbuf);
 
@@ -1568,7 +1568,7 @@ action_output(const char *fmt, ...)
 	va_list args;
 
 	va_start(args, fmt);
-	(void) vsprintf(vmsgbuf, fmt, args);
+	(void) vsnprintf(vmsgbuf, sizeof(vmsgbuf), fmt, args);
 	va_end(args);
 	if (sms_redirect()) {
 		sms_info("%s", vmsgbuf);

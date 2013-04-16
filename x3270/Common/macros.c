@@ -1778,7 +1778,7 @@ sms_info(const char *fmt, ...)
 	sms_t *s;
 
 	va_start(args, fmt);
-	vsprintf(msgbuf, fmt, args);
+	(void) vsnprintf(msgbuf, sizeof(msgbuf), fmt, args);
 	va_end(args);
 
 	do {

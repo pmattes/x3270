@@ -32,15 +32,16 @@
 #include <process.h>	/* for _getpid */
 #include <stdio.h>	/* for _fdopen, _fileno, _snprintf */
 
-#define close           _close
-#define dup             _dup
-#define fdopen          _fdopen
-#define fileno          _fileno
-#define getpid          _getpid
-#define getcwd          _getcwd
-#define open            _open
-#define putenv          _putenv
-#define read            _read
-#define snprintf        _snprintf
-#define unlink          _unlink
-#define write           _write
+#define close		_close
+#define dup		_dup
+#define fdopen		_fdopen
+#define fileno		_fileno
+#define getpid		_getpid
+#define getcwd		_getcwd
+#define open		_open
+#define putenv		_putenv
+#define read		_read
+#define snprintf	_snprintf
+#define vsnprintf	_vsnprintf
+#define unlink		_unlink
+#define write		_write

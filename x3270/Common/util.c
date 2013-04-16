@@ -65,7 +65,7 @@ xs_vsprintf(const char *fmt, va_list args)
 	char buf[16384];
 	int nc;
 
-	nc = vsprintf(buf, fmt, args);
+	nc = vsnprintf(buf, sizeof(buf), fmt, args);
 	if (nc > sizeof(buf))
 		Error("Internal buffer overflow");
 	r = Malloc(nc + 1);
@@ -743,7 +743,7 @@ rpf(rpf_t *r, char *fmt, ...)
 
 	/* Figure out how much space would be needed. */
 	va_start(a, fmt);
-	ns = vsprintf(tbuf, fmt, a); /* XXX: dangerous, but so is vsnprintf */
+	ns = vsnprintf(tbuf, sizeof(tbuf), fmt, a);
 	va_end(a);
 	if (ns >= SP_TMP_LEN)
 	    Error("rpf overrun");

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, Paul Mattes.
+ * Copyright (c) 1993-2013, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -229,7 +229,7 @@ trace_ds(const char *fmt, ...)
 
 	/* print out remainder of message */
 	do_ts = False;
-	(void) vsprintf(tdsbuf, fmt, args);
+	(void) vsnprintf(tdsbuf, 4096, fmt, args);
 	trace_ds_s(tdsbuf, True);
 	va_end(args);
 }
@@ -249,7 +249,7 @@ trace_ds_nb(const char *fmt, ...)
 		tdsbuf = Malloc(4096);
 
 	/* print out remainder of message */
-	(void) vsprintf(tdsbuf, fmt, args);
+	(void) vsnprintf(tdsbuf, 4096, fmt, args);
 	trace_ds_s(tdsbuf, False);
 	va_end(args);
 }
@@ -293,7 +293,7 @@ static void
 vwtrace(const char *fmt, va_list args)
 {
 	if (tracef_bufptr != CN) {
-		tracef_bufptr += vsprintf(tracef_bufptr, fmt, args);
+		tracef_bufptr += vsprintf(tracef_bufptr, fmt, args); /* XXX */
 	} else if (tracef != NULL) {
 		int n2w, nw;
 		char buf[16384];
@@ -323,9 +323,7 @@ vwtrace(const char *fmt, va_list args)
 			do_ts = False;
 		}
 
-		buf[0] = 0;
 		(void) vsnprintf(buf, sizeof(buf), fmt, args);
-		buf[sizeof(buf) - 1] = '\0';
 		n2w = strlen(buf);
 		if (n2w > 0 && buf[n2w - 1] == '\n')
 		    	do_ts = True;

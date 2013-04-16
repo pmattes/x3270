@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2013 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -814,7 +814,7 @@ rop_init(struct rop *rop)
 static void
 popup_rop(struct rop *rop, abort_callback_t *a, const char *fmt, va_list args)
 {
-	(void) vsprintf(vmsgbuf, fmt, args);
+	(void) vsnprintf(vmsgbuf, sizeof(vmsgbuf), fmt, args);
 	if (!rop->shell || (rop->visible && !rop->overwrites)) {
 #if 0
 		char *nl;
@@ -903,7 +903,7 @@ popup_an_errno(int errn, const char *fmt, ...)
 	char *s;
 
 	va_start(args, fmt);
-	(void) vsprintf(vmsgbuf, fmt, args);
+	(void) vsnprintf(vmsgbuf, sizeof(vmsgbuf), fmt, args);
 	va_end(args);
 	s = XtNewString(vmsgbuf);
 
@@ -945,7 +945,7 @@ action_output(const char *fmt, ...)
 	if (sms_redirect()) {
 		char buf[4096];
 
-		(void) vsprintf(buf, fmt, args);
+		(void) vsnprintf(buf, sizeof(buf), fmt, args);
 		sms_info("%s", buf);
 	} else
 		popup_rop(&info_popup, NULL, fmt, args);

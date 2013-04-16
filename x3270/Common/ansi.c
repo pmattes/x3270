@@ -1364,7 +1364,7 @@ ansi_status_report(int nn, int ig2 _is_unused)
 		net_sends("\033[0n");
 		break;
 	    case 6:
-		(void) sprintf(cpr, "\033[%d;%dR",
+		(void) snprintf(cpr, sizeof(cpr), "\033[%d;%dR",
 		    (cursor_addr/COLS) + 1, (cursor_addr%COLS) + 1);
 		net_sends(cpr);
 		break;
@@ -1881,7 +1881,7 @@ emit_cup(int baddr)
 		char cup_buf[11];
 		int sl;
 
-		sl = sprintf(cup_buf, "\033[%d;%dH",
+		sl = snprintf(cup_buf, sizeof(cup_buf), "\033[%d;%dH",
 			(baddr / COLS) + 1,
 			(baddr % COLS) + 1);
 		space3270out(sl);
@@ -1909,7 +1909,7 @@ ansi_dump_spaces(int spaces, int baddr)
 		 * It is possible to optimize this further with clever
 		 * CU[UDFB] sequences, but not (yet) worth the effort.
 		 */
-		sl = sprintf(cup_buf, "\033[%d;%dH",
+		sl = snprintf(cup_buf, sizeof(cup_buf), "\033[%d;%dH",
 			(baddr / COLS) + 1,
 			(baddr % COLS) + 1);
 		if (sl < spaces) {
