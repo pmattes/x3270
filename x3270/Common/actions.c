@@ -244,7 +244,7 @@ XtActionsRec all_actions[] = {
 #if defined(X3270_PRINTER) /*[*/
 	{ "Printer",		Printer_action },
 #endif /*]*/
-#if defined(X3270_SCRIPT) || defined(S3270) /*[*/
+#if defined(X3270_SCRIPT) || defined(TCL3270) /*[*/
 	{ "Query",		Query_action },
 #endif /*]*/
 	{ "Quit",		Quit_action },

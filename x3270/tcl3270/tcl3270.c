@@ -1582,6 +1582,71 @@ Cols_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	return TCL_OK;
 }
 
+void
+Query_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
+    Cardinal *num_params)
+{
+	Tcl_Obj *q_obj;
+	char *s;
+	char *t;
+
+	static struct {
+		char *name;
+		const char *(*fn)(void);
+		char *string;
+	} queries[] = {
+		{ "BindPluName", net_query_bind_plu_name, NULL },
+		{ "ConnectionState", net_query_connection_state, NULL },
+		{ "CodePage", get_host_codepage, NULL },
+		{ "Cursor", ctlr_query_cursor, NULL },
+		{ "Formatted", ctlr_query_formatted, NULL },
+		{ "Host", net_query_host, NULL },
+		{ "LocalEncoding", get_codeset, NULL },
+		{ "LuName", net_query_lu_name, NULL },
+		{ "Model", NULL, full_model_name },
+		{ "ScreenCurSize", ctlr_query_cur_size, NULL },
+		{ "ScreenMaxSize", ctlr_query_max_size, NULL },
+		{ "Ssl", net_query_ssl, NULL },
+		{ CN, NULL }
+	};
+	int i;
+
+	switch (*num_params) {
+	case 0:
+		q_obj = Tcl_NewListObj(0, NULL);
+		for (i = 0; queries[i].name != CN; i++) {
+			t = (char *)(queries[i].fn? (*queries[i].fn)():
+						    queries[i].string);
+			if (t && *t)
+				s = xs_buffer("%s %s", queries[i].name, t);
+			else
+				s = xs_buffer("%s", queries[i].name);
+			Tcl_ListObjAppendElement(sms_interp, q_obj,
+				Tcl_NewStringObj(s, strlen(s)));
+			Free(s);
+		}
+		Tcl_SetObjResult(sms_interp, q_obj);
+		break;
+	case 1:
+		for (i = 0; queries[i].name != CN; i++) {
+			if (!strcasecmp(params[0], queries[i].name)) {
+				s = (char *)(queries[i].fn? (*queries[i].fn)():
+							    queries[i].string);
+				Tcl_SetResult(sms_interp, *s? s: "",
+					TCL_VOLATILE);
+				return;
+			}
+		}
+		popup_an_error("%s: Unknown parameter",
+				action_name(Query_action));
+		break;
+	default:
+		popup_an_error("%s: Requires 0 or 1 arguments",
+				action_name(Query_action));
+		break;
+	}
+}
+
 /* Generate a response to a script command. */
 void
 sms_info(const char *fmt, ...)
