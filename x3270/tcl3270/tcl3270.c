@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2013 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -138,8 +138,8 @@ static const char *unwait_name[] = {
 	"host disconnected",
 	"keyboard unlocked"
 };
-static unsigned long wait_id = 0L;
-static unsigned long command_timeout_id = 0L;
+static ioid_t wait_id = NULL_IOID;
+static ioid_t command_timeout_id = NULL_IOID;
 static int cmd_ret;
 static char *action = NULL;
 static Boolean interactive = False;
@@ -150,7 +150,7 @@ static int tcl3270_main(int argc, const char *argv[]);
 static void negotiate(void);
 static char *tc_scatv(char *s);
 static void snap_save(void);
-static void wait_timed_out(void);
+static void wait_timed_out(ioid_t);
 
 /* Macros.c stuff. */
 static Boolean in_cmd = False;
@@ -179,9 +179,9 @@ Boolean macro_output = False;
 #define UNBLOCK() { \
 	trace_event("Unblocked %s (%s)\n", action, unwait_name[waiting]); \
 	waiting = NOT_WAITING; \
-	if (wait_id != 0L) { \
+	if (wait_id != NULL_IOID) { \
 		RemoveTimeOut(wait_id); \
-		wait_id = 0L; \
+		wait_id = NULL_IOID; \
 	} \
 }
 
@@ -483,11 +483,11 @@ ps_clear(void)
 
 /* Command timeout function. */
 static void
-command_timed_out(void)
+command_timed_out(ioid_t id _is_unused)
 {
     	popup_an_error("Command timed out after %ds.\n",
 		appres.command_timeout);
-	command_timeout_id = 0L;
+	command_timeout_id = NULL_IOID;
 
 	/* Let the command complete unsuccessfully. */
 	UNBLOCK();
@@ -617,9 +617,9 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 		/* Push more string text in. */
 		process_pending_string();
 	}
-	if (command_timeout_id != 0L) {
+	if (command_timeout_id != NULL_IOID) {
 	    	RemoveTimeOut(command_timeout_id);
-		command_timeout_id = 0L;
+		command_timeout_id = NULL_IOID;
 	}
 #if defined(X3270_TRACE) /*[*/
 	if (toggled(EVENT_TRACE)) {
@@ -1465,10 +1465,10 @@ Snap_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 }
 
 static void
-wait_timed_out(void)
+wait_timed_out(ioid_t id _is_unused)
 {
 	popup_an_error("Wait timed out");
-	wait_id = 0L;
+	wait_id = NULL_IOID;
 	UNBLOCK();
 }
 
