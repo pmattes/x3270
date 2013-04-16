@@ -2902,3 +2902,40 @@ void
 toggle_nop(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 {
 }
+
+/*
+ * Queries.
+ */
+const char *
+ctlr_query_cur_size(void)
+{
+	static char result[32];
+
+	snprintf(result, sizeof(result), "%u %u", ROWS, COLS);
+	return result;
+}
+
+const char *
+ctlr_query_cursor(void)
+{
+	static char result[32];
+
+	snprintf(result, sizeof(result), "%u %u",
+		cursor_addr / COLS, cursor_addr % COLS);
+	return result;
+}
+
+const char *
+ctlr_query_formatted(void)
+{
+	return formatted? "formatted": "unformatted";
+}
+
+const char *
+ctlr_query_max_size(void)
+{
+	static char result[32];
+
+	snprintf(result, sizeof(result), "%u %u", maxROWS, maxCOLS);
+	return result;
+}

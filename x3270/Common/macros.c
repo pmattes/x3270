@@ -56,6 +56,7 @@
 #include "resources.h"
 
 #include "actionsc.h"
+#include "charsetc.h"
 #include "childc.h"
 #include "ctlrc.h"
 #include "ftc.h"
@@ -3699,12 +3700,20 @@ Query_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	static struct {
 		char *name;
 		const char *(*fn)(void);
+		char *string;
 	} queries[] = {
-		{ "BindPluName", net_query_bind_plu_name },
-		{ "ConnectionState", net_query_connection_state },
-		{ "Codeset", get_codeset },
-		{ "Host", net_query_host },
-		{ "LuName", net_query_lu_name },
+		{ "BindPluName", net_query_bind_plu_name, NULL },
+		{ "ConnectionState", net_query_connection_state, NULL },
+		{ "CodePage", get_host_codepage, NULL },
+		{ "CodeSet", get_codeset, NULL },
+		{ "Cursor", ctlr_query_cursor, NULL },
+		{ "Formatted", ctlr_query_formatted, NULL },
+		{ "Host", net_query_host, NULL },
+		{ "LuName", net_query_lu_name, NULL },
+		{ "Model", NULL, full_model_name },
+		{ "ScreenCurSize", ctlr_query_cur_size, NULL },
+		{ "ScreenMaxSize", ctlr_query_max_size, NULL },
+		{ "Ssl", net_query_ssl, NULL },
 		{ CN, NULL }
 	};
 	int i;
@@ -3713,7 +3722,8 @@ Query_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	case 0:
 		for (i = 0; queries[i].name != CN; i++) {
 			action_output("%s: %s", queries[i].name,
-					(*queries[i].fn)());
+					queries[i].fn? (*queries[i].fn)():
+					queries[i].string);
 		}
 		break;
 	case 1:

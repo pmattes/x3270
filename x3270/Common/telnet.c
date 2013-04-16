@@ -4492,22 +4492,36 @@ net_query_host(void)
 		} else
 #endif /*]*/
 		{
-			s = xs_buffer("host %s %u %s%s",
-					hostname, current_port,
-#if defined(HAVE_LIBSSL) /*[*/
-					secure_connection? "secure":
-#endif /*]*/
-							   "not-secure",
-#if defined(HAVE_LIBSSL) /*[*/
-					secure_connection?
-					 (secure_unverified? " host-unverified":
-							     " host-verified"):
-					 ""
-#else /*][*/
-							   ""
-#endif /*]*/
-					    );
+			s = xs_buffer("host %s %u", hostname, current_port);
 		}
+		return s;
+	} else
+		return "";
+}
+
+/* Return the SSL state. */
+const char *
+net_query_ssl(void)
+{
+	static char *s = CN;
+
+	if (CONNECTED) {
+		Free(s);
+
+		s = xs_buffer("%s%s",
+#if defined(HAVE_LIBSSL) /*[*/
+			secure_connection? "secure":
+#endif /*]*/
+		                           "not-secure",
+#if defined(HAVE_LIBSSL) /*[*/
+			secure_connection?
+			 (secure_unverified? " host-unverified":
+					     " host-verified"):
+			 ""
+#else /*][*/
+			""
+#endif /*]*/
+			);
 		return s;
 	} else
 		return "";

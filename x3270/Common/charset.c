@@ -354,7 +354,7 @@ charset_init2(char *csname, const char *codepage, const char *cgcsgid,
 }
 
 /* Return the current host codepage. */
-char *
+const char *
 get_host_codepage(void)
 {
 	return (host_codepage != CN)? host_codepage: "037";

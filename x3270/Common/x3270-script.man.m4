@@ -343,6 +343,30 @@ With the XX_FB(html) option, saves it as HTML, otherwise saves it as plain
 ASCII.
 XX_TP(XX_FB(PrintText)(XX_FB(`html,string')))
 Returns the current screen contents as HTML.
+XX_TP(XX_FB(Query)(XX_FI(keyword)))
+Returns state information.
+Keywords are:
+XX_PP
+XX_TS(3,`center;
+l l .')
+XX_TR(XX_TD(Keyword)	XX_TD(Output))
+XX_T_
+XX_TR(XX_TD(BindPluName)	XX_TD(BIND PLU returned by the host))
+XX_TR(XX_TD(ConnectionState)	XX_TD(TN3270/TN3270E mode and submode))
+XX_TR(XX_TD(CodePage)	XX_TD(Host code page))
+XX_TR(XX_TD(CodeSet)	XX_TD(Local character encoding))
+XX_TR(XX_TD(Cursor)	XX_TD(Cursor position (row col)))
+XX_TR(XX_TD(Formatted)	XX_TD(3270 format state (formatted or unformatted)))
+XX_TR(XX_TD(Host)	XX_TD(Host name and port))
+XX_TR(XX_TD(LuName)	XX_TD(Host name LU name))
+XX_TR(XX_TD(Model)	XX_TD(3270 model name (IBM-327x-n)))
+XX_TR(XX_TD(ScreenCurSize)	XX_TD(Current screen size (rows cols)))
+XX_TR(XX_TD(ScreenMaxSize)	XX_TD(Maximum screen size (rows cols)))
+XX_TR(XX_TD(Ssl)	XX_TD(SSL state (secure or not-secure) and host validation state (host-verified or host-unverified)))
+XX_TE
+XX_IP
+Without a XX_FI(keyword), XX_FB(Query) returns each of the defined attributes,
+one per line, labeled by its name.
 XX_TP(XX_FB(ReadBuffer)(XX_FB(Ascii)))
 Dumps the contents of the screen buffer, one line at a time.
 Positions inside data fields are generally output as 2-digit hexadecimal codes

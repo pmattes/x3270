@@ -60,6 +60,7 @@ extern const char *net_query_bind_plu_name(void);
 extern const char *net_query_connection_state(void);
 extern const char *net_query_host(void);
 extern const char *net_query_lu_name(void);
+extern const char *net_query_ssl(void);
 extern void net_sendc(char c);
 extern void net_sends(const char *s);
 extern void net_send_erase(void);
