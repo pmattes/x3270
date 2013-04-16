@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, Paul Mattes.
+ * Copyright (c) 1993-2013, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -3346,7 +3346,7 @@ get_gc(struct sstate *s, int color)
 				 &cpx[pixel_index])) {
 			static char nbuf[16];
 
-			(void) sprintf(nbuf, "%d", pixel_index);
+			(void) snprintf(nbuf, sizeof(nbuf), "%d", pixel_index);
 			if (!in_gc_error) {
 				in_gc_error = True;
 				popup_an_error("Cannot allocate colormap \"%s\" for 3279 color %s (%s), using \"%s\"",
@@ -3400,7 +3400,7 @@ get_selgc(struct sstate *s, int color)
 		if (!alloc_color(color_name[color], FB_WHITE, &cpx[color])) {
 			static char nbuf[16];
 
-			(void) sprintf(nbuf, "%d", color);
+			(void) snprintf(nbuf, sizeof(nbuf), "%d", color);
 			popup_an_error("Cannot allocate colormap \"%s\" for 3279 color %s (%s), using \"white\"",
 			    color_name[color], nbuf,
 			    see_color((unsigned char)(color + 0xf0)));
@@ -5550,7 +5550,8 @@ xim_init(void)
 
 	(void) memset(buf, '\0', sizeof(buf));
 	if (appres.input_method != CN)
-		(void) sprintf(buf, "@im=%s", appres.input_method);
+		(void) snprintf(buf, sizeof(buf), "@im=%s",
+			appres.input_method);
 	if (XSetLocaleModifiers(buf) == CN) {
 		popup_an_error("XSetLocaleModifiers failed\n"
 		    "XIM-based input disabled");

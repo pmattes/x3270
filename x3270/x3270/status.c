@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2013 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -659,9 +659,11 @@ status_timing(struct timeval *t0, struct timeval *t1)
 		cs = (t1->tv_sec - t0->tv_sec) * 10 +
 		     (t1->tv_usec - t0->tv_usec + 50000) / 100000;
 		if (cs < CM)
-			(void) sprintf(buf, ":%02ld.%ld", cs / 10, cs % 10);
+			(void) snprintf(buf, sizeof(buf), ":%02ld.%ld",
+				cs / 10, cs % 10);
 		else
-			(void) sprintf(buf, "%02ld:%02ld", cs / CM, (cs % CM) / 10);
+			(void) snprintf(buf, sizeof(buf), "%02ld:%02ld",
+				cs / CM, (cs % CM) / 10);
 		do_timing(oia_timing = buf);
 	}
 }
@@ -679,7 +681,8 @@ status_cursor_pos(int ca)
 {
 	static char	buf[CCNT+1];
 
-	(void) sprintf(buf, "%03d/%03d", ca/COLS + 1, ca%COLS + 1);
+	(void) snprintf(buf, sizeof(buf), "%03d/%03d",
+		ca/COLS + 1, ca%COLS + 1);
 	do_cursor(oia_cursor = buf);
 }
 

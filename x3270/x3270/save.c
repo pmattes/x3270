@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2009, Paul Mattes.
+ * Copyright (c) 1994-2009, 2013 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -151,7 +151,7 @@ save_xy(void)
 		y = wa.y;
 	}
 
-	(void) sprintf(tbuf, "+%d+%d", x, y);
+	(void) snprintf(tbuf, sizeof(tbuf), "+%d+%d", x, y);
 	if ((ix = cmd_srch("-geometry")))
 		cmd_replace(ix + 1, tbuf);
 	else {
@@ -214,7 +214,7 @@ save_icon(void)
 			return;
 	}
 
-	(void) sprintf(tbuf, "%d", iconX);
+	(void) snprintf(tbuf, sizeof(tbuf), "%d", iconX);
 	ix = cmd_srch(OptIconX);
 	if (ix)
 		cmd_replace(ix + 1, tbuf);
@@ -223,7 +223,7 @@ save_icon(void)
 		cmd_append(tbuf);
 	}
 
-	(void) sprintf(tbuf, "%d", iconY);
+	(void) snprintf(tbuf, sizeof(tbuf), "%d", iconY);
 	ix = cmd_srch(OptIconY);
 	if (ix)
 		cmd_replace(ix + 1, tbuf);
@@ -675,11 +675,11 @@ save_options(char *n)
 		save_opt(f, "emulator font", OptEmulatorFont, ResEmulatorFont,
 		    efontname);
 	if (model_changed) {
-		(void) sprintf(buf, "%d", model_num);
+		(void) snprintf(buf, sizeof(buf), "%d", model_num);
 		save_opt(f, "model", OptModel, ResModel, buf);
 	}
 	if (oversize_changed) {
-		(void) sprintf(buf, "%dx%d", ov_cols, ov_rows);
+		(void) snprintf(buf, sizeof(buf), "%dx%d", ov_cols, ov_rows);
 		save_opt(f, "oversize", OptOversize, ResOversize, buf);
 	}
 	if (scheme_changed && appres.color_scheme != CN)
