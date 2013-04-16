@@ -4447,7 +4447,7 @@ net_query_connection_state(void)
 				else
 					return "tn3270e unbound";
 			case E_3270:
-				return "tn3270e lu-lu";
+				return "tn3270e 3270";
 			case E_NVT:
 				return "tn3270e nvt";
 			case E_SSCP:
@@ -4492,12 +4492,20 @@ net_query_host(void)
 		} else
 #endif /*]*/
 		{
-			s = xs_buffer("host %s %u %s",
+			s = xs_buffer("host %s %u %s%s",
 					hostname, current_port,
 #if defined(HAVE_LIBSSL) /*[*/
-					secure_connection? "encrypted":
+					secure_connection? "secure":
 #endif /*]*/
-							   "unencrypted"
+							   "not-secure",
+#if defined(HAVE_LIBSSL) /*[*/
+					secure_connection?
+					 (secure_unverified? " host-unverified":
+							     " host-verified"):
+					 ""
+#else /*][*/
+							   ""
+#endif /*]*/
 					    );
 		}
 		return s;
