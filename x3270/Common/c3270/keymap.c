@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, Paul Mattes.
+ * Copyright (c) 2000-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -307,7 +307,7 @@ locate_keymap(const char *name, char **fullname, char **r)
 	}
 
 	/* See if it's a file. */
-	fnx = do_subst(name, True, True);
+	fnx = do_subst(name, DS_VARS | DS_TILDE);
 	a = access(fnx, R_OK);
 
 	/* If there's a plain version, return it. */
@@ -560,7 +560,7 @@ static struct keymap *timeout_match = NULL;
 static unsigned long kto = 0L;
 
 static void
-key_timeout(void)
+key_timeout(ioid_t id _is_unused)
 {
 	trace_event("Timeout, using shortest keymap match\n");
 	kto = 0L;

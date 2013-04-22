@@ -612,7 +612,7 @@ save_options(char *n)
 		return -1;
 
 	/* Open the file. */
-	n = do_subst(n, True, True);
+	n = do_subst(n, DS_VARS | DS_TILDE);
 	f = fopen(n, "r");
 	if (f != (FILE *)NULL) {
 		(void) fclose(f);
@@ -829,7 +829,7 @@ merge_profile(XrmDatabase *d, char *session, Boolean mono)
 #endif /*]*/
 
 	if (session == CN && getenv(NO_PROFILE_ENV) != CN) {
-		profile_name = do_subst(DEFAULT_PROFILE, True, True);
+		profile_name = do_subst(DEFAULT_PROFILE, DS_VARS | DS_TILDE);
 	} else {
 		/* Open the file. */
 	    	if (session != CN)
@@ -838,7 +838,7 @@ merge_profile(XrmDatabase *d, char *session, Boolean mono)
 			fname = getenv(PROFILE_ENV);
 		if (fname == CN || *fname == '\0')
 			fname = DEFAULT_PROFILE;
-		profile_name = do_subst(fname, True, True);
+		profile_name = do_subst(fname, DS_VARS | DS_TILDE);
 
 		/* Create a resource database from the file. */
 		dd = XrmGetFileDatabase(profile_name);

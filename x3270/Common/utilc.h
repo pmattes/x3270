@@ -32,7 +32,11 @@
 
 extern void add_resource(const char *name, const char *value);
 extern char *ctl_see(int c);
-extern char *do_subst(const char *s, Boolean do_vars, Boolean do_tilde);
+extern char *do_subst(const char *s, unsigned flags);
+#define DS_NONE		0x0
+#define DS_VARS		0x1
+#define DS_TILDE	0x2
+#define DS_UNIQUE	0x4
 extern void fcatv(FILE *f, char *s);
 extern const char *get_message(const char *key);
 extern char *get_fresource(const char *fmt, ...) printflike(1, 2);

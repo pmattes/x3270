@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2013, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@ void trace_dsn(const char *fmt, ...) printflike(1, 2);
 void trace_event(const char *fmt, ...) printflike(1, 2);
 void trace_set_trace_file(const char *path);
 void trace_set_screentrace_file(const char *path);
-void trace_screen(void);
+void trace_screen(Boolean is_clear);
 void trace_rollover_check(void);
 
 #else /*][*/

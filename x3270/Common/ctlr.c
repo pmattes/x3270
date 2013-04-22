@@ -2414,6 +2414,9 @@ ctlr_any_data(void)
 {
 	register int i;
 
+	if (ea_buf == NULL)
+		return False;
+
 	for (i = 0; i < ROWS*COLS; i++) {
 		if (!IsBlank(ea_buf[i].cc))
 			return True;
@@ -2432,7 +2435,7 @@ ctlr_clear(Boolean can_snap)
 	if (ctlr_any_data()) {
 #if defined(X3270_TRACE) /*[*/
 		if (can_snap && !trace_skipping && toggled(SCREEN_TRACE))
-			trace_screen();
+			trace_screen(True);
 #endif /*]*/
 		scroll_save(maxROWS, ever_3270 ? False : True);
 	}
@@ -2487,7 +2490,7 @@ ctlr_add(int baddr, unsigned char c, unsigned char cs)
 		if (trace_primed && !IsBlank(oc)) {
 #if defined(X3270_TRACE) /*[*/
 			if (toggled(SCREEN_TRACE))
-				trace_screen();
+				trace_screen(False);
 #endif /*]*/
 			scroll_save(maxROWS, False);
 			trace_primed = False;

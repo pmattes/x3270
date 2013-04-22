@@ -2,6 +2,12 @@
 3.3 is the current development line for the x3270 suite.
 <h2>Changes in version 3.3.13alpha1, Nn. Month 2013</h2>
 <ul>
+ <li>[all] Turned off variable substitution for all actions under certain
+  circumstances, such as inside macros. It mostly just caused confusion.</li>
+ <li>[all] Added two pseudo-variables for filename substitutions: ${TIMESTAMP}
+  becomes a microsecond-resolution timestamp and ${UNIQUE} guarantees that the
+  filename is unique. Changed the default trace file names to use ${UNIQUE}.
+  </li>
  <li>[all] Added a number of keywords to the <b>Query</b> action.</li>
  <li>[all] Made the <b>Open</b> (<b>Connect</b>) and <b>Close</b>
   (<b>Disconnect</b>) aliases available everywhere.</li>

@@ -1407,7 +1407,7 @@ merge_profile(void)
 	fname = getenv(PROFILE_ENV);
 	if (fname == CN || *fname == '\0')
 		fname = DEFAULT_PROFILE;
-	profile_name = do_subst(fname, True, True);
+	profile_name = do_subst(fname, DS_VARS | DS_TILDE);
 	did_read = (read_resource_file(profile_name, False) >= 0);
 	Free(profile_name);
 	return did_read;

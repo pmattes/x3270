@@ -37,6 +37,8 @@
 #include <pwd.h>
 #endif /*]*/
 #include <stdarg.h>
+#include <fcntl.h>
+#include <errno.h>
 #include "resources.h"
 #include "charsetc.h"
 #if defined(_MSC_VER) /*[*/
@@ -407,123 +409,196 @@ get_message(const char *key)
 	}
 }
 
-#define ex_getenv getenv
+static char *
+ex_getenv(const char *name, unsigned long flags, int *up)
+{
+	if (!strcasecmp(name, "TIMESTAMP")) {
+		/* YYYYMMDDHHMMSSUUUUUU */
+		static char ts[21];
+		struct timeval tv;
+		struct tm *tm;
+
+		if (gettimeofday(&tv, NULL) < 0)
+			return NewString("?");
+		tm = localtime(&tv.tv_sec);
+		(void) snprintf(ts, sizeof(ts),
+			"%04u%02u%02u%02u%02u%02u%06u",
+			tm->tm_year + 1900,
+			tm->tm_mon + 1,
+			tm->tm_mday,
+			tm->tm_hour,
+			tm->tm_min,
+			tm->tm_sec,
+			(unsigned)tv.tv_usec);
+		return NewString(ts);
+	} else if (!strcasecmp(name, "UNIQUE")) {
+		char buf[64];
+
+		++*up;
+		if (*up == 0)
+			(void) snprintf(buf, sizeof(buf), "%u",
+				(unsigned)getpid());
+		else
+			(void) snprintf(buf, sizeof(buf), "%u-%u",
+				(unsigned)getpid(), *up);
+		return NewString(buf);
+	} else {
+		return getenv(name);
+	}
+}
 
 /* Variable and tilde substitution functions. */
-static char *
-var_subst(const char *s)
+/*static*/ char *
+var_subst(const char *s, unsigned long flags)
 {
+	const char *t;
 	enum { VS_BASE, VS_QUOTE, VS_DOLLAR, VS_BRACE, VS_VN, VS_VNB, VS_EOF }
-	    state = VS_BASE;
+	    state;
 	char c;
-	int o_len = strlen(s) + 1;
+	int o_len;
 	char *ob;
 	char *o;
-	const char *vn_start = CN;
+	const char *vn_start;
+	int u = -1;
+#	define LBR	'{'
+#	define RBR	'}'
 
 	if (strchr(s, '$') == CN)
 		return NewString(s);
 
-	o_len = strlen(s) + 1;
-	ob = Malloc(o_len);
-	o = ob;
-#	define LBR	'{'
-#	define RBR	'}'
+	for (;;) {
+		t = s;
+		state = VS_BASE;
+		vn_start = CN;
+		o_len = strlen(t) + 1;
+		ob = Malloc(o_len);
+		o = ob;
 
-	while (state != VS_EOF) {
-		c = *s;
-		switch (state) {
-		    case VS_BASE:
-			if (c == '\\')
-			    state = VS_QUOTE;
-			else if (c == '$')
-			    state = VS_DOLLAR;
-			else
-			    *o++ = c;
-			break;
-		    case VS_QUOTE:
-			if (c == '$') {
-				*o++ = c;
-				o_len--;
-			} else {
-				*o++ = '\\';
-				*o++ = c;
-			}
-			state = VS_BASE;
-			break;
-		    case VS_DOLLAR:
-			if (c == LBR)
-				state = VS_BRACE;
-			else if (isalpha(c) || c == '_') {
-				vn_start = s;
-				state = VS_VN;
-			} else {
-				*o++ = '$';
-				*o++ = c;
+		while (state != VS_EOF) {
+			c = *t;
+			switch (state) {
+			    case VS_BASE:
+				if (c == '\\')
+				    state = VS_QUOTE;
+				else if (c == '$')
+				    state = VS_DOLLAR;
+				else
+				    *o++ = c;
+				break;
+			    case VS_QUOTE:
+				if (c == '$') {
+					*o++ = c;
+					o_len--;
+				} else {
+					*o++ = '\\';
+					*o++ = c;
+				}
 				state = VS_BASE;
-			}
-			break;
-		    case VS_BRACE:
-			if (isalpha(c) || c == '_') {
-				vn_start = s;
-				state = VS_VNB;
-			} else {
-				*o++ = '$';
-				*o++ = LBR;
-				*o++ = c;
-				state = VS_BASE;
-			}
-			break;
-		    case VS_VN:
-		    case VS_VNB:
-			if (!(isalnum(c) || c == '_')) {
-				int vn_len;
-				char *vn;
-				char *vv;
-
-				vn_len = s - vn_start;
-				if (state == VS_VNB && c != RBR) {
+				break;
+			    case VS_DOLLAR:
+				if (c == LBR)
+					state = VS_BRACE;
+				else if (isalpha(c) || c == '_') {
+					vn_start = t;
+					state = VS_VN;
+				} else {
+					*o++ = '$';
+					*o++ = c;
+					state = VS_BASE;
+				}
+				break;
+			    case VS_BRACE:
+				if (isalpha(c) || c == '_') {
+					vn_start = t;
+					state = VS_VNB;
+				} else {
 					*o++ = '$';
 					*o++ = LBR;
-					(void) strncpy(o, vn_start, vn_len);
-					o += vn_len;
+					*o++ = c;
 					state = VS_BASE;
-					continue;	/* rescan */
 				}
-				vn = Malloc(vn_len + 1);
-				(void) strncpy(vn, vn_start, vn_len);
-				vn[vn_len] = '\0';
-				if ((vv = ex_getenv(vn))) {
-					*o = '\0';
-					o_len = o_len
-					    - 1			/* '$' */
-					    - (state == VS_VNB)	/* { */
-					    - vn_len		/* name */
-					    - (state == VS_VNB)	/* } */
-					    + strlen(vv);
-					ob = Realloc(ob, o_len);
-					o = strchr(ob, '\0');
-					(void) strcpy(o, vv);
-					o += strlen(vv);
+				break;
+			    case VS_VN:
+			    case VS_VNB:
+				if (!(isalnum(c) || c == '_')) {
+					int vn_len;
+					char *vn;
+					char *vv;
+
+					vn_len = t - vn_start;
+					if (state == VS_VNB && c != RBR) {
+						*o++ = '$';
+						*o++ = LBR;
+						(void) strncpy(o, vn_start, vn_len);
+						o += vn_len;
+						state = VS_BASE;
+						continue;	/* rescan */
+					}
+					vn = Malloc(vn_len + 1);
+					(void) strncpy(vn, vn_start, vn_len);
+					vn[vn_len] = '\0';
+					if ((vv = ex_getenv(vn, flags, &u))) {
+						*o = '\0';
+						o_len = o_len
+						    - 1			/* '$' */
+						    - (state == VS_VNB)	/* { */
+						    - vn_len		/* name */
+						    - (state == VS_VNB)	/* } */
+						    + strlen(vv);
+						ob = Realloc(ob, o_len);
+						o = strchr(ob, '\0');
+						(void) strcpy(o, vv);
+						o += strlen(vv);
+					}
+					Free(vn);
+					if (state == VS_VNB) {
+						state = VS_BASE;
+						break;
+					} else {
+						/* Rescan this character */
+						state = VS_BASE;
+						continue;
+					}
 				}
-				Free(vn);
-				if (state == VS_VNB) {
-					state = VS_BASE;
-					break;
-				} else {
-					/* Rescan this character */
-					state = VS_BASE;
+				break;
+			    case VS_EOF:
+				break;
+			}
+			t++;
+			if (c == '\0')
+				state = VS_EOF;
+		}
+
+		/*
+		 * Check for $UNIQUE.
+		 *
+		 * vr_subst() will increment u if $UNIQUE was used. If it has
+		 * been incremented, then try creating the resulting file. If
+		 * the open() call fails with EEXIST, then re-run this function
+		 * with the new value of u, and try this again with the next
+		 * name.
+		 *
+		 * Keep trying until open() succeeds, or fails with something
+		 * other than EEXIST.
+		 */
+		if (u != -1) {
+			int fd;
+
+			fd = open(ob, O_WRONLY | O_EXCL | O_CREAT, 0600);
+			if (fd < 0) {
+				if (errno == EEXIST) {
+					/* Try again. */
+					Free(ob);
 					continue;
 				}
+			} else {
+				close(fd);
 			}
 			break;
-		    case VS_EOF:
-			break;
-		}
-		s++;
-		if (c == '\0')
-			state = VS_EOF;
+		} else
+		    	break;
 	}
+
 	return ob;
 }
 
@@ -580,35 +655,48 @@ tilde_subst(const char *s)
 	}
 	return r;
 }
+#else /*][*/
+static char *
+tilde_subst(const char *s)
+{
+	char *t;
+
+	if (*s != '~' || (t = getenv("HOMEPATH")) == NULL)
+		return NewString(s);
+
+	switch (*(s + 1)) {
+	case '\0':
+		return NewString(t);
+	case '/':
+	case '\\':
+		return xs_buffer("%s%s", t, s + 1);
+	default:
+		return NewString(s);
+	}
+}
 #endif /*]*/
 
 char *
-do_subst(const char *s, Boolean do_vars, Boolean do_tilde)
+do_subst(const char *s, unsigned flags)
 {
-	if (!do_vars && !do_tilde)
+	if (flags == DS_NONE)
 		return NewString(s);
 
-	if (do_vars) {
+	if (flags & DS_VARS) {
 		char *t;
 
-		t = var_subst(s);
-#if !defined(_WIN32) /*[*/
-		if (do_tilde) {
+		t = var_subst(s, flags);
+		if (flags & DS_TILDE) {
 			char *u;
 
 			u = tilde_subst(t);
 			Free(t);
 			return u;
 		}
-#endif /*]*/
 		return t;
 	}
 
-#if !defined(_WIN32) /*[*/
 	return tilde_subst(s);
-#else /*][*/
-	return NewString(s);
-#endif /*]*/
 }
 
 /*

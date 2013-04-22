@@ -1187,6 +1187,24 @@ After XX_FB(on), a filename may be specified to override the default
 trace file name of XX_FB(/tmp/x3trc.)`'XX_FI(pid)`'ifelse(XX_PRODUCT,wc3270,XX_FB(.txt)).
 XX_TPE()dnl
 ')dnl
+XX_LP
+Note that certain parameters to XX_PRODUCT actions (such as the names of files
+and keymaps) are subject to XX_FI(substitutions):
+XX_LP
+The character XX_FB(~) at the beginning of a string is replaced with the user's
+home directory.
+ifelse(XX_PLATFORM,unix,`A XX_FB(~) character followed by a username is
+replaced with that XX_POSESSIVE(user) home directory.
+')dnl
+XX_LP
+Environment variables are substituted using the Unix shell convention of
+$XX_FI(name) or ${XX_FI(name)}.
+XX_LP
+Two special pseudo-environment variables are supported. ${TIMESTAMP} is
+replaced with a microsecond-resolution timestamp; ${UNIQUE} is replaced with a
+string guaranteed to make a unique filename (the process ID optionally
+followed by a dash and a string of digits). ${UNIQUE} is used to form trace
+file names.
 ifelse(XX_PRODUCT,c3270,`include(keymaps.inc)
 ')dnl
 ifelse(XX_PRODUCT,wc3270,`include(keymaps.inc)

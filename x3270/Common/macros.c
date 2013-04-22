@@ -1083,14 +1083,6 @@ execute_command(enum iaction cause, char *s, char **np)
 		/*5*/ "Syntax error: \")\" expected"
 	};
 #define fail(n) { failreason = n; goto failure; }
-#define free_params() { \
-	if (cause == IA_MACRO ||   cause == IA_KEYMAP || \
-	    cause == IA_COMMAND || cause == IA_IDLE) { \
-		Cardinal j; \
-		for (j = 0; j < count; j++) \
-			Free(params[j]); \
-	} \
-}
 
 	parm[0] = '\0';
 	params[count] = parm;
@@ -1283,19 +1275,19 @@ execute_command(enum iaction cause, char *s, char **np)
 	} else if (np)
 		*np = s-1;
 
-	/* If it's a macro, do variable substitutions. */
-	if (cause == IA_MACRO || cause == IA_KEYMAP ||
-	    cause == IA_COMMAND || cause == IA_IDLE) {
-		Cardinal j;
-
-		for (j = 0; j < count; j++)
-			params[j] = do_subst(params[j], True, False);
-	}
+	/*
+	 * There used to be logic to do variable substituion here under most
+	 * circumstances. That's just plain wrong.
+	 *
+	 * Substitutions should be handled for specific arguments to specific
+	 * actions. If substitutions are needed for special situations, they
+	 * should be added explicitly, or new actions or variants of actions
+	 * should be added that include the substitutions.
+	 */
 
 	/* Search the action list. */
 	if (!strncasecmp(aname, PA_PFX, strlen(PA_PFX))) {
 		popup_an_error("Invalid action: %s", aname);
-		free_params();
 		return EM_ERROR;
 	}
 	any = -1;
@@ -1313,7 +1305,6 @@ execute_command(enum iaction cause, char *s, char **np)
 				if (any >= 0) {
 					popup_an_error("Ambiguous action name: "
 					    "%s", aname);
-					free_params();
 					return EM_ERROR;
 				}
 				any = i;
@@ -1326,11 +1317,9 @@ execute_command(enum iaction cause, char *s, char **np)
 		ia_cause = cause;
 		(*actions[any].proc)((Widget)NULL, (XEvent *)NULL,
 			count? params: (String *)NULL, &count);
-		free_params();
 		screen_disp(False);
 	} else {
 		popup_an_error("Unknown action: %s", aname);
-		free_params();
 		return EM_ERROR;
 	}
 
@@ -1348,7 +1337,6 @@ execute_command(enum iaction cause, char *s, char **np)
 	popup_an_error("%s", fail_text[failreason-1]);
 	return EM_ERROR;
 #undef fail
-#undef free_params
 }
 
 /* Run the string at the top of the stack. */
@@ -4189,14 +4177,18 @@ Source_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
     	int fd;
+	char *expanded_filename;
 
 	action_debug(Source_action, event, params, num_params);
 	if (check_usage(Source_action, *num_params, 1, 1) < 0)
 		return;
-	fd = open(params[0], O_RDONLY);
+	expanded_filename = do_subst(params[0], DS_VARS | DS_TILDE);
+	fd = open(expanded_filename, O_RDONLY);
 	if (fd < 0) {
+		Free(expanded_filename);
 	    	popup_an_errno(errno, "%s", params[0]);
 		return;
 	}
+	Free(expanded_filename);
 	push_file(fd);
 }

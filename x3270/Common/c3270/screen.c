@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2012, Paul Mattes.
+ * Copyright (c) 2000-2013, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -197,7 +197,7 @@ static Boolean curses_alt = False;
 static Boolean default_colors = False;
 #endif /*]*/
 
-static void kybd_input(void);
+static void kybd_input(unsigned long fd, ioid_t id);
 static void kybd_input2(int k, ucs4_t ucs4, int alt);
 static void draw_oia(void);
 static void screen_connect(Boolean connected);
@@ -1157,7 +1157,7 @@ static unsigned long eto = 0L;
 static Boolean meta_escape = False;
 
 static void
-escape_timeout(void)
+escape_timeout(ioid_t id _is_unused)
 {
 	trace_event("Timeout waiting for key following Escape, processing "
 	    "separately\n");
@@ -1168,7 +1168,7 @@ escape_timeout(void)
 
 /* Keyboard input. */
 static void
-kybd_input(void)
+kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
 	int k = 0;		/* KEY_XXX, or 0 */
 	ucs4_t ucs4 = 0;	/* input character, or 0 */
@@ -1578,7 +1578,7 @@ static char oia_timing[6]; /* :ss.s*/
 
 static char *status_msg = "X Disconnected";
 static char *saved_status_msg = NULL;
-static unsigned long saved_status_timeout;
+static ioid_t saved_status_timeout;
 
 static void
 cancel_status_push(void)
@@ -1603,11 +1603,11 @@ status_insert_mode(Boolean on)
 }
 
 static void
-status_pop(void)
+status_pop(ioid_t id _is_unused)
 {
     	status_msg = saved_status_msg;
 	saved_status_msg = NULL;
-	saved_status_timeout = 0;
+	saved_status_timeout = NULL_IOID;
 }
 
 void

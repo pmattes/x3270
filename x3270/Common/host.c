@@ -132,7 +132,7 @@ hostfile_init(void)
 	if (hostfile_name == CN)
 		hostfile_name = xs_buffer("%s/ibm_hosts", appres.conf_dir);
 	else
-		hostfile_name = do_subst(appres.hostsfile, True, True);
+		hostfile_name = do_subst(appres.hostsfile, DS_VARS | DS_TILDE);
 	hf = fopen(hostfile_name, "r");
 	if (hf != (FILE *)NULL) {
 		while (fgets(buf, sizeof(buf), hf)) {
@@ -931,7 +931,8 @@ save_recent(const char *hn)
 	 */
 	if (appres.connectfile_name != CN &&
 	    strcasecmp(appres.connectfile_name, "none")) {
-		lcf_name = do_subst(appres.connectfile_name, True, True);
+		lcf_name = do_subst(appres.connectfile_name,
+			DS_VARS | DS_TILDE);
 		lcf = fopen(lcf_name, "r");
 	}
 	if (lcf != (FILE *)NULL) {

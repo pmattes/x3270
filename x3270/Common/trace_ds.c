@@ -664,7 +664,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 	else
 #endif /*]*/
 		tfn = (char *)client_data;
-	tfn = do_subst(tfn, True, True);
+	tfn = do_subst(tfn, DS_VARS | DS_TILDE | DS_UNIQUE);
 	if (strchr(tfn, '\'') ||
 	    ((int)strlen(tfn) > 0 && tfn[strlen(tfn)-1] == '\\')) {
 		popup_an_error("Illegal file name: %s", tfn);
@@ -868,13 +868,12 @@ tracefile_on(int reason, enum toggle_type tt)
 		tracefile = appres.trace_file;
 	else {
 #if defined(_WIN32) /*[*/
-		tracefile_buf = xs_buffer("%s%sx3trc.%u.txt",
+		tracefile_buf = xs_buffer("%s%sx3trc.$UNIQUE.txt",
 			(appres.trace_dir != CN)? appres.trace_dir: myappdata,
-			(appres.trace_dir != CN)? "\\": "",
-			getpid());
+			(appres.trace_dir != CN)? "\\": "");
 #else /*][*/
-		tracefile_buf = xs_buffer("%s/x3trc.%u", appres.trace_dir,
-			getpid());
+		tracefile_buf = xs_buffer("%s/x3trc.$UNIQUE",
+			appres.trace_dir);
 #endif /*]*/
 		tracefile = tracefile_buf;
 	}
@@ -976,7 +975,7 @@ static FILE *screentracef = (FILE *)0;
  * Screen trace function, called when the host clears the screen.
  */
 static void
-do_screentrace(void)
+do_screentrace(Boolean always _is_unused)
 {
 	register int i;
 
@@ -988,13 +987,13 @@ do_screentrace(void)
 }
 
 void
-trace_screen(void)
+trace_screen(Boolean is_clear)
 {
 	trace_skipping = False;
 
 	if (!toggled(SCREEN_TRACE) || !screentracef)
 		return;
-	do_screentrace();
+	do_screentrace(is_clear);
 }
 
 /* Called from ANSI emulation code to log a single character. */
@@ -1032,7 +1031,7 @@ trace_ansi_disc(void)
 static Boolean
 screentrace_cb(char *tfn)
 {
-	tfn = do_subst(tfn, True, True);
+	tfn = do_subst(tfn, DS_VARS | DS_TILDE | DS_UNIQUE);
 	screentracef = fopen(tfn, "a");
 	if (screentracef == (FILE *)NULL) {
 		popup_an_errno(errno, "%s", tfn);
@@ -1073,7 +1072,7 @@ onescreen_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 		tfn = XawDialogGetValueString((Widget)client_data);
 	else
 		tfn = (char *)client_data;
-	tfn = do_subst(tfn, True, True);
+	tfn = do_subst(tfn, DS_VARS | DS_TILDE | DS_UNIQUE);
 	screentracef = fopen(tfn, "a");
 	if (screentracef == (FILE *)NULL) {
 		popup_an_errno(errno, "%s", tfn);
@@ -1084,7 +1083,7 @@ onescreen_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 	XtFree(tfn);
 
 	/* Save the current image, once. */
-	do_screentrace();
+	do_screentrace(True);
 
 	/* Close the file, we're done. */
 	(void) fclose(screentracef);
@@ -1116,14 +1115,13 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 			tracefile = appres.screentrace_file;
 		else {
 #if defined(_WIN32) /*[*/
-			tracefile_buf = xs_buffer("%s%sx3scr.%u.txt",
+			tracefile_buf = xs_buffer("%s%sx3scr.$UNIQUE.txt",
 				(appres.trace_dir != CN)?
 				    appres.trace_dir: myappdata,
-				(appres.trace_dir != CN)? "\\": "",
-				getpid());
+				(appres.trace_dir != CN)? "\\": "");
 #else /*][*/
-			tracefile_buf = xs_buffer("%s/x3scr.%u",
-				appres.trace_dir, getpid());
+			tracefile_buf = xs_buffer("%s/x3scr.$UNIQUE",
+				appres.trace_dir);
 #endif /*]*/
 			tracefile = tracefile_buf;
 		}
@@ -1149,7 +1147,7 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 #endif /*]*/
 	} else {
 		if (ctlr_any_data() && !trace_skipping)
-			do_screentrace();
+			do_screentrace(False);
 		(void) fclose(screentracef);
 		screentracef = NULL;
 	}
