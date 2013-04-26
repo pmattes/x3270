@@ -338,6 +338,12 @@ static SSL *ssl_con;
 static Boolean need_tls_follows = False;
 static char *ssl_cl_hostname;
 static Boolean *ssl_pending;
+struct in_addr host_inaddr;
+static Boolean host_inaddr_valid;
+# if defined(AF_INET6) /*[*/
+struct in6_addr host_in6addr;
+static Boolean host_in6addr_valid;
+# endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
 static char *ssl_password;
 #endif /*]*/
@@ -354,7 +360,8 @@ extern Boolean any_error_output;
 #endif /*]*/
 static void client_info_callback(INFO_CONST SSL *s, int where, int ret);
 static void continue_tls(unsigned char *sbbuf, int len);
-static int spc_verify_cert_hostname(X509 *cert, char *hostname);
+static int spc_verify_cert_hostname(X509 *cert, char *hostname,
+	unsigned char *v4addr, unsigned char *v6addr);
 #endif /*]*/
 
 #if !defined(_WIN32) /*[*/
@@ -397,10 +404,13 @@ typedef union {
 } sockaddr_46_t;
 
 #define NUM_HA	4
-static sockaddr_46_t haddr[4];
+static sockaddr_46_t haddr[NUM_HA];
 static socklen_t ha_len[NUM_HA] = {
     sizeof(haddr[0]), sizeof(haddr[0]), sizeof(haddr[0]), sizeof(haddr[0])
 };
+#if defined(AF_INET6) /*[*/
+static Boolean hin[NUM_HA];
+#endif /*]*/
 static int num_ha = 0;
 static int ha_ix = 0;
 
@@ -447,6 +457,28 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 	int			mtu = OMTU;
 #endif /*]*/
 #	define close_fail	{ (void) SOCK_CLOSE(sock); sock = -1; return -1; }
+#if defined(HAVE_LIBSSL) /*[*/
+	/* Set host_inaddr and host_in6addr for IP address validation. */
+	if (hin[ix]) {
+		if (haddr[ix].sa.sa_family == AF_INET) {
+			memcpy(&host_inaddr, &haddr[ix].sin.sin_addr,
+				sizeof(struct in_addr));
+			host_inaddr_valid = True;
+# if defined(AF_INET6) /*[*/
+			host_in6addr_valid = False;
+# endif /*]*/
+		}
+#if defined(AF_INET6) /*[*/
+		if (haddr[ix].sa.sa_family == AF_INET6) {
+			memcpy(&host_in6addr, &haddr[ix].sin6.sin6_addr,
+				sizeof(struct in6_addr));
+			host_in6addr_valid = True;
+			host_inaddr_valid = False;
+		}
+#endif /*]*/
+	}
+#endif /*]*/
+
 	/* create the socket */
 	if ((sock = socket(haddr[ix].sa.sa_family, SOCK_STREAM, 0)) == -1) {
 		popup_a_sockerr("socket");
@@ -556,6 +588,35 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 #endif /*]*/
 }
 
+#if defined(HAVE_LIBSSL) /*[*/
+static Boolean
+is_numeric_host(const char *host)
+{
+	struct in_addr in;
+
+	/* Is it an IPv4 address? */
+	if (inet_aton(host, &in) != 0)
+		return True;
+
+# if defined(AF_INET6) /*[*/
+	/*
+	 * Is it an IPv6 address?
+	 *
+	 * The test here is imperfect, but a DNS name can't contain a colon,
+	 * so if the name contains one, and getaddrinfo() succeeds, we can
+	 * assume it is a numeric IPv6 address.  We add an extra level of
+	 * insurance, that it only contains characters that are valid in an
+	 * IPv6 numeric address (hex digits, colons and periods).
+	 */
+	if (strchr(host, ':') &&
+	    strspn(host, ":.0123456789abcdefABCDEF") == strlen(host))
+		return True;
+# endif /*]*/
+
+	return False;
+}
+#endif /*]*/
+
 /*
  * net_connect
  *	Establish a telnet socket to the given host passed as an argument.
@@ -573,6 +634,9 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	unsigned short		passthru_port = 0;
 	char			errmsg[1024];
 	int			s;
+#if defined(HAVE_LIBSSL) /*[*/
+	Boolean			inh;
+#endif /*]*/
 
 	if (netrbuf == (unsigned char *)NULL)
 		netrbuf = (unsigned char *)Malloc(BUFSZ);
@@ -595,6 +659,13 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	*pending = False;
 
 	Replace(hostname, NewString(host));
+#if defined(HAVE_LIBSSL) /*[*/
+	host_inaddr_valid = False;
+# if defined(AF_INET6) /*[*/
+	host_in6addr_valid = False;
+# endif /*]*/
+	inh = is_numeric_host(host);
+#endif /*]*/
 
 	/* set up temporary termtype */
 	if (appres.termname == CN) {
@@ -666,6 +737,9 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 			       passthru_len);
 		haddr[0].sin.sin_port = passthru_port;
 		ha_len[0] = sizeof(struct sockaddr_in);
+#if defined(HAVE_LIBSSL) /*[*/
+		hin[0] = False;
+#endif /*]*/
 		num_ha = 1;
 		ha_ix = 0;
 	} else if (proxy_type > 0) {
@@ -679,6 +753,9 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 		    	popup_an_error("%s", errmsg);
 		    	return -1;
 		}
+#if defined(HAVE_LIBSSL) /*[*/
+		hin[0] = False;
+#endif /*]*/
 		num_ha = 1;
 		ha_ix = 0;
 	} else {
@@ -701,6 +778,9 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 					popup_an_error("%s", errmsg);
 					return -1;
 				}
+#if defined(HAVE_LIBSSL) /*[*/
+				hin[i] = inh;
+#endif /*]*/
 				num_ha++;
 			}
 			ha_ix = 0;
@@ -882,7 +962,16 @@ check_cert_name(void)
 		}
 	}
 
-	if (!spc_verify_cert_hostname(cert, hostname)) {
+	if (!spc_verify_cert_hostname(cert, hostname,
+		    host_inaddr_valid? (unsigned char *)(void *)&host_inaddr:
+				       NULL,
+#if defined(AF_INET6) /*[*/
+		    host_in6addr_valid? (unsigned char *)(void *)&host_in6addr:
+				       NULL
+#else /*][*/
+				       NULL
+#endif /*]*/
+		    )) {
 		X509_free(cert);
 		if (appres.verify_host_cert) {
 			popup_an_error("Host certificate name(s) do not match "
@@ -4175,6 +4264,26 @@ hostname_matches(const char *hostname, const char *cn, size_t len)
 	return 0;
 }
 
+/* IP address match function. */
+static int
+ipaddr_matches(unsigned char *v4addr, unsigned char *v6addr,
+	unsigned char *data, int len)
+{
+	switch (len) {
+	case 4:
+		if (v4addr)
+			return !memcmp(v4addr, data, 4);
+		break;
+	case 16:
+		if (v6addr)
+			return !memcmp(v6addr, data, 16);
+		break;
+	default:
+		break;
+	}
+	return 0;
+}
+
 /*
  * Certificate hostname expansion function.
  * Mostly, this expands NULs.
@@ -4205,7 +4314,8 @@ expand_hostname(const char *cn, size_t len)
 
 /* Hostname validation function. */
 static int
-spc_verify_cert_hostname(X509 *cert, char *hostname)
+spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
+	unsigned char *v6addr)
 {
 	int ok = 0;
 	X509_NAME *subj;
@@ -4223,12 +4333,14 @@ spc_verify_cert_hostname(X509 *cert, char *hostname)
 		sizeof(name))) > 0) {
 
 		name[sizeof(name) - 1] = '\0';
-		if (hostname_matches(hostname, name, len)) {
+		if (!v4addr && !v6addr &&
+			hostname_matches(hostname, name, len)) {
+
 			ok = 1;
-			trace_dsn("SSL_connect: common_name %s matches "
+			trace_dsn("SSL_connect: commonName %s matches "
 				"hostname %s\n", name, hostname);
 		} else
-			trace_dsn("SSL_connect: non-matching common name: %s\n",
+			trace_dsn("SSL_connect: non-matching commonName: %s\n",
 				expand_hostname(name, len));
 	}
 
@@ -4241,22 +4353,64 @@ spc_verify_cert_hostname(X509 *cert, char *hostname)
 			if (value->type == GEN_DNS) {
 				len = ASN1_STRING_to_UTF8(&dns,
 					value->d.dNSName);
-				if (hostname_matches(hostname, (char *)dns,
+				if (!v4addr && !v6addr &&
+				    hostname_matches(hostname, (char *)dns,
 					len)) {
 
 					ok = 1;
-					trace_dsn("SSL_connect: common_name "
-						"%s matches hostname %s\n",
+					trace_dsn("SSL_connect: alternameName "
+						"%s matches hostname DNS:%s\n",
 						name, hostname);
 					OPENSSL_free(dns);
 					break;
 				} else
 					trace_dsn("SSL_connect: non-matching "
-						"alternate name: %s\n",
+						"alternateName: DNS:%s\n",
 						expand_hostname((char *)dns,
 						    len));
 				OPENSSL_free(dns);
+			} else if (value->type == GEN_IPADD) {
+				int i;
+
+				if (ipaddr_matches(v4addr, v6addr,
+					    value->d.iPAddress->data,
+					    value->d.iPAddress->length)) {
+					trace_dsn("SSL_connect: matching "
+						"alternateName IP:");
+					ok = 1;
+				} else {
+					trace_dsn("SSL_connect: non-matching "
+						"alternateName: IP:");
+				}
+				switch (value->d.iPAddress->length) {
+				case 4:
+					for (i = 0; i < 4; i++) {
+						trace_dsn("%s%u",
+							(i > 0)? ".": "",
+						  value->d.iPAddress->data[i]);
+					}
+					break;
+				case 16:
+					for (i = 0; i < 16; i+= 2) {
+						trace_dsn("%s%u",
+							(i > 0)? ":": "",
+	 (value->d.iPAddress->data[i] << 8) | value->d.iPAddress->data[i + 1]);
+					}
+					break;
+				default:
+					for (i = 0;
+					     i < value->d.iPAddress->length;
+					     i++) {
+						trace_dsn("%s%u",
+							(i > 0)? "-": "",
+						  value->d.iPAddress->data[i]);
+					}
+					break;
+				}
+				trace_dsn("\n");
 			}
+			if (ok)
+				break;
 		}
 	}
 
