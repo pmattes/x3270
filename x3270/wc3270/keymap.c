@@ -258,7 +258,7 @@ locate_keymap(const char *name, char **fullname, char **r)
 	}
 
 	/* See if it's a file. */
-	fnx = do_subst(name, True, True);
+	fnx = do_subst(name, DS_VARS | DS_TILDE);
 	fny = xs_buffer("%s.%s", fnx, WC3270KM_SUFFIX);
 	Free(fnx);
 	fnx = CN;
