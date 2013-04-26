@@ -338,6 +338,8 @@ static SSL *ssl_con;
 static Boolean need_tls_follows = False;
 static char *ssl_cl_hostname;
 static Boolean *ssl_pending;
+static Boolean accept_specified_host;
+static char *accept_dnsname;
 struct in_addr host_inaddr;
 static Boolean host_inaddr_valid;
 # if defined(AF_INET6) /*[*/
@@ -459,7 +461,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 #	define close_fail	{ (void) SOCK_CLOSE(sock); sock = -1; return -1; }
 #if defined(HAVE_LIBSSL) /*[*/
 	/* Set host_inaddr and host_in6addr for IP address validation. */
-	if (hin[ix]) {
+	if (!accept_specified_host && hin[ix]) {
 		if (haddr[ix].sa.sa_family == AF_INET) {
 			memcpy(&host_inaddr, &haddr[ix].sin.sin_addr,
 				sizeof(struct in_addr));
@@ -592,10 +594,8 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 static Boolean
 is_numeric_host(const char *host)
 {
-	struct in_addr in;
-
 	/* Is it an IPv4 address? */
-	if (inet_aton(host, &in) != 0)
+	if (inet_addr(host) != -1)
 		return True;
 
 # if defined(AF_INET6) /*[*/
@@ -660,11 +660,14 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 
 	Replace(hostname, NewString(host));
 #if defined(HAVE_LIBSSL) /*[*/
-	host_inaddr_valid = False;
+	if (!accept_specified_host) {
+		host_inaddr_valid = False;
 # if defined(AF_INET6) /*[*/
-	host_in6addr_valid = False;
+		host_in6addr_valid = False;
 # endif /*]*/
-	inh = is_numeric_host(host);
+		inh = is_numeric_host(host);
+	} else
+		inh = False;
 #endif /*]*/
 
 	/* set up temporary termtype */
@@ -962,7 +965,8 @@ check_cert_name(void)
 		}
 	}
 
-	if (!spc_verify_cert_hostname(cert, hostname,
+	if (!spc_verify_cert_hostname(cert,
+		    accept_specified_host? accept_dnsname: hostname,
 		    host_inaddr_valid? (unsigned char *)(void *)&host_inaddr:
 				       NULL,
 #if defined(AF_INET6) /*[*/
@@ -4022,6 +4026,59 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 	}
 #endif /*]*/
 
+	/* Parse the -accepthostname option. */
+	if (appres.accept_hostname != NULL) {
+		if (!strcasecmp(appres.accept_hostname, "any") ||
+		    !strcmp(appres.accept_hostname, "*")) {
+			accept_specified_host = True;
+			accept_dnsname = "*";
+		} else if (!strncasecmp(appres.accept_hostname, "DNS:", 4) &&
+			    appres.accept_hostname[4] != '\0') {
+			accept_specified_host = True;
+			accept_dnsname = &appres.accept_hostname[4];
+		} else if (!strncasecmp(appres.accept_hostname, "IP:", 3)) {
+			unsigned short port;
+			sockaddr_46_t ahaddr;
+			socklen_t len;
+			char errmsg[256];
+
+			if (resolve_host_and_port(&appres.accept_hostname[3],
+				"0", 0, &port, &ahaddr.sa, &len, errmsg,
+				sizeof(errmsg), NULL) < 0) {
+
+				popup_an_error("Invalid acceptHostname '%s': "
+					"%s", appres.accept_hostname, errmsg);
+				return;
+			}
+			switch (ahaddr.sa.sa_family) {
+			case AF_INET:
+				memcpy(&host_inaddr, &ahaddr.sin.sin_addr,
+					sizeof(struct in_addr));
+				host_inaddr_valid = True;
+				accept_specified_host = True;
+				accept_dnsname = "";
+				break;
+#if defined(AF_INET6) /*[*/
+			case AF_INET6:
+				memcpy(&host_in6addr, &ahaddr.sin6.sin6_addr,
+					sizeof(struct in6_addr));
+				host_in6addr_valid = True;
+				accept_specified_host = True;
+				accept_dnsname = "";
+				break;
+#endif /*]*/
+			default:
+				break;
+			}
+
+		} else {
+			popup_an_error("Cannot parse acceptHostname '%s' "
+				"(must be 'any' or 'DNS:name' or 'IP:addr')",
+				appres.accept_hostname);
+			return;
+		}
+	}
+
 	if (cl_hostname != CN)
 	    	ssl_cl_hostname = NewString(cl_hostname);
 	if (pending != NULL) {
@@ -4333,8 +4390,9 @@ spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
 		sizeof(name))) > 0) {
 
 		name[sizeof(name) - 1] = '\0';
-		if (!v4addr && !v6addr &&
-			hostname_matches(hostname, name, len)) {
+		if (!strcmp(hostname, "*") ||
+			(!v4addr && !v6addr &&
+			 hostname_matches(hostname, name, len))) {
 
 			ok = 1;
 			trace_dsn("SSL_connect: commonName %s matches "
@@ -4353,14 +4411,17 @@ spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
 			if (value->type == GEN_DNS) {
 				len = ASN1_STRING_to_UTF8(&dns,
 					value->d.dNSName);
-				if (!v4addr && !v6addr &&
-				    hostname_matches(hostname, (char *)dns,
-					len)) {
+				if (!strcmp(hostname, "*") ||
+					(!v4addr && !v6addr &&
+					 hostname_matches(hostname,
+					     (char *)dns, len))) {
 
 					ok = 1;
 					trace_dsn("SSL_connect: alternameName "
-						"%s matches hostname DNS:%s\n",
-						name, hostname);
+						"DNS:%s matches hostname %s\n",
+						expand_hostname((char *)dns,
+						    len),
+						hostname);
 					OPENSSL_free(dns);
 					break;
 				} else
@@ -4372,7 +4433,8 @@ spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
 			} else if (value->type == GEN_IPADD) {
 				int i;
 
-				if (ipaddr_matches(v4addr, v6addr,
+				if (!strcmp(hostname, "*") ||
+					ipaddr_matches(v4addr, v6addr,
 					    value->d.iPAddress->data,
 					    value->d.iPAddress->length)) {
 					trace_dsn("SSL_connect: matching "

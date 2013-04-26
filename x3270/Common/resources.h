@@ -32,6 +32,7 @@
 
 /* Resources. */
 #define ResAcs			"acs"
+#define ResAcceptHostname	"acceptHostname"
 #define ResActiveIcon		"activeIcon"
 #define ResAdVersion		"adVersion"
 #define ResAidWait		"aidWait"
@@ -203,6 +204,7 @@
 #define ResWerase		"werase"
 
 /* Dotted resource names. */
+#define DotAcceptHostname	"." ResAcceptHostname
 #define DotActiveIcon		"." ResActiveIcon
 #define DotAplMode		"." ResAplMode
 #define DotCaDir		"." ResCaDir
@@ -251,6 +253,7 @@
 #define DotVerifyHostCert	"." ResVerifyHostCert
 
 /* Resource classes. */
+#define ClsAcceptHostname	"AcceptHostname"
 #define ClsActiveIcon		"ActiveIcon"
 #define ClsAdVersion		"AdVersion"
 #define ClsAidWait		"AidWait"
@@ -383,6 +386,7 @@
 #define ClsWerase		"Werase"
 
 /* Options. */
+#define OptAcceptHostname	"-accepthostname"
 #define OptActiveIcon		"-activeicon"
 #define OptAllBold		"-allbold"
 #define OptAltScreen		"-altscreen"

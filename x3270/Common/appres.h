@@ -247,6 +247,7 @@ typedef struct {
 	char	*key_file;
 	char	*key_file_type;
 	char	*key_passwd;
+	char	*accept_hostname;
 	Boolean	 self_signed_ok;
 	Boolean	 verify_host_cert;
 #endif /*]*/

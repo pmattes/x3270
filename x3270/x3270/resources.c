@@ -319,6 +319,8 @@ XtResource resources[] = {
 	  offset(dbcs_cgcsgid), XtRString, 0 },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
+	{ ResAcceptHostname, ClsAcceptHostname, XtRString, sizeof(char *),
+	  offset(accept_hostname), XtRString, 0 },
 	{ ResCaDir, ClsCaDir, XtRString, sizeof(char *),
 	  offset(ca_dir), XtRString, 0 },
 	{ ResCaFile, ClsCaFile, XtRString, sizeof(char *),

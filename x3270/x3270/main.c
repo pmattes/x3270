@@ -112,6 +112,7 @@ XrmOptionDescRec options[]= {
 	{ OptActiveIcon,DotActiveIcon,	XrmoptionNoArg,		ResTrue },
 	{ OptAplMode,	DotAplMode,	XrmoptionNoArg,		ResTrue },
 #if defined(HAVE_LIBSSL) /*[*/
+	{ OptAcceptHostname,DotAcceptHostname,XrmoptionSepArg,	NULL },
 	{ OptCaDir,	DotCaDir,	XrmoptionSepArg,	NULL },
 	{ OptCaFile,	DotCaFile,	XrmoptionSepArg,	NULL },
 	{ OptCertFile,	DotCertFile,	XrmoptionSepArg,	NULL },
@@ -193,6 +194,9 @@ static struct {
 	char *args;
 	char *help;
 } option_help[] = {
+#if defined(HAVE_LIBSSL) /*[*/
+	{ OptAcceptHostname, "any|DNS:<name>|IP:<addr>", "Host name to accept from server certificate" },
+#endif /*]*/
 	{ OptActiveIcon, CN, "Make icon a miniature of the display" },
 	{ OptAplMode, CN,    "Turn on APL mode" },
 #if defined(HAVE_LIBSSL) /*[*/

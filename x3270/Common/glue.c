@@ -589,6 +589,10 @@ static struct {
 	char *help_opts;
 	char *help_text;
 } opts[] = {
+#if defined(HAVE_LIBSSL) /*[*/
+{ OptAcceptHostname,OPT_STRING,False,ResAcceptHostname,offset(accept_hostname),
+    "any|DNS:<name>|IP:<addr>","Host name to accept from server certificate" },
+#endif /*]*/
 #if defined(C3270) /*[*/
 { OptAllBold,  OPT_BOOLEAN, True,  ResAllBold,   offset(all_bold_on),
     CN, "Display all text in bold" },
@@ -1002,6 +1006,7 @@ static struct {
 	{ ResBindLimit,	offset(bind_limit),	XRM_BOOLEAN },
 	{ ResBsdTm,	offset(bsd_tm),		XRM_BOOLEAN },
 #if defined(HAVE_LIBSSL) /*[*/
+	{ ResAcceptHostname,offset(accept_hostname),XRM_STRING },
 	{ ResCaDir,	offset(ca_dir),		XRM_STRING },
 	{ ResCaFile,	offset(ca_file),	XRM_STRING },
 	{ ResCertFile,	offset(cert_file),	XRM_STRING },
