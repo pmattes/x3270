@@ -299,6 +299,9 @@ printer_start(const char *lu)
 		 */
 		cmd_len += appres.key_passwd?
 		    strlen(OptKeyPasswd) + 4 + strlen(appres.key_passwd): 0;
+		cmd_len += appres.accept_hostname?
+		    strlen(OptAcceptHostname) + 4 +
+		    strlen(appres.accept_hostname): 0;
 #endif /*]*/
 		cmd_len -= 3;
 		s += 3;
@@ -399,6 +402,13 @@ printer_start(const char *lu)
 					(void) strcat(cmd_text, " ");
 					(void) sprintf(strchr(cmd_text, '\0'),
 						"\"%s\"", appres.key_passwd);
+				}
+				if (appres.accept_hostname) {
+					(void) strcat(cmd_text,
+						" " OptAcceptHostname);
+					(void) strcat(cmd_text, " ");
+					(void) sprintf(strchr(cmd_text, '\0'),
+					     "\"%s\"", appres.accept_hostname);
 				}
 #endif /*]*/
 				s += 2;
