@@ -33,7 +33,9 @@
 
 #include "globals.h"
 
+#if !defined(PR3287) /*[*/
 #include "appres.h"
+#endif /*]*/
 #include "popupsc.h"
 #include "utf8c.h"
 

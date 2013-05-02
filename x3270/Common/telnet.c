@@ -595,7 +595,7 @@ static Boolean
 is_numeric_host(const char *host)
 {
 	/* Is it an IPv4 address? */
-	if (inet_addr(host) != -1)
+	if (inet_addr(host) != (in_addr_t)-1)
 		return True;
 
 # if defined(AF_INET6) /*[*/
@@ -973,7 +973,7 @@ check_cert_name(void)
 		    host_in6addr_valid? (unsigned char *)(void *)&host_in6addr:
 				       NULL
 #else /*][*/
-				       NULL
+		    NULL
 #endif /*]*/
 		    )) {
 		X509_free(cert);
@@ -4391,9 +4391,8 @@ spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
 
 		name[sizeof(name) - 1] = '\0';
 		if (!strcmp(hostname, "*") ||
-			(!v4addr && !v6addr &&
-			 hostname_matches(hostname, name, len))) {
-
+		     (!v4addr && !v6addr &&
+		      hostname_matches(hostname, name, len))) {
 			ok = 1;
 			trace_dsn("SSL_connect: commonName %s matches "
 				"hostname %s\n", name, hostname);
@@ -4412,9 +4411,9 @@ spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
 				len = ASN1_STRING_to_UTF8(&dns,
 					value->d.dNSName);
 				if (!strcmp(hostname, "*") ||
-					(!v4addr && !v6addr &&
-					 hostname_matches(hostname,
-					     (char *)dns, len))) {
+				    (!v4addr && !v6addr &&
+				     hostname_matches(hostname, (char *)dns,
+					 len))) {
 
 					ok = 1;
 					trace_dsn("SSL_connect: alternameName "

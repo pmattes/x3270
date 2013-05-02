@@ -98,6 +98,14 @@ ifelse(XX_PRODUCT,x3270,`XX_FB(x3270) is a toolkit based program, so it understa
 resources.
 It also understands',XX_PRODUCT,lib3270,`XX_POSESSIVE(XX_FB(lib3270)) initialization function understands',` XX_FB(XX_PRODUCT) understands')
 the following options:XX_TPS()
+XX_TP(XX_FB(XX_DASHED(accepthostname)) XX_FI(spec))
+Specifies a particular hostname to accept when validating the name presented
+in the host's SSL certificate, instead of comparing to the name or address
+used to make the connection.
+XX_FI(spec) can either be XX_FB(any), which
+disables name validation, XX_FB(DNS:)`'XX_FI(hostname), which matches a
+particular DNS hostname, or XX_FB(IP:)`'XX_FI(address), which matches a
+particular numeric IPv4 or IPv6 address.
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(activeicon)))
 Specifies that the icon should be a miniature version of the screen image.
 See XX_LINK(#Icons,XX_SM(ICONS)) below.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-20103, Paul Mattes.
+ * Copyright (c) 2000-2013, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,9 @@
  *
  *	pr3287 [options] [lu[,lu...]@]host[:port]
  *	Options are:
+ *	    -accepthostname any|DNS:name|IP:address
+ *	        accept any certificate hostname, or a specific name, or an
+ *	        IP address
  *	    -assoc session
  *		associate with a session (TN3270E only)
  *	    -cadir dir
@@ -166,6 +169,7 @@ char *trnpre = NULL;
 char *trnpost = NULL;
 
 #if defined(HAVE_LIBSSL) /*[*/
+char *accept_hostname;
 char *ca_dir;
 char *ca_file;
 char *cert_file;
@@ -211,8 +215,12 @@ static void
 usage(void)
 {
 	(void) fprintf(stderr, "usage: %s [options] [lu[,lu...]@]host[:port]\n"
-"Options:\n%s%s%s%s%s", programname,
-"  -assoc <session> associate with a session (TN3270E only)\n"
+"Options:\n%s%s%s%s%s%s", programname,
+#if defined(HAVE_LIBSSL) /*[*/
+"  -accepthostname any|DNS:name|IP:addr\n"
+"                   accept any name, specific name or address in host cert\n"
+#endif /*]*/
+"  -assoc <session> associate with a session (TN3270E only)\n",
 #if defined(HAVE_LIBSSL) /*[*/
 "  -cadir <dir>     find CA certificate database in <dir>\n"
 "  -cafile <file>   find CA certificates in <file>\n"
@@ -467,6 +475,17 @@ main(int argc, char *argv[])
 			bdaemon = WILL_DAEMON;
 		else
 #endif /*]*/
+#if defined(HAVE_LIBSSL) /*[*/
+		if (!strcmp(argv[i], "-accepthostname")) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for -accepthostname\n");
+				usage();
+			}
+			accept_hostname = argv[i + 1];
+			i++;
+		} else
+#endif /*]*/
 		if (!strcmp(argv[i], "-assoc")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
@@ -475,8 +494,9 @@ main(int argc, char *argv[])
 			}
 			assoc = argv[i + 1];
 			i++;
+		} else
 #if !defined(_WIN32) /*[*/
-		} else if (!strcmp(argv[i], "-command")) {
+		if (!strcmp(argv[i], "-command")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
 				    "Missing value for -command\n");
@@ -484,9 +504,10 @@ main(int argc, char *argv[])
 			}
 			command = argv[i + 1];
 			i++;
+		} else
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
-		} else if (!strcmp(argv[i], "-cadir")) {
+		if (!strcmp(argv[i], "-cadir")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
 				    "Missing value for -cadir\n");
@@ -550,8 +571,9 @@ main(int argc, char *argv[])
 			}
 			key_passwd = argv[i + 1];
 			i++;
+		} else
 #endif /*]*/
-		} else if (!strcmp(argv[i], "-charset")) {
+		if (!strcmp(argv[i], "-charset")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
 				    "Missing value for -charset\n");
@@ -921,7 +943,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 		}
 
 		/* Negotiate. */
-		if (negotiate(host, s, lu, assoc) < 0) {
+		if (negotiate(host, &ha.sa, ha_len, s, lu, assoc) < 0) {
 			rc = 1;
 			goto retry;
 		}

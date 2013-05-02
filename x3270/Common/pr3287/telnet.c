@@ -77,12 +77,21 @@
 #include "tn3270e.h"
 
 #include "ctlrc.h"
+#include "resolverc.h"
 #include "telnetc.h"
 
 #if !defined(TELOPT_STARTTLS) /*[*/
 #define TELOPT_STARTTLS        46
 #endif /*]*/
 #define TLS_FOLLOWS    1
+
+typedef union {
+	struct sockaddr sa;
+	struct sockaddr_in sin;
+#if defined(AF_INET6) /*[*/
+	struct sockaddr_in6 sin6;
+#endif /*]*/
+} sockaddr_46_t;
 
 extern FILE *tracef;
 extern int ignoreeoj;
@@ -91,6 +100,7 @@ extern unsigned long eoj_timeout;
 extern void pr3287_exit(int);
 
 #if defined(HAVE_LIBSSL) /*[*/
+extern char *accept_hostname;
 extern char *ca_dir;
 extern char *ca_file;
 extern char *cert_file;
@@ -101,6 +111,14 @@ extern char *key_file_type;
 extern char *key_passwd;
 extern int self_signed_ok;
 extern int verify_cert;
+static Boolean accept_specified_host;
+static char *accept_dnsname;
+struct in_addr host_inaddr;
+static Boolean host_inaddr_valid;
+# if defined(AF_INET6) /*[*/
+struct in6_addr host_in6addr;
+static Boolean host_in6addr_valid;
+# endif /*]*/
 static Boolean check_cert_name(const char *host);
 #endif /*]*/
 
@@ -135,6 +153,7 @@ enum cstate cstate = NOT_CONNECTED;
 static char *connected_lu = NULL;
 static char *connected_type = NULL;
 static char *hostname = NULL;
+static sockaddr_46_t host_sa;
 
 #define BUFSZ		4096
 
@@ -348,12 +367,14 @@ popup_a_sockerr(char *fmt, ...)
  *	Initialize the connection, and negotiate TN3270 options with the host.
  */
 int
-negotiate(const char *host, int s, char *lu, char *assoc)
+negotiate(const char *host, struct sockaddr *sa, socklen_t len, int s,
+	char *lu, char *assoc)
 {
 	/* Save the hostname. */
     	char *h = Malloc(strlen(host) + 1);
 	strcpy(h, host);
 	Replace(hostname, h);
+	memcpy(&host_sa.sa, sa, len);
 
 	/* Set options for inline out-of-band data and keepalives. */
 	if (setsockopt(s, SOL_SOCKET, SO_OOBINLINE, (char *)&on,
@@ -1985,6 +2006,59 @@ ssl_base_init(void)
 	}
 #endif /*]*/
 
+	/* Parse the -accepthostname option. */
+	if (accept_hostname) {
+		if (!strcasecmp(accept_hostname, "any") ||
+		    !strcmp(accept_hostname, "*")) {
+			accept_specified_host = True;
+			accept_dnsname = "*";
+		} else if (!strncasecmp(accept_hostname, "DNS:", 4) &&
+			    accept_hostname[4] != '\0') {
+			accept_specified_host = True;
+			accept_dnsname = &accept_hostname[4];
+		} else if (!strncasecmp(accept_hostname, "IP:", 3)) {
+			unsigned short port;
+			sockaddr_46_t ahaddr;
+			socklen_t len;
+			char err[256];
+
+			if (resolve_host_and_port(&accept_hostname[3],
+				"0", 0, &port, &ahaddr.sa, &len, err,
+				sizeof(err), NULL) < 0) {
+
+				errmsg("Invalid acceptHostname '%s': "
+					"%s", accept_hostname, err);
+				return;
+			}
+			switch (ahaddr.sa.sa_family) {
+			case AF_INET:
+				memcpy(&host_inaddr, &ahaddr.sin.sin_addr,
+					sizeof(struct in_addr));
+				host_inaddr_valid = True;
+				accept_specified_host = True;
+				accept_dnsname = "";
+				break;
+#if defined(AF_INET6) /*[*/
+			case AF_INET6:
+				memcpy(&host_in6addr, &ahaddr.sin6.sin6_addr,
+					sizeof(struct in6_addr));
+				host_in6addr_valid = True;
+				accept_specified_host = True;
+				accept_dnsname = "";
+				break;
+#endif /*]*/
+			default:
+				break;
+			}
+
+		} else {
+			errmsg("Cannot parse acceptHostname '%s' "
+				"(must be 'any' or 'DNS:name' or 'IP:addr')",
+				accept_hostname);
+			return;
+		}
+	}
+
 	SSL_load_error_strings();
 	SSL_library_init();
 	ssl_ctx = SSL_CTX_new(SSLv23_method());
@@ -2189,6 +2263,26 @@ hostname_matches(const char *hostname, const char *cn, size_t len)
 	return 0;
 }
 
+/* IP address match function. */
+static int
+ipaddr_matches(unsigned char *v4addr, unsigned char *v6addr,
+	unsigned char *data, int len)
+{
+	switch (len) {
+	case 4:
+		if (v4addr)
+			return !memcmp(v4addr, data, 4);
+		break;
+	case 16:
+		if (v6addr)
+			return !memcmp(v6addr, data, 16);
+		break;
+	default:
+		break;
+	}
+	return 0;
+}
+
 /*
  * Certificate hostname expansion function.
  * Mostly, this expands NULs.
@@ -2219,7 +2313,8 @@ expand_hostname(const char *cn, size_t len)
 
 /* Hostname validation function. */
 static int
-spc_verify_cert_hostname(X509 *cert, const char *hostname)
+spc_verify_cert_hostname(X509 *cert, const char *hostname,
+	unsigned char *v4addr, unsigned char *v6addr)
 {
 	int ok = 0;
 	X509_NAME *subj;
@@ -2237,7 +2332,9 @@ spc_verify_cert_hostname(X509 *cert, const char *hostname)
 		sizeof(name))) > 0) {
 
 		name[sizeof(name) - 1] = '\0';
-		if (hostname_matches(hostname, name, len)) {
+		if (!strcmp(hostname, "*") ||
+		    (!v4addr && !v6addr &&
+		     hostname_matches(hostname, name, len))) {
 			ok = 1;
 			vtrace_str("SSL_connect: common name %s matches "
 				"hostname %s\n", name, hostname);
@@ -2255,8 +2352,10 @@ spc_verify_cert_hostname(X509 *cert, const char *hostname)
 			if (value->type == GEN_DNS) {
 				len = ASN1_STRING_to_UTF8(&dns,
 					value->d.dNSName);
-				if (hostname_matches(hostname, (char *)dns,
-					    len)) {
+				if (!strcmp(hostname, "*") ||
+				    (!v4addr && !v6addr &&
+				     hostname_matches(hostname, (char *)dns,
+					 len))) {
 					ok = 1;
 					vtrace_str("SSL_connect: common name "
 						"%s matches hostname %s\n",
@@ -2269,11 +2368,78 @@ spc_verify_cert_hostname(X509 *cert, const char *hostname)
 						expand_hostname((char *)dns,
 						    len));
 				OPENSSL_free(dns);
+			} else if (value->type == GEN_IPADD) {
+				int i;
+
+				if (!strcmp(hostname, "*") ||
+				    ipaddr_matches(v4addr, v6addr,
+					value->d.iPAddress->data,
+					value->d.iPAddress->length)) {
+				    vtrace_str("SSL_connect: matching "
+					    "alternateName IP:");
+				    ok = 1;
+				} else {
+				    vtrace_str("SSL_connect: non-matching "
+					    "alternateName: IP:");
+				}
+				switch (value->d.iPAddress->length) {
+				case 4:
+					for (i = 0; i < 4; i++) {
+						vtrace_str("%s%u",
+							(i > 0)? ".": "",
+						  value->d.iPAddress->data[i]);
+					}
+					break;
+				case 16:
+					for (i = 0; i < 16; i+= 2) {
+						vtrace_str("%s%u",
+							(i > 0)? ":": "",
+	 (value->d.iPAddress->data[i] << 8) | value->d.iPAddress->data[i + 1]);
+					}
+					break;
+				default:
+					for (i = 0;
+					     i < value->d.iPAddress->length;
+					     i++) {
+						vtrace_str("%s%u",
+							(i > 0)? "-": "",
+						  value->d.iPAddress->data[i]);
+					}
+					break;
+				}
+				vtrace_str("\n");
 			}
+			if (ok)
+				break;
 		}
 	}
 
 	return ok;
+}
+
+static Boolean
+is_numeric_host(const char *host)
+{
+	/* Is it an IPv4 address? */
+	if (inet_addr(host) != (in_addr_t)-1)
+		return True;
+
+# if defined(AF_INET6) /*[*/
+	/*
+	 * Is it an IPv6 address?
+	 *
+	 * The test here is imperfect, but a DNS name can't contain a colon,
+	 * so if the name contains one, and getaddrinfo() succeeds, we can
+	 * assume it is a numeric IPv6 address.  We add an extra level of
+	 * insurance, that it only contains characters that are valid in an
+	 * IPv6 numeric address (hex digits, colons and periods).
+	 */
+	if (strchr(host, ':') &&
+	    strspn(host, ":.0123456789abcdefABCDEF") == strlen(host))
+		return True;
+# endif /*]*/
+
+	return False;
 }
 
 /*
@@ -2287,6 +2453,23 @@ check_cert_name(const char *host)
 {
 	X509 *cert;
 
+	/*
+	 * If they connected to a numeric host and didn't specify a name or
+	 * address to compare to, set the IP or IPv6 address to compare.
+	 */
+	if (!accept_specified_host && is_numeric_host(host)) {
+	    host_inaddr_valid = (host_sa.sa.sa_family == AF_INET);
+	    if (host_inaddr_valid)
+		    memcpy(&host_inaddr, &host_sa.sin.sin_addr,
+			    sizeof(struct in_addr));
+# if defined(AF_INET6) /*[*/
+	    host_in6addr_valid = (host_sa.sa.sa_family == AF_INET6);
+	    if (host_in6addr_valid)
+		    memcpy(&host_in6addr, &host_sa.sin6.sin6_addr,
+			    sizeof(struct in6_addr));
+# endif /*]*/
+	}
+
 	cert = SSL_get_peer_certificate(ssl_con);
 	if (cert == NULL) {
 		if (verify_cert) {
@@ -2299,7 +2482,17 @@ check_cert_name(const char *host)
 		}
 	}
 
-	if (!spc_verify_cert_hostname(cert, host)) {
+	if (!spc_verify_cert_hostname(cert,
+		    accept_specified_host? accept_dnsname: host,
+		    host_inaddr_valid? (unsigned char *)(void *)&host_inaddr:
+				       NULL,
+#if defined(AF_INET6) /*[*/
+		    host_in6addr_valid? (unsigned char *)(void *)&host_in6addr:
+				       NULL
+#else /*][*/
+		    NULL
+#endif /*]*/
+		    )) {
 		X509_free(cert);
 		if (verify_cert) {
 			errmsg("Host certificate name(s) do not match "
@@ -2321,7 +2514,7 @@ static int
 ssl_init(void)
 {
 	if (!ssl_supported) {
-	    	errmsg("Canot connect: SSL DLLs not found");
+	    	errmsg("Cannot connect: SSL DLLs not found");
 		return -1;
 	}
 
