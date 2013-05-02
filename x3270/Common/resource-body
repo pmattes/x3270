@@ -73,6 +73,20 @@ endif
  </ul>
 .
 
+name acceptHostname
+applies a
+type s
+groups s
+switch -accepthostname
+description
+    Defines a specific name to accept when validating the name presented in
+    the server's SSL certificate, instead of using the name or IP address used
+    to make the connection. Takes one of three forms: <b>any</b>, which
+    disables name checking, <b>DNS:</b><i>name</i>, which specifies a DNS
+    hostname, and <b>IP:</b><i>address</i>, which specifies a numeric IPv4 or
+    IPv6 address.
+.
+
 name acs
 applies c
 type b
