@@ -67,26 +67,28 @@ see_ebc(unsigned char ch)
 	switch (ch) {
 	    case FCORDER_NULL:
 		return "NULL";
-	    case FCORDER_SUB:
-		return "SUB";
-	    case FCORDER_DUP:
-		return "DUP";
-	    case FCORDER_FM:
-		return "FM";
 	    case FCORDER_FF:
 		return "FF";
 	    case FCORDER_CR:
 		return "CR";
+	    case FCORDER_SO:
+		return "SO";
+	    case FCORDER_SI:
+		return "SI";
 	    case FCORDER_NL:
 		return "NL";
 	    case FCORDER_EM:
 		return "EM";
+	    case FCORDER_LF:
+		return "LF";
+	    case FCORDER_DUP:
+		return "DUP";
+	    case FCORDER_FM:
+		return "FM";
+	    case FCORDER_SUB:
+		return "SUB";
 	    case FCORDER_EO:
 		return "EO";
-	    case FCORDER_SI:
-		return "SI";
-	    case FCORDER_SO:
-		return "SO";
 	}
 	if (ebcdic_to_multibyte_x(ch, CS_BASE, mb, sizeof(mb), EUO_NONE, &uc)
 		    && (mb[0] != ' ' || ch == 0x40))

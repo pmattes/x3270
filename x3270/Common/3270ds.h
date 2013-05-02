@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2013 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
@@ -78,6 +78,7 @@
 #define FCORDER_SI	0x0f	/*                 shift in (DBCS end) */
 #define FCORDER_NL	0x15	/*		   new line */
 #define FCORDER_EM	0x19	/*		   end of medium */
+#define FCORDER_LF	0x25	/*                 line feed */
 #define FCORDER_DUP	0x1c	/*		   duplicate */
 #define FCORDER_FM	0x1e	/*		   field mark */
 #define FCORDER_SUB	0x3f	/*		   substitute */
