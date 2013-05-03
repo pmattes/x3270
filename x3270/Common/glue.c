@@ -1512,24 +1512,10 @@ void
 popup_an_error(const char *fmt, ...)
 {
 	va_list args;
-	char *s;
-	int sl;
 
 	va_start(args, fmt);
 	(void) vsnprintf(vmsgbuf, sizeof(vmsgbuf), fmt, args);
 	va_end(args);
-
-	/*
-	 * Multi-line messages are fine for X pop-ups, but they're no fun for
-	 * text applications.
-	 */
-	s = vmsgbuf;
-	while ((s = strchr(s, '\n')) != NULL) {
-		*s++ = ' ';
-	}
-	while ((sl = strlen(vmsgbuf)) > 0 && vmsgbuf[sl-1] == ' ') {
-		vmsgbuf[--sl] = '\0';
-	}
 
 	/* Log to the trace file. */
 	trace_dsn("%s\n", vmsgbuf);
