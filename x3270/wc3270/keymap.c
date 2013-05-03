@@ -260,31 +260,47 @@ locate_keymap(const char *name, char **fullname, char **r)
 	/* See if it's a file. */
 	fnx = do_subst(name, DS_VARS | DS_TILDE);
 	fny = xs_buffer("%s.%s", fnx, WC3270KM_SUFFIX);
-	Free(fnx);
-	fnx = CN;
 
-	/*
-	 * Try the application data directory first, then (for compatiblity
-	 * with older releases) the install directory.
-	 */
+	/* AppData/foo.wc3270km? */
 	fnp = xs_buffer("%s%s", myappdata, fny);
 	a = access(fnp, R_OK);
-	Free(fnp);
 	if (a == 0) {
-	    	*fullname = fny;
+	    	*fullname = fnp;
+		Free(fny);
+		Free(fnx);
 		return 1;
 	}
+	Free(fnp);
 
+	/* InstDir/foo.wc3270km? */
 	fnp = xs_buffer("%s%s", instdir, fny);
-	a = access(fny, R_OK);
-	Free(fnp);
+	a = access(fnp, R_OK);
 	if (a == 0) {
-	    	*fullname = fny;
+		Free(fny);
+		Free(fnx);
+	    	*fullname = fnp;
 		return 1;
 	}
+	Free(fnp);
+
+	/* foo.wc3270km? */
+	a = access(fny, R_OK);
+	if (a == 0) {
+		Free(fnx);
+		*fullname = fny;
+		return 1;
+	}
+	Free(fny);
+
+	/* foo? */
+	a = access(fnx, R_OK);
+	if (a == 0) {
+		*fullname = fnx;
+		return 1;
+	}
+	Free(fnx);
 
 	/* No dice. */
-	Free(fny);
 	return -1;
 }
 
@@ -376,7 +392,7 @@ read_keymap(const char *name)
 	rc_3270 = locate_keymap(name_3270, &fn_3270, &r0_3270);
 	rc_nvt = locate_keymap(name_nvt, &fn_nvt, &r0_nvt);
 	if (rc < 0 && rc_3270 < 0 && rc_nvt < 0) {
-		xs_warning("No such keymap resource or file: %s",
+		popup_an_error("No such keymap resource or file: %s",
 		    name);
 		Free(name_3270);
 		Free(name_nvt);
@@ -428,27 +444,14 @@ read_one_keymap(const char *name, const char *fn, const char *r0, int flags)
 		r = r_copy = NewString(r0);
 		xfn = (char *)fn;
 	} else {
-		char *path;
 	    	int sl;
 
-		/*
-		 * Try the application data directory first, then (for
-		 * compatiblity with older releases) the install directory.
-		 */
-		path = xs_buffer("%s%s", myappdata, fn);
-		f = fopen(path, "r");
+		f = fopen(fn, "r");
 		if (f == NULL) {
-		    	Free(path);
-		    	path = xs_buffer("%s%s", instdir, fn);
-			f = fopen(path, "r");
-			if (f == NULL) {
-				Free(path);
-				xs_warning("File '%s' exists but cannot open: "
-					"%s", path, strerror(errno));
-				return;
-			}
+			popup_an_error("File '%s' exists but cannot open: %s",
+				fn, strerror(errno));
+			return;
 		}
-		Free(path);
 		sl = strlen(fn);
 		if (sl > SUFFIX_LEN &&
 		    !strcmp(fn + sl - SUFFIX_LEN, "." WC3270KM_SUFFIX)) {
@@ -481,19 +484,19 @@ read_one_keymap(const char *name, const char *fn, const char *r0, int flags)
 		if (rc < 0 ||
 		    (r == CN && split_dresource(&s, &left, &right) < 0)) {
 			popup_an_error("Keymap %s, line %d: syntax error",
-			    fn, line);
+			    name, line);
 			goto done;
 		}
 
 		pkr = parse_keydef(&left, &ccode, &hint);
 		if (pkr == 0) {
 			popup_an_error("Keymap %s, line %d: Missing <Key>",
-			    fn, line);
+			    name, line);
 			goto done;
 		}
 		if (pkr < 0) {
 			popup_an_error("Keymap %s, line %d: %s",
-			    fn, line, pk_errmsg[-1 - pkr]);
+			    name, line, pk_errmsg[-1 - pkr]);
 			goto done;
 		}
 
@@ -510,14 +513,14 @@ read_one_keymap(const char *name, const char *fn, const char *r0, int flags)
 			pkr = parse_keydef(&left, &ccode, &hint);
 			if (pkr < 0) {
 				popup_an_error("Keymap %s, line %d: %s",
-				    fn, line, pk_errmsg[-1 - pkr]);
+				    name, line, pk_errmsg[-1 - pkr]);
 				goto done;
 			}
 		} while (pkr != 0);
 
 		/* Add it to the list. */
 		hints[0] |= flags;
-		add_keymap_entry(ncodes, codes, hints, xfn, line, right);
+		add_keymap_entry(ncodes, codes, hints, name, line, right);
 	}
 
     done:
@@ -525,7 +528,7 @@ read_one_keymap(const char *name, const char *fn, const char *r0, int flags)
 	if (f != NULL)
 		fclose(f);
 	if (xfn != fn)
-	    Free(xfn);
+		Free(xfn);
 }
 
 /* Multi-key keymap support. */

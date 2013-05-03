@@ -590,12 +590,18 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 #endif /*]*/
 }
 
+#if defined(_WIN32) /*[*/
+#define INET_ADDR_T	unsigned long
+#else /*][*/
+#define INET_ADDR_T	in_addr_t
+#endif /*]*/
+
 #if defined(HAVE_LIBSSL) /*[*/
 static Boolean
 is_numeric_host(const char *host)
 {
 	/* Is it an IPv4 address? */
-	if (inet_addr(host) != (in_addr_t)-1)
+	if (inet_addr(host) != (INET_ADDR_T)-1)
 		return True;
 
 # if defined(AF_INET6) /*[*/
