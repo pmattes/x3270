@@ -82,8 +82,10 @@ Warning(const char *s)
 
 	if (Warning_redirect != NULL)
 		(*Warning_redirect)(s);
-	else
+	else {
 		fprintf(stderr, "Warning: %s\n", s);
+		fflush(stderr);
+	}
 #if defined(C3270) /*[*/
 	any_error_output = True;
 #endif /*]*/
