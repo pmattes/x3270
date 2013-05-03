@@ -2,7 +2,6 @@
 3.3 is the current development line for the x3270 suite.
 <h2>Changes in version 3.3.13alpha1, Nn. Month 2013</h2>
 <ul>
- <li>[all] Added support for the LF (X'25') format control order.</li>
  <li>[all] Added the <b>-accepthostname</b> command-line option and
   <b>acceptHostname</b> resource to allow accepting specific names and IP
   addresses in host certificates, or any name.</li>
@@ -23,7 +22,6 @@
   a <b>utf8</b> resource to force local I/O to be encoded as UTF-8.</li>
  <li>[all] Added a <b>-loginmacro</b> command-line option, and made the
   existing <b>loginMacro</b> resource work on x3270.</li>
- <li>[all] Fixed a number of buffer overflow crashes.</li>
  <li>[<i>wc3270</i>] Made screen printing via <b>PrintText</b> (Alt-P)
   asynchronous, so wc3270 can continue processing keyboard events and host
   output while the screen print is being prepared.</li>
@@ -34,6 +32,13 @@
   a single ws3270 .exe file; they each find the OpenSSL DLLs automatically if
   they are installed.
 </ul>
+<h2>Changes in version 3.3.12ga13, nn. Mon 2013</h2>
+<ul>
+ <li>[<i>c3270</i>, <i>wc3270</i>] Fixed a start-up crash when the tracing is
+  enabled and the menu bar is disasbled.</li>
+ <li>[all] Added support for the LF (X'25') format control order.</li>
+ <li>[All] Fixed a number of buffer overflow crashes.</li>
+ </ul>
 <h2>Changes in version 3.3.12ga12, 1. March 2013</h2>
 <ul>
  <li>[All] Added logic to verify the name in the host certificate.</li>
