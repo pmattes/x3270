@@ -1735,6 +1735,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 		case FCORDER_CR:
 		case FCORDER_NL:
 		case FCORDER_EM:
+		case FCORDER_LF:
 		case FCORDER_EO:
 			END_TEXT(see_ebc(*cp));
 			previous = ORDER;
