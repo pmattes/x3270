@@ -935,6 +935,9 @@ menubar_retoggle(struct toggle *t, int ix)
 	int j;
 	char *s;
 
+	if (!appres.menubar)
+		return;
+
 	/* Search the options menu. */
 	for (j = 0; j < OM_COUNT; j++) {
 		if (option_index[j] == ix)
