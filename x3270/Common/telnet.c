@@ -1044,8 +1044,10 @@ net_connected(void)
 			if (v != X509_V_OK)
 				    popup_an_error("Host certificate "
 					"verification failed:\n"
-					"%s (%ld)",
-					X509_verify_cert_error_string(v), v);
+					"%s (%ld)%s",
+					X509_verify_cert_error_string(v), v,
+					(v == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN)?
+					 "\nCA certificate needs to be added to the local database": "");
 
 			/*
 			 * No need to trace the error, it was already
@@ -4599,8 +4601,10 @@ continue_tls(unsigned char *sbbuf, int len)
 		if (v != X509_V_OK)
 			    popup_an_error("Host certificate "
 				"verification failed:\n"
-				"%s (%ld)",
-				X509_verify_cert_error_string(v), v);
+				"%s (%ld)%s",
+				X509_verify_cert_error_string(v), v,
+				(v == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN)?
+				 "\nCA certificate needs to be added to the local database": "");
 
 		/*
 		 * No need to trace the error, it was already
