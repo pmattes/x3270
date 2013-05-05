@@ -352,9 +352,6 @@ static char *ssl_password;
 #if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 static Boolean ssl_password_prompted;
 #endif /*]*/
-#if defined(C3270) /*[*/
-extern Boolean any_error_output;
-#endif /*]*/
 #if OPENSSL_VERSION_NUMBER >= 0x00907000L /*[*/
 #define INFO_CONST const
 #else /*][*/
@@ -4240,11 +4237,6 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 		goto fail;
 	}
 	ssl_pending = NULL;
-
-#if defined(C3270) /*[*/
-	/* Forget about any diagnostics from bad passwords. */
-	any_error_output = False;
-#endif /*]*/
 
 	return;
 
