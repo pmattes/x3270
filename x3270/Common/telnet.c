@@ -362,7 +362,7 @@ extern Boolean any_error_output;
 #endif /*]*/
 static void client_info_callback(INFO_CONST SSL *s, int where, int ret);
 static void continue_tls(unsigned char *sbbuf, int len);
-static int spc_verify_cert_hostname(X509 *cert, char *hostname,
+static char *spc_verify_cert_hostname(X509 *cert, char *hostname,
 	unsigned char *v4addr, unsigned char *v6addr);
 #endif /*]*/
 
@@ -924,7 +924,7 @@ add_unverified_reason(const char *reason)
 	for (i = 0; i < n_unverified_reasons; i++) {
 	    unverified_reasons[i] = s[i];
 	}
-	unverified_reasons[n_unverified_reasons++] = xs_buffer("%s", reason);
+	unverified_reasons[n_unverified_reasons++] = NewString(reason);
 	unverified_reasons[n_unverified_reasons] = CN;
 	Free(s);
 }
@@ -957,6 +957,7 @@ static Boolean
 check_cert_name(void)
 {
 	X509 *cert;
+	char *unmatched_names;
 
 	cert = SSL_get_peer_certificate(ssl_con);
 	if (cert == NULL) {
@@ -971,7 +972,7 @@ check_cert_name(void)
 		}
 	}
 
-	if (!spc_verify_cert_hostname(cert,
+	unmatched_names = spc_verify_cert_hostname(cert,
 		    accept_specified_host? accept_dnsname: hostname,
 		    host_inaddr_valid? (unsigned char *)(void *)&host_inaddr:
 				       NULL,
@@ -981,20 +982,27 @@ check_cert_name(void)
 #else /*][*/
 		    NULL
 #endif /*]*/
-		    )) {
+		    );
+	if (unmatched_names != NULL) {
 		X509_free(cert);
 		if (appres.verify_host_cert) {
 			popup_an_error("Host certificate name(s) do not match "
-				"%s", hostname);
+				"'%s':\n%s", hostname, unmatched_names);
 			return False;
 		} else {
+			char *reason;
+
 			secure_unverified = True;
 			trace_dsn("Host certificate name(s) do not match "
 				"hostname.\n");
-			add_unverified_reason("Host certificate name(s) do "
-				"not match hostname");
+			reason = xs_buffer("Host certificate name(s) do "
+				"not match '%s': %s", hostname,
+				unmatched_names);
+			add_unverified_reason(reason);
+			Free(reason);
 			return True;
 		}
+		Free(unmatched_names);
 	}
 	X509_free(cert);
 	return True;
@@ -4377,8 +4385,76 @@ expand_hostname(const char *cn, size_t len)
 	return buf;
 }
 
+/*
+ * Add a unique element to a NULL-terminated list of strings.
+ * Return the old list, or free it and return a new one.
+ */
+static char **
+add_to_namelist(char **list, char *item)
+{
+	char **new;
+	int count;
+
+	if (list == NULL) {
+		/* First element. */
+		new = (char **)Malloc(2 * sizeof(char *));
+		new[0] = NewString(item);
+		new[1] = NULL;
+		return new;
+	}
+
+	/* Count the number of elements, and bail if we find a match. */
+	for (count = 0; list[count] != NULL; count++) {
+		if (!strcasecmp(list[count], item))
+			return list;
+	}
+
+	new = (char **)Malloc((count + 2) * sizeof(char *));
+	memcpy(new, list, count * sizeof(char *));
+	Free(list);
+	new[count] = NewString(item);
+	new[count + 1] = NULL;
+	return new;
+}
+
+/*
+ * Free a namelist.
+ */
+static void
+free_namelist(char **list)
+{
+	int i;
+
+	for (i = 0; list[i] != NULL; i++)
+		Free(list[i]);
+	Free(list);
+}
+
+/*
+ * Expand a namelist into text.
+ */
+static char *
+expand_namelist(char **list)
+{
+	int i;
+	char *r = NULL;
+
+	if (list != NULL) {
+		for (i = 0; list[i] != NULL; i++) {
+			char *new;
+
+			new = xs_buffer("%s%s%s",
+				r? r: "",
+				r? " ": "",
+				list[i]);
+			Replace(r, new);
+		}
+	}
+	return r? r: NewString("(none)");
+}
+
 /* Hostname validation function. */
-static int
+static char *
 spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
 	unsigned char *v6addr)
 {
@@ -4390,6 +4466,8 @@ spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
 	int num_an, i;
 	unsigned char *dns;
 	int len;
+	char **namelist = NULL;
+	char *nnl;
 
 	/* Check the common name. */
 	if (!ok &&
@@ -4404,9 +4482,13 @@ spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
 			ok = 1;
 			trace_dsn("SSL_connect: commonName %s matches "
 				"hostname %s\n", name, hostname);
-		} else
+		} else {
 			trace_dsn("SSL_connect: non-matching commonName: %s\n",
 				expand_hostname(name, len));
+			nnl = xs_buffer("DNS:%s", expand_hostname(name, len));
+			namelist = add_to_namelist(namelist, nnl);
+			Free(nnl);
+		}
 	}
 
 	/* Check the alternate names. */
@@ -4431,14 +4513,22 @@ spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
 						hostname);
 					OPENSSL_free(dns);
 					break;
-				} else
+				} else {
 					trace_dsn("SSL_connect: non-matching "
 						"alternateName: DNS:%s\n",
 						expand_hostname((char *)dns,
 						    len));
+					nnl = xs_buffer("DNS:%s",
+						expand_hostname((char *)dns,
+						    len));
+					namelist = add_to_namelist(namelist,
+						nnl);
+					Free(nnl);
+				}
 				OPENSSL_free(dns);
 			} else if (value->type == GEN_IPADD) {
 				int i;
+				char *ipbuf;
 
 				if (!strcmp(hostname, "*") ||
 					ipaddr_matches(v4addr, v6addr,
@@ -4451,39 +4541,59 @@ spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
 					trace_dsn("SSL_connect: non-matching "
 						"alternateName: IP:");
 				}
+				ipbuf = NewString("IP:");
 				switch (value->d.iPAddress->length) {
 				case 4:
 					for (i = 0; i < 4; i++) {
-						trace_dsn("%s%u",
+						nnl = xs_buffer("%s%s%u",
+							ipbuf,
 							(i > 0)? ".": "",
-						  value->d.iPAddress->data[i]);
+						 value->d.iPAddress->data[i]);
+						Replace(ipbuf, nnl);
 					}
 					break;
 				case 16:
 					for (i = 0; i < 16; i+= 2) {
-						trace_dsn("%s%u",
+						nnl = xs_buffer("%s%s%x",
+							ipbuf,
 							(i > 0)? ":": "",
-	 (value->d.iPAddress->data[i] << 8) | value->d.iPAddress->data[i + 1]);
+	(value->d.iPAddress->data[i] << 8) | value->d.iPAddress->data[i + 1]);
+						Replace(ipbuf, nnl);
 					}
 					break;
 				default:
 					for (i = 0;
 					     i < value->d.iPAddress->length;
 					     i++) {
-						trace_dsn("%s%u",
+						nnl = xs_buffer("%s%s%u",
+							ipbuf,
 							(i > 0)? "-": "",
 						  value->d.iPAddress->data[i]);
+						Replace(ipbuf, nnl);
 					}
 					break;
 				}
-				trace_dsn("\n");
+				trace_dsn("%s\n", ipbuf);
+				if (!ok)
+					namelist = add_to_namelist(namelist,
+						ipbuf);
+				Free(ipbuf);
 			}
 			if (ok)
 				break;
 		}
 	}
 
-	return ok;
+	if (ok) {
+		free_namelist(namelist);
+		return NULL;
+	} else if (namelist == NULL)
+	    	return NewString("(none)");
+	else {
+	    	nnl = expand_namelist(namelist);
+		free_namelist(namelist);
+		return nnl;
+	}
 }
 
 /* Create a new OpenSSL connection. */
