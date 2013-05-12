@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,11 @@ typedef enum { P_TEXT, P_HTML, P_RTF } ptype_t;
 #define FPS_EVEN_IF_EMPTY	0x1
 #define FPS_MODIFIED_ITALIC	0x2
 extern Boolean fprint_screen(FILE *f, ptype_t ptype, unsigned opts,
-    char *caption);
+    const char *caption);
+extern void fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts,
+    const char *caption);
+extern Boolean fprint_screen_body(void);
+extern void fprint_screen_done(void);
 extern void PrintText_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void PrintWindow_action(Widget w, XEvent *event, String *params,

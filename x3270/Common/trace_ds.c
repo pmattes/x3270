@@ -969,7 +969,8 @@ toggle_eventTrace(struct toggle *t _is_unused, enum toggle_type tt)
 #if defined(X3270_DISPLAY) /*[*/
 static Widget screentrace_shell = (Widget)NULL;
 #endif /*]*/
-static FILE *screentracef = (FILE *)0;
+static FILE *screentracef = (FILE *)NULL;
+static ptype_t screentracem = P_TEXT;
 
 /*
  * Screen trace function, called when the host clears the screen.
@@ -977,13 +978,7 @@ static FILE *screentracef = (FILE *)0;
 static void
 do_screentrace(Boolean always _is_unused)
 {
-	register int i;
-
-	if (fprint_screen(screentracef, P_TEXT, 0, NULL)) {
-		for (i = 0; i < COLS; i++)
-			(void) fputc('=', screentracef);
-		(void) fputc('\n', screentracef);
-	}
+	(void) fprint_screen_body();
 }
 
 void
@@ -1044,12 +1039,23 @@ screentrace_cb(char *tfn)
 #if !defined(_WIN32) /*[*/
 	(void) fcntl(fileno(screentracef), F_SETFD, 1);
 #endif /*]*/
+	fprint_screen_start(screentracef, /*P_TEXT*/P_HTML, 0, NULL);
 
 	/* We're really tracing, turn the flag on. */
 	appres.toggle[SCREEN_TRACE].value = True;
 	appres.toggle[SCREEN_TRACE].changed = True;
 	menubar_retoggle(&appres.toggle[SCREEN_TRACE], SCREEN_TRACE);
 	return True;
+}
+
+/* End the screen trace. */
+static void
+end_screentrace(void)
+{
+	fprint_screen_done();
+	(void) fclose(screentracef);
+	screentracef = NULL;
+	screentracem = P_TEXT;
 }
 
 #if defined(X3270_DISPLAY) /*[*/
@@ -1062,9 +1068,10 @@ screentrace_callback(Widget w _is_unused, XtPointer client_data,
 		XtPopdown(screentrace_shell);
 }
 
-/* Callback for second "OK" button on screentrace popup */
+/* Callback for second "OK" button on screentrace popup ('once') */
 static void
-onescreen_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
+onescreen_callback(Widget w, XtPointer client_data,
+	XtPointer call_data _is_unused)
 {
 	char *tfn;
 
@@ -1083,11 +1090,11 @@ onescreen_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 	XtFree(tfn);
 
 	/* Save the current image, once. */
+	fprint_screen_start(screentracef, P_TEXT, 0, NULL);
 	do_screentrace(True);
 
 	/* Close the file, we're done. */
-	(void) fclose(screentracef);
-	screentracef = (FILE *)NULL;
+	end_screentrace();
 
 	if (w)
 		XtPopdown(screentrace_shell);
@@ -1125,7 +1132,7 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 #endif /*]*/
 			tracefile = tracefile_buf;
 		}
-		if (tt == TT_INITIAL || tt == TT_ACTION || tt == TT_INTERACTIVE) {
+		if (tt == TT_INITIAL || tt == TT_ACTION) {
 			(void) screentrace_cb(NewString(tracefile));
 			if (tracefile_buf != NULL)
 				Free(tracefile_buf);
@@ -1148,8 +1155,7 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 	} else {
 		if (ctlr_any_data() && !trace_skipping)
 			do_screentrace(False);
-		(void) fclose(screentracef);
-		screentracef = NULL;
+		end_screentrace();
 	}
 
 	if (tracefile_buf != NULL)
