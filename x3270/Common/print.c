@@ -1224,7 +1224,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 				else
 					args = xs_buffer("/p \"%s\"",
 							temp_name);
-				trace_dsn("PrintText() command: \"%s\" %s\n",
+				trace_event("PrintText() command: \"%s\" %s\n",
 					wp, args);
 
 				w = Malloc(sizeof(wsp_t) +
