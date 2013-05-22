@@ -78,3 +78,4 @@ extern Boolean net_bound(void);
 #if defined(HAVE_LIBSSL) /*[*/
 extern void ssl_base_init(char *cl_hostname, Boolean *pending);
 #endif /*]*/
+extern int linemode;

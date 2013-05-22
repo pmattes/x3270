@@ -100,9 +100,6 @@
 
 #define MSC_BUF	1024
 
-/* Externals */
-extern int      linemode;
-
 /* Globals */
 struct macro_def *macro_defs = (struct macro_def *)NULL;
 Boolean		macro_output = False;

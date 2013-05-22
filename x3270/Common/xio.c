@@ -121,6 +121,10 @@ x3270_exit(int n)
 		return;
 	already_exiting = True;
 
+	/* Flush any pending output (mostly for Windows). */
+	fflush(stdout);
+	fflush(stderr);
+
 	/* Turn off toggle-related activity. */
 	shutdown_toggles();
 

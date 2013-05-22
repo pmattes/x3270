@@ -974,7 +974,6 @@ status_dump(void)
 	const char *bplu;
 #endif /*]*/
 	const char *ptype;
-	extern int linemode; /* XXX */
 	extern time_t ns_time;
 	extern int ns_bsent, ns_rsent, ns_brcvd, ns_rrcvd;
 
@@ -1430,7 +1429,7 @@ start_auto_shortcut(void)
 	char delenv[32 + MAX_PATH];
 	char args[1024];
 	HINSTANCE h;
-	extern char *profile_path; /* XXX */
+	char *cwd;
 
     	/* Make sure we're on NT. */
     	if (!is_nt) {
@@ -1442,10 +1441,12 @@ start_auto_shortcut(void)
 	if (profile_path == CN) {
 		fprintf(stderr, "Can't use auto-shortcut mode without a "
 			"session file\n");
-		x3270_exit(1);
+		fflush(stderr);
+		return;
 	}
 
-	printf("Running auto-shortcut\n"); fflush(stdout);
+	printf("Running auto-shortcut\n");
+	fflush(stdout);
 
 	/* Read the session file into 's'. */
 	f = fopen(profile_path, "r");
@@ -1458,7 +1459,8 @@ start_auto_shortcut(void)
 	    	fprintf(stderr, "%s: invalid format\n", profile_path);
 		x3270_exit(1);
 	}
-	printf("Read in session '%s'\n", profile_path); fflush(stdout);
+	printf("Reading session file '%s'\n", profile_path);
+	fflush(stdout);
 
 	/* Create the shortcut. */
 	tempdir = getenv("TEMP");
@@ -1467,24 +1469,27 @@ start_auto_shortcut(void)
 		x3270_exit(1);
 	}
 	sprintf(linkpath, "%s\\wcsa%u.lnk", tempdir, getpid());
-	sprintf(exepath, "%s\\%s", instdir, "wc3270.exe");
-	printf("Executable path is '%s'\n", exepath); fflush(stdout);
+	sprintf(exepath, "%s%s", instdir, "wc3270.exe");
+	printf("Executable path is '%s'\n", exepath);
+	fflush(stdout);
 	if (GetFullPathName(profile_path, MAX_PATH, sesspath, NULL) == 0) {
 	    	fprintf(stderr, "%s: Error %ld\n", profile_path,
 			GetLastError());
 		x3270_exit(1);
 	}
 	sprintf(args, "+S \"%s\"", sesspath);
+	cwd = _getcwd(NULL, 0);
 	hres = create_shortcut(&s,		/* session */
 			       exepath,		/* .exe    */
 			       linkpath,	/* .lnk    */
 			       args,		/* args    */
-			       tempdir		/* cwd     */);
+			       cwd		/* cwd     */);
 	if (!SUCCEEDED(hres)) {
 	    	fprintf(stderr, "Cannot create ShellLink '%s'\n", linkpath);
 		x3270_exit(1);
 	}
-	printf("Created ShellLink '%s'\n", linkpath); fflush(stdout);
+	printf("Created ShellLink '%s'\n", linkpath);
+	fflush(stdout);
 
 	/* Execute it. */
 	sprintf(delenv, "%s=%s", DELENV, linkpath);
@@ -1495,7 +1500,8 @@ start_auto_shortcut(void)
 	    x3270_exit(1);
 	}
 
-	printf("Started ShellLink\n"); fflush(stdout);
+	printf("Started ShellLink\n");
+	fflush(stdout);
 
 	exit(0);
 }
