@@ -340,7 +340,7 @@ action_suppressed(String name, char *suppress)
 
 	while ((t = strstr(s, name)) != CN) {
 		char b;
-		char e = s[strlen(name)];
+		char e = t[strlen(name)];
 
 		if (t == suppress)
 			b = '\0';
@@ -349,7 +349,7 @@ action_suppressed(String name, char *suppress)
 		if ((b == '\0' || b == ')' || isspace(b)) &&
 		    (e == '\0' || e == '(' || isspace(e)))
 			return True;
-		s += strlen(name);
+		s = t + strlen(name);
 	}
 	return False;
 }
