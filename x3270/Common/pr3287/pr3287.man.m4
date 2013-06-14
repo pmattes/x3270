@@ -101,6 +101,11 @@ Causes XX_FI(XX_PRODUCT) to flush any pending printer output whenever an EM
 (End of Medium) order arrives in unformatted 3270 mode.
 This can help preserve multi-page output with hosts that do not clear the 3270
 buffer between pages.
+(Note: This option is defined for historical purposes only; XX_FB(XX_DASHED(emflush)) is now
+the default.)
+XX_TP(XX_FB(XX_DASHED(noemflush)))
+Causes XX_FI(XX_PRODUCT) not to flush any pending printer output when an EM
+(End of Medium) order arrives in unformatted 3270 mode.
 XX_TP(XX_FB(XX_DASHED(ignoreeoj)))
 Ignore TN3270E PRINT-EOJ commands, relying on UNBIND commands to indicate
 the ends of print jobs.

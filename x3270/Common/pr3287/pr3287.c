@@ -52,6 +52,9 @@
  *		display blank lines even if they're empty (formatted LU3)
  *	    -emflush
  *	        flush printer output when an unformatted EM order arrives
+ *	        (historical option, now the default)
+ *	    -noemflush
+ *	        do not flush printer output when an unformatted EM order arrives
  *          -eojtimeout n
  *              time out end of job after n seconds
  *          -ffeoj
@@ -150,7 +153,7 @@ extern FILE *tracef;
 /* Globals. */
 char *programname = NULL;	/* program name */
 int blanklines = 0;
-int emflush = 0;
+int emflush = 1;
 int ignoreeoj = 0;
 int reconnect = 0;
 #if defined(_WIN32) /*[*/
@@ -215,7 +218,7 @@ static void
 usage(void)
 {
 	(void) fprintf(stderr, "usage: %s [options] [lu[,lu...]@]host[:port]\n"
-"Options:\n%s%s%s%s%s%s", programname,
+"Options:\n%s%s%s%s%s%s%s%s%s", programname,
 #if defined(HAVE_LIBSSL) /*[*/
 "  -accepthostname any|DNS:name|IP:addr\n"
 "                   accept any name, specific name or address in host cert\n"
@@ -234,18 +237,21 @@ usage(void)
 #if !defined(_WIN32) /*[*/
 "  -command \"<cmd>\" use <cmd> for printing (default \"lpr\")\n"
 #endif /*]*/
-"  -blanklines      display blank lines even if empty (formatted LU3)\n"
+"  -blanklines      display blank lines even if empty (formatted LU3)\n",
 #if !defined(_WIN32) /*[*/
 "  -daemon          become a daemon after connecting\n"
 #endif /*]*/
 "  -emflush         flush printer output when an unformatted EM order arrives\n"
+"                   (historical option; this is now the default)\n"
+"  -noemflush       do not flush printer output when an unformatted EM order\n"
+"                   arrives\n"
 #if defined(_WIN32) /*[*/
 "  -nocrlf          don't expand newlines to CR/LF\n"
 #else /*][*/
 "  -crlf            expand newlines to CR/LF\n"
 #endif /*]*/
 "  -eojtimeout <seconds>\n"
-"                   time out end of print job\n"
+"                   time out end of print job\n",
 "  -ffeoj           assume FF at the end of each print job\n"
 "  -ffthru          pass through SCS FF orders\n",
 "  -ffskip          skip FF orders at top of page\n"
@@ -256,7 +262,7 @@ usage(void)
 "  -keypasswd file:<file>|string:<string>\n"
 "                   specify private key password\n"
 #endif /*]*/
-"  -ignoreeoj       ignore PRINT-EOJ commands\n"
+"  -ignoreeoj       ignore PRINT-EOJ commands\n",
 #if defined(_WIN32) /*[*/
 "  -printer \"printer name\"\n"
 "                   use specific printer (default is $PRINTER or the system\n"
@@ -585,6 +591,8 @@ main(int argc, char *argv[])
 			blanklines = 1;
 		} else if (!strcmp(argv[i], "-emflush")) {
 			emflush = 1;
+		} else if (!strcmp(argv[i], "-noemflush")) {
+			emflush = 0;
 #if defined(_WIN32) /*[*/
 		} else if (!strcmp(argv[i], "-nocrlf")) {
 			crlf = 0;
