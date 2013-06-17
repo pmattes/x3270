@@ -65,10 +65,13 @@
 #include "trace_dsc.h"
 #include "utf8c.h"
 #include "utilc.h"
-#include "w3miscc.h"
+#if defined(_WIN32) /*[*/
+# include "w3miscc.h"
+# include "winprintc.h"
+#endif /*]*/
 
 #if defined(_MSC_VER) /*[*/
-#include "Msc/deprecated.h"
+# include "Msc/deprecated.h"
 #endif /*]*/
 
 /* Maximum size of a tracefile header. */
@@ -97,17 +100,22 @@ static char    *tracef_bufptr = CN;
 static off_t	tracef_size = 0;
 static off_t	tracef_max = 0;
 static char    *onetime_tracefile_name = CN;
-static char    *onetime_screentracefile_name = CN;
+static tss_t	screentrace_how = TSS_FILE;
+static tss_t	screentrace_last_how = TSS_FILE;
+static char    *onetime_screentrace_name = CN;
 static void	vwtrace(const char *fmt, va_list args);
 static void	wtrace(const char *fmt, ...);
 static char    *create_tracefile_header(const char *mode);
 static void	stop_tracing(void);
+static char    *screentrace_name = NULL;
+#if defined(_WIN32) /*[*/
+static char    *screentrace_tmpfn;
+#endif /*]*/
 
 /* Globals */
 struct timeval   ds_ts;
 Boolean          trace_skipping = False;
 char		*tracefile_name = NULL;
-char		*screentracefile_name = NULL;
 Boolean  	 do_ts = True;
 
 /* display a (row,col) */
@@ -970,7 +978,6 @@ toggle_eventTrace(struct toggle *t _is_unused, enum toggle_type tt)
 static Widget screentrace_shell = (Widget)NULL;
 #endif /*]*/
 static FILE *screentracef = (FILE *)NULL;
-static ptype_t screentracem = P_TEXT;
 
 /*
  * Screen trace function, called when the host clears the screen.
@@ -1024,22 +1031,51 @@ trace_ansi_disc(void)
  * Returns True for success, False for failure.
  */
 static Boolean
-screentrace_cb(char *tfn)
+screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 {
-	tfn = do_subst(tfn, DS_VARS | DS_TILDE | DS_UNIQUE);
-	screentracef = fopen(tfn, "a");
+	char *xtfn = NULL;
+
+	if (how == TSS_FILE) {
+		xtfn = do_subst(tfn, DS_VARS | DS_TILDE | DS_UNIQUE);
+		screentracef = fopen(xtfn, "a");
+	} else {
+#if !defined(_WIN32) /*[*/
+		screentracef = popen(tfn, "w");
+#else /*][*/
+		int fd;
+
+		fd = win_mkstemp(&screentrace_tmpfn, ptype);
+		if (fd < 0) {
+			popup_an_errno(errno, "%s", "(temporary file)");
+			Free(tfn);
+			return False;
+		}
+		screentracef = fdopen(fd, "w");
+#endif /*]*/
+	}
 	if (screentracef == (FILE *)NULL) {
-		popup_an_errno(errno, "%s", tfn);
-		Free(tfn);
+		if (how == TSS_FILE)
+			popup_an_errno(errno, "%s", xtfn);
+		else
+#if !defined(_WIN32) /*[*/
+			popup_an_errno(errno, "%s", tfn);
+#else /*][*/
+			popup_an_errno(errno, "%s", "(temporary file)");
+#endif /*]*/
+		Free(xtfn);
+#if defined(_WIN32) /*[*/
+		Free(screentrace_tmpfn);
+		screentrace_tmpfn = NULL;
+#endif /*]*/
 		return False;
 	}
-	Replace(screentracefile_name, NewString(tfn));
+	Replace(screentrace_name, NewString(tfn));
 	Free(tfn);
 	(void) SETLINEBUF(screentracef);
 #if !defined(_WIN32) /*[*/
 	(void) fcntl(fileno(screentracef), F_SETFD, 1);
 #endif /*]*/
-	fprint_screen_start(screentracef, /*P_TEXT*/P_HTML, 0, NULL);
+	fprint_screen_start(screentracef, ptype, 0, NULL);
 
 	/* We're really tracing, turn the flag on. */
 	appres.toggle[SCREEN_TRACE].value = True;
@@ -1050,12 +1086,21 @@ screentrace_cb(char *tfn)
 
 /* End the screen trace. */
 static void
-end_screentrace(void)
+end_screentrace(Boolean is_final _is_unused)
 {
 	fprint_screen_done();
 	(void) fclose(screentracef);
 	screentracef = NULL;
-	screentracem = P_TEXT;
+
+#if defined(_WIN32) /*[*/
+	if (is_final) {
+		start_wordpad_sync("ScreenTrace", screentrace_tmpfn,
+			screentrace_name);
+	} else {
+		start_wordpad_async("ScreenTrace", screentrace_tmpfn,
+			screentrace_name);
+	}
+#endif /*]*/
 }
 
 #if defined(X3270_DISPLAY) /*[*/
@@ -1064,7 +1109,8 @@ static void
 screentrace_callback(Widget w _is_unused, XtPointer client_data,
     XtPointer call_data _is_unused)
 {
-	if (screentrace_cb(XawDialogGetValueString((Widget)client_data)))
+	if (screentrace_cb(TSS_FILE, P_TEXT,
+		    XawDialogGetValueString((Widget)client_data)))
 		XtPopdown(screentrace_shell);
 }
 
@@ -1094,7 +1140,7 @@ onescreen_callback(Widget w, XtPointer client_data,
 	do_screentrace(True);
 
 	/* Close the file, we're done. */
-	end_screentrace();
+	end_screentrace(False);
 
 	if (w)
 		XtPopdown(screentrace_shell);
@@ -1102,11 +1148,38 @@ onescreen_callback(Widget w, XtPointer client_data,
 #endif /*]*/
 
 void
-trace_set_screentrace_file(const char *path)
+trace_set_screentrace_file(tss_t how, const char *name)
 {
-    	Replace(onetime_screentracefile_name, NewString(path));
+	screentrace_how = how;
+    	Replace(onetime_screentrace_name, name? NewString(name): NULL);
 }
 
+tss_t
+trace_get_screentrace_how(void)
+{
+	return screentrace_how;
+}
+
+tss_t
+trace_get_screentrace_last_how(void)
+{
+	return screentrace_last_how;
+}
+
+const char *
+trace_get_screentrace_name(void)
+{
+	return (screentrace_name && screentrace_name[0])? screentrace_name:
+							  "(system default)";
+}
+
+/*
+ * Turn screen tracing on or off.
+ *
+ * If turning it on, screentrace_how contains TSS_FILE or TSS_PRINTER,
+ *  and screentrace_name is NULL (use the default) or the name of a
+ *  file, printer command (Unix) or printer (Windows).
+ */
 void
 toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 {
@@ -1114,26 +1187,43 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 	char *tracefile;
 
 	if (toggled(SCREEN_TRACE)) {
-	    	if (onetime_screentracefile_name != NULL) {
+		/* Turn it on. */
+	    	if (onetime_screentrace_name != NULL) {
 		    	tracefile = tracefile_buf =
-			    onetime_screentracefile_name;
-			onetime_screentracefile_name = NULL;
-		} else if (appres.screentrace_file)
+			    onetime_screentrace_name;
+			onetime_screentrace_name = NULL;
+		} else if (screentrace_how == TSS_FILE &&
+			   appres.screentrace_file != NULL)
 			tracefile = appres.screentrace_file;
 		else {
 #if defined(_WIN32) /*[*/
-			tracefile_buf = xs_buffer("%s%sx3scr.$UNIQUE.txt",
-				(appres.trace_dir != CN)?
-				    appres.trace_dir: myappdata,
-				(appres.trace_dir != CN)? "\\": "");
+			if (screentrace_how == TSS_FILE)
+				tracefile = tracefile_buf =
+				    xs_buffer("%s%sx3scr.$UNIQUE.txt",
+					(appres.trace_dir != CN)?
+					    appres.trace_dir: myappdata,
+					(appres.trace_dir != CN)? "\\": "");
+			else
+				tracefile = "";
 #else /*][*/
-			tracefile_buf = xs_buffer("%s/x3scr.$UNIQUE",
-				appres.trace_dir);
+			if (screentrace_how == TSS_FILE)
+				tracefile = tracefile_buf =
+				    xs_buffer("%s/x3scr.$UNIQUE",
+					appres.trace_dir);
+			else
+				tracefile = "lpr";
 #endif /*]*/
-			tracefile = tracefile_buf;
 		}
-		if (tt == TT_INITIAL || tt == TT_ACTION) {
-			(void) screentrace_cb(NewString(tracefile));
+		if (tt == TT_INITIAL ||
+		    tt == TT_ACTION ||
+		    tt == TT_INTERACTIVE) {
+			(void) screentrace_cb(screentrace_how,
+#if defined(_WIN32) /*[*/
+				(screentrace_how == TSS_FILE)? P_TEXT: P_RTF,
+#else /*][*/
+				P_TEXT,
+#endif /*]*/
+				NewString(tracefile));
 			if (tracefile_buf != NULL)
 				Free(tracefile_buf);
 			return;
@@ -1153,9 +1243,12 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 		popup_popup(screentrace_shell, XtGrabExclusive);
 #endif /*]*/
 	} else {
+		/* Turn it off. */
 		if (ctlr_any_data() && !trace_skipping)
 			do_screentrace(False);
-		end_screentrace();
+		end_screentrace(tt == TT_FINAL);
+		screentrace_last_how = screentrace_how;
+		screentrace_how = TSS_FILE; /* back to the default */
 	}
 
 	if (tracefile_buf != NULL)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2013 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -71,6 +71,12 @@ void
 do_toggle(int ix)
 {
 	do_toggle_reason(ix, TT_INTERACTIVE);
+}
+
+void
+do_menu_toggle(int ix)
+{
+	do_toggle_reason(ix, TT_XMENU);
 }
 
 /*

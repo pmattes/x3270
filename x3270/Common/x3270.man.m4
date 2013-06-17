@@ -1183,6 +1183,9 @@ The command XX_FB(screentrace on) enables screen tracing;
 the command XX_FB(screentrace off) disables it.
 After XX_FB(on), a filename may be specified to override the default
 trace file name of XX_FB(/tmp/x3scr.)`'XX_FI(pid)`'ifelse(XX_PRODUCT,wc3270,XX_FB(.txt)).
+The keyaord XX_FB(on) can also be followed by the keyword XX_FB(printer) and an optional
+ifelse(XX_PRODUCT,wc3270,printer name,print command)
+to direct screen traces directly to the printer.
 XX_TP(XX_FB(Show))
 Displays statistics and settings.
 XX_TP(XX_FB(Trace))

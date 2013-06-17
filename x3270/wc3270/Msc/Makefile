@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2012, Paul Mattes.
+# Copyright (c) 2007-2013, Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@ VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj c3270.obj charset.obj \
 	resolver.obj resources.obj rpq.obj screen.obj see.obj sf.obj \
 	shortcut.obj ssl_dll.obj tables.obj telnet.obj toggles.obj \
 	trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj xio.obj \
-	w3misc.obj winvers.obj windirs.obj wc3270.RES
+	w3misc.obj winvers.obj windirs.obj winprint.obj wc3270.RES
 OBJECTS = $(VOBJS) version.obj
 WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
 	windirs.obj relink.obj
@@ -211,3 +211,5 @@ wizard.obj: wizard.c
 	$(CC) $(CFLAGS) /c wizard.c
 w3misc.obj: w3misc.c
 	$(CC) $(CFLAGS) /c w3misc.c
+winprint.obj: winprint.c
+	$(CC) $(CFLAGS) /c winprint.c

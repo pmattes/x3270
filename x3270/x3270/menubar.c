@@ -1456,7 +1456,7 @@ toggle_callback(Widget w, XtPointer userdata, XtPointer calldata _is_unused)
 	if (t->w[1] != 0 && w == t->w[!t->value])
 		return;
 
-	do_toggle(t - appres.toggle);
+	do_menu_toggle(t - appres.toggle);
 }
 
 static Widget oversize_shell = NULL;

@@ -1287,22 +1287,83 @@ Trace_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 		action_output("Trace file is %s", tracefile_name);
 }
 
-/* ScreenTrace(on [filename]|off) */
+/*
+ * ScreenTrace(On)
+ * ScreenTrace(On,filename)			backwards-compatible
+ * ScreenTrace(On,File,filename)		preferred
+ * ScreenTrace(On,Printer)
+ * ScreenTrace(On,Printer,"print command")	Unix
+ * ScreenTrace(On,Printer,printername)		Windows
+ * ScreenTrace(Off)
+ */
 void
 ScreenTrace_action(Widget w _is_unused, XEvent *event _is_unused,
 	String *params, Cardinal *num_params)
 {
 	Boolean on = False;
+	tss_t how = TSS_FILE;
+	const char *name = NULL;
 
 	action_debug(Trace_action, event, params, num_params);
+
 	if (*num_params == 0) {
-		action_output("Screen tracing is %sabled.",
-		    toggled(SCREEN_TRACE)? "en": "dis");
+		how = trace_get_screentrace_how();
+		if (toggled(SCREEN_TRACE)) {
+			action_output("Screen tracing is enabled, %s \"%s\".",
+			    (how == TSS_FILE)? "file":
+#if !defined(_WIN32) /*[*/
+			    "with print command",
+#else /*]*/
+			    "to printer",
+#endif /*]*/
+			    trace_get_screentrace_name());
+		} else
+			action_output("Screen tracing is disabled.");
 		return;
 	}
+
 	if (!strcasecmp(params[0], "On")) {
+		if (toggled(SCREEN_TRACE)) {
+			popup_an_error("Screen tracing is already enabled.");
+			return;
+		}
 		on = True;
+		switch (*num_params) {
+		case 1:
+			how = TSS_FILE;
+			name = NULL;
+			break;
+		case 2:
+			if (!strcasecmp(params[1], "Printer")) {
+				how = TSS_PRINTER;
+				name = NULL;
+			} else {
+				how = TSS_FILE;
+				name = params[1];
+			}
+			break;
+		case 3:
+			if (!strcasecmp(params[1], "File"))
+				how = TSS_FILE;
+			else if (!strcasecmp(params[1], "Printer"))
+				how = TSS_PRINTER;
+			else {
+			    popup_an_error("ScreenTrace(On): Must specify "
+				    "'File' or 'Printer'");
+			    return;
+			}
+			name = params[2];
+			break;
+		default:
+			popup_an_error("ScreenTrace(): Too many arguments "
+				"for 'Off'");
+			return;
+		}
 	} else if (!strcasecmp(params[0], "Off")) {
+		if (!toggled(SCREEN_TRACE)) {
+			popup_an_error("Screen tracing is already disabled.");
+			return;
+		}
 		on = False;
 		if (*num_params > 1) {
 			popup_an_error("ScreenTrace(): Too many arguments "
@@ -1315,12 +1376,31 @@ ScreenTrace_action(Widget w _is_unused, XEvent *event _is_unused,
 	}
 
 	if ((on && !toggled(SCREEN_TRACE)) || (!on && toggled(SCREEN_TRACE))) {
-		if (on && *num_params > 1)
-		    	trace_set_screentrace_file(params[1]);
+		if (on)
+		    	trace_set_screentrace_file(how, name);
 		do_toggle(SCREEN_TRACE);
 	}
-	if (screentracefile_name != NULL)
-		action_output("Trace file is %s", screentracefile_name);
+
+	name = trace_get_screentrace_name();
+	if (name != NULL) {
+		if (on) {
+			if (how == TSS_FILE)
+				action_output("Trace file is %s.", name);
+			else
+				action_output("Tracing to printer "
+#if !defined(_WIN32) /*[*/
+					"with command "
+#endif /*]*/
+					"\"%s\".", name);
+		} else {
+			if (trace_get_screentrace_last_how() == TSS_FILE)
+				action_output("Tracing complete. "
+					"Trace file is %s.",
+					name);
+			else
+				action_output("Tracing to printer complete.");
+		}
+	}
 }
 #endif /*]*/
 

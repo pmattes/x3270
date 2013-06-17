@@ -62,13 +62,13 @@ SRCS = actions.c ansi.c apl.c charset.c ctlr.c fallbacks.c ft.c \
 	print.c printer.c proxy.c readres.c resolver.c resources.c rpq.c \
 	see.c sf.c smain.c strtok_r.c tables.c telnet.c toggles.c trace_ds.c \
 	utf8.c util.c w3misc.c windirs.c winvers.c xio.c XtGlue.c unicode.c \
-	unicode_dbcs.c ssl_dll.c
+	unicode_dbcs.c ssl_dll.c winprint.c
 VOBJS = actions.o ansi.o apl.o charset.o ctlr.o fallbacks.o ft.o \
 	ft_cut.o ft_dft.o glue.o host.o idle.o kybd.o macros.o \
 	print.o printer.o proxy.o readres.o resolver.o resources.o rpq.o \
 	see.o sf.o smain.o strtok_r.o tables.o telnet.o toggles.o trace_ds.o \
 	utf8.o util.o w3misc.o windirs.o winvers.o xio.o XtGlue.o ws3270res.o \
-	unicode.o unicode_dbcs.o ssl_dll.o
+	unicode.o unicode_dbcs.o ssl_dll.o winprint.o
 OBJECTS = $(VOBJS) version.o
 LIBS = $(SSLLIB) -lws2_32
 SHRTLIBS = -lole32 -luuid

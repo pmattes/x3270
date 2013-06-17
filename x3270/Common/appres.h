@@ -35,7 +35,13 @@
 
 /* Toggles */
 
-enum toggle_type { TT_INITIAL, TT_INTERACTIVE, TT_ACTION, TT_FINAL };
+enum toggle_type {
+    TT_INITIAL,		/* at start-up */
+    TT_INTERACTIVE,	/* at the prompt */
+    TT_ACTION,		/* from a keymap, script or macro */
+    TT_XMENU,		/* from a GUI menu */
+    TT_FINAL		/* at shutdown */
+};
 struct toggle {
 	Boolean value;		/* toggle value */
 	Boolean changed;	/* has the value changed since init */

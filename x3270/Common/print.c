@@ -65,6 +65,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include "w3miscc.h"
+#include "winprintc.h"
 # if defined(WC3270) /*[*/
 #  include <screenc.h>
 # endif /*]*/
@@ -835,157 +836,6 @@ popup_save_text(char *filename)
 }
 #endif /*]*/
 
-#if defined(_WIN32) /*[*/
-/*
- * A Windows version of something like mkstemp().  Creates a temporary
- * file in $TEMP, returning its path and an open file descriptor.
- */
-int
-win_mkstemp(char **path, ptype_t ptype)
-{
-	char *s;
-	int fd;
-	static unsigned gen = 0;
-
-	s = getenv("TEMP");
-	if (s == NULL)
-		s = getenv("TMP");
-	if (s == NULL)
-		s = "C:";
-	*path = xs_buffer("%s\\x3h%u-%u.%s", s, getpid(), gen,
-			    (ptype == P_RTF)? "rtf": "txt");
-	gen = (gen + 1) % 1000;
-	fd = open(*path, O_CREAT | O_RDWR, S_IREAD | S_IWRITE);
-	if (fd < 0) {
-	    Free(*path);
-	    *path = NULL;
-	}
-	return fd;
-}
-
-/*
- * Find WORDPAD.EXE.
- */
-#define PROGRAMFILES "%ProgramFiles%"
-char *
-find_wordpad(void)
-{
-	char data[1024];
-	DWORD dlen;
-	char *slash;
-	static char *wp = NULL;
-	HKEY key;
-
-	if (wp != NULL)
-	    return wp;
-
-	/* Get the shell print command for RTF files. */
-	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-		    "Software\\Classes\\rtffile\\shell\\print\\command",
-		    0,
-		    KEY_READ,
-		    &key) != ERROR_SUCCESS) {
-	    	return NULL;
-	}
-	dlen = sizeof(data);
-    	if (RegQueryValueEx(key,
-		    NULL,
-		    NULL,
-		    NULL,
-		    (LPVOID)data,
-		    &dlen) != ERROR_SUCCESS) {
-		RegCloseKey(key);
-	    	return NULL;
-	}
-	RegCloseKey(key);
-
-	if (data[0] == '"') {
-	    char data2[1024];
-	    char *q2;
-
-	    /* The first token is quoted; that's the path. */
-	    strcpy(data2, data + 1);
-	    q2 = strchr(data2, '"');
-	    if (q2 == NULL) {
-		return NULL;
-	    }
-	    *q2 = '\0';
-	    strcpy(data, data2);
-	} else if ((slash = strchr(data, '/')) != NULL) {
-	    /* Find the "/p". */
-	    *slash = '\0';
-	    if (*(slash - 1) == ' ')
-		*(slash - 1) = '\0';
-	}
-
-	if (!strncasecmp(data, PROGRAMFILES, strlen(PROGRAMFILES))) {
-	    char *pf = getenv("PROGRAMFILES");
-
-	    /* Substitute %ProgramFiles%. */
-	    if (pf == NULL) {
-		return NULL;
-	    }
-	    wp = xs_buffer("%s\\%s", pf, data + strlen(PROGRAMFILES));
-	} else {
-	    wp = NewString(data);
-	}
-	return wp;
-}
-
-#if defined(WC3270) /*[*/
-/* Asynchronous thread to print a screen snapshot with Wordpad. */
-static DWORD WINAPI
-print_screen(LPVOID lpParameter)
-{
-	wsp_t *w = (wsp_t *)lpParameter;
-	SHELLEXECUTEINFO info;
-
-	/* Run the command and wait for it to complete. */
-	memset(&info, '\0', sizeof(info));
-	(void) ShellExecuteEx(&info);
-	info.cbSize = sizeof(info);
-	info.fMask = SEE_MASK_NOCLOSEPROCESS;
-	info.lpFile = w->wp;
-	info.lpParameters = w->args;
-	info.nShow = SW_MINIMIZE;
-	(void) ShellExecuteEx(&info);
-	if (info.hProcess) {
-		WaitForSingleObject(info.hProcess, INFINITE);
-		CloseHandle(info.hProcess);
-	}
-
-	/* Unlink the temporary file. */
-	(void) unlink(w->filename);
-
-	/*
-	 * Free the memory.
-	 * This is a bit scary, but I believe it's thread-safe.
-	 * If not, I'll just leak the memory.
-	 */
-	Free(w->args);
-	Free(w);
-
-	/* No more need for the thread. */
-	ExitThread(0);
-	return 0;
-}
-#endif /*]*/
-
-/*
- * Close a completed thread handle.
- */
-void
-close_wsh(unsigned long fd, ioid_t id)
-{
-	CloseHandle((HANDLE)fd);
-	RemoveInput(id);
-#if defined(C3270) /*[*/
-	if (appres.do_confirms)
-		popup_an_info("Screen image printed.\n");
-#endif /*]*/
-}
-#endif /*]*/
-
 /* Print or save the contents of the screen as text. */
 void
 PrintText_action(Widget w _is_unused, XEvent *event, String *params,
@@ -1189,76 +1039,17 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 #if !defined(_WIN32) /*[*/
 			print_text_done(f, False);
 #else /*][*/
-			char *wp;
-
-			fclose(f);
-			wp = find_wordpad();
-			if (wp == NULL) {
-				popup_an_error("%s: Can't find WORDPAD.EXE",
-					action_name(PrintText_action));
-			} else {
-#if defined(S3270) /*[*/
-			    	/* Do it synchrously. */
-				char *cmd;
-
-				if (filter != CN)
-					cmd = xs_buffer("start /wait /min %s "
-							"/pt \"%s\" \"%s\"",
-							wp, temp_name, filter);
-				else
-					cmd = xs_buffer("start /wait /min %s "
-							"/p \"%s\"",
-							wp, temp_name);
-				trace_dsn("PrintText() command: %s\n", cmd);
-				system(cmd);
-				Free(cmd);
-#else /*][*/
-			    	/* Do it asynchronously. */
-				wsp_t *w;
-				char *args;
-				HANDLE print_thread;
-
-				if (filter != CN)
-					args = xs_buffer("/pt \"%s\" \"%s\"",
-							temp_name, filter);
-				else
-					args = xs_buffer("/p \"%s\"",
-							temp_name);
-				trace_event("PrintText() command: \"%s\" %s\n",
-					wp, args);
-
-				w = Malloc(sizeof(wsp_t) +
-					strlen(temp_name) + 1);
-				w->filename = (char *)(w + 1);
-				strcpy(w->filename, temp_name);
-				w->wp = wp;
-				w->args = args;
-				print_thread = CreateThread(NULL,
-							    0,
-							    print_screen,
-							    w,
-							    0,
-							    NULL);
-				if (print_thread == NULL) {
-					popup_an_error("Cannot create printing "
-					    "thread: %s\n",
-					    win32_strerror(GetLastError()));
-					Free(w);
-				} else {
-					/*
-					 * Make sure the handle gets closed
-					 * when the screen printing is done.
-					 */
-					(void) AddInput(
-						(unsigned long)print_thread,
-						close_wsh);
-				}
-#endif /*]*/
-			}
-#if !defined(S3270) /*[*/
+# if defined(S3270) /*[*/
+			/* Run WordPad to print the file, synchronusly. */
+			start_wordpad_sync("PrintText", temp_name, filter);
+# else /*][*/
+			/* Run WordPad to print the file, asynchronusly. */
+			start_wordpad_async("PrintText", temp_name, filter);
+# endif /*]*/
+# if !defined(S3270) /*[*/
 			if (appres.do_confirms)
 				popup_an_info("Screen image printing.\n");
-#endif /*]*/
+# endif /*]*/
 #endif /*]*/
 		}
 #if !defined(WC3270) /*[*/
