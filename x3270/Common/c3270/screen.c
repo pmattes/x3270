@@ -1195,11 +1195,12 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 #if defined(CURSES_WIDE) /*[*/
 			            "wch=%u "
 #endif /*]*/
-			                     , k
+				              "\n",
+			                            k
 #if defined(CURSES_WIDE) /*[*/
-			                        , wch
+			                             , wch
 #endif /*]*/
-			                             );
+			                                  );
 		if (k == ERR) {
 			if (first) {
 				if (failed_first) {
