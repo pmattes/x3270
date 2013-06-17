@@ -356,7 +356,7 @@ enum keytype { KT_STD, KT_GE };
 
 #define CN	((char *) NULL)
 #define PN	((XtPointer) NULL)
-#define Replace(var, value) { Free(var); var = (value); }
+#define Replace(var, value) do { Free(var); var = (value); } while(False)
 
 /* Configuration change masks. */
 #define NO_CHANGE	0x0000	/* no change */
