@@ -764,6 +764,15 @@ fm_screentrace(void *ignored _is_unused)
 }
 
 static void
+fm_screentrace_printer(void *ignored _is_unused)
+{
+	if (toggled(SCREEN_TRACE))
+		push_macro("ScreenTrace(off)", False);
+	else
+		push_macro("ScreenTrace(on,printer)", False);
+}
+
+static void
 fm_keymap(void *ignored _is_unused)
 {
     	push_macro("Show(keymap)", False);
@@ -790,6 +799,7 @@ typedef enum {
     FM_XFER,
     FM_TRACE,
     FM_SCREENTRACE,
+    FM_SCREENTRACE_PRINTER,
     FM_KEYMAP,
     FM_DISC,
     FM_QUIT,
@@ -808,6 +818,7 @@ char *file_menu_names[FM_COUNT] = {
     "File Transfer",
     "Enable Tracing",
     "Save Screen Images in File",
+    "Save Screen Images to Printer",
     "Display Keymap",
     "Disconnect",
     "Quit"
@@ -820,6 +831,7 @@ menu_callback file_menu_actions[FM_COUNT] = {
     fm_xfer,
     fm_trace,
     fm_screentrace,
+    fm_screentrace_printer,
     fm_keymap,
     fm_disconnect,
     fm_quit
@@ -958,12 +970,17 @@ menubar_retoggle(struct toggle *t, int ix)
 		Free(s);
 	}
 	if (ix == SCREEN_TRACE) {
-	    	if (toggled(SCREEN_TRACE))
+	    	if (toggled(SCREEN_TRACE)) {
 			rename_item(file_menu_items[FM_SCREENTRACE],
 				"Stop Saving Screen Images");
-		else
+			enable_item(file_menu_items[FM_SCREENTRACE_PRINTER],
+				False);
+		} else {
 			rename_item(file_menu_items[FM_SCREENTRACE],
 				"Save Screen Images in File");
+			enable_item(file_menu_items[FM_SCREENTRACE_PRINTER],
+				True);
+		}
 	}
 }
 
