@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2009, Paul Mattes.
+ * Copyright (c) 1994-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,9 @@
 #include "ft_dftc.h"
 #endif /*]*/
 #include "sfc.h"
+#if defined(_WIN32) /*[*/
+# include "ws2tcpip.h"
+#endif /*]*/
 #include "telnetc.h"
 #include "trace_dsc.h"
 
