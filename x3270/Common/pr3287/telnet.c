@@ -2421,7 +2421,11 @@ static Boolean
 is_numeric_host(const char *host)
 {
 	/* Is it an IPv4 address? */
+#if defined(_WIN32) /*[*/
+	if (inet_addr(host) != (u_long)-1)
+#else /*][*/
 	if (inet_addr(host) != (in_addr_t)-1)
+#endif /*]*/
 		return True;
 
 # if defined(AF_INET6) /*[*/
