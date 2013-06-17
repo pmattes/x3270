@@ -1069,7 +1069,10 @@ screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 #endif /*]*/
 		return False;
 	}
-	Replace(screentrace_name, NewString(tfn));
+	if (how == TSS_FILE)
+		Replace(screentrace_name, NewString(xtfn));
+	else
+		Replace(screentrace_name, NewString(tfn));
 	Free(tfn);
 	(void) SETLINEBUF(screentracef);
 #if !defined(_WIN32) /*[*/
