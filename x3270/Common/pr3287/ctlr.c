@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, Paul Mattes.
+ * Copyright (c) 1993-2013, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -57,6 +57,7 @@
 #include "sfc.h"
 #include "tablesc.h"
 #include "unicodec.h"
+#include "xtablec.h"
 #if defined(_WIN32) /*[*/
 #include "wsc.h"
 #include <windows.h>
@@ -104,6 +105,8 @@ static unsigned char default_gr;
 static unsigned char default_cs;
 static int line_length = MAX_LL;
 static ucs4_t page_buf[MAX_BUF];
+static const char *xlate_buf[MAX_BUF];
+int xlate_len[MAX_BUF];
 static int baddr = 0;
 static Boolean page_buf_initted = False;
 static Boolean any_3270_printable = False;
@@ -255,7 +258,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 #define END_TEXT(cmd)	{ END_TEXT0; trace_ds(" %s", cmd); }
 
 #define START_FIELD(fa) { \
-		ctlr_add(FA_IS_ZERO(fa)?INVISIBLE:VISIBLE, 0, default_gr); \
+		ctlr_add(0, FA_IS_ZERO(fa)?INVISIBLE:VISIBLE, 0, default_gr); \
 		trace_ds(see_attr(fa)); \
 	}
 
@@ -264,6 +267,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 
 	if (!page_buf_initted) {
 		(void) memset(page_buf, '\0', MAX_BUF * sizeof(ucs4_t));
+		(void) memset(xlate_buf, '\0', MAX_BUF * sizeof(char *));
+		(void) memset(xlate_len, '\0', MAX_BUF * sizeof(int));
 		page_buf_initted = True;
 		baddr = 0;
 	}
@@ -335,7 +340,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			} else if (xbaddr > baddr) {
 				/* Unformatted. */
 				while (baddr < xbaddr) {
-					ctlr_add(' ', default_cs, default_gr);
+					ctlr_add(0, ' ', default_cs, default_gr);
 				}
 			}
 			previous = SBA;
@@ -389,8 +394,9 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				break;
 			}
 			while (baddr < xbaddr) {
-				ctlr_add(ra_xlate, ra_ge? CS_GE: default_cs,
-				    default_gr);
+				ctlr_add(ra_ge? 0: *cp,
+					ra_xlate, ra_ge? CS_GE: default_cs,
+					default_gr);
 			}
 			break;
 		case ORDER_EUA:	/* erase unprotected to address */
@@ -408,7 +414,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			trace_ds(see_ebc(*cp));
 			if (*cp)
 				trace_ds("'");
-			ctlr_add(ebcdic_to_unicode(*cp, CS_GE, EUO_NONE),
+			ctlr_add(0, ebcdic_to_unicode(*cp, CS_GE, EUO_NONE),
 				CS_GE, default_gr);
 			break;
 		case ORDER_MF:	/* modify field */
@@ -464,7 +470,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			}
 			if (!any_fa)
 				START_FIELD(0);
-			ctlr_add('\0', 0, default_gr);
+			ctlr_add(0, '\0', 0, default_gr);
 			break;
 		case ORDER_SA:	/* set attribute */
 			END_TEXT("SetAttribtue");
@@ -490,45 +496,45 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 		case FCORDER_FF:	/* Form Feed */
 			END_TEXT("FF");
 			previous = ORDER;
-			ctlr_add(FCORDER_FF, default_cs, default_gr);
+			ctlr_add(0, FCORDER_FF, default_cs, default_gr);
 			break;
 		case FCORDER_CR:	/* Carriage Return */
 			END_TEXT("CR");
 			previous = ORDER;
-			ctlr_add(FCORDER_CR, default_cs, default_gr);
+			ctlr_add(0, FCORDER_CR, default_cs, default_gr);
 			break;
 		case FCORDER_NL:	/* New Line */
 			END_TEXT("NL");
 			previous = ORDER;
-			ctlr_add(FCORDER_NL, default_cs, default_gr);
+			ctlr_add(0, FCORDER_NL, default_cs, default_gr);
 			break;
 		case FCORDER_EM:	/* End of Media */
 			END_TEXT("EM");
 			previous = ORDER;
-			ctlr_add(FCORDER_EM, default_cs, default_gr);
+			ctlr_add(0, FCORDER_EM, default_cs, default_gr);
 			break;
 		case FCORDER_DUP:	/* Visible control characters */
 		case FCORDER_FM:
 			END_TEXT(see_ebc(*cp));
 			previous = ORDER;
-			ctlr_add(ebc2asc0[*cp], default_cs, default_gr);
+			ctlr_add(0, ebc2asc0[*cp], default_cs, default_gr);
 			break;
 		case FCORDER_SUB:	/* misc format control orders */
 		case FCORDER_EO:
 			END_TEXT(see_ebc(*cp));
 			previous = ORDER;
-			ctlr_add('\0', default_cs, default_gr);
+			ctlr_add(0, '\0', default_cs, default_gr);
 			break;
 		case FCORDER_NULL:
 			END_TEXT("NULL");
 			previous = NULLCH;
-			ctlr_add('\0', default_cs, default_gr);
+			ctlr_add(0, '\0', default_cs, default_gr);
 			break;
 		default:	/* enter character */
 			if (*cp <= 0x3F) {
 				END_TEXT("ILLEGAL-ORDER ");
 				previous = ORDER;
-				ctlr_add('\0', default_cs, default_gr);
+				ctlr_add(0, '\0', default_cs, default_gr);
 				trace_ds(see_ebc(*cp));
 				break;
 			}
@@ -536,7 +542,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				trace_ds(" '");
 			previous = TEXT;
 			trace_ds(see_ebc(*cp));
-			ctlr_add(ebcdic_to_unicode(*cp, default_cs, EUO_NONE),
+			ctlr_add(*cp,
+				ebcdic_to_unicode(*cp, default_cs, EUO_NONE),
 				default_cs, default_gr);
 			break;
 		}
@@ -1491,7 +1498,7 @@ prflush(void)
  * Change a character in the 3270 buffer.
  */
 void
-ctlr_add(ucs4_t c, unsigned char cs, unsigned char gr)
+ctlr_add(unsigned char ebc, ucs4_t c, unsigned char cs, unsigned char gr)
 {
 	/* Map control characters, according to the write mode. */
 	if (c < ' ') {
@@ -1517,6 +1524,8 @@ ctlr_add(ucs4_t c, unsigned char cs, unsigned char gr)
 
 	/* Add the character. */
 	page_buf[baddr] = c;
+	if (ebc >= 0x40)
+		xlate_len[baddr] = xtable_lookup(ebc, &xlate_buf[baddr]);
 	baddr = (baddr + 1) % MAX_BUF;
 	any_3270_output = 1;
 	ffeoj_last = False;
@@ -1610,6 +1619,7 @@ dump_unformatted(void)
 	ucs4_t c;
 	int done = 0;
 	char mb[16];
+	const char *mbp;
 	int len;
 	int j;
 
@@ -1644,19 +1654,32 @@ dump_unformatted(void)
 			done = 1;
 			break;
 		default:	/* printable */
-#if !defined(_WIN32) /*[*/
-			len = unicode_to_multibyte(c, mb, sizeof(mb));
-#else /*][*/
-			len = unicode_to_printer(c, mb, sizeof(mb));
-#endif /*]*/
-			if (len == 0) {
-				mb[0] = ' ';
-				len = 1;
+			if (xlate_buf[i] != NULL) {
+				/*
+				 * Custom translation.
+				 *
+				 * Dump it out transparently, but (naively)
+				 * assume that it takes up one character
+				 * position.
+				 */
+				len = xlate_len[i];
+				mbp = xlate_buf[i];
 			} else {
-				len--;
+#if !defined(_WIN32) /*[*/
+				len = unicode_to_multibyte(c, mb, sizeof(mb));
+#else /*][*/
+				len = unicode_to_printer(c, mb, sizeof(mb));
+#endif /*]*/
+				if (len == 0) {
+					mb[0] = ' ';
+					len = 1;
+				} else {
+					len--;
+				}
+				mbp = mb;
 			}
 			for (j = 0; j < len; j++) {
-				if (uoutput(mb[j]) < 0)
+				if (uoutput(mbp[j]) < 0)
 					return -1;
 			}
 
@@ -1678,6 +1701,8 @@ dump_unformatted(void)
 
 	/* Clear out the buffer. */
 	(void) memset(page_buf, '\0', MAX_BUF * sizeof(ucs4_t));
+	(void) memset(xlate_buf, '\0', MAX_BUF * sizeof(char *));
+	(void) memset(xlate_len, '\0', MAX_BUF * sizeof(int));
 
 	/* Flush buffered data. */
 #if defined(_WIN32) /*[*/
@@ -1866,7 +1891,7 @@ print_eoj(void)
 		} else {
 			trace_ds("Automatic 3270 %s EOJ formfeed.\n",
 				wcc_line_length? "formatted": "unformatted");
-			ctlr_add(FCORDER_FF, default_cs, default_gr);
+			ctlr_add(0, FCORDER_FF, default_cs, default_gr);
 			if (wcc_line_length) {
 				if (dump_formatted() < 0)
 					rc = -1;

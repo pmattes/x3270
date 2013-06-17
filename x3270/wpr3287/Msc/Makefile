@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2012, Paul Mattes.
+# Copyright (c) 2007-2013, Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,8 @@ XCPPFLAGS = /D_WIN32 /DPR3287 /DWPR3287 /DX3270_DBCS=1 /D_CRT_SECURE_NO_DEPRECAT
 CFLAGS = $(XCPPFLAGS) -I.
 VOBJS = charset.obj ctlr.obj pr3287.obj proxy.obj resolver.obj see.obj sf.obj \
 	ssl_dll.obj tables.obj telnet.obj trace_ds.obj utf8.obj wpr3287.RES \
-	ws.obj w3misc.obj windirs.obj winvers.obj unicode.obj unicode_dbcs.obj
+	ws.obj w3misc.obj windirs.obj winvers.obj unicode.obj unicode_dbcs.obj \
+	xtable.obj
 OBJECTS = $(VOBJS) version.obj
 LIBS = $(SSLLIB) ws2_32.lib winspool.lib advapi32.lib
 
@@ -101,3 +102,5 @@ winvers.obj: winvers.c
 	$(CC) $(CFLAGS) /c winvers.c
 ws.obj: ws.c
 	$(CC) $(CFLAGS) /c ws.c
+xtable.obj: xtable.c
+	$(CC) $(CFLAGS) /c xtable.c

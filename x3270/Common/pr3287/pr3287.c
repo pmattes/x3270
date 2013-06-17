@@ -93,6 +93,8 @@
  *          	verify host certificates for SSL or SSL/TLS connections
  *          -V
  *		verbose output about negotiation
+ *	    -xtable file
+ *	        custom EBCDIC-to-ASCII translation table
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -129,6 +131,7 @@
 #include "resolverc.h"
 #include "telnetc.h"
 #include "utf8c.h"
+#include "xtablec.h"
 
 #if defined(_WIN32) /*[*/
 #include "w3miscc.h"
@@ -291,6 +294,7 @@ usage(void)
 "  -verfycert       verify host certificate for SSL and SSL/TLS connections\n"
 #endif /*]*/
 "  -V               log verbose information about connection negotiation\n"
+"  -xtable <file>   specify a custom EBCDIC-to-ASCII translation table\n"
 );
 	pr3287_exit(1);
 }
@@ -429,6 +433,7 @@ main(int argc, char *argv[])
 	char *lu = NULL;
 	char *host = NULL;
 	char *port = "23";
+	char *xtable = NULL;
 	unsigned short p;
 	union {
 		struct sockaddr sa;
@@ -691,6 +696,14 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 			}
 			proxy_spec = argv[i + 1];
 			i++;
+		} else if (!strcmp(argv[i], "-xtable")) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for -xtable\n");
+				usage();
+			}
+			xtable = argv[i + 1];
+			i++;
 		} else if (!strcmp(argv[i], "--help")) {
 			usage();
 		} else
@@ -764,6 +777,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 
 	/* Set up the character set. */
 	if (charset_init(charset) < 0)
+		pr3287_exit(1);
+
+	/* Set up the custom translation table. */
+	if (xtable != NULL && xtable_init(xtable) < 0)
 		pr3287_exit(1);
 
 	/* Try opening the trace file, if there is one. */

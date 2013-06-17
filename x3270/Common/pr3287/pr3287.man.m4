@@ -177,6 +177,42 @@ Display build and version information and exit.
 XX_TP(XX_FB(XX_DASHED(verifycert)))
 Verify the host certificate for tunneled SSL and negotiated SSL/TLS
 connections.
+XX_TP(XX_FB(XX_DASHED(xtable) XX_FI(file)))
+Specifies a file containing a custom translation table.
+The table overrides the EBCDIC-to-ASCII translations specified by the host
+code page, and codes specified in the file are not subject to
+ifelse(XX_PRODUCT,pr3287,locale,printer code page)
+translation.
+Any printable ECBDIC code can be translated to zero or more ASCII characters.
+XX_IP
+The table consists of lines that look like:
+XX_RS(XX_FB(ebcdic) XX_FI(ebcdic-code) XX_FB(ascii) XX_FI(ascii-code)...
+)
+XX_IP
+The XX_FI(ebcdic-code) can be specified in hexadecimal X'XX_FI(nn)' notation or
+as numbers in decimal, octal (with a leading 0) or hexadecimal (with a leading
+0x).
+The XX_FI(ascii-code)s can be specified as numbers in decimal, octal or
+hexadecimal, control codes such as XX_FB(^X), symbolic control codes such
+as XX_FB(CR) or XX_FB(Escape), or as double-quoted strings, following the
+full C-language conventions, such as XX_FB(\\r) for a carriage return.
+Comments begin with XX_FB(#), XX_FB(!) or XX_FB(//).
+XX_IP
+Here are some examples of translations.
+XX_BR
+# Translate EBCDIC XX_POSESSIVE(C) to D.
+XX_BR
+ebcdic X'C3' ascii "D"
+XX_BR
+# Expand EBCDIC D to an escape sequence.
+XX_BR
+ebcdic X'C4' ascii Esc "]1,3" 0x6d
+XX_BR
+# Delete EBCDIC XX_POSESSIVE(B)
+XX_BR
+ebcdic X'C2' ascii
+XX_IP
+The full list of symbolic control codes is: XX_FB(BS CR BEL ESC ESCAPE FF HT LF NL NUL SPACE TAB VT).
 XX_TPE()dnl
 ifelse(XX_PRODUCT,pr3287,`XX_SH(Signals)
 SIGINT, SIGHUP and SIGTERM cause the current print job to be flushed (any
