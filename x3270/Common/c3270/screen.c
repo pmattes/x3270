@@ -196,6 +196,7 @@ static Boolean curses_alt = False;
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
 static Boolean default_colors = False;
 #endif /*]*/
+static Boolean screen_initted = False;
 
 static void kybd_input(unsigned long fd, ioid_t id);
 static void kybd_input2(int k, ucs4_t ucs4, int alt);
@@ -292,19 +293,22 @@ screen_init(void)
 	init_user_attribute_colors();
 }
 
-/* Really initialize the screen. */
+/*
+ * Finish screen initialization, when a host connects or when we go into
+ * 'zombie' mode (no prompt, no connection).
+ */
 static void
-screen_connect(Boolean connected)
+finish_screen_init(void)
 {
-	static Boolean initted = False;
 	int want_ov_rows = ov_rows;
 	int want_ov_cols = ov_cols;
 	Boolean oversize = False;
 	char *cl;
 
-	if (initted || !connected)
-	    	return;
-	initted = True;
+	if (screen_initted)
+		return;
+
+	screen_initted = True;
 
 	/* Clear the (original) screen first. */
 #if defined(C3270_80_132) /*[*/
@@ -320,7 +324,6 @@ screen_connect(Boolean connected)
 	(void) setupterm(NULL, fileno(stdout), NULL);
 	if ((cl = tigetstr("clear")) != NULL)
 	    	putp(cl);
-	printf("[c3270]\n\n");
 
 #if !defined(C3270_80_132) /*[*/
 	/* Initialize curses. */
@@ -536,6 +539,14 @@ screen_connect(Boolean connected)
 	ctlr_reinit(-1);
 
 	screen_init2();
+}
+
+/* When the host connects, really initialize the screen. */
+static void
+screen_connect(Boolean connected)
+{
+	if (connected && !screen_initted)
+	    	finish_screen_init();
 }
 
 /* Configure the TTY settings for a curses screen. */
@@ -1520,7 +1531,10 @@ screen_resume(void)
 	 */
 	if ((cl = tigetstr("clear")) != NULL)
 	    	putp(cl);
-	printf("[c3270]\n\n");
+
+	/* Finish screen initialization. */
+	if (!screen_initted)
+	    	finish_screen_init();
 
 #if defined(C3270_80_132) /*[*/
 	if (def_screen != alt_screen && curses_alt) {

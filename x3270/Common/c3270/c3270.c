@@ -474,8 +474,10 @@ main(int argc, char *argv[])
 		if (!appres.no_prompt) {
 			interact();
 			screen_disp(False);
-		} else
+		} else {
 			pause_for_errors();
+			screen_resume();
+		}
 	}
 	peer_script_init();
 
