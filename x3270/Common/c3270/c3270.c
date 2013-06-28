@@ -1438,15 +1438,15 @@ popup_an_info(const char *fmt, ...)
 
 	/* Filter out the junk. */
 	for (s = t = vmsgbuf; *s; s++) {
-	    if (*s == '\n') {
-		*t = '\0';
-		break;
-	    } else if (!quoted && *s == '\\') {
-		quoted = True;
-	    } else {
-		*t++ = *s;
-		quoted = False;
-	    }
+		if (*s == '\n') {
+			*t = '\0';
+			break;
+		} else if (!quoted && *s == '\\') {
+			quoted = True;
+		} else {
+			*t++ = *s;
+			quoted = False;
+		}
 	}
 	*t = '\0';
 

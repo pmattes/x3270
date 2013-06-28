@@ -172,6 +172,7 @@ static int screen_yoffset = 0;	/* Vertical offset to top of screen.
 static void kybd_input(unsigned long fd, ioid_t id);
 static void kybd_input2(INPUT_RECORD *ir);
 static void draw_oia(void);
+static void status_half_connect(Boolean ignored);
 static void status_connect(Boolean ignored);
 static void status_3270_mode(Boolean ignored);
 static void status_printer(Boolean on);
@@ -933,6 +934,7 @@ screen_init(void)
 
 	/* Set up callbacks for state changes. */
 	register_schange(ST_CONNECT, screen_connect);
+	register_schange(ST_HALF_CONNECT, status_half_connect);
 	register_schange(ST_CONNECT, status_connect);
 	register_schange(ST_3270_MODE, status_3270_mode);
 	register_schange(ST_PRINTER, status_printer);
@@ -2051,17 +2053,17 @@ static enum keytype oia_compose_keytype = KT_STD;
 static char oia_lu[LUCNT+1];
 static char oia_timing[6]; /* :ss.s*/
 
-static char *status_msg = "";
+static char *status_msg = "X Disconnect";
 static char *saved_status_msg = NULL;
-static unsigned long saved_status_timeout;
+static unsigned long saved_status_timeout = NULL_IOID;
 
 static void
 cancel_status_push(void)
 {
     	saved_status_msg = NULL;
-	if (saved_status_timeout) {
+	if (saved_status_timeout != NULL_IOID) {
 		RemoveTimeOut(saved_status_timeout);
-		saved_status_timeout = 0;
+		saved_status_timeout = NULL_IOID;
 	}
 }
 
@@ -2082,7 +2084,7 @@ status_pop(ioid_t id _is_unused)
 {
 	status_msg = saved_status_msg;
 	saved_status_msg = NULL;
-	saved_status_timeout = 0;
+	saved_status_timeout = NULL_IOID;
 }
 
 void
@@ -2091,6 +2093,7 @@ status_push(char *msg)
 	if (saved_status_msg != NULL) {
 		/* Already showing something. */
 		RemoveTimeOut(saved_status_timeout);
+		saved_status_timeout = NULL_IOID;
 	} else {
 		saved_status_msg = status_msg;
 	}
@@ -2181,6 +2184,20 @@ status_lu(const char *lu)
 		oia_lu[LUCNT] = '\0';
 	} else
 		(void) memset(oia_lu, '\0', sizeof(oia_lu));
+}
+
+static void
+status_half_connect(Boolean half_connected)
+{
+	if (half_connected) {
+		/* Push the 'Connecting' status under whatever is popped up. */
+		if (saved_status_msg != NULL)
+			saved_status_msg = "X Connecting";
+		else
+			status_msg = "X Connecting";
+		oia_boxsolid = False;
+		status_secure = SS_INSECURE;
+	}
 }
 
 static void
