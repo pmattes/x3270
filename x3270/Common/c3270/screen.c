@@ -1593,7 +1593,7 @@ static enum keytype oia_compose_keytype = KT_STD;
 static char oia_lu[LUCNT+1];
 static char oia_timing[6]; /* :ss.s*/
 
-static char *status_msg = "X Disconnected";
+static char *status_msg = "X Not Connected";
 static char *saved_status_msg = NULL;
 static ioid_t saved_status_timeout = NULL_IOID;
 
@@ -1673,7 +1673,7 @@ status_reset(void)
     	cancel_status_push();
 
 	if (!CONNECTED)
-	    	status_msg = "X Disconnected";
+	    	status_msg = "X Not Connected";
 	else if (kybdlock & KL_ENTER_INHIBIT)
 		status_msg = "X Inhibit";
 	else if (kybdlock & KL_DEFERRED_UNLOCK)
@@ -1765,7 +1765,7 @@ status_connect(Boolean connected)
 #endif /*]*/
 	} else {
 		oia_boxsolid = False;
-		status_msg = "X Disconnected";
+		status_msg = "X Not Connected";
 		status_secure = SS_INSECURE;
 	}       
 }
