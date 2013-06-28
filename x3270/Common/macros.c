@@ -724,6 +724,11 @@ peer_script_init(void)
 		struct sockaddr_in sin;
 		int on = 1;
 
+		if (appres.script_port > 0xffff) {
+			popup_an_error("Script port value %d >%d, ignoring",
+				appres.script_port, 0xffff);
+			return;
+		}
 #if !defined(_WIN32) /*[*/
 		if (appres.socket)
 		    	xs_warning("-scriptport overrides -socket");
