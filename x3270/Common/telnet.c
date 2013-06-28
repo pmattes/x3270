@@ -527,8 +527,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 		    sizeof(errmsg)) == 0) {
 		trace_dsn("Trying %s, port %s...\n", hn, pn);
 #if defined(C3270) /*[*/
-		printf("Trying %s, port %s...\n", hn, pn);
-		fflush(stdout);
+		popup_an_info("Trying %s, port %s...", hn, pn);
 #endif /*]*/
 	}
 

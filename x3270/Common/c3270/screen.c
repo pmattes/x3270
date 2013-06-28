@@ -202,6 +202,7 @@ static void kybd_input(unsigned long fd, ioid_t id);
 static void kybd_input2(int k, ucs4_t ucs4, int alt);
 static void draw_oia(void);
 static void screen_connect(Boolean connected);
+static void status_half_connect(Boolean ignored);
 static void status_connect(Boolean ignored);
 static void status_3270_mode(Boolean ignored);
 static void status_printer(Boolean on);
@@ -447,6 +448,7 @@ finish_screen_init(void)
 	}
 
 	/* Set up callbacks for state changes. */
+	register_schange(ST_HALF_CONNECT, status_half_connect);
 	register_schange(ST_CONNECT, status_connect);
 	register_schange(ST_3270_MODE, status_3270_mode);
 	register_schange(ST_PRINTER, status_printer);
@@ -1593,15 +1595,15 @@ static char oia_timing[6]; /* :ss.s*/
 
 static char *status_msg = "X Disconnected";
 static char *saved_status_msg = NULL;
-static ioid_t saved_status_timeout;
+static ioid_t saved_status_timeout = NULL_IOID;
 
 static void
 cancel_status_push(void)
 {
     	saved_status_msg = NULL;
-	if (saved_status_timeout) {
+	if (saved_status_timeout != NULL_IOID) {
 	    	RemoveTimeOut(saved_status_timeout);
-		saved_status_timeout = 0;
+		saved_status_timeout = NULL_IOID;
 	}
 }
 
@@ -1631,6 +1633,7 @@ status_push(char *msg)
     	if (saved_status_msg != NULL) {
 	    	/* Already showing something. */
 	    	RemoveTimeOut(saved_status_timeout);
+		saved_status_timeout = NULL_IOID;
 	} else {
 	    	saved_status_msg = status_msg;
 	}
@@ -1727,6 +1730,20 @@ status_lu(const char *lu)
 }
 
 static void
+status_half_connect(Boolean half_connected)
+{
+	if (half_connected) {
+		/* Push the 'Connecting' status under whatever is popped up. */
+		if (saved_status_msg != NULL)
+			saved_status_msg = "X Connecting";
+		else
+			status_msg = "X Connecting";
+		oia_boxsolid = False;
+		status_secure = SS_INSECURE;
+	}
+}
+
+static void
 status_connect(Boolean connected)
 {
     	cancel_status_push();
@@ -1794,7 +1811,7 @@ status_untiming(void)
     	oia_timing[0] = '\0';
 }
 
-/*static*/ void
+static void
 draw_oia(void)
 {
 	int rmargin;

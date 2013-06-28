@@ -1450,8 +1450,13 @@ popup_an_info(const char *fmt, ...)
 	}
 	*t = '\0';
 
-	if (strlen(vmsgbuf))
-		status_push(vmsgbuf);
+	if (strlen(vmsgbuf)) {
+		if (escaped) {
+			printf("%s\n", vmsgbuf);
+			fflush(stdout);
+		} else
+			status_push(vmsgbuf);
+	}
 }
 
 void
