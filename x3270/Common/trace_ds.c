@@ -101,6 +101,7 @@ static off_t	tracef_size = 0;
 static off_t	tracef_max = 0;
 static char    *onetime_tracefile_name = CN;
 static tss_t	screentrace_how = TSS_FILE;
+static ptype_t	screentrace_ptype = P_TEXT;
 static tss_t	screentrace_last_how = TSS_FILE;
 static char    *onetime_screentrace_name = CN;
 static void	vwtrace(const char *fmt, va_list args);
@@ -1151,9 +1152,13 @@ onescreen_callback(Widget w, XtPointer client_data,
 #endif /*]*/
 
 void
-trace_set_screentrace_file(tss_t how, const char *name)
+trace_set_screentrace_file(tss_t how, ptype_t ptype, const char *name)
 {
 	screentrace_how = how;
+	if (how == TSS_FILE)
+		screentrace_ptype = ptype;
+	else
+	    	screentrace_ptype = P_TEXT;
     	Replace(onetime_screentrace_name, name? NewString(name): NULL);
 }
 
@@ -1174,6 +1179,45 @@ trace_get_screentrace_name(void)
 {
 	return (screentrace_name && screentrace_name[0])? screentrace_name:
 							  "(system default)";
+}
+
+/* Return the default filename for screen tracing. */
+char *
+screentrace_default_file(ptype_t ptype)
+{
+	const char *suffix;
+
+	switch (ptype) {
+	default:
+	case P_TEXT:
+		suffix = "txt";
+		break;
+	case P_HTML:
+		suffix = "html";
+		break;
+	case P_RTF:
+		suffix = "rtf";
+		break;
+	}
+#if defined(_WIN32) /*[*/
+	return xs_buffer("%s%sx3scr.$UNIQUE.%s",
+		(appres.trace_dir != CN)? appres.trace_dir: myappdata,
+		(appres.trace_dir != CN)? "\\": "",
+		suffix);
+#else /*][*/
+	return xs_buffer("%s/x3scr.$UNIQUE.%s", appres.trace_dir, suffix);
+#endif /*]*/
+}
+
+/* Return the default printer for screen tracing. */
+char *
+screentrace_default_printer(void)
+{
+#if defined(_WIN32) /*[*/
+	return NewString("");
+#else /*][*/
+	return NewString("lpr");
+#endif /*]*/
 }
 
 /*
@@ -1224,7 +1268,7 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 #if defined(_WIN32) /*[*/
 				(screentrace_how == TSS_FILE)? P_TEXT: P_RTF,
 #else /*][*/
-				P_TEXT,
+				screentrace_ptype,
 #endif /*]*/
 				NewString(tracefile));
 			if (tracefile_buf != NULL)
@@ -1252,6 +1296,7 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 		end_screentrace(tt == TT_FINAL);
 		screentrace_last_how = screentrace_how;
 		screentrace_how = TSS_FILE; /* back to the default */
+		screentrace_ptype = P_TEXT; /* back to the default */
 	}
 
 	if (tracefile_buf != NULL)

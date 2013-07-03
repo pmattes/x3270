@@ -41,6 +41,8 @@ extern Boolean trace_skipping;
 extern char *tracefile_name;
 
 const char *rcba(int baddr);
+char *screentrace_default_file(ptype_t ptype);
+char *screentrace_default_printer(void);
 void toggle_dsTrace(struct toggle *t, enum toggle_type tt);
 void toggle_eventTrace(struct toggle *t, enum toggle_type tt);
 void toggle_screenTrace(struct toggle *t, enum toggle_type tt);
@@ -54,7 +56,7 @@ tss_t trace_get_screentrace_how(void);
 tss_t trace_get_screentrace_last_how(void);
 const char *trace_get_screentrace_name(void);
 void trace_set_trace_file(const char *path);
-void trace_set_screentrace_file(tss_t how, const char *name);
+void trace_set_screentrace_file(tss_t how, ptype_t ptype, const char *name);
 void trace_screen(Boolean is_clear);
 void trace_rollover_check(void);
 

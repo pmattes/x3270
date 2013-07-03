@@ -68,6 +68,7 @@
 #include "printc.h"
 #include "savec.h"
 #include "screenc.h"
+#include "stmenuc.h"
 #include "telnetc.h"
 #include "togglesc.h"
 #include "utilc.h"
@@ -983,8 +984,20 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 				CN, &spaced);
 	}
 	if (!appres.secure)
+#if 0
 		any |= toggle_init(file_menu, SCREEN_TRACE,
 				"screenTraceOption", CN, &spaced);
+#endif
+		w = add_menu_itemv("screenTraceOption", file_menu,
+			    stmenu_popup, NULL, &spaced,
+			    NULL);
+		if (w != NULL) {
+			any = True;
+			appres.toggle[SCREEN_TRACE].w[0] = w;
+			XtVaSetValues(w, XtNleftBitmap,
+				toggled(SCREEN_TRACE)? dot: None,
+				NULL);
+		}
 #endif /*]*/
 
 	/* Print Screen Text, Save Screen Text */

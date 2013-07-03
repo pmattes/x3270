@@ -1379,7 +1379,7 @@ ScreenTrace_action(Widget w _is_unused, XEvent *event _is_unused,
 
 	if ((on && !toggled(SCREEN_TRACE)) || (!on && toggled(SCREEN_TRACE))) {
 		if (on)
-		    	trace_set_screentrace_file(how, name);
+		    	trace_set_screentrace_file(how, P_TEXT, name);
 		do_toggle(SCREEN_TRACE);
 	}
 

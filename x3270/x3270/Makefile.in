@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1999-2009, Paul Mattes.
+# Copyright (c) 1999-2013, Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,15 +35,15 @@ SRCS = about.c actions.c ansi.c apl.c charset.c child.c CmeBSB.c Cme.c \
 	ft_dft.c host.c Husk.c idle.c keymap.c keypad.c keysym2ucs.c kybd.c \
 	macros.c main.c menubar.c popups.c print.c printer.c proxy.c \
 	resolver.c resources.c rpq.c save.c screen.c scroll.c see.c select.c \
-	sf.c status.c tables.c telnet.c toggles.c trace_ds.c unicode.c \
-	unicode_dbcs.c utf8.c util.c xio.c
+	sf.c status.c stmenu.c tables.c telnet.c toggles.c trace_ds.c \
+	unicode.c unicode_dbcs.c utf8.c util.c xio.c
 VOBJS = about.o actions.o ansi.o apl.o charset.o child.o CmeBSB.o Cme.o \
 	CmeLine.o CmplxMenu.o ctlr.o dialog.o display8.o fallbacks.o ft.o \
 	ft_cut.o ft_dft.o host.o Husk.o idle.o keymap.o keypad.o keysym2ucs.o \
 	kybd.o macros.o main.o menubar.o popups.o print.o printer.o proxy.o \
 	resolver.o resources.o rpq.o save.o screen.o scroll.o see.o select.o \
-	sf.o status.o tables.o telnet.o toggles.o trace_ds.o unicode.o \
-	unicode_dbcs.o utf8.o util.o xio.o
+	sf.o status.o stmenu.o tables.o telnet.o toggles.o trace_ds.o \
+	unicode.o unicode_dbcs.o utf8.o util.o xio.o
 OBJS1 = $(VOBJS) version.o
 FONTS = 3270-12.pcf.gz 3270-12b.pcf.gz 3270-20.pcf.gz 3270-20b.pcf.gz \
 	3270.pcf.gz 3270b.pcf.gz 3270gr.pcf.gz 3270gt12.pcf.gz \

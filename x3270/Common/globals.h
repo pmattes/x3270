@@ -398,3 +398,6 @@ enum keytype { KT_STD, KT_GE };
 
 /* I/O ID typedef */
 typedef unsigned long ioid_t;
+
+/* Screen print types. */
+typedef enum { P_TEXT, P_HTML, P_RTF } ptype_t;

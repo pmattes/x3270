@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, Paul Mattes.
+ * Copyright (c) 2000-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -159,13 +159,12 @@ static struct {
 	    "Start or stop pr3287 printer session" },
 #endif /*]*/
         { "PrintText",
-#if defined(WC3270) /*[*/
-	              "<printer>",
+#if defined(_WIN32) /*[*/
+	    "[html] [rtf] [modi] [caption <caption>] [[file] <filename>]|<printer-name>",
 #else /*][*/
-	              "<print-command>",
+	    "[html] [rtf] [modi] [caption <caption>] [[file] <filename>]|<print-command>",
 #endif /*]*/
-		                         P_SCRIPTING|P_INTERACTIVE,
-	    "Dump screen image to printer" },
+	    P_SCRIPTING|P_INTERACTIVE, "Dump screen image to file or printer" },
 #if defined(X3270_SCRIPT) /*[*/
         { "Query", "<keyword>", P_SCRIPTING|P_INTERACTIVE,
 	    "Query operational parameters" },
@@ -179,7 +178,13 @@ static struct {
 	{ "Right", CN, P_3270, "Move cursor right" },
 	{ "Right2", CN, P_3270, "Move cursor right 2 columns" },
 #if defined(X3270_TRACE) /*[*/
-	{ "ScreenTrace", "on [<file>]|off", P_INTERACTIVE, "Configure screen tracing" },
+	{ "ScreenTrace",
+# if defined(_WIN32) /*[*/
+	    "[on [[file] <filename>]|on printer [<printer-name>]|off]",
+# else /*][*/
+	    "[on [[file] <filename>]|on printer [<print-command>]|off]",
+# endif /*]*/
+	    P_INTERACTIVE, "Configure screen tracing" },
 #endif /*]*/
 #if defined(X3270_SCRIPT) /*[*/
 	{ "Script", "<path> [<arg>...]", P_SCRIPTING, "Run a child script" },

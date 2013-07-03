@@ -188,6 +188,10 @@ dialog_text_callback(Widget w, XtPointer client_data,
 				/* Only printing characters. */
 				bad = !isprint(c);
 				break;
+			    case T_COMMAND:
+				/* Only printing characters. */
+				bad = !isprint(c);
+				break;
 			    default:
 				/* Only printing characters, no spaces. */
 				bad = !isgraph(c);

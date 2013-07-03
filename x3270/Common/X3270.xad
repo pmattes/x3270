@@ -890,6 +890,15 @@ x3270.screentracePopup.title:			x3270 Screen Image Tracing
 x3270.screentracePopup.dialog.label:		Enter File Name
 x3270.screentracePopup*confirmButton.label:	Continuously
 x3270.screentracePopup*confirm2Button.label:	Once
+x3270.screenTracePopup.title:			x3270 Screen Save
+x3270.screenTracePopup*continuously.label:	Continuously
+x3270.screenTracePopup*once.label:		Once
+x3270.screenTracePopup*file.label:		To File
+x3270.screenTracePopup*printer.label:		To Printer
+x3270.screenTracePopup*text.label:		Text
+x3270.screenTracePopup*html.label:		HTML
+x3270.screenTracePopup*fileName.label:		File Name
+x3270.screenTracePopup*printCommand.label:	Printer Command
 #endif
 #ifdef X3270_MENUS
 x3270.executeActionPopup.title:			x3270 Execute Action
@@ -1025,7 +1034,7 @@ x3270*showTimingOption.label:			Show Timing
 x3270*cursorPosOption.label:			Track Cursor
 x3270*dsTraceOption.label:			Trace Data Stream
 x3270*eventTraceOption.label:			Trace Keyboard/Mouse Events
-x3270*screenTraceOption.label:			Save Screen(s) in File
+x3270*screenTraceOption.label:			Save Screen Contents
 x3270*scrollBarOption.label:			Scrollbar
 x3270*lineWrapOption.label:			Wraparound
 x3270*marginedPasteOption.label:		Paste with Left Margin
@@ -1495,6 +1504,10 @@ x3270.tracePopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.screentracePopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.screenTracePopup.translations: \
+	<Message>WM_PROTOCOLS:		PA-WMProtocols()
+x3270.screenTracePopup*translations:	#override \n\
+	<Key>Return:			PA-confirm()
 x3270.executeActionPopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.saveOptionsPopup.translations: \
@@ -1538,6 +1551,11 @@ x3270.idlePopup*value.translations:	#override \n\
 	<Key>Return:			PA-dialog-next()\n\
 	<Key>Tab:			PA-dialog-next()\n\
 	<Btn1Down>:			PA-dialog-focus() select-start()\n\
+	Ctrl<Key>U:			select-all(DUMMY) delete-selection()
+#endif
+#ifdef X3270_TRACE
+x3270.screenTracePopup*value.translations:	#override \n\
+	<Key>Return:			PA-confirm()\n\
 	Ctrl<Key>U:			select-all(DUMMY) delete-selection()
 #endif
 x3270*value.translations:		#override \n\

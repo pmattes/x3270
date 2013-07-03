@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2013 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -40,15 +40,15 @@ LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
 		  keymap.c keypad.c keysym2ucs.c kybd.c macros.c main.c \
 		  menubar.c popups.c printer.c print.c proxy.c resolver.c \
 		  resources.c rpq.c save.c screen.c scroll.c see.c select.c \
-		  sf.c status.c tables.c toggles.c telnet.c trace_ds.c \
-		  unicode.c unicode_dbcs.c utf8.c util.c xio.c
+		  sf.c status.c stmenu.c tables.c toggles.c telnet.c \
+		  trace_ds.c unicode.c unicode_dbcs.c utf8.c util.c xio.c
           VOBJS = Cme.o CmeBSB.o CmeLine.o CmplxMenu.o Husk.o about.o \
 		  actions.o ansi.o apl.o charset.o child.o ctlr.o dialog.o \
 		  display8.o @FALLBACKS_O@ ft.o ft_cut.o ft_dft.o host.o \
 		  idle.o keymap.o keypad.o keysym2ucs.o kybd.o macros.o \
 		  main.o menubar.o popups.o printer.o print.o proxy.o \
 		  resolver.o resources.o rpq.o save.o screen.o scroll.o see.o \
-		  select.o sf.o status.o tables.o telnet.o toggles.o \
+		  select.o sf.o status.o stmenu.o tables.o telnet.o toggles.o \
 		  trace_ds.o unicode.o unicode_dbcs.o utf8.o util.o xio.o \
 		  @LIBOBJS@
           OBJS1 = $(VOBJS) version.o
