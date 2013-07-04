@@ -984,10 +984,6 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 				CN, &spaced);
 	}
 	if (!appres.secure)
-#if 0
-		any |= toggle_init(file_menu, SCREEN_TRACE,
-				"screenTraceOption", CN, &spaced);
-#endif
 		w = add_menu_itemv("screenTraceOption", file_menu,
 			    stmenu_popup, NULL, &spaced,
 			    NULL);

@@ -162,6 +162,7 @@ XrmOptionDescRec options[]= {
 	{ OptSaveLines,	DotSaveLines,	XrmoptionSepArg,	NULL },
 	{ OptScripted,	DotScripted,	XrmoptionNoArg,		ResTrue },
 	{ OptScrollBar,	DotScrollBar,	XrmoptionNoArg,		ResTrue },
+	{ OptSecure,	DotSecure,	XrmoptionNoArg,		ResTrue },
 #if defined(HAVE_LIBSSL) /*[*/
 	{ OptSelfSignedOk,DotSelfSignedOk,XrmoptionNoArg,	ResTrue },
 #endif /*]*/
@@ -254,6 +255,7 @@ static struct {
 	{ OptSocket,  CN, "Create socket for script control" },
 	{ OptScriptPort, "<port>", "Listen on TCP port <port> for script connections" },
 #endif /*]*/
+	{ OptSecure, NULL, "Set secure mode" },
 	{ OptTermName, "<name>", "Send <name> as TELNET terminal name" },
 #if defined(X3270_TRACE) /*[*/
 	{ OptDsTrace, CN, "Enable tracing" },

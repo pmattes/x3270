@@ -242,6 +242,7 @@
 #define DotScripted		"." ResScripted
 #define DotScriptPort		"." ResScriptPort
 #define DotScrollBar		"." ResScrollBar
+#define DotSecure		"." ResSecure
 #define DotSelfSignedOk		"." ResSelfSignedOk
 #define DotSocket		"." ResSocket
 #define DotTermName		"." ResTermName
