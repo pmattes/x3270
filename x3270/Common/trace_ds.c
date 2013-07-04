@@ -1158,7 +1158,11 @@ trace_set_screentrace_file(tss_t how, ptype_t ptype, const char *name)
 	if (how == TSS_FILE)
 		screentrace_ptype = ptype;
 	else
+#if defined(_WIN32) /*[*/
+	    	screentrace_ptype = P_RTF;
+#else /*][*/
 	    	screentrace_ptype = P_TEXT;
+#endif /*]*/
     	Replace(onetime_screentrace_name, name? NewString(name): NULL);
 }
 
@@ -1243,33 +1247,18 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 			   appres.screentrace_file != NULL)
 			tracefile = appres.screentrace_file;
 		else {
-#if defined(_WIN32) /*[*/
 			if (screentrace_how == TSS_FILE)
 				tracefile = tracefile_buf =
-				    xs_buffer("%s%sx3scr.$UNIQUE.txt",
-					(appres.trace_dir != CN)?
-					    appres.trace_dir: myappdata,
-					(appres.trace_dir != CN)? "\\": "");
+				    screentrace_default_file(screentrace_how);
 			else
-				tracefile = "";
-#else /*][*/
-			if (screentrace_how == TSS_FILE)
 				tracefile = tracefile_buf =
-				    xs_buffer("%s/x3scr.$UNIQUE",
-					appres.trace_dir);
-			else
-				tracefile = "lpr";
-#endif /*]*/
+				    screentrace_default_printer();
 		}
 		if (tt == TT_INITIAL ||
 		    tt == TT_ACTION ||
 		    tt == TT_INTERACTIVE) {
 			(void) screentrace_cb(screentrace_how,
-#if defined(_WIN32) /*[*/
-				(screentrace_how == TSS_FILE)? P_TEXT: P_RTF,
-#else /*][*/
 				screentrace_ptype,
-#endif /*]*/
 				NewString(tracefile));
 			if (tracefile_buf != NULL)
 				Free(tracefile_buf);
