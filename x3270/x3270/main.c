@@ -847,6 +847,7 @@ peek_at_xevent(XEvent *e)
 	if (e->type == KeymapNotify) {
 		ia_cause = IA_PEEK;
 		PA_KeymapNotify_action((Widget)NULL, e, (String *)NULL, &zero);
+		ia_cause = IA_DEFAULT;
 	}
 }
 

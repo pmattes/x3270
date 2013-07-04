@@ -842,7 +842,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	Cardinal i;
-	char *filter = CN;
+	char *name = CN;
 #if defined(X3270_DISPLAY) /*[*/
 	Boolean secure = appres.secure;
 #endif /*]*/
@@ -924,9 +924,9 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 		/* Use the default. */
 		if (!use_file) {
 #if !defined(_WIN32) /*[*/
-			filter = get_resource(ResPrintTextCommand);
+			name = get_resource(ResPrintTextCommand);
 #else /*][*/
-			filter = get_resource(ResPrinterName); /* XXX */
+			name = get_resource(ResPrinterName); /* XXX */
 #endif /*]*/
 		}
 		break;
@@ -936,7 +936,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 			    action_name(PrintText_action));
 			return;
 		}
-		filter = params[i];
+		name = params[i];
 		break;
 	default:
 		popup_an_error("%s: extra arguments or invalid option(s)",
@@ -950,7 +950,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	    ptype = P_RTF;
 #endif /*]*/
 
-	if (filter != CN && filter[0] == '@') {
+	if (name != CN && name[0] == '@') {
 		/*
 		 * Starting the PrintTextCommand resource value with '@'
 		 * suppresses the pop-up dialog, as does setting the 'secure'
@@ -959,13 +959,13 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 #if defined(X3270_DISPLAY) /*[*/
 		secure = True;
 #endif /*]*/
-		filter++;
+		name++;
 	}
-	if (!use_file && (filter == CN || !*filter))
+	if (!use_file && (name == CN || !*name))
 #if !defined(_WIN32) /*[*/
-		filter = "lpr";
+		name = "lpr";
 #else /*][*/
-		filter = CN;
+		name = CN;
 #endif /*]*/
 
 #if defined(X3270_DISPLAY) /*[*/
@@ -993,16 +993,16 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 				}
 				f = fdopen(fd, "w+");
 			} else {
-				if (filter == CN || !*filter) {
+				if (name == CN || !*name) {
 					popup_an_error("%s: missing filename",
 						action_name(PrintText_action));
 					return;
 				}
-				f = fopen(filter, "a");
+				f = fopen(name, "a");
 			}
 		} else {
 #if !defined(_WIN32) /*[*/
-			f = popen(filter, "w");
+			f = popen(name, "w");
 #else /*][*/
 			fd = win_mkstemp(&temp_name, ptype);
 			if (fd < 0) {
@@ -1015,7 +1015,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 		if (f == NULL) {
 			popup_an_errno(errno, "%s: %s",
 					action_name(PrintText_action),
-					filter);
+					name);
 			if (fd >= 0) {
 				(void) close(fd);
 			}
@@ -1041,10 +1041,10 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 #else /*][*/
 # if defined(S3270) /*[*/
 			/* Run WordPad to print the file, synchronusly. */
-			start_wordpad_sync("PrintText", temp_name, filter);
+			start_wordpad_sync("PrintText", temp_name, name);
 # else /*][*/
 			/* Run WordPad to print the file, asynchronusly. */
-			start_wordpad_async("PrintText", temp_name, filter);
+			start_wordpad_async("PrintText", temp_name, name);
 # endif /*]*/
 # if !defined(S3270) /*[*/
 			if (appres.do_confirms)
@@ -1064,9 +1064,9 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 #if defined(X3270_DISPLAY) /*[*/
 	/* Invoked interactively -- pop up the confirmation dialog. */
 	if (use_file) {
-		popup_save_text(filter);
+		popup_save_text(name);
 	} else {
-		popup_print_text(filter);
+		popup_print_text(name);
 	}
 #endif /*]*/
 }
