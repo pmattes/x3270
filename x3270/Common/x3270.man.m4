@@ -424,6 +424,11 @@ ifelse(XX_PRODUCT,c3270,
 Disables the interactive XX_FB(c3270>) prompt.
 When used, a hostname must be provided on the command line.
 ')dnl
+ifelse(XX_PRODUCT,x3270,
+`XX_TP(XX_FB(XX_DASHED(secure)))
+Disables run-time features that could compromise system security
+(user-specified file names and commands, etc.).
+')dnl
 XX_TP(XX_FB(XX_DASHED(set)) XX_FI(toggle))
 Sets the initial value of XX_FI(toggle) to XX_FB(true).
 The list of toggle names is under XX_LINK(`#'XX_TOGGLEREF,XX_SM(XX_TOGGLEREFNM))
