@@ -51,6 +51,7 @@
 
 #include "actionsc.h"
 #include "charsetc.h"
+#include "fprint_screenc.h"
 #include "popupsc.h"
 #include "printc.h"
 #include "trace_dsc.h"
@@ -100,604 +101,6 @@ char *print_window_command = CN;
 
 
 /* Print Text popup */
-
-/*
- * Map default 3279 colors.  This code is duplicated three times. ;-(
- */
-static int
-color_from_fa(unsigned char fa)
-{
-	static int field_colors[4] = {
-		HOST_COLOR_GREEN,        /* default */
-		HOST_COLOR_RED,          /* intensified */
-		HOST_COLOR_BLUE,         /* protected */
-		HOST_COLOR_WHITE         /* protected, intensified */
-#       define DEFCOLOR_MAP(f) \
-		((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
-	};
-
-	if (appres.m3279)
-		return field_colors[DEFCOLOR_MAP(fa)];
-	else
-		return HOST_COLOR_GREEN;
-}
-
-/*
- * Map 3279 colors onto HTML colors.
- */
-static char *
-html_color(int color)
-{
-	static char *html_color_map[] = {
-		"black",
-		"deepSkyBlue",
-		"red",
-		"pink",
-		"green",
-		"turquoise",
-		"yellow",
-		"white",
-		"black",
-		"blue3",
-		"orange",
-		"purple",
-		"paleGreen",
-		"paleTurquoise2",
-		"grey",
-		"white"
-	};
-	if (color >= HOST_COLOR_NEUTRAL_BLACK && color <= HOST_COLOR_WHITE)
-		return html_color_map[color];
-	else
-		return "black";
-}
-
-/* Convert a caption string to UTF-8 RTF. */
-static char *
-rtf_caption(const char *caption)
-{
-    	ucs4_t u;
-	int consumed;
-	enum me_fail error;
-	char *result = Malloc(1);
-	int rlen = 1;
-	char uubuf[64];
-	char mb[16];
-
-	result[0] = '\0';
-
-	while (*caption) {
-		u = multibyte_to_unicode(caption, strlen(caption), &consumed,
-			&error);
-		if (u == 0)
-		    	break;
-		if (u & ~0x7f) {
-			(void) snprintf(uubuf, sizeof(uubuf), "\\u%u?", u);
-		} else {
-			(void) unicode_to_multibyte(u, mb, sizeof(mb));
-			if (mb[0] == '\\' ||
-			    mb[0] == '{' ||
-			    mb[0] == '}')
-				(void) snprintf(uubuf, sizeof(uubuf), "\\%c",
-					mb[0]);
-			else if (mb[0] == '-')
-				(void) snprintf(uubuf, sizeof(uubuf), "\\_");
-			else if (mb[0] == ' ')
-				(void) snprintf(uubuf, sizeof(uubuf), "\\~");
-			else {
-			    	uubuf[0] = mb[0];
-				uubuf[1] = '\0';
-			}
-		}
-		result = Realloc(result, rlen + strlen(uubuf));
-		strcat(result, uubuf);
-		rlen += strlen(uubuf);
-
-		caption += consumed;
-	}
-	return result;
-}
-
-/* Convert a caption string to UTF-8 HTML. */
-static char *
-html_caption(const char *caption)
-{
-    	ucs4_t u;
-	int consumed;
-	enum me_fail error;
-	char *result = Malloc(1);
-	int rlen = 1;
-	char u8buf[16];
-	int nu8;
-
-	result[0] = '\0';
-
-	while (*caption) {
-		u = multibyte_to_unicode(caption, strlen(caption), &consumed,
-			&error);
-		if (u == 0)
-		    	break;
-		switch (u) {
-		case '<':
-		    	result = Realloc(result, rlen + 4);
-			strcat(result, "&lt;");
-			rlen += 4;
-			break;
-		case '>':
-		    	result = Realloc(result, rlen + 4);
-			strcat(result, "&gt;");
-			rlen += 4;
-			break;
-		case '&':
-		    	result = Realloc(result, rlen + 5);
-			strcat(result, "&amp;");
-			rlen += 5;
-			break;
-		default:
-			nu8 = unicode_to_utf8(u, u8buf);
-			result = Realloc(result, rlen + nu8);
-			memcpy(result + rlen - 1, u8buf, nu8);
-			rlen += nu8;
-			result[rlen - 1] = '\0';
-			break;
-		}
-		caption += consumed;
-	}
-	return result;
-}
-
-static ptype_t fps_ptype;
-static unsigned fps_opts;
-static Boolean fps_need_separator;
-static FILE *fps_file;
-
-void
-fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption)
-{
-	char *xcaption = NULL;
-
-	/* Non-text types can always generate blank output. */
-	if (ptype != P_TEXT) {
-		opts |= FPS_EVEN_IF_EMPTY;
-	}
-
-	/* Reset and save the state. */
-	fps_ptype = ptype;
-	fps_opts = opts;
-	fps_need_separator = False;
-	fps_file = f;
-
-	if (caption != NULL) {
-	    	char *ts = strstr(caption, "%T%");
-
-		if (ts != NULL) {
-		    	time_t t = time(NULL);
-			struct tm *tm = localtime(&t);
-
-		    	xcaption = Malloc(strlen(caption) + 1 - 3 + 19);
-			strncpy(xcaption, caption, ts - caption);
-			sprintf(xcaption + (ts - caption),
-				"%04d-%02d-%02d %02d:%02d:%02d",
-				tm->tm_year + 1900,
-				tm->tm_mon + 1,
-				tm->tm_mday,
-				tm->tm_hour,
-				tm->tm_min,
-				tm->tm_sec);
-			strcat(xcaption, ts + 3);
-		} else {
-		    	xcaption = NewString(caption);
-		}
-	}
-
-	switch (ptype) {
-	case P_RTF: {
-		char *pt_font = get_resource(ResPrintTextFont);
-		char *pt_size = get_resource(ResPrintTextSize);
-		int pt_nsize;
-
-		if (pt_font == CN)
-			pt_font = "Courier New";
-		if (pt_size == CN)
-			pt_size = "8";
-		pt_nsize = atoi(pt_size);
-		if (pt_nsize <= 0)
-			pt_nsize = 8;
-
-		fprintf(f, "{\\rtf1\\ansi\\ansicpg%u\\deff0\\deflang1033{\\fonttbl{\\f0\\fmodern\\fprq1\\fcharset0 %s;}}\n"
-			    "\\viewkind4\\uc1\\pard\\f0\\fs%d ",
-#if defined(_WIN32) /*[*/
-			    GetACP(),
-#else /*][*/
-			    1252, /* the number doesn't matter */
-#endif /*]*/
-			    pt_font, pt_nsize * 2);
-		if (xcaption != NULL) {
-			char *hcaption = rtf_caption(xcaption);
-
-			fprintf(f, "%s\\par\\par\n", hcaption);
-			Free(hcaption);
-		}
-		break;
-	}
-	case P_HTML: {
-		char *hcaption = NULL;
-
-		/* Make the caption HTML-safe. */
-		if (xcaption != NULL)
-			hcaption = html_caption(xcaption);
-
-		/* Print the preamble. */
-		fprintf(f, "<html>\n"
-			   "<head>\n"
-			   " <meta http-equiv=\"Content-Type\" "
-			     "content=\"text/html; charset=UTF-8\">\n"
-			   "</head>\n"
-			   " <body>\n");
-		if (hcaption) {
-			fprintf(f, "<p>%s</p>\n", hcaption);
-			Free(hcaption);
-		}
-		break;
-	}
-	case P_TEXT:
-		if (xcaption != NULL)
-			fprintf(f, "%s\n\n", xcaption);
-	}
-
-	if (xcaption != NULL)
-	    	Free(xcaption);
-}
-
-/*
- * Print the ASCIIfied contents of the screen onto a stream.
- * Returns True if anything printed, False otherwise.
- * 
- * 'ptype' can specify:
- *  P_TEXT: Ordinary text
- *  P_HTML: HTML
- *  P_RTF: Windows rich text
- *
- * 'pmode' is one of:
- *  FPM_ALL: Only screen in a stream
- *  FPM_FIRST: First screen in a stream
- *  FPM_NTH: Subsequent screen in a stream
- *
- * 'opts' is an OR of:
- *  FPS_EVEN_IF_EMPTY	Create a file even if the screen is clear
- *  FPS_MODIFIED_ITALIC	Print modified fields in italic
- *    font-style:normal|italic
- *
- * Returns True if anything was generated, False otherwise.
- */
-Boolean
-fprint_screen_body(void)
-{
-	register int i;
-	unsigned long uc;
-	int ns = 0;
-	int nr = 0;
-	Boolean any = False;
-	int fa_addr = find_field_attribute(0);
-	unsigned char fa = ea_buf[fa_addr].fa;
-	int fa_fg, current_fg;
-	int fa_bg, current_bg;
-	Bool fa_high, current_high;
-	Bool fa_ital, current_ital;
-	Bool mi = ((fps_opts & FPS_MODIFIED_ITALIC)) != 0;
-
-	if (ea_buf[fa_addr].fg)
-		fa_fg = ea_buf[fa_addr].fg & 0x0f;
-	else
-		fa_fg = color_from_fa(fa);
-	current_fg = fa_fg;
-
-	if (ea_buf[fa_addr].bg)
-		fa_bg = ea_buf[fa_addr].bg & 0x0f;
-	else
-		fa_bg = HOST_COLOR_BLACK;
-	current_bg = fa_bg;
-
-	if (ea_buf[fa_addr].gr & GR_INTENSIFY)
-		fa_high = True;
-	else
-		fa_high = FA_IS_HIGH(fa);
-	current_high = fa_high;
-	fa_ital = mi && FA_IS_MODIFIED(fa);
-	current_ital = fa_ital;
-
-	switch (fps_ptype) {
-	case P_RTF:
-		if (fps_need_separator)
-			fprintf(fps_file, "\n\\page\n");
-		if (current_high)
-			fprintf(fps_file, "\\b ");
-		break;
-	case P_HTML:
-		fprintf(fps_file, "  <table border=0>"
-			   "<tr bgcolor=black><td>"
-			   "<pre><span style=\"color:%s;"
-			                       "background:%s;"
-					       "font-weight:%s;"
-					       "font-style:%s\">",
-			   html_color(current_fg),
-			   html_color(current_bg),
-			   current_high? "bold": "normal",
-			   current_ital? "italic": "normal");
-		break;
-	case P_TEXT:
-		if (fps_need_separator) {
-			for (i = 0; i < COLS; i++)
-				(void) fputc('=', fps_file);
-			(void) fputc('\n', fps_file);
-		}
-	default:
-		break;
-	}
-
-	fps_need_separator = False;
-
-	for (i = 0; i < ROWS*COLS; i++) {
-		char mb[16];
-		int nmb;
-
-		uc = 0;
-
-		if (i && !(i % COLS)) {
-		    	if (fps_ptype == P_HTML)
-			    	(void) fputc('\n', fps_file);
-			else
-				nr++;
-			ns = 0;
-		}
-		if (ea_buf[i].fa) {
-			uc = ' ';
-			fa = ea_buf[i].fa;
-			if (ea_buf[i].fg)
-				fa_fg = ea_buf[i].fg & 0x0f;
-			else
-				fa_fg = color_from_fa(fa);
-			if (ea_buf[i].bg)
-				fa_bg = ea_buf[i].bg & 0x0f;
-			else
-				fa_bg = HOST_COLOR_BLACK;
-			if (ea_buf[i].gr & GR_INTENSIFY)
-				fa_high = True;
-			else
-				fa_high = FA_IS_HIGH(fa);
-			fa_ital = mi && FA_IS_MODIFIED(fa);
-		}
-		if (FA_IS_ZERO(fa)) {
-#if defined(X3270_DBCS) /*[*/
-			if (ctlr_dbcs_state(i) == DBCS_LEFT)
-			    	uc = 0x3000;
-			else
-#endif /*]*/
-				uc = ' ';
-		} else {
-		    	/* Convert EBCDIC to Unicode. */
-#if defined(X3270_DBCS) /*[*/
-			switch (ctlr_dbcs_state(i)) {
-			case DBCS_NONE:
-			case DBCS_SB:
-			    	uc = ebcdic_to_unicode(ea_buf[i].cc,
-					ea_buf[i].cs, EUO_NONE);
-				if (uc == 0)
-				    	uc = ' ';
-				break;
-			case DBCS_LEFT:
-				uc = ebcdic_to_unicode(
-					(ea_buf[i].cc << 8) |
-					 ea_buf[i + 1].cc,
-					CS_BASE, EUO_NONE);
-				if (uc == 0)
-				    	uc = 0x3000;
-				break;
-			case DBCS_RIGHT:
-				/* skip altogether, we took care of it above */
-				continue;
-			default:
-				uc = ' ';
-				break;
-			}
-#else /*][*/
-			uc = ebcdic_to_unicode(ea_buf[i].cc, ea_buf[i].cs,
-				EUO_NONE);
-			if (uc == 0)
-				uc = ' ';
-#endif /*]*/
-		}
-
-		/* Translate to a type-specific format and write it out. */
-		if (uc == ' ' && fps_ptype != P_HTML)
-			ns++;
-#if defined(X3270_DBCS) /*[*/
-		else if (uc == 0x3000) {
-		    	if (fps_ptype == P_HTML)
-			    	fprintf(fps_file, "  ");
-			else
-				ns += 2;
-		}
-#endif /*]*/
-		else {
-			while (nr) {
-			    	if (fps_ptype == P_RTF)
-				    	fprintf(fps_file, "\\par");
-				(void) fputc('\n', fps_file);
-				nr--;
-			}
-			while (ns) {
-			    	if (fps_ptype == P_RTF)
-				    	fprintf(fps_file, "\\~");
-				else
-					(void) fputc(' ', fps_file);
-				ns--;
-			}
-			if (fps_ptype == P_RTF) {
-				Bool high;
-
-				if (ea_buf[i].gr & GR_INTENSIFY)
-					high = True;
-				else
-					high = fa_high;
-				if (high != current_high) {
-					if (high)
-						fprintf(fps_file, "\\b ");
-					else
-						fprintf(fps_file, "\\b0 ");
-					current_high = high;
-				}
-			}
-			if (fps_ptype == P_HTML) {
-				int fg_color, bg_color;
-				Bool high;
-
-				if (ea_buf[i].fg)
-					fg_color = ea_buf[i].fg & 0x0f;
-				else
-					fg_color = fa_fg;
-				if (ea_buf[i].bg)
-					bg_color = ea_buf[i].bg & 0x0f;
-				else
-					bg_color = fa_bg;
-				if (ea_buf[i].gr & GR_REVERSE) {
-				    	int tmp;
-
-					tmp = fg_color;
-					fg_color = bg_color;
-					bg_color = tmp;
-				}
-
-				if (i == cursor_addr) {
-				    	fg_color = (bg_color == HOST_COLOR_RED)?
-							HOST_COLOR_BLACK: bg_color;
-					bg_color = HOST_COLOR_RED;
-				}
-				if (ea_buf[i].gr & GR_INTENSIFY)
-					high = True;
-				else
-					high = fa_high;
-
-				if (fg_color != current_fg ||
-				    bg_color != current_bg ||
-				    high != current_high ||
-				    fa_ital != current_ital) {
-					fprintf(fps_file,
-						"</span><span "
-						"style=\"color:%s;"
-						"background:%s;"
-						"font-weight:%s;"
-						"font-style:%s\">",
-						html_color(fg_color),
-						html_color(bg_color),
-						high? "bold": "normal",
-						fa_ital? "italic": "normal");
-					current_fg = fg_color;
-					current_bg = bg_color;
-					current_high = high;
-					current_ital = fa_ital;
-				}
-			}
-			any = True;
-			if (fps_ptype == P_RTF) {
-				if (uc & ~0x7f) {
-					fprintf(fps_file, "\\u%ld?", uc);
-				} else {
-					nmb = unicode_to_multibyte(uc,
-						mb, sizeof(mb));
-					if (mb[0] == '\\' ||
-						mb[0] == '{' ||
-						mb[0] == '}')
-						fprintf(fps_file, "\\%c",
-							mb[0]);
-					else if (mb[0] == '-')
-						fprintf(fps_file, "\\_");
-					else if (mb[0] == ' ')
-						fprintf(fps_file, "\\~");
-					else
-						fputc(mb[0], fps_file);
-				}
-			} else if (fps_ptype == P_HTML) {
-				if (uc == '<')
-					fprintf(fps_file, "&lt;");
-				else if (uc == '&')
-				    	fprintf(fps_file, "&amp;");
-				else if (uc == '>')
-				    	fprintf(fps_file, "&gt;");
-				else {
-					nmb = unicode_to_utf8(uc, mb);
-					{
-					    int k;
-
-					    for (k = 0; k < nmb; k++) {
-						fputc(mb[k], fps_file);
-					    }
-					}
-				}
-			} else {
-				nmb = unicode_to_multibyte(uc,
-					mb, sizeof(mb));
-				(void) fputs(mb, fps_file);
-			}
-		}
-	}
-
-	if (fps_ptype == P_HTML)
-	    	(void) fputc('\n', fps_file);
-	else
-		nr++;
-	if (!any && !(fps_opts & FPS_EVEN_IF_EMPTY) && fps_ptype == P_TEXT)
-		return False;
-	while (nr) {
-	    	if (fps_ptype == P_RTF)
-		    	fprintf(fps_file, "\\par");
-		if (fps_ptype == P_TEXT)
-			(void) fputc('\n', fps_file);
-		nr--;
-	}
-	if (fps_ptype == P_HTML)
-		fprintf(fps_file, "%s</span></pre></td></tr>\n"
-		           "  </table>\n",
-			   current_high? "</b>": "");
-	fps_need_separator = True;
-	return True;
-}
-
-/*
- * Finish writing a multi-screen image.
- */
-void
-fprint_screen_done(void)
-{
-	switch (fps_ptype) {
-	case P_RTF:
-	    	fprintf(fps_file, "\n}\n%c", 0);
-		break;
-	case P_HTML:
-		fprintf(fps_file, " </body>\n"
-			   "</html>\n");
-		break;
-	default:
-		break;
-	}
-
-	/* Reset the globals. */
-	fps_ptype = P_TEXT;
-	fps_opts = 0;
-	fps_file = NULL;
-}
-
-Boolean
-fprint_screen(FILE *f, ptype_t ptype, unsigned opts, const char *caption)
-{
-	Boolean any;
-
-	fprint_screen_start(f, ptype, opts, caption);
-	any = fprint_screen_body();
-	fprint_screen_done();
-
-	return any;
-}
 
 #if !defined(_WIN32) /*[*/
 /* Termination code for print text process. */
@@ -751,7 +154,8 @@ print_text_callback(Widget w _is_unused, XtPointer client_data,
 	    Replace(print_text_command, filter);
 	    ptc_changed = True;
 	}
-	(void) fprint_screen(f, P_TEXT, FPS_EVEN_IF_EMPTY, NULL);
+	if (fprint_screen(f, P_TEXT, FPS_EVEN_IF_EMPTY, NULL) < 0)
+		popup_an_error("Screen print failed.");
 	print_text_done(f, True);
 }
 
@@ -772,7 +176,8 @@ save_text_plain_callback(Widget w _is_unused, XtPointer client_data,
 		popup_an_errno(errno, "%s", filename);
 		return;
 	}
-	(void) fprint_screen(f, P_TEXT, FPS_EVEN_IF_EMPTY, NULL);
+	if (fprint_screen(f, P_TEXT, FPS_EVEN_IF_EMPTY, NULL) < 0)
+		popup_an_error("Screen print failed.");
 	fclose(f);
 	XtPopdown(save_text_shell);
 	if (appres.do_confirms)
@@ -796,7 +201,8 @@ save_text_html_callback(Widget w _is_unused, XtPointer client_data,
 		popup_an_errno(errno, "%s", filename);
 		return;
 	}
-	(void) fprint_screen(f, P_HTML, FPS_EVEN_IF_EMPTY, NULL);
+	if (fprint_screen(f, P_HTML, FPS_EVEN_IF_EMPTY, NULL) < 0)
+		popup_an_error("Screen print failed.");
 	fclose(f);
 	XtPopdown(save_text_shell);
 	if (appres.do_confirms)
@@ -1025,7 +431,15 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 			}
 			return;
 		}
-		(void) fprint_screen(f, ptype, opts, caption);
+		if (fprint_screen(f, ptype, opts, caption) < 0) {
+			popup_an_error("Screen print failed.");
+			fclose(f);
+			if (temp_name) {
+				unlink(temp_name);
+				Free(temp_name);
+			}
+			return;
+		}
 		if (use_string) {
 			char buf[8192];
 
@@ -1109,7 +523,8 @@ print_text_option(Widget w, XtPointer client_data _is_unused,
 			popup_an_errno(errno, "popen(%s)", filter);
 			return;
 		}
-		(void) fprint_screen(f, ptype, FPS_EVEN_IF_EMPTY, NULL);
+		if (fprint_screen(f, ptype, FPS_EVEN_IF_EMPTY, NULL) < 0)
+			popup_an_error("Screen print failed.");
 		print_text_done(f, False);
 	} else {
 		/* Pop up a dialog to confirm or modify their choice. */

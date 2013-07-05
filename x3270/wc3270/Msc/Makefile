@@ -42,13 +42,14 @@ RM = erase
 XCPPFLAGS = /D_WIN32 /DWC3270 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /DWINVER=0x500 /D_CRT_SECURE_NO_DEPRECATE $(SSLDEF)
 CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I.
 VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj c3270.obj charset.obj \
-	ctlr.obj fallbacks.obj ft.obj ft_cut.obj ft_dft.obj glue.obj help.obj \
-	host.obj icmd.obj idle.obj keymap.obj keypad.obj kybd.obj macros.obj \
-	menubar.obj print.obj printer.obj proxy.obj readres.obj relink.obj \
-	resolver.obj resources.obj rpq.obj screen.obj see.obj sf.obj \
-	shortcut.obj ssl_dll.obj tables.obj telnet.obj toggles.obj \
-	trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj xio.obj \
-	w3misc.obj winvers.obj windirs.obj winprint.obj wc3270.RES
+	ctlr.obj fallbacks.obj fprint_screen.obj ft.obj ft_cut.obj ft_dft.obj \
+	glue.obj help.obj host.obj icmd.obj idle.obj keymap.obj keypad.obj \
+	kybd.obj macros.obj menubar.obj print.obj printer.obj proxy.obj \
+	readres.obj relink.obj resolver.obj resources.obj rpq.obj screen.obj \
+	see.obj sf.obj shortcut.obj ssl_dll.obj tables.obj telnet.obj \
+	toggles.obj trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj \
+	util.obj xio.obj w3misc.obj winvers.obj windirs.obj winprint.obj \
+	wc3270.RES
 OBJECTS = $(VOBJS) version.obj
 WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
 	windirs.obj relink.obj
@@ -131,6 +132,8 @@ charset.obj: charset.c
 	$(CC) $(CFLAGS) /c charset.c
 ctlr.obj: ctlr.c
 	$(CC) $(CFLAGS) /c ctlr.c
+fprint_screen.obj: fprint_screen.c
+	$(CC) $(CFLAGS) /c fprint_screen.c
 ft.obj: ft.c
 	$(CC) $(CFLAGS) /c ft.c
 ft_cut.obj: ft.c

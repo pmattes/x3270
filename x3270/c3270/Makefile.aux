@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1995-2011, Paul Mattes.
+# Copyright (c) 1995-2011, 2013 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -36,15 +36,15 @@ all:
 # Development tools.
 
 SOURCES = XtGlue.c actions.c ansi.c apl.c c3270.c charset.c child.c ctlr.c \
-	ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c idle.c keymap.c \
-	kybd.c macros.c print.c printer.c proxy.c readres.c resolver.c \
-	resources.c rpq.c screen.c see.c sf.c tables.c telnet.c toggles.c \
-	trace_ds.c utf8.c util.c xio.c unicode.c unicode_dbcs.c keypad.c \
-	menubar.c
+	fprint_screen.c ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c \
+	idle.c keymap.c kybd.c macros.c print.c printer.c proxy.c readres.c \
+	resolver.c resources.c rpq.c screen.c see.c sf.c tables.c telnet.c \
+	toggles.c trace_ds.c utf8.c util.c xio.c unicode.c unicode_dbcs.c \
+	keypad.c menubar.c
 HEADERS = 3270ds.h actionsc.h ansic.h aplc.h appres.h cg.h charsetc.h \
-	childc.h ctlr.h ctlrc.h dialogc.h ftc.h ft_cutc.h ft_cut_ds.h \
-	ft_dftc.h ft_dft_ds.h globals.h gluec.h hostc.h icmdc.h idlec.h \
-	keymapc.h keypadc.h kybdc.h localdefs.h macrosc.h menubarc.h \
+	childc.h ctlr.h ctlrc.h dialogc.h fprint_screenc.h ftc.h ft_cutc.h \
+	ft_cut_ds.h ft_dftc.h ft_dft_ds.h globals.h gluec.h hostc.h icmdc.h \
+	idlec.h keymapc.h keypadc.h kybdc.h localdefs.h macrosc.h menubarc.h \
 	objects.h popupsc.h printc.h printerc.h proxy.h proxyc.h readresc.h \
 	resolverc.h resources.h savec.h screen.h screenc.h scrollc.h seec.h \
 	selectc.h sfc.h statusc.h tablesc.h arpa_telnet.h telnetc.h tn3270e.h \

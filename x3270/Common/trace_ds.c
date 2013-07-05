@@ -56,6 +56,7 @@
 #include "charsetc.h"
 #include "childc.h"
 #include "ctlrc.h"
+#include "fprint_screenc.h"
 #include "menubarc.h"
 #include "popupsc.h"
 #include "printc.h"
@@ -979,6 +980,7 @@ toggle_eventTrace(struct toggle *t _is_unused, enum toggle_type tt)
 static Widget screentrace_shell = (Widget)NULL;
 #endif /*]*/
 static FILE *screentracef = (FILE *)NULL;
+static fps_t screentrace_fps = NULL;
 
 /*
  * Screen trace function, called when the host clears the screen.
@@ -986,7 +988,11 @@ static FILE *screentracef = (FILE *)NULL;
 static void
 do_screentrace(Boolean always _is_unused)
 {
-	(void) fprint_screen_body();
+	/*
+	 * XXX: We should do something smarter here should fprint_screen_body()
+	 * fail.
+	 */
+	(void) fprint_screen_body(screentrace_fps);
 }
 
 void
@@ -1079,7 +1085,12 @@ screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 #if !defined(_WIN32) /*[*/
 	(void) fcntl(fileno(screentracef), F_SETFD, 1);
 #endif /*]*/
-	fprint_screen_start(screentracef, ptype, 0, NULL);
+	if (fprint_screen_start(screentracef, ptype, 0, NULL,
+		    &screentrace_fps) < 0) {
+		popup_an_error("Screen trace start failed.");
+		fclose(screentracef);
+		return False;
+	}
 
 	/* We're really tracing, turn the flag on. */
 	appres.toggle[SCREEN_TRACE].value = True;
@@ -1092,7 +1103,7 @@ screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 static void
 end_screentrace(Boolean is_final _is_unused)
 {
-	fprint_screen_done();
+	fprint_screen_done(&screentrace_fps);
 	(void) fclose(screentracef);
 	screentracef = NULL;
 
@@ -1140,7 +1151,13 @@ onescreen_callback(Widget w, XtPointer client_data,
 	XtFree(tfn);
 
 	/* Save the current image, once. */
-	fprint_screen_start(screentracef, P_TEXT, 0, NULL);
+	if (fprint_screen_start(screentracef, P_TEXT, 0, NULL,
+		    &screentrace_fps) < 0) {
+		popup_an_error("Screen trace start failed.");
+		(void) fclose(screentracef);
+		screentracef = NULL;
+		return;
+	}
 	do_screentrace(True);
 
 	/* Close the file, we're done. */

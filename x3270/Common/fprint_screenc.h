@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013 Paul Mattes.
+ * Copyright (c) 1994-2013, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,17 +26,17 @@
  */
 
 /*
- *	printc.h
- *		Global declarations for print.c.
+ *	fprint_screenc.h
+ *		Screen printing functions.
  */
 
-extern void PrintText_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void PrintWindow_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void print_text_option(Widget w, XtPointer client_data,
-    XtPointer call_data);
-extern void print_window_option(Widget w, XtPointer client_data,
-    XtPointer call_data);
-extern void save_text_option(Widget w, XtPointer client_data,
-    XtPointer call_data);
+#define FPS_EVEN_IF_EMPTY	0x1	/* print even if screen is blank */
+#define FPS_MODIFIED_ITALIC	0x2	/* print modified fields in italic */
+
+typedef struct _fps *fps_t;
+
+int fprint_screen(FILE *f, ptype_t ptype, unsigned opts, const char *caption);
+int fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts,
+	const char *caption, fps_t *fps);
+int fprint_screen_body(fps_t fps);
+int fprint_screen_done(fps_t *fps);
