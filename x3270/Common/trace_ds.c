@@ -1238,10 +1238,13 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 
 	if (tracefile_buf != NULL)
 		Free(tracefile_buf);
+
 #if defined(X3270_DISPLAY) /*[*/
-	XtVaSetValues(appres.toggle[SCREEN_TRACE].w[0],
-		XtNleftBitmap, appres.toggle[SCREEN_TRACE].value? dot: None,
-		NULL);
+	if (appres.toggle[SCREEN_TRACE].w[0] != NULL)
+		XtVaSetValues(appres.toggle[SCREEN_TRACE].w[0],
+			XtNleftBitmap,
+			    appres.toggle[SCREEN_TRACE].value? dot: None,
+			NULL);
 #endif /*]*/
 }
 #endif /*]*/
