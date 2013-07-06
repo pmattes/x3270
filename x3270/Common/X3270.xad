@@ -863,13 +863,6 @@ x3270.oversizePopup*confirmButton.label:	Resize
 x3270.keypadPopup.title:			x3270 Keypad
 #endif
 #ifdef X3270_MENUS
-x3270.printTextPopup.title:			x3270 Screen Print
-x3270.printTextPopup.dialog.label:		Enter Print Command
-x3270.printTextPopup*confirmButton.label:	Print
-x3270.saveTextPopup.title:			x3270 Screen Save
-x3270.saveTextPopup.dialog.label:		Enter File Name
-x3270.saveTextPopup*confirmButton.label:	Save as Text
-x3270.saveTextPopup*confirm2Button.label:	Save as HTML
 x3270.printWindowPopup.title:			x3270 Window Print
 x3270.printWindowPopup.dialog.label:		Enter Print Command
 x3270.printWindowPopup*confirmButton.label:	Print
@@ -886,10 +879,6 @@ x3270.tracePopup.title:				x3270 Tracing
 x3270.tracePopup.dialog.label:			Enter Trace File Name
 x3270.tracePopup*confirmButton.label:		Trace
 x3270.tracePopup*confirm2Button.label:		No File
-x3270.screentracePopup.title:			x3270 Screen Image Tracing
-x3270.screentracePopup.dialog.label:		Enter File Name
-x3270.screentracePopup*confirmButton.label:	Continuously
-x3270.screentracePopup*confirm2Button.label:	Once
 x3270.screenTracePopup.title:			x3270 Screen Save
 x3270.screenTracePopup*continuously.label:	Continuously
 x3270.screenTracePopup*once.label:		Once
@@ -947,8 +936,6 @@ x3270*abortScriptOption.label:			Abort Scripts/Macros/Strings
 x3270*disconnectOption.label:			Disconnect
 x3270*exitOption.label:				Exit x3270
 x3270*exitReallyOption.label:			Disconnect and Exit
-x3270*printTextOption.label:			Print Screen Text
-x3270*saveTextOption.label:			Save Screen Text in File
 x3270*printWindowOption.label:			Print Window Bitmap
 x3270*executeActionOption.label:		Execute an Action
 x3270*fileMenuButton.label:			File
@@ -1349,11 +1336,8 @@ x3270.connectPopup.width:			300
 x3270.fontPopup.width:				300
 x3270.keymapPopup.width:			300
 x3270.oversizePopup.width:			300
-x3270.printTextPopup.width:			300
-x3270.saveTextPopup.width:			300
 x3270.printWindowPopup.width:			300
 x3270.tracePopup.width:				300
-x3270.screentracePopup.width:			300
 x3270.executeActionPopup.width:			300
 x3270.saveOptionsPopup.width:			300
 x3270.passwordPopup.width:			300
@@ -1494,15 +1478,9 @@ x3270.fontPopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.keymapPopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-x3270.printTextPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-x3270.saveTextPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.printWindowPopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.tracePopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-x3270.screentracePopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.screenTracePopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()

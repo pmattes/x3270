@@ -722,8 +722,8 @@ fprint_screen_done(fps_t *ofps)
 	}
 
 	/* Done with the context. */
-	Free(*(void **)fps);
-	*(void **)fps = NULL;
+	Free(*(void **)ofps);
+	*(void **)ofps = NULL;
 
 	return rv;
 }

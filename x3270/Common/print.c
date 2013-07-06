@@ -42,8 +42,8 @@
 #include <errno.h>
 
 #if defined(X3270_DISPLAY) /*[*/
-#include <X11/StringDefs.h>
-#include <X11/Xaw/Dialog.h>
+# include <X11/StringDefs.h>
+# include <X11/Xaw/Dialog.h>
 #endif /*]*/
 
 #include "objects.h"
@@ -54,6 +54,7 @@
 #include "fprint_screenc.h"
 #include "popupsc.h"
 #include "printc.h"
+#include "stmenuc.h"
 #include "trace_dsc.h"
 #include "unicodec.h"
 #include "utf8c.h"
@@ -77,39 +78,21 @@
 #endif /*]*/
 
 /* Typedefs */
-#if defined(WC3270) /*[*/
-typedef struct {		/* Windows screen print context */
-	char *filename;		/* Name of file to print (and unlink) */
-	char *wp;		/* Path of WORDPAD.EXE */
-	char *args;		/* Parameters for Wordpad */
-} wsp_t;
-#endif /*]*/
 
 /* Globals */
-#if defined(X3270_DISPLAY) /*[*/
-char *print_text_command = NULL;
-Boolean ptc_changed = FALSE;
-#endif /*]*/
 
 /* Statics */
 #if defined(X3270_DISPLAY) /*[*/
-static Widget print_text_shell = (Widget)NULL;
-static Widget save_text_shell = (Widget)NULL;
 static Widget print_window_shell = (Widget)NULL;
 char *print_window_command = CN;
 #endif /*]*/
-
 
 /* Print Text popup */
 
 #if !defined(_WIN32) /*[*/
 /* Termination code for print text process. */
 static void
-print_text_done(FILE *f, Boolean do_popdown
-#if defined(X3270_DISPLAY) /*[*/
-					    _is_unused
-#endif /*]*/
-						  )
+print_text_done(FILE *f)
 {
 	int status;
 
@@ -118,127 +101,12 @@ print_text_done(FILE *f, Boolean do_popdown
 		popup_an_error("Print program exited with status %d.",
 		    (status & 0xff00) > 8);
 	} else {
-#if defined(X3270_DISPLAY) /*[*/
-		if (do_popdown)
-			XtPopdown(print_text_shell);
-#endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+# if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 		if (appres.do_confirms)
 			popup_an_info("Screen image printed.");
-#endif /*]*/
+# endif /*]*/
 	}
 
-}
-#endif /*]*/
-
-#if defined(X3270_DISPLAY) /*[*/
-/* Callback for "OK" button on the print text popup. */
-static void
-print_text_callback(Widget w _is_unused, XtPointer client_data,
-    XtPointer call_data _is_unused)
-{
-	char *filter;
-	FILE *f;
-
-	filter = XawDialogGetValueString((Widget)client_data);
-	if (!filter) {
-		XtPopdown(print_text_shell);
-		return;
-	}
-	if (!(f = popen(filter, "w"))) {
-		popup_an_errno(errno, "popen(%s)", filter);
-		return;
-	}
-	if (print_text_command == NULL ||
-		strcmp(print_text_command, filter)) {
-	    Replace(print_text_command, filter);
-	    ptc_changed = True;
-	}
-	if (fprint_screen(f, P_TEXT, FPS_EVEN_IF_EMPTY, NULL) < 0)
-		popup_an_error("Screen print failed.");
-	print_text_done(f, True);
-}
-
-/* Callback for "Plain Text" button on save text popup. */
-static void
-save_text_plain_callback(Widget w _is_unused, XtPointer client_data,
-    XtPointer call_data _is_unused)
-{
-	char *filename;
-	FILE *f;
-
-	filename = XawDialogGetValueString((Widget)client_data);
-	if (!filename) {
-		XtPopdown(save_text_shell);
-		return;
-	}
-	if (!(f = fopen(filename, "a"))) {
-		popup_an_errno(errno, "%s", filename);
-		return;
-	}
-	if (fprint_screen(f, P_TEXT, FPS_EVEN_IF_EMPTY, NULL) < 0)
-		popup_an_error("Screen print failed.");
-	fclose(f);
-	XtPopdown(save_text_shell);
-	if (appres.do_confirms)
-		popup_an_info("Screen image saved.");
-}
-
-/* Callback for "HTML" button on save text popup. */
-static void
-save_text_html_callback(Widget w _is_unused, XtPointer client_data,
-    XtPointer call_data _is_unused)
-{
-	char *filename;
-	FILE *f;
-
-	filename = XawDialogGetValueString((Widget)client_data);
-	if (!filename) {
-		XtPopdown(save_text_shell);
-		return;
-	}
-	if (!(f = fopen(filename, "a"))) {
-		popup_an_errno(errno, "%s", filename);
-		return;
-	}
-	if (fprint_screen(f, P_HTML, FPS_EVEN_IF_EMPTY, NULL) < 0)
-		popup_an_error("Screen print failed.");
-	fclose(f);
-	XtPopdown(save_text_shell);
-	if (appres.do_confirms)
-		popup_an_info("Screen image saved.");
-}
-
-/* Pop up the Print Text dialog, given a filter. */
-static void
-popup_print_text(char *filter)
-{
-	if (print_text_shell == NULL) {
-		print_text_shell = create_form_popup("PrintText",
-		    print_text_callback, (XtCallbackProc)NULL,
-		    FORM_AS_IS);
-		XtVaSetValues(XtNameToWidget(print_text_shell, ObjDialog),
-		    XtNvalue, filter,
-		    NULL);
-	}
-	popup_popup(print_text_shell, XtGrabExclusive);
-}
-
-/* Pop up the Save Text dialog. */
-static void
-popup_save_text(char *filename)
-{
-	if (save_text_shell == NULL) {
-		save_text_shell = create_form_popup("SaveText",
-		    save_text_plain_callback,
-		    save_text_html_callback,
-		    FORM_AS_IS);
-	}
-	if (filename != CN)
-		XtVaSetValues(XtNameToWidget(save_text_shell, ObjDialog),
-		    XtNvalue, filename,
-		    NULL);
-	popup_popup(save_text_shell, XtGrabExclusive);
 }
 #endif /*]*/
 
@@ -384,7 +252,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 		FILE *f;
 		int fd = -1;
 
-		/* Invoked non-interactively. */
+		/* Invoked from somewhere other than a keymap. */
 		if (use_file) {
 			if (use_string) {
 #if defined(_WIN32) /*[*/
@@ -451,7 +319,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 			fclose(f);
 		else {
 #if !defined(_WIN32) /*[*/
-			print_text_done(f, False);
+			print_text_done(f);
 #else /*][*/
 # if defined(S3270) /*[*/
 			/* Run WordPad to print the file, synchronusly. */
@@ -476,73 +344,17 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	}
 
 #if defined(X3270_DISPLAY) /*[*/
-	/* Invoked interactively -- pop up the confirmation dialog. */
+	/* Invoked from a keymap -- pop up the confirmation dialog. */
 	if (use_file) {
-		popup_save_text(name);
+		stmenu_popup(STMP_TEXT);
 	} else {
-		popup_print_text(name);
+		stmenu_popup(STMP_PRINTER);
 	}
 #endif /*]*/
 }
-
-#if defined(X3270_DISPLAY) /*[*/
-#if defined(X3270_MENUS) /*[*/
-
-
-/* Callback for Print Text menu option. */
-void
-print_text_option(Widget w, XtPointer client_data _is_unused,
-    XtPointer call_data _is_unused)
-{
-	char *filter = get_resource(ResPrintTextCommand);
-	Boolean secure = appres.secure;
-	ptype_t ptype = P_TEXT;
-
-	if (print_text_command != NULL)
-	    	filter = print_text_command;
-	else {
-	    	filter = get_resource(ResPrintTextCommand);
-		if (filter == NULL || !*filter)
-		    	filter = "lpr";
-		print_text_command = XtNewString(filter);
-	}
-
-	/* Decode the filter. */
-	if (filter != CN && *filter == '@') {
-		secure = True;
-		filter++;
-	}
-	if (filter == CN || !*filter)
-		filter = "lpr";
-
-	if (secure) {
-		FILE *f;
-
-		/* Print the screen without confirming. */
-		if (!(f = popen(filter, "w"))) {
-			popup_an_errno(errno, "popen(%s)", filter);
-			return;
-		}
-		if (fprint_screen(f, ptype, FPS_EVEN_IF_EMPTY, NULL) < 0)
-			popup_an_error("Screen print failed.");
-		print_text_done(f, False);
-	} else {
-		/* Pop up a dialog to confirm or modify their choice. */
-		popup_print_text(filter);
-	}
-}
-
-/* Callback for Save Text menu option. */
-void
-save_text_option(Widget w, XtPointer client_data _is_unused,
-    XtPointer call_data _is_unused)
-{
-	/* Pop up a dialog to confirm or modify their choice. */
-	popup_save_text(CN);
-}
-#endif /*]*/
 
 
+#if defined(X3270_DISPLAY) /*[*/
 /* Print Window popup */
 
 /*
@@ -634,7 +446,7 @@ PrintWindow_action(Widget w _is_unused, XEvent *event, String *params,
 	popup_popup(print_window_shell, XtGrabExclusive);
 }
 
-#if defined(X3270_MENUS) /*[*/
+# if defined(X3270_MENUS) /*[*/
 /* Callback for menu Print Window option. */
 void
 print_window_option(Widget w, XtPointer client_data _is_unused,
@@ -644,7 +456,5 @@ print_window_option(Widget w, XtPointer client_data _is_unused,
 
 	PrintWindow_action(w, (XEvent *)NULL, (String *)NULL, &zero);
 }
+# endif /*]*/
 #endif /*]*/
-
-#endif /*]*/
-

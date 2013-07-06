@@ -127,6 +127,8 @@ static void menubar_printer(Boolean printer_on);
 #endif /*]*/
 static void menubar_remodel(Boolean ignored _is_unused);
 static void menubar_charset(Boolean ignored _is_unused);
+static void screensave_option(Widget w, XtPointer client_data,
+	XtPointer call_data);
 
 #define NO_BANG(s)	(((s)[0] == '!')? (s) + 1: (s))
 
@@ -983,9 +985,9 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 		any |= toggle_init(file_menu, EVENT_TRACE, "eventTraceOption",
 				CN, &spaced);
 	}
-	if (!appres.secure)
+	if (!appres.secure) {
 		w = add_menu_itemv("screenTraceOption", file_menu,
-			    stmenu_popup, NULL, &spaced,
+			    screensave_option, NULL, &spaced,
 			    NULL);
 		if (w != NULL) {
 			any = True;
@@ -994,22 +996,11 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 				toggled(SCREEN_TRACE)? dot: None,
 				NULL);
 		}
+	}
 #endif /*]*/
 
-	/* Print Screen Text, Save Screen Text */
-	spaced = False;
-	w = add_menu_itemv("printTextOption", file_menu,
-			      print_text_option, NULL, &spaced,
-			      NULL);
-	any |= (w != NULL);
-	if (!appres.secure) {
-		w = add_menu_itemv("saveTextOption", file_menu,
-				      save_text_option, NULL, &spaced,
-				      NULL);
-		any |= (w != NULL);
-	}
-
 	/* Print Window Bitmap */
+	spaced = False;
 	w =  add_menu_itemv("printWindowOption", file_menu,
 			      print_window_option, NULL, &spaced,
 			      NULL);
@@ -2302,6 +2293,13 @@ HandleMenu_action(Widget w _is_unused, XEvent *event, String *params,
 	}
 	XtCallActionProc(menu_parent, "XawPositionComplexMenu", event, &p, 1);
 	XtCallActionProc(menu_parent, "MenuPopup", event, &p, 1);
+}
+
+static void
+screensave_option(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
+{
+	stmenu_popup(STMP_AS_IS);
 }
 
 #endif /*]*/

@@ -59,11 +59,8 @@ extern Boolean	oversize_changed;
 extern Boolean	scheme_changed;
 extern Boolean	keymap_changed;
 extern Boolean	charset_changed;
-extern Boolean  ptc_changed;
 
 extern char    *current_keymap;
-
-extern char    *print_text_command;
 
 char           *command_string = CN;
 
@@ -700,9 +697,6 @@ save_options(char *n)
 				    "True": "False");
 	}
 #endif /*]*/
-	if (ptc_changed)
-	    	save_opt(f, "print text command", CN, ResPrintTextCommand,
-			print_text_command);
 
 	/* Done. */
 	(void) fclose(f);

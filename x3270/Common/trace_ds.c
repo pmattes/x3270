@@ -38,6 +38,7 @@
 #if defined(X3270_DISPLAY) /*[*/
 #include <X11/StringDefs.h>
 #include <X11/Xaw/Dialog.h>
+#include <X11/Xaw/Label.h>
 #endif /*]*/
 #if defined(_WIN32) /*[*/
 #include <windows.h>
@@ -86,6 +87,10 @@
 #if !defined(HAVE_FSEEKO) /*[*/
 #define fseeko(s, o, w)	fseek(s, (long)o, w)
 #define ftello(s)	(off_t)ftell(s)
+#endif /*]*/
+
+#if defined(X3270_DISPLAY) /*[*/
+extern Pixmap dot;
 #endif /*]*/
 
 /* Statics */
@@ -975,10 +980,6 @@ toggle_eventTrace(struct toggle *t _is_unused, enum toggle_type tt)
 }
 
 /* Screen trace file support. */
-
-#if defined(X3270_DISPLAY) /*[*/
-static Widget screentrace_shell = (Widget)NULL;
-#endif /*]*/
 static FILE *screentracef = (FILE *)NULL;
 static fps_t screentrace_fps = NULL;
 
@@ -1118,56 +1119,6 @@ end_screentrace(Boolean is_final _is_unused)
 #endif /*]*/
 }
 
-#if defined(X3270_DISPLAY) /*[*/
-/* Callback for "OK" button on screentrace popup */
-static void
-screentrace_callback(Widget w _is_unused, XtPointer client_data,
-    XtPointer call_data _is_unused)
-{
-	if (screentrace_cb(TSS_FILE, P_TEXT,
-		    XawDialogGetValueString((Widget)client_data)))
-		XtPopdown(screentrace_shell);
-}
-
-/* Callback for second "OK" button on screentrace popup ('once') */
-static void
-onescreen_callback(Widget w, XtPointer client_data,
-	XtPointer call_data _is_unused)
-{
-	char *tfn;
-
-	if (w)
-		tfn = XawDialogGetValueString((Widget)client_data);
-	else
-		tfn = (char *)client_data;
-	tfn = do_subst(tfn, DS_VARS | DS_TILDE | DS_UNIQUE);
-	screentracef = fopen(tfn, "a");
-	if (screentracef == (FILE *)NULL) {
-		popup_an_errno(errno, "%s", tfn);
-		XtFree(tfn);
-		return;
-	}
-	(void) fcntl(fileno(screentracef), F_SETFD, 1);
-	XtFree(tfn);
-
-	/* Save the current image, once. */
-	if (fprint_screen_start(screentracef, P_TEXT, 0, NULL,
-		    &screentrace_fps) < 0) {
-		popup_an_error("Screen trace start failed.");
-		(void) fclose(screentracef);
-		screentracef = NULL;
-		return;
-	}
-	do_screentrace(True);
-
-	/* Close the file, we're done. */
-	end_screentrace(False);
-
-	if (w)
-		XtPopdown(screentrace_shell);
-}
-#endif /*]*/
-
 void
 trace_set_screentrace_file(tss_t how, ptype_t ptype, const char *name)
 {
@@ -1271,30 +1222,8 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 				tracefile = tracefile_buf =
 				    screentrace_default_printer();
 		}
-		if (tt == TT_INITIAL ||
-		    tt == TT_ACTION ||
-		    tt == TT_INTERACTIVE) {
-			(void) screentrace_cb(screentrace_how,
-				screentrace_ptype,
-				NewString(tracefile));
-			if (tracefile_buf != NULL)
-				Free(tracefile_buf);
-			return;
-		}
-#if defined(X3270_DISPLAY) /*[*/
-		if (screentrace_shell == NULL) {
-			screentrace_shell = create_form_popup("screentrace",
-			    screentrace_callback, onescreen_callback,
-			    FORM_NO_WHITE);
-			XtVaSetValues(XtNameToWidget(screentrace_shell,
-					ObjDialog),
-			    XtNvalue, tracefile,
-			    NULL);
-		}
-		appres.toggle[SCREEN_TRACE].value = False;
-		appres.toggle[SCREEN_TRACE].changed = True;
-		popup_popup(screentrace_shell, XtGrabExclusive);
-#endif /*]*/
+		(void) screentrace_cb(screentrace_how, screentrace_ptype,
+			NewString(tracefile));
 	} else {
 		/* Turn it off. */
 		if (ctlr_any_data() && !trace_skipping)
@@ -1307,6 +1236,10 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 
 	if (tracefile_buf != NULL)
 		Free(tracefile_buf);
+#if defined(X3270_DISPLAY) /*[*/
+	XtVaSetValues(appres.toggle[SCREEN_TRACE].w[0],
+		XtNleftBitmap, appres.toggle[SCREEN_TRACE].value? dot: None,
+		NULL);
+#endif /*]*/
 }
-
 #endif /*]*/
