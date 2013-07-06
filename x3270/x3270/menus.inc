@@ -38,20 +38,18 @@ For example, it will tell you precisely what action was taken in response to
 pressing a particular key.
 If the key is not mapped, it will tell you the keysym name and keycode so you
 can add it to a custom keymap.
-XX_TP(XX_FB(Save Screen(s) in File))
-If set, saves an XX_SM(ASCII) representation of the current screen image in
-the file XX_FB(/tmp/x3scr.)`'XX_FI(process_id).
-A pop-up allows the file name to be changed; the default directory name can be
-changed with the "x3270.traceDir" resource.
-The pop-up also has buttons to choose between saving just the current image,
-or continuously saving it as it is redrawn.
-XX_TP(XX_FB(Print Screen Text))
-Pipes an XX_SM(ASCII) representation of the screen contents to a command for
-printing.
-The default command is XX_FB(lpr).
-XX_TP(XX_FB(Save Screen Text in File))
-Appends a text representation of the screen contents to a file.
-The data can be saved in plain XX_SM(ASCII) or XX_SM(HTML).
+XX_TP(XX_FB(Save Screen Contents))
+Allows the contents of the screen to be saved.
+A dialog allows selection between continuous saving (a new image added each
+time the screen changes) or just a snapshot.
+It also allows switching beteen saving to a file and writing directly to the
+printer.
+If the screens are saved to a file, the dialog allows a choice between
+text, HTML or RichText output.
+By default, the file name is XX_FB(/tmp/x3scr.)`'XX_FI(process_id)XX_FB(.)`'XX_FI(type)
+in /tmp. The default directory name can be changed with the "x3270.traceDir"
+resource.
+The dialog also allows the default print command (XX_FB(lpr)) to be changed.
 XX_TP(XX_FB(Print Window Bitmap))
 Uses the XX_FB(xwd) and XX_FB(xpr) commands to print a copy of the graphical
 screen contents.

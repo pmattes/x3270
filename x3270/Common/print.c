@@ -54,7 +54,9 @@
 #include "fprint_screenc.h"
 #include "popupsc.h"
 #include "printc.h"
+#if defined(X3270_DISPLAY) /*[*/
 #include "stmenuc.h"
+#endif /*]*/
 #include "trace_dsc.h"
 #include "unicodec.h"
 #include "utf8c.h"

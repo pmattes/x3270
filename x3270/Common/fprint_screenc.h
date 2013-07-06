@@ -32,6 +32,7 @@
 
 #define FPS_EVEN_IF_EMPTY	0x1	/* print even if screen is blank */
 #define FPS_MODIFIED_ITALIC	0x2	/* print modified fields in italic */
+#define FPS_FF_SEP		0x4	/* use FFs to divide pages in text */
 
 typedef struct _fps *fps_t;
 

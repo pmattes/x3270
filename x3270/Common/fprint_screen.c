@@ -414,12 +414,17 @@ fprint_screen_body(fps_t ofps)
 		break;
 	case P_TEXT:
 		if (fps->need_separator) {
-			for (i = 0; i < COLS; i++) {
-				if (fputc('=', fps->file) < 0)
+			if (fps->opts & FPS_FF_SEP) {
+				if (fputc('\f', fps->file) < 0)
+					FAIL;
+			} else {
+			    	for (i = 0; i < COLS; i++) {
+					if (fputc('=', fps->file) < 0)
+						FAIL;
+				}
+				if (fputc('\n', fps->file) < 0)
 					FAIL;
 			}
-			if (fputc('\n', fps->file) < 0)
-				FAIL;
 		}
 		break;
 	default:

@@ -1086,7 +1086,9 @@ screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 #if !defined(_WIN32) /*[*/
 	(void) fcntl(fileno(screentracef), F_SETFD, 1);
 #endif /*]*/
-	if (fprint_screen_start(screentracef, ptype, 0, NULL,
+	if (fprint_screen_start(screentracef, ptype,
+		    (how == TSS_PRINTER)? FPS_FF_SEP: 0,
+		    NULL,
 		    &screentrace_fps) < 0) {
 		popup_an_error("Screen trace start failed.");
 		fclose(screentracef);
