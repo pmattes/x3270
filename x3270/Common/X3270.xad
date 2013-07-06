@@ -886,6 +886,7 @@ x3270.screenTracePopup*file.label:		To File
 x3270.screenTracePopup*printer.label:		To Printer
 x3270.screenTracePopup*text.label:		Text
 x3270.screenTracePopup*html.label:		HTML
+x3270.screenTracePopup*rtf.label:		RichText
 x3270.screenTracePopup*fileName.label:		File Name
 x3270.screenTracePopup*printCommand.label:	Printer Command
 #endif
