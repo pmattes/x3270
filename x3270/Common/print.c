@@ -323,6 +323,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 #if !defined(_WIN32) /*[*/
 			print_text_done(f);
 #else /*][*/
+			fclose(f);
 # if defined(S3270) /*[*/
 			/* Run WordPad to print the file, synchronusly. */
 			start_wordpad_sync("PrintText", temp_name, name);
