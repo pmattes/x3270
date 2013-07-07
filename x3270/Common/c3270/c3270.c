@@ -1386,21 +1386,35 @@ ScreenTrace_action(Widget w _is_unused, XEvent *event _is_unused,
 	name = trace_get_screentrace_name();
 	if (name != NULL) {
 		if (on) {
-			if (how == TSS_FILE)
-				action_output("Trace file is %s.", name);
-			else
-				action_output("Tracing to printer "
+			if (how == TSS_FILE) {
+				if (ia_cause == IA_COMMAND)
+					action_output("Trace file is %s.",
+						name);
+				else
+					popup_an_info("Tracing screens to "
+						"file.");
+			} else {
+				if (ia_cause == IA_COMMAND)
+					action_output("Tracing to printer "
 #if !defined(_WIN32) /*[*/
-					"with command "
+						"with command "
 #endif /*]*/
-					"\"%s\".", name);
+						"\"%s\".", name);
+				else
+					popup_an_info("Tracing screens to "
+						"printer.");
+			}
 		} else {
-			if (trace_get_screentrace_last_how() == TSS_FILE)
-				action_output("Tracing complete. "
-					"Trace file is %s.",
-					name);
-			else
-				action_output("Tracing to printer complete.");
+			if (trace_get_screentrace_last_how() == TSS_FILE) {
+				if (ia_cause == IA_COMMAND)
+					action_output("Tracing complete. "
+						"Trace file is %s.",
+						name);
+			} else {
+				if (ia_cause == IA_COMMAND)
+					action_output("Tracing to printer "
+						"complete.");
+			}
 		}
 	}
 }

@@ -1111,12 +1111,14 @@ end_screentrace(Boolean is_final _is_unused)
 	screentracef = NULL;
 
 #if defined(_WIN32) /*[*/
-	if (is_final) {
-		start_wordpad_sync("ScreenTrace", screentrace_tmpfn,
-			screentrace_name);
-	} else {
-		start_wordpad_async("ScreenTrace", screentrace_tmpfn,
-			screentrace_name);
+	if (screentrace_how == TSS_PRINTER) {
+		if (is_final) {
+			start_wordpad_sync("ScreenTrace", screentrace_tmpfn,
+				screentrace_name);
+		} else {
+			start_wordpad_async("ScreenTrace", screentrace_tmpfn,
+				screentrace_name);
+		}
 	}
 #endif /*]*/
 }
