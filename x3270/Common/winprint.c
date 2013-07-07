@@ -84,20 +84,28 @@ win_mkstemp(char **path, ptype_t ptype)
 {
 	char *s;
 	int fd;
-	static unsigned gen = 0;
+	unsigned gen = 0;
 
-	s = getenv("TEMP");
-	if (s == NULL)
-		s = getenv("TMP");
-	if (s == NULL)
-		s = "C:";
-	*path = xs_buffer("%s\\x3h%u-%u.%s", s, getpid(), gen,
-			    (ptype == P_RTF)? "rtf": "txt");
-	gen = (gen + 1) % 1000;
-	fd = open(*path, O_CREAT | O_RDWR, S_IREAD | S_IWRITE);
-	if (fd < 0) {
-	    Free(*path);
-	    *path = NULL;
+	while (gen < 1000) {
+		s = getenv("TEMP");
+		if (s == NULL)
+			s = getenv("TMP");
+		if (s == NULL)
+			s = "C:";
+		if (gen)
+			*path = xs_buffer("%s\\x3h-%u-%u.%s", s, getpid(), gen,
+					    (ptype == P_RTF)? "rtf": "txt");
+		else
+			*path = xs_buffer("%s\\x3h-%u.%s", s, getpid(),
+					    (ptype == P_RTF)? "rtf": "txt");
+		fd = open(*path, O_CREAT | O_RDWR, S_IREAD | S_IWRITE | O_EXCL);
+		if (fd < 0) {
+		    Free(*path);
+		    *path = NULL;
+		    if (errno != EEXIST)
+			    return fd;
+		}
+		gen++;
 	}
 	return fd;
 }
