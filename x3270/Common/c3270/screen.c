@@ -82,7 +82,9 @@ extern int cCOLS;
 #define cursesCOLS	COLS
 #define cursesLINES	LINES
 
-#define STATUS_PUSH_MS	5000
+#define STATUS_SCROLL_START_MS	1500
+#define STATUS_SCROLL_MS	100
+#define STATUS_PUSH_MS		5000
 
 #define CM (60*10)	/* csec per minute */
 
@@ -1596,6 +1598,7 @@ static char oia_timing[6]; /* :ss.s*/
 static char *status_msg = "X Not Connected";
 static char *saved_status_msg = NULL;
 static ioid_t saved_status_timeout = NULL_IOID;
+static ioid_t status_scroll_timeout = NULL_IOID;
 
 static void
 cancel_status_push(void)
@@ -1604,6 +1607,10 @@ cancel_status_push(void)
 	if (saved_status_timeout != NULL_IOID) {
 	    	RemoveTimeOut(saved_status_timeout);
 		saved_status_timeout = NULL_IOID;
+	}
+	if (status_scroll_timeout != NULL_IOID) {
+		RemoveTimeOut(status_scroll_timeout);
+		status_scroll_timeout = NULL_IOID;
 	}
 }
 
@@ -1627,6 +1634,19 @@ status_pop(ioid_t id _is_unused)
 	saved_status_timeout = NULL_IOID;
 }
 
+static void
+status_scroll(ioid_t id _is_unused)
+{
+	status_msg++;
+	if (strlen(status_msg) > 35)
+		status_scroll_timeout = AddTimeOut(STATUS_SCROLL_MS,
+			status_scroll);
+	else {
+		saved_status_timeout = AddTimeOut(STATUS_PUSH_MS, status_pop);
+		status_scroll_timeout = NULL_IOID;
+	}
+}
+
 void
 status_push(char *msg)
 {
@@ -1638,8 +1658,13 @@ status_push(char *msg)
 	    	saved_status_msg = status_msg;
 	}
 
-	saved_status_timeout = AddTimeOut(STATUS_PUSH_MS, status_pop);
 	status_msg = msg;
+
+	if (strlen(msg) > 35)
+		status_scroll_timeout = AddTimeOut(STATUS_SCROLL_START_MS,
+			status_scroll);
+	else
+		saved_status_timeout = AddTimeOut(STATUS_PUSH_MS, status_pop);
 }
 
 void

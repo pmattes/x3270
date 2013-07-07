@@ -1285,8 +1285,12 @@ Trace_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 		    	trace_set_trace_file(params[2]);
 		do_toggle(tg);
 	}
-	if (tracefile_name != NULL)
-		action_output("Trace file is %s", tracefile_name);
+	if (tracefile_name != NULL) {
+		if (ia_cause == IA_COMMAND)
+			action_output("Trace file is %s.", tracefile_name);
+		else
+			popup_an_info("Trace file is %s.", tracefile_name);
+	}
 }
 
 /*
@@ -1391,8 +1395,8 @@ ScreenTrace_action(Widget w _is_unused, XEvent *event _is_unused,
 					action_output("Trace file is %s.",
 						name);
 				else
-					popup_an_info("Tracing screens to "
-						"file.");
+					popup_an_info("Trace file is %s.",
+						name);
 			} else {
 				if (ia_cause == IA_COMMAND)
 					action_output("Tracing to printer "
@@ -1401,13 +1405,20 @@ ScreenTrace_action(Widget w _is_unused, XEvent *event _is_unused,
 #endif /*]*/
 						"\"%s\".", name);
 				else
-					popup_an_info("Tracing screens to "
-						"printer.");
+					popup_an_info("Tracing to printer "
+#if !defined(_WIN32) /*[*/
+						"with command "
+#endif /*]*/
+						"\"%s\".", name);
 			}
 		} else {
 			if (trace_get_screentrace_last_how() == TSS_FILE) {
 				if (ia_cause == IA_COMMAND)
 					action_output("Tracing complete. "
+						"Trace file is %s.",
+						name);
+				else
+					popup_an_info("Tracing complete. "
 						"Trace file is %s.",
 						name);
 			} else {
@@ -1443,33 +1454,30 @@ popup_an_info(const char *fmt, ...)
 {
     	va_list args;
 	static char vmsgbuf[4096];
-	char *s, *t;
-	Boolean quoted = False;
+	size_t sl;
 
+	/* Expand it. */
 	va_start(args, fmt);
 	(void) vsprintf(vmsgbuf, fmt, args);
 	va_end(args);
 
-	/* Filter out the junk. */
-	for (s = t = vmsgbuf; *s; s++) {
-		if (*s == '\n') {
-			*t = '\0';
-			break;
-		} else if (!quoted && *s == '\\') {
-			quoted = True;
-		} else {
-			*t++ = *s;
-			quoted = False;
-		}
-	}
-	*t = '\0';
+	/* Remove trailing newlines. */
+	sl = strlen(vmsgbuf);
+	while (sl && vmsgbuf[sl - 1] == '\n')
+		vmsgbuf[--sl] = '\0';
 
-	if (strlen(vmsgbuf)) {
+	/* Push it out. */
+	if (sl) {
 		if (escaped) {
 			printf("%s\n", vmsgbuf);
 			fflush(stdout);
-		} else
+		} else {
+			char *s;
+
+			while ((s = strchr(vmsgbuf, '\n')) != NULL)
+				*s = ' ';
 			status_push(vmsgbuf);
+		}
 	}
 }
 
