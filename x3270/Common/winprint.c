@@ -180,7 +180,6 @@ run_wordpad(LPVOID lpParameter)
 
 	/* Run the command and wait for it to complete. */
 	memset(&info, '\0', sizeof(info));
-	(void) ShellExecuteEx(&info);
 	info.cbSize = sizeof(info);
 	info.fMask = SEE_MASK_NOCLOSEPROCESS;
 	info.lpFile = w->wp;

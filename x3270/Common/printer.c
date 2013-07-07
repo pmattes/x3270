@@ -38,7 +38,8 @@
 #include <X11/Xaw/Dialog.h>
 #endif /*]*/
 #if defined(_WIN32) /*[*/
-#include "windows.h"
+#include <windows.h>
+#include <shellapi.h>
 #endif /*]*/
 #include <errno.h>
 #include <signal.h>
@@ -74,8 +75,9 @@
 #define PRINTER_BUF	1024
 
 /* Statics */
+#if !defined(_WIN32) /*[*/
 static int      printer_pid = -1;
-#if defined(_WIN32) /*[*/
+#else /*][*/
 static HANDLE	printer_handle = NULL;
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
@@ -138,9 +140,9 @@ printer_start(const char *lu)
 #if defined(_WIN32) /*[*/
 	char *pcp_res = CN;
 	char *printercp = CN;	/* -printercp <n> */
-	STARTUPINFO startupinfo;
-	PROCESS_INFORMATION process_information;
+	SHELLEXECUTEINFO info;
 	char *subcommand;
+	char *args;
 	char *space;
 #else /*][*/
 	int stdout_pipe[2];
@@ -154,7 +156,12 @@ printer_start(const char *lu)
 #endif /*]*/
 
 	/* Can't start two. */
-	if (printer_pid != -1) {
+#if defined(_WIN32) /*[*/
+	if (printer_handle != NULL)
+#else /*][*/
+	if (printer_pid != -1)
+#endif /*]*/
+	{
 		popup_an_error("printer is already running");
 		return;
 	}
@@ -419,9 +426,10 @@ printer_start(const char *lu)
 		buf1[1] = '\0';
 		(void) strcat(cmd_text, buf1);
 	}
-	trace_dsn("Printer command line: %s\n", cmd_text);
 
 #if !defined(_WIN32) /*[*/
+	trace_dsn("Printer command line: %s\n", cmd_text);
+
 	/* Make pipes for printer's stdout and stderr. */
 	if (pipe(stdout_pipe) < 0) {
 		popup_an_errno(errno, "pipe() failed");
@@ -486,10 +494,6 @@ printer_start(const char *lu)
 	}
 
 	/* Create the wpr3287 process. */
-	(void) memset(&startupinfo, '\0', sizeof(STARTUPINFO));
-	startupinfo.cb = sizeof(STARTUPINFO);
-	(void) memset(&process_information, '\0', sizeof(PROCESS_INFORMATION));
-
 	subcommand = NewString(cmd_text);
 	strcpy(subcommand, cmd_text);
 	space = strchr(subcommand, ' ');
@@ -506,33 +510,31 @@ printer_start(const char *lu)
 		subcommand = pc;
 
 		if (space)
-			pc = xs_buffer("\"%s\" %s", subcommand, space + 1);
+			args = NewString(space + 1);
 		else
-			pc = xs_buffer("\"%s%s\"", instdir, cmd_text);
-		Free(cmd_text);
-		cmd_text = pc;
+			args = NULL;
+	} else {
+		args = NULL;
 	}
 
-	trace_dsn("Printer command line: %s\n", cmd_text);
-	if (CreateProcess(
-	    subcommand,
-	    cmd_text,
-	    NULL,
-	    NULL,
-	    FALSE,
-	    0, /* creation flags */
-	    NULL,
-	    NULL,
-	    &startupinfo,
-	    &process_information) == 0) {
+	trace_dsn("Printer command: file %s, args %s\n",
+		subcommand, args? args: "");
+	memset(&info, '\0', sizeof(SHELLEXECUTEINFO));
+	info.cbSize = sizeof(SHELLEXECUTEINFO);
+	info.fMask = SEE_MASK_NOCLOSEPROCESS;
+	info.lpFile = subcommand;
+	info.lpParameters = args;
+	info.nShow = SW_MINIMIZE;
+	if (ShellExecuteEx(&info) == TRUE) {
+		printer_handle = info.hProcess;
+	} else {
 		popup_an_error("CreateProcess(%s) failed: %s", subcommand,
 			win32_strerror(GetLastError()));
 	}
-	printer_handle = process_information.hProcess;
-	CloseHandle(process_information.hThread);
-	printer_pid = process_information.dwProcessId;
 
 	Free(subcommand);
+	if (args)
+		Free(args);
 	
 #endif /*]*/
 
@@ -680,11 +682,10 @@ printer_check(void)
 {
 	DWORD exit_code;
 
-	if (printer_pid != -1 &&
+	if (printer_handle != NULL &&
 	    GetExitCodeProcess(printer_handle, &exit_code) != 0 &&
 	    exit_code != STILL_ACTIVE) {
 
-		printer_pid = -1;
 		CloseHandle(printer_handle);
 		printer_handle = NULL;
 
@@ -725,17 +726,18 @@ printer_stop(void)
 	printer_stderr.count = 0;
 
 	/* Kill the process. */
-	if (printer_pid != -1) {
-#if !defined(_WIN32) /*[*/
-		(void) kill(-printer_pid, SIGTERM);
-#else /*][*/
-		TerminateProcess(printer_handle, 0);
-#endif /*]*/
-		printer_pid = -1;
 #if defined(_WIN32) /*[*/
+	if (printer_handle != NULL) {
+		TerminateProcess(printer_handle, 0);
+		CloseHandle(printer_handle);
 		printer_handle = NULL;
-#endif /*]*/
 	}
+#else /*][*/
+	if (printer_pid != -1) {
+		(void) kill(-printer_pid, SIGTERM);
+		printer_pid = -1;
+	}
+#endif /*]*/
 
 	/* Tell everyone else. */
 	st_changed(ST_PRINTER, False);
@@ -825,7 +827,11 @@ printer_lu_dialog(void)
 Boolean
 printer_running(void)
 {
+#if defined(_WIN32) /*[*/
+	return printer_handle != NULL;
+#else /*][*/
 	return printer_pid != -1;
+#endif /*]*/
 }
 
 #endif /*]*/
