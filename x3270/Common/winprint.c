@@ -99,12 +99,14 @@ win_mkstemp(char **path, ptype_t ptype)
 			*path = xs_buffer("%s\\x3h-%u.%s", s, getpid(),
 					    (ptype == P_RTF)? "rtf": "txt");
 		fd = open(*path, O_CREAT | O_RDWR, S_IREAD | S_IWRITE | O_EXCL);
-		if (fd < 0) {
-		    Free(*path);
-		    *path = NULL;
-		    if (errno != EEXIST)
-			    return fd;
-		}
+		if (fd >= 0)
+		    	break;
+
+		/* Try again. */
+		Free(*path);
+		*path = NULL;
+		if (errno != EEXIST)
+			break;
 		gen++;
 	}
 	return fd;
