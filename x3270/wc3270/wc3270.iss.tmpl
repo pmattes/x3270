@@ -8,7 +8,7 @@ AppPublisher=Paul Mattes
 AppPublisherURL=http://x3270.bgp.nu
 AppSupportURL=http://x3270.bgp.nu
 AppUpdatesURL=http://x3270.bgp.nu
-AppCopyright=Copyright (C) 1989-2011 by Paul Mattes, GTRC and others
+AppCopyright=Copyright (C) 1989-2013 by Paul Mattes, GTRC and others
 WizardSmallImageFile=x3270-icon2.bmp
 DefaultDirName={pf}\wc3270
 DisableDirPage=no
@@ -25,24 +25,18 @@ MinVersion=4.0,5.0
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "insecure"; Description: "Install standard version"; GroupDescription: "Installation Type"; Flags: exclusive
-Name: "secure"; Description: "Install secure version (requires separate OpenSSL library)"; GroupDescription: "Installation Type"; Flags: exclusive unchecked
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-Source: "wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: secure
-Source: "wc3270-insecure.exe"; DestName: "wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: insecure
-Source: "..\ws3270-3.3\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: secure
-Source: "..\ws3270-3.3\ws3270-insecure.exe"; DestName: "ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: insecure
-Source: "..\wpr3287-3.3\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: secure
-Source: "..\wpr3287-3.3\wpr3287-insecure.exe"; DestName: "wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: insecure
+Source: "wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\ws3270-3.3\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\wpr3287-3.3\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "catf.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall
 Source: "ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: secure
-Source: "wc3270wiz-insecure.exe"; DestName: "wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion; Tasks: insecure
+Source: "wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "root_certs.txt"; DestDir: "{userappdata}\wc3270"; Flags: ignoreversion; Tasks: secure
+Source: "root_certs.txt"; DestDir: "{userappdata}\wc3270"; Flags: ignoreversion
 Source: "html\Bugs.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "html\Build.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "html\FAQ.html"; DestDir: "{app}\html"; Flags: ignoreversion
@@ -59,7 +53,6 @@ Source: "..\wpr3287-3.3\html\wpr3287-man.html"; DestDir: "{app}\html"; Flags: ig
 Source: "html\Wishlist.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "html\x3270if.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "README.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Dirs]
