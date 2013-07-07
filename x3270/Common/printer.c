@@ -690,7 +690,7 @@ printer_check(void)
 
 		st_changed(ST_PRINTER, False);
 
-		popup_an_error("Printer process exited with status %ld",
+		popup_an_error("Printer process exited with status 0x%lx",
 		    exit_code);
 	}
 }
