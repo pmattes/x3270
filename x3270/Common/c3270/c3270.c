@@ -467,11 +467,8 @@ main(int argc, char *argv[])
 		screen_disp(False);
 	} else {
 	    	/* Drop to the prompt. */
-		if (appres.secure) {
-			Error("Must specify hostname with secure option");
-		}
 		appres.once = False;
-		if (!appres.no_prompt) {
+		if (!appres.secure) {
 			interact();
 			screen_disp(False);
 		} else {
@@ -493,7 +490,7 @@ main(int argc, char *argv[])
 			escape_pending = False;
 			screen_suspend();
 		}
-		if (!appres.no_prompt && !CONNECTED && !appres.reconnect) {
+		if (!appres.secure && !CONNECTED && !appres.reconnect) {
 			screen_suspend();
 			(void) printf("Disconnected.\n");
 			if (appres.once)
@@ -510,7 +507,7 @@ main(int argc, char *argv[])
 			screen_resume();
 		} else if (!CONNECTED &&
 			   !appres.reconnect &&
-			   !appres.no_prompt) {
+			   cl_hostname != NULL) {
 			screen_suspend();
 			x3270_exit(0);
 		}
@@ -560,7 +557,7 @@ interact(void)
 	stop_pager();
 
 	trace_event("Interacting.\n");
-	if (appres.secure || appres.no_prompt) {
+	if (appres.secure) {
 		char s[10];
 
 		printf("[Press <Enter>] ");
@@ -1437,7 +1434,7 @@ Escape_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_
     Cardinal *num_params _is_unused)
 {
 	action_debug(Escape_action, event, params, num_params);
-	if (!appres.secure && !appres.no_prompt) {
+	if (!appres.secure) {
 	    	host_cancel_reconnect();
 		screen_suspend();
 #if 0 /* this fix is in there for something, but I don't know what */

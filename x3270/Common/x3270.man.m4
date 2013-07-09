@@ -312,7 +312,7 @@ ifelse(XX_PRODUCT,c3270,`XX_TP(XX_FB(XX_DASHED(mono)))
 Prevents XX_FB(XX_PRODUCT) from using color, ignoring any color capabilities
 reported by the terminal.
 XX_TP(XX_FB(XX_DASHED(noprompt)))
-Disables command-prompt mode.
+An alias for XX_DASHED(secure).
 ')dnl
 ifelse(XX_PRODUCT,x3270,
 XX_TP(XX_FB(XX_DASHED(once)))

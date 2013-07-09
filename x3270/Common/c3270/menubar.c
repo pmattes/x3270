@@ -898,7 +898,7 @@ menu_init(void)
 
 	file_menu = add_menu("File");
 	for (j = 0; j < FM_COUNT; j++) {
-	    	if (appres.no_prompt && j == FM_PROMPT)
+	    	if (appres.secure && j == FM_PROMPT)
 		    	continue;
 		file_menu_items[j] = add_item(file_menu, file_menu_names[j],
 			file_menu_actions[j], NULL);

@@ -685,8 +685,8 @@ static struct {
 { OptNoAutoShortcut,OPT_BOOLEAN,False,ResAutoShortcut,offset(auto_shortcut),
     CN, "Do not run in auto-shortcut mode" },
 #endif /*]*/
-{ OptNoPrompt, OPT_BOOLEAN, True,  ResNoPrompt,  offset(no_prompt),
-    CN, "Suppress interactive mode (" APPNAME "> prompt)" },
+{ OptNoPrompt, OPT_BOOLEAN, True,  ResNoPrompt,  offset(secure),
+    CN, "Alias for -secure" },
 #endif /*]*/
 { OptOnce,     OPT_BOOLEAN, True,  ResOnce,      offset(once),
     CN, "Exit as soon as the host disconnects" },
@@ -1086,7 +1086,7 @@ static struct {
 	{ ResMono,	offset(mono),		XRM_BOOLEAN },
 	{ ResMouse,	offset(mouse),		XRM_BOOLEAN },
 # endif /*]*/
-	{ ResNoPrompt,	offset(no_prompt),	XRM_BOOLEAN },
+	{ ResNoPrompt,	offset(secure),		XRM_BOOLEAN },
 #endif /*]*/
 	{ ResNumericLock, offset(numeric_lock),	XRM_BOOLEAN },
 	{ ResOerrLock,	offset(oerr_lock),	XRM_BOOLEAN },

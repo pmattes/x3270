@@ -139,7 +139,6 @@ typedef struct {
 	Boolean all_bold_on;
 	Boolean	curses_keypad;
 	Boolean cbreak_mode;
-	Boolean no_prompt;
 	Boolean default_fgbg;
 #if !defined(_WIN32) /*[*/
 	Boolean reverse_video;
