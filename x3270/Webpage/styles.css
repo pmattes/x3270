@@ -1,0 +1,99 @@
+BODY {
+	FONT-FAMILY: Verdana, Myriad Web, Syntax, sans-serif
+}
+TABLE {
+	FONT-FAMILY: Verdana, Myriad Web, Syntax, sans-serif
+}
+TD {
+	FONT-FAMILY: Verdana, Myriad Web, Syntax, sans-serif
+}
+TR {
+	FONT-FAMILY: Verdana, Myriad Web, Syntax, sans-serif
+}
+DIV {
+	FONT-FAMILY: Verdana, Myriad Web, Syntax, sans-serif
+}
+P {
+	FONT-FAMILY: Verdana, Myriad Web, Syntax, sans-serif
+}
+PRE {
+	FONT-FAMILY: Verdana, Myriad Web, Syntax, sans-serif
+}
+H1 {
+	FONT-FAMILY: Verdana, Myriad Web, Syntax, sans-serif
+}
+H2 {
+	FONT-FAMILY: Verdana, Myriad Web, Syntax, sans-serif
+}
+H3 {
+	FONT-FAMILY: Verdana, Myriad Web, Syntax, sans-serif
+}
+H4 {
+	FONT-FAMILY: Verdana, Myriad Web, Syntax, sans-serif
+}
+UL {
+	FONT-FAMILY: Verdana, Myriad Web, Syntax, sans-serif
+}
+BODY {
+	FONT-SIZE: 13px
+}
+TD {
+	FONT-SIZE: 13px
+}
+DIV {
+	FONT-SIZE: 13px
+}
+P {
+	FONT-SIZE: 13px
+}
+PRE {
+	FONT-SIZE: 13px
+}
+UL {
+	FONT-SIZE: 13px
+}
+H1 {
+	FONT-SIZE: 18px
+}
+H2 {
+	FONT-SIZE: 16px
+}
+H3 {
+	FONT-SIZE: 13px
+}
+.huge {
+	FONT-SIZE: 32px
+}
+.small {
+	FONT-SIZE: 12px
+}
+.mini {
+	FONT-SIZE: 11px
+}
+.minimini {
+	FONT-SIZE: 10px
+}
+.menu {
+	PADDING-LEFT: 30px; PADDING-TOP: 30px
+}
+.content {
+	PADDING-RIGHT: 30px; PADDING-TOP: 30px
+}
+A {
+	FONT-WEIGHT: bold; FONT-SIZE: 13px; TEXT-DECORATION: none
+}
+A:link {
+	COLOR: #036
+}
+A:visited {
+	COLOR: #339900
+}
+A:active {
+	COLOR: #036
+}
+A:hover {
+	COLOR: #036
+}
+B.bluer {
+	COLOR: #003366
+}

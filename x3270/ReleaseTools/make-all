@@ -1,0 +1,253 @@
+#!/bin/bash
+# Make everything.  Really.
+# Must be run in the top-level directory.
+# By default, builds but does not release.
+#  With -nobuild, does not build.
+#  With -release, releases.
+# By default, builds everything.
+#  Can specify individual products as arguments.
+
+# If anything fails, stop.
+set -e
+
+# Make sure 'sort' works correctly.
+export LC_ALL="C"
+
+build=1
+release=""
+
+function usage
+{
+	echo >&2 "Usage: $0 [-nobuild] [-release] [<product>...]"
+	exit 0
+}
+
+# Parse the options.
+while [ $# -gt 0 ]
+do	case "$1" in
+	-help|--help)
+		usage
+		;;
+	-nobuild|--nobuild)
+		build=""
+		shift
+		;;
+	-release|--release)
+		release=1
+		shift
+		;;
+	-*)
+		usage
+		;;
+	*)	break
+		;;
+	esac
+done
+
+# Set up the product list.
+if [ $# -gt 0 ]
+then	prods=$*
+#else	prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270 lib3270"
+else	prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270"
+    	all=1;
+fi
+
+if [[ "$prods" =~ wc3270 && \
+      "$prods" =~ ws3270 && \
+      "$prods" =~ wpr3287 ]]
+then	winrel=1;
+fi
+
+# Make sure the product directories exist.
+for i in $prods
+do	if [ ! -d "$i" ]
+	then	echo >&2 "No $i directory -- must be run from top-level dir."
+		exit 1
+	fi
+done
+
+# Put ReleaseTools in our path, so we can see zipit.
+export PATH=$PATH:$PWD/ReleaseTools
+
+# Trace whatever we do.
+#set -x
+
+# Pull in the version.
+source Common/version.txt
+
+d1=$PWD
+reldir=$d1/../../Release
+
+suite=suite3270-$version-src.tgz
+setup=wc3270-$version-setup.exe
+zip=wc3270-$version-noinstall.zip
+
+# Check for existing targets before we do any real work.
+if [ "$release" ]
+then	for prod in $prods
+	do	if [ -f $reldir/$prod-$version-src.tgz ]
+		then	echo >&2 "$prod-$version-src.tgz already exists"
+			exit 1
+		fi
+	done
+	if [ "$all" -a -f $reldir/$suite ]
+	then	echo >&2 "$suite already exists"
+		exit 1
+	fi
+	if [ "$winrel" -a -f $reldir/$setup ]
+	then	echo >&2 "$setup already exists"
+	    	exit 1
+	fi
+	if [ "$winrel" -a -f $reldir/$zip ]
+	then	echo >&2 "$zip already exists"
+	    	exit 1
+	fi
+fi
+
+# Work in a clean temporary directory
+tmpdir=/tmp/mka
+rm -rf $tmpdir
+mkdir $tmpdir
+
+# Build each of the tarballs.
+echo "===== Building tarballs."
+for prod in $prods
+do	cd $prod
+    	make -f Makefile.aux $prod-src.tgz
+	cd ..
+done
+
+echo "===== Copying tarballs."
+# Copy then into the build directory.
+for prod in $prods
+do	cp $prod/$prod-src.tgz $tmpdir/
+done
+
+echo "===== Expanding tarballs."
+# Expand them.
+cd $tmpdir
+for prod in $prods
+do	tar -xzf $prod-src.tgz
+done
+
+if [ "$all" ]
+then	echo "===== Making mega-tarball."
+	# Make a mega-tarball.
+	tar -czf $suite *-3.3/
+fi
+
+for prod in $prods
+do
+    	# Some products don't get built on Linux.
+	case "$prod" in
+	wc3270|wpr3287|ws3270)
+		islinux=""
+		;;
+	*)
+		islinux=1
+		;;
+	esac
+
+	# Build it.
+	d2=$d1/$prod
+	if [ "$build" ]
+	then	echo "===== Building $prod."
+		cd $prod-3.3
+		if [ -f configure ]
+		then	./configure
+		fi
+		case $prod in
+		    tcl3270)
+			xflags="-Wno-long-long"
+			;;
+		    x3270)
+			xflags="-Wno-deprecated-declarations"
+			;;
+		    *)
+			xflags=""
+			;;
+		esac
+		if [ "$islinux" ]
+		then	make -j4 CDEBUGFLAGS="-g -Wall -ansi -pedantic -Wsign-compare $xflags -Werror"
+		else	make CROSS=1 -j4
+		fi
+		if [ -f $d2/instlist.base ]
+		then	echo "===== Installing $prod (base)."
+			mkdir i
+			make install DESTDIR=$PWD/i
+			find i -print | tail -n +2 | sed 's/^..//' | sort >cmp.files
+			diff $d2/instlist.base cmp.files || exit 1
+			rm -rf i
+		fi
+		if [ -f $d2/instlist.man ]
+		then	echo "===== Installing $prod (man)."
+			mkdir i
+			make install.man DESTDIR=$PWD/i
+			find i -print | tail -n +2 | sed 's/^..//' | sort >cmp.files
+			diff $d2/instlist.man cmp.files || exit 1
+			rm -rf i
+		fi
+		if [ -f $d2/instlist.byprefix ]
+		then	echo "===== Installing $prod (byprefix)."
+			mkdir i
+			make install.byprefix DESTDIR=$PWD/i
+			find i -print | tail -n +2 | sed 's/^..//' | sort >cmp.files
+			diff $d2/instlist.byprefix cmp.files || exit 1
+			rm -rf i
+		fi
+		if [ -f $d2/instlist.all-xinstall ]
+		then	echo "===== Installing $prod (all-xinstall)."
+			mkdir i
+			./configure --with-all-xinstall LDFLAGS=-lstdc++
+			make install install.man DESTDIR=$PWD/i
+			find i -print | tail -n +2 | sed 's/^..//' | sort >cmp.files
+			diff $d2/instlist.all-xinstall cmp.files || exit 1
+			rm -rf i
+		fi
+
+	fi
+
+	cd $tmpdir
+
+done
+
+# Release wc3270 via Inno Setup under Wine.
+if [ "$winrel" ]
+then	echo "===== Building setup.exe."
+	cd $tmpdir/wc3270-3.3
+    	wine c:\\Program\ Files\\Inno\ Setup\ 5\\ISCC.EXE wc3270.iss
+	echo "===== Building wc3270.zip."
+	zipit -c "wc3270 $version" -o $zip wc3270.zipit
+fi
+
+cd $tmpdir
+
+# Release each product.
+if [ "$release" ]
+then	echo "===== Releasing."
+    	for prod in $prods
+    	do	tarball=$reldir/$prod-$version-src.tgz
+		echo cp -p $prod-src.tgz $tarball
+		cp -p $prod-src.tgz $tarball
+		chmod ugo-w $tarball
+	done
+
+	# Release the mega-tarball.
+	if [ "$all" ]
+	then	cp -p $suite $reldir/
+		chmod ugo-w $reldir/$suite
+	fi
+
+	# Release the setup.exe.
+	if [ "$winrel" ]
+	then	cp wc3270-3.3/$setup $reldir/
+		chmod ugo-w $reldir/$setup
+	fi
+
+	# Release the zip file.
+	if [ "$winrel" ]
+	then	cp wc3270-3.3/$zip $reldir/
+		chmod ugo-w $reldir/$zip
+	fi
+
+fi

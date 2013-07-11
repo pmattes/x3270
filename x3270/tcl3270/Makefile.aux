@@ -1,0 +1,92 @@
+# Copyright (c) 1995-2011, 2013 Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Auxiliary makefile for tcl3270
+
+TARDIR=tcl3270-3.3
+RM=rm -f
+
+all:
+	@echo "Must pick a specific make target."
+
+# Development tools.
+
+SOURCES = XtGlue.c actions.c ansi.c apl.c charset.c ctlr.c fprint_screen.c \
+	ft.c ft_cut.c ft_dft.c glue.c host.c idle.c kybd.c print.c proxy.c \
+	readres.c resolver.c resources.c rpq.c see.c sf.c tables.c tcl3270.c \
+	telnet.c toggles.c trace_ds.c unicode.c utf8.c util.c xio.c \
+	unicode_dbcs.c
+HEADERS = 3270ds.h actionsc.h ansic.h aplc.h appres.h cg.h charsetc.h \
+	childc.h ctlr.h ctlrc.h dialogc.h fprint_screenc.h ftc.h ft_cutc.h \
+	ft_cut_ds.h ft_dftc.h ft_dft_ds.h globals.h gluec.h hostc.h idlec.h \
+	keymapc.h keypadc.h kybdc.h localdefs.h macrosc.h menubarc.h \
+	objects.h popupsc.h printc.h proxy.h proxyc.h readresc.h resolverc.h \
+	resources.h savec.h screen.h screenc.h scrollc.h seec.h selectc.h \
+	sfc.h statusc.h tablesc.h arpa_telnet.h telnetc.h tn3270e.h \
+	togglesc.h trace_dsc.h unicodec.h utf8c.h utilc.h w3miscc.h xioc.h \
+	X11/keysym.h xl.h unicode_dbcsc.h
+MISC = version.txt tcl3270.man mkversion.sh install-sh \
+	Makefile.in conf.h.in README Examples/cms_cmd.tcl3270 \
+	configure config.sub config.guess configure.in mkfb.c X3270.xad \
+	LICENSE
+DEVKIT = Makefile.aux m42man m42html instlist.base \
+	instlist.man
+HTML = html/Build.html html/FAQ.html html/Intro.html html/Lineage.html \
+	html/ReleaseNotes.html html/README.html html/tcl3270-man.html \
+	html/Resources.html html/SSL.html
+FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
+
+tarlist: Makefile.aux
+	$(RM) tarlist
+	for i in $(FILES); \
+	do echo $(TARDIR)/$$i; \
+	done >$@
+
+tcl3270-src.tar: $(FILES) tarlist
+	$(RM) $(TARDIR)
+	ln -s . $(TARDIR)
+	$(RM) $@
+	tar -ch -T tarlist -f $@
+	$(RM) $(TARDIR)
+
+tcl3270-src.tgz: tcl3270-src.tar
+	gzip <tcl3270-src.tar >$@
+
+configure: configure.in
+	autoconf
+
+man: tcl3270.man html/tcl3270-man.html
+
+tcl3270.man: x3270.man.m4 ft.inc resources.inc version.txt man.m4
+	./m42man tcl3270 x3270.man.m4 >$@
+html/tcl3270-man.html: x3270.man.m4 ft.inc resources.inc version.txt html.m4
+	./m42html tcl3270 x3270.man.m4 >$@
+html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
+	./mkstand.bash "tcl3270 Release Notes" html/documentation-relnotes-body.html $@
+html/Resources.html: resource-body make-resource-doc.pl version.txt
+	./make-resource-doc.pl tcl3270 <resource-body >$@
+html/SSL.html: html/documentation-ssl-body.html mkstand.bash
+	./mkstand.bash "tcl3270 and SSL" html/documentation-ssl-body.html $@

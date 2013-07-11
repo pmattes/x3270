@@ -1,0 +1,134 @@
+#! /usr/local/bin/expect
+# TSO login script, which runs as a peer of x3270.
+# expect version
+
+# Set up login parameters
+set tcp_host ibmhost
+set dial_user VTAM
+set sna_host TSO
+set userid USERID
+set password PASSWORD
+
+# Send x3270 Enter.
+proc x3270_enter {} {
+    send "Enter()\r"
+    expect "*ok\r\n"
+}
+
+# Fetch text from the screen.
+proc x3270_ascii {coords} {
+    send "Ascii($coords)\r"
+    expect {
+	-re "data: (.*)\r\n.*\r\nok\r\n$" {
+	    return $expect_out(1,string)
+	}
+    }
+    send_user "Ascii failed.\n"
+}
+
+# Display an error message and exit.
+proc x3270_error {text} {
+    global spid
+    send "Info(\042$text\042)\r"
+    expect "*ok\r\n"
+    send "CloseScript\r"
+    expect "*ok\r\n"
+    close -i $spid
+    exit
+}
+
+#############################################################################
+# Start of main procedure.
+
+# Start x3270
+set stty_init -echo
+spawn -noecho -ignore SIGHUP x3270 -script -model 2 -color
+set spid $spawn_id
+
+# Connect to host
+set connected 0
+while {$connected == 0} {
+    send "Connect($tcp_host)\r" ; send "Wait()\r"
+    expect {
+      "U F U C($tcp_host)*" {
+	set connected 1
+      }
+      default {
+	send "Disconnect()\r"
+	expect "*ok\r\n"
+	exec sleep 3
+      }
+    }
+}
+
+# Get to a VM command screen
+x3270_enter
+
+# Wait for VM's prompt
+set enter 0
+while {$enter==0} {
+    if {"[x3270_ascii 1,0,5]" == "Enter"} {set enter 1} {sleep 2}
+}
+
+# Dial out to VTAM
+send "String(\042DIAL $dial_user\042)\r"
+expect "*ok\r\n"
+x3270_enter
+
+# No proper way I can think of to do this: let the DIAL command digest
+exec sleep 2
+
+# "DIALED TO xxx" may momentarily flash
+set dialed 0
+while {$dialed==0} {
+    if {"[x3270_ascii 8,0,80]" == "DIALED TO $dial_user"} {exec sleep 2} {set dialed 1}
+}
+
+# Make sure we are dialed to VTAM
+if {"[x3270_ascii 0,64,4]" != "VTAM"} { x3270_error "Couldn't get to VTAM" }
+
+# Get to the SNA host
+send "String(\042$sna_host $userid\042)\r"
+x3270_enter
+
+# Pass VTAM digestion message
+set digested 0
+while {$digested==0} {
+    if {"[x3270_ascii 0,21,20]" == "USS COMMAND HAS BEEN"} {exec sleep 2} {set digested 1}
+}
+
+# Now verify the "TSO/E LOGON" screen
+if {"[x3270_ascii 0,33,11]" != "TSO/E LOGON"} {
+    x3270_error "Couldn't get to TSO logon screen"
+}
+
+# Pump in the password
+send "String($password)\r"
+x3270_enter
+
+# Now look for "LOGON IN PROGRESS"
+set timeout 600
+set sl [expr "18 + [string length $userid]"]
+if {"[x3270_ascii 0,11,$sl]" != "$userid LOGON IN PROGRESS"} {
+    x3270_error "Couldn't log on"
+}
+
+# Make sure TSO is waiting for a '***' enter
+set timeout 10
+send "\r"
+expect {
+    -re ".* (.*) 0x.*\r\nok\r\n" {
+	if {$expect_out(1,string) != "5" } {
+	    x3270_error "Don't understand logon screen"
+	}
+    }
+}
+
+# Off to ISPF
+x3270_enter
+
+# We're in; exit the script and let the user interact.
+send "CloseScript\r"
+expect "*ok\r\n"
+close -i $spid
+exit

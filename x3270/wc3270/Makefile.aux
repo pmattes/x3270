@@ -1,0 +1,104 @@
+# Copyright (c) 1995-2013, Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Auxiliary makefile for wc3270
+
+TARDIR=wc3270-3.3
+RM=rm -f
+
+all:
+	@echo "Must pick a specific make target."
+
+# Development tools.
+
+SOURCES = XtGlue.c actions.c ansi.c apl.c c3270.c catf.c charset.c ctlr.c \
+	fprint_screen.c ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c \
+	idle.c keymap.c keypad.c kybd.c macros.c menubar.c print.c printer.c \
+	proxy.c readres.c relink.c resolver.c resources.c rpq.c screen.c \
+	see.c sf.c shortcut.c ssl_dll.c tables.c telnet.c toggles.c \
+	trace_ds.c unicode.c unicode_dbcs.c utf8.c util.c w3misc.c windirs.c \
+	winprint.c winvers.c xio.c
+HEADERS = 3270ds.h actionsc.h ansic.h aplc.h appres.h cg.h charsetc.h \
+	childc.h conf.h ctlr.h ctlrc.h dialogc.h fprint_screenc.h ftc.h \
+	ft_cutc.h ft_cut_ds.h ft_dftc.h ft_dft_ds.h globals.h gluec.h hostc.h \
+	icmdc.h idlec.h keymapc.h keypadc.h kybdc.h localdefs.h macrosc.h \
+	menubarc.h objects.h popupsc.h printc.h printerc.h proxy.h proxyc.h \
+	readresc.h relinkc.h resolverc.h resources.h savec.h screen.h \
+	screenc.h scrollc.h seec.h selectc.h sfc.h shlobj_missing.h \
+	shortcutc.h ssl_dll.h statusc.h tablesc.h arpa_telnet.h telnetc.h \
+	tn3270e.h togglesc.h trace_dsc.h unicodec.h unicode_dbcsc.h utf8c.h \
+	utilc.h w3miscc.h windirsc.h winprintc.h winversc.h xioc.h xl.h \
+	X11/keysym.h
+MISC = version.txt mkversion.sh mkwversion.sh LICENSE.txt \
+       install-sh X3270.xad mkfb.c Makefile wc3270.rc x3270-icon2.bmp \
+       wc3270.ico wc3270.iss ead3270.c mkshort.c wizard.c wc3270.zipit \
+       Msc/deprecated.h Msc/Makefile Msc/mkversion.c Msc/README.txt x3270if.c \
+       NO-INSTALL.txt keypad.full keypad.labels keypad.map keypad.outline \
+       keypad.callbacks mkkeypad.c root_certs.txt README-zip.txt
+HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
+       html/Keymap.html html/Lineage.html html/ReleaseNotes.html \
+       html/README.html html/Resources.html html/SSL.html html/Wishlist.html \
+       html/wc3270-man.html html/x3270if.html html/x3270-script.html
+
+FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
+
+tarlist: Makefile.aux
+	$(RM) tarlist
+	for i in $(FILES); \
+	do echo $(TARDIR)/$$i; \
+	done >$@
+
+wc3270-src.tar: $(FILES) tarlist
+	$(RM) $(TARDIR)
+	ln -s . $(TARDIR)
+	$(RM) $@
+	tar -ch -T tarlist -f $@
+	$(RM) $(TARDIR)
+
+wc3270-src.tgz: wc3270-src.tar
+	gzip <wc3270-src.tar >$@
+
+man: html/wc3270-man.html html/x3270if.html html/x3270-script.html
+
+html/wc3270-man.html: x3270.man.m4 ft.inc resources.inc hostname.inc keymaps.inc m42html html.m4 version.txt
+	@rm -f man.tmp
+	./m42html wc3270 x3270.man.m4 >man.tmp
+	mv man.tmp $@
+	@rm -f man.tmp
+html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
+	./mkstand.bash "wc3270 Release Notes" html/documentation-relnotes-body.html $@
+html/SSL.html: html/documentation-ssl-body.html mkstand.bash
+	./mkstand.bash "wc3270 and SSL" html/documentation-ssl-body.html $@
+html/x3270if.html:  x3270if.man.m4 html.m4 version.txt
+	./m42html x3270if x3270if.man.m4 >$@
+html/x3270-script.html:  x3270-script.man.m4 html.m4 version.txt
+	./m42html x3270-script x3270-script.man.m4 >$@
+
+html/Resources.html: resource-body make-resource-doc.pl version.txt
+	./make-resource-doc.pl wc3270 <resource-body >$@
+
+wc3270.iss: version.txt wc3270.iss.tmpl mkiss
+	./mkiss <wc3270.iss.tmpl >wc3270.iss

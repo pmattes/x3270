@@ -1,0 +1,357 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>x3270 Build and Install Instructions</title>
+  <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
+</head>
+<body>
+    
+<h1> x3270 Build and Install Instructions</h1>
+    
+<h2> Where Things Get Installed</h2>
+  By default, parts of x3270 are installed under two different directories.
+ 
+<p>Files which are specific to X11 (the <i>x3270</i> binary, <i>x3270</i>
+ manual pages, and fonts) are installed in the system X11 directory (typically
+ <tt>/usr/X11R6</tt> or <tt>/usr/openwin</tt>). This directory is defined 
+when your system is installed and cannot be easily changed. This is referred 
+to as <b>xdir</b> in the table below. </p>
+ 
+<p>Files which are shared with other non-X11 3270 applications (the <i>x3270if</i>&nbsp;
+ and <i>pr3287</i> binaries and man pages, and the configuration files) are 
+installed in the autoconf prefix directory, typically <tt>/usr/local</tt>.
+ The autoconf prefix directory can be changed with options to the <i>x3270</i><tt>configure</tt>
+ script. This is referred to as <b>prefix</b> in the table below. <br>
+ &nbsp;  
+<table border="1" cols="2" width="100%">
+  <tbody>
+     <tr>
+  <td><b>Files</b></td>
+   <td><b>Installed In</b></td>
+  </tr>
+   <tr>
+  <td>Binary for <i>x3270</i></td>
+   <td><b>xdir</b><tt>/bin</tt></td>
+  </tr>
+   <tr>
+  <td>Manual pages for <i>x3270</i></td>
+   <td><b>xdir</b><tt>/man</tt></td>
+  </tr>
+   <tr>
+  <td>Fonts</td>
+   <td><b>xdir</b><tt>/fonts/misc</tt></td>
+  </tr>
+   <tr>
+  <td>Binaries for <i>x3270if</i> and <i>pr3287</i></td>
+   <td><b>prefix</b><tt>/bin</tt></td>
+  </tr>
+   <tr>
+  <td>Manual pages for <i>x3720if</i> and <i>pr3287</i></td>
+   <td><b>prefix</b><tt>/man</tt></td>
+  </tr>
+   <tr>
+  <td>Configuration files (<tt>ibm_hosts</tt>, character set definitions)
+used by <i>x3270</i> and other programs</td>
+   <td><b>prefix</b><tt>/etc</tt></td>
+  </tr>
+     
+  </tbody> 
+</table>
+   </p>
+ 
+<p>If you want everything installed in your system X11 directory, use the
+ following <tt>configure</tt> command: </p>
+ 
+<blockquote>    
+  <pre><tt>configure --with-all-xinstall</tt></pre>
+  </blockquote>
+  By contrast, if you want everyting to be installed in the autoconf prefix
+ directory, use the default <tt>configure</tt> command, but use a different
+ <tt>make</tt> target:  
+<blockquote>    
+  <pre><tt>make install.byprefix</tt></pre>
+  </blockquote>
+    
+<h2> Vanilla X11R6 or X11R5</h2>
+  <i>x3270</i> is set up to build and install without modifications under
+any complete X11R6 or X11R5 implementation.  
+<p>A "complete" R6 or R5 implementation means that <i>xmkmf</i> and <i>imake</i>
+ are configured and installed on your system, and that the <tt>Xaw</tt> and 
+<tt>Xmu</tt> libraries and header files are installed. Some vendors (HP, IBM,
+SCO) consider these optional software and do not always install them.  </p>
+ 
+<p>If you are running vanilla X11R6 or X11R5, then the build procedure is 
+to ensure that your X11 <tt>bin</tt> directory is in your <tt>$PATH</tt>,
+ then: </p>
+ 
+<pre>&nbsp;&nbsp;&nbsp; ./configure&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # probe for system dependencies and create the Makefile<br>&nbsp;&nbsp;&nbsp; make depend&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # add dependency information<br>&nbsp;&nbsp;&nbsp; make&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # build x3270 and its fonts</pre>
+  <i>x3270</i> prefers that its fonts be installed in order to run. However,
+ a script is provided for testing a local copy of <i>x3270</i> in the current
+ directory:  
+<pre>&nbsp;&nbsp;&nbsp; ./dryrun&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # test x3270</pre>
+  Once you are satisfied that <i>x3270</i> is working, you can install it
+(as root) with the command:  
+<pre>&nbsp;&nbsp;&nbsp; make install<br>&nbsp;&nbsp;&nbsp; make install.man</pre>
+  Before running <i>x3270</i>, you will also need to (once):  
+<pre>&nbsp;&nbsp;&nbsp; xset fp rehash</pre>
+  That's the easy way. Here are the exceptions:  
+<h2> IBM AIX</h2>
+  AIX X11R5 does not include <i>xmkmf</i> or <i>imake</i>,
+ but it includes the source code for them. If these have not been built and 
+installed on your system (<i>e.g.</i>, if there is no such file as <tt>/usr/bin/X11/imake</tt>),
+ you must first build and install them by following the instructions in <tt>/usr/lpp/X11/Xamples/README</tt>.
+ 
+<p>Once these have been installed, you can use the standard X11R5 build procedure 
+above. </p>
+<p>The default installation of AIX may also not include the <i>bdftopcf</i> 
+utility, which may need to be installed separately as part of the
+<b>X11.fnt.util</b> package.</p>
+ 
+<h2> HP-UX A9.01, X11R5</h2>
+  HP's X11R5 distribution does not include the <tt>Xaw</tt> libraries or
+header files. As HP's X man page says,  
+<blockquote>A number of unsupported core MIT clients and miscellaneous utilities 
+are provided in /usr/contrib/bin. In addition, the entire core MIT distribution, 
+compiled for Hewlett-Packard platforms, can be obtained from HP's users group 
+INTERWORKS for a nominal fee. See the release notes for details.</blockquote>
+  What you need is the <tt>Xaw</tt> and <tt>Xmu</tt> libraries, <i>imake</i>,
+ and <i>xmkmf</i>. Then you can follow the vanilla R5 build and install instructions.
+ 
+<h2> Sun Solaris 2.x</h2>
+  Follow the instructions for Vanilla X11R6, with the following changes.
+ 
+<h3> Using Sun's Unbundled C Compiler</h3>
+  <b>Do not use</b> Sun's "BSD-compatibility" C compiler, <tt>/usr/ucb/cc</tt>.
+ This is good advice in general, and in particular, <i>x3270</i> will not
+build under it. To build <i>x3270</i> with Sun's unbundled C compiler, you
+should have <tt>/opt/SUNWspro/SC<i>x.x</i>/bin</tt> (replacing <i>x.x</i>
+with the actual version of the compiler) in your $PATH, before <tt>/usr/ucb</tt>.
+ 
+<p>You might also want to take advantage of the Sun compiler's optimization
+ features.&nbsp; This can be done with the command line: </p>
+ 
+<blockquote>    
+  <pre>make CDEBUGFLAGS=-x02</pre>
+  </blockquote>
+    
+<h3> Using gcc</h3>
+  Sun's <i>xmkmf</i> configuration puts some compiler flags in the <tt>Makefile</tt>
+ that are specific to Sun's unbundled C compiler, and you will get a number
+ of harmless, but annoying error messages when compiling with <i>gcc</i>.
+To eliminate these, use the command:  
+<pre>&nbsp;&nbsp;&nbsp; make CDEBUGFLAGS=-O CCOPTIONS="-DSYSV -DSVR4"</pre>
+    
+<h3> Running x3270</h3>
+  To run <i>x3270</i>, your <tt>LD_LIBRARY_PATH</tt> environment variable
+must include <tt>/usr/openwin/lib</tt>.  
+<h2> Mixed X Environments</h2>
+  If you are running a mixture of X environments, such as running a Sun XNews
+ server but using X11R6 libraries and header files, the supplied <tt>Imakefile</tt>
+ may not work properly, because it assumes that your server and libraries
+are of the same type. This is not an impossible situation, just a difficult
+one. It generally means that you will have to build and install the fonts
+separately, perhaps even by hand.  
+<h2> Building Fonts for X Terminals</h2>
+  The Imakefile that comes with x3270 assumes that you plan to run the x3270
+ client on the same workstation as your X server. Therefore it builds fonts
+ for that kind of X server. Compiled fonts (.snf or .pcf files) are not compatible 
+between different servers, so if you run x3270 with its display somewhere 
+else (such as on an X Terminal), you will need to compile the fonts for that 
+server. It is impossible to give comprehensive instructions here; however, 
+here is an outline for how to do it:  
+<ul>
+ Copy all of the <tt>.bdf</tt> files from the <i>x3270</i> distribution into 
+a new directory, say <tt>XXX</tt>.    
+  <p><i>cd</i> into <tt>XXX</tt>. </p>
+   
+  <p>For each <tt>.bdf</tt> file, run the server-specific version of <i>bdftosnf</i>
+ or <i>bdftopcf</i> to create a <tt>.snf</tt> or <tt>.pcf</tt> file. For
+example, for to build an NCD font on a Sun-4, the command is: </p>
+   
+  <pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /usr/local/NCD/binSun4/bdftosnf 3270.bdf &gt;3270.snf</pre>
+  Run the server-specific version of <i>mkfontdir</i>. For example:    
+  <pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /usr/local/NCD/binSun4/mkfontdir .</pre>
+  Then tell your X server to use this directory:    
+  <pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xset fp+ XXX<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xset fp rehash</pre>
+   
+</ul>
+    
+<h2> SCO Open Desktop 3</h2>
+  <i>x3270</i> requires the Athena Widgets library, which is available from
+ sosco.sco.com.  
+<h2>Building on FreeBSD</h2>
+FreeBSD's <b>iconv</b> library is installed in <tt>/usr/local</tt>, so
+the the following options must be passed to the <tt>configure</tt> script:
+  <pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;./configure LDFLAGS=-L/usr/local/lib CPPFLAGS=-I/usr/local/include</pre>
+<h2> Using an app-defaults File</h2>
+  Earlier versions of <i>x3270</i> required a separate <b>app-defaults</b>
+ file. The app-defaults file contains definitions for options, text strings,
+ fonts, colors, etc. The file allows <i>x3270</i> to be reconfigured without
+ recompiling by simply editing the file.  
+<p>Unfortunately, using an app-defaults file is a pain. The mechanism for
+ finding the file is so flexible as to be almost incomprehensible, and it
+is difficult to run the program without doing a full installation, requiring
+ root access to your system. Also, the app-defaults file generally changes
+ whenever the program changes, and making sure that <i>x3270</i> finds the
+ <b>correct</b> app-defaults file compounds the above problems. </p>
+ 
+<p>Starting with version 3.1.0.0, <i>x3270</i> no longer uses a separate
+app-defaults file. Instead, the file is compiled into <i>x3270</i> itself.
+If however, you prefer to have a separate app-defaults file, you can compile
+<i>x3270</i>  to use it. </p>
+ 
+<p>First, you must decide whether you want app-defaults for a color display
+ or a monochrome display. For a color display, the commands are: </p>
+ 
+<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ./configure --enable-app-defaults<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; make clean<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; make</pre>
+  For a monochrome display, the commands are:  
+<pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ./configure --enable-app-defaults=-UCOLOR<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; make clean<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; make</pre>
+    
+<h2> Summary of <tt>configure</tt> Options</h2>
+  The <i>x3270</i> <tt>configure</tt> script accepts the following options:
+ <br>
+ &nbsp;  
+<table border="3" cellspacing="3" cellpadding="3">
+  <tbody>
+     <tr>
+  <td><tt>--help</tt></td>
+   <td>Print a help message.</td>
+  </tr>
+   <tr>
+  <td><tt>--with-all-xinstall</tt></td>
+   <td>Install all files (even those that are common with other non-X11 3270
+ programs) in the system's X11 directory. <br>
+ This is compatible with earlier releases of <i>x3270</i>. <br>
+ It is equivalent to <tt>--prefix='$(PROJECTROOT)'</tt>.</td>
+  </tr>
+   <tr>
+  <td><tt>--prefix=<i>prefix</i></tt></td>
+   <td>Install common architecture-independent files under <i>prefix</i>
+(defaults  to <tt>/usr/local</tt>). <br>
+ When using <tt>make install</tt>, this affects only <i>pr3287</i> and the 
+configuration files. <br>
+ When using <tt>make install.byprefix</tt>, this affects all files.</td>
+  </tr>
+   <tr>
+  <td><tt>--exec-prefix=<i>eprefix</i></tt></td>
+   <td>Install common architecture-dependent files (executables) under <i>eprefix</i>
+ (defaults to same as <i>prefix</i>). <br>
+ See the note under <tt>--prefix</tt>, above.</td>
+  </tr>
+   <tr>
+  <td><tt>--bindir=<i>dir</i></tt></td>
+   <td>Install common user executables in <i>dir</i> (defaults to <i>eprefix</i><tt>/bin</tt>).
+       <br>
+ See the note under <tt>--prefix</tt>, above.</td>
+  </tr>
+   <tr>
+  <td><tt>--sysconfdir=<i>dir</i></tt></td>
+   <td>Install configuration files (<tt>ibm_hosts</tt>, character sets) in
+       <i>dir</i><tt>/x3270</tt> (defaults to <i>prefix</i><tt>/etc</tt>).
+       <br>
+ See the note under <tt>--prefix</tt>, above.</td>
+  </tr>
+   <tr>
+  <td><tt>--enable-app-defaults</tt> <br>
+       <tt>--enable-app-defaults=-UCOLOR</tt></td>
+   <td>Use a separate app-defaults file, instead of compiling one into the
+       <i>x3270</i> executable. <br>
+ With the <tt>=-UCOLOR</tt> option, builds for a monochrome display.</td>
+  </tr>
+   <tr>
+  <td><tt>--without-pr3287</tt></td>
+   <td>Don't build <i>pr3287</i>. <br>
+ Useful if you don't need printer session support, or if you want to build 
+      <i>pr3287</i> separately or with different configuration options.</td>
+  </tr>
+   <tr>
+  <td><tt>--with-fontdir=/<i>full-path</i></tt> <br>
+       <tt>--with-fontdir=<i>relative-path</i></tt></td>
+   <td>Install fonts in an alternate directory. <br>
+ If the parameter starts with "/", it specifies the full pathname of a directory.
+       <br>
+ If not, it specifies a subdirectory of the system's X11 font directory (if 
+using <tt>make install</tt>) or of the <tt>fonts</tt> subdirectory of the 
+architecture-dependent install directory (if using <tt>make install.byprefix</tt>).
+       <br>
+ The default is <tt>misc</tt>.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-ansi</tt></td>
+   <td>Leave out NVT (ANSI) support. <br>
+ Note that NVT support is required for TN3270E support.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-apl</tt></td>
+   <td>Leave out APL character support.</td>
+  </tr>
+   <tr>
+       <td valign="top"><tt>--disable-dbcs</tt><br>
+       </td>
+       <td valign="top">Leave out DBCS (Double Byte Character Set) support.<br>
+       </td>
+     </tr>
+          <tr>
+  <td><tt>--disable-ft</tt></td>
+   <td>Leave out IND$FILE file transfer support.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-keypad</tt></td>
+   <td>Leave out pop-up keypad support.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-local-process</tt></td>
+   <td>Leave out local process (connecting to "-e <i>shell_command</i>")
+support.        <br>
+ This will be automatically disabled if the local system does not support
+the       <i>forkpty</i>() library call.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-menus</tt></td>
+   <td>Leave out menu support. This is helpful for building kiosk applications
+ where the user cannot reconfigure <i>x3270</i>.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-printer</tt></td>
+   <td>Leave out printer session (<i>pr3287</i>) support.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-script<br>
+       </tt></td>
+   <td>Leave out scripting support.<br>
+       </td>
+  </tr>
+   <tr>
+       <td valign="top"><tt>--disable-ssl</tt><br>
+       </td>
+       <td valign="top">Leave out SSL/TLS (Secure Sockets Layer / Transport Layer Security) support. &nbsp;SSL/TLS 
+support requires the OpenSSL library.<br>
+       </td>
+     </tr>
+     <tr>
+       <td valign="top"><tt>--with-ssl=<i>dir</i></tt><br>
+       </td>
+       <td valign="top">Specify the directory where the OpenSSL library is 
+installed.<br>
+       </td>
+     </tr>
+     <tr>
+  <td><tt>--disable-tn3270e</tt></td>
+   <td>Leave out TN3270E support.</td>
+  </tr>
+   <tr>
+  <td><tt>--disable-trace</tt></td>
+   <td>Leave out tracing support.</td>
+  </tr>
+     
+  </tbody> 
+</table>
+    
+<p>Leaving out all of the optional features will result in a binary that's
+ about 40% smaller, and doesn't do a whole lot more than a single session
+of basic TN3270. </p>
+ <br>
+ <br>
+</body>
+</html>

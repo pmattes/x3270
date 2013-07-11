@@ -1,0 +1,5 @@
+#!/bin/bash
+
+. ./version.txt
+
+sed -e "s/%VERSION%/$version/g"
