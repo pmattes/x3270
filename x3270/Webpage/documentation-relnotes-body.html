@@ -2,7 +2,9 @@
 3.3 is the current development line for the x3270 suite.
 <h2>Changes in version 3.3.13alpha2, nn. July 2013</h2>
 <ul>
- <li>[All] Fixed a crash in the <b>Wait(<i>n</i>,seconds)</b> action.</li>
+ <li>[all except <i>x3270</i>] Fixed a parsing problem for session files and
+  <b>-xrm</b> options that resulted in doubled backslash characters.</li>
+ <li>[all] Fixed a crash in the <b>Wait(<i>n</i>,seconds)</b> action.</li>
  <li>[<i>wc3270</i>] Made sure that the wpr3287 process is stopped when the
   wc3270 window is closed.</li>
  <li>[<i>wc3270</i>] Fixed new issues created by the previous Windows 8 process

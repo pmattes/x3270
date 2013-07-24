@@ -1364,9 +1364,12 @@ parse_xrm(const char *arg, const char *where)
 				case 't':
 					*t++ = '\t';
 					break;
-				default:
-					/* Leave other backslashes intact. */
+				case '\\':
+					/* Quote the backslash. */
 					*t++ = '\\';
+					break;
+				default:
+					/* Eat the backslash. */
 					*t++ = c;
 					break;
 				}
