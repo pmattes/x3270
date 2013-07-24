@@ -428,7 +428,7 @@ printer_start(const char *lu)
 	}
 
 #if !defined(_WIN32) /*[*/
-	trace_dsn("Printer command line: %s\n", cmd_text);
+	trace_dsn("Printer command: %s\n", cmd_text);
 
 	/* Make pipes for printer's stdout and stderr. */
 	if (pipe(stdout_pipe) < 0) {
