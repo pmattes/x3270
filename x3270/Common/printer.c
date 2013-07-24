@@ -140,10 +140,12 @@ printer_start(const char *lu)
 #if defined(_WIN32) /*[*/
 	char *pcp_res = CN;
 	char *printercp = CN;	/* -printercp <n> */
-	SHELLEXECUTEINFO info;
 	char *subcommand;
 	char *args;
 	char *space;
+	char *cp_cmdline;
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
 #else /*][*/
 	int stdout_pipe[2];
 	int stderr_pipe[2];
@@ -519,19 +521,19 @@ printer_start(const char *lu)
 
 	trace_dsn("Printer command: file %s, args %s\n",
 		subcommand, args? args: "");
-	memset(&info, '\0', sizeof(SHELLEXECUTEINFO));
-	info.cbSize = sizeof(SHELLEXECUTEINFO);
-	info.fMask = SEE_MASK_NOCLOSEPROCESS;
-	info.lpFile = subcommand;
-	info.lpParameters = args;
-	info.nShow = SW_MINIMIZE;
-	if (ShellExecuteEx(&info) == TRUE) {
-		printer_handle = info.hProcess;
-	} else {
+	cp_cmdline = xs_buffer("\"%s\" %s", subcommand, args? args: "");
+	memset(&si, '\0', sizeof(si));
+	si.cb = sizeof(pi);
+	memset(&pi, '\0', sizeof(pi));
+	if (!CreateProcess(NULL, cp_cmdline, NULL, NULL, FALSE,
+		    DETACHED_PROCESS, NULL, NULL, &si, &pi)) {
 		popup_an_error("CreateProcess(%s) failed: %s", subcommand,
 			win32_strerror(GetLastError()));
+	} else {
+		printer_handle = pi.hProcess;
+		CloseHandle(pi.hThread);
 	}
-
+	Free(cp_cmdline);
 	Free(subcommand);
 	if (args)
 		Free(args);

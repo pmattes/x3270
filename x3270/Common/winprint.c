@@ -186,20 +186,24 @@ static DWORD WINAPI
 run_wordpad(LPVOID lpParameter)
 {
 	wsp_t *w = (wsp_t *)lpParameter;
-	SHELLEXECUTEINFO info;
+	char *cmdline;
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
 
 	/* Run the command and wait for it to complete. */
-	memset(&info, '\0', sizeof(info));
-	info.cbSize = sizeof(info);
-	info.fMask = SEE_MASK_NOCLOSEPROCESS;
-	info.lpFile = w->wp;
-	info.lpParameters = w->args;
-	info.nShow = SW_MINIMIZE;
-	(void) ShellExecuteEx(&info);
-	if (info.hProcess) {
-		WaitForSingleObject(info.hProcess, INFINITE);
-		CloseHandle(info.hProcess);
+	cmdline = xs_buffer("\"%s\" %s", w->wp, w->args);
+	memset(&si, '\0', sizeof(si));
+	si.cb = sizeof(si);
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	si.wShowWindow = SW_HIDE;
+	memset(&pi, '\0', sizeof(pi));
+	if (CreateProcess(NULL, cmdline, NULL, NULL, FALSE, DETACHED_PROCESS,
+		    NULL, NULL, &si, &pi)) {
+		WaitForSingleObject(pi.hProcess, INFINITE);
+		CloseHandle(pi.hProcess);
+		CloseHandle(pi.hThread);
 	}
+	Free(cmdline);
 
 	/* Unlink the temporary file. */
 	(void) unlink(w->filename);
@@ -237,6 +241,8 @@ start_wordpad_sync(char *action_name, char *filename, char *printer)
 {
 	char *wp;
 	char *cmd;
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
 
 	/* Find WordPad. */
 	wp = find_wordpad();
@@ -247,16 +253,28 @@ start_wordpad_sync(char *action_name, char *filename, char *printer)
 
 	/* Construct the command line. */
 	if (printer != NULL && printer[0])
-		cmd = xs_buffer("start \"\" /wait /min \"%s\" /pt \"%s\" "
-			"\"%s\"",
+		cmd = xs_buffer("\"%s\" /pt \"%s\" \"%s\"",
 			wp, filename, printer);
 	else
-		cmd = xs_buffer("start \"\" /wait /min \"%s\" /p \"%s\"",
+		cmd = xs_buffer("\"%s\" /p \"%s\"",
 			wp, filename);
 	trace_event("%s command: %s\n", action_name, cmd);
 
-	/* Run the command. */
-	system(cmd);
+	/* Run the command and wait for it to complete. */
+	memset(&si, '\0', sizeof(si));
+	si.cb = sizeof(si);
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	si.wShowWindow = SW_HIDE;
+	memset(&pi, '\0', sizeof(pi));
+	if (!CreateProcess(NULL, cmd, NULL, NULL, FALSE, DETACHED_PROCESS,
+		    NULL, NULL, &si, &pi)) {
+		popup_an_error("%s: WORDPAD start failure: %s",
+			action_name, win32_strerror(GetLastError()));
+	} else {
+		WaitForSingleObject(pi.hProcess, INFINITE);
+		CloseHandle(pi.hProcess);
+		CloseHandle(pi.hThread);
+	}
 	Free(cmd);
 }
 
