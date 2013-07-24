@@ -140,9 +140,6 @@ printer_start(const char *lu)
 #if defined(_WIN32) /*[*/
 	char *pcp_res = CN;
 	char *printercp = CN;	/* -printercp <n> */
-	char *subcommand;
-	char *args;
-	char *space;
 	char *cp_cmdline;
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
@@ -151,6 +148,7 @@ printer_start(const char *lu)
 	int stderr_pipe[2];
 #endif /*]*/
 	char *printer_opts;
+	Boolean success = True;
 
 #if defined(X3270_DISPLAY) /*[*/
 	/* Make sure the popups are initted. */
@@ -483,6 +481,7 @@ printer_start(const char *lu)
 		(void) close(stdout_pipe[1]);
 		(void) close(stderr_pipe[0]);
 		(void) close(stderr_pipe[1]);
+		success = False;
 		break;
 	}
 #else /*][*/
@@ -496,48 +495,25 @@ printer_start(const char *lu)
 	}
 
 	/* Create the wpr3287 process. */
-	subcommand = NewString(cmd_text);
-	strcpy(subcommand, cmd_text);
-	space = strchr(subcommand, ' ');
-	if (space) {
-		*space = '\0';
-	}
+	if (!strncasecmp(cmd_text, "wpr3287.exe", 11))
+		cp_cmdline = xs_buffer("%s%s", instdir, cmd_text);
+	else
+		cp_cmdline = NewString(cmd_text);
 
-	if (!strcasecmp(subcommand, "wpr3287.exe") || 
-	    !strcasecmp(subcommand, "wpr3287")) {
-	    	char *pc;
-
-	    	pc = xs_buffer("%s%s", instdir, subcommand);
-		Free(subcommand);
-		subcommand = pc;
-
-		if (space)
-			args = NewString(space + 1);
-		else
-			args = NULL;
-	} else {
-		args = NULL;
-	}
-
-	trace_dsn("Printer command: file %s, args %s\n",
-		subcommand, args? args: "");
-	cp_cmdline = xs_buffer("\"%s\" %s", subcommand, args? args: "");
+	trace_dsn("Printer command: %s\n", cp_cmdline);
 	memset(&si, '\0', sizeof(si));
 	si.cb = sizeof(pi);
 	memset(&pi, '\0', sizeof(pi));
 	if (!CreateProcess(NULL, cp_cmdline, NULL, NULL, FALSE,
 		    DETACHED_PROCESS, NULL, NULL, &si, &pi)) {
-		popup_an_error("CreateProcess(%s) failed: %s", subcommand,
+		popup_an_error("CreateProcess() for printer session failed: %s",
 			win32_strerror(GetLastError()));
+		success = False;
 	} else {
 		printer_handle = pi.hProcess;
 		CloseHandle(pi.hThread);
 	}
 	Free(cp_cmdline);
-	Free(subcommand);
-	if (args)
-		Free(args);
-	
 #endif /*]*/
 
 	Free(cmd_text);
@@ -549,7 +525,8 @@ printer_start(const char *lu)
 #endif /*]*/
 
 	/* Tell everyone else. */
-	st_changed(ST_PRINTER, True);
+	if (success)
+		st_changed(ST_PRINTER, True);
 }
 
 #if !defined(_WIN32) /*[*/
