@@ -40,14 +40,15 @@ endif
 
 # Set command paths based on whether compiling natively on Cygwin, or
 # cross-compiling on Linux.
-ifeq ($(CROSS),1)
-CC = i586-mingw32msvc-gcc
-WINDRES = i586-mingw32msvc-windres
-NO_CYGWIN =
-else
+OS = $(shell uname -o)
+ifeq ($(OS),Cygwin)
 CC = gcc
 WINDRES = windres
 NO_CYGWIN = -mno-cygwin
+else
+CC = i586-mingw32msvc-gcc
+WINDRES = i586-mingw32msvc-windres
+NO_CYGWIN =
 endif
 
 XCPPFLAGS = -D_WIN32 -DPR3287 -DWPR3287 -DX3270_DBCS=1 -D_WIN32_WINNT=0x500 -D_WIN32_IE=0x0500 -DWINVER=0x500
