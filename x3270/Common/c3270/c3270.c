@@ -339,7 +339,10 @@ int
 main(int argc, char *argv[])
 {
 	const char	*cl_hostname = CN;
-#if defined(_WIN32) /*[*/
+#if !defined(_WIN32) /*[*/
+	pid_t		 pid;
+	int		 status;
+#else /*][*/
 	char		*delenv;
 #endif /*]*/
 
@@ -513,8 +516,10 @@ main(int argc, char *argv[])
 		}
 
 #if !defined(_WIN32) /*[*/
-		if (children && waitpid(0, (int *)0, WNOHANG) > 0)
+		if (children && (pid = waitpid(-1, &status, WNOHANG)) > 0) {
+			printer_check(pid, status);
 			--children;
+		}
 #else /*][*/
 		printer_check();
 #endif /*]*/

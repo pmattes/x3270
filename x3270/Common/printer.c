@@ -41,6 +41,9 @@
 #include <windows.h>
 #include <shellapi.h>
 #endif /*]*/
+#if !defined(_WIN32) /*[*/
+#include <sys/wait.h>
+#endif /*]*/
 #include <errno.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -80,6 +83,11 @@ static int      printer_pid = -1;
 #else /*][*/
 static HANDLE	printer_handle = NULL;
 #endif /*]*/
+static enum {
+	P_NONE,		/* no printer session */
+	P_RUNNING,	/* pr3287/wpr3287 process running */
+	P_TERMINATING	/* pr3287/wpr3287 process termination requested */
+} printer_state = P_NONE;
 #if defined(X3270_DISPLAY) /*[*/
 static Widget	lu_shell = (Widget)NULL;
 #endif /*]*/
@@ -148,6 +156,7 @@ printer_start(const char *lu)
 	int stderr_pipe[2];
 #endif /*]*/
 	char *printer_opts;
+	Boolean associated = False;
 	Boolean success = True;
 
 #if defined(X3270_DISPLAY) /*[*/
@@ -156,13 +165,8 @@ printer_start(const char *lu)
 #endif /*]*/
 
 	/* Can't start two. */
-#if defined(_WIN32) /*[*/
-	if (printer_handle != NULL)
-#else /*][*/
-	if (printer_pid != -1)
-#endif /*]*/
-	{
-		popup_an_error("printer is already running");
+	if (printer_state == P_RUNNING) {
+		popup_an_error("Printer is already running");
 		return;
 	}
 
@@ -175,6 +179,7 @@ printer_start(const char *lu)
 	/* Select the command line to use. */
 	if (lu == CN) {
 		/* Associate with the current session. */
+		associated = True;
 
 		/* Gotta be in TN3270E mode. */
 		if (!IN_TN3270E) {
@@ -192,6 +197,63 @@ printer_start(const char *lu)
 	} else {
 		/* Specific LU passed in. */
 		cmdlineName = ResLuCommandLine;
+	}
+
+	trace_dsn("Starting %s%s printer session.\n", lu,
+		associated? " associated": "");
+
+	/*
+	 * If the printer process was terminated, but has not yet exited,
+	 * wait for it to exit here. This will reduce, but not completely
+	 * eliminate, the race between the old session to the host being torn
+	 * down and the new one being set up.
+	 */
+	if (printer_state == P_TERMINATING) {
+#if !defined(_WIN32) /*[*/
+	    	int status;
+#else /*][*/
+		DWORD exit_code;
+#endif /*]*/
+
+		trace_dsn("Waiting for old printer session to exit.\n");
+#if !defined(_WIN32) /*[*/
+		if (waitpid(printer_pid, &status, 0) < 0) {
+			popup_an_errno(errno,
+				"Printer process waitpid() failed");
+			return;
+		}
+		--children;
+		printer_pid = -1;
+#else /*][*/
+		if (WaitForSingleObject(printer_handle, 2000) == WAIT_TIMEOUT) {
+			popup_an_error("Printer process failed to exit (Wait)");
+			return;
+		}
+		if (GetExitCodeProcess(printer_handle, &exit_code) == 0) {
+			popup_an_error("GetExitCodeProcess() for printer "
+				"session failed: %s",
+				win32_strerror(GetLastError()));
+			return;
+		}
+		if (exit_code == STILL_ACTIVE) {
+			popup_an_error("Printer process failed to exit (Get)");
+			return;
+		}
+
+		CloseHandle(printer_handle);
+		printer_handle = NULL;
+
+		if (exit_code != 0) {
+			popup_an_error("Printer process exited with status "
+				"0x%lx", (long)exit_code);
+		}
+
+		CloseHandle(printer_handle);
+		printer_handle = NULL;
+#endif /*]*/
+		trace_dsn("Old printer session exited.\n");
+		printer_state = P_NONE;
+		st_changed(ST_PRINTER, False);
 	}
 
 	/* Fetch the command line and command resources. */
@@ -525,8 +587,10 @@ printer_start(const char *lu)
 #endif /*]*/
 
 	/* Tell everyone else. */
-	if (success)
+	if (success) {
+		printer_state = P_RUNNING;
 		st_changed(ST_PRINTER, True);
+	}
 }
 
 #if !defined(_WIN32) /*[*/
@@ -654,12 +718,56 @@ printer_dump(struct pr3o *p, Boolean is_err, Boolean is_dead)
 }
 #endif /*]*/
 
-#if defined(_WIN32) /*[*/
-/* Check for an exited printer session. */
+/*
+ * Check for an exited printer session.
+ *
+ * On Unix, this function is supplied with a process ID and status for an
+ * exited child process. If there is a printer process running and its process
+ * ID matches, process the rest of the state change.
+ *
+ * On Windows, this function is responsible for collecting the status of an
+ * exited printer process, if any.
+ */
 void
-printer_check(void)
+printer_check(
+#if !defined(_WIN32) /*[*/
+	      pid_t pid, int status
+#else /*][*/
+	      void
+#endif /*]*/
+	                           )
 {
+#if defined(_WIN32) /*[*/
 	DWORD exit_code;
+#endif /*]*/
+
+	if (printer_state == P_NONE) {
+	    	return;
+	}
+
+#if !defined(_WIN32) /*[*/
+	if (pid != printer_pid) {
+	    	return;
+	}
+
+	/*
+	 * If we didn't stop it on purpose, decode and display the printer's
+	 * exit status.
+	 */
+	if (printer_state != P_TERMINATING) {
+		if (WIFEXITED(status)) {
+			popup_an_error("Printer process exited with status %d",
+				WEXITSTATUS(status));
+		} else if (WIFSIGNALED(status)) {
+			popup_an_error("Printer process killed by signal %d",
+				WTERMSIG(status));
+		} else {
+			popup_an_error("Printer process stopped by unknown "
+				"status %d", status);
+		}
+	}
+	printer_pid = -1;
+#else /*][*/
 
 	if (printer_handle != NULL &&
 	    GetExitCodeProcess(printer_handle, &exit_code) != 0 &&
@@ -668,18 +776,31 @@ printer_check(void)
 		CloseHandle(printer_handle);
 		printer_handle = NULL;
 
-		st_changed(ST_PRINTER, False);
-
-		popup_an_error("Printer process exited with status 0x%lx",
-		    exit_code);
+		if (printer_state != P_TERMINATING) {
+			popup_an_error("Printer process exited with status "
+				"0x%lx", (long)exit_code);
+		}
+	} else {
+		/* It is still running. */
+		return;
 	}
-}
 #endif /*]*/
+
+	/* Update and propagate the state. */
+	trace_dsn("Printer session exited.\n");
+	printer_state = P_NONE;
+	st_changed(ST_PRINTER, False);
+}
 
 /* Close the printer session. */
 void
 printer_stop(void)
 {
+	if (printer_state != P_RUNNING) {
+		return;
+	}
+	trace_dsn("Stopping printer session.\n");
+
 	/* Remove inputs. */
 	if (printer_stdout.input_id) {
 		RemoveInput(printer_stdout.input_id);
@@ -708,18 +829,14 @@ printer_stop(void)
 #if defined(_WIN32) /*[*/
 	if (printer_handle != NULL) {
 		TerminateProcess(printer_handle, 0);
-		CloseHandle(printer_handle);
-		printer_handle = NULL;
+		printer_state = P_TERMINATING;
 	}
 #else /*][*/
 	if (printer_pid != -1) {
 		(void) kill(-printer_pid, SIGTERM);
-		printer_pid = -1;
+		printer_state = P_TERMINATING;
 	}
 #endif /*]*/
-
-	/* Tell everyone else. */
-	st_changed(ST_PRINTER, False);
 }
 
 /* The emulator is exiting.  Make sure the printer session is cleaned up. */
@@ -760,14 +877,10 @@ printer_host_connect(Boolean connected _is_unused)
 			if (!strcmp(printer_lu, ".")) {
 				if (IN_TN3270E) {
 					/* Associate with TN3270E session. */
-					trace_dsn("Starting associated printer "
-						  "session.\n");
 					printer_start(CN);
 				}
 			} else {
 				/* Specific LU. */
-				trace_dsn("Starting %s printer session.\n",
-				    printer_lu);
 				printer_start(printer_lu);
 			}
 		} else if (!IN_E &&
@@ -776,7 +889,6 @@ printer_host_connect(Boolean connected _is_unused)
 			   printer_running()) {
 
 			/* Stop an automatic associated printer. */
-			trace_dsn("Stopping printer session.\n");
 			printer_stop();
 		}
 	} else if (printer_running()) {
@@ -786,7 +898,6 @@ printer_host_connect(Boolean connected _is_unused)
 		 * a print job pending when we do this, so some sort of awful
 		 * timeout may be needed.
 		 */
-		trace_dsn("Stopping printer session.\n");
 		printer_stop();
 	}
 }
@@ -806,11 +917,7 @@ printer_lu_dialog(void)
 Boolean
 printer_running(void)
 {
-#if defined(_WIN32) /*[*/
-	return printer_handle != NULL;
-#else /*][*/
-	return printer_pid != -1;
-#endif /*]*/
+	return (printer_state == P_RUNNING);
 }
 
 #endif /*]*/

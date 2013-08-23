@@ -687,6 +687,8 @@ main(int argc, char *argv[])
 	/* Process X events forever. */
 	while (1) {
 		XEvent		event;
+		pid_t		pid;
+		int		status;
 
 		while (XtAppPending(appcontext) & (XtIMXEvent | XtIMTimer)) {
 			if (XtAppPeekEvent(appcontext, &event))
@@ -697,8 +699,10 @@ main(int argc, char *argv[])
 		screen_disp(False);
 		XtAppProcessEvent(appcontext, XtIMAll);
 
-		if (children && waitpid(0, (int *)0, WNOHANG) > 0)
+		if (children && (pid = waitpid(-1, &status, WNOHANG)) > 0) {
+			printer_check(pid, status);
 			--children;
+		}
 	}
 }
 
