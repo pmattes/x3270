@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -85,6 +85,12 @@ trace_ds_s(char *s)
 		(void) fprintf(tracef, "\n");
 		dscnt = 0;
 	}
+
+	/*
+	 * Make sure the trace data is flushed, in case this process crashes or
+	 * is terminated before it can close the file.
+	 */
+	fflush(tracef);
 }
 
 void

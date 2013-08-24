@@ -41,20 +41,21 @@ endif
 
 # Set command paths and mkfb (which has to run locally) based on whether
 # compiling natively on Cygwin, or cross-compiling on Linux.
-ifeq ($(CROSS),1)
-MKFB = mkfb
-MKKEYPAD = mkkeypad
-CC = i586-mingw32msvc-gcc
-NATIVECC = gcc
-WINDRES = i586-mingw32msvc-windres
-NO_CYGWIN =
-else
+OS = $(shell uname -o)
+ifeq ($(OS),Cygwin)
 MKFB = mkfb.exe
 MKKEYPAD = mkkeypad.exe
 CC = gcc
 NATIVECC = gcc
 WINDRES = windres
 NO_CYGWIN = -mno-cygwin
+else
+MKFB = mkfb
+MKKEYPAD = mkkeypad
+CC = i586-mingw32msvc-gcc
+NATIVECC = gcc
+WINDRES = i586-mingw32msvc-windres
+NO_CYGWIN =
 endif
 
 XCPPFLAGS = -D_WIN32 -DWC3270 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWINVER=0x500

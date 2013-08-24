@@ -4576,7 +4576,8 @@ spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
 	}
 
 	if (ok) {
-		free_namelist(namelist);
+		if (namelist)
+			free_namelist(namelist);
 		return NULL;
 	} else if (namelist == NULL)
 	    	return NewString("(none)");

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,8 @@ extern void printer_lu_dialog(void);
 extern void printer_start(const char *lu);
 extern void printer_stop(void);
 extern Boolean printer_running(void);
-#if defined(_WIN32) /*[*/
+#if !defined(_WIN32) /*[*/
+extern void printer_check(pid_t pid, int status);
+#else /*][*/
 extern void printer_check(void);
 #endif /*]*/

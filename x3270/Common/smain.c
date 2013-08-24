@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2013 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -168,7 +168,7 @@ main(int argc, char *argv[])
 		(void) process_events(True);
 
 #if !defined(_WIN32) /*[*/
-		if (children && waitpid(0, (int *)0, WNOHANG) > 0)
+		if (children && waitpid(-1, (int *)0, WNOHANG) > 0)
 			--children;
 #endif /*]*/
 	}

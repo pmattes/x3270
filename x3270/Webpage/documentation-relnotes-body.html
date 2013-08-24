@@ -1,6 +1,28 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
 3.3 is the current development line for the x3270 suite.
-<h2>Changes in version 3.3.13alpha1, Nn. Month 2013</h2>
+<h2>Changes in version 3.3.13beta4, 23. August 2013</h2>
+<ul>
+ <li>[all] Corrected the start/stop of pr3287/wpr3287 printer sessions, so that
+  a new one is not started until the previous one has completely exited.</li>
+</ul>
+<h2>Changes in version 3.3.13beta3, 6. August 2013</h2>
+<ul>
+ <li>[<i>pr3287</i>, <i>wpr3287</i>] Made sure trace files get flushed for each
+  entry.</li>
+</ul>
+<h2>Changes in version 3.3.13alpha2, 30. July 2013</h2>
+<ul>
+ <li>[all] Fixed a crash when connecting to certain hosts using an SSL tunnel.
+  </li>
+ <li>[all except <i>x3270</i>] Fixed a parsing problem for session files and
+  <b>-xrm</b> options that resulted in doubled backslash characters.</li>
+ <li>[all] Fixed a crash in the <b>Wait(<i>n</i>,seconds)</b> action.</li>
+ <li>[<i>wc3270</i>] Made sure that the wpr3287 process is stopped when the
+  wc3270 window is closed.</li>
+ <li>[<i>wc3270</i>] Fixed new issues created by the previous Windows 8 process
+  creation fix.</li>
+</ul>
+<h2>Changes in version 3.3.13alpha1, 11. July 2013</h2>
 <ul>
  <li>[<i>wc3270</i>] Fixed some issues with starting Wordpad and wpr3287 on
   Windows 8.</li>

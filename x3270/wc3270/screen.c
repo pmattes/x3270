@@ -235,6 +235,10 @@ cc_handler(DWORD type)
 		}
 
 		return TRUE;
+	} else if (type == CTRL_CLOSE_EVENT) {
+		trace_event("Window closed");
+		x3270_exit(0);
+		return TRUE;
 	} else {
 		/* Let Windows have its way with it. */
 		return FALSE;

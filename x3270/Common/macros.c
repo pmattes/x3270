@@ -3241,6 +3241,7 @@ wait_timed_out(ioid_t id _is_unused)
     	if (sms->state == SS_TIME_WAIT) {
 	    	sms->success = True;
 		sms->state = SS_INCOMPLETE;
+		sms->wait_id = NULL_IOID;
 		sms_continue();
 		return;
 	}
@@ -3541,7 +3542,7 @@ Script_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 		    NULL,
 		    NULL,
 		    FALSE,
-		    0,
+		    DETACHED_PROCESS,
 		    NULL,
 		    NULL,
 		    &startupinfo,
