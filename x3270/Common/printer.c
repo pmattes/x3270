@@ -900,9 +900,11 @@ printer_stop_sync(void)
 	assert(printer_sync_id != NULL_IOID);
 	RemoveInput(printer_sync_id);
 	printer_sync_id = NULL_IOID;
+#if defined(_WIN32) /*[*/
 	assert(printer_sync_handle != NULL);
 	CloseHandle(printer_sync_handle);
 	printer_sync_handle = NULL;
+#endif /*]*/
 	SOCK_CLOSE(printer_sync);
 	printer_sync = -1;
 }
@@ -935,12 +937,16 @@ printer_stop_listening(void)
 {
 	assert(printer_ls_id != NULL_IOID);
 	assert(printer_ls != -1);
+#if defined(_WIN32) /*[*/
 	assert(printer_ls_handle != NULL);
+#endif /*]*/
 
 	RemoveInput(printer_ls_id);
 	printer_ls_id = NULL_IOID;
+#if defined(_WIN32) /*[*/
 	CloseHandle(printer_ls_handle);
 	printer_ls_handle = NULL;
+#endif /*]*/
 	SOCK_CLOSE(printer_ls);
 	printer_ls = -1;
 }
