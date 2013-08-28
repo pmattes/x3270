@@ -2255,10 +2255,13 @@ desc
 name saveLines
 applies x
 type i
-default 64
+default 4096
 switch -sl
 desc
-    The number of display lines to save for the scroll bar.
+    The number of display lines to save for the scroll bar. Note that the
+    scroll bar operates on full screens of data, so the value divided by the
+    number of rows on the screen gives you the number of screens that will be
+    saved.
 .
 
 name sbcsCgcsgid
