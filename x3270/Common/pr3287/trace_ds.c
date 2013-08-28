@@ -89,6 +89,9 @@ trace_ds_s(char *s)
 	/*
 	 * Make sure the trace data is flushed, in case this process crashes or
 	 * is terminated before it can close the file.
+	 *
+	 * On Unix, line buffering usually takes care of this, but on Windows,
+	 * line buffering doesn't work.
 	 */
 	fflush(tracef);
 }
@@ -98,32 +101,48 @@ trace_ds(const char *fmt, ...)
 {
 	va_list args;
 
-	va_start(args, fmt);
-
 	/* allocate buffer */
 	if (tdsbuf == CN)
 		tdsbuf = Malloc(4096);
 
+
 	/* print out remainder of message */
-	(void) vsprintf(tdsbuf, fmt, args);
-	trace_ds_s(tdsbuf);
+	va_start(args, fmt);
+	(void) vsnprintf(tdsbuf, 4096, fmt, args);
 	va_end(args);
+
+	trace_ds_s(tdsbuf);
 }
 
 void
 trace_dsn(const char *fmt, ...)
 {
 	va_list args;
+	size_t sl;
 
-	va_start(args, fmt);
+	if (tracef == NULL) {
+		return;
+	}
 
 	/* allocate buffer */
 	if (tdsbuf == CN)
 		tdsbuf = Malloc(4096);
 
 	/* print out remainder of message */
-	(void) vsprintf(tdsbuf, fmt, args);
-	strcat(tdsbuf, "\n");
-	trace_ds_s(tdsbuf);
+	va_start(args, fmt);
+	(void) vsnprintf(tdsbuf, 4096, fmt, args);
 	va_end(args);
+
+	sl = strlen(tdsbuf);
+	if (sl > 0) {
+		if (tdsbuf[sl - 1] == '\n') {
+			tdsbuf[sl - 1] = '\0';
+		}
+		if (dscnt) {
+			fprintf(tracef, "\n");
+			dscnt = 0;
+		}
+		fprintf(tracef, "%s\n", tdsbuf);
+		fflush(tracef);
+	}
 }

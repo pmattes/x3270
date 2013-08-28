@@ -97,6 +97,7 @@ extern FILE *tracef;
 extern int ignoreeoj;
 extern int ssl_host;
 extern unsigned long eoj_timeout;
+extern int syncsock;
 extern void pr3287_exit(int);
 
 #if defined(HAVE_LIBSSL) /*[*/
@@ -485,6 +486,7 @@ process(int s)
 		struct timeval t;
 		struct timeval *tp;
 		int nr;
+		int maxfd = s;
 
 		FD_ZERO(&rfds);
 		FD_SET(s, &rfds);
@@ -494,12 +496,29 @@ process(int s)
 			tp = &t;
 		} else
 			tp = NULL;
-		nr = select(s + 1, &rfds, NULL, NULL, tp);
-		if (nr == 0 && eoj_timeout)
+		if (syncsock >= 0) {
+			if (syncsock > s) {
+				maxfd = syncsock;
+			}
+			FD_SET(syncsock, &rfds);
+		}
+		nr = select(maxfd + 1, &rfds, NULL, NULL, tp);
+		if (nr == 0 && eoj_timeout) {
 			print_eoj();
+		}
 		if (nr > 0 && FD_ISSET(s, &rfds)) {
-			if (net_input(s) < 0)
+			if (net_input(s) < 0) {
 				return -1;
+			}
+		}
+		if (nr > 0 && syncsock >= 0 && FD_ISSET(syncsock, &rfds)) {
+			vtrace_str("Input on syncsock -- exiting.\n");
+			net_disconnect();
+#if defined(_WIN32) /*[*/
+			/* Let Windows send the TCP FIN. */
+			Sleep(500);
+#endif /*]*/
+			pr3287_exit(0);
 		}
 	}
 	return 0;
@@ -597,7 +616,7 @@ int
 net_input(int s)
 {
 	register unsigned char *cp;
-	int nr;
+	ssize_t nr;
 
 #if defined(HAVE_LIBSSL) /*[*/
 	if (ssl_con != NULL)
@@ -606,6 +625,10 @@ net_input(int s)
 #endif /*]*/
 	nr = recv(s, (char *)netrbuf, BUFSZ, 0);
 	if (nr < 0) {
+		if (socket_errno() == SE_EWOULDBLOCK) {
+			vtrace_str("EWOULDBLOCK\n");
+			return 0;
+		}
 #if defined(HAVE_LIBSSL) /*[*/
                 if (ssl_con != NULL) {
 			unsigned long e;

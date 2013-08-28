@@ -79,6 +79,8 @@
  *		keep trying to reconnect
  *	    -selfsignedok
  *	        allow self-signed host certificates
+ *          -syncport port
+ *              TCP port for login session synchronization
  *	    -trace
  *		trace data stream to a file
  *          -tracedir dir
@@ -173,6 +175,8 @@ int ssl_host = 0;
 unsigned long eoj_timeout = 0L; /* end of job timeout */
 char *trnpre = NULL;
 char *trnpost = NULL;
+int syncport = 0;
+int syncsock = -1;
 
 #if defined(HAVE_LIBSSL) /*[*/
 char *accept_hostname;
@@ -279,6 +283,7 @@ usage(void)
 #if defined(HAVE_LIBSSL) /*[*/
 "  -selfsignedok    allow self-signed host SSL certificates\n"
 #endif /*]*/
+"  -syncport port   TCP port for login session synchronization\n"
 #if defined(_WIN32) /*[*/
 "  -trace           trace data stream to <wc3270appData>/x3trc.<pid>.txt\n",
 #else /*][*/
@@ -308,7 +313,7 @@ verrmsg(const char *fmt, va_list ap)
 
 	ix = !ix;
 	(void) vsprintf(buf[ix], fmt, ap);
-	trace_ds("Error: %s\n", buf[ix]);
+	trace_dsn("Error: %s\n", buf[ix]);
 	if (!strcmp(buf[ix], buf[!ix])) {
 		if (verbose)
 			(void) fprintf(stderr, "Suppressed error '%s'\n",
@@ -391,7 +396,7 @@ static void
 fatal_signal(int sig)
 {
 	/* Flush any pending data and exit. */
-	trace_ds("Fatal signal %d\n", sig);
+	trace_dsn("Fatal signal %d\n", sig);
 	(void) print_eoj();
 	errmsg("Exiting on signal %d", sig);
 	exit(0);
@@ -403,7 +408,7 @@ static void
 flush_signal(int sig)
 {
 	/* Flush any pending data and exit. */
-	trace_ds("Flush signal %d\n", sig);
+	trace_dsn("Flush signal %d\n", sig);
 	(void) print_eoj();
 }
 #endif /*]*/
@@ -420,6 +425,12 @@ pr3287_exit(int status)
 		(void) fgets(buf, 2, stdin);
 	}
 #endif /*]*/
+
+	/* Close the synchronization socket gracefully. */
+	if (syncsock >= 0) {
+		close(syncsock);
+	}
+
 	exit(status);
 }
 
@@ -660,6 +671,14 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 #endif /*]*/
 		} else if (!strcmp(argv[i], "-V")) {
 			verbose = 1;
+		} else if (!strcmp(argv[i], "-syncport")) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for -syncport\n");
+				usage();
+			}
+			syncport = (int)strtoul(argv[i + 1], NULL, 0);
+			i++;
 		} else if (!strcmp(argv[i], "-trace")) {
 			tracing = 1;
 #if !defined(_WIN32) /*[*/
@@ -831,6 +850,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 			(void) fprintf(tracef, " %s", argv[i]);
 		}
 		(void) fprintf(tracef, "\n");
+		fflush(tracef);
 	}
 
 #if defined(HAVE_LIBSSL) /*[*/
@@ -874,6 +894,28 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 	    	proxy_type = proxy_setup(&proxy_host, &proxy_portname);
 		if (proxy_type < 0)
 			pr3287_exit(1);
+	}
+
+	/* Set up the synchronization socket. */
+	if (syncport) {
+		struct sockaddr_in sin;
+
+		memset(&sin, '\0', sizeof(sin));
+		sin.sin_family = AF_INET;
+		sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+		sin.sin_port = htons(syncport);
+
+		syncsock = socket(PF_INET, SOCK_STREAM, 0);
+		if (syncsock < 0) {
+			popup_a_sockerr("socket(syncsock)");
+			pr3287_exit(1);
+		}
+		if (connect(syncsock, (struct sockaddr *)&sin,
+			    sizeof(sin)) < 0) {
+			popup_a_sockerr("connect(syncsock)");
+			pr3287_exit(1);
+		}
+		trace_dsn("Connected to sync port %d.\n", syncport);
 	}
 
 	/*
@@ -966,6 +1008,18 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 				       printer? printer: "(none)");
 #endif /*]*/
 		}
+		trace_dsn("Connected to %s, port %u%s\n", host, p,
+			ssl_host? " via SSL": "");
+		if (assoc != NULL) {
+			trace_dsn("Associating with LU %s\n", assoc);
+		} else if (lu != NULL) {
+			trace_dsn("Connecting to LU %s\n", lu);
+		}
+#if !defined(_WIN32) /*[*/
+		trace_dsn("Command: %s\n", command);
+#else /*][*/
+		trace_dsn("Printer: %s\n", printer? printer: "(none)");
+#endif /*]*/
 
 		/* Negotiate. */
 		if (negotiate(host, &ha.sa, ha_len, s, lu, assoc) < 0) {
