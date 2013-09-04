@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2012, Paul Mattes.
+ * Copyright (c) 2006-2013, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -443,6 +443,96 @@ save_keymaps(void)
 	}
 }
 
+/*
+ * Fix up a UNC printer path in an old session file.
+ * Returns 1 if the name needed fixing, 0 otherwise.
+ */
+int
+fixup_printer(session_t *s)
+{
+	char buf[STR_SIZE];
+	int i, j;
+	char c;
+
+	if (s->printer[0] == '\\' &&
+	    s->printer[1] == '\\' &&
+	    s->printer[2] != '\\') {
+		/*
+		 * The session file was created by an earlier version of the
+		 * session wizard, and contains a UNC printer path that has
+		 * not had its backslashes expanded.  Expand them.
+		 */
+		j = 0;
+		for (i = 0;
+		     i < (STR_SIZE - 1) && (c = s->printer[i]) != '\0';
+		     i++) {
+			if (c == '\\') {
+				if (j < (STR_SIZE - 1)) {
+				    	buf[j++] = '\\';
+				}
+				if (j < (STR_SIZE - 1)) {
+				    	buf[j++] = '\\';
+				}
+			} else {
+				if (j < (STR_SIZE - 1)) {
+				    	buf[j++] = c;
+				}
+			}
+		}
+		buf[j] = '\0';
+		strncpy(s->printer, buf, STR_SIZE);
+
+		return 1;
+	} else {
+	    	return 0;
+	}
+}
+
+/*
+ * Reformat a quoted UNC path for display.
+ * Returns 1 if it was reformatted, 0 otherwise.
+ */
+int
+redisplay_printer(const char *expanded, char *condensed)
+{
+	int i;
+	int j;
+	int bsl = 0;
+	int reformatted = 0;
+
+	j = 0;
+	for (i = 0; i < STR_SIZE; i++) {
+		char c = expanded[i];
+		if (c == '\0') {
+			if (bsl) {
+				goto abort;
+			}
+			condensed[j] = c;
+			break;
+		}
+
+		if (bsl) {
+			if (c == '\\') {
+				reformatted = 1;
+				bsl = 0;
+			} else {
+				goto abort;
+			}
+		} else {
+			condensed[j++] = c;
+			if (c == '\\') {
+				bsl = 1;
+			}
+		}
+	}
+
+	return reformatted;
+
+    abort:
+	strcpy(condensed, expanded);
+	return 0;
+}
+
 void
 new_screen(session_t *s, char *title)
 {
@@ -632,6 +722,15 @@ and dash '-')\n");
 	if (f != NULL) {
 	    	editable = read_session(f, s);
 		fclose(f);
+		if (editable) {
+			if (fixup_printer(s)) {
+				printf("\n"
+"NOTE: This session file contains a UNC printer name that needs to be updated\n"
+" to be compatible with the current version of wc3270.  Even if you do not\n"
+" need to make any other changes to the session, please select the Edit and\n"
+" Update options to have this name automatically corrected.\n");
+			}
+		}
 
 		if (editable) {
 			for (;;) {
@@ -1313,7 +1412,7 @@ for the printer session.");
 	} while (rc < 0);
 
 
-	if (get_printerlu(s, 0) < 0)
+	if (strcmp(s->printerlu, ".") && get_printerlu(s, 0) < 0)
 	    	return -1;
 	return 0;
 }
@@ -1361,6 +1460,8 @@ get_printer(session_t *s)
     	int i;
 	char *ptr;
 	unsigned long u;
+	char cbuf[STR_SIZE];
+	int matching_printer = -1;
 
 	new_screen(s, "\
 wpr3287 Session -- Windows Printer Name\n\
@@ -1371,28 +1472,48 @@ printer, or specify a remote printer with a UNC path, e.g.,\n\
 '\\\\server\\printer22'.  You can specify the Windows default printer with\n\
 the name 'default'.");
 
+	(void) redisplay_printer(s->printer, cbuf);
+
 	enum_printers();
 	if (num_printers) {
-		printf("\nWindows printers (default is '*'):\n");
+		printf("\nWindows printers (system default is '*'):\n");
 		for (i = 0; i < num_printers; i++) {
 			printf(" %2d. %c %s\n", i + 1,
 				strcasecmp(default_printer,
 				    printer_info[i].pName)? ' ': '*',
 				printer_info[i].pName);
+			if (!strcasecmp(cbuf, printer_info[i].pName)) {
+				matching_printer = i;
+			}
 		}
 		printf(" %2d.   Other\n", num_printers + 1);
+		if (cbuf[0] && matching_printer < 0) {
+			matching_printer = num_printers;
+		}
 		for (;;) {
 			if (s->printer[0])
-				printf("\nEnter Windows printer (1-%d): [%s] ",
-				    num_printers + 1, s->printer);
+				printf("\nEnter Windows printer (1-%d): [%d] ",
+				    num_printers + 1, matching_printer + 1);
 			else
 				printf("\nEnter Windows printer (1-%d): [use system default] ",
 					num_printers + 1);
 			fflush(stdout);
 			if (get_input(tbuf, STR_SIZE) == NULL)
 				return -1;
-			if (!tbuf[0])
-				break;
+			if (!tbuf[0]) {
+				if (!s->printer[0] ||
+					matching_printer < num_printers) {
+					break;
+				}
+				/*
+				 * An interesting hack. If they entered
+				 * nothing, and the default is 'other',
+				 * pretend they typed in the number for
+				 * 'other'.
+				 */
+				snprintf(tbuf, sizeof(tbuf), "%d",
+					matching_printer + 1);
+			}
 			if (!strcmp(tbuf, "default")) {
 			    	s->printer[0] = '\0';
 				break;
@@ -1402,7 +1523,7 @@ the name 'default'.");
 				    u > num_printers + 1)
 				continue;
 			if (u == num_printers + 1) {
-				if (get_printer_name(s->printer, tbuf) < 0)
+				if (get_printer_name(cbuf, tbuf) < 0)
 					return -1;
 				strcpy(s->printer, tbuf);
 				break;
@@ -1411,10 +1532,16 @@ the name 'default'.");
 			break;
 		}
 	} else {
-		if (get_printer_name(s->printer, tbuf) < 0)
+		if (get_printer_name(cbuf, tbuf) < 0)
 			return -1;
 		strcpy(s->printer, tbuf);
 	}
+
+	/*
+	 * If the resulting printer name is a UNC path, double the
+	 * backslashes.
+	 */
+	(void) fixup_printer(s);
 	return 0;
 }
 
@@ -1697,6 +1824,8 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 		printf("%3d. wpr3287 Printer Session  : %s\n", MN_3287,
 			s->wpr3287? "Yes": "No");
 		if (s->wpr3287) {
+			char pbuf[STR_SIZE];
+
 			printf("%3d.  wpr3287 Mode .......... : ",
 				MN_3287_MODE);
 			if (!strcmp(s->printerlu, "."))
@@ -1706,9 +1835,10 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 				printf("%3d.  wpr3287 LU ............ : %s\n",
 					MN_3287_LU, s->printerlu);
 			}
+			(void) redisplay_printer(s->printer, pbuf);
 			printf("%3d.  wpr3287 Windows printer : %s\n",
 				MN_3287_PRINTER,
-				s->printer[0]? s->printer: "(system default)");
+				s->printer[0]? pbuf: "(system default)");
 			printf("%3d.  wpr3287 Code Page ..... : ",
 				MN_3287_CODEPAGE);
 			if (s->printercp[0])
@@ -1825,7 +1955,7 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 				}
 				break;
 			case MN_3287_LU:
-				if (s->wpr3287) {
+				if (s->wpr3287 && strcmp(s->printerlu, ".")) {
 					if (get_printerlu(s, 1) < 0)
 						return -1;
 				} else {
@@ -2187,7 +2317,7 @@ create_session_file(session_t *session, char *path)
 	fprintf(f, "! wc3270 session '%s'\n", session->session);
 
 	t = time(NULL);
-	fprintf(f, "! Created by the wc3270 %s session wizard %s",
+	fprintf(f, "! Created or modified by the wc3270 %s Session Wizard %s",
 		wversion, ctime(&t));
 
 	if (strcmp(session->host, CHOICE_NONE)) {
@@ -2294,6 +2424,15 @@ wc3270." ResConsoleColorForHostColor "NeutralWhite: 0\n");
 	fprintf(f, "!c%08lx %d\n", csum, WIZARD_VER);
 
 	fprintf(f, "!\n\
+! Note that in this file, backslash ('\\') characters are used to specify\n\
+! escape sequences, such as '\\r' for a Carriage Return character or '\\t'\n\
+! for a Tab character.  To include literal backslashes in this file, such as\n\
+! in Windows pathnames or UNC paths, they must be doubled, for example:\n\
+!\n\
+!   Desired text            Must be specified this way\n\
+!    C:\\xdir\\file            C:\\\\xdir\\\\file\n\
+!    \\\\server\\printer        \\\\\\\\server\\\\printer\n\
+!\n\
 !*Additional resource definitions can go after this line.\n");
 
 	/* Write out the user's previous extra settings. */
