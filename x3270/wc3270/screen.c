@@ -1207,6 +1207,12 @@ calc_attrs(int baddr, int fa_addr, int fa, Boolean *underlined,
 {
     	int fg, bg, gr, a;
 
+	/* Nondisplay fields are simply blank. */
+	if (FA_IS_ZERO(fa)) {
+		return get_color_pair(HOST_COLOR_NEUTRAL_BLACK,
+				      HOST_COLOR_NEUTRAL_BLACK);
+	}
+
 	/* Compute the color. */
 
 	/* Monochrome is easy, and so is color if nothing is specified. */
