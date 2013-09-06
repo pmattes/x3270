@@ -345,7 +345,7 @@ printer_start_now(const char *lu, Boolean associated)
 	Boolean success = True;
 	struct sockaddr_in printer_lsa;
 	socklen_t len;
-	char syncport[32];
+	char syncopt[64];
 
 #if defined(X3270_DISPLAY) /*[*/
 	/* Make sure the popups are initted. */
@@ -388,7 +388,8 @@ printer_start_now(const char *lu, Boolean associated)
 		SOCK_CLOSE(printer_ls);
 		return;
 	}
-	snprintf(syncport, sizeof(syncport), "%d", ntohs(printer_lsa.sin_port));
+	snprintf(syncopt, sizeof(syncopt), "%s %d",
+		OptSyncPort, ntohs(printer_lsa.sin_port));
 	if (listen(printer_ls, 5) < 0) {
 		popup_a_sockerr("listen(printer sync)");
 		SOCK_CLOSE(printer_ls);
@@ -538,7 +539,7 @@ printer_start_now(const char *lu, Boolean associated)
 	}
 	s = cmdline;
 	while ((s = strstr(s, "%S%")) != CN) {
-		cmd_len += strlen(syncport) - 3;
+		cmd_len += strlen(syncopt) - 3;
 		s += 3;
 	}
 
@@ -649,7 +650,7 @@ printer_start_now(const char *lu, Boolean associated)
 				s += 2;
 				continue;
 			} else if (!strncmp(s+1, "S%", 2)) {
-				strcat(cmd_text, syncport);
+				strcat(cmd_text, syncopt);
 				s += 2;
 				continue;
 			}
