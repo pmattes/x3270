@@ -860,45 +860,46 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 		}
 		(void) SETLINEBUF(tracef);
 		clk = time((time_t *)0);
-		vtrace("Trace started %s", ctime(&clk));
-		vtrace(" Version: %s\n %s\n", build, build_options());
+		vtrace_nts("Trace started %s", ctime(&clk));
+		vtrace_nts(" Version: %s\n %s\n", build, build_options());
 #if !defined(_WIN32) /*[*/
-		vtrace(" Locale codeset: %s\n", locale_codeset);
+		vtrace_nts(" Locale codeset: %s\n", locale_codeset);
 #else /*][*/
-		vtrace(" ANSI codepage: %d, printer codepage: %d\n", GetACP(),
-			options.printercp);
+		vtrace_nts(" ANSI codepage: %d, printer codepage: %d\n",
+			GetACP(), options.printercp);
 #endif /*]*/
-		vtrace(" Host codepage: %d", (int)(cgcsgid & 0xffff));
+		vtrace_nts(" Host codepage: %d", (int)(cgcsgid & 0xffff));
 #if defined(X3270_DBCS) /*[*/
 		if (dbcs)
-			vtrace("+%d", (int)(cgcsgid_dbcs & 0xffff));
+			vtrace_nts("+%d", (int)(cgcsgid_dbcs & 0xffff));
 #endif /*]*/
-		vtrace("\n");
-		vtrace(" Command:");
+		vtrace_nts("\n");
+		vtrace_nts(" Command:");
 		for (i = 0; i < argc; i++) {
-			vtrace(" %s", argv[i]);
+			vtrace_nts(" %s", argv[i]);
 		}
-		vtrace("\n");
+		vtrace_nts("\n");
 
 		/* Dump the translation table. */
 		if (xtable != NULL) {
 			int ebc;
 			const char *x;
 
-			vtrace("Translation table:\n");
+			vtrace_nts("Translation table:\n");
 			for (ebc = 0; ebc <= 0xff; ebc++) {
 				int nx = xtable_lookup(ebc, &x);
 
 				if (nx >= 0) {
 					int j;
 
-					vtrace(" ebcdic X'%02X' ascii", ebc);
+					vtrace_nts(" ebcdic X'%02X' ascii",
+						ebc);
 
 					for (j = 0; j < nx; j++) {
-						vtrace(" 0x%02x",
+						vtrace_nts(" 0x%02x",
 							(unsigned char)x[j]);
 					}
-					vtrace("\n");
+					vtrace_nts("\n");
 				}
 			}
 		}

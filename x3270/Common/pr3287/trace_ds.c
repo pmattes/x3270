@@ -139,16 +139,11 @@ trace_ds(const char *fmt, ...)
 }
 
 /* Trace something that isn't the host or printer data stream. */
-void
-vtrace(const char *fmt, ...)
+static void
+vatrace(int do_ts, const char *fmt, va_list args)
 {
-	va_list args;
 	size_t sl;
 	char *s;
-
-	if (tracef == NULL) {
-		return;
-	}
 
 	clear_tmode(TM_EVENT);
 
@@ -158,9 +153,7 @@ vtrace(const char *fmt, ...)
 	}
 
 	/* Print out remainder of message. */
-	va_start(args, fmt);
 	(void) vsnprintf(tdsbuf, 4096, fmt, args);
-	va_end(args);
 
 	s = tdsbuf;
 
@@ -172,6 +165,26 @@ vtrace(const char *fmt, ...)
 		while (*s == '\n') {
 			s++;
 		}
+	}
+
+	/* Start with a timestamp. */
+	if (tmode == TM_BASE && do_ts) {
+		struct timeval tv;
+		time_t t;
+		struct tm *tm;
+
+		(void) gettimeofday(&tv, NULL);
+		t = tv.tv_sec;
+		tm = localtime(&t);
+		(void) fprintf(tracef, "%d%02d%02d.%02d%02d%02d.%03d ",
+			tm->tm_year + 1900,
+			tm->tm_mon + 1,
+			tm->tm_mday,
+			tm->tm_hour,
+			tm->tm_min,
+			tm->tm_sec,
+			(int)(tv.tv_usec / 1000L));
+		fflush(tracef);
 	}
 
 	sl = strlen(s);
@@ -191,6 +204,36 @@ vtrace(const char *fmt, ...)
 			tmode = TM_EVENT;
 		}
 	}
+}
+
+/* Trace something that isn't host or printer data, with a timestamp. */
+void
+vtrace(const char *fmt, ...)
+{
+	va_list args;
+
+	if (tracef == NULL) {
+		return;
+	}
+
+	va_start(args, fmt);
+	vatrace(1, fmt, args);
+	va_end(args);
+}
+
+/* Trace something that isn't host or printer data, without a timestamp. */
+void
+vtrace_nts(const char *fmt, ...)
+{
+	va_list args;
+
+	if (tracef == NULL) {
+		return;
+	}
+
+	va_start(args, fmt);
+	vatrace(0, fmt, args);
+	va_end(args);
 }
 
 /* Trace a byte of data going to the raw print stream. */

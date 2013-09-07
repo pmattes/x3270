@@ -1630,16 +1630,16 @@ trace_netdata(char direction, unsigned const char *buf, int len)
 	if (IN_3270) {
 		tdiff = ((1.0e6 * (double)(ts.tv_sec - ds_ts.tv_sec)) +
 			(double)(ts.tv_usec - ds_ts.tv_usec)) / 1.0e6;
-		vtrace("%c +%gs\n", direction, tdiff);
+		vtrace_nts("%c +%gs\n", direction, tdiff);
 	}
 	ds_ts = ts;
 	for (offset = 0; offset < len; offset++) {
 		if (!(offset % LINEDUMP_MAX))
-			vtrace("%s%c 0x%-3x ",
+			vtrace_nts("%s%c 0x%-3x ",
 			    (offset ? "\n" : ""), direction, offset);
-		vtrace("%02x", buf[offset]);
+		vtrace_nts("%02x", buf[offset]);
 	}
-	vtrace("\n");
+	vtrace_nts("\n");
 }
 
 

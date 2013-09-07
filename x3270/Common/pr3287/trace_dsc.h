@@ -44,6 +44,7 @@ const char *see_efa_only(unsigned char efa);
 const char *see_qcode(unsigned char id);
 void trace_ds(const char *fmt, ...);
 void vtrace(const char *fmt, ...);
+void vtrace_nts(const char *fmt, ...);
 void trace_pdb(unsigned char *buf, size_t len);
 void trace_pdc(unsigned char c);
 void trace_pds(unsigned char *buf);
@@ -57,6 +58,7 @@ const char *unknown(unsigned char value);
 #define tracef 0
 #define trace_ds 0 &&
 #define vtrace 0 &&
+#define vtrace_nts 0 &&
 #define trace_pdb 0 &&
 #define trace_pdc 0 &&
 #define trace_pds 0 &&
