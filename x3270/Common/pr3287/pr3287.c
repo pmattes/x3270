@@ -46,6 +46,8 @@
  *		use the specified character set
  *          -crlf
  *		expand newlines to CR/LF (POSIX only)
+ *          -crthru
+ *              pass through CRs in unformatted 3270 mode
  *	    -dameon
  *		become a daemon after negotiating
  *          -blanklines
@@ -167,6 +169,7 @@ int printercp = 0;
 #else /*][*/
 int crlf = 0;
 #endif /*]*/
+int crthru = 0;
 int ffeoj = 0;
 int ffthru = 0;
 int ffskip = 0;
@@ -259,6 +262,7 @@ usage(void)
 #else /*][*/
 "  -crlf            expand newlines to CR/LF\n"
 #endif /*]*/
+"  -crthru          pass through CRs in unformatted 3270 mode\n"
 "  -eojtimeout <seconds>\n"
 "                   time out end of print job\n",
 "  -ffeoj           assume FF at the end of each print job\n"
@@ -616,6 +620,8 @@ main(int argc, char *argv[])
 		} else if (!strcmp(argv[i], "-crlf")) {
 			crlf = 1;
 #endif /*]*/
+		} else if (!strcmp(argv[i], "-crthru")) {
+			crthru = 1;
 		} else if (!strcmp(argv[i], "-eojtimeout")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,

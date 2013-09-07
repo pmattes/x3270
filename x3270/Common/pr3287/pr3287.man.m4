@@ -89,6 +89,15 @@ carriage-return/linefeed sequences.',
 `XX_TP(XX_FB(XX_DASHED(nocrlf)))
 Causes newline characters in the output to be left as-is, and not expanded to
 carriage-return/linefeed sequences.')
+XX_TP(XX_FB(XX_DASHED(crthru)))
+In unformatted 3270 mode, causes XX_SM(EBCDIC) CR orders to be passed to
+directly to the printer as XX_SM(ASCII) CR characters, and the output buffer to
+be flushed, instead of being specially interpreted by XX_FI(XX_PRODUCT).
+XX_IP
+By default, XX_SM(EBCDIC) CRs cause the (virtual) print head to return to
+column 0, so that subsequent text overwrites what is already in the buffer,
+and the buffer is flushed only when an XX_SM(EBCDIC) NL or EM order is
+received.
 ifelse(XX_PRODUCT,pr3287,`XX_TP(XX_FB(XX_DASHED(daemon)))
 Causes
 XX_FI(XX_PRODUCT)

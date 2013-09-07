@@ -73,6 +73,7 @@ extern int blanklines;	/* display blank lines even if empty (formatted LU3) */
 extern int emflush;	/* flush printer output when unformatted EM arrives */
 extern int ignoreeoj;	/* ignore PRINT-EOJ commands */
 extern int crlf;	/* expand newline to CR/LF */
+extern int crthru;	/* pass through CR in unformatted 3270 mode */
 extern int ffthru;	/* pass through SCS FF orders */
 extern int ffskip;	/* skip FF orders at top of page */
 extern int ffeoj;	/* assume FF at the end of each SCS page */
@@ -1547,9 +1548,11 @@ ctlr_add(unsigned char ebc, ucs4_t c, unsigned char cs, unsigned char gr)
  * This function will buffer up to MAX_LL characters of output, until it is
  * passed a '\n' or '\f' character.
  *
- * It will process '\r' characters like a printer, i.e., it will not overwrite
- * a buffered non-space character with a space character.  This is how
- * an output line can span multiple 3270 unformatted write commands.
+ * By default, it will process '\r' characters like a printer, i.e., it will
+ * not overwrite a buffered non-space character with a space character.  This
+ * is how an output line can span multiple 3270 unformatted write commands.
+ *
+ * If 'crthru' is set, '\r' characters simply trigger a buffer flush.
  */
 static int
 uoutput(char c)
@@ -1557,26 +1560,40 @@ uoutput(char c)
 	static char buf[MAX_LL];
 	static int col = 0;
 	static int maxcol = 0;
+	static Boolean last_cr = False;
 	int i;
 
 	switch (c) {
 	case '\r':
-		col = 0;
+		if (crthru) {
+			for (i = 0; i < maxcol; i++) {
+				if (stash(buf[i]) < 0)
+					return -1;
+			}
+			if (stash(c) < 0)
+			    	return -1;
+			col = maxcol = 0;
+			last_cr = True;
+		} else {
+			col = 0;
+		}
 		break;
 	case '\n':
 		for (i = 0; i < maxcol; i++) {
 			if (stash(buf[i]) < 0)
 				return -1;
 		}
-		if (crlf) {
-		    if (stash('\r') < 0)
-			    return -1;
+		if (crlf && !last_cr) {
+			if (stash('\r') < 0)
+				return -1;
 		}
 		if (stash(c) < 0)
 			return -1;
 		col = maxcol = 0;
+		last_cr = False;
 		break;
 	case '\f':
+		last_cr = False;
 		if (any_3270_printable || !ffskip) {
 			for (i = 0; i < maxcol; i++) {
 				if (stash(buf[i]) < 0)
@@ -1588,6 +1605,8 @@ uoutput(char c)
 		col = maxcol = 0;
 		break;
 	default:
+		last_cr = False;
+
 		/* Don't overwrite with spaces. */
 		if (c == ' ') {
 			if (col >= maxcol)
