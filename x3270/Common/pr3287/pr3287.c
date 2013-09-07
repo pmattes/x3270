@@ -823,26 +823,30 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 #endif /*]*/
 
 		do {
+			char dashu[32];
+
+			if (u) {
+			    	snprintf(dashu, sizeof(dashu), "-%d", u);
+			} else {
+				dashu[0] = '\0';
+			}
+
 #if defined(_WIN32) /*[*/
 			if (options.tracedir == NULL) {
 				options.tracedir = appdata;
 			}
 			sl = strlen(options.tracedir);
 			(void) snprintf(tracefile, sizeof(tracefile),
-				"%s%sx3trc.%d.txt",
+				"%s%sx3trc.%d%s.txt",
 				options.tracedir,
-				sl? ((options.tracedir[sl - 1] == '\\')? "": "\\"): "",
-				getpid());
+				sl? ((options.tracedir[sl - 1] == '\\')?
+				    "": "\\"): "",
+				getpid(), dashu);
 #else /*][*/
 			(void) snprintf(tracefile, sizeof(tracefile),
-				"%s/x3trc.%d",
-				options.tracedir, getpid());
+				"%s/x3trc.%d%s",
+				options.tracedir, getpid(), dashu);
 #endif /*]*/
-			if (u) {
-				snprintf(tracefile + strlen(tracefile),
-					sizeof(tracefile) - strlen(tracefile),
-					"-%d", u);
-			}
 			fd = open(tracefile, O_WRONLY | O_CREAT | O_EXCL, 0600);
 			if (fd < 0) {
 				if (errno != EEXIST) {
@@ -879,6 +883,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 			vtrace_nts(" %s", argv[i]);
 		}
 		vtrace_nts("\n");
+#if defined(_WIN32) /*[*/
+		vtrace_nts(" AppData: %s\n", appdata? appdata: "(null)");
+#endif /*]*/
 
 		/* Dump the translation table. */
 		if (xtable != NULL) {

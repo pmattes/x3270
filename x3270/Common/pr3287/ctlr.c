@@ -396,7 +396,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			previous = ORDER;
 			if (*cp)
 				trace_ds("'");
-			trace_ds(see_ebc(*cp));
+			trace_ds("%s", see_ebc(*cp));
 			if (*cp)
 				trace_ds("'");
 			ctlr_add(0, ebcdic_to_unicode(*cp, CS_GE, EUO_NONE),
@@ -520,13 +520,13 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				END_TEXT("ILLEGAL-ORDER ");
 				previous = ORDER;
 				ctlr_add(0, '\0', default_cs, default_gr);
-				trace_ds(see_ebc(*cp));
+				trace_ds("%s", see_ebc(*cp));
 				break;
 			}
 			if (previous != TEXT)
 				trace_ds(" '");
 			previous = TEXT;
-			trace_ds(see_ebc(*cp));
+			trace_ds("%s", see_ebc(*cp));
 			ctlr_add(*cp,
 				ebcdic_to_unicode(*cp, default_cs, EUO_NONE),
 				default_cs, default_gr);
