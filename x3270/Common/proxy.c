@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, Paul Mattes.
+ * Copyright (c) 2007-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,6 +58,10 @@
 #include "telnetc.h"
 #include "trace_dsc.h"
 #include "w3miscc.h"
+
+#if defined(PR3287) /*[*/
+#include "pr3287.h"
+#endif /*]*/
 
 #if defined(PR3287) /*[*/
 extern char *proxy_spec;
@@ -121,12 +125,12 @@ proxy_type_name(int type)
 int
 proxy_setup(char **phost, char **pport)
 {
-    	char *proxy;
+    	const char *proxy;
 	char *colon;
 	int sl;
 
 #if defined(PR3287) /*[*/
-	proxy = proxy_spec;
+	proxy = options.proxy_spec;
 #else /*][*/
 	proxy = appres.proxy;
 #endif /*]*/

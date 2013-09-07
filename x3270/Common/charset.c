@@ -81,12 +81,12 @@ unsigned long cgcsgid_dbcs = 0L;
 char *default_display_charset = "3270cg-1a,3270cg-1,iso8859-1";
 
 /* Statics. */
-static enum cs_result charset_init2(char *csname, const char *codepage,
+static enum cs_result charset_init2(const char *csname, const char *codepage,
 	const char *cgcsgid, const char *display_charsets);
 static void set_cgcsgids(const char *spec);
 static int set_cgcsgid(char *spec, unsigned long *idp);
 static void set_host_codepage(char *codepage);
-static void set_charset_name(char *csname);
+static void set_charset_name(const char *csname);
 
 static char *host_codepage = CN;
 static char *charset_name = CN;
@@ -95,7 +95,7 @@ static char *charset_name = CN;
  * Change character sets.
  */
 enum cs_result
-charset_init(char *csname)
+charset_init(const char *csname)
 {
     	enum cs_result rc;
 	char *codeset_name;
@@ -277,7 +277,7 @@ set_host_codepage(char *codepage)
 
 /* Set the global charset name. */
 static void
-set_charset_name(char *csname)
+set_charset_name(const char *csname)
 {
 	if (csname == CN) {
 		Replace(charset_name, NewString("us"));
@@ -293,7 +293,7 @@ set_charset_name(char *csname)
 
 /* Character set init, part 2. */
 static enum cs_result
-charset_init2(char *csname, const char *codepage, const char *cgcsgid,
+charset_init2(const char *csname, const char *codepage, const char *cgcsgid,
 	const char *display_charsets)
 {
 	const char *rcs = display_charsets;

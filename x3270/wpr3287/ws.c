@@ -64,7 +64,7 @@ static int pbcnt = 0;
  * This call should should only be made once.
  */
 int
-ws_start(char *printer_name)
+ws_start(const char *printer_name)
 {
     PRINTER_DEFAULTS defaults;
 
@@ -83,7 +83,7 @@ ws_start(char *printer_name)
     defaults.pDevMode = NULL;
     defaults.DesiredAccess = PRINTER_ACCESS_USE;
 
-    if (OpenPrinter(printer_name, &printer_handle, &defaults) == 0) {
+    if (OpenPrinter((char *)printer_name, &printer_handle, &defaults) == 0) {
 
 	errmsg("ws_start: OpenPrinter failed, "
 		"Win32 error %d", GetLastError());

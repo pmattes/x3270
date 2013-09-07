@@ -34,7 +34,7 @@
 extern unsigned char *obuf, *obptr;
 
 extern int negotiate(const char *host, struct sockaddr *sa, socklen_t len,
-	int s, char *lu, char *assoc);
+	int s, char *lu, const char *assoc);
 extern Boolean net_add_dummy_tn3270e(void);
 extern void net_add_eor(unsigned char *buf, int len);
 extern void net_disconnect(void);

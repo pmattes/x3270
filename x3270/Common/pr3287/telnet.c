@@ -76,6 +76,8 @@
 #endif /*]*/
 #include "tn3270e.h"
 
+#include "pr3287.h"
+
 #include "ctlrc.h"
 #include "resolverc.h"
 #include "trace_dsc.h"
@@ -95,26 +97,10 @@ typedef union {
 } sockaddr_46_t;
 
 extern FILE *tracef;
-extern int ignoreeoj;
-extern int ssl_host;
-extern unsigned long eoj_timeout;
-extern int syncsock;
-extern void pr3287_exit(int);
 
 #if defined(HAVE_LIBSSL) /*[*/
-extern char *accept_hostname;
-extern char *ca_dir;
-extern char *ca_file;
-extern char *cert_file;
-extern char *cert_file_type;
-extern char *chain_file;
-extern char *key_file;
-extern char *key_file_type;
-extern char *key_passwd;
-extern int self_signed_ok;
-extern int verify_cert;
 static Boolean accept_specified_host;
-static char *accept_dnsname;
+static const char *accept_dnsname;
 struct in_addr host_inaddr;
 static Boolean host_inaddr_valid;
 # if defined(AF_INET6) /*[*/
@@ -369,7 +355,7 @@ popup_a_sockerr(char *fmt, ...)
  */
 int
 negotiate(const char *host, struct sockaddr *sa, socklen_t len, int s,
-	char *lu, char *assoc)
+	char *lu, const char *assoc)
 {
 	/* Save the hostname. */
     	char *h = Malloc(strlen(host) + 1);
@@ -396,7 +382,7 @@ negotiate(const char *host, struct sockaddr *sa, socklen_t len, int s,
 
 	/* init ssl */
 #if defined(HAVE_LIBSSL) /*[*/
-	if (ssl_host && !secure_connection) {
+	if (options.ssl.ssl_host && !secure_connection) {
 		int rv;
 
 		if (ssl_init() < 0)
@@ -490,8 +476,8 @@ process(int s)
 
 		FD_ZERO(&rfds);
 		FD_SET(s, &rfds);
-		if (eoj_timeout) {
-			t.tv_sec = eoj_timeout;
+		if (options.eoj_timeout) {
+			t.tv_sec = options.eoj_timeout;
 			t.tv_usec = 0;
 			tp = &t;
 		} else
@@ -503,7 +489,7 @@ process(int s)
 			FD_SET(syncsock, &rfds);
 		}
 		nr = select(maxfd + 1, &rfds, NULL, NULL, tp);
-		if (nr == 0 && eoj_timeout) {
+		if (nr == 0 && options.eoj_timeout) {
 			print_eoj();
 		}
 		if (nr > 0 && FD_ISSET(s, &rfds)) {
@@ -1322,7 +1308,7 @@ process_eor(void)
 			return 0;
 		case TN3270E_DT_PRINT_EOJ:
 			rv = PDS_OKAY_NO_OUTPUT;
-			if (ignoreeoj)
+			if (options.ignoreeoj)
 				vtrace("(ignored)\n");
 			else if (print_eoj() < 0)
 				rv = PDS_FAILED;
@@ -1935,29 +1921,29 @@ net_add_eor(unsigned char *buf, int len)
 static int
 passwd_cb(char *buf, int size, int rwflag, void *userdata)
 {
-    	if (key_passwd == CN) {
+    	if (options.ssl.key_passwd == CN) {
 		errmsg("No OpenSSL private key password specified");
 		return 0;
 	}
 
-	if (!strncasecmp(key_passwd, "string:", 7)) {
+	if (!strncasecmp(options.ssl.key_passwd, "string:", 7)) {
 	    	/* Plaintext in the resource. */
-		size_t len = strlen(key_passwd + 7);
+		size_t len = strlen(options.ssl.key_passwd + 7);
 
 		if (len > (size_t)size - 1)
 		    	len = size - 1;
-		strncpy(buf, key_passwd + 7, len);
+		strncpy(buf, options.ssl.key_passwd + 7, len);
 		buf[len] = '\0';
 		return len;
-	} else if (!strncasecmp(key_passwd, "file:", 5)) {
+	} else if (!strncasecmp(options.ssl.key_passwd, "file:", 5)) {
 	    	/* In a file. */
 	    	FILE *f;
 		char *s;
 
-		f = fopen(key_passwd + 5, "r");
+		f = fopen(options.ssl.key_passwd + 5, "r");
 		if (f == NULL) {
 		    	errmsg("OpenSSL private key file '%s': %s",
-				key_passwd + 5, strerror(errno));
+				options.ssl.key_passwd + 5, strerror(errno));
 			return 0;
 		}
 		memset(buf, '\0', size);
@@ -1966,7 +1952,7 @@ passwd_cb(char *buf, int size, int rwflag, void *userdata)
 		return s? strlen(s): 0;
 	} else {
 		errmsg("Unknown OpenSSL private key syntax '%s'",
-			key_passwd);
+			options.ssl.key_passwd);
 		return 0;
 	}
 }
@@ -2019,27 +2005,30 @@ ssl_base_init(void)
 #endif /*]*/
 
 	/* Parse the -accepthostname option. */
-	if (accept_hostname) {
-		if (!strcasecmp(accept_hostname, "any") ||
-		    !strcmp(accept_hostname, "*")) {
+	if (options.ssl.accept_hostname) {
+		if (!strcasecmp(options.ssl.accept_hostname, "any") ||
+		    !strcmp(options.ssl.accept_hostname, "*")) {
 			accept_specified_host = True;
 			accept_dnsname = "*";
-		} else if (!strncasecmp(accept_hostname, "DNS:", 4) &&
-			    accept_hostname[4] != '\0') {
+		} else if (!strncasecmp(options.ssl.accept_hostname, "DNS:",
+			    4) &&
+			    options.ssl.accept_hostname[4] != '\0') {
 			accept_specified_host = True;
-			accept_dnsname = &accept_hostname[4];
-		} else if (!strncasecmp(accept_hostname, "IP:", 3)) {
+			accept_dnsname = &options.ssl.accept_hostname[4];
+		} else if (!strncasecmp(options.ssl.accept_hostname, "IP:",
+			    3)) {
 			unsigned short port;
 			sockaddr_46_t ahaddr;
 			socklen_t len;
 			char err[256];
 
-			if (resolve_host_and_port(&accept_hostname[3],
+			if (resolve_host_and_port(&options.ssl.accept_hostname[3],
 				"0", 0, &port, &ahaddr.sa, &len, err,
 				sizeof(err), NULL) < 0) {
 
 				errmsg("Invalid acceptHostname '%s': "
-					"%s", accept_hostname, err);
+					"%s", options.ssl.accept_hostname,
+					err);
 				return;
 			}
 			switch (ahaddr.sa.sa_family) {
@@ -2066,7 +2055,7 @@ ssl_base_init(void)
 		} else {
 			errmsg("Cannot parse acceptHostname '%s' "
 				"(must be 'any' or 'DNS:name' or 'IP:addr')",
-				accept_hostname);
+				options.ssl.accept_hostname);
 			return;
 		}
 	}
@@ -2083,16 +2072,16 @@ ssl_base_init(void)
 	SSL_CTX_set_default_passwd_cb(ssl_ctx, passwd_cb);
 
 	/* Pull in the CA certificate file. */
-	if (ca_file != CN || ca_dir != CN) {
+	if (options.ssl.ca_file != CN || options.ssl.ca_dir != CN) {
 		if (SSL_CTX_load_verify_locations(ssl_ctx,
-			    ca_file,
-			    ca_dir) != 1) {
+			    options.ssl.ca_file,
+			    options.ssl.ca_dir) != 1) {
 			errmsg("SSL_CTX_load_verify_locations("
 					"\"%s\", \"%s\") failed:\n%s",
-					ca_file? ca_file:
-					    "",
-					ca_dir? ca_dir:
-					    "",
+					options.ssl.ca_file?
+					    options.ssl.ca_file: "",
+					options.ssl.ca_dir?
+					    options.ssl.ca_dir: "",
 					get_ssl_error(err_buf));
 			goto fail;
 		}
@@ -2132,72 +2121,72 @@ ssl_base_init(void)
 	}
 
 	/* Pull in the client certificate file. */
-	if (chain_file != CN) {
+	if (options.ssl.chain_file != CN) {
 		if (SSL_CTX_use_certificate_chain_file(ssl_ctx,
-			    chain_file) != 1) {
+			    options.ssl.chain_file) != 1) {
 			errmsg("SSL_CTX_use_certificate_chain_file(\"%s\") failed:\n%s",
-				chain_file,
+				options.ssl.chain_file,
 				get_ssl_error(err_buf));
 			goto fail;
 		}
-	} else if (cert_file != CN) {
-		cft = parse_file_type(cert_file_type);
+	} else if (options.ssl.cert_file != CN) {
+		cft = parse_file_type(options.ssl.cert_file_type);
 		if (cft == -1) {
 			errmsg("Invalid OpenSSL certificate "
 				"file type '%s'",
-				cert_file_type);
+				options.ssl.cert_file_type);
 			goto fail;
 		}
 		if (SSL_CTX_use_certificate_file(ssl_ctx,
-			    cert_file,
+			    options.ssl.cert_file,
 			    cft) != 1) {
 			errmsg("SSL_CTX_use_certificate_file(\"%s\") failed:\n%s",
-				cert_file,
+				options.ssl.cert_file,
 				get_ssl_error(err_buf));
 			goto fail;
 		}
 	}
 
 	/* Pull in the private key file. */
-	if (key_file != CN) {
-		int kft = parse_file_type(key_file_type);
+	if (options.ssl.key_file != CN) {
+		int kft = parse_file_type(options.ssl.key_file_type);
 
 		if (kft == -1) {
 			errmsg("Invalid OpenSSL key file type "
 				"'%s'",
-				key_file_type);
+				options.ssl.key_file_type);
 			goto fail;
 		}
 		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
-			    key_file,
+			    options.ssl.key_file,
 			    kft) != 1) {
 			errmsg("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
-				key_file,
+				options.ssl.key_file,
 				get_ssl_error(err_buf));
 			goto fail;
 		}
-	} else if (chain_file != CN) {
+	} else if (options.ssl.chain_file != CN) {
 		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
-			    chain_file,
+			    options.ssl.chain_file,
 			    SSL_FILETYPE_PEM) != 1) {
 			errmsg("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
-				chain_file,
+				options.ssl.chain_file,
 				get_ssl_error(err_buf));
 			goto fail;
 		}
-	} else if (cert_file != CN) {
+	} else if (options.ssl.cert_file != CN) {
 		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
-			    cert_file,
+			    options.ssl.cert_file,
 			    cft) != 1) {
 			errmsg("SSL_CTX_use_PrivateKey_file(\"%s\") failed:\n%s",
-				cert_file,
+				options.ssl.cert_file,
 				get_ssl_error(err_buf));
 			goto fail;
 		}
 	}
 
 	/* Check the key. */
-	if (key_file != CN &&
+	if (options.ssl.key_file != CN &&
 	    SSL_CTX_check_private_key(ssl_ctx) != 1) {
 		errmsg("SSL_CTX_check_private_key failed:\n%s",
 			get_ssl_error(err_buf));
@@ -2229,9 +2218,9 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 	err = X509_STORE_CTX_get_error(ctx);
 
 	/* We might not care. */
-	if (!verify_cert) {
+	if (!options.ssl.verify_cert) {
 		why_not = "not verifying";
-	} else if (self_signed_ok &&
+	} else if (options.ssl.self_signed_ok &&
 		(err == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT ||
 		 err == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN)) {
 		why_not = "self-signed okay";
@@ -2488,7 +2477,7 @@ check_cert_name(const char *host)
 
 	cert = SSL_get_peer_certificate(ssl_con);
 	if (cert == NULL) {
-		if (verify_cert) {
+		if (options.ssl.verify_cert) {
 			errmsg("No host certificate");
 			return False;
 		} else {
@@ -2510,7 +2499,7 @@ check_cert_name(const char *host)
 #endif /*]*/
 		    )) {
 		X509_free(cert);
-		if (verify_cert) {
+		if (options.ssl.verify_cert) {
 			errmsg("Host certificate name(s) do not match "
 				"%s", host);
 			return False;

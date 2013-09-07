@@ -36,5 +36,5 @@ char *ws_default_printer(void);
 int ws_endjob(void);
 int ws_flush(void);
 int ws_putc(char c);
-int ws_start(char *printer_name);
+int ws_start(const char *printer_name);
 int ws_write(char *s, int len);
