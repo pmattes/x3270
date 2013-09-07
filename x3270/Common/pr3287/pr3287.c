@@ -205,6 +205,8 @@ const char *printer = NULL;	/* printer to use */
 static int tracing = 0;		/* are we tracing? */
 #if !defined(_WIN32) /*[*/
 static char *tracedir = "/tmp";	/* where we are tracing */
+#else /*][*/
+static char *tracedir = NULL;	/* where we are tracing */
 #endif /*]*/
 char *proxy_spec;		/* proxy specification */
 
@@ -289,9 +291,7 @@ usage(void)
 #else /*][*/
 "  -trace           trace data stream to /tmp/x3trc.<pid>\n",
 #endif /*]*/
-#if !defined(_WIN32) /*[*/
 "  -tracedir <dir>  directory to keep trace information in\n"
-#endif /*]*/
 "  -trnpre <file>   file of transparent data to send before each job\n"
 "  -trnpost <file>  file of transparent data to send after each job\n"
 "  -v               display version information and exit\n"
@@ -313,7 +313,7 @@ verrmsg(const char *fmt, va_list ap)
 
 	ix = !ix;
 	(void) vsprintf(buf[ix], fmt, ap);
-	trace_dsn("Error: %s\n", buf[ix]);
+	vtrace("Error: %s\n", buf[ix]);
 	if (!strcmp(buf[ix], buf[!ix])) {
 		if (verbose)
 			(void) fprintf(stderr, "Suppressed error '%s'\n",
@@ -396,7 +396,7 @@ static void
 fatal_signal(int sig)
 {
 	/* Flush any pending data and exit. */
-	trace_dsn("Fatal signal %d\n", sig);
+	vtrace("Fatal signal %d\n", sig);
 	(void) print_eoj();
 	errmsg("Exiting on signal %d", sig);
 	exit(0);
@@ -408,7 +408,7 @@ static void
 flush_signal(int sig)
 {
 	/* Flush any pending data and exit. */
-	trace_dsn("Flush signal %d\n", sig);
+	vtrace("Flush signal %d\n", sig);
 	(void) print_eoj();
 }
 #endif /*]*/
@@ -681,7 +681,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 			i++;
 		} else if (!strcmp(argv[i], "-trace")) {
 			tracing = 1;
-#if !defined(_WIN32) /*[*/
 		} else if (!strcmp(argv[i], "-tracedir")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
@@ -690,7 +689,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 			}
 			tracedir = argv[i + 1];
 			i++;
-#endif /*]*/
 		} else if (!strcmp(argv[i], "-trnpre")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
@@ -804,53 +802,95 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 
 	/* Try opening the trace file, if there is one. */
 	if (tracing) {
-		char tracefile[256];
+		char tracefile[4096];
 		time_t clk;
 		int i;
+		int u = 0;
+		int fd;
+#if defined(_WIN32) /*[*/
+		size_t sl;
+#endif /*]*/
 
+		do {
 #if defined(_WIN32) /*[*/
-		(void) sprintf(tracefile, "%sx3trc.%d.txt", appdata, getpid());
-#else /*][*/
-		(void) sprintf(tracefile, "%s/x3trc.%d", tracedir, getpid());
-#endif /*]*/
-		tracef = fopen(tracefile, "a");
-		if (tracef == NULL) {
-#if defined(_WIN32) /*[*/
-			(void) sprintf(tracefile, "x3trc.%d.txt", getpid());
-			tracef = fopen(tracefile, "a");
-			if (tracef == NULL) {
-#endif /*]*/
-				perror(tracefile);
-				pr3287_exit(1);
-#if defined(_WIN32) /*[*/
+			if (tracedir == NULL) {
+				tracedir = appdata;
 			}
+			sl = strlen(tracedir);
+			(void) snprintf(tracefile, sizeof(tracefile),
+				"%s%sx3trc.%d.txt",
+				tracedir,
+				sl? ((tracedir[sl - 1] == '\\')? "": "\\"): "",
+				getpid());
+#else /*][*/
+			(void) snprintf(tracefile, sizeof(tracefile),
+				"%s/x3trc.%d",
+				tracedir, getpid());
 #endif /*]*/
+			if (u) {
+				snprintf(tracefile + strlen(tracefile),
+					sizeof(tracefile) - strlen(tracefile),
+					"-%d", u);
+			}
+			fd = open(tracefile, O_WRONLY | O_CREAT | O_EXCL, 0600);
+			if (fd < 0) {
+				if (errno != EEXIST) {
+					perror(tracefile);
+					pr3287_exit(1);
+				}
+				u++;
+			}
+		} while (fd < 0);
+
+		tracef = fdopen(fd, "w");
+		if (tracef == NULL) {
+			perror(tracefile);
+			pr3287_exit(1);
 		}
 		(void) SETLINEBUF(tracef);
 		clk = time((time_t *)0);
-		(void) fprintf(tracef, "Trace started %s", ctime(&clk));
-		(void) fprintf(tracef, " Version: %s\n %s\n", build,
-			       build_options());
+		vtrace("Trace started %s", ctime(&clk));
+		vtrace(" Version: %s\n %s\n", build, build_options());
 #if !defined(_WIN32) /*[*/
-		(void) fprintf(tracef, " Locale codeset: %s\n", locale_codeset);
+		vtrace(" Locale codeset: %s\n", locale_codeset);
 #else /*][*/
-		(void) fprintf(tracef, " ANSI codepage: %d, "
-			       "printer codepage: %d\n", GetACP(), printercp);
+		vtrace(" ANSI codepage: %d, printer codepage: %d\n", GetACP(),
+			printercp);
 #endif /*]*/
-		(void) fprintf(tracef, " Host codepage: %d",
-			       (int)(cgcsgid & 0xffff));
+		vtrace(" Host codepage: %d", (int)(cgcsgid & 0xffff));
 #if defined(X3270_DBCS) /*[*/
 		if (dbcs)
-			(void) fprintf(tracef, "+%d",
-				       (int)(cgcsgid_dbcs & 0xffff));
+			vtrace("+%d", (int)(cgcsgid_dbcs & 0xffff));
 #endif /*]*/
-		(void) fprintf(tracef, "\n");
-		(void) fprintf(tracef, " Command:");
+		vtrace("\n");
+		vtrace(" Command:");
 		for (i = 0; i < argc; i++) {
-			(void) fprintf(tracef, " %s", argv[i]);
+			vtrace(" %s", argv[i]);
 		}
-		(void) fprintf(tracef, "\n");
-		fflush(tracef);
+		vtrace("\n");
+
+		/* Dump the translation table. */
+		if (xtable != NULL) {
+			int ebc;
+			const char *x;
+
+			vtrace("Translation table:\n");
+			for (ebc = 0; ebc <= 0xff; ebc++) {
+				int nx = xtable_lookup(ebc, &x);
+
+				if (nx >= 0) {
+					int j;
+
+					vtrace(" ebcdic X'%02X' ascii", ebc);
+
+					for (j = 0; j < nx; j++) {
+						vtrace(" 0x%02x",
+							(unsigned char)x[j]);
+					}
+					vtrace("\n");
+				}
+			}
+		}
 	}
 
 #if defined(HAVE_LIBSSL) /*[*/
@@ -915,7 +955,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 			popup_a_sockerr("connect(syncsock)");
 			pr3287_exit(1);
 		}
-		trace_dsn("Connected to sync port %d.\n", syncport);
+		vtrace("Connected to sync port %d.\n", syncport);
 	}
 
 	/*
@@ -1008,17 +1048,17 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 				       printer? printer: "(none)");
 #endif /*]*/
 		}
-		trace_dsn("Connected to %s, port %u%s\n", host, p,
+		vtrace("Connected to %s, port %u%s\n", host, p,
 			ssl_host? " via SSL": "");
 		if (assoc != NULL) {
-			trace_dsn("Associating with LU %s\n", assoc);
+			vtrace("Associating with LU %s\n", assoc);
 		} else if (lu != NULL) {
-			trace_dsn("Connecting to LU %s\n", lu);
+			vtrace("Connecting to LU %s\n", lu);
 		}
 #if !defined(_WIN32) /*[*/
-		trace_dsn("Command: %s\n", command);
+		vtrace("Command: %s\n", command);
 #else /*][*/
-		trace_dsn("Printer: %s\n", printer? printer: "(none)");
+		vtrace("Printer: %s\n", printer? printer: "(none)");
 #endif /*]*/
 
 		/* Negotiate. */
@@ -1072,14 +1112,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 	pr3287_exit(rc);
 
 	return rc;
-}
-
-/* Tracing function. */
-void
-trace_str(const char *s)
-{
-	if (tracef)
-		fprintf(tracef, "%s", s);
 }
 
 /* Error pop-ups. */

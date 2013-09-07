@@ -33,7 +33,6 @@
 #if defined(X3270_TRACE) /*[*/
 
 extern FILE *tracef;
-extern Boolean trace_skipping;
 
 const char *rcba(int baddr);
 const char *see_aid(unsigned char code);
@@ -43,20 +42,24 @@ const char *see_ebc(unsigned char ch);
 const char *see_efa(unsigned char efa, unsigned char value);
 const char *see_efa_only(unsigned char efa);
 const char *see_qcode(unsigned char id);
-void trace_ansi_disc(void);
-void trace_char(char c);
 void trace_ds(const char *fmt, ...);
-void trace_dsn(const char *fmt, ...);
-void trace_event(const char *fmt, ...);
-void trace_screen(void);
+void vtrace(const char *fmt, ...);
+void trace_pdb(unsigned char *buf, size_t len);
+void trace_pdc(unsigned char c);
+void trace_pds(unsigned char *buf);
 const char *unknown(unsigned char value);
+
+/* For compatibility with common x3270/pr3287 code. */
+#define trace_dsn vtrace
 
 #else /*][*/
 
 #define tracef 0
 #define trace_ds 0 &&
-#define trace_dsn 0 &&
-#define trace_event 0 &&
+#define vtrace 0 &&
+#define trace_pdb 0 &&
+#define trace_pdc 0 &&
+#define trace_pds 0 &&
 #define rcba 0 &&
 #define see_aid 0 &&
 #define see_attr 0 &&

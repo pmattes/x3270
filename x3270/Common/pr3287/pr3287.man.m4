@@ -160,8 +160,9 @@ Turns on data stream tracing.
 Trace information is usually saved in the file
 ifelse(XX_PRODUCT,pr3287,`XX_FB(/tmp/x3trc.)`'XX_FI(pid).',
 `XX_FB(x3trc.)`'XX_FI(pid)`'XX_FB(.txt).')
-ifelse(XX_PRODUCT,pr3287,`XX_TP(XX_FB(XX_DASHED(tracedir)) XX_FI(dir))
-Specifies the directory to save trace files in, instead of XX_FB(/tmp).')
+XX_TP(XX_FB(XX_DASHED(tracedir)) XX_FI(dir))
+Specifies the directory to save trace files in, instead of
+ifelse(XX_PRODUCT,pr3287,XX_FB(/tmp), the XX_PRODUCT AppData directory).
 XX_TP(XX_FB(XX_DASHED(trnpre) XX_FI(file)))
 Specifies a file containing data that will be sent to the printer before each
 print job.

@@ -78,6 +78,7 @@
 
 #include "ctlrc.h"
 #include "resolverc.h"
+#include "trace_dsc.h"
 #include "telnetc.h"
 
 #if !defined(TELOPT_STARTTLS) /*[*/
@@ -226,8 +227,7 @@ static void tn3270e_ack(void);
 static void tn3270e_nak(enum pds);
 static void tn3270e_cleared(void);
 
-extern void trace_str(const char *s);
-static void vtrace_str(const char *fmt, ...);
+#define trace_str(str)	vtrace("%s", (str))
 static const char *cmd(int c);
 static const char *opt(unsigned char c);
 static const char *nnn(int c);
@@ -421,7 +421,7 @@ negotiate(const char *host, struct sockaddr *sa, socklen_t len, int s,
 		}
 
 		secure_connection = True;
-		vtrace_str("TLS/SSL tunneled connection complete.  "
+		vtrace("TLS/SSL tunneled connection complete.  "
 			   "Connection is now secure.\n");
 	}
 #endif /*]*/
@@ -512,7 +512,7 @@ process(int s)
 			}
 		}
 		if (nr > 0 && syncsock >= 0 && FD_ISSET(syncsock, &rfds)) {
-			vtrace_str("Input on syncsock -- exiting.\n");
+			vtrace("Input on syncsock -- exiting.\n");
 			net_disconnect();
 #if defined(_WIN32) /*[*/
 			/* Let Windows send the TCP FIN. */
@@ -529,7 +529,7 @@ void
 net_disconnect(void)
 {
 	if (sock != -1) {
-		vtrace_str("SENT disconnect\n");
+		vtrace("SENT disconnect\n");
 		SOCK_CLOSE(sock);
 		sock = -1;
 #if defined(HAVE_LIBSSL) /*[*/
@@ -626,7 +626,7 @@ net_input(int s)
 	nr = recv(s, (char *)netrbuf, BUFSZ, 0);
 	if (nr < 0) {
 		if (socket_errno() == SE_EWOULDBLOCK) {
-			vtrace_str("EWOULDBLOCK\n");
+			vtrace("EWOULDBLOCK\n");
 			return 0;
 		}
 #if defined(HAVE_LIBSSL) /*[*/
@@ -636,13 +636,13 @@ net_input(int s)
 
 			e = ERR_get_error();
 			(void) ERR_error_string(e, err_buf);
-			vtrace_str("RCVD socket error %ld (%s)\n", e, err_buf);
+			vtrace("RCVD socket error %ld (%s)\n", e, err_buf);
 			errmsg("SSL_read:\n%s", err_buf);
 			cstate = NOT_CONNECTED;
 			return -1;
 		}
 #endif /*]*/
-		vtrace_str("RCVD socket error %s\n", sockerrmsg());
+		vtrace("RCVD socket error %s\n", sockerrmsg());
 		popup_a_sockerr("Socket read");
 		cstate = NOT_CONNECTED;
 		return -1;
@@ -699,7 +699,7 @@ telnet_fsm(unsigned char c)
 		break;
 	    case TNS_IAC:	/* process a telnet command */
 		if (c != EOR && c != IAC) {
-			vtrace_str("RCVD %s ", cmd(c));
+			vtrace("RCVD %s ", cmd(c));
 		}
 		switch (c) {
 		    case IAC:	/* escaped IAC, insert it */
@@ -770,7 +770,7 @@ telnet_fsm(unsigned char c)
 		}
 		break;
 	    case TNS_WILL:	/* telnet WILL DO OPTION command */
-		vtrace_str("%s\n", opt(c));
+		vtrace("%s\n", opt(c));
 		switch (c) {
 		    case TELOPT_SGA:
 		    case TELOPT_BINARY:
@@ -782,14 +782,14 @@ telnet_fsm(unsigned char c)
 				hisopts[c] = 1;
 				do_opt[2] = c;
 				net_rawout(do_opt, sizeof(do_opt));
-				vtrace_str("SENT %s %s\n", cmd(DO), opt(c));
+				vtrace("SENT %s %s\n", cmd(DO), opt(c));
 
  				/* For UTS, volunteer to do EOR when they do. */
  				if (c == TELOPT_EOR && !myopts[c]) {
  					myopts[c] = 1;
  					will_opt[2] = c;
  					net_rawout(will_opt, sizeof(will_opt));
- 					vtrace_str("SENT %s %s\n", cmd(WILL),
+ 					vtrace("SENT %s %s\n", cmd(WILL),
 					    opt(c));
  				}
 
@@ -799,24 +799,24 @@ telnet_fsm(unsigned char c)
 		    default:
 			dont_opt[2] = c;
 			net_rawout(dont_opt, sizeof(dont_opt));
-			vtrace_str("SENT %s %s\n", cmd(DONT), opt(c));
+			vtrace("SENT %s %s\n", cmd(DONT), opt(c));
 			break;
 		}
 		telnet_state = TNS_DATA;
 		break;
 	    case TNS_WONT:	/* telnet WONT DO OPTION command */
-		vtrace_str("%s\n", opt(c));
+		vtrace("%s\n", opt(c));
 		if (hisopts[c]) {
 			hisopts[c] = 0;
 			dont_opt[2] = c;
 			net_rawout(dont_opt, sizeof(dont_opt));
-			vtrace_str("SENT %s %s\n", cmd(DONT), opt(c));
+			vtrace("SENT %s %s\n", cmd(DONT), opt(c));
 			check_in3270();
 		}
 		telnet_state = TNS_DATA;
 		break;
 	    case TNS_DO:	/* telnet PLEASE DO OPTION command */
-		vtrace_str("%s\n", opt(c));
+		vtrace("%s\n", opt(c));
 		switch (c) {
 		    case TELOPT_BINARY:
 		    case TELOPT_EOR:
@@ -834,7 +834,7 @@ telnet_fsm(unsigned char c)
 					myopts[c] = 1;
 				will_opt[2] = c;
 				net_rawout(will_opt, sizeof(will_opt));
-				vtrace_str("SENT %s %s\n", cmd(WILL), opt(c));
+				vtrace("SENT %s %s\n", cmd(WILL), opt(c));
 				check_in3270();
 			}
 #if defined(HAVE_LIBSSL) /*[*/
@@ -848,7 +848,7 @@ telnet_fsm(unsigned char c)
 				 * to announce that what follows is TLS.
 				 */
 				net_rawout(follows_msg, sizeof(follows_msg));
-				vtrace_str("SENT %s %s FOLLOWS %s\n",
+				vtrace("SENT %s %s FOLLOWS %s\n",
 						cmd(SB),
 						opt(TELOPT_STARTTLS),
 						cmd(SE));
@@ -860,18 +860,18 @@ telnet_fsm(unsigned char c)
 		    default:
 			wont_opt[2] = c;
 			net_rawout(wont_opt, sizeof(wont_opt));
-			vtrace_str("SENT %s %s\n", cmd(WONT), opt(c));
+			vtrace("SENT %s %s\n", cmd(WONT), opt(c));
 			break;
 		}
 		telnet_state = TNS_DATA;
 		break;
 	    case TNS_DONT:	/* telnet PLEASE DON'T DO OPTION command */
-		vtrace_str("%s\n", opt(c));
+		vtrace("%s\n", opt(c));
 		if (myopts[c]) {
 			myopts[c] = 0;
 			wont_opt[2] = c;
 			net_rawout(wont_opt, sizeof(wont_opt));
-			vtrace_str("SENT %s %s\n", cmd(WONT), opt(c));
+			vtrace("SENT %s %s\n", cmd(WONT), opt(c));
 			check_in3270();
 		}
 		telnet_state = TNS_DATA;
@@ -891,7 +891,7 @@ telnet_fsm(unsigned char c)
 				int tt_len, tb_len;
 				char *tt_out;
 
-				vtrace_str("%s %s\n", opt(sbbuf[0]),
+				vtrace("%s %s\n", opt(sbbuf[0]),
 				    telquals[sbbuf[1]]);
 
 				if (lus != (char **)NULL &&
@@ -919,7 +919,7 @@ telnet_fsm(unsigned char c)
 				    IAC, SE);
 				net_rawout((unsigned char *)tt_out, tb_len);
 
-				vtrace_str("SENT %s %s %s %.*s %s\n",
+				vtrace("SENT %s %s %s %.*s %s\n",
 				    cmd(SB), opt(TELOPT_TTYPE),
 				    telquals[TELQUAL_IS],
 				    tt_len, tt_out + 4,
@@ -979,7 +979,7 @@ tn3270e_request(void)
 
 	net_rawout((unsigned char *)tt_out, tb_len);
 
-	vtrace_str("SENT %s %s DEVICE-TYPE REQUEST %.*s%s%s%s%s "
+	vtrace("SENT %s %s DEVICE-TYPE REQUEST %.*s%s%s%s%s "
 		   "%s\n",
 	    cmd(SB), opt(TELOPT_TN3270E), strlen(termtype), tt_out + 5,
 	    (try_assoc != NULL) ? " ASSOCIATE " : "",
@@ -1010,7 +1010,7 @@ tn3270e_negotiate(void)
 			break;
 	}
 
-	vtrace_str("TN3270E ");
+	vtrace("TN3270E ");
 
 	switch (sbbuf[1]) {
 
@@ -1019,18 +1019,18 @@ tn3270e_negotiate(void)
 		if (sbbuf[2] == TN3270E_OP_DEVICE_TYPE) {
 
 			/* Host wants us to send our device type. */
-			vtrace_str("SEND DEVICE-TYPE SE\n");
+			vtrace("SEND DEVICE-TYPE SE\n");
 
 			tn3270e_request();
 		} else {
-			vtrace_str("SEND ??%u SE\n", sbbuf[2]);
+			vtrace("SEND ??%u SE\n", sbbuf[2]);
 		}
 		break;
 
 	case TN3270E_OP_DEVICE_TYPE:
 
 		/* Device type negotiation. */
-		vtrace_str("DEVICE-TYPE ");
+		vtrace("DEVICE-TYPE ");
 
 		switch (sbbuf[2]) {
 		case TN3270E_OP_IS: {
@@ -1048,7 +1048,7 @@ tn3270e_negotiate(void)
 				while(sbbuf[3+tnlen+1+snlen] != SE)
 					snlen++;
 			}
-			vtrace_str("IS %.*s CONNECT %.*s SE\n",
+			vtrace("IS %.*s CONNECT %.*s SE\n",
 				tnlen, &sbbuf[3],
 				snlen, &sbbuf[3+tnlen+1]);
 
@@ -1078,7 +1078,7 @@ tn3270e_negotiate(void)
 
 			/* Device type failure. */
 
-			vtrace_str("REJECT REASON %s SE\n", rsn(sbbuf[4]));
+			vtrace("REJECT REASON %s SE\n", rsn(sbbuf[4]));
 
 			if (try_assoc != NULL) {
 				errmsg("Cannot associate with specified LU: %s",
@@ -1102,7 +1102,7 @@ tn3270e_negotiate(void)
 
 			break;
 		default:
-			vtrace_str("??%u SE\n", sbbuf[2]);
+			vtrace("??%u SE\n", sbbuf[2]);
 			break;
 		}
 		break;
@@ -1110,14 +1110,14 @@ tn3270e_negotiate(void)
 	case TN3270E_OP_FUNCTIONS:
 
 		/* Functions negotiation. */
-		vtrace_str("FUNCTIONS ");
+		vtrace("FUNCTIONS ");
 
 		switch (sbbuf[2]) {
 
 		case TN3270E_OP_REQUEST:
 
 			/* Host is telling us what functions they want. */
-			vtrace_str("REQUEST %s SE\n",
+			vtrace("REQUEST %s SE\n",
 			    tn3270e_function_names(sbbuf+3, sblen-3));
 
 			e_rcvd = tn3270e_fdecode(sbbuf+3, sblen-3);
@@ -1126,7 +1126,7 @@ tn3270e_negotiate(void)
 				e_funcs = e_rcvd;
 				tn3270e_subneg_send(TN3270E_OP_IS, e_funcs);
 				tn3270e_negotiated = 1;
-				vtrace_str("TN3270E option negotiation "
+				vtrace("TN3270E option negotiation "
 				    "complete.\n");
 				check_in3270();
 			} else {
@@ -1143,7 +1143,7 @@ tn3270e_negotiate(void)
 		case TN3270E_OP_IS:
 
 			/* They accept our last request. */
-			vtrace_str("IS %s SE\n",
+			vtrace("IS %s SE\n",
 			    tn3270e_function_names(sbbuf+3, sblen-3));
 			e_rcvd = tn3270e_fdecode(sbbuf+3, sblen-3);
 			if (e_rcvd != e_funcs) {
@@ -1155,12 +1155,12 @@ tn3270e_negotiate(void)
 					 * They've added something.  Abandon
 					 * TN3270E, they're brain dead.
 					 */
-					vtrace_str("Host illegally added "
+					vtrace("Host illegally added "
 						"function(s), aborting "
 						"TN3270E\n");
 					wont_opt[2] = TELOPT_TN3270E;
 					net_rawout(wont_opt, sizeof(wont_opt));
-					vtrace_str("SENT %s %s\n", cmd(WONT),
+					vtrace("SENT %s %s\n", cmd(WONT),
 						opt(TELOPT_TN3270E));
 					myopts[TELOPT_TN3270E] = 0;
 					check_in3270();
@@ -1168,18 +1168,18 @@ tn3270e_negotiate(void)
 				}
 			}
 			tn3270e_negotiated = 1;
-			vtrace_str("TN3270E option negotiation complete.\n");
+			vtrace("TN3270E option negotiation complete.\n");
 			check_in3270();
 			break;
 
 		default:
-			vtrace_str("??%u SE\n", sbbuf[2]);
+			vtrace("??%u SE\n", sbbuf[2]);
 			break;
 		}
 		break;
 
 	default:
-		vtrace_str("??%u SE\n", sbbuf[1]);
+		vtrace("??%u SE\n", sbbuf[1]);
 	}
 
 	/* Good enough for now. */
@@ -1226,7 +1226,7 @@ tn3270e_subneg_send(unsigned char op, unsigned long funcs)
 	net_rawout(proto_buf, proto_len);
 
 	/* Complete and send out the trace text. */
-	vtrace_str("SENT %s %s FUNCTIONS %s %s %s\n",
+	vtrace("SENT %s %s FUNCTIONS %s %s %s\n",
 	    cmd(SB), opt(TELOPT_TN3270E),
 	    (op == TN3270E_OP_REQUEST)? "REQUEST": "IS",
 	    tn3270e_function_names(proto_buf + 5, proto_len - 7),
@@ -1259,7 +1259,7 @@ process_eor(void)
 	if (IN_E) {
 		tn3270e_header *h = (tn3270e_header *)ibuf;
 
-		vtrace_str("RCVD TN3270E(%s%s %s %u)\n",
+		vtrace("RCVD TN3270E(%s%s %s %u)\n",
 		    e_dt(h->data_type),
 		    e_rq(h->data_type, h->request_flag),
 		    e_rsp(h->data_type, h->response_flag),
@@ -1323,7 +1323,7 @@ process_eor(void)
 		case TN3270E_DT_PRINT_EOJ:
 			rv = PDS_OKAY_NO_OUTPUT;
 			if (ignoreeoj)
-				vtrace_str("(ignored)\n");
+				vtrace("(ignored)\n");
 			else if (print_eoj() < 0)
 				rv = PDS_FAILED;
 			if (h->response_flag) {
@@ -1409,14 +1409,14 @@ net_rawout(unsigned const char *buf, int len)
 
 				e = ERR_get_error();
 				(void) ERR_error_string(e, err_buf);
-				vtrace_str("RCVD socket error %ld (%s)\n", e,
+				vtrace("RCVD socket error %ld (%s)\n", e,
 				    err_buf);
 				errmsg("SSL_write:\n%s", err_buf);
 				cstate = NOT_CONNECTED;
 				return;
 			}
 #endif /*]*/
-			vtrace_str("RCVD socket error %s\n", sockerrmsg());
+			vtrace("RCVD socket error %s\n", sockerrmsg());
 			if (socket_errno() == SE_EPIPE ||
 			    socket_errno() == SE_ECONNRESET) {
 				cstate = NOT_CONNECTED;
@@ -1495,7 +1495,7 @@ check_in3270(void)
 	if (new_cstate != cstate) {
 		int was_in_e = IN_E;
 
-		vtrace_str("Now operating in %s mode.\n",
+		vtrace("Now operating in %s mode.\n",
 			state_name[new_cstate]);
 		cstate =  new_cstate;
 
@@ -1644,16 +1644,16 @@ trace_netdata(char direction, unsigned const char *buf, int len)
 	if (IN_3270) {
 		tdiff = ((1.0e6 * (double)(ts.tv_sec - ds_ts.tv_sec)) +
 			(double)(ts.tv_usec - ds_ts.tv_usec)) / 1.0e6;
-		(void) fprintf(tracef, "%c +%gs\n", direction, tdiff);
+		vtrace("%c +%gs\n", direction, tdiff);
 	}
 	ds_ts = ts;
 	for (offset = 0; offset < len; offset++) {
 		if (!(offset % LINEDUMP_MAX))
-			(void) fprintf(tracef, "%s%c 0x%-3x ",
+			vtrace("%s%c 0x%-3x ",
 			    (offset ? "\n" : ""), direction, offset);
-		(void) fprintf(tracef, "%02x", buf[offset]);
+		vtrace("%02x", buf[offset]);
 	}
-	(void) fprintf(tracef, "\n");
+	vtrace("\n");
 }
 
 
@@ -1720,7 +1720,7 @@ net_output(void)
 	*obptr++ = IAC;
 	*obptr++ = EOR;
 	if (IN_TN3270E || IN_SSCP) {
-		vtrace_str("SENT TN3270E(%s NO-RESPONSE %u)\n",
+		vtrace("SENT TN3270E(%s NO-RESPONSE %u)\n",
 			IN_TN3270E ? "3270-DATA" : "SSCP-LU-DATA", e_xmit_seq);
 		if (e_funcs & E_OPT(TN3270E_FUNC_RESPONSES))
 			e_xmit_seq = (e_xmit_seq + 1) & 0x7fff;
@@ -1746,7 +1746,7 @@ tn3270_ack(void)
 	rsp_buf[4] = 0x00; /* No error */
 	rsp_buf[5] = IAC;
 	rsp_buf[6] = EOR;
-	vtrace_str("SENT TN3270 PRINTER STATUS(OKAY)\n");
+	vtrace("SENT TN3270 PRINTER STATUS(OKAY)\n");
 	net_rawout(rsp_buf, rsp_len);
 }
 
@@ -1777,7 +1777,7 @@ tn3270_nak(enum pds rv)
 	}
 	rsp_buf[5] = IAC;
 	rsp_buf[6] = EOR;
-	vtrace_str("SENT TN3270 PRINTER STATUS(ERROR)\n");
+	vtrace("SENT TN3270 PRINTER STATUS(ERROR)\n");
 	net_rawout(rsp_buf, rsp_len);
 
 	/*
@@ -1809,7 +1809,7 @@ tn3270e_ack(void)
 	rsp_buf[rsp_len++] = TN3270E_POS_DEVICE_END;
 	rsp_buf[rsp_len++] = IAC;
 	rsp_buf[rsp_len++] = EOR;
-	vtrace_str("SENT TN3270E(RESPONSE POSITIVE-RESPONSE "
+	vtrace("SENT TN3270E(RESPONSE POSITIVE-RESPONSE "
 		"%u) DEVICE-END\n",
 		h_in->seq_number[0] << 8 | h_in->seq_number[1]);
 	net_rawout(rsp_buf, rsp_len);
@@ -1847,7 +1847,7 @@ tn3270e_nak(enum pds rv)
 	}
 	rsp_buf[rsp_len++] = IAC;
 	rsp_buf[rsp_len++] = EOR;
-	vtrace_str("SENT TN3270E(RESPONSE NEGATIVE-RESPONSE %u) %s\n",
+	vtrace("SENT TN3270E(RESPONSE NEGATIVE-RESPONSE %u) %s\n",
 		h_in->seq_number[0] << 8 | h_in->seq_number[1],
 		e_neg_type(r));
 	net_rawout(rsp_buf, rsp_len);
@@ -1880,7 +1880,7 @@ tn3270e_cleared(void)
 		rsp_buf[rsp_len++] = IAC;
 	rsp_buf[rsp_len++] = IAC;
 	rsp_buf[rsp_len++] = EOR;
-	vtrace_str("SENT TN3270E(REQUEST ERR-COND-CLEARED %u)\n", e_xmit_seq);
+	vtrace("SENT TN3270E(REQUEST ERR-COND-CLEARED %u)\n", e_xmit_seq);
 	net_rawout(rsp_buf, rsp_len);
 
 	e_xmit_seq = (e_xmit_seq + 1) & 0x7fff;
@@ -1927,17 +1927,6 @@ net_add_eor(unsigned char *buf, int len)
 {
 	buf[len++] = IAC;
 	buf[len++] = EOR;
-}
-
-static void
-vtrace_str(const char *fmt, ...)
-{
-	static char trace_msg[256];
-	va_list args;
-
-	va_start(args, fmt);
-	(void) vsprintf(trace_msg, fmt, args);
-	trace_str(trace_msg);
 }
 
 #if defined(HAVE_LIBSSL) /*[*/
@@ -2248,7 +2237,7 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 		why_not = "self-signed okay";
 	}
 	if (why_not != CN) {
-		vtrace_str("SSL_verify_callback: %s, ignoring '%s' (%d)\n",
+		vtrace("SSL_verify_callback: %s, ignoring '%s' (%d)\n",
 			why_not, X509_verify_cert_error_string(err), err);
 		secure_unverified = True;
 		return 1;
@@ -2359,10 +2348,10 @@ spc_verify_cert_hostname(X509 *cert, const char *hostname,
 		    (!v4addr && !v6addr &&
 		     hostname_matches(hostname, name, len))) {
 			ok = 1;
-			vtrace_str("SSL_connect: common name %s matches "
+			vtrace("SSL_connect: common name %s matches "
 				"hostname %s\n", name, hostname);
 		} else
-			vtrace_str("SSL_connect: non-matching common name: "
+			vtrace("SSL_connect: non-matching common name: "
 				"%s\n", expand_hostname(name, len));
 	}
 
@@ -2380,13 +2369,13 @@ spc_verify_cert_hostname(X509 *cert, const char *hostname,
 				     hostname_matches(hostname, (char *)dns,
 					 len))) {
 					ok = 1;
-					vtrace_str("SSL_connect: common name "
+					vtrace("SSL_connect: common name "
 						"%s matches hostname %s\n",
 						(char *)dns, hostname);
 					OPENSSL_free(dns);
 					break;
 				} else
-					vtrace_str("SSL_connect: non-matching "
+					vtrace("SSL_connect: non-matching "
 						"alternate name: %s\n",
 						expand_hostname((char *)dns,
 						    len));
@@ -2398,24 +2387,24 @@ spc_verify_cert_hostname(X509 *cert, const char *hostname,
 				    ipaddr_matches(v4addr, v6addr,
 					value->d.iPAddress->data,
 					value->d.iPAddress->length)) {
-				    vtrace_str("SSL_connect: matching "
+				    vtrace("SSL_connect: matching "
 					    "alternateName IP:");
 				    ok = 1;
 				} else {
-				    vtrace_str("SSL_connect: non-matching "
+				    vtrace("SSL_connect: non-matching "
 					    "alternateName: IP:");
 				}
 				switch (value->d.iPAddress->length) {
 				case 4:
 					for (i = 0; i < 4; i++) {
-						vtrace_str("%s%u",
+						vtrace("%s%u",
 							(i > 0)? ".": "",
 						  value->d.iPAddress->data[i]);
 					}
 					break;
 				case 16:
 					for (i = 0; i < 16; i+= 2) {
-						vtrace_str("%s%u",
+						vtrace("%s%u",
 							(i > 0)? ":": "",
 	 (value->d.iPAddress->data[i] << 8) | value->d.iPAddress->data[i + 1]);
 					}
@@ -2424,13 +2413,13 @@ spc_verify_cert_hostname(X509 *cert, const char *hostname,
 					for (i = 0;
 					     i < value->d.iPAddress->length;
 					     i++) {
-						vtrace_str("%s%u",
+						vtrace("%s%u",
 							(i > 0)? "-": "",
 						  value->d.iPAddress->data[i]);
 					}
 					break;
 				}
-				vtrace_str("\n");
+				vtrace("\n");
 			}
 			if (ok)
 				break;
@@ -2504,7 +2493,7 @@ check_cert_name(const char *host)
 			return False;
 		} else {
 			secure_unverified = True;
-			vtrace_str("No host certificate.\n");
+			vtrace("No host certificate.\n");
 			return True;
 		}
 	}
@@ -2527,7 +2516,7 @@ check_cert_name(const char *host)
 			return False;
 		} else {
 			secure_unverified = True;
-			vtrace_str("Host certificate name(s) do not match "
+			vtrace("Host certificate name(s) do not match "
 				"host.\n");
 			return True;
 		}
@@ -2561,14 +2550,14 @@ static void
 client_info_callback(INFO_CONST SSL *s, int where, int ret)
 {
 	if (where == SSL_CB_CONNECT_LOOP) {
-		vtrace_str("SSL_connect: %s %s\n",
+		vtrace("SSL_connect: %s %s\n",
 		    SSL_state_string(s), SSL_state_string_long(s));
 	} else if (where == SSL_CB_CONNECT_EXIT) {
 		if (ret == 0) {
-			vtrace_str("SSL_connect: failed in %s %s\n",
+			vtrace("SSL_connect: failed in %s %s\n",
 			    SSL_state_string(s), SSL_state_string_long(s));
 		} else if (ret < 0) {
-			vtrace_str("SSL_connect: error in %s %s\n",
+			vtrace("SSL_connect: error in %s %s\n",
 			    SSL_state_string(s), SSL_state_string_long(s));
 		}
 	}
@@ -2584,13 +2573,13 @@ continue_tls(unsigned char *sbbuf, int len)
 	/* Make sure the option is FOLLOWS. */
 	if (len < 2 || sbbuf[1] != TLS_FOLLOWS) {
 		/* Trace the junk. */
-		vtrace_str("%s ? %s\n", opt(TELOPT_STARTTLS), cmd(SE));
+		vtrace("%s ? %s\n", opt(TELOPT_STARTTLS), cmd(SE));
 		errmsg("TLS negotiation failure");
 		return -1;
 	}
 
 	/* Trace what we got. */
-	vtrace_str("%s FOLLOWS %s\n", opt(TELOPT_STARTTLS), cmd(SE));
+	vtrace("%s FOLLOWS %s\n", opt(TELOPT_STARTTLS), cmd(SE));
 
 	/* Initialize the SSL library. */
 	if (ssl_init() < 0) {
@@ -2620,7 +2609,7 @@ continue_tls(unsigned char *sbbuf, int len)
 	secure_connection = True;
 
 	/* Success. */
-	vtrace_str("TLS/SSL negotiated connection complete.  "
+	vtrace("TLS/SSL negotiated connection complete.  "
 		  "Connection is now secure.\n");
 	return 0;
 }

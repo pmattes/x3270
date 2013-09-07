@@ -1442,6 +1442,7 @@ stash(unsigned char c)
 		ws_needpre = 0;
 	}
 
+	trace_pdc(c);
 	if (ws_putc((char)c)) {
 	    	return -1;
 	}
@@ -1459,6 +1460,7 @@ stash(unsigned char c)
 		}
 	}
 
+	trace_pdc(c);
 	if (fputc(c, prfile) == EOF) {
 		errmsg("Write error to '%s': %s", command, strerror(errno));
 		(void) pclose_no_sigint(prfile);
@@ -2001,6 +2003,7 @@ copyfile(const char *filename)
 		return -1;
 	}
 	while ((c = fgetc(f)) != EOF) {
+		trace_pdc((unsigned char)c);
 #if defined(_WIN32) /*[*/
 		if (ws_putc(c) < 0) {
 #else /*][*/
