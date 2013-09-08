@@ -144,12 +144,12 @@ ifelse(XX_PRODUCT,wpr3287,`XX_TP(XX_FB(XX_DASHED(printer)) XX_FI(printer))
 Specifies the Windows printer to use for each print job.
 The default is to use the printer specified by the XX_FB($PRINTER) environment
 variable, if defined, and otherwise to use the default Windows printer.
-XX_TP(XX_FB(XX_DASHED(printercp)) XX_FI(codepage))
-Specifies the code page to use when generating printer output.
-The default is to use the system ANSI code page.'
 XX_LP
 The printer can be the name of a local printer, or a UNC path to a remote
-printer, e.g., <b>\\server\printer1</b>.)
+printer, e.g., <b>\\server\printer1</b>.
+XX_TP(XX_FB(XX_DASHED(printercp)) XX_FI(codepage))
+Specifies the code page to use when generating printer output.
+The default is to use the system ANSI code page.')
 XX_TP(XX_FB(XX_DASHED(proxy) XX_FI(type):XX_FI(host)[:XX_FI(port)]))
 Causes XX_FB(XX_PRODUCT) to connect via the specified proxy, instead of
 using a direct connection.
@@ -205,7 +205,7 @@ as numbers in decimal, octal (with a leading 0) or hexadecimal (with a leading
 The XX_FI(ascii-code)s can be specified as numbers in decimal, octal or
 hexadecimal, control codes such as XX_FB(^X), symbolic control codes such
 as XX_FB(CR) or XX_FB(Escape), or as double-quoted strings, following the
-full C-language conventions, such as XX_FB(\\r) for a carriage return.
+full C-language conventions, such as XX_FB(\r) for a carriage return.
 Comments begin with XX_FB(#), XX_FB(!) or XX_FB(//).
 XX_IP
 Here are some examples of translations.
