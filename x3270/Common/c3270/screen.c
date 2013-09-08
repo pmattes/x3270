@@ -839,6 +839,10 @@ calc_attrs(int baddr, int fa_addr, int fa)
 {
     	int fg, bg, gr, a;
 
+	if (FA_IS_ZERO(fa)) {
+		return color_from_fa(fa);
+	}
+
 	/* Compute the color. */
 
 	/*

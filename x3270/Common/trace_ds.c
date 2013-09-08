@@ -507,6 +507,10 @@ create_tracefile_header(const char *mode)
 		wtrace("+%d", (int)(cgcsgid_dbcs & 0xffff));
 #endif /*]*/
 	wtrace("\n");
+#if defined(_WIN32) && (defined(C3270) || defined(S3270)) /*[*/
+	wtrace(" AppData: %s\n", myappdata? myappdata: "(null)");
+	wtrace(" Install dir: %s\n", instdir? instdir: "(null)");
+#endif /*]*/
 	if (CONNECTED)
 		wtrace(" Connected to %s, port %u\n",
 		    current_host, current_port);
@@ -840,7 +844,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 
 	/* Display current status. */
 	buf = create_tracefile_header("started");
-	do_ts = True;
+	do_ts = False;
 	wtrace("%s", buf);
 	Free(buf);
 

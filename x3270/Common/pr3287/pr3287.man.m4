@@ -89,6 +89,15 @@ carriage-return/linefeed sequences.',
 `XX_TP(XX_FB(XX_DASHED(nocrlf)))
 Causes newline characters in the output to be left as-is, and not expanded to
 carriage-return/linefeed sequences.')
+XX_TP(XX_FB(XX_DASHED(crthru)))
+In unformatted 3270 mode, causes XX_SM(EBCDIC) CR orders to be passed to
+directly to the printer as XX_SM(ASCII) CR characters, and the output buffer to
+be flushed, instead of being specially interpreted by XX_FI(XX_PRODUCT).
+XX_IP
+By default, XX_SM(EBCDIC) CRs cause the (virtual) print head to return to
+column 0, so that subsequent text overwrites what is already in the buffer,
+and the buffer is flushed only when an XX_SM(EBCDIC) NL or EM order is
+received.
 ifelse(XX_PRODUCT,pr3287,`XX_TP(XX_FB(XX_DASHED(daemon)))
 Causes
 XX_FI(XX_PRODUCT)
@@ -160,8 +169,9 @@ Turns on data stream tracing.
 Trace information is usually saved in the file
 ifelse(XX_PRODUCT,pr3287,`XX_FB(/tmp/x3trc.)`'XX_FI(pid).',
 `XX_FB(x3trc.)`'XX_FI(pid)`'XX_FB(.txt).')
-ifelse(XX_PRODUCT,pr3287,`XX_TP(XX_FB(XX_DASHED(tracedir)) XX_FI(dir))
-Specifies the directory to save trace files in, instead of XX_FB(/tmp).')
+XX_TP(XX_FB(XX_DASHED(tracedir)) XX_FI(dir))
+Specifies the directory to save trace files in, instead of
+ifelse(XX_PRODUCT,pr3287,XX_FB(/tmp), the XX_PRODUCT AppData directory).
 XX_TP(XX_FB(XX_DASHED(trnpre) XX_FI(file)))
 Specifies a file containing data that will be sent to the printer before each
 print job.

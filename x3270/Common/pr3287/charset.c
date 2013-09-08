@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009, Paul Mattes.
+ * Copyright (c) 2001-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,7 +63,7 @@ char *converters = CN;
  * Returns 0 if the new character set was found, -1 otherwise.
  */
 enum cs_result
-charset_init(char *csname)
+charset_init(const char *csname)
 {
 #if !defined(_WIN32) /*[*/
 	char *codeset_name;

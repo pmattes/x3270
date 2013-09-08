@@ -45,85 +45,236 @@
 #include "tablesc.h"
 #include "trace_dsc.h"
 
+/* Maximum length of printer-data output. */
+#define PD_MAX	77
+
 /* Statics */
-static int      dscnt = 0;
+typedef enum { TM_BASE, TM_EVENT, TM_DS, TM_PD } tmode_t;
+static tmode_t tmode = TM_BASE;
+
+static int      tscnt = 0;
 
 /* Globals */
 FILE           *tracef = (FILE *) 0;
 
-/* Data Stream trace print, handles line wraps */
-
-static char *tdsbuf = CN;
+static char *tdsbuf = NULL;
 #define TDS_LEN	75
 
+/* Transition from one mode to another. */
 static void
-trace_ds_s(char *s)
+clear_tmode(tmode_t desired)
 {
-	int len = strlen(s);
-	Boolean nl = False;
-
-	if (tracef == NULL)
-		return;
-
-	if (s && s[len-1] == '\n') {
-		len--;
-		nl = True;
-	}
-	while (dscnt + len >= 75) {
-		int plen = 75-dscnt;
-
-		(void) fprintf(tracef, "%.*s ...\n... ", plen, s);
-		dscnt = 4;
-		s += plen;
-		len -= plen;
-	}
-	if (len) {
-		(void) fprintf(tracef, "%.*s", len, s);
-		dscnt += len;
-	}
-	if (nl) {
-		(void) fprintf(tracef, "\n");
-		dscnt = 0;
+	if (tmode == TM_BASE || tmode == desired) {
+	    	return;
 	}
 
-	/*
-	 * Make sure the trace data is flushed, in case this process crashes or
-	 * is terminated before it can close the file.
-	 */
-	fflush(tracef);
+	fputc('\n', tracef);
+	tscnt = 0;
+	tmode = TM_BASE;
 }
 
+/* Data Stream trace print, handles line wraps. */
 void
 trace_ds(const char *fmt, ...)
 {
 	va_list args;
+	size_t len;
+	const char *s;
+	Boolean nl = False;
 
-	va_start(args, fmt);
+	if (tracef == NULL) {
+		return;
+	}
 
-	/* allocate buffer */
-	if (tdsbuf == CN)
+	/* Allocate buffer. */
+	if (tdsbuf == NULL) {
 		tdsbuf = Malloc(4096);
+	}
 
-	/* print out remainder of message */
-	(void) vsprintf(tdsbuf, fmt, args);
-	trace_ds_s(tdsbuf);
+	/* Print out remainder of message. */
+	va_start(args, fmt);
+	(void) vsnprintf(tdsbuf, 4096, fmt, args);
 	va_end(args);
+
+	clear_tmode(TM_DS);
+
+	/*
+	 * Skip leading newlines, if we're already at the beginning of a
+	 * line.
+	 */
+	s = tdsbuf;
+	if (tmode == TM_BASE) {
+		while (*s == '\n') {
+			s++;
+		}
+	}
+
+	len = strlen(s);
+	if (len && s[len-1] == '\n') {
+		len--;
+		nl = True;
+	}
+	while (tscnt + len >= 75) {
+		int plen = 75-tscnt;
+
+		(void) fprintf(tracef, "%.*s ...\n... ", plen, s);
+		tscnt = 4;
+		s += plen;
+		len -= plen;
+	}
+	if (len) {
+		(void) fprintf(tracef, "%.*s", (int)len, s);
+		tscnt += len;
+	}
+	if (nl) {
+		fputc('\n', tracef);
+		tscnt = 0;
+		tmode = TM_BASE;
+	}
+	fflush(tracef);
+
+	if (tscnt) {
+	    	tmode = TM_DS;
+	}
 }
 
+/* Trace something that isn't the host or printer data stream. */
+static void
+vatrace(int do_ts, const char *fmt, va_list args)
+{
+	size_t sl;
+	char *s;
+
+	clear_tmode(TM_EVENT);
+
+	/* Allocate buffer. */
+	if (tdsbuf == NULL) {
+		tdsbuf = Malloc(4096);
+	}
+
+	/* Print out remainder of message. */
+	(void) vsnprintf(tdsbuf, 4096, fmt, args);
+
+	s = tdsbuf;
+
+	/*
+	 * Skip leading newlines, if we're already at the beginning of a
+	 * line.
+	 */
+	if (tmode == TM_BASE) {
+		while (*s == '\n') {
+			s++;
+		}
+	}
+
+	/* Start with a timestamp. */
+	if (tmode == TM_BASE && do_ts) {
+		struct timeval tv;
+		time_t t;
+		struct tm *tm;
+
+		(void) gettimeofday(&tv, NULL);
+		t = tv.tv_sec;
+		tm = localtime(&t);
+		(void) fprintf(tracef, "%d%02d%02d.%02d%02d%02d.%03d ",
+			tm->tm_year + 1900,
+			tm->tm_mon + 1,
+			tm->tm_mday,
+			tm->tm_hour,
+			tm->tm_min,
+			tm->tm_sec,
+			(int)(tv.tv_usec / 1000L));
+		fflush(tracef);
+	}
+
+	sl = strlen(s);
+	if (sl > 0) {
+		Boolean nl = False;
+
+		if (tdsbuf[sl - 1] == '\n') {
+			nl = True;
+		}
+		fprintf(tracef, "%s", tdsbuf);
+		fflush(tracef);
+		if (nl) {
+			tscnt = 0;
+			tmode = TM_BASE;
+		} else {
+			tscnt += sl;
+			tmode = TM_EVENT;
+		}
+	}
+}
+
+/* Trace something that isn't host or printer data, with a timestamp. */
 void
-trace_dsn(const char *fmt, ...)
+vtrace(const char *fmt, ...)
 {
 	va_list args;
 
+	if (tracef == NULL) {
+		return;
+	}
+
 	va_start(args, fmt);
-
-	/* allocate buffer */
-	if (tdsbuf == CN)
-		tdsbuf = Malloc(4096);
-
-	/* print out remainder of message */
-	(void) vsprintf(tdsbuf, fmt, args);
-	strcat(tdsbuf, "\n");
-	trace_ds_s(tdsbuf);
+	vatrace(1, fmt, args);
 	va_end(args);
+}
+
+/* Trace something that isn't host or printer data, without a timestamp. */
+void
+vtrace_nts(const char *fmt, ...)
+{
+	va_list args;
+
+	if (tracef == NULL) {
+		return;
+	}
+
+	va_start(args, fmt);
+	vatrace(0, fmt, args);
+	va_end(args);
+}
+
+/* Trace a byte of data going to the raw print stream. */
+void
+trace_pdc(unsigned char c)
+{
+	if (tracef == NULL) {
+		return;
+	}
+
+	clear_tmode(TM_PD);
+
+	if (!tscnt) {
+		tscnt = fprintf(tracef, "<Print> ");
+	}
+	tscnt += fprintf(tracef, "%02x", c);
+	if (tscnt >= PD_MAX) {
+		fputc('\n', tracef);
+		tscnt = 0;
+		tmode = TM_BASE;
+	} else {
+		tmode = TM_PD;
+	}
+}
+
+/* Trace a string of data going to the raw print stream. */
+void
+trace_pds(unsigned char *s)
+{
+	unsigned char c;
+
+	while ((c = *s++) != '\0') {
+		trace_pdc(c);
+	}
+}
+
+/* Trace a buffer full of data going to the raw print stream. */
+void
+trace_pdb(unsigned char *s, size_t len)
+{
+    	while (len-- > 0) {
+		trace_pdc(*s++);
+	}
 }

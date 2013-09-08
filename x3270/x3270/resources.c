@@ -77,7 +77,7 @@ XtResource resources[] = {
 	  offset(invert_kpshift), XtRString, ResFalse },
 #endif /*]*/
 	{ ResSaveLines, ClsSaveLines, XtRInt, sizeof(int),
-	  offset(save_lines), XtRString, "64" },
+	  offset(save_lines), XtRString, "4096" },
 	{ ResMenuBar, ClsMenuBar, XtRBoolean, sizeof(Boolean),
 	  offset(menubar), XtRString, ResTrue },
 	{ ResActiveIcon, ClsActiveIcon, XtRBoolean, sizeof(Boolean),

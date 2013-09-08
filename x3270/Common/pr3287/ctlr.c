@@ -50,6 +50,7 @@
 #endif /*]*/
 #include <signal.h>
 #include "globals.h"
+#include "pr3287.h"
 #include "3270ds.h"
 #include "charsetc.h"
 #include "ctlrc.h"
@@ -62,22 +63,6 @@
 #include "wsc.h"
 #include <windows.h>
 #endif /*]*/
-
-#if !defined(_WIN32) /*[*/
-extern char *command;
-#else /*][*/
-extern char *printer;
-extern int printercp;
-#endif /*]*/
-extern int blanklines;	/* display blank lines even if empty (formatted LU3) */
-extern int emflush;	/* flush printer output when unformatted EM arrives */
-extern int ignoreeoj;	/* ignore PRINT-EOJ commands */
-extern int crlf;	/* expand newline to CR/LF */
-extern int ffthru;	/* pass through SCS FF orders */
-extern int ffskip;	/* skip FF orders at top of page */
-extern int ffeoj;	/* assume FF at the end of each SCS page */
-extern char *trnpre;	/* pathname from -trnpre */
-extern char *trnpost;	/* pathname from -trnpost */
 
 #define CS_GE 0x04	/* hack */
 
@@ -411,7 +396,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			previous = ORDER;
 			if (*cp)
 				trace_ds("'");
-			trace_ds(see_ebc(*cp));
+			trace_ds("%s", see_ebc(*cp));
 			if (*cp)
 				trace_ds("'");
 			ctlr_add(0, ebcdic_to_unicode(*cp, CS_GE, EUO_NONE),
@@ -535,13 +520,13 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				END_TEXT("ILLEGAL-ORDER ");
 				previous = ORDER;
 				ctlr_add(0, '\0', default_cs, default_gr);
-				trace_ds(see_ebc(*cp));
+				trace_ds("%s", see_ebc(*cp));
 				break;
 			}
 			if (previous != TEXT)
 				trace_ds(" '");
 			previous = TEXT;
-			trace_ds(see_ebc(*cp));
+			trace_ds("%s", see_ebc(*cp));
 			ctlr_add(*cp,
 				ebcdic_to_unicode(*cp, default_cs, EUO_NONE),
 				default_cs, default_gr);
@@ -631,8 +616,8 @@ unicode_to_printer(ucs4_t u, char mb[], int mb_len)
     	int nc;
 	wchar_t wuc = u;
 
-	nc = WideCharToMultiByte(printercp, 0, &wuc, 1, mb, mb_len, NULL,
-		NULL);
+	nc = WideCharToMultiByte(options.printercp, 0, &wuc, 1, mb, mb_len,
+		NULL, NULL);
 	if (nc > 0)
 	    	mb[nc++] = '\0';
 	return nc;
@@ -725,7 +710,7 @@ dump_scs_line(Boolean reset_pp, Boolean always_nl)
 		    	linebuf[k] = ' ';
 	}
 	if (any_data || always_nl) {
-		if (crlf) {
+		if (options.crlf) {
 			if (stash('\r') < 0)
 				return -1;
 		}
@@ -752,13 +737,13 @@ scs_formfeed(Boolean explicit)
 	 * In ffskip mode, if it's an explicit formfeed, and we haven't
 	 * printed any non-transparent data, do nothing.
 	 */
-	if (ffskip && explicit && !scs_any)
+	if (options.ffskip && explicit && !scs_any)
 		return 0;
 
 	/*
 	 * In ffthru mode, pass through a \f, but only if it's explicit.
 	 */
-	if (ffthru) {
+	if (options.ffthru) {
 		if (explicit) {
 			if (stash('\f') < 0)
 				return -1;
@@ -774,7 +759,7 @@ scs_formfeed(Boolean explicit)
 	if (mpl > 1) {
 		/* Skip to the end of the physical page. */
 		while (line <= mpl) {
-			if (crlf) {
+			if (options.crlf) {
 				if (stash('\r') < 0)
 					return -1;
 			}
@@ -787,7 +772,7 @@ scs_formfeed(Boolean explicit)
 
 		/* Skip the top margin. */
 		while (line < tm) {
-			if (crlf) {
+			if (options.crlf) {
 				if (stash('\r') < 0)
 					return -1;
 			}
@@ -983,7 +968,7 @@ process_scs_contig(unsigned char *buf, int buflen)
 				if (dump_scs_line(False, True) < 0)
 					return PDS_FAILED;
 				while (line < i) {
-					if (crlf) {
+					if (options.crlf) {
 						if (stash('\r') < 0)
 							return PDS_FAILED;
 					}
@@ -1361,7 +1346,7 @@ sigchld_handler(int sig)
  * Special version of popen where the child ignores SIGINT.
  */
 static FILE *
-popen_no_sigint(char *command)
+popen_no_sigint(const char *command)
 {
 	int fds[2];
 	FILE *f;
@@ -1431,36 +1416,39 @@ stash(unsigned char c)
 {
 #if defined(_WIN32) /*[*/
 	if (!ws_initted) {
-	    	if (ws_start(printer) < 0) {
+	    	if (ws_start(options.printer) < 0) {
 		    return -1;
 		}
 		ws_initted = 1;
 	}
 	if (ws_needpre) {
-	    	if ((trnpre != NULL) && copyfile(trnpre) < 0)
+	    	if ((options.trnpre != NULL) && copyfile(options.trnpre) < 0)
 			return -1;
 		ws_needpre = 0;
 	}
 
+	trace_pdc(c);
 	if (ws_putc((char)c)) {
 	    	return -1;
 	}
 #else /*][*/
 	if (prfile == NULL) {
-		prfile = popen_no_sigint(command);
+		prfile = popen_no_sigint(options.command);
 		if (prfile == NULL) {
-			errmsg("%s: %s", command, strerror(errno));
+			errmsg("%s: %s", options.command, strerror(errno));
 			return -1;
 		}
-		if ((trnpre != NULL) && copyfile(trnpre) < 0) {
+		if ((options.trnpre != NULL) && copyfile(options.trnpre) < 0) {
 			(void) pclose_no_sigint(prfile);
 			prfile = NULL;
 			return -1;
 		}
 	}
 
+	trace_pdc(c);
 	if (fputc(c, prfile) == EOF) {
-		errmsg("Write error to '%s': %s", command, strerror(errno));
+		errmsg("Write error to '%s': %s", options.command,
+			strerror(errno));
 		(void) pclose_no_sigint(prfile);
 		prfile = NULL;
 		return -1;
@@ -1483,7 +1471,7 @@ prflush(void)
 #else /*][*/
 	if (prfile != NULL) {
 		if (fflush(prfile) < 0) {
-			errmsg("Flush error to '%s': %s", command,
+			errmsg("Flush error to '%s': %s", options.command,
 			    strerror(errno));
 			(void) pclose_no_sigint(prfile);
 			prfile = NULL;
@@ -1531,7 +1519,7 @@ ctlr_add(unsigned char ebc, ucs4_t c, unsigned char cs, unsigned char gr)
 	ffeoj_last = False;
 
 	/* Implement -emflush mode. */
-	if (emflush && !wcc_line_length && c == FCORDER_EM) {
+	if (options.emflush && !wcc_line_length && c == FCORDER_EM) {
 	    /* XXX: Unfortunately, we do not return error status here. */
 	    dump_unformatted();
 	    baddr = 1;
@@ -1545,9 +1533,11 @@ ctlr_add(unsigned char ebc, ucs4_t c, unsigned char cs, unsigned char gr)
  * This function will buffer up to MAX_LL characters of output, until it is
  * passed a '\n' or '\f' character.
  *
- * It will process '\r' characters like a printer, i.e., it will not overwrite
- * a buffered non-space character with a space character.  This is how
- * an output line can span multiple 3270 unformatted write commands.
+ * By default, it will process '\r' characters like a printer, i.e., it will
+ * not overwrite a buffered non-space character with a space character.  This
+ * is how an output line can span multiple 3270 unformatted write commands.
+ *
+ * If 'crthru' is set, '\r' characters simply trigger a buffer flush.
  */
 static int
 uoutput(char c)
@@ -1555,27 +1545,41 @@ uoutput(char c)
 	static char buf[MAX_LL];
 	static int col = 0;
 	static int maxcol = 0;
+	static Boolean last_cr = False;
 	int i;
 
 	switch (c) {
 	case '\r':
-		col = 0;
+		if (options.crthru) {
+			for (i = 0; i < maxcol; i++) {
+				if (stash(buf[i]) < 0)
+					return -1;
+			}
+			if (stash(c) < 0)
+			    	return -1;
+			col = maxcol = 0;
+			last_cr = True;
+		} else {
+			col = 0;
+		}
 		break;
 	case '\n':
 		for (i = 0; i < maxcol; i++) {
 			if (stash(buf[i]) < 0)
 				return -1;
 		}
-		if (crlf) {
-		    if (stash('\r') < 0)
-			    return -1;
+		if (options.crlf && !last_cr) {
+			if (stash('\r') < 0)
+				return -1;
 		}
 		if (stash(c) < 0)
 			return -1;
 		col = maxcol = 0;
+		last_cr = False;
 		break;
 	case '\f':
-		if (any_3270_printable || !ffskip) {
+		last_cr = False;
+		if (any_3270_printable || !options.ffskip) {
 			for (i = 0; i < maxcol; i++) {
 				if (stash(buf[i]) < 0)
 					return -1;
@@ -1586,6 +1590,8 @@ uoutput(char c)
 		col = maxcol = 0;
 		break;
 	default:
+		last_cr = False;
+
 		/* Don't overwrite with spaces. */
 		if (c == ' ') {
 			if (col >= maxcol)
@@ -1760,7 +1766,7 @@ dump_formatted(void)
 				break;
 			case '\f':
 				while (newlines) {
-					if (crlf) {
+					if (options.crlf) {
 						if (stash('\r') < 0)
 							return -1;
 					}
@@ -1769,7 +1775,7 @@ dump_formatted(void)
 					newlines--;
 					data_without_newline = False;
 				}
-				if (any_3270_printable || !ffskip)
+				if (any_3270_printable || !options.ffskip)
 					if (stash('\f') < 0)
 						return -1;
 				blanks++;
@@ -1784,7 +1790,7 @@ dump_formatted(void)
 				break;
 			default:
 				while (newlines) {
-					if (crlf) {
+					if (options.crlf) {
 						if (stash('\r') < 0)
 							return -1;
 					}
@@ -1832,13 +1838,13 @@ dump_formatted(void)
 				break;
 			}
 		}
-		if (any_data || blanklines)
+		if (any_data || options.blanklines)
 			newlines++;
 	}
 
 	/* If there was data on the last line, put out a newline. */
 	if (data_without_newline) {
-		if (crlf) {
+		if (options.crlf) {
 			if (stash('\r') < 0)
 				return -1;
 		}
@@ -1882,7 +1888,7 @@ print_eoj(void)
 	}
 
 	/* Handle -ffeoj, which blindly adds a formfeed to every page. */
-	if (ffeoj && !ffeoj_last) {
+	if (options.ffeoj && !ffeoj_last) {
 	    	if (scs_any) {
 			trace_ds("Automatic SCS EOJ formfeed.\n");
 		    	scs_formfeed(True);
@@ -1907,7 +1913,7 @@ print_eoj(void)
 #if defined(_WIN32) /*[*/
 	if (ws_initted) {
 		trace_ds("End of print job.\n");
-		if (trnpost != NULL && copyfile(trnpost) < 0)
+		if (options.trnpost != NULL && copyfile(options.trnpost) < 0)
 		    	rc = -1;
 	    	if (ws_endjob() < 0)
 			rc = -1;
@@ -1916,22 +1922,22 @@ print_eoj(void)
 #else /*]*/
 	if (prfile != NULL) {
 		trace_ds("End of print job.\n");
-		if (trnpost != NULL && copyfile(trnpost) < 0)
+		if (options.trnpost != NULL && copyfile(options.trnpost) < 0)
 		    rc = -1;
 		rc = pclose_no_sigint(prfile);
 		if (rc) {
 			if (rc < 0)
-				errmsg("Close error on '%s': %s", command,
-				    strerror(errno));
+				errmsg("Close error on '%s': %s",
+					options.command, strerror(errno));
 			else if (WIFEXITED(rc))
 				errmsg("'%s' exited with status %d",
-				    command, WEXITSTATUS(rc));
+					options.command, WEXITSTATUS(rc));
 			else if (WIFSIGNALED(rc))
 				errmsg("'%s' terminated by signal %d",
-				    command, WTERMSIG(rc));
+					options.command, WTERMSIG(rc));
 			else
 				errmsg("'%s' returned status %d",
-				    command, rc);
+					options.command, rc);
 			rc = -1;
 		}
 		prfile = NULL;
@@ -2001,11 +2007,13 @@ copyfile(const char *filename)
 		return -1;
 	}
 	while ((c = fgetc(f)) != EOF) {
+		trace_pdc((unsigned char)c);
 #if defined(_WIN32) /*[*/
 		if (ws_putc(c) < 0) {
 #else /*][*/
 		if (fputc(c, prfile) < 0) {
-		    	errmsg("write(%s): %s", command, strerror(errno));
+		    	errmsg("write(%s): %s", options.command,
+				strerror(errno));
 #endif /*]*/
 			rc = -1;
 			break;

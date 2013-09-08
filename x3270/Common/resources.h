@@ -442,6 +442,7 @@
 #define OptScrollBar		"-sb"
 #define OptSet			"-set"
 #define OptSocket		"-socket"
+#define OptSyncPort		"-syncport"
 #define OptAutoShortcut		"-S"
 #define OptNoAutoShortcut	"+S"
 #define OptTermName		"-tn"

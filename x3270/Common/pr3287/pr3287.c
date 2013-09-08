@@ -46,6 +46,8 @@
  *		use the specified character set
  *          -crlf
  *		expand newlines to CR/LF (POSIX only)
+ *          -crthru
+ *              pass through CRs in unformatted 3270 mode
  *	    -dameon
  *		become a daemon after negotiating
  *          -blanklines
@@ -79,6 +81,8 @@
  *		keep trying to reconnect
  *	    -selfsignedok
  *	        allow self-signed host certificates
+ *          -syncport port
+ *              TCP port for login session synchronization
  *	    -trace
  *		trace data stream to a file
  *          -tracedir dir
@@ -139,6 +143,8 @@
 #include "windirsc.h"
 #endif /*]*/
 
+#include "pr3287.h"
+
 #if defined(_IOLBF) /*[*/
 #define SETLINEBUF(s)	setvbuf(s, (char *)NULL, _IOLBF, BUFSIZ)
 #else /*][*/
@@ -154,64 +160,18 @@ extern char *build;
 extern FILE *tracef;
 
 /* Globals. */
-char *programname = NULL;	/* program name */
-int blanklines = 0;
-int emflush = 1;
-int ignoreeoj = 0;
-int reconnect = 0;
+options_t options;
+int syncsock = -1;
 #if defined(_WIN32) /*[*/
-int crlf = 1;
-int printercp = 0;
-#else /*][*/
-int crlf = 0;
-#endif /*]*/
-int ffeoj = 0;
-int ffthru = 0;
-int ffskip = 0;
-int verbose = 0;
-int ssl_host = 0;
-unsigned long eoj_timeout = 0L; /* end of job timeout */
-char *trnpre = NULL;
-char *trnpost = NULL;
+char *appdata;
+#endif /* ]*/
 
-#if defined(HAVE_LIBSSL) /*[*/
-char *accept_hostname;
-char *ca_dir;
-char *ca_file;
-char *cert_file;
-char *cert_file_type;
-char *chain_file;
-char *key_file;
-char *key_file_type;
-char *key_passwd;
-int self_signed_ok = 0;
-int verify_cert = 0;
-#endif /*]*/
-
-/* User options. */
-#if !defined(_WIN32) /*[*/
-static enum { NOT_DAEMON, WILL_DAEMON, AM_DAEMON } bdaemon = NOT_DAEMON;
-#endif /*]*/
-static char *assoc = NULL;	/* TN3270 session to associate with */
-#if !defined(_WIN32) /*[*/
-const char *command = "lpr";	/* command to run for printing */
-#else /*][*/
-const char *printer = NULL;	/* printer to use */
-#endif /*]*/
-static int tracing = 0;		/* are we tracing? */
-#if !defined(_WIN32) /*[*/
-static char *tracedir = "/tmp";	/* where we are tracing */
-#endif /*]*/
-char *proxy_spec;		/* proxy specification */
-
+/* Locals. */
+static char *programname = NULL;
 static int proxy_type = 0;
 static char *proxy_host = CN;
 static char *proxy_portname = CN;
 static unsigned short proxy_port = 0;
-
-#if defined(_WIN32) /*[*/
-char *appdata;
-#endif /* ]*/
 
 void pr3287_exit(int);
 const char *build_options(void);
@@ -253,6 +213,7 @@ usage(void)
 #else /*][*/
 "  -crlf            expand newlines to CR/LF\n"
 #endif /*]*/
+"  -crthru          pass through CRs in unformatted 3270 mode\n"
 "  -eojtimeout <seconds>\n"
 "                   time out end of print job\n",
 "  -ffeoj           assume FF at the end of each print job\n"
@@ -279,14 +240,13 @@ usage(void)
 #if defined(HAVE_LIBSSL) /*[*/
 "  -selfsignedok    allow self-signed host SSL certificates\n"
 #endif /*]*/
+"  -syncport port   TCP port for login session synchronization\n"
 #if defined(_WIN32) /*[*/
 "  -trace           trace data stream to <wc3270appData>/x3trc.<pid>.txt\n",
 #else /*][*/
 "  -trace           trace data stream to /tmp/x3trc.<pid>\n",
 #endif /*]*/
-#if !defined(_WIN32) /*[*/
 "  -tracedir <dir>  directory to keep trace information in\n"
-#endif /*]*/
 "  -trnpre <file>   file of transparent data to send before each job\n"
 "  -trnpost <file>  file of transparent data to send after each job\n"
 "  -v               display version information and exit\n"
@@ -308,15 +268,15 @@ verrmsg(const char *fmt, va_list ap)
 
 	ix = !ix;
 	(void) vsprintf(buf[ix], fmt, ap);
-	trace_ds("Error: %s\n", buf[ix]);
+	vtrace("Error: %s\n", buf[ix]);
 	if (!strcmp(buf[ix], buf[!ix])) {
-		if (verbose)
+		if (options.verbose)
 			(void) fprintf(stderr, "Suppressed error '%s'\n",
 			    buf[ix]);
 		return;
 	}
 #if !defined(_WIN32) /*[*/
-	if (bdaemon == AM_DAEMON) {
+	if (options.bdaemon == AM_DAEMON) {
 		/* XXX: Need to put somethig in the Application Event Log. */
 		syslog(LOG_ERR, "%s: %s", programname, buf[ix]);
 	} else {
@@ -391,7 +351,7 @@ static void
 fatal_signal(int sig)
 {
 	/* Flush any pending data and exit. */
-	trace_ds("Fatal signal %d\n", sig);
+	vtrace("Fatal signal %d\n", sig);
 	(void) print_eoj();
 	errmsg("Exiting on signal %d", sig);
 	exit(0);
@@ -403,7 +363,7 @@ static void
 flush_signal(int sig)
 {
 	/* Flush any pending data and exit. */
-	trace_ds("Flush signal %d\n", sig);
+	vtrace("Flush signal %d\n", sig);
 	(void) print_eoj();
 }
 #endif /*]*/
@@ -420,7 +380,74 @@ pr3287_exit(int status)
 		(void) fgets(buf, 2, stdin);
 	}
 #endif /*]*/
+
+	/* Close the synchronization socket gracefully. */
+	if (syncsock >= 0) {
+		close(syncsock);
+	}
+
 	exit(status);
+}
+
+static void
+init_options(void)
+{
+    	/* Clear them all out, just in case. */
+    	memset(&options, '\0', sizeof(options));
+
+	/* Set individual defaults. */
+	options.assoc			= NULL;
+#if !defined(_WIN32) /*[*/
+	options.bdaemon			= NOT_DAEMON;
+#endif /*]*/
+	options.blanklines		= 0;
+	options.charset			= "us";
+#if !defined(_WIN32) /*[*/
+	options.command			= "lpr";
+#endif /*]*/
+#if !defined(_WIN32) /*[*/
+	options.crlf			= 0;
+#else /*][*/
+	options.crlf			= 1;
+#endif /*]*/
+	options.crthru			= 0;
+	options.emflush			= 1;
+	options.eoj_timeout		= 0L;
+	options.ffeoj			= 0;
+	options.ffthru			= 0;
+	options.ffskip			= 0;
+	options.ignoreeoj		= 0;
+#if defined(_WIN32) /*[*/
+	if ((options.printer = getenv("PRINTER")) == NULL)
+		options.printer = ws_default_printer();
+	options.printercp		= 0;
+#endif /*]*/
+	options.proxy_spec		= NULL;
+	options.reconnect		= 0;
+#if defined(HAVE_LIBSSL) /*[*/
+	options.ssl.accept_hostname	= NULL;
+	options.ssl.ca_dir		= NULL;
+	options.ssl.ca_file		= NULL;
+	options.ssl.cert_file		= NULL;
+	options.ssl.cert_file_type	= NULL;
+	options.ssl.chain_file		= NULL;
+	options.ssl.key_file		= NULL;
+	options.ssl.key_file_type	= NULL;
+	options.ssl.key_passwd		= NULL;
+	options.ssl.self_signed_ok	= 0;
+	options.ssl.ssl_host		= 0;
+	options.ssl.verify_cert		= 0;
+#endif /*]*/
+	options.syncport		= 0;
+#if !defined(_WIN32) /*[*/
+	options.tracedir		= "/tmp";
+#else /*][*/
+	options.tracedir		= NULL;
+#endif /*]*/
+	options.tracing			= 0;
+	options.trnpre			= NULL;
+	options.trnpost			= NULL;
+	options.verbose			= 0;
 }
 
 int
@@ -429,7 +456,6 @@ main(int argc, char *argv[])
 	int i;
 	char *at, *colon;
 	int len;
-	char *charset = "us";
 	char *lu = NULL;
 	char *host = NULL;
 	char *port = "23";
@@ -465,13 +491,6 @@ main(int argc, char *argv[])
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-	/*
-	 * Get the printer name via the environment, because Windows doesn't
-	 * let us put spaces in arguments.
-	 */
-	if ((printer = getenv("PRINTER")) == NULL)
-		printer = ws_default_printer();
-
 	if (get_dirs(NULL, "wc3270", NULL, NULL, &appdata, NULL) < 0)
 	    	exit(1);
 
@@ -480,10 +499,11 @@ main(int argc, char *argv[])
 #endif /*]*/
 
 	/* Gather the options. */
+	init_options();
 	for (i = 1; i < argc && argv[i][0] == '-'; i++) {
 #if !defined(_WIN32) /*[*/
 		if (!strcmp(argv[i], "-daemon"))
-			bdaemon = WILL_DAEMON;
+			options.bdaemon = WILL_DAEMON;
 		else
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
@@ -493,7 +513,7 @@ main(int argc, char *argv[])
 				    "Missing value for -accepthostname\n");
 				usage();
 			}
-			accept_hostname = argv[i + 1];
+			options.ssl.accept_hostname = argv[i + 1];
 			i++;
 		} else
 #endif /*]*/
@@ -503,7 +523,7 @@ main(int argc, char *argv[])
 				    "Missing value for -assoc\n");
 				usage();
 			}
-			assoc = argv[i + 1];
+			options.assoc = argv[i + 1];
 			i++;
 		} else
 #if !defined(_WIN32) /*[*/
@@ -513,7 +533,7 @@ main(int argc, char *argv[])
 				    "Missing value for -command\n");
 				usage();
 			}
-			command = argv[i + 1];
+			options.command = argv[i + 1];
 			i++;
 		} else
 #endif /*]*/
@@ -524,7 +544,7 @@ main(int argc, char *argv[])
 				    "Missing value for -cadir\n");
 				usage();
 			}
-			ca_dir = argv[i + 1];
+			options.ssl.ca_dir = argv[i + 1];
 			i++;
 		} else if (!strcmp(argv[i], "-cafile")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
@@ -532,7 +552,7 @@ main(int argc, char *argv[])
 				    "Missing value for -cafile\n");
 				usage();
 			}
-			ca_file = argv[i + 1];
+			options.ssl.ca_file = argv[i + 1];
 			i++;
 		} else if (!strcmp(argv[i], "-certfile")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
@@ -540,7 +560,7 @@ main(int argc, char *argv[])
 				    "Missing value for -certfile\n");
 				usage();
 			}
-			cert_file = argv[i + 1];
+			options.ssl.cert_file = argv[i + 1];
 			i++;
 		} else if (!strcmp(argv[i], "-certfiletype")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
@@ -548,7 +568,7 @@ main(int argc, char *argv[])
 				    "Missing value for -certfiletype\n");
 				usage();
 			}
-			cert_file_type = argv[i + 1];
+			options.ssl.cert_file_type = argv[i + 1];
 			i++;
 		} else if (!strcmp(argv[i], "-chainfile")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
@@ -556,7 +576,7 @@ main(int argc, char *argv[])
 				    "Missing value for -chainfile\n");
 				usage();
 			}
-			chain_file = argv[i + 1];
+			options.ssl.chain_file = argv[i + 1];
 			i++;
 		} else if (!strcmp(argv[i], "-keyfile")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
@@ -564,7 +584,7 @@ main(int argc, char *argv[])
 				    "Missing value for -keyfile\n");
 				usage();
 			}
-			key_file = argv[i + 1];
+			options.ssl.key_file = argv[i + 1];
 			i++;
 		} else if (!strcmp(argv[i], "-keyfiletype")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
@@ -572,7 +592,7 @@ main(int argc, char *argv[])
 				    "Missing value for -keyfiletype\n");
 				usage();
 			}
-			key_file_type = argv[i + 1];
+			options.ssl.key_file_type = argv[i + 1];
 			i++;
 		} else if (!strcmp(argv[i], "-keypasswd")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
@@ -580,7 +600,7 @@ main(int argc, char *argv[])
 				    "Missing value for -keypasswd\n");
 				usage();
 			}
-			key_passwd = argv[i + 1];
+			options.ssl.key_passwd = argv[i + 1];
 			i++;
 		} else
 #endif /*]*/
@@ -590,37 +610,39 @@ main(int argc, char *argv[])
 				    "Missing value for -charset\n");
 				usage();
 			}
-			charset = argv[i + 1];
+			options.charset = argv[i + 1];
 			i++;
 		} else if (!strcmp(argv[i], "-blanklines")) {
-			blanklines = 1;
+			options.blanklines = 1;
 		} else if (!strcmp(argv[i], "-emflush")) {
-			emflush = 1;
+			options.emflush = 1;
 		} else if (!strcmp(argv[i], "-noemflush")) {
-			emflush = 0;
+			options.emflush = 0;
 #if defined(_WIN32) /*[*/
 		} else if (!strcmp(argv[i], "-nocrlf")) {
-			crlf = 0;
+			options.crlf = 0;
 #else /*][*/
 		} else if (!strcmp(argv[i], "-crlf")) {
-			crlf = 1;
+			options.crlf = 1;
 #endif /*]*/
+		} else if (!strcmp(argv[i], "-crthru")) {
+			options.crthru = 1;
 		} else if (!strcmp(argv[i], "-eojtimeout")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
-				    "Missing value for -charset\n");
+				    "Missing value for -eojtimeout\n");
 				usage();
 			}
-			eoj_timeout = strtoul(argv[i + 1], NULL, 0);
+			options.eoj_timeout = strtoul(argv[i + 1], NULL, 0);
 			i++;
 		} else if (!strcmp(argv[i], "-ignoreeoj")) {
-			ignoreeoj = 1;
+			options.ignoreeoj = 1;
 		} else if (!strcmp(argv[i], "-ffeoj")) {
-			ffeoj = 1;
+			options.ffeoj = 1;
 		} else if (!strcmp(argv[i], "-ffthru")) {
-			ffthru = 1;
+			options.ffthru = 1;
 		} else if (!strcmp(argv[i], "-ffskip")) {
-			ffskip = 1;
+			options.ffskip = 1;
 #if defined(_WIN32) /*[*/
 		} else if (!strcmp(argv[i], "-printer")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
@@ -628,22 +650,22 @@ main(int argc, char *argv[])
 				    "Missing value for -printer\n");
 				usage();
 			}
-			printer = argv[i + 1];
+			options.printer = argv[i + 1];
 			i++;
 		} else if (!strcmp(argv[i], "-printercp")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
-				    "Missing value for -printer\n");
+				    "Missing value for -printercp\n");
 				usage();
 			}
-			printercp = (int)strtoul(argv[i + 1], NULL, 0);
+			options.printercp = (int)strtoul(argv[i + 1], NULL, 0);
 			i++;
 #endif /*]*/
 		} else if (!strcmp(argv[i], "-reconnect")) {
-			reconnect = 1;
+			options.reconnect = 1;
 #if defined(HAVE_LIBSSL) /*[*/
 		} else if (!strcmp(argv[i], "-selfsignedok")) {
-		    	self_signed_ok = 1;
+		    	options.ssl.self_signed_ok = 1;
 #endif /*]*/
 		} else if (!strcmp(argv[i], "-v")) {
 			printf("%s\n%s\n", build, build_options());
@@ -656,29 +678,35 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 			exit(0);
 #if defined(HAVE_LIBSSL) /*[*/
 		} else if (!strcmp(argv[i], "-verifycert")) {
-		    	verify_cert = 1;
+		    	options.ssl.verify_cert = 1;
 #endif /*]*/
 		} else if (!strcmp(argv[i], "-V")) {
-			verbose = 1;
+			options.verbose = 1;
+		} else if (!strcmp(argv[i], "-syncport")) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for -syncport\n");
+				usage();
+			}
+			options.syncport = (int)strtoul(argv[i + 1], NULL, 0);
+			i++;
 		} else if (!strcmp(argv[i], "-trace")) {
-			tracing = 1;
-#if !defined(_WIN32) /*[*/
+			options.tracing = 1;
 		} else if (!strcmp(argv[i], "-tracedir")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
 				    "Missing value for -tracedir\n");
 				usage();
 			}
-			tracedir = argv[i + 1];
+			options.tracedir = argv[i + 1];
 			i++;
-#endif /*]*/
 		} else if (!strcmp(argv[i], "-trnpre")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
 				(void) fprintf(stderr,
 				    "Missing value for -trnpre\n");
 				usage();
 			}
-			trnpre = argv[i + 1];
+			options.trnpre = argv[i + 1];
 			i++;
 		} else if (!strcmp(argv[i], "-trnpost")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
@@ -686,7 +714,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 				    "Missing value for -trnpost\n");
 				usage();
 			}
-			trnpost = argv[i + 1];
+			options.trnpost = argv[i + 1];
 			i++;
 		} else if (!strcmp(argv[i], "-proxy")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
@@ -694,7 +722,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 				    "Missing value for -proxy\n");
 				usage();
 			}
-			proxy_spec = argv[i + 1];
+			options.proxy_spec = argv[i + 1];
 			i++;
 		} else if (!strcmp(argv[i], "-xtable")) {
 			if (argc <= i + 1 || !argv[i + 1][0]) {
@@ -716,7 +744,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 #if defined(HAVE_LIBSSL) /*[*/
 	do {
 		if (!strncasecmp(argv[i], "l:", 2)) {
-			ssl_host = True;
+			options.ssl.ssl_host = True;
 			argv[i] += 2;
 			any_prefixes = True;
 		} else
@@ -771,12 +799,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 
 #if defined(_WIN32) /*[*/
 	/* Set the printer code page. */
-	if (printercp == 0)
-	    	printercp = GetACP();
+	if (options.printercp == 0)
+	    	options.printercp = GetACP();
 #endif /*]*/
 
 	/* Set up the character set. */
-	if (charset_init(charset) < 0)
+	if (charset_init(options.charset) < 0)
 		pr3287_exit(1);
 
 	/* Set up the custom translation table. */
@@ -784,53 +812,104 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 		pr3287_exit(1);
 
 	/* Try opening the trace file, if there is one. */
-	if (tracing) {
-		char tracefile[256];
+	if (options.tracing) {
+		char tracefile[4096];
 		time_t clk;
 		int i;
+		int u = 0;
+		int fd;
+#if defined(_WIN32) /*[*/
+		size_t sl;
+#endif /*]*/
+
+		do {
+			char dashu[32];
+
+			if (u) {
+			    	snprintf(dashu, sizeof(dashu), "-%d", u);
+			} else {
+				dashu[0] = '\0';
+			}
 
 #if defined(_WIN32) /*[*/
-		(void) sprintf(tracefile, "%sx3trc.%d.txt", appdata, getpid());
-#else /*][*/
-		(void) sprintf(tracefile, "%s/x3trc.%d", tracedir, getpid());
-#endif /*]*/
-		tracef = fopen(tracefile, "a");
-		if (tracef == NULL) {
-#if defined(_WIN32) /*[*/
-			(void) sprintf(tracefile, "x3trc.%d.txt", getpid());
-			tracef = fopen(tracefile, "a");
-			if (tracef == NULL) {
-#endif /*]*/
-				perror(tracefile);
-				pr3287_exit(1);
-#if defined(_WIN32) /*[*/
+			if (options.tracedir == NULL) {
+				options.tracedir = appdata;
 			}
+			sl = strlen(options.tracedir);
+			(void) snprintf(tracefile, sizeof(tracefile),
+				"%s%sx3trc.%d%s.txt",
+				options.tracedir,
+				sl? ((options.tracedir[sl - 1] == '\\')?
+				    "": "\\"): "",
+				getpid(), dashu);
+#else /*][*/
+			(void) snprintf(tracefile, sizeof(tracefile),
+				"%s/x3trc.%d%s",
+				options.tracedir, getpid(), dashu);
 #endif /*]*/
+			fd = open(tracefile, O_WRONLY | O_CREAT | O_EXCL, 0600);
+			if (fd < 0) {
+				if (errno != EEXIST) {
+					perror(tracefile);
+					pr3287_exit(1);
+				}
+				u++;
+			}
+		} while (fd < 0);
+
+		tracef = fdopen(fd, "w");
+		if (tracef == NULL) {
+			perror(tracefile);
+			pr3287_exit(1);
 		}
 		(void) SETLINEBUF(tracef);
 		clk = time((time_t *)0);
-		(void) fprintf(tracef, "Trace started %s", ctime(&clk));
-		(void) fprintf(tracef, " Version: %s\n %s\n", build,
-			       build_options());
+		vtrace_nts("Trace started %s", ctime(&clk));
+		vtrace_nts(" Version: %s\n %s\n", build, build_options());
 #if !defined(_WIN32) /*[*/
-		(void) fprintf(tracef, " Locale codeset: %s\n", locale_codeset);
+		vtrace_nts(" Locale codeset: %s\n", locale_codeset);
 #else /*][*/
-		(void) fprintf(tracef, " ANSI codepage: %d, "
-			       "printer codepage: %d\n", GetACP(), printercp);
+		vtrace_nts(" ANSI codepage: %d, printer codepage: %d\n",
+			GetACP(), options.printercp);
 #endif /*]*/
-		(void) fprintf(tracef, " Host codepage: %d",
-			       (int)(cgcsgid & 0xffff));
+		vtrace_nts(" Host codepage: %d", (int)(cgcsgid & 0xffff));
 #if defined(X3270_DBCS) /*[*/
 		if (dbcs)
-			(void) fprintf(tracef, "+%d",
-				       (int)(cgcsgid_dbcs & 0xffff));
+			vtrace_nts("+%d", (int)(cgcsgid_dbcs & 0xffff));
 #endif /*]*/
-		(void) fprintf(tracef, "\n");
-		(void) fprintf(tracef, " Command:");
+		vtrace_nts("\n");
+		vtrace_nts(" Command:");
 		for (i = 0; i < argc; i++) {
-			(void) fprintf(tracef, " %s", argv[i]);
+			vtrace_nts(" %s", argv[i]);
 		}
-		(void) fprintf(tracef, "\n");
+		vtrace_nts("\n");
+#if defined(_WIN32) /*[*/
+		vtrace_nts(" AppData: %s\n", appdata? appdata: "(null)");
+#endif /*]*/
+
+		/* Dump the translation table. */
+		if (xtable != NULL) {
+			int ebc;
+			const char *x;
+
+			vtrace_nts("Translation table:\n");
+			for (ebc = 0; ebc <= 0xff; ebc++) {
+				int nx = xtable_lookup(ebc, &x);
+
+				if (nx >= 0) {
+					int j;
+
+					vtrace_nts(" ebcdic X'%02X' ascii",
+						ebc);
+
+					for (j = 0; j < nx; j++) {
+						vtrace_nts(" 0x%02x",
+							(unsigned char)x[j]);
+					}
+					vtrace_nts("\n");
+				}
+			}
+		}
 	}
 
 #if defined(HAVE_LIBSSL) /*[*/
@@ -839,7 +918,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 
 #if !defined(_WIN32) /*[*/
 	/* Become a daemon. */
-	if (bdaemon != NOT_DAEMON) {
+	if (options.bdaemon != NOT_DAEMON) {
 		switch (fork()) {
 			case -1:
 				perror("fork");
@@ -849,7 +928,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 				/* Child: Break away from the TTY. */
 				if (setsid() < 0)
 					exit(1);
-				bdaemon = AM_DAEMON;
+				options.bdaemon = AM_DAEMON;
 				break;
 			default:
 				/* Parent: We're all done. */
@@ -870,10 +949,32 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 #endif /*]*/
 
 	/* Set up the proxy. */
-	if (proxy_spec != CN) {
+	if (options.proxy_spec != CN) {
 	    	proxy_type = proxy_setup(&proxy_host, &proxy_portname);
 		if (proxy_type < 0)
 			pr3287_exit(1);
+	}
+
+	/* Set up the synchronization socket. */
+	if (options.syncport) {
+		struct sockaddr_in sin;
+
+		memset(&sin, '\0', sizeof(sin));
+		sin.sin_family = AF_INET;
+		sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+		sin.sin_port = htons(options.syncport);
+
+		syncsock = socket(PF_INET, SOCK_STREAM, 0);
+		if (syncsock < 0) {
+			popup_a_sockerr("socket(syncsock)");
+			pr3287_exit(1);
+		}
+		if (connect(syncsock, (struct sockaddr *)&sin,
+			    sizeof(sin)) < 0) {
+			popup_a_sockerr("connect(syncsock)");
+			pr3287_exit(1);
+		}
+		vtrace("Connected to sync port %d.\n", options.syncport);
 	}
 
 	/*
@@ -937,7 +1038,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 
 		if (proxy_type > 0) {
 		    	/* Connect to the host through the proxy. */
-		    	if (verbose) {
+		    	if (options.verbose) {
 			    	(void) fprintf(stderr, "Connected to proxy "
 					       "server %s, port %u\n",
 					       proxy_host, proxy_port);
@@ -949,26 +1050,41 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 		}
 
 		/* Say hello. */
-		if (verbose) {
+		if (options.verbose) {
 			(void) fprintf(stderr, "Connected to %s, port %u%s\n",
 			    host, p,
-			    ssl_host? " via SSL": "");
-			if (assoc != NULL)
+			    options.ssl.ssl_host? " via SSL": "");
+			if (options.assoc != NULL)
 				(void) fprintf(stderr, "Associating with LU "
-				    "%s\n", assoc);
+				    "%s\n", options.assoc);
 			else if (lu != NULL)
 				(void) fprintf(stderr, "Connecting to LU %s\n",
 				    lu);
 #if !defined(_WIN32) /*[*/
-			(void) fprintf(stderr, "Command: %s\n", command);
+			(void) fprintf(stderr, "Command: %s\n",
+				options.command);
 #else /*][*/
 			(void) fprintf(stderr, "Printer: %s\n",
-				       printer? printer: "(none)");
+				       options.printer? options.printer:
+						        "(none)");
 #endif /*]*/
 		}
+		vtrace("Connected to %s, port %u%s\n", host, p,
+			options.ssl.ssl_host? " via SSL": "");
+		if (options.assoc != NULL) {
+			vtrace("Associating with LU %s\n", options.assoc);
+		} else if (lu != NULL) {
+			vtrace("Connecting to LU %s\n", lu);
+		}
+#if !defined(_WIN32) /*[*/
+		vtrace("Command: %s\n", options.command);
+#else /*][*/
+		vtrace("Printer: %s\n", options.printer? options.printer:
+							 "(none)");
+#endif /*]*/
 
 		/* Negotiate. */
-		if (negotiate(host, &ha.sa, ha_len, s, lu, assoc) < 0) {
+		if (negotiate(host, &ha.sa, ha_len, s, lu, options.assoc) < 0) {
 			rc = 1;
 			goto retry;
 		}
@@ -982,12 +1098,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 		/* Process what we're told to process. */
 		if (process(s) < 0) {
 			rc = 1;
-			if (verbose)
+			if (options.verbose)
 				(void) fprintf(stderr,
 				    "Disconnected (error).\n");
 			goto retry;
 		}
-		if (verbose)
+		if (options.verbose)
 			(void) fprintf(stderr, "Disconnected (eof).\n");
 
 	    retry:
@@ -1000,7 +1116,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 			s = -1;
 		}
 
-		if (!reconnect)
+		if (!options.reconnect)
 			break;
 		report_success = 1;
 
@@ -1018,14 +1134,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 	pr3287_exit(rc);
 
 	return rc;
-}
-
-/* Tracing function. */
-void
-trace_str(const char *s)
-{
-	if (tracef)
-		fprintf(tracef, "%s", s);
 }
 
 /* Error pop-ups. */

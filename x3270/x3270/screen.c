@@ -2395,8 +2395,8 @@ draw_fields(union sp *buffer, int first, int last)
 		b.word = 0;	/* clear out all fields */
 
 		if (ea_buf[baddr].fa) {
-			fa = ea_buf[baddr].fa;
-			field_ea = sbp;
+		    fa = ea_buf[baddr].fa;
+		    field_ea = sbp;
 			zero = FA_IS_ZERO(fa);
 			if (field_ea->fg && (!appres.modified_sel || !FA_IS_MODIFIED(fa)))
 				field_color = field_ea->fg & COLOR_MASK;
@@ -2417,24 +2417,32 @@ draw_fields(union sp *buffer, int first, int last)
 			Boolean is_vc = False;
 
 			/* Find the right graphic rendition. */
-			gr = sbp->gr;
-			if (!gr)
-				gr = field_ea->gr;
-			if (gr & GR_BLINK)
-				any_blink = True;
-			if (appres.highlight_bold && FA_IS_HIGH(fa))
-				gr |= GR_INTENSIFY;
+			if (zero) {
+			    	gr = 0;
+			} else {
+				gr = sbp->gr;
+				if (!gr)
+					gr = field_ea->gr;
+				if (gr & GR_BLINK)
+					any_blink = True;
+				if (appres.highlight_bold && FA_IS_HIGH(fa))
+					gr |= GR_INTENSIFY;
+			}
 
 			/* Find the right color. */
-			if (sbp->fg)
-				e_color = sbp->fg & COLOR_MASK;
-			else if (appres.mono && (gr & GR_INTENSIFY))
-				e_color = fa_color(FA_INT_HIGH_SEL);
-			else
-				e_color = field_color;
-			if (gr & GR_REVERSE) {
-				e_color = INVERT_COLOR(e_color);
-				reverse = True;
+			if (zero) {
+			    	e_color = fa_color(FA_INT_HIGH_SEL);
+			} else {
+				if (sbp->fg)
+					e_color = sbp->fg & COLOR_MASK;
+				else if (appres.mono && (gr & GR_INTENSIFY))
+					e_color = fa_color(FA_INT_HIGH_SEL);
+				else
+					e_color = field_color;
+				if (gr & GR_REVERSE) {
+					e_color = INVERT_COLOR(e_color);
+					reverse = True;
+				}
 			}
 			if (!appres.mono)
 				b.bits.fg = e_color;
@@ -2717,11 +2725,23 @@ char_color(int baddr)
 	fa = ea_buf[faddr].fa;
 
 	/*
+	 * For non-display fields, we ignore gr and fg.
+	 */
+	if (FA_IS_ZERO(fa)) {
+		color = fa_color(fa);
+		if (appres.mono && SELECTED(baddr)) {
+			color = INVERT_COLOR(color);
+		}
+		return color;
+	}
+
+	/*
 	 * Find the color of the character or the field.
 	 */
 	if (ea_buf[baddr].fg)
 		color = ea_buf[baddr].fg & COLOR_MASK;
-	else if (fa2ea(faddr)->fg && (!appres.modified_sel || !FA_IS_MODIFIED(fa)))
+	else if (fa2ea(faddr)->fg && (!appres.modified_sel ||
+				      !FA_IS_MODIFIED(fa)))
 		color = fa2ea(faddr)->fg & COLOR_MASK;
 	else
 		color = fa_color(fa);
@@ -2734,7 +2754,8 @@ char_color(int baddr)
 	 *  debug font, it's displayed as a blank; don't invert.
 	 */
 	if (!((ea_buf[baddr].fa && !visible_control)) &&
-	    ((ea_buf[baddr].gr & GR_REVERSE) || (fa2ea(faddr)->gr & GR_REVERSE)))
+	    ((ea_buf[baddr].gr & GR_REVERSE) ||
+	     (fa2ea(faddr)->gr & GR_REVERSE)))
 		color = INVERT_COLOR(color);
 
 	/*
@@ -2800,8 +2821,9 @@ redraw_char(int baddr, Boolean invert)
 
 		/*
 		 * Put back what belongs there.
-		 * Note that the cursor may have been covering a DBCS character that is no longer
-		 * DBCS, so if we're not at the right margin, we should redraw two positions.
+		 * Note that the cursor may have been covering a DBCS character
+		 * that is no longer DBCS, so if we're not at the right margin,
+		 * we should redraw two positions.
 		 */
 #if defined(_ST) /*[*/
 		printf("%s:%d: rt%s\n", __FUNCTION__, __LINE__, rcba(flb));
@@ -2834,9 +2856,13 @@ redraw_char(int baddr, Boolean invert)
 	if (d == DBCS_LEFT || d == DBCS_RIGHT)
 		buffer[0].bits.cs = CS_DBCS;
 	fa = ea_buf[faddr].fa;
-	gr = ea_buf[baddr].gr;
-	if (!gr)
-		gr = fa2ea(faddr)->gr;
+	if (FA_IS_ZERO(fa)) {
+		gr = 0;
+	} else {
+		gr = ea_buf[baddr].gr;
+		if (!gr)
+			gr = fa2ea(faddr)->gr;
+	}
 	if (ea_buf[baddr].fa) {
 		if (!visible_control)
 			blank_it = 1;

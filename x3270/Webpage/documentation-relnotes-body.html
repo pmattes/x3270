@@ -1,5 +1,28 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
 3.3 is the current development line for the x3270 suite.
+<h2>Changes in version 3.3.13ga6, n. September 2013</h2>
+<ul>
+ <li>[all] Corrected a problem with the display of non-display fields
+  (incorrectly observing the colors and graphic rendition).</li>
+ <li>[<i>wpr3287</i>] Added the <b>-tracedir</b> option, just like pr3287.</li>
+ <li>[<i>pr3287</i>, <i>wpr3287</i>] Added tracing of the <b>-xtable</b>
+  translation table.</li>
+ <li>[<i>pr3287</i>, <i>wpr3287</i>] Added tracing of the data stream sent to
+  the printer.</li>
+ <li>[<i>pr3287</i>, <i>wpr3287</i>] Use the same unique trace file name
+  convention as the other emulators.</li>
+ <li>[<i>pr3287</i>, <i>wpr3287</i>] Added a <b>-crthru</b> option to pass
+  CR orders through to the printer in unformatted 3270 mode, instead of
+  interpreting them.</li>
+</ul>
+<h2>Changes in version 3.3.13beta5, 4. September 2013</h2>
+<ul>
+ <li>[<i>wc3270</i>] Added logic to the Session Wizard to automatically correct
+  old-format UNC printer names, and also fixed some minor bugs in it.</li>
+ <li>[all] Corrected the CGCSGID for code page 1145 (spanish-euro).</li>
+ <li>[all] Second try at getting pr3287/wpr3287 shut down and re-launched
+  correctly.</li>
+</ul>
 <h2>Changes in version 3.3.13beta4, 23. August 2013</h2>
 <ul>
  <li>[all] Corrected the start/stop of pr3287/wpr3287 printer sessions, so that
