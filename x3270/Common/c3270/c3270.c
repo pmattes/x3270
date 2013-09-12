@@ -398,7 +398,7 @@ main(int argc, char *argv[])
 	rl_readline_name = "c3270";
 	rl_initialize();
 	rl_attempted_completion_function = attempted_completion;
-#if defined(RL_READLINE_VERSION) /*[*/
+#if defined(RL_READLINE_VERSION) && (RL_READLINE_VERSION > 0x0402) /*[*/
 	rl_completion_entry_function = completion_entry;
 #else /*][*/
 	rl_completion_entry_function = (Function *)completion_entry;

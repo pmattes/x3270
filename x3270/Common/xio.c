@@ -35,6 +35,10 @@
  *		Low-level I/O setup functions and exit code.
  */
 
+#if defined(_WIN32) /*[*/
+# include <windows.h>
+#endif /*]*/
+
 #include "globals.h"
 
 #include "actionsc.h"
@@ -119,6 +123,7 @@ x3270_exit(int n)
 	/* Handle unintentional recursion. */
 	if (already_exiting)
 		return;
+
 	already_exiting = True;
 
 	/* Flush any pending output (mostly for Windows). */
@@ -145,7 +150,16 @@ x3270_exit(int n)
 
 	}
 
+#if !defined(_WIN32) /*[*/
 	exit(n);
+#else /*][*/
+	/*
+	 * On Windows, call ExitProcess() instead of the POSIXish exit().
+	 * Apparently calling exit() in a ConsoleCtrlHandler is a bad thing on
+	 * XP, and causes a hang.
+	 */
+	ExitProcess(n);
+#endif /*]*/
 }
 
 void

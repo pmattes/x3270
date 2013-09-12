@@ -1138,6 +1138,10 @@ connection_complete(void)
 #endif /*]*/
 	host_connected();
 	net_connected();
+	if (output_id != NULL_IOID) {
+		RemoveInput(output_id);
+		output_id = NULL_IOID;
+	}
 }
 
 #if !defined(_WIN32) /*[*/
@@ -1149,12 +1153,22 @@ connection_complete(void)
 static void
 output_possible(unsigned long fd, ioid_t id _is_unused)
 {
+	trace_dsn("Output possible\n");
+	
+	/*
+	 * Try a connect() again to see if the connection completed sucessfully.
+	 * On some systems, such as Linux, this is harmless and succeeds.
+	 * On others, such as MacOS, this is mostly harmless and fails
+	 * with EISCONN.
+	 */
 	if (connect(sock, &haddr[ha_ix].sa, sizeof(haddr[0])) < 0) {
-		trace_dsn("RCVD socket error %d (%s)\n", socket_errno(),
-			strerror(errno));
-		popup_a_sockerr("Connection failed");
-		host_disconnect(True);
-		return;
+		if (errno != EISCONN) {
+			trace_dsn("RCVD socket error %d (%s)\n", socket_errno(),
+				strerror(errno));
+			popup_a_sockerr("Connection failed");
+			host_disconnect(True);
+			return;
+		}
 	}
 
 	if (HALF_CONNECTED) {
@@ -1378,6 +1392,10 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		}
 		host_connected();
 		net_connected();
+		if (output_id != NULL_IOID) {
+			RemoveInput(output_id);
+			output_id = NULL_IOID;
+		}
 	}
 
 #if defined(X3270_TRACE) /*[*/
