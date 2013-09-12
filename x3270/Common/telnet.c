@@ -1122,6 +1122,21 @@ net_connected(void)
 }
 
 /*
+ * remove_output
+ * 	Cancel the callback for output available.
+ */
+static void
+remove_output(void)
+{
+#if !defined(_WIN32) /*[*/
+	if (output_id != NULL_IOID) {
+		RemoveInput(output_id);
+		output_id = NULL_IOID;
+	}
+#endif /*]*/
+}
+
+/*
  * connection_complete
  *	The connection appears to be complete (output is possible or input
  *	appeared ready but recv() returned EWOULDBLOCK).  Complete the
@@ -1138,10 +1153,7 @@ connection_complete(void)
 #endif /*]*/
 	host_connected();
 	net_connected();
-	if (output_id != NULL_IOID) {
-		RemoveInput(output_id);
-		output_id = NULL_IOID;
-	}
+	remove_output();
 }
 
 #if !defined(_WIN32) /*[*/
@@ -1174,10 +1186,7 @@ output_possible(unsigned long fd, ioid_t id _is_unused)
 	if (HALF_CONNECTED) {
 		connection_complete();
 	}
-	if (output_id != NULL_IOID) {
-		RemoveInput(output_id);
-		output_id = NULL_IOID;
-	}
+	remove_output();
 }
 #endif /*]*/
 
@@ -1208,13 +1217,8 @@ net_disconnect(void)
 	/* We're not connected to an LU any more. */
 	status_lu(CN);
 
-#if !defined(_WIN32) /*[*/
 	/* We have no more interest in output buffer space. */
-	if (output_id != NULL_IOID) {
-		RemoveInput(output_id);
-		output_id = NULL_IOID;
-	}
-#endif /*]*/
+	remove_output();
 }
 
 
@@ -1392,10 +1396,7 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		}
 		host_connected();
 		net_connected();
-		if (output_id != NULL_IOID) {
-			RemoveInput(output_id);
-			output_id = NULL_IOID;
-		}
+		remove_output();
 	}
 
 #if defined(X3270_TRACE) /*[*/
