@@ -236,7 +236,7 @@ cc_handler(DWORD type)
 
 		return TRUE;
 	} else if (type == CTRL_CLOSE_EVENT) {
-		trace_event("Window closed");
+		trace_event("Window closed\n");
 		x3270_exit(0);
 		return TRUE;
 	} else {

@@ -54,7 +54,7 @@
 #if defined(USE_ICONV) /*[*/
 iconv_t i_u2mb = (iconv_t)-1;
 iconv_t i_mb2u = (iconv_t)-1;
-#if !defined(_LIBICONV_VERSION) || _LIBICONV_VERSION < 0x0108 /*[*/
+#if !defined(_LIBICONV_VERSION) || _LIBICONV_VERSION <= 0x010B /*[*/
 typedef char *ici_t;		/* old iconv */
 #else /*][*/
 typedef const char *ici_t;	/* new iconv */
