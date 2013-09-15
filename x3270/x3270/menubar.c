@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, Paul Mattes.
+ * Copyright (c) 1993-2013, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -127,8 +127,10 @@ static void menubar_printer(Boolean printer_on);
 #endif /*]*/
 static void menubar_remodel(Boolean ignored _is_unused);
 static void menubar_charset(Boolean ignored _is_unused);
+#if defined(X3270_TRACE) /*[*/
 static void screensave_option(Widget w, XtPointer client_data,
 	XtPointer call_data);
+#endif /*]*/
 
 #define NO_BANG(s)	(((s)[0] == '!')? (s) + 1: (s))
 
@@ -2295,11 +2297,13 @@ HandleMenu_action(Widget w _is_unused, XEvent *event, String *params,
 	XtCallActionProc(menu_parent, "MenuPopup", event, &p, 1);
 }
 
+# if defined(X3270_TRACE) /*[*/
 static void
 screensave_option(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
 	stmenu_popup(STMP_AS_IS);
 }
+# endif /*]*/
 
 #endif /*]*/

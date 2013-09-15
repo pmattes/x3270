@@ -33,7 +33,7 @@
 
 #include "globals.h"
 
-#if defined(X3270_MENUS) /*[*/
+#if defined(X3270_MENUS) && defined(X3270_TRACE) /*[*/
 
 #include <X11/Shell.h>
 #include <X11/StringDefs.h>

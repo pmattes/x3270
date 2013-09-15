@@ -253,6 +253,7 @@ flush_ta(void)
 	return any;
 }
 
+#if defined(X3270_TRACE) /*[*/
 /* Decode keyboard lock bits. */
 static char *
 kybdlock_decode(char *how, unsigned int bits)
@@ -320,6 +321,7 @@ kybdlock_decode(char *how, unsigned int bits)
 
 	return buf;
 }
+#endif /*]*/
 
 /* Set bits in the keyboard lock. */
 static void

@@ -61,6 +61,11 @@ LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
 		  FontObj(3270gt32b) FontObj(3270gt8) FontObj(3270h)
       HOSTSFILE = ibm_hosts
 
+/* Stop running cpp on the man page. Please. */
+#undef DontPreprocessManPages
+#define DontPreprocessManPages YES
+#undef PreprocessManPagtes
+
 /* Variables set by autoconf. */
     FONTINSTDIR = @IFONTDIR@
          prefix = @prefix@

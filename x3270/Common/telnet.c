@@ -1342,6 +1342,7 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 			return;
 		}
 #endif /*]*/
+#if defined(X3270_TRACE) /*[*/
 		trace_dsn("RCVD socket error %d (%s)\n",
 			socket_errno(),
 #if !defined(_WIN32) /*[*/
@@ -1350,6 +1351,7 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 			win32_strerror(GetLastError())
 #endif /*]*/
 			);
+#endif /*]*/
 		if (HALF_CONNECTED) {
 			if (ha_ix == num_ha - 1) {
 				popup_a_sockerr("Connect to %s, "
@@ -2684,6 +2686,7 @@ net_rawout(unsigned const char *buf, int len)
 				return;
 			}
 #endif /*]*/
+#if defined(X3270_TRACE) /*[*/
 			trace_dsn("RCVD socket error %d (%s)\n",
 				socket_errno(),
 #if !defined(_WIN32) /*[*/
@@ -2692,6 +2695,7 @@ net_rawout(unsigned const char *buf, int len)
 				win32_strerror(GetLastError())
 #endif /*]*/
 				);
+#endif /*]*/
 			if (socket_errno() == SE_EPIPE || socket_errno() == SE_ECONNRESET) {
 				host_disconnect(False);
 				return;
@@ -3428,7 +3432,9 @@ tn3270e_nak(enum pds rv)
 	unsigned char rsp_buf[10];
 	tn3270e_header *h_in = (tn3270e_header *)ibuf;
 	int rsp_len = 0;
+#if defined(X3270_TRACE) /*[*/
 	char *neg = NULL;
+#endif /*]*/
 
 	rsp_buf[rsp_len++] = TN3270E_DT_RESPONSE;	    /* data_type */
 	rsp_buf[rsp_len++] = 0;				    /* request_flag */
@@ -3443,17 +3449,23 @@ tn3270e_nak(enum pds rv)
 	default:
 	case PDS_BAD_CMD:
 		rsp_buf[rsp_len++] = TN3270E_NEG_COMMAND_REJECT;
+#if defined(X3270_TRACE) /*[*/
 		neg = "COMMAND-REJECT";
+#endif /*]*/
 		break;
 	case PDS_BAD_ADDR:
 		rsp_buf[rsp_len++] = TN3270E_NEG_OPERATION_CHECK;
+#if defined(X3270_TRACE) /*[*/
 		neg = "OPERATION-CHECK";
+#endif /*]*/
 		break;
 	}
 	rsp_buf[rsp_len++] = IAC;
 	rsp_buf[rsp_len++] = EOR;
+#if defined(X3270_TRACE) /*[*/
 	trace_dsn("SENT TN3270E(RESPONSE NEGATIVE-RESPONSE %u) %s\n",
 		h_in->seq_number[0] << 8 | h_in->seq_number[1], neg);
+#endif /*]*/
 	net_rawout(rsp_buf, rsp_len);
 }
 

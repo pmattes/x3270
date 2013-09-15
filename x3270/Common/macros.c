@@ -315,7 +315,11 @@ trace_script_output(const char *fmt, ...)
 	}
 }
 #else /*][*/
-#define trace_script_output(fmt, args...)
+# if defined(__GNUC__) /*[*/
+#  define trace_script_output(format, args...)
+# else /*][*/
+#  define trace_script_output 0 &&
+# endif /*]*/
 #endif /*]*/
 
 #if defined(X3270_SCRIPT) && defined(X3270_PLUGIN) /*[*/
@@ -1329,7 +1333,9 @@ execute_command(enum iaction cause, char *s, char **np)
 	if (ft_state != FT_NONE)
 		sms->state = SS_FT_WAIT;
 #endif /*]*/
+#if defined(X3270_TRACE) /*[*/
 	trace_rollover_check();
+#endif /*]*/
 	if (CKBWAIT)
 		return EM_PAUSE;
 	else

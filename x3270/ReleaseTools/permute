@@ -3,6 +3,8 @@
 # Needs to be run from the top of a source tree (where x3270, s3270, tcl3270
 # and c3270 can be seen).
 
+TD=${TD-/tmp}
+
 if [ $# -eq 0 ]
 then	progs="x3270 s3270 tcl3270 c3270"
 else	progs="$@"
@@ -10,13 +12,13 @@ fi
 
 for prog in $progs
 do	echo "Trying $prog"
-	rm -rf /usr/tmp/$prog-3.3/
+	rm -rf $TD/$prog-3.3/
 	p=$PWD
 	cd $prog
 	yresync
-	make -f Makefile.aux $prog.tgz
-	cd /usr/tmp/
-	tar -xzf ~-/$prog.tgz
+	make -f Makefile.aux $prog-src.tgz
+	cd $TD/
+	tar -xzf ~-/$prog-src.tgz
 	cd $prog-3.3/
 
 	typeset -i b=1
@@ -75,15 +77,15 @@ do	echo "Trying $prog"
 		#echo "$c $hack"
 		./configure --without-pr3287 $c $hack >/dev/null 2>&1 || (echo "$prog configure --without-pr3287 $c $hack failed"; exit 1)
 		make clean >/dev/null 2>&1
-		if make -j4 >/tmp/mk$$ 2>&1
+		if mk >$TD/mk$$ 2>&1
 		then	echo -n "."
 		else	echo
 			echo "$prog failed:$c"
 		fi
-		if grep 'warning:' /tmp/mk$$
+		if grep 'warning:' $TD/mk$$
 		then	echo "Warnings:$c"
 		fi
-		rm /tmp/mk$$
+		rm $TD/mk$$
 		x=x+1
 	done
 	echo

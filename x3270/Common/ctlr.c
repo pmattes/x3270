@@ -1988,7 +1988,9 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 	unsigned char *cp = buf;
 	int s_row;
 	unsigned char c;
+#if defined(X3270_TRACE) /*[*/
 	int baddr;
+#endif /*]*/
 	int text = False;
 
 	/*
@@ -2048,8 +2050,10 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 			    rcba(buffer_addr));
 			break;
 		case ORDER_SBA:
+#if defined(X3270_TRACE) /*[*/
 			baddr = DECODE_BADDR(*(cp+1), *(cp+2));
 			trace_ds(" SBA%s [ignored]\n", rcba(baddr));
+#endif /*]*/
 			cp += 2;
 			i += 2;
 			break;

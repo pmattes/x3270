@@ -700,7 +700,9 @@ main(int argc, char *argv[])
 		XtAppProcessEvent(appcontext, XtIMAll);
 
 		if (children && (pid = waitpid(-1, &status, WNOHANG)) > 0) {
+#if defined(X3270_PRINTER) /*[*/
 			printer_check(pid, status);
+#endif /*]*/
 			--children;
 		}
 	}

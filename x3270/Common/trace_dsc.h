@@ -64,10 +64,10 @@ void trace_rollover_check(void);
 
 #define rcba 0 &&
 #if defined(__GNUC__) /*[*/
-#define trace_ds(format, args...)
-#define trace_dsn(format, args...)
-#define trace_ds_nb(format, args...)
-#define trace_event(format, args...)
+#define trace_ds(args...)
+#define trace_dsn(args...)
+#define trace_ds_nb(args...)
+#define trace_event(args...)
 #else /*][*/
 #define trace_ds 0 &&
 #define trace_ds_nb 0 &&

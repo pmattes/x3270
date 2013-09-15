@@ -35,8 +35,6 @@
 
 #include "globals.h"
 
-#if defined(X3270_TRACE) /*[*/
-
 #include <errno.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -56,6 +54,8 @@ unknown(unsigned char value)
 	(void) snprintf(buf, sizeof(buf), "unknown[0x%x]", value);
 	return buf;
 }
+
+#if defined(X3270_TRACE) /*[*/
 
 const char *
 see_ebc(unsigned char ch)
@@ -252,6 +252,8 @@ see_highlight(unsigned char setting)
 	}
 }
 
+#endif /*]*/
+
 const char *
 see_color(unsigned char setting)
 {
@@ -281,6 +283,8 @@ see_color(unsigned char setting)
 	else
 		return color_name[setting - 0xf0];
 }
+
+#if defined(X3270_TRACE) /*[*/
 
 static const char *
 see_transparency(unsigned char setting)

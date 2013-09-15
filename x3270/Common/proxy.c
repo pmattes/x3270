@@ -486,7 +486,9 @@ proxy_socks4(int fd, char *host, unsigned short port, int force_a)
 	char rbuf[8];
 	int nr;
 	int nread = 0;
+#if defined(X3270_TRACE) /*[*/
 	unsigned short rport;
+#endif /*]*/
 
 	/* Resolve the hostname to an IPv4 address. */
 	if (force_a)
@@ -656,8 +658,8 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 	    "IPv6"
 	};
 	unsigned char *portp;
-	unsigned short rport;
 #endif /*]*/
+	unsigned short rport;
 
 	if (force_d)
 	    	use_name = 1;

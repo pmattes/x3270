@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,26 +31,25 @@
  *
  */
 
+extern const char *see_color(unsigned char setting);
+extern const char *unknown(unsigned char value);
+
 #if defined(X3270_TRACE) /*[*/
 
 extern const char *see_aid(unsigned char code);
 extern const char *see_attr(unsigned char fa);
-extern const char *see_color(unsigned char setting);
 extern const char *see_ebc(unsigned char ch);
 extern const char *see_efa(unsigned char efa, unsigned char value);
 extern const char *see_efa_only(unsigned char efa);
 extern const char *see_qcode(unsigned char id);
-extern const char *unknown(unsigned char value);
 
 #else /*][*/
 
 #define see_aid 0 &&
 #define see_attr 0 &&
-#define see_color 0 &&
 #define see_ebc 0 &&
 #define see_efa 0 &&
 #define see_efa_only 0 &&
 #define see_qcode 0 &&
-#define unknown 0 &&
 
 #endif /*]*/
