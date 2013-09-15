@@ -15,7 +15,6 @@ do	echo "Trying $prog"
 	rm -rf $TD/$prog-3.3/
 	p=$PWD
 	cd $prog
-	yresync
 	make -f Makefile.aux $prog-src.tgz
 	cd $TD/
 	tar -xzf ~-/$prog-src.tgz

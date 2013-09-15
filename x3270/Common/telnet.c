@@ -184,6 +184,7 @@ static char     vlnext;
 
 static int	tn3270e_negotiated = 0;
 static enum { E_NONE, E_3270, E_NVT, E_SSCP } tn3270e_submode = E_NONE;
+#if defined(X3270_TN3270E) /*[*/
 static int	tn3270e_bound = 0;
 static unsigned char *bind_image = NULL;
 static int	bind_image_len = 0;
@@ -198,6 +199,7 @@ static int	bind_ca = 0;
 #define BIND_DIMS_ALT		0x2	/* BIND included alternate size */
 #define BIND_DIMS_VALID		0x4	/* BIND screen sizes were valid */
 static unsigned	bind_state = 0;
+#endif /*]*/
 static char	**lus = (char **)NULL;
 static char	**curr_lu = (char **)NULL;
 static char	*try_lu = CN;
@@ -1104,7 +1106,9 @@ net_connected(void)
 	syncing = 0;
 	tn3270e_negotiated = 0;
 	tn3270e_submode = E_NONE;
+#if defined(X3270_TN3270E) /*[*/
 	tn3270e_bound = 0;
+#endif /*]*/
 
 	setup_lus();
 
@@ -4930,7 +4934,11 @@ net_proxy_port(void)
 Boolean
 net_bound(void)
 {
+#if defined(X3270_TN3270E) /*[*/
     	return (IN_E && tn3270e_bound);
+#else /*][*/
+	return 0;
+#endif /*]*/
 }
 
 #if defined(X3270_DISPLAY) && defined(HAVE_LIBSSL) /*[*/
