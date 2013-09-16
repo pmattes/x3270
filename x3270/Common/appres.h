@@ -45,8 +45,10 @@ enum toggle_type {
 struct toggle {
 	Boolean value;		/* toggle value */
 	Boolean changed;	/* has the value changed since init */
+#if defined(X3270_MENUS) /*[*/
 	Widget w[2];		/* the menu item widgets */
 	const char *label[2];	/* labels */
+#endif /*]*/
 	void (*upcall)(struct toggle *, enum toggle_type); /* change value */
 };
 #define MONOCASE	0

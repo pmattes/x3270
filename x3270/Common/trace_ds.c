@@ -89,7 +89,7 @@
 #define ftello(s)	(off_t)ftell(s)
 #endif /*]*/
 
-#if defined(X3270_DISPLAY) /*[*/
+#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
 extern Pixmap dot;
 #endif /*]*/
 
@@ -422,7 +422,7 @@ trace_rollover_check(void)
 	    	char *alt_filename;
 		char *new_header;
 #if defined(_WIN32) /*[*/
-		char *dot;
+		char *period;
 #endif /*]*/
 
 		/* Close up this file. */
@@ -432,12 +432,12 @@ trace_rollover_check(void)
 
 		/* Unlink and rename the alternate file. */
 #if defined(_WIN32) /*[*/
-		dot = strrchr(tracefile_name, '.');
-		if (dot != CN)
+		period = strrchr(tracefile_name, '.');
+		if (period != CN)
 			alt_filename = xs_buffer("%.*s-%s",
-				dot - tracefile_name,
+				period - tracefile_name,
 				tracefile_name,
-				dot);
+				period);
 		else
 #endif /*]*/
 			alt_filename = xs_buffer("%s-", tracefile_name);
@@ -1245,7 +1245,7 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 	if (tracefile_buf != NULL)
 		Free(tracefile_buf);
 
-#if defined(X3270_DISPLAY) /*[*/
+#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
 	if (appres.toggle[SCREEN_TRACE].w[0] != NULL)
 		XtVaSetValues(appres.toggle[SCREEN_TRACE].w[0],
 			XtNleftBitmap,

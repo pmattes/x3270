@@ -559,7 +559,9 @@ screen_init(void)
 static void
 screen_reinit(unsigned cmask)
 {
+#if defined(X3270_MENUS) /*[*/
 	Dimension cwidth_curr;
+#endif /*]*/
 #if defined(X3270_KEYPAD) /*[*/
 	Dimension mkw;
 #endif /*]*/
@@ -779,13 +781,15 @@ screen_reinit(unsigned cmask)
 
 	/* Initialize the menu bar and integral keypad */
 
-#if defined(X3270_KEYPAD) /*[*/
+#if defined(X3270_MENUS) /*[*/
+# if defined(X3270_KEYPAD) /*[*/
 	cwidth_curr = appres.keypad_on ? container_width : cwidth_nkp;
-#else /*][*/
+# else /*][*/
 	cwidth_curr = container_width;
-#endif /*]*/
+# endif /*]*/
 	menubar_height = menubar_qheight(cwidth_curr);
 	menubar_init(container, container_width, cwidth_curr);
+#endif /*]*/
 
 	if (fixed_height)
 		container_height = fixed_height;

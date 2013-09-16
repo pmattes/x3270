@@ -36,7 +36,7 @@ typedef enum {
 	STMP_TEXT,	/* force to a text file */
 	STMP_PRINTER	/* force to use the printer */
 } stmp_t;
-#if defined(X3270_TRACE) /*[*/
+#if defined(X3270_MENUS) && defined(X3270_TRACE) /*[*/
 extern void stmenu_popup(stmp_t stmp);
 #else /*][*/
 #define stmenu_popup(smtp)
