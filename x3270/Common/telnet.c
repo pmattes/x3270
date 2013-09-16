@@ -409,7 +409,7 @@ static sockaddr_46_t haddr[NUM_HA];
 static socklen_t ha_len[NUM_HA] = {
     sizeof(haddr[0]), sizeof(haddr[0]), sizeof(haddr[0]), sizeof(haddr[0])
 };
-#if defined(AF_INET6) /*[*/
+#if defined(AF_INET6) && defined(HAVE_LIBSSL) /*[*/
 static Boolean hin[NUM_HA];
 #endif /*]*/
 static int num_ha = 0;
