@@ -27,26 +27,25 @@ do	echo "Trying $prog"
 	for opt in ansi apl local-process printer script tn3270e trace menus keypad ft ssl dbcs
 	do	unset ok
 		case $opt in
-		ansi|apl|local-process|tn3270e|trace|ft|ssl)
+		ansi|apl|dbcs|local-process|tn3270e|trace|ft|ssl)
+			# apply to all
 			ok=1
 			;;
 		printer)
+			# only apply to x3270 and c3270
 			if [ $prog = x3270 -o $prog = c3270 ]
 			then	ok=1
 			fi
 			;;
 		script)
+			# required for s3270 and tcl3270
 			if [ $prog != s3270 -a $prog != tcl3270 ]
 			then	ok=1
 			fi
 			;;
 		menus|keypad)
+			# apply only to x3270
 			if [ $prog = x3270 ]
-			then	ok=1
-			fi
-			;;
-		dbcs)
-			if [ $prog != c3270 ]
 			then	ok=1
 			fi
 			;;
@@ -58,7 +57,7 @@ do	echo "Trying $prog"
 			n_opts=n_opts+1
 		fi
 	done
-	echo "$prog: possible options are ${opts[@]} ($b combinations)"
+	echo "$prog: possible options are [${opts[@]}]: $b combinations"
 
 	typeset -i x=0
 	while (( x < b ))
@@ -73,7 +72,9 @@ do	echo "Trying $prog"
 			fi
 			j=j+1
 		done
-		#echo "$c $hack"
+		#echo "$prog $c $hack"
+		# no more hack, please
+		unset hack
 		./configure --without-pr3287 $c $hack >/dev/null 2>&1 || (echo "$prog configure --without-pr3287 $c $hack failed"; exit 1)
 		make clean >/dev/null 2>&1
 		if mk >$TD/mk$$ 2>&1
