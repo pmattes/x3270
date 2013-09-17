@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012, Paul Mattes.
+ * Copyright (c) 2010-2012, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -739,12 +739,15 @@ fm_print(void *ignored _is_unused)
 	push_macro("PrintText", False);
 }
 
+#if defined(X3270_FT) /*[*/
 static void
 fm_xfer(void *ignored _is_unused)
 {
 	push_macro("Escape() Transfer()", False);
 }
+#endif /*]*/
 
+#if defined(X3270_TRACE) /*[*/
 static void
 fm_trace(void *ignored _is_unused)
 {
@@ -771,6 +774,7 @@ fm_screentrace_printer(void *ignored _is_unused)
 	else
 		push_macro("ScreenTrace(on,printer)", False);
 }
+#endif /*]*/
 
 static void
 fm_keymap(void *ignored _is_unused)
@@ -796,10 +800,14 @@ typedef enum {
     FM_STATUS,
     FM_PROMPT,
     FM_PRINT,
+#if defined(X3270_FT) /*[*/
     FM_XFER,
+#endif /*]*/
+#if defined(X3270_TRACE) /*[*/
     FM_TRACE,
     FM_SCREENTRACE,
     FM_SCREENTRACE_PRINTER,
+#endif /*]*/
     FM_KEYMAP,
     FM_DISC,
     FM_QUIT,
@@ -815,10 +823,14 @@ char *file_menu_names[FM_COUNT] = {
     "wc3270> Prompt",
 #endif /*]*/
     "Print Screen",
+#if defined(X3270_FT) /*[*/
     "File Transfer",
+#endif /*]*/
+#if defined(X3270_TRACE) /*[*/
     "Enable Tracing",
     "Save Screen Images in File",
     "Save Screen Images to Printer",
+#endif /*]*/
     "Display Keymap",
     "Disconnect",
     "Quit"
@@ -828,10 +840,14 @@ menu_callback file_menu_actions[FM_COUNT] = {
     fm_status,
     fm_prompt,
     fm_print,
+#if defined(X3270_FT) /*[*/
     fm_xfer,
+#endif /*]*/
+#if defined(X3270_TRACE) /*[*/
     fm_trace,
     fm_screentrace,
     fm_screentrace_printer,
+#endif /*]*/
     fm_keymap,
     fm_disconnect,
     fm_quit
@@ -962,6 +978,7 @@ menubar_retoggle(struct toggle *t, int ix)
 		Free(s);
 		return;
 	}
+#if defined(X3270_TRACE) /*[*/
 	if (ix == EVENT_TRACE || ix == DS_TRACE) {
 		s = xs_buffer("%sable Tracing",
 			(toggled(EVENT_TRACE) || toggled(DS_TRACE))?
@@ -982,6 +999,7 @@ menubar_retoggle(struct toggle *t, int ix)
 				True);
 		}
 	}
+#endif /*]*/
 }
 
 /*

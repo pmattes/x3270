@@ -1196,7 +1196,9 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 
 	for (;;) {
 		volatile int alt = 0;
+#if defined(X3270_TRACE) /*[*/
 		char dbuf[128];
+#endif /*]*/
 #if defined(CURSES_WIDE) /*[*/
 		wint_t wch;
 		size_t sz;
@@ -1210,16 +1212,18 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 #else /*][*/
 		k = wgetch(stdscr);
 #endif /*]*/
+#if defined(X3270_TRACE) /*[*/
 		trace_event("k=%d "
-#if defined(CURSES_WIDE) /*[*/
+# if defined(CURSES_WIDE) /*[*/
 			            "wch=%u "
-#endif /*]*/
+# endif /*]*/
 				              "\n",
 			                            k
-#if defined(CURSES_WIDE) /*[*/
+# if defined(CURSES_WIDE) /*[*/
 			                             , wch
-#endif /*]*/
+# endif /*]*/
 			                                  );
+#endif /*]*/
 		if (k == ERR) {
 			if (first) {
 				if (failed_first) {
