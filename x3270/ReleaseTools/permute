@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Run through all possible configuration combinations
-#  permute [-n] [-s] [program...]
+#  permute [-n] [-s] [-v] [program...]
 #   -n  Just display the combinations
 #   -s  Just run the singles
 
@@ -14,7 +14,7 @@ prog=${0##*/}
 
 function usage()
 {
-    echo >&2 "usage $prog [-n] [-s] [program...]"
+    echo >&2 "usage $prog [-n] [-s] [-v] [program...]"
     exit 1
 }
 
@@ -24,6 +24,9 @@ do	case $1 in
 		shift
 		;;
 	-s)	singles=1
+	    	shift
+		;;
+	-v)	verbose=1
 	    	shift
 		;;
 	-*)	usage
@@ -55,6 +58,7 @@ function iterate()
 		then	echo -n "."
 		else	echo
 			echo "$prog failed: $c"
+			[ $verbose ] && cat $TD/mk$$
 			rc=1
 		fi
 		if grep 'warning:' $TD/mk$$
