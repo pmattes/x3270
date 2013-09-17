@@ -114,6 +114,7 @@ do	echo "Trying $prog."
 	cd $TD/
 	tar -xzf ~-/$prog-src.tgz
 	cd $prog-$ver/
+	[ -f $p/$prog/.mk ] && cp $p/$prog/.mk .
 
 	typeset -i b=1
 	unset opts[@]
