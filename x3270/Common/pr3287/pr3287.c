@@ -1053,7 +1053,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 		if (options.verbose) {
 			(void) fprintf(stderr, "Connected to %s, port %u%s\n",
 			    host, p,
-			    options.ssl.ssl_host? " via SSL": "");
+#if defined(HAVE_LIBSSL) /*[*/
+			    options.ssl.ssl_host? " via SSL": ""
+#else /*][*/
+			    ""
+#endif /*]*/
+			    					);
 			if (options.assoc != NULL)
 				(void) fprintf(stderr, "Associating with LU "
 				    "%s\n", options.assoc);
@@ -1070,7 +1075,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 #endif /*]*/
 		}
 		vtrace("Connected to %s, port %u%s\n", host, p,
-			options.ssl.ssl_host? " via SSL": "");
+#if defined(HAVE_LIBSSL) /*[*/
+			options.ssl.ssl_host? " via SSL": ""
+#else /*][*/
+			""
+#endif /*]*/
+							    );
 		if (options.assoc != NULL) {
 			vtrace("Associating with LU %s\n", options.assoc);
 		} else if (lu != NULL) {

@@ -842,7 +842,9 @@ telnet_fsm(unsigned char c)
 			}
 #endif /*]*/
 			break;
+#if defined(HAVE_LIBSSL) /*[*/
 		    wont:
+#endif /*]*/
 		    default:
 			wont_opt[2] = c;
 			net_rawout(wont_opt, sizeof(wont_opt));
