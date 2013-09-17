@@ -112,6 +112,7 @@ static enum {
 	AWAITING_DISCONNECT,	/* Wait Disconnect */
 	AWAITING_UNLOCK		/* Wait Unlock */
 } waiting = NOT_WAITING;
+#if defined(X3270_TRACE) /*[*/
 static const char *wait_name[] = {
 	"not waiting",
 	"connection incomplete",
@@ -138,6 +139,7 @@ static const char *unwait_name[] = {
 	"host disconnected",
 	"keyboard unlocked"
 };
+#endif /*]*/
 static ioid_t wait_id = NULL_IOID;
 static ioid_t command_timeout_id = NULL_IOID;
 static int cmd_ret;
@@ -148,7 +150,9 @@ static Boolean interactive = False;
 static void ps_clear(void);
 static int tcl3270_main(int argc, const char *argv[]);
 static void negotiate(void);
+#if defined(X3270_TRACE) /*[*/
 static char *tc_scatv(char *s);
+#endif /*]*/
 static void snap_save(void);
 static void wait_timed_out(ioid_t);
 
@@ -1669,6 +1673,7 @@ sms_in_macro(void)
 	return pending_string != NULL;
 }
 
+#if defined(X3270_TRACE) /*[*/
 /* Like fcatv, but goes to a dynamically-allocated buffer. */
 static char *
 tc_scatv(char *s)
@@ -1727,3 +1732,4 @@ tc_scatv(char *s)
 	return buf;
 #undef add_space
 }
+#endif /*]*/
