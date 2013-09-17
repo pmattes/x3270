@@ -215,6 +215,7 @@ static struct {
 	{ CN,  CN, 0, CN }
 };
 
+#if defined(X3270_FT) /*[*/
 static const char *ft_help[] = {
 	"Syntax:",
 	"  To be prompted interactively for parameters:",
@@ -240,6 +241,7 @@ static const char *ft_help[] = {
 	"  Transfer Direction=send LocalFile=/tmp/foo \"HostFile=foo text a\" Host=vm",
 	NULL
 };
+#endif /*]*/
 
 static struct {
 	const char *name;
@@ -290,8 +292,8 @@ Help_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 #endif /*]*/
 #if defined(X3270_FT) /*[*/
 "  help file-transfer file transfer options\n"
-		);
 #endif /*]*/
+		);
 		return;
 	}
 
