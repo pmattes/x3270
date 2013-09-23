@@ -64,6 +64,7 @@
 
 #if defined(X3270_DISPLAY) /*[*/
 #include <X11/keysym.h>
+#include <X11/XKBlib.h>
 
 #define MODMAP_SIZE	8
 #define MAP_SIZE	13
@@ -441,7 +442,7 @@ learn_modifiers(void)
 			if (!kc)
 				continue;
 
-			switch(XKeycodeToKeysym(display, kc, 0)) {
+			switch(XkbKeycodeToKeysym(display, kc, 0, 0)) {
 			    case XK_Meta_L:
 			    case XK_Meta_R:
 				name = "Meta";
