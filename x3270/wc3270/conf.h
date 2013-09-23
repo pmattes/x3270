@@ -8,5 +8,4 @@
 #define X3270_ANSI	1
 #define X3270_PRINTER	1
 #define X3270_DBCS	1
-#define CURSES_WIDE	1 /* temporary */
 #define X3270_SCRIPT	1
