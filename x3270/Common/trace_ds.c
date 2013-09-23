@@ -47,6 +47,7 @@
 #include <signal.h>
 #include <stdarg.h>
 #include <fcntl.h>
+#include <limits.h>
 #include "3270ds.h"
 #include "appres.h"
 #include "objects.h"
@@ -660,7 +661,7 @@ get_devfd(const char *pathname)
 	if (strncmp(pathname, "/dev/fd/", 8))
 		return -1;
 	fd = strtoul(pathname + 8, &ptr, 10);
-	if (ptr == pathname + 8 || *ptr != '\0' || fd < 0)
+	if (ptr == pathname + 8 || *ptr != '\0' || fd > INT_MAX)
 		return -1;
 	return fd;
 }

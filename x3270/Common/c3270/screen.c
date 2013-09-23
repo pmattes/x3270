@@ -1266,7 +1266,7 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 			wcs[0] = wch;
 			wcs[1] = 0;
 			sz = wcstombs(mbs, wcs, sizeof(mbs));
-			if (sz < 0) {
+			if (sz == (size_t)-1) {
 				trace_event("Invalid input wchar 0x%x\n", wch);
 				return;
 			}
@@ -1940,8 +1940,8 @@ draw_oia(void)
 	if (status_secure != SS_INSECURE) {
 	    	if (appres.m3279)
 			(void) attrset(get_color_pair(defcolor_offset +
-				    (status_secure == SS_SECURE)?
-					COLOR_GREEN: COLOR_YELLOW,
+				    ((status_secure == SS_SECURE)?
+					COLOR_GREEN: COLOR_YELLOW),
 				    bg_color) | A_BOLD);
 		else
 		    	(void) attrset(A_BOLD);

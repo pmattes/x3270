@@ -687,7 +687,7 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 	int nc;
 #else /*][*/
 	char u8b[7];
-	size_t nu8;
+	int nu8;
 	ici_t inbuf;
 	char *outbuf;
 	size_t inbytesleft, outbytesleft;
@@ -775,7 +775,7 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 	outbuf = mb;
 	outbytesleft = mb_len;
 	nc = iconv(i_u2mb, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
-	if (nc < 0 || inbytesleft == nu8) {
+	if (nc == (size_t)-1 || inbytesleft == nu8) {
 		mb[0] = '?';
 		mb[1] = '\0';
 		return 2;
@@ -783,7 +783,7 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 
 	/* Return to the initial shift state. */
 	nc = iconv(i_u2mb, NULL, NULL, &outbuf, &outbytesleft);
-	if (nc < 0) {
+	if (nc == (size_t)-1) {
 		mb[0] = '?';
 		mb[1] = '\0';
 		return 0;
