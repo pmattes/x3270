@@ -144,7 +144,7 @@ sub dump {
 
 	print "<b>Type</b>: $type<br>\n";
 	if ($default) { print "<b>Default</b>: $default<br>\n"; }
-	if (defined(@switch)) {
+	if (@switch) {
 	    my $comma;
 	    print "<b>Command Line</b>:";
 	    foreach my $s (@switch) {
