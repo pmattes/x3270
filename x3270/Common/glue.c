@@ -501,7 +501,7 @@ set_appres_defaults(void)
 # if defined(C3270) && !defined(_WIN32) /*[*/
 	appres.mouse = True;
 # endif /*]*/
-#if defined(CURSES_WIDE) /*[*/
+#if defined(CURSES_WIDE) || defined(WC3270) /*[*/
 	appres.acs = True;
 #endif /*]*/
 #endif /*]*/
@@ -1063,7 +1063,7 @@ static struct {
 	{ ResCursesKeypad,offset(curses_keypad),XRM_BOOLEAN },
 	{ ResCbreak,	offset(cbreak_mode),	XRM_BOOLEAN },
 	{ ResAsciiBoxDraw,offset(ascii_box_draw),	XRM_BOOLEAN },
-#if defined(CURSES_WIDE) /*[*/
+#if defined(CURSES_WIDE) || defined(WC3270) /*[*/
 	{ ResAcs,	offset(acs),		XRM_BOOLEAN },
 #endif /*]*/
 #endif /*]*/

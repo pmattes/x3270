@@ -1040,7 +1040,7 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
 		return;
 	} else
 #if !defined(_WIN32) /*[*/
-# if defined(CURSES_WIDE) /*[*/
+# if defined(CURSES_WIDE) || defined(_WIN32) /*[*/
 	       if (appres.acs)
 # endif /*]*/
 	{
