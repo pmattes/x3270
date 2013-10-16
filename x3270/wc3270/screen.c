@@ -48,6 +48,7 @@
 #include "kybdc.h"
 #include "macrosc.h"
 #include "menubarc.h"
+#include "selectc.h"
 #include "screenc.h"
 #include "tablesc.h"
 #include "trace_dsc.h"
@@ -457,13 +458,110 @@ tos_a(int row, int col)
     	return toscreen[ix(row, col)].Attributes;
 }
 
+/*
+ * Local version of select_changed() that deals in screen coordinates, not
+ * 3270 display buffer coordinates.
+ */
+static Boolean
+select_changed_s(unsigned row, unsigned col, unsigned rows, unsigned cols)
+{
+    	int row_adj, rows_adj;
+    	int cols_adj;
+
+	/* Adjust for menu bar. */
+	row_adj = row - screen_yoffset;
+	rows_adj = rows;
+	if (row_adj < 0) {
+		rows_adj -= row_adj;
+		row_adj = 0;
+		if (rows_adj <= 0) {
+		    	return False;
+		}
+	}
+
+	/* Adjust for overflow at the bottom. */
+	if (row_adj >= ROWS) {
+		return FALSE;
+	}
+	if (row_adj + rows_adj >= ROWS) {
+		rows_adj = ROWS - row_adj;
+		if (rows_adj <= 0) {
+		    return FALSE;
+		}
+	}
+
+	/* Adjust for overflow at the right. */
+	if (col >= COLS) {
+	    	return FALSE;
+	}
+	cols_adj = cols;
+	if (col + cols_adj >= COLS) {
+		cols_adj = COLS - col;
+		if (cols_adj <= 0) {
+			return FALSE;
+		}
+	}
+
+	/* Now see if the area on the 3270 display has changed. */
+	return select_changed(row_adj, col, rows_adj, cols_adj);
+}
+
+/*
+ * Local version of select_sync() that deals in screen coordinates, not
+ * 3270 display buffer coordinates.
+ */
+static void
+select_sync_s(unsigned row, unsigned col, unsigned rows, unsigned cols)
+{
+    	int row_adj, rows_adj;
+    	int cols_adj;
+
+	/* Adjust for menu bar. */
+	row_adj = row - screen_yoffset;
+	rows_adj = rows;
+	if (row_adj < 0) {
+		rows_adj -= row_adj;
+		row_adj = 0;
+		if (rows_adj <= 0) {
+		    	return;
+		}
+	}
+
+	/* Adjust for overflow at the bottom. */
+	if (row_adj >= ROWS) {
+		return;
+	}
+	if (row_adj + rows_adj >= ROWS) {
+		rows_adj = ROWS - row_adj;
+		if (rows_adj <= 0) {
+		    return;
+		}
+	}
+
+	/* Adjust for overflow at the right. */
+	if (col >= COLS) {
+	    	return;
+	}
+	cols_adj = cols;
+	if (col + cols_adj >= COLS) {
+		cols_adj = COLS - col;
+		if (cols_adj <= 0) {
+			return;
+		}
+	}
+
+	/* Now see if the area on the 3270 display has changed. */
+	select_sync(row_adj, col, rows_adj, cols_adj);
+}
+
 #if defined(DEBUG_SCREEN_DRAW) /*[*/
 static int
 changed(int row, int col)
 {
 	return !onscreen_valid ||
 		memcmp(&onscreen[ix(row, col)], &toscreen[ix(row, col)],
-		       sizeof(CHAR_INFO));
+		       sizeof(CHAR_INFO)) ||
+		select_changed_s(row, col, 1, 1);
 }
 #endif /*]*/
 
@@ -582,6 +680,7 @@ hdraw(int row, int lrow, int col, int lcol)
 		       &toscreen[ix(xrow, col)],
 		       sizeof(CHAR_INFO) * (lcol - col + 1));
 	}
+	select_sync_s(row, col, lrow - row, lcol - col);
 
 	/* Mark the region as done. */
 	mark_done(row, lrow, col, lcol);
@@ -729,18 +828,20 @@ sync_onscreen(void)
 	    	/* Check the whole row for a match first. */
 	    	if (!memcmp(&onscreen[ix(row, 0)],
 			    &toscreen[ix(row, 0)],
-			    sizeof(CHAR_INFO) * console_cols)) {
-		    if (pending) {
-			    draw_rect(pc_start, pc_end, pr_start, row - 1);
-			    pending = FALSE;
-		    }
-		    continue;
+			    sizeof(CHAR_INFO) * console_cols) &&
+		     !select_changed_s(row, 0, 1, console_cols)) {
+			if (pending) {
+				draw_rect(pc_start, pc_end, pr_start, row - 1);
+				pending = FALSE;
+			}
+			continue;
 		}
 
 		for (col = 0; col < console_cols; col++) {
 		    	if (memcmp(&onscreen[ix(row, col)],
 				   &toscreen[ix(row, col)],
-				   sizeof(CHAR_INFO))) {
+				   sizeof(CHAR_INFO)) ||
+			    select_changed_s(row, col, 1, 1)) {
 			    	/*
 				 * This column differs.
 				 * Start or expand the band, and start pending.
@@ -938,6 +1039,9 @@ screen_init(void)
 	/* Start out in altscreen mode. */
 	set_status_row(console_rows, maxROWS);
 
+	/* Initialize selections. */
+	select_init(maxROWS, maxCOLS);
+
 	/* Set up callbacks for state changes. */
 	register_schange(ST_CONNECT, screen_connect);
 	register_schange(ST_HALF_CONNECT, status_half_connect);
@@ -1127,6 +1231,7 @@ color_from_fa(unsigned char fa)
 		    cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
 }
 
+/* Swap foreground and background colors. */
 static int
 reverse_colors(int a)
 {
@@ -1198,6 +1303,30 @@ init_user_colors(void)
 			  cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
 }
 
+/* Invert colors (selections). */
+static int
+invert_colors(int a)
+{
+    	/*
+	 * Replace color 0 with color 15, color 1 with color 14, etc., through
+	 * replacing color 15 with color 0.
+	 */
+    	return (a & ~0xff) |		/* intensity, etc. */
+	    (0xf0 - (a & 0xf0)) |	/* background */
+	    (0x0f - (a & 0x0f));	/* foreground */
+}
+
+/* Apply selection status. */
+static int
+apply_select(int attr, int baddr)
+{
+    	if (area_is_selected(baddr, 1)) {
+	    	return invert_colors(attr);
+	} else {
+	    	return attr;
+	}
+}
+
 /*
  * Find the display attributes for a baddr, fa_addr and fa.
  */
@@ -1209,8 +1338,9 @@ calc_attrs(int baddr, int fa_addr, int fa, Boolean *underlined,
 
 	/* Nondisplay fields are simply blank. */
 	if (FA_IS_ZERO(fa)) {
-		return get_color_pair(HOST_COLOR_NEUTRAL_BLACK,
-				      HOST_COLOR_NEUTRAL_BLACK);
+		a = get_color_pair(HOST_COLOR_NEUTRAL_BLACK,
+			HOST_COLOR_NEUTRAL_BLACK);
+		goto done;
 	}
 
 	/* Compute the color. */
@@ -1272,15 +1402,16 @@ calc_attrs(int baddr, int fa_addr, int fa, Boolean *underlined,
 		a = reverse_colors(a);
 
 	if (toggled(UNDERSCORE) && (gr & GR_UNDERLINE))
-	    *underlined = True;
+		*underlined = True;
 	else
-	    *underlined = False;
+		*underlined = False;
 
 	if (toggled(UNDERSCORE) && (gr & GR_BLINK))
-	    *blinking = True;
+		*blinking = True;
 	else
-	    *blinking = False;
+		*blinking = False;
 
+    done:
 	return a;
 }
 
@@ -1470,13 +1601,13 @@ screen_disp(Boolean erasing _is_unused)
 				a = calc_attrs(baddr, baddr, fa, &a_underlined,
 					&a_blinking);
 				if (!is_menu) {
-					attrset(defattr);
+					attrset(apply_select(defattr, baddr));
 					addch(' ');
 				}
 			} else if (FA_IS_ZERO(fa)) {
 			    	/* Blank. */
 			    	if (!is_menu) {
-					attrset(a);
+					attrset(apply_select(a, baddr));
 					addch(' ');
 				}
 			} else {
@@ -1487,7 +1618,7 @@ screen_disp(Boolean erasing _is_unused)
 				if (!(ea_buf[baddr].gr ||
 				      ea_buf[baddr].fg ||
 				      ea_buf[baddr].bg)) {
-					attrset(a);
+					attrset(apply_select(a, baddr));
 					underlined = a_underlined;
 					blinking = a_blinking;
 				} else {
@@ -1501,7 +1632,7 @@ screen_disp(Boolean erasing _is_unused)
 					 */
 					b = calc_attrs(baddr, fa_addr, fa,
 						&b_underlined, &b_blinking);
-					attrset(b);
+					attrset(apply_select(b, baddr));
 					underlined = b_underlined;
 					blinking = b_blinking;
 				}
