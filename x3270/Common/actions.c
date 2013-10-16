@@ -101,6 +101,9 @@ XtActionsRec all_actions[] = {
 #if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 	{ "Compose",		Compose_action },
 #endif /*]*/
+#if defined(WC3270) /*[*/
+	{ "Copy",		Copy_action },
+#endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
 	{ "Cut",		Cut_action },
 	{ "Default",		Default_action },
@@ -263,6 +266,9 @@ XtActionsRec all_actions[] = {
 #endif/*]*/
 #if defined(X3270_SCRIPT) /*[*/
 	{ "Script",		Script_action },
+#endif /*]*/
+#if defined(WC3270) /*[*/
+	{ "Selected",		Selected_action },
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
 	{ "SelectAll",		SelectAll_action },
