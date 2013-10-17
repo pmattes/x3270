@@ -194,7 +194,7 @@ static HANDLE cohandle;	/* console screen buffer handle */
 
 static HANDLE *sbuf;	/* dynamically-allocated screen buffer */
 
-static HWND console_window;
+HWND console_window;
 
 static int console_rows;
 static int console_cols;

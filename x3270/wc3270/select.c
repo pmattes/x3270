@@ -59,6 +59,7 @@
 #define IDEOGRAPHIC_SPACE	0x3000
 
 extern int screen_changed;
+extern HWND console_window;
 
 static char *s_pending;
 static char *s_onscreen;
@@ -336,10 +337,10 @@ select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 }
 
 /*
- * NT version of copy-to-clipboard. Does Unicode text.
+ * Unicode text version of copy-to-clipboard.
  */
 static size_t
-copy_clipboard_nt(LPTSTR lptstr)
+copy_clipboard_unicode(LPTSTR lptstr)
 {
 	int r, c;
 	int any_row = -1;
@@ -363,8 +364,8 @@ copy_clipboard_nt(LPTSTR lptstr)
 			if (any_row >= 0 && any_row != r) {
 				*bp++ = '\r';
 				*bp++ = '\n';
-				any_row = r;
 			}
+			any_row = r;
 			d = ctlr_dbcs_state(baddr);
 			if (IS_LEFT(d)) {
 				int xbaddr = baddr;
@@ -409,10 +410,87 @@ copy_clipboard_nt(LPTSTR lptstr)
 }
 
 /*
- * Windows 98 version of copy-to-clipboard. Does 8-bit text only.
+ * OEM text version of copy-to-clipboard.
  */
 static size_t
-copy_clipboard_98(LPTSTR lptstr)
+copy_clipboard_oemtext(LPTSTR lptstr)
+{
+	int r, c;
+	int any_row = -1;
+	char *bp = lptstr;
+	enum dbcs_state d;
+	wchar_t ch;
+	unsigned char fa;
+
+	/* Fill in the buffer. */
+	fa = get_field_attribute(0);
+	for (r = 0; r < ROWS; r++) {
+		for (c = 0; c < COLS; c++) {
+			int baddr = (r * COLS) + c;
+
+			if (ea_buf[baddr].fa) {
+				fa = ea_buf[baddr].fa;
+			}
+			if (!s_pending[baddr]) {
+				continue;
+			}
+			if (any_row >= 0 && any_row != r) {
+				*bp++ = '\r';
+				*bp++ = '\n';
+			}
+			any_row = r;
+			d = ctlr_dbcs_state(baddr);
+			if (IS_LEFT(d)) {
+				int xbaddr = baddr;
+
+				if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
+				    *bp++ = ' ';
+				    continue;
+				}
+
+				xbaddr = baddr;
+				INC_BA(xbaddr);
+				ch = ebcdic_to_unicode((ea_buf[baddr].cc << 8) |
+						      ea_buf[xbaddr].cc,
+						      CS_BASE, EUO_NONE);
+				if (ch == 0) {
+					ch = ' ';
+				}
+				(void) WideCharToMultiByte(CP_OEMCP, 0,
+					&ch, 1, bp, 1, "?", NULL);
+				bp++;
+			} else if (!IS_RIGHT(d)) {
+				if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
+					*bp++ = ' ';
+					continue;
+				}
+
+				ch = ebcdic_to_unicode(ea_buf[baddr].cc,
+					ea_buf[baddr].cs,
+					appres.ascii_box_draw?
+					    EUO_ASCII_BOX: 0);
+				if (ch == 0) {
+					ch = ' ';
+				}
+				if (toggled(MONOCASE) && islower(ch)) {
+					ch = toupper(ch);
+				}
+				(void) WideCharToMultiByte(CP_OEMCP, 0,
+					&ch, 1, bp, 1, "?", NULL);
+				bp++;
+			}
+		}
+	}
+
+	*bp++ = 0;
+	return bp - lptstr;
+}
+
+/*
+ * 8-bit text version of clipboard copy.
+ */
+static size_t
+copy_clipboard_text(LPTSTR lptstr)
 {
 	int r, c;
 	int any_row = -1;
@@ -428,6 +506,7 @@ copy_clipboard_98(LPTSTR lptstr)
 			int baddr = (r * COLS) + c;
 			char buf[16];
 			int nc;
+			ucs4_t u;
 
 			if (ea_buf[baddr].fa) {
 				fa = ea_buf[baddr].fa;
@@ -438,8 +517,8 @@ copy_clipboard_98(LPTSTR lptstr)
 			if (any_row >= 0 && any_row != r) {
 				*bp++ = '\r';
 				*bp++ = '\n';
-				any_row = r;
 			}
+			any_row = r;
 			d = ctlr_dbcs_state(baddr);
 			if (IS_LEFT(d) || IS_RIGHT(d) ||
 				ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
@@ -451,8 +530,8 @@ copy_clipboard_98(LPTSTR lptstr)
 				EUO_BLANK_UNDEF |
 				    (appres.ascii_box_draw?
 				     EUO_ASCII_BOX: 0),
-				NULL);
-			if (nc == 1) {
+				&u);
+			if (nc == 2) {
 				ch = buf[0];
 			} else {
 				ch = ' ';
@@ -479,6 +558,34 @@ Copy_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	LPTSTR lptstr;
 	int r, c;
 	int any_row = -1;
+#define NUM_TYPES 3
+	struct {
+		const char *name;
+		int type;
+		size_t esize;
+		Boolean on98;
+		size_t (*copy_fn)(LPTSTR);
+	} types[NUM_TYPES] = {
+		{ "Unicode",
+		  CF_UNICODETEXT,
+		  sizeof(wchar_t),
+		  False,
+		  copy_clipboard_unicode
+		},
+		{ "OEM text",
+		  CF_OEMTEXT,
+		  sizeof(char),
+		  True,
+		  copy_clipboard_oemtext
+		},
+		{ "text",
+		  CF_TEXT,
+		  sizeof(char),
+		  True,
+		  copy_clipboard_text
+		},
+	};
+	int i;
 
 	action_debug(Copy_action, event, params, num_params);
 
@@ -488,9 +595,10 @@ Copy_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	}
 
 	/* Open the clipboard. */
-	if (!OpenClipboard(NULL)) {
+	if (!OpenClipboard(console_window)) {
 	    	return;
 	}
+	EmptyClipboard();
 
 	/* Compute the size of the output buffer. */
 	sl = 0;
@@ -501,36 +609,39 @@ Copy_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 			if (s_pending[baddr]) {
 				if (any_row >= 0 && any_row != r) {
 					sl += 2; /* CR/LF */
-					any_row = r;
 				}
+				any_row = r;
 				sl++;
 			}
 		}
 	}
 	sl++; /* NUL */
 
-	/* Allocate the buffer. */
-	hglb = GlobalAlloc(GMEM_MOVEABLE,
-		sl * (is_nt? sizeof(wchar_t): sizeof(char)));
-	if (hglb == NULL) {
-		CloseClipboard(); 
-		return;
+	/* Copy it out in the formats we understand. */
+	for (i = 0; i < NUM_TYPES; i++) {
+
+		if (!is_nt && !types[i].on98) {
+		    	continue;
+		}
+
+		/* Allocate the buffer. */
+		hglb = GlobalAlloc(GMEM_MOVEABLE, sl * types[i].esize);
+		if (hglb == NULL) {
+			break;
+		}
+
+		/* Copy the screen data to it. */
+		lptstr = GlobalLock(hglb); 
+		sl = (types[i].copy_fn)(lptstr);
+		GlobalUnlock(hglb); 
+
+		/* Place the handle on the clipboard. */
+		SetClipboardData(types[i].type, hglb);
+		trace_event("Copy(): Put %ld %s characters on the clipboard\n",
+			(long)sl, types[i].name);
 	}
 
-	/* Copy the screen data to it. */
-	lptstr = GlobalLock(hglb); 
-	if (is_nt) {
-		copy_clipboard_nt(lptstr);
-	} else {
-		copy_clipboard_98(lptstr);
-	}
-	GlobalUnlock(hglb); 
-
-	/* Place the handle on the clipboard. */
-	SetClipboardData(is_nt? CF_UNICODETEXT: CF_TEXT, hglb);
 	CloseClipboard();
-	trace_event("Copy(): Put %ld %s characters on the clipboard\n",
-		(long)sl, is_nt? "Unicode": "Text");
 
 	/* Unselect. */
 	unselect(0, ROWS * COLS);
@@ -589,52 +700,3 @@ select_sync(unsigned row, unsigned col, unsigned rows, unsigned cols)
 		       cols);
 	}
 }
-
-#ifdef TEMPORARY
-/*
- * Manual selection action, for testing before mouse stuff works.
- */
-void
-Selected_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
-{
-    	unsigned row, col, rows, cols;
-	unsigned r, c;
-
-	action_debug(Selected_action, event, params, num_params);
-
-	if (*num_params == 0) {
-		unselect(0, maxROWS * maxCOLS);
-		goto done;
-	}
-
-	if (*num_params != 4) {
-		popup_an_error("Selected() needs 4 parameters: row, col, "
-			"rows, cols");
-		return;
-	}
-
-	row = atoi(params[0]);
-	col = atoi(params[1]);
-	rows = atoi(params[2]);
-	cols = atoi(params[3]);
-	if (!rows || !cols) {
-	    	return;
-	}
-
-	if (row + rows > ROWS || col + cols > COLS) {
-		popup_an_error("Selected() overflow");
-		return;
-	}
-
-	for (r = row; r < row + rows; r++) {
-	    	for (c = col; c < col + cols; c++) {
-		    	s_pending[(r * COLS) + c] =
-			    !s_pending[(r * COLS) + c];
-		}
-	}
-
-    done:
-	screen_changed = True;
-	screen_disp(False);
-}
-#endif

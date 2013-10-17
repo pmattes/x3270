@@ -36,8 +36,6 @@
 /* Actions. */
 extern void Copy_action(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
-extern void Selected_action(Widget w, XEvent *event, String *params,
-	Cardinal *num_params);
 
 /* Used by the screen logic. */
 extern Boolean select_changed(unsigned row, unsigned col, unsigned rows,

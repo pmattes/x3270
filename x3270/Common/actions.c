@@ -267,9 +267,6 @@ XtActionsRec all_actions[] = {
 #if defined(X3270_SCRIPT) /*[*/
 	{ "Script",		Script_action },
 #endif /*]*/
-#if defined(WC3270) /*[*/
-	{ "Selected",		Selected_action },
-#endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
 	{ "SelectAll",		SelectAll_action },
 	{ "SelectDown",		SelectDown_action },
