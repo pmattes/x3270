@@ -55,6 +55,9 @@
 
 #include "selectc.h"
 
+/* Unicode DBCS (double-width) blank. */
+#define IDEOGRAPHIC_SPACE	0x3000
+
 extern int screen_changed;
 
 static char *s_pending;
@@ -64,14 +67,21 @@ static char *s_onscreen;
 static char *event_name[] = {
 	"BUTTON_DOWN",
 	"BUTTON_UP",
-	"MOVE"
+	"MOVE",
+	"DOUBLE_CLICK"
 };
 
-/* Selection state. */
+/* If True, we are rubber-banding a selection right now. */
 static Boolean select_pending = False;
-static Boolean select_one = False;
+
+/* If True, we have a stored start point. */
+static Boolean select_started = False;
+
+/* Start of selected area. */
 static int select_start_row;
 static int select_start_col;
+
+/* End of selected area. */
 static int select_end_row;
 static int select_end_col;
 
@@ -103,6 +113,7 @@ unselect(int baddr, int len)
 	 */
 	/*memset(&s_pending[baddr], 0, len);*/
 	select_pending = False;
+	select_started = False;
 	memset(s_pending, 0, ROWS * COLS);
 	screen_changed = True;
 }
@@ -136,6 +147,101 @@ reselect(void)
 }
 
 /*
+ * Returns True if the character at the given location is displayed as a
+ * blank.
+ */
+static Boolean
+is_blank(int baddr)
+{
+	unsigned char fa;
+	int xbaddr;
+	int c;
+
+	/* Check for FA or blanked field. */
+	fa = get_field_attribute(baddr);
+	if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
+		return True;
+	}
+
+	/* Translate to Unicode, exactly as we would display it. */
+	if (IS_LEFT(baddr)) {
+		xbaddr = baddr;
+		DEC_BA(xbaddr);
+		c = ebcdic_to_unicode((ea_buf[xbaddr].cc << 8) |
+				      ea_buf[baddr].cc,
+				      CS_BASE, EUO_NONE);
+		if (c == 0 || c == IDEOGRAPHIC_SPACE) {
+			return True;
+		}
+	} else if (IS_RIGHT(baddr)) {
+		xbaddr = baddr;
+		INC_BA(xbaddr);
+		c = ebcdic_to_unicode((ea_buf[baddr].cc << 8) |
+				      ea_buf[xbaddr].cc,
+				      CS_BASE, EUO_NONE);
+		if (c == 0 || c == IDEOGRAPHIC_SPACE) {
+			return True;
+		}
+	} else {
+		c = ebcdic_to_unicode(ea_buf[baddr].cc,
+			ea_buf[baddr].cs,
+			appres.ascii_box_draw?
+			    EUO_ASCII_BOX: 0);
+		if (c == 0 || c == ' ') {
+			return True;
+		}
+	}
+
+	return False;
+}
+
+/*
+ * Find the starting and ending columns of a 'word'.
+ *
+ * The rules, from Windows, are a bit strange.
+ * A 'word' is a block of non-blank text, plus one blank to the right.
+ * So if you double-click on a blank, you get just the blank, unless it is to
+ * the right of a non-blank, in which case you get the word to the left as
+ * well.
+ */
+static void
+find_word_end(int row, int col, int *startp, int *endp)
+{
+	int baddr = (row * COLS) + col;
+
+	assert(row <= ROWS);
+	assert(col <= COLS);
+
+	/*
+	 * If on a blank now, return just that, or that plus the word to the
+	 * left.
+	 */
+	if (is_blank(baddr)) {
+		*endp = col;
+		while (col && !is_blank((row * COLS) + (col - 1))) {
+			col--;
+		}
+		*endp = col;
+		return;
+	}
+
+	/* Search left. */
+	while (col && !is_blank((row * COLS) + (col - 1))) {
+		col--;
+	}
+	*startp = col;
+
+	/* Search right. */
+	while (col < (COLS - 1) && !is_blank((row * COLS) + (col + 1))) {
+		col++;
+	}
+	if (col < (COLS -1)) {
+		col++;
+	}
+	*endp = col;
+}
+
+/*
  * Pass a mouse event to the select logic.
  *
  * Only the essentials of the event are passed in -- the row and column in
@@ -144,12 +250,12 @@ reselect(void)
  *
  * Returns True if the event was consumed, or False if it was a cursor-move
  * event (button up without movement).
- *
- * XXX: This is *way* not finished.
  */
 Boolean
 select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 {
+	assert(row <= ROWS);
+	assert(col <= COLS);
 
 	trace_event("select_event(%u %u %s %s)\n", row, col, event_name[event],
 		shift? "shift": "no-shift");
@@ -157,14 +263,16 @@ select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 	if (!select_pending) {
 		switch (event) {
 		case SE_BUTTON_DOWN:
-			/* Begin new selection. */
-			trace_event("New selection\n");
-			select_pending = True;
-			if (!select_one) {
+			if (shift && select_started) {
+				/* Extend selection. */
+				trace_event("Extending selection\n");
+			} else {
+				trace_event("New selection\n");
 				select_start_row = row;
 				select_start_col = col;
 			}
-			select_one = False;
+			select_pending = True;
+			select_started = True;
 			select_end_row = row;
 			select_end_col = col;
 			reselect();
@@ -177,30 +285,19 @@ select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 			/* Move without button down. No-op. */
 			trace_event("No-op\n");
 			return True;
+		case SE_DOUBLE_CLICK:
+			trace_event("Double click without single?\n");
+			break;
 		}
 	}
 
-	/* A selection is pending. */
+	/* A selection is pending (rubber-banding). */
 	switch (event) {
 	case SE_BUTTON_DOWN:
-		if (shift) {
-			trace_event("Extend\n");
-			select_end_row = row;
-			select_end_col = col;
-			select_one = False;
-			reselect();
-		} else {
-			trace_event("Button down with pending selection?\n");
-			select_pending = True;
-			select_start_row = row;
-			select_start_col = col;
-			select_end_row = row;
-			select_end_col = col;
-			select_one = False;
-			reselect();
-		}
-		break;
+		trace_event("Button down while already down?\n");
+		return True;
 	case SE_BUTTON_UP:
+		select_pending = False;
 		if (row == select_start_row &&
 		    col == select_start_col) {
 			/*
@@ -208,23 +305,28 @@ select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 			 * but they might extend it later.
 			 */
 			trace_event("Cursor move\n");
-			select_pending = False;
-			select_one = True;
-			unselect(0, ROWS * COLS);
+			s_pending[(row * COLS) + col] = 0;
+			screen_changed = True;
 			return False;
 		}
+		trace_event("Finish selection.\n");
 		select_end_row = row;
 		select_end_col = col;
-		select_one = False;
-		select_pending = False;
 		reselect();
 		break;
 	case SE_MOVE:
 		/* Extend. */
-		trace_event("Move/extend\n");
+		trace_event("Extend\n");
 		select_end_row = row;
 		select_end_col = col;
-		select_one = False;
+		reselect();
+		break;
+	case SE_DOUBLE_CLICK:
+		trace_event("Word select\n");
+		select_pending = False;
+		select_start_row = row;
+		select_end_row = row;
+		find_word_end(row, col, &select_start_col, &select_end_col);
 		reselect();
 		break;
 	}
@@ -236,11 +338,11 @@ select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 /*
  * NT version of copy-to-clipboard. Does Unicode text.
  */
-static void
+static size_t
 copy_clipboard_nt(LPTSTR lptstr)
 {
 	int r, c;
-	Boolean any;
+	int any_row = -1;
 	wchar_t *bp = (wchar_t *)lptstr;
 	enum dbcs_state d;
 	int ch;
@@ -248,7 +350,6 @@ copy_clipboard_nt(LPTSTR lptstr)
 
 	/* Fill in the buffer. */
 	fa = get_field_attribute(0);
-	any = False;
 	for (r = 0; r < ROWS; r++) {
 		for (c = 0; c < COLS; c++) {
 			int baddr = (r * COLS) + c;
@@ -259,13 +360,17 @@ copy_clipboard_nt(LPTSTR lptstr)
 			if (!s_pending[baddr]) {
 				continue;
 			}
-			any = True;
+			if (any_row >= 0 && any_row != r) {
+				*bp++ = '\r';
+				*bp++ = '\n';
+				any_row = r;
+			}
 			d = ctlr_dbcs_state(baddr);
 			if (IS_LEFT(d)) {
 				int xbaddr = baddr;
 
 				if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-				    *bp++ = 0x3000; /* ideographic space */
+				    *bp++ = IDEOGRAPHIC_SPACE;
 				    continue;
 				}
 
@@ -297,28 +402,20 @@ copy_clipboard_nt(LPTSTR lptstr)
 				*bp++ = ch;
 			}
 		}
-		if (any) {
-			*bp++ = '\r';
-			*bp++ = '\n';
-			any = False;
-		}
-	}
-	if (any) {
-		*bp++ = '\r';
-		*bp++ = '\n';
 	}
 
-	*bp = 0;
+	*bp++ = 0;
+	return bp - (wchar_t *)lptstr;
 }
 
 /*
  * Windows 98 version of copy-to-clipboard. Does 8-bit text only.
  */
-static void
+static size_t
 copy_clipboard_98(LPTSTR lptstr)
 {
 	int r, c;
-	Boolean any;
+	int any_row = -1;
 	char *bp = lptstr;
 	enum dbcs_state d;
 	int ch;
@@ -326,7 +423,6 @@ copy_clipboard_98(LPTSTR lptstr)
 
 	/* Fill in the buffer. */
 	fa = get_field_attribute(0);
-	any = False;
 	for (r = 0; r < ROWS; r++) {
 		for (c = 0; c < COLS; c++) {
 			int baddr = (r * COLS) + c;
@@ -339,7 +435,11 @@ copy_clipboard_98(LPTSTR lptstr)
 			if (!s_pending[baddr]) {
 				continue;
 			}
-			any = True;
+			if (any_row >= 0 && any_row != r) {
+				*bp++ = '\r';
+				*bp++ = '\n';
+				any_row = r;
+			}
 			d = ctlr_dbcs_state(baddr);
 			if (IS_LEFT(d) || IS_RIGHT(d) ||
 				ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
@@ -362,17 +462,10 @@ copy_clipboard_98(LPTSTR lptstr)
 			}
 			*bp++ = ch;
 		}
-		if (any) {
-			*bp++ = '\r';
-			*bp++ = '\n';
-			any = False;
-		}
 	}
-	if (any) {
-		*bp++ = '\r';
-		*bp++ = '\n';
-	}
-	*bp = 0;
+
+	*bp++ = 0;
+	return bp - lptstr;
 }
 
 /*
@@ -385,7 +478,7 @@ Copy_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	HGLOBAL hglb;
 	LPTSTR lptstr;
 	int r, c;
-	Boolean any;
+	int any_row = -1;
 
 	action_debug(Copy_action, event, params, num_params);
 
@@ -401,23 +494,18 @@ Copy_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 	/* Compute the size of the output buffer. */
 	sl = 0;
-	any = False;
 	for (r = 0; r < ROWS; r++) {
 		for (c = 0; c < COLS; c++) {
 			int baddr = (r * COLS) + c;
 
 			if (s_pending[baddr]) {
+				if (any_row >= 0 && any_row != r) {
+					sl += 2; /* CR/LF */
+					any_row = r;
+				}
 				sl++;
-				any = True;
 			}
 		}
-		if (any) {
-			sl += 2; /* CR/LF */
-			any = False;
-		}
-	}
-	if (any) {
-		sl += 2; /* CR/LF */
 	}
 	sl++; /* NUL */
 

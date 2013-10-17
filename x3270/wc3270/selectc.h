@@ -45,7 +45,8 @@ extern Boolean select_changed(unsigned row, unsigned col, unsigned rows,
 typedef enum {
 	SE_BUTTON_DOWN,
 	SE_BUTTON_UP,
-	SE_MOVE
+	SE_MOVE,
+	SE_DOUBLE_CLICK
 } select_event_t;
 extern Boolean select_event(unsigned row, unsigned col, select_event_t event,
 	Boolean shift);

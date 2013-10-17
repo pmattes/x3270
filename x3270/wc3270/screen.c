@@ -1801,6 +1801,7 @@ handle_mouse_event(MOUSE_EVENT_RECORD *me)
 {
 	int x, y;
 	int row, col;
+	select_event_t event;
 
 	x = me->dwMousePosition.X;
 	y = me->dwMousePosition.Y;
@@ -1815,20 +1816,47 @@ handle_mouse_event(MOUSE_EVENT_RECORD *me)
 	}
 
 	/* Check for menu pop-up. */
-	if (appres.menubar && y == 0) {
+	if (screen_yoffset && y == 0) {
 		if (me->dwEventFlags == 0 &&
 		    me->dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
 			popup_menu(x, (screen_yoffset != 0));
 			screen_disp(False);
+			return;
 		}
-		return;
 	}
 
-	/* Check for out of bounds. */
+	/* Figure out what sort of event it is. */
+	if (me->dwEventFlags & DOUBLE_CLICK) {
+		event = SE_DOUBLE_CLICK;
+	} else if (me->dwEventFlags & MOUSE_MOVED) {
+		event = SE_MOVE;
+	} else if (me->dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED) {
+		event = SE_BUTTON_DOWN;
+	} else {
+		event = SE_BUTTON_UP;
+	}
+
+	/*
+	 * Check for out of bounds.
+	 *
+	 * Some events we just ignore, but others we map to the edge of the
+	 * display.
+	 */
 	if ((x >= COLS) ||
 	    (y - screen_yoffset < 0) ||
 	    (y - screen_yoffset >= ROWS)) {
-		return;
+		if (event != SE_MOVE && event != SE_BUTTON_UP) {
+			return;
+		}
+		if (x >= COLS) {
+			x = COLS - 1;
+		}
+		if (y - screen_yoffset < 0) {
+			y = screen_yoffset;
+		}
+		if (y - screen_yoffset >= ROWS) {
+			y = screen_yoffset + ROWS - 1;
+		}
 	}
 
 	/* Compute the buffer coordinates. */
@@ -1843,10 +1871,7 @@ handle_mouse_event(MOUSE_EVENT_RECORD *me)
 	 * Pass it to the selection logic. If the event is not consumed, treat
 	 * it as a cursor move.
 	 */
-	if (!select_event(row, col,
-		    (me->dwEventFlags & MOUSE_MOVED)? SE_MOVE:
-		     ((me->dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED)?
-		      SE_BUTTON_DOWN: SE_BUTTON_UP),
+	if (!select_event(row, col, event,
 		    (me->dwControlKeyState & SHIFT_PRESSED) != 0)) {
 		cursor_move((row * COLS) + col);
 	}
