@@ -42,7 +42,13 @@ extern void Selected_action(Widget w, XEvent *event, String *params,
 /* Used by the screen logic. */
 extern Boolean select_changed(unsigned row, unsigned col, unsigned rows,
 	unsigned cols);
-extern void select_event(unsigned row, unsigned col, Boolean pressed);
+typedef enum {
+	SE_BUTTON_DOWN,
+	SE_BUTTON_UP,
+	SE_MOVE
+} select_event_t;
+extern Boolean select_event(unsigned row, unsigned col, select_event_t event,
+	Boolean shift);
 extern void select_init(unsigned max_rows, unsigned max_cols);
 extern void select_sync(unsigned row, unsigned col, unsigned rows,
 	unsigned cols);

@@ -60,6 +60,21 @@ extern int screen_changed;
 static char *s_pending;
 static char *s_onscreen;
 
+/* Event names. */
+static char *event_name[] = {
+	"BUTTON_DOWN",
+	"BUTTON_UP",
+	"MOVE"
+};
+
+/* Selection state. */
+static Boolean select_pending = False;
+static Boolean select_one = False;
+static int select_start_row;
+static int select_start_col;
+static int select_end_row;
+static int select_end_col;
+
 /*
  * Initialize the selection logic, given the maximum screen dimensions.
  */
@@ -87,17 +102,135 @@ unselect(int baddr, int len)
 	 * the whole selected rectangle has.
 	 */
 	/*memset(&s_pending[baddr], 0, len);*/
+	select_pending = False;
 	memset(s_pending, 0, ROWS * COLS);
+	screen_changed = True;
+}
+
+static void
+reselect(void)
+{
+	int rowA, colA, rowZ, colZ;
+	int row, col;
+
+	/* Clear out the current selection. */
+	memset(s_pending, 0, ROWS * COLS);
+
+	/* Fill in from start to end, which may be backwards. */
+	rowA = (select_start_row < select_end_row)?
+	    select_start_row: select_end_row;
+	rowZ = (select_start_row > select_end_row)?
+	    select_start_row: select_end_row;
+	colA = (select_start_col < select_end_col)?
+	    select_start_col: select_end_col;
+	colZ = (select_start_col > select_end_col)?
+	    select_start_col: select_end_col;
+
+	for (row = rowA; row <= rowZ; row++) {
+		for (col = colA; col <= colZ; col++) {
+			s_pending[(row * COLS) + col] = 1;
+		}
+	}
+
 	screen_changed = True;
 }
 
 /*
  * Pass a mouse event to the select logic.
+ *
+ * Only the essentials of the event are passed in -- the row and column in
+ * display coordinates (not screen coordinates), and the status of the left
+ * mouse button. select_event() infers the user's actions from that.
+ *
+ * Returns True if the event was consumed, or False if it was a cursor-move
+ * event (button up without movement).
+ *
+ * XXX: This is *way* not finished.
  */
-void
-select_event(unsigned row, unsigned col, Boolean pressed)
+Boolean
+select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 {
-	/* XXX: do something useful here */
+
+	trace_event("select_event(%u %u %s %s)\n", row, col, event_name[event],
+		shift? "shift": "no-shift");
+
+	if (!select_pending) {
+		switch (event) {
+		case SE_BUTTON_DOWN:
+			/* Begin new selection. */
+			trace_event("New selection\n");
+			select_pending = True;
+			if (!select_one) {
+				select_start_row = row;
+				select_start_col = col;
+			}
+			select_one = False;
+			select_end_row = row;
+			select_end_col = col;
+			reselect();
+			return True;
+		case SE_BUTTON_UP:
+			/* Button up without button down. What? */
+			trace_event("Button up without pending selection?\n");
+			return True;
+		case SE_MOVE:
+			/* Move without button down. No-op. */
+			trace_event("No-op\n");
+			return True;
+		}
+	}
+
+	/* A selection is pending. */
+	switch (event) {
+	case SE_BUTTON_DOWN:
+		if (shift) {
+			trace_event("Extend\n");
+			select_end_row = row;
+			select_end_col = col;
+			select_one = False;
+			reselect();
+		} else {
+			trace_event("Button down with pending selection?\n");
+			select_pending = True;
+			select_start_row = row;
+			select_start_col = col;
+			select_end_row = row;
+			select_end_col = col;
+			select_one = False;
+			reselect();
+		}
+		break;
+	case SE_BUTTON_UP:
+		if (row == select_start_row &&
+		    col == select_start_col) {
+			/*
+			 * No movement. Call it a cursor move,
+			 * but they might extend it later.
+			 */
+			trace_event("Cursor move\n");
+			select_pending = False;
+			select_one = True;
+			unselect(0, ROWS * COLS);
+			return False;
+		}
+		select_end_row = row;
+		select_end_col = col;
+		select_one = False;
+		select_pending = False;
+		reselect();
+		break;
+	case SE_MOVE:
+		/* Extend. */
+		trace_event("Move/extend\n");
+		select_end_row = row;
+		select_end_col = col;
+		select_one = False;
+		reselect();
+		break;
+	}
+
+	/* We consumed the event. */
+	return True;
 }
 
 /*

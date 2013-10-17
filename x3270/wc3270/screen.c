@@ -1795,6 +1795,63 @@ Win98ReadConsoleInputW(HANDLE h, INPUT_RECORD *ir, DWORD len, DWORD *nr)
 	return r;
 }
 
+/* Handle mouse events. */
+static void
+handle_mouse_event(MOUSE_EVENT_RECORD *me)
+{
+	int x, y;
+	int row, col;
+
+	x = me->dwMousePosition.X;
+	y = me->dwMousePosition.Y;
+
+	/* Check for menu selection. */
+	if (menu_is_up) {
+		if (me->dwEventFlags == 0 &&
+		    me->dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+			menu_click(x, y);
+		}
+		return;
+	}
+
+	/* Check for menu pop-up. */
+	if (appres.menubar && y == 0) {
+		if (me->dwEventFlags == 0 &&
+		    me->dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+			popup_menu(x, (screen_yoffset != 0));
+			screen_disp(False);
+		}
+		return;
+	}
+
+	/* Check for out of bounds. */
+	if ((x >= COLS) ||
+	    (y - screen_yoffset < 0) ||
+	    (y - screen_yoffset >= ROWS)) {
+		return;
+	}
+
+	/* Compute the buffer coordinates. */
+	row = y - screen_yoffset;
+	if (flipped) {
+		col = COLS - x;
+	} else {
+		col = x;
+	}
+
+	/*
+	 * Pass it to the selection logic. If the event is not consumed, treat
+	 * it as a cursor move.
+	 */
+	if (!select_event(row, col,
+		    (me->dwEventFlags & MOUSE_MOVED)? SE_MOVE:
+		     ((me->dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED)?
+		      SE_BUTTON_DOWN: SE_BUTTON_UP),
+		    (me->dwControlKeyState & SHIFT_PRESSED) != 0)) {
+		cursor_move((row * COLS) + col);
+	}
+}
+
 /* Keyboard input. */
 static void
 kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
@@ -1803,7 +1860,6 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 	INPUT_RECORD ir;
 	DWORD nr;
 	const char *s;
-	int x, y;
 
 	/* Get the next input event. */
 	if (is_nt)
@@ -1854,39 +1910,14 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		trace_event("Menu\n");
 		break;
 	case MOUSE_EVENT:
-		x = ir.Event.MouseEvent.dwMousePosition.X;
-		y = ir.Event.MouseEvent.dwMousePosition.Y;
 		trace_event("Mouse (%d,%d) ButtonState 0x%lx "
 			"ControlKeyState 0x%lx EventFlags 0x%lx\n",
-			x, y,
+			ir.Event.MouseEvent.dwMousePosition.X,
+			ir.Event.MouseEvent.dwMousePosition.Y,
 			ir.Event.MouseEvent.dwButtonState,
 			ir.Event.MouseEvent.dwControlKeyState,
 			ir.Event.MouseEvent.dwEventFlags);
-
-		/*
-		 * Really simple -- if it's a simple left-click, move the
-		 * cursor.  We can get fancier later.
-		 */
-		if ((ir.Event.MouseEvent.dwButtonState ==
-			FROM_LEFT_1ST_BUTTON_PRESSED) &&
-		    /*(ir.Event.MouseEvent.dwControlKeyState == 0) &&*/
-		    (ir.Event.MouseEvent.dwEventFlags == 0)) {
-		    	if (menu_is_up) {
-			    	menu_click(x, y);
-			} else if (appres.menubar && y == 0) {
-			    	popup_menu(x, (screen_yoffset != 0));
-				screen_disp(False);
-			} else if ((x < COLS) &&
-				   (y - screen_yoffset >= 0) &&
-				   (y - screen_yoffset < ROWS)) {
-				if (flipped)
-					cursor_move((COLS - x) +
-						((y - screen_yoffset) * COLS));
-				else
-					cursor_move(x +
-						((y - screen_yoffset) * COLS));
-			}
-		}
+		handle_mouse_event(&ir.Event.MouseEvent);
 		break;
 	case WINDOW_BUFFER_SIZE_EVENT:
 		trace_event("WindowBufferSize\n");
