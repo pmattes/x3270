@@ -38,34 +38,35 @@
  */
 
 #include "globals.h"
+
 #if defined(_WIN32) /*[*/
-#include <winsock2.h>
-#include <ws2tcpip.h>
+# include <winsock2.h>
+# include <ws2tcpip.h>
 #else /*][*/
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
+# include <sys/socket.h>
+# include <sys/ioctl.h>
+# include <netinet/in.h>
 #endif /*]*/
 #define TELCMDS 1
 #define TELOPTS 1
 #include "arpa_telnet.h"
 #if !defined(_WIN32) /*[*/
-#include <arpa/inet.h>
+# include <arpa/inet.h>
 #endif /*]*/
 #include <errno.h>
 #include <fcntl.h>
 #if !defined(_WIN32) /*[*/
-#include <netdb.h>
+# include <netdb.h>
 #endif /*]*/
 #include <stdarg.h>
 #if defined(HAVE_LIBSSL) /*[*/
-#if defined(_WIN32) /*[*/
-#include "ssl_dll.h"
-#endif /*]*/
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <openssl/conf.h>
-#include <openssl/x509v3.h>
+# if defined(_WIN32) /*[*/
+#  include "ssl_dll.h"
+# endif /*]*/
+# include <openssl/ssl.h>
+# include <openssl/err.h>
+# include <openssl/conf.h>
+# include <openssl/x509v3.h>
 #endif /*]*/
 #include "tn3270e.h"
 #include "3270ds.h"
@@ -81,7 +82,7 @@
 #include "proxyc.h"
 #include "resolverc.h"
 #if defined(C3270) /*[*/
-#include "screenc.h"
+# include "screenc.h"
 #endif /*]*/
 #include "statusc.h"
 #include "tablesc.h"
@@ -93,17 +94,17 @@
 #include "xioc.h"
 
 #if defined(X3270_DISPLAY) && defined(HAVE_LIBSSL) /*[*/
-#include "objects.h"
-#include <X11/StringDefs.h>
-#include <X11/Xaw/Dialog.h>
+# include "objects.h"
+# include <X11/StringDefs.h>
+# include <X11/Xaw/Dialog.h>
 #endif /*]*/
 
 #if !defined(TELOPT_NAWS) /*[*/
-#define TELOPT_NAWS	31
+# define TELOPT_NAWS	31
 #endif /*]*/
 
 #if !defined(TELOPT_STARTTLS) /*[*/
-#define TELOPT_STARTTLS	46
+# define TELOPT_STARTTLS	46
 #endif /*]*/
 #define TLS_FOLLOWS	1
 
@@ -126,9 +127,6 @@ int             linemode = 1;
 Boolean		local_process = False;
 #endif /*]*/
 char           *termtype;
-
-/* Externals */
-extern struct timeval ds_ts;
 
 /* Statics */
 static int      sock = -1;	/* active socket */
@@ -250,12 +248,9 @@ static const char *cmd(int c);
 static const char *opt(unsigned char c);
 static const char *nnn(int c);
 #else /*][*/
-#if defined(__GNUC__) /*[*/
-#else /*][*/
-#endif /*]*/
-#define cmd(x) 0
-#define opt(x) 0
-#define nnn(x) 0
+# define cmd(x) 0
+# define opt(x) 0
+# define nnn(x) 0
 #endif /*]*/
 
 /* telnet states */
@@ -287,44 +282,44 @@ static const char *telquals[3] = { "IS", "SEND", "INFO" };
 static const char *telobjs[4] = { "VAR", "VALUE", "ESC", "USERVAR" };
 #endif /*]*/
 #if defined(X3270_TN3270E) /*[*/
-#if defined(X3270_TRACE) /*[*/
+# if defined(X3270_TRACE) /*[*/
 static const char *reason_code[8] = { "CONN-PARTNER", "DEVICE-IN-USE",
 	"INV-ASSOCIATE", "INV-NAME", "INV-DEVICE-TYPE", "TYPE-NAME-ERROR",
 	"UNKNOWN-ERROR", "UNSUPPORTED-REQ" };
-#define rsn(n)	(((n) <= TN3270E_REASON_UNSUPPORTED_REQ) ? \
+#  define rsn(n)	(((n) <= TN3270E_REASON_UNSUPPORTED_REQ) ? \
 			reason_code[(n)] : "??")
-#endif /*]*/
+# endif /*]*/
 static const char *function_name[5] = { "BIND-IMAGE", "DATA-STREAM-CTL",
 	"RESPONSES", "SCS-CTL-CODES", "SYSREQ" };
-#define fnn(n)	(((n) <= TN3270E_FUNC_SYSREQ) ? \
+# define fnn(n)	(((n) <= TN3270E_FUNC_SYSREQ) ? \
 			function_name[(n)] : "??")
-#if defined(X3270_TRACE) /*[*/
+# if defined(X3270_TRACE) /*[*/
 static const char *data_type[9] = { "3270-DATA", "SCS-DATA", "RESPONSE",
 	"BIND-IMAGE", "UNBIND", "NVT-DATA", "REQUEST", "SSCP-LU-DATA",
 	"PRINT-EOJ" };
-#define e_dt(n)	(((n) <= TN3270E_DT_PRINT_EOJ) ? \
+#  define e_dt(n)	(((n) <= TN3270E_DT_PRINT_EOJ) ? \
 			data_type[(n)] : "??")
 static const char *req_flag[1] = { " ERR-COND-CLEARED" };
-#define e_rq(fn, n) (((fn) == TN3270E_DT_REQUEST) ? \
+#  define e_rq(fn, n) (((fn) == TN3270E_DT_REQUEST) ? \
 			(((n) <= TN3270E_RQF_ERR_COND_CLEARED) ? \
 			req_flag[(n)] : " ??") : "")
 static const char *hrsp_flag[3] = { "NO-RESPONSE", "ERROR-RESPONSE",
 	"ALWAYS-RESPONSE" };
-#define e_hrsp(n) (((n) <= TN3270E_RSF_ALWAYS_RESPONSE) ? \
+#  define e_hrsp(n) (((n) <= TN3270E_RSF_ALWAYS_RESPONSE) ? \
 			hrsp_flag[(n)] : "??")
 static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
-#define e_trsp(n) (((n) <= TN3270E_RSF_NEGATIVE_RESPONSE) ? \
+#  define e_trsp(n) (((n) <= TN3270E_RSF_NEGATIVE_RESPONSE) ? \
 			trsp_flag[(n)] : "??")
-#define e_rsp(fn, n) (((fn) == TN3270E_DT_RESPONSE) ? e_trsp(n) : e_hrsp(n))
-#endif /*]*/
+#  define e_rsp(fn, n) (((fn) == TN3270E_DT_RESPONSE) ? e_trsp(n) : e_hrsp(n))
+# endif /*]*/
 #endif /*]*/
 
 #if defined(C3270) && defined(C3270_80_132) /*[*/
-#define XMIT_ROWS	((appres.altscreen != CN)? MODEL_2_ROWS: maxROWS)
-#define XMIT_COLS	((appres.altscreen != CN)? MODEL_2_COLS: maxCOLS)
+# define XMIT_ROWS	((appres.altscreen != CN)? MODEL_2_ROWS: maxROWS)
+# define XMIT_COLS	((appres.altscreen != CN)? MODEL_2_COLS: maxCOLS)
 #else /*][*/
-#define XMIT_ROWS	maxROWS
-#define XMIT_COLS	maxCOLS
+# define XMIT_ROWS	maxROWS
+# define XMIT_COLS	maxCOLS
 #endif /*]*/
 
 static int ssl_init(void);
@@ -348,17 +343,17 @@ static Boolean host_inaddr_valid;
 struct in6_addr host_in6addr;
 static Boolean host_in6addr_valid;
 # endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
+# if defined(X3270_DISPLAY) /*[*/
 static char *ssl_password;
-#endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+# endif /*]*/
+# if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 static Boolean ssl_password_prompted;
-#endif /*]*/
-#if OPENSSL_VERSION_NUMBER >= 0x00907000L /*[*/
-#define INFO_CONST const
-#else /*][*/
-#define INFO_CONST
-#endif /*]*/
+# endif /*]*/
+# if OPENSSL_VERSION_NUMBER >= 0x00907000L /*[*/
+#  define INFO_CONST const
+# else /*][*/
+#  define INFO_CONST
+# endif /*]*/
 static void client_info_callback(INFO_CONST SSL *s, int where, int ret);
 static void continue_tls(unsigned char *sbbuf, int len);
 static char *spc_verify_cert_hostname(X509 *cert, char *hostname,
@@ -370,29 +365,29 @@ static void output_possible(unsigned long fd, ioid_t id);
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-#define socket_errno()	WSAGetLastError()
-#define SE_EWOULDBLOCK	WSAEWOULDBLOCK
-#define SE_ECONNRESET	WSAECONNRESET
-#define SE_EINTR	WSAEINTR
-#define SE_EAGAIN	WSAEINPROGRESS
-#define SE_EPIPE	WSAECONNABORTED
-#define SE_EINPROGRESS	WSAEINPROGRESS
-#define SOCK_CLOSE(s)	closesocket(s)
-#define SOCK_IOCTL(s, f, v)	ioctlsocket(s, f, (DWORD *)v)
-#define IOCTL_T		u_long
+# define socket_errno()	WSAGetLastError()
+# define SE_EWOULDBLOCK	WSAEWOULDBLOCK
+# define SE_ECONNRESET	WSAECONNRESET
+# define SE_EINTR	WSAEINTR
+# define SE_EAGAIN	WSAEINPROGRESS
+# define SE_EPIPE	WSAECONNABORTED
+# define SE_EINPROGRESS	WSAEINPROGRESS
+# define SOCK_CLOSE(s)	closesocket(s)
+# define SOCK_IOCTL(s, f, v)	ioctlsocket(s, f, (DWORD *)v)
+# define IOCTL_T	u_long
 #else /*][*/
-#define socket_errno()	errno
-#define SE_EWOULDBLOCK	EWOULDBLOCK
-#define SE_ECONNRESET	ECONNRESET
-#define SE_EINTR	EINTR
-#define SE_EAGAIN	EAGAIN
-#define SE_EPIPE	EPIPE
-#if defined(EINPROGRESS) /*[*/
-#define SE_EINPROGRESS	EINPROGRESS
-#endif /*]*/
-#define SOCK_CLOSE(s)	close(s)
-#define SOCK_IOCTL	ioctl
-#define IOCTL_T		int
+# define socket_errno()	errno
+# define SE_EWOULDBLOCK	EWOULDBLOCK
+# define SE_ECONNRESET	ECONNRESET
+# define SE_EINTR	EINTR
+# define SE_EAGAIN	EAGAIN
+# define SE_EPIPE	EPIPE
+# if defined(EINPROGRESS) /*[*/
+#  define SE_EINPROGRESS	EINPROGRESS
+# endif /*]*/
+# define SOCK_CLOSE(s)	close(s)
+# define SOCK_IOCTL	ioctl
+# define IOCTL_T	int
 #endif /*]*/
 
 
@@ -3302,7 +3297,6 @@ trace_netdata(char direction, unsigned const char *buf, int len)
 	int offset;
 	struct timeval ts;
 	double tdiff;
-	extern Boolean do_ts;
 
 	if (!toggled(DS_TRACE))
 		return;

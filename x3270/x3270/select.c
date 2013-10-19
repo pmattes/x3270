@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2013 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -111,8 +111,6 @@ static int      saved_cursor_addr;
 static void own_sels(Time t);
 static int	n_owned = -1;
 static Boolean	any_selected = False;
-
-extern Widget  *screen;
 
 #define CLICK_INTERVAL	300
 

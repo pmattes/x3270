@@ -37,6 +37,10 @@ enum pds {
 	PDS_BAD_ADDR = -2	/* command contained a bad address */
 };
 
+extern unsigned char crm_attr[];
+extern int crm_nattr;
+extern unsigned char reply_mode;
+extern Boolean screen_alt;
 extern Boolean screen_changed;
 
 void ctlr_aclear(int baddr, int count, int clear_ea);

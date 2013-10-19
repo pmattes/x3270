@@ -2503,7 +2503,7 @@ resize_window(int rows)
 }
 
 static void
-usage(void)
+w_usage(void)
 {
     	fprintf(stderr, "Usage: wc3270wiz [session-name]\n"
 		        "       wc3270wiz [session-file]\n");
@@ -2529,7 +2529,7 @@ main(int argc, char *argv[])
 		session_name = argv[1];
 		break;
 	    default:
-	    	usage();
+	    	w_usage();
 		break;
 	}
 

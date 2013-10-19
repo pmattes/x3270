@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,8 @@ extern unsigned int kybdlock;
 #define KL_ENTER_INHIBIT	0x0200
 #define KL_SCROLLED		0x0400
 #define KL_OIA_MINUS		0x0800
+
+extern unsigned char aid;
 
 /* actions */
 extern void AltCursor_action(Widget w, XEvent *event, String *params,

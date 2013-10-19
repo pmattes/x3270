@@ -53,11 +53,11 @@
  *   Use only blocking sockets.
  */
 #if defined(sco) /*[*/
-#define BLOCKING_CONNECT_ONLY	1
+# define BLOCKING_CONNECT_ONLY	1
 #endif /*]*/
 
 #if defined(apollo) /*[*/
-#define BLOCKING_CONNECT_ONLY	1
+# define BLOCKING_CONNECT_ONLY	1
 #endif /*]*/
 
 /*
@@ -66,14 +66,14 @@
 
 /* '_is_unused' explicitly flags an unused parameter */
 #if defined(__GNUC__) /*[*/
-#define _is_unused __attribute__((__unused__))
-#define printflike(s,f) __attribute__ ((__format__ (__printf__, s, f)))
+# define _is_unused __attribute__((__unused__))
+# define printflike(s,f) __attribute__ ((__format__ (__printf__, s, f)))
 #else /*][*/
-#define _is_unused /* nothing */
-#define printflike(s, f) /* nothing */
+# define _is_unused /* nothing */
+# define printflike(s, f) /* nothing */
 #endif /*]*/
 #if 'A' > 'a' /*[*/
-#define EBCDIC_HOST 1
+# define EBCDIC_HOST 1
 #endif /*]*/
 
 /*
@@ -82,13 +82,13 @@
 #include <stdio.h>			/* Unix standard I/O library */
 #include <stdlib.h>			/* Other Unix library functions */
 #if !defined(_MSC_VER) /*[*/
-#include <unistd.h>			/* Unix system calls */
+# include <unistd.h>			/* Unix system calls */
 #endif /*]*/
 #include <ctype.h>			/* Character classes */
 #include <string.h>			/* String manipulations */
 #include <sys/types.h>			/* Basic system data types */
 #if !defined(_MSC_VER) /*[*/
-#include <sys/time.h>			/* System time-related data types */
+# include <sys/time.h>			/* System time-related data types */
 #endif /*]*/
 #include <time.h>			/* C library time functions */
 #include "localdefs.h"			/* {s,tcl,c}3270-specific defines */
@@ -111,12 +111,12 @@ extern int gettimeofday(struct timeval *, void *);
  * development of iconv-based logic can be done on 10646-compliant systems.
  */
 #if defined(__STDC_ISO_10646__) && !defined(USE_ICONV) /*[*/
-#define UNICODE_WCHAR	1
+# define UNICODE_WCHAR	1
 #endif /*]*/
 #if !defined(_WIN32) && !defined(UNICODE_WCHAR) /*[*/
-#undef USE_ICONV
-#define USE_ICONV 1
-#include <iconv.h>
+# undef USE_ICONV
+# define USE_ICONV 1
+# include <iconv.h>
 #endif /*]*/
 
 /*
@@ -130,26 +130,26 @@ typedef unsigned short ebc_t;
  * Cancel out contradictory parts.
  */
 #if !defined(X3270_DISPLAY) /*[*/
-#undef X3270_KEYPAD
-#undef X3270_MENUS
+# undef X3270_KEYPAD
+# undef X3270_MENUS
 #endif /*]*/
 #if defined(C3270) && defined(X3270_DBCS) && !defined(CURSES_WIDE) && !defined(_WIN32) /*[*/
-#undef X3270_DBCS
+# undef X3270_DBCS
 #endif /*]*/
 
 /* Local process (-e) header files. */
 #if defined(X3270_LOCAL_PROCESS) && defined(HAVE_FORKPTY) /*[*/
-#define LOCAL_PROCESS	1
-#include <termios.h>
-#if defined(HAVE_PTY_H) /*[*/
-#include <pty.h>
-#endif /*]*/
-#if defined(HAVE_LIBUTIL_H) /*[*/
-#include <libutil.h>
-#endif /*]*/
-#if defined(HAVE_UTIL_H) /*[*/
-#include <util.h>
-#endif /*]*/
+# define LOCAL_PROCESS	1
+# include <termios.h>
+# if defined(HAVE_PTY_H) /*[*/
+#  include <pty.h>
+# endif /*]*/
+# if defined(HAVE_LIBUTIL_H) /*[*/
+#  include <libutil.h>
+# endif /*]*/
+# if defined(HAVE_UTIL_H) /*[*/
+#  include <util.h>
+# endif /*]*/
 #endif /*]*/
 
 /* Functions we may need to supply. */
@@ -170,6 +170,9 @@ extern int		defROWS;	/* default (EraseWrite) */
 extern int		defCOLS;
 extern int		altROWS;	/* alternate (EraseWriteAlternate) */
 extern int		altCOLS;
+#if defined(C3270) /*[*/
+extern Boolean		any_error_output;
+#endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
 extern Atom		a_3270, a_registry, a_encoding;
 extern XtAppContext	appcontext;
@@ -221,6 +224,7 @@ extern Boolean		non_tn3270e_host;
 extern int		ov_cols, ov_rows;
 extern Boolean		ov_auto;
 extern Boolean		passthru_host;
+extern char		*profile_name;
 extern const char	*programname;
 extern char		*qualified_host;
 extern char		*reconnect_host;
@@ -373,28 +377,28 @@ enum keytype { KT_STD, KT_GE };
 /*   Equivalent of setlinebuf */
 
 #if defined(_IOLBF) /*[*/
-#define SETLINEBUF(s)	setvbuf(s, (char *)NULL, _IOLBF, BUFSIZ)
+# define SETLINEBUF(s)	setvbuf(s, (char *)NULL, _IOLBF, BUFSIZ)
 #else /*][*/
-#define SETLINEBUF(s)	setlinebuf(s)
+# define SETLINEBUF(s)	setlinebuf(s)
 #endif /*]*/
 
 /*   Motorola version of gettimeofday */
 
 #if defined(MOTOROLA)
-#define gettimeofday(tp,tz)	gettimeofday(tp)
+# define gettimeofday(tp,tz)	gettimeofday(tp)
 #endif
 
 /* Default DFT file transfer buffer size. */
 #if defined(X3270_FT) && !defined(DFT_BUF) /*[*/
-#define DFT_BUF		(4 * 1024)
+# define DFT_BUF		(4 * 1024)
 #endif /*]*/
 
 /* DBCS Preedit Types */
 #if defined(X3270_DBCS) /*[*/
-#define PT_ROOT			"Root"
-#define PT_OVER_THE_SPOT	"OverTheSpot"
-#define PT_OFF_THE_SPOT		"OffTheSpot"
-#define PT_ON_THE_SPOT		"OnTheSpot"
+# define PT_ROOT		"Root"
+# define PT_OVER_THE_SPOT	"OverTheSpot"
+# define PT_OFF_THE_SPOT	"OffTheSpot"
+# define PT_ON_THE_SPOT		"OnTheSpot"
 #endif /*]*/
 
 /* I/O ID typedef */
@@ -402,3 +406,6 @@ typedef unsigned long ioid_t;
 
 /* Screen print types. */
 typedef enum { P_TEXT, P_HTML, P_RTF } ptype_t;
+
+/* Usage message with error exit. */
+extern void usage(const char *);

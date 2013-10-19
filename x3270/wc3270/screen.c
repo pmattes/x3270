@@ -66,8 +66,6 @@
 
 #define CM (60*10)	/* csec per minute */
 
-extern char *profile_name;
-
 #if defined(X3270_DBCS) /*[*/
 # if !defined(COMMON_LVB_LEAD_BYTE) /*[*/
 #  define COMMON_LVB_LEAD_BYTE		0x100

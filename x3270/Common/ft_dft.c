@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2013 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -53,8 +53,6 @@
 #include "utilc.h"
 
 #include <errno.h>
-
-extern unsigned char aid;
 
 /* Macros. */
 #define OPEN_MSG	"FT:MSG"	/* Open request for message */

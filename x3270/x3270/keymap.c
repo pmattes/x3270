@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2010, Paul Mattes.
+ * Copyright (c) 1996-2010, 2013 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,7 @@
 #include "appres.h"
 #include "objects.h"
 #include "resources.h"
+#include "screen.h"
 
 #include "hostc.h"
 #include "keymapc.h"
@@ -79,8 +80,6 @@ static void keymap_3270_mode(Boolean);
 /* Undocumented Xt function to convert translations to text. */
 extern String _XtPrintXlations(Widget w, XtTranslations xlations,
     Widget accelWidget, Boolean includeRHS);
-
-extern Widget *screen;
 
 #if defined(X3270_MENUS) /*[*/
 extern Pixmap diamond;

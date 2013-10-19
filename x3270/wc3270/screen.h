@@ -25,7 +25,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Non-display version of screen.h */
+/* wc3270 version of screen.h */
 
 #define SELECTED(baddr)	area_is_selected(baddr, 1)
 extern int *char_width, *char_height;

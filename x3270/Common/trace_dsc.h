@@ -39,6 +39,8 @@ typedef enum {
 
 extern Boolean trace_skipping;
 extern char *tracefile_name;
+extern struct timeval ds_ts;
+extern Boolean do_ts;
 
 const char *rcba(int baddr);
 char *screentrace_default_file(ptype_t ptype);

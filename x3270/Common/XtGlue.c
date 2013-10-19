@@ -73,10 +73,6 @@ Error(const char *s)
 void
 Warning(const char *s)
 {
-#if defined(C3270) /*[*/
-	extern Boolean any_error_output;
-#endif /*]*/
-
 	if (Warning_redirect != NULL)
 		(*Warning_redirect)(s);
 	else {

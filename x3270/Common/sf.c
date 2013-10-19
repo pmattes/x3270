@@ -53,7 +53,8 @@
 #include "kybdc.h"
 #include "screenc.h"
 #include "seec.h"
-#include "sfc.h"
+#include "sfc.h"	/* has to come before rpqc.h */
+#include "rpqc.h"
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace_dsc.h"
@@ -67,12 +68,6 @@
 #define Xr_3279_2	0x000a02e5
 #define Yr_3279_2	0x0002006f
 
-/* Externals: ctlr.c */
-extern Boolean  screen_alt;
-extern unsigned char reply_mode;
-extern int      crm_nattr;
-extern unsigned char crm_attr[];
-
 /* Statics */
 static Boolean  qr_in_progress = False;
 static enum pds sf_read_part(unsigned char buf[], unsigned buflen);
@@ -84,13 +79,11 @@ static void query_reply_start(void);
 static void do_query_reply(unsigned char code);
 static void query_reply_end(void);
 
-typedef void qr_single_fn_t(void);
 typedef Boolean qr_multi_fn_t(unsigned *subindex, Boolean *more);
 
 static qr_single_fn_t do_qr_summary, do_qr_usable_area, do_qr_alpha_part,
 	do_qr_charsets, do_qr_color, do_qr_highlighting, do_qr_reply_modes,
 	do_qr_imp_part, do_qr_null;
-extern qr_single_fn_t do_qr_rpqnames;
 #if defined(X3270_DBCS) /*[*/
 static qr_single_fn_t do_qr_dbcs_asia;
 #endif /*]*/

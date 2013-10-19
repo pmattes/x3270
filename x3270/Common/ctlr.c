@@ -66,9 +66,6 @@
 #include "unicodec.h"
 #include "utilc.h"
 
-/* Externals: kybd.c */
-extern unsigned char aid;
-
 /* Globals */
 int             ROWS, COLS;
 int             maxROWS, maxCOLS;

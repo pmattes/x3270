@@ -63,10 +63,6 @@
 #include "pr3287.h"
 #endif /*]*/
 
-#if defined(PR3287) /*[*/
-extern char *proxy_spec;
-#endif /*]*/
-
 #if defined(_WIN32) /*[*/
 typedef unsigned long in_addr_t;
 #endif /*]*/

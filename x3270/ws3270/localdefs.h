@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, Paul Mattes.
+ * Copyright (c) 2000-2009, 2013 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,8 @@
 
 /* Identify ourselves. */
 #define S3270	1
+
+#include <windows.h>
 
 /* Conditional 80/132 mode switch support. */
 #if defined(BROKEN_NEWTERM) /*[*/

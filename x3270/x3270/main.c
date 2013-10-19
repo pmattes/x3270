@@ -311,7 +311,7 @@ struct toggle_name toggle_names[] = {
 };
 
 
-static void
+void
 usage(const char *msg)
 {
 	unsigned i;

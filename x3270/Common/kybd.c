@@ -53,6 +53,7 @@
 #include "keysym2ucs.h"
 #endif /*]*/
 #include "resources.h"
+#include "screen.h"
 
 #include "actionsc.h"
 #include "ansic.h"
@@ -143,8 +144,6 @@ static struct ta {
 
 static char dxl[] = "0123456789abcdef";
 #define FROM_HEX(c)	(strchr(dxl, tolower(c)) - dxl)
-
-extern Widget *screen;
 
 #define KYBDLOCK_IS_OERR	(kybdlock && !(kybdlock & ~KL_OERR_MASK))
 
@@ -1076,7 +1075,6 @@ key_WCharacter(unsigned char code[], Boolean *skipped)
 	Boolean done = False;
 	Boolean no_si = False;
 	Boolean no_room = False;
-	extern unsigned char reply_mode; /* XXX */
 
 	reset_idle_timer();
 
@@ -3081,7 +3079,6 @@ xim_lookup(XKeyEvent *event)
 	static int buf_len = 0, rlen;
 	KeySym k;
 	Status status;
-	extern XIC ic;
 	int i;
 	Boolean rv = False;
 #define BASE_BUFSIZE 50

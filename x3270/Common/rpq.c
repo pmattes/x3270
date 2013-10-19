@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009, Paul Mattes.
+ * Copyright (c) 2005-2009, 2013 Paul Mattes.
  * Copyright (c) 2004-2005, Don Russell.
  * All rights reserved.
  *
@@ -49,7 +49,10 @@
 #include "3270ds.h"
 #include "appres.h"
 
+#include "ctlrc.h"
 #include "popupsc.h"
+#include "sfc.h"	 /* has to come before rpqc.h */
+#include "rpqc.h"
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace_dsc.h"

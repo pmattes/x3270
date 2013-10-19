@@ -37,6 +37,7 @@
  */
 
 #include "globals.h"
+
 #if !defined(_WIN32) /*[*/
 #include <sys/wait.h>
 #endif /*]*/
@@ -272,7 +273,7 @@ static void start_auto_shortcut(void);
 #endif /*]*/
 
 void
-usage(char *msg)
+usage(const char *msg)
 {
 	if (msg != CN)
 		fprintf(stderr, "%s\n", msg);
@@ -978,8 +979,6 @@ status_dump(void)
 	const char *bplu;
 #endif /*]*/
 	const char *ptype;
-	extern time_t ns_time;
-	extern int ns_bsent, ns_rsent, ns_brcvd, ns_rrcvd;
 
 	action_output("%s", build);
 	action_output("%s %s: %d %s x %d %s, %s, %s",

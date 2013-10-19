@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2013 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -89,3 +89,4 @@ extern unsigned char *selected;		/* selection bitmap */
 extern int	 *ascent, *descent;
 extern unsigned	 fixed_width, fixed_height;
 extern int       hhalo, vhalo;
+extern Widget	 *screen;

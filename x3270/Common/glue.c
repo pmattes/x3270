@@ -71,8 +71,6 @@
 #include "winversc.h"
 #endif /*]*/
 
-extern void usage(char *);
-
 #define LAST_ARG	"--"
 
 #if defined(C3270) /*[*/
@@ -100,7 +98,6 @@ extern void usage(char *);
 
 #if defined(C3270) /*[*/
 extern Boolean merge_profile(void);
-extern Boolean any_error_output;
 #endif /*]*/
 
 /* Statics */

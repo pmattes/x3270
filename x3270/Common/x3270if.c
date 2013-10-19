@@ -72,9 +72,6 @@
 #define NO_STATUS	(-1)
 #define ALL_FIELDS	(-2)
 
-extern int optind;
-extern char *optarg;
-
 static char *me;
 static int verbose = 0;
 static char buf[IBS];

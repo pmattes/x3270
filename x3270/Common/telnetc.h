@@ -41,6 +41,12 @@ struct ctl_char {
 	char value[3];
 };
 
+extern int ns_brcvd;
+extern int ns_bsent;
+extern int ns_rrcvd;
+extern int ns_rsent;
+extern time_t ns_time;
+
 extern void net_abort(void);
 extern Boolean net_add_dummy_tn3270e(void);
 extern void net_add_eor(unsigned char *buf, int len);
