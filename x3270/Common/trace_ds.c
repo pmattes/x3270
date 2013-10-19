@@ -87,10 +87,6 @@
 #define ftello(s)	(off_t)ftell(s)
 #endif /*]*/
 
-#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
-extern Pixmap dot;
-#endif /*]*/
-
 /* Statics */
 static int      dscnt = 0;
 #if !defined(_WIN32) /*[*/

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,8 @@
  */
 
 extern Boolean keypad_changed;
+extern Boolean keypad_popped;
+extern Widget keypad_shell;
 
 #if defined(X3270_KEYPAD) /*[*/
 

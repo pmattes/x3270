@@ -58,14 +58,11 @@
 #include "hostc.h"
 #include "kybdc.h"
 #include "macrosc.h"
+#include "menubarc.h"
 #include "objects.h"
 #include "popupsc.h"
 #include "telnetc.h"
 #include "utilc.h"
-
-/* Externals. */
-extern Pixmap diamond;
-extern Pixmap no_diamond;
 
 /* Globals. */
 text_t t_numeric = T_NUMERIC;

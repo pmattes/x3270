@@ -42,6 +42,8 @@ extern int crm_nattr;
 extern unsigned char reply_mode;
 extern Boolean screen_alt;
 extern Boolean screen_changed;
+extern int first_changed;
+extern int last_changed;
 
 void ctlr_aclear(int baddr, int count, int clear_ea);
 void ctlr_add(int baddr, unsigned char c, unsigned char cs);

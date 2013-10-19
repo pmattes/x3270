@@ -177,6 +177,9 @@ extern Boolean		any_error_output;
 extern Atom		a_3270, a_registry, a_encoding;
 extern XtAppContext	appcontext;
 #endif /*]*/
+#if defined(USE_APP_DEFAULTS) /*[*/
+extern const char	*app_defaults_version;
+#endif /*]*/
 extern const char	*build;
 extern const char	*build_rpq_timestamp;
 extern const char 	*build_rpq_version;
@@ -187,6 +190,9 @@ extern char		*current_host;
 extern unsigned short	current_port;
 #if defined(X3270_DBCS) /*[*/
 extern Boolean		dbcs;
+#endif /*]*/
+#if defined(X3270_DISPLAY) /*[*/
+extern int		default_screen;
 #endif /*]*/
 #if defined(X3270_FT) /*[*/
 extern int		dft_buffersize;
@@ -409,3 +415,14 @@ typedef enum { P_TEXT, P_HTML, P_RTF } ptype_t;
 
 /* Usage message with error exit. */
 extern void usage(const char *);
+
+/* Xt options. */
+#if defined(X3270_DISPLAY) /*[*/
+extern XrmOptionDescRec options[];
+extern int num_options;
+#endif /*]*/
+
+#if defined(C3270) /*[*/
+/* c3270 profile merge. */
+extern Boolean merge_profile(void);
+#endif /*]*/

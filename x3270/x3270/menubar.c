@@ -76,10 +76,6 @@
 
 #define MACROS_MENU	"macrosMenu"
 
-extern Widget		keypad_shell;
-extern int		linemode;
-extern Boolean		keypad_popped;
-
 static struct scheme {
 	char *label;
 	char **parents;

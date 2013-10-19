@@ -46,6 +46,7 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #endif /*]*/
 #define TELCMDS 1
 #define TELOPTS 1
@@ -96,8 +97,6 @@ typedef union {
 #endif /*]*/
 } sockaddr_46_t;
 
-extern FILE *tracef;
-
 #if defined(HAVE_LIBSSL) /*[*/
 static Boolean accept_specified_host;
 static const char *accept_dnsname;
@@ -108,10 +107,6 @@ struct in6_addr host_in6addr;
 static Boolean host_in6addr_valid;
 # endif /*]*/
 static Boolean check_cert_name(const char *host);
-#endif /*]*/
-
-#if defined(_WIN32) /*[*/
-extern char *appdata;
 #endif /*]*/
 
 /*   connection state */
@@ -161,13 +156,9 @@ unsigned char  *obptr = (unsigned char *) NULL;
 int             linemode = 1;
 const char     *termtype = "IBM-3287-1";
 
-/* Externals */
-#if !defined(_WIN32) /*[*/
-extern unsigned long inet_addr(const char *);
-#endif /*]*/
-static struct timeval ds_ts;
 
 /* Statics */
+static struct timeval ds_ts;
 static int      sock = -1;	/* active socket */
 static unsigned char myopts[N_OPTS], hisopts[N_OPTS];
 			/* telnet option flags */

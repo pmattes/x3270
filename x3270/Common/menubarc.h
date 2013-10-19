@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2010, Paul Mattes.
+ * Copyright (c) 1995-2010, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,10 @@
  */
 
 #if defined(X3270_MENUS) /*[*/
+
+extern Pixmap dot, no_dot;
+extern Pixmap diamond, no_diamond;
+extern Pixmap null;
 
 extern void HandleMenu_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);

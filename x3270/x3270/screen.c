@@ -100,14 +100,6 @@
 
 #define MAX_FONTS	50000
 
-/* Externals: main.c */
-extern int      default_screen;
-
-/* Externals: ctlr.c */
-extern Boolean  screen_changed;
-extern int      first_changed;
-extern int      last_changed;
-
 /* Globals */
 unsigned char  *selected;	/* selection bitmap */
 Dimension       main_width;

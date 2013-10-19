@@ -48,7 +48,7 @@
 #include "utilc.h"
 
 #if defined(_MSC_VER) /*[*/
-#include "Msc/deprecated.h"
+# include "Msc/deprecated.h"
 #endif /*]*/
 
 /* Typedefs */

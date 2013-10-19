@@ -57,13 +57,6 @@
 
 static Widget about_shell = NULL;
 static Widget about_form;
-extern time_t ns_time;
-extern int ns_brcvd;
-extern int ns_rrcvd;
-extern int ns_bsent;
-extern int ns_rsent;
-extern int linemode;
-extern Pixmap icon;
 
 /* Called when OK is pressed on the about popup */
 static void

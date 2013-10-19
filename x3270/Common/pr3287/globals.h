@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, Paul Mattes.
+ * Copyright (c) 2000-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -71,3 +71,5 @@ typedef unsigned short ebc_t;
 #define CS_LINEDRAW	0x02	/*  DEC line-drawing character set (ANSI) */
 #define CS_DBCS		0x03	/*  DBCS character set (X'F8') */
 #define CS_GE		0x04	/* cs flag for Graphic Escape */
+
+extern char *build;

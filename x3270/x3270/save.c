@@ -47,23 +47,14 @@
 # include "fallbacksc.h"
 #endif /*]*/
 #include "idlec.h"
+#include "keymapc.h"
+#include "keypadc.h"
 #include "popupsc.h"
+#include "screenc.h"
 #include "utilc.h"
 
 
 /* Support for WM_SAVE_YOURSELF. */
-
-extern Boolean	keypad_changed;
-extern Boolean  keypad_popped;
-extern Boolean	model_changed;
-extern Boolean	scrollbar_changed;
-extern Boolean	efont_changed;
-extern Boolean	oversize_changed;
-extern Boolean	scheme_changed;
-extern Boolean	keymap_changed;
-extern Boolean	charset_changed;
-
-extern char    *current_keymap;
 
 char           *command_string = CN;
 
@@ -553,9 +544,6 @@ save_yourself(void)
 #define NO_PROFILE_ENV	"NOX3270PRO"
 #define RDB_ENV		"X3270RDB"
 #define DEFAULT_PROFILE	"~/.x3270pro"
-
-extern XrmOptionDescRec options[];
-extern int num_options;
 
 char *profile_name = CN;
 static char *xcmd;

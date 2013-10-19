@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, Paul Mattes.
+ * Copyright (c) 1996-2009, 2013 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -35,9 +35,10 @@
 #define PA_KEYMAP_TRACE		PA_PFX "KeymapTrace"
 #define PA_END			PA_PFX "End"
 
-extern struct trans_list *temp_keymaps;
-
+extern char *current_keymap;
+extern Boolean keymap_changed;
 extern char *keymap_trace;
+extern struct trans_list *temp_keymaps;
 
 extern void do_keymap_display(Widget w, XtPointer userdata, XtPointer calldata);
 extern void keymap_init(const char *km, Boolean interactive);

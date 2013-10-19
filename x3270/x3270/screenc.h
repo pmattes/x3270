@@ -32,9 +32,16 @@
  *		Global declarations for screen.c.
  */
 
+extern Boolean efont_changed;
 extern const char *efont_charset;
 extern Boolean efont_matches;
+extern Pixmap icon;
 extern Dimension main_width;
+extern Boolean model_changed;
+extern Boolean oversize_changed;
+extern Boolean scheme_changed;
+extern Window *screen_window;
+extern Boolean scrollbar_changed;
 #if defined(X3270_DBCS) /*[*/
 extern const char *efont_charset_dbcs;
 extern XIM im;

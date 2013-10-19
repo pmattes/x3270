@@ -51,12 +51,6 @@
 #include "telnetc.h"
 #include "trace_dsc.h"
 
-/* Externals: ctlr.c */
-extern Boolean  screen_alt;
-extern unsigned char reply_mode;
-extern int      crm_nattr;
-extern unsigned char crm_attr[];
-
 /* Statics */
 static Boolean  qr_in_progress = False;
 static enum pds sf_read_part(unsigned char buf[], unsigned buflen);

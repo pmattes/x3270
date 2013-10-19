@@ -47,8 +47,6 @@
 #include "tablesc.h"
 #include "utilc.h"
 
-extern Window  *screen_window;
-
 static XChar2b *status_2b;
 static unsigned char *status_1b;
 static XChar2b *display_2b;

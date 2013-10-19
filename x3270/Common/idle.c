@@ -34,55 +34,50 @@
 
 #if defined(X3270_DISPLAY) || defined(C3270) || defined(S3270) /*[*/
 
-#if defined(X3270_DISPLAY) /*[*/
-#include <X11/StringDefs.h>
-#include <X11/Xaw/Toggle.h>
-#include <X11/Xaw/Command.h>
-#include <X11/Xaw/Form.h>
-#include <X11/Shell.h>
-#include <X11/Xaw/AsciiText.h>
-#include <X11/Xaw/TextSrc.h>
-#include <X11/Xaw/TextSink.h>
-#include <X11/Xaw/AsciiSrc.h>
-#include <X11/Xaw/AsciiSink.h>
-#endif /*]*/
-#include <errno.h>
+# if defined(X3270_DISPLAY) /*[*/
+#  include <X11/StringDefs.h>
+#  include <X11/Xaw/Toggle.h>
+#  include <X11/Xaw/Command.h>
+#  include <X11/Xaw/Form.h>
+#  include <X11/Shell.h>
+#  include <X11/Xaw/AsciiText.h>
+#  include <X11/Xaw/TextSrc.h>
+#  include <X11/Xaw/TextSink.h>
+#  include <X11/Xaw/AsciiSrc.h>
+#  include <X11/Xaw/AsciiSink.h>
+# endif /*]*/
+# include <errno.h>
 
-#include "appres.h"
-#include "dialogc.h"
-#include "hostc.h"
-#include "idlec.h"
-#include "macrosc.h"
-#include "objects.h"
-#include "popupsc.h"
-#include "resources.h"
-#include "trace_dsc.h"
-#include "utilc.h"
+# include "appres.h"
+# include "dialogc.h"
+# include "hostc.h"
+# include "idlec.h"
+# if defined(X3270_DISPLAY) /*[*/
+#  include "menubarc.h"
+# endif /*]*/
+# include "macrosc.h"
+# include "objects.h"
+# include "popupsc.h"
+# include "resources.h"
+# include "trace_dsc.h"
+# include "utilc.h"
 
 /* Macros. */
-#define MSEC_PER_SEC	1000L
-#define IDLE_SEC	1L
-#define IDLE_MIN	60L
-#define IDLE_HR		(60L * 60L)
-#define IDLE_MS		(7L * IDLE_MIN * MSEC_PER_SEC)
+# define MSEC_PER_SEC	1000L
+# define IDLE_SEC	1L
+# define IDLE_MIN	60L
+# define IDLE_HR	(60L * 60L)
+# define IDLE_MS	(7L * IDLE_MIN * MSEC_PER_SEC)
 
-#if defined(X3270_DISPLAY) /*[*/
-#define FILE_WIDTH	300	/* width of file name widgets */
-#define MARGIN		3	/* distance from margins to widgets */
-#define CLOSE_VGAP	0	/* distance between paired toggles */
-#define FAR_VGAP	10	/* distance between single toggles and groups */
-#define BUTTON_GAP	5	/* horizontal distance between buttons */
-#endif /*]*/
+# if defined(X3270_DISPLAY) /*[*/
+#  define FILE_WIDTH	300	/* width of file name widgets */
+#  define MARGIN	3	/* distance from margins to widgets */
+#  define CLOSE_VGAP	0	/* distance between paired toggles */
+#  define FAR_VGAP	10	/* distance between single toggles and groups */
+#  define BUTTON_GAP	5	/* horizontal distance between buttons */
+# endif /*]*/
 
-#define BN	(Boolean *)NULL
-
-/* Externals. */
-#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
-extern Pixmap diamond;
-extern Pixmap no_diamond;
-extern Pixmap dot;
-extern Pixmap no_dot;
-#endif /*]*/
+# define BN	(Boolean *)NULL
 
 /* Globals. */
 Boolean idle_changed = False;
@@ -102,7 +97,7 @@ static Boolean idle_ticking = False;
 static void idle_in3270(Boolean in3270);
 static int process_timeout_value(char *t);
 
-#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+# if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
 static enum idle_enum s_disabled = IDLE_DISABLED;
 static enum idle_enum s_session = IDLE_SESSION;
 static enum idle_enum s_perm = IDLE_PERM;
@@ -130,7 +125,7 @@ static void toggle_hms(Widget w, XtPointer client_data,
     XtPointer call_data);
 static void toggle_fuzz(Widget w, XtPointer client_data,
     XtPointer call_data);
-#endif /*]*/
+# endif /*]*/
 
 /* Initialization. */
 void
@@ -157,11 +152,11 @@ idle_init(void)
 		idle_enabled = True;
 
 	/* Seed the random number generator (we seem to be the only user). */
-#if defined(_WIN32) /*[*/
+# if defined(_WIN32) /*[*/
 	srand(time(NULL));
-#else /*][*/
+# else /*][*/
 	srandom(time(NULL));
-#endif /*]*/
+# endif /*]*/
 }
 
 /*
@@ -263,15 +258,15 @@ reset_idle_timer(void)
 		idle_ms_now = idle_ms;
 		if (idle_randomize) {
 			idle_ms_now = idle_ms;
-#if defined(_WIN32) /*[*/
+# if defined(_WIN32) /*[*/
 			idle_ms_now -= rand() % (idle_ms / 10L);
-#else /*][*/
+# else /*][*/
 			idle_ms_now -= random() % (idle_ms / 10L);
-#endif /*]*/
+# endif /*]*/
 		}
-#if defined(DEBUG_IDLE_TIMEOUT) /*[*/
+# if defined(DEBUG_IDLE_TIMEOUT) /*[*/
 		trace_event("Setting idle timeout to %lu\n", idle_ms_now);
-#endif /*]*/
+# endif /*]*/
 		idle_id = AddTimeOut(idle_ms_now, idle_timeout);
 		idle_ticking = True;
 	}
@@ -303,7 +298,7 @@ get_idle_timeout(void)
 	return idle_timeout_string;
 }
 
-#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+# if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
 /* "Idle Command" dialog. */
 
 /*
@@ -692,6 +687,6 @@ idle_start(void)
 	return 0;
 }
 
-#endif /*]*/
+# endif /*]*/
 
 #endif /*]*/

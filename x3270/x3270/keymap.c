@@ -52,6 +52,7 @@
 #include "keymapc.h"
 #include "keypadc.h"
 #include "kybdc.h"
+#include "menubarc.h"
 #include "popupsc.h"
 #include "screenc.h"
 #include "statusc.h"
@@ -82,9 +83,6 @@ extern String _XtPrintXlations(Widget w, XtTranslations xlations,
     Widget accelWidget, Boolean includeRHS);
 
 #if defined(X3270_MENUS) /*[*/
-extern Pixmap diamond;
-extern Pixmap no_diamond;
-
 static enum { SORT_EVENT, SORT_KEYMAP, SORT_ACTION } sort = SORT_KEYMAP;
 
 static Boolean km_isup = False;

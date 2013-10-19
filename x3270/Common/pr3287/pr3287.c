@@ -155,10 +155,6 @@
 #define INADDR_NONE	0xffffffffL
 #endif /*]*/
 
-/* Externals. */
-extern char *build;
-extern FILE *tracef;
-
 /* Globals. */
 options_t options;
 int syncsock = -1;

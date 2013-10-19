@@ -57,9 +57,15 @@
 
 #include "menubarc.h"
 
-/* The usual x3270 'COLS' variable is cCOLS in c3270. */
+/*
+ * The usual x3270 COLS variable (current number of columns in the 3270
+ * display) is called cCOLS in c3270, to avoid a conflict with curses COLS (the
+ * number of columns on the physical termal). For c3270, globals.h #defines
+ * COLS as cCOLS, so common code can use COLS transparently -- everywhere but
+ * here. In this module, we #undef COLS, after #including globals.h but before
+ * #including curses.h, and we use (curses) COLS and (c3270) cCOLS explicitly.
+ */
 #undef COLS
-extern int cCOLS;
 
 #if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
 # include <ncursesw/ncurses.h>
@@ -907,7 +913,6 @@ screen_disp(Boolean erasing _is_unused)
 	int row, col;
 	int field_attrs;
 	unsigned char fa;
-	extern Boolean screen_alt;
 	struct screen_spec *cur_spec;
 #if defined(X3270_DBCS) /*[*/
 	enum dbcs_state d;

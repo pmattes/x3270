@@ -96,10 +96,6 @@
 # define SESSION_SSFX_LEN (int)(sizeof(SESSION_SSFX) - 1)
 #endif /*]*/
 
-#if defined(C3270) /*[*/
-extern Boolean merge_profile(void);
-#endif /*]*/
-
 /* Statics */
 static void no_minus(const char *arg);
 #if defined(LOCAL_PROCESS) /*[*/

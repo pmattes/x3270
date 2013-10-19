@@ -50,6 +50,7 @@
 #include "resources.h"
 
 #include "dialogc.h"
+#include "menubarc.h"
 #include "popupsc.h"
 #include "printc.h"
 #include "togglesc.h"
@@ -63,10 +64,6 @@
 #define MARGIN		3
 #define FILE_WIDTH	300
 #define BUTTON_GAP	5
-
-extern Pixmap diamond;
-extern Pixmap no_diamond;
-extern Pixmap dot;
 
 static Widget stmenu_shell = NULL;
 static Widget stmenu_form;

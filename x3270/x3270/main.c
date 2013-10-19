@@ -69,11 +69,6 @@
 #include "trace_dsc.h"
 #include "utilc.h"
 
-/* Externals */
-#if defined(USE_APP_DEFAULTS) /*[*/
-extern const char *app_defaults_version;
-#endif /*]*/
-
 /* Globals */
 const char     *programname;
 Display        *display;

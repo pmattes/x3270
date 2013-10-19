@@ -47,9 +47,6 @@
 #include "unicodec.h"
 #include "utilc.h"
 
-#undef COLS
-extern int cCOLS;
-
 #if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
 #include <ncursesw/ncurses.h>
 #elif defined(HAVE_NCURSES_NCURSES_H) /*][*/

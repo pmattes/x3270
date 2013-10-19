@@ -1060,7 +1060,6 @@ status_string(void)
 
 	if (CONNECTED) {
 		if (IN_ANSI) {
-			extern int linemode; /* XXX */
 			if (linemode)
 				em_mode = 'L';
 			else
