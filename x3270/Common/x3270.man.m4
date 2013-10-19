@@ -1036,6 +1036,8 @@ ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,c3270,,
 ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,`XX_TR(XX_TDH(Compose)	XX_TD(next two keys form a special symbol))
 ')dnl
 XX_TR(XX_TDH(XX_INT()XX_LA()XX_BLOCK()Connect`'XX_LPAREN`'XX_CCHAR()XX_FI(host)`'XX_RPAREN)	XX_TD(connect to XX_FI(host)))
+ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(XX_INT()XX_LS()`Copy'XX_VOID())	XX_TD(copy highlighted area to clipboard))
+')dnl
 XX_TR(XX_TDH(XX_INT()XX_LA()XX_BLOCK()`CursorSelect'XX_VOID())	XX_TD(Cursor Select XX_SM(AID)))
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(Cut)	XX_TD(erase selected text))
 XX_TR(XX_TDH(Default)	XX_TD(enter key literally))
