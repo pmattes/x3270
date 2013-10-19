@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, Paul Mattes.
+ * Copyright (c) 2009, 2013 Paul Mattes.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -62,7 +62,6 @@
 #include "utilc.h"
 
 #if defined(_WIN32) /*[*/
-#include <windows.h>
 #include "winversc.h"
 #endif /*]*/
 

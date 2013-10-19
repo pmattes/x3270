@@ -59,10 +59,6 @@
 #include <langinfo.h>
 #endif /*]*/
 
-#if defined(_WIN32) /*[*/
-#include <windows.h>
-#endif /*]*/
-
 #if defined(__CYGWIN__) /*[*/
 #include <w32api/windows.h>
 #undef _WIN32

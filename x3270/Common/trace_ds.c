@@ -40,9 +40,6 @@
 #include <X11/Xaw/Dialog.h>
 #include <X11/Xaw/Label.h>
 #endif /*]*/
-#if defined(_WIN32) /*[*/
-#include <windows.h>
-#endif /*]*/
 #include <errno.h>
 #include <signal.h>
 #include <stdarg.h>

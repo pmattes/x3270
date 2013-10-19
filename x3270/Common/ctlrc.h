@@ -37,6 +37,8 @@ enum pds {
 	PDS_BAD_ADDR = -2	/* command contained a bad address */
 };
 
+extern Boolean screen_changed;
+
 void ctlr_aclear(int baddr, int count, int clear_ea);
 void ctlr_add(int baddr, unsigned char c, unsigned char cs);
 void ctlr_add_bg(int baddr, unsigned char color);

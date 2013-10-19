@@ -35,10 +35,6 @@
  *		Low-level I/O setup functions and exit code.
  */
 
-#if defined(_WIN32) /*[*/
-# include <windows.h>
-#endif /*]*/
-
 #include "globals.h"
 
 #include "actionsc.h"

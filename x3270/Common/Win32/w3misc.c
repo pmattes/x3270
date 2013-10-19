@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, Paul Mattes.
+ * Copyright (c) 2007-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -137,7 +137,6 @@ win32_strerror(int e)
 
 /* MinGW has gettimofday(), but MSVC does not. */
 
-#include <windows.h>
 #define SECS_BETWEEN_EPOCHS	11644473600ULL
 #define SECS_TO_100NS		10000000ULL /* 10^7 */
 

@@ -79,7 +79,6 @@
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-#include <windows.h>
 #include "w3miscc.h"
 #include "winversc.h"
 #include "windirsc.h"

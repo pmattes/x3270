@@ -55,7 +55,6 @@
 #include "utilc.h"
 #include "xioc.h"
 
-#include <windows.h>
 #include <direct.h>
 #include <wincon.h>
 #include <shlobj.h>

@@ -44,15 +44,11 @@
 #include <X11/keysym.h>
 
 #if !defined(_MSC_VER) /*[*/
-#include <sys/time.h>
+# include <sys/time.h>
 #endif /*]*/
 #include <sys/types.h>
-#if defined(_WIN32) /*[*/
-#include <windows.h>
-#else /*][*/
 #if defined(SEPARATE_SELECT_H) /*[*/
-#include <sys/select.h>
-#endif /*]*/
+# include <sys/select.h>
 #endif /*]*/
 
 #define InputReadMask	0x1

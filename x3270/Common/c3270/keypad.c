@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, Paul Mattes.
+ * Copyright (c) 2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@
 #include "macrosc.h"
 #include "3270ds.h"
 #include "appres.h"
+#include "ctlrc.h"
 #include "menubarc.h"
 #include "keypadc.h"
 
@@ -48,11 +49,7 @@
 # else /*][*/
 #  include <curses.h>
 # endif /*]*/
-#else /*][*/
-# include "windows.h"
 #endif /*]*/
-
-extern int screen_changed; /* XXX Hack! */
 
 /* Sensitivity map: A rectangular region and a callback function. */
 typedef struct {

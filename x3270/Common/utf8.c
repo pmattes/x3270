@@ -39,10 +39,6 @@
 #include "popupsc.h"
 #include "utf8c.h"
 
-#if defined(_WIN32) /*[*/
-#include <windows.h>
-#endif /*]*/
-
 char *locale_codeset = CN;
 Boolean is_utf8 = False;
 

@@ -32,12 +32,9 @@
  *		A Windows console-based 3270 Terminal Emulator
  *		Screen selections
  */
-#define TEMPORARY
-
 #include "globals.h"
 #include <assert.h>
 #include <wchar.h>
-#include <windows.h>
 
 #include "3270ds.h"
 #include "appres.h"
@@ -46,9 +43,6 @@
 #include "ctlr.h"
 #include "ctlrc.h"
 #include "popupsc.h"
-#ifdef TEMPORARY
-#include "screenc.h"
-#endif
 #include "trace_dsc.h"
 #include "unicodec.h"
 #include "winversc.h"
@@ -57,9 +51,6 @@
 
 /* Unicode DBCS (double-width) blank. */
 #define IDEOGRAPHIC_SPACE	0x3000
-
-extern int screen_changed;
-extern HWND console_window;
 
 static char *s_pending;
 static char *s_onscreen;

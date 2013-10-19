@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, Paul Mattes.
+ * Copyright (c) 2000-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,11 @@
 
 /* Identify ourselves. */
 #define C3270	1
+
+/* On Windows, we need <windows.h>. */
+#if defined(_WIN32) /*[*/
+# include <windows.h>
+#endif /*]*/
 
 /* Conditional 80/132 mode switch support. */
 #if defined(BROKEN_NEWTERM) /*[*/

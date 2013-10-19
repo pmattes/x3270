@@ -57,7 +57,6 @@
 #include "w3miscc.h"
 #include "xioc.h"
 
-#include <windows.h>
 #include <wincon.h>
 #include "winversc.h"
 
@@ -67,7 +66,6 @@
 
 #define CM (60*10)	/* csec per minute */
 
-extern int screen_changed;
 extern char *profile_name;
 
 #if defined(X3270_DBCS) /*[*/

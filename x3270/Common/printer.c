@@ -38,7 +38,6 @@
 #include <X11/Xaw/Dialog.h>
 #endif /*]*/
 #if defined(_WIN32) /*[*/
-#include <windows.h>
 #include <shellapi.h>
 #include <ws2tcpip.h>
 #endif /*]*/

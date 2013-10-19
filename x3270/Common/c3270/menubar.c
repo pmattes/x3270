@@ -69,11 +69,7 @@
 # else /*][*/
 #  include <curses.h>
 # endif /*]*/
-#else /*][*/
-# include "windows.h"
 #endif /*]*/
-
-extern int screen_changed; /* XXX: Hack! */
 
 /*
  * The menus look like this:

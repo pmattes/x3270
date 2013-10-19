@@ -47,7 +47,6 @@
 #include "statusc.h"
 #include "trace_dsc.h"
 #include "utilc.h"
-#include <windows.h>
 
 #define ISREALLYSPACE(c) ((((c) & 0xff) <= ' ') && isspace(c))
 

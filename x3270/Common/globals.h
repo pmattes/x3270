@@ -259,6 +259,7 @@ extern char		*myappdata;
 
 #if defined(_WIN32) && defined(C3270) /*[*/
 extern int		is_installed;
+extern HWND		console_window;
 #endif /*]*/
 
 /* Data types and complex global variables */

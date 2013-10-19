@@ -63,7 +63,6 @@
 #include "utilc.h"
 
 #if defined(_WIN32) /*[*/
-#include <windows.h>
 #include <shellapi.h>
 #include <io.h>
 #include <fcntl.h>

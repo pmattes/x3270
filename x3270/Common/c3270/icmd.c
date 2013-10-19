@@ -38,10 +38,6 @@
 #include "icmdc.h"
 #include "utf8c.h"
 
-#if defined(_WIN32) /*[*/
-#include <windows.h>
-#endif /*]*/
-
 static char host_type[4] = "tso";
 
 /* Support functions for interactive commands. */

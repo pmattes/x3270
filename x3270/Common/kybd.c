@@ -81,10 +81,6 @@
 #include "utf8c.h"
 #include "utilc.h"
 
-#if defined(_WIN32) /*[*/
-#include <windows.h>
-#endif /*]*/
-
 /*#define KYBDLOCK_TRACE	1*/
 
 /* Statics */

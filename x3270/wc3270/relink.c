@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, Paul Mattes.
+ * Copyright (c) 2006-2009, 2013 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,6 @@
 #include "utilc.h"
 #include "xioc.h"
 
-#include <windows.h>
 #include <direct.h>
 #include <wincon.h>
 #include <shlobj.h>

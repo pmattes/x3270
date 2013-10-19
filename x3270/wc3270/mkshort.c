@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2010, Paul Mattes.
+ * Copyright (c) 2006-2010, 2013 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,6 @@
 
 #include "globals.h"
 
-#include <windows.h>
 #include <wincon.h>
 #include <shlobj.h>
 #include "shlobj_missing.h" /* missing IShellLinkDataist stuff from MinGW */

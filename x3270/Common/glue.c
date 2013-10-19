@@ -68,7 +68,6 @@
 #include "xioc.h"
 
 #if defined(_WIN32) /*[*/
-#include <windows.h>
 #include "winversc.h"
 #endif /*]*/
 

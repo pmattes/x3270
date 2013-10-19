@@ -47,10 +47,6 @@
 #include "utf8c.h"
 #include "utilc.h"
 
-#if defined(_WIN32) /*[*/
-#include <windows.h>
-#endif /*]*/
-
 #if defined(_MSC_VER) /*[*/
 #include "Msc/deprecated.h"
 #endif /*]*/
