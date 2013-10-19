@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -369,8 +369,9 @@ main(int argc, char *argv[])
 	/* Emit the initial boilerplate. */
 	fprintf(t, "/* This file was created automatically from %s by mkfb. */\n\n",
 	    filename);
+	fprintf(t, "#include \"globals.h\"\n");
+	fprintf(t, "#include \"fallbacksc.h\"\n");
 	if (cmode) {
-		fprintf(t, "#include \"globals.h\"\n");
 		fprintf(t, "static unsigned char fsd[] = {\n");
 	} else {
 		fprintf(t, "unsigned char common_fallbacks[] = {\n");

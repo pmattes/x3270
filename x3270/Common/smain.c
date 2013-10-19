@@ -79,7 +79,7 @@ char *myappdata = NULL;
 #endif /*]*/
 
 void
-usage(char *msg)
+usage(const char *msg)
 {
 	if (msg != CN)
 	    	fprintf(stderr, "%s\n", msg);

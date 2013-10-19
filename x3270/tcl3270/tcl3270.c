@@ -325,7 +325,7 @@ Tcl_AppInit(Tcl_Interp *interp)
 
 
 void
-usage(char *msg)
+usage(const char *msg)
 {
 	const char *sn = "";
 

@@ -43,6 +43,9 @@
 
 #include "savec.h"
 #include "charsetc.h"
+#if !defined(USE_APP_DEFAULTS) /*[*/
+# include "fallbacksc.h"
+#endif /*]*/
 #include "idlec.h"
 #include "popupsc.h"
 #include "utilc.h"
@@ -802,10 +805,6 @@ merge_profile(XrmDatabase *d, char *session, Boolean mono)
 	const char *fname;
 	char *env_resources;
 	XrmDatabase dd;
-#if !defined(USE_APP_DEFAULTS) /*[*/
-	extern unsigned char common_fallbacks[], mono_fallbacks[],
-		color_fallbacks[];
-#endif /*]*/
 
 #if !defined(USE_APP_DEFAULTS) /*[*/
 	/* Start with the fallbacks. */
