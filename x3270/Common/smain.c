@@ -76,6 +76,7 @@
 #if defined(_WIN32) /*[*/
 char *instdir = NULL;
 char *myappdata = NULL;
+char *commonappdata = NULL;
 #endif /*]*/
 
 void
@@ -105,7 +106,7 @@ main(int argc, char *argv[])
 #if defined(_WIN32) /*[*/
 	(void) get_version_info();
 	if (get_dirs(argv[0], "wc3270", &instdir, NULL, &myappdata,
-		    NULL) < 0)
+		    NULL, &commonappdata, NULL) < 0)
 		exit(1);
 	if (sockstart() < 0)
 	    	exit(1);

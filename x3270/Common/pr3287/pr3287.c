@@ -160,6 +160,7 @@ options_t options;
 int syncsock = -1;
 #if defined(_WIN32) /*[*/
 char *appdata;
+char *common_appdata;
 #endif /* ]*/
 
 /* Locals. */
@@ -487,7 +488,8 @@ main(int argc, char *argv[])
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-	if (get_dirs(NULL, "wc3270", NULL, NULL, &appdata, NULL) < 0)
+	if (get_dirs(NULL, "wc3270", NULL, NULL, &appdata, NULL,
+		    &common_appdata, NULL) < 0)
 	    	exit(1);
 
 	if (sockstart() < 0)

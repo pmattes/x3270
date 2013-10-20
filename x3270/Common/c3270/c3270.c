@@ -268,6 +268,7 @@ Boolean dont_return = False;
 #if defined(_WIN32) /*[*/
 char *instdir = NULL;
 char *myappdata = NULL;
+char *commonappdata = NULL;
 int is_installed;
 static void start_auto_shortcut(void);
 #endif /*]*/
@@ -349,8 +350,8 @@ main(int argc, char *argv[])
 
 #if defined(_WIN32) /*[*/
 	(void) get_version_info();
-	if (get_dirs(argv[0], "wc3270", &instdir, NULL, &myappdata,
-		    &is_installed) < 0)
+	if (get_dirs(argv[0], "wc3270", &instdir, NULL, &myappdata, NULL,
+		    &commonappdata, &is_installed) < 0)
 	    	x3270_exit(1);
 	if (sockstart())
 	    	x3270_exit(1);

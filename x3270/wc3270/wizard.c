@@ -165,6 +165,8 @@ int create_session_file(session_t *s, char *path);
 static char *mya = NULL;
 static char *installdir = NULL;
 static char *desktop = NULL;
+static char *common_desktop = NULL;
+static char *commona = NULL;
 
 int get_printerlu(session_t *s, int explain);
 
@@ -419,7 +421,7 @@ save_keymaps(void)
 		(void) save_keymap_name(NULL, builtin_keymaps[i].name,
 			builtin_keymaps[i].description);
 	}
-	sprintf(dpath, "%s*.wc3270km", mya);
+	sprintf(dpath, "%s*%s", mya, KEYMAP_SUFFIX);
 	h = FindFirstFile(dpath, &find_data);
 	if (h != INVALID_HANDLE_VALUE) {
 		do {
@@ -429,7 +431,20 @@ save_keymaps(void)
 		} while (FindNextFile(h, &find_data) != 0);
 		FindClose(h);
 	}
-	sprintf(dpath, "%s*.wc3270km", installdir);
+	if (commona != NULL) {
+		sprintf(dpath, "%s*%s", commona, KEYMAP_SUFFIX);
+		h = FindFirstFile(dpath, &find_data);
+		if (h != INVALID_HANDLE_VALUE) {
+			do {
+				sprintf(fpath, "%s%s", commona,
+					find_data.cFileName);
+				(void) save_keymap_name(fpath,
+					find_data.cFileName, NULL);
+			} while (FindNextFile(h, &find_data) != 0);
+			FindClose(h);
+		}
+	}
+	sprintf(dpath, "%s*%s", installdir, KEYMAP_SUFFIX);
 	h = FindFirstFile(dpath, &find_data);
 	if (h != INVALID_HANDLE_VALUE) {
 		do {
@@ -612,12 +627,14 @@ get_session(char *session_name, session_t *s, char *path)
 		    	char *bsl;
 			char *colon;
 
-		    	/* Pathname. */
+		    	/* Ends in .wc3270km. Pathname. */
 			path[MAX_PATH - 1] = '\0';
 			bsl = strrchr(session_name, '\\');
 			colon = strrchr(session_name, ':');
 			if (bsl == NULL && colon == NULL) {
-			    	/* No directory or drive prefix (cwd). */
+			    	/*
+				 * No directory or drive prefix -- relative
+				 * path. */
 				if (sl - SESS_LEN + 1 < slen)
 				    	slen = sl - SESS_LEN + 1;
 			    	strncpy(s->session, session_name, slen);
@@ -627,17 +644,17 @@ get_session(char *session_name, session_t *s, char *path)
 				snprintf(path, MAX_PATH, "%s%s", mya,
 					session_name);
 				path[MAX_PATH - 1] = '\0';
-				if (access(path, 0) < 0) {
+				if (access(path, R_OK) < 0) {
 				    	/* Not there.  Try installdir. */
 					snprintf(path, MAX_PATH, "%s%s",
 						installdir, session_name);
 					path[MAX_PATH - 1] = '\0';
-					if (access(path, 0) < 0) {
+					if (access(path, R_OK) < 0) {
 					    	/* Not there.  Try cwd. */
 					    	strncpy(path, session_name,
 							MAX_PATH);
 						path[MAX_PATH - 1] = '\0';
-						if (access(path, 0) < 0) {
+						if (access(path, R_OK) < 0) {
 							/*
 							 * Put the new one in
 							 * AppData.
@@ -651,8 +668,8 @@ get_session(char *session_name, session_t *s, char *path)
 				} /* else use the one in AppData */
 			} else {
 			    	/*
-				 * Pathname.  Copy what's between [:\] and
-				 * ".wc3270".
+				 * Full pathname.  Copy what's between [:\] and
+				 * ".wc3270" as the session name.
 				 */
 			    	char *start;
 
@@ -672,10 +689,13 @@ get_session(char *session_name, session_t *s, char *path)
 			}
 
 		} else {
-		    	/* Session name. */
+		    	/*
+			 * Session name.
+			 * Assume it's in AppData.
+			 */
 		    	strncpy(s->session, session_name, slen);
 			s->session[slen - 1] = '\0';
-			sprintf(path, "%s%s.wc3270", mya, s->session);
+			sprintf(path, "%s%s%s", mya, s->session, SESS_SUFFIX);
 		}
 
 		/* Validate the session name. */
@@ -714,7 +734,7 @@ and dash '-')\n");
 
 			break;
 		}
-		sprintf(path, "%s%s.wc3270", mya, s->session);
+		sprintf(path, "%s%s%s", mya, s->session, SESS_SUFFIX);
 	}
 
 	f = fopen(path, "r");
@@ -2539,7 +2559,7 @@ main(int argc, char *argv[])
 
 	/* Get some paths from Windows. */
 	if (get_dirs(argv[0], "wc3270", &installdir, &desktop, &mya,
-		    &installed) < 0)
+		    &common_desktop, &commona, &installed) < 0)
 	    	return -1;
 
 	/* Resize the console window. */

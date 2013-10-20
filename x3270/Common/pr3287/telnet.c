@@ -84,6 +84,10 @@
 #include "trace_dsc.h"
 #include "telnetc.h"
 
+#if defined(_WIN32) && defined(HAVE_LIBSSL) /*[*/
+#define ROOT_CERTS		"root_certs.txt"
+#endif /*]*/
+
 #if !defined(TELOPT_STARTTLS) /*[*/
 #define TELOPT_STARTTLS        46
 #endif /*]*/
@@ -2082,21 +2086,24 @@ ssl_base_init(void)
 #if defined(_WIN32) /*[*/
 		char *certs;
 
-#if defined(USE_CERTS_DIR) /*[*/
-		certs = Malloc(strlen(instdir) + 7);
-		sprintf(certs, "%s\\certs", instdir);
-
-		if (SSL_CTX_load_verify_locations(ssl_ctx, NULL,
-			certs) != 1) {
-			errmsg("SSL_CTX_load_verify_locations("
-					"\"%s\", \"%s\") failed:\n%s",
-					"", certs,
-					get_ssl_error(err_buf));
-			goto fail;
-		}
-#else /*][*/
+		/*
+		 * Look for root_certs.txt in appdata, then in common_appdata.
+		 */
 		certs = Malloc(strlen(appdata) + 16);
-		sprintf(certs, "%sroot_certs.txt", appdata);
+		sprintf(certs, "%s%s", appdata, ROOT_CERTS);
+		if (access(certs, R_OK) < 0) {
+			if (common_appdata == NULL) {
+				errmsg("No %s found", ROOT_CERTS);
+				goto fail;
+			}
+			Free(certs);
+			certs = Malloc(strlen(common_appdata) + 16);
+			sprintf(certs, "%s%s", common_appdata, ROOT_CERTS);
+			if (access(certs, R_OK) < 0) {
+				errmsg("No %s found", ROOT_CERTS);
+				goto fail;
+			}
+		}
 
 		if (SSL_CTX_load_verify_locations(ssl_ctx,
 			    certs, NULL) != 1) {
@@ -2106,7 +2113,6 @@ ssl_base_init(void)
 					get_ssl_error(err_buf));
 			goto fail;
 		}
-#endif /*]*/
 		Free(certs);
 #else /*][*/
 		SSL_CTX_set_default_verify_paths(ssl_ctx);

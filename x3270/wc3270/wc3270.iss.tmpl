@@ -27,6 +27,9 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
+[InstallDelete]
+Type: files; Name: "{userappdata}\root_certs.txt"
+
 [Files]
 Source: "wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\ws3270-3.3\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -36,7 +39,7 @@ Source: "mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall
 Source: "ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "root_certs.txt"; DestDir: "{userappdata}\wc3270"; Flags: ignoreversion
+Source: "root_certs.txt"; DestDir: "{commonappdata}\wc3270"; Flags: ignoreversion
 Source: "html\Bugs.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "html\Build.html"; DestDir: "{app}\html"; Flags: ignoreversion
 Source: "html\FAQ.html"; DestDir: "{app}\html"; Flags: ignoreversion

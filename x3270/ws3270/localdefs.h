@@ -29,7 +29,7 @@
 
 /*
  *	localdefs.h
- *		Local definitions for c3270.
+ *		Local definitions for ws3270.
  *
  *		This file contains definitions for environment-specific
  *		facilities, such as memory allocation, I/O registration,
@@ -83,3 +83,11 @@ extern void Warning(const char *);
 
 /* "Required" optional parts. */
 #define X3270_SCRIPT	1
+
+/* Work around Windows' brain-damaged snprintf implementation. */
+extern int safe_vsnprintf(char *str, size_t size, const char *fmt, va_list ap);
+extern int safe_snprintf(char *str, size_t size, const char *fmt, ...);
+#if !defined(IS_SNPRINTF_C) /*[*/
+# define vsnprintf safe_vsnprintf
+# define snprintf safe_snprintf
+#endif /*]*/

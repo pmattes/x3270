@@ -99,6 +99,10 @@
 # include <X11/Xaw/Dialog.h>
 #endif /*]*/
 
+#if defined(_WIN32) && defined(HAVE_LIBSSL) /*[*/
+#define ROOT_CERTS	"root_certs.txt"
+#endif /*]*/
+
 #if !defined(TELOPT_NAWS) /*[*/
 # define TELOPT_NAWS	31
 #endif /*]*/
@@ -4167,7 +4171,19 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 #if defined(_WIN32) /*[*/
 		char *certs;
 
-		certs = xs_buffer("%sroot_certs.txt", myappdata);
+		certs = xs_buffer("%s%s", myappdata, ROOT_CERTS);
+		if (access(certs, R_OK) < 0) {
+			if (commonappdata == NULL) {
+				popup_an_error("No %s found", ROOT_CERTS);
+				goto fail;
+			}
+			Free(certs);
+			certs = xs_buffer("%s%s", commonappdata, ROOT_CERTS);
+			if (access(certs, R_OK) < 0) {
+				popup_an_error("No %s found", ROOT_CERTS);
+				goto fail;
+			}
+		}
 
 		if (SSL_CTX_load_verify_locations(ssl_ctx,
 			    certs, NULL) != 1) {

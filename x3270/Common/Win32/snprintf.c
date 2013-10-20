@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009, 2013 Paul Mattes.
+ * Copyright (c) 2013, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -28,60 +28,48 @@
  */
 
 /*
- *	ead3270.c
- *		A Windows console 3270 Terminal Emulator
- *		Application Data directory explorer.
+ *	snprintf.c
+ *		A safer version of snprintf for Windows.
  */
 
 #include <windows.h>
 #include <stdio.h>
-#include <limits.h>
-#include <io.h>
-#include "windirsc.h"
+#include <stdarg.h>
 
-static int
-explore(char *dir)
+#define IS_SNPRINTF_C 1
+#include "localdefs.h"	/* to get the externs for our functions */
+
+/*
+ * Version of {,v}snprintf that work more like the standard versions, and
+ * always NULL terminate. They do not, however, return the length that would
+ * have been written if overflow did not occur -- they return -1, like the
+ * Windows versions.
+ */
+
+int
+safe_vsnprintf(char *str, size_t size, const char *fmt, va_list ap)
 {
-	size_t sl;
-	char short_ad[MAX_PATH];
-	char cmd[7 + MAX_PATH];
+	if (size > 0) {
+		int len;
 
-	sl = strlen(dir);
-	if (sl > 1 && dir[sl - 1] == '\\') {
-		dir[sl - 1] = '\0';
+		len = vsnprintf(str, size, fmt, ap);
+		if (len < 0 || len == size) {
+			str[size - 1] = '\0';
+		}
+		return len;
+	} else {
+		return 0;
 	}
-
-	/* Convert it to a short name. */
-	if (GetShortPathName(dir, short_ad, sizeof(short_ad)) == 0) {
-		fprintf(stderr, "GetShortPathName(\"%s\") failed, win32 "
-			"error %ld\n", dir, (long)GetLastError());
-		return 1;
-	}
-
-	/* Run it. */
-	sprintf(cmd, "start %s", short_ad);
-	system(cmd);
-	return 0;
 }
 
 int
-main(int argc, char *argv[])
+safe_snprintf(char *str, size_t size, const char *fmt, ...)
 {
-	char *appdata = NULL;
-	char *commonappdata = NULL;
+	va_list ap;
+	int len;
 
-	/* Get the application data directories. */
-	if (get_dirs(NULL, "wc3270", NULL, NULL, &appdata, NULL,
-		    &commonappdata, NULL) < 0) {
-		fprintf(stderr, "get_dirs failed\n");
-		return 1;
-	}
-
-	/* Explore them. */
-	(void) explore(appdata);
-	if (commonappdata) {
-		(void) explore(commonappdata);
-	}
-
-	return 0;
+	va_start(ap, fmt);
+	len = safe_vsnprintf(str, size, fmt, ap);
+	va_end(ap);
+	return len;
 }

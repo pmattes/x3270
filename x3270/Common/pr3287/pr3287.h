@@ -83,6 +83,7 @@ extern options_t options;
 
 #if defined(_WIN32) /*[*/
 extern char *appdata;
+extern char *common_appdata;
 #endif /*]*/
 extern int syncsock;
 

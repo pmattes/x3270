@@ -72,3 +72,13 @@ extern void Error(const char *s);
 #define X3270_TRACE 1
 
 extern void errmsg(const char *, ...);
+
+#if defined(_WIN32) /*[*/
+/* Work around Windows' brain-damaged snprintf implementation. */
+extern int safe_vsnprintf(char *str, size_t size, const char *fmt, va_list ap);
+extern int safe_snprintf(char *str, size_t size, const char *fmt, ...);
+# if !defined(IS_SNPRINTF_C) /*[*/
+#  define vsnprintf safe_vsnprintf
+#  define snprintf safe_snprintf
+# endif /*]*/
+#endif /*]*/

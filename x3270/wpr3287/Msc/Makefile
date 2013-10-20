@@ -40,9 +40,9 @@ RM = erase
 XCPPFLAGS = /D_WIN32 /DPR3287 /DWPR3287 /DX3270_DBCS=1 /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 $(SSLDEF)
 CFLAGS = $(XCPPFLAGS) -I.
 VOBJS = charset.obj ctlr.obj pr3287.obj proxy.obj resolver.obj see.obj sf.obj \
-	ssl_dll.obj tables.obj telnet.obj trace_ds.obj utf8.obj wpr3287.RES \
-	ws.obj w3misc.obj windirs.obj winvers.obj unicode.obj unicode_dbcs.obj \
-	xtable.obj
+	snprintf.obj ssl_dll.obj tables.obj telnet.obj trace_ds.obj utf8.obj \
+	wpr3287.RES ws.obj w3misc.obj windirs.obj winvers.obj unicode.obj \
+	unicode_dbcs.obj xtable.obj
 OBJECTS = $(VOBJS) version.obj
 LIBS = $(SSLLIB) ws2_32.lib winspool.lib advapi32.lib
 
@@ -80,6 +80,8 @@ see.obj: see.c
 	$(CC) $(CFLAGS) /c see.c
 sf.obj: sf.c
 	$(CC) $(CFLAGS) /c sf.c
+snprintf.obj: snprintf.c
+	$(CC) $(CFLAGS) /c snprintf.c
 ssl_dll.obj: ssl_dll.c
 	$(CC) $(CFLAGS) /c ssl_dll.c
 tables.obj: tables.c

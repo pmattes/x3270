@@ -25,5 +25,11 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * 	windirsc.h
+ * 		Global declarations for windirs.c.
+ */
+
 extern int get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
-	char **appdata, int *installed);
+	char **appdata, char **common_desktop, char **common_appdata,
+	int *installed);

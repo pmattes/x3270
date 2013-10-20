@@ -46,10 +46,10 @@ VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj c3270.obj charset.obj \
 	glue.obj help.obj host.obj icmd.obj idle.obj keymap.obj keypad.obj \
 	kybd.obj macros.obj menubar.obj print.obj printer.obj proxy.obj \
 	readres.obj relink.obj resolver.obj resources.obj rpq.obj screen.obj \
-	see.obj sf.obj shortcut.obj ssl_dll.obj tables.obj telnet.obj \
-	toggles.obj trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj \
-	util.obj xio.obj w3misc.obj winvers.obj windirs.obj winprint.obj \
-	wc3270.RES
+	see.obj select.obj sf.obj shortcut.obj snprintf.obj ssl_dll.obj \
+	tables.obj telnet.obj toggles.obj trace_ds.obj unicode.obj \
+	unicode_dbcs.obj utf8.obj util.obj w3misc.obj winvers.obj windirs.obj \
+	winprint.obj xio.obj wc3270.RES
 OBJECTS = $(VOBJS) version.obj
 WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
 	windirs.obj relink.obj
@@ -160,6 +160,8 @@ macros.obj: macros.c
 	$(CC) $(CFLAGS) /c macros.c
 menubar.obj: menubar.c
 	$(CC) $(CFLAGS) /c menubar.c
+mkshort.obj: mkshort.c
+	$(CC) $(CFLAGS) /c mkshort.c
 print.obj: print.c
 	$(CC) $(CFLAGS) /c print.c
 printer.obj: printer.c
@@ -180,7 +182,11 @@ screen.obj: screen.c
 	$(CC) $(CFLAGS) /c screen.c
 see.obj: see.c
 	$(CC) $(CFLAGS) /c see.c
+select.obj: select.c
+	$(CC) $(CFLAGS) /c select.c
 sf.obj: sf.c
+	$(CC) $(CFLAGS) /c sf.c
+snprintf.obj: snprintf.c
 	$(CC) $(CFLAGS) /c sf.c
 ssl_dll.obj: ssl_dll.c
 	$(CC) $(CFLAGS) /c ssl_dll.c
@@ -200,14 +206,10 @@ utf8.obj: utf8.c
 	$(CC) $(CFLAGS) /c utf8.c
 util.obj: util.c
 	$(CC) $(CFLAGS) /c util.c
-xio.obj: xio.c
-	$(CC) $(CFLAGS) /c xio.c
 winvers.obj: winvers.c
 	$(CC) $(CFLAGS) /c winvers.c
 windirs.obj: windirs.c
 	$(CC) $(CFLAGS) /c windirs.c
-mkshort.obj: mkshort.c
-	$(CC) $(CFLAGS) /c mkshort.c
 shortcut.obj: shortcut.c
 	$(CC) $(CFLAGS) /c shortcut.c
 wizard.obj: wizard.c
@@ -216,3 +218,5 @@ w3misc.obj: w3misc.c
 	$(CC) $(CFLAGS) /c w3misc.c
 winprint.obj: winprint.c
 	$(CC) $(CFLAGS) /c winprint.c
+xio.obj: xio.c
+	$(CC) $(CFLAGS) /c xio.c

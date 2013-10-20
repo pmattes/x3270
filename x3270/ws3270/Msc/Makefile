@@ -44,9 +44,9 @@ VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj charset.obj ctlr.obj \
 	fallbacks.obj fprint_screen.obj ft.obj ft_cut.obj ft_dft.obj glue.obj \
 	host.obj idle.obj kybd.obj macros.obj print.obj printer.obj proxy.obj \
 	readres.obj resolver.obj resources.obj rpq.obj see.obj sf.obj \
-	smain.obj ssl_dll.obj tables.obj telnet.obj toggles.obj trace_ds.obj \
-	unicode.obj unicode_dbcs.obj utf8.obj util.obj xio.obj w3misc.obj \
-	winvers.obj windirs.obj winprint.obj ws3270.RES
+	smain.obj snprintf.obj ssl_dll.obj tables.obj telnet.obj toggles.obj \
+	trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj xio.obj \
+	w3misc.obj winvers.obj windirs.obj winprint.obj ws3270.RES
 OBJECTS = $(VOBJS) version.obj
 LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib
 SHRTLIBS = ole32.lib
@@ -135,6 +135,8 @@ sf.obj: sf.c
 	$(CC) $(CFLAGS) /c sf.c
 smain.obj: smain.c
 	$(CC) $(CFLAGS) /c smain.c
+snprintf.obj: snprintf.c
+	$(CC) $(CFLAGS) /c snprintf.c
 ssl_dll.obj: ssl_dll.c
 	$(CC) $(CFLAGS) /c ssl_dll.c
 tables.obj: tables.c

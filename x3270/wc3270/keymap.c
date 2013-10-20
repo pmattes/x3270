@@ -271,6 +271,19 @@ locate_keymap(const char *name, char **fullname, char **r)
 	}
 	Free(fnp);
 
+	/* CommonAppData/foo.wc3270km? */
+	if (commonappdata != NULL) {
+		fnp = xs_buffer("%s%s", commonappdata, fny);
+		a = access(fnp, R_OK);
+		if (a == 0) {
+			*fullname = fnp;
+			Free(fny);
+			Free(fnx);
+			return 1;
+		}
+		Free(fnp);
+	}
+
 	/* InstDir/foo.wc3270km? */
 	fnp = xs_buffer("%s%s", instdir, fny);
 	a = access(fnp, R_OK);

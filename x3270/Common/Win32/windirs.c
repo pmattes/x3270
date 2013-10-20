@@ -31,7 +31,8 @@
  *		Find common directory paths.
  */
 
-#include <windows.h>
+#include "globals.h"
+
 #include <shlobj.h>
 #include <stdio.h>
 #include <direct.h>
@@ -46,7 +47,8 @@
 
 /* Locate the desktop and appdata directories from the Windows registry. */
 static int
-old_get_dirs(char **desktop, char **appdata)
+old_get_dirs(char **desktop, char **appdata, char **common_desktop,
+	char **common_appdata)
 {
 	HRESULT hres;
 	HKEY hkey;
@@ -74,6 +76,12 @@ old_get_dirs(char **desktop, char **appdata)
 		if (*appdata == NULL)
 		    	return -1;
 		(*appdata)[0] = '\0';
+	}
+	if (common_desktop != NULL) {
+	    	*common_desktop = NULL;
+	}
+	if (common_appdata != NULL) {
+	    	*common_appdata = NULL;
 	}
 
 	/*
@@ -147,7 +155,8 @@ dll_SHGetFolderPath(HWND hwndOwner, int nFolder, HANDLE hToken, DWORD dwFlags,
 
 /* Locate the desktop and appdata directories via the SHGetFolderPath API. */
 static int
-new_get_dirs(char **desktop, char **appdata)
+new_get_dirs(char **desktop, char **appdata, char **common_desktop,
+	char **common_appdata)
 {
     	HRESULT r;
 
@@ -174,6 +183,34 @@ new_get_dirs(char **desktop, char **appdata)
 		if (r != S_OK) {
 			printf("SHGetFolderPath(APPDATA) failed: 0x%x\n",
 				(int)r);
+			fflush(stdout);
+			return -1;
+		}
+	}
+
+	if (common_desktop != NULL) {
+	    	*common_desktop = malloc(MAX_PATH);
+		if (*common_desktop == NULL)
+		    	return -1;
+		r = dll_SHGetFolderPath(NULL, CSIDL_COMMON_DESKTOPDIRECTORY,
+			NULL, SHGFP_TYPE_CURRENT, *common_desktop);
+		if (r != S_OK) {
+			printf("SHGetFolderPath(COMMON_DESKTOPDIRECTORY) "
+				"failed: 0x%x\n", (int)r);
+			fflush(stdout);
+			return -1;
+		}
+	}
+
+	if (common_appdata != NULL) {
+	    	*common_appdata = malloc(MAX_PATH);
+		if (*common_appdata == NULL)
+		    	return -1;
+		r = dll_SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL,
+			SHGFP_TYPE_CURRENT, *common_appdata);
+		if (r != S_OK) {
+			printf("SHGetFolderPath(COMMON_APPDATA) failed: "
+				"0x%x\n", (int)r);
 			fflush(stdout);
 			return -1;
 		}
@@ -213,24 +250,30 @@ getcwd_bsl(void)
  * If returning AppData and the program is installed, make sure that the
  * directory exists.
  *
- *  param[in]  argv0	 program's argv[0]
- *  param[in]  appname	 application name (for app-data)
- *  param[out] instdir	 installation directory (or NULL)
- *  param[out] desktop	 desktop directory (or NULL)
- *  param[out] appdata	 app-data directory (or NULL)
- *  param[out] installed is the program installed?
+ *  param[in]  argv0	 	program's argv[0]
+ *  param[in]  appname	 	application name (for app-data)
+ *  param[out] instdir	 	installation directory (or NULL)
+ *  param[out] desktop	 	desktop directory (or NULL)
+ *  param[out] appdata	 	app-data directory (or NULL)
+ *  param[out] common_desktop	common desktop directory (or NULL)
+ *  param[out] common_appdata	common app-data directory (or NULL)
+ *  param[out] installed 	is the program installed?
  *
  *  Returns 0 for success, -1 for an unrecoverable error.
  *  All returned directories end in '\'. 
+ *  On Windows 98, common_desktop and common_appdata don't exist, so these are
+ *  returned as empty strings.
  *
  * Uses the presence of CATF.EXE to decide if the program is installed or
  * not.  If not, appdata is returned as the cwd.
  */
 int
 get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
-	char **appdata, int *installed)
+	char **appdata, char **common_desktop, char **common_appdata,
+	int *installed)
 {
     	char **xappdata = appdata;
+    	char **common_xappdata = common_appdata;
 	int is_installed = FALSE;
 
 	if (appdata != NULL || installed != NULL) {
@@ -290,14 +333,21 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 		}
 	}
 
-	/* If not installed, app-data is cwd. */
+	/* If not installed, app-data and common app-data are cwd. */
 	if (appdata != NULL && !is_installed) {
 		*appdata = getcwd_bsl();
 		if (*appdata == NULL)
 			return -1;
+		if (common_appdata != NULL) {
+			*common_appdata = strdup(*appdata);
+			if (*common_appdata == NULL) {
+				return -1;
+			}
+		}
 
 		/* Keep xxx_get_dirs() from resolving it below. */
 		xappdata = NULL;
+		common_xappdata = NULL;
 	}
 
 	if (desktop != NULL || xappdata != NULL) {
@@ -315,11 +365,13 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 		if ((info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) ||
 			    (info.dwMajorVersion < 5)) {
 			/* Use the registry. */
-			if (old_get_dirs(desktop, xappdata) < 0)
+			if (old_get_dirs(desktop, xappdata, common_desktop,
+				    common_xappdata) < 0)
 				return -1;
 		} else {
 			/* Use the API. */
-			if (new_get_dirs(desktop, xappdata) < 0)
+			if (new_get_dirs(desktop, xappdata, common_desktop,
+				    common_xappdata) < 0)
 				return -1;
 		}
 
@@ -348,18 +400,59 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 			*xappdata = wsl;
 
 			/*
-			 * Create the AppData directory, in case the program
-			 * was installed by a different user.
+			 * Create the per-user AppData directory, in case the
+			 * program was installed by a different user.
 			 */
 			_mkdir(*xappdata);
 		}
+
+		/* Append a trailing "\" to CommonDesktop. */
+		if (common_desktop != NULL &&
+			*common_desktop != NULL &&
+			(*common_desktop)[strlen(*common_desktop) - 1]
+			    != '\\') {
+
+			wsl = malloc(strlen(*common_desktop) + 2);
+			if (wsl == NULL)
+			    	return -1;
+			sprintf(wsl, "%s\\", *common_desktop);
+			free(*common_desktop);
+			*common_desktop = wsl;
+		}
+
+		/* Append the product name to CommonAppData. */
+		if (common_xappdata != NULL && *common_xappdata != NULL) {
+			size_t sl = strlen(*common_xappdata);
+			int add_bsl = 0;
+
+			if ((*common_xappdata)[sl - 1] != '\\') {
+				add_bsl = 1;
+			}
+
+			wsl = malloc(sl + add_bsl + strlen(appname) + 2);
+			if (wsl == NULL) {
+				return -1;
+			}
+			sprintf(wsl, "%s%s%s\\",
+				*common_xappdata,
+				add_bsl? "\\": "",
+				appname);
+			_mkdir(wsl);
+
+			free(*common_xappdata);
+			*common_xappdata = wsl;
+		}
+
 	}
 
 #if defined(DEBUG) /*[*/
-	printf("get_dirs: instdir '%s', desktop '%s', appdata '%s'\n",
+	printf("get_dirs: instdir '%s', desktop '%s', appdata '%s', "
+		"common_desktop '%s', common_appdata '%s'\n",
 		instdir? *instdir: "(none)",
 		desktop? *desktop: "(none)",
-		appdata? *appdata: "(none)");
+		appdata? *appdata: "(none)",
+		common_desktop? *common_desktop: "(none)",
+		common_appdata? *common_appdata: "(none)");
 	printf("Enter...");
 	fflush(stdout);
 	(void) getchar();
