@@ -57,8 +57,8 @@ SRCS = charset.c ctlr.c pr3287.c proxy.c resolver.c see.c sf.c snprintf.c \
 	ssl_dll.c tables.c telnet.c trace_ds.c utf8.c w3misc.c windirs.c \
 	winvers.c unicode.c unicode_dbcs.c xtable.c
 VOBJS = charset.o ctlr.o pr3287.o proxy.o resolver.o see.o sf.o snprintf.o \
-	ssl_dll.o tables.o telnet.o trace_ds.o utf8.o wpr3287res.o ws.o \
-	w3misc.o windirs.o winvers.o unicode.o unicode_dbcs.o xtable.o
+	ssl_dll.o tables.o telnet.o trace_ds.o utf8.o w3misc.o windirs.o \
+	winvers.o wpr3287res.o ws.o unicode.o unicode_dbcs.o xtable.o
 OBJECTS = $(VOBJS) version.o
 LIBS = $(SSLLIB) -lws2_32 -lwinspool
 

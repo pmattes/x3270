@@ -70,10 +70,6 @@
 # include "winprintc.h"
 #endif /*]*/
 
-#if defined(_MSC_VER) /*[*/
-# include "Msc/deprecated.h"
-#endif /*]*/
-
 /* Maximum size of a tracefile header. */
 #define MAX_HEADER_SIZE		(32*1024)
 

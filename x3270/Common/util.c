@@ -41,9 +41,6 @@
 #include <errno.h>
 #include "resources.h"
 #include "charsetc.h"
-#if defined(_MSC_VER) /*[*/
-#include "Msc/deprecated.h"
-#endif /*]*/
 
 #include "utilc.h"
 

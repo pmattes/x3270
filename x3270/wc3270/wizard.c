@@ -65,10 +65,6 @@
 #include "windirsc.h"
 #include "relinkc.h"
 
-#if defined(_MSC_VER) /*[*/
-#include "Msc/deprecated.h"
-#endif /*]*/
-
 #define LEGAL_CNAME	"ABCDEFGHIJKLMNOPQRSTUVWXYZ" \
 			"abcedfghijklmnopqrstuvwxyz" \
 			"0123456789_- "

@@ -46,10 +46,6 @@
 #include "resolverc.h"
 #include "w3miscc.h"
 
-#if defined(_MSC_VER) /*[*/
-#include "Msc/deprecated.h"
-#endif /*]*/
-
 #if defined(_WIN32) /*[*/
 static int win32_getaddrinfo(const char *node, const char *service,
 	const struct addrinfo *hints, struct addrinfo **res);

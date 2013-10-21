@@ -59,10 +59,6 @@
 # include <screenc.h>
 #endif /*]*/
 
-#if defined(_MSC_VER) /*[*/
-#include "Msc/deprecated.h"
-#endif /*]*/
-
 /* Typedefs */
 typedef struct {		/* Windows screen print context */
 	char *filename;		/* Name of file to print (and unlink) */

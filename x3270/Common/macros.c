@@ -85,10 +85,6 @@
 #include "w3miscc.h"
 #endif /*]*/
 
-#if defined(_MSC_VER) /*[*/
-#include "Msc/deprecated.h"
-#endif /*]*/
-
 #define ANSI_SAVE_SIZE	4096
 
 #if defined(_WIN32) /*[*/

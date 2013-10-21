@@ -70,9 +70,6 @@
 # include "tablesc.h"
 # include "telnetc.h"
 # include "utilc.h"
-# if defined(_MSC_VER) /*[*/
-# include "Msc/deprecated.h"
-# endif /*]*/
 
 /* Macros. */
 # define eos(s)	strchr((s), '\0')

@@ -47,10 +47,6 @@
 #include "utf8c.h"
 #include "utilc.h"
 
-#if defined(_MSC_VER) /*[*/
-# include "Msc/deprecated.h"
-#endif /*]*/
-
 /* Typedefs */
 typedef struct {
 	ptype_t ptype;		/* Type P_XXX (text, html, rtf) */

@@ -46,54 +46,30 @@
 int
 main(int argc, char *argv[])
 {
-	char exepath[MAX_PATH];
-	char linkpath[MAX_PATH];
+	char exe_path[MAX_PATH];
 	HRESULT hres;
 	char *install_dir;
-	char *exe;
-	char *linkname;
+	char *exe_name;
+	char *link_path;
 
 	(void) get_version_info();
 
 	/* Pull in the parameter. */
 	if (argc != 4) {
-	    	fprintf(stderr, "usage: %s install-dir exe linkname\n",
+	    	fprintf(stderr, "usage: %s install-dir exe-name link-path\n",
 			argv[0]);
 		return 1;
 	}
 	install_dir = argv[1];
-	exe = argv[2];
-	linkname = argv[3];
-	sprintf(exepath, "%s\\%s", install_dir, exe);
-
-	/* Figure out the link path. */
-	if (is_nt) {
-	    	char *userprof;
-
-		userprof = getenv("USERPROFILE");
-		if (userprof == NULL) {
-			fprintf(stderr, "Sorry, I can't figure out where your user "
-				"profile is.\n");
-			return 1;
-		}
-		sprintf(linkpath, "%s\\Desktop\\%s.lnk", userprof, linkname);
-	} else {
-		char *windir;
-
-		windir = getenv("WinDir");
-		if (windir == NULL) {
-			printf("Sorry, I can't figure out where %%WinDir%% "
-				"is.\n");
-			return -1;
-		}
-		sprintf(linkpath, "%s\\Desktop\\%s.pif", windir, linkname);
-	}
+	exe_name = argv[2];
+	link_path = argv[3];
+	sprintf(exe_path, "%s\\%s", install_dir, exe_name);
 
 	/* Create the link. */
 	if (is_nt)
 		hres = CreateLink(
-			exepath,
-			linkpath,
+			exe_path,
+			link_path,
 			NULL,
 			NULL,
 			install_dir,
@@ -102,20 +78,44 @@ main(int argc, char *argv[])
 			L"Lucida Console",
 			0,
 			0);
-	else
+	else {
+		char link_name[MAX_PATH];
+		char *bsl;
+		size_t sl;
+
+		/*
+		 * Extract the link name (the PIF title) from the link path.
+		 */
+		bsl = strrchr(link_path, '\\');
+		if (bsl == NULL) {
+			fprintf(stderr, "cannot figure out link name from "
+				"'%s'\n", link_path);
+			return 1;
+		}
+		bsl++;
+		sl = strlen(bsl);
+		if (sl < 5 || strcasecmp(bsl + sl - 4, ".pif")) {
+			fprintf(stderr, "cannot figure out link name from "
+				"'%s'\n", link_path);
+			return 1;
+		}
+		strncpy(link_name, bsl, sl - 4);
+		link_name[sl - 4] = '\0';
+
 	    	hres = Piffle(
-			linkname,
-			exepath,
-			linkpath,
+			link_name,
+			exe_path,
+			link_path,
 			"",
 			"",
 			install_dir,
 			46,
 			80,
 			"Lucida Console");
+	}
 
 	if (hres) {
-		fprintf(stderr, "Link creation failed.\n");
+		fprintf(stderr, "link creation \"%s\" failed\n", link_path);
 	}
 
 	return hres;

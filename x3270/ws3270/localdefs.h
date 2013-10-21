@@ -91,3 +91,8 @@ extern int safe_snprintf(char *str, size_t size, const char *fmt, ...);
 # define vsnprintf safe_vsnprintf
 # define snprintf safe_snprintf
 #endif /*]*/
+
+#if defined(_MSC_VER) /*[*/
+/* Alias the POSIX entry points that MSVC doesn't like. */
+# include "Msc/deprecated.h"
+#endif /*]*/

@@ -73,7 +73,7 @@ VOBJS = XtGlue.o actions.o ansi.o apl.o c3270.o charset.o ctlr.o fallbacks.o \
 	proxy.o readres.o relink.o resolver.o resources.o rpq.o screen.o \
 	see.o select.o sf.o shortcut.o snprintf.o ssl_dll.o tables.o telnet.o \
 	toggles.o trace_ds.o unicode.o unicode_dbcs.o utf8.o util.o w3misc.o \
-	winvers.o windirs.o winprint.o xio.o
+	wc3270res.o winvers.o windirs.o winprint.o xio.o
 OBJECTS = $(VOBJS) version.o
 WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o winvers.o windirs.o \
 	relink.o snprintf.o

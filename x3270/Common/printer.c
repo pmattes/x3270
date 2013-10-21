@@ -75,10 +75,6 @@
 #include "w3miscc.h"
 #include "xioc.h"
 
-#if defined(_MSC_VER) /*[*/
-#include "Msc/deprecated.h"
-#endif /*]*/
-
 #define PRINTER_BUF	1024
 
 #if !defined(_WIN32) /*[*/

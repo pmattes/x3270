@@ -24,11 +24,36 @@ MinVersion=4.0,5.0
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
-[Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
+[Types]
+; all-users is an NT-and-later concept only
+Name: "forall"; Description: "Full installation for all users"; MinVersion: 0,5.0
+Name: "foruser"; Description: "Full installation for current user only"
+Name: "custom"; Description: "Custom installation"; Flags: iscustom
+
+[Components]
+Name: "base"; Description: "Basic executables"; Types: forall foruser custom; Flags: fixed
+Name: "wizard"; Description: "New Session Wizard"; Types: forall foruser
+Name: "ws3270"; Description: "ws3270 (scripting-only binary)"; Types: forall foruser
+Name: "help"; Description: "Help files"; Types: forall foruser
+Name: "commonfiles"; Description: "Shortcuts and files below go into the all-users profile"; Types: forall; Flags: exclusive
+Name: "userfiles"; Description: "Shortcuts and files below go into the current user's profile"; Types: foruser; Flags: exclusive
+Name: "ca"; Description: "CA root certificates for OpenSSL"; Types: forall foruser
 
 [InstallDelete]
+; Get rid of the per-user CA root certs file. The new install may put it in
+; the common AppData directory.
 Type: files; Name: "{userappdata}\root_certs.txt"
+; Get rid of the old New wc3270 Session desktop icon.
+Type: files; Name: "{userdesktop}\New wc3270 Session.lnk"
+Type: files; Name: "{userdesktop}\New wc3270 Session.pif"
+; Get rid of the old 'New wc3270 Session' start menu item.  It might be in
+; the common programs group or the user programs group.
+Type: files; Name: "{commonprograms}\{groupname}\New wc3270 Session.lnk"
+Type: files; Name: "{userprograms}\{groupname}\New wc3270 Session.lnk"
+; Get rid of the old DLLs.
+Type: files; Name: "{app}\w3n4.dll"
+Type: files; Name: "{app}\w3n46.dll"
+Type: files; Name: "{app}\shf.dll"
 
 [Files]
 Source: "wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -39,27 +64,32 @@ Source: "mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall
 Source: "ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "root_certs.txt"; DestDir: "{commonappdata}\wc3270"; Flags: ignoreversion
-Source: "html\Bugs.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "html\Build.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "html\FAQ.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "html\Intro.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "html\Keymap.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "html\Lineage.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "html\ReleaseNotes.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "html\Resources.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "html\README.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "html\SSL.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "html\wc3270-man.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "..\ws3270-3.3\html\ws3270-man.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "..\wpr3287-3.3\html\wpr3287-man.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "html\Wishlist.html"; DestDir: "{app}\html"; Flags: ignoreversion
-Source: "html\x3270if.html"; DestDir: "{app}\html"; Flags: ignoreversion
+Source: "root_certs.txt"; DestDir: "{commonappdata}\wc3270"; Flags: ignoreversion; Components: ca and commonfiles
+Source: "root_certs.txt"; DestDir: "{userappdata}\wc3270"; Flags: ignoreversion; Components: ca and userfiles
+Source: "html\Bugs.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
+Source: "html\Build.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
+Source: "html\FAQ.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
+Source: "html\Intro.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
+Source: "html\Keymap.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
+Source: "html\Lineage.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
+Source: "html\ReleaseNotes.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
+Source: "html\Resources.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
+Source: "html\README.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
+Source: "html\SSL.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
+Source: "html\wc3270-man.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
+Source: "..\ws3270-3.3\html\ws3270-man.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
+Source: "..\wpr3287-3.3\html\wpr3287-man.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
+Source: "html\Wishlist.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
+Source: "html\x3270if.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
 Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Dirs]
 Name: "{userappdata}\wc3270";
+
+[Tasks]
+Name: "commondesktopicons"; Description: "Create desktop icons (all users)"; GroupDescription: "{cm:AdditionalIcons}"; Components: commonfiles
+Name: "userdesktopicons"; Description: "Create desktop icons (current user)"; GroupDescription: "{cm:AdditionalIcons}"; Components: userfiles
 
 [Code]
 function myHelp(Param: String): String;
@@ -69,9 +99,9 @@ begin
 end;
 
 [Icons]
-Name: "{group}\Session Wizard"; Filename: "{app}\wc3270wiz.exe"; WorkingDir: "{app}"
+Name: "{group}\Session Wizard"; Filename: "{app}\wc3270wiz.exe"; WorkingDir: "{app}"; Components: wizard
 Name: "{group}\Run wc3270"; Filename: "{app}\wc3270.exe"; WorkingDir: "{app}"
-Name: "{group}\wc3270 Documentation"; Filename: "{app}\html\README.html"
+Name: "{group}\wc3270 Documentation"; Filename: "{app}\html\README.html"; Components: wizard
 Name: "{group}\wc3270 Explore AppData"; Filename: "{app}\ead3270.exe"; Flags: runminimized; IconFilename: "{app}\wc3270.exe"
 
 [Registry]
@@ -81,24 +111,19 @@ Root: HKCR; Subkey: "wc3270\DefaultIcon"; ValueType: string; ValueName: ""; Valu
 Root: HKCR; Subkey: "wc3270\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\wc3270"" ""%1"""
 
 [Run]
-Filename: "{app}\wc3270wiz.exe"; Description: "{cm:LaunchProgram,Session Wizard}"; Flags: nowait postinstall skipifsilent
-Filename: "{cmd}"; Parameters: {code:MyHelp}; Description: "{cm:LaunchProgram,Online Documentation}"; Flags: nowait postinstall skipifsilent
-Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""wc3270"""; Flags: nowait skipifsilent runhidden; Tasks: desktopicon
-Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""Session Wizard"""; Flags: nowait skipifsilent runhidden; Tasks: desktopicon
-; Get rid of the old New wc3270 Session desktop icon.
-Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\New wc3270 Session.lnk"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 0,4.0
-Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\New wc3270 Session.pif"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 4.0,0
-; Get rid of the old 'New wc3270 Session' start menu item.  It might be in
-; the common programs group or the user programs group.
-Filename: "{cmd}"; Parameters: "/c erase ""{commonprograms}\{groupname}\New wc3270 Session.lnk"""; Flags: runhidden
-Filename: "{cmd}"; Parameters: "/c erase ""{userprograms}\{groupname}\New wc3270 Session.lnk"""; Flags: runhidden
-; Get rid of the old DLLs.
-Filename: "{cmd}"; Parameters: "/c erase ""{app}\w3n4.dll"""; Flags: runhidden
-Filename: "{cmd}"; Parameters: "/c erase ""{app}\w3n46.dll"""; Flags: runhidden
-Filename: "{cmd}"; Parameters: "/c erase ""{app}\shf.dll"""; Flags: runhidden
+Filename: "{app}\wc3270wiz.exe"; Description: "{cm:LaunchProgram,Session Wizard}"; Components: wizard; Flags: nowait postinstall skipifsilent
+Filename: "{cmd}"; Parameters: {code:MyHelp}; Description: "{cm:LaunchProgram,Online Documentation}"; Components: help; Flags: nowait postinstall skipifsilent
+Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""{commondesktop}\wc3270.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: commondesktopicons; MinVersion: 0,5.0
+Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""{userdesktop}\wc3270.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: userdesktopicons; MinVersion: 0,5.0
+Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""{userdesktop}\wc3270.pif"""; Flags: nowait skipifsilent runhidden; Tasks: userdesktopicons; MinVersion: 4.0,0
+Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""{commondesktop}\Session Wizard.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: commondesktopicons; Components: wizard; MinVersion: 0,5.0
+Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""{userdesktop}\Session Wizard.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: userdesktopicons; Components: wizard; MinVersion: 0,5.0
+Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""{userdesktop}\Session Wizard.pif"""; Flags: nowait skipifsilent runhidden; Tasks: userdesktopicons; Components: wizard; MinVersion: 4.0,0
 
-[UninstallRun]
-Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\wc3270.lnk"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 0,4.0
-Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\Session Wizard.lnk"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 0,4.0
-Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\wc3270.pif"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 4.0,0
-Filename: "{cmd}"; Parameters: "/c erase ""{userdesktop}\Session Wizard.pif"""; Tasks: desktopicon; Flags: runhidden; MinVersion: 4.0,0
+[UninstallDelete]
+Type: files; Name: "{commondesktop}\wc3270.lnk"; Tasks: commondesktopicons; MinVersion: 0,4.0
+Type: files; Name: "{userdesktop}\wc3270.lnk"; Tasks: userdesktopicons; MinVersion: 0,4.0
+Type: files; Name: "{commondesktop}\Session Wizard.lnk"; Tasks: commondesktopicons; MinVersion: 0,4.0
+Type: files; Name: "{userdesktop}\Session Wizard.lnk"; Tasks: userdesktopicons; MinVersion: 0,4.0
+Type: files; Name: "{userdesktop}\wc3270.pif"; Tasks: userdesktopicons; MinVersion: 4.0,0
+Type: files; Name: "{userdesktop}\Session Wizard.pif"; Tasks: userdesktopicons; MinVersion: 4.0,0

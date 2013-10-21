@@ -63,10 +63,6 @@
 #include "shortcutc.h"
 #include "windirsc.h"
 
-#if defined(_MSC_VER) /*[*/
-#include "Msc/deprecated.h"
-#endif /*]*/
-
 #include "relinkc.h"
 
 charsets_t charsets[] = {
