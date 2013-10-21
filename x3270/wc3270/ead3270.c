@@ -39,27 +39,21 @@
 #include <io.h>
 #include "windirsc.h"
 
+#define COMMAND "start explorer.exe"
+
 static int
 explore(char *dir)
 {
 	size_t sl;
-	char short_ad[MAX_PATH];
-	char cmd[7 + MAX_PATH];
+	char cmd[strlen(COMMAND) + 2 + MAX_PATH + 1];
 
 	sl = strlen(dir);
 	if (sl > 1 && dir[sl - 1] == '\\') {
 		dir[sl - 1] = '\0';
 	}
 
-	/* Convert it to a short name. */
-	if (GetShortPathName(dir, short_ad, sizeof(short_ad)) == 0) {
-		fprintf(stderr, "GetShortPathName(\"%s\") failed, win32 "
-			"error %ld\n", dir, (long)GetLastError());
-		return 1;
-	}
-
 	/* Run it. */
-	sprintf(cmd, "start %s", short_ad);
+	sprintf(cmd, "%s \"%s\"", COMMAND, dir);
 	system(cmd);
 	return 0;
 }
