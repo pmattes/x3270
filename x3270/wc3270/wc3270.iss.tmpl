@@ -108,7 +108,8 @@ Name: "{group}\wc3270 Explore AppData"; Filename: "{app}\ead3270.exe"; Flags: ru
 Root: HKCR; Subkey: ".wc3270"; ValueType: string; ValueName: ""; ValueData: "wc3270"; Flags: uninsdeletevalue
 Root: HKCR; Subkey: "wc3270"; ValueType: string; ValueName: ""; ValueData: "wc3270 Emulator Session"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "wc3270\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\wc3270.exe,0"
-Root: HKCR; Subkey: "wc3270\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\wc3270"" ""%1"""
+Root: HKCR; Subkey: "wc3270\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\wc3270.exe"" ""%1"""
+Root: HKCR; Subkey: "wc3270\shell\edit\command"; ValueType: string; ValueName: ""; ValueData: """{app}\wc3270wiz.exe"" -e ""%1"""; Components: wizard
 
 [Run]
 Filename: "{app}\wc3270wiz.exe"; Description: "{cm:LaunchProgram,Session Wizard}"; Components: wizard; Flags: nowait postinstall skipifsilent

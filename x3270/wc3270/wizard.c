@@ -594,6 +594,8 @@ and can create or re-create a shortcut on your desktop.");
  *   s[out]		Session structure to fill in with name and (if the
  *   			file exists) current contents
  *   path[out]		Pathname of session file
+ *   explicit_edit[in]	If TRUE, -e was passed on command line; skip the
+ *   			'exists. Edit?' dialog
  *
  * Returns:  0 file does not exist
  *           1 file does exist and is editable, edit it
@@ -602,8 +604,8 @@ and can create or re-create a shortcut on your desktop.");
  *          -1 bail, end of file
  *          -2 bail, uneditable and they don't want to overwrite it
  */
-int
-get_session(char *session_name, session_t *s, char *path)
+static int
+get_session(char *session_name, session_t *s, char *path, int explicit_edit)
 {
     	FILE *f;
 	int rc;
@@ -748,6 +750,9 @@ and dash '-')\n");
 		}
 
 		if (editable) {
+			if (explicit_edit) {
+				return 1; /* edit it */
+			}
 			for (;;) {
 				printf("\nSession '%s' exists.  Edit it? "
 					"(y/n) [y] ", s->session);
@@ -2123,8 +2128,8 @@ reg_font_from_cset(char *cset, int *codepage)
 	return font;
 }
 
-int
-session_wizard(char *session_name, int installed)
+static int
+session_wizard(char *session_name, int explicit_edit, int installed)
 {
     	session_t session;
 	int rc;
@@ -2142,11 +2147,14 @@ session_wizard(char *session_name, int installed)
 	(void) memset(&session, '\0', sizeof(session));
 
 	/* Intro screen. */
-	if (session_name == NULL && intro(&session) < 0)
-		return -1;
+	if (session_name == NULL) {
+		if (intro(&session) < 0) {
+			return -1;
+		}
+	}
 
 	/* Get the session name. */
-	rc = get_session(session_name, &session, path);
+	rc = get_session(session_name, &session, path, explicit_edit);
 	switch (rc) {
 	case -2: /* Uneditable, and they don't want to overwrite it. */
 	    	return 0;
@@ -2532,12 +2540,20 @@ main(int argc, char *argv[])
 	int rc;
 	char buf[2];
 	char *session_name = NULL;
+	char *program = argv[0];
 	int installed = FALSE;
+	int explicit_edit = FALSE;
 
 	/*
 	 * Parse command-line arguments.
 	 * For now, there is only one -- the optional name of the session.
 	 */
+	program = argv[0];
+	if (argc > 1 && !strcmp(argv[1], "-e")) {
+		explicit_edit = TRUE;
+		argc--;
+		argv++;
+	}
 	switch (argc) {
 	    case 1:
 		break;
@@ -2554,7 +2570,7 @@ main(int argc, char *argv[])
 	    	return 1;
 
 	/* Get some paths from Windows. */
-	if (get_dirs(argv[0], "wc3270", &installdir, &desktop, &mya,
+	if (get_dirs(program, "wc3270", &installdir, &desktop, &mya,
 		    &common_desktop, &commona, &installed) < 0)
 	    	return -1;
 
@@ -2568,7 +2584,7 @@ main(int argc, char *argv[])
 
 	save_keymaps();
 
-	rc = session_wizard(session_name, installed);
+	rc = session_wizard(session_name, explicit_edit, installed);
 
 	printf("\nWizard %s.  [Press <Enter>] ",
 		    (rc < 0)? "aborted": "complete");
