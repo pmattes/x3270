@@ -86,6 +86,9 @@ static struct {
 #if defined(X3270_SCRIPT) /*[*/
 	{ "ContinueScript", CN, P_SCRIPTING, "Resume paused script" },
 #endif /*]*/
+#if defined(WC3270) /*[*/
+	{ "Copy", CN, P_3270, "Copy selected text to Windows clipboard" },
+#endif /*]*/
 	{ "CursorSelect", CN, P_3270, "Light pen select at cursor location" },
 	{ "Delete", CN, P_3270, "Delete character at cursor" },
 	{ "DeleteField", CN, P_3270, "Erase field at cursor location (^U)" },
