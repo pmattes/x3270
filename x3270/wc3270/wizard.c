@@ -113,6 +113,27 @@ enum {
     MN_N_OPTS
 } menu_option_t;
 
+/* Return value from get_session(). */
+typedef enum {
+    GS_NEW,		/* file does not exist */
+    GS_EDIT,		/* file does exist and is editable, edit it */
+    GS_NOEDIT,		/* file does exist and is editable, do not edit it */
+    GS_OVERWRITE,	/* file exists but is uneditable, overwrite it */
+    GS_ERR = -1,	/* error */
+    GS_NOEDIT_LEAVE = -2 /* uneditable and they don't want to overwrite it */
+} gs_t;
+
+/* Return value from summarize_and_proceed().  */
+typedef enum {
+    SRC_ALL,		/* success, in all-users AppData */
+    SRC_USER,		/* success, in current user AppData */
+    SRC_OTHER,		/* not sure where the file is */
+    SRC_ERR = -1	/* error */
+} src_t;
+
+#define YN_ERR		(-1)	/* error return from getyn() */
+#define YN_RETRY	(-2)	/* user input error from getyn() */
+
 extern char *wversion;
 
 /* Aliases for obsolete character set names. */
@@ -156,7 +177,7 @@ static struct {
 	{ NULL,		NULL,					NULL   }
 };
 
-int create_session_file(session_t *s, char *path);
+static int create_session_file(session_t *s, char *path);
 
 static char *mya = NULL;
 static char *installdir = NULL;
@@ -164,9 +185,9 @@ static char *desktop = NULL;
 static char *common_desktop = NULL;
 static char *commona = NULL;
 
-int get_printerlu(session_t *s, int explain);
+static int get_printerlu(session_t *s, int explain);
 
-char *
+static char *
 get_input(char *buf, int bufsize)
 {
     	char *s;
@@ -196,28 +217,37 @@ get_input(char *buf, int bufsize)
 	return buf;
 }
 
-int
+/*
+ * Ask a yes or no question.
+ *
+ * param[in] defval	Default response (TRUE or FALSE).
+ *
+ * return TRUE or FALSE	Proper respoonse
+ *        YN_ERR	I/O error occurred (usually EOF)
+ *        YN_RETRY	User entry error, error message already printed
+ */
+static int
 getyn(int defval)
 {
 	char yn[STR_SIZE];
 
 	if (get_input(yn, STR_SIZE) == NULL) {
-		return -1;
+		return YN_ERR;
 	}
 
 	if (!yn[0])
 		return defval;
 
 	if (!strncasecmp(yn, "yes", strlen(yn)))
-		return 1;
+		return TRUE;
 	if (!strncasecmp(yn, "no", strlen(yn)))
-		return 0;
+		return FALSE;
 
 	printf("Please answer (y)es or (n)o.\n\n");
-	return -2;
+	return YN_RETRY;
 }
 
-void
+static void
 enum_printers(void)
 {
 	DWORD needed = 0;
@@ -248,7 +278,7 @@ enum_printers(void)
 }
 
 /* Get an 'other' printer name. */
-int
+static int
 get_printer_name(char *defname, char *printername)
 {
 	for (;;) {
@@ -288,7 +318,7 @@ km_t *km_first = NULL;
 km_t *km_last = NULL;
 
 /* Save a keymap name.  If it is unique, return its node. */
-km_t *
+static km_t *
 save_keymap_name(char *path, char *keymap_name, char *description)
 {
 	km_t *km;
@@ -457,7 +487,7 @@ save_keymaps(void)
  * Fix up a UNC printer path in an old session file.
  * Returns 1 if the name needed fixing, 0 otherwise.
  */
-int
+static int
 fixup_printer(session_t *s)
 {
 	char buf[STR_SIZE];
@@ -502,7 +532,7 @@ fixup_printer(session_t *s)
  * Reformat a quoted UNC path for display.
  * Returns 1 if it was reformatted, 0 otherwise.
  */
-int
+static int
 redisplay_printer(const char *expanded, char *condensed)
 {
 	int i;
@@ -543,7 +573,10 @@ redisplay_printer(const char *expanded, char *condensed)
 	return 0;
 }
 
-void
+/*
+ * Clear the screen, print a common banner and a title.
+ */
+static void
 new_screen(session_t *s, char *title)
 {
     	system("cls");
@@ -556,7 +589,7 @@ new_screen(session_t *s, char *title)
 }
 
 /* Introductory screen. */
-int
+static int
 intro(session_t *s)
 {
 	int rc;
@@ -573,13 +606,55 @@ and can create or re-create a shortcut on your desktop.");
 	for (;;) {
 		printf("\nContinue? (y/n) [y] ");
 		fflush(stdout);
-		rc = getyn(1);
-		if (rc == -1 || rc == 0)
+		rc = getyn(TRUE);
+		if (rc == YN_ERR || rc == FALSE)
 			return -1;
-		if (rc == 1)
+		if (rc == TRUE)
 			break;
 	}
 	return 0;
+}
+
+/*
+ * Search a well-defined series of locations for a session file.
+ */
+static src_t
+find_session_file(const char *session_name, char *path)
+{
+	/* Try user's AppData. */
+	snprintf(path, MAX_PATH, "%s%s%s", mya, session_name, SESS_SUFFIX);
+	if (access(path, R_OK) == 0) {
+		return SRC_USER;
+	}
+
+	/* Not there.  Try common AppData. */
+	if (commona != NULL) {
+		snprintf(path, MAX_PATH, "%s%s%s", commona, session_name,
+			SESS_SUFFIX);
+		if (access(path, R_OK) == 0) {
+			return SRC_ALL;
+		}
+	}
+
+	/* Not there.  Try installdir. */
+	snprintf(path, MAX_PATH, "%s%s%s", installdir, session_name,
+		SESS_SUFFIX);
+	if (access(path, R_OK) == 0) {
+		return SRC_OTHER;
+	}
+
+	/* Not there.  Try cwd. */
+	snprintf(path, MAX_PATH, "%s%s", session_name, SESS_SUFFIX);
+	if (access(path, R_OK) == 0) {
+		return SRC_OTHER;
+	}
+
+	/*
+	 * Put the new one in the user's AppData.
+	 * I don't think this value is actually used.
+	 */
+	snprintf(path, MAX_PATH, "%s%s%s", mya, session_name, SESS_SUFFIX);
+	return SRC_OTHER;
 }
 
 /*
@@ -596,20 +671,19 @@ and can create or re-create a shortcut on your desktop.");
  *   path[out]		Pathname of session file
  *   explicit_edit[in]	If TRUE, -e was passed on command line; skip the
  *   			'exists. Edit?' dialog
+ *   src[out]		Where the session file was found, if it exists
  *
- * Returns:  0 file does not exist
- *           1 file does exist and is editable, edit it
- *           2 file does exist and is editable, do not edit it
- *           3 file exists but is uneditable, overwrite it
- *          -1 bail, end of file
- *          -2 bail, uneditable and they don't want to overwrite it
+ * Returns: gs_t
  */
-static int
-get_session(char *session_name, session_t *s, char *path, int explicit_edit)
+static gs_t
+get_session(char *session_name, session_t *s, char *path, int explicit_edit,
+	src_t *src)
 {
     	FILE *f;
 	int rc;
 	int editable;
+
+	*src = SRC_OTHER;
 
 	if (session_name != NULL) {
 	    	size_t sl = strlen(session_name);
@@ -631,43 +705,20 @@ get_session(char *session_name, session_t *s, char *path, int explicit_edit)
 			colon = strrchr(session_name, ':');
 			if (bsl == NULL && colon == NULL) {
 			    	/*
-				 * No directory or drive prefix -- relative
-				 * path. */
-				if (sl - SESS_LEN + 1 < slen)
+				 * No directory or drive prefix -- just a file
+				 * name.
+				 */
+				if (sl - SESS_LEN + 1 < slen) {
 				    	slen = sl - SESS_LEN + 1;
+				}
 			    	strncpy(s->session, session_name, slen);
 				s->session[slen - 1] = '\0';
 
-				/* Try AppData. */
-				snprintf(path, MAX_PATH, "%s%s", mya,
-					session_name);
-				path[MAX_PATH - 1] = '\0';
-				if (access(path, R_OK) < 0) {
-				    	/* Not there.  Try installdir. */
-					snprintf(path, MAX_PATH, "%s%s",
-						installdir, session_name);
-					path[MAX_PATH - 1] = '\0';
-					if (access(path, R_OK) < 0) {
-					    	/* Not there.  Try cwd. */
-					    	strncpy(path, session_name,
-							MAX_PATH);
-						path[MAX_PATH - 1] = '\0';
-						if (access(path, R_OK) < 0) {
-							/*
-							 * Put the new one in
-							 * AppData.
-							 */
-							snprintf(path, MAX_PATH,
-								"%s%s", mya,
-								session_name);
-							path[MAX_PATH - 1] = '\0';
-						} /* else use the one in '.' */
-					} /* else use the one in installdir */
-				} /* else use the one in AppData */
+				*src = find_session_file(s->session, path);
 			} else {
 			    	/*
-				 * Full pathname.  Copy what's between [:\] and
-				 * ".wc3270" as the session name.
+				 * Full pathname.  Copy what's between the last
+				 * [:\] and ".wc3270" as the session name.
 				 */
 			    	char *start;
 
@@ -684,25 +735,38 @@ get_session(char *session_name, session_t *s, char *path, int explicit_edit)
 					slen = strlen(start) - SESS_LEN + 1;
 				strncpy(s->session, start, slen);
 				s->session[slen - 1] = '\0';
+
+				/*
+				 * Try to figure out where it is.
+				 * This is inherently imperfect.
+				 */
+				if (!strncmp(path, mya, strlen(mya)) &&
+					path[strlen(mya)] == '\\') {
+					*src = SRC_USER;
+				} else if (commona != NULL &&
+					!strncmp(path, commona,
+					    strlen(commona)) &&
+					path[strlen(commona)] == '\\') {
+					*src = SRC_ALL;
+				} else {
+					*src = SRC_OTHER;
+				}
 			}
 
 		} else {
-		    	/*
-			 * Session name.
-			 * Assume it's in AppData.
-			 */
+			/* Session name, no suffix. */
 		    	strncpy(s->session, session_name, slen);
 			s->session[slen - 1] = '\0';
-			sprintf(path, "%s%s%s", mya, s->session, SESS_SUFFIX);
+
+			*src = find_session_file(s->session, path);
 		}
 
 		/* Validate the session name. */
 		if (strspn(s->session, LEGAL_CNAME) != strlen(s->session)) {
 			fprintf(stdout, "\
 \nIllegal character(s).\n\
-Session names can only have letters, numbers, spaces, underscore '_'\n\
-and dash '-')\n");
-			return -1;
+Session names can only have letters, numbers, spaces, underscores and dashes.\n");
+			return GS_ERR;
 		}
 
 	} else {
@@ -718,11 +782,12 @@ shortcut.");
 			printf("\nEnter session name: ");
 			fflush(stdout);
 			if (get_input(s->session, sizeof(s->session)) == NULL) {
-				return -1;
+				return GS_ERR;
 			}
 			if (!s->session[0])
 				continue;
-			if (strspn(s->session, LEGAL_CNAME) != strlen(s->session)) {
+			if (strspn(s->session, LEGAL_CNAME) !=
+				strlen(s->session)) {
 				fprintf(stdout, "\
 \nIllegal character(s).\n\
 Session names can only have letters, numbers, spaces, underscore '_'\n\
@@ -732,7 +797,7 @@ and dash '-')\n");
 
 			break;
 		}
-		sprintf(path, "%s%s%s", mya, s->session, SESS_SUFFIX);
+		*src = find_session_file(s->session, path);
 	}
 
 	f = fopen(path, "r");
@@ -750,20 +815,35 @@ and dash '-')\n");
 		}
 
 		if (editable) {
+			const char *where;
+
 			if (explicit_edit) {
-				return 1; /* edit it */
+				return GS_EDIT; /* edit it */
+			}
+			switch (*src) {
+			case SRC_ALL:
+				where = " in the all-users AppData "
+				    "directory";
+				break;
+			case SRC_USER:
+				where = " in the current user's "
+				    "AppData directory";
+				break;
+			default:
+				where = "";
+				break;
 			}
 			for (;;) {
-				printf("\nSession '%s' exists.  Edit it? "
-					"(y/n) [y] ", s->session);
+				printf("\nSession '%s' exists%s.\nEdit it? "
+					"(y/n) [y] ", s->session, where);
 				fflush(stdout);
-				rc = getyn(1);
-				if (rc == -1)
-					return -1;
-				if (rc == 0)
-					return 2; /* do not edit */
-				if (rc == 1)
-					return 1; /* edit it */
+				rc = getyn(TRUE);
+				if (rc == YN_ERR)
+					return GS_ERR;
+				if (rc == FALSE)
+					return GS_NOEDIT; /* do not edit */
+				if (rc == TRUE)
+					return GS_EDIT; /* edit it */
 			}
 		} else {
 			for (;;) {
@@ -771,13 +851,13 @@ and dash '-')\n");
 					"cannot be edited.  Replace it? "
 					"(y/n) [n] ", s->session);
 				fflush(stdout);
-				rc = getyn(0);
-				if (rc == -1)
-					return -1;
-				if (rc == 0)
-					return -2; /* don't overwrite */
-				if (rc == 1)
-					return 3; /* overwrite */
+				rc = getyn(FALSE);
+				if (rc == YN_ERR)
+					return GS_ERR;
+				if (rc == FALSE)
+					return GS_NOEDIT_LEAVE; /* don't overwrite */
+				if (rc == TRUE)
+					return GS_OVERWRITE; /* overwrite */
 			}
 		}
 	} else {
@@ -790,11 +870,11 @@ and dash '-')\n");
 		 */
 	    	s->flags |= WF_AUTO_SHORTCUT;
 
-	    	return 0; /* create it */
+	    	return GS_NEW; /* create it */
 	}
 }
 
-int
+static int
 get_host(session_t *s)
 {
     	char buf[STR_SIZE];
@@ -876,7 +956,7 @@ number, character set, etc.), enter '" CHOICE_NONE "'."
 	return 0;
 }
 
-int
+static int
 get_port(session_t *s)
 {
     	char inbuf[STR_SIZE];
@@ -911,7 +991,7 @@ This specifies the TCP Port to use to connect to the host.  It is a number from\
 	return 0;
 }
 
-int
+static int
 get_lu(session_t *s)
 {
     	char buf[STR_SIZE];
@@ -957,7 +1037,7 @@ on the host.  The default is to allow the host to select the Logical Unit.");
 	return 0;
 }
 
-int
+static int
 get_model(session_t *s)
 {
 	int i;
@@ -1003,7 +1083,7 @@ This specifies the dimensions of the screen.");
 	return 0;
 }
 
-int
+static int
 get_oversize(session_t *s)
 {
     	char inbuf[STR_SIZE];
@@ -1073,7 +1153,7 @@ columns).\n",
 	return 0;
 }
 
-int
+static int
 get_charset(session_t *s)
 {
     	char buf[STR_SIZE];
@@ -1160,7 +1240,7 @@ This specifies the EBCDIC character set (code page) used by the host.");
 }
 
 #if defined(HAVE_LIBSSL) /*[*/
-int
+static int
 get_ssl(session_t *s)
 {
     	new_screen(s, "\
@@ -1174,13 +1254,13 @@ Secure Sockets Layer (SSL), then to run the TN3270 session inside the tunnel.");
 			s->ssl? "y" : "n");
 		fflush(stdout);
 		s->ssl = getyn(s->ssl);
-		if (s->ssl == -1)
+		if (s->ssl == YN_ERR)
 			return -1;
 	} while (s->ssl < 0);
 	return 0;
 }
 
-int
+static int
 get_verify(session_t *s)
 {
 	int rc;
@@ -1198,12 +1278,12 @@ certificates are not valid, the connection will be aborted.");
 		fflush(stdout);
 		rc = getyn((s->flags & WF_VERIFY_HOST_CERTS) != 0);
 		switch (rc) {
-		case -1:
+		case YN_ERR:
 			return -1;
-		case 1:
+		case TRUE:
 			s->flags |= WF_VERIFY_HOST_CERTS;
 			break;
-		case 0:
+		case FALSE:
 			s->flags &= ~WF_VERIFY_HOST_CERTS;
 			break;
 		}
@@ -1212,7 +1292,7 @@ certificates are not valid, the connection will be aborted.");
 }
 #endif /*]*/
 
-int
+static int
 get_proxy_server(session_t *s)
 {
     	char hbuf[STR_SIZE];
@@ -1243,7 +1323,7 @@ get_proxy_server(session_t *s)
     	return 0;
 }
 
-int
+static int
 get_proxy_server_port(session_t *s)
 {
     	char pbuf[STR_SIZE];
@@ -1295,7 +1375,7 @@ get_proxy_server_port(session_t *s)
     	return 0;
 }
 
-int
+static int
 get_proxy(session_t *s)
 {
     	int i, j;
@@ -1378,7 +1458,7 @@ wc3270 to use a proxy server to make the connection.");
 	return 0;
 }
 
-int
+static int
 get_wpr3287(session_t *s)
 {
     	new_screen(s, "\
@@ -1392,7 +1472,7 @@ Windows printer.");
 		printf("\nAutomatically start a wpr3287 printer session? (y/n) [n] ");
 		fflush(stdout);
 		s->wpr3287 = getyn(s->wpr3287);
-		if (s->wpr3287 == -1)
+		if (s->wpr3287 == YN_ERR)
 		    	return -1;
 	} while (s->wpr3287 < 0);
 	if (s->wpr3287 == 0)
@@ -1400,7 +1480,7 @@ Windows printer.");
 	return 0;
 }
 
-int
+static int
 get_printer_mode(session_t *s)
 {
 	int rc;
@@ -1419,13 +1499,13 @@ for the printer session.");
 		fflush(stdout);
 		rc = getyn(!strcmp(s->printerlu, "."));
 		switch (rc) {
-		case -1:
+		case YN_ERR:
 		    	return -1;
-		case 0:
+		case FALSE:
 			if (!strcmp(s->printerlu, "."))
 				s->printerlu[0] = '\0';
 			break;
-		case 1:
+		case TRUE:
 			strcpy(s->printerlu, ".");
 			break;
 		}
@@ -1437,7 +1517,7 @@ for the printer session.");
 	return 0;
 }
 
-int
+static int
 get_printerlu(session_t *s, int explain)
 {
 	if (explain) {
@@ -1473,7 +1553,7 @@ then that Logical Unit must be configured explicitly.");
 	return 0;
 }
 
-int
+static int
 get_printer(session_t *s)
 {
 	char tbuf[STR_SIZE];
@@ -1565,7 +1645,7 @@ the name 'default'.");
 	return 0;
 }
 
-int
+static int
 get_printercp(session_t *s)
 {
     	char buf[STR_SIZE];
@@ -1603,7 +1683,7 @@ page.");
 	return 0;
 }
 
-int
+static int
 get_keymaps(session_t *s)
 {
 	km_t *km;
@@ -1682,12 +1762,12 @@ session file, instead of being found at runtime.");
 		fflush(stdout);
 		rc = getyn((s->flags & WF_EMBED_KEYMAPS) != 0);
 		switch (rc) {
-		case -1:
+		case YN_ERR:
 			return -1;
-		case 1:
+		case TRUE:
 		    	s->flags |= WF_EMBED_KEYMAPS;
 			break;
-		case 0:
+		case FALSE:
 		    	s->flags &= ~WF_EMBED_KEYMAPS;
 			break;
 		}
@@ -1775,12 +1855,12 @@ This option selects whether the menu bar is displayed on the screen.");
 		fflush(stdout);
 		rc = getyn(!(s->flags & WF_NO_MENUBAR));
 		switch (rc) {
-		case -1:
+		case YN_ERR:
 			return -1;
-		case 0:
+		case FALSE:
 		    	s->flags |= WF_NO_MENUBAR;
 			break;
-		case 1:
+		case TRUE:
 		    	s->flags &= ~WF_NO_MENUBAR;
 			break;
 		}
@@ -1788,8 +1868,21 @@ This option selects whether the menu bar is displayed on the screen.");
 	return 0;
 }
 
-int
-summarize_and_proceed(session_t *s, char *how, char *path)
+typedef enum {
+	SP_REPLACE,	/* replace uneditable file */
+	SP_CREATE,	/* create new file */
+	SP_UPDATE,	/* update editable file */
+	N_SP
+} sp_t;
+
+static char *how_name[N_SP] = {
+	"Replace",
+	"Create",
+	"Update"
+};
+
+static src_t
+summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 {
     	int rc;
 	char choicebuf[32];
@@ -1889,7 +1982,7 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 			printf("\nEnter item number to change: [none] ");
 			fflush(stdout);
 			if (get_input(choicebuf, sizeof(choicebuf)) == NULL)
-				return -1;
+				return SRC_ERR;
 			if (!choicebuf[0]) {
 				done = 1;
 				break;
@@ -1897,24 +1990,24 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 			switch (atoi(choicebuf)) {
 			case MN_HOST:
 				if (get_host(s) < 0)
-					return -1;
+					return SRC_ERR;
 				break;
 			case MN_LU:
 				if (get_lu(s) < 0)
-					return -1;
+					return SRC_ERR;
 				break;
 			case MN_PORT:
 				if (get_port(s) < 0)
-					return -1;
+					return SRC_ERR;
 				break;
 			case MN_MODEL:
 				if (get_model(s) < 0)
-					return -1;
+					return SRC_ERR;
 				break;
 			case MN_OVERSIZE:
 				if (is_nt) {
 					if (get_oversize(s) < 0)
-						return -1;
+						return SRC_ERR;
 				} else {
 					printf("Invalid entry.\n");
 					invalid = 1;
@@ -1922,26 +2015,26 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 				break;
 			case MN_CHARSET:
 				if (get_charset(s) < 0)
-					return -1;
+					return SRC_ERR;
 				break;
 #if defined(HAVE_LIBSSL) /*[*/
 			case MN_SSL:
 				if (get_ssl(s) < 0)
-					return -1;
+					return SRC_ERR;
 				break;
 			case MN_VERIFY:
 				if (get_verify(s) < 0)
-					return -1;
+					return SRC_ERR;
 				break;
 #endif /*]*/
 			case MN_PROXY:
 				if (get_proxy(s) < 0)
-					return -1;
+					return SRC_ERR;
 				break;
 			case MN_PROXY_SERVER:
 				if (s->proxy_type[0]) {
 					if (get_proxy_server(s) < 0)
-						return -1;
+						return SRC_ERR;
 				} else {
 					printf("Invalid entry.\n");
 					invalid = 1;
@@ -1950,7 +2043,7 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 			case MN_PROXY_PORT:
 				if (s->proxy_type[0]) {
 					if (get_proxy_server_port(s) < 0)
-						return -1;
+						return SRC_ERR;
 				} else {
 					printf("Invalid entry.\n");
 					invalid = 1;
@@ -1959,16 +2052,16 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 			case MN_3287:
 				was_wpr3287 = s->wpr3287;
 				if (get_wpr3287(s) < 0)
-					return -1;
+					return SRC_ERR;
 				if (s->wpr3287 && !was_wpr3287) {
 					if (get_printer_mode(s) < 0)
-						return -1;
+						return SRC_ERR;
 				}
 				break;
 			case MN_3287_MODE:
 				if (s->wpr3287) {
 					if (get_printer_mode(s) < 0)
-						return -1;
+						return SRC_ERR;
 				} else {
 					printf("Invalid entry.\n");
 					invalid = 1;
@@ -1977,7 +2070,7 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 			case MN_3287_LU:
 				if (s->wpr3287 && strcmp(s->printerlu, ".")) {
 					if (get_printerlu(s, 1) < 0)
-						return -1;
+						return SRC_ERR;
 				} else {
 					printf("Invalid entry.\n");
 					invalid = 1;
@@ -1986,7 +2079,7 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 			case MN_3287_PRINTER:
 				if (s->wpr3287) {
 					if (get_printer(s) < 0)
-						return -1;
+						return SRC_ERR;
 				} else {
 					printf("Invalid entry.\n");
 					invalid = 1;
@@ -1995,7 +2088,7 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 			case MN_3287_CODEPAGE:
 				if (s->wpr3287) {
 					if (get_printercp(s) < 0)
-						return -1;
+						return SRC_ERR;
 				} else {
 					printf("Invalid entry.\n");
 					invalid = 1;
@@ -2003,16 +2096,16 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 				break;
 			case MN_KEYMAPS:
 				if (get_keymaps(s) < 0)
-					return -1;
+					return SRC_ERR;
 				break;
 			case MN_EMBED_KEYMAPS:
 				if (get_embed(s) < 0)
-				    	return -1;
+				    	return SRC_ERR;
 				break;
 			case MN_FONT_SIZE:
 				if (is_nt) {
 					if (get_fontsize(s) < 0)
-						return -1;
+						return SRC_ERR;
 				} else {
 					printf("Invalid entry.\n");
 					invalid = 1;
@@ -2020,11 +2113,11 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 				break;
 			case MN_BG:
 				if (get_background(s) < 0)
-				    	return -1;
+				    	return SRC_ERR;
 				break;
 			case MN_MENUBAR:
 				if (get_menubar(s) < 0)
-				    	return -1;
+				    	return SRC_ERR;
 				break;
 			default:
 				printf("Invalid entry.\n");
@@ -2040,18 +2133,44 @@ summarize_and_proceed(session_t *s, char *how, char *path)
 	}
 
 	for (;;) {
-		printf("\n%s the session file '%s'? (y/n) [y] ", how, path);
+		printf("\nSession file is '%s%s'.\n%s it? (y/n) [y] ",
+			(how == SP_CREATE)? session_name: path,
+			(how == SP_CREATE)? SESS_SUFFIX: "",
+			how_name[how]);
 		fflush(stdout);
-		rc = getyn(1);
-		if (rc == -1 || rc == 0)
-			return -1;
-		if (rc == 1)
+		rc = getyn(TRUE);
+		if (rc == YN_ERR || rc == FALSE)
+			return SRC_ERR;
+		if (rc == TRUE)
 			break;
 	}
-	return 0;
+
+	if (how == SP_CREATE && is_nt) {
+		char ac[STR_SIZE];
+
+		/* Ask where they want the file. */
+		for (;;) {
+		    	printf("\nCreate file for all users or current user? "
+				"(all/current) [current] ");
+			fflush(stdout);
+			if (get_input(ac, STR_SIZE) == NULL) {
+				return SRC_ERR;
+			}
+			if (!ac[0] || !strcasecmp(ac, "current")) {
+				return SRC_USER;
+			} else if (!strcasecmp(ac, "all")) {
+				return SRC_ALL;
+			} else {
+				printf("Please answer (a)ll or "
+					"(c)urrent.\n\n");
+			}
+		}
+	}
+
+	return SRC_USER;
 }
 
-wchar_t *
+static wchar_t *
 reg_font_from_cset(char *cset, int *codepage)
 {
     	int i, j;
@@ -2132,7 +2251,8 @@ static int
 session_wizard(char *session_name, int explicit_edit, int installed)
 {
     	session_t session;
-	int rc;
+	gs_t rc;
+	src_t src;
 	char linkpath[MAX_PATH];
 	char exepath[MAX_PATH];
 	char args[MAX_PATH];
@@ -2151,23 +2271,25 @@ session_wizard(char *session_name, int explicit_edit, int installed)
 		if (intro(&session) < 0) {
 			return -1;
 		}
+	} else {
+		new_screen(&session, "");
 	}
 
 	/* Get the session name. */
-	rc = get_session(session_name, &session, path, explicit_edit);
+	rc = get_session(session_name, &session, path, explicit_edit, &src);
 	switch (rc) {
-	case -2: /* Uneditable, and they don't want to overwrite it. */
+	case GS_NOEDIT_LEAVE: /* Uneditable, and they don't want to overwrite it. */
 	    	return 0;
 	default:
-	case -1: /* EOF */
+	case GS_ERR: /* EOF */
 		return -1;
-	case 3: /* Overwrite old (uneditable). */
+	case GS_OVERWRITE: /* Overwrite old (uneditable). */
 		/* Clean out the session. */
 		strcpy(save_session_name, session.session);
 		memset(&session, '\0', sizeof(session));
 		strcpy(session.session, save_session_name);
 		/* fall through... */
-	case 0: /* New. */
+	case GS_NEW: /* New. */
 
 		/* Get the host name, which defaults to the session name. */
 		if (strchr(session.session, ' ') == NULL)
@@ -2181,12 +2303,25 @@ session_wizard(char *session_name, int explicit_edit, int installed)
 		strcpy(session.charset, "bracket");
 		strcpy(session.printerlu, ".");
 		/* fall through... */
-	case 1: /* Edit existing file. */
+	case GS_EDIT: /* Edit existing file. */
 		/* See what they want to change. */
-		if (summarize_and_proceed(&session,
-			    (rc == 3)? "Replace":
-			    ((rc == 0)? "Create": "Update"), path) < 0)
+		src = summarize_and_proceed(&session,
+			    (rc == 3)? SP_REPLACE:
+			    ((rc == 0)? SP_CREATE: SP_UPDATE),
+			    path, session.session);
+		if (src == SRC_ERR) {
 			return -1;
+		}
+
+		if (src == SRC_ALL) {
+			/* All users. */
+			snprintf(path, MAX_PATH, "%s%s%s", commona,
+				session.session, SESS_SUFFIX);
+		} else {
+			/* Current user. */
+			snprintf(path, MAX_PATH, "%s%s%s", mya,
+				session.session, SESS_SUFFIX);
+		}
 
 		/* Create the session file. */
 		printf("\nWriting session file '%s'... ", path);
@@ -2196,14 +2331,16 @@ session_wizard(char *session_name, int explicit_edit, int installed)
 		printf("done\n");
 		fflush(stdout);
 		break;
-	case 2: /* Don't edit existing file, but we do have a copy of the
+	case GS_NOEDIT: /* Don't edit existing file, but we do have a copy of the
 		   session. */
 		break;
 	}
 
 	/* Ask about the shortcut. */
 	if (is_nt)
-		sprintf(linkpath, "%s%s.lnk", desktop, session.session);
+		sprintf(linkpath, "%s%s.lnk",
+			(src == SRC_ALL)? common_desktop: desktop,
+			session.session);
 	else
 		sprintf(linkpath, "%s%s.pif", desktop, session.session);
 	f = fopen(linkpath, "r");
@@ -2214,11 +2351,11 @@ session_wizard(char *session_name, int explicit_edit, int installed)
 			shortcut_exists? "Replace": "Create",
 			installed? "y": "n");
 		rc = getyn(installed == TRUE);
-		if (rc < 0)
+		if (rc == YN_ERR)
 		    	return -1;
-		if (rc == 0)
+		if (rc == FALSE)
 		    	return 0;
-		if (rc == 1)
+		if (rc == TRUE)
 		    	break;
 	}
 
@@ -2320,7 +2457,7 @@ embed_keymaps(session_t *session, FILE *f)
 }
 
 /* Create the session file. */
-int
+static int
 create_session_file(session_t *session, char *path)
 {
     	FILE *f;
@@ -2468,7 +2605,7 @@ wc3270." ResConsoleColorForHostColor "NeutralWhite: 0\n");
 }
 
 /* Make sure the console window is long enough. */
-int
+static int
 resize_window(int rows)
 {
     	int rv = 0;
