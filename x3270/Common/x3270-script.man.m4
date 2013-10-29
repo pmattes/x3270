@@ -71,19 +71,27 @@ XX_PP
 The second method is the XX_FB(child script)
 facility, invoked by the emulator's XX_FB(Script) action.
 This runs a script as a child process of the emulator.
-The child has access to pipes connected to the emulator; the emulator
-look for commands on one pipe, and places the responses on the other.
+ifelse(XX_PLATFORM,unix,`The child has access to pipes connected to the
+emulator; the emulator looks for commands on one pipe, and places the responses on the other.
 The file descriptor of the pipe for commands to the emulator
 is passed in the environment variable X3270INPUT (e.g., the text string "7" if
 the file descriptor is 7); the file descriptor
 of the pipe for responses from the emulator is passed in the environment
 variable X3270OUTPUT.
+',`The emulator creates a TCP listening socket on the IPv4 loopback address,
+127.0.0.1, and places the TCP port in the environment variable X3270PORT
+(e.g., the text string "47196" if the TCP port is 47196).
+')dnl
 XX_PP
 The third method uses a TCP socket.
 The XX_FB(XX_DASHED(scrpiptport)) command-line option causes the emulator to
 bind a socket to the specified port (on the IPv4 loopback address, 127.0.0.1).
 The emulator accepts TCP connections on that port.
 Multiple commands and responses can be sent over each connection.
+ifelse(XX_PLATFORM,windows,`(Note that if the XX_FB(Script) action is used
+with XX_FB(XX_DASHED(scriptport)), it will pass the scriptport port number to child
+scripts, rather than creating a new socket.)
+')dnl
 ifelse(XX_PLATFORM,unix,`XX_PP
 The fourth method uses a Unix-domain socket.
 The XX_FB(XX_DASHED(socket)) command-line option causes the emulator to
@@ -221,11 +229,9 @@ unlocks the keyboard, regardless of the state of the XX_FB(AidWait) toggle.
 XX_PP
 Note that the
 XX_FB(Script)
-action does not complete until end-of-file is
-detected on the pipe or the
-XX_FB(CloseScript)
-action is called by the child
-process.
+action does not complete until
+ifelse(XX_PLATFORM,unix,`end-of-file is detected on the pipe or ')dnl
+the XX_FB(CloseScript) action is called by the child process.
 This behavior is not affected by the state of the XX_FB(AidWait) toggle.
 XX_SH(Basic Programming Strategies)
 3270 session scripting can be more difficult than other kinds of scripting,
@@ -478,6 +484,11 @@ Equivalent to XX_FB(ReadBuffer)(XX_FB(Ascii)), but with the data fields output a
 hexadecimal EBCDIC codes instead.
 Additionally, if a buffer position has the Graphic Escape attribute, it is
 displayed as XX_FB(GE`('XX_FI(xx)`)').
+XX_TP(XX_FB(Script)(XX_FI(path)[,arg...]))
+Runs a child script, passing it optional command-line arguments.
+XX_FI(path) must specify an executable (binary) program: the emulator will
+create a new process and execute it. If you simply want the emulator to read
+commands from a file, use the XX_FB(Source) action.
 XX_TP(XX_FB(Snap))
 Equivalent to XX_FB(Snap)(XX_FB(Save)) (see XX_LINK(#save,below)).
 XX_TP(XX_FB(Snap)(XX_FB(Ascii),...))
@@ -488,7 +499,7 @@ XX_TP(XX_FB(Snap)(`XX_FB(Ebcdic),...'))
 Performs the XX_FB(Ebcdic) action on the saved screen image.
 XX_TP(XX_FB(Snap)(XX_FB(ReadBuffer)))
 Performs the XX_FB(ReadBuffer) action on the saved screen image.
-XX_TP(XX_FB(Snap)(XX_FB(Rows)))
+XX_TP(XX_FB(Snap(XX_FB(Rows))))
 Returns the number of rows in the saved screen image.
 XX_TARGET(save)dnl
 XX_TP(XX_FB(Snap)(XX_FB(Save)))
