@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2012, Paul Mattes.
+dnl Copyright (c) 2000-2013, Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -72,11 +72,11 @@ dnl Stream 1 has the table of contents, stream 2 the body, stream 3 the tail
 divert(1)dnl
 <html>
 <head>
-<title>XX_PRODUCT Manual Page</title>
+<title>XX_PAGENAME Manual Page</title>
 <link HREF="http://www.w3.org/StyleSheets/Core/Steely" TYPE="text/css" REL="stylesheet">
 </head>
 <body>
-<h1>XX_PRODUCT Manual Page</h1>
+<h1>XX_PAGENAME Manual Page</h1>
 <h2>Contents</h2>
 <blockquote>
 divert(3)dnl

@@ -27,56 +27,79 @@ dnl POSSIBILITY OF SUCH DAMAGE.
 define(XX_LA,ifelse(XX_PRODUCT,lib3270,a))dnl
 XX_TH(X3270-SCRIPT,1,XX_DATE)
 XX_SH(Name)
-Scripting Facilities for x3270, s3270, ws3270 and c3270
+Scripting Facilities for
+ifelse(XX_PLATFORM,unix,`x3270,')
+XX_C3270 and XX_S3270
 XX_SH(Synopsis)
-XX_FB(x3270) XX_FB(XX_DASHED(script)) [ XX_FI(x3270-options) ]
+ifelse(XX_PLATFORM,unix,`XX_FB(x3270) XX_FB(XX_DASHED(script)) [ XX_FI(x3270-options) ]
 XX_BR
-XX_FB(s3270) [ XX_FI(s3270-options) ]
+XX_FB(x3270) XX_FB(XX_DASHED(socket)) [ XX_FI(x3270-options) ]
 XX_BR
-XX_FB(ws3270) [ XX_FI(ws3270-options) ]
+XX_FB(x3270) XX_FB(XX_DASHED(scriptport) XX_FI(port)) [ XX_FI(x3270-options) ]
+XX_BR
+')dnl
+ifelse(XX_PLATFORM,unix,`XX_FB(XX_C3270) XX_FB(XX_DASHED(socket)) [ XX_FI(XX_C3270-options) ]
+XX_BR
+')dnl
+XX_FB(XX_C3270) XX_FB(XX_DASHED(scriptport)) XX_FI(port) [ XX_FI(XX_S3270-options) ]
+XX_BR
+XX_FB(XX_S3270) [ XX_FI(XX_S3270-options) ]
 XX_BR
 XX_FB(`Script') ( XX_FI(command) [ `,'XX_FI(arg)... ] )
 XX_SH(Description)
-The XX_FB(x3270) scripting facilities allow the interactive 3270 emulators
-XX_FB(x3270) and XX_FB(c3270) to be operated under the control of another
-program, and form the basis for the script-only emulators XX_FB(s3270)
-and XX_FB(ws3270).
+The XX_FB(x3270) scripting facilities allow the interactive 3270
+ifelse(XX_PLATFORM,unix,`emulators XX_FB(x3270) and XX_FB(c3270)',
+`emulator XX_FB(wc3270)')
+to be operated under the control of another
+program, and forms the basis for the script-only emulator XX_FB(XX_S3270).
 XX_PP
-There are two basic scripting methods.
-The first is the XX_FB(peer script) facility, invoked by the XX_FB(x3270)
-XX_FB(XX_DASHED(script)) switch, and the default mode for XX_FB(s3270) and
-XX_FB(ws3270).
-This runs XX_FB(x3270), XX_FB(s3270) or XX_FB(ws3270) as a child of another
-process.
+There are
+ifelse(XX_PLATFORM,unix,four,three)
+basic scripting methods.
+The first is the XX_FB(peer script) facility,
+ifelse(XX_PLATFORM,unix,`invoked by the XX_FB(x3270)
+XX_FB(XX_DASHED(script)) switch, and ')dnl
+the default mode for XX_FB(XX_S3270).
+This runs the emulator as a child of another process.
 Typically this would be a script using
 XX_FI(expect)(1), XX_FI(perl)(1),
 or the co-process facility of the Korn Shell
 XX_FI(ksh)(1).
-Inthis mode, the emulator process looks for commands on its standard input,
+In this mode, the emulator process looks for commands on its standard input,
 and places the responses on standard output.
 XX_PP
 The second method is the XX_FB(child script)
-facility, invoked by the XX_FB(Script) action in XX_FB(x3270), XX_FB(c3270),
-or XX_FB(s3270).
+facility, invoked by the emulator's XX_FB(Script) action.
 This runs a script as a child process of the emulator.
 The child has access to pipes connected to the emulator; the emulator
 look for commands on one pipe, and places the responses on the other.
-(The file descriptor of the pipe for commands to the emulator
-is passed in the environment variable X3270INPUT; the file descriptor
+The file descriptor of the pipe for commands to the emulator
+is passed in the environment variable X3270INPUT (e.g., the text string "7" if
+the file descriptor is 7); the file descriptor
 of the pipe for responses from the emulator is passed in the environment
-variable X3270OUTPUT.)
+variable X3270OUTPUT.
 XX_PP
-It is possible to mix the two methods.
-A script can invoke another script with the XX_FB(Script) action, and
-may also be implicitly nested when a script invokes the
-XX_FB(Connect)
-action, and the
-XX_FB(ibm_hosts)
-file specifies a login script for that host name.
+The third method uses a TCP socket.
+The XX_FB(XX_DASHED(scrpiptport)) command-line option causes the emulator to
+bind a socket to the specified port (on the IPv4 loopback address, 127.0.0.1).
+The emulator accepts TCP connections on that port.
+Multiple commands and responses can be sent over each connection.
+ifelse(XX_PLATFORM,unix,`XX_PP
+The fourth method uses a Unix-domain socket.
+The XX_FB(XX_DASHED(socket)) command-line option causes the emulator to
+create a Unix-domain stream socket named XX_FB(/tmp/x3sck.)`'XX_FI(pid).
+The emulator accepts connections to that socket.
+Multiple commands and responses can be sent over each connection.
+')dnl
+XX_PP
+It is possible to nest the methods.
+For example, a peer or TCP socket script can invoke the XX_FB(Script) action.
+The calling script will be resumed when the nested script completes.
 XX_PP
 Commands are emulator XX_FI(actions); the syntax is the same as for the
-right-hand side of an Xt translation table entry (an XX_FB(x3270) or
-XX_FB(c3270) keymap).
+right-hand side of
+ifelse(XX_PLATFORM,unix,`an XX_FB(x3270) or',`a')
+XX_FB(XX_C3270) keymap.
 Unlike translation tables, action names are case-insensitive, can be
 uniquely abbreviated, and the parentheses may be omitted if there are
 no parameters.
@@ -150,7 +173,7 @@ XX_FB(x3270)
 window, in hexadecimal preceded by
 XX_FB(0x).
 For
-XX_FB(s3270), XX_FB(ws3270) and XX_FB(c3270),
+XX_FB(XX_S3270) and XX_FB(XX_C3270),
 this is zero.
 XX_TP(12 Command Execution Time)
 The time that it took for the host to respond to the previous commnd, in
@@ -204,6 +227,34 @@ XX_FB(CloseScript)
 action is called by the child
 process.
 This behavior is not affected by the state of the XX_FB(AidWait) toggle.
+XX_SH(Basic Programming Strategies)
+3270 session scripting can be more difficult than other kinds of scripting,
+because it can be hard to tell when the host is finished processing a
+command.
+There is a well-defined 3270 Data Stream facility for doing this: The emulator
+locks the keyboard when it sends the host an AID, and the later host unlocks
+the keyboard.
+The emulator supports this facility directly by not allowing an AID action
+to complete until the keyboard is unlocked.
+Unfortunately, some hosts and some host applications unlock the keyboard as
+soon as they begin processing the command, instead of after it is finished.
+A human operator can see on the screen when the command is finished (e.g.,
+when a READY prompt is displayed), but it can be difficult for a script to
+do this. For such early-unlock hosts, the only option in a script is to poll the
+screen until it can determine that the command is complete.
+XX_LP
+Another complication is that host I/O and script operation are asynchronous.
+That is, the host can update the screen at any time, even between actions that
+are reading the screen contents, so a script can get inconsistent results.
+Assistance for this problem is provided by the XX_FB(Snap) action.
+The XX_FB(Snap(Save)) action saves a snapshot of the screen in a special
+buffer. Then the script can use XX_FB(Snap) variants of the XX_FB(Ascii) and
+XX_FB(Ebcdic) actions (XX_FB(Snap(Ascii)) and XX_FB(Snap(Ebcdic))) to query
+the saved buffer -- which the host cannot modify -- to get the data it wants.
+Finally, XX_FB(XX_FB(Snap(Wait Output))) blocks the script until the host
+modifies the screen, specifically since the last call to XX_FB(Snap(Save)).
+Thus a script can poll the screen efficiently by writing a loop that begins
+with XX_FB(Snap(Save)) and ends with XX_FB(Snap(Wait Output)).
 XX_SH(Script-Specific Actions)
 The following actions have been defined or modified for use with scripts.
 (Note that unlike the display on the status line,
@@ -423,7 +474,7 @@ XX_IP
 In addition, NULL characters in the screen buffer are reported as ASCII
 character 00 instead of 20, even though they should be displayed as blanks.
 XX_TP(XX_FB(ReadBuffer)(XX_FB(Ebcdic)))
-Equivalent to XX_FB(Snap)(XX_FB(Ascii)), but with the data fields output as
+Equivalent to XX_FB(ReadBuffer)(XX_FB(Ascii)), but with the data fields output as
 hexadecimal EBCDIC codes instead.
 Additionally, if a buffer position has the Graphic Escape attribute, it is
 displayed as XX_FB(GE`('XX_FI(xx)`)').
@@ -473,7 +524,9 @@ Any output from those commands will become the output from XX_FB(Source).
 If any of the commands fails, the XX_FB(Source) command will XX_FI(not) abort;
 it will continue reading commands until EOF.
 XX_TP(XX_FB(Title)(XX_FI(text)))
-Changes the x3270 window title to XX_FI(text).
+Changes the
+ifelse(XX_PLATFORM,unix,x3270,wc3270)
+window title to XX_FI(text).
 XX_TP(XX_FB(Transfer)(XX_FI(keyword)=XX_FI(value),...))
 Invokes IND$FILE file transfer.
 See XX_LINK(#File-Transfer,XX_SM(FILE TRANSFER)) below.
@@ -561,24 +614,28 @@ before failing the XX_FB(Wait) action.  The default is to wait indefinitely.
 XX_TP(XX_FB(Wait)(XX_FI(timeout)`,' XX_FB(Seconds)))
 Delays the script XX_FI(timeout) seconds.
 Unlike the other forms of XX_FB(Wait), the timeout is not optional.
-XX_TP(XX_FB(WindowState)(XX_FI(mode)))
+ifelse(XX_PLATFORM,unix,`XX_TP(XX_FB(WindowState)(XX_FI(mode)))
 If XX_FI(mode) is XX_FB(Iconic), changes the x3270 window into an icon.
 If XX_FI(mode) is XX_FB(Normal), changes the x3270 window from an icon to a
 normal window.
+')dnl
 XX_TPE()dnl
 define(XX_action,action)dnl
 include(ft.inc)dnl
 XX_SH(See Also)
 expect(1)
 XX_BR
+perl(1)
+XX_BR
 ksh(1)
-XX_BR
+ifelse(XX_PLATFORM,unix,`XX_BR
 XX_LINK(x3270-man.html,x3270(1))
+')dnl
 XX_BR
-XX_LINK(c3270-man.html,c3270(1))
+XX_LINK(x3270if.html,x3270if(1))
 XX_BR
-XX_LINK(s3270-man.html,s3270(1))
+XX_LINK(XX_C3270-man.html,XX_C3270`(1)')
 XX_BR
-XX_LINK(ws3270-man.html,ws3270(1))
+XX_LINK(XX_S3270-man.html,XX_S3270`(1)')
 XX_SH(Version)
 Version XX_VERSION_NUMBER

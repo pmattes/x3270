@@ -402,7 +402,11 @@ popup_menu(int x, int click)
 }
 
 #if defined(NCURSES_MOUSE_VERSION) || defined(_WIN32) /*[*/
-/* Find a mouse click in the menu hierarchy and act on it. */
+/*
+ * Find a mouse click in the menu hierarchy and act on it.
+ *
+ * Returns True if the coordinates are on a menu somewhere, False otherwise.
+ */
 Boolean
 find_mouse(int x, int y)
 {
@@ -492,7 +496,10 @@ menu_click(int x, int y)
 }
 #endif /*]*/
 
-/* Handle a key event for a menu. */
+/*
+ * Handle a key event for a menu.
+ * With ncurses, this can include mouse events.
+ */
 void
 menu_key(int k, ucs4_t u)
 {

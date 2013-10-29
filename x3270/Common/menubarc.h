@@ -52,16 +52,16 @@ extern void menubar_retoggle(struct toggle *t, int ix);
 
 #elif defined(C3270) /*][*/
 
-#define MENU_IS_UP	0x1
-#define KEYPAD_IS_UP	0x2
+# define MENU_IS_UP	0x1
+# define KEYPAD_IS_UP	0x2
 extern unsigned menu_is_up;
 extern void menu_init(void);
 extern Boolean menu_char(int row, int col, Boolean persistent, ucs4_t *u,
 	Boolean *highlighted, unsigned char *acs);
 extern void menu_key(int k, ucs4_t u);
-#if defined(_WIN32) /*[*/
+# if defined(_WIN32) /*[*/
 extern void menu_click(int x, int y);
-#endif /*]*/
+# endif /*]*/
 extern void popup_menu(int x, int click);
 extern void menu_cursor(int *row, int *col);
 extern void menubar_retoggle(struct toggle *t, int ix);

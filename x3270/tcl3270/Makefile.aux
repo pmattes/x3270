@@ -81,9 +81,9 @@ configure: configure.in
 man: tcl3270.man html/tcl3270-man.html
 
 tcl3270.man: x3270.man.m4 ft.inc resources.inc version.txt man.m4
-	./m42man tcl3270 x3270.man.m4 >$@
+	./m42man tcl3270 tcl3270 x3270.man.m4 >$@
 html/tcl3270-man.html: x3270.man.m4 ft.inc resources.inc version.txt html.m4
-	./m42html tcl3270 x3270.man.m4 >$@
+	./m42html tcl3270 tcl3270 x3270.man.m4 >$@
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "tcl3270 Release Notes" html/documentation-relnotes-body.html $@
 html/Resources.html: resource-body make-resource-doc.pl version.txt

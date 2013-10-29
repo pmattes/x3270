@@ -88,21 +88,21 @@ man: c3270.man x3270if.man ibm_hosts.man x3270-script.man \
 	html/c3270-man.html html/x3270if.html html/ibm_hosts.html \
 	html/x3270-script.html
 c3270.man: x3270.man.m4 ft.inc resources.inc keymaps.inc man.m4 version.txt
-	./m42man c3270 x3270.man.m4 >$@
+	./m42man c3270 c3270 x3270.man.m4 >$@
 html/c3270-man.html: x3270.man.m4 ft.inc resources.inc keymaps.inc html.m4 version.txt
-	./m42html c3270 x3270.man.m4 >$@
+	./m42html c3270 c3270 x3270.man.m4 >$@
 x3270if.man: x3270if.man.m4 man.m4 version.txt
-	./m42man x3270if x3270if.man.m4 >$@
+	./m42man c3270 x3270if x3270if.man.m4 >$@
 html/x3270if.html: x3270if.man.m4 ft.inc html.m4 version.txt
-	./m42html x3270if x3270if.man.m4 >$@
+	./m42html c3270 x3270if x3270if.man.m4 >$@
 ibm_hosts.man: ibm_hosts.man.m4 man.m4 version.txt
-	./m42man ibm_hosts ibm_hosts.man.m4 >$@
+	./m42man c3270 ibm_hosts ibm_hosts.man.m4 >$@
 html/ibm_hosts.html: ibm_hosts.man.m4 ft.inc html.m4 version.txt
-	./m42html ibm_hosts ibm_hosts.man.m4 >$@
+	./m42html c3270 ibm_hosts ibm_hosts.man.m4 >$@
 x3270-script.man: x3270-script.man.m4 man.m4 version.txt
-	./m42man x3270-script x3270-script.man.m4 >$@
+	./m42man c3270 x3270-script x3270-script.man.m4 >$@
 html/x3270-script.html: x3270-script.man.m4 html.m4 version.txt
-	./m42html x3270-script x3270-script.man.m4 >$@
+	./m42html c3270 x3270-script x3270-script.man.m4 >$@
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "c3270 Release Notes" html/documentation-relnotes-body.html $@
 html/Resources.html: resource-body make-resource-doc.pl version.txt

@@ -33,9 +33,6 @@ define(XX_LA,ifelse(XX_PRODUCT,lib3270,a))dnl
 define(XX_VOID,ifelse(XX_PRODUCT,lib3270,`(l3h_t XX_FI(h))'))dnl
 define(XX_INT,ifelse(XX_PRODUCT,lib3270,`int '))dnl
 define(XX_CCHAR,ifelse(XX_PRODUCT,lib3270,`const char *'))dnl
-define(XX_PLATFORM,ifelse(XX_PRODUCT,wc3270,windows,XX_PRODUCT,ws3270,windows,unix))dnl
-define(XX_MODE,ifelse(XX_PRODUCT,c3270,console,XX_PRODUCT,wc3270,console,XX_PRODUCT,s3270,script,XX_PRODUCT,wc3270,script,XX_PRODUCT))dnl
-define(XX_INTERACTIVE,ifelse(XX_PRODUCT,x3270,yes,XX_PRODUCT,c3270,yes,XX_PRODUCT,wc3270,yes,no))dnl
 XX_TH(XX_PRODUCT,ifelse(XX_PRODUCT,lib3270,3,1),XX_DATE)
 XX_SH(Name)
 XX_PRODUCT XX_DASH
@@ -396,7 +393,7 @@ XX_FB(XX_PRODUCT)
 to read commands from standard input, with the results written to standard
 output.
 The protocol for these commands is documented in
-XX_LINK(x3270-script.html,XX_FI(x3270-script)(1)).
+XX_LINK(XX_X3270-script.html,XX_FI(XX_X3270-script)(1)).
 XX_TP(XX_FB(XX_DASHED(sl)) XX_FI(n))
 Specifies that XX_FI(n) lines should be saved for scrolling back.
 The default is 64.
@@ -1008,7 +1005,7 @@ seconds.  A value of 0 is used to wait indefinitely.
 ',`XX_SH(Actions)
 Here is a complete list of basic XX_PRODUCT actions.
 Script-specific actions are described on the
-XX_LINK(x3270-script.html,XX_FI(x3270-script)(1)) manual page.
+XX_LINK(XX_X3270-script.html,XX_FI(XX_X3270-script)(1)) manual page.
 ')dnl
 ifelse(XX_PRODUCT,lib3270,,define(XX_BLOCK,*))dnl
 ifelse(XX_PRODUCT,lib3270,,`XX_PP
@@ -1356,7 +1353,7 @@ dynamically-generated TCP port.
 XX_FB(XX_PRODUCT).
 ')dnl
 The XX_FB(Script) action is fully documented in
-XX_LINK(x3270-script.html,XX_FI(x3270-script)(1)).
+XX_LINK(XX_X3270-script.html,XX_FI(XX_X3270-script)(1)).
 ')dnl
 ifelse(XX_PRODUCT,x3270,
 `XX_TP(XX_FB(The macros Resource))
@@ -1391,7 +1388,7 @@ to operate under the complete control of a script.
 XX_FB(XX_PRODUCT)
 accepts actions from standard input, and prints results on standard output.
 The XX_FB(XX_DASHED(script)) option is fully documented in
-XX_LINK(x3270-script.html,XX_FI(x3270-script)(1)).
+XX_LINK(XX_X3270-script.html,XX_FI(XX_X3270-script)(1)).
 ')dnl
 XX_TPE()dnl
 ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_PRODUCT,wc3270,,`XX_SH(Composite Characters)
@@ -1618,7 +1615,8 @@ XX_FB(KEYBD) Keymap name.
 ')dnl
 XX_SH(See Also)
 ifelse(XX_PRODUCT,wc3270,`XX_LINK(wpr3287-man.html,wpr3287(1)),
-XX_LINK(x3270-script.html,x3270-script(1))
+XX_LINK(ws3270.html,ws3270(1)),
+XX_LINK(XX_X3270-script.html,XX_X3270-script`'(1))
 XX_BR
 ',`
 ifelse(XX_PRODUCT,x3270,,XX_LINK(x3270-man.html,x3270(1))`, ')dnl
@@ -1626,7 +1624,7 @@ ifelse(XX_PRODUCT,s3270,,XX_LINK(s3270-man.html,s3270(1))`, ')dnl
 ifelse(XX_PRODUCT,c3270,,XX_LINK(c3270-man.html,c3270(1))`, ')dnl
 ifelse(XX_PRODUCT,tcl3270,,XX_LINK(tcl3270-man.html,tcl3270(1))`, ')dnl
 ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_LINK(ibm_hosts.html,ibm_hosts(5))`, ')dnl
-ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_LINK(x3270-script.html,x3270-script(1))`, ')dnl
+ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_LINK(XX_X3270-script.html,XX_X3270-script`'(1))`, ')dnl
 ifelse(XX_PLATFORM,windows,,XX_MODE,interactive,XX_LINK(pr3287-man.html,pr3287(1))`, ')dnl
 telnet(1), tn3270(1)
 ifelse(XX_PRODUCT,x3270,`XX_BR

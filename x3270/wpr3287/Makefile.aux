@@ -67,7 +67,7 @@ wpr3287-src.tgz: wpr3287-src.tar
 
 man: html/wpr3287-man.html
 html/wpr3287-man.html: pr3287.man.m4 html.m4 version.txt
-	./m42html wpr3287 pr3287.man.m4 >$@
+	./m42html wpr3287 wpr3287 pr3287.man.m4 >$@
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "wpr3287 Release Notes" html/documentation-relnotes-body.html $@
 

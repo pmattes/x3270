@@ -65,9 +65,9 @@ pr3287-src.tgz: pr3287-src.tar
 
 man: pr3287.man html/pr3287-man.html
 pr3287.man: pr3287.man.m4 man.m4 version.txt
-	./m42man pr3287 pr3287.man.m4 >$@
+	./m42man x3270 pr3287 pr3287.man.m4 >$@
 html/pr3287-man.html: pr3287.man.m4 html.m4 version.txt
-	./m42html pr3287 pr3287.man.m4 >$@
+	./m42html x3270 pr3287 pr3287.man.m4 >$@
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "pr3287 Release Notes" html/documentation-relnotes-body.html $@
 
