@@ -1215,7 +1215,7 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 		else {
 			if (screentrace_how == TSS_FILE)
 				tracefile = tracefile_buf =
-				    screentrace_default_file(screentrace_how);
+				    screentrace_default_file(screentrace_ptype);
 			else
 				tracefile = tracefile_buf =
 				    screentrace_default_printer();
