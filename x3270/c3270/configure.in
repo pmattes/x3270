@@ -46,6 +46,7 @@ hpux)		XPOSIX=-D_XOPEN_SOURCE_EXTENDED
 solaris2*)	XANSI=-D__EXTENSIONS__
 		;;
 darwin*)	XPRECOMP=-no-cpp-precomp
+    		XPOSIX=-D_XOPEN_SOURCE_EXTENDED
 		;;
 linux*)		XANSI="-D_POSIX_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE"
 		;;
