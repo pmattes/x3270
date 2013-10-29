@@ -26,7 +26,8 @@
 
 # Auxiliary makefile for tcl3270
 
-TARDIR=tcl3270-3.3
+PRODUCT=tcl3270
+TARDIR=$(PRODUCT)-3.3
 RM=rm -f
 
 all:
@@ -48,14 +49,14 @@ HEADERS = 3270ds.h actionsc.h ansic.h aplc.h appres.h cg.h charsetc.h \
 	selectc.h sfc.h statusc.h tablesc.h arpa_telnet.h telnetc.h tn3270e.h \
 	togglesc.h trace_dsc.h unicodec.h utf8c.h utilc.h w3miscc.h xioc.h \
 	X11/keysym.h xl.h unicode_dbcsc.h
-MISC = version.txt tcl3270.man mkversion.sh install-sh \
+MISC = version.txt $(PRODUCT).man mkversion.sh install-sh \
 	Makefile.in conf.h.in README Examples/cms_cmd.tcl3270 \
 	configure config.sub config.guess configure.in mkfb.c X3270.xad \
 	LICENSE
 DEVKIT = Makefile.aux m42man m42html instlist.base \
 	instlist.man
 HTML = html/Build.html html/FAQ.html html/Intro.html html/Lineage.html \
-	html/ReleaseNotes.html html/README.html html/tcl3270-man.html \
+	html/ReleaseNotes.html html/README.html html/$(PRODUCT)-man.html \
 	html/Resources.html html/SSL.html
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
@@ -65,28 +66,32 @@ tarlist: Makefile.aux
 	do echo $(TARDIR)/$$i; \
 	done >$@
 
-tcl3270-src.tar: $(FILES) tarlist
+$(PRODUCT)-src.tar: $(FILES) tarlist
 	$(RM) $(TARDIR)
 	ln -s . $(TARDIR)
 	$(RM) $@
 	tar -ch -T tarlist -f $@
 	$(RM) $(TARDIR)
 
-tcl3270-src.tgz: tcl3270-src.tar
-	gzip <tcl3270-src.tar >$@
+$(PRODUCT)-src.tgz: $(PRODUCT)-src.tar
+	gzip <$(PRODUCT)-src.tar >$@
 
 configure: configure.in
 	autoconf
 
-man: tcl3270.man html/tcl3270-man.html
+MANDEP = man.m4 html.m4 m4man Makefile.aux version.txt
+MKMAN = ./m4man -t man -p $(PRODUCT)
+MKHTML = ./m4man -t html -p $(PRODUCT)
 
-tcl3270.man: x3270.man.m4 ft.inc resources.inc version.txt man.m4
-	./m42man tcl3270 tcl3270 x3270.man.m4 >$@
-html/tcl3270-man.html: x3270.man.m4 ft.inc resources.inc version.txt html.m4
-	./m42html tcl3270 tcl3270 x3270.man.m4 >$@
+man: $(PRODUCT).man html/$(PRODUCT)-man.html
+
+$(PRODUCT).man: x3270.man.m4 ft.inc resources.inc $(MANDEP)
+	$(MKMAN) -n $(PRODUCT) x3270.man.m4 >$@
+html/$(PRODUCT)-man.html: x3270.man.m4 ft.inc resources.inc $(MANDEP)
+	$(MKHTML) -n $(PRODUCT) x3270.man.m4 >$@
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
-	./mkstand.bash "tcl3270 Release Notes" html/documentation-relnotes-body.html $@
+	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
 html/Resources.html: resource-body make-resource-doc.pl version.txt
-	./make-resource-doc.pl tcl3270 <resource-body >$@
+	./make-resource-doc.pl $(PRODUCT) <resource-body >$@
 html/SSL.html: html/documentation-ssl-body.html mkstand.bash
-	./mkstand.bash "tcl3270 and SSL" html/documentation-ssl-body.html $@
+	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@

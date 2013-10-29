@@ -141,7 +141,7 @@ ifelse(XX_PLATFORM,unix,`XX_FB(X3270PORT) takes precedence over
 XX_FB(X3270OUTPUT) and XX_FB(X3270INPUT).
 ')dnl
 XX_SH(See Also)
-ifelse(XX_PLATFORM,unix,`XX_LINK(x3270-man.html,x3270(1)),')dnl
+ifelse(XX_PLATFORM,unix,`XX_LINK(x3270-man.html,x3270(1)), ')dnl
 XX_LINK(XX_C3270-man.html,XX_C3270`'(1)),
 XX_LINK(XX_S3270-man.html,XX_S3270`'(1)),
 XX_LINK(XX_X3270-script.html,XX_X3270-script(1))

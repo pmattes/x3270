@@ -27,7 +27,8 @@
 
 # Auxiliary makefile for c3270
 
-TARDIR=c3270-3.3
+PRODUCT=c3270
+TARDIR=$(PRODUCT)-3.3
 RM=rm -f
 
 all:
@@ -50,17 +51,17 @@ HEADERS = 3270ds.h actionsc.h ansic.h aplc.h appres.h cg.h charsetc.h \
 	scrollc.h seec.h selectc.h sfc.h statusc.h tablesc.h arpa_telnet.h \
 	telnetc.h tn3270e.h togglesc.h trace_dsc.h utf8c.h utilc.h w3miscc.h \
 	xioc.h xl.h X11/keysym.h unicodec.h unicode_dbcsc.h
-MISC = version.txt c3270.man x3270if.man x3270-script.man ibm_hosts.man \
+MISC = version.txt $(PRODUCT).man x3270if.man x3270-script.man ibm_hosts.man \
 	mkversion.sh Makefile.in README LICENSE \
 	x3270if.c x3270_glue.expect configure configure.in conf.h.in \
 	install-sh config.sub config.guess ibm_hosts X3270.xad mkfb.c \
 	x3270hist.pl make-cygwin-standalone runc3270.bat mkkeypad.c \
 	keypad.callbacks keypad.full keypad.labels keypad.map keypad.outline
 DEVKIT = Makefile.aux x3270.man.m4 html.m4 man.m4 \
-	ft.inc keymaps.inc m42man m42html instlist.base instlist.man
+	ft.inc keymaps.inc m4man instlist.base instlist.man
 HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
 	html/Lineage.html html/ReleaseNotes.html html/README.html \
-	html/Wishlist.html html/c3270-man.html html/x3270-script.html \
+	html/Wishlist.html html/$(PRODUCT)-man.html html/x3270-script.html \
 	html/x3270if.html html/Resources.html html/SSL.html
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
@@ -71,44 +72,48 @@ tarlist: Makefile.aux
 	do echo $(TARDIR)/$$i; \
 	done >$@
 
-c3270-src.tar: $(FILES) tarlist
+$(PRODUCT)-src.tar: $(FILES) tarlist
 	$(RM) $(TARDIR)
 	ln -s . $(TARDIR)
 	$(RM) $@
 	tar -ch -T tarlist -f $@
 	$(RM) $(TARDIR)
 
-c3270-src.tgz: c3270-src.tar
-	gzip <c3270-src.tar >$@
+$(PRODUCT)-src.tgz: $(PRODUCT)-src.tar
+	gzip <$(PRODUCT)-src.tar >$@
 
 configure: configure.in
 	autoconf
 
-man: c3270.man x3270if.man ibm_hosts.man x3270-script.man \
-	html/c3270-man.html html/x3270if.html html/ibm_hosts.html \
+MANDEP = man.m4 html.m4 m4man Makefile.aux version.txt
+MKMAN = ./m4man -t man -p $(PRODUCT)
+MKHTML = ./m4man -t html -p $(PRODUCT)
+
+man: $(PRODUCT).man x3270if.man ibm_hosts.man x3270-script.man \
+	html/$(PRODUCT)-man.html html/x3270if.html html/ibm_hosts.html \
 	html/x3270-script.html
-c3270.man: x3270.man.m4 ft.inc resources.inc keymaps.inc man.m4 version.txt
-	./m42man c3270 c3270 x3270.man.m4 >$@
-html/c3270-man.html: x3270.man.m4 ft.inc resources.inc keymaps.inc html.m4 version.txt
-	./m42html c3270 c3270 x3270.man.m4 >$@
-x3270if.man: x3270if.man.m4 man.m4 version.txt
-	./m42man c3270 x3270if x3270if.man.m4 >$@
-html/x3270if.html: x3270if.man.m4 ft.inc html.m4 version.txt
-	./m42html c3270 x3270if x3270if.man.m4 >$@
-ibm_hosts.man: ibm_hosts.man.m4 man.m4 version.txt
-	./m42man c3270 ibm_hosts ibm_hosts.man.m4 >$@
-html/ibm_hosts.html: ibm_hosts.man.m4 ft.inc html.m4 version.txt
-	./m42html c3270 ibm_hosts ibm_hosts.man.m4 >$@
-x3270-script.man: x3270-script.man.m4 man.m4 version.txt
-	./m42man c3270 x3270-script x3270-script.man.m4 >$@
-html/x3270-script.html: x3270-script.man.m4 html.m4 version.txt
-	./m42html c3270 x3270-script x3270-script.man.m4 >$@
+$(PRODUCT).man: x3270.man.m4 ft.inc resources.inc keymaps.inc $(MANDEP)
+	$(MKMAN) -n $(PRODUCT) x3270.man.m4 >$@
+html/$(PRODUCT)-man.html: x3270.man.m4 ft.inc resources.inc keymaps.inc $(MANDEP)
+	$(MKHTML) -n $(PRODUCT) x3270.man.m4 >$@
+x3270if.man: x3270if.man.m4 $(MANDEP)
+	$(MKMAN) -n x3270if x3270if.man.m4 >$@
+html/x3270if.html: x3270if.man.m4 ft.inc $(MANDEP)
+	$(MKHTML) -n x3270if x3270if.man.m4 >$@
+ibm_hosts.man: ibm_hosts.man.m4 $(MANDEP)
+	$(MKMAN) -n ibm_hosts ibm_hosts.man.m4 >$@
+html/ibm_hosts.html: ibm_hosts.man.m4 ft.inc $(MANDEP)
+	$(MKHTML) -n ibm_hosts ibm_hosts.man.m4 >$@
+x3270-script.man: x3270-script.man.m4 $(MANDEP)
+	$(MKMAN) -n x3270-script x3270-script.man.m4 >$@
+html/x3270-script.html: x3270-script.man.m4 $(MANDEP)
+	$(MKHTML) -n x3270-script x3270-script.man.m4 >$@
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
-	./mkstand.bash "c3270 Release Notes" html/documentation-relnotes-body.html $@
+	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
 html/Resources.html: resource-body make-resource-doc.pl version.txt
-	./make-resource-doc.pl c3270 <resource-body >$@
+	./make-resource-doc.pl $(PRODUCT) <resource-body >$@
 html/SSL.html: html/documentation-ssl-body.html mkstand.bash
-	./mkstand.bash "c3270 and SSL" html/documentation-ssl-body.html $@
+	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@
 
 ibm1027.c: ibm-1027_P100-1995.ucm mktbl
 	./stripucm.sh ibm-1027_P100-1995.ucm ibm1027 >ibm1027.c
