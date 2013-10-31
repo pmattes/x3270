@@ -1,7 +1,10 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
 3.3 is the current development line for the x3270 suite.
-<h2>Changes in version 3.3.14alpha1, nn. Month 2013</h2>
+<h2>Changes in version 3.3.14alpha1, 30. October 2013</h2>
 <ul>
+ <li>Allow file transfers to start when the screen is unformatted.</li>
+ <li>Fixed a problem with the initial data stream trace snapshot when the
+  screen is unformatted.</li>
  <li>A wrapper function was put around the Windows <i>snprintf</i> function,
   to ensure that it always NUL-terminates strings. The lack of such a wrapper
   could lead to string overflows in some situations.</li>

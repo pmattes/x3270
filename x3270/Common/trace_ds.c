@@ -520,8 +520,10 @@ create_tracefile_header(const char *mode)
 		 * write to ensure that the display is in the right
 		 * mode.
 		 */
-		if (formatted) {
-			wtrace(" Screen contents (3270):\n");
+		if (IN_3270) {
+			wtrace(" Screen contents (%s3270) %sformatted:\n",
+				IN_E? "TN3270E-": "",
+				formatted? "": "un");
 			obptr = obuf;
 #if defined(X3270_TN3270E) /*[*/
 			(void) net_add_dummy_tn3270e();
@@ -533,9 +535,6 @@ create_tracefile_header(const char *mode)
 			trace_netdata('<', obuf, obptr - obuf);
 
 			obptr = obuf;
-#if defined(X3270_TN3270E) /*[*/
-			(void) net_add_dummy_tn3270e();
-#endif /*]*/
 			if (ctlr_snap_modes()) {
 				wtrace(" 3270 modes:\n");
 				space3270out(2);

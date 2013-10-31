@@ -3935,11 +3935,32 @@ kybd_prime(void)
 	int len = 0;
 
 	/*
-	 * No point in trying if the screen isn't formatted, the keyboard
-	 * is locked, or we aren't in 3270 mode.
+	 * No point in trying if the the keyboard is locked or we aren't in
+	 * 3270 mode.
 	 */
-	if (!formatted || kybdlock || !IN_3270)
+	if (kybdlock || !IN_3270)
 		return 0;
+
+	/*
+	 * If unformatted, guess that we can use all the NULs from the cursor
+	 * address forward, leaving one empty slot to delimit the end of the
+	 * command.  It's up to the host to make sense of what we send.
+	 */
+	if (!formatted) {
+		baddr = cursor_addr;
+
+		while (!ea_buf[baddr].cc) {
+		    	len++;
+			INC_BA(baddr);
+			if (baddr == cursor_addr) {
+			    	break;
+			}
+		}
+		if (len) {
+			len--;
+		}
+		return len;
+	}
 
 	fa = get_field_attribute(cursor_addr);
 	if (ea_buf[cursor_addr].fa || FA_IS_PROTECTED(fa)) {
