@@ -1614,24 +1614,20 @@ XX_BR
 XX_FB(KEYBD) Keymap name.
 ')dnl
 XX_SH(See Also)
-ifelse(XX_PRODUCT,wc3270,`XX_LINK(wpr3287-man.html,wpr3287(1)),
-XX_LINK(ws3270.html,ws3270(1)),
-XX_LINK(XX_X3270-script.html,XX_X3270-script`'(1))
-XX_BR
-',`
-ifelse(XX_PRODUCT,x3270,,XX_LINK(x3270-man.html,x3270(1))`, ')dnl
-ifelse(XX_PRODUCT,s3270,,XX_LINK(s3270-man.html,s3270(1))`, ')dnl
+ifelse(XX_INTERACTIVE,yes,XX_LINK(XX_PR3287-man.html,XX_PR3287`'(1))`, ')dnl
+ifelse(XX_PRODUCT,XX_S3270,,XX_LINK(XX_S3270-man.html,XX_S3270`'(1))`, ')dnl
+ifelse(XX_PRODUCT,tcl3270,,XX_LINK(XX_X3270-script.html,`XX_X3270-script`'(1)), ')dnl
+ifelse(XX_PLATFORM,unix,`ifelse(XX_PRODUCT,x3270,,XX_LINK(x3270-man.html,x3270(1))`, ')dnl
 ifelse(XX_PRODUCT,c3270,,XX_LINK(c3270-man.html,c3270(1))`, ')dnl
 ifelse(XX_PRODUCT,tcl3270,,XX_LINK(tcl3270-man.html,tcl3270(1))`, ')dnl
-ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_LINK(ibm_hosts.html,ibm_hosts(5))`, ')dnl
-ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,XX_LINK(XX_X3270-script.html,XX_X3270-script`'(1))`, ')dnl
-ifelse(XX_PLATFORM,windows,,XX_MODE,interactive,XX_LINK(pr3287-man.html,pr3287(1))`, ')dnl
-telnet(1), tn3270(1)
-ifelse(XX_PRODUCT,x3270,`XX_BR
+')dnl
+telnet(1), tn3270(1)dnl
+ifelse(XX_PRODUCT,x3270,`, XX_LINK(ibm_hosts.html,ibm_hosts(5))
+XX_BR
 X Toolkit Intrinsics
+',`
 ')dnl
 XX_BR
-')dnl
 Data Stream XX_POSESSIVE(Programmer) Reference, IBM GA23-0059
 XX_BR
 Character Set Reference, IBM GA27-3831
