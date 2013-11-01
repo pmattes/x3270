@@ -331,6 +331,7 @@ ft_popup_init(void)
 	Widget buffersize_label;
 	Widget start_button;
 	char buflen_buf[128];
+	Widget spacer_toggle;
 
 	/* Register for state changes. */
 	register_schange(ST_CONNECT, ft_connected);
@@ -430,14 +431,22 @@ ft_popup_init(void)
 	    XtNhorizDistance, MARGIN,
 	    XtNborderWidth, 0,
 	    NULL);
-	dialog_apply_bitmap(receive_toggle, receive_flag ? diamond : no_diamond);
+	dialog_apply_bitmap(receive_toggle, receive_flag? diamond: no_diamond);
 	XtAddCallback(receive_toggle, XtNcallback, toggle_receive,
 	    (XtPointer)&s_true);
+	spacer_toggle = XtVaCreateManagedWidget(
+	    "empty", labelWidgetClass, ft_dialog,
+	    XtNfromVert, receive_toggle,
+	    XtNvertDistance, CLOSE_VGAP,
+	    XtNhorizDistance, MARGIN,
+	    XtNborderWidth, 0,
+	    XtNlabel, "",
+	    NULL);
 
 	/* Create ASCII/binary toggles. */
 	ascii_toggle = XtVaCreateManagedWidget(
 	    "ascii", commandWidgetClass, ft_dialog,
-	    XtNfromVert, receive_toggle,
+	    XtNfromVert, spacer_toggle,
 	    XtNvertDistance, FAR_VGAP,
 	    XtNhorizDistance, MARGIN,
 	    XtNborderWidth, 0,
