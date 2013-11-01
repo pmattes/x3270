@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, Paul Mattes.
+ * Copyright (c) 2007-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 #include "icmdc.h"
 #include "utf8c.h"
 
-static char host_type[4] = "tso";
+static char host_type[5] = "tso";
 
 /* Support functions for interactive commands. */
 
@@ -155,7 +155,7 @@ interactive_transfer(String **params, Cardinal *num_params)
 	char localfile[1024];
 	int kw_ix = 0;
 	int receive = 1;
-	int tso = 1;
+	enum { HT_TSO, HT_VM, HT_CICS } htype = HT_TSO;
 	int ascii = 1;
 	int remap = 1;
 	int n;
@@ -173,8 +173,8 @@ File Transfer\n\
 Type 'quit' at any prompt to abort this dialog.\n\
 \n\
 Note: In order to initiate a file transfer, the 3270 cursor must be\n\
-positioned on an input field that can accept the IND$FILE command, i.e.,\n\
-at VM/CMS or TSO command prompt.\n");
+positioned on an input field that can accept the IND$FILE command, e.g.,\n\
+at the VM/CMS or TSO command prompt.\n");
 
 	printf("\nContinue? (y/n) [y] ");
 	if (getyn(1) <= 0)
@@ -230,19 +230,27 @@ at VM/CMS or TSO command prompt.\n");
 	}
 
 	for (;;) {
-	    	printf("Host type: (tso/vm) [%s] ", host_type);
+	    	printf("Host type: (tso/vm/cics) [%s] ", host_type);
 		if (get_input(inbuf, sizeof(inbuf)) == NULL)
 		    	return -1;
 		if (!inbuf[0])
 			strcpy(inbuf, host_type);
 		if (!strncasecmp(inbuf, "tso", strlen(inbuf))) {
 			strcpy(host_type, inbuf);
+		    	strcpy(kw[kw_ix++], "Host=tso");
+			htype = HT_TSO;
 		    	break;
 		}
 		if (!strncasecmp(inbuf, "vm", strlen(inbuf))) {
 			strcpy(host_type, inbuf);
 		    	strcpy(kw[kw_ix++], "Host=vm");
-			tso = 0;
+			htype = HT_VM;
+			break;
+		}
+		if (!strncasecmp(inbuf, "cics", strlen(inbuf))) {
+			strcpy(host_type, inbuf);
+		    	strcpy(kw[kw_ix++], "Host=cics");
+			htype = HT_CICS;
 			break;
 		}
 	}
@@ -354,39 +362,46 @@ ASCII on the workstation.\n\
 	}
 
 	if (!receive) {
-		for (;;) {
-			printf("[optional] Destinaton file record format (fixed/variable/undefined): ");
-			if (get_input(inbuf, sizeof(inbuf)) == NULL)
+		if (htype != HT_CICS) {
+			for (;;) {
+				printf("[optional] Destinaton file record "
+					"format (fixed/variable/undefined): ");
+				if (get_input(inbuf, sizeof(inbuf)) == NULL)
+					return -1;
+				if (!inbuf[0])
+					break;
+				if (!strncasecmp(inbuf, "fixed",
+					    strlen(inbuf))) {
+					sprintf(kw[kw_ix++], "Recfm=fixed");
+					rf_mode = RF_FIXED;
+					break;
+				}
+				if (!strncasecmp(inbuf, "variable",
+					    strlen(inbuf))) {
+					sprintf(kw[kw_ix++], "Recfm=variable");
+					rf_mode = RF_VARIABLE;
+					break;
+				}
+				if (!strncasecmp(inbuf, "undefined",
+					    strlen(inbuf))) {
+					sprintf(kw[kw_ix++], "Recfm=undefined");
+					rf_mode = RF_UNDEFINED;
+					break;
+				}
+			}
+
+			printf("[optional] Destination file logical record "
+				"length: ");
+			n = getnum(0);
+			if (n < 0)
 				return -1;
-			if (!inbuf[0])
-				break;
-			if (!strncasecmp(inbuf, "fixed", strlen(inbuf))) {
-				sprintf(kw[kw_ix++], "Recfm=fixed");
-				rf_mode = RF_FIXED;
-				break;
-			}
-			if (!strncasecmp(inbuf, "variable", strlen(inbuf))) {
-				sprintf(kw[kw_ix++], "Recfm=variable");
-				rf_mode = RF_VARIABLE;
-				break;
-			}
-			if (!strncasecmp(inbuf, "undefined", strlen(inbuf))) {
-				sprintf(kw[kw_ix++], "Recfm=undefined");
-				rf_mode = RF_UNDEFINED;
-				break;
+			if (n > 0) {
+				sprintf(kw[kw_ix++], "Lrecl=%d", n);
+				lrecl = n;
 			}
 		}
 
-		printf("[optional] Destination file logical record length: ");
-		n = getnum(0);
-		if (n < 0)
-		    	return -1;
-		if (n > 0) {
-		    	sprintf(kw[kw_ix++], "Lrecl=%d", n);
-			lrecl = n;
-		}
-
-		if (tso) {
+		if (htype == HT_TSO) {
 
 			printf("[optional] Destination file block size: ");
 			n = getnum(0);
@@ -396,23 +411,31 @@ ASCII on the workstation.\n\
 				sprintf(kw[kw_ix++], "Blksize=%d", n);
 
 			for (;;) {
-				printf("[optional] Destination file allocation type (tracks/cylinders/avblock): ");
+				printf("[optional] Destination file "
+					"allocation type "
+					"(tracks/cylinders/avblock): ");
 				if (get_input(inbuf, sizeof(inbuf)) == NULL)
 					return -1;
 				if (!inbuf[0])
 					break;
-				if (!strncasecmp(inbuf, "tracks", strlen(inbuf))) {
-				    	strcpy(kw[kw_ix++], "Allocation=tracks");
+				if (!strncasecmp(inbuf, "tracks",
+					    strlen(inbuf))) {
+				    	strcpy(kw[kw_ix++],
+						"Allocation=tracks");
 					at_mode = AT_TRACKS;
 					break;
 				}
-				if (!strncasecmp(inbuf, "cylinders", strlen(inbuf))) {
-				    	strcpy(kw[kw_ix++], "Allocation=cylinders");
+				if (!strncasecmp(inbuf, "cylinders",
+					    strlen(inbuf))) {
+				    	strcpy(kw[kw_ix++],
+						"Allocation=cylinders");
 					at_mode = AT_CYLINDERS;
 					break;
 				}
-				if (!strncasecmp(inbuf, "avblock", strlen(inbuf))) {
-				    	strcpy(kw[kw_ix++], "Allocation=avblock");
+				if (!strncasecmp(inbuf, "avblock",
+					    strlen(inbuf))) {
+				    	strcpy(kw[kw_ix++],
+						"Allocation=avblock");
 					at_mode = AT_AVBLOCK;
 					break;
 				}
@@ -448,7 +471,19 @@ ASCII on the workstation.\n\
 	    	printf(" Source file on workstation: %s\n", localfile);
 	    	printf(" Destination file on Host: %s\n", hostfile);
 	}
-	printf(" Transfer mode: %s", ascii? "ASCII": "Binary");
+	printf(" Host type: ");
+	switch (htype) {
+	case HT_TSO:
+		printf("TSO");
+		break;
+	case HT_VM:
+		printf("VM/CMS");
+		break;
+	case HT_CICS:
+		printf("CICS");
+		break;
+	}
+	printf(" \n Transfer mode: %s", ascii? "ASCII": "Binary");
 	if (ascii) {
 		switch (cr_mode) {
 		case CR_REMOVE:

@@ -99,7 +99,7 @@ html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@
 html/x3270if.html:  x3270if.man.m4 $(MANDEP)
 	$(MKHTML) -n x3270if x3270if.man.m4 >$@
-html/wc3270-script.html: x3270-script.man.m4 $(MANDEP)
+html/wc3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
 	$(MKHTML) -n wc3270-script x3270-script.man.m4 >$@
 
 html/Resources.html: resource-body make-resource-doc.pl version.txt

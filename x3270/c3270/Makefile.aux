@@ -104,9 +104,9 @@ ibm_hosts.man: ibm_hosts.man.m4 $(MANDEP)
 	$(MKMAN) -n ibm_hosts ibm_hosts.man.m4 >$@
 html/ibm_hosts.html: ibm_hosts.man.m4 ft.inc $(MANDEP)
 	$(MKHTML) -n ibm_hosts ibm_hosts.man.m4 >$@
-x3270-script.man: x3270-script.man.m4 $(MANDEP)
+x3270-script.man: x3270-script.man.m4 ft.inc $(MANDEP)
 	$(MKMAN) -n x3270-script x3270-script.man.m4 >$@
-html/x3270-script.html: x3270-script.man.m4 $(MANDEP)
+html/x3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
 	$(MKHTML) -n x3270-script x3270-script.man.m4 >$@
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@

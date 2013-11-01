@@ -23,7 +23,7 @@ XX_T_()
 XX_TR(XX_TD(Direction)	XX_TD(No)	XX_TD(receive)	XX_TD(send))
 XX_TR(XX_TD(HostFile)	XX_TD(Yes)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP))
 XX_TR(XX_TD(LocalFile)	XX_TD(Yes)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP))
-XX_TR(XX_TD(Host)	XX_TD(No)	XX_TD(tso)	XX_TD(vm))
+XX_TR(XX_TD(Host)	XX_TD(No)	XX_TD(tso)	`XX_TD(`vm, cics')')
 XX_TR(XX_TD(Mode)	XX_TD(No)	XX_TD(ascii)	XX_TD(binary))
 XX_TR(XX_TD(Cr)	XX_TD(No)	XX_TD(remove)	`XX_TD(`add, keep')')
 XX_TR(XX_TD(Remap)	XX_TD(No)	XX_TD(yes)	XX_TD(no))
@@ -48,7 +48,7 @@ XX_TP(XX_FB(LocalFile))
 The name of the file on the local workstation.
 XX_TP(XX_FB(Host))
 The type of host (which dictates the form of the XX_FB(IND$FILE) command):
-XX_FB(tso) (the default) or XX_FB(vm).
+XX_FB(tso) (the default), XX_FB(vm) or XX_FB(cics).
 XX_TP(XX_FB(Mode))
 Use XX_FB(ascii) (the default) for a text file, which will be translated
 between XX_SM(EBCDIC) and XX_SM(ASCII) as necessary.
@@ -77,26 +77,30 @@ XX_FB(replace) overwrites the destination file with the source file.
 XX_FB(append) appends the source file to the destination file.
 XX_TP(XX_FB(Recfm))
 Controls the record format of files created on the host.
+(XX_SM(TSO) and XX_SM(VM) hosts only.)
 XX_FB(fixed) creates a file with fixed-length records.
 XX_FB(variable) creates a file with variable-length records.
-XX_FB(undefined) creates a file with undefined-length records (XX_SM(TSO) hosts only).
+XX_FB(undefined) creates a file with undefined-length records (XX_SM(TSO) hosts
+only).
 The XX_FB(Lrecl) option controls the record length or maximum record length for
 XX_FB(Recfm=fixed) and XX_FB(Recfm=variable) files, respectively.
 XX_TP(XX_FB(Lrecl))
 Specifies the record length (or maximum record length) for files created on
 the host.
+(XX_SM(TSO) and XX_SM(VM) hosts only.)
 XX_TP(XX_FB(Blksize))
-Specifies the block size for files created on the host.  (XX_SM(TSO) hosts only.)
+Specifies the block size for files created on the host.
+(XX_SM(TSO) and XX_SM(VM) hosts only.)
 XX_TP(XX_FB(Allocation))
-Specifies the units for the XX_SM(TSO) host XX_FB(PrimarySpace) and
+Specifies the units for the XX_FB(PrimarySpace) and
 XX_FB(SecondarySpace) options: XX_FB(tracks), XX_FB(cylinders) or
-XX_FB(avblock).
+XX_FB(avblock). (XX_SM(TSO) hosts only.)
 XX_TP(XX_FB(PrimarySpace))
-Primary allocation for a file created on a XX_SM(TSO) host.
-The units are given by the XX_FB(Allocation) option.
+Primary allocation for a file,
+The units are given by the XX_FB(Allocation) option. (XX_SM(TSO) hosts only.)
 XX_TP(XX_FB(SecondarySpace))
-Secondary allocation for a file created on a XX_SM(TSO) host.
-The units are given by the XX_FB(Allocation) option.
+Secondary allocation for a file.
+The units are given by the XX_FB(Allocation) option. (XX_SM(TSO) hosts only.) 
 XX_TP(XX_FB(BufferSize))
 Buffer size for DFT-mode transfers.
 Can range from 256 to 32768.

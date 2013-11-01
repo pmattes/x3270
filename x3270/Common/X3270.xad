@@ -955,6 +955,7 @@ x3270.ftPopup*append.label:			Append to file
 x3270.ftPopup*remap.label:			Remap ASCII Characters
 x3270.ftPopup*vm.label:				Host is VM/CMS
 x3270.ftPopup*tso.label:			Host is TSO
+x3270.ftPopup*cics.label:			Host is CICS
 x3270.ftPopup*confirmButton.label:		Transfer File
 x3270.ftPopup*file.label:			Record Format
 x3270.ftPopup*recfmDefault.label:		Default

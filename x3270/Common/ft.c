@@ -36,6 +36,8 @@
 
 #if defined(X3270_FT) /*[*/
 
+# include <assert.h>
+
 # if defined(X3270_DISPLAY) /*[*/
 #  include <X11/StringDefs.h>
 #  include <X11/Xaw/Toggle.h>
@@ -101,7 +103,7 @@ static Widget ft_dialog, ft_shell, local_file, host_file;
 static Widget lrecl_widget, blksize_widget;
 static Widget primspace_widget, secspace_widget;
 static Widget send_toggle, receive_toggle;
-static Widget vm_toggle, tso_toggle;
+static Widget vm_toggle, tso_toggle, cics_toggle;
 static Widget ascii_toggle, binary_toggle;
 static Widget cr_widget;
 static Widget remap_widget;
@@ -111,7 +113,19 @@ static Widget buffersize_widget;
 static char *ft_host_filename;		/* Host file to transfer to/from */
 static Boolean receive_flag = True;	/* Current transfer is receive */
 static Boolean append_flag = False;	/* Append transfer */
-static Boolean vm_flag = False;		/* VM Transfer flag */
+typedef enum {
+    HT_TSO,
+    HT_VM,
+    HT_CICS
+} host_type_t;
+static host_type_t host_type = HT_TSO;	/* Host type */
+# if defined(X3270_DISPLAY) /*[*/
+static Boolean host_is_tso = True;	/* Booleans used by dialog */
+static Boolean host_is_tso_or_vm = True;/*  sensitivity logic */
+static host_type_t s_tso = HT_TSO;	/* Values used by toggle callbacks. */
+static host_type_t s_vm = HT_VM;
+static host_type_t s_cics = HT_CICS;
+# endif /*]*/
 
 # if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
 static Widget recfm_options[5];
@@ -232,7 +246,8 @@ static void toggle_cr(Widget w, XtPointer client_data, XtPointer call_data);
 static void toggle_remap(Widget w, XtPointer client_data, XtPointer call_data);
 static void toggle_receive(Widget w, XtPointer client_data,
     XtPointer call_data);
-static void toggle_vm(Widget w, XtPointer client_data, XtPointer call_data);
+static void toggle_host_type(Widget w, XtPointer client_data,
+    XtPointer call_data);
 static void units_callback(Widget w, XtPointer user_data, XtPointer call_data);
 #endif /*]*/
 static void ft_connected(Boolean ignored);
@@ -462,7 +477,7 @@ ft_popup_init(void)
 	    NULL);
 	dialog_register_sensitivity(recfm_label,
 	    &receive_flag, False,
-	    BN, False,
+	    &host_is_tso_or_vm, True,
 	    BN, False);
 
 	recfm_options[0] = XtVaCreateManagedWidget(
@@ -478,7 +493,7 @@ ft_popup_init(void)
 	    (XtPointer)&r_default_recfm);
 	dialog_register_sensitivity(recfm_options[0],
 	    &receive_flag, False,
-	    BN, False,
+	    &host_is_tso_or_vm, True,
 	    BN, False);
 
 	recfm_options[1] = XtVaCreateManagedWidget(
@@ -494,7 +509,7 @@ ft_popup_init(void)
 	    (XtPointer)&r_fixed);
 	dialog_register_sensitivity(recfm_options[1],
 	    &receive_flag, False,
-	    BN, False,
+	    &host_is_tso_or_vm, True,
 	    BN, False);
 
 	recfm_options[2] = XtVaCreateManagedWidget(
@@ -510,7 +525,7 @@ ft_popup_init(void)
 	    (XtPointer)&r_variable);
 	dialog_register_sensitivity(recfm_options[2],
 	    &receive_flag, False,
-	    BN, False,
+	    &host_is_tso_or_vm, True,
 	    BN, False);
 
 	recfm_options[3] = XtVaCreateManagedWidget(
@@ -526,7 +541,7 @@ ft_popup_init(void)
 	    (XtPointer)&r_undefined);
 	dialog_register_sensitivity(recfm_options[3],
 	    &receive_flag, False,
-	    &vm_flag, False,
+	    &host_is_tso, True,
 	    BN, False);
 
 	lrecl_label = XtVaCreateManagedWidget(
@@ -539,7 +554,7 @@ ft_popup_init(void)
 	dialog_register_sensitivity(lrecl_label,
 	    &receive_flag, False,
 	    &recfm_default, False,
-	    BN, False);
+	    &host_is_tso_or_vm, True);
 	lrecl_widget = XtVaCreateManagedWidget(
 	    "value", asciiTextWidgetClass, ft_dialog,
 	    XtNfromVert, recfm_options[3],
@@ -560,7 +575,7 @@ ft_popup_init(void)
 	dialog_register_sensitivity(lrecl_widget,
 	    &receive_flag, False,
 	    &recfm_default, False,
-	    BN, False);
+	    &host_is_tso_or_vm, True);
 
 	blksize_label = XtVaCreateManagedWidget(
 	    "blksize", labelWidgetClass, ft_dialog,
@@ -573,7 +588,7 @@ ft_popup_init(void)
 	dialog_register_sensitivity(blksize_label,
 	    &receive_flag, False,
 	    &recfm_default, False,
-	    BN, False);
+	    &host_is_tso_or_vm, True);
 	blksize_widget = XtVaCreateManagedWidget(
 	    "value", asciiTextWidgetClass, ft_dialog,
 	    XtNfromVert, lrecl_widget,
@@ -594,8 +609,7 @@ ft_popup_init(void)
 	dialog_register_sensitivity(blksize_widget,
 	    &receive_flag, False,
 	    &recfm_default, False,
-	    BN, False);
-
+	    &host_is_tso_or_vm, True);
 
 	/* Find the widest widget in the left column. */
 	XtVaGetValues(send_toggle, XtNwidth, &maxw, NULL);
@@ -615,7 +629,7 @@ ft_popup_init(void)
 
 	/* Create the right column buttons. */
 
-	/* Create VM/TSO toggle. */
+	/* Create VM/TSO/CICS toggles. */
 	vm_toggle = XtVaCreateManagedWidget(
 	    "vm", commandWidgetClass, ft_dialog,
 	    XtNfromVert, host_label,
@@ -624,8 +638,10 @@ ft_popup_init(void)
 	    XtNhorizDistance, COLUMN_GAP,
 	    XtNborderWidth, 0,
 	    NULL);
-	dialog_apply_bitmap(vm_toggle, vm_flag ? diamond : no_diamond);
-	XtAddCallback(vm_toggle, XtNcallback, toggle_vm, (XtPointer)&s_true);
+	dialog_apply_bitmap(vm_toggle,
+		(host_type == HT_VM)? diamond: no_diamond);
+	XtAddCallback(vm_toggle, XtNcallback, toggle_host_type,
+		(XtPointer)&s_vm);
 	tso_toggle =  XtVaCreateManagedWidget(
 	    "tso", commandWidgetClass, ft_dialog,
 	    XtNfromVert, vm_toggle,
@@ -634,13 +650,27 @@ ft_popup_init(void)
 	    XtNhorizDistance, COLUMN_GAP,
 	    XtNborderWidth, 0,
 	    NULL);
-	dialog_apply_bitmap(tso_toggle, vm_flag ? no_diamond : diamond);
-	XtAddCallback(tso_toggle, XtNcallback, toggle_vm, (XtPointer)&s_false);
+	dialog_apply_bitmap(tso_toggle,
+		(host_type == HT_TSO)? diamond : no_diamond);
+	XtAddCallback(tso_toggle, XtNcallback, toggle_host_type,
+		(XtPointer)&s_tso);
+	cics_toggle =  XtVaCreateManagedWidget(
+	    "cics", commandWidgetClass, ft_dialog,
+	    XtNfromVert, tso_toggle,
+	    XtNvertDistance, CLOSE_VGAP,
+	    XtNfromHoriz, h_ref,
+	    XtNhorizDistance, COLUMN_GAP,
+	    XtNborderWidth, 0,
+	    NULL);
+	dialog_apply_bitmap(cics_toggle,
+		(host_type == HT_CICS)? diamond : no_diamond);
+	XtAddCallback(cics_toggle, XtNcallback, toggle_host_type,
+		(XtPointer)&s_cics);
 
 	/* Create CR toggle. */
 	cr_widget = XtVaCreateManagedWidget(
 	    "cr", commandWidgetClass, ft_dialog,
-	    XtNfromVert, tso_toggle,
+	    XtNfromVert, cics_toggle,
 	    XtNvertDistance, FAR_VGAP,
 	    XtNfromHoriz, h_ref,
 	    XtNhorizDistance, COLUMN_GAP,
@@ -680,7 +710,7 @@ ft_popup_init(void)
 	    NULL);
 	dialog_register_sensitivity(units_label,
 	    &receive_flag, False,
-	    &vm_flag, False,
+	    &host_is_tso, True,
 	    BN, False);
 
 	units_options[0] = XtVaCreateManagedWidget(
@@ -697,7 +727,7 @@ ft_popup_init(void)
 	    units_callback, (XtPointer)&u_default_units);
 	dialog_register_sensitivity(units_options[0],
 	    &receive_flag, False,
-	    &vm_flag, False,
+	    &host_is_tso, True,
 	    BN, False);
 
 	units_options[1] = XtVaCreateManagedWidget(
@@ -714,7 +744,7 @@ ft_popup_init(void)
 	    units_callback, (XtPointer)&u_tracks);
 	dialog_register_sensitivity(units_options[1],
 	    &receive_flag, False,
-	    &vm_flag, False,
+	    &host_is_tso, True,
 	    BN, False);
 
 	units_options[2] = XtVaCreateManagedWidget(
@@ -731,7 +761,7 @@ ft_popup_init(void)
 	    units_callback, (XtPointer)&u_cylinders);
 	dialog_register_sensitivity(units_options[2],
 	    &receive_flag, False,
-	    &vm_flag, False,
+	    &host_is_tso, True,
 	    BN, False);
 
 	units_options[3] = XtVaCreateManagedWidget(
@@ -748,7 +778,7 @@ ft_popup_init(void)
 	    units_callback, (XtPointer)&u_avblock);
 	dialog_register_sensitivity(units_options[3],
 	    &receive_flag, False,
-	    &vm_flag, False,
+	    &host_is_tso, True,
 	    BN, False);
 
 	primspace_label = XtVaCreateManagedWidget(
@@ -761,7 +791,7 @@ ft_popup_init(void)
 	    NULL);
 	dialog_register_sensitivity(primspace_label,
 	    &receive_flag, False,
-	    &vm_flag, False,
+	    &host_is_tso, True,
 	    &units_default, False);
 	primspace_widget = XtVaCreateManagedWidget(
 	    "value", asciiTextWidgetClass, ft_dialog,
@@ -782,7 +812,7 @@ ft_popup_init(void)
 		    (XtPointer)&t_numeric);
 	dialog_register_sensitivity(primspace_widget,
 	    &receive_flag, False,
-	    &vm_flag, False,
+	    &host_is_tso, True,
 	    &units_default, False);
 
 	secspace_label = XtVaCreateManagedWidget(
@@ -796,7 +826,7 @@ ft_popup_init(void)
 	dialog_match_dimension(primspace_label, secspace_label, XtNwidth);
 	dialog_register_sensitivity(secspace_label,
 	    &receive_flag, False,
-	    &vm_flag, False,
+	    &host_is_tso, True,
 	    &units_default, False);
 	secspace_widget = XtVaCreateManagedWidget(
 	    "value", asciiTextWidgetClass, ft_dialog,
@@ -817,7 +847,7 @@ ft_popup_init(void)
 		    (XtPointer)&t_numeric);
 	dialog_register_sensitivity(secspace_widget,
 	    &receive_flag, False,
-	    &vm_flag, False,
+	    &host_is_tso, True,
 	    &units_default, False);
 
 	/* Set up the DFT buffer size. */
@@ -990,27 +1020,80 @@ toggle_remap(Widget w, XtPointer client_data _is_unused,
 	dialog_mark_toggle(w, remap_flag ? dot : no_dot);
 }
 
-/* TSO/VM option. */
+/*
+ * Set the individual Boolean variables used by the dialog sensitivity
+ * functions, and call dialog_check_sensitivity().
+ */
 static void
-toggle_vm(Widget w _is_unused, XtPointer client_data _is_unused,
+set_host_type_booleans(void)
+{
+	switch (host_type) {
+	case HT_TSO:
+		host_is_tso = True;
+		host_is_tso_or_vm = True;
+		break;
+	case HT_VM:
+		host_is_tso = False;
+		host_is_tso_or_vm = True;
+		break;
+	case HT_CICS:
+		host_is_tso = False;
+		host_is_tso_or_vm = False;
+	}
+
+	dialog_check_sensitivity(&host_is_tso);
+	dialog_check_sensitivity(&host_is_tso_or_vm);
+}
+
+/* TSO/VM/CICS option. */
+static void
+toggle_host_type(Widget w _is_unused, XtPointer client_data _is_unused,
     XtPointer call_data _is_unused)
 {
+	host_type_t old_host_type;
+
 	/* Toggle the flag. */
-	vm_flag = *(Boolean *)client_data;
+	old_host_type = host_type;
+	host_type = *(host_type_t *)client_data;
+	if (host_type == old_host_type) {
+		return;
+	}
 
 	/* Change the widget states. */
-	dialog_mark_toggle(vm_toggle, vm_flag ? diamond : no_diamond);
-	dialog_mark_toggle(tso_toggle, vm_flag ? no_diamond : diamond);
+	dialog_mark_toggle(vm_toggle,
+		(host_type == HT_VM)? diamond: no_diamond);
+	dialog_mark_toggle(tso_toggle,
+		(host_type == HT_TSO)? diamond: no_diamond);
+	dialog_mark_toggle(cics_toggle,
+		(host_type == HT_CICS)? diamond: no_diamond);
 
-	if (vm_flag) {
-		if (recfm == RECFM_UNDEFINED) {
+	if (host_type != HT_TSO) {
+		/* Reset record format. */
+		if ((host_type == HT_VM && recfm == RECFM_UNDEFINED) ||
+		    (host_type == HT_CICS && recfm != DEFAULT_RECFM)) {
 			recfm = DEFAULT_RECFM;
 			recfm_default = True;
 			dialog_flip_toggles(&recfm_toggles,
 			    recfm_toggles.widgets[0]);
 		}
+		/* Reset units. */
+		if (units != DEFAULT_UNITS) {
+			units = DEFAULT_UNITS;
+			units_default = True;
+			dialog_flip_toggles(&units_toggles,
+			    units_toggles.widgets[0]);
+		}
+		if (host_type == HT_CICS) {
+			/* Reset logical record size and block size. */
+			XtVaSetValues(lrecl_widget, XtNstring, "", NULL);
+			XtVaSetValues(blksize_widget, XtNstring, "", NULL);
+		}
+		/* Reset primary and secondary space. */
+		XtVaSetValues(primspace_widget, XtNstring, "", NULL);
+		XtVaSetValues(secspace_widget, XtNstring, "", NULL);
 	}
-	dialog_check_sensitivity(&vm_flag);
+
+	set_host_type_booleans();
 }
 
 /*
@@ -1084,7 +1167,7 @@ ft_start(void)
 	if (append_flag && !receive_flag)
 		strcat(op, " append");
 	if (!receive_flag) {
-		if (!vm_flag) {
+		if (host_type == HT_TSO) {
 			if (recfm != DEFAULT_RECFM) {
 				/* RECFM Entered, process */
 				strcat(op, " recfm(");
@@ -1143,7 +1226,7 @@ ft_start(void)
 					strcat(op, ")");
 				}
 			}
-		} else {
+		} else if (host_type == HT_VM) {
 			if (recfm != DEFAULT_RECFM) {
 				strcat(op, " recfm ");
 				switch (recfm) {
@@ -1167,7 +1250,7 @@ ft_start(void)
 	}
 
 	/* Insert the '(' for VM options. */
-	if (strlen(op) > 0 && vm_flag) {
+	if (strlen(op) > 0 && host_type != HT_TSO) {
 		opts[0] = ' ';
 		opts[1] = '(';
 		op = opts;
@@ -1630,7 +1713,7 @@ ft_in3270(Boolean ignored _is_unused)
  *   Direction=send|receive	default receive
  *   HostFile=name		required
  *   LocalFile=name			required
- *   Host=[tso|vm]		default tso
+ *   Host=[tso|vm|cics]		default tso
  *   Mode=[ascii|binary]	default ascii
  *   Cr=[add|remove|keep]	default add/remove
  *   Remap=[yes|no]     	default yes
@@ -1650,7 +1733,7 @@ static struct {
 	{ "Direction",		CN, { "receive", "send" } },
 	{ "HostFile" },
 	{ "LocalFile" },
-	{ "Host",		CN, { "tso", "vm" } },
+	{ "Host",		CN, { "tso", "vm", "cics" } },
 	{ "Mode",		CN, { "ascii", "binary" } },
 	{ "Cr",			CN, { "auto", "remove",	"add", "keep" } },
 	{ "Remap",		CN, { "yes", "no" } },
@@ -1823,7 +1906,15 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	}
 	if (ascii_flag)
 	    	remap_flag = !strcasecmp(tp[PARM_REMAP].value, "yes");
-	vm_flag = !strcasecmp(tp[PARM_HOST].value, "vm");
+	if (!strcasecmp(tp[PARM_HOST].value, "tso")) {
+		host_type = HT_TSO;
+	} else if (!strcasecmp(tp[PARM_HOST].value, "vm")) {
+		host_type = HT_VM;
+	} else if (!strcasecmp(tp[PARM_HOST].value, "cics")) {
+		host_type = HT_CICS;
+	} else {
+		assert(0);
+	}
 	recfm = DEFAULT_RECFM;
 	for (k = 0; tp[PARM_RECFM].keyword[k] != CN && k < 4; k++) {
 		if (!strcasecmp(tp[PARM_RECFM].value,
@@ -1871,7 +1962,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	if (append_flag && !receive_flag)
 		strcat(op, " append");
 	if (!receive_flag) {
-		if (!vm_flag) {
+		if (host_type == HT_TSO) {
 			if (recfm != DEFAULT_RECFM) {
 				/* RECFM Entered, process */
 				strcat(op, " recfm(");
@@ -1920,7 +2011,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 					strcat(op, ")");
 				}
 			}
-		} else {
+		} else if (host_type == HT_VM) {
 			if (recfm != DEFAULT_RECFM) {
 				strcat(op, " recfm ");
 				switch (recfm) {
@@ -1942,7 +2033,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	}
 
 	/* Insert the '(' for VM options. */
-	if (strlen(op) > 0 && vm_flag) {
+	if (strlen(op) > 0 && host_type != HT_TSO) {
 		opts[0] = ' ';
 		opts[1] = '(';
 		op = opts;
