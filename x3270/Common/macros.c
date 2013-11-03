@@ -32,7 +32,7 @@
 
 #include "globals.h"
 
-#if defined(X3270_MENUS) /*[*/
+#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
 #include <X11/StringDefs.h>
 #include <X11/Xaw/Dialog.h>
 #endif /*]*/
@@ -3303,7 +3303,7 @@ Expect_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 }
 
 
-#if defined(X3270_MENUS) /*[*/
+#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
 
 /* "Execute an Action" menu option */
 

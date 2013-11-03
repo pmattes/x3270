@@ -131,7 +131,6 @@ typedef unsigned short ebc_t;
  */
 #if !defined(X3270_DISPLAY) /*[*/
 # undef X3270_KEYPAD
-# undef X3270_MENUS
 #endif /*]*/
 #if defined(C3270) && defined(X3270_DBCS) && !defined(CURSES_WIDE) && !defined(_WIN32) /*[*/
 # undef X3270_DBCS

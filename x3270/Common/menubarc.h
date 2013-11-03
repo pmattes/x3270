@@ -32,6 +32,8 @@
 
 #if defined(X3270_MENUS) /*[*/
 
+# if defined(X3270_DISPLAY) /*[*/
+
 /* x3270 externs. */
 extern Pixmap dot, no_dot;
 extern Pixmap diamond, no_diamond;
@@ -51,11 +53,9 @@ extern Dimension menubar_qheight(Dimension container_width);
 extern void menubar_resize(Dimension width);
 extern void menubar_retoggle(struct toggle *t, int ix);
 
-#elif defined(C3270) /*][*/
+# elif defined(C3270) /*][*/
 
-# define menubar_as_set(n)
-
-# if defined(X3270_MENUS) /*[*/
+#  define menubar_as_set(n)
 
 /* c3270 externs. */
 #  define MENU_IS_UP	0x1
@@ -75,7 +75,22 @@ extern void map_acs(unsigned char c, ucs4_t *u, unsigned char *acs);
 extern void Menu_action(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
 
-# else /*][*/
+# endif /*]*/
+
+#else /*][*/
+
+#  define menubar_as_set(n)
+#  define menubar_retoggle(t, ix)
+
+# if defined(X3270_DISPLAY) /*[*/
+
+#  define menubar_init(a, b, c)
+#  define menubar_keypad_changed()
+#  define menubar_qheight(n)	0
+#  define menubar_resize(n)
+#  define HandleMenu_action ignore_action
+
+# elif defined(C3270) /*[*/
 
 #  define menu_is_up 0
 #  define menu_init()
@@ -86,19 +101,7 @@ extern void Menu_action(Widget w, XEvent *event, String *params,
 #  endif /*]*/
 #  define popup_menu(x, click)
 #  define menu_cursor(row, col)
-#  define menubar_retoggle(t, ix)
 #  define map_acs(c, u, acs)
 
 # endif /*]*/
-
-#else /*][*/
-
-# define menubar_as_set(n)
-# define menubar_init(a, b, c)
-# define menubar_keypad_changed()
-# define menubar_qheight(n)	0
-# define menubar_resize(n)
-# define menubar_retoggle(t, ix)
-# define HandleMenu_action ignore_action
-
 #endif /*]*/
