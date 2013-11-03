@@ -32,44 +32,46 @@
  */
 
 #include "globals.h"
-#include <signal.h>
-#include "appres.h"
-#include "3270ds.h"
-#include "resources.h"
-#include "ctlr.h"
 
-#include "actionsc.h"
-#include "charsetc.h"
-#include "ctlrc.h"
-#include "gluec.h"
-#include "hostc.h"
-#include "keymapc.h"
-#include "keypadc.h"
-#include "kybdc.h"
-#include "macrosc.h"
-#include "popupsc.h"
-#include "screenc.h"
-#include "togglesc.h"
-#include "tablesc.h"
-#include "trace_dsc.h"
-#include "unicodec.h"
-#include "utf8c.h"
-#include "utilc.h"
-#include "xioc.h"
+#if defined(X3270_MENUS) /*[*/
+# include <signal.h>
+# include "appres.h"
+# include "3270ds.h"
+# include "resources.h"
+# include "ctlr.h"
 
-#include "menubarc.h"
+# include "actionsc.h"
+# include "charsetc.h"
+# include "ctlrc.h"
+# include "gluec.h"
+# include "hostc.h"
+# include "keymapc.h"
+# include "keypadc.h"
+# include "kybdc.h"
+# include "macrosc.h"
+# include "popupsc.h"
+# include "screenc.h"
+# include "togglesc.h"
+# include "tablesc.h"
+# include "trace_dsc.h"
+# include "unicodec.h"
+# include "utf8c.h"
+# include "utilc.h"
+# include "xioc.h"
 
-#if !defined(_WIN32) /*[*/
-# if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
-#  include <ncursesw/ncurses.h>
-# elif defined(HAVE_NCURSES_NCURSES_H) /*][*/
-#  include <ncurses/ncurses.h>
-# elif defined(HAVE_NCURSES_H) /*][*/
-#  include <ncurses.h>
-# else /*][*/
-#  include <curses.h>
+# include "menubarc.h"
+
+# if !defined(_WIN32) /*[*/
+#  if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
+#   include <ncursesw/ncurses.h>
+#  elif defined(HAVE_NCURSES_NCURSES_H) /*][*/
+#   include <ncurses/ncurses.h>
+#  elif defined(HAVE_NCURSES_H) /*][*/
+#   include <ncurses.h>
+#  else /*][*/
+#   include <curses.h>
+#  endif /*]*/
 # endif /*]*/
-#endif /*]*/
 
 /*
  * The menus look like this:
@@ -82,7 +84,7 @@
  * +----------+
  */
 
-#define MENU_WIDTH 10
+# define MENU_WIDTH 10
 
 typedef void (*menu_callback)(void *);
 
@@ -401,7 +403,7 @@ popup_menu(int x, int click)
 	menu_is_up |= MENU_IS_UP;
 }
 
-#if defined(NCURSES_MOUSE_VERSION) || defined(_WIN32) /*[*/
+# if defined(NCURSES_MOUSE_VERSION) || defined(_WIN32) /*[*/
 /*
  * Find a mouse click in the menu hierarchy and act on it.
  *
@@ -481,9 +483,9 @@ selected:
 	}
 	return True;
 }
-#endif /*]*/
+# endif /*]*/
 
-#if defined(_WIN32) /*[*/
+# if defined(_WIN32) /*[*/
 void
 menu_click(int x, int y)
 {
@@ -494,7 +496,7 @@ menu_click(int x, int y)
 	if (!find_mouse(x, y))
 	    	basic_menu_init();
 }
-#endif /*]*/
+# endif /*]*/
 
 /*
  * Handle a key event for a menu.
@@ -513,7 +515,7 @@ menu_key(int k, ucs4_t u)
 
 	switch (k) {
 
-#if defined(NCURSES_MOUSE_VERSION) /*[*/
+# if defined(NCURSES_MOUSE_VERSION) /*[*/
 	case KEY_MOUSE: {
 		MEVENT m;
 
@@ -527,13 +529,13 @@ menu_key(int k, ucs4_t u)
 			basic_menu_init();
 		break;
 	}
-#endif /*]*/
+# endif /*]*/
 
-#if !defined(_WIN32) /*[*/
+# if !defined(_WIN32) /*[*/
 	case KEY_UP:
-#else /*][*/
+# else /*][*/
 	case VK_UP:
-#endif /*]*/
+# endif /*]*/
 		i = current_item;
 		if (current_item && current_item->prev) {
 			current_item = current_item->prev;
@@ -547,11 +549,11 @@ menu_key(int k, ucs4_t u)
 		}
 		break;
 
-#if !defined(_WIN32) /*[*/
+# if !defined(_WIN32) /*[*/
 	case KEY_DOWN:
-#else /*][*/
+# else /*][*/
 	case VK_DOWN:
-#endif /*]*/
+# endif /*]*/
 		i = current_item;
 		if (current_item && current_item->next) {
 			current_item = current_item->next;
@@ -565,11 +567,11 @@ menu_key(int k, ucs4_t u)
 		}
 		break;
 
-#if !defined(_WIN32) /*[*/
+# if !defined(_WIN32) /*[*/
 	case KEY_LEFT:
-#else /*][*/
+# else /*][*/
 	case VK_LEFT:
-#endif /*]*/
+# endif /*]*/
 		undraw_menu(current_menu);
 		if (current_menu->prev)
 			current_menu = current_menu->prev;
@@ -582,11 +584,11 @@ menu_key(int k, ucs4_t u)
 		draw_menu(current_menu);
 		break;
 
-#if !defined(_WIN32) /*[*/
+# if !defined(_WIN32) /*[*/
 	case KEY_RIGHT:
-#else /*][*/
+# else /*][*/
 	case VK_RIGHT:
-#endif /*]*/
+# endif /*]*/
 		undraw_menu(current_menu);
 		if (current_menu->next)
 			current_menu = current_menu->next;
@@ -599,11 +601,11 @@ menu_key(int k, ucs4_t u)
 		draw_menu(current_menu);
 		break;
 
-#if !defined(_WIN32) /*[*/
+# if !defined(_WIN32) /*[*/
 	case KEY_HOME:
-#else /*][*/
+# else /*][*/
 	case VK_HOME:
-#endif /*]*/
+# endif /*]*/
 		if (current_item) {
 			current_item = current_menu->items;
 			while (current_item && !current_item->enabled) {
@@ -613,11 +615,11 @@ menu_key(int k, ucs4_t u)
 		}
 		break;
 
-#if !defined(_WIN32) /*[*/
+# if !defined(_WIN32) /*[*/
 	case KEY_END:
-#else /*][*/
+# else /*][*/
 	case VK_END:
-#endif /*]*/
+# endif /*]*/
 		i = current_item;
 		while (current_item) {
 			current_item = current_item->next;
@@ -628,11 +630,11 @@ menu_key(int k, ucs4_t u)
 		draw_menu(current_menu);
 		break;
 
-#if !defined(_WIN32) /*[*/
+# if !defined(_WIN32) /*[*/
 	case KEY_ENTER:
-#else /*][*/
+# else /*][*/
 	case VK_RETURN:
-#endif /*]*/
+# endif /*]*/
 		selected = True;
 		break;
 
@@ -742,15 +744,15 @@ fm_print(void *ignored _is_unused)
 	push_macro("PrintText", False);
 }
 
-#if defined(X3270_FT) /*[*/
+# if defined(X3270_FT) /*[*/
 static void
 fm_xfer(void *ignored _is_unused)
 {
 	push_macro("Escape() Transfer()", False);
 }
-#endif /*]*/
+# endif /*]*/
 
-#if defined(X3270_TRACE) /*[*/
+# if defined(X3270_TRACE) /*[*/
 static void
 fm_trace(void *ignored _is_unused)
 {
@@ -777,7 +779,7 @@ fm_screentrace_printer(void *ignored _is_unused)
 	else
 		push_macro("ScreenTrace(on,printer)", False);
 }
-#endif /*]*/
+# endif /*]*/
 
 static void
 fm_keymap(void *ignored _is_unused)
@@ -803,14 +805,14 @@ typedef enum {
     FM_STATUS,
     FM_PROMPT,
     FM_PRINT,
-#if defined(X3270_FT) /*[*/
+# if defined(X3270_FT) /*[*/
     FM_XFER,
-#endif /*]*/
-#if defined(X3270_TRACE) /*[*/
+# endif /*]*/
+# if defined(X3270_TRACE) /*[*/
     FM_TRACE,
     FM_SCREENTRACE,
     FM_SCREENTRACE_PRINTER,
-#endif /*]*/
+# endif /*]*/
     FM_KEYMAP,
     FM_DISC,
     FM_QUIT,
@@ -820,20 +822,20 @@ cmenu_item_t *file_menu_items[FM_COUNT];
 char *file_menu_names[FM_COUNT] = {
     "Copyright",
     "Status",
-#if !defined(_WIN32) /*[*/
+# if !defined(_WIN32) /*[*/
     "c3270> Prompt",
-#else /*][*/
+# else /*][*/
     "wc3270> Prompt",
-#endif /*]*/
+# endif /*]*/
     "Print Screen",
-#if defined(X3270_FT) /*[*/
+# if defined(X3270_FT) /*[*/
     "File Transfer",
-#endif /*]*/
-#if defined(X3270_TRACE) /*[*/
+# endif /*]*/
+# if defined(X3270_TRACE) /*[*/
     "Enable Tracing",
     "Save Screen Images in File",
     "Save Screen Images to Printer",
-#endif /*]*/
+# endif /*]*/
     "Display Keymap",
     "Disconnect",
     "Quit"
@@ -843,14 +845,14 @@ menu_callback file_menu_actions[FM_COUNT] = {
     fm_status,
     fm_prompt,
     fm_print,
-#if defined(X3270_FT) /*[*/
+# if defined(X3270_FT) /*[*/
     fm_xfer,
-#endif /*]*/
-#if defined(X3270_TRACE) /*[*/
+# endif /*]*/
+# if defined(X3270_TRACE) /*[*/
     fm_trace,
     fm_screentrace,
     fm_screentrace_printer,
-#endif /*]*/
+# endif /*]*/
     fm_keymap,
     fm_disconnect,
     fm_quit
@@ -981,7 +983,7 @@ menubar_retoggle(struct toggle *t, int ix)
 		Free(s);
 		return;
 	}
-#if defined(X3270_TRACE) /*[*/
+# if defined(X3270_TRACE) /*[*/
 	if (ix == EVENT_TRACE || ix == DS_TRACE) {
 		s = xs_buffer("%sable Tracing",
 			(toggled(EVENT_TRACE) || toggled(DS_TRACE))?
@@ -1002,7 +1004,7 @@ menubar_retoggle(struct toggle *t, int ix)
 				True);
 		}
 	}
-#endif /*]*/
+# endif /*]*/
 }
 
 /*
@@ -1042,10 +1044,10 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
 		}
 		return;
 	} else
-#if !defined(_WIN32) /*[*/
-# if defined(CURSES_WIDE) || defined(_WIN32) /*[*/
+# if !defined(_WIN32) /*[*/
+#  if defined(CURSES_WIDE) || defined(_WIN32) /*[*/
 	       if (appres.acs)
-# endif /*]*/
+#  endif /*]*/
 	{
 		/* ncurses ACS. */
 	    	*is_acs = 1;
@@ -1093,11 +1095,11 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
 			break;
 		}
 	}
-#endif /*]*/
-#if defined(CURSES_WIDE) || defined(_WIN32) /*[*/
-# if !defined(_WIN32) /*[*/
-       else
 # endif /*]*/
+# if defined(CURSES_WIDE) || defined(_WIN32) /*[*/
+#  if !defined(_WIN32) /*[*/
+       else
+#  endif /*]*/
        {
 	   	/* Unicode. */
 		*is_acs = 0;
@@ -1143,7 +1145,7 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
 			break;
 		}
        }
-#endif /*]*/
+# endif /*]*/
 }
 
 void
@@ -1151,3 +1153,5 @@ Menu_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
 	popup_menu(0, False);
 }
+
+# endif /*]*/

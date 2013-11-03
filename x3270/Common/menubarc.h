@@ -32,6 +32,7 @@
 
 #if defined(X3270_MENUS) /*[*/
 
+/* x3270 externs. */
 extern Pixmap dot, no_dot;
 extern Pixmap diamond, no_diamond;
 extern Pixmap null;
@@ -52,23 +53,43 @@ extern void menubar_retoggle(struct toggle *t, int ix);
 
 #elif defined(C3270) /*][*/
 
-# define MENU_IS_UP	0x1
-# define KEYPAD_IS_UP	0x2
+# define menubar_as_set(n)
+
+# if defined(X3270_MENUS) /*[*/
+
+/* c3270 externs. */
+#  define MENU_IS_UP	0x1
+#  define KEYPAD_IS_UP	0x2
 extern unsigned menu_is_up;
 extern void menu_init(void);
 extern Boolean menu_char(int row, int col, Boolean persistent, ucs4_t *u,
 	Boolean *highlighted, unsigned char *acs);
 extern void menu_key(int k, ucs4_t u);
-# if defined(_WIN32) /*[*/
+#  if defined(_WIN32) /*[*/
 extern void menu_click(int x, int y);
-# endif /*]*/
+#  endif /*]*/
 extern void popup_menu(int x, int click);
 extern void menu_cursor(int *row, int *col);
 extern void menubar_retoggle(struct toggle *t, int ix);
 extern void map_acs(unsigned char c, ucs4_t *u, unsigned char *acs);
 extern void Menu_action(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
-# define menubar_as_set(n)
+
+# else /*][*/
+
+#  define menu_is_up 0
+#  define menu_init()
+#  define menu_char(row, col, persistent, u, highlighted, acs) False
+#  define menu_key(k, u)
+#  if defined(_WIN32) /*[*/
+#   define menu_click(x, y)
+#  endif /*]*/
+#  define popup_menu(x, click)
+#  define menu_cursor(row, col)
+#  define menubar_retoggle(t, ix)
+#  define map_acs(c, u, acs)
+
+# endif /*]*/
 
 #else /*][*/
 

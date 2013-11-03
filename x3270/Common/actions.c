@@ -214,7 +214,7 @@ XtActionsRec all_actions[] = {
 	{ "Insert",		Insert_action },
 	{ "Interrupt",		Interrupt_action },
 	{ "Key",		Key_action },
-#if defined(C3270) /*[*/
+#if defined(C3270) && defined(X3270_MENUS) /*[*/
 	{ "Keypad",		Keypad_action },
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
@@ -225,7 +225,7 @@ XtActionsRec all_actions[] = {
 #if defined(X3270_SCRIPT) || defined(S3270) /*[*/
 	{ "Macro", 		Macro_action },
 #endif /*]*/
-#if defined(C3270) /*[*/
+#if defined(C3270) && defined(X3270_MENUS) /*[*/
 	{ "Menu",		Menu_action },
 #endif /*]*/
 	{ "MonoCase",		MonoCase_action },
