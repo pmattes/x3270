@@ -89,20 +89,26 @@ The format <b>file:</b><i>filename</i> specifies a file containing the password.
 The format <b>string:</b><i>string</i> specifies the password as a string in
 the option or resource directly.</p>
 <h3>Controlling Host Certificate Verification</h3>
-By default, host SSL certificates are verified, and self-signed certificates
-are not allowed.
+By default, host SSL certificates are not verified.
+To enable host certificate verification, set the <b>verifyHostCert</b>
+resource to <b>true</b> or specify the <b>-verifycert</b> option.
+<p> When host certificates are verified, self-signed certificates are not
+allowed.
 To allow self-signed host certificates, set the <b>selfSignedOk</b> resource
-to <b>true</b>.
-To disable host certificate verification completely, set the
-<b>verifyHostCert</b> resource to <b>false</b> or specify the
-<b>-noverifycert</b> option.
+to <b>true</b> or specify the <b>-selfsignedok</b> option.
+<p>
+Also, when host certificates are verified, the name in the host's SSL
+certificate is checked.
+This check can be controlled by the <b>acceptHostname</b> resource or the
+<b>-accepthostname</b> option.
+The value can be <b>any</b>, which disables hostname checking,
+<b>DNS:<i>hostname</i></b>, which matches a specific symbolic hostname, or
+<b>IP:<i>address</i></b>, which matches a particular IPv4 or IPv6 numeric
+address.
 <a name="Windows"></a>
 <h2>Windows and the OpenSSL DLLs</h2>
-There are two versions of each of the Windows
-emulators, one with SSL support and one without.
-An option in the setup program defines which set is installed.
-<p>The secure versions of wc3270, ws3270 and wpr3287 will not function
-without OpenSSL DLLs installed on your workstation.
+<p>wc3270, ws3270 and wpr3287 will not allow secure connections
+without the OpenSSL DLLs installed on your workstation.
 These DLLs are not part of the wc3270 installation -- installing them is a
 completely separate process.
 <p>The Windows OpenSSL DLLs for wc3270 are available here:</p>
