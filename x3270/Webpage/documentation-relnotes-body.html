@@ -1,39 +1,47 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
 3.3 is the current development line for the x3270 suite.
+<h2>Changes in version 3.3.14alpha3, n. December 2013</h2>
+<ul>
+ <li>[all] Fixed a problem reading files with the <b>Source</b> action, when
+  the file does not end with a CR or NL.</li>
+</ul>
 <h2>Changes in version 3.3.14alpha2, 4. November 2013</h2>
 <ul>
- <li>Added support for CICS IND$FILE file transfers.</li>
+ <li>[all] Added support for CICS IND$FILE file transfers.</li>
 </ul>
 <h2>Changes in version 3.3.14alpha1, 30. October 2013</h2>
 <ul>
- <li>Allow file transfers to start when the screen is unformatted.</li>
- <li>Fixed a problem with the initial data stream trace snapshot when the
+ <li>[all] Allow file transfers to start when the screen is unformatted.</li>
+ <li>[all] Fixed a problem with the initial data stream trace snapshot when the
   screen is unformatted.</li>
  <li>A wrapper function was put around the Windows <i>snprintf</i> function,
   to ensure that it always NUL-terminates strings. The lack of such a wrapper
   could lead to string overflows in some situations.</li>
- <li>Added the ability to install wc3270 for all users or just for the current
+ <li>[<i>wc3270</i>] Added the ability to install wc3270 for all users or just
+  for the current
   user (the old behavior was just the current user). Also extended the
   installer to allow selective installation of various pieces. The Session
   Wizard can now create and edit session files and desktop shortcuts for either
   all users or the current user, and keymaps can be located in either the
   all-users or current user's AppData directory. Trace files are always left
   in the current user's AppData directory.</li>
- <li>wc3270 Session files are now editable from the Windows context
-  menu (right-clicking from explorer).</li>
- <li>Windows 98 is no longer supported by the wc3270 installer. This is
+ <li>[<i>wc3270</i>] wc3270 Session files are now editable from the Windows
+  context menu (right-clicking from explorer).</li>
+ <li>[<i>wc3270</i>] Windows 98 is no longer supported by the wc3270 installer.
+  This is
   because the installer tool used by wc3270 (Inno Setup) no longer supports
   Windows 98, not because of any inherent limitation in wc3270. The no-setup
   .ZIP file can still be used to install wc3270 on Windows 98 by hand. A
   simple Windows 98-specific installer may be added at some point in the
   future.</li>
- <li>Added native select/copy to wc3270. Just highlight with the mouse and
-  press Ctrl-C. The <b>Clear</b> action is still available via Alt-C.</li>
+ <li>[<i>wc3270</i>] Added native select/copy to wc3270. Just highlight with
+  the mouse and press Ctrl-C. The <b>Clear</b> action is still available via
+  Alt-C.</li>
 </ul>
 <h2>Changes in version 3.3.13ga7, 11. September 2013</h2>
 <ul>
  <li>[<i>wc3270</i>] Fixed a hang when the wc3270 window was closed on XP.</li>
- <li>[<i>all</i>] Fixed connect() failures on MacOS.</li>
+ <li>[all] Fixed connect() failures on MacOS.</li>
 </ul>
 <h2>Changes in version 3.3.13ga6, 8. September 2013</h2>
 <ul>

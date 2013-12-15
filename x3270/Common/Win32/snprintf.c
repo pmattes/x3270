@@ -53,9 +53,7 @@ safe_vsnprintf(char *str, size_t size, const char *fmt, va_list ap)
 		int len;
 
 		len = vsnprintf(str, size, fmt, ap);
-		if (len < 0 || len == size) {
-			str[size - 1] = '\0';
-		}
+		str[size - 1] = '\0';
 		return len;
 	} else {
 		return 0;

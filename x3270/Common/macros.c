@@ -1678,23 +1678,29 @@ read_from_file(void)
 
 		nr = read(sms->infd, dptr, 1);
 		if (nr < 0) {
+			trace_dsn("%s[%d] read error\n", ST_NAME, sms_depth);
 			sms_pop(False);
 			return;
 		}
 		if (nr == 0) {
 		    	if (sms->msc_len == 0) {
+				trace_dsn("%s[%d] read EOF\n", ST_NAME,
+					sms_depth);
 			    	sms_pop(False);
 				return;
 			} else {
-			    	*++dptr = '\0';
+				trace_dsn("%s[%d] read EOF without newline\n",
+					ST_NAME, sms_depth);
+			    	*dptr = '\0';
 			    	break;
 			}
 		}
-		if (*dptr == '\n') {
+		if (*dptr == '\r' || *dptr == '\n') {
 		    	if (sms->msc_len) {
 			    	*dptr = '\0';
 				break;
-			}
+			} else
+			    	continue;
 		}
 		dptr++;
 		sms->msc_len++;
