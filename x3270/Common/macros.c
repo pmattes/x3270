@@ -2922,6 +2922,7 @@ sms_redirect_to(void)
 		     s->state == SS_CONNECT_WAIT ||
 		     s->state == SS_WAIT_OUTPUT ||
 		     s->state == SS_SWAIT_OUTPUT ||
+		     s->state == SS_FT_WAIT ||
 		     s->wait_id != NULL_IOID))
 			return s;
 	}

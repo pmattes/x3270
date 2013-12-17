@@ -60,7 +60,7 @@
 # include "ftc.h"
 # include "dialogc.h"
 # include "hostc.h"
-# if defined(C3270) || defined(WC3270) /*[*/
+# if defined(C3270) /*[*/
 #  include "icmdc.h"
 # endif /*]*/
 # include "kybdc.h"
@@ -215,6 +215,9 @@ Boolean ft_last_dbcs = False;
 static Widget overwrite_shell;
 #endif /*]*/
 static Boolean ft_is_action;
+#if defined(C3270) /*[*/
+static Boolean ft_is_interactive = False;
+#endif /*]*/
 static ioid_t ft_start_id = NULL_IOID;
 
 #if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
@@ -1579,6 +1582,10 @@ ft_complete(const char *errmsg)
 
 	/* Clean up the state. */
 	ft_state = FT_NONE;
+	if (ft_start_id != NULL_IOID) {
+		RemoveTimeOut(ft_start_id);
+		ft_start_id = NULL_IOID;
+	}
 
 #if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
 	/* Pop down the in-progress shell. */
@@ -1590,7 +1597,8 @@ ft_complete(const char *errmsg)
 	if (errmsg != CN) {
 		char *msg_copy = NewString(errmsg);
 
-		/* Make sure the error message will fit on the display. */
+#if defined(X3270_DISPLAY) /*[*/
+		/* Make sure the error message will fit on the pop-up. */
 		if (strlen(msg_copy) > 50 && strchr(msg_copy, '\n') == CN) {
 			char *s = msg_copy + 50;
 
@@ -1599,9 +1607,15 @@ ft_complete(const char *errmsg)
 			if (s > msg_copy)
 				*s = '\n';	/* yikes! */
 		}
+#endif /*]*/
 #if defined(C3270) /*[*/
-		printf("\r%79s\n", "");
-		fflush(stdout);
+		/* Clear out the progress display. */
+		if (ft_is_interactive) {
+			printf("\r%79s\n", "");
+			fflush(stdout);
+		} else {
+			popup_an_info(" ");
+		}
 #endif /*]*/
 		popup_an_error("%s", msg_copy);
 		Free(msg_copy);
@@ -1621,8 +1635,13 @@ ft_complete(const char *errmsg)
 			ft_is_cut ? "CUT" : "DFT");
 		if (ft_is_action) {
 #if defined(C3270) /*[*/
-			printf("\r%79s\n", "");
-			fflush(stdout);
+			/* Clear out the progress display. */
+			if (ft_is_interactive) {
+				printf("\r%79s\n", "");
+				fflush(stdout);
+			} else {
+				popup_an_info(" ");
+			}
 #endif /*]*/
 			sms_info("%s", buf);
 			sms_continue();
@@ -1633,6 +1652,9 @@ ft_complete(const char *errmsg)
 #endif /*]*/
 		Free(buf);
 	}
+#if defined(C3270) /*[*/
+	ft_is_interactive = False;
+#endif /*]*/
 }
 
 /* Update the bytes-transferred count on the progress pop-up. */
@@ -1651,8 +1673,13 @@ ft_update_length(void)
 	}
 #endif /*]*/
 #if defined(C3270) /*[*/
-	printf("\r%79s\rTransferred %lu bytes. ", "", ft_length);
-	fflush(stdout);
+	if (ft_is_interactive) {
+		printf("\r%79s\rTransferred %lu bytes. ", "", ft_length);
+		fflush(stdout);
+	} else {
+		popup_an_info("Transferred %lu bytes.", ft_length);
+	}
+
 #endif /*]*/
 }
 
@@ -1804,7 +1831,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 		return;
 	}
 
-#if defined(C3270) || defined(WC3270) /*[*/
+#if defined(C3270) /*[*/
 	/* Check for interactive mode. */
 	if (xnparams == 0 && escaped) {
 	    	if (interactive_transfer(&xparams, &xnparams) < 0) {
@@ -1813,6 +1840,9 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 		    	action_output("Aborted");
 		    	return;
 		}
+	}
+	if (escaped) {
+		ft_is_interactive = True;
 	}
 #endif /*]*/
 
@@ -2068,10 +2098,12 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	(void) emulate_input(cmd, strlen(cmd), False);
 	Free(cmd);
 #if defined(C3270) /*[*/
-	if (!escaped)
-	    	screen_suspend();
-	printf("Awaiting start of transfer... ");
-	fflush(stdout);
+	if (ft_is_interactive) {
+		printf("Awaiting start of transfer... ");
+		fflush(stdout);
+	} else {
+		popup_an_info("Awaiting start of transfer... ");
+	}
 #endif /*]*/
 
 	/* Get this thing started. */
