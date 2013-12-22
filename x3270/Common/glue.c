@@ -1192,6 +1192,7 @@ valid_explicit(const char *resname, unsigned len)
 	    { ResKeymap,			V_WILD },
 	    { ResAssocCommand,			V_FLAT },
 	    { ResLuCommandLine,			V_FLAT },
+	    { ResPrintTextScreensPerPage,	V_FLAT },
 #if defined(_WIN32) /*[*/
 	    { ResPrinterCodepage,		V_FLAT },
 	    { ResPrinterCommand,		V_FLAT },

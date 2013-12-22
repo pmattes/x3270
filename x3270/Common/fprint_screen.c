@@ -53,6 +53,8 @@ typedef struct {
 	unsigned opts;		/* FPS_XXX options */
 	Boolean need_separator;	/* Pending page indicator */
 	Boolean broken;		/* If set, output has failed already. */
+	int spp;		/* Screens per page. */
+	int screens;		/* Screen count this page. */
 	FILE *file;		/* Stream to write to */
 } real_fps_t;
 
@@ -218,6 +220,7 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 	real_fps_t *fps;
 	char *xcaption = NULL;
 	int rv = 0;
+	char *pt_spp;
 
 	/* Non-text types can always generate blank output. */
 	if (ptype != P_TEXT) {
@@ -230,6 +233,8 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 	fps->opts = opts;
 	fps->need_separator = False;
 	fps->broken = False;
+	fps->spp = 1;
+	fps->screens = 0;
 	fps->file = f;
 
 	if (caption != NULL) {
@@ -311,9 +316,21 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 		break;
 	}
 	case P_TEXT:
-		if (xcaption != NULL)
-			if (fprintf(f, "%s\n\n", xcaption) < 0)
+		if (xcaption != NULL) {
+			if (fprintf(f, "%s\n\n", xcaption) < 0) {
 				rv = -1;
+			}
+		}
+		break;
+	}
+
+	/* Set up screens-per-page. */
+	pt_spp = get_resource(ResPrintTextScreensPerPage);
+	if (pt_spp != NULL) {
+		fps->spp = atoi(pt_spp);
+		if (fps->spp < 1 || fps->spp > 5) {
+			fps->spp = 1;
+		}
 	}
 
 	if (xcaption != NULL)
@@ -384,12 +401,23 @@ fprint_screen_body(fps_t ofps)
 
 	switch (fps->ptype) {
 	case P_RTF:
-		if (fps->need_separator)
-			if (fprintf(fps->file, "\n\\page\n") < 0)
+		if (fps->need_separator) {
+		    	if (fps->screens < fps->spp) {
+				if (fprintf(fps->file, "\\par\n") < 0) {
+				    	FAIL;
+				}
+			} else {
+				if (fprintf(fps->file, "\n\\page\n") < 0) {
+					FAIL;
+				}
+				fps->screens = 0;
+			}
+		}
+		if (current_high) {
+			if (fprintf(fps->file, "\\b ") < 0) {
 				FAIL;
-		if (current_high)
-			if (fprintf(fps->file, "\\b ") < 0)
-				FAIL;
+			}
+		}
 		break;
 	case P_HTML:
 		if (fprintf(fps->file, "  <table border=0>"
@@ -406,9 +434,12 @@ fprint_screen_body(fps_t ofps)
 		break;
 	case P_TEXT:
 		if (fps->need_separator) {
-			if (fps->opts & FPS_FF_SEP) {
+			if ((fps->opts & FPS_FF_SEP) &&
+				fps->screens >= fps->spp) {
+
 				if (fputc('\f', fps->file) < 0)
 					FAIL;
+				fps->screens = 0;
 			} else {
 			    	for (i = 0; i < COLS; i++) {
 					if (fputc('=', fps->file) < 0)
@@ -679,6 +710,7 @@ fprint_screen_body(fps_t ofps)
 			   current_high? "</b>": "") < 0)
 			FAIL;
 	fps->need_separator = True;
+	fps->screens++;
 	rv = 1; /* wrote a screen */
 
     done:

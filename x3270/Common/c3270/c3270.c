@@ -1350,7 +1350,11 @@ ScreenTrace_action(Widget w _is_unused, XEvent *event _is_unused,
 		case 2:
 			if (!strcasecmp(params[1], "Printer")) {
 				how = TSS_PRINTER;
-				name = NULL;
+#if !defined(_WIN32) /*[*/
+				name = get_resource(ResPrintTextCommand);
+#else /*][*/
+				name = get_resource(ResPrinterName);
+#endif /*]*/
 			} else {
 				how = TSS_FILE;
 				name = params[1];

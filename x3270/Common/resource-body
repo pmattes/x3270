@@ -2163,6 +2163,15 @@ desc
     The font used by the <b>PrintText</b> action.
 .
 
+name printTextScreensPerPage
+applies wc c x
+type i
+default 1
+desc
+    The number of screens to display on a page when tracing screens to the
+    printer.
+.
+
 name printTextSize
 applies wc
 type i

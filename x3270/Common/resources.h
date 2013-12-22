@@ -477,6 +477,7 @@
 #define ResPfWidth		"pfWidth"
 #define ResPrintTextCommand	"printTextCommand"
 #define ResPrintTextFont	"printTextFont"
+#define ResPrintTextScreensPerPage "printTextScreensPerPage"
 #define ResPrintTextSize	"printTextSize"
 #define ResPrintWindowCommand	"printWindowCommand"
 #define ResTraceCommand		"traceCommand"
