@@ -32,11 +32,13 @@ CC = cl /nologo
 RC = rc
 RM = erase
 
-# To build with the OpenSSL library, uncomment the following three lines
-# (substituting your OpenSSL install location in the first).
-#SSLDIR = C:\OpenSSL-Win32
-#SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
-#SSLLIB = gdi32.lib
+# This makefile assumes that you have OpenSSL headers in c:\OpenSSL-Win32.
+# If they are somewhere else, change SSLDIR below.
+SSLDIR = C:\OpenSSL-Win32
+!IF EXISTS($(SSLDIR))
+SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
+SSLLIB = gdi32.lib
+!ENDIF
 
 XCPPFLAGS = /D_WIN32 /DWS3270 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /D_CRT_SECURE_NO_DEPRECATE /DWIN32_LEAN_AND_MEAN $(SSLDEF)
 CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I.

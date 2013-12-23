@@ -85,6 +85,7 @@
 #include "windirsc.h"
 #include "relinkc.h"
 #include <shellapi.h>
+#include <direct.h>
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/

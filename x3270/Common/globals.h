@@ -91,18 +91,22 @@
 # include <sys/time.h>			/* System time-related data types */
 #endif /*]*/
 #include <time.h>			/* C library time functions */
+#if defined(_WIN32) /*[*/
+# include <winsock2.h>
+# include <windows.h>
+#endif /*]*/
+
 #include "localdefs.h"			/* {s,tcl,c}3270-specific defines */
 
 /*
  * MSC glue.
  */
 #if defined(_MSC_VER) /*[*/
-#include <winsock2.h>			/* for struct timeval */
 typedef signed long ssize_t;
 extern int gettimeofday(struct timeval *, void *);
-#define R_OK	4
-#define strcasecmp      _stricmp
-#define strncasecmp     _strnicmp
+# define R_OK	4
+# define strcasecmp      _stricmp
+# define strncasecmp     _strnicmp
 #endif /*]*/
 
 /*

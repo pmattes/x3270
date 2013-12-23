@@ -41,7 +41,5 @@
 #define open		_open
 #define putenv		_putenv
 #define read		_read
-#define snprintf	_snprintf
-#define vsnprintf	_vsnprintf
 #define unlink		_unlink
 #define write		_write

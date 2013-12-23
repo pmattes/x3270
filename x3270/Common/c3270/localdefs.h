@@ -37,11 +37,6 @@
 /* Identify ourselves. */
 #define C3270	1
 
-/* On Windows, we need <windows.h>. */
-#if defined(_WIN32) /*[*/
-# include <windows.h>
-#endif /*]*/
-
 /* Conditional 80/132 mode switch support. */
 #if defined(BROKEN_NEWTERM) /*[*/
 #undef C3270_80_132
@@ -84,6 +79,7 @@ extern void Warning(const char *);
 
 #if defined(_WIN32) /*[*/
 /* Work around Windows' brain-damaged snprintf implementation. */
+# include <stdarg.h>
 extern int safe_vsnprintf(char *str, size_t size, const char *fmt, va_list ap);
 extern int safe_snprintf(char *str, size_t size, const char *fmt, ...);
 # if !defined(IS_SNPRINTF_C) /*[*/

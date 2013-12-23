@@ -33,11 +33,13 @@ CC = cl /nologo
 RC = rc
 RM = erase
 
-# To build with the OpenSSL library, uncomment the following three lines
-# (substituting your OpenSSL install location in the first).
-#SSLDIR = C:\OpenSSL-Win32
-#SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
-#SSLLIB = gdi32.lib
+# This makefile assumes that you have OpenSSL headers in c:\OpenSSL-Win32.
+# If they are somewhere else, change SSLDIR below.
+SSLDIR = C:\OpenSSL-Win32
+!IF EXISTS($(SSLDIR))
+SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
+SSLLIB = gdi32.lib
+!ENDIF
 
 XCPPFLAGS = /D_WIN32 /DWC3270 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /DWINVER=0x500 /D_CRT_SECURE_NO_DEPRECATE $(SSLDEF)
 CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I.
@@ -52,7 +54,7 @@ VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj c3270.obj charset.obj \
 	winprint.obj xio.obj wc3270.RES
 OBJECTS = $(VOBJS) version.obj
 WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
-	windirs.obj relink.obj
+	windirs.obj relink.obj snprintf.obj
 LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib shell32.lib ole32.lib
 SHRTLIBS = ole32.lib
 WIZLIBS = ole32.lib winspool.lib advapi32.lib
@@ -187,7 +189,7 @@ select.obj: select.c
 sf.obj: sf.c
 	$(CC) $(CFLAGS) /c sf.c
 snprintf.obj: snprintf.c
-	$(CC) $(CFLAGS) /c sf.c
+	$(CC) $(CFLAGS) /c snprintf.c
 ssl_dll.obj: ssl_dll.c
 	$(CC) $(CFLAGS) /c ssl_dll.c
 tables.obj: tables.c

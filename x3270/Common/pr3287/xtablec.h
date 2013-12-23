@@ -30,4 +30,4 @@
  */
 
 extern int xtable_init(const char *filename);
-extern int xtable_lookup(unsigned char ebc, const char **r);
+extern int xtable_lookup(unsigned char ebc, char **r);

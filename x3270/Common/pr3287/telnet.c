@@ -597,7 +597,11 @@ int
 net_input(int s)
 {
 	register unsigned char *cp;
+#if defined(_MSC_VER) /*[*/
+	SSIZE_T nr;
+#else /*][*/
 	ssize_t nr;
+#endif /*]*/
 
 #if defined(HAVE_LIBSSL) /*[*/
 	if (ssl_con != NULL)

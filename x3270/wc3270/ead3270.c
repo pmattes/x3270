@@ -45,7 +45,7 @@ static int
 explore(char *dir)
 {
 	size_t sl;
-	char cmd[strlen(COMMAND) + 2 + MAX_PATH + 1];
+	char cmd[sizeof(COMMAND) + 2 + MAX_PATH + 1];
 
 	sl = strlen(dir);
 	if (sl > 1 && dir[sl - 1] == '\\') {

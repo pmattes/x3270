@@ -90,7 +90,7 @@ static unsigned char default_gr;
 static unsigned char default_cs;
 static int line_length = MAX_LL;
 static ucs4_t page_buf[MAX_BUF];
-static const char *xlate_buf[MAX_BUF];
+static char *xlate_buf[MAX_BUF];
 int xlate_len[MAX_BUF];
 static int baddr = 0;
 static Boolean page_buf_initted = False;

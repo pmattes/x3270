@@ -413,11 +413,13 @@ ex_getenv(const char *name, unsigned long flags, int *up)
 		/* YYYYMMDDHHMMSSUUUUUU */
 		static char ts[21];
 		struct timeval tv;
+		time_t t; /* on Windows, timeval.tv_sec is a long */
 		struct tm *tm;
 
 		if (gettimeofday(&tv, NULL) < 0)
 			return NewString("?");
-		tm = localtime(&tv.tv_sec);
+		t = tv.tv_sec;
+		tm = localtime(&t);
 		(void) snprintf(ts, sizeof(ts),
 			"%04u%02u%02u%02u%02u%02u%06u",
 			tm->tm_year + 1900,

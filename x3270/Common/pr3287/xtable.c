@@ -464,7 +464,7 @@ done:
  *    n expand to <n> returned characters
  */
 int
-xtable_lookup(unsigned char ebc, const char **r)
+xtable_lookup(unsigned char ebc, char **r)
 {
 	if (!xtable_initted || ebc < 0x40) {
 		*r = NULL;
