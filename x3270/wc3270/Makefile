@@ -96,7 +96,7 @@ fallbacks.c: $(MKFB) X3270.xad Makefile
 	./$(MKFB) -c X3270.xad $@
 
 $(MKFB): mkfb.c Makefile
-	$(NATIVECC) -g -o $(MKFB) -D_WIN32 mkfb.c
+	$(NATIVECC) -g -o $(MKFB) -DFOR_WIN32 mkfb.c
 
 keypad.o: keypad.c compiled_keypad.h
 
