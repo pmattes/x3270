@@ -18,7 +18,7 @@ release=""
 
 function usage
 {
-	echo >&2 "Usage: $0 [-nobuild] [-release] [<product>...]"
+	echo >&2 "Usage: $0 [--nobuild] [--release] [--just-tarball] [<product>...]"
 	exit 0
 }
 
@@ -36,6 +36,10 @@ do	case "$1" in
 		release=1
 		shift
 		;;
+	-just-tarball|--just-tarball)
+		tarball=1
+		shift
+		;;
 	-*)
 		usage
 		;;
@@ -47,9 +51,12 @@ done
 # Set up the product list.
 if [ $# -gt 0 ]
 then	prods=$*
-#else	prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270 lib3270"
 else	prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270"
     	all=1;
+fi
+if [ "$tarball" -a ! "$all" ]
+then	echo >&2 "Can't do tarball for specific products."
+    	exit 1
 fi
 
 if [[ "$prods" =~ wc3270 && \
@@ -134,6 +141,10 @@ if [ "$all" ]
 then	echo "===== Making mega-tarball."
 	# Make a mega-tarball.
 	tar -czf $suite *-3.3/
+fi
+if [ "$tarball" ]
+then	echo "Tarball is $tmpdir/$suite."
+    	exit
 fi
 
 for prod in $prods

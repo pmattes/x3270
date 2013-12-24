@@ -40,7 +40,7 @@ SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
 SSLLIB = gdi32.lib
 !ENDIF
 
-XCPPFLAGS = /D_WIN32 /DWS3270 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /D_CRT_SECURE_NO_DEPRECATE /DWIN32_LEAN_AND_MEAN $(SSLDEF)
+XCPPFLAGS = /D_WIN32 /DWS3270 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /D_CRT_SECURE_NO_DEPRECATE /DWIN32_LEAN_AND_MEAN /W3 /WX $(SSLDEF)
 CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I.
 VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj charset.obj ctlr.obj \
 	fallbacks.obj fprint_screen.obj ft.obj ft_cut.obj ft_dft.obj glue.obj \

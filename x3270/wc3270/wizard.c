@@ -322,7 +322,7 @@ static km_t *
 save_keymap_name(char *path, char *keymap_name, char *description)
 {
 	km_t *km;
-    	int sl;
+    	size_t sl;
 	km_t *kms;
 	FILE *f;
 	enum { KMF_BOTH, KMF_3270, KMF_NVT } km_mode = KMF_BOTH;
