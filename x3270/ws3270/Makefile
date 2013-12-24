@@ -87,7 +87,7 @@ fallbacks.c: $(MKFB) X3270.xad Makefile
 	./$(MKFB) -c X3270.xad $@
 
 $(MKFB): mkfb.c Makefile
-	$(NATIVECC) -g -o $(MKFB) -D_WIN32 mkfb.c
+	$(NATIVECC) -g -o $(MKFB) -DFOR_WIN32 mkfb.c
 
 ws3270res.o: ws3270.rc ws3270.ico Makefile
 	$(WINDRES) -i ws3270.rc -o ws3270res.o
