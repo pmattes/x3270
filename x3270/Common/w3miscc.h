@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, Paul Mattes.
+ * Copyright (c) 2007-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,10 +32,8 @@
 
 #if defined(_WIN32) /*[*/
 
-#if defined(_WS2TCPIP_H) /*[*/
 extern const char *inet_ntop(int af, const void *src, char *dst,
 	socklen_t cnt);
-#endif /*]*/
 extern int sockstart(void);
 extern const char *win32_strerror(int e);
 

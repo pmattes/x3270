@@ -682,7 +682,7 @@ process_events(Boolean block)
 			if (now > timeouts->ts)
 				tmo = 0;
 			else
-				tmo = timeouts->ts - now;
+				tmo = (DWORD)(timeouts->ts - now);
 #else /*][*/
 			(void) gettimeofday(&now, (void *)NULL);
 			twait.tv_sec = timeouts->tv.tv_sec - now.tv_sec;

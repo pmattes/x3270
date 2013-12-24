@@ -28,10 +28,7 @@
 /*
  * Redefinitions of POSIX functions that MSC doesn't like the names of.
  */
-#include <io.h>		/* for _close, _dup, _read, _write */
-#include <process.h>	/* for _getpid */
-#include <stdio.h>	/* for _fdopen, _fileno, _snprintf */
-
+#define access		_access
 #define close		_close
 #define dup		_dup
 #define fdopen		_fdopen
@@ -41,5 +38,6 @@
 #define open		_open
 #define putenv		_putenv
 #define read		_read
+#define strdup		_strdup
 #define unlink		_unlink
 #define write		_write

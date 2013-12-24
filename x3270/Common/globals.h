@@ -92,10 +92,24 @@
 #endif /*]*/
 #include <time.h>			/* C library time functions */
 #if defined(_WIN32) /*[*/
-# include <winsock2.h>
-# include <windows.h>
+# include <winsock2.h>			/* Has to come before windows.h */
+# include <windows.h>			/* Common definitions for Windows */
+# include <shellapi.h>
+# include <direct.h>
+# include <io.h>
+# include <process.h>
+# include <ws2tcpip.h>
 #endif /*]*/
 
+					/*
+					 * N.B.: localdefs.h has to come
+					 * *after* all of the Windows system
+					 * #includes, so the function names
+					 * that are redefined there are
+					 * declared *after* the declarations
+					 * of the functions they are renamed
+					 * to.
+					 */
 #include "localdefs.h"			/* {s,tcl,c}3270-specific defines */
 
 /*

@@ -116,7 +116,7 @@ char *user_settings = NULL;
 static wchar_t *
 reg_font_from_cset(char *cset, int *codepage)
 {
-    	int i, j;
+    	unsigned i, j;
 	wchar_t *cpname = NULL;
 	wchar_t data[1024];
 	DWORD dlen;

@@ -874,7 +874,7 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
     ucs4_t ucs4;
 #if defined(_WIN32) /*[*/
     wchar_t wc[3];
-    int i;
+    unsigned i;
 
     /* Use MultiByteToWideChar() to get from the ANSI codepage to UTF-16. */
     for (i = 1; i <= mb_len; i++) {

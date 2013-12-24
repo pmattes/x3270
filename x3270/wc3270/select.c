@@ -246,8 +246,8 @@ find_word_end(int row, int col, int *startp, int *endp)
 Boolean
 select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 {
-	assert(row <= ROWS);
-	assert(col <= COLS);
+	assert((int)row <= ROWS);
+	assert((int)col <= COLS);
 
 	trace_event("select_event(%u %u %s %s)\n", row, col, event_name[event],
 		shift? "shift": "no-shift");
@@ -645,11 +645,10 @@ Copy_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 Boolean
 select_changed(unsigned row, unsigned col, unsigned rows, unsigned cols)
 {
-	int r;
+	unsigned r;
 
-	//trace_event("select_changed(%u %u %u %u)\n", row, col, rows, cols);
-	assert(row + rows <= ROWS);
-	assert(col + cols <= COLS);
+	assert((int)(row + rows) <= ROWS);
+	assert((int)(col + cols) <= COLS);
 
 	for (r = row; r < row + rows; r++) {
 		if (memcmp(&s_pending [(r * COLS) + col],
@@ -667,7 +666,6 @@ select_changed(unsigned row, unsigned col, unsigned rows, unsigned cols)
 Boolean
 area_is_selected(int baddr, int len)
 {
-	//trace_event("area_is_selected(%d %d)\n", baddr, len);
     	return memchr(&s_pending[baddr], 1, len) != NULL;
 }
 
@@ -678,12 +676,12 @@ area_is_selected(int baddr, int len)
 void
 select_sync(unsigned row, unsigned col, unsigned rows, unsigned cols)
 {
-	int r;
+	unsigned r;
 
 	//trace_event("select_sync(%u %u %u %u)\n", row, col, rows, cols);
 
-	assert(row + rows <= ROWS);
-	assert(col + cols <= COLS);
+	assert((int)(row + rows) <= ROWS);
+	assert((int)(col + cols) <= COLS);
 
 	for (r = row; r < row + rows; r++) {
 		memcpy(&s_onscreen[(r * COLS) + col],

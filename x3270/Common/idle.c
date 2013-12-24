@@ -153,7 +153,7 @@ idle_init(void)
 
 	/* Seed the random number generator (we seem to be the only user). */
 # if defined(_WIN32) /*[*/
-	srand(time(NULL));
+	srand((unsigned int)time(NULL));
 # else /*][*/
 	srandom(time(NULL));
 # endif /*]*/

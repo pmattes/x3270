@@ -84,8 +84,6 @@
 #include "winversc.h"
 #include "windirsc.h"
 #include "relinkc.h"
-#include <shellapi.h>
-#include <direct.h>
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
@@ -952,7 +950,7 @@ hms(time_t ts)
 	(void) time(&t);
 
 	td = t - ts;
-	hr = td / 3600;
+	hr = (long)(td / 3600);
 	mn = (td % 3600) / 60;
 	sc = td % 60;
 
@@ -1602,7 +1600,7 @@ start_auto_shortcut(void)
 		x3270_exit(1);
 	}
 	sprintf(args, "+S \"%s\"", sesspath);
-	cwd = _getcwd(NULL, 0);
+	cwd = getcwd(NULL, 0);
 	hres = create_shortcut(&s,		/* session */
 			       exepath,		/* .exe    */
 			       linkpath,	/* .lnk    */

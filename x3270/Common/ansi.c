@@ -1075,31 +1075,38 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 			ctlr_add(cursor_addr, (unsigned char)(ansi_ch - 0x5f),
 			    CS_LINEDRAW);
 		else if (ebc_ch & ~0xff)
-			ctlr_add(cursor_addr, unicode_to_ebcdic('?'), CS_BASE);
+			ctlr_add(cursor_addr,
+				(unsigned char)unicode_to_ebcdic('?'),
+				CS_BASE);
 		else
-			ctlr_add(cursor_addr, ebc_ch, CS_BASE);
+			ctlr_add(cursor_addr, (unsigned char)ebc_ch, CS_BASE);
 		break;
 	    case CSD_UK:	/* UK "A" */
 		if (ansi_ch == '#')
 			ctlr_add(cursor_addr, 0x1e, CS_LINEDRAW);
 		else if (ebc_ch & ~0xff)
-			ctlr_add(cursor_addr, unicode_to_ebcdic('?'), CS_BASE);
+			ctlr_add(cursor_addr,
+				(unsigned char)unicode_to_ebcdic('?'),
+				CS_BASE);
 		else
-			ctlr_add(cursor_addr, ebc_ch, CS_BASE);
+			ctlr_add(cursor_addr, (unsigned char)ebc_ch, CS_BASE);
 		break;
 	    case CSD_US:	/* US "B" */
 #if !defined(X3270_DBCS) /*[*/
 		if (ebc_ch & ~0xff)
-			ctlr_add(cursor_addr, unicode_to_ebcdic('?'), CS_BASE);
+			ctlr_add(cursor_addr,
+				(unsigned char)unicode_to_ebcdic('?'),
+				CS_BASE);
 		else
-			ctlr_add(cursor_addr, ebc_ch, CS_BASE);
+			ctlr_add(cursor_addr, (unsigned char)ebc_ch, CS_BASE);
 #else /*][*/
 		if (ebc_ch & ~0xff) {
 
 		    	/* Add a DBCS character to the buffer. */
 		    	if (!dbcs) {
 				/* Not currently using a DBCS character set. */
-				ctlr_add(cursor_addr, unicode_to_ebcdic('?'),
+				ctlr_add(cursor_addr,
+					(unsigned char)unicode_to_ebcdic('?'),
 					CS_BASE);
 				break;
 			}
@@ -1155,7 +1162,7 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 		}
 
 		/* Add an SBCS character to the buffer. */
-		ctlr_add(cursor_addr, ebc_ch, CS_BASE);
+		ctlr_add(cursor_addr, (unsigned char)ebc_ch, CS_BASE);
 #endif /*]*/
 		break;
 	}

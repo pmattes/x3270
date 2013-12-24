@@ -487,11 +487,11 @@ select_changed_s(unsigned row, unsigned col, unsigned rows, unsigned cols)
 	}
 
 	/* Adjust for overflow at the right. */
-	if (col >= COLS) {
+	if ((int)col >= COLS) {
 	    	return FALSE;
 	}
 	cols_adj = cols;
-	if (col + cols_adj >= COLS) {
+	if ((int)(col + cols_adj) >= COLS) {
 		cols_adj = COLS - col;
 		if (cols_adj <= 0) {
 			return FALSE;
@@ -535,11 +535,11 @@ select_sync_s(unsigned row, unsigned col, unsigned rows, unsigned cols)
 	}
 
 	/* Adjust for overflow at the right. */
-	if (col >= COLS) {
+	if ((int)col >= COLS) {
 	    	return;
 	}
 	cols_adj = cols;
-	if (col + cols_adj >= COLS) {
+	if ((int)(col + cols_adj) >= COLS) {
 		cols_adj = COLS - col;
 		if (cols_adj <= 0) {
 			return;
@@ -1971,7 +1971,7 @@ trace_as_keymap(unsigned long xk, KEY_EVENT_RECORD *e)
 
 		sprintf(strchr(buf, '\0'), "<Key>%s", n? n: "???");
 	} else if (xk > 0x7f) {
-	    	wchar_t w = xk;
+	    	wchar_t w = (wchar_t)xk;
 		char c;
 		BOOL udc = FALSE;
 

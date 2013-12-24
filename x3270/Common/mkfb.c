@@ -39,6 +39,10 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#if defined(_MSC_VER) /*[*/
+#include "Msc/deprecated.h"
+#endif /*]*/
+
 #define BUFSZ	1024		/* input line buffer size */
 #define ARRSZ	8192		/* output array size */
 #define SSSZ	10		/* maximum nested ifdef */
@@ -146,7 +150,7 @@ unsigned long is_defined =
 #endif
 |
 #if defined(FOR_WIN32) || defined(_WIN32)
-	MODE_WIN32
+	MODE__WIN32
 #else
 	0
 #endif

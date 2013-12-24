@@ -330,18 +330,18 @@
 #define MINUS1	0xffffffffU
 
 #define SET16(ptr, val) { \
-	*((ptr)++) = ((val) & MASK16) >> 8; \
-	*((ptr)++) = ((val) & MASK08); \
+	*((ptr)++) = (unsigned char)(((val) & MASK16) >> 8); \
+	*((ptr)++) = (unsigned char)(((val) & MASK08)); \
 }
 #define GET16(val, ptr) { \
 	(val) = *((ptr)+1); \
 	(val) += *(ptr) << 8; \
 }
 #define SET32(ptr, val) { \
-	*((ptr)++) = ((val) & MASK32) >> 24; \
-	*((ptr)++) = ((val) & MASK24) >> 16; \
-	*((ptr)++) = ((val) & MASK16) >> 8; \
-	*((ptr)++) = ((val) & MASK08); \
+	*((ptr)++) = (unsigned char)(((val) & MASK32) >> 24); \
+	*((ptr)++) = (unsigned char)(((val) & MASK24) >> 16); \
+	*((ptr)++) = (unsigned char)(((val) & MASK16) >> 8); \
+	*((ptr)++) = (unsigned char)(((val) & MASK08)); \
 }
 #define HIGH8(s)        (((s) >> 8) & 0xff)
 #define LOW8(s)         ((s) & 0xff)

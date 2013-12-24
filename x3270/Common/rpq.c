@@ -453,9 +453,9 @@ get_rpq_timezone(void)
 	}
 
 	/* sanity check: difference cannot exceed +/- 12 hours */
-	if (labs(delta) > 720L)
+	if (labs((long)delta) > 720L)
 		rpq_warning("RPQ timezone exceeds 12 hour UTC offset");
-	return (labs(delta) > 720L)? 3 : (int) delta;
+	return (labs((long)delta) > 720L)? 3 : (int) delta;
 }
 
 

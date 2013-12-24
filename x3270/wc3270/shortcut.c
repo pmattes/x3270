@@ -467,7 +467,7 @@ Piffle(char *title, LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
 	    	screen_height = 25;
 
 	strncpy(title, pif.basic.window_title, sizeof(pif.basic.window_title));
-	pif.basic.screen_height = screen_height; /* XXX? */
+	pif.basic.screen_height = (unsigned char)screen_height; /* XXX? */
 	sl = strlen(title);
 	if (sl < sizeof(pif.basic.window_title))
 	    	memset(pif.basic.window_title + sl, ' ',

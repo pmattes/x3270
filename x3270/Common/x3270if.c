@@ -64,6 +64,7 @@
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
+#include <ws2tcpip.h>
 #include "w3miscc.h"
 #endif /*]*/
 

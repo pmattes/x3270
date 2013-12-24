@@ -153,7 +153,7 @@ struct {
 
 #define MAX_PRINTERS	256
 PRINTER_INFO_1 printer_info[MAX_PRINTERS];
-int num_printers = 0;
+unsigned num_printers = 0;
 char default_printer[1024];
 
 static struct {
@@ -191,7 +191,7 @@ static char *
 get_input(char *buf, int bufsize)
 {
     	char *s;
-	int sl;
+	size_t sl;
 
 	/* Make sure all of the output gets out. */
 	fflush(stdout);
@@ -1040,11 +1040,11 @@ on the host.  The default is to allow the host to select the Logical Unit.");
 static int
 get_model(session_t *s)
 {
-	int i;
+	unsigned long i;
     	char inbuf[STR_SIZE];
 	char *ptr;
 	unsigned long u;
-	int max_model = is_nt? 5: 4;
+	unsigned long max_model = is_nt? 5: 4;
 
 	new_screen(s, "\
 Model Number\n\
@@ -1054,7 +1054,7 @@ This specifies the dimensions of the screen.");
 	printf("\n");
 	for (i = 2; i <= max_model; i++) {
 		if (wrows[i]) {
-			printf(" Model %d has %2d rows and %3d columns.\n",
+			printf(" Model %lu has %2d rows and %3d columns.\n",
 			    i, wrows[i], wcols[i]);
 		}
 	}
@@ -1128,8 +1128,8 @@ columns).\n",
 				"'rows x cols'.\n");
 			continue;
 		}
-		if (r < wrows[s->model] ||
-		    c < wcols[s->model]) {
+		if ((int)r < wrows[s->model] ||
+		    (int)c < wcols[s->model]) {
 			printf("Oversize must be larger than the default for "
 				"a model %d (%u x %u).\n",
 				(int)s->model,
@@ -1157,7 +1157,7 @@ static int
 get_charset(session_t *s)
 {
     	char buf[STR_SIZE];
-    	int i, k;
+    	unsigned i, k;
 	char *ptr;
 	unsigned long u;
 
@@ -1557,7 +1557,7 @@ static int
 get_printer(session_t *s)
 {
 	char tbuf[STR_SIZE];
-    	int i;
+    	unsigned i;
 	char *ptr;
 	unsigned long u;
 	char cbuf[STR_SIZE];
@@ -1602,7 +1602,7 @@ the name 'default'.");
 				return -1;
 			if (!tbuf[0]) {
 				if (!s->printer[0] ||
-					matching_printer < num_printers) {
+					matching_printer < (int)num_printers) {
 					break;
 				}
 				/*
@@ -2173,7 +2173,7 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 static wchar_t *
 reg_font_from_cset(char *cset, int *codepage)
 {
-    	int i, j;
+    	unsigned i, j;
 	wchar_t *cpname = NULL;
 	wchar_t data[1024];
 	DWORD dlen;
