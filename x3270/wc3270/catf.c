@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, Paul Mattes.
+ * Copyright (c) 2007-2009, 2013 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,14 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <io.h>
+
+#if defined(_MSC_VER) /*[*/
+#define open _open
+#define read _read
+#define close _close
+#define write _write
+#endif /*]*/
 
 #define BUFFER_SIZE	16384
 

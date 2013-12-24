@@ -38,12 +38,17 @@
 
 #include "conf.h"
 #if defined(_WIN32) /*[*/
+#include <winsock2.h>
 #include <windows.h>
 #include <io.h>
 #endif /*]*/
 #include <stdio.h>
 #if !defined(_MSC_VER) /*[*/
 #include <unistd.h>
+#else /*][*/
+#include <io.h>
+#define read _read
+#define write _write
 #endif /*]*/
 #if !defined(_WIN32) /*[*/
 #include <string.h>

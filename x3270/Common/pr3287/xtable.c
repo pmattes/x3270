@@ -422,7 +422,7 @@ xtable_init(const char *filename)
 				rc = -1;
 				goto done;
 			}
-			xl[sx++] = asc;
+			xl[sx++] = (char)asc;
 		}
 
 		/* Save the translation. */

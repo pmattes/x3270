@@ -28,26 +28,32 @@
 #include <stdio.h>			/* Unix standard I/O library */
 #include <stdlib.h>			/* Other Unix library functions */
 #if !defined(_MSC_VER) /*[*/
-#include <unistd.h>			/* Unix system calls */
+# include <unistd.h>			/* Unix system calls */
 #endif /*]*/
 #include <ctype.h>			/* Character classes */
 #include <string.h>			/* String manipulations */
 #include <sys/types.h>			/* Basic system data types */
 #if !defined(_MSC_VER) /*[*/
-#include <sys/time.h>			/* System time-related data types */
+# include <sys/time.h>			/* System time-related data types */
 #endif /*]*/
 #include <time.h>			/* C library time functions */
 #if defined(_WIN32) /*[*/
-#include <winsock2.h>
-#include <windows.h>
+# include <winsock2.h>
+# include <windows.h>
+# include <shlobj.h>
+# include <stdio.h>
+# include <direct.h>
+# include <io.h>
+# include <process.h>
 #endif /*]*/
 
 #include "localdefs.h"
 
 #if defined(_MSC_VER) /*[*/
-#define strcasecmp	_stricmp
-#define strncasecmp	_strnicmp
-#define R_OK		4
+extern int gettimeofday(struct timeval *, void *);
+# define strcasecmp	_stricmp
+# define strncasecmp	_strnicmp
+# define R_OK		4
 #endif /*]*/
 
 #if defined(__STDC_ISO_10646__) && !defined(USE_ICONV) /*[*/
