@@ -37,10 +37,6 @@
 #include <X11/StringDefs.h>
 #include <X11/Xaw/Dialog.h>
 #endif /*]*/
-#if defined(_WIN32) /*[*/
-#include <shellapi.h>
-#include <ws2tcpip.h>
-#endif /*]*/
 #if !defined(_WIN32) /*[*/
 #include <sys/wait.h>
 #include <sys/socket.h>

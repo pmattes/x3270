@@ -92,36 +92,9 @@
 #endif /*]*/
 #include <time.h>			/* C library time functions */
 #if defined(_WIN32) /*[*/
-# include <winsock2.h>			/* Has to come before windows.h */
-# include <windows.h>			/* Common definitions for Windows */
-# include <shellapi.h>
-# include <direct.h>
-# include <io.h>
-# include <process.h>
-# include <ws2tcpip.h>
+# include "wincmn.h"			/* Common Windows definitions */
 #endif /*]*/
-
-					/*
-					 * N.B.: localdefs.h has to come
-					 * *after* all of the Windows system
-					 * #includes, so the function names
-					 * that are redefined there are
-					 * declared *after* the declarations
-					 * of the functions they are renamed
-					 * to.
-					 */
 #include "localdefs.h"			/* {s,tcl,c}3270-specific defines */
-
-/*
- * MSC glue.
- */
-#if defined(_MSC_VER) /*[*/
-typedef signed long ssize_t;
-extern int gettimeofday(struct timeval *, void *);
-# define R_OK	4
-# define strcasecmp      _stricmp
-# define strncasecmp     _strnicmp
-#endif /*]*/
 
 /*
  * Locale-related definitions.

@@ -32,12 +32,14 @@
  *		A safer version of snprintf for Windows.
  */
 
-#include <windows.h>
-#include <stdio.h>
-#include <stdarg.h>
+#if !defined(_WIN32) /*[*/
+#error For Windows only.
+#endif /*]*/
 
 #define IS_SNPRINTF_C 1
-#include "localdefs.h"	/* to get the externs for our functions */
+#include "wincmn.h"
+
+#include <stdio.h>
 
 /*
  * Version of {,v}snprintf that work more like the standard versions, and

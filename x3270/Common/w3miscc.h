@@ -30,17 +30,14 @@
  *		Miscellaneous Win32 functions.
  */
 
+/*
+ * Note: This header file declares only the 'new' functions in w3misc.c.
+ * The replacement functions defined in w3misc.c are declared in wincmn.h.
+ */
+
 #if defined(_WIN32) /*[*/
 
-extern const char *inet_ntop(int af, const void *src, char *dst,
-	socklen_t cnt);
 extern int sockstart(void);
 extern const char *win32_strerror(int e);
-
-#if defined(_MSC_VER) /*[*/
-extern int getopt(int argc, char * const argv[], const char *optstring);
-extern char *optarg;
-extern int optind, opterr, optopt;
-#endif /*]*/
 
 #endif /*]*/

@@ -50,8 +50,6 @@
 
 #include "winprintc.h"
 
-#include <shellapi.h>
-#include <io.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include "w3miscc.h"

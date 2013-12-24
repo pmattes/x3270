@@ -32,16 +32,15 @@
  */
 
 #include "conf.h"
+#if defined(_WIN32) /*[*/
+# include "wincmn.h"
+#endif /*]*/
 
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <errno.h>
-
-#if defined(_MSC_VER) /*[*/
-#include "Msc/deprecated.h"
-#endif /*]*/
 
 #define BUFSZ	1024		/* input line buffer size */
 #define ARRSZ	8192		/* output array size */

@@ -38,40 +38,31 @@
 
 #include "conf.h"
 #if defined(_WIN32) /*[*/
-#include <winsock2.h>
-#include <windows.h>
-#include <io.h>
+# include "wincmn.h"
 #endif /*]*/
 #include <stdio.h>
 #if !defined(_MSC_VER) /*[*/
-#include <unistd.h>
-#else /*][*/
-#include <io.h>
-#define read _read
-#define write _write
+# include <unistd.h>
 #endif /*]*/
 #if !defined(_WIN32) /*[*/
-#include <string.h>
-#include <signal.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <netinet/in.h>
-#if defined(HAVE_SYS_SELECT_H) /*[*/
-#include <sys/select.h>
-#endif /*]*/
-#if defined(HAVE_GETOPT_H) /*[*/
-#include <getopt.h>
-#endif /*]*/
+# include <string.h>
+# include <signal.h>
+# include <errno.h>
+# include <stdlib.h>
+# include <fcntl.h>
+# include <sys/types.h>
+# include <sys/socket.h>
+# include <sys/un.h>
+# include <netinet/in.h>
+# if defined(HAVE_SYS_SELECT_H) /*[*/
+#  include <sys/select.h>
+# endif /*]*/
+# if defined(HAVE_GETOPT_H) /*[*/
+#  include <getopt.h>
+# endif /*]*/
 #endif /*]*/
 
-#if defined(_WIN32) /*[*/
-#include <ws2tcpip.h>
 #include "w3miscc.h"
-#endif /*]*/
 
 #define IBS	4096
 

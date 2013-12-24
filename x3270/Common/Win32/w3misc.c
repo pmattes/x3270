@@ -36,8 +36,6 @@
 #error This module is only for Win32.
 #endif /*]*/
 
-#include <winsock2.h>
-#include <ws2tcpip.h>
 #include <stdio.h>
 #include <errno.h>
 

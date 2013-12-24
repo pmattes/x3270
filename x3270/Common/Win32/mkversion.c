@@ -61,14 +61,12 @@
  *	EOF
 */
 
+#include "wincmn.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
-#if defined(_MSC_VER) /*[*/
-#include "deprecated.h"
-#endif /*]*/
 
 static char *
 NewString(char *s)

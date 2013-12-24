@@ -55,10 +55,7 @@
 #include "utilc.h"
 #include "xioc.h"
 
-#include <direct.h>
 #include <wincon.h>
-#include <shlobj.h>
-#include "shlobj_missing.h"
 
 #include "winversc.h"
 #include "shortcutc.h"

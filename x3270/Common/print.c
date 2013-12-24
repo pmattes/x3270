@@ -55,7 +55,7 @@
 #include "popupsc.h"
 #include "printc.h"
 #if defined(X3270_DISPLAY) /*[*/
-#include "stmenuc.h"
+# include "stmenuc.h"
 #endif /*]*/
 #include "trace_dsc.h"
 #include "unicodec.h"
@@ -63,15 +63,13 @@
 #include "utilc.h"
 
 #if defined(_WIN32) /*[*/
-#include <shellapi.h>
-#include <io.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include "w3miscc.h"
-#include "winprintc.h"
-# if defined(WC3270) /*[*/
-#  include <screenc.h>
-# endif /*]*/
+# include <fcntl.h>
+# include <sys/stat.h>
+# include "w3miscc.h"
+# include "winprintc.h"
+#  if defined(WC3270) /*[*/
+#   include <screenc.h>
+#  endif /*]*/
 #endif /*]*/
 
 /* Typedefs */

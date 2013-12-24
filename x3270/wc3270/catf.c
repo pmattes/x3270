@@ -33,18 +33,14 @@
  *		A subset of the Unix 'tail -f' command.
  */
 
-#include <windows.h>
+#if !defined(_WIN32) /*[*/
+#error For Windows only.
+#endif /*]*/
+
+#include "wincmn.h"
 #include <stdio.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <io.h>
-
-#if defined(_MSC_VER) /*[*/
-#define open _open
-#define read _read
-#define close _close
-#define write _write
-#endif /*]*/
 
 #define BUFFER_SIZE	16384
 

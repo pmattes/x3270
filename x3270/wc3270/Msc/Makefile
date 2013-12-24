@@ -74,13 +74,13 @@ fallbacks.obj: fallbacks.c
 	$(CC) $(CFLAGS) /c fallbacks.c
 
 $(MKFB): mkfb.c Msc\Makefile
-	$(CC) /Fe$(MKFB) /D_WIN32 /D_CRT_SECURE_NO_DEPRECATE mkfb.c
+	$(CC) /Fe$(MKFB) $(XCPPFLAGS)  mkfb.c
 
 compiled_keypad.h: keypad.full keypad.labels keypad.map keypad.outline keypad.callbacks $(MKKEYPAD)
 	$(MKKEYPAD) >$@
 
 $(MKKEYPAD): mkkeypad.c
-	$(CC) /Fe$(MKKEYPAD) /D_WIN32 /D_CRT_SECURE_NO_DEPRECATE mkkeypad.c
+	$(CC) /Fe$(MKKEYPAD) $(XCPPFLAGS)  mkkeypad.c
 
 wc3270.RES: wc3270.rc wc3270.ico Msc\Makefile
 	$(RC) wc3270.rc

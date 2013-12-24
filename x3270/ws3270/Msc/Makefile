@@ -69,7 +69,7 @@ fallbacks.obj: fallbacks.c
 	$(CC) $(CFLAGS) /c fallbacks.c
 
 $(MKFB): mkfb.c Msc\Makefile
-	$(CC) /Fe$(MKFB) /D_WIN32 /D_CRT_SECURE_NO_DEPRECATE mkfb.c
+	$(CC) /Fe$(MKFB) $(XCPPFLAGS) mkfb.c
 
 ws3270.RES: ws3270.rc ws3270.ico Msc\Makefile
 	$(RC) ws3270.rc

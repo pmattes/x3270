@@ -33,10 +33,15 @@
  *		Application Data directory explorer.
  */
 
-#include <windows.h>
+#if !defined(_WIN32) /*[*/
+#error For Windows only.
+#endif /*]*/
+
+#include "wincmn.h"
+
 #include <stdio.h>
 #include <limits.h>
-#include <io.h>
+
 #include "windirsc.h"
 
 #define COMMAND "start explorer.exe"

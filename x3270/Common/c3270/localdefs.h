@@ -76,19 +76,3 @@ extern void *Realloc(void *, size_t);
 extern char *NewString(const char *);
 extern void Error(const char *);
 extern void Warning(const char *);
-
-#if defined(_WIN32) /*[*/
-/* Work around Windows' brain-damaged snprintf implementation. */
-# include <stdarg.h>
-extern int safe_vsnprintf(char *str, size_t size, const char *fmt, va_list ap);
-extern int safe_snprintf(char *str, size_t size, const char *fmt, ...);
-# if !defined(IS_SNPRINTF_C) /*[*/
-#  define vsnprintf safe_vsnprintf
-#  define snprintf safe_snprintf
-# endif /*]*/
-#endif /*]*/
-
-#if defined(_MSC_VER) /*[*/
-/* Alias the POSIX entry points that MSVC doesn't like. */
-# include "Msc/deprecated.h"
-#endif /*]*/

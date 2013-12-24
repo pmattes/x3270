@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, Paul Mattes.
+ * Copyright (c) 1996-2009, 2013 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,26 +33,30 @@
  *		Shell link creation
  */
 
-#include <windows.h>
-#include <shlobj.h>
+#if !defined(_WIN32) /*[*/
+#error For Windows only.
+#endif /*]*/
+
+#include "wincmn.h"
 #include "shlobj_missing.h"
 #include <stdio.h>
 
 #include "shortcutc.h"
 #include "winversc.h"
 
-// CreateLink - uses the shell's IShellLink and IPersistFile interfaces 
-//   to create and store a shortcut to the specified object. 
-// Returns the result of calling the member functions of the interfaces. 
-// lpszPathObj - address of a buffer containing the path of the object 
-// lpszPathLink - address of a buffer containing the path where the 
-//   shell link is to be stored 
-// lpszDesc - address of a buffer containing the description of the 
-//   shell link 
+/*
+ * CreateLink - uses the shell's IShellLink and IPersistFile interfaces to
+ * create and store a shortcut to the specified object.
+ * Returns the result of calling the member functions of the interfaces.
+ *  lpszPathObj - address of a buffer containing the path of the object
+ *  lpszPathLink - address of a buffer containing the path where the shell link
+ *   is to be stored
+ *  lpszDesc - address of a buffer containing the description of the shell link
+ */
 HRESULT
 CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
-    LPSTR lpszArgs, LPSTR lpszDir, int rows, int cols, wchar_t *font,
-    int pointsize, int codepage)
+	LPSTR lpszArgs, LPSTR lpszDir, int rows, int cols, wchar_t *font,
+	int pointsize, int codepage)
 {
 	HRESULT			hres;
 	int	 		initialized;
@@ -69,7 +73,7 @@ CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
 	}
 	initialized = 1;
 
-	// Get a pointer to the IShellLink interface.
+	/* Get a pointer to the IShellLink interface. */
 	hres = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
 	    &IID_IShellLink, (LPVOID *)&psl);
 
@@ -78,7 +82,7 @@ CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
 		goto out;
 	}
 
-	// Set the path to the shortcut target, and add the description.
+	/* Set the path to the shortcut target, and add the description. */
 	psl->lpVtbl->SetPath(psl, lpszPathObj);
 	if (lpszDesc)
 		psl->lpVtbl->SetDescription(psl, lpszDesc);
@@ -170,8 +174,10 @@ CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
 		}
 	}
 
-	// Query IShellLink for the IPersistFile interface for saving
-	// the shortcut in persistent storage.
+	/*
+	 * Query IShellLink for the IPersistFile interface for saving the
+	 * shortcut in persistent storage.
+	 */
 	hres = psl->lpVtbl->QueryInterface(psl, &IID_IPersistFile,
 	    (void **)&ppf);
 
@@ -180,10 +186,10 @@ CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
 		goto out;
 	}
 
-	// Ensure that the string is ANSI.
+	/* Ensure that the string is ANSI. */
 	MultiByteToWideChar(CP_ACP, 0, lpszPathLink, -1, wsz, MAX_PATH);
 
-	// Save the link by calling IPersistFile::Save.
+	/* Save the link by calling IPersistFile::Save. */
 	hres = ppf->lpVtbl->Save(ppf, wsz, TRUE);
 	if (!SUCCEEDED(hres)) {
 	    	fprintf(stderr, "Save failed\n");

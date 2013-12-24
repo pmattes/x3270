@@ -37,8 +37,6 @@
 #include "globals.h"
 
 #include <wincon.h>
-#include <shlobj.h>
-#include "shlobj_missing.h" /* missing IShellLinkDataist stuff from MinGW */
 
 #include "shortcutc.h"
 #include "winversc.h"

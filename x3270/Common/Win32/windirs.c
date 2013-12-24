@@ -33,10 +33,6 @@
 
 #include "globals.h"
 
-#include <shlobj.h>
-#include <stdio.h>
-#include <direct.h>
-
 #include "windirsc.h"
 
 

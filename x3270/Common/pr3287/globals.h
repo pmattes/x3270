@@ -38,23 +38,10 @@
 #endif /*]*/
 #include <time.h>			/* C library time functions */
 #if defined(_WIN32) /*[*/
-# include <winsock2.h>
-# include <windows.h>
-# include <shlobj.h>
-# include <stdio.h>
-# include <direct.h>
-# include <io.h>
-# include <process.h>
+# include "wincmn.h"			/* Common Windows definitions. */
 #endif /*]*/
 
 #include "localdefs.h"
-
-#if defined(_MSC_VER) /*[*/
-extern int gettimeofday(struct timeval *, void *);
-# define strcasecmp	_stricmp
-# define strncasecmp	_strnicmp
-# define R_OK		4
-#endif /*]*/
 
 #if defined(__STDC_ISO_10646__) && !defined(USE_ICONV) /*[*/
 #define UNICODE_WCHAR   1

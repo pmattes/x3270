@@ -37,9 +37,6 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
-#else /*][*/
-#include <winsock2.h>
-#include <ws2tcpip.h>
 #endif /*]*/
 
 #include <stdio.h>
