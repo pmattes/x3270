@@ -44,20 +44,18 @@ endif
 OS = $(shell uname -o)
 ifeq ($(OS),Cygwin)
 MKFB = mkfb.exe
-CC = gcc
+CC = i686-pc-mingw32-gcc
 NATIVECC = gcc
-WINDRES = windres
-NO_CYGWIN = -mno-cygwin
+WINDRES = i686-pc-mingw32-windres
 else
 MKFB = mkfb
 CC = i586-mingw32msvc-gcc
 NATIVECC = gcc
 WINDRES = i586-mingw32msvc-windres
-NO_CYGWIN =
 endif
 
 XCPPFLAGS = -D_WIN32 -DWS3270 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWIN32_LEAN_AND_MEAN
-CFLAGS = $(EXTRA_FLAGS) $(NO_CYGWIN) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
+CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
 SRCS = actions.c ansi.c apl.c charset.c ctlr.c fprint_screen.c fallbacks.c \
 	ft.c ft_cut.c ft_dft.c glue.c host.c idle.c kybd.c macros.c \
 	print.c printer.c proxy.c readres.c resolver.c resources.c rpq.c \

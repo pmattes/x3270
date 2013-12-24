@@ -588,10 +588,9 @@ Win98WriteConsoleOutputW(HANDLE hConsoleOutput, const CHAR_INFO* lpBuffer,
 		    const CHAR_INFO *c = &lpBuffer[ix(row, col)];
 		    CHAR_INFO *d = &lpCopy[ix(row, col)];
 		    unsigned char ch;
-		    int nc;
 		    BOOL udc;
 
-		    nc = WideCharToMultiByte(CP_OEMCP, 0,
+		    (void) WideCharToMultiByte(CP_OEMCP, 0,
 			    &c->Char.UnicodeChar, 1,
 			    (char *)&ch, 1,
 			    "?",

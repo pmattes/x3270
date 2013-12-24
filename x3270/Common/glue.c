@@ -1577,20 +1577,24 @@ action_output(const char *fmt, ...)
 		sms_info("%s", vmsgbuf);
 		return;
 	} else {
+#if !defined(WC3270) /*[*/
 		FILE *aout;
+#endif /*]*/
 
 #if defined(C3270) /*[*/
 		screen_suspend();
+# if defined(WC3270) /*[*/
+		pager_output(vmsgbuf);
+# else /*][*/
 		aout = start_pager();
-		any_error_output = True;
+# endif /*]*/
 #else /*][*/
 		aout = stdout;
 #endif /*]*/
-#if defined(WC3270) /*[*/
-		pager_output(vmsgbuf);
-#else /*][*/
+#if !defined(WC3270) /*[*/
 		(void) fprintf(aout, "%s\n", vmsgbuf);
 #endif /*]*/
+		any_error_output = True;
 		macro_output = True;
 	}
 }

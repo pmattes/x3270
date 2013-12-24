@@ -45,21 +45,19 @@ OS = $(shell uname -o)
 ifeq ($(OS),Cygwin)
 MKFB = mkfb.exe
 MKKEYPAD = mkkeypad.exe
-CC = gcc
+CC = i686-pc-mingw32-gcc
 NATIVECC = gcc
-WINDRES = windres
-NO_CYGWIN = -mno-cygwin
+WINDRES = i686-pc-mingw32-gccwindres
 else
 MKFB = mkfb
 MKKEYPAD = mkkeypad
 CC = i586-mingw32msvc-gcc
 NATIVECC = gcc
 WINDRES = i586-mingw32msvc-windres
-NO_CYGWIN =
 endif
 
 XCPPFLAGS = -D_WIN32 -DWC3270 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWINVER=0x500
-CFLAGS = $(EXTRA_FLAGS) $(NO_CYGWIN) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
+CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
 SRCS = XtGlue.c actions.c ansi.c apl.c c3270.c charset.c ctlr.c fallbacks.c \
        	fprint_screen.c ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c \
 	idle.c keymap.c keypad.c kybd.c macros.c menubar.c print.c printer.c \

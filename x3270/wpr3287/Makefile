@@ -42,17 +42,15 @@ endif
 # cross-compiling on Linux.
 OS = $(shell uname -o)
 ifeq ($(OS),Cygwin)
-CC = gcc
-WINDRES = windres
-NO_CYGWIN = -mno-cygwin
+CC = i686-pc-mingw32-gcc
+WINDRES = i686-pc-mingw32-windres
 else
 CC = i586-mingw32msvc-gcc
 WINDRES = i586-mingw32msvc-windres
-NO_CYGWIN =
 endif
 
 XCPPFLAGS = -D_WIN32 -DPR3287 -DWPR3287 -DX3270_DBCS=1 -D_WIN32_WINNT=0x500 -D_WIN32_IE=0x0500 -DWINVER=0x500
-CFLAGS = $(NO_CYGWIN) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP) $(CDEBUGFLAGS)
+CFLAGS = -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP) $(CDEBUGFLAGS)
 SRCS = charset.c ctlr.c pr3287.c proxy.c resolver.c see.c sf.c snprintf.c \
 	ssl_dll.c tables.c telnet.c trace_ds.c utf8.c w3misc.c windirs.c \
 	winvers.c unicode.c unicode_dbcs.c xtable.c
