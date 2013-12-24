@@ -1536,7 +1536,7 @@ popup_an_error(const char *fmt, ...)
 		sms_error(vmsgbuf);
 		return;
 	} else {
-#if defined(C3270) || defined(WC3270) /*[*/
+#if defined(C3270) /*[*/
 		screen_suspend();
 		any_error_output = True;
 #endif /*]*/
@@ -1582,6 +1582,7 @@ action_output(const char *fmt, ...)
 #endif /*]*/
 
 #if defined(C3270) /*[*/
+		any_error_output = True;
 		screen_suspend();
 # if defined(WC3270) /*[*/
 		pager_output(vmsgbuf);
@@ -1594,7 +1595,6 @@ action_output(const char *fmt, ...)
 #if !defined(WC3270) /*[*/
 		(void) fprintf(aout, "%s\n", vmsgbuf);
 #endif /*]*/
-		any_error_output = True;
 		macro_output = True;
 	}
 }
