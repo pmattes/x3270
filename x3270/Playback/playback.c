@@ -28,7 +28,7 @@
  */
 
 /*
- * playback file facility for x3270
+ * Playback file facility for x3270
  */
 
 #include <stdio.h>
@@ -36,6 +36,8 @@
 #include <signal.h>
 #include <memory.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <assert.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
@@ -59,8 +61,8 @@ static enum {
 } tstate = T_NONE;
 int fdisp = 0;
 
-extern int optind;
-extern char *optarg;
+static void process(FILE *f, int s);
+static int step(FILE *f, int s, int to_eor);
 
 void
 usage(void)
@@ -94,10 +96,11 @@ main(int argc, char *argv[])
 
 	/* Parse command-line arguments */
 
-	if (me = strrchr(argv[0], '/'))
+	if ((me = strrchr(argv[0], '/')) != NULL) {
 		me++;
-	else
+	} else {
 		me = argv[0];
+	}
 
 	while ((c = getopt(argc, argv, "p:")) != -1) {
 		switch (c) {
@@ -109,8 +112,9 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if (argc - optind != 1)
+	if (argc - optind != 1) {
 		usage();
+	}
 
 	/* Open the file. */
 	f = fopen(argv[optind], "r");
@@ -196,7 +200,7 @@ trace_netdata(char *direction, unsigned char *buf, int len)
 	(void) printf("\n");
 }
 
-int
+static void
 process(FILE *f, int s)
 {
 	char buf[BSIZE];
@@ -292,7 +296,7 @@ d: disconnect\n\
 	return;
 }
 
-int
+static int
 step(FILE *f, int s, int to_eor)
 {
 	int c = 0;
@@ -320,6 +324,9 @@ step(FILE *f, int s, int to_eor)
 		}
 		again = 0;
 		switch (pstate) {
+		    case NONE:
+			assert(pstate != NONE);
+			break;
 		    case WRONG:
 			if (c == '\n')
 				pstate = BASE;

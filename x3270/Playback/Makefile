@@ -1,4 +1,6 @@
+CFLAGS = -g -Wall -Werror -ansi -pedantic -D_XOPEN_SOURCE
+
 all: playback
 
 playback: playback.o
-	$(CC) -o playback playback.o
+	$(CC) $(CFLAGS) -o playback playback.o
