@@ -51,7 +51,7 @@ done
 # Set up the product list.
 if [ $# -gt 0 ]
 then	prods=$*
-else	prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270"
+else	prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270 Playback"
     	all=1;
 fi
 if [ "$tarball" -a ! "$all" ]
