@@ -203,7 +203,7 @@ scroll_save(int n, Boolean trim_blanks)
 	thumb_top_base =
 	    thumb_top =
 	    ((float)n_saved / (float)(appres.save_lines + maxROWS));
-	thumb_shown = 1.0 - thumb_top;
+	thumb_shown = (float)(1.0 - thumb_top);
 	screen_set_thumb_traced(thumb_top, thumb_shown);
 }
 
@@ -232,7 +232,7 @@ scroll_round(void)
 	thumb_top_base =
 	    thumb_top =
 	    ((float)n_saved / (float)(appres.save_lines + maxROWS));
-	thumb_shown = 1.0 - thumb_top;
+	thumb_shown = (float)(1.0 - thumb_top);
 	screen_set_thumb_traced(thumb_top, thumb_shown);
 }
 
@@ -340,7 +340,7 @@ sync_scroll(int sb)
 	blink_start();
 
 	tt0 = ((float)n_saved / (float)(appres.save_lines + maxROWS));
-	thumb_shown = 1.0 - tt0;
+	thumb_shown = (float)(1.0 - tt0);
 	thumb_top = ((float)(n_saved-sb) /
 			(float)(appres.save_lines + maxROWS));
 	screen_set_thumb_traced(thumb_top, thumb_shown);
@@ -408,7 +408,7 @@ scroll_proc(int n, int total)
 		pct = (float)n / (float)total;
 	}
 	trace_event("scroll_proc(%d, %d) -> %f%%\n", n, total, pct);
-	nss = pct * thumb_shown * n_saved;
+	nss = (int)(pct * thumb_shown * n_saved);
 	scroll_n(nss, n);
 }
 

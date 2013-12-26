@@ -146,7 +146,7 @@ fi
 if [ "$all" ]
 then	echo "===== Making mega-tarball."
 	# Make a mega-tarball.
-	tar -czf $suite *-3.3/ VS/
+	tar -czf $suite *-3.3/ Playback/ VS/
 fi
 if [ "$tarball" ]
 then	echo "Tarball is $tmpdir/$suite."
