@@ -62,16 +62,16 @@ SRCS = XtGlue.c actions.c ansi.c apl.c c3270.c charset.c ctlr.c fallbacks.c \
        	fprint_screen.c ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c \
 	idle.c keymap.c keypad.c kybd.c macros.c menubar.c print.c printer.c \
 	proxy.c readres.c relink.c resolver.c resources.c rpq.c screen.c \
-	see.c select.c sf.c shortcut.c snprintf.c ssl_dll.c tables.c telnet.c \
-	toggles.c trace_ds.c unicode.c unicode_dbcs.c utf8.c util.c w3misc.c \
-	winvers.c windirs.c winprint.c xio.c
+	scroll.c see.c select.c sf.c shortcut.c snprintf.c ssl_dll.c tables.c \
+	telnet.c toggles.c trace_ds.c unicode.c unicode_dbcs.c utf8.c util.c \
+	w3misc.c winvers.c windirs.c winprint.c xio.c
 VOBJS = XtGlue.o actions.o ansi.o apl.o c3270.o charset.o ctlr.o fallbacks.o \
        	fprint_screen.o ft.o ft_cut.o ft_dft.o glue.o help.o host.o icmd.o \
 	idle.o keymap.o keypad.o kybd.o macros.o menubar.o print.o printer.o \
 	proxy.o readres.o relink.o resolver.o resources.o rpq.o screen.o \
-	see.o select.o sf.o shortcut.o snprintf.o ssl_dll.o tables.o telnet.o \
-	toggles.o trace_ds.o unicode.o unicode_dbcs.o utf8.o util.o w3misc.o \
-	wc3270res.o winvers.o windirs.o winprint.o xio.o
+	scroll.o see.o select.o sf.o shortcut.o snprintf.o ssl_dll.o tables.o \
+	telnet.o toggles.o trace_ds.o unicode.o unicode_dbcs.o utf8.o util.o \
+	w3misc.o wc3270res.o winvers.o windirs.o winprint.o xio.o
 OBJECTS = $(VOBJS) version.o
 WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o winvers.o windirs.o \
 	relink.o snprintf.o
