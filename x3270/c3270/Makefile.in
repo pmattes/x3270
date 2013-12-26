@@ -35,15 +35,15 @@ all:: c3270 x3270if
 SRCS = actions.c ansi.c apl.c c3270.c charset.c child.c ctlr.c \
 	fprint_screen.c ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c \
 	idle.c keymap.c kybd.c macros.c print.c printer.c proxy.c readres.c \
-	resolver.c resources.c rpq.c screen.c see.c sf.c tables.c telnet.c \
-	toggles.c trace_ds.c unicode.c unicode_dbcs.c utf8.c util.c xio.c \
-	XtGlue.c menubar.c keypad.c
+	resolver.c resources.c rpq.c screen.c scroll.c see.c sf.c tables.c \
+	telnet.c toggles.c trace_ds.c unicode.c unicode_dbcs.c utf8.c util.c \
+	xio.c XtGlue.c menubar.c keypad.c
 VOBJS = actions.o ansi.o apl.o c3270.o charset.o child.o ctlr.o fallbacks.o \
 	fprint_screen.o ft.o ft_cut.o ft_dft.o glue.o help.o host.o icmd.o \
 	idle.o keymap.o kybd.o macros.o print.o printer.o proxy.o readres.o \
-	resolver.o resources.o rpq.o screen.o see.o sf.o tables.o telnet.o \
-	toggles.o trace_ds.o unicode.o unicode_dbcs.o utf8.o util.o xio.o \
-	XtGlue.o menubar.o keypad.o
+	resolver.o resources.o rpq.o screen.o scroll.o see.o sf.o tables.o \
+	telnet.o toggles.o trace_ds.o unicode.o unicode_dbcs.o utf8.o util.o \
+	xio.o XtGlue.o menubar.o keypad.o
 OBJS1 = $(VOBJS) version.o
 
 LIBDIR = @libdir@
