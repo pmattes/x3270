@@ -254,7 +254,7 @@ XtResource resources[] = {
 	  toggle_offset(DS_TRACE), XtRString, ResFalse },
 #endif /*]*/
 	{ ResScrollBar, ClsScrollBar, XtRBoolean, sizeof(Boolean),
-	  toggle_offset(SCROLL_BAR), XtRString, ResFalse },
+	  toggle_offset(SCROLL_BAR), XtRString, ResTrue },
 #if defined(X3270_ANSI) /*[*/
 	{ ResLineWrap, ClsLineWrap, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(LINE_WRAP), XtRString, ResTrue },
