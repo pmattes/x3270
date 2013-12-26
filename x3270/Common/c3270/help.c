@@ -192,6 +192,7 @@ static struct {
 #if defined(X3270_SCRIPT) /*[*/
 	{ "Script", "<path> [<arg>...]", P_SCRIPTING, "Run a child script" },
 #endif /*]*/
+	{ "Scroll", "Forward|Backward", P_INTERACTIVE, "Scroll screen" },
 	{ "Show", CN, P_INTERACTIVE, "Display status and settings" },
 #if defined(X3270_SCRIPT) /*[*/
 	{ "Snap", "<args>", P_SCRIPTING, "Screen snapshot manipulation" },

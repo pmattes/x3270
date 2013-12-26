@@ -165,8 +165,8 @@ static char *base_keymap3 =
   "Ctrl<Key>a <Key>F11: PF(23)\n"
              "<Key>F12: PF(12)\n"
   "Ctrl<Key>a <Key>F12: PF(24)\n"
-  "<Key>PPAGE: Scroll(Backward)\n"
-  "<Key>NPAGE: Scroll(Forward)\n";
+           "<Key>PPAGE: Scroll(Backward)\n"
+           "<Key>NPAGE: Scroll(Forward)\n";
 
 /* Base keymap for c3270, 3270 mode. */
 static char *base_3270_keymap =
@@ -228,7 +228,9 @@ static char *base_keymap =
        "Shift <Key>F10: PF(22)\n"
        "Shift <Key>F11: PF(23)\n"
        "Shift <Key>F12: PF(24)\n"
-    "Shift <Key>ESCAPE: Key(0x1d)\n";
+    "Shift <Key>ESCAPE: Key(0x1d)\n"
+           "<Key>PRIOR: Scroll(Backward)\n"
+	    "<Key>NEXT: Scroll(Forward)";
 
 /* Base keymap for wc3270, 3270 mode. */
 static char *base_3270_keymap =
@@ -262,9 +264,7 @@ static char *base_3270_keymap =
        "Shift <Key>END: EraseEOF\n"
              "<Key>END: FieldEnd\n"
       "Shift <Key>LEFT: PreviousWord\n"
-     "Shift <Key>RIGHT: NextWord\n"
-           "<Key>PRIOR: PF(7)\n"
-	    "<Key>NEXT: PF(8)";
+     "Shift <Key>RIGHT: NextWord\n";
 #endif /*]*/
 
 Boolean any_error_output = False;

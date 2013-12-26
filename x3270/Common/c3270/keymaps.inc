@@ -234,7 +234,9 @@ XX_TR(XX_TD(XX_KEY(,`F(XX_FI(n))'))	XX_TD(`PF(XX_FI(n))'))
 XX_TR(XX_TD(XX_KEY(Ctrl,a) XX_KEY(,`F(XX_FI(n))'))	XX_TD(`PF(XX_FI(n)+12)'))
 XX_TR(XX_TD(XX_KEY(Ctrl,a) XX_KEY(,1))	XX_TD(`PA(1)'))
 XX_TR(XX_TD(XX_KEY(Ctrl,a) XX_KEY(,2))	XX_TD(`PA(2)'))
-XX_TR(XX_TD(XX_KEY(Ctrl,a) XX_KEY(,3))	XX_TD(`PA(3)'))',
+XX_TR(XX_TD(XX_KEY(Ctrl,a) XX_KEY(,3))	XX_TD(`PA(3)'))
+XX_TR(XX_TD(XX_KEY(,PPAGE))	XX_TD(`Scroll(Backward)'))
+XX_TR(XX_TD(XX_KEY(,NPAGE))	XX_TD(`Scroll(Forward)'))',
 XX_PRODUCT,wc3270,
 `XX_TR(XX_TD(XX_KEY(Alt,1))	XX_TD(`PA(1)'))
 XX_TR(XX_TD(XX_KEY(Alt,2))	XX_TD(`PA(2)'))
@@ -249,6 +251,8 @@ XX_TR(XX_TD(XX_KEY(Alt,m))	XX_TD(Compose))
 XX_TR(XX_TD(XX_KEY(Alt,n))	XX_TD(Menu))
 XX_TR(XX_TD(XX_KEY(Ctrl,p))	XX_TD(Paste))
 XX_TR(XX_TD(XX_KEY(Alt,p))	XX_TD(PrintText))
+XX_TR(XX_TD(XX_KEY(,PRIOR))	XX_TD(`Scroll(Backward)'))
+XX_TR(XX_TD(XX_KEY(,NEXT))	XX_TD(`Scroll(Forward)'))
 XX_TR(XX_TD(XX_KEY(Shift,`F`'XX_FI(n)'))	XX_TD(`PF(XX_FI(n)+12)'))')
 XX_TE()
 XX_LP

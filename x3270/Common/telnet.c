@@ -215,6 +215,7 @@ static void store3270in(unsigned char c);
 static void check_linemode(Boolean init);
 static int non_blocking(Boolean on);
 static void net_connected(void);
+static void connection_complete(void);
 #if defined(X3270_TN3270E) /*[*/
 static int tn3270e_negotiate(void);
 #endif /*]*/
@@ -828,7 +829,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 #if !defined(_WIN32) /*[*/
 			(void) fcntl(sock, F_SETFD, 1);
 #endif /*]*/
-			net_connected();
+			connection_complete();
 			host_in3270(CONNECTED_ANSI);
 			break;
 		}

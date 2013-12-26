@@ -48,8 +48,9 @@
 #include "kybdc.h"
 #include "macrosc.h"
 #include "menubarc.h"
-#include "selectc.h"
 #include "screenc.h"
+#include "scrollc.h"
+#include "selectc.h"
 #include "tablesc.h"
 #include "trace_dsc.h"
 #include "unicodec.h"
@@ -1071,6 +1072,9 @@ screen_init(void)
 	/* Set up the controller. */
 	ctlr_init(-1);
 	ctlr_reinit(-1);
+
+	/* Set up the scrollbar. */
+	scroll_init();
 
 	/* Set the window label. */
 	if (appres.title != CN)

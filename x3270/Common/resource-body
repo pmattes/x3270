@@ -2264,7 +2264,7 @@ desc
 .
 
 name saveLines
-applies x
+applies x C
 type i
 default 4096
 switch -sl

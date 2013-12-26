@@ -48,10 +48,10 @@ VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj c3270.obj charset.obj \
 	glue.obj help.obj host.obj icmd.obj idle.obj keymap.obj keypad.obj \
 	kybd.obj macros.obj menubar.obj print.obj printer.obj proxy.obj \
 	readres.obj relink.obj resolver.obj resources.obj rpq.obj screen.obj \
-	see.obj select.obj sf.obj shortcut.obj snprintf.obj ssl_dll.obj \
-	tables.obj telnet.obj toggles.obj trace_ds.obj unicode.obj \
-	unicode_dbcs.obj utf8.obj util.obj w3misc.obj winvers.obj windirs.obj \
-	winprint.obj xio.obj wc3270.RES
+	scroll.obj see.obj select.obj sf.obj shortcut.obj snprintf.obj \
+	ssl_dll.obj tables.obj telnet.obj toggles.obj trace_ds.obj \
+	unicode.obj unicode_dbcs.obj utf8.obj util.obj w3misc.obj winvers.obj \
+	windirs.obj winprint.obj xio.obj wc3270.RES
 OBJECTS = $(VOBJS) version.obj
 WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
 	windirs.obj relink.obj snprintf.obj
@@ -182,6 +182,8 @@ rpq.obj: rpq.c
 	$(CC) $(CFLAGS) /c rpq.c
 screen.obj: screen.c
 	$(CC) $(CFLAGS) /c screen.c
+scroll.obj: scroll.c
+	$(CC) $(CFLAGS) /c scroll.c
 see.obj: see.c
 	$(CC) $(CFLAGS) /c see.c
 select.obj: select.c

@@ -702,6 +702,10 @@ static struct {
 #endif /*]*/
 { OptProxy,    OPT_STRING,  False, ResProxy,     offset(proxy),
     "<type>:<host>[:<port>]", "Secify proxy type and server" },
+#if defined(C3270) /*[*/
+{ OptSaveLines, OPT_INT,    False, ResSaveLines, offset(save_lines),
+    "<lines>", "Specify the number of lines to save for scrolling" },
+#endif /*]*/
 #if defined(S3270) /*[*/
 { OptScripted, OPT_NOP,     False, ResScripted,  NULL,
     CN, "Turn on scripting" },
@@ -794,16 +798,22 @@ parse_options(int *argcp, const char **argv)
 					     opts[j].flag? "True": "False");
 			break;
 		    case OPT_STRING:
-			if (i == *argcp - 1)	/* missing arg */
+			if (i == *argcp - 1) {	/* missing arg */
+				popup_an_error("Missing value for '%s'",
+					argv[i]);
 				continue;
+			}
 			*(const char **)opts[j].aoff = argv[++i];
 			if (opts[j].res_name != CN)
 				add_resource(NewString(opts[j].res_name),
 					     NewString(argv[i]));
 			break;
 		    case OPT_XRM:
-			if (i == *argcp - 1)	/* missing arg */
+			if (i == *argcp - 1) {	/* missing arg */
+				popup_an_error("Missing value for '%s'",
+					argv[i]);
 				continue;
+			}
 			parse_xrm(argv[++i], "-xrm");
 			break;
 		    case OPT_SKIP2:
@@ -814,8 +824,11 @@ parse_options(int *argcp, const char **argv)
 		    case OPT_NOP:
 			break;
 		    case OPT_INT:
-			if (i == *argcp - 1)	/* missing arg */
+			if (i == *argcp - 1) {	/* missing arg */
+				popup_an_error("Missing value for '%s'",
+					argv[i]);
 				continue;
+			}
 			*(int *)opts[j].aoff = atoi(argv[++i]);
 			if (opts[j].res_name != CN)
 				add_resource(NewString(opts[j].name),
@@ -1103,6 +1116,9 @@ static struct {
 #if !defined(_WIN32) /*[*/
 	{ ResReverseVideo,offset(reverse_video),XRM_BOOLEAN },
 #endif /*]*/
+#endif /*]*/
+#if defined(C3270) /*[*/
+	{ ResSaveLines,	offset(save_lines),	XRM_INT },
 #endif /*]*/
 #if defined(X3270_TRACE) /*[*/
 	{ ResScreenTraceFile,offset(screentrace_file),XRM_STRING },

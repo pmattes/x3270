@@ -394,10 +394,11 @@ to read commands from standard input, with the results written to standard
 output.
 The protocol for these commands is documented in
 XX_LINK(XX_X3270-script.html,XX_FI(XX_X3270-script)(1)).
-XX_TP(XX_FB(XX_DASHED(sl)) XX_FI(n))
-Specifies that XX_FI(n) lines should be saved for scrolling back.
-The default is 64.
 ')dnl 
+ifelse(XX_INTERACTIVE,yes,`XX_TP(XX_FB(XX_DASHED(sl)) XX_FI(n))
+Specifies that XX_FI(n) lines should be saved for scrolling back.
+The default is 4096.
+')dnl
 ifelse(XX_PRODUCT,wc3270,`XX_TP(XX_FB(XX_DASHED(S)))
 Runs XX_PRODUCT in auto-shortcut mode.
 XX_PRODUCT will create a temporary shorcut (.LNK file) that matches the
@@ -877,10 +878,10 @@ If clear, the normal block cursor will be used.
 XX_LP
 These names also represent resources that can be set in your .Xdefaults
 or .x3270pro file.
-For example, if you always want to have the scrollbar on, you can add
+For example, if you always want to have the scrollbar off, you can add
 the following to your .Xdefaults or .x3270pro:
 XX_BR
-XX_RS(XX_PRODUCT.scrollBar:	true)
+XX_RS(XX_PRODUCT.scrollBar:	false)
 XX_BR
 ')dnl
 XX_LP
@@ -1112,6 +1113,8 @@ XX_TR(XX_TDH(XX_INT()XX_LS()ReadBuffer`'XX_SPACE`'Ebcdic`'XX_VOID())	XX_TD(dump 
 ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,c3270,,`XX_TR(XX_TDH(XX_INT()XX_LS()`Rows'XX_VOID())	XX_TD(report screen size))
 ')dnl
 ifelse(XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,`XX_TR(XX_TDH(XX_BLOCK()Script(XX_FI(command)[,XX_FI(arg)...]))	XX_TD(run a script))
+')dnl
+ifelse(XX_INTERACTIVE,yes,`XX_TR(XX_TDH(Scroll(Forward|Backward))	XX_TD(scroll screen))
 ')dnl
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(SelectAll(XX_FI(atom)))	XX_TD(select entire screen))
 ')dnl

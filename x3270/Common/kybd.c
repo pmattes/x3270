@@ -70,6 +70,7 @@
 #include "popupsc.h"
 #include "printc.h"
 #include "screenc.h"
+#include "scrollc.h"
 #if defined(X3270_DISPLAY) /*[*/
 #include "selectc.h"
 #endif /*]*/
@@ -1651,6 +1652,9 @@ do_reset(Boolean explicit)
 
 	/* Always clear insert mode. */
 	insert_mode(False);
+
+	/* Always reset scrolling. */
+	scroll_to_bottom();
 
 	/* Otherwise, if not connect, reset is a no-op. */
 	if (!CONNECTED)

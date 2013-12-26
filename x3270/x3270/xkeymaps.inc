@@ -172,6 +172,8 @@ XX_TR(XX_TD(XX_KEY(,F10))	XX_TD(PF(10)))
 XX_TR(XX_TD(XX_KEY(,F11))	XX_TD(PF(11)))
 XX_TR(XX_TD(XX_KEY(,F12))	XX_TD(PF(12)))
 XX_TR(XX_TD(XX_KEY(Alt,q))	XX_TD(Quit()))
+XX_TR(XX_TD(XX_KEY(,Prior))	XX_TD(`Scroll(Backward)'))
+XX_TR(XX_TD(XX_KEY(,Next))	XX_TD(`Scroll(Forward)'))
 XX_TR(XX_TD(:XX_KEY(,))	XX_TD(Default()))
 XX_TE()
 XX_PP

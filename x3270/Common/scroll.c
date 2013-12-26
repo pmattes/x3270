@@ -452,9 +452,9 @@ Scroll_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 		return;
 	}
 	if (!strcasecmp(params[0], "Forward")) {
-		scroll_n(1, +1);
+		scroll_n(maxROWS, +1);
 	} else if (!strcasecmp(params[0], "Backward")) {
-		scroll_n(1, -1);
+		scroll_n(maxROWS, -1);
 	} else {
 		popup_an_error("Scroll parameter must be Forward or Backward");
 		return;

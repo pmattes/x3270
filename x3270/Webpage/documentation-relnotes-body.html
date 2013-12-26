@@ -2,10 +2,21 @@
 3.3 is the current development line for the x3270 suite.
 <h2>Changes in version 3.3.14alpha4, nn. December 2013</h2>
 <ul>
- <li>[all Windows] Got everything to build under MSVC again, using both the
-  command line and MS Visual Studio. A Visual Studio solution file is now
-  included in the source tarball. Windows targets also cross-compile with the
-  latest Cygwin MinGW.</li>
+ <li>[<i>c3270</i>, <i>wc3270</i>] Added screen scrolling (saving previous
+  screen contents, to be displayed interactively), controlled by the new
+  <b>Scroll</b> action. <b>Scroll</b>(Backward) (mapped onto PageUp) goes back
+  one screen; <b>Scroll</b>(Forward) (mapped onto PageDown) goes ahead one
+  screen. The <b>Reset</b> action cancels scrolling. The <b>-sl</b>
+  command-line option or <b>scrollLines</b> resource changes the number of
+  lines saved for scrolling from the default of 4096.</li>
+ <li>[<i>x3270</i>] Turned the scrollbar on by default. Mapped the PageUp and
+  PageDown keys to the (new) <b>Scroll</b> action, to scroll up or down one
+  screen, respectively. Modified the <b>Reset</b> action to cancel any
+  screen scrolling.</li>
+ <li>[all Windows] Got everything to build under MSVC again, using either the
+  command line or MS Visual Studio. A Visual Studio solution file is now
+  included in the source tarball. Windows targets also cross-compile again with
+  the latest Cygwin MinGW.</li>
 </ul>
 <h2>Changes in version 3.3.14alpha4, 21. December 2013</h2>
 <ul>
