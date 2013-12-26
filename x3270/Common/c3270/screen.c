@@ -48,6 +48,7 @@
 #include "macrosc.h"
 #include "popupsc.h"
 #include "screenc.h"
+#include "scrollc.h"
 #include "tablesc.h"
 #include "trace_dsc.h"
 #include "unicodec.h"
@@ -547,6 +548,9 @@ finish_screen_init(void)
 	/* Set up the controller. */
 	ctlr_init(-1);
 	ctlr_reinit(-1);
+
+	/* Set up the scrollbar. */
+	scroll_init();
 
 	screen_init2();
 }
@@ -1611,7 +1615,7 @@ static char oia_timing[6]; /* :ss.s*/
 static char *status_msg = "X Not Connected";
 static char *saved_status_msg = NULL;
 static ioid_t saved_status_timeout = NULL_IOID;
-static ioid_t status_scroll_timeout = NULL_IOID;
+static ioid_t oia_scroll_timeout = NULL_IOID;
 
 static void
 cancel_status_push(void)
@@ -1621,9 +1625,9 @@ cancel_status_push(void)
 	    	RemoveTimeOut(saved_status_timeout);
 		saved_status_timeout = NULL_IOID;
 	}
-	if (status_scroll_timeout != NULL_IOID) {
-		RemoveTimeOut(status_scroll_timeout);
-		status_scroll_timeout = NULL_IOID;
+	if (oia_scroll_timeout != NULL_IOID) {
+		RemoveTimeOut(oia_scroll_timeout);
+		oia_scroll_timeout = NULL_IOID;
 	}
 }
 
@@ -1648,15 +1652,15 @@ status_pop(ioid_t id _is_unused)
 }
 
 static void
-status_scroll(ioid_t id _is_unused)
+oia_scroll(ioid_t id _is_unused)
 {
 	status_msg++;
 	if (strlen(status_msg) > 35)
-		status_scroll_timeout = AddTimeOut(STATUS_SCROLL_MS,
-			status_scroll);
+		oia_scroll_timeout = AddTimeOut(STATUS_SCROLL_MS,
+			oia_scroll);
 	else {
 		saved_status_timeout = AddTimeOut(STATUS_PUSH_MS, status_pop);
-		status_scroll_timeout = NULL_IOID;
+		oia_scroll_timeout = NULL_IOID;
 	}
 }
 
@@ -1674,8 +1678,8 @@ status_push(char *msg)
 	status_msg = msg;
 
 	if (strlen(msg) > 35)
-		status_scroll_timeout = AddTimeOut(STATUS_SCROLL_START_MS,
-			status_scroll);
+		oia_scroll_timeout = AddTimeOut(STATUS_SCROLL_START_MS,
+			oia_scroll);
 	else
 		saved_status_timeout = AddTimeOut(STATUS_PUSH_MS, status_pop);
 }
@@ -1847,6 +1851,20 @@ void
 status_untiming(void)
 {
     	oia_timing[0] = '\0';
+}
+
+void
+status_scrolled(int n)
+{
+	static char ssbuf[128];
+
+	cancel_status_push();
+	if (n) {
+		snprintf(ssbuf, sizeof(ssbuf), "X Scrolled %d", n);
+		status_msg = ssbuf;
+	} else {
+	    	status_msg = "";
+	}
 }
 
 static void

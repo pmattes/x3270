@@ -178,12 +178,14 @@ typedef struct {
 	char	*printer_lu;
 	char	*printer_opts;
 #endif /*]*/
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+	int	save_lines;
+#endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
 	char	*efontname;
 	char	*fixed_size;
 	char	*icon_font;
 	char	*icon_label_font;
-	int	save_lines;
 	char	*normal_name;
 	char	*select_name;
 	char	*bold_name;

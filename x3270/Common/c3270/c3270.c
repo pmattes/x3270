@@ -164,7 +164,9 @@ static char *base_keymap3 =
              "<Key>F11: PF(11)\n"
   "Ctrl<Key>a <Key>F11: PF(23)\n"
              "<Key>F12: PF(12)\n"
-  "Ctrl<Key>a <Key>F12: PF(24)\n";
+  "Ctrl<Key>a <Key>F12: PF(24)\n"
+  "<Key>PPAGE: Scroll(Backward)\n"
+  "<Key>NPAGE: Scroll(Forward)\n";
 
 /* Base keymap for c3270, 3270 mode. */
 static char *base_3270_keymap =

@@ -399,7 +399,9 @@ x3270.keymap.base: \
 	:<Key>dead_grave:	 	Compose() Key(grave)\n\
         :<Key>dead_circumflex:          Compose() Key(asciicircum)\n\
 	:<Key>dead_tilde:	        Compose() Key(asciitilde)\n\
-	:<Key>dead_diaeresis:	        Compose() Key(quotedbl)\n
+	:<Key>dead_diaeresis:	        Compose() Key(quotedbl)\n\
+	:<Key>Prior:			Scroll(Backward)\n\
+	:<Key>Next:			Scroll(Forward)\n
 !
 ! Base keymap for 3270 mode.  These mappings are added to the base keymap,
 ! but only when in 3270 mode.

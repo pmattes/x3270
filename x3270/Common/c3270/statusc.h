@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, Paul Mattes.
+ * Copyright (c) 1999-2009, 2013 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,7 @@ extern void status_minus(void);
 extern void status_oerr(int error_type);
 extern void status_reset(void);
 extern void status_reverse_mode(Boolean on);
+extern void status_scrolled(int n);
 extern void status_syswait(void);
 extern void status_timing(struct timeval *t0, struct timeval *t1);
 extern void status_twait(void);

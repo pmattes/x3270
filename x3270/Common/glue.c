@@ -542,6 +542,10 @@ set_appres_defaults(void)
 #if defined(HAVE_LIBSSL) /*[*/
 	appres.verify_host_cert = False;
 #endif /*]*/
+
+#if defined(C3270) /*[*/
+	appres.save_lines = 4096;
+#endif /*]*/
 }
 
 #if defined (C3270) /*[*/

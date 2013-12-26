@@ -45,6 +45,7 @@
 #include "popupsc.h"
 #include "printc.h"
 #include "resources.h"
+#include "scrollc.h"
 #include "selectc.h"
 #include "togglesc.h"
 #include "trace_dsc.h"
@@ -142,6 +143,9 @@ XtActionsRec all_actions[] = {
 #if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 	{ "Flip",		Flip_action },
 	{ "Redraw",		Redraw_action },
+#endif /*]*/
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+	{ "Scroll",		Scroll_action },
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
 	{ "SetFont",		SetFont_action },

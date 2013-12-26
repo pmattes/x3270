@@ -54,6 +54,8 @@ extern void pager_output(const char *s);
 extern Boolean screen_wait_for_key(char *c);
 #endif /*]*/
 extern void toggle_monocase(struct toggle *t, enum toggle_type tt);
+#define screen_set_thumb(top, shown)
+#define enable_cursor(on)
 
 extern Boolean escaped;
 
