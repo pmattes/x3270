@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2010, 2013 Paul Mattes.
+ * Copyright (c) 2000-2010, 2013, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,11 @@
  *		facilities, such as memory allocation, I/O registration,
  *		and timers.
  */
+
+#define PR3287	1
+#if defined(_WIN32) /*[*/
+# define WPR3287	1
+#endif /*]*/
 
 /* These first definitions were cribbed from X11 -- but no X code is used. */
 #define False 0

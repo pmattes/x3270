@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2013, Paul Mattes.
+# Copyright (c) 2007-2014, Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,7 @@ SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
 SSLLIB = gdi32.lib user32.lib
 !ENDIF
 
-XCPPFLAGS = /D_WIN32 /DPR3287 /DWPR3287 /DX3270_DBCS=1 /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /W3 /WX $(SSLDEF)
+XCPPFLAGS = /D_WIN32 /DX3270_DBCS=1 /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /W3 /WX $(SSLDEF)
 CFLAGS = $(XCPPFLAGS) -I.
 VOBJS = charset.obj ctlr.obj pr3287.obj proxy.obj resolver.obj see.obj sf.obj \
 	snprintf.obj ssl_dll.obj tables.obj telnet.obj trace_ds.obj utf8.obj \
