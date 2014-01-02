@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -473,7 +473,7 @@ create_tracefile_header(const char *mode)
 	save_yourself();
 	wtrace(" Command: %s\n", command_string);
 	wtrace(" Model %s, %d rows x %d cols", model_name, maxROWS, maxCOLS);
-#if defined(X3270_DISPLAY) || (defined(C3270) && !defined(_WIN32)) /*[*/
+#if defined(X3270_INTERACTIVE) && !defined(_WIN32) /*[*/
 	wtrace(", %s display", appres.mono ? "monochrome" : "color");
 #endif /*]*/
 	if (appres.extended)

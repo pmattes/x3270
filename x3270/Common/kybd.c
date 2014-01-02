@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013, 2014 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -4122,7 +4122,7 @@ PA_Shift_action(Widget w _is_unused, XEvent *event _is_unused, String *params _i
 }
 #endif /*]*/
 
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 static Boolean
 build_composites(void)
 {

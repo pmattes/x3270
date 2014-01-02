@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -4165,7 +4165,7 @@ Plugin_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 }
 #endif /*]*/
 
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 /*
  * Bell action, used by scripts to ring the console bell and enter a comment
  * into the trace log.

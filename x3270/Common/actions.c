@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -55,11 +55,11 @@
 #if defined(X3270_FT) /*[*/
 #include "ftc.h"
 #endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 #include "keypadc.h"
 #include "menubarc.h"
 #endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 #include "screenc.h"
 #endif /*]*/
 
@@ -99,7 +99,7 @@ XtActionsRec all_actions[] = {
 #if defined(X3270_DISPLAY) /*[*/
 	{ "AltCursor",  	AltCursor_action },
 #endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 	{ "Compose",		Compose_action },
 #endif /*]*/
 #if defined(WC3270) /*[*/
@@ -112,7 +112,7 @@ XtActionsRec all_actions[] = {
 	{ "HardPrint",		PrintText_action },
 	{ "HexString",		HexString_action },
 #endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 	{ "Info",		Info_action },
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
@@ -140,11 +140,11 @@ XtActionsRec all_actions[] = {
 	{ "PrintWindow",	PrintWindow_action },
 #endif /*]*/
 	{ "PrintText",		PrintText_action },
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 	{ "Flip",		Flip_action },
 	{ "Redraw",		Redraw_action },
 #endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 	{ "Scroll",		Scroll_action },
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
@@ -170,7 +170,7 @@ XtActionsRec all_actions[] = {
 	{ "Attn",		Attn_action },
 	{ "BackSpace",		BackSpace_action },
 	{ "BackTab",		BackTab_action },
-#if defined(X3270_SCRIPT) && (defined(X3270_DISPLAY) || defined(C3270)) /*[*/
+#if defined(X3270_SCRIPT) && (defined(X3270_INTERACTIVE)) /*[*/
 	{ "Bell",		Bell_action },
 #endif /*]*/
 	{ "CircumNot",		CircumNot_action },

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2009, 2013 Paul Mattes.
+ * Copyright (c) 2002-2009, 2013, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@ enum idle_enum {
 	IDLE_PERM = 2
 };
 
-#if defined(X3270_DISPLAY) || defined(C3270) || defined(S3270) /*[*/
+#if defined(X3270_INTERACTIVE) || defined(S3270) /*[*/
 extern void cancel_idle_timer(void);
 extern void idle_init(void);
 extern void reset_idle_timer(void);

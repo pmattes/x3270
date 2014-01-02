@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -348,7 +348,7 @@ static Boolean host_in6addr_valid;
 # if defined(X3270_DISPLAY) /*[*/
 static char *ssl_password;
 # endif /*]*/
-# if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+# if defined(X3270_INTERACTIVE) /*[*/
 static Boolean ssl_password_prompted;
 # endif /*]*/
 # if OPENSSL_VERSION_NUMBER >= 0x00907000L /*[*/
@@ -4134,7 +4134,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 #if defined(C3270) /*[*/
     try_again:
 #endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 	ssl_password_prompted = False;
 #endif /*]*/
 	ssl_ctx = SSL_CTX_new(SSLv23_method());

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2009, 2013 Paul Mattes.
+ * Copyright (c) 1994-2009, 2013, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -441,7 +441,7 @@ rethumb(void)
 	screen_set_thumb_traced(thumb_top, thumb_shown);
 }
 
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 void
 Scroll_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	Cardinal *num_params)

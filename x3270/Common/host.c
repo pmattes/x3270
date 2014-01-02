@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -75,7 +75,7 @@ struct host *hosts = (struct host *)NULL;
 static struct host *last_host = (struct host *)NULL;
 static Boolean auto_reconnect_inprogress = False;
 static int net_sock = -1;
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 static ioid_t reconnect_id = NULL_IOID;
 #endif /*]*/
 
@@ -83,7 +83,7 @@ static ioid_t reconnect_id = NULL_IOID;
 static void save_recent(const char *);
 #endif /*]*/
 
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 static void try_reconnect(ioid_t id);
 #endif /*]*/
 
@@ -653,7 +653,7 @@ host_connect(const char *n)
 	net_sock = net_connect(chost, port, localprocess_cmd != CN, &resolving,
 	    &pending);
 	if (net_sock < 0 && !resolving) {
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 # if defined(X3270_DISPLAY) /*[*/
 		if (appres.once) {
 			/* Exit when the error pop-up pops down. */
@@ -705,7 +705,7 @@ host_connect(const char *n)
 	return 0;
 }
 
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 /*
  * Reconnect to the last host.
  */
@@ -749,7 +749,7 @@ host_disconnect(Boolean failed)
 		x_remove_input();
 		net_disconnect();
 		net_sock = -1;
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 # if defined(X3270_DISPLAY) /*[*/
 		if (appres.once) {
 			if (error_popup_visible()) {

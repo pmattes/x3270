@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009, Paul Mattes.
+ * Copyright (c) 2001-2009, 2013, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
  *		Global declarations for child.c.
  */
 
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 extern int fork_child(void);
 extern void child_ignore_output(void);
 #else /*][*/

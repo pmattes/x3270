@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2013, Paul Mattes.
+ * Copyright (c) 1994-2014, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -96,7 +96,7 @@ print_text_done(FILE *f)
 		popup_an_error("Print program exited with status %d.",
 		    (status & 0xff00) > 8);
 	} else {
-# if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+# if defined(X3270_INTERACTIVE) /*[*/
 		if (appres.do_confirms)
 			popup_an_info("Screen image printed.");
 # endif /*]*/

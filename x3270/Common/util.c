@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -1117,14 +1117,14 @@ build_options(void)
 		" --disable-menus"
 # endif /*]*/
 #endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 # if defined(X3270_PRINTER) /*[*/
 		" --enable-printer"
 # else /*][*/
 		" --disable-printer"
 # endif /*]*/
 #endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 # if defined(X3270_SCRIPT) /*[*/
 		" --enable-script"
 # else /*][*/

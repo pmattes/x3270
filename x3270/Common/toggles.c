@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013, 2014 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -85,7 +85,7 @@ do_menu_toggle(int ix)
 void
 initialize_toggles(void)
 {
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 	appres.toggle[MONOCASE].upcall =         toggle_monocase;
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, Paul Mattes.
+ * Copyright (c) 1993-2012, 2014 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -106,17 +106,17 @@ typedef struct {
 #endif /*]*/
 
 	/* Options (not toggles) */
-#if defined(X3270_DISPLAY) || (defined(C3270) && !defined(_WIN32)) /*[*/
+#if defined(X3270_INTERACTIVE) && !defined(_WIN32) /*[*/
 	Boolean mono;
 #endif /*]*/
 	Boolean extended;
 	Boolean m3279;
 	Boolean modified_sel;
 	Boolean	once;
-#if defined(X3270_DISPLAY) || (defined(C3270) && defined(_WIN32)) /*[*/
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
 	Boolean visual_bell;
 #endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 	Boolean menubar;
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
@@ -133,7 +133,7 @@ typedef struct {
 	Boolean	keypad_on;
 # endif /*]*/
 #endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 	Boolean do_confirms;
 	Boolean reconnect;
 #endif /*]*/
@@ -172,13 +172,13 @@ typedef struct {
 #if defined(X3270_KEYPAD) /*[*/
 	char	*keypad;
 #endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 	char	*key_map;
 	char	*compose_map;
 	char	*printer_lu;
 	char	*printer_opts;
 #endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 	int	save_lines;
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
