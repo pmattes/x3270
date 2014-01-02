@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013 Paul Mattes.
+# Copyright (c) 2007-2009, 2013, 2014 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@ NATIVECC = gcc
 WINDRES = i586-mingw32msvc-windres
 endif
 
-XCPPFLAGS = -D_WIN32 -DWC3270 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWINVER=0x500
+XCPPFLAGS = -D_WIN32 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWINVER=0x500
 CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
 SRCS = XtGlue.c actions.c ansi.c apl.c c3270.c charset.c ctlr.c fallbacks.c \
        	fprint_screen.c ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c \

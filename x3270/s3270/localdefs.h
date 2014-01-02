@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, Paul Mattes.
+ * Copyright (c) 2000-2009, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,9 @@
 
 /* Identify ourselves. */
 #define S3270   1
+#if defined(_WIN32) /*[*/
+# define WS3270	1
+#endif /*]*/
 
 /* These first definitions were cribbed from X11 -- but no X code is used. */
 #define False 0

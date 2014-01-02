@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013 Paul Mattes.
+# Copyright (c) 2007-2009, 2013, 2014 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,7 @@ NATIVECC = gcc
 WINDRES = i586-mingw32msvc-windres
 endif
 
-XCPPFLAGS = -D_WIN32 -DWS3270 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWIN32_LEAN_AND_MEAN
+XCPPFLAGS = -D_WIN32 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWIN32_LEAN_AND_MEAN
 CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
 SRCS = actions.c ansi.c apl.c charset.c ctlr.c fprint_screen.c fallbacks.c \
 	ft.c ft_cut.c ft_dft.c glue.c host.c idle.c kybd.c macros.c \
