@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013, 2014 Paul Mattes.
+ * Copyright (c) 2000-2009, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 
 /*
  *	localdefs.h
- *		Local definitions for ws3270.
+ *		Local definitions for s3270.
  *
  *		This file contains definitions for environment-specific
  *		facilities, such as memory allocation, I/O registration,
@@ -37,14 +37,9 @@
  */
 
 /* Identify ourselves. */
-#define S3270	1
-#define WS3270	1
-
-/* Conditional 80/132 mode switch support. */
-#if defined(BROKEN_NEWTERM) /*[*/
-#undef C3270_80_132
-#else /*][*/
-#define C3270_80_132 1
+#define S3270   1
+#if defined(_WIN32) /*[*/
+# define WS3270	1
 #endif /*]*/
 
 /* These first definitions were cribbed from X11 -- but no X code is used. */
@@ -82,11 +77,3 @@ extern void Warning(const char *);
 
 /* "Required" optional parts. */
 #define X3270_SCRIPT	1
-
-/* Work around Windows' brain-damaged snprintf implementation. */
-extern int safe_vsnprintf(char *str, size_t size, const char *fmt, va_list ap);
-extern int safe_snprintf(char *str, size_t size, const char *fmt, ...);
-#if !defined(IS_SNPRINTF_C) /*[*/
-# define vsnprintf safe_vsnprintf
-# define snprintf safe_snprintf
-#endif /*]*/
