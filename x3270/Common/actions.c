@@ -59,7 +59,7 @@
 #include "keypadc.h"
 #include "menubarc.h"
 #endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) || defined(WC3270) /*[*/
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 #include "screenc.h"
 #endif /*]*/
 
@@ -199,7 +199,7 @@ XtActionsRec all_actions[] = {
 #if defined(X3270_SCRIPT) /*[*/
 	{ "Execute",		Execute_action },
 #endif /*]*/
-#if defined(C3270) || defined(WC3270) /*[*/
+#if defined(C3270) /*[*/
 	{ "Exit",		Quit_action },
 #endif /*]*/
 #if defined(X3270_SCRIPT) /*[*/
@@ -208,7 +208,7 @@ XtActionsRec all_actions[] = {
 	{ "FieldEnd",		FieldEnd_action },
 	{ "FieldMark",		FieldMark_action },
 	{ "HexString",		HexString_action},
-#if defined(C3270) || defined(WC3270) /*[*/
+#if defined(C3270) /*[*/
 	{ "Help",		Help_action},
 #endif/*]*/
 #if defined(X3270_SCRIPT) /*[*/

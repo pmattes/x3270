@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -125,6 +125,11 @@ typedef unsigned short ebc_t;
 #endif /*]*/
 #if defined(C3270) && defined(X3270_DBCS) && !defined(CURSES_WIDE) && !defined(_WIN32) /*[*/
 # undef X3270_DBCS
+#endif /*]*/
+
+/* Derived #defines. */
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+# define X3270_INTERACTIVE	1
 #endif /*]*/
 
 /* Local process (-e) header files. */
@@ -258,7 +263,7 @@ extern char		*myappdata;
 extern char		*commonappdata;
 #endif /*]*/
 
-#if defined(_WIN32) && defined(C3270) /*[*/
+#if defined(WC3270) /*[*/
 extern int		is_installed;
 extern HWND		console_window;
 #endif /*]*/
