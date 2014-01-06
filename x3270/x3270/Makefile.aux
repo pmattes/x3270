@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2013, Paul Mattes.
+# Copyright (c) 1995-2014, Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -39,50 +39,58 @@ SOURCES = Cme.c CmeBSB.c CmeLine.c CmplxMenu.c Husk.c about.c actions.c \
 	ansi.c apl.c charset.c child.c ctlr.c dialog.c display8.c \
 	fprint_screen.c ft.c ft_cut.c ft_dft.c host.c idle.c keymap.c \
 	keypad.c keysym2ucs.c kybd.c macros.c main.c menubar.c popups.c \
-	printer.c print.c proxy.c resolver.c resources.c rpq.c save.c \
+	print.c printer.c proxy.c qcpp.c resolver.c resources.c rpq.c save.c \
 	screen.c scroll.c see.c select.c sf.c status.c stmenu.c strtok_r.c \
 	tables.c telnet.c toggles.c trace_ds.c unicode.c unicode_dbcs.c \
-	utf8.c util.c xio.c x3270if.c qcpp.c
+	utf8.c util.c x3270if.c xio.c
+
 HEADERS = 3270ds.h Cme.h CmeBSB.h CmeBSBP.h CmeLine.h CmeLineP.h CmeP.h \
 	CmplxMenu.h CmplxMenuP.h Husk.h HuskP.h aboutc.h actionsc.h ansic.h \
-	aplc.h appres.h cg.h charsetc.h childc.h ctlr.h ctlrc.h \
-	dialogc.h display8c.h fallbacksc.h fprint_screenc.h ftc.h ft_cut_ds.h \
-	ft_cutc.h ft_dftc.h ft_dft_ds.h globals.h hostc.h idlec.h keymapc.h \
-	keypadc.h keysym2ucs.h kybdc.h localdefs.h macrosc.h mainc.h \
-	menubarc.h objects.h popupsc.h printerc.h printc.h proxy.h proxyc.h \
-	resolverc.h resources.h resourcesc.h rpqc.h savec.h screen.h \
+	aplc.h appres.h arpa_telnet.h cg.h charsetc.h childc.h ctlr.h ctlrc.h \
+	dialogc.h display8c.h fallbacksc.h fprint_screenc.h ft_cut_ds.h \
+	ft_cutc.h ft_dft_ds.h ft_dftc.h ftc.h globals.h hostc.h idlec.h \
+	keymapc.h keypadc.h keysym2ucs.h kybdc.h localdefs.h macrosc.h \
+	mainc.h menubarc.h objects.h popupsc.h printc.h printerc.h proxy.h \
+	proxyc.h resolverc.h resources.h resourcesc.h rpqc.h savec.h screen.h \
 	screenc.h scrollc.h seec.h selectc.h sfc.h statusc.h stmenuc.h \
-	tablesc.h arpa_telnet.h telnetc.h tn3270e.h togglesc.h trace_dsc.h \
-	unicodec.h unicode_dbcsc.h utf8c.h utilc.h w3miscc.h xioc.h
-BITMAPS = keypad.bm dot.bm arrow.bm diamond.bm ky.bm no_diamond.bm no_dot.bm \
-	null.bm locked.bm unlocked.bm wait.bm x3270.bm
+	tablesc.h telnetc.h tn3270e.h togglesc.h trace_dsc.h unicode_dbcsc.h \
+	unicodec.h utf8c.h utilc.h w3miscc.h xioc.h
+
+BITMAPS = arrow.bm diamond.bm dot.bm keypad.bm ky.bm locked.bm no_diamond.bm \
+	no_dot.bm null.bm unlocked.bm wait.bm x3270.bm
+
 FONTS = 3270-12.bdf 3270-12b.bdf 3270-20.bdf 3270-20b.bdf 3270.bdf 3270b.bdf \
-	3270gr.bdf 3270gt12.bdf 3270gt12b.bdf \
-	3270gt16.bdf 3270gt16b.bdf 3270gt24.bdf 3270gt24b.bdf 3270gt32.bdf \
-	3270gt32b.bdf 3270gt8.bdf 3270h.bdf
-MISC = LICENSE README X3270.xad dryrun ibm_hosts ibm_hosts.man install-sh \
-	mkfb.c mkversion.sh version.txt x3270-script.man $(PRODUCT).man \
-	x3270_glue.expect x3270if.man README.dbcs qcpp-defs.sh x3270hist.pl \
-	x3270-icon2.xpm
+	3270gr.bdf 3270gt12.bdf 3270gt12b.bdf 3270gt16.bdf 3270gt16b.bdf \
+	3270gt24.bdf 3270gt24b.bdf 3270gt32.bdf 3270gt32b.bdf 3270gt8.bdf \
+	3270h.bdf
+
+MISC = $(PRODUCT).man LICENSE README README.dbcs X3270.xad dryrun ibm_hosts \
+	ibm_hosts.man install-sh mkfb.c mkversion.sh qcpp-defs.sh version.txt \
+	x3270-icon2.xpm x3270-script.man x3270_glue.expect x3270hist.pl \
+	x3270if.man
+
 EXAMPLES = Examples/child_script.bash Examples/child_script.ksh \
 	Examples/child_script.sh Examples/cms_logon.bash \
 	Examples/cms_logon.sh Examples/ibm_hosts Examples/peer_script.bash \
 	Examples/peer_script.expect Examples/peer_script.ksh \
 	Examples/peer_script.sh
-CONFIG = Imakefile.in conf.h.in config.guess config.sub configure \
-	 configure.in Makefile.in
-HTML = html/Attributes.html html/Brackets.html html/Bugs.html html/Build.html \
-	html/Charset.html html/FAQ.html html/Intro.html html/Keymap.html \
-	html/Lineage.html html/ReleaseNotes.html html/README.html \
-	html/Resources.html html/SSL.html \
-	html/Wishlist.html html/del.jpg html/delta.jpg \
-	html/ibm_hosts.html html/$(PRODUCT)-man.html html/x3270-script.html \
-	html/x3270.jpg html/x3270.xbm html/x3270if.html
+
+CONFIG = Imakefile.in Makefile.in conf.h.in config.guess config.sub configure \
+	configure.in
+
+HTML = html/$(PRODUCT)-man.html html/Attributes.html html/Brackets.html \
+	html/Bugs.html html/Build.html html/Charset.html html/FAQ.html \
+	html/Intro.html html/Keymap.html html/Lineage.html html/README.html \
+	html/ReleaseNotes.html html/Resources.html html/SSL.html \
+	html/Wishlist.html html/del.jpg html/delta.jpg html/ibm_hosts.html \
+	html/x3270-script.html html/x3270.jpg html/x3270.xbm \
+	html/x3270if.html
+
 FT = ft/all.chars ft/print.chars
-DEVKIT = Makefile.aux apl.inc ft.inc html.m4 m4man man.m4 \
-	menus.inc x3270.man.m4 xkeymaps.inc \
-	instlist.all-xinstall instlist.base instlist.byprefix \
-	x3270/instlist.man
+
+DEVKIT = Makefile.aux apl.inc ft.inc html.m4 instlist.all-xinstall \
+	instlist.base instlist.byprefix m4man man.m4 menus.inc x3270.man.m4 \
+	x3270/instlist.man xkeymaps.inc
 
 FILES = $(SOURCES) $(HEADERS) $(BITMAPS) $(FONTS) $(MISC) $(EXAMPLES) \
 	$(CONFIG) $(HTML) $(FT)

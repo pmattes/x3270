@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2011, 2013 Paul Mattes.
+# Copyright (c) 1995-2011, 2013-2014 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -40,26 +40,30 @@ SOURCES = XtGlue.c actions.c ansi.c apl.c charset.c ctlr.c fprint_screen.c \
 	proxy.c readres.c resolver.c resources.c rpq.c see.c sf.c smain.c \
 	tables.c telnet.c toggles.c trace_ds.c unicode.c unicode_dbcs.c \
 	utf8.c util.c xio.c
-HEADERS = 3270ds.h actionsc.h ansic.h aplc.h appres.h cg.h charsetc.h \
-	childc.h ctlr.h ctlrc.h dialogc.h fallbacksc.h fprint_screenc.h ftc.h \
-	ft_cutc.h ft_cut_ds.h ft_dftc.h ft_dft_ds.h globals.h gluec.h hostc.h \
-	idlec.h keymapc.h keypadc.h kybdc.h localdefs.h macrosc.h menubarc.h \
-	objects.h popupsc.h printc.h proxy.h proxyc.h readresc.h resolverc.h \
-	resources.h rpqc.h savec.h screen.h screenc.h scrollc.h seec.h \
-	selectc.h sfc.h statusc.h tablesc.h arpa_telnet.h telnetc.h tn3270e.h \
-	togglesc.h trace_dsc.h unicodec.h unicode_dbcsc.h utf8c.h utilc.h \
-	w3miscc.h xioc.h xl.h X11/keysym.h
-MISC = version.txt $(PRODUCT).man x3270if.man x3270-script.man \
-	mkversion.sh Makefile.in conf.h.in README x3270if.c \
-	Examples/cms_cmd.expect x3270_glue.expect configure install-sh \
-	config.sub config.guess parts.h.in configure.in mkfb.c X3270.xad \
-	LICENSE s3270_glue.bash
-DEVKIT = Makefile.aux m42man m42html instlist.base \
-	instlist.man
-HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
-	html/Lineage.html html/ReleaseNotes.html html/README.html \
-	html/Wishlist.html html/$(PRODUCT)-man.html html/x3270-script.html \
-	html/x3270.xbm html/x3270if.html html/Resources.html html/SSL.html
+
+HEADERS = 3270ds.h X11/keysym.h actionsc.h ansic.h aplc.h appres.h \
+	arpa_telnet.h cg.h charsetc.h childc.h ctlr.h ctlrc.h dialogc.h \
+	fallbacksc.h fprint_screenc.h ft_cut_ds.h ft_cutc.h ft_dft_ds.h \
+	ft_dftc.h ftc.h globals.h gluec.h hostc.h idlec.h keymapc.h keypadc.h \
+	kybdc.h localdefs.h macrosc.h menubarc.h objects.h popupsc.h printc.h \
+	proxy.h proxyc.h readresc.h resolverc.h resources.h rpqc.h savec.h \
+	screen.h screenc.h scrollc.h seec.h selectc.h sfc.h statusc.h \
+	tablesc.h telnetc.h tn3270e.h togglesc.h trace_dsc.h unicode_dbcsc.h \
+	unicodec.h utf8c.h utilc.h w3miscc.h xioc.h xl.h
+
+MISC = $(PRODUCT).man Examples/cms_cmd.expect LICENSE Makefile.in README \
+	X3270.xad conf.h.in config.guess config.sub configure configure.in \
+	install-sh mkfb.c mkversion.sh parts.h.in s3270_glue.bash version.txt \
+	x3270-script.man x3270_glue.expect x3270if.c x3270if.man
+
+DEVKIT = Makefile.aux instlist.base instlist.man m42html m42man
+
+HTML = html/$(PRODUCT)-man.html html/Bugs.html html/Build.html html/FAQ.html \
+	html/Intro.html html/Lineage.html html/README.html \
+	html/ReleaseNotes.html html/Resources.html html/SSL.html \
+	html/Wishlist.html html/x3270-script.html html/x3270.xbm \
+	html/x3270if.html
+
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
 tarlist: Makefile.aux

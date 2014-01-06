@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013, 2014 Paul Mattes.
+# Copyright (c) 2007-2009, 2013-2014 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -56,18 +56,18 @@ endif
 
 XCPPFLAGS = -D_WIN32 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWIN32_LEAN_AND_MEAN
 CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
-SRCS = actions.c ansi.c apl.c charset.c ctlr.c fprint_screen.c fallbacks.c \
-	ft.c ft_cut.c ft_dft.c glue.c host.c idle.c kybd.c macros.c \
-	print.c printer.c proxy.c readres.c resolver.c resources.c rpq.c \
-	see.c sf.c smain.c snprintf.c ssl_dll.c strtok_r.c tables.c telnet.c \
-	toggles.c trace_ds.c utf8.c util.c w3misc.c windirs.c winvers.c xio.c \
-	XtGlue.c unicode.c unicode_dbcs.c winprint.c
-VOBJS = actions.o ansi.o apl.o charset.o ctlr.o fallbacks.o fprint_screen.o \
-	ft.o ft_cut.o ft_dft.o glue.o host.o idle.o kybd.o macros.o \
-	print.o printer.o proxy.o readres.o resolver.o resources.o rpq.o \
-	see.o sf.o smain.o snprintf.o ssl_dll.o strtok_r.o tables.o telnet.o \
-	toggles.o trace_ds.o utf8.o util.o w3misc.o windirs.o winvers.o xio.o \
-	XtGlue.o ws3270res.o unicode.o unicode_dbcs.o winprint.o
+SRCS = XtGlue.c actions.c ansi.c apl.c charset.c ctlr.c fallbacks.c \
+	fprint_screen.c ft.c ft_cut.c ft_dft.c glue.c host.c idle.c kybd.c \
+	macros.c print.c printer.c proxy.c readres.c resolver.c resources.c \
+	rpq.c see.c sf.c smain.c snprintf.c ssl_dll.c strtok_r.c tables.c \
+	telnet.c toggles.c trace_ds.c unicode.c unicode_dbcs.c utf8.c util.c \
+	w3misc.c windirs.c winprint.c winvers.c xio.c
+VOBJS = XtGlue.o actions.o ansi.o apl.o charset.o ctlr.o fallbacks.o \
+	fprint_screen.o ft.o ft_cut.o ft_dft.o glue.o host.o idle.o kybd.o \
+	macros.o print.o printer.o proxy.o readres.o resolver.o resources.o \
+	rpq.o see.o sf.o smain.o snprintf.o ssl_dll.o strtok_r.o tables.o \
+	telnet.o toggles.o trace_ds.o unicode.o unicode_dbcs.o utf8.o util.o \
+	w3misc.o windirs.o winprint.o winvers.o ws3270res.o xio.o
 OBJECTS = $(VOBJS) version.o
 LIBS = $(SSLLIB) -lws2_32
 SHRTLIBS = -lole32 -luuid

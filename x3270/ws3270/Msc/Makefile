@@ -47,8 +47,8 @@ VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj charset.obj ctlr.obj \
 	host.obj idle.obj kybd.obj macros.obj print.obj printer.obj proxy.obj \
 	readres.obj resolver.obj resources.obj rpq.obj see.obj sf.obj \
 	smain.obj snprintf.obj ssl_dll.obj tables.obj telnet.obj toggles.obj \
-	trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj xio.obj \
-	w3misc.obj winvers.obj windirs.obj winprint.obj ws3270.RES
+	trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj \
+	w3misc.obj windirs.obj winprint.obj winvers.obj ws3270.RES xio.obj
 OBJECTS = $(VOBJS) version.obj
 LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib
 SHRTLIBS = ole32.lib

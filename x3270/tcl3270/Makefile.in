@@ -1,4 +1,4 @@
-# Copyright (c) 1993-2009, 2013 Paul Mattes.
+# Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -32,16 +32,18 @@ CC = @CC@
 
 all:: tcl3270
 
-SRCS =	actions.c ansi.c apl.c charset.c ctlr.c fprint_screen.c ft.c ft_cut.c \
-	ft_dft.c glue.c host.c idle.c kybd.c print.c proxy.c readres.c \
-	resolver.c resources.c rpq.c see.c sf.c tables.c tcl3270.c telnet.c \
-	toggles.c trace_ds.c unicode.c unicode_dbcs.c utf8.c util.c xio.c \
-	XtGlue.c
-VOBJS = actions.o ansi.o apl.o charset.o ctlr.o fallbacks.o fprint_screen.o \
-	ft.o ft_cut.o ft_dft.o glue.o host.o idle.o kybd.o print.o proxy.o \
-	readres.o resolver.o resources.o rpq.o see.o sf.o tables.o tcl3270.o \
-	telnet.o toggles.o trace_ds.o unicode.o unicode_dbcs.o utf8.o util.o \
-	xio.o XtGlue.o
+SRCS = XtGlue.c actions.c ansi.c apl.c charset.c ctlr.c fprint_screen.c ft.c \
+	ft_cut.c ft_dft.c glue.c host.c idle.c kybd.c print.c proxy.c \
+	readres.c resolver.c resources.c rpq.c see.c sf.c tables.c tcl3270.c \
+	telnet.c toggles.c trace_ds.c unicode.c unicode_dbcs.c utf8.c util.c \
+	xio.c
+
+VOBJS = XtGlue.o actions.o ansi.o apl.o charset.o ctlr.o fallbacks.o \
+	fprint_screen.o ft.o ft_cut.o ft_dft.o glue.o host.o idle.o kybd.o \
+	print.o proxy.o readres.o resolver.o resources.o rpq.o see.o sf.o \
+	tables.o tcl3270.o telnet.o toggles.o trace_ds.o unicode.o \
+	unicode_dbcs.o utf8.o util.o xio.o
+
 OBJS1 = $(VOBJS) version.o
 
 LIBDIR = @libdir@

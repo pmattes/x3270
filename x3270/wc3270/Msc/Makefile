@@ -50,8 +50,8 @@ VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj c3270.obj charset.obj \
 	readres.obj relink.obj resolver.obj resources.obj rpq.obj screen.obj \
 	scroll.obj see.obj select.obj sf.obj shortcut.obj snprintf.obj \
 	ssl_dll.obj tables.obj telnet.obj toggles.obj trace_ds.obj \
-	unicode.obj unicode_dbcs.obj utf8.obj util.obj w3misc.obj winvers.obj \
-	windirs.obj winprint.obj xio.obj wc3270.RES
+	unicode.obj unicode_dbcs.obj utf8.obj util.obj w3misc.obj wc3270.RES \
+	windirs.obj winprint.obj winvers.obj xio.obj
 OBJECTS = $(VOBJS) version.obj
 WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
 	windirs.obj relink.obj snprintf.obj

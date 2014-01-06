@@ -52,11 +52,11 @@ endif
 XCPPFLAGS = -D_WIN32 -DX3270_DBCS=1 -D_WIN32_WINNT=0x500 -D_WIN32_IE=0x0500 -DWINVER=0x500
 CFLAGS = -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP) $(CDEBUGFLAGS)
 SRCS = charset.c ctlr.c pr3287.c proxy.c resolver.c see.c sf.c snprintf.c \
-	ssl_dll.c tables.c telnet.c trace_ds.c utf8.c w3misc.c windirs.c \
-	winvers.c unicode.c unicode_dbcs.c xtable.c
+	ssl_dll.c tables.c telnet.c trace_ds.c unicode.c unicode_dbcs.c \
+	utf8.c w3misc.c windirs.c winvers.c xtable.c
 VOBJS = charset.o ctlr.o pr3287.o proxy.o resolver.o see.o sf.o snprintf.o \
-	ssl_dll.o tables.o telnet.o trace_ds.o utf8.o w3misc.o windirs.o \
-	winvers.o wpr3287res.o ws.o unicode.o unicode_dbcs.o xtable.o
+	ssl_dll.o tables.o telnet.o trace_ds.o unicode.o unicode_dbcs.o \
+	utf8.o w3misc.o windirs.o winvers.o wpr3287res.o ws.o xtable.o
 OBJECTS = $(VOBJS) version.o
 LIBS = $(SSLLIB) -lws2_32 -lwinspool
 

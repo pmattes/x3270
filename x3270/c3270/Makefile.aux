@@ -1,5 +1,5 @@
 #
-# Copyright (c) 1995-2011, 2013 Paul Mattes.
+# Copyright (c) 1995-2011, 2013-2014 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -36,33 +36,38 @@ all:
 
 # Development tools.
 
-SOURCES = actions.c ansi.c apl.c c3270.c charset.c child.c ctlr.c \
+SOURCES = XtGlue.c actions.c ansi.c apl.c c3270.c charset.c child.c ctlr.c \
 	fprint_screen.c ft.c ft_cut.c ft_dft.c glue.c help.c host.c icmd.c \
 	idle.c keymap.c keypad.c kybd.c macros.c menubar.c print.c printer.c \
 	proxy.c readres.c resolver.c resources.c rpq.c screen.c scroll.c \
 	see.c sf.c tables.c telnet.c toggles.c trace_ds.c unicode.c \
-	unicode_dbcs.c utf8.c util.c xio.c XtGlue.c
-HEADERS = 3270ds.h actionsc.h ansic.h aplc.h appres.h cg.h charsetc.h \
-	childc.h ctlr.h ctlrc.h dialogc.h fallbacksc.h fprint_screenc.h ftc.h \
-	ft_cutc.h ft_cut_ds.h ft_dftc.h ft_dft_ds.h globals.h gluec.h hostc.h \
-	icmdc.h idlec.h keymapc.h keypadc.h kybdc.h localdefs.h macrosc.h \
-	menubarc.h objects.h popupsc.h printc.h printerc.h proxy.h proxyc.h \
-	readresc.h resolverc.h resources.h rpqc.h savec.h screen.h screenc.h \
-	scrollc.h seec.h selectc.h sfc.h statusc.h tablesc.h arpa_telnet.h \
-	telnetc.h tn3270e.h togglesc.h trace_dsc.h utf8c.h utilc.h w3miscc.h \
-	xioc.h xl.h X11/keysym.h unicodec.h unicode_dbcsc.h
-MISC = version.txt $(PRODUCT).man x3270if.man x3270-script.man ibm_hosts.man \
-	mkversion.sh Makefile.in README LICENSE \
-	x3270if.c x3270_glue.expect configure configure.in conf.h.in \
-	install-sh config.sub config.guess ibm_hosts X3270.xad mkfb.c \
-	x3270hist.pl make-cygwin-standalone runc3270.bat mkkeypad.c \
-	keypad.callbacks keypad.full keypad.labels keypad.map keypad.outline
-DEVKIT = Makefile.aux x3270.man.m4 html.m4 man.m4 \
-	ft.inc keymaps.inc m4man instlist.base instlist.man
-HTML = html/Bugs.html html/Build.html html/FAQ.html html/Intro.html \
-	html/Lineage.html html/ReleaseNotes.html html/README.html \
-	html/Wishlist.html html/$(PRODUCT)-man.html html/x3270-script.html \
-	html/x3270if.html html/Resources.html html/SSL.html
+	unicode_dbcs.c utf8.c util.c xio.c
+
+HEADERS = 3270ds.h X11/keysym.h actionsc.h ansic.h aplc.h appres.h \
+	arpa_telnet.h cg.h charsetc.h childc.h ctlr.h ctlrc.h dialogc.h \
+	fallbacksc.h fprint_screenc.h ft_cut_ds.h ft_cutc.h ft_dft_ds.h \
+	ft_dftc.h ftc.h globals.h gluec.h hostc.h icmdc.h idlec.h keymapc.h \
+	keypadc.h kybdc.h localdefs.h macrosc.h menubarc.h objects.h \
+	popupsc.h printc.h printerc.h proxy.h proxyc.h readresc.h resolverc.h \
+	resources.h rpqc.h savec.h screen.h screenc.h scrollc.h seec.h \
+	selectc.h sfc.h statusc.h tablesc.h telnetc.h tn3270e.h togglesc.h \
+	trace_dsc.h unicode_dbcsc.h unicodec.h utf8c.h utilc.h w3miscc.h \
+	xioc.h xl.h
+
+MISC = $(PRODUCT).man LICENSE Makefile.in README X3270.xad conf.h.in \
+	config.guess config.sub configure configure.in ibm_hosts \
+	ibm_hosts.man install-sh keypad.callbacks keypad.full keypad.labels \
+	keypad.map keypad.outline make-cygwin-standalone mkfb.c mkkeypad.c \
+	mkversion.sh runc3270.bat version.txt x3270-script.man \
+	x3270_glue.expect x3270hist.pl x3270if.c x3270if.man
+
+DEVKIT = Makefile.aux ft.inc html.m4 instlist.base instlist.man keymaps.inc \
+	m4man man.m4 x3270.man.m4
+
+HTML = html/$(PRODUCT)-man.html html/Bugs.html html/Build.html html/FAQ.html \
+	html/Intro.html html/Lineage.html html/README.html \
+	html/ReleaseNotes.html html/Resources.html html/SSL.html \
+	html/Wishlist.html html/x3270-script.html html/x3270if.html
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 

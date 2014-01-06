@@ -1,4 +1,4 @@
-# Copyright (c) 2000-2013 Paul Mattes.
+# Copyright (c) 2000-2014 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -36,16 +36,20 @@ all:
 # Development tools.
 
 SOURCES = charset.c ctlr.c pr3287.c proxy.c resolver.c see.c sf.c snprintf.c \
-	ssl_dll.c tables.c telnet.c trace_ds.c utf8.c w3misc.c windirs.c \
-	winvers.c ws.c unicode.c unicode_dbcs.c xtable.c
+	ssl_dll.c tables.c telnet.c trace_ds.c unicode.c unicode_dbcs.c \
+	utf8.c w3misc.c windirs.c winvers.c ws.c xtable.c
+
 HEADERS = 3270ds.h arpa_telnet.h charsetc.h ctlrc.h globals.h localdefs.h \
-	popupsc.h pr3287.h proxyc.h proxy.h resolverc.h seec.h sfc.h \
-	ssl_dll.h tablesc.h telnetc.h tn3270e.h trace_dsc.h unicodec.h \
-	unicode_dbcsc.h utf8c.h w3miscc.h wincmn.h windirsc.h winversc.h \
-	wsc.h xtablec.h
-MISC = mkversion.sh version.txt LICENSE Makefile Makefile.aux \
-	pr3287.ico wpr3287.rc Msc/Makefile Msc/mkversion.c Msc/README.txt
-DEVKIT = pr3287.man.m4 m42man
+	popupsc.h pr3287.h proxy.h proxyc.h resolverc.h seec.h sfc.h \
+	ssl_dll.h tablesc.h telnetc.h tn3270e.h trace_dsc.h unicode_dbcsc.h \
+	unicodec.h utf8c.h w3miscc.h wincmn.h windirsc.h winversc.h wsc.h \
+	xtablec.h
+
+MISC = LICENSE Makefile Makefile.aux Msc/Makefile Msc/README.txt \
+	Msc/mkversion.c mkversion.sh pr3287.ico version.txt wpr3287.rc
+
+DEVKIT = m42man pr3287.man.m4
+
 HTML = html/$(PRODUCT)-man.html html/Build.html html/ReleaseNotes.html
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML) 

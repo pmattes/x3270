@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2010, 2013 Paul Mattes.
+# Copyright (c) 1999-2010, 2013-2014 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -46,10 +46,11 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 INSTALL = @INSTALL@
 
-SRCS = pr3287.c ctlr.c trace_ds.c tables.c telnet.c sf.c charset.c resolver.c \
-	see.c proxy.c unicode.c unicode_dbcs.c utf8.c xtable.c
-OBJECTS = pr3287.o ctlr.o trace_ds.o tables.o telnet.o sf.o charset.o \
-	resolver.o see.o proxy.o unicode.o unicode_dbcs.o utf8.o xtable.o
+SRCS = charset.c ctlr.c pr3287.c proxy.c resolver.c see.c sf.c tables.c \
+	telnet.c trace_ds.c unicode.c unicode_dbcs.c utf8.c xtable.c
+
+OBJECTS = charset.o ctlr.o pr3287.o proxy.o resolver.o see.o sf.o tables.o \
+	telnet.o trace_ds.o unicode.o unicode_dbcs.o utf8.o xtable.o
 
 version.o: version.txt mkversion.sh
 	@chmod +x mkversion.sh version.txt
