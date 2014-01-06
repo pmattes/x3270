@@ -9,13 +9,13 @@ SCREENS = c3270-thumb.png c3270.png cyrillic-thumb.png cyrillic.png \
 OTHERS = $(SCREENS) Brackets.html Build-c3270.html Build-pr3287.html \
 	Build-s3270.html Build-tcl3270.html Build-wc3270.html \
 	Build-x3270.html Charset.html HotBugs.html Keymap.html \
-	Unix/c3270-man.html Unix/ibm_hosts.html Unix/pr3287-man.html \
-	Unix/s3270-man.html Unix/tcl3270-man.html Unix/x3270-man.html \
-	Unix/x3270-script.html Unix/x3270if.html Windows/wc3270-man.html \
-	Windows/wc3270-script.html Windows/wpr3287-man.html \
-	Windows/ws3270-man.html Windows/x3270if.html Wishlist.html \
-	c3270-Resources.html c3270Keymap.html del.jpg delta.jpg man/FAQ.html \
-	s3270-Resources.html styles.css tcl3270-Resources.html \
+	SS-HCS12-1372-00.pdf Unix/c3270-man.html Unix/ibm_hosts.html \
+	Unix/pr3287-man.html Unix/s3270-man.html Unix/tcl3270-man.html \
+	Unix/x3270-man.html Unix/x3270-script.html Unix/x3270if.html \
+	Windows/wc3270-man.html Windows/wc3270-script.html \
+	Windows/wpr3287-man.html Windows/ws3270-man.html Windows/x3270if.html \
+	Wishlist.html c3270-Resources.html c3270Keymap.html del.jpg delta.jpg \
+	man/FAQ.html s3270-Resources.html styles.css tcl3270-Resources.html \
 	wc3270-Resources.html wc3270Keymap.html ws3270-Resources.html \
 	x026.gif x3270-Resources.html x3270.jpg
 
