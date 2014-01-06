@@ -9,11 +9,6 @@ Microsoft tools:
     mkversion.c
 	C-language replacement for mkversion.sh and mkwversion.sh.
 
-    deprecated.h
-	#defines to work around some MS-deprecated POSIX function names.
-
 Official releases of wc3270 are built and tested with MinGW, not the Microsoft
 tools.  These files are provided as-is, with no guarantee that the resulting
 executables and DLLs will function properly.
-
-Also note that the resulting executable will not include SSL support.
