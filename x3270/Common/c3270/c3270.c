@@ -1569,8 +1569,10 @@ start_auto_shortcut(void)
 		return;
 	}
 
+#if defined(AS_DEBUG) /*[*/
 	printf("Running auto-shortcut\n");
 	fflush(stdout);
+#endif /*]*/
 
 	/* Read the session file into 's'. */
 	f = fopen(profile_path, "r");
@@ -1583,8 +1585,10 @@ start_auto_shortcut(void)
 	    	fprintf(stderr, "%s: invalid format\n", profile_path);
 		x3270_exit(1);
 	}
+#if defined(AS_DEBUG) /*[*/
 	printf("Reading session file '%s'\n", profile_path);
 	fflush(stdout);
+#endif /*]*/
 
 	/* Create the shortcut. */
 	tempdir = getenv("TEMP");
@@ -1594,8 +1598,10 @@ start_auto_shortcut(void)
 	}
 	sprintf(linkpath, "%s\\wcsa%u.lnk", tempdir, getpid());
 	sprintf(exepath, "%s%s", instdir, "wc3270.exe");
+#if defined(AS_DEBUG) /*[*/
 	printf("Executable path is '%s'\n", exepath);
 	fflush(stdout);
+#endif /*]*/
 	if (GetFullPathName(profile_path, MAX_PATH, sesspath, NULL) == 0) {
 	    	fprintf(stderr, "%s: Error %ld\n", profile_path,
 			GetLastError());
@@ -1612,8 +1618,10 @@ start_auto_shortcut(void)
 	    	fprintf(stderr, "Cannot create ShellLink '%s'\n", linkpath);
 		x3270_exit(1);
 	}
+#if defined(AS_DEBUG) /*[*/
 	printf("Created ShellLink '%s'\n", linkpath);
 	fflush(stdout);
+#endif /*]*/
 
 	/* Execute it. */
 	sprintf(delenv, "%s=%s", DELENV, linkpath);
@@ -1624,8 +1632,10 @@ start_auto_shortcut(void)
 	    x3270_exit(1);
 	}
 
+#if defined(AS_DEBUG) /*[*/
 	printf("Started ShellLink\n");
 	fflush(stdout);
+#endif /*]*/
 
 	exit(0);
 }
