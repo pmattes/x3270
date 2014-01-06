@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2009, Paul Mattes.
+ * Copyright (c) 1994-2009, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
@@ -62,7 +63,13 @@ static enum {
 int fdisp = 0;
 
 static void process(FILE *f, int s);
-static int step(FILE *f, int s, int to_eor);
+typedef enum {
+	STEP_LINE,	/* step one line in the file */
+	STEP_EOR,	/* step until IAC EOR */
+	STEP_MARK	/* step until a mark (line starting with '+') */
+} step_t;
+static int step(FILE *f, int s, step_t type);
+static int process_command(FILE *f, int s);
 
 void
 usage(void)
@@ -93,6 +100,7 @@ main(int argc, char *argv[])
 	int addrlen = sizeof(addr);
 	int one = 1;
 	socklen_t len;
+	int flags;
 
 	/* Parse command-line arguments */
 
@@ -149,10 +157,18 @@ main(int argc, char *argv[])
 		perror("listen");
 		exit(1);
 	}
+	if ((flags = fcntl(s, F_GETFL)) < 0) {
+		perror("fcntl(F_GETFD)");
+		exit(1);
+	}
+
+	if (fcntl(s, F_SETFL, flags | O_NONBLOCK) < 0) {
+		perror("fcntl(F_SETFD)");
+		exit(1);
+	}
 	(void) signal(SIGPIPE, SIG_IGN);
 
 	/* Accept connections and process them. */
-
 	for (;;) {
 		int s2;
 #if defined(AF_INET6) /*[*/
@@ -163,16 +179,39 @@ main(int argc, char *argv[])
 
 		addr.sa.sa_family = proto;
 		len = addrlen;
-		(void) printf("Waiting for connection.\n");
+		(void) printf("Waiting for connection on port %u.\n", port);
+		for (;;) {
+			fd_set rfds;
+			int ns;
+
+			FD_ZERO(&rfds);
+			FD_SET(0, &rfds);
+			FD_SET(s, &rfds);
+
+			printf("playback> ");
+			fflush(stdout);
+			ns = select(s + 1, &rfds, NULL, NULL, NULL);
+			if (ns < 0) {
+				perror("select");
+				exit(1);
+			}
+			if (FD_ISSET(0, &rfds)) {
+				process_command(NULL, -1);
+			}
+			if (FD_ISSET(s, &rfds)) {
+				break;
+			}
+		}
 		s2 = accept(s, &addr.sa, &len);
 		if (s2 < 0) {
 			perror("accept");
 			continue;
 		}
-		(void) printf("Connection from %s %u.\n",
+		(void) printf("\nConnection from %s, port %u.\n",
 #if defined(AF_INET6) /*[*/
-		    inet_ntop(proto, (void *)&addr.sin6.sin6_addr, buf,
-			INET6_ADDRSTRLEN),
+		    inet_ntop(proto, &addr.sin6.sin6_addr, buf,
+			INET6_ADDRSTRLEN) +
+			 (IN6_IS_ADDR_V4MAPPED(&addr.sin6.sin6_addr)? 7: 0),
 		    ntohs(addr.sin6.sin6_port)
 #else /*][*/
 		    inet_ntoa(addr.sin.sin_addr),
@@ -186,11 +225,100 @@ main(int argc, char *argv[])
 	}
 }
 
+/*
+ * Process a command on stdin.
+ *
+ * f is NULL and s is -1 if we are not connected.
+ *
+ * Returns 0 for no change, -1 to stop processing the file.
+ */
+static int
+process_command(FILE *f, int s)
+{
+	char buf[BUFSIZ];
+	size_t sl;
+	char *t;
+
+	if (fgets(buf, BUFSIZ, stdin) == NULL) {
+		printf("\n");
+		exit(0);
+	}
+	sl = strlen(buf);
+	if (sl > 0 && buf[sl - 1] == '\n') {
+		buf[sl - 1] = '\0';
+	}
+	t = buf;
+	while (*t == ' ') {
+		t++;
+	}
+	if (!*t) {
+		return 0;
+	}
+
+	if (!strncmp(t, "s", 1)) {		/* step line */
+		if (f == NULL) {
+			printf("Not connected.\n");
+			return 0;
+		}
+		if (!step(f, s, STEP_LINE)) {
+			return -1;
+		}
+	} else if (!strncmp(t, "r", 1)) {	/* step record */
+		if (f == NULL) {
+			printf("Not connected.\n");
+			return 0;
+		}
+		if (!step(f, s, STEP_EOR)) {
+			return -1;
+		}
+	} else if (!strncmp(t, "t", 1)) {	/* to mark */
+		if (f == NULL) {
+			printf("Not connected.\n");
+			return 0;
+		}
+		if (!step(f, s, STEP_MARK)) {
+			return -1;
+		}
+	} else if (!strncmp(t, "e", 1)) {	/* to EOF */
+		if (f == NULL) {
+			printf("Not connected.\n");
+			return 0;
+		}
+		while (step(f, s, STEP_EOR)) {
+			usleep(1000000 / 4);
+		}
+		return -1;
+	} else if (!strncmp(t, "q", 1)) {	/* quit */
+		exit(0);
+	} else if (!strncmp(t, "d", 1)) {	/* disconnect */
+		if (f == NULL) {
+			printf("Not connected.\n");
+			return 0;
+		}
+		return -1;
+	} else if (t[0] == '?' || t[0] == 'h') {
+		(void) printf("\
+s: step line\n\
+r: step record\n\
+t: to mark\n\
+e: play to EOF\n\
+q: quit\n\
+d: disconnect\n\
+?: help\n");
+	} else {
+		printf("%c? Use '?' for help.\n", *t);
+	}
+
+	return 0;
+}
+
+/* Trace data from the host or emulator. */
 void
 trace_netdata(char *direction, unsigned char *buf, int len)
 {
 	int offset;
 
+	printf("\n");
 	for (offset = 0; offset < len; offset++) {
 		if (!(offset % LINEDUMP_MAX))
 			(void) printf("%s%s 0x%-3x ",
@@ -200,41 +328,37 @@ trace_netdata(char *direction, unsigned char *buf, int len)
 	(void) printf("\n");
 }
 
+/*
+ * Process commands until a file is exhausted or we get a 'quit' command or
+ * EOF.
+ */
 static void
 process(FILE *f, int s)
 {
 	char buf[BSIZE];
-	int prompt = 1;
 
 	/* Loop, looking for keyboard input or emulator response. */
 	for (;;) {
 		fd_set rfds;
-		struct timeval t;
 		int ns;
 
-		if (prompt == 1) {
-			(void) printf("playback> ");
-			(void) fflush(stdout);
-		}
+		(void) printf("playback> ");
+		(void) fflush(stdout);
 
 		FD_ZERO(&rfds);
 		FD_SET(s, &rfds);
 		FD_SET(0, &rfds);
-		t.tv_sec = 0;
-		t.tv_usec = 500000;
-		ns = select(s+1, &rfds, (fd_set *)NULL, (fd_set *)NULL, &t);
+		ns = select(s+1, &rfds, (fd_set *)NULL, (fd_set *)NULL, NULL);
 		if (ns < 0) {
 			perror("select");
 			exit(1);
 		}
 		if (ns == 0) {
-			prompt++;
 			continue;
 		}
 		if (FD_ISSET(s, &rfds)) {
 			int nr;
 
-			(void) printf("\n");
 			nr = read(s, buf, BSIZE);
 			if (nr < 0) {
 				perror("read");
@@ -245,47 +369,11 @@ process(FILE *f, int s)
 				break;
 			}
 			trace_netdata("emul", (unsigned char *)buf, nr);
-			prompt = 0;
 		}
 		if (FD_ISSET(0, &rfds)) {
-			if (fgets(buf, BSIZE, stdin) == (char *)NULL) {
-				(void) printf("\n");
-				exit(0);
-			}
-			if (!strncmp(buf, "s", 1)) {		/* step line */
-				if (!step(f, s, 0))
-					break;
-			} else if (!strncmp(buf, "r", 1)) {	/* step record */
-				if (!step(f, s, 1))
-					break;
-			} else if (!strncmp(buf, "t", 1)) {	/* to mark */
-				if (!step(f, s, 2))
-					break;
-			} else if (!strncmp(buf, "e", 1)) {	/* to EOF */
-				FD_ZERO(&rfds);
-				while (step(f, s, 1)) {
-					t.tv_sec = 0;
-					t.tv_usec = 1000000 / 4;
-					(void) select(0, NULL, NULL, NULL, &t);
-				}
+			if (process_command(f, s) < 0) {
 				break;
-			} else if (!strncmp(buf, "q", 1)) {	/* quit */
-				exit(0);
-			} else if (!strncmp(buf, "d", 1)) {	/* disconnect */
-				break;
-			} else if (buf[0] == '?') {
-				(void) printf("\
-s: step line\n\
-r: step record\n\
-t: to mark\n\
-e: play to EOF\n\
-q: quit\n\
-d: disconnect\n\
-?: help\n");
-			} else if (buf[0] != '\n') {		/* junk */
-				(void) printf("%c?\n", buf[0]);
 			}
-			prompt = 0;
 		}
 	}
 
@@ -296,8 +384,13 @@ d: disconnect\n\
 	return;
 }
 
+/*
+ * Step through the file.
+ *
+ * Returns 0 for EOF, nonzeo otherwise.
+ */
 static int
-step(FILE *f, int s, int to_eor)
+step(FILE *f, int s, step_t type)
 {
 	int c = 0;
 	static int d1;
@@ -312,15 +405,17 @@ step(FILE *f, int s, int to_eor)
 
     top:
 	while (again || ((c = fgetc(f)) != EOF)) {
-		if (c == '\r')
+		if (c == '\r') {
 			continue;
+		}
 		if (!again) {
 			if (!fdisp || c == '\n') {
 				printf("\nfile ");
 				fdisp = 1;
 			}
-			if (c != '\n')
+			if (c != '\n') {
 				putchar(c);
+			}
 		}
 		again = 0;
 		switch (pstate) {
@@ -328,60 +423,61 @@ step(FILE *f, int s, int to_eor)
 			assert(pstate != NONE);
 			break;
 		    case WRONG:
-			if (c == '\n')
+			if (c == '\n') {
 				pstate = BASE;
+			}
 			break;
 		    case BASE:
-			if (c == '+' && (to_eor == 2)) {
+			if (c == '+' && (type == STEP_MARK)) {
 				/* Hit the mark. */
 				at_mark = 1;
 				goto run_it;
 			}
-			if (c == '<')
+			if (c == '<') {
 				pstate = LESS;
-			else {
+			} else {
 				pstate = WRONG;
 				again = 1;
 			}
 			break;
 		    case LESS:
-			if (c == ' ')
+			if (c == ' ') {
 				pstate = SPACE;
-			else {
+			} else {
 				pstate = WRONG;
 				again = 1;
 			}
 			break;
 		    case SPACE:
-			if (c == '0')
+			if (c == '0') {
 				pstate = ZERO;
-			else {
+			} else {
 				pstate = WRONG;
 				again = 1;
 			}
 			break;
 		    case ZERO:
-			if (c == 'x')
+			if (c == 'x') {
 				pstate = X;
-			else {
+			} else {
 				pstate = WRONG;
 				again = 1;
 			}
 			break;
 		    case X:
-			if (isxd(c))
+			if (isxd(c)) {
 				pstate = N;
-			else {
+			} else {
 				pstate = WRONG;
 				again = 1;
 			}
 			break;
 		    case N:
-			if (isxd(c))
+			if (isxd(c)) {
 				pstate = N;
-			else if (c == ' ' || c == '\t')
+			} else if (c == ' ' || c == '\t') {
 				pstate = SPACE2;
-			else {
+			} else {
 				pstate = WRONG;
 				again = 1;
 			}
@@ -391,9 +487,9 @@ step(FILE *f, int s, int to_eor)
 				d1 = strchr(hexes, c) - hexes;
 				pstate = D1;
 				cp = obuf;
-			} else if (c == ' ' || c == '\t')
+			} else if (c == ' ' || c == '\t') {
 				pstate = SPACE2;
-			else {
+			} else {
 				pstate = WRONG;
 				again = 1;
 			}
@@ -406,21 +502,25 @@ step(FILE *f, int s, int to_eor)
 				pstate = D2;
 				switch (tstate) {
 				    case T_NONE:
-					if (*(unsigned char *)cp == IAC)
+					if (*(unsigned char *)cp == IAC) {
 					    tstate = T_IAC;
+					}
 					break;
 				    case T_IAC:
 					if (*(unsigned char *)cp == EOR &&
-					    (to_eor == 1))
+					    type == STEP_EOR) {
 						at_eor = 1;
+					}
 					tstate = T_NONE;
 					break;
 				}
 				cp++;
-				if (at_eor && (to_eor == 1))
+				if (at_eor && type == STEP_EOR) {
 				    	stop_eor = 1;
-				if (at_eor || (cp - obuf >= BUFSIZ))
+				}
+				if (at_eor || (cp - obuf >= BUFSIZ)) {
 					goto run_it;
+				}
 			} else {
 				NO_FDISP;
 				(void) printf("Non-hex char '%c' in playback "
@@ -456,11 +556,11 @@ step(FILE *f, int s, int to_eor)
 		return 0;
 	}
 
-	if ((to_eor == 1) && !stop_eor) {
+	if (type == STEP_EOR && !stop_eor) {
 		cp = obuf;
 		goto top;
 	}
-	if ((to_eor == 2) && !at_mark) {
+	if (type == STEP_MARK && !at_mark) {
 		cp = obuf;
 		goto top;
 	}
