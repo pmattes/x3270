@@ -19,18 +19,17 @@ The minimum set of Cygwin packages needed to build <i>wc3270</i> are:
  <ul>
      <li>The default set (bash, etc.)</li>
      <li>The <b>make</b> package from the <b>Devel</b> group.</li>
-     <li>The <b>gcc-core</b> package from the <b>Devel</b> group.</li>
+     <li>The <b>mingw-gcc-core</b> package from the <b>Devel</b> group.</li>
+     <li>The <b>mingw-w32api</b> package from the <b>Devel</b> group.</li>
  </ul>
 </p>
 <p>
 To build <i>wc3270</i>, start a Cygwin shell,
-<b>cd</b> to the directory where the source code resides, and type:  
+<b>cd</b> to the <tt>wc3270-3.3</tt> directory, and type:  
 <pre>&nbsp;&nbsp;&nbsp;make</pre>
 </p>
 <i>wc3270</i> was developed primarily on 32-bit Windows XP and 64-bit
-  Windows 7, but should be buildable on Windows Server 2003 or Windows 2000
-  (though Windows 2000 has been known to build defective <i>wc3270</i> DLLs).
-  It has not been built on 64-bit XP or on Vista.
+  Windows 7, but should be buildable on any Windows from 2000 on.
 <h3>On Linux</h3>
 <p>
   <i>wc3270</i> can also be built on Linux with the MinGW cross-compiler.
@@ -38,7 +37,7 @@ To build <i>wc3270</i>, start a Cygwin shell,
   On Ubuntu, this compiler is available as the <b>mingw32</b> package, and
   the Makefile has been set up to use it.
   To build wc3270 on Linux with MinGW, use the command:
-  <pre>&nbsp;&nbsp;&nbsp;make CROSS=1</pre>
+  <pre>&nbsp;&nbsp;&nbsp;make</pre>
 </p>
 <h3>With OpenSSL Support</h3>
 <p>
@@ -57,24 +56,28 @@ Then copy the <tt>include</tt> and <tt>lib</tt> directories from
  command-line option <tt>NO_SSL=1</tt> to <b>make</b>.
 </p>
 </p>
-<h2>Using Microsoft Tools</h2>
-To build <i>wc3270</i> using Microsoft Visual C++, start a Command Prompt
-window.
-At the command prompt, 'cd' to the <i>wc3270</i> source directory, and type:
+<h2>Using Microsoft Command-Line Tools</h2>
+To build <i>wc3270</i> using Microsoft Visual C++ command-line tools, start a
+Command Prompt window.
+At the command prompt, 'cd' to the <tt>wc3270-3.3</tt> directory, and type:
 <pre>&nbsp;&nbsp;&nbsp;nmake /f Msc\Makefile</pre>
 <p>
-This will build <tt>wc3270.exe</tt> and the DLLs and utilities needed to
-install and run it.
+This will build <tt>wc3270.exe</tt> and the utilities needed to run it.
 </p>
 <p>
- Note that the resulting version of <i>wc3270</i> will not
- include SSL support.
- To build an OpenSSL version of <i>wc3270</i> with MSC, you will
- need the header files and libraries from the full Win32 OpenSSL distribution
- described in the <a href="documentation-ssl.html#Windows">SSL Instructions</a> (not the 'lite'
- version).  First, install OpenSSL on your Windows box.
- Then you must modify <tt>Msc\Makefile</tt>; instructions for doing that are
- included in the file itself.
+<a NAME="MS-OpenSSL"></a>
+Note that to build an OpenSSL version of <i>wc3270</i>, you will need the
+header files and libraries from the full Win32 OpenSSL distribution
+ described in the <a href="documentation-ssl.html#Windows">SSL Instructions</a>
+ (not the 'lite' version), installed in the directory <tt>C:\OpenSSL-Win32</tt>.
+</p>
+<h2>Using Microsoft Visual Studio</h2>
+A Microsoft Visual C++ project for wc3270 (along with ws3270 and wpr3287) is
+included with the full-suite source distribution, in the file
+<tt>VS\wc3270.vcsproj</tt>.
+<p>
+Also see the <a href="#MS-OpenSSL">note in the previous section</a> about
+OpenSSL.
 </p>
 <h2>Creating an Installer</h2>
 <p>
