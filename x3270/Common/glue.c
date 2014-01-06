@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -126,7 +126,8 @@ struct toggle_name toggle_names[] = {
 	{ ResShowTiming,      SHOW_TIMING },
 #endif /*]*/
 #if defined(X3270_TRACE) /*[*/
-	{ ResDsTrace,         DS_TRACE },
+	{ ResTrace,           TRACING },
+	{ ResDsTrace,         TRACING },
 #endif /*]*/
 #if defined(X3270_ANSI) /*[*/
 	{ ResLineWrap,        LINE_WRAP },
@@ -134,7 +135,7 @@ struct toggle_name toggle_names[] = {
 	{ ResBlankFill,       BLANK_FILL },
 #if defined(X3270_TRACE) /*[*/
 	{ ResScreenTrace,     SCREEN_TRACE },
-	{ ResEventTrace,      EVENT_TRACE },
+	{ ResEventTrace,      TRACING },
 #endif /*]*/
 #if defined(C3270) /*[*/
 	{ ResMarginedPaste,   MARGINED_PASTE },
@@ -384,6 +385,12 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 		appres.once = False;
 	if (appres.conf_dir == CN)
 		appres.conf_dir = LIBX3270DIR;
+
+#if defined(X3270_TRACE) /*[*/
+	if (!appres.debug_tracing) {
+		 appres.toggle[TRACING].value = False;
+	}
+#endif /*]*/
 
 	return argc;
 }
@@ -735,7 +742,7 @@ static struct {
     "<string>", "Set window title to <string>" },
 #endif /*]*/
 #if defined(X3270_TRACE) /*[*/
-{ OptDsTrace,  OPT_BOOLEAN, True,  ResDsTrace,   toggle_offset(DS_TRACE),
+{ OptTrace,    OPT_BOOLEAN, True,  ResTrace,     toggle_offset(TRACING),
     CN, "Enable tracing" },
 { OptTraceFile,OPT_STRING,  False, ResTraceFile, offset(trace_file),
     "<file>", "Write traces to <file>" },
@@ -848,12 +855,6 @@ parse_options(int *argcp, const char **argv)
 	(void) memcpy((char *)argv, (char *)argv_out,
 	    (argc_out + 1) * sizeof(char *));
 	Free((char *)argv_out);
-
-#if defined(X3270_TRACE) /*[*/
-	/* One isn't very useful without the other. */
-	if (appres.toggle[DS_TRACE].value)
-		appres.toggle[EVENT_TRACE].value = True;
-#endif /*]*/
 }
 
 /* Disply command-line help. */

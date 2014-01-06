@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -120,7 +120,7 @@ XrmOptionDescRec options[]= {
 	{ OptColorScheme,DotColorScheme,XrmoptionSepArg,	NULL },
 	{ OptDevName,	DotDevName,	XrmoptionSepArg,	NULL },
 #if defined(X3270_TRACE) /*[*/
-	{ OptDsTrace,	DotDsTrace,	XrmoptionNoArg,		ResTrue },
+	{ OptTrace,	DotTrace,	XrmoptionNoArg,		ResTrue },
 #endif /*]*/
 	{ OptEmulatorFont,DotEmulatorFont,XrmoptionSepArg,	NULL },
 	{ OptExtended,	DotExtended,	XrmoptionNoArg,		ResTrue },
@@ -253,7 +253,7 @@ static struct {
 	{ OptSecure, NULL, "Set secure mode" },
 	{ OptTermName, "<name>", "Send <name> as TELNET terminal name" },
 #if defined(X3270_TRACE) /*[*/
-	{ OptDsTrace, CN, "Enable tracing" },
+	{ OptTrace, CN, "Enable tracing" },
 	{ OptTraceFile, "<file>", "Write traces to <file>" },
 	{ OptTraceFileSize, "<n>[KM]", "Limit trace file to <n> bytes" },
 #endif /*]*/
@@ -284,7 +284,8 @@ struct toggle_name toggle_names[] = {
 	{ ResShowTiming,      SHOW_TIMING },
 	{ ResCursorPos,       CURSOR_POS },
 #if defined(X3270_TRACE) /*[*/
-	{ ResDsTrace,         DS_TRACE },
+	{ ResTrace,           TRACING },
+	{ ResDsTrace,         TRACING }, /* compatibility */
 #endif /*]*/
 	{ ResScrollBar,       SCROLL_BAR },
 #if defined(X3270_ANSI) /*[*/
@@ -293,7 +294,7 @@ struct toggle_name toggle_names[] = {
 	{ ResBlankFill,       BLANK_FILL },
 #if defined(X3270_TRACE) /*[*/
 	{ ResScreenTrace,     SCREEN_TRACE },
-	{ ResEventTrace,      EVENT_TRACE },
+	{ ResEventTrace,      TRACING }, /* compatibility */
 #endif /*]*/
 	{ ResMarginedPaste,   MARGINED_PASTE },
 	{ ResRectangleSelect, RECTANGLE_SELECT },
@@ -660,11 +661,13 @@ main(int argc, char *argv[])
 
 	/* Handle initial toggle settings. */
 #if defined(X3270_TRACE) /*[*/
+	if (appres.dsTrace_bc || appres.eventTrace_bc) {
+	    	/* Backwards compatibility with old resource names. */
+		appres.toggle[TRACING].value = True;
+	}
 	if (!appres.debug_tracing) {
-		appres.toggle[DS_TRACE].value = False;
-		appres.toggle[EVENT_TRACE].value = False;
-	} else if (toggled(DS_TRACE))
-	    	appres.toggle[EVENT_TRACE].value = True;
+		appres.toggle[TRACING].value = False;
+	}
 #endif /*]*/
 	initialize_toggles();
 

@@ -58,7 +58,7 @@ struct toggle {
 #define CURSOR_POS	4
 
 #if defined(X3270_TRACE) /*[*/
-#define DS_TRACE	5
+#define TRACING		5
 #endif /*]*/
 
 #define SCROLL_BAR	6
@@ -71,26 +71,25 @@ struct toggle {
 
 #if defined(X3270_TRACE) /*[*/
 #define SCREEN_TRACE	9
-#define EVENT_TRACE	10
 #endif /*]*/
 
-#define MARGINED_PASTE	11
-#define RECTANGLE_SELECT 12
+#define MARGINED_PASTE	10
+#define RECTANGLE_SELECT 11
 
 #if defined(X3270_DISPLAY) /*[*/
-#define CROSSHAIR	13
-#define VISIBLE_CONTROL	14
+#define CROSSHAIR	12
+#define VISIBLE_CONTROL	13
 #endif /*]*/
 
 #if defined(X3270_SCRIPT) || defined(TCL3270) /*[*/
-#define AID_WAIT	15
+#define AID_WAIT	14
 #endif /*]*/
 
 #if defined(C3270) /*[*/
-#define UNDERSCORE	16
+#define UNDERSCORE	15
 #endif /*]*/
 
-#define N_TOGGLES	17
+#define N_TOGGLES	16
 
 #define toggled(ix)		(appres.toggle[ix].value)
 #define toggle_toggle(t) \
@@ -231,6 +230,8 @@ typedef struct {
 	char	*trace_file;
 	char	*screentrace_file;
 	char	*trace_file_size;
+	Boolean  dsTrace_bc;
+	Boolean  eventTrace_bc;
 # if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
 	Boolean	trace_monitor;
 # endif /*]*/

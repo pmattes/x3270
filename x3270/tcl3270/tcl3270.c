@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -418,12 +418,6 @@ tcl3270_main(int argc, const char *argv[])
 	(void) signal(SIGPIPE, SIG_IGN);
 
 	/* Handle initial toggle settings. */
-#if defined(X3270_TRACE) /*[*/
-	if (!appres.debug_tracing) {
-		appres.toggle[DS_TRACE].value = False;
-		appres.toggle[EVENT_TRACE].value = False;
-	}
-#endif /*]*/
 	initialize_toggles();
 
 #if defined(HAVE_LIBSSL) /*[*/
@@ -546,7 +540,7 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 
 #if defined(X3270_TRACE) /*[*/
 	/* Trace what we're about to do. */
-	if (toggled(EVENT_TRACE)) {
+	if (toggled(TRACING)) {
 		trace_event("Running %s", action);
 		for (j = 0; j < count; j++) {
 			char *s;
@@ -626,7 +620,7 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 		command_timeout_id = NULL_IOID;
 	}
 #if defined(X3270_TRACE) /*[*/
-	if (toggled(EVENT_TRACE)) {
+	if (toggled(TRACING)) {
 		const char *s;
 #		define TRUNC_LEN 40
 		char s_trunc[TRUNC_LEN + 1];

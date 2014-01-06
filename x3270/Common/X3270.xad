@@ -1,5 +1,5 @@
 !
-! Copyright (c) 1995-2013, Paul Mattes.
+! Copyright (c) 1995-2014, Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -201,8 +201,7 @@ x3270.charsetList:			U.S. English (CP 037): us-intl\n\
 ! x3270.crosshair:			false
 ! x3270.cursorBlink:			false
 ! x3270.cursorPos:			true
-! x3270.dsTrace:			false
-! x3270.eventTrace:			false
+! x3270.tracing:			false
 ! x3270.lineWrap:			true
 ! x3270.marginedPaste:			false
 ! x3270.monoCase:			false
@@ -1023,8 +1022,7 @@ x3270*monocaseOption.label:			Monocase
 x3270*cursorBlinkOption.label:			Blinking Cursor
 x3270*showTimingOption.label:			Show Timing
 x3270*cursorPosOption.label:			Track Cursor
-x3270*dsTraceOption.label:			Trace Data Stream
-x3270*eventTraceOption.label:			Trace Keyboard/Mouse Events
+x3270*traceOption.label:			Trace Data and Events
 x3270*screenTraceOption.label:			Save Screen Contents
 x3270*scrollBarOption.label:			Scrollbar
 x3270*lineWrapOption.label:			Wraparound

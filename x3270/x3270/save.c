@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2009, 2013 Paul Mattes.
+ * Copyright (c) 1994-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -374,7 +374,7 @@ save_toggles(void)
 			    !strcmp(tmp_cmd[j+1], toggle_names[i].name)) {
 				if (i == SCROLL_BAR
 #if defined(X3270_TRACE) /*[*/
-				    || i == DS_TRACE
+				    || i == TRACING
 #endif /*]*/
 				    ) {
 					cmd_delete(j);
@@ -388,11 +388,11 @@ save_toggles(void)
 		    case SCROLL_BAR:
 			continue;	/* +sb/-sb done separately */
 #if defined(X3270_TRACE) /*[*/
-		    case DS_TRACE:
-			ix = cmd_srch(OptDsTrace);
-			if (appres.toggle[DS_TRACE].value) {
+		    case TRACING:
+			ix = cmd_srch(OptTrace);
+			if (appres.toggle[TRACING].value) {
 				if (!ix)
-					cmd_append(OptDsTrace);
+					cmd_append(OptTrace);
 			} else {
 				if (ix)
 					cmd_delete(ix);
@@ -637,7 +637,7 @@ save_options(char *n)
 		if (toggle_names[i].index < 0 || !appres.toggle[i].changed)
 			continue;
 #if defined(X3270_TRACE) /*[*/
-		if (i == DS_TRACE || i == SCREEN_TRACE || i == EVENT_TRACE)
+		if (i == TRACING || i == SCREEN_TRACE)
 			continue;
 #endif /*]*/
 		if (!any_toggles) {

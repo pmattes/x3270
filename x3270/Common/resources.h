@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2013, Paul Mattes.
+ * Copyright (c) 1995-2014, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -183,6 +183,7 @@
 #define ResSuppress		"suppress"
 #define ResTermName		"termName"
 #define ResTitle		"title"
+#define ResTrace		"trace"
 #define ResTraceDir		"traceDir"
 #define ResTraceFile		"traceFile"
 #define ResTraceFileSize	"traceFileSize"
@@ -247,6 +248,7 @@
 #define DotSocket		"." ResSocket
 #define DotTermName		"." ResTermName
 #define DotTitle		"." ResTitle
+#define DotTrace		"." ResTrace
 #define DotTraceFile		"." ResTraceFile
 #define DotTraceFileSize	"." ResTraceFileSize
 #define DotUser			"." ResUser
@@ -369,6 +371,7 @@
 #define ClsSuppressHost		"SuppressHost"
 #define ClsSuppressFontMenu	"SuppressFontMenu"
 #define ClsTermName		"TermName"
+#define ClsTrace		"Trace"
 #define ClsTraceDir		"TraceDir"
 #define ClsTraceFile		"TraceFile"
 #define ClsTraceFileSize	"TraceFileSize"
@@ -405,7 +408,7 @@
 #define OptDefaultFgBg		"-defaultfgbg"
 #define OptDefScreen		"-defscreen"
 #define OptDevName		"-devname"
-#define OptDsTrace		"-trace"
+#define OptTrace		"-trace"
 #define OptEmulatorFont		"-efont"
 #define OptExtended		"-extended"
 #define OptHostsFile		"-hostsfile"

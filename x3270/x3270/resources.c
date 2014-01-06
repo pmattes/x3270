@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -250,8 +250,12 @@ XtResource resources[] = {
 	{ ResCursorPos, ClsCursorPos, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(CURSOR_POS), XtRString, ResTrue },
 #if defined(X3270_TRACE) /*[*/
+	{ ResTrace, ClsTrace, XtRBoolean, sizeof(Boolean),
+	  toggle_offset(TRACING), XtRString, ResFalse },
 	{ ResDsTrace, ClsDsTrace, XtRBoolean, sizeof(Boolean),
-	  toggle_offset(DS_TRACE), XtRString, ResFalse },
+	  offset(dsTrace_bc), XtRString, ResFalse },
+	{ ResEventTrace, ClsEventTrace, XtRBoolean, sizeof(Boolean),
+	  offset(eventTrace_bc), XtRString, ResFalse },
 #endif /*]*/
 	{ ResScrollBar, ClsScrollBar, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(SCROLL_BAR), XtRString, ResTrue },
@@ -264,8 +268,6 @@ XtResource resources[] = {
 #if defined(X3270_TRACE) /*[*/
 	{ ResScreenTrace, ClsScreenTrace, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(SCREEN_TRACE), XtRString, ResFalse },
-	{ ResEventTrace, ClsEventTrace, XtRBoolean, sizeof(Boolean),
-	  toggle_offset(EVENT_TRACE), XtRString, ResFalse },
 #endif /*]*/
 	{ ResMarginedPaste, ClsMarginedPaste, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(MARGINED_PASTE), XtRString, ResFalse },

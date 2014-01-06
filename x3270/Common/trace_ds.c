@@ -154,7 +154,7 @@ trace_ds_s(char *s, Boolean can_break)
 	wchar_t *w_chunk;	/* transient wchar_t buffer */
 	char *mb_chunk;		/* transient multibyte buffer */
 
-	if (!toggled(DS_TRACE) || tracef == NULL || !len)
+	if (!toggled(TRACING) || tracef == NULL || !len)
 		return;
 
 	/* Allocate buffers for chunks of output data. */
@@ -224,7 +224,7 @@ trace_ds(const char *fmt, ...)
 {
 	va_list args;
 
-	if (!toggled(DS_TRACE) || tracef == NULL)
+	if (!toggled(TRACING) || tracef == NULL)
 		return;
 
 	va_start(args, fmt);
@@ -245,7 +245,7 @@ trace_ds_nb(const char *fmt, ...)
 {
 	va_list args;
 
-	if (!toggled(DS_TRACE) || tracef == NULL)
+	if (!toggled(TRACING) || tracef == NULL)
 		return;
 
 	va_start(args, fmt);
@@ -266,7 +266,7 @@ trace_event(const char *fmt, ...)
 {
 	va_list args;
 
-	if (!toggled(EVENT_TRACE) || tracef == NULL)
+	if (!toggled(TRACING) || tracef == NULL)
 		return;
 
 	/* print out message */
@@ -281,7 +281,7 @@ trace_dsn(const char *fmt, ...)
 {
 	va_list args;
 
-	if (!toggled(DS_TRACE) || tracef == NULL)
+	if (!toggled(TRACING) || tracef == NULL)
 		return;
 
 	/* print out message */
@@ -390,13 +390,9 @@ stop_tracing(void)
 		(void) fclose(tracef_pipe);
 		tracef_pipe = NULL;
 	}
-	if (toggled(DS_TRACE)) {
-		toggle_toggle(&appres.toggle[DS_TRACE]);
-		menubar_retoggle(&appres.toggle[DS_TRACE], DS_TRACE);
-	}
-	if (toggled(EVENT_TRACE)) {
-		toggle_toggle(&appres.toggle[EVENT_TRACE]);
-		menubar_retoggle(&appres.toggle[EVENT_TRACE],  EVENT_TRACE);
+	if (toggled(TRACING)) {
+		toggle_toggle(&appres.toggle[TRACING]);
+		menubar_retoggle(&appres.toggle[TRACING], TRACING);
 	}
 }
 
@@ -944,32 +940,22 @@ trace_set_trace_file(const char *path)
 }
 
 void
-toggle_dsTrace(struct toggle *t _is_unused, enum toggle_type tt)
+toggle_tracing(struct toggle *t _is_unused, enum toggle_type tt)
 {
 	/* If turning on trace and no trace file, open one. */
-	if (toggled(DS_TRACE) && tracef == NULL)
-		tracefile_on(DS_TRACE, tt);
+	if (toggled(TRACING) && tracef == NULL) {
+		tracefile_on(TRACING, tt);
+	}
 
 	/* If turning off trace and not still tracing events, close the
 	   trace file. */
-	else if (!toggled(DS_TRACE) && !toggled(EVENT_TRACE))
+	else if (!toggled(TRACING)) {
 		tracefile_off();
+	}
 
-	if (toggled(DS_TRACE))
+	if (toggled(TRACING)) {
 		(void) gettimeofday(&ds_ts, (struct timezone *)NULL);
-}
-
-void
-toggle_eventTrace(struct toggle *t _is_unused, enum toggle_type tt)
-{
-	/* If turning on event debug, and no trace file, open one. */
-	if (toggled(EVENT_TRACE) && tracef == NULL)
-		tracefile_on(EVENT_TRACE, tt);
-
-	/* If turning off event debug, and not tracing the data stream,
-	   close the trace file. */
-	else if (!toggled(EVENT_TRACE) && !toggled(DS_TRACE))
-		tracefile_off();
+	}
 }
 
 /* Screen trace file support. */

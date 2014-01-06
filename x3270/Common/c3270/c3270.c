@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -445,12 +445,6 @@ main(int argc, char *argv[])
 #endif /*]*/
 
 	/* Handle initial toggle settings. */
-#if defined(X3270_TRACE) /*[*/
-	if (!appres.debug_tracing) {
-		appres.toggle[DS_TRACE].value = False;
-		appres.toggle[EVENT_TRACE].value = False;
-	}
-#endif /*]*/
 	initialize_toggles();
 	icmd_init();
 
@@ -1234,71 +1228,53 @@ void
 Trace_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
-	int tg = 0;
-	Boolean both = False;
 	Boolean on = False;
+	Cardinal arg0 = 0;
 
 	action_debug(Trace_action, event, params, num_params);
+
 	if (*num_params == 0) {
-		action_output("Data tracing is %sabled.",
-		    toggled(DS_TRACE)? "en": "dis");
-		action_output("Keyboard tracing is %sabled.",
-		    toggled(EVENT_TRACE)? "en": "dis");
+		action_output("Tracing is %sabled.",
+		    toggled(TRACING)? "en": "dis");
 		return;
-	}
-	if (!strcasecmp(params[0], "Data"))
-		tg = DS_TRACE;
-	else if (!strcasecmp(params[0], "Keyboard"))
-		tg = EVENT_TRACE;
-	else if (!strcasecmp(params[0], "Off")) {
-		both = True;
-		on = False;
-		if (*num_params > 1) {
-			popup_an_error("Trace(): Too many arguments for 'Off'");
-			return;
-		}
-	} else if (!strcasecmp(params[0], "On")) {
-		both = True;
-		on = True;
-	} else {
-		popup_an_error("Trace(): Unknown trace type -- "
-		    "must be Data or Keyboard");
-		return;
-	}
-	if (!both) {
-		if (*num_params == 1 || !strcasecmp(params[1], "On"))
-			on = True;
-		else if (!strcasecmp(params[1], "Off")) {
-			on = False;
-			if (*num_params > 2) {
-				popup_an_error("Trace(): Too many arguments "
-				    "for 'Off'");
-				return;
-			}
-		} else {
-			popup_an_error("Trace(): Must be 'On' or 'Off'");
-			return;
-		}
 	}
 
-	if (both) {
-		if (on && *num_params > 1)
-		    	trace_set_trace_file(params[1]);
-		if ((on && !toggled(DS_TRACE)) || (!on && toggled(DS_TRACE)))
-			do_toggle(DS_TRACE);
-		if ((on && !toggled(EVENT_TRACE)) ||
-		    (!on && toggled(EVENT_TRACE)))
-			do_toggle(EVENT_TRACE);
-	} else if ((on && !toggled(tg)) || (!on && toggled(tg))) {
-		if (on && *num_params > 2)
-		    	trace_set_trace_file(params[2]);
-		do_toggle(tg);
+	if (!strcasecmp(params[0], "Data") ||
+	    !strcasecmp(params[0], "Keyboard")) {
+		/* Skip. */
+		arg0 = 1;
 	}
+	if (!strcasecmp(params[arg0], "Off")) {
+		on = False;
+		if (*num_params > arg0) {
+			popup_an_error("Trace: Too many arguments for 'Off'");
+			return;
+		}
+	} else if (!strcasecmp(params[arg0], "On")) {
+		on = True;
+		if (*num_params == arg0) {
+			/* Nothing else to do. */
+		} else if (*num_params == arg0 + 1) {
+		    	trace_set_trace_file(params[arg0]);
+		} else {
+			popup_an_error("Trace: Too many arguments for 'On'");
+			return;
+		}
+	} else {
+		popup_an_error("Trace(): Must be On or Off");
+		return;
+	}
+
+	if ((on && !toggled(TRACING)) || (!on && toggled(TRACING))) {
+		do_toggle(TRACING);
+	}
+
 	if (tracefile_name != NULL) {
-		if (ia_cause == IA_COMMAND)
+		if (ia_cause == IA_COMMAND) {
 			action_output("Trace file is %s.", tracefile_name);
-		else
+		} else {
 			popup_an_info("Trace file is %s.", tracefile_name);
+		}
 	}
 }
 

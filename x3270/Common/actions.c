@@ -691,8 +691,9 @@ action_debug(XtActionProc action, XEvent *event, String *params,
 	char snbuf[11];
 #endif /*]*/
 
-	if (!toggled(EVENT_TRACE))
+	if (!toggled(TRACING)) {
 		return;
+	}
 	if (event == (XEvent *)NULL) {
 		trace_event(" %s", ia_name[(int)ia_cause]);
 	}

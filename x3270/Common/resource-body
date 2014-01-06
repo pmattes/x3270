@@ -977,8 +977,9 @@ default false
 switch -trace 
 switch -set dsTrace
 switch -clear dsTrace
-option File -&gt; Trace Data Stream
 description
+    <i>Deprecated resource -- replaced by %-trace%</i>
+    <p class=indented>
     When true, %p% writes a hexadecimal representation of all network
     traffic (and its interpretation) into a file, which defaults to
 if u
@@ -1071,8 +1072,9 @@ applies a
 default false
 switch -set eventTrace
 switch -clear eventTrace
-option File -&gt; Trace Keyboard/Mouse Events
 description
+    <i>Deprecated resource -- replaced by %-trace%</i>
+    <p class=indented>
     When true, %p% traces information about keyboard and mouse
     events into a file.
     The default file name is
@@ -2487,6 +2489,36 @@ switch -title
 desc
     Sets the title for the %p% window, overriding the default of constructing
     the name from the host that is connected to.
+.
+
+name trace
+applies a
+groups t
+type b
+default false
+switch -trace 
+switch -set trace
+switch -clear trace
+option File -&gt; Trace Data and Events
+description
+    When true, %p% writes information about events and actions, as well as a
+    hexadecimal representation of all network traffic (and its interpretation)
+    into a file, which defaults to
+if u
+    <b>/tmp/x3trc.<i>pid</i></b>.
+else
+    <b>x3trc.<i>process-id</i>.txt</b> in the %p% Application Data directory.
+endif
+if x wc
+    It also pops up a window to watch the file as it
+    is created, with the pathname of the file as the window title.
+endif
+if x
+    The command run in the window is defined by %-traceCommand%.
+endif
+    The directory prefix is defined by %-traceDir%.
+    If %-traceFile% is defined, it gives the entire pathname
+    and %-traceDir% is ignored.
 .
 
 name traceCommand

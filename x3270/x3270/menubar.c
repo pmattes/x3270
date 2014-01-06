@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -978,10 +978,8 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 	   Save Screen(s) in File */
 	spaced = False;
 	if (appres.debug_tracing) {
-		any |= toggle_init(file_menu, DS_TRACE, "dsTraceOption", CN,
+		any |= toggle_init(file_menu, TRACING, "traceOption", CN,
 				&spaced);
-		any |= toggle_init(file_menu, EVENT_TRACE, "eventTraceOption",
-				CN, &spaced);
 	}
 	if (!appres.secure) {
 		w = add_menu_itemv("screenTraceOption", file_menu,

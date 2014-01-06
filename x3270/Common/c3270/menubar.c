@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012, 2013 Paul Mattes.
+ * Copyright (c) 2010-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -756,10 +756,11 @@ fm_xfer(void *ignored _is_unused)
 static void
 fm_trace(void *ignored _is_unused)
 {
-	if (toggled(DS_TRACE) || toggled(EVENT_TRACE))
+	if (toggled(TRACING)) {
 		push_macro("Trace(off)", False);
-	else
+	} else {
 		push_macro("Trace(on)", False);
+	}
 }
 
 static void
@@ -984,10 +985,9 @@ menubar_retoggle(struct toggle *t, int ix)
 		return;
 	}
 # if defined(X3270_TRACE) /*[*/
-	if (ix == EVENT_TRACE || ix == DS_TRACE) {
+	if (ix == TRACING) {
 		s = xs_buffer("%sable Tracing",
-			(toggled(EVENT_TRACE) || toggled(DS_TRACE))?
-			"Dis": "En");
+			(toggled(TRACING))? "Dis": "En");
 		rename_item(file_menu_items[FM_TRACE], s);
 		Free(s);
 	}

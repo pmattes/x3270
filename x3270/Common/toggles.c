@@ -100,9 +100,8 @@ initialize_toggles(void)
 	appres.toggle[VISIBLE_CONTROL].upcall =  toggle_visible_control;
 #endif /*]*/
 #if defined(X3270_TRACE) /*[*/
-	appres.toggle[DS_TRACE].upcall =         toggle_dsTrace;
+	appres.toggle[TRACING].upcall =          toggle_tracing;
 	appres.toggle[SCREEN_TRACE].upcall =     toggle_screenTrace;
-	appres.toggle[EVENT_TRACE].upcall =      toggle_eventTrace;
 #endif /*]*/
 #if defined(X3270_ANSI) /*[*/
 	appres.toggle[LINE_WRAP].upcall =        toggle_lineWrap;
@@ -116,11 +115,8 @@ initialize_toggles(void)
 #endif /*]*/
 
 #if defined(X3270_TRACE) /*[*/
-	if (toggled(DS_TRACE))
-		appres.toggle[DS_TRACE].upcall(&appres.toggle[DS_TRACE],
-		    TT_INITIAL);
-	if (toggled(EVENT_TRACE))
-		appres.toggle[EVENT_TRACE].upcall(&appres.toggle[EVENT_TRACE],
+	if (toggled(TRACING))
+		appres.toggle[TRACING].upcall(&appres.toggle[TRACING],
 		    TT_INITIAL);
 	if (toggled(SCREEN_TRACE))
 		appres.toggle[SCREEN_TRACE].upcall(&appres.toggle[SCREEN_TRACE],
@@ -136,13 +132,9 @@ shutdown_toggles(void)
 {
 #if defined(X3270_TRACE) /*[*/
 	/* Clean up the data stream trace monitor window. */
-	if (toggled(DS_TRACE)) {
-		appres.toggle[DS_TRACE].value = False;
-		toggle_dsTrace(&appres.toggle[DS_TRACE], TT_FINAL);
-	}
-	if (toggled(EVENT_TRACE)) {
-		appres.toggle[EVENT_TRACE].value = False;
-		toggle_dsTrace(&appres.toggle[EVENT_TRACE], TT_FINAL);
+	if (toggled(TRACING)) {
+		appres.toggle[TRACING].value = False;
+		toggle_tracing(&appres.toggle[TRACING], TT_FINAL);
 	}
 
 	/* Clean up the screen trace file. */

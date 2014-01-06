@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2013, Paul Mattes.
+ * Copyright (c) 1995-2014, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,8 +45,7 @@ extern Boolean do_ts;
 const char *rcba(int baddr);
 char *screentrace_default_file(ptype_t ptype);
 char *screentrace_default_printer(void);
-void toggle_dsTrace(struct toggle *t, enum toggle_type tt);
-void toggle_eventTrace(struct toggle *t, enum toggle_type tt);
+void toggle_tracing(struct toggle *t, enum toggle_type tt);
 void toggle_screenTrace(struct toggle *t, enum toggle_type tt);
 void trace_ansi_disc(void);
 void trace_char(char c);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2010, 2013 Paul Mattes.
+ * Copyright (c) 1996-2010, 2013-2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -565,7 +565,7 @@ void
 PA_KeymapTrace_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
-	if (!toggled(EVENT_TRACE) || *num_params != 2)
+	if (!toggled(TRACING) || *num_params != 2)
 		return;
 	Replace(keymap_trace, XtMalloc(strlen(params[0]) + 1 +
 				       strlen(params[1]) + 1));

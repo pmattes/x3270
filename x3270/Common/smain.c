@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -137,12 +137,6 @@ main(int argc, char *argv[])
 #endif /*]*/
 
 	/* Handle initial toggle settings. */
-#if defined(X3270_TRACE) /*[*/
-	if (!appres.debug_tracing) {
-		appres.toggle[DS_TRACE].value = False;
-		appres.toggle[EVENT_TRACE].value = False;
-	}
-#endif /*]*/
 	initialize_toggles();
 
 #if defined(HAVE_LIBSSL) /*[*/

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -842,9 +842,7 @@ popup_rop(struct rop *rop, abort_callback_t *a, const char *fmt, va_list args)
 #if defined(X3270_TRACE) /*[*/
 	/* Put the error in the trace file. */
 	if (rop->is_error) {
-		if (toggled(DS_TRACE))
-			trace_dsn("Error: %s\n", vmsgbuf);
-		else if (toggled(EVENT_TRACE)) {
+		if (toggled(TRACING)) {
 			trace_event("Error: %s\n", vmsgbuf);
 		}
 	}

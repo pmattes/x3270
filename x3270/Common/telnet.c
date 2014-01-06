@@ -2738,7 +2738,7 @@ net_hexansi_out(unsigned char *buf, int len)
 
 #if defined(X3270_TRACE) /*[*/
 	/* Trace the data. */
-	if (toggled(DS_TRACE)) {
+	if (toggled(TRACING)) {
 		int i;
 
 		trace_dsn(">");
@@ -2774,7 +2774,7 @@ static void
 net_cookedout(const char *buf, int len)
 {
 #if defined(X3270_TRACE) /*[*/
-	if (toggled(DS_TRACE)) {
+	if (toggled(TRACING)) {
 		int i;
 
 		trace_dsn(">");
@@ -3300,7 +3300,7 @@ trace_netdata(char direction, unsigned const char *buf, int len)
 	struct timeval ts;
 	double tdiff;
 
-	if (!toggled(DS_TRACE))
+	if (!toggled(TRACING))
 		return;
 	do_ts = False;
 	(void) gettimeofday(&ts, (struct timezone *)NULL);

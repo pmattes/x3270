@@ -287,8 +287,9 @@ trace_script_output(const char *fmt, ...)
 	char *m = msgbuf;
 	char c;
 
-	if (!toggled(EVENT_TRACE))
+	if (!toggled(TRACING)) {
 		return;
+	}
 
 	va_start(args, fmt);
 	vsnprintf(msgbuf, sizeof(msgbuf), fmt, args);
