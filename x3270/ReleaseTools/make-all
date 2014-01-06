@@ -16,10 +16,11 @@ export LC_ALL="C"
 build=1
 release=""
 major=3.3
+all_prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270 Playback"
 
 function usage
 {
-	echo >&2 "Usage: $0 [--nobuild] [--release] [--just-tarball] [<product>...]"
+	echo >&2 "Usage: $0 [--nobuild] [--release] [--just-tarball] [--win32] [<product>...]"
 	exit 0
 }
 
@@ -41,6 +42,11 @@ do	case "$1" in
 		tarball=1
 		shift
 		;;
+	-win32|--win32)
+		all_prods="wc3270 wpr3287 ws3270"
+		just_win32=1
+		shift
+		;;
 	-*)
 		usage
 		;;
@@ -52,8 +58,8 @@ done
 # Set up the product list.
 if [ $# -gt 0 ]
 then	prods=$*
-else	prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270 Playback"
-    	all=1;
+else	prods=$all_prods
+    	[ -z "$just_win32" ] && all=1
 fi
 if [ "$tarball" -a ! "$all" ]
 then	echo >&2 "Can't do tarball for specific products."
