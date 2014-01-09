@@ -427,6 +427,8 @@ ifelse(XX_PRODUCT,x3270,
 Disables run-time features that could compromise system security
 (user-specified file names and commands, etc.).
 ')dnl
+XX_TP(XX_FB(XX_DASHED(selfsignedok)))
+When verifying a host XX_SM(SSL) certificate, allow it to be self-signed.
 XX_TP(XX_FB(XX_DASHED(set)) XX_FI(toggle))
 Sets the initial value of XX_FI(toggle) to XX_FB(true).
 The list of toggle names is under XX_LINK(`#'XX_TOGGLEREF,XX_SM(XX_TOGGLEREFNM))
