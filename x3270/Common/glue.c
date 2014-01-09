@@ -1353,6 +1353,7 @@ parse_xrm(const char *arg, const char *where)
 			*(Boolean *)address = False;
 		} else {
 			xs_warning("%s: Invalid Boolean value: %s", where, s);
+			*(Boolean *)address = False;
 		}
 		break;
 	case XRM_STRING:
@@ -1517,7 +1518,7 @@ safe_string(const char *s)
 int
 read_resource_file(const char *filename, Boolean fatal)
 {
-    	return read_resource_filex(filename, fatal, parse_xrm);
+    	return read_resource_filex(filename, fatal);
 }
 
 /* Screen globals. */
