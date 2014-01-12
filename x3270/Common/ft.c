@@ -119,15 +119,12 @@ typedef enum {
     HT_CICS
 } host_type_t;
 static host_type_t host_type = HT_TSO;	/* Host type */
-# if defined(X3270_DISPLAY) /*[*/
+# if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
 static Boolean host_is_tso = True;	/* Booleans used by dialog */
 static Boolean host_is_tso_or_vm = True;/*  sensitivity logic */
 static host_type_t s_tso = HT_TSO;	/* Values used by toggle callbacks. */
 static host_type_t s_vm = HT_VM;
 static host_type_t s_cics = HT_CICS;
-# endif /*]*/
-
-# if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
 static Widget recfm_options[5];
 static Widget units_options[5];
 static struct toggle_list recfm_toggles = { recfm_options };
