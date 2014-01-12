@@ -2920,7 +2920,9 @@ sms_redirect_to(void)
 		     s->state == SS_CONNECT_WAIT ||
 		     s->state == SS_WAIT_OUTPUT ||
 		     s->state == SS_SWAIT_OUTPUT ||
+#if defined(X3270_FT) /*[*/
 		     s->state == SS_FT_WAIT ||
+#endif /*]*/
 		     s->wait_id != NULL_IOID))
 			return s;
 	}
