@@ -1,0 +1,33 @@
+#!/usr/bin/perl
+
+use strict;
+
+open DEFS, "<../Common/resources.h" or die "No resources file.\n";
+
+my %res;
+
+while (<DEFS>) {
+	chomp;
+	next unless /^#define\s+Res([A-Za-z0-9]+)\s+/;
+	my $lc = substr $1, 0, 1;
+	$lc =~ tr/[A-Z]/[a-z]/;
+	$res{$lc . substr($1, 1)} = 1;
+}
+close DEFS;
+
+open DOCS, "<source2" or die "No defs file.\n";
+
+my %doc;
+
+while (<DOCS>) {
+	chomp;
+	next unless /^name\s+([A-Za-z0-9]+)/;
+	$doc{$1} = 1;
+}
+close DOCS;
+
+foreach my $r (sort keys %res) {
+	if (!defined($doc{$r})) {
+		print "Not documented: $r\n";
+	}
+}
