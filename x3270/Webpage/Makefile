@@ -51,5 +51,46 @@ screenshots.html: screenshots-body.html mkpages.bash
 x026.html: x026-body.html mkpages.bash
 	./mkpages.bash x026
 
+Unix/c3270-man.html:
+	cd ../c3270 && make -f Makefile.aux html/c3270-man.html
+Unix/ibm_hosts.html:
+	cd ../x3270 && make -f Makefile.aux html/ibm_hosts.html
+Unix/pr3287-man.html:
+	cd ../pr3287 && make -f Makefile.aux html/pr3287-man.html
+Unix/s3270-man.html:
+	cd ../s3270 && make -f Makefile.aux html/s3270-man.html
+Unix/tcl3270-man.html:
+	cd ../tcl3270 && make -f Makefile.aux html/tcl3270-man.html
+Unix/x3270-man.html:
+	cd ../x3270 && make -f Makefile.aux html/x3270-man.html
+Unix/x3270-script.html:
+	cd ../x3270 && make -f Makefile.aux html/x3270-script.html
+Unix/x3270if.html:
+	cd ../x3270 && make -f Makefile.aux html/x3270if.html
+
+Windows/wc3270-man.html:
+	cd ../wc3270 && make -f Makefile.aux html/wc3270-man.html
+Windows/wc3270-script.html:
+	cd ../wc3270 && make -f Makefile.aux html/wc3270-script.html
+Windows/wpr3287-man.html:
+	cd ../wpr3287 && make -f Makefile.aux html/wpr3287-man.html
+Windows/ws3270-man.html:
+	cd ../ws3270 && make -f Makefile.aux html/ws3270-man.html
+Windows/x3270if.html:
+	cd ../wc3270 && make -f Makefile.aux html/x3270if.html
+
+c3270-Resources.html:
+	cd ../c3270 && make -f Makefile.aux html/Resources.html
+s3270-Resources.html:
+	cd ../s3270 && make -f Makefile.aux html/Resources.html
+tcl3270-Resources.html:
+	cd ../tcl3270 && make -f Makefile.aux html/Resources.html
+wc3270-Resources.html:
+	cd ../wc3270 && make -f Makefile.aux html/Resources.html
+ws3270-Resources.html:
+	cd ../ws3270 && make -f Makefile.aux html/Resources.html
+x3270-Resources.html:
+	cd ../x3270 && make -f Makefile.aux html/Resources.html
+
 webpage.tgz: $(PAGES) $(OTHERS) mkpages.bash Makefile
 	tar -czhf webpage.tgz $(PAGES) $(OTHERS)
