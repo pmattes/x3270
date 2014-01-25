@@ -145,7 +145,7 @@ html/x3270if.html: x3270if.man.m4 ft.inc $(MANDEP)
 	@rm -f man.tmp
 ibm_hosts.man: ibm_hosts.man.m4 man.m4 $(MANDEP)
 	@rm -f man.tmp
-	$(MKHTML) -n ibm_hosts ibm_hosts.man.m4 >man.tmp
+	$(MKMAN) -n ibm_hosts ibm_hosts.man.m4 >man.tmp
 	mv man.tmp $@
 	@rm -f man.tmp
 html/ibm_hosts.html: ibm_hosts.man.m4 ft.inc $(MANDEP)
@@ -155,7 +155,7 @@ html/ibm_hosts.html: ibm_hosts.man.m4 ft.inc $(MANDEP)
 	@rm -f man.tmp
 x3270-script.man: x3270-script.man.m4 ft.inc $(MANDEP)
 	@rm -f man.tmp
-	$(MKHTML) -n x3270-script x3270-script.man.m4 >man.tmp
+	$(MKMAN) -n x3270-script x3270-script.man.m4 >man.tmp
 	mv man.tmp $@
 	@rm -f man.tmp
 html/x3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
