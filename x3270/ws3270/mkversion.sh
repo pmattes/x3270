@@ -1,1 +1,1 @@
-../Common/Nodisplay/mkversion.sh
+../Common/mkversion.sh
