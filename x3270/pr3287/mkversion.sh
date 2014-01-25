@@ -1,1 +1,1 @@
-../Common/pr3287/mkversion.sh
+../Common/mkversion.sh
