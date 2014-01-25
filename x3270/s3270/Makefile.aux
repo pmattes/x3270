@@ -99,7 +99,7 @@ html/$(PRODUCT)-man.html: x3270.man.m4 ft.inc resources.inc $(MANDEP)
 x3270if.man: x3270if.man.m4 $(MANDEP)
 	$(MKMAN) -n x3270if x3270if.man.m4 >$@
 html/x3270if.html: x3270if.man.m4 ft.inc $(MANDEP)
-	$(MKMAN) -n x3270if x3270if.man.m4 >$@
+	$(MKHTML) -n x3270if x3270if.man.m4 >$@
 x3270-script.man: x3270-script.man.m4 ft.inc $(MANDEP)
 	$(MKMAN) -n x3270-script x3270-script.man.m4 >$@
 html/x3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
