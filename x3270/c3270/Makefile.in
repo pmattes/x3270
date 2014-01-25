@@ -67,11 +67,16 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 
 version.o: $(VOBJS) version.txt mkversion.sh
+	$(RM) xversion.c
 	@chmod +x mkversion.sh version.txt
-	sh ./mkversion.sh $(CC) c3270
+	sh ./mkversion.sh c3270 >xversion.c
+	$(CC) $(CFLAGS) -c -o $@ xversion.c
+	$(RM) xversion.c
 
 fallbacks.c: mkfb X3270.xad
-	$(RM) $@
+	$(RM) $@ >xversion.c
+	$(CC) $(CFLAGS) -c -o $@ xversion.c
+	$(RM) xversion.c
 	./mkfb -c X3270.xad $@
 
 keypad.o: keypad.c compiled_keypad.h

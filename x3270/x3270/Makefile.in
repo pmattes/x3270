@@ -77,8 +77,11 @@ LDFLAGS = @XLIB@ @LDFLAGS@
 LIBS = @LIBS@ -lXaw -lXmu -lXt -lX11
 
 version.o: $(VOBJS) version.txt mkversion.sh
+	$(RM) version.c
 	@chmod +x mkversion.sh version.txt
-	sh ./mkversion.sh $(CC) x3270
+	sh ./mkversion.sh x3270 >xversion.c
+	$(CC) $(CFLAGS) -c -o $@ xversion.c
+	$(RM) xversion.c
 
 fallbacks.c: mkfb X3270.xad
 	$(RM) $@

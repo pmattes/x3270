@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1995-2009, Paul Mattes.
+# Copyright (c) 1995-2009, 2014 Paul Mattes.
 # Copyright (c) 2005, Don Russell.
 # All rights reserved.
 # 
@@ -28,7 +28,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
-# Create version.o from version.txt
+# Create version.c from version.txt
 #set -x
 
 # Ensure that 'date' emits 7-bit U.S. ASCII.
@@ -49,15 +49,11 @@ user=${LOGNAME-$USER}
 # decimal (0-9) digits only. Length must be even number of digits.
 rpq_timestamp=`date +%Y%m%d%H%M%S`
 
-trap 'rm -f version.c' 0 1 2 15
-
-cat <<EOF >version.c
-const char *build = "${2-x3270} v$version $builddate $user";
+cat <<EOF
+const char *build = "${1-x3270} v$version $builddate $user";
 const char *app_defaults_version = "$adversion";
-static const char sccsid[] = "@(#)${2-x3270} v$version $sccsdate $user";
+const char sccsid[] = "@(#)${1-x3270} v$version $sccsdate $user";
 
 const char *build_rpq_timestamp = "$rpq_timestamp";
 const char *build_rpq_version = "$version";
 EOF
-
-${1-cc} -c version.c

@@ -62,9 +62,12 @@ LIBS = $(SSLLIB) -lws2_32 -lwinspool
 
 all: wpr3287.exe
 
+XVERSION = xversion.c
 version.o: $(VOBJS) version.txt mkversion.sh
+	$(RM) $(XVERSION)
 	@chmod +x mkversion.sh version.txt
-	sh ./mkversion.sh $(CC) wpr3287
+	sh ./mkversion.sh wpr3287 >$(XVERSION)
+	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 
 wpr3287res.o: wpr3287.rc pr3287.ico
 	$(WINDRES) -i wpr3287.rc -o wpr3287res.o

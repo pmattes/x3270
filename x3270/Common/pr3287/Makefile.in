@@ -53,8 +53,11 @@ OBJECTS = charset.o ctlr.o pr3287.o proxy.o resolver.o see.o sf.o tables.o \
 	telnet.o trace_ds.o unicode.o unicode_dbcs.o utf8.o xtable.o
 
 version.o: version.txt mkversion.sh
+	$(RM) xversion.c
 	@chmod +x mkversion.sh version.txt
-	sh ./mkversion.sh $(CC) pr3287
+	sh ./mkversion.sh pr3287 >xversion.c
+	$(CC) $(CFLAGS) -c -o $@ xversion.c
+	$(RM) xversion.c
 
 pr3287: $(OBJECTS) version.o
 	$(CC) -o $@ $(OBJECTS) version.o $(LDFLAGS) $(LIBS)

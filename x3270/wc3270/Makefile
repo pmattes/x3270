@@ -86,8 +86,11 @@ all: $(PROGS)
 wc3270.exe : XCPPFLAGS += -DWIN32_LEAN_AND_MEAN
 
 version.o: $(VOBJS) version.txt mkversion.sh Makefile
+	$(RM) xversion.c
 	@chmod +x mkversion.sh version.txt
-	sh ./mkversion.sh $(CC) wc3270
+	sh ./mkversion.sh wc3270 >xversion.c
+	$(CC) $(CFLAGS) -c -o $@ xversion.c
+	$(RM) xversion.c
 
 fallbacks.c: $(MKFB) X3270.xad Makefile
 	$(RM) $@

@@ -76,9 +76,13 @@ DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--ena
 PROGS = ws3270.exe
 all: $(PROGS)
 
+XVERSION = xversion.c
 version.o: $(VOBJS) version.txt mkversion.sh Makefile
+	$(RM) $(XVERSION)
 	@chmod +x mkversion.sh version.txt
-	sh ./mkversion.sh $(CC) ws3270
+	sh ./mkversion.sh ws3270 >$(XVERSION)
+	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
+	$(RM) $(XVERSION)
 
 fallbacks.c: $(MKFB) X3270.xad Makefile
 	$(RM) $@

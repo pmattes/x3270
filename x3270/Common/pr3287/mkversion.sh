@@ -1,5 +1,5 @@
 #! /bin/sh
-# Copyright (c) 1995-2009, Paul Mattes.
+# Copyright (c) 1995-2009, 2014 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -39,12 +39,8 @@ builddate=`date`
 sccsdate=`date +%Y/%m/%d`
 user=${LOGNAME-$USER}
 
-trap 'rm -f version.c' 0 1 2 15
-
-cat <<EOF >version.c
-const char *build = "${2-x3270} v$version $builddate $user";
+cat <<EOF
+const char *build = "${1-x3270} v$version $builddate $user";
 const char *app_defaults_version = "$adversion";
-static const char sccsid[] = "@(#)${2-x3270} v$version $sccsdate $user";
+const char sccsid[] = "@(#)${1-x3270} v$version $sccsdate $user";
 EOF
-
-${1-cc} -c version.c

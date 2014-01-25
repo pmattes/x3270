@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# Copyright (c) 1999-2009, Paul Mattes.
+# Copyright (c) 1999-2009, 2014 Paul Mattes.
 # Copyright (c) 2005, Don Russell.
 # All rights reserved.
 #
@@ -48,15 +48,11 @@ user=${LOGNAME-$USER}
 # decimal (0-9) digits only. Length must be even number of digits.
 rpq_timestamp=`date +%Y%m%d%H%M%S`
 
-trap 'rm -f version.c' 0 1 2 15
-
-cat <<EOF >version.c
-char *build = "${2-x3270} v$version $builddate $user";
+cat <<EOF
+char *build = "${1-x3270} v$version $builddate $user";
 char *app_defaults_version = "$adversion";
-static char sccsid[] = "@(#)${2-x3270} v$version $sccsdate $user";
+char sccsid[] = "@(#)${1-x3270} v$version $sccsdate $user";
 
 const char *build_rpq_timestamp = "$rpq_timestamp";
 const char *build_rpq_version = "$version";
 EOF
-
-${1-cc} -c version.c
