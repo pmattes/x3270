@@ -52,12 +52,13 @@ SRCS = charset.c ctlr.c pr3287.c proxy.c resolver.c see.c sf.c tables.c \
 OBJECTS = charset.o ctlr.o pr3287.o proxy.o resolver.o see.o sf.o tables.o \
 	telnet.o trace_ds.o unicode.o unicode_dbcs.o utf8.o xtable.o
 
+XVERSION = xversion.c
 version.o: version.txt mkversion.sh
-	$(RM) xversion.c
+	$(RM) $(XVERSION)
 	@chmod +x mkversion.sh version.txt
-	sh ./mkversion.sh pr3287 >xversion.c
-	$(CC) $(CFLAGS) -c -o $@ xversion.c
-	$(RM) xversion.c
+	sh ./mkversion.sh pr3287 >$(XVERSION)
+	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
+	$(RM) $(XVERSION)
 
 pr3287: $(OBJECTS) version.o
 	$(CC) -o $@ $(OBJECTS) version.o $(LDFLAGS) $(LIBS)

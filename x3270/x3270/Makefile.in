@@ -76,12 +76,13 @@ CFLAGS = @CFLAGS@ $(XCPPFLAGS) $(CDEBUGFLAGS)
 LDFLAGS = @XLIB@ @LDFLAGS@
 LIBS = @LIBS@ -lXaw -lXmu -lXt -lX11
 
+XVERSION = xversion.c
 version.o: $(VOBJS) version.txt mkversion.sh
-	$(RM) version.c
+	$(RM) $(XVERSION)
 	@chmod +x mkversion.sh version.txt
-	sh ./mkversion.sh x3270 >xversion.c
-	$(CC) $(CFLAGS) -c -o $@ xversion.c
-	$(RM) xversion.c
+	sh ./mkversion.sh x3270 >$(XVERSION)
+	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
+	$(RM) $(XVERSION)
 
 fallbacks.c: mkfb X3270.xad
 	$(RM) $@

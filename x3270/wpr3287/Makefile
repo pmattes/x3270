@@ -68,6 +68,7 @@ version.o: $(VOBJS) version.txt mkversion.sh
 	@chmod +x mkversion.sh version.txt
 	sh ./mkversion.sh wpr3287 >$(XVERSION)
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
+	$(RM) $(XVERSION)
 
 wpr3287res.o: wpr3287.rc pr3287.ico
 	$(WINDRES) -i wpr3287.rc -o wpr3287res.o
