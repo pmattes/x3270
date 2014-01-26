@@ -130,3 +130,11 @@ ibm1385.c: ibm-1385_P100-1997.ucm mktbl
 	./stripucm.sh ibm-1385_P100-1997.ucm ibm1385 >ibm1385.c
 	mktbl: mktbl.c
 	$(CC) -o mktbl mktbl.c
+
+# Bootstrap targets.
+Makefile: Makefile.in configure
+	./configure
+	make depend
+cscope.out: $(SOURCES) $(HEADERS)
+	cs -b
+bootstrap: $(PRODUCT)-src.tgz Makefile cscope.out

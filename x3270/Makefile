@@ -6,28 +6,28 @@ all: $(ALL)
 .fake: $(ALL)
 
 c3270-dir:
-	cd c3270 && mk
+	cd c3270 && make -f Makefile.aux bootstrap && mk
 
 pr3287-dir:
-	cd pr3287 && mk
+	cd pr3287 && make -f Makefile.aux bootstrap && mk
 
 s3270-dir:
-	cd s3270 && mk
+	cd s3270 && make -f Makefile.aux bootstrap && mk
 
 tcl3270-dir:
-	cd tcl3270 && mk
+	cd tcl3270 && make -f Makefile.aux bootstrap && mk
 
 wc3270-dir:
-	cd wc3270 && mk
+	cd wc3270 && make -f Makefile.aux bootstrap && mk
 
 Webpage-dir:
 	cd Webpage && mk
 
 wpr3287-dir:
-	cd wpr3287 && mk
+	cd wpr3287 && make -f Makefile.aux bootstrap && mk
 
 ws3270-dir:
-	cd ws3270 && mk
+	cd ws3270 && make -f Makefile.aux bootstrap && mk
 
 x3270-dir:
-	cd x3270 && mk
+	cd x3270 && make -f Makefile.aux bootstrap && mk

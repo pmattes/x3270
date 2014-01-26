@@ -182,3 +182,11 @@ html/Resources.html: resource-body make-resource-doc.pl version.txt
 	./make-resource-doc.pl $(PRODUCT) <resource-body >$@
 html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@
+
+# Bootstrap targets.
+Makefile: Makefile.in configure
+	./configure
+	make depend
+cscope.out: $(SOURCES) $(HEADERS)
+	cs -b
+bootstrap: $(PRODUCT)-src.tgz Makefile cscope.out
