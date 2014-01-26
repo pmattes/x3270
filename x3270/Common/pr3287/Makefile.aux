@@ -81,3 +81,11 @@ html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 
 configure: configure.in
 	autoconf
+
+# Bootstrap targets.
+Makefile: Makefile.in configure
+	./configure
+	make depend
+cscope.out: $(SOURCES) $(HEADERS)
+	cs -b
+bootstrap: $(PRODUCT)-src.tgz Makefile cscope.out

@@ -110,3 +110,10 @@ html/Resources.html: resource-body make-resource-doc.pl version.txt
 
 wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 	./mkiss <wc3270.iss.tmpl >wc3270.iss
+
+# Bootstrap targets.
+dependencies: Makefile
+	make depend
+cscope.out: $(SOURCES) $(HEADERS)
+	cs -b
+bootstrap: $(PRODUCT)-src.tgz dependencies cscope.out

@@ -79,5 +79,9 @@ html/$(PRODUCT)-man.html: pr3287.man.m4 $(MANDEP)
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
 
-configure: configure.in
-	autoconf
+# Bootstrap targets.
+dependencies: Makefile
+	make depend
+cscope.out: $(SOURCES) $(HEADERS)
+	cs -b
+bootstrap: $(PRODUCT)-src.tgz dependencies cscope.out
