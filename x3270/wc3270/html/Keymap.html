@@ -65,7 +65,8 @@ Keymap files can come in three flavors:
     <li>The file <b><i>foo</i>.3270.wc3270km</b> contains keymap definitions
         that apply only to 3270 mode.</li>
 </ul>
-Any or all of the three files can be present.
+Any or all of the three files can be present. The one, two or three files are
+taken together to represent a single keymap named <b>foo</b>.
 <h2>Rules for Keymap Definition Files</h2>
 You may now edit the keymap to create your own custom definition.
 Here is the full set of rules.
@@ -172,18 +173,28 @@ above example would look like this:
     !    \\server\printer        \\\\server\\printer
     !
     !*Additional resource definitions can go after this line.
-    ! Select my keymap.
-    wc3270.keymap: mine
     ! Define my meymap.
     wc3270.keymap.mine: \n\
       &lt;Key>PRIOR: PF(7) \n\
       &lt;Key>Next: PF(8) \n
+    ! Select my keymap.
+    wc3270.keymap: mine
     </pre>
 </blockquote>
-Note that similar naming conventions are used to define partial keymaps:
-<b>wc3270.keymap.mine.nvt</b> would define a keymap that applies only to NVT
-mode, and <b>wc3270.keymap.mine.3270</b> would define a keymap that applies
-only to 3270 mode.
+Note that wc3270 resource definitions use backslash quoting conventions, so a
+backslash ('<b>\</b>') inside a keymap must be quoted with another backslash.
+Also, keymaps are multi-line resource definitions, so each line except the last
+must end with a newline (<b>'\n'</b>) and a backslash ('<b>\</b>'), as shown
+above.
+<p>
+Note that similar naming conventions are used to define the mode-specific
+keymap resourcess are are used to name the files: the <b>wc3270.keymap.foo</b>
+resource would define the mappings that are used in all modes; the
+<b>wc3270.keymap.mine.nvt</b> resource would define the mappings that
+apply only to NVT mode, and the <b>wc3270.keymap.mine.3270</b> resource would
+define the mappings that apply only to 3270 mode. The one, two or
+three keymap resources above are taken together to define a single keymap,
+<b>mine</b>.
 
 <h2>More Information</h2>
 This document is not an exhaustive definition of keymaps -- the complete
