@@ -21,13 +21,20 @@ If the mappings you want aren't defined in the default keymap,
 you can create a custom keymap.
 The easiest way to do this is to follow this example -- a custom keymap that
 maps <b>Page Up</b> to <b>PF7</b> and <b>Page Down</b> to <b>PF8</b>.
+(Note that in the default keymap, <b>Page Up</b> scrolls the display up, and
+<b>Page Down</b> scrolls it down; this keymap will override that.)
 <p>
 First, pick a unique name for your keymap, e.g., <i>mine</i>.
 Using a text editor such as <b>notepad</b>, create a file called
-<tt>mine.wc3270km</tt> in the <b>wc3270</b> installation directory.
-(The <b>wc3270</b> installation directory is usually <tt>C:\Program Files\wc3270</tt>, but can vary depending on your Windows installation and the options
-you chose when you installed <b>wc3270</b>.)
-In that file, put the following:
+<b>mine.wc3270km</b> in the <b>wc3270</b> AppData directory (that directory
+is where the Session Wizard saves session files; it is usually something
+like <b>C:\Users\<i>yourname</i>\AppData\Roaming\wc3270</b>, but the name
+varies with different versions of Windows and different languages.
+The Start Menu comand <i>wc3270 Explore AppData</i> will open Explorer
+windows on the two AppData directories -- yours and the all-users one.)
+</p>
+<p>In that file, put the following, using a text editing program like
+<i>Notepad</i>:
 <blockquote>
 <pre>
 !description: Map PageUp and PageDown to PF7/PF8
@@ -36,31 +43,29 @@ In that file, put the following:
 </blockquote>
 <p>Note that in a keymap file, comment lines start with <b>!</b>.
 Comment lines are ignored, except for one special one (shown above): a
-comment line starting with <tt>!description:</tt> will be displayed by the
-<i>New Session Wizard</i> as the description of the keymap.
+comment line starting with <b>!description:</b> will be displayed by the
+<i>Session Wizard</i> as the description of the keymap.
 <p>To use the keymap, you can either create a new <b>wc3270</b>
 session, or you can modify an existing one.
-<p>
-To create a new one, run the <i>wc3270 New Session Wizard</i>.
+In either case, run the <i>Session Wizard</i>.
 The list of available keymaps should now include <b>mine</b>.
-<p>To modify an existing session, use <b>notepad</b> to edit the session
-file.
-(Session files are located in the <b>wc3270</b> installation directory, and
-have the suffix <b>.wc3270</b>, so the session file for <b>foo</b> is called
-<tt>foo.wc3270</tt>.)
-If the session already uses a keymap, it will have a line that starts with
-<tt>wc3270.keymap:</tt>.
-If it has this line, modify it to specify <b>mine</b> instead.
-If it does not have this line, add it:
-<blockquote>
-    <pre>
-    wc3270.keymap: mine
-    </pre>
-</blockquote>
-<p>Now, run your <b>wc3270</b> session.
+<p>Tell the Session Wizard to change the keymap and rewrite the session
+file.</p>
+<p>Now, run your <b>wc3270</b> session again.
 The <b>Page Up</b> key should now emulate the 3270 <b>PF7</b> key, and the
 <b>Page Down</b> key should now emulate the 3270 <b>PF8</b> key.
 </p>
+<h2>Full Keymap File Name Conventions</h2>
+Keymap files can come in three flavors:
+<ul>
+    <li>The file <b><i>foo</i>.wc3270km</b> contains keymap definitions that
+        apply to all wc3270 modes.</li>
+    <li>The file <b><i>foo</i>.nvt.wc3270km</b> contains keymap definitions
+        that apply only to NVT (non-3270) mode.</li>
+    <li>The file <b><i>foo</i>.3270.wc3270km</b> contains keymap definitions
+        that apply only to 3270 mode.</li>
+</ul>
+Any or all of the three files can be present.
 <h2>Rules for Keymap Definition Files</h2>
 You may now edit the keymap to create your own custom definition.
 Here is the full set of rules.
@@ -122,7 +127,7 @@ The list of names for special Windows keys, such as PRIOR, NEXT and HOME,
 is on the <a href="wc3270-man.html#Keymaps">wc3270 manual page</a>.
 <p>
 To find out which key or sequence of keys is being generated for any
-given key on your keyboard, start <b>wc3270</b> with the <b>-set eventTrace</b>
+given key on your keyboard, start <b>wc3270</b> with the <b>-trace</b>
 option.
 <b>wc3270</b> will create a pop-up window showing a trace file, which will
 include several lines of text for each key that is pressed.
@@ -137,7 +142,7 @@ manual page</a>.
 
 <h2>How to Debug Your Keymap</h2>
 There are two <b>wc3270</b> options to aid with keymap debugging.
-The first is the <b>-set eventTrace</b> option described above.
+The first is the <b>-trace</b> option described above.
 The information traced includes the keymap (and line within the keymap)
 that matched the event, the <b>wc3270</b> action that was run in response,
 and if for some reason the action did not work, why it did not work.
@@ -147,6 +152,38 @@ This tells you exactly which keymap entries are active.
 Often times it will point out that <b>wc3270</b> isn't using the keymap you
 thought it was, or that some of your keymap entries
 are interfering with one another.
+
+<h2>Keymaps as Resources</h2>
+It is also possible to put your keymap directly in your wc3270 session file,
+using resource definitions. This leaves fewer files to carry around if you want
+to move your session from one workstation to another.
+<p>
+Keymap resource definitions go at the very end of a wc3270 session file. The
+above example would look like this:
+<blockquote>
+    <pre>
+    ! Note that in this file, backslash ('\') characters are used to specify
+    ! escape sequences, such as '\r' for a Carriage Return character or '\t'
+    ! for a Tab character.  To include literal backslashes in this file, such as
+    ! in Windows pathnames or UNC paths, they must be doubled, for example:
+    !
+    !   Desired text            Must be specified this way
+    !    C:\xdir\file            C:\\xdir\\file
+    !    \\server\printer        \\\\server\\printer
+    !
+    !*Additional resource definitions can go after this line.
+    ! Select my keymap.
+    wc3270.keymap: mine
+    ! Define my meymap.
+    wc3270.keymap.mine: \n\
+      &lt;Key>PRIOR: PF(7) \n\
+      &lt;Key>Next: PF(8) \n
+    </pre>
+</blockquote>
+Note that similar naming conventions are used to define partial keymaps:
+<b>wc3270.keymap.mine.nvt</b> would define a keymap that applies only to NVT
+mode, and <b>wc3270.keymap.mine.3270</b> would define a keymap that applies
+only to 3270 mode.
 
 <h2>More Information</h2>
 This document is not an exhaustive definition of keymaps -- the complete
