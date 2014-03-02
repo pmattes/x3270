@@ -2028,6 +2028,9 @@ kybd_input2(INPUT_RECORD *ir)
 		xk = (ir->Event.KeyEvent.wVirtualKeyCode << 16) & 0xffff0000;
 	else if (ir->Event.KeyEvent.uChar.UnicodeChar)
 		xk = ir->Event.KeyEvent.uChar.UnicodeChar;
+	else if (ir->Event.KeyEvent.wVirtualKeyCode >= 0x30 &&
+			ir->Event.KeyEvent.wVirtualKeyCode <= 0x5a)
+		xk = ir->Event.KeyEvent.wVirtualKeyCode;
 	else
 		xk = (ir->Event.KeyEvent.wVirtualKeyCode << 16) & 0xffff0000;
 

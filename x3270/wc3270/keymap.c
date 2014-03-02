@@ -155,7 +155,7 @@ parse_keydef(char **str, int *ccode, int *hint)
 			flags |= KM_LALT;
 			s += 7;
 		} else if (!strncasecmp(s, "RightAlt", 8)) {
-			flags |= KM_ALT;
+			flags |= KM_RALT;
 			s += 8;
 		} else if (!strncasecmp(s, "Enhanced", 8)) {
 			flags |= KM_ENHANCED;
@@ -673,7 +673,7 @@ lookup_key(unsigned long code, unsigned long state)
 	int n_shortest = 0;
 	int state_match = 0;
 
-	/* trace_event("lookup_key(0x%08lx, 0x%lx)\n", code, state); */
+	trace_event("lookup_key(0x%08lx, 0x%lx)\n", code, state);
 
 	/* If there's a timeout pending, cancel it. */
 	if (kto) {
