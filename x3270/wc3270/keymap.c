@@ -74,7 +74,6 @@ struct keymap {
 #define IS_INACTIVE(k)	((k)->hints[0] & KM_INACTIVE)
 
 static struct keymap *master_keymap = NULL;
-static struct keymap **nextk = &master_keymap;
 
 static Boolean last_3270 = False;
 static Boolean last_nvt = False;
@@ -334,10 +333,9 @@ codecmp(struct keymap *k1, struct keymap *k2, int len)
 
 	/* The codes agree, now try the modifiers. */
 	for (i = 0; i < len; i++) {
-		if (k1->hints[i] & KM_HINTS) {
-			if ((k1->hints[i] & KM_HINTS) !=
-			    (k2->hints[i] & KM_HINTS))
-				return -1;
+		if ((k1->hints[i] & KM_HINTS) !=
+		    (k2->hints[i] & KM_HINTS)) {
+			return -1;
 		}
 	}
 
@@ -349,10 +347,9 @@ codecmp(struct keymap *k1, struct keymap *k2, int len)
 /* Add a keymap entry. */
 static void
 add_keymap_entry(int ncodes, int *codes, int *hints, const char *file,
-    int line, const char *action)
+    int line, const char *action, struct keymap ***nextkp)
 {
 	struct keymap *k;
-	struct keymap *j;
 
 	/* Allocate a new node. */
 	k = Malloc(sizeof(struct keymap));
@@ -367,22 +364,9 @@ add_keymap_entry(int ncodes, int *codes, int *hints, const char *file,
 	k->line = line;
 	k->action = NewString(action);
 
-	/* See if it's inactive, or supercedes other entries. */
-	if ((!last_3270 && (k->hints[0] & KM_3270_ONLY)) ||
-	    (!last_nvt  && (k->hints[0] & KM_NVT_ONLY))) {
-		k->hints[0] |= KM_INACTIVE;
-	} else for (j = master_keymap; j != NULL; j = j->next) {
-		/* It may supercede other entries. */
-		if (j->ncodes == k->ncodes &&
-		    !codecmp(j, k, k->ncodes)) {
-			j->hints[0] |= KM_INACTIVE;
-			j->successor = k;
-		}
-	}
-
 	/* Link it in. */
-	*nextk = k;
-	nextk = &k->next;
+	**nextkp = k;
+	*nextkp = &k->next;
 }
 
 /*
@@ -432,12 +416,14 @@ read_keymap(const char *name)
 
 /*
  * Read a keymap from a file.
+ * Accumulates the keymap onto the list pointed to by nextkp.
  * Returns 0 for success, -1 for an error.
  *
  * Keymap files look suspiciously like x3270 keymaps, but aren't.
  */
 static void
-read_one_keymap(const char *name, const char *fn, const char *r0, int flags)
+read_one_keymap_internal(const char *name, const char *fn, const char *r0,
+	int flags, struct keymap ***nextkp)
 {
 	char *r = CN;			/* resource value */
 	char *r_copy = CN;		/* initial value of r */
@@ -532,7 +518,8 @@ read_one_keymap(const char *name, const char *fn, const char *r0, int flags)
 
 		/* Add it to the list. */
 		hints[0] |= flags;
-		add_keymap_entry(ncodes, codes, hints, name, line, right);
+		add_keymap_entry(ncodes, codes, hints, name, line, right,
+			nextkp);
 	}
 
     done:
@@ -541,6 +528,37 @@ read_one_keymap(const char *name, const char *fn, const char *r0, int flags)
 		fclose(f);
 	if (xfn != fn)
 		Free(xfn);
+}
+
+/*
+ * Read a keymap from a file.
+ * Adds the keymap to the front of the 'master_keymap' list.
+ * Returns 0 for success, -1 for an error.
+ */
+static void
+read_one_keymap(const char *name, const char *fn, const char *r0, int flags)
+{
+    	struct keymap *one_master;
+	struct keymap **one_nextk;
+
+	/* Read in the keymap. */
+	one_master = NULL;
+	one_nextk = &one_master;
+	read_one_keymap_internal(name, fn, r0, flags, &one_nextk);
+
+	if (one_master == NULL) {
+		/* Nothing added. */
+		return;
+	}
+	if (master_keymap == NULL) {
+		/* Something added, nothing there before. */
+		master_keymap = one_master;
+		return;
+	}
+
+	/* Insert this keymap ahead of the previous ones. */
+	*one_nextk = master_keymap;
+	master_keymap = one_master;
 }
 
 /* Multi-key keymap support. */
@@ -905,7 +923,10 @@ keymap_init(void)
 	/* In case this is a subsequent call, wipe out the current keymap. */
 	clear_keymap();
 
+	/* Read the base keymap. */
 	read_keymap("base");
+
+	/* Read the user-defined keymaps. */
 	if (appres.key_map != CN) {
 		s = s0 = NewString(appres.key_map);
 		while ((comma = strchr(s, ',')) != CN) {
@@ -945,14 +966,13 @@ clear_keymap(void)
 		Free(k);
 	}
 	master_keymap = NULL;
-	nextk = &master_keymap;
 }
 
 /* Set the inactive flags for the current keymap. */
 static void
 set_inactive(void)
 {
-	struct keymap *k;
+	struct keymap *k, *j;
 
 	/* Clear the inactive flags and successors. */
 	for (k = master_keymap; k != NULL; k = k->next) {
@@ -969,25 +989,21 @@ set_inactive(void)
 		}
 	}
 
-	/* Turn off elements with successors. */
+	/* Compute superceded entries. */
 	for (k = master_keymap; k != NULL; k = k->next) {
-		struct keymap *j;
-		struct keymap *last_j = NULL;
-
-		if (IS_INACTIVE(k))
+		if (k->hints[0] & KM_INACTIVE) {
 			continue;
-
-		/* If it now has a successor, turn it off. */
-		for (j = k->next; j != NULL; j = j->next) {
-			if (!IS_INACTIVE(j) &&
-			    k->ncodes == j->ncodes &&
-			    !codecmp(k, j, k->ncodes)) {
-				last_j = j;
-			}
 		}
-		if (last_j != NULL) {
-			k->successor = last_j;
-			k->hints[0] |= KM_INACTIVE;
+		for (j = k->next; j != NULL; j = j->next) {
+			if (j->hints[0] & KM_INACTIVE) {
+				continue;
+			}
+			/* It may supercede other entries. */
+			if (j->ncodes == k->ncodes &&
+			    !codecmp(j, k, k->ncodes)) {
+				j->hints[0] |= KM_INACTIVE;
+				j->successor = k;
+			}
 		}
 	}
 }
@@ -1081,8 +1097,9 @@ keymap_dump(void)
 
 	for (k = master_keymap; k != NULL; k = k->next) {
 		if (k->successor != NULL)
-			action_output("[%s:%d]  (replaced by %s:%d)", k->file,
-			    k->line, k->successor->file, k->successor->line);
+			action_output("[%s:%d] -- superceded by %s:%d --",
+				k->file, k->line,
+				k->successor->file, k->successor->line);
 		else if (!IS_INACTIVE(k)) {
 			int i;
 			char buf[1024];
