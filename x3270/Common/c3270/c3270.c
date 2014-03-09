@@ -1234,39 +1234,56 @@ Trace_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	action_debug(Trace_action, event, params, num_params);
 
 	if (*num_params == 0) {
-		action_output("Tracing is %sabled.",
-		    toggled(TRACING)? "en": "dis");
+		if (toggled(TRACING) && tracefile_name != NULL) {
+			action_output("Trace file is %s.", tracefile_name);
+		} else {
+			action_output("Tracing is %sabled.",
+			    toggled(TRACING)? "en": "dis");
+		}
 		return;
 	}
 
 	if (!strcasecmp(params[0], "Data") ||
 	    !strcasecmp(params[0], "Keyboard")) {
 		/* Skip. */
-		arg0 = 1;
+		arg0++;
 	}
 	if (!strcasecmp(params[arg0], "Off")) {
 		on = False;
+		arg0++;
 		if (*num_params > arg0) {
 			popup_an_error("Trace: Too many arguments for 'Off'");
 			return;
 		}
+		if (!toggled(TRACING)) {
+			return;
+		}
 	} else if (!strcasecmp(params[arg0], "On")) {
 		on = True;
+		arg0++;
 		if (*num_params == arg0) {
 			/* Nothing else to do. */
 		} else if (*num_params == arg0 + 1) {
-		    	trace_set_trace_file(params[arg0]);
+			if (toggled(TRACING)) {
+				popup_an_error("Trace: filename argument "
+					"ignored.");
+			} else {
+				trace_set_trace_file(params[arg0]);
+			}
 		} else {
 			popup_an_error("Trace: Too many arguments for 'On'");
 			return;
 		}
 	} else {
-		popup_an_error("Trace(): Must be On or Off");
+		popup_an_error("Trace: Parameter must be On or Off");
 		return;
 	}
 
 	if ((on && !toggled(TRACING)) || (!on && toggled(TRACING))) {
 		do_toggle(TRACING);
+		if (!on) {
+			action_output("Tracing stopped.");
+		}
 	}
 
 	if (tracefile_name != NULL) {
