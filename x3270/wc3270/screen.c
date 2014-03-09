@@ -2823,13 +2823,11 @@ screen_wait_for_key(char *c)
 	/* Get the next keyboard input event. */
 	do {
 	    	ReadConsoleInputA(chandle, &ir, 1, &nr);
-	} while ((ir.EventType != KEY_EVENT) ||
-		 !ir.Event.KeyEvent.bKeyDown ||
-		 ((c == NULL) &&
-		  (ir.Event.KeyEvent.uChar.AsciiChar & 0xff) < ' '));
+	} while ((ir.EventType != KEY_EVENT) || !ir.Event.KeyEvent.bKeyDown);
 
-	if (c != NULL)
+	if (c != NULL) {
 		*c = ir.Event.KeyEvent.uChar.AsciiChar;
+	}
 
 	return (ir.Event.KeyEvent.uChar.AsciiChar == 'q') ||
 	       (ir.Event.KeyEvent.uChar.AsciiChar == 'Q');
