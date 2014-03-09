@@ -100,7 +100,7 @@ static void interact(void);
 static void stop_pager(void);
 
 #if defined(HAVE_LIBREADLINE) /*[*/
-static CPPFunction attempted_completion;
+static char **attempted_completion();
 static char *completion_entry(const char *, int);
 #endif /*]*/
 
