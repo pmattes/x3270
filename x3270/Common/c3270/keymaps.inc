@@ -121,7 +121,7 @@ XX_LP
 Keymap entries are case-sensitive and modifier-specific.
 This means that a keymap for the XX_FB(b) key will match only a
 lowercase XX_FB(b).
-Actions for uppercase XX_FB(B), or for XX_FB(Alt-b) or XX_FB(Control-B),
+Actions for uppercase XX_FB(B), or for XX_FB(Alt-B),
 must be specified separately.
 ifelse(XX_PRODUCT,wc3270,
 `XX_LP

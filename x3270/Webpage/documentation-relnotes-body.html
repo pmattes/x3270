@@ -5,9 +5,22 @@
  <li>[<i>wc3270</i>] Added <b>Esc</b> as an alias for <b>ESCAPE</b> in keymaps.
   </li>
 </ul>
-<h2>Changes in version 3.3.14ga7, Nn. January 2014</h2>
+<h2>Changes in version 3.3.14ga7, Nn. March 2014</h2>
 <ul>
- <li>Fixed some man pages that accidentally ended up as html.</li>
+ <li>[<i>c3270</i>, <i>wc3270</i></i>] Corrected a problem where the
+  <b>trace on</b> command at the <b>c3270></b> prompt resulted in tracing to
+  a file named <b>on</b>.</li>
+ <li>[<i>c3270</i>, <i>wc3270</i></i>] Reversed the order of keymaps.
+  User-specified keymaps appear first, with later-specified ones before
+  earlier-specified ones, so the override relationships are more obvious.
+  On Windows, this also resolves the rules for ambiguous keymaps -- the first
+  match wins, given the new ordering rules.</li>
+ <li>[<i>wc3270</i></i>] Fixed a problem with printable virtual key events
+  being interpreted incorrectly, even though they were traced correctly, for
+  example, Ctrl-Shift-3.</li>
+ <li>[<i>wc3270</i></i>] Fixed a problem with the <b>RightCtrl</b> modifier
+  in a keymap being interpreted as <b>Ctrl</b>.
+ <li>[<i>wc3270</i>Fixed some man pages that accidentally ended up as html.</li>
 </ul>
 <h2>Changes in version 3.3.14ga6, 23. January 2014</h2>
 <ul>
