@@ -182,7 +182,7 @@ static char     vlnext;
 #endif /*]*/
 
 static int	tn3270e_negotiated = 0;
-static enum { E_NONE, E_3270, E_NVT, E_SSCP } tn3270e_submode = E_NONE;
+static enum { E_UNBOUND, E_3270, E_NVT, E_SSCP } tn3270e_submode = E_UNBOUND;
 #if defined(X3270_TN3270E) /*[*/
 static int	tn3270e_bound = 0;
 static unsigned char *bind_image = NULL;
@@ -1076,6 +1076,9 @@ net_connected(void)
 	}
 #endif /*]*/
 
+	/* Done with SSL or proxy. */
+	cstate = CONNECTED_INITIAL;
+
 	/* set up telnet options */
 	(void) memset((char *) myopts, 0, sizeof(myopts));
 	(void) memset((char *) hisopts, 0, sizeof(hisopts));
@@ -1102,7 +1105,7 @@ net_connected(void)
 	ns_rsent = 0;
 	syncing = 0;
 	tn3270e_negotiated = 0;
-	tn3270e_submode = E_NONE;
+	tn3270e_submode = E_UNBOUND;
 #if defined(X3270_TN3270E) /*[*/
 	tn3270e_bound = 0;
 #endif /*]*/
@@ -2221,6 +2224,17 @@ tn3270e_negotiate(void)
 			}
 			tn3270e_negotiated = 1;
 			trace_dsn("TN3270E option negotiation complete.\n");
+
+			/*
+			 * If the host does not support BIND_IMAGE, then we
+			 * must go straight to 3270 mode. We do not implicitly
+			 * unlock the keyboard, though -- that requires a
+			 * Write command from the host.
+			 */
+			if (!(e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE))) {
+				tn3270e_submode = E_3270;
+			}
+
 			check_in3270();
 			break;
 
@@ -2477,6 +2491,46 @@ process_bind(unsigned char *buf, int buflen)
 # endif /*]*/
 		}
 	}
+
+	/* A BIND implicitly puts us in 3270 mode. */
+	tn3270e_submode = E_3270;
+}
+#endif /*]*/
+
+#if defined(X3270_TRACE) /*[*/
+/* Decode an UNBIND reason. */
+static const char *
+unbind_reason (unsigned char r)
+{
+	static char unk[32];
+
+	switch (r) {
+	case TN3270E_UNBIND_NORMAL:
+		return "normal";
+	case TN3270E_UNBIND_BIND_FORTHCOMING:
+		return "BIND forthcoming";
+	case TN3270E_UNBIND_VR_INOPERATIVE:
+		return "virtual route inoperative";
+	case TN3270E_UNBIND_RX_INOPERATIVE:
+		return "route extension inoperative";
+	case TN3270E_UNBIND_HRESET:
+		return "hierarchical reset";
+	case TN3270E_UNBIND_SSCP_GONE:
+		return "SSCP gone";
+	case TN3270E_UNBIND_VR_DEACTIVATED:
+		return "virtual route deactivated";
+	case TN3270E_UNBIND_LU_FAILURE_PERM:
+		return "unrecoverable LU failure";
+	case TN3270E_UNBIND_LU_FAILURE_TEMP:
+		return "recoverable LU failure";
+	case TN3270E_UNBIND_CLEANUP:
+		return "cleanup";
+	case TN3270E_UNBIND_BAD_SENSE:
+		return "bad sense code or user-supplied sense code";
+	default:
+		snprintf(unk, sizeof(unk), "unknown X'%02x'", r);
+		return unk;
+	}
 }
 #endif /*]*/
 
@@ -2555,6 +2609,11 @@ process_eor(void)
 		case TN3270E_DT_UNBIND:
 			if (!(e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE)))
 				return 0;
+
+			if ((ibptr - ibuf) > EH_SIZE) {
+				trace_ds("< UNBIND %s\n",
+					unbind_reason(ibuf[EH_SIZE]));
+			}
 			tn3270e_bound = 0;
 			/*
 			 * Undo any screen-sizing effects from a previous BIND.
@@ -2564,8 +2623,7 @@ process_eor(void)
 			altROWS = maxROWS;
 			altCOLS = maxCOLS;
 			ctlr_erase(False);
-			if (tn3270e_submode == E_3270)
-				tn3270e_submode = E_NONE;
+			tn3270e_submode = E_UNBOUND;
 			check_in3270();
 			return 0;
 		case TN3270E_DT_NVT_DATA:
@@ -3065,27 +3123,27 @@ check_in3270(void)
 	enum cstate new_cstate = NOT_CONNECTED;
 #if defined(X3270_TRACE) /*[*/
 	static const char *state_name[] = {
-		"unconnected",
-		"resolving hostname",
-		"TCP connection pending",
-		"negotiating SSL or proxy",
-		"connected; 3270 state unknown",
-		"TN3270 NVT",
-		"TN3270 3270",
-		"TN3270E",
-		"TN3270E NVT",
-		"TN3270E SSCP-LU",
-		"TN3270E 3270"
+		"unconnected",				/* NOT_CONNECTED */
+		"resolving hostname",			/* RESOLVING */
+		"TCP connection pending",		/* PENDING */
+		"negotiating SSL or proxy",		/* NEGOTIATING */
+		"connected; 3270 state unknown",	/* CONNECTED_INITIAL */
+		"TN3270 NVT",				/* CONNECTED_ANSI */
+		"TN3270 3270",				/* CONNECTED_3270 */
+		"TN3270E unbound",			/* CONNECTED_UNBOUND */
+		"TN3270E NVT",				/* CONNECTED_NVT */
+		"TN3270E SSCP-LU",			/* CONNECTED_SSCP */
+		"TN3270E 3270"				/* CONNECTED_TN3270E */
 	};
 #endif /*]*/
 
 #if defined(X3270_TN3270E) /*[*/
 	if (myopts[TELOPT_TN3270E]) {
 		if (!tn3270e_negotiated)
-			new_cstate = CONNECTED_INITIAL_E;
+			new_cstate = CONNECTED_UNBOUND;
 		else switch (tn3270e_submode) {
-		case E_NONE:
-			new_cstate = CONNECTED_INITIAL_E;
+		case E_UNBOUND:
+			new_cstate = CONNECTED_UNBOUND;
 			break;
 		case E_NVT:
 			new_cstate = CONNECTED_NVT;
@@ -3147,7 +3205,7 @@ check_in3270(void)
 		/* If we fell out of TN3270E, remove the state. */
 		if (!myopts[TELOPT_TN3270E]) {
 			tn3270e_negotiated = 0;
-			tn3270e_submode = E_NONE;
+			tn3270e_submode = E_UNBOUND;
 			tn3270e_bound = 0;
 		}
 #endif /*]*/
@@ -3476,14 +3534,14 @@ net_add_dummy_tn3270e(void)
 {
 	tn3270e_header *h;
 
-	if (!IN_E || tn3270e_submode == E_NONE)
+	if (!IN_E || tn3270e_submode == E_UNBOUND)
 		return False;
 
 	space3270out(EH_SIZE);
 	h = (tn3270e_header *)obptr;
 
 	switch (tn3270e_submode) {
-	case E_NONE:
+	case E_UNBOUND:
 		break;
 	case E_NVT:
 		h->data_type = TN3270E_DT_NVT_DATA;
@@ -3673,7 +3731,7 @@ net_abort(void)
 		 * Time, and testers, will tell.
 		 */
 		switch (tn3270e_submode) {
-		case E_NONE:
+		case E_UNBOUND:
 		case E_NVT:
 			break;
 		case E_SSCP:
@@ -4813,11 +4871,8 @@ net_query_connection_state(void)
 		if (IN_E) {
 			switch (tn3270e_submode) {
 			default:
-			case E_NONE:
-				if (tn3270e_bound)
-					return "tn3270e bound";
-				else
-					return "tn3270e unbound";
+			case E_UNBOUND:
+				return "tn3270e unbound";
 			case E_3270:
 				return "tn3270e 3270";
 			case E_NVT:

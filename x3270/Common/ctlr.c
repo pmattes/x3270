@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -185,6 +185,9 @@ ctlr_reinit(unsigned cmask)
 							  maxROWS * maxCOLS));
 		cursor_addr = 0;
 		buffer_addr = 0;
+
+		ea_buf[-1].fa  = FA_PRINTABLE | FA_MODIFY;
+		aea_buf[-1].fa = FA_PRINTABLE | FA_MODIFY;
 	}
 }
 
@@ -327,13 +330,6 @@ ctlr_connect(Boolean ignored _is_unused)
 	ticking_stop();
 	status_untiming();
 
-	if (ever_3270) {
-		ea_buf[-1].fa = FA_PRINTABLE | FA_MODIFY;
-		aea_buf[-1].fa = FA_PRINTABLE | FA_MODIFY;
-	} else {
-		ea_buf[-1].fa = FA_PRINTABLE | FA_PROTECT;
-		aea_buf[-1].fa = FA_PRINTABLE | FA_PROTECT;
-	}
 	if (!IN_3270 || (IN_SSCP && (kybdlock & KL_OIA_TWAIT))) {
 		kybdlock_clr(KL_OIA_TWAIT, "ctlr_connect");
 		status_reset();

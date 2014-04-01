@@ -1,5 +1,23 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
 3.3 is the current development line for the x3270 suite.
+<h2>Changes in version 3.3.14beta8, 31. March 2014</h2>
+<ul>
+ <li>[all 3270] Changed the keyboard to unlock when a BIND-IMAGE is received.
+  This matches the behavior of PCOMM and is consistent with some comments found
+  on IBM webpages. The net result is that the keyboard will be unlocked (and
+  scripts may be allowed to proceed) earlier than with previous versions of the
+  emulators. This is good for talking to hosts that don't send an initial Write
+  command (as can happen with CICS); previously this Write was the only trigger
+  for unlocking the keyboard at connect or BIND time. But it is bad if a script
+  implicitly depended on the old behavior. Scripts confused by this change may
+  need to add a <b>Wait(InputField)</b> to cover these cases.</li>
+ <li>[all 3270] Got rid of the <b>E</b> status for keyboard lock in the
+  scripting prompt. The status is now <b>L</b> (locked) or <b>U</b>
+  (unlocked).</li>
+ <li>[all 3270] Added decoding of UNBIND reasons to traces.</li>
+ <li>[all 3270] Increased the number of situations where keyboard input can
+  result in typeahead instead of drops.</li>
+</ul>
 <h2>Changes in version 3.3.14ga7, 8. March 2014</h2>
 <ul>
  <li>[<i>c3270</i>, <i>wc3270</i></i>] Corrected a problem where the

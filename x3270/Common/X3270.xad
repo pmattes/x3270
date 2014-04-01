@@ -1092,6 +1092,7 @@ x3270.message.charMode:				NVT character mode
 x3270.message.lineMode:				NVT line mode
 x3270.message.dsMode:				3270 mode
 x3270.message.sscpMode:				SSCP-LU mode
+x3270.message.unboundMode:			unbound mode
 x3270.message.tn3270eOpts:			TN3270E options:
 x3270.message.tn3270eNoOpts:			No TN3270E options
 x3270.message.connectionPending:		Connection pending to:
