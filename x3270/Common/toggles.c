@@ -79,6 +79,21 @@ do_menu_toggle(int ix)
 	do_toggle_reason(ix, TT_XMENU);
 }
 
+#if defined(X3270_TRACE) /*[*/
+static void
+init_toggle_fallible(int ix)
+{
+	if (toggled(ix)) {
+		appres.toggle[ix].upcall(&appres.toggle[ix], TT_INITIAL);
+# if defined(X3270_MENUS) || defined(C3270) /*[*/
+		if (!toggled(ix)) {
+			menubar_retoggle(&appres.toggle[ix], ix);
+		}
+# endif /*]*/
+	}
+}
+#endif /*]*/
+
 /*
  * Called from system initialization code to handle initial toggle settings.
  */
@@ -115,12 +130,8 @@ initialize_toggles(void)
 #endif /*]*/
 
 #if defined(X3270_TRACE) /*[*/
-	if (toggled(TRACING))
-		appres.toggle[TRACING].upcall(&appres.toggle[TRACING],
-		    TT_INITIAL);
-	if (toggled(SCREEN_TRACE))
-		appres.toggle[SCREEN_TRACE].upcall(&appres.toggle[SCREEN_TRACE],
-		    TT_INITIAL);
+	init_toggle_fallible(TRACING);
+	init_toggle_fallible(SCREEN_TRACE);
 #endif /*]*/
 }
 
