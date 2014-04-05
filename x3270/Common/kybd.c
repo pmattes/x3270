@@ -100,7 +100,7 @@ static unsigned char pa_xlate[] = {
 #define PA_SZ	(sizeof(pa_xlate)/sizeof(pa_xlate[0]))
 static ioid_t unlock_id = NULL_IOID;
 static time_t unlock_delay_time;
-Boolean key_Character(int code, Boolean with_ge, Boolean pasting,
+static Boolean key_Character(int code, Boolean with_ge, Boolean pasting,
 			     Boolean *skipped);
 static Boolean flush_ta(void);
 static void key_AID(unsigned char aid_code);
@@ -416,12 +416,11 @@ kybd_in3270(Boolean in3270 _is_unused)
 	}
 
 	switch ((int)cstate) {
-	case CONNECTED_INITIAL_E:
+	case CONNECTED_UNBOUND:
 		/*
-		 * Either we just negotiated TN3270E, or we just processed
-		 * and UNBIND from the host.  In either case, we are now
-		 * awaiting a first unlock from the host, or a transition to
-		 * 3270, NVT or SSCP-LU mode.
+		 * We just processed and UNBIND from the host. We are waiting
+		 * for a BIND, or data to switch us to 3270, NVT or SSCP-LU
+		 * mode.
 		 */
 		kybdlock_set(KL_AWAITING_FIRST, "kybd_in3270");
 		break;
@@ -434,6 +433,18 @@ kybd_in3270(Boolean in3270 _is_unused)
 		 */
 		kybdlock_clr(-1, "kybd_in3270");
 		break;
+	case CONNECTED_TN3270E:
+		/*
+		 * We are in TN3270E 3270 mode. If we were explicitly bound,
+		 * then the keyboard must be unlocked now. If not, we are
+		 * implicitly in 3270 mode because the host did not negotiate
+		 * BIND notifications, and we should continue to wait for a
+		 * Write command before unlocking the keyboard.
+		 */
+		if (net_bound()) {
+		    kybdlock_clr(-1, "kybd_in3270");
+		}
+		/* else fall through... */
 	default:
 		/*
 		 * We just transitioned into or out of 3270 mode.
@@ -803,7 +814,7 @@ key_Character_wrapper(Widget w _is_unused, XEvent *event _is_unused, String *par
  * Handle an ordinary displayable character key.  Lots of stuff to handle
  * insert-mode, protected fields and etc.
  */
-/*static*/ Boolean
+static Boolean
 key_Character(int code, Boolean with_ge, Boolean pasting, Boolean *skipped)
 {
 	register int	baddr, faddr, xaddr;
@@ -1375,6 +1386,26 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	if (skipped != NULL)
 		*skipped = False;
 
+	if (kybdlock) {
+	    char ubuf[32];
+	    const char *apl_name;
+
+	    if (keytype == KT_STD) {
+		snprintf(ubuf, sizeof(ubuf), "U+%04x", ucs4);
+		enq_ta(Key_action, ubuf, NULL);
+	    } else {
+		/* APL character */
+		apl_name = KeySymToAPLString(ucs4);
+		if (apl_name != NULL) {
+		    snprintf(ubuf, sizeof(ubuf), "apl_%s", apl_name);
+		    enq_ta(Key_action, ubuf, NULL);
+		} else {
+		    trace_event("  dropped (invalid key type or name)\n");
+		}
+	    }
+	    return;
+	}
+
 	ak.keysym = ucs4;
 	ak.keytype = keytype;
 
@@ -1451,7 +1482,25 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	}
 #endif /*]*/
 	else {
-		trace_event("  dropped (not connected)\n");
+		const char *why;
+
+		switch (cstate) {
+		case NOT_CONNECTED:
+			why = "connected";
+			break;
+		case RESOLVING:
+		case PENDING:
+		case NEGOTIATING:
+		case CONNECTED_INITIAL:
+		default:
+			why = "negotiated";
+			break;
+		case CONNECTED_UNBOUND:
+			why = "bound";
+			break;
+		}
+
+		trace_event("  dropped (not %s)\n", why);
 	}
 }
 

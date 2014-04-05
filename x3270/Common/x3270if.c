@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,14 +26,25 @@
  */
 
 /*
- * Script interface utility for x3270, c3270 and s3270.
+ * Script interface utility for x3270, c3270, wc3270, s3270 and ws3270.
  *
- * Accesses an x3270 command stream on the file descriptors defined by the
- * environment variables X3270OUTPUT (output from x3270, input to script) and
- * X3270INPUT (input to x3270, output from script).
+ * Accesses an emulator command stream in one of several different ways:
  *
- * Can also access a command stream via a socket, whose TCP port is defined by
- * the environment variable X3270PORT.
+ * - (Unix only) Using the file descriptors defined by the environment
+ *   variables X3270OUTPUT (output from the emulator, input to script) and
+ *   X3270INPUT (input to the emulator, output from script). These are
+ *   automatically passed to child scripts by the Unix emulators' Script()
+ *   action.
+ *
+ * - Using a loopback IPv4 socket whose TCP port is defined by the
+ *   environment variable X3270PORT. This is automatically passed to child
+ *   scripts by the Windows emulators' Script() action.
+ *
+ * - (Unix only) Using the Unix-domain socket /tmp/x3sck.<x3270-pid>. This
+ *   socket is created by the Unix emulators' -socket option.
+ *
+ * - Using a loopback IPv4 socket whose TCP port is passed in explicitly.
+ *   This port is bound by the emulators by the -scriptport option.
  */
 
 #include "conf.h"
@@ -49,7 +60,6 @@
 # include <signal.h>
 # include <errno.h>
 # include <stdlib.h>
-# include <fcntl.h>
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <sys/un.h>
@@ -73,17 +83,31 @@ static char *me;
 static int verbose = 0;
 static char buf[IBS];
 
-#if !defined(_WIN32) /*[*/
-static void iterative_io(int pid);
-#endif /*]*/
+static void iterative_io(int pid, unsigned short port);
 static void single_io(int pid, unsigned short port, int fn, char *cmd);
 
 static void
 usage(void)
 {
 	(void) fprintf(stderr, "\
-usage: %s [-v] [-S] [-s field] [-p pid] [-t port] [action[(param[,...])]]\n\
-       %s -i\n", me, me);
+usage: %s [options] action[(param[,...])]\n\
+           execute the named action\n\
+       %s [options] -s field\n\
+           display status field 0..12\n\
+       %s [options] -S\n\
+           display all status fields\n\
+       %s [options] -i\n\
+           shuttle commands and responses between stdin/stdout and emulator\n\
+    options:\n\
+       -v\n\
+           verbose operation\n"
+#if !defined(_WIN32) /*[*/
+"       -p pid\n\
+           connect to process <pid>\n"
+#endif /*]*/
+"       -t port\n\
+           connect to TCP port <port>\n",
+	    me, me, me, me);
 	exit(2);
 }
 
@@ -133,12 +157,12 @@ main(int argc, char *argv[])
 	/* Parse options. */
 	while ((c = getopt(argc, argv, "ip:s:St:v")) != -1) {
 		switch (c) {
-#if !defined(_WIN32) /*[*/
 		    case 'i':
 			if (fn >= 0)
 				usage();
 			iterative++;
 			break;
+#if !defined(_WIN32) /*[*/
 		    case 'p':
 			pid = (int)strtoul(optarg, &ptr, 0);
 			if (ptr == optarg || *ptr != '\0' || pid <= 0) {
@@ -202,11 +226,9 @@ main(int argc, char *argv[])
 #endif /*]*/
 
 	/* Do the I/O. */
-#if !defined(_WIN32) /*[*/
 	if (iterative)
-		iterative_io(pid);
+		iterative_io(pid, port);
 	else
-#endif /*]*/
 		single_io(pid, port, fn, argv[optind]);
 	return 0;
 }
@@ -465,10 +487,9 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 	exit(xs);
 }
 
-#if !defined(_WIN32) /*[*/
-/* Act as a passive pipe between 'expect' and x3270. */
+/* Act as a passive pipe to the emulator. */
 static void
-iterative_io(int pid)
+iterative_io(int pid, unsigned short port)
 {
 #	define N_IO 2
 	struct {
@@ -476,10 +497,11 @@ iterative_io(int pid)
 		int rfd, wfd;
 		char buf[IBS];
 		int offset, count;
-	} io[N_IO];	/* [0] is program->x3270, [1] is x3270->program */
+	} io[N_IO];	/* [0] is script->emulator, [1] is emulator->script */
 	fd_set rfds, wfds;
 	int fd_max = 0;
 	int i;
+	char *port_env;
 
 #ifdef DEBUG
 	if (verbose) {
@@ -489,27 +511,32 @@ iterative_io(int pid)
 #endif
 
 	/* Get the x3270 file descriptors. */
-	io[0].name = "program->x3270";
+	io[0].name = "script->emulator";
 	io[0].rfd = fileno(stdin);
+#if !defined(_WIN32) /*[*/
 	if (pid)
 		io[0].wfd = usock(pid);
 	else
+#endif /*]*/
+	if (port) {
+		io[0].wfd = tsock(port);
+	} else if ((port_env = getenv("X3270PORT")) != NULL) {
+		io[0].wfd = tsock(atoi(port_env));
+	} else {
 		io[0].wfd = fd_env("X3270INPUT");
-	io[1].name = "x3270->program";
-	if (pid)
+	}
+	io[1].name = "emulator->script";
+	if (pid || port || (port_env != NULL)) {
 		io[1].rfd = dup(io[0].wfd);
-	else
+	} else {
 		io[1].rfd = fd_env("X3270OUTPUT");
+	}
 	io[1].wfd = fileno(stdout);
 	for (i = 0; i < N_IO; i++) {
 		if (io[i].rfd > fd_max)
 			fd_max = io[i].rfd;
 		if (io[i].wfd > fd_max)
 			fd_max = io[i].wfd;
-		(void) fcntl(io[i].rfd, F_SETFL,
-		    fcntl(io[i].rfd, F_GETFL, 0) | O_NDELAY);
-		(void) fcntl(io[i].wfd, F_SETFL,
-		    fcntl(io[i].wfd, F_GETFL, 0) | O_NDELAY);
 		io[i].offset = 0;
 		io[i].count = 0;
 	}
@@ -518,6 +545,10 @@ iterative_io(int pid)
 	for (;;) {
 		int rv;
 
+		/*
+		 * XXX: On Unix, we can use select(), but on Windows, we need
+		 * to use WaitForMultipleObjects().
+		 */
 		FD_ZERO(&rfds);
 		FD_ZERO(&wfds);
 
@@ -546,8 +577,9 @@ iterative_io(int pid)
 			perror("x3270if: select");
 			exit(2);
 		}
-		if (verbose)
+		if (verbose) {
 			(void) fprintf(stderr, "select->%d\n", rv);
+		}
 
 		for (i = 0; i < N_IO; i++) {
 			if (io[i].count) {
@@ -565,10 +597,11 @@ iterative_io(int pid)
 					io[i].offset += rv;
 					io[i].count -= rv;
 #ifdef DEBUG
-					if (verbose)
+					if (verbose) {
 						(void) fprintf(stderr,
 						    "write(%s)->%d\n",
 						    io[i].name, rv);
+					}
 #endif
 				}
 			} else if (FD_ISSET(io[i].rfd, &rfds)) {
@@ -584,12 +617,12 @@ iterative_io(int pid)
 				io[i].offset = 0;
 				io[i].count = rv;
 #ifdef DEBUG
-				if (verbose)
+				if (verbose) {
 					(void) fprintf(stderr,
 					    "read(%s)->%d\n", io[i].name, rv);
+				}
 #endif
 			}
 		}
 	}
 }
-#endif /*]*/

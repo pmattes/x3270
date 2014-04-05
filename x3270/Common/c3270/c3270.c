@@ -295,7 +295,7 @@ usage(const char *msg)
 /* Callback for connection state changes. */
 static void
 main_connect(Boolean ignored)
-{       
+{
 	if (CONNECTED || appres.disconnect_clear) {
 #if defined(C3270_80_132) /*[*/
 		if (appres.altscreen != CN)
@@ -427,7 +427,7 @@ main(int argc, char *argv[])
 	sms_init();
 
 	register_schange(ST_CONNECT, main_connect);
-        register_schange(ST_3270_MODE, main_connect);
+	register_schange(ST_3270_MODE, main_connect);
         register_schange(ST_EXITING, main_exiting);
 #if defined(X3270_FT) /*[*/
 	ft_init();
@@ -1097,9 +1097,13 @@ status_dump(void)
 		} else if (IN_3270) {
 			action_output("  %s%s, %s", emode,
 			    get_message("dsMode"), ts);
-		} else
+		} else if (cstate == CONNECTED_UNBOUND) {
+			action_output("  %s%s, %s", emode,
+			    get_message("unboundMode"), ts);
+		} else {
 			action_output("  %s, %s",
 				get_message("unnegotiated"), ts);
+		}
 
 #if defined(X3270_TN3270E) /*[*/
 		eopts = tn3270e_current_opts();

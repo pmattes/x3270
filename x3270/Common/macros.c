@@ -2487,10 +2487,8 @@ status_string(void)
 
 	if (!kybdlock)
 		kb_stat = 'U';
-	else if (!CONNECTED || KBWAIT)
-		kb_stat = 'L';
 	else
-		kb_stat = 'E';
+		kb_stat = 'L';
 
 	if (formatted)
 		fmt_stat = 'F';

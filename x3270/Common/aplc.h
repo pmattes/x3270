@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,4 +30,10 @@
  *		Global declarations for apl.c.
  */
 
+#if defined(X3270_APL) /*[*/
 extern KeySym APLStringToKeysym(char *s, int *is_gep);
+extern const char *KeySymToAPLString(KeySym k);
+#else /*][*/
+#define APLStringToKeysym(s, is_gep)	NoSymbol
+#define KeySymToAPLString(k)		NULL
+#endif

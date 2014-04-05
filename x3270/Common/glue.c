@@ -1581,7 +1581,7 @@ popup_an_errno(int errn, const char *fmt, ...)
 	s = NewString(vmsgbuf);
 
 	if (errn > 0)
-		popup_an_error("%s:\n%s", s, strerror(errn));
+		popup_an_error("%s: %s", s, strerror(errn));
 	else
 		popup_an_error("%s", s);
 	Free(s);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -608,8 +608,12 @@ popup_about_status(void)
 		} else if (IN_3270) {
 			(void) snprintf(fbuf, sizeof(fbuf), "  %s%s, ", emode,
 			    get_message("dsMode"));
-		} else
+		} else if (cstate == CONNECTED_UNBOUND) {
+			(void) snprintf(fbuf, sizeof(fbuf), "  %s%s, ", emode,
+			    get_message("unboundMode"));
+		} else {
 			(void) strcpy(fbuf, "  ");
+		}
 		(void) strcat(fbuf, hms(ns_time));
 
 		MAKE_LABEL(fbuf, 0);

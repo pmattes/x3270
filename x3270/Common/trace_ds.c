@@ -673,7 +673,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 	    ((int)strlen(tfn) > 0 && tfn[strlen(tfn)-1] == '\\')) {
 		popup_an_error("Illegal file name: %s", tfn);
 		Free(tfn);
-		return;
+		goto done;
 	}
 
 	tracef_max = 0;
@@ -690,7 +690,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 				popup_an_error("Must specify a trace file "
 				    "name");
 				free(tfn);
-				return;
+				goto done;
 			}
 		}
 
@@ -698,7 +698,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 			if (pipe(pipefd) < 0) {
 				popup_an_errno(errno, "pipe() failed");
 				Free(tfn);
-				return;
+				goto done;
 			}
 			pipefile = fdopen(pipefd[1], "w");
 			if (pipefile == NULL) {
@@ -706,7 +706,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 				(void) close(pipefd[0]);
 				(void) close(pipefd[1]);
 				Free(tfn);
-				return;
+				goto done;
 			}
 			(void) SETLINEBUF(pipefile);
 			(void) fcntl(pipefd[1], F_SETFD, 1);
@@ -741,7 +741,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 				(void) close(pipefd[1]);
 #endif /*]*/
 				Free(tfn);
-				return;
+				goto done;
 			}
 			tracef_size = ftello(tracef);
 			Replace(tracefile_name,
@@ -833,10 +833,12 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 	wtrace("%s", buf);
 	Free(buf);
 
+done:
 #if defined(X3270_DISPLAY) /*[*/
 	if (w)
 		XtPopdown(trace_shell);
 #endif /*]*/
+	return;
 }
 
 #if defined(X3270_DISPLAY) /*[*/
@@ -945,6 +947,9 @@ toggle_tracing(struct toggle *t _is_unused, enum toggle_type tt)
 	/* If turning on trace and no trace file, open one. */
 	if (toggled(TRACING) && tracef == NULL) {
 		tracefile_on(TRACING, tt);
+		if (tracef == NULL) {
+		    appres.toggle[TRACING].value = False;
+		}
 	}
 
 	/* If turning off trace and not still tracing events, close the
@@ -1205,8 +1210,11 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 				tracefile = tracefile_buf =
 				    screentrace_default_printer();
 		}
-		(void) screentrace_cb(screentrace_how, screentrace_ptype,
-			NewString(tracefile));
+		if (!screentrace_cb(screentrace_how, screentrace_ptype,
+			NewString(tracefile))) {
+
+			appres.toggle[SCREEN_TRACE].value = False;
+		}
 	} else {
 		/* Turn it off. */
 		if (ctlr_any_data() && !trace_skipping)

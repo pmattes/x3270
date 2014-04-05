@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -209,6 +209,22 @@ APLStringToKeysym(char *s, int *is_gep)
 			return axl[i].keysym;
 		}
 	return NoSymbol;
+}
+
+/*
+ * Translation from XK_ symbol to APL character name.
+ */
+const char *
+KeySymToAPLString(KeySym k)
+{
+	int i;
+
+	for (i = 0; axl[i].name; i++) {
+	    if (axl[i].keysym == k) {
+		return axl[i].name;
+	    }
+	}
+	return NULL;
 }
 
 #endif /*]*/
