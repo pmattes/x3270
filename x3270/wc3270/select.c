@@ -69,6 +69,9 @@ static Boolean select_pending = False;
 /* If True, we have a stored start point. */
 static Boolean select_started = False;
 
+/* If True, the current selection was from a double-click. */
+static Boolean word_selected = False;
+
 /* Start of selected area. */
 static int select_start_row;
 static int select_start_col;
@@ -97,15 +100,13 @@ select_init(unsigned max_rows, unsigned max_cols)
 void
 unselect(int baddr, int len)
 {
-	//trace_event("unselect(%d %d)\n", baddr, len);
-
     	/*
 	 * Technically, only the specified area has changed, but intuitively,
 	 * the whole selected rectangle has.
 	 */
-	/*memset(&s_pending[baddr], 0, len);*/
 	select_pending = False;
 	select_started = False;
+	word_selected = False;
 	memset(s_pending, 0, ROWS * COLS);
 	screen_changed = True;
 }
@@ -265,62 +266,57 @@ select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 			}
 			select_pending = True;
 			select_started = True;
+			word_selected = False;
 			select_end_row = row;
 			select_end_col = col;
 			reselect();
-			return True;
-		case SE_BUTTON_UP:
-			/* Button up without button down. What? */
-			trace_event("Button up without pending selection?\n");
-			return True;
-		case SE_MOVE:
-			/* Move without button down. No-op. */
-			trace_event("No-op\n");
-			return True;
+			break;
 		case SE_DOUBLE_CLICK:
-			trace_event("Double click without single?\n");
+			trace_event("Word select\n");
+			select_pending = False;
+			select_start_row = row;
+			select_end_row = row;
+			find_word_end(row, col, &select_start_col,
+				&select_end_col);
+			word_selected = True;
+			reselect();
+			break;
+		default:
 			break;
 		}
-	}
-
-	/* A selection is pending (rubber-banding). */
-	switch (event) {
-	case SE_BUTTON_DOWN:
-		trace_event("Button down while already down?\n");
-		return True;
-	case SE_BUTTON_UP:
-		select_pending = False;
-		if (row == select_start_row &&
-		    col == select_start_col) {
-			/*
-			 * No movement. Call it a cursor move,
-			 * but they might extend it later.
-			 */
-			trace_event("Cursor move\n");
-			s_pending[(row * COLS) + col] = 0;
-			screen_changed = True;
-			return False;
+	} else {
+		/* A selection is pending (rubber-banding). */
+		switch (event) {
+		case SE_BUTTON_UP:
+			select_pending = False;
+			word_selected = False;
+			if (row == select_start_row &&
+			    col == select_start_col) {
+				/*
+				 * No movement. Call it a cursor move,
+				 * but they might extend it later.
+				 */
+				trace_event("Cursor move\n");
+				s_pending[(row * COLS) + col] = 0;
+				screen_changed = True;
+				/* We did not consume the event. */
+				return False;
+			}
+			trace_event("Finish selection.\n");
+			select_end_row = row;
+			select_end_col = col;
+			reselect();
+			break;
+		case SE_MOVE:
+			/* Extend. */
+			trace_event("Extend\n");
+			select_end_row = row;
+			select_end_col = col;
+			reselect();
+			break;
+		default:
+			break;
 		}
-		trace_event("Finish selection.\n");
-		select_end_row = row;
-		select_end_col = col;
-		reselect();
-		break;
-	case SE_MOVE:
-		/* Extend. */
-		trace_event("Extend\n");
-		select_end_row = row;
-		select_end_col = col;
-		reselect();
-		break;
-	case SE_DOUBLE_CLICK:
-		trace_event("Word select\n");
-		select_pending = False;
-		select_start_row = row;
-		select_end_row = row;
-		find_word_end(row, col, &select_start_col, &select_end_col);
-		reselect();
-		break;
 	}
 
 	/* We consumed the event. */
@@ -335,6 +331,8 @@ copy_clipboard_unicode(LPTSTR lptstr)
 {
 	int r, c;
 	int any_row = -1;
+	int ns = 0;
+	Boolean last_cjk_space = False;
 	wchar_t *bp = (wchar_t *)lptstr;
 	enum dbcs_state d;
 	int ch;
@@ -355,43 +353,58 @@ copy_clipboard_unicode(LPTSTR lptstr)
 			if (any_row >= 0 && any_row != r) {
 				*bp++ = '\r';
 				*bp++ = '\n';
+				ns = 0;
+				last_cjk_space = False;
 			}
 			any_row = r;
+
 			d = ctlr_dbcs_state(baddr);
 			if (IS_LEFT(d)) {
 				int xbaddr = baddr;
 
 				if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-				    *bp++ = IDEOGRAPHIC_SPACE;
-				    continue;
+					ch = IDEOGRAPHIC_SPACE;
+				} else {
+					xbaddr = baddr;
+					INC_BA(xbaddr);
+					ch = ebcdic_to_unicode(
+						(ea_buf[baddr].cc << 8) |
+						    ea_buf[xbaddr].cc,
+						CS_BASE, EUO_NONE);
+					if (ch == 0) {
+						ch = IDEOGRAPHIC_SPACE;
+					}
 				}
-
-				xbaddr = baddr;
-				INC_BA(xbaddr);
-				ch = ebcdic_to_unicode((ea_buf[baddr].cc << 8) |
-						      ea_buf[xbaddr].cc,
-						      CS_BASE, EUO_NONE);
-				if (ch == 0) {
-					ch = ' ';
-				}
-				*bp++ = ch;
 			} else if (!IS_RIGHT(d)) {
 				if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-					*bp++ = ' ';
-					continue;
-				}
-
-				ch = ebcdic_to_unicode(ea_buf[baddr].cc,
-					ea_buf[baddr].cs,
-					appres.ascii_box_draw?
-					    EUO_ASCII_BOX: 0);
-				if (ch == 0) {
 					ch = ' ';
+				} else {
+					ch = ebcdic_to_unicode(ea_buf[baddr].cc,
+						ea_buf[baddr].cs,
+						appres.ascii_box_draw?
+						    EUO_ASCII_BOX: 0);
+					if (ch == 0) {
+						ch = ' ';
+					}
+					if (toggled(MONOCASE) && islower(ch)) {
+						ch = toupper(ch);
+					}
 				}
-				if (toggled(MONOCASE) && islower(ch)) {
-					ch = toupper(ch);
+			}
+
+			if (ch == ' ') {
+				if (!word_selected || last_cjk_space) {
+					*bp++ = ' ';
+				} else {
+					ns++;
+				}
+			} else {
+				while (ns) {
+				    *bp++ = ' ';
+				    ns--;
 				}
 				*bp++ = ch;
+				last_cjk_space = (ch == IDEOGRAPHIC_SPACE);
 			}
 		}
 	}
@@ -408,6 +421,8 @@ copy_clipboard_oemtext(LPTSTR lptstr)
 {
 	int r, c;
 	int any_row = -1;
+	int ns = 0;
+	Boolean last_cjk_space = False;
 	char *bp = lptstr;
 	enum dbcs_state d;
 	wchar_t ch;
@@ -428,6 +443,8 @@ copy_clipboard_oemtext(LPTSTR lptstr)
 			if (any_row >= 0 && any_row != r) {
 				*bp++ = '\r';
 				*bp++ = '\n';
+				ns = 0;
+				last_cjk_space = False;
 			}
 			any_row = r;
 			d = ctlr_dbcs_state(baddr);
@@ -435,40 +452,55 @@ copy_clipboard_oemtext(LPTSTR lptstr)
 				int xbaddr = baddr;
 
 				if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-				    *bp++ = ' ';
-				    continue;
+					ch = IDEOGRAPHIC_SPACE;
+				} else {
+					xbaddr = baddr;
+					INC_BA(xbaddr);
+					ch = ebcdic_to_unicode(
+						(ea_buf[baddr].cc << 8) |
+						    ea_buf[xbaddr].cc,
+						CS_BASE, EUO_NONE);
+					if (ch == 0) {
+						ch = IDEOGRAPHIC_SPACE;
+					}
 				}
-
-				xbaddr = baddr;
-				INC_BA(xbaddr);
-				ch = ebcdic_to_unicode((ea_buf[baddr].cc << 8) |
-						      ea_buf[xbaddr].cc,
-						      CS_BASE, EUO_NONE);
-				if (ch == 0) {
-					ch = ' ';
+				while (ns) {
+					*bp++ = ' ';
+					ns--;
 				}
-				(void) WideCharToMultiByte(CP_OEMCP, 0,
-					&ch, 1, bp, 1, "?", NULL);
-				bp++;
+				bp += WideCharToMultiByte(CP_OEMCP, 0, &ch, 1,
+					bp, 1, "?", NULL);
+				last_cjk_space = (ch == IDEOGRAPHIC_SPACE);
 			} else if (!IS_RIGHT(d)) {
 				if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-					*bp++ = ' ';
-					continue;
-				}
-
-				ch = ebcdic_to_unicode(ea_buf[baddr].cc,
-					ea_buf[baddr].cs,
-					appres.ascii_box_draw?
-					    EUO_ASCII_BOX: 0);
-				if (ch == 0) {
 					ch = ' ';
+				} else {
+					ch = ebcdic_to_unicode(ea_buf[baddr].cc,
+						ea_buf[baddr].cs,
+						appres.ascii_box_draw?
+						    EUO_ASCII_BOX: 0);
+					if (ch == 0) {
+						ch = ' ';
+					}
+					if (toggled(MONOCASE) && islower(ch)) {
+						ch = toupper(ch);
+					}
 				}
-				if (toggled(MONOCASE) && islower(ch)) {
-					ch = toupper(ch);
+				if (ch == ' ') {
+					if (!word_selected || last_cjk_space) {
+						*bp++ = ' ';
+					} else {
+						ns++;
+					}
+				} else {
+					while (ns) {
+						*bp++ = ' ';
+						ns--;
+					}
+					bp += WideCharToMultiByte(CP_OEMCP, 0,
+						&ch, 1, bp, 1, "?", NULL);
+					last_cjk_space = False;
 				}
-				(void) WideCharToMultiByte(CP_OEMCP, 0,
-					&ch, 1, bp, 1, "?", NULL);
-				bp++;
 			}
 		}
 	}
@@ -485,6 +517,7 @@ copy_clipboard_text(LPTSTR lptstr)
 {
 	int r, c;
 	int any_row = -1;
+	int ns = 0;
 	char *bp = lptstr;
 	enum dbcs_state d;
 	int ch;
@@ -508,29 +541,39 @@ copy_clipboard_text(LPTSTR lptstr)
 			if (any_row >= 0 && any_row != r) {
 				*bp++ = '\r';
 				*bp++ = '\n';
+				ns = 0;
 			}
 			any_row = r;
 			d = ctlr_dbcs_state(baddr);
 			if (IS_LEFT(d) || IS_RIGHT(d) ||
 				ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-			    *bp++ = ' ';
-			    continue;
-			}
-			nc = ebcdic_to_multibyte_x(ea_buf[baddr].cc,
-				ea_buf[baddr].cs, buf, sizeof(buf),
-				EUO_BLANK_UNDEF |
-				    (appres.ascii_box_draw?
-				     EUO_ASCII_BOX: 0),
-				&u);
-			if (nc == 2) {
-				ch = buf[0];
+			    ch = ' ';
 			} else {
-				ch = ' ';
+				nc = ebcdic_to_multibyte_x(ea_buf[baddr].cc,
+					ea_buf[baddr].cs, buf, sizeof(buf),
+					EUO_BLANK_UNDEF |
+					    (appres.ascii_box_draw?
+					     EUO_ASCII_BOX: 0),
+					&u);
+				if (nc == 2) {
+					ch = buf[0];
+				} else {
+					ch = ' ';
+				}
+				if (toggled(MONOCASE) && islower(ch)) {
+					ch = toupper(ch);
+				}
 			}
-			if (toggled(MONOCASE) && islower(ch)) {
-				ch = toupper(ch);
+
+			if (ch == ' ' && word_selected) {
+				ns++;
+			} else {
+				while (ns) {
+					*bp++ = ' ';
+					ns--;
+				}
+				*bp++ = ch;
 			}
-			*bp++ = ch;
 		}
 	}
 
@@ -579,6 +622,8 @@ Copy_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	int i;
 
 	action_debug(Copy_action, event, params, num_params);
+
+	trace_event("Word %sselected\n", word_selected? "": "not ");
 
 	/* Make sure we have something to do. */
 	if (memchr(s_pending, 1, COLS * ROWS) == NULL) {
