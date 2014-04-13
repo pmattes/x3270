@@ -5,8 +5,11 @@
  <li>[<i>wc3270</i>] Added <b>Esc</b> as an alias for <b>ESCAPE</b> in keymaps.
   </li>
 </ul>
-<h2>Changes in version 3.3.14ga9, nn. April 2014</h2>
+<h2>Changes in version 3.3.14ga9, 13. April 2014</h2>
 <ul>
+ <li>[<i>pr3287</i>, <i>wpr3287</i>] Fixed a problem with misinterpreting
+  NULL (X'00') characters in unformatted mode as spaces, when they should be
+  ignored. This caused printer output to be shifted and sometimes wrapped.</li>
  <li>[<i>wc3270</i>] Corrected the <b>Copy()</b> action so the space after a
   word selected with a double mouse click is not copied to the clipboard.</li>
  <li>[all 3270] Fixed a crash when disabling tracing after opening the trace
