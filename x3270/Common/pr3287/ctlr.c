@@ -1502,10 +1502,11 @@ ctlr_add(unsigned char ebc, ucs4_t c, unsigned char cs, unsigned char gr)
 		} else {
 			/*
 			 * Unformatted, all control characters but CR/NL/FF/EM
-			 * are displayed as spaces.
+			 * and NULL are displayed as spaces.
 			 */
 			if (c != FCORDER_CR && c != FCORDER_NL &&
-			    c != FCORDER_FF && c != FCORDER_EM)
+			    c != FCORDER_FF && c != FCORDER_EM &&
+			    c != FCORDER_NULL)
 				c = ' ';
 		}
 	}
