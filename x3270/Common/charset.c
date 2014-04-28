@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -124,7 +124,7 @@ charset_init(const char *csname)
 # endif /*]*/
 #else /*][*/
 	snprintf(cpname, sizeof(cpname), "CP%d",
-# if defined(WS3270) /*[*/
+# if defined(_WIN32) /*[*/
 		appres.local_cp
 # else /*][*/
 		GetACP()

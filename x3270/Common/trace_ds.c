@@ -483,7 +483,7 @@ create_tracefile_header(const char *mode)
 	wtrace(" Locale codeset: %s\n", locale_codeset);
 #else /*][*/
 	wtrace(" ANSI codepage: %d\n", GetACP());
-# if defined(WS3270) /*[*/
+# if defined(_WIN32) /*[*/
 	wtrace(" Local codepage: %d\n", appres.local_cp);
 # endif /*]*/
 #endif /*]*/

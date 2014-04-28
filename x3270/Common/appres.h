@@ -301,10 +301,10 @@ typedef struct {
 	char	*title;
 #endif /*]*/
 
-#if defined(S3270) /*[*/
-# if defined(WS3270) /*[*/
+#if defined(_WIN32) /*[*/
 	int	local_cp;
-# endif /*]*/
+#endif /*]*/
+#if defined(S3270) /*[*/
 	Boolean	utf8;
 #endif /*]*/
 

@@ -60,11 +60,11 @@ typedef const char *ici_t;	/* new iconv */
 #define DEFAULT_CSNAME	"us"
 
 #if defined(_WIN32) /*[*/
-# if defined(WS3270) /*[*/
-#  define LOCAL_CODEPAGE	appres.local_cp
-# else /*[*/
+# if defined(PR3287) /*[*/
 #  define LOCAL_CODEPAGE	CP_ACP
-# endif /*]*/
+# else /*][*/
+#  define LOCAL_CODEPAGE	appres.local_cp
+# endif /*]*/ 
 #endif /*]*/
 
 /*
