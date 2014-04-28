@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -32,8 +32,7 @@
 /*
  *	ctlr.c
  *		This module handles interpretation of the 3270 data stream and
- *		maintenance of the 3270 device state.  It was split out from
- *		screen.c, which handles X operations.
+ *		maintenance of the 3270 device state.
  *
  */
 
@@ -638,6 +637,8 @@ unicode_to_printer(ucs4_t u, char mb[], int mb_len)
  * newline).  The 'line' variable is always incremented, and may end up
  * pointing past the bottom margin.  The 'pp' variable is set to the left
  * margin.
+ *
+ * We do not observe the -skipcc option with SCS data.
  */
 static int
 dump_scs_line(Boolean reset_pp, Boolean always_nl)
@@ -1502,11 +1503,10 @@ ctlr_add(unsigned char ebc, ucs4_t c, unsigned char cs, unsigned char gr)
 		} else {
 			/*
 			 * Unformatted, all control characters but CR/NL/FF/EM
-			 * and NULL are displayed as spaces.
+			 * are displayed as spaces.
 			 */
 			if (c != FCORDER_CR && c != FCORDER_NL &&
-			    c != FCORDER_FF && c != FCORDER_EM &&
-			    c != FCORDER_NULL)
+			    c != FCORDER_FF && c != FCORDER_EM)
 				c = ' ';
 		}
 	}
@@ -1543,7 +1543,8 @@ ctlr_add(unsigned char ebc, ucs4_t c, unsigned char cs, unsigned char gr)
 static int
 uoutput(char c)
 {
-	static char buf[MAX_LL];
+	static char buf[MAX_LL + 1]; /* room for 132 characters plus
+					carriage control */
 	static int col = 0;
 	static int maxcol = 0;
 	static Boolean last_cr = False;
@@ -1553,6 +1554,9 @@ uoutput(char c)
 	case '\r':
 		if (options.crthru) {
 			for (i = 0; i < maxcol; i++) {
+				if (!i && options.skipcc) {
+					continue;
+				}
 				if (stash(buf[i]) < 0)
 					return -1;
 			}
@@ -1566,6 +1570,9 @@ uoutput(char c)
 		break;
 	case '\n':
 		for (i = 0; i < maxcol; i++) {
+			if (!i && options.skipcc) {
+				continue;
+			}
 			if (stash(buf[i]) < 0)
 				return -1;
 		}
@@ -1582,6 +1589,9 @@ uoutput(char c)
 		last_cr = False;
 		if (any_3270_printable || !options.ffskip) {
 			for (i = 0; i < maxcol; i++) {
+				if (!i && options.skipcc) {
+					continue;
+				}
 				if (stash(buf[i]) < 0)
 					return -1;
 			}
@@ -1661,6 +1671,19 @@ dump_unformatted(void)
 			done = 1;
 			break;
 		default:	/* printable */
+			/*
+			 * Insert a newline if they send a 133rd printable
+			 * character on a line.
+			 *
+			 * If they specified '-skipcc', don't count the first
+			 * character on the line as printable.
+			 */
+			if (++prcol > MAX_LL + (options.skipcc != 0)) {
+				if (uoutput('\n') < 0)
+					return -1;
+				prcol = 0;
+			}
+
 			if (xlate_buf[i] != NULL) {
 				/*
 				 * Custom translation.
@@ -1690,12 +1713,6 @@ dump_unformatted(void)
 					return -1;
 			}
 
-			/* Handle implied newlines. */
-			if (++prcol >= MAX_LL) {
-				if (uoutput('\n') < 0)
-					return -1;
-				prcol = 0;
-			}
 			break;
 		}
 	}
@@ -1734,6 +1751,8 @@ dump_unformatted(void)
  * Nulls are displayed as spaces, except when they constitute an entire line,
  * in which case the line is suppressed.
  * Formfeeds are passed through, and otherwise treated like nulls.
+ *
+ * We do not observe the -skipcc option with formatted data.
  */
 static int
 dump_formatted(void)

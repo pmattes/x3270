@@ -4,6 +4,11 @@
 <ul>
  <li>[<i>x3270</i>] Restored the ability to use the special 3270 fonts with
   code page 1047.</li>
+ <li>[<i>pr3287</i>, <i>wpr3287</i>] Backed out the previous change to ignore
+  NULLs (they really are supposed to be considered blanks in unformatted Write
+  commands). Replaced it with a new <b>-skipcc</b> option to ignore ASA
+  carriage control characters at the beginning of each line; it only applies
+  to unformatted Write commands.</li>
 </ul>
 <h2>Changes in version 3.3.14ga9, 13. April 2014</h2>
 <ul>

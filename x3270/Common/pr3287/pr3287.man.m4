@@ -164,6 +164,10 @@ There is a 5-second delay between reconnect attempts, to reduce network
 thrashing for down or misconfigured hosts.
 XX_TP(XX_FB(XX_DASHED(selfsignedok)))
 Allow self-signed host certificates.
+XX_TP(XX_FB(XX_DASHED(skipcc)))
+For unformatted writes, skip ASA carriage control characters (e.g., blank for
+single-space, `0' for double-space, `1' for formfeed, etc.) in the first
+position of each line of host output.
 XX_TP(XX_FB(XX_DASHED(trace)))
 Turns on data stream tracing.
 Trace information is usually saved in the file
