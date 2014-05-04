@@ -89,7 +89,7 @@ static unsigned char default_gr;
 static unsigned char default_cs;
 static int line_length = MAX_LL;
 static ucs4_t page_buf[MAX_BUF];
-static char *xlate_buf[MAX_BUF];
+static unsigned char *xlate_buf[MAX_BUF];
 int xlate_len[MAX_BUF];
 static int baddr = 0;
 static Boolean page_buf_initted = False;
@@ -251,7 +251,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 
 	if (!page_buf_initted) {
 		(void) memset(page_buf, '\0', MAX_BUF * sizeof(ucs4_t));
-		(void) memset(xlate_buf, '\0', MAX_BUF * sizeof(char *));
+		(void) memset(xlate_buf, '\0',
+			MAX_BUF * sizeof(unsigned char *));
 		(void) memset(xlate_len, '\0', MAX_BUF * sizeof(int));
 		page_buf_initted = True;
 		baddr = 0;
@@ -1528,6 +1529,38 @@ ctlr_add(unsigned char ebc, ucs4_t c, unsigned char cs, unsigned char gr)
 	}
 }
 
+static struct {
+	char buf;		/* printable data */
+	unsigned char *trn;	/* transparent data */
+	unsigned trn_len;	/* length of transparent data */
+} uo_data[MAX_LL + 1];		/* room for full line plus carriage control */
+static unsigned uo_col;		/* current output column */
+static unsigned uo_maxcol;	/* maximum column buffered */
+static Boolean uo_last_cr = False; /* last data was CR */
+
+/*
+ * Dump and free any transparent unformatted data at col.
+ */
+static int
+dump_uo_trn(unsigned col)
+{
+	unsigned i;
+	int rv = 0;
+
+	if (uo_data[col].trn != NULL) {
+		for (i = 0; i < uo_data[col].trn_len; i++) {
+			if (stash(uo_data[col].trn[i]) < 0) {
+				rv = -1;
+				break;
+			}
+		}
+		Free(uo_data[col].trn);
+		uo_data[col].trn = NULL;
+		uo_data[col].trn_len = 0;
+	}
+	return rv;
+}
+
 /*
  * Unformatted output function.  Processes one character of output data.
  *
@@ -1543,81 +1576,107 @@ ctlr_add(unsigned char ebc, ucs4_t c, unsigned char cs, unsigned char gr)
 static int
 uoutput(char c)
 {
-	static char buf[MAX_LL + 1]; /* room for 132 characters plus
-					carriage control */
-	static int col = 0;
-	static int maxcol = 0;
-	static Boolean last_cr = False;
-	int i;
+	unsigned i;
 
 	switch (c) {
 	case '\r':
 		if (options.crthru) {
-			for (i = 0; i < maxcol; i++) {
+			for (i = 0; i < uo_maxcol; i++) {
+				if (dump_uo_trn(i) < 0) {
+					return -1;
+				}
 				if (!i && options.skipcc) {
 					continue;
 				}
-				if (stash(buf[i]) < 0)
+				if (stash(uo_data[i].buf) < 0) {
 					return -1;
+				}
 			}
-			if (stash(c) < 0)
+			if (stash(c) < 0) {
 			    	return -1;
-			col = maxcol = 0;
-			last_cr = True;
+			}
+			uo_col = uo_maxcol = 0;
+			uo_last_cr = True;
 		} else {
-			col = 0;
+			uo_col = 0;
 		}
 		break;
 	case '\n':
-		for (i = 0; i < maxcol; i++) {
+		for (i = 0; i < uo_maxcol; i++) {
+			if (dump_uo_trn(i) < 0) {
+				return -1;
+			}
 			if (!i && options.skipcc) {
 				continue;
 			}
-			if (stash(buf[i]) < 0)
+			if (stash(uo_data[i].buf) < 0)
 				return -1;
 		}
-		if (options.crlf && !last_cr) {
+		if (options.crlf && !uo_last_cr) {
 			if (stash('\r') < 0)
 				return -1;
 		}
 		if (stash(c) < 0)
 			return -1;
-		col = maxcol = 0;
-		last_cr = False;
+		uo_col = uo_maxcol = 0;
+		uo_last_cr = False;
 		break;
 	case '\f':
-		last_cr = False;
+		uo_last_cr = False;
 		if (any_3270_printable || !options.ffskip) {
-			for (i = 0; i < maxcol; i++) {
+			for (i = 0; i < uo_maxcol; i++) {
+				if (dump_uo_trn(i) < 0) {
+					return -1;
+				}
 				if (!i && options.skipcc) {
 					continue;
 				}
-				if (stash(buf[i]) < 0)
+				if (stash(uo_data[i].buf) < 0)
 					return -1;
 			}
 			if (stash(c) < 0)
 				return -1;
 		}
-		col = maxcol = 0;
+		uo_col = uo_maxcol = 0;
 		break;
 	default:
-		last_cr = False;
+		uo_last_cr = False;
 
 		/* Don't overwrite with spaces. */
 		if (c == ' ') {
-			if (col >= maxcol)
-				buf[col++] = c;
+			if (uo_col >= uo_maxcol)
+				uo_data[uo_col++].buf = c;
 			else
-				col++;
+				uo_col++;
 		} else {
-			buf[col++] = c;
+			uo_data[uo_col++].buf = c;
 			any_3270_printable = True;
 		}
-		if (col > maxcol)
-			maxcol = col;
+		if (uo_col > uo_maxcol)
+			uo_maxcol = uo_col;
 		break;
 	}
 	return 0;
+}
+
+/*
+ * Add transparent data to the unformatted output buffer.
+ */
+static void
+uoutput_trn(const unsigned char *s, int len)
+{
+	unsigned char *new;
+
+	if (len <= 0) {
+		return;
+	}
+	new = Realloc(uo_data[uo_col].trn, uo_data[uo_col].trn_len + len);
+	if (uo_data[uo_col].trn != NULL) {
+		memcpy(new, uo_data[uo_col].trn, uo_data[uo_col].trn_len);
+	}
+	memcpy(new + uo_data[uo_col].trn_len, s, len);
+	uo_data[uo_col].trn = new;
+	uo_data[uo_col].trn_len += len;
 }
 
 /*
@@ -1684,30 +1743,24 @@ dump_unformatted(void)
 				prcol = 0;
 			}
 
+			/* Handle transparent data. */
 			if (xlate_buf[i] != NULL) {
-				/*
-				 * Custom translation.
-				 *
-				 * Dump it out transparently, but (naively)
-				 * assume that it takes up one character
-				 * position.
-				 */
-				len = xlate_len[i];
-				mbp = xlate_buf[i];
-			} else {
-#if !defined(_WIN32) /*[*/
-				len = unicode_to_multibyte(c, mb, sizeof(mb));
-#else /*][*/
-				len = unicode_to_printer(c, mb, sizeof(mb));
-#endif /*]*/
-				if (len == 0) {
-					mb[0] = ' ';
-					len = 1;
-				} else {
-					len--;
-				}
-				mbp = mb;
+				uoutput_trn(xlate_buf[i], xlate_len[i]);
+				break;
 			}
+
+#if !defined(_WIN32) /*[*/
+			len = unicode_to_multibyte(c, mb, sizeof(mb));
+#else /*][*/
+			len = unicode_to_printer(c, mb, sizeof(mb));
+#endif /*]*/
+			if (len == 0) {
+				mb[0] = ' ';
+				len = 1;
+			} else {
+				len--;
+			}
+			mbp = mb;
 			for (j = 0; j < len; j++) {
 				if (uoutput(mbp[j]) < 0)
 					return -1;
@@ -1725,7 +1778,7 @@ dump_unformatted(void)
 
 	/* Clear out the buffer. */
 	(void) memset(page_buf, '\0', MAX_BUF * sizeof(ucs4_t));
-	(void) memset(xlate_buf, '\0', MAX_BUF * sizeof(char *));
+	(void) memset(xlate_buf, '\0', MAX_BUF * sizeof(unsigned char *));
 	(void) memset(xlate_len, '\0', MAX_BUF * sizeof(int));
 
 	/* Flush buffered data. */

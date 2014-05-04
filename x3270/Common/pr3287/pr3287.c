@@ -895,7 +895,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 		/* Dump the translation table. */
 		if (xtable != NULL) {
 			int ebc;
-			char *x;
+			unsigned char *x;
 
 			vtrace_nts("Translation table:\n");
 			for (ebc = 0; ebc <= 0xff; ebc++) {
