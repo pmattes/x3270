@@ -1533,7 +1533,7 @@ static struct {
 	char buf;		/* printable data */
 	unsigned char *trn;	/* transparent data */
 	unsigned trn_len;	/* length of transparent data */
-} uo_data[MAX_LL + 1];		/* room for full line plus carriage control */
+} uo_data[MAX_LL + 2];		/* room for full line plus carriage control */
 static unsigned uo_col;		/* current output column */
 static unsigned uo_maxcol;	/* maximum column buffered */
 static Boolean uo_last_cr = False; /* last data was CR */
@@ -1562,6 +1562,33 @@ dump_uo_trn(unsigned col)
 }
 
 /*
+ * Dump pending unformatted output.
+ */
+static int
+dump_uo(void)
+{
+	unsigned i;
+
+	for (i = 0; i < uo_maxcol; i++) {
+		if (dump_uo_trn(i) < 0) {
+			return -1;
+		}
+		if (!i && options.skipcc) {
+			continue;
+		}
+		if (stash(uo_data[i].buf) < 0) {
+			return -1;
+		}
+	}
+	if (uo_maxcol < MAX_LL + 2) {
+		if (dump_uo_trn(uo_maxcol) < 0) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
+/*
  * Unformatted output function.  Processes one character of output data.
  *
  * This function will buffer up to MAX_LL characters of output, until it is
@@ -1576,21 +1603,11 @@ dump_uo_trn(unsigned col)
 static int
 uoutput(char c)
 {
-	unsigned i;
-
 	switch (c) {
 	case '\r':
 		if (options.crthru) {
-			for (i = 0; i < uo_maxcol; i++) {
-				if (dump_uo_trn(i) < 0) {
-					return -1;
-				}
-				if (!i && options.skipcc) {
-					continue;
-				}
-				if (stash(uo_data[i].buf) < 0) {
-					return -1;
-				}
+			if (dump_uo() < 0) {
+				return -1;
 			}
 			if (stash(c) < 0) {
 			    	return -1;
@@ -1602,15 +1619,8 @@ uoutput(char c)
 		}
 		break;
 	case '\n':
-		for (i = 0; i < uo_maxcol; i++) {
-			if (dump_uo_trn(i) < 0) {
-				return -1;
-			}
-			if (!i && options.skipcc) {
-				continue;
-			}
-			if (stash(uo_data[i].buf) < 0)
-				return -1;
+		if (dump_uo() < 0) {
+			return -1;
 		}
 		if (options.crlf && !uo_last_cr) {
 			if (stash('\r') < 0)
@@ -1624,15 +1634,8 @@ uoutput(char c)
 	case '\f':
 		uo_last_cr = False;
 		if (any_3270_printable || !options.ffskip) {
-			for (i = 0; i < uo_maxcol; i++) {
-				if (dump_uo_trn(i) < 0) {
-					return -1;
-				}
-				if (!i && options.skipcc) {
-					continue;
-				}
-				if (stash(uo_data[i].buf) < 0)
-					return -1;
+			if (dump_uo() < 0) {
+				return -1;
 			}
 			if (stash(c) < 0)
 				return -1;
@@ -1780,6 +1783,19 @@ dump_unformatted(void)
 	(void) memset(page_buf, '\0', MAX_BUF * sizeof(ucs4_t));
 	(void) memset(xlate_buf, '\0', MAX_BUF * sizeof(unsigned char *));
 	(void) memset(xlate_len, '\0', MAX_BUF * sizeof(int));
+
+	/* Clear the output state. */
+	for (i = 0; i < MAX_LL + 2; i++) {
+		uo_data[i].buf = 0;
+		if (uo_data[i].trn != NULL) {
+			Free(uo_data[i].trn);
+		}
+		uo_data[i].trn = NULL;
+		uo_data[i].trn_len = 0;
+	}
+	uo_col = 0;
+	uo_maxcol = 0;
+	uo_last_cr = False;
 
 	/* Flush buffered data. */
 #if defined(_WIN32) /*[*/
