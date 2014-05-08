@@ -541,7 +541,7 @@ set_appres_defaults(void)
 	appres.plugin_command = "x3270hist.pl";
 #endif /*]*/
 
-#if defined(WS3270) /*[*/
+#if defined(_WIN32) /*[*/
 	appres.local_cp = GetACP();
 #endif /*]*/
 	appres.devname = "x3270";
@@ -667,7 +667,7 @@ static struct {
 { OptKeymap,   OPT_STRING,  False, ResKeymap,    offset(key_map),
     "<name>[,<name>...]", "Keyboard map name(s)" },
 #endif /*]*/
-#if defined(WS3270) /*[*/
+#if defined(_WIN32) /*[*/
 { OptLocalCp,  OPT_INT,	False, ResLocalCp,   offset(local_cp),
     "<codepage>", "Use <codepage> instead of ANSI codepage for local I/O"
 },
@@ -1081,7 +1081,7 @@ static struct {
 	{ ResKill,	offset(kill),		XRM_STRING },
 	{ ResLnext,	offset(lnext),		XRM_STRING },
 #endif /*]*/
-#if defined(WS3270) /*[*/
+#if defined(_WIN32) /*[*/
 	{ ResLocalCp,	offset(local_cp),	XRM_INT },
 #endif /*]*/
 	{ ResLoginMacro,offset(login_macro),	XRM_STRING },

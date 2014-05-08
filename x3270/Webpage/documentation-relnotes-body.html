@@ -5,10 +5,22 @@
  <li>[<i>wc3270</i>] Added <b>Esc</b> as an alias for <b>ESCAPE</b> in keymaps.
   </li>
 </ul>
+<h2>Changes in version 3.3.14ga11, 3. May 2014</h2>
+<ul>
+ <li>[<i>pr3287</i>, <i>wpr3287</i>] Changed the <b>-xtable</b> option so that
+  the translations are considered transparent data (they are not considered
+  when checking for line wrap or when skipping ASA carriage control
+  characters).</li>
+</ul>
 <h2>Changes in version 3.3.14ga10, 27. April 2014</h2>
 <ul>
  <li>[<i>x3270</i>] Restored the ability to use the special 3270 fonts with
   code page 1047.</li>
+ <li>[<i>pr3287</i>, <i>wpr3287</i>] Backed out the previous change to ignore
+  NULLs (they really are supposed to be considered blanks in unformatted Write
+  commands). Replaced it with a new <b>-skipcc</b> option to ignore ASA
+  carriage control characters at the beginning of each line; it only applies
+  to unformatted Write commands.</li>
 </ul>
 <h2>Changes in version 3.3.14ga9, 13. April 2014</h2>
 <ul>

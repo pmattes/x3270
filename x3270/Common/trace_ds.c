@@ -483,7 +483,7 @@ create_tracefile_header(const char *mode)
 	wtrace(" Locale codeset: %s\n", locale_codeset);
 #else /*][*/
 	wtrace(" ANSI codepage: %d\n", GetACP());
-# if defined(WS3270) /*[*/
+# if defined(_WIN32) /*[*/
 	wtrace(" Local codepage: %d\n", appres.local_cp);
 # endif /*]*/
 #endif /*]*/
@@ -1073,6 +1073,7 @@ screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 	if (fprint_screen_start(screentracef, ptype,
 		    (how == TSS_PRINTER)? FPS_FF_SEP: 0,
 		    NULL,
+		    screentrace_name,
 		    &screentrace_fps) < 0) {
 		popup_an_error("Screen trace start failed.");
 		fclose(screentracef);

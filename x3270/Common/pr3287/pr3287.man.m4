@@ -164,6 +164,10 @@ There is a 5-second delay between reconnect attempts, to reduce network
 thrashing for down or misconfigured hosts.
 XX_TP(XX_FB(XX_DASHED(selfsignedok)))
 Allow self-signed host certificates.
+XX_TP(XX_FB(XX_DASHED(skipcc)))
+For unformatted writes, skip ASA carriage control characters (e.g., blank for
+single-space, `0' for double-space, `1' for formfeed, etc.) in the first
+position of each line of host output.
 XX_TP(XX_FB(XX_DASHED(trace)))
 Turns on data stream tracing.
 Trace information is usually saved in the file
@@ -188,11 +192,10 @@ XX_TP(XX_FB(XX_DASHED(verifycert)))
 Verify the host certificate for tunneled SSL and negotiated SSL/TLS
 connections.
 XX_TP(XX_FB(XX_DASHED(xtable) XX_FI(file)))
-Specifies a file containing a custom translation table.
-The table overrides the EBCDIC-to-ASCII translations specified by the host
-code page, and codes specified in the file are not subject to
-ifelse(XX_PRODUCT,pr3287,locale,printer code page)
-translation.
+Specifies a file containing transparent data translations.
+The file specifies EBCDIC characters that will be translated into transparent
+ASCII data (data that will not be further translated and will not count as
+taking up column(s) on the print line).
 Any printable ECBDIC code can be translated to zero or more ASCII characters.
 XX_IP
 The table consists of lines that look like:
@@ -205,14 +208,10 @@ as numbers in decimal, octal (with a leading 0) or hexadecimal (with a leading
 The XX_FI(ascii-code)s can be specified as numbers in decimal, octal or
 hexadecimal, control codes such as XX_FB(^X), symbolic control codes such
 as XX_FB(CR) or XX_FB(Escape), or as double-quoted strings, following the
-full C-language conventions, such as XX_FB(\r) for a carriage return.
+full C-language conventions, such as XX_FB(XX_BACKSLASH(r)) for a carriage return.
 Comments begin with XX_FB(#), XX_FB(!) or XX_FB(//).
 XX_IP
 Here are some examples of translations.
-XX_BR
-# Translate EBCDIC XX_POSESSIVE(C) to D.
-XX_BR
-ebcdic X'C3' ascii "D"
 XX_BR
 # Expand EBCDIC D to an escape sequence.
 XX_BR

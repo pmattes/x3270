@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Paul Mattes.
+ * Copyright (c) 2013-2014, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,6 +56,7 @@ typedef struct {
 #endif /*]*/
 	const char *proxy_spec;	/* proxy specification */
 	int reconnect;		/* -reconnect */
+	int skipcc;		/* -skipcc */
 #if defined(HAVE_LIBSSL) /*[*/
 	struct {
 		const char *accept_hostname;	/* -accepthostname */

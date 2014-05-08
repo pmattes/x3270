@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2013, Paul Mattes.
+ * Copyright (c) 2000-2014, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,6 +81,8 @@
  *		keep trying to reconnect
  *	    -selfsignedok
  *	        allow self-signed host certificates
+ *	    -skipcc
+ *	    	skip ASA carriage control characters in host output
  *          -syncport port
  *              TCP port for login session synchronization
  *	    -trace
@@ -237,6 +239,8 @@ usage(void)
 #if defined(HAVE_LIBSSL) /*[*/
 "  -selfsignedok    allow self-signed host SSL certificates\n"
 #endif /*]*/
+"  -skipcc          skip ASA carriage control characters in unformatted host\n"
+"                   output\n"
 "  -syncport port   TCP port for login session synchronization\n"
 #if defined(_WIN32) /*[*/
 "  -trace           trace data stream to <wc3270appData>/x3trc.<pid>.txt\n",
@@ -421,6 +425,7 @@ init_options(void)
 #endif /*]*/
 	options.proxy_spec		= NULL;
 	options.reconnect		= 0;
+	options.skipcc			= 0;
 #if defined(HAVE_LIBSSL) /*[*/
 	options.ssl.accept_hostname	= NULL;
 	options.ssl.ca_dir		= NULL;
@@ -730,6 +735,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 			}
 			xtable = argv[i + 1];
 			i++;
+		} else if (!strcmp(argv[i], "-skipcc")) {
+			options.skipcc = 1;
 		} else if (!strcmp(argv[i], "--help")) {
 			usage();
 		} else
@@ -888,7 +895,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 		/* Dump the translation table. */
 		if (xtable != NULL) {
 			int ebc;
-			char *x;
+			unsigned char *x;
 
 			vtrace_nts("Translation table:\n");
 			for (ebc = 0; ebc <= 0xff; ebc++) {

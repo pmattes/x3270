@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Paul Mattes.
+ * Copyright (c) 2013, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,7 +59,7 @@ static struct {
 #define MAX_EX	64
 static struct {
 	int len;	/* -1 for no translation, 0 for empty translation */
-	char expansion[MAX_EX];
+	unsigned char expansion[MAX_EX];
 } xls[256];
 static int xtable_initted = 0;
 
@@ -464,7 +464,7 @@ done:
  *    n expand to <n> returned characters
  */
 int
-xtable_lookup(unsigned char ebc, char **r)
+xtable_lookup(unsigned char ebc, unsigned char **r)
 {
 	if (!xtable_initted || ebc < 0x40) {
 		*r = NULL;
@@ -474,7 +474,7 @@ xtable_lookup(unsigned char ebc, char **r)
 	if (xls[ebc].len > 0) {
 	    	*r = xls[ebc].expansion;
 	} else if (xls[ebc].len == 0) {
-		*r = "";
+		*r = (unsigned char *)"";
 	} else {
 		*r = NULL;
 	}
