@@ -149,7 +149,13 @@ main(int argc, char *argv[])
 #endif /*]*/
 
 	/* Identify yourself. */
-	if ((me = strrchr(argv[0], '/')) != (char *)NULL)
+	if ((me = strrchr(argv[0],
+#if !defined(_WIN32) /*[*/
+			'/'
+#else /*][*/
+			'\\'
+#endif /*]*/
+			)) != (char *)NULL)
 		me++;
 	else
 		me = argv[0];
@@ -217,8 +223,9 @@ main(int argc, char *argv[])
 		if (iterative)
 			usage();
 	}
-	if (pid && port)
+	if (pid && port) {
 	    	usage();
+	}
 
 #if !defined(_WIN32) /*[*/
 	/* Ignore broken pipes. */
@@ -487,6 +494,8 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 	exit(xs);
 }
 
+#if !defined(_WIN32) /*[*/
+
 /* Act as a passive pipe to the emulator. */
 static void
 iterative_io(int pid, unsigned short port)
@@ -545,10 +554,6 @@ iterative_io(int pid, unsigned short port)
 	for (;;) {
 		int rv;
 
-		/*
-		 * XXX: On Unix, we can use select(), but on Windows, we need
-		 * to use WaitForMultipleObjects().
-		 */
 		FD_ZERO(&rfds);
 		FD_ZERO(&wfds);
 
@@ -626,3 +631,170 @@ iterative_io(int pid, unsigned short port)
 		}
 	}
 }
+
+#else /*][*/
+
+static HANDLE stdin_thread;
+static HANDLE stdin_enable_event, stdin_done_event;
+static char stdin_buf[256];
+static int stdin_nr;
+static int stdin_error;
+
+/*
+ * stdin input thread
+ *
+ * Endlessly:
+ * - waits for stdin_enable_event
+ * - reads from stdin
+ * - leaves the input in stdin_buf and the length in stdin_nr
+ * - sets stdin_done_event
+ *
+ * If there is a read error, leaves -1 in stdin_nr and a Windows error code in
+ * stdin_error.
+ */
+static DWORD WINAPI
+stdin_read(LPVOID lpParameter)
+{
+	for (;;) {
+		DWORD rv;
+
+		rv = WaitForSingleObject(stdin_enable_event, INFINITE);
+		switch (rv) {
+		case WAIT_ABANDONED:
+		case WAIT_TIMEOUT:
+		case WAIT_FAILED:
+			stdin_nr = -1;
+			stdin_error = GetLastError();
+			SetEvent(stdin_done_event);
+			break;
+		case WAIT_OBJECT_0:
+			stdin_nr = read(0, stdin_buf, sizeof(stdin_buf));
+			if (stdin_nr < 0) {
+				stdin_error = GetLastError();
+			}
+			SetEvent(stdin_done_event);
+			break;
+		}
+	}
+	return 0;
+}
+
+/* Act as a passive pipe to the emulator. */
+static void
+iterative_io(int pid, unsigned short port)
+{
+	char *port_env;
+    	int s;
+	struct sockaddr_in sin;
+	HANDLE socket_event;
+	HANDLE ha[2];
+	DWORD ret;
+	char buf[1024];
+	int nr;
+
+	if (!port) {
+		port_env = getenv("X3270PORT");
+		if (port_env == NULL) {
+			fprintf(stderr, "Must specify port or put port in "
+				"X3270PORT.\n");
+			exit(2);
+		}
+		port = atoi(port_env);
+		if (port <= 0 || (port & ~0xffff)) {
+			fprintf(stderr, "Invalid X3270PORT.\n");
+			exit(2);
+		}
+	}
+
+	/* Open the socket. */
+	s = socket(PF_INET, SOCK_STREAM, 0);
+	if (s < 0) {
+		fprintf(stderr, "socket failed: error 0x%x\n",
+			(unsigned)WSAGetLastError());
+		exit(2);
+	}
+	memset(&sin, '\0', sizeof(sin));
+	sin.sin_family = AF_INET;
+	sin.sin_port = htons(port);
+	sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	if (connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+		fprintf(stderr, "connect(%u) failed: %s\n",
+			port, win32_strerror(WSAGetLastError()));
+		exit(2);
+	}
+	if (verbose) {
+		fprintf(stderr, "<connected to port %d>\n", port);
+	}
+	socket_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (socket_event == NULL) {
+		fprintf(stderr, "CreateEvent failed: %s\n",
+			win32_strerror(GetLastError()));
+		exit(2);
+	}
+	if (WSAEventSelect(s, socket_event, FD_READ|FD_CLOSE) != 0) {
+		fprintf(stderr, "WSAEventSelect failed: %s\n",
+			win32_strerror(WSAGetLastError()));
+		exit(2);
+	}
+
+	/* Create a thread to read data from the socket. */
+	stdin_enable_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+	stdin_done_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+	stdin_thread = CreateThread(NULL, 0, stdin_read, NULL, 0, NULL);
+	if (stdin_thread == NULL) {
+		fprintf(stderr, "CreateThread failed: %s\n",
+			win32_strerror(GetLastError()));
+		exit(2);
+	}
+	SetEvent(stdin_enable_event);
+
+	ha[0] = socket_event;
+	ha[1] = stdin_done_event;
+	for (;;) {
+		ret = WaitForMultipleObjects(2, ha, FALSE, INFINITE);
+		switch (ret) {
+		case WAIT_OBJECT_0: /* socket input */
+			nr = recv(s, buf, sizeof(buf), 0);
+			if (verbose) {
+				fprintf(stderr, "<%d byte%s from socket>\n",
+					nr, (nr == 1)? "": "s");
+			}
+			if (nr < 0) {
+				fprintf(stderr, "recv failed: %s\n",
+					win32_strerror(WSAGetLastError()));
+				exit(2);
+			}
+			if (nr == 0) {
+				exit(0);
+			}
+			fwrite(buf, 1, nr, stdout);
+			break;
+		case WAIT_OBJECT_0 + 1: /* stdin input */
+			if (verbose) {
+				fprintf(stderr, "<%d byte%s from stdin>\n",
+					stdin_nr, (stdin_nr == 1)? "": "s");
+			}
+			if (stdin_nr < 0) {
+				fprintf(stderr, "stdin read failed: %s\n",
+					win32_strerror(stdin_error));
+				exit(2);
+			}
+			if (stdin_nr == 0) {
+				exit(0);
+			}
+			(void) send(s, stdin_buf, stdin_nr, 0);
+			SetEvent(stdin_enable_event);
+			break;
+		case WAIT_FAILED:
+			fprintf(stderr, "WaitForMultipleObjects failed: %s\n ",
+				win32_strerror(GetLastError()));
+			exit(2);
+		default:
+			fprintf(stderr, "Unexpected return %d from "
+				"WaitForMultipleObjects\n", (int)ret);
+			exit(2);
+		}
+	}
+}
+
+#endif /*]*/
