@@ -928,13 +928,20 @@ parse_set_clear(int *argcp, char **argv)
 		/* Match the name. */
 		i++;
 		for (j = 0; toggle_names[j].name != NULL; j++)
-			if (!strcmp(argv[i], toggle_names[j].name)) {
+			if (!strcasecmp(argv[i], toggle_names[j].name)) {
 				appres.toggle[toggle_names[j].index].value =
 				    is_set;
 				break;
 			}
-		if (toggle_names[j].name == NULL)
-			usage("Unknown toggle name");
+		if (toggle_names[j].name == NULL) {
+			fprintf(stderr, "Unknown toggle name '%s'. Toggle "
+				"names are:\n", argv[i]);
+			for (j = 0; toggle_names[j].name != NULL; j++) {
+			    fprintf(stderr, " %s", toggle_names[j].name);
+			}
+			fprintf(stderr, "\n");
+			exit(1);
+		}
 
 		/* Substitute. */
 		argv_out[argc_out++] = "-xrm";
