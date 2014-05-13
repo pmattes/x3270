@@ -778,7 +778,7 @@ fm_screentrace_printer(void *ignored _is_unused)
 	if (toggled(SCREEN_TRACE))
 		push_macro("ScreenTrace(off)", False);
 	else
-		push_macro("ScreenTrace(on,printer)", False);
+		push_macro("ScreenTrace(on,printer,gdi)", False);
 }
 # endif /*]*/
 

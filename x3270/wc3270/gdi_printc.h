@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2014, Paul Mattes.
+ * Copyright (c) 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,19 +26,19 @@
  */
 
 /*
- *	fprint_screenc.h
- *		Screen printing functions.
+ *	gdi_printc.h
+ *		GDI screen printing functions.
  */
 
-#define FPS_EVEN_IF_EMPTY	0x1	/* print even if screen is blank */
-#define FPS_MODIFIED_ITALIC	0x2	/* print modified fields in italic */
-#define FPS_FF_SEP		0x4	/* use FFs to divide pages in text */
+/* Header for screen snapshots. */
+typedef struct {
+	unsigned signature;	/* Signature, to make sure we haven't gotten
+				   lost */
+	unsigned short rows;	/* Rows */
+	unsigned short cols;	/* Columns */
+} gdi_header_t;
 
-typedef struct _fps *fps_t;
+/* Signature for GDI snapshot files. */
+#define GDI_SIGNATURE		0x33323730
 
-int fprint_screen(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
-	const char *printer_name);
-int fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts,
-	const char *caption, const char *printer_name, fps_t *fps);
-int fprint_screen_body(fps_t fps);
-int fprint_screen_done(fps_t *fps);
+extern int gdi_print(FILE *f, const char *caption, const char *printer_name);

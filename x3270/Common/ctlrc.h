@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009, 2013 Paul Mattes.
+ * Copyright (c) 2005-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -77,6 +77,7 @@ enum pds ctlr_write(unsigned char buf[], int buflen, Boolean erase);
 void ctlr_write_sscp_lu(unsigned char buf[], int buflen);
 struct ea *fa2ea(int baddr);
 int find_field_attribute(int baddr);
+int find_field_attribute_ea(int baddr, struct ea *ea);
 unsigned char get_field_attribute(register int baddr);
 Boolean get_bounded_field_attribute(register int baddr, register int bound,
     unsigned char *fa_out);
@@ -121,10 +122,12 @@ enum dbcs_why { DBCS_FIELD, DBCS_SUBFIELD, DBCS_ATTRIBUTE };
 
 #if defined(X3270_DBCS) /*[*/
 enum dbcs_state ctlr_dbcs_state(int baddr);
+enum dbcs_state ctlr_dbcs_state_ea(int baddr, struct ea *ea);
 extern enum dbcs_state ctlr_lookleft_state(int baddr, enum dbcs_why *why);
 int ctlr_dbcs_postprocess(void);
 #else /*][*/
 #define ctlr_dbcs_state(b)		DBCS_NONE
+#define ctlr_dbcs_state_ea(b, ea)	DBCS_NONE
 #define ctlr_lookleft_state(b, w)	DBCS_NONE
 #define ctlr_dbcs_postprocess()		0
 #endif /*]*/

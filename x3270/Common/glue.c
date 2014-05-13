@@ -1227,7 +1227,9 @@ valid_explicit(const char *resname, unsigned len)
 	    { ResPrinterCommand,		V_FLAT },
 	    { ResPrinterName, 			V_FLAT },
 	    { ResPrintTextFont, 		V_FLAT },
+	    { ResPrintTextHorizontalMargin,	V_FLAT },
 	    { ResPrintTextSize, 		V_FLAT },
+	    { ResPrintTextVerticalMargin,	V_FLAT },
 	    { ResHostColorForDefault,		V_FLAT },
 	    { ResHostColorForIntensified,	V_FLAT },
 	    { ResHostColorForProtected,		V_FLAT },
@@ -1334,6 +1336,7 @@ parse_xrm(const char *arg, const char *where)
 			}
 		}
 	}
+	/* XXX: This needs to work for s3270, too. */
 #if defined(C3270) /*[*/
 	if (address == NULL && valid_explicit(name, rnlen) == 0) {
 		/*

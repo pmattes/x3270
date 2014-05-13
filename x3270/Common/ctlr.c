@@ -360,20 +360,31 @@ ctlr_connect(Boolean ignored _is_unused)
  * Returns -1 if the screen isn't formatted.
  */
 int
-find_field_attribute(int baddr)
+find_field_attribute_ea(int baddr, struct ea *ea)
 {
 	int sbaddr;
 
-	if (!formatted)
-		return -1;
-
 	sbaddr = baddr;    
 	do {   
-		if (ea_buf[baddr].fa)
+		if (ea[baddr].fa) {
 			return baddr;
+		}
 		DEC_BA(baddr);
 	} while (baddr != sbaddr);
 	return -1;
+}
+
+/*
+ * Find the buffer address of the field attribute for a given buffer address.
+ * Returns -1 if the screen isn't formatted.
+ */
+int
+find_field_attribute(int baddr)
+{
+	if (!formatted) {
+		return -1;
+	}
+	return find_field_attribute_ea(baddr, ea_buf);
 }
 
 /*
@@ -2810,9 +2821,15 @@ ctlr_shrink(void)
  * Takes line-wrapping into account, which probably isn't done all that well.
  */
 enum dbcs_state
+ctlr_dbcs_state_ea(int baddr, struct ea *ea)
+{
+	return dbcs? ea[baddr].db: DBCS_NONE;
+}
+
+enum dbcs_state
 ctlr_dbcs_state(int baddr)
 {
-	return dbcs? ea_buf[baddr].db: DBCS_NONE;
+	return ctlr_dbcs_state_ea(baddr, ea_buf);
 }
 #endif /*]*/
 

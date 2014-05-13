@@ -212,8 +212,8 @@ static char *base_keymap =
            "Alt <Key>n: Menu\n"
            "Alt <Key>N: Menu\n"
 # endif /*]*/
-           "Alt <Key>p: PrintText\n"
-           "Alt <Key>P: PrintText\n"
+           "Alt <Key>p: PrintText(gdi)\n"
+           "Alt <Key>P: PrintText(gdi)\n"
           "Ctrl <Key>v: Paste\n"
           "Ctrl <Key>]: Escape\n"
         "Shift <Key>F1: PF(13)\n"
@@ -1301,11 +1301,11 @@ Trace_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 
 /*
  * ScreenTrace(On)
- * ScreenTrace(On,filename)			backwards-compatible
- * ScreenTrace(On,File,filename)		preferred
+ * ScreenTrace(On,filename)			 backwards-compatible
+ * ScreenTrace(On,File,filename)		 preferred
  * ScreenTrace(On,Printer)
- * ScreenTrace(On,Printer,"print command")	Unix
- * ScreenTrace(On,Printer,printername)		Windows
+ * ScreenTrace(On,Printer,"print command")	 Unix
+ * ScreenTrace(On,Printer[,Gdi|WordPad],printername) Windows
  * ScreenTrace(Off)
  */
 void
@@ -1313,10 +1313,15 @@ ScreenTrace_action(Widget w _is_unused, XEvent *event _is_unused,
 	String *params, Cardinal *num_params)
 {
 	Boolean on = False;
+#if defined(_WIN32) /*[*/
+	Boolean is_file = False;
+#endif /*]*/
 	tss_t how = TSS_FILE;
+	ptype_t ptype = P_TEXT;
 	const char *name = NULL;
+	Cardinal px;
 
-	action_debug(Trace_action, event, params, num_params);
+	action_debug(ScreenTrace_action, event, params, num_params);
 
 	if (*num_params == 0) {
 		how = trace_get_screentrace_how();
@@ -1334,48 +1339,7 @@ ScreenTrace_action(Widget w _is_unused, XEvent *event _is_unused,
 		return;
 	}
 
-	if (!strcasecmp(params[0], "On")) {
-		if (toggled(SCREEN_TRACE)) {
-			popup_an_error("Screen tracing is already enabled.");
-			return;
-		}
-		on = True;
-		switch (*num_params) {
-		case 1:
-			how = TSS_FILE;
-			name = NULL;
-			break;
-		case 2:
-			if (!strcasecmp(params[1], "Printer")) {
-				how = TSS_PRINTER;
-#if !defined(_WIN32) /*[*/
-				name = get_resource(ResPrintTextCommand);
-#else /*][*/
-				name = get_resource(ResPrinterName);
-#endif /*]*/
-			} else {
-				how = TSS_FILE;
-				name = params[1];
-			}
-			break;
-		case 3:
-			if (!strcasecmp(params[1], "File"))
-				how = TSS_FILE;
-			else if (!strcasecmp(params[1], "Printer"))
-				how = TSS_PRINTER;
-			else {
-			    popup_an_error("ScreenTrace(On): Must specify "
-				    "'File' or 'Printer'");
-			    return;
-			}
-			name = params[2];
-			break;
-		default:
-			popup_an_error("ScreenTrace(): Too many arguments "
-				"for 'Off'");
-			return;
-		}
-	} else if (!strcasecmp(params[0], "Off")) {
+	if (!strcasecmp(params[0], "Off")) {
 		if (!toggled(SCREEN_TRACE)) {
 			popup_an_error("Screen tracing is already disabled.");
 			return;
@@ -1386,14 +1350,81 @@ ScreenTrace_action(Widget w _is_unused, XEvent *event _is_unused,
 				"for 'Off'");
 			return;
 		}
-	} else {
+		goto toggle_it;
+	}
+	if (strcasecmp(params[0], "On")) {
 		popup_an_error("ScreenTrace(): Must be 'On' or 'Off'");
 		return;
 	}
 
+	/* Process 'On'. */
+	if (toggled(SCREEN_TRACE)) {
+		popup_an_error("Screen tracing is already enabled.");
+		return;
+	}
+
+	on = True;
+	px = 1;
+
+	if (px >= *num_params) {
+		/*
+		 * No more parameters. Trace to a file, and generate the name.
+		 */
+		goto toggle_it;
+	}
+	if (!strcasecmp(params[px], "File")) {
+	    	px++;
+#if defined(_WIN32) /*[*/
+		is_file = True;
+#endif /*]*/
+	} else if (!strcasecmp(params[px], "Printer")) {
+		px++;
+		how = TSS_PRINTER;
+#if defined(WIN32) /*[*/
+		ptype = P_GDI;
+#endif /*]*/
+	}
+#if defined(_WIN32) /*[*/
+	if (px < *num_params && !strcasecmp(params[px], "Gdi")) {
+		if (is_file) {
+			popup_an_error("ScreenTrace(): Cannot specify "
+				"'File' and 'Gdi'.");
+			return;
+		}
+		px++;
+		how = TSS_PRINTER;
+		ptype = P_GDI;
+	} else if (px < *num_params && !strcasecmp(params[px], "WordPad")) {
+		if (is_file) {
+			popup_an_error("ScreenTrace(): Cannot specify "
+				"'File' and 'WordPad'.");
+			return;
+		}
+		px++;
+		how = TSS_PRINTER;
+		ptype = P_RTF;
+	}
+#endif /*]*/
+	if (px < *num_params) {
+		name = params[px];
+		px++;
+	}
+	if (px < *num_params) {
+		popup_an_error("ScreenTrace(): Too many arguments.");
+		return;
+	}
+	if (how == TSS_PRINTER && name == NULL) {
+#if !defined(_WIN32) /*[*/
+		name = get_resource(ResPrintTextCommand);
+#else /*][*/
+		name = get_resource(ResPrinterName);
+#endif /*]*/
+	}
+
+toggle_it:
 	if ((on && !toggled(SCREEN_TRACE)) || (!on && toggled(SCREEN_TRACE))) {
 		if (on)
-		    	trace_set_screentrace_file(how, P_TEXT, name);
+		    	trace_set_screentrace_file(how, ptype, name);
 		do_toggle(SCREEN_TRACE);
 	}
 
@@ -1409,17 +1440,33 @@ ScreenTrace_action(Widget w _is_unused, XEvent *event _is_unused,
 						name);
 			} else {
 				if (ia_cause == IA_COMMAND)
-					action_output("Tracing to printer "
+					action_output("Tracing to %sprinter "
 #if !defined(_WIN32) /*[*/
 						"with command "
 #endif /*]*/
-						"\"%s\".", name);
+						"\"%s\".",
+#if !defined(_WIN32) /*[*/
+						"",
+#else /*][*/
+						(ptype == P_RTF)? "RTF ":
+						 ((ptype == P_GDI)? "GDI ":
+						  "? "),
+#endif /*]*/
+						name);
 				else
-					popup_an_info("Tracing to printer "
+					popup_an_info("Tracing to %sprinter "
 #if !defined(_WIN32) /*[*/
 						"with command "
 #endif /*]*/
-						"\"%s\".", name);
+						"\"%s\".",
+#if !defined(_WIN32) /*[*/
+						"",
+#else /*][*/
+						(ptype == P_RTF)? "RTF ":
+						 ((ptype == P_GDI)? "GDI ":
+						  "? "),
+#endif /*]*/
+						name);
 			}
 		} else {
 			if (trace_get_screentrace_last_how() == TSS_FILE) {

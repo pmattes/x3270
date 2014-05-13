@@ -407,7 +407,7 @@ enum keytype { KT_STD, KT_GE };
 typedef unsigned long ioid_t;
 
 /* Screen print types. */
-typedef enum { P_TEXT, P_HTML, P_RTF } ptype_t;
+typedef enum { P_TEXT, P_HTML, P_RTF, P_GDI } ptype_t;
 
 /* Usage message with error exit. */
 extern void usage(const char *);

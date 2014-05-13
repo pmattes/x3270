@@ -154,7 +154,13 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 		} else if (!strcasecmp(params[i], "rtf")) {
 			ptype = P_RTF;
 			use_file = True;
-		} else if (!strcasecmp(params[i], "secure")) {
+		}
+#if defined(WC3270) /*[*/
+		else if (!strcasecmp(params[i], "gdi")) {
+			ptype = P_GDI;
+		}
+#endif /*]*/
+		else if (!strcasecmp(params[i], "secure")) {
 #if defined(X3270_DISPLAY) /*[*/
 			secure = True;
 #endif /*]*/
@@ -215,8 +221,9 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 
 #if defined(_WIN32) /*[*/
 	/* On Windows, use rich text. */
-	if (!use_string && !use_file && ptype != P_HTML)
-	    ptype = P_RTF;
+	if (!use_string && !use_file && ptype != P_HTML && ptype != P_GDI) {
+		ptype = P_RTF;
+	}
 #endif /*]*/
 
 	if (name != CN && name[0] == '@') {
@@ -230,12 +237,13 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 #endif /*]*/
 		name++;
 	}
-	if (!use_file && (name == CN || !*name))
+	if (!use_file && (name == CN || !*name)) {
 #if !defined(_WIN32) /*[*/
 		name = "lpr";
 #else /*][*/
 		name = CN;
 #endif /*]*/
+	}
 
 #if defined(X3270_DISPLAY) /*[*/
 	if (secure ||
@@ -278,7 +286,11 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 				popup_an_errno(errno, "mkstemp");
 				return;
 			}
-			f = fdopen(fd, "w+");
+			if (ptype == P_GDI) {
+				f = fdopen(fd, "wb+");
+			} else {
+				f = fdopen(fd, "w+");
+			}
 #endif /*]*/
 		}
 		if (f == NULL) {
@@ -294,7 +306,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 			}
 			return;
 		}
-		if (fprint_screen(f, ptype, opts, caption) < 0) {
+		if (fprint_screen(f, ptype, opts, caption, name) < 0) {
 			popup_an_error("Screen print failed.");
 			fclose(f);
 			if (temp_name) {
@@ -310,20 +322,32 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 			while (fgets(buf, sizeof(buf), f) != NULL)
 				action_output("%s", buf);
 		}
-		if (use_file)
+		if (use_file) {
 			fclose(f);
-		else {
+		} else {
 #if !defined(_WIN32) /*[*/
 			print_text_done(f);
 #else /*][*/
 			fclose(f);
+			if (ptype == P_RTF) {
 # if defined(S3270) /*[*/
-			/* Run WordPad to print the file, synchronusly. */
-			start_wordpad_sync("PrintText", temp_name, name);
+				/*
+				 * Run WordPad to print the file, synchronusly.
+				 */
+				start_wordpad_sync("PrintText", temp_name,
+					name);
 # else /*][*/
-			/* Run WordPad to print the file, asynchronusly. */
-			start_wordpad_async("PrintText", temp_name, name);
+				/*
+				 * Run WordPad to print the file,
+				 * asynchronusly.
+				 */
+				start_wordpad_async("PrintText", temp_name,
+					name);
 # endif /*]*/
+			} else if (ptype == P_GDI) {
+				/* All done with the temp file. */
+				unlink(temp_name);
+			}
 # if !defined(S3270) /*[*/
 			if (appres.do_confirms)
 				popup_an_info("Screen image printing.\n");

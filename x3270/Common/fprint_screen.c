@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2013, Paul Mattes.
+ * Copyright (c) 1994-2014, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,10 @@
 #include "resources.h"
 
 #include "fprint_screenc.h"
+#if defined(WC3270) /*[*/
+#include "gdi_printc.h"
+#endif /*]*/
+#include "trace_dsc.h"
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
@@ -56,6 +60,8 @@ typedef struct {
 	int spp;		/* Screens per page. */
 	int screens;		/* Screen count this page. */
 	FILE *file;		/* Stream to write to */
+	char *caption;		/* Caption with %T% expanded */
+	char *printer_name;	/* Printer name (used by GDI) */
 } real_fps_t;
 
 /* Globals */
@@ -215,10 +221,9 @@ html_caption(const char *caption)
  */
 int
 fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
-	fps_t *fps_ret)
+	const char *printer_name, fps_t *fps_ret)
 {
 	real_fps_t *fps;
-	char *xcaption = NULL;
 	int rv = 0;
 	char *pt_spp;
 
@@ -238,6 +243,7 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 	fps->file = f;
 
 	if (caption != NULL) {
+		char *xcaption;
 	    	char *ts = strstr(caption, "%T%");
 
 		if (ts != NULL) {
@@ -258,6 +264,15 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 		} else {
 		    	xcaption = NewString(caption);
 		}
+		fps->caption = xcaption;
+	} else {
+		fps->caption = NULL;
+	}
+
+	if (printer_name != NULL && printer_name[0]) {
+		fps->printer_name = NewString(printer_name);
+	} else {
+		fps->printer_name = NULL;
 	}
 
 	switch (ptype) {
@@ -284,8 +299,8 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 			    pt_font, pt_nsize * 2) < 0) {
 			rv = -1;
 		}
-		if (rv == 0 && xcaption != NULL) {
-			char *hcaption = rtf_caption(xcaption);
+		if (rv == 0 && fps->caption != NULL) {
+			char *hcaption = rtf_caption(fps->caption);
 
 			if (fprintf(f, "%s\\par\\par\n", hcaption) < 0)
 				rv = -1;
@@ -297,8 +312,8 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 		char *hcaption = NULL;
 
 		/* Make the caption HTML-safe. */
-		if (xcaption != NULL)
-			hcaption = html_caption(xcaption);
+		if (fps->caption != NULL)
+			hcaption = html_caption(fps->caption);
 
 		/* Print the preamble. */
 		if (fprintf(f, "<html>\n"
@@ -316,11 +331,14 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 		break;
 	}
 	case P_TEXT:
-		if (xcaption != NULL) {
-			if (fprintf(f, "%s\n\n", xcaption) < 0) {
+		if (fps->caption != NULL) {
+			if (fprintf(f, "%s\n\n", fps->caption) < 0) {
 				rv = -1;
 			}
 		}
+		break;
+	case P_GDI:
+		/* Nothing interesting to do. */
 		break;
 	}
 
@@ -333,11 +351,10 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 		}
 	}
 
-	if (xcaption != NULL)
-	    	Free(xcaption);
-
 	if (rv < 0) {
 		/* We've failed; there's no point in returning the context. */
+		Free(fps->caption);
+		Free(fps->printer_name);
 		Free(fps);
 		*fps_ret = NULL;
 	} else
@@ -372,6 +389,9 @@ fprint_screen_body(fps_t ofps)
 	Bool fa_high, current_high;
 	Bool fa_ital, current_ital;
 	Bool mi;
+#if defined(WC3270) /*[*/
+	gdi_header_t h;
+#endif /*]*/
 	int rv = 0;
 
 	/* Quick short-circuit. */
@@ -450,6 +470,25 @@ fprint_screen_body(fps_t ofps)
 			}
 		}
 		break;
+#if defined(WC3270) /*[*/
+	case P_GDI:
+		/*
+		 * Write the current screen buffer to the file.
+		 * We will read it back and print it when we are done.
+		 */
+		h.signature = GDI_SIGNATURE;
+		h.rows = ROWS;
+		h.cols = COLS;
+		if (fwrite(&h, sizeof(h), 1, fps->file) != 1) {
+			FAIL;
+		}
+		if (fwrite(ea_buf, sizeof(struct ea), ROWS * COLS, fps->file)
+			    != ROWS * COLS) {
+			FAIL;
+		}
+		fflush(fps->file);
+		goto done;
+#endif /*]*/
 	default:
 		break;
 	}
@@ -745,12 +784,26 @@ fprint_screen_done(fps_t *ofps)
 				    "</html>\n") < 0)
 				rv = -1;
 			break;
+#if defined(WC3270) /*[*/
+		case P_GDI:
+			trace_event("Printing to GDI printer %s\n",
+				fps->printer_name? fps->printer_name:
+						   "(system default)");
+			if (gdi_print(fps->file, fps->caption,
+				    fps->printer_name) < 0) {
+				rv = -1;
+			}
+			break;
+#endif /*]*/
 		default:
 			break;
 		}
 	}
 
 	/* Done with the context. */
+	Free(fps->caption);
+	Free(fps->printer_name);
+	memset(fps, '\0', sizeof(*fps));
 	Free(*(void **)ofps);
 	*(void **)ofps = NULL;
 
@@ -763,12 +816,14 @@ fprint_screen_done(fps_t *ofps)
  * 1 for screen written, -1 for error.
  */
 int
-fprint_screen(FILE *f, ptype_t ptype, unsigned opts, const char *caption)
+fprint_screen(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
+	const char *printer_name)
 {
 	fps_t fps;
 	int any;
 
-	if (fprint_screen_start(f, ptype, opts, caption, &fps) < 0)
+	if (fprint_screen_start(f, ptype, opts, caption, printer_name,
+		    &fps) < 0)
 		return -1;
 	if ((any = fprint_screen_body(fps)) < 0) {
 		(void) fprint_screen_done(&fps);

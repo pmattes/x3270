@@ -1097,12 +1097,18 @@ end_screentrace(Boolean is_final _is_unused)
 
 #if defined(_WIN32) /*[*/
 	if (screentrace_how == TSS_PRINTER) {
-		if (is_final) {
-			start_wordpad_sync("ScreenTrace", screentrace_tmpfn,
-				screentrace_name);
+		if (screentrace_ptype == P_RTF) {
+			/* Start up WordPad to print the file. */
+			if (is_final) {
+				start_wordpad_sync("ScreenTrace",
+					screentrace_tmpfn, screentrace_name);
+			} else {
+				start_wordpad_async("ScreenTrace",
+					screentrace_tmpfn, screentrace_name);
+			}
 		} else {
-			start_wordpad_async("ScreenTrace", screentrace_tmpfn,
-				screentrace_name);
+			/* Get rid of the temp file. */
+			unlink(screentrace_tmpfn);
 		}
 	}
 #endif /*]*/
@@ -1112,14 +1118,7 @@ void
 trace_set_screentrace_file(tss_t how, ptype_t ptype, const char *name)
 {
 	screentrace_how = how;
-	if (how == TSS_FILE)
-		screentrace_ptype = ptype;
-	else
-#if defined(_WIN32) /*[*/
-	    	screentrace_ptype = P_RTF;
-#else /*][*/
-	    	screentrace_ptype = P_TEXT;
-#endif /*]*/
+	screentrace_ptype = ptype;
     	Replace(onetime_screentrace_name, name? NewString(name): NULL);
 }
 
