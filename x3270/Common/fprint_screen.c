@@ -335,8 +335,8 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 			}
 		}
 		break;
-#if defined(WC3270) /*[*/
 	case P_GDI:
+#if defined(WC3270) /*[*/
 		switch (gdi_print_start(printer_name)) {
 		case GDI_STATUS_SUCCESS:
 			break;
@@ -347,8 +347,8 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 			rv = FPS_STATUS_CANCEL;
 			break;
 		}
-		break;
 #endif /*]*/
+		break;
 	}
 
 	/* Set up screens-per-page. */
