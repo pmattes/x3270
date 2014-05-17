@@ -132,6 +132,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	 *            'file')
 	 *  rtf      generates RTF output instead of ASCII text (and implies
 	 *            'file')
+	 *  gdi      prints to a GDI printer (wc3270 only)
 	 *  modi     print modified fields in italics
 	 *  caption "text"
 	 *           Adds caption text above the screen

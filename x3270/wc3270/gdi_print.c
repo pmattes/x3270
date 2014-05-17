@@ -57,7 +57,7 @@
 
 /* Defines */
 #define PPI			72	/* points per inch */
-#define DEFAULT_FONTSIZE	10	/* default size is 10pt type */
+#define DEFAULT_FONTSIZE	8	/* default size is 8pt type */
 
 /* Typedefs */
 

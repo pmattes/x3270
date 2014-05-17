@@ -2165,6 +2165,27 @@ desc
     The font used by the <b>PrintText</b> action.
 .
 
+name printTextHorizontalMargin
+applies wc
+type i
+default 0.5
+desc
+    The left- and right-hand margins used by the <b>PrintText</b> action when
+    printing in GDI mode. (It is <i>not</i> used when printing via WordPad.)
+    The value is in inches by default, but can be
+    suffixed with <b>mm</b> or <b>cm</b> to specify SI units.
+.
+
+name printTextOrientation
+applies wc
+type i
+desc
+    The page orientation used by the <b>PrintText</b> action when
+    printing in GDI mode. (It is <i>not</i> used when printing via WordPad.)
+    The value is either <b>portrait</b> or </b>landscape</b>. The default is
+    to use whatever the printer's default is.
+.
+
 name printTextScreensPerPage
 applies wc c x
 type i
@@ -2180,6 +2201,17 @@ type i
 default 8
 desc
     The font size used by the <b>PrintText</b> action.
+.
+
+name printTextVerticalMargin
+applies wc
+type i
+default 0.5
+desc
+    The top and bottom margins used by the <b>PrintText</b> action when
+    printing in GDI mode. (It is <i>not</i> used when printing via WordPad.)
+    The value is in inches by default, but can be
+    suffixed with <b>mm</b> or <b>cm</b> to specify SI units.
 .
 
 name printWindowCommand

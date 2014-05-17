@@ -1097,7 +1097,7 @@ XX_TR(XX_TDH(XX_INT()XX_LA()XX_BLOCK()PF`'XX_LPAREN`'XX_FI(XX_INT()n)`'XX_RPAREN
 XX_TR(XX_TDH(XX_INT()XX_LS()`PreviousWord'XX_VOID())	XX_TD(move cursor to previous word))
 ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(XX_INT()XX_LS()`Paste'XX_VOID())	XX_TD(insert clipboard contents))')dnl
 ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,tcl3270,,XX_PRODUCT,lib3270,,`XX_TR(XX_TDH(Printer(Start[,XX_FI(lu)]|Stop))	XX_TD(start or stop printer session))
-ifelse(XX_PLATFORM,windows,`XX_TR(XX_TDH(PrintText(XX_FI([printer-name])))	XX_TD(print screen text on printer))',
+ifelse(XX_PLATFORM,windows,`XX_TR(XX_TDH(PrintText([gdi,]XX_FI([printer-name])))	XX_TD(print screen text on printer))',
 `XX_TR(XX_TDH(PrintText(XX_FI(command)))	XX_TD(print screen text on printer))')
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(PrintWindow(XX_FI(command)))	XX_TD(print screen image (bitmap) on printer))
 ')')dnl
@@ -1243,10 +1243,21 @@ ifelse(XX_PLATFORM,windows,`The font defaults to XX_FB(Courier New) and the
 point size defaults to 8.
 These can be overridden by the XX_FB(printTextFont) and XX_FB(printTextSize)
 resources, respectively.
+If the XX_FB(gdi) keyword is used, additional resources can control the
+output. XX_FB(printTextHorizontalMargin) defines the left- and right-hand
+margins. XX_FB(printTextVerticalMargin) defines the top and bottom margins.
+Both default to 0.5 inches; the values are in inches by default but can be
+suffixed with XX_FB(mm) or XX_FB(cm). XX_FB(printTextOrientation) defines the
+page orientation as XX_FB(portrait) or XX_FB(landscape).
 ')dnl
+XX_LP
 Multiple arguments can include keywords to control the output of
 XX_FB(PrintText):
 XX_TPS()dnl
+ifelse(XX_PRODUCT,wc3270,`XX_TP(XX_FB(gdi))
+Print directly to the printer using GDI, instead of creating an RTF file and
+running WordPad to print it.
+')dnl
 XX_TP(XX_FB(file) XX_FI(filename))
 Save the output in a file.
 XX_TP(XX_FB(html))
