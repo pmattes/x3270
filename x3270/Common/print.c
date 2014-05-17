@@ -306,8 +306,14 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 			}
 			return;
 		}
-		if (fprint_screen(f, ptype, opts, caption, name) < 0) {
+		switch (fprint_screen(f, ptype, opts, caption, name)) {
+		case FPS_STATUS_SUCCESS:
+		case FPS_STATUS_SUCCESS_WRITTEN:
+			break;
+		case FPS_STATUS_ERROR:
 			popup_an_error("Screen print failed.");
+			/* fall through */
+		case FPS_STATUS_CANCEL:
 			fclose(f);
 			if (temp_name) {
 				unlink(temp_name);

@@ -41,4 +41,12 @@ typedef struct {
 /* Signature for GDI snapshot files. */
 #define GDI_SIGNATURE		0x33323730
 
-extern int gdi_print(FILE *f, const char *caption, const char *printer_name);
+typedef enum {
+	GDI_STATUS_SUCCESS = 0,
+	GDI_STATUS_ERROR = -1,
+	GDI_STATUS_CANCEL = -2
+} gdi_status_t;
+#define GDI_STATUS_IS_ERROR(gs) ((int)gs < 0)
+
+extern gdi_status_t gdi_print_start(const char *printer_name);
+extern gdi_status_t gdi_print_finish(FILE *f, const char *caption);

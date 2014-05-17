@@ -216,15 +216,13 @@ html_caption(const char *caption)
 /*
  * Write a screen trace header to a stream.
  * Returns the context to use with subsequent calls.
- *
- * Returns 0 for success, -1 for error.
  */
-int
+fps_status_t
 fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 	const char *printer_name, fps_t *fps_ret)
 {
 	real_fps_t *fps;
-	int rv = 0;
+	int rv = FPS_STATUS_SUCCESS;
 	char *pt_spp;
 
 	/* Non-text types can always generate blank output. */
@@ -297,13 +295,13 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 			    1252, /* the number doesn't matter */
 #endif /*]*/
 			    pt_font, pt_nsize * 2) < 0) {
-			rv = -1;
+			rv = FPS_STATUS_ERROR;
 		}
-		if (rv == 0 && fps->caption != NULL) {
+		if (rv == FPS_STATUS_SUCCESS && fps->caption != NULL) {
 			char *hcaption = rtf_caption(fps->caption);
 
 			if (fprintf(f, "%s\\par\\par\n", hcaption) < 0)
-				rv = -1;
+				rv = FPS_STATUS_ERROR;
 			Free(hcaption);
 		}
 		break;
@@ -322,10 +320,10 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 			     "content=\"text/html; charset=UTF-8\">\n"
 			   "</head>\n"
 			   " <body>\n") < 0)
-			rv = -1;
-		if (rv == 0 && hcaption) {
+			rv = FPS_STATUS_ERROR;
+		if (rv == FPS_STATUS_SUCCESS && hcaption) {
 			if (fprintf(f, "<p>%s</p>\n", hcaption) < 0)
-				rv = -1;
+				rv = FPS_STATUS_ERROR;
 			Free(hcaption);
 		}
 		break;
@@ -333,13 +331,24 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 	case P_TEXT:
 		if (fps->caption != NULL) {
 			if (fprintf(f, "%s\n\n", fps->caption) < 0) {
-				rv = -1;
+				rv = FPS_STATUS_ERROR;
 			}
 		}
 		break;
+#if defined(WC3270) /*[*/
 	case P_GDI:
-		/* Nothing interesting to do. */
+		switch (gdi_print_start(printer_name)) {
+		case GDI_STATUS_SUCCESS:
+			break;
+		case GDI_STATUS_ERROR:
+			rv = FPS_STATUS_ERROR;
+			break;
+		case GDI_STATUS_CANCEL:
+			rv = FPS_STATUS_CANCEL;
+			break;
+		}
 		break;
+#endif /*]*/
 	}
 
 	/* Set up screens-per-page. */
@@ -351,14 +360,15 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 		}
 	}
 
-	if (rv < 0) {
+	if (rv != FPS_STATUS_SUCCESS) {
 		/* We've failed; there's no point in returning the context. */
 		Free(fps->caption);
 		Free(fps->printer_name);
 		Free(fps);
 		*fps_ret = NULL;
-	} else
+	} else {
 		*fps_ret = (fps_t)(void *)fps;
+	}
 
 	return rv;
 }
@@ -373,7 +383,7 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
  *
  * Returns 0 for no screen written, 1 for screen written, -1 for error.
  */
-int
+fps_status_t
 fprint_screen_body(fps_t ofps)
 {
 	real_fps_t *fps = (real_fps_t *)(void *)ofps;
@@ -392,11 +402,12 @@ fprint_screen_body(fps_t ofps)
 #if defined(WC3270) /*[*/
 	gdi_header_t h;
 #endif /*]*/
-	int rv = 0;
+	fps_status_t rv = FPS_STATUS_SUCCESS;
 
 	/* Quick short-circuit. */
-	if (fps == NULL || fps->broken)
-		return -1;
+	if (fps == NULL || fps->broken) {
+		return FPS_STATUS_ERROR;
+	}
 
 	mi = ((fps->opts & FPS_MODIFIED_ITALIC)) != 0;
 	if (ea_buf[fa_addr].fg)
@@ -732,7 +743,7 @@ fprint_screen_body(fps_t ofps)
 	} else
 		nr++;
 	if (!any && !(fps->opts & FPS_EVEN_IF_EMPTY) && fps->ptype == P_TEXT) {
-		return 0;
+		return FPS_STATUS_SUCCESS;
 	}
 	while (nr) {
 	    	if (fps->ptype == P_RTF)
@@ -750,11 +761,12 @@ fprint_screen_body(fps_t ofps)
 			FAIL;
 	fps->need_separator = True;
 	fps->screens++;
-	rv = 1; /* wrote a screen */
+	rv = FPS_STATUS_SUCCESS_WRITTEN; /* wrote a screen */
 
     done:
-	if (rv < 0)
+	if (FPS_IS_ERROR(rv)) {
 		fps->broken = True;
+	}
 	return rv;
 }
 
@@ -764,34 +776,36 @@ fprint_screen_body(fps_t ofps)
  * Finish writing a multi-screen image.
  * Returns 0 success, -1 for error. In either case, the context is freed.
  */
-int
+fps_status_t
 fprint_screen_done(fps_t *ofps)
 {
 	real_fps_t *fps = (real_fps_t *)*(void **)ofps;
-	int rv = 0;
+	int rv = FPS_STATUS_SUCCESS;
 
-	if (fps == NULL)
-		return -1;
+	if (fps == NULL) {
+		return FPS_STATUS_ERROR;
+	}
 
 	if (!fps->broken) {
 		switch (fps->ptype) {
 		case P_RTF:
-			if (fprintf(fps->file, "\n}\n%c", 0) < 0)
-				rv = -1;
+			if (fprintf(fps->file, "\n}\n%c", 0) < 0) {
+				rv = FPS_STATUS_ERROR;
+			}
 			break;
 		case P_HTML:
 			if (fprintf(fps->file, " </body>\n"
-				    "</html>\n") < 0)
-				rv = -1;
+				    "</html>\n") < 0) {
+				rv = FPS_STATUS_ERROR;
+			}
 			break;
 #if defined(WC3270) /*[*/
 		case P_GDI:
 			trace_event("Printing to GDI printer %s\n",
 				fps->printer_name? fps->printer_name:
 						   "(system default)");
-			if (gdi_print(fps->file, fps->caption,
-				    fps->printer_name) < 0) {
-				rv = -1;
+			if (gdi_print_finish(fps->file, fps->caption) < 0) {
+				rv = FPS_STATUS_ERROR;
 			}
 			break;
 #endif /*]*/
@@ -812,24 +826,27 @@ fprint_screen_done(fps_t *ofps)
 
 /*
  * Write a header, screen image, and trailer to a file.
- * Returns 0 for no screen written (but a header and trailer might have been),
- * 1 for screen written, -1 for error.
  */
-int
+fps_status_t
 fprint_screen(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 	const char *printer_name)
 {
 	fps_t fps;
-	int any;
+	fps_status_t srv;
+	fps_status_t srv_body;
 
-	if (fprint_screen_start(f, ptype, opts, caption, printer_name,
-		    &fps) < 0)
-		return -1;
-	if ((any = fprint_screen_body(fps)) < 0) {
-		(void) fprint_screen_done(&fps);
-		return -1;
+	srv = fprint_screen_start(f, ptype, opts, caption, printer_name, &fps);
+	if (FPS_IS_ERROR(srv)) {
+		return srv;
 	}
-	if (fprint_screen_done(&fps) < 0)
-		return -1;
-	return any;
+	srv_body = fprint_screen_body(fps);
+	if (FPS_IS_ERROR(srv_body)) {
+		(void) fprint_screen_done(&fps);
+		return srv_body;
+	}
+	srv = fprint_screen_done(&fps);
+	if (FPS_IS_ERROR(srv)) {
+		return srv;
+	}
+	return srv_body;
 }

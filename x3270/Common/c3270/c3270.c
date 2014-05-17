@@ -1427,6 +1427,9 @@ toggle_it:
 		    	trace_set_screentrace_file(how, ptype, name);
 		do_toggle(SCREEN_TRACE);
 	}
+	if (on && !toggled(SCREEN_TRACE)) {
+		return;
+	}
 
 	name = trace_get_screentrace_name();
 	if (name != NULL) {

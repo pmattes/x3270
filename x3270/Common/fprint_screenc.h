@@ -36,9 +36,17 @@
 
 typedef struct _fps *fps_t;
 
-int fprint_screen(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
-	const char *printer_name);
-int fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts,
+typedef enum {
+	FPS_STATUS_SUCCESS = 0,
+	FPS_STATUS_SUCCESS_WRITTEN = 1,
+	FPS_STATUS_ERROR = -1,
+	FPS_STATUS_CANCEL = -2
+} fps_status_t;
+#define FPS_IS_ERROR(fps) ((int)fps < 0)
+
+fps_status_t fprint_screen(FILE *f, ptype_t ptype, unsigned opts,
+	const char *caption, const char *printer_name);
+fps_status_t fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts,
 	const char *caption, const char *printer_name, fps_t *fps);
-int fprint_screen_body(fps_t fps);
-int fprint_screen_done(fps_t *fps);
+fps_status_t fprint_screen_body(fps_t fps);
+fps_status_t fprint_screen_done(fps_t *fps);

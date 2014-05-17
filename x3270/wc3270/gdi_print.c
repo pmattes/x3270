@@ -53,6 +53,7 @@
 #include "trace_dsc.h"
 #include "unicodec.h"
 #include "utilc.h"
+#include "w3miscc.h"
 
 /* Defines */
 #define PPI			72	/* points per inch */
@@ -96,7 +97,7 @@ static struct {				/* printer state */
 
 /* Forward declarations. */
 static void gdi_get_params(uparm_t *up);
-static int gdi_init(const char *printer_name, const char **fail);
+static gdi_status_t gdi_init(const char *printer_name, const char **fail);
 static int gdi_screenful(struct ea *ea, unsigned short rows,
 	unsigned short cols, const char **fail);
 static int gdi_done(const char **fail);
@@ -105,14 +106,13 @@ static BOOL get_printer_device(const char *printer_name, HGLOBAL *pdevnames,
 	HGLOBAL *pdevmode);
 
 
-/* Print to a GDI printer. */
-int
-gdi_print(FILE *f, const char *caption, const char *printer_name)
+/*
+ * Initialize printing to a GDI printer.
+ */
+gdi_status_t
+gdi_print_start(const char *printer_name)
 {
-	size_t nr;
-	struct ea *ea_tmp;
-	gdi_header_t h;
-	const char *fail;
+	const char *fail = "";
 
 	if (!uparm.done) {
 		/* Set the defaults. */
@@ -132,22 +132,34 @@ gdi_print(FILE *f, const char *caption, const char *printer_name)
 
 	/* Initialize the printer and pop up the dialog. */
 	switch (gdi_init(printer_name, &fail)) {
-	case 0: /* no-op */
-		trace_event("[gdi] canceled\n");
-		return 0;
-	case 1: /* success */
+	case GDI_STATUS_SUCCESS:
 		trace_event("[gdi] initialized\n");
 		break;
-	case -1: /* failure */
+	case GDI_STATUS_ERROR:
 		popup_an_error("Printer initialization error: %s", fail);
-		return -1;
+		return GDI_STATUS_ERROR;
+	case GDI_STATUS_CANCEL:
+		trace_event("[gdi] canceled\n");
+		return GDI_STATUS_CANCEL;
 	}
+
+	return GDI_STATUS_SUCCESS;
+}
+
+/* Finish printing to a GDI printer. */
+gdi_status_t
+gdi_print_finish(FILE *f, const char *caption)
+{
+	size_t nr;
+	struct ea *ea_tmp;
+	gdi_header_t h;
+	const char *fail = "";
 
 	/* Save the caption. */
 	if (caption != NULL) {
-	    Replace(pstate.caption, NewString(caption));
+		Replace(pstate.caption, NewString(caption));
 	} else {
-	    Replace(pstate.caption, NULL);
+		Replace(pstate.caption, NULL);
 	}
 
 	/* Allocate the buffer. */
@@ -193,12 +205,12 @@ gdi_print(FILE *f, const char *caption, const char *printer_name)
 	}
 	Free(ea_tmp);
 
-	return 0;
+	return GDI_STATUS_SUCCESS;
 
 abort:
 	Free(ea_tmp);
 	gdi_abort();
-	return -1;
+	return GDI_STATUS_ERROR;
 }
 
 /*
@@ -304,10 +316,8 @@ gdi_get_params(uparm_t *up)
 /*
  * Initalize the named GDI printer. If the name is NULL, use the default
  * printer.
- *
- * Returns 1 for success, 0 for no-op (dialog exited), -1 for error.
  */
-static int
+static gdi_status_t
 gdi_init(const char *printer_name, const char **fail)
 {
 	LPDEVMODE devmode;
@@ -324,13 +334,13 @@ gdi_init(const char *printer_name, const char **fail)
 	pstate.dlg.Flags = PD_RETURNDC | PD_NOPAGENUMS | PD_HIDEPRINTTOFILE |
 	    PD_NOSELECTION;
 
-	if (printer_name != NULL) {
+	if (printer_name != NULL && *printer_name) {
 		if (!get_printer_device(printer_name, &pstate.dlg.hDevNames,
 			    &pstate.dlg.hDevMode)) {
 			snprintf(get_fail, sizeof(get_fail),
-				"GetPrinter(%s) failed",
-				printer_name? printer_name:
-					      "system default");
+				"GetPrinter(%s) failed: %s",
+				printer_name? printer_name: "system default",
+				win32_strerror(GetLastError()));
 			*fail = get_fail;
 			goto failed;
 		}
@@ -343,7 +353,7 @@ gdi_init(const char *printer_name, const char **fail)
 	}
 
 	if (!PrintDlg(&pstate.dlg)) {
-	    	return 0;
+	    	return GDI_STATUS_CANCEL;
 	}
 	dc = pstate.dlg.hDC;
 
@@ -592,7 +602,7 @@ gdi_init(const char *printer_name, const char **fail)
 		goto failed;
 	}
 
-	return 1;
+	return GDI_STATUS_SUCCESS;
 
 failed:
 	/* Clean up what we can and return failure. */
@@ -608,7 +618,7 @@ failed:
 		DeleteObject(pstate.underscore_font);
 		pstate.underscore_font = NULL;
 	}
-	return -1;
+	return GDI_STATUS_ERROR;
 }
 
 /*

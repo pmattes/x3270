@@ -1026,6 +1026,7 @@ static Boolean
 screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 {
 	char *xtfn = NULL;
+	int srv;
 
 	if (how == TSS_FILE) {
 		xtfn = do_subst(tfn, DS_VARS | DS_TILDE | DS_UNIQUE);
@@ -1070,12 +1071,15 @@ screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 #if !defined(_WIN32) /*[*/
 	(void) fcntl(fileno(screentracef), F_SETFD, 1);
 #endif /*]*/
-	if (fprint_screen_start(screentracef, ptype,
-		    (how == TSS_PRINTER)? FPS_FF_SEP: 0,
-		    NULL,
-		    screentrace_name,
-		    &screentrace_fps) < 0) {
-		popup_an_error("Screen trace start failed.");
+	srv = fprint_screen_start(screentracef, ptype,
+		(how == TSS_PRINTER)? FPS_FF_SEP: 0, NULL, screentrace_name,
+		&screentrace_fps);
+	if (FPS_IS_ERROR(srv)) {
+		if (srv == FPS_STATUS_ERROR) {
+			popup_an_error("Screen trace start failed.");
+		} else if (srv == FPS_STATUS_CANCEL) {
+			popup_an_error("Screen trace canceled.");
+		}
 		fclose(screentracef);
 		return False;
 	}
