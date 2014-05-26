@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2013, Paul Mattes.
+ * Copyright (c) 2006-2014, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -1041,7 +1041,7 @@ get_model(session_t *s)
     	char inbuf[STR_SIZE];
 	char *ptr;
 	unsigned long u;
-	unsigned long max_model = is_nt? 5: 4;
+	unsigned long max_model = 5;
 
 	new_screen(s, "\
 Model Number\n\
@@ -1056,8 +1056,8 @@ This specifies the dimensions of the screen.");
 		}
 	}
 	for (;;) {
-		printf("\nEnter model number: (2, 3%s) [%d] ",
-			is_nt? ", 4 or 5": " or 4", (int)s->model);
+		printf("\nEnter model number: (2, 3, 4 or 5) [%d] ",
+			(int)s->model);
 		fflush(stdout);
 		if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 			return -1;
@@ -1170,8 +1170,6 @@ This specifies the EBCDIC character set (code page) used by the host.");
 	k = 0;
 	for (i = 0; charsets[i].name != NULL; i++) {
 	    	int j;
-		char *n, *h;
-
 
 	    	if (i) {
 			if (!(i % CS_COLS))
@@ -1185,17 +1183,10 @@ This specifies the EBCDIC character set (code page) used by the host.");
 		    	j += num_charsets / 2;
 			k++;
 		}
-		if (is_nt || !charsets[j].is_dbcs) {
-		    	n = charsets[j].name;
-		    	h = charsets[j].hostcp;
-		} else {
-		    	n = "";
-		    	h = "";
-		}
 		printf(" %2d. %-*s %-*s",
 			j + 1,
-			CS_WIDTH, n,
-			CP_WIDTH, h);
+			CS_WIDTH, charsets[j].name,
+			CP_WIDTH, charsets[j].hostcp);
 	}
 	printf("\n");
 	for (;;) {
@@ -1207,8 +1198,7 @@ This specifies the EBCDIC character set (code page) used by the host.");
 			break;
 		/* Check for numeric value. */
 		u = strtoul(buf, &ptr, 10);
-		if (u > 0 && u <= i && *ptr == '\0' &&
-			    (is_nt || !charsets[u - 1].is_dbcs)) {
+		if (u > 0 && u <= i && *ptr == '\0') {
 			strcpy(s->charset, charsets[u - 1].name);
 			s->is_dbcs = charsets[u - 1].is_dbcs;
 			break;
@@ -1222,8 +1212,7 @@ This specifies the EBCDIC character set (code page) used by the host.");
 		}
 		/* Check for name match. */
 		for (i = 0; charsets[i].name != NULL; i++) {
-			if (!strcmp(buf, charsets[i].name) &&
-				    (is_nt || !charsets[i].is_dbcs)) {
+			if (!strcmp(buf, charsets[i].name)) {
 				strcpy(s->charset, charsets[i].name);
 				s->is_dbcs = charsets[i].is_dbcs;
 				break;
@@ -1906,13 +1895,12 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 		printf("%3d. Model Number ........... : %d "
 			"(%d rows x %d columns)\n", MN_MODEL,
 			(int)s->model, wrows[s->model], wcols[s->model]);
-		if (is_nt) {
-			printf("%3d.  Oversize .............. : ", MN_OVERSIZE);
-			if (s->ov_rows || s->ov_cols)
-				printf("%u rows x %u columns\n",
-					s->ov_rows, s->ov_cols);
-			else
-				printf(DISPLAY_NONE"\n");
+		printf("%3d.  Oversize .............. : ", MN_OVERSIZE);
+		if (s->ov_rows || s->ov_cols) {
+			printf("%u rows x %u columns\n",
+				s->ov_rows, s->ov_cols);
+		} else {
+			printf(DISPLAY_NONE"\n");
 		}
 		printf("%3d. Character Set .......... : %s (CP %s)\n",
 			MN_CHARSET, s->charset, cp);
@@ -1963,10 +1951,9 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 			printf("%3d.  Embed Keymaps ......... : %s\n",
 				MN_EMBED_KEYMAPS,
 				(s->flags & WF_EMBED_KEYMAPS)? "Yes": "No");
-		if (is_nt)
-			printf("%3d. Font Size .............. : %u\n",
-				MN_FONT_SIZE,
-				s->point_size? s->point_size: 12);
+		printf("%3d. Font Size .............. : %u\n",
+			MN_FONT_SIZE,
+			s->point_size? s->point_size: 12);
 		printf("%3d. Background Color ....... : %s\n", MN_BG,
 			(s->flags & WF_WHITE_BG)? "white": "black");
 		printf("%3d. Menu Bar ............... : %s\n", MN_MENUBAR,
@@ -2002,12 +1989,8 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 					return SRC_ERR;
 				break;
 			case MN_OVERSIZE:
-				if (is_nt) {
-					if (get_oversize(s) < 0)
-						return SRC_ERR;
-				} else {
-					printf("Invalid entry.\n");
-					invalid = 1;
+				if (get_oversize(s) < 0) {
+					return SRC_ERR;
 				}
 				break;
 			case MN_CHARSET:
@@ -2100,12 +2083,8 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 				    	return SRC_ERR;
 				break;
 			case MN_FONT_SIZE:
-				if (is_nt) {
-					if (get_fontsize(s) < 0)
-						return SRC_ERR;
-				} else {
-					printf("Invalid entry.\n");
-					invalid = 1;
+				if (get_fontsize(s) < 0) {
+					return SRC_ERR;
 				}
 				break;
 			case MN_BG:
@@ -2142,7 +2121,7 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 			break;
 	}
 
-	if (how == SP_CREATE && is_nt) {
+	if (how == SP_CREATE) {
 		char ac[STR_SIZE];
 
 		/* Ask where they want the file. */
@@ -2259,6 +2238,8 @@ session_wizard(char *session_name, int explicit_edit, int installed)
 	int shortcut_exists;
 	char path[MAX_PATH];
 	int extra_height = 1;
+	wchar_t *font;
+	int codepage = 0;
 
 	/* Start with nothing. */
 	(void) memset(&session, '\0', sizeof(session));
@@ -2334,12 +2315,9 @@ session_wizard(char *session_name, int explicit_edit, int installed)
 	}
 
 	/* Ask about the shortcut. */
-	if (is_nt)
-		sprintf(linkpath, "%s%s.lnk",
-			(src == SRC_ALL)? common_desktop: desktop,
-			session.session);
-	else
-		sprintf(linkpath, "%s%s.pif", desktop, session.session);
+	sprintf(linkpath, "%s%s.lnk",
+		(src == SRC_ALL)? common_desktop: desktop,
+		session.session);
 	f = fopen(linkpath, "r");
 	if ((shortcut_exists = (f != NULL)))
 		fclose(f);
@@ -2364,38 +2342,23 @@ session_wizard(char *session_name, int explicit_edit, int installed)
 	sprintf(args, "+S \"%s\"", path);
 	if (!(session.flags & WF_NO_MENUBAR))
 	    	extra_height += 2;
-	if (is_nt) {
-	    	wchar_t *font;
-		int codepage = 0;
 
-		font = reg_font_from_cset(session.charset, &codepage);
+	font = reg_font_from_cset(session.charset, &codepage);
 
-		hres = CreateLink(
-			exepath,		/* path to executable */
-			linkpath,		/* where to put the link */
-			"wc3270 session",	/* description */
-			args,			/* arguments */
-			installdir,		/* working directory */
-			(session.ov_rows?	/* console rows */
-			    session.ov_rows: wrows[session.model]) +
-				extra_height,
-			session.ov_cols?	/* console cols */
-			    session.ov_cols: wcols[session.model],
-			font,			/* font */
-			session.point_size,	/* point size */
-			codepage);		/* code page */
-	} else
-		hres = Piffle(
-			session.session,	/* window title */
-			exepath,		/* path to executable */
-			linkpath,		/* where to put the link */
-			"wc3270 session",	/* description */
-			args,			/* arguments */
-			installdir,		/* working directory */
-			wrows[session.model] + extra_height,
-			wcols[session.model],
-						/* console rows, columns */
-			"Lucida Console");	/* font */
+	hres = CreateLink(
+		exepath,		/* path to executable */
+		linkpath,		/* where to put the link */
+		"wc3270 session",	/* description */
+		args,			/* arguments */
+		installdir,		/* working directory */
+		(session.ov_rows?	/* console rows */
+		    session.ov_rows: wrows[session.model]) +
+			extra_height,
+		session.ov_cols?	/* console cols */
+		    session.ov_cols: wcols[session.model],
+		font,			/* font */
+		session.point_size,	/* point size */
+		codepage);		/* code page */
 
 	if (SUCCEEDED(hres)) {
 		printf("done\n");
@@ -2709,10 +2672,7 @@ main(int argc, char *argv[])
 	    	return -1;
 
 	/* Resize the console window. */
-	if (is_nt)
-		resize_window(44);
-	else
-	    	system("mode con lines=50");
+	resize_window(44);
 
 	signal(SIGINT, SIG_IGN);
 

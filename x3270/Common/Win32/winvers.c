@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, Paul Mattes.
+ * Copyright (c) 2007-2009, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,6 @@
 
 #include "winversc.h"
 
-int is_nt = 1;
 int has_ipv6 = 1;
 
 int
@@ -52,14 +51,23 @@ get_version_info(void)
 	    	return -1;
 	}
 
-	/* Yes, people still run Win98. */
-	if (info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
-	    	is_nt = 0;
+	/*
+	 * Enforce our version requirements explicitly, though chances are
+	 * missing DLL entry points will cause us to fall over long before we
+	 * get to here.
+	 */
+	if (info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS ||
+		info.dwMajorVersion < 5) {
+		fprintf(stderr, "Minimum supported Windows version is Windows "
+			"2000 (NT 5.0)\n");
+		return -1;
+	}
 
-	/* Win2K and earlier is IPv4-only.  WinXP and later can have IPv6. */
-	if (!is_nt ||
-		info.dwMajorVersion < 5 ||
-		(info.dwMajorVersion == 5 && info.dwMinorVersion < 1)) {
+	/*
+	 * Win2K (5.0) and earlier is IPv4-only.  WinXP (5.1) and later can
+	 * have IPv6.
+	 */
+	if (info.dwMajorVersion == 5 && info.dwMinorVersion < 1) {
 	    has_ipv6 = 0;
 	}
 

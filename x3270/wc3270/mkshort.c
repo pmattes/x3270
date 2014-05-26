@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2010, 2013 Paul Mattes.
+ * Copyright (c) 2006-2010, 2013-2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -64,54 +64,17 @@ main(int argc, char *argv[])
 	sprintf(exe_path, "%s\\%s", install_dir, exe_name);
 
 	/* Create the link. */
-	if (is_nt)
-		hres = CreateLink(
-			exe_path,
-			link_path,
-			NULL,
-			NULL,
-			install_dir,
-			46,
-			80,
-			L"Lucida Console",
-			0,
-			0);
-	else {
-		char link_name[MAX_PATH];
-		char *bsl;
-		size_t sl;
-
-		/*
-		 * Extract the link name (the PIF title) from the link path.
-		 */
-		bsl = strrchr(link_path, '\\');
-		if (bsl == NULL) {
-			fprintf(stderr, "cannot figure out link name from "
-				"'%s'\n", link_path);
-			return 1;
-		}
-		bsl++;
-		sl = strlen(bsl);
-		if (sl < 5 || strcasecmp(bsl + sl - 4, ".pif")) {
-			fprintf(stderr, "cannot figure out link name from "
-				"'%s'\n", link_path);
-			return 1;
-		}
-		strncpy(link_name, bsl, sl - 4);
-		link_name[sl - 4] = '\0';
-
-	    	hres = Piffle(
-			link_name,
-			exe_path,
-			link_path,
-			"",
-			"",
-			install_dir,
-			46,
-			80,
-			"Lucida Console");
-	}
-
+	hres = CreateLink(
+		exe_path,
+		link_path,
+		NULL,
+		NULL,
+		install_dir,
+		46,
+		80,
+		L"Lucida Console",
+		0,
+		0);
 	if (hres) {
 		fprintf(stderr, "link creation \"%s\" failed\n", link_path);
 	}

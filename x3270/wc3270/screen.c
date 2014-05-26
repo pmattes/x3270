@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2013, Paul Mattes.
+ * Copyright (c) 2000-2014, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -562,55 +562,6 @@ changed(int row, int col)
 }
 #endif /*]*/
 
-/* Windows 98 version of WriteConsoleOutputW(). */
-static BOOL
-Win98WriteConsoleOutputW(HANDLE hConsoleOutput, const CHAR_INFO* lpBuffer,
-    COORD dwBufferSize, COORD dwBufferCoord, PSMALL_RECT lpWriteRegion)
-{
-	CHAR_INFO *lpCopy;
-	size_t s;
-	int row, col;
-	BOOL rc;
-
-	/* Copy lpBuffer. */
-	s = dwBufferSize.X * dwBufferSize.Y * sizeof(CHAR_INFO);
-	lpCopy = (CHAR_INFO *)Malloc(s);
-
-	/*
-	 * Scan the specified region, translating Unicode to the OEM code
-	 * page (what console output expects).
-	 */
-	for (row = lpWriteRegion->Top;
-	     row <= lpWriteRegion->Bottom;
-	     row++) {
-		for (col = lpWriteRegion->Left;
-		     col <= lpWriteRegion->Right;
-		     col++) {
-		    const CHAR_INFO *c = &lpBuffer[ix(row, col)];
-		    CHAR_INFO *d = &lpCopy[ix(row, col)];
-		    unsigned char ch;
-		    BOOL udc;
-
-		    (void) WideCharToMultiByte(CP_OEMCP, 0,
-			    &c->Char.UnicodeChar, 1,
-			    (char *)&ch, 1,
-			    "?",
-			    &udc);
-		    *d = *c;
-		    d->Char.UnicodeChar = 0;
-		    d->Char.AsciiChar = ch;
-	    }
-    }
-
-    /* Do the Ascii version. */
-    rc = WriteConsoleOutputA(hConsoleOutput, lpCopy, dwBufferSize,
-	    dwBufferCoord, lpWriteRegion);
-
-    /* Done. */
-    Free(lpCopy);
-    return rc;
-}
-
 /*
  * Draw a rectangle of homogeneous text.
  */
@@ -657,12 +608,8 @@ hdraw(int row, int lrow, int col, int lcol)
 	writeRegion.Top = row;
 	writeRegion.Right = lcol;
 	writeRegion.Bottom = lrow;
-	if (is_nt)
-		rc = WriteConsoleOutputW(sbuf, toscreen, bufferSize,
-			bufferCoord, &writeRegion);
-	else
-		rc = Win98WriteConsoleOutputW(sbuf, toscreen, bufferSize,
-			bufferCoord, &writeRegion);
+	rc = WriteConsoleOutputW(sbuf, toscreen, bufferSize, bufferCoord,
+		&writeRegion);
 	if (rc == 0) {
 
 		fprintf(stderr, "WriteConsoleOutput failed: %s\n",
@@ -1768,36 +1715,6 @@ decode_state(int state, Boolean limited, const char *skip)
 	return buf;
 }
 
-/* Windows 98 version of ReadConsoleInputW(). */
-static BOOL
-Win98ReadConsoleInputW(HANDLE h, INPUT_RECORD *ir, DWORD len, DWORD *nr)
-{
-	BOOL r;
-
-	/* Call the 8-bit version. */
-	r = ReadConsoleInputA(h, ir, len, nr);
-	if (!r)
-		return r;
-
-	/*
-	 * Translate the 8-bit input character to Unicode.
-	 * We assume that console input uses the OEM code page.
-	 */
-	if ((ir->EventType == KEY_EVENT) &&
-	    (ir->Event.KeyEvent.uChar.AsciiChar)) {
-		int nc;
-		WCHAR w;
-
-		nc = MultiByteToWideChar(CP_OEMCP, 0,
-			&ir->Event.KeyEvent.uChar.AsciiChar, 1,
-			&w, 1);
-		if (nc != 1)
-		    return 1;
-		ir->Event.KeyEvent.uChar.UnicodeChar = w;
-	}
-	return r;
-}
-
 /* Handle mouse events. */
 static void
 handle_mouse_event(MOUSE_EVENT_RECORD *me)
@@ -1890,10 +1807,7 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 	const char *s;
 
 	/* Get the next input event. */
-	if (is_nt)
-		rc = ReadConsoleInputW(chandle, &ir, 1, &nr);
-	else
-		rc = Win98ReadConsoleInputW(chandle, &ir, 1, &nr);
+	rc = ReadConsoleInputW(chandle, &ir, 1, &nr);
 	if (rc == 0) {
 		fprintf(stderr, "ReadConsoleInput failed: %s\n",
 			win32_strerror(GetLastError()));
@@ -2698,7 +2612,7 @@ Paste_action(Widget w _is_unused, XEvent *event, String *params,
 {
     	HGLOBAL hglb;
 	LPTSTR lptstr;
-	UINT format = is_nt? CF_UNICODETEXT: CF_TEXT;
+	UINT format = CF_UNICODETEXT;
 
     	action_debug(Paste_action, event, params, num_params);
 	if (check_usage(Paste_action, *num_params, 0, 0) < 0)
@@ -2712,33 +2626,29 @@ Paste_action(Widget w _is_unused, XEvent *event, String *params,
 	if (hglb != NULL) {
 		lptstr = GlobalLock(hglb);
 		if (lptstr != NULL) { 
-		    	if (is_nt) {
-			    int sl = 0;
-			    wchar_t *w = (wchar_t *)lptstr;
-			    ucs4_t *u;
-			    ucs4_t *us;
-			    int i;
+			int sl = 0;
+			wchar_t *w = (wchar_t *)lptstr;
+			ucs4_t *u;
+			ucs4_t *us;
+			int i;
 
-			    for (i = 0; *w != 0x0000; i++, w++) {
+			for (i = 0; *w != 0x0000; i++, w++) {
 				sl++;
-			    }
-			    us = u = Malloc(sl * sizeof(ucs4_t));
-
-			    /*
-			     * Expand from UCS-2 to UCS-4.
-			     * XXX: It isn't UCS-2, it's UTF-16.
-			     */
-			    w = (wchar_t *)lptstr;
-			    for (i = 0; i < sl; i++) {
-				*us++ = *w++;
-			    }
-			    emulate_uinput(u, sl, True);
-			    Free(u);
-			} else {
-			    emulate_input(lptstr, strlen(lptstr), True);
 			}
-			GlobalUnlock(hglb); 
+			us = u = Malloc(sl * sizeof(ucs4_t));
+
+			/*
+			 * Expand from UCS-2 to UCS-4.
+			 * XXX: It isn't UCS-2, it's UTF-16.
+			 */
+			w = (wchar_t *)lptstr;
+			for (i = 0; i < sl; i++) {
+				*us++ = *w++;
+			}
+			emulate_uinput(u, sl, True);
+			Free(u);
 		}
+		GlobalUnlock(hglb); 
 	}
 	CloseClipboard(); 
 }

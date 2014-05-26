@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, Paul Mattes.
+ * Copyright (c) 2006-2009, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,120 +35,6 @@
 
 #include "windirsc.h"
 
-
-/*
- * If Win2K or later, use SHGetFoldersA from shell32.dll.
- * Otherwise, use the function below.
- */
-
-/* Locate the desktop and appdata directories from the Windows registry. */
-static int
-old_get_dirs(char **desktop, char **appdata, char **common_desktop,
-	char **common_appdata)
-{
-	HRESULT hres;
-	HKEY hkey;
-	DWORD index;
-
-	/* Get some paths from Windows. */
-	hres = RegOpenKeyEx(HKEY_CURRENT_USER,
-    "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
-    		0, KEY_QUERY_VALUE, &hkey);
-	if (hres != ERROR_SUCCESS) {
-	    	printf("Sorry, I can't figure out where your Desktop or "
-			"Application Data directories are, Windows error "
-			"%ld.\n", hres);
-		return -1;
-	}
-
-	if (desktop != NULL) {
-	    	*desktop = malloc(MAX_PATH);
-		if (*desktop == NULL)
-		    	return -1;
-		(*desktop)[0] = '\0';
-	}
-	if (appdata != NULL) {
-	    	*appdata = malloc(MAX_PATH);
-		if (*appdata == NULL)
-		    	return -1;
-		(*appdata)[0] = '\0';
-	}
-	if (common_desktop != NULL) {
-	    	*common_desktop = NULL;
-	}
-	if (common_appdata != NULL) {
-	    	*common_appdata = NULL;
-	}
-
-	/*
-	 * Iterate to find Desktop and AppData.
-	 * We can't just go for them individually, because we can't use
-	 * ReqQueryValueEx on Win98, and ReqQueryValue doesn't work.
-	 */
-	for (index = 0; ; index++) {
-		char name[MAX_PATH];
-		DWORD nlen = MAX_PATH;
-		char value[MAX_PATH];
-		DWORD vlen = MAX_PATH;
-		DWORD type;
-
-		hres = RegEnumValue(hkey, index, name, &nlen, 0, &type,
-			(unsigned char *)value, &vlen);
-		if (hres != ERROR_SUCCESS)
-			break;
-
-		if (desktop != NULL && !strcmp(name, "Desktop"))
-		    	strcpy(*desktop, value);
-		else if (appdata != NULL && !strcmp(name, "AppData"))
-		    	strcpy(*appdata, value);
-
-		if ((desktop == NULL || (*desktop)[0]) &&
-		    (appdata == NULL || (*appdata)[0]))
-		    	break;
-
-	}
-	RegCloseKey(hkey);
-
-	if ((desktop != NULL && !(*desktop)[0]) ||
-	    (appdata != NULL && !(*appdata)[0])) {
-
-	    	printf("Sorry, I can't figure out where your Desktop or "
-			"Application Data directories are.\n");
-		return -1;
-	}
-
-	return 0;
-}
-
-/*
- * dll_SHGetFolderPath explicitly pulls SHGetFolderPathA out of shell32.dll,
- * so we won't get link errors on Win98.
- */
-
-static HRESULT
-dll_SHGetFolderPath(HWND hwndOwner, int nFolder, HANDLE hToken, DWORD dwFlags,
-	LPTSTR pszPath)
-{
-    	static HMODULE handle = NULL;
-	static FARPROC p = NULL;
-	typedef HRESULT (__stdcall *sgfp_fn)(HWND, int, HANDLE, DWORD, LPSTR);
-
-	if (handle == NULL) {
-	    	handle = LoadLibrary("shell32.dll");
-		if (handle == NULL) {
-		    	fprintf(stderr, "Cannot find shell32.dll\n");
-			return E_FAIL;
-		}
-		p = GetProcAddress(handle, "SHGetFolderPathA");
-		if (p == NULL) {
-		    	fprintf(stderr, "Cannot find SHGetFolderPathA in "
-				"shell32.dll\n");
-			return E_FAIL;
-		}
-	}
-	return ((sgfp_fn)p)(hwndOwner, nFolder, hToken, dwFlags, pszPath);
-}
-
 /* Locate the desktop and appdata directories via the SHGetFolderPath API. */
 static int
 new_get_dirs(char **desktop, char **appdata, char **common_desktop,
@@ -160,7 +46,7 @@ new_get_dirs(char **desktop, char **appdata, char **common_desktop,
 	    	*desktop = malloc(MAX_PATH);
 		if (*desktop == NULL)
 		    	return -1;
-		r = dll_SHGetFolderPath(NULL, CSIDL_DESKTOPDIRECTORY, NULL,
+		r = SHGetFolderPath(NULL, CSIDL_DESKTOPDIRECTORY, NULL,
 			SHGFP_TYPE_CURRENT, *desktop);
 		if (r != S_OK) {
 			printf("SHGetFolderPath(DESKTOPDIRECTORY) failed: "
@@ -174,7 +60,7 @@ new_get_dirs(char **desktop, char **appdata, char **common_desktop,
 	    	*appdata = malloc(MAX_PATH);
 		if (*appdata == NULL)
 		    	return -1;
-		r = dll_SHGetFolderPath(NULL, CSIDL_APPDATA, NULL,
+		r = SHGetFolderPath(NULL, CSIDL_APPDATA, NULL,
 			SHGFP_TYPE_CURRENT, *appdata);
 		if (r != S_OK) {
 			printf("SHGetFolderPath(APPDATA) failed: 0x%x\n",
@@ -188,7 +74,7 @@ new_get_dirs(char **desktop, char **appdata, char **common_desktop,
 	    	*common_desktop = malloc(MAX_PATH);
 		if (*common_desktop == NULL)
 		    	return -1;
-		r = dll_SHGetFolderPath(NULL, CSIDL_COMMON_DESKTOPDIRECTORY,
+		r = SHGetFolderPath(NULL, CSIDL_COMMON_DESKTOPDIRECTORY,
 			NULL, SHGFP_TYPE_CURRENT, *common_desktop);
 		if (r != S_OK) {
 			printf("SHGetFolderPath(COMMON_DESKTOPDIRECTORY) "
@@ -202,7 +88,7 @@ new_get_dirs(char **desktop, char **appdata, char **common_desktop,
 	    	*common_appdata = malloc(MAX_PATH);
 		if (*common_appdata == NULL)
 		    	return -1;
-		r = dll_SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL,
+		r = SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL,
 			SHGFP_TYPE_CURRENT, *common_appdata);
 		if (r != S_OK) {
 			printf("SHGetFolderPath(COMMON_APPDATA) failed: "
@@ -358,17 +244,10 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 			return -1;
 		}
 
-		if ((info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) ||
-			    (info.dwMajorVersion < 5)) {
-			/* Use the registry. */
-			if (old_get_dirs(desktop, xappdata, common_desktop,
-				    common_xappdata) < 0)
-				return -1;
-		} else {
-			/* Use the API. */
-			if (new_get_dirs(desktop, xappdata, common_desktop,
-				    common_xappdata) < 0)
-				return -1;
+		/* Ask Windows where the directories are. */
+		if (new_get_dirs(desktop, xappdata, common_desktop,
+			    common_xappdata) < 0) {
+			return -1;
 		}
 
 		/* Append a trailing "\" to Desktop. */

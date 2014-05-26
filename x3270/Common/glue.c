@@ -473,16 +473,7 @@ set_appres_defaults(void)
 	appres.model = "4";
 	appres.hostsfile = CN;
 	appres.port = "23";
-
-#if !defined(_WIN32) /*[*/
 	appres.charset = "bracket";
-#else /*][*/
-	if (is_nt)
-		appres.charset = "bracket";
-	else
-		appres.charset = "bracket437";
-#endif /*]*/
-
 	appres.termname = CN;
 	appres.macros = CN;
 #if defined(X3270_TRACE) && !defined(_WIN32) /*[*/

@@ -376,7 +376,7 @@ main(int argc, char *argv[])
 	argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
 	printf("%s\n\n"
-		"Copyright 1989-2013 by Paul Mattes, GTRC and others.\n"
+		"Copyright 1989-2014 by Paul Mattes, GTRC and others.\n"
 		"Type 'show copyright' for full copyright information.\n"
 		"Type 'help' for help information.\n\n",
 		build);
@@ -1172,7 +1172,7 @@ copyright_dump(void)
 	action_output(" ");
 	action_output("%s", build);
 	action_output(" ");
-	action_output("Copyright (c) 1993-2013, Paul Mattes.");
+	action_output("Copyright (c) 1993-2014, Paul Mattes.");
 	action_output("Copyright (c) 1990, Jeff Sparkes.");
 	action_output("Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA");
 	action_output(" 30332.");
@@ -1601,12 +1601,6 @@ start_auto_shortcut(void)
 	char args[1024];
 	HINSTANCE h;
 	char *cwd;
-
-    	/* Make sure we're on NT. */
-    	if (!is_nt) {
-	    	fprintf(stderr, "Auto-shortcut does not work on Win9x\n");
-		x3270_exit(1);
-	}
 
 	/* Make sure there is a session file. */
 	if (profile_path == CN) {

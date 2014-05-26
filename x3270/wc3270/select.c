@@ -597,25 +597,21 @@ Copy_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 		const char *name;
 		int type;
 		size_t esize;
-		Boolean on98;
 		size_t (*copy_fn)(LPTSTR);
 	} types[NUM_TYPES] = {
 		{ "Unicode",
 		  CF_UNICODETEXT,
 		  sizeof(wchar_t),
-		  False,
 		  copy_clipboard_unicode
 		},
 		{ "OEM text",
 		  CF_OEMTEXT,
 		  sizeof(char),
-		  True,
 		  copy_clipboard_oemtext
 		},
 		{ "text",
 		  CF_TEXT,
 		  sizeof(char),
-		  True,
 		  copy_clipboard_text
 		},
 	};
@@ -655,10 +651,6 @@ Copy_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 	/* Copy it out in the formats we understand. */
 	for (i = 0; i < NUM_TYPES; i++) {
-
-		if (!is_nt && !types[i].on98) {
-		    	continue;
-		}
 
 		/* Allocate the buffer. */
 		hglb = GlobalAlloc(GMEM_MOVEABLE, sl * types[i].esize);

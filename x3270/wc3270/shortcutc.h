@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, Paul Mattes.
+ * Copyright (c) 2006-2009, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,3 @@
 extern HRESULT CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink,
 	LPSTR lpszDesc, LPSTR lpszArgs, LPSTR lpszDir, int rows, int cols,
 	wchar_t *font, int pointsize, int codepage);
-extern HRESULT Piffle(char *title, LPCSTR lpszPathObj, LPSTR lpszPathLink,
-	LPSTR lpszDesc, LPSTR lpszArgs, LPSTR lpszDir, int rows, int cols,
-	char *font);
