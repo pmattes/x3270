@@ -976,6 +976,7 @@ static void
 status_dump(void)
 {
 	const char *emode, *ftype, *ts;
+	const char *clu;
 #if defined(X3270_TN3270E) /*[*/
 	const char *eopts;
 	const char *bplu;
@@ -991,8 +992,9 @@ status_dump(void)
 	    (appres.extended && !std_ds_host) ? get_message("extendedDs") :
 		get_message("standardDs"));
 	action_output("%s %s", get_message("terminalName"), termtype);
-	if (connected_lu != CN && connected_lu[0])
-		action_output("%s %s", get_message("luName"), connected_lu);
+	clu = net_query_lu_name();
+	if (clu != CN && clu[0])
+		action_output("%s %s", get_message("luName"), clu);
 #if defined(X3270_TN3270E) /*[*/
 	bplu = net_query_bind_plu_name();
 	if (bplu != CN && bplu[0])
