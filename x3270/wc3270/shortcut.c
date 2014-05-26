@@ -119,10 +119,11 @@ CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc,
 		p.nInputBufferSize = 0;
 		p.dwFontSize.X = 0;
 		p.dwFontSize.Y = pointsize? pointsize: 12;
-		p.uFontFamily = 54; /* ? */
-		p.uFontWeight = 400; /* ? */
-		wcscpy(p.FaceName, font);
-		p.uCursorSize = /*0x19*/100;
+		p.uFontFamily = 0; /* FF_DONTCARE */
+		p.uFontWeight = 400; /* FW_NORMAL */
+		wcsncpy(p.FaceName, font, LF_FACESIZE - 1);
+		p.FaceName[LF_FACESIZE - 1] = 0;
+		p.uCursorSize = 100;
 		p.bFullScreen = 0;
 		p.bQuickEdit = 0;
 		p.bInsertMode = 1;
