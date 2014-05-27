@@ -55,9 +55,10 @@ VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj c3270.obj charset.obj \
 OBJECTS = $(VOBJS) version.obj
 WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
 	windirs.obj relink.obj snprintf.obj
-LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib shell32.lib ole32.lib
+LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib shell32.lib ole32.lib \
+       comdlg32.lib gdi32.lib winspool.lib
 SHRTLIBS = ole32.lib
-WIZLIBS = ole32.lib winspool.lib advapi32.lib
+WIZLIBS = ole32.lib winspool.lib advapi32.lib shell32.lib
 
 PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe x3270if.exe
 all: $(PROGS)
@@ -103,7 +104,7 @@ catf.exe: catf.c
 	$(CC) /Fecatf.exe $(CFLAGS) catf.c
 
 ead3270.exe: ead3270.obj windirs.obj
-	$(CC) /Fe$@ $(CFLAGS) ead3270.obj windirs.obj advapi32.lib
+	$(CC) /Fe$@ $(CFLAGS) ead3270.obj windirs.obj advapi32.lib shell32.lib
 
 ead3270.obj: ead3270.c
 	$(CC) $(CFLAGS) /c ead3270.c

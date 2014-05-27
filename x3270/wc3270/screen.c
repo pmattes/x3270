@@ -67,6 +67,8 @@
 
 #define CM (60*10)	/* csec per minute */
 
+#define XTRA_ROWS	(1 + 2 * (appres.menubar == True))
+
 #if defined(X3270_DBCS) /*[*/
 # if !defined(COMMON_LVB_LEAD_BYTE) /*[*/
 #  define COMMON_LVB_LEAD_BYTE		0x100
@@ -189,12 +191,13 @@ static HWND GetConsoleHwnd(void);
 static HANDLE chandle;	/* console input handle */
 static HANDLE cohandle;	/* console screen buffer handle */
 
-static HANDLE *sbuf;	/* dynamically-allocated screen buffer */
+static HANDLE sbuf;	/* dynamically-allocated screen buffer */
 
 HWND console_window;
 
 static int console_rows;
 static int console_cols;
+static COORD console_max;
 
 static int screen_swapped = FALSE;
 
@@ -241,6 +244,168 @@ cc_handler(DWORD type)
 		/* Let Windows have its way with it. */
 		return FALSE;
 	}
+}
+
+/*
+ * Return the number of rows implied by the given model number.
+ */
+static int
+model_rows(int m)
+{
+	switch (m) {
+	default:
+	case 2:
+		return MODEL_2_ROWS;
+	case 3:
+		return MODEL_3_ROWS;
+	case 4:
+		return MODEL_4_ROWS;
+	case 5:
+		return MODEL_5_ROWS;
+	}
+}
+
+/*
+ * Return the number of colums implied by the given model number.
+ */
+static int
+model_cols(int m)
+{
+	switch (m) {
+	default:
+	case 2:
+		return MODEL_2_COLS;
+	case 3:
+		return MODEL_3_COLS;
+	case 4:
+		return MODEL_4_COLS;
+	case 5:
+		return MODEL_5_COLS;
+	}
+}
+
+/*
+ * Resize the newly-created console.
+ *
+ * This function may make the console bigger (if the model number or oversize
+ * requests it) or may make it smaller (if it is larger than what the model
+ * requires).
+ *
+ * It may change the global values of:
+ *   maxROWS
+ *   maxCOLS
+ *   ov_rows
+ *   ov_cols
+ */
+static int
+resize_console(void)
+{
+	COORD want_bs;
+	SMALL_RECT sr;
+
+	/*
+	 * Calculate the rows and columns we want -- start with the
+	 * model-number-derived size, increase with oversize, decrease with
+	 * the physical limit of the console.
+	 */
+	want_bs.Y = model_rows(model_num) + XTRA_ROWS;
+	if (ov_rows + XTRA_ROWS > want_bs.Y) {
+		want_bs.Y = ov_rows + XTRA_ROWS;
+	}
+	if (console_max.Y && want_bs.Y > console_max.Y) {
+		want_bs.Y = console_max.Y;
+	}
+	want_bs.X = model_cols(model_num);
+	if (ov_cols > want_bs.X) {
+		want_bs.X = ov_cols;
+	}
+	if (console_max.X && want_bs.X > console_max.X) {
+		want_bs.X = console_max.X;
+	}
+
+	if (want_bs.Y != console_rows || want_bs.X != console_cols) {
+		/*
+		 * If we are making anything smaller, we need to shrink the
+		 * console window to the least common area first.
+		 */
+		if (want_bs.Y < console_rows || want_bs.X < console_cols) {
+			SMALL_RECT tsr;
+
+			tsr.Top = 0;
+			if (want_bs.Y < console_rows) {
+				tsr.Bottom = want_bs.Y - 1;
+			} else {
+				tsr.Bottom = console_rows - 1;
+			}
+			tsr.Left = 0;
+			if (want_bs.X < console_cols) {
+				tsr.Right = want_bs.X - 1;
+			} else {
+				tsr.Right = console_cols - 1;
+			}
+			if (SetConsoleWindowInfo(sbuf, TRUE, &tsr) == 0) {
+				fprintf(stderr, "SetConsoleWindowInfo(1) "
+					"failed: %s\n",
+					win32_strerror(GetLastError()));
+				return -1;
+			}
+		}
+
+		/* Set the console buffer size. */
+		if (SetConsoleScreenBufferSize(sbuf, want_bs) == 0) {
+			fprintf(stderr, "SetConsoleScreenBufferSize failed: "
+				"%s\n", win32_strerror(GetLastError()));
+			return -1;
+		}
+
+		/* Set the console window. */
+		sr.Top = 0;
+		sr.Bottom = want_bs.Y - 1;
+		sr.Left = 0;
+		sr.Right = want_bs.X - 1;
+		if (SetConsoleWindowInfo(sbuf, TRUE, &sr) == 0) {
+			fprintf(stderr, "SetConsoleWindowInfo(2) failed: "
+				"%s\n", win32_strerror(GetLastError()));
+			return -1;
+		}
+
+		/* Remember the new physical screen dimensions. */
+		console_rows = want_bs.Y;
+		console_cols = want_bs.X;
+
+		/*
+		 * Calculate new oversize and maximum logical screen
+		 * dimensions.
+		 *
+		 * This gets a bit tricky, because the menu bar and OIA can
+		 * disappear if we are constrained by the physical screen, but
+		 * we will not turn them off to make oversize fit.
+		 */
+		if (ov_cols > model_cols(model_num)) {
+			if (ov_cols > console_cols) {
+				maxCOLS = ov_cols = console_cols;
+			}
+		} else {
+			ov_cols = 0;
+			maxROWS = model_cols(model_num);
+		}
+
+		if (ov_rows > model_rows(model_num)) {
+			if (ov_rows + XTRA_ROWS > console_rows) {
+				ov_rows = console_rows - XTRA_ROWS;
+				if (ov_rows <= model_rows(model_num)) {
+					ov_rows = 0;
+					maxROWS = model_rows(model_num);
+				} else {
+					maxROWS = ov_rows;
+				}
+			}
+		} else {
+			ov_rows = 0;
+			maxROWS = model_rows(model_num);
+		}
+	}
+	return 0;
 }
 
 /*
@@ -294,6 +459,9 @@ initscr(void)
 		return NULL;
 	}
 
+	/* Get its maximum dimensions. */
+	console_max = GetLargestConsoleWindowSize(cohandle);
+
 	/* Create the screen buffer. */
 	sbuf = CreateConsoleScreenBuffer(
 		GENERIC_READ | GENERIC_WRITE,
@@ -308,9 +476,16 @@ initscr(void)
 		return NULL;
 	}
 
+	/* Set its dimensions. */
+	if (!ov_auto) {
+		if (resize_console() < 0) {
+			return NULL;
+		}
+	}
+
 	/* Set its cursor state. */
 	if (SetConsoleCursorInfo(sbuf, &cursor_info) == 0) {
-		fprintf(stderr, "SetConsoleScreenBufferInfo failed: %s\n",
+		fprintf(stderr, "SetConsoleCursorInfo failed: %s\n",
 			win32_strerror(GetLastError()));
 		return NULL;
 	}
@@ -478,12 +653,12 @@ select_changed_s(unsigned row, unsigned col, unsigned rows, unsigned cols)
 
 	/* Adjust for overflow at the bottom. */
 	if (row_adj >= ROWS) {
-		return FALSE;
+		return False;
 	}
 	if (row_adj + rows_adj >= ROWS) {
 		rows_adj = ROWS - row_adj;
 		if (rows_adj <= 0) {
-		    return FALSE;
+		    return False;
 		}
 	}
 
@@ -911,8 +1086,8 @@ endwin(void)
 void
 screen_init(void)
 {
-	int want_ov_rows = ov_rows;
-	int want_ov_cols = ov_cols;
+	int want_ov_rows;
+	int want_ov_cols;
 	Boolean oversize = False;
 
 	if (appres.menubar)
@@ -929,12 +1104,23 @@ screen_init(void)
 		(void) fprintf(stderr, "Can't initialize terminal.\n");
 		x3270_exit(1);
 	}
+	/* If I remove this statement, then when the screen is finally
+	 * drawn from the host, the app will crash. Ugh. */
+#if 0
+	fprintf(stderr, "maxROWS %d ov_rows %d console_rows %d console_max.Y %d\n",
+		maxROWS, ov_rows, console_rows, console_max.Y);
+#endif
+	want_ov_rows = ov_rows;
+	want_ov_cols = ov_cols;
 	windows_cp = GetConsoleCP();
 
 	/*
 	 * Respect the console size we are given.
 	 */
 	while (console_rows < maxROWS || console_cols < maxCOLS) {
+		fprintf(stderr, "backing off: model_num %d, console_rows %d, maxROWS %d, console_cols %d, maxCOLS %d\n",
+			model_num, console_rows, maxROWS, console_cols, maxCOLS);
+
 		/*
 		 * First, cancel any oversize.  This will get us to the correct
 		 * model number, if there is any.

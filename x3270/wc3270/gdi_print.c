@@ -454,8 +454,8 @@ gdi_init(const char *printer_name, const char **fail)
 		maxphmargin, maxpvmargin);
 
 	/* Compute the margins in pixels. */
-	pstate.hmargin_pixels = uparm.hmargin * pchar.ppiX;
-	pstate.vmargin_pixels = uparm.vmargin * pchar.ppiY;
+	pstate.hmargin_pixels = (int)(uparm.hmargin * pchar.ppiX);
+	pstate.vmargin_pixels = (int)(uparm.vmargin * pchar.ppiY);
 
 	/* See if the margins are too small. */
 	if (pstate.hmargin_pixels < maxphmargin) {
@@ -652,7 +652,7 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 	if (pstate.out_row == 0 && pstate.caption != NULL) {
 		int center;
 
-		if (strlen(pstate.caption) < pstate.usable_cols) {
+		if ((int)strlen(pstate.caption) < pstate.usable_cols) {
 			center = (pstate.usable_xpixels -
 			       (strlen(pstate.caption) * pstate.space_size.cx))
 			      / 2;
