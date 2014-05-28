@@ -119,6 +119,7 @@ main(int argc, char *argv[])
 		(void) charset_init(NULL);
 	}
 	action_init();
+	model_init();
 	ctlr_init(-1);
 	ctlr_reinit(-1);
 	kybd_init();

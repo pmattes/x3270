@@ -154,9 +154,7 @@ int
 parse_command_line(int argc, const char **argv, const char **cl_hostname)
 {
 	int cl, i;
-	int ovc, ovr;
 	int hn_argc;
-	int model_number;
 	int sl;
 	int xcmd_len = 0;
 	char *xcmd;
@@ -326,6 +324,32 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	 * Sort out the contradictory and implicit settings.
 	 */
 
+	if (appres.apl_mode)
+		appres.charset = Apl;
+	if (*cl_hostname == CN)
+		appres.once = False;
+	if (appres.conf_dir == CN)
+		appres.conf_dir = LIBX3270DIR;
+
+#if defined(X3270_TRACE) /*[*/
+	if (!appres.debug_tracing) {
+		 appres.toggle[TRACING].value = False;
+	}
+#endif /*]*/
+
+	return argc;
+}
+
+/*
+ * Initialize the model number and oversize. This needs to happen before the
+ * screen is initialized.
+ */
+void
+model_init(void)
+{
+	int model_number;
+	int ovc, ovr;
+
 	/*
 	 * Sort out model and color modes, based on the model number resource.
 	 */
@@ -341,21 +365,23 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 		model_number = 4;
 #endif /*]*/
 	}
+#if defined(RESTRICT_3279) /*[*/
+	if (appres.m3279 && model_number == 4) {
+		model_number = 3;
+	}
+#endif /*]*/
 #if defined(C3270) && !defined(_WIN32) /*[*/
 	if (appres.mono)
 		appres.m3279 = False;
 #endif /*]*/
-	if (!appres.extended)
-		appres.oversize = CN;
 
-#if defined(RESTRICT_3279) /*[*/
-	if (appres.m3279 && model_number == 4)
-		model_number = 3;
-#endif /*]*/
+	if (!appres.extended) {
+		appres.oversize = CN;
+	}
+
 	ovc = 0;
 	ovr = 0;
-	if (appres.extended &&
-	    appres.oversize != CN) {
+	if (appres.extended && appres.oversize != CN) {
 #if defined(C3270) /*[*/
 	    	if (!strcasecmp(appres.oversize, "auto")) {
 		    	ovc = -1;
@@ -374,26 +400,13 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 		}
 	}
 	set_rows_cols(model_number, ovc, ovr);
-	if (appres.termname != CN)
+	if (appres.termname != CN) {
 		termtype = appres.termname;
-	else
+	} else {
 		termtype = full_model_name;
-
-	if (appres.apl_mode)
-		appres.charset = Apl;
-	if (*cl_hostname == CN)
-		appres.once = False;
-	if (appres.conf_dir == CN)
-		appres.conf_dir = LIBX3270DIR;
-
-#if defined(X3270_TRACE) /*[*/
-	if (!appres.debug_tracing) {
-		 appres.toggle[TRACING].value = False;
 	}
-#endif /*]*/
-
-	return argc;
 }
+
 
 static void
 no_minus(const char *arg)

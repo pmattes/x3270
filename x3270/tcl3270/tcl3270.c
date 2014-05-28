@@ -403,6 +403,7 @@ tcl3270_main(int argc, const char *argv[])
 		xs_warning("Cannot find charset \"%s\"", appres.charset);
 		(void) charset_init(CN);
 	}
+	model_init();
 	ctlr_init(-1);
 	ctlr_reinit(-1);
 	kybd_init();

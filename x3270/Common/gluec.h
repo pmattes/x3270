@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@ extern void parse_xrm(const char *arg, const char *where);
 extern char *safe_string(const char *s);
 extern Boolean process_events(Boolean block);
 extern void cmdline_help(Boolean as_action);
+extern void model_init(void);
 struct host_color {
     char *name;
     int index;

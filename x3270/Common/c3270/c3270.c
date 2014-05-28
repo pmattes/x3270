@@ -401,6 +401,7 @@ main(int argc, char *argv[])
 		(void) charset_init(CN);
 	}
 	action_init();
+	model_init();
 
 #if defined(HAVE_LIBREADLINE) /*[*/
 	/* Set up readline. */
@@ -420,7 +421,6 @@ main(int argc, char *argv[])
 	kybd_init();
 	idle_init();
 	keymap_init();
-	hostfile_init();
 	hostfile_init();
 	ansi_init();
 
