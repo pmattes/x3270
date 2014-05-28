@@ -260,14 +260,16 @@ set_rows_cols(int mn, int ovc, int ovr)
 			popup_an_error("Invalid %s %dx%d:\nNegative or zero",
 			    ResOversize, ovc, ovr);
 		else if (ovc * ovr >= 0x4000)
-			popup_an_error("Invalid %s %dx%d:\nToo big",
-			    ResOversize, ovc, ovr);
+			popup_an_error("Invalid %s %dx%d:\nExceeds protocol "
+				"limit", ResOversize, ovc, ovr);
 		else if (ovc > 0 && ovc < maxCOLS)
-			popup_an_error("Invalid %s cols (%d):\nLess than model %d cols (%d)",
-			    ResOversize, ovc, model_num, maxCOLS);
+			popup_an_error("Invalid %s cols (%d):\nLess than "
+				"model %d cols (%d)", ResOversize, ovc,
+				model_num, maxCOLS);
 		else if (ovr > 0 && ovr < maxROWS)
-			popup_an_error("Invalid %s rows (%d):\nLess than model %d rows (%d)",
-			    ResOversize, ovr, model_num, maxROWS);
+			popup_an_error("Invalid %s rows (%d):\nLess than "
+				"model %d rows (%d)", ResOversize, ovr,
+				model_num, maxROWS);
 		else {
 			ov_cols = maxCOLS = ovc;
 			ov_rows = maxROWS = ovr;

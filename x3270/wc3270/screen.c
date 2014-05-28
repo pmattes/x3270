@@ -48,6 +48,7 @@
 #include "kybdc.h"
 #include "macrosc.h"
 #include "menubarc.h"
+#include "popupsc.h"
 #include "screenc.h"
 #include "scrollc.h"
 #include "selectc.h"
@@ -289,19 +290,15 @@ model_cols(int m)
  *
  * This function may make the console bigger (if the model number or oversize
  * requests it) or may make it smaller (if it is larger than what the model
- * requires).
- *
- * It may change the global values of:
- *   maxROWS
- *   maxCOLS
- *   ov_rows
- *   ov_cols
+ * requires). It may also call set_rows_cols() to update other globals derived
+ * from the ov_cols and ov_rows.
  */
 static int
 resize_console(void)
 {
 	COORD want_bs;
 	SMALL_RECT sr;
+	Boolean ov_changed = False;
 
 	/*
 	 * Calculate the rows and columns we want -- start with the
@@ -383,28 +380,33 @@ resize_console(void)
 		 */
 		if (ov_cols > model_cols(model_num)) {
 			if (ov_cols > console_cols) {
-				maxCOLS = ov_cols = console_cols;
+				popup_an_error("Oversize columns (%d) "
+					"truncated to maximum window width "
+					"(%d)", ov_cols, console_cols);
+				ov_cols = console_cols;
+				ov_changed = True;
 			}
-		} else {
-			ov_cols = 0;
-			maxROWS = model_cols(model_num);
 		}
 
 		if (ov_rows > model_rows(model_num)) {
 			if (ov_rows + XTRA_ROWS > console_rows) {
+				popup_an_error("Oversize rows (%d) truncated "
+					"to maximum window height (%d) - %d "
+					"-> %d rows", ov_rows, console_rows,
+					XTRA_ROWS, console_rows - XTRA_ROWS);
 				ov_rows = console_rows - XTRA_ROWS;
 				if (ov_rows <= model_rows(model_num)) {
 					ov_rows = 0;
-					maxROWS = model_rows(model_num);
-				} else {
-					maxROWS = ov_rows;
 				}
+				ov_changed = True;
 			}
-		} else {
-			ov_rows = 0;
-			maxROWS = model_rows(model_num);
 		}
 	}
+
+	if (ov_changed) {
+		set_rows_cols(model_num, ov_cols, ov_rows);
+	}
+
 	return 0;
 }
 
@@ -1104,12 +1106,6 @@ screen_init(void)
 		(void) fprintf(stderr, "Can't initialize terminal.\n");
 		x3270_exit(1);
 	}
-	/* If I remove this statement, then when the screen is finally
-	 * drawn from the host, the app will crash. Ugh. */
-#if 0
-	fprintf(stderr, "maxROWS %d ov_rows %d console_rows %d console_max.Y %d\n",
-		maxROWS, ov_rows, console_rows, console_max.Y);
-#endif
 	want_ov_rows = ov_rows;
 	want_ov_cols = ov_cols;
 	windows_cp = GetConsoleCP();
@@ -1118,9 +1114,6 @@ screen_init(void)
 	 * Respect the console size we are given.
 	 */
 	while (console_rows < maxROWS || console_cols < maxCOLS) {
-		fprintf(stderr, "backing off: model_num %d, console_rows %d, maxROWS %d, console_cols %d, maxCOLS %d\n",
-			model_num, console_rows, maxROWS, console_cols, maxCOLS);
-
 		/*
 		 * First, cancel any oversize.  This will get us to the correct
 		 * model number, if there is any.
