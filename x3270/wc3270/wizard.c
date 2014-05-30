@@ -107,6 +107,7 @@ enum {
     MN_FONT_SIZE,	/* font size */
     MN_BG,		/* background color */
     MN_MENUBAR,		/* menu bar */
+    MN_NOTEPAD,		/* use Notepad to edit file */
     MN_N_OPTS
 } menu_option_t;
 
@@ -208,6 +209,8 @@ typedef struct {
 } xsb_t;
 static xsb_t xs_current;
 static xsb_t xs_all;
+
+static void print_user_settings(FILE *f);
 
 static char *
 get_input(char *buf, int bufsize)
@@ -1889,6 +1892,85 @@ This option selects whether the menu bar is displayed on the screen.");
 	return 0;
 }
 
+/*
+ * Run Notepad on the session file, allowing arbitrary resources to be
+ * edited.
+ */
+static int
+run_notepad(session_t *s)
+{
+	int rc;
+	char *t = NULL;
+	char cmd[MAX_PATH + 64];
+	FILE *f;
+	char *us;
+	char buf[2];
+
+	new_screen(s, "\
+Notepad\n\
+\n\
+This option will start up the Windows Notapad editor to allow you to edit\n\
+miscellaneous resources in your session file.");
+
+	do {
+		printf("\nProceed? (y/n) [y] ");
+		fflush(stdout);
+		rc = getyn(TRUE);
+		switch (rc) {
+		case YN_ERR:
+			return -1;
+		case FALSE:
+			return 0;
+		case TRUE:
+			break;
+		}
+	} while (rc < 0);
+
+	t = _tempnam(NULL, "w3270wiz");
+	if (t == NULL) {
+		printf("Error creating temporary session file name.\n");
+		goto fail;
+	}
+	f = fopen(t, "w");
+	if (f == NULL) {
+		printf("Error creating temporary session file.\n");
+		goto fail;
+	}
+	fprintf(f, "! Comment lines begin with '!', like this one.\n\
+! Resource values look like this (without the '!'):\n\
+!  wc3270.printTestScreensPerPage: 3\n");
+	print_user_settings(f);
+	fclose(f);
+	f = NULL;
+	snprintf(cmd, sizeof(cmd), "start/wait notepad.exe %s", t);
+	system(cmd);
+	f = fopen(t, "r");
+	if (f == NULL) {
+		printf("Error reading back temporary session file.\n");
+		goto fail;
+	}
+	us = NULL;
+	if (read_user_settings(f, &us) == 0) {
+		printf("Error reading back temporary session file.\n");
+		goto fail;
+	}
+	fclose(f);
+	free(user_settings);
+	user_settings = us;
+	unlink(t);
+	free(t);
+	return 0;
+
+    fail:
+	printf("[Press <Enter>] ");
+	fflush(stdout);
+	(void) fgets(buf, 2, stdin);
+	if (t != NULL) {
+		free(t);
+	}
+	return -1;
+}
+
 typedef enum {
 	SP_REPLACE,	/* replace uneditable file */
 	SP_CREATE,	/* create new file */
@@ -1993,6 +2075,8 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 			(s->flags & WF_WHITE_BG)? "white": "black");
 		printf("%3d. Menu Bar ............... : %s\n", MN_MENUBAR,
 			(s->flags & WF_NO_MENUBAR)? "No": "Yes");
+		printf("%3d. Edit miscellaneous resources with Notepad\n",
+			MN_NOTEPAD);
 
 		for (;;) {
 		    	int invalid = 0;
@@ -2129,6 +2213,11 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 			case MN_MENUBAR:
 				if (get_menubar(s) < 0)
 				    	return SRC_ERR;
+				break;
+			case MN_NOTEPAD:
+				if (run_notepad(s) < 0) {
+					return SRC_ERR;
+				}
 				break;
 			default:
 				printf("Invalid entry.\n");
@@ -2772,6 +2861,27 @@ embed_keymaps(session_t *session, FILE *f)
 	}
 }
 
+/* Write miscellaneous user settings into an open file. */
+static void
+print_user_settings(FILE *f)
+{
+	fprintf(f, "!\n\
+! Note that in this file, backslash ('\\') characters are used to specify\n\
+! escape sequences, such as '\\r' for a Carriage Return character or '\\t'\n\
+! for a Tab character.  To include literal backslashes in this file, such as\n\
+! in Windows pathnames or UNC paths, they must be doubled, for example:\n\
+!\n\
+!   Desired text            Must be specified this way\n\
+!    C:\\xdir\\file            C:\\\\xdir\\\\file\n\
+!    \\\\server\\printer        \\\\\\\\server\\\\printer\n\
+!\n\
+!*Additional resource definitions can go after this line.\n");
+
+	/* Write out the user's previous extra settings. */
+	if (user_settings != NULL)
+	    	fprintf(f, "%s", user_settings);
+}
+
 /* Create the session file. */
 static int
 create_session_file(session_t *session, char *path)
@@ -2899,21 +3009,7 @@ wc3270." ResConsoleColorForHostColor "NeutralWhite: 0\n");
 	fseek(f, 0, SEEK_END);
 	fprintf(f, "!c%08lx %d\n", csum, WIZARD_VER);
 
-	fprintf(f, "!\n\
-! Note that in this file, backslash ('\\') characters are used to specify\n\
-! escape sequences, such as '\\r' for a Carriage Return character or '\\t'\n\
-! for a Tab character.  To include literal backslashes in this file, such as\n\
-! in Windows pathnames or UNC paths, they must be doubled, for example:\n\
-!\n\
-!   Desired text            Must be specified this way\n\
-!    C:\\xdir\\file            C:\\\\xdir\\\\file\n\
-!    \\\\server\\printer        \\\\\\\\server\\\\printer\n\
-!\n\
-!*Additional resource definitions can go after this line.\n");
-
-	/* Write out the user's previous extra settings. */
-	if (user_settings != NULL)
-	    	fprintf(f, "%s", user_settings);
+	print_user_settings(f);
 
 	fclose(f);
 

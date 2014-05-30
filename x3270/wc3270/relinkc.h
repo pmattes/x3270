@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2012, Paul Mattes.
+ * Copyright (c) 2006-2012, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -82,6 +82,7 @@ extern char *user_settings;
 extern int wrows[6];
 extern int wcols[6];
 
+extern int read_user_settings(FILE *f, char **usp);
 extern int read_session(FILE *f, session_t *s);
 extern HRESULT create_shortcut(session_t *session, char *exepath,
 	char *linkpath, char *args, char *workingdir);

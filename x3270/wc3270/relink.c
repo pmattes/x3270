@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, 2013 Paul Mattes.
+ * Copyright (c) 2006-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -202,6 +202,39 @@ hex(char c)
 
 //#define DEBUG_EDIT 1
 
+int
+read_user_settings(FILE *f, char **usp)
+{
+	int saw_star;
+	char buf[1024];
+
+	/*
+	 * Read the balance of the file into a temporary buffer, ignoring
+	 * the '!*' line.
+	 */
+	saw_star = 0;
+	while (fgets(buf, sizeof(buf), f) != NULL) {
+	    	if (!saw_star) {
+			if (buf[0] == '!' && buf[1] == '*')
+				saw_star = 1;
+			continue;
+		}
+		if (*usp == NULL) {
+		    	*usp = malloc(strlen(buf) + 1);
+			(*usp)[0] = '\0';
+		} else
+		    	*usp = realloc(*usp, strlen(*usp) + strlen(buf) + 1);
+		if (*usp == NULL) {
+#if defined(DEBUG_EDIT) /*[*/
+			printf("out of memory]\n");
+#endif /*]*/
+			return 0;
+		}
+		strcat(*usp, buf);
+	}
+	return 1;
+}
+
 /*
  * Read an existing session file.
  * Returns 1 for success (file read and editable), 0 for failure.
@@ -304,26 +337,8 @@ read_session(FILE *f, session_t *s)
 	 * Read the balance of the file into a temporary buffer, ignoring
 	 * the '!*' line.
 	 */
-	saw_star = 0;
-	while (fgets(buf, sizeof(buf), f) != NULL) {
-	    	if (!saw_star) {
-			if (buf[0] == '!' && buf[1] == '*')
-				saw_star = 1;
-			continue;
-		}
-		if (user_settings == NULL) {
-		    	user_settings = malloc(strlen(buf) + 1);
-			user_settings[0] = '\0';
-		} else
-		    	user_settings = realloc(user_settings,
-				strlen(user_settings) + strlen(buf) + 1);
-		if (user_settings == NULL) {
-#if defined(DEBUG_EDIT) /*[*/
-			printf("out of memory]\n");
-#endif /*]*/
-			return 0;
-		}
-		strcat(user_settings, buf);
+	if (read_user_settings(f, &user_settings) == 0) {
+		return 0;
 	}
 
 	/* Success */
