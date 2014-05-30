@@ -120,13 +120,22 @@ typedef enum {
     GS_NOEDIT_LEAVE = -2 /* uneditable and they don't want to overwrite it */
 } gs_t;
 
-/* Return value from summarize_and_proceed().  */
+/* Return value from summarize_and_proceed(). */
 typedef enum {
     SRC_ALL,		/* success, in all-users AppData */
     SRC_USER,		/* success, in current user AppData */
     SRC_OTHER,		/* not sure where the file is */
     SRC_ERR = -1	/* error */
 } src_t;
+
+/* Return value from intro(). */
+typedef enum {
+    IT_EDIT,		/* edit existing session */
+    IT_CREATE,		/* create new session */
+    IT_DELETE,		/* delete existing session */
+    IT_QUIT,		/* quit wizard */
+    IT_ERR = -1		/* error */
+} intro_t;
 
 #define YN_ERR		(-1)	/* error return from getyn() */
 #define YN_RETRY	(-2)	/* user input error from getyn() */
@@ -183,6 +192,22 @@ static char *common_desktop = NULL;
 static char *commona = NULL;
 
 static int get_printerlu(session_t *s, int explain);
+
+typedef enum { U_CURRENT, U_ALL } xsu_t;
+static int num_xs;
+static char *xs_name(int n, xsu_t *up);
+static void xs_init(void);
+typedef struct xs {
+	xsu_t user;
+	char *name;
+	struct xs *next;
+} xs_t;
+typedef struct {
+	int count;
+	xs_t *list;
+} xsb_t;
+static xsb_t xs_current;
+static xsb_t xs_all;
 
 static char *
 get_input(char *buf, int bufsize)
@@ -586,10 +611,10 @@ new_screen(session_t *s, char *title)
 }
 
 /* Introductory screen. */
-static int
+static intro_t
 intro(session_t *s)
 {
-	int rc;
+	char enq[16];
 
 	new_screen(s, "\
 Overview\n\
@@ -601,15 +626,25 @@ It creates or edits a session file in your wc3270 Application Data directory\n\
 and can create or re-create a shortcut on your desktop.");
 
 	for (;;) {
-		printf("\nContinue? (y/n) [y] ");
+		if (num_xs) {
+			printf("\n(C)reate, (e)dit, (d)elete or (q)uit? (c/e/d/q) [c] ");
+		} else {
+			printf("\n(C)reate or (q)uit? (c/q) [c] ");
+		}
 		fflush(stdout);
-		rc = getyn(TRUE);
-		if (rc == YN_ERR || rc == FALSE)
-			return -1;
-		if (rc == TRUE)
-			break;
+		if (get_input(enq, sizeof(enq)) == NULL) {
+			return IT_ERR;
+		}
+		if (enq[0] == '\0' || enq[0] == 'c' || enq[0] == 'C') {
+			return IT_CREATE;
+		} else if (num_xs && (enq[0] == 'e' || enq[0] == 'E')) {
+			return IT_EDIT;
+		} else if (num_xs && (enq[0] == 'd' || enq[0] == 'D')) {
+			return IT_DELETE;
+		} else if (enq[0] == 'q' || enq[0] == 'Q') {
+			return IT_QUIT;
+		}
 	}
-	return 0;
 }
 
 /*
@@ -770,7 +805,7 @@ Session names can only have letters, numbers, spaces, underscores and dashes.\n"
 
 		/* Get the session name interactively. */
 		new_screen(s, "\
-Session Name\n\
+New Session Name\n\
 \n\
 This is a unique name for the wc3270 session.  It is the name of the file\n\
 containing the session configuration parameters and the name of the desktop\n\
@@ -2223,6 +2258,306 @@ reg_font_from_cset(char *cset, int *codepage)
 	return font;
 }
 
+static void
+display_sessions(void)
+{
+	int i;
+	int col = 0;
+	char *n;
+
+	/*
+	 * Display the session names in four colums. Each 20-character column
+	 * looks like:
+	 * <space><nn><.><space><name>
+	 * So there is room for 15 characters of session name in the first
+	 * three columns, and 14 in the last column (since we avoid writing in
+	 * column 80 of the display).
+	 */
+	for (i = 0; (n = xs_name(i + 1, NULL)) != NULL; i++) {
+		size_t slen;
+
+		if (i == 0 && xs_current.count != 0) {
+			printf("Current User\n");
+		} else if (i == xs_current.count) {
+			if (col) {
+				printf("\n");
+				col = 0;
+			}
+			printf("All Users\n");
+		}
+
+		slen = strlen(n);
+
+	    retry:
+		switch (col) {
+		default:
+		case 0:
+			printf(" %2d. %s", i + 1, n);
+			if (slen <= 15) { /* fits in column 0 */
+				printf("%*s", 15 - slen, "");
+				col = 1;
+			} else if (slen <= 15 + 20) { /* covers 0 and 1 */
+				printf("%*s", 15 + 20 - slen, "");
+				col = 2;
+			} else if (slen <= 15 + 20 + 20) { /* covers 0, 1, 2 */
+				printf("%*s", 15 + 20 + 20 - slen, "");
+				col = 3;
+			} else { /* whole line */
+				printf("\n");
+			}
+			break;
+		case 1:
+			if (slen > 15 + 20 + 19) { /* overflows */
+				printf("\n");
+				col = 0;
+				goto retry;
+			}
+			printf(" %2d. %s", i + 1, n);
+			if (slen <= 15) { /* fits in column 1 */
+				printf("%*s", 15 - slen, "");
+				col = 2;
+			} else if (slen <= 15 + 20) { /* covers 1 and 2 */
+				printf("%*s", 15 + 20 - slen, "");
+				col = 3;
+			} else { /* rest of the line */
+				printf("\n");
+				col = 0;
+			}
+			break;
+		case 2:
+			if (slen > 15 + 19) { /* overflows */
+				printf("\n");
+				col = 0;
+				goto retry;
+			}
+			printf(" %2d. %s", i + 1, n);
+			if (slen <= 15) { /* fits in column 2 */
+				printf("%*s", 15 - slen, "");
+				col = 3;
+			} else { /* rest of the line */
+				printf("\n");
+				col = 0;
+			}
+			break;
+		case 3:
+			if (slen > 14) { /* overflows */
+				printf("\n");
+				col = 0;
+				goto retry;
+			}
+			printf(" %2d. %s\n", i + 1, n);
+			col = 0;
+			break;
+		}
+	}
+	if (col) {
+		printf("\n");
+	}
+}
+
+static char *
+existing_session(session_t *s)
+{
+	char nbuf[64];
+
+	new_screen(s, "\
+Existing Sessions\n");
+
+	display_sessions();
+
+	for (;;) {
+		int n;
+
+		printf("\nEnter session number to edit (1..%d): ", num_xs);
+		fflush(stdout);
+		if (get_input(nbuf, sizeof(nbuf)) == NULL) {
+			return NULL;
+		}
+		if (nbuf[0] == '\0') {
+			continue;
+		}
+		if (nbuf[0] == 'q' || nbuf[0] == 'Q') {
+			return NULL;
+		}
+		n = atoi(nbuf);
+		if (n <= 0 || n > num_xs) {
+			continue;
+		}
+		return xs_name(n, NULL);
+	}
+}
+
+static int
+delete_session(session_t *s)
+{
+	char nbuf[64];
+	char *name;
+	xsu_t u;
+	char path[MAX_PATH];
+
+	new_screen(s, "\
+Existing Sessions\n");
+
+	display_sessions();
+
+	for (;;) {
+		int n;
+
+		printf("\nEnter session number to delete (1..%d): ", num_xs);
+		fflush(stdout);
+		if (get_input(nbuf, sizeof(nbuf)) == NULL) {
+			return -1;
+		}
+		if (nbuf[0] == '\0') {
+			continue;
+		}
+		if (nbuf[0] == 'q' || nbuf[0] == 'Q') {
+			return -1;
+		}
+		n = atoi(nbuf);
+		if (n <= 0 || n > num_xs) {
+			continue;
+		}
+		name = xs_name(n, &u);
+		break;
+	}
+
+	for (;;) {
+		gs_t rc;
+
+		printf("\nAre you sure you want to delete session '%s'? (y/n) "
+			"[n] ", name);
+		fflush(stdout);
+		rc = getyn(FALSE);
+		if (rc == YN_ERR)
+		    	return -1;
+		if (rc == FALSE)
+		    	return 0;
+		if (rc == TRUE)
+		    	break;
+	}
+
+	snprintf(path, MAX_PATH, "%s%s%s",
+		(u == U_CURRENT)? mya: commona,
+		name, SESS_SUFFIX);
+	if (unlink(path) < 0) {
+		printf("\nDelete '%s' failed: %s\n", path, strerror(errno));
+		return -1;
+	} else {
+		snprintf(path, MAX_PATH, "%s%s.lnk",
+			(u == U_CURRENT)? desktop: common_desktop,
+			name);
+		(void) unlink(path);
+		printf("\nSession '%s' deleted.\n", name);
+		return 0;
+	}
+}
+
+/* Initialize a set of session names from a directory. */
+static void
+xs_init_type(char *dirname, xsb_t *xsb, xsu_t user)
+{
+	char dpath[MAX_PATH];
+	HANDLE h;
+	WIN32_FIND_DATA find_data;
+	xs_t *xs;
+
+	sprintf(dpath, "%s*%s", dirname, SESS_SUFFIX);
+	h = FindFirstFile(dpath, &find_data);
+	if (h != INVALID_HANDLE_VALUE) {
+		do {
+			char *sname;
+			size_t nlen;
+			xs_t *xss, *prev;
+
+			sname = find_data.cFileName;
+			nlen = strlen(sname) - strlen(SESS_SUFFIX);
+
+			if (user == U_ALL) {
+				int skip = 0;
+				xs_t *xsc;
+
+				for (xsc = xs_current.list;
+				     xsc != NULL;
+				     xsc = xsc->next) {
+					char *n = xsc->name;
+
+					if (strlen(n) == nlen &&
+						!strncasecmp(n, sname, nlen)) {
+						skip = 1;
+						break;
+					}
+				}
+				if (skip) {
+					continue;
+				}
+			}
+
+			xs = (xs_t *)malloc(sizeof(xs_t) + nlen + 1);
+			if (xs == NULL) {
+				fprintf(stderr, "Not enough memory\n");
+				exit(1);
+			}
+			xs->user = user;
+			xs->name = (char *)(xs + 1);
+			strncpy(xs->name, sname, nlen);
+			xs->name[nlen] = '\0';
+			for (xss = xsb->list, prev = NULL;
+			     xss != NULL;
+			     prev = xss, xss = xss->next) {
+				if (strcasecmp(xs->name, xss->name) < 0) {
+					break;
+				}
+			}
+			/* xs goes before xss, which may be NULL. */
+			xs->next = xss;
+			if (prev != NULL) {
+				prev->next = xs;
+			} else {
+				xsb->list = xs;
+			}
+			xsb->count++;
+		} while (FindNextFile(h, &find_data) != 0);
+		FindClose(h);
+	}
+}
+
+/* Initialize the session names. */
+static void
+xs_init(void)
+{
+	xs_init_type(mya, &xs_current, U_CURRENT);
+	if (commona != NULL) {
+		xs_init_type(commona, &xs_all, U_ALL);
+	}
+	num_xs = xs_current.count + xs_all.count;
+}
+
+/* Look up a session name by index, starting from 1. */
+static char *
+xs_name(int n, xsu_t *up)
+{
+	xs_t *xs;
+
+	for (xs = xs_current.list; xs != NULL; xs = xs->next) {
+		if (!--n) {
+			if (up != NULL) {
+				*up = xs->user;
+			}
+			return xs->name;
+		}
+	}
+	for (xs = xs_all.list; xs != NULL; xs = xs->next) {
+		if (!--n) {
+			if (up != NULL) {
+				*up = xs->user;
+			}
+			return xs->name;
+		}
+	}
+	return NULL;
+}
+
 static int
 session_wizard(char *session_name, int explicit_edit, int installed)
 {
@@ -2244,10 +2579,31 @@ session_wizard(char *session_name, int explicit_edit, int installed)
 	/* Start with nothing. */
 	(void) memset(&session, '\0', sizeof(session));
 
+	/* Find the existing sessions. */
+	xs_init();
+
 	/* Intro screen. */
 	if (session_name == NULL) {
-		if (intro(&session) < 0) {
+		switch (intro(&session)) {
+		case IT_ERR:
+		case IT_QUIT:
 			return -1;
+		case IT_EDIT:
+			session_name = existing_session(&session);
+			if (session_name == NULL) {
+				return -1;
+			}
+			explicit_edit = TRUE;
+			break;
+		case IT_DELETE:
+			if (delete_session(&session) < 0) {
+				return -1;
+			} else {
+				return 0;
+			}
+		case IT_CREATE:
+			/* fall through */
+			break;
 		}
 	} else {
 		new_screen(&session, "");
