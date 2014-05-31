@@ -2457,7 +2457,8 @@ Existing Sessions\n");
 	for (;;) {
 		int n;
 
-		printf("\nEnter session number to edit (1..%d): ", num_xs);
+		printf("\nEnter session name or number (1..%d) to edit, or 'q' "
+			"to quit: ", num_xs);
 		fflush(stdout);
 		if (get_input(nbuf, sizeof(nbuf)) == NULL) {
 			return NULL;
@@ -2469,7 +2470,17 @@ Existing Sessions\n");
 			return NULL;
 		}
 		n = atoi(nbuf);
-		if (n <= 0 || n > num_xs) {
+		if (n == 0) {
+			int i;
+
+			for (i = 0; i < num_xs; i++) {
+				if (!strcasecmp(nbuf, xs_name(i + 1, NULL))) {
+					return xs_name(i + 1, NULL);
+				}
+			}
+			continue;
+		}
+		if (n < 0 || n > num_xs) {
 			continue;
 		}
 		return xs_name(n, NULL);
@@ -2480,7 +2491,7 @@ static int
 delete_session(session_t *s)
 {
 	char nbuf[64];
-	char *name;
+	char *name = NULL;
 	xsu_t u;
 	char path[MAX_PATH];
 
@@ -2492,7 +2503,8 @@ Existing Sessions\n");
 	for (;;) {
 		int n;
 
-		printf("\nEnter session number to delete (1..%d): ", num_xs);
+		printf("\nEnter session name or number (1..%d) to delete, or "
+			"'q' to quit: ", num_xs);
 		fflush(stdout);
 		if (get_input(nbuf, sizeof(nbuf)) == NULL) {
 			return -1;
@@ -2504,7 +2516,21 @@ Existing Sessions\n");
 			return -1;
 		}
 		n = atoi(nbuf);
-		if (n <= 0 || n > num_xs) {
+		if (n == 0) {
+			int i;
+
+			for (i = 0; i < num_xs; i++) {
+				if (!strcasecmp(nbuf, xs_name(i + 1, NULL))) {
+					name = nbuf;
+					break;
+				}
+			}
+			if (name != NULL) {
+				break;
+			}
+			continue;
+		}
+		if (n < 0 || n > num_xs) {
 			continue;
 		}
 		name = xs_name(n, &u);
