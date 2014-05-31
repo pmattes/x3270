@@ -361,6 +361,7 @@ static void continue_tls(unsigned char *sbbuf, int len);
 static char *spc_verify_cert_hostname(X509 *cert, char *hostname,
 	unsigned char *v4addr, unsigned char *v6addr);
 #endif /*]*/
+static Boolean refused_tls = False;
 
 #if !defined(_WIN32) /*[*/
 static void output_possible(unsigned long fd, ioid_t id);
@@ -1223,6 +1224,18 @@ net_disconnect(void)
 
 	/* We have no more interest in output buffer space. */
 	remove_output();
+
+	/* If we refused TLS and never entered 3270 mode, say so. */
+	if (refused_tls && !ever_3270) {
+#if defined(HAVE_LIBSSL) /*[*/
+		popup_an_error("Connection failed:\n"
+			"Host requested TLS but SSL DLLs not found");
+#else /*][*/
+		popup_an_error("Connection failed:\n"
+			"Host requested TLS but SSL not supported");
+#endif /*]*/
+	}
+	refused_tls = False;
 }
 
 
@@ -1767,10 +1780,17 @@ telnet_fsm(unsigned char c)
 #if defined(X3270_TN3270E) /*[*/
 		    case TELOPT_TN3270E:
 #endif /*]*/
-#if defined(HAVE_LIBSSL) /*[*/
 		    case TELOPT_STARTTLS:
-			if (c == TELOPT_STARTTLS && !ssl_supported)
+#if defined(HAVE_LIBSSL) /*[*/
+			if (c == TELOPT_STARTTLS && !ssl_supported) {
+				refused_tls = True;
 			    	goto wont;
+			}
+#else /*][*/
+			if (c == TELOPT_STARTTLS) {
+				refused_tls = True;
+			    	goto wont;
+			}
 #endif /*]*/
 		    case TELOPT_NEW_ENVIRON:
 			if (c == TELOPT_TN3270E && non_tn3270e_host)
@@ -3340,10 +3360,8 @@ opt(unsigned char c)
 		return TELOPT(c);
 	else if (c == TELOPT_TN3270E)
 		return "TN3270E";
-#if defined(HAVE_LIBSSL) /*[*/
 	else if (c == TELOPT_STARTTLS)
 		return "START-TLS";
-#endif /*]*/
 	else
 		return nnn((int)c);
 }

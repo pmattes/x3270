@@ -282,6 +282,8 @@ static int ssl_init(void);
 static void client_info_callback(INFO_CONST SSL *s, int where, int ret);
 static int continue_tls(unsigned char *sbbuf, int len);
 #endif /*]*/
+static Boolean refused_tls = False;
+static Boolean ever_3270 = False;
 
 #if defined(_WIN32) /*[*/
 #define socket_errno()	WSAGetLastError()
@@ -522,6 +524,17 @@ net_disconnect(void)
 		secure_connection = False;
 		secure_unverified = False;
 #endif /*]*/
+		if (refused_tls && !ever_3270) {
+#if defined(HAVE_LIBSSL) /*[*/
+			errmsg("Connection failed:\n"
+				"Host requested TLS but SSL DLLs not found");
+#else /*][*/
+			errmsg("Connection failed:\n"
+				"Host requested TLS but SSL not supported");
+#endif /*]*/
+		}
+		refused_tls = False;
+		ever_3270 = False;
 	}
 }
 
@@ -809,10 +822,17 @@ telnet_fsm(unsigned char c)
 		    case TELOPT_SGA:
 		    case TELOPT_TM:
 		    case TELOPT_TN3270E:
-#if defined(HAVE_LIBSSL) /*[*/
 		    case TELOPT_STARTTLS:
-			if (c == TELOPT_STARTTLS && !ssl_supported)
+#if defined(HAVE_LIBSSL) /*[*/
+			if (c == TELOPT_STARTTLS && !ssl_supported) {
+				refused_tls = True;
 				goto wont;
+			}
+#else /*][*/
+			if (c == TELOPT_STARTTLS) {
+				refused_tls = True;
+				goto wont;
+			}
 #endif /*]*/
 			if (!myopts[c]) {
 				if (c != TELOPT_TM)
@@ -841,9 +861,7 @@ telnet_fsm(unsigned char c)
 			}
 #endif /*]*/
 			break;
-#if defined(HAVE_LIBSSL) /*[*/
 		    wont:
-#endif /*]*/
 		    default:
 			wont_opt[2] = c;
 			net_rawout(wont_opt, sizeof(wont_opt));
@@ -1461,6 +1479,7 @@ check_in3270(void)
 			break;
 		case E_3270:
 			new_cstate = CONNECTED_TN3270E;
+			ever_3270 = True;
 			break;
 		case E_SSCP:
 			new_cstate = CONNECTED_SSCP;
@@ -1472,6 +1491,7 @@ check_in3270(void)
 	           hisopts[TELOPT_BINARY] &&
 	           hisopts[TELOPT_EOR]) {
 		new_cstate = CONNECTED_3270;
+		ever_3270 = True;
 	} else if (cstate == CONNECTED_INITIAL) {
 		/* Nothing has happened, yet. */
 		return;
@@ -1607,10 +1627,8 @@ opt(unsigned char c)
 		return TELOPT(c);
 	else if (c == TELOPT_TN3270E)
 		return "TN3270E";
-#if defined(HAVE_LIBSSL) /*[*/
 	else if (c == TELOPT_STARTTLS)
 		return "START-TLS";
-#endif /*]*/
 	else
 		return nnn((int)c);
 }
