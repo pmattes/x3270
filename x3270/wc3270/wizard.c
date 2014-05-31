@@ -1942,8 +1942,13 @@ miscellaneous resources in your session file.");
 	print_user_settings(f);
 	fclose(f);
 	f = NULL;
-	snprintf(cmd, sizeof(cmd), "start/wait notepad.exe %s", t);
+
+	printf("Starting Notepad... ");
+	fflush(stdout);
+	snprintf(cmd, sizeof(cmd), "start/wait notepad.exe \"%s\"", t);
 	system(cmd);
+	printf("done\n");
+
 	f = fopen(t, "r");
 	if (f == NULL) {
 		printf("Error reading back temporary session file.\n");
