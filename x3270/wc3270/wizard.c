@@ -107,7 +107,8 @@ enum {
     MN_FONT_SIZE,	/* font size */
     MN_BG,		/* background color */
     MN_MENUBAR,		/* menu bar */
-    MN_NOTEPAD,		/* use Notepad to edit file */
+    MN_TRACE,		/* trace at start-up */
+    MN_NOTEPAD,		/* use Notepad to edit file (last option) */
     MN_N_OPTS
 } menu_option_t;
 
@@ -1892,6 +1893,36 @@ This option selects whether the menu bar is displayed on the screen.");
 	return 0;
 }
 
+static int
+get_trace(session_t *s)
+{
+	int rc;
+
+    	new_screen(s, "\
+Tracing\n\
+\n\
+This option causes wc3270 to begin tracing at start-up. The trace file will\n\
+be left in the wc370 AppData directory.");
+
+	do {
+		printf("\nTrace at start-up? (y/n) [%s] ",
+			(s->flags & WF_TRACE)? "y" : "n");
+		fflush(stdout);
+		rc = getyn((s->flags & WF_TRACE) != 0);
+		switch (rc) {
+		case YN_ERR:
+			return -1;
+		case TRUE:
+			s->flags |= WF_TRACE;
+			break;
+		case FALSE:
+			s->flags &= ~WF_TRACE;
+			break;
+		}
+	} while (rc < 0);
+	return 0;
+}
+
 /*
  * Run Notepad on the session file, allowing arbitrary resources to be
  * edited.
@@ -2080,6 +2111,8 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 			(s->flags & WF_WHITE_BG)? "white": "black");
 		printf("%3d. Menu Bar ............... : %s\n", MN_MENUBAR,
 			(s->flags & WF_NO_MENUBAR)? "No": "Yes");
+		printf("%3d. Trace at start-up ...... : %s\n", MN_TRACE,
+			(s->flags & WF_TRACE)? "Yes": "No");
 		printf("%3d. Edit miscellaneous resources with Notepad\n",
 			MN_NOTEPAD);
 
@@ -2217,6 +2250,10 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 				break;
 			case MN_MENUBAR:
 				if (get_menubar(s) < 0)
+				    	return SRC_ERR;
+				break;
+			case MN_TRACE:
+				if (get_trace(s) < 0)
 				    	return SRC_ERR;
 				break;
 			case MN_NOTEPAD:
@@ -3002,6 +3039,9 @@ wc3270." ResConsoleColorForHostColor "NeutralWhite: 0\n");
 
 	if (session->flags & WF_NO_MENUBAR)
 	    	fprintf(f, "wc3270.%s: %s\n", ResMenuBar, ResFalse);
+
+	if (session->flags & WF_TRACE)
+	    	fprintf(f, "wc3270.%s: %s\n", ResTrace, ResTrue);
 
 	/* Emit the warning. */
 	fprintf(f, "\

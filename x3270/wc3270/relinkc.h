@@ -69,6 +69,7 @@ typedef struct {
 #define WF_WHITE_BG		0x04	/* white background */
 #define WF_NO_MENUBAR		0x08	/* don't leave room for menu bar */
 #define WF_VERIFY_HOST_CERTS	0x10	/* verify host certificate */
+#define WF_TRACE		0x20	/* trace at start-up */
 
 typedef struct {
 	char *name;
