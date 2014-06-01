@@ -305,6 +305,7 @@ extern enum cstate cstate;
 struct toggle_name {
 	const char *name;
 	int index;
+	Boolean is_alias;
 };
 extern struct toggle_name toggle_names[];
 

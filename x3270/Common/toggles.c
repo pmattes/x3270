@@ -108,11 +108,13 @@ initialize_toggles(void)
 	appres.toggle[CURSOR_BLINK].upcall =     toggle_cursorBlink;
 	appres.toggle[SHOW_TIMING].upcall =      toggle_showTiming;
 	appres.toggle[CURSOR_POS].upcall =       toggle_cursorPos;
-	appres.toggle[MARGINED_PASTE].upcall =   toggle_nop;
 	appres.toggle[RECTANGLE_SELECT].upcall = toggle_nop;
 	appres.toggle[SCROLL_BAR].upcall =       toggle_scrollBar;
 	appres.toggle[CROSSHAIR].upcall =        toggle_crosshair;
 	appres.toggle[VISIBLE_CONTROL].upcall =  toggle_visible_control;
+#endif /*]*/
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
+	appres.toggle[MARGINED_PASTE].upcall =   toggle_nop;
 #endif /*]*/
 #if defined(X3270_TRACE) /*[*/
 	appres.toggle[TRACING].upcall =          toggle_tracing;

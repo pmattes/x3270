@@ -278,32 +278,32 @@ static String fallbacks[] = {
 };
 
 struct toggle_name toggle_names[] = {
-	{ ResMonoCase,        MONOCASE },
-	{ ResAltCursor,       ALT_CURSOR },
-	{ ResCursorBlink,     CURSOR_BLINK },
-	{ ResShowTiming,      SHOW_TIMING },
-	{ ResCursorPos,       CURSOR_POS },
+	{ ResMonoCase,        MONOCASE,		False },
+	{ ResAltCursor,       ALT_CURSOR,	False },
+	{ ResCursorBlink,     CURSOR_BLINK,	False },
+	{ ResShowTiming,      SHOW_TIMING,	False },
+	{ ResCursorPos,       CURSOR_POS,	False },
 #if defined(X3270_TRACE) /*[*/
-	{ ResTrace,           TRACING },
-	{ ResDsTrace,         TRACING }, /* compatibility */
+	{ ResTrace,           TRACING,		False },
+	{ ResDsTrace,         TRACING,		True }, /* compatibility */
 #endif /*]*/
-	{ ResScrollBar,       SCROLL_BAR },
+	{ ResScrollBar,       SCROLL_BAR,	False },
 #if defined(X3270_ANSI) /*[*/
-	{ ResLineWrap,        LINE_WRAP },
+	{ ResLineWrap,        LINE_WRAP,	False },
 #endif /*]*/
-	{ ResBlankFill,       BLANK_FILL },
+	{ ResBlankFill,       BLANK_FILL,	False },
 #if defined(X3270_TRACE) /*[*/
-	{ ResScreenTrace,     SCREEN_TRACE },
-	{ ResEventTrace,      TRACING }, /* compatibility */
+	{ ResScreenTrace,     SCREEN_TRACE,	False },
+	{ ResEventTrace,      TRACING,		True }, /* compatibility */
 #endif /*]*/
-	{ ResMarginedPaste,   MARGINED_PASTE },
-	{ ResRectangleSelect, RECTANGLE_SELECT },
-	{ ResCrosshair,	      CROSSHAIR },
-	{ ResVisibleControl,  VISIBLE_CONTROL },
+	{ ResMarginedPaste,   MARGINED_PASTE,	False },
+	{ ResRectangleSelect, RECTANGLE_SELECT,	False },
+	{ ResCrosshair,	      CROSSHAIR,	False },
+	{ ResVisibleControl,  VISIBLE_CONTROL,	False },
 #if defined(X3270_SCRIPT) /*[*/
-	{ ResAidWait,         AID_WAIT },
+	{ ResAidWait,         AID_WAIT,		False },
 #endif /*]*/
-	{ NULL,               0 }
+	{ NULL,               0,		False }
 };
 
 
@@ -937,7 +937,10 @@ parse_set_clear(int *argcp, char **argv)
 			fprintf(stderr, "Unknown toggle name '%s'. Toggle "
 				"names are:\n", argv[i]);
 			for (j = 0; toggle_names[j].name != NULL; j++) {
-			    fprintf(stderr, " %s", toggle_names[j].name);
+				if (!toggle_names[j].is_alias) {
+					fprintf(stderr, " %s",
+						toggle_names[j].name);
+				}
 			}
 			fprintf(stderr, "\n");
 			exit(1);
