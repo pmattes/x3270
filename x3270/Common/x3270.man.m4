@@ -180,8 +180,9 @@ XX_TP(XX_FB(XX_DASHED(clear)) XX_FI(toggle))
 Sets the initial value of XX_FI(toggle) to XX_FB(false).
 define(XX_TOGGLEREF,`ifelse(XX_PRODUCT,x3270,Menus,Toggles)')dnl
 define(XX_TOGGLEREFNM,`ifelse(XX_PRODUCT,x3270,MENUS,TOGGLES)')dnl
-The list of toggle names is under XX_LINK(`#'XX_TOGGLEREF,XX_SM(XX_TOGGLEREFNM))
+XX_HO(`The list of toggle names is under XX_LINK(`#'XX_TOGGLEREF,XX_SM(XX_TOGGLEREFNM))
 below.
+')dnl
 ifelse(XX_PRODUCT,c3270,
 `XX_TP(XX_FB(XX_DASHED(defaultfgbg)))
 Causes XX_PRODUCT to use the XX_POSESSIVE(terminal) default foreground color
@@ -431,8 +432,9 @@ XX_TP(XX_FB(XX_DASHED(selfsignedok)))
 When verifying a host XX_SM(SSL) certificate, allow it to be self-signed.
 XX_TP(XX_FB(XX_DASHED(set)) XX_FI(toggle))
 Sets the initial value of XX_FI(toggle) to XX_FB(true).
-The list of toggle names is under XX_LINK(`#'XX_TOGGLEREF,XX_SM(XX_TOGGLEREFNM))
+XX_HO(`The list of toggle names is under XX_LINK(`#'XX_TOGGLEREF,XX_SM(XX_TOGGLEREFNM))
 below.
+')dnl
 ifelse(XX_PRODUCT,tcl3270,,XX_PLATFORM,windows,,
 `XX_TP(XX_FB(XX_DASHED(socket)))
 Causes the emulator to create a Unix-domain socket when it starts, for use
