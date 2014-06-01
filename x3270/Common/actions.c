@@ -53,6 +53,7 @@
 #include "xioc.h"
 
 #if defined(X3270_FT) /*[*/
+#include "unicodec.h"
 #include "ftc.h"
 #endif /*]*/
 #if defined(X3270_INTERACTIVE) /*[*/

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2012, Paul Mattes.
+ * Copyright (c) 1996-2012, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,12 +45,12 @@
 #include "ctlrc.h"
 #include "ft_cutc.h"
 #include "ft_cut_ds.h"
+#include "unicodec.h"
 #include "ftc.h"
 #include "kybdc.h"
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace_dsc.h"
-#include "unicodec.h"
 #include "utilc.h"
 
 static Boolean cut_xfer_in_progress = False;
@@ -229,7 +229,7 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 			    	ft_dbcs_state = FT_DBCS_NONE;
 				continue;
 			}
-			nx = ebcdic_to_multibyte((ft_dbcs_byte1 << 8) |
+			nx = ft_ebcdic_to_multibyte((ft_dbcs_byte1 << 8) |
 				    i_asc2ft[c],
 				(char *)ob, obuf_len);
 			if (nx && (ob[nx - 1] == '\0'))
@@ -250,13 +250,14 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 			 * it onto ASCII 0x9f.  So we skip it explicitly and
 			 * treat it as printable here.
 			 */
-		    	nx = unicode_to_multibyte(c, (char *)ob, obuf_len);
+		    	nx = ft_unicode_to_multibyte(c, (char *)ob, obuf_len);
 		} else if (c == 0xff) {
-		    	nx = unicode_to_multibyte(0x9f, (char *)ob, obuf_len);
+		    	nx = ft_unicode_to_multibyte(0x9f, (char *)ob,
+				obuf_len);
 		} else {
 		    	/* Displayable character, remap. */
 			c = i_asc2ft[c];
-			nx = ebcdic_to_multibyte(c, (char *)ob, obuf_len);
+			nx = ft_ebcdic_to_multibyte(c, (char *)ob, obuf_len);
 		}
 		if (nx && (ob[nx - 1] == '\0'))
 			nx--;
@@ -356,7 +357,7 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 		 * DBCS is a guess at this point, assuming that SO and SI
 		 * are unmodified by IND$FILE.
 		 */
-		u = multibyte_to_unicode((const char *)buf, len, &consumed,
+		u = ft_multibyte_to_unicode((const char *)buf, len, &consumed,
 			&error);
 		if (u < 0x20 || ((u >= 0x80 && u < 0x9f)))
 		    	e = i_asc2ft[u];
@@ -468,7 +469,7 @@ cut_control_code(void)
 			for (i = 0; i < 80; i++) {
 			    	int xlen;
 
-				xlen = ebcdic_to_multibyte(
+				xlen = ft_ebcdic_to_multibyte(
 					ea_buf[O_CC_MESSAGE + i].cc,
 					bp, mb_len);
 				if (xlen) {
@@ -721,7 +722,7 @@ xlate_getc(void)
 			ft_length++;
 			mb[mb_len++] = c;
 			error = ME_NONE;
-			(void) multibyte_to_unicode(mb, mb_len, &consumed,
+			(void) ft_multibyte_to_unicode(mb, mb_len, &consumed,
 				&error);
 			if (error == ME_INVALID) {
 				mb[0] = '?';

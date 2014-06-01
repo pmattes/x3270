@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, Paul Mattes.
+ * Copyright (c) 1996-2009, 2014 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -78,5 +78,19 @@ extern void Transfer_action(Widget w, XEvent *event, String *parms,
 #if !defined(X3270_MENUS) /*[*/
 extern void ft_init(void);
 #endif /*]*/
+
+# if defined(_WIN32) /*[*/
+extern int ft_ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len);
+extern int ft_unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len);
+extern ucs4_t ft_multibyte_to_unicode(const char *mb, size_t mb_len,
+	int *consumedp, enum me_fail *errorp);
+# else /*][*/
+#  define ft_ebcdic_to_multibyte(ebc, mb, mb_len) \
+	     ebcdic_to_multibyte(ebc, mb, mb_len)
+#  define ft_unicode_to_multibyte(ucs4, mb, mb_len) \
+	     unicode_to_multibyte(ucs4, mb, mb_len)
+#  define ft_multibyte_to_unicode(mb, mb_len, consumedp, errorp) \
+	     multibyte_to_unicode(mb, mb_len, consumedp, errorp)
+# endif /*]*/
 
 #endif /*]*/

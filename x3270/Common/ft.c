@@ -57,6 +57,7 @@
 # include "charsetc.h"
 # include "ft_cutc.h"
 # include "ft_dftc.h"
+# include "unicodec.h"
 # include "ftc.h"
 # include "dialogc.h"
 # include "hostc.h"
@@ -96,6 +97,9 @@ Boolean ascii_flag = True;		/* Convert to ascii */
 Boolean cr_flag = True;			/* Add crlf to each line */
 Boolean remap_flag = True;		/* Remap ASCII<->EBCDIC */
 unsigned long ft_length = 0;		/* Length of transfer */
+#if defined(_WIN32) /*[*/
+int ft_windows_codepage;		/* Windows code page */
+#endif /*]*/
 
 /* Statics. */
 # if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
@@ -1757,6 +1761,8 @@ ft_in3270(Boolean ignored _is_unused)
  *   Allocation=[default|tracks|cylinders|avblock] default default
  *   PrimarySpace=n		no default
  *   SecondarySpace=n		no default
+ *   BufferSize			no default
+ *   WindowsCodePage=n		no default
  */
 static struct {
 	const char *name;
@@ -1779,6 +1785,9 @@ static struct {
 				      "avblock" } },
 	{ "PrimarySpace" },
 	{ "SecondarySpace" },
+#if defined(_WIN32) /*[*/
+	{ "WindowsCodePage" },
+#endif /*]*/
 	{ "BufferSize" },
 	{ CN }
 };
@@ -1798,6 +1807,9 @@ enum ft_parm_name {
 	PARM_PRIMARY_SPACE,
 	PARM_SECONDARY_SPACE,
 	PARM_BUFFER_SIZE,
+#if defined(_WIN32) /*[*/
+	PARM_WINDOWS_CODEPAGE,
+#endif /*]*/
 	N_PARMS
 };
 
@@ -1889,6 +1901,9 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 				    case PARM_PRIMARY_SPACE:
 				    case PARM_SECONDARY_SPACE:
 				    case PARM_BUFFER_SIZE:
+#if defined(_WIN32) /*[*/
+				    case PARM_WINDOWS_CODEPAGE:
+#endif /*]*/
 					l = strtol(eq + 1, &ptr, 10);
 					l = l; /* keep gcc happy */
 					if (ptr == eq + 1 || *ptr) {
@@ -1896,6 +1911,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 							"value: '%s'", eq + 1);
 						return;
 					}
+					break;
 					break;
 				    default:
 					break;
@@ -1967,6 +1983,16 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 			break;
 		}
 	}
+
+#if defined(_WIN32) /*[*/
+	if (tp[PARM_WINDOWS_CODEPAGE].value != CN) {
+		ft_windows_codepage = atoi(tp[PARM_WINDOWS_CODEPAGE].value);
+	} else if (appres.ft_codepage) {
+		ft_windows_codepage = appres.ft_codepage;
+	} else {
+		ft_windows_codepage = appres.local_cp;
+	}
+#endif /*]*/
 
 	ft_host_filename = tp[PARM_HOST_FILE].value;
 	ft_local_filename = tp[PARM_LOCAL_FILE].value;
@@ -2108,5 +2134,54 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	ft_state = FT_AWAIT_ACK;
 	ft_is_cut = False;
 }
+
+# if defined(_WIN32) /*[*/
+/*
+ * Windows character translation functions.
+ *
+ * These are wrappers around the existing functions in unicode.c, but they swap
+ * the local codepage in and out to use the one specified for the transfer.
+ *
+ * On other platforms, these functions are #defined to their 'real'
+ * counterparts.
+ */
+int
+ft_ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len)
+{
+	int local_cp = appres.local_cp;
+	int rc;
+
+	appres.local_cp = ft_windows_codepage;
+	rc = ebcdic_to_multibyte(ebc, mb, mb_len);
+	appres.local_cp = local_cp;
+	return rc;
+}
+
+int
+ft_unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len)
+{
+	int local_cp = appres.local_cp;
+	int rc;
+
+	appres.local_cp = ft_windows_codepage;
+	rc = unicode_to_multibyte(ucs4, mb, mb_len);
+	appres.local_cp = local_cp;
+	return rc;
+}
+
+ucs4_t
+ft_multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
+	enum me_fail *errorp)
+{
+	int local_cp = appres.local_cp;
+	ucs4_t rc;
+
+	appres.local_cp = ft_windows_codepage;
+	rc = multibyte_to_unicode(mb, mb_len, consumedp, errorp);
+	appres.local_cp = local_cp;
+	return rc;
+}
+
+# endif /*]*/
 
 #endif /*]*/

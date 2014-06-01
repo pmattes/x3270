@@ -52,6 +52,7 @@
 #include "ansic.h"
 #include "charsetc.h"
 #include "ctlrc.h"
+#include "unicodec.h"
 #include "ftc.h"
 #include "gluec.h"
 #include "hostc.h"

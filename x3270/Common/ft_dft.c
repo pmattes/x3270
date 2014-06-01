@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -44,12 +44,12 @@
 #include "charsetc.h"
 #include "kybdc.h"
 #include "ft_dftc.h"
+#include "unicodec.h"
 #include "ftc.h"
 #include "popupsc.h"
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace_dsc.h"
-#include "unicodec.h"
 #include "utilc.h"
 
 #include <errno.h>
@@ -322,7 +322,7 @@ dft_data_insert(struct data_buffer *data_bufr)
 						ft_dbcs_state = FT_DBCS_NONE;
 						continue;
 					}
-					nx = ebcdic_to_multibyte(
+					nx = ft_ebcdic_to_multibyte(
 						(ft_dbcs_byte1 << 8) |
 						    i_asc2ft[c],
 						(char *)ob, obuf_len);
@@ -347,20 +347,20 @@ dft_data_insert(struct data_buffer *data_bufr)
 					 * explicitly and treat it as printable
 					 * here.
 					 */
-				    	nx = unicode_to_multibyte(c, ob,
+				    	nx = ft_unicode_to_multibyte(c, ob,
 						obuf_len);
 				} else if (c == 0xff) {
 				    	/*
 					 * IND$FILE maps X'FF' to 0xff. We
 					 * want U+009F.
 					 */
-				    	nx = unicode_to_multibyte(0x9f, ob,
+				    	nx = ft_unicode_to_multibyte(0x9f, ob,
 						obuf_len);
 				} else {
 				    	/* Displayable character, remap. */
 					c = i_asc2ft[c];
-					nx = ebcdic_to_multibyte(c, (char *)ob,
-						obuf_len);
+					nx = ft_ebcdic_to_multibyte(c,
+						(char *)ob, obuf_len);
 				}
 				if (nx && (ob[nx - 1] == '\0'))
 					nx--;
@@ -486,7 +486,8 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 			}
 			error = ME_NONE;
 			inbuf[in_ix++] = c;
-			(void) multibyte_to_unicode(inbuf, in_ix, &consumed, &error);
+			(void) ft_multibyte_to_unicode(inbuf, in_ix, &consumed,
+				&error);
 			if (error == ME_INVALID) {
 				inbuf[0] = '?';
 				in_ix = 1;
@@ -533,7 +534,7 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 	 * Control codes are treated as Unicode and mapped directly.
 	 * We also handle DBCS here.
 	 */
-	u = multibyte_to_unicode(inbuf, in_ix, &consumed, &error);
+	u = ft_multibyte_to_unicode(inbuf, in_ix, &consumed, &error);
 	if (u < 0x20 || ((u >= 0x80 && u < 0x9f)))
 	    	e = i_asc2ft[u];
 	else if (u == 0x9f)

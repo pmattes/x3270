@@ -47,6 +47,7 @@
 
 #include "charsetc.h"
 #include "ctlrc.h"
+#include "unicodec.h"
 #include "ftc.h"
 #include "ft_cutc.h"
 #include "ft_dftc.h"
@@ -63,7 +64,6 @@
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace_dsc.h"
-#include "unicodec.h"
 #include "utilc.h"
 
 /* Globals */

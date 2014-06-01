@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
  */
 
 #include "globals.h"
+#include "appres.h"
 
 #include "charsetc.h"
 #include "hostc.h"
@@ -39,6 +40,9 @@
 #include "utf8c.h"
 
 static char host_type[5] = "tso";
+#if defined(_WIN32) /*[*/
+static int windows_cp = 0;
+#endif /*]*/
 
 /* Support functions for interactive commands. */
 
@@ -149,8 +153,8 @@ int
 interactive_transfer(String **params, Cardinal *num_params)
 {
     	char inbuf[1024];
-	static String kw_ret[14];
-	static char kw[13][1024];
+	static String kw_ret[15];
+	static char kw[14][1024];
 	char hostfile[1024];
 	char localfile[1024];
 	int kw_ix = 0;
@@ -274,6 +278,24 @@ ASCII on the workstation.\n\
 	}
 
 	if (ascii) {
+#if defined(_WIN32) /*[*/
+		for (;;) {
+			int cp;
+
+			cp = windows_cp;
+			if (cp == 0) {
+				cp = appres.ft_codepage? appres.ft_codepage:
+							 appres.local_cp;
+			}
+			printf("Windows code page for transfer: [%d] ", cp);
+			windows_cp = getnum(cp);
+			if (windows_cp < 0) {
+				return -1;
+			}
+			sprintf(kw[kw_ix++], "WindowsCodePage=%d", windows_cp);
+			break;
+		}
+#endif /*]*/
 	    	printf("\
  For ASCII transfers, carriage return (CR) characters can be handled specially.\n\
   'remove' means that CRs will be removed during the transfer.\n\
@@ -316,7 +338,7 @@ ASCII on the workstation.\n\
   'yes' means that text will be translated.\n\
   'no' means that text will be transferred as-is.\n",
 #if defined(WC3270) /*[*/
-		    GetACP(),
+		    windows_cp,
 #else /*][*/
 		    locale_codeset,
 #endif /*]*/
@@ -496,9 +518,13 @@ ASCII on the workstation.\n\
 			break;
 		}
 		if (remap)
-		    	printf(", remap text\n");
+		    	printf(", remap text");
 		else
-		    	printf(", don't remap text\n");
+		    	printf(", don't remap text");
+#if defined(_WIN32) /*[*/
+		printf(", Windows code page %d", windows_cp);
+#endif /*]*/
+		printf("\n");
 	} else
 		printf("\n");
 	if (receive) {
