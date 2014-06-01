@@ -21,18 +21,15 @@ The IND$FILE program must be installed on the IBM host, and the 3270 cursor
 must be located in a field that will accept a TSO or VM/CMS command.
 XX_TP(XX_FB(Printer Session))
 Starts or stops a printer session.
-XX_TP(XX_FB(Trace Data Stream))
+XX_TP(XX_FB(Trace Data and Events))
 If set, network traffic (both a hexadecimal representation and its
-interpretation) are logged to the file
+interpretation) is logged to the file
 XX_FB(/tmp/x3trc.)`'XX_FI(process_id),
 and a window is popped up to monitor the data.
 The file name is confirmed with a pop-up; the default directory name for the
 trace file can be changed with the "x3270.traceDir" resource.
-XX_TP(XX_FB(Trace Keyboard/Mouse Events))
-If set, information about keyboard and mouse events and the actions that
-XX_FB(x3270) takes in response are logged to a file.
-This is the same file as used for tracing the data stream, above.
-Event tracing is useful for creating and debugging custom keymaps, macros
+Keyboard and mouse events are also traced.
+This is useful for creating and debugging custom keymaps, macros
 and scripts.
 For example, it will tell you precisely what action was taken in response to
 pressing a particular key.
@@ -71,7 +68,7 @@ XX_TP(XX_FB(Execute an Action))
 Allows an action name and parameters to be entered from the keyboard.
 This allows experimentation with actions without having to edit keymaps
 and repeatedly restart XX_FB(x3270).
-XX_LP
+XX_TP(XX_FB(Toggles))
 The toggles under the Options menu are as follows:
 XX_TPS()dnl
 XX_TP(XX_FB(Monocase))
@@ -113,6 +110,58 @@ XX_TP(XX_FB(Crosshair Cursor))
 If set, XX_FB(x3270) will display a crosshair over the cursor: lines extending
 the full width and height of the screen, centered over the cursor position.
 This makes locating the cursor on the screen much easier.
+XX_TP(XX_FB(Visible Control Chars))
+If set, XX_FB(x3270) will diplay control characters as special underscored
+symbols instead of blanks.
+XX_LP
+XX_TS(2,c l.)
+XX_TR(XX_TD(Symbol)	XX_TD(Meaning))
+XX_TR(XX_TD(Period)	XX_TD(NUL (0)))
+XX_TR(XX_TD(P)	XX_TD(Start of protected field))
+XX_TR(XX_TD(U)	XX_TD(Start of unprotected field))
+XX_TR(XX_TD(M)	XX_TD(Start of modified field))
+XX_TR(XX_TD(<)	XX_TD(SO (Start of DBCS subfield)))
+XX_TR(XX_TD(>)	XX_TD(SI (End of DBCS subfield)))
+XX_TE()
 XX_TPE()dnl
 XX_TPE()dnl
 XX_LP
+The names of the toggles for use with the XX_FB(XX_DASHED(set))
+and XX_FB(XX_DASHED(clear))
+options are as follows:
+XX_LP
+XX_TS(2,center;
+l l .)
+XX_TR(XX_TD(Menu Option)	XX_TD(Name))
+XX_T_()
+XX_TR(XX_TD(Monocase)	XX_TD(monoCase))
+XX_TR(XX_TD(Blinking Cursor)	XX_TD(cursorBlink))
+XX_TR(XX_TD(Blank Fill)	XX_TD(blankFill))
+XX_TR(XX_TD(Show Timing)	XX_TD(showTiming))
+XX_TR(XX_TD(Track Cursor)	XX_TD(cursorPos))
+XX_TR(XX_TD(Trace Data and Events)	XX_TD(trace))
+XX_TR(XX_TD(Save Screen(s) in File)	XX_TD(screenTrace))
+XX_TR(XX_TD(Scrollbar)	XX_TD(scrollBar))
+XX_TR(XX_TD(Wraparound)	XX_TD(lineWrap))
+XX_TR(XX_TD(Paste with Left Margin)	XX_TD(marginedPaste))
+XX_TR(XX_TD(Select by Rectangles)	XX_TD(rectangleSelect))
+XX_TR(XX_TD(Crosshair Cursor)	XX_TD(crosshair))
+XX_TR(XX_TD(Visible Control Chars)	XX_TD(visibleControl))
+XX_TE()
+XX_LP
+In addition, the toggle XX_FB(altCursor) can be used to select the cursor type.
+If set, an underline cursor will be used.
+If clear, the normal block cursor will be used.
+The toggle XX_FB(aidWait) can also be used to change how actions that send an
+AID to the host behave: when clear, they no longer block until the host
+unlocks the keyboard.
+XX_LP
+These names also represent resources that can be set in your .Xdefaults
+or .x3270pro file.
+For example, if you always want to have the scrollbar off, you can add
+the following to your .Xdefaults or .x3270pro:
+XX_BR
+XX_RS(XX_PRODUCT.scrollBar:	false)
+XX_BR
+XX_LP
+These names are also used as the first parameter to the XX_FB(Toggle) action.

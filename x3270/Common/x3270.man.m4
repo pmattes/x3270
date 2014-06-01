@@ -733,7 +733,8 @@ XX_LP
 The on-screen menu title bar can be turned off via the "XX_PRODUCT.menuBar"
 resource.
 XX_LP
-The pop-up keypad allows the 3270-specific keys (PF keys, PA keys, Clear,
+The pop-up keypad allows the 3270-specific keys (XX_SM(PF) keys, XX_SM(PA)
+keys, Clear,
 Reset, etc.) to be invoked without memorizing their key mappings or switching
 to the XX_FB(XX_PRODUCT>) prompt.
 The keypad can be popped up by pressing Alt-K, or can be invoked via a menu
@@ -808,11 +809,14 @@ See XX_LINK(#Keymaps,XX_SM(KEYMAPS)) for details.
 ifelse(XX_PRODUCT,x3270,`include(menus.inc)',`XX_SH(Toggles)
 XX_FB(XX_PRODUCT) has a number of configurable modes which may be selected by
 the XX_FB(XX_DASHED(set)) and XX_FB(XX_DASHED(clear)) options.
+These names can also be used as the first parameter to the XX_FB(Toggle)
+action.
 XX_TPS()dnl
-XX_TP(XX_FB(monoCase))
+ifelse(XX_INTERACTIVE,yes,`XX_TP(XX_FB(monoCase))
 If set, XX_FB(XX_PRODUCT) operates in uppercase-only mode.
+')dnl
 XX_TP(XX_FB(blankFill))
-If set, XX_FB(XX_PRODUCT) behaves in some un-3270-like ways.
+If set, XX_FB(XX_PRODUCT) modifies interactive 3270 behavior in two ways.
 First, when a character is typed into a field, all nulls in the field to the
 left of that character are changed to blanks.
 This eliminates a common 3270 data-entry surprise.
@@ -832,63 +836,49 @@ If set, XX_PRODUCT will display underlined fields by substituting
 underscore XX_DQUOTED(_) characters for blanks or nulls in the field.
 Otherwise, these fields will be displayed
 ifelse(XX_PRODUCT,c3270,`using the XX_POSESSIVE(terminal) native
-unerlining mode, if one is defined.
+underlining mode, if one is defined.
 ',`with a highlighted background.
 Note that setting XX_FB(underscore) also disables the highlighted background
 for blinking fields.
 XX_FB(underscore) is set by default.
 ')dnl
 ')dnl
+XX_TP(XX_FB(trace))
+Turns on data stream and event tracing at start-up.
+Network traffic (both a hexadecimal representation and its
+interpretation) is logged to the file
+XX_FB(/tmp/x3trc.)`'XX_FI(process_id).
+The directory for the trace file can be changed with
+the "XX_PRODUCT.traceDir" resource.
+Script commands are also traced.
+XX_TP(XX_FB(screenTrace))
+Turns on screen tracing at start-up.
+Each time the screen changes, its contents are appended to the file
+XX_FB(/tmp/x3scr.)`'XX_FI(process_id).
+ifelse(XX_MODE,console,`XX_TP(XX_FB(showTiming))
+If set, the time taken by the host to process an XX_SM(AID) is displayed on
+the status line.
+')dnl
+ifelse(XX_PRODUCT,wc3270,`XX_TP(XX_FB(marginedPaste))
+If set, puts restrictions on how pasted text is placed on the screen.
+The position of the cursor at the time the `paste' operation is begun is
+used as a left margin.
+No pasted text will fill any area of the screen to the left of that
+position.
+This option is useful for pasting into certain XX_SM(IBM) editors that use the
+left side of the screen for control information.
+')dnl
+XX_TP(XX_FB(aidWait))
+Changes the behavior of actions that send an XX_SM(AID) to the
+host (XX_FB(Enter),
+XX_FB(Clear), XX_FB(PA) and XX_FB(PF)).
+When set, these actions no longer block until the host unlocks the keyboard.
+It is up to the script to poll the prompt for the unlocked state, or to use
+the XX_FB(Wait(Unlock)) action to wait for the unlock.
 XX_TPE()dnl
 XX_LP
 ')dnl
-The names of the toggles for use with the XX_FB(XX_DASHED(set))
-and XX_FB(XX_DASHED(clear))
-options are as follows:
-XX_LP
-XX_TS(2,center;
-l l .)
-XX_TR(XX_TD(ifelse(XX_PRODUCT,x3270,`Menu ')Option)	XX_TD(Name))
-XX_T_()
-XX_TR(XX_TD(Monocase)	XX_TD(monoCase))
-ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TD(Blinking Cursor)	XX_TD(cursorBlink))
 ')dnl
-XX_TR(XX_TD(Blank Fill)	XX_TD(blankFill))
-ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TD(Show Timing)	XX_TD(showTiming))
-')dnl
-XX_TR(XX_TD(Track Cursor)	XX_TD(cursorPos))
-XX_TR(XX_TD(Trace Data Stream)	XX_TD(dsTrace))
-XX_TR(XX_TD(Trace ifelse(XX_PRODUCT,x3270,`Keyboard/Mouse ')Events)	XX_TD(eventTrace))
-XX_TR(XX_TD(Save Screen(s) in File)	XX_TD(screenTrace))
-ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TD(Scrollbar)	XX_TD(scrollBar))
-')dnl
-XX_TR(XX_TD(Wraparound)	XX_TD(lineWrap))
-ifelse(XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,tcl3270,,`XX_TR(XX_TD(Paste with Left Margin)	XX_TD(marginedPaste))
-')dnl
-ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TD(Select by Rectangles)	XX_TD(rectangleSelect))
-XX_TR(XX_TD(Crosshair Cursor)	XX_TD(crosshair))
-')dnl
-ifelse(XX_MODE,console,`XX_TR(XX_TD(Underscore Mode)	XX_TD(underscore))
-')dnl
-')dnl
-XX_TE()
-ifelse(XX_PRODUCT,x3270,
-`XX_LP
-In addition, the toggle XX_FB(altCursor) can be used to select the cursor type.
-If set, an underline cursor will be used.
-If clear, the normal block cursor will be used.
-XX_LP
-These names also represent resources that can be set in your .Xdefaults
-or .x3270pro file.
-For example, if you always want to have the scrollbar off, you can add
-the following to your .Xdefaults or .x3270pro:
-XX_BR
-XX_RS(XX_PRODUCT.scrollBar:	false)
-XX_BR
-')dnl
-XX_LP
-These names are also used as the first parameter to the XX_FB(Toggle)
-ifelse(XX_PRODUCT,lib3270,function,action).
 ifelse(XX_INTERACTIVE,yes,`XX_SH(Status Line)
 ifelse(XX_PRODUCT,c3270,`If the terminal that XX_FB(XX_PRODUCT) is running on
 has at least one more row that the 3270 model requires (e.g., 25 rows for a
