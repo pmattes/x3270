@@ -1131,6 +1131,16 @@ description
     emulator display.
 .
 
+name ftCodePage
+type i
+applies w
+description
+    The Windows code page to use for translating between EBCDIC and ASCII in
+    IND$FILE file transfers. The default is to use the system ANSI code page.
+    This value can be overridden in the File Transfer dialog and by a parameter
+    to the <b>Transfer</b> action. 
+.
+
 name highlightBold
 type b
 applies x
@@ -2058,6 +2068,9 @@ else
 default wpr3287.exe -assoc %L% -command %R% %P% %V% %S% %I% %O% %H%
 endif
 desc
+    <i><b>Note:</b> This resource is for debug purposes only. To add optional
+    parameters to the wc3270 command line, use %-printer.options.%</i>
+    <p class="indented">
     The shell command to use to start a printer session, when associated with
     the current TN3270E session LU (when %-printerLU% is "<b>.</b>").
     Within the string, the following substitutions
@@ -2107,6 +2120,9 @@ else
 default wpr3287.exe %R% %P% %V% %S% %I% %O% %L%@%H%
 endif
 desc
+    <i><b>Note:</b> This resource is for debug purposes only. To add optional
+    parameters to the wc3270 command line, use %-printer.options.%</i>
+    <p class="indented">
     The shell command to use to start a printer session, when associated with a
     specific LU.  Within the string, the following substitutions are made:
     <ul>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2013, Paul Mattes.
+ * Copyright (c) 1996-2014, Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -1987,8 +1987,8 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 #if defined(_WIN32) /*[*/
 	if (tp[PARM_WINDOWS_CODEPAGE].value != CN) {
 		ft_windows_codepage = atoi(tp[PARM_WINDOWS_CODEPAGE].value);
-	} else if (appres.ft_codepage) {
-		ft_windows_codepage = appres.ft_codepage;
+	} else if (appres.ft_cp) {
+		ft_windows_codepage = appres.ft_cp;
 	} else {
 		ft_windows_codepage = appres.local_cp;
 	}

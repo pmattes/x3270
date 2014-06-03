@@ -284,8 +284,8 @@ ASCII on the workstation.\n\
 
 			cp = windows_cp;
 			if (cp == 0) {
-				cp = appres.ft_codepage? appres.ft_codepage:
-							 appres.local_cp;
+				cp = appres.ft_cp? appres.ft_cp:
+						   appres.local_cp;
 			}
 			printf("Windows code page for transfer: [%d] ", cp);
 			windows_cp = getnum(cp);

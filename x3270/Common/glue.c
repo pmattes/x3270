@@ -1098,6 +1098,7 @@ static struct {
 #endif /*]*/
 #if defined(_WIN32) /*[*/
 	{ ResLocalCp,	offset(local_cp),	XRM_INT },
+	{ ResFtCodePage, offset(ft_cp),		XRM_INT },
 #endif /*]*/
 	{ ResLoginMacro,offset(login_macro),	XRM_STRING },
 	{ ResM3279,	offset(m3279),		XRM_BOOLEAN },

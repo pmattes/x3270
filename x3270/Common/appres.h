@@ -304,7 +304,7 @@ typedef struct {
 #if defined(_WIN32) /*[*/
 	int	local_cp;
 # if defined(X3270_FT) /*[*/
-	int	ft_codepage;
+	int	ft_cp;
 # endif /*]*/
 #endif /*]*/
 #if defined(S3270) /*[*/
