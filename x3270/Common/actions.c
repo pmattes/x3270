@@ -106,8 +106,10 @@ XtActionsRec all_actions[] = {
 #if defined(WC3270) /*[*/
 	{ "Copy",		Copy_action },
 #endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
 	{ "Cut",		Cut_action },
+#endif /*]*/
+#if defined(X3270_DISPLAY) /*[*/
 	{ "Default",		Default_action },
 	{ "HandleMenu",		HandleMenu_action },
 	{ "HardPrint",		PrintText_action },

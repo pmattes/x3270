@@ -1031,8 +1031,10 @@ XX_TR(XX_TDH(XX_INT()XX_LA()XX_BLOCK()Connect`'XX_LPAREN`'XX_CCHAR()XX_FI(host)`
 ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(XX_INT()XX_LS()`Copy'XX_VOID())	XX_TD(copy highlighted area to clipboard))
 ')dnl
 XX_TR(XX_TDH(XX_INT()XX_LA()XX_BLOCK()`CursorSelect'XX_VOID())	XX_TD(Cursor Select XX_SM(AID)))
-ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(Cut)	XX_TD(erase selected text))
+ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(Cut)	XX_TD(copy highlighted area to clipboard and erase))
 XX_TR(XX_TDH(Default)	XX_TD(enter key literally))
+')dnl
+ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(XX_INT()XX_LS()`Cut'XX_VOID())	XX_TD(copy highlighted area to clipboard and erase))
 ')dnl
 XX_TR(XX_TDH(XX_INT()XX_LS()`Delete'XX_VOID())	XX_TD(delete character under cursor (or send XX_SM(ASCII DEL))))
 XX_TR(XX_TDH(XX_INT()XX_LS()`DeleteField'XX_VOID())	XX_TD(delete the entire field))

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Paul Mattes.
+ * Copyright (c) 2013-2014, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -582,10 +582,11 @@ copy_clipboard_text(LPTSTR lptstr)
 }
 
 /*
- * The Copy() action, generally mapped onto ^C.
+ * Common code for Copy and Cut.
  */
 void
-Copy_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
+copy_cut_action(Widget w, XEvent *event, String *params, Cardinal *num_params,
+	Boolean cutting)
 {
 	size_t sl;
 	HGLOBAL hglb;
@@ -617,14 +618,12 @@ Copy_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	};
 	int i;
 
-	action_debug(Copy_action, event, params, num_params);
-
-	trace_event("Word %sselected\n", word_selected? "": "not ");
-
 	/* Make sure we have something to do. */
 	if (memchr(s_pending, 1, COLS * ROWS) == NULL) {
 		return;
 	}
+
+	trace_event("Word %sselected\n", word_selected? "": "not ");
 
 	/* Open the clipboard. */
 	if (!OpenClipboard(console_window)) {
@@ -671,8 +670,80 @@ Copy_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 	CloseClipboard();
 
+	/* Do the 'cutting' part of 'Cut'. */
+	if (cutting) {
+		unsigned char fa;
+		int baddr;
+		int ba2;
+		char *sp_save;
+
+		/*
+		 * Save the contents of s_pending and use the copy instead of
+		 * s_pending, because the first call to ctlr_add() will zero
+		 * it.
+		 */
+		sp_save = Malloc(ROWS * COLS);
+		memcpy(sp_save, s_pending, ROWS * COLS);
+
+		fa = get_field_attribute(0);
+		for (baddr = 0; baddr < ROWS * COLS; baddr++) {
+			if (ea_buf[baddr].fa) {
+				fa = ea_buf[baddr].fa;
+			} else {
+				if (!sp_save[baddr] || FA_IS_PROTECTED(fa)) {
+					continue;
+				}
+				switch (ctlr_dbcs_state(baddr)) {
+				case DBCS_NONE:
+					ctlr_add(baddr, EBC_space,
+						ea_buf[baddr].cs);
+					break;
+				case DBCS_LEFT:
+					ctlr_add(baddr, EBC_space,
+						ea_buf[baddr].cs);
+					ba2 = baddr;
+					INC_BA(ba2);
+					ctlr_add(ba2, EBC_space,
+						ea_buf[baddr].cs);
+					break;
+				case DBCS_RIGHT:
+					ba2 = baddr;
+					DEC_BA(ba2);
+					ctlr_add(ba2, EBC_space,
+						ea_buf[baddr].cs);
+					ctlr_add(baddr, EBC_space,
+						ea_buf[baddr].cs);
+					break;
+				default:
+					break;
+				}
+			}
+		}
+		Free(sp_save);
+	}
+
 	/* Unselect. */
 	unselect(0, ROWS * COLS);
+}
+
+/*
+ * The Copy() action, generally mapped onto ^C.
+ */
+void
+Copy_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
+{
+	action_debug(Copy_action, event, params, num_params);
+	copy_cut_action(w, event, params, num_params, False);
+}
+
+/*
+ * The Cut() action, generally mapped onto ^X.
+ */
+void
+Cut_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
+{
+	action_debug(Cut_action, event, params, num_params);
+	copy_cut_action(w, event, params, num_params, True);
 }
 
 /*

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Paul Mattes.
+ * Copyright (c) 2013-2014, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,8 @@
 
 /* Actions. */
 extern void Copy_action(Widget w, XEvent *event, String *params,
+	Cardinal *num_params);
+extern void Cut_action(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
 
 /* Used by the screen logic. */

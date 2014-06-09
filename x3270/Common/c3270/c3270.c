@@ -216,6 +216,7 @@ static char *base_keymap =
            "Alt <Key>p: PrintText(gdi)\n"
            "Alt <Key>P: PrintText(gdi)\n"
           "Ctrl <Key>v: Paste\n"
+          "Ctrl <Key>x: Cut\n"
           "Ctrl <Key>]: Escape\n"
         "Shift <Key>F1: PF(13)\n"
         "Shift <Key>F2: PF(14)\n"
