@@ -259,7 +259,6 @@ undraw_menu(cmenu_t *cmenu)
 void
 draw_menu(cmenu_t *cmenu)
 {
-	char *t;
 	int row, col;
 	cmenu_item_t *i;
 
@@ -267,9 +266,8 @@ draw_menu(cmenu_t *cmenu)
 
 	/* Highlight the title. */
 	row = 0;
-	t = cmenu->title;
 	for (col = cmenu->offset;
-	     *t++ && col < cmenu->offset + MENU_WIDTH;
+	     col < cmenu->offset + MENU_WIDTH - 1;
 	     col++) {
 		menu_rv[(row * MODEL_2_COLS) + col] = True;
 	}

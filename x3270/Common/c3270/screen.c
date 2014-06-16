@@ -967,17 +967,20 @@ screen_disp(Boolean erasing _is_unused)
 
 		if (menu_is_up) {
 			if (appres.m3279) {
-				norm = get_color_pair(HOST_COLOR_NEUTRAL_WHITE,
-					HOST_COLOR_NEUTRAL_BLACK);
-				high = get_color_pair(HOST_COLOR_NEUTRAL_BLACK,
-					HOST_COLOR_NEUTRAL_WHITE);
+				norm = get_color_pair(COLOR_WHITE, COLOR_BLACK);
+				high = get_color_pair(COLOR_BLACK, COLOR_WHITE);
 			} else {
-				norm = defattr;
-				high = attrset(defattr | A_BOLD);
+				norm = defattr & ~A_BOLD;
+				high = defattr | A_BOLD;
 			}
 		} else {
-			norm = defattr & ~A_BOLD;
-			high = defattr & ~A_BOLD;
+			if (appres.m3279) {
+				norm = get_color_pair(COLOR_WHITE, COLOR_BLACK);
+				high = get_color_pair(COLOR_WHITE, COLOR_BLACK);
+			} else {
+				norm = defattr & ~A_BOLD;
+				high = defattr & ~A_BOLD;
+			}
 		}
 
 		for (row = 0; row < screen_yoffset; row++) {
@@ -1932,6 +1935,21 @@ draw_oia(void)
    On wider displays, there is a bigger gap between TRIPS and LU-Name.
 
 */
+
+	/*
+	 * If there is at least one black line between the 3270 display and the
+	 * OIA, draw a row of underlined blanks above the OIA. This is
+	 * something c3270 can do that wc3270 cannot, since Windows consoles
+	 * can't do underlining.
+	 */
+	if (status_row > screen_yoffset + maxROWS) {
+		int i;
+		(void) attrset(A_UNDERLINE | defattr);
+		move(status_row - 1, 0);
+		for (i = 0; i < rmargin; i++) {
+			printw(" ");
+		}
+	}
 
 	(void) attrset(A_REVERSE | defattr);
 	mvprintw(status_row, 0, "4");

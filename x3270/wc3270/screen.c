@@ -1648,25 +1648,59 @@ screen_disp(Boolean erasing _is_unused)
 #if defined(X3270_MENUS) /*[*/
 		unsigned char acs;
 #endif /*]*/
-		int norm, high;
+		int norm0, high0;
+		int norm1, high1;
 
 		if (menu_is_up) {
-			if (appres.m3279) {
-				high = cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
-				       cmap_bg[HOST_COLOR_NEUTRAL_WHITE];
-				norm = cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
-				       cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
+			/*
+			 * Menu is up. Both rows are white on black for normal,
+			 * black on white for highlighted.
+			 */
+			if (menu_is_up & KEYPAD_IS_UP) {
+				high0 = high1 =
+				    cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
+				    cmap_bg[HOST_COLOR_NEUTRAL_WHITE];
+				norm0 = norm1 =
+				    cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
+				    cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
 			} else {
-				high = reverse_colors(defattr);
-				norm = defattr;
+				norm0 =
+				    cmap_bg[HOST_COLOR_GREY] |
+				    cmap_fg[HOST_COLOR_NEUTRAL_BLACK];
+				high0 =
+				    cmap_bg[HOST_COLOR_NEUTRAL_WHITE] | 
+				    cmap_fg[HOST_COLOR_NEUTRAL_BLACK];
+				norm1 = 
+				    cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
+				    cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
+				high1 =
+				    cmap_fg[HOST_COLOR_NEUTRAL_BLACK] | 
+				    cmap_bg[HOST_COLOR_NEUTRAL_WHITE];
 			}
+
 		} else {
-			norm = high = cmap_fg[HOST_COLOR_GREY] |
-			              cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
+			/*
+			 * Menu is not up.
+			 * Row 0 is a gray-background stripe.
+			 * Row 1 has a black background.
+			 */
+			norm0 = high0 = cmap_bg[HOST_COLOR_GREY] |
+			                cmap_fg[HOST_COLOR_NEUTRAL_BLACK];
+			norm1 = high1 = cmap_bg[HOST_COLOR_NEUTRAL_BLACK] |
+					cmap_fg[HOST_COLOR_GREY];
 		}
 
 		for (row = 0; row < screen_yoffset; row++) {
 		    	move(row, 0);
+			int norm, high;
+
+			if (row) {
+				norm = norm1;
+				high = high1;
+			} else {
+				norm = norm0;
+				high = high0;
+			}
 			for (col = 0; col < cCOLS; col++) {
 				if (menu_char(row, col, True, &u, &highlight,
 					    &acs)) {
@@ -1707,17 +1741,11 @@ screen_disp(Boolean erasing _is_unused)
 				&u, &highlight, &acs);
 			if (is_menu) {
 			    	if (highlight) {
-					if (appres.m3279)
-						attrset(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
-							cmap_bg[HOST_COLOR_WHITE]);
-					else
-						attrset(reverse_colors(defattr));
+					attrset(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
+						cmap_bg[HOST_COLOR_WHITE]);
 				} else {
-					if (appres.m3279)
-						attrset(cmap_fg[HOST_COLOR_WHITE] |
-							cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
-					else
-						attrset(defattr);
+					attrset(cmap_fg[HOST_COLOR_WHITE] |
+						cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
 				}
 				addch(u);
 			}
