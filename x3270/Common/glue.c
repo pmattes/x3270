@@ -552,6 +552,7 @@ set_appres_defaults(void)
 
 #if defined(HAVE_LIBSSL) /*[*/
 	appres.verify_host_cert = False;
+	appres.tls = True;
 #endif /*]*/
 
 #if defined(C3270) /*[*/
@@ -1151,6 +1152,9 @@ static struct {
 	{ ResTermName,	offset(termname),	XRM_STRING },
 #if defined(WC3270) /*[*/
 	{ ResTitle,	offset(title),		XRM_STRING },
+#endif /*]*/
+#if defined(HAVE_LIBSSL) /*[*/
+	{ ResTls,	offset(tls),		XRM_BOOLEAN },
 #endif /*]*/
 #if defined(X3270_TRACE) /*[*/
 	{ ResTraceDir,	offset(trace_dir),	XRM_STRING },

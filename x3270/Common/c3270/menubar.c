@@ -786,6 +786,32 @@ fm_keymap(void *ignored _is_unused)
     	push_macro("Show(keymap)", False);
 }
 
+# if defined(_WIN32) /*[*/
+static void
+fm_help(void *ignored _is_unused)
+{
+	start_html_help();
+}
+
+static void
+fm_wizard(void *session)
+{
+	char *cmd;
+
+	if (session != NULL) {
+		cmd = xs_buffer("start \"wc3270 Session Wizard\" "
+			"\"%swc3270wiz.exe\" -e \"%s\"", instdir,
+			(char *)session);
+	} else {
+		cmd = xs_buffer("start \"wc3270 Session Wizard\" "
+			"\"%swc3270wiz.exe\"", instdir);
+	}
+	system(cmd);
+	Free(cmd);
+	screen_fixup(); /* get back mouse events */
+}
+# endif /*]*/
+
 static void
 fm_disconnect(void *ignored _is_unused)
 {
@@ -813,6 +839,11 @@ typedef enum {
     FM_SCREENTRACE_PRINTER,
 # endif /*]*/
     FM_KEYMAP,
+# if defined(_WIN32) /*[*/
+    FM_HELP,
+    FM_WIZARD,
+    FM_WIZARD_SESS,
+# endif /*]*/
     FM_DISC,
     FM_QUIT,
     FM_COUNT
@@ -836,6 +867,11 @@ char *file_menu_names[FM_COUNT] = {
     "Save Screen Images to Printer",
 # endif /*]*/
     "Display Keymap",
+# if defined(_WIN32) /*[*/
+    "Help",
+    "Session Wizard",
+    "Edit Session",
+# endif /*]*/
     "Disconnect",
     "Quit"
 };
@@ -853,6 +889,11 @@ menu_callback file_menu_actions[FM_COUNT] = {
     fm_screentrace_printer,
 # endif /*]*/
     fm_keymap,
+# if defined(_WIN32) /*[*/
+    fm_help,
+    fm_wizard,
+    fm_wizard,
+# endif /*]*/
     fm_disconnect,
     fm_quit
 };
@@ -918,10 +959,27 @@ menu_init(void)
 
 	file_menu = add_menu("File");
 	for (j = 0; j < FM_COUNT; j++) {
-	    	if (appres.secure && j == FM_PROMPT)
+	    	if (appres.secure && j == FM_PROMPT) {
 		    	continue;
-		file_menu_items[j] = add_item(file_menu, file_menu_names[j],
-			file_menu_actions[j], NULL);
+		}
+#if defined(WC3270) /*[*/
+		if (j == FM_WIZARD_SESS && profile_path == NULL) {
+			continue;
+		}
+		if (j == FM_WIZARD_SESS) {
+			char *text;
+
+			text = xs_buffer("Edit Session %s",
+				profile_path);
+
+			file_menu_items[j] = add_item(file_menu,
+			    text, file_menu_actions[j], profile_path);
+		} else
+#endif /*]*/
+		{
+			file_menu_items[j] = add_item(file_menu,
+				file_menu_names[j], file_menu_actions[j], NULL);
+		}
 	}
 	options_menu = add_menu("Options");
 	for (j = 0; j < OM_COUNT; j++) {

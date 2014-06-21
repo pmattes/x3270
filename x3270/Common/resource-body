@@ -340,7 +340,8 @@ description
     Defines a directory containing CA (root) certificates, used to validate
     a certificate presented by the host during SSL negotiation.
 if w
-    The default is the <b>certs</b> subdirectory of the %p% install directory.
+    There is no default directory. The default is to use the file
+    <tt>root_certs.txt</tt> in in the wc3270 AppData directory.
 else
     The default is determined by the OpenSSL library on your workstation.
 endif
@@ -354,6 +355,12 @@ switch -cafile
 description
     Defines a PEM-format file containing CA (root) certificates, used to
     validate a certificate presented by the host during SSL negotiation.
+if w
+    The default is to use the file <tt>root_certs.txt</tt> in in the wc3270
+    AppData directory.
+else
+    The default is determined by the OpenSSL library on your workstation.
+endif
 .
 
 name cbreak
@@ -2537,6 +2544,26 @@ switch -title
 desc
     Sets the title for the %p% window, overriding the default of constructing
     the name from the host that is connected to.
+.
+
+name tls
+applies w
+type b
+groups s
+default true
+description
+    If true, %p% will accept TLS negotiations from the host (if the OpenSSL
+    DLLs are installed). If false, it will reject them.
+.
+
+name tls
+applies u
+type b
+groups s
+default true
+description
+    If true, %p% will accept TLS negotiations from the host. If false, it will
+    reject them.
 .
 
 name trace

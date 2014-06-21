@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -79,3 +79,6 @@ extern void rpf_free(rpf_t *r);
 extern const char *build_options(void);
 extern void dump_version(void);
 extern const char *display_scale(double d, char *buf, size_t buflen);
+#if defined(WC3270) /*[*/
+extern void start_html_help(void);
+#endif /*]*/

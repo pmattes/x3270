@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,12 +38,14 @@
 #include "gluec.h"
 #include "popupsc.h"
 #include "screenc.h"
+#include "utilc.h"
 
 #define P_3270		0x0001	/* 3270 actions */
 #define P_SCRIPTING	0x0002	/* scripting actions */
 #define P_INTERACTIVE	0x0004	/* interactive (command-prompt) actions */
 #define P_OPTIONS	0x0008	/* command-line options */
 #define P_TRANSFER	0x0010	/* file transfer options */
+#define P_HTML		0x0020	/* HTML help */
 
 #if defined(WC3270) /*[*/
 #define PROGRAM	"wc3270"
@@ -250,6 +252,10 @@ static const char *ft_help[] = {
 };
 #endif /*]*/
 
+#if defined(WC3270) /*[*/
+static void html_help(Boolean);
+#endif /*]*/
+
 static struct {
 	const char *name;
 	int flag;
@@ -272,6 +278,9 @@ static struct {
 #endif /*]*/
 #if defined(X3270_FT) /*[*/
 	{ "file-transfer",	P_TRANSFER,	CN, ft_help, NULL },
+#endif /*]*/
+#if defined(WC3270) /*[*/
+	{ "html",		P_HTML,		CN, NULL, html_help },
 #endif /*]*/
 	{ CN, 0, CN }
 };
@@ -299,6 +308,9 @@ Help_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 #endif /*]*/
 #if defined(X3270_FT) /*[*/
 "  help file-transfer file transfer options\n"
+#endif /*]*/
+#if defined(WC3270) /*[*/
+"  help html          display HTML help file\n"
 #endif /*]*/
 		);
 		return;
@@ -415,3 +427,11 @@ Help_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 			action_output("No such command: %s", params[0]);
 	}
 }
+
+#if defined(WC3270) /*[*/
+static void
+html_help(Boolean ignored _is_unused)
+{
+	start_html_help();
+}
+#endif /*]*/

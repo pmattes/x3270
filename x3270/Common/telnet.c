@@ -362,6 +362,7 @@ static char *spc_verify_cert_hostname(X509 *cert, char *hostname,
 	unsigned char *v4addr, unsigned char *v6addr);
 #endif /*]*/
 static Boolean refused_tls = False;
+static Boolean ever_in_3270 = False;
 
 #if !defined(_WIN32) /*[*/
 static void output_possible(unsigned long fd, ioid_t id);
@@ -1226,16 +1227,22 @@ net_disconnect(void)
 	remove_output();
 
 	/* If we refused TLS and never entered 3270 mode, say so. */
-	if (refused_tls && !ever_3270) {
+	if (refused_tls && !ever_in_3270) {
 #if defined(HAVE_LIBSSL) /*[*/
-		popup_an_error("Connection failed:\n"
-			"Host requested TLS but SSL DLLs not found");
+		if (!appres.tls) {
+			popup_an_error("Connection failed:\n"
+				"Host requested TLS but SSL disabled");
+		} else {
+			popup_an_error("Connection failed:\n"
+				"Host requested TLS but SSL DLLs not found");
+		}
 #else /*][*/
 		popup_an_error("Connection failed:\n"
 			"Host requested TLS but SSL not supported");
 #endif /*]*/
 	}
 	refused_tls = False;
+	ever_in_3270 = False;
 }
 
 
@@ -1782,7 +1789,9 @@ telnet_fsm(unsigned char c)
 #endif /*]*/
 		    case TELOPT_STARTTLS:
 #if defined(HAVE_LIBSSL) /*[*/
-			if (c == TELOPT_STARTTLS && !ssl_supported) {
+			if (c == TELOPT_STARTTLS &&
+				(!ssl_supported || !appres.tls)) {
+
 				refused_tls = True;
 			    	goto wont;
 			}
@@ -3231,6 +3240,9 @@ check_in3270(void)
 #endif /*]*/
 		trace_dsn("Now operating in %s mode.\n",
 			state_name[new_cstate]);
+		if (IN_3270) {
+			ever_in_3270 = True;
+		}
 		host_in3270(new_cstate);
 	}
 }
@@ -4742,10 +4754,12 @@ client_info_callback(INFO_CONST SSL *s, int where, int ret)
 	} else if (where == SSL_CB_CONNECT_EXIT) {
 		if (ret == 0) {
 			trace_dsn("SSL_connect trace: failed in %s\n",
-			    SSL_state_string_long(s));
+				SSL_state_string_long(s));
 		} else if (ret < 0) {
 			unsigned long e;
 			char err_buf[1024];
+			char *st;
+			char *colon;
 
 			err_buf[0] = '\n';
 			e = ERR_get_error();
@@ -4761,9 +4775,15 @@ client_info_callback(INFO_CONST SSL *s, int where, int ret)
 #endif /*]*/
 			else
 				err_buf[0] = '\0';
-			trace_dsn("SSL_connect trace: error in %s%s\n",
+			st = xs_buffer("SSL_connect trace: error in %s%s",
 			    SSL_state_string_long(s),
 			    err_buf);
+			if ((colon = strrchr(st, ':')) != NULL) {
+				*colon = '\n';
+			}
+
+			popup_an_error("%s", st);
+			Free(st);
 		}
 	}
 }

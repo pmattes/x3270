@@ -341,6 +341,8 @@ XtResource resources[] = {
 	  offset(key_passwd), XtRString, 0 },
 	{ ResSelfSignedOk, ClsSelfSignedOk, XtRBoolean, sizeof(Boolean),
 	  offset(self_signed_ok), XtRString, ResFalse },
+	{ ResTls, ClsTls, XtRBoolean, sizeof(Boolean),
+	  offset(tls), XtRString, ResTrue },
 	{ ResVerifyHostCert, ClsVerifyHostCert, XtRBoolean, sizeof(Boolean),
 	  offset(verify_host_cert), XtRString, ResFalse },
 #endif /*]*/

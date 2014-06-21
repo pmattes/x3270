@@ -34,12 +34,16 @@
 
 #include "globals.h"
 #if !defined(_WIN32) /*[*/
-#include <pwd.h>
+# include <pwd.h>
 #endif /*]*/
 #include <stdarg.h>
 #include <fcntl.h>
 #include <errno.h>
 #include "resources.h"
+#if defined(WC3270) /*[*/
+# include "appres.h"
+# include "screenc.h"
+#endif /*]*/
 #include "charsetc.h"
 
 #include "utilc.h"
@@ -1194,15 +1198,29 @@ dump_version(void)
 const char *
 display_scale(double d, char *buf, size_t buflen)
 {
-    if (d >= 1000000.0)
-	snprintf(buf, buflen, "%.3g M", d / 1000000.0);
-    else if (d >= 1000.0)
-	snprintf(buf, buflen, "%.3g K", d / 1000.0);
-    else
-	snprintf(buf, buflen, "%.3g ", d);
+	if (d >= 1000000.0)
+		snprintf(buf, buflen, "%.3g M", d / 1000000.0);
+	else if (d >= 1000.0)
+		snprintf(buf, buflen, "%.3g K", d / 1000.0);
+	else
+		snprintf(buf, buflen, "%.3g ", d);
 
-    /* Don't trust snprintf. */
-    buf[buflen - 1] = '\0';
+	/* Don't trust snprintf. */
+	buf[buflen - 1] = '\0';
 
-    return buf;
+	return buf;
 }
+
+#if defined(WC3270) /*[*/
+void
+start_html_help(void)
+{
+	char *cmd;
+
+	cmd = xs_buffer("start \"wc3270 Help\" \"%shtml\\README.html\"",
+		instdir);
+	system(cmd);
+	Free(cmd);
+	screen_fixup(); /* get back mouse events */
+}
+#endif /*]*/

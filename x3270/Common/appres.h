@@ -260,6 +260,7 @@ typedef struct {
 	char	*accept_hostname;
 	Boolean	 self_signed_ok;
 	Boolean	 verify_host_cert;
+	Boolean	 tls;
 #endif /*]*/
 	char	*proxy;
 #if defined(TCL3270) /*[*/
