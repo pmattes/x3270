@@ -109,6 +109,14 @@ static char    *screentrace_name = NULL;
 static char    *screentrace_tmpfn;
 #endif /*]*/
 
+#if defined(_WIN32) /*[*/
+# if defined(WC3270) /*[*/
+#  define DEFAULT_TRACE_DIR	(mydesktop? mydesktop: myappdata)
+# else /*][*/
+#  define DEFAULT_TRACE_DIR	myappdata
+# endif /*]*/
+#endif /*]*/
+
 /* Globals */
 struct timeval   ds_ts;
 Boolean          trace_skipping = False;
@@ -496,6 +504,7 @@ create_tracefile_header(const char *mode)
 #if defined(_WIN32) && (defined(C3270) || defined(S3270)) /*[*/
 	wtrace(" AppData: %s\n", myappdata? myappdata: "(null)");
 	wtrace(" Install dir: %s\n", instdir? instdir: "(null)");
+	wtrace(" Desktop: %s\n", mydesktop? mydesktop: "(null)");
 #endif /*]*/
 	if (CONNECTED)
 		wtrace(" Connected to %s, port %u\n",
@@ -875,8 +884,8 @@ tracefile_on(int reason, enum toggle_type tt)
 	else {
 #if defined(_WIN32) /*[*/
 		tracefile_buf = xs_buffer("%s%sx3trc.$UNIQUE.txt",
-			(appres.trace_dir != CN)? appres.trace_dir: myappdata,
-			(appres.trace_dir != CN)? "\\": "");
+			appres.trace_dir? appres.trace_dir: DEFAULT_TRACE_DIR,
+			appres.trace_dir? "\\": "");
 #else /*][*/
 		tracefile_buf = xs_buffer("%s/x3trc.$UNIQUE",
 			appres.trace_dir);
@@ -1165,8 +1174,8 @@ screentrace_default_file(ptype_t ptype)
 	}
 #if defined(_WIN32) /*[*/
 	return xs_buffer("%s%sx3scr.$UNIQUE.%s",
-		(appres.trace_dir != CN)? appres.trace_dir: myappdata,
-		(appres.trace_dir != CN)? "\\": "",
+		appres.trace_dir? appres.trace_dir: DEFAULT_TRACE_DIR,
+		appres.trace_dir? "\\": "",
 		suffix);
 #else /*][*/
 	return xs_buffer("%s/x3scr.$UNIQUE.%s", appres.trace_dir, suffix);

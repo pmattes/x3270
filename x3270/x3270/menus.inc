@@ -24,7 +24,7 @@ Starts or stops a printer session.
 XX_TP(XX_FB(Trace Data and Events))
 If set, network traffic (both a hexadecimal representation and its
 interpretation) is logged to the file
-XX_FB(/tmp/x3trc.)`'XX_FI(process_id),
+XX_FB(/tmp/x3trc.)`'XX_FI(pid),
 and a window is popped up to monitor the data.
 The file name is confirmed with a pop-up; the default directory name for the
 trace file can be changed with the "x3270.traceDir" resource.
@@ -43,7 +43,7 @@ It also allows switching beteen saving to a file and writing directly to the
 printer.
 If the screens are saved to a file, the dialog allows a choice between
 text, HTML or RichText output.
-By default, the file name is XX_FB(/tmp/x3scr.)`'XX_FI(process_id)XX_FB(.)`'XX_FI(type)
+By default, the file name is XX_FB(/tmp/x3scr.)`'XX_FI(pid)XX_FB(.)`'XX_FI(type)
 in /tmp. The default directory name can be changed with the "x3270.traceDir"
 resource.
 The dialog also allows the default print command (XX_FB(lpr)) to be changed.

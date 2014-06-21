@@ -439,7 +439,7 @@ ifelse(XX_PRODUCT,tcl3270,,XX_PLATFORM,windows,,
 `XX_TP(XX_FB(XX_DASHED(socket)))
 Causes the emulator to create a Unix-domain socket when it starts, for use
 by script processes to send commands to the emulator.
-The socket is named XX_FB(/tmp/x3sck.)`'XX_FI(process_id).
+The socket is named XX_FB(/tmp/x3sck.)`'XX_FI(pid).
 ')dnl
 The XX_FB(XX_DASHED(p)) option of XX_FI(x3270if) causes it to use this socket,
 instead of pipes specified by environment variables.
@@ -475,8 +475,8 @@ Turns on data stream ifelse(XX_PRODUCT,x3270,,`and event ')tracing at startup.
 ifelse(XX_PRODUCT,x3270,`Unlike turning it on from a menu option,
 there is no pop-up to confirm the file name, which defaults to',
 `The default trace file name is')
-ifelse(XX_PLATFORM,windows,`XX_FB(x3trc.)`'XX_FI(process_id)XX_FB(.txt) in the
-XX_FB(XX_PRODUCT) XX_FI(Application Data) directory',`XX_FB(/tmp/x3trc.)`'XX_FI(process_id)').
+ifelse(XX_PRODUCT,wc3270,`XX_FB(x3trc.)`'XX_FI(pid)XX_FB(.txt) on the
+current XX_POSESSIVE(user) Desktop',XX_PRODUCT,ws3270,`XX_FB(x3trc.)`'XX_FI(pid)XX_FB(.txt) in the wc3270 AppData directory',`XX_FB(/tmp/x3trc)').
 XX_TP(XX_FB(XX_DASHED(tracefile)) XX_FI(file))
 Specifies a file to save data stream and event traces into.
 If the name starts with XX_DQUOTED(>>), data will be appended to the file.
@@ -849,14 +849,18 @@ XX_TP(XX_FB(trace))
 Turns on data stream and event tracing at start-up.
 Network traffic (both a hexadecimal representation and its
 interpretation) is logged to the file
-XX_FB(/tmp/x3trc.)`'XX_FI(process_id).
+ifelse(XX_PRODUCT,wc3270,`XX_FB(x3trc.)`'XX_FI(pid)`'XX_FB(.txt)
+on the current XX_POSESSIVE(user) desktop',ws3270,`XX_FB(x3trc.)`'XX_FI(pid)`'XX_FB(.txt) in the wc3270 AppData
+directory',`XX_FB(/tmp/x3trc.)`'XX_FI(pid)').
 The directory for the trace file can be changed with
 the "XX_PRODUCT.traceDir" resource.
 Script commands are also traced.
 XX_TP(XX_FB(screenTrace))
 Turns on screen tracing at start-up.
 Each time the screen changes, its contents are appended to the file
-XX_FB(/tmp/x3scr.)`'XX_FI(process_id).
+ifelse(XX_PRODUCT,wc3270,`XX_FB(x3scr.)`'XX_FI(pid)`'XX_FB(.txt)
+on the current XX_POSESSIVE(user) desktop',ws3270,`XX_FB(x3scr.)`'XX_FI(pid)`'XX_FB(.txt) in the wc3270 AppData
+directory',`XX_FB(/tmp/x3scr.)`'XX_FI(pid)').
 ifelse(XX_MODE,console,`XX_TP(XX_FB(showTiming))
 If set, the time taken by the host to process an XX_SM(AID) is displayed on
 the status line.
@@ -1185,7 +1189,8 @@ Turns screen tracing (saving screen images to a file) on or off.
 The command XX_FB(screentrace on) enables screen tracing;
 the command XX_FB(screentrace off) disables it.
 After XX_FB(on), a filename may be specified to override the default
-trace file name of XX_FB(/tmp/x3scr.)`'XX_FI(pid)`'ifelse(XX_PRODUCT,wc3270,XX_FB(.txt)).
+trace file name of
+ifelse(XX_PLATFORM,windows,`XX_FB(x3scr.)`'XX_FI(pid)`'XX_FB(.txt)',`XX_FB(/tmp/x3scr.)`'XX_FI(pid)').
 The keyaord XX_FB(on) can also be followed by the keyword XX_FB(printer) and an optional
 ifelse(XX_PRODUCT,wc3270,printer name,print command)
 to direct screen traces directly to the printer.
@@ -1198,7 +1203,8 @@ the command XX_FB(trace off) disables it.
 The qualifier XX_FB(data) or XX_FB(keyboard) can be specified
 before XX_FB(on) or XX_FB(off) to enable or disable a particular trace.
 After XX_FB(on), a filename may be specified to override the default
-trace file name of XX_FB(/tmp/x3trc.)`'XX_FI(pid)`'ifelse(XX_PRODUCT,wc3270,XX_FB(.txt)).
+trace file name of
+ifelse(XX_PLATFORM,windows,`XX_FB(x3trc.)`'XX_FI(pid)`'XX_FB(.txt)',`XX_FB(/tmp/x3trc.)`'XX_FI(pid)').
 XX_TPE()dnl
 ')dnl
 XX_LP

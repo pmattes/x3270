@@ -179,10 +179,10 @@ mode is used, the terminal type is always sent as 3278, but this does not
 affect color capabilities.
 XX_LP
 XX_TARGET(rn3)XX_FI(Note 3): The default trace file is
-ifelse(XX_PLATFORM,windows,`XX_FB(x3trc.)`'XX_FI(pid)`'XX_FB(.txt) in the
-directory where XX_PRODUCT was started.',
-`XX_FB(x3trc.)`'XX_FI(pid) in the directory specified by
-the XX_FB(traceDir) resource.')
+ifelse(XX_PRODUCT,wc3270,`XX_FB(x3trc.)`'XX_FI(pid)`'XX_FB(.txt)
+on the current XX_POSESSIVE(user) desktop',XX_PRODUCT,ws3270,`XX_FB(x3trc.)`'XX_FI(pid)`'XX_FB(.txt)
+in the wc3270 AppData directory',`XX_FB(x3trc.)`'XX_FI(pid) in the directory specified by
+the XX_FB(traceDir) resource').
 ifelse(XX_PRODUCT,c3270,`XX_LP
 XX_TARGET(rn4)XX_FI(Note 4): See XX_LINK(#Printer-Support,XX_SM(PRINTER SUPPORT)) for details.')
 ifelse(XX_PRODUCT,wc3270,`XX_LP

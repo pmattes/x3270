@@ -78,6 +78,7 @@
 char *instdir = NULL;
 char *myappdata = NULL;
 char *commonappdata = NULL;
+char *mydesktop = NULL;
 #endif /*]*/
 
 void

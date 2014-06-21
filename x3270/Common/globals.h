@@ -261,6 +261,7 @@ extern char		*user_title;
 extern char		*instdir;
 extern char		*myappdata;
 extern char		*commonappdata;
+extern char		*mydesktop;
 #endif /*]*/
 
 #if defined(WC3270) /*[*/
