@@ -2208,7 +2208,7 @@ tn3270e_negotiate(void)
 			    tn3270e_function_names(sbbuf+3, sblen-3));
 
 			e_rcvd = tn3270e_fdecode(sbbuf+3, sblen-3);
-			if ((e_rcvd == e_funcs) || (e_funcs & ~e_rcvd)) {
+			if (!(e_rcvd & ~e_funcs)) {
 				/* They want what we want, or less.  Done. */
 				e_funcs = e_rcvd;
 				tn3270e_subneg_send(TN3270E_OP_IS, e_funcs);
