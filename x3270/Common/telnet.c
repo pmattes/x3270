@@ -2233,23 +2233,17 @@ tn3270e_negotiate(void)
 			trace_dsn("IS %s SE\n",
 			    tn3270e_function_names(sbbuf+3, sblen-3));
 			e_rcvd = tn3270e_fdecode(sbbuf+3, sblen-3);
-			if (e_rcvd != e_funcs) {
-				if (e_funcs & ~e_rcvd) {
-					/*
-					 * They've removed something.  This is
-					 * technically illegal, but we can
-					 * live with it.
-					 */
-					e_funcs = e_rcvd;
-				} else {
-					/*
-					 * They've added something.  Abandon
-					 * TN3270E, they're brain dead.
-					 */
-					backoff_tn3270e("Host illegally added "
-					    "function(s)");
-					break;
-				}
+			if (!(e_rcvd & ~e_funcs)) {
+				/* They want what we want, or less.  Done. */
+				e_funcs = e_rcvd;
+			} else {
+				/*
+				 * They've added something. Abandon TN3270E,
+				 * they're brain dead.
+				 */
+				backoff_tn3270e("Host illegally added "
+					"function(s)");
+				break;
 			}
 			tn3270e_negotiated = 1;
 			trace_dsn("TN3270E option negotiation complete.\n");
