@@ -157,8 +157,6 @@ static ioid_t output_id = NULL_IOID;
 static char     ttype_tmpval[13];
 
 #if defined(X3270_TN3270E) /*[*/
-static unsigned long e_funcs;	/* negotiated TN3270E functions */
-#define E_OPT(n)	(1 << (n))
 static unsigned short e_xmit_seq; /* transmit sequence number */
 static int response_required;
 #endif /*]*/
@@ -208,6 +206,27 @@ static char	*proxy_host = CN;
 static char	*proxy_portname = CN;
 static unsigned short proxy_port = 0;
 
+#if defined(X3270_TN3270E) /*[*/
+#define MX8     256             /* maxiumum number of bits */
+#define NB8     64              /* bits per unit */
+#define NU8     (MX8 / NB8)     /* units per object */
+
+typedef struct {
+	uint64_t u[NU8];
+} b8_t;
+
+static void b8_zero(b8_t *b);
+static void b8_not(b8_t *b);
+static void b8_and(b8_t *r, b8_t *a, b8_t *b);
+static void b8_set_bit(b8_t *b, unsigned bit);
+static Boolean b8_bit_is_set(b8_t *b, unsigned bit);
+static Boolean b8_is_zero(b8_t *b);
+static void b8_copy(b8_t *to, b8_t *from);
+static Boolean b8_none_added(b8_t *want, b8_t *got);
+
+static b8_t e_funcs;		/* negotiated TN3270E functions */
+#endif /*]*/
+
 static int telnet_fsm(unsigned char c);
 static void net_rawout(unsigned const char *buf, int len);
 static void check_in3270(void);
@@ -224,8 +243,8 @@ static int process_eor(void);
 #if defined(X3270_TRACE) /*[*/
 static const char *tn3270e_function_names(const unsigned char *, int);
 #endif /*]*/
-static void tn3270e_subneg_send(unsigned char, unsigned long);
-static unsigned long tn3270e_fdecode(const unsigned char *, int);
+static void tn3270e_subneg_send(unsigned char, b8_t *);
+static void tn3270e_fdecode(const unsigned char *, int, b8_t *);
 static void tn3270e_ack(void);
 static void tn3270e_nak(enum pds);
 #endif /*]*/
@@ -362,7 +381,7 @@ static char *spc_verify_cert_hostname(X509 *cert, char *hostname,
 	unsigned char *v4addr, unsigned char *v6addr);
 #endif /*]*/
 static Boolean refused_tls = False;
-static Boolean ever_in_3270 = False;
+static Boolean any_host_data = False;
 
 #if !defined(_WIN32) /*[*/
 static void output_possible(unsigned long fd, ioid_t id);
@@ -1087,9 +1106,10 @@ net_connected(void)
 	did_ne_send = False;
 	deferred_will_ttype = False;
 #if defined(X3270_TN3270E) /*[*/
-	e_funcs = E_OPT(TN3270E_FUNC_BIND_IMAGE) |
-		  E_OPT(TN3270E_FUNC_RESPONSES) |
-		  E_OPT(TN3270E_FUNC_SYSREQ);
+	b8_zero(&e_funcs);
+	b8_set_bit(&e_funcs, TN3270E_FUNC_BIND_IMAGE);
+	b8_set_bit(&e_funcs, TN3270E_FUNC_RESPONSES);
+	b8_set_bit(&e_funcs, TN3270E_FUNC_SYSREQ);
 	e_xmit_seq = 0;
 	response_required = TN3270E_RSF_NO_RESPONSE;
 #endif /*]*/
@@ -1227,7 +1247,7 @@ net_disconnect(void)
 	remove_output();
 
 	/* If we refused TLS and never entered 3270 mode, say so. */
-	if (refused_tls && !ever_in_3270) {
+	if (refused_tls && !any_host_data) {
 #if defined(HAVE_LIBSSL) /*[*/
 		if (!appres.tls) {
 			popup_an_error("Connection failed:\n"
@@ -1242,7 +1262,7 @@ net_disconnect(void)
 #endif /*]*/
 	}
 	refused_tls = False;
-	ever_in_3270 = False;
+	any_host_data = False;
 }
 
 
@@ -2088,7 +2108,7 @@ tn3270e_negotiate(void)
 	static char reported_lu[LU_MAX+1];
 	static char reported_type[LU_MAX+1];
 	int sblen;
-	unsigned long e_rcvd;
+	b8_t e_rcvd;
 
 	/* Find out how long the subnegotiation buffer is. */
 	for (sblen = 0; ; sblen++) {
@@ -2161,7 +2181,7 @@ tn3270e_negotiate(void)
 				snlen? connected_lu: "");
 
 			/* Tell them what we can do. */
-			tn3270e_subneg_send(TN3270E_OP_REQUEST, e_funcs);
+			tn3270e_subneg_send(TN3270E_OP_REQUEST, &e_funcs);
 			break;
 		}
 		case TN3270E_OP_REJECT:
@@ -2202,16 +2222,15 @@ tn3270e_negotiate(void)
 		switch (sbbuf[2]) {
 
 		case TN3270E_OP_REQUEST:
-
 			/* Host is telling us what functions they want. */
 			trace_dsn("REQUEST %s SE\n",
 			    tn3270e_function_names(sbbuf+3, sblen-3));
 
-			e_rcvd = tn3270e_fdecode(sbbuf+3, sblen-3);
-			if (!(e_rcvd & ~e_funcs)) {
+			tn3270e_fdecode(sbbuf+3, sblen-3, &e_rcvd);
+			if (b8_none_added(&e_funcs, &e_rcvd)) {
 				/* They want what we want, or less.  Done. */
-				e_funcs = e_rcvd;
-				tn3270e_subneg_send(TN3270E_OP_IS, e_funcs);
+				b8_copy(&e_funcs, &e_rcvd);
+				tn3270e_subneg_send(TN3270E_OP_IS, &e_funcs);
 				tn3270e_negotiated = 1;
 				trace_dsn("TN3270E option negotiation "
 				    "complete.\n");
@@ -2221,21 +2240,20 @@ tn3270e_negotiate(void)
 				 * They want us to do something we can't.
 				 * Request the common subset.
 				 */
-				e_funcs &= e_rcvd;
+				b8_and(&e_funcs, &e_funcs, &e_rcvd);
 				tn3270e_subneg_send(TN3270E_OP_REQUEST,
-				    e_funcs);
+				    &e_funcs);
 			}
 			break;
 
 		case TN3270E_OP_IS:
-
 			/* They accept our last request, or a subset thereof. */
 			trace_dsn("IS %s SE\n",
 			    tn3270e_function_names(sbbuf+3, sblen-3));
-			e_rcvd = tn3270e_fdecode(sbbuf+3, sblen-3);
-			if (!(e_rcvd & ~e_funcs)) {
+			tn3270e_fdecode(sbbuf+3, sblen-3, &e_rcvd);
+			if (b8_none_added(&e_funcs, &e_rcvd)) {
 				/* They want what we want, or less.  Done. */
-				e_funcs = e_rcvd;
+				b8_copy(&e_funcs, &e_rcvd);
 			} else {
 				/*
 				 * They've added something. Abandon TN3270E,
@@ -2254,7 +2272,7 @@ tn3270e_negotiate(void)
 			 * unlock the keyboard, though -- that requires a
 			 * Write command from the host.
 			 */
-			if (!(e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE))) {
+			if (!b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE)) {
 				tn3270e_submode = E_3270;
 			}
 
@@ -2302,21 +2320,22 @@ tn3270e_current_opts(void)
 	static char text_buf[1024];
 	char *s = text_buf;
 
-	if (!e_funcs || !IN_E)
+	if (b8_is_zero(&e_funcs) || !IN_E)
 		return CN;
-	for (i = 0; i < 32; i++) {
-		if (e_funcs & E_OPT(i))
-		s += sprintf(s, "%s%s", (s == text_buf) ? "" : " ",
-		    fnn(i));
+	for (i = 0; i < MX8; i++) {
+		if (b8_bit_is_set(&e_funcs, i)) {
+			s += sprintf(s, "%s%s", (s == text_buf) ? "" : " ",
+				fnn(i));
+		}
 	}
 	return text_buf;
 }
 
 /* Transmit a TN3270E FUNCTIONS REQUEST or FUNCTIONS IS message. */
 static void
-tn3270e_subneg_send(unsigned char op, unsigned long funcs)
+tn3270e_subneg_send(unsigned char op, b8_t *funcs)
 {
-	unsigned char proto_buf[7 + 32];
+	unsigned char proto_buf[7 + MX8];
 	int proto_len;
 	int i;
 
@@ -2324,9 +2343,10 @@ tn3270e_subneg_send(unsigned char op, unsigned long funcs)
 	(void) memcpy(proto_buf, functions_req, 4);
 	proto_buf[4] = op;
 	proto_len = 5;
-	for (i = 0; i < 32; i++) {
-		if (funcs & E_OPT(i))
+	for (i = 0; i < MX8; i++) {
+		if (b8_bit_is_set(funcs, (i))) {
 			proto_buf[proto_len++] = i;
+		}
 	}
 
 	/* Complete and send out the protocol message. */
@@ -2342,19 +2362,16 @@ tn3270e_subneg_send(unsigned char op, unsigned long funcs)
 	    cmd(SE));
 }
 
-/* Translate a string of TN3270E functions into a bit-map. */
-static unsigned long
-tn3270e_fdecode(const unsigned char *buf, int len)
+/* Translate a string of TN3270E functions into a bitmap. */
+static void
+tn3270e_fdecode(const unsigned char *buf, int len, b8_t *r)
 {
-	unsigned long r = 0L;
 	int i;
 
-	/* Note that this code silently ignores options >= 32. */
+	b8_zero(r);
 	for (i = 0; i < len; i++) {
-		if (buf[i] < 32)
-			r |= E_OPT(buf[i]);
+		b8_set_bit(r, buf[i]);
 	}
-	return r;
 }
 #endif /*]*/
 
@@ -2577,9 +2594,10 @@ process_eor(void)
 
 		switch (h->data_type) {
 		case TN3270E_DT_3270_DATA:
-			if ((e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE)) &&
-			    !tn3270e_bound)
+			if (b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE) &&
+			    !tn3270e_bound) {
 				return 0;
+			}
 			tn3270e_submode = E_3270;
 			check_in3270();
 			response_required = h->response_flag;
@@ -2594,8 +2612,9 @@ process_eor(void)
 			response_required = TN3270E_RSF_NO_RESPONSE;
 			return 0;
 		case TN3270E_DT_BIND_IMAGE:
-			if (!(e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE)))
+			if (!b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE)) {
 				return 0;
+			}
 			process_bind(ibuf + EH_SIZE, (ibptr - ibuf) - EH_SIZE);
 			if (bind_state & BIND_DIMS_PRESENT) {
 				if (bind_state & BIND_DIMS_ALT) {
@@ -2630,9 +2649,9 @@ process_eor(void)
 			check_in3270();
 			return 0;
 		case TN3270E_DT_UNBIND:
-			if (!(e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE)))
+			if (!b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE)) {
 				return 0;
-
+			}
 			if ((ibptr - ibuf) > EH_SIZE) {
 				trace_ds("< UNBIND %s\n",
 					unbind_reason(ibuf[EH_SIZE]));
@@ -2658,8 +2677,9 @@ process_eor(void)
 			}
 			return 0;
 		case TN3270E_DT_SSCP_LU_DATA:
-			if (!(e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE)))
+			if (!b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE)) {
 				return 0;
+			}
 			tn3270e_submode = E_SSCP;
 			check_in3270();
 			ctlr_write_sscp_lu(ibuf + EH_SIZE,
@@ -3234,8 +3254,8 @@ check_in3270(void)
 #endif /*]*/
 		trace_dsn("Now operating in %s mode.\n",
 			state_name[new_cstate]);
-		if (IN_3270) {
-			ever_in_3270 = True;
+		if (IN_3270 || IN_ANSI || IN_SSCP) {
+			any_host_data = True;
 		}
 		host_in3270(new_cstate);
 	}
@@ -3446,8 +3466,9 @@ net_output(void)
 
 		trace_dsn("SENT TN3270E(%s NO-RESPONSE %u)\n",
 			IN_TN3270E ? "3270-DATA" : "SSCP-LU-DATA", e_xmit_seq);
-		if (e_funcs & E_OPT(TN3270E_FUNC_RESPONSES))
+		if (b8_bit_is_set(&e_funcs, TN3270E_FUNC_RESPONSES)) {
 			e_xmit_seq = (e_xmit_seq + 1) & 0x7fff;
+		}
 	}
 #endif /*]*/
 
@@ -3747,7 +3768,7 @@ net_abort(void)
 {
 	static unsigned char buf[] = { IAC, AO };
 
-	if (e_funcs & E_OPT(TN3270E_FUNC_SYSREQ)) {
+	if (b8_bit_is_set(&e_funcs, TN3270E_FUNC_SYSREQ)) {
 		/*
 		 * I'm not sure yet what to do here.  Should the host respond
 		 * to the AO by sending us SSCP-LU data (and putting us into
@@ -3761,8 +3782,8 @@ net_abort(void)
 		case E_SSCP:
 			net_rawout(buf, sizeof(buf));
 			trace_dsn("SENT AO\n");
-			if (tn3270e_bound ||
-			    !(e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE))) {
+			if (tn3270e_bound || !b8_bit_is_set(&e_funcs,
+						    TN3270E_FUNC_BIND_IMAGE)) {
 				tn3270e_submode = E_3270;
 				check_in3270();
 			}
@@ -3905,9 +3926,10 @@ net_snap_options(void)
 		(void) memcpy(obptr, functions_req, 4);
 		obptr += 4;
 		*obptr++ = TN3270E_OP_IS;
-		for (i = 0; i < 32; i++) {
-			if (e_funcs & E_OPT(i))
+		for (i = 0; i < MX8; i++) {
+			if (b8_bit_is_set(&e_funcs, i)) {
 				*obptr++ = i;
+			}
 		}
 		*obptr++ = IAC;
 		*obptr++ = SE;
@@ -4884,10 +4906,11 @@ net_query_bind_plu_name(void)
 	 * negotiated the BIND-IMAGE option.
 	 */
 	if ((cstate == CONNECTED_TN3270E) &&
-	    (e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE)))
+	    b8_bit_is_set(&e_funcs, TN3270E_FUNC_BIND_IMAGE)) {
 		return plu_name? plu_name: "";
-	else
+	} else {
 		return "";
+	}
 #else /*][*/
 	/* No TN3270E, no BIND negotiation. */
 	return "";
@@ -5104,4 +5127,105 @@ popup_password(void)
 
 	popup_popup(password_shell, XtGrabExclusive);
 }
+#endif /*]*/
+
+#if defined(X3270_TN3270E) /*[*/
+
+/*
+ * 256-bit bitmap functions.
+ *
+ * These are defined for TN3270E function negotiation, but could be of general
+ * use.
+ */
+
+/* Zero a bitmap. */
+static void
+b8_zero(b8_t *b)
+{
+	int i;
+
+	for (i = 0; i < NU8; i++) {
+		b->u[i] = 0;
+	}
+}
+
+/* 1's complement a bitmap. */
+static void
+b8_not(b8_t *b)
+{
+	int i;
+
+	for (i = 0; i < NU8; i++) {
+		b->u[i] = ~b->u[i];
+	}
+}
+
+/* AND two objects. */
+static void
+b8_and(b8_t *r, b8_t *a, b8_t *b)
+{
+	int i;
+
+	for (i = 0; i < NU8; i++) {
+		r->u[i] = a->u[i] & b->u[i];
+	}
+}
+
+/* Set a bit in a bitmap. */
+static void
+b8_set_bit(b8_t *b, unsigned bit)
+{
+	if (bit < MX8) {
+		b->u[bit / NB8] |= (uint64_t)1 << (bit % NB8);
+	}
+}
+
+/* Test a bit in a bitmap. */
+static Boolean
+b8_bit_is_set(b8_t *b, unsigned bit)
+{
+    	if (bit < MX8) {
+		return (b->u[bit / NB8] & ((uint64_t)1 << (bit % NB8))) != 0;
+	} else {
+		return False;
+	}
+}
+
+/* Test a bitmap for all zeroes. */
+static Boolean
+b8_is_zero(b8_t *b)
+{
+	int i;
+
+	for (i = 0; i < NU8; i++) {
+		if (b->u[i]) {
+			return False;
+		}
+	}
+	return True;
+}
+
+/* Copy one bitmap to another. */
+static void
+b8_copy(b8_t *to, b8_t *from)
+{
+    	*to = *from; /* struct copy */
+}
+
+/* Check for bits added to a bitmap. */
+static Boolean
+b8_none_added(b8_t *want, b8_t *got)
+{
+	b8_t t;
+
+	/*
+	 * The basic arithmetic is:
+	 *  !(got & ~want)
+	 */
+	b8_copy(&t, want);
+	b8_not(&t);
+	b8_and(&t, got, &t);
+	return b8_is_zero(&t);
+}
+
 #endif /*]*/
