@@ -125,8 +125,9 @@ typedef enum {
 /* Return value from summarize_and_proceed(). */
 typedef enum {
     SRC_ALL,		/* success, in all-users AppData */
-    SRC_USER,		/* success, in current user AppData */
+    SRC_CURRENT,	/* success, in current user AppData */
     SRC_OTHER,		/* not sure where the file is */
+    SRC_NONE,		/* don't rewrite the file */
     SRC_ERR = -1	/* error */
 } src_t;
 
@@ -135,6 +136,9 @@ typedef enum {
     IT_EDIT,		/* edit existing session */
     IT_CREATE,		/* create new session */
     IT_DELETE,		/* delete existing session */
+    IT_COPY,		/* copy existing session */
+    IT_RENAME,		/* rename existing session */
+    IT_SHORTCUT,	/* create shortcut */
     IT_QUIT,		/* quit wizard */
     IT_ERR = -1		/* error */
 } intro_t;
@@ -212,6 +216,8 @@ static xsb_t xs_current;
 static xsb_t xs_all;
 
 static void print_user_settings(FILE *f);
+static void display_sessions(int with_numbers);
+static int write_shortcut(session_t *s, src_t src, char *path, int installed);
 
 static char *
 get_input(char *buf, int bufsize)
@@ -623,29 +629,53 @@ intro(session_t *s)
 	new_screen(s, "\
 Overview\n\
 \n\
-This wizard sets up a new wc3270 session, or allows you to modify an existing\n\
-session.\n\
-\n\
-It creates or edits a session file in your wc3270 Application Data directory\n\
-and can create or re-create a shortcut on your desktop.");
+This wizard allows you to set up a new wc3270 session or modify an existing\n\
+one. It also lets you create or re-create a shortcut on the desktop.\n");
+
+	display_sessions(0);
+
+	printf("\n\
+  1. Create new session (n)\n");
+	if (num_xs) {
+		printf("\
+  2. Edit session (e)\n\
+  3. Delete sesstion (d)\n\
+  4. Copy session (c)\n\
+  5. Rename session (r)\n\
+  6. Create shortcut (s)\n");
+	}
+	printf("\
+  7. Quit (q)\n");
 
 	for (;;) {
-		if (num_xs) {
-			printf("\n(C)reate, (e)dit, (d)elete or (q)uit? (c/e/d/q) [c] ");
-		} else {
-			printf("\n(C)reate or (q)uit? (c/q) [c] ");
-		}
+	    	int i;
+
+		printf("\nEnter selection (1..7 or n%s/q) [n] ",
+			num_xs? "/e/d/c/r/s": "");
 		fflush(stdout);
 		if (get_input(enq, sizeof(enq)) == NULL) {
 			return IT_ERR;
 		}
-		if (enq[0] == '\0' || enq[0] == 'c' || enq[0] == 'C') {
+		i = atoi(enq);
+		if (enq[0] == '\0' || enq[0] == 'n' || enq[0] == 'N' ||
+			i == 1) {
 			return IT_CREATE;
-		} else if (num_xs && (enq[0] == 'e' || enq[0] == 'E')) {
+		} else if (num_xs && (enq[0] == 'e' || enq[0] == 'E' ||
+			    i == 2)) {
 			return IT_EDIT;
-		} else if (num_xs && (enq[0] == 'd' || enq[0] == 'D')) {
+		} else if (num_xs && (enq[0] == 'd' || enq[0] == 'D' ||
+			    i == 3)) {
 			return IT_DELETE;
-		} else if (enq[0] == 'q' || enq[0] == 'Q') {
+		} else if (num_xs && (enq[0] == 'c' || enq[0] == 'C' ||
+			    i == 4)) {
+			return IT_COPY;
+		} else if (num_xs && (enq[0] == 'r' || enq[0] == 'R' ||
+			    i == 5)) {
+			return IT_RENAME;
+		} else if (num_xs && (enq[0] == 's' || enq[0] == 'S' ||
+			    i == 6)) {
+			return IT_SHORTCUT;
+		} else if (enq[0] == 'q' || enq[0] == 'Q' || i == 7) {
 			return IT_QUIT;
 		}
 	}
@@ -660,7 +690,7 @@ find_session_file(const char *session_name, char *path)
 	/* Try user's AppData. */
 	snprintf(path, MAX_PATH, "%s%s%s", mya, session_name, SESS_SUFFIX);
 	if (access(path, R_OK) == 0) {
-		return SRC_USER;
+		return SRC_CURRENT;
 	}
 
 	/* Not there.  Try common AppData. */
@@ -778,7 +808,7 @@ get_session(char *session_name, session_t *s, char *path, int explicit_edit,
 				 */
 				if (!strncmp(path, mya, strlen(mya)) &&
 					path[strlen(mya)] == '\\') {
-					*src = SRC_USER;
+					*src = SRC_CURRENT;
 				} else if (commona != NULL &&
 					!strncmp(path, commona,
 					    strlen(commona)) &&
@@ -861,7 +891,7 @@ and dash '-')\n");
 				where = " in the all-users AppData "
 				    "directory";
 				break;
-			case SRC_USER:
+			case SRC_CURRENT:
 				where = " in the current user's "
 				    "AppData directory";
 				break;
@@ -2021,6 +2051,34 @@ static char *how_name[N_SP] = {
 };
 
 static src_t
+get_src(src_t def)
+{
+	char ac[STR_SIZE];
+
+	/* Ask where they want the file. */
+	for (;;) {
+		printf("\nCreate session for all users or current user? "
+			"(all/current) [%s] ",
+			(def == SRC_CURRENT)? "current": "all");
+		fflush(stdout);
+		if (get_input(ac, STR_SIZE) == NULL) {
+			return SRC_ERR;
+		}
+		if (!ac[0]) {
+			return def;
+		}
+		if (!strncasecmp(ac, "current", strlen(ac))) {
+			return SRC_CURRENT;
+		} else if (!strncasecmp(ac, "all", strlen(ac))) {
+			return SRC_ALL;
+		} else {
+			printf("Please answer (a)ll or "
+				"(c)urrent.\n\n");
+		}
+	}
+}
+
+static src_t
 summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 {
     	int rc;
@@ -2037,7 +2095,7 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 				break;
 			}
 
-		new_screen(s, "");
+		new_screen(s, "Options");
 
 		printf("%3d. Host ................... : %s\n", MN_HOST,
 			strcmp(s->host, CHOICE_NONE)? s->host: DISPLAY_NONE);
@@ -2281,35 +2339,28 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 			how_name[how]);
 		fflush(stdout);
 		rc = getyn(TRUE);
-		if (rc == YN_ERR || rc == FALSE)
+		if (rc == YN_ERR) {
 			return SRC_ERR;
-		if (rc == TRUE)
+		}
+		if (rc == FALSE) {
+			return SRC_NONE;
+		}
+		if (rc == TRUE) {
 			break;
-	}
-
-	if (how == SP_CREATE) {
-		char ac[STR_SIZE];
-
-		/* Ask where they want the file. */
-		for (;;) {
-		    	printf("\nCreate file for all users or current user? "
-				"(all/current) [current] ");
-			fflush(stdout);
-			if (get_input(ac, STR_SIZE) == NULL) {
-				return SRC_ERR;
-			}
-			if (!ac[0] || !strcasecmp(ac, "current")) {
-				return SRC_USER;
-			} else if (!strcasecmp(ac, "all")) {
-				return SRC_ALL;
-			} else {
-				printf("Please answer (a)ll or "
-					"(c)urrent.\n\n");
-			}
 		}
 	}
 
-	return SRC_USER;
+	if (how == SP_CREATE) {
+		return get_src(SRC_CURRENT);
+	}
+
+	if (!strncasecmp(mya, path, strlen(mya))) {
+		return SRC_CURRENT;
+	} else if (!strncasecmp(commona, path, strlen(commona))) {
+		return SRC_ALL;
+	} else {
+		return SRC_OTHER;
+	}
 }
 
 static wchar_t *
@@ -2390,7 +2441,17 @@ reg_font_from_cset(char *cset, int *codepage)
 }
 
 static void
-display_sessions(void)
+print_n(int n, int with_numbers)
+{
+	if (with_numbers) {
+		printf(" %2d.", n + 1);
+	} else {
+		printf(" ");
+	}
+}
+
+static void
+display_sessions(int with_numbers)
 {
 	int i;
 	int col = 0;
@@ -2408,13 +2469,13 @@ display_sessions(void)
 		size_t slen;
 
 		if (i == 0 && xs_current.count != 0) {
-			printf("Current User\n");
+			printf("Sessions for current user:\n");
 		} else if (i == xs_current.count) {
 			if (col) {
 				printf("\n");
 				col = 0;
 			}
-			printf("All Users\n");
+			printf("Sessions for all users:\n");
 		}
 
 		slen = strlen(n);
@@ -2423,7 +2484,8 @@ display_sessions(void)
 		switch (col) {
 		default:
 		case 0:
-			printf(" %2d. %s", i + 1, n);
+			print_n(i, with_numbers);
+			printf(" %s", n);
 			if (slen <= 15) { /* fits in column 0 */
 				printf("%*s", 15 - slen, "");
 				col = 1;
@@ -2443,7 +2505,8 @@ display_sessions(void)
 				col = 0;
 				goto retry;
 			}
-			printf(" %2d. %s", i + 1, n);
+			print_n(i, with_numbers);
+			printf(" %s", n);
 			if (slen <= 15) { /* fits in column 1 */
 				printf("%*s", 15 - slen, "");
 				col = 2;
@@ -2461,7 +2524,8 @@ display_sessions(void)
 				col = 0;
 				goto retry;
 			}
-			printf(" %2d. %s", i + 1, n);
+			print_n(i, with_numbers);
+			printf(" %s", n);
 			if (slen <= 15) { /* fits in column 2 */
 				printf("%*s", 15 - slen, "");
 				col = 3;
@@ -2476,7 +2540,8 @@ display_sessions(void)
 				col = 0;
 				goto retry;
 			}
-			printf(" %2d. %s\n", i + 1, n);
+			print_n(i, with_numbers);
+			printf(" %s\n", n);
 			col = 0;
 			break;
 		}
@@ -2486,21 +2551,21 @@ display_sessions(void)
 	}
 }
 
+/*
+ * Display the list of existing sessions, and return a selected session name.
+ */
 static char *
-existing_session(session_t *s)
+get_existing_session(const char *why, xsu_t *u)
 {
 	char nbuf[64];
 
-	new_screen(s, "\
-Existing Sessions\n");
-
-	display_sessions();
+	display_sessions(1);
 
 	for (;;) {
 		int n;
 
-		printf("\nEnter session name or number (1..%d) to edit, or 'q' "
-			"to quit: ", num_xs);
+		printf("\nEnter session name or number (1..%d) to %s, or 'q' "
+			"to quit: ", num_xs, why);
 		fflush(stdout);
 		if (get_input(nbuf, sizeof(nbuf)) == NULL) {
 			return NULL;
@@ -2517,7 +2582,7 @@ Existing Sessions\n");
 
 			for (i = 0; i < num_xs; i++) {
 				if (!strcasecmp(nbuf, xs_name(i + 1, NULL))) {
-					return xs_name(i + 1, NULL);
+					return xs_name(i + 1, u);
 				}
 			}
 			continue;
@@ -2525,58 +2590,32 @@ Existing Sessions\n");
 		if (n < 0 || n > num_xs) {
 			continue;
 		}
-		return xs_name(n, NULL);
+		return xs_name(n, u);
 	}
+}
+
+static char *
+existing_session(session_t *s)
+{
+	new_screen(s, "\
+Edit Session\n");
+
+	return get_existing_session("edit", NULL);
 }
 
 static int
 delete_session(session_t *s)
 {
-	char nbuf[64];
 	char *name = NULL;
 	xsu_t u;
 	char path[MAX_PATH];
 
 	new_screen(s, "\
-Existing Sessions\n");
+Delete Session\n");
 
-	display_sessions();
-
-	for (;;) {
-		int n;
-
-		printf("\nEnter session name or number (1..%d) to delete, or "
-			"'q' to quit: ", num_xs);
-		fflush(stdout);
-		if (get_input(nbuf, sizeof(nbuf)) == NULL) {
-			return -1;
-		}
-		if (nbuf[0] == '\0') {
-			continue;
-		}
-		if (nbuf[0] == 'q' || nbuf[0] == 'Q') {
-			return -1;
-		}
-		n = atoi(nbuf);
-		if (n == 0) {
-			int i;
-
-			for (i = 0; i < num_xs; i++) {
-				if (!strcasecmp(nbuf, xs_name(i + 1, NULL))) {
-					name = nbuf;
-					break;
-				}
-			}
-			if (name != NULL) {
-				break;
-			}
-			continue;
-		}
-		if (n < 0 || n > num_xs) {
-			continue;
-		}
-		name = xs_name(n, &u);
-		break;
+	name = get_existing_session("delete", &u);
+	if (name == NULL) {
+		return -1;
 	}
 
 	for (;;) {
@@ -2608,6 +2647,157 @@ Existing Sessions\n");
 		printf("\nSession '%s' deleted.\n", name);
 		return 0;
 	}
+}
+
+static int
+rename_or_copy_session(session_t *s, int is_rename)
+{
+	char nbuf[64];
+	char *name = NULL;
+	xsu_t u;
+	char from_path[MAX_PATH];
+	char to_path[MAX_PATH];
+	int i;
+	FILE *f;
+
+	if (is_rename) {
+		new_screen(s, "\
+Rename Session\n");
+	} else {
+		new_screen(s, "\
+Copy Session\n");
+	}
+
+	name = get_existing_session(is_rename? "rename": "copy", &u);
+	if (name == NULL) {
+		return -1;
+	}
+
+	for (;;) {
+		printf("\nEnter new session name for '%s', or 'q' to quit: ",
+			name);
+		fflush(stdout);
+		if (get_input(nbuf, sizeof(nbuf)) == NULL) {
+			return -1;
+		}
+		if (nbuf[0] == '\0') {
+			continue;
+		}
+		if (nbuf[0] == 'q' || nbuf[0] == 'Q') {
+			return -1;
+		}
+		for (i = 0; i < num_xs; i++) {
+			if (!strcasecmp(nbuf, xs_name(i + 1, NULL))) {
+				break;
+			}
+		}
+		if (i < num_xs) {
+			printf("Session '%s' already exists. To replace it, "
+				"you must delete it first.\n", nbuf);
+			continue;
+		}
+		if (strcspn(nbuf, LEGAL_CNAME) != strlen(s->session)) {
+			printf("\
+\nIllegal character(s).\n\
+Session names can only have letters, numbers, spaces, underscores and dashes.\n");
+			continue;
+		}
+		break;
+	}
+
+	switch (u) {
+	case U_ALL:
+		snprintf(from_path, MAX_PATH, "%s%s%s",
+			commona, name, SESS_SUFFIX);
+		break;
+	case U_CURRENT:
+		snprintf(from_path, MAX_PATH, "%s%s%s",
+			mya, name, SESS_SUFFIX);
+		break;
+	}
+
+	switch (get_src((u == U_ALL)? SRC_ALL: SRC_CURRENT)) {
+	case SRC_ALL:
+		snprintf(to_path, MAX_PATH, "%s%s%s",
+			commona, nbuf, SESS_SUFFIX);
+		break;
+	case SRC_CURRENT:
+		snprintf(to_path, MAX_PATH, "%s%s%s",
+			mya, nbuf, SESS_SUFFIX);
+		break;
+	default:
+		return -1;
+	}
+
+	f = fopen(from_path, "r");
+	if (f == NULL) {
+		perror(from_path);
+		return -1;
+	}
+	if (!read_session(f, s)) {
+		fclose(f);
+		fprintf(stderr, "Cannot read '%s'.\n", from_path);
+		return -1;
+	}
+	fclose(f);
+
+	strncpy(s->session, nbuf, STR_SIZE);
+	if (create_session_file(s, to_path) < 0) {
+		fprintf(stderr, "Cannot write '%s'.\n", to_path);
+		return -1;
+	}
+
+	if (is_rename) {
+		if (unlink(from_path) < 0) {
+			fprintf(stderr, "Cannot remove '%s'.\n", from_path);
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+static int
+new_shortcut(session_t *s, int installed)
+{
+	char *name = NULL;
+	xsu_t u;
+	char from_path[MAX_PATH];
+	FILE *f;
+
+	new_screen(s, "\
+Create Shortcut\n");
+
+	name = get_existing_session("create shortcut for", &u);
+	if (name == NULL) {
+		return -1;
+	}
+
+	switch (u) {
+	case U_ALL:
+		snprintf(from_path, MAX_PATH, "%s%s%s",
+			commona, name, SESS_SUFFIX);
+		break;
+	case U_CURRENT:
+		snprintf(from_path, MAX_PATH, "%s%s%s",
+			mya, name, SESS_SUFFIX);
+		break;
+	}
+
+	f = fopen(from_path, "r");
+	if (f == NULL) {
+		perror(from_path);
+		return -1;
+	}
+	if (!read_session(f, s)) {
+		fclose(f);
+		fprintf(stderr, "Cannot read '%s'.\n", from_path);
+		return -1;
+	}
+	fclose(f);
+
+	return write_shortcut(s, (u == U_ALL)? SRC_ALL: SRC_CURRENT, from_path,
+		installed);
 }
 
 /* Initialize a set of session names from a directory. */
@@ -2679,10 +2869,33 @@ xs_init_type(char *dirname, xsb_t *xsb, xsu_t user)
 	}
 }
 
+/* Delete a set of names. */
+static void
+free_xs(xsb_t *xsb)
+{
+	xs_t *list;
+	xs_t *next;
+
+	list = xsb->list;
+	while (list != NULL) {
+		next = list->next;
+		free(list->name);
+		free(list);
+		list = next;
+	}
+
+	xsb->count = 0;
+	xsb->list = NULL;
+}
+
 /* Initialize the session names. */
 static void
 xs_init(void)
 {
+	free_xs(&xs_current);
+	free_xs(&xs_all);
+	num_xs = 0;
+
 	xs_init_type(mya, &xs_current, U_CURRENT);
 	if (commona != NULL) {
 		xs_init_type(commona, &xs_all, U_ALL);
@@ -2715,23 +2928,88 @@ xs_name(int n, xsu_t *up)
 	return NULL;
 }
 
+/* Create or re-create a shortcut. */
+static int
+write_shortcut(session_t *s, src_t src, char *path, int installed)
+{
+	char linkpath[MAX_PATH];
+	char exepath[MAX_PATH];
+	char args[MAX_PATH];
+	FILE *f;
+	int shortcut_exists;
+	int extra_height = 1;
+	wchar_t *font;
+	int codepage = 0;
+	HRESULT hres;
+
+	/* Ask about the shortcut. */
+	sprintf(linkpath, "%s%s.lnk",
+		(src == SRC_ALL)? common_desktop: desktop,
+		s->session);
+	f = fopen(linkpath, "r");
+	if ((shortcut_exists = (f != NULL))) {
+		fclose(f);
+	}
+	for (;;) {
+		int rc;
+
+	    	printf("\n%s desktop shortcut (y/n) [%s]: ",
+			shortcut_exists? "Replace": "Create",
+			installed? "y": "n");
+		rc = getyn(installed == TRUE);
+		if (rc == YN_ERR)
+		    	return -1;
+		if (rc == FALSE)
+		    	return 0;
+		if (rc == TRUE)
+		    	break;
+	}
+
+	/* Create the desktop shorcut. */
+	printf("\n%s desktop shortcut '%s'... ",
+		shortcut_exists? "Replacing": "Creating", linkpath);
+	fflush(stdout);
+	sprintf(exepath, "%swc3270.exe", installdir);
+	sprintf(args, "+S \"%s\"", path);
+	if (!(s->flags & WF_NO_MENUBAR))
+	    	extra_height += 2;
+
+	font = reg_font_from_cset(s->charset, &codepage);
+
+	hres = CreateLink(
+		exepath,		/* path to executable */
+		linkpath,		/* where to put the link */
+		"wc3270 session",	/* description */
+		args,			/* arguments */
+		installdir,		/* working directory */
+		(s->ov_rows?	/* console rows */
+		    s->ov_rows: wrows[s->model]) +
+			extra_height,
+		s->ov_cols?	/* console cols */
+		    s->ov_cols: wcols[s->model],
+		font,			/* font */
+		s->point_size,	/* point size */
+		codepage);		/* code page */
+
+	if (SUCCEEDED(hres)) {
+		printf("done\n");
+		fflush(stdout);
+		return 0;
+	} else {
+		printf("Failed\n");
+		fflush(stdout);
+		return -1;
+	}
+}
+
 static int
 session_wizard(char *session_name, int explicit_edit, int installed)
 {
     	session_t session;
 	gs_t rc;
 	src_t src;
-	char linkpath[MAX_PATH];
-	char exepath[MAX_PATH];
-	char args[MAX_PATH];
-	HRESULT hres;
 	char save_session_name[STR_SIZE];
-	FILE *f;
-	int shortcut_exists;
 	char path[MAX_PATH];
-	int extra_height = 1;
-	wchar_t *font;
-	int codepage = 0;
 
 	/* Start with nothing. */
 	(void) memset(&session, '\0', sizeof(session));
@@ -2758,6 +3036,26 @@ session_wizard(char *session_name, int explicit_edit, int installed)
 			} else {
 				return 0;
 			}
+		case IT_COPY:
+			if (rename_or_copy_session(&session, 0) < 0) {
+				return -1;
+			} else {
+				return 0;
+			}
+		case IT_RENAME:
+			if (rename_or_copy_session(&session, 1) < 0) {
+				return -1;
+			} else {
+				return 0;
+			}
+			return 0;
+		case IT_SHORTCUT:
+			if (new_shortcut(&session, installed) < 0) {
+				return -1;
+			} else {
+				return 0;
+			}
+			return 0;
 		case IT_CREATE:
 			/* fall through */
 			break;
@@ -2797,22 +3095,29 @@ session_wizard(char *session_name, int explicit_edit, int installed)
 	case GS_EDIT: /* Edit existing file. */
 		/* See what they want to change. */
 		src = summarize_and_proceed(&session,
-			    (rc == 3)? SP_REPLACE:
-			    ((rc == 0)? SP_CREATE: SP_UPDATE),
+			    (rc == GS_OVERWRITE)? SP_REPLACE:
+			    ((rc == GS_NEW)? SP_CREATE: SP_UPDATE),
 			    path, session.session);
 		if (src == SRC_ERR) {
 			return -1;
+		}
+		if (src == SRC_NONE) {
+			if (rc == GS_NEW) {
+				return 0;
+			} else {
+				break;
+			}
 		}
 
 		if (src == SRC_ALL) {
 			/* All users. */
 			snprintf(path, MAX_PATH, "%s%s%s", commona,
 				session.session, SESS_SUFFIX);
-		} else {
+		} else if (src == SRC_CURRENT) {
 			/* Current user. */
 			snprintf(path, MAX_PATH, "%s%s%s", mya,
 				session.session, SESS_SUFFIX);
-		}
+		} /* else keep path as-is */
 
 		/* Create the session file. */
 		printf("\nWriting session file '%s'... ", path);
@@ -2828,60 +3133,7 @@ session_wizard(char *session_name, int explicit_edit, int installed)
 	}
 
 	/* Ask about the shortcut. */
-	sprintf(linkpath, "%s%s.lnk",
-		(src == SRC_ALL)? common_desktop: desktop,
-		session.session);
-	f = fopen(linkpath, "r");
-	if ((shortcut_exists = (f != NULL)))
-		fclose(f);
-	for (;;) {
-	    	printf("\n%s desktop shortcut (y/n) [%s]: ",
-			shortcut_exists? "Replace": "Create",
-			installed? "y": "n");
-		rc = getyn(installed == TRUE);
-		if (rc == YN_ERR)
-		    	return -1;
-		if (rc == FALSE)
-		    	return 0;
-		if (rc == TRUE)
-		    	break;
-	}
-
-	/* Create the desktop shorcut. */
-	printf("\n%s desktop shortcut '%s'... ",
-		shortcut_exists? "Replacing": "Creating", linkpath);
-	fflush(stdout);
-	sprintf(exepath, "%swc3270.exe", installdir);
-	sprintf(args, "+S \"%s\"", path);
-	if (!(session.flags & WF_NO_MENUBAR))
-	    	extra_height += 2;
-
-	font = reg_font_from_cset(session.charset, &codepage);
-
-	hres = CreateLink(
-		exepath,		/* path to executable */
-		linkpath,		/* where to put the link */
-		"wc3270 session",	/* description */
-		args,			/* arguments */
-		installdir,		/* working directory */
-		(session.ov_rows?	/* console rows */
-		    session.ov_rows: wrows[session.model]) +
-			extra_height,
-		session.ov_cols?	/* console cols */
-		    session.ov_cols: wcols[session.model],
-		font,			/* font */
-		session.point_size,	/* point size */
-		codepage);		/* code page */
-
-	if (SUCCEEDED(hres)) {
-		printf("done\n");
-		fflush(stdout);
-		return 0;
-	} else {
-		printf("Failed\n");
-		fflush(stdout);
-		return -1;
-	}
+	return write_shortcut(&session, src, path, installed);
 }
 
 /* Embed the selected keymaps in the session file. */
@@ -3201,7 +3453,12 @@ main(int argc, char *argv[])
 
 	save_keymaps();
 
-	rc = session_wizard(session_name, explicit_edit, installed);
+	do {
+		rc = session_wizard(session_name, explicit_edit, installed);
+		if (session_name != NULL) {
+			break;
+		}
+	} while (rc >= 0);
 
 	printf("\nWizard %s.  [Press <Enter>] ",
 		    (rc < 0)? "aborted": "complete");

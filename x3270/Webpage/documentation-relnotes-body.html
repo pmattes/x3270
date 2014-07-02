@@ -2,8 +2,13 @@
 3.3 is the current development line for the x3270 suite.
 <h2>Changes in version 3.3.15alpha1, Nn. Month 2014</h2>
 <ul>
- <li>[all] Fixed an issue with TN3270E options negotiation (thank you to
-  Máximo Castañeda for pointing it out).</li>
+ <li>[<i>wc3270</i>] Fixed a problem where editing an all-users session would
+  result in copying the session to the current user's AppData directory, and
+  re-creating the shortcut would point it to the wrong entry.</li>
+ <li>[<i>wc3270</i>] Added Session Wizard options to copy a session, rename a
+  session, and create a shortcut for a session.</li>
+ <li>[all] Fixed several issues with TN3270E options negotiation (thank you to
+  Máximo Castañeda for pointing these out).</li>
  <li>[<i>wc3270</i>] Changed the default directory for trace files from the
   wc3270 AppData directory to the current user's desktop. Also fixed a number
   of documentation issues in this area.</li>
