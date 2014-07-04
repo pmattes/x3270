@@ -134,8 +134,8 @@ typedef enum {
 
 /* Return value from main_menu(). */
 typedef enum {
+    MO_CREATE = 1,	/* create new session */
     MO_EDIT,		/* edit existing session */
-    MO_CREATE,		/* create new session */
     MO_DELETE,		/* delete existing session */
     MO_COPY,		/* copy existing session */
     MO_RENAME,		/* rename existing session */
@@ -143,6 +143,8 @@ typedef enum {
     MO_QUIT,		/* quit wizard */
     MO_ERR = -1		/* error */
 } menu_op_t;
+#define MO_FIRST	MO_CREATE
+#define MO_LAST		MO_QUIT
 
 /* Return value from session_wizard(). */
 typedef enum {
@@ -695,6 +697,30 @@ new_screen(session_t *s, const char *path, const char *title)
     printf("\n%s\n", title);
 }
 
+/*
+ * List of main menu operations.
+ *
+ * N.B.: This list is sorted in menu_op_t (MO_XXX) order. If you re-order one,
+ * you *must* re-order the other.
+ */
+struct {		/* Menu options: */
+    const char *text;	/*  long name */
+    const char *name;	/*  short name */
+    const char *alias;	/*  short name alias */
+    int requires_xs;	/*  if TRUE, requires existing sessions */
+    int num_params;	/*  number of command-line parameters to accept */
+} main_option[] = {
+    { NULL, NULL, FALSE, 0 }, /* intentional hole */
+    { "Create new session", "new",      "create", FALSE, 1 },
+    { "Edit session",       "edit",     NULL,     TRUE, 1 },
+    { "Delete session",     "delete",   "rm",     TRUE, 1 },
+    { "Copy session",       "copy",     "cp",     TRUE, 2 },
+    { "Rename session",     "rename",   "mv",     TRUE, 2 },
+    { "Create shortcut",    "shortcut", NULL,     TRUE, 1 },
+    { "Quit",               "quit",     "exit",   FALSE, 0 },
+    { NULL, NULL, FALSE, 0 } /* end marker */
+};
+
 /**
  * Main screen.
  *
@@ -703,13 +729,23 @@ new_screen(session_t *s, const char *path, const char *title)
  * selected.
  *
  * @param[in,out] s	Session (unused)
+ * @param[out] argcp	Returned number of parameters
+ * @param[out] argvp	Returned parameters
  *
  * @return menu_op_t describing selected operation
  */
+#define MAX_TOKENS 3
+
 static menu_op_t
-main_menu(session_t *s)
+main_menu(session_t *s, int *argcp, char ***argvp)
 {
-    char enq[16];
+    static char enq[256];
+    static char *token[MAX_TOKENS + 1];
+    int num_tokens;
+    int i;
+
+    *argcp = 0;
+    *argvp = NULL;
 
     new_screen(s, NULL, "\
 Overview\n\
@@ -719,45 +755,103 @@ one. It also lets you create or replace a shortcut on the desktop.\n");
 
     display_sessions(0);
 
-    printf("\n\
-  1. Create new session (new)\n");
-    if (num_xs) {
-	printf("\
-  2. Edit session (edit)\n\
-  3. Delete sesstion (delete)\n\
-  4. Copy session (copy)\n\
-  5. Rename session (rename)\n\
-  6. Create shortcut (shortcut)\n");
+    printf("\n");
+    for (i = MO_FIRST; main_option[i].text != NULL; i++) {
+	if (!num_xs && main_option[i].requires_xs) {
+	    continue;
+	}
+	printf("  %d. %s (%s)\n",
+		i, main_option[i].text, main_option[i].name);
     }
-    printf("\
-  7. Quit (quit)\n");
 
     for (;;) {
-	int i;
 	size_t sl;
+	int mo;
 
-	printf("\nEnter command name or number (1..7) [new] ");
+	printf("\nEnter command name or number (%d..%d) [%s] ",
+		MO_FIRST, MO_LAST, main_option[MO_CREATE].name);
 	fflush(stdout);
 	if (get_input(enq, sizeof(enq)) == NULL) {
 	    return MO_ERR;
 	}
+
+	/* Check the default. */
 	sl = strlen(enq);
-	i = atoi(enq);
-	if (!sl || !strncasecmp(enq, "new", sl) || i == 1) {
+	if (!sl) {
 	    return MO_CREATE;
-	} else if (num_xs && (!strncasecmp(enq, "edit", sl) || i == 2)) {
-	    return MO_EDIT;
-	} else if (num_xs && (!strncasecmp(enq, "delete", sl) || i == 3)) {
-	    return MO_DELETE;
-	} else if (num_xs && (!strncasecmp(enq, "copy", sl) || i == 4)) {
-	    return MO_COPY;
-	} else if (num_xs && (!strncasecmp(enq, "rename", sl) || i == 5)) {
-	    return MO_RENAME;
-	} else if (num_xs && (!strncasecmp(enq, "shortcut", sl) || i == 6)) {
-	    return MO_SHORTCUT;
-	} else if (!strncasecmp(enq, "quit", sl) || i == 7) {
-	    return MO_QUIT;
 	}
+
+	/* Split into tokens. */
+	num_tokens = 0;
+	token[0] = strtok(enq, " \t");
+	if (token[0] == NULL) {
+	    printf("\nWow, am I confused.\n");
+	    continue;
+	}
+	sl = strlen(token[0]);
+	num_tokens++;
+	while (num_tokens < MAX_TOKENS) {
+	    if ((token[num_tokens] = strtok(NULL, " \t")) != NULL) {
+		num_tokens++;
+	    } else {
+		break;
+	    }
+	}
+	if (strtok(NULL, " \t") != NULL) {
+	    goto extra;
+	}
+	token[num_tokens] = NULL;
+
+	/* Check numbers. */
+	mo = atoi(token[0]);
+	if (mo >= MO_FIRST && mo <= MO_LAST) {
+	    if (num_tokens > 1) {
+		goto extra;
+	    }
+	    if (!num_xs && main_option[mo].requires_xs) {
+		printf("\nUnknown command.");
+		continue;
+	    }
+	    return (menu_op_t)mo;
+	}
+
+	/* Check keywords. */
+	for (i = MO_FIRST; main_option[i].text != NULL; i++) {
+	    if (!num_xs && main_option[i].requires_xs) {
+		continue;
+	    }
+	    if (!strncasecmp(token[0], main_option[i].name, sl)) {
+		if (num_tokens - 1 > main_option[i].num_params) {
+		    goto extra;
+		}
+		*argcp = num_tokens - 1;
+		*argvp = token + 1;
+		return (menu_op_t)i;
+	    }
+	}
+
+	/* Check again for aliases. */
+	for (i = MO_FIRST; main_option[i].text != NULL; i++) {
+	    if (!num_xs && main_option[i].requires_xs) {
+		continue;
+	    }
+	    if (main_option[i].alias != NULL &&
+		    !strncasecmp(token[0], main_option[i].alias, sl)) {
+		if (num_tokens - 1 > main_option[i].num_params) {
+		    goto extra;
+		}
+		*argcp = num_tokens - 1;
+		*argvp = token + 1;
+		return (menu_op_t)i;
+	    }
+	}
+
+	printf("\nUnknown command.");
+	continue;
+
+    extra:
+	printf("\nExtra parameter(s).");
+	continue;
     }
 }
 
@@ -807,6 +901,28 @@ find_session_file(const char *session_name, char *path)
      */
     snprintf(path, MAX_PATH, "%s%s%s", mya, session_name, SESS_SUFFIX);
     return SRC_OTHER;
+}
+
+/**
+ * Check a session name for illegal characters.
+ *
+ * Displays an error message.
+ *
+ * @param[in] name	Name to check
+ *
+ * @return TRUE for success, FALSE for error.
+ */
+static int
+legal_session_name(const char *name)
+{
+    if (strspn(name, LEGAL_CNAME) != strlen(name)) {
+	printf("\
+\nIllegal character(s).\n\
+Session names can only have letters, numbers, spaces, underscores and dashes.\n");
+	return FALSE;
+    } else {
+	return TRUE;
+    }
 }
 
 /**
@@ -923,10 +1039,7 @@ get_session(char *session_name, session_t *s, char *path, int explicit_edit,
 	}
 
 	/* Validate the session name. */
-	if (strspn(s->session, LEGAL_CNAME) != strlen(s->session)) {
-	    fprintf(stdout, "\
-\nIllegal character(s).\n\
-Session names can only have letters, numbers, spaces, underscores and dashes.\n");
+	if (!legal_session_name(s->session)) {
 	    return GS_ERR;
 	}
 
@@ -948,11 +1061,7 @@ shortcut.");
 	    if (!s->session[0]) {
 		continue;
 	    }
-	    if (strspn(s->session, LEGAL_CNAME) != strlen(s->session)) {
-		fprintf(stdout, "\
-\nIllegal character(s).\n\
-Session names can only have letters, numbers, spaces, underscore '_'\n\
-and dash '-')\n");
+	    if (!legal_session_name(s->session)) {
 		continue;
 	    }
 
@@ -2150,15 +2259,15 @@ static char *how_name[N_SP] = {
 };
 
 static src_t
-get_src(src_t def)
+get_src(const char *name, src_t def)
 {
     char ac[STR_SIZE];
 
     /* Ask where they want the file. */
     for (;;) {
-	printf("\nCreate for all users or current user '%s'? "
+	printf("\nCreate '%s' for all users or current user '%s'? "
 		"(all/current) [%s] ",
-		username, (def == SRC_CURRENT)? "current": "all");
+		name, username, (def == SRC_CURRENT)? "current": "all");
 	fflush(stdout);
 	if (get_input(ac, STR_SIZE) == NULL) {
 	    return SRC_ERR;
@@ -2457,7 +2566,7 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
     }
 
     for (;;) {
-	printf("\n%s Session file '%s'? (y/n) [y] ",
+	printf("\n%s session file '%s'? (y/n) [y] ",
 		how_name[how], session_name);
 	fflush(stdout);
 	rc = getyn(TRUE);
@@ -2471,7 +2580,7 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
     }
 
     if (how == SP_CREATE) {
-	return get_src(SRC_CURRENT);
+	return get_src(session_name, SRC_CURRENT);
     }
 
     if (!strncasecmp(mya, path, strlen(mya))) {
@@ -2720,20 +2829,87 @@ get_existing_session(const char *why, char **name, src_t *l)
     }
 }
 
+/**
+ * Look up a session specified by the user on the main menu.
+ *
+ * If it is not found, the user is prompted to press Enter.
+ *
+ * @param[in] name	Session name to look up
+ * @param[out] lp	Returned location of session
+ *
+ * @return Session name, or NULL if not found
+ */
+static char *
+menu_existing_session(char *name, src_t *lp)
+{
+    int i;
+
+    for (i = 0; i < num_xs; i++) {
+	if (!strcasecmp(name, xs_name(i + 1, lp))) {
+	    break;
+	}
+    }
+    if (i >= num_xs) {
+	char buf[2];
+
+	printf("No such session: %s\n[Press <Enter>] ", name);
+	fflush(stdout);
+	(void) fgets(buf, 2, stdin);
+	return NULL;
+    } else {
+	return name;
+    }
+}
+
+/**
+ * Request that the user press the Enter key.
+ *
+ * This generally happens after displaying an error message.
+ */
+static void
+ask_enter(void)
+{
+    char buf[2];
+
+    printf("[Press <Enter>] ");
+    fflush(stdout);
+    (void) fgets(buf, 2, stdin);
+}
+
+/**
+ * Delete a session.
+ *
+ * Prompts for a session name, if none is provided in argc/argv.
+ *
+ * @param[in] s		Session (unused)
+ * @param[in] argc	Command argument count (from main menu prompt)
+ * @param[in] argv	Command argumens (from main menu prompt)
+ *
+ * @return 0 for success, -1 for failure
+ */
 static int
-delete_session(session_t *s)
+delete_session(session_t *s, int argc, char **argv)
 {
     char *name = NULL;
     src_t l;
     char path[MAX_PATH];
 
-    new_screen(s, NULL, "\
+    if (argc > 0) {
+	name = menu_existing_session(argv[0], &l);
+	if (name == NULL) {
+	    return 0;
+	}
+    }
+
+    if (argc == 0) {
+	new_screen(s, NULL, "\
 Delete Session\n");
 
-    if (get_existing_session("delete", &name, &l) < 0) {
+	if (get_existing_session("delete", &name, &l) < 0) {
 	    return -1;
-    } else if (name == NULL) {
+	} else if (name == NULL) {
 	    return 0;
+	}
     }
 
     for (;;) {
@@ -2756,19 +2932,34 @@ Delete Session\n");
 	    name, SESS_SUFFIX);
     if (unlink(path) < 0) {
 	printf("\nDelete '%s' failed: %s\n", path, strerror(errno));
-	return -1;
-    } else {
-	snprintf(path, MAX_PATH, "%s%s.lnk",
-		(l == SRC_CURRENT)? desktop: common_desktop,
-		name);
-	(void) unlink(path);
-	printf("\nSession '%s' deleted.\n", name);
-	return 0;
+	goto failed;
     }
+    snprintf(path, MAX_PATH, "%s%s.lnk",
+	    (l == SRC_CURRENT)? desktop: common_desktop, name);
+    (void) unlink(path);
+    printf("\nSession '%s' deleted.\n", name);
+
+    return 0;
+
+failed:
+    ask_enter();
+    return 0;
 }
 
+/**
+ * Rename or copy a session.
+ *
+ * Prompts for from/to session names, if not provided in argc/argv.
+ *
+ * @param[in] s		Session (unused)
+ * @param[in] argc	Command argument count (from main menu prompt)
+ * @param[in] argv	Command argumens (from main menu prompt)
+ * @param[in] is_rename	TRUE if rename, FALSE if copy
+ *
+ * @return 0 for success, -1 for failure
+ */
 static int
-rename_or_copy_session(session_t *s, int is_rename)
+rename_or_copy_session(session_t *s, int argc, char **argv, int is_rename)
 {
     char to_name[64];
     char *from_name = NULL;
@@ -2779,36 +2970,51 @@ rename_or_copy_session(session_t *s, int is_rename)
     int i;
     FILE *f;
 
-    if (is_rename) {
-	    new_screen(s, NULL, "\
-Rename Session\n");
-    } else {
-	    new_screen(s, NULL, "\
-Copy Session\n");
+    if (argc > 0) {
+	from_name = menu_existing_session(argv[0], &l);
+	if (from_name == NULL) {
+	    return 0;
+	}
     }
 
-    if (get_existing_session(is_rename? "rename": "copy", &from_name, &l) < 0) {
-	return -1;
-    } else if (from_name == NULL) {
-	return 0;
+    if (argc == 0) {
+	if (is_rename) {
+	    new_screen(s, NULL, "\
+    Rename Session\n");
+	} else {
+	    new_screen(s, NULL, "\
+    Copy Session\n");
+	}
+	if (get_existing_session(is_rename? "rename": "copy", &from_name,
+		    &l) < 0) {
+	    return -1;
+	} else if (from_name == NULL) {
+	    return 0;
+	}
     }
 
     for (;;) {
-	if (is_rename) {
-	    printf("\nEnter new session name for '%s', or 'q' to quit: ",
-		    from_name);
+	if (argc > 1) {
+	    strncpy(to_name, argv[1], sizeof(to_name));
+	    to_name[sizeof(to_name) - 1] = '\0';
+	    argc = 1; /* a bit of a hack */
 	} else {
-	    printf("\nEnter new session name to copy '%s' into, or 'q' to "
-		    "quit: ",
-		    from_name);
-	}
-	fflush(stdout);
-	if (get_input(to_name, sizeof(to_name)) == NULL) {
-	    return -1;
-	} else if (to_name[0] == '\0') {
-	    continue;
-	} else if (to_name[0] == 'q' || to_name[0] == 'Q') {
-	    return 0;
+	    if (is_rename) {
+		printf("\nEnter new session name for '%s', or 'q' to quit: ",
+			from_name);
+	    } else {
+		printf("\nEnter new session name to copy '%s' into, or 'q' to "
+			"quit: ",
+			from_name);
+	    }
+	    fflush(stdout);
+	    if (get_input(to_name, sizeof(to_name)) == NULL) {
+		return -1;
+	    } else if (to_name[0] == '\0') {
+		continue;
+	    } else if (to_name[0] == 'q' || to_name[0] == 'Q') {
+		return 0;
+	    }
 	}
 	for (i = 0; i < num_xs; i++) {
 	    if (!strcasecmp(to_name, xs_name(i + 1, NULL))) {
@@ -2820,10 +3026,7 @@ Copy Session\n");
 		    "delete it first.\n", to_name);
 	    continue;
 	}
-	if (strcspn(to_name, LEGAL_CNAME) != strlen(s->session)) {
-	    printf("\
-\nIllegal character(s).\n\
-Session names can only have letters, numbers, spaces, underscores and dashes.\n");
+	if (!legal_session_name(to_name)) {
 	    continue;
 	}
 	break;
@@ -2840,7 +3043,7 @@ Session names can only have letters, numbers, spaces, underscores and dashes.\n"
 	break;
     }
 
-    switch (get_src(l)) {
+    switch (get_src(to_name, l)) {
     case SRC_ALL:
 	snprintf(to_path, MAX_PATH, "%s%s%s", commona, to_name, SESS_SUFFIX);
 	break;
@@ -2862,7 +3065,7 @@ Session names can only have letters, numbers, spaces, underscores and dashes.\n"
     if (!read_session(f, s)) {
 	fclose(f);
 	fprintf(stderr, "Cannot read '%s'.\n", from_path);
-	return -1;
+	goto failed;
     }
     fclose(f);
 
@@ -2870,14 +3073,14 @@ Session names can only have letters, numbers, spaces, underscores and dashes.\n"
     strncpy(s->session, to_name, STR_SIZE);
     if (create_session_file(s, to_path) < 0) {
 	fprintf(stderr, "Cannot write '%s'.\n", to_path);
-	return -1;
+	goto failed;
     }
 
     /* Remove the orginal. */
     if (is_rename) {
 	if (unlink(from_path) < 0) {
 	    fprintf(stderr, "Cannot remove '%s'.\n", from_path);
-	    return -1;
+	    goto failed;
 	}
     }
 
@@ -2903,7 +3106,7 @@ Session names can only have letters, numbers, spaces, underscores and dashes.\n"
 
 	/* Create the new shortcut. */
 	if (write_shortcut(s, FALSE, l, to_path) < 0) {
-	    return -1;
+	    goto failed;
 	}
 
 	/* Remove the original. */
@@ -2911,29 +3114,43 @@ Session names can only have letters, numbers, spaces, underscores and dashes.\n"
 	    if (unlink(from_linkpath) < 0) {
 		fprintf(stderr, "Cannot remove '%s'.\n",
 			from_linkpath);
-		return -1;
+		goto failed;
 	    }
 	}
     }
 
     return 0;
+
+failed:
+    ask_enter();
+    return 0;
 }
 
 static int
-new_shortcut(session_t *s)
+new_shortcut(session_t *s, int argc, char **argv)
 {
     char *name = NULL;
     src_t l;
     char from_path[MAX_PATH];
     FILE *f;
+    int rc;
 
-    new_screen(s, NULL, "\
+    if (argc > 0) {
+	name = menu_existing_session(argv[0], &l);
+	if (name == NULL) {
+	    return 0;
+	}
+    }
+
+    if (argc == 0) {
+	new_screen(s, NULL, "\
 Create Shortcut\n");
 
-    if (get_existing_session("create shortcut for", &name, &l) < 0) {
-	return -1;
-    } else if (name == NULL) {
-	return 0;
+	if (get_existing_session("create shortcut for", &name, &l) < 0) {
+	    return -1;
+	} else if (name == NULL) {
+	    return 0;
+	}
     }
 
     switch (l) {
@@ -2949,15 +3166,24 @@ Create Shortcut\n");
     f = fopen(from_path, "r");
     if (f == NULL) {
 	perror(from_path);
-	return -1;
+	goto failed;
     } else if (!read_session(f, s)) {
 	fclose(f);
 	fprintf(stderr, "Cannot read '%s'.\n", from_path);
-	return -1;
+	goto failed;
     }
     fclose(f);
 
-    return write_shortcut(s, TRUE, l, from_path);
+    rc = write_shortcut(s, (argc == 0), l, from_path);
+    if (rc < 0) {
+	goto failed;
+    }
+
+    return 0;
+
+failed:
+    ask_enter();
+    return 0;
 }
 
 /* Initialize a set of session names from a directory. */
@@ -3174,6 +3400,8 @@ session_wizard(char *session_name, int explicit_edit)
     src_t src;
     char save_session_name[STR_SIZE];
     char path[MAX_PATH];
+    int argc;
+    char **argv;
 
     /* Start with nothing. */
     (void) memset(&session, '\0', sizeof(session));
@@ -3183,47 +3411,61 @@ session_wizard(char *session_name, int explicit_edit)
 
     /* Intro screen. */
     if (session_name == NULL) {
-	switch (main_menu(&session)) {
+	switch (main_menu(&session, &argc, &argv)) {
 	case MO_ERR:
 	    return SW_ERR;
 	case MO_QUIT:
 	    return SW_QUIT;
 	case MO_EDIT:
-	    new_screen(&session, NULL, "\
+	    if (argc > 0) {
+		session_name = menu_existing_session(argv[0], NULL);
+		if (session_name == NULL) {
+		    return SW_SUCCESS;
+		}
+	    } else {
+		new_screen(&session, NULL, "\
 Edit Session\n");
-	    if (get_existing_session("edit", &session_name, NULL) < 0) {
-		return SW_ERR;
-	    } else if (session_name == NULL) {
-		return SW_SUCCESS;
+		if (get_existing_session("edit", &session_name, NULL) < 0) {
+		    return SW_ERR;
+		} else if (session_name == NULL) {
+		    return SW_SUCCESS;
+		}
 	    }
 	    explicit_edit = TRUE;
 	    break;
 	case MO_DELETE:
-	    if (delete_session(&session) < 0) {
+	    if (delete_session(&session, argc, argv) < 0) {
 		return SW_ERR;
 	    } else {
 		return SW_SUCCESS;
 	    }
 	case MO_COPY:
-	    if (rename_or_copy_session(&session, 0) < 0) {
+	    if (rename_or_copy_session(&session, argc, argv, 0) < 0) {
 		return SW_ERR;
 	    } else {
 		return SW_SUCCESS;
 	    }
 	case MO_RENAME:
-	    if (rename_or_copy_session(&session, 1) < 0) {
+	    if (rename_or_copy_session(&session, argc, argv, 1) < 0) {
 		return SW_ERR;
 	    } else {
 		return SW_SUCCESS;
 	    }
 	case MO_SHORTCUT:
-	    if (new_shortcut(&session) < 0) {
+	    if (new_shortcut(&session, argc, argv) < 0) {
 		return SW_ERR;
 	    } else {
 		return SW_SUCCESS;
 	    }
 	case MO_CREATE:
-	    /* fall through */
+	    if (argc > 0) {
+		if (!legal_session_name(argv[0])) {
+		    ask_enter();
+		    return SW_SUCCESS;
+		}
+		session_name = argv[0];
+	    }
+	    /* fall through below */
 	    break;
 	}
     } else {
