@@ -56,6 +56,7 @@
 #include "xioc.h"
 
 #include <wincon.h>
+#include <lmcons.h>
 
 #include "winversc.h"
 #include "shortcutc.h"
@@ -131,17 +132,17 @@ typedef enum {
     SRC_ERR = -1	/* error */
 } src_t;
 
-/* Return value from intro(). */
+/* Return value from main_menu(). */
 typedef enum {
-    IT_EDIT,		/* edit existing session */
-    IT_CREATE,		/* create new session */
-    IT_DELETE,		/* delete existing session */
-    IT_COPY,		/* copy existing session */
-    IT_RENAME,		/* rename existing session */
-    IT_SHORTCUT,	/* create shortcut */
-    IT_QUIT,		/* quit wizard */
-    IT_ERR = -1		/* error */
-} intro_t;
+    MO_EDIT,		/* edit existing session */
+    MO_CREATE,		/* create new session */
+    MO_DELETE,		/* delete existing session */
+    MO_COPY,		/* copy existing session */
+    MO_RENAME,		/* rename existing session */
+    MO_SHORTCUT,	/* create shortcut */
+    MO_QUIT,		/* quit wizard */
+    MO_ERR = -1		/* error */
+} menu_op_t;
 
 /* Return value from session_wizard(). */
 typedef enum {
@@ -203,8 +204,8 @@ static char *installdir = NULL;
 static char *desktop = NULL;
 static char *common_desktop = NULL;
 static char *commona = NULL;
-
 static int installed = FALSE;
+static TCHAR username[UNLEN + 1];
 
 static int get_printerlu(session_t *s, int explain);
 
@@ -227,6 +228,17 @@ static void print_user_settings(FILE *f);
 static void display_sessions(int with_numbers);
 static int write_shortcut(session_t *s, int ask, src_t src, char *path);
 
+/**
+ * Fetch a line of input from the console.
+ *
+ * The input is stripped of any leading whitespace and trailing whitespace,
+ * and is NULL-terminated.
+ *
+ * @param[out] buf	Buffer to read input into
+ * @param[in] bufsize	Size of buffer
+ *
+ * @return buf, or NULL if an error such as EOF is encountered.
+ */
 static char *
 get_input(char *buf, int bufsize)
 {
@@ -260,14 +272,14 @@ get_input(char *buf, int bufsize)
     return buf;
 }
 
-/*
+/**
  * Ask a yes or no question.
  *
- * param[in] defval	Default response (TRUE or FALSE).
+ * @param[in] defval	Default response (TRUE or FALSE).
  *
- * return TRUE or FALSE	Proper respoonse
- *        YN_ERR	I/O error occurred (usually EOF)
- *        YN_RETRY	User entry error, error message already printed
+ * @return TRUE or FALSE	Proper respoonse
+ *         YN_ERR		I/O error occurred (usually EOF)
+ *         YN_RETRY		User entry error, error message already printed
  */
 static int
 getyn(int defval)
@@ -292,7 +304,9 @@ getyn(int defval)
     return YN_RETRY;
 }
 
-/* Gather the list of system printers from Windows. */
+/**
+ * Gather the list of system printers from Windows.
+ */
 static void
 enum_printers(void)
 {
@@ -325,20 +339,32 @@ enum_printers(void)
     num_printers = returned;
 }
 
-/* Get an 'other' printer name. */
+/**
+ * Get an 'other' printer name from the console.
+ *
+ * Accepts the name 'default' to mean the system default printer.
+ *
+ * @param[in] defname		Default printer name to use for empty input, or
+ * 				NULL
+ * @param[out] printername	Resulting printer name
+ * @param[in] bufsize		Size of printername buffer
+ *
+ * @return 0 for success, -1 for error such as EOF
+ *  Returns an empty string in 'printername' to indicate the default printer
+ */
 static int
-get_printer_name(char *defname, char *printername)
+get_printer_name(const char *defname, char *printername, int bufsize)
 {
     for (;;) {
 	printf("\nEnter Windows printer name: [%s] ",
 		defname[0]? defname: "use system default");
 	fflush(stdout);
-	if (get_input(printername, STR_SIZE) == NULL) {
+	if (get_input(printername, bufsize) == NULL) {
 	    return -1;
 	}
 	if (!printername[0]) {
 	    if (defname[0]) {
-		strcpy(printername, defname);
+		snprintf(printername, bufsize, "%s", defname);
 	    }
 	    break;
 	}
@@ -366,9 +392,17 @@ typedef struct km {			/* Keymap: */
 km_t *km_first = NULL;
 km_t *km_last = NULL;
 
-/* Save a keymap name.  If it is unique, return its node. */
+/**
+ * Save a keymap name. Return its node.
+ *
+ * @param[in] path		Pathname of keymap file
+ * @param[in] keymap_name	Name of keymap
+ * @param[in] description	Keymap description, or NULL
+ *
+ * @return Keymap node, possibly newly-allocated.
+ */
 static km_t *
-save_keymap_name(char *path, char *keymap_name, char *description)
+save_keymap_name(const char *path, char *keymap_name, const char *description)
 {
     km_t *km;
     size_t sl;
@@ -487,6 +521,12 @@ save_keymap_name(char *path, char *keymap_name, char *description)
     return km;
 }
 
+/**
+ * Initialize the set of available keymaps.
+ *
+ * Adds the builtin keymaps to a database, then searches the two AppData
+ * directories for user-defined keymaps and adds those.
+ */
 static void
 save_keymaps(void)
 {
@@ -531,9 +571,16 @@ save_keymaps(void)
     }
 }
 
-/*
+/**
  * Fix up a UNC printer path in an old session file.
- * Returns 1 if the name needed fixing, 0 otherwise.
+ *
+ * The session wizard was originally written without understanding that
+ * backslashes needed to be doubled. So it created session files with UNC
+ * printer paths using incorrect syntax. This function patches that up.
+ *
+ * @param[in,out] s	Session
+ *
+ * @return 1 if the name needed fixing, 0 otherwise.
  */
 static int
 fixup_printer(session_t *s)
@@ -573,9 +620,13 @@ fixup_printer(session_t *s)
     }
 }
 
-/*
+/**
  * Reformat a quoted UNC path for display.
- * Returns 1 if it was reformatted, 0 otherwise.
+ *
+ * @param[in] expanded		UNC path in session file (quoted) format
+ * @param[out] condensed	UNC path in display format
+ *
+ * @return 1 if it was reformatted, 0 otherwise.
  */
 static int
 redisplay_printer(const char *expanded, char *condensed)
@@ -619,29 +670,48 @@ abort:
     return 0;
 }
 
-/*
+/**
  * Clear the screen, print a common banner and a title.
+ *
+ * @param[in] s		Session (its name is displayed, if defined)
+ * @param[in] path	Pathname of session file, or NULL
+ * @param[in] title	Text to display after session and path
  */
 static void
-new_screen(session_t *s, char *title)
+new_screen(session_t *s, const char *path, const char *title)
 {
+    static char wizard[] = "wc3270 Session Wizard";
     system("cls");
-    printf(
-"wc3270 Session Wizard                                            %s\n",
-	wversion);
+    printf("%s%*s%s\n",
+	    wizard,
+	    79 - strlen(wizard) - strlen(wversion), " ",
+	    wversion);
     if (s->session[0]) {
 	printf("\nSession: %s\n", s->session);
+    }
+    if (path != NULL) {
+	printf("Path: %s\n", path);
     }
     printf("\n%s\n", title);
 }
 
-/* Introductory screen. */
-static intro_t
-intro(session_t *s)
+/**
+ * Main screen.
+ *
+ * Displays a list of existing sessions (as a mnemonic) and a list of
+ * available operations. Prompts for an operation. Returns the operation
+ * selected.
+ *
+ * @param[in,out] s	Session (unused)
+ *
+ * @return menu_op_t describing selected operation
+ */
+static menu_op_t
+main_menu(session_t *s)
 {
     char enq[16];
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 Overview\n\
 \n\
 This wizard allows you to set up a new wc3270 session or modify an existing\n\
@@ -650,48 +720,57 @@ one. It also lets you create or replace a shortcut on the desktop.\n");
     display_sessions(0);
 
     printf("\n\
-  1. Create new session (n)\n");
+  1. Create new session (new)\n");
     if (num_xs) {
 	printf("\
-  2. Edit session (e)\n\
-  3. Delete sesstion (d)\n\
-  4. Copy session (c)\n\
-  5. Rename session (r)\n\
-  6. Create shortcut (s)\n");
+  2. Edit session (edit)\n\
+  3. Delete sesstion (delete)\n\
+  4. Copy session (copy)\n\
+  5. Rename session (rename)\n\
+  6. Create shortcut (shortcut)\n");
     }
     printf("\
-  7. Quit (q)\n");
+  7. Quit (quit)\n");
 
     for (;;) {
 	int i;
+	size_t sl;
 
-	printf("\nEnter selection (1..7 or n%s/q) [n] ",
-		num_xs? "/e/d/c/r/s": "");
+	printf("\nEnter command name or number (1..7) [new] ");
 	fflush(stdout);
 	if (get_input(enq, sizeof(enq)) == NULL) {
-	    return IT_ERR;
+	    return MO_ERR;
 	}
+	sl = strlen(enq);
 	i = atoi(enq);
-	if (enq[0] == '\0' || enq[0] == 'n' || enq[0] == 'N' || i == 1) {
-	    return IT_CREATE;
-	} else if (num_xs && (enq[0] == 'e' || enq[0] == 'E' || i == 2)) {
-	    return IT_EDIT;
-	} else if (num_xs && (enq[0] == 'd' || enq[0] == 'D' || i == 3)) {
-	    return IT_DELETE;
-	} else if (num_xs && (enq[0] == 'c' || enq[0] == 'C' || i == 4)) {
-	    return IT_COPY;
-	} else if (num_xs && (enq[0] == 'r' || enq[0] == 'R' || i == 5)) {
-	    return IT_RENAME;
-	} else if (num_xs && (enq[0] == 's' || enq[0] == 'S' || i == 6)) {
-	    return IT_SHORTCUT;
-	} else if (enq[0] == 'q' || enq[0] == 'Q' || i == 7) {
-	    return IT_QUIT;
+	if (!sl || !strncasecmp(enq, "new", sl) || i == 1) {
+	    return MO_CREATE;
+	} else if (num_xs && (!strncasecmp(enq, "edit", sl) || i == 2)) {
+	    return MO_EDIT;
+	} else if (num_xs && (!strncasecmp(enq, "delete", sl) || i == 3)) {
+	    return MO_DELETE;
+	} else if (num_xs && (!strncasecmp(enq, "copy", sl) || i == 4)) {
+	    return MO_COPY;
+	} else if (num_xs && (!strncasecmp(enq, "rename", sl) || i == 5)) {
+	    return MO_RENAME;
+	} else if (num_xs && (!strncasecmp(enq, "shortcut", sl) || i == 6)) {
+	    return MO_SHORTCUT;
+	} else if (!strncasecmp(enq, "quit", sl) || i == 7) {
+	    return MO_QUIT;
 	}
     }
 }
 
-/*
+/**
  * Search a well-defined series of locations for a session file.
+ *
+ * @param[in] session_name	Name of session
+ * @param[out] path		Returned pathname
+ *
+ * @return SRC_XXX enumeration:
+ * 	   SRC_CURRENT session is in current user's AppData directory
+ * 	   SRC_ALL session is in all-users AppData directory
+ * 	   SRC_OTHER session is somewhere else
  */
 static src_t
 find_session_file(const char *session_name, char *path)
@@ -730,23 +809,33 @@ find_session_file(const char *session_name, char *path)
     return SRC_OTHER;
 }
 
-/*
- * Session name screen.
- * Parameters:
- *   session_name[in]	If NULL, prompt for one
- *   			If non-NULL and does not end in .wc3270, take this as
- *   			the session name, and fail if it contains invalid
- *   			characters
- *   			If non-NULL and ends in .wc3270, take this as the path
- *   			to the session file
- *   s[out]		Session structure to fill in with name and (if the
- *   			file exists) current contents
- *   path[out]		Pathname of session file
- *   explicit_edit[in]	If TRUE, -e was passed on command line; skip the
- *   			'exists. Edit?' dialog
- *   src[out]		Where the session file was found, if it exists
+/**
+ * Preliminary triage of session file.
+ *
+ * Prompts for a session name if one was not provided on the command line.
+ * Figures out if the file is editable. Asks if an existing file should be
+ * edited or (if not editable) replaced.
+ *
+ * @param[in] session_name	Session name. If NULL, prompt for one
+ * 				If non-NULL and does not end in .wc3270, take
+ * 				this as the session name, and fail if it
+ * 				contains invalid characters.
+ *   				If non-NULL and ends in .wc3270, take this as
+ *   				the path to the session file.
+ * @param[out] s		Session structure to fill in with name and (if
+ * 				the file exists) current contents
+ * @param[out] path		Pathname of session file
+ * @param[in] explicit_edit	If TRUE, -e was passed on command line; skip
+ * 				the 'exists. Edit?' dialog
+ * @param[out] src		Where the session file was found, if it exists
  *
  * Returns: gs_t
+ *  GS_NEW		file does not exist
+ *  GS_EDIT		file does exist and is editable, edit it
+ *  GS_NOEDIT		file does exist and is editable, do not edit it
+ *  GS_OVERWRITE	file exists but is uneditable, overwrite it
+ *  GS_ERR		fatal error
+ *  GS_NOEDIT_LEAVE	uneditable and they don't want to overwrite it
  */
 static gs_t
 get_session(char *session_name, session_t *s, char *path, int explicit_edit,
@@ -844,7 +933,7 @@ Session names can only have letters, numbers, spaces, underscores and dashes.\n"
     } else {
 
 	/* Get the session name interactively. */
-	new_screen(s, "\
+	new_screen(s, NULL, "\
 New Session Name\n\
 \n\
 This is a unique name for the wc3270 session.  It is the name of the file\n\
@@ -887,25 +976,22 @@ and dash '-')\n");
 	}
 
 	if (editable) {
-	    const char *where;
-
 	    if (explicit_edit) {
-		    return GS_EDIT; /* edit it */
-	    }
-	    switch (*src) {
-	    case SRC_ALL:
-		where = " in the all-users AppData directory";
-		break;
-	    case SRC_CURRENT:
-		where = " in the current user's AppData directory";
-		break;
-	    default:
-		where = "";
-		break;
+		return GS_EDIT; /* edit it */
 	    }
 	    for (;;) {
-		printf("\nSession '%s' exists%s.\nEdit it? (y/n) [y] ",
-			s->session, where);
+		printf("\nSession '%s' exists", s->session);
+		switch (*src) {
+		case SRC_ALL:
+		    printf(" (defined for all users)");
+		    break;
+		case SRC_CURRENT:
+		    printf(" (defined for user '%s')", username);
+		    break;
+		default:
+		    break;
+		}
+		printf(".\nEdit it? (y/n) [y] ");
 		fflush(stdout);
 		rc = getyn(TRUE);
 		if (rc == YN_ERR) {
@@ -945,6 +1031,15 @@ and dash '-')\n");
     }
 }
 
+/**
+ * Prompt for a hostname or address.
+ *
+ * Allows IPv6 addresses if the underlying OS supports them.
+ *
+ * @param[in,out] s	Session
+ *
+ * @return 0 for success, -1 for failure.
+ */
 static int
 get_host(session_t *s)
 {
@@ -980,10 +1075,10 @@ To create a session file with no hostname (one that just specifies the model\n\
 number, character set, etc.), enter '" CHOICE_NONE "'."
 
     if (has_ipv6) {
-	new_screen(s, COMMON_HOST_TEXT1 ", " COMMON_HOST_TEXT2 " or "
+	new_screen(s, NULL, COMMON_HOST_TEXT1 ", " COMMON_HOST_TEXT2 " or "
 		IPV6_HOST_TEXT "." COMMON_HOST_TEXT3);
     } else {
-	new_screen(s, COMMON_HOST_TEXT1 " or " COMMON_HOST_TEXT2 "."
+	new_screen(s, NULL, COMMON_HOST_TEXT1 " or " COMMON_HOST_TEXT2 "."
 		COMMON_HOST_TEXT3);
     }
 
@@ -1024,6 +1119,13 @@ number, character set, etc.), enter '" CHOICE_NONE "'."
     return 0;
 }
 
+/**
+ * Prompt for a port number.
+ *
+ * Allows an non-zero 16-bit number, or the name 'telnet' (23).
+ *
+ * @return 0 for success, -1 for error.
+ */
 static int
 get_port(session_t *s)
 {
@@ -1031,7 +1133,7 @@ get_port(session_t *s)
     char *ptr;
     unsigned long u;
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 TCP Port\n\
 \n\
 This specifies the TCP Port to use to connect to the host.  It is a number from\n\
@@ -1063,7 +1165,7 @@ get_lu(session_t *s)
 {
     char buf[STR_SIZE];
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 Logical Unit (LU) Name\n\
 \n\
 This specifies a particular Logical Unit or Logical Unit group to connect to\n\
@@ -1108,7 +1210,7 @@ get_model(session_t *s)
     unsigned long u;
     unsigned long max_model = 5;
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 Model Number\n\
 \n\
 This specifies the dimensions of the screen.");
@@ -1149,7 +1251,7 @@ get_oversize(session_t *s)
     unsigned r, c;
     char xc;
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 Oversize\n\
 \n\
 This specifies 'oversize' dimensions for the screen, beyond the number of\n\
@@ -1209,7 +1311,7 @@ get_charset(session_t *s)
     char *ptr;
     unsigned long u;
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 Character Set\n\
 \n\
 This specifies the EBCDIC character set (code page) used by the host.");
@@ -1283,7 +1385,7 @@ This specifies the EBCDIC character set (code page) used by the host.");
 static int
 get_ssl(session_t *s)
 {
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 SSL Tunnel\n\
 \n\
 This option causes wc3270 to first create a tunnel to the host using the\n\
@@ -1305,7 +1407,7 @@ get_verify(session_t *s)
 {
     int rc;
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 Verify Host Certificates\n\
 \n\
 This option causes wc3270 to verify the certificates presented by the host\n\
@@ -1423,7 +1525,7 @@ get_proxy(session_t *s)
     char tbuf[STR_SIZE];
     char old_proxy[STR_SIZE];
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 Proxy\n\
 \n\
 If you do not have a direct connection to your host, this option allows\n\
@@ -1503,7 +1605,7 @@ wc3270 to use a proxy server to make the connection.");
 static int
 get_wpr3287(session_t *s)
 {
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 wpr3287 Session\n\
 \n\
 This option allows wc3270 to automatically start a wpr3287 printer session\n\
@@ -1529,7 +1631,7 @@ get_printer_mode(session_t *s)
 {
     int rc;
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 wpr3287 Session -- Printer Mode\n\
 \n\
 The wpr3287 printer session can be configured in one of two ways.  The first\n\
@@ -1567,7 +1669,7 @@ static int
 get_printerlu(session_t *s, int explain)
 {
     if (explain) {
-	new_screen(s, "\
+	new_screen(s, NULL, "\
 wpr3287 Session -- Printer Logical Unit (LU) Name\n\
 \n\
 If the wpr3287 printer session is associated with a particular Logical Unit,\n\
@@ -1612,7 +1714,7 @@ get_printer(session_t *s)
     char cbuf[STR_SIZE];
     int matching_printer = -1;
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 wpr3287 Session -- Windows Printer Name\n\
 \n\
 The wpr3287 session can use the Windows default printer as its real printer,\n\
@@ -1670,7 +1772,7 @@ the name 'default'.");
 	    if (*ptr != '\0' || u == 0 || u > num_printers + 1) {
 		continue;
 	    } else if (u == num_printers + 1) {
-		if (get_printer_name(cbuf, tbuf) < 0) {
+		if (get_printer_name(cbuf, tbuf, STR_SIZE) < 0) {
 		    return -1;
 		}
 		strcpy(s->printer, tbuf);
@@ -1680,7 +1782,7 @@ the name 'default'.");
 	    break;
 	}
     } else {
-	if (get_printer_name(cbuf, tbuf) < 0) {
+	if (get_printer_name(cbuf, tbuf, STR_SIZE) < 0) {
 	    return -1;
 	}
 	strcpy(s->printer, tbuf);
@@ -1699,7 +1801,7 @@ get_printercp(session_t *s)
 {
     char buf[STR_SIZE];
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 wpr3287 Session -- Printer Code Page\n\
 \n\
 By default, wpr3287 uses the system's default ANSI code page.  You can\n\
@@ -1737,7 +1839,7 @@ get_keymaps(session_t *s)
 {
     km_t *km;
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 Keymaps\n\
 \n\
 A keymap is a mapping from the PC keyboard to the virtual 3270 keyboard.\n\
@@ -1801,7 +1903,7 @@ get_embed(session_t *s)
 {
     int rc;
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 Embed Keymaps\n\
 \n\
 If selected, this option causes any selected keymaps to be copied into the\n\
@@ -1829,7 +1931,7 @@ session file, instead of being found at runtime.");
 static int
 get_fontsize(session_t *s)
 {
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 Font Size\n\
 \n\
 Allows the font size (character height in pixels) to be specified for the\n\
@@ -1864,7 +1966,7 @@ wc3270 window.  The size must be between 5 and 72.  The default is 12.");
 static int
 get_background(session_t *s)
 {
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 Background Color\n\
 \n\
 This option selects whether the screen background is black (the default) or\n\
@@ -1896,7 +1998,7 @@ get_menubar(session_t *s)
 {
     int rc;
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 Menu Bar\n\
 \n\
 This option selects whether the menu bar is displayed on the screen.");
@@ -1925,7 +2027,7 @@ get_trace(session_t *s)
 {
     int rc;
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 Tracing\n\
 \n\
 This option causes wc3270 to begin tracing at start-up. The trace file will\n\
@@ -1964,7 +2066,7 @@ run_notepad(session_t *s)
     char *us;
     char buf[2];
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 Notepad\n\
 \n\
 This option will start up the Windows Notapad editor to allow you to edit\n\
@@ -2054,20 +2156,23 @@ get_src(src_t def)
 
     /* Ask where they want the file. */
     for (;;) {
-	printf("\nCreate session for all users or current user? "
+	printf("\nCreate for all users or current user '%s'? "
 		"(all/current) [%s] ",
-		(def == SRC_CURRENT)? "current": "all");
+		username, (def == SRC_CURRENT)? "current": "all");
 	fflush(stdout);
 	if (get_input(ac, STR_SIZE) == NULL) {
 	    return SRC_ERR;
 	} else if (!ac[0]) {
 	    return def;
-	} else if (!strncasecmp(ac, "current", strlen(ac))) {
-		return SRC_CURRENT;
 	} else if (!strncasecmp(ac, "all", strlen(ac))) {
-		return SRC_ALL;
+	    return SRC_ALL;
+	} else if (!strncasecmp(ac, "current", strlen(ac)) ||
+		   !strcasecmp(ac, username)) {
+	    return SRC_CURRENT;
+	} else if (!strncasecmp(ac, "quit", strlen(ac))) {
+	    return SRC_NONE;
 	} else {
-		printf("Please answer (a)ll or (c)urrent.\n\n");
+	    printf("\nPlease answer (a)ll or (c)urrent.");
 	}
     }
 }
@@ -2090,7 +2195,7 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 	    }
 	}
 
-	new_screen(s, "Options");
+	new_screen(s, (how == SP_CREATE)? NULL: path, "Options");
 
 	printf("%3d. Host ................... : %s\n", MN_HOST,
 		strcmp(s->host, CHOICE_NONE)? s->host: DISPLAY_NONE);
@@ -2352,10 +2457,8 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
     }
 
     for (;;) {
-	printf("\nSession file is '%s%s'.\n%s it? (y/n) [y] ",
-		(how == SP_CREATE)? session_name: path,
-		(how == SP_CREATE)? SESS_SUFFIX: "",
-		how_name[how]);
+	printf("\n%s Session file '%s'? (y/n) [y] ",
+		how_name[how], session_name);
 	fflush(stdout);
 	rc = getyn(TRUE);
 	if (rc == YN_ERR) {
@@ -2490,7 +2593,7 @@ display_sessions(int with_numbers)
 	size_t slen;
 
 	if (i == 0 && xs_current.count != 0) {
-	    printf("Sessions for current user:\n");
+	    printf("Sessions for user '%s':\n", username);
 	} else if (i == xs_current.count) {
 	    if (col) {
 		printf("\n");
@@ -2624,7 +2727,7 @@ delete_session(session_t *s)
     src_t l;
     char path[MAX_PATH];
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 Delete Session\n");
 
     if (get_existing_session("delete", &name, &l) < 0) {
@@ -2677,10 +2780,10 @@ rename_or_copy_session(session_t *s, int is_rename)
     FILE *f;
 
     if (is_rename) {
-	    new_screen(s, "\
+	    new_screen(s, NULL, "\
 Rename Session\n");
     } else {
-	    new_screen(s, "\
+	    new_screen(s, NULL, "\
 Copy Session\n");
     }
 
@@ -2744,6 +2847,8 @@ Session names can only have letters, numbers, spaces, underscores and dashes.\n"
     case SRC_CURRENT:
 	snprintf(to_path, MAX_PATH, "%s%s%s", mya, to_name, SESS_SUFFIX);
 	break;
+    case SRC_NONE:
+	return 0;
     default:
 	return -1;
     }
@@ -2822,7 +2927,7 @@ new_shortcut(session_t *s)
     char from_path[MAX_PATH];
     FILE *f;
 
-    new_screen(s, "\
+    new_screen(s, NULL, "\
 Create Shortcut\n");
 
     if (get_existing_session("create shortcut for", &name, &l) < 0) {
@@ -3078,13 +3183,13 @@ session_wizard(char *session_name, int explicit_edit)
 
     /* Intro screen. */
     if (session_name == NULL) {
-	switch (intro(&session)) {
-	case IT_ERR:
+	switch (main_menu(&session)) {
+	case MO_ERR:
 	    return SW_ERR;
-	case IT_QUIT:
+	case MO_QUIT:
 	    return SW_QUIT;
-	case IT_EDIT:
-	    new_screen(&session, "\
+	case MO_EDIT:
+	    new_screen(&session, NULL, "\
 Edit Session\n");
 	    if (get_existing_session("edit", &session_name, NULL) < 0) {
 		return SW_ERR;
@@ -3093,36 +3198,36 @@ Edit Session\n");
 	    }
 	    explicit_edit = TRUE;
 	    break;
-	case IT_DELETE:
+	case MO_DELETE:
 	    if (delete_session(&session) < 0) {
 		return SW_ERR;
 	    } else {
 		return SW_SUCCESS;
 	    }
-	case IT_COPY:
+	case MO_COPY:
 	    if (rename_or_copy_session(&session, 0) < 0) {
 		return SW_ERR;
 	    } else {
 		return SW_SUCCESS;
 	    }
-	case IT_RENAME:
+	case MO_RENAME:
 	    if (rename_or_copy_session(&session, 1) < 0) {
 		return SW_ERR;
 	    } else {
 		return SW_SUCCESS;
 	    }
-	case IT_SHORTCUT:
+	case MO_SHORTCUT:
 	    if (new_shortcut(&session) < 0) {
 		return SW_ERR;
 	    } else {
 		return SW_SUCCESS;
 	    }
-	case IT_CREATE:
+	case MO_CREATE:
 	    /* fall through */
 	    break;
 	}
     } else {
-	new_screen(&session, "");
+	new_screen(&session, NULL, "");
     }
 
     /* Get the session name. */
@@ -3490,6 +3595,7 @@ main(int argc, char *argv[])
     char *session_name = NULL;
     char *program = argv[0];
     int explicit_edit = FALSE;
+    DWORD name_size;
 
     /*
      * Parse command-line arguments.
@@ -3522,6 +3628,12 @@ main(int argc, char *argv[])
 		&common_desktop, &commona, &installed) < 0) {
 	return 1;
     }
+    name_size = sizeof(username) / sizeof(TCHAR);
+    if (GetUserName(username, &name_size) == 0) {
+	fprintf(stderr, "GetUserName failed, error %ld\n",
+		(long)GetLastError());
+	return 1;
+    }
 
     /* Resize the console window. */
     resize_window(44);
@@ -3542,10 +3654,12 @@ main(int argc, char *argv[])
      * Wait for Enter before exiting, so the console window does not
      * disappear without the user seeing what it did.
      */
-    printf("\nWizard %s.  [Press <Enter>] ",
+    if (rc != SW_QUIT) {
+	printf("\nWizard %s.  [Press <Enter>] ",
 		(rc == SW_ERR)? "aborted": "complete");
-    fflush(stdout);
-    (void) fgets(buf, 2, stdin);
+	fflush(stdout);
+	(void) fgets(buf, 2, stdin);
+    }
 
     return 0;
 }
