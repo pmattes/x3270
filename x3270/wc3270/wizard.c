@@ -924,17 +924,24 @@ find_session_file(const char *session_name, char *path)
  *
  * Displays an error message.
  *
- * @param[in] name	Name to check
+ * @param[in] name		Name to check
+ * @param[in] result		Result buffer for error message, or NULL
+ * @param[in] result_size	Size of result buffer
  *
  * @return TRUE for success, FALSE for error.
  */
+#define SESSION_NAME_ERR \
+"Illegal character(s).\n\
+Session names can only have letters, numbers, spaces, underscores and dashes."
 static int
-legal_session_name(const char *name)
+legal_session_name(const char *name, char *result, size_t result_size)
 {
     if (strspn(name, LEGAL_CNAME) != strlen(name)) {
-	printf("\
-\nIllegal character(s).\n\
-Session names can only have letters, numbers, spaces, underscores and dashes.");
+	if (result != NULL) {
+	    snprintf(result, result_size, "%s", SESSION_NAME_ERR);
+	} else {
+	    printf("\n%s", SESSION_NAME_ERR);
+	}
 	return FALSE;
     } else {
 	return TRUE;
@@ -1055,7 +1062,7 @@ get_session(const char *session_name, session_t *s, char *path,
 	}
 
 	/* Validate the session name. */
-	if (!legal_session_name(s->session)) {
+	if (!legal_session_name(s->session, NULL, 0)) {
 	    return GS_ERR;
 	}
 
@@ -1077,7 +1084,7 @@ shortcut.");
 	    if (!s->session[0]) {
 		continue;
 	    }
-	    if (!legal_session_name(s->session)) {
+	    if (!legal_session_name(s->session, NULL, 0)) {
 		continue;
 	    }
 
@@ -3041,15 +3048,15 @@ get_existing_session(const char *why, const char **name, src_t *lp)
 /**
  * Look up a session specified by the user on the main menu.
  *
- * If it is not found, the user is prompted to press Enter.
- *
- * @param[in] name	Session name to look up
- * @param[out] lp	Returned location of session
+ * @param[in] name		Session name to look up
+ * @param[out] lp		Returned location of session
+ * @param[out] result		Buffer to put error message in
+ * @param[in] result_size	Size of 'result' buffer
  *
  * @return Session name, or NULL if not found
  */
 static char *
-menu_existing_session(char *name, src_t *lp)
+menu_existing_session(char *name, src_t *lp, char *result, size_t result_size)
 {
     int i;
 
@@ -3059,11 +3066,7 @@ menu_existing_session(char *name, src_t *lp)
 	}
     }
     if (i >= num_xs) {
-	char buf[2];
-
-	printf("No such session: %s\n[Press <Enter>] ", name);
-	fflush(stdout);
-	(void) fgets(buf, 2, stdin);
+	snprintf(result, result_size, "No such session: '%s'", name);
 	return NULL;
     } else {
 	return name;
@@ -3105,7 +3108,7 @@ delete_session(int argc, char **argv, char *result, size_t result_size)
     char path[MAX_PATH];
 
     if (argc > 0) {
-	name = menu_existing_session(argv[0], &l);
+	name = menu_existing_session(argv[0], &l, result, result_size);
 	if (name == NULL) {
 	    return 0;
 	}
@@ -3188,7 +3191,8 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
     ws_t wsrc;
 
     if (argc > 0) {
-	from_name = menu_existing_session(argv[0], &from_l);
+	from_name = menu_existing_session(argv[0], &from_l, result,
+		result_size);
 	if (from_name == NULL) {
 	    return 0;
 	}
@@ -3243,7 +3247,7 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
 		    "delete it first.", to_name);
 	    continue;
 	}
-	if (!legal_session_name(to_name)) {
+	if (!legal_session_name(to_name, NULL, 0)) {
 	    continue;
 	}
 	break;
@@ -3376,7 +3380,7 @@ new_shortcut(int argc, char **argv, char *result, size_t result_size)
     session_t s;
 
     if (argc > 0) {
-	name = menu_existing_session(argv[0], &l);
+	name = menu_existing_session(argv[0], &l, result, result_size);
 	if (name == NULL) {
 	    return 0;
 	}
@@ -3697,7 +3701,8 @@ session_wizard(const char *session_name, int explicit_edit, char *result,
 	    return SW_QUIT;
 	case MO_EDIT:
 	    if (argc > 0) {
-		session_name = menu_existing_session(argv[0], NULL);
+		session_name = menu_existing_session(argv[0], NULL, result,
+			result_size);
 		if (session_name == NULL) {
 		    return SW_SUCCESS;
 		}
@@ -3740,8 +3745,7 @@ Edit Session\n");
 	    }
 	case MO_CREATE:
 	    if (argc > 0) {
-		if (!legal_session_name(argv[0])) {
-		    ask_enter();
+		if (!legal_session_name(argv[0], result, result_size)) {
 		    return SW_SUCCESS;
 		}
 		session_name = argv[0];
