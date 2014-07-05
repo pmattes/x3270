@@ -3169,7 +3169,7 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
 {
     char to_name[64];
     const char *from_name = NULL;
-    src_t l;
+    src_t from_l, to_l;
     char from_path[MAX_PATH];
     char to_path[MAX_PATH];
     char from_linkpath[MAX_PATH];
@@ -3178,7 +3178,7 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
     session_t s;
 
     if (argc > 0) {
-	from_name = menu_existing_session(argv[0], &l);
+	from_name = menu_existing_session(argv[0], &from_l);
 	if (from_name == NULL) {
 	    return 0;
 	}
@@ -3193,7 +3193,7 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
     Copy Session\n");
 	}
 	if (get_existing_session(is_rename? "rename": "copy", &from_name,
-		    &l) < 0) {
+		    &from_l) < 0) {
 	    return -1;
 	} else if (from_name == NULL) {
 	    return 0;
@@ -3239,7 +3239,7 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
 	break;
     }
 
-    switch (l) {
+    switch (from_l) {
     case SRC_ALL:
 	snprintf(from_path, MAX_PATH, "%s%s%s", commona, from_name,
 		SESS_SUFFIX);
@@ -3250,7 +3250,7 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
 	break;
     }
 
-    switch (get_src(to_name, l)) {
+    switch ((to_l = get_src(to_name, from_l))) {
     case SRC_ALL:
 	snprintf(to_path, MAX_PATH, "%s%s%s", commona, to_name, SESS_SUFFIX);
 	break;
@@ -3293,7 +3293,7 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
 
     /* See about the shortcut as well. */
     snprintf(from_linkpath, sizeof(from_linkpath), "%s%s.lnk",
-	    (l == SRC_ALL)? common_desktop: desktop, from_name);
+	    (from_l == SRC_ALL)? common_desktop: desktop, from_name);
     if (access(from_linkpath, R_OK) == 0) {
 	for (;;) {
 	    gs_t rc;
@@ -3312,7 +3312,7 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
 	}
 
 	/* Create the new shortcut. */
-	if (write_shortcut(&s, FALSE, l, to_path) < 0) {
+	if (write_shortcut(&s, FALSE, to_l, to_path) < 0) {
 	    goto failed;
 	}
 
@@ -3558,12 +3558,12 @@ xs_name(int n, src_t *lp)
  * @param[in] s		Session
  * @param[in] ask	If TRUE, ask first
  * @param[in] src	Where the session file is (all or current user)
- * @param[in] path	Pathname of session file
+ * @param[in] sess_path	Pathname of session file
  *
  * @return 0 for no-op, 1 for success, -1 for failure
  */
 static int
-write_shortcut(const session_t *s, int ask, src_t src, const char *path)
+write_shortcut(const session_t *s, int ask, src_t src, const char *sess_path)
 {
     char linkpath[MAX_PATH];
     char exepath[MAX_PATH];
@@ -3603,7 +3603,7 @@ write_shortcut(const session_t *s, int ask, src_t src, const char *path)
 
     /* Create the desktop shorcut. */
     sprintf(exepath, "%swc3270.exe", installdir);
-    sprintf(args, "+S \"%s\"", path);
+    sprintf(args, "+S \"%s\"", sess_path);
     if (!(s->flags & WF_NO_MENUBAR)) {
 	    extra_height += 2;
     }
