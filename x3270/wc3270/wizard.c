@@ -226,6 +226,8 @@ typedef struct {	/* Set of existing sessions: */
 static xsb_t xs_current;	/* current-user sessions */
 static xsb_t xs_all;		/* all-users sessions */
 
+static session_t empty_session;
+
 static void print_user_settings(FILE *f);
 static void display_sessions(int with_numbers);
 static int write_shortcut(session_t *s, int ask, src_t src, char *path);
@@ -302,7 +304,7 @@ getyn(int defval)
 	    return FALSE;
     }
 
-    printf("Please answer (y)es or (n)o.\n\n");
+    printf("\nPlease answer (y)es or (n)o.");
     return YN_RETRY;
 }
 
@@ -374,7 +376,7 @@ get_printer_name(const char *defname, char *printername, int bufsize)
 	    printername[0] = '\0';
 	}
 	if (strchr(printername, '!') || strchr(printername, ',')) {
-	    printf("Invalid printer name.\n");
+	    printf("\nInvalid printer name.");
 	    continue;
 	} else {
 	    break;
@@ -415,7 +417,7 @@ save_keymap_name(const char *path, char *keymap_name, const char *description)
 
     km = (km_t *)malloc(sizeof(km_t));
     if (km == NULL) {
-	fprintf(stderr, "Not enough memory\n");
+	fprintf(stderr, "Out of memory\n");
 	return NULL;
     }
     memset(km, '\0', sizeof(km_t));
@@ -728,7 +730,6 @@ struct {		/* Menu options: */
  * available operations. Prompts for an operation. Returns the operation
  * selected.
  *
- * @param[in,out] s	Session (unused)
  * @param[out] argcp	Returned number of parameters
  * @param[out] argvp	Returned parameters
  *
@@ -737,7 +738,7 @@ struct {		/* Menu options: */
 #define MAX_TOKENS 3
 
 static menu_op_t
-main_menu(session_t *s, int *argcp, char ***argvp)
+main_menu(int *argcp, char ***argvp)
 {
     static char enq[256];
     static char *token[MAX_TOKENS + 1];
@@ -747,7 +748,7 @@ main_menu(session_t *s, int *argcp, char ***argvp)
     *argcp = 0;
     *argvp = NULL;
 
-    new_screen(s, NULL, "\
+    new_screen(&empty_session, NULL, "\
 Overview\n\
 \n\
 This wizard allows you to set up a new wc3270 session or modify an existing\n\
@@ -918,7 +919,7 @@ legal_session_name(const char *name)
     if (strspn(name, LEGAL_CNAME) != strlen(name)) {
 	printf("\
 \nIllegal character(s).\n\
-Session names can only have letters, numbers, spaces, underscores and dashes.\n");
+Session names can only have letters, numbers, spaces, underscores and dashes.");
 	return FALSE;
     } else {
 	return TRUE;
@@ -1192,10 +1193,12 @@ number, character set, etc.), enter '" CHOICE_NONE "'."
     }
 
     for (;;) {
+	size_t n_good;
+
 	if (s->host[0]) {
 	    printf("\nEnter host name or IP address: [%s] ", s->host);
 	} else {
-		printf("\nEnter host name or IP address: ");
+	    printf("\nEnter host name or IP address: ");
 	}
 	fflush(stdout);
 	if (get_input(buf, sizeof(s->host)) == NULL) {
@@ -1203,17 +1206,11 @@ number, character set, etc.), enter '" CHOICE_NONE "'."
 	} else if (!strcmp(buf, CHOICE_NONE)) {
 	    strcpy(s->host, buf);
 	    break;
-	} else if (strchr(buf, ' ') != NULL) {
-	    printf("\nHost names cannot contain spaces.\n");
-	    continue;
-	} else if (strchr(buf, '@') != NULL) {
-	    printf("\nHostnames cannot contain '@' characters.\n");
-	    continue;
-	} else if (strchr(buf, '[') != NULL) {
-	    printf("\nHostnames cannot contain '[' characters.\n");
-	    continue;
-	} else if (strchr(buf, ']') != NULL) {
-	    printf("\nHostnames cannot contain ']' characters.\n");
+	}
+	n_good = strcspn(buf, " @[]");
+	if (n_good != strlen(buf)) {
+	    printf("\nInvalid character '%c' in host name.",
+		    buf[n_good]);
 	    continue;
 	}
 	if (!buf[0]) {
@@ -1260,7 +1257,7 @@ This specifies the TCP Port to use to connect to the host.  It is a number from\
 	}
 	u = strtoul(inbuf, &ptr, 10);
 	if (u < 1 || u > 65535 || *ptr != '\0') {
-	    printf("Invalid port.\n");
+	    printf("\nInvalid port.");
 	} else {
 	    s->port = (int)u;
 	    break;
@@ -1281,6 +1278,8 @@ This specifies a particular Logical Unit or Logical Unit group to connect to\n\
 on the host.  The default is to allow the host to select the Logical Unit.");
 
     for (;;) {
+	size_t n_good;
+
 	printf("\nEnter Logical Unit (LU) name: [%s] ",
 		s->luname[0]? s->luname: CHOICE_NONE);
 	fflush(stdout);
@@ -1291,17 +1290,10 @@ on the host.  The default is to allow the host to select the Logical Unit.");
 	} else if (!strcmp(buf, CHOICE_NONE)) {
 	    s->luname[0] = '\0';
 	    break;
-	} else if (strchr(buf, ':') != NULL) {
-	    printf("\nLU name cannot contain ':' characters.\n");
-	    continue;
-	} else if (strchr(buf, '@') != NULL) {
-	    printf("\nLU name cannot contain '@' characters.\n");
-	    continue;
-	} else if (strchr(buf, '[') != NULL) {
-	    printf("\nLU name cannot contain '[' characters.\n");
-	    continue;
-	} else if (strchr(buf, ']') != NULL) {
-	    printf("\nLU name cannot contain ']' characters.\n");
+	}
+	n_good = strcspn(buf, ":@[]");
+	if (n_good != strlen(buf)) {
+	    printf("\nLU name contains invalid character '%c'", buf[n_good]);
 	    continue;
 	}
 	strcpy(s->luname, buf);
@@ -1341,7 +1333,7 @@ This specifies the dimensions of the screen.");
 	}
 	u = strtoul(inbuf, &ptr, 10);
 	if (u < 2 || u > max_model || *ptr != '\0') {
-	    printf("Invalid model number.\n");
+	    printf("\nInvalid model number.");
 	    continue;
 	} else if (s->model != (int)u) {
 	    s->model = (int)u;
@@ -1390,19 +1382,19 @@ columns).\n",
 	    s->ov_cols = 0;
 	    break;
 	} else if (sscanf(inbuf, "%u x %u%c", &r, &c, &xc) != 2) {
-	    printf("Please enter oversize in the form 'rows x cols'.\n");
+	    printf("\nPlease enter oversize in the form 'rows x cols'.");
 	    continue;
 	} else if ((int)r < wrows[s->model] || (int)c < wcols[s->model]) {
-	    printf("Oversize must be larger than the default for a model %d "
-		    "(%u x %u).\n",
+	    printf("\nOversize must be larger than the default for a model %d "
+		    "(%u x %u).",
 		    (int)s->model, wrows[s->model], wcols[s->model]);
 	    continue;
 	} else if (r > 255 || c > 255) {
-	    printf("Rows and columns must be 255 or less.\n");
+	    printf("\nRows and columns must be 255 or less.");
 	    continue;
 	} else if (r * c > 0x4000) {
-	    printf("The total screen area (rows multiplied by columns) must "
-		    "be less than %d.\n", 0x4000);
+	    printf("\nThe total screen area (rows multiplied by columns) must "
+		    "be less than %d.", 0x4000);
 	    continue;
 	}
 	s->ov_rows = (unsigned char)r;
@@ -1485,7 +1477,7 @@ This specifies the EBCDIC character set (code page) used by the host.");
 	if (charsets[i].name != NULL) {
 	    break;
 	}
-	printf("Invalid character set name.\n");
+	printf("\nInvalid character set name.");
     }
     return 0;
 }
@@ -1566,7 +1558,7 @@ get_proxy_server(session_t *s)
 	    }
 	}
 	if (strchr(hbuf, '[') != NULL || strchr(hbuf, ']') != NULL) {
-	    printf("Server name cannot include '[' or ']'\n");
+	    printf("\nServer name cannot include '[' or ']'.");
 	    continue;
 	}
 	strcpy(s->proxy_host, hbuf);
@@ -1618,7 +1610,7 @@ get_proxy_server_port(session_t *s)
 	}
 	l = strtoul(pbuf, &ptr, 10);
 	if (l == 0 || *ptr != '\0' || (l & ~0xffffL)) {
-	    printf("Invalid port\n");
+	    printf("\nInvalid port.");
 	} else {
 	    strcpy(s->proxy_port, pbuf);
 	    break;
@@ -1689,7 +1681,7 @@ wc3270 to use a proxy server to make the connection.");
 		break;
 	    }
 	}
-	printf("Invalid proxy type.\n");
+	printf("\nInvalid proxy type.");
     }
 
     /* If the type changed, the rest of the information is invalid. */
@@ -1933,7 +1925,7 @@ page.");
 	}
 	cp = atoi(buf);
 	if (cp <= 0) {
-	    printf("Invald code page\n");
+	    printf("\nInvald code page.");
 	} else {
 	    strcpy(s->printercp, buf);
 	    break;
@@ -1994,7 +1986,7 @@ user-defined keymaps, separated by commas.");
 		}
 	    }
 	    if (km == NULL) {
-		printf("\nInvalid keymap name '%s'\n", t);
+		printf("Invalid keymap name '%s'.", t);
 		wrong = TRUE;
 		break;
 	    }
@@ -2064,6 +2056,7 @@ wc3270 window.  The size must be between 5 and 72.  The default is 12.");
 	}
 	u = strtoul(inbuf, &ptr, 10);
 	if (*ptr != '\0' || u == 0 || u < 5 || u > 72) {
+	    printf("\nInvalid font size.");
 	    continue;
 	}
 	s->point_size = (unsigned char)u;
@@ -2291,6 +2284,18 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 {
     int rc;
     char choicebuf[32];
+    session_t old_session;
+
+    switch (how) {
+    case SP_REPLACE:
+    case SP_CREATE:
+    case N_SP: /* can't happen, but the compiler wants it */
+	memset(&old_session, '\0', sizeof(session_t));
+	break;
+    case SP_UPDATE:
+	memcpy(&old_session, s, sizeof(session_t));
+	break;
+    }
 
     for (;;) {
 	int done = 0;
@@ -2393,6 +2398,7 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 	    if (get_input(choicebuf, sizeof(choicebuf)) == NULL) {
 		return SRC_ERR;
 	    } else if (!choicebuf[0]) {
+		/* none */
 		done = 1;
 		break;
 	    }
@@ -2551,7 +2557,7 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 		}
 		break;
 	    default:
-		printf("Invalid entry.\n");
+		printf("\nInvalid entry.");
 		invalid = 1;
 		break;
 	    }
@@ -2565,24 +2571,31 @@ summarize_and_proceed(session_t *s, sp_t how, char *path, char *session_name)
 	}
     }
 
-    for (;;) {
-	printf("\n%s session file '%s'? (y/n) [y] ",
-		how_name[how], session_name);
-	fflush(stdout);
-	rc = getyn(TRUE);
-	if (rc == YN_ERR) {
-	    return SRC_ERR;
-	} else if (rc == FALSE) {
-	    return SRC_NONE;
-	} else if (rc == TRUE) {
-	    break;
+    /* Ask if they want to write the file. */
+    if (memcmp(s, &old_session, sizeof(session_t))) {
+	for (;;) {
+	    printf("\n%s session file '%s'? (y/n) [y] ",
+		    how_name[how], session_name);
+	    fflush(stdout);
+	    rc = getyn(TRUE);
+	    if (rc == YN_ERR) {
+		return SRC_ERR;
+	    } else if (rc == FALSE) {
+		return SRC_NONE;
+	    } else if (rc == TRUE) {
+		break;
+	    }
 	}
+    } else {
+	return SRC_NONE;
     }
 
+    /* If creating, ask where they want it written. */
     if (how == SP_CREATE) {
 	return get_src(session_name, SRC_CURRENT);
     }
 
+    /* Return where the file ended up. */
     if (!strncasecmp(mya, path, strlen(mya))) {
 	return SRC_CURRENT;
     } else if (!strncasecmp(commona, path, strlen(commona))) {
@@ -2820,8 +2833,10 @@ get_existing_session(const char *why, char **name, src_t *l)
 		    return 0;
 		}
 	    }
+	    printf("\nNo such session.");
 	    continue;
 	} else if (n < 0 || n > num_xs) {
+	    printf("\nNo such session.");
 	    continue;
 	}
 	*name = xs_name(n, l);
@@ -2881,14 +2896,13 @@ ask_enter(void)
  *
  * Prompts for a session name, if none is provided in argc/argv.
  *
- * @param[in] s		Session (unused)
  * @param[in] argc	Command argument count (from main menu prompt)
  * @param[in] argv	Command argumens (from main menu prompt)
  *
  * @return 0 for success, -1 for failure
  */
 static int
-delete_session(session_t *s, int argc, char **argv)
+delete_session(int argc, char **argv)
 {
     char *name = NULL;
     src_t l;
@@ -2902,7 +2916,7 @@ delete_session(session_t *s, int argc, char **argv)
     }
 
     if (argc == 0) {
-	new_screen(s, NULL, "\
+	new_screen(&empty_session, NULL, "\
 Delete Session\n");
 
 	if (get_existing_session("delete", &name, &l) < 0) {
@@ -2951,7 +2965,6 @@ failed:
  *
  * Prompts for from/to session names, if not provided in argc/argv.
  *
- * @param[in] s		Session (unused)
  * @param[in] argc	Command argument count (from main menu prompt)
  * @param[in] argv	Command argumens (from main menu prompt)
  * @param[in] is_rename	TRUE if rename, FALSE if copy
@@ -2959,7 +2972,7 @@ failed:
  * @return 0 for success, -1 for failure
  */
 static int
-rename_or_copy_session(session_t *s, int argc, char **argv, int is_rename)
+rename_or_copy_session(int argc, char **argv, int is_rename)
 {
     char to_name[64];
     char *from_name = NULL;
@@ -2969,6 +2982,7 @@ rename_or_copy_session(session_t *s, int argc, char **argv, int is_rename)
     char from_linkpath[MAX_PATH];
     int i;
     FILE *f;
+    session_t s;
 
     if (argc > 0) {
 	from_name = menu_existing_session(argv[0], &l);
@@ -2979,10 +2993,10 @@ rename_or_copy_session(session_t *s, int argc, char **argv, int is_rename)
 
     if (argc == 0) {
 	if (is_rename) {
-	    new_screen(s, NULL, "\
+	    new_screen(&empty_session, NULL, "\
     Rename Session\n");
 	} else {
-	    new_screen(s, NULL, "\
+	    new_screen(&empty_session, NULL, "\
     Copy Session\n");
 	}
 	if (get_existing_session(is_rename? "rename": "copy", &from_name,
@@ -3022,8 +3036,8 @@ rename_or_copy_session(session_t *s, int argc, char **argv, int is_rename)
 	    }
 	}
 	if (i < num_xs) {
-	    printf("Session '%s' already exists. To replace it, you must "
-		    "delete it first.\n", to_name);
+	    printf("\nSession '%s' already exists. To replace it, you must "
+		    "delete it first.", to_name);
 	    continue;
 	}
 	if (!legal_session_name(to_name)) {
@@ -3062,24 +3076,24 @@ rename_or_copy_session(session_t *s, int argc, char **argv, int is_rename)
 	perror(from_path);
 	return -1;
     }
-    if (!read_session(f, s)) {
+    if (!read_session(f, &s)) {
 	fclose(f);
-	fprintf(stderr, "Cannot read '%s'.\n", from_path);
+	printf("Cannot read '%s'.\n", from_path);
 	goto failed;
     }
     fclose(f);
 
     /* Change its name and write it back out. */
-    strncpy(s->session, to_name, STR_SIZE);
-    if (create_session_file(s, to_path) < 0) {
-	fprintf(stderr, "Cannot write '%s'.\n", to_path);
+    strncpy(s.session, to_name, STR_SIZE);
+    if (create_session_file(&s, to_path) < 0) {
+	printf("Cannot write '%s'.\n", to_path);
 	goto failed;
     }
 
     /* Remove the orginal. */
     if (is_rename) {
 	if (unlink(from_path) < 0) {
-	    fprintf(stderr, "Cannot remove '%s'.\n", from_path);
+	    printf("Cannot remove '%s'.\n", from_path);
 	    goto failed;
 	}
     }
@@ -3105,15 +3119,14 @@ rename_or_copy_session(session_t *s, int argc, char **argv, int is_rename)
 	}
 
 	/* Create the new shortcut. */
-	if (write_shortcut(s, FALSE, l, to_path) < 0) {
+	if (write_shortcut(&s, FALSE, l, to_path) < 0) {
 	    goto failed;
 	}
 
 	/* Remove the original. */
 	if (is_rename) {
 	    if (unlink(from_linkpath) < 0) {
-		fprintf(stderr, "Cannot remove '%s'.\n",
-			from_linkpath);
+		printf("Cannot remove '%s'.\n", from_linkpath);
 		goto failed;
 	    }
 	}
@@ -3127,13 +3140,14 @@ failed:
 }
 
 static int
-new_shortcut(session_t *s, int argc, char **argv)
+new_shortcut(int argc, char **argv)
 {
     char *name = NULL;
     src_t l;
     char from_path[MAX_PATH];
     FILE *f;
     int rc;
+    session_t s;
 
     if (argc > 0) {
 	name = menu_existing_session(argv[0], &l);
@@ -3143,7 +3157,7 @@ new_shortcut(session_t *s, int argc, char **argv)
     }
 
     if (argc == 0) {
-	new_screen(s, NULL, "\
+	new_screen(&empty_session, NULL, "\
 Create Shortcut\n");
 
 	if (get_existing_session("create shortcut for", &name, &l) < 0) {
@@ -3167,14 +3181,14 @@ Create Shortcut\n");
     if (f == NULL) {
 	perror(from_path);
 	goto failed;
-    } else if (!read_session(f, s)) {
+    } else if (!read_session(f, &s)) {
 	fclose(f);
-	fprintf(stderr, "Cannot read '%s'.\n", from_path);
+	printf("Cannot read '%s'.\n", from_path);
 	goto failed;
     }
     fclose(f);
 
-    rc = write_shortcut(s, (argc == 0), l, from_path);
+    rc = write_shortcut(&s, (argc == 0), l, from_path);
     if (rc < 0) {
 	goto failed;
     }
@@ -3225,7 +3239,7 @@ xs_init_type(char *dirname, xsb_t *xsb, src_t location)
 
 	    xs = (xs_t *)malloc(sizeof(xs_t) + nlen + 1);
 	    if (xs == NULL) {
-		fprintf(stderr, "Not enough memory\n");
+		printf("Out of memory\n");
 		exit(1);
 	    }
 	    xs->location = location;
@@ -3411,7 +3425,7 @@ session_wizard(char *session_name, int explicit_edit)
 
     /* Intro screen. */
     if (session_name == NULL) {
-	switch (main_menu(&session, &argc, &argv)) {
+	switch (main_menu(&argc, &argv)) {
 	case MO_ERR:
 	    return SW_ERR;
 	case MO_QUIT:
@@ -3434,25 +3448,25 @@ Edit Session\n");
 	    explicit_edit = TRUE;
 	    break;
 	case MO_DELETE:
-	    if (delete_session(&session, argc, argv) < 0) {
+	    if (delete_session(argc, argv) < 0) {
 		return SW_ERR;
 	    } else {
 		return SW_SUCCESS;
 	    }
 	case MO_COPY:
-	    if (rename_or_copy_session(&session, argc, argv, 0) < 0) {
+	    if (rename_or_copy_session(argc, argv, FALSE) < 0) {
 		return SW_ERR;
 	    } else {
 		return SW_SUCCESS;
 	    }
 	case MO_RENAME:
-	    if (rename_or_copy_session(&session, argc, argv, 1) < 0) {
+	    if (rename_or_copy_session(argc, argv, TRUE) < 0) {
 		return SW_ERR;
 	    } else {
 		return SW_SUCCESS;
 	    }
 	case MO_SHORTCUT:
-	    if (new_shortcut(&session, argc, argv) < 0) {
+	    if (new_shortcut(argc, argv) < 0) {
 		return SW_ERR;
 	    } else {
 		return SW_SUCCESS;
@@ -3475,23 +3489,25 @@ Edit Session\n");
     /* Get the session name. */
     rc = get_session(session_name, &session, path, explicit_edit, &src);
     switch (rc) {
-    case GS_NOEDIT_LEAVE: /* Uneditable, and they don't want to overwrite it. */
+    case GS_NOEDIT_LEAVE:	/* Uneditable, and they don't want to overwrite
+				   it. */
 	return SW_SUCCESS;
     default:
-    case GS_ERR: /* EOF */
+    case GS_ERR:		/* EOF */
 	return SW_ERR;
-    case GS_OVERWRITE: /* Overwrite old (uneditable). */
+    case GS_OVERWRITE:		/* Overwrite old (uneditable). */
 	/* Clean out the session. */
 	strcpy(save_session_name, session.session);
 	memset(&session, '\0', sizeof(session));
 	strcpy(session.session, save_session_name);
 	/* fall through... */
-    case GS_NEW: /* New. */
+    case GS_NEW:		/* New. */
 
 	/* Get the host name, which defaults to the session name. */
 	if (strchr(session.session, ' ') == NULL) {
 	    strcpy(session.host, session.session);
-	} else if (get_host(&session) < 0) {
+	}
+	if (get_host(&session) < 0) {
 	    return SW_ERR;
 	}
 
@@ -3501,7 +3517,7 @@ Edit Session\n");
 	strcpy(session.charset, "bracket");
 	strcpy(session.printerlu, ".");
 	/* fall through... */
-    case GS_EDIT: /* Edit existing file. */
+    case GS_EDIT:		/* Edit existing file. */
 	/* See what they want to change. */
 	src = summarize_and_proceed(&session,
 		(rc == GS_OVERWRITE)? SP_REPLACE:
@@ -3539,7 +3555,7 @@ Edit Session\n");
 	break;
     }
 
-    /* Ask about the shortcut. */
+    /* Ask about creating or updating the shortcut. */
     if (write_shortcut(&session, TRUE, src, path) < 0) {
 	return SW_ERR;
     } else {
@@ -3833,7 +3849,6 @@ int
 main(int argc, char *argv[])
 {
     sw_t rc;
-    char buf[2];
     char *session_name = NULL;
     char *program = argv[0];
     int explicit_edit = FALSE;
@@ -3897,10 +3912,8 @@ main(int argc, char *argv[])
      * disappear without the user seeing what it did.
      */
     if (rc != SW_QUIT) {
-	printf("\nWizard %s.  [Press <Enter>] ",
-		(rc == SW_ERR)? "aborted": "complete");
-	fflush(stdout);
-	(void) fgets(buf, 2, stdin);
+	printf("\nWizard %s. ", (rc == SW_ERR)? "aborted": "complete");
+	ask_enter();
     }
 
     return 0;
