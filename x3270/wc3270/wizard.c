@@ -156,6 +156,15 @@ typedef enum {
 #define YN_ERR		(-1)	/* error return from getyn() */
 #define YN_RETRY	(-2)	/* user input error from getyn() */
 
+/* Return value from write_shorcut(). */
+typedef enum {
+    WS_NOP,		/* did nothing */
+    WS_CREATED,		/* new shortcut */
+    WS_REPLACED,	/* replaced shortcut */
+    WS_FAILED,		/* operation failed */
+    WS_ERR = -1		/* error */
+} ws_t;
+
 extern char *wversion;
 
 /* Aliases for obsolete character set names. */
@@ -230,7 +239,7 @@ static session_t empty_session;
 
 static void print_user_settings(FILE *f);
 static void display_sessions(int with_numbers);
-static int write_shortcut(const session_t *s, int ask, src_t src,
+static ws_t write_shortcut(const session_t *s, int ask, src_t src,
 	const char *path);
 
 /**
@@ -2334,12 +2343,12 @@ miscellaneous resources in your session file.");
     t = _tempnam(NULL, "w3270wiz");
     if (t == NULL) {
 	printf("Error creating temporary session file name.\n");
-	goto fail;
+	goto failed;
     }
     f = fopen(t, "w");
     if (f == NULL) {
 	printf("Error creating temporary session file.\n");
-	goto fail;
+	goto failed;
     }
     fprintf(f, "! Comment lines begin with '!', like this one.\n\
 ! Resource values look like this (without the '!'):\n\
@@ -2357,12 +2366,12 @@ miscellaneous resources in your session file.");
     f = fopen(t, "r");
     if (f == NULL) {
 	printf("Error reading back temporary session file.\n");
-	goto fail;
+	goto failed;
     }
     us = NULL;
     if (read_user_settings(f, &us) == 0) {
 	printf("Error reading back temporary session file.\n");
-	goto fail;
+	goto failed;
     }
     fclose(f);
     free(user_settings);
@@ -2371,7 +2380,7 @@ miscellaneous resources in your session file.");
     free(t);
     return 0;
 
-fail:
+failed:
     printf("[Press <Enter>] ");
     fflush(stdout);
     (void) fgets(buf, 2, stdin);
@@ -3073,7 +3082,7 @@ ask_enter(void)
 
     printf("[Press <Enter>] ");
     fflush(stdout);
-    (void) fgets(buf, 2, stdin);
+    (void) fgets(buf, sizeof(buf), stdin);
 }
 
 /**
@@ -3176,6 +3185,7 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
     int i;
     FILE *f;
     session_t s;
+    ws_t wsrc;
 
     if (argc > 0) {
 	from_name = menu_existing_session(argv[0], &from_l);
@@ -3312,8 +3322,16 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
 	}
 
 	/* Create the new shortcut. */
-	if (write_shortcut(&s, FALSE, to_l, to_path) < 0) {
+	wsrc = write_shortcut(&s, FALSE, to_l, to_path);
+	switch (wsrc) {
+	case WS_ERR:
+	    return -1;
+	case WS_FAILED:
 	    goto failed;
+	case WS_CREATED:
+	case WS_REPLACED:
+	case WS_NOP:
+	    break;
 	}
 
 	/* Remove the original. */
@@ -3325,8 +3343,9 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
 	}
     }
 
-    snprintf(result, result_size, "Session '%s' %s.",
-	    from_name, is_rename? "renamed": "copied");
+    snprintf(result, result_size, "Session '%s' %s to '%s'.",
+	    from_name, is_rename? "renamed": "copied",
+	    to_name);
     return 0;
 
 failed:
@@ -3353,7 +3372,7 @@ new_shortcut(int argc, char **argv, char *result, size_t result_size)
     src_t l;
     char from_path[MAX_PATH];
     FILE *f;
-    int rc;
+    ws_t rc;
     session_t s;
 
     if (argc > 0) {
@@ -3395,12 +3414,21 @@ Create Shortcut\n");
     }
     fclose(f);
 
-    rc = write_shortcut(&s, (argc == 0), l, from_path);
-    if (rc < 0) {
+    rc = write_shortcut(&s, FALSE, l, from_path);
+    switch (rc) {
+    case WS_NOP:
+	break;
+    case WS_ERR:
+	return -1;
+    case WS_FAILED:
 	goto failed;
+    case WS_CREATED:
+    case WS_REPLACED:
+	snprintf(result, result_size, "Shortcut %s for '%s'.",
+		(rc == WS_CREATED)? "created": "replaced",
+		name);
+	break;
     }
-
-    snprintf(result, result_size, "Shortcut created for '%s'.", name);
     return 0;
 
 failed:
@@ -3560,15 +3588,14 @@ xs_name(int n, src_t *lp)
  * @param[in] src	Where the session file is (all or current user)
  * @param[in] sess_path	Pathname of session file
  *
- * @return 0 for no-op, 1 for success, -1 for failure
+ * @return ws_t (no-op, create, replace, error)
  */
-static int
+static ws_t
 write_shortcut(const session_t *s, int ask, src_t src, const char *sess_path)
 {
     char linkpath[MAX_PATH];
     char exepath[MAX_PATH];
     char args[MAX_PATH];
-    FILE *f;
     int shortcut_exists;
     int extra_height = 1;
     wchar_t *font;
@@ -3579,10 +3606,7 @@ write_shortcut(const session_t *s, int ask, src_t src, const char *sess_path)
     sprintf(linkpath, "%s%s.lnk",
 	    (src == SRC_ALL)? common_desktop: desktop,
 	    s->session);
-    f = fopen(linkpath, "r");
-    if ((shortcut_exists = (f != NULL))) {
-	fclose(f);
-    }
+    shortcut_exists = (access(linkpath, R_OK) == 0);
     if (ask) {
 	for (;;) {
 	    int rc;
@@ -3592,9 +3616,9 @@ write_shortcut(const session_t *s, int ask, src_t src, const char *sess_path)
 		    installed? "y": "n");
 	    rc = getyn(installed == TRUE);
 	    if (rc == YN_ERR) {
-		return -1;
+		return WS_ERR;
 	    } else if (rc == FALSE) {
-		return 0;
+		return WS_NOP;
 	    } else if (rc == TRUE) {
 		break;
 	    }
@@ -3617,8 +3641,7 @@ write_shortcut(const session_t *s, int ask, src_t src, const char *sess_path)
 	    args,			/* arguments */
 	    installdir,		/* working directory */
 	    (s->ov_rows?	/* console rows */
-		s->ov_rows: wrows[s->model]) +
-		    extra_height,
+		s->ov_rows: wrows[s->model]) + extra_height,
 	    s->ov_cols?	/* console cols */
 		s->ov_cols: wcols[s->model],
 	    font,			/* font */
@@ -3626,11 +3649,10 @@ write_shortcut(const session_t *s, int ask, src_t src, const char *sess_path)
 	    codepage);		/* code page */
 
     if (SUCCEEDED(hres)) {
-	return 1;
+	return shortcut_exists? WS_REPLACED: WS_CREATED;
     } else {
-	printf("Writing shortcut failed\n");
-	fflush(stdout);
-	return -1;
+	printf("Writing shortcut '%s' failed\n", linkpath);
+	return WS_FAILED;
     }
 }
 
@@ -3657,7 +3679,8 @@ session_wizard(const char *session_name, int explicit_edit, char *result,
     char path[MAX_PATH];
     int argc;
     char **argv;
-    int shrc;
+    ws_t wsrc;
+    size_t sl;
 
     /* Start with nothing. */
     (void) memset(&session, '\0', sizeof(session));
@@ -3787,7 +3810,7 @@ Edit Session\n");
 
 	/* Create the session file. */
 	if (write_session_file(&session, path) < 0) {
-	    return SW_ERR;
+	    goto failed;
 	}
 	snprintf(result, result_size, "Wrote session '%s'.", session.session);
 	break;
@@ -3797,19 +3820,31 @@ Edit Session\n");
     }
 
     /* Ask about creating or updating the shortcut. */
-    shrc = write_shortcut(&session, TRUE, src, path);
-    if (shrc < 0) {
+    wsrc = write_shortcut(&session, TRUE, src, path);
+    switch (wsrc) {
+    case WS_NOP:
+	break;
+    case WS_ERR:
 	return SW_ERR;
-    } else {
-	if (shrc == 1) {
-	    size_t sl = strlen(result);
+    case WS_FAILED:
+	goto failed;
+    case WS_CREATED:
+    case WS_REPLACED:
+	sl = strlen(result);
 
-	    snprintf(result + sl, result_size - sl,
-		    "%sWrote shortcut '%s'.",
-		    sl? "\n": "", session.session);
-	}
-	return SW_SUCCESS;
+	snprintf(result + sl, result_size - sl,
+		"%s%s shortcut '%s'.",
+		sl? "\n": "",
+		(wsrc == WS_CREATED)? "Created": "Replaced",
+		session.session);
+	break;
     }
+
+    return SW_SUCCESS;
+
+failed:
+    ask_enter();
+    return SW_SUCCESS;
 }
 
 /**
