@@ -1,0 +1,119 @@
+<h1>x3270 and SSL</h1>
+x3270 support secures communication via the Secure Sockets
+Layer (SSL).  (The text
+below refers to <i>x3270</i>, but the descriptions actually apply to all of the
+members of the suite.)
+<p>x3270 SSL support uses the <a href="http://www.openssl.org">OpenSSL</a>
+library.
+Much of the information below is common to many OpenSSL clients and more
+extensive documentation is available on the Web.
+<p>
+A secure connection can be negotiated immediately by specifying the
+<b>L:</b> prefix on the hostname (e.g., <b>L:foo.whatever.net</b>), or can
+be negotiated later via the TELNET STARTTLS option (which is initiated by
+the host after the connection has been established).</p>
+<h3>A Note on PEM Format</h3>
+<i>PEM</i> (Privacy Enhanced Mail) is a text file format used for SSL
+certificates and private keys.
+It is easily recognized by headers like the following:
+<p>&nbsp;&nbsp;<tt>-----BEGIN CERTIFICATE-----</tt>
+<p>A certificate is the text between (and including) the BEGIN CERTIFICATE
+and END CERTIFICATE headers. A private key is the text between (and including)
+the BEGIN RSA PRIVATE KEY and END RSA PRIVATE KEY headers.
+A PEM-format file can contain multiple certificates and keys.
+<h2>Options and Resources</h2>
+SSL is controlled by a number of different command-line options and resources.
+<h3>Specifying the Server's Root Certificate</h3>
+If your host's certificate was not signed by a well-known certificate authority
+(CA), you can configure x3270 to accept it by specifying an alternate set of
+root certificate(s).
+</p>The <b>-cafile</b> option (or the <b>caFile</b> resource) can be used to
+specify a file containing one or more server root certificates.
+This file must be in PEM format.</p>
+<p>If there are a large number of certificates, the <b>-cadir</b> option (or
+the <b>caDir</b> resource) can be used to specify a directory containing root
+certificates.
+This directory contains files that use the naming convention of
+<i>hash</i>.<i>seq</i>, where <i>hash</i> is the hash of the certificate
+value and <i>seq</i> is a sequence number (since multiple certificates could
+have the same hash) starting with 0.
+<p>If your host uses a self-signed certificate, x3270 will not normally allow
+SSL authentication with it. To allow authentication with self-signed
+certificates, set the <b>selfSignedOk</b> resource to <b>true</b>.
+<h3>Updating the Root Certificate Database</h3>
+To avoid having to specify a root certificate for each invocation of x3270,
+one or more certificates can be added to the OpenSSL root certificate database.
+On Linux and Unix, this procedure is (unfortunately) an
+operating-system- and release- specific procedure.
+Howevever, the OpenSSL root certificate database is common to all OpenSSL
+applications on your workstation, so instructions on updating it should be
+easily found on the web.
+<p>On Windows, the root certificate database used by wc3270, ws3270 and
+wpr3287 is installed as part of the setup procedure and updating it is
+documented below.
+<p>The root certificate database is a PEM-format text file called
+<b>root-certs.txt</b>.
+The file is located in the wc3270 Application Data directory.
+(The Application Data directory varies between Windows releases, but it is
+easily found by selecting <b>wc3270 Explore AppData</b> in the <b>wc3270</b>
+program group.) You can add your root certificate
+(which must be in PEM format) to this file with a text editor such as
+Notepad.
+<h3>Specifying a Certificate for the Client (the Emulator)</h3>
+If you have been issued a certificate and a private key to allow your client
+(the emulator) to be authenticated by your host, there are several options that
+allow this to be specified to x3270.
+<p>The <b>-certfile</b> option (or the <b>certFile</b> resource) defines a
+file containing the client certificate.
+By default, this file is in PEM format, but it can also be in ASN1 format,
+which is specified by setting the <b>-certfiletype</b> option (or the
+<b>certFileType</b> resource) to the value <b>asn1</b>.</p>
+<p>The <b>-chainfile</b> option (or the <b>chainFile</b> resource) defines a
+PEM-format file containing both the client certificate and any intermediate
+certificates that were used to sign it.
+If a chain file is specified, it is used instead of the certificate file.</p>
+<h3>Specifying the Private Key for the Client Certificate</h3>
+The file containing the private key for the client certificate can be specified
+by the <b>-keyfile</b> option or the <b>keyFile</b> resource.
+This file is in PEM format by default, but can be in ASN1 format, by
+specifying the <b>-keyfiletype</b> option or the <b>keyFileType</b> resource
+with the value <b>asn1</b>.
+<p>If no explicit key file is specified, the default is to find the private
+key in the chain file or the client certificate file (whichever was
+specified).</p>
+<p>If the private key is encrypted, then a password must be specified.
+The password is given with the <b>-keypasswd</b> option or the <b>keyPasswd</b>
+resource.
+The password can have one of two formats.
+The format <b>file:</b><i>filename</i> specifies a file containing the password.
+The format <b>string:</b><i>string</i> specifies the password as a string in
+the option or resource directly.</p>
+<h3>Controlling Host Certificate Verification</h3>
+By default, host SSL certificates are not verified.
+To enable host certificate verification, set the <b>verifyHostCert</b>
+resource to <b>true</b> or specify the <b>-verifycert</b> option.
+<p> When host certificates are verified, self-signed certificates are not
+allowed.
+To allow self-signed host certificates, set the <b>selfSignedOk</b> resource
+to <b>true</b> or specify the <b>-selfsignedok</b> option.
+<p>
+Also, when host certificates are verified, the name in the host's SSL
+certificate is checked.
+This check can be controlled by the <b>acceptHostname</b> resource or the
+<b>-accepthostname</b> option.
+The value can be <b>any</b>, which disables hostname checking,
+<b>DNS:<i>hostname</i></b>, which matches a specific symbolic hostname, or
+<b>IP:<i>address</i></b>, which matches a particular IPv4 or IPv6 numeric
+address.
+<a name="Windows"></a>
+<h2>Windows and the OpenSSL DLLs</h2>
+<p>wc3270, ws3270 and wpr3287 will not allow secure connections
+without the OpenSSL DLLs installed on your workstation.
+These DLLs are not part of the wc3270 installation -- installing them is a
+completely separate process.
+<p>The Windows OpenSSL DLLs for wc3270 are available here:</p>
+<p>&nbsp;&nbsp;<a href="http://www.slproweb.com/products/Win32OpenSSL.html">
+    http://www.slproweb.com/products/Win32OpenSSL.html</a></p>
+<p>The specific file to download is:</p>
+<p>&nbsp;&nbsp;<a href="http://slproweb.com/download/Win32OpenSSL_Light-1_0_1g.exe">
+    http://slproweb.com/download/Win32OpenSSL_Light-1_0_1g.exe</a></p>

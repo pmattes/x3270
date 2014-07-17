@@ -1,0 +1,36 @@
+How to Run x3270 in DBCS Mode
+-----------------------------
+DBCS is an attribute of your locale and the host character set you select.
+
+Your locale is defined by the LC_CTYPE or LC_ALL environment variable, and
+determines the character set and encoding for interactions with the Input
+Method, as well as other workstation I/O (cut/paste, screen printing,
+scripting).
+
+The x3270 host character set may be selected from the command line, or from
+the Options->Character set menu option.  For example, Simplified Chinese is
+selected via the option '-charset simplified-chinese'.
+
+In order to get multi-byte input, you must run an X Input Method (e.g., xcin,
+kinput2).  The input method name can be automatically derived from
+the locale, or can be specified by the XMODIFIERS environment variable or by
+the '-im' command-line option.
+
+The preedit type used by the input method can be specified by the '-pt' option,
+which takes the values 'Root' or 'OverTheSpot'.  The vertical offset of the
+preedit window for 'OverTheSpot' can be modified by adding a suffix to
+'OverTheSpot', e.g., '-pt OverTheSpot+2' will cause the preedit window to
+appear two lines below the cursor.  The default preedit type is
+'OverTheSpot+1'.
+
+Languages and Code Pages Supported
+----------------------------------
+ Charset Name       Code Pages               X11 Charsets
+ ------------------ ------------------------ -------------------------
+ simplified-chinese 836 (SBCS), 837 (DBCS)   gb2312.1980-0, iso10646-1
+ japanese           1027 (SBCS), 300 (DBCS)  jisx201.1976-0+jisx0208.1983-0,
+					     iso10646-1
+
+Known Limitations
+-----------------
+- Flipped mode does not work, and is disabled.

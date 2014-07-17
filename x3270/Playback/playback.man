@@ -1,0 +1,64 @@
+'\" t
+.TH PLAYBACK 1 "25 October 1994"
+.SH NAME
+playback \-
+.SM IBM
+x3270 trace file playback tool
+.SH SYNOPSIS
+.B playback
+[
+.B \-p
+.I port
+]
+.I trace_file
+.SH DESCRIPTION
+.B playback
+opens a trace file (presumably created by the
+.B x3270
+.I "Trace Data Stream"
+facility) and plays the host data it contains back over a socket to processes
+that connect to it.
+It also displays the data produced by the process in response.
+.LP
+Once connected to a process,
+.B playback
+is used interactively.
+Keyboard commands control the flow of data from the file to the socket.
+These commands are:
+.TP
+.B s
+Send one line of data.
+.TP
+.B r
+Send one record of data (send data until the TELNET EOR sequence is reached).
+.TP
+.B q
+Exit
+.B playback.
+.TP
+.B d
+Disconnect the current socket and wait for another connection.
+.SH EXAMPLE
+Suppose you wanted to play back a trace file called
+.B /usr/tmp/x3trc.12345.
+In one window, run:
+.sp
+	playback /usr/tmp/x3trc.12345
+.LP
+In another window, start
+.B x3270
+with the command:
+.sp
+	x3270 localhost 4001
+.LP
+.B playback
+will announce the connection.
+.LP
+Thereafter, the
+.B s
+and
+.B r
+commands will send data from the file to
+.B x3270.
+.SH "SEE ALSO"
+.IR x3270 (1)

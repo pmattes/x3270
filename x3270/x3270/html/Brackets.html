@@ -1,0 +1,196 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <title>Square Bracket Characters</title>
+   <link HREF="http://www.w3.org/StyleSheets/Core/Steely" TYPE="text/css" REL="stylesheet">
+</head>
+<body>
+
+<h1>
+Square Bracket Characters</h1>
+
+<h2>
+The Problem</h2>
+Most IBM 3270 emulators have some degree of difficulty with the square-bracket
+characters, <b>[</b> and <b>]</b>. The problem is that there is not a consistent
+definition of what EBCDIC codes represent them. Hosts may define the square
+bracket characters as X'BA' and X'BB' (as defined in the IBM <i>Chararcter
+Set Reference</i> as standard EBCDIC characters), or as X'AD' and X'BD'
+(which is what the IBM C compilers recognize). In addition, some (but not
+all) hosts display these characters with a Graphics Escape (GE) sequence.
+When the host and/or x3270 are misconfigured, the square-bracket characters
+may be displayed as&nbsp;<img SRC="del.jpg" height=23 width=24> and&nbsp;<img SRC="delta.jpg" height=21 width=20>,
+or <b>&Yacute;</b> and <b>&uml;</b>.
+<h2>
+Host Configuration</h2>
+If you are using ISPF, you may simply need to use the correct terminal
+translation table. According to the IBM's <i>ISPF Planning and Customizing
+(SC28-1298)</i>, Section 3.11, the correct translation table for displaying
+square bracket characters is called <b>3278A</b>.
+<p>In VM/CMS, the commands <b>terminal apl on</b> and <b>set apl on</b>
+cause the X'AD', X'BD', X'BA' and X'BB' characters to be displayed with
+a Graphics Escape (GE) prefix. With <b>terminal apl off</b> and <b>set
+apl off</b> in effect, they are displayed without the GE prefix.
+<h2>
+x3270 Facilities</h2>
+x3270 has two facilities to deal with this situation: character sets and
+keymaps. By selecting the correct character set and keymap, you can set
+up x3270 to generate and display the proper codes for the square-bracket
+characters.
+<blockquote><b>-charset bracket</b> is the default mode, and is used with
+hosts that use X'AD' and X'BD' for the square-bracket characters. It can
+be used if the host displays these characters with or without a GE sequence.</blockquote>
+
+<blockquote><b>-charset us</b> is for use with hosts that use X'BA' and
+X'BB' for the square-bracket characters, and <i>do not</i> display these
+characters with a GE sequence.</blockquote>
+
+<blockquote><b>-apl</b> (an abbreviation for <b>-charset apl</b>, <b>-keymap
+apl</b>) is for use with hosts running APL, which use GE X'AD' and GE X'BD'
+to represent and display the APL2 square-bracket characters.</blockquote>
+Here is a table which summarizes the combinations of characters generated
+and displayed in the various modes.
+<br>&nbsp;
+<center><table BORDER COLS=11 WIDTH="100%" >
+<tr>
+<td><i>&nbsp;</i></td>
+
+<td COLSPAN="2">
+<center><i>keyboard generates</i></center>
+</td>
+
+<td COLSPAN="8">
+<center><i>graphic displayed for EBCDIC codes</i></center>
+</td>
+</tr>
+
+<tr>
+<td><i>x3270 Mode</i></td>
+
+<td>
+<center><i>[ key</i></center>
+</td>
+
+<td>
+<center><i>] key</i></center>
+</td>
+
+<td>
+<center>X'AD'</center>
+</td>
+
+<td>
+<center>X'BD'</center>
+</td>
+
+<td>
+<center>X'BA'</center>
+</td>
+
+<td>
+<center>X'BB'</center>
+</td>
+
+<td>
+<center>GE X'BA'</center>
+</td>
+
+<td>
+<center>GE X'BB'</center>
+</td>
+
+<td>
+<center>GE X'AD'</center>
+</td>
+
+<td>
+<center>GE X'BD'</center>
+</td>
+</tr>
+
+<tr>
+<td><b>-charset</b> <b>bracket</b> (default)</td>
+
+<td ALIGN=CENTER>X'AD'</td>
+
+<td>
+<center>X'BD'</center>
+</td>
+
+<td>
+<center><b>[</b></center>
+</td>
+
+<td>
+<center><b>]</b></center>
+</td>
+
+<td>
+<center><b>&Yacute;</b></center>
+</td>
+
+<td>
+<center><b>&uml;</b></center>
+</td>
+
+<td ROWSPAN="3">
+<center><img SRC="del.jpg" height=23 width=24></center>
+</td>
+
+<td ROWSPAN="3">
+<center><img SRC="delta.jpg" height=21 width=20></center>
+</td>
+
+<td ROWSPAN="3">
+<center><b>[</b></center>
+</td>
+
+<td ROWSPAN="3">
+<center><b>]</b></center>
+</td>
+</tr>
+
+<tr>
+<td><b>-charset</b> <b>us</b></td>
+
+<td>
+<center>X'BA'</center>
+</td>
+
+<td>
+<center>X'BB'</center>
+</td>
+
+<td ROWSPAN="2">
+<center><b>&Yacute;</b></center>
+</td>
+
+<td ROWSPAN="2">
+<center><b>&uml;</b></center>
+</td>
+
+<td ROWSPAN="2">
+<center><b>[</b></center>
+</td>
+
+<td ROWSPAN="2">
+<center><b>]</b></center>
+</td>
+</tr>
+
+<tr>
+<td><b>-apl</b></td>
+
+<td>
+<center>GE X'AD'</center>
+</td>
+
+<td>
+<center>GE X'BD'</center>
+</td>
+</tr>
+</table></center>
+
+</body>
+</html>
