@@ -509,6 +509,7 @@ set_appres_defaults(void)
 #endif /*]*/
 #endif /*]*/
 	appres.bind_limit = True;
+	appres.new_environ = True;
 
 #if defined(X3270_ANSI) /*[*/
 	appres.icrnl = True;
@@ -1115,6 +1116,7 @@ static struct {
 # endif /*]*/
 	{ ResNoPrompt,	offset(secure),		XRM_BOOLEAN },
 #endif /*]*/
+	{ ResNewEnviron,offset(new_environ),	XRM_BOOLEAN },
 	{ ResNumericLock, offset(numeric_lock),	XRM_BOOLEAN },
 	{ ResOerrLock,	offset(oerr_lock),	XRM_BOOLEAN },
 	{ ResOversize,	offset(oversize),	XRM_STRING },

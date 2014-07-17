@@ -1826,6 +1826,9 @@ telnet_fsm(unsigned char c)
 				goto wont;
 			if (c == TELOPT_TM && !appres.bsd_tm)
 				goto wont;
+			if (c == TELOPT_NEW_ENVIRON && !appres.new_environ) {
+				goto wont;
+			}
 			if (c == TELOPT_TTYPE &&
 			    myopts[TELOPT_NEW_ENVIRON] &&
 			    !did_ne_send) {
@@ -1964,7 +1967,8 @@ telnet_fsm(unsigned char c)
 			}
 #endif /*]*/
 			else if (sbbuf[0] == TELOPT_NEW_ENVIRON &&
-			         sbbuf[1] == TELQUAL_SEND) {
+			         sbbuf[1] == TELQUAL_SEND &&
+				 appres.new_environ) {
 				int tb_len;
 				char *tt_out;
 				char *user;

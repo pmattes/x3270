@@ -2,6 +2,9 @@
 3.3 is the current development line for the x3270 suite.
 <h2>Changes in version 3.3.15alpha1, Nn. Month 2014</h2>
 <ul>
+ <li>[all] Added a <b>newEnviron</b> resource. If set to <b>true</b> (the
+  default), the emulator will respond to the TELNET NEW-ENVIRON option. If set
+  to <b>false</b>, it will not.</b>
  <li>[<i>wc3270</i>] Fixed a problem where editing an all-users session would
   result in copying the session to the current user's AppData directory, and
   re-creating the shortcut would point it to the wrong entry.</li>

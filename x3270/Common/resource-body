@@ -1866,6 +1866,15 @@ description
     If false, mouse-control events will not be enabled.
 .
 
+name newEnviron
+applies a
+type b
+default true
+description
+    If true, %p% will respond to the TELNET NEW-ENVIRONMENT option. If false,
+    it will not.
+.
+
 name noOther
 applies x
 groups s
