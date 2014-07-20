@@ -111,7 +111,7 @@ wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 
 # Bootstrap targets.
 dependencies: Makefile
-	+$(MAKE) depend
+	$(MAKE) depend
 cscope.out: $(SOURCES) $(HEADERS)
 	cs -b
 bootstrap: $(PRODUCT)-src.tgz dependencies cscope.out

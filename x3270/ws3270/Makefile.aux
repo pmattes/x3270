@@ -100,7 +100,7 @@ html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 
 # Bootstrap targets.
 dependencies: Makefile
-	+$(MAKE) depend
+	$(MAKE) depend
 cscope.out: $(SOURCES) $(HEADERS)
 	cs -b
 bootstrap: $(PRODUCT)-src.tgz dependencies cscope.out

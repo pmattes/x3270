@@ -81,7 +81,7 @@ html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 
 # Bootstrap targets.
 dependencies: Makefile
-	+$(MAKE) depend
+	$(MAKE) depend
 cscope.out: $(SOURCES) $(HEADERS)
 	cs -b
 bootstrap: $(PRODUCT)-src.tgz dependencies cscope.out

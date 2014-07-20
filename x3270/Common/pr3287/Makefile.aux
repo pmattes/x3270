@@ -85,7 +85,7 @@ configure: configure.in
 # Bootstrap targets.
 Makefile: Makefile.in configure
 	./configure
-	+$(MAKE) depend
+	$(MAKE) depend
 cscope.out: $(SOURCES) $(HEADERS)
 	cs -b
 bootstrap: $(PRODUCT)-src.tgz Makefile cscope.out

@@ -134,7 +134,7 @@ ibm1385.c: ibm-1385_P100-1997.ucm mktbl
 # Bootstrap targets.
 Makefile: Makefile.in configure
 	./configure
-	+$(MAKE) depend
+	$(MAKE) depend
 cscope.out: $(SOURCES) $(HEADERS)
 	cs -b
 bootstrap: $(PRODUCT)-src.tgz Makefile cscope.out

@@ -9,39 +9,39 @@ all: $(ALL)
 $(ALL_BUT_WEBPAGE): Webpage-dir
 
 Webpage-dir:
-	+cd Webpage && $(MAKE)
+	cd Webpage && $(MAKE)
 
 c3270-dir:
-	+cd c3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
+	cd c3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
 
 pr3287-dir:
-	+cd pr3287 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
+	cd pr3287 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
 
 s3270-dir:
-	+cd s3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
+	cd s3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
 
 tcl3270-dir:
-	+cd tcl3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
+	cd tcl3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
 
 wc3270-dir:
-	+cd wc3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
+	cd wc3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
 
 wpr3287-dir:
-	+cd wpr3287 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
+	cd wpr3287 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
 
 ws3270-dir:
-	+cd ws3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
+	cd ws3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
 
 x3270-dir:
-	+cd x3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
+	cd x3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
 
 clean:
-	+cd c3270 && $(MAKE) $@
-	+cd pr3287 && $(MAKE) $@
-	+cd s3270 && $(MAKE) $@
-	+cd tcl3270 && $(MAKE) $@
-	+cd wc3270 && $(MAKE) $@
-	+cd wpr3287 && $(MAKE) $@
-	+cd ws3270 && $(MAKE) $@
-	+cd x3270 && $(MAKE) $@
-	+cd Webpage && $(MAKE) $@
+	cd c3270 && $(MAKE) $@
+	cd pr3287 && $(MAKE) $@
+	cd s3270 && $(MAKE) $@
+	cd tcl3270 && $(MAKE) $@
+	cd wc3270 && $(MAKE) $@
+	cd wpr3287 && $(MAKE) $@
+	cd ws3270 && $(MAKE) $@
+	cd x3270 && $(MAKE) $@
+	cd Webpage && $(MAKE) $@
