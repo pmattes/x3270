@@ -107,7 +107,7 @@ clean:
 clobber: clean
 	rm -f $(PROGS)
 
-depend:
+depend: $(SRCS)
 	mingwmakedep -C $(CC) $(XCPPFLAGS) -I. $(SRCS) >dependencies
 
 ifeq ($(wildcard dependencies),dependencies)
