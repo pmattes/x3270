@@ -2,7 +2,7 @@
 # generate a man page or html man page from m4 source
 function usage()
 {
-    echo >&2 "usage: $0 -t html|man -p product -n name source"
+    echo >&2 "usage: $0 -t html|man -p product -n name [-o outfile] source"
     exit 1
 }
 
@@ -27,6 +27,11 @@ do	case $1 in
 	    -n)
 		shift
 		name=$1
+		shift
+		;;
+	    -o)
+		shift
+		outfile=$1
 		shift
 		;;
 	    -*)
@@ -87,7 +92,27 @@ case $product in
 	interactive=no
 	;;
 esac
+
+# set up output file, and make sure it will be deleted
+if [ -n "$outfile" ]
+then	tf=/tmp/m4man$$
+    	rm -f $tf
+	trap "rm -f $tf" exit
+	trap "exit" INT QUIT HUP TERM
+fi
+
 /usr/bin/m4 -DXX_PRODUCT=$product -DXX_PAGENAME=$name \
     -DXX_PLATFORM=$platform -DXX_MODE=$mode -DXX_INTERACTIVE=$interactive \
     -DXX_C3270=$c3270 -DXX_S3270=$s3270 -DXX_PR3287=$pr3287 -DXX_X3270=$x3270 \
-    -DXX_DATE="$date" -DXX_VERSION_NUMBER=$version $type.m4 $source
+    -DXX_DATE="$date" -DXX_VERSION_NUMBER=$version $type.m4 $source |
+ if [ -n "$outfile" ]
+ then	cat >$tf
+ else	cat
+ fi
+rc=$?
+
+if [ -n "$outfile" -a $rc -eq 0 ]
+then	mv $tf $outfile
+fi
+
+exit $rc

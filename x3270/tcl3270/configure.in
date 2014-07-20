@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2009, Paul Mattes.
+dnl Copyright (c) 2000-2009, 2013-2014 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -47,8 +47,12 @@ linux*)		XANSI=-D_BSD_SOURCE
 *)		XANSI=""
 		;;
 esac
+if test "$GCC" = yes
+then	CCOPTIONS="-Wall -Wsign-compare -ansi -pedantic -Wno-variadic-macros -Wno-long-long"
+fi
 AC_SUBST(XANSI)
 AC_SUBST(XPRECOMP)
+AC_SUBST(CCOPTIONS)
 
 dnl Figure out what version of Tcl they've got
 AC_CHECK_PROG(tclsh,tclsh,yes,no)

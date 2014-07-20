@@ -93,21 +93,18 @@ man: html/$(PRODUCT)-man.html html/x3270if.html html/wc3270-script.html
 
 html/$(PRODUCT)-man.html: x3270.man.m4 ft.inc resources.inc hostname.inc \
     	keymaps.inc $(MANDEP)
-	@rm -f man.tmp
-	$(MKHTML) -n $(PRODUCT) x3270.man.m4 >man.tmp
-	mv man.tmp $@
-	@rm -f man.tmp
+	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
 html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@
 html/x3270if.html:  x3270if.man.m4 $(MANDEP)
-	$(MKHTML) -n x3270if x3270if.man.m4 >$@
+	$(MKHTML) -n x3270if -o $@ x3270if.man.m4
 html/wc3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
-	$(MKHTML) -n wc3270-script x3270-script.man.m4 >$@
+	$(MKHTML) -n wc3270-script -o $@ x3270-script.man.m4
 
 html/Resources.html: resource-body make-resource-doc.pl version.txt
-	./make-resource-doc.pl $(PRODUCT) <resource-body >$@
+	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
 
 wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 	./mkiss <wc3270.iss.tmpl >wc3270.iss

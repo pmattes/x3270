@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2013, Paul Mattes.
+dnl Copyright (c) 2000-2014, Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -53,10 +53,14 @@ linux*)		XANSI="-D_POSIX_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE"
 aix*)		BROKEN_NEWTERM=1
 		;;
 esac
+if test "$GCC" = yes
+then	CCOPTIONS="-Wall -Wsign-compare -ansi -pedantic -Wno-variadic-macros"
+fi
 AC_SUBST(XPOSIX)
 AC_SUBST(XANSI)
 AC_SUBST(XPRECOMP)
 AC_SUBST(BROKEN_NEWTERM)
+AC_SUBST(CCOPTIONS)
 
 dnl Check for --without-readline
 AC_ARG_WITH(readline, [  --without-readline      Don't use the readline library])

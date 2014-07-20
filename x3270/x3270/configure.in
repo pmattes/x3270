@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2009, Paul Mattes.
+dnl Copyright (c) 2000-2009, 2014 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -49,9 +49,13 @@ darwin*)	XPRECOMP=-no-cpp-precomp
 linux*)		XANSI="-D_POSIX_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE"
 		;;
 esac
+if test "$GCC" = yes
+then	CCOPTIONS="-Wall -Wsign-compare -ansi -pedantic -Wno-variadic-macros"
+fi
 AC_SUBST(XANSI)
 AC_SUBST(XPRECOMP)
 AC_SUBST(NIXCCOPTIONS)
+AC_SUBST(CCOPTIONS)
 
 dnl Check for X
 AC_PATH_X

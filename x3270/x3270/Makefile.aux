@@ -124,62 +124,32 @@ man: $(PRODUCT).man x3270if.man ibm_hosts.man x3270-script.man \
 	html/x3270-script.html
 
 $(PRODUCT).man: $(MANSRC) $(MANDEP)
-	@rm -f man.tmp
-	$(MKMAN) -n x3270 x3270.man.m4 >man.tmp
-	mv man.tmp $@
-	@rm -f man.tmp
+	$(MKMAN) -n x3270 -o $@ x3270.man.m4
 html/$(PRODUCT)-man.html: $(MANSRC) $(MANDEP)
-	@rm -f man.tmp
-	$(MKHTML) -n x3270 x3270.man.m4 >man.tmp
-	mv man.tmp $@
-	@rm -f man.tmp
+	$(MKHTML) -n x3270 -o $@ x3270.man.m4
 x3270if.man: x3270if.man.m4 $(MANDEP)
-	@rm -f man.tmp
-	$(MKMAN) -n x3270if x3270if.man.m4 >man.tmp
-	mv man.tmp $@
-	@rm -f man.tmp
+	$(MKMAN) -n x3270if -o $@ x3270if.man.m4
 html/x3270if.html: x3270if.man.m4 ft.inc $(MANDEP)
-	@rm -f man.tmp
-	$(MKHTML) -n x3270if x3270if.man.m4 >man.tmp
-	mv man.tmp $@
-	@rm -f man.tmp
+	$(MKHTML) -n x3270if -o $@ x3270if.man.m4
 ibm_hosts.man: ibm_hosts.man.m4 man.m4 $(MANDEP)
-	@rm -f man.tmp
-	$(MKMAN) -n ibm_hosts ibm_hosts.man.m4 >man.tmp
-	mv man.tmp $@
-	@rm -f man.tmp
+	$(MKMAN) -n ibm_hosts -o $@ ibm_hosts.man.m4
 html/ibm_hosts.html: ibm_hosts.man.m4 ft.inc $(MANDEP)
-	@rm -f man.tmp
-	$(MKHTML) -n ibm_hosts ibm_hosts.man.m4 >man.tmp
-	mv man.tmp $@
-	@rm -f man.tmp
+	$(MKHTML) -n ibm_hosts -o $@ ibm_hosts.man.m4
 x3270-script.man: x3270-script.man.m4 ft.inc $(MANDEP)
-	@rm -f man.tmp
-	$(MKMAN) -n x3270-script x3270-script.man.m4 >man.tmp
-	mv man.tmp $@
-	@rm -f man.tmp
+	$(MKMAN) -n x3270-script -o $@ x3270-script.man.m4
 html/x3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
-	@rm -f man.tmp
-	$(MKHTML) -n x3270-script x3270-script.man.m4 >man.tmp
-	mv man.tmp $@
-	@rm -f man.tmp
+	$(MKHTML) -n x3270-script -o $@ x3270-script.man.m4
 
 html/FAQ.html: mkstand.bash html/documentation-faq-body.html 
-	@rm -f html.tmp
-	./mkstand.bash '$(PRODUCT) Frequently Asked Questions' html/documentation-faq-body.html html.tmp
-	mv html.tmp html/FAQ.html
-	@rm -f html.tmp
+	./mkstand.bash '$(PRODUCT) Frequently Asked Questions' html/documentation-faq-body.html $@
 
 html/Lineage.html: mkstand.bash html/license-body.html 
-	@rm -f html.tmp
-	./mkstand.bash '$(PRODUCT) Licensing' html/license-body.html html.tmp
-	mv html.tmp html/Lineage.html
-	@rm -f html.tmp
+	./mkstand.bash '$(PRODUCT) Licensing' html/license-body.html $@
 
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
 html/Resources.html: resource-body make-resource-doc.pl version.txt
-	./make-resource-doc.pl $(PRODUCT) <resource-body >$@
+	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
 html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@
 

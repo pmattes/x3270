@@ -7,6 +7,11 @@ then	echo >&2 "usage: $0 'title' infile outfile"
 	exit 1
 fi
 
+tf=/tmp/mkstand$$
+rm -f $tf
+trap "rm -f $tf" exit
+trap "exit" INT QUIT HUP TERM
+
 (cat <<EOF
 <html>
  <head>
@@ -20,4 +25,5 @@ cat <<EOF
  </body>
 </html>
 EOF
-) >$3
+) >$tf
+mv $tf $3

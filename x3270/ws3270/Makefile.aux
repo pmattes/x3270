@@ -88,13 +88,13 @@ MKHTML = ./m4man -t html -p $(PRODUCT)
 man: html/$(PRODUCT)-man.html html/ws3270-script.html
 
 html/$(PRODUCT)-man.html: x3270.man.m4 $(MANDEP)
-	$(MKHTML) -n $(PRODUCT) x3270.man.m4 >$@
+	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
 html/wc3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
-	$(MKHTML) -n ws3270-script x3270-script.man.m4 >$@
+	$(MKHTML) -n ws3270-script -o $@ x3270-script.man.m4
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
 html/Resources.html: resource-body make-resource-doc.pl version.txt
-	./make-resource-doc.pl $(PRODUCT) <resource-body >$@
+	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
 html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@
 

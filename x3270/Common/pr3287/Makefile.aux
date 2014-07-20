@@ -73,9 +73,9 @@ MKHTML = ./m4man -t html -p $(PRODUCT)
 
 man: $(PRODUCT).man html/$(PRODUCT)-man.html
 $(PRODUCT).man: $(PRODUCT).man.m4 $(MANDEP)
-	$(MKMAN) -n $(PRODUCT) $(PRODUCT).man.m4 >$@
+	$(MKMAN) -n $(PRODUCT) -o $@ $(PRODUCT).man.m4
 html/$(PRODUCT)-man.html: $(PRODUCT).man.m4 $(MANDEP)
-	$(MKHTML) -n $(PRODUCT) $(PRODUCT).man.m4 >$@
+	$(MKHTML) -n $(PRODUCT) -o $@ $(PRODUCT).man.m4
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
 

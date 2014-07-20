@@ -2,7 +2,16 @@
 
 use strict;
 
-die "Must specify an argument.\n" unless ($#ARGV == 0);
+my $outfile;
+if ($ARGV[0] eq "-o") {
+    die "Missing filename after -o.\n" unless ($#ARGV >= 1);
+    shift;
+    $outfile = $ARGV[0];
+    shift;
+}
+
+die "Must specify product.\n" unless ($#ARGV >= 0);
+my $product = $ARGV[0];
 
 # Figure out the version name.
 my $version;
@@ -17,26 +26,25 @@ close VERSION;
 my %approd;
 $approd{'a'} = 1;
 
-if ($ARGV[0] eq "x3270") {
+if ($product eq "x3270") {
     $approd{'u'} = 1;
-} elsif ($ARGV[0] eq "c3270") {
+} elsif ($product eq "c3270") {
     $approd{'C'} = 1;
     $approd{'u'} = 1;
-} elsif ($ARGV[0] eq "s3270") {
+} elsif ($product eq "s3270") {
     $approd{'S'} = 1;
     $approd{'u'} = 1;
-} elsif ($ARGV[0] eq "tcl3270") {
+} elsif ($product eq "tcl3270") {
     $approd{'u'} = 1;
-} elsif ($ARGV[0] eq "wc3270") {
+} elsif ($product eq "wc3270") {
     $approd{'C'} = 1;
     $approd{'w'} = 1;
-} elsif ($ARGV[0] eq "ws3270") {
+} elsif ($product eq "ws3270") {
     $approd{'S'} = 1;
     $approd{'w'} = 1;
 } else {
-    die "Unknown product '$ARGV[0]'.\n";
+    die "Unknown product '$product'.\n";
 }
-my $product = $ARGV[0];
 my $prefix = $product;
 $prefix =~ s/3270//;
 $approd{$prefix} = 1;
@@ -49,6 +57,34 @@ my %types = (
     b => 'Boolean',
     s => 'String'
 );
+
+# Set up output file.
+my $out;
+my $tmpfile;
+if ($outfile) {
+    $tmpfile = "/tmp/mkr" . $$;
+    unlink $tmpfile;
+    open TMPFILE, ">", $tmpfile or die "Can't open $tmpfile.\n";
+    $out = *TMPFILE;
+} else {
+    $out = *STDOUT;
+}
+
+# From here on out, unlink the tempfile if we bail.
+END {
+    unlink $tmpfile if ($tmpfile);
+}
+
+# Unlink the tempfile if we get a termination signal.
+sub sighandler
+{
+    unlink $tmpfile if ($tmpfile);
+    exit(0);
+}
+$SIG{'INT'} = \&sighandler;
+$SIG{'QUIT'} = \&sighandler;
+$SIG{'HUP'} = \&sighandler;
+$SIG{'TERM'} = \&sighandler;
 
 # Remove HTML attributes from a resource name.
 sub nix
@@ -139,23 +175,23 @@ sub dump {
 		push @o_index, $n;
 	    }
 	    my $tgt = nix($n);
-	    print "<a name=\"$tgt\"></a>\n<b>Name:</b> $product.$n<br>\n";
+	    print $out "<a name=\"$tgt\"></a>\n<b>Name:</b> $product.$n<br>\n";
 	}
 
-	print "<b>Type</b>: $type<br>\n";
-	if ($default) { print "<b>Default</b>: $default<br>\n"; }
+	print $out "<b>Type</b>: $type<br>\n";
+	if ($default) { print $out "<b>Default</b>: $default<br>\n"; }
 	if (@switch) {
 	    my $comma;
-	    print "<b>Command Line</b>:";
+	    print $out "<b>Command Line</b>:";
 	    foreach my $s (@switch) {
-		print "$comma $s\n";
+		print $out "$comma $s\n";
 		$comma = ",";
 	    }
-	    print "<br>\n";
+	    print $out "<br>\n";
 	}
 	if ($product eq "x3270") {
 	    foreach my $o (@option) {
-		print "<b>Option</b>: $o<br>\n";
+		print $out "<b>Option</b>: $o<br>\n";
 	    }
 	}
 	$description =~ s/%p%/$product/g;
@@ -166,8 +202,8 @@ sub dump {
 	    $description =~ s/%-[\w.<>\/*]+%/<a href=#$clean>$product.$full<\/a>/;
 	}
 	#$description =~ s/%-([\w.]+)%/<a href=#\1><tt>$product.\1<\/tt><\/a>/g;
-	print "<b>Description</b>:<br>\n";
-	print "<p class=indented>$description</p>\n";
+	print $out "<b>Description</b>:<br>\n";
+	print $out "<p class=indented>$description</p>\n";
     }
     undef $name;
     undef @names;
@@ -180,7 +216,7 @@ sub dump {
     undef $groups;
 }
 
-print <<"EOS";
+print $out <<"EOS";
 <!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
 <html>
 <head>
@@ -247,7 +283,7 @@ while (<STDIN>) {
     } elsif ($in_intro) {
 	if (/^\./) {
 	    undef $in_intro;
-	    print "<h2>Alphabetical Resource List</h2>\n";
+	    print $out "<h2>Alphabetical Resource List</h2>\n";
 	} else {
 	    s/%p%/$product/g;
 	    while (/%-([\w.<>\/*]+)%/) {
@@ -256,7 +292,7 @@ while (<STDIN>) {
 		$clean =~ s/<\/?i>//g;
 		$_ =~ s/%-[\w.<>\/*]+%/<a href=#$clean>$product.$full<\/a>/;
 	    }
-	    print "$_\n";
+	    print $out "$_\n";
 	}
 	next;
     }
@@ -305,43 +341,50 @@ while (<STDIN>) {
 
 &dump;
 
-print <<EOT;
+print $out <<EOT;
 <h2>Index of All Resources</h2>
 <table border cols=4 width="75%">
 EOT
 my $ix = 0;
 foreach my $i (@index) {
     if (!($ix % 4)) {
-	if ($ix) { print " </tr>\n"; }
-	print "<tr>";
+	if ($ix) { print $out " </tr>\n"; }
+	print $out "<tr>";
     }
     my $clean = nix($i);
-    print " <td><a href=\"#$clean\">$i</a></td>";
+    print $out " <td><a href=\"#$clean\">$i</a></td>";
     $ix++;
 }
-print " </tr>\n</table>\n";
+print $out " </tr>\n</table>\n";
 
 my $q = 0;
 foreach my $j (@indices) {
     my @arr = @$j;
     if ($#arr >= 0) {
-	print "<h2>$index_name[$q] Resources</h2>\n";
-	print "<table border cols=4 width=\"75%\">\n";
+	print $out "<h2>$index_name[$q] Resources</h2>\n";
+	print $out "<table border cols=4 width=\"75%\">\n";
 	my $ix = 0;
 	foreach my $i (@arr) {
 	    if (!($ix % 4)) {
-		if ($ix) { print " </tr>\n"; }
-		print "<tr>";
+		if ($ix) { print $out " </tr>\n"; }
+		print $out "<tr>";
 	    }
 	    my $clean = nix($i);
-	    print " <td><a href=\"#$clean\">$i</a></td>";
+	    print $out " <td><a href=\"#$clean\">$i</a></td>";
 	    $ix++;
 	}
-	print " </tr>\n</table>\n";
+	print $out " </tr>\n</table>\n";
     }
     $q = $q + 1;
 }
 
-print "<p><i>$product version $version ", `date`, "\n";
+print $out "<p><i>$product version $version ", `date`, "\n";
 
-print "</body>\n";
+print $out "</body>\n";
+
+#  Wrap up the outfile.
+if ($outfile) {
+    close TMPFILE;
+    system("mv $tmpfile $outfile") == 0
+	or die "Can't rename $tmpfile to $outfile.\n";
+}
