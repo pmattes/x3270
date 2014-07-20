@@ -156,7 +156,7 @@ html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 # Bootstrap targets.
 Makefile: Makefile.in configure
 	./configure
-	make depend
+	+$(MAKE) depend
 cscope.out: $(SOURCES) $(HEADERS)
 	cs -b
 bootstrap: $(PRODUCT)-src.tgz Makefile cscope.out
