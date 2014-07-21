@@ -467,7 +467,7 @@ initscr(void)
 	/* Create the screen buffer. */
 	sbuf = CreateConsoleScreenBuffer(
 		GENERIC_READ | GENERIC_WRITE,
-		FILE_SHARE_WRITE,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
 		NULL,
 		CONSOLE_TEXTMODE_BUFFER,
 		NULL);
