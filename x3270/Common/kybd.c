@@ -100,7 +100,7 @@ static unsigned char pa_xlate[] = {
 #define PA_SZ	(sizeof(pa_xlate)/sizeof(pa_xlate[0]))
 static ioid_t unlock_id = NULL_IOID;
 static time_t unlock_delay_time;
-static Boolean key_Character(int code, Boolean with_ge, Boolean pasting,
+static Boolean key_Character(unsigned ebc, Boolean with_ge, Boolean pasting,
 			     Boolean *skipped);
 static Boolean flush_ta(void);
 static void key_AID(unsigned char aid_code);
@@ -780,34 +780,39 @@ ins_prep(int faddr, int baddr, int count, Boolean *no_room)
 
 }
 
-#define GE_WFLAG	0x100
-#define PASTE_WFLAG	0x200
+/* Flags OR'ed into an EBCDIC code when pushed into the typeahead queue. */
+#define GE_WFLAG	0x10000
+#define PASTE_WFLAG	0x20000
 
+/*
+ * Callback for enqueued typeahead. The single parameter is an EBCDIC code,
+ * OR'd with the flags above.
+ */
 static void
-key_Character_wrapper(Widget w _is_unused, XEvent *event _is_unused, String *params,
-    Cardinal *num_params _is_unused)
+key_Character_wrapper(Widget w _is_unused, XEvent *event _is_unused,
+	String *params, Cardinal *num_params _is_unused)
 {
-	int code;
+	unsigned ebc;
 	Boolean with_ge = False;
 	Boolean pasting = False;
 	char mb[16];
 	ucs4_t uc;
 
-	code = atoi(params[0]);
-	if (code & GE_WFLAG) {
+	ebc = atoi(params[0]);
+	if (ebc & GE_WFLAG) {
 		with_ge = True;
-		code &= ~GE_WFLAG;
+		ebc &= ~GE_WFLAG;
 	}
-	if (code & PASTE_WFLAG) {
+	if (ebc & PASTE_WFLAG) {
 		pasting = True;
-		code &= ~PASTE_WFLAG;
+		ebc &= ~PASTE_WFLAG;
 	}
-	ebcdic_to_multibyte_x(code, with_ge? CS_GE: CS_BASE,
+	ebcdic_to_multibyte_x(ebc, with_ge? CS_GE: CS_BASE,
 		mb, sizeof(mb), EUO_BLANK_UNDEF, &uc);
 	trace_event(" %s -> Key(%s\"%s\")\n",
 	    ia_name[(int) ia_cause],
 	    with_ge ? "GE " : "", mb);
-	(void) key_Character(code, with_ge, pasting, NULL);
+	(void) key_Character(ebc, with_ge, pasting, NULL);
 }
 
 /*
@@ -815,7 +820,7 @@ key_Character_wrapper(Widget w _is_unused, XEvent *event _is_unused, String *par
  * insert-mode, protected fields and etc.
  */
 static Boolean
-key_Character(int code, Boolean with_ge, Boolean pasting, Boolean *skipped)
+key_Character(unsigned ebc, Boolean with_ge, Boolean pasting, Boolean *skipped)
 {
 	register int	baddr, faddr, xaddr;
 	register unsigned char	fa;
@@ -830,7 +835,7 @@ key_Character(int code, Boolean with_ge, Boolean pasting, Boolean *skipped)
 	if (kybdlock) {
 		char codename[64];
 
-		(void) snprintf(codename, sizeof(codename), "%d", code |
+		(void) snprintf(codename, sizeof(codename), "%d", ebc |
 			(with_ge ? GE_WFLAG : 0) |
 			(pasting ? PASTE_WFLAG : 0));
 		enq_ta(key_Character_wrapper, codename, CN);
@@ -844,8 +849,8 @@ key_Character(int code, Boolean with_ge, Boolean pasting, Boolean *skipped)
 		return False;
 	}
 	if (appres.numeric_lock && FA_IS_NUMERIC(fa) &&
-	    !((code >= EBC_0 && code <= EBC_9) ||
-	      code == EBC_minus || code == EBC_period)) {
+	    !((ebc >= EBC_0 && ebc <= EBC_9) ||
+	      ebc == EBC_minus || ebc == EBC_period)) {
 		operator_error(KL_OERR_NUMERIC);
 		return False;
 	}
@@ -990,7 +995,7 @@ key_Character(int code, Boolean with_ge, Boolean pasting, Boolean *skipped)
 		    	INC_BA(baddr);
 		} while (ea_buf[baddr].fa);
 	} else {
-		ctlr_add(baddr, (unsigned char)code,
+		ctlr_add(baddr, (unsigned char)ebc,
 		    (unsigned char)(with_ge ? CS_GE : 0));
 		ctlr_add_fg(baddr, 0);
 		ctlr_add_gr(baddr, 0);
@@ -1040,7 +1045,7 @@ key_Character(int code, Boolean with_ge, Boolean pasting, Boolean *skipped)
 	 * This happens for all pasted data (even DUP), and for all
 	 * keyboard-generated data except DUP.
 	 */
-	if (pasting || (code != EBC_dup)) {
+	if (pasting || (ebc != EBC_dup)) {
 		while (ea_buf[baddr].fa) {
 			if (skipped != NULL)
 				*skipped = True;
@@ -1058,18 +1063,18 @@ key_Character(int code, Boolean with_ge, Boolean pasting, Boolean *skipped)
 
 #if defined(X3270_DBCS) /*[*/
 static void
-key_WCharacter_wrapper(Widget w _is_unused, XEvent *event _is_unused, String *params,
-    Cardinal *num_params _is_unused)
+key_WCharacter_wrapper(Widget w _is_unused, XEvent *event _is_unused,
+	String *params, Cardinal *num_params _is_unused)
 {
-	int code;
-	unsigned char codebuf[2];
+	unsigned ebc_wide;
+	unsigned char ebc_pair[2];
 
-	code = atoi(params[0]);
-	trace_event(" %s -> Key(0x%04x)\n",
-	    ia_name[(int) ia_cause], code);
-	codebuf[0] = (code >> 8) & 0xff;
-	codebuf[1] = code & 0xff;
-	(void) key_WCharacter(codebuf, NULL);
+	ebc_wide = atoi(params[0]);
+	trace_event(" %s -> Key(X'%04x')\n", ia_name[(int) ia_cause],
+		ebc_wide);
+	ebc_pair[0] = (ebc_wide >> 8) & 0xff;
+	ebc_pair[1] = ebc_wide & 0xff;
+	(void) key_WCharacter(ebc_pair, NULL);
 }
 
 /*
@@ -1077,7 +1082,7 @@ key_WCharacter_wrapper(Widget w _is_unused, XEvent *event _is_unused, String *pa
  * Returns True if a character was stored in the buffer, False otherwise.
  */
 Boolean
-key_WCharacter(unsigned char code[], Boolean *skipped)
+key_WCharacter(unsigned char ebc_pair[], Boolean *skipped)
 {
 	int baddr;
 	register unsigned char fa;
@@ -1094,7 +1099,7 @@ key_WCharacter(unsigned char code[], Boolean *skipped)
 		char codename[64];
 
 		(void) snprintf(codename, sizeof(codename), "%d",
-			(code[0] << 8) | code[1]);
+			(ebc_pair[0] << 8) | ebc_pair[1]);
 		enq_ta(key_WCharacter_wrapper, codename, CN);
 		return False;
 	}
@@ -1117,7 +1122,7 @@ key_WCharacter(unsigned char code[], Boolean *skipped)
 	if (IN_ANSI) {
 	    char mb[16];
 
-	    (void) ebcdic_to_multibyte((code[0] << 8) | code[1], mb,
+	    (void) ebcdic_to_multibyte((ebc_pair[0] << 8) | ebc_pair[1], mb,
 				       sizeof(mb));
 	    net_sends(mb);
 	    return True;
@@ -1159,9 +1164,9 @@ retry:
 				return False;
 			}
 		}
-		ctlr_add(baddr, code[0], ea_buf[baddr].cs);
+		ctlr_add(baddr, ebc_pair[0], ea_buf[baddr].cs);
 		INC_BA(baddr);
-		ctlr_add(baddr, code[1], ea_buf[baddr].cs);
+		ctlr_add(baddr, ebc_pair[1], ea_buf[baddr].cs);
 		INC_BA(baddr);
 		done = True;
 		break;
@@ -1187,9 +1192,9 @@ retry:
 			if (ea_buf[xaddr].fa || ea_buf[xaddr].cc == EBC_so)
 				break;
 		}
-		ctlr_add(baddr, code[0], ea_buf[baddr].cs);
+		ctlr_add(baddr, ebc_pair[0], ea_buf[baddr].cs);
 		INC_BA(baddr);
-		ctlr_add(baddr, code[1], ea_buf[baddr].cs);
+		ctlr_add(baddr, ebc_pair[1], ea_buf[baddr].cs);
 		if (!no_si) {
 			INC_BA(baddr);
 			ctlr_add(baddr, EBC_si, ea_buf[baddr].cs);
@@ -1307,9 +1312,9 @@ retry:
 				DEC_BA(baddr);
 			ctlr_add(baddr, EBC_so, ea_buf[baddr].cs);
 			INC_BA(baddr);
-			ctlr_add(baddr, code[0], ea_buf[baddr].cs);
+			ctlr_add(baddr, ebc_pair[0], ea_buf[baddr].cs);
 			INC_BA(baddr);
-			ctlr_add(baddr, code[1], ea_buf[baddr].cs);
+			ctlr_add(baddr, ebc_pair[1], ea_buf[baddr].cs);
 			if (!no_si) {
 				INC_BA(baddr);
 				ctlr_add(baddr, EBC_si, ea_buf[baddr].cs);
@@ -1327,9 +1332,9 @@ retry:
 				if (ea_buf[xaddr].fa)
 					break;
 			}
-			ctlr_add(baddr, code[0], CS_DBCS);
+			ctlr_add(baddr, ebc_pair[0], CS_DBCS);
 			INC_BA(baddr);
-			ctlr_add(baddr, code[1], CS_DBCS);
+			ctlr_add(baddr, ebc_pair[1], CS_DBCS);
 			INC_BA(baddr);
 			done = True;
 		}
@@ -1463,11 +1468,11 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 		}
 #if defined(X3270_DBCS) /*[*/
 		if (ebc & 0xff00) {
-		    	unsigned char code[2];
+		    	unsigned char ebc_pair[2];
 
-			code[0] = (ebc & 0xff00)>> 8;
-			code[1] = ebc & 0xff;
-			(void) key_WCharacter(code, skipped);
+			ebc_pair[0] = (ebc & 0xff00)>> 8;
+			ebc_pair[1] = ebc & 0xff;
+			(void) key_WCharacter(ebc_pair, skipped);
 		} else
 #endif /*]*/
 			(void) key_Character(ebc, (keytype == KT_GE) || ge,
@@ -3401,7 +3406,10 @@ remargin(int lmargin)
  * "Pasting" means that the sequence came from the X clipboard.  Returns are
  * ignored; newlines mean "move to beginning of next line"; tabs and formfeeds
  * become spaces.  Backslashes are not special, but ASCII ESC characters are
- * used to signify 3270 Graphic Escapes.
+ * used to signify 3270 Graphic Escapes. If the NOSKIP_PASTE toggle is set,
+ * then we don't do auto-skip, except at the end of the string; when the cursor
+ * lands on a protected region of the screen, we treat printable characters as
+ * cursor-right actions.
  *
  * "Not pasting" means that the sequence is a login string specified in the
  * hosts file, or a parameter to the String action.  Returns are "move to
@@ -3765,11 +3773,11 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 						False, True, &skipped);
 				else {
 #if defined(X3270_DBCS) /*[*/
-				    	unsigned char code[2];
+				    	unsigned char ebc_pair[2];
 
-					code[0] = (literal >> 8) & 0xff;
-					code[1] = literal & 0xff;
-					key_WCharacter(code, &skipped);
+					ebc_pair[0] = (literal >> 8) & 0xff;
+					ebc_pair[1] = literal & 0xff;
+					key_WCharacter(ebc_pair, &skipped);
 #else /*][*/
 					popup_an_error("%s: EBCDIC code > 255",
 					    action_name(String_action));
