@@ -1174,25 +1174,25 @@ ft_start(void)
 	/* Build the ind$file command */
 	op[0] = '\0';
 	if (ascii_flag)
-		strcat(op, " ascii");
+		strcat(op, " ASCII");
 	if (cr_flag)
-		strcat(op, " crlf");
+		strcat(op, " CRLF");
 	if (append_flag && !receive_flag)
-		strcat(op, " append");
+		strcat(op, " APPEND");
 	if (!receive_flag) {
 		if (host_type == HT_TSO) {
 			if (recfm != DEFAULT_RECFM) {
 				/* RECFM Entered, process */
-				strcat(op, " recfm(");
+				strcat(op, " RECFM(");
 				switch (recfm) {
 				    case RECFM_FIXED:
-					strcat(op, "f");
+					strcat(op, "F");
 					break;
 				    case RECFM_VARIABLE:
-					strcat(op, "v");
+					strcat(op, "V");
 					break;
 				    case RECFM_UNDEFINED:
-					strcat(op, "u");
+					strcat(op, "U");
 					break;
 				    default:
 					break;
@@ -1202,25 +1202,25 @@ ft_start(void)
 				    XtNstring, &lrecl,
 				    NULL);
 				if (strlen(lrecl) > 0)
-					sprintf(eos(op), " lrecl(%s)", lrecl);
+					sprintf(eos(op), " LRECL(%s)", lrecl);
 				XtVaGetValues(blksize_widget,
 				    XtNstring, &blksize,
 				    NULL);
 				if (strlen(blksize) > 0)
-					sprintf(eos(op), " blksize(%s)",
+					sprintf(eos(op), " BLKSIZE(%s)",
 					    blksize);
 			}
 			if (units != DEFAULT_UNITS) {
 				/* Space Entered, processs it */
 				switch (units) {
 				    case TRACKS:
-					strcat(op, " tracks");
+					strcat(op, " TRACKS");
 					break;
 				    case CYLINDERS:
-					strcat(op, " cylinders");
+					strcat(op, " CYLINDERS");
 					break;
 				    case AVBLOCK:
-					strcat(op, " avblock");
+					strcat(op, " AVBLOCK");
 					break;
 				    default:
 					break;
@@ -1228,7 +1228,7 @@ ft_start(void)
 				XtVaGetValues(primspace_widget, XtNstring,
 				    &primspace, NULL);
 				if (strlen(primspace) > 0) {
-					sprintf(eos(op), " space(%s",
+					sprintf(eos(op), " SPACE(%s",
 					    primspace);
 					XtVaGetValues(secspace_widget,
 					    XtNstring, &secspace,
@@ -1241,13 +1241,13 @@ ft_start(void)
 			}
 		} else if (host_type == HT_VM) {
 			if (recfm != DEFAULT_RECFM) {
-				strcat(op, " recfm ");
+				strcat(op, " RECFM ");
 				switch (recfm) {
 				    case RECFM_FIXED:
-					strcat(op, "f");
+					strcat(op, "F");
 					break;
 				    case RECFM_VARIABLE:
-					strcat(op, "v");
+					strcat(op, "V");
 					break;
 				    default:
 					break;
@@ -1257,7 +1257,7 @@ ft_start(void)
 				    XtNstring, &lrecl,
 				    NULL);
 				if (strlen(lrecl) > 0)
-					sprintf(eos(op), " lrecl %s", lrecl);
+					sprintf(eos(op), " LRECL %s", lrecl);
 			}
 		}
 	}
@@ -1270,8 +1270,8 @@ ft_start(void)
 	}
 
 	/* Build the whole command. */
-	cmd = xs_buffer("ind\\e005Bfile %s %s%s\\n",
-	    receive_flag ? "get" : "put", ft_host_filename, op);
+	cmd = xs_buffer("IND\\e005BFILE %s %s%s\\n",
+	    receive_flag ? "GET" : "PUT", ft_host_filename, op);
 
 	/* Erase the line and enter the command. */
 	flen = kybd_prime();
@@ -2018,54 +2018,54 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	/* Build the ind$file command */
 	op[0] = '\0';
 	if (ascii_flag)
-		strcat(op, " ascii");
+		strcat(op, " ASCII");
 	if (cr_flag)
-		strcat(op, " crlf");
+		strcat(op, " CRLF");
 	if (append_flag && !receive_flag)
-		strcat(op, " append");
+		strcat(op, " APPEND");
 	if (!receive_flag) {
 		if (host_type == HT_TSO) {
 			if (recfm != DEFAULT_RECFM) {
 				/* RECFM Entered, process */
-				strcat(op, " recfm(");
+				strcat(op, " RECFM(");
 				switch (recfm) {
 				    case RECFM_FIXED:
-					strcat(op, "f");
+					strcat(op, "F");
 					break;
 				    case RECFM_VARIABLE:
-					strcat(op, "v");
+					strcat(op, "V");
 					break;
 				    case RECFM_UNDEFINED:
-					strcat(op, "u");
+					strcat(op, "U");
 					break;
 				    default:
 					break;
 				};
 				strcat(op, ")");
 				if (tp[PARM_LRECL].value != CN)
-					sprintf(eos(op), " lrecl(%s)",
+					sprintf(eos(op), " LRECL(%s)",
 					    tp[PARM_LRECL].value);
 				if (tp[PARM_BLKSIZE].value != CN)
-					sprintf(eos(op), " blksize(%s)",
+					sprintf(eos(op), " BLKSIZE(%s)",
 					    tp[PARM_BLKSIZE].value);
 			}
 			if (units != DEFAULT_UNITS) {
 				/* Space Entered, processs it */
 				switch (units) {
 				    case TRACKS:
-					strcat(op, " tracks");
+					strcat(op, " TRACKS");
 					break;
 				    case CYLINDERS:
-					strcat(op, " cylinders");
+					strcat(op, " CYLINDERS");
 					break;
 				    case AVBLOCK:
-					strcat(op, " avblock");
+					strcat(op, " AVBLOCK");
 					break;
 				    default:
 					break;
 				};
 				if (tp[PARM_PRIMARY_SPACE].value != CN) {
-					sprintf(eos(op), " space(%s",
+					sprintf(eos(op), " SPACE(%s",
 					    tp[PARM_PRIMARY_SPACE].value);
 					if (tp[PARM_SECONDARY_SPACE].value)
 						sprintf(eos(op), ",%s",
@@ -2075,20 +2075,20 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 			}
 		} else if (host_type == HT_VM) {
 			if (recfm != DEFAULT_RECFM) {
-				strcat(op, " recfm ");
+				strcat(op, " RECFM ");
 				switch (recfm) {
 				    case RECFM_FIXED:
-					strcat(op, "f");
+					strcat(op, "F");
 					break;
 				    case RECFM_VARIABLE:
-					strcat(op, "v");
+					strcat(op, "V");
 					break;
 				    default:
 					break;
 				};
 
 				if (tp[PARM_LRECL].value)
-					sprintf(eos(op), " lrecl %s",
+					sprintf(eos(op), " LRECL %s",
 					    tp[PARM_LRECL].value);
 			}
 		}
@@ -2102,8 +2102,8 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	}
 
 	/* Build the whole command. */
-	cmd = xs_buffer("ind\\e005Bfile %s %s%s\\n",
-	    receive_flag ? "get" : "put", ft_host_filename, op);
+	cmd = xs_buffer("IND\\e005BFILE %s %s%s\\n",
+	    receive_flag ? "GET" : "PUT", ft_host_filename, op);
 
 	/* Erase the line and enter the command. */
 	flen = kybd_prime();

@@ -47,7 +47,7 @@ MKFB = mkfb.exe
 MKKEYPAD = mkkeypad.exe
 CC = i686-pc-mingw32-gcc
 NATIVECC = gcc
-WINDRES = i686-pc-mingw32-gccwindres
+WINDRES = i686-pc-mingw32-windres
 else
 MKFB = mkfb
 MKKEYPAD = mkkeypad
