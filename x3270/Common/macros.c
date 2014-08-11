@@ -298,7 +298,7 @@ trace_script_output(const char *fmt, ...)
 	s = msgbuf;
 	while ((c = *s++)) {
 		if (c == '\n') {
-			trace_dsn("Output for %s[%d]: '%.*s'\n",
+			vtrace("Output for %s[%d]: '%.*s'\n",
 				ST_NAME, sms_depth,
 				(int)((s - 1) - m),
 				m);
@@ -469,7 +469,7 @@ script_enable(void)
 #endif /*]*/
 
 	if (sms->infd >= 0 && stdin_id == 0) {
-		trace_dsn("Enabling input for %s[%d]\n", ST_NAME, sms_depth);
+		vtrace("Enabling input for %s[%d]\n", ST_NAME, sms_depth);
 #if defined(_WIN32) /*[*/
 		stdin_id = AddInput((int)sms->inhandle, script_input);
 #else /*][*/
@@ -486,7 +486,7 @@ static void
 script_disable(void)
 {
 	if (stdin_id != 0) {
-		trace_dsn("Disabling input for %s[%d]\n", ST_NAME, sms_depth);
+		vtrace("Disabling input for %s[%d]\n", ST_NAME, sms_depth);
 		RemoveInput(stdin_id);
 		stdin_id = NULL_IOID;
 	}
@@ -600,7 +600,7 @@ sms_pop(Boolean can_exit)
 {
 	sms_t *s;
 
-	trace_dsn("%s[%d] complete\n", ST_NAME, sms_depth);
+	vtrace("%s[%d] complete\n", ST_NAME, sms_depth);
 
 	/* When you pop the peer script, that's the end of x3270. */
 	if (sms->type == ST_PEER && !sms->is_transient && can_exit)
@@ -657,7 +657,7 @@ sms_pop(Boolean can_exit)
 	} else if (CKBWAIT && (int)sms->state < (int)SS_KBWAIT) {
 		/* The child implicitly blocked the parent. */
 		sms->state = SS_KBWAIT;
-		trace_dsn("%s[%d] implicitly paused %s\n",
+		vtrace("%s[%d] implicitly paused %s\n",
 			    ST_NAME, sms_depth, sms_state_name[sms->state]);
 	} else if (sms->state == SS_IDLE && sms->type != ST_FILE) {
 		/* The parent needs to be restarted. */
@@ -922,7 +922,7 @@ socket_connection(unsigned long fd _is_unused, ioid_t id _is_unused)
 		popup_an_errno(errno, "socket accept");
 		return;
 	}
-	trace_dsn("New script socket connection\n");
+	vtrace("New script socket connection\n");
 
 	/* Push on a peer script. */
 	(void) sms_push(ST_PEER);
@@ -973,7 +973,7 @@ child_socket_connection(unsigned long fd _is_unused, ioid_t id _is_unused)
 			win32_strerror(GetLastError()));
 		return;
 	}
-	trace_dsn("New child script socket connection\n");
+	vtrace("New child script socket connection\n");
 
 	/* Push on a peer script. */
 	old_sms = sms;
@@ -1027,7 +1027,7 @@ child_exited(unsigned long fd _is_unused, ioid_t id _is_unused)
 			    	popup_an_error("GetExitCodeProcess failed: %s",
 					win32_strerror(GetLastError()));
 			} else if (status != STILL_ACTIVE) {
-				trace_dsn("Child script exited with status "
+				vtrace("Child script exited with status "
 					"0x%x\n", (unsigned)status);
 			    	CloseHandle(s->child_handle);
 				s->child_handle = INVALID_HANDLE_VALUE;
@@ -1347,18 +1347,18 @@ run_string(void)
 	int len;
 	int len_left;
 
-	trace_dsn("%s[%d] running\n", ST_NAME, sms_depth);
+	vtrace("%s[%d] running\n", ST_NAME, sms_depth);
 
 	sms->state = SS_RUNNING;
 	len = strlen(sms->dptr);
-	trace_dsn("%sString[%d]: '%s'\n",
+	vtrace("%sString[%d]: '%s'\n",
 		    sms->is_hex ? "Hex" : "",
 		    sms_depth, sms->dptr);
 
 	if (sms->is_hex) {
 		if (CKBWAIT) {
 			sms->state = SS_KBWAIT;
-			trace_dsn("%s[%d] paused %s\n",
+			vtrace("%s[%d] paused %s\n",
 				    ST_NAME, sms_depth,
 				    sms_state_name[sms->state]);
 		} else {
@@ -1370,7 +1370,7 @@ run_string(void)
 			sms->dptr += len - len_left;
 			if (CKBWAIT) {
 				sms->state = SS_KBWAIT;
-				trace_dsn("%s[%d] paused %s\n",
+				vtrace("%s[%d] paused %s\n",
 					    ST_NAME, sms_depth,
 					    sms_state_name[sms->state]);
 			}
@@ -1390,7 +1390,7 @@ run_macro(void)
 	enum em_stat es;
 	sms_t *s;
 
-	trace_dsn("%s[%d] running\n", ST_NAME, sms_depth);
+	vtrace("%s[%d] running\n", ST_NAME, sms_depth);
 
 	/*
 	 * Keep executing commands off the line until one pauses or
@@ -1401,7 +1401,7 @@ run_macro(void)
 		 * Check for command failure.
 		 */
 		if (!sms->success) {
-			trace_dsn("%s[%d] failed\n", ST_NAME, sms_depth);
+			vtrace("%s[%d] failed\n", ST_NAME, sms_depth);
 
 			/* Propogate it. */
 			if (sms->next != SN)
@@ -1410,7 +1410,7 @@ run_macro(void)
 		}
 
 		sms->state = SS_RUNNING;
-		trace_dsn("%s[%d]: '%s'\n", ST_NAME, sms_depth, a);
+		vtrace("%s[%d]: '%s'\n", ST_NAME, sms_depth, a);
 		s = sms;
 		s->success = True;
 		s->executing = True;
@@ -1428,7 +1428,7 @@ run_macro(void)
 
 		/* Macro could not execute.  Abort it. */
 		if (es == EM_ERROR) {
-			trace_dsn("%s[%d] error\n", ST_NAME, sms_depth);
+			vtrace("%s[%d] error\n", ST_NAME, sms_depth);
 
 			/* Propogate it. */
 			if (sms->next != SN)
@@ -1443,7 +1443,7 @@ run_macro(void)
 		if (es == EM_PAUSE || (int)sms->state >= (int)SS_KBWAIT) {
 			if (sms->state == SS_RUNNING)
 				sms->state = SS_KBWAIT;
-			trace_dsn("%s[%d] paused %s\n", ST_NAME, sms_depth,
+			vtrace("%s[%d] paused %s\n", ST_NAME, sms_depth,
 				    sms_state_name[sms->state]);
 			sms->dptr = nextm;
 			return;
@@ -1577,7 +1577,7 @@ login_macro(char *s)
 static void
 run_script(void)
 {
-	trace_dsn("%s[%d] running\n", ST_NAME, sms_depth);
+	vtrace("%s[%d] running\n", ST_NAME, sms_depth);
 
 	for (;;) {
 		char *ptr;
@@ -1611,7 +1611,7 @@ run_script(void)
 		/* Execute it. */
 		sms->state = SS_RUNNING;
 		sms->success = True;
-		trace_dsn("%s[%d]: '%s'\n", ST_NAME, sms_depth, cmd);
+		vtrace("%s[%d]: '%s'\n", ST_NAME, sms_depth, cmd);
 		s = sms;
 		s->executing = True;
 		es = execute_command(IA_SCRIPT, cmd, (char **)NULL);
@@ -1645,7 +1645,7 @@ run_script(void)
 			}
 			sms->need_prompt = True;
 		} else if (es == EM_ERROR) {
-			trace_dsn("%s[%d] error\n", ST_NAME, sms_depth);
+			vtrace("%s[%d] error\n", ST_NAME, sms_depth);
 			script_prompt(False);
 			/* If it was an idle command, cancel it. */
 			cancel_if_idle_command();
@@ -1654,7 +1654,7 @@ run_script(void)
 		if (sms->state == SS_RUNNING)
 			sms->state = SS_IDLE;
 		else {
-			trace_dsn("%s[%d] paused %s\n",
+			vtrace("%s[%d] paused %s\n",
 				    ST_NAME, sms_depth,
 				    sms_state_name[sms->state]);
 		}
@@ -1676,18 +1676,18 @@ read_from_file(void)
 
 		nr = read(sms->infd, dptr, 1);
 		if (nr < 0) {
-			trace_dsn("%s[%d] read error\n", ST_NAME, sms_depth);
+			vtrace("%s[%d] read error\n", ST_NAME, sms_depth);
 			sms_pop(False);
 			return;
 		}
 		if (nr == 0) {
 		    	if (sms->msc_len == 0) {
-				trace_dsn("%s[%d] read EOF\n", ST_NAME,
+				vtrace("%s[%d] read EOF\n", ST_NAME,
 					sms_depth);
 			    	sms_pop(False);
 				return;
 			} else {
-				trace_dsn("%s[%d] read EOF without newline\n",
+				vtrace("%s[%d] read EOF without newline\n",
 					ST_NAME, sms_depth);
 			    	*dptr = '\0';
 			    	break;
@@ -1706,7 +1706,7 @@ read_from_file(void)
 	}
 
 	/* Run the command as a macro. */
-	trace_dsn("%s[%d] read '%s'\n", ST_NAME, sms_depth, sms->msc);
+	vtrace("%s[%d] read '%s'\n", ST_NAME, sms_depth, sms->msc);
 	sms->state = SS_INCOMPLETE;
 	push_macro(sms->dptr, False);
 }
@@ -1815,7 +1815,7 @@ script_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 	char *ptr;
 	char c;
 
-	trace_dsn("Input for %s[%d] %s reading %s %d\n", ST_NAME, sms_depth,
+	vtrace("Input for %s[%d] %s reading %s %d\n", ST_NAME, sms_depth,
 		sms_state_name[sms->state],
 		sms->is_socket? "socket": "fd",
 		sms->infd);
@@ -1848,10 +1848,10 @@ script_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		popup_an_errno(errno, "%s[%d] read", ST_NAME, sms_depth);
 		return;
 	}
-	trace_dsn("Input for %s[%d] %s complete, nr=%d\n", ST_NAME, sms_depth,
+	vtrace("Input for %s[%d] %s complete, nr=%d\n", ST_NAME, sms_depth,
 		sms_state_name[sms->state], (int)nr);
 	if (nr == 0) {	/* end of file */
-		trace_dsn("EOF %s[%d]\n", ST_NAME, sms_depth);
+		vtrace("EOF %s[%d]\n", ST_NAME, sms_depth);
 		if (sms->msc_len)
 			popup_an_error("%s[%d]: missing newline",
 				ST_NAME, sms_depth);
@@ -3620,7 +3620,7 @@ cancel_if_idle_command(void)
 		if (s->type == ST_IDLE) {
 			cancel_idle_timer();
 			s->idle_error = True;
-			trace_dsn("Cancelling idle command");
+			vtrace("Cancelling idle command");
 			break;
 		}
 	}
@@ -3818,7 +3818,7 @@ plugin_input(unsigned long fd _is_inused, ioid_t id _is_unused)
 
 		*nl = '\0';
 
-		trace_dsn("From plugin: %s\n", plugin_buf);
+		vtrace("From plugin: %s\n", plugin_buf);
 
 		switch (plugin_tq[ptq_first]) {
 		case PLUGIN_INIT:
@@ -4130,7 +4130,7 @@ plugin_aid(unsigned char aid)
 
 	/* Make sure we don't overrun the response queue. */
 	if (PLUGIN_BACKLOG >= PLUGIN_QMAX) {
-		trace_dsn("Plugin queue overflow\n");
+		vtrace("Plugin queue overflow\n");
 		return;
 	}
 

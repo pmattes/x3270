@@ -181,7 +181,7 @@ Boolean macro_output = False;
 
 /* Shorthand macro to unlock the current action. */
 #define UNBLOCK() { \
-	trace_event("Unblocked %s (%s)\n", action, unwait_name[waiting]); \
+	vtrace("Unblocked %s (%s)\n", action, unwait_name[waiting]); \
 	waiting = NOT_WAITING; \
 	if (wait_id != NULL_IOID) { \
 		RemoveTimeOut(wait_id); \
@@ -381,7 +381,7 @@ main_connect(Boolean ignored)
 			if (waiting == AWAITING_DISCONNECT) {
 				UNBLOCK();
 			} else {
-				trace_event("Unblocked %s (was '%s') -- "
+				vtrace("Unblocked %s (was '%s') -- "
 					"failure\n", action,
 					wait_name[waiting]);
 				popup_an_error("Host disconnected");
@@ -465,7 +465,7 @@ process_pending_string(void)
 			ps_clear();
 	}
 	if (CKBWAIT) {
-		trace_event("Blocked %s (keyboard locked)\n", action);
+		vtrace("Blocked %s (keyboard locked)\n", action);
 		waiting = AWAITING_RESET;
 	}
 }
@@ -542,15 +542,15 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 #if defined(X3270_TRACE) /*[*/
 	/* Trace what we're about to do. */
 	if (toggled(TRACING)) {
-		trace_event("Running %s", action);
+		vtrace("Running %s", action);
 		for (j = 0; j < count; j++) {
 			char *s;
 
 			s = tc_scatv(argv[j]);
-			trace_event(" %s", s);
+			vtrace(" %s", s);
 			Free(s);
 		}
-		trace_event("\n");
+		vtrace("\n");
 	}
 #endif /*]*/
 
@@ -569,7 +569,7 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 		waiting = AWAITING_RESET;
 
 	if (waiting != NOT_WAITING) {
-		trace_event("Blocked %s (%s)\n", action, wait_name[waiting]);
+		vtrace("Blocked %s (%s)\n", action, wait_name[waiting]);
 		if (appres.command_timeout) {
 			command_timeout_id = AddTimeOut(
 				appres.command_timeout * 1000,
@@ -627,19 +627,19 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 		char s_trunc[TRUNC_LEN + 1];
 
 		s = Tcl_GetStringResult(interp);
-		trace_event("Completed %s (%s)", action,
+		vtrace("Completed %s (%s)", action,
 			(cmd_ret == TCL_OK) ? "ok" : "error");
 		if (s != CN && *s) {
 			char buf[1024];
 
 			strncpy(s_trunc, s, TRUNC_LEN);
 			s_trunc[TRUNC_LEN] = '\0';
-			trace_event(" -> \"%s\"",
+			vtrace(" -> \"%s\"",
 			    scatv(s_trunc, buf, sizeof(buf)));
 			if (strlen(s) > TRUNC_LEN)
-				trace_event("...(%d chars)", (int)strlen(s));
+				vtrace("...(%d chars)", (int)strlen(s));
 		}
-		trace_event("\n");
+		vtrace("\n");
 	}
 #endif /*]*/
 	(void) Tcl_SetServiceMode(old_mode);

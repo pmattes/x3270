@@ -839,14 +839,10 @@ popup_rop(struct rop *rop, abort_callback_t *a, const char *fmt, va_list args)
 		return;
 	}
 
-#if defined(X3270_TRACE) /*[*/
 	/* Put the error in the trace file. */
 	if (rop->is_error) {
-		if (toggled(TRACING)) {
-			trace_event("Error: %s\n", vmsgbuf);
-		}
+		vtrace("Error: %s\n", vmsgbuf);
 	}
-#endif /*]*/
 
 	if (rop->is_error && sms_redirect()) {
 		sms_error(vmsgbuf);

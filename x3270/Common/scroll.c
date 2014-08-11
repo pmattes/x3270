@@ -116,11 +116,13 @@ scroll_init(void)
 static void
 screen_set_thumb_traced(float top, float shown)
 {
-	trace_event(" -> screen_set_thumb(top %f, shown %f)\n", top, shown);
-	trace_event(" -> top %f top_base %f shown %f\n",
+#if defined(SCROLL_DEBUG) /*[*/
+	vtrace(" -> screen_set_thumb(top %f, shown %f)\n", top, shown);
+	vtrace(" -> top %f top_base %f shown %f\n",
 		thumb_top,
 		thumb_top_base,
 		thumb_shown);
+#endif /*]*/
 	screen_set_thumb(top, shown);
 }
 
@@ -149,8 +151,10 @@ scroll_save(int n, Boolean trim_blanks)
 {
 	int i;
 
-	trace_event("scroll_save(%d, %s)\n", n,
+#if defined(SCROLL_DEBUG) /*[*/
+	vtrace("scroll_save(%d, %s)\n", n,
 		trim_blanks? "trim": "no trim");
+#endif /*]*/
 
 	/* Trim trailing blank lines from 'n', if requested */
 	if (trim_blanks) {
@@ -407,7 +411,9 @@ scroll_proc(int n, int total)
 	} else {
 		pct = (float)n / (float)total;
 	}
-	trace_event("scroll_proc(%d, %d) -> %f%%\n", n, total, pct);
+#if defined(SCROLL_DEBUG) /*[*/
+	vtrace("scroll_proc(%d, %d) -> %f%%\n", n, total, pct);
+#endif /*]*/
 	nss = (int)(pct * thumb_shown * n_saved);
 	scroll_n(nss, n);
 }
@@ -418,7 +424,9 @@ scroll_proc(int n, int total)
 void
 jump_proc(float top)
 {
-	trace_event("jump_proc(%f)\n", top);
+#if defined(SCROLL_DEBUG) /*[*/
+	vtrace("jump_proc(%f)\n", top);
+#endif /*]*/
 	if (!n_saved) {
 		screen_set_thumb_traced(thumb_top, thumb_shown);
 		return;

@@ -698,7 +698,7 @@ action_debug(XtActionProc action, XEvent *event, String *params,
 		return;
 	}
 	if (event == (XEvent *)NULL) {
-		trace_event(" %s", ia_name[(int)ia_cause]);
+		vtrace(" %s", ia_name[(int)ia_cause]);
 	}
 #if defined(X3270_DISPLAY) /*[*/
 	else switch (event->type) {
@@ -724,7 +724,7 @@ action_debug(XtActionProc action, XEvent *event, String *params,
 		do {
 			int was_ambiguous = ambiguous;
 
-			trace_event("%s ':%s<Key%s>%s'",
+			vtrace("%s ':%s<Key%s>%s'",
 				was_ambiguous? " or": "Event",
 				key_symbolic_state(state, &ambiguous),
 				press,
@@ -739,17 +739,17 @@ action_debug(XtActionProc action, XEvent *event, String *params,
 			do {
 				int was_ambiguous = ambiguous;
 
-				trace_event(" %s '%s<Key%s>%s'",
+				vtrace(" %s '%s<Key%s>%s'",
 					was_ambiguous? "or":
 					    "(case-insensitive:",
 					key_symbolic_state(state, &ambiguous),
 					press,
 					symname);
 			} while (ambiguous);
-			trace_event(")");
+			vtrace(")");
 		}
 #if defined(VERBOSE_EVENTS) /*[*/
-		trace_event("\nKey%s [state %s, keycode %d, keysym "
+		vtrace("\nKey%s [state %s, keycode %d, keysym "
 			    "0x%lx \"%s\"]",
 			    press, key_state(kevent->state),
 			    kevent->keycode, ks,
@@ -764,14 +764,14 @@ action_debug(XtActionProc action, XEvent *event, String *params,
 		do {
 			int was_ambiguous = ambiguous;
 
-			trace_event("%s '%s<Btn%d%s>'",
+			vtrace("%s '%s<Btn%d%s>'",
 				was_ambiguous? " or": "Event",
 				key_symbolic_state(bevent->state, &ambiguous),
 				bevent->button,
 				direction);
 		} while (ambiguous);
 #if defined(VERBOSE_EVENTS) /*[*/
-		trace_event("\nButton%s [state %s, button %d]",
+		vtrace("\nButton%s [state %s, button %d]",
 		    press, key_state(bevent->state),
 		    bevent->button);
 #endif /*]*/
@@ -781,65 +781,65 @@ action_debug(XtActionProc action, XEvent *event, String *params,
 		do {
 			int was_ambiguous = ambiguous;
 
-			trace_event("%s '%s<Motion>'",
+			vtrace("%s '%s<Motion>'",
 				was_ambiguous? " or": "Event",
 				key_symbolic_state(mevent->state, &ambiguous));
 		} while (ambiguous);
 #if defined(VERBOSE_EVENTS) /*[*/
-		trace_event("\nMotionNotify [state %s]",
+		vtrace("\nMotionNotify [state %s]",
 			    key_state(mevent->state));
 #endif /*]*/
 		break;
 	    case EnterNotify:
-		trace_event("EnterNotify");
+		vtrace("EnterNotify");
 		break;
 	    case LeaveNotify:
-		trace_event("LeaveNotify");
+		vtrace("LeaveNotify");
 		break;
 	    case FocusIn:
-		trace_event("FocusIn");
+		vtrace("FocusIn");
 		break;
 	    case FocusOut:
-		trace_event("FocusOut");
+		vtrace("FocusOut");
 		break;
 	    case KeymapNotify:
-		trace_event("KeymapNotify");
+		vtrace("KeymapNotify");
 		break;
 	    case Expose:
 		exevent = (XExposeEvent *)event;
-		trace_event("Expose [%dx%d+%d+%d]",
+		vtrace("Expose [%dx%d+%d+%d]",
 		    exevent->width, exevent->height, exevent->x, exevent->y);
 		break;
 	    case PropertyNotify:
-		trace_event("PropertyNotify");
+		vtrace("PropertyNotify");
 		break;
 	    case ClientMessage:
 		cmevent = (XClientMessageEvent *)event;
 		atom_name = XGetAtomName(display, (Atom)cmevent->data.l[0]);
-		trace_event("ClientMessage [%s]",
+		vtrace("ClientMessage [%s]",
 		    (atom_name == CN) ? "(unknown)" : atom_name);
 		break;
 	    case ConfigureNotify:
 		cevent = (XConfigureEvent *)event;
-		trace_event("ConfigureNotify [%dx%d+%d+%d]",
+		vtrace("ConfigureNotify [%dx%d+%d+%d]",
 		    cevent->width, cevent->height, cevent->x, cevent->y);
 		break;
 	    default:
-		trace_event("Event %d", event->type);
+		vtrace("Event %d", event->type);
 		break;
 	}
 	if (keymap_trace != CN)
-		trace_event(" via %s -> %s(", keymap_trace,
+		vtrace(" via %s -> %s(", keymap_trace,
 		    action_name(action));
 	else
 #endif /*]*/
-		trace_event(" -> %s(", action_name(action));
+		vtrace(" -> %s(", action_name(action));
 	for (i = 0; i < *num_params; i++) {
-		trace_event("%s\"%s\"",
+		vtrace("%s\"%s\"",
 		    i ? ", " : "",
 		    scatv(params[i], pbuf, sizeof(pbuf)));
 	}
-	trace_event(")\n");
+	vtrace(")\n");
 
 	trace_rollover_check();
 }

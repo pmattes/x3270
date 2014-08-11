@@ -300,10 +300,8 @@ proxy_passthru(int fd, char *host, unsigned short port)
 	buf = Malloc(strlen(host) + 32);
 	(void) sprintf(buf, "%s %u\r\n", host, port);
 
-#if defined(X3270_TRACE) /*[*/
-	trace_dsn("Passthru Proxy: xmit '%.*s'", (int)(strlen(buf) - 2), buf);
+	vtrace("Passthru Proxy: xmit '%.*s'", (int)(strlen(buf) - 2), buf);
 	trace_netdata('>', (unsigned char *)buf, strlen(buf));
-#endif /*]*/
 
 	if (send(fd, buf, strlen(buf), 0) < 0) {
 	    	popup_a_sockerr("Passthru Proxy: send error");
@@ -335,10 +333,8 @@ proxy_http(int fd, char *host, unsigned short port)
 		(colon? "]": ""),
 		port);
 
-#if defined(X3270_TRACE) /*[*/
-	trace_dsn("HTTP Proxy: xmit '%.*s'\n", (int)(strlen(buf) - 2), buf);
+	vtrace("HTTP Proxy: xmit '%.*s'\n", (int)(strlen(buf) - 2), buf);
 	trace_netdata('>', (unsigned char *)buf, strlen(buf));
-#endif /*]*/
 
 	if (send(fd, buf, strlen(buf), 0) < 0) {
 	    	popup_a_sockerr("HTTP Proxy: send error");
@@ -352,10 +348,8 @@ proxy_http(int fd, char *host, unsigned short port)
 		(colon? "]": ""),
 		port);
 
-#if defined(X3270_TRACE) /*[*/
-	trace_dsn("HTTP Proxy: xmit '%.*s'\n", (int)(strlen(buf) - 2), buf);
+	vtrace("HTTP Proxy: xmit '%.*s'\n", (int)(strlen(buf) - 2), buf);
 	trace_netdata('>', (unsigned char *)buf, strlen(buf));
-#endif /*]*/
 
 	if (send(fd, buf, strlen(buf), 0) < 0) {
 	    	popup_a_sockerr("HTTP Proxy: send error");
@@ -364,10 +358,8 @@ proxy_http(int fd, char *host, unsigned short port)
 	}
 
 	strcpy(buf, "\r\n");
-#if defined(X3270_TRACE) /*[*/
-	trace_dsn("HTTP Proxy: xmit ''\n");
+	vtrace("HTTP Proxy: xmit ''\n");
 	trace_netdata('>', (unsigned char *)buf, strlen(buf));
-#endif /*]*/
 
 	if (send(fd, buf, strlen(buf), 0) < 0) {
 	    	popup_a_sockerr("HTTP Proxy: send error");
@@ -425,10 +417,8 @@ proxy_http(int fd, char *host, unsigned short port)
 	}
 	rbuf[nread] = '\0';
 
-#if defined(X3270_TRACE) /*[*/
 	trace_netdata('<', (unsigned char *)rbuf, nread);
-	trace_dsn("HTTP Proxy: recv '%s'\n", rbuf);
-#endif /*]*/
+	vtrace("HTTP Proxy: recv '%s'\n", rbuf);
 
 	if (strncmp(rbuf, "HTTP/", 5) || (space = strchr(rbuf, ' ')) == CN) {
 	    	popup_an_error("HTTP Proxy: unrecognized reply");
@@ -451,10 +441,8 @@ proxy_telnet(int fd, char *host, unsigned short port)
 	buf = Malloc(strlen(host) + 32);
 	(void) sprintf(buf, "connect %s %u\r\n", host, port);
 
-#if defined(X3270_TRACE) /*[*/
-	trace_dsn("TELNET Proxy: xmit '%.*s'", (int)(strlen(buf) - 2), buf);
+	vtrace("TELNET Proxy: xmit '%.*s'", (int)(strlen(buf) - 2), buf);
 	trace_netdata('>', (unsigned char *)buf, strlen(buf));
-#endif /*]*/
 
 	if (send(fd, buf, strlen(buf), 0) < 0) {
 	    	popup_a_sockerr("TELNET Proxy: send error");
@@ -515,12 +503,10 @@ proxy_socks4(int fd, char *host, unsigned short port, int force_a)
 		strcpy(s, host);
 		s += strlen(host) + 1;
 
-#if defined(X3270_TRACE) /*[*/
-		trace_dsn("SOCKS4 Proxy: version 4 connect port %u "
+		vtrace("SOCKS4 Proxy: version 4 connect port %u "
 			"address 0.0.0.1 user '%s' host '%s'\n",
 			port, user, host);
 		trace_netdata('>', (unsigned char *)buf, s - buf);
-#endif /*]*/
 
 		if (send(fd, buf, s - buf, 0) < 0) {
 		    	popup_a_sockerr("SOCKS4 Proxy: send error");
@@ -541,12 +527,10 @@ proxy_socks4(int fd, char *host, unsigned short port, int force_a)
 		strcpy(s, user);
 		s += strlen(user) + 1;
 
-#if defined(X3270_TRACE) /*[*/
-		trace_dsn("SOCKS4 Proxy: xmit version 4 connect port %u "
+		vtrace("SOCKS4 Proxy: xmit version 4 connect port %u "
 			"address %s user '%s'\n",
 			port, inet_ntoa(ipaddr), user);
 		trace_netdata('>', (unsigned char *)buf, s - buf);
-#endif /*]*/
 
 		if (send(fd, buf, s - buf, 0) < 0) {
 			Free(buf);
@@ -591,13 +575,13 @@ proxy_socks4(int fd, char *host, unsigned short port, int force_a)
 
 	    	rport = (rbuf[2] << 8) | rbuf[3];
 	    	memcpy(&a, &rbuf[4], 4);
-		trace_dsn("SOCKS4 Proxy: recv status 0x%02x port %u "
+		vtrace("SOCKS4 Proxy: recv status 0x%02x port %u "
 			"address %s\n",
 			rbuf[1],
 			rport,
 			inet_ntoa(a));
 	} else
-		trace_dsn("SOCKS4 Proxy: recv status 0x%02x\n", rbuf[1]);
+		vtrace("SOCKS4 Proxy: recv status 0x%02x\n", rbuf[1]);
 #endif /*]*/
 
 	switch (rbuf[1]) {
@@ -674,10 +658,8 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 
 	/* Send the authentication request to the server. */
 	strcpy((char *)rbuf, "\005\001\000");
-#if defined(X3270_TRACE) /*[*/
-	trace_dsn("SOCKS5 Proxy: xmit version 5 nmethods 1 (no auth)\n");
+	vtrace("SOCKS5 Proxy: xmit version 5 nmethods 1 (no auth)\n");
 	trace_netdata('>', rbuf, 3);
-#endif /*]*/
 	if (send(fd, (char *)rbuf, 3, 0) < 0) {
 		popup_a_sockerr("SOCKS5 Proxy: send error");
 		return -1;
@@ -726,19 +708,15 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 		    	break;
 	}
 
-#if defined(X3270_TRACE) /*[*/
 	trace_netdata('<', rbuf, nread);
-#endif /*]*/
 
 	if (rbuf[0] != 0x05 || (rbuf[1] != 0 && rbuf[1] != 0xff)) {
 	    	popup_an_error("SOCKS5 Proxy: bad authentication response");
 		return -1;
 	}
 
-#if defined(X3270_TRACE) /*[*/
-	trace_dsn("SOCKS5 Proxy: recv version %d method %d\n", rbuf[0],
+	vtrace("SOCKS5 Proxy: recv version %d method %d\n", rbuf[0],
 		rbuf[1]);
-#endif /*]*/
 
 	if (rbuf[1] == 0xff) {
 	    	popup_an_error("SOCKS5 Proxy: authentication failure");
@@ -772,14 +750,12 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 	}
 	SET16(s, port);
 
-#if defined(X3270_TRACE) /*[*/
-	trace_dsn("SOCKS5 Proxy: xmit version 5 connect %s %s port %u\n",
+	vtrace("SOCKS5 Proxy: xmit version 5 connect %s %s port %u\n",
 		use_name? "domainname":
 			  ((ha.sa.sa_family == AF_INET)? "IPv4": "IPv6"),
 		use_name? host: nbuf,
 		port);
 	trace_netdata('>', (unsigned char *)buf, s - buf);
-#endif /*]*/
 
 	if (send(fd, buf, s - buf, 0) < 0) {
 		popup_a_sockerr("SOCKS5 Proxy: send error");
@@ -949,7 +925,7 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 		break;
 	}
 	rport = (*portp << 8) + *(portp + 1);
-	trace_dsn("SOCKS5 Proxy: recv version %d status 0x%02x address %s %s "
+	vtrace("SOCKS5 Proxy: recv version %d status 0x%02x address %s %s "
 		"port %u\n",
 		buf[0], buf[1],
 		atype_name[(unsigned char)buf[3]],

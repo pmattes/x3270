@@ -50,9 +50,6 @@ void trace_pdc(unsigned char c);
 void trace_pds(unsigned char *buf);
 const char *unknown(unsigned char value);
 
-/* For compatibility with common x3270/pr3287 code. */
-#define trace_dsn vtrace
-
 #else /*][*/
 
 #define tracef 0

@@ -801,7 +801,7 @@ fprint_screen_done(fps_t *ofps)
 			break;
 #if defined(WC3270) /*[*/
 		case P_GDI:
-			trace_event("Printing to GDI printer %s\n",
+			vtrace("Printing to GDI printer %s\n",
 				fps->printer_name? fps->printer_name:
 						   "(system default)");
 			if (gdi_print_finish(fps->file, fps->caption) < 0) {

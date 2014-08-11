@@ -528,19 +528,17 @@ process_ds(unsigned char *buf, int buflen)
 
 	scroll_to_bottom();
 
-	trace_ds("< ");
-
 	switch (buf[0]) {	/* 3270 command */
 	case CMD_EAU:	/* erase all unprotected */
 	case SNA_CMD_EAU:
 		ctlr_erase_all_unprotected();
-		trace_ds("EraseAllUnprotected\n");
+		trace_ds("< EraseAllUnprotected\n");
 		return PDS_OKAY_NO_OUTPUT;
 		break;
 	case CMD_EWA:	/* erase/write alternate */
 	case SNA_CMD_EWA:
 		ctlr_erase(True);
-		trace_ds("EraseWriteAlternate");
+		trace_ds("< EraseWriteAlternate");
 		if ((rv = ctlr_write(buf, buflen, True)) < 0)
 			return rv;
 		return PDS_OKAY_NO_OUTPUT;
@@ -548,43 +546,43 @@ process_ds(unsigned char *buf, int buflen)
 	case CMD_EW:	/* erase/write */
 	case SNA_CMD_EW:
 		ctlr_erase(False);
-		trace_ds("EraseWrite");
+		trace_ds("< EraseWrite");
 		if ((rv = ctlr_write(buf, buflen, True)) < 0)
 			return rv;
 		return PDS_OKAY_NO_OUTPUT;
 		break;
 	case CMD_W:	/* write */
 	case SNA_CMD_W:
-		trace_ds("Write");
+		trace_ds("< Write");
 		if ((rv = ctlr_write(buf, buflen, False)) < 0)
 			return rv;
 		return PDS_OKAY_NO_OUTPUT;
 		break;
 	case CMD_RB:	/* read buffer */
 	case SNA_CMD_RB:
-		trace_ds("ReadBuffer\n");
+		trace_ds("< ReadBuffer\n");
 		ctlr_read_buffer(aid);
 		return PDS_OKAY_OUTPUT;
 		break;
 	case CMD_RM:	/* read modifed */
 	case SNA_CMD_RM:
-		trace_ds("ReadModified\n");
+		trace_ds("< ReadModified\n");
 		ctlr_read_modified(aid, False);
 		return PDS_OKAY_OUTPUT;
 		break;
 	case CMD_RMA:	/* read modifed all */
 	case SNA_CMD_RMA:
-		trace_ds("ReadModifiedAll\n");
+		trace_ds("< ReadModifiedAll\n");
 		ctlr_read_modified(aid, True);
 		return PDS_OKAY_OUTPUT;
 		break;
 	case CMD_WSF:	/* write structured field */
 	case SNA_CMD_WSF:
-		trace_ds("WriteStructuredField");
+		trace_ds("< WriteStructuredField");
 		return write_structured_field(buf, buflen);
 		break;
 	case CMD_NOP:	/* no-op */
-		trace_ds("NoOp\n");
+		trace_ds("< NoOp\n");
 		return PDS_OKAY_NO_OUTPUT;
 		break;
 	default:
@@ -1445,7 +1443,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				(void) ebcdic_to_multibyte(
 					   (add_c1 << 8) | add_c2,
 					   mb, sizeof(mb));
-			        trace_ds_nb("'%s'", mb);
+			        trace_ds("'%s'", mb);
 			} else
 #endif /*]*/
 			{
@@ -1917,7 +1915,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				(void) ebcdic_to_multibyte(
 					   (add_c1 << 8) | add_c2, mb,
 					   sizeof(mb));
-			        trace_ds_nb("%s", mb);
+			        trace_ds("%s", mb);
 			} else {
 #endif /*]*/
 				add_c1 = *cp;

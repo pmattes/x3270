@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2013, Paul Mattes.
+ * Copyright (c) 2000-2014, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -934,7 +934,7 @@ screen_disp(Boolean erasing _is_unused)
 			if (write(1, altscreen_spec.mode_switch,
 			    strlen(altscreen_spec.mode_switch)) < 0)
 			    	exit(1);
-			trace_event("Switching to alt (%dx%d) screen.\n",
+			vtrace("Switching to alt (%dx%d) screen.\n",
 			    altscreen_spec.rows, altscreen_spec.cols);
 			swap_screens(alt_screen);
 			cur_spec = &altscreen_spec;
@@ -942,7 +942,7 @@ screen_disp(Boolean erasing _is_unused)
 			if (write(1, defscreen_spec.mode_switch,
 			    strlen(defscreen_spec.mode_switch)) < 0)
 			    	exit(1);
-			trace_event("Switching to default (%dx%d) screen.\n",
+			vtrace("Switching to default (%dx%d) screen.\n",
 			    defscreen_spec.rows, defscreen_spec.cols);
 			swap_screens(def_screen);
 			cur_spec = &defscreen_spec;
@@ -1190,7 +1190,7 @@ static Boolean meta_escape = False;
 static void
 escape_timeout(ioid_t id _is_unused)
 {
-	trace_event("Timeout waiting for key following Escape, processing "
+	vtrace("Timeout waiting for key following Escape, processing "
 	    "separately\n");
 	eto = 0L;
 	meta_escape = False;
@@ -1225,7 +1225,7 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		k = wgetch(stdscr);
 #endif /*]*/
 #if defined(X3270_TRACE) /*[*/
-		trace_event("k=%d "
+		vtrace("k=%d "
 # if defined(CURSES_WIDE) /*[*/
 			            "wch=%u "
 # endif /*]*/
@@ -1239,12 +1239,12 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		if (k == ERR) {
 			if (first) {
 				if (failed_first) {
-					trace_event("End of File, exiting.\n");
+					vtrace("End of File, exiting.\n");
 					x3270_exit(1);
 				}
 				failed_first = True;
 			}
-			trace_event("k == ERR, return\n");
+			vtrace("k == ERR, return\n");
 			return;
 		} else {
 			failed_first = False;
@@ -1261,7 +1261,7 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 			mb[1] = '\0';
 			ucs4 = multibyte_to_unicode(mb, 1, &consumed, &error);
 			if (ucs4 == 0) {
-				trace_event("Invalid input char 0x%x\n", k);
+				vtrace("Invalid input char 0x%x\n", k);
 				return;
 			}
 			k = 0;
@@ -1279,7 +1279,7 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 			wcs[1] = 0;
 			sz = wcstombs(mbs, wcs, sizeof(mbs));
 			if (sz == (size_t)-1) {
-				trace_event("Invalid input wchar 0x%x\n", wch);
+				vtrace("Invalid input wchar 0x%x\n", wch);
 				return;
 			}
 			if (sz == 1) {
@@ -1291,7 +1291,7 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 			    	ucs4 = multibyte_to_unicode(mbs, sz, &consumed,
 					&error);
 				if (ucs4 == 0) {
-					trace_event("Unsupported input "
+					vtrace("Unsupported input "
 						"wchar %x\n", wch);
 					return;
 				}
@@ -1310,7 +1310,7 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 			if (getmouse(&m) != OK)
 			    return;
 			if ((m.bstate & BUTTON1_RELEASED)) {
-			    	trace_event("Mouse BUTTON1_RELEASED "
+			    	vtrace("Mouse BUTTON1_RELEASED "
 					"(x=%d,y=%d)\n",
 					m.x, m.y);
 				if (screen_yoffset != 0 && m.y == 0) {
@@ -1342,15 +1342,15 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 			meta_escape = False;
 			alt = KM_ALT;
 		} else if (me_mode == TS_ON && ucs4 == 0x1b) {
-			trace_event("Key '%s' (curses key 0x%x, char code 0x%x)\n",
+			vtrace("Key '%s' (curses key 0x%x, char code 0x%x)\n",
 				decode_key(k, ucs4, alt, dbuf), k, ucs4);
 			eto = AddTimeOut(100L, escape_timeout);
-			trace_event(" waiting to see if Escape is followed by"
+			vtrace(" waiting to see if Escape is followed by"
 			    " another key\n");
 			meta_escape = True;
 			continue;
 		}
-		trace_event("Key '%s' (curses key 0x%x, char code 0x%x)\n",
+		vtrace("Key '%s' (curses key 0x%x, char code 0x%x)\n",
 			decode_key(k, ucs4, alt, dbuf), k, ucs4);
 		kybd_input2(k, ucs4, alt);
 		first = False;
@@ -1484,7 +1484,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 		Key_action(NULL, NULL, params, &one);
 		return;
 	}
-	trace_event(" dropped (no default)\n");
+	vtrace(" dropped (no default)\n");
 }
 
 Boolean

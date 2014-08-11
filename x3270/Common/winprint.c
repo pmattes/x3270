@@ -251,7 +251,7 @@ start_wordpad_sync(char *action_name, char *filename, char *printer)
 	else
 		cmd = xs_buffer("\"%s\" /p \"%s\"",
 			wp, filename);
-	trace_event("%s command: %s\n", action_name, cmd);
+	vtrace("%s command: %s\n", action_name, cmd);
 
 	/* Run the command and wait for it to complete. */
 	memset(&si, '\0', sizeof(si));
@@ -292,7 +292,7 @@ start_wordpad_async(char *action_name, char *filename, char *printer)
 		args = xs_buffer("/pt \"%s\" \"%s\"", filename, printer);
 	else
 		args = xs_buffer("/p \"%s\"", filename);
-	trace_event("%s() command: \"%s\" %s\n", action_name, wp, args);
+	vtrace("%s() command: \"%s\" %s\n", action_name, wp, args);
 
 	/*
 	 * Create a thread to start WordPad, wait for it to terminate, and

@@ -40,7 +40,6 @@ typedef enum {
 extern Boolean trace_skipping;
 extern char *tracefile_name;
 extern struct timeval ds_ts;
-extern Boolean do_ts;
 
 const char *rcba(int baddr);
 char *screentrace_default_file(ptype_t ptype);
@@ -50,9 +49,8 @@ void toggle_screenTrace(struct toggle *t, enum toggle_type tt);
 void trace_ansi_disc(void);
 void trace_char(char c);
 void trace_ds(const char *fmt, ...) printflike(1, 2);
-void trace_ds_nb(const char *fmt, ...) printflike(1, 2);
-void trace_dsn(const char *fmt, ...) printflike(1, 2);
-void trace_event(const char *fmt, ...) printflike(1, 2);
+void vtrace(const char *fmt, ...) printflike(1, 2);
+void ntvtrace(const char *fmt, ...) printflike(1, 2);
 tss_t trace_get_screentrace_how(void);
 tss_t trace_get_screentrace_last_how(void);
 const char *trace_get_screentrace_name(void);
@@ -66,14 +64,12 @@ void trace_rollover_check(void);
 #define rcba 0 &&
 #if defined(__GNUC__) /*[*/
 #define trace_ds(args...)
-#define trace_dsn(args...)
-#define trace_ds_nb(args...)
-#define trace_event(args...)
+#define vtrace(args...)
+#define ntvtrace(args...)
 #else /*][*/
 #define trace_ds 0 &&
-#define trace_ds_nb 0 &&
-#define trace_dsn 0 &&
-#define trace_event 0 &&
+#define vtrace 0 &&
+#define ntvtrace 0 &&
 #define rcba 0 &&
 #endif /*]*/
 

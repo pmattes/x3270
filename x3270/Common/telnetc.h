@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *
@@ -75,12 +75,16 @@ extern void net_send_werase(void);
 extern Boolean net_snap_options(void);
 extern void space3270out(int n);
 extern const char *tn3270e_current_opts(void);
-extern void trace_netdata(char direction, unsigned const char *buf, int len);
 extern void popup_a_sockerr(char *fmt, ...) printflike(1, 2);
 extern char *net_proxy_type(void);
 extern char *net_proxy_host(void);
 extern char *net_proxy_port(void);
 extern Boolean net_bound(void);
+#if defined(X3270_TRACE) /*[*/
+extern void trace_netdata(char direction, unsigned const char *buf, int len);
+#else /*][*/
+# define trace_netdata(direction, buf, len)
+#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 extern void ssl_base_init(char *cl_hostname, Boolean *pending);
 #endif /*]*/

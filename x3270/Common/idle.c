@@ -235,7 +235,7 @@ idle_in3270(Boolean in3270 _is_unused)
 static void
 idle_timeout(ioid_t id _is_unused)
 {
-	trace_event("Idle timeout\n");
+	vtrace("Idle timeout\n");
 	idle_ticking = False;
 	push_idle(idle_command);
 	reset_idle_timer();
@@ -265,7 +265,7 @@ reset_idle_timer(void)
 # endif /*]*/
 		}
 # if defined(DEBUG_IDLE_TIMEOUT) /*[*/
-		trace_event("Setting idle timeout to %lu\n", idle_ms_now);
+		vtrace("Setting idle timeout to %lu\n", idle_ms_now);
 # endif /*]*/
 		idle_id = AddTimeOut(idle_ms_now, idle_timeout);
 		idle_ticking = True;

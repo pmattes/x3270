@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -564,7 +564,7 @@ status_ret(char *s, struct keymap *k)
 		status_compose(False, 0, KT_STD);
 
 	if (s != NULL && s != ignore)
-		trace_event(" %s:%d -> %s\n", current_match->file,
+		vtrace(" %s:%d -> %s\n", current_match->file,
 		    current_match->line, s);
 	if ((current_match = k) == NULL)
 		consumed = 0;
@@ -578,7 +578,7 @@ static unsigned long kto = 0L;
 static void
 key_timeout(ioid_t id _is_unused)
 {
-	trace_event("Timeout, using shortest keymap match\n");
+	vtrace("Timeout, using shortest keymap match\n");
 	kto = 0L;
 	current_match = timeout_match;
 	push_keymap_action(status_ret(timeout_match->action, NULL));
@@ -591,7 +591,7 @@ ambiguous(struct keymap *k, int nc)
 	struct keymap *j;
 
 	if ((j = longer_match(k, nc)) != NULL) {
-		trace_event(" ambiguous keymap match, shortest is %s:%d, "
+		vtrace(" ambiguous keymap match, shortest is %s:%d, "
 		    "setting timeout\n", j->file, j->line);
 		timeout_match = k;
 		kto = AddTimeOut(500L, key_timeout);
@@ -663,7 +663,7 @@ lookup_key(int kcode, ucs4_t ucs4, int modifiers)
 				return status_ret(ignore, j);
 		} else {
 			/* Keep looking. */
-			trace_event(" partial keymap match in %s:%d %s\n",
+			vtrace(" partial keymap match in %s:%d %s\n",
 			    current_match->file, current_match->line,
 			    (n_shortest > 1)? " and other(s)": "");
 			return status_ret(ignore, current_match);
@@ -695,7 +695,7 @@ lookup_key(int kcode, ucs4_t ucs4, int modifiers)
 
 	/* Complain. */
 	beep();
-	trace_event(" keymap lookup failure after partial match\n");
+	vtrace(" keymap lookup failure after partial match\n");
 	return status_ret(ignore, NULL);
 }
 

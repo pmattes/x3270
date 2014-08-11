@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -4924,7 +4924,7 @@ static Position main_x = 0, main_y = 0;
 static void
 configure_stable(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
-	trace_event("Reconfigure timer expired\n");
+	vtrace("Reconfigure timer expired\n");
 	configure_ticking = False;
 	if (!cn.ticking)
 		screen_redo = REDO_NONE;
@@ -4942,12 +4942,13 @@ do_resize(void)
 
 	if (rsfonts == (struct rsfont *)NULL || !allow_resize) {
 		/* Illegal or impossible. */
-		if (rsfonts == (struct rsfont *)NULL)
-			trace_event("  no fonts available for resize\n"
-			    "    reasserting previous size\n");
-		else
-			trace_event("  resize prohibited by resource\n"
-			    "    reasserting previous size\n");
+		if (rsfonts == (struct rsfont *)NULL) {
+			vtrace("  no fonts available for resize\n"
+				"    reasserting previous size\n");
+		} else {
+			vtrace("  resize prohibited by resource\n"
+				"    reasserting previous size\n");
+		}
 		set_toplevel_sizes();
 		return;
 	}
@@ -5078,15 +5079,16 @@ do_resize(void)
 
 	/* Change fonts. */
 	if (!best || (efontname && !strcmp(best->name, efontname))) {
-		if (cn.width > main_width || cn.height > main_height)
-			trace_event("  no larger font available\n"
-			    "    reasserting previous size\n");
-		else
-			trace_event("  no smaller font available\n"
-			    "    reasserting previous size\n");
+		if (cn.width > main_width || cn.height > main_height) {
+			vtrace("  no larger font available\n"
+				"    reasserting previous size\n");
+		} else {
+			vtrace("  no smaller font available\n"
+				"    reasserting previous size\n");
+		}
 		set_toplevel_sizes();
 	} else {
-		trace_event("    switching to font '%s', new size %dx%d\n",
+		vtrace("    switching to font '%s', new size %dx%d\n",
 		    best->name, best->total_width, best->total_height);
 		screen_newfont(best->name, False, False);
 
@@ -5129,8 +5131,8 @@ revert_screen(void)
 		break;
 	    case REDO_RESIZE:
 		/* Changed fonts in response to a previous user resize. */
-		trace_event("  size reassertion failed, window truncated\n"
-		    "    doing nothing\n");
+		vtrace("  size reassertion failed, window truncated\n"
+			"  doing nothing\n");
 		screen_redo = REDO_NONE;
 		return;
 	    case REDO_NONE:
@@ -5143,7 +5145,7 @@ revert_screen(void)
 
 	/* Tell the user what we're doing. */
 	if (revert != CN) {
-		trace_event("    reverting to previous %s\n", revert);
+		vtrace("    reverting to previous %s\n", revert);
 		popup_an_error("Main window does not fit on the "
 		    "X display\n"
 		    "Reverting to previous %s", revert);
@@ -5169,7 +5171,7 @@ stream_end(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
 	Boolean needs_moving = False;
 
-	trace_event("Stream timer expired %hux%hu+%hd+%hd\n",
+	vtrace("Stream timer expired %hux%hu+%hd+%hd\n",
 		cn.width, cn.height, cn.x, cn.y);
 
 	/* Not ticking any more. */
@@ -5187,7 +5189,8 @@ stream_end(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 	 * reconfig we may need to revert, and get out.
 	 */
 	if (cn.width == main_width && cn.height == main_height) {
-		trace_event("  width and height match\n    doing nothing\n");
+		vtrace("  width and height match\n"
+			"  doing nothing\n");
 		screen_redo = REDO_NONE;
 		goto done;
 	}
@@ -5197,13 +5200,14 @@ stream_end(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 	 * decoration.  Be persistent
 	 */
 	if (cn.width >= main_width && cn.height >= main_height) {
-		trace_event("  bigger\n    asserting desired size\n");
+		vtrace("  bigger\n"
+			"    asserting desired size\n");
 		set_toplevel_sizes();
 		screen_redo = REDO_NONE;
 	}
 
 	/* They're not correct. */
-	trace_event("  size mismatch, want %ux%u", main_width, main_height);
+	vtrace("  size mismatch, want %ux%u", main_width, main_height);
 
 	revert_screen();
 
@@ -5242,7 +5246,7 @@ PA_ConfigureNotify_action(Widget w _is_unused, XEvent *event, String *params _is
 	} else {
 		XtVaGetValues(toplevel, XtNx, &xx, XtNy, &yy, NULL);
 	}
-	trace_event("ConfigureNotify %hux%hu+%hd+%hd\n",
+	vtrace("ConfigureNotify %hux%hu+%hd+%hd\n",
 	    re->width, re->height, xx, yy);
 	
 	/* Save the latest values. */

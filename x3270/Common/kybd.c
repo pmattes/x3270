@@ -109,7 +109,7 @@ static KeySym MyStringToKeysym(char *s, enum keytype *keytypep,
 	ucs4_t *ucs4);
 
 #if defined(X3270_DBCS) /*[*/
-Boolean key_WCharacter(unsigned char code[], Boolean *skipped);
+static Boolean key_WCharacter(unsigned char code[], Boolean *skipped);
 #endif /*]*/
 
 static Boolean		insert = False;		/* insert mode */
@@ -159,27 +159,27 @@ enq_ta(XtActionProc fn, char *parm1, char *parm2)
 
 	/* If no connection, forget it. */
 	if (!CONNECTED) {
-		trace_event("  dropped (not connected)\n");
+		vtrace("  dropped (not connected)\n");
 		return;
 	}
 
 	/* If operator error, complain and drop it. */
 	if (kybdlock & KL_OERR_MASK) {
 		ring_bell();
-		trace_event("  dropped (operator error)\n");
+		vtrace("  dropped (operator error)\n");
 		return;
 	}
 
 	/* If scroll lock, complain and drop it. */
 	if (kybdlock & KL_SCROLLED) {
 		ring_bell();
-		trace_event("  dropped (scrolled)\n");
+		vtrace("  dropped (scrolled)\n");
 		return;
 	}
 
 	/* If typeahead disabled, complain and drop it. */
 	if (!appres.typeahead) {
-		trace_event("  dropped (no typeahead)\n");
+		vtrace("  dropped (no typeahead)\n");
 		return;
 	}
 
@@ -200,7 +200,7 @@ enq_ta(XtActionProc fn, char *parm1, char *parm2)
 	}
 	ta_tail = ta;
 
-	trace_event("  action queued (kybdlock 0x%x)\n", kybdlock);
+	vtrace("  action queued (kybdlock 0x%x)\n", kybdlock);
 }
 
 /*
@@ -325,12 +325,12 @@ kybdlock_set(unsigned int bits, const char *cause _is_unused)
 {
 	unsigned int n;
 
-	trace_event("Keyboard lock(%s) %s\n", cause,
+	vtrace("Keyboard lock(%s) %s\n", cause,
 		kybdlock_decode("+", bits));
 	n = kybdlock | bits;
 	if (n != kybdlock) {
 #if defined(KYBDLOCK_TRACE) /*[*/
-	       trace_event("  %s: kybdlock |= 0x%04x, 0x%04x -> 0x%04x\n",
+	       vtrace("  %s: kybdlock |= 0x%04x, 0x%04x -> 0x%04x\n",
 		    cause, bits, kybdlock, n);
 #endif /*]*/
 		if ((kybdlock ^ bits) & KL_DEFERRED_UNLOCK) {
@@ -349,12 +349,12 @@ kybdlock_clr(unsigned int bits, const char *cause _is_unused)
 	unsigned int n;
 
 	if (kybdlock & bits)
-		trace_event("Keyboard unlock(%s) %s\n", cause,
+		vtrace("Keyboard unlock(%s) %s\n", cause,
 			kybdlock_decode("-", kybdlock & bits));
 	n = kybdlock & ~bits;
 	if (n != kybdlock) {
 #if defined(KYBDLOCK_TRACE) /*[*/
-		trace_event("  %s: kybdlock &= ~0x%04x, 0x%04x -> 0x%04x\n",
+		vtrace("  %s: kybdlock &= ~0x%04x, 0x%04x -> 0x%04x\n",
 		    cause, bits, kybdlock, n);
 #endif /*]*/
 		if ((kybdlock ^ n) & KL_DEFERRED_UNLOCK) {
@@ -809,7 +809,7 @@ key_Character_wrapper(Widget w _is_unused, XEvent *event _is_unused,
 	}
 	ebcdic_to_multibyte_x(ebc, with_ge? CS_GE: CS_BASE,
 		mb, sizeof(mb), EUO_BLANK_UNDEF, &uc);
-	trace_event(" %s -> Key(%s\"%s\")\n",
+	vtrace(" %s -> Key(%s\"%s\")\n",
 	    ia_name[(int) ia_cause],
 	    with_ge ? "GE " : "", mb);
 	(void) key_Character(ebc, with_ge, pasting, NULL);
@@ -1070,7 +1070,7 @@ key_WCharacter_wrapper(Widget w _is_unused, XEvent *event _is_unused,
 	unsigned char ebc_pair[2];
 
 	ebc_wide = atoi(params[0]);
-	trace_event(" %s -> Key(X'%04x')\n", ia_name[(int) ia_cause],
+	vtrace(" %s -> Key(X'%04x')\n", ia_name[(int) ia_cause],
 		ebc_wide);
 	ebc_pair[0] = (ebc_wide >> 8) & 0xff;
 	ebc_pair[1] = ebc_wide & 0xff;
@@ -1081,7 +1081,7 @@ key_WCharacter_wrapper(Widget w _is_unused, XEvent *event _is_unused,
  * Input a DBCS character.
  * Returns True if a character was stored in the buffer, False otherwise.
  */
-Boolean
+static Boolean
 key_WCharacter(unsigned char ebc_pair[], Boolean *skipped)
 {
 	int baddr;
@@ -1112,7 +1112,7 @@ key_WCharacter(unsigned char ebc_pair[], Boolean *skipped)
 	if (!dbcs)
 #endif /*]*/
 	{
-		trace_event("DBCS character received when not in DBCS mode, "
+		vtrace("DBCS character received when not in DBCS mode, "
 		    "ignoring.\n");
 		return True;
 	}
@@ -1405,7 +1405,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 		    snprintf(ubuf, sizeof(ubuf), "apl_%s", apl_name);
 		    enq_ta(Key_action, ubuf, NULL);
 		} else {
-		    trace_event("  dropped (invalid key type or name)\n");
+		    vtrace("  dropped (invalid key type or name)\n");
 		}
 	    }
 	    return;
@@ -1452,18 +1452,18 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 		break;
 	}
 
-	trace_event(" %s -> Key(U+%04x)\n", ia_name[(int) cause], ucs4);
+	vtrace(" %s -> Key(U+%04x)\n", ia_name[(int) cause], ucs4);
 	if (IN_3270) {
 	    	ebc_t ebc;
 		Boolean ge;
 
 		if (ucs4 < ' ') {
-			trace_event("  dropped (control char)\n");
+			vtrace("  dropped (control char)\n");
 			return;
 		}
 		ebc = unicode_to_ebcdic_ge(ucs4, &ge);
 		if (ebc == 0) {
-			trace_event("  dropped (no EBCDIC translation)\n");
+			vtrace("  dropped (no EBCDIC translation)\n");
 			return;
 		}
 #if defined(X3270_DBCS) /*[*/
@@ -1487,6 +1487,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	}
 #endif /*]*/
 	else {
+#if defined(X3270_TRACE) /*[*/
 		const char *why;
 
 		switch (cstate) {
@@ -1505,7 +1506,8 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 			break;
 		}
 
-		trace_event("  dropped (not %s)\n", why);
+		vtrace("  dropped (not %s)\n", why);
+#endif /*]*/
 	}
 }
 
@@ -1530,8 +1532,8 @@ key_ACharacter(char *mb, enum keytype keytype, enum iaction cause,
 	/* Convert the multibyte string to UCS4. */
 	ucs4 = multibyte_to_unicode(mb, strlen(mb), &consumed, &error);
 	if (ucs4 == 0) {
-		trace_event(" %s -> Key(?)\n", ia_name[(int) cause]);
-		trace_event("  dropped (invalid multibyte sequence)\n");
+		vtrace(" %s -> Key(?)\n", ia_name[(int) cause]);
+		vtrace("  dropped (invalid multibyte sequence)\n");
 		return;
 	}
 
@@ -1740,7 +1742,7 @@ do_reset(Boolean explicit)
 		kybdlock_clr(~KL_DEFERRED_UNLOCK, "do_reset");
 		kybdlock_set(KL_DEFERRED_UNLOCK, "do_reset");
 		unlock_id = AddTimeOut(appres.unlock_delay_ms, defer_unlock);
-		trace_event("Deferring keyboard unlock %dms\n",
+		vtrace("Deferring keyboard unlock %dms\n",
 			appres.unlock_delay_ms);
 	}
 
@@ -3167,11 +3169,11 @@ xim_lookup(XKeyEvent *event)
 		rv = True;
 		break;
 	case XLookupChars:
-		trace_event("%d XIM char%s:", rlen, (rlen != 1)? "s": "");
+		vtrace("%d XIM char%s:", rlen, (rlen != 1)? "s": "");
 		for (i = 0; i < rlen; i++) {
-			trace_event(" %02x", buf[i] & 0xff);
+			vtrace(" %02x", buf[i] & 0xff);
 		}
-		trace_event("\n");
+		vtrace("\n");
 		buf[rlen] = '\0';
 		key_ACharacter(buf, KT_STD, ia_cause, NULL);
 		rv = False;
@@ -3444,7 +3446,7 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 		 * so if the keyboard is locked, it's fatal
 		 */
 		if (kybdlock) {
-			trace_event("  keyboard locked, string dropped\n");
+			vtrace("  keyboard locked, string dropped\n");
 			return 0;
 		}
 
@@ -3766,7 +3768,7 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 				nc++;
 				break;
 			} else {
-			    	trace_event(" %s -> Key(X'%02X')\n",
+			    	vtrace(" %s -> Key(X'%02X')\n",
 					ia_name[(int) ia], literal);
 				if (!(literal & ~0xff))
 					key_Character((unsigned char) literal,
@@ -3825,7 +3827,7 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 		break;
 	    case EBC:
 		/* XXX: line below added after 3.3.7p7 */
-		trace_event(" %s -> Key(X'%02X')\n", ia_name[(int) ia],
+		vtrace(" %s -> Key(X'%02X')\n", ia_name[(int) ia],
 			literal);
 		key_Character((unsigned char) literal, False, True, &skipped);
 		state = BASE;
@@ -4511,7 +4513,7 @@ Default_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
 				    	key_UCharacter(ucs4, KT_STD, IA_KEY,
 						NULL);
 				} else {
-					trace_event(
+					vtrace(
 					    " %s: dropped (unknown keysym)\n",
 					    action_name(Default_action));
 				}
@@ -4522,11 +4524,11 @@ Default_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
 
 	    case ButtonPress:
 	    case ButtonRelease:
-		trace_event(" %s: dropped (no action configured)\n",
+		vtrace(" %s: dropped (no action configured)\n",
 		    action_name(Default_action));
 		break;
 	    default:
-		trace_event(" %s: dropped (unknown event type)\n",
+		vtrace(" %s: dropped (unknown event type)\n",
 		    action_name(Default_action));
 		break;
 	}

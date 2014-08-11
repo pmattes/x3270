@@ -86,7 +86,6 @@ static int select_end_col;
 void
 select_init(unsigned max_rows, unsigned max_cols)
 {
-	//trace_event("select_init(%d %d)\n", max_rows, max_cols);
 	s_pending = Malloc(max_rows * max_cols);
 	s_onscreen = Malloc(max_rows * max_cols);
 	unselect(0, max_rows * max_cols);
@@ -250,7 +249,7 @@ select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 	assert((int)row <= ROWS);
 	assert((int)col <= COLS);
 
-	trace_event("select_event(%u %u %s %s)\n", row, col, event_name[event],
+	vtrace("select_event(%u %u %s %s)\n", row, col, event_name[event],
 		shift? "shift": "no-shift");
 
 	if (!select_pending) {
@@ -258,9 +257,9 @@ select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 		case SE_BUTTON_DOWN:
 			if (shift && select_started) {
 				/* Extend selection. */
-				trace_event("Extending selection\n");
+				vtrace("Extending selection\n");
 			} else {
-				trace_event("New selection\n");
+				vtrace("New selection\n");
 				select_start_row = row;
 				select_start_col = col;
 			}
@@ -272,7 +271,7 @@ select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 			reselect();
 			break;
 		case SE_DOUBLE_CLICK:
-			trace_event("Word select\n");
+			vtrace("Word select\n");
 			select_pending = False;
 			select_start_row = row;
 			select_end_row = row;
@@ -296,20 +295,20 @@ select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 				 * No movement. Call it a cursor move,
 				 * but they might extend it later.
 				 */
-				trace_event("Cursor move\n");
+				vtrace("Cursor move\n");
 				s_pending[(row * COLS) + col] = 0;
 				screen_changed = True;
 				/* We did not consume the event. */
 				return False;
 			}
-			trace_event("Finish selection.\n");
+			vtrace("Finish selection.\n");
 			select_end_row = row;
 			select_end_col = col;
 			reselect();
 			break;
 		case SE_MOVE:
 			/* Extend. */
-			trace_event("Extend\n");
+			vtrace("Extend\n");
 			select_end_row = row;
 			select_end_col = col;
 			reselect();
@@ -623,7 +622,7 @@ copy_cut_action(Widget w, XEvent *event, String *params, Cardinal *num_params,
 		return;
 	}
 
-	trace_event("Word %sselected\n", word_selected? "": "not ");
+	vtrace("Word %sselected\n", word_selected? "": "not ");
 
 	/* Open the clipboard. */
 	if (!OpenClipboard(console_window)) {
@@ -664,7 +663,7 @@ copy_cut_action(Widget w, XEvent *event, String *params, Cardinal *num_params,
 
 		/* Place the handle on the clipboard. */
 		SetClipboardData(types[i].type, hglb);
-		trace_event("Copy(): Put %ld %s characters on the clipboard\n",
+		vtrace("Copy(): Put %ld %s characters on the clipboard\n",
 			(long)sl, types[i].name);
 	}
 
@@ -785,8 +784,6 @@ void
 select_sync(unsigned row, unsigned col, unsigned rows, unsigned cols)
 {
 	unsigned r;
-
-	//trace_event("select_sync(%u %u %u %u)\n", row, col, rows, cols);
 
 	assert((int)(row + rows) <= ROWS);
 	assert((int)(col + cols) <= COLS);

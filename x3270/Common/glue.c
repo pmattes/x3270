@@ -1577,7 +1577,7 @@ popup_an_error(const char *fmt, ...)
 	va_end(args);
 
 	/* Log to the trace file. */
-	trace_dsn("%s\n", vmsgbuf);
+	vtrace("%s\n", vmsgbuf);
 
 	if (sms_redirect()) {
 		sms_error(vmsgbuf);

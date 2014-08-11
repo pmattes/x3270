@@ -218,7 +218,7 @@ cc_handler(DWORD type)
 		char *action;
 
 		/* Process it as a Ctrl-C. */
-		trace_event("Control-C received via Console Event Handler%s\n",
+		vtrace("Control-C received via Console Event Handler%s\n",
 			escaped? " (should be ignored)": "");
 		if (escaped)
 		    	return TRUE;
@@ -238,7 +238,7 @@ cc_handler(DWORD type)
 
 		return TRUE;
 	} else if (type == CTRL_CLOSE_EVENT) {
-		trace_event("Window closed\n");
+		vtrace("Window closed\n");
 		x3270_exit(0);
 		return TRUE;
 	} else {
@@ -759,19 +759,19 @@ hdraw(int row, int lrow, int col, int lcol)
 	{
 		int trow, tcol;
 
-		trace_event("hdraw row %d-%d col %d-%d attr 0x%x:\n",
+		vtrace("hdraw row %d-%d col %d-%d attr 0x%x:\n",
 			row, lrow, col, lcol, tos_a(row, col));
 		for (trow = 0; trow < console_rows; trow++) {
 			for (tcol = 0; tcol < console_cols; tcol++) {
 				if (trow >= row && trow <= lrow &&
 				    tcol >= col && tcol <= lcol)
-					trace_event("h");
+					vtrace("h");
 				else if (is_done(trow, tcol))
-					trace_event("d");
+					vtrace("d");
 				else
-					trace_event(".");
+					vtrace(".");
 			}
-			trace_event("\n");
+			vtrace("\n");
 		}
 	}
 #endif /*]*/
@@ -828,20 +828,20 @@ draw_rect(int pc_start, int pc_end, int pr_start, int pr_end)
 	{
 		int trow, tcol;
 
-		trace_event("draw_rect row %d-%d col %d-%d\n",
+		vtrace("draw_rect row %d-%d col %d-%d\n",
 			pr_start, pr_end, pc_start, pc_end);
 		for (trow = 0; trow < console_rows; trow++) {
 			for (tcol = 0; tcol < console_cols; tcol++) {
 				if (trow >= pr_start && trow <= pr_end &&
 				    tcol >= pc_start && tcol <= pc_end) {
 					if (changed(trow, tcol))
-						trace_event("r");
+						vtrace("r");
 					else
-						trace_event("x");
+						vtrace("x");
 				} else
-					trace_event(".");
+					vtrace(".");
 			}
-			trace_event("\n");
+			vtrace("\n");
 		}
 	}
 #endif /*]*/
@@ -923,15 +923,15 @@ sync_onscreen(void)
 	{
 		int trow, tcol;
 
-		trace_event("sync_onscreen:\n");
+		vtrace("sync_onscreen:\n");
 		for (trow = 0; trow < console_rows; trow++) {
 			for (tcol = 0; tcol < console_cols; tcol++) {
 				if (changed(trow, tcol))
-					trace_event("m");
+					vtrace("m");
 				else
-					trace_event(".");
+					vtrace(".");
 			}
-			trace_event("\n");
+			vtrace("\n");
 		}
 	}
 #endif /*]*/
@@ -1546,7 +1546,7 @@ calc_attrs(int baddr, int fa_addr, int fa, Boolean *underlined,
 static void
 blink_em(ioid_t id _is_unused)
 {
-    	trace_event("blink timeout\n");
+    	vtrace("blink timeout\n");
 
     	/* We're not ticking any more. */
     	blink_id = 0;
@@ -2025,7 +2025,7 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 
 	switch (ir.EventType) {
 	case FOCUS_EVENT:
-		trace_event("Focus\n");
+		vtrace("Focus\n");
 		/*
 		 * When we get a focus event, the system may have (incorrectly)
 		 * redrawn our window.  Do it again ourselves.
@@ -2035,14 +2035,15 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		break;
 	case KEY_EVENT:
 		if (!ir.Event.KeyEvent.bKeyDown) {
-			/*trace_event("KeyUp\n");*/
+			/*vtrace("KeyUp\n");*/
 			return;
 		}
 		s = lookup_cname(ir.Event.KeyEvent.wVirtualKeyCode << 16,
 			False);
 		if (s == NULL)
 			s = "?";
-		trace_event("Key%s vkey 0x%x (%s) scan 0x%x char U+%04x state 0x%x (%s)\n",
+		vtrace("Key%s vkey 0x%x (%s) scan 0x%x char U+%04x "
+			"state 0x%x (%s)\n",
 			ir.Event.KeyEvent.bKeyDown? "Down": "Up",
 			ir.Event.KeyEvent.wVirtualKeyCode, s,
 			ir.Event.KeyEvent.wVirtualScanCode,
@@ -2056,10 +2057,10 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		kybd_input2(&ir);
 		break;
 	case MENU_EVENT:
-		trace_event("Menu\n");
+		vtrace("Menu\n");
 		break;
 	case MOUSE_EVENT:
-		trace_event("Mouse (%d,%d) ButtonState 0x%lx "
+		vtrace("Mouse (%d,%d) ButtonState 0x%lx "
 			"ControlKeyState 0x%lx EventFlags 0x%lx\n",
 			ir.Event.MouseEvent.dwMousePosition.X,
 			ir.Event.MouseEvent.dwMousePosition.Y,
@@ -2069,10 +2070,10 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		handle_mouse_event(&ir.Event.MouseEvent);
 		break;
 	case WINDOW_BUFFER_SIZE_EVENT:
-		trace_event("WindowBufferSize\n");
+		vtrace("WindowBufferSize\n");
 		break;
 	default:
-		trace_event("Unknown input event %d\n", ir.EventType);
+		vtrace("Unknown input event %d\n", ir.EventType);
 		break;
 	}
 }
@@ -2121,7 +2122,7 @@ trace_as_keymap(unsigned long xk, KEY_EVENT_RECORD *e)
 	} else {
 	    	sprintf(strchr(buf, '\0'), "<Key>%c", (unsigned char)xk);
 	}
-	trace_event(" %s ->", buf);
+	vtrace(" %s ->", buf);
 }
 
 static void
@@ -2283,7 +2284,7 @@ kybd_input2(INPUT_RECORD *ir)
 		one = 1;
 		Key_action(NULL, NULL, params, &one);
 	} else {
-		trace_event(" dropped (no default)\n");
+		vtrace(" dropped (no default)\n");
 	}
 }
 

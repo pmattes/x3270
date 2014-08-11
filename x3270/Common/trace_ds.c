@@ -70,6 +70,12 @@
 # include "winprintc.h"
 #endif /*]*/
 
+/* Size of the data stream trace buffer. */
+#define TRACE_DS_BUFSIZE	(4*1024)
+
+/* Wrap column for data stream tracing. */
+#define TRACE_DS_WRAP		75
+
 /* Maximum size of a tracefile header. */
 #define MAX_HEADER_SIZE		(32*1024)
 
@@ -100,8 +106,8 @@ static tss_t	screentrace_how = TSS_FILE;
 static ptype_t	screentrace_ptype = P_TEXT;
 static tss_t	screentrace_last_how = TSS_FILE;
 static char    *onetime_screentrace_name = CN;
-static void	vwtrace(const char *fmt, va_list args);
-static void	wtrace(const char *fmt, ...);
+static void	vwtrace(Boolean do_ts, const char *fmt, va_list args);
+static void	wtrace(Boolean do_ts, const char *fmt, ...);
 static char    *create_tracefile_header(const char *mode);
 static void	stop_tracing(void);
 static char    *screentrace_name = NULL;
@@ -118,10 +124,11 @@ static char    *screentrace_tmpfn;
 #endif /*]*/
 
 /* Globals */
-struct timeval   ds_ts;
 Boolean          trace_skipping = False;
 char		*tracefile_name = NULL;
-Boolean  	 do_ts = True;
+
+/* Statics */
+static Boolean 	 wrote_ts = False;
 
 /* display a (row,col) */
 const char *
@@ -137,7 +144,6 @@ rcba(int baddr)
 /* Data Stream trace print, handles line wraps */
 
 static char *tdsbuf = CN;
-#define TDS_LEN	75
 
 /*
  * This function is careful to do line breaks based on wchar_t's, not
@@ -182,13 +188,13 @@ trace_ds_s(char *s, Boolean can_break)
 		nl = True;
 	}
 
-	if (!can_break && dscnt + wlen >= 75) {
-		wtrace("...\n... ");
+	if (!can_break && dscnt + wlen >= TRACE_DS_WRAP) {
+		wtrace(False, "...\n... ");
 		dscnt = 0;
 	}
 
-	while (dscnt + wlen >= 75) {
-		int plen = 75-dscnt;
+	while (dscnt + wlen >= TRACE_DS_WRAP) {
+		int plen = TRACE_DS_WRAP - dscnt;
 		int mblen;
 
 		if (plen) {
@@ -202,7 +208,7 @@ trace_ds_s(char *s, Boolean can_break)
 		    mblen = 0;
 		}
 
-		wtrace("%.*s ...\n... ", mblen, mb_chunk);
+		wtrace(False, "%.*s ...\n... ", mblen, mb_chunk);
 		dscnt = 4;
 		w_cur += plen;
 		wlen -= plen;
@@ -215,11 +221,11 @@ trace_ds_s(char *s, Boolean can_break)
 		mblen = wcstombs(mb_chunk, w_chunk, len0);
 		if (mblen <= 0)
 		    Error("trace_ds_s: wcstombs 2 failed");
-		wtrace("%.*s", mblen, mb_chunk);
+		wtrace(False, "%.*s", mblen, mb_chunk);
 		dscnt += wlen;
 	}
 	if (nl) {
-		wtrace("\n");
+		wtrace(False, "\n");
 		dscnt = 0;
 	}
 	Free(mb_chunk);
@@ -227,6 +233,10 @@ trace_ds_s(char *s, Boolean can_break)
 	Free(w_chunk);
 }
 
+/*
+ * External interface to data stream tracing -- no timestamps, automatic line
+ * wraps.
+ */
 void
 trace_ds(const char *fmt, ...)
 {
@@ -239,63 +249,68 @@ trace_ds(const char *fmt, ...)
 
 	/* allocate buffer */
 	if (tdsbuf == CN)
-		tdsbuf = Malloc(4096);
+		tdsbuf = Malloc(TRACE_DS_BUFSIZE);
 
 	/* print out remainder of message */
-	do_ts = False;
-	(void) vsnprintf(tdsbuf, 4096, fmt, args);
+	(void) vsnprintf(tdsbuf, TRACE_DS_BUFSIZE, fmt, args);
 	trace_ds_s(tdsbuf, True);
-	va_end(args);
-}
-
-void
-trace_ds_nb(const char *fmt, ...)
-{
-	va_list args;
-
-	if (!toggled(TRACING) || tracef == NULL)
-		return;
-
-	va_start(args, fmt);
-
-	/* allocate buffer */
-	if (tdsbuf == CN)
-		tdsbuf = Malloc(4096);
-
-	/* print out remainder of message */
-	(void) vsnprintf(tdsbuf, 4096, fmt, args);
-	trace_ds_s(tdsbuf, False);
 	va_end(args);
 }
 
 /* Conditional event trace. */
 void
-trace_event(const char *fmt, ...)
+vtrace(const char *fmt, ...)
 {
 	va_list args;
 
-	if (!toggled(TRACING) || tracef == NULL)
+	if (!toggled(TRACING) || tracef == NULL) {
 		return;
+	}
 
 	/* print out message */
 	va_start(args, fmt);
-	vwtrace(fmt, args);
+	vwtrace(True, fmt, args);
 	va_end(args);
 }
 
-/* Conditional data stream trace, without line splitting. */
+/* Conditional event trace. */
 void
-trace_dsn(const char *fmt, ...)
+ntvtrace(const char *fmt, ...)
 {
 	va_list args;
 
-	if (!toggled(TRACING) || tracef == NULL)
+	if (!toggled(TRACING) || tracef == NULL) {
 		return;
+	}
 
 	/* print out message */
 	va_start(args, fmt);
-	vwtrace(fmt, args);
+	vwtrace(False, fmt, args);
 	va_end(args);
+}
+
+/*
+ * Generate a timestamp for the trace file.
+ */
+static void
+gen_ts(char *buf, size_t bufsize)
+{
+    struct timeval tv;
+    time_t t;
+    struct tm *tm;
+
+    (void) gettimeofday(&tv, NULL);
+    t = tv.tv_sec;
+    tm = localtime(&t);
+    (void) snprintf(buf, bufsize,
+	    "%d%02d%02d.%02d%02d%02d.%03d ",
+	    tm->tm_year + 1900,
+	    tm->tm_mon + 1,
+	    tm->tm_mday,
+	    tm->tm_hour,
+	    tm->tm_min,
+	    tm->tm_sec,
+	    (int)(tv.tv_usec / 1000L));
 }
 
 /*
@@ -304,86 +319,108 @@ trace_dsn(const char *fmt, ...)
  * all others are wrappers around this function.
  */
 static void
-vwtrace(const char *fmt, va_list args)
+vwtrace(Boolean do_ts, const char *fmt, va_list args)
 {
-	if (tracef_bufptr != CN) {
-		tracef_bufptr += vsprintf(tracef_bufptr, fmt, args); /* XXX */
-	} else if (tracef != NULL) {
-		int n2w, nw;
-		char buf[16384];
-		struct timeval tv;
-		time_t t;
-		struct tm *tm;
+    int n2w_left, n2w, nw;
+    char ts_buf[1024];
+    char buf[16384];
+    char *bp;
 
-		/* Start with a timestamp. */
-		if (do_ts) {
-			(void) gettimeofday(&tv, NULL);
-			t = tv.tv_sec;
-			tm = localtime(&t);
-			n2w = snprintf(buf, sizeof(buf),
-				"%d%02d%02d.%02d%02d%02d.%03d ",
-				tm->tm_year + 1900,
-				tm->tm_mon + 1,
-				tm->tm_mday,
-				tm->tm_hour,
-				tm->tm_min,
-				tm->tm_sec,
-				(int)(tv.tv_usec / 1000L));
-			(void) fwrite(buf, n2w, 1, tracef);
-			fflush(tracef);
-			if (tracef_pipe != NULL) {
-				(void) fwrite(buf, n2w, 1, tracef_pipe);
-				fflush(tracef);
-			}
-			do_ts = False;
-		}
-
-		(void) vsnprintf(buf, sizeof(buf), fmt, args);
-		n2w = strlen(buf);
-		if (n2w > 0 && buf[n2w - 1] == '\n')
-		    	do_ts = True;
-
-		nw = fwrite(buf, n2w, 1, tracef);
-		if (nw == 1) {
-			fflush(tracef);
-		} else {
-			if (errno != EPIPE
-#if defined(EILSEQ) /*[*/
-					   && errno != EILSEQ
-#endif /*]*/
-					                     )
-				popup_an_errno(errno,
-				    "Write to trace file failed");
-#if defined(EILSEQ) /*[*/
-			if (errno != EILSEQ)
-#endif /*]*/
-			{
-				stop_tracing();
-				return;
-			}
-		}
-		tracef_size = ftello(tracef);
-		if (tracef_pipe != NULL) {
-			nw = fwrite(buf, n2w, 1, tracef_pipe);
-			if (nw != 1) {
-				(void) fclose(tracef_pipe);
-				tracef_pipe = NULL;
-			} else {
-			    	fflush(tracef_pipe);
-			}
-		}
+    /* Ugly hack to write into a memory buffer. */
+    if (tracef_bufptr != CN) {
+	if (do_ts) {
+	    gen_ts(ts_buf, sizeof(ts_buf));
+	    tracef_bufptr += sprintf(tracef_bufptr, "%s", ts_buf);
 	}
+	tracef_bufptr += vsprintf(tracef_bufptr, fmt, args);
+	return;
+    }
+
+    if (tracef == NULL) {
+	return;
+    }
+
+    ts_buf[0] = '\0';
+
+    (void) vsnprintf(buf, sizeof(buf), fmt, args);
+    n2w_left = strlen(buf);
+    bp = buf;
+
+    while (n2w_left > 0) {
+	char *nl;
+	Boolean wrote_nl = False;
+
+	if (do_ts && !wrote_ts) {
+	    if (ts_buf[0] == '\0') {
+		gen_ts(ts_buf, sizeof(ts_buf));
+	    }
+	    (void) fwrite(ts_buf, strlen(ts_buf), 1, tracef);
+	    fflush(tracef);
+	    if (tracef_pipe != NULL) {
+		(void) fwrite(ts_buf, strlen(ts_buf), 1, tracef_pipe);
+		fflush(tracef);
+	    }
+	    wrote_ts = True;
+	}
+
+	nl = strchr(bp, '\n');
+	if (nl != NULL) {
+	    wrote_nl = True;
+	    n2w = nl - bp + 1;
+	} else {
+	    n2w = n2w_left;
+	}
+
+	nw = fwrite(bp, n2w, 1, tracef);
+	if (nw == 1) {
+	    fflush(tracef);
+	} else {
+	    if (errno != EPIPE
+#if defined(EILSEQ) /*[*/
+			       && errno != EILSEQ
+#endif /*]*/
+						 ) {
+		popup_an_errno(errno, "Write to trace file failed");
+	    }
+#if defined(EILSEQ) /*[*/
+	    if (errno != EILSEQ)
+#endif /*]*/
+	    {
+		stop_tracing();
+		return;
+	    }
+	}
+
+	if (tracef_pipe != NULL) {
+	    nw = fwrite(bp, n2w, 1, tracef_pipe);
+	    if (nw != 1) {
+		(void) fclose(tracef_pipe);
+		tracef_pipe = NULL;
+	    } else {
+		fflush(tracef_pipe);
+	    }
+	}
+
+	if (wrote_nl) {
+	    wrote_ts = False;
+	}
+
+	bp += n2w;
+	n2w_left -= n2w;
+    }
+
+    tracef_size = ftello(tracef);
 }
 
 /* Write to the trace file. */
 static void
-wtrace(const char *fmt, ...)
+wtrace(Boolean do_ts, const char *fmt, ...)
 {
 	if (tracef != NULL) {
 		va_list args;
 
 		va_start(args, fmt);
-		vwtrace(fmt, args);
+		vwtrace(do_ts, fmt, args);
 		va_end(args);
 	}
 }
@@ -420,7 +457,7 @@ trace_rollover_check(void)
 #endif /*]*/
 
 		/* Close up this file. */
-		wtrace("Trace rolled over\n");
+		wtrace(True, "Trace rolled over\n");
 		fclose(tracef);
 		tracef = NULL;
 
@@ -449,8 +486,7 @@ trace_rollover_check(void)
 		tracef_size = 0L;
 		(void) SETLINEBUF(tracef);
 		new_header = create_tracefile_header("rolled over");
-		do_ts = True;
-		wtrace(new_header);
+		wtrace(False, new_header);
 		Free(new_header);
 	}
 }
@@ -471,48 +507,48 @@ create_tracefile_header(const char *mode)
 	tracef_bufptr = buf;
 
 	/* Display current status */
-	wtrace("Trace %s\n", mode);
-	wtrace(" Version: %s\n", build);
-	wtrace(" %s\n", build_options());
+	wtrace(True, "Trace %s\n", mode);
+	wtrace(False, " Version: %s\n", build);
+	wtrace(False, " %s\n", build_options());
 	save_yourself();
-	wtrace(" Command: %s\n", command_string);
-	wtrace(" Model %s, %d rows x %d cols", model_name, maxROWS, maxCOLS);
+	wtrace(False, " Command: %s\n", command_string);
+	wtrace(False, " Model %s, %d rows x %d cols", model_name, maxROWS, maxCOLS);
 #if defined(X3270_INTERACTIVE) && !defined(_WIN32) /*[*/
-	wtrace(", %s display", appres.mono ? "monochrome" : "color");
+	wtrace(False, ", %s display", appres.mono ? "monochrome" : "color");
 #endif /*]*/
 	if (appres.extended)
-		wtrace(", extended data stream");
-	wtrace(", %s emulation", appres.m3279 ? "color" : "monochrome");
-	wtrace(", %s charset", get_charset_name());
+		wtrace(False, ", extended data stream");
+	wtrace(False, ", %s emulation", appres.m3279 ? "color" : "monochrome");
+	wtrace(False, ", %s charset", get_charset_name());
 	if (appres.apl_mode)
-		wtrace(", APL mode");
-	wtrace("\n");
+		wtrace(False, ", APL mode");
+	wtrace(False, "\n");
 #if !defined(_WIN32) /*[*/
-	wtrace(" Locale codeset: %s\n", locale_codeset);
+	wtrace(False, " Locale codeset: %s\n", locale_codeset);
 #else /*][*/
-	wtrace(" ANSI codepage: %d\n", GetACP());
+	wtrace(False, " ANSI codepage: %d\n", GetACP());
 # if defined(_WIN32) /*[*/
-	wtrace(" Local codepage: %d\n", appres.local_cp);
+	wtrace(False, " Local codepage: %d\n", appres.local_cp);
 # endif /*]*/
 #endif /*]*/
-	wtrace(" Host codepage: %d", (int)(cgcsgid & 0xffff));
+	wtrace(False, " Host codepage: %d", (int)(cgcsgid & 0xffff));
 #if defined(X3270_DBCS) /*[*/
 	if (dbcs)
-		wtrace("+%d", (int)(cgcsgid_dbcs & 0xffff));
+		wtrace(False, "+%d", (int)(cgcsgid_dbcs & 0xffff));
 #endif /*]*/
-	wtrace("\n");
+	wtrace(False, "\n");
 #if defined(_WIN32) && (defined(C3270) || defined(S3270)) /*[*/
-	wtrace(" AppData: %s\n", myappdata? myappdata: "(null)");
-	wtrace(" Install dir: %s\n", instdir? instdir: "(null)");
-	wtrace(" Desktop: %s\n", mydesktop? mydesktop: "(null)");
+	wtrace(False, " AppData: %s\n", myappdata? myappdata: "(null)");
+	wtrace(False, " Install dir: %s\n", instdir? instdir: "(null)");
+	wtrace(False, " Desktop: %s\n", mydesktop? mydesktop: "(null)");
 #endif /*]*/
 	if (CONNECTED)
-		wtrace(" Connected to %s, port %u\n",
+		wtrace(False, " Connected to %s, port %u\n",
 		    current_host, current_port);
 
 	/* Snap the current TELNET options. */
 	if (net_snap_options()) {
-		wtrace(" TELNET state:\n");
+		wtrace(False, " TELNET state:\n");
 		trace_netdata('<', obuf, obptr - obuf);
 	}
 
@@ -526,7 +562,7 @@ create_tracefile_header(const char *mode)
 		 * mode.
 		 */
 		if (IN_3270) {
-			wtrace(" Screen contents (%s3270) %sformatted:\n",
+			wtrace(False, " Screen contents (%s3270) %sformatted:\n",
 				IN_E? "TN3270E-": "",
 				formatted? "": "un");
 			obptr = obuf;
@@ -541,7 +577,7 @@ create_tracefile_header(const char *mode)
 
 			obptr = obuf;
 			if (ctlr_snap_modes()) {
-				wtrace(" 3270 modes:\n");
+				wtrace(False, " 3270 modes:\n");
 				space3270out(2);
 				net_add_eor(obuf, obptr - obuf);
 				obptr += 2;
@@ -552,7 +588,7 @@ create_tracefile_header(const char *mode)
 		else if (IN_E) {
 			obptr = obuf;
 			(void) net_add_dummy_tn3270e();
-			wtrace(" Screen contents (%s):\n",
+			wtrace(False, " Screen contents (%s):\n",
 				IN_SSCP? "SSCP-LU": "TN3270E-NVT");
 			if (IN_SSCP) 
 			    	ctlr_snap_buffer_sscp_lu();
@@ -563,7 +599,7 @@ create_tracefile_header(const char *mode)
 			obptr += 2;
 			trace_netdata('<', obuf, obptr - obuf);
 			if (IN_ANSI) {
-				wtrace(" NVT modes:\n");
+				wtrace(False, " NVT modes:\n");
 				obptr = obuf;
 				ansi_snap_modes();
 				trace_netdata('<', obuf, obptr - obuf);
@@ -573,10 +609,10 @@ create_tracefile_header(const char *mode)
 #if defined(X3270_ANSI) /*[*/
 		else if (IN_ANSI) {
 			obptr = obuf;
-			wtrace(" Screen contents (NVT):\n");
+			wtrace(False, " Screen contents (NVT):\n");
 			ansi_snap();
 			trace_netdata('<', obuf, obptr - obuf);
-			wtrace(" NVT modes:\n");
+			wtrace(False, " NVT modes:\n");
 			obptr = obuf;
 			ansi_snap_modes();
 			trace_netdata('<', obuf, obptr - obuf);
@@ -584,7 +620,7 @@ create_tracefile_header(const char *mode)
 #endif /*]*/
 	}
 
-	wtrace(" Data stream:\n");
+	wtrace(False, " Data stream:\n");
 
 	/* Return the buffer. */
 	tracef_bufptr = CN;
@@ -838,8 +874,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 
 	/* Display current status. */
 	buf = create_tracefile_header("started");
-	do_ts = False;
-	wtrace("%s", buf);
+	wtrace(False, "%s", buf);
 	Free(buf);
 
 done:
@@ -928,7 +963,7 @@ tracefile_on(int reason, enum toggle_type tt)
 static void
 tracefile_off(void)
 {
-	wtrace("Trace stopped\n");
+	wtrace(True, "Trace stopped\n");
 #if !defined(_WIN32) /*[*/
 	if (tracewindow_pid != -1)
 		(void) kill(tracewindow_pid, SIGKILL);
@@ -965,10 +1000,6 @@ toggle_tracing(struct toggle *t _is_unused, enum toggle_type tt)
 	   trace file. */
 	else if (!toggled(TRACING)) {
 		tracefile_off();
-	}
-
-	if (toggled(TRACING)) {
-		(void) gettimeofday(&ds_ts, (struct timezone *)NULL);
 	}
 }
 

@@ -389,6 +389,7 @@ static void output_possible(unsigned long fd, ioid_t id);
 
 #if defined(_WIN32) /*[*/
 # define socket_errno()	WSAGetLastError()
+# define socket_strerror(n) win32_strerror(n)
 # define SE_EWOULDBLOCK	WSAEWOULDBLOCK
 # define SE_ECONNRESET	WSAECONNRESET
 # define SE_EINTR	WSAEINTR
@@ -400,6 +401,7 @@ static void output_possible(unsigned long fd, ioid_t id);
 # define IOCTL_T	u_long
 #else /*][*/
 # define socket_errno()	errno
+# define socket_strerror(n) strerror(n)
 # define SE_EWOULDBLOCK	EWOULDBLOCK
 # define SE_ECONNRESET	ECONNRESET
 # define SE_EINTR	EINTR
@@ -545,7 +547,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 	if (numeric_host_and_port(&haddr[ix].sa, ha_len[ix], hn,
 		    sizeof(hn), pn, sizeof(pn), errmsg,
 		    sizeof(errmsg)) == 0) {
-		trace_dsn("Trying %s, port %s...\n", hn, pn);
+		vtrace("Trying %s, port %s...\n", hn, pn);
 #if defined(C3270) /*[*/
 		popup_an_info("Trying %s, port %s...", hn, pn);
 #endif /*]*/
@@ -558,7 +560,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 		    || socket_errno() == SE_EINPROGRESS
 #endif /*]*/
 					   ) {
-			trace_dsn("TCP connection pending.\n");
+			vtrace("TCP connection pending.\n");
 			*pending = True;
 #if !defined(_WIN32) /*[*/
 			output_id = AddOutput(sock, output_possible);
@@ -982,7 +984,7 @@ check_cert_name(void)
 			return False;
 		} else {
 			secure_unverified = True;
-			trace_dsn("No host certificate.\n");
+			vtrace("No host certificate.\n");
 			add_unverified_reason("No host certificate");
 			return True;
 		}
@@ -1009,7 +1011,7 @@ check_cert_name(void)
 			char *reason;
 
 			secure_unverified = True;
-			trace_dsn("Host certificate name(s) do not match "
+			vtrace("Host certificate name(s) do not match "
 				"hostname.\n");
 			reason = xs_buffer("Host certificate name(s) do "
 				"not match '%s': %s", hostname,
@@ -1039,7 +1041,7 @@ net_connected(void)
 	if (proxy_type > 0) {
 
 		/* Negotiate with the proxy. */
-	    	trace_dsn("Connected to proxy server %s, port %u.\n",
+	    	vtrace("Connected to proxy server %s, port %u.\n",
 			proxy_host, proxy_port);
 
 	    	if (proxy_negotiate(proxy_type, sock, hostname,
@@ -1049,7 +1051,7 @@ net_connected(void)
 		}
 	}
 
-	trace_dsn("Connected to %s, port %u%s.\n", hostname, current_port,
+	vtrace("Connected to %s, port %u%s.\n", hostname, current_port,
 	    ssl_host? " via SSL": "");
 
 #if defined(HAVE_LIBSSL) /*[*/
@@ -1058,7 +1060,7 @@ net_connected(void)
 	    	int rv;
 
 		if (SSL_set_fd(ssl_con, sock) != 1) {
-			trace_dsn("Can't set fd!\n");
+			vtrace("Can't set fd!\n");
 		}
 		rv = SSL_connect(ssl_con);
 		if (rv != 1) {
@@ -1089,7 +1091,7 @@ net_connected(void)
 
 		secure_connection = True;
 
-		trace_dsn("TLS/SSL tunneled connection complete.  "
+		vtrace("TLS/SSL tunneled connection complete.  "
 			  "Connection is now secure.\n");
 
 		/* Tell everyone else again. */
@@ -1191,7 +1193,7 @@ connection_complete(void)
 static void
 output_possible(unsigned long fd, ioid_t id _is_unused)
 {
-	trace_dsn("Output possible\n");
+	vtrace("Output possible\n");
 	
 	/*
 	 * Try a connect() again to see if the connection completed sucessfully.
@@ -1201,7 +1203,7 @@ output_possible(unsigned long fd, ioid_t id _is_unused)
 	 */
 	if (connect(sock, &haddr[ha_ix].sa, sizeof(haddr[0])) < 0) {
 		if (errno != EISCONN) {
-			trace_dsn("RCVD socket error %d (%s)\n", socket_errno(),
+			vtrace("RCVD socket error %d (%s)\n", socket_errno(),
 				strerror(errno));
 			popup_a_sockerr("Connection failed");
 			host_disconnect(True);
@@ -1238,7 +1240,7 @@ net_disconnect(void)
 		(void) shutdown(sock, 2);
 	(void) SOCK_CLOSE(sock);
 	sock = -1;
-	trace_dsn("SENT disconnect\n");
+	vtrace("SENT disconnect\n");
 
 	/* We're not connected to an LU any more. */
 	status_lu(CN);
@@ -1327,7 +1329,7 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 #if defined(_WIN32) /*[*/
 	(void) ResetEvent(sock_handle);
 #endif /*]*/
-	trace_dsn("Reading host socket\n");
+	vtrace("Reading host socket\n");
 
 #if defined(HAVE_LIBSSL) /*[*/
 	if (ssl_con != NULL) {
@@ -1352,10 +1354,10 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 	else
 #endif /*]*/
 		nr = recv(sock, (char *) netrbuf, BUFSZ, 0);
-	trace_dsn("Host socket read complete nr=%d\n", nr);
+	vtrace("Host socket read complete nr=%d\n", nr);
 	if (nr < 0) {
 		if (socket_errno() == SE_EWOULDBLOCK) {
-			trace_dsn("EWOULDBLOCK\n");
+			vtrace("EWOULDBLOCK\n");
 			return;
 		}
 #if defined(HAVE_LIBSSL) /*[*/
@@ -1368,7 +1370,7 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 				(void) ERR_error_string(e, err_buf);
 			else
 				strcpy(err_buf, "unknown error");
-			trace_dsn("RCVD SSL_read error %ld (%s)\n", e,
+			vtrace("RCVD SSL_read error %ld (%s)\n", e,
 			    err_buf);
 			popup_an_error("SSL_read:\n%s", err_buf);
 			host_disconnect(True);
@@ -1381,21 +1383,13 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		}
 #if defined(LOCAL_PROCESS) /*[*/
 		if (errno == EIO && local_process) {
-			trace_dsn("RCVD local process disconnect\n");
+			vtrace("RCVD local process disconnect\n");
 			host_disconnect(False);
 			return;
 		}
 #endif /*]*/
-#if defined(X3270_TRACE) /*[*/
-		trace_dsn("RCVD socket error %d (%s)\n",
-			socket_errno(),
-#if !defined(_WIN32) /*[*/
-			strerror(errno)
-#else /*][*/
-			win32_strerror(GetLastError())
-#endif /*]*/
-			);
-#endif /*]*/
+		vtrace("RCVD socket error %d (%s)\n",
+			socket_errno(), socket_strerror(socket_errno()));
 		if (HALF_CONNECTED) {
 			if (ha_ix == num_ha - 1) {
 				popup_a_sockerr("Connect to %s, "
@@ -1428,7 +1422,7 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		return;
 	} else if (nr == 0) {
 		/* Host disconnected. */
-		trace_dsn("RCVD disconnect\n");
+		vtrace("RCVD disconnect\n");
 		host_disconnect(False);
 		return;
 	}
@@ -1480,7 +1474,7 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		(void) ctlr_dbcs_postprocess();
 	}
 	if (ansi_data) {
-		trace_dsn("\n");
+		vtrace("\n");
 		ansi_data = 0;
 	}
 #endif /*]*/
@@ -1535,7 +1529,7 @@ send_naws(void)
 	(void) sprintf(naws_msg + naws_len, "%c%c", IAC, SE);
 	naws_len += 2;
 	net_rawout((unsigned char *)naws_msg, naws_len);
-	trace_dsn("SENT %s NAWS %d %d %s\n", cmd(SB), XMIT_COLS,
+	vtrace("SENT %s NAWS %d %d %s\n", cmd(SB), XMIT_COLS,
 	    XMIT_ROWS, cmd(SE));
 }
 
@@ -1623,7 +1617,7 @@ telnet_fsm(unsigned char c)
 			telnet_state = TNS_IAC;
 #if defined(X3270_ANSI) /*[*/
 			if (ansi_data) {
-				trace_dsn("\n");
+				vtrace("\n");
 				ansi_data = 0;
 			}
 #endif /*]*/
@@ -1642,16 +1636,16 @@ telnet_fsm(unsigned char c)
 		if (IN_ANSI && !IN_E) {
 #if defined(X3270_ANSI) /*[*/
 			if (!ansi_data) {
-				trace_dsn("<.. ");
+				vtrace("<.. ");
 				ansi_data = 4;
 			}
 			see_chr = ctl_see((int) c);
 			ansi_data += (sl = strlen(see_chr));
 			if (ansi_data >= TRACELINE) {
-				trace_dsn(" ...\n... ");
+				vtrace(" ...\n... ");
 				ansi_data = 4 + sl;
 			}
-			trace_dsn("%s", see_chr);
+			vtrace("%s", see_chr);
 			if (!syncing) {
 				if (linemode && appres.onlcr && c == '\n')
 					ansi_process((unsigned int) '\r');
@@ -1665,23 +1659,23 @@ telnet_fsm(unsigned char c)
 		break;
 	    case TNS_IAC:	/* process a telnet command */
 		if (c != EOR && c != IAC) {
-			trace_dsn("RCVD %s ", cmd(c));
+			vtrace("RCVD %s ", cmd(c));
 		}
 		switch (c) {
 		    case IAC:	/* escaped IAC, insert it */
 			if (IN_ANSI && !IN_E) {
 #if defined(X3270_ANSI) /*[*/
 				if (!ansi_data) {
-					trace_dsn("<.. ");
+					vtrace("<.. ");
 					ansi_data = 4;
 				}
 				see_chr = ctl_see((int) c);
 				ansi_data += (sl = strlen(see_chr));
 				if (ansi_data >= TRACELINE) {
-					trace_dsn(" ...\n ...");
+					vtrace(" ...\n ...");
 					ansi_data = 4 + sl;
 				}
-				trace_dsn("%s", see_chr);
+				vtrace("%s", see_chr);
 				ansi_process((unsigned int) c);
 				sms_store(c);
 #endif /*]*/
@@ -1697,7 +1691,7 @@ telnet_fsm(unsigned char c)
 			} else
 				Warning("EOR received when not in 3270 mode, "
 				    "ignored.");
-			trace_dsn("RCVD EOR\n");
+			vtrace("RCVD EOR\n");
 			ibptr = ibuf;
 			telnet_state = TNS_DATA;
 			break;
@@ -1720,7 +1714,7 @@ telnet_fsm(unsigned char c)
 			sbptr = sbbuf;
 			break;
 		    case DM:
-			trace_dsn("\n");
+			vtrace("\n");
 			if (syncing) {
 				syncing = 0;
 				x_except_on(sock);
@@ -1729,17 +1723,17 @@ telnet_fsm(unsigned char c)
 			break;
 		    case GA:
 		    case NOP:
-			trace_dsn("\n");
+			vtrace("\n");
 			telnet_state = TNS_DATA;
 			break;
 		    default:
-			trace_dsn("???\n");
+			vtrace("???\n");
 			telnet_state = TNS_DATA;
 			break;
 		}
 		break;
 	    case TNS_WILL:	/* telnet WILL DO OPTION command */
-		trace_dsn("%s\n", opt(c));
+		vtrace("%s\n", opt(c));
 		switch (c) {
 		    case TELOPT_SGA:
 		    case TELOPT_BINARY:
@@ -1754,7 +1748,7 @@ telnet_fsm(unsigned char c)
 					hisopts[c] = 1;
 					do_opt[2] = c;
 					net_rawout(do_opt, sizeof(do_opt));
-					trace_dsn("SENT %s %s\n",
+					vtrace("SENT %s %s\n",
 						cmd(DO), opt(c));
 
 					/*
@@ -1766,7 +1760,7 @@ telnet_fsm(unsigned char c)
 						will_opt[2] = c;
 						net_rawout(will_opt,
 							sizeof(will_opt));
-						trace_dsn("SENT %s %s\n",
+						vtrace("SENT %s %s\n",
 							cmd(WILL), opt(c));
 					}
 
@@ -1778,25 +1772,25 @@ telnet_fsm(unsigned char c)
 		    default:
 			dont_opt[2] = c;
 			net_rawout(dont_opt, sizeof(dont_opt));
-			trace_dsn("SENT %s %s\n", cmd(DONT), opt(c));
+			vtrace("SENT %s %s\n", cmd(DONT), opt(c));
 			break;
 		}
 		telnet_state = TNS_DATA;
 		break;
 	    case TNS_WONT:	/* telnet WONT DO OPTION command */
-		trace_dsn("%s\n", opt(c));
+		vtrace("%s\n", opt(c));
 		if (hisopts[c]) {
 			hisopts[c] = 0;
 			dont_opt[2] = c;
 			net_rawout(dont_opt, sizeof(dont_opt));
-			trace_dsn("SENT %s %s\n", cmd(DONT), opt(c));
+			vtrace("SENT %s %s\n", cmd(DONT), opt(c));
 			check_in3270();
 			check_linemode(False);
 		}
 		telnet_state = TNS_DATA;
 		break;
 	    case TNS_DO:	/* telnet PLEASE DO OPTION command */
-		trace_dsn("%s\n", opt(c));
+		vtrace("%s\n", opt(c));
 		switch (c) {
 		    case TELOPT_BINARY:
 		    case TELOPT_EOR:
@@ -1846,7 +1840,7 @@ telnet_fsm(unsigned char c)
 					myopts[c] = 1;
 				will_opt[2] = c;
 				net_rawout(will_opt, sizeof(will_opt));
-				trace_dsn("SENT %s %s\n", cmd(WILL),
+				vtrace("SENT %s %s\n", cmd(WILL),
 					opt(c));
 				check_in3270();
 				check_linemode(False);
@@ -1866,7 +1860,7 @@ telnet_fsm(unsigned char c)
 				 */
 				net_rawout(follows_msg,
 						sizeof(follows_msg));
-				trace_dsn("SENT %s %s FOLLOWS %s\n",
+				vtrace("SENT %s %s FOLLOWS %s\n",
 						cmd(SB),
 						opt(TELOPT_STARTTLS),
 						cmd(SE));
@@ -1878,18 +1872,18 @@ telnet_fsm(unsigned char c)
 		    wont:
 			wont_opt[2] = c;
 			net_rawout(wont_opt, sizeof(wont_opt));
-			trace_dsn("SENT %s %s\n", cmd(WONT), opt(c));
+			vtrace("SENT %s %s\n", cmd(WONT), opt(c));
 			break;
 		}
 		telnet_state = TNS_DATA;
 		break;
 	    case TNS_DONT:	/* telnet PLEASE DON'T DO OPTION command */
-		trace_dsn("%s\n", opt(c));
+		vtrace("%s\n", opt(c));
 		if (myopts[c]) {
 			myopts[c] = 0;
 			wont_opt[2] = c;
 			net_rawout(wont_opt, sizeof(wont_opt));
-			trace_dsn("SENT %s %s\n", cmd(WONT), opt(c));
+			vtrace("SENT %s %s\n", cmd(WONT), opt(c));
 			check_in3270();
 			check_linemode(False);
 		}
@@ -1912,7 +1906,7 @@ telnet_fsm(unsigned char c)
 				int tt_len, tb_len;
 				char *tt_out;
 
-				trace_dsn("%s %s\n", opt(sbbuf[0]),
+				vtrace("%s %s\n", opt(sbbuf[0]),
 				    telquals[sbbuf[1]]);
 				if (lus != (char **)NULL && try_lu == CN) {
 					/* None of the LUs worked. */
@@ -1941,7 +1935,7 @@ telnet_fsm(unsigned char c)
 				net_rawout((unsigned char *)tt_out, tb_len);
 				Free(tt_out);
 
-				trace_dsn("SENT %s %s %s %s%s%s %s\n",
+				vtrace("SENT %s %s %s %s%s%s %s\n",
 				    cmd(SB), opt(TELOPT_TTYPE),
 				    telquals[TELQUAL_IS],
 				    termtype,
@@ -1973,7 +1967,7 @@ telnet_fsm(unsigned char c)
 				char *tt_out;
 				char *user;
 
-				trace_dsn("%s %s %s\n", opt(sbbuf[0]),
+				vtrace("%s %s %s\n", opt(sbbuf[0]),
 				    telquals[sbbuf[1]],
 				    telobjs[sbbuf[2]]);
 
@@ -1995,7 +1989,7 @@ telnet_fsm(unsigned char c)
 					IAC, SE);
 				net_rawout((unsigned char *)tt_out, tb_len);
 				Free(tt_out);
-				trace_dsn("SENT %s %s "
+				vtrace("SENT %s %s "
 					"%s "
 					"%s \"%s\" "
 					"%s \"%s\" "
@@ -2019,7 +2013,7 @@ telnet_fsm(unsigned char c)
 				    myopts[TELOPT_TTYPE]) {
 					will_opt[2] = TELOPT_TTYPE;
 					net_rawout(will_opt, sizeof(will_opt));
-					trace_dsn("SENT %s %s\n", cmd(WILL),
+					vtrace("SENT %s %s\n", cmd(WILL),
 						opt(TELOPT_TTYPE));
 					check_in3270();
 					check_linemode(False);
@@ -2070,7 +2064,7 @@ tn3270e_request(void)
 	net_rawout((unsigned char *)tt_out, tb_len);
 	Free(tt_out);
 
-	trace_dsn("SENT %s %s DEVICE-TYPE REQUEST %s%s%s "
+	vtrace("SENT %s %s DEVICE-TYPE REQUEST %s%s%s "
 		   "%s\n",
 	    cmd(SB), opt(TELOPT_TN3270E), xtn,
 	    (try_lu != CN && *try_lu) ? " CONNECT " : "",
@@ -2086,12 +2080,12 @@ tn3270e_request(void)
 static void
 backoff_tn3270e(const char *why)
 {
-	trace_dsn("Aborting TN3270E: %s\n", why);
+	vtrace("Aborting TN3270E: %s\n", why);
 
 	/* Tell the host 'no'. */
 	wont_opt[2] = TELOPT_TN3270E;
 	net_rawout(wont_opt, sizeof(wont_opt));
-	trace_dsn("SENT %s %s\n", cmd(WONT), opt(TELOPT_TN3270E));
+	vtrace("SENT %s %s\n", cmd(WONT), opt(TELOPT_TN3270E));
 
 	/* Restore the LU list; we may need to run it again in TN3270 mode. */
 	setup_lus();
@@ -2120,7 +2114,7 @@ tn3270e_negotiate(void)
 			break;
 	}
 
-	trace_dsn("TN3270E ");
+	vtrace("TN3270E ");
 
 	switch (sbbuf[1]) {
 
@@ -2129,18 +2123,18 @@ tn3270e_negotiate(void)
 		if (sbbuf[2] == TN3270E_OP_DEVICE_TYPE) {
 
 			/* Host wants us to send our device type. */
-			trace_dsn("SEND DEVICE-TYPE SE\n");
+			vtrace("SEND DEVICE-TYPE SE\n");
 
 			tn3270e_request();
 		} else {
-			trace_dsn("SEND ??%u SE\n", sbbuf[2]);
+			vtrace("SEND ??%u SE\n", sbbuf[2]);
 		}
 		break;
 
 	case TN3270E_OP_DEVICE_TYPE:
 
 		/* Device type negotiation. */
-		trace_dsn("DEVICE-TYPE ");
+		vtrace("DEVICE-TYPE ");
 
 		switch (sbbuf[2]) {
 		case TN3270E_OP_IS: {
@@ -2180,7 +2174,7 @@ tn3270e_negotiate(void)
 				status_lu(connected_lu);
 			}
 
-			trace_dsn("IS %s CONNECT %s SE\n",
+			vtrace("IS %s CONNECT %s SE\n",
 				tnlen? connected_type: "",
 				snlen? connected_lu: "");
 
@@ -2192,7 +2186,7 @@ tn3270e_negotiate(void)
 
 			/* Device type failure. */
 
-			trace_dsn("REJECT REASON %s SE\n", rsn(sbbuf[4]));
+			vtrace("REJECT REASON %s SE\n", rsn(sbbuf[4]));
 			if (sbbuf[4] == TN3270E_REASON_INV_DEVICE_TYPE ||
 			    sbbuf[4] == TN3270E_REASON_UNSUPPORTED_REQ) {
 				backoff_tn3270e("Host rejected device type or "
@@ -2213,7 +2207,7 @@ tn3270e_negotiate(void)
 
 			break;
 		default:
-			trace_dsn("??%u SE\n", sbbuf[2]);
+			vtrace("??%u SE\n", sbbuf[2]);
 			break;
 		}
 		break;
@@ -2221,13 +2215,13 @@ tn3270e_negotiate(void)
 	case TN3270E_OP_FUNCTIONS:
 
 		/* Functions negotiation. */
-		trace_dsn("FUNCTIONS ");
+		vtrace("FUNCTIONS ");
 
 		switch (sbbuf[2]) {
 
 		case TN3270E_OP_REQUEST:
 			/* Host is telling us what functions they want. */
-			trace_dsn("REQUEST %s SE\n",
+			vtrace("REQUEST %s SE\n",
 			    tn3270e_function_names(sbbuf+3, sblen-3));
 
 			tn3270e_fdecode(sbbuf+3, sblen-3, &e_rcvd);
@@ -2236,7 +2230,7 @@ tn3270e_negotiate(void)
 				b8_copy(&e_funcs, &e_rcvd);
 				tn3270e_subneg_send(TN3270E_OP_IS, &e_funcs);
 				tn3270e_negotiated = 1;
-				trace_dsn("TN3270E option negotiation "
+				vtrace("TN3270E option negotiation "
 				    "complete.\n");
 				check_in3270();
 			} else {
@@ -2252,7 +2246,7 @@ tn3270e_negotiate(void)
 
 		case TN3270E_OP_IS:
 			/* They accept our last request, or a subset thereof. */
-			trace_dsn("IS %s SE\n",
+			vtrace("IS %s SE\n",
 			    tn3270e_function_names(sbbuf+3, sblen-3));
 			tn3270e_fdecode(sbbuf+3, sblen-3, &e_rcvd);
 			if (b8_none_added(&e_funcs, &e_rcvd)) {
@@ -2268,7 +2262,7 @@ tn3270e_negotiate(void)
 				break;
 			}
 			tn3270e_negotiated = 1;
-			trace_dsn("TN3270E option negotiation complete.\n");
+			vtrace("TN3270E option negotiation complete.\n");
 
 			/*
 			 * If the host does not support BIND_IMAGE, then we
@@ -2284,13 +2278,13 @@ tn3270e_negotiate(void)
 			break;
 
 		default:
-			trace_dsn("??%u SE\n", sbbuf[2]);
+			vtrace("??%u SE\n", sbbuf[2]);
 			break;
 		}
 		break;
 
 	default:
-		trace_dsn("??%u SE\n", sbbuf[1]);
+		vtrace("??%u SE\n", sbbuf[1]);
 	}
 
 	/* Good enough for now. */
@@ -2359,7 +2353,7 @@ tn3270e_subneg_send(unsigned char op, b8_t *funcs)
 	net_rawout(proto_buf, proto_len);
 
 	/* Complete and send out the trace text. */
-	trace_dsn("SENT %s %s FUNCTIONS %s %s %s\n",
+	vtrace("SENT %s %s FUNCTIONS %s %s %s\n",
 	    cmd(SB), opt(TELOPT_TN3270E),
 	    (op == TN3270E_OP_REQUEST)? "REQUEST": "IS",
 	    tn3270e_function_names(proto_buf + 5, proto_len - 7),
@@ -2590,7 +2584,7 @@ process_eor(void)
 		unsigned char *s;
 		enum pds rv;
 
-		trace_dsn("RCVD TN3270E(%s%s %s %u)\n",
+		vtrace("RCVD TN3270E(%s%s %s %u)\n",
 		    e_dt(h->data_type),
 		    e_rq(h->data_type, h->request_flag),
 		    e_rsp(h->data_type, h->response_flag),
@@ -2711,11 +2705,11 @@ net_exception(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
 #if defined(LOCAL_PROCESS) /*[*/
 	if (local_process) {
-		trace_dsn("RCVD exception\n");
+		vtrace("RCVD exception\n");
 	} else
 #endif /*[*/
 	{
-		trace_dsn("RCVD urgent data indication\n");
+		vtrace("RCVD urgent data indication\n");
 		if (!syncing) {
 			syncing = 1;
 			x_except_off();
@@ -2785,24 +2779,18 @@ net_rawout(unsigned const char *buf, int len)
 
 				e = ERR_get_error();
 				(void) ERR_error_string(e, err_buf);
-				trace_dsn("RCVD SSL_write error %ld (%s)\n", e,
+				vtrace("RCVD SSL_write error %ld (%s)\n", e,
 				    err_buf);
 				popup_an_error("SSL_write:\n%s", err_buf);
 				host_disconnect(False);
 				return;
 			}
 #endif /*]*/
-#if defined(X3270_TRACE) /*[*/
-			trace_dsn("RCVD socket error %d (%s)\n",
+			vtrace("RCVD socket error %d (%s)\n",
 				socket_errno(),
-#if !defined(_WIN32) /*[*/
-				strerror(errno)
-#else /*][*/
-				win32_strerror(GetLastError())
-#endif /*]*/
-				);
-#endif /*]*/
-			if (socket_errno() == SE_EPIPE || socket_errno() == SE_ECONNRESET) {
+				socket_strerror(socket_errno()));
+			if (socket_errno() == SE_EPIPE ||
+			    socket_errno() == SE_ECONNRESET) {
 				host_disconnect(False);
 				return;
 			} else if (socket_errno() == SE_EINTR) {
@@ -2846,10 +2834,10 @@ net_hexansi_out(unsigned char *buf, int len)
 	if (toggled(TRACING)) {
 		int i;
 
-		trace_dsn(">");
+		vtrace(">");
 		for (i = 0; i < len; i++)
-			trace_dsn(" %s", ctl_see((int) *(buf+i)));
-		trace_dsn("\n");
+			vtrace(" %s", ctl_see((int) *(buf+i)));
+		vtrace("\n");
 	}
 #endif /*]*/
 
@@ -2882,10 +2870,10 @@ net_cookedout(const char *buf, int len)
 	if (toggled(TRACING)) {
 		int i;
 
-		trace_dsn(">");
+		vtrace(">");
 		for (i = 0; i < len; i++)
-			trace_dsn(" %s", ctl_see((int) *(buf+i)));
-		trace_dsn("\n");
+			vtrace(" %s", ctl_see((int) *(buf+i)));
+		vtrace("\n");
 	}
 #endif /*]*/
 	net_rawout((unsigned const char *) buf, len);
@@ -3256,7 +3244,7 @@ check_in3270(void)
 			tn3270e_bound = 0;
 		}
 #endif /*]*/
-		trace_dsn("Now operating in %s mode.\n",
+		vtrace("Now operating in %s mode.\n",
 			state_name[new_cstate]);
 		if (IN_3270 || IN_ANSI || IN_SSCP) {
 			any_host_data = True;
@@ -3339,7 +3327,7 @@ check_linemode(Boolean init)
 	if (init || linemode != wasline) {
 		st_changed(ST_LINE_MODE, linemode);
 		if (!init) {
-			trace_dsn("Operating in %s mode.\n",
+			vtrace("Operating in %s mode.\n",
 			    linemode ? "line" : "character-at-a-time");
 		}
 #if defined(X3270_ANSI) /*[*/
@@ -3403,27 +3391,16 @@ void
 trace_netdata(char direction, unsigned const char *buf, int len)
 {
 	int offset;
-	struct timeval ts;
-	double tdiff;
 
 	if (!toggled(TRACING))
 		return;
-	do_ts = False;
-	(void) gettimeofday(&ts, (struct timezone *)NULL);
-	if (IN_3270) {
-		tdiff = ((1.0e6 * (double)(ts.tv_sec - ds_ts.tv_sec)) +
-			(double)(ts.tv_usec - ds_ts.tv_usec)) / 1.0e6;
-		trace_dsn("%c +%gs\n", direction, tdiff);
-		do_ts = False;
-	}
-	ds_ts = ts;
 	for (offset = 0; offset < len; offset++) {
 		if (!(offset % LINEDUMP_MAX))
-			trace_dsn("%s%c 0x%-3x ",
+			ntvtrace("%s%c 0x%-3x ",
 			    (offset ? "\n" : ""), direction, offset);
-		trace_dsn("%02x", buf[offset]);
+		ntvtrace("%02x", buf[offset]);
 	}
-	trace_dsn("\n");
+	ntvtrace("\n");
 }
 #endif /*]*/
 
@@ -3468,7 +3445,7 @@ net_output(void)
 		h->seq_number[0] = (e_xmit_seq >> 8) & 0xff;
 		h->seq_number[1] = e_xmit_seq & 0xff;
 
-		trace_dsn("SENT TN3270E(%s NO-RESPONSE %u)\n",
+		vtrace("SENT TN3270E(%s NO-RESPONSE %u)\n",
 			IN_TN3270E ? "3270-DATA" : "SSCP-LU-DATA", e_xmit_seq);
 		if (b8_bit_is_set(&e_funcs, TN3270E_FUNC_RESPONSES)) {
 			e_xmit_seq = (e_xmit_seq + 1) & 0x7fff;
@@ -3499,7 +3476,7 @@ net_output(void)
 	*xoptr++ = EOR;
 	net_rawout(xobuf, xoptr - xobuf);
 
-	trace_dsn("SENT EOR\n");
+	vtrace("SENT EOR\n");
 	ns_rsent++;
 #undef BSTART
 }
@@ -3526,8 +3503,7 @@ tn3270e_ack(void)
 	rsp_buf[rsp_len++] = TN3270E_POS_DEVICE_END;
 	rsp_buf[rsp_len++] = IAC;
 	rsp_buf[rsp_len++] = EOR;
-	trace_dsn("SENT TN3270E(RESPONSE POSITIVE-RESPONSE "
-		"%u) DEVICE-END\n",
+	vtrace("SENT TN3270E(RESPONSE POSITIVE-RESPONSE %u) DEVICE-END\n",
 		h_in->seq_number[0] << 8 | h_in->seq_number[1]);
 	net_rawout(rsp_buf, rsp_len);
 }
@@ -3570,7 +3546,7 @@ tn3270e_nak(enum pds rv)
 	rsp_buf[rsp_len++] = IAC;
 	rsp_buf[rsp_len++] = EOR;
 #if defined(X3270_TRACE) /*[*/
-	trace_dsn("SENT TN3270E(RESPONSE NEGATIVE-RESPONSE %u) %s\n",
+	vtrace("SENT TN3270E(RESPONSE NEGATIVE-RESPONSE %u) %s\n",
 		h_in->seq_number[0] << 8 | h_in->seq_number[1], neg);
 #endif /*]*/
 	net_rawout(rsp_buf, rsp_len);
@@ -3703,12 +3679,12 @@ net_linemode(void)
 	if (hisopts[TELOPT_ECHO]) {
 		dont_opt[2] = TELOPT_ECHO;
 		net_rawout(dont_opt, sizeof(dont_opt));
-		trace_dsn("SENT %s %s\n", cmd(DONT), opt(TELOPT_ECHO));
+		vtrace("SENT %s %s\n", cmd(DONT), opt(TELOPT_ECHO));
 	}
 	if (hisopts[TELOPT_SGA]) {
 		dont_opt[2] = TELOPT_SGA;
 		net_rawout(dont_opt, sizeof(dont_opt));
-		trace_dsn("SENT %s %s\n", cmd(DONT), opt(TELOPT_SGA));
+		vtrace("SENT %s %s\n", cmd(DONT), opt(TELOPT_SGA));
 	}
 }
 
@@ -3720,12 +3696,12 @@ net_charmode(void)
 	if (!hisopts[TELOPT_ECHO]) {
 		do_opt[2] = TELOPT_ECHO;
 		net_rawout(do_opt, sizeof(do_opt));
-		trace_dsn("SENT %s %s\n", cmd(DO), opt(TELOPT_ECHO));
+		vtrace("SENT %s %s\n", cmd(DO), opt(TELOPT_ECHO));
 	}
 	if (!hisopts[TELOPT_SGA]) {
 		do_opt[2] = TELOPT_SGA;
 		net_rawout(do_opt, sizeof(do_opt));
-		trace_dsn("SENT %s %s\n", cmd(DO), opt(TELOPT_SGA));
+		vtrace("SENT %s %s\n", cmd(DO), opt(TELOPT_SGA));
 	}
 }
 #endif /*]*/
@@ -3743,7 +3719,7 @@ net_break(void)
 
 	/* I don't know if we should first send TELNET synch ? */
 	net_rawout(buf, sizeof(buf));
-	trace_dsn("SENT BREAK\n");
+	vtrace("SENT BREAK\n");
 }
 
 /*
@@ -3758,7 +3734,7 @@ net_interrupt(void)
 
 	/* I don't know if we should first send TELNET synch ? */
 	net_rawout(buf, sizeof(buf));
-	trace_dsn("SENT IP\n");
+	vtrace("SENT IP\n");
 }
 
 /*
@@ -3785,7 +3761,7 @@ net_abort(void)
 			break;
 		case E_SSCP:
 			net_rawout(buf, sizeof(buf));
-			trace_dsn("SENT AO\n");
+			vtrace("SENT AO\n");
 			if (tn3270e_bound || !b8_bit_is_set(&e_funcs,
 						    TN3270E_FUNC_BIND_IMAGE)) {
 				tn3270e_submode = E_3270;
@@ -3794,7 +3770,7 @@ net_abort(void)
 			break;
 		case E_3270:
 			net_rawout(buf, sizeof(buf));
-			trace_dsn("SENT AO\n");
+			vtrace("SENT AO\n");
 			tn3270e_submode = E_SSCP;
 			check_in3270();
 			break;
@@ -3981,7 +3957,7 @@ non_blocking(Boolean on)
 # if defined(FIONBIO) /*[*/
 	IOCTL_T i = on ? 1 : 0;
 
-    	trace_dsn("Making host socket %sblocking\n", on? "non-": "");
+    	vtrace("Making host socket %sblocking\n", on? "non-": "");
 	if (sock < 0)
 		return 0;
 
@@ -3992,7 +3968,7 @@ non_blocking(Boolean on)
 # else /*][*/
 	int f;
 
-    	trace_dsn("Making host socket %sblocking\n", on? "non-": "");
+    	vtrace("Making host socket %sblocking\n", on? "non-": "");
 	if (sock < 0)
 		return 0;
 
@@ -4171,7 +4147,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 #if defined(_WIN32) /*[*/
     	if (ssl_dll_init() < 0) {
 	    	/* The DLLs may not be there, or may be the wrong ones. */
-		trace_dsn("SSL DLL init failed: %s\n", ssl_fail_reason);
+		vtrace("SSL DLL init failed: %s\n", ssl_fail_reason);
 	    	ssl_supported = False;
 	    	return;
 	}
@@ -4437,7 +4413,7 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 	if (why_not != CN) {
 	    	char *s;
 
-		trace_dsn("SSL_verify_callback: %s, ignoring '%s' (%d)\n",
+		vtrace("SSL_verify_callback: %s, ignoring '%s' (%d)\n",
 			why_not, X509_verify_cert_error_string(err), err);
 		secure_unverified = True;
 		s = xs_buffer("%s (%d)", X509_verify_cert_error_string(err),
@@ -4622,10 +4598,10 @@ spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
 		     (!v4addr && !v6addr &&
 		      hostname_matches(hostname, name, len))) {
 			ok = 1;
-			trace_dsn("SSL_connect: commonName %s matches "
+			vtrace("SSL_connect: commonName %s matches "
 				"hostname %s\n", name, hostname);
 		} else {
-			trace_dsn("SSL_connect: non-matching commonName: %s\n",
+			vtrace("SSL_connect: non-matching commonName: %s\n",
 				expand_hostname(name, len));
 			nnl = xs_buffer("DNS:%s", expand_hostname(name, len));
 			namelist = add_to_namelist(namelist, nnl);
@@ -4648,7 +4624,7 @@ spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
 					 len))) {
 
 					ok = 1;
-					trace_dsn("SSL_connect: alternameName "
+					vtrace("SSL_connect: alternameName "
 						"DNS:%s matches hostname %s\n",
 						expand_hostname((char *)dns,
 						    len),
@@ -4656,7 +4632,7 @@ spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
 					OPENSSL_free(dns);
 					break;
 				} else {
-					trace_dsn("SSL_connect: non-matching "
+					vtrace("SSL_connect: non-matching "
 						"alternateName: DNS:%s\n",
 						expand_hostname((char *)dns,
 						    len));
@@ -4676,11 +4652,11 @@ spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
 					ipaddr_matches(v4addr, v6addr,
 					    value->d.iPAddress->data,
 					    value->d.iPAddress->length)) {
-					trace_dsn("SSL_connect: matching "
+					vtrace("SSL_connect: matching "
 						"alternateName IP:");
 					ok = 1;
 				} else {
-					trace_dsn("SSL_connect: non-matching "
+					vtrace("SSL_connect: non-matching "
 						"alternateName: IP:");
 				}
 				ipbuf = NewString("IP:");
@@ -4715,7 +4691,7 @@ spc_verify_cert_hostname(X509 *cert, char *hostname, unsigned char *v4addr,
 					}
 					break;
 				}
-				trace_dsn("%s\n", ipbuf);
+				vtrace("%s\n", ipbuf);
 				if (!ok)
 					namelist = add_to_namelist(namelist,
 						ipbuf);
@@ -4758,7 +4734,7 @@ ssl_init(void)
 		return -1;
 	}
 	SSL_set_verify_depth(ssl_con, 64);
-	trace_dsn("SSL_init: %sverifying host certificate\n",
+	vtrace("SSL_init: %sverifying host certificate\n",
 		appres.verify_host_cert? "": "not ");
 	SSL_set_verify(ssl_con, SSL_VERIFY_PEER, ssl_verify_callback);
 	return 0;
@@ -4769,11 +4745,11 @@ static void
 client_info_callback(INFO_CONST SSL *s, int where, int ret)
 {
 	if (where == SSL_CB_CONNECT_LOOP) {
-		trace_dsn("SSL_connect trace: %s %s\n",
+		vtrace("SSL_connect trace: %s %s\n",
 		    SSL_state_string(s), SSL_state_string_long(s));
 	} else if (where == SSL_CB_CONNECT_EXIT) {
 		if (ret == 0) {
-			trace_dsn("SSL_connect trace: failed in %s\n",
+			vtrace("SSL_connect trace: failed in %s\n",
 				SSL_state_string_long(s));
 		} else if (ret < 0) {
 			unsigned long e;
@@ -4820,14 +4796,14 @@ continue_tls(unsigned char *sbbuf, int len)
 	/* Make sure the option is FOLLOWS. */
 	if (len < 2 || sbbuf[1] != TLS_FOLLOWS) {
 		/* Trace the junk. */
-		trace_dsn("%s ? %s\n", opt(TELOPT_STARTTLS), cmd(SE));
+		vtrace("%s ? %s\n", opt(TELOPT_STARTTLS), cmd(SE));
 		popup_an_error("TLS negotiation failure");
 		net_disconnect();
 		return;
 	}
 
 	/* Trace what we got. */
-	trace_dsn("%s FOLLOWS %s\n", opt(TELOPT_STARTTLS), cmd(SE));
+	vtrace("%s FOLLOWS %s\n", opt(TELOPT_STARTTLS), cmd(SE));
 
 	/* Initialize the SSL library. */
 	if (ssl_init() < 0) {
@@ -4838,7 +4814,7 @@ continue_tls(unsigned char *sbbuf, int len)
 
 	/* Set up the TLS/SSL connection. */
 	if (SSL_set_fd(ssl_con, sock) != 1) {
-		trace_dsn("Can't set fd!\n");
+		vtrace("Can't set fd!\n");
 	}
 
 #if defined(_WIN32) /*[*/
@@ -4884,7 +4860,7 @@ continue_tls(unsigned char *sbbuf, int len)
 	secure_connection = True;
 
 	/* Success. */
-	trace_dsn("TLS/SSL negotiated connection complete.  "
+	vtrace("TLS/SSL negotiated connection complete.  "
 		  "Connection is now secure.\n");
 
 	/* Tell the world that we are (still) connected, now in secure mode. */

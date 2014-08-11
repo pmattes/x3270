@@ -512,7 +512,7 @@ main(int argc, char *argv[])
 #endif /*]*/
 				    ) {
 			interact();
-			trace_event("Done interacting.\n");
+			vtrace("Done interacting.\n");
 			screen_resume();
 		} else if (!CONNECTED &&
 			   !appres.reconnect &&
@@ -567,7 +567,7 @@ interact(void)
 	/* In case we got here because a command output, stop the pager. */
 	stop_pager();
 
-	trace_event("Interacting.\n");
+	vtrace("Interacting.\n");
 	if (appres.secure) {
 		char s[10];
 

@@ -162,7 +162,7 @@ printer_reap_now(void)
 
 	assert(printer_state == P_TERMINATING);
 
-	trace_dsn("Waiting for old printer session to exit.\n");
+	vtrace("Waiting for old printer session to exit.\n");
 #if !defined(_WIN32) /*[*/
 	if (waitpid(printer_pid, &status, 0) < 0) {
 		popup_an_errno(errno, "Printer process waitpid() failed");
@@ -197,7 +197,7 @@ printer_reap_now(void)
 	printer_handle = NULL;
 #endif /*]*/
 
-	trace_dsn("Old printer session exited.\n");
+	vtrace("Old printer session exited.\n");
 	printer_state = P_NONE;
 	st_changed(ST_PRINTER, False);
 }
@@ -208,7 +208,7 @@ delayed_start(ioid_t id _is_unused)
 {
 	assert(printer_state == P_DELAY);
 
-	trace_dsn("Printer session start delay complete.\n");
+	vtrace("Printer session start delay complete.\n");
 
 	/* Start the printer. */
 	printer_state = P_NONE;
@@ -267,7 +267,7 @@ printer_start(const char *lu)
 		 * Remember what was requested, and set a timeout to start the
 		 * new session.
 		 */
-		trace_dsn("Delaying printer session start %dms.\n",
+		vtrace("Delaying printer session start %dms.\n",
 			PRINTER_DELAY_MS);
 		Replace(printer_delay_lu, NewString(lu));
 		printer_delay_associated = associated;
@@ -288,7 +288,7 @@ printer_start(const char *lu)
 		 * get in after a manual stop. This is needed because we can't
 		 * distinguish a manual from an automatic start.
 		 */
-		trace_dsn("Delaying printer session start %dms after exit.\n",
+		vtrace("Delaying printer session start %dms after exit.\n",
 			PRINTER_DELAY_MS);
 		Replace(printer_delay_lu, NewString(lu));
 		printer_delay_associated = associated;
@@ -352,7 +352,7 @@ printer_start_now(const char *lu, Boolean associated)
 		cmdlineName = ResLuCommandLine;
 	}
 
-	trace_dsn("Starting %s%s printer session.\n", lu,
+	vtrace("Starting %s%s printer session.\n", lu,
 		associated? " associated": "");
 
 	/* Create a listening socket for pr3287 to connect back to. */
@@ -652,7 +652,7 @@ printer_start_now(const char *lu, Boolean associated)
 	}
 
 #if !defined(_WIN32) /*[*/
-	trace_dsn("Printer command: %s\n", cmd_text);
+	vtrace("Printer command: %s\n", cmd_text);
 
 	/* Make pipes for printer's stdout and stderr. */
 	if (pipe(stdout_pipe) < 0) {
@@ -726,9 +726,9 @@ printer_start_now(const char *lu, Boolean associated)
 	else
 		cp_cmdline = NewString(cmd_text);
 
-	trace_dsn("Printer command: %s\n", cp_cmdline);
+	vtrace("Printer command: %s\n", cp_cmdline);
 	if (printerName != NULL) {
-		trace_dsn("Printer (via %%PRINTER%%): %s\n", printerName);
+		vtrace("Printer (via %%PRINTER%%): %s\n", printerName);
 	}
 	memset(&si, '\0', sizeof(si));
 	si.cb = sizeof(pi);
@@ -905,7 +905,7 @@ printer_stop_sync(void)
 static void
 printer_sync_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
-	trace_dsn("Input/EOF on printer sync socket.\n");
+	vtrace("Input/EOF on printer sync socket.\n");
 	assert(printer_state >= P_RUNNING);
 
 	/*
@@ -956,7 +956,7 @@ printer_accept(unsigned long fd _is_unused, ioid_t id)
 	if (printer_sync < 0) {
 		popup_a_sockerr("accept(printer sync)");
 	} else {
-		trace_dsn("Accepted sync connection from printer.\n");
+		vtrace("Accepted sync connection from printer.\n");
 
 #if defined(_WIN32) /*[*/
 		printer_sync_handle = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -1058,7 +1058,7 @@ printer_check(
 	}
 
 	/* Update and propagate the state. */
-	trace_dsn("Printer session exited.\n");
+	vtrace("Printer session exited.\n");
 	if (printer_sync_id != NULL_IOID) {
 		printer_stop_sync();
 	}
@@ -1079,7 +1079,7 @@ printer_check(
 static void
 printer_kill(ioid_t id _is_unused)
 {
-	trace_dsn("Forcibly terminating printer session.\n");
+	vtrace("Forcibly terminating printer session.\n");
 
 	/* Kill the process. */
 #if defined(_WIN32) /*[*/
@@ -1100,7 +1100,7 @@ printer_stop()
 {
 	switch (printer_state) {
 	case P_DELAY:
-		trace_dsn("Canceling delayed printer session start.\n");
+		vtrace("Canceling delayed printer session start.\n");
 		assert(printer_delay_id != NULL_IOID);
 		RemoveTimeOut(printer_delay_id);
 		printer_delay_id = NULL_IOID;
@@ -1116,7 +1116,7 @@ printer_stop()
 		return;
 	}
 
-	trace_dsn("Stopping printer session.\n");
+	vtrace("Stopping printer session.\n");
 
 	/* Remove inputs. */
 	if (printer_stdout.input_id) {
@@ -1149,7 +1149,7 @@ printer_stop()
 	 * Then set a timeout to terminate it not so gracefully.
 	 */
 	if (printer_sync >= 0) {
-		trace_dsn("Stopping printer by shutting down sync socket.\n");
+		vtrace("Stopping printer by shutting down sync socket.\n");
 		assert(printer_ls == -1);
 
 		/* The separate shutdown() call is likely redundant. */
@@ -1165,7 +1165,7 @@ printer_stop()
 		/*
 		 * No sync socket. Too late to get one.
 		 */
-		trace_dsn("No sync socket.\n");
+		vtrace("No sync socket.\n");
 		printer_stop_listening();
 	}
 

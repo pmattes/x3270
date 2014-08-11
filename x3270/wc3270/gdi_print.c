@@ -133,13 +133,13 @@ gdi_print_start(const char *printer_name)
 	/* Initialize the printer and pop up the dialog. */
 	switch (gdi_init(printer_name, &fail)) {
 	case GDI_STATUS_SUCCESS:
-		trace_event("[gdi] initialized\n");
+		vtrace("[gdi] initialized\n");
 		break;
 	case GDI_STATUS_ERROR:
 		popup_an_error("Printer initialization error: %s", fail);
 		return GDI_STATUS_ERROR;
 	case GDI_STATUS_CANCEL:
-		trace_event("[gdi] canceled\n");
+		vtrace("[gdi] canceled\n");
 		return GDI_STATUS_CANCEL;
 	}
 
@@ -237,11 +237,11 @@ parse_margin(char *s, const char *what)
 		} else if (!strcasecmp(nextp, "cm")) {
 			d /= 2.54;
 		} else {
-			trace_event("gdi: unknown %s unit '%s'\n",
+			vtrace("gdi: unknown %s unit '%s'\n",
 				what, nextp);
 		}
 	} else {
-	    trace_event("gdi: invalid %s '%s'\n", what, s);
+	    vtrace("gdi: invalid %s '%s'\n", what, s);
 	    return 0;
 	}
 	return d;
@@ -265,7 +265,7 @@ gdi_get_params(uparm_t *up)
 		} else if (!strcasecmp(s, "landscape")) {
 			up->orientation = DMORIENT_LANDSCAPE;
 		} else {
-			trace_event("gdi: unknown orientation '%s'\n", s);
+			vtrace("gdi: unknown orientation '%s'\n", s);
 		}
 	}
 
@@ -296,7 +296,7 @@ gdi_get_params(uparm_t *up)
 		if (l > 0) {
 			up->font_size = (int)l;
 		} else {
-			trace_event("gdi: invalid %s '%s'\n",
+			vtrace("gdi: invalid %s '%s'\n",
 				ResPrintTextSize, s);
 		}
 	}
@@ -307,7 +307,7 @@ gdi_get_params(uparm_t *up)
 		if (l > 0) {
 			up->spp = (int)l;
 		} else {
-			trace_event("gdi: invalid %s '%s'\n",
+			vtrace("gdi: invalid %s '%s'\n",
 				ResPrintTextScreensPerPage, s);
 		}
 	}
@@ -421,16 +421,16 @@ gdi_init(const char *printer_name, const char **fail)
 
 	/* Trace the device characteristics. */
 	devnames = (DEVNAMES *)GlobalLock(pstate.dlg.hDevNames);
-	trace_event("[gdi] Printer '%s' capabilities:\n",
+	vtrace("[gdi] Printer '%s' capabilities:\n",
 		(char *)devnames + devnames->wDeviceOffset);
 	GlobalUnlock(devnames);
-	trace_event("[gdi]  LOGPIXELSX %d LOGPIXELSY %d\n",
+	vtrace("[gdi]  LOGPIXELSX %d LOGPIXELSY %d\n",
 		pchar.ppiX, pchar.ppiY);
-	trace_event("[gdi]  PHYSICALOFFSETX %d PHYSICALOFFSETY %d\n",
+	vtrace("[gdi]  PHYSICALOFFSETX %d PHYSICALOFFSETY %d\n",
 		pchar.poffX, pchar.poffY);
-	trace_event("[gdi]  HORZRES %d VERTRES %d\n",
+	vtrace("[gdi]  HORZRES %d VERTRES %d\n",
 		pchar.horzres, pchar.vertres);
-	trace_event("[gdi]  PHYSICALWIDTH %d PHYSICALHEIGHT %d\n",
+	vtrace("[gdi]  PHYSICALWIDTH %d PHYSICALHEIGHT %d\n",
 		pchar.pwidth, pchar.pheight);
 
 	/* Compute the scale factors (points to pixels). */
@@ -450,7 +450,7 @@ gdi_init(const char *printer_name, const char **fail)
 	} else {
 		maxpvmargin = pchar.poffY;
 	}
-	trace_event("[gdi] maxphmargin is %d, maxpvmargin is %d pixels\n",
+	vtrace("[gdi] maxphmargin is %d, maxpvmargin is %d pixels\n",
 		maxphmargin, maxpvmargin);
 
 	/* Compute the margins in pixels. */
@@ -460,23 +460,23 @@ gdi_init(const char *printer_name, const char **fail)
 	/* See if the margins are too small. */
 	if (pstate.hmargin_pixels < maxphmargin) {
 		pstate.hmargin_pixels = maxphmargin;
-		trace_event("[gdi] hmargin is too small, setting to %g\"\n",
+		vtrace("[gdi] hmargin is too small, setting to %g\"\n",
 			(float)pstate.hmargin_pixels / pchar.ppiX);
 	}
 	if (pstate.vmargin_pixels < maxpvmargin) {
 		pstate.vmargin_pixels = maxpvmargin;
-		trace_event("[gdi] vmargin is too small, setting to %g\"\n",
+		vtrace("[gdi] vmargin is too small, setting to %g\"\n",
 			(float)pstate.vmargin_pixels / pchar.ppiX);
 	}
 
 	/* See if the margins are too big. */
 	if (pstate.hmargin_pixels * 2 >= pchar.horzres) {
 		pstate.hmargin_pixels = pchar.ppiX;
-		trace_event("[gdi] hmargin is too big, setting to 1\"\n");
+		vtrace("[gdi] hmargin is too big, setting to 1\"\n");
 	}
 	if (pstate.vmargin_pixels * 2 >= pchar.vertres) {
 		pstate.vmargin_pixels = pchar.ppiY;
-		trace_event("[gdi] vmargin is too big, setting to 1\"\n");
+		vtrace("[gdi] vmargin is too big, setting to 1\"\n");
 	}
 
 	/*
@@ -485,7 +485,7 @@ gdi_init(const char *printer_name, const char **fail)
 	 */
 	pstate.usable_xpixels = pchar.pwidth - (2 * pstate.hmargin_pixels);
 	pstate.usable_ypixels = pchar.pheight - (2 * pstate.vmargin_pixels);
-	trace_event("[gdi] usable area is %dx%d pixels\n",
+	vtrace("[gdi] usable area is %dx%d pixels\n",
 		pstate.usable_xpixels, pstate.usable_ypixels);
 
 	/* Create the Roman font. */
@@ -515,11 +515,11 @@ gdi_init(const char *printer_name, const char **fail)
 		*fail = "GetTextExtentSize failed";
 		goto failed;
 	}
-	trace_event("[gdi] space character is %dx%d logical units\n",
+	vtrace("[gdi] space character is %dx%d logical units\n",
 		(int)pstate.space_size.cx, (int)pstate.space_size.cy);
 	pstate.usable_cols = pstate.usable_xpixels / pstate.space_size.cx;
 	pstate.usable_rows = pstate.usable_ypixels / pstate.space_size.cy;
-	trace_event("[gdi] usable area is %dx%d characters\n",
+	vtrace("[gdi] usable area is %dx%d characters\n",
 		pstate.usable_cols, pstate.usable_rows);
 
 	/* Create a bold font that is the same size, if possible. */
