@@ -61,7 +61,7 @@ void trace_rollover_check(void);
 
 #else /*][*/
 
-#define rcba 0 &&
+#define rcba(baddr) NULL
 #if defined(__GNUC__) /*[*/
 #define trace_ds(args...)
 #define vtrace(args...)
@@ -70,7 +70,6 @@ void trace_rollover_check(void);
 #define trace_ds 0 &&
 #define vtrace 0 &&
 #define ntvtrace 0 &&
-#define rcba 0 &&
 #endif /*]*/
 
 #endif /*]*/
