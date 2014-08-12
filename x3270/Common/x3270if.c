@@ -64,6 +64,7 @@
 # include <sys/socket.h>
 # include <sys/un.h>
 # include <netinet/in.h>
+# include <arpa/inet.h>
 # if defined(HAVE_SYS_SELECT_H) /*[*/
 #  include <sys/select.h>
 # endif /*]*/
