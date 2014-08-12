@@ -39,7 +39,7 @@
 
 #if !defined(_WIN32) /*[*/
 #include <sys/wait.h>
-#include <sys/signal.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
