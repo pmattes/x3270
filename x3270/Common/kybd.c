@@ -1452,7 +1452,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	    	ebc_t ebc;
 		Boolean ge;
 
-		if (ucs4 < ' ') {
+		if (ucs4 < 0x20) {
 			trace_event("  dropped (control char)\n");
 			return;
 		}
@@ -3466,7 +3466,7 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 				break;
 			    case '\f':
 				if (pasting) {
-					key_UCharacter(' ', KT_STD, ia,
+					key_UCharacter(0x20, KT_STD, ia,
 						&skipped);
 				} else {
 					action_internal(Clear_action, ia, CN,

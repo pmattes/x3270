@@ -39,11 +39,12 @@
 
 #if !defined(_WIN32) /*[*/
 #include <sys/wait.h>
-#include <sys/signal.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #endif /*]*/
 #include <errno.h>
 #include <fcntl.h>

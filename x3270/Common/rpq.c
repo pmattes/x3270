@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009, 2013 Paul Mattes.
+ * Copyright (c) 2005-2009, 2013-2014 Paul Mattes.
  * Copyright (c) 2004-2005, Don Russell.
  * All rights reserved.
  *
@@ -36,13 +36,13 @@
 #include "globals.h"
 #include <errno.h>
 #if !defined(_WIN32) /*[*/
-#include <netinet/in.h>
-#include <arpa/inet.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
 #endif /*]*/
 #include <sys/types.h>
 #if !defined(_WIN32) /*[*/
-#include <sys/socket.h>
-#include <netdb.h>
+# include <sys/socket.h>
+# include <netdb.h>
 #endif /*]*/
 #include <assert.h>
 #include <stdarg.h>
