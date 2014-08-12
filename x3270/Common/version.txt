@@ -1,2 +1,2 @@
-version="3.3.15alpha1"
+version="3.3.15beta2"
 adversion="3.3.4"
