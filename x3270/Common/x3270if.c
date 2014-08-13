@@ -80,6 +80,12 @@
 #define NO_STATUS	(-1)
 #define ALL_FIELDS	(-2)
 
+#if defined(_WIN32) /*[*/
+#define DIRSEP	'\\'
+#else /*][*/
+#define DIRSEP '/'
+#endif /*]*/
+
 static char *me;
 static int verbose = 0;
 static char buf[IBS];
@@ -150,18 +156,14 @@ main(int argc, char *argv[])
 #endif /*]*/
 
 	/* Identify yourself. */
-	if ((me = strrchr(argv[0],
-#if !defined(_WIN32) /*[*/
-			'/'
-#else /*][*/
-			'\\'
-#endif /*]*/
-			)) != (char *)NULL)
+	if ((me = strrchr(argv[0], DIRSEP)) != NULL) {
 		me++;
-	else
+	} else {
 		me = argv[0];
+	}
 
 	/* Parse options. */
+	opterr = 0;
 	while ((c = getopt(argc, argv, "ip:s:St:v")) != -1) {
 		switch (c) {
 		    case 'i':
