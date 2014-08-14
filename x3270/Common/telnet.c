@@ -360,7 +360,7 @@ static Boolean accept_specified_host;
 static char *accept_dnsname;
 struct in_addr host_inaddr;
 static Boolean host_inaddr_valid;
-# if defined(AF_INET6) /*[*/
+# if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 struct in6_addr host_in6addr;
 static Boolean host_in6addr_valid;
 # endif /*]*/
@@ -419,7 +419,7 @@ static void output_possible(unsigned long fd, ioid_t id);
 typedef union {
 	struct sockaddr sa;
 	struct sockaddr_in sin;
-#if defined(AF_INET6) /*[*/
+#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 	struct sockaddr_in6 sin6;
 #endif /*]*/
 } sockaddr_46_t;
@@ -429,7 +429,7 @@ static sockaddr_46_t haddr[NUM_HA];
 static socklen_t ha_len[NUM_HA] = {
     sizeof(haddr[0]), sizeof(haddr[0]), sizeof(haddr[0]), sizeof(haddr[0])
 };
-#if defined(AF_INET6) && defined(HAVE_LIBSSL) /*[*/
+#if defined(HAVE_LIBSSL) /*[*/
 static Boolean hin[NUM_HA];
 #endif /*]*/
 static int num_ha = 0;
@@ -485,11 +485,11 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 			memcpy(&host_inaddr, &haddr[ix].sin.sin_addr,
 				sizeof(struct in_addr));
 			host_inaddr_valid = True;
-# if defined(AF_INET6) /*[*/
+# if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 			host_in6addr_valid = False;
 # endif /*]*/
 		}
-#if defined(AF_INET6) /*[*/
+#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 		if (haddr[ix].sa.sa_family == AF_INET6) {
 			memcpy(&host_in6addr, &haddr[ix].sin6.sin6_addr,
 				sizeof(struct in6_addr));
@@ -622,7 +622,7 @@ is_numeric_host(const char *host)
 	if (inet_addr(host) != (INET_ADDR_T)-1)
 		return True;
 
-# if defined(AF_INET6) /*[*/
+# if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 	/*
 	 * Is it an IPv6 address?
 	 *
@@ -686,7 +686,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 #if defined(HAVE_LIBSSL) /*[*/
 	if (!accept_specified_host) {
 		host_inaddr_valid = False;
-# if defined(AF_INET6) /*[*/
+# if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 		host_in6addr_valid = False;
 # endif /*]*/
 		inh = is_numeric_host(host);
@@ -994,7 +994,7 @@ check_cert_name(void)
 		    accept_specified_host? accept_dnsname: hostname,
 		    host_inaddr_valid? (unsigned char *)(void *)&host_inaddr:
 				       NULL,
-#if defined(AF_INET6) /*[*/
+#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 		    host_in6addr_valid? (unsigned char *)(void *)&host_in6addr:
 				       NULL
 #else /*][*/
@@ -4185,7 +4185,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 				accept_specified_host = True;
 				accept_dnsname = "";
 				break;
-#if defined(AF_INET6) /*[*/
+#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 			case AF_INET6:
 				memcpy(&host_in6addr, &ahaddr.sin6.sin6_addr,
 					sizeof(struct in6_addr));

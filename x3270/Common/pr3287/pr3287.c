@@ -466,7 +466,7 @@ main(int argc, char *argv[])
 	union {
 		struct sockaddr sa;
 		struct sockaddr_in sin;
-#if defined(AF_INET6) /*[*/
+#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 		struct sockaddr_in6 sin6;
 #endif /*]*/
 	} ha;

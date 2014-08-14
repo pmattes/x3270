@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -96,7 +96,7 @@
 typedef union {
 	struct sockaddr sa;
 	struct sockaddr_in sin;
-#if defined(AF_INET6) /*[*/
+#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 	struct sockaddr_in6 sin6;
 #endif /*]*/
 } sockaddr_46_t;
@@ -106,7 +106,7 @@ static Boolean accept_specified_host;
 static const char *accept_dnsname;
 struct in_addr host_inaddr;
 static Boolean host_inaddr_valid;
-# if defined(AF_INET6) /*[*/
+# if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 struct in6_addr host_in6addr;
 static Boolean host_in6addr_valid;
 # endif /*]*/
@@ -2058,7 +2058,7 @@ ssl_base_init(void)
 				accept_specified_host = True;
 				accept_dnsname = "";
 				break;
-#if defined(AF_INET6) /*[*/
+#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 			case AF_INET6:
 				memcpy(&host_in6addr, &ahaddr.sin6.sin6_addr,
 					sizeof(struct in6_addr));
@@ -2450,7 +2450,7 @@ is_numeric_host(const char *host)
 #endif /*]*/
 		return True;
 
-# if defined(AF_INET6) /*[*/
+# if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 	/*
 	 * Is it an IPv6 address?
 	 *
@@ -2488,7 +2488,7 @@ check_cert_name(const char *host)
 	    if (host_inaddr_valid)
 		    memcpy(&host_inaddr, &host_sa.sin.sin_addr,
 			    sizeof(struct in_addr));
-# if defined(AF_INET6) /*[*/
+# if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 	    host_in6addr_valid = (host_sa.sa.sa_family == AF_INET6);
 	    if (host_in6addr_valid)
 		    memcpy(&host_in6addr, &host_sa.sin6.sin6_addr,
@@ -2512,7 +2512,7 @@ check_cert_name(const char *host)
 		    accept_specified_host? accept_dnsname: host,
 		    host_inaddr_valid? (unsigned char *)(void *)&host_inaddr:
 				       NULL,
-#if defined(AF_INET6) /*[*/
+#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 		    host_in6addr_valid? (unsigned char *)(void *)&host_in6addr:
 				       NULL
 #else /*][*/

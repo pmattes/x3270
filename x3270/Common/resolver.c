@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, Paul Mattes.
+ * Copyright (c) 2007-2009, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,7 @@
 #include "resolverc.h"
 #include "w3miscc.h"
 
-#if defined(_WIN32) /*[*/
+#if defined(_WIN32) && defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 static int win32_getaddrinfo(const char *node, const char *service,
 	const struct addrinfo *hints, struct addrinfo **res);
 static void win32_freeaddrinfo(struct addrinfo *res);
@@ -67,7 +67,7 @@ resolve_host_and_port(const char *host, char *portname, int ix,
 	unsigned short *pport, struct sockaddr *sa, socklen_t *sa_len,
 	char *errmsg, int em_len, int *lastp)
 {
-#if defined(_WIN32) /*[*/
+#if defined(_WIN32) && defined(AF_INET6) && defined(X3270_IPV6) /*[*/
     	OSVERSIONINFO info;
 	Boolean has_getaddrinfo = False;
 
@@ -86,7 +86,7 @@ resolve_host_and_port(const char *host, char *portname, int ix,
 	if (has_getaddrinfo)
 #endif /*]*/
 	{
-#if defined(AF_INET6) /*[*/
+#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 		struct addrinfo	 hints, *res0, *res;
 		int		 rc;
 
@@ -147,11 +147,11 @@ resolve_host_and_port(const char *host, char *portname, int ix,
 		freeaddrinfo(res0);
 #endif /*]*/
 	}
-#if defined(_WIN32) /*[*/
+#if defined(_WIN32) && defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 	else
 #endif /*]*/
 
-#if defined(_WIN32) || !defined(AF_INET6) /*[*/
+#if defined(_WIN32) || !defined(AF_INET6) || !defined(X3270_IPV6) /*[*/
 	{
 		struct hostent	*hp;
 		struct servent	*sp;
@@ -178,9 +178,11 @@ resolve_host_and_port(const char *host, char *portname, int ix,
 		/* Use gethostbyname() to resolve the hostname. */
 		hp = gethostbyname(host);
 		if (hp == (struct hostent *) 0) {
+		    	fprintf(stderr, "gethostbyname failed\n");
+			fflush(stderr);
 			sin->sin_family = AF_INET;
 			sin->sin_addr.s_addr = inet_addr(host);
-			if (sin->sin_addr.s_addr == (unsigned long)-1) {
+			if (sin->sin_addr.s_addr == INADDR_NONE) {
 				snprintf(errmsg, em_len,
 					"Unknown host:\n%s", host);
 				return -2;
@@ -190,6 +192,8 @@ resolve_host_and_port(const char *host, char *portname, int ix,
 		} else {
 		    	int i;
 
+		    	fprintf(stderr, "gethostbyname succeeded\n");
+			fflush(stderr);
 			for (i = 0; i < ix; i++) {
 			    	if (hp->h_addr_list[i] == NULL) {
 					snprintf(errmsg, em_len,
@@ -240,7 +244,7 @@ numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
 	if (has_getnameinfo)
 #endif /*]*/
 	{
-#if defined(AF_INET6) /*[*/
+#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 		int	 rc;
 
 		/* Use getnameinfo(). */
@@ -256,7 +260,7 @@ numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
 	else
 #endif /*]*/
 
-#if defined(_WIN32) || !defined(AF_INET6) /*[*/
+#if defined(_WIN32) || !defined(AF_INET6) || !defined(X3270_IPV6) /*[*/
 	{
 		struct sockaddr_in *sin = (struct sockaddr_in *)sa;
 
@@ -270,7 +274,7 @@ numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
 	return 0;
 }
 
-#if defined(_WIN32) /*[*/
+#if defined(_WIN32) && defined(AF_INET6) && defined(X3270_IPV6) /*[*/
 /*
  * Windows-specific versions of getaddrinfo(), freeaddrinfo() and
  * gai_strerror().
