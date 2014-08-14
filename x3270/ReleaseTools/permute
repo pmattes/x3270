@@ -124,10 +124,10 @@ do	echo "Trying $prog."
 	fi
 	typeset -a opts masks
 	typeset -i n_opts=0
-	for opt in disable-ansi disable-apl disable-local-process disable-printer disable-script disable-tn3270e disable-trace disable-menus disable-keypad disable-ft disable-ssl disable-dbcs with-iconv
+	for opt in disable-ansi disable-apl disable-local-process disable-printer disable-script disable-tn3270e disable-trace disable-menus disable-keypad disable-ft disable-ssl disable-dbcs with-iconv disable-ipv6
 	do	unset ok
 		case $opt in
-		disable-dbcs|disable-ssl|with-iconv)
+		disable-dbcs|disable-ssl|with-iconv|disable-ipv6)
 			# apply to all
 			ok=1
 			;;

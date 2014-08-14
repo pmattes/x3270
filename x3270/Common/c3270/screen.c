@@ -960,7 +960,7 @@ screen_disp(Boolean erasing _is_unused)
 
 	/* If the menubar is separate, draw it first. */
 	if (screen_yoffset) {
-	    	ucs4_t u;
+	    	ucs4_t u = 0;
 		Boolean highlight;
 		unsigned char acs;
 		int norm, high;
@@ -1023,9 +1023,9 @@ screen_disp(Boolean erasing _is_unused)
 			int attr_mask =
 			    toggled(UNDERSCORE)? (int)~A_UNDERLINE: -1;
 			Boolean is_menu = False;
-			ucs4_t u;
-			Boolean highlight;
-			unsigned char acs;
+			ucs4_t u = 0;
+			Boolean highlight = False;
+			unsigned char acs = 0;
 
 			if (flipped)
 				move(row + screen_yoffset, cCOLS-1 - col);
