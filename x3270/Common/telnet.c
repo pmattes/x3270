@@ -2535,7 +2535,7 @@ process_bind(unsigned char *buf, int buflen)
 }
 #endif /*]*/
 
-#if defined(X3270_TRACE) /*[*/
+#if defined(X3270_TRACE) && defined(X3270_TN3270E) /*[*/
 /* Decode an UNBIND reason. */
 static const char *
 unbind_reason (unsigned char r)
