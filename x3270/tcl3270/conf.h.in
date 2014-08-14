@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, Paul Mattes.
+ * Copyright (c) 2000-2009, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -59,3 +59,4 @@
 #undef X3270_LOCAL_PROCESS
 #undef X3270_TN3270E
 #undef X3270_TRACE
+#undef X3270_IPV6

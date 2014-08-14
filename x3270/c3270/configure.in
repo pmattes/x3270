@@ -287,6 +287,11 @@ case "$enable_trace" in
 ""|yes)	AC_DEFINE(X3270_TRACE,1)
 	;;
 esac
+AC_ARG_ENABLE(ipv6,[  --disable-ipv6         leave out IPv6 support])
+case "$enable_ipv6" in                  
+""|yes) AC_DEFINE(X3270_IPV6,1)                 
+	;;                              
+esac
 AC_ARG_ENABLE(history,[  --enable-history        include experimental history support])
 case "$enable_history" in
 yes)	AC_DEFINE(X3270_PLUGIN,1)
