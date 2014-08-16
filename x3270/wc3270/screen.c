@@ -1123,7 +1123,6 @@ screen_init(void)
 			ov_cols = 0;
 			ov_rows = 0;
 			oversize = True;
-			continue;
 		}
 
 		/* If we're at the smallest screen now, give up. */
@@ -2221,42 +2220,6 @@ kybd_input2(INPUT_RECORD *ir)
 	case VK_HOME:
 		action_internal(Home_action, IA_DEFAULT, CN, CN);
 		return;
-	case VK_ADD:
-		k = '+';
-		break;
-	case VK_SUBTRACT:
-		k = '+';
-		break;
-	case VK_NUMPAD0:
-		k = '0';
-		break;
-	case VK_NUMPAD1:
-		k = '1';
-		break;
-	case VK_NUMPAD2:
-		k = '2';
-		break;
-	case VK_NUMPAD3:
-		k = '3';
-		break;
-	case VK_NUMPAD4:
-		k = '4';
-		break;
-	case VK_NUMPAD5:
-		k = '5';
-		break;
-	case VK_NUMPAD6:
-		k = '6';
-		break;
-	case VK_NUMPAD7:
-		k = '7';
-		break;
-	case VK_NUMPAD8:
-		k = '8';
-		break;
-	case VK_NUMPAD9:
-		k = '9';
-		break;
 	default:
 		break;
 	}
@@ -2277,16 +2240,6 @@ kybd_input2(INPUT_RECORD *ir)
 		action_internal(Enter_action, IA_DEFAULT, CN, CN);
 		return;
 	default:
-		break;
-	}
-
-	/* Do some NVT-only translations. */
-	if (IN_ANSI) switch(k) {
-	case VK_DELETE:
-		k = 0x7f;
-		break;
-	case VK_BACK:
-		k = '\b';
 		break;
 	}
 
