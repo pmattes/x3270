@@ -646,7 +646,7 @@ select_changed_s(unsigned row, unsigned col, unsigned rows, unsigned cols)
 	row_adj = row - screen_yoffset;
 	rows_adj = rows;
 	if (row_adj < 0) {
-		rows_adj -= row_adj;
+		rows_adj += row_adj;
 		row_adj = 0;
 		if (rows_adj <= 0) {
 		    	return False;
@@ -666,13 +666,13 @@ select_changed_s(unsigned row, unsigned col, unsigned rows, unsigned cols)
 
 	/* Adjust for overflow at the right. */
 	if ((int)col >= COLS) {
-	    	return FALSE;
+	    	return False;
 	}
 	cols_adj = cols;
 	if ((int)(col + cols_adj) >= COLS) {
 		cols_adj = COLS - col;
 		if (cols_adj <= 0) {
-			return FALSE;
+			return False;
 		}
 	}
 
