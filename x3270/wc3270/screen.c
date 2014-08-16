@@ -512,7 +512,7 @@ initscr(void)
 }
 
 /*
- * Vitrual curses functions.
+ * Virtual curses functions.
  */
 static int cur_row = 0;
 static int cur_col = 0;
