@@ -714,7 +714,7 @@ static struct {
 #endif /*]*/
 #endif /*]*/
 { OptProxy,    OPT_STRING,  False, ResProxy,     offset(proxy),
-    "<type>:<host>[:<port>]", "Secify proxy type and server" },
+    "<type>:<host>[:<port>]", "Specify proxy type and server" },
 #if defined(C3270) /*[*/
 { OptSaveLines, OPT_INT,    False, ResSaveLines, offset(save_lines),
     "<lines>", "Specify the number of lines to save for scrolling" },
