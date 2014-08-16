@@ -646,7 +646,7 @@ select_changed_s(unsigned row, unsigned col, unsigned rows, unsigned cols)
 	row_adj = row - screen_yoffset;
 	rows_adj = rows;
 	if (row_adj < 0) {
-		rows_adj -= row_adj;
+		rows_adj += row_adj;
 		row_adj = 0;
 		if (rows_adj <= 0) {
 		    	return False;
