@@ -103,8 +103,13 @@ static unsigned char default_ic;
 static void	ctlr_half_connect(Boolean ignored);
 static void	ctlr_connect(Boolean ignored);
 static int	sscp_start;
-static void ticking_stop(void);
 static void ctlr_add_ic(int baddr, unsigned char ic);
+
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+static void ticking_stop(void);
+#else /*][*/
+#define ticking_stop()
+#endif /*]*/
 
 /*
  * code_table is used to translate buffer addresses and attributes to the 3270
@@ -2834,6 +2839,7 @@ ctlr_dbcs_state(int baddr)
 #endif /*]*/
 
 
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 /*
  * Transaction timing.  The time between sending an interrupt (PF, PA, Enter,
  * Clear) and the host unlocking the keyboard is indicated on the status line
@@ -2911,6 +2917,7 @@ toggle_showTiming(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 	if (!toggled(SHOW_TIMING))
 		status_untiming();
 }
+#endif /*]*/
 
 
 /*

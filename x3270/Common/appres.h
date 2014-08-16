@@ -51,45 +51,46 @@ struct toggle {
 #endif /*]*/
 	void (*upcall)(struct toggle *, enum toggle_type); /* change value */
 };
-#define MONOCASE	0
-#define ALT_CURSOR	1
-#define CURSOR_BLINK	2
-#define SHOW_TIMING	3
-#define CURSOR_POS	4
 
-#if defined(X3270_TRACE) /*[*/
-#define TRACING		5
-#endif /*]*/
-
-#define SCROLL_BAR	6
-
-#if defined(X3270_ANSI) /*[*/
-#define LINE_WRAP	7
-#endif /*]*/
-
-#define BLANK_FILL	8
-
-#if defined(X3270_TRACE) /*[*/
-#define SCREEN_TRACE	9
-#endif /*]*/
-
-#define MARGINED_PASTE	10
-#define RECTANGLE_SELECT 11
-
+typedef enum {
+    MONOCASE,		/* all-uppercase display */
 #if defined(X3270_DISPLAY) /*[*/
-#define CROSSHAIR	12
-#define VISIBLE_CONTROL	13
+    ALT_CURSOR,		/* block cursor */
+    CURSOR_BLINK,	/* blinking cursor */
 #endif /*]*/
-
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+    SHOW_TIMING,	/* display command execution time in the OIA */
+    CURSOR_POS,		/* display cursor position in the OIA */
+#endif /*]*/
+#if defined(X3270_TRACE) /*[*/
+    TRACING,		/* trace data and events */
+#endif /*]*/
+#if defined(X3270_DISPLAY) /*[*/
+    SCROLL_BAR,		/* include scroll bar */
+#endif /*]*/
+#if defined(X3270_ANSI) /*[*/
+    LINE_WRAP,		/* NVT xterm line-wrap mode (auto-wraparound) */
+#endif /*]*/
+    BLANK_FILL,		/* treat trailing blanks like NULLs on input */
+#if defined(X3270_TRACE) /*[*/
+    SCREEN_TRACE,	/* trace screen contents to file or printer */
+#endif /*]*/
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+    MARGINED_PASTE,	/* respect left margin when pasting */
+#endif /*]*/
+#if defined(X3270_DISPLAY) /*[*/
+    RECTANGLE_SELECT,	/* select by rectangles */
+    CROSSHAIR,		/* display cursor crosshair */
+    VISIBLE_CONTROL,	/* display visible control characters */
+#endif /*]*/
 #if defined(X3270_SCRIPT) || defined(TCL3270) /*[*/
-#define AID_WAIT	14
+    AID_WAIT,		/* make scripts wait for AIDs to complete */
 #endif /*]*/
-
 #if defined(C3270) /*[*/
-#define UNDERSCORE	15
+    UNDERSCORE,		/* special c3270/wc3270 underscore display mode */
 #endif /*]*/
-
-#define N_TOGGLES	16
+    N_TOGGLES
+} toggle_index_t;
 
 #define toggled(ix)		(appres.toggle[ix].value)
 #define toggle_toggle(t) \

@@ -3370,6 +3370,7 @@ kybd_scroll_lock(Boolean lock)
 		kybdlock_clr(KL_SCROLLED, "kybd_scroll_lock");
 }
 
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 /*
  * Move the cursor back within the legal paste area.
  * Returns a Boolean indicating success.
@@ -3401,6 +3402,7 @@ remargin(int lmargin)
 	cursor_move(baddr);
 	return True;
 }
+#endif /*]*/
 
 /*
  * Pretend that a sequence of keys was entered at the keyboard.
@@ -3431,7 +3433,9 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 	int nc = 0;
 	enum iaction ia = pasting ? IA_PASTE : IA_STRING;
 	int orig_addr = cursor_addr;
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 	int orig_col = BA_TO_COL(cursor_addr);
+#endif /*]*/
 	Boolean skipped = False;
 	ucs4_t c;
 
@@ -3456,6 +3460,7 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 			if (cursor_addr < orig_addr)
 				return xlen-1;		/* wrapped */
 
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 			/* Jump cursor over left margin. */
 			if (toggled(MARGINED_PASTE) &&
 			    BA_TO_COL(cursor_addr) < orig_col) {
@@ -3463,6 +3468,7 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 					return xlen-1;
 				skipped = True;
 			}
+#endif /*]*/
 		}
 
 		c = *ws;
@@ -3811,30 +3817,34 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 
 	switch (state) {
 	    case BASE:
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 		if (toggled(MARGINED_PASTE) &&
 		    BA_TO_COL(cursor_addr) < orig_col) {
 			(void) remargin(orig_col);
 		}
+#endif /*]*/
 		break;
 	    case OCTAL:
 	    case HEX:
 		key_UCharacter((unsigned char) literal, KT_STD, ia, &skipped);
 		state = BASE;
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 		if (toggled(MARGINED_PASTE) &&
 		    BA_TO_COL(cursor_addr) < orig_col) {
 			(void) remargin(orig_col);
 		}
+#endif /*]*/
 		break;
 	    case EBC:
-		/* XXX: line below added after 3.3.7p7 */
-		vtrace(" %s -> Key(X'%02X')\n", ia_name[(int) ia],
-			literal);
+		vtrace(" %s -> Key(X'%02X')\n", ia_name[(int) ia], literal);
 		key_Character((unsigned char) literal, False, True, &skipped);
 		state = BASE;
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 		if (toggled(MARGINED_PASTE) &&
 		    BA_TO_COL(cursor_addr) < orig_col) {
 			(void) remargin(orig_col);
 		}
+#endif /*]*/
 		break;
 	    case BACKPF:
 		if (nc > 0) {
