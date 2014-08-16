@@ -501,7 +501,7 @@ menu_click(int x, int y)
  * With ncurses, this can include mouse events.
  */
 void
-menu_key(int k, ucs4_t u)
+menu_key(menu_key_t k, ucs4_t u)
 {
 	cmenu_item_t *i;
 	Boolean selected = False;
@@ -514,7 +514,7 @@ menu_key(int k, ucs4_t u)
 	switch (k) {
 
 # if defined(NCURSES_MOUSE_VERSION) /*[*/
-	case KEY_MOUSE: {
+	case MK_MOUSE: {
 		MEVENT m;
 
 		if (getmouse(&m) != OK)
@@ -529,11 +529,7 @@ menu_key(int k, ucs4_t u)
 	}
 # endif /*]*/
 
-# if !defined(_WIN32) /*[*/
-	case KEY_UP:
-# else /*][*/
-	case VK_UP:
-# endif /*]*/
+	case MK_UP:
 		i = current_item;
 		if (current_item && current_item->prev) {
 			current_item = current_item->prev;
@@ -547,11 +543,7 @@ menu_key(int k, ucs4_t u)
 		}
 		break;
 
-# if !defined(_WIN32) /*[*/
-	case KEY_DOWN:
-# else /*][*/
-	case VK_DOWN:
-# endif /*]*/
+	case MK_DOWN:
 		i = current_item;
 		if (current_item && current_item->next) {
 			current_item = current_item->next;
@@ -565,11 +557,7 @@ menu_key(int k, ucs4_t u)
 		}
 		break;
 
-# if !defined(_WIN32) /*[*/
-	case KEY_LEFT:
-# else /*][*/
-	case VK_LEFT:
-# endif /*]*/
+	case MK_LEFT:
 		undraw_menu(current_menu);
 		if (current_menu->prev)
 			current_menu = current_menu->prev;
@@ -582,11 +570,7 @@ menu_key(int k, ucs4_t u)
 		draw_menu(current_menu);
 		break;
 
-# if !defined(_WIN32) /*[*/
-	case KEY_RIGHT:
-# else /*][*/
-	case VK_RIGHT:
-# endif /*]*/
+	case MK_RIGHT:
 		undraw_menu(current_menu);
 		if (current_menu->next)
 			current_menu = current_menu->next;
@@ -599,11 +583,7 @@ menu_key(int k, ucs4_t u)
 		draw_menu(current_menu);
 		break;
 
-# if !defined(_WIN32) /*[*/
-	case KEY_HOME:
-# else /*][*/
-	case VK_HOME:
-# endif /*]*/
+	case MK_HOME:
 		if (current_item) {
 			current_item = current_menu->items;
 			while (current_item && !current_item->enabled) {
@@ -613,11 +593,7 @@ menu_key(int k, ucs4_t u)
 		}
 		break;
 
-# if !defined(_WIN32) /*[*/
-	case KEY_END:
-# else /*][*/
-	case VK_END:
-# endif /*]*/
+	case MK_END:
 		i = current_item;
 		while (current_item) {
 			current_item = current_item->next;
@@ -628,15 +604,11 @@ menu_key(int k, ucs4_t u)
 		draw_menu(current_menu);
 		break;
 
-# if !defined(_WIN32) /*[*/
-	case KEY_ENTER:
-# else /*][*/
-	case VK_RETURN:
-# endif /*]*/
+	case MK_ENTER:
 		selected = True;
 		break;
 
-	case 0:
+	case MK_NONE:
 		switch (u) {
 		case '\r':
 		case '\n':
@@ -648,6 +620,7 @@ menu_key(int k, ucs4_t u)
 		break;
 
 	default:
+	case MK_OTHER:
 		basic_menu_init();
 		break;
 	}

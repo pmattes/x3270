@@ -2125,6 +2125,32 @@ trace_as_keymap(unsigned long xk, KEY_EVENT_RECORD *e)
 	vtrace(" %s ->", buf);
 }
 
+/* Translate a Windows virtual key to a menubar abstract key. */
+static menu_key_t
+key_to_mkey(int k)
+{
+    switch (k) {
+    case VK_UP:
+	return MK_UP;
+    case VK_DOWN:
+	return MK_DOWN;
+    case VK_LEFT:
+	return MK_LEFT;
+    case VK_RIGHT:
+	return MK_RIGHT;
+    case VK_HOME:
+	return MK_HOME;
+    case VK_END:
+	return MK_END;
+    case VK_RETURN:
+	return MK_ENTER;
+    case 0:
+	return MK_NONE;
+    default:
+	return MK_OTHER;
+    }
+}
+
 static void
 kybd_input2(INPUT_RECORD *ir)
 {
@@ -2157,7 +2183,7 @@ kybd_input2(INPUT_RECORD *ir)
 		xk = (ir->Event.KeyEvent.wVirtualKeyCode << 16) & 0xffff0000;
 
 	if (menu_is_up) {
-	    	menu_key(xk >> 16, xk & 0xffff);
+	    	menu_key(key_to_mkey(xk >> 16), xk & 0xffff);
 		return;
 	}
 

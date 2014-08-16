@@ -55,6 +55,19 @@ extern void menubar_retoggle(struct toggle *t, int ix);
 
 # elif defined(C3270) /*][*/
 
+typedef enum {
+    MK_MOUSE = 1,	/* ncurses mouse event */
+    MK_UP,		/* cursor up */
+    MK_DOWN,		/* cursor down */
+    MK_LEFT,		/* cursor left */
+    MK_RIGHT,		/* cursor right */
+    MK_HOME,		/* home */
+    MK_END,		/* end */
+    MK_ENTER,		/* enter or return */
+    MK_NONE,		/* no symbolic key code */
+    MK_OTHER		/* anything else */
+} menu_key_t;
+
 #  define menubar_as_set(n)
 
 /* c3270 externs. */
@@ -64,7 +77,7 @@ extern unsigned menu_is_up;
 extern void menu_init(void);
 extern Boolean menu_char(int row, int col, Boolean persistent, ucs4_t *u,
 	Boolean *highlighted, unsigned char *acs);
-extern void menu_key(int k, ucs4_t u);
+extern void menu_key(menu_key_t k, ucs4_t u);
 #  if defined(_WIN32) /*[*/
 extern void menu_click(int x, int y);
 #  endif /*]*/

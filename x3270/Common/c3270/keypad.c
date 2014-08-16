@@ -430,7 +430,7 @@ keypad_key(int k, ucs4_t u)
 	switch (k) {
 
 # if defined(NCURSES_MOUSE_VERSION) /*[*/
-	case KEY_MOUSE: {
+	case MK_MOUSE: {
 		MEVENT m;
 		size_t i;
 
@@ -451,66 +451,38 @@ keypad_key(int k, ucs4_t u)
 	    }
 # endif /*]*/
 
-# if !defined(_WIN32) /*[*/
-	case KEY_UP:
-# else /*][*/
-	case VK_UP:
-# endif /*]*/
+	case MK_UP:
 		find_adjacent(0, -1);
 		break;
 
-# if !defined(_WIN32) /*[*/
-	case KEY_DOWN:
-# else /*][*/
-	case VK_DOWN:
-# endif /*]*/
+	case MK_DOWN:
 		find_adjacent(0, 1);
 		break;
 
-# if !defined(_WIN32) /*[*/
-	case KEY_LEFT:
-# else /*][*/
-	case VK_LEFT:
-# endif /*]*/
+	case MK_LEFT:
 		find_adjacent(-1, 0);
 		break;
 
-# if !defined(_WIN32) /*[*/
-	case KEY_RIGHT:
-# else /*][*/
-	case VK_RIGHT:
-# endif /*]*/
+	case MK_RIGHT:
 		find_adjacent(1, 0);
 		break;
 
-# if !defined(_WIN32) /*[*/
-	case KEY_HOME:
-# else /*][*/
-	case VK_HOME:
-# endif /*]*/
+	case MK_HOME:
 		/* Find the first entry. */
 		current_sens = &sens[0];
 		break;
 
-# if !defined(_WIN32) /*[*/
-	case KEY_END:
-# else /*][*/
-	case VK_END:
-# endif /*]*/
+	case MK_END:
 		/* Find the last entry. */
 		current_sens = &sens[NUM_SENSE - 1];
 		break;
 
-# if !defined(_WIN32) /*[*/
-	case KEY_ENTER:
-# else /*][*/
-	case VK_RETURN:
-# endif /*]*/
+	case MK_ENTER:
 		push_macro(current_sens->callback, False);
 		pop_up_keypad(False);
 		break;
 
-	case 0:
+	case MK_NONE:
 		switch (u) {
 		case '\r':
 		case '\n':
@@ -523,6 +495,7 @@ keypad_key(int k, ucs4_t u)
 		break;
 
 	default:
+	case MK_OTHER:
 		pop_up_keypad(False);
 		break;
 	}

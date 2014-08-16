@@ -1303,10 +1303,12 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		if (k == KEY_MOUSE) {
 		    	MEVENT m;
 
+# if defined(X3270_MENUS) /*[*/
 			if (menu_is_up) {
-			    menu_key(k, 0);
+			    menu_key(MK_MOUSE, 0);
 			    return;
 			}
+#endif /*]*/
 			if (getmouse(&m) != OK)
 			    return;
 			if ((m.bstate & BUTTON1_RELEASED)) {
@@ -1357,6 +1359,40 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 	}
 }
 
+#if defined(X3270_MENUS) /*[*/
+/* Translate a curses key to a menubar abstract key. */
+static menu_key_t
+key_to_mkey(int k)
+{
+    switch (k) {
+#if defined(NCURSES_MOUSE_VERSION) /*[*/
+    case KEY_MOUSE:
+	return MK_MOUSE;
+#endif /*]*/
+    case KEY_UP:
+	return MK_UP;
+    case KEY_DOWN:
+	return MK_DOWN;
+    case KEY_LEFT:
+	return MK_LEFT;
+    case KEY_RIGHT:
+	return MK_RIGHT;
+    case KEY_HOME:
+	return MK_HOME;
+    case KEY_END:
+	return MK_END;
+    case KEY_ENTER:
+	return MK_ENTER;
+    case 0:
+	return MK_NONE;
+    default:
+	return MK_OTHER;
+    }
+}
+#else /*][*/
+#define key_to_mkey(k) 0
+#endif /*]*/
+
 static void
 kybd_input2(int k, ucs4_t ucs4, int alt)
 {
@@ -1365,7 +1401,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	int i;
 
 	if (menu_is_up) {
-	    menu_key(k, ucs4);
+	    menu_key(key_to_mkey(k), ucs4);
 	    screen_disp(False);
 	    return;
 	}
