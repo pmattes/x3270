@@ -1072,12 +1072,9 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
 			break;
 		}
 		return;
-	} else
-# if !defined(_WIN32) /*[*/
-#  if defined(CURSES_WIDE) || defined(_WIN32) /*[*/
-	       if (appres.acs)
-#  endif /*]*/
-	{
+	}
+# if defined(CURSES_WIDE) /*[*/
+	else if (appres.acs) {
 		/* ncurses ACS. */
 	    	*is_acs = 1;
 		switch (c) {
@@ -1126,10 +1123,7 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
 	}
 # endif /*]*/
 # if defined(CURSES_WIDE) || defined(_WIN32) /*[*/
-#  if !defined(_WIN32) /*[*/
-       else
-#  endif /*]*/
-       {
+       else {
 	   	/* Unicode. */
 		*is_acs = 0;
 	   	switch (c) {

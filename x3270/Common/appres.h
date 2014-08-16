@@ -211,7 +211,9 @@ typedef struct {
 	char	*all_bold;
 	char	*altscreen;
 	char	*defscreen;
+#if defined(CURSES_WIDE) /*[*/
 	Boolean	acs;
+#endif /*]*/
 	Boolean ascii_box_draw;
 	Boolean mouse;
 #endif /*]*/

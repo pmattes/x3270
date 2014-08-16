@@ -500,11 +500,15 @@ set_appres_defaults(void)
 	appres.meta_escape = "auto";
 	appres.curses_keypad = True;
 	appres.cbreak_mode = False;
+# if !defined(_WIN32) && !defined(CURSES_WIDE) /*[*/
+	appres.ascii_box_draw = True;
+# else /*][*/
 	appres.ascii_box_draw = False;
-# if defined(C3270) && !defined(_WIN32) /*[*/
+# endif /*]*/
+# if !defined(_WIN32) /*[*/
 	appres.mouse = True;
 # endif /*]*/
-#if defined(CURSES_WIDE) || defined(WC3270) /*[*/
+#if defined(CURSES_WIDE) /*[*/
 	appres.acs = True;
 #endif /*]*/
 #endif /*]*/
@@ -1090,7 +1094,7 @@ static struct {
 	{ ResCursesKeypad,offset(curses_keypad),XRM_BOOLEAN },
 	{ ResCbreak,	offset(cbreak_mode),	XRM_BOOLEAN },
 	{ ResAsciiBoxDraw,offset(ascii_box_draw),	XRM_BOOLEAN },
-#if defined(CURSES_WIDE) || defined(WC3270) /*[*/
+#if defined(CURSES_WIDE) /*[*/
 	{ ResAcs,	offset(acs),		XRM_BOOLEAN },
 #endif /*]*/
 #endif /*]*/
