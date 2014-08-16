@@ -1471,7 +1471,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 		} else
 #endif /*]*/
 			(void) key_Character(ebc, (keytype == KT_GE) || ge,
-					     False, skipped);
+				(cause == IA_PASTE), skipped);
 	}
 #if defined(X3270_ANSI) /*[*/
 	else if (IN_ANSI) {
