@@ -1043,131 +1043,140 @@ menubar_retoggle(struct toggle *t, int ix)
 void
 map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
 {
-	if (appres.ascii_box_draw) {
-	    	/* ASCII art. */
-		*is_acs = 0;
-		switch (c) {
-		case 'l':
-		case 'm':
-		case 'k':
-		case 'j':
-		case 't':
-		case 'u':
-		case 'v':
-		case 'w':
-		case 'n':
-		    	*u = '+';
-			break;
-		case 'q':
-			*u = '-';
-			break;
-		case 'x':
-			*u = '|';
-			break;
-		case 's':
-			*u = ' ';
-			break;
-		default:
-			*u = '?';
-			break;
-		}
-		return;
+# if defined(CURSES_WIDE) || defined(_WIN32) /*[*/
+    /*
+     * If we have wide curses thus can do ACS, or if we are on Windows,
+     * then do ASCII art only if the user requests it.
+     *
+     * Otherwise (no wide curses, no Windows), ASCII art is all we can do.
+     */
+    if (appres.ascii_box_draw)
+# endif /*]*/
+    {
+	/* ASCII art. */
+	*is_acs = 0;
+	switch (c) {
+	case 'l':
+	case 'm':
+	case 'k':
+	case 'j':
+	case 't':
+	case 'u':
+	case 'v':
+	case 'w':
+	case 'n':
+	    *u = '+';
+	    break;
+	case 'q':
+	    *u = '-';
+	    break;
+	case 'x':
+	    *u = '|';
+	    break;
+	case 's':
+	    *u = ' ';
+	    break;
+	default:
+	    *u = '?';
+	    break;
 	}
+	return;
+    }
 # if defined(CURSES_WIDE) /*[*/
-	else if (appres.acs) {
-		/* ncurses ACS. */
-	    	*is_acs = 1;
-		switch (c) {
-		case 'l':
-			*u = ACS_ULCORNER;
-			break;
-		case 'm':
-			*u = ACS_LLCORNER;
-			break;
-		case 'k':
-			*u = ACS_URCORNER;
-			break;
-		case 'j':
-			*u = ACS_LRCORNER;
-			break;
-		case 't':
-			*u = ACS_LTEE;
-			break;
-		case 'u':
-			*u = ACS_RTEE;
-			break;
-		case 'v':
-			*u = ACS_BTEE;
-			break;
-		case 'w':
-			*u = ACS_TTEE;
-			break;
-		case 'q':
-			*u = ACS_HLINE;
-			break;
-		case 'x':
-			*u = ACS_VLINE;
-			break;
-		case 'n':
-			*u = ACS_PLUS;
-			break;
-		case 's':
-			*u = ' ';
-			*is_acs = 0;
-			break;
-		default:
-			*u = '?';
-			*is_acs = 0;
-			break;
-		}
+    else if (appres.acs) {
+	/* ncurses ACS. */
+	*is_acs = 1;
+	switch (c) {
+	case 'l':
+	    *u = ACS_ULCORNER;
+	    break;
+	case 'm':
+	    *u = ACS_LLCORNER;
+	    break;
+	case 'k':
+	    *u = ACS_URCORNER;
+	    break;
+	case 'j':
+	    *u = ACS_LRCORNER;
+	    break;
+	case 't':
+	    *u = ACS_LTEE;
+	    break;
+	case 'u':
+	    *u = ACS_RTEE;
+	    break;
+	case 'v':
+	    *u = ACS_BTEE;
+	    break;
+	case 'w':
+	    *u = ACS_TTEE;
+	    break;
+	case 'q':
+	    *u = ACS_HLINE;
+	    break;
+	case 'x':
+	    *u = ACS_VLINE;
+	    break;
+	case 'n':
+	    *u = ACS_PLUS;
+	    break;
+	case 's':
+	    *u = ' ';
+	    *is_acs = 0;
+	    break;
+	default:
+	    *u = '?';
+	    *is_acs = 0;
+	    break;
 	}
+    }
 # endif /*]*/
 # if defined(CURSES_WIDE) || defined(_WIN32) /*[*/
-       else {
-	   	/* Unicode. */
-		*is_acs = 0;
-	   	switch (c) {
-		case 'l':
-			*u = 0x250c;
-			break;
-		case 'm':
-			*u = 0x2514;
-			break;
-		case 'k':
-			*u = 0x2510;
-			break;
-		case 'j':
-			*u = 0x2518;
-			break;
-		case 't':
-			*u = 0x251c;
-			break;
-		case 'u':
-			*u = 0x2524;
-			break;
-		case 'v':
-			*u = 0x2534;
-			break;
-		case 'w':
-			*u = 0x252c;
-			break;
-		case 'q':
-			*u = 0x2500;
-			break;
-		case 'x':
-			*u = 0x2502;
-			break;
-		case 'n':
-			*u = 0x253c;
-			break;
-		case 's':
-			*u = ' ';
-			break;
-		default:
-			*u = '?';
-			break;
-		}
-       }
+   else {
+	/* Unicode. */
+	*is_acs = 0;
+	switch (c) {
+	case 'l':
+	    *u = 0x250c;
+	    break;
+	case 'm':
+	    *u = 0x2514;
+	    break;
+	case 'k':
+	    *u = 0x2510;
+	    break;
+	case 'j':
+	    *u = 0x2518;
+	    break;
+	case 't':
+	    *u = 0x251c;
+	    break;
+	case 'u':
+	    *u = 0x2524;
+	    break;
+	case 'v':
+	    *u = 0x2534;
+	    break;
+	case 'w':
+	    *u = 0x252c;
+	    break;
+	case 'q':
+	    *u = 0x2500;
+	    break;
+	case 'x':
+	    *u = 0x2502;
+	    break;
+	case 'n':
+	    *u = 0x253c;
+	    break;
+	case 's':
+	    *u = ' ';
+	    break;
+	default:
+	    *u = '?';
+	break;
+	}
+   }
 # endif /*]*/
 }
 
