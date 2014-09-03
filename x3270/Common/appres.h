@@ -75,7 +75,7 @@ typedef enum {
 #if defined(X3270_TRACE) /*[*/
     SCREEN_TRACE,	/* trace screen contents to file or printer */
 #endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
     MARGINED_PASTE,	/* respect left margin when pasting */
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
@@ -88,6 +88,9 @@ typedef enum {
 #endif /*]*/
 #if defined(C3270) /*[*/
     UNDERSCORE,		/* special c3270/wc3270 underscore display mode */
+#endif /*]*/
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
+    OVERLAY_PASTE,	/* overlay protected fields when pasting */
 #endif /*]*/
     N_TOGGLES
 } toggle_index_t;

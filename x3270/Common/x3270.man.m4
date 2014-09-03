@@ -832,6 +832,12 @@ ifelse(XX_PRODUCT,wc3270,`XX_TP(XX_FB(marginedPaste))
 If set, pasting multi-line input via the XX_FB(Paste) action will maintain a
 left margin (it will not move the cursor further left than where the paste
 begins).
+XX_TP(XX_FB(overlayPaste))
+If set, pasting over a protected field will simply increment the cursor
+position instead of locking the keyboard.
+This allows forms to be copied and pasted with the protected fields
+included.
+Setting this toggle also implicitly sets the XX_FB(marginedPaste) toggle.
 ')dnl
 ifelse(XX_MODE,console,`XX_TP(XX_FB(underscore))
 If set, XX_PRODUCT will display underlined fields by substituting

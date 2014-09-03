@@ -101,6 +101,13 @@ No pasted text will fill any area of the screen to the left of that
 position.
 This option is useful for pasting into certain XX_SM(IBM) editors that use the
 left side of the screen for control information.
+XX_TP(XX_FB(Overlay Paste))
+If set, pasting over a protected field will simply increment the cursor
+position instead of locking the keyboard.
+This allows forms to be copied and pasted with the protected fields
+included.
+Setting this toggle also implicitly sets the XX_FB(Paste with Left Margin)
+toggle.
 XX_TP(XX_FB(Select by Rectangles))
 If set, XX_FB(x3270) will always select rectangular areas of the screen.
 Otherwise, XX_FB(x3270)

@@ -204,6 +204,7 @@ x3270.charsetList:			U.S. English (CP 037): us-intl\n\
 ! x3270.tracing:			false
 ! x3270.lineWrap:			true
 ! x3270.marginedPaste:			false
+! x3270.overlayPaste:			false
 ! x3270.monoCase:			false
 ! x3270.rectangleSelect:		false
 ! x3270.screenTrace:			false
@@ -1027,6 +1028,7 @@ x3270*screenTraceOption.label:			Save Screen Contents
 x3270*scrollBarOption.label:			Scrollbar
 x3270*lineWrapOption.label:			Wraparound
 x3270*marginedPasteOption.label:		Paste with Left Margin
+x3270*overlayPasteOption.label:			Overlay Paste
 x3270*rectangleSelectOption.label:		Select by Rectangles
 x3270*blankFillOption.label:			Blank Fill
 x3270*crosshairOption.label:			Crosshair Cursor

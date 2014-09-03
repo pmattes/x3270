@@ -878,6 +878,9 @@ typedef enum {
     OM_TIMING,
     OM_CURSOR,
     OM_UNDERSCORE,
+#if defined(WC3270) /*[*/
+    OM_OVERLAY_PASTE,
+#endif /*]*/
     OM_COUNT
 } options_menu_enum;
 cmenu_item_t *options_menu_items[OM_COUNT];
@@ -886,14 +889,20 @@ int option_index[OM_COUNT] = {
     BLANK_FILL,
     SHOW_TIMING,
     CURSOR_POS,
-    UNDERSCORE
+    UNDERSCORE,
+#if defined(WC3270) /*[*/
+    OVERLAY_PASTE
+#endif /*]*/
 };
 char *option_names[OM_COUNT] = {
     "Monocase",
     "Blank Fill",
     "Show Timing",
     "Track Cursor",
-    "Underscore Mode"
+    "Underscore Mode",
+#if defined(WC3270) /*[*/
+    "Overlay Paste"
+#endif /*]*/
 };
 
 cmenu_t *file_menu;

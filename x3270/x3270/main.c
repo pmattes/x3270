@@ -303,6 +303,7 @@ struct toggle_name toggle_names[] = {
 #if defined(X3270_SCRIPT) /*[*/
 	{ ResAidWait,         AID_WAIT,		False },
 #endif /*]*/
+	{ ResOverlayPaste,    OVERLAY_PASTE,	False },
 	{ NULL,               0,		False }
 };
 

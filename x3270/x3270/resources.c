@@ -283,6 +283,8 @@ XtResource resources[] = {
 	{ ResAidWait, ClsAidWait, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(AID_WAIT), XtRString, ResTrue },
 #endif /*]*/
+	{ ResOverlayPaste, ClsOverlayPaste, XtRBoolean, sizeof(Boolean),
+	  toggle_offset(OVERLAY_PASTE), XtRString, ResFalse },
 
 #if defined(X3270_ANSI) /*[*/
 	{ ResIcrnl, ClsIcrnl, XtRBoolean, sizeof(Boolean),

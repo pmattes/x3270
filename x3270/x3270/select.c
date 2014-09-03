@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -1492,8 +1492,6 @@ grab_sel(int start, int end, Boolean really, Time t)
 					}
 				}
 			}
-			if (really && (end % COLS == COLS - 1))
-				store_sel('\n');
 		} else {
 			int row, col;
 			int start_col = start % COLS;
@@ -1535,8 +1533,9 @@ grab_sel(int start, int end, Boolean really, Time t)
 					}
 				}
 				nulls = 0;
-				if (really)
+				if (really && row < end_row) {
 					store_sel('\n');
+				}
 			}
 		}
 	}

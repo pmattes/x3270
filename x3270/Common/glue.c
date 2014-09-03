@@ -146,6 +146,9 @@ struct toggle_name toggle_names[] = {
 #if defined(C3270) /*[*/
 	{ ResUnderscore,      UNDERSCORE,	False },
 #endif /*]*/
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
+	{ ResOverlayPaste,    OVERLAY_PASTE,	False },
+#endif /*]*/
 	{ NULL,               0,		False }
 };
 
@@ -542,7 +545,7 @@ set_appres_defaults(void)
 #if defined(X3270_SCRIPT) || defined(TCL3270) /*[*/
 	appres.toggle[AID_WAIT].value = True;
 #endif /*]*/
-#if defined(C3270) && defined(_WIN32) /*[*/
+#if defined(WC3270) /*[*/
 	appres.toggle[UNDERSCORE].value = True;
 #endif /*]*/
 

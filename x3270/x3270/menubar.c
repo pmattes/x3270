@@ -1955,10 +1955,17 @@ options_menu_init(Boolean regen, Position x, Position y)
 #if defined(X3270_ANSI) /*[*/
 		toggle_init(t, LINE_WRAP, "lineWrapOption", CN, &spaced);
 #endif /*]*/
-		toggle_init(t, MARGINED_PASTE, "marginedPasteOption", CN, &spaced);
-		toggle_init(t, RECTANGLE_SELECT, "rectangleSelectOption", CN, &spaced);
+		toggle_init(t, MARGINED_PASTE, "marginedPasteOption", CN,
+			&spaced);
+		toggle_init(t, OVERLAY_PASTE, "overlayPasteOption", CN,
+			&spaced);
+		toggle_init(t, MARGINED_PASTE, "marginedPasteOption", CN,
+			&spaced);
+		toggle_init(t, RECTANGLE_SELECT, "rectangleSelectOption", CN,
+			&spaced);
 		toggle_init(t, CROSSHAIR, "crosshairOption", CN, &spaced);
-		toggle_init(t, VISIBLE_CONTROL, "visibleControlOption", CN, &spaced);
+		toggle_init(t, VISIBLE_CONTROL, "visibleControlOption", CN,
+			&spaced);
 		spaced = False;
 		toggle_init(t, ALT_CURSOR, "underlineCursorOption",
 		    "blockCursorOption", &spaced);

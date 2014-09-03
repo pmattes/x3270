@@ -85,6 +85,8 @@
 
 /*#define KYBDLOCK_TRACE	1*/
 
+#define MarginedPaste()	(toggled(MARGINED_PASTE) || toggled(OVERLAY_PASTE))
+
 /* Statics */
 static enum	{ NONE, COMPOSE, FIRST } composing = NONE;
 static unsigned char pf_xlate[] = { 
@@ -826,6 +828,7 @@ key_Character(unsigned ebc, Boolean with_ge, Boolean pasting, Boolean *skipped)
 	register unsigned char	fa;
 	enum dbcs_why why = DBCS_FIELD;
 	Boolean no_room = False;
+	Boolean auto_skip = True;
 
 	reset_idle_timer();
 
@@ -844,9 +847,26 @@ key_Character(unsigned ebc, Boolean with_ge, Boolean pasting, Boolean *skipped)
 	baddr = cursor_addr;
 	faddr = find_field_attribute(baddr);
 	fa = get_field_attribute(baddr);
+
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
+	if (pasting && toggled(OVERLAY_PASTE)) {
+	    auto_skip = False;
+	}
+#endif /*]*/
+
 	if (ea_buf[baddr].fa || FA_IS_PROTECTED(fa)) {
+	    if (!auto_skip) {
+		/*
+		 * In overlay-paste mode, protected fields cause paste buffer
+		 * data to be dropped while moving the cursor right.
+		 */
+		INC_BA(baddr);
+		cursor_move(baddr);
+		return True;
+	    } else {
 		operator_error(KL_OERR_PROTECTED);
 		return False;
+	    }
 	}
 	if (appres.numeric_lock && FA_IS_NUMERIC(fa) &&
 	    !((ebc >= EBC_0 && ebc <= EBC_9) ||
@@ -1045,7 +1065,7 @@ key_Character(unsigned ebc, Boolean with_ge, Boolean pasting, Boolean *skipped)
 	 * This happens for all pasted data (even DUP), and for all
 	 * keyboard-generated data except DUP.
 	 */
-	if (pasting || (ebc != EBC_dup)) {
+	if (auto_skip && (pasting || (ebc != EBC_dup))) {
 		while (ea_buf[baddr].fa) {
 			if (skipped != NULL)
 				*skipped = True;
@@ -1055,6 +1075,8 @@ key_Character(unsigned ebc, Boolean with_ge, Boolean pasting, Boolean *skipped)
 				INC_BA(baddr);
 		}
 		cursor_move(baddr);
+	} else {
+	    cursor_move(baddr);
 	}
 
 	(void) ctlr_dbcs_postprocess();
@@ -1476,7 +1498,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 		} else
 #endif /*]*/
 			(void) key_Character(ebc, (keytype == KT_GE) || ge,
-					     False, skipped);
+				(cause == IA_PASTE), skipped);
 	}
 #if defined(X3270_ANSI) /*[*/
 	else if (IN_ANSI) {
@@ -3370,7 +3392,7 @@ kybd_scroll_lock(Boolean lock)
 		kybdlock_clr(KL_SCROLLED, "kybd_scroll_lock");
 }
 
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
 /*
  * Move the cursor back within the legal paste area.
  * Returns a Boolean indicating success.
@@ -3382,6 +3404,18 @@ remargin(int lmargin)
 	int baddr, b0 = 0;
 	int faddr;
 	unsigned char fa;
+
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
+	if (toggled(OVERLAY_PASTE)) {
+	    /*
+	     * If doing overlay paste as well, just drop down to the margin
+	     * column on the next line, and don't worry about protected fields.
+	     */
+	    baddr = ROWCOL_TO_BA(BA_TO_ROW(cursor_addr), lmargin);
+	    cursor_move(baddr);
+	    return True;
+	}
+#endif /*]*/
 
 	baddr = cursor_addr;
 	while (BA_TO_COL(baddr) < lmargin) {
@@ -3433,11 +3467,18 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 	int nc = 0;
 	enum iaction ia = pasting ? IA_PASTE : IA_STRING;
 	int orig_addr = cursor_addr;
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
 	int orig_col = BA_TO_COL(cursor_addr);
 #endif /*]*/
 	Boolean skipped = False;
 	ucs4_t c;
+	Boolean auto_skip = True;
+
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
+	if (pasting && toggled(OVERLAY_PASTE)) {
+	    auto_skip = False;
+	}
+#endif /*]*/
 
 	/*
 	 * In the switch statements below, "break" generally means "consume
@@ -3460,9 +3501,9 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 			if (cursor_addr < orig_addr)
 				return xlen-1;		/* wrapped */
 
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
 			/* Jump cursor over left margin. */
-			if (toggled(MARGINED_PASTE) &&
+			if (MarginedPaste() &&
 			    BA_TO_COL(cursor_addr) < orig_col) {
 				if (!remargin(orig_col))
 					return xlen-1;
@@ -3494,9 +3535,33 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 				break;
 			    case '\n':
 				if (pasting) {
-					if (!skipped)
+					if (auto_skip) {
+					    if (!skipped) {
 						action_internal(Newline_action,
 								ia, CN, CN);
+					    }
+					} else {
+					    int baddr = cursor_addr;
+					    int row;
+
+					    /*
+					     * Overlay paste mode: Move to the
+					     * beginning of the next row.
+					     *
+					     * If this is the last pasted
+					     * character, ignore it.
+					     */
+					    if (xlen == 1) {
+						return 0;
+					    }
+					    row = BA_TO_ROW(cursor_addr);
+					    if (row >= ROWS - 1) {
+						return xlen - 1;
+					    }
+					    baddr = ROWCOL_TO_BA(row + 1, 0);
+					    cursor_move(baddr);
+
+					}
 					skipped = False;
 				} else {
 					action_internal(Enter_action, ia, CN,
@@ -3817,8 +3882,8 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 
 	switch (state) {
 	    case BASE:
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
-		if (toggled(MARGINED_PASTE) &&
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
+		if (MarginedPaste() &&
 		    BA_TO_COL(cursor_addr) < orig_col) {
 			(void) remargin(orig_col);
 		}
@@ -3828,8 +3893,8 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 	    case HEX:
 		key_UCharacter((unsigned char) literal, KT_STD, ia, &skipped);
 		state = BASE;
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
-		if (toggled(MARGINED_PASTE) &&
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
+		if (MarginedPaste() &&
 		    BA_TO_COL(cursor_addr) < orig_col) {
 			(void) remargin(orig_col);
 		}
@@ -3839,8 +3904,8 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 		vtrace(" %s -> Key(X'%02X')\n", ia_name[(int) ia], literal);
 		key_Character((unsigned char) literal, False, True, &skipped);
 		state = BASE;
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
-		if (toggled(MARGINED_PASTE) &&
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
+		if (MarginedPaste() &&
 		    BA_TO_COL(cursor_addr) < orig_col) {
 			(void) remargin(orig_col);
 		}

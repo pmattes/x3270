@@ -1969,6 +1969,27 @@ endif
     <b>true</b> otherwise.
 .
 
+name overlayPaste
+applies wc x
+groups i
+type b
+default false
+switch -set overlayPaste
+switch -clear overlayPaste
+option Options -&gt; Toggles -&gt; Overlay Paste
+desc
+    When true, the <b>Paste</b> action will overlay protected fields,
+    instead of locking the keyboard and stopping. This means that when the
+    cursor is on a protected field, a displayable character read from the paste
+    buffer will simply cause the cursor to advance to the right; the actual
+    character is ignored. This allows regions of the screen that include
+    protected fields to be copied and pasted back into a formatted screens that
+    include the same protected fields (i.e., a form).
+    <p class="indented">
+    Note: Setting overlayPaste to <b>true</b> will cause %p% to act as if the
+    %-marginedPaste% toggle were also set.
+.
+
 name oversize
 applies a
 type s

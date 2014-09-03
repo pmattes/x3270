@@ -2,6 +2,14 @@
 3.3 is the current development line for the x3270 suite.
 <h2>Changes in version 3.3.15ga3, nn. September 2014</h2>
 <ul>
+ <li>[<i>x3270</i>, <i>wc3270</i>] Added an <b>overlayPaste</b> toggle.
+  When set, pasting over a protected field will simply increment the cursor
+  position instead of locking the keyboard. This allows forms to be copied and
+  pasted with the protected fields included. Setting this toggle also
+  implicitly sets the <b>marginedPaste</b> toggle.</li>
+ <li>[<i>x3270</i>] Changed the selection logic so that a rectangular
+  selection (the default for 3270 mode) never ends with a newline character.
+  </li>
  <li>[all] Added a <b>--disable-ipv6</b> option to the ./configure script to
   allow IPv6 support to be explicitly disabled.</li>
 </ul>
