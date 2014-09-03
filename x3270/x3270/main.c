@@ -901,6 +901,16 @@ parse_local_process(int *argcp, char **argv, char **cmds)
 }
 #endif /*]*/
 
+/* Comparison function for toggle name qsort. */
+static int
+name_cmp(const void *p1, const void *p2)
+{
+    const char *s1 = *(char *const *)p1;
+    const char *s2 = *(char *const *)p2;
+
+    return strcmp(s1, s2);
+}
+
 /*
  * Pick out -set and -clear toggle options.
  */
@@ -935,15 +945,23 @@ parse_set_clear(int *argcp, char **argv)
 				break;
 			}
 		if (toggle_names[j].name == NULL) {
-			fprintf(stderr, "Unknown toggle name '%s'. Toggle "
-				"names are:\n", argv[i]);
+			const char **tn;
+			int ntn = 0;
+
+			tn = (const char **)Calloc(N_TOGGLES, sizeof(char **));
 			for (j = 0; toggle_names[j].name != NULL; j++) {
 				if (!toggle_names[j].is_alias) {
-					fprintf(stderr, " %s",
-						toggle_names[j].name);
+					tn[ntn++] = toggle_names[j].name;
 				}
 			}
+			qsort(tn, ntn, sizeof(const char *), name_cmp);
+			fprintf(stderr, "Unknown toggle name '%s'. Toggle "
+				"names are:\n", argv[i]);
+			for (j = 0; j < ntn; j++) {
+				fprintf(stderr, " %s", tn[j]);
+			}
 			fprintf(stderr, "\n");
+			Free(tn);
 			exit(1);
 		}
 
