@@ -126,6 +126,8 @@ ifelse(XX_MODE,console,`XX_TR(XX_TD(noPrompt)	XX_TD(False)	XX_TD(XX_DASHED(nopro
 ')dnl
 XX_TR(XX_TD(numericLock)	XX_TD(False)	XX_TD(XX_NBSP)	XX_TD(Lock keyboard for numeric field error))
 XX_TR(XX_TD(oerrLock)	XX_TD(ifelse(XX_PRODUCT,c3270,True,False))	XX_TD(XX_NBSP)	XX_TD(Lock keyboard for input error))
+ifelse(XX_PRODUCT,c3270,,XX_PRODUCT,s3270,,XX_PRODUCT,tcl3270,,`XX_TR(XX_TD(overlayPaste)	XX_TD(False)	XX_TD(XX_DASHED(set) overlayPaste)	XX_TD(Overlay protected fields when pasting))
+')dnl
 XX_TR(XX_TD(oversize)	XX_TD(XX_NBSP)	XX_TD(XX_DASHED(oversize))	XX_TD(Oversize screen dimensions))
 XX_TR(XX_TD(port)	XX_TD(telnet)	XX_TD(XX_DASHED(port))	XX_TD(Non-default TCP port))
 ifelse(XX_MODE,console,`XX_TR(XX_TD(printer.*)	XX_TD(XX_LINK(#rn4,`(note 4)'))	XX_TD(XX_NBSP)	XX_TD(Printer session config))

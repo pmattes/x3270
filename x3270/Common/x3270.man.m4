@@ -871,15 +871,6 @@ ifelse(XX_MODE,console,`XX_TP(XX_FB(showTiming))
 If set, the time taken by the host to process an XX_SM(AID) is displayed on
 the status line.
 ')dnl
-ifelse(XX_PRODUCT,wc3270,`XX_TP(XX_FB(marginedPaste))
-If set, puts restrictions on how pasted text is placed on the screen.
-The position of the cursor at the time the `paste' operation is begun is
-used as a left margin.
-No pasted text will fill any area of the screen to the left of that
-position.
-This option is useful for pasting into certain XX_SM(IBM) editors that use the
-left side of the screen for control information.
-')dnl
 XX_TP(XX_FB(aidWait))
 Changes the behavior of actions that send an XX_SM(AID) to the
 host (XX_FB(Enter),
