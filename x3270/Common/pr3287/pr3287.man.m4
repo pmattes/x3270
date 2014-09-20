@@ -140,6 +140,11 @@ Specifies the password for the private key file, if it is encrypted.
 The argument can be XX_FB(file):XX_FI(filename), specifying that the
 password is in a file, or XX_FB(string):XX_FI(string), specifying the
 password on the command-line directly.
+XX_TP(XX_FB(XX_DASHED(mpp) XX_FI(n)))
+Specifies a non-default value for the Maximum Presentation Position (the
+line length for unformatted Write commands).
+The default is 132.
+The minimum is 40 and the maximum is 256.
 ifelse(XX_PRODUCT,wpr3287,`XX_TP(XX_FB(XX_DASHED(printer)) XX_FI(printer))
 Specifies the Windows printer to use for each print job.
 The default is to use the printer specified by the XX_FB($PRINTER) environment
@@ -271,7 +276,7 @@ RFC 1646, TN3270 Extensions for LUname and Printer Selection
 XX_BR
 RFC 2355, TN3270 Enhancements
 XX_SH(Copyrights)
-Copyright`'XX_COPY()1993-2013, Paul Mattes.
+Copyright`'XX_COPY()1993-2014, Paul Mattes.
 XX_BR
 Copyright`'XX_COPY()1990, Jeff Sparkes.
 XX_BR

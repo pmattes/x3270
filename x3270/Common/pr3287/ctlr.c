@@ -71,8 +71,7 @@
 #define WCC_64				0x20
 #define WCC_80				0x30
 
-#define MAX_LL				132
-#define MAX_BUF				(MAX_LL * MAX_LL)	/* swag */
+#define MAX_BUF				(MAX_UNF_MPP * MAX_UNF_MPP) /* swag */
 
 #define VISIBLE		0x01	/* visible field */
 #define INVISIBLE	0x02	/* invisible field */
@@ -87,7 +86,7 @@ static int ll_len[] = { 132, 40, 64, 80 };
 /* 3270 (formatted mode) data */
 static unsigned char default_gr;
 static unsigned char default_cs;
-static int line_length = MAX_LL;
+static int line_length;
 static ucs4_t page_buf[MAX_BUF];
 static unsigned char *xlate_buf[MAX_BUF];
 int xlate_len[MAX_BUF];
@@ -1533,7 +1532,7 @@ static struct {
 	char buf;		/* printable data */
 	unsigned char *trn;	/* transparent data */
 	unsigned trn_len;	/* length of transparent data */
-} uo_data[MAX_LL + 2];		/* room for full line plus carriage control */
+} uo_data[MAX_UNF_MPP + 2];	/* room for full line plus carriage control */
 static unsigned uo_col;		/* current output column */
 static unsigned uo_maxcol;	/* maximum column buffered */
 static Boolean uo_last_cr = False; /* last data was CR */
@@ -1580,7 +1579,7 @@ dump_uo(void)
 			return -1;
 		}
 	}
-	if (uo_maxcol < MAX_LL + 2) {
+	if (uo_maxcol < MAX_UNF_MPP + 2) {
 		if (dump_uo_trn(uo_maxcol) < 0) {
 			return -1;
 		}
@@ -1591,7 +1590,7 @@ dump_uo(void)
 /*
  * Unformatted output function.  Processes one character of output data.
  *
- * This function will buffer up to MAX_LL characters of output, until it is
+ * This function will buffer up to MPP characters of output, until it is
  * passed a '\n' or '\f' character.
  *
  * By default, it will process '\r' characters like a printer, i.e., it will
@@ -1740,7 +1739,7 @@ dump_unformatted(void)
 			 * If they specified '-skipcc', don't count the first
 			 * character on the line as printable.
 			 */
-			if (++prcol > MAX_LL + (options.skipcc != 0)) {
+			if (++prcol > options.mpp + (options.skipcc != 0)) {
 				if (uoutput('\n') < 0)
 					return -1;
 				prcol = 0;
@@ -1785,7 +1784,7 @@ dump_unformatted(void)
 	(void) memset(xlate_len, '\0', MAX_BUF * sizeof(int));
 
 	/* Clear the output state. */
-	for (i = 0; i < MAX_LL + 2; i++) {
+	for (i = 0; i < MAX_UNF_MPP + 2; i++) {
 		uo_data[i].buf = 0;
 		if (uo_data[i].trn != NULL) {
 			Free(uo_data[i].trn);
@@ -1834,7 +1833,7 @@ dump_formatted(void)
 
 	if (!any_3270_output)
 		return 0;
-	for (i = 0; i < MAX_LL; i++) {
+	for (i = 0; i < MAX_UNF_MPP; i++) {
 		int blanks = 0;
 		int any_data = 0;
 		int j;
