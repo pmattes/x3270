@@ -1173,12 +1173,19 @@ ft_start(void)
 
 	/* Build the ind$file command */
 	op[0] = '\0';
-	if (ascii_flag)
+	if (ascii_flag) {
 		strcat(op, " ASCII");
-	if (cr_flag)
+	} else if (host_type == HT_CICS) {
+		strcat(op, " BINARY");
+	}
+	if (cr_flag) {
 		strcat(op, " CRLF");
-	if (append_flag && !receive_flag)
+	} else if (host_type == HT_CICS) {
+		strcat(op, " NOCRLF");
+	}
+	if (append_flag && !receive_flag) {
 		strcat(op, " APPEND");
+	}
 	if (!receive_flag) {
 		if (host_type == HT_TSO) {
 			if (recfm != DEFAULT_RECFM) {
@@ -1953,6 +1960,10 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	if (!strcasecmp(tp[PARM_CR].value, "auto")) {
 		cr_flag = ascii_flag;
 	} else {
+		if (!ascii_flag) {
+			popup_an_error("Invalid 'Cr' option for ASCII mode");
+			return;
+		}
 		cr_flag = !strcasecmp(tp[PARM_CR].value, "remove") ||
 			  !strcasecmp(tp[PARM_CR].value, "add");
 	}
@@ -2017,12 +2028,19 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 
 	/* Build the ind$file command */
 	op[0] = '\0';
-	if (ascii_flag)
+	if (ascii_flag) {
 		strcat(op, " ASCII");
-	if (cr_flag)
+	} else if (host_type == HT_CICS) {
+		strcat(op, " BINARY");
+	}
+	if (cr_flag) {
 		strcat(op, " CRLF");
-	if (append_flag && !receive_flag)
+	} else if (host_type == HT_CICS) {
+		strcat(op, " NOCRLF");
+	}
+	if (append_flag && !receive_flag) {
 		strcat(op, " APPEND");
+	}
 	if (!receive_flag) {
 		if (host_type == HT_TSO) {
 			if (recfm != DEFAULT_RECFM) {
