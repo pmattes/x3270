@@ -68,6 +68,8 @@
  *          -keyfile file
  *          -keyfiletype type
  *          -keypasswd type:text
+ *          -mpp n
+ *              set the maximum presentation position (unformatted line length)
  *          -nocrlf
  *		expand newlines to CR/LF (Windows only)
  *	    -printer "printer name"
@@ -226,6 +228,8 @@ usage(void)
 "                   specify private key password\n"
 #endif /*]*/
 "  -ignoreeoj       ignore PRINT-EOJ commands\n",
+"  -mpp <n>         define the Maximum Presentation Position (unformatted\n"
+"                   line length)\n"
 #if defined(_WIN32) /*[*/
 "  -printer \"printer name\"\n"
 "                   use specific printer (default is $PRINTER or the system\n"
@@ -426,6 +430,7 @@ init_options(void)
 	options.proxy_spec		= NULL;
 	options.reconnect		= 0;
 	options.skipcc			= 0;
+	options.mpp			= DEFAULT_UNF_MPP;
 #if defined(HAVE_LIBSSL) /*[*/
 	options.ssl.accept_hostname	= NULL;
 	options.ssl.ca_dir		= NULL;
@@ -664,6 +669,20 @@ main(int argc, char *argv[])
 			options.printercp = (int)strtoul(argv[i + 1], NULL, 0);
 			i++;
 #endif /*]*/
+		} else if (!strcmp(argv[i], "-mpp")) {
+			if (argc <= i + 1 || !argv[i + 1][0]) {
+				(void) fprintf(stderr,
+				    "Missing value for -mpp\n");
+				usage();
+			}
+			options.mpp = (int)strtoul(argv[i + 1], NULL, 0);
+			if (options.mpp < MIN_UNF_MPP ||
+			    options.mpp > MAX_UNF_MPP) {
+				(void) fprintf(stderr,
+				    "Invalid for -mpp\n");
+				usage();
+			}
+			i++;
 		} else if (!strcmp(argv[i], "-reconnect")) {
 			options.reconnect = 1;
 #if defined(HAVE_LIBSSL) /*[*/
@@ -674,7 +693,7 @@ main(int argc, char *argv[])
 			printf("%s\n%s\n", build, build_options());
 			charset_list();
 			printf("\n\
-Copyright 1989-2013, Paul Mattes, GTRC and others.\n\
+Copyright 1989-2014, Paul Mattes, GTRC and others.\n\
 See the source code or documentation for licensing details.\n\
 Distributed WITHOUT ANY WARRANTY; without even the implied warranty of\n\
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");

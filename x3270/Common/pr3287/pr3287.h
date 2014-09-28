@@ -57,6 +57,7 @@ typedef struct {
 	const char *proxy_spec;	/* proxy specification */
 	int reconnect;		/* -reconnect */
 	int skipcc;		/* -skipcc */
+	int mpp;		/* -mpp */
 #if defined(HAVE_LIBSSL) /*[*/
 	struct {
 		const char *accept_hostname;	/* -accepthostname */
@@ -89,3 +90,7 @@ extern char *common_appdata;
 extern int syncsock;
 
 extern void pr3287_exit(int exit_code);
+
+#define MIN_UNF_MPP	40	/* minimum value for unformatted MPP */
+#define MAX_UNF_MPP	256	/* maximum value for unformatted MPP */
+#define DEFAULT_UNF_MPP	132	/* default value for unformatted MPP */
