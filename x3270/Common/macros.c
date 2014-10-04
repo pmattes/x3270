@@ -1847,6 +1847,8 @@ script_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		else
 #endif
 		popup_an_errno(errno, "%s[%d] read", ST_NAME, sms_depth);
+		sms_pop(True);
+		sms_continue();
 		return;
 	}
 	vtrace("Input for %s[%d] %s complete, nr=%d\n", ST_NAME, sms_depth,
