@@ -1718,14 +1718,17 @@ description
 .
 
 name menuBar
-applies x
+applies x wc
 groups a
 type b
 default true
 description
     If false, the menu bar will not be displayed at the top of
-    the %p% main window.  The three pull-down menus are still available,
+    the %p% main window.
+if x
+    The three pull-down menus are still available,
     however, by pressing Ctrl and each of the mouse buttons.
+endif
 .
 
 name menuBar
@@ -1736,7 +1739,6 @@ default true
 description
     If false, the menu bar will not be displayed at the top of
     the %p% display, even if the terminal supports a mouse.
-    The menu is still available by pressing Ctrl-N.
 .
 
 name metaEscape

@@ -2570,11 +2570,11 @@ edit_menu(session_t *s, sp_t how, const char *path, const char *session_name)
 	    int invalid = 0;
 	    int was_wpr3287 = 0;
 
-	    printf("\nEnter item number to change: [none] ");
+	    printf("\nEnter item number to change: [%s] ", CHOICE_NONE);
 	    fflush(stdout);
 	    if (get_input(choicebuf, sizeof(choicebuf)) == NULL) {
 		return SRC_ERR;
-	    } else if (!choicebuf[0]) {
+	    } else if (!choicebuf[0] || !strcasecmp(choicebuf, CHOICE_NONE)) {
 		/* none */
 		done = 1;
 		break;
