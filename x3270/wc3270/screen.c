@@ -2025,7 +2025,8 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 
 	switch (ir.EventType) {
 	case FOCUS_EVENT:
-		trace_event("Focus\n");
+		trace_event("Focus %s\n", ir.Event.FocusEvent.bSetFocus?
+			"set": "unset");
 		/*
 		 * When we get a focus event, the system may have (incorrectly)
 		 * redrawn our window.  Do it again ourselves.
