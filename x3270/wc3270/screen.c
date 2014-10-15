@@ -2633,24 +2633,27 @@ draw_oia(void)
 		printw(" ");
 	}
 
-	if (appres.m3279)
+	if (appres.m3279) {
 	    	attrset(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
 			cmap_bg[HOST_COLOR_GREY]);
-	else
+	} else {
 		attrset(reverse_colors(defattr));
+	}
 	mvprintw(status_row, 0, "4");
-	if (oia_undera)
+	if (oia_undera) {
 		printw("%c", IN_E? 'B': 'A');
-	else
+	} else {
 		printw(" ");
-	if (IN_ANSI)
+	}
+	if (IN_NVT) {
 		printw("N");
-	else if (oia_boxsolid)
+	} else if (oia_boxsolid) {
 		printw(" ");
-	else if (IN_SSCP)
+	} else if (IN_SSCP) {
 		printw("S");
-	else
+	} else {
 		printw("?");
+	}
 
 	if (appres.m3279)
 	    	attrset(cmap_fg[HOST_COLOR_GREY] |

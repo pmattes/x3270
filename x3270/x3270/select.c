@@ -818,7 +818,7 @@ Cut_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_par
 	for (baddr = 0; baddr < ROWS*COLS; baddr++) {
 		if (ea_buf[baddr].fa)
 			fa = ea_buf[baddr].fa;
-		else if ((IN_ANSI || !FA_IS_PROTECTED(fa)) && SELECTED(baddr))
+		else if ((IN_NVT || !FA_IS_PROTECTED(fa)) && SELECTED(baddr))
 			target[baddr/ULBS] |= 1 << (baddr%ULBS);
 	}
 

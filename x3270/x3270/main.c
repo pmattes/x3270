@@ -785,7 +785,7 @@ relabel(Boolean ignored _is_unused)
 						strlen(reconnect_host) : 0));
 	if (PCONNECTED || appres.reconnect) {
 		(void) sprintf(title, "x3270-%d%s %s", model_num,
-		    (IN_ANSI ? "A" : ""), reconnect_host);
+		    (IN_NVT ? "A" : ""), reconnect_host);
 		if (user_title == CN)
 			XtVaSetValues(toplevel, XtNtitle, title, NULL);
 		if (user_icon_name == CN)

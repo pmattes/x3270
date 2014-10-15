@@ -543,16 +543,16 @@ menubar_connect(Boolean ignored _is_unused)
 		    NULL);
 #endif /*]*/
 	if (linemode_button != (Widget)NULL)
-		XtVaSetValues(linemode_button, XtNsensitive, IN_ANSI, NULL);
+		XtVaSetValues(linemode_button, XtNsensitive, IN_NVT, NULL);
 	if (charmode_button != (Widget)NULL)
-		XtVaSetValues(charmode_button, XtNsensitive, IN_ANSI, NULL);
+		XtVaSetValues(charmode_button, XtNsensitive, IN_NVT, NULL);
 	if (appres.toggle[LINE_WRAP].w[0] != (Widget)NULL)
 		XtVaSetValues(appres.toggle[LINE_WRAP].w[0],
-		    XtNsensitive, IN_ANSI,
+		    XtNsensitive, IN_NVT,
 		    NULL);
 	if (appres.toggle[RECTANGLE_SELECT].w[0] != (Widget)NULL)
 		XtVaSetValues(appres.toggle[RECTANGLE_SELECT].w[0],
-		    XtNsensitive, IN_ANSI,
+		    XtNsensitive, IN_NVT,
 		    NULL);
 	if (models_option != (Widget)NULL)
 		XtVaSetValues(models_option, XtNsensitive, !PCONNECTED, NULL);
@@ -1964,13 +1964,13 @@ options_menu_init(Boolean regen, Position x, Position y)
 				linemode_callback, NULL,
 				&spaced,
 				XtNleftBitmap, linemode? diamond: no_diamond,
-				XtNsensitive, IN_ANSI,
+				XtNsensitive, IN_NVT,
 				NULL);
 		charmode_button = add_menu_itemv("characterModeOption", t,
 				charmode_callback, NULL,
 				&spaced,
 				XtNleftBitmap, linemode? no_diamond: diamond,
-				XtNsensitive, IN_ANSI,
+				XtNsensitive, IN_NVT,
 				NULL);
 		if (!appres.mono) {
 			spaced = False;

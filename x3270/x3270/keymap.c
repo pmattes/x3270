@@ -125,7 +125,7 @@ keymap_init(const char *km, Boolean interactive)
 	setup_keymaps(km, interactive);
 	if (!initted) {
 		initted = True;
-		last_nvt = IN_ANSI;
+		last_nvt = IN_NVT;
 		last_3270 = IN_3270;
 		register_schange(ST_3270_MODE, keymap_3270_mode);
 		register_schange(ST_CONNECT, keymap_3270_mode);
@@ -157,8 +157,8 @@ keymap_init(const char *km, Boolean interactive)
 static void
 keymap_3270_mode(Boolean ignored _is_unused)
 {
-	if (last_nvt != IN_ANSI || last_3270 != IN_3270) {
-		last_nvt = IN_ANSI;
+	if (last_nvt != IN_NVT || last_3270 != IN_3270) {
+		last_nvt = IN_NVT;
 		last_3270 = IN_3270;
 
 		/* Switch between 3270 and NVT keymaps. */
@@ -332,9 +332,10 @@ add_keymap(const char *name, Boolean do_popup)
 		any++;
 		if (translations != CN)
 			add_trans(name, translations, path, is_from_server);
-		if (IN_ANSI && translations_nvt != CN)
+		if (IN_NVT && translations_nvt != CN) {
 			add_trans(buf_nvt, translations_nvt, path_nvt,
 			    is_from_server);
+		}
 		if (IN_3270 && translations_3270 != CN)
 			add_trans(buf_3270, translations_3270, path_3270,
 			    is_from_server);
@@ -358,9 +359,10 @@ add_keymap(const char *name, Boolean do_popup)
 			any++;
 		if (translations != CN)
 			add_trans(name, translations, CN, is_from_server);
-		if (IN_ANSI && translations_nvt != CN)
+		if (IN_NVT && translations_nvt != CN) {
 			add_trans(buf_nvt + strlen(ResKeymap) + 1,
 			    translations_nvt, CN, is_from_server);
+		}
 		if (IN_3270 && translations_3270 != CN)
 			add_trans(buf_3270 + strlen(ResKeymap) + 1,
 			    translations_3270, CN, is_from_server);
@@ -379,9 +381,10 @@ add_keymap(const char *name, Boolean do_popup)
 		translations_3270 = get_resource(buf_3270);
 		if (translations != CN || translations_nvt != CN || translations_3270 != CN)
 			any++;
-		if (IN_ANSI && translations_nvt != CN)
+		if (IN_NVT && translations_nvt != CN) {
 			add_trans(buf_nvt + strlen(ResKeymap) + 1,
 			    translations_nvt, CN, is_from_server);
+		}
 		if (IN_3270 && translations_3270 != CN)
 			add_trans(buf_3270 + strlen(ResKeymap) + 1,
 			    translations_3270, CN, is_from_server);

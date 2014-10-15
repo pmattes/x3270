@@ -1445,7 +1445,7 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 #endif /*]*/
 	}
 
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		(void) ctlr_dbcs_postprocess();
 	}
 	if (ansi_data) {
@@ -1600,7 +1600,7 @@ telnet_fsm(unsigned char c)
 			status_reset();
 			ps_process();
 		}
-		if (IN_ANSI && !IN_E) {
+		if (IN_NVT && !IN_E) {
 			if (!ansi_data) {
 				vtrace("<.. ");
 				ansi_data = 4;
@@ -1628,7 +1628,7 @@ telnet_fsm(unsigned char c)
 		}
 		switch (c) {
 		    case IAC:	/* escaped IAC, insert it */
-			if (IN_ANSI && !IN_E) {
+			if (IN_NVT && !IN_E) {
 				if (!ansi_data) {
 					vtrace("<.. ");
 					ansi_data = 4;
@@ -2841,8 +2841,9 @@ static void
 net_cookout(const char *buf, int len)
 {
 
-	if (!IN_ANSI || (kybdlock & KL_AWAITING_FIRST))
+	if (!IN_NVT || (kybdlock & KL_AWAITING_FIRST)) {
 		return;
+	}
 
 	if (linemode) {
 		register int	i;
@@ -3192,7 +3193,7 @@ check_in3270(void)
 #endif /*]*/
 		vtrace("Now operating in %s mode.\n",
 			state_name[new_cstate]);
-		if (IN_3270 || IN_ANSI || IN_SSCP) {
+		if (IN_3270 || IN_NVT || IN_SSCP) {
 			any_host_data = True;
 		}
 		host_in3270(new_cstate);
@@ -3276,7 +3277,7 @@ check_linemode(Boolean init)
 			vtrace("Operating in %s mode.\n",
 			    linemode ? "line" : "character-at-a-time");
 		}
-		if (IN_ANSI && linemode) {
+		if (IN_NVT && linemode) {
 			cooked_init();
 		}
 	}

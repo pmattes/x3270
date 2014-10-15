@@ -778,7 +778,7 @@ host_disconnect(Boolean failed)
 		 * Remember a disconnect from ANSI mode, to keep screen tracing
 		 * in sync.
 		 */
-		if (IN_ANSI && toggled(SCREEN_TRACE)) {
+		if (IN_NVT && toggled(SCREEN_TRACE)) {
 			trace_ansi_disc();
 		}
 

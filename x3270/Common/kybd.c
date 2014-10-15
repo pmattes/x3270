@@ -521,7 +521,7 @@ operator_error(int error_type)
 static void
 key_AID(unsigned char aid_code)
 {
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		register unsigned i;
 
 		if (aid_code == AID_ENTER) {
@@ -1131,8 +1131,8 @@ key_WCharacter(unsigned char ebc_pair[], Boolean *skipped)
 		return True;
 	}
 
-	/* In ANSI mode? */
-	if (IN_ANSI) {
+	/* In NVT mode? */
+	if (IN_NVT) {
 	    char mb[16];
 
 	    (void) ebcdic_to_multibyte((ebc_pair[0] << 8) | ebc_pair[1], mb,
@@ -1490,7 +1490,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 			(void) key_Character(ebc, (keytype == KT_GE) || ge,
 				(cause == IA_PASTE), skipped);
 	}
-	else if (IN_ANSI) {
+	else if (IN_NVT) {
 	    	char mb[16];
 
 		unicode_to_multibyte(ucs4, mb, sizeof(mb));
@@ -1614,7 +1614,7 @@ Tab_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_par
 			return;
 		}
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		net_sendc('\t');
 		return;
 	}
@@ -1785,7 +1785,7 @@ Home_action(Widget w _is_unused, XEvent *event, String *params,
 		enq_ta(Home_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		ansi_send_home();
 		return;
 	}
@@ -1837,7 +1837,7 @@ Left_action(Widget w _is_unused, XEvent *event, String *params,
 			return;
 		}
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		ansi_send_left();
 		return;
 	}
@@ -1943,7 +1943,7 @@ Delete_action(Widget w _is_unused, XEvent *event, String *params,
 		enq_ta(Delete_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		net_sendc('\177');
 		return;
 	}
@@ -1972,7 +1972,7 @@ BackSpace_action(Widget w _is_unused, XEvent *event, String *params,
 		enq_ta(BackSpace_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		net_send_erase();
 		return;
 	}
@@ -2059,7 +2059,7 @@ Erase_action(Widget w _is_unused, XEvent *event, String *params,
 		enq_ta(Erase_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		net_send_erase();
 		return;
 	}
@@ -2091,7 +2091,7 @@ Right_action(Widget w _is_unused, XEvent *event, String *params,
 			return;
 		}
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		ansi_send_right();
 		return;
 	}
@@ -2128,7 +2128,7 @@ Left2_action(Widget w _is_unused, XEvent *event, String *params,
 			return;
 		}
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		return;
 	}
 	baddr = cursor_addr;
@@ -2162,10 +2162,7 @@ PreviousWord_action(Widget w _is_unused, XEvent *event, String *params,
 		enq_ta(PreviousWord_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
-		return;
-	}
-	if (!formatted) {
+	if (IN_NVT || !formatted) {
 		return;
 	}
 
@@ -2234,7 +2231,7 @@ Right2_action(Widget w _is_unused, XEvent *event, String *params,
 			return;
 		}
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		return;
 	}
 	baddr = cursor_addr;
@@ -2313,10 +2310,7 @@ NextWord_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *nu
 		enq_ta(NextWord_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
-		return;
-	}
-	if (!formatted) {
+	if (IN_NVT || !formatted) {
 		return;
 	}
 
@@ -2382,7 +2376,7 @@ Up_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_para
 			return;
 		}
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		ansi_send_up();
 		return;
 	}
@@ -2412,7 +2406,7 @@ Down_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_pa
 			return;
 		}
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		ansi_send_down();
 		return;
 	}
@@ -2438,7 +2432,7 @@ Newline_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
 		enq_ta(Newline_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		net_sendc('\n');
 		return;
 	}
@@ -2467,7 +2461,7 @@ Dup_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_par
 		enq_ta(Dup_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		return;
 	}
 	if (key_Character(EBC_dup, False, False, NULL))
@@ -2489,7 +2483,7 @@ FieldMark_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *n
 		enq_ta(FieldMark_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		return;
 	}
 	(void) key_Character(EBC_fm, False, False, NULL);
@@ -2522,8 +2516,9 @@ SysReq_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_
 	if (check_usage(SysReq_action, *num_params, 0, 0) < 0)
 		return;
 	reset_idle_timer();
-	if (IN_ANSI)
+	if (IN_NVT) {
 		return;
+	}
 #if defined(X3270_TN3270E) /*[*/
 	if (IN_E) {
 		net_abort();
@@ -2556,7 +2551,7 @@ Clear_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_p
 		enq_ta(Clear_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		ansi_send_clear();
 		return;
 	}
@@ -2669,7 +2664,7 @@ CursorSelect_action(Widget w _is_unused, XEvent *event, String *params,
 		return;
 	}
 
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		return;
 	}
 	lightpen_select(cursor_addr);
@@ -2684,14 +2679,17 @@ MouseSelect_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	action_debug(MouseSelect_action, event, params, num_params);
-	if (check_usage(MouseSelect_action, *num_params, 0, 0) < 0)
+	if (check_usage(MouseSelect_action, *num_params, 0, 0) < 0) {
 		return;
-	if (w != *screen)
+	}
+	if (w != *screen) {
 		return;
+	}
 	reset_idle_timer();
-	if (kybdlock)
+	if (kybdlock) {
 		return;
-	if (IN_ANSI) {
+	}
+	if (IN_NVT) {
 		return;
 	}
 	lightpen_select(mouse_baddr(w, event));
@@ -2718,7 +2716,7 @@ EraseEOF_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *nu
 		enq_ta(EraseEOF_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		return;
 	}
 	baddr = cursor_addr;
@@ -2772,7 +2770,7 @@ EraseInput_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *
 		enq_ta(EraseInput_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		return;
 	}
 	if (formatted) {
@@ -2836,7 +2834,7 @@ DeleteWord_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *
 		enq_ta(DeleteWord_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		net_send_werase();
 		return;
 	}
@@ -2902,7 +2900,7 @@ DeleteField_action(Widget w _is_unused, XEvent *event, String *params, Cardinal 
 		enq_ta(DeleteField_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		net_send_kill();
 		return;
 	}
@@ -2942,7 +2940,7 @@ Insert_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_
 		enq_ta(Insert_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		return;
 	}
 	insert_mode(True);
@@ -2956,20 +2954,22 @@ void
 ToggleInsert_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
 {
 	action_debug(ToggleInsert_action, event, params, num_params);
-	if (check_usage(ToggleInsert_action, *num_params, 0, 0) < 0)
+	if (check_usage(ToggleInsert_action, *num_params, 0, 0) < 0) {
 		return;
+	}
 	reset_idle_timer();
 	if (kybdlock) {
 		enq_ta(ToggleInsert_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		return;
 	}
-	if (insert)
+	if (insert) {
 		insert_mode(False);
-	else
+	} else {
 		insert_mode(True);
+	}
 }
 
 
@@ -2987,7 +2987,7 @@ ToggleReverse_action(Widget w _is_unused, XEvent *event, String *params, Cardina
 		enq_ta(ToggleReverse_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		return;
 	}
 	reverse_mode(!reverse);
@@ -3013,7 +3013,7 @@ FieldEnd_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *nu
 		enq_ta(FieldEnd_action, CN, CN);
 		return;
 	}
-	if (IN_ANSI) {
+	if (IN_NVT) {
 		return;
 	}
 	if (!formatted) {
@@ -4321,7 +4321,7 @@ Default_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
 		}
 		if (ll == 1) {
 			/* Remap certain control characters. */
-			if (!IN_ANSI) switch (buf[0]) {
+			if (!IN_NVT) switch (buf[0]) {
 			    case '\t':
 				action_internal(Tab_action, IA_DEFAULT, CN, CN);
 				break;

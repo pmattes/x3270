@@ -463,7 +463,7 @@ main(int argc, char *argv[])
 		if (host_connect(cl_hostname) < 0)
 			x3270_exit(1);
 		/* Wait for negotiations to complete or fail. */
-		while (!IN_ANSI && !IN_3270) {
+		while (!IN_NVT && !IN_3270) {
 			(void) process_events(True);
 			if (!PCONNECTED)
 				x3270_exit(1);
@@ -1090,11 +1090,12 @@ status_dump(void)
 			emode = "TN3270E ";
 		else
 			emode = "";
-		if (IN_ANSI) {
-			if (linemode)
+		if (IN_NVT) {
+			if (linemode) {
 				ftype = get_message("lineMode");
-			else
+			} else {
 				ftype = get_message("charMode");
+			}
 			action_output("  %s%s, %s", emode, ftype, ts);
 		} else if (IN_SSCP) {
 			action_output("  %s%s, %s", emode,
@@ -1141,7 +1142,7 @@ status_dump(void)
 			    ns_brcvd, (ns_brcvd == 1) ?
 				get_message("byte") : get_message("bytes"));
 
-		if (IN_ANSI) {
+		if (IN_NVT) {
 			struct ctl_char *c = net_linemode_chars();
 			int i;
 			char buf[128];

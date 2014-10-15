@@ -245,7 +245,7 @@ static sms_t *sms_redirect_to(void);
 #define CAN_PROCEED ( \
     IN_SSCP || \
     (IN_3270 && (no_login_host || (formatted && cursor_addr)) && !CKBWAIT) || \
-    (IN_ANSI && !(kybdlock & KL_AWAITING_FIRST)) \
+    (IN_NVT && !(kybdlock & KL_AWAITING_FIRST)) \
 )
 
 #if defined(X3270_SCRIPT) && defined(X3270_PLUGIN) /*[*/
@@ -1908,7 +1908,7 @@ sms_continue(void)
 			break;
 
 		    case SS_WAIT_NVT:
-			if (IN_ANSI) {
+			if (IN_NVT) {
 			    sms->state = SS_WAIT_IFIELD;
 			    continue;
 			}
@@ -2504,11 +2504,12 @@ status_string(void)
 		connect_stat = NewString("N");
 
 	if (CONNECTED) {
-		if (IN_ANSI) {
-			if (linemode)
+		if (IN_NVT) {
+			if (linemode) {
 				em_mode = 'L';
-			else
+			} else {
 				em_mode = 'C';
+			}
 		} else if (IN_3270)
 			em_mode = 'I';
 		else
@@ -2810,8 +2811,9 @@ Wait_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	if (np == 1) {
 		if (!strcasecmp(pr[0], "NVTMode") ||
 		    !strcasecmp(pr[0], "ansi")) {
-			if (!IN_ANSI)
+			if (!IN_NVT) {
 				next_state = SS_WAIT_NVT;
+			}
 		} else if (!strcasecmp(pr[0], "3270Mode") ||
 			   !strcasecmp(pr[0], "3270")) {
 			if (!IN_3270)
@@ -3275,7 +3277,7 @@ Expect_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	}
 	if (check_usage(Expect_action, *num_params, 1, 2) < 0)
 		return;
-	if (!IN_ANSI) {
+	if (!IN_NVT) {
 		popup_an_error("%s is valid only when connected in ANSI mode",
 		    action_name(Expect_action));
 	}

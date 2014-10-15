@@ -595,11 +595,12 @@ popup_about_status(void)
 			emode = "TN3270E ";
 		else
 			emode = "";
-		if (IN_ANSI) {
-			if (linemode)
+		if (IN_NVT) {
+			if (linemode) {
 				ftype = get_message("lineMode");
-			else
+			} else {
 				ftype = get_message("charMode");
+			}
 			(void) snprintf(fbuf, sizeof(fbuf), "  %s%s, ",
 				emode, ftype);
 		} else if (IN_SSCP) {
@@ -671,7 +672,7 @@ popup_about_status(void)
 				    get_message("byte") : get_message("bytes"));
 		MAKE_LABEL(fbuf, 4);
 
-		if (IN_ANSI) {
+		if (IN_NVT) {
 			struct ctl_char *c = net_linemode_chars();
 			int i;
 

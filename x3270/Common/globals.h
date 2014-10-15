@@ -288,7 +288,7 @@ extern enum cstate cstate;
 #define HALF_CONNECTED	(cstate == RESOLVING || cstate == PENDING)
 #define CONNECTED	((int)cstate >= (int)CONNECTED_INITIAL)
 #define IN_NEITHER	(cstate == NEGOTIATING || cstate == CONNECTED_INITIAL)
-#define IN_ANSI		(cstate == CONNECTED_ANSI || cstate == CONNECTED_NVT)
+#define IN_NVT		(cstate == CONNECTED_ANSI || cstate == CONNECTED_NVT)
 #define IN_3270		(cstate == CONNECTED_3270 || cstate == CONNECTED_TN3270E || cstate == CONNECTED_SSCP)
 #define IN_SSCP		(cstate == CONNECTED_SSCP)
 #define IN_TN3270E	(cstate == CONNECTED_TN3270E)

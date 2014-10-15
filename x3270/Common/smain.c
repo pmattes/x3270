@@ -151,7 +151,7 @@ main(int argc, char *argv[])
 		if (host_connect(cl_hostname) < 0)
 			exit(1);
 		/* Wait for negotiations to complete or fail. */
-		while (!IN_ANSI && !IN_3270) {
+		while (!IN_NVT && !IN_3270) {
 			(void) process_events(True);
 			if (!PCONNECTED)
 				exit(1);
