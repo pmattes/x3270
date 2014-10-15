@@ -7,5 +7,4 @@
 #define X3270_MENUS	1
 #define X3270_PRINTER	1
 #define X3270_SCRIPT	1
-#define X3270_TN3270E	1
 #define X3270_IPV6	1

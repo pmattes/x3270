@@ -2519,12 +2519,9 @@ SysReq_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_
 	if (IN_NVT) {
 		return;
 	}
-#if defined(X3270_TN3270E) /*[*/
 	if (IN_E) {
 		net_abort();
-	} else
-#endif /*]*/
-	{
+	} else {
 		if (kybdlock & KL_OIA_MINUS)
 			return;
 		else if (kybdlock)

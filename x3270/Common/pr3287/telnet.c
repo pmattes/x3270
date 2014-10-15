@@ -131,7 +131,7 @@ enum cstate cstate = NOT_CONNECTED;
 #define HALF_CONNECTED	(cstate == PENDING)
 #define CONNECTED	((int)cstate >= (int)CONNECTED_INITIAL)
 #define IN_NEITHER	(cstate == CONNECTED_INITIAL)
-#define IN_ANSI		(cstate == CONNECTED_ANSI || cstate == CONNECTED_NVT)
+#define IN_NVT		(cstate == CONNECTED_ANSI || cstate == CONNECTED_NVT)
 #define IN_3270		(cstate == CONNECTED_3270 || cstate == CONNECTED_TN3270E || cstate == CONNECTED_SSCP)
 #define IN_SSCP		(cstate == CONNECTED_SSCP)
 #define IN_TN3270E	(cstate == CONNECTED_TN3270E)
@@ -688,7 +688,7 @@ telnet_fsm(unsigned char c)
 			telnet_state = TNS_IAC;
 			break;
 		}
-		if (IN_ANSI && !IN_E) {
+		if (IN_NVT && !IN_E) {
 			/* NVT data? */
 			;
 		} else {
@@ -701,7 +701,7 @@ telnet_fsm(unsigned char c)
 		}
 		switch (c) {
 		    case IAC:	/* escaped IAC, insert it */
-			if (IN_ANSI && !IN_E) {
+			if (IN_NVT && !IN_E) {
 				;
 			} else
 				store3270in(c);

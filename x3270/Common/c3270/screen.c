@@ -1483,7 +1483,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	}
 
 	/* Do some NVT-only translations. */
-	if (IN_ANSI) switch (k) {
+	if (IN_NVT) switch (k) {
 	case KEY_DC:
 	    	ucs4 = 0x7f;
 		k = 0;
@@ -1991,14 +1991,15 @@ draw_oia(void)
 	else
 		printw(" ");
 	(void) attrset(A_REVERSE | defattr);
-	if (IN_ANSI)
+	if (IN_NVT) {
 		printw("N");
-	else if (oia_boxsolid)
+	} else if (oia_boxsolid) {
 		printw(" ");
-	else if (IN_SSCP)
+	} else if (IN_SSCP) {
 		printw("S");
-	else
+	} else {
 		printw("?");
+	}
 
 	(void) attrset(defattr);
 	mvprintw(status_row, 8, "%-35.35s", status_msg);

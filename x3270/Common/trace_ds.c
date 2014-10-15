@@ -564,9 +564,7 @@ create_tracefile_header(const char *mode)
 				IN_E? "TN3270E-": "",
 				formatted? "": "un");
 			obptr = obuf;
-#if defined(X3270_TN3270E) /*[*/
 			(void) net_add_dummy_tn3270e();
-#endif /*]*/
 			ctlr_snap_buffer();
 			space3270out(2);
 			net_add_eor(obuf, obptr - obuf);
@@ -581,9 +579,7 @@ create_tracefile_header(const char *mode)
 				obptr += 2;
 				trace_netdata('<', obuf, obptr - obuf);
 			}
-		}
-#if defined(X3270_TN3270E) /*[*/
-		else if (IN_E) {
+		} else if (IN_E) {
 			obptr = obuf;
 			(void) net_add_dummy_tn3270e();
 			wtrace(False, " Screen contents (%s):\n",
@@ -603,9 +599,7 @@ create_tracefile_header(const char *mode)
 				ansi_snap_modes();
 				trace_netdata('<', obuf, obptr - obuf);
 			}
-		}
-#endif /*]*/
-		else if (IN_NVT) {
+		} else if (IN_NVT) {
 			obptr = obuf;
 			wtrace(False, " Screen contents (NVT):\n");
 			ansi_snap();

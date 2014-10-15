@@ -494,9 +494,7 @@ popup_about_status(void)
 	char fbuf[1024];
 	const char *ftype;
 	const char *emode;
-#if defined(X3270_TN3270E) /*[*/
 	const char *eopts;
-#endif /*]*/
 	const char *ptype;
 	const char *bplu;
 
@@ -633,7 +631,6 @@ popup_about_status(void)
 			MAKE_VALUE(bplu);
 		}
 
-#if defined(X3270_TN3270E) /*[*/
 		eopts = tn3270e_current_opts();
 		if (eopts != CN) {
 			(void) snprintf(fbuf, sizeof(fbuf), "  %s",
@@ -645,7 +642,6 @@ popup_about_status(void)
 				get_message("tn3270eNoOpts"));
 			MAKE_LABEL(fbuf, 0);
 		}
-#endif /*]*/
 
 		if (IN_3270)
 			(void) snprintf(fbuf, sizeof(fbuf),

@@ -256,11 +256,6 @@ case "$enable_menus" in
 	;;
 esac
 AC_ARG_ENABLE(ssl,[  --disable-ssl           leave out OpenSSL support])
-AC_ARG_ENABLE(tn3270e,[  --disable-tn3270e       leave out TN3270E support])
-case "$enable_tn3270e" in
-""|yes)	AC_DEFINE(X3270_TN3270E,1)
-	;;
-esac
 AC_ARG_ENABLE(ipv6,[  --disable-ipv6         leave out IPv6 support])
 case "$enable_ipv6" in                  
 ""|yes) AC_DEFINE(X3270_IPV6,1)                 

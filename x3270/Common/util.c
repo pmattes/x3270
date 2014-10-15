@@ -1130,11 +1130,6 @@ build_options(void)
 		" --disable-script"
 # endif /*]*/
 #endif /*]*/
-#if defined(X3270_TN3270E) /*[*/
-		" --enable-tn3270e"
-#else /*][*/
-		" --disable-tn3270e"
-#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 		" --with-ssl"
 #else /*][*/

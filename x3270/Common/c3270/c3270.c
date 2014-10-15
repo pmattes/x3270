@@ -980,10 +980,8 @@ status_dump(void)
 {
 	const char *emode, *ftype, *ts;
 	const char *clu;
-#if defined(X3270_TN3270E) /*[*/
 	const char *eopts;
 	const char *bplu;
-#endif /*]*/
 	const char *ptype;
 
 	action_output("%s", build);
@@ -998,11 +996,9 @@ status_dump(void)
 	clu = net_query_lu_name();
 	if (clu != CN && clu[0])
 		action_output("%s %s", get_message("luName"), clu);
-#if defined(X3270_TN3270E) /*[*/
 	bplu = net_query_bind_plu_name();
 	if (bplu != CN && bplu[0])
 	    	action_output("%s %s", get_message("bindPluName"), bplu);
-#endif /*]*/
 	action_output("%s %s (%s)", get_message("characterSet"),
 	    get_charset_name(),
 #if defined(X3270_DBCS) /*[*/
@@ -1111,7 +1107,6 @@ status_dump(void)
 				get_message("unnegotiated"), ts);
 		}
 
-#if defined(X3270_TN3270E) /*[*/
 		eopts = tn3270e_current_opts();
 		if (eopts != CN) {
 			action_output("  %s %s", get_message("tn3270eOpts"),
@@ -1119,7 +1114,6 @@ status_dump(void)
 		} else if (IN_E) {
 			action_output("  %s", get_message("tn3270eNoOpts"));
 		}
-#endif /*]*/
 
 		if (IN_3270)
 			action_output("%s %d %s, %d %s\n%s %d %s, %d %s",

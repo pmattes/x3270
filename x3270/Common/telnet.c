@@ -156,10 +156,8 @@ static ioid_t output_id = NULL_IOID;
 #endif /*]*/
 static char     ttype_tmpval[13];
 
-#if defined(X3270_TN3270E) /*[*/
 static unsigned short e_xmit_seq; /* transmit sequence number */
 static int response_required;
-#endif /*]*/
 
 static int      ansi_data = 0;
 static unsigned char *lbuf = (unsigned char *)NULL;
@@ -179,7 +177,6 @@ static char     vlnext;
 
 static int	tn3270e_negotiated = 0;
 static enum { E_UNBOUND, E_3270, E_NVT, E_SSCP } tn3270e_submode = E_UNBOUND;
-#if defined(X3270_TN3270E) /*[*/
 static int	tn3270e_bound = 0;
 static unsigned char *bind_image = NULL;
 static int	bind_image_len = 0;
@@ -194,7 +191,6 @@ static int	bind_ca = 0;
 #define BIND_DIMS_ALT		0x2	/* BIND included alternate size */
 #define BIND_DIMS_VALID		0x4	/* BIND screen sizes were valid */
 static unsigned	bind_state = 0;
-#endif /*]*/
 static char	**lus = (char **)NULL;
 static char	**curr_lu = (char **)NULL;
 static char	*try_lu = CN;
@@ -204,7 +200,6 @@ static char	*proxy_host = CN;
 static char	*proxy_portname = CN;
 static unsigned short proxy_port = 0;
 
-#if defined(X3270_TN3270E) /*[*/
 #define MX8     256             /* maxiumum number of bits */
 #define NB8     64              /* bits per unit */
 #define NU8     (MX8 / NB8)     /* units per object */
@@ -223,7 +218,6 @@ static void b8_copy(b8_t *to, b8_t *from);
 static Boolean b8_none_added(b8_t *want, b8_t *got);
 
 static b8_t e_funcs;		/* negotiated TN3270E functions */
-#endif /*]*/
 
 static int telnet_fsm(unsigned char c);
 static void net_rawout(unsigned const char *buf, int len);
@@ -233,17 +227,13 @@ static void check_linemode(Boolean init);
 static int non_blocking(Boolean on);
 static void net_connected(void);
 static void connection_complete(void);
-#if defined(X3270_TN3270E) /*[*/
 static int tn3270e_negotiate(void);
-#endif /*]*/
 static int process_eor(void);
-#if defined(X3270_TN3270E) /*[*/
 static const char *tn3270e_function_names(const unsigned char *, int);
 static void tn3270e_subneg_send(unsigned char, b8_t *);
 static void tn3270e_fdecode(const unsigned char *, int, b8_t *);
 static void tn3270e_ack(void);
 static void tn3270e_nak(enum pds);
-#endif /*]*/
 
 static void do_data(char c);
 static void do_intr(char c);
@@ -281,14 +271,11 @@ static unsigned char	will_opt[]	= {
 	IAC, WILL, '_' };
 static unsigned char	wont_opt[]	= { 
 	IAC, WONT, '_' };
-#if defined(X3270_TN3270E) /*[*/
 static unsigned char	functions_req[] = {
 	IAC, SB, TELOPT_TN3270E, TN3270E_OP_FUNCTIONS };
-#endif /*]*/
 
 static const char *telquals[3] = { "IS", "SEND", "INFO" };
 static const char *telobjs[4] = { "VAR", "VALUE", "ESC", "USERVAR" };
-#if defined(X3270_TN3270E) /*[*/
 static const char *reason_code[8] = { "CONN-PARTNER", "DEVICE-IN-USE",
 	"INV-ASSOCIATE", "INV-NAME", "INV-DEVICE-TYPE", "TYPE-NAME-ERROR",
 	"UNKNOWN-ERROR", "UNSUPPORTED-REQ" };
@@ -315,7 +302,6 @@ static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
 # define e_trsp(n) (((n) <= TN3270E_RSF_NEGATIVE_RESPONSE) ? \
 			trsp_flag[(n)] : "??")
 # define e_rsp(fn, n) (((fn) == TN3270E_DT_RESPONSE) ? e_trsp(n) : e_hrsp(n))
-#endif /*]*/
 
 #if defined(C3270) && defined(C3270_80_132) /*[*/
 # define XMIT_ROWS	((appres.altscreen != CN)? MODEL_2_ROWS: maxROWS)
@@ -1087,14 +1073,12 @@ net_connected(void)
 	(void) memset((char *) hisopts, 0, sizeof(hisopts));
 	did_ne_send = False;
 	deferred_will_ttype = False;
-#if defined(X3270_TN3270E) /*[*/
 	b8_zero(&e_funcs);
 	b8_set_bit(&e_funcs, TN3270E_FUNC_BIND_IMAGE);
 	b8_set_bit(&e_funcs, TN3270E_FUNC_RESPONSES);
 	b8_set_bit(&e_funcs, TN3270E_FUNC_SYSREQ);
 	e_xmit_seq = 0;
 	response_required = TN3270E_RSF_NO_RESPONSE;
-#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 	need_tls_follows = False;
 #endif /*]*/
@@ -1110,9 +1094,7 @@ net_connected(void)
 	syncing = 0;
 	tn3270e_negotiated = 0;
 	tn3270e_submode = E_UNBOUND;
-#if defined(X3270_TN3270E) /*[*/
 	tn3270e_bound = 0;
-#endif /*]*/
 
 	setup_lus();
 
@@ -1703,9 +1685,7 @@ telnet_fsm(unsigned char c)
 		    case TELOPT_EOR:
 		    case TELOPT_TTYPE:
 		    case TELOPT_ECHO:
-#if defined(X3270_TN3270E) /*[*/
 		    case TELOPT_TN3270E:
-#endif /*]*/
 			if (c != TELOPT_TN3270E || !non_tn3270e_host) {
 				if (!hisopts[c]) {
 					hisopts[c] = 1;
@@ -1761,9 +1741,7 @@ telnet_fsm(unsigned char c)
 		    case TELOPT_SGA:
 		    case TELOPT_NAWS:
 		    case TELOPT_TM:
-#if defined(X3270_TN3270E) /*[*/
 		    case TELOPT_TN3270E:
-#endif /*]*/
 		    case TELOPT_STARTTLS:
 #if defined(HAVE_LIBSSL) /*[*/
 			if (c == TELOPT_STARTTLS &&
@@ -1908,14 +1886,11 @@ telnet_fsm(unsigned char c)
 
 				/* Advance to the next LU name. */
 				next_lu();
-			}
-#if defined(X3270_TN3270E) /*[*/
-			else if (myopts[TELOPT_TN3270E] &&
+			} else if (myopts[TELOPT_TN3270E] &&
 				   sbbuf[0] == TELOPT_TN3270E) {
 				if (tn3270e_negotiate())
 					return -1;
 			}
-#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 			else if (need_tls_follows &&
 				   myopts[TELOPT_STARTTLS] &&
@@ -1992,7 +1967,6 @@ telnet_fsm(unsigned char c)
 	return 0;
 }
 
-#if defined(X3270_TN3270E) /*[*/
 /* Send a TN3270E terminal type request. */
 static void
 tn3270e_request(void)
@@ -2332,9 +2306,7 @@ tn3270e_fdecode(const unsigned char *buf, int len, b8_t *r)
 		b8_set_bit(r, buf[i]);
 	}
 }
-#endif /*]*/
 
-#if defined(X3270_TN3270E) /*[*/
 static int
 maxru(unsigned char c)
 {
@@ -2472,10 +2444,10 @@ process_bind(unsigned char *buf, int buflen)
 		if (namelen > BIND_PLU_NAME_MAX)
 			namelen = BIND_PLU_NAME_MAX;
 		if ((namelen > 0) && (buflen > BIND_OFF_PLU_NAME + namelen)) {
-# if defined(EBCDIC_HOST) /*[*/
+#if defined(EBCDIC_HOST) /*[*/
 			memcpy(plu_name, &buf[BIND_OFF_PLU_NAME], namelen);
 			plu_name[namelen] = '\0';
-# else /*][*/
+#else /*][*/
 		    	int i;
 
 			for (i = 0; i < namelen; i++) {
@@ -2487,14 +2459,13 @@ process_bind(unsigned char *buf, int buflen)
 				if (nx > 1)
 					dest_ix += nx - 1;
 			}
-# endif /*]*/
+#endif /*]*/
 		}
 	}
 
 	/* A BIND implicitly puts us in 3270 mode. */
 	tn3270e_submode = E_3270;
 }
-#endif /*]*/
 
 /* Decode an UNBIND reason. */
 static const char *
@@ -2537,7 +2508,6 @@ process_eor(void)
 	if (syncing || !(ibptr - ibuf))
 		return(0);
 
-#if defined(X3270_TN3270E) /*[*/
 	if (IN_E) {
 		tn3270e_header *h = (tn3270e_header *)ibuf;
 		unsigned char *s;
@@ -2646,9 +2616,7 @@ process_eor(void)
 			/* Should do something more extraordinary here. */
 			return 0;
 		}
-	} else
-#endif /*]*/
-	{
+	} else {
 		(void) process_ds(ibuf, ibptr - ibuf);
 	}
 	return 0;
@@ -3120,7 +3088,6 @@ check_in3270(void)
 		"TN3270E 3270"				/* CONNECTED_TN3270E */
 	};
 
-#if defined(X3270_TN3270E) /*[*/
 	if (myopts[TELOPT_TN3270E]) {
 		if (!tn3270e_negotiated)
 			new_cstate = CONNECTED_UNBOUND;
@@ -3138,9 +3105,7 @@ check_in3270(void)
 			new_cstate = CONNECTED_SSCP;
 			break;
 		}
-	} else
-#endif /*]*/
-	if (myopts[TELOPT_BINARY] &&
+	} else if (myopts[TELOPT_BINARY] &&
 	           myopts[TELOPT_EOR] &&
 	           myopts[TELOPT_TTYPE] &&
 	           hisopts[TELOPT_BINARY] &&
@@ -3154,11 +3119,8 @@ check_in3270(void)
 	}
 
 	if (new_cstate != cstate) {
-#if defined(X3270_TN3270E) /*[*/
 		int was_in_e = IN_E;
-#endif /*]*/
 
-#if defined(X3270_TN3270E) /*[*/
 		/*
 		 * If we've now switched between non-TN3270E mode and
 		 * TN3270E mode, reset the LU list so we can try again
@@ -3168,7 +3130,6 @@ check_in3270(void)
 			curr_lu = lus;
 			try_lu = *curr_lu;
 		}
-#endif /*]*/
 
 		/* Allocate the initial 3270 input buffer. */
 		if (new_cstate >= CONNECTED_INITIAL && !ibuf_size) {
@@ -3183,14 +3144,12 @@ check_in3270(void)
 			cooked_init();
 		}
 
-#if defined(X3270_TN3270E) /*[*/
 		/* If we fell out of TN3270E, remove the state. */
 		if (!myopts[TELOPT_TN3270E]) {
 			tn3270e_negotiated = 0;
 			tn3270e_submode = E_UNBOUND;
 			tn3270e_bound = 0;
 		}
-#endif /*]*/
 		vtrace("Now operating in %s mode.\n",
 			state_name[new_cstate]);
 		if (IN_3270 || IN_NVT || IN_SSCP) {
@@ -3363,13 +3322,8 @@ net_output(void)
 	int need_resize = 0;
 	unsigned char *nxoptr, *xoptr;
 
-#if defined(X3270_TN3270E) /*[*/
 #define BSTART	((IN_TN3270E || IN_SSCP) ? obuf_base : obuf)
-#else /*][*/
-#define BSTART	obuf
-#endif /*]*/
 
-#if defined(X3270_TN3270E) /*[*/
 	/* Set the TN3720E header. */
 	if (IN_TN3270E || IN_SSCP) {
 		tn3270e_header *h = (tn3270e_header *)obuf_base;
@@ -3394,7 +3348,6 @@ net_output(void)
 			e_xmit_seq = (e_xmit_seq + 1) & 0x7fff;
 		}
 	}
-#endif /*]*/
 
 	/* Reallocate the expanded output buffer. */
 	while (xobuf_len <  (obptr - BSTART + 1) * 2) {
@@ -3424,7 +3377,6 @@ net_output(void)
 #undef BSTART
 }
 
-#if defined(X3270_TN3270E) /*[*/
 /* Send a TN3270E positive response to the server. */
 static void
 tn3270e_ack(void)
@@ -3519,7 +3471,6 @@ net_add_dummy_tn3270e(void)
 	obptr += EH_SIZE;
 	return True;
 }
-#endif /*]*/
 
 /*
  * Add IAC EOR to a buffer.
@@ -3671,7 +3622,6 @@ net_interrupt(void)
  *	Send telnet AO.
  *
  */
-#if defined(X3270_TN3270E) /*[*/
 void
 net_abort(void)
 {
@@ -3706,7 +3656,6 @@ net_abort(void)
 		}
 	}
 }
-#endif /*]*/
 
 /*
  * parse_ctlchar
@@ -3800,7 +3749,6 @@ net_snap_options(void)
 		}
 	}
 
-#if defined(X3270_TN3270E) /*[*/
 	/* If we're in TN3270E mode, snap the subnegotations as well. */
 	if (myopts[TELOPT_TN3270E]) {
 		any = True;
@@ -3867,7 +3815,6 @@ net_snap_options(void)
 			*obptr++ = EOR;
 		}
 	}
-#endif /*]*/
 	return any;
 }
 
@@ -4805,7 +4752,6 @@ ssl_init(void)
 const char *
 net_query_bind_plu_name(void)
 {
-#if defined(X3270_TN3270E) /*[*/
 	/*
 	 * Return the PLU name, if we're in TN3270E 3270 mode and have
 	 * negotiated the BIND-IMAGE option.
@@ -4816,10 +4762,6 @@ net_query_bind_plu_name(void)
 	} else {
 		return "";
 	}
-#else /*][*/
-	/* No TN3270E, no BIND negotiation. */
-	return "";
-#endif /*]*/
 }
 
 /* Return the current connection state. */
@@ -4827,7 +4769,6 @@ const char *
 net_query_connection_state(void)
 {
 	if (CONNECTED) {
-#if defined(X3270_TN3270E) /*[*/
 		if (IN_E) {
 			switch (tn3270e_submode) {
 			default:
@@ -4840,9 +4781,7 @@ net_query_connection_state(void)
 			case E_SSCP:
 				return "tn3270 sscp-lu";
 			}
-		} else
-#endif /*]*/
-		{
+		} else {
 			if (IN_3270)
 				return "tn3270 3270";
 			else
@@ -4957,11 +4896,7 @@ net_proxy_port(void)
 Boolean
 net_bound(void)
 {
-#if defined(X3270_TN3270E) /*[*/
     	return (IN_E && tn3270e_bound);
-#else /*][*/
-	return 0;
-#endif /*]*/
 }
 
 #if defined(X3270_DISPLAY) && defined(HAVE_LIBSSL) /*[*/
@@ -5033,8 +4968,6 @@ popup_password(void)
 	popup_popup(password_shell, XtGrabExclusive);
 }
 #endif /*]*/
-
-#if defined(X3270_TN3270E) /*[*/
 
 /*
  * 256-bit bitmap functions.
@@ -5132,5 +5065,3 @@ b8_none_added(b8_t *want, b8_t *got)
 	b8_and(&t, got, &t);
 	return b8_is_zero(&t);
 }
-
-#endif /*]*/

@@ -169,11 +169,11 @@ Boolean macro_output = False;
 #define INPUT_OKAY ( \
     IN_SSCP || \
     (IN_3270 && formatted && cursor_addr && !CKBWAIT) || \
-    (IN_ANSI && !(kybdlock & KL_AWAITING_FIRST)) \
+    (IN_NVT && !(kybdlock & KL_AWAITING_FIRST)) \
 )
 
 /* Is is safe to continue a script waiting for the connection to complete? */
-#define CONNECT_DONE	(IN_SSCP || IN_3270 || IN_ANSI)
+#define CONNECT_DONE	(IN_SSCP || IN_3270 || IN_NVT)
 
 /* Shorthand macro to unlock the current action. */
 #define UNBLOCK() { \
@@ -352,16 +352,19 @@ main_connect(Boolean ignored)
 		/* Check for various wait conditions. */
 		switch (waiting) {
 		case AWAITING_CONNECT:
-			if (CONNECT_DONE)
+			if (CONNECT_DONE) {
 				UNBLOCK();
+			}
 			break;
 		case AWAITING_3270:
-			if (IN_3270)
+			if (IN_3270) {
 				UNBLOCK();
+			}
 			break;
 		case AWAITING_NVT:
-			if (IN_ANSI)
+			if (IN_NVT) {
 				UNBLOCK();
+			}
 			break;
 		default:
 			/* Nothing we can figure out here. */
@@ -1046,19 +1049,22 @@ status_string(void)
 		connect_stat = NewString("N");
 
 	if (CONNECTED) {
-		if (IN_ANSI) {
-			if (linemode)
+		if (IN_NVT) {
+			if (linemode) {
 				em_mode = 'L';
-			else
+			} else {
 				em_mode = 'C';
-		} else if (IN_SSCP)
+			}
+		} else if (IN_SSCP) {
 			em_mode = 'S';
-		else if (IN_3270)
+		} else if (IN_3270) {
 			em_mode = 'I';
-		else
+		} else {
 			em_mode = 'P';
-	} else
+		}
+	} else {
 		em_mode = 'N';
+	}
 
 	(void) sprintf(s, "%c %c %c %s %c %d %d %d %d %d",
 	    kb_stat,
@@ -1525,7 +1531,7 @@ Wait_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 			popup_an_error("Not connected");
 			return;
 		}
-		if (!IN_ANSI)
+		if (!IN_NVT)
 			waiting = AWAITING_NVT;
 	} else if (!strcasecmp(pr[0], "Disconnect")) {
 		if (CONNECTED)

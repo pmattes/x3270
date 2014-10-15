@@ -866,7 +866,7 @@ keymap_init(void)
 	}
 
 	last_3270 = IN_3270;
-	last_nvt = IN_ANSI;
+	last_nvt = IN_NVT;
 	set_inactive();
 
 	if (!initted) {
@@ -937,9 +937,9 @@ set_inactive(void)
 static void
 keymap_3270_mode(Boolean ignored _is_unused)
 {
-	if (last_3270 != IN_3270 || last_nvt != IN_ANSI) {
+	if (last_3270 != IN_3270 || last_nvt != IN_NVT) {
 		last_3270 = IN_3270;
-		last_nvt = IN_ANSI;
+		last_nvt = IN_NVT;
 		set_inactive();
 	}
 }
