@@ -4076,8 +4076,9 @@ kybd_prime(void)
 	 * No point in trying if the the keyboard is locked or we aren't in
 	 * 3270 mode.
 	 */
-	if (kybdlock || !IN_3270)
+	if (kybdlock || !IN_3270) {
 		return 0;
+	}
 
 	/*
 	 * If unformatted, guess that we can use all the NULs from the cursor
@@ -4087,7 +4088,8 @@ kybd_prime(void)
 	if (!formatted) {
 		baddr = cursor_addr;
 
-		while (!ea_buf[baddr].cc) {
+		while (ea_buf[baddr].cc == EBC_null ||
+		       ea_buf[baddr].cc == EBC_space) {
 		    	len++;
 			INC_BA(baddr);
 			if (baddr == cursor_addr) {
@@ -4109,8 +4111,9 @@ kybd_prime(void)
 		baddr = next_unprotected(cursor_addr);
 
 		/* If there isn't any, give up. */
-		if (!baddr)
+		if (!baddr) {
 			return 0;
+		}
 
 		/* Move the cursor there. */
 	} else {
