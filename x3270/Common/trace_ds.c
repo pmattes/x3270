@@ -604,7 +604,6 @@ create_tracefile_header(const char *mode)
 			}
 		}
 #endif /*]*/
-#if defined(X3270_ANSI) /*[*/
 		else if (IN_ANSI) {
 			obptr = obuf;
 			wtrace(False, " Screen contents (NVT):\n");
@@ -615,7 +614,6 @@ create_tracefile_header(const char *mode)
 			ansi_snap_modes();
 			trace_netdata('<', obuf, obptr - obuf);
 		}
-#endif /*]*/
 	}
 
 	wtrace(False, " Data stream:\n");

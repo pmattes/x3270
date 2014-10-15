@@ -521,7 +521,6 @@ operator_error(int error_type)
 static void
 key_AID(unsigned char aid_code)
 {
-#if defined(X3270_ANSI) /*[*/
 	if (IN_ANSI) {
 		register unsigned i;
 
@@ -541,7 +540,6 @@ key_AID(unsigned char aid_code)
 			}
 		return;
 	}
-#endif /*]*/
 #if defined(X3270_PLUGIN) /*[*/
 	plugin_aid(aid_code);
 #endif /*]*/
@@ -909,16 +907,12 @@ key_Character(unsigned ebc, Boolean with_ge, Boolean pasting, Boolean *skipped)
 			was_si = (ea_buf[xaddr].cc == EBC_si);
 			ctlr_add(xaddr, EBC_space, CS_BASE);
 			ctlr_add_fg(xaddr, 0);
-#if defined(X3270_ANSI) /*[*/
 			ctlr_add_bg(xaddr, 0);
-#endif /*]*/
 			if (!was_si) {
 				INC_BA(xaddr);
 				ctlr_add(xaddr, EBC_so, CS_BASE);
 				ctlr_add_fg(xaddr, 0);
-#if defined(X3270_ANSI) /*[*/
 				ctlr_add_bg(xaddr, 0);
-#endif /*]*/
 			}
 		}
 
@@ -1137,7 +1131,6 @@ key_WCharacter(unsigned char ebc_pair[], Boolean *skipped)
 		return True;
 	}
 
-#if defined(X3270_ANSI) /*[*/
 	/* In ANSI mode? */
 	if (IN_ANSI) {
 	    char mb[16];
@@ -1147,7 +1140,6 @@ key_WCharacter(unsigned char ebc_pair[], Boolean *skipped)
 	    net_sends(mb);
 	    return True;
 	}
-#endif /*]*/
 
 	baddr = cursor_addr;
 	fa = get_field_attribute(baddr);
@@ -1498,15 +1490,12 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 			(void) key_Character(ebc, (keytype == KT_GE) || ge,
 				(cause == IA_PASTE), skipped);
 	}
-#if defined(X3270_ANSI) /*[*/
 	else if (IN_ANSI) {
 	    	char mb[16];
 
 		unicode_to_multibyte(ucs4, mb, sizeof(mb));
 		net_sends(mb);
-	}
-#endif /*]*/
-	else {
+	} else {
 		const char *why;
 
 		switch (cstate) {
@@ -1625,12 +1614,10 @@ Tab_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_par
 			return;
 		}
 	}
-#if defined(X3270_ANSI) /*[*/
 	if (IN_ANSI) {
 		net_sendc('\t');
 		return;
 	}
-#endif /*]*/
 	cursor_move(next_unprotected(cursor_addr));
 }
 
@@ -1798,12 +1785,10 @@ Home_action(Widget w _is_unused, XEvent *event, String *params,
 		enq_ta(Home_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
 	if (IN_ANSI) {
 		ansi_send_home();
 		return;
 	}
-#endif /*]*/
 	if (!formatted) {
 		cursor_move(0);
 		return;
@@ -1852,12 +1837,10 @@ Left_action(Widget w _is_unused, XEvent *event, String *params,
 			return;
 		}
 	}
-#if defined(X3270_ANSI) /*[*/
 	if (IN_ANSI) {
 		ansi_send_left();
 		return;
 	}
-#endif /*]*/
 	if (!flipped)
 		do_left();
 	else {
@@ -1960,12 +1943,10 @@ Delete_action(Widget w _is_unused, XEvent *event, String *params,
 		enq_ta(Delete_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
 	if (IN_ANSI) {
 		net_sendc('\177');
 		return;
 	}
-#endif /*]*/
 	if (!do_delete())
 		return;
 	if (reverse) {
@@ -1991,12 +1972,10 @@ BackSpace_action(Widget w _is_unused, XEvent *event, String *params,
 		enq_ta(BackSpace_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
 	if (IN_ANSI) {
 		net_send_erase();
 		return;
 	}
-#endif /*]*/
 	if (reverse)
 		(void) do_delete();
 	else if (!flipped)
@@ -2080,12 +2059,10 @@ Erase_action(Widget w _is_unused, XEvent *event, String *params,
 		enq_ta(Erase_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
 	if (IN_ANSI) {
 		net_send_erase();
 		return;
 	}
-#endif /*]*/
 	if (reverse)
 		do_delete();
 	else
@@ -2114,12 +2091,10 @@ Right_action(Widget w _is_unused, XEvent *event, String *params,
 			return;
 		}
 	}
-#if defined(X3270_ANSI) /*[*/
 	if (IN_ANSI) {
 		ansi_send_right();
 		return;
 	}
-#endif /*]*/
 	if (!flipped) {
 		baddr = cursor_addr;
 		INC_BA(baddr);
@@ -2153,10 +2128,9 @@ Left2_action(Widget w _is_unused, XEvent *event, String *params,
 			return;
 		}
 	}
-#if defined(X3270_ANSI) /*[*/
-	if (IN_ANSI)
+	if (IN_ANSI) {
 		return;
-#endif /*]*/
+	}
 	baddr = cursor_addr;
 	DEC_BA(baddr);
 	d = ctlr_dbcs_state(baddr);
@@ -2188,12 +2162,12 @@ PreviousWord_action(Widget w _is_unused, XEvent *event, String *params,
 		enq_ta(PreviousWord_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
-	if (IN_ANSI)
+	if (IN_ANSI) {
 		return;
-#endif /*]*/
-	if (!formatted)
+	}
+	if (!formatted) {
 		return;
+	}
 
 	baddr = cursor_addr;
 	prot = FA_IS_PROTECTED(get_field_attribute(baddr));
@@ -2260,10 +2234,9 @@ Right2_action(Widget w _is_unused, XEvent *event, String *params,
 			return;
 		}
 	}
-#if defined(X3270_ANSI) /*[*/
-	if (IN_ANSI)
+	if (IN_ANSI) {
 		return;
-#endif /*]*/
+	}
 	baddr = cursor_addr;
 	INC_BA(baddr);
 	d = ctlr_dbcs_state(baddr);
@@ -2340,12 +2313,12 @@ NextWord_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *nu
 		enq_ta(NextWord_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
-	if (IN_ANSI)
+	if (IN_ANSI) {
 		return;
-#endif /*]*/
-	if (!formatted)
+	}
+	if (!formatted) {
 		return;
+	}
 
 	/* If not in an unprotected field, go to the next unprotected word. */
 	if (ea_buf[cursor_addr].fa ||
@@ -2409,12 +2382,10 @@ Up_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_para
 			return;
 		}
 	}
-#if defined(X3270_ANSI) /*[*/
 	if (IN_ANSI) {
 		ansi_send_up();
 		return;
 	}
-#endif /*]*/
 	baddr = cursor_addr - COLS;
 	if (baddr < 0)
 		baddr = (cursor_addr + (ROWS * COLS)) - COLS;
@@ -2441,12 +2412,10 @@ Down_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_pa
 			return;
 		}
 	}
-#if defined(X3270_ANSI) /*[*/
 	if (IN_ANSI) {
 		ansi_send_down();
 		return;
 	}
-#endif /*]*/
 	baddr = (cursor_addr + COLS) % (COLS * ROWS);
 	cursor_move(baddr);
 }
@@ -2469,12 +2438,10 @@ Newline_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
 		enq_ta(Newline_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
 	if (IN_ANSI) {
 		net_sendc('\n');
 		return;
 	}
-#endif /*]*/
 	baddr = (cursor_addr + COLS) % (COLS * ROWS);	/* down */
 	baddr = (baddr / COLS) * COLS;			/* 1st col */
 	faddr = find_field_attribute(baddr);
@@ -2500,10 +2467,9 @@ Dup_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_par
 		enq_ta(Dup_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
-	if (IN_ANSI)
+	if (IN_ANSI) {
 		return;
-#endif /*]*/
+	}
 	if (key_Character(EBC_dup, False, False, NULL))
 		cursor_move(next_unprotected(cursor_addr));
 }
@@ -2523,10 +2489,9 @@ FieldMark_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *n
 		enq_ta(FieldMark_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
-	if (IN_ANSI)
+	if (IN_ANSI) {
 		return;
-#endif /*]*/
+	}
 	(void) key_Character(EBC_fm, False, False, NULL);
 }
 
@@ -2591,12 +2556,10 @@ Clear_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_p
 		enq_ta(Clear_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
 	if (IN_ANSI) {
 		ansi_send_clear();
 		return;
 	}
-#endif /*]*/
 	buffer_addr = 0;
 	ctlr_clear(True);
 	cursor_move(0);
@@ -2706,10 +2669,9 @@ CursorSelect_action(Widget w _is_unused, XEvent *event, String *params,
 		return;
 	}
 
-#if defined(X3270_ANSI) /*[*/
-	if (IN_ANSI)
+	if (IN_ANSI) {
 		return;
-#endif /*]*/
+	}
 	lightpen_select(cursor_addr);
 }
 
@@ -2729,10 +2691,9 @@ MouseSelect_action(Widget w, XEvent *event, String *params,
 	reset_idle_timer();
 	if (kybdlock)
 		return;
-#if defined(X3270_ANSI) /*[*/
-	if (IN_ANSI)
+	if (IN_ANSI) {
 		return;
-#endif /*]*/
+	}
 	lightpen_select(mouse_baddr(w, event));
 }
 #endif /*]*/
@@ -2757,10 +2718,9 @@ EraseEOF_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *nu
 		enq_ta(EraseEOF_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
-	if (IN_ANSI)
+	if (IN_ANSI) {
 		return;
-#endif /*]*/
+	}
 	baddr = cursor_addr;
 	fa = get_field_attribute(baddr);
 	if (FA_IS_PROTECTED(fa) || ea_buf[baddr].fa) {
@@ -2812,10 +2772,9 @@ EraseInput_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *
 		enq_ta(EraseInput_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
-	if (IN_ANSI)
+	if (IN_ANSI) {
 		return;
-#endif /*]*/
+	}
 	if (formatted) {
 		/* find first field attribute */
 		baddr = 0;
@@ -2877,12 +2836,10 @@ DeleteWord_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *
 		enq_ta(DeleteWord_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
 	if (IN_ANSI) {
 		net_send_werase();
 		return;
 	}
-#endif /*]*/
 	if (!formatted)
 		return;
 
@@ -2945,12 +2902,10 @@ DeleteField_action(Widget w _is_unused, XEvent *event, String *params, Cardinal 
 		enq_ta(DeleteField_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
 	if (IN_ANSI) {
 		net_send_kill();
 		return;
 	}
-#endif /*]*/
 	if (!formatted)
 		return;
 
@@ -2987,10 +2942,9 @@ Insert_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_
 		enq_ta(Insert_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
-	if (IN_ANSI)
+	if (IN_ANSI) {
 		return;
-#endif /*]*/
+	}
 	insert_mode(True);
 }
 
@@ -3009,10 +2963,9 @@ ToggleInsert_action(Widget w _is_unused, XEvent *event, String *params, Cardinal
 		enq_ta(ToggleInsert_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
-	if (IN_ANSI)
+	if (IN_ANSI) {
 		return;
-#endif /*]*/
+	}
 	if (insert)
 		insert_mode(False);
 	else
@@ -3034,10 +2987,9 @@ ToggleReverse_action(Widget w _is_unused, XEvent *event, String *params, Cardina
 		enq_ta(ToggleReverse_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
-	if (IN_ANSI)
+	if (IN_ANSI) {
 		return;
-#endif /*]*/
+	}
 	reverse_mode(!reverse);
 }
 
@@ -3061,12 +3013,12 @@ FieldEnd_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *nu
 		enq_ta(FieldEnd_action, CN, CN);
 		return;
 	}
-#if defined(X3270_ANSI) /*[*/
-	if (IN_ANSI)
+	if (IN_ANSI) {
 		return;
-#endif /*]*/
-	if (!formatted)
+	}
+	if (!formatted) {
 		return;
+	}
 	baddr = cursor_addr;
 	faddr = find_field_attribute(baddr);
 	fa = ea_buf[faddr].fa;
@@ -3964,11 +3916,9 @@ hex_input(char *s)
 {
 	char *t;
 	Boolean escaped;
-#if defined(X3270_ANSI) /*[*/
 	unsigned char *xbuf = (unsigned char *)NULL;
 	unsigned char *tbuf = (unsigned char *)NULL;
 	int nbytes = 0;
-#endif /*]*/
 
 	/* Validate the string. */
 	if (strlen(s) % 2) {
@@ -3982,9 +3932,7 @@ hex_input(char *s)
 	while (*t) {
 		if (isxdigit(*t) && isxdigit(*(t + 1))) {
 			escaped = False;
-#if defined(X3270_ANSI) /*[*/
 			nbytes++;
-#endif /*]*/
 		} else if (!strncmp(t, "\\E", 2) || !strncmp(t, "\\e", 2)) {
 			if (escaped) {
 				popup_an_error("%s: Double \\E",
@@ -4014,11 +3962,10 @@ hex_input(char *s)
 		return;
 	}
 
-#if defined(X3270_ANSI) /*[*/
 	/* Allocate a temporary buffer. */
-	if (!IN_3270 && nbytes)
+	if (!IN_3270 && nbytes) {
 		tbuf = xbuf = (unsigned char *)Malloc(nbytes);
-#endif /*]*/
+	}
 
 	/* Pump it in. */
 	t = s;
@@ -4030,22 +3977,18 @@ hex_input(char *s)
 			c = (FROM_HEX(*t) * 16) + FROM_HEX(*(t + 1));
 			if (IN_3270)
 				key_Character(c, escaped, True, NULL);
-#if defined(X3270_ANSI) /*[*/
 			else
 				*tbuf++ = (unsigned char)c;
-#endif /*]*/
 			escaped = False;
 		} else if (!strncmp(t, "\\E", 2) || !strncmp(t, "\\e", 2)) {
 			escaped = True;
 		}
 		t += 2;
 	}
-#if defined(X3270_ANSI) /*[*/
 	if (!IN_3270 && nbytes) {
 		net_hexansi_out(xbuf, nbytes);
 		Free(xbuf);
 	}
-#endif /*]*/
 }
  
 void

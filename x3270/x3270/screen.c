@@ -2253,7 +2253,6 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 }
 
 
-#if defined(X3270_ANSI) /*[*/
 Boolean
 screen_obscured(void)
 {
@@ -2300,7 +2299,6 @@ screen_scroll(void)
 	if (was_on)
 		cursor_on();
 }
-#endif /*]*/
 
 
 /*

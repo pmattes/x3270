@@ -127,9 +127,7 @@ struct toggle_name toggle_names[] = {
 #endif /*]*/
 	{ ResTrace,           TRACING,		False },
 	{ ResDsTrace,         TRACING,		True },
-#if defined(X3270_ANSI) /*[*/
 	{ ResLineWrap,        LINE_WRAP,	False },
-#endif /*]*/
 	{ ResBlankFill,       BLANK_FILL,	False },
 	{ ResScreenTrace,     SCREEN_TRACE,	False },
 	{ ResEventTrace,      TRACING,		True },
@@ -514,7 +512,6 @@ set_appres_defaults(void)
 	appres.bind_limit = True;
 	appres.new_environ = True;
 
-#if defined(X3270_ANSI) /*[*/
 	appres.icrnl = True;
 	appres.inlcr = False;
 	appres.onlcr = True;
@@ -526,7 +523,6 @@ set_appres_defaults(void)
 	appres.intr = "^C";
 	appres.quit = "^\\";
 	appres.eof = "^D";
-#endif /*]*/
 
 	appres.unlock_delay = True;
 	appres.unlock_delay_ms = 350;
@@ -1074,22 +1070,18 @@ static struct {
 # endif /*]*/
 	{ ResDefScreen,	offset(defscreen),	XRM_STRING },
 #endif /*]*/
-#if defined(X3270_ANSI) /*[*/
 	{ ResEof,	offset(eof),		XRM_STRING },
 	{ ResErase,	offset(erase),		XRM_STRING },
-#endif /*]*/
 	{ ResExtended,	offset(extended),	XRM_BOOLEAN },
 #if defined(X3270_FT) /*[*/
 	{ ResDftBufferSize,offset(dft_buffer_size),XRM_INT },
 #endif /*]*/
 	{ ResHostname,	offset(hostname),	XRM_STRING },
 	{ ResHostsFile,	offset(hostsfile),	XRM_STRING },
-#if defined(X3270_ANSI) /*[*/
 	{ ResIcrnl,	offset(icrnl),		XRM_BOOLEAN },
 	{ ResInlcr,	offset(inlcr),		XRM_BOOLEAN },
 	{ ResOnlcr,	offset(onlcr),		XRM_BOOLEAN },
 	{ ResIntr,	offset(intr),		XRM_STRING },
-#endif /*]*/
 #if defined(X3270_SCRIPT) /*[*/
 	{ ResPluginCommand, offset(plugin_command), XRM_STRING },
 #endif /*]*/
@@ -1113,10 +1105,8 @@ static struct {
 	{ ResAcs,	offset(acs),		XRM_BOOLEAN },
 #endif /*]*/
 #endif /*]*/
-#if defined(X3270_ANSI) /*[*/
 	{ ResKill,	offset(kill),		XRM_STRING },
 	{ ResLnext,	offset(lnext),		XRM_STRING },
-#endif /*]*/
 #if defined(_WIN32) /*[*/
 	{ ResLocalCp,	offset(local_cp),	XRM_INT },
 	{ ResFtCodePage, offset(ft_cp),		XRM_INT },
@@ -1146,10 +1136,8 @@ static struct {
 #endif /*]*/
 	{ ResProxy,	offset(proxy),		XRM_STRING },
 	{ ResQrBgColor,	offset(qr_bg_color),	XRM_BOOLEAN },
-#if defined(X3270_ANSI) /*[*/
 	{ ResQuit,	offset(quit),		XRM_STRING },
 	{ ResRprnt,	offset(rprnt),		XRM_STRING },
-#endif /*]*/
 #if defined(C3270) /*[*/
 	{ ResReconnect,	offset(reconnect),	XRM_BOOLEAN },
 #if !defined(_WIN32) /*[*/
@@ -1190,9 +1178,7 @@ static struct {
 #if defined(WC3270) /*[*/
 	{ ResVisualBell,offset(visual_bell),	XRM_BOOLEAN },
 #endif /*]*/
-#if defined(X3270_ANSI) /*[*/
 	{ ResWerase,	offset(werase),		XRM_STRING },
-#endif /*]*/
 
 	{ CN,		0,			XRM_STRING }
 };

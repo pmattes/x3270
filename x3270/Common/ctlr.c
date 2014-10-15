@@ -2661,7 +2661,6 @@ ctlr_bcopy(int baddr_from, int baddr_to, int count, int move_ea)
 	/* XXX: What about move_ea? */
 }
 
-#if defined(X3270_ANSI) /*[*/
 /*
  * Erase a region of the 3270 buffer, optionally clearing extended attributes
  * as well.
@@ -2714,7 +2713,6 @@ ctlr_scroll(void)
 		screen_scroll();
 	}
 }
-#endif /*]*/
 
 /*
  * Note that a particular region of the screen has changed.
@@ -2725,7 +2723,6 @@ ctlr_changed(int bstart, int bend)
 	REGION_CHANGED(bstart, bend);
 }
 
-#if defined(X3270_ANSI) /*[*/
 /*
  * Swap the regular and alternate screen buffers
  */
@@ -2751,7 +2748,6 @@ ctlr_altbuffer(Boolean alt)
 		blink_start();
 	}
 }
-#endif /*]*/
 
 
 /*

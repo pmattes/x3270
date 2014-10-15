@@ -66,9 +66,7 @@ typedef enum {
 #if defined(X3270_DISPLAY) /*[*/
     SCROLL_BAR,		/* include scroll bar */
 #endif /*]*/
-#if defined(X3270_ANSI) /*[*/
     LINE_WRAP,		/* NVT xterm line-wrap mode (auto-wraparound) */
-#endif /*]*/
     BLANK_FILL,		/* treat trailing blanks like NULLs on input */
     SCREEN_TRACE,	/* trace screen contents to file or printer */
 #if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
@@ -282,7 +280,6 @@ typedef struct {
 	Cursor	locked_mcursor;
 #endif /*]*/
 
-#if defined(X3270_ANSI) /*[*/
 	/* Line-mode TTY parameters */
 	Boolean	icrnl;
 	Boolean	inlcr;
@@ -295,7 +292,6 @@ typedef struct {
 	char	*intr;
 	char	*quit;
 	char	*eof;
-#endif /*]*/
 
 	char	*hostname;
 

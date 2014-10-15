@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,8 +30,6 @@
  *		Global declarations for ansi.c.
  */
 
-#if defined(X3270_ANSI) /*[*/
-
 extern void ansi_init(void);
 extern void ansi_process(unsigned int c);
 extern void ansi_send_clear(void);
@@ -45,19 +43,3 @@ extern void ansi_send_up(void);
 extern void ansi_snap(void);
 extern void ansi_snap_modes(void);
 extern void toggle_lineWrap(struct toggle *t, enum toggle_type type);
-
-#else /*][*/
-
-#define ansi_init()
-#define ansi_process(n)
-#define ansi_send_clear()
-#define ansi_send_down()
-#define ansi_send_home()
-#define ansi_send_left()
-#define ansi_send_pa(n)
-#define ansi_send_pf(n)
-#define ansi_send_right()
-#define ansi_send_up()
-#define ansi_snap()
-
-#endif /*]*/

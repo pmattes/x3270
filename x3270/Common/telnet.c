@@ -161,7 +161,6 @@ static unsigned short e_xmit_seq; /* transmit sequence number */
 static int response_required;
 #endif /*]*/
 
-#if defined(X3270_ANSI) /*[*/
 static int      ansi_data = 0;
 static unsigned char *lbuf = (unsigned char *)NULL;
 			/* line-mode input buffer */
@@ -177,7 +176,6 @@ static char     veof;
 static char     vwerase;
 static char     vrprnt;
 static char     vlnext;
-#endif /*]*/
 
 static int	tn3270e_negotiated = 0;
 static enum { E_UNBOUND, E_3270, E_NVT, E_SSCP } tn3270e_submode = E_UNBOUND;
@@ -247,7 +245,6 @@ static void tn3270e_ack(void);
 static void tn3270e_nak(enum pds);
 #endif /*]*/
 
-#if defined(X3270_ANSI) /*[*/
 static void do_data(char c);
 static void do_intr(char c);
 static void do_quit(char c);
@@ -260,7 +257,6 @@ static void do_eol(char c);
 static void do_lnext(char c);
 static char parse_ctlchar(char *s);
 static void cooked_init(void);
-#endif /*]*/
 
 static const char *cmd(int c);
 static const char *opt(unsigned char c);
@@ -651,7 +647,6 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	if (netrbuf == (unsigned char *)NULL)
 		netrbuf = (unsigned char *)Malloc(BUFSZ);
 
-#if defined(X3270_ANSI) /*[*/
 	if (!t_valid) {
 		vintr   = parse_ctlchar(appres.intr);
 		vquit   = parse_ctlchar(appres.quit);
@@ -663,7 +658,6 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 		vlnext  = parse_ctlchar(appres.lnext);
 		t_valid = 1;
 	}
-#endif /*]*/
 
 	*resolving = False;
 	*pending = False;
@@ -1308,9 +1302,7 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 	}
 #endif /*]*/
 
-#if defined(X3270_ANSI) /*[*/
 	ansi_data = 0;
-#endif /*]*/
 
 #if defined(_WIN32) /*[*/
 	(void) ResetEvent(sock_handle);
@@ -1453,7 +1445,6 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 #endif /*]*/
 	}
 
-#if defined(X3270_ANSI) /*[*/
 	if (IN_ANSI) {
 		(void) ctlr_dbcs_postprocess();
 	}
@@ -1461,7 +1452,6 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		vtrace("\n");
 		ansi_data = 0;
 	}
-#endif /*]*/
 
 	/* See if it's time to roll over the trace file. */
 	trace_rollover_check();
@@ -1588,35 +1578,29 @@ force_local(char *s)
 static int
 telnet_fsm(unsigned char c)
 {
-#if defined(X3270_ANSI) /*[*/
 	char	*see_chr;
 	int	sl;
-#endif /*]*/
 
 	switch (telnet_state) {
 	    case TNS_DATA:	/* normal data processing */
 		if (c == IAC) {	/* got a telnet command */
 			telnet_state = TNS_IAC;
-#if defined(X3270_ANSI) /*[*/
 			if (ansi_data) {
 				vtrace("\n");
 				ansi_data = 0;
 			}
-#endif /*]*/
 			break;
 		}
 		if (IN_NEITHER) {	/* now can assume ANSI mode */
-#if defined(X3270_ANSI)/*[*/
-			if (linemode)
+			if (linemode) {
 				cooked_init();
-#endif /*]*/
+			}
 			host_in3270(CONNECTED_ANSI);
 			kybdlock_clr(KL_AWAITING_FIRST, "telnet_fsm");
 			status_reset();
 			ps_process();
 		}
 		if (IN_ANSI && !IN_E) {
-#if defined(X3270_ANSI) /*[*/
 			if (!ansi_data) {
 				vtrace("<.. ");
 				ansi_data = 4;
@@ -1634,7 +1618,6 @@ telnet_fsm(unsigned char c)
 				ansi_process((unsigned int) c);
 				sms_store(c);
 			}
-#endif /*]*/
 		} else {
 			store3270in(c);
 		}
@@ -1646,7 +1629,6 @@ telnet_fsm(unsigned char c)
 		switch (c) {
 		    case IAC:	/* escaped IAC, insert it */
 			if (IN_ANSI && !IN_E) {
-#if defined(X3270_ANSI) /*[*/
 				if (!ansi_data) {
 					vtrace("<.. ");
 					ansi_data = 4;
@@ -1660,7 +1642,6 @@ telnet_fsm(unsigned char c)
 				vtrace("%s", see_chr);
 				ansi_process((unsigned int) c);
 				sms_store(c);
-#endif /*]*/
 			} else
 				store3270in(c);
 			telnet_state = TNS_DATA;
@@ -2790,7 +2771,6 @@ net_rawout(unsigned const char *buf, int len)
 }
 
 
-#if defined(X3270_ANSI) /*[*/
 /*
  * net_hexansi_out
  *	Send uncontrolled user data to the host in ANSI mode, performing IAC
@@ -3116,9 +3096,6 @@ do_lnext(char c)
 	lnext = 1;
 	ansi_process_s("^\b");
 }
-#endif /*]*/
-
-
 
 /*
  * check_in3270
@@ -3199,12 +3176,11 @@ check_in3270(void)
 			ibptr = ibuf;
 		}
 
-#if defined(X3270_ANSI) /*[*/
 		/* Reinitialize line mode. */
 		if ((new_cstate == CONNECTED_ANSI && linemode) ||
-		    new_cstate == CONNECTED_NVT)
+		    new_cstate == CONNECTED_NVT) {
 			cooked_init();
-#endif /*]*/
+		}
 
 #if defined(X3270_TN3270E) /*[*/
 		/* If we fell out of TN3270E, remove the state. */
@@ -3300,10 +3276,9 @@ check_linemode(Boolean init)
 			vtrace("Operating in %s mode.\n",
 			    linemode ? "line" : "character-at-a-time");
 		}
-#if defined(X3270_ANSI) /*[*/
-		if (IN_ANSI && linemode)
+		if (IN_ANSI && linemode) {
 			cooked_init();
-#endif /*]*/
+		}
 	}
 }
 
@@ -3556,7 +3531,6 @@ net_add_eor(unsigned char *buf, int len)
 }
 
 
-#if defined(X3270_ANSI) /*[*/
 /*
  * net_sendc
  *	Send a character of user data over the network in ANSI mode.
@@ -3619,7 +3593,6 @@ net_send_werase(void)
 {
 	net_cookout(&vwerase, 1);
 }
-#endif /*]*/
 
 
 #if defined(X3270_MENUS) /*[*/
@@ -3734,7 +3707,6 @@ net_abort(void)
 }
 #endif /*]*/
 
-#if defined(X3270_ANSI) /*[*/
 /*
  * parse_ctlchar
  *	Parse an stty control-character specification.
@@ -3755,9 +3727,8 @@ parse_ctlchar(char *s)
 	} else
 		return *s;
 }
-#endif /*]*/
 
-#if (defined(X3270_MENUS) || defined(C3270)) && defined(X3270_ANSI) /*[*/
+#if defined(X3270_MENUS) || defined(C3270) /*[*/
 /*
  * net_linemode_chars
  *	Report line-mode characters.

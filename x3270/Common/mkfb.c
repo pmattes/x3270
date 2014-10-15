@@ -54,7 +54,6 @@ unsigned n_fallbacks = 0;	/* number of fallback entries */
 #define MODE_COLOR	0x00000001
 #define MODE_FT		0x00000002
 #define MODE_MENUS	0x00000008
-#define MODE_ANSI	0x00000010
 #define MODE_KEYPAD	0x00000020
 #define MODE_APL	0x00000040
 #define MODE_PRINTER	0x00000080
@@ -79,7 +78,6 @@ struct {
 	{ "COLOR", MODE_COLOR },
 	{ "X3270_FT", MODE_FT },
 	{ "X3270_MENUS", MODE_MENUS },
-	{ "X3270_ANSI", MODE_ANSI },
 	{ "X3270_KEYPAD", MODE_KEYPAD },
 	{ "X3270_APL", MODE_APL },
 	{ "X3270_PRINTER", MODE_PRINTER },
@@ -100,12 +98,6 @@ unsigned long is_defined =
 |
 #if defined(X3270_MENUS)
 	MODE_MENUS
-#else
-	0
-#endif
-|
-#if defined(X3270_ANSI)
-	MODE_ANSI
 #else
 	0
 #endif

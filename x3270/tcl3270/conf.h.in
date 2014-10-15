@@ -52,7 +52,6 @@
 #undef USE_ICONV
 
 /* Optional parts. */
-#undef X3270_ANSI
 #undef X3270_APL
 #undef X3270_DBCS
 #undef X3270_FT

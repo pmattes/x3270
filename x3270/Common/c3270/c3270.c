@@ -1141,7 +1141,6 @@ status_dump(void)
 			    ns_brcvd, (ns_brcvd == 1) ?
 				get_message("byte") : get_message("bytes"));
 
-#if defined(X3270_ANSI) /*[*/
 		if (IN_ANSI) {
 			struct ctl_char *c = net_linemode_chars();
 			int i;
@@ -1163,7 +1162,6 @@ status_dump(void)
 				action_output("%s", buf);
 			}
 		}
-#endif /*]*/
 	} else if (HALF_CONNECTED) {
 		action_output("%s %s", get_message("connectionPending"),
 		    current_host);

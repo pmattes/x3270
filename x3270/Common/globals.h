@@ -36,9 +36,6 @@
 
 /* Autoconf settings. */
 #include "conf.h"			/* autoconf settings */
-#if defined(X3270_TN3270E) && !defined(X3270_ANSI) /*[*/
-#define X3270_ANSI	1	/* RFC2355 requires NVT mode */
-#endif /*]*/
 #if defined(HAVE_VASPRINTF) && !defined(_GNU_SOURCE) /*[*/
 #define _GNU_SOURCE		/* vasprintf isn't POSIX */
 #endif /*]*/

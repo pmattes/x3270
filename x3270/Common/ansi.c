@@ -32,8 +32,6 @@
 
 #include "globals.h"
 
-#if defined(X3270_ANSI) /*[*/
-
 #if defined(X3270_DISPLAY) /*[*/
 #include <X11/Shell.h>
 #endif /*]*/
@@ -2416,5 +2414,3 @@ ansi_snap_modes(void)
 		}
 	}
 }
-
-#endif /*]*/

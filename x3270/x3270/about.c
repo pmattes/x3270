@@ -671,7 +671,6 @@ popup_about_status(void)
 				    get_message("byte") : get_message("bytes"));
 		MAKE_LABEL(fbuf, 4);
 
-#if defined(X3270_ANSI) /*[*/
 		if (IN_ANSI) {
 			struct ctl_char *c = net_linemode_chars();
 			int i;
@@ -688,7 +687,6 @@ popup_about_status(void)
 				MAKE_VALUE(c[i].value);
 			}
 		}
-#endif /*]*/
 	} else if (HALF_CONNECTED) {
 		MAKE_LABEL(get_message("connectionPending"), 4);
 		MAKE_VALUE(current_host);

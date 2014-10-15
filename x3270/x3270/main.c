@@ -280,9 +280,7 @@ struct toggle_name toggle_names[] = {
 	{ ResTrace,           TRACING,		False },
 	{ ResDsTrace,         TRACING,		True }, /* compatibility */
 	{ ResScrollBar,       SCROLL_BAR,	False },
-#if defined(X3270_ANSI) /*[*/
 	{ ResLineWrap,        LINE_WRAP,	False },
-#endif /*]*/
 	{ ResBlankFill,       BLANK_FILL,	False },
 	{ ResScreenTrace,     SCREEN_TRACE,	False },
 	{ ResEventTrace,      TRACING,		True }, /* compatibility */

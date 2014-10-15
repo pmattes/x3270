@@ -1082,11 +1082,6 @@ const char *
 build_options(void)
 {
     	return "Build options:"
-#if defined(X3270_ANSI) /*[*/
-		" --enable-ansi"
-#else /*][*/
-		" --disable-ansi"
-#endif /*]*/
 #if defined(X3270_APL) /*[*/
 		" --enable-apl"
 #else /*][*/

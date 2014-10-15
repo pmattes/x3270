@@ -257,10 +257,8 @@ XtResource resources[] = {
 	  offset(eventTrace_bc), XtRString, ResFalse },
 	{ ResScrollBar, ClsScrollBar, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(SCROLL_BAR), XtRString, ResTrue },
-#if defined(X3270_ANSI) /*[*/
 	{ ResLineWrap, ClsLineWrap, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(LINE_WRAP), XtRString, ResTrue },
-#endif /*]*/
 	{ ResBlankFill, ClsBlankFill, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(BLANK_FILL), XtRString, ResFalse },
 	{ ResScreenTrace, ClsScreenTrace, XtRBoolean, sizeof(Boolean),
@@ -280,7 +278,6 @@ XtResource resources[] = {
 	{ ResOverlayPaste, ClsOverlayPaste, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(OVERLAY_PASTE), XtRString, ResFalse },
 
-#if defined(X3270_ANSI) /*[*/
 	{ ResIcrnl, ClsIcrnl, XtRBoolean, sizeof(Boolean),
 	  offset(icrnl), XtRString, ResTrue },
 	{ ResInlcr, ClsInlcr, XtRBoolean, sizeof(Boolean),
@@ -303,7 +300,6 @@ XtResource resources[] = {
 	  offset(quit), XtRString, "^\\" },
 	{ ResEof, ClsEof, XtRString, sizeof(char *),
 	  offset(eof), XtRString, "^D" },
-#endif /*]*/
 
 #if defined(X3270_PRINTER) /*[*/
 	{ ResPrinterLu, ClsPrinterLu, XtRString, sizeof(char *),

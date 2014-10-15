@@ -546,12 +546,10 @@ menubar_connect(Boolean ignored _is_unused)
 		XtVaSetValues(linemode_button, XtNsensitive, IN_ANSI, NULL);
 	if (charmode_button != (Widget)NULL)
 		XtVaSetValues(charmode_button, XtNsensitive, IN_ANSI, NULL);
-#if defined(X3270_ANSI) /*[*/
 	if (appres.toggle[LINE_WRAP].w[0] != (Widget)NULL)
 		XtVaSetValues(appres.toggle[LINE_WRAP].w[0],
 		    XtNsensitive, IN_ANSI,
 		    NULL);
-#endif /*]*/
 	if (appres.toggle[RECTANGLE_SELECT].w[0] != (Widget)NULL)
 		XtVaSetValues(appres.toggle[RECTANGLE_SELECT].w[0],
 		    XtNsensitive, IN_ANSI,
@@ -654,12 +652,10 @@ menubar_in3270(Boolean in3270)
 		    XtNleftBitmap, in3270 ? no_diamond
 					: (linemode ? no_diamond : diamond),
 		    NULL);
-#if defined(X3270_ANSI) /*[*/
 	if (appres.toggle[LINE_WRAP].w[0] != (Widget)NULL)
 		XtVaSetValues(appres.toggle[LINE_WRAP].w[0],
 		    XtNsensitive, !in3270,
 		    NULL);
-#endif /*]*/
 	if (appres.toggle[RECTANGLE_SELECT].w[0] != (Widget)NULL)
 		XtVaSetValues(appres.toggle[RECTANGLE_SELECT].w[0],
 		    XtNsensitive, !in3270,
@@ -1948,9 +1944,7 @@ options_menu_init(Boolean regen, Position x, Position y)
 		toggle_init(t, SHOW_TIMING, "showTimingOption", CN, &spaced);
 		toggle_init(t, CURSOR_POS, "cursorPosOption", CN, &spaced);
 		toggle_init(t, SCROLL_BAR, "scrollBarOption", CN, &spaced);
-#if defined(X3270_ANSI) /*[*/
 		toggle_init(t, LINE_WRAP, "lineWrapOption", CN, &spaced);
-#endif /*]*/
 		toggle_init(t, MARGINED_PASTE, "marginedPasteOption", CN,
 			&spaced);
 		toggle_init(t, OVERLAY_PASTE, "overlayPasteOption", CN,
@@ -2009,9 +2003,7 @@ options_menu_init(Boolean regen, Position x, Position y)
 		    appres.toggle[SHOW_TIMING].w[0] != NULL ||
 		    appres.toggle[CURSOR_POS].w[0] != NULL ||
 		    appres.toggle[SCROLL_BAR].w[0] != NULL ||
-#if defined(X3270_ANSI) /*[*/
 		    appres.toggle[LINE_WRAP].w[0] != NULL ||
-#endif /*]*/
 		    appres.toggle[MARGINED_PASTE].w[0] != NULL ||
 		    appres.toggle[RECTANGLE_SELECT].w[0] != NULL ||
 		    appres.toggle[CROSSHAIR].w[0] != NULL ||
