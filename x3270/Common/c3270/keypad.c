@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2013 Paul Mattes.
+ * Copyright (c) 2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,25 +33,24 @@
 
 #include "globals.h"
 
-#if defined(X3270_MENUS) /*[*/
-# include "macrosc.h"
-# include "3270ds.h"
-# include "appres.h"
-# include "ctlrc.h"
-# include "menubarc.h"
-# include "keypadc.h"
+#include "macrosc.h"
+#include "3270ds.h"
+#include "appres.h"
+#include "ctlrc.h"
+#include "menubarc.h"
+#include "keypadc.h"
 
-# if !defined(_WIN32) /*[*/
-#  if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
-#   include <ncursesw/ncurses.h>
-#  elif defined(HAVE_NCURSES_NCURSES_H) /*][*/
-#   include <ncurses/ncurses.h>
-#  elif defined(HAVE_NCURSES_H) /*][*/
-#   include <ncurses.h>
-#  else /*][*/
-#   include <curses.h>
-#  endif /*]*/
+#if !defined(_WIN32) /*[*/
+# if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
+#  include <ncursesw/ncurses.h>
+# elif defined(HAVE_NCURSES_NCURSES_H) /*][*/
+#  include <ncurses/ncurses.h>
+# elif defined(HAVE_NCURSES_H) /*][*/
+#  include <ncurses.h>
+# else /*][*/
+#  include <curses.h>
 # endif /*]*/
+#endif /*]*/
 
 /* Sensitivity map: A rectangular region and a callback function. */
 typedef struct {
@@ -68,14 +67,14 @@ typedef struct {
 } keypad_desc_t;
 
 /* Pull in the compiled keypad structures (sens, keypad_desc). */
-# include "compiled_keypad.h"
-# define KEYPAD_HEIGHT	(sizeof(keypad_desc)/sizeof(keypad_desc[0]))
-# define NUM_SENSE	(sizeof(sens)/sizeof(sens[0]))
+#include "compiled_keypad.h"
+#define KEYPAD_HEIGHT	(sizeof(keypad_desc)/sizeof(keypad_desc[0]))
+#define NUM_SENSE	(sizeof(sens)/sizeof(sens[0]))
 
 static sens_t *current_sens = NULL;
-# if defined(XXX_DEBUG) || defined(YYY_DEBUG) || defined(ZZZ_DEBUG)
+#if defined(XXX_DEBUG) || defined(YYY_DEBUG) || defined(ZZZ_DEBUG)
 static FILE *xxx = NULL;
-# endif
+#endif
 
 /* Return the keypad character on top of the screen. */
 Boolean
@@ -91,17 +90,17 @@ keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted,
 			map_acs(d->outline, u, acs);
 			*highlighted = (d->sens != NULL) &&
 			    (d->sens == current_sens);
-# ifdef XXX_DEBUG
+#ifdef XXX_DEBUG
 			fprintf(xxx, "row %d col %d outline 0x%x !highlight\n",
 				row, col, *u);
-# endif
+#endif
 			return True;
 		}
 		if (d->literal) {
 			*u = d->literal;
 			*highlighted = (d->sens != NULL) &&
 			    (d->sens == current_sens);
-# ifdef XXX_DEBUG
+#ifdef XXX_DEBUG
 			fprintf(xxx, "row %d col %d literal '%c' d->sens %p "
 				"%s current_sens %p %s\n",
 				row, col, *u,
@@ -109,7 +108,7 @@ keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted,
 				d->sens? d->sens->callback: "(null)",
 				(void *)current_sens,
 				current_sens->callback);
-# endif
+#endif
 			return True;
 		}
 	}
@@ -138,7 +137,7 @@ pop_up_keypad(Boolean up)
 	if (up) {
 		menu_is_up |= KEYPAD_IS_UP;
 		current_sens = &sens[0];
-# if defined(XXX_DEBUG) || defined(YYY_DEBUG) || defined(ZZZ_DEBUG)
+#if defined(XXX_DEBUG) || defined(YYY_DEBUG) || defined(ZZZ_DEBUG)
 		if (xxx == NULL) {
 			xxx = fopen("/tmp/ccc", "a");
 			if (xxx == NULL) {
@@ -146,7 +145,7 @@ pop_up_keypad(Boolean up)
 				exit(1);
 			}
 		}
-# endif
+#endif
 	} else {
 		menu_is_up &= ~KEYPAD_IS_UP;
 		current_sens = NULL;
@@ -196,7 +195,7 @@ static void
 find_adjacent(int xinc, int yinc)
 {
 	int ul_x, lr_x, ul_y, lr_y;
-# 	define N_MATCH 4
+#	define N_MATCH 4
 	sens_t *matches[N_MATCH];
 	int n_matched = 0;
 
@@ -227,21 +226,21 @@ find_adjacent(int xinc, int yinc)
 			lr_x = current_sens->lr_x + 1;
 		}
 	}
-# if defined(YYY_DEBUG)
+#if defined(YYY_DEBUG)
 	fprintf(xxx, "ul_y %d ul_x %d lr_y %d lr_x %d\n",
 		ul_y, ul_x, lr_y, lr_x);
 	fflush(xxx);
-# endif
+#endif
 
 	while (True) {
 		int x, y;
 
 		for (y = ul_y; y <= lr_y; y++) {
 			for (x = ul_x; x <= lr_x; x++) {
-# if defined(YYY_DEBUG)
+#if defined(YYY_DEBUG)
 				fprintf(xxx, "searching row %d col %d\n", x, y);
 				fflush(xxx);
-# endif
+#endif
 				if (keypad_desc[y][x].sens != NULL &&
 				    n_matched < N_MATCH) {
 					int i;
@@ -261,14 +260,14 @@ find_adjacent(int xinc, int yinc)
 		if (n_matched) {
 			int i;
 
-# if defined(ZZZ_DEBUG)
+#if defined(ZZZ_DEBUG)
 			fprintf(xxx, "%d matches:", n_matched);
 			for (i = 0; i < n_matched; i++) {
 				fprintf(xxx, " %s", matches[i]->callback);
 			}
 			fprintf(xxx, "\n");
 			fflush(xxx);
-# endif
+#endif
 			if (n_matched == 0)
 				current_sens = matches[0];
 			else {
@@ -336,7 +335,7 @@ find_adjacent(int xinc, int yinc)
 						center[i] =
 						    find_center_y(matches[i]);
 				}
-# if defined(ZZZ_DEBUG)
+#if defined(ZZZ_DEBUG)
 				fprintf(xxx, "overlaps:");
 				for (i = 0; i < n_matched; i++) {
 					fprintf(xxx, " %d", overlap[i]);
@@ -345,7 +344,7 @@ find_adjacent(int xinc, int yinc)
 				}
 				fprintf(xxx, ", tie %d\n", tie);
 				fflush(xxx);
-# endif
+#endif
 				if (tie) {
 					/*
 					 * Pick the best-centered match.
@@ -359,24 +358,24 @@ find_adjacent(int xinc, int yinc)
 					else
 						curr_center =
 						    find_center_y(current_sens);
-# if defined(ZZZ_DEBUG)
+#if defined(ZZZ_DEBUG)
 					fprintf(xxx, "curr_center is %d\n",
 						curr_center);
 					fflush(xxx);
-# endif
+#endif
 					for (i = 0; i < n_matched; i++) {
 						if (overlap[i] ==
 							overlap[best_o]) {
 							if (best_c < 0 ||
 							    abs(curr_center - center[i]) <
 							    abs(curr_center - center[best_c])) {
-# if defined(ZZZ_DEBUG)
+#if defined(ZZZ_DEBUG)
 								fprintf(xxx,
 									"center '%s' (%d) is better\n",
 									matches[i]->callback,
 									center[i]);
 								fflush(xxx);
-# endif
+#endif
 								best_c = i;
 							}
 						}
@@ -399,7 +398,7 @@ find_adjacent(int xinc, int yinc)
 	}
 }
 
-# if defined(_WIN32) /*[*/
+#if defined(_WIN32) /*[*/
 void
 keypad_click(int x, int y)
 {
@@ -418,7 +417,7 @@ keypad_click(int x, int y)
 	}
 	pop_up_keypad(False);
 }
-# endif /*]*/
+#endif /*]*/
 
 /* Process a key event while the keypad is up. */
 void
@@ -429,7 +428,7 @@ keypad_key(int k, ucs4_t u)
 
 	switch (k) {
 
-# if defined(NCURSES_MOUSE_VERSION) /*[*/
+#if defined(NCURSES_MOUSE_VERSION) /*[*/
 	case MK_MOUSE: {
 		MEVENT m;
 		size_t i;
@@ -449,7 +448,7 @@ keypad_key(int k, ucs4_t u)
 		pop_up_keypad(False);
 		break;
 	    }
-# endif /*]*/
+#endif /*]*/
 
 	case MK_UP:
 		find_adjacent(0, -1);
@@ -508,5 +507,3 @@ Keypad_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     pop_up_keypad(True);
 }
-
-#endif /*]*/

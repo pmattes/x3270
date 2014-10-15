@@ -35,8 +35,6 @@
 
 #include "globals.h"
 
-#if defined(X3270_MENUS) /*[*/
-
 #include <X11/Shell.h>
 #include <X11/StringDefs.h>
 #include <X11/Xaw/Command.h>
@@ -707,5 +705,3 @@ popup_about_status(void)
 
 #undef MAKE_LABEL
 #undef MAKE_VALUE
-
-#endif /*]*/

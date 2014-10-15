@@ -1,7 +1,7 @@
 /* (from) $XConsortium: SimpleMenu.c,v 1.41 92/09/10 16:25:07 converse Exp $ */
 
 /*
- * Copyright (c) 1995-2009, 2013 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -60,7 +60,6 @@
  */
 
 #include "globals.h"
-#if defined(X3270_MENUS) /*[*/
 
 #include <stdio.h>
 #include <X11/IntrinsicP.h>
@@ -1477,5 +1476,3 @@ GetRightEntry(Widget w, XEvent *event)
 
     return(NULL);
 }
-
-#endif /*]*/

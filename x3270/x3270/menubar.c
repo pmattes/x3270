@@ -34,8 +34,6 @@
 
 #include "globals.h"
 
-#if defined(X3270_MENUS) /*[*/
-
 #include <stdarg.h>
 
 #include <X11/StringDefs.h>
@@ -2292,5 +2290,3 @@ screensave_option(Widget w _is_unused, XtPointer client_data _is_unused,
 {
 	stmenu_popup(STMP_AS_IS);
 }
-
-#endif /*]*/

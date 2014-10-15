@@ -3547,7 +3547,6 @@ net_send_werase(void)
 }
 
 
-#if defined(X3270_MENUS) /*[*/
 /*
  * External entry points to negotiate line or character mode.
  */
@@ -3584,7 +3583,6 @@ net_charmode(void)
 		vtrace("SENT %s %s\n", cmd(DO), opt(TELOPT_SGA));
 	}
 }
-#endif /*]*/
 
 
 /*
@@ -3678,7 +3676,6 @@ parse_ctlchar(char *s)
 		return *s;
 }
 
-#if defined(X3270_MENUS) || defined(C3270) /*[*/
 /*
  * net_linemode_chars
  *	Report line-mode characters.
@@ -3700,7 +3697,6 @@ net_linemode_chars(void)
 
 	return c;
 }
-#endif /*]*/
 
 /*
  * Construct a string to reproduce the current TELNET options.

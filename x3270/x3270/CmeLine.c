@@ -1,7 +1,7 @@
 /* (from) $XConsortium: SmeLine.c,v 1.13 91/07/23 12:23:21 rws Exp $ */
 
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,6 @@
  */
 
 #include "globals.h"
-#if defined(X3270_MENUS) /*[*/
 
 #include <stdio.h>
 #include <X11/IntrinsicP.h>
@@ -304,5 +303,3 @@ QueryGeometry(Widget w, XtWidgetGeometry *intended,
     }
     return(ret_val);
 }
-
-#endif /*]*/

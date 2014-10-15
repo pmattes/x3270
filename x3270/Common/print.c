@@ -473,7 +473,6 @@ PrintWindow_action(Widget w _is_unused, XEvent *event, String *params,
 	popup_popup(print_window_shell, XtGrabExclusive);
 }
 
-# if defined(X3270_MENUS) /*[*/
 /* Callback for menu Print Window option. */
 void
 print_window_option(Widget w, XtPointer client_data _is_unused,
@@ -483,5 +482,4 @@ print_window_option(Widget w, XtPointer client_data _is_unused,
 
 	PrintWindow_action(w, (XEvent *)NULL, (String *)NULL, &zero);
 }
-# endif /*]*/
 #endif /*]*/

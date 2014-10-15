@@ -32,7 +32,7 @@
 
 #include "globals.h"
 
-#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 #include <X11/StringDefs.h>
 #include <X11/Xaw/Dialog.h>
 #endif /*]*/
@@ -191,9 +191,7 @@ static const char *sms_state_name[] = {
 	"CLOSING"
 };
 
-#if defined(X3270_MENUS) /*[*/
 static struct macro_def *macro_last = (struct macro_def *) NULL;
-#endif /*]*/
 static ioid_t stdin_id = NULL_IOID;
 static unsigned char *ansi_save_buf;
 static int      ansi_save_cnt = 0;
@@ -376,7 +374,6 @@ sms_init(void)
 	register_schange(ST_3270_MODE, sms_in3270);
 }
 
-#if defined(X3270_MENUS) /*[*/
 /* Parse the macros resource into the macro list */
 void
 macros_init(void)
@@ -442,7 +439,6 @@ macros_init(void)
 		Warning(buf);
 	}
 }
-#endif /*]*/
 
 /*
  * Enable input from a script.
@@ -1526,14 +1522,12 @@ ps_set(char *s, Boolean is_hex)
 	push_string(s, False, is_hex);
 }
 
-#if defined(X3270_MENUS) /*[*/
 /* Callback for macros menu. */
 void
 macro_command(struct macro_def *m)
 {
 	push_macro(m->action, False);
 }
-#endif /*]*/
 
 /*
  * If the string looks like an action, e.g., starts with "Xxx(", run a login
@@ -2927,14 +2921,12 @@ sms_redirect(void)
     	return sms_redirect_to() != NULL;
 }
 
-#if defined(X3270_MENUS) || defined(C3270) /*[*/
 /* Return whether any scripts are active. */
 Boolean
 sms_active(void)
 {
 	return sms != SN;
 }
-#endif /*]*/
 
 /* Translate an expect string (uses C escape syntax). */
 static void
@@ -3301,7 +3293,7 @@ Expect_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 }
 
 
-#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 
 /* "Execute an Action" menu option */
 

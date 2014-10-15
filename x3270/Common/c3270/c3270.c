@@ -126,9 +126,7 @@ static char *base_keymap1 =
     "Ctrl<Key>a <Key>k: Keypad\n"
     "Ctrl<Key>a <Key>l: Redraw\n"
     "Ctrl<Key>a <Key>m: Compose\n"
-# if defined(X3270_MENUS) /*[*/
     "Ctrl<Key>a <Key>n: Menu\n"
-# endif /*]*/
     "Ctrl<Key>a <Key>p: PrintText\n"
     "Ctrl<Key>a <Key>^: Key(notsign)\n"
               "<Key>DC: Delete\n"
@@ -181,9 +179,7 @@ static char *base_3270_keymap =
            "Ctrl<Key>k: Keypad\n"
            "Ctrl<Key>l: Redraw\n"
            "Ctrl<Key>m: Enter\n"
-# if defined(X3270_MENUS) /*[*/
            "Ctrl<Key>n: Menu\n"
-# endif /*]*/
            "Ctrl<Key>r: Reset\n"
            "Ctrl<Key>u: DeleteField\n"
     "Ctrl<Key>a <Key>v: ToggleReverse\n"
@@ -209,10 +205,8 @@ static char *base_keymap =
            "Alt <Key>L: Redraw\n"
            "Alt <Key>m: Compose\n"
            "Alt <Key>M: Compose\n"
-# if defined(X3270_MENUS) /*[*/
            "Alt <Key>n: Menu\n"
            "Alt <Key>N: Menu\n"
-# endif /*]*/
            "Alt <Key>p: PrintText(gdi)\n"
            "Alt <Key>P: PrintText(gdi)\n"
           "Ctrl <Key>v: Paste\n"

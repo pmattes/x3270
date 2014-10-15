@@ -35,8 +35,6 @@
 
 #include "globals.h"
 
-#if defined(X3270_MENUS) /*[*/
-
 #include <X11/StringDefs.h>
 #include <X11/Xaw/Toggle.h>
 #include <X11/Xaw/Command.h>
@@ -372,5 +370,3 @@ PA_dialog_focus_action(Widget w, XEvent *event _is_unused, String *parms _is_unu
 	if (focus_widget)
 		XtSetKeyboardFocus(focus_widget, w);
 }
-
-#endif /*]*/

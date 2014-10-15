@@ -122,9 +122,7 @@ XrmOptionDescRec options[]= {
 	{ OptTrace,	DotTrace,	XrmoptionNoArg,		ResTrue },
 	{ OptEmulatorFont,DotEmulatorFont,XrmoptionSepArg,	NULL },
 	{ OptExtended,	DotExtended,	XrmoptionNoArg,		ResTrue },
-#if defined(X3270_MENUS) /*[*/
 	{ OptHostsFile,	DotHostsFile,	XrmoptionSepArg,	NULL },
-#endif /*]*/
 	{ OptIconName,	".iconName",	XrmoptionSepArg,	NULL },
 	{ OptIconX,	".iconX",	XrmoptionSepArg,	NULL },
 	{ OptIconY,	".iconY",	XrmoptionSepArg,	NULL },
@@ -205,9 +203,7 @@ static struct {
 	{ OptDevName, "<name>", "Specify device name (workstation ID)" },
 	{ OptEmulatorFont, "<font>", "Font for emulator window" },
 	{ OptExtended, CN, "Extended 3270 data stream (deprecated)" },
-#if defined(X3270_MENUS) /*[*/
 	{ OptHostsFile, "<filename>", "Pathname of ibm_hosts file" },
-#endif /*]*/
 	{ OptIconName, "<name>", "Title for icon" },
 	{ OptIconX, "<x>", "X position for icon" },
 	{ OptIconY, "<y>", "Y position for icon" },
@@ -304,13 +300,8 @@ usage(const char *msg)
 	if (msg != CN)
 	    	fprintf(stderr, "%s\n", msg);
 
-#if defined(X3270_MENUS) /*[*/
 	fprintf(stderr, "Usage: %s [options] [[ps:][LUname@]hostname[:port]]\n",
 		programname);
-#else /*][*/
-	fprintf(stderr, "Usage: %s [options] [ps:][LUname@]hostname[:port]\n",
-		programname);
-#endif /*]*/
 	fprintf(stderr, "Options:\n");
 	for (i = 0; i < XtNumber(option_help); i++) {
 		fprintf(stderr, " %s%s%s\n   %s\n",
@@ -428,10 +419,6 @@ main(int argc, char *argv[])
 	/* Verify command-line syntax. */
 	switch (argc) {
 	    case 1:
-#if !defined(X3270_MENUS) /*[*/
-		if (cl_hostname == CN)
-			usage(CN);
-#endif /*]*/
 		break;
 	    case 2:
 		if (cl_hostname != CN)
@@ -603,15 +590,6 @@ main(int argc, char *argv[])
 		appres.reconnect = False;
 	}
 
-#if !defined(X3270_MENUS) /*[*/
-	/*
-	 * If there are no menus, then -once is the default; let -reconnect
-	 * override it.
-	 */
-	if (appres.reconnect)
-		appres.once = False;
-#endif /*]*/
-
 	if (appres.char_class != CN)
 		reclass(appres.char_class);
 
@@ -622,9 +600,6 @@ main(int argc, char *argv[])
 	sms_init();
 	info_popup_init();
 	error_popup_init();
-#if defined(X3270_FT) && !defined(X3270_MENUS) /*[*/
-	ft_init();
-#endif /*]*/
 #if defined(X3270_PRINTER) /*[*/
 	printer_init();
 #endif /*]*/

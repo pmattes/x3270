@@ -97,7 +97,7 @@ static Boolean idle_ticking = False;
 static void idle_in3270(Boolean in3270);
 static int process_timeout_value(char *t);
 
-# if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+# if defined(X3270_DISPLAY) /*[*/
 static enum idle_enum s_disabled = IDLE_DISABLED;
 static enum idle_enum s_session = IDLE_SESSION;
 static enum idle_enum s_perm = IDLE_PERM;
@@ -298,7 +298,7 @@ get_idle_timeout(void)
 	return idle_timeout_string;
 }
 
-# if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+# if defined(X3270_DISPLAY) /*[*/
 /* "Idle Command" dialog. */
 
 /*

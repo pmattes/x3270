@@ -46,11 +46,11 @@ extern Boolean idle_changed;
 extern char *idle_command;
 extern char *idle_timeout_string;
 extern enum idle_enum idle_user_enabled;
-#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+# if defined(X3270_DISPLAY) /*[*/
 extern void popup_idle(void);
-#endif /*]*/
+# endif /*]*/
 #else /*][*/
-#define cancel_idle_timer()
-#define idle_init()
-#define reset_idle_timer()
+# define cancel_idle_timer()
+# define idle_init()
+# define reset_idle_timer()
 #endif /*]*/

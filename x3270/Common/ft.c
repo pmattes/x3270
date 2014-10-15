@@ -102,7 +102,7 @@ int ft_windows_codepage;		/* Windows code page */
 #endif /*]*/
 
 /* Statics. */
-# if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+# if defined(X3270_DISPLAY) /*[*/
 static Widget ft_dialog, ft_shell, local_file, host_file;
 static Widget lrecl_widget, blksize_widget;
 static Widget primspace_widget, secspace_widget;
@@ -123,7 +123,7 @@ typedef enum {
     HT_CICS
 } host_type_t;
 static host_type_t host_type = HT_TSO;	/* Host type */
-# if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+# if defined(X3270_DISPLAY) /*[*/
 static Boolean host_is_tso = True;	/* Booleans used by dialog */
 static Boolean host_is_tso_or_vm = True;/*  sensitivity logic */
 static host_type_t s_tso = HT_TSO;	/* Values used by toggle callbacks. */
@@ -138,7 +138,7 @@ static struct toggle_list units_toggles = { units_options };
 static enum recfm {
 	DEFAULT_RECFM, RECFM_FIXED, RECFM_VARIABLE, RECFM_UNDEFINED
 } recfm = DEFAULT_RECFM;
-# if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+# if defined(X3270_DISPLAY) /*[*/
 static Boolean recfm_default = True;
 static enum recfm r_default_recfm = DEFAULT_RECFM;
 static enum recfm r_fixed = RECFM_FIXED;
@@ -149,7 +149,7 @@ static enum recfm r_undefined = RECFM_UNDEFINED;
 static enum units {
 	DEFAULT_UNITS, TRACKS, CYLINDERS, AVBLOCK
 } units = DEFAULT_UNITS;
-# if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+# if defined(X3270_DISPLAY) /*[*/
 static Boolean units_default = True;
 static enum units u_default_units = DEFAULT_UNITS;
 static enum units u_tracks = TRACKS;
@@ -158,7 +158,7 @@ static enum units u_avblock = AVBLOCK;
 # endif /*]*/
 
 static Boolean allow_overwrite = False;
-# if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+# if defined(X3270_DISPLAY) /*[*/
 static sr_t *ft_sr = (sr_t *)NULL;
 
 static Widget progress_shell, from_file, to_file;
@@ -212,7 +212,7 @@ unsigned char ft_dbcs_byte1;
 Boolean ft_last_dbcs = False;
 #endif /*]*/
 
-#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 static Widget overwrite_shell;
 #endif /*]*/
 static Boolean ft_is_action;
@@ -221,7 +221,7 @@ static Boolean ft_is_interactive = False;
 #endif /*]*/
 static ioid_t ft_start_id = NULL_IOID;
 
-#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 static void ft_cancel(Widget w, XtPointer client_data, XtPointer call_data);
 static void ft_popup_callback(Widget w, XtPointer client_data,
     XtPointer call_data);
@@ -259,7 +259,7 @@ static void ft_in3270(Boolean ignored);
 
 /* Main external entry point. */
 
-#if !defined(X3270_DISPLAY) || !defined(X3270_MENUS) /*[*/
+#if !defined(X3270_DISPLAY) /*[*/
 void
 ft_init(void)
 {
@@ -299,7 +299,7 @@ ft_didnt_start(ioid_t id _is_unused)
 	sms_continue();
 }
 
-#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 /* "File Transfer" dialog. */
 
 /*
@@ -1595,7 +1595,7 @@ ft_complete(const char *errmsg)
 		ft_start_id = NULL_IOID;
 	}
 
-#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 	/* Pop down the in-progress shell. */
 	if (!ft_is_action)
 		XtPopdown(progress_shell);
@@ -1654,7 +1654,7 @@ ft_complete(const char *errmsg)
 			sms_info("%s", buf);
 			sms_continue();
 		}
-#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 		else
 			popup_an_info("%s", buf);
 #endif /*]*/
@@ -1669,7 +1669,7 @@ ft_complete(const char *errmsg)
 void
 ft_update_length(void)
 {
-#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 	char text_string[80];
 
 	/* Format the message */
@@ -1706,7 +1706,7 @@ ft_running(Boolean is_cut)
 	(void) gettimeofday(&t0, (struct timezone *)NULL);
 	ft_length = 0;
 
-#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 	if (!ft_is_action) {
 		XtUnmapWidget(waiting);
 		ft_update_length();
@@ -1724,7 +1724,7 @@ ft_aborting(void)
 {
 	if (ft_state == FT_RUNNING || ft_state == FT_ABORT_WAIT) {
 		ft_state = FT_ABORT_SENT;
-#if defined(X3270_DISPLAY) && defined(X3270_MENUS) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 		if (!ft_is_action) {
 			XtUnmapWidget(waiting);
 			XtUnmapWidget(ft_status);

@@ -222,9 +222,7 @@ static void send_spot_loc(void);
 static enum {
     REDO_NONE,
     REDO_FONT,
-#if defined(X3270_MENUS) /*[*/
     REDO_MODEL,
-#endif /*]*/
 #if defined(X3270_KEYPAD) /*[*/
     REDO_KEYPAD,
 #endif /*]*/
@@ -232,11 +230,9 @@ static enum {
     REDO_RESIZE
 } screen_redo = REDO_NONE;
 static char *redo_old_font = CN;
-#if defined(X3270_MENUS) /*[*/
 static int redo_old_model;
 static int redo_old_ov_cols;
 static int redo_old_ov_rows;
-#endif /*]*/
 
 static unsigned char blank_map[32];
 #define BKM_SET(n)	blank_map[(n)/8] |= 1 << ((n)%8)
@@ -551,9 +547,7 @@ screen_init(void)
 static void
 screen_reinit(unsigned cmask)
 {
-#if defined(X3270_MENUS) /*[*/
 	Dimension cwidth_curr;
-#endif /*]*/
 #if defined(X3270_KEYPAD) /*[*/
 	Dimension mkw;
 #endif /*]*/
@@ -773,15 +767,13 @@ screen_reinit(unsigned cmask)
 
 	/* Initialize the menu bar and integral keypad */
 
-#if defined(X3270_MENUS) /*[*/
-# if defined(X3270_KEYPAD) /*[*/
+#if defined(X3270_KEYPAD) /*[*/
 	cwidth_curr = appres.keypad_on ? container_width : cwidth_nkp;
-# else /*][*/
+#else /*][*/
 	cwidth_curr = container_width;
-# endif /*]*/
+#endif /*]*/
 	menubar_height = menubar_qheight(cwidth_curr);
 	menubar_init(container, container_width, cwidth_curr);
-#endif /*]*/
 
 	if (fixed_height)
 		container_height = fixed_height;
@@ -3113,7 +3105,6 @@ allocate_pixels(void)
 	}
 }
 
-#if defined(X3270_MENUS) /*[*/
 /* Deallocate pixels. */
 static void
 destroy_pixels(void)
@@ -3126,10 +3117,10 @@ destroy_pixels(void)
 	 * that may be in use by other Xt widgets.  Occh.
 	 */
 
-	for (i = 0; i < 16; i++)
+	for (i = 0; i < 16; i++) {
 		cpx_done[i] = False;
+	}
 }
-#endif /*]*/
 
 /*
  * Create graphics contexts.
@@ -4300,7 +4291,6 @@ font_init(void)
 {
 }
 
-#if defined(X3270_MENUS) /*[*/
 /*
  * Change models.
  */
@@ -4398,7 +4388,6 @@ screen_newcharset(char *csname)
 
 	}
 }
-#endif /*]*/
 
 /*
  * Visual or not-so-visual bell
@@ -5106,13 +5095,11 @@ revert_screen(void)
 		revert = "font";
 		screen_newfont(redo_old_font, False, False);
 		break;
-#if defined(X3270_MENUS) /*[*/
 	    case REDO_MODEL:
 		revert = "model number";
 		screen_change_model(redo_old_model,
 		    redo_old_ov_cols, redo_old_ov_rows);
 		break;
-#endif /*]*/
 #if defined(X3270_KEYPAD) /*[*/
 	    case REDO_KEYPAD:
 		revert = "keypad configuration";

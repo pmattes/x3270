@@ -1299,12 +1299,10 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		if (k == KEY_MOUSE) {
 		    	MEVENT m;
 
-# if defined(X3270_MENUS) /*[*/
 			if (menu_is_up) {
 			    menu_key(MK_MOUSE, 0);
 			    return;
 			}
-#endif /*]*/
 			if (getmouse(&m) != OK)
 			    return;
 			if ((m.bstate & BUTTON1_RELEASED)) {
@@ -1355,7 +1353,6 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 	}
 }
 
-#if defined(X3270_MENUS) /*[*/
 /* Translate a curses key to a menubar abstract key. */
 static menu_key_t
 key_to_mkey(int k)
@@ -1385,9 +1382,6 @@ key_to_mkey(int k)
 	return MK_OTHER;
     }
 }
-#else /*][*/
-#define key_to_mkey(k) 0
-#endif /*]*/
 
 static void
 kybd_input2(int k, ucs4_t ucs4, int alt)

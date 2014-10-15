@@ -1644,9 +1644,7 @@ screen_disp(Boolean erasing _is_unused)
 	if (screen_yoffset) {
 	    	ucs4_t u;
 		Boolean highlight;
-#if defined(X3270_MENUS) /*[*/
 		unsigned char acs;
-#endif /*]*/
 		int norm0, high0;
 		int norm1, high1;
 
@@ -1727,9 +1725,7 @@ screen_disp(Boolean erasing _is_unused)
 			Boolean is_menu = False;
 			ucs4_t u;
 			Boolean highlight;
-#if defined(X3270_MENUS) /*[*/
 			unsigned char acs;
-#endif /*]*/
 
 			if (flipped)
 				move(row + screen_yoffset, cCOLS-1 - col);

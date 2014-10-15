@@ -93,13 +93,7 @@ XtResource resources[] = {
 	{ ResAplMode, ClsAplMode, XtRBoolean, sizeof(Boolean),
 	  offset(apl_mode), XtRString, ResFalse },
 	{ ResOnce, ClsOnce, XtRBoolean, sizeof(Boolean),
-	  offset(once), XtRString,
-#if defined(X3270_MENUS) /*[*/
-	  ResFalse
-#else /*][*/
-	  ResTrue
-#endif /*]*/
-	},
+	  offset(once), XtRString, ResFalse },
 	{ ResScripted, ClsScripted, XtRBoolean, sizeof(Boolean),
 	  offset(scripted), XtRString, ResFalse },
 	{ ResModifiedSel, ClsModifiedSel, XtRBoolean, sizeof(Boolean),

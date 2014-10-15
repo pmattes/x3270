@@ -1109,13 +1109,6 @@ build_options(void)
 #else /*][*/
 		" --disable-local-process"
 #endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
-# if defined(X3270_MENUS) /*[*/
-		" --enable-menus"
-# else /*][*/
-		" --disable-menus"
-# endif /*]*/
-#endif /*]*/
 #if defined(X3270_INTERACTIVE) /*[*/
 # if defined(X3270_PRINTER) /*[*/
 		" --enable-printer"

@@ -151,7 +151,7 @@ XtActionsRec all_actions[] = {
 #if defined(X3270_DISPLAY) /*[*/
 	{ "SetFont",		SetFont_action },
 	{ "TemporaryKeymap",	TemporaryKeymap_action },
-# if defined(X3270_FT) && defined(X3270_MENUS) /*[*/
+# if defined(X3270_FT) /*[*/
 	{ PA_PFX "dialog-next",	PA_dialog_next_action },
 	{ PA_PFX "dialog-focus", PA_dialog_focus_action },
 # endif /*]*/
@@ -219,7 +219,7 @@ XtActionsRec all_actions[] = {
 	{ "Insert",		Insert_action },
 	{ "Interrupt",		Interrupt_action },
 	{ "Key",		Key_action },
-#if defined(C3270) && defined(X3270_MENUS) /*[*/
+#if defined(C3270) /*[*/
 	{ "Keypad",		Keypad_action },
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
@@ -230,7 +230,7 @@ XtActionsRec all_actions[] = {
 #if defined(X3270_SCRIPT) || defined(S3270) /*[*/
 	{ "Macro", 		Macro_action },
 #endif /*]*/
-#if defined(C3270) && defined(X3270_MENUS) /*[*/
+#if defined(C3270) /*[*/
 	{ "Menu",		Menu_action },
 #endif /*]*/
 	{ "MonoCase",		MonoCase_action },
@@ -260,7 +260,7 @@ XtActionsRec all_actions[] = {
 #if defined(X3270_SCRIPT) || defined(TCL3270) || defined(S3270) /*[*/
 	{ "ReadBuffer",		ReadBuffer_action },
 #endif /*]*/
-#if defined(X3270_MENUS) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 	{ "Reconnect",		Reconnect_action },
 #endif /*]*/
 	{ "Reset",		Reset_action },

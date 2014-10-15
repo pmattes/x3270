@@ -1107,7 +1107,7 @@ Connect_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 		sms_connect_wait();
 }
 
-#if defined(X3270_MENUS) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 void
 Reconnect_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {

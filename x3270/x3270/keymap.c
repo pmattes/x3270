@@ -82,7 +82,6 @@ static void keymap_3270_mode(Boolean);
 extern String _XtPrintXlations(Widget w, XtTranslations xlations,
     Widget accelWidget, Boolean includeRHS);
 
-#if defined(X3270_MENUS) /*[*/
 static enum { SORT_EVENT, SORT_KEYMAP, SORT_ACTION } sort = SORT_KEYMAP;
 
 static Boolean km_isup = False;
@@ -106,9 +105,6 @@ static Boolean is_temp(char *k);
 static char *pathname(char *k);
 static Boolean from_server(char *k);
 static void km_regen(void);
-#else /*][*/
-#define km_regen()
-#endif /*]*/
 
 char *current_keymap = CN;
 
@@ -722,7 +718,6 @@ temporary_keymap(char *k)
 }
 #undef TN
 
-#if defined(X3270_MENUS) /*[*/
 /* Create and pop up the current keymap pop-up. */
 void
 do_keymap_display(Widget w _is_unused, XtPointer userdata _is_unused,
@@ -1267,4 +1262,3 @@ event_cmp(char *e1, char *e2)
 	else
 		return strcmp(e1, e2);
 }
-#endif /*]*/

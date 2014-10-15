@@ -116,7 +116,6 @@ x3270.colorScheme.greenScreen: \
 	green green green green \
 	white black dimGrey \
 	4 15 4 15
-#ifdef X3270_MENUS
 !   Color schemes listed on the Options color menu
 x3270.schemeList:			Default 3279: default\n\
 					Bright: bright\n\
@@ -163,7 +162,6 @@ x3270.charsetList:			U.S. English (CP 037): us-intl\n\
 					Thai (CP 1160): thai\n\
 					Turkish (CP 1026): turkish\n\
 					United Kingdom (CP 285): uk\n
-#endif
 !
 !   Pseudo-colors for 3278 mode
 ! x3270.colorBackground:		black
@@ -847,7 +845,6 @@ x3270.errorPopup*cancelButton.label:		Exit
 x3270.printerErrorPopup.title:			x3270 Printer Error
 x3270.childErrorPopup.title:			x3270 Child Process Error
 x3270.passwordPopup.title:			x3270 Password
-#ifdef X3270_MENUS
 x3270.infoPopup.title:				x3270 Information
 x3270.printerInfoPopup.title:			x3270 Printer Information
 x3270.childInfoPopup.title:			x3270 Child Process Information
@@ -860,15 +857,12 @@ x3270.keymapPopup.dialog.label:			Enter Keymap Name
 x3270.oversizePopup.title:			x3270 Oversize
 x3270.oversizePopup.dialog.label:		Enter Dimensions (cols x rows)
 x3270.oversizePopup*confirmButton.label:	Resize
-#endif
 #ifdef X3270_KEYPAD
 x3270.keypadPopup.title:			x3270 Keypad
 #endif
-#ifdef X3270_MENUS
 x3270.printWindowPopup.title:			x3270 Window Print
 x3270.printWindowPopup.dialog.label:		Enter Print Command
 x3270.printWindowPopup*confirmButton.label:	Print
-#endif
 x3270.passwordPopup.dialog.label:		Enter Private Key Password
 #ifdef COLOR
 x3270.passwordPopup.dialog*value*foreground:	lavender
@@ -890,7 +884,6 @@ x3270.screenTracePopup*html.label:		HTML
 x3270.screenTracePopup*rtf.label:		RichText
 x3270.screenTracePopup*fileName.label:		File Name
 x3270.screenTracePopup*printCommand.label:	Printer Command
-#ifdef X3270_MENUS
 x3270.executeActionPopup.title:			x3270 Execute Action
 x3270.executeActionPopup.dialog.label:		Enter Action and Parameters
 x3270.executeActionPopup*confirmButton.label:	Execute
@@ -903,7 +896,6 @@ x3270.aboutStatusPopup.title:			x3270 Connection Status
 x3270.connectPopup*confirmButton.label:		Connect
 x3270.fontPopup*confirmButton.label:		Select Font
 x3270.keymapPopup*confirmButton.label:		Select Keymap
-#endif
 #ifdef X3270_FT
 x3270.ftPopup.title:				x3270 File Transfer
 x3270.ftProgressPopup.title:			x3270 File Transfer
@@ -919,7 +911,6 @@ x3270.printerInfoPopup*cancelButton.label:	Abort Printer
 x3270.childErrorPopup*cancelButton.label:	Discard Output
 x3270.childInfoPopup*cancelButton.label:	Discard Output
 x3270*cancelButton.label:			Cancel
-#ifdef X3270_MENUS
 x3270*aboutOption.label:			About x3270...
 x3270*aboutCopyright.label:			Copyright
 x3270*aboutConfig.label:			Configuration
@@ -941,7 +932,6 @@ x3270*printWindowOption.label:			Print Window Bitmap
 x3270*executeActionOption.label:		Execute an Action
 x3270*fileMenuButton.label:			File
 x3270*fileMenu.label:				File
-#endif
 #ifdef X3270_FT
 x3270.ftPopup*justify:				left
 x3270.ftPopup*send.label:			Send to host
@@ -999,7 +989,6 @@ x3270.printerLuPopup.title:			x3270 Printer Session
 x3270.printerLuPopup.dialog.label:		Enter LU Name
 x3270.printerLuPopup*confirmButton.label:	Start Session
 #endif
-#ifdef X3270_MENUS
 x3270*optionsMenuButton.label:			Options
 x3270*optionsMenu.label:			Options
 x3270*connectMenuButton.label:			Connect
@@ -1045,10 +1034,8 @@ x3270*model4Option.label:			Model 4 (80x43)
 x3270*model5Option.label:			Model 5 (132x27)
 x3270*oversizeOption.label:			Oversize...
 x3270*saveOption.label:				Save Changed Options
-#endif
 !
 ! Messages
-#ifdef X3270_MENUS
 x3270.message.processId:			Process ID:
 x3270.message.windowId:				Main window ID:
 x3270.message.model:				Model
@@ -1122,7 +1109,6 @@ x3270.message.statusInhibit:			Inhibit
 x3270.message.statusScrolled:			Scrolled
 x3270.message.statusMinus:			No Function
 x3270.message.unverified:			not verified
-#endif
 x3270.message.statusConnecting:			Connecting
 #endif
 #ifdef X3270_FT
@@ -1190,14 +1176,11 @@ x3270*kmPopup*text*font:	fixed
 x3270*font:			-*-helvetica-bold-r-normal--14-*-100-100-p-*-iso8859-1
 !
 ! Menu configuration
-#ifdef X3270_MENUS
 x3270*menuBarContainer.borderWidth:		2
-#endif
 #ifdef COLOR
 #ifdef X3270_KEYPAD
 x3270.keypadBackground:				grey
 #endif
-#ifdef X3270_MENUS
 x3270*menuBarContainer.background:		grey
 x3270*menuBarContainer.borderColor:		grey40
 x3270*fileMenuButton*background:		grey
@@ -1219,17 +1202,13 @@ x3270*optionsMenuButton*borderColor:		grey
 x3270*connectMenuButton*borderColor:		grey
 x3270*macrosMenuButton*borderColor:		grey
 x3270*helpButton*borderColor:			grey
-#endif
 #else
-#ifdef X3270_MENUS
 x3270*fileMenuButton*borderColor:		XtDefaultBackground
 x3270*optionsMenuButton*borderColor:		XtDefaultBackground
 x3270*connectMenuButton*borderColor:		XtDefaultBackground
 x3270*macrosMenuButton*borderColor:		XtDefaultBackground
 x3270*helpButton*borderColor:			XtDefaultBackground
 #endif
-#endif
-#ifdef X3270_MENUS
 x3270*fileMenuButton*highlightThickness:	1
 x3270*optionsMenuButton*highlightThickness:	1
 x3270*connectMenuButton*highlightThickness:	1
@@ -1284,7 +1263,6 @@ x3270*charsetMenu*leftMargin:			20
 x3270*charsetMenu*rightMargin:			20
 x3270*hostMenu*rightMargin:			20
 x3270*macrosMenu*rightMargin:			20
-#endif
 !
 ! Confirm and cancel buttons
 !  borderWidth and borderColor are never specified anywhere else, so these
@@ -1474,7 +1452,6 @@ x3270.childInfoPopup*translations:	#override \n\
 	<Key>Return:			PA-confirm()
 x3270.passwordPopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-#ifdef X3270_MENUS
 x3270.connectPopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.fontPopup.translations: \
@@ -1511,7 +1488,6 @@ x3270.kmPopup*translations:		#override \n\
 	<Key>Return:			PA-confirm()
 x3270.luPopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-#endif
 #ifdef X3270_FT
 x3270.ftPopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()

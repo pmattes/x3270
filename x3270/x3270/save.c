@@ -547,8 +547,6 @@ static char *xcmd;
 static int xargc;
 static char **xargv;
 
-#if defined(X3270_MENUS) /*[*/
-
 typedef struct scs {
 	struct scs *next;
 	char *name;
@@ -691,8 +689,6 @@ save_options(char *n)
 
 	return 0;
 }
-
-#endif /*]*/
 
 /* Save a copy of the command-line options. */
 void

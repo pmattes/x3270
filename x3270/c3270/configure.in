@@ -259,11 +259,6 @@ case "$enable_printer" in
 ""|yes)	AC_DEFINE(X3270_PRINTER,1)
 	;;
 esac
-AC_ARG_ENABLE(menus,[  --disable-menus         leave out menu support])
-case "$enable_menus" in
-""|yes)	AC_DEFINE(X3270_MENUS,1)
-	;;
-esac
 AC_ARG_ENABLE(script,[  --disable-script        leave out scripting support])
 case "$enable_script" in
 ""|yes)	AC_DEFINE(X3270_SCRIPT,1)
