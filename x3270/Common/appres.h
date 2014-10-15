@@ -62,9 +62,7 @@ typedef enum {
     SHOW_TIMING,	/* display command execution time in the OIA */
     CURSOR_POS,		/* display cursor position in the OIA */
 #endif /*]*/
-#if defined(X3270_TRACE) /*[*/
     TRACING,		/* trace data and events */
-#endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
     SCROLL_BAR,		/* include scroll bar */
 #endif /*]*/
@@ -72,9 +70,7 @@ typedef enum {
     LINE_WRAP,		/* NVT xterm line-wrap mode (auto-wraparound) */
 #endif /*]*/
     BLANK_FILL,		/* treat trailing blanks like NULLs on input */
-#if defined(X3270_TRACE) /*[*/
     SCREEN_TRACE,	/* trace screen contents to file or printer */
-#endif /*]*/
 #if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
     MARGINED_PASTE,	/* respect left margin when pasting */
 #endif /*]*/
@@ -232,16 +228,14 @@ typedef struct {
 	char	*user;		/* for 5250 */
 	char	*login_macro;
 	char	*macros;
-#if defined(X3270_TRACE) /*[*/
 	char	*trace_dir;
 	char	*trace_file;
 	char	*screentrace_file;
 	char	*trace_file_size;
 	Boolean  dsTrace_bc;
 	Boolean  eventTrace_bc;
-# if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
 	Boolean	trace_monitor;
-# endif /*]*/
 #endif /*]*/
 	char	*oversize;
 #if defined(X3270_FT) /*[*/

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *
@@ -54,8 +54,6 @@ unknown(unsigned char value)
 	(void) snprintf(buf, sizeof(buf), "unknown[0x%x]", value);
 	return buf;
 }
-
-#if defined(X3270_TRACE) /*[*/
 
 const char *
 see_ebc(unsigned char ch)
@@ -252,8 +250,6 @@ see_highlight(unsigned char setting)
 	}
 }
 
-#endif /*]*/
-
 const char *
 see_color(unsigned char setting)
 {
@@ -283,8 +279,6 @@ see_color(unsigned char setting)
 	else
 		return color_name[setting - 0xf0];
 }
-
-#if defined(X3270_TRACE) /*[*/
 
 static const char *
 see_transparency(unsigned char setting)
@@ -490,5 +484,3 @@ see_qcode(unsigned char id)
 		return buf;
 	}
 }
-
-#endif /*]*/

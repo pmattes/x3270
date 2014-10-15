@@ -1231,7 +1231,6 @@ Show_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 		popup_an_error("Unknown 'Show' keyword");
 }
 
-#if defined(X3270_TRACE) /*[*/
 /* Trace([data|keyboard][on [filename]|off]) */
 void
 Trace_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
@@ -1494,7 +1493,6 @@ toggle_it:
 		}
 	}
 }
-#endif /*]*/
 
 /* Break to the command prompt. */
 void

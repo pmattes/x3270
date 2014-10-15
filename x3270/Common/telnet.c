@@ -240,9 +240,7 @@ static int tn3270e_negotiate(void);
 #endif /*]*/
 static int process_eor(void);
 #if defined(X3270_TN3270E) /*[*/
-#if defined(X3270_TRACE) /*[*/
 static const char *tn3270e_function_names(const unsigned char *, int);
-#endif /*]*/
 static void tn3270e_subneg_send(unsigned char, b8_t *);
 static void tn3270e_fdecode(const unsigned char *, int, b8_t *);
 static void tn3270e_ack(void);
@@ -264,15 +262,9 @@ static char parse_ctlchar(char *s);
 static void cooked_init(void);
 #endif /*]*/
 
-#if defined(X3270_TRACE) /*[*/
 static const char *cmd(int c);
 static const char *opt(unsigned char c);
 static const char *nnn(int c);
-#else /*][*/
-# define cmd(x) 0
-# define opt(x) 0
-# define nnn(x) 0
-#endif /*]*/
 
 /* telnet states */
 #define TNS_DATA	0	/* receiving data */
@@ -298,41 +290,35 @@ static unsigned char	functions_req[] = {
 	IAC, SB, TELOPT_TN3270E, TN3270E_OP_FUNCTIONS };
 #endif /*]*/
 
-#if defined(X3270_TRACE) /*[*/
 static const char *telquals[3] = { "IS", "SEND", "INFO" };
 static const char *telobjs[4] = { "VAR", "VALUE", "ESC", "USERVAR" };
-#endif /*]*/
 #if defined(X3270_TN3270E) /*[*/
-# if defined(X3270_TRACE) /*[*/
 static const char *reason_code[8] = { "CONN-PARTNER", "DEVICE-IN-USE",
 	"INV-ASSOCIATE", "INV-NAME", "INV-DEVICE-TYPE", "TYPE-NAME-ERROR",
 	"UNKNOWN-ERROR", "UNSUPPORTED-REQ" };
 #  define rsn(n)	(((n) <= TN3270E_REASON_UNSUPPORTED_REQ) ? \
 			reason_code[(n)] : "??")
-# endif /*]*/
 static const char *function_name[5] = { "BIND-IMAGE", "DATA-STREAM-CTL",
 	"RESPONSES", "SCS-CTL-CODES", "SYSREQ" };
 # define fnn(n)	(((n) <= TN3270E_FUNC_SYSREQ) ? \
 			function_name[(n)] : "??")
-# if defined(X3270_TRACE) /*[*/
 static const char *data_type[9] = { "3270-DATA", "SCS-DATA", "RESPONSE",
 	"BIND-IMAGE", "UNBIND", "NVT-DATA", "REQUEST", "SSCP-LU-DATA",
 	"PRINT-EOJ" };
-#  define e_dt(n)	(((n) <= TN3270E_DT_PRINT_EOJ) ? \
+# define e_dt(n)	(((n) <= TN3270E_DT_PRINT_EOJ) ? \
 			data_type[(n)] : "??")
 static const char *req_flag[1] = { " ERR-COND-CLEARED" };
-#  define e_rq(fn, n) (((fn) == TN3270E_DT_REQUEST) ? \
+# define e_rq(fn, n) (((fn) == TN3270E_DT_REQUEST) ? \
 			(((n) <= TN3270E_RQF_ERR_COND_CLEARED) ? \
 			req_flag[(n)] : " ??") : "")
 static const char *hrsp_flag[3] = { "NO-RESPONSE", "ERROR-RESPONSE",
 	"ALWAYS-RESPONSE" };
-#  define e_hrsp(n) (((n) <= TN3270E_RSF_ALWAYS_RESPONSE) ? \
+# define e_hrsp(n) (((n) <= TN3270E_RSF_ALWAYS_RESPONSE) ? \
 			hrsp_flag[(n)] : "??")
 static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
-#  define e_trsp(n) (((n) <= TN3270E_RSF_NEGATIVE_RESPONSE) ? \
+# define e_trsp(n) (((n) <= TN3270E_RSF_NEGATIVE_RESPONSE) ? \
 			trsp_flag[(n)] : "??")
-#  define e_rsp(fn, n) (((fn) == TN3270E_DT_RESPONSE) ? e_trsp(n) : e_hrsp(n))
-# endif /*]*/
+# define e_rsp(fn, n) (((fn) == TN3270E_DT_RESPONSE) ? e_trsp(n) : e_hrsp(n))
 #endif /*]*/
 
 #if defined(C3270) && defined(C3270_80_132) /*[*/
@@ -1439,9 +1425,7 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 		remove_output();
 	}
 
-#if defined(X3270_TRACE) /*[*/
 	trace_netdata('<', netrbuf, nr);
-#endif /*]*/
 
 	ns_brcvd += nr;
 	for (cp = netrbuf; cp < (netrbuf + nr); cp++) {
@@ -1479,10 +1463,8 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 	}
 #endif /*]*/
 
-#if defined(X3270_TRACE) /*[*/
 	/* See if it's time to roll over the trace file. */
 	trace_rollover_check();
-#endif /*]*/
 
 #if defined(_WIN32) /*[*/
 	}
@@ -2291,7 +2273,6 @@ tn3270e_negotiate(void)
 	return 0;
 }
 
-#if defined(X3270_TRACE) /*[*/
 /* Expand a string of TN3270E function codes into text. */
 static const char *
 tn3270e_function_names(const unsigned char *buf, int len)
@@ -2308,7 +2289,6 @@ tn3270e_function_names(const unsigned char *buf, int len)
 	}
 	return text_buf;
 }
-#endif /*]*/
 
 /* Expand the current TN3270E function codes into text. */
 const char *
@@ -2535,7 +2515,6 @@ process_bind(unsigned char *buf, int buflen)
 }
 #endif /*]*/
 
-#if defined(X3270_TRACE) && defined(X3270_TN3270E) /*[*/
 /* Decode an UNBIND reason. */
 static const char *
 unbind_reason (unsigned char r)
@@ -2570,7 +2549,6 @@ unbind_reason (unsigned char r)
 		return unk;
 	}
 }
-#endif /*]*/
 
 static int
 process_eor(void)
@@ -2744,9 +2722,7 @@ net_rawout(unsigned const char *buf, int len)
 {
 	int	nw;
 
-#if defined(X3270_TRACE) /*[*/
 	trace_netdata('>', buf, len);
-#endif /*]*/
 
 	while (len) {
 #if defined(OMTU) /*[*/
@@ -2829,7 +2805,6 @@ net_hexansi_out(unsigned char *buf, int len)
 	if (!len)
 		return;
 
-#if defined(X3270_TRACE) /*[*/
 	/* Trace the data. */
 	if (toggled(TRACING)) {
 		int i;
@@ -2839,7 +2814,6 @@ net_hexansi_out(unsigned char *buf, int len)
 			vtrace(" %s", ctl_see((int) *(buf+i)));
 		vtrace("\n");
 	}
-#endif /*]*/
 
 	/* Expand it. */
 	tbuf = xbuf = (unsigned char *)Malloc(2*len);
@@ -2866,7 +2840,6 @@ net_hexansi_out(unsigned char *buf, int len)
 static void
 net_cookedout(const char *buf, int len)
 {
-#if defined(X3270_TRACE) /*[*/
 	if (toggled(TRACING)) {
 		int i;
 
@@ -2875,7 +2848,6 @@ net_cookedout(const char *buf, int len)
 			vtrace(" %s", ctl_see((int) *(buf+i)));
 		vtrace("\n");
 	}
-#endif /*]*/
 	net_rawout((unsigned const char *) buf, len);
 }
 
@@ -3156,7 +3128,6 @@ static void
 check_in3270(void)
 {
 	enum cstate new_cstate = NOT_CONNECTED;
-#if defined(X3270_TRACE) /*[*/
 	static const char *state_name[] = {
 		"unconnected",				/* NOT_CONNECTED */
 		"resolving hostname",			/* RESOLVING */
@@ -3170,7 +3141,6 @@ check_in3270(void)
 		"TN3270E SSCP-LU",			/* CONNECTED_SSCP */
 		"TN3270E 3270"				/* CONNECTED_TN3270E */
 	};
-#endif /*]*/
 
 #if defined(X3270_TN3270E) /*[*/
 	if (myopts[TELOPT_TN3270E]) {
@@ -3338,8 +3308,6 @@ check_linemode(Boolean init)
 }
 
 
-#if defined(X3270_TRACE) /*[*/
-
 /*
  * nnn
  *	Expands a number to a character string, for displaying unknown telnet
@@ -3402,7 +3370,6 @@ trace_netdata(char direction, unsigned const char *buf, int len)
 	}
 	ntvtrace("\n");
 }
-#endif /*]*/
 
 
 /*
@@ -3515,9 +3482,7 @@ tn3270e_nak(enum pds rv)
 	unsigned char rsp_buf[10];
 	tn3270e_header *h_in = (tn3270e_header *)ibuf;
 	int rsp_len = 0;
-#if defined(X3270_TRACE) /*[*/
 	char *neg = NULL;
-#endif /*]*/
 
 	rsp_buf[rsp_len++] = TN3270E_DT_RESPONSE;	    /* data_type */
 	rsp_buf[rsp_len++] = 0;				    /* request_flag */
@@ -3532,27 +3497,20 @@ tn3270e_nak(enum pds rv)
 	default:
 	case PDS_BAD_CMD:
 		rsp_buf[rsp_len++] = TN3270E_NEG_COMMAND_REJECT;
-#if defined(X3270_TRACE) /*[*/
 		neg = "COMMAND-REJECT";
-#endif /*]*/
 		break;
 	case PDS_BAD_ADDR:
 		rsp_buf[rsp_len++] = TN3270E_NEG_OPERATION_CHECK;
-#if defined(X3270_TRACE) /*[*/
 		neg = "OPERATION-CHECK";
-#endif /*]*/
 		break;
 	}
 	rsp_buf[rsp_len++] = IAC;
 	rsp_buf[rsp_len++] = EOR;
-#if defined(X3270_TRACE) /*[*/
 	vtrace("SENT TN3270E(RESPONSE NEGATIVE-RESPONSE %u) %s\n",
 		h_in->seq_number[0] << 8 | h_in->seq_number[1], neg);
-#endif /*]*/
 	net_rawout(rsp_buf, rsp_len);
 }
 
-#if defined(X3270_TRACE) /*[*/
 /* Add a dummy TN3270E header to the output buffer. */
 Boolean
 net_add_dummy_tn3270e(void)
@@ -3586,9 +3544,7 @@ net_add_dummy_tn3270e(void)
 	return True;
 }
 #endif /*]*/
-#endif /*]*/
 
-#if defined(X3270_TRACE) /*[*/
 /*
  * Add IAC EOR to a buffer.
  */
@@ -3598,7 +3554,6 @@ net_add_eor(unsigned char *buf, int len)
 	buf[len++] = IAC;
 	buf[len++] = EOR;
 }
-#endif /*]*/
 
 
 #if defined(X3270_ANSI) /*[*/
@@ -3826,7 +3781,6 @@ net_linemode_chars(void)
 }
 #endif /*]*/
 
-#if defined(X3270_TRACE) /*[*/
 /*
  * Construct a string to reproduce the current TELNET options.
  * Returns a Boolean indicating whether it is necessary.
@@ -3944,7 +3898,6 @@ net_snap_options(void)
 #endif /*]*/
 	return any;
 }
-#endif /*]*/
 
 /*
  * Set blocking/non-blocking mode on the socket.  On error, pops up an error

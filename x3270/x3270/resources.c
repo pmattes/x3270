@@ -208,7 +208,6 @@ XtResource resources[] = {
 	  offset(macros), XtRString, 0 },
 	{ ResFixedSize, ClsFixedSize, XtRString, sizeof(char *),
 	  offset(fixed_size), XtRString, 0 },
-#if defined(X3270_TRACE) /*[*/
 	{ ResTraceDir, ClsTraceDir, XtRString, sizeof(char *),
 	  offset(trace_dir), XtRString, "/tmp" },
 	{ ResTraceFile, ClsTraceFile, XtRString, sizeof(char *),
@@ -219,7 +218,6 @@ XtResource resources[] = {
 	  offset(trace_monitor), XtRString, ResTrue },
 	{ ResScreenTraceFile, ClsScreenTraceFile, XtRString, sizeof(char *),
 	  offset(screentrace_file), XtRString, 0 },
-#endif /*]*/
 	{ ResColorScheme, ClsColorScheme, XtRString, sizeof(String),
 	  offset(color_scheme), XtRString, "default" },
 #if defined(X3270_FT) /*[*/
@@ -251,14 +249,12 @@ XtResource resources[] = {
 	  toggle_offset(SHOW_TIMING), XtRString, ResFalse },
 	{ ResCursorPos, ClsCursorPos, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(CURSOR_POS), XtRString, ResTrue },
-#if defined(X3270_TRACE) /*[*/
 	{ ResTrace, ClsTrace, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(TRACING), XtRString, ResFalse },
 	{ ResDsTrace, ClsDsTrace, XtRBoolean, sizeof(Boolean),
 	  offset(dsTrace_bc), XtRString, ResFalse },
 	{ ResEventTrace, ClsEventTrace, XtRBoolean, sizeof(Boolean),
 	  offset(eventTrace_bc), XtRString, ResFalse },
-#endif /*]*/
 	{ ResScrollBar, ClsScrollBar, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(SCROLL_BAR), XtRString, ResTrue },
 #if defined(X3270_ANSI) /*[*/
@@ -267,10 +263,8 @@ XtResource resources[] = {
 #endif /*]*/
 	{ ResBlankFill, ClsBlankFill, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(BLANK_FILL), XtRString, ResFalse },
-#if defined(X3270_TRACE) /*[*/
 	{ ResScreenTrace, ClsScreenTrace, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(SCREEN_TRACE), XtRString, ResFalse },
-#endif /*]*/
 	{ ResMarginedPaste, ClsMarginedPaste, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(MARGINED_PASTE), XtRString, ResFalse },
 	{ ResRectangleSelect, ClsRectangleSelect, XtRBoolean, sizeof(Boolean),

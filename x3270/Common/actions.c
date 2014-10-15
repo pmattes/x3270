@@ -132,9 +132,7 @@ XtActionsRec all_actions[] = {
 	{ PA_PFX "Focus",	PA_Focus_action },
 	{ PA_PFX "GraphicsExpose", PA_GraphicsExpose_action },
 	{ PA_PFX "KeymapNotify", PA_KeymapNotify_action },
-# if defined(X3270_TRACE) /*[*/
 	{ PA_KEYMAP_TRACE,	PA_KeymapTrace_action },
-# endif /*]*/
 	{ PA_PFX "Shift",	PA_Shift_action },
 	{ PA_PFX "StateChanged", PA_StateChanged_action },
 	{ PA_PFX "VisibilityNotify",PA_VisibilityNotify_action },
@@ -268,7 +266,7 @@ XtActionsRec all_actions[] = {
 	{ "Reset",		Reset_action },
 	{ "Right",		Right_action },
 	{ "Right2",		Right2_action },
-#if defined(C3270) && defined(X3270_TRACE) /*[*/
+#if defined(C3270) /*[*/
 	{ "ScreenTrace",	ScreenTrace_action },
 #endif/*]*/
 #if defined(X3270_SCRIPT) /*[*/
@@ -301,9 +299,9 @@ XtActionsRec all_actions[] = {
 	{ "Toggle",		Toggle_action },
 	{ "ToggleInsert",	ToggleInsert_action },
 	{ "ToggleReverse",	ToggleReverse_action },
-#if defined(C3270) && defined(X3270_TRACE) /*[*/
+#if defined(C3270) /*[*/
 	{ "Trace",		Trace_action },
-#endif/*]*/
+#endif /*]*/
 #if defined(X3270_FT) /*[*/
 	{ "Transfer",		Transfer_action },
 #endif /*]*/
@@ -497,7 +495,6 @@ learn_modifiers(void)
 	XFreeModifiermap(mm);
 }
 
-#if defined(X3270_TRACE) /*[*/
 /*
  * Return the symbolic name for the modifier combination (i.e., "Meta" instead
  * of "Mod2".  Note that because it is possible to map multiple keysyms to the
@@ -574,7 +571,6 @@ key_symbolic_state(unsigned int state, int *iteration)
 
 	return rs;
 }
-#endif /*]*/
 
 /* Return whether or not an KeyPress event state includes the Meta key. */
 Boolean
@@ -667,8 +663,6 @@ check_usage(XtActionProc action, Cardinal nargs, Cardinal nargs_min,
 /*
  * Display an action debug message
  */
-#if defined(X3270_TRACE) /*[*/
-
 #define KSBUF	256
 void
 action_debug(XtActionProc action, XEvent *event, String *params,
@@ -843,8 +837,6 @@ action_debug(XtActionProc action, XEvent *event, String *params,
 
 	trace_rollover_check();
 }
-
-#endif /*]*/
 
 /*
  * Wrapper for calling an action internally.

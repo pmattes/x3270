@@ -125,18 +125,14 @@ struct toggle_name toggle_names[] = {
 	{ ResMonoCase,        MONOCASE,		False },
 	{ ResShowTiming,      SHOW_TIMING,	False },
 #endif /*]*/
-#if defined(X3270_TRACE) /*[*/
 	{ ResTrace,           TRACING,		False },
 	{ ResDsTrace,         TRACING,		True },
-#endif /*]*/
 #if defined(X3270_ANSI) /*[*/
 	{ ResLineWrap,        LINE_WRAP,	False },
 #endif /*]*/
 	{ ResBlankFill,       BLANK_FILL,	False },
-#if defined(X3270_TRACE) /*[*/
 	{ ResScreenTrace,     SCREEN_TRACE,	False },
 	{ ResEventTrace,      TRACING,		True },
-#endif /*]*/
 #if defined(WC3270) /*[*/
 	{ ResMarginedPaste,   MARGINED_PASTE,	False },
 #endif /*]*/
@@ -327,18 +323,18 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	 * Sort out the contradictory and implicit settings.
 	 */
 
-	if (appres.apl_mode)
+	if (appres.apl_mode) {
 		appres.charset = Apl;
-	if (*cl_hostname == CN)
+	}
+	if (*cl_hostname == CN) {
 		appres.once = False;
-	if (appres.conf_dir == CN)
+	}
+	if (appres.conf_dir == CN) {
 		appres.conf_dir = LIBX3270DIR;
-
-#if defined(X3270_TRACE) /*[*/
+	}
 	if (!appres.debug_tracing) {
 		 appres.toggle[TRACING].value = False;
 	}
-#endif /*]*/
 
 	return argc;
 }
@@ -492,7 +488,7 @@ set_appres_defaults(void)
 	appres.charset = "bracket";
 	appres.termname = CN;
 	appres.macros = CN;
-#if defined(X3270_TRACE) && !defined(_WIN32) /*[*/
+#if !defined(_WIN32) /*[*/
 	appres.trace_dir = "/tmp";
 #endif /*]*/
 #if defined(WC3270) /*[*/
@@ -754,14 +750,12 @@ static struct {
 { OptTitle,    OPT_STRING,  False, ResTitle,     offset(title),
     "<string>", "Set window title to <string>" },
 #endif /*]*/
-#if defined(X3270_TRACE) /*[*/
 { OptTrace,    OPT_BOOLEAN, True,  ResTrace,     toggle_offset(TRACING),
     CN, "Enable tracing" },
 { OptTraceFile,OPT_STRING,  False, ResTraceFile, offset(trace_file),
     "<file>", "Write traces to <file>" },
 { OptTraceFileSize,OPT_STRING,False,ResTraceFileSize,offset(trace_file_size),
     "<n>[KM]", "Limit trace file to <n> bytes" },
-#endif /*]*/
 { OptUser,     OPT_STRING,  False, ResUser,      offset(user),
     "<name>", "Specify user name for RFC 4777" },
 #if defined(S3270) /*[*/
@@ -1165,9 +1159,7 @@ static struct {
 #if defined(C3270) /*[*/
 	{ ResSaveLines,	offset(save_lines),	XRM_INT },
 #endif /*]*/
-#if defined(X3270_TRACE) /*[*/
 	{ ResScreenTraceFile,offset(screentrace_file),XRM_STRING },
-#endif /*]*/
 	{ ResSecure,	offset(secure),		XRM_BOOLEAN },
 #if defined(HAVE_LIBSSL) /*[*/
 	{ ResSelfSignedOk,offset(self_signed_ok),XRM_BOOLEAN },
@@ -1183,13 +1175,11 @@ static struct {
 #if defined(HAVE_LIBSSL) /*[*/
 	{ ResTls,	offset(tls),		XRM_BOOLEAN },
 #endif /*]*/
-#if defined(X3270_TRACE) /*[*/
 	{ ResTraceDir,	offset(trace_dir),	XRM_STRING },
 	{ ResTraceFile,	offset(trace_file),	XRM_STRING },
 	{ ResTraceFileSize,offset(trace_file_size),XRM_STRING },
 #if defined(WC3270) /*[*/
 	{ ResTraceMonitor,offset(trace_monitor),XRM_BOOLEAN },
-#endif /*]*/
 #endif /*]*/
 	{ ResTypeahead,	offset(typeahead),	XRM_BOOLEAN },
 	{ ResUnlockDelay,offset(unlock_delay),	XRM_BOOLEAN },

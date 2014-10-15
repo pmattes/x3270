@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,7 +53,6 @@ unsigned n_fallbacks = 0;	/* number of fallback entries */
 /* ifdef state stack */
 #define MODE_COLOR	0x00000001
 #define MODE_FT		0x00000002
-#define MODE_TRACE	0x00000004
 #define MODE_MENUS	0x00000008
 #define MODE_ANSI	0x00000010
 #define MODE_KEYPAD	0x00000020
@@ -79,7 +78,6 @@ struct {
 } parts[] = {
 	{ "COLOR", MODE_COLOR },
 	{ "X3270_FT", MODE_FT },
-	{ "X3270_TRACE", MODE_TRACE },
 	{ "X3270_MENUS", MODE_MENUS },
 	{ "X3270_ANSI", MODE_ANSI },
 	{ "X3270_KEYPAD", MODE_KEYPAD },
@@ -96,12 +94,6 @@ unsigned long is_defined =
     MODE_COLOR |
 #if defined(X3270_FT)
 	MODE_FT
-#else
-	0
-#endif
-|
-#if defined(X3270_TRACE)
-	MODE_TRACE
 #else
 	0
 #endif

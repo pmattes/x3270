@@ -30,8 +30,6 @@
  *		Global declarations for trace_ds.c.
  */
 
-#if defined(X3270_TRACE) /*[*/
-
 typedef enum {
     TSS_FILE,	/* trace to file */
     TSS_PRINTER	/* trace to printer */
@@ -58,18 +56,3 @@ void trace_set_trace_file(const char *path);
 void trace_set_screentrace_file(tss_t how, ptype_t ptype, const char *name);
 void trace_screen(Boolean is_clear);
 void trace_rollover_check(void);
-
-#else /*][*/
-
-#define rcba(baddr) NULL
-#if defined(__GNUC__) /*[*/
-#define trace_ds(args...)
-#define vtrace(args...)
-#define ntvtrace(args...)
-#else /*][*/
-#define trace_ds 0 &&
-#define vtrace 0 &&
-#define ntvtrace 0 &&
-#endif /*]*/
-
-#endif /*]*/

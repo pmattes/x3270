@@ -370,7 +370,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 		return;
 	}
 
-#if defined(X3270_DISPLAY) && defined(X3270_TRACE) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 	/* Invoked from a keymap -- pop up the confirmation dialog. */
 	if (use_file) {
 		stmenu_popup(STMP_TEXT);

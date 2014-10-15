@@ -876,7 +876,6 @@ x3270.passwordPopup.dialog*value*foreground:	lavender
 x3270.passwordPopup.dialog*value*foreground:	white
 x3270.passwordPopup.dialog*value*background:	white
 #endif
-#ifdef X3270_TRACE
 x3270.tracePopup.title:				x3270 Tracing
 x3270.tracePopup.dialog.label:			Enter Trace File Name
 x3270.tracePopup*confirmButton.label:		Trace
@@ -891,7 +890,6 @@ x3270.screenTracePopup*html.label:		HTML
 x3270.screenTracePopup*rtf.label:		RichText
 x3270.screenTracePopup*fileName.label:		File Name
 x3270.screenTracePopup*printCommand.label:	Printer Command
-#endif
 #ifdef X3270_MENUS
 x3270.executeActionPopup.title:			x3270 Execute Action
 x3270.executeActionPopup.dialog.label:		Enter Action and Parameters
@@ -1536,11 +1534,9 @@ x3270.idlePopup*value.translations:	#override \n\
 	<Btn1Down>:			PA-dialog-focus() select-start()\n\
 	Ctrl<Key>U:			select-all(DUMMY) delete-selection()
 #endif
-#ifdef X3270_TRACE
 x3270.screenTracePopup*value.translations:	#override \n\
 	<Key>Return:			PA-confirm()\n\
 	Ctrl<Key>U:			select-all(DUMMY) delete-selection()
-#endif
 x3270*value.translations:		#override \n\
 	<Key>Return:			PA-confirm()\n\
 	Ctrl<Key>U:			select-all(DUMMY) delete-selection()

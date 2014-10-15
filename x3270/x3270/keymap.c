@@ -521,11 +521,9 @@ expand_table(const char *name, char *table)
 		while (s <= cm)
 			*t++ = *s++;
 
-#if defined(X3270_TRACE) /*[*/
 		/* Insert a PA-KeymapTrace call. */
 		(void) sprintf(t, " " PA_KEYMAP_TRACE "(%s,%d) ", name, nlines);
 		t = strchr(t, '\0');
-#endif /*]*/
 
 		/*
 		 * Copy to the next unquoted newline and append a PA-End call.
@@ -540,10 +538,8 @@ expand_table(const char *name, char *table)
 			while (s < cm)
 				*t++ = *s++;
 		}
-#if defined(X3270_TRACE) /*[*/
 		(void) strcpy(t, PA_ENDL);
 		t += strlen(PA_ENDL);
-#endif /*]*/
 		if (cm == CN)
 			break;
 		else
@@ -554,7 +550,6 @@ expand_table(const char *name, char *table)
 	return t0;
 }
 
-#if defined(X3270_TRACE) /*[*/
 /*
  * Trace a keymap.
  *
@@ -571,7 +566,6 @@ PA_KeymapTrace_action(Widget w _is_unused, XEvent *event _is_unused, String *par
 				       strlen(params[1]) + 1));
 	(void) sprintf(keymap_trace, "%s:%s", params[0], params[1]);
 }
-#endif /*]*/
 
 /*
  * End a keymap trace.

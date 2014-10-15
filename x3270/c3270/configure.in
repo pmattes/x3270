@@ -286,11 +286,6 @@ case "$enable_tn3270e" in
 ""|yes)	AC_DEFINE(X3270_TN3270E,1)
 	;;
 esac
-AC_ARG_ENABLE(trace,[  --disable-trace         leave out tracing support])
-case "$enable_trace" in
-""|yes)	AC_DEFINE(X3270_TRACE,1)
-	;;
-esac
 AC_ARG_ENABLE(ipv6,[  --disable-ipv6         leave out IPv6 support])
 case "$enable_ipv6" in                  
 ""|yes) AC_DEFINE(X3270_IPV6,1)                 

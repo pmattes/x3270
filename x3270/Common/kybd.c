@@ -251,7 +251,6 @@ flush_ta(void)
 	return any;
 }
 
-#if defined(X3270_TRACE) /*[*/
 /* Decode keyboard lock bits. */
 static char *
 kybdlock_decode(char *how, unsigned int bits)
@@ -319,7 +318,6 @@ kybdlock_decode(char *how, unsigned int bits)
 
 	return buf;
 }
-#endif /*]*/
 
 /* Set bits in the keyboard lock. */
 static void
@@ -1509,7 +1507,6 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	}
 #endif /*]*/
 	else {
-#if defined(X3270_TRACE) /*[*/
 		const char *why;
 
 		switch (cstate) {
@@ -1529,7 +1526,6 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 		}
 
 		vtrace("  dropped (not %s)\n", why);
-#endif /*]*/
 	}
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Paul Mattes.
+ * Copyright (c) 2013-2014, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,6 @@
  */
 
 #include "globals.h"
-
-#if defined(X3270_MENUS) && defined(X3270_TRACE) /*[*/
 
 #include <X11/Shell.h>
 #include <X11/StringDefs.h>
@@ -462,5 +460,3 @@ stmenu_popup(stmp_t stmp)
 	/* Pop it up. */
 	popup_popup(stmenu_shell, XtGrabExclusive);
 }
-
-#endif /*]*/

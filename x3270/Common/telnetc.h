@@ -80,11 +80,7 @@ extern char *net_proxy_type(void);
 extern char *net_proxy_host(void);
 extern char *net_proxy_port(void);
 extern Boolean net_bound(void);
-#if defined(X3270_TRACE) /*[*/
 extern void trace_netdata(char direction, unsigned const char *buf, int len);
-#else /*][*/
-# define trace_netdata(direction, buf, len)
-#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 extern void ssl_base_init(char *cl_hostname, Boolean *pending);
 #endif /*]*/

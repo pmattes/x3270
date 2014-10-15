@@ -977,7 +977,6 @@ ctlr_read_buffer(unsigned char aid_byte)
 	net_output();
 }
 
-#if defined(X3270_TRACE) /*[*/
 /*
  * Construct a 3270 command to reproduce the current state of the display, if
  * formatted.
@@ -1140,7 +1139,6 @@ ctlr_snap_buffer_sscp_lu(void)
 		} while (baddr != cursor_addr);
 	}
 }
-#endif /*]*/
 
 
 /*
@@ -1997,9 +1995,7 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 	unsigned char *cp = buf;
 	int s_row;
 	unsigned char c;
-#if defined(X3270_TRACE) /*[*/
 	int baddr;
-#endif /*]*/
 	int text = False;
 
 	/*
@@ -2059,10 +2055,8 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 			    rcba(buffer_addr));
 			break;
 		case ORDER_SBA:
-#if defined(X3270_TRACE) /*[*/
 			baddr = DECODE_BADDR(*(cp+1), *(cp+2));
 			trace_ds(" SBA%s [ignored]\n", rcba(baddr));
-#endif /*]*/
 			cp += 2;
 			i += 2;
 			break;
@@ -2447,15 +2441,12 @@ ctlr_clear(Boolean can_snap)
 {
 	/* Snap any data that is about to be lost into the trace file. */
 	if (ctlr_any_data()) {
-#if defined(X3270_TRACE) /*[*/
-		if (can_snap && !trace_skipping && toggled(SCREEN_TRACE))
+		if (can_snap && !trace_skipping && toggled(SCREEN_TRACE)) {
 			trace_screen(True);
-#endif /*]*/
+		}
 		scroll_save(maxROWS, ever_3270 ? False : True);
 	}
-#if defined(X3270_TRACE) /*[*/
 	trace_skipping = False;
-#endif /*]*/
 
 	/* Clear the screen. */
 	(void) memset((char *)ea_buf, 0, ROWS*COLS*sizeof(struct ea));
@@ -2502,10 +2493,9 @@ ctlr_add(int baddr, unsigned char c, unsigned char cs)
 	if (ea_buf[baddr].fa ||
 	    ((oc = ea_buf[baddr].cc) != c || ea_buf[baddr].cs != cs)) {
 		if (trace_primed && !IsBlank(oc)) {
-#if defined(X3270_TRACE) /*[*/
-			if (toggled(SCREEN_TRACE))
+			if (toggled(SCREEN_TRACE)) {
 				trace_screen(False);
-#endif /*]*/
+			}
 			scroll_save(maxROWS, False);
 			trace_primed = False;
 		}

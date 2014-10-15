@@ -382,27 +382,27 @@ proxy_http(int fd, char *host, unsigned short port)
 		tv.tv_usec = 0;
 		if (select(fd + 1, &rfds, NULL, NULL, &tv) < 0) {
 		    	popup_an_error("HTTP Proxy: server timeout");
-#if defined(X3270_TRACE) /*[*/
-		    	if (nread)
-				trace_netdata('<', (unsigned char *)rbuf, nread);
-#endif /*]*/
+		    	if (nread) {
+				trace_netdata('<', (unsigned char *)rbuf,
+					nread);
+			}
 			return -1;
 		}
 
 	    	nr = recv(fd, &rbuf[nread], 1, 0);
 		if (nr < 0) {
 			popup_a_sockerr("HTTP Proxy: receive error");
-#if defined(X3270_TRACE) /*[*/
-		    	if (nread)
-				trace_netdata('<', (unsigned char *)rbuf, nread);
-#endif /*]*/
+		    	if (nread) {
+				trace_netdata('<', (unsigned char *)rbuf,
+					nread);
+			}
 			return -1;
 		}
 		if (nr == 0) {
-#if defined(X3270_TRACE) /*[*/
-		    	if (nread)
-				trace_netdata('<', (unsigned char *)rbuf, nread);
-#endif /*]*/
+		    	if (nread) {
+				trace_netdata('<', (unsigned char *)rbuf,
+					nread);
+			}
 			popup_an_error("HTTP Proxy: unexpected EOF");
 			return -1;
 		}
@@ -467,9 +467,7 @@ proxy_socks4(int fd, char *host, unsigned short port, int force_a)
 	char rbuf[8];
 	int nr;
 	int nread = 0;
-#if defined(X3270_TRACE) /*[*/
 	unsigned short rport;
-#endif /*]*/
 
 	/* Resolve the hostname to an IPv4 address. */
 	if (force_a)
@@ -568,7 +566,6 @@ proxy_socks4(int fd, char *host, unsigned short port, int force_a)
 		    	break;
 	}
 
-#if defined(X3270_TRACE) /*[*/
 	trace_netdata('<', (unsigned char *)rbuf, nread);
 	if (use_4a) {
 	    	struct in_addr a;
@@ -582,7 +579,6 @@ proxy_socks4(int fd, char *host, unsigned short port, int force_a)
 			inet_ntoa(a));
 	} else
 		vtrace("SOCKS4 Proxy: recv status 0x%02x\n", rbuf[1]);
-#endif /*]*/
 
 	switch (rbuf[1]) {
 	case 0x5a:
@@ -626,7 +622,6 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 	int n2read = 0;
 	char nbuf[256];
 	int done = 0;
-#if defined(X3270_TRACE) /*[*/
 	char *atype_name[] = {
 	    "",
 	    "IPv4",
@@ -635,7 +630,6 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 	    "IPv6"
 	};
 	unsigned char *portp;
-#endif /*]*/
 	unsigned short rport;
 
 	if (force_d)
@@ -680,28 +674,25 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 		tv.tv_usec = 0;
 		if (select(fd + 1, &rfds, NULL, NULL, &tv) < 0) {
 		    	popup_an_error("SOCKS5 Proxy: server timeout");
-#if defined(X3270_TRACE) /*[*/
-		    	if (nread)
+		    	if (nread) {
 				trace_netdata('<', rbuf, nread);
-#endif /*]*/
+			}
 			return -1;
 		}
 
 	    	nr = recv(fd, (char *)&rbuf[nread], 1, 0);
 		if (nr < 0) {
 			popup_a_sockerr("SOCKS5 Proxy: receive error");
-#if defined(X3270_TRACE) /*[*/
-		    	if (nread)
+		    	if (nread) {
 				trace_netdata('<', rbuf, nread);
-#endif /*]*/
+			}
 			return -1;
 		}
 		if (nr == 0) {
 			popup_a_sockerr("SOCKS5 Proxy: unexpected EOF");
-#if defined(X3270_TRACE) /*[*/
-		    	if (nread)
+		    	if (nread) {
 				trace_netdata('<', rbuf, nread);
-#endif /*]*/
+			}
 			return -1;
 		}
 		if (++nread >= 2)
@@ -789,18 +780,16 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 	    	nr = recv(fd, (char *)&r, 1, 0);
 		if (nr < 0) {
 			popup_a_sockerr("SOCKS5 Proxy: receive error");
-#if defined(X3270_TRACE) /*[*/
-		    	if (nread)
+		    	if (nread) {
 				trace_netdata('<', (unsigned char *)buf, nread);
-#endif /*]*/
+			}
 			return -1;
 		}
 		if (nr == 0) {
 			popup_an_error("SOCKS5 Proxy: unexpected EOF");
-#if defined(X3270_TRACE) /*[*/
-		    	if (nread)
+		    	if (nread) {
 				trace_netdata('<', (unsigned char *)buf, nread);
-#endif /*]*/
+			}
 			return -1;
 		}
 
@@ -812,18 +801,17 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 		    	if (r != 0x05) {
 			    	popup_an_error("SOCKS5 Proxy: incorrect "
 					"reply version 0x%02x", r);
-#if defined(X3270_TRACE) /*[*/
-				if (nread)
-					trace_netdata('<', (unsigned char *)buf, nread);
-#endif /*]*/
+				if (nread) {
+					trace_netdata('<',
+						(unsigned char *)buf, nread);
+				}
 				return -1;
 			}
 			break;
 		case 1:
-#if defined(X3270_TRACE) /*[*/
-			if (r != 0x00)
+			if (r != 0x00) {
 				trace_netdata('<', (unsigned char *)buf, nread);
-#endif /*]*/
+			}
 		    	switch (r) {
 			case 0x00:
 			    	break;
@@ -881,10 +869,10 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 			default:
 				popup_an_error("SOCKS5 Proxy: unknown server "
 					"address type 0x%02x", r);
-#if defined(X3270_TRACE) /*[*/
-				if (nread)
-					trace_netdata('<', (unsigned char *)buf, nread);
-#endif /*]*/
+				if (nread) {
+					trace_netdata('<',
+						(unsigned char *)buf, nread);
+				}
 				return -1;
 			}
 			break;
@@ -897,7 +885,6 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 		}
 	}
 
-#if defined(X3270_TRACE) /*[*/
 	trace_netdata('<', (unsigned char *)buf, nread);
 	switch (buf[3]) {
 	case 0x01: /* IPv4 */
@@ -931,7 +918,6 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 		atype_name[(unsigned char)buf[3]],
 		nbuf,
 		rport);
-#endif /*]*/
 	Free(buf);
 
     	return 0;

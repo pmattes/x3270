@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1741,10 +1741,9 @@ ansi_process(unsigned int c)
 
 	scroll_to_bottom();
 
-#if defined(X3270_TRACE) /*[*/
-	if (toggled(SCREEN_TRACE))
+	if (toggled(SCREEN_TRACE)) {
 		trace_char((char)c);
-#endif /*]*/
+	}
 
 	fn = ansi_fn[st[(int)state][c]];
 	state = (*fn)(n[0], n[1]);
@@ -1850,8 +1849,6 @@ toggle_lineWrap(struct toggle *t _is_unused, enum toggle_type type _is_unused)
 	else
 		wraparound_mode = 0;
 }
-
-#if defined(X3270_TRACE) /*[*/
 
 /* Emit an SGR command. */
 static void
@@ -2419,7 +2416,5 @@ ansi_snap_modes(void)
 		}
 	}
 }
-
-#endif /*]*/
 
 #endif /*]*/

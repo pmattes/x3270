@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,12 +45,8 @@ extern XtActionsRec     *actions;
 
 extern const char       *ia_name[];
 
-#if defined(X3270_TRACE) /*[*/
 extern void action_debug(XtActionProc action, XEvent *event, String *params,
     Cardinal *num_params);
-#else /*][*/
-#define action_debug(a, e, p, n)
-#endif /*]*/
 extern void action_init(void);
 extern void action_internal(XtActionProc action, enum iaction cause,
     const char *parm1, const char *parm2);

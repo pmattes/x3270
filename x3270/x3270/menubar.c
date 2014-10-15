@@ -123,10 +123,8 @@ static void menubar_printer(Boolean printer_on);
 #endif /*]*/
 static void menubar_remodel(Boolean ignored _is_unused);
 static void menubar_charset(Boolean ignored _is_unused);
-#if defined(X3270_TRACE) /*[*/
 static void screensave_option(Widget w, XtPointer client_data,
 	XtPointer call_data);
-#endif /*]*/
 
 #define NO_BANG(s)	(((s)[0] == '!')? (s) + 1: (s))
 
@@ -972,7 +970,6 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 	}
 #endif /*]*/
 
-#if defined(X3270_TRACE) /*[*/
 	/* Trace Data Stream
 	   Trace X Events
 	   Save Screen(s) in File */
@@ -993,7 +990,6 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 				NULL);
 		}
 	}
-#endif /*]*/
 
 	/* Print Window Bitmap */
 	spaced = False;
@@ -2298,13 +2294,11 @@ HandleMenu_action(Widget w _is_unused, XEvent *event, String *params,
 	XtCallActionProc(menu_parent, "MenuPopup", event, &p, 1);
 }
 
-# if defined(X3270_TRACE) /*[*/
 static void
 screensave_option(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
 	stmenu_popup(STMP_AS_IS);
 }
-# endif /*]*/
 
 #endif /*]*/

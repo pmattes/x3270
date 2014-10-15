@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,8 +30,6 @@
  *		Global declarations for trace_ds.c.
  */
 
-#if defined(X3270_TRACE) /*[*/
-
 extern FILE *tracef;
 
 const char *rcba(int baddr);
@@ -49,23 +47,3 @@ void trace_pdb(unsigned char *buf, size_t len);
 void trace_pdc(unsigned char c);
 void trace_pds(unsigned char *buf);
 const char *unknown(unsigned char value);
-
-#else /*][*/
-
-#define tracef 0
-#define trace_ds 0 &&
-#define vtrace 0 &&
-#define vtrace_nts 0 &&
-#define trace_pdb 0 &&
-#define trace_pdc 0 &&
-#define trace_pds 0 &&
-#define rcba 0 &&
-#define see_aid 0 &&
-#define see_attr 0 &&
-#define see_color 0 &&
-#define see_ebc 0 &&
-#define see_efa 0 &&
-#define see_efa_only 0 &&
-#define see_qcode 0 &&
-
-#endif /*]*/

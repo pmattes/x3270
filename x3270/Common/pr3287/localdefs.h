@@ -70,7 +70,6 @@ extern void *Calloc(size_t, size_t);
 extern void *Realloc(void *, size_t);
 extern char *NewString(const char *);
 extern void Error(const char *s);
-#define X3270_TRACE 1
 #define X3270_IPV6 1
 
 extern void errmsg(const char *, ...);

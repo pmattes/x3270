@@ -169,7 +169,6 @@ static HANDLE socket_event = NULL;
 # endif /*]*/
 #endif /*]*/
 
-#if defined(X3270_TRACE) /*[*/
 static const char *sms_state_name[] = {
 	"IDLE",
 	"INCOMPLETE",
@@ -191,7 +190,6 @@ static const char *sms_state_name[] = {
 	"EXPECTING",
 	"CLOSING"
 };
-#endif /*]*/
 
 #if defined(X3270_MENUS) /*[*/
 static struct macro_def *macro_last = (struct macro_def *) NULL;
@@ -278,7 +276,6 @@ static void plugin_start(char *command, char *argv[], Boolean complain);
 static void no_plugin(void);
 #endif /*]*/
 
-#if defined(X3270_SCRIPT) && defined(X3270_TRACE) /*[*/
 static void
 trace_script_output(const char *fmt, ...)
 {
@@ -308,13 +305,6 @@ trace_script_output(const char *fmt, ...)
 		}
 	}
 }
-#else /*][*/
-# if defined(__GNUC__) /*[*/
-#  define trace_script_output(format, args...)
-# else /*][*/
-#  define trace_script_output 0 &&
-# endif /*]*/
-#endif /*]*/
 
 #if defined(X3270_SCRIPT) && defined(X3270_PLUGIN) /*[*/
 static void
@@ -1327,9 +1317,7 @@ execute_command(enum iaction cause, char *s, char **np)
 	if (ft_state != FT_NONE)
 		sms->state = SS_FT_WAIT;
 #endif /*]*/
-#if defined(X3270_TRACE) /*[*/
 	trace_rollover_check();
-#endif /*]*/
 	if (CKBWAIT)
 		return EM_PAUSE;
 	else

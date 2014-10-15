@@ -119,9 +119,7 @@ XrmOptionDescRec options[]= {
 	{ OptClear,	".xxx",		XrmoptionSkipArg,	NULL },
 	{ OptColorScheme,DotColorScheme,XrmoptionSepArg,	NULL },
 	{ OptDevName,	DotDevName,	XrmoptionSepArg,	NULL },
-#if defined(X3270_TRACE) /*[*/
 	{ OptTrace,	DotTrace,	XrmoptionNoArg,		ResTrue },
-#endif /*]*/
 	{ OptEmulatorFont,DotEmulatorFont,XrmoptionSepArg,	NULL },
 	{ OptExtended,	DotExtended,	XrmoptionNoArg,		ResTrue },
 #if defined(X3270_MENUS) /*[*/
@@ -167,10 +165,8 @@ XrmOptionDescRec options[]= {
 	{ OptScriptPort,DotScriptPort,	XrmoptionSepArg,	NULL },
 #endif /*]*/
 	{ OptTermName,	DotTermName,	XrmoptionSepArg,	NULL },
-#if defined(X3270_TRACE) /*[*/
 	{ OptTraceFile,	DotTraceFile,	XrmoptionSepArg,	NULL },
 	{ OptTraceFileSize,DotTraceFileSize,XrmoptionSepArg,	NULL },
-#endif /*]*/
 #if defined(X3270_DBCS) /*[*/
 	{ OptInputMethod,DotInputMethod,XrmoptionSepArg,	NULL },
 	{ OptPreeditType,DotPreeditType,XrmoptionSepArg,	NULL },
@@ -252,11 +248,9 @@ static struct {
 #endif /*]*/
 	{ OptSecure, NULL, "Set secure mode" },
 	{ OptTermName, "<name>", "Send <name> as TELNET terminal name" },
-#if defined(X3270_TRACE) /*[*/
 	{ OptTrace, CN, "Enable tracing" },
 	{ OptTraceFile, "<file>", "Write traces to <file>" },
 	{ OptTraceFileSize, "<n>[KM]", "Limit trace file to <n> bytes" },
-#endif /*]*/
 #if defined(X3270_DBCS) /*[*/
 	{ OptInputMethod, "<name>", "Specify multi-byte input method" },
 	{ OptPreeditType, "<style>", "Define input method pre-edit type" },
@@ -283,19 +277,15 @@ struct toggle_name toggle_names[] = {
 	{ ResCursorBlink,     CURSOR_BLINK,	False },
 	{ ResShowTiming,      SHOW_TIMING,	False },
 	{ ResCursorPos,       CURSOR_POS,	False },
-#if defined(X3270_TRACE) /*[*/
 	{ ResTrace,           TRACING,		False },
 	{ ResDsTrace,         TRACING,		True }, /* compatibility */
-#endif /*]*/
 	{ ResScrollBar,       SCROLL_BAR,	False },
 #if defined(X3270_ANSI) /*[*/
 	{ ResLineWrap,        LINE_WRAP,	False },
 #endif /*]*/
 	{ ResBlankFill,       BLANK_FILL,	False },
-#if defined(X3270_TRACE) /*[*/
 	{ ResScreenTrace,     SCREEN_TRACE,	False },
 	{ ResEventTrace,      TRACING,		True }, /* compatibility */
-#endif /*]*/
 	{ ResMarginedPaste,   MARGINED_PASTE,	False },
 	{ ResRectangleSelect, RECTANGLE_SELECT,	False },
 	{ ResCrosshair,	      CROSSHAIR,	False },
@@ -661,7 +651,6 @@ main(int argc, char *argv[])
 	label_init();
 
 	/* Handle initial toggle settings. */
-#if defined(X3270_TRACE) /*[*/
 	if (appres.dsTrace_bc || appres.eventTrace_bc) {
 	    	/* Backwards compatibility with old resource names. */
 		appres.toggle[TRACING].value = True;
@@ -669,7 +658,6 @@ main(int argc, char *argv[])
 	if (!appres.debug_tracing) {
 		appres.toggle[TRACING].value = False;
 	}
-#endif /*]*/
 	initialize_toggles();
 
 #if defined(HAVE_LIBSSL) /*[*/

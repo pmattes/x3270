@@ -1140,11 +1140,6 @@ build_options(void)
 #else /*][*/
 		" --disable-tn3270e"
 #endif /*]*/
-#if defined(X3270_TRACE) /*[*/
-		" --enable-trace"
-#else /*][*/
-		" --disable-trace"
-#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 		" --with-ssl"
 #else /*][*/

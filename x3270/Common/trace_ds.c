@@ -33,8 +33,6 @@
 
 #include "globals.h"
 
-#if defined(X3270_TRACE) /*[*/
-
 #if defined(X3270_DISPLAY) /*[*/
 #include <X11/StringDefs.h>
 #include <X11/Xaw/Dialog.h>
@@ -1280,4 +1278,3 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 			NULL);
 #endif /*]*/
 }
-#endif /*]*/

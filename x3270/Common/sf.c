@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2010, 2013 Paul Mattes.
+ * Copyright (c) 1994-2010, 2013-2014 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -235,9 +235,7 @@ sf_read_part(unsigned char buf[], unsigned buflen)
 	unsigned char partition;
 	unsigned i;
 	int any = 0;
-#if defined(X3270_TRACE) /*[*/
 	const char *comma = "";
-#endif /*]*/
 
 	if (buflen < 5) {
 		trace_ds(" error: field length %d too small\n", buflen);
@@ -282,14 +280,12 @@ sf_read_part(unsigned char buf[], unsigned buflen)
 				trace_ds(")\n");
 				do_query_reply(QR_NULL);
 			} else {
-#if defined(X3270_TRACE) /*[*/
 				for (i = 6; i < buflen; i++) {
 					trace_ds("%s%s", comma,
 					    see_qcode(buf[i]));
 					comma = ",";
 				}
 				trace_ds(")\n");
-#endif /*]*/
 				for (i = 0; i < NSR; i++) {
 					if (memchr((char *)&buf[6],
 						   (char)replies[i].code,
@@ -309,14 +305,12 @@ sf_read_part(unsigned char buf[], unsigned buflen)
 			}
 			break;
 		    case SF_RPQ_EQUIV:
-#if defined(X3270_TRACE) /*[*/
 			trace_ds("Equivlent+List(");
 			for (i = 6; i < buflen; i++) {
 				trace_ds("%s%s", comma, see_qcode(buf[i]));
 				comma = ",";
 			}
 			trace_ds(")\n");
-#endif /*]*/
 			for (i = 0; i < NSR; i++)
 #if defined(X3270_DBCS) /*[*/
 				if (dbcs || replies[i].code != QR_DBCS_ASIA)
@@ -400,9 +394,7 @@ sf_set_reply_mode(unsigned char buf[], int buflen)
 {
 	unsigned char partition;
 	int i;
-#if defined(X3270_TRACE) /*[*/
 	const char *comma = "(";
-#endif /*]*/
 
 	if (buflen < 5) {
 		trace_ds(" error: wrong field length %d\n", buflen);
@@ -436,9 +428,7 @@ sf_set_reply_mode(unsigned char buf[], int buflen)
 		for (i = 5; i < buflen; i++) {
 			crm_attr[i - 5] = buf[i];
 			trace_ds("%s%s", comma, see_efa_only(buf[i]));
-#if defined(X3270_TRACE) /*[*/
 			comma = ",";
-#endif /*]*/
 		}
 		trace_ds("%s\n", crm_nattr ? ")" : "");
 	}
@@ -451,9 +441,7 @@ sf_create_partition(unsigned char buf[], int buflen)
 	unsigned char pid;
 	unsigned char uom;		/* unit of measure */
 	unsigned char am;		/* addressing mode */
-#if defined(X3270_TRACE) /*[*/
 	unsigned char flags;		/* flags */
-#endif /*]*/
 	unsigned short h;		/* height of presentation space */
 	unsigned short w;		/* width of presentation space */
 	unsigned short rv;		/* viewport origin row */
@@ -467,14 +455,12 @@ sf_create_partition(unsigned char buf[], int buflen)
 	unsigned short pw;		/* character cell point width */
 	unsigned short ph;		/* character cell point height */
 
-#if defined(X3270_TRACE) /*[*/
 	static const char *bit4[16] = {
 	    "0000", "0001", "0010", "0011",
 	    "0100", "0101", "0110", "0111",
 	    "1000", "1001", "1010", "1011",
 	    "1100", "1101", "1110", "1111"
 	};
-#endif /*]*/
 
 	if (buflen > 3) {
 		trace_ds("(");
@@ -507,13 +493,12 @@ sf_create_partition(unsigned char buf[], int buflen)
 		am = 0;
 	}
 
-#if defined(X3270_TRACE) /*[*/
 	if (buflen > 5) {
 		flags = buf[5];
 		trace_ds(",flags=0x%02x", flags);
-	} else
+	} else {
 		flags = 0;
-#endif /*]*/
+	}
 
 	if (buflen > 7) {
 		GET16(h, &buf[6]);
@@ -712,9 +697,7 @@ static void
 do_qr_summary(void)
 {
 	unsigned i;
-#if defined(X3270_TRACE) /*[*/
 	const char *comma = "";
-#endif /*]*/
 
 	trace_ds("> QueryReply(Summary(");
 	space3270out(NSR);
@@ -722,10 +705,8 @@ do_qr_summary(void)
 #if defined(X3270_DBCS) /*[*/
 		if (dbcs || replies[i].code != QR_DBCS_ASIA) {
 #endif /*]*/
-#if defined(X3270_TRACE) /*[*/
 			trace_ds("%s%s", comma, see_qcode(replies[i].code));
 			comma = ",";
-#endif /*]*/
 			*obptr++ = replies[i].code;
 #if defined(X3270_DBCS) /*[*/
 		}

@@ -723,7 +723,6 @@ fm_xfer(void *ignored _is_unused)
 }
 # endif /*]*/
 
-# if defined(X3270_TRACE) /*[*/
 static void
 fm_trace(void *ignored _is_unused)
 {
@@ -751,7 +750,6 @@ fm_screentrace_printer(void *ignored _is_unused)
 	else
 		push_macro("ScreenTrace(on,printer,gdi)", False);
 }
-# endif /*]*/
 
 static void
 fm_keymap(void *ignored _is_unused)
@@ -806,11 +804,9 @@ typedef enum {
 # if defined(X3270_FT) /*[*/
     FM_XFER,
 # endif /*]*/
-# if defined(X3270_TRACE) /*[*/
     FM_TRACE,
     FM_SCREENTRACE,
     FM_SCREENTRACE_PRINTER,
-# endif /*]*/
     FM_KEYMAP,
 # if defined(_WIN32) /*[*/
     FM_HELP,
@@ -834,11 +830,9 @@ char *file_menu_names[FM_COUNT] = {
 # if defined(X3270_FT) /*[*/
     "File Transfer",
 # endif /*]*/
-# if defined(X3270_TRACE) /*[*/
     "Enable Tracing",
     "Save Screen Images in File",
     "Save Screen Images to Printer",
-# endif /*]*/
     "Display Keymap",
 # if defined(_WIN32) /*[*/
     "Help",
@@ -856,11 +850,9 @@ menu_callback file_menu_actions[FM_COUNT] = {
 # if defined(X3270_FT) /*[*/
     fm_xfer,
 # endif /*]*/
-# if defined(X3270_TRACE) /*[*/
     fm_trace,
     fm_screentrace,
     fm_screentrace_printer,
-# endif /*]*/
     fm_keymap,
 # if defined(_WIN32) /*[*/
     fm_help,
@@ -1022,7 +1014,6 @@ menubar_retoggle(struct toggle *t, int ix)
 		Free(s);
 		return;
 	}
-# if defined(X3270_TRACE) /*[*/
 	if (ix == TRACING) {
 		s = xs_buffer("%sable Tracing",
 			(toggled(TRACING))? "Dis": "En");
@@ -1042,7 +1033,6 @@ menubar_retoggle(struct toggle *t, int ix)
 				True);
 		}
 	}
-# endif /*]*/
 }
 
 /*

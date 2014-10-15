@@ -58,5 +58,4 @@
 #undef X3270_FT
 #undef X3270_LOCAL_PROCESS
 #undef X3270_TN3270E
-#undef X3270_TRACE
 #undef X3270_IPV6

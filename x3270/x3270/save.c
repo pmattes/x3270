@@ -372,33 +372,30 @@ save_toggles(void)
 			     !strcmp(tmp_cmd[j], OptClear)) &&
 			    tmp_cmd[j+1] &&
 			    !strcmp(tmp_cmd[j+1], toggle_names[i].name)) {
-				if (i == SCROLL_BAR
-#if defined(X3270_TRACE) /*[*/
-				    || i == TRACING
-#endif /*]*/
-				    ) {
+				if (i == SCROLL_BAR || i == TRACING) {
 					cmd_delete(j);
 					cmd_delete(j + 1);
-				} else
+				} else {
 					ix = j;
+				}
 		}
 
 		/* Handle aliased switches. */
 		switch (i) {
 		    case SCROLL_BAR:
 			continue;	/* +sb/-sb done separately */
-#if defined(X3270_TRACE) /*[*/
 		    case TRACING:
 			ix = cmd_srch(OptTrace);
 			if (appres.toggle[TRACING].value) {
-				if (!ix)
+				if (!ix) {
 					cmd_append(OptTrace);
+				}
 			} else {
-				if (ix)
+				if (ix) {
 					cmd_delete(ix);
+				}
 			}
 			continue;
-#endif /*]*/
 		}
 
 		/* If need be, switch "-set" with "-clear", or append one. */
@@ -634,12 +631,12 @@ save_options(char *n)
 
 	/* Save most of the toggles. */
 	for (i = 0; i < N_TOGGLES; i++) {
-		if (toggle_names[i].index < 0 || !appres.toggle[i].changed)
+		if (toggle_names[i].index < 0 || !appres.toggle[i].changed) {
 			continue;
-#if defined(X3270_TRACE) /*[*/
-		if (i == TRACING || i == SCREEN_TRACE)
+		}
+		if (i == TRACING || i == SCREEN_TRACE) {
 			continue;
-#endif /*]*/
+		}
 		if (!any_toggles) {
 			(void) fprintf(f, "! toggles (%s, %s)\n",
 			    OptSet, OptClear);
