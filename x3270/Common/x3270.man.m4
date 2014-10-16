@@ -730,7 +730,7 @@ XX_FB(XX_PRODUCT) supports a menu bar and pop-up keypad.
 The menu bar allows common functions to be executed without needing to switch
 to the XX_FB(XX_PRODUCT>) prompt.
 It is available by pressing Alt-N, or if the console supports a mouse, by
-clikcing on the menu titles displayed at the top of the screen.
+clicking on the menu titles displayed at the top of the screen.
 XX_LP
 The on-screen menu title bar can be turned off via the "XX_PRODUCT.menuBar"
 resource.
