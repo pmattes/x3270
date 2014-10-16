@@ -106,7 +106,6 @@ XtResource resources[] = {
 	  offset(bind_limit), XtRString, ResTrue },
 	{ ResNewEnviron, ClsNewEnviron, XtRBoolean, sizeof(Boolean),
 	  offset(new_environ), XtRString, ResTrue },
-#if defined(X3270_SCRIPT) /*[*/
 	{ ResSocket, ClsSocket, XtRBoolean, sizeof(Boolean),
 	  offset(socket), XtRString, ResFalse },
 	{ ResScriptPort, ClsScriptPort, XtRInt, sizeof(int),
@@ -115,7 +114,6 @@ XtResource resources[] = {
 	  offset(plugin_command), XtRString, "x3270hist.pl" },
 	{ ResLoginMacro, ClsLoginMacro, XtRString, sizeof(String),
 	  offset(login_macro), XtRString, 0 },
-#endif /*]*/
 	{ ResUseCursorColor, ClsUseCursorColor, XtRBoolean, sizeof(Boolean),
 	  offset(use_cursor_color), XtRString, ResFalse },
 	{ ResReconnect, ClsReconnect, XtRBoolean, sizeof(Boolean),
@@ -220,14 +218,12 @@ XtResource resources[] = {
 #endif /*]*/
 	{ ResConnectFileName, ClsConnectFileName, XtRString, sizeof(String),
 	  offset(connectfile_name), XtRString, "~/.x3270connect" },
-#if defined(X3270_SCRIPT) /*[*/
 	{ ResIdleCommand, ClsIdleCommand, XtRString, sizeof(String),
 	  offset(idle_command), XtRString, 0 },
 	{ ResIdleCommandEnabled, ClsIdleCommandEnabled, XtRBoolean, sizeof(Boolean),
 	  offset(idle_command_enabled), XtRString, ResFalse },
 	{ ResIdleTimeout, ClsIdleTimeout, XtRString, sizeof(String),
 	  offset(idle_timeout), XtRString, 0 },
-#endif /*]*/
 	{ ResProxy, ClsProxy, XtRString, sizeof(String),
 	  offset(proxy), XtRString, 0 },
 	{ ResHostname, ClsHostname, XtRString, sizeof(String),
@@ -265,10 +261,8 @@ XtResource resources[] = {
 	  toggle_offset(CROSSHAIR), XtRString, ResFalse },
 	{ ResVisibleControl, ClsVisibleControl, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(VISIBLE_CONTROL), XtRString, ResFalse },
-#if defined(X3270_SCRIPT) /*[*/
 	{ ResAidWait, ClsAidWait, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(AID_WAIT), XtRString, ResTrue },
-#endif /*]*/
 	{ ResOverlayPaste, ClsOverlayPaste, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(OVERLAY_PASTE), XtRString, ResFalse },
 

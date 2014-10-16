@@ -1116,13 +1116,6 @@ build_options(void)
 		" --disable-printer"
 # endif /*]*/
 #endif /*]*/
-#if defined(X3270_INTERACTIVE) /*[*/
-# if defined(X3270_SCRIPT) /*[*/
-		" --enable-script"
-# else /*][*/
-		" --disable-script"
-# endif /*]*/
-#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 		" --with-ssl"
 #else /*][*/

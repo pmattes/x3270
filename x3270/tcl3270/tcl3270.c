@@ -1723,3 +1723,9 @@ tc_scatv(char *s)
 	return buf;
 #undef add_space
 }
+
+/* Dummy version of function in macros.c. */
+void
+cancel_if_idle_command(void)
+{
+}

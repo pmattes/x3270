@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,11 +49,7 @@ extern void AsciiField_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void Ascii_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-#if defined(X3270_SCRIPT) /*[*/
 extern void cancel_if_idle_command(void);
-#else /*][*/
-#define cancel_if_idle_command()
-#endif /*]*/
 extern void Bell_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void CloseScript_action(Widget w, XEvent *event, String *params,
@@ -70,12 +66,8 @@ extern void execute_action_option(Widget w, XtPointer client_data,
     XtPointer call_data);
 extern void Expect_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-#if defined(X3270_SCRIPT) && defined(X3270_PLUGIN) /*[*/
+#if defined(X3270_PLUGIN) /*[*/
 extern void plugin_aid(unsigned char aid);
-#else /*][*/
-#define plugin_aid(a)
-#endif /*]*/
-#if defined(X3270_SCRIPT) /*[*/
 extern void Plugin_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 #endif /*]*/
@@ -100,11 +92,7 @@ extern void ReadBuffer_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void Script_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-#if defined(X3270_SCRIPT) /*[*/
 extern void sms_accumulate_time(struct timeval *, struct timeval *);
-#else /*][*/
-#define sms_accumulate_time(a, b)
-#endif /*]*/
 extern Boolean sms_active(void);
 extern void sms_connect_wait(void);
 extern void sms_continue(void);
@@ -115,10 +103,8 @@ extern void sms_init(void);
 extern Boolean sms_in_macro(void);
 extern Boolean sms_redirect(void);
 extern void sms_store(unsigned char c);
-#if defined(X3270_SCRIPT) || defined(TCL3270) || defined(S3270) /*[*/
 extern void Snap_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-#endif /*]*/
 #if defined(TCL3270) /*[*/
 extern void Status_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);

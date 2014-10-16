@@ -74,6 +74,3 @@ extern void *Realloc(void *, size_t);
 extern char *NewString(const char *);
 extern void Error(const char *);
 extern void Warning(const char *);
-
-/* "Required" optional parts. */
-#define X3270_SCRIPT	1

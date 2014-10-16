@@ -57,7 +57,6 @@ unsigned n_fallbacks = 0;	/* number of fallback entries */
 #define MODE_APL	0x00000040
 #define MODE_PRINTER	0x00000080
 #define MODE_STANDALONE	0x00000100
-#define MODE_SCRIPT	0x00000200
 #define MODE_DBCS	0x00000400
 #define MODE__WIN32	0x00000800
 
@@ -80,7 +79,6 @@ struct {
 	{ "X3270_APL", MODE_APL },
 	{ "X3270_PRINTER", MODE_PRINTER },
 	{ "STANDALONE", MODE_STANDALONE },
-	{ "X3270_SCRIPT", MODE_SCRIPT },
 	{ "X3270_DBCS", MODE_DBCS },
 	{ "_WIN32", MODE__WIN32 }
 };
@@ -108,12 +106,6 @@ unsigned long is_defined =
 |
 #if defined(X3270_PRINTER)
 	MODE_PRINTER
-#else
-	0
-#endif
-|
-#if defined(X3270_SCRIPT)
-	MODE_SCRIPT
 #else
 	0
 #endif

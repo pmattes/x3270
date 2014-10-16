@@ -276,12 +276,6 @@ case "$enable_printer" in
 ""|yes)	AC_DEFINE(X3270_PRINTER,1)
 	;;
 esac
-AC_ARG_ENABLE(script,[  --disable-script        leave out scripting support])
-case "$enable_script" in
-""|yes)	AC_DEFINE(X3270_SCRIPT,1)
-	;;
-*)	X3270_SCRIPT="#undef X3270_SCRIPT" ;;
-esac
 AC_ARG_ENABLE(ssl,[  --disable-ssl           leave out OpenSSL support])
 case "$enable_ssl" in
 no)	;;

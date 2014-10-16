@@ -59,10 +59,8 @@ static struct {
 	int purpose;
 	const char *help;
 } cmd_help[] = {
-#if defined(X3270_SCRIPT) /*[*/
 	{ "Abort",	CN, P_SCRIPTING, "Abort pending scripts and macros" },
 	{ "AnsiText",	CN, P_SCRIPTING, "Dump pending NVT text" },
-#endif /*]*/
 	{ "Ascii",	CN, P_SCRIPTING, "Screen contents in ASCII" },
 	{ "Ascii",	"<n>", P_SCRIPTING, "<n> bytes of screen contents from cursor, in ASCII" },
 	{ "Ascii",	"<row> <col> <n>", P_SCRIPTING, "<n> bytes of screen contents from <row>,<col>, in ASCII" },
@@ -71,23 +69,17 @@ static struct {
 	{ "Attn", CN, P_3270, "Send 3270 ATTN sequence (TELNET IP)" },
 	{ "BackSpace", CN, P_3270, "Move cursor left" },
 	{ "BackTab", CN, P_3270, "Move to previous field" },
-#if defined(X3270_SCRIPT) /*[*/
 	{ "Bell", CN, P_SCRIPTING, "Ring the terminal bell" },
-#endif /*]*/
 	{ "CircumNot", CN, P_3270, "Send ~ in NVT mode, \254 in 3270 mode" },
 	{ "Clear", CN, P_3270, "Send CLEAR AID (clear screen)" },
 	{ "Close", CN, P_INTERACTIVE, "Alias for 'Disconnect'" },
-#if defined(X3270_SCRIPT) /*[*/
 	{ "CloseScript", CN, P_SCRIPTING, "Exit peer script" },
-#endif /*]*/
 	{ "Compose", CN, P_INTERACTIVE, "Interpret next two keystrokes according to the compose map" },
 	{ "Connect", "[<lu>@]<host>[:<port>]", P_INTERACTIVE, "Open connection to <host>" },
 #if defined(LOCAL_PROCESS) /*[*/
 	{ "Connect", "-e [<command> [<arg>...]]", P_INTERACTIVE, "Open connection to a local shell or command" },
 #endif /*]*/
-#if defined(X3270_SCRIPT) /*[*/
 	{ "ContinueScript", CN, P_SCRIPTING, "Resume paused script" },
-#endif /*]*/
 #if defined(WC3270) /*[*/
 	{ "Copy", CN, P_3270, "Copy selected text to Windows clipboard" },
 #endif /*]*/
@@ -114,9 +106,7 @@ static struct {
 	                                           "'c3270>'"
 #endif /*]*/
 						               " prompt" },
-#if defined(X3270_SCRIPT) /*[*/
 	{ "Execute", "<command>", P_SCRIPTING, "Execute a shell command" },
-#endif /*]*/
 	{ "Exit", CN, P_INTERACTIVE, "Exit "
 #if defined(WC3270) /*[*/
 	                                    "wc3270"
@@ -124,9 +114,7 @@ static struct {
 	                                    "c3270"
 #endif /*]*/
 					    	    },
-#if defined(X3270_SCRIPT) /*[*/
 	{ "Expect", "<pattern>", P_SCRIPTING, "Wait for NVT output" },
-#endif /*]*/
 	{ "FieldEnd", CN, P_3270, "Move to end of field" },
 	{ "FieldMark", CN, P_3270, "3270 FIELD MARK key (X'1E')" },
 	{ "Flip", CN, P_3270, "Flip display left-to-right" },
@@ -140,9 +128,7 @@ static struct {
 	{ "Key", "<symbol>|0x<nn>", P_3270, "Input one character" },
 	{ "Left", CN, P_3270, "Move cursr left" },
 	{ "Left2", CN, P_3270, "Move cursor left 2 columns" },
-#if defined(X3270_SCRIPT) /*[*/
 	{ "Macro", "<name>", P_SCRIPTING, "Execute a predefined macro" },
-#endif /*]*/
 	{ "MonoCase", CN, P_3270, "Toggle monocase mode" },
 	{ "MoveCursor", "<row> <col>", P_3270|P_SCRIPTING, "Move cursor to specific location" },
 	{ "Newline", CN, P_3270, "Move cursor to first field in next row" },
@@ -152,9 +138,7 @@ static struct {
 #if defined(WC3270) /*[*/
 	{ "Paste", CN, P_3270, "Paste clipboard contents" },
 #endif /*]*/
-#if defined(X3270_SCRIPT) /*[*/
 	{ "PauseScript", CN, P_SCRIPTING, "Pause script until ResumeScript" },
-#endif /*]*/
 	{ "PF", "<n>", P_3270, "Send 3270 PF AID" },
 	{ "PreviousWord", CN, P_3270, "Move cursor to previous word" },
 	{ "Printer", "Start[,lu]|Stop", P_3270|P_SCRIPTING|P_INTERACTIVE,
@@ -170,14 +154,10 @@ static struct {
 	    "[html] [rtf] [modi] [caption <caption>] [[file] <filename>]|<print-command>",
 #endif /*]*/
 	    P_SCRIPTING|P_INTERACTIVE, "Dump screen image to file or printer" },
-#if defined(X3270_SCRIPT) /*[*/
         { "Query", "<keyword>", P_SCRIPTING|P_INTERACTIVE,
 	    "Query operational parameters" },
-#endif /*]*/
 	{ "Quit", CN, P_INTERACTIVE, "Exit " PROGRAM },
-#if defined(X3270_SCRIPT) /*[*/
         { "ReadBuffer", "ASCII|EBCDIC", P_SCRIPTING, "Dump display buffer" },
-#endif /*]*/
 	{ "Redraw", CN, P_INTERACTIVE|P_3270, "Redraw screen" },
 	{ "Reset", CN, P_3270, "Clear keyboard lock" },
 	{ "Right", CN, P_3270, "Move cursor right" },
@@ -189,14 +169,10 @@ static struct {
 	    "[on [[file] <filename>]|on printer [<print-command>]|off]",
 # endif /*]*/
 	    P_INTERACTIVE, "Configure screen tracing" },
-#if defined(X3270_SCRIPT) /*[*/
 	{ "Script", "<path> [<arg>...]", P_SCRIPTING, "Run a child script" },
-#endif /*]*/
 	{ "Scroll", "Forward|Backward", P_INTERACTIVE, "Scroll screen" },
 	{ "Show", CN, P_INTERACTIVE, "Display status and settings" },
-#if defined(X3270_SCRIPT) /*[*/
 	{ "Snap", "<args>", P_SCRIPTING, "Screen snapshot manipulation" },
-#endif /*]*/
         { "Source", "<file>", P_SCRIPTING|P_INTERACTIVE, "Read actions from file" },
 	{ "String", "<text>", P_3270|P_SCRIPTING, "Input a string" },
 	{ "SysReq", CN, P_3270, "Send 3270 Attention (TELNET ABORT or SYSREQ AID)" },
@@ -211,9 +187,7 @@ static struct {
 	{ "Trace", "[data|keyboard] on [<file>]|off", P_INTERACTIVE, "Configure tracing" },
 	{ "Transfer", "[<args>]", P_INTERACTIVE, "IND$FILE file transfer (see 'help file-transfer')" },
 	{ "Up", CN, P_3270, "Move cursor up" },
-#if defined(X3270_SCRIPT) /*[*/
 	{ "Wait", "<args>", P_SCRIPTING, "Wait for host events" },
-#endif /*]*/
 	{ CN,  CN, 0, CN }
 };
 
@@ -259,19 +233,11 @@ static struct {
 	const char **block;
 	void (*fn)(Boolean);
 } help_subcommand[] = {
-	{ "all",		
-#if defined(X3270_SCRIPT) /*[*/
-	    			-1,
-#else /*][*/
-				~P_SCRIPTING,
-#endif /*]*/
-						CN, NULL, NULL },
+	{ "all",		-1,		CN, NULL, NULL },
 	{ "3270",		P_3270,		CN, NULL, NULL },
 	{ "interactive",	P_INTERACTIVE,	CN, NULL, NULL },
 	{ "options",		P_OPTIONS,	CN, NULL, &cmdline_help },
-#if defined(X3270_SCRIPT) /*[*/
 	{ "scripting",		P_SCRIPTING,	CN, NULL, NULL },
-#endif /*]*/
 #if defined(X3270_FT) /*[*/
 	{ "file-transfer",	P_TRANSFER,	CN, ft_help, NULL },
 #endif /*]*/
@@ -299,9 +265,7 @@ Help_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 "  help interactive   interactive (command-prompt) commands\n"
 "  help <command>     help for one <command>\n"
 "  help options       command-line options\n"
-#if defined(X3270_SCRIPT) /*[*/
 "  help scripting     scripting commands\n"
-#endif /*]*/
 #if defined(X3270_FT) /*[*/
 "  help file-transfer file transfer options\n"
 #endif /*]*/
@@ -406,10 +370,8 @@ Help_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 		Boolean any = False;
 
 		for (i = 0; cmd_help[i].name != CN; i++) {
-#if !defined(X3270_SCRIPT) /*[*/
 			if (cmd_help[i].purpose == P_SCRIPTING)
 				continue;
-#endif /*]*/
 			if (!strncasecmp(cmd_help[i].name, params[0],
 			    strlen(params[0]))) {
 				action_output("  %s %s\n    %s",

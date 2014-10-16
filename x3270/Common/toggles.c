@@ -114,9 +114,7 @@ initialize_toggles(void)
 	appres.toggle[SCREEN_TRACE].upcall =     toggle_screenTrace;
 	appres.toggle[LINE_WRAP].upcall =        toggle_lineWrap;
 	appres.toggle[BLANK_FILL].upcall =       toggle_nop;
-#if defined(X3270_SCRIPT) || defined(TCL3270) /*[*/
 	appres.toggle[AID_WAIT].upcall =         toggle_nop;
-#endif /*]*/
 #if defined(C3270) /*[*/
 	appres.toggle[UNDERSCORE].upcall =	 toggle_underscore;
 #endif /*]*/

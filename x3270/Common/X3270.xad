@@ -901,9 +901,7 @@ x3270.ftPopup.title:				x3270 File Transfer
 x3270.ftProgressPopup.title:			x3270 File Transfer
 x3270.ftOverwritePopup.title:			x3270 File Transfer
 #endif
-#ifdef X3270_SCRIPT
 x3270.idlePopup.title:				x3270 Idle Command
-#endif
 x3270.kmPopup.title:				x3270 Keymap
 x3270*confirmButton.label:			OK
 x3270.printerErrorPopup*cancelButton.label:	Abort Printer
@@ -972,7 +970,6 @@ x3270.ftProgressPopup*waiting.label:		Waiting for host acknowledgment...
 x3270.ftProgressPopup*status.label:		%lu bytes transferred
 x3270.ftProgressPopup*aborting.label:		Aborting transfer...
 #endif
-#ifdef X3270_SCRIPT
 x3270.idlePopup*justify:			left
 x3270.idlePopup*command.label:			Command(s)
 x3270.idlePopup*timeout.label:			Timeout Value
@@ -983,7 +980,6 @@ x3270.idlePopup*hours.label:			Hours
 x3270.idlePopup*minutes.label:			Minutes
 x3270.idlePopup*seconds.label:			Seconds
 x3270.idlePopup*fuzz.label:			Vary time 0..10%
-#endif
 #ifdef X3270_PRINTER
 x3270.printerLuPopup.title:			x3270 Printer Session
 x3270.printerLuPopup.dialog.label:		Enter LU Name
@@ -1501,7 +1497,6 @@ x3270.ftPopup*value.translations:	#override \n\
 	<Btn1Down>:			PA-dialog-focus() select-start()\n\
 	Ctrl<Key>U:			select-all(DUMMY) delete-selection()
 #endif
-#ifdef X3270_SCRIPT
 x3270.idlePopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.idlePopup*value.translations:	#override \n\
@@ -1509,7 +1504,6 @@ x3270.idlePopup*value.translations:	#override \n\
 	<Key>Tab:			PA-dialog-next()\n\
 	<Btn1Down>:			PA-dialog-focus() select-start()\n\
 	Ctrl<Key>U:			select-all(DUMMY) delete-selection()
-#endif
 x3270.screenTracePopup*value.translations:	#override \n\
 	<Key>Return:			PA-confirm()\n\
 	Ctrl<Key>U:			select-all(DUMMY) delete-selection()

@@ -75,9 +75,7 @@ typedef enum {
     CROSSHAIR,		/* display cursor crosshair */
     VISIBLE_CONTROL,	/* display visible control characters */
 #endif /*]*/
-#if defined(X3270_SCRIPT) || defined(TCL3270) /*[*/
     AID_WAIT,		/* make scripts wait for AIDs to complete */
-#endif /*]*/
 #if defined(C3270) /*[*/
     UNDERSCORE,		/* special c3270/wc3270 underscore display mode */
 #endif /*]*/
@@ -159,10 +157,8 @@ typedef struct {
 	Boolean qr_bg_color;
 	Boolean bind_limit;
 	Boolean new_environ;
-#if defined(X3270_SCRIPT) /*[*/
 	Boolean socket;
 	int	script_port;
-#endif /*]*/
 
 	/* Named resources */
 #if defined(X3270_KEYPAD) /*[*/
@@ -242,9 +238,7 @@ typedef struct {
 	char	*idle_command;
 	Boolean idle_command_enabled;
 	char	*idle_timeout;
-#if defined(X3270_SCRIPT) /*[*/
 	char	*plugin_command;
-#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 	char	*ca_dir;
 	char	*ca_file;

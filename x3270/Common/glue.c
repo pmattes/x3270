@@ -134,9 +134,7 @@ struct toggle_name toggle_names[] = {
 #if defined(WC3270) /*[*/
 	{ ResMarginedPaste,   MARGINED_PASTE,	False },
 #endif /*]*/
-#if defined(X3270_SCRIPT) || defined(TCL3270) /*[*/
 	{ ResAidWait,         AID_WAIT,		False },
-#endif /*]*/
 #if defined(C3270) /*[*/
 	{ ResUnderscore,      UNDERSCORE,	False },
 #endif /*]*/
@@ -534,14 +532,12 @@ set_appres_defaults(void)
 #if defined(C3270) /*[*/
 	appres.toggle[CURSOR_POS].value = True;
 #endif /*]*/
-#if defined(X3270_SCRIPT) || defined(TCL3270) /*[*/
 	appres.toggle[AID_WAIT].value = True;
-#endif /*]*/
 #if defined(WC3270) /*[*/
 	appres.toggle[UNDERSCORE].value = True;
 #endif /*]*/
 
-#if defined(C3270) && defined(X3270_SCRIPT) /*[*/
+#if defined(C3270) /*[*/
 	appres.plugin_command = "x3270hist.pl";
 #endif /*]*/
 
@@ -677,11 +673,9 @@ static struct {
     "<codepage>", "Use <codepage> instead of ANSI codepage for local I/O"
 },
 #endif /*]*/
-#if defined(X3270_SCRIPT) /*[*/
 { OptLoginMacro, OPT_STRING, False, ResLoginMacro, offset(login_macro),
     "Action([arg[,arg...]]) [...]"
 },
-#endif /*]*/
 { OptModel,    OPT_STRING,  False, ResModel,     offset(model),
     "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
 #if defined(C3270) /*[*/
@@ -722,10 +716,8 @@ static struct {
 { OptScripted, OPT_NOP,     False, ResScripted,  NULL,
     CN, "Turn on scripting" },
 #endif /*]*/
-#if defined(X3270_SCRIPT) /*[*/
 { OptScriptPort,OPT_INT,    True, ResScriptPort, offset(script_port),
     "<port>", "TCP port to listen on for script commands" },
-#endif /*]*/
 #if defined(C3270) /*[*/
 { OptSecure,   OPT_BOOLEAN, True,  ResSecure,    offset(secure),
     CN, "Restrict potentially-destructive user actions" },
@@ -736,10 +728,8 @@ static struct {
 #endif /*]*/
 { OptSet,      OPT_SKIP2,   False, NULL,         NULL,
     "<toggle>", "Turn on <toggle>" },
-#if defined(X3270_SCRIPT) /*[*/
 { OptSocket,   OPT_BOOLEAN, True,  ResSocket,    offset(socket),
     CN, "Create socket for script control" },
-#endif /*]*/
 { OptTermName, OPT_STRING,  False, ResTermName,  offset(termname),
     "<name>", "Send <name> as TELNET terminal name" },
 #if defined(WC3270) /*[*/
@@ -1082,7 +1072,7 @@ static struct {
 	{ ResInlcr,	offset(inlcr),		XRM_BOOLEAN },
 	{ ResOnlcr,	offset(onlcr),		XRM_BOOLEAN },
 	{ ResIntr,	offset(intr),		XRM_STRING },
-#if defined(X3270_SCRIPT) /*[*/
+#if defined(X3270_PLUGIN) /*[*/
 	{ ResPluginCommand, offset(plugin_command), XRM_STRING },
 #endif /*]*/
 #if defined(C3270) || defined(S3270) /*[*/
@@ -1153,9 +1143,7 @@ static struct {
 	{ ResSelfSignedOk,offset(self_signed_ok),XRM_BOOLEAN },
 #endif /*]*/
 	{ ResSbcsCgcsgid, offset(sbcs_cgcsgid),	XRM_STRING },
-#if defined(X3270_SCRIPT) /*[*/
 	{ ResScriptPort,offset(script_port),	XRM_INT },
-#endif /*]*/
 	{ ResTermName,	offset(termname),	XRM_STRING },
 #if defined(WC3270) /*[*/
 	{ ResTitle,	offset(title),		XRM_STRING },

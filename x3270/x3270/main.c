@@ -135,9 +135,7 @@ XrmOptionDescRec options[]= {
 #if defined(HAVE_LIBSSL) /*[*/
 	{ OptKeyPasswd,	DotKeyPasswd,	XrmoptionSepArg,	NULL },
 #endif /*]*/
-#if defined(X3270_SCRIPT) /*[*/
 	{ OptLoginMacro,DotLoginMacro,	XrmoptionSepArg,	NULL },
-#endif /*]*/
 	{ OptM3279,	DotM3279,	XrmoptionNoArg,		ResTrue },
 	{ OptModel,	DotModel,	XrmoptionSepArg,	NULL },
 	{ OptMono,	DotMono,	XrmoptionNoArg,		ResTrue },
@@ -158,10 +156,8 @@ XrmOptionDescRec options[]= {
 	{ OptSelfSignedOk,DotSelfSignedOk,XrmoptionNoArg,	ResTrue },
 #endif /*]*/
 	{ OptSet,	".xxx",		XrmoptionSkipArg,	NULL },
-#if defined(X3270_SCRIPT) /*[*/
 	{ OptSocket,	DotSocket,	XrmoptionNoArg,		ResTrue },
 	{ OptScriptPort,DotScriptPort,	XrmoptionSepArg,	NULL },
-#endif /*]*/
 	{ OptTermName,	DotTermName,	XrmoptionSepArg,	NULL },
 	{ OptTraceFile,	DotTraceFile,	XrmoptionSepArg,	NULL },
 	{ OptTraceFileSize,DotTraceFileSize,XrmoptionSepArg,	NULL },
@@ -216,9 +212,7 @@ static struct {
 #if defined(HAVE_LIBSSL) /*[*/
 	{ OptKeyPasswd, "file:<filename>|string:<text>", "Specify OpenSSL private key password" },
 #endif /*]*/
-#if defined(X3270_SCRIPT) /*[*/
 	{ OptLoginMacro, "Action([arg[,...]]) [...]", "Specify macro to run at login" },
-#endif /*]*/
 	{ OptM3279, CN, "3279 emulation (deprecated)" },
 	{ OptModel, "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
 	{ OptMono, CN, "Do not use color" },
@@ -238,10 +232,8 @@ static struct {
 	{ OptSelfSignedOk, CN, "Allow self-signed host certificates" },
 #endif /*]*/
 	{ OptSet, "<toggle>", "Turn on <toggle>" },
-#if defined(X3270_SCRIPT) /*[*/
 	{ OptSocket,  CN, "Create socket for script control" },
 	{ OptScriptPort, "<port>", "Listen on TCP port <port> for script connections" },
-#endif /*]*/
 	{ OptSecure, NULL, "Set secure mode" },
 	{ OptTermName, "<name>", "Send <name> as TELNET terminal name" },
 	{ OptTrace, CN, "Enable tracing" },
@@ -284,9 +276,7 @@ struct toggle_name toggle_names[] = {
 	{ ResRectangleSelect, RECTANGLE_SELECT,	False },
 	{ ResCrosshair,	      CROSSHAIR,	False },
 	{ ResVisibleControl,  VISIBLE_CONTROL,	False },
-#if defined(X3270_SCRIPT) /*[*/
 	{ ResAidWait,         AID_WAIT,		False },
-#endif /*]*/
 	{ ResOverlayPaste,    OVERLAY_PASTE,	False },
 	{ NULL,               0,		False }
 };

@@ -673,7 +673,6 @@ save_options(char *n)
 	if (charset_changed)
 		save_opt(f, "charset", OptCharset, ResCharset,
 		    get_charset_name());
-#if defined(X3270_SCRIPT) /*[*/
 	if (idle_changed) {
 		save_opt(f, "idle command", CN, ResIdleCommand, idle_command);
 		save_opt(f, "idle timeout", CN, ResIdleTimeout,
@@ -682,7 +681,6 @@ save_options(char *n)
 				(idle_user_enabled == IDLE_PERM)?
 				    "True": "False");
 	}
-#endif /*]*/
 
 	/* Done. */
 	(void) fclose(f);

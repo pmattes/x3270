@@ -94,7 +94,7 @@ static Boolean know_mods = False;
 #endif /*]*/
 
 XtActionsRec all_actions[] = {
-#if defined(C3270) && defined(X3270_SCRIPT) /*[*/
+#if defined(C3270) /*[*/
 	{ "Abort",		Abort_action },
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
@@ -163,7 +163,7 @@ XtActionsRec all_actions[] = {
 	{ "set-select",		set_select_action },
 	{ "start-extend",	start_extend_action },
 #endif /*]*/
-#if defined(X3270_SCRIPT) || defined(S3270) /*[*/
+#if !defined(TCL3270) /*[*/
 	{ "AnsiText",		AnsiText_action },
 #endif /*]*/
 	{ "Ascii",		Ascii_action },
@@ -171,17 +171,17 @@ XtActionsRec all_actions[] = {
 	{ "Attn",		Attn_action },
 	{ "BackSpace",		BackSpace_action },
 	{ "BackTab",		BackTab_action },
-#if defined(X3270_SCRIPT) && (defined(X3270_INTERACTIVE)) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 	{ "Bell",		Bell_action },
 #endif /*]*/
 	{ "CircumNot",		CircumNot_action },
 	{ "Clear",		Clear_action },
 	{ "Close",		Disconnect_action },
-#if defined(X3270_SCRIPT) /*[*/
+#if !defined(TCL3270) /*[*/
 	{ "CloseScript",	CloseScript_action },
 #endif /*]*/
 	{ "Connect",		Connect_action },
-#if defined(X3270_SCRIPT) /*[*/
+#if !defined(TCL3270) /*[*/
 	{ "ContinueScript",	ContinueScript_action },
 #endif /*]*/
 	{ "CursorSelect",	CursorSelect_action },
@@ -197,13 +197,13 @@ XtActionsRec all_actions[] = {
 	{ "Erase",		Erase_action },
 	{ "EraseEOF",		EraseEOF_action },
 	{ "EraseInput",		EraseInput_action },
-#if defined(X3270_SCRIPT) /*[*/
+#if !defined(TCL3270) /*[*/
 	{ "Execute",		Execute_action },
 #endif /*]*/
 #if defined(C3270) /*[*/
 	{ "Exit",		Quit_action },
 #endif /*]*/
-#if defined(X3270_SCRIPT) /*[*/
+#if !defined(TCL3270) /*[*/
 	{ "Expect",		Expect_action },
 #endif /*]*/
 	{ "FieldEnd",		FieldEnd_action },
@@ -212,9 +212,9 @@ XtActionsRec all_actions[] = {
 #if defined(C3270) /*[*/
 	{ "Help",		Help_action},
 #endif/*]*/
-#if defined(X3270_SCRIPT) /*[*/
+#if defined(X3270_PLUGIN) /*[*/
 	{ "Plugin",		Plugin_action},
-#endif/*]*/
+#endif /*]*/
 	{ "Home",		Home_action },
 	{ "Insert",		Insert_action },
 	{ "Interrupt",		Interrupt_action },
@@ -227,7 +227,7 @@ XtActionsRec all_actions[] = {
 #endif /*]*/
 	{ "Left",		Left_action },
 	{ "Left2", 		Left2_action },
-#if defined(X3270_SCRIPT) || defined(S3270) /*[*/
+#if !defined(TCL3270) /*[*/
 	{ "Macro", 		Macro_action },
 #endif /*]*/
 #if defined(C3270) /*[*/
@@ -246,20 +246,16 @@ XtActionsRec all_actions[] = {
 #if defined(WC3270) /*[*/
 	{ "Paste",		Paste_action },
 #endif /*]*/
-#if defined(X3270_SCRIPT) /*[*/
+#if !defined(TCL3270) /*[*/
 	{ "PauseScript",	PauseScript_action },
 #endif /*]*/
 	{ "PreviousWord",	PreviousWord_action },
 #if defined(X3270_PRINTER) /*[*/
 	{ "Printer",		Printer_action },
 #endif /*]*/
-#if defined(X3270_SCRIPT) || defined(TCL3270) /*[*/
 	{ "Query",		Query_action },
-#endif /*]*/
 	{ "Quit",		Quit_action },
-#if defined(X3270_SCRIPT) || defined(TCL3270) || defined(S3270) /*[*/
 	{ "ReadBuffer",		ReadBuffer_action },
-#endif /*]*/
 #if defined(X3270_INTERACTIVE) /*[*/
 	{ "Reconnect",		Reconnect_action },
 #endif /*]*/
@@ -269,7 +265,7 @@ XtActionsRec all_actions[] = {
 #if defined(C3270) /*[*/
 	{ "ScreenTrace",	ScreenTrace_action },
 #endif/*]*/
-#if defined(X3270_SCRIPT) /*[*/
+#if !defined(TCL3270) /*[*/
 	{ "Script",		Script_action },
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
@@ -281,9 +277,7 @@ XtActionsRec all_actions[] = {
 #if defined(C3270) /*[*/
 	{ "Show",		Show_action },
 #endif/*]*/
-#if defined(X3270_SCRIPT) || defined(TCL3270) || defined(S3270) /*[*/
 	{ "Snap",		Snap_action },
-#endif /*]*/
 #if !defined(TCL3270) /*[*/
 	{ "Source",		Source_action },
 #endif /*]*/
@@ -309,9 +303,7 @@ XtActionsRec all_actions[] = {
 	{ "Unselect",		Unselect_action },
 #endif /*]*/
 	{ "Up",			Up_action },
-#if defined(X3270_SCRIPT) || defined(TCL3270) || defined(S3270) /*[*/
 	{ "Wait",		Wait_action },
-#endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
 	{ "WindowState",	WindowState_action },
 #endif /*]*/

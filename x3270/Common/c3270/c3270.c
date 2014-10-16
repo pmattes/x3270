@@ -1491,9 +1491,7 @@ Escape_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_
 	    	host_cancel_reconnect();
 		screen_suspend();
 #if 0 /* this fix is in there for something, but I don't know what */
-#if defined(X3270_SCRIPT) /*[*/
 		abort_script();
-#endif /*]*/
 #endif
 	}
 }

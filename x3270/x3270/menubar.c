@@ -181,10 +181,8 @@ static Widget	m3279_button;
 static Widget   keypad_option_button;
 static Widget	scheme_button;
 static Widget   connect_menu;
-#if defined(X3270_SCRIPT) /*[*/
 static Widget	script_abort_button;
 static Widget	idle_button;
-#endif /*]*/
 
 static Pixmap   arrow;
 Pixmap	dot;
@@ -658,12 +656,10 @@ menubar_in3270(Boolean in3270)
 		XtVaSetValues(appres.toggle[RECTANGLE_SELECT].w[0],
 		    XtNsensitive, !in3270,
 		    NULL);
-#if defined(X3270_SCRIPT) /*[*/
 	if (idle_button != (Widget)NULL)
 		XtVaSetValues(idle_button,
 		    XtNsensitive, in3270,
 		    NULL);
-#endif /*]*/
 }
 
 /* Called when we switch between ANSI line and character. */
@@ -680,7 +676,6 @@ menubar_linemode(Boolean in_linemode)
 		    NULL);
 }
 
-#if defined(X3270_SCRIPT) /*[*/
 /* Called to change the sensitivity of the "Abort Script" button. */
 void
 menubar_as_set(Boolean sensitive)
@@ -690,7 +685,6 @@ menubar_as_set(Boolean sensitive)
 		    XtNsensitive, sensitive,
 		    NULL);
 }
-#endif /*]*/
 
 
 /*
@@ -713,7 +707,6 @@ disconnect(Widget w _is_unused, XtPointer client_data _is_unused,
 	host_disconnect(False);
 }
 
-#if defined(X3270_SCRIPT) /*[*/
 /* Called from the "Abort Script" button on the "File..." menu */
 static void
 script_abort_callback(Widget w _is_unused, XtPointer client_data _is_unused,
@@ -721,7 +714,6 @@ script_abort_callback(Widget w _is_unused, XtPointer client_data _is_unused,
 {
 	abort_script();
 }
-#endif /*]*/
 
 /* "About x3270" popups */
 static void
@@ -1009,7 +1001,6 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 		any |= (w != NULL);
 	}
 
-#if defined(X3270_SCRIPT) /*[*/
 	/* Abort script */
 	spaced = False;
 	script_abort_button = add_menu_itemv("abortScriptOption", file_menu,
@@ -1017,7 +1008,6 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 			XtNsensitive, sms_active(),
 			NULL);
 	any |= (script_abort_button != NULL);
-#endif /*]*/
 
 	/* Disconnect */
 	spaced = False;
@@ -1664,7 +1654,6 @@ do_keymap(Widget w _is_unused, XtPointer userdata _is_unused, XtPointer calldata
 	popup_popup(keymap_shell, XtGrabExclusive);
 }
 
-#if defined(X3270_SCRIPT) /*[*/
 /* Callback from the "Idle Command" menu option */
 static void
 do_idle_command(Widget w _is_unused, XtPointer userdata _is_unused,
@@ -1672,7 +1661,6 @@ do_idle_command(Widget w _is_unused, XtPointer userdata _is_unused,
 {
 	popup_idle();
 }
-#endif /*]*/
 
 /* Called to change telnet modes */
 static void
@@ -2212,7 +2200,6 @@ options_menu_init(Boolean regen, Position x, Position y)
 			      NULL);
 	any |= (w != NULL);
 
-#if defined(X3270_SCRIPT) /*[*/
 	/* Create the "Idle Command" option */
 	if (!appres.secure) {
 		spaced = False;
@@ -2223,7 +2210,6 @@ options_menu_init(Boolean regen, Position x, Position y)
 				NULL);
 		any |= (idle_button != NULL);
 	}
-#endif /*]*/
 
 	if (any) {
 		if (menubar_buttons) {

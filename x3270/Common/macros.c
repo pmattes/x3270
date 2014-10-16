@@ -161,12 +161,10 @@ typedef struct sms {
 #define SN	((sms_t *)NULL)
 static sms_t *sms = SN;
 static int sms_depth = 0;
-#if defined(X3270_SCRIPT) /*[*/
 static int socketfd = -1;
 static ioid_t socket_id = NULL_IOID;
-# if defined(_WIN32) /*[*/
+#if defined(_WIN32) /*[*/
 static HANDLE socket_event = NULL;
-# endif /*]*/
 #endif /*]*/
 
 static const char *sms_state_name[] = {
@@ -214,18 +212,14 @@ int peer_nr;
 int peer_errno;
 #endif /*]*/
 
-#if defined(X3270_SCRIPT) /*[*/
 static void cleanup_socket(Boolean b);
-#endif /*]*/
 static void script_prompt(Boolean success);
 static void script_input(unsigned long fd, ioid_t id);
 static void sms_pop(Boolean can_exit);
-#if defined(X3270_SCRIPT) /*[*/
 static void socket_connection(unsigned long fd, ioid_t id);
-# if defined(_WIN32) /*[*/
+#if defined(_WIN32) /*[*/
 static void child_socket_connection(unsigned long fd, ioid_t id);
 static void child_exited(unsigned long fd, ioid_t id);
-# endif /*]*/
 #endif /*]*/
 static void wait_timed_out(ioid_t id);
 static void read_from_file(void);
@@ -233,11 +227,7 @@ static sms_t *sms_redirect_to(void);
 
 /* Macro that defines that the keyboard is locked due to user input. */
 #define KBWAIT	(kybdlock & (KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK|KL_ENTER_INHIBIT))
-#if defined(X3270_SCRIPT) /*[*/
 #define CKBWAIT	(appres.toggle[AID_WAIT].value && KBWAIT)
-#else /*][*/
-#define CKBWAIT	(KBWAIT)
-#endif /*]*/
 
 /* Macro that defines when it's safe to continue a Wait()ing sms. */
 #define CAN_PROCEED ( \
@@ -246,7 +236,7 @@ static sms_t *sms_redirect_to(void);
     (IN_NVT && !(kybdlock & KL_AWAITING_FIRST)) \
 )
 
-#if defined(X3270_SCRIPT) && defined(X3270_PLUGIN) /*[*/
+#if defined(X3270_PLUGIN) /*[*/
 static int plugin_pid = 0;		/* process ID if running, or 0 */
 static int plugin_outpipe = -1;		/* from emulator, to plugin */
 static int plugin_inpipe = -1;		/* from plugin, to emulator */
@@ -304,7 +294,7 @@ trace_script_output(const char *fmt, ...)
 	}
 }
 
-#if defined(X3270_SCRIPT) && defined(X3270_PLUGIN) /*[*/
+#if defined(X3270_PLUGIN) /*[*/
 static void
 plugin_start_appres(Boolean complain)
 {
@@ -334,7 +324,7 @@ plugin_start_appres(Boolean complain)
 static void
 sms_connect(Boolean connected)
 {
-#if defined(X3270_SCRIPT) && defined(X3270_PLUGIN) /*[*/
+#if defined(X3270_PLUGIN) /*[*/
 	if (connected) {
 		if (appres.plugin_command && !plugin_pid) {
 			plugin_start_appres(False);
@@ -620,7 +610,6 @@ sms_pop(Boolean can_exit)
 	if (sms->idle_error)
 		popup_an_error("Idle command disabled due to error");
 
-#if defined(X3270_SCRIPT) /*[*/
 	/* If this was a -socket peer, get ready for another connection. */
 	if (sms->type == ST_PEER && sms->is_external) {
 #if defined(_WIN32) /*[*/
@@ -629,7 +618,6 @@ sms_pop(Boolean can_exit)
 		socket_id = AddInput(socketfd, socket_connection);
 #endif /*]*/
 	}
-#endif /*]*/
 
 	/* Release the memory. */
 	s = sms;
@@ -703,7 +691,6 @@ peer_script_init(void)
 	sms_t *s;
 	Boolean on_top;
 
-#if defined(X3270_SCRIPT) /*[*/
 	if (appres.script_port) {
 		struct sockaddr_in sin;
 		int on = 1;
@@ -792,8 +779,7 @@ peer_script_init(void)
 		register_schange(ST_EXITING, cleanup_socket);
 		return;
 	}
-#endif /*]*/
-#if defined(X3270_SCRIPT) && !defined(_WIN32) /*[*/
+#if !defined(_WIN32) /*[*/
 	if (appres.socket && !appres.script_port) {
 		struct sockaddr_un ssun;
 
@@ -874,7 +860,6 @@ peer_script_init(void)
 	}
 }
 
-#if defined(X3270_SCRIPT) /*[*/
 /* Accept a new socket connection. */
 static void
 socket_connection(unsigned long fd _is_unused, ioid_t id _is_unused)
@@ -997,7 +982,6 @@ cleanup_socket(Boolean b _is_unused)
 	(void) unlink(buf);
 #endif /*]*/
 }
-#endif /*]*/
 
 #if defined(_WIN32) /*[*/
 /* Process an event on a child script handle (presumably a process exit). */
@@ -3326,9 +3310,8 @@ execute_action_option(Widget w _is_unused, XtPointer client_data _is_unused,
 
 #endif /*]*/
 
-#if defined(X3270_SCRIPT) /*[*/
 
-# if defined(_WIN32) /*[*/
+#if defined(_WIN32) /*[*/
 /* Let the system pick a TCP port to bind to, and listen on it. */
 static unsigned short
 pick_port(int *sp)
@@ -3365,10 +3348,10 @@ pick_port(int *sp)
 	*sp = s;
 	return ntohs(sin.sin_port);
 }
-# endif /*]*/
+#endif /*]*/
 
 /* "Script" action, runs a script as a child process. */
-# if !defined(_WIN32) /*[*/
+#if !defined(_WIN32) /*[*/
 void
 Script_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
@@ -3465,9 +3448,9 @@ Script_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	/* Set up to reap the child's exit status. */
 	++children;
 }
-# endif /*]*/
+#endif /*]*/
 
-# if defined(_WIN32) /*[*/
+#if defined(_WIN32) /*[*/
 /* "Script" action, runs a script as a child process. */
 void
 Script_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
@@ -3570,7 +3553,6 @@ Script_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	script_enable();
 
 }
-# endif /*]*/
 #endif /*]*/
 
 /* "Macro" action, explicitly invokes a named macro. */
@@ -3591,7 +3573,6 @@ Macro_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	popup_an_error("no such macro: '%s'", params[0]);
 }
 
-#if defined(X3270_SCRIPT) /*[*/
 /*
  * Idle cancellation: cancels the idle command if the current sms or any sms
  * that called it caused an error.
@@ -3610,7 +3591,6 @@ cancel_if_idle_command(void)
 		}
 	}
 }
-#endif /*]*/
 
 #if defined(X3270_PRINTER) /*[*/
 /* "Printer" action, starts or stops a printer session. */
@@ -3636,7 +3616,6 @@ Printer_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 }
 #endif /*]*/
 
-#if defined(X3270_SCRIPT) /*[*/
 /* Abort all running scripts. */
 void
 abort_script(void)
@@ -3660,9 +3639,7 @@ Abort_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 #endif /*]*/
 	abort_script();
 }
-#endif /*]*/
 
-#if defined(X3270_SCRIPT) /*[*/
 /* Accumulate command execution time. */
 void
 sms_accumulate_time(struct timeval *t0, struct timeval *t1)
@@ -3676,7 +3653,6 @@ sms_accumulate_time(struct timeval *t0, struct timeval *t1)
 #endif /*]*/
     }
 }
-#endif /*]*/
 
 void
 Query_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
@@ -3730,8 +3706,6 @@ Query_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 		break;
 	}
 }
-
-#if defined(X3270_SCRIPT) /*[*/
 
 #if defined(X3270_PLUGIN) /*[*/
 
@@ -4162,8 +4136,6 @@ Bell_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 {
 	ring_bell();
 }
-#endif /*]*/
-
 #endif /*]*/
 
 void

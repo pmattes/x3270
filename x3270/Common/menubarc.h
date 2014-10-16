@@ -39,11 +39,7 @@ extern Pixmap null;
 
 extern void HandleMenu_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-#if defined(X3270_SCRIPT) /*[*/
 extern void menubar_as_set(Boolean sensitive);
-#else /*][*/
-# define menubar_as_set(n)
-#endif /*]*/
 extern void menubar_init(Widget container, Dimension overall_width,
     Dimension current_width);
 extern void menubar_keypad_changed(void);
