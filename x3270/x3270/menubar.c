@@ -103,9 +103,7 @@ static Widget  *charset_widgets;
 static void scheme_init(void);
 static void charsets_init(void);
 static void options_menu_init(Boolean regen, Position x, Position y);
-#if defined(X3270_KEYPAD) /*[*/
 static void keypad_button_init(Position x, Position y);
-#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 static void ssl_icon_init(Position x, Position y);
 #endif /*]*/
@@ -131,9 +129,7 @@ static void screensave_option(Widget w, XtPointer client_data,
 #include "arrow.bm"
 #include "diamond.bm"
 #include "no_diamond.bm"
-#if defined(X3270_KEYPAD) /*[*/
 #include "ky.bm"
-#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 #include "locked.bm"
 #include "unlocked.bm"
@@ -164,9 +160,7 @@ static Widget   locked_icon;
 static Widget   unlocked_icon;
 static Widget   unverified_icon;
 #endif /*]*/
-#if defined(X3270_KEYPAD) /*[*/
 static Widget   keypad_button;
-#endif /*]*/
 static Widget   linemode_button;
 static Widget   charmode_button;
 static Widget   models_option;
@@ -207,11 +201,7 @@ static Boolean	toggle_init(Widget, int, const char *, const char *, Boolean *);
 
 #define MENU_BORDER	2
 
-#if defined(X3270_KEYPAD) /*[*/
 #define KY_WIDTH	(ky_width + 8)
-#else /*][*/
-#define KY_WIDTH	0
-#endif /*]*/
 
 #define	MENU_MIN_WIDTH	(LEFT_MARGIN + 3*(KEY_WIDTH+2*BORDER+SPACING) + \
 			 LEFT_MARGIN + KY_WIDTH + 2*BORDER + SPACING + \
@@ -439,21 +429,17 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 
 	ssl_icon_init(
 	    (Position) (current_width - LEFT_MARGIN -
-#if defined(X3270_KEYPAD) /*[*/
 			    (ky_width+8) -
-#endif /*]*/
 			    4*BORDER - 2*MENU_BORDER - (locked_width+8)),
 	    TOP_MARGIN);
 #endif /*]*/
 
-#if defined(X3270_KEYPAD) /*[*/
 	/* Keypad button */
 
 	keypad_button_init(
 	    (Position) (current_width - LEFT_MARGIN - (ky_width+8) -
 			    2*BORDER - 2*MENU_BORDER),
 	    TOP_MARGIN);
-#endif /*]*/
 }
 
 /*
@@ -605,7 +591,6 @@ menubar_printer(Boolean printer_on)
 }
 #endif /*]*/
 
-#if defined(X3270_KEYPAD) /*[*/
 void
 menubar_keypad_changed(void)
 {
@@ -615,7 +600,6 @@ menubar_keypad_changed(void)
 			appres.keypad_on || keypad_popped ? dot : None,
 		    NULL);
 }
-#endif /*]*/
 
 /* Called when we switch between ANSI and 3270 modes. */
 static void
@@ -1292,7 +1276,6 @@ macros_menu_init(Boolean regen, Position x, Position y)
 		    NULL);
 }
 
-#if defined(X3270_KEYPAD) /*[*/
 /* Called toggle the keypad */
 static void
 toggle_keypad(Widget w _is_unused, XtPointer client_data _is_unused,
@@ -1341,7 +1324,6 @@ keypad_button_init(Position x, Position y)
 		XtVaSetValues(keypad_button, XtNx, x, NULL);
 	}
 }
-#endif /*]*/
 
 #if defined(HAVE_LIBSSL) /*[*/
 static void
@@ -1398,17 +1380,13 @@ menubar_resize(Dimension width)
 #if defined(HAVE_LIBSSL) /*[*/
 	ssl_icon_init(
 	    (Position) (width - LEFT_MARGIN -
-#if defined(X3270_KEYPAD) /*[*/
 			    (ky_width+8) -
-#endif /*]*/
 			    4*BORDER - 2*MENU_BORDER - (locked_width+8)),
 	    TOP_MARGIN);
 #endif /*]*/
-#if defined(X3270_KEYPAD) /*[*/
 	keypad_button_init(
 	    (Position) (width - LEFT_MARGIN - (ky_width+8) - 2*BORDER),
 	    TOP_MARGIN);
-#endif /*]*/
 }
 
 
@@ -1907,7 +1885,6 @@ options_menu_init(Boolean regen, Position x, Position y)
 		t = XtVaCreatePopupShell(
 		    "togglesMenu", complexMenuWidgetClass, menu_parent,
 		    NULL);
-#if defined(X3270_KEYPAD) /*[*/
 		if (!menubar_buttons) {
 			keypad_option_button = add_menu_itemv("keypadOption", t,
 					toggle_keypad, NULL,
@@ -1921,7 +1898,6 @@ options_menu_init(Boolean regen, Position x, Position y)
 			else
 				spaced = True;
 		}
-#endif /*]*/
 		toggle_init(t, MONOCASE, "monocaseOption", CN, &spaced);
 		toggle_init(t, CURSOR_BLINK, "cursorBlinkOption", CN, &spaced);
 		toggle_init(t, BLANK_FILL, "blankFillOption", CN, &spaced);

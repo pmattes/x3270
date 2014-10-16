@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@ extern Boolean keypad_changed;
 extern Boolean keypad_popped;
 extern Widget keypad_shell;
 
-#if defined(X3270_KEYPAD) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 
 extern enum kp_placement {
 	kp_right, kp_left, kp_bottom, kp_integral, kp_inside_right
@@ -62,24 +62,24 @@ extern Boolean keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted,
 extern void keypad_cursor(int *row, int *col);
 extern void pop_up_keypad(Boolean up);
 extern void keypad_key(int k, ucs4_t u);
-#if defined(_WIN32) /*[*/
+#  if defined(_WIN32) /*[*/
 extern void keypad_click(int x, int y);
-#endif /*]*/
+#  endif /*]*/
 extern void Keypad_action(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
 # endif /*]*/
 
-#define keypad_qheight()	0
-#define min_keypad_width()	0
-#define keypad_first_up()
-#define keypad_init(a, b, c, d, e)	0
-#define keypad_move()
-#define keypad_placement_init()
-#define keypad_popup_init()
-#define keypad_set_keymap()
-#define keypad_set_temp_keymap(n)
-#define keypad_shift()
-#define keypad_popdown(w)
-#define keypad_popup()
+# define keypad_qheight()	0
+# define min_keypad_width()	0
+# define keypad_first_up()
+# define keypad_init(a, b, c, d, e)	0
+# define keypad_move()
+# define keypad_placement_init()
+# define keypad_popup_init()
+# define keypad_set_keymap()
+# define keypad_set_temp_keymap(n)
+# define keypad_shift()
+# define keypad_popdown(w)
+# define keypad_popup()
 
 #endif /*]*/

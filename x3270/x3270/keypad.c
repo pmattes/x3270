@@ -35,8 +35,6 @@
 
 #include "globals.h"
 
-#if defined(X3270_KEYPAD) /*[*/
-
 #include <X11/Shell.h>
 #include <X11/StringDefs.h>
 #include <X11/Xaw/Command.h>
@@ -796,5 +794,3 @@ keypad_popup(void)
 	appres.keypad_on = True;
 	keypad_first_up();
 }
-
-#endif /*]*/

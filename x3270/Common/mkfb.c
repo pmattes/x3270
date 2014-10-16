@@ -52,7 +52,6 @@ unsigned n_fallbacks = 0;	/* number of fallback entries */
 
 /* ifdef state stack */
 #define MODE_COLOR	0x00000001
-#define MODE_KEYPAD	0x00000020
 #define MODE_APL	0x00000040
 #define MODE_PRINTER	0x00000080
 #define MODE_STANDALONE	0x00000100
@@ -73,7 +72,6 @@ struct {
 	unsigned long mask;
 } parts[] = {
 	{ "COLOR", MODE_COLOR },
-	{ "X3270_KEYPAD", MODE_KEYPAD },
 	{ "X3270_APL", MODE_APL },
 	{ "X3270_PRINTER", MODE_PRINTER },
 	{ "STANDALONE", MODE_STANDALONE },
@@ -84,12 +82,6 @@ struct {
 
 unsigned long is_defined =
     MODE_COLOR |
-#if defined(X3270_KEYPAD)
-	MODE_KEYPAD
-#else
-	0
-#endif
-|
 #if defined(X3270_APL)
 	MODE_APL
 #else

@@ -146,10 +146,8 @@ static Boolean  iconic = False;
 static Widget   container;
 static Widget   scrollbar;
 static Dimension menubar_height;
-#if defined(X3270_KEYPAD) /*[*/
 static Dimension keypad_height;
 static Dimension keypad_xwidth;
-#endif /*]*/
 static Dimension container_width;
 static Dimension cwidth_nkp;
 static Dimension container_height;
@@ -223,9 +221,7 @@ static enum {
     REDO_NONE,
     REDO_FONT,
     REDO_MODEL,
-#if defined(X3270_KEYPAD) /*[*/
     REDO_KEYPAD,
-#endif /*]*/
     REDO_SCROLLBAR,
     REDO_RESIZE
 } screen_redo = REDO_NONE;
@@ -548,9 +544,7 @@ static void
 screen_reinit(unsigned cmask)
 {
 	Dimension cwidth_curr;
-#if defined(X3270_KEYPAD) /*[*/
 	Dimension mkw;
-#endif /*]*/
 
 	/* Allocate colors. */
 	if (cmask & COLOR_CHANGE) {
@@ -737,14 +731,13 @@ screen_reinit(unsigned cmask)
 	else
 		container_width = nss.screen_width+2 + scrollbar_width;
 	cwidth_nkp = container_width;
-#if defined(X3270_KEYPAD) /*[*/
 	mkw = min_keypad_width();
 	if (kp_placement == kp_integral && container_width < mkw) {
 		keypad_xwidth = mkw - container_width;
 		container_width = mkw;
-	} else
+	} else {
 		keypad_xwidth = 0;
-#endif /*]*/
+	}
 
 	if (container == (Widget)NULL) {
 		container = XtVaCreateManagedWidget(
@@ -767,11 +760,7 @@ screen_reinit(unsigned cmask)
 
 	/* Initialize the menu bar and integral keypad */
 
-#if defined(X3270_KEYPAD) /*[*/
 	cwidth_curr = appres.keypad_on ? container_width : cwidth_nkp;
-#else /*][*/
-	cwidth_curr = container_width;
-#endif /*]*/
 	menubar_height = menubar_qheight(cwidth_curr);
 	menubar_init(container, container_width, cwidth_curr);
 
@@ -779,7 +768,6 @@ screen_reinit(unsigned cmask)
 		container_height = fixed_height;
 	else
 		container_height = menubar_height + nss.screen_height+2;
-#if defined(X3270_KEYPAD) /*[*/
 	if (kp_placement == kp_integral) {
 		(void) keypad_init(container, container_height,
 		    container_width, False, False);
@@ -787,7 +775,6 @@ screen_reinit(unsigned cmask)
 	} else
 		keypad_height = 0;
 	container_height += keypad_height;
-#endif /*]*/
 
 	/* Create screen and set container dimensions */
 	inflate_screen();
@@ -825,13 +812,8 @@ set_toplevel_sizes(void)
 {
 	Dimension tw, th;
 
-#if defined(X3270_KEYPAD) /*[*/
 	tw = container_width - (appres.keypad_on ? 0 : keypad_xwidth);
 	th = container_height - (appres.keypad_on ? 0 : keypad_height);
-#else /*][*/
-	tw = container_width;
-	th = container_height;
-#endif /*]*/
 	if (fixed_width) {
 		XtVaSetValues(toplevel,
 		    XtNwidth, fixed_width,
@@ -901,12 +883,7 @@ inflate_screen(void)
 		    "screen", widgetClass, container,
 		    XtNwidth, nss.screen_width,
 		    XtNheight, nss.screen_height,
-		    XtNx,
-#if defined(X3270_KEYPAD) /*[*/
-			appres.keypad_on ? (keypad_xwidth / 2) : 0,
-#else /*][*/
-			0,
-#endif /*]*/
+		    XtNx, appres.keypad_on ? (keypad_xwidth / 2) : 0,
 		    XtNy, menubar_height,
 		    XtNbackground,
 			appres.mono ? appres.background : colorbg_pixel,
@@ -918,12 +895,7 @@ inflate_screen(void)
 		XtVaSetValues(nss.widget,
 		    XtNwidth, nss.screen_width,
 		    XtNheight, nss.screen_height,
-		    XtNx,
-#if defined(X3270_KEYPAD) /*[*/
-			appres.keypad_on ? (keypad_xwidth / 2) : 0,
-#else /*][*/
-			0,
-#endif /*]*/
+		    XtNx, appres.keypad_on ? (keypad_xwidth / 2) : 0,
 		    XtNy, menubar_height,
 		    XtNbackground,
 			appres.mono ? appres.background : colorbg_pixel,
@@ -974,10 +946,7 @@ scrollbar_init(Boolean is_reset)
 			    "scrollbar", scrollbarWidgetClass,
 			    container,
 			    XtNx, nss.screen_width+1
-#if defined(X3270_KEYPAD) /*[*/
-				    + (appres.keypad_on ? (keypad_xwidth / 2) : 0)
-#endif /*]*/
-				    ,
+				    + (appres.keypad_on ? (keypad_xwidth / 2) : 0),
 			    XtNy, menubar_height,
 			    XtNwidth, scrollbar_width-1,
 			    XtNheight, nss.screen_height,
@@ -991,10 +960,7 @@ scrollbar_init(Boolean is_reset)
 		} else {
 			XtVaSetValues(scrollbar,
 			    XtNx, nss.screen_width+1
-#if defined(X3270_KEYPAD) /*[*/
-				    + (appres.keypad_on ? (keypad_xwidth / 2) : 0)
-#endif /*]*/
-				    ,
+				    + (appres.keypad_on ? (keypad_xwidth / 2) : 0),
 			    XtNy, menubar_height,
 			    XtNwidth, scrollbar_width-1,
 			    XtNheight, nss.screen_height,
@@ -1119,15 +1085,15 @@ mcursor_locked(void)
 	set_mcursor();
 }
 
-#if defined(X3270_KEYPAD) /*[*/
 /*
  * Called from the keypad button to expose or hide the integral keypad.
  */
 void
 screen_showikeypad(Boolean on)
 {
-	if (on)
+	if (on) {
 		screen_redo = REDO_KEYPAD;
+	}
 
 	inflate_screen();
 	if (keypad_xwidth > 0) {
@@ -1136,7 +1102,6 @@ screen_showikeypad(Boolean on)
 		menubar_resize(on ? container_width : cwidth_nkp);
 	}
 }
-#endif /*]*/
 
 
 /*
@@ -4946,25 +4911,18 @@ do_resize(void)
 	 */
 	for (r = rsfonts; r != (struct rsfont *) NULL; r = r->next) {
 		Dimension cw, ch;	/* container_width, container_height */
+		Dimension mkw;
 
 		cw = SCREEN_WIDTH(r->width)+2 + scrollbar_width;
-#if defined(X3270_KEYPAD) /*[*/
-		{
-			Dimension mkw;
-
-			mkw = min_keypad_width();
-			if (kp_placement == kp_integral
-			    && appres.keypad_on
-			    && cw < mkw)
-				cw = mkw;
+		mkw = min_keypad_width();
+		if (kp_placement == kp_integral && appres.keypad_on
+			&& cw < mkw) {
+			cw = mkw;
 		}
 
-#endif /*]*/
 		ch = SCREEN_HEIGHT(r->height)+2 + menubar_qheight(cw);
-#if defined(X3270_KEYPAD) /*[*/
 		if (kp_placement == kp_integral && appres.keypad_on)
 			ch += keypad_qheight();
-#endif /*]*/
 		r->total_width = cw;
 		r->total_height = ch;
 		r->area = cw * ch;
@@ -5100,12 +5058,10 @@ revert_screen(void)
 		screen_change_model(redo_old_model,
 		    redo_old_ov_cols, redo_old_ov_rows);
 		break;
-#if defined(X3270_KEYPAD) /*[*/
 	    case REDO_KEYPAD:
 		revert = "keypad configuration";
 		screen_showikeypad(appres.keypad_on = False);
 		break;
-#endif /*]*/
 	    case REDO_SCROLLBAR:
 		revert = "scrollbar configuration";
 		if (toggled(SCROLL_BAR)) {

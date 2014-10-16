@@ -278,7 +278,6 @@ save_efont(void)
 	}
 }
 
-#if defined(X3270_KEYPAD) /*[*/
 /* Save the keypad state. */
 static void
 save_keypad(void)
@@ -294,7 +293,6 @@ save_keypad(void)
 			cmd_delete(ix);
 	}
 }
-#endif /*]*/
 
 /* Save the scrollbar state. */
 static void
@@ -498,9 +496,7 @@ save_yourself(void)
 	save_keymap();
 	save_model();
 	save_efont();
-#if defined(X3270_KEYPAD) /*[*/
 	save_keypad();
-#endif /*]*/
 	save_scrollbar();
 	save_toggles();
 	save_host();
@@ -645,13 +641,12 @@ save_options(char *n)
 		    appres.toggle[i].value ? ResTrue : ResFalse);
 	}
 
-#if defined(X3270_KEYPAD) /*[*/
 	/* Save the keypad state. */
-	if (keypad_changed)
+	if (keypad_changed) {
 		save_opt(f, "keypad state", OptKeypadOn, ResKeypadOn,
 			(appres.keypad_on || keypad_popped) ?
 			    ResTrue : ResFalse);
-#endif /*]*/
+	}
 
 	/* Save other menu-changeable options. */
 	if (efont_changed)

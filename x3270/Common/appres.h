@@ -122,7 +122,7 @@ typedef struct {
 	Boolean visual_select;
 	Boolean suppress_host;
 	Boolean suppress_font_menu;
-# if defined(X3270_KEYPAD) /*[*/
+# if defined(X3270_DISPLAY) /*[*/
 	Boolean	keypad_on;
 # endif /*]*/
 #endif /*]*/
@@ -161,7 +161,7 @@ typedef struct {
 	int	script_port;
 
 	/* Named resources */
-#if defined(X3270_KEYPAD) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 	char	*keypad;
 #endif /*]*/
 #if defined(X3270_INTERACTIVE) /*[*/

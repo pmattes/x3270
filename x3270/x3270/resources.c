@@ -68,14 +68,12 @@ XtResource resources[] = {
 	  offset(extended), XtRString, ResTrue },
 	{ ResM3279, ClsM3279, XtRBoolean, sizeof(Boolean),
 	  offset(m3279), XtRString, ResTrue },
-#if defined(X3270_KEYPAD) /*[*/
 	{ ResKeypad, ClsKeypad, XtRString, sizeof(String),
 	  offset(keypad), XtRString, KpRight },
 	{ ResKeypadOn, ClsKeypadOn, XtRBoolean, sizeof(Boolean),
 	  offset(keypad_on), XtRString, ResFalse },
 	{ ResInvertKeypadShift, ClsInvertKeypadShift, XtRBoolean, sizeof(Boolean),
 	  offset(invert_kpshift), XtRString, ResFalse },
-#endif /*]*/
 	{ ResSaveLines, ClsSaveLines, XtRInt, sizeof(int),
 	  offset(save_lines), XtRString, "4096" },
 	{ ResMenuBar, ClsMenuBar, XtRBoolean, sizeof(Boolean),

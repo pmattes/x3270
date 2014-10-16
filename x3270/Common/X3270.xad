@@ -857,9 +857,7 @@ x3270.keymapPopup.dialog.label:			Enter Keymap Name
 x3270.oversizePopup.title:			x3270 Oversize
 x3270.oversizePopup.dialog.label:		Enter Dimensions (cols x rows)
 x3270.oversizePopup*confirmButton.label:	Resize
-#ifdef X3270_KEYPAD
 x3270.keypadPopup.title:			x3270 Keypad
-#endif
 x3270.printWindowPopup.title:			x3270 Window Print
 x3270.printWindowPopup.dialog.label:		Enter Print Command
 x3270.printWindowPopup*confirmButton.label:	Print
@@ -1151,10 +1149,8 @@ x3270.aplFont:			3270
 x3270.debugFont:		3270d
 x3270.iconFont:			nil2
 x3270.iconLabelFont:		8x13
-#ifdef X3270_KEYPAD
 x3270*keyPad*large*font: 	fixed
 x3270*keyPad*small*font:	-*-fixed-medium-r-semicondensed-*-12-*-*
-#endif
 x3270*value*font:		fixed
 x3270*dataLabel.font:		 -*-courier-medium-r-normal--14-*-100-100-m-*-iso8859-1
 !x3270*smallLabel.font:		5x7
@@ -1166,9 +1162,7 @@ x3270*font:			-*-helvetica-bold-r-normal--14-*-100-100-p-*-iso8859-1
 ! Menu configuration
 x3270*menuBarContainer.borderWidth:		2
 #ifdef COLOR
-#ifdef X3270_KEYPAD
 x3270.keypadBackground:				grey
-#endif
 x3270*menuBarContainer.background:		grey
 x3270*menuBarContainer.borderColor:		grey40
 x3270*fileMenuButton*background:		grey
@@ -1324,14 +1318,12 @@ x3270.ftProgressPopup*filename.borderColor:	grey40
 x3270.ftProgressPopup*filename.background:	lavender
 #endif
 !
-#ifdef X3270_KEYPAD
 ! Keypad key dimensions, in pixels
 x3270.keypad.keyHeight:		24
 x3270.keypad.keyWidth:		48
 x3270.keypad.pfWidth:		32
 x3270.keypad.paWidth:		36
 x3270.keypad.largeKeyWidth:	56
-#endif
 !
 ! Keymap display pop-up
 !
@@ -1391,7 +1383,6 @@ x3270*screen.translations:		#override \n\
 	:<BtnUp>:			Default()
 x3270icon.translations:			#override \n\
 	<Expose>:			PA-Expose()
-#ifdef X3270_KEYPAD
 x3270.keypadPopup.translations: #override \n\
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()\n\
 	<KeymapNotify>:			PA-KeymapNotify()\n\
@@ -1411,7 +1402,6 @@ x3270.keypadPopup.container.translations: #override \n\
 	<KeyPress>Alt_R:		PA-Shift()\n\
 	<KeyRelease>Alt_R:		PA-Shift()\n\
 	:<Key>:				Default()
-#endif
 x3270.errorPopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.printerErrorPopup.translations: \

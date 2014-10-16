@@ -1092,13 +1092,6 @@ build_options(void)
 #else /*][*/
 		" --disable-dbcs"
 #endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
-# if defined(X3270_KEYPAD) /*[*/
-		" --enable-keypad"
-# else /*][*/
-		" --disable-keypad"
-# endif /*]*/
-#endif /*]*/
 #if defined(X3270_LOCAL_PROCESS) /*[*/
 		" --enable-local-process"
 #else /*][*/
