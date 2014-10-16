@@ -114,9 +114,7 @@ static void Bye(Widget w, XtPointer client_data, XtPointer call_data);
 static void menubar_in3270(Boolean in3270);
 static void menubar_linemode(Boolean in_linemode);
 static void menubar_connect(Boolean ignored);
-#if defined(X3270_PRINTER) /*[*/
 static void menubar_printer(Boolean printer_on);
-#endif /*]*/
 static void menubar_remodel(Boolean ignored _is_unused);
 static void menubar_charset(Boolean ignored _is_unused);
 static void screensave_option(Widget w, XtPointer client_data,
@@ -148,12 +146,10 @@ static Widget   exit_button;
 static Widget   exit_menu;
 static Widget   macros_button;
 static Widget	ft_button;
-#if defined(X3270_PRINTER) /*[*/
 static Widget	printer_button;
 static Widget	assoc_button;
 static Widget	lu_button;
 static Widget	printer_off_button;
-#endif /*]*/
 static Widget   connect_button;
 #if defined(HAVE_LIBSSL) /*[*/
 static Widget   locked_icon;
@@ -364,9 +360,7 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 		register_schange(ST_LINE_MODE, menubar_linemode);
 		register_schange(ST_HALF_CONNECT, menubar_connect);
 		register_schange(ST_CONNECT, menubar_connect);
-#if defined(X3270_PRINTER) /*[*/
 		register_schange(ST_PRINTER, menubar_printer);
-#endif /*]*/
 		register_schange(ST_REMODEL, menubar_remodel);
 		register_schange(ST_CHARSET, menubar_charset);
 
@@ -511,7 +505,6 @@ menubar_connect(Boolean ignored _is_unused)
 	/* Set up the various option buttons. */
 	if (ft_button != (Widget)NULL)
 		XtVaSetValues(ft_button, XtNsensitive, IN_3270, NULL);
-#if defined(X3270_PRINTER) /*[*/
 	if (printer_button != (Widget)NULL)
 		XtVaSetValues(printer_button, XtNsensitive, IN_3270,
 		    NULL);
@@ -523,7 +516,6 @@ menubar_connect(Boolean ignored _is_unused)
 		XtVaSetValues(lu_button, XtNsensitive,
 		    !printer_running() && IN_3270,
 		    NULL);
-#endif /*]*/
 	if (linemode_button != (Widget)NULL)
 		XtVaSetValues(linemode_button, XtNsensitive, IN_NVT, NULL);
 	if (charmode_button != (Widget)NULL)
@@ -571,7 +563,6 @@ menubar_connect(Boolean ignored _is_unused)
 #endif /*]*/
 }
 
-#if defined(X3270_PRINTER) /*[*/
 /* Called when the printer starts or stops. */
 static void
 menubar_printer(Boolean printer_on)
@@ -589,7 +580,6 @@ menubar_printer(Boolean printer_on)
 		    XtNsensitive, printer_on,
 		    NULL);
 }
-#endif /*]*/
 
 void
 menubar_keypad_changed(void)
@@ -607,7 +597,6 @@ menubar_in3270(Boolean in3270)
 {
 	if (ft_button != (Widget)NULL)
 		XtVaSetValues(ft_button, XtNsensitive, IN_3270, NULL);
-#if defined(X3270_PRINTER) /*[*/
 	if (printer_button != (Widget)NULL)
 		XtVaSetValues(printer_button, XtNsensitive, IN_3270,
 		    NULL);
@@ -619,7 +608,6 @@ menubar_in3270(Boolean in3270)
 		XtVaSetValues(lu_button, XtNsensitive,
 		    !printer_running() && IN_3270,
 		    NULL);
-#endif /*]*/
 	if (linemode_button != (Widget)NULL)
 		XtVaSetValues(linemode_button,
 		    XtNsensitive, !in3270,
@@ -749,7 +737,6 @@ do_save_options(Widget w _is_unused, XtPointer client_data _is_unused,
 	popup_popup(save_shell, XtGrabExclusive);
 }
 
-#if defined(X3270_PRINTER) /*[*/
 /* Callback for printer session options. */
 static void
 do_printer(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_unused)
@@ -761,7 +748,6 @@ do_printer(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_u
 	else
 		printer_stop();
 }
-#endif /*]*/
 
 /* Figure out if a Widget is suppressed. */
 static Boolean
@@ -902,7 +888,6 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 		any |= (ft_button != NULL);
 	}
 
-#if defined(X3270_PRINTER) /*[*/
 	/* Printer start/stop */
 	if (!item_suppressed(file_menu, "printerOption")) {
 		w = XtVaCreatePopupShell(
@@ -936,7 +921,6 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 		} else
 			XtDestroyWidget(w);
 	}
-#endif /*]*/
 
 	/* Trace Data Stream
 	   Trace X Events

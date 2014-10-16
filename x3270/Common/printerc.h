@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
  *		Printer session support
  */             
 
-#if defined(X3270_PRINTER) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 extern void printer_init(void);
 extern void printer_lu_dialog(void);
 extern void printer_start(const char *lu);
@@ -42,10 +42,10 @@ extern void printer_check(pid_t pid, int status);
 extern void printer_check(void);
 # endif /*]*/
 #else /*][*/
-#define printer_init()
-#define printer_lu_dialog()
-#define printer_start(lu)
-#define printer_stop()
-#define printer_running() FALSE
-#define printer_check(pid, status)
+# define printer_init()
+# define printer_lu_dialog()
+# define printer_start(lu)
+# define printer_stop()
+# define printer_running() FALSE
+# define printer_check(pid, status)
 #endif /*]*/

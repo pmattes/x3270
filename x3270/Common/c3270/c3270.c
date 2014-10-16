@@ -427,9 +427,7 @@ main(int argc, char *argv[])
 	register_schange(ST_3270_MODE, main_connect);
         register_schange(ST_EXITING, main_exiting);
 	ft_init();
-#if defined(X3270_PRINTER) /*[*/
 	printer_init();
-#endif /*]*/
 
 #if !defined(_WIN32) /*[*/
 	/* Make sure we don't fall over any SIGPIPEs. */

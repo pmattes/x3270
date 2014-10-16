@@ -1097,13 +1097,6 @@ build_options(void)
 #else /*][*/
 		" --disable-local-process"
 #endif /*]*/
-#if defined(X3270_INTERACTIVE) /*[*/
-# if defined(X3270_PRINTER) /*[*/
-		" --enable-printer"
-# else /*][*/
-		" --disable-printer"
-# endif /*]*/
-#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 		" --with-ssl"
 #else /*][*/

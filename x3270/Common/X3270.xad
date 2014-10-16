@@ -910,12 +910,10 @@ x3270*aboutCopyright.label:			Copyright
 x3270*aboutConfig.label:			Configuration
 x3270*aboutStatus.label:			Connection Status
 x3270*ftOption.label:				File Transfer...
-#ifdef X3270_PRINTER
 x3270*printerOption.label:			Printer Session
 x3270*assocButton.label:			Start, associate with current LU
 x3270*luButton.label:				Start, specific LU...
 x3270*printerOffButton.label:			Stop Printer
-#endif
 x3270*abortScriptOption.label:			Abort Scripts/Macros/Strings
 x3270*disconnectOption.label:			Disconnect
 x3270*exitOption.label:				Exit x3270
@@ -972,11 +970,9 @@ x3270.idlePopup*hours.label:			Hours
 x3270.idlePopup*minutes.label:			Minutes
 x3270.idlePopup*seconds.label:			Seconds
 x3270.idlePopup*fuzz.label:			Vary time 0..10%
-#ifdef X3270_PRINTER
 x3270.printerLuPopup.title:			x3270 Printer Session
 x3270.printerLuPopup.dialog.label:		Enter LU Name
 x3270.printerLuPopup*confirmButton.label:	Start Session
-#endif
 x3270*optionsMenuButton.label:			Options
 x3270*optionsMenu.label:			Options
 x3270*connectMenuButton.label:			Connect

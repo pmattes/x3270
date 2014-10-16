@@ -68,7 +68,7 @@
 #include "macrosc.h"
 #include "menubarc.h"
 #include "popupsc.h"
-#if defined(X3270_PRINTER) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 #include "printerc.h"
 #endif /*]*/
 #include "screenc.h"
@@ -3584,7 +3584,7 @@ cancel_if_idle_command(void)
 	}
 }
 
-#if defined(X3270_PRINTER) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 /* "Printer" action, starts or stops a printer session. */
 void
 Printer_action(Widget w _is_unused, XEvent *event _is_unused, String *params,

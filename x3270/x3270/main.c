@@ -143,9 +143,7 @@ XrmOptionDescRec options[]= {
 	{ OptOnce,	DotOnce,	XrmoptionNoArg,		ResTrue },
 	{ OptOversize,	DotOversize,	XrmoptionSepArg,	NULL },
 	{ OptPort,	DotPort,	XrmoptionSepArg,	NULL },
-#if defined(X3270_PRINTER) /*[*/
 	{ OptPrinterLu,	DotPrinterLu,	XrmoptionSepArg,	NULL },
-#endif /*]*/
 	{ OptProxy,	DotProxy,	XrmoptionSepArg,	NULL },
 	{ OptReconnect,	DotReconnect,	XrmoptionNoArg,		ResTrue },
 	{ OptSaveLines,	DotSaveLines,	XrmoptionSepArg,	NULL },
@@ -220,9 +218,7 @@ static struct {
 	{ OptOnce, CN, "Exit as soon as the host disconnects" },
 	{ OptOversize,  "<cols>x<rows>", "Specify larger screen" },
 	{ OptPort, "<port>", "Specify default TELNET port" },
-#if defined(X3270_PRINTER) /*[*/
 	{ OptPrinterLu,  "<luname>", "Automatically start a pr3287 printer session to <luname>" },
-#endif /*]*/
 	{ OptProxy, "<type>:<host>[:<port>]", "Secify proxy type and server" },
 	{ OptReconnect, CN, "Reconnect to host as soon as it disconnects" },
 	{ OptSaveLines, "<n>", "Number of lines to save for scroll bar" },
@@ -590,9 +586,7 @@ main(int argc, char *argv[])
 	sms_init();
 	info_popup_init();
 	error_popup_init();
-#if defined(X3270_PRINTER) /*[*/
 	printer_init();
-#endif /*]*/
 
 	protocols[0] = a_delete_me;
 	protocols[1] = a_save_yourself;

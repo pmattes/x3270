@@ -284,12 +284,8 @@ XtResource resources[] = {
 	  offset(quit), XtRString, "^\\" },
 	{ ResEof, ClsEof, XtRString, sizeof(char *),
 	  offset(eof), XtRString, "^D" },
-
-#if defined(X3270_PRINTER) /*[*/
 	{ ResPrinterLu, ClsPrinterLu, XtRString, sizeof(char *),
 	  offset(printer_lu), XtRString, 0 },
-#endif /*]*/
-
 #if defined(X3270_DBCS) /*[*/
 	{ ResInputMethod, ClsInputMethod, XtRString, sizeof(char *),
 	  offset(input_method), XtRString, 0 },

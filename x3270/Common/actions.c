@@ -246,7 +246,7 @@ XtActionsRec all_actions[] = {
 	{ "PauseScript",	PauseScript_action },
 #endif /*]*/
 	{ "PreviousWord",	PreviousWord_action },
-#if defined(X3270_PRINTER) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 	{ "Printer",		Printer_action },
 #endif /*]*/
 	{ "Query",		Query_action },

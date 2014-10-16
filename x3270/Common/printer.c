@@ -32,7 +32,7 @@
 
 #include "globals.h"
 
-#if (defined(C3270) || defined(X3270_DISPLAY)) && defined(X3270_PRINTER) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 #if defined(X3270_DISPLAY) /*[*/
 #include <X11/StringDefs.h>
 #include <X11/Xaw/Dialog.h>
