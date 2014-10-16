@@ -47,9 +47,7 @@
 
 #include "charsetc.h"
 #include "ctlrc.h"
-#if defined(X3270_FT) /*[*/
 #include "ft_dftc.h"
-#endif /*]*/
 #include "kybdc.h"
 #include "screenc.h"
 #include "seec.h"
@@ -87,9 +85,7 @@ static qr_single_fn_t do_qr_summary, do_qr_usable_area, do_qr_alpha_part,
 #if defined(X3270_DBCS) /*[*/
 static qr_single_fn_t do_qr_dbcs_asia;
 #endif /*]*/
-#if defined(X3270_FT) /*[*/
 static qr_single_fn_t do_qr_ddm;
-#endif /*]*/
 
 static struct reply {
 	unsigned char code;
@@ -106,9 +102,7 @@ static struct reply {
 #if defined(X3270_DBCS) /*[*/
     { QR_DBCS_ASIA,    do_qr_dbcs_asia,    NULL },		/* 0x91 */
 #endif /*]*/
-#if defined(X3270_FT) /*[*/
     { QR_DDM,          do_qr_ddm,          NULL },		/* 0x95 */
-#endif /*]*/
     { QR_RPQNAMES,     do_qr_rpqnames,     NULL },		/* 0xa1 */
     { QR_IMP_PART,     do_qr_imp_part,     NULL },		/* 0xa6 */
 
@@ -192,12 +186,10 @@ write_structured_field(unsigned char buf[], int buflen)
 			trace_ds("OutboundDS");
 			rv_this = sf_outbound_ds(cp, (int)fieldlen);
 			break;
-#if defined(X3270_FT) /*[*/
 		    case SF_TRANSFER_DATA:   /* File transfer data         */
 			trace_ds("FileTransferData");
 			ft_dft_data(cp, (int)fieldlen);
 			break;
-#endif /*]*/
 		    default:
 			trace_ds("unsupported ID 0x%02x\n", cp[2]);
 			rv_this = PDS_BAD_CMD;
@@ -909,7 +901,6 @@ do_qr_charsets(void)
 #endif /*]*/
 }
 
-#if defined(X3270_FT) /*[*/
 static void
 do_qr_ddm(void)
 {
@@ -922,7 +913,6 @@ do_qr_ddm(void)
 	SET16(obptr, dft_buffersize);	/* set outbound length limit OUTLIM */
 	SET16(obptr, 0x0101);		/* NSS=01, DDMSS=01 */
 }
-#endif /*]*/
 
 static void
 do_qr_imp_part(void)

@@ -714,13 +714,11 @@ fm_print(void *ignored _is_unused)
 	push_macro("PrintText", False);
 }
 
-#if defined(X3270_FT) /*[*/
 static void
 fm_xfer(void *ignored _is_unused)
 {
 	push_macro("Escape() Transfer()", False);
 }
-#endif /*]*/
 
 static void
 fm_trace(void *ignored _is_unused)
@@ -800,9 +798,7 @@ typedef enum {
     FM_STATUS,
     FM_PROMPT,
     FM_PRINT,
-#if defined(X3270_FT) /*[*/
     FM_XFER,
-#endif /*]*/
     FM_TRACE,
     FM_SCREENTRACE,
     FM_SCREENTRACE_PRINTER,
@@ -826,9 +822,7 @@ char *file_menu_names[FM_COUNT] = {
     "wc3270> Prompt",
 #endif /*]*/
     "Print Screen",
-#if defined(X3270_FT) /*[*/
     "File Transfer",
-#endif /*]*/
     "Enable Tracing",
     "Save Screen Images in File",
     "Save Screen Images to Printer",
@@ -846,9 +840,7 @@ menu_callback file_menu_actions[FM_COUNT] = {
     fm_status,
     fm_prompt,
     fm_print,
-#if defined(X3270_FT) /*[*/
     fm_xfer,
-#endif /*]*/
     fm_trace,
     fm_screentrace,
     fm_screentrace_printer,

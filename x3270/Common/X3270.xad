@@ -896,11 +896,9 @@ x3270.aboutStatusPopup.title:			x3270 Connection Status
 x3270.connectPopup*confirmButton.label:		Connect
 x3270.fontPopup*confirmButton.label:		Select Font
 x3270.keymapPopup*confirmButton.label:		Select Keymap
-#ifdef X3270_FT
 x3270.ftPopup.title:				x3270 File Transfer
 x3270.ftProgressPopup.title:			x3270 File Transfer
 x3270.ftOverwritePopup.title:			x3270 File Transfer
-#endif
 x3270.idlePopup.title:				x3270 Idle Command
 x3270.kmPopup.title:				x3270 Keymap
 x3270*confirmButton.label:			OK
@@ -913,9 +911,7 @@ x3270*aboutOption.label:			About x3270...
 x3270*aboutCopyright.label:			Copyright
 x3270*aboutConfig.label:			Configuration
 x3270*aboutStatus.label:			Connection Status
-#ifdef X3270_FT
 x3270*ftOption.label:				File Transfer...
-#endif
 #ifdef X3270_PRINTER
 x3270*printerOption.label:			Printer Session
 x3270*assocButton.label:			Start, associate with current LU
@@ -930,7 +926,6 @@ x3270*printWindowOption.label:			Print Window Bitmap
 x3270*executeActionOption.label:		Execute an Action
 x3270*fileMenuButton.label:			File
 x3270*fileMenu.label:				File
-#ifdef X3270_FT
 x3270.ftPopup*justify:				left
 x3270.ftPopup*send.label:			Send to host
 x3270.ftPopup*receive.label:			Receive from host
@@ -969,7 +964,6 @@ x3270.ftOverwritePopup*overwriteName.label:	Overwrite existing file %s?
 x3270.ftProgressPopup*waiting.label:		Waiting for host acknowledgment...
 x3270.ftProgressPopup*status.label:		%lu bytes transferred
 x3270.ftProgressPopup*aborting.label:		Aborting transfer...
-#endif
 x3270.idlePopup*justify:			left
 x3270.idlePopup*command.label:			Command(s)
 x3270.idlePopup*timeout.label:			Timeout Value
@@ -1107,7 +1101,6 @@ x3270.message.statusMinus:			No Function
 x3270.message.unverified:			not verified
 x3270.message.statusConnecting:			Connecting
 #endif
-#ifdef X3270_FT
 x3270.message.ftComplete:			Transfer complete, %i bytes transferred\n\
 %sbytes/sec in %s mode
 x3270.message.ftUnable:				Cannot begin transfer
@@ -1122,7 +1115,6 @@ x3270.message.ftCutOversize:			Illegal frame length
 x3270.message.ftDisconnected:			Host disconnected, transfer cancelled
 x3270.message.ftNot3270:			Not in 3270 mode, transfer cancelled
 x3270.message.ftDftUnknownOpen:			Uknown DFT Open type from host
-#endif
 x3270.message.inputMethod:			X11 Input Method (XIM):
 x3270.message.ximState:				state:
 x3270.message.ximDisabled:			failed
@@ -1327,11 +1319,9 @@ x3270.aboutStatusPopup*icon.foreground:		darkslateblue
 x3270.errorPopup*label.foreground:		firebrick
 x3270.printerErrorPopup*label.foreground:	firebrick
 x3270.childErrorPopup*label.foreground:		firebrick
-#ifdef X3270_FT
 x3270.ftProgressPopup*filename.borderWidth:	2
 x3270.ftProgressPopup*filename.borderColor:	grey40
 x3270.ftProgressPopup*filename.background:	lavender
-#endif
 #endif
 !
 #ifdef X3270_KEYPAD
@@ -1484,7 +1474,6 @@ x3270.kmPopup*translations:		#override \n\
 	<Key>Return:			PA-confirm()
 x3270.luPopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-#ifdef X3270_FT
 x3270.ftPopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 ! Note: WM_PROTOCOLS is explicitly not defined for ftPopup, so that the user
@@ -1496,7 +1485,6 @@ x3270.ftPopup*value.translations:	#override \n\
 	<Key>Tab:			PA-dialog-next()\n\
 	<Btn1Down>:			PA-dialog-focus() select-start()\n\
 	Ctrl<Key>U:			select-all(DUMMY) delete-selection()
-#endif
 x3270.idlePopup.translations: \
 	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.idlePopup*value.translations:	#override \n\

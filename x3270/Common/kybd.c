@@ -1693,11 +1693,7 @@ do_reset(Boolean explicit)
 	 * If explicit (from the keyboard) and there is typeahead or
 	 * a half-composed key, simply flush it.
 	 */
-	if (explicit
-#if defined(X3270_FT) /*[*/
-	    || ft_state != FT_NONE
-#endif /*]*/
-	    ) {
+	if (explicit || ft_state != FT_NONE) {
 		Boolean half_reset = False;
 
 		if (flush_ta())
@@ -1735,9 +1731,7 @@ do_reset(Boolean explicit)
 	 * Otherwise (from the host), schedule a deferred keyboard unlock.
 	 */
 	if (explicit
-#if defined(X3270_FT) /*[*/
 	    || ft_state != FT_NONE
-#endif /*]*/
 	    || (!appres.unlock_delay && !sms_in_macro())
 	    || (unlock_delay_time != 0 && (time(NULL) - unlock_delay_time) > 1)
 	    || !appres.unlock_delay_ms) {
@@ -3995,7 +3989,6 @@ ignore_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_
 	reset_idle_timer();
 }
 
-#if defined(X3270_FT) /*[*/
 /*
  * Set up the cursor and input field for command input.
  * Returns the length of the input field, or 0 if there is no field
@@ -4074,7 +4067,6 @@ kybd_prime(void)
 	/* Return the field length. */
 	return len;
 }
-#endif /*]*/
 
 /*
  * Translate a keysym name to a keysym, including APL and extended

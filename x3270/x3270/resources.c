@@ -212,10 +212,8 @@ XtResource resources[] = {
 	  offset(screentrace_file), XtRString, 0 },
 	{ ResColorScheme, ClsColorScheme, XtRString, sizeof(String),
 	  offset(color_scheme), XtRString, "default" },
-#if defined(X3270_FT) /*[*/
 	{ ResDftBufferSize, ClsDftBufferSize, XtRInt, sizeof(int),
 	  offset(dft_buffer_size), XtRString, "4096" },
-#endif /*]*/
 	{ ResConnectFileName, ClsConnectFileName, XtRString, sizeof(String),
 	  offset(connectfile_name), XtRString, "~/.x3270connect" },
 	{ ResIdleCommand, ClsIdleCommand, XtRString, sizeof(String),

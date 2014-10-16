@@ -64,7 +64,6 @@
 /* Optional parts. */
 #undef X3270_APL
 #undef X3270_DBCS
-#undef X3270_FT
 #undef X3270_KEYPAD
 #undef X3270_LOCAL_PROCESS
 #undef X3270_PRINTER

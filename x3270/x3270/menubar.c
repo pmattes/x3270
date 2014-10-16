@@ -908,7 +908,6 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 		}
 	}
 
-#if defined(X3270_FT) /*[*/
 	/* File Transfer */
 	if (!appres.secure) {
 		spaced = False;
@@ -918,7 +917,6 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 				NULL);
 		any |= (ft_button != NULL);
 	}
-#endif /*]*/
 
 #if defined(X3270_PRINTER) /*[*/
 	/* Printer start/stop */

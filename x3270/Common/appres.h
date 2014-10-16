@@ -230,10 +230,8 @@ typedef struct {
 	Boolean	trace_monitor;
 #endif /*]*/
 	char	*oversize;
-#if defined(X3270_FT) /*[*/
 	char	*ft_command;
 	int	dft_buffer_size;
-#endif /*]*/
 	char	*connectfile_name;
 	char	*idle_command;
 	Boolean idle_command_enabled;
@@ -293,9 +291,7 @@ typedef struct {
 
 #if defined(_WIN32) /*[*/
 	int	local_cp;
-# if defined(X3270_FT) /*[*/
 	int	ft_cp;
-# endif /*]*/
 #endif /*]*/
 #if defined(S3270) /*[*/
 	Boolean	utf8;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2009, 2013 Paul Mattes.
+ * Copyright (c) 1994-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,8 +39,8 @@
 #include <string.h>
 
 #include "ctlrc.h"
-#if defined(X3270_FT) /*[*/
-#include "ft_dftc.h"
+#if !defined(PR3287) /*[*/
+# include "ft_dftc.h"
 #endif /*]*/
 #include "sfc.h"
 #if defined(_WIN32) /*[*/
@@ -80,9 +80,7 @@ static unsigned char supported_replies[] = {
 	QR_DBCS_ASIA,		/* 0x91 */
 #endif /*]*/
 	QR_IMP_PART,		/* 0xa6 */
-#if defined(X3270_FT) /*[*/
 	QR_DDM,			/* 0x95 */
-#endif /*]*/
 };
 #define NSR	(sizeof(supported_replies)/sizeof(unsigned char))
 
@@ -152,7 +150,7 @@ write_structured_field(unsigned char buf[], int buflen)
 			trace_ds("OutboundDS");
 			rv_this = sf_outbound_ds(cp, (int)fieldlen);
 			break;
-#if defined(X3270_FT) /*[*/
+#if !defined(PR3287) /*[*/
 		    case SF_TRANSFER_DATA:   /* File transfer data         */
 			trace_ds("FileTransferData");
 			ft_dft_data(cp, (int)fieldlen);
@@ -658,7 +656,6 @@ do_query_reply(unsigned char code)
 		*obptr++ = 0;		/* no special features */
 		break;
 
-#if defined(X3270_FT) /*[*/
 	    case QR_DDM:
 		trace_ds("> QueryReply(DistributedDataManagement)\n");
 		space3270out(8);
@@ -667,7 +664,6 @@ do_query_reply(unsigned char code)
 		SET16(obptr,2048);	/* set outbound length limit */
 		SET16(obptr,0x0101);	/* NSS=01, DDMSS=01 */
 		break;
-#endif /*]*/
 
 	    default:
 		return;	/* internal error */

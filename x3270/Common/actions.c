@@ -52,10 +52,8 @@
 #include "utilc.h"
 #include "xioc.h"
 
-#if defined(X3270_FT) /*[*/
 #include "unicodec.h"
 #include "ftc.h"
-#endif /*]*/
 #if defined(X3270_INTERACTIVE) /*[*/
 #include "keypadc.h"
 #include "menubarc.h"
@@ -151,10 +149,8 @@ XtActionsRec all_actions[] = {
 #if defined(X3270_DISPLAY) /*[*/
 	{ "SetFont",		SetFont_action },
 	{ "TemporaryKeymap",	TemporaryKeymap_action },
-# if defined(X3270_FT) /*[*/
 	{ PA_PFX "dialog-next",	PA_dialog_next_action },
 	{ PA_PFX "dialog-focus", PA_dialog_focus_action },
-# endif /*]*/
 	{ "insert-selection",	insert_selection_action },
 	{ "move-select",	move_select_action },
 	{ "select-end",		select_end_action },
@@ -296,9 +292,7 @@ XtActionsRec all_actions[] = {
 #if defined(C3270) /*[*/
 	{ "Trace",		Trace_action },
 #endif /*]*/
-#if defined(X3270_FT) /*[*/
 	{ "Transfer",		Transfer_action },
-#endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
 	{ "Unselect",		Unselect_action },
 #endif /*]*/

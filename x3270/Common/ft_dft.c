@@ -34,8 +34,6 @@
 
 #include "globals.h"
 
-#if defined(X3270_FT) /*[*/
-
 #include "appres.h"
 #include "3270ds.h"
 #include "ft_dft_ds.h"
@@ -748,6 +746,3 @@ set_dft_buffersize(void)
 	if (dft_buffersize < DFT_MIN_BUF)
 		dft_buffersize = DFT_MIN_BUF;
 }
-
-
-#endif /*]*/

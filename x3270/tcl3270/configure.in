@@ -240,11 +240,6 @@ no)	;;
 *)	AC_DEFINE(X3270_DBCS,1)
 	;;
 esac
-AC_ARG_ENABLE(ft,[  --disable-ft            leave out file transfer support])
-case "$enable_ft" in
-""|yes)	AC_DEFINE(X3270_FT,1)
-	;;
-esac
 AC_ARG_ENABLE(local_process,[  --disable-local-process leave out local process support])
 case "$enable_local_process" in
 ""|yes)	AC_DEFINE(X3270_LOCAL_PROCESS,1)

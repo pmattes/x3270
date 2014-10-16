@@ -256,11 +256,6 @@ no)	;;
 *)	AC_DEFINE(X3270_DBCS,1)
 	;;
 esac
-AC_ARG_ENABLE(ft,[  --disable-ft            leave out file transfer support])
-case "$enable_ft" in
-""|yes)	AC_DEFINE(X3270_FT,1)
-	;;
-esac
 AC_ARG_ENABLE(keypad,[  --disable-keypad        leave out pop-up keypad support])
 case "$enable_keypad" in
 ""|yes)	AC_DEFINE(X3270_KEYPAD,1)

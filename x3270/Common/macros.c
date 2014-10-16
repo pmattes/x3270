@@ -109,9 +109,7 @@ typedef struct sms {
 		SS_RUNNING,	/* command executing */
 		SS_KBWAIT,	/* command awaiting keyboard unlock */
 		SS_CONNECT_WAIT,/* command awaiting connection to complete */
-#if defined(X3270_FT) /*[*/
 		SS_FT_WAIT,	/* command awaiting file transfer to complete */
-#endif /*]*/
 		SS_TIME_WAIT,   /* command awaiting simple timeout */
 		SS_PAUSED,	/* stopped in PauseScript action */
 		SS_WAIT_NVT,	/* awaiting completion of Wait(NVTMode) */
@@ -173,9 +171,7 @@ static const char *sms_state_name[] = {
 	"RUNNING",
 	"KBWAIT",
 	"CONNECT_WAIT",
-#if defined(X3270_FT) /*[*/
 	"FT_WAIT",
-#endif /*]*/
 	"TIME_WAIT",
 	"PAUSED",
 	"WAIT_NVT",
@@ -1293,15 +1289,15 @@ execute_command(enum iaction cause, char *s, char **np)
 		return EM_ERROR;
 	}
 
-#if defined(X3270_FT) /*[*/
-	if (ft_state != FT_NONE)
+	if (ft_state != FT_NONE) {
 		sms->state = SS_FT_WAIT;
-#endif /*]*/
+	}
 	trace_rollover_check();
-	if (CKBWAIT)
+	if (CKBWAIT) {
 		return EM_PAUSE;
-	else
+	} else {
 		return EM_CONTINUE;
+	}
 
     failure:
 	popup_an_error("%s", fail_text[failreason-1]);
@@ -1930,15 +1926,13 @@ sms_continue(void)
 			}
 			break;
 
-#if defined(X3270_FT) /*[*/
 		    case SS_FT_WAIT:
-			if (ft_state == FT_NONE)
+			if (ft_state == FT_NONE) {
 				break;
-			else {
+			} else {
 				continuing = False;
 				return;
 			}
-#endif /*]*/
 
 		    case SS_TIME_WAIT:
 			continuing = False;
@@ -2889,9 +2883,7 @@ sms_redirect_to(void)
 		     s->state == SS_CONNECT_WAIT ||
 		     s->state == SS_WAIT_OUTPUT ||
 		     s->state == SS_SWAIT_OUTPUT ||
-#if defined(X3270_FT) /*[*/
 		     s->state == SS_FT_WAIT ||
-#endif /*]*/
 		     s->wait_id != NULL_IOID))
 			return s;
 	}

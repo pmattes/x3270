@@ -191,7 +191,6 @@ static struct {
 	{ CN,  CN, 0, CN }
 };
 
-#if defined(X3270_FT) /*[*/
 static const char *ft_help[] = {
 	"Syntax:",
 	"  To be prompted interactively for parameters:",
@@ -220,7 +219,6 @@ static const char *ft_help[] = {
 	"  Transfer Direction=send LocalFile=/tmp/foo \"HostFile=foo text a\" Host=vm",
 	NULL
 };
-#endif /*]*/
 
 #if defined(WC3270) /*[*/
 static void html_help(Boolean);
@@ -238,9 +236,7 @@ static struct {
 	{ "interactive",	P_INTERACTIVE,	CN, NULL, NULL },
 	{ "options",		P_OPTIONS,	CN, NULL, &cmdline_help },
 	{ "scripting",		P_SCRIPTING,	CN, NULL, NULL },
-#if defined(X3270_FT) /*[*/
 	{ "file-transfer",	P_TRANSFER,	CN, ft_help, NULL },
-#endif /*]*/
 #if defined(WC3270) /*[*/
 	{ "html",		P_HTML,		CN, NULL, html_help },
 #endif /*]*/
@@ -266,9 +262,7 @@ Help_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 "  help <command>     help for one <command>\n"
 "  help options       command-line options\n"
 "  help scripting     scripting commands\n"
-#if defined(X3270_FT) /*[*/
 "  help file-transfer file transfer options\n"
-#endif /*]*/
 #if defined(WC3270) /*[*/
 "  help html          display HTML help file\n"
 #endif /*]*/

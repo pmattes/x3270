@@ -32,8 +32,6 @@
  *		Global declarations for ft.c.
  */
 
-#if defined(X3270_FT) /*[*/
-
 extern Boolean ascii_flag;
 extern Boolean cr_flag;
 extern unsigned long ft_length;
@@ -90,5 +88,3 @@ extern ucs4_t ft_multibyte_to_unicode(const char *mb, size_t mb_len,
 #  define ft_multibyte_to_unicode(mb, mb_len, consumedp, errorp) \
 	     multibyte_to_unicode(mb, mb_len, consumedp, errorp)
 # endif /*]*/
-
-#endif /*]*/

@@ -407,9 +407,7 @@ tcl3270_main(int argc, const char *argv[])
 	ctlr_reinit(-1);
 	kybd_init();
 	ansi_init();
-#if defined(X3270_FT) /*[*/
 	ft_init();
-#endif /*]*/
 
 	register_schange(ST_CONNECT, main_connect);
 	register_schange(ST_3270_MODE, main_connect);
@@ -557,13 +555,11 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	(*actions[i].proc)((Widget)NULL, (XEvent *)NULL, argv, &count);
 
 	/* Set implicit wait state. */
-#if defined(X3270_FT) /*[*/
-	if (ft_state != FT_NONE)
+	if (ft_state != FT_NONE) {
 		waiting = AWAITING_FT;
-	else
-#endif /*]*/
-	if ((waiting == NOT_WAITING) && CKBWAIT)
+	} else if ((waiting == NOT_WAITING) && CKBWAIT) {
 		waiting = AWAITING_RESET;
+	}
 
 	if (waiting != NOT_WAITING) {
 		vtrace("Blocked %s (%s)\n", action, wait_name[waiting]);
@@ -597,12 +593,10 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 			if (!CKBWAIT)
 				UNBLOCK();
 			break;
-#if defined(X3270_FT) /*[*/
 		case AWAITING_FT:
 			if (ft_state == FT_NONE)
 				UNBLOCK();
 			break;
-#endif /*]*/
 		case AWAITING_UNLOCK:
 			if (!KBWAIT)
 				UNBLOCK();

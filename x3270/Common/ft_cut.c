@@ -34,8 +34,6 @@
 
 #include "globals.h"
 
-#if defined(X3270_FT) /*[*/
-
 #include "appres.h"
 #include "ctlr.h"
 #include "3270ds.h"
@@ -765,5 +763,3 @@ xlate_getc(void)
 	}
 	return r;
 }
-
-#endif /*]*/

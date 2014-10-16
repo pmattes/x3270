@@ -678,12 +678,10 @@ ctlr_read_modified(unsigned char aid_byte, Boolean all)
 	if (IN_SSCP && aid_byte != AID_ENTER)
 		return;
 
-#if defined(X3270_FT) /*[*/
 	if (aid_byte == AID_SF) {
 		dft_read_modified();
 		return;
 	}
-#endif /*]*/
 
 	trace_ds("> ");
 	obptr = obuf;
@@ -867,12 +865,10 @@ ctlr_read_buffer(unsigned char aid_byte)
 	unsigned char	current_gr = 0x00;
 	unsigned char	current_cs = 0x00;
 
-#if defined(X3270_FT) /*[*/
 	if (aid_byte == AID_SF) {
 		dft_read_modified();
 		return;
 	}
-#endif /*]*/
 
 	trace_ds("> ");
 	obptr = obuf;
@@ -2401,7 +2397,6 @@ ps_process(void)
 		;
 	sms_continue();
 
-#if defined(X3270_FT) /*[*/
 	/* Process file transfers. */
 	if (ft_state != FT_NONE &&      /* transfer in progress */
 	    formatted &&                /* screen is formatted */
@@ -2411,7 +2406,6 @@ ps_process(void)
 	    ea_buf[1919].fa && FA_IS_SKIP(ea_buf[1919].fa)) {
 		ft_cut_data();
 	}
-#endif /*]*/
 }
 
 /*

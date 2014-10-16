@@ -525,9 +525,7 @@ set_appres_defaults(void)
 	appres.unlock_delay = True;
 	appres.unlock_delay_ms = 350;
 
-#if defined(X3270_FT) /*[*/
 	appres.dft_buffer_size = DFT_BUF;
-#endif /*]*/
 
 #if defined(C3270) /*[*/
 	appres.toggle[CURSOR_POS].value = True;
@@ -1063,9 +1061,7 @@ static struct {
 	{ ResEof,	offset(eof),		XRM_STRING },
 	{ ResErase,	offset(erase),		XRM_STRING },
 	{ ResExtended,	offset(extended),	XRM_BOOLEAN },
-#if defined(X3270_FT) /*[*/
 	{ ResDftBufferSize,offset(dft_buffer_size),XRM_INT },
-#endif /*]*/
 	{ ResHostname,	offset(hostname),	XRM_STRING },
 	{ ResHostsFile,	offset(hostsfile),	XRM_STRING },
 	{ ResIcrnl,	offset(icrnl),		XRM_BOOLEAN },

@@ -186,9 +186,7 @@ extern Boolean		dbcs;
 #if defined(X3270_DISPLAY) /*[*/
 extern int		default_screen;
 #endif /*]*/
-#if defined(X3270_FT) /*[*/
 extern int		dft_buffersize;
-#endif /*]*/
 extern char		*efontname;
 extern Boolean		ever_3270;
 extern Boolean		exiting;
@@ -390,7 +388,7 @@ enum keytype { KT_STD, KT_GE };
 #endif
 
 /* Default DFT file transfer buffer size. */
-#if defined(X3270_FT) && !defined(DFT_BUF) /*[*/
+#if !defined(DFT_BUF) /*[*/
 # define DFT_BUF		(4 * 1024)
 #endif /*]*/
 

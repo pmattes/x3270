@@ -426,9 +426,7 @@ main(int argc, char *argv[])
 	register_schange(ST_CONNECT, main_connect);
 	register_schange(ST_3270_MODE, main_connect);
         register_schange(ST_EXITING, main_exiting);
-#if defined(X3270_FT) /*[*/
 	ft_init();
-#endif /*]*/
 #if defined(X3270_PRINTER) /*[*/
 	printer_init();
 #endif /*]*/
@@ -483,12 +481,9 @@ main(int argc, char *argv[])
 
 	/* Process events forever. */
 	while (1) {
-		if (!escaped
-#if defined(X3270_FT) /*[*/
-			|| ft_state != FT_NONE
-#endif /*]*/
-			)
+		if (!escaped || ft_state != FT_NONE) {
 			(void) process_events(True);
+		}
 		if (appres.cbreak_mode && escape_pending) {
 			escape_pending = False;
 			screen_suspend();
@@ -500,11 +495,7 @@ main(int argc, char *argv[])
 				x3270_exit(0);
 			interact();
 			screen_resume();
-		} else if (escaped
-#if defined(X3270_FT) /*[*/
-				    && ft_state == FT_NONE
-#endif /*]*/
-				    ) {
+		} else if (escaped && ft_state == FT_NONE) {
 			interact();
 			vtrace("Done interacting.\n");
 			screen_resume();

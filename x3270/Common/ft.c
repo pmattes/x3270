@@ -34,59 +34,57 @@
 
 #include "globals.h"
 
-#if defined(X3270_FT) /*[*/
+#include <assert.h>
 
-# include <assert.h>
+#if defined(X3270_DISPLAY) /*[*/
+# include <X11/StringDefs.h>
+# include <X11/Xaw/Toggle.h>
+# include <X11/Xaw/Command.h>
+# include <X11/Xaw/Form.h>
+# include <X11/Shell.h>
+# include <X11/Xaw/AsciiText.h>
+# include <X11/Xaw/TextSrc.h>
+# include <X11/Xaw/TextSink.h>
+# include <X11/Xaw/AsciiSrc.h>
+# include <X11/Xaw/AsciiSink.h>
+#endif /*]*/
+#include <errno.h>
 
-# if defined(X3270_DISPLAY) /*[*/
-#  include <X11/StringDefs.h>
-#  include <X11/Xaw/Toggle.h>
-#  include <X11/Xaw/Command.h>
-#  include <X11/Xaw/Form.h>
-#  include <X11/Shell.h>
-#  include <X11/Xaw/AsciiText.h>
-#  include <X11/Xaw/TextSrc.h>
-#  include <X11/Xaw/TextSink.h>
-#  include <X11/Xaw/AsciiSrc.h>
-#  include <X11/Xaw/AsciiSink.h>
-# endif /*]*/
-# include <errno.h>
-
-# include "appres.h"
-# include "actionsc.h"
-# include "charsetc.h"
-# include "ft_cutc.h"
-# include "ft_dftc.h"
-# include "unicodec.h"
-# include "ftc.h"
-# include "dialogc.h"
-# include "hostc.h"
-# if defined(C3270) /*[*/
-#  include "icmdc.h"
-# endif /*]*/
-# include "kybdc.h"
-# include "macrosc.h"
-# include "menubarc.h"
-# include "objects.h"
-# include "popupsc.h"
-# include "screenc.h"
-# include "tablesc.h"
-# include "telnetc.h"
-# include "utilc.h"
+#include "appres.h"
+#include "actionsc.h"
+#include "charsetc.h"
+#include "ft_cutc.h"
+#include "ft_dftc.h"
+#include "unicodec.h"
+#include "ftc.h"
+#include "dialogc.h"
+#include "hostc.h"
+#if defined(C3270) /*[*/
+# include "icmdc.h"
+#endif /*]*/
+#include "kybdc.h"
+#include "macrosc.h"
+#include "menubarc.h"
+#include "objects.h"
+#include "popupsc.h"
+#include "screenc.h"
+#include "tablesc.h"
+#include "telnetc.h"
+#include "utilc.h"
 
 /* Macros. */
-# define eos(s)	strchr((s), '\0')
+#define eos(s)	strchr((s), '\0')
 
-# if defined(X3270_DISPLAY) /*[*/
-#  define FILE_WIDTH	300	/* width of file name widgets */
-#  define MARGIN		3	/* distance from margins to widgets */
-#  define CLOSE_VGAP	0	/* distance between paired toggles */
-#  define FAR_VGAP	10	/* distance between single toggles and groups */
-#  define BUTTON_GAP	5	/* horizontal distance between buttons */
-#  define COLUMN_GAP	40	/* distance between columns */
-# endif /*]*/
+#if defined(X3270_DISPLAY) /*[*/
+# define FILE_WIDTH	300	/* width of file name widgets */
+# define MARGIN		3	/* distance from margins to widgets */
+# define CLOSE_VGAP	0	/* distance between paired toggles */
+# define FAR_VGAP	10	/* distance between single toggles and groups */
+# define BUTTON_GAP	5	/* horizontal distance between buttons */
+# define COLUMN_GAP	40	/* distance between columns */
+#endif /*]*/
 
-# define BN	(Boolean *)NULL
+#define BN	(Boolean *)NULL
 
 /* Globals. */
 enum ft_state ft_state = FT_NONE;	/* File transfer state */
@@ -102,7 +100,7 @@ int ft_windows_codepage;		/* Windows code page */
 #endif /*]*/
 
 /* Statics. */
-# if defined(X3270_DISPLAY) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 static Widget ft_dialog, ft_shell, local_file, host_file;
 static Widget lrecl_widget, blksize_widget;
 static Widget primspace_widget, secspace_widget;
@@ -112,7 +110,7 @@ static Widget ascii_toggle, binary_toggle;
 static Widget cr_widget;
 static Widget remap_widget;
 static Widget buffersize_widget;
-# endif /*]*/
+#endif /*]*/
 
 static char *ft_host_filename;		/* Host file to transfer to/from */
 static Boolean receive_flag = True;	/* Current transfer is receive */
@@ -123,7 +121,7 @@ typedef enum {
     HT_CICS
 } host_type_t;
 static host_type_t host_type = HT_TSO;	/* Host type */
-# if defined(X3270_DISPLAY) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 static Boolean host_is_tso = True;	/* Booleans used by dialog */
 static Boolean host_is_tso_or_vm = True;/*  sensitivity logic */
 static host_type_t s_tso = HT_TSO;	/* Values used by toggle callbacks. */
@@ -133,38 +131,38 @@ static Widget recfm_options[5];
 static Widget units_options[5];
 static struct toggle_list recfm_toggles = { recfm_options };
 static struct toggle_list units_toggles = { units_options };
-# endif /*]*/
+#endif /*]*/
 
 static enum recfm {
 	DEFAULT_RECFM, RECFM_FIXED, RECFM_VARIABLE, RECFM_UNDEFINED
 } recfm = DEFAULT_RECFM;
-# if defined(X3270_DISPLAY) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 static Boolean recfm_default = True;
 static enum recfm r_default_recfm = DEFAULT_RECFM;
 static enum recfm r_fixed = RECFM_FIXED;
 static enum recfm r_variable = RECFM_VARIABLE;
 static enum recfm r_undefined = RECFM_UNDEFINED;
-# endif /*]*/
+#endif /*]*/
 
 static enum units {
 	DEFAULT_UNITS, TRACKS, CYLINDERS, AVBLOCK
 } units = DEFAULT_UNITS;
-# if defined(X3270_DISPLAY) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 static Boolean units_default = True;
 static enum units u_default_units = DEFAULT_UNITS;
 static enum units u_tracks = TRACKS;
 static enum units u_cylinders = CYLINDERS;
 static enum units u_avblock = AVBLOCK;
-# endif /*]*/
+#endif /*]*/
 
 static Boolean allow_overwrite = False;
-# if defined(X3270_DISPLAY) /*[*/
+#if defined(X3270_DISPLAY) /*[*/
 static sr_t *ft_sr = (sr_t *)NULL;
 
 static Widget progress_shell, from_file, to_file;
 static Widget ft_status, waiting, aborting;
 static String status_string;
-# endif /*]*/
+#endif /*]*/
 static struct timeval t0;		/* Starting time */
 static Boolean ft_is_cut;		/* File transfer is CUT-style */
 
@@ -2153,7 +2151,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	ft_is_cut = False;
 }
 
-# if defined(_WIN32) /*[*/
+#if defined(_WIN32) /*[*/
 /*
  * Windows character translation functions.
  *
@@ -2199,7 +2197,5 @@ ft_multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 	appres.local_cp = local_cp;
 	return rc;
 }
-
-# endif /*]*/
 
 #endif /*]*/
