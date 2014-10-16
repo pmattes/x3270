@@ -66,11 +66,6 @@ extern void execute_action_option(Widget w, XtPointer client_data,
     XtPointer call_data);
 extern void Expect_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-#if defined(X3270_PLUGIN) /*[*/
-extern void plugin_aid(unsigned char aid);
-extern void Plugin_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-#endif /*]*/
 extern void login_macro(char *s);
 extern void macros_init(void);
 extern void Macro_action(Widget w, XEvent *event, String *params,

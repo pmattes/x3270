@@ -208,9 +208,6 @@ XtActionsRec all_actions[] = {
 #if defined(C3270) /*[*/
 	{ "Help",		Help_action},
 #endif/*]*/
-#if defined(X3270_PLUGIN) /*[*/
-	{ "Plugin",		Plugin_action},
-#endif /*]*/
 	{ "Home",		Home_action },
 	{ "Insert",		Insert_action },
 	{ "Interrupt",		Interrupt_action },

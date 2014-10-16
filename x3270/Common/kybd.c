@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013, 2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -540,9 +540,6 @@ key_AID(unsigned char aid_code)
 			}
 		return;
 	}
-#if defined(X3270_PLUGIN) /*[*/
-	plugin_aid(aid_code);
-#endif /*]*/
 
 	if (IN_SSCP) {
 		if (kybdlock & KL_OIA_MINUS)

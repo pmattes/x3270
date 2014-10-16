@@ -1068,9 +1068,6 @@ static struct {
 	{ ResInlcr,	offset(inlcr),		XRM_BOOLEAN },
 	{ ResOnlcr,	offset(onlcr),		XRM_BOOLEAN },
 	{ ResIntr,	offset(intr),		XRM_STRING },
-#if defined(X3270_PLUGIN) /*[*/
-	{ ResPluginCommand, offset(plugin_command), XRM_STRING },
-#endif /*]*/
 #if defined(C3270) || defined(S3270) /*[*/
 	{ ResIdleCommand,offset(idle_command),	XRM_STRING },
 	{ ResIdleCommandEnabled,offset(idle_command_enabled),	XRM_BOOLEAN },
