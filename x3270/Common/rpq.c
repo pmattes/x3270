@@ -39,9 +39,7 @@
 # include <netinet/in.h>
 # include <arpa/inet.h>
 #endif /*]*/
-#include <sys/types.h>
 #if !defined(_WIN32) /*[*/
-# include <sys/socket.h>
 # include <netdb.h>
 #endif /*]*/
 #include <assert.h>

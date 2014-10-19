@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2013 Paul Mattes.
+ * Copyright (c) 1999-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -43,10 +43,6 @@
 #include <errno.h>
 #include <X11/keysym.h>
 
-#if !defined(_MSC_VER) /*[*/
-# include <sys/time.h>
-#endif /*]*/
-#include <sys/types.h>
 #if defined(SEPARATE_SELECT_H) /*[*/
 # include <sys/select.h>
 #endif /*]*/

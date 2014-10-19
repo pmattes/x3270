@@ -40,7 +40,6 @@
 #include "globals.h"
 
 #if !defined(_WIN32) /*[*/
-# include <sys/socket.h>
 # include <sys/ioctl.h>
 # include <netinet/in.h>
 #endif /*]*/
@@ -740,9 +739,12 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 		 * XXX: We don't try multiple addresses for a proxy
 		 * host.
 		 */
-	    	if (resolve_host_and_port(proxy_host, proxy_portname,
-			    0, &proxy_port, &haddr[0].sa, &ha_len[0], errmsg,
-			    sizeof(errmsg), NULL) < 0) {
+		rhp_t rv;
+
+	    	rv = resolve_host_and_port(proxy_host, proxy_portname, 0,
+			&proxy_port, &haddr[0].sa, &ha_len[0], errmsg,
+			sizeof(errmsg), NULL);
+	    	if (RHP_IS_ERROR(rv)) {
 		    	popup_an_error("%s", errmsg);
 		    	return -1;
 		}
@@ -759,15 +761,18 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 #endif /*]*/
 		    	int i;
 			int last = False;
+			rhp_t rv;
 
 #if defined(LOCAL_PROCESS) /*[*/
 			local_process = False;
 #endif /*]*/
 			num_ha = 0;
 			for (i = 0; i < NUM_HA && !last; i++) {
-				if (resolve_host_and_port(host, portname, i,
-				    &current_port, &haddr[i].sa, &ha_len[i],
-				    errmsg, sizeof(errmsg), &last) < 0) {
+				rv = resolve_host_and_port(host, portname, i,
+					&current_port, &haddr[i].sa,
+					&ha_len[i], errmsg, sizeof(errmsg),
+					&last);
+				if (RHP_IS_ERROR(rv)) {
 					popup_an_error("%s", errmsg);
 					return -1;
 				}
@@ -4036,11 +4041,12 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 			sockaddr_46_t ahaddr;
 			socklen_t len;
 			char errmsg[256];
+			rhp_t rv;
 
-			if (resolve_host_and_port(&appres.accept_hostname[3],
+			rv = resolve_host_and_port(&appres.accept_hostname[3],
 				"0", 0, &port, &ahaddr.sa, &len, errmsg,
-				sizeof(errmsg), NULL) < 0) {
-
+				sizeof(errmsg), NULL);
+			if (RHP_IS_ERROR(rv)) {
 				popup_an_error("Invalid acceptHostname '%s': "
 					"%s", appres.accept_hostname, errmsg);
 				return;

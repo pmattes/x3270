@@ -39,7 +39,6 @@
 #endif /*]*/
 #if !defined(_WIN32) /*[*/
 #include <sys/wait.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #endif /*]*/

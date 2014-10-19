@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, Paul Mattes.
+ * Copyright (c) 2007-2009, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,13 @@
  *		Hostname resolution.
  */
 
-extern int
+typedef enum {
+    RHP_SUCCESS = 0,
+    RHP_FATAL = -1,
+    RHP_CANNOT_RESOLVE = -2
+} rhp_t;
+#define RHP_IS_ERROR(r)	((r) < 0)
+extern rhp_t
 resolve_host_and_port(const char *host, char *portname, int ix,
 	unsigned short *pport, struct sockaddr *sa, socklen_t *sa_len,
 	char *errmsg, int em_size, int *lastp);

@@ -84,6 +84,9 @@
 #include <ctype.h>			/* Character classes */
 #include <string.h>			/* String manipulations */
 #include <sys/types.h>			/* Basic system data types */
+#if !defined(_WIN32) /*[*/
+# include <sys/socket.h>		/* Socket data types */
+#endif /*]*/
 #if !defined(_MSC_VER) /*[*/
 # include <sys/time.h>			/* System time-related data types */
 #endif /*]*/

@@ -37,7 +37,6 @@
 #endif /*]*/
 
 #if !defined(_WIN32) /*[*/
-#include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -636,14 +635,14 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 	    	use_name = 1;
 	else {
 	    	char errmsg[1024];
-		int rv;
+		rhp_t rv;
 
 		/* Resolve the hostname. */
 		rv = resolve_host_and_port(host, CN, 0, &rport, &ha.sa,
 			&ha_len, errmsg, sizeof(errmsg), NULL);
-		if (rv == -2)
+		if (rv == RHP_CANNOT_RESOLVE) {
 		    	use_name = 1;
-		else if (rv < 0) {
+		} else if (RHP_IS_ERROR(rv)) {
 			popup_an_error("SOCKS5 proxy: %s/%u: %s", host, port,
 				errmsg);
 			return -1;
