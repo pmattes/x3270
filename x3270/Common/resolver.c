@@ -43,7 +43,7 @@
 #include "resolverc.h"
 #include "w3miscc.h"
 
-#if defined(_WIN32) && defined(AF_INET6) && defined(X3270_IPV6) /*[*/
+#if defined(_WIN32) && defined(X3270_IPV6) /*[*/
 static int win32_getaddrinfo(const char *node, const char *service,
 	const struct addrinfo *hints, struct addrinfo **res);
 static void win32_freeaddrinfo(struct addrinfo *res);
@@ -67,7 +67,7 @@ resolve_host_and_port(const char *host, char *portname, int ix,
 	unsigned short *pport, struct sockaddr *sa, socklen_t *sa_len,
 	char *errmsg, int em_len, int *lastp)
 {
-#if defined(_WIN32) && defined(AF_INET6) && defined(X3270_IPV6) /*[*/
+#if defined(_WIN32) && defined(X3270_IPV6) /*[*/
     	OSVERSIONINFO info;
 	Boolean has_getaddrinfo = False;
 
@@ -86,7 +86,7 @@ resolve_host_and_port(const char *host, char *portname, int ix,
 	if (has_getaddrinfo)
 #endif /*]*/
 	{
-#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
+#if defined(X3270_IPV6) /*[*/
 		struct addrinfo	 hints, *res0, *res;
 		int		 rc;
 
@@ -147,11 +147,11 @@ resolve_host_and_port(const char *host, char *portname, int ix,
 		freeaddrinfo(res0);
 #endif /*]*/
 	}
-#if defined(_WIN32) && defined(AF_INET6) && defined(X3270_IPV6) /*[*/
+#if defined(_WIN32) && defined(X3270_IPV6) /*[*/
 	else
 #endif /*]*/
 
-#if defined(_WIN32) || !defined(AF_INET6) || !defined(X3270_IPV6) /*[*/
+#if defined(_WIN32) || !defined(X3270_IPV6) /*[*/
 	{
 		struct hostent	*hp;
 		struct servent	*sp;
@@ -244,7 +244,7 @@ numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
 	if (has_getnameinfo)
 #endif /*]*/
 	{
-#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
+#if defined(X3270_IPV6) /*[*/
 		int	 rc;
 
 		/* Use getnameinfo(). */
@@ -260,7 +260,7 @@ numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
 	else
 #endif /*]*/
 
-#if defined(_WIN32) || !defined(AF_INET6) || !defined(X3270_IPV6) /*[*/
+#if defined(_WIN32) || !defined(X3270_IPV6) /*[*/
 	{
 		struct sockaddr_in *sin = (struct sockaddr_in *)sa;
 
@@ -274,7 +274,7 @@ numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
 	return 0;
 }
 
-#if defined(_WIN32) && defined(AF_INET6) && defined(X3270_IPV6) /*[*/
+#if defined(_WIN32) && defined(X3270_IPV6) /*[*/
 /*
  * Windows-specific versions of getaddrinfo(), freeaddrinfo() and
  * gai_strerror().

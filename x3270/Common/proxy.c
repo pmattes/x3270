@@ -608,7 +608,7 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 	union {
 	    	struct sockaddr sa;
 		struct sockaddr_in sin;
-#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
+#if defined(X3270_IPV6) /*[*/
 		struct sockaddr_in6 sin6;
 #endif /*]*/
 	} ha;
@@ -730,7 +730,7 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 		memcpy(s, &ha.sin.sin_addr, 4);
 		s += 4;
 		strcpy(nbuf, inet_ntoa(ha.sin.sin_addr));
-#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
+#if defined(X3270_IPV6) /*[*/
 	} else {
 	    	*s++ = 0x04;	/* IPv6 */
 		memcpy(s, &ha.sin6.sin6_addr, sizeof(struct in6_addr));
@@ -861,7 +861,7 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 			case 0x03:
 				n2read = -1;
 				break;
-#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
+#if defined(X3270_IPV6) /*[*/
 			case 0x04:
 				n2read = sizeof(struct in6_addr) + 2;
 				break;
@@ -897,7 +897,7 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 		nbuf[(unsigned char)buf[4]] = '\0';
 		portp = (unsigned char *)&buf[5 + (unsigned char)buf[4]];
 		break;
-#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
+#if defined(X3270_IPV6) /*[*/
 	case 0x04: /* IPv6 */
 	    	memcpy(&ha.sin6.sin6_addr, &buf[4], sizeof(struct in6_addr));
 		(void) inet_ntop(AF_INET6, &ha.sin6.sin6_addr, nbuf,

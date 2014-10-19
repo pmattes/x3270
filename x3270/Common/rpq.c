@@ -609,7 +609,7 @@ get_rpq_address(unsigned char *buf, const int maxlen)
 	/* Is there a user override? */
 	if ((kw->allow_oride) && (kw->oride > 0)) {
 		char *p1, *p2, *rpqtext;
-#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
+#if defined(X3270_IPV6) /*[*/
 		struct addrinfo *res;
 		int ga_err;
 #else /*][*/
@@ -628,7 +628,7 @@ get_rpq_address(unsigned char *buf, const int maxlen)
 		}
 		*p2 = '\0';
 
-#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
+#if defined(X3270_IPV6) /*[*/
 		ga_err = getaddrinfo(rpqtext, NULL, NULL, &res);
 		if (ga_err == 0) {
 			void *src = NULL;
@@ -698,7 +698,7 @@ get_rpq_address(unsigned char *buf, const int maxlen)
 		union {
 			struct sockaddr sa;
 			struct sockaddr_in sa4;
-#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
+#if defined(X3270_IPV6) /*[*/
 			struct sockaddr_in6 sa6;
 #endif /*]*/
 		} u;
@@ -715,7 +715,7 @@ get_rpq_address(unsigned char *buf, const int maxlen)
 			src = &u.sa4.sin_addr;
 			len = sizeof(struct in_addr);
 			break;
-#if defined(AF_INET6) && defined(X3270_IPV6) /*[*/
+#if defined(X3270_IPV6) /*[*/
 		case AF_INET6:
 			src = &u.sa6.sin6_addr;
 			len = sizeof(struct in6_addr);
