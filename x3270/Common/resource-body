@@ -438,6 +438,13 @@ description
     <p class="indented">
     To display the character sets supported by %p%, use the <b>-v</b>
     command-line option.
+if wc
+    <p class="indented">
+    Note that %p% DBCS support is limited. DBCS is supported only on Windows
+    XP and later. On Windows XP, Windows East Asian language support must be
+    installed. On Windows Vista and later, the Windows System Locale must be
+    set to a matching language.
+endif
 .
 
 name charsetList
