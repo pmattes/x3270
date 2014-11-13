@@ -1441,6 +1441,38 @@ columns).\n",
 }
 
 /**
+ * Issue a warning for DBCS characters sets.
+ */
+static void
+dbcs_check(void)
+{
+    if (windows_major_version < 5) {
+	printf("\n\
+Note: wc3270 DBCS is supported only on Windows XP and later.\n");
+	goto any_key;
+    }
+    if (windows_major_version == 5) {
+	printf("\n\
+Note: wc3270 DBCS support on Windows XP requires installation of Windows East\n\
+Asian language support.\n");
+	goto any_key;
+    }
+    if (windows_major_version >= 6) {
+	printf("\n\
+Note: wc3270 DBCS support on Windows Vista and later requires setting the\n\
+Windows System Locale to a matching language.\n");
+	goto any_key;
+    }
+
+    return;
+
+any_key:
+    printf("[Press Enter to continue] ");
+    fflush(stdout);
+    (void) getchar();
+}
+
+/**
  * Prompt for a character set.
  *
  * @param[in,out] s	Session
@@ -1454,6 +1486,7 @@ get_charset(session_t *s)
     unsigned i, k;
     char *ptr;
     unsigned long u;
+    int was_dbcs = s->is_dbcs;
 
     new_screen(s, NULL, "\
 Character Set\n\
@@ -1517,11 +1550,17 @@ This specifies the EBCDIC character set (code page) used by the host.");
 		break;
 	    }
 	}
+
 	if (charsets[i].name != NULL) {
 	    break;
 	}
 	printf("\nInvalid character set name.");
     }
+
+    if (!was_dbcs && s->is_dbcs) {
+	dbcs_check();
+    }
+
     return 0;
 }
 
