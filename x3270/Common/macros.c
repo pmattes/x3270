@@ -2026,7 +2026,7 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 			}
 		} else {
 			s += sprintf(s, "%s%02x",
-				i ? " " : "",
+				any ? " " : "",
 				buf[first + i].cc);
 		}
 		any = True;
@@ -3619,7 +3619,11 @@ Query_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 			if (!strcasecmp(params[0], queries[i].name)) {
 				const char *s;
 
-				s = (*queries[i].fn)();
+				if (queries[i].fn) {
+					s = (*queries[i].fn)();
+				} else {
+					s = queries[i].string;
+				}
 				action_output("%s\n", *s? s: " ");
 				return;
 			}

@@ -37,6 +37,8 @@
 #include "winversc.h"
 
 int has_ipv6 = 1;
+int windows_major_version;
+int windows_minor_version;
 
 int
 get_version_info(void)
@@ -62,6 +64,10 @@ get_version_info(void)
 			"2000 (NT 5.0)\n");
 		return -1;
 	}
+
+	/* Save the version for applications that need fine-grained info. */
+	windows_major_version = info.dwMajorVersion;
+	windows_minor_version = info.dwMinorVersion;
 
 	/*
 	 * Win2K (5.0) and earlier is IPv4-only.  WinXP (5.1) and later can

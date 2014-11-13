@@ -26,5 +26,7 @@
  */
 
 extern int has_ipv6;
+extern int windows_major_version;
+extern int windows_minor_version;
 
 extern int get_version_info(void);
