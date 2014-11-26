@@ -117,8 +117,13 @@ typedef void *sms_cbh;
 typedef void (*sms_data_cb)(sms_cbh handle, const char *buf, size_t len);
 typedef void (*sms_done_cb)(sms_cbh handle, Boolean success,
 	const char *status_buf, size_t status_len);
-extern void push_cb(const char *buf, size_t len, sms_cbh handle,
-	sms_data_cb data, sms_done_cb done);
+typedef struct {
+    const char *shortname;
+    sms_data_cb data;
+    sms_done_cb done;
+} sms_cb_t;
+extern void push_cb(const char *buf, size_t len, const sms_cb_t *cb,
+	sms_cbh handle);
 #if defined(CB_DEBUG) /*[*/
 extern void Cb_action(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);

@@ -156,11 +156,10 @@ typedef struct sms {
 	ioid_t expect_id;
 	ioid_t wait_id;
 
-	struct sms_cb {		/* ST_CB context: */
+	struct sms_cbx {	/* ST_CB context: */
+	    const sms_cb_t *cb;	/*  callback block */
 	    sms_cbh handle;	/*  handle */
-	    sms_data_cb data; 	/*  data callback */
-	    sms_done_cb done;	/*  done callback */
-	} cb;
+	} cbx;
 } sms_t;
 #define SN	((sms_t *)NULL)
 static sms_t *sms = SN;
@@ -204,7 +203,8 @@ static const char *st_name[] = { "String", "Macro", "Command", "KeymapAction",
 static enum iaction st_cause[] = { IA_MACRO, IA_MACRO, IA_COMMAND, IA_KEYMAP,
 				 IA_IDLE, IA_MACRO, IA_MACRO };
 #define ST_sNAME(s)	st_name[(int)(s)->type]
-#define ST_NAME		ST_sNAME(sms)
+#define ST_NAME \
+    ((sms->type == ST_CB) ? sms->cbx.cb->shortname : ST_sNAME(sms))
 
 #if defined(_WIN32) /*[*/
 static HANDLE peer_thread;
@@ -1440,16 +1440,14 @@ push_file(int fd)
 
 /* Push a callback on the stack. */
 void
-push_cb(const char *buf, size_t len, sms_cbh handle, sms_data_cb data,
-	sms_done_cb done)
+push_cb(const char *buf, size_t len, const sms_cb_t *cb, sms_cbh handle)
 {
 	/* Push the callback sms on the stack. */
 	if (!sms_push(ST_CB)) {
 	    return;
 	}
-	sms->cb.handle = handle;
-	sms->cb.data = data;
-	sms->cb.done = done;
+	sms->cbx.cb = cb;
+	sms->cbx.handle = handle;
 	sms->state = SS_RUNNING;
 	sms->need_prompt = True;
 
@@ -1640,48 +1638,67 @@ read_from_file(void)
 void
 sms_error(const char *msg)
 {
-	sms_t *s;
-	Boolean is_script = False;
+    sms_t *s;
+    Boolean is_script = False;
 
-	/* Print the error message. */
-	s = sms_redirect_to();
-	is_script = (s != NULL);
-	if (is_script) {
-	    	char *text = Malloc(strlen("data: ") + strlen(msg) + 2);
-		char *newline;
-		char *last_space;
+    /* Print the error message. */
+    s = sms_redirect_to();
+    is_script = (s != NULL);
+    if (is_script) {
+	size_t sl = strlen(msg);
+	char *text = Malloc(strlen("data: ") + sl + 2);
+	char *newline;
+	char *last_space;
 
-		sprintf(text, "data: %s", msg);
-		newline = text;
-		while ((newline = strchr(newline, '\n')) != NULL)
-		    	*newline++ = ' ';
-		last_space = strrchr(text, ' ');
-		if (last_space != NULL &&
-			last_space == text + strlen(text) - 1)
-		    	*last_space = '\n';
-		else
-		    	strcat(text, "\n");
-
-		if (s->is_socket) {
-			send(s->infd, text, strlen(text), 0);
-		} else if (s->type == ST_CB) {
-			(*s->cb.data)(s->cb.handle, text + 6, strlen(text + 6));
-		} else {
-			fprintf(s->outfile, "%s", text);
-		}
-		trace_script_output("%s", text);
-		Free(text);
+	/* Prepend 'data: ', unless doing a callback. */
+	if (s->type == ST_CB) {
+	    strcpy(text, msg);
 	} else {
-		(void) fprintf(stderr, "%s\n", msg);
-		fflush(stderr);
+	    sprintf(text, "data: %s", msg);
 	}
 
-	/* Fail the current command. */
-	sms->success = False;
+	/* Translate newlines to spaces. */
+	newline = text;
+	while ((newline = strchr(newline, '\n')) != NULL) {
+	    *newline++ = ' ';
+	}
 
-	/* Cancel any login. */
-	if (s != NULL && s->is_login)
-		host_disconnect(True);
+	if (s->type == ST_CB) {
+	    /* Remove trailing spaces. */
+	    while (sl && text[sl - 1] == ' ') {
+		sl--;
+	    }
+	    trace_script_output("%.*s\n", (int)sl, text);
+	    (*s->cbx.cb->data)(s->cbx.handle, text, sl);
+	} else {
+	    /* End with one newline. */
+	    last_space = strrchr(text, ' ');
+	    if (last_space != NULL && last_space == text + strlen(text) - 1) {
+		*last_space = '\n';
+	    } else {
+		strcat(text, "\n");
+	    }
+	    trace_script_output("%s", text);
+	    if (s->is_socket) {
+		send(s->infd, text, strlen(text), 0);
+	    } else {
+		fprintf(s->outfile, "%s", text);
+	    }
+	}
+
+	Free(text);
+    } else {
+	(void) fprintf(stderr, "%s\n", msg);
+	fflush(stderr);
+    }
+
+    /* Fail the current command. */
+    sms->success = False;
+
+    /* Cancel any login. */
+    if (s != NULL && s->is_login) {
+	host_disconnect(True);
+    }
 }
 
 /*
@@ -1695,46 +1712,50 @@ sms_error(const char *msg)
 void
 sms_info(const char *fmt, ...)
 {
-	char *nl;
-	char msgbuf[4096];
-	char *msg = msgbuf;
-	va_list args;
-	sms_t *s;
+    char *nl;
+    char msgbuf[4096];
+    char *msg = msgbuf;
+    va_list args;
+    sms_t *s;
 
-	va_start(args, fmt);
-	(void) vsnprintf(msgbuf, sizeof(msgbuf), fmt, args);
-	va_end(args);
+    va_start(args, fmt);
+    (void) vsnprintf(msgbuf, sizeof(msgbuf), fmt, args);
+    va_end(args);
 
-	do {
-		int nc;
+    do {
+	int nc;
 
-		nl = strchr(msg, '\n');
-		if (nl != CN)
-			nc = nl - msg;
-		else
-			nc = strlen(msg);
-		if (nc || (nl != CN)) {
-		    	if ((s = sms_redirect_to()) != NULL) {
-			    	char *text = Malloc(strlen("data: ") + nc + 2);
+	nl = strchr(msg, '\n');
+	if (nl != CN) {
+	    nc = nl - msg;
+	} else {
+	    nc = strlen(msg);
+	}
+	if (nc || (nl != CN)) {
+	    if ((s = sms_redirect_to()) != NULL) {
+		if (s->type == ST_CB) {
+		    (*s->cbx.cb->data)(s->cbx.handle, msg, nc);
+		    trace_script_output("%.*s\n", nc, msg);
+		} else {
+		    char *text = Malloc(strlen("data: ") + nc + 2);
 
-				sprintf(text, "data: %.*s\n", nc, msg);
-			    	if (s->is_socket) {
-				    	send(s->infd, text, strlen(text), 0);
-				} else if (s->type == ST_CB) {
-					(*s->cb.data)(s->cb.handle, text + 6,
-						strlen(text + 6));
-				} else {
-					(void) fprintf(s->outfile, "%s", text);
-				}
-				trace_script_output("%s", text);
-				Free(text);
-			} else
-				(void) printf("%.*s\n", nc, msg);
+		    sprintf(text, "data: %.*s\n", nc, msg);
+		    if (s->is_socket) {
+			send(s->infd, text, strlen(text), 0);
+		    } else {
+			(void) fprintf(s->outfile, "%s", text);
+		    }
+		    trace_script_output("%s", text);
+		    Free(text);
 		}
-		msg = nl + 1;
-	} while (nl);
+	    } else {
+		(void) printf("%.*s\n", nc, msg);
+	    }
+	}
+	msg = nl + 1;
+    } while (nl);
 
-	macro_output = True;
+    macro_output = True;
 }
 
 /* Process available input from a script. */
@@ -2500,21 +2521,22 @@ script_prompt(Boolean success)
 
 	t = Malloc(strlen(s) + 1 + strlen(timing) + 1 + 6 + 1);
 	if (sms->type == ST_CB) {
-	    sprintf(t, "%s %s\n", s, timing);
+	    sprintf(t, "%s %s", s, timing);
+	    trace_script_output("%s\n", t);
 	} else {
 	    sprintf(t, "%s %s\n%s\n", s, timing, success ? "ok" : "error");
+	    trace_script_output("%s", t);
 	}
 	Free(s);
 
-	trace_script_output("%s", t);
 
 	if (sms->is_socket) {
 	    	send(sms->infd, t, strlen(t), 0);
 	} else if (sms->type == ST_CB) {
-		struct sms_cb cb = sms->cb;
+		struct sms_cbx cbx = sms->cbx;
 
 		sms_pop(False);
-		(*cb.done)(cb.handle, success, t, strlen(t) - 1);
+		(*cbx.cb->done)(cbx.handle, success, t, strlen(t));
 		sms_continue();
 	} else {
 		(void) fprintf(sms->outfile, "%s", t);
@@ -3732,28 +3754,34 @@ Source_action(Widget w _is_unused, XEvent *event, String *params,
 }
 
 #if defined(CB_DEBUG) /*[*/
+/* Data callback for Cb action. */
 static void
 cb_data(sms_cbh handle, const char *buf, size_t len)
 {
-	fprintf(stderr, "cb_data %u: '%.*s'\n", (unsigned)(intptr_t)handle,
-		(int)len, buf);
+    fprintf(stderr, "cb_data %#x: '%.*s'\n",
+	    (unsigned)(intptr_t)handle,
+	    (int)len, buf);
 }
 
+/* Completion callback for Cb action. */
 static void
 cb_done(sms_cbh handle, Boolean success, const char *status_buf,
 	size_t status_len)
 {
-	fprintf(stderr, "cb_done %u: '%.*s': %s\n", (unsigned)(intptr_t)handle,
-		(int)status_len, status_buf, success? "succeed": "fail");
+    fprintf(stderr, "cb_done %#x: '%.*s': %s\n",
+	    (unsigned)(intptr_t)handle,
+	    (int)status_len, status_buf, success? "success": "failure");
 }
 
+/* Cb action: Debug action to exercise the sms callback API. */
 void
 Cb_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	Cardinal *num_params)
 {
-	if (*num_params > 0) {
-		push_cb(params[0], strlen(params[0]), (sms_cbh)1234, cb_data,
-			cb_done);
-	}
+    static sms_cb_t cba_cb = { "Cb", cb_data, cb_done };
+
+    if (*num_params > 0) {
+	push_cb(params[0], strlen(params[0]), &cba_cb, (sms_cbh)0x1234);
+    }
 }
 #endif /*]*/
