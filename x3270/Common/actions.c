@@ -170,6 +170,9 @@ XtActionsRec all_actions[] = {
 #if defined(X3270_INTERACTIVE) /*[*/
 	{ "Bell",		Bell_action },
 #endif /*]*/
+#if defined(CB_DEBUG) /*[*/
+	{ "Cb",			Cb_action },
+#endif /*]*/
 	{ "CircumNot",		CircumNot_action },
 	{ "Clear",		Clear_action },
 	{ "Close",		Disconnect_action },

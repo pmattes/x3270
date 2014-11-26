@@ -105,11 +105,7 @@ static void	ctlr_connect(Boolean ignored);
 static int	sscp_start;
 static void ctlr_add_ic(int baddr, unsigned char ic);
 
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 static void ticking_stop(void);
-#else /*][*/
-#define ticking_stop()
-#endif /*]*/
 
 /*
  * code_table is used to translate buffer addresses and attributes to the 3270
@@ -2819,7 +2815,6 @@ ctlr_dbcs_state(int baddr)
 #endif /*]*/
 
 
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 /*
  * Transaction timing.  The time between sending an interrupt (PF, PA, Enter,
  * Clear) and the host unlocking the keyboard is indicated on the status line
@@ -2827,11 +2822,16 @@ ctlr_dbcs_state(int baddr)
  * the unlock, the time should be fairly accurate.
  */
 static struct timeval t_start;
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 static Boolean ticking = False;
+#endif /*]*/
 static Boolean mticking = False;
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 static ioid_t tick_id;
 static struct timeval t_want;
+#endif /*]*/
 
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 /* Return the difference in milliseconds between two timevals. */
 static long
 delta_msec(struct timeval *t1, struct timeval *t0)
@@ -2839,7 +2839,9 @@ delta_msec(struct timeval *t1, struct timeval *t0)
 	return (t1->tv_sec - t0->tv_sec) * 1000 +
 	       (t1->tv_usec - t0->tv_usec + 500) / 1000;
 }
+#endif /*]*/
 
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 static void
 keep_ticking(ioid_t id _is_unused)
 {
@@ -2854,6 +2856,7 @@ keep_ticking(ioid_t id _is_unused)
 	tick_id = AddTimeOut(msec, keep_ticking);
 	status_timing(&t_start, &t1);
 }
+#endif /*]*/
 
 void
 ticking_start(Boolean anyway)
@@ -2861,6 +2864,7 @@ ticking_start(Boolean anyway)
 	(void) gettimeofday(&t_start, (struct timezone *) 0);
 	mticking = True;
 
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 	if (!toggled(SHOW_TIMING) && !anyway)
 		return;
 	status_untiming();
@@ -2869,6 +2873,7 @@ ticking_start(Boolean anyway)
 	ticking = True;
 	tick_id = AddTimeOut(1000, keep_ticking);
 	t_want = t_start;
+#endif /*]*/
 }
 
 static void
@@ -2884,13 +2889,16 @@ ticking_stop(void)
 		return;
 	}
 
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 	if (!ticking)
 		return;
 	RemoveTimeOut(tick_id);
 	ticking = False;
 	status_timing(&t_start, &t1);
+#endif /*]*/
 }
 
+#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
 void
 toggle_showTiming(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 {

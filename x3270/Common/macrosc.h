@@ -87,7 +87,11 @@ extern void ReadBuffer_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void Script_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
+#if !defined(TCL3270) /*[*/
 extern void sms_accumulate_time(struct timeval *, struct timeval *);
+#else /*][*/
+#define sms_accumulate_time(t0, t1)
+#endif /*]*/
 extern Boolean sms_active(void);
 extern void sms_connect_wait(void);
 extern void sms_continue(void);
@@ -108,3 +112,14 @@ extern void Source_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void Wait_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
+
+typedef void *sms_cbh;
+typedef void (*sms_data_cb)(sms_cbh handle, const char *buf, size_t len);
+typedef void (*sms_done_cb)(sms_cbh handle, Boolean success,
+	const char *status_buf, size_t status_len);
+extern void push_cb(const char *buf, size_t len, sms_cbh handle,
+	sms_data_cb data, sms_done_cb done);
+#if defined(CB_DEBUG) /*[*/
+extern void Cb_action(Widget w, XEvent *event, String *params,
+	Cardinal *num_params);
+#endif /*]*/

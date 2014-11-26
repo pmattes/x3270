@@ -48,6 +48,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdarg.h>
+#include <assert.h>
 #include "3270ds.h"
 #include "appres.h"
 #include "ctlr.h"
@@ -128,7 +129,8 @@ typedef struct sms {
 		ST_IDLE,	/* idle command */
 		ST_CHILD,	/* child process */
 		ST_PEER,	/* peer (external) process */
-		ST_FILE		/* read commands from file */
+		ST_FILE,	/* read commands from file */
+		ST_CB		/* callback (httpd or other) */
 	} type;
 	Boolean	success;
 	Boolean	need_prompt;
@@ -153,6 +155,12 @@ typedef struct sms {
 	int	pid;
 	ioid_t expect_id;
 	ioid_t wait_id;
+
+	struct sms_cb {		/* ST_CB context: */
+	    sms_cbh handle;	/*  handle */
+	    sms_data_cb data; 	/*  data callback */
+	    sms_done_cb done;	/*  done callback */
+	} cb;
 } sms_t;
 #define SN	((sms_t *)NULL)
 static sms_t *sms = SN;
@@ -192,7 +200,7 @@ static char    *expect_text = CN;
 static int	expect_len = 0;
 static const char *st_name[] = { "String", "Macro", "Command", "KeymapAction",
 				 "IdleCommand", "ChildScript", "PeerScript",
-				 "File" };
+				 "File", "Callback" };
 static enum iaction st_cause[] = { IA_MACRO, IA_MACRO, IA_COMMAND, IA_KEYMAP,
 				 IA_IDLE, IA_MACRO, IA_MACRO };
 #define ST_sNAME(s)	st_name[(int)(s)->type]
@@ -1303,7 +1311,7 @@ run_macro(void)
 		if (!sms->success) {
 			vtrace("%s[%d] failed\n", ST_NAME, sms_depth);
 
-			/* Propogate it. */
+			/* Propagate it. */
 			if (sms->next != SN)
 				sms->next->success = False;
 			break;
@@ -1330,7 +1338,7 @@ run_macro(void)
 		if (es == EM_ERROR) {
 			vtrace("%s[%d] error\n", ST_NAME, sms_depth);
 
-			/* Propogate it. */
+			/* Propaogate it. */
 			if (sms->next != SN)
 				sms->next->success = False;
 
@@ -1359,12 +1367,12 @@ run_macro(void)
 
 /* Push a macro (macro, command or keymap action) on the stack. */
 static void
-push_xmacro(enum sms_type type, char *s, Boolean is_login)
+push_xmacro(enum sms_type type, const char *s, size_t len, Boolean is_login)
 {
 	macro_output = False;
 	if (!sms_push(type))
 		return;
-	(void) snprintf(sms->msc, MSC_BUF, "%s", s);
+	(void) snprintf(sms->msc, MSC_BUF, "%.*s", (int)len, s);
 	sms->msc_len = strlen(sms->msc);
 	if (is_login) {
 		sms->state = SS_WAIT_IFIELD;
@@ -1378,28 +1386,28 @@ push_xmacro(enum sms_type type, char *s, Boolean is_login)
 void
 push_macro(char *s, Boolean is_login)
 {
-	push_xmacro(ST_MACRO, s, is_login);
+	push_xmacro(ST_MACRO, s, strlen(s), is_login);
 }
 
 /* Push an interactive command on the stack. */
 void
 push_command(char *s)
 {
-	push_xmacro(ST_COMMAND, s, False);
+	push_xmacro(ST_COMMAND, s, strlen(s), False);
 }
 
 /* Push an keymap action on the stack. */
 void
 push_keymap_action(char *s)
 {
-	push_xmacro(ST_KEYMAP, s, False);
+	push_xmacro(ST_KEYMAP, s, strlen(s), False);
 }
 
 /* Push an keymap action on the stack. */
 void
 push_idle(char *s)
 {
-	push_xmacro(ST_IDLE, s, False);
+	push_xmacro(ST_IDLE, s, strlen(s), False);
 }
 
 /* Push a string on the stack. */
@@ -1428,6 +1436,25 @@ push_file(int fd)
 	    	return;
 	sms->infd = fd;
 	read_from_file();
+}
+
+/* Push a callback on the stack. */
+void
+push_cb(const char *buf, size_t len, sms_cbh handle, sms_data_cb data,
+	sms_done_cb done)
+{
+	/* Push the callback sms on the stack. */
+	if (!sms_push(ST_CB)) {
+	    return;
+	}
+	sms->cb.handle = handle;
+	sms->cb.data = data;
+	sms->cb.done = done;
+	sms->state = SS_RUNNING;
+	sms->need_prompt = True;
+
+	/* Push the command in as a macro on top of that. */
+	push_xmacro(ST_MACRO, buf, len, False);
 }
 
 /* Set a pending string. */
@@ -1635,10 +1662,13 @@ sms_error(const char *msg)
 		else
 		    	strcat(text, "\n");
 
-		if (s->is_socket)
+		if (s->is_socket) {
 			send(s->infd, text, strlen(text), 0);
-		else
+		} else if (s->type == ST_CB) {
+			(*s->cb.data)(s->cb.handle, text + 6, strlen(text + 6));
+		} else {
 			fprintf(s->outfile, "%s", text);
+		}
 		trace_script_output("%s", text);
 		Free(text);
 	} else {
@@ -1688,10 +1718,14 @@ sms_info(const char *fmt, ...)
 			    	char *text = Malloc(strlen("data: ") + nc + 2);
 
 				sprintf(text, "data: %.*s\n", nc, msg);
-			    	if (s->is_socket)
+			    	if (s->is_socket) {
 				    	send(s->infd, text, strlen(text), 0);
-				else
+				} else if (s->type == ST_CB) {
+					(*s->cb.data)(s->cb.handle, text + 6,
+						strlen(text + 6));
+				} else {
 					(void) fprintf(s->outfile, "%s", text);
+				}
 				trace_script_output("%s", text);
 				Free(text);
 			} else
@@ -1930,6 +1964,9 @@ sms_continue(void)
 			break;
 		    case ST_FILE:
 			read_from_file();
+			break;
+		    case ST_CB:
+			script_prompt(sms->success);
 			break;
 		}
 	}
@@ -2462,16 +2499,27 @@ script_prompt(Boolean success)
 		(void) strcpy(timing, "-");
 
 	t = Malloc(strlen(s) + 1 + strlen(timing) + 1 + 6 + 1);
-	sprintf(t, "%s %s\n%s\n", s, timing, success ? "ok" : "error");
+	if (sms->type == ST_CB) {
+	    sprintf(t, "%s %s\n", s, timing);
+	} else {
+	    sprintf(t, "%s %s\n%s\n", s, timing, success ? "ok" : "error");
+	}
 	Free(s);
+
+	trace_script_output("%s", t);
 
 	if (sms->is_socket) {
 	    	send(sms->infd, t, strlen(t), 0);
+	} else if (sms->type == ST_CB) {
+		struct sms_cb cb = sms->cb;
+
+		sms_pop(False);
+		(*cb.done)(cb.handle, success, t, strlen(t) - 1);
+		sms_continue();
 	} else {
 		(void) fprintf(sms->outfile, "%s", t);
 		(void) fflush(sms->outfile);
 	}
-	trace_script_output("%s", t);
 	free(t);
 }
 
@@ -2813,7 +2861,7 @@ sms_redirect_to(void)
     	sms_t *s;
 
 	for (s = sms; s != SN; s = s->next) {
-	    	if ((s->type == ST_CHILD || s->type == ST_PEER) &&
+	    	if ((s->type == ST_CHILD || s->type == ST_PEER || s->type == ST_CB) &&
 		    (s->state == SS_RUNNING ||
 		     s->state == SS_CONNECT_WAIT ||
 		     s->state == SS_WAIT_OUTPUT ||
@@ -3571,13 +3619,24 @@ Abort_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 void
 sms_accumulate_time(struct timeval *t0, struct timeval *t1)
 {
+    sms_t *s;
+    unsigned long msec;
+
+    msec = (t1->tv_sec - t0->tv_sec) * 1000 +
+	   (t1->tv_usec - t0->tv_usec + 500) / 1000;
+
     if (sms != SN) {
 	sms->accumulated = True;
-	sms->msec += (t1->tv_sec - t0->tv_sec) * 1000 +
-		     (t1->tv_usec - t0->tv_usec + 500) / 1000;
+	sms->msec += msec;
 #if defined(DEBUG_ACCUMULATE) /*[*/
 	printf("%s: accumulated %lu msec\n", ST_NAME, sms->msec);
 #endif /*]*/
+    }
+
+    s = sms_redirect_to();
+    if (s != NULL) {
+	s->accumulated = True;
+	s->msec += msec;
     }
 }
 
@@ -3671,3 +3730,30 @@ Source_action(Widget w _is_unused, XEvent *event, String *params,
 	Free(expanded_filename);
 	push_file(fd);
 }
+
+#if defined(CB_DEBUG) /*[*/
+static void
+cb_data(sms_cbh handle, const char *buf, size_t len)
+{
+	fprintf(stderr, "cb_data %u: '%.*s'\n", (unsigned)(intptr_t)handle,
+		(int)len, buf);
+}
+
+static void
+cb_done(sms_cbh handle, Boolean success, const char *status_buf,
+	size_t status_len)
+{
+	fprintf(stderr, "cb_done %u: '%.*s': %s\n", (unsigned)(intptr_t)handle,
+		(int)status_len, status_buf, success? "succeed": "fail");
+}
+
+void
+Cb_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
+	Cardinal *num_params)
+{
+	if (*num_params > 0) {
+		push_cb(params[0], strlen(params[0]), (sms_cbh)1234, cb_data,
+			cb_done);
+	}
+}
+#endif /*]*/
