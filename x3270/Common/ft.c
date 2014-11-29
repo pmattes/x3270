@@ -1769,33 +1769,6 @@ ft_in3270(Boolean ignored _is_unused)
  *   BufferSize			no default
  *   WindowsCodePage=n		no default
  */
-static struct {
-	const char *name;
-	char *value;
-	const char *keyword[4];
-} tp[] = {
-	{ "Direction",		CN, { "receive", "send" } },
-	{ "HostFile" },
-	{ "LocalFile" },
-	{ "Host",		CN, { "tso", "vm", "cics" } },
-	{ "Mode",		CN, { "ascii", "binary" } },
-	{ "Cr",			CN, { "auto", "remove",	"add", "keep" } },
-	{ "Remap",		CN, { "yes", "no" } },
-	{ "Exist",		CN, { "keep", "replace", "append" } },
-	{ "Recfm",		CN, { "default", "fixed", "variable",
-				      "undefined" } },
-	{ "Lrecl" },
-	{ "Blksize" },
-	{ "Allocation",		CN, { "default", "tracks", "cylinders",
-				      "avblock" } },
-	{ "PrimarySpace" },
-	{ "SecondarySpace" },
-#if defined(_WIN32) /*[*/
-	{ "WindowsCodePage" },
-#endif /*]*/
-	{ "BufferSize" },
-	{ CN }
-};
 enum ft_parm_name {
 	PARM_DIRECTION,
 	PARM_HOST_FILE,
@@ -1816,6 +1789,32 @@ enum ft_parm_name {
 	PARM_WINDOWS_CODEPAGE,
 #endif /*]*/
 	N_PARMS
+};
+static struct {
+	const char *name;
+	char *value;
+	const char *keyword[4];
+} tp[N_PARMS] = {
+	{ "Direction",		CN, { "receive", "send" } },
+	{ "HostFile" },
+	{ "LocalFile" },
+	{ "Host",		CN, { "tso", "vm", "cics" } },
+	{ "Mode",		CN, { "ascii", "binary" } },
+	{ "Cr",			CN, { "auto", "remove",	"add", "keep" } },
+	{ "Remap",		CN, { "yes", "no" } },
+	{ "Exist",		CN, { "keep", "replace", "append" } },
+	{ "Recfm",		CN, { "default", "fixed", "variable",
+				      "undefined" } },
+	{ "Lrecl" },
+	{ "Blksize" },
+	{ "Allocation",		CN, { "default", "tracks", "cylinders",
+				      "avblock" } },
+	{ "PrimarySpace" },
+	{ "SecondarySpace" },
+	{ "BufferSize" },
+#if defined(_WIN32) /*[*/
+	{ "WindowsCodePage" },
+#endif /*]*/
 };
 
 void  
