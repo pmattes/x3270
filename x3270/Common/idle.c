@@ -49,6 +49,7 @@
 # include <errno.h>
 
 # include "appres.h"
+# include "actionsc.h"
 # include "dialogc.h"
 # include "hostc.h"
 # include "idlec.h"

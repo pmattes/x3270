@@ -45,6 +45,7 @@
 #include "screen.h"
 #include "resources.h"
 
+#include "actionsc.h"
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "unicodec.h"

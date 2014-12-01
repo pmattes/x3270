@@ -48,7 +48,7 @@ linux*)		XANSI="-D_POSIX_SOURCE"
 		;;
 esac
 if test "$GCC" = yes
-then	CCOPTIONS="-Wall -Wsign-compare -ansi -pedantic -Wno-variadic-macros"
+then	CCOPTIONS="-Wall -Wsign-compare -std=c99 -pedantic -Wno-variadic-macros"
 fi
 AC_SUBST(XANSI)
 AC_SUBST(XPRECOMP)

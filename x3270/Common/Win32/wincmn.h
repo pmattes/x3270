@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2013, Paul Mattes.
+ * Copyright (c) 2007-2014, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,6 +55,11 @@
 const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
 
 /*
+ * Windows has no in_addr_t.
+ */
+typedef unsigned long in_addr_t;
+
+/*
  * Windows snprintf/vsnprintf do not guarantee NUL termination, so we have our
  * own.
  */
@@ -63,6 +68,15 @@ int safe_snprintf(char *str, size_t size, const char *fmt, ...);
 # if !defined(IS_SNPRINTF_C) /*[*/
 #  define vsnprintf	safe_vsnprintf
 #  define snprintf	safe_snprintf
+# endif /*]*/
+
+/*
+ * We always use _vscprintf instead of vscprintf.
+ * MinGW is missing the extern for it.
+ */
+# define vscprintf	_vscprintf
+# if defined(__MINGW_NOTHROW) /*[*/
+int __cdecl __MINGW_NOTHROW _vscprintf (const char *, ...);
 # endif /*]*/
 
 # if defined(_MSC_VER) /*[*/
@@ -88,6 +102,7 @@ int safe_snprintf(char *str, size_t size, const char *fmt, ...);
 /* Non-standard string function names. */
 #  define strcasecmp    _stricmp
 #  define strncasecmp   _strnicmp
+
 
 /* MSVC has no POSIX ssize_t. */
 typedef SSIZE_T ssize_t;

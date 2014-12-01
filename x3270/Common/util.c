@@ -44,6 +44,7 @@
 # include "appres.h"
 # include "screenc.h"
 #endif /*]*/
+#include "asprintfc.h"
 #include "charsetc.h"
 
 #include "utilc.h"
@@ -57,23 +58,12 @@ static char *
 xs_vsprintf(const char *fmt, va_list args)
 {
 	char *r = CN;
-#if defined(HAVE_VASPRINTF) /*[*/
 	int nw;
 
 	nw = vasprintf(&r, fmt, args);
 	if (nw < 0 || r == CN)
 		Error("Out of memory");
 	return r;
-#else /*][*/
-	char buf[16384];
-	int nc;
-
-	nc = vsnprintf(buf, sizeof(buf), fmt, args);
-	if (nc > sizeof(buf))
-		Error("Internal buffer overflow");
-	r = Malloc(nc + 1);
-	return strcpy(r, buf);
-#endif /*]*/
 }
 
 /*

@@ -314,7 +314,8 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 			hcaption = html_caption(fps->caption);
 
 		/* Print the preamble. */
-		if (fprintf(f, "<html>\n"
+		if (!(opts & FPS_NO_HEADER) &&
+			fprintf(f, "<html>\n"
 			   "<head>\n"
 			   " <meta http-equiv=\"Content-Type\" "
 			     "content=\"text/html; charset=UTF-8\">\n"
@@ -794,8 +795,8 @@ fprint_screen_done(fps_t *ofps)
 			}
 			break;
 		case P_HTML:
-			if (fprintf(fps->file, " </body>\n"
-				    "</html>\n") < 0) {
+			if (!(fps->opts & FPS_NO_HEADER) &&
+				fprintf(fps->file, " </body>\n</html>\n") < 0) {
 				rv = FPS_STATUS_ERROR;
 			}
 			break;

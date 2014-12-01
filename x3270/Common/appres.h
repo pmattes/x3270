@@ -159,6 +159,7 @@ typedef struct {
 	Boolean new_environ;
 	Boolean socket;
 	int	script_port;
+	char	*httpd_port;
 
 	/* Named resources */
 #if defined(X3270_DISPLAY) /*[*/
@@ -236,7 +237,6 @@ typedef struct {
 	char	*idle_command;
 	Boolean idle_command_enabled;
 	char	*idle_timeout;
-	char	*plugin_command;
 #if defined(HAVE_LIBSSL) /*[*/
 	char	*ca_dir;
 	char	*ca_file;

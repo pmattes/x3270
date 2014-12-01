@@ -59,10 +59,6 @@
 #include "pr3287.h"
 #endif /*]*/
 
-#if defined(_WIN32) /*[*/
-typedef unsigned long in_addr_t;
-#endif /*]*/
-
 /*
  * Supported proxy types.
  *

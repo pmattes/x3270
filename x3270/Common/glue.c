@@ -535,10 +535,6 @@ set_appres_defaults(void)
 	appres.toggle[UNDERSCORE].value = True;
 #endif /*]*/
 
-#if defined(C3270) /*[*/
-	appres.plugin_command = "x3270hist.pl";
-#endif /*]*/
-
 #if defined(_WIN32) /*[*/
 	appres.local_cp = GetACP();
 #endif /*]*/
@@ -654,6 +650,8 @@ static struct {
 #endif /*]*/
 { OptHostsFile,OPT_STRING,  False, ResHostsFile, offset(hostsfile),
     "<filename>", "Use <hostname> as the ibm_hosts file" },
+{ OptHttpd,    OPT_STRING,  False, ResHttpd,     offset(httpd_port),
+    "[<addr>:]<port>", "TCP port to listen on for http requests" },
 #if defined(HAVE_LIBSSL) /*[*/
 { OptKeyFile,  OPT_STRING,  False, ResKeyFile, offset(key_file),
     "<filename>", "Get OpenSSL private key from <filename>" },

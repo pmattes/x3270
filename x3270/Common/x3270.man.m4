@@ -215,6 +215,13 @@ Uses XX_FI(file) as the hosts file, which allows aliases for host names and
 scripts to be executed at login.
 See XX_LINK(ibm_hosts.html,XX_FI(ibm_hosts)(1)) for details.
 ')dnl
+ifelse(XX_PRODUCT,tcl3270,,`XX_TP(XX_FB(XX_DASHED(httpd)) XX_FB(`[')`'XX_FI(addr)`'XX_FB(`:]')`'XX_FI(port))
+Specifies a port (and optional address) to listen on for HTTP connections.
+XX_FI(Addr) can be specified as XX_DQUOTED(*) to indicate 0.0.0.0; the
+default is 127.0.0.1. IPv6 numeric addresses must be specified inside of
+square brackets, e.g., [::1]:4080 to specify the IPv6 loopback address and
+TCP port 4080.
+')dnl
 ifelse(XX_PRODUCT,x3270,`XX_TP(XX_FB(XX_DASHED(iconname)) XX_FI(name))
 Specifies an alternate title for the program icon.
 XX_TP(XX_FB(XX_DASHED(iconx)) XX_FI(x))

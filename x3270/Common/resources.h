@@ -103,6 +103,7 @@
 #define ResHostColorForProtectedIntensified ResHostColorFor "ProtectedIntensified"
 #define ResHostname		"hostname"
 #define ResHostsFile		"hostsFile"
+#define ResHttpd		"httpd"
 #define ResIconFont		"iconFont"
 #define ResIconLabelFont	"iconLabelFont"
 #define ResIcrnl		"icrnl"
@@ -151,7 +152,6 @@
 #define ResOnlcr		"onlcr"
 #define ResOverlayPaste		"overlayPaste"
 #define ResOversize		"oversize"
-#define ResPluginCommand	"pluginCommand"
 #define ResPort			"port"
 #define ResPreeditType		"preeditType"
 #define ResPrinterCodepage	"printer.codepage"
@@ -226,6 +226,7 @@
 #define DotEmulatorFont		"." ResEmulatorFont
 #define DotExtended		"." ResExtended
 #define DotHostsFile		"." ResHostsFile
+#define DotHttpd		"." ResHttpd
 #define DotInputMethod		"." ResInputMethod
 #define DotKeyFile		"." ResKeyFile
 #define DotKeyFileType		"." ResKeyFileType
@@ -308,6 +309,7 @@
 #define ClsHighlightBold	"HighlightBold"
 #define ClsHostname		"Hostname"
 #define ClsHostsFile		"HostsFile"
+#define ClsHttpd		"Httpd"
 #define ClsIconFont		"IconFont"
 #define ClsIconLabelFont	"IconLabelFont"
 #define ClsIcrnl		"Icrnl"
@@ -352,7 +354,6 @@
 #define ClsOnlcr		"Onlcr"
 #define ClsOverlayPaste		"OverlayPaste"
 #define ClsOversize		"Oversize"
-#define ClsPluginCommand	"PluginCommand"
 #define ClsPort			"Port"
 #define ClsPreeditType		"PreeditType"
 #define ClsPrinterLu		"PrinterLu"
@@ -418,6 +419,7 @@
 #define OptEmulatorFont		"-efont"
 #define OptExtended		"-extended"
 #define OptHostsFile		"-hostsfile"
+#define OptHttpd		"-httpd"
 #define OptIconName		"-iconname"
 #define OptIconX		"-iconx"
 #define OptIconY		"-icony"

@@ -50,12 +50,16 @@
 
 #include "actionsc.h"
 #include "ansic.h"
+#include "bind-optc.h"
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "unicodec.h"
 #include "ftc.h"
 #include "gluec.h"
 #include "hostc.h"
+#include "httpd-corec.h"
+#include "httpd-nodesc.h"
+#include "httpd-ioc.h"
 #include "icmdc.h"
 #include "idlec.h"
 #include "keymapc.h"
@@ -422,6 +426,18 @@ main(int argc, char *argv[])
 	ansi_init();
 
 	sms_init();
+
+	if (appres.httpd_port) {
+	    struct sockaddr *sa;
+	    socklen_t sa_len;
+
+	    if (!parse_bind_opt(appres.httpd_port, &sa, &sa_len)) {
+		xs_warning("Invalid -httpd port \"%s\"", appres.httpd_port);
+	    } else {
+		httpd_objects_init();
+		hio_init(sa, sa_len);
+	    }
+	}
 
 	register_schange(ST_CONNECT, main_connect);
 	register_schange(ST_3270_MODE, main_connect);

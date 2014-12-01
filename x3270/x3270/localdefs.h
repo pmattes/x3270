@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, Paul Mattes.
+ * Copyright (c) 2000-2009, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -39,10 +39,10 @@
 /* Use X for this stuff. */
 #include <X11/Intrinsic.h>
 
-#define Malloc(n)	XtMalloc(n)
+#define Malloc(n)	((void *)XtMalloc(n))
 #define Free(p)		XtFree((void *)p)
-#define Calloc(n, s)	XtCalloc(n, s)
-#define Realloc(p, s)	XtRealloc((XtPointer)p, s)
+#define Calloc(n, s)	((void *)XtCalloc(n, s))
+#define Realloc(p, s)	((void *)XtRealloc((XtPointer)p, s))
 #define NewString(s)	XtNewString(s)
 
 #define Error(s)	XtError(s)

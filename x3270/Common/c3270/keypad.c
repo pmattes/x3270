@@ -33,6 +33,7 @@
 
 #include "globals.h"
 
+#include "actionsc.h"
 #include "macrosc.h"
 #include "3270ds.h"
 #include "appres.h"

@@ -49,6 +49,7 @@
 #include <signal.h>
 #include <stdarg.h>
 #include <assert.h>
+
 #include "3270ds.h"
 #include "appres.h"
 #include "ctlr.h"
@@ -521,6 +522,11 @@ sms_pop(Boolean can_exit)
 	/* When you pop the peer script, that's the end of x3270. */
 	if (sms->type == ST_PEER && !sms->is_transient && can_exit)
 		x3270_exit(0);
+
+	/* If this is a callback macro, propagate the state. */
+	if (sms->next != NULL && sms->next->type == ST_CB) {
+		sms->next->success = sms->success;
+	}
 
 	/* Remove the input event. */
 	script_disable();
@@ -1305,6 +1311,8 @@ run_macro(void)
 	 * we run out of commands.
 	 */
 	while (*a) {
+		enum iaction ia;
+
 		/*
 		 * Check for command failure.
 		 */
@@ -1322,7 +1330,16 @@ run_macro(void)
 		s = sms;
 		s->success = True;
 		s->executing = True;
-		es = execute_command(st_cause[s->type], a, &nextm);
+
+		if (s->type == ST_MACRO &&
+		    s->next != NULL &&
+		    s->next->type == ST_CB) {
+			ia = s->next->cbx.cb->ia;
+		} else {
+			ia = st_cause[s->type];
+		}
+
+		es = execute_command(ia, a, &nextm);
 		s->executing = False;
 		s->dptr = nextm;
 

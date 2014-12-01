@@ -36,6 +36,7 @@
 #include "appres.h"
 #include "resources.h"
 
+#include "actionsc.h"
 #include "gluec.h"
 #include "hostc.h"
 #include "keymapc.h"

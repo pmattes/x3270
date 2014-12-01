@@ -42,13 +42,16 @@ SSLLIB = gdi32.lib
 
 XCPPFLAGS = /D_WIN32 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /D_CRT_SECURE_NO_DEPRECATE /DWIN32_LEAN_AND_MEAN /W3 /WX $(SSLDEF)
 CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I.
-VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj charset.obj ctlr.obj \
-	fallbacks.obj fprint_screen.obj ft.obj ft_cut.obj ft_dft.obj glue.obj \
-	host.obj idle.obj kybd.obj macros.obj print.obj printer.obj proxy.obj \
-	readres.obj resolver.obj resources.obj rpq.obj see.obj sf.obj \
-	smain.obj snprintf.obj ssl_dll.obj tables.obj telnet.obj toggles.obj \
-	trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj \
-	w3misc.obj windirs.obj winprint.obj winvers.obj ws3270.RES xio.obj
+VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj asprintf.obj bind-opt.obj \
+	charset.obj ctlr.obj fallbacks.obj favicon.obj fprint_screen.obj \
+	ft.obj ft_cut.obj ft_dft.obj glue.obj host.obj httpd-core.obj \
+	httpd-io.obj httpd-nodes.obj idle.obj kybd.obj macros.obj print.obj \
+	printer.obj proxy.obj readres.obj resolver.obj resources.obj rpq.obj \
+	see.obj sf.obj smain.obj snprintf.obj ssl_dll.obj tables.obj \
+	telnet.obj toggles.obj trace_ds.obj unicode.obj unicode_dbcs.obj \
+	utf8.obj util.obj varbuf.obj w3misc.obj windirs.obj winprint.obj \
+	winvers.obj ws3270.RES xio.obj
+
 OBJECTS = $(VOBJS) version.obj
 LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib
 SHRTLIBS = ole32.lib
@@ -95,10 +98,16 @@ ansi.obj: ansi.c
 	$(CC) $(CFLAGS) /c ansi.c
 apl.obj: apl.c
 	$(CC) $(CFLAGS) /c apl.c
+asprintf.obj: asprintf.c
+	$(CC) $(CFLAGS) /c asprintf.c
+bind-opt.obj: bind-opt.c
+	$(CC) $(CFLAGS) /c bind-opt.c
 charset.obj: charset.c
 	$(CC) $(CFLAGS) /c charset.c
 ctlr.obj: ctlr.c
 	$(CC) $(CFLAGS) /c ctlr.c
+favicon.obj: favicon.c
+	$(CC) $(CFLAGS) /c favicon.c
 fprint_screen.obj: fprint_screen.c
 	$(CC) $(CFLAGS) /c fprint_screen.c
 ft.obj: ft.c
@@ -111,12 +120,20 @@ glue.obj: glue.c
 	$(CC) $(CFLAGS) /c glue.c
 host.obj: host.c
 	$(CC) $(CFLAGS) /c host.c
+httpd-core.obj: httpd-core.c
+	$(CC) $(CFLAGS) /c httpd-core.c
+httpd-io.obj: httpd-io.c
+	$(CC) $(CFLAGS) /c httpd-io.c
+httpd-nodes.obj: httpd-nodes.c
+	$(CC) $(CFLAGS) /c httpd-nodes.c
 idle.obj: idle.c
 	$(CC) $(CFLAGS) /c idle.c
 kybd.obj: kybd.c
 	$(CC) $(CFLAGS) /c kybd.c
 macros.obj: macros.c
 	$(CC) $(CFLAGS) /c macros.c
+mkshort.obj: mkshort.c
+	$(CC) $(CFLAGS) /c mkshort.c
 print.obj: print.c
 	$(CC) $(CFLAGS) /c print.c
 printer.obj: printer.c
@@ -135,6 +152,8 @@ see.obj: see.c
 	$(CC) $(CFLAGS) /c see.c
 sf.obj: sf.c
 	$(CC) $(CFLAGS) /c sf.c
+shortcut.obj: shortcut.c
+	$(CC) $(CFLAGS) /c shortcut.c
 smain.obj: smain.c
 	$(CC) $(CFLAGS) /c smain.c
 snprintf.obj: snprintf.c
@@ -157,19 +176,17 @@ utf8.obj: utf8.c
 	$(CC) $(CFLAGS) /c utf8.c
 util.obj: util.c
 	$(CC) $(CFLAGS) /c util.c
-xio.obj: xio.c
-	$(CC) $(CFLAGS) /c xio.c
+varbuf.obj: varbuf.c
+	$(CC) $(CFLAGS) /c varbuf.c
 winvers.obj: winvers.c
 	$(CC) $(CFLAGS) /c winvers.c
 windirs.obj: windirs.c
 	$(CC) $(CFLAGS) /c windirs.c
-mkshort.obj: mkshort.c
-	$(CC) $(CFLAGS) /c mkshort.c
-shortcut.obj: shortcut.c
-	$(CC) $(CFLAGS) /c shortcut.c
-wizard.obj: wizard.c
-	$(CC) $(CFLAGS) /c wizard.c
 w3misc.obj: w3misc.c
 	$(CC) $(CFLAGS) /c w3misc.c
 winprint.obj: winprint.c
 	$(CC) $(CFLAGS) /c winprint.c
+wizard.obj: wizard.c
+	$(CC) $(CFLAGS) /c wizard.c
+xio.obj: xio.c
+	$(CC) $(CFLAGS) /c xio.c

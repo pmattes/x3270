@@ -43,15 +43,18 @@ SSLLIB = gdi32.lib
 
 XCPPFLAGS = /D_WIN32 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /DWINVER=0x500 /D_CRT_SECURE_NO_DEPRECATE /W3 /WX $(SSLDEF)
 CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I.
-VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj c3270.obj charset.obj \
-	ctlr.obj fallbacks.obj fprint_screen.obj ft.obj ft_cut.obj ft_dft.obj \
-	gdi_print.obj glue.obj help.obj host.obj icmd.obj idle.obj keymap.obj \
-	keypad.obj kybd.obj macros.obj menubar.obj print.obj printer.obj \
-	proxy.obj readres.obj relink.obj resolver.obj resources.obj rpq.obj \
-	screen.obj scroll.obj see.obj select.obj sf.obj shortcut.obj \
-	snprintf.obj ssl_dll.obj tables.obj telnet.obj toggles.obj \
-	trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj \
-	w3misc.obj wc3270.RES windirs.obj winprint.obj winvers.obj xio.obj
+
+VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj asprintf.obj bind-opt.obj \
+	c3270.obj charset.obj ctlr.obj fallbacks.obj favicon.obj \
+	fprint_screen.obj ft.obj ft_cut.obj ft_dft.obj gdi_print.obj glue.obj \
+	help.obj host.obj icmd.obj idle.obj keymap.obj keypad.obj kybd.obj \
+	macros.obj menubar.obj print.obj printer.obj proxy.obj readres.obj \
+	relink.obj resolver.obj resources.obj rpq.obj screen.obj scroll.obj \
+	see.obj select.obj sf.obj shortcut.obj snprintf.obj ssl_dll.obj \
+	tables.obj telnet.obj toggles.obj trace_ds.obj unicode.obj \
+	unicode_dbcs.obj utf8.obj util.obj varbuf.obj w3misc.obj wc3270.RES \
+	windirs.obj winprint.obj winvers.obj xio.obj
+
 OBJECTS = $(VOBJS) version.obj
 WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
 	windirs.obj relink.obj snprintf.obj
@@ -129,12 +132,18 @@ ansi.obj: ansi.c
 	$(CC) $(CFLAGS) /c ansi.c
 apl.obj: apl.c
 	$(CC) $(CFLAGS) /c apl.c
+asprintf.obj: asprintf.c
+	$(CC) $(CFLAGS) /c asprintf.c
+bind-opt.obj: bind-opt.c
+	$(CC) $(CFLAGS) /c bind-opt.c
 c3270.obj: c3270.c
 	$(CC) $(CFLAGS) /c c3270.c
 charset.obj: charset.c
 	$(CC) $(CFLAGS) /c charset.c
 ctlr.obj: ctlr.c
 	$(CC) $(CFLAGS) /c ctlr.c
+favicon.obj: favicon.c
+	$(CC) $(CFLAGS) /c favicon.c
 fprint_screen.obj: fprint_screen.c
 	$(CC) $(CFLAGS) /c fprint_screen.c
 ft.obj: ft.c
@@ -151,6 +160,12 @@ help.obj: help.c
 	$(CC) $(CFLAGS) /c help.c
 host.obj: host.c
 	$(CC) $(CFLAGS) /c host.c
+httpd-core.obj: httpd-core.c
+	$(CC) $(CFLAGS) /c httpd-core.c
+httpd-nodes.obj: httpd-nodes.c
+	$(CC) $(CFLAGS) /c httpd-nodes.c
+httpd-io.obj: httpd-io.c
+	$(CC) $(CFLAGS) /c httpd-io.c
 icmd.obj: icmd.c
 	$(CC) $(CFLAGS) /c icmd.c
 idle.obj: idle.c
@@ -191,6 +206,8 @@ see.obj: see.c
 	$(CC) $(CFLAGS) /c see.c
 select.obj: select.c
 	$(CC) $(CFLAGS) /c select.c
+shortcut.obj: shortcut.c
+	$(CC) $(CFLAGS) /c shortcut.c
 sf.obj: sf.c
 	$(CC) $(CFLAGS) /c sf.c
 snprintf.obj: snprintf.c
@@ -213,17 +230,17 @@ utf8.obj: utf8.c
 	$(CC) $(CFLAGS) /c utf8.c
 util.obj: util.c
 	$(CC) $(CFLAGS) /c util.c
-winvers.obj: winvers.c
-	$(CC) $(CFLAGS) /c winvers.c
-windirs.obj: windirs.c
-	$(CC) $(CFLAGS) /c windirs.c
-shortcut.obj: shortcut.c
-	$(CC) $(CFLAGS) /c shortcut.c
-wizard.obj: wizard.c
-	$(CC) $(CFLAGS) /c wizard.c
+varbuf.obj: varbuf.c
+	$(CC) $(CFLAGS) /c varbuf.c
 w3misc.obj: w3misc.c
 	$(CC) $(CFLAGS) /c w3misc.c
+windirs.obj: windirs.c
+	$(CC) $(CFLAGS) /c windirs.c
+winvers.obj: winvers.c
+	$(CC) $(CFLAGS) /c winvers.c
 winprint.obj: winprint.c
 	$(CC) $(CFLAGS) /c winprint.c
+wizard.obj: wizard.c
+	$(CC) $(CFLAGS) /c wizard.c
 xio.obj: xio.c
 	$(CC) $(CFLAGS) /c xio.c

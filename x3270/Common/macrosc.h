@@ -119,6 +119,7 @@ typedef void (*sms_done_cb)(sms_cbh handle, Boolean success,
 	const char *status_buf, size_t status_len);
 typedef struct {
     const char *shortname;
+    enum iaction ia;
     sms_data_cb data;
     sms_done_cb done;
 } sms_cb_t;

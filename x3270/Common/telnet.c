@@ -69,6 +69,7 @@
 
 #include "appres.h"
 
+#include "actionsc.h"
 #include "ansic.h"
 #include "ctlrc.h"
 #include "hostc.h"
