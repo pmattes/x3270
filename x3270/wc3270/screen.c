@@ -1688,9 +1688,9 @@ screen_disp(Boolean erasing _is_unused)
 		}
 
 		for (row = 0; row < screen_yoffset; row++) {
-		    	move(row, 0);
 			int norm, high;
 
+		    	move(row, 0);
 			if (row) {
 				norm = norm1;
 				high = high1;

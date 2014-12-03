@@ -96,6 +96,9 @@
 # define SESSION_SSFX_LEN (int)(sizeof(SESSION_SSFX) - 1)
 #endif /*]*/
 
+/* Typedefs */
+typedef const char *ccp_t;
+
 /* Statics */
 static void no_minus(const char *arg);
 #if defined(LOCAL_PROCESS) /*[*/
@@ -915,23 +918,23 @@ parse_set_clear(int *argcp, const char **argv)
 			}
 		}
 		if (toggle_names[j].name == NULL) {
-			const char **tn;
+			ccp_t *tn;
 			int ntn = 0;
 
-			tn = (const char **)Calloc(N_TOGGLES, sizeof(char **));
+			tn = (ccp_t *)Calloc(N_TOGGLES, sizeof(ccp_t));
 			for (j = 0; toggle_names[j].name != NULL; j++) {
 				if (!toggle_names[j].is_alias) {
 					tn[ntn++] = toggle_names[j].name;
 				}
 			}
-			qsort(tn, ntn, sizeof(const char *), name_cmp);
+			qsort((void *)tn, ntn, sizeof(const char *), name_cmp);
 			fprintf(stderr, "Unknown toggle name '%s'. Toggle "
 				"names are:\n", argv[i]);
 			for (j = 0; j < ntn; j++) {
 				fprintf(stderr, " %s", tn[j]);
 			}
 			fprintf(stderr, "\n");
-			Free(tn);
+			Free((void *)tn);
 			exit(1);
 		}
 

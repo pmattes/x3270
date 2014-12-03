@@ -60,6 +60,13 @@ const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
 typedef unsigned long in_addr_t;
 
 /*
+ * Prior to VS2013, Windows did not define va_copy().
+ */
+#if defined(_WIN32) && !defined(va_copy) /*[*/
+#define va_copy(to, from)	(to) = (from)
+#endif /*]*/
+
+/*
  * Windows snprintf/vsnprintf do not guarantee NUL termination, so we have our
  * own.
  */

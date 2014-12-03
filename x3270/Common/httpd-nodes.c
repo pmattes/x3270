@@ -32,8 +32,8 @@
 
 #include "globals.h"
 
-#include <unistd.h>
 #if !defined(_WIN32) /*[*/
+# include <unistd.h>
 # include <netinet/in.h>
 # include <sys/select.h>
 # include <arpa/inet.h>

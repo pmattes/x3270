@@ -46,7 +46,7 @@ VOBJS = charset.obj ctlr.obj pr3287.obj proxy.obj resolver.obj see.obj sf.obj \
 	unicode.obj unicode_dbcs.obj utf8.obj w3misc.obj windirs.obj \
 	winvers.obj wpr3287.RES ws.obj xtable.obj
 OBJECTS = $(VOBJS) version.obj
-LIBS = $(SSLLIB) ws2_32.lib winspool.lib advapi32.lib
+LIBS = $(SSLLIB) ws2_32.lib winspool.lib advapi32.lib shell32.lib
 
 all: wpr3287.exe
 

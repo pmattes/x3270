@@ -53,7 +53,7 @@ VOBJS = XtGlue.obj actions.obj ansi.obj apl.obj asprintf.obj bind-opt.obj \
 	winvers.obj ws3270.RES xio.obj
 
 OBJECTS = $(VOBJS) version.obj
-LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib
+LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib shell32.lib
 SHRTLIBS = ole32.lib
 WIZLIBS = ole32.lib winspool.lib advapi32.lib
 

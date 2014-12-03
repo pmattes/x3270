@@ -116,14 +116,14 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
     /* Try for the easiest case: a number. */
     u = strtoul(spec, &end, 10);
     if (u != 0 && u <= USHRT_MAX && *end == '\0') {
-	return construct_v4(INADDR_LOOPBACK, u, addr, addrlen);
+	return construct_v4(INADDR_LOOPBACK, (unsigned short)u, addr, addrlen);
     }
 
     /* Try for another easy one: *:<port> */
     if (!strncmp(spec, "*:", 2)) {
 	u = strtoul(spec + 2, &end, 10);
 	if (u != 0 && u <= USHRT_MAX && *end == '\0') {
-	    return construct_v4(INADDR_ANY, u, addr, addrlen);
+	    return construct_v4(INADDR_ANY, (unsigned short)u, addr, addrlen);
 	} else {
 	    return False;
 	}
