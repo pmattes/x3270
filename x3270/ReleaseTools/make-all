@@ -137,7 +137,7 @@ for prod in $prods
 do	cp $prod/$prod-src.tgz $tmpdir/
 done
 if [ "$all" ]
-then	cp VS.tgz $tmpdir/
+then	cp -R VS2010/ $tmpdir/
 fi
 
 echo "===== Expanding tarballs."
@@ -146,14 +146,11 @@ cd $tmpdir
 for prod in $prods
 do	tar -xzf $prod-src.tgz
 done
-if [ "$all" ]
-then	tar -xzf VS.tgz
-fi
 
 if [ "$all" ]
 then	echo "===== Making mega-tarball."
 	# Make a mega-tarball.
-	tar -czf $suite *-$major/ Playback/ VS/
+	tar -czf $suite *-$major/ Playback/ VS2010/
 fi
 if [ "$tarball" ]
 then	echo "Tarball is $tmpdir/$suite."

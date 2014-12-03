@@ -190,7 +190,7 @@ httpd_data_trace(httpd_t *h, const char *direction, const char *buf,
 {
     size_t i;
 #define BPL 16
-    char linebuf[BPL];
+    unsigned char linebuf[BPL];
     size_t j;
 
     for (i = 0; i < len; i++) {
@@ -701,7 +701,7 @@ httpd_digest_request_line(httpd_t *h)
      */
 
     /* White space at the beginning of the input is bad. */
-    if (isspace(rq[0])) {
+    if (isspace((unsigned char)rq[0])) {
 	return httpd_error(h, errmode, 400, "<P>Invalid request "
 		"syntax.</P>\n<P>Whitespace at the beginning of the "
 		"request.</P>");
@@ -1381,14 +1381,16 @@ httpd_digest_request(httpd_t *h)
 	    field_t *f;
 
 	    /* The field name needs to start with a non-space, non-colon. */
-	    if (iscntrl(*s) || isspace(*s) || *s == ':') {
+	    if (iscntrl((unsigned char)*s) ||
+		    isspace((unsigned char)*s) ||
+		    *s == ':') {
 		return httpd_error(h, ERRMODE_FATAL, 400, "Malformed "
 			"field name in request.");
 	    }
 
 	    /* Parse the rest of the name. */
-	    while (*s != '\n' && *s != ':' && !isspace(*s)) {
-		if (iscntrl(*s)) {
+	    while (*s != '\n' && *s != ':' && !isspace((unsigned char)*s)) {
+		if (iscntrl((unsigned char)*s)) {
 		    return httpd_error(h, ERRMODE_FATAL, 400,
 			    "Malformed field name in request.");
 		}
@@ -1397,7 +1399,7 @@ httpd_digest_request(httpd_t *h)
 	    field_name_len = s - field_name;
 
 	    /* Skip spaces after the name (technically illegal). */
-	    while (*s != '\n' && isspace(*s)) {
+	    while (*s != '\n' && isspace((unsigned char)*s)) {
 		s++;
 	    }
 
@@ -1409,7 +1411,7 @@ httpd_digest_request(httpd_t *h)
 	    s++;
 
 	    /* Skip spaces after the colon. */
-	    while (*s != '\n' && isspace(*s)) {
+	    while (*s != '\n' && isspace((unsigned char)*s)) {
 		s++;
 	    }
 
@@ -1421,7 +1423,7 @@ httpd_digest_request(httpd_t *h)
 	    value_len = s - value;
 
 	    /* Trim trailing spaces from the value. */
-	    while (value_len && isspace(s[value_len - 1])) {
+	    while (value_len && isspace((unsigned char)s[value_len - 1])) {
 		value_len--;
 	    }
 	    if (value_len == 0) {

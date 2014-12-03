@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\ws3270-3.3\actions.c" />
+    <ClCompile Include="..\..\ws3270-3.3\ansi.c" />
+    <ClCompile Include="..\..\ws3270-3.3\apl.c" />
+    <ClCompile Include="..\..\ws3270-3.3\asprintf.c" />
+    <ClCompile Include="..\..\ws3270-3.3\bind-opt.c" />
+    <ClCompile Include="..\..\ws3270-3.3\charset.c" />
+    <ClCompile Include="..\..\ws3270-3.3\ctlr.c" />
+    <ClCompile Include="..\..\ws3270-3.3\fallbacks.c" />
+    <ClCompile Include="..\..\ws3270-3.3\favicon.c" />
+    <ClCompile Include="..\..\ws3270-3.3\fprint_screen.c" />
+    <ClCompile Include="..\..\ws3270-3.3\ft.c" />
+    <ClCompile Include="..\..\ws3270-3.3\ft_cut.c" />
+    <ClCompile Include="..\..\ws3270-3.3\ft_dft.c" />
+    <ClCompile Include="..\..\ws3270-3.3\glue.c" />
+    <ClCompile Include="..\..\ws3270-3.3\host.c" />
+    <ClCompile Include="..\..\ws3270-3.3\httpd-core.c" />
+    <ClCompile Include="..\..\ws3270-3.3\httpd-io.c" />
+    <ClCompile Include="..\..\ws3270-3.3\httpd-nodes.c" />
+    <ClCompile Include="..\..\ws3270-3.3\idle.c" />
+    <ClCompile Include="..\..\ws3270-3.3\kybd.c" />
+    <ClCompile Include="..\..\ws3270-3.3\macros.c" />
+    <ClCompile Include="..\..\ws3270-3.3\print.c" />
+    <ClCompile Include="..\..\ws3270-3.3\printer.c" />
+    <ClCompile Include="..\..\ws3270-3.3\proxy.c" />
+    <ClCompile Include="..\..\ws3270-3.3\readres.c" />
+    <ClCompile Include="..\..\ws3270-3.3\resolver.c" />
+    <ClCompile Include="..\..\ws3270-3.3\resources.c" />
+    <ClCompile Include="..\..\ws3270-3.3\rpq.c" />
+    <ClCompile Include="..\..\ws3270-3.3\see.c" />
+    <ClCompile Include="..\..\ws3270-3.3\sf.c" />
+    <ClCompile Include="..\..\ws3270-3.3\smain.c" />
+    <ClCompile Include="..\..\ws3270-3.3\snprintf.c" />
+    <ClCompile Include="..\..\ws3270-3.3\ssl_dll.c" />
+    <ClCompile Include="..\..\ws3270-3.3\strtok_r.c" />
+    <ClCompile Include="..\..\ws3270-3.3\tables.c" />
+    <ClCompile Include="..\..\ws3270-3.3\telnet.c" />
+    <ClCompile Include="..\..\ws3270-3.3\toggles.c" />
+    <ClCompile Include="..\..\ws3270-3.3\trace_ds.c" />
+    <ClCompile Include="..\..\ws3270-3.3\unicode.c" />
+    <ClCompile Include="..\..\ws3270-3.3\unicode_dbcs.c" />
+    <ClCompile Include="..\..\ws3270-3.3\utf8.c" />
+    <ClCompile Include="..\..\ws3270-3.3\util.c" />
+    <ClCompile Include="..\..\ws3270-3.3\varbuf.c" />
+    <ClCompile Include="..\..\ws3270-3.3\version.c" />
+    <ClCompile Include="..\..\ws3270-3.3\w3misc.c" />
+    <ClCompile Include="..\..\ws3270-3.3\windirs.c" />
+    <ClCompile Include="..\..\ws3270-3.3\winprint.c" />
+    <ClCompile Include="..\..\ws3270-3.3\winvers.c" />
+    <ClCompile Include="..\..\ws3270-3.3\xio.c" />
+    <ClCompile Include="..\..\ws3270-3.3\XtGlue.c" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{74911F0D-82AF-4FFC-8A43-C411597A64C1}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>ws3270</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>NotSet</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32;_WIN32_WINNT=0x0500;_WIN32_IE=0x0500;WINVER=0x500;_CRT_SECURE_NO_DEPRECATE;SSLDIR=C:\OpenSSL-Win32;HAVE_LIBSSL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalIncludeDirectories>C:\OpenSSL-Win32\include;%(RootDir)%(Directory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>C:\OpenSSL-Win32\lib\VC\static\ssleay32MDd.lib;C:\OpenSSL-Win32\lib\VC\static\libeay32MDd.lib;Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
