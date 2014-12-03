@@ -198,7 +198,7 @@ do
 			;;
 		esac
 		if [ "$islinux" ]
-		then	make -j4 CDEBUGFLAGS="-g -Wall -ansi -pedantic -Wsign-compare $xflags -Werror"
+		then	make -j4 CDEBUGFLAGS="-g $xflags -Werror"
 		else	make -j4
 		fi
 		if [ -f $d2/instlist.base ]
