@@ -2462,6 +2462,14 @@ desc
     port.
     The rules for the commands passed over these connections are documented
     in the <i>x3270-script</i> manual page.
+    The syntax of this resource is [<i>address</i>:]<i>port</i>, where
+    <i>address</i> is an IPv4 or IPv6 address such as <b>127.0.0.1</b> or
+    <b>0.0.0.0</b>, and <i>port</i> is a TCP port such as <b>4081</b>. The
+    address can also be specified as <b>*</b> to indicate <b>0.0.0.0</b>. A
+    numeric IPv6 address must be enclosed in square brackets, e.g.,
+    <b>[1234:5678::3]</b>, to avoid ambiguity between the colons inside the
+    address and the colon separating the address from the port. If no address
+    is specified, it defaults to <b>127.0.0.1</b>.
 .
 
 name scrollBar

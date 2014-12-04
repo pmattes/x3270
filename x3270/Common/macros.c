@@ -57,6 +57,7 @@
 #include "resources.h"
 
 #include "actionsc.h"
+#include "bind-optc.h"
 #include "charsetc.h"
 #include "childc.h"
 #include "ctlrc.h"
@@ -637,24 +638,26 @@ peer_script_init(void)
 	Boolean on_top;
 
 	if (appres.script_port) {
-		struct sockaddr_in sin;
+		struct sockaddr *sa;
+		socklen_t sa_len;
 		int on = 1;
 
-		if (appres.script_port > 0xffff) {
-			popup_an_error("Script port value %d >%d, ignoring",
-				appres.script_port, 0xffff);
+		if (!parse_bind_opt(appres.script_port, &sa, &sa_len)) {
+			popup_an_error("Invalid script port value '%s', "
+				"ignoring", appres.script_port);
 			return;
 		}
 #if !defined(_WIN32) /*[*/
-		if (appres.socket)
+		if (appres.socket) {
 		    	xs_warning("-scriptport overrides -socket");
+		}
 #endif /*]*/
 
 		/* -scriptport overrides -script */
 		appres.scripted = False;
 
 		/* Create the listening socket. */
-		socketfd = socket(AF_INET, SOCK_STREAM, 0);
+		socketfd = socket(sa->sa_family, SOCK_STREAM, 0);
 		if (socketfd < 0) {
 #if !defined(_WIN32) /*[*/
 			popup_an_errno(errno, "socket()");
@@ -662,6 +665,7 @@ peer_script_init(void)
 			popup_an_error("socket(): %s",
 				win32_strerror(GetLastError()));
 #endif /*]*/
+			Free(sa);
 			return;
 		}
 		if (setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, (char *)&on,
@@ -672,14 +676,10 @@ peer_script_init(void)
 			popup_an_error("setsockopt(SO_REUSEADDR): %s",
 				win32_strerror(GetLastError()));
 #endif /*]*/
+			Free(sa);
 			return;
 		}
-		(void) memset(&sin, '\0', sizeof(sin));
-		sin.sin_family = AF_INET;
-		sin.sin_port = htons(appres.script_port);
-		sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-		if (bind(socketfd, (struct sockaddr *)&sin, sizeof(sin))
-				< 0) {
+		if (bind(socketfd, sa, sa_len) < 0) {
 #if !defined(_WIN32) /*[*/
 			popup_an_errno(errno, "socket bind");
 #else /*][*/
@@ -688,8 +688,10 @@ peer_script_init(void)
 #endif /*]*/
 			SOCK_CLOSE(socketfd);
 			socketfd = -1;
+			Free(sa);
 			return;
 		}
+		Free(sa);
 		if (listen(socketfd, 1) < 0) {
 #if !defined(_WIN32) /*[*/
 			popup_an_errno(errno, "socket listen");

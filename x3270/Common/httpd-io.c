@@ -72,6 +72,7 @@ typedef SOCKET socket_t;
 
 #define N_SESSIONS	32
 typedef struct {
+    llist_t link;	/* list linkage */
     socket_t s;		/* socket */
 #if defined(_WIN32) /*[*/
     HANDLE event;
@@ -87,7 +88,7 @@ typedef struct {
 	Boolean done;	/* is the command done? */
     } pending;
 } session_t;
-static session_t session[N_SESSIONS];
+llist_t sessions = LLIST_INIT(sessions);
 static int n_sessions;
 static socket_t listen_s;
 #if defined(_WIN32) /*[*/
@@ -113,24 +114,21 @@ socket_errtext(void)
  * Close the session associated with a particular socket.
  * Called from the HTTPD logic when a fatal error or EOF occurs.
  *
- * @param[in] ix	session index
+ * @param[in] session	Session
  */
 static void
-hio_socket_close(int ix)
+hio_socket_close(session_t *session)
 {
-    SOCK_CLOSE(session[ix].s);
-    if (session[ix].ioid != NULL_IOID) {
-	RemoveInput(session[ix].ioid);
-	session[ix].ioid = NULL_IOID;
+    SOCK_CLOSE(session->s);
+    if (session->ioid != NULL_IOID) {
+	RemoveInput(session->ioid);
     }
-    session[ix].s = INVALID_SOCKET;
 #if defined(_WIN32) /*[*/
-    CloseHandle(session[ix].event);
-    session[ix].event = INVALID_HANDLE_VALUE;
+    CloseHandle(session->event);
 #endif /*]*/
-    session[ix].dhandle = NULL;
-    session[ix].idle = 0;
-    vb_free(&session[ix].pending.result);
+    vb_free(&session->pending.result);
+    llist_unlink(&session->link);
+    Free(session);
     n_sessions--;
 }
 
@@ -143,23 +141,28 @@ hio_socket_close(int ix)
 void
 hio_socket_input(unsigned long fd, ioid_t id)
 {
-    int i;
+    session_t *session;
     char buf[1024];
     ssize_t nr;
 
-    for (i = 0; i < N_SESSIONS; i++) {
-	if (session[i].ioid == id) {
+    session = NULL;
+    FOREACH_LLIST(&sessions, session, session_t *) {
+	if (session->ioid == id) {
 	    break;
 	}
-    }
-    if (i >= N_SESSIONS) {
+    } FOREACH_LLIST_END(&sessions, session, session_t *);
+    if (session == NULL) {
 	popup_an_error("httpd mystery input");
 	return;
     }
 
-    session[i].idle = 0;
+    /* Move this session to the front of the list. */
+    llist_unlink(&session->link);
+    llist_insert_before(&session->link, &sessions);
 
-    nr = recv(session[i].s, buf, sizeof(buf), 0);
+    session->idle = 0;
+
+    nr = recv(session->s, buf, sizeof(buf), 0);
     if (nr <= 0) {
 	char ebuf[1024];
 
@@ -169,19 +172,19 @@ hio_socket_input(unsigned long fd, ioid_t id)
 	} else {
 	    strcpy(ebuf, "session EOF");
 	}
-	httpd_close(session[i].dhandle, ebuf);
-	hio_socket_close(i);
+	httpd_close(session->dhandle, ebuf);
+	hio_socket_close(session);
     } else {
 	httpd_status_t rv;
 
-	rv = httpd_input(session[i].dhandle, buf, nr);
+	rv = httpd_input(session->dhandle, buf, nr);
 	if (rv < 0) {
-	    httpd_close(session[i].dhandle, "protocol error");
-	    hio_socket_close(i);
+	    httpd_close(session->dhandle, "protocol error");
+	    hio_socket_close(session);
 	} else if (rv == HS_PENDING) {
 	    /* Stop input on this socket. */
-	    RemoveInput(session[i].ioid);
-	    session[i].ioid = NULL_IOID;
+	    RemoveInput(session->ioid);
+	    session->ioid = NULL_IOID;
 	}
     }
 }
@@ -199,7 +202,7 @@ hio_connection(unsigned long fd, ioid_t id)
     struct sockaddr_in sin;
     socklen_t len;
     char namebuf[256];
-    int i;
+    session_t *session;
 
     len = sizeof(sin);
     t = accept(listen_s, (struct sockaddr *)&sin, &len);
@@ -214,39 +217,36 @@ hio_connection(unsigned long fd, ioid_t id)
 	SOCK_CLOSE(t);
 	return;
     }
-    for (i = 0; i < N_SESSIONS; i++) {
-	if (session[i].s == INVALID_SOCKET) {
-	    break;
-	}
-    }
-    assert(i < N_SESSIONS);
 
-    session[i].s = t;
+    session = Malloc(sizeof(session_t));
+    memset(session, 0, sizeof(session_t));
+    vb_init(&session->pending.result);
+    session->s = t;
 #if defined(_WIN32) /*[*/
-    session[i].event = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (session[i].event == NULL) {
+    session->event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (session->event == NULL) {
 	popup_an_error("httpd: can't create socket handle");
 	SOCK_CLOSE(t);
-	session[i].s = INVALID_SOCKET;
+	Free(session);
 	return;
     }
-    if (WSAEventSelect(session[i].s, session[i].event,
-		FD_READ | FD_CLOSE) != 0) {
+    if (WSAEventSelect(session->s, session->event, FD_READ | FD_CLOSE) != 0) {
 	popup_an_error("httpd: Can't set socket handle events");
-	CloseHandle(session[i].event);
-	session[i].event = INVALID_HANDLE_VALUE;
+	CloseHandle(session->event);
 	SOCK_CLOSE(t);
-	session[i].s = INVALID_SOCKET;
+	Free(session);
 	return;
     }
 #endif /*]*/
-    session[i].dhandle = httpd_new(&session[i], namebuf);
+    session->dhandle = httpd_new(session, namebuf);
 #if !defined(_WIN32) /*[*/
-    session[i].ioid = AddInput(t, hio_socket_input);
+    session->ioid = AddInput(t, hio_socket_input);
 #else /*][*/
-    session[i].ioid = AddInput((unsigned long)session[i].event,
+    session->ioid = AddInput((unsigned long)session->event,
 	    hio_socket_input);
 #endif /*]*/
+
+    llist_insert_before(&session->link, &sessions);
     n_sessions++;
 }
 
@@ -259,14 +259,7 @@ hio_connection(unsigned long fd, ioid_t id)
 void
 hio_init(struct sockaddr *sa, socklen_t sa_len)
 {
-    int i;
     int on = 1;
-
-    /* Clear out the sockets. */
-    for (i = 0; i < N_SESSIONS; i++) {
-	session[i].s = INVALID_SOCKET;
-	vb_init(&session[i].pending.result);
-    }
 
     listen_s = socket(sa->sa_family, SOCK_STREAM, 0);
     if (listen_s < 0) {
@@ -463,7 +456,7 @@ hio_async_done(void *dhandle, httpd_status_t rv)
     session_t *s = httpd_mhandle(dhandle);
 
     if (rv < 0) {
-	hio_socket_close(s - session);
+	hio_socket_close(s);
     } else if (s->ioid == NULL_IOID) {
 #if !defined(_WIN32) /*[*/
 	s->ioid = AddInput(s->s, hio_socket_input);

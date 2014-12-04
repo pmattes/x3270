@@ -158,7 +158,7 @@ typedef struct {
 	Boolean bind_limit;
 	Boolean new_environ;
 	Boolean socket;
-	int	script_port;
+	char    *script_port;
 	char	*httpd_port;
 
 	/* Named resources */

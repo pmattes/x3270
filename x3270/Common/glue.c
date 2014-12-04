@@ -715,8 +715,8 @@ static struct {
 { OptScripted, OPT_NOP,     False, ResScripted,  NULL,
     CN, "Turn on scripting" },
 #endif /*]*/
-{ OptScriptPort,OPT_INT,    True, ResScriptPort, offset(script_port),
-    "<port>", "TCP port to listen on for script commands" },
+{ OptScriptPort,OPT_STRING, False, ResScriptPort, offset(script_port),
+    "[<addr>:]<port>", "TCP port to listen on for script commands" },
 #if defined(C3270) /*[*/
 { OptSecure,   OPT_BOOLEAN, True,  ResSecure,    offset(secure),
     CN, "Restrict potentially-destructive user actions" },
@@ -1137,7 +1137,7 @@ static struct {
 	{ ResSelfSignedOk,offset(self_signed_ok),XRM_BOOLEAN },
 #endif /*]*/
 	{ ResSbcsCgcsgid, offset(sbcs_cgcsgid),	XRM_STRING },
-	{ ResScriptPort,offset(script_port),	XRM_INT },
+	{ ResScriptPort,offset(script_port),	XRM_STRING },
 	{ ResTermName,	offset(termname),	XRM_STRING },
 #if defined(WC3270) /*[*/
 	{ ResTitle,	offset(title),		XRM_STRING },

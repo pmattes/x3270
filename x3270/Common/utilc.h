@@ -82,3 +82,27 @@ extern const char *display_scale(double d, char *buf, size_t buflen);
 #if defined(WC3270) /*[*/
 extern void start_html_help(void);
 #endif /*]*/
+
+/* Doubly-linked lists. */
+typedef struct llist {
+    struct llist *next;
+    struct llist *prev;
+} llist_t;
+
+extern Boolean llist_isempty(llist_t *l);
+extern void llist_init(llist_t *l);
+extern void llist_insert_before(llist_t *element, llist_t *before);
+extern void llist_unlink(llist_t *element);
+
+#define LLIST_INIT(head)	{ &head, &head }
+
+#define FOREACH_LLIST(head, elt, type) { \
+    llist_t *_elt; \
+    llist_t *_next; \
+    for (_elt = (head)->next; _elt != (head); _elt = _next) { \
+	_next = _elt->next; \
+	(elt) = (type)(void *)_elt;
+
+#define FOREACH_LLIST_END(head, elt, type) \
+    } \
+}

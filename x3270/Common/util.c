@@ -1166,3 +1166,34 @@ start_html_help(void)
 	screen_fixup(); /* get back mouse events */
 }
 #endif /*]*/
+
+/*
+ * Doubly-linked lists.
+ */
+Boolean
+llist_isempty(llist_t *l)
+{
+    return l->next == l && l->prev == l;
+}
+
+void
+llist_init(llist_t *l)
+{
+    l->next = l->prev = l;
+}
+
+void
+llist_insert_before(llist_t *element, llist_t *before)
+{
+    element->next = before;
+    element->prev = before->prev;
+    before->prev->next = element;
+    before->prev = element;
+}
+
+void
+llist_unlink(llist_t *element)
+{
+    element->next->prev = element->next;
+    element->prev->next = element->prev;
+}

@@ -418,12 +418,14 @@ It is generally a good idea to put this option on the command lines of all
 shortcuts, to avoid infinite looping.
 ')dnl
 ifelse(XX_PRODUCT,tcl3270,,
-`XX_TP(XX_FB(XX_DASHED(scriptport)) XX_FI(port))
+`XX_TP(XX_FB(XX_DASHED(scriptport)) XX_FB(`[')`'XX_FI(addr)`'XX_FB(`:]')`'XX_FI(port))
+Specifies a port (and optional address) to listen on for scripting connections.
+XX_FI(Addr) can be specified as XX_DQUOTED(*) to indicate 0.0.0.0; the
+default is 127.0.0.1. IPv6 numeric addresses must be specified inside of
+square brackets, e.g., [::1]:4081 to specify the IPv6 loopback address and
+TCP port 4081.
 Causes XX_PRODUCT to listen for scripting connections on local TCP
 port XX_FI(port).
-ifelse(XX_MODE,console,`Note that this is the only way to do peer scripting
-on XX_PRODUCT.
-')dnl
 ')dnl
 ifelse(XX_PRODUCT,c3270,
 `XX_TP(XX_FB(XX_DASHED(secure)))
