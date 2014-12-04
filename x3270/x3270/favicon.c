@@ -1,0 +1,1 @@
+../Shared/favicon.c
