@@ -8,6 +8,11 @@ all: $(ALL)
 
 $(ALL_BUT_WEBPAGE): Webpage-dir
 
+Webpage-dir: Shared-dir
+
+Shared-dir:
+	cd Shared && $(MAKE)
+
 Webpage-dir:
 	cd Webpage && $(MAKE)
 
