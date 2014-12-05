@@ -80,6 +80,7 @@ typedef struct {
     void *dhandle;	/* httpd protocol handle */
     int idle;
     ioid_t ioid;	/* AddInput ID */
+    ioid_t toid;	/* AddTimeOut ID */
 
     struct {		/* pending command state: */
 	sendto_callback_t *callback; /* callback function */
@@ -123,6 +124,9 @@ hio_socket_close(session_t *session)
     if (session->ioid != NULL_IOID) {
 	RemoveInput(session->ioid);
     }
+    if (session->toid != NULL_IOID) {
+	RemoveTimeOut(session->toid);
+    }
 #if defined(_WIN32) /*[*/
     CloseHandle(session->event);
 #endif /*]*/
@@ -130,6 +134,32 @@ hio_socket_close(session_t *session)
     llist_unlink(&session->link);
     Free(session);
     n_sessions--;
+}
+
+/**
+ * httpd timeout.
+ *
+ * @param[in] id	timeout ID
+ */
+static void
+hio_timeout(ioid_t id)
+{
+    session_t *session;
+
+    session = NULL;
+    FOREACH_LLIST(&sessions, session, session_t *) {
+	if (session->toid == id) {
+	    break;
+	}
+    } FOREACH_LLIST_END(&sessions, session, session_t *);
+    if (session == NULL) {
+	popup_an_error("httpd mystery timeout");
+	return;
+    }
+
+    session->toid = NULL_IOID;
+    httpd_close(session->dhandle, "timeout");
+    hio_socket_close(session);
 }
 
 /**
@@ -158,9 +188,14 @@ hio_socket_input(unsigned long fd, ioid_t id)
 
     /* Move this session to the front of the list. */
     llist_unlink(&session->link);
-    llist_insert_before(&session->link, &sessions);
+    llist_insert_before(&session->link, sessions.next);
 
     session->idle = 0;
+
+    if (session->toid != NULL_IOID) {
+	RemoveTimeOut(session->toid);
+	session->toid = NULL_IOID;
+    }
 
     nr = recv(session->s, buf, sizeof(buf), 0);
     if (nr <= 0) {
@@ -185,6 +220,9 @@ hio_socket_input(unsigned long fd, ioid_t id)
 	    /* Stop input on this socket. */
 	    RemoveInput(session->ioid);
 	    session->ioid = NULL_IOID;
+	} else if (session->toid == NULL_IOID) {
+	    /* Leave input enabled and start the timeout. */
+	    session->toid = AddTimeOut(IDLE_MAX * 1000, hio_timeout);
 	}
     }
 }
@@ -246,7 +284,10 @@ hio_connection(unsigned long fd, ioid_t id)
 	    hio_socket_input);
 #endif /*]*/
 
-    llist_insert_before(&session->link, &sessions);
+    /* Set the timeout for the first line of input. */
+    session->toid = AddTimeOut(IDLE_MAX * 1000, hio_timeout);
+
+    llist_insert_before(&session->link, sessions.next);
     n_sessions++;
 }
 
@@ -453,15 +494,29 @@ hio_to3270(const char *cmd, sendto_callback_t *callback, void *dhandle,
 void
 hio_async_done(void *dhandle, httpd_status_t rv)
 {
-    session_t *s = httpd_mhandle(dhandle);
+    session_t *session = httpd_mhandle(dhandle);
 
     if (rv < 0) {
-	hio_socket_close(s);
-    } else if (s->ioid == NULL_IOID) {
+	hio_socket_close(session);
+	return;
+    }
+
+    /* Allow more input. */
+    if (session->ioid == NULL_IOID) {
 #if !defined(_WIN32) /*[*/
-	s->ioid = AddInput(s->s, hio_socket_input);
+	session->ioid = AddInput(session->s, hio_socket_input);
 #else /*][*/
-	s->ioid = AddInput((unsigned long)s->event, hio_socket_input);
+	session->ioid = AddInput((unsigned long)session->event,
+		hio_socket_input);
 #endif /*]*/
+    }
+
+    /*
+     * Set a timeout for that input to arrive. We didn't set this timeout
+     * as soon as the last input arrived, because it might have taken us a
+     * long time to proces the last request.
+     */
+    if (session->toid == NULL_IOID) {
+	session->toid = AddTimeOut(IDLE_MAX * 1000, hio_timeout);
     }
 }

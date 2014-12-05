@@ -1194,6 +1194,6 @@ llist_insert_before(llist_t *element, llist_t *before)
 void
 llist_unlink(llist_t *element)
 {
-    element->next->prev = element->next;
-    element->prev->next = element->prev;
+    element->next->prev = element->prev;
+    element->prev->next = element->next;
 }
