@@ -1635,8 +1635,7 @@ ft_complete(const char *errmsg)
 		bytes_sec = (double)ft_length /
 			((double)(t1.tv_sec - t0.tv_sec) + 
 			 (double)(t1.tv_usec - t0.tv_usec) / 1.0e6);
-		buf = Malloc(256);
-		(void) snprintf(buf, 256, get_message("ftComplete"), ft_length,
+		buf = xs_buffer(get_message("ftComplete"), ft_length,
 			display_scale(bytes_sec, kbuf, sizeof(kbuf)),
 			ft_is_cut ? "CUT" : "DFT");
 		if (ft_is_action) {
