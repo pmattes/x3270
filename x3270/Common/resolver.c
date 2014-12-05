@@ -90,6 +90,8 @@ ipv6_works(void)
  * Resolve a hostname and port using getaddrinfo, allowing IPv4 or IPv6.
  * Returns RHP_SUCCESS for success, RHP_FATAL for fatal error (name resolution
  * impossible), RHP_CANNOT_RESOLVE for simple error (cannot resolve the name).
+ *
+ * XXX: Apparently getaddrinfo does not range-check a numeric service.
  */
 static rhp_t
 resolve_host_and_port_v46(const char *host, char *portname, int ix,

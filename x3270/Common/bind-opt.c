@@ -50,42 +50,6 @@ typedef union {
 } sau_t;
 
 /**
- * Return an IPv4 address.
- *
- * @param[in] port	port number string, with no other punctuation
- * @param[out] sa	returned sockaddr, IPv4 INADDR_LOOPBACK and the port
- * @param[out] addrlen	returned address length
- *
- * @return True if parsed successfully
- */
-static Boolean
-just_port(const char *port, struct sockaddr **sa, socklen_t *addrlen)
-{
-    unsigned long u;
-    char *end;
-    struct sockaddr_in *sin;
-
-    /* Parse the number. */
-    u = strtoul(port, &end, 10);
-
-    /* Validate it. */
-    if (u == 0 || u > USHRT_MAX || *end != '\0') {
-	return False;
-    }
-
-    /* Build up the sockaddr. */
-    sin = Malloc(sizeof(*sin));
-    memset(sin, 0, sizeof(*sin));
-    sin->sin_family = AF_INET;
-    sin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    sin->sin_port = htons((unsigned short)u);
-    *sa = (struct sockaddr *)sin;
-    *addrlen = sizeof(*sin);
-
-    return True;
-}
-
-/**
  * Parse a bind option for -httpd or -scriptport.
  *
  * Syntax:
@@ -128,19 +92,8 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
     *addr = NULL;
     *addrlen = 0;
 
-    /* Try for the easiest case: a number. */
-    if (just_port(spec, addr, addrlen)) {
-	return True;
-    }
-
-    /* Next, a colon and a number. */
-    if (*spec == ':') {
-	return just_port(spec + 1, addr, addrlen);
-    }
-
-    /* Try for another easy one: *:<port> */
-    if (!strncmp(spec, "*:", 2)) {
-	return just_port(spec + 2, addr, addrlen);
+    if (spec == NULL || *spec == '\0') {
+	return False;
     }
 
     /* Tease apart the syntax. */
@@ -164,20 +117,41 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
 	port_str = Malloc(strlen(rbrack + 2) + 1);
 	strcpy(port_str, rbrack + 2);
     } else {
-	char *colon = strchr(spec, ':');
+	char *colon;
 
-	/* We appear to have a <host>:<port>. */
-	if (colon == NULL || colon == spec || !*(colon + 1)) {
-	    return False;
+	/* No square brackets. Use the colon to split the address and port. */
+	colon = strchr(spec, ':');
+	if (colon == NULL) {
+	    /* Just a port. */
+	    host_str = NewString("127.0.0.1");
+	    port_str = NewString(spec);
+	} else if (colon == spec) {
+	    /* Just a colon and a port. */
+	    if (!*(colon + 1)) {
+		return False;
+	    }
+	    host_str = NewString("127.0.0.1");
+	    port_str = NewString(spec + 1);
+	} else {
+	    /* <address>:<port>. */
+	    if (colon == NULL || colon == spec || !*(colon + 1)) {
+		return False;
+	    }
+
+	    hlen = colon - spec;
+	    host_str = Malloc(hlen + 1);
+	    strncpy(host_str, spec, hlen);
+	    host_str[hlen] = '\0';
+
+	    port_str = Malloc(strlen(colon + 1) + 1);
+	    strcpy(port_str, colon + 1);
 	}
+    }
 
-	hlen = colon - spec;
-	host_str = Malloc(hlen + 1);
-	strncpy(host_str, spec, hlen);
-	host_str[hlen] = '\0';
-
-	port_str = Malloc(strlen(colon + 1) + 1);
-	strcpy(port_str, colon + 1);
+    /* Translate '*'. */
+    if (!strcmp(host_str, "*")) {
+	Free(host_str);
+	host_str = NewString("0.0.0.0");
     }
 
     /* Use the resolver to resolve the components we've split apart. */
