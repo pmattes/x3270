@@ -182,6 +182,9 @@ vb_reset(varbuf_t *r)
 /**
  * Consume a buffer (free it and return the contents).
  *
+ * This function is guaranteed never to return NULL, even if nothing was ever
+ * added.
+ *
  * @param[in,out] r	Varbuf to consume
  *
  * @return contents
@@ -189,10 +192,11 @@ vb_reset(varbuf_t *r)
 char *
 vb_consume(varbuf_t *r)
 {
-    char *ret = r->buf;
+    char *ret;
 
+    ret = r->buf;
     vb_init(r);
-    return ret;
+    return ret? ret: NewString("");
 }
 
 /**

@@ -816,7 +816,6 @@ percent_decode(const char *uri, size_t len, Boolean plus)
     char c;
     varbuf_t r;
     char xc;
-    char *ret;
 
     vb_init(&r);
 
@@ -865,8 +864,7 @@ percent_decode(const char *uri, size_t len, Boolean plus)
     }
 
     /* Done. */
-    ret = vb_consume(&r);
-    return ret? ret: NewString("");
+    return vb_consume(&r);
 }
 
 /**
@@ -1997,7 +1995,6 @@ html_quote(const char *text)
 {
     varbuf_t r;
     char c;
-    char *ret;
 
     vb_init(&r);
 
@@ -2020,8 +2017,7 @@ html_quote(const char *text)
 	    break;
 	}
     }
-    ret = vb_consume(&r);
-    return ret? ret: NewString("");
+    return vb_consume(&r);
 }
 
 /**
@@ -2036,7 +2032,6 @@ uri_quote(const char *text)
 {
     varbuf_t r;
     char c;
-    char *ret;
 
     vb_init(&r);
 
@@ -2047,8 +2042,7 @@ uri_quote(const char *text)
 	    vb_appendf(&r, "%%%02x", c & 0xff);
 	}
     }
-    ret = vb_consume(&r);
-    return ret? ret: NewString("");
+    return vb_consume(&r);
 }
 
 /**

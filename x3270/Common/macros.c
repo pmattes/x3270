@@ -764,6 +764,10 @@ peer_script_init(void)
 	}
 #endif /*]*/
 
+	if (appres.httpd_port) {
+		appres.scripted = False;
+	}
+
 	if (!appres.scripted)
 		return;
 

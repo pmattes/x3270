@@ -51,20 +51,37 @@ typedef union {
 
 /**
  * Return an IPv4 address.
+ *
+ * @param[in] port	port number string, with no other punctuation
+ * @param[out] sa	returned sockaddr, IPv4 INADDR_LOOPBACK and the port
+ * @param[out] addrlen	returned address length
+ *
+ * @return True if parsed successfully
  */
 static Boolean
-construct_v4(in_addr_t addr, unsigned short port, struct sockaddr **sa,
-	socklen_t *addrlen)
+just_port(const char *port, struct sockaddr **sa, socklen_t *addrlen)
 {
+    unsigned long u;
+    char *end;
     struct sockaddr_in *sin;
 
+    /* Parse the number. */
+    u = strtoul(port, &end, 10);
+
+    /* Validate it. */
+    if (u == 0 || u > USHRT_MAX || *end != '\0') {
+	return False;
+    }
+
+    /* Build up the sockaddr. */
     sin = Malloc(sizeof(*sin));
     memset(sin, 0, sizeof(*sin));
     sin->sin_family = AF_INET;
-    sin->sin_addr.s_addr = htonl(addr);
-    sin->sin_port = htons(port);
+    sin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    sin->sin_port = htons((unsigned short)u);
     *sa = (struct sockaddr *)sin;
     *addrlen = sizeof(*sin);
+
     return True;
 }
 
@@ -72,7 +89,7 @@ construct_v4(in_addr_t addr, unsigned short port, struct sockaddr **sa,
  * Parse a bind option for -httpd or -scriptport.
  *
  * Syntax:
- *  <port>
+ *  <port> or :<port>
  *   implies 127.0.0.1
  *  <ip4addr>:<port>
  *  *:<port>
@@ -100,8 +117,6 @@ construct_v4(in_addr_t addr, unsigned short port, struct sockaddr **sa,
 Boolean
 parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
 {
-    unsigned long u;
-    char *end;
     size_t hlen;
     char *host_str;
     char *port_str;
@@ -114,19 +129,18 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
     *addrlen = 0;
 
     /* Try for the easiest case: a number. */
-    u = strtoul(spec, &end, 10);
-    if (u != 0 && u <= USHRT_MAX && *end == '\0') {
-	return construct_v4(INADDR_LOOPBACK, (unsigned short)u, addr, addrlen);
+    if (just_port(spec, addr, addrlen)) {
+	return True;
+    }
+
+    /* Next, a colon and a number. */
+    if (*spec == ':') {
+	return just_port(spec + 1, addr, addrlen);
     }
 
     /* Try for another easy one: *:<port> */
     if (!strncmp(spec, "*:", 2)) {
-	u = strtoul(spec + 2, &end, 10);
-	if (u != 0 && u <= USHRT_MAX && *end == '\0') {
-	    return construct_v4(INADDR_ANY, (unsigned short)u, addr, addrlen);
-	} else {
-	    return False;
-	}
+	return just_port(spec + 2, addr, addrlen);
     }
 
     /* Tease apart the syntax. */
@@ -166,7 +180,7 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
 	strcpy(port_str, colon + 1);
     }
 
-    /* Use the resolver to figure out the mess. */
+    /* Use the resolver to resolve the components we've split apart. */
     *addr = Malloc(sizeof(sau_t));
     rv = resolve_host_and_port(host_str, port_str, 0, &port, *addr, addrlen,
 	    errmsg, sizeof(errmsg), NULL);
