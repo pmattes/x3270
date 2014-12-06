@@ -51,63 +51,87 @@
 
 #define my_isspace(c)	isspace((unsigned char)c)
 
-/*
- * Cheesy internal version of sprintf that allocates its own memory.
+/**
+ * Local variation of vasprintf(). Returns the buffer instead of a count, and
+ * crashes if it runs out of memory.
+ *
+ * @param[in] fmt	printf format string
+ * @param[in] args	argument list
+ *
+ * @return malloc'd buffer, guaranteed not to be NULL. Must free() when done.
  */
 static char *
-xs_vsprintf(const char *fmt, va_list args)
+xs_vbuffer(const char *fmt, va_list args)
 {
-	char *r = CN;
-	int nw;
+    char *r = CN;
+    int nw;
 
-	nw = vasprintf(&r, fmt, args);
-	if (nw < 0 || r == CN)
-		Error("Out of memory");
-	return r;
+    nw = vasprintf(&r, fmt, args);
+    if (nw < 0) {
+	Error("xs_vbuffer: vasprintf failure");
+    }
+    if (r == CN) {
+	Error("Out of memory");
+    }
+    return r;
 }
 
-/*
- * Common helper functions to insert strings, through a template, into a new
- * buffer.
- * 'format' is assumed to be a printf format string with '%s's in it.
+/**
+ * Local variation of vsprintf(). Returns the buffer instead of a count, and
+ * crashes if it runs out of memory.
+ *
+ * @param[in] fmt	printf format string
+ *
+ * @return malloc'd buffer, guaranteed not to be NULL. Must free() when done.
  */
 char *
 xs_buffer(const char *fmt, ...)
 {
-	va_list args;
-	char *r;
+    va_list args;
+    char *r;
 
-	va_start(args, fmt);
-	r = xs_vsprintf(fmt, args);
-	va_end(args);
-	return r;
+    va_start(args, fmt);
+    r = xs_vbuffer(fmt, args);
+    va_end(args);
+    return r;
 }
 
-/* Common uses of xs_buffer. */
+/**
+ * printf-like interface to Warning().
+ * Displays a warning message, given a printf format.
+ *
+ * @param[in] fmt	printf format
+ */
 void
 xs_warning(const char *fmt, ...)
 {
-	va_list args;
-	char *r;
+    va_list args;
+    char *r;
 
-	va_start(args, fmt);
-	r = xs_vsprintf(fmt, args);
-	va_end(args);
-	Warning(r);
-	Free(r);
+    va_start(args, fmt);
+    r = xs_vbuffer(fmt, args);
+    va_end(args);
+    Warning(r);
+    Free(r);
 }
 
+/**
+ * printf-like interface to Error().
+ * Displays an error message, and exits, given a printf format.
+ *
+ * @param[in] fmt	printf format
+ */
 void
 xs_error(const char *fmt, ...)
 {
-	va_list args;
-	char *r;
+    va_list args;
+    char *r;
 
-	va_start(args, fmt);
-	r = xs_vsprintf(fmt, args);
-	va_end(args);
-	Error(r);
-	Free(r);
+    va_start(args, fmt);
+    r = xs_vbuffer(fmt, args);
+    va_end(args);
+    Error(r);
+    Free(r);
 }
 
 /* Prettyprinter for strings with unprintable data. */
@@ -731,7 +755,7 @@ get_fresource(const char *fmt, ...)
 	char *r;
 
 	va_start(args, fmt);
-	name = xs_vsprintf(fmt, args);
+	name = xs_vbuffer(fmt, args);
 	va_end(args);
 	r = get_resource(name);
 	Free(name);

@@ -40,7 +40,7 @@ extern void vb_init(varbuf_t *r);
 extern void vb_append(varbuf_t *r, const char *buf, size_t len);
 extern void vb_appends(varbuf_t *r, const char *buf);
 extern void vb_vappendf(varbuf_t *r, const char *format, va_list ap);
-extern void vb_appendf(varbuf_t *r, const char *format, ...);
+extern void vb_appendf(varbuf_t *r, const char *format, ...) printflike(2, 3);
 extern const char *vb_buf(const varbuf_t *r);
 extern size_t vb_len(const varbuf_t *r);
 extern void vb_reset(varbuf_t *r);
