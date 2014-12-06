@@ -51,6 +51,7 @@
 #include "trace_dsc.h"
 #include "unicodec.h"
 #include "utf8c.h"
+#include "utilc.h"
 
 #define MB_MAX	16
 
@@ -1362,19 +1363,20 @@ ansi_reset_mode(int nn, int ig2 _is_unused)
 static enum state
 ansi_status_report(int nn, int ig2 _is_unused)
 {
-	static char cpr[11];
+    char *s;
 
-	switch (nn) {
-	    case 5:
-		net_sends("\033[0n");
-		break;
-	    case 6:
-		(void) snprintf(cpr, sizeof(cpr), "\033[%d;%dR",
-		    (cursor_addr/COLS) + 1, (cursor_addr%COLS) + 1);
-		net_sends(cpr);
-		break;
-	}
-	return DATA;
+    switch (nn) {
+    case 5:
+	net_sends("\033[0n");
+	break;
+    case 6:
+	s = xs_buffer("\033[%d;%dR",
+		(cursor_addr/COLS) + 1, (cursor_addr%COLS) + 1);
+	net_sends(s);
+	Free(s);
+	break;
+    }
+    return DATA;
 }
 
 static enum state
@@ -1804,39 +1806,43 @@ ansi_send_clear(void)
 void
 ansi_send_pf(int nn)
 {
-	static char fn_buf[6];
-	static int code[] = {
-		/*
-		 * F1 through F12 are VT220 codes. (Note the discontinuity --
-		 * \E[16~ is missing)
-		 */
-		11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 23, 24,
-		/*
-		 * F13 through F20 are defined for xterm.
-		 */
-		25, 26, 28, 29, 31, 32, 33, 34,
-		/*
-		 * F21 through F24 are x3270 extensions.
-		 */
-		35, 36, 37, 38
-	};
+    char *s;
+    static int code[] = {
+	/*
+	 * F1 through F12 are VT220 codes. (Note the discontinuity --
+	 * \E[16~ is missing)
+	 */
+	11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 23, 24,
+	/*
+	 * F13 through F20 are defined for xterm.
+	 */
+	25, 26, 28, 29, 31, 32, 33, 34,
+	/*
+	 * F21 through F24 are x3270 extensions.
+	 */
+	35, 36, 37, 38
+    };
 
-	if (nn < 1 || (unsigned)nn > sizeof(code)/sizeof(code[0]))
-		return;
-	(void) snprintf(fn_buf, sizeof(fn_buf), "\033[%d~", code[nn-1]);
-	net_sends(fn_buf);
+    if (nn < 1 || (unsigned)nn > sizeof(code)/sizeof(code[0])) {
+	return;
+    }
+    s = xs_buffer("\033[%d~", code[nn-1]);
+    net_sends(s);
+    Free(s);
 }
 
 void
 ansi_send_pa(int nn)
 {
-	static char fn_buf[4];
-	static char code[4] = { 'P', 'Q', 'R', 'S' };
+    char *s;
+    static char code[4] = { 'P', 'Q', 'R', 'S' };
 
-	if (nn < 1 || nn > 4)
-		return;
-	(void) snprintf(fn_buf, sizeof(fn_buf), "\033O%c", code[nn-1]);
-	net_sends(fn_buf);
+    if (nn < 1 || nn > 4) {
+	return;
+    }
+    s = xs_buffer("\033O%c", code[nn-1]);
+    net_sends(s);
+    Free(s);
 }
 
 void
@@ -1879,52 +1885,56 @@ emit_decpriv(int mode, char op)
 static void
 emit_cup(int baddr)
 {
-    	if (baddr) {
-		char cup_buf[11];
-		int sl;
+    if (baddr) {
+	char *s;
+	int sl;
 
-		sl = snprintf(cup_buf, sizeof(cup_buf), "\033[%d;%dH",
-			(baddr / COLS) + 1,
-			(baddr % COLS) + 1);
-		space3270out(sl);
-		strcpy((char *)obptr, cup_buf);
-		obptr += sl;
-	} else {
-	    	space3270out(3);
-		*obptr++ = 0x1b;
-		*obptr++ = '[';
-		*obptr++ = 'H';
-	}
+	s = xs_buffer("\033[%d;%dH", (baddr / COLS) + 1, (baddr % COLS) + 1);
+	sl = strlen(s);
+	space3270out(sl);
+	strcpy((char *)obptr, s);
+	Free(s);
+	obptr += sl;
+    } else {
+	space3270out(3);
+	*obptr++ = 0x1b;
+	*obptr++ = '[';
+	*obptr++ = 'H';
+    }
 }
 
 /* Emit <n> spaces or a CUP, whichever is shorter. */
 static int
-ansi_dump_spaces(int spaces, int baddr)
+ansi_dump_spaces(size_t spaces, int baddr)
 {
-	if (spaces) {
-		char cup_buf[11];
-		int sl;
+    char *s;
+    size_t sl;
 
-		/*
-		 * Move the cursor, if it takes less space than
-		 * expanding the spaces.
-		 * It is possible to optimize this further with clever
-		 * CU[UDFB] sequences, but not (yet) worth the effort.
-		 */
-		sl = snprintf(cup_buf, sizeof(cup_buf), "\033[%d;%dH",
-			(baddr / COLS) + 1,
-			(baddr % COLS) + 1);
-		if (sl < spaces) {
-			space3270out(sl);
-			strcpy((char *)obptr, cup_buf);
-			obptr += sl;
-		} else {
-			space3270out(spaces);
-			while (spaces--)
-				*obptr++ = ' ';
-		}
-	}
+    if (!spaces) {
 	return 0;
+    }
+
+    /*
+     * Move the cursor, if it takes less space than
+     * expanding the spaces.
+     * It is possible to optimize this further with clever
+     * CU[UDFB] sequences, but not (yet) worth the effort.
+     */
+    s = xs_buffer("\033[%d;%dH", (baddr / COLS) + 1, (baddr % COLS) + 1);
+    sl = strlen(s);
+    if (sl < spaces) {
+	space3270out(sl);
+	strcpy((char *)obptr, s);
+	obptr += sl;
+    } else {
+	space3270out(spaces);
+	while (spaces--) {
+	    *obptr++ = ' ';
+	}
+    }
+
+    Free(s);
+    return 0;
 }
 
 /*

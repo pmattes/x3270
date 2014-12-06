@@ -99,16 +99,13 @@ charset_init(const char *csname)
 	const char *dbcs_display_charsets = NULL;
 	Boolean need_free = False;
 #endif /*]*/
-#if defined(_WIN32) /*[*/
-	char cpname[32];
-#endif /*]*/
 
 #if !defined(_WIN32) /*[*/
 	/* Get all of the locale stuff right. */
 	setlocale(LC_ALL, "");
 
 	/* Figure out the locale code set (character set encoding). */
-	codeset_name = nl_langinfo(CODESET);
+	codeset_name = NewString(nl_langinfo(CODESET));
 # if defined(__CYGWIN__) /*[*/
 	/*
 	 * Cygwin's locale support is quite limited.  If the locale
@@ -119,20 +116,16 @@ charset_init(const char *csname)
 	 * Hopefully at some point Cygwin will start returning something
 	 * meaningful here and this logic will stop triggering.
 	 */
-	if (!strcmp(codeset_name, "US-ASCII"))
+	if (!strcmp(codeset_name, "US-ASCII")) {
+		Free(codeset_name);
 	    	codeset_name = xs_buffer("CP%d", GetACP());
+	}
 # endif /*]*/
 #else /*][*/
-	snprintf(cpname, sizeof(cpname), "CP%d",
-# if defined(_WIN32) /*[*/
-		appres.local_cp
-# else /*][*/
-		GetACP()
-# endif /*]*/
-		);
-	codeset_name = cpname;
+	codeset_name = xs_buffer("CP%d", appres.local_cp);
 #endif /*]*/
 	set_codeset(codeset_name);
+	Free(codeset_name);
 
 	/* Do nothing, successfully. */
 	if (csname == CN || !strcasecmp(csname, "us")) {
