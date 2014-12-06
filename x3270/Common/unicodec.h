@@ -57,7 +57,7 @@ enum me_fail {
 };
 extern ucs4_t multibyte_to_unicode(const char *mb, size_t mb_len, 
 	int *consumedp, enum me_fail *errorp);
-extern int multibyte_to_unicode_string(char *mb, size_t mb_len,
+extern int multibyte_to_unicode_string(const char *mb, size_t mb_len,
 	ucs4_t *ucs4, size_t u_len);
 extern ebc_t multibyte_to_ebcdic(const char *mb, size_t mb_len, 
 	int *consumedp, enum me_fail *errorp);

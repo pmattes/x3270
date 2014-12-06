@@ -71,6 +71,7 @@
 #include "tablesc.h"
 #include "telnetc.h"
 #include "utilc.h"
+#include "varbufc.h"
 
 /* Macros. */
 #define eos(s)	strchr((s), '\0')
@@ -89,7 +90,7 @@
 /* Globals. */
 enum ft_state ft_state = FT_NONE;	/* File transfer state */
 char *ft_local_filename;		/* Local file to transfer to/from */
-FILE *ft_local_file = (FILE *)NULL;	/* File descriptor for local file */
+FILE *ft_local_file = NULL;		/* File descriptor for local file */
 Boolean ft_last_cr = False;		/* CR was last char in local file */
 Boolean ascii_flag = True;		/* Convert to ascii */
 Boolean cr_flag = True;			/* Add crlf to each line */
@@ -224,7 +225,7 @@ static void ft_cancel(Widget w, XtPointer client_data, XtPointer call_data);
 static void ft_popup_callback(Widget w, XtPointer client_data,
     XtPointer call_data);
 static void ft_popup_init(void);
-static int ft_start(void);
+static Boolean ft_start(void);
 static void ft_start_callback(Widget w, XtPointer call_parms,
     XtPointer call_data);
 static void overwrite_cancel_callback(Widget w, XtPointer client_data,
@@ -332,8 +333,8 @@ ft_popup_init(void)
 	Widget recfm_label, units_label;
 	Widget buffersize_label;
 	Widget start_button;
-	char buflen_buf[128];
 	Widget spacer_toggle;
+	char *s;
 
 	/* Register for state changes. */
 	register_schange(ST_CONNECT, ft_connected);
@@ -891,8 +892,9 @@ ft_popup_init(void)
 	    BN, False,
 	    BN, False);
 	set_dft_buffersize();
-	(void) snprintf(buflen_buf, sizeof(buflen_buf), "%d", dft_buffersize);
-	XtVaSetValues(buffersize_widget, XtNstring, buflen_buf, NULL);
+	s = xs_buffer("%d", dft_buffersize);
+	XtVaSetValues(buffersize_widget, XtNstring, s, NULL);
+	XtFree(s);
 
 	/* Set up the buttons at the bottom. */
 	start_button = XtVaCreateManagedWidget(
@@ -962,10 +964,10 @@ static void
 ft_start_callback(Widget w _is_unused, XtPointer call_parms _is_unused,
 	XtPointer call_data _is_unused)
 {
-	if (ft_start()) {
-		XtPopdown(ft_shell);
-		popup_progress();
-	}
+    if (ft_start()) {
+	XtPopdown(ft_shell);
+	popup_progress();
+    }
 }
 
 /* Send/receive options. */
@@ -1107,203 +1109,191 @@ toggle_host_type(Widget w _is_unused, XtPointer client_data _is_unused,
 	set_host_type_booleans();
 }
 
-/*
+/**
  * Begin the transfer.
- * Returns 1 if the transfer has started, 0 otherwise.
+ *
+ * @return True if the transfer has started, False otherwise
  */
-static int
+static Boolean
 ft_start(void)
 {
-	char opts[80];
-	char *op = opts + 1;
-	char *cmd;
-	String buffersize, lrecl, blksize, primspace, secspace;
-	char updated_buffersize[128];
-	unsigned flen;
+    varbuf_t r;
+    String buffersize, lrecl, blksize, primspace, secspace;
+    unsigned flen;
+    char *s;
 
-	ft_is_action = False;
+    ft_is_action = False;
 
 #if defined(X3270_DBCS) /*[*/
-	ft_dbcs_state = FT_DBCS_NONE;
+    ft_dbcs_state = FT_DBCS_NONE;
 #endif /*]*/
 
-	/* Get the DFT buffer size. */
-	XtVaGetValues(buffersize_widget, XtNstring, &buffersize, NULL);
-	if (*buffersize)
-		dft_buffersize = atoi(buffersize);
-	else
-		dft_buffersize = 0;
-	set_dft_buffersize();
-	(void) snprintf(updated_buffersize, sizeof(updated_buffersize), "%d",
-		dft_buffersize);
-	XtVaSetValues(buffersize_widget, XtNstring, updated_buffersize, NULL);
+    /* Get the DFT buffer size. */
+    XtVaGetValues(buffersize_widget, XtNstring, &buffersize, NULL);
+    if (*buffersize) {
+	dft_buffersize = atoi(buffersize);
+    } else {
+	dft_buffersize = 0;
+    }
+    set_dft_buffersize();
+    s = xs_buffer("%d", dft_buffersize);
+    XtVaSetValues(buffersize_widget, XtNstring, s, NULL);
+    XtFree(s);
 
-	/* Get the host file from its widget */
-	XtVaGetValues(host_file, XtNstring, &ft_host_filename, NULL);
-	if (!*ft_host_filename)
-		return 0;
-	/* XXX: probably more validation to do here */
+    /* Get the host file from its widget */
+    XtVaGetValues(host_file, XtNstring, &ft_host_filename, NULL);
+    if (!*ft_host_filename) {
+	return False;
+    }
+    /* XXX: probably more validation to do here */
 
-	/* Get the local file from it widget */
-	XtVaGetValues(local_file, XtNstring,  &ft_local_filename, NULL);
-	if (!*ft_local_filename)
-		return 0;
+    /* Get the local file from it widget */
+    XtVaGetValues(local_file, XtNstring,  &ft_local_filename, NULL);
+    if (!*ft_local_filename) {
+	return False;
+    }
 
-	/* See if the local file can be overwritten. */
-	if (receive_flag && !append_flag && !allow_overwrite) {
-		ft_local_file = fopen(ft_local_filename,
-			ascii_flag? "r": "rb");
-		if (ft_local_file != (FILE *)NULL) {
-			(void) fclose(ft_local_file);
-			ft_local_file = (FILE *)NULL;
-			popup_overwrite();
-			return 0;
+    /* See if the local file can be overwritten. */
+    if (receive_flag && !append_flag && !allow_overwrite) {
+	ft_local_file = fopen(ft_local_filename, ascii_flag? "r": "rb");
+	if (ft_local_file != NULL) {
+	    (void) fclose(ft_local_file);
+	    ft_local_file = NULL;
+	    popup_overwrite();
+	    return False;
+	}
+    }
+
+    /* Open the local file. */
+    ft_local_file = fopen(ft_local_filename, local_fflag());
+    if (ft_local_file == NULL) {
+	    allow_overwrite = False;
+	    popup_an_errno(errno, "Local file '%s'", ft_local_filename);
+	    return False;
+    }
+
+    /* Build the ind$file command */
+    vb_init(&r);
+    vb_appendf(&r, "IND\\e005BFILE %s %s %s",
+	    receive_flag? "GET": "PUT",
+	    ft_host_filename,
+	    (host_type != HT_TSO)? "(": "");
+    if (ascii_flag) {
+	vb_appends(&r, "ASCII");
+    } else if (host_type == HT_CICS) {
+	vb_appends(&r, "BINARY");
+    }
+    if (cr_flag) {
+	vb_appends(&r, " CRLF");
+    } else if (host_type == HT_CICS) {
+	vb_appends(&r, " NOCRLF");
+    }
+    if (append_flag && !receive_flag) {
+	vb_appends(&r, " APPEND");
+    }
+    if (!receive_flag) {
+	if (host_type == HT_TSO) {
+	    if (recfm != DEFAULT_RECFM) {
+		/* RECFM Entered, process */
+		vb_appends(&r, " RECFM(");
+		switch (recfm) {
+		case RECFM_FIXED:
+		    vb_appends(&r, "F");
+		    break;
+		case RECFM_VARIABLE:
+		    vb_appends(&r, "V");
+		    break;
+		case RECFM_UNDEFINED:
+		    vb_appends(&r, "U");
+		    break;
+		default:
+		    break;
+		};
+		vb_appends(&r, ")");
+		XtVaGetValues(lrecl_widget, XtNstring, &lrecl, NULL);
+		if (strlen(lrecl) > 0) {
+		    vb_appendf(&r, " LRECL(%s)", lrecl);
 		}
-	}
-
-	/* Open the local file. */
-	ft_local_file = fopen(ft_local_filename, local_fflag());
-	if (ft_local_file == (FILE *)NULL) {
-		allow_overwrite = False;
-		popup_an_errno(errno, "Local file '%s'", ft_local_filename);
-		return 0;
-	}
-
-	/* Build the ind$file command */
-	op[0] = '\0';
-	if (ascii_flag) {
-		strcat(op, " ASCII");
-	} else if (host_type == HT_CICS) {
-		strcat(op, " BINARY");
-	}
-	if (cr_flag) {
-		strcat(op, " CRLF");
-	} else if (host_type == HT_CICS) {
-		strcat(op, " NOCRLF");
-	}
-	if (append_flag && !receive_flag) {
-		strcat(op, " APPEND");
-	}
-	if (!receive_flag) {
-		if (host_type == HT_TSO) {
-			if (recfm != DEFAULT_RECFM) {
-				/* RECFM Entered, process */
-				strcat(op, " RECFM(");
-				switch (recfm) {
-				    case RECFM_FIXED:
-					strcat(op, "F");
-					break;
-				    case RECFM_VARIABLE:
-					strcat(op, "V");
-					break;
-				    case RECFM_UNDEFINED:
-					strcat(op, "U");
-					break;
-				    default:
-					break;
-				};
-				strcat(op, ")");
-				XtVaGetValues(lrecl_widget,
-				    XtNstring, &lrecl,
-				    NULL);
-				if (strlen(lrecl) > 0)
-					sprintf(eos(op), " LRECL(%s)", lrecl);
-				XtVaGetValues(blksize_widget,
-				    XtNstring, &blksize,
-				    NULL);
-				if (strlen(blksize) > 0)
-					sprintf(eos(op), " BLKSIZE(%s)",
-					    blksize);
-			}
-			if (units != DEFAULT_UNITS) {
-				/* Space Entered, processs it */
-				switch (units) {
-				    case TRACKS:
-					strcat(op, " TRACKS");
-					break;
-				    case CYLINDERS:
-					strcat(op, " CYLINDERS");
-					break;
-				    case AVBLOCK:
-					strcat(op, " AVBLOCK");
-					break;
-				    default:
-					break;
-				};
-				XtVaGetValues(primspace_widget, XtNstring,
-				    &primspace, NULL);
-				if (strlen(primspace) > 0) {
-					sprintf(eos(op), " SPACE(%s",
-					    primspace);
-					XtVaGetValues(secspace_widget,
-					    XtNstring, &secspace,
-					    NULL);
-					if (strlen(secspace) > 0)
-						sprintf(eos(op), ",%s",
-						    secspace);
-					strcat(op, ")");
-				}
-			}
-		} else if (host_type == HT_VM) {
-			if (recfm != DEFAULT_RECFM) {
-				strcat(op, " RECFM ");
-				switch (recfm) {
-				    case RECFM_FIXED:
-					strcat(op, "F");
-					break;
-				    case RECFM_VARIABLE:
-					strcat(op, "V");
-					break;
-				    default:
-					break;
-				};
-
-				XtVaGetValues(lrecl_widget,
-				    XtNstring, &lrecl,
-				    NULL);
-				if (strlen(lrecl) > 0)
-					sprintf(eos(op), " LRECL %s", lrecl);
-			}
+		XtVaGetValues(blksize_widget, XtNstring, &blksize, NULL);
+		if (strlen(blksize) > 0) {
+		    vb_appendf(&r, " BLKSIZE(%s)", blksize);
 		}
-	}
-
-	/* Insert the '(' for VM options. */
-	if (strlen(op) > 0 && host_type != HT_TSO) {
-		opts[0] = ' ';
-		opts[1] = '(';
-		op = opts;
-	}
-
-	/* Build the whole command. */
-	cmd = xs_buffer("IND\\e005BFILE %s %s%s\\n",
-	    receive_flag ? "GET" : "PUT", ft_host_filename, op);
-
-	/* Erase the line and enter the command. */
-	flen = kybd_prime();
-	if (!flen || flen < strlen(cmd) - 1) {
-		XtFree(cmd);
-		if (ft_local_file != NULL) {
-		    	fclose(ft_local_file);
-			ft_local_file = NULL;
-			if (receive_flag && !append_flag)
-			    unlink(ft_local_filename);
+	    }
+	    if (units != DEFAULT_UNITS) {
+		/* Space Entered, processs it */
+		switch (units) {
+		case TRACKS:
+		    vb_appends(&r, " TRACKS");
+		    break;
+		case CYLINDERS:
+		    vb_appends(&r, " CYLINDERS");
+		    break;
+		case AVBLOCK:
+		    vb_appends(&r, " AVBLOCK");
+		    break;
+		default:
+		    break;
+		};
+		XtVaGetValues(primspace_widget, XtNstring, &primspace, NULL);
+		if (strlen(primspace) > 0) {
+		    vb_appendf(&r, " SPACE(%s", primspace);
+		    XtVaGetValues(secspace_widget, XtNstring, &secspace, NULL);
+		    if (strlen(secspace) > 0) {
+			vb_appendf(&r, ",%s", secspace);
+		    }
+		    vb_appends(&r, ")");
 		}
-		popup_an_error("%s", get_message("ftUnable"));
-		allow_overwrite = False;
-		return 0;
-	}
-	(void) emulate_input(cmd, strlen(cmd), False);
-	XtFree(cmd);
+	    }
+	} else if (host_type == HT_VM) {
+	    if (recfm != DEFAULT_RECFM) {
+		vb_appends(&r, " RECFM ");
+		switch (recfm) {
+		case RECFM_FIXED:
+		    vb_appends(&r, "F");
+		    break;
+		case RECFM_VARIABLE:
+		    vb_appends(&r, "V");
+		    break;
+		default:
+		    break;
+		};
 
-	/* Get this thing started. */
-	ft_state = FT_AWAIT_ACK;
-	ft_is_cut = False;
-	ft_last_cr = False;
+		XtVaGetValues(lrecl_widget, XtNstring, &lrecl, NULL);
+		if (strlen(lrecl) > 0) {
+		    vb_appendf(&r, " LRECL %s", lrecl);
+		}
+	    }
+	}
+    }
+    vb_appends(&r, "\\n");
+
+    /* Erase the line and enter the command. */
+    flen = kybd_prime();
+    if (!flen || flen < vb_len(&r) - 1) {
+	vb_free(&r);
+	if (ft_local_file != NULL) {
+	    fclose(ft_local_file);
+	    ft_local_file = NULL;
+	    if (receive_flag && !append_flag) {
+		unlink(ft_local_filename);
+	    }
+	}
+	popup_an_error("%s", get_message("ftUnable"));
+	allow_overwrite = False;
+	return False;
+    }
+    (void) emulate_input(vb_buf(&r), vb_len(&r), False);
+    vb_free(&r);
+
+    /* Get this thing started. */
+    ft_state = FT_AWAIT_ACK;
+    ft_is_cut = False;
+    ft_last_cr = False;
 #if defined(X3270_DBCS) /*[*/
-	ft_last_dbcs = False;
+    ft_last_dbcs = False;
 #endif /*]*/
 
-	return 1;
+    return True;
 }
 
 /* "Transfer in Progress" pop-up. */
@@ -1548,13 +1538,13 @@ static void
 overwrite_okay_callback(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
-	XtPopdown(overwrite_shell);
+    XtPopdown(overwrite_shell);
 
-	allow_overwrite = True;
-	if (ft_start()) {
-		XtPopdown(ft_shell);
-		popup_progress();
-	}
+    allow_overwrite = True;
+    if (ft_start()) {
+	XtPopdown(ft_shell);
+	popup_progress();
+    }
 }
 
 /* Overwrite "cancel" button. */
@@ -1582,9 +1572,9 @@ void
 ft_complete(const char *errmsg)
 {
 	/* Close the local file. */
-	if (ft_local_file != (FILE *)NULL && fclose(ft_local_file) < 0)
+	if (ft_local_file != NULL && fclose(ft_local_file) < 0)
 		popup_an_errno(errno, "close(%s)", ft_local_filename);
-	ft_local_file = (FILE *)NULL;
+	ft_local_file = NULL;
 
 	/* Clean up the state. */
 	ft_state = FT_NONE;
@@ -1667,24 +1657,21 @@ void
 ft_update_length(void)
 {
 #if defined(X3270_DISPLAY) /*[*/
-	char text_string[80];
+    /* Format the message */
+    if (!ft_is_action) {
+	char *s = xs_buffer(status_string, ft_length);
 
-	/* Format the message */
-	if (!ft_is_action) {
-		(void) snprintf(text_string, sizeof(text_string),
-			status_string, ft_length);
-
-		XtVaSetValues(ft_status, XtNlabel, text_string, NULL);
-	}
+	XtVaSetValues(ft_status, XtNlabel, s, NULL);
+	XtFree(s);
+    }
 #endif /*]*/
 #if defined(C3270) /*[*/
-	if (ft_is_interactive) {
-		printf("\r%79s\rTransferred %lu bytes. ", "", ft_length);
-		fflush(stdout);
-	} else {
-		popup_an_info("Transferred %lu bytes.", ft_length);
-	}
-
+    if (ft_is_interactive) {
+	printf("\r%79s\rTransferred %lu bytes. ", "", ft_length);
+	fflush(stdout);
+    } else {
+	popup_an_info("Transferred %lu bytes.", ft_length);
+    }
 #endif /*]*/
 }
 
@@ -1820,333 +1807,316 @@ void
 Transfer_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
-	int i, k;
-	Cardinal j;
-	long l;
-	char *ptr;
+    int i, k;
+    Cardinal j;
+    long l;
+    char *ptr;
+    unsigned flen;
+    varbuf_t r;
 
-	char opts[80];
-	char *op = opts + 1;
-	char *cmd;
-	unsigned flen;
+    String *xparams = params;
+    Cardinal xnparams = *num_params;
 
-	String *xparams = params;
-	Cardinal xnparams = *num_params;
+    action_debug(Transfer_action, event, params, num_params);
 
-        action_debug(Transfer_action, event, params, num_params);
+    ft_is_action = True;
 
-	ft_is_action = True;
-
-	/* Make sure we're connected. */
-	if (!IN_3270) {
-		popup_an_error("Not connected");
-		return;
-	}
+    /* Make sure we're connected. */
+    if (!IN_3270) {
+	popup_an_error("Not connected");
+	return;
+    }
 
 #if defined(C3270) /*[*/
-	/* Check for interactive mode. */
-	if (xnparams == 0 && escaped) {
-	    	if (interactive_transfer(&xparams, &xnparams) < 0) {
-		    	printf("\n");
-			fflush(stdout);
-		    	action_output("Aborted");
-		    	return;
-		}
+    /* Check for interactive mode. */
+    if (xnparams == 0 && escaped) {
+	if (interactive_transfer(&xparams, &xnparams) < 0) {
+	    printf("\n");
+	    fflush(stdout);
+	    action_output("Aborted");
+	    return;
 	}
-	if (escaped) {
-		ft_is_interactive = True;
-	}
+    }
+    if (escaped) {
+	ft_is_interactive = True;
+    }
 #endif /*]*/
 
-	/* Set everything to the default. */
+    /* Set everything to the default. */
+    for (i = 0; i < N_PARMS; i++) {
+	Free(tp[i].value);
+	if (tp[i].keyword[0] != CN) {
+	    tp[i].value = NewString(tp[i].keyword[0]);
+	} else {
+	    tp[i].value = CN;
+	}
+    }
+
+    /* See what they specified. */
+    for (j = 0; j < xnparams; j++) {
 	for (i = 0; i < N_PARMS; i++) {
-		Free(tp[i].value);
-		if (tp[i].keyword[0] != CN)
-			tp[i].value =
-				NewString(tp[i].keyword[0]);
-		else
-			tp[i].value = CN;
-	}
+	    char *eq;
+	    int kwlen;
 
-	/* See what they specified. */
-	for (j = 0; j < xnparams; j++) {
-		for (i = 0; i < N_PARMS; i++) {
-			char *eq;
-			int kwlen;
-
-			eq = strchr(xparams[j], '=');
-			if (eq == CN || eq == xparams[j] || !*(eq + 1)) {
-				popup_an_error("Invalid option syntax: '%s'",
-					xparams[j]);
-				return;
+	    eq = strchr(xparams[j], '=');
+	    if (eq == CN || eq == xparams[j] || !*(eq + 1)) {
+		popup_an_error("Invalid option syntax: '%s'", xparams[j]);
+		return;
+	    }
+	    kwlen = eq - xparams[j];
+	    if (!strncasecmp(xparams[j], tp[i].name, kwlen)
+		    && !tp[i].name[kwlen]) {
+		if (tp[i].keyword[0]) {
+		    for (k = 0; tp[i].keyword[k] != CN && k < 4; k++) {
+			if (!strcasecmp(eq + 1, tp[i].keyword[k])) {
+			    break;
 			}
-			kwlen = eq - xparams[j];
-			if (!strncasecmp(xparams[j], tp[i].name, kwlen)
-					&& !tp[i].name[kwlen]) {
-				if (tp[i].keyword[0]) {
-					for (k = 0;
-					     tp[i].keyword[k] != CN && k < 4;
-					     k++) {
-						if (!strcasecmp(eq + 1,
-							tp[i].keyword[k])) {
-							break;
-						}
-					}
-					if (k >= 4 ||
-					    tp[i].keyword[k] == CN) {
-						popup_an_error("Invalid option "
-							"value: '%s'", eq + 1);
-						return;
-					}
-				} else switch (i) {
-				    case PARM_LRECL:
-				    case PARM_BLKSIZE:
-				    case PARM_PRIMARY_SPACE:
-				    case PARM_SECONDARY_SPACE:
-				    case PARM_BUFFER_SIZE:
+		    }
+		    if (k >= 4 || tp[i].keyword[k] == CN) {
+			popup_an_error("Invalid option value: '%s'", eq + 1);
+			return;
+		    }
+		} else switch (i) {
+		    case PARM_LRECL:
+		    case PARM_BLKSIZE:
+		    case PARM_PRIMARY_SPACE:
+		    case PARM_SECONDARY_SPACE:
+		    case PARM_BUFFER_SIZE:
 #if defined(_WIN32) /*[*/
-				    case PARM_WINDOWS_CODEPAGE:
+		    case PARM_WINDOWS_CODEPAGE:
 #endif /*]*/
-					l = strtol(eq + 1, &ptr, 10);
-					l = l; /* keep gcc happy */
-					if (ptr == eq + 1 || *ptr) {
-						popup_an_error("Invalid option "
-							"value: '%s'", eq + 1);
-						return;
-					}
-					break;
-					break;
-				    default:
-					break;
-				}
-				tp[i].value = NewString(eq + 1);
-				break;
+			l = strtol(eq + 1, &ptr, 10);
+			l = l; /* keep gcc happy */
+			if (ptr == eq + 1 || *ptr) {
+			    popup_an_error("Invalid option value: '%s'", eq + 1);
+			    return;
 			}
-		}
-		if (i >= N_PARMS) {
-			popup_an_error("Unknown option: %s", xparams[j]);
-			return;
-		}
-	}
-
-	/* Check for required values. */
-	if (tp[PARM_HOST_FILE].value == CN) {
-		popup_an_error("Missing 'HostFile' option");
-		return;
-	}
-	if (tp[PARM_LOCAL_FILE].value == CN) {
-		popup_an_error("Missing 'LocalFile' option");
-		return;
-	}
-
-	/*
-	 * Start the transfer.  Much of this is duplicated from ft_start()
-	 * and should be made common.
-	 */
-	if (tp[PARM_BUFFER_SIZE].value != CN)
-		dft_buffersize = atoi(tp[PARM_BUFFER_SIZE].value);
-	else
-		dft_buffersize = 0;
-	set_dft_buffersize();
-
-	receive_flag = !strcasecmp(tp[PARM_DIRECTION].value, "receive");
-	append_flag = !strcasecmp(tp[PARM_EXIST].value, "append");
-	allow_overwrite = !strcasecmp(tp[PARM_EXIST].value, "replace");
-	ascii_flag = !strcasecmp(tp[PARM_MODE].value, "ascii");
-	if (!strcasecmp(tp[PARM_CR].value, "auto")) {
-		cr_flag = ascii_flag;
-	} else {
-		if (!ascii_flag) {
-			popup_an_error("Invalid 'Cr' option for ASCII mode");
-			return;
-		}
-		cr_flag = !strcasecmp(tp[PARM_CR].value, "remove") ||
-			  !strcasecmp(tp[PARM_CR].value, "add");
-	}
-	if (ascii_flag)
-	    	remap_flag = !strcasecmp(tp[PARM_REMAP].value, "yes");
-	if (!strcasecmp(tp[PARM_HOST].value, "tso")) {
-		host_type = HT_TSO;
-	} else if (!strcasecmp(tp[PARM_HOST].value, "vm")) {
-		host_type = HT_VM;
-	} else if (!strcasecmp(tp[PARM_HOST].value, "cics")) {
-		host_type = HT_CICS;
-	} else {
-		assert(0);
-	}
-	recfm = DEFAULT_RECFM;
-	for (k = 0; tp[PARM_RECFM].keyword[k] != CN && k < 4; k++) {
-		if (!strcasecmp(tp[PARM_RECFM].value,
-			    tp[PARM_RECFM].keyword[k]))  {
-			recfm = (enum recfm)k;
+			break;
+		    default:
 			break;
 		}
+		tp[i].value = NewString(eq + 1);
+		break;
+	    }
 	}
-	units = DEFAULT_UNITS;
-	for (k = 0; tp[PARM_ALLOCATION].keyword[k] != CN && k < 4; k++) {
-		if (!strcasecmp(tp[PARM_ALLOCATION].value,
-			    tp[PARM_ALLOCATION].keyword[k]))  {
-			units = (enum units)k;
-			break;
-		}
+	if (i >= N_PARMS) {
+	    popup_an_error("Unknown option: %s", xparams[j]);
+	    return;
 	}
+    }
+
+    /* Check for required values. */
+    if (tp[PARM_HOST_FILE].value == CN) {
+	popup_an_error("Missing 'HostFile' option");
+	return;
+    }
+    if (tp[PARM_LOCAL_FILE].value == CN) {
+	popup_an_error("Missing 'LocalFile' option");
+	return;
+    }
+
+    /*
+     * Start the transfer.  Much of this is duplicated from ft_start()
+     * and should be made common.
+     */
+    if (tp[PARM_BUFFER_SIZE].value != CN) {
+	dft_buffersize = atoi(tp[PARM_BUFFER_SIZE].value);
+    } else {
+	dft_buffersize = 0;
+    }
+    set_dft_buffersize();
+
+    receive_flag = !strcasecmp(tp[PARM_DIRECTION].value, "receive");
+    append_flag = !strcasecmp(tp[PARM_EXIST].value, "append");
+    allow_overwrite = !strcasecmp(tp[PARM_EXIST].value, "replace");
+    ascii_flag = !strcasecmp(tp[PARM_MODE].value, "ascii");
+    if (!strcasecmp(tp[PARM_CR].value, "auto")) {
+	cr_flag = ascii_flag;
+    } else {
+	if (!ascii_flag) {
+	    popup_an_error("Invalid 'Cr' option for ASCII mode");
+	    return;
+	}
+	cr_flag = !strcasecmp(tp[PARM_CR].value, "remove") ||
+		  !strcasecmp(tp[PARM_CR].value, "add");
+    }
+    if (ascii_flag) {
+	remap_flag = !strcasecmp(tp[PARM_REMAP].value, "yes");
+    }
+    if (!strcasecmp(tp[PARM_HOST].value, "tso")) {
+	host_type = HT_TSO;
+    } else if (!strcasecmp(tp[PARM_HOST].value, "vm")) {
+	host_type = HT_VM;
+    } else if (!strcasecmp(tp[PARM_HOST].value, "cics")) {
+	host_type = HT_CICS;
+    } else {
+	assert(0);
+    }
+    recfm = DEFAULT_RECFM;
+    for (k = 0; tp[PARM_RECFM].keyword[k] != CN && k < 4; k++) {
+	if (!strcasecmp(tp[PARM_RECFM].value, tp[PARM_RECFM].keyword[k]))  {
+	    recfm = (enum recfm)k;
+	    break;
+	}
+    }
+    units = DEFAULT_UNITS;
+    for (k = 0; tp[PARM_ALLOCATION].keyword[k] != CN && k < 4; k++) {
+	if (!strcasecmp(tp[PARM_ALLOCATION].value,
+			tp[PARM_ALLOCATION].keyword[k]))  {
+	    units = (enum units)k;
+	    break;
+	}
+    }
 
 #if defined(_WIN32) /*[*/
-	if (tp[PARM_WINDOWS_CODEPAGE].value != CN) {
-		ft_windows_codepage = atoi(tp[PARM_WINDOWS_CODEPAGE].value);
-	} else if (appres.ft_cp) {
-		ft_windows_codepage = appres.ft_cp;
-	} else {
-		ft_windows_codepage = appres.local_cp;
-	}
+    if (tp[PARM_WINDOWS_CODEPAGE].value != CN) {
+	ft_windows_codepage = atoi(tp[PARM_WINDOWS_CODEPAGE].value);
+    } else if (appres.ft_cp) {
+	ft_windows_codepage = appres.ft_cp;
+    } else {
+	ft_windows_codepage = appres.local_cp;
+    }
 #endif /*]*/
 
-	ft_host_filename = tp[PARM_HOST_FILE].value;
-	ft_local_filename = tp[PARM_LOCAL_FILE].value;
+    ft_host_filename = tp[PARM_HOST_FILE].value;
+    ft_local_filename = tp[PARM_LOCAL_FILE].value;
 
-	/* See if the local file can be overwritten. */
-	if (receive_flag && !append_flag && !allow_overwrite) {
-		ft_local_file = fopen(ft_local_filename,
-			ascii_flag? "r": "rb");
-		if (ft_local_file != (FILE *)NULL) {
-			(void) fclose(ft_local_file);
-			popup_an_error("File exists");
-			return;
+    /* See if the local file can be overwritten. */
+    if (receive_flag && !append_flag && !allow_overwrite) {
+	ft_local_file = fopen(ft_local_filename, ascii_flag? "r": "rb");
+	if (ft_local_file != NULL) {
+	    (void) fclose(ft_local_file);
+	    popup_an_error("File exists");
+	    return;
+	}
+    }
+
+    /* Open the local file. */
+    ft_local_file = fopen(ft_local_filename, local_fflag());
+    if (ft_local_file == NULL) {
+	popup_an_errno(errno, "Local file '%s'", ft_local_filename);
+	return;
+    }
+
+    /* Build the ind$file command */
+    vb_init(&r);
+    vb_appendf(&r, "IND\\e005BFILE %s %s %s",
+	    receive_flag? "GET": "PUT",
+	    ft_host_filename,
+	    (host_type != HT_TSO)? "(": "");
+    if (ascii_flag) {
+	vb_appends(&r, "ASCII");
+    } else if (host_type == HT_CICS) {
+	vb_appends(&r, "BINARY");
+    }
+    if (cr_flag) {
+	vb_appends(&r, " CRLF");
+    } else if (host_type == HT_CICS) {
+	vb_appends(&r, " NOCRLF");
+    }
+    if (append_flag && !receive_flag) {
+	vb_appends(&r, " APPEND");
+    }
+    if (!receive_flag) {
+	if (host_type == HT_TSO) {
+	    if (recfm != DEFAULT_RECFM) {
+		/* RECFM Entered, process */
+		vb_appends(&r, " RECFM(");
+		switch (recfm) {
+		case RECFM_FIXED:
+		    vb_appends(&r, "F");
+		    break;
+		case RECFM_VARIABLE:
+		    vb_appends(&r, "V");
+		    break;
+		case RECFM_UNDEFINED:
+		    vb_appends(&r, "U");
+		    break;
+		default:
+		    break;
+		};
+		vb_appends(&r, ")");
+		if (tp[PARM_LRECL].value != CN) {
+		    vb_appendf(&r, " LRECL(%s)", tp[PARM_LRECL].value);
 		}
-	}
-
-	/* Open the local file. */
-	ft_local_file = fopen(ft_local_filename, local_fflag());
-	if (ft_local_file == (FILE *)NULL) {
-		popup_an_errno(errno, "Local file '%s'", ft_local_filename);
-		return;
-	}
-
-	/* Build the ind$file command */
-	op[0] = '\0';
-	if (ascii_flag) {
-		strcat(op, " ASCII");
-	} else if (host_type == HT_CICS) {
-		strcat(op, " BINARY");
-	}
-	if (cr_flag) {
-		strcat(op, " CRLF");
-	} else if (host_type == HT_CICS) {
-		strcat(op, " NOCRLF");
-	}
-	if (append_flag && !receive_flag) {
-		strcat(op, " APPEND");
-	}
-	if (!receive_flag) {
-		if (host_type == HT_TSO) {
-			if (recfm != DEFAULT_RECFM) {
-				/* RECFM Entered, process */
-				strcat(op, " RECFM(");
-				switch (recfm) {
-				    case RECFM_FIXED:
-					strcat(op, "F");
-					break;
-				    case RECFM_VARIABLE:
-					strcat(op, "V");
-					break;
-				    case RECFM_UNDEFINED:
-					strcat(op, "U");
-					break;
-				    default:
-					break;
-				};
-				strcat(op, ")");
-				if (tp[PARM_LRECL].value != CN)
-					sprintf(eos(op), " LRECL(%s)",
-					    tp[PARM_LRECL].value);
-				if (tp[PARM_BLKSIZE].value != CN)
-					sprintf(eos(op), " BLKSIZE(%s)",
-					    tp[PARM_BLKSIZE].value);
-			}
-			if (units != DEFAULT_UNITS) {
-				/* Space Entered, processs it */
-				switch (units) {
-				    case TRACKS:
-					strcat(op, " TRACKS");
-					break;
-				    case CYLINDERS:
-					strcat(op, " CYLINDERS");
-					break;
-				    case AVBLOCK:
-					strcat(op, " AVBLOCK");
-					break;
-				    default:
-					break;
-				};
-				if (tp[PARM_PRIMARY_SPACE].value != CN) {
-					sprintf(eos(op), " SPACE(%s",
-					    tp[PARM_PRIMARY_SPACE].value);
-					if (tp[PARM_SECONDARY_SPACE].value)
-						sprintf(eos(op), ",%s",
-						    tp[PARM_SECONDARY_SPACE].value);
-					strcat(op, ")");
-				}
-			}
-		} else if (host_type == HT_VM) {
-			if (recfm != DEFAULT_RECFM) {
-				strcat(op, " RECFM ");
-				switch (recfm) {
-				    case RECFM_FIXED:
-					strcat(op, "F");
-					break;
-				    case RECFM_VARIABLE:
-					strcat(op, "V");
-					break;
-				    default:
-					break;
-				};
-
-				if (tp[PARM_LRECL].value)
-					sprintf(eos(op), " LRECL %s",
-					    tp[PARM_LRECL].value);
-			}
+		if (tp[PARM_BLKSIZE].value != CN) {
+		    vb_appendf(&r, " BLKSIZE(%s)", tp[PARM_BLKSIZE].value);
 		}
-	}
-
-	/* Insert the '(' for VM options. */
-	if (strlen(op) > 0 && host_type != HT_TSO) {
-		opts[0] = ' ';
-		opts[1] = '(';
-		op = opts;
-	}
-
-	/* Build the whole command. */
-	cmd = xs_buffer("IND\\e005BFILE %s %s%s\\n",
-	    receive_flag ? "GET" : "PUT", ft_host_filename, op);
-
-	/* Erase the line and enter the command. */
-	flen = kybd_prime();
-	if (!flen || flen < strlen(cmd) - 1) {
-		Free(cmd);
-		if (ft_local_file != NULL) {
-		    	fclose(ft_local_file);
-			ft_local_file = NULL;
-			if (receive_flag && !append_flag)
-			    unlink(ft_local_filename);
+	    }
+	    if (units != DEFAULT_UNITS) {
+		/* Space Entered, processs it */
+		switch (units) {
+		case TRACKS:
+		    vb_appends(&r, " TRACKS");
+		    break;
+		case CYLINDERS:
+		    vb_appends(&r, " CYLINDERS");
+		    break;
+		case AVBLOCK:
+		    vb_appends(&r, " AVBLOCK");
+		    break;
+		default:
+		    break;
 		}
-		popup_an_error("%s", get_message("ftUnable"));
-		return;
+		if (tp[PARM_PRIMARY_SPACE].value != CN) {
+		    vb_appendf(&r, " SPACE(%s", tp[PARM_PRIMARY_SPACE].value);
+		    if (tp[PARM_SECONDARY_SPACE].value) {
+			vb_appendf(&r, ",%s", tp[PARM_SECONDARY_SPACE].value);
+		    }
+		    vb_appends(&r, ")");
+		}
+	    }
+	} else if (host_type == HT_VM) {
+	    if (recfm != DEFAULT_RECFM) {
+		vb_appends(&r, " RECFM ");
+		switch (recfm) {
+		case RECFM_FIXED:
+		    vb_appends(&r, "F");
+		    break;
+		case RECFM_VARIABLE:
+		    vb_appends(&r, "V");
+		    break;
+		default:
+		    break;
+		};
+
+		if (tp[PARM_LRECL].value) {
+		    vb_appendf(&r, " LRECL %s", tp[PARM_LRECL].value);
+		}
+	    }
 	}
-	(void) emulate_input(cmd, strlen(cmd), False);
-	Free(cmd);
+    }
+    vb_appends(&r, "\\n");
+
+    /* Erase the line and enter the command. */
+    flen = kybd_prime();
+    if (!flen || flen < vb_len(&r) - 1) {
+	vb_free(&r);
+	if (ft_local_file != NULL) {
+	    fclose(ft_local_file);
+	    ft_local_file = NULL;
+	    if (receive_flag && !append_flag) {
+		unlink(ft_local_filename);
+	    }
+	}
+	popup_an_error("%s", get_message("ftUnable"));
+	return;
+    }
+    (void) emulate_input(vb_buf(&r), vb_len(&r), False);
+    vb_free(&r);
 #if defined(C3270) /*[*/
-	if (ft_is_interactive) {
-		printf("Awaiting start of transfer... ");
-		fflush(stdout);
-	} else {
-		popup_an_info("Awaiting start of transfer... ");
-	}
+    if (ft_is_interactive) {
+	printf("Awaiting start of transfer... ");
+	fflush(stdout);
+    } else {
+	popup_an_info("Awaiting start of transfer... ");
+    }
 #endif /*]*/
 
-	/* Get this thing started. */
-	ft_start_id = AddTimeOut(10 * 1000, ft_didnt_start);
-	ft_state = FT_AWAIT_ACK;
-	ft_is_cut = False;
+    /* Get this thing started. */
+    ft_start_id = AddTimeOut(10 * 1000, ft_didnt_start);
+    ft_state = FT_AWAIT_ACK;
+    ft_is_cut = False;
 }
 
 #if defined(_WIN32) /*[*/

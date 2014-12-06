@@ -3393,7 +3393,7 @@ remargin(int lmargin)
  * Returns the number of unprocessed characters.
  */
 int
-emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
+emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 {
 	enum {
 	    BASE, BACKSLASH, BACKX, BACKE, BACKP, BACKPA, BACKPF, OCTAL,
@@ -3871,7 +3871,7 @@ emulate_uinput(ucs4_t *ws, int xlen, Boolean pasting)
 
 /* Multibyte version of emulate_uinput. */
 int
-emulate_input(char *s, int len, Boolean pasting)
+emulate_input(const char *s, int len, Boolean pasting)
 {
 	static ucs4_t *w_ibuf = NULL;
 	static size_t w_ibuf_len = 0;
@@ -3900,9 +3900,9 @@ emulate_input(char *s, int len, Boolean pasting)
  * Graphic Escapes are handled as \E.
  */
 void
-hex_input(char *s)
+hex_input(const char *s)
 {
-	char *t;
+	const char *t;
 	Boolean escaped;
 	unsigned char *xbuf = (unsigned char *)NULL;
 	unsigned char *tbuf = (unsigned char *)NULL;

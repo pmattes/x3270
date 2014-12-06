@@ -148,9 +148,9 @@ extern void Up_action(Widget w, XEvent *event, String *params,
 
 /* other functions */
 extern void do_reset(Boolean explicit);
-extern int emulate_input(char *s, int len, Boolean pasting);
-extern int emulate_uinput(ucs4_t *s, int len, Boolean pasting);
-extern void hex_input(char *s);
+extern int emulate_input(const char *s, int len, Boolean pasting);
+extern int emulate_uinput(const ucs4_t *s, int len, Boolean pasting);
+extern void hex_input(const char *s);
 extern void kybdlock_clr(unsigned int bits, const char *cause);
 extern void kybd_inhibit(Boolean inhibit);
 extern void kybd_init(void);

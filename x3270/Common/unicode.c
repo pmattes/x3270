@@ -998,7 +998,7 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
  * Returns the number of UCS-4 characters stored.
  */
 int
-multibyte_to_unicode_string(char *mb, size_t mb_len, ucs4_t *ucs4,
+multibyte_to_unicode_string(const char *mb, size_t mb_len, ucs4_t *ucs4,
 	size_t u_len)
 {
     int consumed;
