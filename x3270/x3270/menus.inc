@@ -91,7 +91,7 @@ If set, the cursor position is displayed on the status line.
 XX_TP(XX_FB(Scrollbar))
 If set, the scrollbar appears.
 XX_TP(XX_FB(Wraparound))
-If set, the XX_SM(ANSI) terminal emulator automatically assumes a XX_SM(NEWLINE)
+If set, the XX_SM(NVT) terminal emulator automatically assumes a XX_SM(NEWLINE)
 character when it reaches the end of a line.
 XX_TP(XX_FB(Paste with Left Margin))
 If set, puts restrictions on how pasted text is placed on the screen.
@@ -111,7 +111,7 @@ toggle.
 XX_TP(XX_FB(Select by Rectangles))
 If set, XX_FB(x3270) will always select rectangular areas of the screen.
 Otherwise, XX_FB(x3270)
-selects by rectangles when in 3270 mode, but in XX_SM(ANSI) mode it selects
+selects by rectangles when in 3270 mode, but in XX_SM(NVT) mode it selects
 continuous regions of the screen like XX_FI(xterm)(1).
 XX_TP(XX_FB(Crosshair Cursor))
 If set, XX_FB(x3270) will display a crosshair over the cursor: lines extending

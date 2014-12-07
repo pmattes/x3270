@@ -84,7 +84,7 @@
 
 #include "w3miscc.h"
 
-#define ANSI_SAVE_SIZE	4096
+#define NVT_SAVE_SIZE	4096
 
 #if defined(_WIN32) /*[*/
 #define SOCK_CLOSE(s)	closesocket(s)
@@ -194,9 +194,9 @@ static const char *sms_state_name[] = {
 
 static struct macro_def *macro_last = (struct macro_def *) NULL;
 static ioid_t stdin_id = NULL_IOID;
-static unsigned char *ansi_save_buf;
-static int      ansi_save_cnt = 0;
-static int      ansi_save_ix = 0;
+static unsigned char *nvt_save_buf;
+static int      nvt_save_cnt = 0;
+static int      nvt_save_ix = 0;
 static char    *expect_text = CN;
 static int	expect_len = 0;
 static const char *st_name[] = { "String", "Macro", "Command", "KeymapAction",
@@ -469,8 +469,8 @@ sms_push(enum sms_type type)
 		status_script(True);
 	}
 
-	if (ansi_save_buf == (unsigned char *)NULL)
-		ansi_save_buf = (unsigned char *)Malloc(ANSI_SAVE_SIZE);
+	if (nvt_save_buf == (unsigned char *)NULL)
+		nvt_save_buf = (unsigned char *)Malloc(NVT_SAVE_SIZE);
 	return True;
 }
 
@@ -506,8 +506,8 @@ sms_enqueue(enum sms_type type)
 
 	sms_depth++;
 
-	if (ansi_save_buf == (unsigned char *)NULL)
-		ansi_save_buf = (unsigned char *)Malloc(ANSI_SAVE_SIZE);
+	if (nvt_save_buf == (unsigned char *)NULL)
+		nvt_save_buf = (unsigned char *)Malloc(NVT_SAVE_SIZE);
 
 	return s;
 }
@@ -2442,8 +2442,8 @@ ReadBuffer_action(Widget w _is_unused, XEvent *event _is_unused,
  *     C(host) connected
  *  5 emulator mode
  *     N not connected
- *     C connected in ANSI character mode
- *     L connected in ANSI line mode
+ *     C connected in NVT character mode
+ *     L connected in NVT line mode
  *     P 3270 negotiation pending
  *     I connected in 3270 mode
  *  6 model number
@@ -3030,16 +3030,16 @@ static Boolean
 expect_matches(void)
 {
 	int ix, i;
-	unsigned char buf[ANSI_SAVE_SIZE];
+	unsigned char buf[NVT_SAVE_SIZE];
 	char *t;
 
-	ix = (ansi_save_ix + ANSI_SAVE_SIZE - ansi_save_cnt) % ANSI_SAVE_SIZE;
-	for (i = 0; i < ansi_save_cnt; i++) {
-		buf[i] = ansi_save_buf[(ix + i) % ANSI_SAVE_SIZE];
+	ix = (nvt_save_ix + NVT_SAVE_SIZE - nvt_save_cnt) % NVT_SAVE_SIZE;
+	for (i = 0; i < nvt_save_cnt; i++) {
+		buf[i] = nvt_save_buf[(ix + i) % NVT_SAVE_SIZE];
 	}
-	t = memstr((char *)buf, expect_text, ansi_save_cnt, expect_len);
+	t = memstr((char *)buf, expect_text, nvt_save_cnt, expect_len);
 	if (t != CN) {
-		ansi_save_cnt -= ((unsigned char *)t - buf) + expect_len;
+		nvt_save_cnt -= ((unsigned char *)t - buf) + expect_len;
 		Free(expect_text);
 		expect_text = CN;
 		return True;
@@ -3047,7 +3047,7 @@ expect_matches(void)
 		return False;
 }
 
-/* Store an ANSI character for use by the Ansi action. */
+/* Store an NVT character for use by the Ansi action. */
 void
 sms_store(unsigned char c)
 {
@@ -3055,10 +3055,10 @@ sms_store(unsigned char c)
 		return;
 
 	/* Save the character in the buffer. */
-	ansi_save_buf[ansi_save_ix++] = c;
-	ansi_save_ix %= ANSI_SAVE_SIZE;
-	if (ansi_save_cnt < ANSI_SAVE_SIZE)
-		ansi_save_cnt++;
+	nvt_save_buf[nvt_save_ix++] = c;
+	nvt_save_ix %= NVT_SAVE_SIZE;
+	if (nvt_save_cnt < NVT_SAVE_SIZE)
+		nvt_save_cnt++;
 
 	/* If a script or macro is waiting to match a string, check now. */
 	if (sms->state == SS_EXPECTING && expect_matches()) {
@@ -3069,7 +3069,7 @@ sms_store(unsigned char c)
 	}
 }
 
-/* Dump whatever ANSI data has been sent by the host since last called. */
+/* Dump whatever NVT data has been sent by the host since last called. */
 void
 AnsiText_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_unused,
     Cardinal *num_params _is_unused)
@@ -3077,14 +3077,14 @@ AnsiText_action(Widget w _is_unused, XEvent *event _is_unused, String *params _i
 	register int i;
 	int ix;
 	unsigned char c;
-	char linebuf[ANSI_SAVE_SIZE * 4 + 1];
+	char linebuf[NVT_SAVE_SIZE * 4 + 1];
 	char *s = linebuf;
 
-	if (!ansi_save_cnt)
+	if (!nvt_save_cnt)
 		return;
-	ix = (ansi_save_ix + ANSI_SAVE_SIZE - ansi_save_cnt) % ANSI_SAVE_SIZE;
-	for (i = 0; i < ansi_save_cnt; i++) {
-		c = ansi_save_buf[(ix + i) % ANSI_SAVE_SIZE];
+	ix = (nvt_save_ix + NVT_SAVE_SIZE - nvt_save_cnt) % NVT_SAVE_SIZE;
+	for (i = 0; i < nvt_save_cnt; i++) {
+		c = nvt_save_buf[(ix + i) % NVT_SAVE_SIZE];
 		if (!(c & ~0x1f)) switch (c) {
 		    case '\n':
 			s += sprintf(s, "\\n");
@@ -3105,8 +3105,8 @@ AnsiText_action(Widget w _is_unused, XEvent *event _is_unused, String *params _i
 	}
 	*s = '\0';
 	action_output("%s", linebuf);
-	ansi_save_cnt = 0;
-	ansi_save_ix = 0;
+	nvt_save_cnt = 0;
+	nvt_save_ix = 0;
 }
 
 /* Pause a script. */
@@ -3258,7 +3258,7 @@ wait_timed_out(ioid_t id _is_unused)
 	sms_continue();
 }
 
-/* Wait for a string from the host (ANSI mode only). */
+/* Wait for a string from the host (NVT mode only). */
 void
 Expect_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
@@ -3274,7 +3274,7 @@ Expect_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	if (check_usage(Expect_action, *num_params, 1, 2) < 0)
 		return;
 	if (!IN_NVT) {
-		popup_an_error("%s is valid only when connected in ANSI mode",
+		popup_an_error("%s is valid only when connected in NVT mode",
 		    action_name(Expect_action));
 	}
 	if (*num_params == 2) {

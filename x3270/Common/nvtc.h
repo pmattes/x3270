@@ -26,20 +26,20 @@
  */
 
 /*
- *	ansic.h
- *		Global declarations for ansi.c.
+ *	nvtc.h
+ *		Global declarations for nvt.c.
  */
 
-extern void ansi_init(void);
-extern void ansi_process(unsigned int c);
-extern void ansi_send_clear(void);
-extern void ansi_send_down(void);
-extern void ansi_send_home(void);
-extern void ansi_send_left(void);
-extern void ansi_send_pa(int nn);
-extern void ansi_send_pf(int nn);
-extern void ansi_send_right(void);
-extern void ansi_send_up(void);
-extern void ansi_snap(void);
-extern void ansi_snap_modes(void);
+extern void nvt_init(void);
+extern void nvt_process(unsigned int c);
+extern void nvt_send_clear(void);
+extern void nvt_send_down(void);
+extern void nvt_send_home(void);
+extern void nvt_send_left(void);
+extern void nvt_send_pa(int nn);
+extern void nvt_send_pf(int nn);
+extern void nvt_send_right(void);
+extern void nvt_send_up(void);
+extern void nvt_snap(void);
+extern void nvt_snap_modes(void);
 extern void toggle_lineWrap(struct toggle *t, enum toggle_type type);

@@ -37,10 +37,10 @@
 #include "globals.h"
 #include "appres.h"
 
-#include "ansic.h"
 #include "actionsc.h"
 #include "ctlrc.h"
 #include "menubarc.h"
+#include "nvtc.h"
 #include "popupsc.h"
 #include "screenc.h"
 #include "trace_dsc.h"

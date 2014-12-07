@@ -591,7 +591,7 @@ menubar_keypad_changed(void)
 		    NULL);
 }
 
-/* Called when we switch between ANSI and 3270 modes. */
+/* Called when we switch between NVT and 3270 modes. */
 static void
 menubar_in3270(Boolean in3270)
 {
@@ -634,7 +634,7 @@ menubar_in3270(Boolean in3270)
 		    NULL);
 }
 
-/* Called when we switch between ANSI line and character. */
+/* Called when we switch between NVT line and character modes. */
 static void
 menubar_linemode(Boolean in_linemode)
 {

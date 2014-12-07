@@ -118,10 +118,10 @@ enum cstate {
 	NOT_CONNECTED,		/* no socket, unknown mode */
 	PENDING,		/* connection pending */
 	CONNECTED_INITIAL,	/* connected, no mode yet */
-	CONNECTED_ANSI,		/* connected in NVT ANSI mode */
+	CONNECTED_NVT,		/* connected in NVT mode */
 	CONNECTED_3270,		/* connected in old-style 3270 mode */
 	CONNECTED_INITIAL_E,	/* connected in TN3270E mode, unnegotiated */
-	CONNECTED_NVT,		/* connected in TN3270E mode, NVT mode */
+	CONNECTED_E_NVT,	/* connected in TN3270E mode, NVT mode */
 	CONNECTED_SSCP,		/* connected in TN3270E mode, SSCP-LU mode */
 	CONNECTED_TN3270E	/* connected in TN3270E mode, 3270 mode */
 };
@@ -131,7 +131,7 @@ enum cstate cstate = NOT_CONNECTED;
 #define HALF_CONNECTED	(cstate == PENDING)
 #define CONNECTED	((int)cstate >= (int)CONNECTED_INITIAL)
 #define IN_NEITHER	(cstate == CONNECTED_INITIAL)
-#define IN_NVT		(cstate == CONNECTED_ANSI || cstate == CONNECTED_NVT)
+#define IN_NVT		(cstate == CONNECTED_NVT || cstate == CONNECTED_E_NVT)
 #define IN_3270		(cstate == CONNECTED_3270 || cstate == CONNECTED_TN3270E || cstate == CONNECTED_SSCP)
 #define IN_SSCP		(cstate == CONNECTED_SSCP)
 #define IN_TN3270E	(cstate == CONNECTED_TN3270E)
@@ -1475,7 +1475,7 @@ check_in3270(void)
 			new_cstate = CONNECTED_INITIAL_E;
 			break;
 		case E_NVT:
-			new_cstate = CONNECTED_NVT;
+			new_cstate = CONNECTED_E_NVT;
 			break;
 		case E_3270:
 			new_cstate = CONNECTED_TN3270E;
@@ -1496,7 +1496,7 @@ check_in3270(void)
 		/* Nothing has happened, yet. */
 		return;
 	} else {
-		new_cstate = CONNECTED_ANSI;
+		new_cstate = CONNECTED_NVT;
 	}
 
 	if (new_cstate != cstate) {

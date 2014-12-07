@@ -775,11 +775,11 @@ host_disconnect(Boolean failed)
 #endif /*]*/
 
 		/*
-		 * Remember a disconnect from ANSI mode, to keep screen tracing
+		 * Remember a disconnect from NVT mode, to keep screen tracing
 		 * in sync.
 		 */
 		if (IN_NVT && toggled(SCREEN_TRACE)) {
-			trace_ansi_disc();
+			trace_nvt_disc();
 		}
 
 		cstate = NOT_CONNECTED;
@@ -789,7 +789,7 @@ host_disconnect(Boolean failed)
 	}
 }
 
-/* The host has entered 3270 or ANSI mode, or switched between them. */
+/* The host has entered 3270 or NVT mode, or switched between them. */
 void
 host_in3270(enum cstate new_cstate)
 {

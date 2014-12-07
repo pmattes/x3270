@@ -26,8 +26,8 @@
  */
 
 /*
- *	ansi.c
- *		ANSI terminal emulation.
+ *	nvt.c
+ *		NVT (ANSI X3.64 / DEC VT100 / xterm) terminal emulation.
  */
 
 #include "globals.h"
@@ -40,7 +40,7 @@
 #include "ctlr.h"
 #include "3270ds.h"
 
-#include "ansic.h"
+#include "nvtc.h"
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "hostc.h"
@@ -119,6 +119,11 @@ static enum state {
     MBPEND = 7
 } state = DATA;
 
+/*
+ * Terminal functions for ANSI X3.64 are called ansi_xxx.
+ * DEC VT100-specific functions are called dec_xxx.
+ * Xterm-specific functions are called xterm_xxx.
+ */
 static enum state ansi_data_mode(int, int);
 static enum state dec_save_cursor(int, int);
 static enum state dec_restore_cursor(int, int);
@@ -177,7 +182,7 @@ static enum state ansi_one_g3(int, int);
 static enum state ansi_multibyte(int, int);
 
 typedef enum state (*afn_t)(int, int);
-static afn_t ansi_fn[] = {
+static afn_t nvt_fn[] = {
 /* 0 */		&ansi_data_mode,
 /* 1 */		&dec_save_cursor,
 /* 2 */		&dec_restore_cursor,
@@ -438,7 +443,7 @@ static int      n[NN], nx = 0;
 #define NT	256
 static char     text[NT + 1];
 static int      tx = 0;
-static int      ansi_ch;
+static int      nvt_ch;
 static unsigned char gr = 0;
 static unsigned char saved_gr = 0;
 static unsigned char fg = 0;
@@ -476,7 +481,7 @@ static unsigned char ped[PE_MAX];
 
 static Boolean  held_wrap = False;
 
-static void	ansi_scroll(void);
+static void	nvt_scroll(void);
 
 static enum state
 ansi_data_mode(int ig1 _is_unused, int ig2 _is_unused)
@@ -525,7 +530,7 @@ ansi_newline(int ig1 _is_unused, int ig2 _is_unused)
 	if (nc < scroll_bottom * COLS)
 		cursor_move(nc);
 	else
-		ansi_scroll();
+		nvt_scroll();
 	held_wrap = False;
 	return DATA;
 }
@@ -963,7 +968,7 @@ ansi_lf(int ig1 _is_unused, int ig2 _is_unused)
 	if (nc < scroll_bottom * COLS)
 		cursor_move(nc);
 	else
-		ansi_scroll();
+		nvt_scroll();
 	return DATA;
 }
 
@@ -1003,7 +1008,7 @@ ansi_nop(int ig1 _is_unused, int ig2 _is_unused)
 	    if (cursor_addr / COLS >= scroll_bottom) \
 		    cursor_move(cursor_addr / COLS * COLS); \
 	    else { \
-		    ansi_scroll(); \
+		    nvt_scroll(); \
 		    cursor_move(nc - COLS); \
 	    } \
     } \
@@ -1018,13 +1023,13 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 	enum dbcs_state d;
 #endif /*]*/
 
-	if ((pmi == 0) && (ansi_ch & 0x80)) {
+	if ((pmi == 0) && (nvt_ch & 0x80)) {
 	    	char mbs[2];
 		int consumed;
 		enum me_fail fail;
 		unsigned long ucs4;
 
-		mbs[0] = (char)ansi_ch;
+		mbs[0] = (char)nvt_ch;
 		mbs[1] = '\0';
 		ucs4 = multibyte_to_unicode(mbs, 1, &consumed, &fail);
 		if (ucs4 == 0) {
@@ -1032,28 +1037,28 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 			case ME_SHORT:
 				/* Start munching multi-byte. */
 				pmi = 0;
-				pending_mbs[pmi++] = (char)ansi_ch;
+				pending_mbs[pmi++] = (char)nvt_ch;
 				return MBPEND;
 			case ME_INVALID:
 			default:
 				/* Invalid multi-byte -> '?' */
-				ansi_ch = '?';
+				nvt_ch = '?';
 				break;
 			}
 		} else {
-			ansi_ch = ucs4;
+			nvt_ch = ucs4;
 		}
 	}
 	pmi = 0;
 
 	/* Translate to EBCDIC to see if it's DBCS. */
-	ebc_ch = unicode_to_ebcdic(ansi_ch);
+	ebc_ch = unicode_to_ebcdic(nvt_ch);
 	if (ebc_ch & ~0xff) {
 #if defined(X3270_DBCS) /*[*/
 		if (!dbcs)
 #endif
 		{
-			ansi_ch = '?';
+			nvt_ch = '?';
 			ebc_ch = asc2ebc0['?'];
 		}
 	}
@@ -1070,8 +1075,8 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 #endif /*]*/
 	switch (csd[(once_cset != -1) ? once_cset : cset]) {
 	    case CSD_LD:	/* line drawing "0" */
-		if (ansi_ch >= 0x5f && ansi_ch <= 0x7e)
-			ctlr_add(cursor_addr, (unsigned char)(ansi_ch - 0x5f),
+		if (nvt_ch >= 0x5f && nvt_ch <= 0x7e)
+			ctlr_add(cursor_addr, (unsigned char)(nvt_ch - 0x5f),
 			    CS_LINEDRAW);
 		else if (ebc_ch & ~0xff)
 			ctlr_add(cursor_addr,
@@ -1081,7 +1086,7 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 			ctlr_add(cursor_addr, (unsigned char)ebc_ch, CS_BASE);
 		break;
 	    case CSD_UK:	/* UK "A" */
-		if (ansi_ch == '#')
+		if (nvt_ch == '#')
 			ctlr_add(cursor_addr, 0x1e, CS_LINEDRAW);
 		else if (ebc_ch & ~0xff)
 			ctlr_add(cursor_addr,
@@ -1231,16 +1236,16 @@ ansi_multibyte(int ig1, int ig2)
 	if (pmi >= MB_MAX - 2) {
 	    	/* String too long. */
 		pmi = 0;
-	    	ansi_ch = '?';
+	    	nvt_ch = '?';
 		return ansi_printing(ig1, ig2);
 	}
 
-	pending_mbs[pmi++] = (char)ansi_ch;
+	pending_mbs[pmi++] = (char)nvt_ch;
 	pending_mbs[pmi] = '\0';
 	ucs4 = multibyte_to_unicode(pending_mbs, pmi, &consumed, &fail);
 	if (ucs4 != 0) {
 	    	/* Success! */
-	    	ansi_ch = ucs4;
+	    	nvt_ch = ucs4;
 		return ansi_printing(ig1, ig2);
 	}
 	if (fail == ME_SHORT) {
@@ -1251,18 +1256,18 @@ ansi_multibyte(int ig1, int ig2)
 	/* Failure. */
 
 	/* Replace the sequence with '?'. */
-	ucs4 = ansi_ch; /* save for later */
+	ucs4 = nvt_ch; /* save for later */
 	pmi = 0;
-	ansi_ch = '?';
+	nvt_ch = '?';
 	(void) ansi_printing(ig1, ig2);
 
 	/*
 	 * Reprocess whatever we choked on (especially if it's a control
 	 * character).
 	 */
-	ansi_ch = ucs4;
+	nvt_ch = ucs4;
 	state = DATA;
-	fn = ansi_fn[st[(int)DATA][ansi_ch]];
+	fn = nvt_fn[st[(int)DATA][nvt_ch]];
 	return (*fn)(n[0], n[1]);
 }
 
@@ -1278,7 +1283,7 @@ ansi_semicolon(int ig1 _is_unused, int ig2 _is_unused)
 static enum state
 ansi_digit(int ig1 _is_unused, int ig2 _is_unused)
 {
-	n[nx] = (n[nx] * 10) + (ansi_ch - '0');
+	n[nx] = (n[nx] * 10) + (nvt_ch - '0');
 	return state;
 }
 
@@ -1382,14 +1387,14 @@ ansi_status_report(int nn, int ig2 _is_unused)
 static enum state
 ansi_cs_designate(int ig1 _is_unused, int ig2 _is_unused)
 {
-	cs_to_change = strchr(gnnames, ansi_ch) - gnnames;
+	cs_to_change = strchr(gnnames, nvt_ch) - gnnames;
 	return CSDES;
 }
 
 static enum state
 ansi_cs_designate2(int ig1 _is_unused, int ig2 _is_unused)
 {
-	csd[cs_to_change] = strchr(csnames, ansi_ch) - csnames;
+	csd[cs_to_change] = strchr(csnames, nvt_ch) - csnames;
 	return DATA;
 }
 
@@ -1613,7 +1618,7 @@ static enum state
 xterm_text(int ig1 _is_unused, int ig2 _is_unused)
 {
 	if (tx < NT)
-		text[tx++] = ansi_ch;
+		text[tx++] = nvt_ch;
 	return state;
 }
 
@@ -1689,7 +1694,7 @@ ansi_htab_clear(int nn, int ig2 _is_unused)
  * Scroll the screen or the scrolling region.
  */
 static void
-ansi_scroll(void)
+nvt_scroll(void)
 {
 	held_wrap = False;
 
@@ -1712,9 +1717,9 @@ ansi_scroll(void)
 	ctlr_aclear((scroll_bottom - 1) * COLS, COLS, 1);
 }
 
-/* Callback for when we enter ANSI mode. */
+/* Callback for when we enter NVT mode. */
 static void
-ansi_in3270(Boolean in3270)
+nvt_in3270(Boolean in3270)
 {
 	if (!in3270)
 		(void) ansi_reset(0, 0);
@@ -1726,18 +1731,18 @@ ansi_in3270(Boolean in3270)
  */
 
 void
-ansi_init(void)
+nvt_init(void)
 {
-	register_schange(ST_3270_MODE, ansi_in3270);
+	register_schange(ST_3270_MODE, nvt_in3270);
 }
 
 void
-ansi_process(unsigned int c)
+nvt_process(unsigned int c)
 {
 	afn_t fn;
 
 	c &= 0xff;
-	ansi_ch = c;
+	nvt_ch = c;
 
 	scroll_to_bottom();
 
@@ -1745,7 +1750,7 @@ ansi_process(unsigned int c)
 		trace_char((char)c);
 	}
 
-	fn = ansi_fn[st[(int)state][c]];
+	fn = nvt_fn[st[(int)state][c]];
 	state = (*fn)(n[0], n[1]);
 
 	/* Saving pending escape data. */
@@ -1756,7 +1761,7 @@ ansi_process(unsigned int c)
 }
 
 void
-ansi_send_up(void)
+nvt_send_up(void)
 {
 	if (appl_cursor)
 		net_sends("\033OA");
@@ -1765,7 +1770,7 @@ ansi_send_up(void)
 }
 
 void
-ansi_send_down(void)
+nvt_send_down(void)
 {
 	if (appl_cursor)
 		net_sends("\033OB");
@@ -1774,7 +1779,7 @@ ansi_send_down(void)
 }
 
 void
-ansi_send_right(void)
+nvt_send_right(void)
 {
 	if (appl_cursor)
 		net_sends("\033OC");
@@ -1783,7 +1788,7 @@ ansi_send_right(void)
 }
 
 void
-ansi_send_left(void)
+nvt_send_left(void)
 {
 	if (appl_cursor)
 		net_sends("\033OD");
@@ -1792,19 +1797,19 @@ ansi_send_left(void)
 }
 
 void
-ansi_send_home(void)
+nvt_send_home(void)
 {
 	net_sends("\033[H");
 }
 
 void
-ansi_send_clear(void)
+nvt_send_clear(void)
 {
 	net_sends("\033[2K");
 }
 
 void
-ansi_send_pf(int nn)
+nvt_send_pf(int nn)
 {
     char *s;
     static int code[] = {
@@ -1832,7 +1837,7 @@ ansi_send_pf(int nn)
 }
 
 void
-ansi_send_pa(int nn)
+nvt_send_pa(int nn)
 {
     char *s;
     static char code[4] = { 'P', 'Q', 'R', 'S' };
@@ -1943,7 +1948,7 @@ ansi_dump_spaces(size_t spaces, int baddr)
  * blank screen.
  */
 static void
-ansi_snap_one(struct ea *buf)
+nvt_snap_one(struct ea *buf)
 {
     	int baddr;
 	int cur_gr = 0;
@@ -2099,7 +2104,7 @@ ansi_snap_one(struct ea *buf)
 
 /* Snap the contents of the screen buffers in NVT mode. */
 void
-ansi_snap(void)
+nvt_snap(void)
 {
     	/*
 	 * Note that ea_buf is the live buffer, and aea_buf is the other
@@ -2108,14 +2113,14 @@ ansi_snap(void)
 	 */
 	if (is_altbuffer) {
 	    	/* Draw the primary screen first. */
-	    	ansi_snap_one(aea_buf);
+	    	nvt_snap_one(aea_buf);
 		emit_cup(0);
 
 		/* Switch to the alternate. */
 		emit_decpriv(47, 'h');
 
 		/* Draw the secondary, and stay in alternate mode. */
-		ansi_snap_one(ea_buf);
+		nvt_snap_one(ea_buf);
 	} else {
 	    	int i;
 		int any = 0;
@@ -2134,7 +2139,7 @@ ansi_snap(void)
 			emit_decpriv(47, 'h');
 
 			/* Draw the alternate screen. */
-			ansi_snap_one(aea_buf);
+			nvt_snap_one(aea_buf);
 			emit_cup(0);
 
 			/* Switch to the primary. */
@@ -2142,7 +2147,7 @@ ansi_snap(void)
 		}
 
 		/* Draw the primary, and stay in primary mode. */
-		ansi_snap_one(ea_buf);
+		nvt_snap_one(ea_buf);
 	}
 }
 
@@ -2151,7 +2156,7 @@ ansi_snap(void)
  * This is a subtle piece of logic, and may harbor a few bugs yet.
  */
 void
-ansi_snap_modes(void)
+nvt_snap_modes(void)
 {
     	int i;
 	static char csdsel[4] = "()*+";

@@ -66,7 +66,6 @@
 #include "ctlr.h"
 
 #include "actionsc.h"
-#include "ansic.h"
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "ftc.h"
@@ -76,6 +75,7 @@
 #include "kybdc.h"
 #include "macrosc.h"
 #include "menubarc.h"
+#include "nvtc.h"
 #include "popupsc.h"
 #include "screenc.h"
 #include "selectc.h"
@@ -406,7 +406,7 @@ tcl3270_main(int argc, const char *argv[])
 	ctlr_init(-1);
 	ctlr_reinit(-1);
 	kybd_init();
-	ansi_init();
+	nvt_init();
 	ft_init();
 
 	register_schange(ST_CONNECT, main_connect);

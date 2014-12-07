@@ -777,10 +777,10 @@ XX_LP
 The color scheme may also be changed while XX_FB(XX_PRODUCT)
 is running with a selection from the XX_FB(Options) menu.
 ')dnl
-XX_SH(NVT (ANSI) Mode)
+XX_SH(NVT Mode)
 Some hosts use an XX_SM(ASCII) front-end to do initial login negotiation,
 then later switch to 3270 mode.
-XX_FB(XX_PRODUCT) will emulate an XX_SM(ANSI) X.64 terminal until the host
+XX_FB(XX_PRODUCT) will emulate an XX_SM(ANSI) X3.64 terminal until the host
 places it in 3270 mode (telnet XX_SM(BINARY) and XX_SM(SEND EOR) modes, or
 XX_SM(TN3270E) mode negotiation).
 ifelse(XX_PRODUCT,x3270,`The emulation is fairly complete; however, it is
@@ -788,7 +788,7 @@ not intended to make XX_FB(XX_PRODUCT) a replacement for XX_FI(xterm)(1).
 ')dnl
 XX_PP
 If the host later negotiates to stop functioning in 3270 mode,
-XX_FB(XX_PRODUCT) will return to XX_SM(ANSI) emulation.
+XX_FB(XX_PRODUCT) will return to XX_SM(NVT) emulation.
 XX_PP
 In XX_SM(NVT) mode, XX_FB(XX_PRODUCT)
 supports both character-at-a-time mode and line mode operation.
@@ -835,7 +835,7 @@ Second, in insert mode, trailing blanks in a field are treated like nulls,
 eliminating the annoying XX_DQUOTED(lock-up) that often occurs when inserting
 into an field with (apparent) space at the end.
 XX_TP(XX_FB(lineWrap))
-If set, the XX_SM(ANSI) terminal emulator automatically assumes
+If set, the XX_SM(NVT) terminal emulator automatically assumes
 a XX_SM(NEWLINE) character when it reaches the end of a line.
 ifelse(XX_PRODUCT,wc3270,`XX_TP(XX_FB(marginedPaste))
 If set, pasting multi-line input via the XX_FB(Paste) action will maintain a

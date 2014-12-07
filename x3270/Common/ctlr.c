@@ -326,7 +326,7 @@ ctlr_half_connect(Boolean ignored _is_unused)
 
 
 /*
- * Called when a host connects, disconnects, or changes ANSI/3270 modes.
+ * Called when a host connects, disconnects, or changes NVT/3270 modes.
  */
 static void
 ctlr_connect(Boolean ignored _is_unused)

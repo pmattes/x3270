@@ -44,7 +44,7 @@ char *screentrace_default_file(ptype_t ptype);
 char *screentrace_default_printer(void);
 void toggle_tracing(struct toggle *t, enum toggle_type tt);
 void toggle_screenTrace(struct toggle *t, enum toggle_type tt);
-void trace_ansi_disc(void);
+void trace_nvt_disc(void);
 void trace_char(char c);
 void trace_ds(const char *fmt, ...) printflike(1, 2);
 void vtrace(const char *fmt, ...) printflike(1, 2);

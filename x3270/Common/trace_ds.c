@@ -49,12 +49,12 @@
 #include "resources.h"
 #include "ctlr.h"
 
-#include "ansic.h"
 #include "charsetc.h"
 #include "childc.h"
 #include "ctlrc.h"
 #include "fprint_screenc.h"
 #include "menubarc.h"
+#include "nvtc.h"
 #include "popupsc.h"
 #include "printc.h"
 #include "savec.h"
@@ -587,7 +587,7 @@ create_tracefile_header(const char *mode)
 			if (IN_SSCP) {
 			    	ctlr_snap_buffer_sscp_lu();
 			} else if (IN_NVT) {
-			    	ansi_snap();
+			    	nvt_snap();
 			}
 			space3270out(2);
 			net_add_eor(obuf, obptr - obuf);
@@ -596,17 +596,17 @@ create_tracefile_header(const char *mode)
 			if (IN_NVT) {
 				wtrace(False, " NVT modes:\n");
 				obptr = obuf;
-				ansi_snap_modes();
+				nvt_snap_modes();
 				trace_netdata('<', obuf, obptr - obuf);
 			}
 		} else if (IN_NVT) {
 			obptr = obuf;
 			wtrace(False, " Screen contents (NVT):\n");
-			ansi_snap();
+			nvt_snap();
 			trace_netdata('<', obuf, obptr - obuf);
 			wtrace(False, " NVT modes:\n");
 			obptr = obuf;
-			ansi_snap_modes();
+			nvt_snap_modes();
 			trace_netdata('<', obuf, obptr - obuf);
 		}
 	}
@@ -1021,7 +1021,7 @@ trace_screen(Boolean is_clear)
 	do_screentrace(is_clear);
 }
 
-/* Called from ANSI emulation code to log a single character. */
+/* Called from NVT emulation code to log a single character. */
 void
 trace_char(char c)
 {
@@ -1031,13 +1031,13 @@ trace_char(char c)
 }
 
 /*
- * Called when disconnecting in ANSI mode, to finish off the trace file
+ * Called when disconnecting in NVT mode, to finish off the trace file
  * and keep the next screen clear from re-recording the screen image.
  * (In a gross violation of data hiding and modularity, trace_skipping is
  * manipulated directly in ctlr_clear()).
  */
 void
-trace_ansi_disc(void)
+trace_nvt_disc(void)
 {
 	int i;
 

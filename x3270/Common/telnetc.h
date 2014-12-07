@@ -56,7 +56,7 @@ extern int net_connect(const char *, char *, Boolean, Boolean *, Boolean *);
 extern void net_disconnect(void);
 extern void net_exception(unsigned long fd, ioid_t id);
 extern int net_getsockname(void *buf, int *len);
-extern void net_hexansi_out(unsigned char *buf, int len);
+extern void net_hexnvt_out(unsigned char *buf, int len);
 extern void net_input(unsigned long fd, ioid_t id);
 extern void net_interrupt(void);
 extern void net_linemode(void);

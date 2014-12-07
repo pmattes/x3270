@@ -56,7 +56,6 @@
 #include "screen.h"
 
 #include "actionsc.h"
-#include "ansic.h"
 #include "aplc.h"
 #include "charsetc.h"
 #include "ctlrc.h"
@@ -68,6 +67,7 @@
 #include "keypadc.h"
 #include "kybdc.h"
 #include "macrosc.h"
+#include "nvtc.h"
 #include "popupsc.h"
 #include "printc.h"
 #include "screenc.h"
@@ -405,7 +405,7 @@ kybd_connect(Boolean connected)
 }
 
 /*
- * Called when we switch between 3270 and ANSI modes.
+ * Called when we switch between 3270 and NVT modes.
  */
 static void
 kybd_in3270(Boolean in3270 _is_unused)
@@ -424,11 +424,11 @@ kybd_in3270(Boolean in3270 _is_unused)
 		 */
 		kybdlock_set(KL_AWAITING_FIRST, "kybd_in3270");
 		break;
-	case CONNECTED_ANSI:
 	case CONNECTED_NVT:
+	case CONNECTED_E_NVT:
 	case CONNECTED_SSCP:
 		/*
-		 * We just transitioned to ANSI, TN3270E NVT or TN3270E SSCP-LU
+		 * We just transitioned to NVT, TN3270E NVT or TN3270E SSCP-LU
 		 * mode.  Remove all lock bits.
 		 */
 		kybdlock_clr(-1, "kybd_in3270");
@@ -530,12 +530,12 @@ key_AID(unsigned char aid_code)
 		}
 		for (i = 0; i < PF_SZ; i++)
 			if (aid_code == pf_xlate[i]) {
-				ansi_send_pf(i+1);
+				nvt_send_pf(i+1);
 				return;
 			}
 		for (i = 0; i < PA_SZ; i++)
 			if (aid_code == pa_xlate[i]) {
-				ansi_send_pa(i+1);
+				nvt_send_pa(i+1);
 				return;
 			}
 		return;
@@ -1777,7 +1777,7 @@ Home_action(Widget w _is_unused, XEvent *event, String *params,
 		return;
 	}
 	if (IN_NVT) {
-		ansi_send_home();
+		nvt_send_home();
 		return;
 	}
 	if (!formatted) {
@@ -1829,7 +1829,7 @@ Left_action(Widget w _is_unused, XEvent *event, String *params,
 		}
 	}
 	if (IN_NVT) {
-		ansi_send_left();
+		nvt_send_left();
 		return;
 	}
 	if (!flipped)
@@ -2083,7 +2083,7 @@ Right_action(Widget w _is_unused, XEvent *event, String *params,
 		}
 	}
 	if (IN_NVT) {
-		ansi_send_right();
+		nvt_send_right();
 		return;
 	}
 	if (!flipped) {
@@ -2368,7 +2368,7 @@ Up_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_para
 		}
 	}
 	if (IN_NVT) {
-		ansi_send_up();
+		nvt_send_up();
 		return;
 	}
 	baddr = cursor_addr - COLS;
@@ -2398,7 +2398,7 @@ Down_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_pa
 		}
 	}
 	if (IN_NVT) {
-		ansi_send_down();
+		nvt_send_down();
 		return;
 	}
 	baddr = (cursor_addr + COLS) % (COLS * ROWS);
@@ -2540,7 +2540,7 @@ Clear_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_p
 		return;
 	}
 	if (IN_NVT) {
-		ansi_send_clear();
+		nvt_send_clear();
 		return;
 	}
 	buffer_addr = 0;
@@ -3257,7 +3257,7 @@ HexString_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *n
 
 /*
  * Dual-mode action for the "asciicircum" ("^") key:
- *  If in ANSI mode, pass through untranslated.
+ *  If in NVT mode, pass through untranslated.
  *  If in 3270 mode, translate to "notsign".
  * This action is obsoleted by the use of 3270-mode and NVT-mode keymaps, but
  * is still defined here for backwards compatibility with old keymaps.
@@ -3894,7 +3894,7 @@ emulate_input(const char *s, int len, Boolean pasting)
 /*
  * Pretend that a sequence of hexadecimal characters was entered at the
  * keyboard.  The input is a sequence of hexadecimal bytes, 2 characters
- * per byte.  If connected in ANSI mode, these are treated as ASCII
+ * per byte.  If connected in NVT mode, these are treated as ASCII
  * characters; if in 3270 mode, they are considered EBCDIC.
  *
  * Graphic Escapes are handled as \E.
@@ -3929,7 +3929,7 @@ hex_input(const char *s)
 				return;
 			}
 			if (!IN_3270) {
-				popup_an_error("%s: \\E in ANSI mode",
+				popup_an_error("%s: \\E in NVT mode",
 				    action_name(HexString_action));
 				cancel_if_idle_command();
 				return;
@@ -3974,7 +3974,7 @@ hex_input(const char *s)
 		t += 2;
 	}
 	if (!IN_3270 && nbytes) {
-		net_hexansi_out(xbuf, nbytes);
+		net_hexnvt_out(xbuf, nbytes);
 		Free(xbuf);
 	}
 }

@@ -23,9 +23,6 @@
     <ClCompile Include="..\wc3270-3.3\actions.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270-3.3\ansi.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270-3.3\apl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -84,6 +81,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\wc3270-3.3\menubar.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wc3270-3.3\nvt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\wc3270-3.3\print.c">

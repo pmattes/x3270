@@ -71,11 +71,11 @@
 #include "appres.h"
 
 #include "actionsc.h"
-#include "ansic.h"
 #include "ctlrc.h"
 #include "hostc.h"
 #include "kybdc.h"
 #include "macrosc.h"
+#include "nvtc.h"
 #include "popupsc.h"
 #include "proxyc.h"
 #include "resolverc.h"
@@ -160,7 +160,7 @@ static char     ttype_tmpval[13];
 static unsigned short e_xmit_seq; /* transmit sequence number */
 static int response_required;
 
-static int      ansi_data = 0;
+static int      nvt_data = 0;
 static unsigned char *lbuf = (unsigned char *)NULL;
 			/* line-mode input buffer */
 static unsigned char *lbptr;
@@ -826,7 +826,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 			(void) fcntl(sock, F_SETFD, 1);
 #endif /*]*/
 			connection_complete();
-			host_in3270(CONNECTED_ANSI);
+			host_in3270(CONNECTED_NVT);
 			break;
 		}
 		return sock;
@@ -1291,7 +1291,7 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 	}
 #endif /*]*/
 
-	ansi_data = 0;
+	nvt_data = 0;
 
 #if defined(_WIN32) /*[*/
 	(void) ResetEvent(sock_handle);
@@ -1413,15 +1413,15 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 #if defined(LOCAL_PROCESS) /*[*/
 		if (local_process) {
 			/* More to do here, probably. */
-			if (IN_NEITHER) {	/* now can assume ANSI mode */
-				host_in3270(CONNECTED_ANSI);
+			if (IN_NEITHER) {	/* now can assume NVT mode */
+				host_in3270(CONNECTED_NVT);
 				hisopts[TELOPT_ECHO] = 1;
 				check_linemode(False);
 				kybdlock_clr(KL_AWAITING_FIRST, "telnet_fsm");
 				status_reset();
 				ps_process();
 			}
-			ansi_process((unsigned int) *cp);
+			nvt_process((unsigned int) *cp);
 		} else {
 #endif /*]*/
 			if (telnet_fsm(*cp)) {
@@ -1437,9 +1437,9 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 	if (IN_NVT) {
 		(void) ctlr_dbcs_postprocess();
 	}
-	if (ansi_data) {
+	if (nvt_data) {
 		vtrace("\n");
-		ansi_data = 0;
+		nvt_data = 0;
 	}
 
 	/* See if it's time to roll over the trace file. */
@@ -1574,37 +1574,37 @@ telnet_fsm(unsigned char c)
 	    case TNS_DATA:	/* normal data processing */
 		if (c == IAC) {	/* got a telnet command */
 			telnet_state = TNS_IAC;
-			if (ansi_data) {
+			if (nvt_data) {
 				vtrace("\n");
-				ansi_data = 0;
+				nvt_data = 0;
 			}
 			break;
 		}
-		if (IN_NEITHER) {	/* now can assume ANSI mode */
+		if (IN_NEITHER) {	/* now can assume NVT mode */
 			if (linemode) {
 				cooked_init();
 			}
-			host_in3270(CONNECTED_ANSI);
+			host_in3270(CONNECTED_NVT);
 			kybdlock_clr(KL_AWAITING_FIRST, "telnet_fsm");
 			status_reset();
 			ps_process();
 		}
 		if (IN_NVT && !IN_E) {
-			if (!ansi_data) {
+			if (!nvt_data) {
 				vtrace("<.. ");
-				ansi_data = 4;
+				nvt_data = 4;
 			}
 			see_chr = ctl_see((int) c);
-			ansi_data += (sl = strlen(see_chr));
-			if (ansi_data >= TRACELINE) {
+			nvt_data += (sl = strlen(see_chr));
+			if (nvt_data >= TRACELINE) {
 				vtrace(" ...\n... ");
-				ansi_data = 4 + sl;
+				nvt_data = 4 + sl;
 			}
 			vtrace("%s", see_chr);
 			if (!syncing) {
 				if (linemode && appres.onlcr && c == '\n')
-					ansi_process((unsigned int) '\r');
-				ansi_process((unsigned int) c);
+					nvt_process((unsigned int) '\r');
+				nvt_process((unsigned int) c);
 				sms_store(c);
 			}
 		} else {
@@ -1618,18 +1618,18 @@ telnet_fsm(unsigned char c)
 		switch (c) {
 		    case IAC:	/* escaped IAC, insert it */
 			if (IN_NVT && !IN_E) {
-				if (!ansi_data) {
+				if (!nvt_data) {
 					vtrace("<.. ");
-					ansi_data = 4;
+					nvt_data = 4;
 				}
 				see_chr = ctl_see((int) c);
-				ansi_data += (sl = strlen(see_chr));
-				if (ansi_data >= TRACELINE) {
+				nvt_data += (sl = strlen(see_chr));
+				if (nvt_data >= TRACELINE) {
 					vtrace(" ...\n ...");
-					ansi_data = 4 + sl;
+					nvt_data = 4 + sl;
 				}
 				vtrace("%s", see_chr);
-				ansi_process((unsigned int) c);
+				nvt_process((unsigned int) c);
 				sms_store(c);
 			} else
 				store3270in(c);
@@ -2607,7 +2607,7 @@ process_eor(void)
 			tn3270e_submode = E_NVT;
 			check_in3270();
 			for (s = ibuf; s < ibptr; s++) {
-				ansi_process(*s++);
+				nvt_process(*s++);
 			}
 			return 0;
 		case TN3270E_DT_SSCP_LU_DATA:
@@ -2657,12 +2657,12 @@ net_exception(unsigned long fd _is_unused, ioid_t id _is_unused)
  *   3270 mode
  *	net_output	send a 3270 record
  *
- *   ANSI mode; call each other in turn
+ *   NVT mode; call each other in turn
  *	net_sendc	net_cookout for 1 byte
  *	net_sends	net_cookout for a null-terminated string
- *	net_cookout	send user data with cooked-mode processing, ANSI mode
- *	net_cookedout	send user data, ANSI mode, already cooked
- *	net_rawout	send telnet protocol data, ANSI mode
+ *	net_cookout	send user data with cooked-mode processing, NVT mode
+ *	net_cookedout	send user data, NVT mode, already cooked
+ *	net_rawout	send telnet protocol data, NVT mode
  *
  */
 
@@ -2747,12 +2747,12 @@ net_rawout(unsigned const char *buf, int len)
 
 
 /*
- * net_hexansi_out
- *	Send uncontrolled user data to the host in ANSI mode, performing IAC
+ * net_hexnvt_out
+ *	Send uncontrolled user data to the host in NVT mode, performing IAC
  *	and CR quoting as necessary.
  */
 void
-net_hexansi_out(unsigned char *buf, int len)
+net_hexnvt_out(unsigned char *buf, int len)
 {
 	unsigned char *tbuf;
 	unsigned char *xbuf;
@@ -2790,7 +2790,7 @@ net_hexansi_out(unsigned char *buf, int len)
 
 /*
  * net_cookedout
- *	Send user data out in ANSI mode, without cooked-mode processing.
+ *	Send user data out in NVT mode, without cooked-mode processing.
  */
 static void
 net_cookedout(const char *buf, int len)
@@ -2809,7 +2809,7 @@ net_cookedout(const char *buf, int len)
 
 /*
  * net_cookout
- *	Send output in ANSI mode, including cooked-mode processing if
+ *	Send output in NVT mode, including cooked-mode processing if
  *	appropriate.
  */
 static void
@@ -2884,10 +2884,10 @@ cooked_init(void)
 }
 
 static void
-ansi_process_s(const char *data)
+nvt_process_s(const char *data)
 {
 	while (*data)
-		ansi_process((unsigned int) *data++);
+		nvt_process((unsigned int) *data++);
 }
 
 static void
@@ -2905,11 +2905,11 @@ do_data(char c)
 		if (c == '\r')
 			*lbptr++ = '\0';
 		if (c == '\t')
-			ansi_process((unsigned int) c);
+			nvt_process((unsigned int) c);
 		else
-			ansi_process_s(ctl_see((int) c));
+			nvt_process_s(ctl_see((int) c));
 	} else
-		ansi_process_s("\007");
+		nvt_process_s("\007");
 	lnext = 0;
 	backslashed = 0;
 }
@@ -2921,7 +2921,7 @@ do_intr(char c)
 		do_data(c);
 		return;
 	}
-	ansi_process_s(ctl_see((int) c));
+	nvt_process_s(ctl_see((int) c));
 	cooked_init();
 	net_interrupt();
 }
@@ -2933,7 +2933,7 @@ do_quit(char c)
 		do_data(c);
 		return;
 	}
-	ansi_process_s(ctl_see((int) c));
+	nvt_process_s(ctl_see((int) c));
 	cooked_init();
 	net_break();
 }
@@ -2945,7 +2945,7 @@ do_cerase(char c)
 
 	if (backslashed) {
 		lbptr--;
-		ansi_process_s("\b");
+		nvt_process_s("\b");
 		do_data(c);
 		return;
 	}
@@ -2957,7 +2957,7 @@ do_cerase(char c)
 		len = strlen(ctl_see((int) *--lbptr));
 
 		while (len--)
-			ansi_process_s("\b \b");
+			nvt_process_s("\b \b");
 	}
 }
 
@@ -2986,7 +2986,7 @@ do_werase(char c)
 		len = strlen(ctl_see((int) ch));
 
 		while (len--)
-			ansi_process_s("\b \b");
+			nvt_process_s("\b \b");
 	}
 }
 
@@ -2997,7 +2997,7 @@ do_kill(char c)
 
 	if (backslashed) {
 		lbptr--;
-		ansi_process_s("\b");
+		nvt_process_s("\b");
 		do_data(c);
 		return;
 	}
@@ -3009,7 +3009,7 @@ do_kill(char c)
 		len = strlen(ctl_see((int) *--lbptr));
 
 		for (i = 0; i < len; i++)
-			ansi_process_s("\b \b");
+			nvt_process_s("\b \b");
 	}
 }
 
@@ -3022,10 +3022,10 @@ do_rprnt(char c)
 		do_data(c);
 		return;
 	}
-	ansi_process_s(ctl_see((int) c));
-	ansi_process_s("\r\n");
+	nvt_process_s(ctl_see((int) c));
+	nvt_process_s("\r\n");
 	for (p = lbuf; p < lbptr; p++)
-		ansi_process_s(ctl_see((int) *p));
+		nvt_process_s(ctl_see((int) *p));
 }
 
 static void
@@ -3033,7 +3033,7 @@ do_eof(char c)
 {
 	if (backslashed) {
 		lbptr--;
-		ansi_process_s("\b");
+		nvt_process_s("\b");
 		do_data(c);
 		return;
 	}
@@ -3053,12 +3053,12 @@ do_eol(char c)
 		return;
 	}
 	if (lbptr+2 >= lbuf + BUFSZ) {
-		ansi_process_s("\007");
+		nvt_process_s("\007");
 		return;
 	}
 	*lbptr++ = '\r';
 	*lbptr++ = '\n';
-	ansi_process_s("\r\n");
+	nvt_process_s("\r\n");
 	forward_data();
 }
 
@@ -3070,7 +3070,7 @@ do_lnext(char c)
 		return;
 	}
 	lnext = 1;
-	ansi_process_s("^\b");
+	nvt_process_s("^\b");
 }
 
 /*
@@ -3087,10 +3087,10 @@ check_in3270(void)
 		"TCP connection pending",		/* PENDING */
 		"negotiating SSL or proxy",		/* NEGOTIATING */
 		"connected; 3270 state unknown",	/* CONNECTED_INITIAL */
-		"TN3270 NVT",				/* CONNECTED_ANSI */
+		"TN3270 NVT",				/* CONNECTED_NVT */
 		"TN3270 3270",				/* CONNECTED_3270 */
 		"TN3270E unbound",			/* CONNECTED_UNBOUND */
-		"TN3270E NVT",				/* CONNECTED_NVT */
+		"TN3270E NVT",				/* CONNECTED_E_NVT */
 		"TN3270E SSCP-LU",			/* CONNECTED_SSCP */
 		"TN3270E 3270"				/* CONNECTED_TN3270E */
 	};
@@ -3103,7 +3103,7 @@ check_in3270(void)
 			new_cstate = CONNECTED_UNBOUND;
 			break;
 		case E_NVT:
-			new_cstate = CONNECTED_NVT;
+			new_cstate = CONNECTED_E_NVT;
 			break;
 		case E_3270:
 			new_cstate = CONNECTED_TN3270E;
@@ -3146,8 +3146,8 @@ check_in3270(void)
 		}
 
 		/* Reinitialize line mode. */
-		if ((new_cstate == CONNECTED_ANSI && linemode) ||
-		    new_cstate == CONNECTED_NVT) {
+		if ((new_cstate == CONNECTED_NVT && linemode) ||
+		    new_cstate == CONNECTED_E_NVT) {
 			cooked_init();
 		}
 
@@ -3492,7 +3492,7 @@ net_add_eor(unsigned char *buf, int len)
 
 /*
  * net_sendc
- *	Send a character of user data over the network in ANSI mode.
+ *	Send a character of user data over the network in NVT mode.
  */
 void
 net_sendc(char c)
@@ -3512,7 +3512,7 @@ net_sendc(char c)
 
 /*
  * net_sends
- *	Send a null-terminated string of user data in ANSI mode.
+ *	Send a null-terminated string of user data in NVT mode.
  */
 void
 net_sends(const char *s)
@@ -3523,7 +3523,7 @@ net_sends(const char *s)
 
 /*
  * net_send_erase
- *	Sends the KILL character in ANSI mode.
+ *	Sends the KILL character in NVT mode.
  */
 void
 net_send_erase(void)
@@ -3534,7 +3534,7 @@ net_send_erase(void)
 
 /*
  * net_send_kill
- *	Sends the KILL character in ANSI mode.
+ *	Sends the KILL character in NVT mode.
  */
 void
 net_send_kill(void)
@@ -3545,7 +3545,7 @@ net_send_kill(void)
 
 /*
  * net_send_werase
- *	Sends the WERASE character in ANSI mode.
+ *	Sends the WERASE character in NVT mode.
  */
 void
 net_send_werase(void)

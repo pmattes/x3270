@@ -47,7 +47,6 @@
 #include "resources.h"
 
 #include "actionsc.h"
-#include "ansic.h"
 #include "bind-optc.h"
 #include "charsetc.h"
 #include "ctlrc.h"
@@ -61,6 +60,7 @@
 #include "kybdc.h"
 #include "macrosc.h"
 #include "menubarc.h"
+#include "nvtc.h"
 #include "popupsc.h"
 #include "printerc.h"
 #include "resourcesc.h"
@@ -588,7 +588,7 @@ main(int argc, char *argv[])
 	screen_init();
 	kybd_init();
 	idle_init();
-	ansi_init();
+	nvt_init();
 	sms_init();
 	if (appres.httpd_port) {
 	    struct sockaddr *sa;

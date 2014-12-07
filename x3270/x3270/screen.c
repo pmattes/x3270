@@ -59,7 +59,6 @@
 #include "resources.h"
 
 #include "actionsc.h"
-#include "ansic.h"
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "display8c.h"
@@ -68,6 +67,7 @@
 #include "keypadc.h"
 #include "kybdc.h"
 #include "menubarc.h"
+#include "nvtc.h"
 #include "popupsc.h"
 #include "savec.h"
 #include "screenc.h"
@@ -1003,7 +1003,7 @@ toggle_scrollBar(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 }
 
 /*
- * Called when a host connects, disconnects or changes ANSI/3270 mode.
+ * Called when a host connects, disconnects or changes NVT/3270 modes.
  */
 static void
 screen_connect(Boolean ignored _is_unused)
@@ -1014,9 +1014,8 @@ screen_connect(Boolean ignored _is_unused)
 	if (CONNECTED) {
 		/*
 		 * Clear the screen.
-		 * If we're in ANSI/NVT mode, go to the maximum screen
-		 * dimensions, otherwise go to the default 24x80 for 3270
-		 * or SSCP mode.
+		 * If we're in NVT mode, go to the maximum screen dimensions,
+		 * otherwise go to the default 24x80 for 3270 or SSCP mode.
 		 */
 		ctlr_erase((IN_NVT || IN_SSCP)? True: False);
 		if (IN_3270)

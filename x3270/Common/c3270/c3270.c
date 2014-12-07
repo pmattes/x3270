@@ -49,7 +49,6 @@
 #include "resources.h"
 
 #include "actionsc.h"
-#include "ansic.h"
 #include "bind-optc.h"
 #include "charsetc.h"
 #include "ctlrc.h"
@@ -65,6 +64,7 @@
 #include "keymapc.h"
 #include "kybdc.h"
 #include "macrosc.h"
+#include "nvtc.h"
 #include "popupsc.h"
 #include "printerc.h"
 #include "screenc.h"
@@ -423,7 +423,7 @@ main(int argc, char *argv[])
 	idle_init();
 	keymap_init();
 	hostfile_init();
-	ansi_init();
+	nvt_init();
 
 	sms_init();
 

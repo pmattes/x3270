@@ -41,7 +41,6 @@
 #include "resources.h"
 
 #include "actionsc.h"
-#include "ansic.h"
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "gluec.h"
@@ -50,6 +49,7 @@
 #include "kybdc.h"
 #include "macrosc.h"
 #include "menubarc.h"
+#include "nvtc.h"
 #include "popupsc.h"
 #include "readresc.h"
 #include "screenc.h"
