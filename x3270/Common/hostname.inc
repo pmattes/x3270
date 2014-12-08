@@ -46,8 +46,6 @@ XX_FB(telnet).
 This can be overridden with the XX_FB(XX_DASHED(port)) option, or by appending
 a XX_FI(port) to the XX_FI(hostname) with a colon
 XX_DQUOTED(XX_FB(:)).
-ifelse(XX_PRODUCT,lib3270,,
-`(For compatability with previous versions of XX_FB(XX_PRODUCT)
+(For compatability with previous versions of XX_FB(XX_PRODUCT)
 and with XX_FI(tn3270)(1), the XX_FI(port)
 may also be specified as a second, separate argument.)
-')dnl

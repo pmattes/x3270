@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2013, Paul Mattes.
+dnl Copyright (c) 2000-2014, Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,6 @@ dnl HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 dnl STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 dnl IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 dnl POSSIBILITY OF SUCH DAMAGE.
-define(XX_LA,ifelse(XX_PRODUCT,lib3270,a))dnl
 XX_TH(X3270-SCRIPT,1,XX_DATE)
 XX_SH(Name)
 Scripting Facilities for
