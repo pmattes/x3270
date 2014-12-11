@@ -1242,6 +1242,7 @@ valid_explicit(const char *resname, unsigned len)
 	    { ResPrinterName, 			V_FLAT },
 	    { ResPrintTextFont, 		V_FLAT },
 	    { ResPrintTextHorizontalMargin,	V_FLAT },
+	    { ResPrintTextOrientation,		V_FLAT },
 	    { ResPrintTextSize, 		V_FLAT },
 	    { ResPrintTextVerticalMargin,	V_FLAT },
 	    { ResHostColorForDefault,		V_FLAT },
