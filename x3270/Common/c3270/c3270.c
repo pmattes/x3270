@@ -1627,7 +1627,7 @@ start_auto_shortcut(void)
 		x3270_exit(1);
 	}
 	memset(&s, '\0', sizeof(session_t));
-	if (read_session(f, &s) == 0) {
+	if (read_session(f, &s, NULL) == 0) {
 	    	fprintf(stderr, "%s: invalid format\n", profile_path);
 		x3270_exit(1);
 	}

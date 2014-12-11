@@ -79,11 +79,10 @@ typedef struct {
 } charsets_t;
 extern charsets_t charsets[];
 extern size_t num_charsets;
-extern char *user_settings;
 extern int wrows[6];
 extern int wcols[6];
 
 extern int read_user_settings(FILE *f, char **usp);
-extern int read_session(FILE *f, session_t *s);
+extern int read_session(FILE *f, session_t *s, char **usp);
 extern HRESULT create_shortcut(session_t *session, char *exepath,
 	char *linkpath, char *args, char *workingdir);

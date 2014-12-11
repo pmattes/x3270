@@ -208,7 +208,7 @@ static struct {
     { NULL,		NULL,					NULL   }
 };
 
-static int write_session_file(const session_t *s, const char *path);
+static int write_session_file(const session_t *s, char *us, const char *path);
 
 static char *mya = NULL;
 static char *installdir = NULL;
@@ -237,7 +237,7 @@ static xsb_t xs_all;		/* all-users sessions */
 
 static session_t empty_session;
 
-static void print_user_settings(FILE *f);
+static void write_user_settings(char *us, FILE *f);
 static void display_sessions(int with_numbers);
 static ws_t write_shortcut(const session_t *s, int ask, src_t src,
 	const char *path);
@@ -963,6 +963,7 @@ legal_session_name(const char *name, char *result, size_t result_size)
  *   				the path to the session file.
  * @param[out] s		Session structure to fill in with name and (if
  * 				the file exists) current contents
+ * @param[out] us		User parameters
  * @param[out] path		Pathname of session file
  * @param[in] explicit_edit	If TRUE, -e was passed on command line; skip
  * 				the 'exists. Edit?' dialog
@@ -977,7 +978,7 @@ legal_session_name(const char *name, char *result, size_t result_size)
  *  GS_NOEDIT_LEAVE	uneditable and they don't want to overwrite it
  */
 static gs_t
-get_session(const char *session_name, session_t *s, char *path,
+get_session(const char *session_name, session_t *s, char **us, char *path,
 	int explicit_edit, src_t *src)
 {
     FILE *f;
@@ -1095,7 +1096,7 @@ shortcut.");
 
     f = fopen(path, "r");
     if (f != NULL) {
-	editable = read_session(f, s);
+	editable = read_session(f, s, us);
 	fclose(f);
 	if (editable) {
 	    if (fixup_printer(s)) {
@@ -2314,17 +2315,18 @@ be left in the wc370 AppData directory.");
  * edited.
  *
  * @param[in] s		Session
+ * @param[in,out] us	User settings
  *
  * @return 0 for success, -1 for failure
  */
 static int
-run_notepad(session_t *s)
+run_notepad(session_t *s, char **us)
 {
     int rc;
     char *t = NULL;
     char cmd[MAX_PATH + 64];
     FILE *f;
-    char *us;
+    char *new_us;
     char buf[2];
 
     new_screen(s, NULL, "\
@@ -2360,7 +2362,7 @@ miscellaneous resources in your session file.");
     fprintf(f, "! Comment lines begin with '!', like this one.\n\
 ! Resource values look like this (without the '!'):\n\
 !  wc3270.printTestScreensPerPage: 3\n");
-    print_user_settings(f);
+    write_user_settings(*us, f);
     fclose(f);
     f = NULL;
 
@@ -2375,14 +2377,16 @@ miscellaneous resources in your session file.");
 	printf("Error reading back temporary session file.\n");
 	goto failed;
     }
-    us = NULL;
-    if (read_user_settings(f, &us) == 0) {
+    new_us = NULL;
+    if (read_user_settings(f, &new_us) == 0) {
 	printf("Error reading back temporary session file.\n");
 	goto failed;
     }
     fclose(f);
-    free(user_settings);
-    user_settings = us;
+    if (*us != NULL) {
+	free(*us);
+    }
+    *us = new_us;
     unlink(t);
     free(t);
     return 0;
@@ -2450,6 +2454,7 @@ get_src(const char *name, src_t def)
  * Display the current settings for a session and allow them to be edited.
  *
  * @param[in,out] s	Session
+ * @param[in,out] us	User settings
  * @param[in] how	How session is being edited (replace/create/update)
  * @param[in] path	Session pathname
  * @param[in] session_name Name of session
@@ -2457,11 +2462,14 @@ get_src(const char *name, src_t def)
  * @return 0 for success, -1 for failure
  */
 static src_t
-edit_menu(session_t *s, sp_t how, const char *path, const char *session_name)
+edit_menu(session_t *s, char **us, sp_t how, const char *path,
+	const char *session_name)
 {
     int rc;
     char choicebuf[32];
     session_t old_session;
+    char *old_us = NULL;
+    src_t ret = SRC_NONE;
 
     switch (how) {
     case SP_REPLACE:
@@ -2472,6 +2480,15 @@ edit_menu(session_t *s, sp_t how, const char *path, const char *session_name)
     case SP_UPDATE:
 	memcpy(&old_session, s, sizeof(session_t));
 	break;
+    }
+
+    /* Save a copy of the original user settings. */
+    if (*us != NULL) {
+	old_us = strdup(*us);
+	if (old_us == NULL) {
+	    printf("Out of memory.\n");
+	    exit(1);
+	}
     }
 
     for (;;) {
@@ -2573,7 +2590,8 @@ edit_menu(session_t *s, sp_t how, const char *path, const char *session_name)
 	    printf("\nEnter item number to change: [%s] ", CHOICE_NONE);
 	    fflush(stdout);
 	    if (get_input(choicebuf, sizeof(choicebuf)) == NULL) {
-		return SRC_ERR;
+		ret = SRC_ERR;
+		goto done;
 	    } else if (!choicebuf[0] || !strcasecmp(choicebuf, CHOICE_NONE)) {
 		/* none */
 		done = 1;
@@ -2582,55 +2600,65 @@ edit_menu(session_t *s, sp_t how, const char *path, const char *session_name)
 	    switch (atoi(choicebuf)) {
 	    case MN_HOST:
 		if (get_host(s) < 0) {
-		    return SRC_ERR;
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		break;
 	    case MN_LU:
 		if (get_lu(s) < 0) {
-		    return SRC_ERR;
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		break;
 	    case MN_PORT:
 		if (get_port(s) < 0) {
-		    return SRC_ERR;
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		break;
 	    case MN_MODEL:
 		if (get_model(s) < 0) {
-		    return SRC_ERR;
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		break;
 	    case MN_OVERSIZE:
 		if (get_oversize(s) < 0) {
-		    return SRC_ERR;
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		break;
 	    case MN_CHARSET:
 		if (get_charset(s) < 0) {
-		    return SRC_ERR;
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		break;
 #if defined(HAVE_LIBSSL) /*[*/
 	    case MN_SSL:
 		if (get_ssl(s) < 0) {
-		    return SRC_ERR;
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		break;
 	    case MN_VERIFY:
 		if (get_verify(s) < 0) {
-		    return SRC_ERR;
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		break;
 #endif /*]*/
 	    case MN_PROXY:
 		if (get_proxy(s) < 0) {
-		    return SRC_ERR;
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		break;
 	    case MN_PROXY_SERVER:
 		if (s->proxy_type[0]) {
 		    if (get_proxy_server(s) < 0) {
-			return SRC_ERR;
+			ret = SRC_ERR;
+			goto done;
 		    }
 		} else {
 		    printf("Invalid entry.\n");
@@ -2640,7 +2668,8 @@ edit_menu(session_t *s, sp_t how, const char *path, const char *session_name)
 	    case MN_PROXY_PORT:
 		if (s->proxy_type[0]) {
 		    if (get_proxy_server_port(s) < 0) {
-			return SRC_ERR;
+			ret = SRC_ERR;
+			goto done;
 		    }
 		} else {
 		    printf("Invalid entry.\n");
@@ -2650,18 +2679,21 @@ edit_menu(session_t *s, sp_t how, const char *path, const char *session_name)
 	    case MN_3287:
 		was_wpr3287 = s->wpr3287;
 		if (get_wpr3287(s) < 0) {
-		    return SRC_ERR;
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		if (s->wpr3287 && !was_wpr3287) {
 		    if (get_printer_mode(s) < 0) {
-			return SRC_ERR;
+			ret = SRC_ERR;
+			goto done;
 		    }
 		}
 		break;
 	    case MN_3287_MODE:
 		if (s->wpr3287) {
 		    if (get_printer_mode(s) < 0) {
-			return SRC_ERR;
+			ret = SRC_ERR;
+			goto done;
 		    }
 		} else {
 		    printf("Invalid entry.\n");
@@ -2671,7 +2703,8 @@ edit_menu(session_t *s, sp_t how, const char *path, const char *session_name)
 	    case MN_3287_LU:
 		if (s->wpr3287 && strcmp(s->printerlu, ".")) {
 		    if (get_printerlu(s, 1) < 0) {
-			return SRC_ERR;
+			ret = SRC_ERR;
+			goto done;
 		    }
 		} else {
 		    printf("Invalid entry.\n");
@@ -2681,7 +2714,8 @@ edit_menu(session_t *s, sp_t how, const char *path, const char *session_name)
 	    case MN_3287_PRINTER:
 		if (s->wpr3287) {
 		    if (get_printer(s) < 0) {
-			return SRC_ERR;
+			ret = SRC_ERR;
+			goto done;
 		    }
 		} else {
 		    printf("Invalid entry.\n");
@@ -2691,7 +2725,8 @@ edit_menu(session_t *s, sp_t how, const char *path, const char *session_name)
 	    case MN_3287_CODEPAGE:
 		if (s->wpr3287) {
 		    if (get_printercp(s) < 0) {
-			return SRC_ERR;
+			ret = SRC_ERR;
+			goto done;
 		    }
 		} else {
 		    printf("Invalid entry.\n");
@@ -2700,37 +2735,44 @@ edit_menu(session_t *s, sp_t how, const char *path, const char *session_name)
 		break;
 	    case MN_KEYMAPS:
 		if (get_keymaps(s) < 0) {
-		    return SRC_ERR;
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		break;
 	    case MN_EMBED_KEYMAPS:
 		if (get_embed(s) < 0) {
-		    return SRC_ERR;
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		break;
 	    case MN_FONT_SIZE:
 		if (get_fontsize(s) < 0) {
-		    return SRC_ERR;
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		break;
 	    case MN_BG:
 		if (get_background(s) < 0) {
-		    return SRC_ERR;
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		break;
 	    case MN_MENUBAR:
 		if (get_menubar(s) < 0) {
-		    return SRC_ERR;
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		break;
 	    case MN_TRACE:
 		if (get_trace(s) < 0) {
-		    return SRC_ERR;
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		break;
 	    case MN_NOTEPAD:
-		if (run_notepad(s) < 0) {
-		    return SRC_ERR;
+		if (run_notepad(s, us) < 0) {
+		    ret = SRC_ERR;
+		    goto done;
 		}
 		break;
 	    default:
@@ -2749,37 +2791,52 @@ edit_menu(session_t *s, sp_t how, const char *path, const char *session_name)
     }
 
     /* Ask if they want to write the file. */
-    if (memcmp(s, &old_session, sizeof(session_t))) {
+    if (memcmp(s, &old_session, sizeof(session_t)) ||
+	((old_us != NULL) ^ (*us != NULL)) ||
+	(old_us != NULL && strcmp(old_us, *us))) {
 	for (;;) {
 	    printf("\n%s session file '%s'? (y/n) [y] ",
 		    how_name[how], session_name);
 	    fflush(stdout);
 	    rc = getyn(TRUE);
 	    if (rc == YN_ERR) {
-		return SRC_ERR;
+		ret = SRC_ERR;
+		goto done;
 	    } else if (rc == FALSE) {
-		return SRC_NONE;
+		ret = SRC_NONE;
+		goto done;
 	    } else if (rc == TRUE) {
 		break;
 	    }
 	}
     } else {
-	return SRC_NONE;
+	ret = SRC_NONE;
+	goto done;
     }
 
     /* If creating, ask where they want it written. */
     if (how == SP_CREATE) {
-	return get_src(session_name, SRC_CURRENT);
+	ret = get_src(session_name, SRC_CURRENT);
+	goto done;
     }
 
     /* Return where the file ended up. */
     if (!strncasecmp(mya, path, strlen(mya))) {
-	return SRC_CURRENT;
+	ret = SRC_CURRENT;
+	goto done;
     } else if (!strncasecmp(commona, path, strlen(commona))) {
-	return SRC_ALL;
+	ret = SRC_ALL;
+	goto done;
     } else {
-	return SRC_OTHER;
+	ret = SRC_OTHER;
+	goto done;
     }
+
+done:
+    if (old_us != NULL) {
+	free(old_us);
+    }
+    return ret;
 }
 
 /**
@@ -3189,6 +3246,7 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
     FILE *f;
     session_t s;
     ws_t wsrc;
+    char *us;
 
     if (argc > 0) {
 	from_name = menu_existing_session(argv[0], &from_l, result,
@@ -3283,7 +3341,7 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
 	perror(from_path);
 	return -1;
     }
-    if (!read_session(f, &s)) {
+    if (!read_session(f, &s, &us)) {
 	fclose(f);
 	printf("Cannot read '%s'.\n", from_path);
 	goto failed;
@@ -3292,7 +3350,7 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
 
     /* Change its name and write it back out. */
     strncpy(s.session, to_name, STR_SIZE);
-    if (write_session_file(&s, to_path) < 0) {
+    if (write_session_file(&s, us, to_path) < 0) {
 	printf("Cannot write '%s'.\n", to_path);
 	goto failed;
     }
@@ -3411,7 +3469,7 @@ Create Shortcut\n");
     if (f == NULL) {
 	perror(from_path);
 	goto failed;
-    } else if (!read_session(f, &s)) {
+    } else if (!read_session(f, &s, NULL)) {
 	fclose(f);
 	printf("Cannot read '%s'.\n", from_path);
 	goto failed;
@@ -3685,6 +3743,7 @@ session_wizard(const char *session_name, int explicit_edit, char *result,
     char **argv;
     ws_t wsrc;
     size_t sl;
+    char *us = NULL;
 
     /* Start with nothing. */
     (void) memset(&session, '\0', sizeof(session));
@@ -3758,10 +3817,13 @@ Edit Session\n");
     }
 
     /* Get the session name. */
-    rc = get_session(session_name, &session, path, explicit_edit, &src);
+    rc = get_session(session_name, &session, &us, path, explicit_edit, &src);
     switch (rc) {
     case GS_NOEDIT_LEAVE:	/* Uneditable, and they don't want to overwrite
 				   it. */
+	if (us != NULL) {
+	    free(us);
+	}
 	return SW_SUCCESS;
     default:
     case GS_ERR:		/* EOF */
@@ -3771,6 +3833,10 @@ Edit Session\n");
 	strcpy(save_session_name, session.session);
 	memset(&session, '\0', sizeof(session));
 	strcpy(session.session, save_session_name);
+	if (us != NULL) {
+	    free(us);
+	    us = NULL;
+	}
 	/* fall through... */
     case GS_NEW:		/* New. */
 
@@ -3790,7 +3856,7 @@ Edit Session\n");
 	/* fall through... */
     case GS_EDIT:		/* Edit existing file. */
 	/* See what they want to change. */
-	src = edit_menu(&session,
+	src = edit_menu(&session, &us,
 		(rc == GS_OVERWRITE)? SP_REPLACE:
 		 ((rc == GS_NEW)? SP_CREATE: SP_UPDATE),
 		path, session.session);
@@ -3813,10 +3879,18 @@ Edit Session\n");
 	} /* else keep path as-is */
 
 	/* Create the session file. */
-	if (write_session_file(&session, path) < 0) {
+	if (write_session_file(&session, us, path) < 0) {
+	    if (us != NULL) {
+		free(us);
+		us = NULL;
+	    }
 	    goto failed;
 	}
 	snprintf(result, result_size, "Wrote session '%s'.", session.session);
+	if (us != NULL) {
+	    free(us);
+	    us = NULL;
+	}
 	break;
     case GS_NOEDIT: /* Don't edit existing file, but we do have a copy of
 		       the session. */
@@ -3897,10 +3971,11 @@ embed_keymaps(const session_t *session, FILE *f)
 /**
  * Write miscellaneous user settings into an open file.
  *
+ * @param[in] us	User settings, or NULL
  * @param[in] f		File to write into
  */
 static void
-print_user_settings(FILE *f)
+write_user_settings(char *us, FILE *f)
 {
     fprintf(f, "!\n\
 ! Note that in this file, backslash ('\\') characters are used to specify\n\
@@ -3915,8 +3990,8 @@ print_user_settings(FILE *f)
 !*Additional resource definitions can go after this line.\n");
 
     /* Write out the user's previous extra settings. */
-    if (user_settings != NULL) {
-	fprintf(f, "%s", user_settings);
+    if (us != NULL) {
+	fprintf(f, "%s", us);
     }
 }
 
@@ -3924,12 +3999,13 @@ print_user_settings(FILE *f)
  * Write a session file.
  *
  * @param[in] session	Session to write
+ * @param[in] us	User settings
  * @param[in] path	Pathname to write session into
  *
  * @return 0 for success, -1 for failure.
  */
 static int
-write_session_file(const session_t *session, const char *path)
+write_session_file(const session_t *session, char *us, const char *path)
 {
     FILE *f;
     time_t t;
@@ -4074,7 +4150,7 @@ wc3270." ResConsoleColorForHostColor "NeutralWhite: 0\n");
     fseek(f, 0, SEEK_END);
     fprintf(f, "!c%08lx %d\n", csum, WIZARD_VER);
 
-    print_user_settings(f);
+    write_user_settings(us, f);
 
     fclose(f);
 
