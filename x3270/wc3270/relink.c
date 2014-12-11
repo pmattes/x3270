@@ -108,8 +108,6 @@ int wrows[6] = { 0, 0,
 int wcols[6] = { 0, 0,
     MODEL_2_COLS, MODEL_3_COLS, MODEL_4_COLS, MODEL_5_COLS };
 
-char *user_settings = NULL;
-
 static wchar_t *
 reg_font_from_cset(char *cset, int *codepage)
 {
@@ -208,6 +206,11 @@ read_user_settings(FILE *f, char **usp)
 	int saw_star;
 	char buf[1024];
 
+	if (usp == NULL) {
+	    return 1; /* success */
+	}
+	*usp = NULL;
+
 	/*
 	 * Read the balance of the file into a temporary buffer, ignoring
 	 * the '!*' line.
@@ -240,7 +243,7 @@ read_user_settings(FILE *f, char **usp)
  * Returns 1 for success (file read and editable), 0 for failure.
  */
 int
-read_session(FILE *f, session_t *s)
+read_session(FILE *f, session_t *s, char **usp)
 {
     	char buf[1024];
 	int saw_hex = 0;
@@ -337,7 +340,7 @@ read_session(FILE *f, session_t *s)
 	 * Read the balance of the file into a temporary buffer, ignoring
 	 * the '!*' line.
 	 */
-	if (read_user_settings(f, &user_settings) == 0) {
+	if (usp != NULL && read_user_settings(f, usp) == 0) {
 		return 0;
 	}
 
