@@ -862,6 +862,7 @@ typedef enum {
     OM_CURSOR,
     OM_UNDERSCORE,
 #if defined(WC3270) /*[*/
+    OM_MARGINED_PASTE,
     OM_OVERLAY_PASTE,
 #endif /*]*/
     OM_COUNT
@@ -874,6 +875,7 @@ int option_index[OM_COUNT] = {
     CURSOR_POS,
     UNDERSCORE,
 #if defined(WC3270) /*[*/
+    MARGINED_PASTE,
     OVERLAY_PASTE
 #endif /*]*/
 };
@@ -884,6 +886,7 @@ char *option_names[OM_COUNT] = {
     "Track Cursor",
     "Underscore Mode",
 #if defined(WC3270) /*[*/
+    "Margined Paste",
     "Overlay Paste"
 #endif /*]*/
 };
