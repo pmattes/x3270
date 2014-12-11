@@ -811,8 +811,9 @@ static void
 ft_start_callback(Widget w _is_unused, XtPointer call_parms _is_unused,
 	XtPointer call_data _is_unused)
 {
+    XtPopdown(ft_shell);
+
     if (ft_start()) {
-	XtPopdown(ft_shell);
 	popup_progress();
     }
 }
