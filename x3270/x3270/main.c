@@ -604,6 +604,7 @@ main(int argc, char *argv[])
 	info_popup_init();
 	error_popup_init();
 	printer_init();
+	ft_init();
 
 	protocols[0] = a_delete_me;
 	protocols[1] = a_save_yourself;

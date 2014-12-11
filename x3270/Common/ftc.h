@@ -72,8 +72,7 @@ extern void PA_dialog_next_action(Widget w, XEvent *event, String *parms,
 extern void popup_ft(Widget w, XtPointer call_parms, XtPointer call_data);
 extern void Transfer_action(Widget w, XEvent *event, String *parms,
     Cardinal *num_parms);
-
-extern void ft_init(void);
+extern char *ft_local_fflag(void);
 
 # if defined(_WIN32) /*[*/
 extern int ft_ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len);

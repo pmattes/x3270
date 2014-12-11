@@ -122,6 +122,7 @@
     <ClCompile Include="..\wc3270-3.3\ft.c" />
     <ClCompile Include="..\wc3270-3.3\ft_cut.c" />
     <ClCompile Include="..\wc3270-3.3\ft_dft.c" />
+    <ClCompile Include="..\wc3270-3.3\ft_gui.c" />
     <ClCompile Include="..\wc3270-3.3\gdi_print.c" />
     <ClCompile Include="..\wc3270-3.3\glue.c" />
     <ClCompile Include="..\wc3270-3.3\help.c" />

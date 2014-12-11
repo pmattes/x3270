@@ -50,6 +50,9 @@
     <ClCompile Include="..\wc3270-3.3\ft_dft.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\wc3270-3.3\ft_gui.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\wc3270-3.3\gdi_print.c">
       <Filter>Source Files</Filter>
     </ClCompile>

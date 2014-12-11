@@ -61,7 +61,7 @@ CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
 
 SRCS = XtGlue.c actions.c apl.c asprintf.c bind-opt.c c3270.c charset.c \
 	ctlr.c fallbacks.c favicon.c fprint_screen.c ft.c ft_cut.c ft_dft.c \
-	gdi_print.c glue.c help.c host.c httpd-core.c httpd-io.c \
+	ft_gui.c gdi_print.c glue.c help.c host.c httpd-core.c httpd-io.c \
 	httpd-nodes.c icmd.c idle.c keymap.c keypad.c kybd.c macros.c \
 	menubar.c nvt.c print.c printer.c proxy.c readres.c relink.c \
 	resolver.c resources.c rpq.c screen.c scroll.c see.c select.c sf.c \
@@ -71,7 +71,7 @@ SRCS = XtGlue.c actions.c apl.c asprintf.c bind-opt.c c3270.c charset.c \
 
 VOBJS = XtGlue.o actions.o apl.o asprintf.o bind-opt.o c3270.o charset.o \
 	ctlr.o fallbacks.o favicon.o fprint_screen.o ft.o ft_cut.o ft_dft.o \
-	gdi_print.o glue.o help.o host.o httpd-core.o httpd-io.o \
+	ft_gui.o gdi_print.o glue.o help.o host.o httpd-core.o httpd-io.o \
 	httpd-nodes.o icmd.o idle.o keymap.o keypad.o kybd.o macros.o \
 	menubar.o nvt.o print.o printer.o proxy.o readres.o relink.o \
 	resolver.o resources.o rpq.o screen.o scroll.o see.o select.o sf.o \
