@@ -55,7 +55,7 @@
 #include "charsetc.h"
 #include "ftc.h"
 #include "hostc.h"
-#include "idlec.h"
+#include "idle_guic.h"
 #include "keymapc.h"
 #include "keypadc.h"
 #include "kybdc.h"

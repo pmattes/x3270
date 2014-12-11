@@ -26,29 +26,8 @@
  */
 
 /*
- *	idlec.h
- *		Global declarations for idle.c.
+ *	idle_guic.h
+ *		Global declarations for idle_gui.c.
  */
 
-enum idle_enum {
-	IDLE_DISABLED = 0,
-	IDLE_SESSION = 1,
-	IDLE_PERM = 2
-};
-
-#if defined(X3270_INTERACTIVE) || defined(S3270) /*[*/
-extern void cancel_idle_timer(void);
-extern void idle_init(void);
-extern void reset_idle_timer(void);
-extern char *get_idle_command();
-extern char *get_idle_timeout();
-extern Boolean idle_changed;
-extern char *idle_command;
-extern char *idle_timeout_string;
-extern enum idle_enum idle_user_enabled;
-extern int process_idle_timeout_value(const char *string);
-#else /*][*/
-# define cancel_idle_timer()
-# define idle_init()
-# define reset_idle_timer()
-#endif /*]*/
+extern void popup_idle(void);
