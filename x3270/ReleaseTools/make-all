@@ -137,7 +137,7 @@ for prod in $prods
 do	cp $prod/$prod-src.tgz $tmpdir/
 done
 if [ "$all" ]
-then	cp -R VS2010/ $tmpdir/
+then	tar -cf - --exclude-vcs VS2010 | tar -xf - --directory $tmpdir
 fi
 
 echo "===== Expanding tarballs."
