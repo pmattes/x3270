@@ -3734,7 +3734,11 @@ Query_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 			if (!strcasecmp(params[0], queries[i].name)) {
 				const char *s;
 
-				s = (*queries[i].fn)();
+				if (queries[i].fn) {
+					s = (*queries[i].fn)();
+				} else {
+					s = queries[i].string;
+				}
 				action_output("%s\n", *s? s: " ");
 				return;
 			}
