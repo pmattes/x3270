@@ -47,6 +47,7 @@ extern int split_dbcs_resource(const char *value, char sep, char **part1,
 extern int split_dresource(char **st, char **left, char **right);
 extern int split_lresource(char **st, char **value);
 extern char *strip_whitespace(const char *s);
+extern char *xs_vbuffer(const char *fmt, va_list);
 extern char *xs_buffer(const char *fmt, ...) printflike(1, 2);
 extern void xs_error(const char *fmt, ...) printflike(1, 2);
 extern void xs_warning(const char *fmt, ...) printflike(1, 2);

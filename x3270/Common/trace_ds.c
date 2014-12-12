@@ -40,7 +40,6 @@
 #endif /*]*/
 #include <errno.h>
 #include <signal.h>
-#include <stdarg.h>
 #include <fcntl.h>
 #include <limits.h>
 #include "3270ds.h"

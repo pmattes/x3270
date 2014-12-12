@@ -42,7 +42,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <stdarg.h>
 #include <assert.h>
 
 #include "3270ds.h"

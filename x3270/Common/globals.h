@@ -91,6 +91,7 @@
 # include <sys/time.h>			/* System time-related data types */
 #endif /*]*/
 #include <time.h>			/* C library time functions */
+#include <stdarg.h>			/* variable argument lists */
 #if defined(_WIN32) /*[*/
 # include "wincmn.h"			/* Common Windows definitions */
 #endif /*]*/

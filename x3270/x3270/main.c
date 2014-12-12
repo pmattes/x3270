@@ -603,6 +603,7 @@ main(int argc, char *argv[])
 	}
 	info_popup_init();
 	error_popup_init();
+	printer_popup_init();
 	printer_init();
 	ft_init();
 

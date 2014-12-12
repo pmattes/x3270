@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2010, 2013 Paul Mattes.
+ * Copyright (c) 2000-2010, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,10 +33,6 @@
 #include "globals.h"
 
 #if defined(X3270_INTERACTIVE) /*[*/
-#if defined(X3270_DISPLAY) /*[*/
-#include <X11/StringDefs.h>
-#include <X11/Xaw/Dialog.h>
-#endif /*]*/
 #if !defined(_WIN32) /*[*/
 #include <sys/wait.h>
 #include <netinet/in.h>
@@ -44,7 +40,6 @@
 #endif /*]*/
 #include <errno.h>
 #include <signal.h>
-#include <stdarg.h>
 #include <fcntl.h>
 #include <assert.h>
 #include "3270ds.h"
@@ -109,9 +104,6 @@ static ioid_t	printer_kill_id = NULL_IOID; /* kill timeout ID */
 static ioid_t	printer_delay_id = NULL_IOID; /* delay timeout ID */
 static char	*printer_delay_lu = NULL;
 static Boolean	printer_delay_associated = False;
-#if defined(X3270_DISPLAY) /*[*/
-static Widget	lu_shell = (Widget)NULL;
-#endif /*]*/
 static struct pr3o {
 	int fd;			/* file descriptor */
 	ioid_t input_id;	/* input ID */
@@ -337,11 +329,6 @@ printer_start_now(const char *lu, Boolean associated)
 	struct sockaddr_in printer_lsa;
 	socklen_t len;
 	char syncopt[64];
-
-#if defined(X3270_DISPLAY) /*[*/
-	/* Make sure the popups are initted. */
-	printer_popup_init();
-#endif /*]*/
 
 	assert(printer_state == P_NONE);
 
@@ -874,12 +861,8 @@ printer_dump(struct pr3o *p, Boolean is_err, Boolean is_dead)
 			p->buf[p->count] = '\0';
 
 		/* Dump it and clear the buffer. */
-#if defined(X3270_DISPLAY) /*[*/
 		popup_printer_output(is_err, is_dead? NULL: printer_stop,
 		    "%s", p->buf);
-#else /*][*/
-		action_output("%s", p->buf);
-#endif
 		p->count = 0;
 	}
 }
@@ -1182,26 +1165,6 @@ printer_exiting(Boolean b _is_unused)
 	}
 }
 
-#if defined(X3270_DISPLAY) /*[*/
-/* Callback for "OK" button on printer specific-LU popup */
-static void
-lu_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
-{
-	char *lu;
-
-	if (w) {
-		lu = XawDialogGetValueString((Widget)client_data);
-		if (lu == CN || *lu == '\0') {
-			popup_an_error("Must supply an LU");
-			return;
-		} else
-			XtPopdown(lu_shell);
-	} else
-		lu = (char *)client_data;
-	printer_start(lu);
-}
-#endif /*]*/
-
 /* Host connect/disconnect/3270-mode event. */
 static void
 printer_host_connect(Boolean connected _is_unused)
@@ -1252,18 +1215,6 @@ printer_host_connect(Boolean connected _is_unused)
 		}
 	}
 }
-
-#if defined(X3270_DISPLAY) /*[*/
-/* Pop up the LU dialog box. */
-void
-printer_lu_dialog(void)
-{
-	if (lu_shell == NULL)
-		lu_shell = create_form_popup("printerLu",
-		    lu_callback, (XtCallbackProc)NULL, FORM_NO_WHITE);
-	popup_popup(lu_shell, XtGrabExclusive);
-}
-#endif /*]*/
 
 Boolean
 printer_running(void)

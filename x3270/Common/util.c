@@ -36,7 +36,6 @@
 #if !defined(_WIN32) /*[*/
 # include <pwd.h>
 #endif /*]*/
-#include <stdarg.h>
 #include <fcntl.h>
 #include <errno.h>
 #include "resources.h"
@@ -60,7 +59,7 @@
  *
  * @return malloc'd buffer, guaranteed not to be NULL. Must free() when done.
  */
-static char *
+char *
 xs_vbuffer(const char *fmt, va_list args)
 {
     char *r = CN;

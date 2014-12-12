@@ -41,7 +41,6 @@
 #include <X11/Xaw/Form.h>
 #include <X11/Xaw/Label.h>
 #include <X11/Xaw/Text.h>
-#include <stdarg.h>
 #include "objects.h"
 #include "appres.h"
 

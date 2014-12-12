@@ -34,8 +34,6 @@
 
 #include "globals.h"
 
-#include <stdarg.h>
-
 #include <X11/StringDefs.h>
 #include <X11/Xaw/Command.h>
 #include <X11/Xaw/MenuButton.h>
@@ -62,8 +60,9 @@
 #include "macrosc.h"
 #include "menubarc.h"
 #include "popupsc.h"
-#include "printerc.h"
 #include "printc.h"
+#include "printerc.h"
+#include "printer_guic.h"
 #include "savec.h"
 #include "screenc.h"
 #include "stmenuc.h"

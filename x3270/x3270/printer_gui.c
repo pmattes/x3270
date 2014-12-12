@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2014 Paul Mattes.
+ * Copyright (c) 2000-2010, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,16 +25,49 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* c3270 version of popupsc.h */
+/*
+ *	printer_gui.c
+ *		GUI for printer session support
+ */
 
-/* Note that these functions are in c3270.c or glue.c, not popups.c. */
+#include "globals.h"
 
-extern void action_output(const char *fmt, ...) printflike(1, 2);
-extern void popup_an_errno(int errn, const char *fmt, ...) printflike(2, 3);
-extern void popup_an_error(const char *fmt, ...) printflike(1, 2);
-extern void popup_an_info(const char *fmt, ...) printflike(1, 2);
-extern void Info_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-typedef void abort_callback_t(void);
-extern void popup_printer_output(Boolean is_err, abort_callback_t *a,
-	const char *fmt, ...);
+#include <X11/StringDefs.h>
+#include <X11/Xaw/Dialog.h>
+
+#include "popupsc.h"
+#include "printerc.h"
+#include "printer_guic.h"
+
+static Widget lu_shell = NULL;
+
+/* Callback for "OK" button on printer specific-LU popup */
+static void
+lu_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
+{
+    char *lu;
+
+    if (w) {
+	lu = XawDialogGetValueString((Widget)client_data);
+	if (lu == NULL || *lu == '\0') {
+	    popup_an_error("Must supply an LU");
+	    return;
+	} else {
+	    XtPopdown(lu_shell);
+	}
+    } else {
+	lu = (char *)client_data;
+    }
+    printer_start(lu);
+}
+
+/* Pop up the LU dialog box. */
+void
+printer_lu_dialog(void)
+{
+    if (lu_shell == NULL) {
+	lu_shell = create_form_popup("printerLu", lu_callback, NULL,
+		FORM_NO_WHITE);
+    }
+    popup_popup(lu_shell, XtGrabExclusive);
+}

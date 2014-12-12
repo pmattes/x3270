@@ -34,7 +34,6 @@
 
 #include <errno.h>
 #include <limits.h>
-#include <stdarg.h>
 
 #include "appres.h"
 #include "asprintfc.h"

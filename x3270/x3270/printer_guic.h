@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2014 Paul Mattes.
+ * Copyright (c) 2000-2010, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,16 +25,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* c3270 version of popupsc.h */
+/*
+ *	printer_guic.h
+ *		Header file for GUI for printer session support
+ */
 
-/* Note that these functions are in c3270.c or glue.c, not popups.c. */
-
-extern void action_output(const char *fmt, ...) printflike(1, 2);
-extern void popup_an_errno(int errn, const char *fmt, ...) printflike(2, 3);
-extern void popup_an_error(const char *fmt, ...) printflike(1, 2);
-extern void popup_an_info(const char *fmt, ...) printflike(1, 2);
-extern void Info_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-typedef void abort_callback_t(void);
-extern void popup_printer_output(Boolean is_err, abort_callback_t *a,
-	const char *fmt, ...);
+extern void printer_lu_dialog(void);

@@ -43,7 +43,6 @@
 #endif /*]*/
 #include <signal.h>
 #include <errno.h>
-#include <stdarg.h>
 #include "appres.h"
 #include "3270ds.h"
 #include "resources.h"

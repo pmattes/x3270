@@ -1544,8 +1544,6 @@ Boolean flipped = False;
 
 /* Replacements for functions in popups.c. */
 
-#include <stdarg.h>
-
 Boolean error_popup_visible = False;
 
 static char vmsgbuf[4096];
@@ -1628,4 +1626,18 @@ action_output(const char *fmt, ...)
 #endif /*]*/
 		macro_output = True;
 	}
+}
+
+void
+popup_printer_output(Boolean is_err _is_unused, abort_callback_t *a _is_unused,
+	const char *fmt, ...)
+{
+    va_list args;
+    char *m;
+
+    va_start(args, fmt);
+    m = xs_vbuffer(fmt, args);
+    va_end(args);
+    action_output("%s", m);
+    Free(m);
 }

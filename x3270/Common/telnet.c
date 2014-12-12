@@ -54,7 +54,6 @@
 #if !defined(_WIN32) /*[*/
 # include <netdb.h>
 #endif /*]*/
-#include <stdarg.h>
 #include <stdint.h>
 #if defined(HAVE_LIBSSL) /*[*/
 # if defined(_WIN32) /*[*/

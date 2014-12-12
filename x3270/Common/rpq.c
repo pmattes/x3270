@@ -43,7 +43,6 @@
 # include <netdb.h>
 #endif /*]*/
 #include <assert.h>
-#include <stdarg.h>
 #include "3270ds.h"
 #include "appres.h"
 

@@ -33,8 +33,6 @@
 
 #include "globals.h"
 
-#include <stdarg.h>
-
 #include "asprintfc.h"
 
 #if !defined(_WIN32) /*[*/

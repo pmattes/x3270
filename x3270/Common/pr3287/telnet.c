@@ -37,6 +37,7 @@
 
 
 #include "globals.h"
+
 #if defined(_WIN32) /*[*/
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -56,7 +57,6 @@
 #if !defined(_WIN32) /*[*/
 #include <netdb.h>
 #endif /*]*/
-#include <stdarg.h>
 #include <string.h>
 #if !defined(_MSC_VER) /*[*/
 #include <sys/time.h>
