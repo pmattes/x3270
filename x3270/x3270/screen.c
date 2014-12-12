@@ -5738,3 +5738,10 @@ dfc_search_name(const char *name)
 
 	return False;
 }
+
+/* Return the window for the screen. */
+unsigned long
+screen_window_number(void)
+{
+    return XtWindow(toplevel);
+}

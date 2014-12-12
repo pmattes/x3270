@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2014 Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,22 +25,10 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Non-display version of screenc.h */
+/*
+ *      xaac.h
+ *              Header file for the Execute an Action menu item.
+ */
 
-#define blink_start()
-#define cursor_move(baddr)	cursor_addr = (baddr)
-#define display_heightMM()	100
-#define display_height()	1
-#define display_widthMM()	100
-#define display_width()		1
-#define mcursor_locked()
-#define mcursor_normal()
-#define mcursor_waiting()
-#define ring_bell()
-#define screen_disp(erasing)
-#define screen_flip()
-#define screen_obscured()	False
-#define screen_scroll()
-#define screen_80()
-#define screen_132()
-#define screen_window_number()	0L
+extern void execute_action_option(Widget w, XtPointer client_data,
+	XtPointer call_data);

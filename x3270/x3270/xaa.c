@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2014 Paul Mattes.
+ * Copyright (c) 1993-2014, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,22 +25,51 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Non-display version of screenc.h */
+/*
+ *      xaa.c
+ *              The Execute an Action menu item.
+ */
 
-#define blink_start()
-#define cursor_move(baddr)	cursor_addr = (baddr)
-#define display_heightMM()	100
-#define display_height()	1
-#define display_widthMM()	100
-#define display_width()		1
-#define mcursor_locked()
-#define mcursor_normal()
-#define mcursor_waiting()
-#define ring_bell()
-#define screen_disp(erasing)
-#define screen_flip()
-#define screen_obscured()	False
-#define screen_scroll()
-#define screen_80()
-#define screen_132()
-#define screen_window_number()	0L
+#include "globals.h"
+
+#include <X11/StringDefs.h>
+#include <X11/Xaw/Dialog.h>
+
+#include "actionsc.h"
+#include "macrosc.h"
+#include "popupsc.h"
+#include "xaac.h"
+
+/* Macros */
+
+/* Globals */
+
+/* Statics */
+static Widget execute_action_shell = (Widget)NULL;
+
+/* Callback for "OK" button on execute action popup */
+static void
+execute_action_callback(Widget w _is_unused, XtPointer client_data,
+	XtPointer call_data _is_unused)
+{
+    char *text;
+
+    text = XawDialogGetValueString((Widget)client_data);
+    XtPopdown(execute_action_shell);
+    if (!text) {
+	return;
+    }
+    push_macro(text, False);
+}
+
+void
+execute_action_option(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
+{
+    if (execute_action_shell == NULL) {
+	execute_action_shell = create_form_popup("ExecuteAction",
+		execute_action_callback, NULL, FORM_NO_CC);
+    }
+
+    popup_popup(execute_action_shell, XtGrabExclusive);
+}

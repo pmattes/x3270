@@ -122,6 +122,7 @@ extern void toggle_cursorPos(struct toggle *t, enum toggle_type tt);
 extern void toggle_monocase(struct toggle *t, enum toggle_type tt);
 extern void toggle_scrollBar(struct toggle *t, enum toggle_type tt);
 extern void toggle_visible_control(struct toggle *t, enum toggle_type tt);
+extern unsigned long screen_window_number(void);
 
 /* font list */
 struct font_list {

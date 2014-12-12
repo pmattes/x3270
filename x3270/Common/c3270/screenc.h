@@ -85,3 +85,5 @@ extern int windows_cp;
 extern void toggle_underscore(struct toggle *t, enum toggle_type type);
 extern void screen_final(void);
 #endif /*]*/
+
+#define screen_window_number()	0L

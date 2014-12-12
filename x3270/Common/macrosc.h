@@ -62,8 +62,6 @@ extern void Ebcdic_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void Execute_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void execute_action_option(Widget w, XtPointer client_data,
-    XtPointer call_data);
 extern void Expect_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void login_macro(char *s);

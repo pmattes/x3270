@@ -70,6 +70,7 @@
 #include "telnetc.h"
 #include "togglesc.h"
 #include "utilc.h"
+#include "xaac.h"
 #include "xioc.h"
 
 #define MACROS_MENU	"macrosMenu"

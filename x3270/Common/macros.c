@@ -32,11 +32,6 @@
 
 #include "globals.h"
 
-#if defined(X3270_DISPLAY) /*[*/
-#include <X11/StringDefs.h>
-#include <X11/Xaw/Dialog.h>
-#endif /*]*/
-
 #if !defined(_WIN32) /*[*/
 #include <sys/wait.h>
 #include <signal.h>
@@ -2515,12 +2510,7 @@ status_string(void)
 	    model_num,
 	    ROWS, COLS,
 	    cursor_addr / COLS, cursor_addr % COLS,
-#if defined(X3270_DISPLAY) /*[*/
-	    XtWindow(toplevel)
-#else /*][*/
-	    0L
-#endif /*]*/
-	    );
+	    screen_window_number());
 
 	r = NewString(s);
 	Free(connect_stat);
@@ -3295,41 +3285,6 @@ Expect_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	}
 	/* else allow sms to proceed */
 }
-
-
-#if defined(X3270_DISPLAY) /*[*/
-
-/* "Execute an Action" menu option */
-
-static Widget execute_action_shell = (Widget)NULL;
-
-/* Callback for "OK" button on execute action popup */
-static void
-execute_action_callback(Widget w _is_unused, XtPointer client_data,
-    XtPointer call_data _is_unused)
-{
-	char *text;
-
-	text = XawDialogGetValueString((Widget)client_data);
-	XtPopdown(execute_action_shell);
-	if (!text)
-		return;
-	push_macro(text, False);
-}
-
-void
-execute_action_option(Widget w _is_unused, XtPointer client_data _is_unused,
-    XtPointer call_data _is_unused)
-{
-	if (execute_action_shell == NULL)
-		execute_action_shell = create_form_popup("ExecuteAction",
-		    execute_action_callback, (XtCallbackProc)NULL, FORM_NO_CC);
-
-	popup_popup(execute_action_shell, XtGrabExclusive);
-}
-
-#endif /*]*/
-
 
 #if defined(_WIN32) /*[*/
 /* Let the system pick a TCP port to bind to, and listen on it. */
