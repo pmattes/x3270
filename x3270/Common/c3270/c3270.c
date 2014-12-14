@@ -1438,33 +1438,9 @@ toggle_it:
 						name);
 			} else {
 				if (ia_cause == IA_COMMAND)
-					action_output("Tracing to %sprinter "
-#if !defined(_WIN32) /*[*/
-						"with command "
-#endif /*]*/
-						"\"%s\".",
-#if !defined(_WIN32) /*[*/
-						"",
-#else /*][*/
-						(ptype == P_RTF)? "RTF ":
-						 ((ptype == P_GDI)? "GDI ":
-						  "? "),
-#endif /*]*/
-						name);
+					action_output("Tracing to printer.");
 				else
-					popup_an_info("Tracing to %sprinter "
-#if !defined(_WIN32) /*[*/
-						"with command "
-#endif /*]*/
-						"\"%s\".",
-#if !defined(_WIN32) /*[*/
-						"",
-#else /*][*/
-						(ptype == P_RTF)? "RTF ":
-						 ((ptype == P_GDI)? "GDI ":
-						  "? "),
-#endif /*]*/
-						name);
+					popup_an_info("Tracing to printer.");
 			}
 		} else {
 			if (trace_get_screentrace_last_how() == TSS_FILE) {
@@ -1479,6 +1455,9 @@ toggle_it:
 			} else {
 				if (ia_cause == IA_COMMAND)
 					action_output("Tracing to printer "
+						"complete.");
+				else
+					popup_an_info("Tracing to printer "
 						"complete.");
 			}
 		}

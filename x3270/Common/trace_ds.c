@@ -1062,6 +1062,7 @@ screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 		xtfn = do_subst(tfn, DS_VARS | DS_TILDE | DS_UNIQUE);
 		screentracef = fopen(xtfn, "a");
 	} else {
+		/* Printer. */
 #if !defined(_WIN32) /*[*/
 		screentracef = popen(tfn, "w");
 #else /*][*/
@@ -1073,7 +1074,7 @@ screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 			Free(tfn);
 			return False;
 		}
-		screentracef = fdopen(fd, "w");
+		screentracef = fdopen(fd, (ptype == P_GDI)? "wb+": "w");
 #endif /*]*/
 	}
 	if (screentracef == (FILE *)NULL) {
@@ -1102,8 +1103,8 @@ screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 	(void) fcntl(fileno(screentracef), F_SETFD, 1);
 #endif /*]*/
 	srv = fprint_screen_start(screentracef, ptype,
-		(how == TSS_PRINTER)? FPS_FF_SEP: 0, NULL, screentrace_name,
-		&screentrace_fps);
+		(how == TSS_PRINTER)? FPS_FF_SEP: 0,
+		default_caption(), screentrace_name, &screentrace_fps);
 	if (FPS_IS_ERROR(srv)) {
 		if (srv == FPS_STATUS_ERROR) {
 			popup_an_error("Screen trace start failed.");

@@ -89,6 +89,7 @@ static struct {				/* printer state */
 	int usable_xpixels, usable_ypixels;/*  usable area (pixels) */
 	int usable_cols, usable_rows;	/*  usable area (chars) */
 	HFONT font, bold_font, underscore_font, bold_underscore_font;
+	HFONT caption_font;
 					/*  fonts */
 	SIZE space_size;		/*  size of a space character */
 	INT *dx;			/*  spacing array */
@@ -502,7 +503,7 @@ gdi_init(const char *printer_name, const char **fail)
 	pstate.font = CreateFont(
 		uparm.font_size? (int)(uparm.font_size * pstate.yptscale): 0,
 					/* height */
-		uparm.font_size? 0: pstate.usable_xpixels / COLS,
+		uparm.font_size? 0: pstate.usable_xpixels / maxCOLS,
 					/* width */
 		0,			/* escapement */
 		0,			/* orientation */
@@ -597,6 +598,27 @@ gdi_init(const char *printer_name, const char **fail)
 		goto failed;
 	}
 
+	/* Create a caption font. */
+	pstate.caption_font = CreateFont(
+		pstate.space_size.cy,	/* height */
+		0,			/* width */
+		0,			/* escapement */
+		0,			/* orientation */
+		FW_NORMAL,		/* weight */
+		TRUE,			/* italic */
+		FALSE,			/* underline */
+		FALSE,			/* strikeout */
+		ANSI_CHARSET,		/* character set */
+		OUT_OUTLINE_PRECIS,	/* output precision */
+		CLIP_DEFAULT_PRECIS,	/* clip precision */
+		DEFAULT_QUALITY,	/* quality */
+		VARIABLE_PITCH|FF_DONTCARE,/* pitch and family */
+		"Times New Roman");	/* face */
+	if (pstate.bold_underscore_font == NULL) {
+		*fail = "CreateFont (bold underscore) failed";
+		goto failed;
+	}
+
 	/* Set up the manual spacing array. */
 	pstate.dx = Malloc(sizeof(INT) * maxCOLS);
 	for (i = 0; i < maxCOLS; i++) {
@@ -640,250 +662,261 @@ static int
 gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 	const char **fail)
 {
-	HDC dc = pstate.dlg.hDC;
-	LPDEVMODE devmode;
-	int row, col, baddr;
-	int rc = 0;
-	int status;
+    HDC dc = pstate.dlg.hDC;
+    LPDEVMODE devmode;
+    int row, col, baddr;
+    int rc = 0;
+    int status;
 
-	int fa_addr = find_field_attribute_ea(0, ea);
-	unsigned char fa = ea[fa_addr].fa;
-	Bool fa_high, high;
-	Bool fa_underline, underline;
-	Bool fa_reverse, reverse;
-	unsigned long uc;
-	Bool is_dbcs;
-	char c;
+    int fa_addr = find_field_attribute_ea(0, ea);
+    unsigned char fa = ea[fa_addr].fa;
+    Bool fa_high, high;
+    Bool fa_underline, underline;
+    Bool fa_reverse, reverse;
+    unsigned long uc;
+    Bool is_dbcs;
+    char c;
+    int usable_rows;
 
-	devmode = (LPDEVMODE)GlobalLock(pstate.dlg.hDevMode);
+    devmode = (LPDEVMODE)GlobalLock(pstate.dlg.hDevMode);
 
-	/*
-	 * If there is a caption, center it on the first line and skip a line
-	 * after that.
-	 */
-	if (pstate.out_row == 0 && pstate.caption != NULL) {
-		int center;
+    /* Compute the usable rows, including the caption. */
+    usable_rows = pstate.usable_rows;
+    if (pstate.caption) {
+	usable_rows -= 2;
+    }
 
-		if ((int)strlen(pstate.caption) < pstate.usable_cols) {
-			center = (pstate.usable_xpixels -
-			       (strlen(pstate.caption) * pstate.space_size.cx))
-			      / 2;
+    /*
+     * Does this screen fit?
+     * (Note that the first test, "pstate.out_row", is there so that if the
+     * font is so big the image won't fit at all, we still print as much
+     * of it as we can.)
+     */
+    if (pstate.out_row && pstate.out_row + ROWS > usable_rows) {
+	if (EndPage(dc) <= 0) {
+	    *fail = "EndPage failed";
+	    rc = -1;
+	    goto done;
+	}
+	pstate.out_row = 0;
+	pstate.screens = 0;
+    }
+
+    /* If there is a caption, put it on the last line. */
+    if (pstate.out_row == 0 && pstate.caption != NULL) {
+	SelectObject(dc, pstate.caption_font);
+	status = ExtTextOut(dc,
+		pstate.hmargin_pixels - pchar.poffX,
+		pstate.vmargin_pixels +
+		    ((pstate.usable_rows - 1) * pstate.space_size.cy) -
+		    pchar.poffY,
+		0, NULL,
+		pstate.caption, strlen(pstate.caption), NULL);
+	if (status <= 0) {
+	    *fail = "ExtTextOut failed";
+	    rc = -1;
+	    goto done;
+	}
+    }
+
+    /* Now dump out a screen's worth. */
+    if (ea[fa_addr].gr & GR_INTENSIFY) {
+	fa_high = True;
+    } else {
+	fa_high = FA_IS_HIGH(fa);
+    }
+    fa_reverse = ((ea[fa_addr].gr & GR_REVERSE) != 0);
+    fa_underline = ((ea[fa_addr].gr & GR_UNDERLINE) != 0);
+
+    for (baddr = 0, row = 0; row < ROWS; row++) {
+	if (pstate.out_row + row >= usable_rows) {
+	    break;
+	}
+	for (col = 0; col < COLS; col++, baddr++) {
+	    if (ea[baddr].fa) {
+		fa = ea[baddr].fa;
+		if (ea[baddr].gr & GR_INTENSIFY) {
+		    fa_high = True;
 		} else {
-		    	center = 0;
+		    fa_high = FA_IS_HIGH(fa);
 		}
+		fa_reverse = ((ea[fa_addr].gr & GR_REVERSE) != 0);
+		fa_underline = ((ea[fa_addr].gr & GR_UNDERLINE) != 0);
+
+		/* Just skip it. */
+		continue;
+	    }
+	    if (col >= pstate.usable_cols) {
+		continue;
+	    }
+	    is_dbcs = FALSE;
+	    if (FA_IS_ZERO(fa)) {
+#if defined(X3270_DBCS) /*[*/
+		if (ctlr_dbcs_state_ea(baddr, ea) == DBCS_LEFT) {
+		    uc = 0x3000;
+		} else
+#endif /*]*/
+		{
+		    uc = ' ';
+		}
+	    } else {
+		/* Convert EBCDIC to Unicode. */
+#if defined(X3270_DBCS) /*[*/
+		switch (ctlr_dbcs_state(baddr)) {
+		case DBCS_NONE:
+		case DBCS_SB:
+		    uc = ebcdic_to_unicode(ea[baddr].cc, ea[baddr].cs,
+			    EUO_NONE);
+		    if (uc == 0) {
+			uc = ' ';
+		    }
+		    break;
+		case DBCS_LEFT:
+		    is_dbcs = TRUE;
+		    uc = ebcdic_to_unicode((ea[baddr].cc << 8) |
+				ea[baddr + 1].cc,
+			    CS_BASE, EUO_NONE);
+		    if (uc == 0) {
+			uc = 0x3000;
+		    }
+		    break;
+		case DBCS_RIGHT:
+		    /* skip altogether, we took care of it above */
+		    continue;
+		default:
+		    uc = ' ';
+		    break;
+		}
+#else /*][*/
+		uc = ebcdic_to_unicode(ea[baddr].cc, ea[baddr].cs, EUO_NONE);
+		if (uc == 0) {
+		    uc = ' ';
+		}
+#endif /*]*/
+	    }
+
+	    /* Figure out the attributes of the current buffer position. */
+	    high = ((ea[baddr].gr & GR_INTENSIFY) != 0);
+	    if (!high) {
+		high = fa_high;
+	    }
+	    reverse = ((ea[fa_addr].gr & GR_REVERSE) != 0);
+	    if (!reverse) {
+		reverse = fa_reverse;
+	    }
+	    underline = ((ea[fa_addr].gr & GR_UNDERLINE) != 0);
+	    if (!underline) {
+		underline = fa_underline;
+	    }
+
+	    /*
+	     * Set the bg/fg color and font. Obviously this could be optimized
+	     * quite a bit.
+	     */
+	    if (reverse) {
+		SetTextColor(dc, 0xffffff);
+		SetBkColor(dc, 0);
+		SetBkMode(dc, OPAQUE);
+	    } else {
+		SetTextColor(dc, 0);
+		SetBkColor(dc, 0xffffff);
+		SetBkMode(dc, TRANSPARENT);
+	    }
+	    if (!high && !underline) {
+		SelectObject(dc, pstate.font);
+	    } else if (high && !underline) {
 		SelectObject(dc, pstate.bold_font);
-		status = ExtTextOut(dc,
-			pstate.hmargin_pixels - center - pchar.poffX,
-			pstate.vmargin_pixels + pstate.space_size.cy -
-			    pchar.poffY,
-			0, NULL,
-			pstate.caption, strlen(pstate.caption), pstate.dx);
-		if (status <= 0) {
+	    } else if (!high && underline) {
+		SelectObject(dc, pstate.underscore_font);
+	    } else {
+		SelectObject(dc, pstate.bold_underscore_font);
+	    }
+
+	    /*
+	     * Handle spaces and DBCS spaces (U+3000).
+	     * If not reverse or underline, just skip over them.
+	     * Otherwise, print a space or two spaces, using the
+	     * right font and modes.
+	     */
+	    if (uc == ' ' || uc == 0x3000) {
+		if (reverse || underline) {
+		    status = ExtTextOut(dc, pstate.hmargin_pixels +
+				(col * pstate.space_size.cx) -
+				pchar.poffX,
+			    pstate.vmargin_pixels +
+				((pstate.out_row + row + 1) *
+				 pstate.space_size.cy) -
+				pchar.poffY,
+			    0, NULL,
+			    "  ",
+			    (uc == 0x3000)? 2: 1,
+			    pstate.dx);
+		    if (status <= 0) {
 			*fail = "ExtTextOut failed";
 			rc = -1;
 			goto done;
+		    }
 		}
-		pstate.out_row = 2;
-	}
+		continue;
+	    }
+#if defined(X3270_DBCS) /*[*/
+	    if (is_dbcs) {
+		wchar_t w;
+		INT wdx;
 
-	/* Now dump out a screen's worth. */
-	if (ea[fa_addr].gr & GR_INTENSIFY) {
-		fa_high = True;
-	} else {
-		fa_high = FA_IS_HIGH(fa);
-	}
-	fa_reverse = ((ea[fa_addr].gr & GR_REVERSE) != 0);
-	fa_underline = ((ea[fa_addr].gr & GR_UNDERLINE) != 0);
+		w = (wchar_t)uc;
+		wdx = pstate.space_size.cx;
 
-	for (baddr = 0, row = 0; row < ROWS; row++) {
-		if (pstate.out_row + row >= pstate.usable_rows) {
-		    	break;
+		status = ExtTextOutW(dc,
+			pstate.hmargin_pixels + (col * pstate.space_size.cx) -
+			    pchar.poffX,
+			pstate.vmargin_pixels +
+			    ((pstate.out_row + row + 1) *
+			     pstate.space_size.cy) -
+			    pchar.poffY,
+			0, NULL,
+			&w, 1, &wdx);
+		if (status <= 0) {
+		    *fail = "ExtTextOutW failed";
+		    rc = -1;
+		    goto done;
 		}
-		for (col = 0; col < COLS; col++, baddr++) {
-			if (ea[baddr].fa) {
-				fa = ea[baddr].fa;
-				if (ea[baddr].gr & GR_INTENSIFY) {
-					fa_high = True;
-				} else {
-					fa_high = FA_IS_HIGH(fa);
-				}
-				fa_reverse =
-				    ((ea[fa_addr].gr & GR_REVERSE) != 0);
-				fa_underline =
-				    ((ea[fa_addr].gr & GR_UNDERLINE) != 0);
-
-				/* Just skip it. */
-				continue;
-			}
-			if (col >= pstate.usable_cols) {
-				continue;
-			}
-			is_dbcs = FALSE;
-			if (FA_IS_ZERO(fa)) {
-#if defined(X3270_DBCS) /*[*/
-				if (ctlr_dbcs_state_ea(baddr, ea) == DBCS_LEFT)
-					uc = 0x3000;
-				else
-#endif /*]*/
-					uc = ' ';
-			} else {
-				/* Convert EBCDIC to Unicode. */
-#if defined(X3270_DBCS) /*[*/
-				switch (ctlr_dbcs_state(baddr)) {
-				case DBCS_NONE:
-				case DBCS_SB:
-					uc = ebcdic_to_unicode(ea[baddr].cc,
-						ea[baddr].cs, EUO_NONE);
-					if (uc == 0)
-						uc = ' ';
-					break;
-				case DBCS_LEFT:
-					is_dbcs = TRUE;
-					uc = ebcdic_to_unicode(
-						(ea[baddr].cc << 8) |
-						 ea[baddr + 1].cc,
-						CS_BASE, EUO_NONE);
-					if (uc == 0)
-						uc = 0x3000;
-					break;
-				case DBCS_RIGHT:
-					/* skip altogether, we took care of it above */
-					continue;
-				default:
-					uc = ' ';
-					break;
-				}
-#else /*][*/
-				uc = ebcdic_to_unicode(ea[baddr].cc,
-					ea[baddr].cs, EUO_NONE);
-				if (uc == 0)
-					uc = ' ';
-#endif /*]*/
-			}
-
-			/*
-			 * Figure out the attributes of the current buffer
-			 * position.
-			 */
-			high = ((ea[baddr].gr & GR_INTENSIFY) != 0);
-			if (!high) {
-				high = fa_high;
-			}
-			reverse = ((ea[fa_addr].gr & GR_REVERSE) != 0);
-			if (!reverse) {
-				reverse = fa_reverse;
-			}
-			underline = ((ea[fa_addr].gr & GR_UNDERLINE) != 0);
-			if (!underline) {
-				underline = fa_underline;
-			}
-
-			/*
-			 * Set the bg/fg color and font. Obviously this could
-			 * be optimized quite a bit.
-			 */
-			if (reverse) {
-				SetTextColor(dc, 0xffffff);
-				SetBkColor(dc, 0);
-				SetBkMode(dc, OPAQUE);
-			} else {
-				SetTextColor(dc, 0);
-				SetBkColor(dc, 0xffffff);
-				SetBkMode(dc, TRANSPARENT);
-			}
-			if (!high && !underline) {
-				SelectObject(dc, pstate.font);
-			} else if (high && !underline) {
-				SelectObject(dc, pstate.bold_font);
-			} else if (!high && underline) {
-				SelectObject(dc, pstate.underscore_font);
-			} else {
-				SelectObject(dc, pstate.bold_underscore_font);
-			}
-
-			/*
-			 * Handle spaces and DBCS spaces (U+3000).
-			 * If not reverse or underline, just skip over them.
-			 * Otherwise, print a space or two spaces, using the
-			 * right font and modes.
-			 */
-			if (uc == ' ' || uc == 0x3000) {
-				if (reverse || underline) {
-					status = ExtTextOut(dc,
-						pstate.hmargin_pixels +
-						  (col * pstate.space_size.cx) -
-						  pchar.poffX,
-						pstate.vmargin_pixels +
-						  ((pstate.out_row + row + 1) * pstate.space_size.cy) -
-						  pchar.poffY,
-						0, NULL,
-						"  ",
-						(uc == 0x3000)? 2: 1,
-						pstate.dx);
-					if (status <= 0) {
-						*fail = "ExtTextOut failed";
-						rc = -1;
-						goto done;
-					}
-				}
-				continue;
-			}
-#if defined(X3270_DBCS) /*[*/
-			if (is_dbcs) {
-				wchar_t w;
-				INT wdx;
-
-				w = (wchar_t)uc;
-				wdx = pstate.space_size.cx;
-
-				status = ExtTextOutW(dc,
-					pstate.hmargin_pixels + (col * pstate.space_size.cx) - pchar.poffX,
-					pstate.vmargin_pixels + ((pstate.out_row + row + 1) * pstate.space_size.cy) - pchar.poffY,
-					0, NULL,
-					&w, 1, &wdx);
-				if (status <= 0) {
-					*fail = "ExtTextOutW failed";
-					rc = -1;
-					goto done;
-				}
-				continue;
-			}
+		continue;
+	    }
 #endif
-			c = (char)uc;
-			status = ExtTextOut(dc,
-				pstate.hmargin_pixels +
-				    (col * pstate.space_size.cx) -
-				    pchar.poffX,
-				pstate.vmargin_pixels +
-				    ((pstate.out_row + row + 1) * pstate.space_size.cy) -
-				    pchar.poffY,
-				0, NULL,
-				&c, 1, pstate.dx);
-			if (status <= 0) {
-				*fail = "ExtTextOut failed";
-				rc = -1;
-				goto done;
-			}
-		}
+	    c = (char)uc;
+	    status = ExtTextOut(dc,
+		    pstate.hmargin_pixels + (col * pstate.space_size.cx) -
+			pchar.poffX,
+		    pstate.vmargin_pixels +
+			((pstate.out_row + row + 1) * pstate.space_size.cy) -
+			pchar.poffY,
+		    0, NULL,
+		    &c, 1, pstate.dx);
+	    if (status <= 0) {
+		*fail = "ExtTextOut failed";
+		rc = -1;
+		goto done;
+	    }
 	}
+    }
 
-	/* Tally the current screen and see if we need to go to a new page. */
-	pstate.out_row += (row + 1); /* current screen plus a gap */
-	pstate.screens++;
-	if (pstate.out_row >= pstate.usable_rows ||
-		    pstate.screens >= uparm.spp) {
-		if (EndPage(dc) <= 0) {
-			*fail = "EndPage failed";
-			rc = -1;
-			goto done;
-		}
-		pstate.out_row = 0;
-		pstate.screens = 0;
+    /* Tally the current screen and see if we need to go to a new page. */
+    pstate.out_row += (row + 1); /* current screen plus a gap */
+    pstate.screens++;
+    if (pstate.out_row >= usable_rows || pstate.screens >= uparm.spp) {
+	if (EndPage(dc) <= 0) {
+	    *fail = "EndPage failed";
+	    rc = -1;
+	    goto done;
 	}
+	pstate.out_row = 0;
+	pstate.screens = 0;
+    }
 
 done:
-	GlobalUnlock(devmode);
-	return rc;
+    GlobalUnlock(devmode);
+    return rc;
 }
 
 /*

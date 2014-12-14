@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,3 +40,4 @@ extern void print_window_option(Widget w, XtPointer client_data,
     XtPointer call_data);
 extern void save_text_option(Widget w, XtPointer client_data,
     XtPointer call_data);
+extern char *default_caption(void);

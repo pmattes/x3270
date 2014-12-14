@@ -990,43 +990,53 @@ menu_init(void)
 void
 menubar_retoggle(struct toggle *t, int ix)
 {
-	int j;
-	char *s;
+    int j;
+    char *s;
 
-	if (!appres.menubar)
-		return;
+    if (!appres.menubar) {
+	return;
+    }
 
-	/* Search the options menu. */
-	for (j = 0; j < OM_COUNT; j++) {
-		if (option_index[j] == ix)
-			break;
+    /* Search the options menu. */
+    for (j = 0; j < OM_COUNT; j++) {
+	if (option_index[j] == ix) {
+	    break;
 	}
-	if (j < OM_COUNT) {
-		s = xs_buffer("%sable %s",
-			toggled(ix)? "Dis": "En", option_names[j]);
-		rename_item(options_menu_items[j], s);
-		Free(s);
-		return;
+    }
+    if (j < OM_COUNT) {
+	s = xs_buffer("%sable %s", toggled(ix)? "Dis": "En", option_names[j]);
+	rename_item(options_menu_items[j], s);
+	Free(s);
+	return;
+    }
+    if (ix == TRACING) {
+	s = xs_buffer("%sable Tracing", (toggled(TRACING))? "Dis": "En");
+	rename_item(file_menu_items[FM_TRACE], s);
+	Free(s);
+    }
+    if (ix == SCREEN_TRACE) {
+	if (toggled(SCREEN_TRACE)) {
+	    switch (trace_get_screentrace_how()) {
+	    case TSS_FILE:
+		rename_item(file_menu_items[FM_SCREENTRACE],
+			"Stop Saving Screen Images");
+		enable_item(file_menu_items[FM_SCREENTRACE_PRINTER], False);
+		break;
+	    case TSS_PRINTER:
+		enable_item(file_menu_items[FM_SCREENTRACE], False);
+		rename_item(file_menu_items[FM_SCREENTRACE_PRINTER],
+			"Stop Saving Screen Images");
+		break;
+	    }
+	} else {
+	    rename_item(file_menu_items[FM_SCREENTRACE],
+		    "Save Screen Images in File");
+	    enable_item(file_menu_items[FM_SCREENTRACE], True);
+	    rename_item(file_menu_items[FM_SCREENTRACE_PRINTER],
+		    "Save Screen Images to Printer");
+	    enable_item(file_menu_items[FM_SCREENTRACE_PRINTER], True);
 	}
-	if (ix == TRACING) {
-		s = xs_buffer("%sable Tracing",
-			(toggled(TRACING))? "Dis": "En");
-		rename_item(file_menu_items[FM_TRACE], s);
-		Free(s);
-	}
-	if (ix == SCREEN_TRACE) {
-	    	if (toggled(SCREEN_TRACE)) {
-			rename_item(file_menu_items[FM_SCREENTRACE],
-				"Stop Saving Screen Images");
-			enable_item(file_menu_items[FM_SCREENTRACE_PRINTER],
-				False);
-		} else {
-			rename_item(file_menu_items[FM_SCREENTRACE],
-				"Save Screen Images in File");
-			enable_item(file_menu_items[FM_SCREENTRACE_PRINTER],
-				True);
-		}
-	}
+    }
 }
 
 /*

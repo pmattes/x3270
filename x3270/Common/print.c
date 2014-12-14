@@ -105,6 +105,65 @@ print_text_done(FILE *f)
 }
 #endif /*]*/
 
+/**
+ * Default caption.
+ *
+ * @return caption text
+ */
+char *
+default_caption(void)
+{
+    static char *r = NULL;
+
+#if !defined(_WIN32) /*[*/
+    /* Unix version: username@host %T% */
+    char hostname[132];
+    char *user;
+
+    gethostname(hostname, sizeof(hostname));
+    hostname[sizeof(hostname) - 1] = '\0';
+    user = getenv("USER");
+    if (user == NULL) {
+	user = "(unknown)";
+    }
+
+    if (r != NULL) {
+	Free(r);
+    }
+    r = xs_buffer("%s @ %s %%T%%", user, hostname);
+
+#else /*][*/
+
+    char *username;
+    char *computername;
+    char *userdomain;
+
+    username = getenv("USERNAME");
+    if (username == NULL) {
+	username = "(unknown)";
+    }
+    computername = getenv("COMPUTERNAME");
+    if (computername == NULL) {
+	computername = "(unknown)";
+    }
+    userdomain = getenv("USERDOMAIN");
+    if (userdomain == NULL) {
+	userdomain = "(unknown)";
+    }
+
+    if (r != NULL) {
+	Free(r);
+    }
+    if (strcasecmp(userdomain, computername)) {
+	r = xs_buffer("%s\\%s @ %s %%T%%", userdomain, username, computername);
+    } else {
+	r = xs_buffer("%s @ %s %%T%%", username, computername);
+    }
+#endif
+
+    return r;
+}
+
 /* Print or save the contents of the screen as text. */
 void
 PrintText_action(Widget w _is_unused, XEvent *event, String *params,
@@ -309,6 +368,9 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 				Free(temp_name);
 			}
 			return;
+		}
+		if (caption == NULL) {
+		    caption = default_caption();
 		}
 		switch (fprint_screen(f, ptype, opts, caption, name)) {
 		case FPS_STATUS_SUCCESS:
