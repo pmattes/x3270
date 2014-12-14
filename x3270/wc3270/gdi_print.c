@@ -330,6 +330,7 @@ gdi_init(const char *printer_name, const char **fail)
 	int maxphmargin, maxpvmargin;
 	int i;
 	static char get_fail[1024];
+	int fheight, fwidth;
 
 	memset(&pstate.dlg, '\0', sizeof(pstate.dlg));
 	pstate.dlg.lStructSize = sizeof(pstate.dlg);
@@ -496,15 +497,34 @@ gdi_init(const char *printer_name, const char **fail)
 	 * If they specified a particular font size, use that as the height,
 	 * and let the system pick the width.
 	 *
-	 * If the did not specify a font size, or chose "auto", then divide the
-	 * usable area by COLS to get the width, and let the system pick the
-	 * height.
+	 * If they did not specify a font size, or chose "auto", then let the
+	 * "screens per page" drive what to do. If "screens per page" is set,
+	 * then divide the page Y pixels by the screens-per-page times the
+	 * display height to get the font height, and let the system pick the
+	 * width. (TODO: We could then check the width it picked to make sure
+	 * the screens will fit.)
+	 *
+	 * Otherwise, divide the page X pixels by COLS to get the font width,
+	 * and let the system pick the height.
 	 */
+	if (uparm.font_size) {
+	    fheight = uparm.font_size * pstate.yptscale;
+	    fwidth = 0;
+	} else {
+	    if (uparm.spp > 1) {
+		fheight = pstate.usable_ypixels /
+		    (uparm.spp * maxROWS /* spp screens */
+		     + (uparm.spp - 1) /* spaces between screens */
+		     + 2 /* space and caption*/ );
+		fwidth = 0;
+	    } else {
+		fheight = 0;
+		fwidth = pstate.usable_xpixels / maxCOLS;
+	    }
+	}
 	pstate.font = CreateFont(
-		uparm.font_size? (int)(uparm.font_size * pstate.yptscale): 0,
-					/* height */
-		uparm.font_size? 0: pstate.usable_xpixels / maxCOLS,
-					/* width */
+		fheight,		/* height */
+		fwidth,			/* width */
 		0,			/* escapement */
 		0,			/* orientation */
 		FW_NORMAL,		/* weight */
