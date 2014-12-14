@@ -29,10 +29,12 @@ PAGES = credits.html documentation-bugs.html documentation-faq.html \
 	documentation-manpages.html documentation-misc.html \
 	documentation-other.html documentation-relnotes.html \
 	documentation-ssl.html documentation.html download.html index.html \
-	license.html screenshots.html x026.html
+	license.html rest.html screenshots.html x026.html
+
 SCREENS = c3270-thumb.png c3270.png cyrillic-thumb.png cyrillic.png \
 	japanese-thumb.png japanese.png keypad-thumb.png keypad.png \
 	wc3270-thumb.png wc3270.png x3270_main-thumb.png x3270_main.png
+
 OTHERS = $(SCREENS) Brackets.html Build-c3270.html Build-pr3287.html \
 	Build-s3270.html Build-tcl3270.html Build-wc3270.html \
 	Build-x3270.html Charset.html HotBugs.html Keymap.html \
