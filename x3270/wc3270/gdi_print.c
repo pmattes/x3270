@@ -57,7 +57,6 @@
 
 /* Defines */
 #define PPI			72	/* points per inch */
-#define DEFAULT_FONTSIZE	8	/* default size is 8pt type */
 
 /* Typedefs */
 
@@ -120,7 +119,7 @@ gdi_print_start(const char *printer_name)
 		uparm.hmargin = 0.5;
 		uparm.vmargin = 0.5;
 		uparm.font_name = NULL;
-		uparm.font_size = DEFAULT_FONTSIZE;
+		uparm.font_size = 0; /* auto */
 		uparm.spp = 1;
 
 		/* Gather up the parameters. */
@@ -292,12 +291,14 @@ gdi_get_params(uparm_t *up)
 
 	/* Font size. */
 	if ((s = get_resource(ResPrintTextSize)) != NULL) {
-		l = strtoul(s, &nextp, 0);
-		if (l > 0) {
-			up->font_size = (int)l;
-		} else {
-			vtrace("gdi: invalid %s '%s'\n",
-				ResPrintTextSize, s);
+		if (strcasecmp(s, "auto")) {
+			l = strtoul(s, &nextp, 0);
+			if (l > 0) {
+				up->font_size = (int)l;
+			} else {
+				vtrace("gdi: invalid %s '%s'\n",
+					ResPrintTextSize, s);
+			}
 		}
 	}
 
@@ -488,10 +489,21 @@ gdi_init(const char *printer_name, const char **fail)
 	vtrace("[gdi] usable area is %dx%d pixels\n",
 		pstate.usable_xpixels, pstate.usable_ypixels);
 
-	/* Create the Roman font. */
+	/*
+	 * Create the Roman font.
+	 *
+	 * If they specified a particular font size, use that as the height,
+	 * and let the system pick the width.
+	 *
+	 * If the did not specify a font size, or chose "auto", then divide the
+	 * usable area by COLS to get the width, and let the system pick the
+	 * height.
+	 */
 	pstate.font = CreateFont(
-		(int)(uparm.font_size * pstate.yptscale), /* height */
-		0,			/* width */
+		uparm.font_size? (int)(uparm.font_size * pstate.yptscale): 0,
+					/* height */
+		uparm.font_size? 0: pstate.usable_xpixels / COLS,
+					/* width */
 		0,			/* escapement */
 		0,			/* orientation */
 		FW_NORMAL,		/* weight */

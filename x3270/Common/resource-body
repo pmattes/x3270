@@ -2277,9 +2277,12 @@ desc
 name printTextSize
 applies wc
 type i
-default 8
+default auto (GDI), 8 (WordPad)
 desc
     The font size used by the <b>PrintText</b> action.
+    When using GDI printing, the default is to select the largest font that
+    will fit across the page. When using WordPad for printing, the default is
+    8 points.
 .
 
 name printTextVerticalMargin
