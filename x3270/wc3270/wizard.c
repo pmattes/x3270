@@ -2289,7 +2289,7 @@ get_trace(session_t *s)
 Tracing\n\
 \n\
 This option causes wc3270 to begin tracing at start-up. The trace file will\n\
-be left in the wc370 AppData directory.");
+be left in the wc3270 AppData directory.");
 
     do {
 	printf("\nTrace at start-up? (y/n) [%s] ",
@@ -2332,7 +2332,7 @@ run_notepad(session_t *s, char **us)
     new_screen(s, NULL, "\
 Notepad\n\
 \n\
-This option will start up the Windows Notapad editor to allow you to edit\n\
+This option will start up the Windows Notepad editor to allow you to edit\n\
 miscellaneous resources in your session file.");
 
     do {
