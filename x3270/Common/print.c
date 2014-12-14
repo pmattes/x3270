@@ -133,6 +133,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	 *  rtf      generates RTF output instead of ASCII text (and implies
 	 *            'file')
 	 *  gdi      prints to a GDI printer (wc3270 only)
+	 *  wordpad  prints via WordPad (wc3270 only)
 	 *  modi     print modified fields in italics
 	 *  caption "text"
 	 *           Adds caption text above the screen
@@ -159,6 +160,8 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 #if defined(WC3270) /*[*/
 		else if (!strcasecmp(params[i], "gdi")) {
 			ptype = P_GDI;
+		} else if (!strcasecmp(params[i], "wordpad")) {
+			ptype = P_RTF;
 		}
 #endif /*]*/
 		else if (!strcasecmp(params[i], "secure")) {
@@ -221,9 +224,9 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	}
 
 #if defined(_WIN32) /*[*/
-	/* On Windows, use rich text. */
-	if (!use_string && !use_file && ptype != P_HTML && ptype != P_GDI) {
-		ptype = P_RTF;
+	/* On Windows, use GDI as the default. */
+	if (!use_string && !use_file && ptype == P_TEXT) {
+		ptype = P_GDI;
 	}
 #endif /*]*/
 

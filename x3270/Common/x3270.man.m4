@@ -1070,7 +1070,7 @@ XX_TR(XX_TDH(XX_BLOCK()PF`'XX_LPAREN`'XX_FI(n)`'XX_RPAREN)	XX_TD(Program Functio
 XX_TR(XX_TDH(`PreviousWord')	XX_TD(move cursor to previous word))
 ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(`Paste')	XX_TD(insert clipboard contents))')dnl
 ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,tcl3270,,`XX_TR(XX_TDH(Printer(Start[,XX_FI(lu)]|Stop))	XX_TD(start or stop printer session))
-ifelse(XX_PLATFORM,windows,`XX_TR(XX_TDH(PrintText([gdi,]XX_FI([printer-name])))	XX_TD(print screen text on printer))',
+ifelse(XX_PLATFORM,windows,`XX_TR(XX_TDH(PrintText([gdi|wordpad,]XX_FI([printer-name])))	XX_TD(print screen text on printer))',
 `XX_TR(XX_TDH(PrintText(XX_FI(command)))	XX_TD(print screen text on printer))')
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(PrintWindow(XX_FI(command)))	XX_TD(print screen image (bitmap) on printer))
 ')')dnl
@@ -1214,10 +1214,12 @@ A single argument is
 ifelse(XX_PLATFORM,windows,`the name of the printer to use',
 `the command to use to print, e.g., XX_FB(lpr)').
 ifelse(XX_PLATFORM,windows,`The font defaults to XX_FB(Courier New) and the
-point size defaults to 8.
+point size defaults to XX_FI(auto) (by default -- pick the widest font that
+will fit across the page) or 8 (if using WordPad).
 These can be overridden by the XX_FB(printTextFont) and XX_FB(printTextSize)
 resources, respectively.
-If the XX_FB(gdi) keyword is used, additional resources can control the
+Unless the XX_FB(wordpad) keyword is used to force the output to be run through
+the Windows WordPad utility, additional resources can control the
 output. XX_FB(printTextHorizontalMargin) defines the left- and right-hand
 margins. XX_FB(printTextVerticalMargin) defines the top and bottom margins.
 Both default to 0.5 inches; the values are in inches by default but can be
@@ -1230,7 +1232,9 @@ XX_FB(PrintText):
 XX_TPS()dnl
 ifelse(XX_PRODUCT,wc3270,`XX_TP(XX_FB(gdi))
 Print directly to the printer using GDI, instead of creating an RTF file and
-running WordPad to print it.
+running WordPad to print it. (This is the default).
+XX_TP(XX_FB(wordpad))
+Create an RTF file and run WordPad to print it. (This was the former default).
 ')dnl
 XX_TP(XX_FB(file) XX_FI(filename))
 Save the output in a file.
