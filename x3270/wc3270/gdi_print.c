@@ -316,363 +316,431 @@ gdi_get_params(uparm_t *up)
 }
 
 /*
+ * Create a Roman font.
+ * Returns 0 for success, -1 for failure.
+ */
+static int
+create_roman_font(HDC dc, int fheight, int fwidth, const char **fail)
+{
+    pstate.font = CreateFont(
+	    fheight,		/* height */
+	    fwidth,		/* width */
+	    0,			/* escapement */
+	    0,			/* orientation */
+	    FW_NORMAL,		/* weight */
+	    FALSE,		/* italic */
+	    FALSE,		/* underline */
+	    FALSE,		/* strikeout */
+	    DEFAULT_CHARSET,	/* character set */
+	    OUT_OUTLINE_PRECIS,	/* output precision */
+	    CLIP_DEFAULT_PRECIS,/* clip precision */
+	    DEFAULT_QUALITY,	/* quality */
+	    FIXED_PITCH|FF_DONTCARE,/* pitch and family */
+	    uparm.font_name);	/* face */
+    if (pstate.font == NULL) {
+	*fail = "CreateFont failed";
+	return -1;
+    }
+
+    /* Measure a space to find out the size we got. */
+    SelectObject(dc, pstate.font);
+    if (!GetTextExtentPoint32(dc, " ", 1, &pstate.space_size)) {
+	*fail = "GetTextExtentPoint32 failed";
+	return -1;
+    }
+    vtrace("[gdi] space character is %dx%d logical units\n",
+	    (int)pstate.space_size.cx, (int)pstate.space_size.cy);
+    pstate.usable_cols = pstate.usable_xpixels / pstate.space_size.cx;
+    pstate.usable_rows = pstate.usable_ypixels / pstate.space_size.cy;
+    vtrace("[gdi] usable area is %dx%d characters\n",
+	    pstate.usable_cols, pstate.usable_rows);
+    return 0;
+}
+
+/*
  * Initalize the named GDI printer. If the name is NULL, use the default
  * printer.
  */
 static gdi_status_t
 gdi_init(const char *printer_name, const char **fail)
 {
-	LPDEVMODE devmode;
-	HDC dc;
-	DOCINFO docinfo;
-	DEVNAMES *devnames;
-	int rmargin, bmargin; /* right margin, bottom margin */
-	int maxphmargin, maxpvmargin;
-	int i;
-	static char get_fail[1024];
-	int fheight, fwidth;
+    LPDEVMODE devmode;
+    HDC dc;
+    DOCINFO docinfo;
+    DEVNAMES *devnames;
+    int rmargin, bmargin; /* right margin, bottom margin */
+    int maxphmargin, maxpvmargin;
+    int i;
+    static char get_fail[1024];
+    int fheight, fwidth;
 
-	memset(&pstate.dlg, '\0', sizeof(pstate.dlg));
-	pstate.dlg.lStructSize = sizeof(pstate.dlg);
-	pstate.dlg.Flags = PD_RETURNDC | PD_NOPAGENUMS | PD_HIDEPRINTTOFILE |
-	    PD_NOSELECTION;
+    memset(&pstate.dlg, '\0', sizeof(pstate.dlg));
+    pstate.dlg.lStructSize = sizeof(pstate.dlg);
+    pstate.dlg.Flags = PD_RETURNDC | PD_NOPAGENUMS | PD_HIDEPRINTTOFILE |
+	PD_NOSELECTION;
 
-	if (printer_name != NULL && *printer_name) {
-		if (!get_printer_device(printer_name, &pstate.dlg.hDevNames,
-			    &pstate.dlg.hDevMode)) {
-			snprintf(get_fail, sizeof(get_fail),
-				"GetPrinter(%s) failed: %s",
-				printer_name? printer_name: "system default",
-				win32_strerror(GetLastError()));
-			*fail = get_fail;
-			goto failed;
-		}
-		if (uparm.orientation) {
-		    devmode = (LPDEVMODE)GlobalLock(pstate.dlg.hDevMode);
-		    devmode->dmFields |= DM_ORIENTATION;
-		    devmode->dmOrientation = uparm.orientation;
-		    GlobalUnlock(devmode);
-		}
+    if (printer_name != NULL && *printer_name) {
+	if (!get_printer_device(printer_name, &pstate.dlg.hDevNames,
+		    &pstate.dlg.hDevMode)) {
+	    snprintf(get_fail, sizeof(get_fail),
+		    "GetPrinter(%s) failed: %s",
+		    printer_name? printer_name: "system default",
+		    win32_strerror(GetLastError()));
+	    *fail = get_fail;
+	    goto failed;
 	}
+	if (uparm.orientation) {
+	    devmode = (LPDEVMODE)GlobalLock(pstate.dlg.hDevMode);
+	    devmode->dmFields |= DM_ORIENTATION;
+	    devmode->dmOrientation = uparm.orientation;
+	    GlobalUnlock(devmode);
+	}
+    }
 
-	if (!PrintDlg(&pstate.dlg)) {
-	    	return GDI_STATUS_CANCEL;
-	}
-	dc = pstate.dlg.hDC;
+    if (!PrintDlg(&pstate.dlg)) {
+	return GDI_STATUS_CANCEL;
+    }
+    dc = pstate.dlg.hDC;
 
-	/* Find out the printer characteristics. */
+    /* Find out the printer characteristics. */
 
-	/* LOGPIXELSX and LOGPIXELSY are the pixels-per-inch for the printer. */
-	pchar.ppiX = GetDeviceCaps(dc, LOGPIXELSX);
-	if (pchar.ppiX <= 0) {
-		*fail = "Can't get LOGPIXELSX";
-		goto failed;
-	}
-	pchar.ppiY = GetDeviceCaps(dc, LOGPIXELSY);
-	if (pchar.ppiY <= 0) {
-		*fail = "Can't get LOGPIXELSY";
-		goto failed;
-	}
+    /* LOGPIXELSX and LOGPIXELSY are the pixels-per-inch for the printer. */
+    pchar.ppiX = GetDeviceCaps(dc, LOGPIXELSX);
+    if (pchar.ppiX <= 0) {
+	*fail = "Can't get LOGPIXELSX";
+	goto failed;
+    }
+    pchar.ppiY = GetDeviceCaps(dc, LOGPIXELSY);
+    if (pchar.ppiY <= 0) {
+	*fail = "Can't get LOGPIXELSY";
+	goto failed;
+    }
 
-	/*
-	 * PHYSICALOFFSETX and PHYSICALOFFSETY are the fixed top and left-hand
-	 * margins, in pixels. Whatever you print is offset by these amounts, so
-	 * you have to subtract them from your coordinates. You cannot print in
-	 * these areas.
-	 */
-	pchar.poffX = GetDeviceCaps(dc, PHYSICALOFFSETX);
-	if (pchar.poffX < 0) {
-		*fail = "Can't get PHYSICALOFFSETX";
-		goto failed;
-	}
-	pchar.poffY = GetDeviceCaps(dc, PHYSICALOFFSETY);
-	if (pchar.poffY < 0) {
-		*fail = "Can't get PHYSICALOFFSETY";
-		goto failed;
-	}
+    /*
+     * PHYSICALOFFSETX and PHYSICALOFFSETY are the fixed top and left-hand
+     * margins, in pixels. Whatever you print is offset by these amounts, so
+     * you have to subtract them from your coordinates. You cannot print in
+     * these areas.
+     */
+    pchar.poffX = GetDeviceCaps(dc, PHYSICALOFFSETX);
+    if (pchar.poffX < 0) {
+	*fail = "Can't get PHYSICALOFFSETX";
+	goto failed;
+    }
+    pchar.poffY = GetDeviceCaps(dc, PHYSICALOFFSETY);
+    if (pchar.poffY < 0) {
+	*fail = "Can't get PHYSICALOFFSETY";
+	goto failed;
+    }
 
-	/*
-	 * HORZRES and VERTRES are the size of the usable area of the page, in
-	 * pixels. They implicitly give you the size of the right-hand and
-	 * bottom physical offsets.
-	 */
-	pchar.horzres = GetDeviceCaps(dc, HORZRES);
-	if (pchar.horzres <= 0) {
-		*fail = "Can't get HORZRES";
-		goto failed;
-	}
-	pchar.vertres = GetDeviceCaps(dc, VERTRES);
-	if (pchar.vertres <= 0) {
-		*fail = "Can't get VERTRES";
-		goto failed;
-	}
+    /*
+     * HORZRES and VERTRES are the size of the usable area of the page, in
+     * pixels. They implicitly give you the size of the right-hand and
+     * bottom physical offsets.
+     */
+    pchar.horzres = GetDeviceCaps(dc, HORZRES);
+    if (pchar.horzres <= 0) {
+	*fail = "Can't get HORZRES";
+	goto failed;
+    }
+    pchar.vertres = GetDeviceCaps(dc, VERTRES);
+    if (pchar.vertres <= 0) {
+	*fail = "Can't get VERTRES";
+	goto failed;
+    }
 
-	/*
-	 * PHYSICALWIDTH and PHYSICALHEIGHT are the size of the entire area of
-	 * the page, in pixels.
-	 */
-	pchar.pwidth = GetDeviceCaps(dc, PHYSICALWIDTH);
-	if (pchar.pwidth <= 0) {
-		*fail = "Can't get PHYSICALWIDTH";
-		goto failed;
-	}
-	pchar.pheight = GetDeviceCaps(dc, PHYSICALHEIGHT);
-	if (pchar.pheight <= 0) {
-		*fail = "Can't get PHYSICALHEIGHT";
-		goto failed;
-	}
+    /*
+     * PHYSICALWIDTH and PHYSICALHEIGHT are the size of the entire area of
+     * the page, in pixels.
+     */
+    pchar.pwidth = GetDeviceCaps(dc, PHYSICALWIDTH);
+    if (pchar.pwidth <= 0) {
+	*fail = "Can't get PHYSICALWIDTH";
+	goto failed;
+    }
+    pchar.pheight = GetDeviceCaps(dc, PHYSICALHEIGHT);
+    if (pchar.pheight <= 0) {
+	*fail = "Can't get PHYSICALHEIGHT";
+	goto failed;
+    }
 
-	/* Trace the device characteristics. */
-	devnames = (DEVNAMES *)GlobalLock(pstate.dlg.hDevNames);
-	vtrace("[gdi] Printer '%s' capabilities:\n",
-		(char *)devnames + devnames->wDeviceOffset);
-	GlobalUnlock(devnames);
-	vtrace("[gdi]  LOGPIXELSX %d LOGPIXELSY %d\n",
-		pchar.ppiX, pchar.ppiY);
-	vtrace("[gdi]  PHYSICALOFFSETX %d PHYSICALOFFSETY %d\n",
-		pchar.poffX, pchar.poffY);
-	vtrace("[gdi]  HORZRES %d VERTRES %d\n",
-		pchar.horzres, pchar.vertres);
-	vtrace("[gdi]  PHYSICALWIDTH %d PHYSICALHEIGHT %d\n",
-		pchar.pwidth, pchar.pheight);
+    /* Trace the device characteristics. */
+    devnames = (DEVNAMES *)GlobalLock(pstate.dlg.hDevNames);
+    vtrace("[gdi] Printer '%s' capabilities:\n",
+	    (char *)devnames + devnames->wDeviceOffset);
+    GlobalUnlock(devnames);
+    vtrace("[gdi]  LOGPIXELSX %d LOGPIXELSY %d\n",
+	    pchar.ppiX, pchar.ppiY);
+    vtrace("[gdi]  PHYSICALOFFSETX %d PHYSICALOFFSETY %d\n",
+	    pchar.poffX, pchar.poffY);
+    vtrace("[gdi]  HORZRES %d VERTRES %d\n",
+	    pchar.horzres, pchar.vertres);
+    vtrace("[gdi]  PHYSICALWIDTH %d PHYSICALHEIGHT %d\n",
+	    pchar.pwidth, pchar.pheight);
 
-	/* Compute the scale factors (points to pixels). */
-	pstate.xptscale = (FLOAT)pchar.ppiX / (FLOAT)PPI;
-	pstate.yptscale = (FLOAT)pchar.ppiY / (FLOAT)PPI;
+    /* Compute the scale factors (points to pixels). */
+    pstate.xptscale = (FLOAT)pchar.ppiX / (FLOAT)PPI;
+    pstate.yptscale = (FLOAT)pchar.ppiY / (FLOAT)PPI;
 
-	/* Compute the implied right and bottom margins. */
-	rmargin = pchar.pwidth - pchar.horzres - pchar.poffX;
-	bmargin = pchar.pheight - pchar.vertres - pchar.poffY;
-	if (rmargin > pchar.poffX) {
-		maxphmargin = rmargin;
-	} else {
-		maxphmargin = pchar.poffX;
-	}
-	if (bmargin > pchar.poffY) {
-		maxpvmargin = bmargin;
-	} else {
-		maxpvmargin = pchar.poffY;
-	}
-	vtrace("[gdi] maxphmargin is %d, maxpvmargin is %d pixels\n",
-		maxphmargin, maxpvmargin);
+    /* Compute the implied right and bottom margins. */
+    rmargin = pchar.pwidth - pchar.horzres - pchar.poffX;
+    bmargin = pchar.pheight - pchar.vertres - pchar.poffY;
+    if (rmargin > pchar.poffX) {
+	maxphmargin = rmargin;
+    } else {
+	maxphmargin = pchar.poffX;
+    }
+    if (bmargin > pchar.poffY) {
+	maxpvmargin = bmargin;
+    } else {
+	maxpvmargin = pchar.poffY;
+    }
+    vtrace("[gdi] maxphmargin is %d, maxpvmargin is %d pixels\n",
+	    maxphmargin, maxpvmargin);
 
-	/* Compute the margins in pixels. */
-	pstate.hmargin_pixels = (int)(uparm.hmargin * pchar.ppiX);
-	pstate.vmargin_pixels = (int)(uparm.vmargin * pchar.ppiY);
+    /* Compute the margins in pixels. */
+    pstate.hmargin_pixels = (int)(uparm.hmargin * pchar.ppiX);
+    pstate.vmargin_pixels = (int)(uparm.vmargin * pchar.ppiY);
 
-	/* See if the margins are too small. */
-	if (pstate.hmargin_pixels < maxphmargin) {
-		pstate.hmargin_pixels = maxphmargin;
-		vtrace("[gdi] hmargin is too small, setting to %g\"\n",
-			(float)pstate.hmargin_pixels / pchar.ppiX);
-	}
-	if (pstate.vmargin_pixels < maxpvmargin) {
-		pstate.vmargin_pixels = maxpvmargin;
-		vtrace("[gdi] vmargin is too small, setting to %g\"\n",
-			(float)pstate.vmargin_pixels / pchar.ppiX);
-	}
+    /* See if the margins are too small. */
+    if (pstate.hmargin_pixels < maxphmargin) {
+	pstate.hmargin_pixels = maxphmargin;
+	vtrace("[gdi] hmargin is too small, setting to %g\"\n",
+		(float)pstate.hmargin_pixels / pchar.ppiX);
+    }
+    if (pstate.vmargin_pixels < maxpvmargin) {
+	pstate.vmargin_pixels = maxpvmargin;
+	vtrace("[gdi] vmargin is too small, setting to %g\"\n",
+		(float)pstate.vmargin_pixels / pchar.ppiX);
+    }
 
-	/* See if the margins are too big. */
-	if (pstate.hmargin_pixels * 2 >= pchar.horzres) {
-		pstate.hmargin_pixels = pchar.ppiX;
-		vtrace("[gdi] hmargin is too big, setting to 1\"\n");
-	}
-	if (pstate.vmargin_pixels * 2 >= pchar.vertres) {
-		pstate.vmargin_pixels = pchar.ppiY;
-		vtrace("[gdi] vmargin is too big, setting to 1\"\n");
-	}
+    /* See if the margins are too big. */
+    if (pstate.hmargin_pixels * 2 >= pchar.horzres) {
+	pstate.hmargin_pixels = pchar.ppiX;
+	vtrace("[gdi] hmargin is too big, setting to 1\"\n");
+    }
+    if (pstate.vmargin_pixels * 2 >= pchar.vertres) {
+	pstate.vmargin_pixels = pchar.ppiY;
+	vtrace("[gdi] vmargin is too big, setting to 1\"\n");
+    }
 
-	/*
-	 * Compute the usable area in pixels. That's the physical page size
-	 * less the margins, now that we know that the margins are reasonable.
-	 */
-	pstate.usable_xpixels = pchar.pwidth - (2 * pstate.hmargin_pixels);
-	pstate.usable_ypixels = pchar.pheight - (2 * pstate.vmargin_pixels);
-	vtrace("[gdi] usable area is %dx%d pixels\n",
-		pstate.usable_xpixels, pstate.usable_ypixels);
+    /*
+     * Compute the usable area in pixels. That's the physical page size
+     * less the margins, now that we know that the margins are reasonable.
+     */
+    pstate.usable_xpixels = pchar.pwidth - (2 * pstate.hmargin_pixels);
+    pstate.usable_ypixels = pchar.pheight - (2 * pstate.vmargin_pixels);
+    vtrace("[gdi] usable area is %dx%d pixels\n",
+	    pstate.usable_xpixels, pstate.usable_ypixels);
 
-	/*
-	 * Create the Roman font.
-	 *
-	 * If they specified a particular font size, use that as the height,
-	 * and let the system pick the width.
-	 *
-	 * If they did not specify a font size, or chose "auto", then let the
-	 * "screens per page" drive what to do. If "screens per page" is set,
-	 * then divide the page Y pixels by the screens-per-page times the
-	 * display height to get the font height, and let the system pick the
-	 * width. (TODO: We could then check the width it picked to make sure
-	 * the screens will fit.)
-	 *
-	 * Otherwise, divide the page X pixels by COLS to get the font width,
-	 * and let the system pick the height.
-	 */
-	if (uparm.font_size) {
-	    fheight = uparm.font_size * pstate.yptscale;
+    /*
+     * Create the Roman font.
+     *
+     * If they specified a particular font size, use that as the height,
+     * and let the system pick the width.
+     *
+     * If they did not specify a font size, or chose "auto", then let the
+     * "screens per page" drive what to do. If "screens per page" is set,
+     * then divide the page Y pixels by the screens-per-page times the
+     * display height to get the font height, and let the system pick the
+     * width.
+     *
+     * Otherwise, divide the page X pixels by COLS to get the font width,
+     * and let the system pick the height.
+     */
+    if (uparm.font_size) {
+	/* User-specified fixed font size. */
+	fheight = uparm.font_size * pstate.yptscale;
+	fwidth = 0;
+    } else {
+	if (uparm.spp > 1) {
+	    /*
+	     * Scale the height so the specified number of screens will
+	     * fit.
+	     */
+	    fheight = pstate.usable_ypixels /
+		(uparm.spp * maxROWS /* spp screens */
+		 + (uparm.spp - 1) /* spaces between screens */
+		 + 2 /* space and caption*/ );
 	    fwidth = 0;
 	} else {
-	    if (uparm.spp > 1) {
-		fheight = pstate.usable_ypixels /
-		    (uparm.spp * maxROWS /* spp screens */
-		     + (uparm.spp - 1) /* spaces between screens */
-		     + 2 /* space and caption*/ );
-		fwidth = 0;
-	    } else {
-		fheight = 0;
-		fwidth = pstate.usable_xpixels / maxCOLS;
-	    }
+	    /*
+	     * Scale the width so a screen will fit the page horizonally.
+	     */
+	    fheight = 0;
+	    fwidth = pstate.usable_xpixels / maxCOLS;
 	}
-	pstate.font = CreateFont(
-		fheight,		/* height */
-		fwidth,			/* width */
-		0,			/* escapement */
-		0,			/* orientation */
-		FW_NORMAL,		/* weight */
-		FALSE,			/* italic */
-		FALSE,			/* underline */
-		FALSE,			/* strikeout */
-		DEFAULT_CHARSET,	/* character set */
-		OUT_OUTLINE_PRECIS,	/* output precision */
-		CLIP_DEFAULT_PRECIS,	/* clip precision */
-		DEFAULT_QUALITY,	/* quality */
-		FIXED_PITCH|FF_DONTCARE,/* pitch and family */
-		uparm.font_name);	/* face */
-	if (pstate.font == NULL) {
-		*fail = "CreateFont failed";
-		goto failed;
-	}
+    }
+    if (create_roman_font(dc, fheight, fwidth, fail) < 0) {
+	goto failed;
+    }
 
-	/* Measure a space to find out the size we got. */
-	SelectObject(dc, pstate.font);
-	if (!GetTextExtentPoint32(dc, " ", 1, &pstate.space_size)) {
-		*fail = "GetTextExtentSize failed";
-		goto failed;
-	}
-	vtrace("[gdi] space character is %dx%d logical units\n",
-		(int)pstate.space_size.cx, (int)pstate.space_size.cy);
-	pstate.usable_cols = pstate.usable_xpixels / pstate.space_size.cx;
-	pstate.usable_rows = pstate.usable_ypixels / pstate.space_size.cy;
-	vtrace("[gdi] usable area is %dx%d characters\n",
-		pstate.usable_cols, pstate.usable_rows);
-
-	/* Create a bold font that is the same size, if possible. */
-	pstate.bold_font = CreateFont(
-		pstate.space_size.cy,	/* height */
-		pstate.space_size.cx,	/* width */
-		0,			/* escapement */
-		0,			/* orientation */
-		FW_BOLD,		/* weight */
-		FALSE,			/* italic */
-		FALSE,			/* underline */
-		FALSE,			/* strikeout */
-		ANSI_CHARSET,		/* character set */
-		OUT_OUTLINE_PRECIS,	/* output precision */
-		CLIP_DEFAULT_PRECIS,	/* clip precision */
-		DEFAULT_QUALITY,	/* quality */
-		FIXED_PITCH|FF_DONTCARE,/* pitch and family */
-		uparm.font_name);	/* face */
-	if (pstate.bold_font == NULL) {
-		*fail = "CreateFont (bold) failed";
-		goto failed;
-	}
-
-	/* Create an underscore font that is the same size, if possible. */
-	pstate.underscore_font = CreateFont(
-		pstate.space_size.cy,	/* height */
-		pstate.space_size.cx,	/* width */
-		0,			/* escapement */
-		0,			/* orientation */
-		FW_NORMAL,		/* weight */
-		FALSE,			/* italic */
-		TRUE,			/* underline */
-		FALSE,			/* strikeout */
-		ANSI_CHARSET,		/* character set */
-		OUT_OUTLINE_PRECIS,	/* output precision */
-		CLIP_DEFAULT_PRECIS,	/* clip precision */
-		DEFAULT_QUALITY,	/* quality */
-		FIXED_PITCH|FF_DONTCARE,/* pitch and family */
-		uparm.font_name);	/* face */
-	if (pstate.underscore_font == NULL) {
-		*fail = "CreateFont (underscore) failed";
-		goto failed;
-	}
-
-	/* Create a bold, underscore font that is the same size, if possible. */
-	pstate.bold_underscore_font = CreateFont(
-		pstate.space_size.cy,	/* height */
-		pstate.space_size.cx,	/* width */
-		0,			/* escapement */
-		0,			/* orientation */
-		FW_BOLD,		/* weight */
-		FALSE,			/* italic */
-		TRUE,			/* underline */
-		FALSE,			/* strikeout */
-		ANSI_CHARSET,		/* character set */
-		OUT_OUTLINE_PRECIS,	/* output precision */
-		CLIP_DEFAULT_PRECIS,	/* clip precision */
-		DEFAULT_QUALITY,	/* quality */
-		FIXED_PITCH|FF_DONTCARE,/* pitch and family */
-		uparm.font_name);	/* face */
-	if (pstate.bold_underscore_font == NULL) {
-		*fail = "CreateFont (bold underscore) failed";
-		goto failed;
-	}
-
-	/* Create a caption font. */
-	pstate.caption_font = CreateFont(
-		pstate.space_size.cy,	/* height */
-		0,			/* width */
-		0,			/* escapement */
-		0,			/* orientation */
-		FW_NORMAL,		/* weight */
-		TRUE,			/* italic */
-		FALSE,			/* underline */
-		FALSE,			/* strikeout */
-		ANSI_CHARSET,		/* character set */
-		OUT_OUTLINE_PRECIS,	/* output precision */
-		CLIP_DEFAULT_PRECIS,	/* clip precision */
-		DEFAULT_QUALITY,	/* quality */
-		VARIABLE_PITCH|FF_DONTCARE,/* pitch and family */
-		"Times New Roman");	/* face */
-	if (pstate.bold_underscore_font == NULL) {
-		*fail = "CreateFont (bold underscore) failed";
-		goto failed;
-	}
-
-	/* Set up the manual spacing array. */
-	pstate.dx = Malloc(sizeof(INT) * maxCOLS);
-	for (i = 0; i < maxCOLS; i++) {
-		pstate.dx[i] = pstate.space_size.cx;
-	}
-
-	/* Fill in the document info. */
-	memset(&docinfo, '\0', sizeof(docinfo));
-	docinfo.cbSize = sizeof(docinfo);
-	docinfo.lpszDocName = "wc3270 screen";
-
-	/* Start the document. */
-	if (StartDoc(dc, &docinfo) <= 0) {
-		*fail = "StartDoc failed";
-		goto failed;
-	}
-
-	return GDI_STATUS_SUCCESS;
-
-failed:
-	/* Clean up what we can and return failure. */
-	if (pstate.font) {
+    /*
+     * If we computed the font size, see if the other dimension is too
+     * big. If it is, scale using the other dimension, which is guaranteed to
+     * make the original computed dimension no bigger.
+     *
+     * XXX: This needs more testing.
+     */
+    if (!uparm.font_size) {
+	if (fwidth == 0) {
+	    /*
+	     * We computed the height because spp > 1. See if the width
+	     * overflows.
+	     */
+	    if (pstate.space_size.cx * maxCOLS > pstate.usable_xpixels) {
+		vtrace("[gdi] font too wide, retrying\n");
 		DeleteObject(pstate.font);
 		pstate.font = NULL;
+
+		fheight = 0;
+		fwidth = pstate.usable_xpixels / maxCOLS;
+		if (create_roman_font(dc, fheight, fwidth, fail) < 0) {
+		    goto failed;
+		}
+	    }
+	} else if (fheight == 0) {
+	    /*
+	     * We computed the width (spp <= 1). See if the height
+	     * overflows.
+	     */
+	    if (pstate.space_size.cy * (maxROWS + 2) >
+		    pstate.usable_xpixels) {
+		vtrace("[gdi] font too high, retrying\n");
+		DeleteObject(pstate.font);
+		pstate.font = NULL;
+
+		fheight = pstate.usable_xpixels / (maxROWS + 2);
+		fwidth = 0;
+		if (create_roman_font(dc, fheight, fwidth, fail) < 0) {
+		    goto failed;
+		}
+	    }
 	}
-	if (pstate.bold_font) {
-		DeleteObject(pstate.bold_font);
-		pstate.bold_font = NULL;
-	}
-	if (pstate.underscore_font) {
-		DeleteObject(pstate.underscore_font);
-		pstate.underscore_font = NULL;
-	}
-	return GDI_STATUS_ERROR;
+    }
+
+    /* Create a bold font that is the same size, if possible. */
+    pstate.bold_font = CreateFont(
+	    pstate.space_size.cy,	/* height */
+	    pstate.space_size.cx,	/* width */
+	    0,			/* escapement */
+	    0,			/* orientation */
+	    FW_BOLD,		/* weight */
+	    FALSE,			/* italic */
+	    FALSE,			/* underline */
+	    FALSE,			/* strikeout */
+	    ANSI_CHARSET,		/* character set */
+	    OUT_OUTLINE_PRECIS,	/* output precision */
+	    CLIP_DEFAULT_PRECIS,	/* clip precision */
+	    DEFAULT_QUALITY,	/* quality */
+	    FIXED_PITCH|FF_DONTCARE,/* pitch and family */
+	    uparm.font_name);	/* face */
+    if (pstate.bold_font == NULL) {
+	*fail = "CreateFont (bold) failed";
+	goto failed;
+    }
+
+    /* Create an underscore font that is the same size, if possible. */
+    pstate.underscore_font = CreateFont(
+	    pstate.space_size.cy,	/* height */
+	    pstate.space_size.cx,	/* width */
+	    0,			/* escapement */
+	    0,			/* orientation */
+	    FW_NORMAL,		/* weight */
+	    FALSE,			/* italic */
+	    TRUE,			/* underline */
+	    FALSE,			/* strikeout */
+	    ANSI_CHARSET,		/* character set */
+	    OUT_OUTLINE_PRECIS,	/* output precision */
+	    CLIP_DEFAULT_PRECIS,	/* clip precision */
+	    DEFAULT_QUALITY,	/* quality */
+	    FIXED_PITCH|FF_DONTCARE,/* pitch and family */
+	    uparm.font_name);	/* face */
+    if (pstate.underscore_font == NULL) {
+	*fail = "CreateFont (underscore) failed";
+	goto failed;
+    }
+
+    /* Create a bold, underscore font that is the same size, if possible. */
+    pstate.bold_underscore_font = CreateFont(
+	    pstate.space_size.cy,	/* height */
+	    pstate.space_size.cx,	/* width */
+	    0,			/* escapement */
+	    0,			/* orientation */
+	    FW_BOLD,		/* weight */
+	    FALSE,			/* italic */
+	    TRUE,			/* underline */
+	    FALSE,			/* strikeout */
+	    ANSI_CHARSET,		/* character set */
+	    OUT_OUTLINE_PRECIS,	/* output precision */
+	    CLIP_DEFAULT_PRECIS,	/* clip precision */
+	    DEFAULT_QUALITY,	/* quality */
+	    FIXED_PITCH|FF_DONTCARE,/* pitch and family */
+	    uparm.font_name);	/* face */
+    if (pstate.bold_underscore_font == NULL) {
+	*fail = "CreateFont (bold underscore) failed";
+	goto failed;
+    }
+
+    /* Create a caption font. */
+    pstate.caption_font = CreateFont(
+	    pstate.space_size.cy,	/* height */
+	    0,			/* width */
+	    0,			/* escapement */
+	    0,			/* orientation */
+	    FW_NORMAL,		/* weight */
+	    TRUE,			/* italic */
+	    FALSE,			/* underline */
+	    FALSE,			/* strikeout */
+	    ANSI_CHARSET,		/* character set */
+	    OUT_OUTLINE_PRECIS,	/* output precision */
+	    CLIP_DEFAULT_PRECIS,	/* clip precision */
+	    DEFAULT_QUALITY,	/* quality */
+	    VARIABLE_PITCH|FF_DONTCARE,/* pitch and family */
+	    "Times New Roman");	/* face */
+    if (pstate.bold_underscore_font == NULL) {
+	*fail = "CreateFont (bold underscore) failed";
+	goto failed;
+    }
+
+    /* Set up the manual spacing array. */
+    pstate.dx = Malloc(sizeof(INT) * maxCOLS);
+    for (i = 0; i < maxCOLS; i++) {
+	pstate.dx[i] = pstate.space_size.cx;
+    }
+
+    /* Fill in the document info. */
+    memset(&docinfo, '\0', sizeof(docinfo));
+    docinfo.cbSize = sizeof(docinfo);
+    docinfo.lpszDocName = "wc3270 screen";
+
+    /* Start the document. */
+    if (StartDoc(dc, &docinfo) <= 0) {
+	*fail = "StartDoc failed";
+	goto failed;
+    }
+
+    return GDI_STATUS_SUCCESS;
+
+failed:
+    /* Clean up what we can and return failure. */
+    if (pstate.font) {
+	DeleteObject(pstate.font);
+	pstate.font = NULL;
+    }
+    if (pstate.bold_font) {
+	DeleteObject(pstate.bold_font);
+	pstate.bold_font = NULL;
+    }
+    if (pstate.underscore_font) {
+	DeleteObject(pstate.underscore_font);
+	pstate.underscore_font = NULL;
+    }
+    if (pstate.caption_font) {
+	DeleteObject(pstate.caption_font);
+	pstate.caption_font = NULL;
+    }
+    return GDI_STATUS_ERROR;
 }
 
 /*
@@ -737,6 +805,36 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 	    rc = -1;
 	    goto done;
 	}
+    }
+
+    /* Draw a line separating the screens. */
+    if (pstate.out_row) {
+	HPEN pen;
+
+	pen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
+	SelectObject(dc, pen);
+	status = MoveToEx(dc, 
+		pstate.hmargin_pixels - pchar.poffX,
+		pstate.vmargin_pixels +
+		    (pstate.out_row * pstate.space_size.cy) +
+		    (pstate.space_size.cy / 2) - pchar.poffY,
+		    NULL);
+	if (status == 0) {
+	    *fail = "MoveToEx failed";
+	    rc = -1;
+	    goto done;
+	}
+	status = LineTo(dc,
+		pstate.hmargin_pixels - pchar.poffX + pstate.usable_xpixels,
+		pstate.vmargin_pixels +
+		    (pstate.out_row * pstate.space_size.cy) +
+		    (pstate.space_size.cy / 2) - pchar.poffY);
+	if (status == 0) {
+	    *fail = "LineTo failed";
+	    rc = -1;
+	    goto done;
+	}
+	DeleteObject(pen);
     }
 
     /* Now dump out a screen's worth. */
