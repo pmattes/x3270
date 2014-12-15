@@ -63,36 +63,36 @@
 /* Globals */
 
 /* Statics */
-typedef struct {			/* user parameters: */
-	int orientation;		/*  orientation */
-	double hmargin;			/*  horizontal margin in inches */
-	double vmargin;			/*  vertical margin in inches */
-	const char *font_name;		/*  font name */
-	int font_size;			/*  font size in points */
-	int spp;			/*  screens per page */
-	Boolean done;			/* done fetching values */
+typedef struct {		/* user parameters: */
+    int orientation;		/*  orientation */
+    double hmargin;		/*  horizontal margin in inches */
+    double vmargin;		/*  vertical margin in inches */
+    const char *font_name;	/*  font name */
+    int font_size;		/*  font size in points */
+    int spp;			/*  screens per page */
+    Boolean done;		/* done fetching values */
 } uparm_t;
 static uparm_t uparm;
-static struct {				/* printer characteristics: */
-	int ppiX, ppiY;			/*  points per inch */
-	int poffX, poffY;		/*  left, top physical offsets */
-	int horzres, vertres;		/*  resolution (usable area) */
-	int pwidth, pheight;		/*  physical width, height */
+static struct {			/* printer characteristics: */
+    int ppiX, ppiY;		/*  points per inch */
+    int poffX, poffY;		/*  left, top physical offsets */
+    int horzres, vertres;	/*  resolution (usable area) */
+    int pwidth, pheight;	/*  physical width, height */
 } pchar;
-static struct {				/* printer state */
-	char *caption;			/*  caption */
-	int out_row;			/*  next row to print to */
-	int screens;			/*  number of screens on current page */
-	PRINTDLG dlg;			/*  Windows print dialog */
-	FLOAT xptscale, yptscale;	/*  x, y point-to-LU scaling factors */
-	int hmargin_pixels, vmargin_pixels; /*  margins, in pixels */
-	int usable_xpixels, usable_ypixels;/*  usable area (pixels) */
-	int usable_cols, usable_rows;	/*  usable area (chars) */
-	HFONT font, bold_font, underscore_font, bold_underscore_font;
-	HFONT caption_font;
-					/*  fonts */
-	SIZE space_size;		/*  size of a space character */
-	INT *dx;			/*  spacing array */
+static struct {			/* printer state */
+    char *caption;		/*  caption */
+    int out_row;		/*  next row to print to */
+    int screens;		/*  number of screens on current page */
+    PRINTDLG dlg;		/*  Windows print dialog */
+    FLOAT xptscale, yptscale;	/*  x, y point-to-LU scaling factors */
+    int hmargin_pixels, vmargin_pixels; /*  margins, in pixels */
+    int usable_xpixels, usable_ypixels;/*  usable area (pixels) */
+    int usable_cols, usable_rows;/*  usable area (chars) */
+    HFONT font, bold_font, underscore_font, bold_underscore_font;
+    HFONT caption_font;
+			        /*  fonts */
+    SIZE space_size;		/*  size of a space character */
+    INT *dx;			/*  spacing array */
 } pstate;
 
 /* Forward declarations. */
@@ -112,105 +112,105 @@ static BOOL get_printer_device(const char *printer_name, HGLOBAL *pdevnames,
 gdi_status_t
 gdi_print_start(const char *printer_name)
 {
-	const char *fail = "";
+    const char *fail = "";
 
-	if (!uparm.done) {
-		/* Set the defaults. */
-		uparm.orientation = 0;
-		uparm.hmargin = 0.5;
-		uparm.vmargin = 0.5;
-		uparm.font_name = NULL;
-		uparm.font_size = 0; /* auto */
-		uparm.spp = 1;
+    if (!uparm.done) {
+	/* Set the defaults. */
+	uparm.orientation = 0;
+	uparm.hmargin = 0.5;
+	uparm.vmargin = 0.5;
+	uparm.font_name = NULL;
+	uparm.font_size = 0; /* auto */
+	uparm.spp = 1;
 
-		/* Gather up the parameters. */
-		gdi_get_params(&uparm);
+	/* Gather up the parameters. */
+	gdi_get_params(&uparm);
 
-		/* Don't do this again. */
-		uparm.done = True;
-	}
+	/* Don't do this again. */
+	uparm.done = True;
+    }
 
-	/* Initialize the printer and pop up the dialog. */
-	switch (gdi_init(printer_name, &fail)) {
-	case GDI_STATUS_SUCCESS:
-		vtrace("[gdi] initialized\n");
-		break;
-	case GDI_STATUS_ERROR:
-		popup_an_error("Printer initialization error: %s", fail);
-		return GDI_STATUS_ERROR;
-	case GDI_STATUS_CANCEL:
-		vtrace("[gdi] canceled\n");
-		return GDI_STATUS_CANCEL;
-	}
+    /* Initialize the printer and pop up the dialog. */
+    switch (gdi_init(printer_name, &fail)) {
+    case GDI_STATUS_SUCCESS:
+	vtrace("[gdi] initialized\n");
+	break;
+    case GDI_STATUS_ERROR:
+	popup_an_error("Printer initialization error: %s", fail);
+	return GDI_STATUS_ERROR;
+    case GDI_STATUS_CANCEL:
+	vtrace("[gdi] canceled\n");
+	return GDI_STATUS_CANCEL;
+    }
 
-	return GDI_STATUS_SUCCESS;
+    return GDI_STATUS_SUCCESS;
 }
 
 /* Finish printing to a GDI printer. */
 gdi_status_t
 gdi_print_finish(FILE *f, const char *caption)
 {
-	size_t nr;
-	struct ea *ea_tmp;
-	gdi_header_t h;
-	const char *fail = "";
+    size_t nr;
+    struct ea *ea_tmp;
+    gdi_header_t h;
+    const char *fail = "";
 
-	/* Save the caption. */
-	if (caption != NULL) {
-		Replace(pstate.caption, NewString(caption));
-	} else {
-		Replace(pstate.caption, NULL);
+    /* Save the caption. */
+    if (caption != NULL) {
+	Replace(pstate.caption, NewString(caption));
+    } else {
+	Replace(pstate.caption, NULL);
+    }
+
+    /* Allocate the buffer. */
+    ea_tmp = Malloc((((maxROWS * maxCOLS) + 1) * sizeof(struct ea)));
+
+    /* Set up the fake fa in location -1. */
+    memset(&ea_tmp[0], '\0', sizeof(struct ea));
+    ea_tmp[0].fa = FA_PRINTABLE | FA_MODIFY;
+
+    /* Rewind the file. */
+    rewind(f);
+
+    /* Read it back. */
+    while ((nr = fread(&h, sizeof(gdi_header_t), 1, f)) == 1) {
+	/* Check the signature. */
+	if (h.signature != GDI_SIGNATURE) {
+	    popup_an_error("Corrupt temporary file (signature)");
+	    goto abort;
 	}
 
-	/* Allocate the buffer. */
-	ea_tmp = Malloc((((maxROWS * maxCOLS) + 1) * sizeof(struct ea)));
-
-	/* Set up the fake fa in location -1. */
-	memset(&ea_tmp[0], '\0', sizeof(struct ea));
-	ea_tmp[0].fa = FA_PRINTABLE | FA_MODIFY;
-
-	/* Rewind the file. */
-	rewind(f);
-
-	/* Read it back. */
-	while ((nr = fread(&h, sizeof(gdi_header_t), 1, f)) == 1) {
-		/* Check the signature. */
-		if (h.signature != GDI_SIGNATURE) {
-			popup_an_error("Corrupt temporary file (signature)");
-			goto abort;
-		}
-
-		/* Check the screen dimensions. */
-		if (h.rows > maxROWS || h.cols > maxCOLS) {
-			popup_an_error("Corrupt temporary file (screen size)");
-			goto abort;
-		}
-
-		/* Read the screen image in. */
-		if (fread(ea_tmp + 1, sizeof(struct ea), h.rows * h.cols, f) !=
-			    h.rows * h.cols) {
-			popup_an_error("Truncated temporary file");
-			goto abort;
-		}
-
-		/* Process it. */
-		if (gdi_screenful(ea_tmp + 1, h.rows, h.cols, &fail) < 0) {
-			popup_an_error("Printing error: %s", fail);
-			goto abort;
-		}
+	/* Check the screen dimensions. */
+	if (h.rows > maxROWS || h.cols > maxCOLS) {
+	    popup_an_error("Corrupt temporary file (screen size)");
+	    goto abort;
 	}
-	if (gdi_done(&fail) < 0) {
-		popup_an_error("Final printing error: %s", fail);
+
+	/* Read the screen image in. */
+	if (fread(ea_tmp + 1, sizeof(struct ea), h.rows * h.cols, f) !=
+		    h.rows * h.cols) {
+	    popup_an_error("Truncated temporary file");
+	    goto abort;
+	}
+
+	/* Process it. */
+	if (gdi_screenful(ea_tmp + 1, h.rows, h.cols, &fail) < 0) {
+		popup_an_error("Printing error: %s", fail);
 		goto abort;
 	}
-	Free(ea_tmp);
+    }
+    if (gdi_done(&fail) < 0) {
+	popup_an_error("Final printing error: %s", fail);
+	goto abort;
+    }
+    Free(ea_tmp);
 
-	return GDI_STATUS_SUCCESS;
+    return GDI_STATUS_SUCCESS;
 
 abort:
-	Free(ea_tmp);
-	gdi_abort();
-	return GDI_STATUS_ERROR;
+    Free(ea_tmp);
+    gdi_abort();
+    return GDI_STATUS_ERROR;
 }
 
 /*
@@ -219,32 +219,32 @@ abort:
 static double
 parse_margin(char *s, const char *what)
 {
-	double d;
-	char *nextp;
+    double d;
+    char *nextp;
 
-	d = strtod(s, &nextp);
-	if (d > 0.0) {
-		while (*nextp == ' ') {
-			nextp++;
-		}
-		if (*nextp == '\0' || *nextp == '"' ||
-			!strcasecmp(nextp, "in") ||
-			!strcasecmp(nextp, "inch") ||
-			!strcasecmp(nextp, "inches")) {
-			/* Do nothing. */
-		} else if (!strcasecmp(nextp, "mm")) {
-			d /= 25.4;
-		} else if (!strcasecmp(nextp, "cm")) {
-			d /= 2.54;
-		} else {
-			vtrace("gdi: unknown %s unit '%s'\n",
-				what, nextp);
-		}
-	} else {
-	    vtrace("gdi: invalid %s '%s'\n", what, s);
-	    return 0;
+    d = strtod(s, &nextp);
+    if (d > 0.0) {
+	while (*nextp == ' ') {
+	    nextp++;
 	}
-	return d;
+	if (*nextp == '\0' || *nextp == '"' ||
+		!strcasecmp(nextp, "in") ||
+		!strcasecmp(nextp, "inch") ||
+		!strcasecmp(nextp, "inches")) {
+	    /* Do nothing. */
+	} else if (!strcasecmp(nextp, "mm")) {
+	    d /= 25.4;
+	} else if (!strcasecmp(nextp, "cm")) {
+	    d /= 2.54;
+	} else {
+	    vtrace("gdi: unknown %s unit '%s'\n",
+		    what, nextp);
+	}
+    } else {
+	vtrace("gdi: invalid %s '%s'\n", what, s);
+	return 0;
+    }
+    return d;
 }
 
 /*
@@ -253,66 +253,88 @@ parse_margin(char *s, const char *what)
 static void
 gdi_get_params(uparm_t *up)
 {
-	char *s;
-	double d;
-	unsigned long l;
-	char *nextp;
+    char *s;
+    double d;
+    unsigned long l;
+    char *nextp;
 
-	/* Orientation. */
-	if ((s = get_resource(ResPrintTextOrientation)) != NULL) {
-		if (!strcasecmp(s, "portrait")) {
-			up->orientation = DMORIENT_PORTRAIT;
-		} else if (!strcasecmp(s, "landscape")) {
-			up->orientation = DMORIENT_LANDSCAPE;
-		} else {
-			vtrace("gdi: unknown orientation '%s'\n", s);
-		}
+    /* Orientation. */
+    if ((s = get_resource(ResPrintTextOrientation)) != NULL) {
+	if (!strcasecmp(s, "portrait")) {
+	    up->orientation = DMORIENT_PORTRAIT;
+	} else if (!strcasecmp(s, "landscape")) {
+	    up->orientation = DMORIENT_LANDSCAPE;
+	} else {
+	    vtrace("gdi: unknown orientation '%s'\n", s);
 	}
+    }
 
-	/* Horizontal margin. */
-	if ((s = get_resource(ResPrintTextHorizontalMargin)) != NULL) {
-		d = parse_margin(s, ResPrintTextHorizontalMargin);
-		if (d > 0) {
-			up->hmargin = d;
-		}
+    /* Horizontal margin. */
+    if ((s = get_resource(ResPrintTextHorizontalMargin)) != NULL) {
+	d = parse_margin(s, ResPrintTextHorizontalMargin);
+	if (d > 0) {
+	    up->hmargin = d;
 	}
+    }
 
-	/* Vertical margin. */
-	if ((s = get_resource(ResPrintTextVerticalMargin)) != NULL) {
-		d = parse_margin(s, ResPrintTextVerticalMargin);
-		if (d > 0) {
-			up->vmargin = d;
-		}
+    /* Vertical margin. */
+    if ((s = get_resource(ResPrintTextVerticalMargin)) != NULL) {
+	d = parse_margin(s, ResPrintTextVerticalMargin);
+	if (d > 0) {
+	    up->vmargin = d;
 	}
+    }
 
-	/* Font name. */
-	if ((s = get_resource(ResPrintTextFont)) != NULL) {
-		up->font_name = s;
-	}
+    /* Font name. */
+    if ((s = get_resource(ResPrintTextFont)) != NULL) {
+	up->font_name = s;
+    }
 
-	/* Font size. */
-	if ((s = get_resource(ResPrintTextSize)) != NULL) {
-		if (strcasecmp(s, "auto")) {
-			l = strtoul(s, &nextp, 0);
-			if (l > 0) {
-				up->font_size = (int)l;
-			} else {
-				vtrace("gdi: invalid %s '%s'\n",
-					ResPrintTextSize, s);
-			}
-		}
+    /* Font size. */
+    if ((s = get_resource(ResPrintTextSize)) != NULL) {
+	if (strcasecmp(s, "auto")) {
+	    l = strtoul(s, &nextp, 0);
+	    if (l > 0) {
+		up->font_size = (int)l;
+	    } else {
+		vtrace("gdi: invalid %s '%s'\n", ResPrintTextSize, s);
+	    }
 	}
+    }
 
-	/* Screens per page. */
-	if ((s = get_resource(ResPrintTextScreensPerPage)) != NULL) {
-		l = strtoul(s, &nextp, 0);
-		if (l > 0) {
-			up->spp = (int)l;
-		} else {
-			vtrace("gdi: invalid %s '%s'\n",
-				ResPrintTextScreensPerPage, s);
-		}
+    /* Screens per page. */
+    if ((s = get_resource(ResPrintTextScreensPerPage)) != NULL) {
+	l = strtoul(s, &nextp, 0);
+	if (l > 0) {
+	    up->spp = (int)l;
+	} else {
+	    vtrace("gdi: invalid %s '%s'\n", ResPrintTextScreensPerPage, s);
 	}
+    }
+}
+
+/*
+ * Clean up fonts.
+ */
+static void
+cleanup_fonts(void)
+{
+    if (pstate.font) {
+	DeleteObject(pstate.font);
+	pstate.font = NULL;
+    }
+    if (pstate.bold_font) {
+	DeleteObject(pstate.bold_font);
+	pstate.bold_font = NULL;
+    }
+    if (pstate.underscore_font) {
+	DeleteObject(pstate.underscore_font);
+	pstate.underscore_font = NULL;
+    }
+    if (pstate.caption_font) {
+	DeleteObject(pstate.caption_font);
+	pstate.caption_font = NULL;
+    }
 }
 
 /*
@@ -724,22 +746,7 @@ gdi_init(const char *printer_name, const char **fail)
 
 failed:
     /* Clean up what we can and return failure. */
-    if (pstate.font) {
-	DeleteObject(pstate.font);
-	pstate.font = NULL;
-    }
-    if (pstate.bold_font) {
-	DeleteObject(pstate.bold_font);
-	pstate.bold_font = NULL;
-    }
-    if (pstate.underscore_font) {
-	DeleteObject(pstate.underscore_font);
-	pstate.underscore_font = NULL;
-    }
-    if (pstate.caption_font) {
-	DeleteObject(pstate.caption_font);
-	pstate.caption_font = NULL;
-    }
+    cleanup_fonts();
     return GDI_STATUS_ERROR;
 }
 
@@ -1043,21 +1050,23 @@ done:
 static int
 gdi_done(const char **fail)
 {
-	int rc = 0;
+    int rc = 0;
 
-	if (pstate.out_row) {
-		if (EndPage(pstate.dlg.hDC) <= 0) {
-			*fail = "EndPage failed";
-			rc = -1;
-		}
-		pstate.out_row = 0;
+    if (pstate.out_row) {
+	if (EndPage(pstate.dlg.hDC) <= 0) {
+	    *fail = "EndPage failed";
+	    rc = -1;
 	}
-	if (EndDoc(pstate.dlg.hDC) <= 0) {
-		*fail = "EndDoc failed";
-		rc = -1;
-	}
+	pstate.out_row = 0;
+    }
+    if (EndDoc(pstate.dlg.hDC) <= 0) {
+	*fail = "EndDoc failed";
+	rc = -1;
+    }
 
-	return rc;
+    cleanup_fonts();
+
+    return rc;
 }
 
 /*
@@ -1066,11 +1075,13 @@ gdi_done(const char **fail)
 static void
 gdi_abort(void)
 {
-	if (pstate.out_row) {
-		(void) EndPage(pstate.dlg.hDC);
-		pstate.out_row = 0;
-	}
-	(void) EndDoc(pstate.dlg.hDC);
+    if (pstate.out_row) {
+	(void) EndPage(pstate.dlg.hDC);
+	pstate.out_row = 0;
+    }
+    (void) EndDoc(pstate.dlg.hDC);
+
+    cleanup_fonts();
 }
 
 /*
