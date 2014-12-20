@@ -416,10 +416,68 @@ print_window_done(int status)
 static void
 snap_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
-	if (!print_window_command)
-		return;
-	XSync(display, 0);
-	print_window_done(system(print_window_command));
+    if (!print_window_command) {
+	return;
+    }
+    trace_event("%s: Running '%s'\n", action_name(PrintWindow_action),
+	    print_window_command);
+    XSync(display, 0);
+    print_window_done(system(print_window_command));
+}
+
+/* Expand the window print command. */
+static char *
+expand_print_window_command(const char *command)
+{
+    char *window_id;
+    size_t malloc_len;
+    const char *s;
+    char c;
+    char *xcommand;
+    char *xs;
+#   define WINDOW	"%WINDOW%"
+#   define WINDOW_SIZE	(sizeof(WINDOW) - 1)
+
+    /* Pre-expand the Window ID so we know how long it is. */
+    window_id = xs_buffer("%lu", (unsigned long)XtWindow(toplevel));
+
+    /*
+     * Figure out how long the translated command will be.
+     * %WINDOW% becomes the window ID.
+     * Other '%' characters are doubled (quoted).
+     */
+    malloc_len = strlen(command);
+    s = command;
+    while (c = *s) {
+	if (!strncasecmp(s, WINDOW, WINDOW_SIZE)) {
+	    s += WINDOW_SIZE;
+	    malloc_len -= WINDOW_SIZE;
+	    malloc_len += strlen(window_id);
+	    continue;
+	} else if (c == '%') {
+	    malloc_len++;
+	}
+	s++;
+    }
+
+    /* Expand the command. */
+    xs = xcommand = XtMalloc(malloc_len + 1);
+    s = command;
+    while (c = *s) {
+	if (!strncasecmp(s, WINDOW, WINDOW_SIZE)) {
+	    strcpy(xs, window_id);
+	    xs += strlen(window_id);
+	    s += WINDOW_SIZE;
+	    continue;
+	} else if (c == '%') {
+	    *xs++ = c;
+	}
+	*xs++ = c;
+	s++;
+    }
+    *xs = '\0';
+    XtFree(window_id);
+    return xcommand;
 }
 
 /* Callback for "OK" button on print window popup. */
@@ -427,10 +485,19 @@ static void
 print_window_callback(Widget w _is_unused, XtPointer client_data,
     XtPointer call_data _is_unused)
 {
-	print_window_command = XawDialogGetValueString((Widget)client_data);
-	XtPopdown(print_window_shell);
-	if (print_window_command)
-		(void) XtAppAddTimeOut(appcontext, 1000, snap_it, 0);
+    char *cmd;
+
+    cmd = XawDialogGetValueString((Widget)client_data);
+
+    XtPopdown(print_window_shell);
+
+    if (cmd) {
+	/* Expand the command. */
+	Replace(print_window_command, expand_print_window_command(cmd));
+
+	/* In 1 second, snap the window. */
+	(void) XtAppAddTimeOut(appcontext, 1000, snap_it, 0);
+    }
 }
 
 /* Print the contents of the screen as a bitmap. */
@@ -438,39 +505,54 @@ void
 PrintWindow_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
-	char *filter = get_resource(ResPrintWindowCommand);
-	char *fb = XtMalloc(strlen(filter) + 16);
-	char *xfb = fb;
-	Boolean secure = appres.secure;
+    char *command;
+    Boolean secure = appres.secure;
 
-	action_debug(PrintWindow_action, event, params, num_params);
-	if (*num_params > 0)
-		filter = params[0];
-	if (*num_params > 1)
-		popup_an_error("%s: extra arguments ignored",
-		    action_name(PrintWindow_action));
-	if (filter == CN) {
-		popup_an_error("%s: no %s defined",
-		    action_name(PrintWindow_action), ResPrintWindowCommand);
-		return;
+    action_debug(PrintWindow_action, event, params, num_params);
+
+    /* Figure out what the command is. */
+    command = get_resource(ResPrintWindowCommand);
+    if (*num_params > 0) {
+	command = params[0];
+    }
+    if (*num_params > 1) {
+	popup_an_error("%s: extra arguments ignored",
+		action_name(PrintWindow_action));
+    }
+    if (command == NULL || !*command) {
+	popup_an_error("%s: no %s defined", action_name(PrintWindow_action),
+		ResPrintWindowCommand);
+	return;
+    }
+
+    /* Check for secure mode. */
+    if (command[0] == '@') {
+	secure = True;
+	if (!*++command) {
+	    popup_an_error("%s: Invalid %s", action_name(PrintWindow_action),
+		    ResPrintWindowCommand);
+	    return;
 	}
-	(void) sprintf(fb, filter, XtWindow(toplevel));
-	if (fb[0] == '@') {
-		secure = True;
-		xfb = fb + 1;
-	}
-	if (secure) {
-		print_window_done(system(xfb));
-		Free(fb);
-		return;
-	}
-	if (print_window_shell == NULL)
-		print_window_shell = create_form_popup("printWindow",
-		    print_window_callback, (XtCallbackProc)NULL, FORM_AS_IS);
-	XtVaSetValues(XtNameToWidget(print_window_shell, ObjDialog),
-	    XtNvalue, fb,
-	    NULL);
-	popup_popup(print_window_shell, XtGrabExclusive);
+    }
+    if (secure) {
+	char *xcommand = expand_print_window_command(command);
+
+	trace_event("%s: Running '%s'\n", action_name(PrintWindow_action),
+		xcommand);
+	print_window_done(system(xcommand));
+	XtFree(xcommand);
+	return;
+    }
+
+    /* Pop up the dialog. */
+    if (print_window_shell == NULL) {
+	print_window_shell = create_form_popup("printWindow",
+		print_window_callback, NULL, FORM_AS_IS);
+    }
+    XtVaSetValues(XtNameToWidget(print_window_shell, ObjDialog),
+	XtNvalue, command,
+	NULL);
+    popup_popup(print_window_shell, XtGrabExclusive);
 }
 
 # if defined(X3270_MENUS) /*[*/

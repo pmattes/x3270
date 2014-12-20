@@ -1052,7 +1052,7 @@ screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 			Free(tfn);
 			return False;
 		}
-		screentracef = fdopen(fd, "w");
+		screentracef = fdopen(fd, (ptype == P_GDI)? "wb+": "w");
 #endif /*]*/
 	}
 	if (screentracef == (FILE *)NULL) {
