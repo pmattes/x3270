@@ -223,7 +223,7 @@ cc_handler(DWORD type)
 		if (escaped)
 		    	return TRUE;
 		action = lookup_key(0x03, LEFT_CTRL_PRESSED);
-		if (action != CN) {
+		if (action != NULL) {
 			if (strcmp(action, "[ignore]"))
 				push_keymap_action(action);
 		} else {
@@ -231,7 +231,7 @@ cc_handler(DWORD type)
 			Cardinal one;
 
 			params[0] = "0x03";
-			params[1] = CN;
+			params[1] = NULL;
 			one = 1;
 			Key_action(NULL, NULL, params, &one);
 		}
@@ -1097,7 +1097,7 @@ screen_init(void)
 	appres.mouse = True;
 
 	/* Disallow altscreen/defscreen. */
-	if ((appres.altscreen != CN) || (appres.defscreen != CN)) {
+	if ((appres.altscreen != NULL) || (appres.defscreen != NULL)) {
 		(void) fprintf(stderr, "altscreen/defscreen not supported\n");
 		x3270_exit(1);
 	}
@@ -1202,9 +1202,9 @@ screen_init(void)
 	scroll_init();
 
 	/* Set the window label. */
-	if (appres.title != CN)
+	if (appres.title != NULL)
 		screen_title(appres.title);
-	else if (profile_name != CN)
+	else if (profile_name != NULL)
 	    	screen_title(profile_name);
 	else
 		screen_title("wc3270");
@@ -1258,7 +1258,7 @@ ts_value(const char *s, enum ts *tsp)
 {
 	*tsp = TS_AUTO;
 
-	if (s != CN && s[0]) {
+	if (s != NULL && s[0]) {
 		int sl = strlen(s);
 
 		if (!strncasecmp(s, "true", sl))
@@ -1297,9 +1297,9 @@ init_user_attribute_color(int *a, const char *resname)
 	char *ptr;
 	int i;
 
-	if ((r = get_resource(resname)) == CN)
+	if ((r = get_resource(resname)) == NULL)
 		return;
-	for (i = 0; host_color[i].name != CN; i++) {
+	for (i = 0; host_color[i].name != NULL; i++) {
 	    	if (!strcasecmp(r, host_color[i].name)) {
 		    	*a = host_color[i].index;
 			return;
@@ -1395,9 +1395,9 @@ init_user_color(const char *name, int ix)
 	char *ptr;
 
 	r = get_fresource("%s%s", ResConsoleColorForHostColor, name);
-	if (r == CN)
+	if (r == NULL)
 		r = get_fresource("%s%d", ResConsoleColorForHostColor, ix);
-	if (r == CN)
+	if (r == NULL)
 	    	return;
 
 	l = strtoul(r, &ptr, 0);
@@ -1415,7 +1415,7 @@ init_user_colors(void)
 {
 	int i;
 
-	for (i = 0; host_color[i].name != CN; i++) {
+	for (i = 0; host_color[i].name != NULL; i++) {
 	    	init_user_color(host_color[i].name, host_color[i].index);
 	}
 
@@ -1848,7 +1848,7 @@ decode_state(int state, Boolean limited, const char *skip)
 	char *space = "";
 
 	*s = '\0';
-	if (skip == CN)
+	if (skip == NULL)
 	    	skip = "";
 	if (state & LEFT_CTRL_PRESSED) {
 		state &= ~LEFT_CTRL_PRESSED;
@@ -2046,7 +2046,7 @@ kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 			ir.Event.KeyEvent.uChar.UnicodeChar,
 			(int)ir.Event.KeyEvent.dwControlKeyState,
 			decode_state(ir.Event.KeyEvent.dwControlKeyState,
-			    False, CN));
+			    False, NULL));
 		if (!ir.Event.KeyEvent.bKeyDown) {
 			return;
 		}
@@ -2186,7 +2186,7 @@ kybd_input2(INPUT_RECORD *ir)
 	if (xk) {
 	    	trace_as_keymap(xk, &ir->Event.KeyEvent);
 		action = lookup_key(xk, ir->Event.KeyEvent.dwControlKeyState);
-		if (action != CN) {
+		if (action != NULL) {
 			if (strcmp(action, "[ignore]"))
 				push_keymap_action(action);
 			return;
@@ -2200,22 +2200,22 @@ kybd_input2(INPUT_RECORD *ir)
 	/* These first cases apply to both 3270 and NVT modes. */
 	switch (k) {
 	case VK_ESCAPE:
-		action_internal(Escape_action, IA_DEFAULT, CN, CN);
+		action_internal(Escape_action, IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_UP:
-		action_internal(Up_action, IA_DEFAULT, CN, CN);
+		action_internal(Up_action, IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_DOWN:
-		action_internal(Down_action, IA_DEFAULT, CN, CN);
+		action_internal(Down_action, IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_LEFT:
-		action_internal(Left_action, IA_DEFAULT, CN, CN);
+		action_internal(Left_action, IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_RIGHT:
-		action_internal(Right_action, IA_DEFAULT, CN, CN);
+		action_internal(Right_action, IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_HOME:
-		action_internal(Home_action, IA_DEFAULT, CN, CN);
+		action_internal(Home_action, IA_DEFAULT, NULL, NULL);
 		return;
 	default:
 		break;
@@ -2225,16 +2225,16 @@ kybd_input2(INPUT_RECORD *ir)
 	if (IN_3270) switch(k) {
 	/* These cases apply only to 3270 mode. */
 	case VK_TAB:
-		action_internal(Tab_action, IA_DEFAULT, CN, CN);
+		action_internal(Tab_action, IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_DELETE:
-		action_internal(Delete_action, IA_DEFAULT, CN, CN);
+		action_internal(Delete_action, IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_BACK:
-		action_internal(BackSpace_action, IA_DEFAULT, CN, CN);
+		action_internal(BackSpace_action, IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_RETURN:
-		action_internal(Enter_action, IA_DEFAULT, CN, CN);
+		action_internal(Enter_action, IA_DEFAULT, NULL, NULL);
 		return;
 	default:
 		break;
@@ -2243,7 +2243,7 @@ kybd_input2(INPUT_RECORD *ir)
 	/* Catch PF keys. */
 	if (k >= VK_F1 && k <= VK_F24) {
 		(void) sprintf(buf, "%d", k - VK_F1 + 1);
-		action_internal(PF_action, IA_DEFAULT, buf, CN);
+		action_internal(PF_action, IA_DEFAULT, buf, NULL);
 		return;
 	}
 
@@ -2256,7 +2256,7 @@ kybd_input2(INPUT_RECORD *ir)
 		(void) sprintf(ks, "U+%04x",
 			       ir->Event.KeyEvent.uChar.UnicodeChar);
 		params[0] = ks;
-		params[1] = CN;
+		params[1] = NULL;
 		one = 1;
 		Key_action(NULL, NULL, params, &one);
 	} else {
@@ -2709,7 +2709,7 @@ ring_bell(void)
 	} bell_mode = 0;
 
 	if (!(bell_mode & BELL_KNOWN)) {
-	    	if (appres.bell_mode != CN) {
+	    	if (appres.bell_mode != NULL) {
 			/*
 			 * New config: wc3270.bellMode
 			 * 		none		do nothing
@@ -2863,13 +2863,13 @@ relabel(Boolean ignored _is_unused)
 {
 	char *title;
 
-	if (appres.title != CN)
+	if (appres.title != NULL)
 	    	return;
 
 	if (PCONNECTED) {
 	    	char *hostname;
 
-		if (profile_name != CN)
+		if (profile_name != NULL)
 		    	hostname = profile_name;
 		else
 		    	hostname = reconnect_host;

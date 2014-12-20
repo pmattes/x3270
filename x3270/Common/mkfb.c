@@ -162,7 +162,7 @@ main(int argc, char *argv[])
 	int last_continue = 0;
 
 	/* Parse arguments. */
-	if ((me = strrchr(argv[0], '/')) != (char *)NULL)
+	if ((me = strrchr(argv[0], '/')) != NULL)
 		me++;
 	else
 		me = argv[0];
@@ -178,7 +178,7 @@ main(int argc, char *argv[])
 	    case 2:
 	    case 3:
 		if (strcmp(argv[1], "-")) {
-			if (freopen(argv[1], "r", stdin) == (FILE *)NULL) {
+			if (freopen(argv[1], "r", stdin) == NULL) {
 				perror(argv[1]);
 				exit(1);
 			}
@@ -194,7 +194,7 @@ main(int argc, char *argv[])
 	/* Do #ifdef, comment and whitespace processing first. */
 	u = mkfb_tmpfile();
 
-	while (fgets(buf, BUFSZ, stdin) != (char *)NULL) {
+	while (fgets(buf, BUFSZ, stdin) != NULL) {
 		char *s = buf;
 		int sl;
 		unsigned i;
@@ -498,7 +498,7 @@ main(int argc, char *argv[])
 					aix[i],
 			    xlno[i]);
 		}
-		fprintf(o, "\t(String)NULL\n};\n\n");
+		fprintf(o, "\tNULL\n};\n\n");
 
 		/* Emit some test code. */
 		fprintf(o, "%s", "#if defined(DEBUG) /*[*/\n\

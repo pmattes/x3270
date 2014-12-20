@@ -327,7 +327,7 @@ usage(const char *msg)
 	if (!strcmp(programname, "tcl3270"))
 		sn = " [scriptname]";
 
-	if (msg != CN)
+	if (msg != NULL)
 		fprintf(stderr, "%s\n", msg);
 	fprintf(stderr, "Usage: %s%s [tcl3270-options] [host] [-- script-args]\n"
 "       <host> is [ps:][LUname@]hostname[:port]\n",
@@ -393,13 +393,13 @@ main_connect(Boolean ignored)
 static int
 tcl3270_main(int argc, const char *argv[])
 {
-	const char	*cl_hostname = CN;
+	const char	*cl_hostname = NULL;
 
 	argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
 	if (charset_init(appres.charset) != CS_OKAY) {
 		xs_warning("Cannot find charset \"%s\"", appres.charset);
-		(void) charset_init(CN);
+		(void) charset_init(NULL);
 	}
 	model_init();
 	ctlr_init(-1);
@@ -422,7 +422,7 @@ tcl3270_main(int argc, const char *argv[])
 #endif /*]*/
 
 	/* Connect to the host, and wait for negotiation to complete. */
-	if (cl_hostname != CN) {
+	if (cl_hostname != NULL) {
 		action = NewString("[initial connection]");
 		if (host_connect(cl_hostname) < 0)
 			exit(1);
@@ -551,7 +551,7 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	/* Set up more ugly global variables and run the action. */
 	ia_cause = IA_SCRIPT;
 	cmd_ret = TCL_OK;
-	(*actions[i].proc)((Widget)NULL, (XEvent *)NULL, argv, &count);
+	(*actions[i].proc)(NULL, NULL, argv, &count);
 
 	/* Set implicit wait state. */
 	if (ft_state != FT_NONE) {
@@ -618,7 +618,7 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 		s = Tcl_GetStringResult(interp);
 		vtrace("Completed %s (%s)", action,
 			(cmd_ret == TCL_OK) ? "ok" : "error");
-		if (s != CN && *s) {
+		if (s != NULL && *s) {
 			char buf[1024];
 
 			strncpy(s_trunc, s, TRUNC_LEN);
@@ -1596,14 +1596,14 @@ Query_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 		{ "ScreenCurSize", ctlr_query_cur_size, NULL },
 		{ "ScreenMaxSize", ctlr_query_max_size, NULL },
 		{ "Ssl", net_query_ssl, NULL },
-		{ CN, NULL }
+		{ NULL, NULL }
 	};
 	int i;
 
 	switch (*num_params) {
 	case 0:
 		q_obj = Tcl_NewListObj(0, NULL);
-		for (i = 0; queries[i].name != CN; i++) {
+		for (i = 0; queries[i].name != NULL; i++) {
 			t = (char *)(queries[i].fn? (*queries[i].fn)():
 						    queries[i].string);
 			if (t && *t)
@@ -1617,7 +1617,7 @@ Query_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 		Tcl_SetObjResult(sms_interp, q_obj);
 		break;
 	case 1:
-		for (i = 0; queries[i].name != CN; i++) {
+		for (i = 0; queries[i].name != NULL; i++) {
 			if (!strcasecmp(params[0], queries[i].name)) {
 				s = (char *)(queries[i].fn? (*queries[i].fn)():
 							    queries[i].string);

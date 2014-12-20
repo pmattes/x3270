@@ -126,7 +126,7 @@ parse_keydef(char **str, int *ccode, int *hint)
 	*str = s;
 
 	s = strstr(s, "<Key>");
-	if (s == CN)
+	if (s == NULL)
 		return PKE_MKEY;
 	ks = s + 5;
 	*s = '\0';
@@ -243,14 +243,14 @@ locate_keymap(const char *name, char **fullname, char **r)
 	int a;
 
 	/* Return nothing, to begin with. */
-	*fullname = CN;
-	*r = CN;
+	*fullname = NULL;
+	*r = NULL;
 
 	/* See if it's a resource. */
 	rs = get_fresource(ResKeymap ".%s", name);
 
 	/* If there's a plain version, return it. */
-	if (rs != CN) {
+	if (rs != NULL) {
 		*fullname = NewString(name);
 		*r = NewString(rs);
 		return 1;
@@ -426,8 +426,8 @@ static void
 read_one_keymap_internal(const char *name, const char *fn, const char *r0,
 	int flags, struct keymap ***nextkp)
 {
-	char *r = CN;			/* resource value */
-	char *r_copy = CN;		/* initial value of r */
+	char *r = NULL;			/* resource value */
+	char *r_copy = NULL;		/* initial value of r */
 	FILE *f = NULL;			/* resource file */
 	char buf[1024];			/* file read buffer */
 	int line = 0;			/* line number */
@@ -439,7 +439,7 @@ read_one_keymap_internal(const char *name, const char *fn, const char *r0,
 	char *xfn = NULL;
 
 	/* Find the resource or file. */
-	if (r0 != CN) {
+	if (r0 != NULL) {
 		r = r_copy = NewString(r0);
 		xfn = (char *)fn;
 	} else {
@@ -461,8 +461,8 @@ read_one_keymap_internal(const char *name, const char *fn, const char *r0,
 		}
 	}
 
-	while ((r != CN)? (rc = split_dresource(&r, &left, &right)):
-		          fgets(buf, sizeof(buf), f) != CN) {
+	while ((r != NULL)? (rc = split_dresource(&r, &left, &right)):
+		          fgets(buf, sizeof(buf), f) != NULL) {
 		char *s;
 		int ccode;
 		int pkr;
@@ -471,7 +471,7 @@ read_one_keymap_internal(const char *name, const char *fn, const char *r0,
 		line++;
 
 		/* Skip empty lines and comments. */
-		if (r == CN) {
+		if (r == NULL) {
 			s = buf;
 			while (ISREALLYSPACE(*s))
 				s++;
@@ -481,7 +481,7 @@ read_one_keymap_internal(const char *name, const char *fn, const char *r0,
 
 		/* Split. */
 		if (rc < 0 ||
-		    (r == CN && split_dresource(&s, &left, &right) < 0)) {
+		    (r == NULL && split_dresource(&s, &left, &right) < 0)) {
 			popup_an_error("Keymap %s, line %d: syntax error",
 			    name, line);
 			goto done;
@@ -877,7 +877,7 @@ static struct {
 	{ "PageDown",	VK_NEXT << 16 },
 	{ "Esc",	VK_ESCAPE << 16 },
 
-	{ CN, 0 }
+	{ NULL, 0 }
 };
 
 /* Look up a symbolic vkey name and return its code. */
@@ -886,7 +886,7 @@ lookup_ccode(const char *s)
 {
 	int i;
 
-	for (i = 0; vk_key[i].name != CN; i++) {
+	for (i = 0; vk_key[i].name != NULL; i++) {
 		if (!strcasecmp(s, vk_key[i].name))
 			return vk_key[i].code;
 	}
@@ -899,7 +899,7 @@ lookup_cname(unsigned long ccode, Boolean special_only)
 {
 	int i;
 
-	for (i = 0; vk_key[i].name != CN; i++) {
+	for (i = 0; vk_key[i].name != NULL; i++) {
 		if (ccode == vk_key[i].code)
 			return vk_key[i].name;
 	}
@@ -910,7 +910,7 @@ lookup_cname(unsigned long ccode, Boolean special_only)
 		cbuf[1] = '\0';
 		return cbuf;
 	}
-	return CN;
+	return NULL;
 }
 
 /* Read each of the keymaps specified by the keymap resource. */
@@ -928,9 +928,9 @@ keymap_init(void)
 	read_keymap("base");
 
 	/* Read the user-defined keymaps. */
-	if (appres.key_map != CN) {
+	if (appres.key_map != NULL) {
 		s = s0 = NewString(appres.key_map);
-		while ((comma = strchr(s, ',')) != CN) {
+		while ((comma = strchr(s, ',')) != NULL) {
 			*comma = '\0';
 			if (*s)
 				read_keymap(s);

@@ -184,7 +184,7 @@ find_fonts(char *charset, FILE *outfile, void (*progress)(int),
 
 	/* Get the list of fonts from the server. */
 	work.matches = XListFonts(display, "*", 32767, &work.count);
-	if (work.matches == (char **)NULL) {
+	if (work.matches == NULL) {
 		if (verbose)
 			printf("XListFonts returned nothing\n");
 		return False;
@@ -285,7 +285,7 @@ search(char *charset, char **matches, XFontStruct **f, int count, FILE *outfile)
 		if (!charset_matches(charset, font_registry, font_encoding,
 					mapped_charset)) {
 			if (verbose) {
-				if (mapped_charset != CN)
+				if (mapped_charset != NULL)
 					printf("%s", mapped_charset);
 				else
 					printf("%s-%s", font_registry,

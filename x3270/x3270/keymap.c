@@ -62,12 +62,12 @@
 #define Res3270		"3270"
 
 Boolean keymap_changed = False;
-struct trans_list *trans_list = (struct trans_list *)NULL;
+struct trans_list *trans_list = NULL;
 static struct trans_list **last_trans = &trans_list;
 static struct trans_list *tkm_last;
 struct trans_list *temp_keymaps;	/* temporary keymap list */
-char *keymap_trace = CN;
-static char *last_keymap = CN;
+char *keymap_trace = NULL;
+static char *last_keymap = NULL;
 static Boolean last_nvt = False;
 static Boolean last_3270 = False;
 
@@ -106,7 +106,7 @@ static char *pathname(char *k);
 static Boolean from_server(char *k);
 static void km_regen(void);
 
-char *current_keymap = CN;
+char *current_keymap = NULL;
 
 /* Keymap initialization. */
 void
@@ -114,9 +114,9 @@ keymap_init(const char *km, Boolean interactive)
 {
 	static Boolean initted = False;
 
-	if (km == CN)
-		if ((km = (char *)getenv("KEYMAP")) == CN)
-			if ((km = (char *)getenv("KEYBD")) == CN)
+	if (km == NULL)
+		if ((km = (char *)getenv("KEYMAP")) == NULL)
+			if ((km = (char *)getenv("KEYBD")) == NULL)
 				km = "@server";
 	setup_keymaps(km, interactive);
 	if (!initted) {
@@ -134,7 +134,7 @@ keymap_init(const char *km, Boolean interactive)
 
 		/* Re-apply any temporary keymaps. */
 		for (t = temp_keymaps; t != NULL; t = t->next) {
-			trans = lookup_tt(t->name, CN);
+			trans = lookup_tt(t->name, NULL);
 			screen_set_temp_keymap(trans);
 			keypad_set_temp_keymap(trans);
 		}
@@ -143,7 +143,7 @@ keymap_init(const char *km, Boolean interactive)
 
 	/* Save the name(s) of the last keymap, so we can switch modes later. */
 	if (km != last_keymap) {
-		Replace(last_keymap, km? NewString(km): CN);
+		Replace(last_keymap, km? NewString(km): NULL);
 	}
 }
 
@@ -174,7 +174,7 @@ setup_keymaps(const char *km, Boolean do_popup)
 	struct trans_list *next;
 
 	/* Make sure it starts with "base". */
-	if (km == CN)
+	if (km == NULL)
 		bkm = XtNewString("base");
 	else
 		bkm = xs_buffer("base,%s", km);
@@ -183,18 +183,18 @@ setup_keymaps(const char *km, Boolean do_popup)
 		keymap_changed = True;
 
 	/* Clear out any existing translations. */
-	Replace(current_keymap, CN);
-	for (t = trans_list; t != (struct trans_list *)NULL; t = next) {
+	Replace(current_keymap, NULL);
+	for (t = trans_list; t != NULL; t = next) {
 		next = t->next;
 		Free(t->name);
 		Free(t->pathname);
 		Free(t);
 	}
-	trans_list = (struct trans_list *)NULL;
+	trans_list = NULL;
 	last_trans = &trans_list;
 
 	/* Build up the new list. */
-	if (bkm != CN) {
+	if (bkm != NULL) {
 		char *ns = XtNewString(bkm);
 		char *n0 = ns;
 		char *comma;
@@ -226,23 +226,23 @@ static char *
 get_file_keymap(const char *name, char **pathp)
 {
 	char *path;
-	XrmDatabase dd = (XrmDatabase)NULL;
+	XrmDatabase dd = NULL;
 	char *resname;
 	XrmValue value;
 	char *type;
-	char *r = CN;
+	char *r = NULL;
 
-	*pathp = CN;
+	*pathp = NULL;
 
 	/* Look for a global keymap file. */
-	if (dd == (XrmDatabase)NULL) {
+	if (dd == NULL) {
 		path = xs_buffer("%s/keymap.%s", appres.conf_dir, name);
 		dd = XrmGetFileDatabase(path);
-		if (dd != (XrmDatabase)NULL)
+		if (dd != NULL)
 			*pathp = path;
 		else {
 			XtFree(path);
-			return CN;
+			return NULL;
 		}
 	}
 
@@ -252,7 +252,7 @@ get_file_keymap(const char *name, char **pathp)
 		    *value.addr) {
 		r = XtNewString(value.addr);
 	} else {
-		*pathp = CN;
+		*pathp = NULL;
 	}
 	XtFree(resname);
 	XrmDestroyDatabase(dd);
@@ -273,7 +273,7 @@ add_keymap(const char *name, Boolean do_popup)
 	Boolean is_from_server = False;
 
 	if (strcmp(name, "base")) {
-		if (current_keymap == CN)
+		if (current_keymap == NULL)
 			current_keymap = XtNewString(name);
 		else {
 
@@ -289,14 +289,14 @@ add_keymap(const char *name, Boolean do_popup)
 			char *vendor;
 			char *keymap;
 		};
-		static struct sk *sk_list = (struct sk *)NULL;
+		static struct sk *sk_list = NULL;
 		struct sk *sk;
 
-		if (sk_list == (struct sk *)NULL) {
+		if (sk_list == NULL) {
 			char *s, *vendor, *keymap;
 
 			s = get_resource("serverKeymapList");
-			if (s == CN)
+			if (s == NULL)
 				return;
 			s = XtNewString(s);
 			while (split_dresource(&s, &vendor, &keymap) == 1) {
@@ -307,14 +307,14 @@ add_keymap(const char *name, Boolean do_popup)
 				sk_list = sk;
 			}
 		}
-		for (sk = sk_list; sk != (struct sk *)NULL; sk = sk->next) {
+		for (sk = sk_list; sk != NULL; sk = sk->next) {
 			if (!strcmp(sk->vendor, ServerVendor(display))) {
 				name = sk->keymap;
 				is_from_server = True;
 				break;
 			}
 		}
-		if (sk == (struct sk *)NULL)
+		if (sk == NULL)
 			return;
 	}
 
@@ -324,15 +324,15 @@ add_keymap(const char *name, Boolean do_popup)
 	translations_nvt = get_file_keymap(buf_nvt, &path_nvt);
 	buf_3270 = xs_buffer("%s.%s", name, Res3270);
 	translations_3270 = get_file_keymap(buf_3270, &path_3270);
-	if (translations != CN || translations_nvt != CN || translations_3270 != CN) {
+	if (translations != NULL || translations_nvt != NULL || translations_3270 != NULL) {
 		any++;
-		if (translations != CN)
+		if (translations != NULL)
 			add_trans(name, translations, path, is_from_server);
-		if (IN_NVT && translations_nvt != CN) {
+		if (IN_NVT && translations_nvt != NULL) {
 			add_trans(buf_nvt, translations_nvt, path_nvt,
 			    is_from_server);
 		}
-		if (IN_3270 && translations_3270 != CN)
+		if (IN_3270 && translations_3270 != NULL)
 			add_trans(buf_3270, translations_3270, path_3270,
 			    is_from_server);
 		XtFree(translations);
@@ -351,17 +351,17 @@ add_keymap(const char *name, Boolean do_popup)
 		translations_nvt = get_resource(buf_nvt);
 		buf_3270 = xs_buffer("%s.%s.%s", ResKeymap, name, Res3270);
 		translations_3270 = get_resource(buf_3270);
-		if (translations != CN || translations_nvt != CN || translations_3270)
+		if (translations != NULL || translations_nvt != NULL || translations_3270)
 			any++;
-		if (translations != CN)
-			add_trans(name, translations, CN, is_from_server);
-		if (IN_NVT && translations_nvt != CN) {
+		if (translations != NULL)
+			add_trans(name, translations, NULL, is_from_server);
+		if (IN_NVT && translations_nvt != NULL) {
 			add_trans(buf_nvt + strlen(ResKeymap) + 1,
-			    translations_nvt, CN, is_from_server);
+			    translations_nvt, NULL, is_from_server);
 		}
-		if (IN_3270 && translations_3270 != CN)
+		if (IN_3270 && translations_3270 != NULL)
 			add_trans(buf_3270 + strlen(ResKeymap) + 1,
-			    translations_3270, CN, is_from_server);
+			    translations_3270, NULL, is_from_server);
 		XtFree(buf);
 		XtFree(buf_nvt);
 		XtFree(buf_3270);
@@ -375,17 +375,17 @@ add_keymap(const char *name, Boolean do_popup)
 		buf_3270 = xs_buffer("%s.%s.%s.%s", ResKeymap, name, Res3270,
 		    ResUser);
 		translations_3270 = get_resource(buf_3270);
-		if (translations != CN || translations_nvt != CN || translations_3270 != CN)
+		if (translations != NULL || translations_nvt != NULL || translations_3270 != NULL)
 			any++;
-		if (IN_NVT && translations_nvt != CN) {
+		if (IN_NVT && translations_nvt != NULL) {
 			add_trans(buf_nvt + strlen(ResKeymap) + 1,
-			    translations_nvt, CN, is_from_server);
+			    translations_nvt, NULL, is_from_server);
 		}
-		if (IN_3270 && translations_3270 != CN)
+		if (IN_3270 && translations_3270 != NULL)
 			add_trans(buf_3270 + strlen(ResKeymap) + 1,
-			    translations_3270, CN, is_from_server);
-		if (translations != CN)
-			add_trans(buf, translations, CN, is_from_server);
+			    translations_3270, NULL, is_from_server);
+		if (translations != NULL)
+			add_trans(buf, translations, NULL, is_from_server);
 		XtFree(buf);
 		XtFree(buf_nvt);
 		XtFree(buf_3270);
@@ -459,7 +459,7 @@ unquoted_newline(char *s)
 			break;
 		}
 	}
-	return CN;
+	return NULL;
 }
 
 /* Expand a translation table with keymap tracing calls. */
@@ -469,12 +469,12 @@ expand_table(const char *name, char *table)
 	char *cm, *t0, *t, *s;
 	int nlines = 1;
 
-	if (table == CN)
-		return CN;
+	if (table == NULL)
+		return NULL;
 
 	/* Roughly count the number of lines in the table. */
 	cm = table;
-	while ((cm = strchr(cm, '\n')) != CN) {
+	while ((cm = strchr(cm, '\n')) != NULL) {
 		nlines++;
 		cm++;
 	}
@@ -501,7 +501,7 @@ expand_table(const char *name, char *table)
 
 		/* Find the '>' from the event name, and copy up through it. */
 		cm = strchr(s, '>');
-		if (cm == CN) {
+		if (cm == NULL) {
 			while ((*t++ = *s++))
 				;
 			break;
@@ -511,7 +511,7 @@ expand_table(const char *name, char *table)
 
 		/* Find the ':' following, and copy up throught that. */
 		cm = strchr(s, ':');
-		if (cm == CN) {
+		if (cm == NULL) {
 			while ((*t++ = *s++))
 				;
 			break;
@@ -528,7 +528,7 @@ expand_table(const char *name, char *table)
 		 * Copy to the next unquoted newline and append a PA-End call.
 		 */
 		cm = unquoted_newline(s);
-		if (cm == CN) {
+		if (cm == NULL) {
 			while ((*t = *s)) {
 				t++;
 				s++;
@@ -539,7 +539,7 @@ expand_table(const char *name, char *table)
 		}
 		(void) strcpy(t, PA_ENDL);
 		t += strlen(PA_ENDL);
-		if (cm == CN)
+		if (cm == NULL)
 			break;
 		else
 			*t++ = *s++;
@@ -575,7 +575,7 @@ void
 PA_End_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_unused,
     Cardinal *num_params _is_unused)
 {
-	Replace(keymap_trace, CN);
+	Replace(keymap_trace, NULL);
 }
 
 /*
@@ -589,13 +589,12 @@ lookup_tt(const char *name, char *table)
 		XtTranslations trans;
 		struct tt_cache *next;
 	};
-#	define TTN (struct tt_cache *)NULL
-	static struct tt_cache *tt_cache = TTN;
+	static struct tt_cache *tt_cache = NULL;
 	struct tt_cache *t;
 	char *xtable;
 
 	/* Look for an old one. */
-	for (t = tt_cache; t != TTN; t = t->next)
+	for (t = tt_cache; t != NULL; t = t->next)
 		if (!strcmp(name, t->name))
 			return t->trans;
 
@@ -610,12 +609,11 @@ lookup_tt(const char *name, char *table)
 
 	return t->trans;
 }
-#undef TTN
 
 /*
  * Set or clear a temporary keymap.
  *
- * If the parameter is CN, removes all keymaps.
+ * If the parameter is NULL, removes all keymaps.
  * Otherwise, toggles the keymap by that name.
  *
  * Returns 0 if the action was successful, -1 otherwise.
@@ -627,35 +625,34 @@ temporary_keymap(char *k)
 	char *km;
 	XtTranslations trans;
 	struct trans_list *t, *prev;
-	char *path = CN;
-#	define TN (struct trans_list *)NULL
+	char *path = NULL;
 
-	if (k == CN) {
+	if (k == NULL) {
 		struct trans_list *next;
 
 		/* Delete all temporary keymaps. */
-		for (t = temp_keymaps; t != TN; t = next) {
+		for (t = temp_keymaps; t != NULL; t = next) {
 			Free(t->name);
 			Free(t->pathname);
 			next = t->next;
 			Free(t);
 		}
-		tkm_last = temp_keymaps = TN;
-		screen_set_temp_keymap((XtTranslations)NULL);
-		keypad_set_temp_keymap((XtTranslations)NULL);
+		tkm_last = temp_keymaps = NULL;
+		screen_set_temp_keymap(NULL);
+		keypad_set_temp_keymap(NULL);
 		status_kmap(False);
 		km_regen();
 		return 0;
 	}
 
 	/* Check for deleting one keymap. */
-	for (prev = TN, t = temp_keymaps; t != TN; prev = t, t = t->next)
+	for (prev = NULL, t = temp_keymaps; t != NULL; prev = t, t = t->next)
 		if (!strcmp(k, t->name))
 			break;
-	if (t != TN) {
+	if (t != NULL) {
 
 		/* Delete the keymap from the list. */
-		if (prev != TN)
+		if (prev != NULL)
 			prev->next = t->next;
 		else
 			temp_keymaps = t->next;
@@ -665,16 +662,16 @@ temporary_keymap(char *k)
 		Free(t);
 
 		/* Rebuild the translation tables from the remaining ones. */
-		screen_set_temp_keymap((XtTranslations)NULL);
-		keypad_set_temp_keymap((XtTranslations)NULL);
-		for (t = temp_keymaps; t != TN; t = t->next) {
-			trans = lookup_tt(t->name, CN);
+		screen_set_temp_keymap(NULL);
+		keypad_set_temp_keymap(NULL);
+		for (t = temp_keymaps; t != NULL; t = t->next) {
+			trans = lookup_tt(t->name, NULL);
 			screen_set_temp_keymap(trans);
 			keypad_set_temp_keymap(trans);
 		}
 
 		/* Update the status line. */
-		if (temp_keymaps == TN)
+		if (temp_keymaps == NULL)
 			status_kmap(False);
 		km_regen();
 		return 0;
@@ -684,10 +681,10 @@ temporary_keymap(char *k)
 
 	/* Try a file first. */
 	km = get_file_keymap(k, &path);
-	if (km == CN) {
+	if (km == NULL) {
 		/* Then try a resource. */
 		km = get_fresource("%s.%s", ResKeymap, k);
-		if (km == CN)
+		if (km == NULL)
 			return -1;
 	}
 
@@ -702,8 +699,8 @@ temporary_keymap(char *k)
 	t->pathname = path;
 	t->is_temp = True;
 	t->from_server = False;
-	t->next = TN;
-	if (tkm_last != TN)
+	t->next = NULL;
+	if (tkm_last != NULL)
 		tkm_last->next = t;
 	else
 		temp_keymaps = t;
@@ -716,7 +713,6 @@ temporary_keymap(char *k)
 	/* Success. */
 	return 0;
 }
-#undef TN
 
 /* Create and pop up the current keymap pop-up. */
 void
@@ -739,8 +735,8 @@ do_keymap_display(Widget w _is_unused, XtPointer userdata _is_unused,
 	    NULL);
 	XtAddCallback(km_shell, XtNpopupCallback, place_popup,
 	    (XtPointer) CenterP);
-	XtAddCallback(km_shell, XtNpopupCallback, km_up, (XtPointer)NULL);
-	XtAddCallback(km_shell, XtNpopdownCallback, km_down, (XtPointer)NULL);
+	XtAddCallback(km_shell, XtNpopupCallback, km_up, NULL);
+	XtAddCallback(km_shell, XtNpopdownCallback, km_down, NULL);
 
 	/* Create a form in the popup. */
 	form = XtVaCreateManagedWidget(
@@ -759,24 +755,21 @@ do_keymap_display(Widget w _is_unused, XtPointer userdata _is_unused,
 	    XtNfromVert, label,
 	    XtNleftBitmap, sort == SORT_EVENT ? diamond : no_diamond,
 	    NULL);
-	XtAddCallback(sort_event, XtNcallback, do_sort_event,
-	    (XtPointer)NULL);
+	XtAddCallback(sort_event, XtNcallback, do_sort_event, NULL);
 	sort_keymap = XtVaCreateManagedWidget("sortKeymapOption",
 	    commandWidgetClass, form,
 	    XtNborderWidth, 0,
 	    XtNfromVert, sort_event,
 	    XtNleftBitmap, sort == SORT_KEYMAP ? diamond : no_diamond,
 	    NULL);
-	XtAddCallback(sort_keymap, XtNcallback, do_sort_keymap,
-	    (XtPointer)NULL);
+	XtAddCallback(sort_keymap, XtNcallback, do_sort_keymap, NULL);
 	sort_action = XtVaCreateManagedWidget("sortActionOption",
 	    commandWidgetClass, form,
 	    XtNborderWidth, 0,
 	    XtNfromVert, sort_keymap,
 	    XtNleftBitmap, sort == SORT_ACTION ? diamond : no_diamond,
 	    NULL);
-	XtAddCallback(sort_action, XtNcallback, do_sort_action,
-	    (XtPointer)NULL);
+	XtAddCallback(sort_action, XtNcallback, do_sort_action, NULL);
 
 	/* Create a text widget attached to the file. */
 	text = XtVaCreateManagedWidget(
@@ -793,7 +786,7 @@ do_keymap_display(Widget w _is_unused, XtPointer userdata _is_unused,
 	    commandWidgetClass, form,
 	    XtNfromVert, text,
 	    NULL);
-	XtAddCallback(done, XtNcallback, km_done, (XtPointer)NULL);
+	XtAddCallback(done, XtNcallback, km_done, NULL);
 
 	/* Pop it up. */
 	km_exists = True;
@@ -819,7 +812,7 @@ create_text(void)
 	/* Ready a file. */
 	(void) snprintf(km_file, sizeof(km_file), "/tmp/km.%d", getpid());
 	f = fopen(km_file, "w");
-	if (f == (FILE *)NULL) {
+	if (f == NULL) {
 		popup_an_errno(errno, "temporary file open");
 		return;
 	}
@@ -946,19 +939,19 @@ format_xlations(String s, FILE *f)
 		char *keymap;
 		int km_line;
 		char *full_keymap;
-	} *xl_list = (struct xl *)NULL, *x, *xs, *xlp, *xn;
+	} *xl_list = NULL, *x, *xs, *xlp, *xn;
 	char *km_last;
 	int line_last = 0;
 
 	/* Construct the list. */
-	for (t = s; t != CN; t = t_next) {
+	for (t = s; t != NULL; t = t_next) {
 		char *k, *a, *kk;
 		int nq;
 		static char cmps[] = ": " PA_KEYMAP_TRACE "(";
 
 		/* Find the end of this rule and terminate this line. */
 		t_next = strstr(t, PA_ENDL "\n");
-		if (t_next != CN) {
+		if (t_next != NULL) {
 			t_next += strlen(PA_ENDL);
 			*t_next++ = '\0';
 		}
@@ -969,14 +962,14 @@ format_xlations(String s, FILE *f)
 
 		/* Use only traced events. */
 		k = strstr(t, cmps);
-		if (k == CN)
+		if (k == NULL)
 			continue;
 		*k = '\0';
 		k += strlen(cmps);
 
 		/* Find the rest of the actions. */
 		a = strchr(k, ')');
-		if (a == CN)
+		if (a == NULL)
 			continue;
 		while (*(++a) == ' ')
 			;
@@ -1011,8 +1004,8 @@ format_xlations(String s, FILE *f)
 		(void) sprintf(x->full_keymap, "%s:%d", x->keymap, x->km_line);
 
 		/* Find where it should be inserted. */
-		for (xs = xl_list, xlp = (struct xl *)NULL;
-		     xs != (struct xl *)NULL;
+		for (xs = xl_list, xlp = NULL;
+		     xs != NULL;
 		     xlp = xs, xs = xs->next) {
 			int halt = 0;
 
@@ -1033,7 +1026,7 @@ format_xlations(String s, FILE *f)
 		}
 
 		/* Insert it. */
-		if (xlp != (struct xl *)NULL) {
+		if (xlp != NULL) {
 			x->next = xlp->next;
 			xlp->next = x;
 		} else {
@@ -1049,15 +1042,15 @@ format_xlations(String s, FILE *f)
 		    get_message("kmKeymapLine"),
 		    get_message("kmActions"),
 		    DASHES);
-	km_last = CN;
-	for (xs = xl_list; xs != (struct xl *)NULL; xs = xs->next) {
+	km_last = NULL;
+	for (xs = xl_list; xs != NULL; xs = xs->next) {
 		switch (sort) {
 		    case SORT_EVENT:
-			if (km_last != CN) {
+			if (km_last != NULL) {
 				char *l;
 
 				l = strchr(xs->event, '<');
-				if (l != CN) {
+				if (l != NULL) {
 					if (strcmp(km_last, l))
 						(void) fprintf(f, "\n");
 					km_last = l;
@@ -1066,18 +1059,18 @@ format_xlations(String s, FILE *f)
 				km_last = strchr(xs->event, '<');
 			break;
 		    case SORT_KEYMAP:
-			if (km_last == CN || strcmp(xs->keymap, km_last)) {
+			if (km_last == NULL || strcmp(xs->keymap, km_last)) {
 				char *p;
 
 				(void) fprintf(f, "%s%s '%s'%s",
-				    km_last == CN ? "" : "\n",
+				    km_last == NULL ? "" : "\n",
 				    get_message(is_temp(xs->keymap) ?
 						    "kmTemporaryKeymap" :
 						    "kmKeymap"),
 				    xs->keymap,
 				    from_server(xs->keymap) ?
 					get_message("kmFromServer") : "");
-				if ((p = pathname(xs->keymap)) != CN)
+				if ((p = pathname(xs->keymap)) != NULL)
 					(void) fprintf(f, ", %s %s",
 					    get_message("kmFile"), p);
 				else
@@ -1110,7 +1103,7 @@ format_xlations(String s, FILE *f)
 	}
 
 	/* Free it. */
-	for (xs = xl_list; xs != (struct xl *)NULL; xs = xn) {
+	for (xs = xl_list; xs != NULL; xs = xn) {
 		xn = xs->next;
 		Free(xs->actions);
 		Free(xs->event);
@@ -1144,12 +1137,12 @@ km_index(char *n)
 	struct trans_list *t;
 	int ix = 0;
 
-	for (t = trans_list; t != (struct trans_list *)NULL; t = t->next) {
+	for (t = trans_list; t != NULL; t = t->next) {
 		if (!strcmp(t->name, n))
 			return ix;
 		ix++;
 	}
-	for (t = temp_keymaps; t != (struct trans_list *)NULL; t = t->next) {
+	for (t = temp_keymaps; t != NULL; t = t->next) {
 		if (!strcmp(t->name, n))
 			return ix;
 		ix++;
@@ -1163,11 +1156,11 @@ is_temp(char *k)
 {
 	struct trans_list *t;
 
-	for (t = trans_list; t != (struct trans_list *)NULL; t = t->next) {
+	for (t = trans_list; t != NULL; t = t->next) {
 		if (!strcmp(t->name, k))
 			return t->is_temp;
 	}
-	for (t = temp_keymaps; t != (struct trans_list *)NULL; t = t->next) {
+	for (t = temp_keymaps; t != NULL; t = t->next) {
 		if (!strcmp(t->name, k))
 			return t->is_temp;
 	}
@@ -1180,15 +1173,15 @@ pathname(char *k)
 {
 	struct trans_list *t;
 
-	for (t = trans_list; t != (struct trans_list *)NULL; t = t->next) {
+	for (t = trans_list; t != NULL; t = t->next) {
 		if (!strcmp(t->name, k))
 			return t->pathname;
 	}
-	for (t = temp_keymaps; t != (struct trans_list *)NULL; t = t->next) {
+	for (t = temp_keymaps; t != NULL; t = t->next) {
 		if (!strcmp(t->name, k))
 			return t->pathname;
 	}
-	return CN;
+	return NULL;
 }
 
 /* Return whether or not a keymap was translated from "@server". */
@@ -1197,11 +1190,11 @@ from_server(char *k)
 {
 	struct trans_list *t;
 
-	for (t = trans_list; t != (struct trans_list *)NULL; t = t->next) {
+	for (t = trans_list; t != NULL; t = t->next) {
 		if (!strcmp(t->name, k))
 			return t->from_server;
 	}
-	for (t = temp_keymaps; t != (struct trans_list *)NULL; t = t->next) {
+	for (t = temp_keymaps; t != NULL; t = t->next) {
 		if (!strcmp(t->name, k))
 			return t->from_server;
 	}
@@ -1248,8 +1241,8 @@ event_cmp(char *e1, char *e2)
 	int r;
 
 	/* If either has a syntax problem, do a straight string compare. */
-	if ((l1 = strchr(e1, '<')) == CN ||
-	    (l2 = strchr(e2, '<')) == CN)
+	if ((l1 = strchr(e1, '<')) == NULL ||
+	    (l2 = strchr(e2, '<')) == NULL)
 		return strcmp(e1, e2);
 
 	/*

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009, 2013 Paul Mattes.
+ * Copyright (c) 2001-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,8 +55,8 @@ unsigned long cgcsgid = 0x02b90025;
 unsigned long cgcsgid_dbcs = 0x02b90025;
 int dbcs = 0;
 
-char *encoding = CN;
-char *converters = CN;
+char *encoding = NULL;
+char *converters = NULL;
 
 /*
  * Change character sets.

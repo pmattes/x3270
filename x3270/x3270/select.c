@@ -978,8 +978,8 @@ SelectAll_action(Widget w _is_unused, XEvent *event, String *params,
  * Screen side.
  */
 
-static char    *select_buf = CN;
-static char    *sb_ptr = CN;
+static char    *select_buf = NULL;
+static char    *sb_ptr = NULL;
 static int      sb_size = 0;
 #define SB_CHUNK	1024
 
@@ -988,7 +988,7 @@ static Time     sel_time;
 static void
 init_select_buf(void)
 {
-	if (select_buf == CN)
+	if (select_buf == NULL)
 		select_buf = XtMalloc(sb_size = SB_CHUNK);
 	sb_ptr = select_buf;
 }
@@ -1175,7 +1175,7 @@ lose_sel(Widget w _is_unused, Atom *selection)
 		if (own_sel[i].atom != None && own_sel[i].atom == *selection) {
 			own_sel[i].atom = None;
 			XtFree(own_sel[i].buffer);
-			own_sel[i].buffer = CN;
+			own_sel[i].buffer = NULL;
 			n_owned--;
 			break;
 		}
@@ -1382,7 +1382,7 @@ own_sels(Time t)
 			XtWarning("Could not get selection");
 			if (own_sel[j].atom != None) {
 				XtFree(own_sel[j].buffer);
-				own_sel[j].buffer = CN;
+				own_sel[j].buffer = NULL;
 				own_sel[j].atom = None;
 				n_owned--;
 			}

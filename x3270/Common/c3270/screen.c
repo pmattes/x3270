@@ -191,7 +191,7 @@ static struct {
 	{ "magenta",    COLOR_MAGENTA },
 	{ "cyan",	COLOR_CYAN },
 	{ "white",	COLOR_WHITE },
-	{ CN,	0 }
+	{ NULL,	0 }
 };
 
 static int status_row = 0;	/* Row to display the status line on */
@@ -234,18 +234,18 @@ screen_init(void)
 
 #if !defined(C3270_80_132) /*[*/
 	/* Disallow altscreen/defscreen. */
-	if ((appres.altscreen != CN) || (appres.defscreen != CN)) {
+	if ((appres.altscreen != NULL) || (appres.defscreen != NULL)) {
 		(void) fprintf(stderr, "altscreen/defscreen not supported\n");
 		exit(1);
 	}
 #else /*][*/
 	/* Parse altscreen/defscreen. */
-	if ((appres.altscreen != CN) ^ (appres.defscreen != CN)) {
+	if ((appres.altscreen != NULL) ^ (appres.defscreen != NULL)) {
 		(void) fprintf(stderr,
 		    "Must specify both altscreen and defscreen\n");
 		exit(1);
 	}
-	if (appres.altscreen != CN) {
+	if (appres.altscreen != NULL) {
 		parse_screen_spec(appres.altscreen, &altscreen_spec);
 		if (altscreen_spec.rows < 27 || altscreen_spec.cols < 132) {
 		    (void) fprintf(stderr, "Rows and/or cols too small on "
@@ -322,7 +322,7 @@ finish_screen_init(void)
 
 	/* Clear the (original) screen first. */
 #if defined(C3270_80_132) /*[*/
-	if (appres.defscreen != CN) {
+	if (appres.defscreen != NULL) {
 		char nbuf[64];
 
 		(void) sprintf(nbuf, "COLUMNS=%d", defscreen_spec.cols);
@@ -344,7 +344,7 @@ finish_screen_init(void)
 	initscr_done = True;
 #else /*][*/
 	/* Set up ncurses, and see if it's within bounds. */
-	if (appres.defscreen != CN) {
+	if (appres.defscreen != NULL) {
 		char nbuf[64];
 
 		(void) sprintf(nbuf, "COLUMNS=%d", defscreen_spec.cols);
@@ -487,7 +487,7 @@ finish_screen_init(void)
 		start_color();
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
 		if ((appres.default_fgbg ||
-		     ((colorterm = getenv("COLORTERM")) != CN &&
+		     ((colorterm = getenv("COLORTERM")) != NULL &&
 		      !strcmp(colorterm, "gnome-terminal"))) &&
 		    use_default_colors() != ERR) {
 
@@ -674,7 +674,7 @@ ts_value(const char *s, enum ts *tsp)
 {
 	*tsp = TS_AUTO;
 
-	if (s != CN && s[0]) {
+	if (s != NULL && s[0]) {
 		int sl = strlen(s);
 
 		if (!strncasecmp(s, "true", sl))
@@ -737,9 +737,9 @@ init_user_attribute_color(int *a, const char *resname)
 	char *ptr;
 	int i;
 
-    	if ((r = get_resource(resname)) == CN)
+    	if ((r = get_resource(resname)) == NULL)
 		return;
-	for (i = 0; cc_name[i].name != CN; i++) {
+	for (i = 0; cc_name[i].name != NULL; i++) {
 	    	if (!strcasecmp(r, cc_name[i].name)) {
 		    	*a = cc_name[i].index;
 			return;
@@ -810,12 +810,12 @@ init_user_color(const char *name, int ix)
 	char *ptr;
 
 	r = get_fresource("%s%s", ResCursesColorForHostColor, name);
-	if (r == CN)
+	if (r == NULL)
 		r = get_fresource("%s%d", ResCursesColorForHostColor, ix);
-	if (r == CN)
+	if (r == NULL)
 	    	return;
 
-	for (i = 0; cc_name[i].name != CN; i++) {
+	for (i = 0; cc_name[i].name != NULL; i++) {
 	    	if (!strcasecmp(r, cc_name[i].name)) {
 		    	cmap[ix] = cc_name[i].index;
 			return;
@@ -836,7 +836,7 @@ init_user_colors(void)
 {
 	int i;
 
-	for (i = 0; host_color[i].name != CN; i++) {
+	for (i = 0; host_color[i].name != NULL; i++) {
 	    	init_user_color(host_color[i].name, host_color[i].index);
 	}
 }
@@ -1397,7 +1397,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	}
 
 	action = lookup_key(k, ucs4, alt);
-	if (action != CN) {
+	if (action != NULL) {
 		if (strcmp(action, "[ignore]"))
 			push_keymap_action(action);
 		return;
@@ -1407,26 +1407,26 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	/* These first cases apply to both 3270 and NVT modes. */
 	switch (k) {
 	case KEY_UP:
-		action_internal(Up_action, IA_DEFAULT, CN, CN);
+		action_internal(Up_action, IA_DEFAULT, NULL, NULL);
 		return;
 	case KEY_DOWN:
-		action_internal(Down_action, IA_DEFAULT, CN, CN);
+		action_internal(Down_action, IA_DEFAULT, NULL, NULL);
 		return;
 	case KEY_LEFT:
-		action_internal(Left_action, IA_DEFAULT, CN, CN);
+		action_internal(Left_action, IA_DEFAULT, NULL, NULL);
 		return;
 	case KEY_RIGHT:
-		action_internal(Right_action, IA_DEFAULT, CN, CN);
+		action_internal(Right_action, IA_DEFAULT, NULL, NULL);
 		return;
 	case KEY_HOME:
-		action_internal(Home_action, IA_DEFAULT, CN, CN);
+		action_internal(Home_action, IA_DEFAULT, NULL, NULL);
 		return;
 	default:
 		break;
 	}
 	switch (ucs4) {
 	case 0x1d:
-		action_internal(Escape_action, IA_DEFAULT, CN, CN);
+		action_internal(Escape_action, IA_DEFAULT, NULL, NULL);
 		return;
 	}
 
@@ -1434,41 +1434,41 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	if (IN_3270) {
 	    	switch(k) {
 		case KEY_DC:
-			action_internal(Delete_action, IA_DEFAULT, CN, CN);
+			action_internal(Delete_action, IA_DEFAULT, NULL, NULL);
 			return;
 		case KEY_BACKSPACE:
-			action_internal(BackSpace_action, IA_DEFAULT, CN, CN);
+			action_internal(BackSpace_action, IA_DEFAULT, NULL, NULL);
 			return;
 		case KEY_HOME:
-			action_internal(Home_action, IA_DEFAULT, CN, CN);
+			action_internal(Home_action, IA_DEFAULT, NULL, NULL);
 			return;
 		default:
 			break;
 		}
 	    	switch(ucs4) {
 		case 0x03:
-			action_internal(Clear_action, IA_DEFAULT, CN, CN);
+			action_internal(Clear_action, IA_DEFAULT, NULL, NULL);
 			return;
 		case 0x12:
-			action_internal(Reset_action, IA_DEFAULT, CN, CN);
+			action_internal(Reset_action, IA_DEFAULT, NULL, NULL);
 			return;
 		case 'L' & 0x1f:
-			action_internal(Redraw_action, IA_DEFAULT, CN, CN);
+			action_internal(Redraw_action, IA_DEFAULT, NULL, NULL);
 			return;
 		case '\t':
-			action_internal(Tab_action, IA_DEFAULT, CN, CN);
+			action_internal(Tab_action, IA_DEFAULT, NULL, NULL);
 			return;
 		case 0177:
-			action_internal(Delete_action, IA_DEFAULT, CN, CN);
+			action_internal(Delete_action, IA_DEFAULT, NULL, NULL);
 			return;
 		case '\b':
-			action_internal(BackSpace_action, IA_DEFAULT, CN, CN);
+			action_internal(BackSpace_action, IA_DEFAULT, NULL, NULL);
 			return;
 		case '\r':
-			action_internal(Enter_action, IA_DEFAULT, CN, CN);
+			action_internal(Enter_action, IA_DEFAULT, NULL, NULL);
 			return;
 		case '\n':
-			action_internal(Newline_action, IA_DEFAULT, CN, CN);
+			action_internal(Newline_action, IA_DEFAULT, NULL, NULL);
 			return;
 		default:
 			break;
@@ -1492,7 +1492,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	for (i = 1; i <= 24; i++) {
 		if (k == KEY_F(i)) {
 			(void) sprintf(buf, "%d", i);
-			action_internal(PF_action, IA_DEFAULT, buf, CN);
+			action_internal(PF_action, IA_DEFAULT, buf, NULL);
 			return;
 		}
 	}
@@ -1505,7 +1505,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 
 		sprintf(ks, "U+%04x", ucs4);
 		params[0] = ks;
-		params[1] = CN;
+		params[1] = NULL;
 		one = 1;
 		Key_action(NULL, NULL, params, &one);
 		return;

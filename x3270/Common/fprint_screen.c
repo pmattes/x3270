@@ -279,9 +279,9 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 		char *pt_size = get_resource(ResPrintTextSize);
 		int pt_nsize;
 
-		if (pt_font == CN)
+		if (pt_font == NULL)
 			pt_font = "Courier New";
-		if (pt_size == CN)
+		if (pt_size == NULL)
 			pt_size = "8";
 		pt_nsize = atoi(pt_size);
 		if (pt_nsize <= 0)

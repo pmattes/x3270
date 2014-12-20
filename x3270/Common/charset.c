@@ -80,8 +80,8 @@ static int set_cgcsgid(char *spec, unsigned long *idp);
 static void set_host_codepage(char *codepage);
 static void set_charset_name(const char *csname);
 
-static char *host_codepage = CN;
-static char *charset_name = CN;
+static char *host_codepage = NULL;
+static char *charset_name = NULL;
 
 /*
  * Change character sets.
@@ -128,15 +128,15 @@ charset_init(const char *csname)
 	Free(codeset_name);
 
 	/* Do nothing, successfully. */
-	if (csname == CN || !strcasecmp(csname, "us")) {
-		set_cgcsgids(CN);
-		set_host_codepage(CN);
-		set_charset_name(CN);
+	if (csname == NULL || !strcasecmp(csname, "us")) {
+		set_cgcsgids(NULL);
+		set_host_codepage(NULL);
+		set_charset_name(NULL);
 #if defined(X3270_DISPLAY) /*[*/
 		(void) screen_new_display_charsets(default_display_charset,
 		    "us");
 #endif /*]*/
-		(void) set_uni(CN, &codepage, &cgcsgid, &display_charsets);
+		(void) set_uni(NULL, &codepage, &cgcsgid, &display_charsets);
 #if defined(X3270_DBCS) /*[*/
 		(void) set_uni_dbcs("", NULL, NULL);
 #endif /*]*/
@@ -145,11 +145,11 @@ charset_init(const char *csname)
 
 	if (set_uni(csname, &codepage, &cgcsgid, &display_charsets) < 0)
 		return CS_NOTFOUND;
-	if (appres.sbcs_cgcsgid != CN)
+	if (appres.sbcs_cgcsgid != NULL)
 	    	cgcsgid = appres.sbcs_cgcsgid; /* override */
 #if defined(X3270_DBCS) /*[*/
 	if (set_uni_dbcs(csname, &dbcs_cgcsgid, &dbcs_display_charsets) == 0) {
-	    if (appres.dbcs_cgcsgid != CN)
+	    if (appres.dbcs_cgcsgid != NULL)
 		    dbcs_cgcsgid = appres.dbcs_cgcsgid; /* override */
 	    cgcsgid = xs_buffer("%s+%s", cgcsgid, dbcs_cgcsgid);
 	    display_charsets = xs_buffer("%s+%s", display_charsets,
@@ -179,7 +179,7 @@ set_cgcsgid(char *spec, unsigned long *r)
 	unsigned long cp;
 	char *ptr;
 
-	if (spec != CN &&
+	if (spec != NULL &&
 	    (cp = strtoul(spec, &ptr, 0)) &&
 	    ptr != spec &&
 	    *ptr == '\0') {
@@ -201,12 +201,12 @@ set_cgcsgids(const char *spec)
 	char *buf;
 	char *token;
 
-	if (spec != CN) {
+	if (spec != NULL) {
 		buf = spec_copy = NewString(spec);
-		while (n_ids >= 0 && (token = strtok(buf, "+")) != CN) {
+		while (n_ids >= 0 && (token = strtok(buf, "+")) != NULL) {
 			unsigned long *idp = NULL;
 
-			buf = CN;
+			buf = NULL;
 			switch (n_ids) {
 			case 0:
 			    idp = &cgcsgid;
@@ -235,12 +235,12 @@ set_cgcsgids(const char *spec)
 			return;
 	}
 
-	if (appres.sbcs_cgcsgid != CN)
+	if (appres.sbcs_cgcsgid != NULL)
 	    	cgcsgid = strtoul(appres.sbcs_cgcsgid, NULL, 0);
 	else
 		cgcsgid = DEFAULT_CGEN | DEFAULT_CSET;
 #if defined(X3270_DBCS) /*[*/
-	if (appres.dbcs_cgcsgid != CN)
+	if (appres.dbcs_cgcsgid != NULL)
 	    	cgcsgid_dbcs = strtoul(appres.dbcs_cgcsgid, NULL, 0);
 	else
 		cgcsgid_dbcs = 0L;
@@ -251,11 +251,11 @@ set_cgcsgids(const char *spec)
 static void
 set_host_codepage(char *codepage)
 {
-	if (codepage == CN) {
+	if (codepage == NULL) {
 		Replace(host_codepage, NewString("037"));
 		return;
 	}
-	if (host_codepage == CN || strcmp(host_codepage, codepage)) {
+	if (host_codepage == NULL || strcmp(host_codepage, codepage)) {
 	    	Replace(host_codepage, NewString(codepage));
 	}
 }
@@ -264,13 +264,13 @@ set_host_codepage(char *codepage)
 static void
 set_charset_name(const char *csname)
 {
-	if (csname == CN) {
+	if (csname == NULL) {
 		Replace(charset_name, NewString("us"));
 		charset_changed = False;
 		return;
 	}
-	if ((charset_name != CN && strcmp(charset_name, csname)) ||
-	    (appres.charset != CN && strcmp(appres.charset, csname))) {
+	if ((charset_name != NULL && strcmp(charset_name, csname)) ||
+	    (appres.charset != NULL && strcmp(appres.charset, csname))) {
 		Replace(charset_name, NewString(csname));
 		charset_changed = True;
 	}
@@ -287,8 +287,8 @@ charset_init2(const char *csname, const char *codepage, const char *cgcsgid,
 
 	/* Isolate the pieces. */
 	buf = rcs_copy = NewString(rcs);
-	while ((token = strtok(buf, "+")) != CN) {
-		buf = CN;
+	while ((token = strtok(buf, "+")) != NULL) {
+		buf = NULL;
 		switch (n_rcs) {
 		case 0:
 #if defined(X3270_DBCS) /*[*/
@@ -342,13 +342,13 @@ charset_init2(const char *csname, const char *codepage, const char *cgcsgid,
 const char *
 get_host_codepage(void)
 {
-	return (host_codepage != CN)? host_codepage: "037";
+	return (host_codepage != NULL)? host_codepage: "037";
 }
 
 /* Return the current character set name. */
 char *
 get_charset_name(void)
 {
-	return (charset_name != CN)? charset_name:
-	    ((appres.charset != CN)? appres.charset: "us");
+	return (charset_name != NULL)? charset_name:
+	    ((appres.charset != NULL)? appres.charset: "us");
 }

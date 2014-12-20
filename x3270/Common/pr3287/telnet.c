@@ -170,10 +170,10 @@ static unsigned char *ibuf = (unsigned char *) NULL;
 			/* 3270 input buffer */
 static unsigned char *ibptr;
 static int      ibuf_size = 0;	/* size of ibuf */
-static unsigned char *obuf_base = (unsigned char *)NULL;
-static unsigned char *netrbuf = (unsigned char *)NULL;
+static unsigned char *obuf_base = NULL;
+static unsigned char *netrbuf = NULL;
 			/* network input buffer */
-static unsigned char *sbbuf = (unsigned char *)NULL;
+static unsigned char *sbbuf = NULL;
 			/* telnet sub-option buffer */
 static unsigned char *sbptr;
 static unsigned char telnet_state;
@@ -187,8 +187,8 @@ static int response_required;
 static int	tn3270e_negotiated = 0;
 static enum { E_NONE, E_3270, E_NVT, E_SSCP } tn3270e_submode = E_NONE;
 static int	tn3270e_bound = 0;
-static char	**lus = (char **)NULL;
-static char	**curr_lu = (char **)NULL;
+static char	**lus = NULL;
+static char	**curr_lu = NULL;
 static char	*try_lu = NULL;
 static char	*try_assoc = NULL;
 
@@ -549,12 +549,12 @@ setup_lus(char *luname, const char *assoc)
 
 	connected_lu = NULL;
 	connected_type = NULL;
-	curr_lu = (char **)NULL;
+	curr_lu = NULL;
 	try_lu = NULL;
 
 	if (lus) {
 		Free(lus);
-		lus = (char **)NULL;
+		lus = NULL;
 	}
 
 	if (assoc != NULL) {
@@ -670,8 +670,8 @@ net_input(int s)
 static void
 next_lu(void)
 {
-	if (curr_lu != (char **)NULL && (try_lu = *++curr_lu) == NULL)
-		curr_lu = (char **)NULL;
+	if (curr_lu != NULL && (try_lu = *++curr_lu) == NULL)
+		curr_lu = NULL;
 }
 
 /*
@@ -733,7 +733,7 @@ telnet_fsm(unsigned char c)
 			break;
 		    case SB:
 			telnet_state = TNS_SB;
-			if (sbbuf == (unsigned char *)NULL)
+			if (sbbuf == NULL)
 				sbbuf = (unsigned char *)Malloc(1024);
 			sbptr = sbbuf;
 			break;
@@ -899,7 +899,7 @@ telnet_fsm(unsigned char c)
 				vtrace("%s %s\n", opt(sbbuf[0]),
 				    telquals[sbbuf[1]]);
 
-				if (lus != (char **)NULL &&
+				if (lus != NULL &&
                                     try_assoc == NULL &&
 				    try_lu == NULL) {
 					/* None of the LUs worked. */
@@ -1523,7 +1523,7 @@ check_in3270(void)
 		 * TN3270E state, reset the LU list so we can try again
 		 * in the new mode.
 		 */
-		if (lus != (char **)NULL && was_in_e != IN_E) {
+		if (lus != NULL && was_in_e != IN_E) {
 			curr_lu = lus;
 			try_lu = *curr_lu;
 		}
@@ -1645,7 +1645,7 @@ trace_netdata(char direction, unsigned const char *buf, int len)
 
 	if (tracef == NULL)
 		return;
-	(void) gettimeofday(&ts, (struct timezone *)NULL);
+	(void) gettimeofday(&ts, NULL);
 	if (IN_3270) {
 		tdiff = ((1.0e6 * (double)(ts.tv_sec - ds_ts.tv_sec)) +
 			(double)(ts.tv_usec - ds_ts.tv_usec)) / 1.0e6;
@@ -1940,7 +1940,7 @@ net_add_eor(unsigned char *buf, int len)
 static int
 passwd_cb(char *buf, int size, int rwflag, void *userdata)
 {
-    	if (options.ssl.key_passwd == CN) {
+    	if (options.ssl.key_passwd == NULL) {
 		errmsg("No OpenSSL private key password specified");
 		return 0;
 	}
@@ -1979,7 +1979,7 @@ passwd_cb(char *buf, int size, int rwflag, void *userdata)
 static int
 parse_file_type(const char *s)
 {
-    	if (s == CN || !strcasecmp(s, "pem"))
+    	if (s == NULL || !strcasecmp(s, "pem"))
 		return SSL_FILETYPE_PEM;
 	else if (!strcasecmp(s, "asn1"))
 		return SSL_FILETYPE_ASN1;
@@ -2001,7 +2001,7 @@ get_ssl_error(char *buf)
 
 		(void) ERR_error_string(e, xbuf);
 		colon = strrchr(xbuf, ':');
-		if (colon != CN)
+		if (colon != NULL)
 			strcpy(buf, colon + 1);
 		else
 			strcpy(buf, xbuf);
@@ -2091,7 +2091,7 @@ ssl_base_init(void)
 	SSL_CTX_set_default_passwd_cb(ssl_ctx, passwd_cb);
 
 	/* Pull in the CA certificate file. */
-	if (options.ssl.ca_file != CN || options.ssl.ca_dir != CN) {
+	if (options.ssl.ca_file != NULL || options.ssl.ca_dir != NULL) {
 		if (SSL_CTX_load_verify_locations(ssl_ctx,
 			    options.ssl.ca_file,
 			    options.ssl.ca_dir) != 1) {
@@ -2142,7 +2142,7 @@ ssl_base_init(void)
 	}
 
 	/* Pull in the client certificate file. */
-	if (options.ssl.chain_file != CN) {
+	if (options.ssl.chain_file != NULL) {
 		if (SSL_CTX_use_certificate_chain_file(ssl_ctx,
 			    options.ssl.chain_file) != 1) {
 			errmsg("SSL_CTX_use_certificate_chain_file(\"%s\") failed:\n%s",
@@ -2150,7 +2150,7 @@ ssl_base_init(void)
 				get_ssl_error(err_buf));
 			goto fail;
 		}
-	} else if (options.ssl.cert_file != CN) {
+	} else if (options.ssl.cert_file != NULL) {
 		cft = parse_file_type(options.ssl.cert_file_type);
 		if (cft == -1) {
 			errmsg("Invalid OpenSSL certificate "
@@ -2169,7 +2169,7 @@ ssl_base_init(void)
 	}
 
 	/* Pull in the private key file. */
-	if (options.ssl.key_file != CN) {
+	if (options.ssl.key_file != NULL) {
 		int kft = parse_file_type(options.ssl.key_file_type);
 
 		if (kft == -1) {
@@ -2186,7 +2186,7 @@ ssl_base_init(void)
 				get_ssl_error(err_buf));
 			goto fail;
 		}
-	} else if (options.ssl.chain_file != CN) {
+	} else if (options.ssl.chain_file != NULL) {
 		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
 			    options.ssl.chain_file,
 			    SSL_FILETYPE_PEM) != 1) {
@@ -2195,7 +2195,7 @@ ssl_base_init(void)
 				get_ssl_error(err_buf));
 			goto fail;
 		}
-	} else if (options.ssl.cert_file != CN) {
+	} else if (options.ssl.cert_file != NULL) {
 		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
 			    options.ssl.cert_file,
 			    cft) != 1) {
@@ -2207,7 +2207,7 @@ ssl_base_init(void)
 	}
 
 	/* Check the key. */
-	if (options.ssl.key_file != CN &&
+	if (options.ssl.key_file != NULL &&
 	    SSL_CTX_check_private_key(ssl_ctx) != 1) {
 		errmsg("SSL_CTX_check_private_key failed:\n%s",
 			get_ssl_error(err_buf));
@@ -2229,7 +2229,7 @@ static int
 ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 {
 	int err;
-	char *why_not = CN;
+	char *why_not = NULL;
 
 	/* If OpenSSL thinks it's okay, so do we. */
 	if (preverify_ok)
@@ -2246,7 +2246,7 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 		 err == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN)) {
 		why_not = "self-signed okay";
 	}
-	if (why_not != CN) {
+	if (why_not != NULL) {
 		vtrace("SSL_verify_callback: %s, ignoring '%s' (%d)\n",
 			why_not, X509_verify_cert_error_string(err), err);
 		secure_unverified = True;

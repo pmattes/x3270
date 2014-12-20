@@ -56,7 +56,7 @@
 
 /* Support for WM_SAVE_YOURSELF. */
 
-char           *command_string = CN;
+char           *command_string = NULL;
 
 static char    *cmd;
 static int      cmd_len;
@@ -472,7 +472,7 @@ save_yourself(void)
 	char *c, *c2;
 	int len;
 
-	Replace(command_string, CN);
+	Replace(command_string, NULL);
 
 	/* Copy the original command line into tmp_cmd. */
 	tmp_cmd = (char **) XtMalloc(sizeof(char *) * NWORDS);
@@ -523,7 +523,7 @@ save_yourself(void)
 
 	/* Save a readable copy of the command string for posterity. */
 	command_string = c;
-	while (((c2 = strchr(c, '\0')) != CN) &&
+	while (((c2 = strchr(c, '\0')) != NULL) &&
 	       (c2 - command_string < len-1)) {
 		*c2 = ' ';
 		c = c2 + 1;
@@ -538,7 +538,7 @@ save_yourself(void)
 #define RDB_ENV		"X3270RDB"
 #define DEFAULT_PROFILE	"~/.x3270pro"
 
-char *profile_name = CN;
+char *profile_name = NULL;
 static char *xcmd;
 static int xargc;
 static char **xargv;
@@ -570,7 +570,7 @@ save_opt(FILE *f, const char *full_name, const char *opt_name,
     const char *res_name, const char *value)
 {
 	(void) fprintf(f, "! %s ", full_name);
-	if (opt_name != CN)
+	if (opt_name != NULL)
 		(void) fprintf(f, " (%s)", opt_name);
 	(void) fprintf(f, "\n%s.%s: %s\n", XtName(toplevel), res_name, value);
 }
@@ -587,18 +587,18 @@ save_options(char *n)
 	char buf[64];
 	Boolean any_toggles = False;
 
-	if (n == CN || *n == '\0')
+	if (n == NULL || *n == '\0')
 		return -1;
 
 	/* Open the file. */
 	n = do_subst(n, DS_VARS | DS_TILDE);
 	f = fopen(n, "r");
-	if (f != (FILE *)NULL) {
+	if (f != NULL) {
 		(void) fclose(f);
 		exists = True;
 	}
 	f = fopen(n, "a");
-	if (f == (FILE *)NULL) {
+	if (f == NULL) {
 		popup_an_errno(errno, "Cannot open %s", n);
 		XtFree(n);
 		return -1;
@@ -660,19 +660,19 @@ save_options(char *n)
 		(void) snprintf(buf, sizeof(buf), "%dx%d", ov_cols, ov_rows);
 		save_opt(f, "oversize", OptOversize, ResOversize, buf);
 	}
-	if (scheme_changed && appres.color_scheme != CN)
+	if (scheme_changed && appres.color_scheme != NULL)
 		save_opt(f, "color scheme", OptColorScheme, ResColorScheme,
 		    appres.color_scheme);
-	if (keymap_changed && current_keymap != CN)
+	if (keymap_changed && current_keymap != NULL)
 		save_opt(f, "keymap", OptKeymap, ResKeymap, current_keymap);
 	if (charset_changed)
 		save_opt(f, "charset", OptCharset, ResCharset,
 		    get_charset_name());
 	if (idle_changed) {
-		save_opt(f, "idle command", CN, ResIdleCommand, idle_command);
-		save_opt(f, "idle timeout", CN, ResIdleTimeout,
+		save_opt(f, "idle command", NULL, ResIdleCommand, idle_command);
+		save_opt(f, "idle timeout", NULL, ResIdleTimeout,
 				idle_timeout_string);
-		save_opt(f, "idle enabled", CN, ResIdleCommandEnabled,
+		save_opt(f, "idle enabled", NULL, ResIdleCommandEnabled,
 				(idle_user_enabled == IDLE_PERM)?
 				    "True": "False");
 	}
@@ -700,7 +700,7 @@ save_args(int argc, char *argv[])
 		(void) strcpy(xcmd + len, argv[i]);
 		len += strlen(argv[i]) + 1;
 	}
-	xargv[i] = CN;
+	xargv[i] = NULL;
 	*(xcmd + len) = '\0';
 	xargc = argc;
 }
@@ -795,15 +795,15 @@ merge_profile(XrmDatabase *d, char *session, Boolean mono)
 	XrmMergeDatabases(dd, d);
 #endif /*]*/
 
-	if (session == CN && getenv(NO_PROFILE_ENV) != CN) {
+	if (session == NULL && getenv(NO_PROFILE_ENV) != NULL) {
 		profile_name = do_subst(DEFAULT_PROFILE, DS_VARS | DS_TILDE);
 	} else {
 		/* Open the file. */
-	    	if (session != CN)
+	    	if (session != NULL)
 		    	fname = session;
 		else
 			fname = getenv(PROFILE_ENV);
-		if (fname == CN || *fname == '\0')
+		if (fname == NULL || *fname == '\0')
 			fname = DEFAULT_PROFILE;
 		profile_name = do_subst(fname, DS_VARS | DS_TILDE);
 
@@ -812,7 +812,7 @@ merge_profile(XrmDatabase *d, char *session, Boolean mono)
 		if (dd != NULL) {
 			/* Merge in the profile options. */
 			XrmMergeDatabases(dd, d);
-		} else if (session != CN) {
+		} else if (session != NULL) {
 		    	Error("Session file not found");
 		}
 	}
@@ -834,8 +834,8 @@ merge_profile(XrmDatabase *d, char *session, Boolean mono)
 
 	/* Free the saved command-line options. */
 	XtFree(xcmd);
-	xcmd = CN;
-	Replace(xargv, (char **)NULL);
+	xcmd = NULL;
+	Replace(xargv, NULL);
 }
 
 int

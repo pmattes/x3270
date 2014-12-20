@@ -234,7 +234,7 @@ printer_start(const char *lu)
 	}
 
 	/* Figure out the LU. */
-	if (lu == CN) {
+	if (lu == NULL) {
 		/* Associate with the current session. */
 		associated = True;
 
@@ -245,7 +245,7 @@ printer_start(const char *lu)
 		}
 
 		/* Gotta be connected to an LU. */
-		if (connected_lu == CN) {
+		if (connected_lu == NULL) {
 			popup_an_error("Not connected to a specific LU");
 			return;
 		}
@@ -313,10 +313,10 @@ printer_start_now(const char *lu, Boolean associated)
 	char *cmd_text;
 	char c;
 	char charset_cmd[256];	/* -charset <csname> */
-	char *proxy_cmd = CN;	/* -proxy <spec> */
+	char *proxy_cmd = NULL;	/* -proxy <spec> */
 #if defined(_WIN32) /*[*/
-	char *pcp_res = CN;
-	char *printercp = CN;	/* -printercp <n> */
+	char *pcp_res = NULL;
+	char *printercp = NULL;	/* -printercp <n> */
 	char *cp_cmdline;
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
@@ -396,14 +396,14 @@ printer_start_now(const char *lu, Boolean associated)
 
 	/* Fetch the command line and command resources. */
 	cmdline = get_resource(cmdlineName);
-	if (cmdline == CN) {
+	if (cmdline == NULL) {
 		popup_an_error("%s resource not defined", cmdlineName);
 		SOCK_CLOSE(printer_ls);
 		return;
 	}
 #if !defined(_WIN32) /*[*/
 	cmd = get_resource(ResPrinterCommand);
-	if (cmd == CN) {
+	if (cmd == NULL) {
 		popup_an_error(ResPrinterCommand " resource not defined");
 		SOCK_CLOSE(printer_ls);
 		return;
@@ -417,7 +417,7 @@ printer_start_now(const char *lu, Boolean associated)
 		get_charset_name());
 
 	/* Construct proxy option. */
-	if (appres.proxy != CN) {
+	if (appres.proxy != NULL) {
 #if !defined(_WIN32) /*[*/
 	    	proxy_cmd = xs_buffer("-proxy \"%s\"", appres.proxy);
 #else /*][ */
@@ -444,46 +444,46 @@ printer_start_now(const char *lu, Boolean associated)
 	/* Figure out how long it will be. */
 	cmd_len = strlen(cmdline) + 1;
 	s = cmdline;
-	while ((s = strstr(s, "%L%")) != CN) {
+	while ((s = strstr(s, "%L%")) != NULL) {
 		cmd_len += strlen(lu) - 3;
 		s += 3;
 	}
 	s = cmdline;
-	while ((s = strstr(s, "%H%")) != CN) {
+	while ((s = strstr(s, "%H%")) != NULL) {
 		cmd_len += strlen(qualified_host) - 3;
 		s += 3;
 	}
 #if !defined(_WIN32) /*[*/
 	s = cmdline;
-	while ((s = strstr(s, "%C%")) != CN) {
+	while ((s = strstr(s, "%C%")) != NULL) {
 		cmd_len += strlen(cmd) - 3;
 		s += 3;
 	}
 #endif /*]*/
 	s = cmdline;
-	while ((s = strstr(s, "%R%")) != CN) {
+	while ((s = strstr(s, "%R%")) != NULL) {
 		cmd_len += strlen(charset_cmd) - 3;
 		s += 3;
 	}
 	s = cmdline;
-	while ((s = strstr(s, "%P%")) != CN) {
+	while ((s = strstr(s, "%P%")) != NULL) {
 		cmd_len += (proxy_cmd? strlen(proxy_cmd): 0) - 3;
 		s += 3;
 	}
 #if defined(_WIN32) /*[*/
 	s = cmdline;
-	while ((s = strstr(s, "%I%")) != CN) {
+	while ((s = strstr(s, "%I%")) != NULL) {
 		cmd_len += (printercp? strlen(printercp): 0) - 3;
 		s += 3;
 	}
 #endif /*]*/
 	s = cmdline;
-	while ((s = strstr(s, "%O%")) != CN) {
+	while ((s = strstr(s, "%O%")) != NULL) {
 		cmd_len += (printer_opts? strlen(printer_opts): 0) - 3;
 		s += 3;
 	}
 	s = cmdline;
-	while ((s = strstr(s, "%V%")) != CN) {
+	while ((s = strstr(s, "%V%")) != NULL) {
 #if defined(HAVE_LIBSSL) /*[*/
 		cmd_len += appres.verify_host_cert?
 		    strlen(OptVerifyHostCert) + 1: 0;
@@ -516,7 +516,7 @@ printer_start_now(const char *lu, Boolean associated)
 		s += 3;
 	}
 	s = cmdline;
-	while ((s = strstr(s, "%S%")) != CN) {
+	while ((s = strstr(s, "%S%")) != NULL) {
 		cmd_len += strlen(syncopt) - 3;
 		s += 3;
 	}
@@ -547,19 +547,19 @@ printer_start_now(const char *lu, Boolean associated)
 				s += 2;
 				continue;
 			} else if (!strncmp(s+1, "P%", 2)) {
-			    	if (proxy_cmd != CN)
+			    	if (proxy_cmd != NULL)
 					(void) strcat(cmd_text, proxy_cmd);
 				s += 2;
 				continue;
 #if defined(_WIN32) /*[*/
 			} else if (!strncmp(s+1, "I%", 2)) {
-			    	if (printercp != CN)
+			    	if (printercp != NULL)
 					(void) strcat(cmd_text, printercp);
 				s += 2;
 				continue;
 #endif /*]*/
 			} else if (!strncmp(s+1, "O%", 2)) {
-			    	if (printer_opts != CN)
+			    	if (printer_opts != NULL)
 					(void) strcat(cmd_text, printer_opts);
 				s += 2;
 				continue;
@@ -645,7 +645,7 @@ printer_start_now(const char *lu, Boolean associated)
 	if (pipe(stdout_pipe) < 0) {
 		popup_an_errno(errno, "pipe() failed");
 		Free(cmd_text);
-		if (proxy_cmd != CN)
+		if (proxy_cmd != NULL)
 			Free(proxy_cmd);
 		SOCK_CLOSE(printer_ls);
 		return;
@@ -656,7 +656,7 @@ printer_start_now(const char *lu, Boolean associated)
 		(void) close(stdout_pipe[0]);
 		(void) close(stdout_pipe[1]);
 		Free(cmd_text);
-		if (proxy_cmd != CN)
+		if (proxy_cmd != NULL)
 			Free(proxy_cmd);
 		SOCK_CLOSE(printer_ls);
 		return;
@@ -674,7 +674,7 @@ printer_start_now(const char *lu, Boolean associated)
 			perror("setsid");
 			_exit(1);
 		}
-		(void) execlp("/bin/sh", "sh", "-c", cmd_text, CN);
+		(void) execlp("/bin/sh", "sh", "-c", cmd_text, NULL);
 		(void) perror("exec(printer)");
 		_exit(1);
 	    default:	/* parent process */
@@ -733,10 +733,10 @@ printer_start_now(const char *lu, Boolean associated)
 #endif /*]*/
 
 	Free(cmd_text);
-	if (proxy_cmd != CN)
+	if (proxy_cmd != NULL)
 		Free(proxy_cmd);
 #if defined(_WIN32) /*[*/
-	if (printercp != CN)
+	if (printercp != NULL)
 		Free(printercp);
 #endif /*]*/
 
@@ -1172,18 +1172,18 @@ printer_host_connect(Boolean connected _is_unused)
 	if (IN_3270) {
 		char *printer_lu = appres.printer_lu;
 
-		if (printer_lu != CN && !printer_running()) {
+		if (printer_lu != NULL && !printer_running()) {
 			if (!strcmp(printer_lu, ".")) {
 				if (IN_TN3270E) {
 					/* Associate with TN3270E session. */
-					printer_start(CN);
+					printer_start(NULL);
 				}
 			} else {
 				/* Specific LU. */
 				printer_start(printer_lu);
 			}
 		} else if (!IN_E &&
-			   printer_lu != CN &&
+			   printer_lu != NULL &&
 			   !strcmp(printer_lu, ".") &&
 			   printer_running()) {
 

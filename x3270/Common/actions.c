@@ -75,13 +75,13 @@ static struct {
 	Boolean is_meta;
 } skeymask[MAP_SIZE] = { 
 	{ { "Shift" }, ShiftMask, False },
-	{ { (char *)NULL } /* Lock */, LockMask, False },
+	{ { NULL } /* Lock */, LockMask, False },
 	{ { "Ctrl" }, ControlMask, False },
-	{ { CN }, Mod1Mask, False },
-	{ { CN }, Mod2Mask, False },
-	{ { CN }, Mod3Mask, False },
-	{ { CN }, Mod4Mask, False },
-	{ { CN }, Mod5Mask, False },
+	{ { NULL }, Mod1Mask, False },
+	{ { NULL }, Mod2Mask, False },
+	{ { NULL }, Mod3Mask, False },
+	{ { NULL }, Mod4Mask, False },
+	{ { NULL }, Mod5Mask, False },
 	{ { "Button1" }, Button1Mask, False },
 	{ { "Button2" }, Button2Mask, False },
 	{ { "Button3" }, Button3Mask, False },
@@ -333,7 +333,7 @@ action_suppressed(String name, char *suppress)
 	char *s = suppress;
 	char *t;
 
-	while ((t = strstr(s, name)) != CN) {
+	while ((t = strstr(s, name)) != NULL) {
 		char b;
 		char e = t[strlen(name)];
 
@@ -361,7 +361,7 @@ action_init(void)
 
 	/* See if there are any filters at all. */
 	suppress = get_resource(ResSuppressActions);
-	if (suppress == CN) {
+	if (suppress == NULL) {
 		actions = all_actions;
 		return;
 	}
@@ -395,7 +395,7 @@ action_name(XtActionProc action)
 			int j;
 			Boolean aliased = False;
 
-			for (j = 0; aliased_actions[j] != CN; j++) {
+			for (j = 0; aliased_actions[j] != NULL; j++) {
 				if (!strcmp(aliased_actions[j],
 							actions[i].string)) {
 					aliased = True;
@@ -419,7 +419,7 @@ learn_modifiers(void)
 	XModifierKeymap *mm;
 	int i, j, k;
 	static char *default_modname[] = {
-	    CN, CN, "Ctrl",
+	    NULL, NULL, "Ctrl",
 	    "Mod1", "Mod2", "Mod3", "Mod4", "Mod5",
 	    "Button1", "Button2", "Button3", "Button4", "Button5"
 	};
@@ -429,7 +429,7 @@ learn_modifiers(void)
 	for (i = 0; i < MODMAP_SIZE; i++) {
 		for (j = 0; j < mm->max_keypermod; j++) {
 			KeyCode kc;
-			const char *name = CN;
+			const char *name = NULL;
 			Boolean is_meta = False;
 
 			kc = mm->modifiermap[(i * mm->max_keypermod) + j];
@@ -457,13 +457,13 @@ learn_modifiers(void)
 			    default:
 				break;
 			}
-			if (name == CN)
+			if (name == NULL)
 				continue;
 			if (is_meta)
 				skeymask[i].is_meta = True;
 
 			for (k = 0; k < MAX_MODS_PER; k++) {
-				if (skeymask[i].name[k] == CN)
+				if (skeymask[i].name[k] == NULL)
 					break;
 				else if (!strcmp(skeymask[i].name[k], name))
 					k = MAX_MODS_PER;
@@ -474,7 +474,7 @@ learn_modifiers(void)
 		}
 	}
 	for (i = 0; i < MODMAP_SIZE; i++) {
-		if (skeymask[i].name[0] == CN) {
+		if (skeymask[i].name[0] == NULL) {
 			skeymask[i].name[0] = default_modname[i];
 		}
 	}
@@ -509,7 +509,7 @@ key_symbolic_state(unsigned int state, int *iteration)
 		/* First time, build the table. */
 		n_ix = 0;
 		for (i = 0; i < MAP_SIZE; i++) {
-			if (skeymask[i].name[0] != CN &&
+			if (skeymask[i].name[0] != NULL &&
 			    (state & skeymask[i].mask)) {
 				ix[i] = 0;
 				state &= ~skeymask[i].mask;
@@ -545,7 +545,7 @@ key_symbolic_state(unsigned int state, int *iteration)
 		ix[ix_ix[i]]++;
 		while (i >= 0 &&
 		       (ix[ix_ix[i]] >= MAX_MODS_PER ||
-			skeymask[ix_ix[i]].name[ix[ix_ix[i]]] == CN)) {
+			skeymask[ix_ix[i]].name[ix[ix_ix[i]]] == NULL)) {
 			ix[ix_ix[i]] = 0;
 			i = i - 1;
 			if (i >= 0)
@@ -570,7 +570,7 @@ event_is_meta(int state)
 		know_mods = True;
 	}
 	for (i = 0; i < MAP_SIZE; i++) {
-		if (skeymask[i].name[0] != CN &&
+		if (skeymask[i].name[0] != NULL &&
 		    skeymask[i].is_meta &&
 		    (state & skeymask[i].mask)) {
 			return True;
@@ -602,7 +602,7 @@ key_state(unsigned int state)
 		{ "Button3", Button3Mask },
 		{ "Button4", Button4Mask },
 		{ "Button5", Button5Mask },
-		{ CN, 0 },
+		{ NULL, 0 },
 	};
 	int i;
 
@@ -677,7 +677,7 @@ action_debug(XtActionProc action, XEvent *event, String *params,
 	if (!toggled(TRACING)) {
 		return;
 	}
-	if (event == (XEvent *)NULL) {
+	if (event == NULL) {
 		vtrace(" %s", ia_name[(int)ia_cause]);
 	}
 #if defined(X3270_DISPLAY) /*[*/
@@ -696,7 +696,7 @@ action_debug(XtActionProc action, XEvent *event, String *params,
 			state &= ~ShiftMask;
 		if (ks == NoSymbol)
 			symname = "NoSymbol";
-		else if ((symname = XKeysymToString(ks)) == CN) {
+		else if ((symname = XKeysymToString(ks)) == NULL) {
 			(void) snprintf(snbuf, sizeof(snbuf), "0x%lx",
 				(unsigned long)ks);
 			symname = snbuf;
@@ -797,7 +797,7 @@ action_debug(XtActionProc action, XEvent *event, String *params,
 		cmevent = (XClientMessageEvent *)event;
 		atom_name = XGetAtomName(display, (Atom)cmevent->data.l[0]);
 		vtrace("ClientMessage [%s]",
-		    (atom_name == CN) ? "(unknown)" : atom_name);
+		    (atom_name == NULL) ? "(unknown)" : atom_name);
 		break;
 	    case ConfigureNotify:
 		cevent = (XConfigureEvent *)event;
@@ -808,7 +808,7 @@ action_debug(XtActionProc action, XEvent *event, String *params,
 		vtrace("Event %d", event->type);
 		break;
 	}
-	if (keymap_trace != CN)
+	if (keymap_trace != NULL)
 		vtrace(" via %s -> %s(", keymap_trace,
 		    action_name(action));
 	else
@@ -835,10 +835,10 @@ action_internal(XtActionProc action, enum iaction cause, const char *parm1,
 	String parms[2];
 
 	/* Duplicate the parms, because XtActionProc doesn't grok 'const'. */
-	if (parm1 != CN) {
+	if (parm1 != NULL) {
 		parms[0] = NewString(parm1);
 		count++;
-		if (parm2 != CN) {
+		if (parm2 != NULL) {
 			parms[1] = NewString(parm2);
 			count++;
 		}

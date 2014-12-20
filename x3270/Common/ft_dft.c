@@ -79,7 +79,7 @@ int dft_buffersize = 0;			/* Buffer size (LIMIN, LIMOUT) */
 static Boolean message_flag = False;	/* Open Request for msg received */
 static int dft_eof;
 static unsigned long recnum;
-static char *abort_string = CN;
+static char *abort_string = NULL;
 static unsigned char *dft_savebuf = NULL;
 static int dft_savebuf_len = 0;
 static int dft_savebuf_max = 0;
@@ -252,11 +252,11 @@ dft_data_insert(struct data_buffer *data_bufr)
 		/* If transfer completed ok, use our msg. */
 		if (memcmp(msgp, END_TRANSFER, strlen(END_TRANSFER)) == 0) {
 			Free(msgp);
-			ft_complete((String)NULL);
-		} else if (ft_state == FT_ABORT_SENT && abort_string != CN) {
+			ft_complete(NULL);
+		} else if (ft_state == FT_ABORT_SENT && abort_string != NULL) {
 			Free(msgp);
 			ft_complete(abort_string);
-			Replace(abort_string, CN);
+			Replace(abort_string, NULL);
 		} else {
 			ft_complete((char *)msgp);
 			Free(msgp);

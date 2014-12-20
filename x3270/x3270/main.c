@@ -90,7 +90,7 @@ XrmDatabase     rdb;
 AppRes          appres;
 int		children = 0;
 Boolean		exiting = False;
-char           *user_title = CN;
+char           *user_title = NULL;
 
 /* Statics */
 static void	peek_at_xevent(XEvent *);
@@ -105,7 +105,7 @@ static int	parse_model_number(char *m);
 static void	parse_set_clear(int *, char **);
 static void	label_init(void);
 static void	sigchld_handler(int);
-static char    *user_icon_name = CN;
+static char    *user_icon_name = NULL;
 
 XrmOptionDescRec options[]= {
 	{ OptActiveIcon,DotActiveIcon,	XrmoptionNoArg,		ResTrue },
@@ -186,8 +186,8 @@ static struct {
 #if defined(HAVE_LIBSSL) /*[*/
 	{ OptAcceptHostname, "any|DNS:<name>|IP:<addr>", "Host name to accept from server certificate" },
 #endif /*]*/
-	{ OptActiveIcon, CN, "Make icon a miniature of the display" },
-	{ OptAplMode, CN,    "Turn on APL mode" },
+	{ OptActiveIcon, NULL, "Make icon a miniature of the display" },
+	{ OptAplMode, NULL,    "Turn on APL mode" },
 #if defined(HAVE_LIBSSL) /*[*/
 	{ OptCaDir, "<directory>", "Specify OpenSSL CA certificate database directory" },
 	{ OptCaFile, "<filename>", "Specify OpenSSL CA certificate file" },
@@ -201,7 +201,7 @@ static struct {
 	{ OptColorScheme, "<name>", "Use color scheme <name>" },
 	{ OptDevName, "<name>", "Specify device name (workstation ID)" },
 	{ OptEmulatorFont, "<font>", "Font for emulator window" },
-	{ OptExtended, CN, "Extended 3270 data stream (deprecated)" },
+	{ OptExtended, NULL, "Extended 3270 data stream (deprecated)" },
 	{ OptHttpd, "[<addr>:]<port>", "TCP port to listen on for http requests" },
 	{ OptHostsFile, "<filename>", "Pathname of ibm_hosts file" },
 	{ OptIconName, "<name>", "Title for icon" },
@@ -212,33 +212,33 @@ static struct {
 	{ OptKeyFileType, "pem|asn1", "Specify OpenSSL private key file type" },
 #endif /*]*/
 	{ OptKeymap, "<name>[,<name>...]", "Keyboard map name(s)" },
-	{ OptKeypadOn, CN, "Turn on pop-up keypad at start-up" },
+	{ OptKeypadOn, NULL, "Turn on pop-up keypad at start-up" },
 #if defined(HAVE_LIBSSL) /*[*/
 	{ OptKeyPasswd, "file:<filename>|string:<text>", "Specify OpenSSL private key password" },
 #endif /*]*/
 	{ OptLoginMacro, "Action([arg[,...]]) [...]", "Specify macro to run at login" },
-	{ OptM3279, CN, "3279 emulation (deprecated)" },
+	{ OptM3279, NULL, "3279 emulation (deprecated)" },
 	{ OptModel, "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
-	{ OptMono, CN, "Do not use color" },
-	{ OptNoScrollBar, CN, "Disable scroll bar" },
-	{ OptOnce, CN, "Exit as soon as the host disconnects" },
+	{ OptMono, NULL, "Do not use color" },
+	{ OptNoScrollBar, NULL, "Disable scroll bar" },
+	{ OptOnce, NULL, "Exit as soon as the host disconnects" },
 	{ OptOversize,  "<cols>x<rows>", "Specify larger screen" },
 	{ OptPort, "<port>", "Specify default TELNET port" },
 	{ OptPrinterLu,  "<luname>", "Automatically start a pr3287 printer session to <luname>" },
 	{ OptProxy, "<type>:<host>[:<port>]", "Secify proxy type and server" },
-	{ OptReconnect, CN, "Reconnect to host as soon as it disconnects" },
+	{ OptReconnect, NULL, "Reconnect to host as soon as it disconnects" },
 	{ OptSaveLines, "<n>", "Number of lines to save for scroll bar" },
-	{ OptScripted, CN, "Accept commands on standard input" },
-	{ OptScrollBar, CN, "Turn on scroll bar" },
+	{ OptScripted, NULL, "Accept commands on standard input" },
+	{ OptScrollBar, NULL, "Turn on scroll bar" },
 #if defined(HAVE_LIBSSL) /*[*/
-	{ OptSelfSignedOk, CN, "Allow self-signed host certificates" },
+	{ OptSelfSignedOk, NULL, "Allow self-signed host certificates" },
 #endif /*]*/
 	{ OptSet, "<toggle>", "Turn on <toggle>" },
-	{ OptSocket,  CN, "Create socket for script control" },
+	{ OptSocket,  NULL, "Create socket for script control" },
 	{ OptScriptPort, "<port>", "Listen on TCP port <port> for script connections" },
 	{ OptSecure, NULL, "Set secure mode" },
 	{ OptTermName, "<name>", "Send <name> as TELNET terminal name" },
-	{ OptTrace, CN, "Enable tracing" },
+	{ OptTrace, NULL, "Enable tracing" },
 	{ OptTraceFile, "<file>", "Write traces to <file>" },
 	{ OptTraceFileSize, "<n>[KM]", "Limit trace file to <n> bytes" },
 #if defined(X3270_DBCS) /*[*/
@@ -246,11 +246,11 @@ static struct {
 	{ OptPreeditType, "<style>", "Define input method pre-edit type" },
 #endif /*]*/
 	{ OptUser, "<name>", "Specify user name for RFC 4777" },
-	{ OptV, CN, "Display build options and character sets" },
+	{ OptV, NULL, "Display build options and character sets" },
 #if defined(HAVE_LIBSSL) /*[*/
-	{ OptVerifyHostCert, CN, "Verify OpenSSL host certificate" },
+	{ OptVerifyHostCert, NULL, "Verify OpenSSL host certificate" },
 #endif /*]*/
-	{ OptVersion, CN, "Display build options and character sets" },
+	{ OptVersion, NULL, "Display build options and character sets" },
 	{ "-xrm", "'x3270.<resource>: <value>'", "Set <resource> to <vale>" }
 };
 
@@ -289,7 +289,7 @@ usage(const char *msg)
 {
 	unsigned i;
 
-	if (msg != CN)
+	if (msg != NULL)
 	    	fprintf(stderr, "%s\n", msg);
 
 	fprintf(stderr, "Usage: %s [options] [[ps:][LUname@]hostname[:port]]\n",
@@ -321,12 +321,12 @@ main(int argc, char *argv[])
 	int	i;
 #endif /*]*/
 	Atom	protocols[2];
-	char	*cl_hostname = CN;
+	char	*cl_hostname = NULL;
 	int	ovc, ovr;
 	char	junk;
 	int	model_number;
 	Boolean	mono = False;
-	char	*session = CN;
+	char	*session = NULL;
 	Boolean pending = False;
 
 	if (XtNumber(options) != XtNumber(option_help))
@@ -356,7 +356,7 @@ main(int argc, char *argv[])
 	 * Figure out which fallbacks to use, based on the "-mono"
 	 * switch on the command line, and the depth of the display.
 	 */
-	dname = CN;
+	dname = NULL;
 	for (i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "-mono"))
 			mono = True;
@@ -364,7 +364,7 @@ main(int argc, char *argv[])
 			dname = argv[i+1];
 	}
 	display = XOpenDisplay(dname);
-	if (display == (Display *)NULL)
+	if (display == NULL)
 		XtError("Can't open display");
 	if (DefaultDepthOfScreen(XDefaultScreenOfDisplay(display)) == 1)
 		mono = True;
@@ -413,30 +413,30 @@ main(int argc, char *argv[])
 	    case 1:
 		break;
 	    case 2:
-		if (cl_hostname != CN)
-			usage(CN);
+		if (cl_hostname != NULL)
+			usage(NULL);
 		no_minus(argv[1]);
 		cl_hostname = argv[1];
 		break;
 	    case 3:
-		if (cl_hostname != CN)
-			usage(CN);
+		if (cl_hostname != NULL)
+			usage(NULL);
 		no_minus(argv[1]);
 		no_minus(argv[2]);
 		cl_hostname = xs_buffer("%s:%s", argv[1], argv[2]);
 		break;
 	    default:
-		usage(CN);
+		usage(NULL);
 		break;
 	}
 
 	/* If the 'hostname' ends with .x3270, it is a session file. */
-	if (cl_hostname != CN &&
+	if (cl_hostname != NULL &&
 	    strlen(cl_hostname) > strlen(".x3270") &&
 	    !strcmp(cl_hostname + strlen(cl_hostname) - strlen(".x3270"),
 		".x3270")) {
 		session = cl_hostname;
-		cl_hostname = CN;
+		cl_hostname = NULL;
 	}
 
 	/* Merge in the profile or session file. */
@@ -453,7 +453,7 @@ main(int argc, char *argv[])
 	 * If the hostname is specified as a resource and not specified as a
 	 * positional argument, use the resource value.
 	 */
-	if (cl_hostname == CN && appres.hostname != CN)
+	if (cl_hostname == NULL && appres.hostname != NULL)
 	    	cl_hostname = appres.hostname;
 
 #if defined(USE_APP_DEFAULTS) /*[*/
@@ -501,7 +501,7 @@ main(int argc, char *argv[])
 		appres.m3279 = False;
 	}
 	if (!appres.extended)
-		appres.oversize = CN;
+		appres.oversize = NULL;
 	if (appres.secure)
 		appres.disconnect_clear = True;
 
@@ -530,20 +530,20 @@ main(int argc, char *argv[])
 	    case CS_NOTFOUND:
 		popup_an_error("Cannot find definition for host character set "
 		    "\"%s\"", appres.charset);
-		(void) charset_init(CN);
+		(void) charset_init(NULL);
 		break;
 	    case CS_BAD:
 		popup_an_error("Invalid definition for host character set "
 		    "\"%s\"", appres.charset);
-		(void) charset_init(CN);
+		(void) charset_init(NULL);
 		break;
 	    case CS_PREREQ:
 		popup_an_error("No fonts for host character set \"%s\"",
 		    appres.charset);
-		(void) charset_init(CN);
+		(void) charset_init(NULL);
 		break;
 	    case CS_ILLEGAL:
-		(void) charset_init(CN);
+		(void) charset_init(NULL);
 		break;
 	}
 
@@ -554,13 +554,13 @@ main(int argc, char *argv[])
 	if (appres.m3279 && model_number == 4)
 		model_number = 3;
 #endif /*]*/
-	if (!appres.extended || appres.oversize == CN ||
+	if (!appres.extended || appres.oversize == NULL ||
 	    sscanf(appres.oversize, "%dx%d%c", &ovc, &ovr, &junk) != 2) {
 		ovc = 0;
 		ovr = 0;
 	}
 	set_rows_cols(model_number, ovc, ovr);
-	if (appres.termname != CN)
+	if (appres.termname != NULL)
 		termtype = appres.termname;
 	else
 		termtype = full_model_name;
@@ -576,13 +576,13 @@ main(int argc, char *argv[])
 	 */
 	if (argc <= 1) {
 #if defined(LOCAL_PROCESS) /*[*/
-		if (cl_hostname == CN)
+		if (cl_hostname == NULL)
 #endif /*]*/
 			appres.once = False;
 		appres.reconnect = False;
 	}
 
-	if (appres.char_class != CN)
+	if (appres.char_class != NULL)
 		reclass(appres.char_class);
 
 	screen_init();
@@ -641,7 +641,7 @@ main(int argc, char *argv[])
 #endif /*]*/
 
 	/* Connect to the host. */
-	if (cl_hostname != CN && !pending)
+	if (cl_hostname != NULL && !pending)
 		(void) host_connect(cl_hostname);
 
 	/* Prepare to run a peer script. */
@@ -757,16 +757,16 @@ relabel(Boolean ignored _is_unused)
 	char *title;
 	char icon_label[8];
 
-	if (user_title != CN && user_icon_name != CN)
+	if (user_title != NULL && user_icon_name != NULL)
 		return;
 	title = XtMalloc(10 + ((PCONNECTED || appres.reconnect) ?
 						strlen(reconnect_host) : 0));
 	if (PCONNECTED || appres.reconnect) {
 		(void) sprintf(title, "x3270-%d%s %s", model_num,
 		    (IN_NVT ? "A" : ""), reconnect_host);
-		if (user_title == CN)
+		if (user_title == NULL)
 			XtVaSetValues(toplevel, XtNtitle, title, NULL);
-		if (user_icon_name == CN)
+		if (user_icon_name == NULL)
 			XtVaSetValues(toplevel,
 			    XtNiconName, reconnect_host,
 			    NULL);
@@ -774,9 +774,9 @@ relabel(Boolean ignored _is_unused)
 	} else {
 		(void) sprintf(title, "x3270-%d", model_num);
 		(void) sprintf(icon_label, "x3270-%d", model_num);
-		if (user_title == CN)
+		if (user_title == NULL)
 			XtVaSetValues(toplevel, XtNtitle, title, NULL);
-		if (user_icon_name == CN)
+		if (user_icon_name == NULL)
 			XtVaSetValues(toplevel, XtNiconName, icon_label, NULL);
 		set_aicon_label(icon_label);
 	}
@@ -789,7 +789,7 @@ label_init(void)
 {
 	user_title = get_resource(XtNtitle);
 	user_icon_name = get_resource(XtNiconName);
-	if (user_icon_name != CN)
+	if (user_icon_name != NULL)
 		set_aicon_label(user_icon_name);
 
 	register_schange(ST_HALF_CONNECT, relabel);
@@ -813,7 +813,7 @@ peek_at_xevent(XEvent *e)
 
 	if (e->type == KeymapNotify) {
 		ia_cause = IA_PEEK;
-		PA_KeymapNotify_action((Widget)NULL, e, (String *)NULL, &zero);
+		PA_KeymapNotify_action(NULL, e, NULL, &zero);
 		ia_cause = IA_DEFAULT;
 	}
 }
@@ -859,7 +859,7 @@ parse_local_process(int *argcp, char **argv, char **cmds)
 
 		/* Stamp out the remaining args. */
 		*argcp = i;
-		argv[i] = CN;
+		argv[i] = NULL;
 		break;
 	}
 }
@@ -936,7 +936,7 @@ parse_set_clear(int *argcp, char **argv)
 
 	}
 	*argcp = argc_out;
-	argv_out[argc_out] = CN;
+	argv_out[argc_out] = NULL;
 	(void) memcpy((char *)argv, (char *)argv_out,
 	    (argc_out + 1) * sizeof(char *));
 	Free(argv_out);

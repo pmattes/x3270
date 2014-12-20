@@ -316,7 +316,7 @@ Initialize(Widget request _is_unused, Widget new, ArgList args _is_unused,
 
   if (cmw->core.width == 0) {
       cmw->complex_menu.menu_width = FALSE;
-      cmw->core.width = GetMenuWidth(new, (Widget)NULL);
+      cmw->core.width = GetMenuWidth(new, NULL);
   }
 
   cmw->complex_menu.menu_height = TRUE;
@@ -488,7 +488,7 @@ SetValues(Widget current, Widget request _is_unused, Widget new,
     }
 
     if (layout)
-	Layout(new, (Dimension *)NULL, (Dimension *)NULL);
+	Layout(new, NULL, NULL);
 
     return(ret_val);
 }
@@ -580,7 +580,7 @@ GeometryManager(Widget w, XtWidgetGeometry *request, XtWidgetGeometry *reply)
 	    entry->rectangle.height = old_height;	
 	}
 	else {
-	    Layout(( Widget) cmw, (Dimension *)NULL, (Dimension *)NULL);
+	    Layout(( Widget) cmw, NULL, NULL);
 	}
 	answer = XtGeometryDone;
     }
@@ -614,7 +614,7 @@ GeometryManager(Widget w, XtWidgetGeometry *request, XtWidgetGeometry *reply)
 static void
 ChangeManaged(Widget w)
 {
-    Layout(w, (Dimension *)NULL, (Dimension *)NULL);
+    Layout(w, NULL, NULL);
 }
 
 /************************************************************
@@ -678,7 +678,7 @@ PositionMenuAction(Widget w, XEvent *event, String *params,
     PositionMenu(menu, &loc);
     break;
   default:
-    PositionMenu(menu, (XPoint *)NULL);
+    PositionMenu(menu, NULL);
     break;
   }
 }  
@@ -1287,7 +1287,7 @@ ClearParent(Widget w, XtPointer junk _is_unused, XtPointer garbage _is_unused)
 		    cmw->complex_menu.parent?
 			    cmw->complex_menu.parent->core.name: "(null)");
 #endif
-    Notify(w, (XEvent *)NULL, (String *)NULL, (Cardinal *)NULL);
+    Notify(w, NULL, NULL, NULL);
 }
 
 /*      Function Name: MakeSetValuesRequest

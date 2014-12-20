@@ -117,11 +117,11 @@ char	       *model_name = &full_model_name[4];
 AppRes          appres;
 int		children = 0;
 Boolean		exiting = False;
-char	       *command_string = CN;
+char	       *command_string = NULL;
 static Boolean	sfont = False;
 Boolean	       *standard_font = &sfont;
-char	       *profile_name = CN;
-char	       *profile_path = CN;
+char	       *profile_name = NULL;
+char	       *profile_path = NULL;
 
 struct toggle_name toggle_names[] = {
 #if defined(C3270) /*[*/
@@ -198,7 +198,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 		(void) strcpy(xcmd + xcmd_len, argv[i]);
 		xcmd_len += strlen(argv[i]) + 1;
 	}
-	xargv[i] = CN;
+	xargv[i] = NULL;
 	*(xcmd + xcmd_len) = '\0';
 	xargc = argc;
 
@@ -241,7 +241,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	}
 
 	/* Delete the host name and any "--". */
-	if (argv[hn_argc] != CN && !strcmp(argv[hn_argc], LAST_ARG))
+	if (argv[hn_argc] != NULL && !strcmp(argv[hn_argc], LAST_ARG))
 		hn_argc++;
 	if (hn_argc > 1) {
 		for (i = 1; i < argc - hn_argc + 2; i++) {
@@ -250,7 +250,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	}
 
 	/* Merge in the session. */
-	if (*cl_hostname != CN &&
+	if (*cl_hostname != NULL &&
 	    (((sl = strlen(*cl_hostname)) > SESSION_SFX_LEN &&
 	      !strcasecmp(*cl_hostname + sl - SESSION_SFX_LEN, SESSION_SFX))
 #if defined(_WIN32) /*[*/
@@ -267,7 +267,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 		read_session_or_profile = True;
 
 		pname = strrchr(*cl_hostname, '\\');
-		if (pname != CN)
+		if (pname != NULL)
 		    	pname++;
 		else
 		    	pname = *cl_hostname;
@@ -302,7 +302,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 		 * as a positional command-line argument, pretend it was one,
 		 * so we will connect to it at start-up.
 		 */
-		if (*cl_hostname == CN && appres.hostname != CN)
+		if (*cl_hostname == NULL && appres.hostname != NULL)
 		    	*cl_hostname = appres.hostname;
 	}
 
@@ -325,10 +325,10 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	if (appres.apl_mode) {
 		appres.charset = Apl;
 	}
-	if (*cl_hostname == CN) {
+	if (*cl_hostname == NULL) {
 		appres.once = False;
 	}
-	if (appres.conf_dir == CN) {
+	if (appres.conf_dir == NULL) {
 		appres.conf_dir = LIBX3270DIR;
 	}
 	if (!appres.debug_tracing) {
@@ -374,12 +374,12 @@ model_init(void)
 #endif /*]*/
 
 	if (!appres.extended) {
-		appres.oversize = CN;
+		appres.oversize = NULL;
 	}
 
 	ovc = 0;
 	ovr = 0;
-	if (appres.extended && appres.oversize != CN) {
+	if (appres.extended && appres.oversize != NULL) {
 #if defined(C3270) /*[*/
 	    	if (!strcasecmp(appres.oversize, "auto")) {
 		    	ovc = -1;
@@ -398,7 +398,7 @@ model_init(void)
 		}
 	}
 	set_rows_cols(model_number, ovc, ovr);
-	if (appres.termname != CN) {
+	if (appres.termname != NULL) {
 		termtype = appres.termname;
 	} else {
 		termtype = full_model_name;
@@ -442,7 +442,7 @@ parse_local_process(int *argcp, const char **argv, const char **cmds)
 
 		/* Stamp out the remaining args. */
 		*argcp = i;
-		argv[i] = CN;
+		argv[i] = NULL;
 		break;
 	}
 	*cmds = cmds_buf;
@@ -482,18 +482,18 @@ set_appres_defaults(void)
 #endif /*]*/
 
 	appres.model = "4";
-	appres.hostsfile = CN;
+	appres.hostsfile = NULL;
 	appres.port = "23";
 	appres.charset = "bracket";
-	appres.termname = CN;
-	appres.macros = CN;
+	appres.termname = NULL;
+	appres.macros = NULL;
 #if !defined(_WIN32) /*[*/
 	appres.trace_dir = "/tmp";
 #endif /*]*/
 #if defined(WC3270) /*[*/
 	appres.trace_monitor = True;
 #endif /*]*/
-	appres.oversize = CN;
+	appres.oversize = NULL;
 #if defined(C3270) /*[*/
 	appres.meta_escape = "auto";
 	appres.curses_keypad = True;
@@ -596,7 +596,7 @@ static struct {
 #endif /*]*/
 #if defined(C3270) /*[*/
 { OptAllBold,  OPT_BOOLEAN, True,  ResAllBold,   offset(all_bold_on),
-    CN, "Display all text in bold" },
+    NULL, "Display all text in bold" },
 #endif /*]*/
 #if defined(C3270) && !defined(_WIN32) /*[*/
 { OptAltScreen,OPT_STRING,  False, ResAltScreen, offset(altscreen),
@@ -606,10 +606,10 @@ static struct {
 #endif /*]*/
 #if defined(WC3270) /*[*/
 { OptAutoShortcut,OPT_BOOLEAN, True, ResAutoShortcut,offset(auto_shortcut),
-    CN, "Run in auto-shortcut mode" },
+    NULL, "Run in auto-shortcut mode" },
 #endif /*]*/
 { OptAplMode,  OPT_BOOLEAN, True,  ResAplMode,   offset(apl_mode),
-    CN, "Turn on APL mode" },
+    NULL, "Turn on APL mode" },
 #if defined(HAVE_LIBSSL) /*[*/
 { OptCaDir,    OPT_STRING,  False, ResCaDir,     offset(ca_dir),
     "<directory>","Specify OpenSSL CA certificate database directory" },
@@ -618,7 +618,7 @@ static struct {
 #endif /*]*/
 #if defined(C3270) && !defined(_WIN32) /*[*/
 { OptCbreak,   OPT_BOOLEAN, True,  ResCbreak,    offset(cbreak_mode),
-    CN, "Force terminal CBREAK mode" },
+    NULL, "Force terminal CBREAK mode" },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 { OptCertFile, OPT_STRING,  False, ResCertFile,  offset(cert_file),
@@ -635,7 +635,7 @@ static struct {
 #if defined(C3270) && !defined(_WIN32) /*[*/
 # if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
 { OptDefaultFgBg,OPT_BOOLEAN,True, ResDefaultFgBg,offset(default_fgbg),
-    CN,
+    NULL,
     "Use terminal's default foreground and background colors"
 },
 # endif /*]*/
@@ -680,17 +680,17 @@ static struct {
 #if defined(C3270) /*[*/
 # if !defined(_WIN32) /*[*/
 { OptMono,     OPT_BOOLEAN, True,  ResMono,      offset(mono),
-    CN, "Do not use terminal color capabilities" },
+    NULL, "Do not use terminal color capabilities" },
 # endif /*]*/
 #if defined(WC3270) /*[*/
 { OptNoAutoShortcut,OPT_BOOLEAN,False,ResAutoShortcut,offset(auto_shortcut),
-    CN, "Do not run in auto-shortcut mode" },
+    NULL, "Do not run in auto-shortcut mode" },
 #endif /*]*/
 { OptNoPrompt, OPT_BOOLEAN, True,  ResNoPrompt,  offset(secure),
-    CN, "Alias for -secure" },
+    NULL, "Alias for -secure" },
 #endif /*]*/
 { OptOnce,     OPT_BOOLEAN, True,  ResOnce,      offset(once),
-    CN, "Exit as soon as the host disconnects" },
+    NULL, "Exit as soon as the host disconnects" },
 { OptOversize, OPT_STRING,  False, ResOversize,  offset(oversize),
     "<cols>x<rows>", "Specify larger screen" },
 { OptPort,     OPT_STRING,  False, ResPort,      offset(port),
@@ -699,10 +699,10 @@ static struct {
 { OptPrinterLu,OPT_STRING,  False, ResPrinterLu, offset(printer_lu),
     "<luname>", "Automatically start a "PR3287_NAME" printer session to <luname>" },
 { OptReconnect,OPT_BOOLEAN, True,  ResReconnect, offset(reconnect),
-    CN, "Reconnect to host as soon as it disconnects" },
+    NULL, "Reconnect to host as soon as it disconnects" },
 #if !defined(_WIN32) /*[*/
 { OptReverseVideo,OPT_BOOLEAN,True,ResReverseVideo,offset(reverse_video),
-    CN, "Switch to black-on-white mode" },
+    NULL, "Switch to black-on-white mode" },
 #endif /*]*/
 #endif /*]*/
 { OptProxy,    OPT_STRING,  False, ResProxy,     offset(proxy),
@@ -713,22 +713,22 @@ static struct {
 #endif /*]*/
 #if defined(S3270) /*[*/
 { OptScripted, OPT_NOP,     False, ResScripted,  NULL,
-    CN, "Turn on scripting" },
+    NULL, "Turn on scripting" },
 #endif /*]*/
 { OptScriptPort,OPT_STRING, False, ResScriptPort, offset(script_port),
     "[<addr>:]<port>", "TCP port to listen on for script commands" },
 #if defined(C3270) /*[*/
 { OptSecure,   OPT_BOOLEAN, True,  ResSecure,    offset(secure),
-    CN, "Restrict potentially-destructive user actions" },
+    NULL, "Restrict potentially-destructive user actions" },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 { OptSelfSignedOk, OPT_BOOLEAN, True, ResSelfSignedOk, offset(self_signed_ok),
-    CN, "Allow self-signed host certificates" },
+    NULL, "Allow self-signed host certificates" },
 #endif /*]*/
 { OptSet,      OPT_SKIP2,   False, NULL,         NULL,
     "<toggle>", "Turn on <toggle>" },
 { OptSocket,   OPT_BOOLEAN, True,  ResSocket,    offset(socket),
-    CN, "Create socket for script control" },
+    NULL, "Create socket for script control" },
 { OptTermName, OPT_STRING,  False, ResTermName,  offset(termname),
     "<name>", "Send <name> as TELNET terminal name" },
 #if defined(WC3270) /*[*/
@@ -736,7 +736,7 @@ static struct {
     "<string>", "Set window title to <string>" },
 #endif /*]*/
 { OptTrace,    OPT_BOOLEAN, True,  ResTrace,     toggle_offset(TRACING),
-    CN, "Enable tracing" },
+    NULL, "Enable tracing" },
 { OptTraceFile,OPT_STRING,  False, ResTraceFile, offset(trace_file),
     "<file>", "Write traces to <file>" },
 { OptTraceFileSize,OPT_STRING,False,ResTraceFileSize,offset(trace_file_size),
@@ -745,24 +745,24 @@ static struct {
     "<name>", "Specify user name for RFC 4777" },
 #if defined(S3270) /*[*/
 { OptUtf8,     OPT_BOOLEAN, True,  ResUtf8,      offset(utf8),
-    CN,       "Force local codeset to be UTF-8"
+    NULL,       "Force local codeset to be UTF-8"
 },
 #endif /*]*/
 { OptV,        OPT_V,	False, NULL,	     NULL,
-    CN, "Display build options and character sets" },
+    NULL, "Display build options and character sets" },
 #if defined(HAVE_LIBSSL) /*[*/
 { OptVerifyHostCert,OPT_BOOLEAN,True,ResVerifyHostCert,offset(verify_host_cert),
-    CN, "Enable OpenSSL host certificate validation" },
+    NULL, "Enable OpenSSL host certificate validation" },
 #endif /*]*/
 { OptVersion,  OPT_V,	False, NULL,	     NULL,
-    CN, "Display build options and character sets" },
+    NULL, "Display build options and character sets" },
 { "-xrm",      OPT_XRM,     False, NULL,         NULL,
     "'" APPNAME ".<resource>: <value>'", "Set <resource> to <value>"
 },
 { LAST_ARG,    OPT_DONE,    False, NULL,         NULL,
-    CN, "Terminate argument list" },
-{ CN,          OPT_SKIP2,   False, NULL,         NULL,
-    CN, CN }
+    NULL, "Terminate argument list" },
+{ NULL,          OPT_SKIP2,   False, NULL,         NULL,
+    NULL, NULL }
 };
 
 /*
@@ -780,11 +780,11 @@ parse_options(int *argcp, const char **argv)
 	argv_out[argc_out++] = argv[0];
 
 	for (i = 1; i < *argcp; i++) {
-		for (j = 0; opts[j].name != CN; j++) {
+		for (j = 0; opts[j].name != NULL; j++) {
 			if (!strcmp(argv[i], opts[j].name))
 				break;
 		}
-		if (opts[j].name == CN) {
+		if (opts[j].name == NULL) {
 			argv_out[argc_out++] = argv[i];
 			continue;
 		}
@@ -792,7 +792,7 @@ parse_options(int *argcp, const char **argv)
 		switch (opts[j].type) {
 		    case OPT_BOOLEAN:
 			*(Boolean *)opts[j].aoff = opts[j].flag;
-			if (opts[j].res_name != CN)
+			if (opts[j].res_name != NULL)
 				add_resource(NewString(opts[j].name),
 					     opts[j].flag? "True": "False");
 			break;
@@ -803,7 +803,7 @@ parse_options(int *argcp, const char **argv)
 				continue;
 			}
 			*(const char **)opts[j].aoff = argv[++i];
-			if (opts[j].res_name != CN)
+			if (opts[j].res_name != NULL)
 				add_resource(NewString(opts[j].res_name),
 					     NewString(argv[i]));
 			break;
@@ -829,7 +829,7 @@ parse_options(int *argcp, const char **argv)
 				continue;
 			}
 			*(int *)opts[j].aoff = atoi(argv[++i]);
-			if (opts[j].res_name != CN)
+			if (opts[j].res_name != NULL)
 				add_resource(NewString(opts[j].name),
 					     NewString(argv[i]));
 			break;
@@ -843,7 +843,7 @@ parse_options(int *argcp, const char **argv)
 		}
 	}
 	*argcp = argc_out;
-	argv_out[argc_out] = CN;
+	argv_out[argc_out] = NULL;
 	(void) memcpy((char *)argv, (char *)argv_out,
 	    (argc_out + 1) * sizeof(char *));
 	Free((char *)argv_out);
@@ -855,7 +855,7 @@ cmdline_help (Boolean as_action)
 {
     int i;
     
-    for (i = 0; opts[i].name != CN; i++) {
+    for (i = 0; opts[i].name != NULL; i++) {
 	if (as_action) {
 	    action_output("  %s%s%s",
 		    opts[i].name,
@@ -940,7 +940,7 @@ parse_set_clear(int *argcp, const char **argv)
 
 	}
 	*argcp = argc_out;
-	argv_out[argc_out] = CN;
+	argv_out[argc_out] = NULL;
 	(void) memcpy((char *)argv, (char *)argv_out,
 	    (argc_out + 1) * sizeof(char *));
 	Free((char *)argv_out);
@@ -1162,7 +1162,7 @@ static struct {
 #endif /*]*/
 	{ ResWerase,	offset(werase),		XRM_STRING },
 
-	{ CN,		0,			XRM_STRING }
+	{ NULL,		0,			XRM_STRING }
 };
 
 /*
@@ -1202,7 +1202,7 @@ struct host_color host_color[] = {
     { "Grey",		HOST_COLOR_GREY },
     { "Gray",		HOST_COLOR_GREY }, /* alias */
     { "White",		HOST_COLOR_WHITE },
-    { CN,		0 }
+    { NULL,		0 }
 };
 
 /*
@@ -1247,7 +1247,7 @@ valid_explicit(const char *resname, unsigned len)
 	int i;
 	int j;
 
-	for (i = 0; explicit_resources[i].name != CN; i++) {
+	for (i = 0; explicit_resources[i].name != NULL; i++) {
 		unsigned sl = strlen(explicit_resources[i].name);
 
 	    	switch (explicit_resources[i].type) {
@@ -1266,7 +1266,7 @@ valid_explicit(const char *resname, unsigned len)
 		    break;
 		case V_COLOR:
 		    /* xxx<host-color> or xxx<host-color-index> match. */
-		    for (j = 0; host_color[j].name != CN; j++) {
+		    for (j = 0; host_color[j].name != NULL; j++) {
 			    char *x;
 
 			    x = xs_buffer("%s%s", explicit_resources[i].name,
@@ -1317,7 +1317,7 @@ parse_xrm(const char *arg, const char *where)
 	    	return;
 
 	/* Look up the name. */
-	for (i = 0; resources[i].name != CN; i++) {
+	for (i = 0; resources[i].name != NULL; i++) {
 		if (!strncapcmp(resources[i].name, name, rnlen)) {
 			address = resources[i].address;
 			type = resources[i].type;

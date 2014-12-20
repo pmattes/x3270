@@ -74,7 +74,7 @@ static char s_seconds = 's';
 static Widget idle_dialog, idle_shell, command_value, timeout_value;
 static Widget enable_toggle, enable_perm_toggle, disable_toggle;
 static Widget hours_toggle, minutes_toggle, seconds_toggle, fuzz_toggle;
-static sr_t *idle_sr = (sr_t *)NULL;
+static sr_t *idle_sr = NULL;
 
 static void idle_cancel(Widget w, XtPointer client_data, XtPointer call_data);
 static void idle_popup_callback(Widget w, XtPointer client_data,
@@ -104,7 +104,7 @@ popup_idle(void)
     char *s;
 
     /* Initialize it. */
-    if (idle_shell == (Widget)NULL) {
+    if (idle_shell == NULL) {
 	idle_popup_init();
     }
 
@@ -113,7 +113,7 @@ popup_idle(void)
      * a number, and h/m/s.
      */
     its = NewString(idle_timeout_string);
-    if (its != CN) {
+    if (its != NULL) {
 	if (*its == '~') {
 	    fuzz = True;
 	    its++;
@@ -182,8 +182,7 @@ idle_popup_init(void)
 	    NULL);
     XtAddCallback(idle_shell, XtNpopupCallback, place_popup,
 	    (XtPointer)CenterP);
-    XtAddCallback(idle_shell, XtNpopupCallback, idle_popup_callback,
-	    (XtPointer)NULL);
+    XtAddCallback(idle_shell, XtNpopupCallback, idle_popup_callback, NULL);
 
     /* Create the form within the shell. */
     idle_dialog = XtVaCreateManagedWidget(
@@ -296,7 +295,7 @@ idle_popup_init(void)
 	    XtNsensitive, True,
 	    NULL);
     dialog_apply_bitmap(fuzz_toggle, no_dot);
-    XtAddCallback(fuzz_toggle, XtNcallback, toggle_fuzz, (XtPointer)NULL);
+    XtAddCallback(fuzz_toggle, XtNcallback, toggle_fuzz, NULL);
 
     /* Create enable/disable toggles. */
     enable_toggle = XtVaCreateManagedWidget(

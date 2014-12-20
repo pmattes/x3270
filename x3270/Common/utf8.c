@@ -39,7 +39,7 @@
 #include "popupsc.h"
 #include "utf8c.h"
 
-char *locale_codeset = CN;
+char *locale_codeset = NULL;
 Boolean is_utf8 = False;
 
 /*

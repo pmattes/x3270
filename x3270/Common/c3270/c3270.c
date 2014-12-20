@@ -283,7 +283,7 @@ static void start_auto_shortcut(void);
 void
 usage(const char *msg)
 {
-	if (msg != CN)
+	if (msg != NULL)
 		fprintf(stderr, "%s\n", msg);
 	fprintf(stderr, "Usage: %s [options] [ps:][LUname@]hostname[:port]\n",
 		programname);
@@ -298,7 +298,7 @@ main_connect(Boolean ignored)
 {
 	if (CONNECTED || appres.disconnect_clear) {
 #if defined(C3270_80_132) /*[*/
-		if (appres.altscreen != CN)
+		if (appres.altscreen != NULL)
 			ctlr_erase(False);
 		else
 #endif /*]*/
@@ -347,7 +347,7 @@ sigchld_handler(int ignored)
 int
 main(int argc, char *argv[])
 {
-	const char	*cl_hostname = CN;
+	const char	*cl_hostname = NULL;
 #if !defined(_WIN32) /*[*/
 	pid_t		 pid;
 	int		 status;
@@ -398,7 +398,7 @@ main(int argc, char *argv[])
 
 	if (charset_init(appres.charset) != CS_OKAY) {
 		xs_warning("Cannot find charset \"%s\"", appres.charset);
-		(void) charset_init(CN);
+		(void) charset_init(NULL);
 	}
 	action_init();
 	model_init();
@@ -461,7 +461,7 @@ main(int argc, char *argv[])
 	ssl_base_init(NULL, NULL);
 #endif /*]*/
 
-	if (cl_hostname != CN) {
+	if (cl_hostname != NULL) {
 		pause_for_errors();
 		/* Connect to the host. */
 		appres.once = True;
@@ -617,7 +617,7 @@ interact(void)
 		    	(void) printf("Press <Enter> to resume session.\n");
 #if defined(HAVE_LIBREADLINE) /*[*/
 		s = rl_s = readline("c3270> ");
-		if (s == CN) {
+		if (s == NULL) {
 			printf("\n");
 			exit(0);
 		}
@@ -626,7 +626,7 @@ interact(void)
 		(void) fflush(stdout);
 
 		/* Get the command, and trim white space. */
-		if (fgets(buf, sizeof(buf), stdin) == CN) {
+		if (fgets(buf, sizeof(buf), stdin) == NULL) {
 			printf("\n");
 #if defined(_WIN32) /*[*/
 		    	continue;
@@ -706,18 +706,18 @@ start_pager(void)
 	static char *morepath = MOREPATH;
 	static char *or_cat = " || cat";
 	char *pager_env;
-	char *pager_cmd = CN;
+	char *pager_cmd = NULL;
 
 	if (pager != NULL)
 		return pager;
 
-	if ((pager_env = getenv("PAGER")) != CN)
+	if ((pager_env = getenv("PAGER")) != NULL)
 		pager_cmd = pager_env;
 	else if (strlen(lesspath))
 		pager_cmd = lesscmd;
 	else if (strlen(morepath))
 		pager_cmd = morepath;
-	if (pager_cmd != CN) {
+	if (pager_cmd != NULL) {
 		char *s;
 
 		s = Malloc(strlen(pager_cmd) + strlen(or_cat) + 1);
@@ -779,14 +779,14 @@ pager_output(const char *s)
 		 * partway through the string.
 		 */
 		nl = strchr(s, '\n');
-		if (nl != CN) {
+		if (nl != NULL) {
 		    	sl = nl - s;
 			printf("%.*s\n", sl, s);
 			s = nl + 1;
 		} else {
 			printf("%s\n", s);
 			sl = strlen(s);
-			s = CN;
+			s = NULL;
 		}
 
 		/* Account for the newline. */
@@ -795,13 +795,13 @@ pager_output(const char *s)
 		/* Account (conservatively) for any line wrap. */
 		pager_rowcnt += sl / maxCOLS;
 
-	} while (s != CN);
+	} while (s != NULL);
 }
 #endif /*]*/
 
 #if defined(HAVE_LIBREADLINE) /*[*/
 
-static char **matches = (char **)NULL;
+static char **matches = NULL;
 static char **next_match;
 
 /* Generate a match list. */
@@ -884,7 +884,7 @@ attempted_completion(const char *text, int start, int end)
 			 * is fairly stupid, and can be fooled by other
 			 * whitespace and embedded double quotes.)
 			 */
-			if (strchr(h->name, ' ') != CN) {
+			if (strchr(h->name, ' ') != NULL) {
 				matches[j] = Malloc(strlen(h->name) + 3);
 				(void) sprintf(matches[j], "\"%s\"", h->name);
 				j++;
@@ -892,7 +892,7 @@ attempted_completion(const char *text, int start, int end)
 				matches[j++] = NewString(h->name);
 			}
 		}
-		matches[j] = CN;
+		matches[j] = NULL;
 		return NULL;
 	}
 
@@ -911,7 +911,7 @@ attempted_completion(const char *text, int start, int end)
 			matches[j++] = NewString(actions[i].string);
 		}
 	}
-	matches[j] = CN;
+	matches[j] = NULL;
 	return NULL;
 }
 
@@ -922,12 +922,12 @@ completion_entry(const char *text, int state)
 	char *r;
 
 	if (next_match == NULL)
-		return CN;
+		return NULL;
 
-	if ((r = *next_match++) == CN) {
+	if ((r = *next_match++) == NULL) {
 		Free(matches);
 		next_match = matches = NULL;
-		return CN;
+		return NULL;
 	} else
 		return r;
 }
@@ -992,10 +992,10 @@ status_dump(void)
 		get_message("standardDs"));
 	action_output("%s %s", get_message("terminalName"), termtype);
 	clu = net_query_lu_name();
-	if (clu != CN && clu[0])
+	if (clu != NULL && clu[0])
 		action_output("%s %s", get_message("luName"), clu);
 	bplu = net_query_bind_plu_name();
-	if (bplu != CN && bplu[0])
+	if (bplu != NULL && bplu[0])
 	    	action_output("%s %s", get_message("bindPluName"), bplu);
 	action_output("%s %s (%s)", get_message("characterSet"),
 	    get_charset_name(),
@@ -1065,7 +1065,7 @@ status_dump(void)
 			if (secure_unverified) {
 				int i;
 
-				for (i = 0; unverified_reasons[i] != CN; i++) {
+				for (i = 0; unverified_reasons[i] != NULL; i++) {
 					action_output("   %s",
 						unverified_reasons[i]);
 				}
@@ -1106,7 +1106,7 @@ status_dump(void)
 		}
 
 		eopts = tn3270e_current_opts();
-		if (eopts != CN) {
+		if (eopts != NULL) {
 			action_output("  %s %s", get_message("tn3270eOpts"),
 			    eopts);
 		} else if (IN_E) {
@@ -1541,12 +1541,12 @@ merge_profile(void)
 	Boolean did_read = False;
 
 	/* Check for the no-profile environment variable. */
-	if (getenv(NO_PROFILE_ENV) != CN)
+	if (getenv(NO_PROFILE_ENV) != NULL)
 		return did_read;
 
 	/* Read the file. */
 	fname = getenv(PROFILE_ENV);
-	if (fname == CN || *fname == '\0')
+	if (fname == NULL || *fname == '\0')
 		fname = DEFAULT_PROFILE;
 	profile_name = do_subst(fname, DS_VARS | DS_TILDE);
 	did_read = (read_resource_file(profile_name, False) >= 0);
@@ -1574,7 +1574,7 @@ start_auto_shortcut(void)
 	char *cwd;
 
 	/* Make sure there is a session file. */
-	if (profile_path == CN) {
+	if (profile_path == NULL) {
 		fprintf(stderr, "Can't use auto-shortcut mode without a "
 			"session file\n");
 		fflush(stderr);
@@ -1604,7 +1604,7 @@ start_auto_shortcut(void)
 
 	/* Create the shortcut. */
 	tempdir = getenv("TEMP");
-	if (tempdir == CN) {
+	if (tempdir == NULL) {
 	    	fprintf(stderr, "No %%TEMP%%?\n");
 		x3270_exit(1);
 	}

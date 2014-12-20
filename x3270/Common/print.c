@@ -78,8 +78,8 @@
 
 /* Statics */
 #if defined(X3270_DISPLAY) /*[*/
-static Widget print_window_shell = (Widget)NULL;
-char *print_window_command = CN;
+static Widget print_window_shell = NULL;
+char *print_window_command = NULL;
 #endif /*]*/
 
 /* Print Text popup */
@@ -170,7 +170,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
 	Cardinal i;
-	char *name = CN;
+	char *name = NULL;
 #if defined(X3270_DISPLAY) /*[*/
 	Boolean secure = appres.secure;
 #endif /*]*/
@@ -289,7 +289,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	}
 #endif /*]*/
 
-	if (name != CN && name[0] == '@') {
+	if (name != NULL && name[0] == '@') {
 		/*
 		 * Starting the PrintTextCommand resource value with '@'
 		 * suppresses the pop-up dialog, as does setting the 'secure'
@@ -300,11 +300,11 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 #endif /*]*/
 		name++;
 	}
-	if (!use_file && (name == CN || !*name)) {
+	if (!use_file && (name == NULL || !*name)) {
 #if !defined(_WIN32) /*[*/
 		name = "lpr";
 #else /*][*/
-		name = CN;
+		name = NULL;
 #endif /*]*/
 	}
 
@@ -333,7 +333,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 				}
 				f = fdopen(fd, "w+");
 			} else {
-				if (name == CN || !*name) {
+				if (name == NULL || !*name) {
 					popup_an_error("%s: missing filename",
 						action_name(PrintText_action));
 					return;
@@ -514,7 +514,7 @@ PrintWindow_action(Widget w _is_unused, XEvent *event, String *params,
 	if (*num_params > 1)
 		popup_an_error("%s: extra arguments ignored",
 		    action_name(PrintWindow_action));
-	if (filter == CN) {
+	if (filter == NULL) {
 		popup_an_error("%s: no %s defined",
 		    action_name(PrintWindow_action), ResPrintWindowCommand);
 		return;
@@ -531,7 +531,7 @@ PrintWindow_action(Widget w _is_unused, XEvent *event, String *params,
 	}
 	if (print_window_shell == NULL)
 		print_window_shell = create_form_popup("printWindow",
-		    print_window_callback, (XtCallbackProc)NULL, FORM_AS_IS);
+		    print_window_callback, NULL, FORM_AS_IS);
 	XtVaSetValues(XtNameToWidget(print_window_shell, ObjDialog),
 	    XtNvalue, fb,
 	    NULL);
@@ -545,6 +545,6 @@ print_window_option(Widget w, XtPointer client_data _is_unused,
 {
 	Cardinal zero = 0;
 
-	PrintWindow_action(w, (XEvent *)NULL, (String *)NULL, &zero);
+	PrintWindow_action(w, NULL, NULL, &zero);
 }
 #endif /*]*/

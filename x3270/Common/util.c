@@ -62,14 +62,14 @@
 char *
 xs_vbuffer(const char *fmt, va_list args)
 {
-    char *r = CN;
+    char *r = NULL;
     int nw;
 
     nw = vasprintf(&r, fmt, args);
     if (nw < 0) {
 	Error("xs_vbuffer: vasprintf failure");
     }
-    if (r == CN) {
+    if (r == NULL) {
 	Error("Out of memory");
     }
     return r;
@@ -296,20 +296,20 @@ split_dbcs_resource(const char *value, char sep, char **part1, char **part2)
 {
 	int n_parts = 0;
 	const char *s = value;
-	const char *f_start = CN;	/* start of sub-field */
-	const char *f_end = CN;		/* end of sub-field */
+	const char *f_start = NULL;	/* start of sub-field */
+	const char *f_end = NULL;		/* end of sub-field */
 	char c;
 	char **rp;
 
-	*part1 = CN;
-	*part2 = CN;
+	*part1 = NULL;
+	*part2 = NULL;
 
 	for( ; ; ) {
 		c = *s;
 		if (c == sep || c == '\0') {
-			if (f_start == CN)
+			if (f_start == NULL)
 				return -1;
-			if (f_end == CN)
+			if (f_end == NULL)
 				f_end = s;
 			if (f_end == f_start) {
 				if (c == sep) {
@@ -338,18 +338,18 @@ split_dbcs_resource(const char *value, char sep, char **part1, char **part2)
 			*rp = Malloc(f_end - f_start + 1);
 			strncpy(*rp, f_start, f_end - f_start);
 			(*rp)[f_end - f_start] = '\0';
-			f_end = CN;
-			f_start = CN;
+			f_end = NULL;
+			f_start = NULL;
 			n_parts++;
 			if (c == '\0')
 				return n_parts;
 		} else if (isspace(c)) {
-			if (f_end == CN)
+			if (f_end == NULL)
 				f_end = s;
 		} else {
-			if (f_start == CN)
+			if (f_start == NULL)
 				f_start = s;
-			f_end = CN;
+			f_end = NULL;
 		}
 		s++;
 	}
@@ -414,7 +414,7 @@ get_message(const char *key)
 	char *r;
 
 	(void) snprintf(namebuf, sizeof(namebuf), "%s.%s", ResMessage, key);
-	if ((r = get_resource(namebuf)) != CN)
+	if ((r = get_resource(namebuf)) != NULL)
 		return r;
 	else {
 		(void) snprintf(namebuf, sizeof(namebuf),
@@ -479,13 +479,13 @@ var_subst(const char *s, unsigned long flags)
 #	define LBR	'{'
 #	define RBR	'}'
 
-	if (strchr(s, '$') == CN)
+	if (strchr(s, '$') == NULL)
 		return NewString(s);
 
 	for (;;) {
 		t = s;
 		state = VS_BASE;
-		vn_start = CN;
+		vn_start = NULL;
 		o_len = strlen(t) + 1;
 		ob = Malloc(o_len);
 		o = ob;
@@ -631,7 +631,7 @@ tilde_subst(const char *s)
 	const char *rest;
 	struct passwd *p;
 	char *r;
-	char *mname = CN;
+	char *mname = NULL;
 
 	/* Does it start with a "~"? */
 	if (*s != '~')
@@ -662,7 +662,7 @@ tilde_subst(const char *s)
 	Free(mname);
 
 	/* Substitute and return. */
-	if (p == (struct passwd *)NULL)
+	if (p == NULL)
 		r = NewString(s);
 	else {
 		r = Malloc(strlen(p->pw_dir) + strlen(rest) + 1);
@@ -792,7 +792,7 @@ split_hier(char *label, char **base, char ***parents)
 	char *lp;
 
 	label = NewString(label);
-	for (lp = label; (gt = strchr(lp, '>')) != CN; lp = gt + 1) {
+	for (lp = label; (gt = strchr(lp, '>')) != NULL; lp = gt + 1) {
 		if (gt == lp)
 			return False;
 		n_parents++;
@@ -803,7 +803,7 @@ split_hier(char *label, char **base, char ***parents)
 	if (n_parents) {
 		*parents = (char **)Calloc(n_parents + 1, sizeof(char *));
 		for (n_parents = 0, lp = label;
-		     (gt = strchr(lp, '>')) != CN;
+		     (gt = strchr(lp, '>')) != NULL;
 		     lp = gt + 1) {
 			(*parents)[n_parents++] = lp;
 			*gt = '\0';
@@ -893,7 +893,7 @@ get_resource(const char *name)
 	XrmValue value;
 	char *type;
 	char *str;
-	char *r = CN;
+	char *r = NULL;
 
 	str = xs_buffer("%s.%s", XtName(toplevel), name);
 	if ((XrmGetResource(rdb, str, 0, &type, &value) == True) && *value.addr)

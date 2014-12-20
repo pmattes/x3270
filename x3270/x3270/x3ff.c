@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009, Paul Mattes.
+ * Copyright (c) 2001-2009, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -203,7 +203,7 @@ main(int argc, char *argv[])
 
 	/* Get the list of fonts from the server. */
 	matches = XListFonts(display, pattern, 32767, &count);
-	if (matches == (char **)NULL) {
+	if (matches == NULL) {
 		fprintf(stderr, "No fonts match pattern '%s'.\n",
 		    appres.pattern);
 		exit(1);

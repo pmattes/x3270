@@ -126,7 +126,7 @@ main(int argc, char *argv[])
 
 	/* Open the file. */
 	f = fopen(argv[optind], "r");
-	if (f == (FILE *)NULL) {
+	if (f == NULL) {
 		perror(argv[optind]);
 		exit(1);
 	}
@@ -348,7 +348,7 @@ process(FILE *f, int s)
 		FD_ZERO(&rfds);
 		FD_SET(s, &rfds);
 		FD_SET(0, &rfds);
-		ns = select(s+1, &rfds, (fd_set *)NULL, (fd_set *)NULL, NULL);
+		ns = select(s+1, &rfds, NULL, NULL, NULL);
 		if (ns < 0) {
 			perror("select");
 			exit(1);

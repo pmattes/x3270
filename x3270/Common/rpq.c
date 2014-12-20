@@ -474,7 +474,7 @@ get_rpq_user(unsigned char buf[], const int buflen)
 	 *    result in 6 bytes sent as 0x40F0E740C1C2 because the text is
 	 *    accepted "as is" then translated from ASCII to EBCDIC.
 	 */
-	const char *rpqtext = CN;
+	const char *rpqtext = NULL;
 	int x = 0;
 	struct rpq_keyword *kw;
 	char *sbuf, *sbuf0;
@@ -736,7 +736,7 @@ get_rpq_address(unsigned char *buf, const int maxlen)
 #endif /*]*/
 
 #define RPQ_WARNBUF_SIZE	1024
-static char *rpq_warnbuf = CN;
+static char *rpq_warnbuf = NULL;
 static int rpq_wbcnt = 0;
 
 static void
@@ -749,7 +749,7 @@ rpq_warning(const char *fmt, ...)
 	 */
 	if (!rpq_complained) {
 		va_start(a, fmt);
-		if (rpq_warnbuf == CN)
+		if (rpq_warnbuf == NULL)
 			rpq_warnbuf = Malloc(RPQ_WARNBUF_SIZE);
 		if (rpq_wbcnt < RPQ_WARNBUF_SIZE) {
 			*(rpq_warnbuf + rpq_wbcnt++) = '\n';
@@ -773,6 +773,6 @@ rpq_dump_warnings(void)
 		rpq_complained = True;
 
 		free(rpq_warnbuf);
-		rpq_warnbuf = CN;
+		rpq_warnbuf = NULL;
 	}
 }

@@ -101,152 +101,152 @@ static char Bm[] = "bm";
 static char Sm[] = "small";
 
 static struct button_list pf_list[] = {
-    { "PF13",           Lg, CN, 0, 0, PF_action,       "13" },
-    { "PF14",           Lg, CN, 0, 0, PF_action,       "14" },
-    { "PF15",           Lg, CN, 0, 0, PF_action,       "15" },
-    { "PF16",           Lg, CN, 0, 0, PF_action,       "16" },
-    { "PF17",           Lg, CN, 0, 0, PF_action,       "17" },
-    { "PF18",           Lg, CN, 0, 0, PF_action,       "18" },
-    { "PF19",           Lg, CN, 0, 0, PF_action,       "19" },
-    { "PF20",           Lg, CN, 0, 0, PF_action,       "20" },
-    { "PF21",           Lg, CN, 0, 0, PF_action,       "21" },
-    { "PF22",           Lg, CN, 0, 0, PF_action,       "22" },
-    { "PF23",           Lg, CN, 0, 0, PF_action,       "23" },
-    { "PF24",           Lg, CN, 0, 0, PF_action,       "24" },
-    { "PF1",            Lg, CN, 0, 0, PF_action,       "1" },
-    { "PF2",            Lg, CN, 0, 0, PF_action,       "2" },
-    { "PF3",            Lg, CN, 0, 0, PF_action,       "3" },
-    { "PF4",            Lg, CN, 0, 0, PF_action,       "4" },
-    { "PF5",            Lg, CN, 0, 0, PF_action,       "5" },
-    { "PF6",            Lg, CN, 0, 0, PF_action,       "6" },
-    { "PF7",            Lg, CN, 0, 0, PF_action,       "7" },
-    { "PF8",            Lg, CN, 0, 0, PF_action,       "8" },
-    { "PF9",            Lg, CN, 0, 0, PF_action,       "9" },
-    { "PF10",           Lg, CN, 0, 0, PF_action,       "10" },
-    { "PF11",           Lg, CN, 0, 0, PF_action,       "11" },
-    { "PF12",           Lg, CN, 0, 0, PF_action,       "12" }
+    { "PF13",           Lg, NULL, 0, 0, PF_action,       "13" },
+    { "PF14",           Lg, NULL, 0, 0, PF_action,       "14" },
+    { "PF15",           Lg, NULL, 0, 0, PF_action,       "15" },
+    { "PF16",           Lg, NULL, 0, 0, PF_action,       "16" },
+    { "PF17",           Lg, NULL, 0, 0, PF_action,       "17" },
+    { "PF18",           Lg, NULL, 0, 0, PF_action,       "18" },
+    { "PF19",           Lg, NULL, 0, 0, PF_action,       "19" },
+    { "PF20",           Lg, NULL, 0, 0, PF_action,       "20" },
+    { "PF21",           Lg, NULL, 0, 0, PF_action,       "21" },
+    { "PF22",           Lg, NULL, 0, 0, PF_action,       "22" },
+    { "PF23",           Lg, NULL, 0, 0, PF_action,       "23" },
+    { "PF24",           Lg, NULL, 0, 0, PF_action,       "24" },
+    { "PF1",            Lg, NULL, 0, 0, PF_action,       "1" },
+    { "PF2",            Lg, NULL, 0, 0, PF_action,       "2" },
+    { "PF3",            Lg, NULL, 0, 0, PF_action,       "3" },
+    { "PF4",            Lg, NULL, 0, 0, PF_action,       "4" },
+    { "PF5",            Lg, NULL, 0, 0, PF_action,       "5" },
+    { "PF6",            Lg, NULL, 0, 0, PF_action,       "6" },
+    { "PF7",            Lg, NULL, 0, 0, PF_action,       "7" },
+    { "PF8",            Lg, NULL, 0, 0, PF_action,       "8" },
+    { "PF9",            Lg, NULL, 0, 0, PF_action,       "9" },
+    { "PF10",           Lg, NULL, 0, 0, PF_action,       "10" },
+    { "PF11",           Lg, NULL, 0, 0, PF_action,       "11" },
+    { "PF12",           Lg, NULL, 0, 0, PF_action,       "12" }
 };
 #define PF_SZ (sizeof(pf_list)/sizeof(pf_list[0]))
 
 static struct button_list pad_list[] = {
-    { "PA1",            Lg, CN, 0, 0, PA_action,       "1" },
-    { "PA2",            Lg, CN, 0, 0, PA_action,       "2" },
-    { "PA3",            Lg, CN, 0, 0, PA_action,       "3" },
+    { "PA1",            Lg, NULL, 0, 0, PA_action,       "1" },
+    { "PA2",            Lg, NULL, 0, 0, PA_action,       "2" },
+    { "PA3",            Lg, NULL, 0, 0, PA_action,       "3" },
     { 0, 0, 0, 0 },
     { "Up" ,            Bm, (char *)up_bits, up_width, up_height,
-                                      Up_action,       CN },
+                                      Up_action,       NULL },
     { 0, 0, 0, 0 },
     { "Left",           Bm, (char *)left_bits, left_width, left_height,
-                                      Left_action,     CN },
+                                      Left_action,     NULL },
     { "Home",           Bm, (char *)home_bits, home_width, home_height,
-                                      Home_action,     CN },
+                                      Home_action,     NULL },
     { "Right",          Bm, (char *)right_bits, right_width, right_height,
-                                      Right_action,    CN },
+                                      Right_action,    NULL },
     { 0, 0, 0, 0 },
     { "Down",           Bm, (char *)down_bits, down_width, down_height,
-                                      Down_action,     CN },
+                                      Down_action,     NULL },
     { 0, 0, 0, 0 },
 };
 #define PAD_SZ (sizeof(pad_list)/sizeof(pad_list[0]))
 
 static struct button_list lower_list[] = {
-    { "Clear",          Sm, CN, 0, 0, Clear_action,    CN },
-    { "Reset",          Sm, CN, 0, 0, Reset_action,    CN },
+    { "Clear",          Sm, NULL, 0, 0, Clear_action,    NULL },
+    { "Reset",          Sm, NULL, 0, 0, Reset_action,    NULL },
     { "Ins",            Bm, (char *)ins_bits, ins_width, ins_height,
-                                      Insert_action,   CN },
+                                      Insert_action,   NULL },
     { "Del",            Bm, (char *)del_bits, del_width, del_height,
-                                      Delete_action,   CN },
-    { "Erase\nEOF",     Sm, CN, 0, 0, EraseEOF_action, CN },
-    { "Erase\nInput",   Sm, CN, 0, 0, EraseInput_action,CN },
-    { "Dup",            Sm, CN, 0, 0, Dup_action,      CN },
-    { "Field\nMark",    Sm, CN, 0, 0, FieldMark_action,CN },
-    { "Sys\nReq",       Sm, CN, 0, 0, SysReq_action,   CN },
-    { "Cursor\nSelect", Sm, CN, 0, 0, CursorSelect_action,CN },
-    { "Attn",           Sm, CN, 0, 0, Attn_action,     CN },
-    { "Compose",        Sm, CN, 0, 0, Compose_action,  CN },
+                                      Delete_action,   NULL },
+    { "Erase\nEOF",     Sm, NULL, 0, 0, EraseEOF_action, NULL },
+    { "Erase\nInput",   Sm, NULL, 0, 0, EraseInput_action,NULL },
+    { "Dup",            Sm, NULL, 0, 0, Dup_action,      NULL },
+    { "Field\nMark",    Sm, NULL, 0, 0, FieldMark_action,NULL },
+    { "Sys\nReq",       Sm, NULL, 0, 0, SysReq_action,   NULL },
+    { "Cursor\nSelect", Sm, NULL, 0, 0, CursorSelect_action,NULL },
+    { "Attn",           Sm, NULL, 0, 0, Attn_action,     NULL },
+    { "Compose",        Sm, NULL, 0, 0, Compose_action,  NULL },
     { "Btab",           Bm, (char *)btab_bits, btab_width, btab_height,
-                                      BackTab_action,  CN },
+                                      BackTab_action,  NULL },
     { "Tab",            Bm, (char *)tab_bits, tab_width, tab_height,
-                                      Tab_action,      CN },
+                                      Tab_action,      NULL },
     { "Newline",	Bm, (char *)newline_bits, newline_width, newline_height,
-				      Newline_action,  CN },
-    { "Enter",          Sm, CN, 0, 0, Enter_action,    CN }
+				      Newline_action,  NULL },
+    { "Enter",          Sm, NULL, 0, 0, Enter_action,    NULL }
 };
 #define LOWER_SZ (sizeof(lower_list)/sizeof(lower_list[0]))
 
 static struct button_list vpf_list[] = {
-    { "PF1",            Lg, CN, 0, 0, PF_action,       "1" },
-    { "PF2",            Lg, CN, 0, 0, PF_action,       "2" },
-    { "PF3",            Lg, CN, 0, 0, PF_action,       "3" },
-    { "PF4",            Lg, CN, 0, 0, PF_action,       "4" },
-    { "PF5",            Lg, CN, 0, 0, PF_action,       "5" },
-    { "PF6",            Lg, CN, 0, 0, PF_action,       "6" },
-    { "PF7",            Lg, CN, 0, 0, PF_action,       "7" },
-    { "PF8",            Lg, CN, 0, 0, PF_action,       "8" },
-    { "PF9",            Lg, CN, 0, 0, PF_action,       "9" },
-    { "PF10",           Lg, CN, 0, 0, PF_action,       "10" },
-    { "PF11",           Lg, CN, 0, 0, PF_action,       "11" },
-    { "PF12",           Lg, CN, 0, 0, PF_action,       "12" },
+    { "PF1",            Lg, NULL, 0, 0, PF_action,       "1" },
+    { "PF2",            Lg, NULL, 0, 0, PF_action,       "2" },
+    { "PF3",            Lg, NULL, 0, 0, PF_action,       "3" },
+    { "PF4",            Lg, NULL, 0, 0, PF_action,       "4" },
+    { "PF5",            Lg, NULL, 0, 0, PF_action,       "5" },
+    { "PF6",            Lg, NULL, 0, 0, PF_action,       "6" },
+    { "PF7",            Lg, NULL, 0, 0, PF_action,       "7" },
+    { "PF8",            Lg, NULL, 0, 0, PF_action,       "8" },
+    { "PF9",            Lg, NULL, 0, 0, PF_action,       "9" },
+    { "PF10",           Lg, NULL, 0, 0, PF_action,       "10" },
+    { "PF11",           Lg, NULL, 0, 0, PF_action,       "11" },
+    { "PF12",           Lg, NULL, 0, 0, PF_action,       "12" },
 };
 #define VPF_SZ (sizeof(vpf_list)/sizeof(vpf_list[0]))
 
 static struct button_list vspf_list[] = {
-    { "PF13",           Lg, CN, 0, 0, PF_action,       "13" },
-    { "PF14",           Lg, CN, 0, 0, PF_action,       "14" },
-    { "PF15",           Lg, CN, 0, 0, PF_action,       "15" },
-    { "PF16",           Lg, CN, 0, 0, PF_action,       "16" },
-    { "PF17",           Lg, CN, 0, 0, PF_action,       "17" },
-    { "PF18",           Lg, CN, 0, 0, PF_action,       "18" },
-    { "PF19",           Lg, CN, 0, 0, PF_action,       "19" },
-    { "PF20",           Lg, CN, 0, 0, PF_action,       "20" },
-    { "PF21",           Lg, CN, 0, 0, PF_action,       "21" },
-    { "PF22",           Lg, CN, 0, 0, PF_action,       "22" },
-    { "PF23",           Lg, CN, 0, 0, PF_action,       "23" },
-    { "PF24",           Lg, CN, 0, 0, PF_action,       "24" },
+    { "PF13",           Lg, NULL, 0, 0, PF_action,       "13" },
+    { "PF14",           Lg, NULL, 0, 0, PF_action,       "14" },
+    { "PF15",           Lg, NULL, 0, 0, PF_action,       "15" },
+    { "PF16",           Lg, NULL, 0, 0, PF_action,       "16" },
+    { "PF17",           Lg, NULL, 0, 0, PF_action,       "17" },
+    { "PF18",           Lg, NULL, 0, 0, PF_action,       "18" },
+    { "PF19",           Lg, NULL, 0, 0, PF_action,       "19" },
+    { "PF20",           Lg, NULL, 0, 0, PF_action,       "20" },
+    { "PF21",           Lg, NULL, 0, 0, PF_action,       "21" },
+    { "PF22",           Lg, NULL, 0, 0, PF_action,       "22" },
+    { "PF23",           Lg, NULL, 0, 0, PF_action,       "23" },
+    { "PF24",           Lg, NULL, 0, 0, PF_action,       "24" },
 };
 static Widget vpf_w[2][VPF_SZ];
 
 static struct button_list vpad_list[] = {
     { 0, 0, 0 },
     { "Up" ,            Bm, (char *)up_bits, up_width, up_height,
-                                      Up_action,       CN },
+                                      Up_action,       NULL },
     { 0, 0, 0 },
     { "Left" ,          Bm, (char *)left_bits, left_width, left_height,
-                                      Left_action,     CN },
+                                      Left_action,     NULL },
     { "Home",           Bm, (char *)home_bits, home_width, home_height,
-                                      Home_action,     CN },
+                                      Home_action,     NULL },
     { "Right" ,         Bm, (char *)right_bits, right_width, right_height,
-                                      Right_action,    CN },
+                                      Right_action,    NULL },
     { "Ins",            Bm, (char *)ins_bits, ins_width, ins_height,
-                                      Insert_action,   CN },
+                                      Insert_action,   NULL },
     { "Down" ,          Bm, (char *)down_bits, down_width, down_height,
-                                      Down_action,     CN },
+                                      Down_action,     NULL },
     { "Del",            Bm, (char *)del_bits, del_width, del_height,
-                                      Delete_action,   CN },
-    { "PA1",            Lg, CN, 0, 0, PA_action,       "1" },
-    { "PA2",            Lg, CN, 0, 0, PA_action,       "2" },
-    { "PA3",            Lg, CN, 0, 0, PA_action,       "3" },
+                                      Delete_action,   NULL },
+    { "PA1",            Lg, NULL, 0, 0, PA_action,       "1" },
+    { "PA2",            Lg, NULL, 0, 0, PA_action,       "2" },
+    { "PA3",            Lg, NULL, 0, 0, PA_action,       "3" },
 };
 #define VPAD_SZ (sizeof(vpad_list)/sizeof(vpad_list[0]))
 
 static struct button_list vfn_list[] = {
     { "Btab",           Bm, (char *)btab_bits, btab_width, btab_height,
-                                      BackTab_action,  CN },
+                                      BackTab_action,  NULL },
     { "Tab",            Bm, (char *)tab_bits, tab_width, tab_height,       
-                                      Tab_action,      CN },
-    { "Clear",          Sm, CN, 0, 0, Clear_action,    CN },
-    { "Reset",          Sm, CN, 0, 0, Reset_action,    CN },
-    { "Erase\nEOF",     Sm, CN, 0, 0, EraseEOF_action, CN },
-    { "Erase\nInput",   Sm, CN, 0, 0, EraseInput_action,CN },
-    { "Dup",            Sm, CN, 0, 0, Dup_action,      CN },
-    { "Field\nMark",    Sm, CN, 0, 0, FieldMark_action,CN },
-    { "Sys\nReq",       Sm, CN, 0, 0, SysReq_action,   CN },
-    { "Cursor\nSelect", Sm, CN, 0, 0, CursorSelect_action,CN },
-    { "Attn",           Sm, CN, 0, 0, Attn_action,     CN },
-    { "Compose",        Sm, CN, 0, 0, Compose_action,  CN },
+                                      Tab_action,      NULL },
+    { "Clear",          Sm, NULL, 0, 0, Clear_action,    NULL },
+    { "Reset",          Sm, NULL, 0, 0, Reset_action,    NULL },
+    { "Erase\nEOF",     Sm, NULL, 0, 0, EraseEOF_action, NULL },
+    { "Erase\nInput",   Sm, NULL, 0, 0, EraseInput_action,NULL },
+    { "Dup",            Sm, NULL, 0, 0, Dup_action,      NULL },
+    { "Field\nMark",    Sm, NULL, 0, 0, FieldMark_action,NULL },
+    { "Sys\nReq",       Sm, NULL, 0, 0, SysReq_action,   NULL },
+    { "Cursor\nSelect", Sm, NULL, 0, 0, CursorSelect_action,NULL },
+    { "Attn",           Sm, NULL, 0, 0, Attn_action,     NULL },
+    { "Compose",        Sm, NULL, 0, 0, Compose_action,  NULL },
     { "Newline",	Bm, (char *)newline_bits, newline_width, newline_height,
-				      Newline_action,  CN },
-    { "Enter",          Sm, CN, 0, 0, Enter_action,    CN },
+				      Newline_action,  NULL },
+    { "Enter",          Sm, NULL, 0, 0, Enter_action,    NULL },
 };
 #define VFN_SZ (sizeof(vfn_list)/sizeof(vfn_list[0]))
 
@@ -257,7 +257,7 @@ static Dimension key_width;
 static Dimension large_key_width;
 
 static Widget keypad_container = (Widget) NULL;
-static Widget key_pad = (Widget)NULL;
+static Widget key_pad = NULL;
 static XtTranslations keypad_t00 = (XtTranslations) NULL;
 static XtTranslations keypad_t0 = (XtTranslations) NULL;
 static XtTranslations saved_xt = (XtTranslations) NULL;
@@ -295,7 +295,7 @@ callfn(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_unuse
 {
 	struct button_list *keyd = (struct button_list *) client_data;
 
-	action_internal(keyd->action, IA_KEYPAD, keyd->parm, CN);
+	action_internal(keyd->action, IA_KEYPAD, keyd->parm, NULL);
 }
 
 /*
@@ -488,7 +488,7 @@ get_keypad_dimension(const char *name)
 	char *d;
 	long v;
 
-	if ((d = get_fresource("%s.%s", ResKeypad, name)) == CN)
+	if ((d = get_fresource("%s.%s", ResKeypad, name)) == NULL)
 		xs_error("Cannot find %s resource", ResKeypad);
 	if ((v = strtol(d, (char **)0, 0)) <= 0)
 		xs_error("Illegal %s resource", ResKeypad);
@@ -558,7 +558,7 @@ keypad_init(Widget container, Dimension voffset, Dimension screen_width, Boolean
 		hoffset = 0;
 	if (voffset & 1)
 		voffset++;
-	if (key_pad == (Widget)NULL) {
+	if (key_pad == NULL) {
 		key_pad = XtVaCreateManagedWidget(
 		    "keyPad", compositeWidgetClass, container,
 		    XtNx, hoffset,
@@ -732,7 +732,7 @@ keypad_popup_init(void)
 	/* Make keystrokes in the popup apply to the main window */
 
 	save_00translations(keypad_container, &keypad_t00);
-	set_translations(keypad_container, (XtTranslations *)NULL, &keypad_t0);
+	set_translations(keypad_container, NULL, &keypad_t0);
 	if (saved_xt != (XtTranslations) NULL) {
 		XtOverrideTranslations(keypad_container, saved_xt);
 		saved_xt = (XtTranslations) NULL;
@@ -744,7 +744,7 @@ void
 keypad_set_temp_keymap(XtTranslations trans)
 {
 	if (keypad_container != (Widget) NULL) {
-		if (trans == (XtTranslations)NULL) {
+		if (trans == NULL) {
 			trans = keypad_t0;
 			XtUninstallTranslations(keypad_container);
 		}
@@ -758,7 +758,7 @@ keypad_set_temp_keymap(XtTranslations trans)
 void
 keypad_set_keymap(void)
 {
-	if (keypad_container == (Widget)NULL)
+	if (keypad_container == NULL)
 		return;
 	XtUninstallTranslations(keypad_container);
 	set_translations(keypad_container, &keypad_t00, &keypad_t0);

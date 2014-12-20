@@ -86,7 +86,7 @@ Malloc(size_t len)
 	char *r;
 
 	r = malloc(len);
-	if (r == (char *)NULL)
+	if (r == NULL)
 		Error("Out of memory");
 	return r;
 }
@@ -97,7 +97,7 @@ Calloc(size_t nelem, size_t elsize)
 	char *r;
 
 	r = malloc(nelem * elsize);
-	if (r == (char *)NULL)
+	if (r == NULL)
 		Error("Out of memory");
 	return memset(r, '\0', nelem * elsize);
 }
@@ -337,7 +337,7 @@ static struct {
 	{ "Delete", 0x7f },
 #endif /*]*/
 
-	{ (char *)NULL, NoSymbol }
+	{ NULL, NoSymbol }
 };
 
 KeySym
@@ -347,7 +347,7 @@ StringToKeysym(char *s)
 
 	if (strlen(s) == 1 && (*(unsigned char *)s & 0x7f) > ' ')
 		return (KeySym)*(unsigned char *)s;
-	for (i = 0; latin1[i].name != (char *)NULL; i++) {
+	for (i = 0; latin1[i].name != NULL; i++) {
 		if (!strcmp(s, latin1[i].name))
 			return latin1[i].keysym;
 	}
@@ -359,11 +359,11 @@ KeysymToString(KeySym k)
 {
 	int i;
 
-	for (i = 0; latin1[i].name != (char *)NULL; i++) {
+	for (i = 0; latin1[i].name != NULL; i++) {
 		if (latin1[i].keysym == k)
 			return latin1[i].name;
 	}
-	return (char *)NULL;
+	return NULL;
 }
 
 /* Timeouts. */
@@ -393,15 +393,14 @@ typedef struct timeout {
 	tofn_t proc;
 	Boolean in_play;
 } timeout_t;
-#define TN	(timeout_t *)NULL
-static timeout_t *timeouts = TN;
+static timeout_t *timeouts = NULL;
 
 ioid_t
 AddTimeOut(unsigned long interval_ms, tofn_t proc)
 {
 	timeout_t *t_new;
 	timeout_t *t;
-	timeout_t *prev = TN;
+	timeout_t *prev = NULL;
 
 	t_new = (timeout_t *)Malloc(sizeof(timeout_t));
 	t_new->proc = proc;
@@ -420,7 +419,7 @@ AddTimeOut(unsigned long interval_ms, tofn_t proc)
 #endif /*]*/
 
 	/* Find where to insert this item. */
-	for (t = timeouts; t != TN; t = t->next) {
+	for (t = timeouts; t != NULL; t = t->next) {
 #if defined(_WIN32) /*[*/
 		if (t->ts > t_new->ts)
 #else /*][*/
@@ -433,11 +432,11 @@ AddTimeOut(unsigned long interval_ms, tofn_t proc)
 	}
 
 	/* Insert it. */
-	if (prev == TN) {	/* Front. */
+	if (prev == NULL) {	/* Front. */
 		t_new->next = timeouts;
 		timeouts = t_new;
-	} else if (t == TN) {	/* Rear. */
-		t_new->next = TN;
+	} else if (t == NULL) {	/* Rear. */
+		t_new->next = NULL;
 		prev->next = t_new;
 	} else {				/* Middle. */
 		t_new->next = t;
@@ -452,13 +451,13 @@ RemoveTimeOut(ioid_t timer)
 {
 	timeout_t *st = (timeout_t *)timer;
 	timeout_t *t;
-	timeout_t *prev = TN;
+	timeout_t *prev = NULL;
 
 	if (st->in_play)
 		return;
-	for (t = timeouts; t != TN; t = t->next) {
+	for (t = timeouts; t != NULL; t = t->next) {
 		if (t == st) {
-			if (prev != TN)
+			if (prev != NULL)
 				prev->next = t->next;
 			else
 				timeouts = t->next;
@@ -476,7 +475,7 @@ typedef struct input {
         int condition;
 	iofn_t proc;
 } input_t;          
-static input_t *inputs = (input_t *)NULL;
+static input_t *inputs = NULL;
 static Boolean inputs_changed = False;
 
 ioid_t
@@ -534,16 +533,16 @@ void
 RemoveInput(ioid_t id)
 {
 	input_t *ip;
-	input_t *prev = (input_t *)NULL;
+	input_t *prev = NULL;
 
-	for (ip = inputs; ip != (input_t *)NULL; ip = ip->next) {
+	for (ip = inputs; ip != NULL; ip = ip->next) {
 		if (ip == (input_t *)id)
 			break;
 		prev = ip;
 	}
-	if (ip == (input_t *)NULL)
+	if (ip == NULL)
 		return;
-	if (prev != (input_t *)NULL)
+	if (prev != NULL)
 		prev->next = ip->next;
 	else
 		inputs = ip->next;
@@ -563,7 +562,7 @@ select_setup(int *nfds, fd_set *readfds, fd_set *writefds,
 	input_t *ip;
 	int r = 0;
 
-	for (ip = inputs; ip != (input_t *)NULL; ip = ip->next) {
+	for (ip = inputs; ip != NULL; ip = ip->next) {
 		if ((unsigned long)ip->condition & InputReadMask) {
 			FD_SET(ip->source, readfds);
 			if ((int)ip->source >= *nfds)
@@ -583,10 +582,10 @@ select_setup(int *nfds, fd_set *readfds, fd_set *writefds,
 			r = 1;
 		}
 	}
-	if (timeouts != TN) {
+	if (timeouts != NULL) {
 		struct timeval now, twait;
 
-		(void) gettimeofday(&now, (void *)NULL);
+		(void) gettimeofday(&now, NULL);
 		twait.tv_sec = timeouts->tv.tv_sec - now.tv_sec;
 		twait.tv_usec = timeouts->tv.tv_usec - now.tv_usec;
 		if (twait.tv_usec < 0L) {
@@ -651,7 +650,7 @@ process_events(Boolean block)
 	FD_ZERO(&wfds);
 	FD_ZERO(&xfds);
 #endif /*]*/
-	for (ip = inputs; ip != (input_t *)NULL; ip = ip->next) {
+	for (ip = inputs; ip != NULL; ip = ip->next) {
 		if ((unsigned long)ip->condition & InputReadMask) {
 #if defined(_WIN32) /*[*/
 			ha[nha++] = (HANDLE)ip->source;
@@ -672,7 +671,7 @@ process_events(Boolean block)
 #endif /*]*/
 	}
 	if (block) {
-		if (timeouts != TN) {
+		if (timeouts != NULL) {
 #if defined(_WIN32) /*[*/
 			ms_ts(&now);
 			if (now > timeouts->ts)
@@ -680,7 +679,7 @@ process_events(Boolean block)
 			else
 				tmo = (DWORD)(timeouts->ts - now);
 #else /*][*/
-			(void) gettimeofday(&now, (void *)NULL);
+			(void) gettimeofday(&now, NULL);
 			twait.tv_sec = timeouts->tv.tv_sec - now.tv_sec;
 			twait.tv_usec = timeouts->tv.tv_usec - now.tv_usec;
 			if (twait.tv_usec < 0L) {
@@ -696,7 +695,7 @@ process_events(Boolean block)
 #if defined(_WIN32) /*[*/
 			tmo = INFINITE;
 #else /*][*/
-			tp = (struct timeval *)NULL;
+			tp = NULL;
 #endif /*]*/
 		}
 	} else {
@@ -729,9 +728,9 @@ process_events(Boolean block)
 #endif /*]*/
 	inputs_changed = False;
 #if defined(_WIN32) /*[*/
-	for (i = 0, ip = inputs; ip != (input_t *)NULL; ip = ip_next, i++) {
+	for (i = 0, ip = inputs; ip != NULL; ip = ip_next, i++) {
 #else /*][*/
-	for (ip = inputs; ip != (input_t *)NULL; ip = ip_next) {
+	for (ip = inputs; ip != NULL; ip = ip_next) {
 #endif /*]*/
 		ip_next = ip->next;
 		if (((unsigned long)ip->condition & InputReadMask) &&
@@ -764,13 +763,13 @@ process_events(Boolean block)
 	}
 
 	/* See what's expired. */
-	if (timeouts != TN) {
+	if (timeouts != NULL) {
 #if defined(_WIN32) /*[*/
 		ms_ts(&now);
 #else /*][*/
-		(void) gettimeofday(&now, (void *)NULL);
+		(void) gettimeofday(&now, NULL);
 #endif /*]*/
-		while ((t = timeouts) != TN) {
+		while ((t = timeouts) != NULL) {
 #if defined(_WIN32) /*[*/
 			if (t->ts <= now) {
 #else /*][*/

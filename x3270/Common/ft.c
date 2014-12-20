@@ -205,7 +205,7 @@ ft_complete(const char *errmsg)
     ft_gui_progress_popdown();
 
     /* Pop up the text. */
-    if (errmsg != CN) {
+    if (errmsg != NULL) {
 	char *msg_copy = NewString(errmsg);
 
 	/* Make sure the error message will fit on the pop-up. */
@@ -223,7 +223,7 @@ ft_complete(const char *errmsg)
 	char *buf;
 	char kbuf[256];
 
-	(void) gettimeofday(&t1, (struct timezone *)NULL);
+	(void) gettimeofday(&t1, NULL);
 	bytes_sec = (double)ft_length /
 		((double)(t1.tv_sec - t0.tv_sec) + 
 		 (double)(t1.tv_usec - t0.tv_usec) / 1.0e6);
@@ -263,7 +263,7 @@ ft_running(Boolean is_cut)
 	}
     }
     ft_private.is_cut = is_cut;
-    (void) gettimeofday(&t0, (struct timezone *)NULL);
+    (void) gettimeofday(&t0, NULL);
     ft_length = 0;
 
     ft_gui_running(ft_length);
@@ -344,18 +344,18 @@ static struct {
     char *value;
     const char *keyword[4];
 } tp[N_PARMS] = {
-    { "Direction",	CN, { "receive", "send" } },
+    { "Direction",	NULL, { "receive", "send" } },
     { "HostFile" },
     { "LocalFile" },
-    { "Host",		CN, { "tso", "vm", "cics" } },
-    { "Mode",		CN, { "ascii", "binary" } },
-    { "Cr",		CN, { "auto", "remove",	"add", "keep" } },
-    { "Remap",		CN, { "yes", "no" } },
-    { "Exist",		CN, { "keep", "replace", "append" } },
-    { "Recfm",		CN, { "default", "fixed", "variable", "undefined" } },
+    { "Host",		NULL, { "tso", "vm", "cics" } },
+    { "Mode",		NULL, { "ascii", "binary" } },
+    { "Cr",		NULL, { "auto", "remove",	"add", "keep" } },
+    { "Remap",		NULL, { "yes", "no" } },
+    { "Exist",		NULL, { "keep", "replace", "append" } },
+    { "Recfm",		NULL, { "default", "fixed", "variable", "undefined" } },
     { "Lrecl" },
     { "Blksize" },
-    { "Allocation",	CN, { "default", "tracks", "cylinders", "avblock" } },
+    { "Allocation",	NULL, { "default", "tracks", "cylinders", "avblock" } },
     { "PrimarySpace" },
     { "SecondarySpace" },
     { "BufferSize" },
@@ -396,10 +396,10 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
     /* Set everything to the default. */
     for (i = 0; i < N_PARMS; i++) {
 	Free(tp[i].value);
-	if (tp[i].keyword[0] != CN) {
+	if (tp[i].keyword[0] != NULL) {
 	    tp[i].value = NewString(tp[i].keyword[0]);
 	} else {
-	    tp[i].value = CN;
+	    tp[i].value = NULL;
 	}
     }
 
@@ -410,7 +410,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	    int kwlen;
 
 	    eq = strchr(xparams[j], '=');
-	    if (eq == CN || eq == xparams[j] || !*(eq + 1)) {
+	    if (eq == NULL || eq == xparams[j] || !*(eq + 1)) {
 		popup_an_error("Invalid option syntax: '%s'", xparams[j]);
 		return;
 	    }
@@ -418,12 +418,12 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	    if (!strncasecmp(xparams[j], tp[i].name, kwlen)
 		    && !tp[i].name[kwlen]) {
 		if (tp[i].keyword[0]) {
-		    for (k = 0; tp[i].keyword[k] != CN && k < 4; k++) {
+		    for (k = 0; tp[i].keyword[k] != NULL && k < 4; k++) {
 			if (!strcasecmp(eq + 1, tp[i].keyword[k])) {
 			    break;
 			}
 		    }
-		    if (k >= 4 || tp[i].keyword[k] == CN) {
+		    if (k >= 4 || tp[i].keyword[k] == NULL) {
 			popup_an_error("Invalid option value: '%s'", eq + 1);
 			return;
 		    }
@@ -458,11 +458,11 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
     }
 
     /* Check for required values. */
-    if (tp[PARM_HOST_FILE].value == CN) {
+    if (tp[PARM_HOST_FILE].value == NULL) {
 	popup_an_error("Missing 'HostFile' option");
 	return;
     }
-    if (tp[PARM_LOCAL_FILE].value == CN) {
+    if (tp[PARM_LOCAL_FILE].value == NULL) {
 	popup_an_error("Missing 'LocalFile' option");
 	return;
     }
@@ -471,7 +471,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
      * Start the transfer.  Much of this is duplicated from ft_start()
      * and should be made common.
      */
-    if (tp[PARM_BUFFER_SIZE].value != CN) {
+    if (tp[PARM_BUFFER_SIZE].value != NULL) {
 	dft_buffersize = atoi(tp[PARM_BUFFER_SIZE].value);
     } else {
 	dft_buffersize = 0;
@@ -505,14 +505,14 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	assert(0);
     }
     ft_private.recfm = DEFAULT_RECFM;
-    for (k = 0; tp[PARM_RECFM].keyword[k] != CN && k < 4; k++) {
+    for (k = 0; tp[PARM_RECFM].keyword[k] != NULL && k < 4; k++) {
 	if (!strcasecmp(tp[PARM_RECFM].value, tp[PARM_RECFM].keyword[k]))  {
 	    ft_private.recfm = (enum recfm)k;
 	    break;
 	}
     }
     ft_private.units = DEFAULT_UNITS;
-    for (k = 0; tp[PARM_ALLOCATION].keyword[k] != CN && k < 4; k++) {
+    for (k = 0; tp[PARM_ALLOCATION].keyword[k] != NULL && k < 4; k++) {
 	if (!strcasecmp(tp[PARM_ALLOCATION].value,
 			tp[PARM_ALLOCATION].keyword[k]))  {
 	    ft_private.units = (enum units)k;
@@ -521,7 +521,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
     }
 
 #if defined(_WIN32) /*[*/
-    if (tp[PARM_WINDOWS_CODEPAGE].value != CN) {
+    if (tp[PARM_WINDOWS_CODEPAGE].value != NULL) {
 	ft_windows_codepage = atoi(tp[PARM_WINDOWS_CODEPAGE].value);
     } else if (appres.ft_cp) {
 	ft_windows_codepage = appres.ft_cp;
@@ -588,10 +588,10 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 		    break;
 		};
 		vb_appends(&r, ")");
-		if (tp[PARM_LRECL].value != CN) {
+		if (tp[PARM_LRECL].value != NULL) {
 		    vb_appendf(&r, " LRECL(%s)", tp[PARM_LRECL].value);
 		}
-		if (tp[PARM_BLKSIZE].value != CN) {
+		if (tp[PARM_BLKSIZE].value != NULL) {
 		    vb_appendf(&r, " BLKSIZE(%s)", tp[PARM_BLKSIZE].value);
 		}
 	    }
@@ -610,7 +610,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 		default:
 		    break;
 		}
-		if (tp[PARM_PRIMARY_SPACE].value != CN) {
+		if (tp[PARM_PRIMARY_SPACE].value != NULL) {
 		    vb_appendf(&r, " SPACE(%s", tp[PARM_PRIMARY_SPACE].value);
 		    if (tp[PARM_SECONDARY_SPACE].value) {
 			vb_appendf(&r, ",%s", tp[PARM_SECONDARY_SPACE].value);

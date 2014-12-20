@@ -188,7 +188,7 @@ enq_ta(XtActionProc fn, char *parm1, char *parm2)
 	ta = (struct ta *) Malloc(sizeof(*ta));
 	ta->next = (struct ta *) NULL;
 	ta->fn = fn;
-	ta->parm1 = ta->parm2 = CN;
+	ta->parm1 = ta->parm2 = NULL;
 	if (parm1) {
 		ta->parm1 = NewString(parm1);
 		if (parm2)
@@ -213,11 +213,11 @@ run_ta(void)
 {
 	struct ta *ta;
 
-	if (kybdlock || (ta = ta_head) == (struct ta *)NULL)
+	if (kybdlock || (ta = ta_head) == NULL)
 		return False;
 
-	if ((ta_head = ta->next) == (struct ta *)NULL) {
-		ta_tail = (struct ta *)NULL;
+	if ((ta_head = ta->next) == NULL) {
+		ta_tail = NULL;
 		status_typeahead(False);
 	}
 
@@ -596,7 +596,7 @@ PF_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_para
 	if (kybdlock & KL_OIA_MINUS)
 		return;
 	else if (kybdlock)
-		enq_ta(PF_action, params[0], CN);
+		enq_ta(PF_action, params[0], NULL);
 	else
 		key_AID(pf_xlate[k-1]);
 }
@@ -620,7 +620,7 @@ PA_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_para
 	if (kybdlock & KL_OIA_MINUS)
 		return;
 	else if (kybdlock)
-		enq_ta(PA_action, params[0], CN);
+		enq_ta(PA_action, params[0], NULL);
 	else
 		key_AID(pa_xlate[k-1]);
 }
@@ -834,7 +834,7 @@ key_Character(unsigned ebc, Boolean with_ge, Boolean pasting, Boolean *skipped)
 		(void) snprintf(codename, sizeof(codename), "%d", ebc |
 			(with_ge ? GE_WFLAG : 0) |
 			(pasting ? PASTE_WFLAG : 0));
-		enq_ta(key_Character_wrapper, codename, CN);
+		enq_ta(key_Character_wrapper, codename, NULL);
 		return False;
 	}
 	baddr = cursor_addr;
@@ -1111,7 +1111,7 @@ key_WCharacter(unsigned char ebc_pair[], Boolean *skipped)
 
 		(void) snprintf(codename, sizeof(codename), "%d",
 			(ebc_pair[0] << 8) | ebc_pair[1]);
-		enq_ta(key_WCharacter_wrapper, codename, CN);
+		enq_ta(key_WCharacter_wrapper, codename, NULL);
 		return False;
 	}
 
@@ -1607,7 +1607,7 @@ Tab_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_par
 			kybdlock_clr(KL_OERR_MASK, "Tab");
 			status_reset();
 		} else {
-			enq_ta(Tab_action, CN, CN);
+			enq_ta(Tab_action, NULL, NULL);
 			return;
 		}
 	}
@@ -1638,7 +1638,7 @@ BackTab_action(Widget w _is_unused, XEvent *event, String *params,
 			kybdlock_clr(KL_OERR_MASK, "BackTab");
 			status_reset();
 		} else {
-			enq_ta(BackTab_action, CN, CN);
+			enq_ta(BackTab_action, NULL, NULL);
 			return;
 		}
 	}
@@ -1773,7 +1773,7 @@ Home_action(Widget w _is_unused, XEvent *event, String *params,
 		return;
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(Home_action, CN, CN);
+		enq_ta(Home_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT) {
@@ -1824,7 +1824,7 @@ Left_action(Widget w _is_unused, XEvent *event, String *params,
 			kybdlock_clr(KL_OERR_MASK, "Left");
 			status_reset();
 		} else {
-			enq_ta(Left_action, CN, CN);
+			enq_ta(Left_action, NULL, NULL);
 			return;
 		}
 	}
@@ -1931,7 +1931,7 @@ Delete_action(Widget w _is_unused, XEvent *event, String *params,
 	action_debug(Delete_action, event, params, num_params);
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(Delete_action, CN, CN);
+		enq_ta(Delete_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT) {
@@ -1960,7 +1960,7 @@ BackSpace_action(Widget w _is_unused, XEvent *event, String *params,
 	action_debug(BackSpace_action, event, params, num_params);
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(BackSpace_action, CN, CN);
+		enq_ta(BackSpace_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT) {
@@ -2047,7 +2047,7 @@ Erase_action(Widget w _is_unused, XEvent *event, String *params,
 	action_debug(Erase_action, event, params, num_params);
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(Erase_action, CN, CN);
+		enq_ta(Erase_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT) {
@@ -2078,7 +2078,7 @@ Right_action(Widget w _is_unused, XEvent *event, String *params,
 			kybdlock_clr(KL_OERR_MASK, "Right");
 			status_reset();
 		} else {
-			enq_ta(Right_action, CN, CN);
+			enq_ta(Right_action, NULL, NULL);
 			return;
 		}
 	}
@@ -2115,7 +2115,7 @@ Left2_action(Widget w _is_unused, XEvent *event, String *params,
 			kybdlock_clr(KL_OERR_MASK, "Left2");
 			status_reset();
 		} else {
-			enq_ta(Left2_action, CN, CN);
+			enq_ta(Left2_action, NULL, NULL);
 			return;
 		}
 	}
@@ -2150,7 +2150,7 @@ PreviousWord_action(Widget w _is_unused, XEvent *event, String *params,
 	action_debug(PreviousWord_action, event, params, num_params);
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(PreviousWord_action, CN, CN);
+		enq_ta(PreviousWord_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT || !formatted) {
@@ -2218,7 +2218,7 @@ Right2_action(Widget w _is_unused, XEvent *event, String *params,
 			kybdlock_clr(KL_OERR_MASK, "Right2");
 			status_reset();
 		} else {
-			enq_ta(Right2_action, CN, CN);
+			enq_ta(Right2_action, NULL, NULL);
 			return;
 		}
 	}
@@ -2298,7 +2298,7 @@ NextWord_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *nu
 	action_debug(NextWord_action, event, params, num_params);
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(NextWord_action, CN, CN);
+		enq_ta(NextWord_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT || !formatted) {
@@ -2363,7 +2363,7 @@ Up_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_para
 			kybdlock_clr(KL_OERR_MASK, "Up");
 			status_reset();
 		} else {
-			enq_ta(Up_action, CN, CN);
+			enq_ta(Up_action, NULL, NULL);
 			return;
 		}
 	}
@@ -2393,7 +2393,7 @@ Down_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_pa
 			kybdlock_clr(KL_OERR_MASK, "Down");
 			status_reset();
 		} else {
-			enq_ta(Down_action, CN, CN);
+			enq_ta(Down_action, NULL, NULL);
 			return;
 		}
 	}
@@ -2420,7 +2420,7 @@ Newline_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
 		return;
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(Newline_action, CN, CN);
+		enq_ta(Newline_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT) {
@@ -2449,7 +2449,7 @@ Dup_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_par
 		return;
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(Dup_action, CN, CN);
+		enq_ta(Dup_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT) {
@@ -2471,7 +2471,7 @@ FieldMark_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *n
 		return;
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(FieldMark_action, CN, CN);
+		enq_ta(FieldMark_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT) {
@@ -2494,7 +2494,7 @@ Enter_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_p
 	if (kybdlock & KL_OIA_MINUS)
 		return;
 	else if (kybdlock)
-		enq_ta(Enter_action, CN, CN);
+		enq_ta(Enter_action, NULL, NULL);
 	else
 		key_AID(AID_ENTER);
 }
@@ -2516,7 +2516,7 @@ SysReq_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_
 		if (kybdlock & KL_OIA_MINUS)
 			return;
 		else if (kybdlock)
-			enq_ta(SysReq_action, CN, CN);
+			enq_ta(SysReq_action, NULL, NULL);
 		else
 			key_AID(AID_SYSREQ);
 	}
@@ -2536,7 +2536,7 @@ Clear_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_p
 	if (kybdlock & KL_OIA_MINUS)
 		return;
 	if (kybdlock && CONNECTED) {
-		enq_ta(Clear_action, CN, CN);
+		enq_ta(Clear_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT) {
@@ -2648,7 +2648,7 @@ CursorSelect_action(Widget w _is_unused, XEvent *event, String *params,
 		return;
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(CursorSelect_action, CN, CN);
+		enq_ta(CursorSelect_action, NULL, NULL);
 		return;
 	}
 
@@ -2701,7 +2701,7 @@ EraseEOF_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *nu
 		return;
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(EraseEOF_action, CN, CN);
+		enq_ta(EraseEOF_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT) {
@@ -2755,7 +2755,7 @@ EraseInput_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *
 		return;
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(EraseInput_action, CN, CN);
+		enq_ta(EraseInput_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT) {
@@ -2819,7 +2819,7 @@ DeleteWord_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *
 		return;
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(DeleteWord_action, CN, CN);
+		enq_ta(DeleteWord_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT) {
@@ -2885,7 +2885,7 @@ DeleteField_action(Widget w _is_unused, XEvent *event, String *params, Cardinal 
 		return;
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(DeleteField_action, CN, CN);
+		enq_ta(DeleteField_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT) {
@@ -2925,7 +2925,7 @@ Insert_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_
 		return;
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(Insert_action, CN, CN);
+		enq_ta(Insert_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT) {
@@ -2947,7 +2947,7 @@ ToggleInsert_action(Widget w _is_unused, XEvent *event, String *params, Cardinal
 	}
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(ToggleInsert_action, CN, CN);
+		enq_ta(ToggleInsert_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT) {
@@ -2972,7 +2972,7 @@ ToggleReverse_action(Widget w _is_unused, XEvent *event, String *params, Cardina
 		return;
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(ToggleReverse_action, CN, CN);
+		enq_ta(ToggleReverse_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT) {
@@ -2998,7 +2998,7 @@ FieldEnd_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *nu
 		return;
 	reset_idle_timer();
 	if (kybdlock) {
-		enq_ta(FieldEnd_action, CN, CN);
+		enq_ta(FieldEnd_action, NULL, NULL);
 		return;
 	}
 	if (IN_NVT) {
@@ -3289,7 +3289,7 @@ do_pa(unsigned n)
 		char nn[3];
 
 		(void) sprintf(nn, "%d", n);
-		enq_ta(PA_action, nn, CN);
+		enq_ta(PA_action, nn, NULL);
 		return;
 	}
 	key_AID(pa_xlate[n-1]);
@@ -3308,7 +3308,7 @@ do_pf(unsigned n)
 		char nn[3];
 
 		(void) sprintf(nn, "%d", n);
-		enq_ta(PF_action, nn, CN);
+		enq_ta(PF_action, nn, NULL);
 		return;
 	}
 	key_AID(pf_xlate[n-1]);
@@ -3454,7 +3454,7 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 		    case BASE:
 			switch (c) {
 			    case '\b':
-				action_internal(Left_action, ia, CN, CN);
+				action_internal(Left_action, ia, NULL, NULL);
 				skipped = False;
 				break;
 			    case '\f':
@@ -3462,8 +3462,8 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 					key_UCharacter(0x20, KT_STD, ia,
 						&skipped);
 				} else {
-					action_internal(Clear_action, ia, CN,
-							CN);
+					action_internal(Clear_action, ia, NULL,
+							NULL);
 					skipped = False;
 					if (IN_3270)
 						return xlen-1;
@@ -3474,7 +3474,7 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 					if (auto_skip) {
 					    if (!skipped) {
 						action_internal(Newline_action,
-								ia, CN, CN);
+								ia, NULL, NULL);
 					    }
 					} else {
 					    int baddr = cursor_addr;
@@ -3500,8 +3500,8 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 					}
 					skipped = False;
 				} else {
-					action_internal(Enter_action, ia, CN,
-							CN);
+					action_internal(Enter_action, ia, NULL,
+							NULL);
 					skipped = False;
 					if (IN_3270)
 						return xlen-1;
@@ -3509,13 +3509,13 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 				break;
 			    case '\r':
 				if (!pasting) {
-					action_internal(Newline_action, ia, CN,
-							CN);
+					action_internal(Newline_action, ia, NULL,
+							NULL);
 					skipped = False;
 				}
 				break;
 			    case '\t':
-				action_internal(Tab_action, ia, CN, CN);
+				action_internal(Tab_action, ia, NULL, NULL);
 				skipped = False;
 				break;
 			    case '\\':	/* backslashes are NOT special when
@@ -3588,12 +3588,12 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 				state = BASE;
 				break;
 			    case 'b':
-				action_internal(Left_action, ia, CN, CN);
+				action_internal(Left_action, ia, NULL, NULL);
 				skipped = False;
 				state = BASE;
 				break;
 			    case 'f':
-				action_internal(Clear_action, ia, CN, CN);
+				action_internal(Clear_action, ia, NULL, NULL);
 				skipped = False;
 				state = BASE;
 				if (IN_3270)
@@ -3601,7 +3601,7 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 				else
 					break;
 			    case 'n':
-				action_internal(Enter_action, ia, CN, CN);
+				action_internal(Enter_action, ia, NULL, NULL);
 				skipped = False;
 				state = BASE;
 				if (IN_3270)
@@ -3612,17 +3612,17 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 				state = BACKP;
 				break;
 			    case 'r':
-				action_internal(Newline_action, ia, CN, CN);
+				action_internal(Newline_action, ia, NULL, NULL);
 				skipped = False;
 				state = BASE;
 				break;
 			    case 't':
-				action_internal(Tab_action, ia, CN, CN);
+				action_internal(Tab_action, ia, NULL, NULL);
 				skipped = False;
 				state = BASE;
 				break;
 			    case 'T':
-				action_internal(BackTab_action, ia, CN, CN);
+				action_internal(BackTab_action, ia, NULL, NULL);
 				skipped = False;
 				state = BASE;
 				break;
@@ -3904,8 +3904,8 @@ hex_input(const char *s)
 {
 	const char *t;
 	Boolean escaped;
-	unsigned char *xbuf = (unsigned char *)NULL;
-	unsigned char *tbuf = (unsigned char *)NULL;
+	unsigned char *xbuf = NULL;
+	unsigned char *tbuf = NULL;
 	int nbytes = 0;
 
 	/* Validate the string. */
@@ -4197,13 +4197,13 @@ build_composites(void)
 	int i;
 	struct composite *cp;
 
-	if (appres.compose_map == CN) {
+	if (appres.compose_map == NULL) {
 		popup_an_error("%s: No %s defined", action_name(Compose_action),
 		    ResComposeMap);
 		return False;
 	}
 	c0 = get_fresource("%s.%s", ResComposeMap, appres.compose_map);
-	if (c0 == CN) {
+	if (c0 == NULL) {
 		popup_an_error("%s: Cannot find %s \"%s\"",
 		    action_name(Compose_action), ResComposeMap,
 		    appres.compose_map);
@@ -4309,23 +4309,23 @@ Default_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
 			/* Remap certain control characters. */
 			if (!IN_NVT) switch (buf[0]) {
 			    case '\t':
-				action_internal(Tab_action, IA_DEFAULT, CN, CN);
+				action_internal(Tab_action, IA_DEFAULT, NULL, NULL);
 				break;
 			   case '\177':
-				action_internal(Delete_action, IA_DEFAULT, CN,
-				    CN);
+				action_internal(Delete_action, IA_DEFAULT, NULL,
+				    NULL);
 				break;
 			    case '\b':
 				action_internal(Erase_action, IA_DEFAULT,
-				    CN, CN);
+				    NULL, NULL);
 				break;
 			    case '\r':
-				action_internal(Enter_action, IA_DEFAULT, CN,
-				    CN);
+				action_internal(Enter_action, IA_DEFAULT, NULL,
+				    NULL);
 				break;
 			    case '\n':
-				action_internal(Newline_action, IA_DEFAULT, CN,
-				    CN);
+				action_internal(Newline_action, IA_DEFAULT, NULL,
+				    NULL);
 				break;
 			    default:
 				key_ACharacter(buf, KT_STD, IA_DEFAULT, NULL);
@@ -4339,97 +4339,97 @@ Default_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
 		/* Pick some other reasonable defaults. */
 		switch (ks) {
 		    case XK_Up:
-			action_internal(Up_action, IA_DEFAULT, CN, CN);
+			action_internal(Up_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_Down:
-			action_internal(Down_action, IA_DEFAULT, CN, CN);
+			action_internal(Down_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_Left:
-			action_internal(Left_action, IA_DEFAULT, CN, CN);
+			action_internal(Left_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_Right:
-			action_internal(Right_action, IA_DEFAULT, CN, CN);
+			action_internal(Right_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_Insert:
 #if defined(XK_KP_Insert) /*[*/
 		    case XK_KP_Insert:
 #endif /*]*/
-			action_internal(Insert_action, IA_DEFAULT, CN, CN);
+			action_internal(Insert_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_Delete:
-			action_internal(Delete_action, IA_DEFAULT, CN, CN);
+			action_internal(Delete_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_Home:
-			action_internal(Home_action, IA_DEFAULT, CN, CN);
+			action_internal(Home_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_Tab:
-			action_internal(Tab_action, IA_DEFAULT, CN, CN);
+			action_internal(Tab_action, IA_DEFAULT, NULL, NULL);
 			break;
 #if defined(XK_ISO_Left_Tab) /*[*/
 		    case XK_ISO_Left_Tab:
-			action_internal(BackTab_action, IA_DEFAULT, CN, CN);
+			action_internal(BackTab_action, IA_DEFAULT, NULL, NULL);
 			break;
 #endif /*]*/
 		    case XK_Clear:
-			action_internal(Clear_action, IA_DEFAULT, CN, CN);
+			action_internal(Clear_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_Sys_Req:
-			action_internal(SysReq_action, IA_DEFAULT, CN, CN);
+			action_internal(SysReq_action, IA_DEFAULT, NULL, NULL);
 			break;
 #if defined(XK_EuroSign) /*[*/
 		    case XK_EuroSign:
 			action_internal(Key_action, IA_DEFAULT, "currency",
-				CN);
+				NULL);
 			break;
 #endif /*]*/
 
 #if defined(XK_3270_Duplicate) /*[*/
 		    /* Funky 3270 keysyms. */
 		    case XK_3270_Duplicate:
-			action_internal(Dup_action, IA_DEFAULT, CN, CN);
+			action_internal(Dup_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_3270_FieldMark:
-			action_internal(FieldMark_action, IA_DEFAULT, CN, CN);
+			action_internal(FieldMark_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_3270_Right2:
-			action_internal(Right2_action, IA_DEFAULT, CN, CN);
+			action_internal(Right2_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_3270_Left2:
-			action_internal(Left2_action, IA_DEFAULT, CN, CN);
+			action_internal(Left2_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_3270_BackTab:
-			action_internal(BackTab_action, IA_DEFAULT, CN, CN);
+			action_internal(BackTab_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_3270_EraseEOF:
-			action_internal(EraseEOF_action, IA_DEFAULT, CN, CN);
+			action_internal(EraseEOF_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_3270_EraseInput:
-			action_internal(EraseInput_action, IA_DEFAULT, CN, CN);
+			action_internal(EraseInput_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_3270_Reset:
-			action_internal(Reset_action, IA_DEFAULT, CN, CN);
+			action_internal(Reset_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_3270_PA1:
-			action_internal(PA_action, IA_DEFAULT, "1", CN);
+			action_internal(PA_action, IA_DEFAULT, "1", NULL);
 			break;
 		    case XK_3270_PA2:
-			action_internal(PA_action, IA_DEFAULT, "2", CN);
+			action_internal(PA_action, IA_DEFAULT, "2", NULL);
 			break;
 		    case XK_3270_PA3:
-			action_internal(PA_action, IA_DEFAULT, "3", CN);
+			action_internal(PA_action, IA_DEFAULT, "3", NULL);
 			break;
 		    case XK_3270_Attn:
-			action_internal(Attn_action, IA_DEFAULT, CN, CN);
+			action_internal(Attn_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_3270_AltCursor:
-			action_internal(AltCursor_action, IA_DEFAULT, CN, CN);
+			action_internal(AltCursor_action, IA_DEFAULT, NULL, NULL);
 			break;
 		    case XK_3270_CursorSelect:
-			action_internal(CursorSelect_action, IA_DEFAULT, CN,
-			    CN);
+			action_internal(CursorSelect_action, IA_DEFAULT, NULL,
+			    NULL);
 			break;
 		    case XK_3270_Enter:
-			action_internal(Enter_action, IA_DEFAULT, CN, CN);
+			action_internal(Enter_action, IA_DEFAULT, NULL, NULL);
 			break;
 #endif /*]*/
 
@@ -4437,69 +4437,69 @@ Default_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
 		    /* Funky APL keysyms. */
 		    case XK_downcaret:
 			action_internal(Key_action, IA_DEFAULT, "apl_downcaret",
-			    CN);
+			    NULL);
 			break;
 		    case XK_upcaret:
 			action_internal(Key_action, IA_DEFAULT, "apl_upcaret",
-			    CN);
+			    NULL);
 			break;
 		    case XK_overbar:
 			action_internal(Key_action, IA_DEFAULT, "apl_overbar",
-			    CN);
+			    NULL);
 			break;
 		    case XK_downtack:
 			action_internal(Key_action, IA_DEFAULT, "apl_downtack",
-			    CN);
+			    NULL);
 			break;
 		    case XK_upshoe:
 			action_internal(Key_action, IA_DEFAULT, "apl_upshoe",
-			    CN);
+			    NULL);
 			break;
 		    case XK_downstile:
 			action_internal(Key_action, IA_DEFAULT, "apl_downstile",
-			    CN);
+			    NULL);
 			break;
 		    case XK_underbar:
 			action_internal(Key_action, IA_DEFAULT, "apl_underbar",
-			    CN);
+			    NULL);
 			break;
 		    case XK_jot:
-			action_internal(Key_action, IA_DEFAULT, "apl_jot", CN);
+			action_internal(Key_action, IA_DEFAULT, "apl_jot", NULL);
 			break;
 		    case XK_quad:
-			action_internal(Key_action, IA_DEFAULT, "apl_quad", CN);
+			action_internal(Key_action, IA_DEFAULT, "apl_quad", NULL);
 			break;
 		    case XK_uptack:
 			action_internal(Key_action, IA_DEFAULT, "apl_uptack",
-			    CN);
+			    NULL);
 			break;
 		    case XK_circle:
 			action_internal(Key_action, IA_DEFAULT, "apl_circle",
-			    CN);
+			    NULL);
 			break;
 		    case XK_upstile:
 			action_internal(Key_action, IA_DEFAULT, "apl_upstile",
-			    CN);
+			    NULL);
 			break;
 		    case XK_downshoe:
 			action_internal(Key_action, IA_DEFAULT, "apl_downshoe",
-			    CN);
+			    NULL);
 			break;
 		    case XK_rightshoe:
 			action_internal(Key_action, IA_DEFAULT, "apl_rightshoe",
-			    CN);
+			    NULL);
 			break;
 		    case XK_leftshoe:
 			action_internal(Key_action, IA_DEFAULT, "apl_leftshoe",
-			    CN);
+			    NULL);
 			break;
 		    case XK_lefttack:
 			action_internal(Key_action, IA_DEFAULT, "apl_lefttack",
-			    CN);
+			    NULL);
 			break;
 		    case XK_righttack:
 			action_internal(Key_action, IA_DEFAULT, "apl_righttack",
-			    CN);
+			    NULL);
 			break;
 #endif /*]*/
 
@@ -4507,7 +4507,7 @@ Default_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
 			if (ks >= XK_F1 && ks <= XK_F24) {
 				(void) snprintf(buf, sizeof(buf), "%ld",
 					ks - XK_F1 + 1);
-				action_internal(PF_action, IA_DEFAULT, buf, CN);
+				action_internal(PF_action, IA_DEFAULT, buf, NULL);
 			} else {
 				ucs4_t ucs4;
 
@@ -4555,7 +4555,7 @@ TemporaryKeymap_action(Widget w _is_unused, XEvent *event, String *params, Cardi
 		return;
 
 	if (*num_params == 0 || !strcmp(params[0], "None")) {
-		(void) temporary_keymap(CN);
+		(void) temporary_keymap(NULL);
 		return;
 	}
 

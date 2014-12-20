@@ -61,18 +61,18 @@ Boolean		passthru_host = False;
 Boolean		ssl_host = False;
 #define		LUNAME_SIZE	16
 char		luname[LUNAME_SIZE+1];
-char		*connected_lu = CN;
-char		*connected_type = CN;
+char		*connected_lu = NULL;
+char		*connected_type = NULL;
 Boolean		ever_3270 = False;
 
-char           *current_host = CN;
-char           *full_current_host = CN;
+char           *current_host = NULL;
+char           *full_current_host = NULL;
 unsigned short  current_port;
-char	       *reconnect_host = CN;
-char	       *qualified_host = CN;
+char	       *reconnect_host = NULL;
+char	       *qualified_host = NULL;
 
-struct host *hosts = (struct host *)NULL;
-static struct host *last_host = (struct host *)NULL;
+struct host *hosts = NULL;
+static struct host *last_host = NULL;
 static Boolean auto_reconnect_inprogress = False;
 static int net_sock = -1;
 #if defined(X3270_INTERACTIVE) /*[*/
@@ -125,12 +125,12 @@ hostfile_init(void)
 
 	hostfile_initted = True;
 	hostfile_name = appres.hostsfile;
-	if (hostfile_name == CN)
+	if (hostfile_name == NULL)
 		hostfile_name = xs_buffer("%s/ibm_hosts", appres.conf_dir);
 	else
 		hostfile_name = do_subst(appres.hostsfile, DS_VARS | DS_TILDE);
 	hf = fopen(hostfile_name, "r");
-	if (hf != (FILE *)NULL) {
+	if (hf != NULL) {
 		while (fgets(buf, sizeof(buf), hf)) {
 			char *s = buf;
 			char *name, *entry_type, *hostname;
@@ -174,9 +174,9 @@ hostfile_init(void)
 			if (*s)
 				h->loginstring = NewString(s);
 			else
-				h->loginstring = CN;
+				h->loginstring = NULL;
 			h->prev = last_host;
-			h->next = (struct host *)NULL;
+			h->next = NULL;
 			if (last_host)
 				last_host->next = h;
 			else
@@ -184,7 +184,7 @@ hostfile_init(void)
 			last_host = h;
 		}
 		(void) fclose(hf);
-	} else if (appres.hostsfile != CN) {
+	} else if (appres.hostsfile != NULL) {
 		popup_an_errno(errno, "Cannot open " ResHostsFile " '%s'",
 				appres.hostsfile);
 	}
@@ -194,7 +194,7 @@ hostfile_init(void)
 	/*
 	 * Read the recent-connection file, and prepend it to the hosts list.
 	 */
-	save_recent(CN);
+	save_recent(NULL);
 #endif /*]*/
 }
 
@@ -208,12 +208,12 @@ hostfile_lookup(const char *name, char **hostname, char **loginstring)
 	struct host *h;
 
 	hostfile_init();
-	for (h = hosts; h != (struct host *)NULL; h = h->next) {
+	for (h = hosts; h != NULL; h = h->next) {
 		if (h->entry_type == RECENT)
 			continue;
 		if (!strcmp(name, h->name)) {
 			*hostname = h->hostname;
-			if (h->loginstring != CN) {
+			if (h->loginstring != NULL) {
 				*loginstring = h->loginstring;
 			} else {
 				*loginstring = appres.login_macro;
@@ -238,13 +238,13 @@ parse_localprocess(const char *s)
 			char *r;
 
 			r = getenv("SHELL");
-			if (r != CN)
+			if (r != NULL)
 				return r;
 			else
 				return "/bin/sh";
 		}
 	}
-	return CN;
+	return NULL;
 }
 #endif /*]*/
 
@@ -546,8 +546,8 @@ host_connect(const char *n)
 	char *s;		/* temporary */
 	const char *chost;	/* to whom we will connect */
 	char *target_name;
-	char *ps = CN;
-	char *port = CN;
+	char *ps = NULL;
+	char *port = NULL;
 	Boolean resolving;
 	Boolean pending;
 	static Boolean ansi_host;
@@ -582,7 +582,7 @@ host_connect(const char *n)
 #endif /*]*/
 
 #if defined(LOCAL_PROCESS) /*[*/
-	if ((localprocess_cmd = parse_localprocess(nb)) != CN) {
+	if ((localprocess_cmd = parse_localprocess(nb)) != NULL) {
 		chost = localprocess_cmd;
 		port = appres.port;
 	} else
@@ -594,7 +594,7 @@ host_connect(const char *n)
 		if ((s = split_host(nb, &ansi_host, &std_ds_host,
 		    &passthru_host, &non_tn3270e_host, &ssl_host,
 		    &no_login_host, luname, &port,
-		    &needed)) == CN)
+		    &needed)) == NULL)
 			return -1;
 
 		/* Look up the name in the hosts file. */
@@ -614,7 +614,7 @@ host_connect(const char *n)
 		chost = s;
 
 		/* Default the port. */
-		if (port == CN)
+		if (port == NULL)
 			port = appres.port;
 	}
 
@@ -628,8 +628,8 @@ host_connect(const char *n)
 	if (n != full_current_host) {
 		Replace(full_current_host, NewString(n));
 	}
-	Replace(current_host, CN);
-	if (localprocess_cmd != CN) {
+	Replace(current_host, NULL);
+	if (localprocess_cmd != NULL) {
 		if (full_current_host[strlen(OptLocalProcess)] != '\0')
 		current_host = NewString(full_current_host +
 		    strlen(OptLocalProcess) + 1);
@@ -650,7 +650,7 @@ host_connect(const char *n)
 
 	/* Attempt contact. */
 	ever_3270 = False;
-	net_sock = net_connect(chost, port, localprocess_cmd != CN, &resolving,
+	net_sock = net_connect(chost, port, localprocess_cmd != NULL, &resolving,
 	    &pending);
 	if (net_sock < 0 && !resolving) {
 #if defined(X3270_INTERACTIVE) /*[*/
@@ -681,9 +681,9 @@ host_connect(const char *n)
 	/* Success. */
 
 	/* Set pending string. */
-	if (ps == CN)
+	if (ps == NULL)
 		ps = appres.login_macro;
-	if (ps != CN)
+	if (ps != NULL)
 		login_macro(ps);
 
 	/* Prepare Xt for I/O. */
@@ -712,7 +712,7 @@ host_connect(const char *n)
 static void
 host_reconnect(void)
 {
-	if (auto_reconnect_inprogress || current_host == CN ||
+	if (auto_reconnect_inprogress || current_host == NULL ||
 	    CONNECTED || HALF_CONNECTED)
 		return;
 	if (host_connect(reconnect_host) >= 0)
@@ -872,7 +872,7 @@ save_recent(const char *hn)
 	struct host *h;
 	int nih = 0;
 	struct host *r_start = NULL;
-	char *lcf_name = CN;
+	char *lcf_name = NULL;
 	FILE *lcf = NULL;
 	struct host **h_array = NULL;
 	int nh = 0;
@@ -900,13 +900,13 @@ save_recent(const char *hn)
 	 * Allocate a new entry and add it to the array, just under the
 	 * ibm_hosts and before the first recent entry.
 	 */
-	if (hn != CN) {
+	if (hn != NULL) {
 		h = (struct host *)Malloc(sizeof(*h));
 		h->name = NewString(hn);
 		h->parents = NULL;
 		h->hostname = NewString(hn);
 		h->entry_type = RECENT;
-		h->loginstring = CN;
+		h->loginstring = NULL;
 		h->connect_time = t;
 		h_array = (struct host **)
 		    Realloc(h_array, (nh + 1) * sizeof(struct host *));
@@ -924,16 +924,16 @@ save_recent(const char *hn)
 	 * Read the last-connection file, to capture the any changes made by
 	 * other instances of x3270.  
 	 */
-	if (appres.connectfile_name != CN &&
+	if (appres.connectfile_name != NULL &&
 	    strcasecmp(appres.connectfile_name, "none")) {
 		lcf_name = do_subst(appres.connectfile_name,
 			DS_VARS | DS_TILDE);
 		lcf = fopen(lcf_name, "r");
 	}
-	if (lcf != (FILE *)NULL) {
+	if (lcf != NULL) {
 		char buf[1024];
 
-		while (fgets(buf, sizeof(buf), lcf) != CN) {
+		while (fgets(buf, sizeof(buf), lcf) != NULL) {
 			int sl;
 			time_t connect_time;
 			char *ptr;
@@ -955,7 +955,7 @@ save_recent(const char *hn)
 			h->parents = NULL;
 			h->hostname = NewString(ptr + 1);
 			h->entry_type = RECENT;
-			h->loginstring = CN;
+			h->loginstring = NULL;
 			h->connect_time = connect_time;
 			h_array = (struct host **)
 			    Realloc(h_array, (nh + 1) * sizeof(struct host *));
@@ -1041,7 +1041,7 @@ save_recent(const char *hn)
 			fclose(lcf);
 		}
 	}
-	if (lcf_name != CN)
+	if (lcf_name != NULL)
 		Free(lcf_name);
 }
 #endif /*]*/
@@ -1063,8 +1063,8 @@ register_schange(int tx, void (*func)(Boolean))
 
 	st = (struct st_callback *)Malloc(sizeof(*st));
 	st->func = func;
-	st->next = (struct st_callback *)NULL;
-	if (st_last[tx] != (struct st_callback *)NULL)
+	st->next = NULL;
+	if (st_last[tx] != NULL)
 		st_last[tx]->next = st;
 	else
 		st_callbacks[tx] = st;
@@ -1077,9 +1077,7 @@ st_changed(int tx, Boolean mode)
 {
 	struct st_callback *st;
 
-	for (st = st_callbacks[tx];
-	     st != (struct st_callback *)NULL;
-	     st = st->next) {
+	for (st = st_callbacks[tx]; st != NULL; st = st->next) {
 		(*st->func)(mode);
 	}
 }
@@ -1118,7 +1116,7 @@ Reconnect_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 		popup_an_error("Already connected");
 		return;
 	}
-	if (current_host == CN) {
+	if (current_host == NULL) {
 		popup_an_error("No previous host to connect to");
 		return;
 	}

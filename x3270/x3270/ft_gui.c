@@ -1436,7 +1436,7 @@ ft_gui_progress_popdown(void)
 void
 ft_gui_errmsg_prepare(char *msg)
 {
-    if (strlen(msg) > MAX_MSGLEN && strchr(msg, '\n') == CN) {
+    if (strlen(msg) > MAX_MSGLEN && strchr(msg, '\n') == NULL) {
 	char *s = msg + MAX_MSGLEN;
 	while (s > msg && *s != ' ') {
 	    s--;

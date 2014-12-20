@@ -362,8 +362,6 @@ enum keytype { KT_STD, KT_GE };
 
 /* Shorthand macros */
 
-#define CN	((char *) NULL)
-#define PN	((XtPointer) NULL)
 #define Replace(var, value) do { Free(var); var = (value); } while(False)
 
 /* Configuration change masks. */
@@ -380,7 +378,7 @@ enum keytype { KT_STD, KT_GE };
 /*   Equivalent of setlinebuf */
 
 #if defined(_IOLBF) /*[*/
-# define SETLINEBUF(s)	setvbuf(s, (char *)NULL, _IOLBF, BUFSIZ)
+# define SETLINEBUF(s)	setvbuf(s, NULL, _IOLBF, BUFSIZ)
 #else /*][*/
 # define SETLINEBUF(s)	setlinebuf(s)
 #endif /*]*/

@@ -400,7 +400,7 @@ popup_about_config(void)
 		MAKE_LABEL(get_message("inputMethod"), 4);
 		if (appres.input_method) {
 			MAKE_VALUE(appres.input_method);
-		} else if (getenv("XMODIFIERS") != CN) {
+		} else if (getenv("XMODIFIERS") != NULL) {
 			MAKE_VALUE("(via environment)");
 		} else {
 			MAKE_VALUE("(unspecified)");
@@ -414,7 +414,7 @@ popup_about_config(void)
 			ftype = get_message("ximActive");
 		MAKE_VALUE(ftype);
 		MAKE_LABEL2(get_message("ximLocale"));
-		if (locale_name != CN) {
+		if (locale_name != NULL) {
 			MAKE_VALUE(locale_name);
 		} else {
 			MAKE_VALUE("(error)");
@@ -424,8 +424,7 @@ popup_about_config(void)
 	MAKE_LABEL(get_message("localeCodeset"), 4);
 	MAKE_VALUE(locale_codeset);
 
-	if (trans_list != (struct trans_list *)NULL ||
-	    temp_keymaps != (struct trans_list *)NULL) {
+	if (trans_list != NULL || temp_keymaps != NULL) {
 		struct trans_list *t;
 
 		fbuf[0] = '\0';
@@ -565,7 +564,7 @@ popup_about_status(void)
 			if (secure_unverified) {
 			    	int i;
 
-				for (i = 0; unverified_reasons[i] != CN; i++) {
+				for (i = 0; unverified_reasons[i] != NULL; i++) {
 				    	snprintf(fbuf, sizeof(fbuf), "   %s",
 						unverified_reasons[i]);
 					MAKE_LABEL(fbuf, 0);
@@ -615,14 +614,14 @@ popup_about_status(void)
 
 		MAKE_LABEL(fbuf, 0);
 
-		if (connected_lu != CN && connected_lu[0]) {
+		if (connected_lu != NULL && connected_lu[0]) {
 		    	(void) snprintf(fbuf, sizeof(fbuf), "  %s",
 				get_message("luName"));
 			MAKE_LABEL(fbuf, 0);
 			MAKE_VALUE(connected_lu);
 		}
 		bplu = net_query_bind_plu_name();
-		if (bplu != CN && bplu[0]) {
+		if (bplu != NULL && bplu[0]) {
 		    	(void) snprintf(fbuf, sizeof(fbuf), "  %s",
 				get_message("bindPluName"));
 			MAKE_LABEL(fbuf, 0);
@@ -630,7 +629,7 @@ popup_about_status(void)
 		}
 
 		eopts = tn3270e_current_opts();
-		if (eopts != CN) {
+		if (eopts != NULL) {
 			(void) snprintf(fbuf, sizeof(fbuf), "  %s",
 	 			get_message("tn3270eOpts"));
 			MAKE_LABEL(fbuf, 0);

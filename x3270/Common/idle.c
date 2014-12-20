@@ -55,8 +55,8 @@
 
 /* Globals. */
 Boolean idle_changed = False;
-char *idle_command = CN;
-char *idle_timeout_string = CN;
+char *idle_command = NULL;
+char *idle_timeout_string = NULL;
 enum idle_enum idle_user_enabled = IDLE_DISABLED;
 
 /* Statics. */
@@ -82,15 +82,15 @@ idle_init(void)
 
 	/* Get values from resources. */
 	cmd = appres.idle_command;
-	idle_command = cmd? NewString(cmd): CN;
+	idle_command = cmd? NewString(cmd): NULL;
 	tmo = appres.idle_timeout;
-	idle_timeout_string = tmo? NewString(tmo): CN;
+	idle_timeout_string = tmo? NewString(tmo): NULL;
 	if (appres.idle_command_enabled)
 		idle_user_enabled = IDLE_PERM;
 	else
 		idle_user_enabled = IDLE_DISABLED;
 	if (idle_user_enabled &&
-	    idle_command != CN &&
+	    idle_command != NULL &&
 	    process_idle_timeout_value(idle_timeout_string) == 0) {
 		;
 	}
@@ -114,7 +114,7 @@ process_idle_timeout_value(const char *t)
 	const char *s = t;
 	char *ptr;
 
-	if (s == CN || *s == '\0') {
+	if (s == NULL || *s == '\0') {
 		idle_ms = IDLE_MS;
 		idle_randomize = True;
 		idle_enabled = True;

@@ -150,7 +150,7 @@
 #include "pr3287.h"
 
 #if defined(_IOLBF) /*[*/
-#define SETLINEBUF(s)	setvbuf(s, (char *)NULL, _IOLBF, BUFSIZ)
+#define SETLINEBUF(s)	setvbuf(s, NULL, _IOLBF, BUFSIZ)
 #else /*][*/
 #define SETLINEBUF(s)	setlinebuf(s)
 #endif /*]*/
@@ -170,8 +170,8 @@ char *common_appdata;
 /* Locals. */
 static char *programname = NULL;
 static int proxy_type = 0;
-static char *proxy_host = CN;
-static char *proxy_portname = CN;
+static char *proxy_host = NULL;
+static char *proxy_portname = NULL;
 static unsigned short proxy_port = 0;
 
 void pr3287_exit(int);
@@ -973,7 +973,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 #endif /*]*/
 
 	/* Set up the proxy. */
-	if (options.proxy_spec != CN) {
+	if (options.proxy_spec != NULL) {
 	    	proxy_type = proxy_setup(&proxy_host, &proxy_portname);
 		if (proxy_type < 0)
 			pr3287_exit(1);

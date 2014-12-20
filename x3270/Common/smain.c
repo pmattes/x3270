@@ -88,7 +88,7 @@ char *mydesktop = NULL;
 void
 usage(const char *msg)
 {
-	if (msg != CN)
+	if (msg != NULL)
 	    	fprintf(stderr, "%s\n", msg);
 	fprintf(stderr, "Usage: %s [options] [ps:][LUname@]hostname[:port]\n",
 		programname);
@@ -107,7 +107,7 @@ main_connect(Boolean ignored)
 int
 main(int argc, char *argv[])
 {
-	const char	*cl_hostname = CN;
+	const char	*cl_hostname = NULL;
 
 #if defined(_WIN32) /*[*/
 	(void) get_version_info();
@@ -160,7 +160,7 @@ main(int argc, char *argv[])
 #endif /*]*/
 
 	/* Connect to the host. */
-	if (cl_hostname != CN) {
+	if (cl_hostname != NULL) {
 		if (host_connect(cl_hostname) < 0)
 			exit(1);
 		/* Wait for negotiations to complete or fail. */

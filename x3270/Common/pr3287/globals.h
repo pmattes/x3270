@@ -52,8 +52,6 @@
 #include <iconv.h>
 #endif /*]*/
 
-#define CN	(char *)NULL
-
 extern unsigned long cgcsgid;
 extern unsigned long cgcsgid_dbcs;
 extern int dbcs;

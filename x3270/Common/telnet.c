@@ -115,7 +115,7 @@
 #define N_OPTS		256
 
 /* Globals */
-char    	*hostname = CN;
+char    	*hostname = NULL;
 time_t          ns_time;
 int             ns_brcvd;
 int             ns_rrcvd;
@@ -142,11 +142,11 @@ static unsigned char *ibuf = (unsigned char *) NULL;
 			/* 3270 input buffer */
 static unsigned char *ibptr;
 static int      ibuf_size = 0;	/* size of ibuf */
-static unsigned char *obuf_base = (unsigned char *)NULL;
+static unsigned char *obuf_base = NULL;
 static int	obuf_size = 0;
-static unsigned char *netrbuf = (unsigned char *)NULL;
+static unsigned char *netrbuf = NULL;
 			/* network input buffer */
-static unsigned char *sbbuf = (unsigned char *)NULL;
+static unsigned char *sbbuf = NULL;
 			/* telnet sub-option buffer */
 static unsigned char *sbptr;
 static unsigned char telnet_state;
@@ -160,7 +160,7 @@ static unsigned short e_xmit_seq; /* transmit sequence number */
 static int response_required;
 
 static int      nvt_data = 0;
-static unsigned char *lbuf = (unsigned char *)NULL;
+static unsigned char *lbuf = NULL;
 			/* line-mode input buffer */
 static unsigned char *lbptr;
 static int      lnext = 0;
@@ -191,13 +191,13 @@ static int	bind_ca = 0;
 #define BIND_DIMS_ALT		0x2	/* BIND included alternate size */
 #define BIND_DIMS_VALID		0x4	/* BIND screen sizes were valid */
 static unsigned	bind_state = 0;
-static char	**lus = (char **)NULL;
-static char	**curr_lu = (char **)NULL;
-static char	*try_lu = CN;
+static char	**lus = NULL;
+static char	**curr_lu = NULL;
+static char	*try_lu = NULL;
 
 static int	proxy_type = 0;
-static char	*proxy_host = CN;
-static char	*proxy_portname = CN;
+static char	*proxy_host = NULL;
+static char	*proxy_portname = NULL;
 static unsigned short proxy_port = 0;
 
 #define MX8     256             /* maxiumum number of bits */
@@ -304,8 +304,8 @@ static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
 # define e_rsp(fn, n) (((fn) == TN3270E_DT_RESPONSE) ? e_trsp(n) : e_hrsp(n))
 
 #if defined(C3270) && defined(C3270_80_132) /*[*/
-# define XMIT_ROWS	((appres.altscreen != CN)? MODEL_2_ROWS: maxROWS)
-# define XMIT_COLS	((appres.altscreen != CN)? MODEL_2_COLS: maxCOLS)
+# define XMIT_ROWS	((appres.altscreen != NULL)? MODEL_2_ROWS: maxROWS)
+# define XMIT_COLS	((appres.altscreen != NULL)? MODEL_2_COLS: maxCOLS)
 #else /*][*/
 # define XMIT_ROWS	maxROWS
 # define XMIT_COLS	maxCOLS
@@ -404,7 +404,7 @@ static int num_ha = 0;
 static int ha_ix = 0;
 
 #if defined(X3270_DISPLAY) && defined(HAVE_LIBSSL) /*[*/
-static Widget password_shell = (Widget)NULL;
+static Widget password_shell = NULL;
 static void popup_password(void);
 #endif /*]*/
 
@@ -630,7 +630,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	Boolean			inh;
 #endif /*]*/
 
-	if (netrbuf == (unsigned char *)NULL)
+	if (netrbuf == NULL)
 		netrbuf = (unsigned char *)Malloc(BUFSZ);
 
 	if (!t_valid) {
@@ -661,7 +661,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 #endif /*]*/
 
 	/* set up temporary termtype */
-	if (appres.termname == CN) {
+	if (appres.termname == NULL) {
 	    	if (appres.oversize) {
 		    	termtype = "IBM-DYNAMIC";
 		} else if (std_ds_host) {
@@ -679,7 +679,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 		const char *hn;
 
 		hn = getenv("INTERNET_HOST");
-		if (hn == CN)
+		if (hn == NULL)
 			hn = "internet-gateway";
 
 		hp = gethostbyname(hn);
@@ -691,11 +691,11 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 		passthru_len = hp->h_length;
 
 		sp = getservbyname("telnet-passthru","tcp");
-		if (sp != (struct servent *)NULL)
+		if (sp != NULL)
 			passthru_port = sp->s_port;
 		else
 			passthru_port = htons(3514);
-	} else if (appres.proxy != CN && !proxy_type) {
+	} else if (appres.proxy != NULL && !proxy_type) {
 	    	proxy_type = proxy_setup(&proxy_host, &proxy_portname);
 		if (proxy_type > 0) {
 		    	unsigned long lport;
@@ -805,7 +805,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 			close_fail;
 		    case 0:	/* child */
 			putenv("TERM=xterm");
-			if (strchr(host, ' ') != CN) {
+			if (strchr(host, ' ') != NULL) {
 				(void) execlp("/bin/sh", "sh", "-c", host,
 				    NULL);
 			} else {
@@ -813,7 +813,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 
 				arg1 = strrchr(host, '/');
 				(void) execlp(host,
-					(arg1 == CN) ? host : arg1 + 1,
+					(arg1 == NULL) ? host : arg1 + 1,
 					NULL);
 			}
 			perror(host);
@@ -854,13 +854,13 @@ setup_lus(void)
 	int n_lus = 1;
 	int i;
 
-	connected_lu = CN;
-	connected_type = CN;
+	connected_lu = NULL;
+	connected_type = NULL;
 
 	if (!luname[0]) {
 		Replace(lus, NULL);
-		curr_lu = (char **)NULL;
-		try_lu = CN;
+		curr_lu = NULL;
+		try_lu = NULL;
 		return;
 	}
 
@@ -869,7 +869,7 @@ setup_lus(void)
 	 * number of LUs to try. 
 	 */
 	lu = luname;
-	while ((comma = strchr(lu, ',')) != CN) {
+	while ((comma = strchr(lu, ',')) != NULL) {
 		n_lus++;
 		lu++;
 	}
@@ -888,12 +888,12 @@ setup_lus(void)
 	do {
 		lus[i++] = lu;
 		comma = strchr(lu, ',');
-		if (comma != CN) {
+		if (comma != NULL) {
 			*comma = '\0';
 			lu = comma + 1;
 		}
-	} while (comma != CN);
-	lus[i] = CN;
+	} while (comma != NULL);
+	lus[i] = NULL;
 	curr_lu = lus;
 	try_lu = *curr_lu;
 }
@@ -915,7 +915,7 @@ add_unverified_reason(const char *reason)
 	    unverified_reasons[i] = s[i];
 	}
 	unverified_reasons[n_unverified_reasons++] = NewString(reason);
-	unverified_reasons[n_unverified_reasons] = CN;
+	unverified_reasons[n_unverified_reasons] = NULL;
 	Free(s);
 }
 
@@ -1211,7 +1211,7 @@ net_disconnect(void)
 	vtrace("SENT disconnect\n");
 
 	/* We're not connected to an LU any more. */
-	status_lu(CN);
+	status_lu(NULL);
 
 	/* We have no more interest in output buffer space. */
 	remove_output();
@@ -1499,8 +1499,8 @@ send_naws(void)
 static void
 next_lu(void)
 {
-	if (curr_lu != (char **)NULL && (try_lu = *++curr_lu) == CN)
-		curr_lu = (char **)NULL;
+	if (curr_lu != NULL && (try_lu = *++curr_lu) == NULL)
+		curr_lu = NULL;
 }
 
 #if defined(EBCDIC_HOST) /*[*/
@@ -1660,7 +1660,7 @@ telnet_fsm(unsigned char c)
 			break;
 		    case SB:
 			telnet_state = TNS_SB;
-			if (sbbuf == (unsigned char *)NULL)
+			if (sbbuf == NULL)
 				sbbuf = (unsigned char *)Malloc(1024);
 			sbptr = sbbuf;
 			break;
@@ -1855,7 +1855,7 @@ telnet_fsm(unsigned char c)
 
 				vtrace("%s %s\n", opt(sbbuf[0]),
 				    telquals[sbbuf[1]]);
-				if (lus != (char **)NULL && try_lu == CN) {
+				if (lus != NULL && try_lu == NULL) {
 					/* None of the LUs worked. */
 					popup_an_error("Cannot connect to "
 						"specified LU");
@@ -1863,11 +1863,11 @@ telnet_fsm(unsigned char c)
 				}
 
 				tt_len = strlen(termtype);
-				if (try_lu != CN && *try_lu) {
+				if (try_lu != NULL && *try_lu) {
 					tt_len += strlen(try_lu) + 1;
 					connected_lu = try_lu;
 				} else
-					connected_lu = CN;
+					connected_lu = NULL;
 				status_lu(connected_lu);
 
 				tb_len = 4 + tt_len + 2;
@@ -1875,8 +1875,8 @@ telnet_fsm(unsigned char c)
 				(void) sprintf(tt_out, "%c%c%c%c%s%s%s%c%c",
 				    IAC, SB, TELOPT_TTYPE, TELQUAL_IS,
 				    force_ascii(termtype),
-				    (try_lu != CN && *try_lu) ? "@" : "",
-				    (try_lu != CN && *try_lu) ?
+				    (try_lu != NULL && *try_lu) ? "@" : "",
+				    (try_lu != NULL && *try_lu) ?
 					force_ascii(try_lu) : "",
 				    IAC, SE);
 				net_rawout((unsigned char *)tt_out, tb_len);
@@ -1886,8 +1886,8 @@ telnet_fsm(unsigned char c)
 				    cmd(SB), opt(TELOPT_TTYPE),
 				    telquals[TELQUAL_IS],
 				    termtype,
-				    (try_lu != CN && *try_lu) ? "@" : "",
-				    (try_lu != CN && *try_lu) ? try_lu : "",
+				    (try_lu != NULL && *try_lu) ? "@" : "",
+				    (try_lu != NULL && *try_lu) ? try_lu : "",
 				    cmd(SE));
 
 				/* Advance to the next LU name. */
@@ -1917,7 +1917,7 @@ telnet_fsm(unsigned char c)
 
 				/* Send out NEW-ENVIRON. */
 				user = appres.user? appres.user: getenv("USER");
-				if (user == CN)
+				if (user == NULL)
 					user = "unknown";
 				tb_len = 21 + strlen(user) +
 				    strlen(appres.devname);
@@ -1988,7 +1988,7 @@ tn3270e_request(void)
 	    	xtn[7] = '8';
 
 	tt_len = strlen(termtype);
-	if (try_lu != CN && *try_lu)
+	if (try_lu != NULL && *try_lu)
 		tt_len += strlen(try_lu) + 1;
 
 	tb_len = 5 + tt_len + 2;
@@ -1998,7 +1998,7 @@ tn3270e_request(void)
 	    IAC, SB, TELOPT_TN3270E, TN3270E_OP_DEVICE_TYPE,
 	    TN3270E_OP_REQUEST, force_ascii(xtn));
 
-	if (try_lu != CN && *try_lu)
+	if (try_lu != NULL && *try_lu)
 		t += sprintf(t, "%c%s", TN3270E_OP_CONNECT,
 			force_ascii(try_lu));
 
@@ -2010,8 +2010,8 @@ tn3270e_request(void)
 	vtrace("SENT %s %s DEVICE-TYPE REQUEST %s%s%s "
 		   "%s\n",
 	    cmd(SB), opt(TELOPT_TN3270E), xtn,
-	    (try_lu != CN && *try_lu) ? " CONNECT " : "",
-	    (try_lu != CN && *try_lu) ? try_lu : "",
+	    (try_lu != NULL && *try_lu) ? " CONNECT " : "",
+	    (try_lu != NULL && *try_lu) ? try_lu : "",
 	    cmd(SE));
 
 	Free(xtn);
@@ -2138,10 +2138,10 @@ tn3270e_negotiate(void)
 			}
 
 			next_lu();
-			if (try_lu != CN) {
+			if (try_lu != NULL) {
 				/* Try the next LU. */
 				tn3270e_request();
-			} else if (lus != (char **)NULL) {
+			} else if (lus != NULL) {
 				/* No more LUs to try.  Give up. */
 				backoff_tn3270e("Host rejected resource(s)");
 			} else {
@@ -2260,7 +2260,7 @@ tn3270e_current_opts(void)
 	char *s = text_buf;
 
 	if (b8_is_zero(&e_funcs) || !IN_E)
-		return CN;
+		return NULL;
 	for (i = 0; i < MX8; i++) {
 		if (b8_bit_is_set(&e_funcs, i)) {
 			s += sprintf(s, "%s%s", (s == text_buf) ? "" : " ",
@@ -2335,7 +2335,7 @@ process_bind(unsigned char *buf, int buflen)
 	bind_image_len = buflen;
 
 	/* Clean up the derived state. */
-	if (plu_name == CN)
+	if (plu_name == NULL)
 	    	plu_name = Malloc(mb_max_len(BIND_PLU_NAME_MAX + 1));
 	(void) memset(plu_name, '\0', mb_max_len(BIND_PLU_NAME_MAX + 1));
 	maxru_sec = 0;
@@ -2875,7 +2875,7 @@ net_cookout(const char *buf, int len)
 static void
 cooked_init(void)
 {
-	if (lbuf == (unsigned char *)NULL)
+	if (lbuf == NULL)
 		lbuf = (unsigned char *)Malloc(BUFSZ);
 	lbptr = lbuf;
 	lnext = 0;
@@ -3132,7 +3132,7 @@ check_in3270(void)
 		 * TN3270E mode, reset the LU list so we can try again
 		 * in the new mode.
 		 */
-		if (lus != (char **)NULL && was_in_e != IN_E) {
+		if (lus != NULL && was_in_e != IN_E) {
 			curr_lu = lus;
 			try_lu = *curr_lu;
 		}
@@ -3756,20 +3756,20 @@ net_snap_options(void)
 		any = True;
 
 		space3270out(5 +
-			((connected_type != CN) ? strlen(connected_type) : 0) +
-			((connected_lu != CN) ? + strlen(connected_lu) : 0) +
+			((connected_type != NULL) ? strlen(connected_type) : 0) +
+			((connected_lu != NULL) ? + strlen(connected_lu) : 0) +
 			2);
 		*obptr++ = IAC;
 		*obptr++ = SB;
 		*obptr++ = TELOPT_TN3270E;
 		*obptr++ = TN3270E_OP_DEVICE_TYPE;
 		*obptr++ = TN3270E_OP_IS;
-		if (connected_type != CN) {
+		if (connected_type != NULL) {
 			(void) memcpy(obptr, connected_type,
 					strlen(connected_type));
 			obptr += strlen(connected_type);
 		}
-		if (connected_lu != CN) {
+		if (connected_lu != NULL) {
 			*obptr++ = TN3270E_OP_CONNECT;
 			(void) memcpy(obptr, connected_lu,
 					strlen(connected_lu));
@@ -3912,7 +3912,7 @@ static int
 passwd_cb(char *buf, int size, int rwflag _is_unused,
 	void *userdata _is_unused)
 {
-    	if (appres.key_passwd == CN) {
+    	if (appres.key_passwd == NULL) {
 #if defined(C3270) /*[*/
 		char *s;
 
@@ -3929,10 +3929,10 @@ passwd_cb(char *buf, int size, int rwflag _is_unused,
 			popup_password();
 			ssl_password_prompted = True;
 			return 0;
-		} else if (ssl_password != CN) {
+		} else if (ssl_password != NULL) {
 		    	strcpy(buf, ssl_password);
 			Free(ssl_password);
-			ssl_password = CN;
+			ssl_password = NULL;
 			return strlen(buf);
 		} else {
 			popup_an_error("No OpenSSL private key password specified");
@@ -3978,7 +3978,7 @@ passwd_cb(char *buf, int size, int rwflag _is_unused,
 static int
 parse_file_type(const char *s)
 {
-    	if (s == CN || !strcasecmp(s, "pem"))
+    	if (s == NULL || !strcasecmp(s, "pem"))
 		return SSL_FILETYPE_PEM;
 	else if (!strcasecmp(s, "asn1"))
 		return SSL_FILETYPE_ASN1;
@@ -4000,7 +4000,7 @@ get_ssl_error(char *buf)
 
 		(void) ERR_error_string(e, xbuf);
 		colon = strrchr(xbuf, ':');
-		if (colon != CN)
+		if (colon != NULL)
 			strcpy(buf, colon + 1);
 		else
 		    	strcpy(buf, xbuf);
@@ -4081,7 +4081,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 		}
 	}
 
-	if (cl_hostname != CN)
+	if (cl_hostname != NULL)
 	    	ssl_cl_hostname = NewString(cl_hostname);
 	if (pending != NULL) {
 		*pending = False;
@@ -4106,7 +4106,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 	SSL_CTX_set_default_passwd_cb(ssl_ctx, passwd_cb);
 
 	/* Pull in the CA certificate file. */
-	if (appres.ca_file != CN || appres.ca_dir != CN) {
+	if (appres.ca_file != NULL || appres.ca_dir != NULL) {
 		if (SSL_CTX_load_verify_locations(ssl_ctx,
 			    appres.ca_file,
 			    appres.ca_dir) != 1) {
@@ -4157,7 +4157,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 	}
 
 	/* Pull in the client certificate file. */
-	if (appres.chain_file != CN) {
+	if (appres.chain_file != NULL) {
 		if (SSL_CTX_use_certificate_chain_file(ssl_ctx,
 			    appres.chain_file) != 1) {
 			popup_an_error("Client certificate chain file load "
@@ -4166,7 +4166,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 				get_ssl_error(err_buf));
 			goto fail;
 		}
-	} else if (appres.cert_file != CN) {
+	} else if (appres.cert_file != NULL) {
 		cert_file_type = parse_file_type(appres.cert_file_type);
 		if (cert_file_type == -1) {
 			popup_an_error("Invalid client certificate "
@@ -4186,7 +4186,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 	}
 
 	/* Pull in the private key file. */
-	if (appres.key_file != CN) {
+	if (appres.key_file != NULL) {
 		int key_file_type =
 		    parse_file_type(appres.key_file_type);
 
@@ -4206,7 +4206,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 					get_ssl_error(err_buf));
 			goto password_fail;
 		}
-	} else if (appres.chain_file != CN) {
+	} else if (appres.chain_file != NULL) {
 		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
 			    appres.chain_file,
 			    SSL_FILETYPE_PEM) != 1) {
@@ -4217,7 +4217,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 					get_ssl_error(err_buf));
 			goto password_fail;
 		}
-	} else if (appres.cert_file != CN) {
+	} else if (appres.cert_file != NULL) {
 		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
 			    appres.cert_file,
 			    cert_file_type) != 1) {
@@ -4231,7 +4231,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 	}
 
 	/* Check the key. */
-	if (appres.key_file != CN &&
+	if (appres.key_file != NULL &&
 	    SSL_CTX_check_private_key(ssl_ctx) != 1) {
 		popup_an_error("Private key check failed:\n%s",
 			get_ssl_error(err_buf));
@@ -4268,7 +4268,7 @@ static int
 ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 {
 	int err;
-	char *why_not = CN;
+	char *why_not = NULL;
 
 	/* If OpenSSL thinks it's okay, so do we. */
 	if (preverify_ok)
@@ -4285,7 +4285,7 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 		 err == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN)) {
 		why_not = "self-signed okay";
 	}
-	if (why_not != CN) {
+	if (why_not != NULL) {
 	    	char *s;
 
 		vtrace("SSL_verify_callback: %s, ignoring '%s' (%d)\n",
@@ -4800,7 +4800,7 @@ net_query_connection_state(void)
 const char *
 net_query_lu_name(void)
 {
-	if (CONNECTED && connected_lu != CN)
+	if (CONNECTED && connected_lu != NULL)
 		return connected_lu;
 	else
 		return "";
@@ -4810,7 +4810,7 @@ net_query_lu_name(void)
 const char *
 net_query_host(void)
 {
-	static char *s = CN;
+	static char *s = NULL;
 
 	if (CONNECTED) {
 		Free(s);
@@ -4832,7 +4832,7 @@ net_query_host(void)
 const char *
 net_query_ssl(void)
 {
-	static char *s = CN;
+	static char *s = NULL;
 
 	if (CONNECTED) {
 		Free(s);
@@ -4926,7 +4926,7 @@ password_callback(Widget w _is_unused, XtPointer client_data,
 	if (ssl_ctx != NULL && ssl_cl_hostname) {
 	    	(void) host_connect(ssl_cl_hostname);
 		Free(ssl_cl_hostname);
-		ssl_cl_hostname = CN;
+		ssl_cl_hostname = NULL;
 	}
 }
 
@@ -4936,15 +4936,15 @@ password_popdown(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
 	/* If there's no password (they cancelled), don't pop up again. */
-	if (ssl_password == CN) {
+	if (ssl_password == NULL) {
 		/* Don't pop up again. */
 		add_error_popdown_callback(NULL);
 
 		/* Try connecting to the command-line host. */
-		if (ssl_cl_hostname != CN) {
+		if (ssl_cl_hostname != NULL) {
 			(void) host_connect(ssl_cl_hostname);
 			Free(ssl_cl_hostname);
-			ssl_cl_hostname = CN;
+			ssl_cl_hostname = NULL;
 		}
 	}
 }
@@ -4955,17 +4955,17 @@ popup_password(void)
 {
 	if (password_shell == NULL) {
 		password_shell = create_form_popup("Password",
-		    password_callback, (XtCallbackProc)NULL,
+		    password_callback, NULL,
 		    FORM_AS_IS);
 		XtAddCallback(password_shell, XtNpopdownCallback,
-			password_popdown, (XtPointer)NULL);
+			password_popdown, NULL);
 	}
 	XtVaSetValues(XtNameToWidget(password_shell, ObjDialog),
 		XtNvalue, "",
 		NULL);
-	if (ssl_password != CN) {
+	if (ssl_password != NULL) {
 		Free(ssl_password);
-		ssl_password = CN;
+		ssl_password = NULL;
 	}
 
 	popup_popup(password_shell, XtGrabExclusive);

@@ -122,10 +122,10 @@ proxy_setup(char **phost, char **pport)
 #else /*][*/
 	proxy = appres.proxy;
 #endif /*]*/
-	if (proxy == CN)
+	if (proxy == NULL)
 	    	return PT_NONE;
 
-	if ((colon = strchr(proxy, ':')) == CN || (colon == proxy)) {
+	if ((colon = strchr(proxy, ':')) == NULL || (colon == proxy)) {
 	    	popup_an_error("Invalid proxy syntax");
 		return -1;
 	}
@@ -136,7 +136,7 @@ proxy_setup(char **phost, char **pport)
 
 		if (parse_host_port(colon + 1, phost, pport) < 0)
 		    	return -1;
-		if (*pport == CN)
+		if (*pport == NULL)
 		    	*pport = NewString(PORT_PASSTHRU);
 		return PT_PASSTHRU;
 	}
@@ -145,7 +145,7 @@ proxy_setup(char **phost, char **pport)
 
 		if (parse_host_port(colon + 1, phost, pport) < 0)
 		    	return -1;
-		if (*pport == CN)
+		if (*pport == NULL)
 		    	*pport = NewString(PORT_HTTP);
 		return PT_HTTP;
 	}
@@ -154,7 +154,7 @@ proxy_setup(char **phost, char **pport)
 
 		if (parse_host_port(colon + 1, phost, pport) < 0)
 		    	return -1;
-		if (*pport == CN) {
+		if (*pport == NULL) {
 		    	popup_an_error("Must specify port for telnet proxy");
 			return -1;
 		}
@@ -165,7 +165,7 @@ proxy_setup(char **phost, char **pport)
 
 		if (parse_host_port(colon + 1, phost, pport) < 0)
 		    	return -1;
-		if (*pport == CN)
+		if (*pport == NULL)
 		    	*pport = NewString(PORT_SOCKS4);
 		return PT_SOCKS4;
 	}
@@ -174,7 +174,7 @@ proxy_setup(char **phost, char **pport)
 
 		if (parse_host_port(colon + 1, phost, pport) < 0)
 		    	return -1;
-		if (*pport == CN)
+		if (*pport == NULL)
 		    	*pport = NewString(PORT_SOCKS4A);
 		return PT_SOCKS4A;
 	}
@@ -183,7 +183,7 @@ proxy_setup(char **phost, char **pport)
 
 		if (parse_host_port(colon + 1, phost, pport) < 0)
 		    	return -1;
-		if (*pport == CN)
+		if (*pport == NULL)
 		    	*pport = NewString(PORT_SOCKS5);
 		return PT_SOCKS5;
 	}
@@ -192,7 +192,7 @@ proxy_setup(char **phost, char **pport)
 
 		if (parse_host_port(colon + 1, phost, pport) < 0)
 		    	return -1;
-		if (*pport == CN)
+		if (*pport == NULL)
 		    	*pport = NewString(PORT_SOCKS5D);
 		return PT_SOCKS5D;
 	}
@@ -219,7 +219,7 @@ parse_host_port(char *s, char **phost, char **pport)
 	    	/* Hostname in square brackets. */
 		hstart = s + 1;
 	    	rbrack = strchr(s, ']');
-		if (rbrack == CN ||
+		if (rbrack == NULL ||
 			rbrack == s + 1 ||
 			(*(rbrack + 1) != '\0' && *(rbrack + 1) != ':')) {
 
@@ -245,8 +245,8 @@ parse_host_port(char *s, char **phost, char **pport)
 	}
 
 	/* Parse the port. */
-	if (colon == CN || !*(colon + 1))
-	    	*pport = CN;
+	if (colon == NULL || !*(colon + 1))
+	    	*pport = NULL;
 	else
 	    	*pport = NewString(colon + 1);
 
@@ -415,7 +415,7 @@ proxy_http(int fd, char *host, unsigned short port)
 	trace_netdata('<', (unsigned char *)rbuf, nread);
 	vtrace("HTTP Proxy: recv '%s'\n", rbuf);
 
-	if (strncmp(rbuf, "HTTP/", 5) || (space = strchr(rbuf, ' ')) == CN) {
+	if (strncmp(rbuf, "HTTP/", 5) || (space = strchr(rbuf, ' ')) == NULL) {
 	    	popup_an_error("HTTP Proxy: unrecognized reply");
 		return -1;
 	}
@@ -480,7 +480,7 @@ proxy_socks4(int fd, char *host, unsigned short port, int force_a)
 
 	/* Resolve the username. */
 	user = getenv("USER");
-	if (user == CN)
+	if (user == NULL)
 	    	user = "nobody";
 
 	/* Send the request to the server. */
@@ -634,7 +634,7 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
 		rhp_t rv;
 
 		/* Resolve the hostname. */
-		rv = resolve_host_and_port(host, CN, 0, &rport, &ha.sa,
+		rv = resolve_host_and_port(host, NULL, 0, &rport, &ha.sa,
 			&ha_len, errmsg, sizeof(errmsg), NULL);
 		if (rv == RHP_CANNOT_RESOLVE) {
 		    	use_name = 1;

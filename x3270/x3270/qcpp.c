@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997-2009, Paul Mattes.
+ * Copyright (c) 1997-2009, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -90,7 +90,7 @@ main(int argc, char *argv[])
 	sym_t *s, *prev;
 	int verbose = 0;
 
-	if ((me = strrchr(argv[0], '/')) != (char *)NULL)
+	if ((me = strrchr(argv[0], '/')) != NULL)
 		me++;
 	else
 		me = argv[0];
@@ -144,7 +144,7 @@ main(int argc, char *argv[])
 	    case 2:
 		if (strcmp(argv[optind], "-")) {
 			f = fopen(argv[optind], "r");
-			if (f == (FILE *)NULL) {
+			if (f == NULL) {
 				perror(argv[optind]);
 				exit(1);
 			}
@@ -164,7 +164,7 @@ main(int argc, char *argv[])
 
 	pass[nest] = 1;
 
-	while (fgets(buf, sizeof(buf), f) != (char *)NULL) {
+	while (fgets(buf, sizeof(buf), f) != NULL) {
 		ln++;
 		if (buf[0] != '#') {
 			if (pass[nest])

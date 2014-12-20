@@ -160,7 +160,7 @@ read_resource_filex(const char *filename, Boolean fatal)
 	where = Malloc(strlen(filename) + 64);
 
 	ilen = 0;
-	while (fgets(buf + ilen, sizeof(buf) - ilen, f) != CN || ilen) {
+	while (fgets(buf + ilen, sizeof(buf) - ilen, f) != NULL || ilen) {
 		char *s;
 		unsigned sl;
 		Boolean bsl = False;

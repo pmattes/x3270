@@ -818,7 +818,7 @@ popup_rop(struct rop *rop, abort_callback_t *a, const char *fmt, va_list args)
 #if 0
 		char *nl;
 
-		while ((nl = strchr(vmsgbuf, '\n')) != CN) {
+		while ((nl = strchr(vmsgbuf, '\n')) != NULL) {
 			*nl = ' ';
 		}
 		(void) fprintf(stderr, "%s: %s\n", programname, vmsgbuf);

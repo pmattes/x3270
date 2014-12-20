@@ -72,7 +72,7 @@
 #define offset(field) XtOffsetOf(CmeRec, cme.field)
 static XtResource resources[] = {
   {XtNcallback, XtCCallback, XtRCallback, sizeof(XtPointer),
-     offset(callbacks), XtRCallback, (XtPointer)NULL},
+     offset(callbacks), XtRCallback, NULL},
 };   
 #undef offset
 

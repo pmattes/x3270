@@ -126,7 +126,7 @@ fd_env(const char *name)
 	int fd;
 
 	fdname = getenv(name);
-	if (fdname == (char *)NULL) {
+	if (fdname == NULL) {
 		(void) fprintf(stderr, "%s: %s not set in the environment\n",
 				me, name);
 		exit(2);
@@ -459,7 +459,7 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 
 	/* Print status, if that's what they want. */
 	if (fn != NO_STATUS) {
-		char *sf = (char *)NULL;
+		char *sf = NULL;
 		char *sb = status;
 		int rc;
 
@@ -470,9 +470,9 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 				if (!fn--)
 					break;
 				sf = strtok(sb, " \t");
-				sb = (char *)NULL;
-			} while (sf != (char *)NULL);
-			rc = printf("%s\n", (sf != (char *)NULL) ? sf : "");
+				sb = NULL;
+			} while (sf != NULL);
+			rc = printf("%s\n", (sf != NULL) ? sf : "");
 		}
 		if (rc < 0) {
 			perror("x3270if: printf");
@@ -580,8 +580,7 @@ iterative_io(int pid, unsigned short port)
 			}
 		}
 
-		if ((rv = select(fd_max, &rfds, &wfds, (fd_set *)NULL,
-				(struct timeval *)NULL)) < 0) {
+		if ((rv = select(fd_max, &rfds, &wfds, NULL, NULL)) < 0) {
 			perror("x3270if: select");
 			exit(2);
 		}

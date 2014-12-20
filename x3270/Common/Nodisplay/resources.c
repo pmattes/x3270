@@ -144,7 +144,7 @@ get_resource(const char *name)
 		}
 	}
 #if defined(C3270) /*[*/
-	for (i = 0; rdb[i].name != (char *)NULL; i++) {
+	for (i = 0; rdb[i].name != NULL; i++) {
 		if (!strcmp(rdb[i].name, name)) {
 			return rdb[i].value;
 		}

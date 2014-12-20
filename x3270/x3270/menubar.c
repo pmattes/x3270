@@ -228,7 +228,7 @@ add_menu_hier(struct menu_hier *root, char **parents, ArgList args,
 	while (parents && *parents) {
 		struct menu_hier *child, *last_child = NULL;
 
-		if (h->name != CN && !strcmp(h->name, *parents))
+		if (h->name != NULL && !strcmp(h->name, *parents))
 			break;
 		last_child = h->child;
 		for (child = h->child; child != NULL; child = child->sibling) {
@@ -371,7 +371,7 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 	mb_old = menubar_buttons;
 	menubar_buttons = (height != 0);
 	if (menubar_buttons) {
-		if (menu_bar == (Widget)NULL) {
+		if (menu_bar == NULL) {
 			/* Create the menu bar. */
 			menu_bar = XtVaCreateManagedWidget(
 			    "menuBarContainer", huskWidgetClass, container,
@@ -388,7 +388,7 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 			XtMapWidget(menu_bar);
 		}
 		menu_parent = menu_bar;
-	} else if (menu_bar != (Widget)NULL) {
+	} else if (menu_bar != NULL) {
 		/* Hide the menu bar. */
 		XtUnmapWidget(menu_bar);
 		menu_parent = container;
@@ -447,13 +447,13 @@ static void
 menubar_connect(Boolean ignored _is_unused)
 {
 	/* Set the disconnect button sensitivity. */
-	if (disconnect_button != (Widget)NULL)
+	if (disconnect_button != NULL)
 		XtVaSetValues(disconnect_button,
 		    XtNsensitive, PCONNECTED,
 		    NULL);
 
 	/* Set up the exit button, either with a pullright or a callback. */
-	if (exit_button != (Widget)NULL) {
+	if (exit_button != NULL) {
 		if (PCONNECTED) {
 			/* Remove the immediate callback. */
 			if (n_bye) {
@@ -484,8 +484,8 @@ menubar_connect(Boolean ignored _is_unused)
 	}
 
 	/* Set up the connect menu. */
-	if (!appres.reconnect && connect_menu != (Widget)NULL) {
-		if (PCONNECTED && connect_button != (Widget)NULL)
+	if (!appres.reconnect && connect_menu != NULL) {
+		if (PCONNECTED && connect_button != NULL)
 			XtUnmapWidget(connect_button);
 		else {
 			connect_menu_init(True,
@@ -503,40 +503,40 @@ menubar_connect(Boolean ignored _is_unused)
 	    TOP_MARGIN);
 
 	/* Set up the various option buttons. */
-	if (ft_button != (Widget)NULL)
+	if (ft_button != NULL)
 		XtVaSetValues(ft_button, XtNsensitive, IN_3270, NULL);
-	if (printer_button != (Widget)NULL)
+	if (printer_button != NULL)
 		XtVaSetValues(printer_button, XtNsensitive, IN_3270,
 		    NULL);
-	if (assoc_button != (Widget)NULL)
+	if (assoc_button != NULL)
 		XtVaSetValues(assoc_button, XtNsensitive,
 		    !printer_running() && IN_3270 && IN_TN3270E,
 		    NULL);
-	if (lu_button != (Widget)NULL)
+	if (lu_button != NULL)
 		XtVaSetValues(lu_button, XtNsensitive,
 		    !printer_running() && IN_3270,
 		    NULL);
-	if (linemode_button != (Widget)NULL)
+	if (linemode_button != NULL)
 		XtVaSetValues(linemode_button, XtNsensitive, IN_NVT, NULL);
-	if (charmode_button != (Widget)NULL)
+	if (charmode_button != NULL)
 		XtVaSetValues(charmode_button, XtNsensitive, IN_NVT, NULL);
-	if (appres.toggle[LINE_WRAP].w[0] != (Widget)NULL)
+	if (appres.toggle[LINE_WRAP].w[0] != NULL)
 		XtVaSetValues(appres.toggle[LINE_WRAP].w[0],
 		    XtNsensitive, IN_NVT,
 		    NULL);
-	if (appres.toggle[RECTANGLE_SELECT].w[0] != (Widget)NULL)
+	if (appres.toggle[RECTANGLE_SELECT].w[0] != NULL)
 		XtVaSetValues(appres.toggle[RECTANGLE_SELECT].w[0],
 		    XtNsensitive, IN_NVT,
 		    NULL);
-	if (models_option != (Widget)NULL)
+	if (models_option != NULL)
 		XtVaSetValues(models_option, XtNsensitive, !PCONNECTED, NULL);
-	if (extended_button != (Widget)NULL)
+	if (extended_button != NULL)
 		XtVaSetValues(extended_button, XtNsensitive, !PCONNECTED,
 		    NULL);
-	if (m3278_button != (Widget)NULL)
+	if (m3278_button != NULL)
 		XtVaSetValues(m3278_button, XtNsensitive, !PCONNECTED,
 		    NULL);
-	if (m3279_button != (Widget)NULL)
+	if (m3279_button != NULL)
 		XtVaSetValues(m3279_button, XtNsensitive, !PCONNECTED,
 		    NULL);
 
@@ -567,15 +567,15 @@ menubar_connect(Boolean ignored _is_unused)
 static void
 menubar_printer(Boolean printer_on)
 {
-	if (assoc_button != (Widget)NULL)
+	if (assoc_button != NULL)
 		XtVaSetValues(assoc_button, XtNsensitive,
 		    !printer_on && IN_3270 && IN_TN3270E,
 		    NULL);
-	if (lu_button != (Widget)NULL)
+	if (lu_button != NULL)
 		XtVaSetValues(lu_button, XtNsensitive,
 		    !printer_on && IN_3270,
 		    NULL);
-	if (printer_off_button != (Widget)NULL)
+	if (printer_off_button != NULL)
 		XtVaSetValues(printer_off_button,
 		    XtNsensitive, printer_on,
 		    NULL);
@@ -584,7 +584,7 @@ menubar_printer(Boolean printer_on)
 void
 menubar_keypad_changed(void)
 {
-	if (keypad_option_button != (Widget)NULL)
+	if (keypad_option_button != NULL)
 		XtVaSetValues(keypad_option_button,
 		    XtNleftBitmap,
 			appres.keypad_on || keypad_popped ? dot : None,
@@ -595,40 +595,40 @@ menubar_keypad_changed(void)
 static void
 menubar_in3270(Boolean in3270)
 {
-	if (ft_button != (Widget)NULL)
+	if (ft_button != NULL)
 		XtVaSetValues(ft_button, XtNsensitive, IN_3270, NULL);
-	if (printer_button != (Widget)NULL)
+	if (printer_button != NULL)
 		XtVaSetValues(printer_button, XtNsensitive, IN_3270,
 		    NULL);
-	if (assoc_button != (Widget)NULL)
+	if (assoc_button != NULL)
 		XtVaSetValues(assoc_button, XtNsensitive,
 		    !printer_running() && IN_3270 && IN_TN3270E,
 		    NULL);
-	if (lu_button != (Widget)NULL)
+	if (lu_button != NULL)
 		XtVaSetValues(lu_button, XtNsensitive,
 		    !printer_running() && IN_3270,
 		    NULL);
-	if (linemode_button != (Widget)NULL)
+	if (linemode_button != NULL)
 		XtVaSetValues(linemode_button,
 		    XtNsensitive, !in3270,
 		    XtNleftBitmap, in3270 ? no_diamond
 					: (linemode ? diamond : no_diamond),
 		    NULL);
-	if (charmode_button != (Widget)NULL)
+	if (charmode_button != NULL)
 		XtVaSetValues(charmode_button,
 		    XtNsensitive, !in3270,
 		    XtNleftBitmap, in3270 ? no_diamond
 					: (linemode ? no_diamond : diamond),
 		    NULL);
-	if (appres.toggle[LINE_WRAP].w[0] != (Widget)NULL)
+	if (appres.toggle[LINE_WRAP].w[0] != NULL)
 		XtVaSetValues(appres.toggle[LINE_WRAP].w[0],
 		    XtNsensitive, !in3270,
 		    NULL);
-	if (appres.toggle[RECTANGLE_SELECT].w[0] != (Widget)NULL)
+	if (appres.toggle[RECTANGLE_SELECT].w[0] != NULL)
 		XtVaSetValues(appres.toggle[RECTANGLE_SELECT].w[0],
 		    XtNsensitive, !in3270,
 		    NULL);
-	if (idle_button != (Widget)NULL)
+	if (idle_button != NULL)
 		XtVaSetValues(idle_button,
 		    XtNsensitive, in3270,
 		    NULL);
@@ -638,11 +638,11 @@ menubar_in3270(Boolean in3270)
 static void
 menubar_linemode(Boolean in_linemode)
 {
-	if (linemode_button != (Widget)NULL)
+	if (linemode_button != NULL)
 		XtVaSetValues(linemode_button,
 		    XtNleftBitmap, in_linemode ? diamond : no_diamond,
 		    NULL);
-	if (charmode_button != (Widget)NULL)
+	if (charmode_button != NULL)
 		XtVaSetValues(charmode_button,
 		    XtNleftBitmap, in_linemode ? no_diamond : diamond,
 		    NULL);
@@ -652,7 +652,7 @@ menubar_linemode(Boolean in_linemode)
 void
 menubar_as_set(Boolean sensitive)
 {
-	if (script_abort_button != (Widget)NULL)
+	if (script_abort_button != NULL)
 		XtVaSetValues(script_abort_button,
 		    XtNsensitive, sensitive,
 		    NULL);
@@ -730,7 +730,7 @@ do_save_options(Widget w _is_unused, XtPointer client_data _is_unused,
 {
 	if (save_shell == NULL)
 		save_shell = create_form_popup("SaveOptions",
-		    save_button_callback, (XtCallbackProc)NULL, FORM_NO_WHITE);
+		    save_button_callback, NULL, FORM_NO_WHITE);
 	XtVaSetValues(XtNameToWidget(save_shell, ObjDialog),
 	    XtNvalue, profile_name,
 	    NULL);
@@ -742,7 +742,7 @@ static void
 do_printer(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_unused)
 {
 	if (client_data == NULL)
-		printer_start(CN);
+		printer_start(NULL);
 	else if (!strcmp(client_data, "lu"))
 		printer_lu_dialog();
 	else
@@ -761,9 +761,9 @@ item_suppressed(Widget parent, const char *name)
 	while (p != NULL) {
 		char *n = XtName(p);
 
-		if (n == CN)
+		if (n == NULL)
 			break;
-		if (s != CN) {
+		if (s != NULL) {
 			t = xs_buffer("%s.%s", n, s);
 			Free(s);
 			s = t;
@@ -774,7 +774,7 @@ item_suppressed(Widget parent, const char *name)
 	}
 	suppress = get_fresource("%s.%s.%s", s, name, ResSuppress);
 	Free(s);
-	return suppress != CN &&
+	return suppress != NULL &&
 	       !strncasecmp(suppress, "True", strlen(suppress));
 }
 
@@ -838,11 +838,11 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 	Boolean spaced = False;
 	Boolean any = False;
 
-	if (regen && (file_menu != (Widget)NULL)) {
+	if (regen && (file_menu != NULL)) {
 		XtDestroyWidget(file_menu);
-		file_menu = (Widget)NULL;
+		file_menu = NULL;
 	}
-	if (file_menu != (Widget)NULL)
+	if (file_menu != NULL)
 		return;
 
 	file_menu = XtVaCreatePopupShell(
@@ -861,11 +861,11 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 		    "aboutMenu", complexMenuWidgetClass, file_menu,
 		    NULL);
 		any_about |= add_menu_itemv("aboutCopyright", w,
-			show_about_copyright, NULL, NULL, NULL) != (Widget)NULL;
+			show_about_copyright, NULL, NULL, NULL) != NULL;
 		any_about |= add_menu_itemv("aboutConfig", w,
-			show_about_config, NULL, NULL, NULL) != (Widget)NULL;
+			show_about_config, NULL, NULL, NULL) != NULL;
 		any_about |= add_menu_itemv("aboutStatus", w,
-			show_about_status, NULL, NULL, NULL) != (Widget)NULL;
+			show_about_status, NULL, NULL, NULL) != NULL;
 		if (any_about) {
 			(void) XtVaCreateManagedWidget(
 			    "aboutOption", cmeBSBObjectClass, file_menu,
@@ -927,7 +927,7 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 	   Save Screen(s) in File */
 	spaced = False;
 	if (appres.debug_tracing) {
-		any |= toggle_init(file_menu, TRACING, "traceOption", CN,
+		any |= toggle_init(file_menu, TRACING, "traceOption", NULL,
 				&spaced);
 	}
 	if (!appres.secure) {
@@ -984,7 +984,7 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 	any |= (disconnect_button != NULL);
 
 	/* Exit x3270 */
-	if (exit_menu != (Widget)NULL)
+	if (exit_menu != NULL)
 		XtDestroyWidget(exit_menu);
 	exit_menu = XtVaCreatePopupShell(
 	    "exitMenu", complexMenuWidgetClass, menu_parent,
@@ -1056,7 +1056,7 @@ do_connect_popup(Widget w _is_unused, XtPointer client_data _is_unused,
 {
 	if (connect_shell == NULL)
 		connect_shell = create_form_popup("Connect",
-		    connect_button_callback, (XtCallbackProc)NULL, FORM_NO_CC);
+		    connect_button_callback, NULL, FORM_NO_CC);
 	popup_popup(connect_shell, XtGrabExclusive);
 }
 
@@ -1076,17 +1076,17 @@ connect_menu_init(Boolean regen, Position x, Position y)
 	static struct menu_hier *root = NULL;
 	Widget recent_menu = NULL;
 
-	if (regen && (connect_menu != (Widget)NULL)) {
+	if (regen && (connect_menu != NULL)) {
 		XtDestroyWidget(connect_menu);
-		connect_menu = (Widget)NULL;
-		if (connect_button != (Widget)NULL) {
+		connect_menu = NULL;
+		if (connect_button != NULL) {
 			XtDestroyWidget(connect_button);
-			connect_button = (Widget)NULL;
+			connect_button = NULL;
 		}
 		free_menu_hier(root);
 		root = NULL;
 	}
-	if (connect_menu != (Widget)NULL)
+	if (connect_menu != NULL)
 		return;
 
 	/* Create the menu */
@@ -1208,19 +1208,19 @@ macros_menu_init(Boolean regen, Position x, Position y)
 	Boolean any = False;
 	static struct menu_hier *root = NULL;
 
-	if (regen && (macros_menu != (Widget)NULL)) {
+	if (regen && (macros_menu != NULL)) {
 		XtDestroyWidget(macros_menu);
-		macros_menu = (Widget)NULL;
-		if (macros_button != (Widget)NULL) {
+		macros_menu = NULL;
+		if (macros_button != NULL) {
 			XtDestroyWidget(macros_button);
-			macros_button = (Widget)NULL;
+			macros_button = NULL;
 		}
 	}
 	if (regen && root != NULL) {
 		free_menu_hier(root);
 		root = NULL;
 	}
-	if (macros_menu != (Widget)NULL || !PCONNECTED)
+	if (macros_menu != NULL || !PCONNECTED)
 		return;
 
 	/* Walk the list */
@@ -1289,7 +1289,7 @@ keypad_button_init(Position x, Position y)
 {
 	if (!menubar_buttons)
 		return;
-	if (keypad_button == (Widget)NULL) {
+	if (keypad_button == NULL) {
 		Pixmap pixmap;
 
 		pixmap = XCreateBitmapFromData(display, root_window,
@@ -1315,7 +1315,7 @@ ssl_icon_init(Position x, Position y)
 {
 	if (!menubar_buttons)
 		return;
-	if (locked_icon == (Widget)NULL) {
+	if (locked_icon == NULL) {
 		Pixmap pixmap;
 
 		pixmap = XCreateBitmapFromData(display, root_window,
@@ -1423,7 +1423,7 @@ do_oversize_popup(Widget w _is_unused, XtPointer client_data _is_unused,
 {
 	if (oversize_shell == NULL)
 		oversize_shell = create_form_popup("Oversize",
-		    oversize_button_callback, (XtCallbackProc)NULL,
+		    oversize_button_callback, NULL,
 		    FORM_NO_WHITE);
 	popup_popup(oversize_shell, XtGrabExclusive);
 }
@@ -1484,7 +1484,7 @@ font_button_callback(Widget w, XtPointer client_data,
 	if (!s || !*s)
 		return;
 	XtPopdown(font_shell);
-	do_newfont(w, s, PN);
+	do_newfont(w, s, NULL);
 }
 
 static void
@@ -1493,7 +1493,7 @@ do_otherfont(Widget w _is_unused, XtPointer userdata _is_unused,
 {
 	if (font_shell == NULL)
 		font_shell = create_form_popup("Font", font_button_callback,
-						(XtCallbackProc)NULL,
+						NULL,
 						FORM_NO_CC);
 	popup_popup(font_shell, XtGrabExclusive);
 }
@@ -1508,7 +1508,7 @@ scheme_init(void)
 	struct scheme *s;
 
 	cm = get_resource(ResSchemeList);
-	if (cm == CN)
+	if (cm == NULL)
 		return;
 	cm = XtNewString(cm);
 
@@ -1521,8 +1521,8 @@ scheme_init(void)
 		}
 		s->label = label;
 		s->scheme = scheme;
-		s->next = (struct scheme *)NULL;
-		if (last_scheme != (struct scheme *)NULL)
+		s->next = NULL;
+		if (last_scheme != NULL)
 			last_scheme->next = s;
 		else
 			schemes = s;
@@ -1547,7 +1547,7 @@ charsets_init(void)
 	struct charset *s;
 
 	cm = get_resource(ResCharsetList);
-	if (cm == CN)
+	if (cm == NULL)
 		return;
 	cm = XtNewString(cm);
 
@@ -1559,8 +1559,8 @@ charsets_init(void)
 			continue;
 		}
 		s->charset = charset;
-		s->next = (struct charset *)NULL;
-		if (last_charset != (struct charset *)NULL)
+		s->next = NULL;
+		if (last_charset != NULL)
 			last_charset->next = s;
 		else
 			charsets = s;
@@ -1597,8 +1597,8 @@ keymap_button_callback(Widget w _is_unused, XtPointer client_data,
 	char *s;
 
 	s = XawDialogGetValueString((Widget)client_data);
-	if (s != CN && !*s)
-		s = CN;
+	if (s != NULL && !*s)
+		s = NULL;
 	XtPopdown(keymap_shell);
 	keymap_init(s, True);
 }
@@ -1609,7 +1609,7 @@ do_keymap(Widget w _is_unused, XtPointer userdata _is_unused, XtPointer calldata
 {
 	if (keymap_shell == NULL)
 		keymap_shell = create_form_popup("Keymap",
-		    keymap_button_callback, (XtCallbackProc)NULL,
+		    keymap_button_callback, NULL,
 		    FORM_NO_WHITE);
 	popup_popup(keymap_shell, XtGrabExclusive);
 }
@@ -1769,7 +1769,7 @@ toggle_extended(Widget w _is_unused, XtPointer client_data _is_unused,
 	appres.extended = !appres.extended;
 	if (extended_button != NULL)
 		XtVaSetValues(extended_button,
-				XtNleftBitmap, appres.extended ? dot : (Pixmap)NULL,
+				XtNleftBitmap, appres.extended? dot: (Pixmap)NULL,
 				NULL);
 	if (oversize_button != NULL)
 		XtVaSetValues(oversize_button,
@@ -1805,7 +1805,7 @@ toggle_m3279(Widget w, XtPointer client_data _is_unused, XtPointer call_data _is
 	if (model_num == 4 || model_num == 5)
 		screen_change_model(3, 0, 0);
 #endif /*]*/
-	if (scheme_button != (Widget)NULL)
+	if (scheme_button != NULL)
 		XtVaSetValues(scheme_button, XtNsensitive, appres.m3279, NULL);
 	screen_m3279(appres.m3279);
 }
@@ -1825,15 +1825,15 @@ options_menu_init(Boolean regen, Position x, Position y)
 	Boolean any = False;
 	Widget w;
 
-	if (regen && (options_menu != (Widget)NULL)) {
+	if (regen && (options_menu != NULL)) {
 		XtDestroyWidget(options_menu);
-		options_menu = (Widget)NULL;
+		options_menu = NULL;
 		if (options_menu_button != NULL) {
 			XtDestroyWidget(options_menu_button);
 			options_menu_button = NULL;
 		}
 	}
-	if (options_menu != (Widget)NULL) {
+	if (options_menu != NULL) {
 		if (font_widgets != NULL) {
 			/* Set the current font. */
 			for (f = font_list, ix = 0; f; f = f->next, ix++) {
@@ -1882,23 +1882,23 @@ options_menu_init(Boolean regen, Position x, Position y)
 			else
 				spaced = True;
 		}
-		toggle_init(t, MONOCASE, "monocaseOption", CN, &spaced);
-		toggle_init(t, CURSOR_BLINK, "cursorBlinkOption", CN, &spaced);
-		toggle_init(t, BLANK_FILL, "blankFillOption", CN, &spaced);
-		toggle_init(t, SHOW_TIMING, "showTimingOption", CN, &spaced);
-		toggle_init(t, CURSOR_POS, "cursorPosOption", CN, &spaced);
-		toggle_init(t, SCROLL_BAR, "scrollBarOption", CN, &spaced);
-		toggle_init(t, LINE_WRAP, "lineWrapOption", CN, &spaced);
-		toggle_init(t, MARGINED_PASTE, "marginedPasteOption", CN,
+		toggle_init(t, MONOCASE, "monocaseOption", NULL, &spaced);
+		toggle_init(t, CURSOR_BLINK, "cursorBlinkOption", NULL, &spaced);
+		toggle_init(t, BLANK_FILL, "blankFillOption", NULL, &spaced);
+		toggle_init(t, SHOW_TIMING, "showTimingOption", NULL, &spaced);
+		toggle_init(t, CURSOR_POS, "cursorPosOption", NULL, &spaced);
+		toggle_init(t, SCROLL_BAR, "scrollBarOption", NULL, &spaced);
+		toggle_init(t, LINE_WRAP, "lineWrapOption", NULL, &spaced);
+		toggle_init(t, MARGINED_PASTE, "marginedPasteOption", NULL,
 			&spaced);
-		toggle_init(t, OVERLAY_PASTE, "overlayPasteOption", CN,
+		toggle_init(t, OVERLAY_PASTE, "overlayPasteOption", NULL,
 			&spaced);
-		toggle_init(t, MARGINED_PASTE, "marginedPasteOption", CN,
+		toggle_init(t, MARGINED_PASTE, "marginedPasteOption", NULL,
 			&spaced);
-		toggle_init(t, RECTANGLE_SELECT, "rectangleSelectOption", CN,
+		toggle_init(t, RECTANGLE_SELECT, "rectangleSelectOption", NULL,
 			&spaced);
-		toggle_init(t, CROSSHAIR, "crosshairOption", CN, &spaced);
-		toggle_init(t, VISIBLE_CONTROL, "visibleControlOption", CN,
+		toggle_init(t, CROSSHAIR, "crosshairOption", NULL, &spaced);
+		toggle_init(t, VISIBLE_CONTROL, "visibleControlOption", NULL,
 			&spaced);
 		spaced = False;
 		toggle_init(t, ALT_CURSOR, "underlineCursorOption",

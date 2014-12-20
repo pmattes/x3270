@@ -95,14 +95,14 @@ static HANDLE	tracewindow_handle = NULL;
 #endif /*]*/
 static FILE    *tracef = NULL;
 static FILE    *tracef_pipe = NULL;
-static char    *tracef_bufptr = CN;
+static char    *tracef_bufptr = NULL;
 static off_t	tracef_size = 0;
 static off_t	tracef_max = 0;
-static char    *onetime_tracefile_name = CN;
+static char    *onetime_tracefile_name = NULL;
 static tss_t	screentrace_how = TSS_FILE;
 static ptype_t	screentrace_ptype = P_TEXT;
 static tss_t	screentrace_last_how = TSS_FILE;
-static char    *onetime_screentrace_name = CN;
+static char    *onetime_screentrace_name = NULL;
 static void	vwtrace(Boolean do_ts, const char *fmt, va_list args);
 static void	wtrace(Boolean do_ts, const char *fmt, ...);
 static char    *create_tracefile_header(const char *mode);
@@ -140,7 +140,7 @@ rcba(int baddr)
 
 /* Data Stream trace print, handles line wraps */
 
-static char *tdsbuf = CN;
+static char *tdsbuf = NULL;
 
 /*
  * This function is careful to do line breaks based on wchar_t's, not
@@ -245,7 +245,7 @@ trace_ds(const char *fmt, ...)
 	va_start(args, fmt);
 
 	/* allocate buffer */
-	if (tdsbuf == CN)
+	if (tdsbuf == NULL)
 		tdsbuf = Malloc(TRACE_DS_BUFSIZE);
 
 	/* print out remainder of message */
@@ -324,7 +324,7 @@ vwtrace(Boolean do_ts, const char *fmt, va_list args)
     char *bp;
 
     /* Ugly hack to write into a memory buffer. */
-    if (tracef_bufptr != CN) {
+    if (tracef_bufptr != NULL) {
 	if (do_ts) {
 	    gen_ts(ts_buf, sizeof(ts_buf));
 	    tracef_bufptr += sprintf(tracef_bufptr, "%s", ts_buf);
@@ -461,7 +461,7 @@ trace_rollover_check(void)
 		/* Unlink and rename the alternate file. */
 #if defined(_WIN32) /*[*/
 		period = strrchr(tracefile_name, '.');
-		if (period != CN)
+		if (period != NULL)
 			alt_filename = xs_buffer("%.*s-%s",
 				period - tracefile_name,
 				tracefile_name,
@@ -472,9 +472,9 @@ trace_rollover_check(void)
 		(void) unlink(alt_filename);
 		(void) rename(tracefile_name, alt_filename);
 		Free(alt_filename);
-		alt_filename = CN;
+		alt_filename = NULL;
 		tracef = fopen(tracefile_name, "w");
-		if (tracef == (FILE *)NULL) {
+		if (tracef == NULL) {
 			popup_an_errno(errno, "%s", tracefile_name);
 			return;
 		}
@@ -489,7 +489,7 @@ trace_rollover_check(void)
 }
 
 #if defined(X3270_DISPLAY) /*[*/
-static Widget trace_shell = (Widget)NULL;
+static Widget trace_shell = NULL;
 #endif /*]*/
 static int trace_reason;
 
@@ -613,7 +613,7 @@ create_tracefile_header(const char *mode)
 	wtrace(False, " Data stream:\n");
 
 	/* Return the buffer. */
-	tracef_bufptr = CN;
+	tracef_bufptr = NULL;
 	return buf;
 }
 
@@ -630,7 +630,7 @@ get_tracef_max(void)
 
 	calculated = True;
 
-	if (appres.trace_file_size == CN ||
+	if (appres.trace_file_size == NULL ||
 	    !strcmp(appres.trace_file_size, "0") ||
 	    !strncasecmp(appres.trace_file_size, "none",
 			 strlen(appres.trace_file_size))) {
@@ -689,7 +689,7 @@ get_devfd(const char *pathname)
 static void
 tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
 {
-	char *tfn = CN;
+	char *tfn = NULL;
 	int devfd = -1;
 #if defined(X3270_DISPLAY) /*[*/
 	int pipefd[2];
@@ -768,7 +768,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 				tracef = fopen(tfn + 2, "a");
 			} else
 				tracef = fopen(tfn, "w");
-			if (tracef == (FILE *)NULL) {
+			if (tracef == NULL) {
 				popup_an_errno(errno, "%s", tfn);
 #if defined(X3270_DISPLAY) /*[*/
 				fclose(tracef_pipe);
@@ -801,7 +801,7 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 				(void) execlp("xterm", "xterm",
 				    "-title", just_piped? "trace": tfn,
 				    "-sb", "-e", "/bin/sh", "-c",
-				    cmd, CN);
+				    cmd, NULL);
 			}
 			(void) perror("exec(xterm) failed");
 			_exit(1);
@@ -881,7 +881,7 @@ static void
 no_tracefile_callback(Widget w, XtPointer client_data,
 	XtPointer call_data _is_unused)
 {
-	tracefile_callback((Widget)NULL, "", PN);
+	tracefile_callback(NULL, "", NULL);
 	XtPopdown(trace_shell);
 }
 #endif /*]*/
@@ -893,12 +893,12 @@ tracefile_on(int reason, enum toggle_type tt)
 	char *tracefile_buf = NULL;
 	char *tracefile;
 
-	if (tracef != (FILE *)NULL)
+	if (tracef != NULL)
 		return;
 
 	trace_reason = reason;
 	if (appres.secure && tt != TT_INITIAL) {
-		tracefile_callback((Widget)NULL, "none", PN);
+		tracefile_callback(NULL, "none", NULL);
 		return;
 	}
 	if (onetime_tracefile_name != NULL) {
@@ -922,7 +922,7 @@ tracefile_on(int reason, enum toggle_type tt)
 	if (tt == TT_INITIAL || tt == TT_ACTION)
 #endif /*]*/
 	{
-		tracefile_callback((Widget)NULL, tracefile, PN);
+		tracefile_callback(NULL, tracefile, NULL);
 		if (tracefile_buf != NULL)
 		    	Free(tracefile_buf);
 		return;
@@ -994,7 +994,7 @@ toggle_tracing(struct toggle *t _is_unused, enum toggle_type tt)
 }
 
 /* Screen trace file support. */
-static FILE *screentracef = (FILE *)NULL;
+static FILE *screentracef = NULL;
 static fps_t screentrace_fps = NULL;
 
 /*
@@ -1077,7 +1077,7 @@ screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 		screentracef = fdopen(fd, (ptype == P_GDI)? "wb+": "w");
 #endif /*]*/
 	}
-	if (screentracef == (FILE *)NULL) {
+	if (screentracef == NULL) {
 		if (how == TSS_FILE)
 			popup_an_errno(errno, "%s", xtfn);
 		else

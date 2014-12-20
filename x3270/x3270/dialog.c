@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2012, Paul Mattes.
+ * Copyright (c) 1996-2012, 2014 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  * 
@@ -72,8 +72,8 @@ Boolean s_true = True;
 Boolean s_false = False;
 
 /* Statics. */
-static sr_t **srp = (sr_t **)NULL;
-static sr_t *sr_last = (sr_t *)NULL;
+static sr_t **srp = NULL;
+static sr_t *sr_last = NULL;
 static Widget focus_widget = NULL;
 static void focus_next(sr_t *s);
 
@@ -129,7 +129,7 @@ dialog_flip_toggles(struct toggle_list *toggle_list, Widget w)
 	int i;
 
 	/* Flip the widget w to on, and the rest to off. */
-	for (i = 0; toggle_list->widgets[i] != (Widget)NULL; i++) {
+	for (i = 0; toggle_list->widgets[i] != NULL; i++) {
 		/* Process each widget in the list */
 		dialog_mark_toggle(*(toggle_list->widgets+i),
 		    (*(toggle_list->widgets+i) == w) ? diamond : no_diamond);
@@ -230,21 +230,21 @@ dialog_register_sensitivity(Widget w, Boolean *bvar1, Boolean bval1,
 	s->has_focus = False;
 
 	/* Link it onto the chain. */
-	s->next = (sr_t *)NULL;
-	if (sr_last != (sr_t *)NULL)
+	s->next = NULL;
+	if (sr_last != NULL)
 		sr_last->next = s;
 	else
 		*srp = s;
 	sr_last = s;
 
 	/* Set up the initial widget sensitivity. */
-	if (bvar1 == (Boolean *)NULL)
+	if (bvar1 == NULL)
 		f = True;
 	else {
 		f = (*bvar1 == bval1);
-		if (bvar2 != (Boolean *)NULL)
+		if (bvar2 != NULL)
 			f &= (*bvar2 == bval2);
-		if (bvar3 != (Boolean *)NULL)
+		if (bvar3 != NULL)
 			f &= (*bvar3 == bval3);
 	}
 	XtVaSetValues(w, XtNsensitive, f, NULL);
@@ -256,15 +256,14 @@ dialog_check_sensitivity(Boolean *bvar)
 {
 	sr_t *s;
 
-	for (s = *srp; s != (sr_t *)NULL; s = s->next) {
+	for (s = *srp; s != NULL; s = s->next) {
 		if (s->bvar1 == bvar || s->bvar2 == bvar || s->bvar3 == bvar) {
 			Boolean f;
 
-			f = (s->bvar1 != (Boolean *)NULL &&
-			     (*s->bvar1 == s->bval1));
-			if (s->bvar2 != (Boolean *)NULL)
+			f = (s->bvar1 != NULL && (*s->bvar1 == s->bval1));
+			if (s->bvar2 != NULL)
 				f &= (*s->bvar2 == s->bval2);
-			if (s->bvar3 != (Boolean *)NULL)
+			if (s->bvar3 != NULL)
 				f &= (*s->bvar3 == s->bval3);
 			XtVaSetValues(s->w, XtNsensitive, f, NULL);
 
@@ -287,7 +286,7 @@ focus_next(sr_t *s)
 	XawTextDisplayCaret(s->w, False);
 
 	/* Search after. */
-	for (t = s->next; t != (sr_t *)NULL; t = t->next) {
+	for (t = s->next; t != NULL; t = t->next) {
 		if (t->is_value) {
 			XtVaGetValues(t->w, XtNsensitive, &sen, NULL);
 			if (sen)
@@ -296,8 +295,8 @@ focus_next(sr_t *s)
 	}
 
 	/* Wrap and search before. */
-	if (t == (sr_t *)NULL)
-		for (t = *srp; t != s && t != (sr_t *)NULL; t = t->next) {
+	if (t == NULL)
+		for (t = *srp; t != s && t != NULL; t = t->next) {
 			if (t->is_value) {
 				XtVaGetValues(t->w, XtNsensitive, &sen, NULL);
 				if (sen)
@@ -306,7 +305,7 @@ focus_next(sr_t *s)
 		}
 
 	/* Move the focus. */
-	if (t != (sr_t *)NULL && t != s) {
+	if (t != NULL && t != s) {
 		t->has_focus = True;
 		XawTextDisplayCaret(t->w, True);
 		if (focus_widget)
@@ -330,7 +329,7 @@ PA_dialog_next_action(Widget w, XEvent *event _is_unused, String *parms _is_unus
 {
 	sr_t *s;
 
-	for (s = *srp; s != (sr_t *)NULL; s = s->next) {
+	for (s = *srp; s != NULL; s = s->next) {
 		if (s->w == w) {
 			focus_next(s);
 			return;
@@ -346,7 +345,7 @@ PA_dialog_focus_action(Widget w, XEvent *event _is_unused, String *parms _is_unu
 	sr_t *s;
 
 	/* Remove the focus from the widget that has it now. */
-	for (s = *srp; s != (sr_t *)NULL; s = s->next) {
+	for (s = *srp; s != NULL; s = s->next) {
 		if (s->has_focus) {
 			if (s->w == w)
 				return;
@@ -357,11 +356,11 @@ PA_dialog_focus_action(Widget w, XEvent *event _is_unused, String *parms _is_unu
 	}
 
 	/* Find this object. */
-	for (s = *srp; s != (sr_t *)NULL; s = s->next) {
+	for (s = *srp; s != NULL; s = s->next) {
 		if (s->w == w)
 			break;
 	}
-	if (s == (sr_t *)NULL)
+	if (s == NULL)
 		return;
 
 	/* Give it the focus. */

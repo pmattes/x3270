@@ -89,7 +89,7 @@
 #define MSC_BUF	1024
 
 /* Globals */
-struct macro_def *macro_defs = (struct macro_def *)NULL;
+struct macro_def *macro_defs = NULL;
 Boolean		macro_output = False;
 
 /* Statics */
@@ -157,8 +157,7 @@ typedef struct sms {
 	    sms_cbh handle;	/*  handle */
 	} cbx;
 } sms_t;
-#define SN	((sms_t *)NULL)
-static sms_t *sms = SN;
+static sms_t *sms = NULL;
 static int sms_depth = 0;
 static int socketfd = -1;
 static ioid_t socket_id = NULL_IOID;
@@ -191,7 +190,7 @@ static ioid_t stdin_id = NULL_IOID;
 static unsigned char *nvt_save_buf;
 static int      nvt_save_cnt = 0;
 static int      nvt_save_ix = 0;
-static char    *expect_text = CN;
+static char    *expect_text = NULL;
 static int	expect_len = 0;
 static const char *st_name[] = { "String", "Macro", "Command", "KeymapAction",
 				 "IdleCommand", "ChildScript", "PeerScript",
@@ -269,11 +268,11 @@ static void
 sms_connect(Boolean connected)
 {
 	/* Hack to ensure that disconnects don't cause infinite recursion. */
-	if (sms != SN && sms->executing)
+	if (sms != NULL && sms->executing)
 		return;
 
 	if (!connected) {
-		while (sms != SN && sms->is_login) {
+		while (sms != NULL && sms->is_login) {
 #if !defined(_WIN32) /*[*/
 			if (sms->type == ST_CHILD && sms->pid > 0)
 				(void) kill(sms->pid, SIGTERM);
@@ -303,12 +302,12 @@ sms_init(void)
 void
 macros_init(void)
 {
-	char *s = CN;
+	char *s = NULL;
 	char *name, *action;
 	struct macro_def *m;
 	int ns;
 	int ix = 1;
-	static char *last_s = CN;
+	static char *last_s = NULL;
 
 	/* Free the previous macro definitions. */
 	while (macro_defs) {
@@ -316,11 +315,11 @@ macros_init(void)
 		Free(macro_defs);
 		macro_defs = m;
 	}
-	macro_defs = (struct macro_def *)NULL;
-	macro_last = (struct macro_def *)NULL;
+	macro_defs = NULL;
+	macro_last = NULL;
 	if (last_s) {
 		Free(last_s);
-		last_s = CN;
+		last_s = NULL;
 	}
 
 	/* Search for new ones. */
@@ -334,8 +333,8 @@ macros_init(void)
 		s = get_fresource("%s.%s", ResMacros, rname);
 		Free(rname);
 	}
-	if (s == CN) {
-		if (appres.macros == CN)
+	if (s == NULL) {
+		if (appres.macros == NULL)
 			return;
 		s = NewString(appres.macros);
 	} else
@@ -353,7 +352,7 @@ macros_init(void)
 			macro_last->next = m;
 		else
 			macro_defs = m;
-		m->next = (struct macro_def *)NULL;
+		m->next = NULL;
 		macro_last = m;
 		ix++;
 	}
@@ -418,7 +417,7 @@ new_sms(enum sms_type type)
 	s->success = True;
 	s->need_prompt = False;
 	s->is_login = False;
-	s->outfile = (FILE *)NULL;
+	s->outfile = NULL;
 	s->infd = -1;
 #if defined(_WIN32) /*[*/
 	s->inhandle = INVALID_HANDLE_VALUE;
@@ -446,13 +445,13 @@ sms_push(enum sms_type type)
 	sms_t *s;
 
 	/* Preempt any running sms. */
-	if (sms != SN) {
+	if (sms != NULL) {
 		/* Remove the running sms's input. */
 		script_disable();
 	}
 
 	s = new_sms(type);
-	if (sms != SN)
+	if (sms != NULL)
 		s->is_login = sms->is_login;	/* propagate from parent */
 	s->next = sms;
 	sms = s;
@@ -463,7 +462,7 @@ sms_push(enum sms_type type)
 		status_script(True);
 	}
 
-	if (nvt_save_buf == (unsigned char *)NULL)
+	if (nvt_save_buf == NULL)
 		nvt_save_buf = (unsigned char *)Malloc(NVT_SAVE_SIZE);
 	return True;
 }
@@ -474,16 +473,16 @@ sms_push(enum sms_type type)
 static sms_t *
 sms_enqueue(enum sms_type type)
 {
-	sms_t *s, *t, *t_prev = SN;
+	sms_t *s, *t, *t_prev = NULL;
 
 	/* Allocate and initialize a new structure. */
 	s = new_sms(type);
 
 	/* Find the bottom of the stack. */
-	for (t = sms; t != SN; t = t->next)
+	for (t = sms; t != NULL; t = t->next)
 		t_prev = t;
 
-	if (t_prev == SN) {	/* Empty stack. */
+	if (t_prev == NULL) {	/* Empty stack. */
 		s->next = sms;
 		sms = s;
 
@@ -494,13 +493,13 @@ sms_enqueue(enum sms_type type)
 		menubar_as_set(True);
 		status_script(True);
 	} else {			/* Add to bottom. */
-		s->next = SN;
+		s->next = NULL;
 		t_prev->next = s;
 	}
 
 	sms_depth++;
 
-	if (nvt_save_buf == (unsigned char *)NULL)
+	if (nvt_save_buf == NULL)
 		nvt_save_buf = (unsigned char *)Malloc(NVT_SAVE_SIZE);
 
 	return s;
@@ -565,7 +564,7 @@ sms_pop(Boolean can_exit)
 	Free(s);
 	sms_depth--;
 
-	if (sms == SN) {
+	if (sms == NULL) {
 		/* Turn off the menu option. */
 		menubar_as_set(False);
 		status_script(False);
@@ -583,7 +582,7 @@ sms_pop(Boolean can_exit)
 
 #if defined(_WIN32) /*[*/
 	/* If the new top sms is an exited script, pop it, too. */
-	if (sms != SN &&
+	if (sms != NULL &&
 	    sms->type == ST_CHILD &&
 	    sms->child_handle == INVALID_HANDLE_VALUE)
 	    	sms_pop(False);
@@ -765,7 +764,7 @@ peer_script_init(void)
 	if (!appres.scripted)
 		return;
 
-	if (sms == SN) {
+	if (sms == NULL) {
 		/* No login script running, simply push a new sms. */
 		(void) sms_push(ST_PEER);
 		s = sms;
@@ -1230,8 +1229,7 @@ execute_command(enum iaction cause, char *s, char **np)
 		sms->accumulated = False;
 		sms->msec = 0L;
 		ia_cause = cause;
-		(*actions[any].proc)((Widget)NULL, (XEvent *)NULL,
-			count? params: (String *)NULL, &count);
+		(*actions[any].proc)(NULL, NULL, count? params: NULL, &count);
 		screen_disp(False);
 	} else {
 		popup_an_error("Unknown action: %s", aname);
@@ -1320,7 +1318,7 @@ run_macro(void)
 			vtrace("%s[%d] failed\n", ST_NAME, sms_depth);
 
 			/* Propagate it. */
-			if (sms->next != SN)
+			if (sms->next != NULL)
 				sms->next->success = False;
 			break;
 		}
@@ -1356,7 +1354,7 @@ run_macro(void)
 			vtrace("%s[%d] error\n", ST_NAME, sms_depth);
 
 			/* Propaogate it. */
-			if (sms->next != SN)
+			if (sms->next != NULL)
 				sms->next->success = False;
 
 			/* If it was an idle command, cancel it. */
@@ -1554,7 +1552,7 @@ run_script(void)
 		vtrace("%s[%d]: '%s'\n", ST_NAME, sms_depth, cmd);
 		s = sms;
 		s->executing = True;
-		es = execute_command(IA_SCRIPT, cmd, (char **)NULL);
+		es = execute_command(IA_SCRIPT, cmd, NULL);
 		s->executing = False;
 
 		/* Move the rest of the buffer over. */
@@ -1743,12 +1741,12 @@ sms_info(const char *fmt, ...)
 	int nc;
 
 	nl = strchr(msg, '\n');
-	if (nl != CN) {
+	if (nl != NULL) {
 	    nc = nl - msg;
 	} else {
 	    nc = strlen(msg);
 	}
-	if (nc || (nl != CN)) {
+	if (nc || (nl != NULL)) {
 	    if ((s = sms_redirect_to()) != NULL) {
 		if (s->type == ST_CB) {
 		    (*s->cbx.cb->data)(s->cbx.handle, msg, nc);
@@ -1866,7 +1864,7 @@ sms_continue(void)
 	continuing = True;
 
 	while (True) {
-		if (sms == SN) {
+		if (sms == NULL) {
 			continuing = False;
 			return;
 		}
@@ -2050,7 +2048,7 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 	 * host.  output_wait_needed is cleared by sms_host_output,
 	 * which is called from the write logic in ctlr.c.
 	 */     
-	if (sms != SN && buf == ea_buf)
+	if (sms != NULL && buf == ea_buf)
 		sms->output_wait_needed = True;
 
 	is_zero = FA_IS_ZERO(get_field_attribute(first));
@@ -2453,7 +2451,7 @@ status_string(void)
 	char kb_stat;
 	char fmt_stat;
 	char prot_stat;
-	char *connect_stat = CN;
+	char *connect_stat = NULL;
 	char em_mode;
 	char s[1024];
 	char *r;
@@ -2525,7 +2523,7 @@ script_prompt(Boolean success)
 
 	s = status_string();
 
-	if (sms != SN && sms->accumulated)
+	if (sms != NULL && sms->accumulated)
 		(void) snprintf(timing, sizeof(timing), "%ld.%03ld",
 			sms->msec / 1000L, sms->msec % 1000L);
 	else
@@ -2621,7 +2619,7 @@ void
 Snap_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
-	if (sms == SN || sms->state != SS_RUNNING) {
+	if (sms == NULL || sms->state != SS_RUNNING) {
 		popup_an_error("%s can only be called from scripts or macros",
 		    action_name(Snap_action));
 		return;
@@ -2792,7 +2790,7 @@ Wait_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 				"value", action_name(Wait_action));
 		return;
 	}
-	if (sms == SN || sms->state != SS_RUNNING) {
+	if (sms == NULL || sms->state != SS_RUNNING) {
 		popup_an_error("%s can only be called from scripts or macros",
 		    action_name(Wait_action));
 		return;
@@ -2856,7 +2854,7 @@ Wait_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 void
 sms_connect_wait(void)
 {
-	if (sms != SN &&
+	if (sms != NULL &&
 	    (int)sms->state >= (int)SS_RUNNING &&
 	    sms->state != SS_WAIT_IFIELD) {
 		if (HALF_CONNECTED ||
@@ -2871,7 +2869,7 @@ sms_connect_wait(void)
 void
 sms_host_output(void)
 {
-	if (sms != SN) {
+	if (sms != NULL) {
 		sms->output_wait_needed = False;
 
 		switch (sms->state) {
@@ -2894,7 +2892,7 @@ sms_redirect_to(void)
 {
     	sms_t *s;
 
-	for (s = sms; s != SN; s = s->next) {
+	for (s = sms; s != NULL; s = s->next) {
 	    	if ((s->type == ST_CHILD || s->type == ST_PEER || s->type == ST_CB) &&
 		    (s->state == SS_RUNNING ||
 		     s->state == SS_CONNECT_WAIT ||
@@ -2918,7 +2916,7 @@ sms_redirect(void)
 Boolean
 sms_active(void)
 {
-	return sms != SN;
+	return sms != NULL;
 }
 
 /* Translate an expect string (uses C escape syntax). */
@@ -3011,7 +3009,7 @@ memstr(char *s1, char *s2, int n1, int n2)
 	for (i = 0; i <= n1 - n2; i++, s1++)
 		if (*s1 == *s2 && !memcmp(s1, s2, n2))
 			return s1;
-	return CN;
+	return NULL;
 }
 
 /* Check for a match against an expect string. */
@@ -3027,10 +3025,10 @@ expect_matches(void)
 		buf[i] = nvt_save_buf[(ix + i) % NVT_SAVE_SIZE];
 	}
 	t = memstr((char *)buf, expect_text, nvt_save_cnt, expect_len);
-	if (t != CN) {
+	if (t != NULL) {
 		nvt_save_cnt -= ((unsigned char *)t - buf) + expect_len;
 		Free(expect_text);
-		expect_text = CN;
+		expect_text = NULL;
 		return True;
 	} else
 		return False;
@@ -3040,7 +3038,7 @@ expect_matches(void)
 void
 sms_store(unsigned char c)
 {
-	if (sms == SN)
+	if (sms == NULL)
 		return;
 
 	/* Save the character in the buffer. */
@@ -3103,7 +3101,7 @@ void
 PauseScript_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_unused,
     Cardinal *num_params _is_unused)
 {
-	if (sms == SN || (sms->type != ST_PEER && sms->type != ST_CHILD)) {
+	if (sms == NULL || (sms->type != ST_PEER && sms->type != ST_CHILD)) {
 		popup_an_error("%s can only be called from a script",
 		    action_name(PauseScript_action));
 		return;
@@ -3123,11 +3121,11 @@ ContinueScript_action(Widget w, XEvent *event _is_unused, String *params,
 	 * If this is a nested script, this action aborts the current script,
 	 * then applies to the previous one.
 	 */
-	if (w == (Widget)NULL && sms_depth > 1)
+	if (w == NULL && sms_depth > 1)
 		sms_pop(False);
 
 	/* Continue the previous script. */
-	if (sms == SN || sms->state != SS_PAUSED) {
+	if (sms == NULL || sms->state != SS_PAUSED) {
 		popup_an_error("%s: No script waiting",
 		    action_name(ContinueScript_action));
 		sms_continue();
@@ -3143,7 +3141,7 @@ void
 CloseScript_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
     Cardinal *num_params)
 {
-	if (sms != SN &&
+	if (sms != NULL &&
 	    (sms->type == ST_PEER || sms->type == ST_CHILD)) {
 
 		/* Close this script. */
@@ -3153,7 +3151,7 @@ CloseScript_action(Widget w _is_unused, XEvent *event _is_unused, String *params
 		/* If nonzero status passed, fail the calling script. */
 		if (*num_params > 0 &&
 		    atoi(params[0]) != 0 &&
-		    sms->next != SN) {
+		    sms->next != NULL) {
 			sms->next->success = False;
 			if (sms->is_login)
 				host_disconnect(True);
@@ -3203,11 +3201,11 @@ Execute_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 static void
 expect_timed_out(ioid_t id _is_unused)
 {
-	if (sms == SN || sms->state != SS_EXPECTING)
+	if (sms == NULL || sms->state != SS_EXPECTING)
 		return;
 
 	Free(expect_text);
-	expect_text = CN;
+	expect_text = NULL;
 	popup_an_error("%s: Timed out", action_name(Expect_action));
 	sms->expect_id = NULL_IOID;
 	sms->state = SS_INCOMPLETE;
@@ -3255,7 +3253,7 @@ Expect_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	int tmo;
 
 	/* Verify the environment and parameters. */
-	if (sms == SN || sms->state != SS_RUNNING) {
+	if (sms == NULL || sms->state != SS_RUNNING) {
 		popup_an_error("%s can only be called from a script or macro",
 		    action_name(Expect_action));
 		return;
@@ -3360,7 +3358,7 @@ Script_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 		popup_an_error("pipe() failed");
 		return;
 	}
-	if ((sms->outfile = fdopen(outpipe[1], "w")) == (FILE *)NULL) {
+	if ((sms->outfile = fdopen(outpipe[1], "w")) == NULL) {
 		(void) close(inpipe[0]);
 		(void) close(inpipe[1]);
 		(void) close(outpipe[0]);
@@ -3403,7 +3401,7 @@ Script_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 		argv = (char **)Malloc((*num_params + 1) * sizeof(char *));
 		for (i = 0; i < *num_params; i++)
 			argv[i] = params[i];
-		argv[i] = CN;
+		argv[i] = NULL;
 
 		/* Exec. */
 		(void) execvp(params[0], argv);
@@ -3538,7 +3536,7 @@ Macro_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 
 	if (check_usage(Macro_action, *num_params, 1, 1) < 0)
 		return;
-	for (m = macro_defs; m != (struct macro_def *)NULL; m = m->next) {
+	for (m = macro_defs; m != NULL; m = m->next) {
 		if (!strcmp(m->name, params[0])) {
 			push_macro(m->action, False);
 			return;
@@ -3575,7 +3573,7 @@ Printer_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 	if (check_usage(Printer_action, *num_params, 1, 2) < 0)
 		return;
 	if (!strcasecmp(params[0], "Start")) {
-		printer_start((*num_params > 1)? params[1] : CN);
+		printer_start((*num_params > 1)? params[1] : NULL);
 	} else if (!strcasecmp(params[0], "Stop")) {
 		if (*num_params != 1) {
 			popup_an_error("%s: Extra argument(s)",
@@ -3594,7 +3592,7 @@ Printer_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 void
 abort_script(void)
 {
-	while (sms != SN) {
+	while (sms != NULL) {
 #if !defined(_WIN32) /*[*/
 		if (sms->type == ST_CHILD && sms->pid > 0)
 			(void) kill(sms->pid, SIGTERM);
@@ -3624,7 +3622,7 @@ sms_accumulate_time(struct timeval *t0, struct timeval *t1)
     msec = (t1->tv_sec - t0->tv_sec) * 1000 +
 	   (t1->tv_usec - t0->tv_usec + 500) / 1000;
 
-    if (sms != SN) {
+    if (sms != NULL) {
 	sms->accumulated = True;
 	sms->msec += msec;
 #if defined(DEBUG_ACCUMULATE) /*[*/
@@ -3660,20 +3658,20 @@ Query_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 		{ "ScreenCurSize", ctlr_query_cur_size, NULL },
 		{ "ScreenMaxSize", ctlr_query_max_size, NULL },
 		{ "Ssl", net_query_ssl, NULL },
-		{ CN, NULL }
+		{ NULL, NULL }
 	};
 	int i;
 
 	switch (*num_params) {
 	case 0:
-		for (i = 0; queries[i].name != CN; i++) {
+		for (i = 0; queries[i].name != NULL; i++) {
 			action_output("%s: %s", queries[i].name,
 					queries[i].fn? (*queries[i].fn)():
 					queries[i].string);
 		}
 		break;
 	case 1:
-		for (i = 0; queries[i].name != CN; i++) {
+		for (i = 0; queries[i].name != NULL; i++) {
 			if (!strcasecmp(params[0], queries[i].name)) {
 				const char *s;
 

@@ -62,9 +62,9 @@ static int      scroll_next = 0;
 static int      scrolled_back = 0;
 static Boolean  need_saving = True;
 static Boolean  vscreen_swapped = False;
-static char    *sbuf = CN;
+static char    *sbuf = NULL;
 static int      sa_bufsize;
-static char    *zbuf = CN;
+static char    *zbuf = NULL;
 
 /* Thumb state: */
 /*   Fraction of blank area above thumb (0.0 to 1.0) */
@@ -94,7 +94,7 @@ scroll_init(void)
 		    ((appres.save_lines+maxROWS-1)/maxROWS) * maxROWS;
 	if (!appres.save_lines)
 		appres.save_lines = maxROWS;
-	if (sbuf != CN) {
+	if (sbuf != NULL) {
 		Free(sbuf);
 		Free(zbuf);
 		Free(ea_save);

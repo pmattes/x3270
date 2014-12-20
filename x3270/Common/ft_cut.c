@@ -109,7 +109,7 @@ static char table6[] =
 
 static int quadrant = -1;
 static unsigned long expanded_length;
-static char *saved_errmsg = CN;
+static char *saved_errmsg = NULL;
 
 #define XLATE_NBUF	32
 static int xlate_buffered = 0;			/* buffer count */
@@ -169,7 +169,7 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 
 		/* Translate to a quadrant index. */
 		ixp = strchr(alphas, ebc2asc0[c]);
-		if (ixp == (char *)NULL) {
+		if (ixp == NULL) {
 			/* Try a different quadrant. */
 			quadrant = -1;
 			goto retry;
@@ -280,7 +280,7 @@ store_download(unsigned char c, unsigned char *ob)
 	/* Quadrant already defined. */
 	if (quadrant >= 0) {
 		ixp = (unsigned char *)memchr(conv[quadrant].xlate, c, NE);
-		if (ixp != (unsigned char *)NULL) {
+		if (ixp != NULL) {
 			ix = ixp - conv[quadrant].xlate;
 			*ob++ = asc2ebc0[(int)alphas[ix]];
 			return 1;
@@ -293,7 +293,7 @@ store_download(unsigned char c, unsigned char *ob)
 		if (quadrant == oq)
 			continue;
 		ixp = (unsigned char *)memchr(conv[quadrant].xlate, c, NE);
-		if (ixp == (unsigned char *)NULL)
+		if (ixp == NULL)
 			continue;
 		ix = ixp - conv[quadrant].xlate;
 		*ob++ = conv[quadrant].selector;
@@ -450,16 +450,16 @@ cut_control_code(void)
 		trace_ds("XFER_COMPLETE\n");
 		cut_ack();
 		cut_xfer_in_progress = False;
-		ft_complete((String)NULL);
+		ft_complete(NULL);
 		break;
 	    case SC_ABORT_FILE:
 	    case SC_ABORT_XMIT:
 		trace_ds("ABORT\n");
 		cut_xfer_in_progress = False;
 		cut_ack();
-		if (ft_state == FT_ABORT_SENT && saved_errmsg != CN) {
+		if (ft_state == FT_ABORT_SENT && saved_errmsg != NULL) {
 			buf = saved_errmsg;
-			saved_errmsg = CN;
+			saved_errmsg = NULL;
 		} else {
 		    	int mb_len = 161;
 
@@ -567,7 +567,7 @@ cut_data_request(void)
 	trace_ds("> FT DATA %u\n", from6(seq));
 	ft_update_length();
 	expanded_length += count;
-	action_internal(Enter_action, IA_FT, CN, CN);
+	action_internal(Enter_action, IA_FT, NULL, NULL);
 }
 
 /*
@@ -590,7 +590,7 @@ from6(unsigned char c)
 
 	c = ebc2asc0[c];
 	p = strchr(table6, c);
-	if (p == CN)
+	if (p == NULL)
 		return 0;
 	return p - table6;
 }
@@ -654,7 +654,7 @@ static void
 cut_ack(void)
 {
 	trace_ds("> FT ACK\n");
-	action_internal(Enter_action, IA_FT, CN, CN);
+	action_internal(Enter_action, IA_FT, NULL, NULL);
 }
 
 /*
@@ -672,7 +672,7 @@ cut_abort(const char *s, unsigned short reason)
 	ctlr_add(RO_REASON_CODE, HIGH8(reason), 0);
 	ctlr_add(RO_REASON_CODE+1, LOW8(reason), 0);
 	trace_ds("> FT CONTROL_CODE ABORT\n");
-	action_internal(PF_action, IA_FT, "2", CN);
+	action_internal(PF_action, IA_FT, "2", NULL);
 
 	/* Update the in-progress pop-up. */
 	ft_aborting();

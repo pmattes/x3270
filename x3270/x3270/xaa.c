@@ -45,7 +45,7 @@
 /* Globals */
 
 /* Statics */
-static Widget execute_action_shell = (Widget)NULL;
+static Widget execute_action_shell = NULL;
 
 /* Callback for "OK" button on execute action popup */
 static void
