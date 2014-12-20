@@ -289,11 +289,11 @@ x3270.emulatorFontList.3270cg-1a,3270cg-1,iso10646-1,iso8859-1+big5-0,iso10646-1
 ! Print commands
 x3270.printTextCommand:			lpr
 #ifndef STANDALONE
-x3270.printWindowCommand:		xwd -id %d | xpr | lpr
+x3270.printWindowCommand:		xwd -id %WINDOW% | xpr | lpr
 !
 ! System V versions of print commands
 ! x3270.printTextCommand:		lp
-! x3270.printWindowCommand:		xwd -id %d | xpr | lp
+! x3270.printWindowCommand:		xwd -id %WINDOW% | xpr | lp
 !
 ! Trace window command
 x3270.traceCommand:			tail -f
