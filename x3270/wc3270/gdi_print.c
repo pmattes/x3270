@@ -661,7 +661,7 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		}
 		SelectObject(dc, pstate.bold_font);
 		status = ExtTextOut(dc,
-			pstate.hmargin_pixels - center - pchar.poffX,
+			pstate.hmargin_pixels + center - pchar.poffX,
 			pstate.vmargin_pixels + pstate.space_size.cy -
 			    pchar.poffY,
 			0, NULL,
@@ -672,6 +672,21 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 			goto done;
 		}
 		pstate.out_row = 2;
+	}
+
+	/*
+	 * Does this screen fit?
+	 * We test for "pstate.out_row > 2" first, so that if the font is so
+	 * big that nothing would fit, we print as much as we can.
+	 */
+	if (pstate.out_row > 2 && pstate.out_row + ROWS > pstate.usable_rows) {
+		if (EndPage(dc) <= 0) {
+			*fail = "EndPage failed";
+			rc = -1;
+			goto done;
+		}
+		pstate.out_row = 0;
+		pstate.screens = 0;
 	}
 
 	/* Now dump out a screen's worth. */
