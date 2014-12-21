@@ -119,17 +119,6 @@ html/Resources.html: resource-body make-resource-doc.pl version.txt
 html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@
 
-ibm1027.c: ibm-1027_P100-1995.ucm mktbl
-	./stripucm.sh ibm-1027_P100-1995.ucm ibm1027 >$@
-ibm300.c: ibm-300_P110-1997.ucm mktbl
-	./stripucm.sh ibm-300_P110-1997.ucm ibm300 >$@
-ibm837.c: ibm-837_P100-2000.ucm mktbl
-	./stripucm.sh ibm-837_P100-2000.ucm ibm837 >$@
-ibm1385.c: ibm-1385_P100-1997.ucm mktbl
-	./stripucm.sh ibm-1385_P100-1997.ucm ibm1385 >$@
-	mktbl: mktbl.c
-	$(CC) -o mktbl mktbl.c
-
 # Bootstrap targets.
 Makefile: Makefile.in configure
 	./configure

@@ -1,1 +1,0 @@
-../Common/stripucm.sh
