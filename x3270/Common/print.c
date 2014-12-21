@@ -496,21 +496,17 @@ static char *
 expand_print_window_command(const char *command)
 {
     const char *s;
-    char c;
     varbuf_t r;
 #   define WINDOW	"%WINDOW%"
 #   define WINDOW_SIZE	(sizeof(WINDOW) - 1)
 
     vb_init(&r);
     s = command;
-    while ((c = *s)) {
+    while (*s) {
 	if (!strncasecmp(s, WINDOW, WINDOW_SIZE)) {
 	    vb_appendf(&r, "%ld", (unsigned long)XtWindow(toplevel));
 	    s += WINDOW_SIZE;
 	} else {
-	    if (c == '%') {
-		vb_append(&r, s, 1);
-	    }
 	    vb_append(&r, s, 1);
 	    s++;
 	}
