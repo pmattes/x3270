@@ -432,7 +432,6 @@ expand_print_window_command(const char *command)
     char *window_id;
     size_t malloc_len;
     const char *s;
-    char c;
     char *xcommand;
     char *xs;
 #   define WINDOW	"%WINDOW%"
@@ -444,36 +443,30 @@ expand_print_window_command(const char *command)
     /*
      * Figure out how long the translated command will be.
      * %WINDOW% becomes the window ID.
-     * Other '%' characters are doubled (quoted).
      */
     malloc_len = strlen(command);
     s = command;
-    while (c = *s) {
+    while (*s) {
 	if (!strncasecmp(s, WINDOW, WINDOW_SIZE)) {
 	    s += WINDOW_SIZE;
 	    malloc_len -= WINDOW_SIZE;
 	    malloc_len += strlen(window_id);
-	    continue;
-	} else if (c == '%') {
-	    malloc_len++;
+	} else {
+	    s++;
 	}
-	s++;
     }
 
     /* Expand the command. */
     xs = xcommand = XtMalloc(malloc_len + 1);
     s = command;
-    while (c = *s) {
+    while (*s) {
 	if (!strncasecmp(s, WINDOW, WINDOW_SIZE)) {
 	    strcpy(xs, window_id);
 	    xs += strlen(window_id);
 	    s += WINDOW_SIZE;
-	    continue;
-	} else if (c == '%') {
-	    *xs++ = c;
+	} else {
+	    *xs++ = *s++;
 	}
-	*xs++ = c;
-	s++;
     }
     *xs = '\0';
     XtFree(window_id);
