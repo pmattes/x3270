@@ -42,10 +42,12 @@
 #include "ctlr.h"
 #include "3270ds.h"
 
+#include "actionsc.h"
 #include "ansic.h"
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "hostc.h"
+#include "macrosc.h"
 #include "screenc.h"
 #include "scrollc.h"
 #include "tablesc.h"
@@ -1754,6 +1756,9 @@ ansi_process(unsigned int c)
 	    	pe = 0;
 	else if (pe < PE_MAX)
 	    	ped[pe++] = c;
+
+	/* Let a script go. */
+	sms_host_output();
 }
 
 void
