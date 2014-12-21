@@ -41,9 +41,11 @@
 #include "3270ds.h"
 
 #include "nvtc.h"
+#include "actionsc.h"
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "hostc.h"
+#include "macrosc.h"
 #include "screenc.h"
 #include "scrollc.h"
 #include "tablesc.h"
@@ -1739,25 +1741,29 @@ nvt_init(void)
 void
 nvt_process(unsigned int c)
 {
-	afn_t fn;
+    afn_t fn;
 
-	c &= 0xff;
-	nvt_ch = c;
+    c &= 0xff;
+    nvt_ch = c;
 
-	scroll_to_bottom();
+    scroll_to_bottom();
 
-	if (toggled(SCREEN_TRACE)) {
-		trace_char((char)c);
-	}
+    if (toggled(SCREEN_TRACE)) {
+	trace_char((char)c);
+    }
 
-	fn = nvt_fn[st[(int)state][c]];
-	state = (*fn)(n[0], n[1]);
+    fn = nvt_fn[st[(int)state][c]];
+    state = (*fn)(n[0], n[1]);
 
-	/* Saving pending escape data. */
-	if (state == DATA)
-	    	pe = 0;
-	else if (pe < PE_MAX)
-	    	ped[pe++] = c;
+    /* Saving pending escape data. */
+    if (state == DATA) {
+	pe = 0;
+    } else if (pe < PE_MAX) {
+	ped[pe++] = c;
+    }
+
+    /* Let a script go. */
+    sms_host_output();
 }
 
 void
