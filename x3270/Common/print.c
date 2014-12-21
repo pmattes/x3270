@@ -61,6 +61,7 @@
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
+#include "varbufc.h"
 
 #if defined(_WIN32) /*[*/
 # include <fcntl.h>
@@ -494,55 +495,27 @@ snap_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 static char *
 expand_print_window_command(const char *command)
 {
-    char *window_id;
-    size_t malloc_len;
     const char *s;
     char c;
-    char *xcommand;
-    char *xs;
+    varbuf_t r;
 #   define WINDOW	"%WINDOW%"
 #   define WINDOW_SIZE	(sizeof(WINDOW) - 1)
 
-    /* Pre-expand the Window ID so we know how long it is. */
-    window_id = xs_buffer("%lu", (unsigned long)XtWindow(toplevel));
-
-    /*
-     * Figure out how long the translated command will be.
-     * %WINDOW% becomes the window ID.
-     * Other '%' characters are doubled (quoted).
-     */
-    malloc_len = strlen(command);
+    vb_init(&r);
     s = command;
     while ((c = *s)) {
 	if (!strncasecmp(s, WINDOW, WINDOW_SIZE)) {
+	    vb_appendf(&r, "%ld", (unsigned long)XtWindow(toplevel));
 	    s += WINDOW_SIZE;
-	    malloc_len -= WINDOW_SIZE;
-	    malloc_len += strlen(window_id);
-	    continue;
-	} else if (c == '%') {
-	    malloc_len++;
+	} else {
+	    if (c == '%') {
+		vb_append(&r, s, 1);
+	    }
+	    vb_append(&r, s, 1);
+	    s++;
 	}
-	s++;
     }
-
-    /* Expand the command. */
-    xs = xcommand = XtMalloc(malloc_len + 1);
-    s = command;
-    while ((c = *s)) {
-	if (!strncasecmp(s, WINDOW, WINDOW_SIZE)) {
-	    strcpy(xs, window_id);
-	    xs += strlen(window_id);
-	    s += WINDOW_SIZE;
-	    continue;
-	} else if (c == '%') {
-	    *xs++ = c;
-	}
-	*xs++ = c;
-	s++;
-    }
-    *xs = '\0';
-    XtFree(window_id);
-    return xcommand;
+    return vb_consume(&r);
 }
 
 /* Callback for "OK" button on print window popup. */
