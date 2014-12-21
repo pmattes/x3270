@@ -75,15 +75,12 @@ tarlist: Makefile.aux
 	do echo $(TARDIR)/$$i; \
 	done >$@
 
-$(PRODUCT)-src.tar: $(FILES) tarlist
+$(PRODUCT)-src.tgz: $(FILES) tarlist
 	$(RM) $(TARDIR)
 	ln -s . $(TARDIR)
 	$(RM) $@
-	tar -ch -T tarlist -f $@
+	tar -czh -T tarlist -f $@
 	$(RM) $(TARDIR)
-
-$(PRODUCT)-src.tgz: $(PRODUCT)-src.tar
-	gzip <$(PRODUCT)-src.tar >$@
 
 configure: configure.in
 	autoconf
@@ -118,6 +115,6 @@ html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 Makefile: Makefile.in configure
 	./configure
 	$(MAKE) depend
-cscope.out: $(SOURCES) $(HEADERS)
+cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
 	cs -b
 bootstrap: $(PRODUCT)-src.tgz Makefile cscope.out

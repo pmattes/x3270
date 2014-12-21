@@ -79,15 +79,12 @@ tarlist: Makefile.aux
 	do echo $(TARDIR)/$$i; \
 	done >$@
 
-$(PRODUCT)-src.tar: $(FILES) tarlist
+$(PRODUCT)-src.tgz: $(FILES) tarlist
 	$(RM) $(TARDIR)
 	ln -s . $(TARDIR)
 	$(RM) $@
-	tar -ch -T tarlist -f $@
+	tar -czh -T tarlist -f $@
 	$(RM) $(TARDIR)
-
-$(PRODUCT)-src.tgz: $(PRODUCT)-src.tar
-	gzip <$(PRODUCT)-src.tar >$@
 
 configure: configure.in
 	autoconf
@@ -137,6 +134,6 @@ ibm1385.c: ibm-1385_P100-1997.ucm mktbl
 Makefile: Makefile.in configure
 	./configure
 	$(MAKE) depend
-cscope.out: $(SOURCES) $(HEADERS)
+cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
 	cs -b
 bootstrap: $(PRODUCT)-src.tgz Makefile cscope.out
