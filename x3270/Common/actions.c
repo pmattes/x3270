@@ -44,6 +44,7 @@
 #include "macrosc.h"
 #include "popupsc.h"
 #include "printc.h"
+#include "print_windowc.h"
 #include "resources.h"
 #include "scrollc.h"
 #include "selectc.h"

@@ -34,20 +34,20 @@ SRCS = Cme.c CmeBSB.c CmeLine.c CmplxMenu.c Husk.c about.c actions.c apl.c \
 	favicon.c fprint_screen.c ft.c ft_cut.c ft_dft.c ft_gui.c host.c \
 	httpd-core.c httpd-io.c httpd-nodes.c idle.c idle_gui.c keymap.c \
 	keypad.c keysym2ucs.c kybd.c macros.c main.c menubar.c nvt. popups.c \
-	print.c printer.c printer_gui.c proxy.c resolver.c resources.c rpq.c \
-	save.c screen.c scroll.c see.c select.c sf.c status.c stmenu.c \
-	tables.c telnet.c toggles.c trace_ds.c unicode.c unicode_dbcs.c \
-	utf8.c util.c varbuf.c xaa.c xio.c
+	print.c print_window.c printer.c printer_gui.c proxy.c resolver.c \
+	resources.c rpq.c save.c screen.c scroll.c see.c select.c sf.c \
+	status.c stmenu.c tables.c telnet.c toggles.c trace_ds.c unicode.c \
+	unicode_dbcs.c utf8.c util.c varbuf.c xaa.c xio.c
 
 VOBJS = Cme.o CmeBSB.o CmeLine.o CmplxMenu.o Husk.o about.o actions.o apl.o \
 	asprintf.o bind-opt.o charset.o child.o ctlr.o dialog.o display8.o \
 	fallbacks.o favicon.o fprint_screen.o ft.o ft_cut.o ft_dft.o ft_gui.o \
 	host.o httpd-core.o httpd-io.o httpd-nodes.o idle.o idle_gui.o \
 	keymap.o keypad.o keysym2ucs.o kybd.o macros.o main.o menubar.o nvt.o \
-	popups.o print.o printer.o printer_gui.o proxy.o resolver.o \
-	resources.o rpq.o save.o screen.o scroll.o see.o select.o sf.o \
-	status.o stmenu.o tables.o telnet.o toggles.o trace_ds.o unicode.o \
-	unicode_dbcs.o utf8.o util.o varbuf.o xaa.o xio.o
+	popups.o print.o print_window.o printer.o printer_gui.o proxy.o \
+	resolver.o resources.o rpq.o save.o screen.o scroll.o see.o select.o \
+	sf.o status.o stmenu.o tables.o telnet.o toggles.o trace_ds.o \
+	unicode.o unicode_dbcs.o utf8.o util.o varbuf.o xaa.o xio.o
 
 OBJS1 = $(VOBJS) version.o
 

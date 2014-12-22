@@ -61,6 +61,7 @@
 #include "menubarc.h"
 #include "popupsc.h"
 #include "printc.h"
+#include "print_windowc.h"
 #include "printerc.h"
 #include "printer_guic.h"
 #include "savec.h"

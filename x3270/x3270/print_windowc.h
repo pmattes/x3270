@@ -26,14 +26,11 @@
  */
 
 /*
- *	printc.h
- *		Global declarations for print.c.
+ *	print_windowc.h
+ *		Global declarations for print_window.c.
  */
 
-extern void PrintText_action(Widget w, XEvent *event, String *params,
+extern void PrintWindow_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void print_text_option(Widget w, XtPointer client_data,
+extern void print_window_option(Widget w, XtPointer client_data,
     XtPointer call_data);
-extern void save_text_option(Widget w, XtPointer client_data,
-    XtPointer call_data);
-extern char *default_caption(void);

@@ -61,7 +61,6 @@
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
-#include "varbufc.h"
 
 #if defined(_WIN32) /*[*/
 # include <fcntl.h>
@@ -78,10 +77,6 @@
 /* Globals */
 
 /* Statics */
-#if defined(X3270_DISPLAY) /*[*/
-static Widget print_window_shell = NULL;
-char *print_window_command = NULL;
-#endif /*]*/
 
 /* Print Text popup */
 
@@ -445,157 +440,3 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	}
 #endif /*]*/
 }
-
-
-#if defined(X3270_DISPLAY) /*[*/
-/* Print Window popup */
-
-/*
- * Printing the window bitmap is a rather convoluted process:
- *    The PrintWindow action calls PrintWindow_action(), or a menu option calls
- *	print_window_option().
- *    print_window_option() pops up the dialog.
- *    The OK button on the dialog triggers print_window_callback.
- *    print_window_callback pops down the dialog, then schedules a timeout
- *     1 second away.
- *    When the timeout expires, it triggers snap_it(), which finally calls
- *     xwd.
- * The timeout indirection is necessary because xwd prints the actual contents
- * of the window, including any pop-up dialog in front of it.  We pop down the
- * dialog, but then it is up to the server and Xt to send us the appropriate
- * expose events to repaint our window.  Hopefully, one second is enough to do
- * that.
- */
-
-/* Termination procedure for window print. */
-static void
-print_window_done(int status)
-{
-	if (status)
-		popup_an_error("Print program exited with status %d.",
-		    (status & 0xff00) >> 8);
-	else if (appres.do_confirms)
-		popup_an_info("Bitmap printed.");
-}
-
-/* Timeout callback for window print. */
-static void
-snap_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
-{
-    if (!print_window_command) {
-	return;
-    }
-    vtrace("%s: Running '%s'\n", action_name(PrintWindow_action),
-	    print_window_command);
-    XSync(display, 0);
-    print_window_done(system(print_window_command));
-}
-
-/* Expand the window print command. */
-static char *
-expand_print_window_command(const char *command)
-{
-    const char *s;
-    varbuf_t r;
-#   define WINDOW	"%WINDOW%"
-#   define WINDOW_SIZE	(sizeof(WINDOW) - 1)
-
-    vb_init(&r);
-    s = command;
-    while (*s) {
-	if (!strncasecmp(s, WINDOW, WINDOW_SIZE)) {
-	    vb_appendf(&r, "%ld", (unsigned long)XtWindow(toplevel));
-	    s += WINDOW_SIZE;
-	} else {
-	    vb_append(&r, s, 1);
-	    s++;
-	}
-    }
-    return vb_consume(&r);
-}
-
-/* Callback for "OK" button on print window popup. */
-static void
-print_window_callback(Widget w _is_unused, XtPointer client_data,
-    XtPointer call_data _is_unused)
-{
-    char *cmd;
-
-    cmd = XawDialogGetValueString((Widget)client_data);
-
-    XtPopdown(print_window_shell);
-
-    if (cmd) {
-	/* Expand the command. */
-	Replace(print_window_command, expand_print_window_command(cmd));
-
-	/* In 1 second, snap the window. */
-	(void) XtAppAddTimeOut(appcontext, 1000, snap_it, 0);
-    }
-}
-
-/* Print the contents of the screen as a bitmap. */
-void
-PrintWindow_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
-{
-    char *command;
-    Boolean secure = appres.secure;
-
-    action_debug(PrintWindow_action, event, params, num_params);
-
-    /* Figure out what the command is. */
-    command = get_resource(ResPrintWindowCommand);
-    if (*num_params > 0) {
-	command = params[0];
-    }
-    if (*num_params > 1) {
-	popup_an_error("%s: extra arguments ignored",
-		action_name(PrintWindow_action));
-    }
-    if (command == NULL || !*command) {
-	popup_an_error("%s: no %s defined", action_name(PrintWindow_action),
-		ResPrintWindowCommand);
-	return;
-    }
-
-    /* Check for secure mode. */
-    if (command[0] == '@') {
-	secure = True;
-	if (!*++command) {
-	    popup_an_error("%s: Invalid %s", action_name(PrintWindow_action),
-		    ResPrintWindowCommand);
-	    return;
-	}
-    }
-    if (secure) {
-	char *xcommand = expand_print_window_command(command);
-
-	vtrace("%s: Running '%s'\n", action_name(PrintWindow_action),
-		xcommand);
-	print_window_done(system(xcommand));
-	XtFree(xcommand);
-	return;
-    }
-
-    /* Pop up the dialog. */
-    if (print_window_shell == NULL) {
-	print_window_shell = create_form_popup("printWindow",
-		print_window_callback, NULL, FORM_AS_IS);
-    }
-    XtVaSetValues(XtNameToWidget(print_window_shell, ObjDialog),
-	XtNvalue, command,
-	NULL);
-    popup_popup(print_window_shell, XtGrabExclusive);
-}
-
-/* Callback for menu Print Window option. */
-void
-print_window_option(Widget w, XtPointer client_data _is_unused,
-    XtPointer call_data _is_unused)
-{
-	Cardinal zero = 0;
-
-	PrintWindow_action(w, NULL, NULL, &zero);
-}
-#endif /*]*/
