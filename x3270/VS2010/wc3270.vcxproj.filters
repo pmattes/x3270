@@ -89,6 +89,9 @@
     <ClCompile Include="..\wc3270-3.3\nvt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\wc3270-3.3\nvt_gui.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\wc3270-3.3\print.c">
       <Filter>Source Files</Filter>
     </ClCompile>

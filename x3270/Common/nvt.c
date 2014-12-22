@@ -32,10 +32,6 @@
 
 #include "globals.h"
 
-#if defined(X3270_DISPLAY) /*[*/
-#include <X11/Shell.h>
-#endif /*]*/
-
 #include "appres.h"
 #include "ctlr.h"
 #include "3270ds.h"
@@ -46,6 +42,7 @@
 #include "ctlrc.h"
 #include "hostc.h"
 #include "macrosc.h"
+#include "nvt_guic.h"
 #include "screenc.h"
 #include "scrollc.h"
 #include "tablesc.h"
@@ -1627,42 +1624,9 @@ xterm_text(int ig1 _is_unused, int ig2 _is_unused)
 static enum state
 xterm_text_do(int ig1 _is_unused, int ig2 _is_unused)
 {
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
-	text[tx] = '\0';
-#endif /*]*/
-
-#if defined(X3270_DISPLAY) /*[*/
-	switch (n[0]) {
-	    case 0:	/* icon name and window title */
-		XtVaSetValues(toplevel, XtNiconName, text, NULL);
-		XtVaSetValues(toplevel, XtNtitle, text, NULL);
-		break;
-	    case 1:	/* icon name */
-		XtVaSetValues(toplevel, XtNiconName, text, NULL);
-		break;
-	    case 2:	/* window_title */
-		XtVaSetValues(toplevel, XtNtitle, text, NULL);
-		break;
-	    case 50:	/* font */
-		screen_newfont(text, False, False);
-		break;
-	    default:
-		break;
-	}
-#endif /*]*/
-
-#if defined(WC3270) /*[*/
-	switch (n[0]) {
-	    case 0:	/* icon name and window title */
-	    case 2:	/* window_title */
-		screen_title(text);
-		break;
-	    default:
-		break;
-	}
-#endif /*]*/
-
-	return DATA;
+    text[tx] = '\0';
+    xterm_text_gui(n[0], text);
+    return DATA;
 }
 
 static enum state

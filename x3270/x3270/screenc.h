@@ -101,7 +101,8 @@ extern void screen_m3279(Boolean m3279);
 extern Boolean screen_new_display_charsets(const char *display_charsets,
     const char *csnames);
 extern void screen_newcharset(char *csname);
-extern void screen_newfont(char *fontname, Boolean do_popup, Boolean is_cs);
+extern void screen_newfont(const char *fontname, Boolean do_popup,
+	Boolean is_cs);
 extern void screen_newscheme(char *s);
 extern Boolean screen_obscured(void);
 extern void screen_preinit(void);

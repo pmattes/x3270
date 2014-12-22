@@ -138,6 +138,7 @@
     <ClCompile Include="..\wc3270-3.3\macros.c" />
     <ClCompile Include="..\wc3270-3.3\menubar.c" />
     <ClCompile Include="..\wc3270-3.3\nvt.c" />
+    <ClCompile Include="..\wc3270-3.3\nvt_gui.c" />
     <ClCompile Include="..\wc3270-3.3\print.c" />
     <ClCompile Include="..\wc3270-3.3\printer.c" />
     <ClCompile Include="..\wc3270-3.3\proxy.c" />

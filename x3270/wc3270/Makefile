@@ -63,21 +63,21 @@ SRCS = XtGlue.c actions.c apl.c asprintf.c bind-opt.c c3270.c charset.c \
 	ctlr.c fallbacks.c favicon.c fprint_screen.c ft.c ft_cut.c ft_dft.c \
 	ft_gui.c gdi_print.c glue.c help.c host.c httpd-core.c httpd-io.c \
 	httpd-nodes.c icmd.c idle.c keymap.c keypad.c kybd.c macros.c \
-	menubar.c nvt.c print.c printer.c proxy.c readres.c relink.c \
-	resolver.c resources.c rpq.c screen.c scroll.c see.c select.c sf.c \
-	shortcut.c snprintf.c ssl_dll.c tables.c telnet.c toggles.c \
-	trace_ds.c unicode.c unicode_dbcs.c utf8.c util.c varbuf.c w3misc.c \
-	windirs.c winprint.c winvers.c xio.c
+	menubar.c nvt.c nvt_gui.c print.c printer.c proxy.c readres.c \
+	relink.c resolver.c resources.c rpq.c screen.c scroll.c see.c \
+	select.c sf.c shortcut.c snprintf.c ssl_dll.c tables.c telnet.c \
+	toggles.c trace_ds.c unicode.c unicode_dbcs.c utf8.c util.c varbuf.c \
+	w3misc.c windirs.c winprint.c winvers.c xio.c
 
 VOBJS = XtGlue.o actions.o apl.o asprintf.o bind-opt.o c3270.o charset.o \
 	ctlr.o fallbacks.o favicon.o fprint_screen.o ft.o ft_cut.o ft_dft.o \
 	ft_gui.o gdi_print.o glue.o help.o host.o httpd-core.o httpd-io.o \
 	httpd-nodes.o icmd.o idle.o keymap.o keypad.o kybd.o macros.o \
-	menubar.o nvt.o print.o printer.o proxy.o readres.o relink.o \
-	resolver.o resources.o rpq.o screen.o scroll.o see.o select.o sf.o \
-	shortcut.o snprintf.o ssl_dll.o tables.o telnet.o toggles.o \
-	trace_ds.o unicode.o unicode_dbcs.o utf8.o util.o varbuf.o w3misc.o \
-	wc3270res.o windirs.o winprint.o winvers.o xio.o
+	menubar.o nvt.o nvt_gui.o print.o printer.o proxy.o readres.o \
+	relink.o resolver.o resources.o rpq.o screen.o scroll.o see.o \
+	select.o sf.o shortcut.o snprintf.o ssl_dll.o tables.o telnet.o \
+	toggles.o trace_ds.o unicode.o unicode_dbcs.o utf8.o util.o varbuf.o \
+	w3misc.o wc3270res.o windirs.o winprint.o winvers.o xio.o
 
 OBJECTS = $(VOBJS) version.o
 WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o winvers.o windirs.o \

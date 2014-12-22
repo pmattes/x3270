@@ -3870,7 +3870,7 @@ screen_new_display_charsets(const char *display_charsets, const char *csnames)
 }
 
 void
-screen_newfont(char *fontnames, Boolean do_popup, Boolean is_cs)
+screen_newfont(const char *fontnames, Boolean do_popup, Boolean is_cs)
 {
 	char *old_font;
 	char *lff;

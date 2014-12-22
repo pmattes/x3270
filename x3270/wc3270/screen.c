@@ -2842,7 +2842,7 @@ Paste_action(Widget w _is_unused, XEvent *event, String *params,
 
 /* Set the window title. */
 void
-screen_title(char *text)
+screen_title(const char *text)
 {
 	(void) SetConsoleTitle(text);
 }
