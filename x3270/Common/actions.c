@@ -44,7 +44,9 @@
 #include "macrosc.h"
 #include "popupsc.h"
 #include "printc.h"
-#include "print_windowc.h"
+#if defined(X3270_DISPLAY) /*[*/
+# include "print_windowc.h"
+#endif /*]*/
 #include "resources.h"
 #include "scrollc.h"
 #include "selectc.h"

@@ -41,11 +41,6 @@
 
 #include <errno.h>
 
-#if defined(X3270_DISPLAY) /*[*/
-# include <X11/StringDefs.h>
-# include <X11/Xaw/Dialog.h>
-#endif /*]*/
-
 #include "objects.h"
 #include "resources.h"
 
@@ -54,9 +49,7 @@
 #include "fprint_screenc.h"
 #include "popupsc.h"
 #include "printc.h"
-#if defined(X3270_DISPLAY) /*[*/
-# include "stmenuc.h"
-#endif /*]*/
+#include "print_guic.h"
 #include "trace_dsc.h"
 #include "unicodec.h"
 #include "utf8c.h"
@@ -85,19 +78,19 @@
 static void
 print_text_done(FILE *f)
 {
-	int status;
+    int status;
 
-	status = pclose(f);
-	if (status) {
-		popup_an_error("Print program exited with status %d.",
-		    (status & 0xff00) > 8);
-	} else {
+    status = pclose(f);
+    if (status) {
+	popup_an_error("Print program exited with status %d.",
+		(status & 0xff00) > 8);
+    } else {
 # if defined(X3270_INTERACTIVE) /*[*/
-		if (appres.do_confirms)
-			popup_an_info("Screen image printed.");
-# endif /*]*/
+	if (appres.do_confirms) {
+	    popup_an_info("Screen image printed.");
 	}
-
+# endif /*]*/
+    }
 }
 #endif /*]*/
 
@@ -165,278 +158,252 @@ void
 PrintText_action(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
-	Cardinal i;
-	char *name = NULL;
-#if defined(X3270_DISPLAY) /*[*/
-	Boolean secure = appres.secure;
-#endif /*]*/
-	ptype_t ptype = P_TEXT;
-	Boolean use_file = False;
-	Boolean use_string = False;
-	char *temp_name = NULL;
-	unsigned opts = FPS_EVEN_IF_EMPTY;
-	char *caption = NULL;
+    Cardinal i;
+    char *name = NULL;
+    Boolean secure = appres.secure;
+    ptype_t ptype = P_TEXT;
+    Boolean use_file = False;
+    Boolean use_string = False;
+    char *temp_name = NULL;
+    unsigned opts = FPS_EVEN_IF_EMPTY;
+    char *caption = NULL;
+    FILE *f;
+    int fd = -1;
 
-	action_debug(PrintText_action, event, params, num_params);
+    action_debug(PrintText_action, event, params, num_params);
 
-	/*
-	 * Pick off optional arguments:
-	 *  file     directs the output to a file instead of a command;
-	 *  	      must be the last keyword
-	 *  html     generates HTML output instead of ASCII text (and implies
-	 *            'file')
-	 *  rtf      generates RTF output instead of ASCII text (and implies
-	 *            'file')
-	 *  gdi      prints to a GDI printer (wc3270 only)
-	 *  wordpad  prints via WordPad (wc3270 only)
-	 *  modi     print modified fields in italics
-	 *  caption "text"
-	 *           Adds caption text above the screen
-	 *           %T% is replaced by a timestamp
-	 *  secure   disables the pop-up dialog, if this action is invoked from
-	 *            a keymap
-	 *  command  directs the output to a command (this is the default, but
-	 *            allows the command to be one of the other keywords);
-	 *  	      must be the last keyword
-	 *  string   returns the data as a string, allowed only from scripts
-	 */
-	for (i = 0; i < *num_params; i++) {
-		if (!strcasecmp(params[i], "file")) {
-			use_file = True;
-			i++;
-			break;
-		} else if (!strcasecmp(params[i], "html")) {
-			ptype = P_HTML;
-			use_file = True;
-		} else if (!strcasecmp(params[i], "rtf")) {
-			ptype = P_RTF;
-			use_file = True;
-		}
+    /*
+     * Pick off optional arguments:
+     *  file     directs the output to a file instead of a command;
+     *  	      must be the last keyword
+     *  html     generates HTML output instead of ASCII text (and implies
+     *            'file')
+     *  rtf      generates RTF output instead of ASCII text (and implies
+     *            'file')
+     *  gdi      prints to a GDI printer (wc3270 only)
+     *  wordpad  prints via WordPad (wc3270 only)
+     *  modi     print modified fields in italics
+     *  caption "text"
+     *           Adds caption text above the screen
+     *           %T% is replaced by a timestamp
+     *  secure   disables the pop-up dialog, if this action is invoked from
+     *            a keymap
+     *  command  directs the output to a command (this is the default, but
+     *            allows the command to be one of the other keywords);
+     *  	      must be the last keyword
+     *  string   returns the data as a string, allowed only from scripts
+     */
+    for (i = 0; i < *num_params; i++) {
+	if (!strcasecmp(params[i], "file")) {
+	    use_file = True;
+	    i++;
+	    break;
+	} else if (!strcasecmp(params[i], "html")) {
+	    ptype = P_HTML;
+	    use_file = True;
+	} else if (!strcasecmp(params[i], "rtf")) {
+	    ptype = P_RTF;
+	    use_file = True;
+	}
 #if defined(WC3270) /*[*/
-		else if (!strcasecmp(params[i], "gdi")) {
-			ptype = P_GDI;
-		} else if (!strcasecmp(params[i], "wordpad")) {
-			ptype = P_RTF;
-		}
-#endif /*]*/
-		else if (!strcasecmp(params[i], "secure")) {
-#if defined(X3270_DISPLAY) /*[*/
-			secure = True;
-#endif /*]*/
-		} else if (!strcasecmp(params[i], "command")) {
-			if ((ptype != P_TEXT) || use_file) {
-				popup_an_error("%s: contradictory options",
-				    action_name(PrintText_action));
-				return;
-			}
-			i++;
-			break;
-		} else if (!strcasecmp(params[i], "string")) {
-			if (ia_cause != IA_SCRIPT) {
-				popup_an_error("%s(string) can only be used "
-						"from a script",
-				    action_name(PrintText_action));
-				return;
-			}
-			use_string = True;
-			use_file = True;
-		} else if (!strcasecmp(params[i], "modi")) {
-		    	opts |= FPS_MODIFIED_ITALIC;
-		} else if (!strcasecmp(params[i], "caption")) {
-		    	if (i == *num_params - 1) {
-			    	popup_an_error("%s: mising caption parameter",
-					action_name(PrintText_action));
-				return;
-			}
-			caption = params[++i];
-		} else {
-			break;
-		}
+	else if (!strcasecmp(params[i], "gdi")) {
+	    ptype = P_GDI;
+	} else if (!strcasecmp(params[i], "wordpad")) {
+	    ptype = P_RTF;
 	}
-	switch (*num_params - i) {
-	case 0:
-		/* Use the default. */
-		if (!use_file) {
-#if !defined(_WIN32) /*[*/
-			name = get_resource(ResPrintTextCommand);
-#else /*][*/
-			name = get_resource(ResPrinterName); /* XXX */
 #endif /*]*/
-		}
-		break;
-	case 1:
-		if (use_string) {
-			popup_an_error("%s: extra arguments or invalid option(s)",
-			    action_name(PrintText_action));
-			return;
-		}
-		name = params[i];
-		break;
-	default:
-		popup_an_error("%s: extra arguments or invalid option(s)",
-		    action_name(PrintText_action));
+	else if (!strcasecmp(params[i], "secure")) {
+	    secure = True;
+	} else if (!strcasecmp(params[i], "command")) {
+	    if ((ptype != P_TEXT) || use_file) {
+		popup_an_error("%s: contradictory options",
+			action_name(PrintText_action));
 		return;
-	}
-
-#if defined(_WIN32) /*[*/
-	/* On Windows, use GDI as the default. */
-	if (!use_string && !use_file && ptype == P_TEXT) {
-		ptype = P_GDI;
-	}
-#endif /*]*/
-
-	if (name != NULL && name[0] == '@') {
-		/*
-		 * Starting the PrintTextCommand resource value with '@'
-		 * suppresses the pop-up dialog, as does setting the 'secure'
-		 * resource.
-		 */
-#if defined(X3270_DISPLAY) /*[*/
-		secure = True;
-#endif /*]*/
-		name++;
-	}
-	if (!use_file && (name == NULL || !*name)) {
-#if !defined(_WIN32) /*[*/
-		name = "lpr";
-#else /*][*/
-		name = NULL;
-#endif /*]*/
-	}
-
-#if defined(X3270_DISPLAY) /*[*/
-	if (secure ||
-		ia_cause == IA_COMMAND ||
-		ia_cause == IA_MACRO ||
-		ia_cause == IA_SCRIPT)
-#endif /*]*/
-	{
-		FILE *f;
-		int fd = -1;
-
-		/* Invoked from somewhere other than a keymap. */
-		if (use_file) {
-			if (use_string) {
-#if defined(_WIN32) /*[*/
-				fd = win_mkstemp(&temp_name, ptype);
-#else /*][*/
-				temp_name = NewString("/tmp/x3hXXXXXX");
-				fd = mkstemp(temp_name);
-#endif /*]*/
-				if (fd < 0) {
-					popup_an_errno(errno, "mkstemp");
-					return;
-				}
-				f = fdopen(fd, "w+");
-			} else {
-				if (name == NULL || !*name) {
-					popup_an_error("%s: missing filename",
-						action_name(PrintText_action));
-					return;
-				}
-				f = fopen(name, "a");
-			}
-		} else {
-#if !defined(_WIN32) /*[*/
-			f = popen(name, "w");
-#else /*][*/
-			fd = win_mkstemp(&temp_name, ptype);
-			if (fd < 0) {
-				popup_an_errno(errno, "mkstemp");
-				return;
-			}
-			if (ptype == P_GDI) {
-				f = fdopen(fd, "wb+");
-			} else {
-				f = fdopen(fd, "w+");
-			}
-#endif /*]*/
-		}
-		if (f == NULL) {
-			popup_an_errno(errno, "%s: %s",
-					action_name(PrintText_action),
-					name);
-			if (fd >= 0) {
-				(void) close(fd);
-			}
-			if (temp_name) {
-				unlink(temp_name);
-				Free(temp_name);
-			}
-			return;
-		}
-		if (caption == NULL) {
-		    caption = default_caption();
-		}
-		switch (fprint_screen(f, ptype, opts, caption, name)) {
-		case FPS_STATUS_SUCCESS:
-		case FPS_STATUS_SUCCESS_WRITTEN:
-			break;
-		case FPS_STATUS_ERROR:
-			popup_an_error("Screen print failed.");
-			/* fall through */
-		case FPS_STATUS_CANCEL:
-			fclose(f);
-			if (temp_name) {
-				unlink(temp_name);
-				Free(temp_name);
-			}
-			return;
-		}
-		if (use_string) {
-			char buf[8192];
-
-			rewind(f);
-			while (fgets(buf, sizeof(buf), f) != NULL)
-				action_output("%s", buf);
-		}
-		if (use_file) {
-			fclose(f);
-		} else {
-#if !defined(_WIN32) /*[*/
-			print_text_done(f);
-#else /*][*/
-			fclose(f);
-			if (ptype == P_RTF) {
-# if defined(S3270) /*[*/
-				/*
-				 * Run WordPad to print the file, synchronusly.
-				 */
-				start_wordpad_sync("PrintText", temp_name,
-					name);
-# else /*][*/
-				/*
-				 * Run WordPad to print the file,
-				 * asynchronusly.
-				 */
-				start_wordpad_async("PrintText", temp_name,
-					name);
-# endif /*]*/
-			} else if (ptype == P_GDI) {
-				/* All done with the temp file. */
-				unlink(temp_name);
-			}
-# if !defined(S3270) /*[*/
-			if (appres.do_confirms)
-				popup_an_info("Screen image printing.\n");
-# endif /*]*/
-#endif /*]*/
-		}
-#if !defined(WC3270) /*[*/
-		if (temp_name) {
-		    	unlink(temp_name);
-			Free(temp_name);
-		}
-#endif /*]*/
+	    }
+	    i++;
+	    break;
+	} else if (!strcasecmp(params[i], "string")) {
+	    if (ia_cause != IA_SCRIPT) {
+		popup_an_error("%s(string) can only be used from a script",
+			action_name(PrintText_action));
 		return;
-	}
-
-#if defined(X3270_DISPLAY) /*[*/
-	/* Invoked from a keymap -- pop up the confirmation dialog. */
-	if (use_file) {
-		stmenu_popup(STMP_TEXT);
+	    }
+	    use_string = True;
+	    use_file = True;
+	} else if (!strcasecmp(params[i], "modi")) {
+	    opts |= FPS_MODIFIED_ITALIC;
+	} else if (!strcasecmp(params[i], "caption")) {
+	    if (i == *num_params - 1) {
+		popup_an_error("%s: mising caption parameter",
+			action_name(PrintText_action));
+		return;
+	    }
+	    caption = params[++i];
 	} else {
-		stmenu_popup(STMP_PRINTER);
+	    break;
+	}
+    }
+
+    switch (*num_params - i) {
+    case 0:
+	/* Use the default. */
+	if (!use_file) {
+#if !defined(_WIN32) /*[*/
+	    name = get_resource(ResPrintTextCommand);
+#else /*][*/
+	    name = get_resource(ResPrinterName); /* XXX */
+#endif /*]*/
+	}
+	break;
+    case 1:
+	if (use_string) {
+	    popup_an_error("%s: extra arguments or invalid option(s)",
+		    action_name(PrintText_action));
+	    return;
+	}
+	name = params[i];
+	break;
+    default:
+	popup_an_error("%s: extra arguments or invalid option(s)",
+	    action_name(PrintText_action));
+	return;
+    }
+
+#if defined(_WIN32) /*[*/
+    /* On Windows, use GDI as the default. */
+    if (!use_string && !use_file && ptype == P_TEXT) {
+	ptype = P_GDI;
+    }
+#endif /*]*/
+
+    if (name != NULL && name[0] == '@') {
+	/*
+	 * Starting the PrintTextCommand resource value with '@'
+	 * suppresses the pop-up dialog, as does setting the 'secure'
+	 * resource.
+	 */
+	secure = True;
+	name++;
+    }
+    if (!use_file && (name == NULL || !*name)) {
+#if !defined(_WIN32) /*[*/
+	name = "lpr";
+#else /*][*/
+	name = NULL;
+#endif /*]*/
+    }
+
+    /* See if the GUI wants to handle it. */
+    if (!secure && print_text_gui(use_file)) {
+	return;
+    }
+
+    /* Do the real work. */
+    if (use_file) {
+	if (use_string) {
+#if defined(_WIN32) /*[*/
+	    fd = win_mkstemp(&temp_name, ptype);
+#else /*][*/
+	    temp_name = NewString("/tmp/x3hXXXXXX");
+	    fd = mkstemp(temp_name);
+#endif /*]*/
+	    if (fd < 0) {
+		popup_an_errno(errno, "mkstemp");
+		return;
+	    }
+	    f = fdopen(fd, "w+");
+	} else {
+	    if (name == NULL || !*name) {
+		popup_an_error("%s: missing filename",
+			action_name(PrintText_action));
+		return;
+	    }
+	    f = fopen(name, "a");
+	}
+    } else {
+#if !defined(_WIN32) /*[*/
+	f = popen(name, "w");
+#else /*][*/
+	fd = win_mkstemp(&temp_name, ptype);
+	if (fd < 0) {
+	    popup_an_errno(errno, "mkstemp");
+	    return;
+	}
+	if (ptype == P_GDI) {
+	    f = fdopen(fd, "wb+");
+	} else {
+	    f = fdopen(fd, "w+");
 	}
 #endif /*]*/
+    }
+    if (f == NULL) {
+	popup_an_errno(errno, "%s: %s", action_name(PrintText_action),
+		name);
+	if (fd >= 0) {
+	    (void) close(fd);
+	}
+	if (temp_name) {
+	    unlink(temp_name);
+	    Free(temp_name);
+	}
+	return;
+    }
+    if (caption == NULL) {
+	caption = default_caption();
+    }
+    switch (fprint_screen(f, ptype, opts, caption, name)) {
+    case FPS_STATUS_SUCCESS:
+    case FPS_STATUS_SUCCESS_WRITTEN:
+	break;
+    case FPS_STATUS_ERROR:
+	popup_an_error("Screen print failed.");
+	/* fall through */
+    case FPS_STATUS_CANCEL:
+	fclose(f);
+	if (temp_name) {
+	    unlink(temp_name);
+	    Free(temp_name);
+	}
+	return;
+    }
+    if (use_string) {
+	char buf[8192];
+
+	rewind(f);
+	while (fgets(buf, sizeof(buf), f) != NULL) {
+	    action_output("%s", buf);
+	}
+	if (use_file) {
+	    fclose(f);
+	} else {
+#if !defined(_WIN32) /*[*/
+	    print_text_done(f);
+#else /*][*/
+	    fclose(f);
+	    if (ptype == P_RTF) {
+# if defined(S3270) /*[*/
+		/* Run WordPad to print the file, synchronusly. */
+		start_wordpad_sync("PrintText", temp_name, name);
+# else /*][*/
+		/* Run WordPad to print the file, asynchronusly. */
+		start_wordpad_async("PrintText", temp_name, name);
+# endif /*]*/
+	    } else if (ptype == P_GDI) {
+		/* All done with the temp file. */
+		unlink(temp_name);
+	    }
+# if !defined(S3270) /*[*/
+	    if (appres.do_confirms) {
+		popup_an_info("Screen image printing.\n");
+	    }
+# endif /*]*/
+#endif /*]*/
+	}
+#if !defined(WC3270) /*[*/
+	if (temp_name) {
+	    unlink(temp_name);
+	    Free(temp_name);
+	}
+#endif /*]*/
+    }
 }
