@@ -41,10 +41,13 @@ SSLLIB = gdi32.lib user32.lib
 
 XCPPFLAGS = /D_WIN32 /DX3270_DBCS=1 /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /W3 /WX $(SSLDEF)
 CFLAGS = $(XCPPFLAGS) -I.
-VOBJS = charset.obj ctlr.obj pr3287.obj proxy.obj resolver.obj see.obj sf.obj \
-	snprintf.obj ssl_dll.obj tables.obj telnet.obj trace_ds.obj \
-	unicode.obj unicode_dbcs.obj utf8.obj w3misc.obj windirs.obj \
-	winvers.obj wpr3287.RES ws.obj xtable.obj
+
+VOBJS = asprintf.obj charset.obj ctlr.obj pr3287.obj proxy.obj resolver.obj \
+	see.obj sf.obj snprintf.obj ssl_dll.obj tables.obj telnet.obj \
+	trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj \
+	varbuf.obj w3misc.obj windirs.obj winvers.obj wpr3287.RES ws.obj \
+	xtable.obj
+
 OBJECTS = $(VOBJS) version.obj
 LIBS = $(SSLLIB) ws2_32.lib winspool.lib advapi32.lib shell32.lib
 
@@ -68,6 +71,8 @@ clean:
 clobber: clean
 	$(RM) wpr3287.exe
 
+asprintf.obj: asprintf.c
+	$(CC) $(CFLAGS) /c asprintf.c
 charset.obj: charset.c
 	$(CC) $(CFLAGS) /c charset.c
 ctlr.obj: ctlr.c
@@ -98,6 +103,10 @@ unicode_dbcs.obj: unicode_dbcs.c
 	$(CC) $(CFLAGS) /c unicode_dbcs.c
 utf8.obj: utf8.c
 	$(CC) $(CFLAGS) /c utf8.c
+util.obj: util.c
+	$(CC) $(CFLAGS) /c util.c
+varbuf.obj: varbuf.c
+	$(CC) $(CFLAGS) /c varbuf.c
 w3misc.obj: w3misc.c
 	$(CC) $(CFLAGS) /c w3misc.c
 windirs.obj: windirs.c

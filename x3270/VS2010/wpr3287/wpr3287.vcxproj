@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\wpr3287-3.3\asprintf.c" />
     <ClCompile Include="..\..\wpr3287-3.3\charset.c" />
     <ClCompile Include="..\..\wpr3287-3.3\ctlr.c" />
     <ClCompile Include="..\..\wpr3287-3.3\pr3287.c" />
@@ -26,6 +27,8 @@
     <ClCompile Include="..\..\wpr3287-3.3\unicode.c" />
     <ClCompile Include="..\..\wpr3287-3.3\unicode_dbcs.c" />
     <ClCompile Include="..\..\wpr3287-3.3\utf8.c" />
+    <ClCompile Include="..\..\wpr3287-3.3\util.c" />
+    <ClCompile Include="..\..\wpr3287-3.3\varbuf.c" />
     <ClCompile Include="..\..\wpr3287-3.3\version.c" />
     <ClCompile Include="..\..\wpr3287-3.3\w3misc.c" />
     <ClCompile Include="..\..\wpr3287-3.3\windirs.c" />

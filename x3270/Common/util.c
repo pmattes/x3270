@@ -38,7 +38,9 @@
 #endif /*]*/
 #include <fcntl.h>
 #include <errno.h>
-#include "resources.h"
+#if !defined(PR3287) /*[*/
+# include "resources.h"
+#endif /*]*/
 #if defined(WC3270) /*[*/
 # include "appres.h"
 # include "screenc.h"
@@ -94,6 +96,8 @@ xs_buffer(const char *fmt, ...)
     va_end(args);
     return r;
 }
+
+#if !defined(PR3287) /*[*/
 
 /**
  * printf-like interface to Warning().
@@ -1220,3 +1224,5 @@ llist_unlink(llist_t *element)
     element->next->prev = element->prev;
     element->prev->next = element->next;
 }
+
+#endif /*]*/

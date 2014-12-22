@@ -37,6 +37,7 @@
 # include <sys/time.h>			/* System time-related data types */
 #endif /*]*/
 #include <time.h>			/* C library time functions */
+#include <stdarg.h>			/* Varargs */
 #if defined(_WIN32) /*[*/
 # include "wincmn.h"			/* Common Windows definitions. */
 #endif /*]*/
@@ -69,3 +70,19 @@ typedef unsigned short ebc_t;
 #define CS_GE		0x04	/* cs flag for Graphic Escape */
 
 extern char *build;
+
+/*
+ *  * Compiler-specific #defines.
+ *   */
+
+/* '_is_unused' explicitly flags an unused parameter */
+#if defined(__GNUC__) /*[*/
+# define _is_unused __attribute__((__unused__))
+# define printflike(s,f) __attribute__ ((__format__ (__printf__, s, f)))
+#else /*][*/
+# define _is_unused /* nothing */
+# define printflike(s, f) /* nothing */
+#endif /*]*/
+#if 'A' > 'a' /*[*/
+# define EBCDIC_HOST 1
+#endif /*]*/

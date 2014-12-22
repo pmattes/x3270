@@ -38,4 +38,3 @@ extern const char *see_ebc(unsigned char ch);
 extern const char *see_efa(unsigned char efa, unsigned char value);
 extern const char *see_efa_only(unsigned char efa);
 extern const char *see_qcode(unsigned char id);
-extern const char *unknown(unsigned char value);

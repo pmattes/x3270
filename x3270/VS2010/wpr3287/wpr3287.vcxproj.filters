@@ -15,6 +15,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\wpr3287-3.3\asprintf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\wpr3287-3.3\charset.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -58,6 +61,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\wpr3287-3.3\utf8.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\wpr3287-3.3\util.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\wpr3287-3.3\varbuf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\wpr3287-3.3\w3misc.c">
