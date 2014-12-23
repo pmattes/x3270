@@ -96,13 +96,18 @@ snap_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
     print_window_done(system(print_window_command));
 }
 
-/* Expand the window print command. */
+/*
+ * Expand the window print command.
+ *
+ * The token used to substitute the window ID is "%d", which is a historical
+ * artifact of the original, amazingly insecure implementation.
+ */
 static char *
 expand_print_window_command(const char *command)
 {
     const char *s;
     varbuf_t r;
-#   define WINDOW	"%WINDOW%"
+#   define WINDOW	"%d"
 #   define WINDOW_SIZE	(sizeof(WINDOW) - 1)
 
     vb_init(&r);

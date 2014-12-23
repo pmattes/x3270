@@ -2299,11 +2299,11 @@ desc
 name printWindowCommand
 applies x
 type s
-default xwd -id %WINDOW% | xpr | lpr
+default xwd -id %d | xpr | lpr
 desc
     The shell command used by the <b>PrintWindow</b> action.
     The X11 window identifier of the main x3270 window is substituted for
-    any <b>%WINDOW%</b> in the command.
+    any <b>%d</b> in the command.
     If the first character of the command is '<b>@</b>', the usual pop-up
     windows before and after the window is printed will not appear.
 .
