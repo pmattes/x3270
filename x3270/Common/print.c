@@ -434,7 +434,7 @@ expand_print_window_command(const char *command)
     const char *s;
     char *xcommand;
     char *xs;
-#   define WINDOW	"%WINDOW%"
+#   define WINDOW	"%d"
 #   define WINDOW_SIZE	(sizeof(WINDOW) - 1)
 
     /* Pre-expand the Window ID so we know how long it is. */
@@ -442,7 +442,7 @@ expand_print_window_command(const char *command)
 
     /*
      * Figure out how long the translated command will be.
-     * %WINDOW% becomes the window ID.
+     * %d becomes the window ID.
      */
     malloc_len = strlen(command);
     s = command;
