@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2013, Paul Mattes.
+dnl Copyright (c) 2000-2014, Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -394,10 +394,13 @@ XX_FB(ContinueScript).
 XX_TP(XX_FB(PrintText)([XX_FB(command),]XX_FI(filter))))
 Pipes an ASCII representation of the current screen image through the named
 XX_FI(filter), e.g., XX_FB(lpr).
-XX_TP(XX_FB(PrintText)([XX_FB(html),],XX_FB(file),XX_FI(filename))))
+XX_TP(XX_FB(PrintText)([XX_FB(html),][XX_FB(append),][XX_FB(replace),]XX_FB(file),XX_FI(filename))))
 Saves the current screen contents in a file.
 With the XX_FB(html) option, saves it as HTML, otherwise saves it as plain
 ASCII.
+The XX_FB(append) option (the default) causes the data to be appended to the
+file if it already exists. The XX_FB(replace) option causes the file to be
+overwritten instead.
 XX_TP(XX_FB(PrintText)(XX_FB(`html,string')))
 Returns the current screen contents as HTML.
 XX_TP(XX_FB(Query)(XX_FI(keyword)))

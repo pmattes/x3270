@@ -118,6 +118,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	ptype_t ptype = P_TEXT;
 	Boolean use_file = False;
 	Boolean use_string = False;
+	Boolean replace = False;
 	char *temp_name = NULL;
 	unsigned opts = FPS_EVEN_IF_EMPTY;
 	char *caption = NULL;
@@ -133,6 +134,8 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	 *  rtf      generates RTF output instead of ASCII text (and implies
 	 *            'file')
 	 *  gdi      prints to a GDI printer (wc3270 only)
+	 *  replace  replace the file
+	 *  append   append to the file, if it exists (default)
 	 *  modi     print modified fields in italics
 	 *  caption "text"
 	 *           Adds caption text above the screen
@@ -155,6 +158,10 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 		} else if (!strcasecmp(params[i], "rtf")) {
 			ptype = P_RTF;
 			use_file = True;
+		} else if (!strcasecmp(params[i], "replace")) {
+			replace = True;
+		} else if (!strcasecmp(params[i], "append")) {
+			replace = False;
 		}
 #if defined(WC3270) /*[*/
 		else if (!strcasecmp(params[i], "gdi")) {
@@ -276,7 +283,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 						action_name(PrintText_action));
 					return;
 				}
-				f = fopen(name, "a");
+				f = fopen(name, replace? "w": "a");
 			}
 		} else {
 #if !defined(_WIN32) /*[*/
