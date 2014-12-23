@@ -36,8 +36,7 @@
 
 #include "varbufc.h"
 
-#define RA_INC  1024		/* increment for response allocations */
-#define ROUND_UP(n, incr) ((((n) + ((incr - 1))) / (incr)) * (incr))
+#define RA_BASE  16	/* initial allocation size */
 
 /**
  * Initialize a buffer.
@@ -57,7 +56,13 @@ static void
 vb_expand(varbuf_t *r, size_t len)
 {
     if (r->len + len > r->alloc_len) {
-	r->alloc_len = ROUND_UP(r->len + len, RA_INC);
+	if (r->alloc_len == 0) {
+	    r->alloc_len = RA_BASE;
+	}
+	/* Yes, there are cleverer ways to find the nearest power of 2. */
+	while (r->len + len > r->alloc_len) {
+	    r->alloc_len *= 2;
+	}
 	r->buf = Realloc(r->buf, r->alloc_len);
     }
 }
