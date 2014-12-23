@@ -30,6 +30,7 @@
     <ClCompile Include="..\..\ws3270-3.3\httpd-nodes.c" />
     <ClCompile Include="..\..\ws3270-3.3\idle.c" />
     <ClCompile Include="..\..\ws3270-3.3\kybd.c" />
+    <ClCompile Include="..\..\ws3270-3.3\linemode.c" />
     <ClCompile Include="..\..\ws3270-3.3\macros.c" />
     <ClCompile Include="..\..\ws3270-3.3\ansi.c" />
     <ClCompile Include="..\..\ws3270-3.3\print.c" />

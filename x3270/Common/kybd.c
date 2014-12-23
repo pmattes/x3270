@@ -66,6 +66,7 @@
 #include "keymapc.h"
 #include "keypadc.h"
 #include "kybdc.h"
+#include "linemodec.h"
 #include "macrosc.h"
 #include "nvtc.h"
 #include "popupsc.h"
@@ -1964,7 +1965,7 @@ BackSpace_action(Widget w _is_unused, XEvent *event, String *params,
 		return;
 	}
 	if (IN_NVT) {
-		net_send_erase();
+		linemode_send_erase();
 		return;
 	}
 	if (reverse)
@@ -2051,7 +2052,7 @@ Erase_action(Widget w _is_unused, XEvent *event, String *params,
 		return;
 	}
 	if (IN_NVT) {
-		net_send_erase();
+		linemode_send_erase();
 		return;
 	}
 	if (reverse)
@@ -2823,7 +2824,7 @@ DeleteWord_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *
 		return;
 	}
 	if (IN_NVT) {
-		net_send_werase();
+		linemode_send_werase();
 		return;
 	}
 	if (!formatted)
@@ -2889,7 +2890,7 @@ DeleteField_action(Widget w _is_unused, XEvent *event, String *params, Cardinal 
 		return;
 	}
 	if (IN_NVT) {
-		net_send_kill();
+		linemode_send_kill();
 		return;
 	}
 	if (!formatted)

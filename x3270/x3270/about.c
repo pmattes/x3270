@@ -47,6 +47,7 @@
 #include "aboutc.h"
 #include "charsetc.h"
 #include "keymapc.h"
+#include "linemodec.h"
 #include "popupsc.h"
 #include "screenc.h"
 #include "telnetc.h"
@@ -666,7 +667,7 @@ popup_about_status(void)
 		MAKE_LABEL(fbuf, 4);
 
 		if (IN_NVT) {
-			struct ctl_char *c = net_linemode_chars();
+			struct ctl_char *c = linemode_chars();
 			int i;
 
 			MAKE_LABEL(get_message("specialCharacters"), 4);

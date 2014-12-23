@@ -73,6 +73,7 @@
 #include "ctlrc.h"
 #include "hostc.h"
 #include "kybdc.h"
+#include "linemodec.h"
 #include "macrosc.h"
 #include "nvtc.h"
 #include "popupsc.h"
@@ -160,21 +161,6 @@ static unsigned short e_xmit_seq; /* transmit sequence number */
 static int response_required;
 
 static int      nvt_data = 0;
-static unsigned char *lbuf = NULL;
-			/* line-mode input buffer */
-static unsigned char *lbptr;
-static int      lnext = 0;
-static int      backslashed = 0;
-static int      t_valid = 0;
-static char     vintr;
-static char     vquit;
-static char     verase;
-static char     vkill;
-static char     veof;
-static char     vwerase;
-static char     vrprnt;
-static char     vlnext;
-
 static int	tn3270e_negotiated = 0;
 static enum { E_UNBOUND, E_3270, E_NVT, E_SSCP } tn3270e_submode = E_UNBOUND;
 static int	tn3270e_bound = 0;
@@ -234,19 +220,6 @@ static void tn3270e_subneg_send(unsigned char, b8_t *);
 static void tn3270e_fdecode(const unsigned char *, int, b8_t *);
 static void tn3270e_ack(void);
 static void tn3270e_nak(enum pds);
-
-static void do_data(char c);
-static void do_intr(char c);
-static void do_quit(char c);
-static void do_cerase(char c);
-static void do_werase(char c);
-static void do_kill(char c);
-static void do_rprnt(char c);
-static void do_eof(char c);
-static void do_eol(char c);
-static void do_lnext(char c);
-static char parse_ctlchar(char *s);
-static void cooked_init(void);
 
 static const char *cmd(int c);
 static const char *opt(unsigned char c);
@@ -633,17 +606,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	if (netrbuf == NULL)
 		netrbuf = (unsigned char *)Malloc(BUFSZ);
 
-	if (!t_valid) {
-		vintr   = parse_ctlchar(appres.intr);
-		vquit   = parse_ctlchar(appres.quit);
-		verase  = parse_ctlchar(appres.erase);
-		vkill   = parse_ctlchar(appres.kill);
-		veof    = parse_ctlchar(appres.eof);
-		vwerase = parse_ctlchar(appres.werase);
-		vrprnt  = parse_ctlchar(appres.rprnt);
-		vlnext  = parse_ctlchar(appres.lnext);
-		t_valid = 1;
-	}
+	linemode_init();
 
 	*resolving = False;
 	*pending = False;
@@ -1307,8 +1270,7 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 			       MSG_PEEK)) <= 0)
 			ignore_ssl = True;
 		else
-			nr = SSL_read(ssl_con, (char *) netrbuf,
-				BUFSZ);
+			nr = SSL_read(ssl_con, (char *) netrbuf, BUFSZ);
 	} else
 #else /*][*/
 #endif /*]*/
@@ -1579,7 +1541,7 @@ telnet_fsm(unsigned char c)
 		}
 		if (IN_NEITHER) {	/* now can assume NVT mode */
 			if (linemode) {
-				cooked_init();
+				linemode_buf_init();
 			}
 			host_in3270(CONNECTED_NVT);
 			kybdlock_clr(KL_AWAITING_FIRST, "telnet_fsm");
@@ -2661,6 +2623,46 @@ net_exception(unsigned long fd _is_unused, ioid_t id _is_unused)
  *
  */
 
+/*
+ * net_cookedout
+ *      Send user data out in NVT mode, without cooked-mode processing.
+ */
+void
+net_cookedout(const char *buf, size_t len)
+{
+    if (toggled(TRACING)) {
+	size_t i;
+
+	vtrace(">");
+	for (i = 0; i < len; i++) {
+	    vtrace(" %s", ctl_see((int)*(buf+i)));
+	}
+	vtrace("\n");
+    }
+    net_rawout((unsigned const char *)buf, len);
+}
+
+/*
+ * net_cookout
+ *      Send output in NVT mode, including cooked-mode processing if
+ *      appropriate.
+ */
+void
+net_cookout(const char *buf, size_t len)
+{
+    if (!IN_NVT || (kybdlock & KL_AWAITING_FIRST)) {
+	return;
+    }
+
+    if (linemode) {
+	linemode_out(buf, len);
+    } else {
+	net_cookedout(buf, len);
+    }
+}
+
+
+
 
 /*
  * net_rawout
@@ -2783,290 +2785,6 @@ net_hexnvt_out(unsigned char *buf, int len)
 	Free(xbuf);
 }
 
-/*
- * net_cookedout
- *	Send user data out in NVT mode, without cooked-mode processing.
- */
-static void
-net_cookedout(const char *buf, int len)
-{
-	if (toggled(TRACING)) {
-		int i;
-
-		vtrace(">");
-		for (i = 0; i < len; i++)
-			vtrace(" %s", ctl_see((int) *(buf+i)));
-		vtrace("\n");
-	}
-	net_rawout((unsigned const char *) buf, len);
-}
-
-
-/*
- * net_cookout
- *	Send output in NVT mode, including cooked-mode processing if
- *	appropriate.
- */
-static void
-net_cookout(const char *buf, int len)
-{
-
-	if (!IN_NVT || (kybdlock & KL_AWAITING_FIRST)) {
-		return;
-	}
-
-	if (linemode) {
-		register int	i;
-		char	c;
-
-		for (i = 0; i < len; i++) {
-			c = buf[i];
-
-			/* Input conversions. */
-			if (!lnext && c == '\r' && appres.icrnl)
-				c = '\n';
-			else if (!lnext && c == '\n' && appres.inlcr)
-				c = '\r';
-
-			/* Backslashes. */
-			if (c == '\\' && !backslashed)
-				backslashed = 1;
-			else
-				backslashed = 0;
-
-			/* Control chars. */
-			if (c == '\n')
-				do_eol(c);
-			else if (c == vintr)
-				do_intr(c);
-			else if (c == vquit)
-				do_quit(c);
-			else if (c == verase)
-				do_cerase(c);
-			else if (c == vkill)
-				do_kill(c);
-			else if (c == vwerase)
-				do_werase(c);
-			else if (c == vrprnt)
-				do_rprnt(c);
-			else if (c == veof)
-				do_eof(c);
-			else if (c == vlnext)
-				do_lnext(c);
-			else if (c == 0x08 || c == 0x7f) /* Yes, a hack. */
-				do_cerase(c);
-			else
-				do_data(c);
-		}
-		return;
-	} else
-		net_cookedout(buf, len);
-}
-
-
-/*
- * Cooked mode input processing.
- */
-
-static void
-cooked_init(void)
-{
-	if (lbuf == NULL)
-		lbuf = (unsigned char *)Malloc(BUFSZ);
-	lbptr = lbuf;
-	lnext = 0;
-	backslashed = 0;
-}
-
-static void
-nvt_process_s(const char *data)
-{
-	while (*data)
-		nvt_process((unsigned int) *data++);
-}
-
-static void
-forward_data(void)
-{
-	net_cookedout((char *) lbuf, lbptr - lbuf);
-	cooked_init();
-}
-
-static void
-do_data(char c)
-{
-	if (lbptr+1 < lbuf + BUFSZ) {
-		*lbptr++ = c;
-		if (c == '\r')
-			*lbptr++ = '\0';
-		if (c == '\t')
-			nvt_process((unsigned int) c);
-		else
-			nvt_process_s(ctl_see((int) c));
-	} else
-		nvt_process_s("\007");
-	lnext = 0;
-	backslashed = 0;
-}
-
-static void
-do_intr(char c)
-{
-	if (lnext) {
-		do_data(c);
-		return;
-	}
-	nvt_process_s(ctl_see((int) c));
-	cooked_init();
-	net_interrupt();
-}
-
-static void
-do_quit(char c)
-{
-	if (lnext) {
-		do_data(c);
-		return;
-	}
-	nvt_process_s(ctl_see((int) c));
-	cooked_init();
-	net_break();
-}
-
-static void
-do_cerase(char c)
-{
-	int len;
-
-	if (backslashed) {
-		lbptr--;
-		nvt_process_s("\b");
-		do_data(c);
-		return;
-	}
-	if (lnext) {
-		do_data(c);
-		return;
-	}
-	if (lbptr > lbuf) {
-		len = strlen(ctl_see((int) *--lbptr));
-
-		while (len--)
-			nvt_process_s("\b \b");
-	}
-}
-
-static void
-do_werase(char c)
-{
-	int any = 0;
-	int len;
-
-	if (lnext) {
-		do_data(c);
-		return;
-	}
-	while (lbptr > lbuf) {
-		char ch;
-
-		ch = *--lbptr;
-
-		if (ch == ' ' || ch == '\t') {
-			if (any) {
-				++lbptr;
-				break;
-			}
-		} else
-			any = 1;
-		len = strlen(ctl_see((int) ch));
-
-		while (len--)
-			nvt_process_s("\b \b");
-	}
-}
-
-static void
-do_kill(char c)
-{
-	int i, len;
-
-	if (backslashed) {
-		lbptr--;
-		nvt_process_s("\b");
-		do_data(c);
-		return;
-	}
-	if (lnext) {
-		do_data(c);
-		return;
-	}
-	while (lbptr > lbuf) {
-		len = strlen(ctl_see((int) *--lbptr));
-
-		for (i = 0; i < len; i++)
-			nvt_process_s("\b \b");
-	}
-}
-
-static void
-do_rprnt(char c)
-{
-	unsigned char *p;
-
-	if (lnext) {
-		do_data(c);
-		return;
-	}
-	nvt_process_s(ctl_see((int) c));
-	nvt_process_s("\r\n");
-	for (p = lbuf; p < lbptr; p++)
-		nvt_process_s(ctl_see((int) *p));
-}
-
-static void
-do_eof(char c)
-{
-	if (backslashed) {
-		lbptr--;
-		nvt_process_s("\b");
-		do_data(c);
-		return;
-	}
-	if (lnext) {
-		do_data(c);
-		return;
-	}
-	do_data(c);
-	forward_data();
-}
-
-static void
-do_eol(char c)
-{
-	if (lnext) {
-		do_data(c);
-		return;
-	}
-	if (lbptr+2 >= lbuf + BUFSZ) {
-		nvt_process_s("\007");
-		return;
-	}
-	*lbptr++ = '\r';
-	*lbptr++ = '\n';
-	nvt_process_s("\r\n");
-	forward_data();
-}
-
-static void
-do_lnext(char c)
-{
-	if (lnext) {
-		do_data(c);
-		return;
-	}
-	lnext = 1;
-	nvt_process_s("^\b");
-}
 
 /*
  * check_in3270
@@ -3143,7 +2861,7 @@ check_in3270(void)
 		/* Reinitialize line mode. */
 		if ((new_cstate == CONNECTED_NVT && linemode) ||
 		    new_cstate == CONNECTED_E_NVT) {
-			cooked_init();
+			linemode_buf_init();
 		}
 
 		/* If we fell out of TN3270E, remove the state. */
@@ -3239,7 +2957,7 @@ check_linemode(Boolean init)
 			    linemode ? "line" : "character-at-a-time");
 		}
 		if (IN_NVT && linemode) {
-			cooked_init();
+			linemode_buf_init();
 		}
 	}
 }
@@ -3517,39 +3235,6 @@ net_sends(const char *s)
 
 
 /*
- * net_send_erase
- *	Sends the KILL character in NVT mode.
- */
-void
-net_send_erase(void)
-{
-	net_cookout(&verase, 1);
-}
-
-
-/*
- * net_send_kill
- *	Sends the KILL character in NVT mode.
- */
-void
-net_send_kill(void)
-{
-	net_cookout(&vkill, 1);
-}
-
-
-/*
- * net_send_werase
- *	Sends the WERASE character in NVT mode.
- */
-void
-net_send_werase(void)
-{
-	net_cookout(&vwerase, 1);
-}
-
-
-/*
  * External entry points to negotiate line or character mode.
  */
 void
@@ -3655,49 +3340,6 @@ net_abort(void)
 			break;
 		}
 	}
-}
-
-/*
- * parse_ctlchar
- *	Parse an stty control-character specification.
- *	A cheap, non-complaining implementation.
- */
-static char
-parse_ctlchar(char *s)
-{
-	if (!s || !*s)
-		return 0;
-	if ((int) strlen(s) > 1) {
-		if (*s != '^')
-			return 0;
-		else if (*(s+1) == '?')
-			return 0177;
-		else
-			return *(s+1) - '@';
-	} else
-		return *s;
-}
-
-/*
- * net_linemode_chars
- *	Report line-mode characters.
- */
-struct ctl_char *
-net_linemode_chars(void)
-{
-	static struct ctl_char c[9];
-
-	c[0].name = "intr";	(void) strcpy(c[0].value, ctl_see(vintr));
-	c[1].name = "quit";	(void) strcpy(c[1].value, ctl_see(vquit));
-	c[2].name = "erase";	(void) strcpy(c[2].value, ctl_see(verase));
-	c[3].name = "kill";	(void) strcpy(c[3].value, ctl_see(vkill));
-	c[4].name = "eof";	(void) strcpy(c[4].value, ctl_see(veof));
-	c[5].name = "werase";	(void) strcpy(c[5].value, ctl_see(vwerase));
-	c[6].name = "rprnt";	(void) strcpy(c[6].value, ctl_see(vrprnt));
-	c[7].name = "lnext";	(void) strcpy(c[7].value, ctl_see(vlnext));
-	c[8].name = 0;
-
-	return c;
 }
 
 /*

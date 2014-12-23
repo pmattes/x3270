@@ -35,12 +35,6 @@
 /* Output buffer. */
 extern unsigned char *obuf, *obptr;
 
-/* Spelled-out tty control character. */
-struct ctl_char {
-	const char *name;
-	char value[3];
-};
-
 extern int ns_brcvd;
 extern int ns_bsent;
 extern int ns_rrcvd;
@@ -60,7 +54,6 @@ extern void net_hexnvt_out(unsigned char *buf, int len);
 extern void net_input(unsigned long fd, ioid_t id);
 extern void net_interrupt(void);
 extern void net_linemode(void);
-extern struct ctl_char *net_linemode_chars(void);
 extern void net_output(void);
 extern const char *net_query_bind_plu_name(void);
 extern const char *net_query_connection_state(void);
@@ -69,9 +62,6 @@ extern const char *net_query_lu_name(void);
 extern const char *net_query_ssl(void);
 extern void net_sendc(char c);
 extern void net_sends(const char *s);
-extern void net_send_erase(void);
-extern void net_send_kill(void);
-extern void net_send_werase(void);
 extern Boolean net_snap_options(void);
 extern void space3270out(int n);
 extern const char *tn3270e_current_opts(void);
@@ -85,3 +75,7 @@ extern void trace_netdata(char direction, unsigned const char *buf, int len);
 extern void ssl_base_init(char *cl_hostname, Boolean *pending);
 #endif /*]*/
 extern int linemode;
+
+/* These are for linemode.c to call, not external users. */
+extern void net_cookedout(const char *buf, size_t len);
+extern void net_cookout(const char *buf, size_t len);

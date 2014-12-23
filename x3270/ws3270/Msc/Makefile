@@ -46,12 +46,12 @@ CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I.
 VOBJS = XtGlue.obj actions.obj apl.obj asprintf.obj bind-opt.obj charset.obj \
 	ctlr.obj fallbacks.obj favicon.obj fprint_screen.obj ft.obj \
 	ft_cut.obj ft_dft.obj glue.obj host.obj httpd-core.obj httpd-io.obj \
-	httpd-nodes.obj idle.obj kybd.obj macros.obj nvt.obj print.obj \
-	printer.obj proxy.obj readres.obj resolver.obj resources.obj rpq.obj \
-	see.obj sf.obj smain.obj snprintf.obj ssl_dll.obj tables.obj \
-	telnet.obj toggles.obj trace_ds.obj unicode.obj unicode_dbcs.obj \
-	utf8.obj util.obj varbuf.obj w3misc.obj windirs.obj winprint.obj \
-	winvers.obj ws3270.RES xio.obj
+	httpd-nodes.obj idle.obj kybd.obj linemode.obj macros.obj nvt.obj \
+	print.obj printer.obj proxy.obj readres.obj resolver.obj \
+	resources.obj rpq.obj see.obj sf.obj smain.obj snprintf.obj \
+	ssl_dll.obj tables.obj telnet.obj toggles.obj trace_ds.obj \
+	unicode.obj unicode_dbcs.obj utf8.obj util.obj varbuf.obj w3misc.obj \
+	windirs.obj winprint.obj winvers.obj ws3270.RES xio.obj
 
 OBJECTS = $(VOBJS) version.obj
 LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib shell32.lib
@@ -131,6 +131,8 @@ idle.obj: idle.c
 	$(CC) $(CFLAGS) /c idle.c
 kybd.obj: kybd.c
 	$(CC) $(CFLAGS) /c kybd.c
+linemode.obj: linemode.c
+	$(CC) $(CFLAGS) /c linemode.c
 macros.obj: macros.c
 	$(CC) $(CFLAGS) /c macros.c
 mkshort.obj: mkshort.c

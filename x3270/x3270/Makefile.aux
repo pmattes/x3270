@@ -39,8 +39,8 @@ SOURCES = Cme.c CmeBSB.c CmeLine.c CmplxMenu.c Husk.c about.c actions.c apl.c \
 	asprintf.c bind-opt.c charset.c child.c ctlr.c dialog.c display8.c \
 	favicon.c fprint_screen.c ft.c ft_cut.c ft_dft.c ft_gui.c host.c \
 	httpd-core.c httpd-io.c httpd-nodes.o idle.c idle_gui.c keymap.c \
-	keypad.c keysym2ucs.c kybd.c macros.c main.c menubar.c nvt.c \
-	nvt_gui.c popups.c print.c print_gui.c print_window.c printer.c \
+	keypad.c keysym2ucs.c kybd.c linemode.c macros.c main.c menubar.c \
+	nvt.c nvt_gui.c popups.c print.c print_gui.c print_window.c printer.c \
 	printer_gui.c proxy.c qcpp.c resolver.c resources.c rpq.c save.c \
 	screen.c scroll.c see.c select.c sf.c status.c stmenu.c strtok_r.c \
 	tables.c telnet.c toggles.c trace_ds.c unicode.c unicode_dbcs.c \
@@ -53,13 +53,13 @@ HEADERS = 3270ds.h Cme.h CmeBSB.h CmeBSBP.h CmeLine.h CmeLineP.h CmeP.h \
 	fprint_screenc.h ft_cut_ds.h ft_cutc.h ft_dft_ds.h ft_dftc.h \
 	ft_guic.h ft_private.h ftc.h globals.h hostc.h httpd-corec.h \
 	httpd-ioc.h httpd-nodesc.h idle_guic.h idlec.h keymapc.h keypadc.h \
-	keysym2ucs.h kybdc.h localdefs.h macrosc.h mainc.h menubarc.h \
-	nvt_guic.h nvtc.h objects.h popupsc.h print_guic.h print_windowc.h \
-	printc.h printer_guic.h printerc.h proxy.h proxyc.h resolverc.h \
-	resources.h resourcesc.h rpqc.h savec.h screen.h screenc.h scrollc.h \
-	seec.h selectc.h sfc.h statusc.h stmenuc.h tablesc.h telnetc.h \
-	tn3270e.h togglesc.h trace_dsc.h unicode_dbcsc.h unicodec.h utf8c.h \
-	utilc.h varbufc.h w3miscc.h xaa.c xaac.h xioc.h
+	keysym2ucs.h kybdc.h linemodec.h localdefs.h macrosc.h mainc.h \
+	menubarc.h nvt_guic.h nvtc.h objects.h popupsc.h print_guic.h \
+	print_windowc.h printc.h printer_guic.h printerc.h proxy.h proxyc.h \
+	resolverc.h resources.h resourcesc.h rpqc.h savec.h screen.h \
+	screenc.h scrollc.h seec.h selectc.h sfc.h statusc.h stmenuc.h \
+	tablesc.h telnetc.h tn3270e.h togglesc.h trace_dsc.h unicode_dbcsc.h \
+	unicodec.h utf8c.h utilc.h varbufc.h w3miscc.h xaa.c xaac.h xioc.h
 
 BITMAPS = arrow.bm diamond.bm dot.bm keypad.bm ky.bm locked.bm no_diamond.bm \
 	no_dot.bm null.bm unlocked.bm wait.bm x3270.bm

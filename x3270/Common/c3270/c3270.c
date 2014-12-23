@@ -62,6 +62,7 @@
 #include "idlec.h"
 #include "keymapc.h"
 #include "kybdc.h"
+#include "linemodec.h"
 #include "macrosc.h"
 #include "nvtc.h"
 #include "popupsc.h"
@@ -1135,7 +1136,7 @@ status_dump(void)
 				get_message("byte") : get_message("bytes"));
 
 		if (IN_NVT) {
-			struct ctl_char *c = net_linemode_chars();
+			struct ctl_char *c = linemode_chars();
 			int i;
 			char buf[128];
 			char *s = buf;
