@@ -931,8 +931,7 @@ free_unverified_reasons(void)
 		for (i = 0; unverified_reasons[i]; i++) {
 			Free(unverified_reasons[i]);
 		}
-		Free(unverified_reasons);
-		unverified_reasons = NULL;
+		Replace(unverified_reasons, NULL);
 	}
 	n_unverified_reasons = 0;
 }
@@ -1110,8 +1109,7 @@ net_connected(void)
 	if (passthru_host) {
 		char *buf;
 
-		buf = Malloc(strlen(hostname) + 32);
-		(void) sprintf(buf, "%s %d\r\n", hostname, current_port);
+		buf = xs_buffer("%s %d\r\n", hostname, current_port);
 		(void) send(sock, buf, strlen(buf), 0);
 		Free(buf);
 	}
@@ -2328,9 +2326,7 @@ process_bind(unsigned char *buf, int buflen)
 	int dest_ix = 0;
 
 	/* Save the raw image. */
-	if (bind_image != NULL)
-	    Free(bind_image);
-	bind_image = (unsigned char *)Malloc(buflen);
+	Replace(bind_image, (unsigned char *)Malloc(buflen));
 	memcpy(bind_image, buf, buflen);
 	bind_image_len = buflen;
 
@@ -3930,9 +3926,8 @@ passwd_cb(char *buf, int size, int rwflag _is_unused,
 			ssl_password_prompted = True;
 			return 0;
 		} else if (ssl_password != NULL) {
-		    	strcpy(buf, ssl_password);
-			Free(ssl_password);
-			ssl_password = NULL;
+			snprintf(buf, size, "%s", ssl_password);
+			Replace(ssl_password, NULL);
 			return strlen(buf);
 		} else {
 			popup_an_error("No OpenSSL private key password specified");
@@ -4813,15 +4808,14 @@ net_query_host(void)
 	static char *s = NULL;
 
 	if (CONNECTED) {
-		Free(s);
-
 #if defined(LOCAL_PROCESS) /*[*/
 		if (local_process) {
-			s = xs_buffer("process %s", hostname);
+			Replace(s, xs_buffer("process %s", hostname));
 		} else
 #endif /*]*/
 		{
-			s = xs_buffer("host %s %u", hostname, current_port);
+			Replace(s, xs_buffer("host %s %u", hostname,
+				    current_port));
 		}
 		return s;
 	} else
@@ -4925,8 +4919,7 @@ password_callback(Widget w _is_unused, XtPointer client_data,
 	 */
 	if (ssl_ctx != NULL && ssl_cl_hostname) {
 	    	(void) host_connect(ssl_cl_hostname);
-		Free(ssl_cl_hostname);
-		ssl_cl_hostname = NULL;
+		Replace(ssl_cl_hostname, NULL);
 	}
 }
 
@@ -4943,8 +4936,7 @@ password_popdown(Widget w _is_unused, XtPointer client_data _is_unused,
 		/* Try connecting to the command-line host. */
 		if (ssl_cl_hostname != NULL) {
 			(void) host_connect(ssl_cl_hostname);
-			Free(ssl_cl_hostname);
-			ssl_cl_hostname = NULL;
+			Replace(ssl_cl_hostname, NULL);
 		}
 	}
 }
@@ -4963,10 +4955,7 @@ popup_password(void)
 	XtVaSetValues(XtNameToWidget(password_shell, ObjDialog),
 		XtNvalue, "",
 		NULL);
-	if (ssl_password != NULL) {
-		Free(ssl_password);
-		ssl_password = NULL;
-	}
+	Replace(ssl_password, NULL);
 
 	popup_popup(password_shell, XtGrabExclusive);
 }
