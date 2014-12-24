@@ -35,31 +35,11 @@ all:
 
 # Development tools.
 
-SOURCES = Cme.c CmeBSB.c CmeLine.c CmplxMenu.c Husk.c about.c actions.c apl.c \
-	asprintf.c bind-opt.c charset.c child.c ctlr.c dialog.c display8.c \
-	favicon.c fprint_screen.c ft.c ft_cut.c ft_dft.c ft_gui.c host.c \
-	httpd-core.c httpd-io.c httpd-nodes.o idle.c idle_gui.c keymap.c \
-	keypad.c keysym2ucs.c kybd.c linemode.c macros.c main.c menubar.c \
-	nvt.c nvt_gui.c popups.c print.c print_gui.c print_window.c printer.c \
-	printer_gui.c proxy.c qcpp.c resolver.c resources.c rpq.c save.c \
-	screen.c scroll.c see.c select.c sf.c status.c stmenu.c strtok_r.c \
-	tables.c telnet.c toggles.c trace_ds.c unicode.c unicode_dbcs.c \
-	utf8.c util.c varbuf.c x3270if.c xaa.c xio.c
+include common_files.mk x3270_files.mk
 
-HEADERS = 3270ds.h Cme.h CmeBSB.h CmeBSBP.h CmeLine.h CmeLineP.h CmeP.h \
-	CmplxMenu.h CmplxMenuP.h Husk.h HuskP.h aboutc.h actionsc.h aplc.h \
-	appres.h arpa_telnet.h asprintfc.h bind-optc.h cg.h charsetc.h \
-	childc.h ctlr.h ctlrc.h dialogc.h display8c.h fallbacksc.h \
-	fprint_screenc.h ft_cut_ds.h ft_cutc.h ft_dft_ds.h ft_dftc.h \
-	ft_guic.h ft_private.h ftc.h globals.h hostc.h httpd-corec.h \
-	httpd-ioc.h httpd-nodesc.h idle_guic.h idlec.h keymapc.h keypadc.h \
-	keysym2ucs.h kybdc.h linemodec.h localdefs.h macrosc.h mainc.h \
-	menubarc.h nvt_guic.h nvtc.h objects.h popupsc.h print_guic.h \
-	print_windowc.h printc.h printer_guic.h printerc.h proxy.h proxyc.h \
-	resolverc.h resources.h resourcesc.h rpqc.h savec.h screen.h \
-	screenc.h scrollc.h seec.h selectc.h sfc.h statusc.h stmenuc.h \
-	tablesc.h telnetc.h tn3270e.h togglesc.h trace_dsc.h unicode_dbcsc.h \
-	unicodec.h utf8c.h utilc.h varbufc.h w3miscc.h xaa.c xaac.h xioc.h
+SOURCES = $(COMMON_SOURCES) $(HTTPD_SOURCES) $(X3270_SOURCES)
+
+HEADERS = $(COMMON_HEADERS) $(HTTPD_HEADERS) $(X3270_HEADERS)
 
 BITMAPS = arrow.bm diamond.bm dot.bm keypad.bm ky.bm locked.bm no_diamond.bm \
 	no_dot.bm null.bm unlocked.bm wait.bm x3270.bm
@@ -69,10 +49,10 @@ FONTS = 3270-12.bdf 3270-12b.bdf 3270-20.bdf 3270-20b.bdf 3270.bdf 3270b.bdf \
 	3270gt24.bdf 3270gt24b.bdf 3270gt32.bdf 3270gt32b.bdf 3270gt8.bdf \
 	3270h.bdf
 
-MISC = $(PRODUCT).man LICENSE README README.dbcs X3270.xad dryrun ibm_hosts \
-	ibm_hosts.man install-sh mkfb.c mkversion.sh qcpp-defs.sh version.txt \
-	x3270-icon2.xpm x3270-script.man x3270_glue.expect x3270hist.pl \
-	x3270if.man
+MISC = $(PRODUCT).man LICENSE README README.dbcs X3270.xad common_files.mk \
+	dryrun ibm_hosts ibm_hosts.man install-sh mkfb.c mkversion.sh \
+	qcpp-defs.sh version.txt x3270-icon2.xpm x3270-script.man \
+	x3270_files.mk x3270_glue.expect x3270hist.pl x3270if.c x3270if.man
 
 EXAMPLES = Examples/child_script.bash Examples/child_script.ksh \
 	Examples/child_script.sh Examples/cms_logon.bash \
@@ -100,7 +80,7 @@ DEVKIT = Makefile.aux apl.inc ft.inc html.m4 instlist.all-xinstall \
 FILES = $(SOURCES) $(HEADERS) $(BITMAPS) $(FONTS) $(MISC) $(EXAMPLES) \
 	$(CONFIG) $(HTML) $(FT)
 
-tarlist: Makefile.aux
+tarlist: Makefile.aux common_files.mk x3270_files.mk
 	$(RM) tarlist
 	for i in $(FILES); \
 	do echo $(TARDIR)/$$i; \

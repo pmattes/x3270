@@ -51,7 +51,9 @@
 #include "resources.h"
 
 #include "actionsc.h"
-#include "bind-optc.h"
+#if !defined(TCL3270) /*[*/
+# include "bind-optc.h"
+#endif /*]*/
 #include "charsetc.h"
 #include "childc.h"
 #include "ctlrc.h"
@@ -635,11 +637,13 @@ peer_script_init(void)
 		socklen_t sa_len;
 		int on = 1;
 
+#if !defined(TCL3270) /*[*/
 		if (!parse_bind_opt(appres.script_port, &sa, &sa_len)) {
 			popup_an_error("Invalid script port value '%s', "
 				"ignoring", appres.script_port);
 			return;
 		}
+#endif /*]*/
 #if !defined(_WIN32) /*[*/
 		if (appres.socket) {
 		    	xs_warning("-scriptport overrides -socket");

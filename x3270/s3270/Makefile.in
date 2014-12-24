@@ -31,19 +31,11 @@ CC = @CC@
 
 all:: s3270 x3270if
 
-SRCS = XtGlue.c actions.c apl.c asprintf.c bind-opt.c charset.c ctlr.c \
-	favicon.c fprint_screen.c ft.c ft_cut.c ft_dft.c glue.c host.c \
-	httpd-core.c httpd-io.c httpd-nodes.c idle.c kybd.c linemode.c \
-	macros.c nvt.c print.c proxy.c readres.c resolver.c resources.c rpq.c \
-	see.c sf.c smain.c tables.c telnet.c toggles.c trace_ds.c unicode.c \
-	unicode_dbcs.c utf8.c util.c varbuf.c xio.c
+include common_files.mk s3270_files.mk
 
-VOBJS = XtGlue.o actions.o apl.o asprintf.o bind-opt.o charset.o ctlr.o \
-	fallbacks.o favicon.o fprint_screen.o ft.o ft_cut.o ft_dft.o glue.o \
-	host.o httpd-core.o httpd-io.o httpd-nodes.o idle.o kybd.o linemode.o \
-	macros.o nvt.o print.o proxy.o readres.o resolver.o resources.o rpq.o \
-	see.o sf.o smain.o tables.o telnet.o toggles.o trace_ds.o unicode.o \
-	unicode_dbcs.o utf8.o util.o varbuf.o xio.o
+SRCS = $(COMMON_SOURCES) $(HTTPD_SOURCES) $(S3270_SOURCES)
+
+VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(S3270_OBJECTS) fallbacks.o
 
 OBJS1 = $(VOBJS) version.o
 

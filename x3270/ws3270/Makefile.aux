@@ -35,30 +35,16 @@ all:
 
 # Development tools.
 
-SOURCES = XtGlue.c actions.c apl.c asprintf.c bind-opt.c charset.c ctlr.c \
-	favicon.c fprint_screen.c ft.c ft_cut.c ft_dft.c glue.c host.c \
-	httpd-core.c httpd-io.c httpd-nodes.c idle.c kybd.c macros.c nvt.c \
-	print.c printer.c proxy.c readres.c resolver.c resources.c rpq.c \
-	see.c sf.c smain.c snprintf.c ssl_dll.c strtok_r.c tables.c telnet.c \
-	toggles.c trace_ds.c unicode.c unicode_dbcs.c utf8.c util.c varbuf.c \
-	w3misc.c windirs.c winprint.c winvers.c xio.c
+include common_files.mk ws3270_files.mk
 
-HEADERS = 3270ds.h X11/keysym.h actionsc.h aplc.h appres.h arpa_telnet.h \
-	asprintfc.h bind-optc.h cg.h charsetc.h childc.h conf.h ctlr.h \
-	ctlrc.h dialogc.h fallbacksc.h fprint_screenc.h ft_cut_ds.h ft_cutc.h \
-	ft_dft_ds.h ft_dftc.h ft_guic.h ft_private.h ftc.h globals.h gluec.h \
-	hostc.h httpd-corec.h httpd-ioc.h httpd-nodesc.h idlec.h keymapc.h \
-	keypadc.h kybdc.h localdefs.h macrosc.h menubarc.h nvt_guic.h nvtc.h \
-	objects.h popupsc.h print_guic.h printc.h proxy.h proxyc.h readresc.h \
-	resolverc.h resources.h rpqc.h savec.h screen.h screenc.h scrollc.h \
-	seec.h selectc.h sfc.h ssl_dll.h statusc.h tablesc.h telnetc.h \
-	tn3270e.h togglesc.h trace_dsc.h unicode_dbcsc.h unicodec.h utf8c.h \
-	utilc.h varbufc.h w3miscc.h wincmn.h windirsc.h winprintc.h \
-	winversc.h xioc.h xl.h
+SOURCES = $(COMMON_SOURCES) $(HTTPD_SOURCES) $(WS3270_SOURCES)
+
+HEADERS = $(COMMON_HEADERS) $(HTTPD_HEADERS) $(WS3270_HEADERS)
 
 MISC = Examples/cms_cmd.expect LICENSE.txt Makefile Msc/Makefile \
-	Msc/README.txt Msc/mkversion.c README.txt X3270.xad mkfb.c \
-	mkversion.sh version.txt ws3270.ico ws3270.rc x3270_glue.expect
+	Msc/README.txt Msc/mkversion.c README.txt X3270.xad common_files.mk \
+	mkfb.c mkversion.sh version.txt ws3270.ico ws3270.rc ws3270_files.mk \
+	x3270_glue.expect
 
 DEVKIT = Makefile.aux instlist.base m42html m42man
 
@@ -69,7 +55,7 @@ HTML = html/$(PRODUCT)-man.html html/Bugs.html html/Build.html html/FAQ.html \
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
-tarlist: Makefile.aux
+tarlist: Makefile.aux common_files.mk ws3270_files.mk
 	$(RM) tarlist
 	for i in $(FILES); \
 	do echo $(TARDIR)/$$i; \
