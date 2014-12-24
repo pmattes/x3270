@@ -126,6 +126,7 @@ default_caption(void)
     char *username;
     char *computername;
     char *userdomain;
+    char ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
 
     username = getenv("USERNAME");
     if (username == NULL) {
@@ -133,7 +134,13 @@ default_caption(void)
     }
     computername = getenv("COMPUTERNAME");
     if (computername == NULL) {
-	computername = "(unknown)";
+	DWORD size = MAX_COMPUTERNAME_LENGTH + 1;
+
+	if (GetComputerName(ComputerName, &size)) {
+	    computername = ComputerName;
+	} else {
+	    computername = "(unknown)";
+	}
     }
     userdomain = getenv("USERDOMAIN");
     if (userdomain == NULL) {

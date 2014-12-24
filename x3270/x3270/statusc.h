@@ -46,6 +46,7 @@ extern void status_oerr(int error_type);
 extern void status_reinit(unsigned cmask);
 extern void status_reset(void);
 extern void status_reverse_mode(Boolean on);
+extern void status_screentrace(int n);
 extern void status_script(Boolean on);
 extern void status_scrolled(int n);
 extern void status_shift_mode(int state);

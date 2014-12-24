@@ -2355,6 +2355,7 @@ static enum keytype oia_compose_keytype = KT_STD;
 #define LUCNT	8
 static char oia_lu[LUCNT+1];
 static char oia_timing[6]; /* :ss.s*/
+static char oia_screentrace = ' ';
 
 static char *status_msg = "X Not Connected";
 static char *saved_status_msg = NULL;
@@ -2608,6 +2609,18 @@ status_scrolled(int n)
 	}
 }
 
+void
+status_screentrace(int n)
+{
+    if (n < 0) {
+	oia_screentrace = ' ';
+    } else if (n < 10) {
+	oia_screentrace = "0123456789"[n];
+    } else {
+	oia_screentrace = '+';
+    }
+}
+
 static void
 draw_oia(void)
 {
@@ -2677,6 +2690,7 @@ draw_oia(void)
 			attrset(defattr);
 	} else
 	    	printw(" ");
+	printw("%c", oia_screentrace);
 
 	mvprintw(status_row, rmargin-25, "%s", oia_lu);
 

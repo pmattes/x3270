@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -102,7 +102,7 @@ static int colors3279[SSZ] =  {
  *   M-35	Compose first character
  *   M-34	empty
  *   M-33	Typeahead indication ("T" or blank)
- *   M-32	empty
+ *   M-32	Screentrace count
  *   M-31	Alternate keymap indication ("K" or blank)
  *   M-30	Reverse input mode indication ("R" or blank)
  *   M-29	Insert mode indication (Special symbol/"I" or blank)
@@ -126,6 +126,8 @@ static int colors3279[SSZ] =  {
 #define COMPOSE	(maxCOLS-36)	/* compose characters */
 
 #define TYPEAHD	(maxCOLS-33)	/* typeahead */
+
+#define SCRNTRC	(maxCOLS-32)	/* screentrace */
 
 #define KMAP	(maxCOLS-31)	/* alt keymap in effect */
 
@@ -172,6 +174,7 @@ static Boolean  oia_undera = True;
 static Boolean  oia_boxsolid = False;
 static int      oia_shift = 0;
 static Boolean  oia_typeahead = False;
+static int      oia_screentrace = -1;
 static Boolean  oia_compose = False;
 static unsigned char oia_compose_char = 0;
 static enum keytype oia_compose_keytype = KT_STD;
@@ -294,6 +297,7 @@ static void do_script(Boolean on);
 static void do_printer(Boolean on);
 static void do_shift(int state);
 static void do_typeahead(int state);
+static void do_screentrace(int state);
 static void do_compose(Boolean on, unsigned char c, enum keytype keytype);
 static void do_lu(const char *lu);
 static void do_timing(char *buf);
@@ -393,6 +397,7 @@ status_reinit(unsigned cmask)
 	do_printer(oia_printer);
 	do_shift(oia_shift);
 	do_typeahead(oia_typeahead);
+	do_screentrace(oia_screentrace);
 	do_compose(oia_compose, oia_compose_char, oia_compose_keytype);
 	do_lu(oia_lu);
 	do_cursor(oia_cursor);
@@ -618,6 +623,13 @@ void
 status_typeahead(Boolean on)
 {
 	do_typeahead(oia_typeahead = on);
+}
+
+/* Change screentrace */
+void
+status_screentrace(int n)
+{
+	do_screentrace(oia_screentrace = n);
 }
 
 /* Set compose character */
@@ -1156,6 +1168,22 @@ static void
 do_typeahead(int state)
 {
 	status_add(TYPEAHD, state ? (*standard_font ? 'T' : CG_T) : nullblank, KT_STD);
+}
+
+static void
+do_screentrace(int n)
+{
+    unsigned char c;
+
+    if (n < 0) {
+	c = CG_space;
+    } else if (n < 10) {
+	c = CG_0 + n;
+    } else {
+	c = CG_plus;
+    }
+
+    status_add(SCRNTRC, c, KT_STD);
 }
 
 static void

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, Paul Mattes.
+ * Copyright (c) 1999-2009, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,17 +28,18 @@
 /* Non-display verson of statusc.h */
 
 #define status_compose(on, c, keytype)
-#define status_typeahead(on)
-#define status_script(on)
-#define status_reverse_mode(on)
-#define status_insert_mode(on)
-#define status_syswait()
-#define status_reset()
-#define status_twait()
-#define status_oerr(error_type)
-#define status_timing(t0, t1)
 #define status_ctlr_done()
-#define status_untiming()
+#define status_insert_mode(on)
 #define status_kybdlock()
-#define status_minus()
 #define status_lu(lu)
+#define status_minus()
+#define status_oerr(error_type)
+#define status_reset()
+#define status_reverse_mode(on)
+#define status_screentrace(n)
+#define status_script(on)
+#define status_syswait()
+#define status_timing(t0, t1)
+#define status_twait()
+#define status_typeahead(on)
+#define status_untiming()

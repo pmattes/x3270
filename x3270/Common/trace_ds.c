@@ -57,6 +57,7 @@
 #include "popupsc.h"
 #include "printc.h"
 #include "savec.h"
+#include "statusc.h"
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace_dsc.h"
@@ -110,6 +111,9 @@ static void	stop_tracing(void);
 static char    *screentrace_name = NULL;
 #if defined(_WIN32) /*[*/
 static char    *screentrace_tmpfn;
+#endif /*]*/
+#if defined(X3270_INTERACTIVE) /*[*/
+static int 	screentrace_count;
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
@@ -1008,6 +1012,7 @@ do_screentrace(Boolean always _is_unused)
 	 * fail.
 	 */
 	(void) fprint_screen_body(screentrace_fps);
+	status_screentrace(++screentrace_count);
 }
 
 void
@@ -1230,6 +1235,7 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 
 	if (toggled(SCREEN_TRACE)) {
 		/* Turn it on. */
+		status_screentrace((screentrace_count = 0));
 	    	if (onetime_screentrace_name != NULL) {
 		    	tracefile = tracefile_buf =
 			    onetime_screentrace_name;
@@ -1249,6 +1255,7 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 			NewString(tracefile))) {
 
 			appres.toggle[SCREEN_TRACE].value = False;
+			status_screentrace((screentrace_count = -1));
 		}
 	} else {
 		/* Turn it off. */
@@ -1258,6 +1265,7 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 		screentrace_last_how = screentrace_how;
 		screentrace_how = TSS_FILE; /* back to the default */
 		screentrace_ptype = P_TEXT; /* back to the default */
+		status_screentrace((screentrace_count = -1));
 	}
 
 	if (tracefile_buf != NULL)
