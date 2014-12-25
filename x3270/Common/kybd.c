@@ -103,8 +103,7 @@ static unsigned char pa_xlate[] = {
 #define PA_SZ	(sizeof(pa_xlate)/sizeof(pa_xlate[0]))
 static ioid_t unlock_id = NULL_IOID;
 static time_t unlock_delay_time;
-static Boolean key_Character(unsigned ebc, Boolean with_ge, Boolean pasting,
-			     Boolean *skipped);
+static Boolean key_Character(unsigned ebc, Boolean with_ge, Boolean pasting);
 static Boolean flush_ta(void);
 static void key_AID(unsigned char aid_code);
 static void kybdlock_set(unsigned int bits, const char *cause);
@@ -112,7 +111,7 @@ static KeySym MyStringToKeysym(char *s, enum keytype *keytypep,
 	ucs4_t *ucs4);
 
 #if defined(X3270_DBCS) /*[*/
-static Boolean key_WCharacter(unsigned char code[], Boolean *skipped);
+static Boolean key_WCharacter(unsigned char code[]);
 #endif /*]*/
 
 static Boolean		insert = False;		/* insert mode */
@@ -808,7 +807,7 @@ key_Character_wrapper(Widget w _is_unused, XEvent *event _is_unused,
 	vtrace(" %s -> Key(%s\"%s\")\n",
 	    ia_name[(int) ia_cause],
 	    with_ge ? "GE " : "", mb);
-	(void) key_Character(ebc, with_ge, pasting, NULL);
+	(void) key_Character(ebc, with_ge, pasting);
 }
 
 /*
@@ -816,7 +815,7 @@ key_Character_wrapper(Widget w _is_unused, XEvent *event _is_unused,
  * insert-mode, protected fields and etc.
  */
 static Boolean
-key_Character(unsigned ebc, Boolean with_ge, Boolean pasting, Boolean *skipped)
+key_Character(unsigned ebc, Boolean with_ge, Boolean pasting)
 {
 	register int	baddr, faddr, xaddr;
 	register unsigned char	fa;
@@ -825,9 +824,6 @@ key_Character(unsigned ebc, Boolean with_ge, Boolean pasting, Boolean *skipped)
 	Boolean auto_skip = True;
 
 	reset_idle_timer();
-
-	if (skipped != NULL)
-		*skipped = False;
 
 	if (kybdlock) {
 		char codename[64];
@@ -1057,8 +1053,6 @@ key_Character(unsigned ebc, Boolean with_ge, Boolean pasting, Boolean *skipped)
 	 */
 	if (auto_skip && (pasting || (ebc != EBC_dup))) {
 		while (ea_buf[baddr].fa) {
-			if (skipped != NULL)
-				*skipped = True;
 			if (FA_IS_SKIP(ea_buf[baddr].fa))
 				baddr = next_unprotected(baddr);
 			else
@@ -1086,7 +1080,7 @@ key_WCharacter_wrapper(Widget w _is_unused, XEvent *event _is_unused,
 		ebc_wide);
 	ebc_pair[0] = (ebc_wide >> 8) & 0xff;
 	ebc_pair[1] = ebc_wide & 0xff;
-	(void) key_WCharacter(ebc_pair, NULL);
+	(void) key_WCharacter(ebc_pair);
 }
 
 /*
@@ -1094,7 +1088,7 @@ key_WCharacter_wrapper(Widget w _is_unused, XEvent *event _is_unused,
  * Returns True if a character was stored in the buffer, False otherwise.
  */
 static Boolean
-key_WCharacter(unsigned char ebc_pair[], Boolean *skipped)
+key_WCharacter(unsigned char ebc_pair[])
 {
 	int baddr;
 	register unsigned char fa;
@@ -1116,10 +1110,6 @@ key_WCharacter(unsigned char ebc_pair[], Boolean *skipped)
 		return False;
 	}
 
-	if (skipped != NULL)
-		*skipped = False;
-
-	/* In DBCS mode? */
 #if defined(X3270_DBCS) /*[*/
 	if (!dbcs)
 #endif /*]*/
@@ -1369,8 +1359,6 @@ retry:
 
 		/* Implement auto-skip. */
 		while (ea_buf[baddr].fa) {
-			if (skipped != NULL)
-				*skipped = True;
 			if (FA_IS_SKIP(ea_buf[baddr].fa))
 				baddr = next_unprotected(baddr);
 			else
@@ -1390,16 +1378,12 @@ retry:
  * Handle an ordinary character key, given its Unicode value.
  */
 static void
-key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
-	       Boolean *skipped)
+key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause)
 {
 	register int i;
 	struct akeysym ak;
 
 	reset_idle_timer();
-
-	if (skipped != NULL)
-		*skipped = False;
 
 	if (kybdlock) {
 	    char ubuf[32];
@@ -1482,11 +1466,11 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 
 			ebc_pair[0] = (ebc & 0xff00)>> 8;
 			ebc_pair[1] = ebc & 0xff;
-			(void) key_WCharacter(ebc_pair, skipped);
+			(void) key_WCharacter(ebc_pair);
 		} else
 #endif /*]*/
 			(void) key_Character(ebc, (keytype == KT_GE) || ge,
-				(cause == IA_PASTE), skipped);
+				(cause == IA_PASTE));
 	}
 	else if (IN_NVT) {
 	    	char mb[16];
@@ -1522,17 +1506,13 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
  * representation.
  */
 static void
-key_ACharacter(char *mb, enum keytype keytype, enum iaction cause,
-	       Boolean *skipped)
+key_ACharacter(char *mb, enum keytype keytype, enum iaction cause)
 {
 	ucs4_t ucs4;
 	int consumed;
 	enum me_fail error;
 
 	reset_idle_timer();
-
-	if (skipped != NULL)
-		*skipped = False;
 
 	/* Convert the multibyte string to UCS4. */
 	ucs4 = multibyte_to_unicode(mb, strlen(mb), &consumed, &error);
@@ -1542,7 +1522,7 @@ key_ACharacter(char *mb, enum keytype keytype, enum iaction cause,
 		return;
 	}
 
-	key_UCharacter(ucs4, keytype, cause, skipped);
+	key_UCharacter(ucs4, keytype, cause);
 }
 #endif /*]*/
 
@@ -2456,7 +2436,7 @@ Dup_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_par
 	if (IN_NVT) {
 		return;
 	}
-	if (key_Character(EBC_dup, False, False, NULL))
+	if (key_Character(EBC_dup, False, False))
 		cursor_move(next_unprotected(cursor_addr));
 }
 
@@ -2478,7 +2458,7 @@ FieldMark_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *n
 	if (IN_NVT) {
 		return;
 	}
-	(void) key_Character(EBC_fm, False, False, NULL);
+	(void) key_Character(EBC_fm, False, False);
 }
 
 
@@ -3134,7 +3114,7 @@ xim_lookup(XKeyEvent *event)
 		}
 		vtrace("\n");
 		buf[rlen] = '\0';
-		key_ACharacter(buf, KT_STD, ia_cause, NULL);
+		key_ACharacter(buf, KT_STD, ia_cause);
 		rv = False;
 		break;
 	case XLookupBoth:
@@ -3181,9 +3161,9 @@ Key_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_par
 			continue;
 		}
 		if (k != NoSymbol)
-			key_UCharacter(k, keytype, IA_KEY, NULL);
+			key_UCharacter(k, keytype, IA_KEY);
 		else
-			key_UCharacter(ucs4, keytype, IA_KEY, NULL);
+			key_UCharacter(ucs4, keytype, IA_KEY);
 	}
 }
 
@@ -3272,9 +3252,9 @@ CircumNot_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *n
 	reset_idle_timer();
 
 	if (IN_3270 && composing == NONE)
-		key_UCharacter(0xac, KT_STD, IA_KEY, NULL);
+		key_UCharacter(0xac, KT_STD, IA_KEY);
 	else
-		key_UCharacter('^', KT_STD, IA_KEY, NULL);
+		key_UCharacter('^', KT_STD, IA_KEY);
 }
 
 /* PA key action for String actions */
@@ -3396,478 +3376,460 @@ remargin(int lmargin)
 int
 emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 {
-	enum {
-	    BASE, BACKSLASH, BACKX, BACKE, BACKP, BACKPA, BACKPF, OCTAL,
-	    HEX, EBC, XGE
-	} state = BASE;
-	int literal = 0;
-	int nc = 0;
-	enum iaction ia = pasting ? IA_PASTE : IA_STRING;
-	int orig_addr = cursor_addr;
+    enum {
+	BASE, BACKSLASH, BACKX, BACKE, BACKP, BACKPA, BACKPF, OCTAL,
+	HEX, EBC, XGE
+    } state = BASE;
+    int literal = 0;
+    int nc = 0;
+    enum iaction ia = pasting ? IA_PASTE : IA_STRING;
+    int orig_addr = cursor_addr;
 #if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
-	int orig_col = BA_TO_COL(cursor_addr);
+    int orig_col = BA_TO_COL(cursor_addr);
 #endif /*]*/
-	Boolean skipped = False;
-	ucs4_t c;
-	Boolean auto_skip = True;
+    int last_addr = cursor_addr;
+    int last_row = BA_TO_ROW(cursor_addr);
+    Boolean just_wrapped = False;
+    ucs4_t c;
+    Boolean auto_skip = True;
 
 #if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
-	if (pasting && toggled(OVERLAY_PASTE)) {
-	    auto_skip = False;
-	}
+    if (pasting && toggled(OVERLAY_PASTE)) {
+	auto_skip = False;
+    }
 #endif /*]*/
+
+    /*
+     * In the switch statements below, "break" generally means "consume
+     * this character," while "continue" means "rescan this character."
+     */
+    while (xlen) {
 
 	/*
-	 * In the switch statements below, "break" generally means "consume
-	 * this character," while "continue" means "rescan this character."
+	 * It isn't possible to unlock the keyboard from a string,
+	 * so if the keyboard is locked, it's fatal
 	 */
-	while (xlen) {
-
-		/*
-		 * It isn't possible to unlock the keyboard from a string,
-		 * so if the keyboard is locked, it's fatal
-		 */
-		if (kybdlock) {
-			vtrace("  keyboard locked, string dropped\n");
-			return 0;
-		}
-
-		if (pasting && IN_3270) {
-
-			/* Check for cursor wrap to top of screen. */
-			if (cursor_addr < orig_addr)
-				return xlen-1;		/* wrapped */
-
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
-			/* Jump cursor over left margin. */
-			if (MarginedPaste() &&
-			    BA_TO_COL(cursor_addr) < orig_col) {
-				if (!remargin(orig_col))
-					return xlen-1;
-				skipped = True;
-			}
-#endif /*]*/
-		}
-
-		c = *ws;
-
-		switch (state) {
-		    case BASE:
-			switch (c) {
-			    case '\b':
-				action_internal(Left_action, ia, NULL, NULL);
-				skipped = False;
-				break;
-			    case '\f':
-				if (pasting) {
-					key_UCharacter(0x20, KT_STD, ia,
-						&skipped);
-				} else {
-					action_internal(Clear_action, ia, NULL,
-							NULL);
-					skipped = False;
-					if (IN_3270)
-						return xlen-1;
-				}
-				break;
-			    case '\n':
-				if (pasting) {
-					if (auto_skip) {
-					    if (!skipped) {
-						action_internal(Newline_action,
-								ia, NULL, NULL);
-					    }
-					} else {
-					    int baddr = cursor_addr;
-					    int row;
-
-					    /*
-					     * Overlay paste mode: Move to the
-					     * beginning of the next row.
-					     *
-					     * If this is the last pasted
-					     * character, ignore it.
-					     */
-					    if (xlen == 1) {
-						return 0;
-					    }
-					    row = BA_TO_ROW(cursor_addr);
-					    if (row >= ROWS - 1) {
-						return xlen - 1;
-					    }
-					    baddr = ROWCOL_TO_BA(row + 1, 0);
-					    cursor_move(baddr);
-
-					}
-					skipped = False;
-				} else {
-					action_internal(Enter_action, ia, NULL,
-							NULL);
-					skipped = False;
-					if (IN_3270)
-						return xlen-1;
-				}
-				break;
-			    case '\r':
-				if (!pasting) {
-					action_internal(Newline_action, ia, NULL,
-							NULL);
-					skipped = False;
-				}
-				break;
-			    case '\t':
-				action_internal(Tab_action, ia, NULL, NULL);
-				skipped = False;
-				break;
-			    case '\\':	/* backslashes are NOT special when
-					   pasting */
-				if (!pasting)
-					state = BACKSLASH;
-				else
-					key_UCharacter((unsigned char)c,
-						KT_STD, ia, &skipped);
-				break;
-			    case '\033': /* ESC is special only when pasting */
-				if (pasting)
-					state = XGE;
-				break;
-			    case '[':	/* APL left bracket */
-				if (pasting && appres.apl_mode)
-					key_UCharacter(XK_Yacute, KT_GE, ia,
-						&skipped);
-				else
-					key_UCharacter((unsigned char)c,
-						KT_STD, ia, &skipped);
-				break;
-			    case ']':	/* APL right bracket */
-				if (pasting && appres.apl_mode)
-					key_UCharacter(XK_diaeresis, KT_GE, ia,
-						&skipped);
-				else
-					key_UCharacter((unsigned char)c,
-						KT_STD, ia,
-						&skipped);
-				break;
-			    case UPRIV_fm: /* private-use FM */
-				if (pasting)
-					key_Character(EBC_fm, False, True,
-						&skipped);
-				break;
-			    case UPRIV_dup: /* private-use DUP */
-				if (pasting)
-					key_Character(EBC_dup, False, True,
-						&skipped);
-				break;
-			    case UPRIV_eo: /* private-use EO */
-				if (pasting)
-					key_Character(EBC_eo, False, True,
-						&skipped);
-				break;
-			    case UPRIV_sub: /* private-use SUB */
-				if (pasting)
-					key_Character(EBC_sub, False, True,
-						&skipped);
-				break;
-			default:
-				if (pasting &&
-					(c >= UPRIV_GE_00 &&
-					 c <= UPRIV_GE_ff))
-					key_Character(c - UPRIV_GE_00, KT_GE,
-						ia, &skipped);
-				else
-					key_UCharacter(c, KT_STD, ia,
-						&skipped);
-				break;
-			}
-			break;
-		    case BACKSLASH:	/* last character was a backslash */
-			switch (c) {
-			    case 'a':
-				popup_an_error("%s: Bell not supported",
-				    action_name(String_action));
-				cancel_if_idle_command();
-				state = BASE;
-				break;
-			    case 'b':
-				action_internal(Left_action, ia, NULL, NULL);
-				skipped = False;
-				state = BASE;
-				break;
-			    case 'f':
-				action_internal(Clear_action, ia, NULL, NULL);
-				skipped = False;
-				state = BASE;
-				if (IN_3270)
-					return xlen-1;
-				else
-					break;
-			    case 'n':
-				action_internal(Enter_action, ia, NULL, NULL);
-				skipped = False;
-				state = BASE;
-				if (IN_3270)
-					return xlen-1;
-				else
-					break;
-			    case 'p':
-				state = BACKP;
-				break;
-			    case 'r':
-				action_internal(Newline_action, ia, NULL, NULL);
-				skipped = False;
-				state = BASE;
-				break;
-			    case 't':
-				action_internal(Tab_action, ia, NULL, NULL);
-				skipped = False;
-				state = BASE;
-				break;
-			    case 'T':
-				action_internal(BackTab_action, ia, NULL, NULL);
-				skipped = False;
-				state = BASE;
-				break;
-			    case 'v':
-				popup_an_error("%s: Vertical tab not supported",
-				    action_name(String_action));
-				cancel_if_idle_command();
-				state = BASE;
-				break;
-			    case 'u':
-			    case 'x':
-				state = BACKX;
-				break;
-			    case 'e':
-				state = BACKE;
-				break;
-			    case '\\':
-				key_UCharacter((unsigned char) c, KT_STD, ia,
-						&skipped);
-				state = BASE;
-				break;
-			    case '0': 
-			    case '1': 
-			    case '2': 
-			    case '3':
-			    case '4': 
-			    case '5': 
-			    case '6': 
-			    case '7':
-				state = OCTAL;
-				literal = 0;
-				nc = 0;
-				continue;
-			default:
-				state = BASE;
-				continue;
-			}
-			break;
-		    case BACKP:	/* last two characters were "\p" */
-			switch (c) {
-			    case 'a':
-				literal = 0;
-				nc = 0;
-				state = BACKPA;
-				break;
-			    case 'f':
-				literal = 0;
-				nc = 0;
-				state = BACKPF;
-				break;
-			    default:
-				popup_an_error("%s: Unknown character "
-						"after \\p",
-				    action_name(String_action));
-				cancel_if_idle_command();
-				state = BASE;
-				break;
-			}
-			break;
-		    case BACKPF: /* last three characters were "\pf" */
-			if (nc < 2 && isdigit(c)) {
-				literal = (literal * 10) + (c - '0');
-				nc++;
-			} else if (!nc) {
-				popup_an_error("%s: Unknown character "
-						"after \\pf",
-				    action_name(String_action));
-				cancel_if_idle_command();
-				state = BASE;
-			} else {
-				do_pf(literal);
-				skipped = False;
-				if (IN_3270) {
-					return xlen;
-				}
-				state = BASE;
-				continue;
-			}
-			break;
-		    case BACKPA: /* last three characters were "\pa" */
-			if (nc < 1 && isdigit(c)) {
-				literal = (literal * 10) + (c - '0');
-				nc++;
-			} else if (!nc) {
-				popup_an_error("%s: Unknown character "
-						"after \\pa",
-				    action_name(String_action));
-				cancel_if_idle_command();
-				state = BASE;
-			} else {
-				do_pa(literal);
-				skipped = False;
-				if (IN_3270)
-					return xlen-1;
-				state = BASE;
-				continue;
-			}
-			break;
-		    case BACKX:	/* last two characters were "\x" or "\u" */
-			if (isxdigit(c)) {
-				state = HEX;
-				literal = 0;
-				nc = 0;
-				continue;
-			} else {
-				popup_an_error("%s: Missing hex digits after \\x",
-				    action_name(String_action));
-				cancel_if_idle_command();
-				state = BASE;
-				continue;
-			}
-		    case BACKE:	/* last two characters were "\e" */
-			if (isxdigit(c)) {
-				state = EBC;
-				literal = 0;
-				nc = 0;
-				continue;
-			} else {
-				popup_an_error("%s: Missing hex digits after \\e",
-				    action_name(String_action));
-				cancel_if_idle_command();
-				state = BASE;
-				continue;
-			}
-		    case OCTAL:	/* have seen \ and one or more octal digits */
-			if (nc < 3 && isdigit(c) && c < '8') {
-				literal = (literal * 8) + FROM_HEX(c);
-				nc++;
-				break;
-			} else {
-				key_UCharacter((unsigned char) literal, KT_STD,
-				    ia, &skipped);
-				state = BASE;
-				continue;
-			}
-		    case HEX:	/* have seen \x and one or more hex digits */
-			if (nc < 4 && isxdigit(c)) {
-				literal = (literal * 16) + FROM_HEX(c);
-				nc++;
-				break;
-			} else {
-				key_UCharacter((unsigned char) literal, KT_STD,
-				    ia, &skipped);
-				state = BASE;
-				continue;
-			}
-		    case EBC:	/* have seen \e and one or more hex digits */
-			if (nc < 4 && isxdigit(c)) {
-				literal = (literal * 16) + FROM_HEX(c);
-				nc++;
-				break;
-			} else {
-			    	vtrace(" %s -> Key(X'%02X')\n",
-					ia_name[(int) ia], literal);
-				if (!(literal & ~0xff))
-					key_Character((unsigned char) literal,
-						False, True, &skipped);
-				else {
-#if defined(X3270_DBCS) /*[*/
-				    	unsigned char ebc_pair[2];
-
-					ebc_pair[0] = (literal >> 8) & 0xff;
-					ebc_pair[1] = literal & 0xff;
-					key_WCharacter(ebc_pair, &skipped);
-#else /*][*/
-					popup_an_error("%s: EBCDIC code > 255",
-					    action_name(String_action));
-					cancel_if_idle_command();
-#endif /*]*/
-				}
-				state = BASE;
-				continue;
-			}
-		    case XGE:	/* have seen ESC */
-			switch (c) {
-			    case ';':	/* FM */
-				key_Character(EBC_fm, False, True, &skipped);
-				break;
-			    case '*':	/* DUP */
-				key_Character(EBC_dup, False, True, &skipped);
-				break;
-			    default:
-				key_UCharacter((unsigned char) c, KT_GE, ia,
-						&skipped);
-				break;
-			}
-			state = BASE;
-			break;
-		}
-		ws++;
-		xlen--;
+	if (kybdlock) {
+	    vtrace("  keyboard locked, string dropped\n");
+	    return 0;
 	}
 
+	if (pasting && IN_3270) {
+
+	    /* Check for cursor wrap to top of screen. */
+	    if (cursor_addr < orig_addr) {
+		return xlen-1;		/* wrapped */
+	    }
+
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
+	    /* Jump cursor over left margin. */
+	    if (MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
+		if (!remargin(orig_col)) {
+		    return xlen-1;
+		}
+	    }
+#endif /*]*/
+	}
+
+	if (last_addr != cursor_addr) {
+	    last_addr = cursor_addr;
+	    if (last_row == BA_TO_ROW(cursor_addr)) {
+		just_wrapped = False;
+	    } else {
+		last_row = BA_TO_ROW(cursor_addr);
+		just_wrapped = True;
+	    }
+	}
+
+	c = *ws;
+
 	switch (state) {
-	    case BASE:
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
-		if (MarginedPaste() &&
-		    BA_TO_COL(cursor_addr) < orig_col) {
-			(void) remargin(orig_col);
-		}
-#endif /*]*/
+	case BASE:
+	    switch (c) {
+	    case '\b':
+		action_internal(Left_action, ia, NULL, NULL);
 		break;
-	    case OCTAL:
-	    case HEX:
-		key_UCharacter((unsigned char) literal, KT_STD, ia, &skipped);
-		state = BASE;
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
-		if (MarginedPaste() &&
-		    BA_TO_COL(cursor_addr) < orig_col) {
-			(void) remargin(orig_col);
-		}
-#endif /*]*/
-		break;
-	    case EBC:
-		vtrace(" %s -> Key(X'%02X')\n", ia_name[(int) ia], literal);
-		key_Character((unsigned char) literal, False, True, &skipped);
-		state = BASE;
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
-		if (MarginedPaste() &&
-		    BA_TO_COL(cursor_addr) < orig_col) {
-			(void) remargin(orig_col);
-		}
-#endif /*]*/
-		break;
-	    case BACKPF:
-		if (nc > 0) {
-			do_pf(literal);
-			state = BASE;
+	    case '\f':
+		if (pasting) {
+		    key_UCharacter(0x20, KT_STD, ia);
+		} else {
+		    action_internal(Clear_action, ia, NULL,
+					NULL);
+		    if (IN_3270) {
+			return xlen-1;
+		    }
 		}
 		break;
-	    case BACKPA:
-		if (nc > 0) {
-			do_pa(literal);
-			state = BASE;
+	    case '\n':
+		if (pasting) {
+		    if (auto_skip) {
+			if (!just_wrapped) {
+			    action_internal(Newline_action, ia, NULL, NULL);
+			    last_row = BA_TO_ROW(cursor_addr);
+			}
+		    } else {
+			int baddr = cursor_addr;
+			int row;
+
+			/*
+			 * Overlay paste mode: Move to the beginning of the
+			 * next row.
+			 *
+			 * If this is the last pasted character, ignore it.
+			 */
+			if (xlen == 1) {
+			    return 0;
+			}
+			row = BA_TO_ROW(cursor_addr);
+			if (row >= ROWS - 1) {
+			    return xlen - 1;
+			}
+			baddr = ROWCOL_TO_BA(row + 1, 0);
+			cursor_move(baddr);
+		    }
+		} else {
+		    action_internal(Enter_action, ia, NULL, NULL);
+		    if (IN_3270) {
+			return xlen-1;
+		    }
+		}
+		break;
+	    case '\r':
+		if (!pasting) {
+		    action_internal(Newline_action, ia, NULL, NULL);
+		}
+		break;
+	    case '\t':
+		action_internal(Tab_action, ia, NULL, NULL);
+		break;
+	    case '\\':	/* backslashes are NOT special when pasting */
+		if (!pasting) {
+		    state = BACKSLASH;
+		} else {
+		    key_UCharacter((unsigned char)c, KT_STD, ia);
+		}
+		break;
+	    case '\033': /* ESC is special only when pasting */
+		if (pasting) {
+		    state = XGE;
+		}
+		break;
+	    case '[':	/* APL left bracket */
+		if (pasting && appres.apl_mode) {
+			key_UCharacter(XK_Yacute, KT_GE, ia);
+		} else {
+			key_UCharacter((unsigned char)c, KT_STD, ia);
+		}
+		break;
+	    case ']':	/* APL right bracket */
+		if (pasting && appres.apl_mode) {
+		    key_UCharacter(XK_diaeresis, KT_GE, ia);
+		} else {
+		    key_UCharacter((unsigned char)c, KT_STD, ia);
+		}
+		break;
+	    case UPRIV_fm: /* private-use FM */
+		if (pasting) {
+		    key_Character(EBC_fm, False, True);
+		}
+		break;
+	    case UPRIV_dup: /* private-use DUP */
+		if (pasting) {
+		    key_Character(EBC_dup, False, True);
+		}
+		break;
+	    case UPRIV_eo: /* private-use EO */
+		if (pasting) {
+		    key_Character(EBC_eo, False, True);
+		}
+		break;
+	    case UPRIV_sub: /* private-use SUB */
+		if (pasting) {
+		    key_Character(EBC_sub, False, True);
 		}
 		break;
 	    default:
-		popup_an_error("%s: Missing data after \\",
-		    action_name(String_action));
-		cancel_if_idle_command();
+		if (pasting && (c >= UPRIV_GE_00 && c <= UPRIV_GE_ff)) {
+		    key_Character(c - UPRIV_GE_00, KT_GE, ia);
+		} else {
+		    key_UCharacter(c, KT_STD, ia);
+		}
 		break;
-	}
+	    }
+	    break;
 
-	return xlen;
+	case BACKSLASH:	/* last character was a backslash */
+	    switch (c) {
+	    case 'a':
+		popup_an_error("%s: Bell not supported",
+			action_name(String_action));
+		cancel_if_idle_command();
+		state = BASE;
+		break;
+	    case 'b':
+		action_internal(Left_action, ia, NULL, NULL);
+		state = BASE;
+		break;
+	    case 'f':
+		action_internal(Clear_action, ia, NULL, NULL);
+		state = BASE;
+		if (IN_3270) {
+		    return xlen-1;
+		}
+		break;
+	    case 'n':
+		action_internal(Enter_action, ia, NULL, NULL);
+		state = BASE;
+		if (IN_3270) {
+		    return xlen-1;
+		}
+		break;
+	    case 'p':
+		state = BACKP;
+		break;
+	    case 'r':
+		action_internal(Newline_action, ia, NULL, NULL);
+		state = BASE;
+		break;
+	    case 't':
+		action_internal(Tab_action, ia, NULL, NULL);
+		state = BASE;
+		break;
+	    case 'T':
+		action_internal(BackTab_action, ia, NULL, NULL);
+		state = BASE;
+		break;
+	    case 'v':
+		popup_an_error("%s: Vertical tab not supported",
+			action_name(String_action));
+		cancel_if_idle_command();
+		state = BASE;
+		break;
+	    case 'u':
+	    case 'x':
+		state = BACKX;
+		break;
+	    case 'e':
+		state = BACKE;
+		break;
+	    case '\\':
+		key_UCharacter((unsigned char) c, KT_STD, ia);
+		state = BASE;
+		break;
+	    case '0': 
+	    case '1': 
+	    case '2': 
+	    case '3':
+	    case '4': 
+	    case '5': 
+	    case '6': 
+	    case '7':
+		state = OCTAL;
+		literal = 0;
+		nc = 0;
+		continue;
+	    default:
+		state = BASE;
+		continue;
+	    }
+	    break;
+
+	case BACKP:	/* last two characters were "\p" */
+	    switch (c) {
+	    case 'a':
+		literal = 0;
+		nc = 0;
+		state = BACKPA;
+		break;
+	    case 'f':
+		literal = 0;
+		nc = 0;
+		state = BACKPF;
+		break;
+	    default:
+		popup_an_error("%s: Unknown character after \\p",
+			action_name(String_action));
+		cancel_if_idle_command();
+		state = BASE;
+		break;
+	    }
+	    break;
+
+	case BACKPF: /* last three characters were "\pf" */
+	    if (nc < 2 && isdigit(c)) {
+		literal = (literal * 10) + (c - '0');
+		nc++;
+	    } else if (!nc) {
+		popup_an_error("%s: Unknown character after \\pf",
+			action_name(String_action));
+		cancel_if_idle_command();
+		state = BASE;
+	    } else {
+		do_pf(literal);
+		if (IN_3270) {
+		    return xlen;
+		}
+		state = BASE;
+		continue;
+	    }
+	    break;
+
+	case BACKPA: /* last three characters were "\pa" */
+	    if (nc < 1 && isdigit(c)) {
+		literal = (literal * 10) + (c - '0');
+		nc++;
+	    } else if (!nc) {
+		popup_an_error("%s: Unknown character after \\pa",
+			action_name(String_action));
+		cancel_if_idle_command();
+		state = BASE;
+	    } else {
+		do_pa(literal);
+		if (IN_3270) {
+		    return xlen-1;
+		}
+		state = BASE;
+		continue;
+	    }
+	    break;
+	case BACKX:	/* last two characters were "\x" or "\u" */
+	    if (isxdigit(c)) {
+		state = HEX;
+		literal = 0;
+		nc = 0;
+		continue;
+	    } else {
+		popup_an_error("%s: Missing hex digits after \\x",
+			action_name(String_action));
+		cancel_if_idle_command();
+		state = BASE;
+		continue;
+	    }
+	case BACKE:	/* last two characters were "\e" */
+	    if (isxdigit(c)) {
+		state = EBC;
+		literal = 0;
+		nc = 0;
+		continue;
+	    } else {
+		popup_an_error("%s: Missing hex digits after \\e",
+			action_name(String_action));
+		cancel_if_idle_command();
+		state = BASE;
+		continue;
+	    }
+	case OCTAL:	/* have seen \ and one or more octal digits */
+	    if (nc < 3 && isdigit(c) && c < '8') {
+		literal = (literal * 8) + FROM_HEX(c);
+		nc++;
+		break;
+	    } else {
+		key_UCharacter((unsigned char) literal, KT_STD, ia);
+		state = BASE;
+		continue;
+	    }
+	case HEX:	/* have seen \x and one or more hex digits */
+	    if (nc < 4 && isxdigit(c)) {
+		literal = (literal * 16) + FROM_HEX(c);
+		nc++;
+		break;
+	    } else {
+		key_UCharacter((unsigned char) literal, KT_STD, ia);
+		state = BASE;
+		continue;
+	    }
+	case EBC:	/* have seen \e and one or more hex digits */
+	    if (nc < 4 && isxdigit(c)) {
+		literal = (literal * 16) + FROM_HEX(c);
+		nc++;
+		break;
+	    } else {
+		vtrace(" %s -> Key(X'%02X')\n", ia_name[(int) ia], literal);
+		if (!(literal & ~0xff)) {
+		    key_Character((unsigned char) literal, False, True);
+		} else {
+#if defined(X3270_DBCS) /*[*/
+		    unsigned char ebc_pair[2];
+
+		    ebc_pair[0] = (literal >> 8) & 0xff;
+		    ebc_pair[1] = literal & 0xff;
+		    key_WCharacter(ebc_pair);
+#else /*][*/
+		    popup_an_error("%s: EBCDIC code > 255",
+			    action_name(String_action));
+		    cancel_if_idle_command();
+#endif /*]*/
+		}
+		state = BASE;
+		continue;
+	    }
+	case XGE:	/* have seen ESC */
+	    switch (c) {
+	    case ';':	/* FM */
+		key_Character(EBC_fm, False, True);
+		break;
+	    case '*':	/* DUP */
+		key_Character(EBC_dup, False, True);
+		break;
+	    default:
+		key_UCharacter((unsigned char) c, KT_GE, ia);
+		break;
+	    }
+	    state = BASE;
+	    break;
+	}
+	ws++;
+	xlen--;
+    }
+
+    switch (state) {
+    case BASE:
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
+	if (MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
+	    (void) remargin(orig_col);
+	}
+#endif /*]*/
+	break;
+    case OCTAL:
+    case HEX:
+	key_UCharacter((unsigned char) literal, KT_STD, ia);
+	state = BASE;
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
+	if (MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
+	    (void) remargin(orig_col);
+	}
+#endif /*]*/
+	break;
+    case EBC:
+	vtrace(" %s -> Key(X'%02X')\n", ia_name[(int) ia], literal);
+	key_Character((unsigned char) literal, False, True);
+	state = BASE;
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
+	if (MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
+	    (void) remargin(orig_col);
+	}
+#endif /*]*/
+	break;
+    case BACKPF:
+	if (nc > 0) {
+	    do_pf(literal);
+	    state = BASE;
+	}
+	break;
+    case BACKPA:
+	if (nc > 0) {
+	    do_pa(literal);
+	    state = BASE;
+	}
+	break;
+    default:
+	popup_an_error("%s: Missing data after \\",
+		action_name(String_action));
+	cancel_if_idle_command();
+	break;
+    }
+
+    return xlen;
 }
 
 /* Multibyte version of emulate_uinput. */
@@ -3965,7 +3927,7 @@ hex_input(const char *s)
 
 			c = (FROM_HEX(*t) * 16) + FROM_HEX(*(t + 1));
 			if (IN_3270)
-				key_Character(c, escaped, True, NULL);
+				key_Character(c, escaped, True);
 			else
 				*tbuf++ = (unsigned char)c;
 			escaped = False;
@@ -4303,7 +4265,7 @@ Default_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
 		ll = XLookupString(kevent, buf, 32, &ks, (XComposeStatus *) 0);
 		buf[ll] = '\0';
 		if (ll > 1) {
-			key_ACharacter(buf, KT_STD, IA_DEFAULT, NULL);
+			key_ACharacter(buf, KT_STD, IA_DEFAULT);
 			return;
 		}
 		if (ll == 1) {
@@ -4329,10 +4291,10 @@ Default_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
 				    NULL);
 				break;
 			    default:
-				key_ACharacter(buf, KT_STD, IA_DEFAULT, NULL);
+				key_ACharacter(buf, KT_STD, IA_DEFAULT);
 				break;
 			} else {
-				key_ACharacter(buf, KT_STD, IA_DEFAULT, NULL);
+				key_ACharacter(buf, KT_STD, IA_DEFAULT);
 			}
 			return;
 		}
@@ -4514,8 +4476,7 @@ Default_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
 
 			    	ucs4 = keysym2ucs(ks);
 				if (ucs4 != (ucs4_t)-1) {
-				    	key_UCharacter(ucs4, KT_STD, IA_KEY,
-						NULL);
+				    	key_UCharacter(ucs4, KT_STD, IA_KEY);
 				} else {
 					vtrace(
 					    " %s: dropped (unknown keysym)\n",
