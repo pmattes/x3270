@@ -1894,8 +1894,6 @@ options_menu_init(Boolean regen, Position x, Position y)
 			&spaced);
 		toggle_init(t, OVERLAY_PASTE, "overlayPasteOption", NULL,
 			&spaced);
-		toggle_init(t, MARGINED_PASTE, "marginedPasteOption", NULL,
-			&spaced);
 		toggle_init(t, RECTANGLE_SELECT, "rectangleSelectOption", NULL,
 			&spaced);
 		toggle_init(t, CROSSHAIR, "crosshairOption", NULL, &spaced);
