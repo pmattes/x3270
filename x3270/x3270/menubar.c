@@ -71,6 +71,7 @@
 #include "togglesc.h"
 #include "utilc.h"
 #include "xaac.h"
+#include "xactionsc.h"
 #include "xioc.h"
 
 #define MACROS_MENU	"macrosMenu"

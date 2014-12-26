@@ -196,7 +196,7 @@ static struct {
  * Translation from APL ksysym names to indirect APL keysyms.
  */
 KeySym
-APLStringToKeysym(char *s, int *is_gep)
+APLStringToKeysym(const char *s, int *is_gep)
 {
 	register int i;
 

@@ -450,22 +450,22 @@ rethumb(void)
 }
 
 #if defined(X3270_INTERACTIVE) /*[*/
-void
-Scroll_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
-	Cardinal *num_params)
+Boolean
+Scroll_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	action_debug(Scroll_action, event, params, num_params);
-	if (*num_params != 1) {
-		popup_an_error("Scroll takes one parameter");
-		return;
-	}
-	if (!strcasecmp(params[0], "Forward")) {
-		scroll_n(maxROWS, +1);
-	} else if (!strcasecmp(params[0], "Backward")) {
-		scroll_n(maxROWS, -1);
-	} else {
-		popup_an_error("Scroll parameter must be Forward or Backward");
-		return;
-	}
+    eaction_debug("Scroll", ia, argc, argv);
+    if (check_eusage("Scroll", argc, 1, 1) < 0) {
+	return False;
+    }
+
+    if (!strcasecmp(argv[0], "Forward")) {
+	scroll_n(maxROWS, +1);
+    } else if (!strcasecmp(argv[0], "Backward")) {
+	scroll_n(maxROWS, -1);
+    } else {
+	popup_an_error("Scroll parameter must be Forward or Backward");
+	return False;
+    }
+    return True;
 }
 #endif /*]*/

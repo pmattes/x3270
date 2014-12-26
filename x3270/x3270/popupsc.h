@@ -53,8 +53,7 @@ extern void child_popup_init(void);
 extern void error_init(void);
 extern void error_popup_init(void);
 extern Boolean error_popup_visible(void);
-extern void Info_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t Info_eaction;
 extern void info_popup_init(void);
 extern void PA_confirm_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);

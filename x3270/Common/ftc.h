@@ -65,13 +65,10 @@ extern void ft_complete(const char *errmsg);
 extern void ft_init(void);
 extern void ft_running(Boolean is_cut);
 extern void ft_update_length(void);
-extern void PA_dialog_focus_action(Widget w, XEvent *event, String *parms,
-    Cardinal *num_parms);
-extern void PA_dialog_next_action(Widget w, XEvent *event, String *parms,
-    Cardinal *num_parms);
+#if defined(X3270_DISPLAY) /*[*/
 extern void popup_ft(Widget w, XtPointer call_parms, XtPointer call_data);
-extern void Transfer_action(Widget w, XEvent *event, String *parms,
-    Cardinal *num_parms);
+#endif /*]*/
+extern eaction_t Transfer_eaction;
 extern char *ft_local_fflag(void);
 
 # if defined(_WIN32) /*[*/

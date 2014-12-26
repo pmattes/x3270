@@ -364,33 +364,32 @@ static struct {
 #endif /*]*/
 };
 
-void  
-Transfer_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+Boolean  
+Transfer_eaction(ia_t ia, unsigned argc, const char **argv)
 {
     int i, k;
-    Cardinal j;
+    unsigned j;
     long l;
     char *ptr;
     unsigned flen;
     varbuf_t r;
 
-    String *xparams = params;
-    Cardinal xnparams = *num_params;
+    char **xparams = (char **)argv;
+    unsigned xnparams = argc;
 
-    action_debug(Transfer_action, event, params, num_params);
+    eaction_debug("Transfer", ia, argc, argv);
 
     ft_private.is_action = True;
 
     /* Make sure we're connected. */
     if (!IN_3270) {
 	popup_an_error("Not connected");
-	return;
+	return False;
     }
 
     /* Check for interactive mode. */
     if (ft_gui_interact(&xparams, &xnparams)) {
-	return;
+	return True;
     }
 
     /* Set everything to the default. */
@@ -412,7 +411,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	    eq = strchr(xparams[j], '=');
 	    if (eq == NULL || eq == xparams[j] || !*(eq + 1)) {
 		popup_an_error("Invalid option syntax: '%s'", xparams[j]);
-		return;
+		return False;
 	    }
 	    kwlen = eq - xparams[j];
 	    if (!strncasecmp(xparams[j], tp[i].name, kwlen)
@@ -425,7 +424,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 		    }
 		    if (k >= 4 || tp[i].keyword[k] == NULL) {
 			popup_an_error("Invalid option value: '%s'", eq + 1);
-			return;
+			return False;
 		    }
 		} else switch (i) {
 		    case PARM_LRECL:
@@ -441,7 +440,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 			if (ptr == eq + 1 || *ptr) {
 			    popup_an_error("Invalid option value: '%s'",
 				    eq + 1);
-			    return;
+			    return False;
 			}
 			break;
 		    default:
@@ -453,18 +452,18 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	}
 	if (i >= N_PARMS) {
 	    popup_an_error("Unknown option: %s", xparams[j]);
-	    return;
+	    return False;
 	}
     }
 
     /* Check for required values. */
     if (tp[PARM_HOST_FILE].value == NULL) {
 	popup_an_error("Missing 'HostFile' option");
-	return;
+	return False;
     }
     if (tp[PARM_LOCAL_FILE].value == NULL) {
 	popup_an_error("Missing 'LocalFile' option");
-	return;
+	return False;
     }
 
     /*
@@ -487,7 +486,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
     } else {
 	if (!ascii_flag) {
 	    popup_an_error("Invalid 'Cr' option for ASCII mode");
-	    return;
+	    return False;
 	}
 	cr_flag = !strcasecmp(tp[PARM_CR].value, "remove") ||
 		  !strcasecmp(tp[PARM_CR].value, "add");
@@ -539,7 +538,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	if (ft_local_file != NULL) {
 	    (void) fclose(ft_local_file);
 	    popup_an_error("File exists");
-	    return;
+	    return False;
 	}
     }
 
@@ -547,7 +546,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
     ft_local_file = fopen(ft_local_filename, ft_local_fflag());
     if (ft_local_file == NULL) {
 	popup_an_errno(errno, "Local file '%s'", ft_local_filename);
-	return;
+	return False;
     }
 
     /* Build the ind$file command */
@@ -652,7 +651,7 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
 	    }
 	}
 	popup_an_error("%s", get_message("ftUnable"));
-	return;
+	return False;
     }
     (void) emulate_input(vb_buf(&r), vb_len(&r), False);
     vb_free(&r);
@@ -663,6 +662,8 @@ Transfer_action(Widget w _is_unused, XEvent *event, String *params,
     ft_start_id = AddTimeOut(10 * 1000, ft_didnt_start);
     ft_state = FT_AWAIT_ACK;
     ft_private.is_cut = False;
+
+    return True;
 }
 
 #if defined(_WIN32) /*[*/

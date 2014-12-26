@@ -80,6 +80,7 @@
 #include "unicode_dbcsc.h"
 #include "utf8c.h"
 #include "utilc.h"
+#include "xactionsc.h"
 #include "xioc.h"
 
 #if defined(HAVE_SYS_SELECT_H) /*[*/
@@ -3666,14 +3667,16 @@ screen_focus(Boolean in)
 /*
  * Change fonts.
  */
-void
-SetFont_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+Boolean
+SetFont_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	action_debug(SetFont_action, event, params, num_params);
-	if (check_usage(SetFont_action, *num_params, 1, 1) < 0)
-		return;
-	screen_newfont(params[0], True, False);
+    eaction_debug("SetFont", ia, argc, argv);
+    if (check_eusage("SetFont", argc, 1, 1) < 0) {
+	return False;
+    }
+
+    screen_newfont(argv[0], True, False);
+    return True;
 }
 
 /*
@@ -5547,41 +5550,40 @@ send_spot_loc(void)
 #endif /*]*/
 
 /* Change the window title. */
-void
-Title_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+Boolean
+Title_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	action_debug(Title_action, event, params, num_params);
+    eaction_debug("Title", ia, argc, argv);
+    if (check_eusage("Title", argc, 1, 1) < 0) {
+	return False;
+    }
 
-	if (check_usage(Title_action, *num_params, 1, 1) < 0)
-		return;
-
-	user_title = NewString(params[0]);
-	XtVaSetValues(toplevel, XtNtitle, user_title, NULL);
+    user_title = NewString(argv[0]);
+    XtVaSetValues(toplevel, XtNtitle, user_title, NULL);
+    return True;
 }
 
 /* Change the window state. */
-void
-WindowState_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+Boolean
+WindowState_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	int state;
+    int state;
 
-	action_debug(WindowState_action, event, params, num_params);
+    eaction_debug("WindowState", ia, argc, argv);
+    if (check_eusage("WindowState", argc, 1, 1) < 0) {
+	return False;
+    }
 
-	if (check_usage(WindowState_action, *num_params, 1, 1) < 0)
-		return;
-
-	if (!strcasecmp(params[0], "Iconic"))
-		state = True;
-	else if (!strcasecmp(params[0], "Normal"))
-		state = False;
-	else {
-		popup_an_error("%s argument must be Iconic or Normal",
-		    action_name(WindowState_action));
-	       return;
-	}
-	XtVaSetValues(toplevel, XtNiconic, state, NULL);
+    if (!strcasecmp(argv[0], "Iconic")) {
+	state = True;
+    } else if (!strcasecmp(argv[0], "Normal")) {
+	state = False;
+    } else {
+	popup_an_error("WindowState argument must be Iconic or Normal");
+	return False;
+    }
+    XtVaSetValues(toplevel, XtNiconic, state, NULL);
+    return True;
 }
 
 static dfc_t *dfc = NULL, *dfc_last = NULL;

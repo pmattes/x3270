@@ -34,10 +34,8 @@
  */
 
 /* Actions. */
-extern void Copy_action(Widget w, XEvent *event, String *params,
-	Cardinal *num_params);
-extern void Cut_action(Widget w, XEvent *event, String *params,
-	Cardinal *num_params);
+extern eaction_t Copy_eaction;
+extern eaction_t Cut_eaction;
 
 /* Used by the screen logic. */
 extern Boolean select_changed(unsigned row, unsigned col, unsigned rows,

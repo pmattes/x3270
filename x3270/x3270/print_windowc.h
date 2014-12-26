@@ -30,7 +30,6 @@
  *		Global declarations for print_window.c.
  */
 
-extern void PrintWindow_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t PrintWindow_eaction;
 extern void print_window_option(Widget w, XtPointer client_data,
     XtPointer call_data);

@@ -31,7 +31,7 @@
 
 /*
  *	actions.c
- *		The X actions table and action debugging code.
+ *		The actions table and action debugging code.
  */
 
 #include "globals.h"
@@ -65,291 +65,208 @@
 #include "screenc.h"
 #endif /*]*/
 
-#if defined(X3270_DISPLAY) /*[*/
-#include <X11/keysym.h>
-#include <X11/XKBlib.h>
-
-#define MODMAP_SIZE	8
-#define MAP_SIZE	13
-#define MAX_MODS_PER	4
-static struct {
-        const char *name[MAX_MODS_PER];
-        unsigned int mask;
-	Boolean is_meta;
-} skeymask[MAP_SIZE] = { 
-	{ { "Shift" }, ShiftMask, False },
-	{ { NULL } /* Lock */, LockMask, False },
-	{ { "Ctrl" }, ControlMask, False },
-	{ { NULL }, Mod1Mask, False },
-	{ { NULL }, Mod2Mask, False },
-	{ { NULL }, Mod3Mask, False },
-	{ { NULL }, Mod4Mask, False },
-	{ { NULL }, Mod5Mask, False },
-	{ { "Button1" }, Button1Mask, False },
-	{ { "Button2" }, Button2Mask, False },
-	{ { "Button3" }, Button3Mask, False },
-	{ { "Button4" }, Button4Mask, False },
-	{ { "Button5" }, Button5Mask, False }
-};
-static Boolean know_mods = False;
-#endif /*]*/
-
-XtActionsRec all_actions[] = {
-#if defined(C3270) /*[*/
-	{ "Abort",		Abort_action },
-#endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
-	{ "AltCursor",  	AltCursor_action },
-#endif /*]*/
-#if defined(X3270_INTERACTIVE) /*[*/
-	{ "Compose",		Compose_action },
-#endif /*]*/
-#if defined(WC3270) /*[*/
-	{ "Copy",		Copy_action },
-#endif /*]*/
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
-	{ "Cut",		Cut_action },
-#endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
-	{ "Default",		Default_action },
-	{ "HandleMenu",		HandleMenu_action },
-	{ "HardPrint",		PrintText_action },
-	{ "HexString",		HexString_action },
-#endif /*]*/
-#if defined(X3270_INTERACTIVE) /*[*/
-	{ "Info",		Info_action },
-#endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
-	{ "Keymap",		TemporaryKeymap_action },
-	{ PA_PFX "ConfigureNotify", PA_ConfigureNotify_action },
-	{ PA_END,		PA_End_action },
-#endif /*]*/
-#if defined(C3270) /*[*/
-	{ "Escape",		Escape_action },
-#endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
-	{ PA_PFX "EnterLeave",	PA_EnterLeave_action },
-	{ PA_PFX "Expose",	PA_Expose_action },
-	{ PA_PFX "Focus",	PA_Focus_action },
-	{ PA_PFX "GraphicsExpose", PA_GraphicsExpose_action },
-	{ PA_PFX "KeymapNotify", PA_KeymapNotify_action },
-	{ PA_KEYMAP_TRACE,	PA_KeymapTrace_action },
-	{ PA_PFX "Shift",	PA_Shift_action },
-	{ PA_PFX "StateChanged", PA_StateChanged_action },
-	{ PA_PFX "VisibilityNotify",PA_VisibilityNotify_action },
-	{ PA_PFX "WMProtocols",	PA_WMProtocols_action },
-	{ PA_PFX "confirm",	PA_confirm_action },
-	{ "PrintWindow",	PrintWindow_action },
-#endif /*]*/
-	{ "PrintText",		PrintText_action },
-#if defined(X3270_INTERACTIVE) /*[*/
-	{ "Flip",		Flip_action },
-	{ "Redraw",		Redraw_action },
-#endif /*]*/
-#if defined(X3270_INTERACTIVE) /*[*/
-	{ "Scroll",		Scroll_action },
-#endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
-	{ "SetFont",		SetFont_action },
-	{ "TemporaryKeymap",	TemporaryKeymap_action },
-	{ PA_PFX "dialog-next",	PA_dialog_next_action },
-	{ PA_PFX "dialog-focus", PA_dialog_focus_action },
-	{ "insert-selection",	insert_selection_action },
-	{ "move-select",	move_select_action },
-	{ "select-end",		select_end_action },
-	{ "select-extend",	select_extend_action },
-	{ "select-start",	select_start_action },
-	{ "set-select",		set_select_action },
-	{ "start-extend",	start_extend_action },
-#endif /*]*/
-#if !defined(TCL3270) /*[*/
-	{ "AnsiText",		AnsiText_action },
-#endif /*]*/
-	{ "Ascii",		Ascii_action },
-	{ "AsciiField",		AsciiField_action },
-	{ "Attn",		Attn_action },
-	{ "BackSpace",		BackSpace_action },
-	{ "BackTab",		BackTab_action },
-#if defined(X3270_INTERACTIVE) /*[*/
-	{ "Bell",		Bell_action },
-#endif /*]*/
-#if defined(CB_DEBUG) /*[*/
-	{ "Cb",			Cb_action },
-#endif /*]*/
-	{ "CircumNot",		CircumNot_action },
-	{ "Clear",		Clear_action },
-	{ "Close",		Disconnect_action },
-#if !defined(TCL3270) /*[*/
-	{ "CloseScript",	CloseScript_action },
-#endif /*]*/
-	{ "Connect",		Connect_action },
-#if !defined(TCL3270) /*[*/
-	{ "ContinueScript",	ContinueScript_action },
-#endif /*]*/
-	{ "CursorSelect",	CursorSelect_action },
-	{ "Delete", 		Delete_action },
-	{ "DeleteField",	DeleteField_action },
-	{ "DeleteWord",		DeleteWord_action },
-	{ "Disconnect",		Disconnect_action },
-	{ "Down",		Down_action },
-	{ "Dup",		Dup_action },
-	{ "Ebcdic",		Ebcdic_action },
-	{ "EbcdicField",	EbcdicField_action },
-	{ "Enter",		Enter_action },
-	{ "Erase",		Erase_action },
-	{ "EraseEOF",		EraseEOF_action },
-	{ "EraseInput",		EraseInput_action },
-#if !defined(TCL3270) /*[*/
-	{ "Execute",		Execute_action },
-#endif /*]*/
-#if defined(C3270) /*[*/
-	{ "Exit",		Quit_action },
-#endif /*]*/
-#if !defined(TCL3270) /*[*/
-	{ "Expect",		Expect_action },
-#endif /*]*/
-	{ "FieldEnd",		FieldEnd_action },
-	{ "FieldMark",		FieldMark_action },
-	{ "HexString",		HexString_action},
-#if defined(C3270) /*[*/
-	{ "Help",		Help_action},
-#endif/*]*/
-	{ "Home",		Home_action },
-	{ "Insert",		Insert_action },
-	{ "Interrupt",		Interrupt_action },
-	{ "Key",		Key_action },
-#if defined(C3270) /*[*/
-	{ "Keypad",		Keypad_action },
-#endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
-	{ "KybdSelect",		KybdSelect_action },
-#endif /*]*/
-	{ "Left",		Left_action },
-	{ "Left2", 		Left2_action },
-#if !defined(TCL3270) /*[*/
-	{ "Macro", 		Macro_action },
-#endif /*]*/
-#if defined(C3270) /*[*/
-	{ "Menu",		Menu_action },
-#endif /*]*/
-	{ "MonoCase",		MonoCase_action },
-#if defined(X3270_DISPLAY) /*[*/
-	{ "MouseSelect",	MouseSelect_action },
-#endif /*]*/
-	{ "MoveCursor",		MoveCursor_action },
-	{ "Newline",		Newline_action },
-	{ "NextWord",		NextWord_action },
-	{ "Open",		Connect_action },
-	{ "PA",			PA_action },
-	{ "PF",			PF_action },
-#if defined(WC3270) /*[*/
-	{ "Paste",		Paste_action },
-#endif /*]*/
-#if !defined(TCL3270) /*[*/
-	{ "PauseScript",	PauseScript_action },
-#endif /*]*/
-	{ "PreviousWord",	PreviousWord_action },
-#if defined(X3270_INTERACTIVE) /*[*/
-	{ "Printer",		Printer_action },
-#endif /*]*/
-	{ "Query",		Query_action },
-	{ "Quit",		Quit_action },
-	{ "ReadBuffer",		ReadBuffer_action },
-#if defined(X3270_INTERACTIVE) /*[*/
-	{ "Reconnect",		Reconnect_action },
-#endif /*]*/
-	{ "Reset",		Reset_action },
-	{ "Right",		Right_action },
-	{ "Right2",		Right2_action },
-#if defined(C3270) /*[*/
-	{ "ScreenTrace",	ScreenTrace_action },
-#endif/*]*/
-#if !defined(TCL3270) /*[*/
-	{ "Script",		Script_action },
-#endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
-	{ "SelectAll",		SelectAll_action },
-	{ "SelectDown",		SelectDown_action },
-	{ "SelectMotion",	SelectMotion_action },
-	{ "SelectUp",		SelectUp_action },
-#endif /*]*/
-#if defined(C3270) /*[*/
-	{ "Show",		Show_action },
-#endif/*]*/
-	{ "Snap",		Snap_action },
-#if !defined(TCL3270) /*[*/
-	{ "Source",		Source_action },
-#endif /*]*/
-#if defined(TCL3270) /*[*/
-	{ "Status",		Status_action },
-#endif /*]*/
-	{ "String",		String_action },
-	{ "SysReq",		SysReq_action },
-	{ "Tab",		Tab_action },
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
-	{ "Title",		Title_action },
-#endif /*]*/
-	{ "Toggle",		Toggle_action },
-	{ "ToggleInsert",	ToggleInsert_action },
-	{ "ToggleReverse",	ToggleReverse_action },
-#if defined(C3270) /*[*/
-	{ "Trace",		Trace_action },
-#endif /*]*/
-	{ "Transfer",		Transfer_action },
-#if defined(X3270_DISPLAY) /*[*/
-	{ "Unselect",		Unselect_action },
-#endif /*]*/
-	{ "Up",			Up_action },
-	{ "Wait",		Wait_action },
-#if defined(X3270_DISPLAY) /*[*/
-	{ "WindowState",	WindowState_action },
-#endif /*]*/
-	{ "ignore",		ignore_action }
-};
-
-int actioncount = XtNumber(all_actions);
-XtActionsRec *actions = NULL;
-
-/* Actions that are aliases for other actions. */
-static char *aliased_actions[] = {
-	"Close", "HardPrint", "Open", NULL
-};
-
 enum iaction ia_cause;
 const char *ia_name[] = {
-	"String", "Paste", "Screen redraw", "Keypad", "Default", "Key",
-	"Macro", "Script", "Peek", "Typeahead", "File transfer", "Command",
-	"Keymap", "Idle"
+    "String", "Paste", "Screen redraw", "Keypad", "Default", "Key",
+    "Macro", "Script", "Peek", "Typeahead", "File transfer", "Command",
+    "Keymap", "Idle"
 };
 
-/* No-op action for suppressed actions. */
-static void
-suppressed_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
-{
-	action_debug(suppressed_action, event, params, num_params);
-}
+/* The emulator action table. */
+eaction_table_t all_eactions[] = {
+#if defined(C3270) /*[*/
+    { "Abort",		Abort_eaction, NULL },
+#endif /*]*/
+#if defined(X3270_DISPLAY) /*[*/
+    { "AltCursor",  	AltCursor_eaction, NULL },
+#endif /*]*/
+#if defined(X3270_INTERACTIVE) /*[*/
+    { "Compose",	Compose_eaction, NULL },
+#endif /*]*/
+#if defined(WC3270) /*[*/
+    { "Copy",		Copy_eaction, NULL },
+#endif /*]*/
+#if defined(WC3270) /*[*/
+    { "Cut",		Cut_eaction, NULL },
+#endif /*]*/
+    { "HexString",	HexString_eaction, NULL },
+#if defined(X3270_INTERACTIVE) /*[*/
+    { "Info",		Info_eaction, NULL },
+#endif /*]*/
+#if defined(X3270_DISPLAY) /*[*/
+    { "Keymap",		TemporaryKeymap_eaction, NULL },
+#endif /*]*/
+#if defined(C3270) /*[*/
+    { "Escape",		Escape_eaction, NULL },
+#endif /*]*/
+#if defined(X3270_DISPLAY) /*[*/
+    { "PrintWindow",	PrintWindow_eaction, NULL },
+#endif /*]*/
+    { "PrintText",	PrintText_eaction, NULL },
+#if defined(X3270_INTERACTIVE) /*[*/
+    { "Flip",		Flip_eaction, NULL },
+#endif /*]*/
+#if defined(C3270) /*[*/
+    { "Redraw",		Redraw_eaction, NULL },
+#endif /*]*/
+#if defined(X3270_INTERACTIVE) /*[*/
+    { "Scroll",		Scroll_eaction, NULL },
+#endif /*]*/
+#if defined(X3270_DISPLAY) /*[*/
+    { "SetFont",	SetFont_eaction, NULL },
+    { "TemporaryKeymap",TemporaryKeymap_eaction, NULL },
+#endif /*]*/
+#if !defined(TCL3270) /*[*/
+    { "AnsiText",	AnsiText_eaction, NULL },
+#endif /*]*/
+    { "Ascii",		Ascii_eaction, NULL },
+    { "AsciiField",	AsciiField_eaction, NULL },
+    { "Attn",		Attn_eaction, NULL },
+    { "BackSpace",	BackSpace_eaction, NULL },
+    { "BackTab",	BackTab_eaction, NULL },
+#if defined(X3270_INTERACTIVE) /*[*/
+    { "Bell",		Bell_eaction, NULL },
+#endif /*]*/
+    { "CircumNot",	CircumNot_eaction, NULL },
+    { "Clear",		Clear_eaction, NULL },
+    { "Close",		Disconnect_eaction, NULL },
+#if !defined(TCL3270) /*[*/
+    { "CloseScript",	CloseScript_eaction, NULL },
+#endif /*]*/
+    { "Connect",	Connect_eaction, NULL },
+#if !defined(TCL3270) /*[*/
+    { "ContinueScript",	ContinueScript_eaction, NULL },
+#endif /*]*/
+    { "CursorSelect",	CursorSelect_eaction, NULL },
+    { "Delete", 	Delete_eaction, NULL },
+    { "DeleteField",	DeleteField_eaction, NULL },
+    { "DeleteWord",	DeleteWord_eaction, NULL },
+    { "Disconnect",	Disconnect_eaction, NULL },
+    { "Down",		Down_eaction, NULL },
+    { "Dup",		Dup_eaction, NULL },
+    { "Ebcdic",		Ebcdic_eaction, NULL },
+    { "EbcdicField",	EbcdicField_eaction, NULL },
+    { "Enter",		Enter_eaction, NULL },
+    { "Erase",		Erase_eaction, NULL },
+    { "EraseEOF",	EraseEOF_eaction, NULL },
+    { "EraseInput",	EraseInput_eaction, NULL },
+#if !defined(TCL3270) /*[*/
+    { "Execute",	Execute_eaction, NULL },
+#endif /*]*/
+#if defined(C3270) /*[*/
+    { "Exit",		Quit_eaction, NULL },
+#endif /*]*/
+#if !defined(TCL3270) /*[*/
+    { "Expect",		Expect_eaction, NULL },
+#endif /*]*/
+    { "FieldEnd",	FieldEnd_eaction, NULL },
+    { "FieldMark",	FieldMark_eaction, NULL },
+    { "HexString",	HexString_eaction},
+#if defined(C3270) /*[*/
+    { "Help",		Help_eaction},
+#endif/*]*/
+    { "Home",		Home_eaction, NULL },
+    { "Insert",		Insert_eaction, NULL },
+    { "Interrupt",	Interrupt_eaction, NULL },
+    { "Key",		Key_eaction, NULL },
+#if defined(C3270) /*[*/
+    { "Keypad",		Keypad_eaction, NULL },
+#endif /*]*/
+    { "Left",		Left_eaction, NULL },
+    { "Left2", 		Left2_eaction, NULL },
+#if !defined(TCL3270) /*[*/
+    { "Macro", 		Macro_eaction, NULL },
+#endif /*]*/
+#if defined(C3270) /*[*/
+    { "Menu",		Menu_eaction, NULL },
+#endif /*]*/
+    { "MonoCase",	MonoCase_eaction, NULL },
+    { "MoveCursor",	MoveCursor_eaction, NULL },
+    { "Newline",	Newline_eaction, NULL },
+    { "NextWord",	NextWord_eaction, NULL },
+    { "Open",		Connect_eaction, NULL },
+    { "PA",		PA_eaction, NULL },
+    { "PF",		PF_eaction, NULL },
+#if defined(WC3270) /*[*/
+    { "Paste",		Paste_eaction, NULL },
+#endif /*]*/
+#if !defined(TCL3270) /*[*/
+    { "PauseScript",	PauseScript_eaction, NULL },
+#endif /*]*/
+    { "PreviousWord",	PreviousWord_eaction, NULL },
+#if defined(X3270_INTERACTIVE) /*[*/
+    { "Printer",	Printer_eaction, NULL },
+#endif /*]*/
+    { "Query",		Query_eaction, NULL },
+    { "Quit",		Quit_eaction, NULL },
+    { "ReadBuffer",	ReadBuffer_eaction, NULL },
+#if defined(X3270_INTERACTIVE) /*[*/
+    { "Reconnect",	Reconnect_eaction, NULL },
+#endif /*]*/
+    { "Reset",		Reset_eaction, NULL },
+    { "Right",		Right_eaction, NULL },
+    { "Right2",		Right2_eaction, NULL },
+#if defined(C3270) /*[*/
+    { "ScreenTrace",	ScreenTrace_eaction, NULL },
+#endif/*]*/
+#if !defined(TCL3270) /*[*/
+    { "Script",		Script_eaction, NULL },
+#endif /*]*/
+#if defined(C3270) /*[*/
+    { "Show",		Show_eaction, NULL },
+#endif/*]*/
+    { "Snap",		Snap_eaction, NULL },
+#if !defined(TCL3270) /*[*/
+    { "Source",		Source_eaction, NULL },
+#endif /*]*/
+#if defined(TCL3270) /*[*/
+    { "Status",		Status_eaction, NULL },
+#endif /*]*/
+    { "String",		String_eaction, NULL },
+    { "SysReq",		SysReq_eaction, NULL },
+    { "Tab",		Tab_eaction, NULL },
+#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
+    { "Title",		Title_eaction, NULL },
+#endif /*]*/
+    { "Toggle",		Toggle_eaction, NULL },
+    { "ToggleInsert",	ToggleInsert_eaction, NULL },
+    { "ToggleReverse",	ToggleReverse_eaction, NULL },
+#if defined(C3270) /*[*/
+    { "Trace",		Trace_eaction, NULL },
+#endif/*]*/
+    { "Transfer",	Transfer_eaction, NULL },
+    { "Up",		Up_eaction, NULL },
+    { "Wait",		Wait_eaction, NULL },
+#if defined(X3270_DISPLAY) /*[*/
+    { "WindowState",	WindowState_eaction, NULL },
+#endif /*]*/
+};
+eaction_table_t *eaction_table = all_eactions;
+unsigned num_eactions = sizeof(all_eactions) / sizeof(all_eactions[0]);
 
 /* Look up an action name in the suppressed actions resource. */
-static Boolean
-action_suppressed(String name, char *suppress)
+Boolean
+action_suppressed(const char *name, const char *suppress)
 {
-	char *s = suppress;
-	char *t;
+    const char *s = suppress;
+    char *t;
 
-	while ((t = strstr(s, name)) != NULL) {
-		char b;
-		char e = t[strlen(name)];
+    while ((t = strstr(s, name)) != NULL) {
+	char b;
+	char e = t[strlen(name)];
 
-		if (t == suppress)
-			b = '\0';
-		else
-			b = *(t - 1);
-		if ((b == '\0' || b == ')' || isspace(b)) &&
-		    (e == '\0' || e == '(' || isspace(e)))
-			return True;
-		s = t + strlen(name);
+	if (t == suppress) {
+	    b = '\0';
+	} else {
+	    b = *(t - 1);
 	}
-	return False;
+	if ((b == '\0' || b == ')' || isspace(b)) &&
+	    (e == '\0' || e == '(' || isspace(e))) {
+	    return True;
+	}
+	s = t + strlen(name);
+    }
+    return False;
 }
 
 /*
@@ -359,6 +276,7 @@ action_suppressed(String name, char *suppress)
 void
 action_init(void)
 {
+#if 0
 	char *suppress;
 	int i;
 
@@ -376,256 +294,8 @@ action_init(void)
 		if (action_suppressed(actions[i].string, suppress))
 			actions[i].proc = suppressed_action;
 	}
+#endif
 }
-
-/*
- * Return a name for an action.
- */
-const char *
-action_name(XtActionProc action)
-{
-	register int i;
-
-	/*
-	 * XXX: It would be better if the real name could be displayed, with a
-	 * message indicating it is suppressed.
-	 */
-	if (action == suppressed_action)
-		return "(suppressed)";
-
-	for (i = 0; i < actioncount; i++)
-		if (actions[i].proc == action) {
-			int j;
-			Boolean aliased = False;
-
-			for (j = 0; aliased_actions[j] != NULL; j++) {
-				if (!strcmp(aliased_actions[j],
-							actions[i].string)) {
-					aliased = True;
-					break;
-				}
-			}
-			if (!aliased)
-				return actions[i].string;
-		}
-	return "(unknown)";
-}
-
-#if defined(X3270_DISPLAY) /*[*/
-/*
- * Search the modifier map to learn the modifier bits for Meta, Alt, Hyper and
- *  Super.
- */
-static void
-learn_modifiers(void)
-{
-	XModifierKeymap *mm;
-	int i, j, k;
-	static char *default_modname[] = {
-	    NULL, NULL, "Ctrl",
-	    "Mod1", "Mod2", "Mod3", "Mod4", "Mod5",
-	    "Button1", "Button2", "Button3", "Button4", "Button5"
-	};
-
-	mm = XGetModifierMapping(display);
-
-	for (i = 0; i < MODMAP_SIZE; i++) {
-		for (j = 0; j < mm->max_keypermod; j++) {
-			KeyCode kc;
-			const char *name = NULL;
-			Boolean is_meta = False;
-
-			kc = mm->modifiermap[(i * mm->max_keypermod) + j];
-			if (!kc)
-				continue;
-
-			switch(XkbKeycodeToKeysym(display, kc, 0, 0)) {
-			    case XK_Meta_L:
-			    case XK_Meta_R:
-				name = "Meta";
-				is_meta = True;
-				break;
-			    case XK_Alt_L:
-			    case XK_Alt_R:
-				name = "Alt";
-				break;
-			    case XK_Super_L:
-			    case XK_Super_R:
-				name = "Super";
-				break;
-			    case XK_Hyper_L:
-			    case XK_Hyper_R:
-				name = "Hyper";
-				break;
-			    default:
-				break;
-			}
-			if (name == NULL)
-				continue;
-			if (is_meta)
-				skeymask[i].is_meta = True;
-
-			for (k = 0; k < MAX_MODS_PER; k++) {
-				if (skeymask[i].name[k] == NULL)
-					break;
-				else if (!strcmp(skeymask[i].name[k], name))
-					k = MAX_MODS_PER;
-			}
-			if (k >= MAX_MODS_PER)
-				continue;
-			skeymask[i].name[k] = name;
-		}
-	}
-	for (i = 0; i < MODMAP_SIZE; i++) {
-		if (skeymask[i].name[0] == NULL) {
-			skeymask[i].name[0] = default_modname[i];
-		}
-	}
-	XFreeModifiermap(mm);
-}
-
-/*
- * Return the symbolic name for the modifier combination (i.e., "Meta" instead
- * of "Mod2".  Note that because it is possible to map multiple keysyms to the
- * same modifier bit, the answer may be ambiguous; we return the combinations
- * iteratively.
- */
-static char *
-key_symbolic_state(unsigned int state, int *iteration)
-{
-	static char rs[64];
-	static int ix[MAP_SIZE];
-	static int ix_ix[MAP_SIZE];
-	static int n_ix = 0;
-#if defined(VERBOSE_EVENTS) /*[*/
-	static int leftover = 0;
-#endif /*]*/
-	const char *comma = "";
-	int i;
-
-	if (!know_mods) {
-		learn_modifiers();
-		know_mods = True;
-	}
-
-	if (*iteration == 0) {
-		/* First time, build the table. */
-		n_ix = 0;
-		for (i = 0; i < MAP_SIZE; i++) {
-			if (skeymask[i].name[0] != NULL &&
-			    (state & skeymask[i].mask)) {
-				ix[i] = 0;
-				state &= ~skeymask[i].mask;
-				ix_ix[n_ix++] = i;
-			} else
-				ix[i] = MAX_MODS_PER;
-		}
-#if defined(VERBOSE_EVENTS) /*[*/
-		leftover = state;
-#endif /*]*/
-	}
-
-	/* Construct this result. */
-	rs[0] = '\0';
-	for (i = 0; i < n_ix;  i++) {
-		(void) strcat(rs, comma);
-		(void) strcat(rs, skeymask[ix_ix[i]].name[ix[ix_ix[i]]]);
-		comma = " ";
-	}
-#if defined(VERBOSE_EVENTS) /*[*/
-	if (leftover)
-		(void) sprintf(strchr(rs, '\0'), "%s?%d", comma, state);
-#endif /*]*/
-
-	/*
-	 * Iterate to the next.
-	 * This involves treating each slot like an n-ary number, where n is
-	 * the number of elements in the slot, iterating until the highest-
-	 * ordered slot rolls back over to 0.
-	 */
-	if (n_ix) {
-		i = n_ix - 1;
-		ix[ix_ix[i]]++;
-		while (i >= 0 &&
-		       (ix[ix_ix[i]] >= MAX_MODS_PER ||
-			skeymask[ix_ix[i]].name[ix[ix_ix[i]]] == NULL)) {
-			ix[ix_ix[i]] = 0;
-			i = i - 1;
-			if (i >= 0)
-				ix[ix_ix[i]]++;
-		}
-		*iteration = i >= 0;
-	} else
-		*iteration = 0;
-
-	return rs;
-}
-
-/* Return whether or not an KeyPress event state includes the Meta key. */
-Boolean
-event_is_meta(int state)
-{
-	int i;
-
-	/* Learn the modifier map. */
-	if (!know_mods) {
-		learn_modifiers();
-		know_mods = True;
-	}
-	for (i = 0; i < MAP_SIZE; i++) {
-		if (skeymask[i].name[0] != NULL &&
-		    skeymask[i].is_meta &&
-		    (state & skeymask[i].mask)) {
-			return True;
-		}
-	}
-	return False;
-}
-
-#if defined(VERBOSE_EVENTS) /*[*/
-static char *
-key_state(unsigned int state)
-{
-	static char rs[64];
-	const char *comma = "";
-	static struct {
-		const char *name;
-		unsigned int mask;
-	} keymask[] = {
-		{ "Shift", ShiftMask },
-		{ "Lock", LockMask },
-		{ "Control", ControlMask },
-		{ "Mod1", Mod1Mask },
-		{ "Mod2", Mod2Mask },
-		{ "Mod3", Mod3Mask },
-		{ "Mod4", Mod4Mask },
-		{ "Mod5", Mod5Mask },
-		{ "Button1", Button1Mask },
-		{ "Button2", Button2Mask },
-		{ "Button3", Button3Mask },
-		{ "Button4", Button4Mask },
-		{ "Button5", Button5Mask },
-		{ NULL, 0 },
-	};
-	int i;
-
-	rs[0] = '\0';
-	for (i = 0; keymask[i].name; i++) {
-		if (state & keymask[i].mask) {
-			(void) strcat(rs, comma);
-			(void) strcat(rs, keymask[i].name);
-			comma = "|";
-			state &= ~keymask[i].mask;
-		}
-	}
-	if (!rs[0])
-		(void) sprintf(rs, "%d", state);
-	else if (state)
-		(void) sprintf(strchr(rs, '\0'), "%s?%d", comma, state);
-	return rs;
-}
-#endif /*]*/
-#endif /*]*/
 
 /*
  * Check the number of argument to an action, and possibly pop up a usage
@@ -634,233 +304,77 @@ key_state(unsigned int state)
  * Returns 0 if the argument count is correct, -1 otherwise.
  */
 int
-check_usage(XtActionProc action, Cardinal nargs, Cardinal nargs_min,
-    Cardinal nargs_max)
+check_eusage(const char *aname, unsigned nargs, unsigned nargs_min,
+    unsigned nargs_max)
 {
-	if (nargs >= nargs_min && nargs <= nargs_max)
-		return 0;
-	if (nargs_min == nargs_max)
-		popup_an_error("%s requires %d argument%s",
-		    action_name(action), nargs_min, nargs_min == 1 ? "" : "s");
-	else
-		popup_an_error("%s requires %d or %d arguments",
-		    action_name(action), nargs_min, nargs_max);
-	cancel_if_idle_command();
-	return -1;
+    if (nargs >= nargs_min && nargs <= nargs_max) {
+	return 0;
+    }
+    if (nargs_min == nargs_max) {
+	popup_an_error("%s requires %d argument%s",
+		aname, nargs_min, nargs_min == 1 ? "" : "s");
+    } else {
+	popup_an_error("%s requires %d or %d arguments",
+		aname, nargs_min, nargs_max);
+    }
+    cancel_if_idle_command();
+    return -1;
 }
 
 /*
- * Display an action debug message
+ * Trace the execution of an emulator action.
  */
-#define KSBUF	256
 void
-action_debug(XtActionProc action, XEvent *event, String *params,
-    Cardinal *num_params)
+eaction_debug(const char *aname, ia_t ia, unsigned argc, const char **argv)
 {
-	Cardinal i;
-	char pbuf[1024];
-#if defined(X3270_DISPLAY) /*[*/
-	XKeyEvent *kevent;
-	KeySym ks;
-	XButtonEvent *bevent;
-	XMotionEvent *mevent;
-	XConfigureEvent *cevent;
-	XClientMessageEvent *cmevent;
-	XExposeEvent *exevent;
-	const char *press = "Press";
-	const char *direction = "Down";
-	char dummystr[KSBUF+1];
-	char *atom_name;
-	int ambiguous = 0;
-	int state;
-	const char *symname = "";
-	char snbuf[11];
-#endif /*]*/
+    unsigned i;
+    char pbuf[1024];
 
-	if (!toggled(TRACING)) {
-		return;
-	}
-	if (event == NULL) {
-		vtrace(" %s", ia_name[(int)ia_cause]);
-	}
-#if defined(X3270_DISPLAY) /*[*/
-	else switch (event->type) {
-	    case KeyRelease:
-		press = "Release";
-	    case KeyPress:
-		kevent = (XKeyEvent *)event;
-		(void) XLookupString(kevent, dummystr, KSBUF, &ks, NULL);
-		state = kevent->state;
-		/*
-		 * If the keysym is a printable ASCII character, ignore the
-		 * Shift key.
-		 */
-		if (ks != ' ' && !(ks & ~0xff) && isprint(ks))
-			state &= ~ShiftMask;
-		if (ks == NoSymbol)
-			symname = "NoSymbol";
-		else if ((symname = XKeysymToString(ks)) == NULL) {
-			(void) snprintf(snbuf, sizeof(snbuf), "0x%lx",
-				(unsigned long)ks);
-			symname = snbuf;
-		}
-		do {
-			int was_ambiguous = ambiguous;
+    if (!toggled(TRACING)) {
+	return;
+    }
+    vtrace("%s -> %s(", ia_name[(int)ia], aname);
+    for (i = 0; i < argc; i++) {
+	vtrace("%s\"%s\"",
+		i? ", ": "",
+		scatv(argv[i], pbuf, sizeof(pbuf)));
+    }
+    vtrace(")\n");
 
-			vtrace("%s ':%s<Key%s>%s'",
-				was_ambiguous? " or": "Event",
-				key_symbolic_state(state, &ambiguous),
-				press,
-				symname);
-		} while (ambiguous);
-		/*
-		 * If the keysym is an alphanumeric ASCII character, show the
-		 * case-insensitive alternative, sans the colon.
-		 */
-		if (!(ks & ~0xff) && isalpha(ks)) {
-			ambiguous = 0;
-			do {
-				int was_ambiguous = ambiguous;
-
-				vtrace(" %s '%s<Key%s>%s'",
-					was_ambiguous? "or":
-					    "(case-insensitive:",
-					key_symbolic_state(state, &ambiguous),
-					press,
-					symname);
-			} while (ambiguous);
-			vtrace(")");
-		}
-#if defined(VERBOSE_EVENTS) /*[*/
-		vtrace("\nKey%s [state %s, keycode %d, keysym "
-			    "0x%lx \"%s\"]",
-			    press, key_state(kevent->state),
-			    kevent->keycode, ks,
-			    symname);
-#endif /*]*/
-		break;
-	    case ButtonRelease:
-		press = "Release";
-		direction = "Up";
-	    case ButtonPress:
-		bevent = (XButtonEvent *)event;
-		do {
-			int was_ambiguous = ambiguous;
-
-			vtrace("%s '%s<Btn%d%s>'",
-				was_ambiguous? " or": "Event",
-				key_symbolic_state(bevent->state, &ambiguous),
-				bevent->button,
-				direction);
-		} while (ambiguous);
-#if defined(VERBOSE_EVENTS) /*[*/
-		vtrace("\nButton%s [state %s, button %d]",
-		    press, key_state(bevent->state),
-		    bevent->button);
-#endif /*]*/
-		break;
-	    case MotionNotify:
-		mevent = (XMotionEvent *)event;
-		do {
-			int was_ambiguous = ambiguous;
-
-			vtrace("%s '%s<Motion>'",
-				was_ambiguous? " or": "Event",
-				key_symbolic_state(mevent->state, &ambiguous));
-		} while (ambiguous);
-#if defined(VERBOSE_EVENTS) /*[*/
-		vtrace("\nMotionNotify [state %s]",
-			    key_state(mevent->state));
-#endif /*]*/
-		break;
-	    case EnterNotify:
-		vtrace("EnterNotify");
-		break;
-	    case LeaveNotify:
-		vtrace("LeaveNotify");
-		break;
-	    case FocusIn:
-		vtrace("FocusIn");
-		break;
-	    case FocusOut:
-		vtrace("FocusOut");
-		break;
-	    case KeymapNotify:
-		vtrace("KeymapNotify");
-		break;
-	    case Expose:
-		exevent = (XExposeEvent *)event;
-		vtrace("Expose [%dx%d+%d+%d]",
-		    exevent->width, exevent->height, exevent->x, exevent->y);
-		break;
-	    case PropertyNotify:
-		vtrace("PropertyNotify");
-		break;
-	    case ClientMessage:
-		cmevent = (XClientMessageEvent *)event;
-		atom_name = XGetAtomName(display, (Atom)cmevent->data.l[0]);
-		vtrace("ClientMessage [%s]",
-		    (atom_name == NULL) ? "(unknown)" : atom_name);
-		break;
-	    case ConfigureNotify:
-		cevent = (XConfigureEvent *)event;
-		vtrace("ConfigureNotify [%dx%d+%d+%d]",
-		    cevent->width, cevent->height, cevent->x, cevent->y);
-		break;
-	    default:
-		vtrace("Event %d", event->type);
-		break;
-	}
-	if (keymap_trace != NULL)
-		vtrace(" via %s -> %s(", keymap_trace,
-		    action_name(action));
-	else
-#endif /*]*/
-		vtrace(" -> %s(", action_name(action));
-	for (i = 0; i < *num_params; i++) {
-		vtrace("%s\"%s\"",
-		    i ? ", " : "",
-		    scatv(params[i], pbuf, sizeof(pbuf)));
-	}
-	vtrace(")\n");
-
-	trace_rollover_check();
+    trace_rollover_check();
 }
 
 /*
- * Wrapper for calling an action internally.
+ * Run an emulator action.
  */
 void
-action_internal(XtActionProc action, enum iaction cause, const char *parm1,
-    const char *parm2)
+run_eaction(const char *name, enum iaction cause, const char *parm1,
+	const char *parm2)
 {
-	Cardinal count = 0;
-	String parms[2];
+    unsigned i;
+    eaction_t *eaction = NULL;
+    unsigned count = 0;
+    const char *parms[2];
 
-	/* Duplicate the parms, because XtActionProc doesn't grok 'const'. */
-	if (parm1 != NULL) {
-		parms[0] = NewString(parm1);
-		count++;
-		if (parm2 != NULL) {
-			parms[1] = NewString(parm2);
-			count++;
-		}
+    for (i = 0; i < num_eactions; i++) {
+	if (!strcasecmp(eaction_table[i].name, name)) {
+	    eaction = eaction_table[i].eaction;
+	    break;
 	}
+    }
+    if (eaction == NULL) {
+	return; /* XXX: And do something? */
+    }
 
-	ia_cause = cause;
-	(*action)((Widget) NULL, (XEvent *) NULL,
-	    count ? parms : (String *) NULL,
-	    &count);
-
-	/* Free the parm copies. */
-	switch (count) {
-	    case 2:
-		Free(parms[1]);
-		/* fall through... */
-	    case 1:
-		Free(parms[0]);
-		break;
-	    default:
-		break;
+    if (parm1 != NULL) {
+	parms[0] = parm1;
+	count++;
+	if (parm2 != NULL) {
+	    parms[1] = parm2;
+	    count++;
 	}
+    }
+
+    ia_cause = cause;
+    (void)(*eaction)(cause, count, parms);
 }

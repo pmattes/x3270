@@ -42,26 +42,9 @@
 /* These first definitions were cribbed from X11 -- but no X code is used. */
 #define False 0
 #define True 1
-typedef void *XtPointer;
-typedef void *Widget;
-typedef void *XEvent;
 typedef char Boolean;
-typedef char *String;
-typedef unsigned int Cardinal;
 typedef unsigned long KeySym;
-#define Bool int
-typedef void (*XtActionProc)(
-    Widget 		/* widget */,
-    XEvent*		/* event */,
-    String*		/* params */,
-    Cardinal*		/* num_params */
-);
-typedef struct _XtActionsRec{
-    String	 string;
-    XtActionProc proc;
-} XtActionsRec;
-#define XtNumber(n)	(sizeof(n)/sizeof((n)[0]))
-#define NoSymbol		0L
+#define NoSymbol 0L
 
 /* These are local functions with similar semantics to X functions. */
 extern void *Malloc(size_t);

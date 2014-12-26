@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2010, Paul Mattes.
+ * Copyright (c) 1999-2010, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,24 +59,16 @@ extern void toggle_monocase(struct toggle *t, enum toggle_type tt);
 
 extern Boolean escaped;
 
-extern void Escape_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Help_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Redraw_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void ScreenTrace_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Show_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Trace_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t Escape_eaction;
+extern eaction_t Help_eaction;
+extern eaction_t Redraw_eaction;
+extern eaction_t ScreenTrace_eaction;
+extern eaction_t Show_eaction;
+extern eaction_t Trace_eaction;
 
 #if defined(WC3270) /*[*/
-extern void Paste_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Title_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t Paste_eaction;
+extern eaction_t Title_eaction;
 extern void screen_title(const char *text);
 extern int windows_cp;
 #endif /*]*/

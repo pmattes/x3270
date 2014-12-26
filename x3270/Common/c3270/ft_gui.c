@@ -109,7 +109,7 @@ ft_gui_aborting(void)
 
 /* Check for interactive mode. */
 Boolean 
-ft_gui_interact(String **params, Cardinal *num_params)
+ft_gui_interact(char ***params, unsigned *num_params)
 {   
     if (*num_params == 0 && escaped) {
 	if (interactive_transfer(params, num_params) < 0) {

@@ -77,6 +77,7 @@
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
+#include "xactionsc.h"
 
 #define Max(x, y)	(((x) > (y))? (x): (y))
 #define Min(x, y)	(((x) < (y))? (x): (y))

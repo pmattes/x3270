@@ -147,7 +147,7 @@ static Boolean interactive = False;
 static void ps_clear(void);
 static int tcl3270_main(int argc, const char *argv[]);
 static void negotiate(void);
-static char *tc_scatv(char *s);
+static char *tc_scatv(const char *s);
 static void snap_save(void);
 static void wait_timed_out(ioid_t);
 
@@ -236,7 +236,8 @@ Tcl_AppInit(Tcl_Interp *interp)
     const char **tcl_argv;
     int argc;
     const char **argv;
-    int i;
+    unsigned i;
+    int j;
     Tcl_Obj *argv_obj;
     char argc_buf[32];
 
@@ -255,8 +256,8 @@ Tcl_AppInit(Tcl_Interp *interp)
     argc = tcl_argc + 1;
     argv = (const char **)Malloc((argc + 1) * sizeof(char *));
     argv[0] = s0;
-    for (i = 0; i < tcl_argc; i++) {
-	argv[1 + i] = tcl_argv[i];
+    for (j = 0; j < tcl_argc; j++) {
+	argv[1 + j] = tcl_argv[j];
     }
     argv[argc] = NULL;
 
@@ -294,9 +295,9 @@ Tcl_AppInit(Tcl_Interp *interp)
      * they weren't already created by the init procedures called above.
      */
     action_init();
-    for (i = 0; i < actioncount; i++) {
-	if (Tcl_CreateObjCommand(interp, actions[i].string, x3270_cmd, NULL,
-		NULL) == NULL) {
+    for (i = 0; i < num_eactions; i++) {
+	if (Tcl_CreateObjCommand(interp, eaction_table[i].name, x3270_cmd,
+		    NULL, NULL) == NULL) {
 	    return TCL_ERROR;
 	}
     }
@@ -493,10 +494,10 @@ static int
 x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 		Tcl_Obj *CONST objv[])
 {
-	int i;
+	unsigned i;
 	unsigned j;
 	unsigned count;
-	char **argv = NULL;
+	const char **argv = NULL;
 	int old_mode;
 
 	/* Set up ugly global variables. */
@@ -517,11 +518,11 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 
 	/* Look up the action. */
 	Replace(action, NewString(Tcl_GetString(objv[0])));
-	for (i = 0; i < actioncount; i++) {
-		if (!strcmp(action, actions[i].string))
+	for (i = 0; i < num_eactions; i++) {
+		if (!strcmp(action, eaction_table[i].name))
 			break;
 	}
-	if (i >= actioncount) {
+	if (i >= num_eactions) {
 		Tcl_SetResult(interp, "No such action", TCL_STATIC);
 		return TCL_ERROR;
 	}
@@ -529,7 +530,7 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	/* Stage the arguments. */
 	count = objc - 1;
 	if (count) {
-		argv = (char **)Malloc(count*sizeof(char *));
+		argv = (const char **)Malloc(count*sizeof(char *));
 		for (j = 0; j < count; j++) {
 			argv[j] = Tcl_GetString(objv[j + 1]);
 		}
@@ -551,7 +552,7 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	/* Set up more ugly global variables and run the action. */
 	ia_cause = IA_SCRIPT;
 	cmd_ret = TCL_OK;
-	(*actions[i].proc)(NULL, NULL, argv, &count);
+	(*eaction_table[i].eaction)(IA_SCRIPT, count, argv);
 
 	/* Set implicit wait state. */
 	if (ft_state != FT_NONE) {
@@ -894,110 +895,116 @@ dump_rectangle(int start_row, int start_col, int rows, int cols,
 	}
 }
 
-static void
-dump_fixed(String params[], Cardinal count, const char *name, Boolean in_ascii,
-	struct ea *buf, int rel_rows, int rel_cols, int caddr)
+static Boolean
+dump_fixed(const char **params, unsigned count, const char *name,
+	Boolean in_ascii, struct ea *buf, int rel_rows, int rel_cols,
+	int caddr)
 {
-	int row, col, len, rows = 0, cols = 0;
+    int row, col, len, rows = 0, cols = 0;
 
-	switch (count) {
-	    case 0:	/* everything */
-		row = 0;
-		col = 0;
-		len = rel_rows*rel_cols;
-		break;
-	    case 1:	/* from cursor, for n */
-		row = caddr / rel_cols;
-		col = caddr % rel_cols;
-		len = atoi(params[0]);
-		break;
-	    case 3:	/* from (row,col), for n */
-		row = atoi(params[0]);
-		col = atoi(params[1]);
-		len = atoi(params[2]);
-		break;
-	    case 4:	/* from (row,col), for rows x cols */
-		row = atoi(params[0]);
-		col = atoi(params[1]);
-		rows = atoi(params[2]);
-		cols = atoi(params[3]);
-		len = 0;
-		break;
-	    default:
-		popup_an_error("%s requires 0, 1, 3 or 4 arguments", name);
-		return;
+    switch (count) {
+    case 0:	/* everything */
+	row = 0;
+	col = 0;
+	len = rel_rows*rel_cols;
+	break;
+    case 1:	/* from cursor, for n */
+	row = caddr / rel_cols;
+	col = caddr % rel_cols;
+	len = atoi(params[0]);
+	break;
+    case 3:	/* from (row,col), for n */
+	row = atoi(params[0]);
+	col = atoi(params[1]);
+	len = atoi(params[2]);
+	break;
+    case 4:	/* from (row,col), for rows x cols */
+	row = atoi(params[0]);
+	col = atoi(params[1]);
+	rows = atoi(params[2]);
+	cols = atoi(params[3]);
+	len = 0;
+	break;
+    default:
+	popup_an_error("%s requires 0, 1, 3 or 4 arguments", name);
+	return False;
+    }
+
+    if (
+	(row < 0 || row > rel_rows || col < 0 || col > rel_cols || len < 0) ||
+	((count < 4)  && ((row * rel_cols) + col + len > rel_rows * rel_cols)) ||
+	((count == 4) && (cols < 0 || rows < 0 ||
+			  col + cols > rel_cols || row + rows > rel_rows))
+       ) {
+	popup_an_error("%s: Invalid argument", name);
+	return False;
+    }
+    if (count < 4) {
+	dump_range((row * rel_cols) + col, len, in_ascii, buf, rel_rows,
+		rel_cols);
+    } else {
+	dump_rectangle(row, col, rows, cols, in_ascii, buf, rel_cols);
+    }
+
+    return True;
+}
+
+static Boolean
+dump_field(unsigned count, const char *name, Boolean in_ascii)
+{
+    int start, baddr;
+    int len = 0;
+
+    if (count != 0) {
+	popup_an_error("%s requires 0 arguments", name);
+	return False;
+    }
+    if (!formatted) {
+	popup_an_error("%s: Screen is not formatted", name);
+	return False;
+    }
+    start = find_field_attribute(cursor_addr);
+    INC_BA(start);
+    baddr = start;
+    do {
+	if (ea_buf[baddr].fa) {
+	    break;
 	}
-
-	if (
-	    (row < 0 || row > rel_rows || col < 0 || col > rel_cols || len < 0) ||
-	    ((count < 4)  && ((row * rel_cols) + col + len > rel_rows * rel_cols)) ||
-	    ((count == 4) && (cols < 0 || rows < 0 ||
-			      col + cols > rel_cols || row + rows > rel_rows))
-	   ) {
-		popup_an_error("%s: Invalid argument", name);
-		return;
-	}
-	if (count < 4)
-		dump_range((row * rel_cols) + col, len, in_ascii, buf,
-			rel_rows, rel_cols);
-	else
-		dump_rectangle(row, col, rows, cols, in_ascii, buf, rel_cols);
+	len++;
+	INC_BA(baddr);
+    } while (baddr != start);
+    dump_range(start, len, in_ascii, ea_buf, ROWS, COLS);
+    return True;
 }
 
-static void
-dump_field(Cardinal count, const char *name, Boolean in_ascii)
+Boolean
+Ascii_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	int start, baddr;
-	int len = 0;
-
-	if (count != 0) {
-		popup_an_error("%s requires 0 arguments", name);
-		return;
-	}
-	if (!formatted) {
-		popup_an_error("%s: Screen is not formatted", name);
-		return;
-	}
-	start = find_field_attribute(cursor_addr);
-	INC_BA(start);
-	baddr = start;
-	do {
-		if (ea_buf[baddr].fa)
-			break;
-		len++;
-		INC_BA(baddr);
-	} while (baddr != start);
-	dump_range(start, len, in_ascii, ea_buf, ROWS, COLS);
+    eaction_debug("Ascii", ia, argc, argv);
+    return dump_fixed(argv, argc, "Ascii", True, ea_buf, ROWS, COLS,
+	    cursor_addr);
 }
 
-void
-Ascii_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
-    Cardinal *num_params)
+Boolean
+AsciiField_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	dump_fixed(params, *num_params, action_name(Ascii_action), True,
-		ea_buf, ROWS, COLS, cursor_addr);
+    eaction_debug("AsciiField", ia, argc, argv);
+    return dump_field(argc, "AsciiField", True);
 }
 
-void
-AsciiField_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_unused,
-    Cardinal *num_params)
+Boolean
+Ebcdic_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	dump_field(*num_params, action_name(AsciiField_action), True);
+    eaction_debug("Ebcdic", ia, argc, argv);
+    return dump_fixed(argv, argc, "Ebcdic", False, ea_buf, ROWS, COLS,
+	    cursor_addr);
 }
 
-void
-Ebcdic_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
-    Cardinal *num_params)
+Boolean
+EbcdicField_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	dump_fixed(params, *num_params, action_name(Ebcdic_action), False,
-		ea_buf, ROWS, COLS, cursor_addr);
-}
-
-void
-EbcdicField_action(Widget w _is_unused, XEvent *event _is_unused,
-    String *params _is_unused, Cardinal *num_params)
-{
-	dump_field(*num_params, action_name(EbcdicField_action), False);
+    eaction_debug("EbcdicField", ia, argc, argv);
+    return dump_field(argc, "EbcdicField", False);
 }
 
 /* "Status" action, returns the s3270 prompt. */
@@ -1009,7 +1016,6 @@ status_string(void)
 	char prot_stat;
 	char *connect_stat = NULL;
 	char em_mode;
-	char s[1024];
 	char *r;
 
 	if (!kybdlock)
@@ -1059,7 +1065,7 @@ status_string(void)
 		em_mode = 'N';
 	}
 
-	(void) sprintf(s, "%c %c %c %s %c %d %d %d %d %d",
+	r = xs_buffer("%c %c %c %s %c %d %d %d %d %d",
 	    kb_stat,
 	    fmt_stat,
 	    prot_stat,
@@ -1068,20 +1074,24 @@ status_string(void)
 	    model_num,
 	    ROWS, COLS,
 	    cursor_addr / COLS, cursor_addr % COLS);
-	r = NewString(s);
 	Free(connect_stat);
 	return r;
 }
 
-void
-Status_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
-    Cardinal *num_params)
+Boolean
+Status_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	char *s;
+    char *s;
 
-	s = status_string();
-	Tcl_SetResult(sms_interp, s, TCL_VOLATILE);
-	Free(s);
+    eaction_debug("Status", ia, argc, argv);
+    if (check_eusage("Status", argc, 0, 0) < 0) {
+	return False;
+    }
+
+    s = status_string();
+    Tcl_SetResult(sms_interp, s, TCL_VOLATILE);
+    Free(s);
+    return True;
 }
 
 static unsigned char
@@ -1104,158 +1114,153 @@ calc_cs(unsigned char cs)
  * Operates on the supplied 'buf' parameter, which might be the live
  * screen buffer 'ea_buf' or a copy saved with 'Snap'.
  */
-static void
-do_read_buffer(String *params, Cardinal num_params, struct ea *buf)
+static Boolean
+do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 {
-	Tcl_Obj *o = NULL;
-	Tcl_Obj *row = NULL;
-	register int	baddr;
-	unsigned char	current_fg = 0x00;
-	unsigned char	current_gr = 0x00;
-	unsigned char	current_cs = 0x00;
-	char field_buf[1024];
-	Boolean in_ebcdic = False;
+    Tcl_Obj *o = NULL;
+    Tcl_Obj *row = NULL;
+    int	baddr;
+    unsigned char current_fg = 0x00;
+    unsigned char current_gr = 0x00;
+    unsigned char current_cs = 0x00;
+    char field_buf[1024];
+    Boolean in_ebcdic = False;
 
-	if (num_params > 0) {
-		if (num_params > 1) {
-			popup_an_error("%s: extra agruments",
-					action_name(ReadBuffer_action));
-			return;
-		}
-		if (!strncasecmp(params[0], "Ascii", strlen(params[0])))
-			in_ebcdic = False;
-		else if (!strncasecmp(params[0], "Ebcdic", strlen(params[0])))
-			in_ebcdic = True;
-		else {
-			popup_an_error("%s: first parameter must be "
-					"Ascii or Ebcdic",
-					action_name(ReadBuffer_action));
-			return;
-		}
-					                                        
+    if (num_params > 0) {
+	if (num_params > 1) {
+	    popup_an_error("ReadBuffer: extra agruments");
+	    return False;
 	}
+	if (!strncasecmp(params[0], "Ascii", strlen(params[0])))
+	    in_ebcdic = False;
+	else if (!strncasecmp(params[0], "Ebcdic", strlen(params[0])))
+	    in_ebcdic = True;
+	else {
+	    popup_an_error("ReadBuffer: first parameter must be Ascii or "
+		    "Ebcdic");
+	    return False;
+	}
+    }
 
-	baddr = 0;
-	do {
-		if (!(baddr % COLS)) {
-			/* New row. */
-			if (o == NULL)
-				o = Tcl_NewListObj(0, NULL);
-			if (row != NULL)
-				Tcl_ListObjAppendElement(sms_interp, o, row);
-			row = Tcl_NewListObj(0, NULL);
-		}
-		if (buf[baddr].fa) {
-			char *s = field_buf;
-			s += sprintf(s, "SF(%02x=%02x", XA_3270,
-					buf[baddr].fa);
-			if (buf[baddr].fg)
-				s += sprintf(s, ",%02x=%02x", XA_FOREGROUND,
-						buf[baddr].fg);
-			if (buf[baddr].gr)
-				s += sprintf(s, ",%02x=%02x", XA_HIGHLIGHTING,
-						buf[baddr].gr | 0xf0);
-			if (buf[baddr].cs & CS_MASK)
-				s += sprintf(s, ",%02x=%02x", XA_CHARSET,
-					     calc_cs(buf[baddr].cs));
-			s += sprintf(s, ")");
-			Tcl_ListObjAppendElement(sms_interp, row,
-				Tcl_NewStringObj(field_buf, -1));
+    baddr = 0;
+    do {
+	if (!(baddr % COLS)) {
+	    /* New row. */
+	    if (o == NULL) {
+		o = Tcl_NewListObj(0, NULL);
+	    }
+	    if (row != NULL) {
+		Tcl_ListObjAppendElement(sms_interp, o, row);
+	    }
+	    row = Tcl_NewListObj(0, NULL);
+	}
+	if (buf[baddr].fa) {
+	    char *s = field_buf;
+	    s += sprintf(s, "SF(%02x=%02x", XA_3270, buf[baddr].fa);
+	    if (buf[baddr].fg) {
+		s += sprintf(s, ",%02x=%02x", XA_FOREGROUND,
+			buf[baddr].fg);
+	    }
+	    if (buf[baddr].gr) {
+		s += sprintf(s, ",%02x=%02x", XA_HIGHLIGHTING,
+			buf[baddr].gr | 0xf0);
+	    }
+	    if (buf[baddr].cs & CS_MASK) {
+		s += sprintf(s, ",%02x=%02x", XA_CHARSET,
+			calc_cs(buf[baddr].cs));
+	    }
+	    s += sprintf(s, ")");
+	    Tcl_ListObjAppendElement(sms_interp, row,
+		    Tcl_NewStringObj(field_buf, -1));
+	} else {
+	    if (buf[baddr].fg != current_fg) {
+		sprintf(field_buf, "SA(%02x=%02x)", XA_FOREGROUND,
+			buf[baddr].fg);
+		Tcl_ListObjAppendElement(sms_interp, row,
+			Tcl_NewStringObj(field_buf, -1));
+		current_fg = buf[baddr].fg;
+	    }
+	    if (buf[baddr].gr != current_gr) {
+		sprintf(field_buf, "SA(%02x=%02x)", XA_HIGHLIGHTING,
+			buf[baddr].gr | 0xf0);
+		Tcl_ListObjAppendElement(sms_interp, row,
+			Tcl_NewStringObj(field_buf, -1));
+		current_gr = buf[baddr].gr;
+	    }
+	    if ((buf[baddr].cs & ~CS_GE) != (current_cs & ~CS_GE)) {
+		sprintf(field_buf, "SA(%02x=%02x)", XA_CHARSET,
+			calc_cs(buf[baddr].cs));
+		Tcl_ListObjAppendElement(sms_interp, row,
+			Tcl_NewStringObj(field_buf, -1));
+		current_cs = buf[baddr].cs;
+	    }
+	    if (in_ebcdic) {
+		if (buf[baddr].cs & CS_GE) {
+		    sprintf(field_buf, "GE(%02x)", buf[baddr].cc);
 		} else {
-			if (buf[baddr].fg != current_fg) {
-				sprintf(field_buf, "SA(%02x=%02x)",
-						XA_FOREGROUND,
-						buf[baddr].fg);
-				Tcl_ListObjAppendElement(sms_interp, row,
-					Tcl_NewStringObj(field_buf, -1));
-				current_fg = buf[baddr].fg;
-			}
-			if (buf[baddr].gr != current_gr) {
-				sprintf(field_buf, "SA(%02x=%02x)",
-						XA_HIGHLIGHTING,
-						buf[baddr].gr | 0xf0);
-				Tcl_ListObjAppendElement(sms_interp, row,
-					Tcl_NewStringObj(field_buf, -1));
-				current_gr = buf[baddr].gr;
-			}
-			if ((buf[baddr].cs & ~CS_GE) !=
-					(current_cs & ~CS_GE)) {
-				sprintf(field_buf, "SA(%02x=%02x)",
-						XA_CHARSET,
-						calc_cs(buf[baddr].cs));
-				Tcl_ListObjAppendElement(sms_interp, row,
-					Tcl_NewStringObj(field_buf, -1));
-				current_cs = buf[baddr].cs;
-			}
-			if (in_ebcdic) {
-				if (buf[baddr].cs & CS_GE)
-					sprintf(field_buf, "GE(%02x)",
-							buf[baddr].cc);
-				else
-					sprintf(field_buf, "%02x",
-							buf[baddr].cc);
-				Tcl_ListObjAppendElement(sms_interp, row,
-					Tcl_NewStringObj(field_buf, -1));
-			} else {
-				int len;
-				char mb[16];
-				int j;
-				ucs4_t uc;
+		    sprintf(field_buf, "%02x", buf[baddr].cc);
+		}
+		Tcl_ListObjAppendElement(sms_interp, row,
+			Tcl_NewStringObj(field_buf, -1));
+	    } else {
+		int len;
+		char mb[16];
+		int j;
+		ucs4_t uc;
 
 #if defined(X3270_DBCS) /*[*/
-				if (IS_LEFT(ctlr_dbcs_state(baddr))) {
-					len = ebcdic_to_multibyte(
-						(buf[baddr].cc << 8) |
-						 buf[baddr + 1].cc,
-						mb, sizeof(mb));
-					field_buf[0] = '\0';
-					for (j = 0; j < len - 1; j++)
-					    	sprintf(strchr(field_buf, '\0'),
-							    "%02x",
-							    mb[j] & 0xff);
-				} else if (IS_RIGHT(ctlr_dbcs_state(baddr))) {
-					strcpy(field_buf, " -");
-				} else
-#endif /*]*/
-				if (buf[baddr].cc == EBC_null)
-					strcpy(field_buf, "00");
-				else {
-					len = ebcdic_to_multibyte_x(
-						buf[baddr].cc,
-						buf[baddr].cs & CS_MASK,
-						mb, sizeof(mb), EUO_BLANK_UNDEF,
-						&uc);
-					field_buf[0] = '\0';
-					for (j = 0; j < len - 1; j++)
-					    	sprintf(strchr(field_buf, '\0'),
-							    "%02x",
-							    mb[j] & 0xff);
-				}
-
-				Tcl_ListObjAppendElement(sms_interp, row,
-					Tcl_NewStringObj(field_buf, -1));
-			}
-		}
-		INC_BA(baddr);
-	} while (baddr != 0);
-
-	if (row) {
-		if (o) {
-			Tcl_ListObjAppendElement(sms_interp, o, row);
-			Tcl_SetObjResult(sms_interp, o);
+		if (IS_LEFT(ctlr_dbcs_state(baddr))) {
+		    len = ebcdic_to_multibyte((buf[baddr].cc << 8) |
+			    buf[baddr + 1].cc,
+			    mb, sizeof(mb));
+		    field_buf[0] = '\0';
+		    for (j = 0; j < len - 1; j++) {
+			sprintf(strchr(field_buf, '\0'), "%02x",
+				mb[j] & 0xff);
+		    }
+		} else if (IS_RIGHT(ctlr_dbcs_state(baddr))) {
+		    strcpy(field_buf, " -");
 		} else
-			Tcl_SetObjResult(sms_interp, row);
+#endif /*]*/
+		if (buf[baddr].cc == EBC_null) {
+		    strcpy(field_buf, "00");
+		} else {
+		    len = ebcdic_to_multibyte_x(buf[baddr].cc,
+			    buf[baddr].cs & CS_MASK,
+			    mb, sizeof(mb), EUO_BLANK_UNDEF,
+			    &uc);
+		    field_buf[0] = '\0';
+		    for (j = 0; j < len - 1; j++) {
+			sprintf(strchr(field_buf, '\0'), "%02x",
+				mb[j] & 0xff);
+		    }
+		}
+		Tcl_ListObjAppendElement(sms_interp, row,
+			Tcl_NewStringObj(field_buf, -1));
+	    }
 	}
+	INC_BA(baddr);
+    } while (baddr != 0);
+
+    if (row) {
+	if (o) {
+	    Tcl_ListObjAppendElement(sms_interp, o, row);
+	    Tcl_SetObjResult(sms_interp, o);
+	} else {
+	    Tcl_SetObjResult(sms_interp, row);
+	}
+    }
+    return True;
 }
 
 /*
  * ReadBuffer action.
  */
-void
-ReadBuffer_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
-    Cardinal *num_params)
+Boolean
+ReadBuffer_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	do_read_buffer(params, *num_params, ea_buf);
+    eaction_debug("ReadBuffer", ia, argc, argv);
+    return do_read_buffer(argv, argc, ea_buf);
 }
 
 /*
@@ -1317,140 +1322,131 @@ snap_save(void)
 	snap_caddr = cursor_addr;
 }
 
-void
-Snap_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
-    Cardinal *num_params)
+Boolean
+Snap_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	char nbuf[16];
+    char nbuf[16];
 
-	if (*num_params == 0) {
-		snap_save();
-		return;
-	}
+    eaction_debug("Snap", ia, argc, argv);
+    if (argc == 0) {
+	snap_save();
+	return True;
+    }
 
-	/* Handle 'Snap Wait' separately. */
-	if (!strcasecmp(params[0], action_name(Wait_action))) {
-		long tmo = -1;
-		char *ptr;
-		unsigned maxp = 0;
+    /* Handle 'Snap Wait' separately. */
+    if (!strcasecmp(argv[0], "Wait")) {
+	long tmo = -1;
+	char *ptr;
+	unsigned maxp = 0;
 
-		if (*num_params > 1 &&
-		    (tmo = strtol(params[1], &ptr, 10)) >= 0 &&
-		    ptr != params[0] &&
-		    *ptr == '\0') {
-			maxp = 3;
-		} else {
-			tmo = -1;
-			maxp = 2;
-		}
-		if (*num_params > maxp) {
-			popup_an_error("Too many arguments to %s %s",
-			    action_name(Snap_action),
-			    action_name(Wait_action));
-			    return;
-		}
-		if (*num_params < maxp) {
-			popup_an_error("Too few arguments to %s %s",
-			    action_name(Snap_action),
-			    action_name(Wait_action));
-			    return;
-		}
-		if (strcasecmp(params[*num_params - 1], "Output")) {
-			popup_an_error("Unknown parameter to %s %s",
-			action_name(Snap_action),
-			action_name(Wait_action));
-			return;
-		}
-
-		/* Must be connected. */
-		if (!(CONNECTED || HALF_CONNECTED)) {
-			popup_an_error("%s: Not connected",
-			    action_name(Snap_action));
-			return;
-		}
-
-		/*
-		 * Make sure we need to wait.
-		 * If we don't, then Snap Wait Output is equivalen to Snap Save.
-		 */
-		if (!output_wait_needed) {
-			snap_save();
-			return;
-		}
-
-		/* Set the new state. */
-		waiting = AWAITING_SOUTPUT;
-
-		/* Set up a timeout, if they want one. */
-		if (tmo >= 0)
-			wait_id = AddTimeOut(tmo? (tmo * 1000): 1,
-					wait_timed_out);
-		return;
-	}
-
-	if (!strcasecmp(params[0], "Save")) {
-		if (*num_params != 1) {
-			popup_an_error("Extra argument(s)");
-			return;
-		}
-		snap_save();
-	} else if (!strcasecmp(params[0], "Status")) {
-		if (*num_params != 1) {
-			popup_an_error("Extra argument(s)");
-			return;
-		}
-		if (snap_status == NULL) {
-			popup_an_error("No saved state");
-			return;
-		}
-		Tcl_SetResult(sms_interp, snap_status, TCL_VOLATILE);
-	} else if (!strcasecmp(params[0], "Rows")) {
-		if (*num_params != 1) {
-			popup_an_error("Extra argument(s)");
-			return;
-		}
-		if (snap_status == NULL) {
-			popup_an_error("No saved state");
-			return;
-		}
-		(void) sprintf(nbuf, "%d", snap_rows);
-		Tcl_SetResult(sms_interp, nbuf, TCL_VOLATILE);
-	} else if (!strcasecmp(params[0], "Cols")) {
-		if (*num_params != 1)
-			popup_an_error("extra argument(s)");
-		(void) sprintf(nbuf, "%d", snap_cols);
-		Tcl_SetResult(sms_interp, nbuf, TCL_VOLATILE);
-	} else if (!strcasecmp(params[0], action_name(Ascii_action))) {
-		if (snap_status == NULL) {
-			popup_an_error("No saved state");
-			return;
-		}
-		dump_fixed(params + 1, *num_params - 1,
-			action_name(Ascii_action), True, snap_buf,
-			snap_rows, snap_cols, snap_caddr);
-	} else if (!strcasecmp(params[0], action_name(Ebcdic_action))) {
-		if (snap_status == NULL) {
-			popup_an_error("No saved state");
-			return;
-		}
-		dump_fixed(params + 1, *num_params - 1,
-			action_name(Ebcdic_action), False, snap_buf,
-			snap_rows, snap_cols, snap_caddr);
-	} else if (!strcasecmp(params[0], action_name(ReadBuffer_action))) {
-		if (snap_status == NULL) {
-			popup_an_error("No saved state");
-			return;
-		}
-		do_read_buffer(params + 1, *num_params - 1, snap_buf);
+	if (argc > 1 &&
+	    (tmo = strtol(argv[1], &ptr, 10)) >= 0 &&
+	    ptr != argv[0] &&
+	    *ptr == '\0') {
+	    maxp = 3;
 	} else {
-		popup_an_error("%s: Argument must be Save, Status, Rows, Cols, "
-		    "%s, %s, %s or %s",
-		    action_name(Snap_action),
-		    action_name(Wait_action),
-		    action_name(Ascii_action),
-		    action_name(Ebcdic_action),
-		    action_name(ReadBuffer_action));
+	    tmo = -1;
+	    maxp = 2;
 	}
+	if (argc > maxp) {
+	    popup_an_error("Too many arguments to Snap(Wait)");
+	    return False;
+	}
+	if (argc < maxp) {
+	    popup_an_error("Too few arguments to Snap(Wait)");
+	    return False;
+	}
+	if (strcasecmp(argv[argc - 1], "Output")) {
+	    popup_an_error("Unknown parameter to Snap(Wait)");
+	    return False;
+	}
+
+	/* Must be connected. */
+	if (!(CONNECTED || HALF_CONNECTED)) {
+	    popup_an_error("Snap: Not connected");
+	    return False;
+	}
+
+	/*
+	 * Make sure we need to wait.
+	 * If we don't, then Snap Wait Output is equivalen to Snap Save.
+	 */
+	if (!output_wait_needed) {
+	    snap_save();
+	    return False;
+	}
+
+	/* Set the new state. */
+	waiting = AWAITING_SOUTPUT;
+
+	/* Set up a timeout, if they want one. */
+	if (tmo >= 0) {
+	    wait_id = AddTimeOut(tmo? (tmo * 1000): 1, wait_timed_out);
+	}
+	return True;
+    }
+
+    if (!strcasecmp(argv[0], "Save")) {
+	if (argc != 1) {
+	    popup_an_error("Extra argument(s)");
+	    return False;
+	}
+	snap_save();
+    } else if (!strcasecmp(argv[0], "Status")) {
+	if (argc != 1) {
+	    popup_an_error("Extra argument(s)");
+	    return False;
+	}
+	if (snap_status == NULL) {
+	    popup_an_error("No saved state");
+	    return False;
+	}
+	Tcl_SetResult(sms_interp, snap_status, TCL_VOLATILE);
+    } else if (!strcasecmp(argv[0], "Rows")) {
+	if (argc != 1) {
+	    popup_an_error("Extra argument(s)");
+	    return False;
+	}
+	if (snap_status == NULL) {
+	    popup_an_error("No saved state");
+	    return False;
+	}
+	(void) sprintf(nbuf, "%d", snap_rows);
+	Tcl_SetResult(sms_interp, nbuf, TCL_VOLATILE);
+    } else if (!strcasecmp(argv[0], "Cols")) {
+	if (argc != 1) {
+	    popup_an_error("extra argument(s)");
+	    return False;
+	}
+	(void) sprintf(nbuf, "%d", snap_cols);
+	Tcl_SetResult(sms_interp, nbuf, TCL_VOLATILE);
+    } else if (!strcasecmp(argv[0], "Ascii")) {
+	if (snap_status == NULL) {
+	    popup_an_error("No saved state");
+	    return False;
+	}
+	return dump_fixed(argv + 1, argc - 1, "Ascii", True, snap_buf,
+		snap_rows, snap_cols, snap_caddr);
+    } else if (!strcasecmp(argv[0], "Ebcdic")) {
+	if (snap_status == NULL) {
+	    popup_an_error("No saved state");
+	    return False;
+	}
+	return dump_fixed(argv + 1, argc - 1, "Ebcdic", False, snap_buf,
+		snap_rows, snap_cols, snap_caddr);
+    } else if (!strcasecmp(argv[0], "ReadBuffer")) {
+	if (snap_status == NULL) {
+	    popup_an_error("No saved state");
+	    return False;
+	}
+	return do_read_buffer(argv + 1, argc - 1, snap_buf);
+    } else {
+	popup_an_error("Snap: Argument must be Save, Status, Rows, Cols, "
+		"Wait, Ascii, Ebcdic or ReadBuffer");
+	return False;
+    }
+
+    return True;
 }
 
 static void
@@ -1461,84 +1457,94 @@ wait_timed_out(ioid_t id _is_unused)
 	UNBLOCK();
 }
 
-void
-Wait_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
-    Cardinal *num_params)
+Boolean
+Wait_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	long tmo = -1;
-	char *ptr;
-	Cardinal np;
-	String *pr;
+    long tmo = -1;
+    char *ptr;
+    unsigned np;
+    const char **pr;
 
-	if (*num_params > 0 &&
-	    (tmo = strtol(params[0], &ptr, 10)) >= 0 &&
-	     ptr != params[0] &&
-	     *ptr == '\0') {
-		np = *num_params - 1;
-		pr = params + 1;
-	 } else {
-		tmo = -1;
-		np = *num_params;
-		pr = params;
-	}
+    eaction_debug("Wait", ia, argc, argv);
 
-	if (np == 0) {
-		if (!CONNECTED) {
-			popup_an_error("Not connected");
-			return;
-		}
-		if (!INPUT_OKAY)
-			waiting = AWAITING_IFIELD;
-		return;
-	}
-	if (np != 1) {
-		popup_an_error("Too many parameters");
-		return;
-	}
-	if (!strcasecmp(pr[0], "InputField")) {
-		/* Same as no parameters. */
-		if (!CONNECTED) {
-			popup_an_error("Not connected");
-			return;
-		}
-		if (!INPUT_OKAY)
-			waiting = AWAITING_IFIELD;
-	} else if (!strcasecmp(pr[0], "Output")) {
-		if (!CONNECTED) {
-			popup_an_error("Not connected");
-			return;
-		}
-		if (output_wait_needed)
-			waiting = AWAITING_OUTPUT;
-	} else if (!strcasecmp(pr[0], "3270") ||
-		   !strcasecmp(pr[0], "3270Mode")) {
-		if (!CONNECTED) {
-			popup_an_error("Not connected");
-			return;
-		}
-		if (!IN_3270)
-			waiting = AWAITING_3270;
-	} else if (!strcasecmp(pr[0], "ansi") ||
-		   !strcasecmp(pr[0], "NVTMode")) {
-		if (!CONNECTED) {
-			popup_an_error("Not connected");
-			return;
-		}
-		if (!IN_NVT)
-			waiting = AWAITING_NVT;
-	} else if (!strcasecmp(pr[0], "Disconnect")) {
-		if (CONNECTED)
-			waiting = AWAITING_DISCONNECT;
-	} else if (!strcasecmp(pr[0], "Unlock")) {
-		if (CONNECTED && KBWAIT)
-			waiting = AWAITING_UNLOCK;
-	} else {
-		popup_an_error("Unknown Wait type: %s", pr[0]);
-		return;
-	}
+    if (argc > 0 &&
+	(tmo = strtol(argv[0], &ptr, 10)) >= 0 &&
+	 ptr != argv[0] &&
+	 *ptr == '\0') {
+	np = argc - 1;
+	pr = argv + 1;
+     } else {
+	tmo = -1;
+	np = argc;
+	pr = argv;
+    }
 
-	if (waiting != NOT_WAITING && tmo >= 0)
-		wait_id = AddTimeOut(tmo? (tmo * 1000L): 1, wait_timed_out);
+    if (np == 0) {
+	if (!CONNECTED) {
+	    popup_an_error("Not connected");
+	    return False;
+	}
+	if (!INPUT_OKAY) {
+	    waiting = AWAITING_IFIELD;
+	}
+	return True;
+    }
+    if (np != 1) {
+	popup_an_error("Too many parameters");
+	return True;
+    }
+    if (!strcasecmp(pr[0], "InputField")) {
+	/* Same as no parameters. */
+	if (!CONNECTED) {
+	    popup_an_error("Not connected");
+	    return False;
+	}
+	if (!INPUT_OKAY) {
+	    waiting = AWAITING_IFIELD;
+	}
+    } else if (!strcasecmp(pr[0], "Output")) {
+	if (!CONNECTED) {
+	    popup_an_error("Not connected");
+	    return False;
+	}
+	if (output_wait_needed) {
+	    waiting = AWAITING_OUTPUT;
+	}
+    } else if (!strcasecmp(pr[0], "3270") ||
+	       !strcasecmp(pr[0], "3270Mode")) {
+	if (!CONNECTED) {
+	    popup_an_error("Not connected");
+	    return False;
+	}
+	if (!IN_3270) {
+	    waiting = AWAITING_3270;
+	}
+    } else if (!strcasecmp(pr[0], "ansi") ||
+	       !strcasecmp(pr[0], "NVTMode")) {
+	if (!CONNECTED) {
+	    popup_an_error("Not connected");
+	    return False;
+	}
+	if (!IN_NVT) {
+	    waiting = AWAITING_NVT;
+	}
+    } else if (!strcasecmp(pr[0], "Disconnect")) {
+	if (CONNECTED) {
+	    waiting = AWAITING_DISCONNECT;
+	}
+    } else if (!strcasecmp(pr[0], "Unlock")) {
+	if (CONNECTED && KBWAIT) {
+	    waiting = AWAITING_UNLOCK;
+	}
+    } else {
+	popup_an_error("Unknown Wait type: %s", pr[0]);
+	return False;
+    }
+
+    if (waiting != NOT_WAITING && tmo >= 0) {
+	wait_id = AddTimeOut(tmo? (tmo * 1000L): 1, wait_timed_out);
+    }
+    return True;
 }
 
 static int
@@ -1571,69 +1577,68 @@ Cols_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	return TCL_OK;
 }
 
-void
-Query_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
-    Cardinal *num_params)
+Boolean
+Query_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	Tcl_Obj *q_obj;
-	char *s;
-	char *t;
+    Tcl_Obj *q_obj;
+    char *s;
+    char *t;
 
-	static struct {
-		char *name;
-		const char *(*fn)(void);
-		char *string;
-	} queries[] = {
-		{ "BindPluName", net_query_bind_plu_name, NULL },
-		{ "ConnectionState", net_query_connection_state, NULL },
-		{ "CodePage", get_host_codepage, NULL },
-		{ "Cursor", ctlr_query_cursor, NULL },
-		{ "Formatted", ctlr_query_formatted, NULL },
-		{ "Host", net_query_host, NULL },
-		{ "LocalEncoding", get_codeset, NULL },
-		{ "LuName", net_query_lu_name, NULL },
-		{ "Model", NULL, full_model_name },
-		{ "ScreenCurSize", ctlr_query_cur_size, NULL },
-		{ "ScreenMaxSize", ctlr_query_max_size, NULL },
-		{ "Ssl", net_query_ssl, NULL },
-		{ NULL, NULL }
-	};
-	int i;
+    static struct {
+	char *name;
+	const char *(*fn)(void);
+	char *string;
+    } queries[] = {
+	{ "BindPluName", net_query_bind_plu_name, NULL },
+	{ "ConnectionState", net_query_connection_state, NULL },
+	{ "CodePage", get_host_codepage, NULL },
+	{ "Cursor", ctlr_query_cursor, NULL },
+	{ "Formatted", ctlr_query_formatted, NULL },
+	{ "Host", net_query_host, NULL },
+	{ "LocalEncoding", get_codeset, NULL },
+	{ "LuName", net_query_lu_name, NULL },
+	{ "Model", NULL, full_model_name },
+	{ "ScreenCurSize", ctlr_query_cur_size, NULL },
+	{ "ScreenMaxSize", ctlr_query_max_size, NULL },
+	{ "Ssl", net_query_ssl, NULL },
+	{ NULL, NULL }
+    };
+    int i;
 
-	switch (*num_params) {
-	case 0:
-		q_obj = Tcl_NewListObj(0, NULL);
-		for (i = 0; queries[i].name != NULL; i++) {
-			t = (char *)(queries[i].fn? (*queries[i].fn)():
-						    queries[i].string);
-			if (t && *t)
-				s = xs_buffer("%s %s", queries[i].name, t);
-			else
-				s = xs_buffer("%s", queries[i].name);
-			Tcl_ListObjAppendElement(sms_interp, q_obj,
-				Tcl_NewStringObj(s, strlen(s)));
-			Free(s);
-		}
-		Tcl_SetObjResult(sms_interp, q_obj);
-		break;
-	case 1:
-		for (i = 0; queries[i].name != NULL; i++) {
-			if (!strcasecmp(params[0], queries[i].name)) {
-				s = (char *)(queries[i].fn? (*queries[i].fn)():
-							    queries[i].string);
-				Tcl_SetResult(sms_interp, *s? s: "",
-					TCL_VOLATILE);
-				return;
-			}
-		}
-		popup_an_error("%s: Unknown parameter",
-				action_name(Query_action));
-		break;
-	default:
-		popup_an_error("%s: Requires 0 or 1 arguments",
-				action_name(Query_action));
-		break;
+    eaction_debug("Query", ia, argc, argv);
+    if (check_eusage("Query", argc, 0, 1) < 0) {
+	return False;
+    }
+
+    switch (argc) {
+    case 0:
+	q_obj = Tcl_NewListObj(0, NULL);
+	for (i = 0; queries[i].name != NULL; i++) {
+	    t = (char *)(queries[i].fn? (*queries[i].fn)(): queries[i].string);
+	    if (t && *t) {
+		s = xs_buffer("%s %s", queries[i].name, t);
+	    } else {
+		s = xs_buffer("%s", queries[i].name);
+	    }
+	    Tcl_ListObjAppendElement(sms_interp, q_obj,
+		    Tcl_NewStringObj(s, strlen(s)));
+	    Free(s);
 	}
+	Tcl_SetObjResult(sms_interp, q_obj);
+	break;
+    case 1:
+	for (i = 0; queries[i].name != NULL; i++) {
+	    if (!strcasecmp(argv[0], queries[i].name)) {
+		s = (char *)(queries[i].fn? (*queries[i].fn)():
+			queries[i].string);
+		Tcl_SetResult(sms_interp, *s? s: "", TCL_VOLATILE);
+		return True;
+	    }
+	}
+	popup_an_error("Query: Unknown parameter");
+	return False;
+    }
+    return True;
 }
 
 /* Generate a response to a script command. */
@@ -1660,7 +1665,7 @@ sms_in_macro(void)
 
 /* Like fcatv, but goes to a dynamically-allocated buffer. */
 static char *
-tc_scatv(char *s)
+tc_scatv(const char *s)
 {
 #define ALLOC_INC	1024
 	char *buf;

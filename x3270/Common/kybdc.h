@@ -49,102 +49,50 @@ extern unsigned int kybdlock;
 extern unsigned char aid;
 
 /* actions */
-extern void AltCursor_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Attn_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void BackSpace_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void BackTab_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void CircumNot_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Clear_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Compose_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void CursorSelect_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Default_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void DeleteField_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void DeleteWord_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Delete_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Down_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Dup_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Enter_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void EraseEOF_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void EraseInput_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Erase_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void FieldEnd_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void FieldMark_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Flip_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void HexString_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Home_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void ignore_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Insert_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Interrupt_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Key_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Left2_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Left_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void MonoCase_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void MouseSelect_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void MoveCursor_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Newline_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void NextWord_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void PA_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void PA_Shift_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void PF_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void PreviousWord_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Reset_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Right2_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Right_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void String_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void SysReq_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Tab_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void TemporaryKeymap_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void ToggleInsert_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void ToggleReverse_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Up_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t AltCursor_eaction;
+extern eaction_t Attn_eaction;
+extern eaction_t BackSpace_eaction;
+extern eaction_t BackTab_eaction;
+extern eaction_t CircumNot_eaction;
+extern eaction_t Clear_eaction;
+extern eaction_t Compose_eaction;
+extern eaction_t CursorSelect_eaction;
+extern eaction_t Delete_eaction;
+extern eaction_t DeleteField_eaction;
+extern eaction_t DeleteWord_eaction;
+extern eaction_t Down_eaction;
+extern eaction_t Dup_eaction;
+extern eaction_t Enter_eaction;
+extern eaction_t Erase_eaction;
+extern eaction_t EraseEOF_eaction;
+extern eaction_t EraseInput_eaction;
+extern eaction_t FieldEnd_eaction;
+extern eaction_t FieldMark_eaction;
+extern eaction_t Flip_eaction;
+extern eaction_t HexString_eaction;
+extern eaction_t Home_eaction;
+extern eaction_t Insert_eaction;
+extern eaction_t Interrupt_eaction;
+extern eaction_t Key_eaction;
+extern eaction_t Left2_eaction;
+extern eaction_t Left_eaction;
+extern eaction_t MonoCase_eaction;
+extern eaction_t MoveCursor_eaction;
+extern eaction_t Newline_eaction;
+extern eaction_t NextWord_eaction;
+extern eaction_t PA_eaction;
+extern eaction_t PF_eaction;
+extern eaction_t PreviousWord_eaction;
+extern eaction_t Reset_eaction;
+extern eaction_t Right2_eaction;
+extern eaction_t Right_eaction;
+extern eaction_t String_eaction;
+extern eaction_t SysReq_eaction;
+extern eaction_t Tab_eaction;
+extern eaction_t TemporaryKeymap_eaction;
+extern eaction_t ToggleInsert_eaction;
+extern eaction_t ToggleReverse_eaction;
+extern eaction_t Up_eaction;
 
 /* other functions */
 extern void do_reset(Boolean explicit);
@@ -158,3 +106,7 @@ extern int kybd_prime(void);
 extern void kybd_scroll_lock(Boolean lock);
 extern Boolean run_ta(void);
 extern int state_from_keymap(char keymap[32]);
+extern void lightpen_select(int baddr);
+extern void key_UCharacter(ucs4_t ucs4, enum keytype keytype,
+	enum iaction cause);
+

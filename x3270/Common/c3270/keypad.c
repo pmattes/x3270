@@ -503,8 +503,13 @@ keypad_key(int k, ucs4_t u)
 	screen_changed = True;
 }
 
-void
-Keypad_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
+Boolean
+Keypad_eaction(ia_t ia, unsigned argc, const char **argv)
 {
+    eaction_debug("Keypad", ia, argc, argv);
+    if (check_eusage("Keypad", argc, 0, 0) < 0) {
+	return False;
+    }
     pop_up_keypad(True);
+    return True;
 }

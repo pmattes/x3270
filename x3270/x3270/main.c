@@ -72,6 +72,7 @@
 #include "togglesc.h"
 #include "trace_dsc.h"
 #include "utilc.h"
+#include "xactionsc.h"
 
 /* Globals */
 const char     *programname;
@@ -512,8 +513,8 @@ main(int argc, char *argv[])
 	a_encoding = XInternAtom(display, "CHARSET_ENCODING", False);
 	a_state = XInternAtom(display, "WM_STATE", False);
 
-	action_init();
-	XtAppAddActions(appcontext, actions, actioncount);
+	xaction_init();
+	XtAppAddActions(appcontext, xactions, xactioncount);
 
 	keymap_init(appres.key_map, False);
 

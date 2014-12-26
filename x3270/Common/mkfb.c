@@ -492,9 +492,9 @@ main(int argc, char *argv[])
 
 	if (cmode) {
 		/* Emit the fallback array. */
-		fprintf(o, "String fallbacks[%u] = {\n", n_fallbacks + 1);
+		fprintf(o, "char *fallbacks[%u] = {\n", n_fallbacks + 1);
 		for (i = 0; i < n_fallbacks; i++) {
-			fprintf(o, "\t(String)&fsd[%u], /* line %u */\n",
+			fprintf(o, "\t(char *)&fsd[%u], /* line %u */\n",
 					aix[i],
 			    xlno[i]);
 		}

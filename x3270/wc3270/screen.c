@@ -214,37 +214,33 @@ static void blink_em(ioid_t id);
 BOOL WINAPI
 cc_handler(DWORD type)
 {
-	if (type == CTRL_C_EVENT) {
-		char *action;
+    if (type == CTRL_C_EVENT) {
+	char *action;
 
-		/* Process it as a Ctrl-C. */
-		vtrace("Control-C received via Console Event Handler%s\n",
-			escaped? " (should be ignored)": "");
-		if (escaped)
-		    	return TRUE;
-		action = lookup_key(0x03, LEFT_CTRL_PRESSED);
-		if (action != NULL) {
-			if (strcmp(action, "[ignore]"))
-				push_keymap_action(action);
-		} else {
-			String params[2];
-			Cardinal one;
-
-			params[0] = "0x03";
-			params[1] = NULL;
-			one = 1;
-			Key_action(NULL, NULL, params, &one);
-		}
-
-		return TRUE;
-	} else if (type == CTRL_CLOSE_EVENT) {
-		vtrace("Window closed\n");
-		x3270_exit(0);
-		return TRUE;
-	} else {
-		/* Let Windows have its way with it. */
-		return FALSE;
+	/* Process it as a Ctrl-C. */
+	vtrace("Control-C received via Console Event Handler%s\n",
+		escaped? " (should be ignored)": "");
+	if (escaped) {
+	    return TRUE;
 	}
+	action = lookup_key(0x03, LEFT_CTRL_PRESSED);
+	if (action != NULL) {
+	    if (strcmp(action, "[ignore]")) {
+		push_keymap_action(action);
+	    }
+	} else {
+	    run_eaction("Key", IA_DEFAULT, "0x03", NULL);
+	}
+
+	return TRUE;
+    } else if (type == CTRL_CLOSE_EVENT) {
+	vtrace("Window closed\n");
+	x3270_exit(0);
+	return TRUE;
+    } else {
+	/* Let Windows have its way with it. */
+	return FALSE;
+    }
 }
 
 /*
@@ -2200,22 +2196,22 @@ kybd_input2(INPUT_RECORD *ir)
 	/* These first cases apply to both 3270 and NVT modes. */
 	switch (k) {
 	case VK_ESCAPE:
-		action_internal(Escape_action, IA_DEFAULT, NULL, NULL);
+		run_eaction("Escape", IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_UP:
-		action_internal(Up_action, IA_DEFAULT, NULL, NULL);
+		run_eaction("Up", IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_DOWN:
-		action_internal(Down_action, IA_DEFAULT, NULL, NULL);
+		run_eaction("Down", IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_LEFT:
-		action_internal(Left_action, IA_DEFAULT, NULL, NULL);
+		run_eaction("Left", IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_RIGHT:
-		action_internal(Right_action, IA_DEFAULT, NULL, NULL);
+		run_eaction("Right", IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_HOME:
-		action_internal(Home_action, IA_DEFAULT, NULL, NULL);
+		run_eaction("Home", IA_DEFAULT, NULL, NULL);
 		return;
 	default:
 		break;
@@ -2225,16 +2221,16 @@ kybd_input2(INPUT_RECORD *ir)
 	if (IN_3270) switch(k) {
 	/* These cases apply only to 3270 mode. */
 	case VK_TAB:
-		action_internal(Tab_action, IA_DEFAULT, NULL, NULL);
+		run_eaction("Tab", IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_DELETE:
-		action_internal(Delete_action, IA_DEFAULT, NULL, NULL);
+		run_eaction("Delete", IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_BACK:
-		action_internal(BackSpace_action, IA_DEFAULT, NULL, NULL);
+		run_eaction("BackSpace", IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_RETURN:
-		action_internal(Enter_action, IA_DEFAULT, NULL, NULL);
+		run_eaction("Enter", IA_DEFAULT, NULL, NULL);
 		return;
 	default:
 		break;
@@ -2243,22 +2239,17 @@ kybd_input2(INPUT_RECORD *ir)
 	/* Catch PF keys. */
 	if (k >= VK_F1 && k <= VK_F24) {
 		(void) sprintf(buf, "%d", k - VK_F1 + 1);
-		action_internal(PF_action, IA_DEFAULT, buf, NULL);
+		run_eaction("PF", IA_DEFAULT, buf, NULL);
 		return;
 	}
 
 	/* Then any other character. */
 	if (ir->Event.KeyEvent.uChar.UnicodeChar) {
 		char ks[7];
-		String params[2];
-		Cardinal one;
 
 		(void) sprintf(ks, "U+%04x",
 			       ir->Event.KeyEvent.uChar.UnicodeChar);
-		params[0] = ks;
-		params[1] = NULL;
-		one = 1;
-		Key_action(NULL, NULL, params, &one);
+		run_eaction("Key", IA_DEFAULT, ks, NULL);
 	} else {
 		vtrace(" dropped (no default)\n");
 	}
@@ -2702,14 +2693,19 @@ draw_oia(void)
 		    "%03d/%03d", cursor_addr/cCOLS + 1, cursor_addr%cCOLS + 1);
 }
 
-void
-Redraw_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_unused,
-    Cardinal *num_params _is_unused)
+Boolean
+Redraw_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	if (!escaped) {
-		onscreen_valid = FALSE;
-		refresh();
-	}
+    eaction_debug("Redraw", ia, argc, argv);
+    if (check_eusage("Redraw", argc, 0, 0) < 0) {
+	return False;
+    }
+
+    if (!escaped) {
+	onscreen_valid = FALSE;
+	refresh();
+    }
+    return True;
 }
 
 void
@@ -2807,69 +2803,74 @@ screen_80(void)
  * Windows-specific Paste action, that takes advantage of the existing x3270
  * instrastructure for multi-line paste.
  */
-void
-Paste_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+Boolean
+Paste_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-    	HGLOBAL hglb;
-	LPTSTR lptstr;
-	UINT format = CF_UNICODETEXT;
+    HGLOBAL hglb;
+    LPTSTR lptstr;
+    UINT format = CF_UNICODETEXT;
 
-    	action_debug(Paste_action, event, params, num_params);
-	if (check_usage(Paste_action, *num_params, 0, 0) < 0)
-	    	return;
+    eaction_debug("Paste", ia, argc, argv);
+    if (check_eusage("Paste", argc, 0, 0) < 0) {
+	return False;
+    }
 
-    	if (!IsClipboardFormatAvailable(format))
-		return; 
-	if (!OpenClipboard(NULL))
-		return;
-	hglb = GetClipboardData(format);
-	if (hglb != NULL) {
-		lptstr = GlobalLock(hglb);
-		if (lptstr != NULL) { 
-			int sl = 0;
-			wchar_t *w = (wchar_t *)lptstr;
-			ucs4_t *u;
-			ucs4_t *us;
-			int i;
+    if (!IsClipboardFormatAvailable(format)) {
+	return False;
+    }
+    if (!OpenClipboard(NULL)) {
+	return False;
+    }
+    hglb = GetClipboardData(format);
+    if (hglb != NULL) {
+	lptstr = GlobalLock(hglb);
+	if (lptstr != NULL) { 
+	    int sl = 0;
+	    wchar_t *w = (wchar_t *)lptstr;
+	    ucs4_t *u;
+	    ucs4_t *us;
+	    int i;
 
-			for (i = 0; *w != 0x0000; i++, w++) {
-				sl++;
-			}
-			us = u = Malloc(sl * sizeof(ucs4_t));
+	    for (i = 0; *w != 0x0000; i++, w++) {
+		sl++;
+	    }
+	    us = u = Malloc(sl * sizeof(ucs4_t));
 
-			/*
-			 * Expand from UCS-2 to UCS-4.
-			 * XXX: It isn't UCS-2, it's UTF-16.
-			 */
-			w = (wchar_t *)lptstr;
-			for (i = 0; i < sl; i++) {
-				*us++ = *w++;
-			}
-			emulate_uinput(u, sl, True);
-			Free(u);
-		}
-		GlobalUnlock(hglb); 
+	    /*
+	     * Expand from UCS-2 to UCS-4.
+	     * XXX: It isn't UCS-2, it's UTF-16.
+	     */
+	    w = (wchar_t *)lptstr;
+	    for (i = 0; i < sl; i++) {
+		*us++ = *w++;
+	    }
+	    emulate_uinput(u, sl, True);
+	    Free(u);
 	}
-	CloseClipboard(); 
+	GlobalUnlock(hglb); 
+    }
+    CloseClipboard(); 
+
+    return True;
 }
 
 /* Set the window title. */
 void
 screen_title(const char *text)
 {
-	(void) SetConsoleTitle(text);
+    (void) SetConsoleTitle(text);
 }
 
-void
-Title_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+Boolean
+Title_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-    	action_debug(Title_action, event, params, num_params);
-	if (check_usage(Title_action, *num_params, 1, 1) < 0)
-	    	return;
+    eaction_debug("Title", ia, argc, argv);
+    if (check_eusage("Title", argc, 1, 1) < 0) {
+	return False;
+    }
 
-	screen_title(params[0]);
+    screen_title(argv[0]);
+    return True;
 }
 
 static void

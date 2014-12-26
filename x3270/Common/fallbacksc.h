@@ -35,5 +35,5 @@ extern unsigned char common_fallbacks[];
 extern unsigned char color_fallbacks[];
 extern unsigned char mono_fallbacks[];
 #else /*][*/
-extern String fallbacks[];
+extern char *fallbacks[];
 #endif /*]*/

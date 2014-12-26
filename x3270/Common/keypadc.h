@@ -32,10 +32,10 @@
 
 extern Boolean keypad_changed;
 extern Boolean keypad_popped;
-extern Widget keypad_shell;
 
 #if defined(X3270_DISPLAY) /*[*/
 
+extern Widget keypad_shell;
 extern enum kp_placement {
 	kp_right, kp_left, kp_bottom, kp_integral, kp_inside_right
 } kp_placement;
@@ -65,8 +65,7 @@ extern void keypad_key(int k, ucs4_t u);
 #  if defined(_WIN32) /*[*/
 extern void keypad_click(int x, int y);
 #  endif /*]*/
-extern void Keypad_action(Widget w, XEvent *event, String *params,
-	Cardinal *num_params);
+extern eaction_t Keypad_eaction;
 # endif /*]*/
 
 # define keypad_qheight()	0

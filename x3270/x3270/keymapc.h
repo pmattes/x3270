@@ -47,4 +47,4 @@ extern void PA_End_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void PA_KeymapTrace_action(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern int temporary_keymap(char *k);
+extern int temporary_keymap(const char *k);

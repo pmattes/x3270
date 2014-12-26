@@ -38,4 +38,4 @@ extern void do_menu_toggle(int);
 extern void do_toggle(int);
 extern void initialize_toggles(void);
 extern void shutdown_toggles(void);
-extern void Toggle_action(Widget, XEvent *, String *, Cardinal *);
+extern eaction_t Toggle_eaction;

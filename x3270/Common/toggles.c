@@ -141,40 +141,41 @@ shutdown_toggles(void)
 	}
 }
 
-void
-Toggle_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+Boolean
+Toggle_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	int j;
-	int ix;
+    int j;
+    int ix;
 
-	action_debug(Toggle_action, event, params, num_params);
-	if (check_usage(Toggle_action, *num_params, 1, 2) < 0)
-		return;
-	for (j = 0; toggle_names[j].name != NULL; j++) {
-		if (!strcasecmp(params[0], toggle_names[j].name)) {
-		    	ix = toggle_names[j].index;
-			break;
-		}
+    eaction_debug("Toggle", ia, argc, argv);
+    if (check_eusage("Toggle", argc, 1, 2) < 0) {
+	return False;
+    }
+    for (j = 0; toggle_names[j].name != NULL; j++) {
+	if (!strcasecmp(argv[0], toggle_names[j].name)) {
+	    ix = toggle_names[j].index;
+	    break;
 	}
-	if (toggle_names[j].name == NULL) {
-		popup_an_error("%s: Unknown toggle name '%s'",
-		    action_name(Toggle_action), params[0]);
-		return;
-	}
+    }
+    if (toggle_names[j].name == NULL) {
+	popup_an_error("Toggle: Unknown toggle name '%s'", argv[0]);
+	return False;
+    }
 
-	if (*num_params == 1) {
-		do_toggle_reason(ix, TT_ACTION);
-	} else if (!strcasecmp(params[1], "set")) {
-		if (!toggled(ix)) {
-			do_toggle_reason(ix, TT_ACTION);
-		}
-	} else if (!strcasecmp(params[1], "clear")) {
-		if (toggled(ix)) {
-			do_toggle_reason(ix, TT_ACTION);
-		}
-	} else {
-		popup_an_error("%s: Unknown keyword '%s' (must be 'set' or "
-		    "'clear')", action_name(Toggle_action), params[1]);
+    if (argc == 1) {
+	do_toggle_reason(ix, TT_ACTION);
+    } else if (!strcasecmp(argv[1], "set")) {
+	if (!toggled(ix)) {
+	    do_toggle_reason(ix, TT_ACTION);
 	}
+    } else if (!strcasecmp(argv[1], "clear")) {
+	if (toggled(ix)) {
+	    do_toggle_reason(ix, TT_ACTION);
+	}
+    } else {
+	popup_an_error("Toggle: Unknown keyword '%s' (must be 'set' or "
+		"'clear')", argv[1]);
+	return False;
+    }
+    return True;
 }

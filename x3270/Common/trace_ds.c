@@ -691,9 +691,8 @@ get_devfd(const char *pathname)
 
 /* Callback for "OK" button on trace popup */
 static void
-tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
+tracefile_ok(char *tfn)
 {
-	char *tfn = NULL;
 	int devfd = -1;
 #if defined(X3270_DISPLAY) /*[*/
 	int pipefd[2];
@@ -701,12 +700,6 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 #endif /*]*/
 	char *buf;
 
-#if defined(X3270_DISPLAY) /*[*/
-	if (w)
-		tfn = XawDialogGetValueString((Widget)client_data);
-	else
-#endif /*]*/
-		tfn = (char *)client_data;
 	tfn = do_subst(tfn, DS_VARS | DS_TILDE | DS_UNIQUE);
 	if (strchr(tfn, '\'') ||
 	    ((int)strlen(tfn) > 0 && tfn[strlen(tfn)-1] == '\\')) {
@@ -872,20 +865,33 @@ tracefile_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unus
 	Free(buf);
 
 done:
-#if defined(X3270_DISPLAY) /*[*/
-	if (w)
-		XtPopdown(trace_shell);
-#endif /*]*/
 	return;
 }
 
 #if defined(X3270_DISPLAY) /*[*/
+static void
+tracefile_callback(Widget w, XtPointer client_data,
+	XtPointer call_data _is_unused)
+{
+    char *tfn = NULL;
+
+    if (w) {
+	tfn = XawDialogGetValueString((Widget)client_data);
+    } else {
+	tfn = (char *)client_data;
+    }
+    tracefile_ok(tfn);
+    if (w) {
+	XtPopdown(trace_shell);
+    }
+}
+
 /* Callback for "No File" button on trace popup */
 static void
 no_tracefile_callback(Widget w, XtPointer client_data,
 	XtPointer call_data _is_unused)
 {
-	tracefile_callback(NULL, "", NULL);
+	tracefile_ok("");
 	XtPopdown(trace_shell);
 }
 #endif /*]*/
@@ -902,7 +908,7 @@ tracefile_on(int reason, enum toggle_type tt)
 
 	trace_reason = reason;
 	if (appres.secure && tt != TT_INITIAL) {
-		tracefile_callback(NULL, "none", NULL);
+		tracefile_ok("none");
 		return;
 	}
 	if (onetime_tracefile_name != NULL) {
@@ -926,7 +932,7 @@ tracefile_on(int reason, enum toggle_type tt)
 	if (tt == TT_INITIAL || tt == TT_ACTION)
 #endif /*]*/
 	{
-		tracefile_callback(NULL, tracefile, NULL);
+		tracefile_ok(tracefile);
 		if (tracefile_buf != NULL)
 		    	Free(tracefile_buf);
 		return;

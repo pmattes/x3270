@@ -244,18 +244,20 @@ static struct {
 };
 
 /* c3270-specific actions. */
-void
-Help_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
-    Cardinal *num_params)
+Boolean
+Help_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	int i;
-	int overall = -1;
-	int match = 0;
+    int i;
+    int overall = -1;
+    int match = 0;
 
-	action_debug(Help_action, event, params, num_params);
+    eaction_debug("Help", ia, argc, argv);
+    if (check_eusage("Help", argc, 0, 1) < 0) {
+	return False;
+    }
 
-	if (*num_params != 1) {
-		action_output(
+    if (argc != 1) {
+	action_output(
 "  help all           all commands\n"
 "  help 3270          3270 commands\n"
 "  help interactive   interactive (command-prompt) commands\n"
@@ -266,118 +268,115 @@ Help_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
 #if defined(WC3270) /*[*/
 "  help html          display HTML help file\n"
 #endif /*]*/
-		);
-		return;
+	);
+	return True;
+    }
+
+    if (!strcmp(argv[0], "verify")) {
+	unsigned j;
+	Boolean any = False;
+
+	for (i = 0; cmd_help[i].name; i++) {
+	    Boolean found = False;
+
+	    for (j = 0; j < num_eactions; j++) {
+		if (!strcasecmp(cmd_help[i].name, eaction_table[j].name)) {
+		    found = True;
+		    break;
+		}
+	    }
+	    if (!found) {
+		action_output("Help for nonexistent action: %s",
+			cmd_help[i].name);
+		any = True;
+	    }
 	}
-
-	if (!strcmp(params[0], "verify")) {
-		int j;
-		Boolean any = False;
-
-		for (i = 0; cmd_help[i].name; i++) {
-		    	Boolean found = False;
-
-			for (j = 0; j < actioncount; j++) {
-				if (!strcasecmp(cmd_help[i].name,
-					        actions[j].string)) {
-					found = True;
-					break;
-				}
-			}
-			if (!found) {
-			    	action_output("Help for nonexistent action: %s",
-					cmd_help[i].name);
-				any = True;
-			}
-		}
-		if (!any)
-		    	action_output("No orphaned help messages.");
-		any = False;
-		for (j = 0; j < actioncount; j++) {
-		    	Boolean found = False;
-
-			for (i = 0; cmd_help[i].name; i++) {
-
-				if (!strcasecmp(cmd_help[i].name,
-					        actions[j].string)) {
-					found = True;
-					break;
-				}
-			}
-			if (!found) {
-			    	action_output("No Help for %s",
-					actions[j].string);
-				any = True;
-			}
-		}
-		if (!any)
-		    	printf("No orphaned actions.\n");
-		return;
+	if (!any) {
+	    action_output("No orphaned help messages.");
 	}
+	any = False;
+	for (j = 0; j < num_eactions; j++) {
+	    Boolean found = False;
 
-	for (i = 0; help_subcommand[i].name != NULL; i++) {
-		if (!strncasecmp(help_subcommand[i].name, params[0],
-		    strlen(params[0]))) {
-			match = help_subcommand[i].flag;
-			overall = i;
-			break;
+	    for (i = 0; cmd_help[i].name; i++) {
+
+		if (!strcasecmp(cmd_help[i].name, eaction_table[j].name)) {
+		    found = True;
+		    break;
 		}
+	    }
+	    if (!found) {
+		action_output("No Help for %s", eaction_table[j].name);
+		any = True;
+	    }
 	}
-	if (match) {
-		for (i = 0; cmd_help[i].name != NULL; i++) {
-			if (!strncasecmp(cmd_help[i].name, params[0],
-			    strlen(params[0]))) {
-				action_output("Ambiguous: matches '%s' and "
-				    "one or more commands",
-				    help_subcommand[overall].name);
-				return;
-			}
-		}
-		if (help_subcommand[overall].text != NULL) {
-			action_output("%s", help_subcommand[overall].text);
-			return;
-		}
-		if (help_subcommand[overall].block != NULL) {
-			int j;
-
-			for (j = 0;
-			     help_subcommand[overall].block[j] != NULL;
-			     j++) {
-				action_output("%s",
-					help_subcommand[overall].block[j]);
-			}
-			return;
-		}
-		if (help_subcommand[overall].fn != NULL) {
-		    	(*help_subcommand[overall].fn)(True);
-			return;
-		}
-		for (i = 0; cmd_help[i].name != NULL; i++) {
-			if (cmd_help[i].purpose & match) {
-				action_output("  %s %s\n    %s",
-				    cmd_help[i].name,
-				    cmd_help[i].args? cmd_help[i].args: "",
-				    cmd_help[i].help? cmd_help[i].help: "");
-			}
-		}
-	} else {
-		Boolean any = False;
-
-		for (i = 0; cmd_help[i].name != NULL; i++) {
-			if (cmd_help[i].purpose == P_SCRIPTING)
-				continue;
-			if (!strncasecmp(cmd_help[i].name, params[0],
-			    strlen(params[0]))) {
-				action_output("  %s %s\n    %s",
-				    cmd_help[i].name,
-				    cmd_help[i].args? cmd_help[i].args: "",
-				    cmd_help[i].help? cmd_help[i].help: "");
-				any = True;
-			}
-		}
-		if (!any)
-			action_output("No such command: %s", params[0]);
+	if (!any) {
+	    printf("No orphaned actions.\n");
 	}
+	return True;
+    }
+
+    for (i = 0; help_subcommand[i].name != NULL; i++) {
+	if (!strncasecmp(help_subcommand[i].name, argv[0], strlen(argv[0]))) {
+	    match = help_subcommand[i].flag;
+	    overall = i;
+	    break;
+	}
+    }
+    if (match) {
+	for (i = 0; cmd_help[i].name != NULL; i++) {
+	    if (!strncasecmp(cmd_help[i].name, argv[0], strlen(argv[0]))) {
+		action_output("Ambiguous: matches '%s' and one or more "
+			"commands",
+			help_subcommand[overall].name);
+		return False;
+	    }
+	}
+	if (help_subcommand[overall].text != NULL) {
+	    action_output("%s", help_subcommand[overall].text);
+	    return True;
+	}
+	if (help_subcommand[overall].block != NULL) {
+	    int j;
+
+	    for (j = 0; help_subcommand[overall].block[j] != NULL; j++) {
+		action_output("%s", help_subcommand[overall].block[j]);
+	    }
+	    return True;
+	}
+	if (help_subcommand[overall].fn != NULL) {
+	    (*help_subcommand[overall].fn)(True);
+	    return True;
+	}
+	for (i = 0; cmd_help[i].name != NULL; i++) {
+	    if (cmd_help[i].purpose & match) {
+		action_output("  %s %s\n    %s",
+			cmd_help[i].name,
+			cmd_help[i].args? cmd_help[i].args: "",
+			cmd_help[i].help? cmd_help[i].help: "");
+	    }
+	}
+    } else {
+	Boolean any = False;
+
+	for (i = 0; cmd_help[i].name != NULL; i++) {
+	    if (cmd_help[i].purpose == P_SCRIPTING) {
+		continue;
+	    }
+	    if (!strncasecmp(cmd_help[i].name, argv[0], strlen(argv[0]))) {
+		action_output("  %s %s\n    %s",
+			cmd_help[i].name,
+			cmd_help[i].args? cmd_help[i].args: "",
+			cmd_help[i].help? cmd_help[i].help: "");
+			any = True;
+	    }
+	}
+	if (!any) {
+	    action_output("No such command: %s", argv[0]);
+	    return False;
+	}
+    }
+    return True;
 }
 
 #if defined(WC3270) /*[*/

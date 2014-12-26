@@ -56,7 +56,7 @@ static char *print_window_command = NULL;
 
 /*
  * Printing the window bitmap is a rather convoluted process:
- *    The PrintWindow action calls PrintWindow_action(), or a menu option calls
+ *    The PrintWindow action calls PrintWindow_eaction(), or a menu option calls
  *	print_window_option().
  *    print_window_option() pops up the dialog.
  *    The OK button on the dialog triggers print_window_callback.
@@ -90,8 +90,7 @@ snap_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
     if (!print_window_command) {
 	return;
     }
-    vtrace("%s: Running '%s'\n", action_name(PrintWindow_action),
-	    print_window_command);
+    vtrace("PrintWindow: Running '%s'\n", print_window_command);
     XSync(display, 0);
     print_window_done(system(print_window_command));
 }
@@ -145,47 +144,42 @@ print_window_callback(Widget w _is_unused, XtPointer client_data,
 }
 
 /* Print the contents of the screen as a bitmap. */
-void
-PrintWindow_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+Boolean
+PrintWindow_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-    char *command;
+    const char *command;
     Boolean secure = appres.secure;
 
-    action_debug(PrintWindow_action, event, params, num_params);
+    eaction_debug("PrintWindow", ia, argc, argv);
 
     /* Figure out what the command is. */
     command = get_resource(ResPrintWindowCommand);
-    if (*num_params > 0) {
-	command = params[0];
+    if (argc > 0) {
+	command = argv[0];
     }
-    if (*num_params > 1) {
-	popup_an_error("%s: extra arguments ignored",
-		action_name(PrintWindow_action));
+    if (argc > 1) {
+	popup_an_error("PrintWindow: extra arguments ignored");
     }
     if (command == NULL || !*command) {
-	popup_an_error("%s: no %s defined", action_name(PrintWindow_action),
-		ResPrintWindowCommand);
-	return;
+	popup_an_error("PrintWindow: no %s defined", ResPrintWindowCommand);
+	return False;
     }
 
     /* Check for secure mode. */
     if (command[0] == '@') {
 	secure = True;
 	if (!*++command) {
-	    popup_an_error("%s: Invalid %s", action_name(PrintWindow_action),
-		    ResPrintWindowCommand);
-	    return;
+	    popup_an_error("PrintWindow: Invalid %s", ResPrintWindowCommand);
+	    return False;
 	}
     }
     if (secure) {
 	char *xcommand = expand_print_window_command(command);
 
-	vtrace("%s: Running '%s'\n", action_name(PrintWindow_action),
-		xcommand);
+	vtrace("PrintWindow: Running '%s'\n", xcommand);
 	print_window_done(system(xcommand));
 	XtFree(xcommand);
-	return;
+	return True;
     }
 
     /* Pop up the dialog. */
@@ -197,6 +191,7 @@ PrintWindow_action(Widget w _is_unused, XEvent *event, String *params,
 	XtNvalue, command,
 	NULL);
     popup_popup(print_window_shell, XtGrabExclusive);
+    return True;
 }
 
 /* Callback for menu Print Window option. */
@@ -204,7 +199,5 @@ void
 print_window_option(Widget w, XtPointer client_data _is_unused,
     XtPointer call_data _is_unused)
 {
-    Cardinal zero = 0;
-
-    PrintWindow_action(w, NULL, NULL, &zero);
+    (void) PrintWindow_eaction(IA_KEYMAP, 0, NULL);
 }

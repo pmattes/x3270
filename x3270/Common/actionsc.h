@@ -30,27 +30,22 @@
  *		Global declarations for actions.c.
  */
 
-/* types of internal actions */
-enum iaction {
-	IA_STRING, IA_PASTE, IA_REDRAW,
-	IA_KEYPAD, IA_DEFAULT, IA_KEY,
-	IA_MACRO, IA_SCRIPT, IA_PEEK,
-	IA_TYPEAHEAD, IA_FT, IA_COMMAND, IA_KEYMAP,
-	IA_IDLE
-};
-extern enum iaction ia_cause;
+typedef struct {
+    const char *name;
+    eaction_t *eaction;
+    const char *help;
+} eaction_table_t;
 
-extern int              actioncount;
-extern XtActionsRec     *actions;
+extern eaction_table_t *eaction_table;
+extern unsigned num_eactions;
 
 extern const char       *ia_name[];
 
-extern void action_debug(XtActionProc action, XEvent *event, String *params,
-    Cardinal *num_params);
+extern Boolean action_suppressed(const char *name, const char *suppress);
+extern void eaction_debug(const char *aname, ia_t ia, unsigned argc,
+	const char **argv);
 extern void action_init(void);
-extern void action_internal(XtActionProc action, enum iaction cause,
-    const char *parm1, const char *parm2);
-extern const char *action_name(XtActionProc action);
-extern int check_usage(XtActionProc action, Cardinal nargs, Cardinal nargs_min,
-    Cardinal nargs_max);
-extern Boolean event_is_meta(int state);
+extern void run_eaction(const char *name, enum iaction cause,
+	const char *parm1, const char *parm2);
+extern int check_eusage(const char *aname, unsigned nargs, unsigned nargs_min,
+	unsigned nargs_max);

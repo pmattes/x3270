@@ -30,10 +30,5 @@
  *		Global declarations for print.c.
  */
 
-extern void PrintText_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void print_text_option(Widget w, XtPointer client_data,
-    XtPointer call_data);
-extern void save_text_option(Widget w, XtPointer client_data,
-    XtPointer call_data);
+extern eaction_t PrintText_eaction;
 extern char *default_caption(void);

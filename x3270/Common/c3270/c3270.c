@@ -810,7 +810,7 @@ static char **
 attempted_completion(const char *text, int start, int end)
 {
 	char *s;
-	int i, j;
+	unsigned i, j;
 	int match_count;
 
 	/* If this is not the first word, fail. */
@@ -898,8 +898,8 @@ attempted_completion(const char *text, int start, int end)
 	}
 
 	/* Search for matches. */
-	for (i = 0, match_count = 0; i < actioncount; i++) {
-		if (!strncasecmp(actions[i].string, s, strlen(s)))
+	for (i = 0, match_count = 0; i < num_eactions; i++) {
+		if (!strncasecmp(eaction_table[i].name, s, strlen(s)))
 			match_count++;
 	}
 	if (!match_count)
@@ -907,9 +907,9 @@ attempted_completion(const char *text, int start, int end)
 
 	/* Return what we got. */
 	next_match = matches = Malloc((match_count + 1) * sizeof(char **));
-	for (i = 0, j = 0; i < actioncount; i++) {
-		if (!strncasecmp(actions[i].string, s, strlen(s))) {
-			matches[j++] = NewString(actions[i].string);
+	for (i = 0, j = 0; i < num_eactions; i++) {
+		if (!strncasecmp(eaction_table[i].name, s, strlen(s))) {
+			matches[j++] = NewString(eaction_table[i].name);
 		}
 	}
 	matches[j] = NULL;
@@ -1200,99 +1200,103 @@ copyright_dump(void)
 	action_output(" ");
 }
 
-void
-Show_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
-    Cardinal *num_params)
+Boolean
+Show_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	action_debug(Show_action, event, params, num_params);
-	if (*num_params == 0) {
-		action_output("  Show copyright   copyright information");
-		action_output("  Show stats       connection statistics");
-		action_output("  Show status      same as 'Show stats'");
-		action_output("  Show keymap      current keymap");
-		return;
-	}
-	if (!strncasecmp(params[0], "stats", strlen(params[0])) ||
-	    !strncasecmp(params[0], "status", strlen(params[0]))) {
-		status_dump();
-	} else if (!strncasecmp(params[0], "keymap", strlen(params[0]))) {
-		keymap_dump();
-	} else if (!strncasecmp(params[0], "copyright", strlen(params[0]))) {
-		copyright_dump();
-	} else
-		popup_an_error("Unknown 'Show' keyword");
+    eaction_debug("Show", ia, argc, argv);
+    if (check_eusage("Show", argc, 0, 1) < 0) {
+	return False;
+    }
+
+    if (argc == 0) {
+	action_output("  Show copyright   copyright information");
+	action_output("  Show stats       connection statistics");
+	action_output("  Show status      same as 'Show stats'");
+	action_output("  Show keymap      current keymap");
+	return True;
+    }
+    if (!strncasecmp(argv[0], "stats", strlen(argv[0])) ||
+	!strncasecmp(argv[0], "status", strlen(argv[0]))) {
+	status_dump();
+    } else if (!strncasecmp(argv[0], "keymap", strlen(argv[0]))) {
+	keymap_dump();
+    } else if (!strncasecmp(argv[0], "copyright", strlen(argv[0]))) {
+	copyright_dump();
+    } else {
+	popup_an_error("Unknown 'Show' keyword");
+	return False;
+    }
+    return True;
 }
 
 /* Trace([data|keyboard][on [filename]|off]) */
-void
-Trace_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
-    Cardinal *num_params)
+Boolean
+Trace_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	Boolean on = False;
-	Cardinal arg0 = 0;
+    Boolean on = False;
+    unsigned arg0 = 0;
 
-	action_debug(Trace_action, event, params, num_params);
+    eaction_debug("Trace", ia, argc, argv);
 
-	if (*num_params == 0) {
-		if (toggled(TRACING) && tracefile_name != NULL) {
-			action_output("Trace file is %s.", tracefile_name);
-		} else {
-			action_output("Tracing is %sabled.",
-			    toggled(TRACING)? "en": "dis");
-		}
-		return;
-	}
-
-	if (!strcasecmp(params[0], "Data") ||
-	    !strcasecmp(params[0], "Keyboard")) {
-		/* Skip. */
-		arg0++;
-	}
-	if (!strcasecmp(params[arg0], "Off")) {
-		on = False;
-		arg0++;
-		if (*num_params > arg0) {
-			popup_an_error("Trace: Too many arguments for 'Off'");
-			return;
-		}
-		if (!toggled(TRACING)) {
-			return;
-		}
-	} else if (!strcasecmp(params[arg0], "On")) {
-		on = True;
-		arg0++;
-		if (*num_params == arg0) {
-			/* Nothing else to do. */
-		} else if (*num_params == arg0 + 1) {
-			if (toggled(TRACING)) {
-				popup_an_error("Trace: filename argument "
-					"ignored.");
-			} else {
-				trace_set_trace_file(params[arg0]);
-			}
-		} else {
-			popup_an_error("Trace: Too many arguments for 'On'");
-			return;
-		}
+    if (argc == 0) {
+	if (toggled(TRACING) && tracefile_name != NULL) {
+	    action_output("Trace file is %s.", tracefile_name);
 	} else {
-		popup_an_error("Trace: Parameter must be On or Off");
-		return;
+	    action_output("Tracing is %sabled.",
+		    toggled(TRACING)? "en": "dis");
 	}
+	return True;
+    }
 
-	if ((on && !toggled(TRACING)) || (!on && toggled(TRACING))) {
-		do_toggle(TRACING);
-		if (!on) {
-			action_output("Tracing stopped.");
-		}
+    if (!strcasecmp(argv[0], "Data") || !strcasecmp(argv[0], "Keyboard")) {
+	/* Skip. */
+	arg0++;
+    }
+    if (!strcasecmp(argv[arg0], "Off")) {
+	on = False;
+	arg0++;
+	if (argc > arg0) {
+	    popup_an_error("Trace: Too many arguments for 'Off'");
+	    return False;
 	}
+	if (!toggled(TRACING)) {
+	    return True;
+	}
+    } else if (!strcasecmp(argv[arg0], "On")) {
+	on = True;
+	arg0++;
+	if (argc == arg0) {
+	    /* Nothing else to do. */
+	} else if (argc == arg0 + 1) {
+	    if (toggled(TRACING)) {
+		popup_an_error("Trace: filename argument ignored.");
+	    } else {
+		trace_set_trace_file(argv[arg0]);
+	    }
+	} else {
+	    popup_an_error("Trace: Too many arguments for 'On'");
+	    return False;
+	}
+    } else {
+	popup_an_error("Trace: Parameter must be On or Off");
+	return False;
+    }
 
-	if (tracefile_name != NULL) {
-		if (ia_cause == IA_COMMAND) {
-			action_output("Trace file is %s.", tracefile_name);
-		} else {
-			popup_an_info("Trace file is %s.", tracefile_name);
-		}
+    if ((on && !toggled(TRACING)) || (!on && toggled(TRACING))) {
+	do_toggle(TRACING);
+	if (!on) {
+	    action_output("Tracing stopped.");
 	}
+    }
+
+    if (tracefile_name != NULL) {
+	if (ia_cause == IA_COMMAND) {
+	    action_output("Trace file is %s.", tracefile_name);
+	} else {
+	    popup_an_info("Trace file is %s.", tracefile_name);
+	}
+    }
+    return True;
 }
 
 /*
@@ -1304,180 +1308,180 @@ Trace_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
  * ScreenTrace(On,Printer[,Gdi|WordPad],printername) Windows
  * ScreenTrace(Off)
  */
-void
-ScreenTrace_action(Widget w _is_unused, XEvent *event _is_unused,
-	String *params, Cardinal *num_params)
+Boolean
+ScreenTrace_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	Boolean on = False;
+    Boolean on = False;
 #if defined(_WIN32) /*[*/
-	Boolean is_file = False;
+    Boolean is_file = False;
 #endif /*]*/
-	tss_t how = TSS_FILE;
-	ptype_t ptype = P_TEXT;
-	const char *name = NULL;
-	Cardinal px;
+    tss_t how = TSS_FILE;
+    ptype_t ptype = P_TEXT;
+    const char *name = NULL;
+    unsigned px;
 
-	action_debug(ScreenTrace_action, event, params, num_params);
+    eaction_debug("ScreenTrace", ia, argc, argv);
 
-	if (*num_params == 0) {
-		how = trace_get_screentrace_how();
-		if (toggled(SCREEN_TRACE)) {
-			action_output("Screen tracing is enabled, %s \"%s\".",
-			    (how == TSS_FILE)? "file":
-#if !defined(_WIN32) /*[*/
-			    "with print command",
-#else /*]*/
-			    "to printer",
-#endif /*]*/
-			    trace_get_screentrace_name());
-		} else
-			action_output("Screen tracing is disabled.");
-		return;
-	}
-
-	if (!strcasecmp(params[0], "Off")) {
-		if (!toggled(SCREEN_TRACE)) {
-			popup_an_error("Screen tracing is already disabled.");
-			return;
-		}
-		on = False;
-		if (*num_params > 1) {
-			popup_an_error("ScreenTrace(): Too many arguments "
-				"for 'Off'");
-			return;
-		}
-		goto toggle_it;
-	}
-	if (strcasecmp(params[0], "On")) {
-		popup_an_error("ScreenTrace(): Must be 'On' or 'Off'");
-		return;
-	}
-
-	/* Process 'On'. */
+    if (argc == 0) {
+	how = trace_get_screentrace_how();
 	if (toggled(SCREEN_TRACE)) {
-		popup_an_error("Screen tracing is already enabled.");
-		return;
-	}
-
-	on = True;
-	px = 1;
-
-	if (px >= *num_params) {
-		/*
-		 * No more parameters. Trace to a file, and generate the name.
-		 */
-		goto toggle_it;
-	}
-	if (!strcasecmp(params[px], "File")) {
-	    	px++;
-#if defined(_WIN32) /*[*/
-		is_file = True;
-#endif /*]*/
-	} else if (!strcasecmp(params[px], "Printer")) {
-		px++;
-		how = TSS_PRINTER;
-#if defined(WIN32) /*[*/
-		ptype = P_GDI;
-#endif /*]*/
-	}
-#if defined(_WIN32) /*[*/
-	if (px < *num_params && !strcasecmp(params[px], "Gdi")) {
-		if (is_file) {
-			popup_an_error("ScreenTrace(): Cannot specify "
-				"'File' and 'Gdi'.");
-			return;
-		}
-		px++;
-		how = TSS_PRINTER;
-		ptype = P_GDI;
-	} else if (px < *num_params && !strcasecmp(params[px], "WordPad")) {
-		if (is_file) {
-			popup_an_error("ScreenTrace(): Cannot specify "
-				"'File' and 'WordPad'.");
-			return;
-		}
-		px++;
-		how = TSS_PRINTER;
-		ptype = P_RTF;
-	}
-#endif /*]*/
-	if (px < *num_params) {
-		name = params[px];
-		px++;
-	}
-	if (px < *num_params) {
-		popup_an_error("ScreenTrace(): Too many arguments.");
-		return;
-	}
-	if (how == TSS_PRINTER && name == NULL) {
+	    action_output("Screen tracing is enabled, %s \"%s\".",
+		    (how == TSS_FILE)? "file":
 #if !defined(_WIN32) /*[*/
-		name = get_resource(ResPrintTextCommand);
-#else /*][*/
-		name = get_resource(ResPrinterName);
+		    "with print command",
+#else /*]*/
+		    "to printer",
 #endif /*]*/
+		    trace_get_screentrace_name());
+	} else {
+	    action_output("Screen tracing is disabled.");
 	}
+	return True;
+    }
+
+    if (!strcasecmp(argv[0], "Off")) {
+	if (!toggled(SCREEN_TRACE)) {
+	    popup_an_error("Screen tracing is already disabled.");
+	    return False;
+	}
+	on = False;
+	if (argc > 1) {
+	    popup_an_error("ScreenTrace(): Too many arguments for 'Off'");
+	    return False;
+	}
+	goto toggle_it;
+    }
+    if (strcasecmp(argv[0], "On")) {
+	popup_an_error("ScreenTrace(): Must be 'On' or 'Off'");
+	return False;
+    }
+
+    /* Process 'On'. */
+    if (toggled(SCREEN_TRACE)) {
+	popup_an_error("Screen tracing is already enabled.");
+	return True;
+    }
+
+    on = True;
+    px = 1;
+
+    if (px >= argc) {
+	/*
+	 * No more parameters. Trace to a file, and generate the name.
+	 */
+	goto toggle_it;
+    }
+    if (!strcasecmp(argv[px], "File")) {
+	px++;
+#if defined(_WIN32) /*[*/
+	is_file = True;
+#endif /*]*/
+    } else if (!strcasecmp(argv[px], "Printer")) {
+	px++;
+	how = TSS_PRINTER;
+#if defined(WIN32) /*[*/
+	ptype = P_GDI;
+#endif /*]*/
+    }
+#if defined(_WIN32) /*[*/
+    if (px < argc && !strcasecmp(argv[px], "Gdi")) {
+	if (is_file) {
+	    popup_an_error("ScreenTrace(): Cannot specify 'File' and 'Gdi'.");
+	    return False;
+	}
+	px++;
+	how = TSS_PRINTER;
+	ptype = P_GDI;
+    } else if (px < argc && !strcasecmp(argv[px], "WordPad")) {
+	if (is_file) {
+	    popup_an_error("ScreenTrace(): Cannot specify 'File' and "
+		    "'WordPad'.");
+	    return False;
+	}
+	px++;
+	how = TSS_PRINTER;
+	ptype = P_RTF;
+    }
+#endif /*]*/
+    if (px < argc) {
+	name = argv[px];
+	px++;
+    }
+    if (px < argc) {
+	popup_an_error("ScreenTrace(): Too many arguments.");
+	return False;
+    }
+    if (how == TSS_PRINTER && name == NULL) {
+#if !defined(_WIN32) /*[*/
+	name = get_resource(ResPrintTextCommand);
+#else /*][*/
+	name = get_resource(ResPrinterName);
+#endif /*]*/
+    }
 
 toggle_it:
-	if ((on && !toggled(SCREEN_TRACE)) || (!on && toggled(SCREEN_TRACE))) {
-		if (on)
-		    	trace_set_screentrace_file(how, ptype, name);
-		do_toggle(SCREEN_TRACE);
+    if ((on && !toggled(SCREEN_TRACE)) || (!on && toggled(SCREEN_TRACE))) {
+	if (on) {
+	    trace_set_screentrace_file(how, ptype, name);
 	}
-	if (on && !toggled(SCREEN_TRACE)) {
-		return;
-	}
+	do_toggle(SCREEN_TRACE);
+    }
+    if (on && !toggled(SCREEN_TRACE)) {
+	return True;
+    }
 
-	name = trace_get_screentrace_name();
-	if (name != NULL) {
-		if (on) {
-			if (how == TSS_FILE) {
-				if (ia_cause == IA_COMMAND)
-					action_output("Trace file is %s.",
-						name);
-				else
-					popup_an_info("Trace file is %s.",
-						name);
-			} else {
-				if (ia_cause == IA_COMMAND)
-					action_output("Tracing to printer.");
-				else
-					popup_an_info("Tracing to printer.");
-			}
+    name = trace_get_screentrace_name();
+    if (name != NULL) {
+	if (on) {
+	    if (how == TSS_FILE) {
+		if (ia_cause == IA_COMMAND) {
+		    action_output("Trace file is %s.", name);
 		} else {
-			if (trace_get_screentrace_last_how() == TSS_FILE) {
-				if (ia_cause == IA_COMMAND)
-					action_output("Tracing complete. "
-						"Trace file is %s.",
-						name);
-				else
-					popup_an_info("Tracing complete. "
-						"Trace file is %s.",
-						name);
-			} else {
-				if (ia_cause == IA_COMMAND)
-					action_output("Tracing to printer "
-						"complete.");
-				else
-					popup_an_info("Tracing to printer "
-						"complete.");
-			}
+		    popup_an_info("Trace file is %s.", name);
 		}
+	    } else {
+		if (ia_cause == IA_COMMAND) {
+		    action_output("Tracing to printer.");
+		} else {
+		    popup_an_info("Tracing to printer.");
+		}
+	    }
+	} else {
+	    if (trace_get_screentrace_last_how() == TSS_FILE) {
+		if (ia_cause == IA_COMMAND) {
+		    action_output("Tracing complete. Trace file is %s.", name);
+		} else {
+		    popup_an_info("Tracing complete. Trace file is %s.", name);
+		}
+	    } else {
+		if (ia_cause == IA_COMMAND) {
+		    action_output("Tracing to printer complete.");
+		} else {
+		    popup_an_info("Tracing to printer complete.");
+		}
+	    }
 	}
+    }
+    return True;
 }
 
 /* Break to the command prompt. */
-void
-Escape_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_unused,
-    Cardinal *num_params _is_unused)
+Boolean
+Escape_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	action_debug(Escape_action, event, params, num_params);
-	if (!appres.secure) {
-	    	host_cancel_reconnect();
-		screen_suspend();
+    eaction_debug("Escape", ia, argc, argv);
+    if (check_eusage("Escape", argc, 0, 0) < 0) {
+	return False;
+    }
+
+    if (!appres.secure) {
+	host_cancel_reconnect();
+	screen_suspend();
 #if 0 /* this fix is in there for something, but I don't know what */
-		abort_script();
+	abort_script();
 #endif
-	}
+    }
+    return True;
 }
 
 /* Popup an informational message. */
@@ -1513,16 +1517,17 @@ popup_an_info(const char *fmt, ...)
 	}
 }
 
-void
-Info_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
-	Cardinal *num_params)
+Boolean
+Info_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	action_debug(Info_action, event, params, num_params);
+    eaction_debug("Info", ia, argc, argv);
 
-    	if (!*num_params)
-	    	return;
+    if (!argc) {
+	return True;
+    }
 
-	popup_an_info("%s", params[0]);
+    popup_an_info("%s", argv[0]);
+    return True;
 }
 
 #if !defined(_WIN32) /*[*/

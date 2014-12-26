@@ -41,50 +41,33 @@ extern struct macro_def *macro_defs;
 extern Boolean macro_output;
 
 extern void abort_script(void);
-extern void Abort_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void AnsiText_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void AsciiField_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Ascii_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t Abort_eaction;
+extern eaction_t AnsiText_eaction;
+extern eaction_t AsciiField_eaction;
+extern eaction_t Ascii_eaction;
 extern void cancel_if_idle_command(void);
-extern void Bell_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void CloseScript_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void ContinueScript_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void EbcdicField_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Ebcdic_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Execute_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Expect_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t Bell_eaction;
+extern eaction_t CloseScript_eaction;
+extern eaction_t ContinueScript_eaction;
+extern eaction_t EbcdicField_eaction;
+extern eaction_t Ebcdic_eaction;
+extern eaction_t Execute_eaction;
+extern eaction_t Expect_eaction;
 extern void login_macro(char *s);
 extern void macros_init(void);
-extern void Macro_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t Macro_eaction;
 extern void macro_command(struct macro_def *m);
-extern void PauseScript_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t PauseScript_eaction;
 extern void peer_script_init(void);
 extern void ps_set(char *s, Boolean is_hex);
-extern void Printer_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t Printer_eaction;
 extern void push_command(char *);
 extern void push_idle(char *);
 extern void push_keymap_action(char *);
 extern void push_macro(char *, Boolean);
-extern void Query_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void ReadBuffer_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Script_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t Query_eaction;
+extern eaction_t ReadBuffer_eaction;
+extern eaction_t Script_eaction;
 #if !defined(TCL3270) /*[*/
 extern void sms_accumulate_time(struct timeval *, struct timeval *);
 #else /*][*/
@@ -100,16 +83,12 @@ extern void sms_init(void);
 extern Boolean sms_in_macro(void);
 extern Boolean sms_redirect(void);
 extern void sms_store(unsigned char c);
-extern void Snap_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t Snap_eaction;
 #if defined(TCL3270) /*[*/
-extern void Status_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t Status_eaction;
 #endif /*]*/
-extern void Source_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Wait_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t Source_eaction;
+extern eaction_t Wait_eaction;
 
 typedef void *sms_cbh;
 typedef void (*sms_data_cb)(sms_cbh handle, const char *buf, size_t len);

@@ -40,7 +40,7 @@ extern void ft_gui_complete_popup(const char *msg);
 extern void ft_gui_update_length(unsigned long length);
 extern void ft_gui_running(unsigned long length);
 extern void ft_gui_aborting(void);
-extern Boolean ft_gui_interact(String **params, Cardinal *num_params);
+extern Boolean ft_gui_interact(char ***params, unsigned *num_params);
 extern void ft_gui_awaiting(void);
 #else /*][*/
 # define ft_gui_progress_popdown()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,12 +41,9 @@ struct host {
 };
 extern struct host *hosts;
 
-extern void Connect_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Disconnect_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void Reconnect_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t Connect_eaction;
+extern eaction_t Disconnect_eaction;
+extern eaction_t Reconnect_eaction;
 
 /* Host connect/disconnect and state change. */
 extern void hostfile_init(void);

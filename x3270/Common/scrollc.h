@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,13 +32,12 @@
  *		Global declarations for scroll.c.
  */
 
-void jump_proc(float top);
-void rethumb(void);
-void scroll_init(void);
-void scroll_proc(int n, int total);
-void scroll_round(void);
-void scroll_save(int n, Boolean trim_blanks);
-void scroll_to_bottom(void);
+extern void jump_proc(float top);
+extern void rethumb(void);
+extern void scroll_init(void);
+extern void scroll_proc(int n, int total);
+extern void scroll_round(void);
+extern void scroll_save(int n, Boolean trim_blanks);
+extern void scroll_to_bottom(void);
 
-void Scroll_action(Widget w, XEvent *event, String *params,
-	Cardinal *num_params);
+extern eaction_t Scroll_eaction;

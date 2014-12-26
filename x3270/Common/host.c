@@ -1084,60 +1084,67 @@ st_changed(int tx, Boolean mode)
 
 /* Explicit connect/disconnect actions. */
 
-void
-Connect_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
+Boolean
+Connect_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	action_debug(Connect_action, event, params, num_params);
-	if (check_usage(Connect_action, *num_params, 1, 1) < 0)
-		return;
-	if (CONNECTED || HALF_CONNECTED) {
-		popup_an_error("Already connected");
-		return;
-	}
-	(void) host_connect(params[0]);
+    eaction_debug("Connect", ia, argc, argv);
+    if (check_eusage("Connect", argc, 1, 1) < 0) {
+	return False;
+    }
+    if (CONNECTED || HALF_CONNECTED) {
+	popup_an_error("Already connected");
+	return False;
+    }
+    (void) host_connect(argv[0]);
 
-	/*
-	 * If called from a script and the connection was successful (or
-	 * half-successful), pause the script until we are connected and
-	 * we have identified the host type.
-	 */
-	if (!w && (CONNECTED || HALF_CONNECTED))
-		sms_connect_wait();
+    /*
+     * If called from a script and the connection was successful (or
+     * half-successful), pause the script until we are connected and
+     * we have identified the host type.
+     */
+    if (ia != IA_KEYMAP && (CONNECTED || HALF_CONNECTED)) {
+	sms_connect_wait();
+    }
+    return True;
 }
 
 #if defined(X3270_INTERACTIVE) /*[*/
-void
-Reconnect_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
+Boolean
+Reconnect_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	action_debug(Reconnect_action, event, params, num_params);
-	if (check_usage(Reconnect_action, *num_params, 0, 0) < 0)
-		return;
-	if (CONNECTED || HALF_CONNECTED) {
-		popup_an_error("Already connected");
-		return;
-	}
-	if (current_host == NULL) {
-		popup_an_error("No previous host to connect to");
-		return;
-	}
-	host_reconnect();
+    eaction_debug("Reconnect", ia, argc, argv);
+    if (check_eusage("Reconnect", argc, 0, 0) < 0) {
+	    return False;
+    }
+    if (CONNECTED || HALF_CONNECTED) {
+	popup_an_error("Already connected");
+	return False;
+    }
+    if (current_host == NULL) {
+	popup_an_error("No previous host to connect to");
+	return False;
+    }
+    host_reconnect();
 
-	/*
-	 * If called from a script and the connection was successful (or
-	 * half-successful), pause the script until we are connected and
-	 * we have identified the host type.
-	 */
-	if (!w && (CONNECTED || HALF_CONNECTED))
-		sms_connect_wait();
+    /*
+     * If called from a script and the connection was successful (or
+     * half-successful), pause the script until we are connected and
+     * we have identified the host type.
+     */
+    if (ia != IA_KEYMAP && (CONNECTED || HALF_CONNECTED)) {
+	sms_connect_wait();
+    }
+    return True;
 }
 #endif /*]*/
 
-void
-Disconnect_action(Widget w _is_unused, XEvent *event, String *params,
-	Cardinal *num_params)
+Boolean
+Disconnect_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	action_debug(Disconnect_action, event, params, num_params);
-	if (check_usage(Disconnect_action, *num_params, 0, 0) < 0)
-		return;
-	host_disconnect(False);
+    eaction_debug("Disconnect", ia, argc, argv);
+    if (check_eusage("Disconnect", argc, 0, 0) < 0) {
+	return False;
+    }
+    host_disconnect(False);
+    return True;
 }

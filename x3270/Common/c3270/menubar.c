@@ -1183,8 +1183,14 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
 #endif /*]*/
 }
 
-void
-Menu_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
+Boolean
+Menu_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	popup_menu(0, False);
+    eaction_debug("Menu", ia, argc, argv);
+    if (check_eusage("Menu", argc, 0, 0) < 0) {
+	return False;
+    }
+
+    popup_menu(0, False);
+    return True;
 }

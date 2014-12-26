@@ -33,8 +33,7 @@ extern void action_output(const char *fmt, ...) printflike(1, 2);
 extern void popup_an_errno(int errn, const char *fmt, ...) printflike(2, 3);
 extern void popup_an_error(const char *fmt, ...) printflike(1, 2);
 extern void popup_an_info(const char *fmt, ...) printflike(1, 2);
-extern void Info_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t Info_eaction;
 typedef void abort_callback_t(void);
 extern void popup_printer_output(Boolean is_err, abort_callback_t *a,
 	const char *fmt, ...);

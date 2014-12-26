@@ -567,7 +567,7 @@ cut_data_request(void)
 	trace_ds("> FT DATA %u\n", from6(seq));
 	ft_update_length();
 	expanded_length += count;
-	action_internal(Enter_action, IA_FT, NULL, NULL);
+	run_eaction("Enter", IA_FT, NULL, NULL);
 }
 
 /*
@@ -654,7 +654,7 @@ static void
 cut_ack(void)
 {
 	trace_ds("> FT ACK\n");
-	action_internal(Enter_action, IA_FT, NULL, NULL);
+	run_eaction("Enter", IA_FT, NULL, NULL);
 }
 
 /*
@@ -672,7 +672,7 @@ cut_abort(const char *s, unsigned short reason)
 	ctlr_add(RO_REASON_CODE, HIGH8(reason), 0);
 	ctlr_add(RO_REASON_CODE+1, LOW8(reason), 0);
 	trace_ds("> FT CONTROL_CODE ABORT\n");
-	action_internal(PF_action, IA_FT, "2", NULL);
+	run_eaction("PF", IA_FT, "2", NULL);
 
 	/* Update the in-progress pop-up. */
 	ft_aborting();

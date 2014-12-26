@@ -158,11 +158,12 @@ x3270_exit(int n)
 #endif /*]*/
 }
 
-void
-Quit_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
+Boolean
+Quit_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	action_debug(Quit_action, event, params, num_params);
-	if (!w || !CONNECTED) {
-		x3270_exit(0);
-	}
+    eaction_debug("Quit", ia, argc, argv);
+    if (ia != IA_KEYMAP || !CONNECTED) {
+	x3270_exit(0);
+    }
+    return False;
 }

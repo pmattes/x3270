@@ -161,12 +161,11 @@ default_caption(void)
 }
 
 /* Print or save the contents of the screen as text. */
-void
-PrintText_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+Boolean
+PrintText_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-    Cardinal i;
-    char *name = NULL;
+    unsigned i;
+    const char *name = NULL;
     Boolean secure = appres.secure;
     ptype_t ptype = P_TEXT;
     Boolean use_file = False;
@@ -174,11 +173,11 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
     Boolean replace = False;
     char *temp_name = NULL;
     unsigned opts = FPS_EVEN_IF_EMPTY;
-    char *caption = NULL;
+    const char *caption = NULL;
     FILE *f;
     int fd = -1;
 
-    action_debug(PrintText_action, event, params, num_params);
+    eaction_debug("PrintText", ia, argc, argv);
 
     /*
      * Pick off optional arguments:
@@ -203,62 +202,60 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
      *  	      must be the last keyword
      *  string   returns the data as a string, allowed only from scripts
      */
-    for (i = 0; i < *num_params; i++) {
-	if (!strcasecmp(params[i], "file")) {
+    for (i = 0; i < argc; i++) {
+	if (!strcasecmp(argv[i], "file")) {
 	    use_file = True;
 	    i++;
 	    break;
-	} else if (!strcasecmp(params[i], "html")) {
+	} else if (!strcasecmp(argv[i], "html")) {
 	    ptype = P_HTML;
 	    use_file = True;
-	} else if (!strcasecmp(params[i], "rtf")) {
+	} else if (!strcasecmp(argv[i], "rtf")) {
 	    ptype = P_RTF;
 	    use_file = True;
-	} else if (!strcasecmp(params[i], "replace")) {
+	} else if (!strcasecmp(argv[i], "replace")) {
 	    replace = True;
-	} else if (!strcasecmp(params[i], "append")) {
+	} else if (!strcasecmp(argv[i], "append")) {
 	    replace = False;
 	}
 #if defined(WC3270) /*[*/
-	else if (!strcasecmp(params[i], "gdi")) {
+	else if (!strcasecmp(argv[i], "gdi")) {
 	    ptype = P_GDI;
-	} else if (!strcasecmp(params[i], "wordpad")) {
+	} else if (!strcasecmp(argv[i], "wordpad")) {
 	    ptype = P_RTF;
 	}
 #endif /*]*/
-	else if (!strcasecmp(params[i], "secure")) {
+	else if (!strcasecmp(argv[i], "secure")) {
 	    secure = True;
-	} else if (!strcasecmp(params[i], "command")) {
+	} else if (!strcasecmp(argv[i], "command")) {
 	    if ((ptype != P_TEXT) || use_file) {
-		popup_an_error("%s: contradictory options",
-			action_name(PrintText_action));
-		return;
+		popup_an_error("PrintText: contradictory options");
+		return False;
 	    }
 	    i++;
 	    break;
-	} else if (!strcasecmp(params[i], "string")) {
+	} else if (!strcasecmp(argv[i], "string")) {
 	    if (ia_cause != IA_SCRIPT) {
-		popup_an_error("%s(string) can only be used from a script",
-			action_name(PrintText_action));
-		return;
+		popup_an_error("PrintText(string) can only be used from a "
+			"script");
+		return False;
 	    }
 	    use_string = True;
 	    use_file = True;
-	} else if (!strcasecmp(params[i], "modi")) {
+	} else if (!strcasecmp(argv[i], "modi")) {
 	    opts |= FPS_MODIFIED_ITALIC;
-	} else if (!strcasecmp(params[i], "caption")) {
-	    if (i == *num_params - 1) {
-		popup_an_error("%s: mising caption parameter",
-			action_name(PrintText_action));
-		return;
+	} else if (!strcasecmp(argv[i], "caption")) {
+	    if (i == argc - 1) {
+		popup_an_error("PrintText: mising caption parameter");
+		return False;
 	    }
-	    caption = params[++i];
+	    caption = argv[++i];
 	} else {
 	    break;
 	}
     }
 
-    switch (*num_params - i) {
+    switch (argc - i) {
     case 0:
 	/* Use the default. */
 	if (!use_file) {
@@ -271,16 +268,14 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	break;
     case 1:
 	if (use_string) {
-	    popup_an_error("%s: extra arguments or invalid option(s)",
-		    action_name(PrintText_action));
-	    return;
+	    popup_an_error("PrintText: extra arguments or invalid option(s)");
+	    return False;
 	}
-	name = params[i];
+	name = argv[i];
 	break;
     default:
-	popup_an_error("%s: extra arguments or invalid option(s)",
-	    action_name(PrintText_action));
-	return;
+	popup_an_error("PrinText: extra arguments or invalid option(s)");
+	return False;
     }
 
 #if defined(_WIN32) /*[*/
@@ -309,7 +304,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 
     /* See if the GUI wants to handle it. */
     if (!secure && print_text_gui(use_file)) {
-	return;
+	return True;
     }
 
     /* Do the real work. */
@@ -323,14 +318,13 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 #endif /*]*/
 	    if (fd < 0) {
 		popup_an_errno(errno, "mkstemp");
-		return;
+		return False;
 	    }
 	    f = fdopen(fd, "w+");
 	} else {
 	    if (name == NULL || !*name) {
-		popup_an_error("%s: missing filename",
-			action_name(PrintText_action));
-		return;
+		popup_an_error("PrintText: missing filename");
+		return False;
 	    }
 	    f = fopen(name, replace? "w": "a");
 	}
@@ -341,7 +335,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	fd = win_mkstemp(&temp_name, ptype);
 	if (fd < 0) {
 	    popup_an_errno(errno, "mkstemp");
-	    return;
+	    return False;
 	}
 	if (ptype == P_GDI) {
 	    f = fdopen(fd, "wb+");
@@ -351,8 +345,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 #endif /*]*/
     }
     if (f == NULL) {
-	popup_an_errno(errno, "%s: %s", action_name(PrintText_action),
-		name);
+	popup_an_errno(errno, "PrintText: %s", name);
 	if (fd >= 0) {
 	    (void) close(fd);
 	}
@@ -360,7 +353,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	    unlink(temp_name);
 	    Free(temp_name);
 	}
-	return;
+	return False;
     }
     if (caption == NULL) {
 	caption = default_caption();
@@ -378,7 +371,7 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	    unlink(temp_name);
 	    Free(temp_name);
 	}
-	return;
+	return False;
     }
     if (use_string) {
 	char buf[8192];
@@ -420,4 +413,5 @@ PrintText_action(Widget w _is_unused, XEvent *event, String *params,
 	}
 #endif /*]*/
     }
+    return True;
 }

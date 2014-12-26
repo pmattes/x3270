@@ -765,11 +765,11 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 
     int fa_addr = find_field_attribute_ea(0, ea);
     unsigned char fa = ea[fa_addr].fa;
-    Bool fa_high, high;
-    Bool fa_underline, underline;
-    Bool fa_reverse, reverse;
+    Boolean fa_high, high;
+    Boolean fa_underline, underline;
+    Boolean fa_reverse, reverse;
     unsigned long uc;
-    Bool is_dbcs;
+    Boolean is_dbcs;
     char c;
     int usable_rows;
 

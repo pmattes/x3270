@@ -620,7 +620,7 @@ lookup_tt(const char *name, char *table)
  *
  */
 int
-temporary_keymap(char *k)
+temporary_keymap(const char *k)
 {
 	char *km;
 	XtTranslations trans;

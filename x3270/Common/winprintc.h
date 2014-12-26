@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Paul Mattes.
+ * Copyright (c) 2013-2014, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,7 @@
  */
 
 extern int win_mkstemp(char **path, ptype_t ptype);
-extern void start_wordpad_sync(char *action_name, char *filename,
-	char *printer);
-extern void start_wordpad_async(char *action_name, char *filename,
-	char *printer);
+extern void start_wordpad_sync(const char *action_name, const char *filename,
+	const char *printer);
+extern void start_wordpad_async(const char *action_name, const char *filename,
+	const char *printer);

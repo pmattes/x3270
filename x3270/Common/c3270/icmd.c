@@ -150,10 +150,10 @@ getnum(int defval)
  * Returns 0 for success, -1 for failure.
  */
 int
-interactive_transfer(String **params, Cardinal *num_params)
+interactive_transfer(char ***params, unsigned *num_params)
 {
     	char inbuf[1024];
-	static String kw_ret[15];
+	static char *kw_ret[15];
 	static char kw[14][1024];
 	char hostfile[1024];
 	char localfile[1024];
@@ -595,7 +595,7 @@ ASCII on the workstation.\n\
 	printf("transfer");
 #endif /*]*/
 	for (i = 0; i < kw_ix; i++) {
-	    	kw_ret[i] = (String)kw[i];
+	    	kw_ret[i] = kw[i];
 #if defined(FT_DEBUG) /*[*/
 		if (strchr(kw_ret[i], ' ') != NULL)
 			printf(" \"%s\"", kw_ret[i]);

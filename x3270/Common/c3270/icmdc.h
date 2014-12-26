@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, Paul Mattes.
+ * Copyright (c) 2007-2009, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,4 +32,4 @@
  */
 
 void icmd_init(void);
-int interactive_transfer(String **params, Cardinal *num_params);
+int interactive_transfer(char ***params, unsigned *num_params);

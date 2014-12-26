@@ -584,165 +584,167 @@ copy_clipboard_text(LPTSTR lptstr)
  * Common code for Copy and Cut.
  */
 void
-copy_cut_action(Widget w, XEvent *event, String *params, Cardinal *num_params,
-	Boolean cutting)
+copy_cut_action(Boolean cutting)
 {
-	size_t sl;
-	HGLOBAL hglb;
-	LPTSTR lptstr;
-	int r, c;
-	int any_row = -1;
+    size_t sl;
+    HGLOBAL hglb;
+    LPTSTR lptstr;
+    int r, c;
+    int any_row = -1;
 #define NUM_TYPES 3
-	struct {
-		const char *name;
-		int type;
-		size_t esize;
-		size_t (*copy_fn)(LPTSTR);
-	} types[NUM_TYPES] = {
-		{ "Unicode",
-		  CF_UNICODETEXT,
-		  sizeof(wchar_t),
-		  copy_clipboard_unicode
-		},
-		{ "OEM text",
-		  CF_OEMTEXT,
-		  sizeof(char),
-		  copy_clipboard_oemtext
-		},
-		{ "text",
-		  CF_TEXT,
-		  sizeof(char),
-		  copy_clipboard_text
-		},
-	};
-	int i;
+    struct {
+	const char *name;
+	int type;
+	size_t esize;
+	size_t (*copy_fn)(LPTSTR);
+    } types[NUM_TYPES] = {
+	{ "Unicode",
+	  CF_UNICODETEXT,
+	  sizeof(wchar_t),
+	  copy_clipboard_unicode
+	},
+	{ "OEM text",
+	  CF_OEMTEXT,
+	  sizeof(char),
+	  copy_clipboard_oemtext
+	},
+	{ "text",
+	  CF_TEXT,
+	  sizeof(char),
+	  copy_clipboard_text
+	},
+    };
+    int i;
 
-	/* Make sure we have something to do. */
-	if (memchr(s_pending, 1, COLS * ROWS) == NULL) {
-		return;
-	}
+    /* Make sure we have something to do. */
+    if (memchr(s_pending, 1, COLS * ROWS) == NULL) {
+	return;
+    }
 
-	vtrace("Word %sselected\n", word_selected? "": "not ");
+    vtrace("Word %sselected\n", word_selected? "": "not ");
 
-	/* Open the clipboard. */
-	if (!OpenClipboard(console_window)) {
-	    	return;
-	}
-	EmptyClipboard();
+    /* Open the clipboard. */
+    if (!OpenClipboard(console_window)) {
+	return;
+    }
+    EmptyClipboard();
 
-	/* Compute the size of the output buffer. */
-	sl = 0;
-	for (r = 0; r < ROWS; r++) {
-		for (c = 0; c < COLS; c++) {
-			int baddr = (r * COLS) + c;
+    /* Compute the size of the output buffer. */
+    sl = 0;
+    for (r = 0; r < ROWS; r++) {
+	for (c = 0; c < COLS; c++) {
+	    int baddr = (r * COLS) + c;
 
-			if (s_pending[baddr]) {
-				if (any_row >= 0 && any_row != r) {
-					sl += 2; /* CR/LF */
-				}
-				any_row = r;
-				sl++;
-			}
+	    if (s_pending[baddr]) {
+		if (any_row >= 0 && any_row != r) {
+		    sl += 2; /* CR/LF */
 		}
+		any_row = r;
+		sl++;
+	    }
 	}
-	sl++; /* NUL */
+    }
+    sl++; /* NUL */
 
-	/* Copy it out in the formats we understand. */
-	for (i = 0; i < NUM_TYPES; i++) {
+    /* Copy it out in the formats we understand. */
+    for (i = 0; i < NUM_TYPES; i++) {
 
-		/* Allocate the buffer. */
-		hglb = GlobalAlloc(GMEM_MOVEABLE, sl * types[i].esize);
-		if (hglb == NULL) {
-			break;
+	/* Allocate the buffer. */
+	hglb = GlobalAlloc(GMEM_MOVEABLE, sl * types[i].esize);
+	if (hglb == NULL) {
+	    break;
+	}
+
+	/* Copy the screen data to it. */
+	lptstr = GlobalLock(hglb); 
+	sl = (types[i].copy_fn)(lptstr);
+	GlobalUnlock(hglb); 
+
+	/* Place the handle on the clipboard. */
+	SetClipboardData(types[i].type, hglb);
+	vtrace("Copy(): Put %ld %s characters on the clipboard\n",
+		(long)sl, types[i].name);
+    }
+
+    CloseClipboard();
+
+    /* Do the 'cutting' part of 'Cut'. */
+    if (cutting) {
+	unsigned char fa;
+	int baddr;
+	int ba2;
+	char *sp_save;
+
+	/*
+	 * Save the contents of s_pending and use the copy instead of
+	 * s_pending, because the first call to ctlr_add() will zero
+	 * it.
+	 */
+	sp_save = Malloc(ROWS * COLS);
+	memcpy(sp_save, s_pending, ROWS * COLS);
+
+	fa = get_field_attribute(0);
+	for (baddr = 0; baddr < ROWS * COLS; baddr++) {
+	    if (ea_buf[baddr].fa) {
+		fa = ea_buf[baddr].fa;
+	    } else {
+		if (!sp_save[baddr] || FA_IS_PROTECTED(fa)) {
+		    continue;
 		}
-
-		/* Copy the screen data to it. */
-		lptstr = GlobalLock(hglb); 
-		sl = (types[i].copy_fn)(lptstr);
-		GlobalUnlock(hglb); 
-
-		/* Place the handle on the clipboard. */
-		SetClipboardData(types[i].type, hglb);
-		vtrace("Copy(): Put %ld %s characters on the clipboard\n",
-			(long)sl, types[i].name);
-	}
-
-	CloseClipboard();
-
-	/* Do the 'cutting' part of 'Cut'. */
-	if (cutting) {
-		unsigned char fa;
-		int baddr;
-		int ba2;
-		char *sp_save;
-
-		/*
-		 * Save the contents of s_pending and use the copy instead of
-		 * s_pending, because the first call to ctlr_add() will zero
-		 * it.
-		 */
-		sp_save = Malloc(ROWS * COLS);
-		memcpy(sp_save, s_pending, ROWS * COLS);
-
-		fa = get_field_attribute(0);
-		for (baddr = 0; baddr < ROWS * COLS; baddr++) {
-			if (ea_buf[baddr].fa) {
-				fa = ea_buf[baddr].fa;
-			} else {
-				if (!sp_save[baddr] || FA_IS_PROTECTED(fa)) {
-					continue;
-				}
-				switch (ctlr_dbcs_state(baddr)) {
-				case DBCS_NONE:
-					ctlr_add(baddr, EBC_space,
-						ea_buf[baddr].cs);
-					break;
-				case DBCS_LEFT:
-					ctlr_add(baddr, EBC_space,
-						ea_buf[baddr].cs);
-					ba2 = baddr;
-					INC_BA(ba2);
-					ctlr_add(ba2, EBC_space,
-						ea_buf[baddr].cs);
-					break;
-				case DBCS_RIGHT:
-					ba2 = baddr;
-					DEC_BA(ba2);
-					ctlr_add(ba2, EBC_space,
-						ea_buf[baddr].cs);
-					ctlr_add(baddr, EBC_space,
-						ea_buf[baddr].cs);
-					break;
-				default:
-					break;
-				}
-			}
+		switch (ctlr_dbcs_state(baddr)) {
+		case DBCS_NONE:
+		    ctlr_add(baddr, EBC_space, ea_buf[baddr].cs);
+		    break;
+		case DBCS_LEFT:
+		    ctlr_add(baddr, EBC_space, ea_buf[baddr].cs);
+		    ba2 = baddr;
+		    INC_BA(ba2);
+		    ctlr_add(ba2, EBC_space, ea_buf[baddr].cs);
+		    break;
+		case DBCS_RIGHT:
+		    ba2 = baddr;
+		    DEC_BA(ba2);
+		    ctlr_add(ba2, EBC_space, ea_buf[baddr].cs);
+		    ctlr_add(baddr, EBC_space, ea_buf[baddr].cs);
+		    break;
+		default:
+		    break;
 		}
-		Free(sp_save);
+	    }
 	}
+	Free(sp_save);
+    }
 
-	/* Unselect. */
-	unselect(0, ROWS * COLS);
+    /* Unselect. */
+    unselect(0, ROWS * COLS);
 }
 
 /*
  * The Copy() action, generally mapped onto ^C.
  */
-void
-Copy_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
+Boolean
+Copy_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	action_debug(Copy_action, event, params, num_params);
-	copy_cut_action(w, event, params, num_params, False);
+    eaction_debug("Copy", ia, argc, argv);
+    if (check_eusage("Copy", argc, 0, 0) < 0) {
+	return False;
+    }
+    copy_cut_action(False);
+    return True;
 }
 
 /*
  * The Cut() action, generally mapped onto ^X.
  */
-void
-Cut_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
+Boolean
+Cut_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	action_debug(Cut_action, event, params, num_params);
-	copy_cut_action(w, event, params, num_params, True);
+    eaction_debug("Cut", ia, argc, argv);
+    if (check_eusage("Cut", argc, 0, 0) < 0) {
+	return False;
+    }
+    copy_cut_action(True);
+    return True;
 }
 
 /*

@@ -79,8 +79,7 @@ extern void popup_menu(int x, int click);
 extern void menu_cursor(int *row, int *col);
 extern void menubar_retoggle(struct toggle *t, int ix);
 extern void map_acs(unsigned char c, ucs4_t *u, unsigned char *acs);
-extern void Menu_action(Widget w, XEvent *event, String *params,
-	Cardinal *num_params);
+extern eaction_t Menu_eaction;
 
 #else /*][*/
 # define menubar_as_set(n)

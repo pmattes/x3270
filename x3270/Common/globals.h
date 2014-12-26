@@ -240,11 +240,11 @@ extern Boolean		ssl_host;
 extern Boolean		*standard_font;
 extern Boolean		std_ds_host;
 extern char		*termtype;
-extern Widget		toplevel;
 extern Boolean		visible_control;
 extern int		*xtra_width;
 
 #if defined(X3270_DISPLAY) /*[*/
+extern Widget		toplevel;
 extern Atom		a_delete_me;
 extern Atom		a_save_yourself;
 extern Atom		a_state;
@@ -421,3 +421,14 @@ extern int num_options;
 /* c3270 profile merge. */
 extern Boolean merge_profile(void);
 #endif /*]*/
+
+/* Emulator actions. */
+/* types of internal actions */
+typedef enum iaction {
+    IA_STRING, IA_PASTE, IA_REDRAW, IA_KEYPAD, IA_DEFAULT, IA_KEY, IA_MACRO,
+    IA_SCRIPT, IA_PEEK, IA_TYPEAHEAD, IA_FT, IA_COMMAND, IA_KEYMAP, IA_IDLE
+} ia_t;
+extern enum iaction ia_cause;
+#define IA_FROM_KEYMAP(ia)	((ia) == IA_KEYMAP || (ia) == IA_DEFAULT)
+
+typedef Boolean (eaction_t)(ia_t ia, unsigned argc, const char **argv);

@@ -230,7 +230,8 @@ close_wsh(unsigned long fd, ioid_t id)
 
 /* Start WordPad to print something, synchronously. */
 void
-start_wordpad_sync(char *action_name, char *filename, char *printer)
+start_wordpad_sync(const char *action_name, const char *filename,
+	const char *printer)
 {
 	char *wp;
 	char *cmd;
@@ -273,7 +274,8 @@ start_wordpad_sync(char *action_name, char *filename, char *printer)
 
 /* Start WordPad to print something, asynchonously. */
 void
-start_wordpad_async(char *action_name, char *filename, char *printer)
+start_wordpad_async(const char *action_name, const char *filename,
+	const char *printer)
 {
 	char *wp;
 	wsp_t *w;

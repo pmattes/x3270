@@ -1048,14 +1048,15 @@ popup_child_output(Boolean is_err, abort_callback_t *a, const char *fmt, ...)
 /*
  * Script actions
  */
-void
-Info_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+Boolean
+Info_eaction(ia_t ia, unsigned argc, const char **argv)
 {
-	action_debug(Info_action, event, params, num_params);
-	if (check_usage(Info_action, *num_params, 1, 1) < 0)
-		return;
-	popup_an_info("%s", params[0]);
+    eaction_debug("Info", ia, argc, argv);
+    if (check_eusage("Info", argc, 1, 1) < 0) {
+	return False;
+    }
+    popup_an_info("%s", argv[0]);
+    return True;
 }
 
 /*

@@ -30,8 +30,7 @@
  *		Global declarations for xio.c.
  */
 
-extern void Quit_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+extern eaction_t Quit_eaction;
 extern void x3270_exit(int n);
 extern void x_add_input(int net_sock);
 extern void x_except_off(void);

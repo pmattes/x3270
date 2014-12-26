@@ -397,9 +397,9 @@ fprint_screen_body(fps_t ofps)
 	unsigned char fa = ea_buf[fa_addr].fa;
 	int fa_fg, current_fg;
 	int fa_bg, current_bg;
-	Bool fa_high, current_high;
-	Bool fa_ital, current_ital;
-	Bool mi;
+	Boolean fa_high, current_high;
+	Boolean fa_ital, current_ital;
+	Boolean mi;
 #if defined(WC3270) /*[*/
 	gdi_header_t h;
 #endif /*]*/
@@ -610,7 +610,7 @@ fprint_screen_body(fps_t ofps)
 				ns--;
 			}
 			if (fps->ptype == P_RTF) {
-				Bool high;
+				Boolean high;
 
 				if (ea_buf[i].gr & GR_INTENSIFY)
 					high = True;
@@ -630,7 +630,7 @@ fprint_screen_body(fps_t ofps)
 			}
 			if (fps->ptype == P_HTML) {
 				int fg_color, bg_color;
-				Bool high;
+				Boolean high;
 
 				if (ea_buf[i].fg)
 					fg_color = ea_buf[i].fg & 0x0f;
