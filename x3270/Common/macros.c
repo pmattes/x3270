@@ -76,6 +76,7 @@
 #include "trace_dsc.h"
 #include "utf8c.h"
 #include "utilc.h"
+#include "varbufc.h"
 #include "xioc.h"
 
 #include "w3miscc.h"
@@ -2299,7 +2300,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
     unsigned char current_gr = 0x00;
     unsigned char current_cs = 0x00;
     Boolean in_ebcdic = False;
-    rpf_t r;
+    varbuf_t r;
 
     if (num_params > 0) {
 	if (num_params > 1) {
@@ -2329,55 +2330,58 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	}
     }
 
-    rpf_init(&r);
+    vb_init(&r);
     baddr = 0;
     do {
 	if (!(baddr % COLS)) {
 	    if (baddr) {
 		if (fd >= 0) {
-		    if (write(fd, r.buf + 1, strlen(r.buf + 1)) < 0) {
+		    if (write(fd, vb_buf(&r) + 1, vb_len(&r) - 1) < 0) {
 			goto done;
 		    }
 		    if (write(fd, "\n", 1) < 0) {
 			goto done;
 		    }
 		} else {
-		    action_output("%s", r.buf + 1);
+		    action_output("%s", vb_buf(&r) + 1);
 		}
 	    }
-	    rpf_reset(&r);
+	    vb_reset(&r);
 	}
 	if (buf[baddr].fa) {
-	    rpf(&r, " SF(%02x=%02x", XA_3270, buf[baddr].fa);
+	    vb_appendf(&r, " SF(%02x=%02x", XA_3270, buf[baddr].fa);
 	    if (buf[baddr].fg) {
-		rpf(&r, ",%02x=%02x", XA_FOREGROUND, buf[baddr].fg);
+		vb_appendf(&r, ",%02x=%02x", XA_FOREGROUND, buf[baddr].fg);
 	    }
 	    if (buf[baddr].gr) {
-		rpf(&r, ",%02x=%02x", XA_HIGHLIGHTING, buf[baddr].gr | 0xf0);
+		vb_appendf(&r, ",%02x=%02x", XA_HIGHLIGHTING,
+			buf[baddr].gr | 0xf0);
 	    }
 	    if (buf[baddr].cs & CS_MASK) {
-		rpf(&r, ",%02x=%02x", XA_CHARSET, calc_cs(buf[baddr].cs));
+		vb_appendf(&r, ",%02x=%02x", XA_CHARSET,
+			calc_cs(buf[baddr].cs));
 	    }
-	    rpf(&r, ")");
+	    vb_appendf(&r, ")");
 	} else {
 	    if (buf[baddr].fg != current_fg) {
-		rpf(&r, " SA(%02x=%02x)", XA_FOREGROUND, buf[baddr].fg);
+		vb_appendf(&r, " SA(%02x=%02x)", XA_FOREGROUND, buf[baddr].fg);
 		current_fg = buf[baddr].fg;
 	    }
 	    if (buf[baddr].gr != current_gr) {
-		rpf(&r, " SA(%02x=%02x)", XA_HIGHLIGHTING,
+		vb_appendf(&r, " SA(%02x=%02x)", XA_HIGHLIGHTING,
 			buf[baddr].gr | 0xf0);
 		current_gr = buf[baddr].gr;
 	    }
 	    if ((buf[baddr].cs & ~CS_GE) != (current_cs & ~CS_GE)) {
-		rpf(&r, " SA(%02x=%02x)", XA_CHARSET, calc_cs(buf[baddr].cs));
+		vb_appendf(&r, " SA(%02x=%02x)", XA_CHARSET,
+			calc_cs(buf[baddr].cs));
 		current_cs = buf[baddr].cs;
 	    }
 	    if (in_ebcdic) {
 		if (buf[baddr].cs & CS_GE) {
-		    rpf(&r, " GE(%02x)", buf[baddr].cc);
+		    vb_appendf(&r, " GE(%02x)", buf[baddr].cc);
 		} else {
-		    rpf(&r, " %02x", buf[baddr].cc);
+		    vb_appendf(&r, " %02x", buf[baddr].cc);
 		}
 	    } else {
 		Boolean done = False;
@@ -2390,13 +2394,13 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 		if (IS_LEFT(ctlr_dbcs_state(baddr))) {
 		    len = ebcdic_to_multibyte( (buf[baddr].cc << 8) |
 			    buf[baddr + 1].cc, mb, sizeof(mb));
-		    rpf(&r, " ");
+		    vb_appendf(&r, " ");
 		    for (j = 0; j < len-1; j++) {
-			rpf(&r, "%02x", mb[j] & 0xff);
+			vb_appendf(&r, "%02x", mb[j] & 0xff);
 		    }
 		    done = True;
 		} else if (IS_RIGHT(ctlr_dbcs_state(baddr))) {
-		    rpf(&r, " -");
+		    vb_appendf(&r, " -");
 		    done = True;
 		}
 #endif /*]*/
@@ -2420,12 +2424,12 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 		}
 
 		if (!done) {
-		    rpf(&r, " ");
+		    vb_appendf(&r, " ");
 		    if (mb[0] == '\0') {
-			rpf(&r, "00");
+			vb_appendf(&r, "00");
 		    } else {
 			for (j = 0; mb[j]; j++) {
-			    rpf(&r, "%02x", mb[j] & 0xff);
+			    vb_appendf(&r, "%02x", mb[j] & 0xff);
 			}
 		    }
 		}
@@ -2434,17 +2438,17 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	INC_BA(baddr);
     } while (baddr != 0);
     if (fd >= 0) {
-	if (write(fd, r.buf + 1, strlen(r.buf + 1)) < 0) {
+	if (write(fd, vb_buf(&r) + 1, vb_len(&r) - 1) < 0) {
 	    goto done;
 	}
 	if (write(fd, "\n", 1) < 0) {
 	    goto done;
 	}
     } else {
-	action_output("%s", r.buf + 1);
+	action_output("%s", vb_buf(&r) + 1);
     }
 done:
-    rpf_free(&r);
+    vb_free(&r);
     return True;
 }
 

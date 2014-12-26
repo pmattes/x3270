@@ -820,68 +820,6 @@ split_hier(char *label, char **base, char ***parents)
 	return True;
 }
 
-/*
- * Incremental, reallocing version of snprintf.
- */
-#define RPF_BLKSIZE	4096
-#define SP_TMP_LEN	16384
-
-/* Initialize an RPF structure. */
-void
-rpf_init(rpf_t *r)
-{
-	r->buf = NULL;
-	r->alloc_len = 0;
-	r->cur_len = 0;
-}
-
-/* Reset an initialized RPF structure (re-use with length 0). */
-void
-rpf_reset(rpf_t *r)
-{
-	r->cur_len = 0;
-}
-
-/* Append a string to a dynamically-allocated buffer. */
-void
-rpf(rpf_t *r, char *fmt, ...)
-{
-	va_list a;
-	Boolean need_realloc = False;
-	int ns;
-	char tbuf[SP_TMP_LEN];
-
-	/* Figure out how much space would be needed. */
-	va_start(a, fmt);
-	ns = vsnprintf(tbuf, sizeof(tbuf), fmt, a);
-	va_end(a);
-	if (ns >= SP_TMP_LEN)
-	    Error("rpf overrun");
-
-	/* Make sure we have that. */
-	while (r->alloc_len - r->cur_len < ns + 1) {
-		r->alloc_len += RPF_BLKSIZE;
-		need_realloc = True;
-	}
-	if (need_realloc) {
-		r->buf = Realloc(r->buf, r->alloc_len);
-	}
-
-	/* Scribble onto the end of that. */
-	(void) strcpy(r->buf + r->cur_len, tbuf);
-	r->cur_len += ns;
-}
-
-/* Free resources associated with an RPF. */
-void
-rpf_free(rpf_t *r)
-{
-	Free(r->buf);
-	r->buf = NULL;
-	r->alloc_len = 0;
-	r->cur_len = 0;
-}
-
 #if defined(X3270_DISPLAY) /*[*/
 
 /* Glue between x3270 and the X libraries. */

@@ -69,16 +69,6 @@ extern char *KeysymToString(KeySym k);
 extern int read_resource_file(const char *filename, Boolean fatal);
 extern Boolean split_hier(char *label, char **base, char ***parents);
 
-typedef struct {
-	char *buf;
-	int alloc_len;
-	int cur_len;
-} rpf_t;
-
-extern void rpf_init(rpf_t *r);
-extern void rpf_reset(rpf_t *r);
-extern void rpf(rpf_t *r, char *fmt, ...) printflike(2, 3);
-extern void rpf_free(rpf_t *r);
 extern const char *build_options(void);
 extern void dump_version(void);
 extern const char *display_scale(double d, char *buf, size_t buflen);
