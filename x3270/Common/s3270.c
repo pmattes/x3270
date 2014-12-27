@@ -31,7 +31,7 @@
  */
 
 /*
- *	smain.c
+ *	s3270.c
  *		A displayless 3270 Terminal Emulator
  *		Main proceudre.
  */
