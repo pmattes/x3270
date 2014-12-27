@@ -295,8 +295,8 @@ Tcl_AppInit(Tcl_Interp *interp)
      * they weren't already created by the init procedures called above.
      */
     action_init();
-    for (i = 0; i < num_eactions; i++) {
-	if (Tcl_CreateObjCommand(interp, eaction_table[i].name, x3270_cmd,
+    for (i = 0; i < num_actions; i++) {
+	if (Tcl_CreateObjCommand(interp, action_table[i].name, x3270_cmd,
 		    NULL, NULL) == NULL) {
 	    return TCL_ERROR;
 	}
@@ -494,149 +494,155 @@ static int
 x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 		Tcl_Obj *CONST objv[])
 {
-	unsigned i;
-	unsigned j;
-	unsigned count;
-	const char **argv = NULL;
-	int old_mode;
+    unsigned i;
+    unsigned j;
+    unsigned count;
+    const char **argv = NULL;
+    int old_mode;
 
-	/* Set up ugly global variables. */
-	in_cmd = True;
-	sms_interp = interp;
+    /* Set up ugly global variables. */
+    in_cmd = True;
+    sms_interp = interp;
 
-	/* Synchronously run any pending I/O's and timeouts.  Ugly. */
-	old_mode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-	while (process_events(False))
-		;
-	(void) Tcl_SetServiceMode(old_mode);
+    /* Synchronously run any pending I/O's and timeouts.  Ugly. */
+    old_mode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
+    while (process_events(False)) {
+	    ;
+    }
+    (void) Tcl_SetServiceMode(old_mode);
 
-	/* Verify minimal command syntax. */
-	if (objc < 1) {
-		Tcl_SetResult(interp, "Missing action name", TCL_STATIC);
-		return TCL_ERROR;
+    /* Verify minimal command syntax. */
+    if (objc < 1) {
+	Tcl_SetResult(interp, "Missing action name", TCL_STATIC);
+	return TCL_ERROR;
+    }
+
+    /* Look up the action. */
+    Replace(action, NewString(Tcl_GetString(objv[0])));
+    for (i = 0; i < num_actions; i++) {
+	if (!strcmp(action, action_table[i].name)) {
+	    break;
 	}
+    }
+    if (i >= num_actions) {
+	Tcl_SetResult(interp, "No such action", TCL_STATIC);
+	return TCL_ERROR;
+    }
 
-	/* Look up the action. */
-	Replace(action, NewString(Tcl_GetString(objv[0])));
-	for (i = 0; i < num_eactions; i++) {
-		if (!strcmp(action, eaction_table[i].name))
-			break;
+    /* Stage the arguments. */
+    count = objc - 1;
+    if (count) {
+	argv = (const char **)Malloc(count*sizeof(char *));
+	for (j = 0; j < count; j++) {
+	    argv[j] = Tcl_GetString(objv[j + 1]);
 	}
-	if (i >= num_eactions) {
-		Tcl_SetResult(interp, "No such action", TCL_STATIC);
-		return TCL_ERROR;
+    }
+
+    /* Trace what we're about to do. */
+    if (toggled(TRACING)) {
+	vtrace("Running %s", action);
+	for (j = 0; j < count; j++) {
+	    char *s;
+
+	    s = tc_scatv(argv[j]);
+	    vtrace(" %s", s);
+	    Free(s);
 	}
+	vtrace("\n");
+    }
 
-	/* Stage the arguments. */
-	count = objc - 1;
-	if (count) {
-		argv = (const char **)Malloc(count*sizeof(char *));
-		for (j = 0; j < count; j++) {
-			argv[j] = Tcl_GetString(objv[j + 1]);
-		}
+    /* Set up more ugly global variables and run the action. */
+    ia_cause = IA_SCRIPT;
+    cmd_ret = TCL_OK;
+    (*action_table[i].action)(IA_SCRIPT, count, argv);
+
+    /* Set implicit wait state. */
+    if (ft_state != FT_NONE) {
+	waiting = AWAITING_FT;
+    } else if ((waiting == NOT_WAITING) && CKBWAIT) {
+	waiting = AWAITING_RESET;
+    }
+
+    if (waiting != NOT_WAITING) {
+	vtrace("Blocked %s (%s)\n", action, wait_name[waiting]);
+	if (appres.command_timeout) {
+	    command_timeout_id = AddTimeOut(appres.command_timeout * 1000,
+		    command_timed_out);
 	}
+    }
 
-	/* Trace what we're about to do. */
-	if (toggled(TRACING)) {
-		vtrace("Running %s", action);
-		for (j = 0; j < count; j++) {
-			char *s;
+    /*
+     * Process responses and push any pending string, until
+     * we can proceed.
+     */
+    process_pending_string();
+    old_mode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
+    while (waiting != NOT_WAITING) {
 
-			s = tc_scatv(argv[j]);
-			vtrace(" %s", s);
-			Free(s);
-		}
-		vtrace("\n");
-	}
-
-	/* Set up more ugly global variables and run the action. */
-	ia_cause = IA_SCRIPT;
-	cmd_ret = TCL_OK;
-	(*eaction_table[i].eaction)(IA_SCRIPT, count, argv);
-
-	/* Set implicit wait state. */
-	if (ft_state != FT_NONE) {
-		waiting = AWAITING_FT;
-	} else if ((waiting == NOT_WAITING) && CKBWAIT) {
-		waiting = AWAITING_RESET;
-	}
-
-	if (waiting != NOT_WAITING) {
-		vtrace("Blocked %s (%s)\n", action, wait_name[waiting]);
-		if (appres.command_timeout) {
-			command_timeout_id = AddTimeOut(
-				appres.command_timeout * 1000,
-				command_timed_out);
-		}
-	}
+	/* Process pending file I/O. */
+	(void) process_events(True);
 
 	/*
-	 * Process responses and push any pending string, until
-	 * we can proceed.
+	 * Check for the completion of output-related wait conditions.
 	 */
+	switch (waiting) {
+	case AWAITING_IFIELD:
+	    if (INPUT_OKAY) {
+		UNBLOCK();
+	    }
+	    break;
+	case AWAITING_RESET:
+	    if (!CKBWAIT) {
+		UNBLOCK();
+	    }
+	    break;
+	case AWAITING_FT:
+	    if (ft_state == FT_NONE) {
+		UNBLOCK();
+	    }
+	    break;
+	case AWAITING_UNLOCK:
+	    if (!KBWAIT) {
+		UNBLOCK();
+	    }
+	default:
+	    break;
+	}
+
+	/* Push more string text in. */
 	process_pending_string();
-	old_mode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-	while (waiting != NOT_WAITING) {
+    }
+    if (command_timeout_id != NULL_IOID) {
+	RemoveTimeOut(command_timeout_id);
+	command_timeout_id = NULL_IOID;
+    }
+    if (toggled(TRACING)) {
+	const char *s;
+#	define TRUNC_LEN 40
+	char s_trunc[TRUNC_LEN + 1];
 
-		/* Process pending file I/O. */
-		(void) process_events(True);
+	s = Tcl_GetStringResult(interp);
+	vtrace("Completed %s (%s)", action,
+		(cmd_ret == TCL_OK)? "ok": "error");
+	if (s != NULL && *s) {
+	    char buf[1024];
 
-		/*
-		 * Check for the completion of output-related wait conditions.
-		 */
-		switch (waiting) {
-		case AWAITING_IFIELD:
-			if (INPUT_OKAY)
-				UNBLOCK();
-			break;
-		case AWAITING_RESET:
-			if (!CKBWAIT)
-				UNBLOCK();
-			break;
-		case AWAITING_FT:
-			if (ft_state == FT_NONE)
-				UNBLOCK();
-			break;
-		case AWAITING_UNLOCK:
-			if (!KBWAIT)
-				UNBLOCK();
-		default:
-			break;
-		}
-
-		/* Push more string text in. */
-		process_pending_string();
+	    strncpy(s_trunc, s, TRUNC_LEN);
+	    s_trunc[TRUNC_LEN] = '\0';
+	    vtrace(" -> \"%s\"", scatv(s_trunc, buf, sizeof(buf)));
+	    if (strlen(s) > TRUNC_LEN) {
+		vtrace("...(%d chars)", (int)strlen(s));
+	    }
 	}
-	if (command_timeout_id != NULL_IOID) {
-	    	RemoveTimeOut(command_timeout_id);
-		command_timeout_id = NULL_IOID;
-	}
-	if (toggled(TRACING)) {
-		const char *s;
-#		define TRUNC_LEN 40
-		char s_trunc[TRUNC_LEN + 1];
-
-		s = Tcl_GetStringResult(interp);
-		vtrace("Completed %s (%s)", action,
-			(cmd_ret == TCL_OK) ? "ok" : "error");
-		if (s != NULL && *s) {
-			char buf[1024];
-
-			strncpy(s_trunc, s, TRUNC_LEN);
-			s_trunc[TRUNC_LEN] = '\0';
-			vtrace(" -> \"%s\"",
-			    scatv(s_trunc, buf, sizeof(buf)));
-			if (strlen(s) > TRUNC_LEN)
-				vtrace("...(%d chars)", (int)strlen(s));
-		}
-		vtrace("\n");
-	}
-	(void) Tcl_SetServiceMode(old_mode);
-	in_cmd = False;
-	sms_interp = NULL;
-	if (argv)
-		Free(argv);
-	return cmd_ret;
+	vtrace("\n");
+    }
+    (void) Tcl_SetServiceMode(old_mode);
+    in_cmd = False;
+    sms_interp = NULL;
+    if (argv) {
+	Free(argv);
+    }
+    return cmd_ret;
 }
 
 /* Do initial connect negotiation. */
@@ -978,32 +984,32 @@ dump_field(unsigned count, const char *name, Boolean in_ascii)
 }
 
 Boolean
-Ascii_eaction(ia_t ia, unsigned argc, const char **argv)
+Ascii_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Ascii", ia, argc, argv);
+    action_debug("Ascii", ia, argc, argv);
     return dump_fixed(argv, argc, "Ascii", True, ea_buf, ROWS, COLS,
 	    cursor_addr);
 }
 
 Boolean
-AsciiField_eaction(ia_t ia, unsigned argc, const char **argv)
+AsciiField_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("AsciiField", ia, argc, argv);
+    action_debug("AsciiField", ia, argc, argv);
     return dump_field(argc, "AsciiField", True);
 }
 
 Boolean
-Ebcdic_eaction(ia_t ia, unsigned argc, const char **argv)
+Ebcdic_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Ebcdic", ia, argc, argv);
+    action_debug("Ebcdic", ia, argc, argv);
     return dump_fixed(argv, argc, "Ebcdic", False, ea_buf, ROWS, COLS,
 	    cursor_addr);
 }
 
 Boolean
-EbcdicField_eaction(ia_t ia, unsigned argc, const char **argv)
+EbcdicField_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("EbcdicField", ia, argc, argv);
+    action_debug("EbcdicField", ia, argc, argv);
     return dump_field(argc, "EbcdicField", False);
 }
 
@@ -1079,12 +1085,12 @@ status_string(void)
 }
 
 Boolean
-Status_eaction(ia_t ia, unsigned argc, const char **argv)
+Status_action(ia_t ia, unsigned argc, const char **argv)
 {
     char *s;
 
-    eaction_debug("Status", ia, argc, argv);
-    if (check_eusage("Status", argc, 0, 0) < 0) {
+    action_debug("Status", ia, argc, argv);
+    if (check_argc("Status", argc, 0, 0) < 0) {
 	return False;
     }
 
@@ -1257,9 +1263,9 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
  * ReadBuffer action.
  */
 Boolean
-ReadBuffer_eaction(ia_t ia, unsigned argc, const char **argv)
+ReadBuffer_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("ReadBuffer", ia, argc, argv);
+    action_debug("ReadBuffer", ia, argc, argv);
     return do_read_buffer(argv, argc, ea_buf);
 }
 
@@ -1323,11 +1329,11 @@ snap_save(void)
 }
 
 Boolean
-Snap_eaction(ia_t ia, unsigned argc, const char **argv)
+Snap_action(ia_t ia, unsigned argc, const char **argv)
 {
     char nbuf[16];
 
-    eaction_debug("Snap", ia, argc, argv);
+    action_debug("Snap", ia, argc, argv);
     if (argc == 0) {
 	snap_save();
 	return True;
@@ -1458,14 +1464,14 @@ wait_timed_out(ioid_t id _is_unused)
 }
 
 Boolean
-Wait_eaction(ia_t ia, unsigned argc, const char **argv)
+Wait_action(ia_t ia, unsigned argc, const char **argv)
 {
     long tmo = -1;
     char *ptr;
     unsigned np;
     const char **pr;
 
-    eaction_debug("Wait", ia, argc, argv);
+    action_debug("Wait", ia, argc, argv);
 
     if (argc > 0 &&
 	(tmo = strtol(argv[0], &ptr, 10)) >= 0 &&
@@ -1578,7 +1584,7 @@ Cols_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 }
 
 Boolean
-Query_eaction(ia_t ia, unsigned argc, const char **argv)
+Query_action(ia_t ia, unsigned argc, const char **argv)
 {
     Tcl_Obj *q_obj;
     char *s;
@@ -1605,8 +1611,8 @@ Query_eaction(ia_t ia, unsigned argc, const char **argv)
     };
     int i;
 
-    eaction_debug("Query", ia, argc, argv);
-    if (check_eusage("Query", argc, 0, 1) < 0) {
+    action_debug("Query", ia, argc, argv);
+    if (check_argc("Query", argc, 0, 1) < 0) {
 	return False;
     }
 

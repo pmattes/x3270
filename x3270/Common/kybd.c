@@ -130,7 +130,7 @@ static int n_composites = 0;
 typedef struct ta {
     struct ta *next;
     const char *efn_name;
-    eaction_t *fn;
+    action_t *fn;
     const char *parm1;
     const char *parm2;
 } ta_t;
@@ -144,10 +144,10 @@ static char dxl[] = "0123456789abcdef";
 
 
 /*
- * Put a function or eaction on the typeahead queue.
+ * Put a function or action on the typeahead queue.
  */
 static void
-enq_xta(const char *name, eaction_t *fn, const char *parm1, const char *parm2)
+enq_xta(const char *name, action_t *fn, const char *parm1, const char *parm2)
 {
 	ta_t *ta;
 
@@ -199,7 +199,7 @@ enq_xta(const char *name, eaction_t *fn, const char *parm1, const char *parm2)
 }
 
 /*
- * Put an eaction on the typeahead queue.
+ * Put an action on the typeahead queue.
  */
 static void
 enq_ta(const char *efn_name, const char *parm1, const char *parm2)
@@ -211,7 +211,7 @@ enq_ta(const char *efn_name, const char *parm1, const char *parm2)
  * Put a function on the typeahead queue.
  */
 static void
-enq_fta(eaction_t *fn, const char *parm1, const char *parm2)
+enq_fta(action_t *fn, const char *parm1, const char *parm2)
 {
     enq_xta(NULL, fn, parm1, parm2);
 }
@@ -234,7 +234,7 @@ run_ta(void)
     }
 
     if (ta->efn_name) {
-	run_eaction(ta->efn_name, IA_TYPEAHEAD, ta->parm1, ta->parm2);
+	run_action(ta->efn_name, IA_TYPEAHEAD, ta->parm1, ta->parm2);
     } else {
 	unsigned argc = 0;
 	const char *argv[2];
@@ -603,12 +603,12 @@ key_AID(unsigned char aid_code)
 }
 
 Boolean
-PF_eaction(ia_t ia, unsigned argc, const char **argv)
+PF_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned k;
 
-    eaction_debug("PF", ia, argc, argv);
-    if (check_eusage("PF", argc, 1, 1) < 0) {
+    action_debug("PF", ia, argc, argv);
+    if (check_argc("PF", argc, 1, 1) < 0) {
 	return False;
     }
     k = atoi(argv[0]);
@@ -630,12 +630,12 @@ PF_eaction(ia_t ia, unsigned argc, const char **argv)
 }
 
 Boolean
-PA_eaction(ia_t ia, unsigned argc, const char **argv)
+PA_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned k;
 
-    eaction_debug("PF", ia, argc, argv);
-    if (check_eusage("PA", argc, 1, 1) < 0) {
+    action_debug("PF", ia, argc, argv);
+    if (check_argc("PA", argc, 1, 1) < 0) {
 	return False;
     }
     k = atoi(argv[0]);
@@ -661,10 +661,10 @@ PA_eaction(ia_t ia, unsigned argc, const char **argv)
  * ATTN key, per RFC 2355.  Sends IP, regardless.
  */
 Boolean
-Attn_eaction(ia_t ia, unsigned argc, const char **argv)
+Attn_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Attn", ia, argc, argv);
-    if (check_eusage("Attn", argc, 0, 0) < 0) {
+    action_debug("Attn", ia, argc, argv);
+    if (check_argc("Attn", argc, 0, 0) < 0) {
 	return False;
     }
     if (!IN_3270) {
@@ -692,10 +692,10 @@ Attn_eaction(ia_t ia, unsigned argc, const char **argv)
  * This is now the same as the Attn action.
  */
 Boolean
-Interrupt_eaction(ia_t ia, unsigned argc, const char **argv)
+Interrupt_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Interrupt", ia, argc, argv);
-    if (check_eusage("Interrupt", argc, 0, 0) < 0) {
+    action_debug("Interrupt", ia, argc, argv);
+    if (check_argc("Interrupt", argc, 0, 0) < 0) {
 	return False;
     }
     if (!IN_3270) {
@@ -1537,10 +1537,10 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause)
 }
 
 Boolean
-MonoCase_eaction(ia_t ia, unsigned argc, const char **argv)
+MonoCase_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("MonoCase", ia, argc, argv);
-    if (check_eusage("MonoCase", argc, 0, 0) < 0) {
+    action_debug("MonoCase", ia, argc, argv);
+    if (check_argc("MonoCase", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -1552,10 +1552,10 @@ MonoCase_eaction(ia_t ia, unsigned argc, const char **argv)
  * Flip the display left-to-right
  */
 Boolean
-Flip_eaction(ia_t ia, unsigned argc, const char **argv)
+Flip_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Flip", ia, argc, argv);
-    if (check_eusage("Flip", argc, 0, 0) < 0) {
+    action_debug("Flip", ia, argc, argv);
+    if (check_argc("Flip", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -1574,10 +1574,10 @@ Flip_eaction(ia_t ia, unsigned argc, const char **argv)
  * Tab forward to next field.
  */
 Boolean
-Tab_eaction(ia_t ia, unsigned argc, const char **argv)
+Tab_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Tab", ia, argc, argv);
-    if (check_eusage("Tab", argc, 0, 0) < 0) {
+    action_debug("Tab", ia, argc, argv);
+    if (check_argc("Tab", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -1603,13 +1603,13 @@ Tab_eaction(ia_t ia, unsigned argc, const char **argv)
  * Tab backward to previous field.
  */
 Boolean
-BackTab_eaction(ia_t ia, unsigned argc, const char **argv)
+BackTab_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr, nbaddr;
     int	sbaddr;
 
-    eaction_debug("BackTab", ia, argc, argv);
-    if (check_eusage("BackTab", argc, 0, 0) < 0) {
+    action_debug("BackTab", ia, argc, argv);
+    if (check_argc("BackTab", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -1734,10 +1734,10 @@ do_reset(Boolean explicit)
 }
 
 Boolean
-Reset_eaction(ia_t ia, unsigned argc, const char **argv)
+Reset_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Reset", ia, argc, argv);
-    if (check_eusage("Reset", argc, 0, 0) < 0) {
+    action_debug("Reset", ia, argc, argv);
+    if (check_argc("Reset", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -1750,10 +1750,10 @@ Reset_eaction(ia_t ia, unsigned argc, const char **argv)
  * Move to first unprotected field on screen.
  */
 Boolean
-Home_eaction(ia_t ia, unsigned argc, const char **argv)
+Home_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Home", ia, argc, argv);
-    if (check_eusage("Home", argc, 0, 0) < 0) {
+    action_debug("Home", ia, argc, argv);
+    if (check_argc("Home", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -1798,10 +1798,10 @@ do_left(void)
 }
 
 Boolean
-Left_eaction(ia_t ia, unsigned argc, const char **argv)
+Left_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Left", ia, argc, argv);
-    if (check_eusage("Left", argc, 0, 0) < 0) {
+    action_debug("Left", ia, argc, argv);
+    if (check_argc("Left", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -1912,10 +1912,10 @@ do_delete(void)
 }
 
 Boolean
-Delete_eaction(ia_t ia, unsigned argc, const char **argv)
+Delete_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Delete", ia, argc, argv);
-    if (check_eusage("Delete", argc, 0, 0) < 0) {
+    action_debug("Delete", ia, argc, argv);
+    if (check_argc("Delete", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -1946,10 +1946,10 @@ Delete_eaction(ia_t ia, unsigned argc, const char **argv)
  * 3270-style backspace.
  */
 Boolean
-BackSpace_eaction(ia_t ia, unsigned argc, const char **argv)
+BackSpace_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("BackSpace", ia, argc, argv);
-    if (check_eusage("BackSpace", argc, 0, 0) < 0) {
+    action_debug("BackSpace", ia, argc, argv);
+    if (check_argc("BackSpace", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2036,10 +2036,10 @@ do_erase(void)
 }
 
 Boolean
-Erase_eaction(ia_t ia, unsigned argc, const char **argv)
+Erase_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Erase", ia, argc, argv);
-    if (check_eusage("Erase", argc, 0, 0) < 0) {
+    action_debug("Erase", ia, argc, argv);
+    if (check_argc("Erase", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2064,13 +2064,13 @@ Erase_eaction(ia_t ia, unsigned argc, const char **argv)
  * Cursor right 1 position.
  */
 Boolean
-Right_eaction(ia_t ia, unsigned argc, const char **argv)
+Right_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
     enum dbcs_state d;
 
-    eaction_debug("Right", ia, argc, argv);
-    if (check_eusage("Right", argc, 0, 0) < 0) {
+    action_debug("Right", ia, argc, argv);
+    if (check_argc("Right", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2106,13 +2106,13 @@ Right_eaction(ia_t ia, unsigned argc, const char **argv)
  * Cursor left 2 positions.
  */
 Boolean
-Left2_eaction(ia_t ia, unsigned argc, const char **argv)
+Left2_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
     enum dbcs_state d;
 
-    eaction_debug("Left2", ia, argc, argv);
-    if (check_eusage("Left2", argc, 0, 0) < 0) {
+    action_debug("Left2", ia, argc, argv);
+    if (check_argc("Left2", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2148,15 +2148,15 @@ Left2_eaction(ia_t ia, unsigned argc, const char **argv)
  * Cursor to previous word.
  */
 Boolean
-PreviousWord_eaction(ia_t ia, unsigned argc, const char **argv)
+PreviousWord_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
     int baddr0;
     unsigned char c;
     Boolean prot;
 
-    eaction_debug("PreviousWord", ia, argc, argv);
-    if (check_eusage("PreviousWord", argc, 0, 0) < 0) {
+    action_debug("PreviousWord", ia, argc, argv);
+    if (check_argc("PreviousWord", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2220,13 +2220,13 @@ PreviousWord_eaction(ia_t ia, unsigned argc, const char **argv)
  * Cursor right 2 positions.
  */
 Boolean
-Right2_eaction(ia_t ia, unsigned argc, const char **argv)
+Right2_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
     enum dbcs_state d;
 
-    eaction_debug("Right2", ia, argc, argv);
-    if (check_eusage("Right2", argc, 0, 0) < 0) {
+    action_debug("Right2", ia, argc, argv);
+    if (check_argc("Right2", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2310,13 +2310,13 @@ nt_word(int baddr)
  * Cursor to next unprotected word.
  */
 Boolean
-NextWord_eaction(ia_t ia, unsigned argc, const char **argv)
+NextWord_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
     unsigned char c;
 
-    eaction_debug("NextWord", ia, argc, argv);
-    if (check_eusage("NextWord", argc, 0, 0) < 0) {
+    action_debug("NextWord", ia, argc, argv);
+    if (check_argc("NextWord", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2378,12 +2378,12 @@ NextWord_eaction(ia_t ia, unsigned argc, const char **argv)
  * Cursor up 1 position.
  */
 Boolean
-Up_eaction(ia_t ia, unsigned argc, const char **argv)
+Up_action(ia_t ia, unsigned argc, const char **argv)
 {
     register int baddr;
 
-    eaction_debug("Up", ia, argc, argv);
-    if (check_eusage("Up", argc, 0, 0) < 0) {
+    action_debug("Up", ia, argc, argv);
+    if (check_argc("Up", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2413,12 +2413,12 @@ Up_eaction(ia_t ia, unsigned argc, const char **argv)
  * Cursor down 1 position.
  */
 Boolean
-Down_eaction(ia_t ia, unsigned argc, const char **argv)
+Down_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
 
-    eaction_debug("Down", ia, argc, argv);
-    if (check_eusage("Down", argc, 0, 0) < 0) {
+    action_debug("Down", ia, argc, argv);
+    if (check_argc("Down", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2445,13 +2445,13 @@ Down_eaction(ia_t ia, unsigned argc, const char **argv)
  * Cursor to first field on next line or any lines after that.
  */
 Boolean
-Newline_eaction(ia_t ia, unsigned argc, const char **argv)
+Newline_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr, faddr;
     unsigned char fa;
 
-    eaction_debug("Newline", ia, argc, argv);
-    if (check_eusage("Newline", argc, 0, 0) < 0) {
+    action_debug("Newline", ia, argc, argv);
+    if (check_argc("Newline", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2480,10 +2480,10 @@ Newline_eaction(ia_t ia, unsigned argc, const char **argv)
  * DUP key
  */
 Boolean
-Dup_eaction(ia_t ia, unsigned argc, const char **argv)
+Dup_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Dup", ia, argc, argv);
-    if (check_eusage("Dup", argc, 0, 0) < 0) {
+    action_debug("Dup", ia, argc, argv);
+    if (check_argc("Dup", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2505,10 +2505,10 @@ Dup_eaction(ia_t ia, unsigned argc, const char **argv)
  * FM key
  */
 Boolean
-FieldMark_eaction(ia_t ia, unsigned argc, const char **argv)
+FieldMark_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("FieldMark", ia, argc, argv);
-    if (check_eusage("FieldMark", argc, 0, 0) < 0) {
+    action_debug("FieldMark", ia, argc, argv);
+    if (check_argc("FieldMark", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2528,10 +2528,10 @@ FieldMark_eaction(ia_t ia, unsigned argc, const char **argv)
  * Vanilla AID keys.
  */
 Boolean
-Enter_eaction(ia_t ia, unsigned argc, const char **argv)
+Enter_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Enter", ia, argc, argv);
-    if (check_eusage("Enter", argc, 0, 0) < 0) {
+    action_debug("Enter", ia, argc, argv);
+    if (check_argc("Enter", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2546,10 +2546,10 @@ Enter_eaction(ia_t ia, unsigned argc, const char **argv)
 }
 
 Boolean
-SysReq_eaction(ia_t ia, unsigned argc, const char **argv)
+SysReq_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("SysReq", ia, argc, argv);
-    if (check_eusage("SysReq", argc, 0, 0) < 0) {
+    action_debug("SysReq", ia, argc, argv);
+    if (check_argc("SysReq", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2575,10 +2575,10 @@ SysReq_eaction(ia_t ia, unsigned argc, const char **argv)
  * Clear AID key
  */
 Boolean
-Clear_eaction(ia_t ia, unsigned argc, const char **argv)
+Clear_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Clear", ia, argc, argv);
-    if (check_eusage("Clear", argc, 0, 0) < 0) {
+    action_debug("Clear", ia, argc, argv);
+    if (check_argc("Clear", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2692,10 +2692,10 @@ lightpen_select(int baddr)
  * Cursor Select key (light pen simulator) -- at the current cursor location.
  */
 Boolean
-CursorSelect_eaction(ia_t ia, unsigned argc, const char **argv)
+CursorSelect_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("CursorSelect", ia, argc, argv);
-    if (check_eusage("CursorSelect", argc, 0, 0) < 0) {
+    action_debug("CursorSelect", ia, argc, argv);
+    if (check_argc("CursorSelect", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2715,15 +2715,15 @@ CursorSelect_eaction(ia_t ia, unsigned argc, const char **argv)
  * Erase End Of Field Key.
  */
 Boolean
-EraseEOF_eaction(ia_t ia, unsigned argc, const char **argv)
+EraseEOF_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
     unsigned char fa;
     enum dbcs_state d;
     enum dbcs_why why = DBCS_FIELD;
 
-    eaction_debug("EraseEOF", ia, argc, argv);
-    if (check_eusage("EraseEOF", argc, 0, 0) < 0) {
+    action_debug("EraseEOF", ia, argc, argv);
+    if (check_argc("EraseEOF", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2773,14 +2773,14 @@ EraseEOF_eaction(ia_t ia, unsigned argc, const char **argv)
  * Erase all Input Key.
  */
 Boolean
-EraseInput_eaction(ia_t ia, unsigned argc, const char **argv)
+EraseInput_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr, sbaddr;
     unsigned char fa;
     Boolean f;
 
-    eaction_debug("EraseInput", ia, argc, argv);
-    if (check_eusage("EraseInput", argc, 0, 0) < 0) {
+    action_debug("EraseInput", ia, argc, argv);
+    if (check_argc("EraseInput", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2841,13 +2841,13 @@ EraseInput_eaction(ia_t ia, unsigned argc, const char **argv)
  * Which is to say, does a ^W.
  */
 Boolean
-DeleteWord_eaction(ia_t ia, unsigned argc, const char **argv)
+DeleteWord_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
     unsigned char fa;
 
-    eaction_debug("DeleteWord", ia, argc, argv);
-    if (check_eusage("DeleteWord", argc, 0, 0) < 0) {
+    action_debug("DeleteWord", ia, argc, argv);
+    if (check_argc("DeleteWord", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2912,13 +2912,13 @@ DeleteWord_eaction(ia_t ia, unsigned argc, const char **argv)
  * Which is to say, does a ^U.
  */
 Boolean
-DeleteField_eaction(ia_t ia, unsigned argc, const char **argv)
+DeleteField_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
     unsigned char fa;
 
-    eaction_debug("DeleteField", ia, argc, argv);
-    if (check_eusage("DeleteField", argc, 0, 0) < 0) {
+    action_debug("DeleteField", ia, argc, argv);
+    if (check_argc("DeleteField", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2958,10 +2958,10 @@ DeleteField_eaction(ia_t ia, unsigned argc, const char **argv)
  * Set insert mode key.
  */
 Boolean
-Insert_eaction(ia_t ia, unsigned argc, const char **argv)
+Insert_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Insert", ia, argc, argv);
-    if (check_eusage("Insert", argc, 0, 0) < 0) {
+    action_debug("Insert", ia, argc, argv);
+    if (check_argc("Insert", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -2981,10 +2981,10 @@ Insert_eaction(ia_t ia, unsigned argc, const char **argv)
  * Toggle insert mode key.
  */
 Boolean
-ToggleInsert_eaction(ia_t ia, unsigned argc, const char **argv)
+ToggleInsert_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("ToggleInsert", ia, argc, argv);
-    if (check_eusage("ToggleInsert", argc, 0, 0) < 0) {
+    action_debug("ToggleInsert", ia, argc, argv);
+    if (check_argc("ToggleInsert", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -3008,10 +3008,10 @@ ToggleInsert_eaction(ia_t ia, unsigned argc, const char **argv)
  * Toggle reverse mode key.
  */
 Boolean
-ToggleReverse_eaction(ia_t ia, unsigned argc, const char **argv)
+ToggleReverse_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("ToggleReverse", ia, argc, argv);
-    if (check_eusage("ToggleReverse", argc, 0, 0) < 0) {
+    action_debug("ToggleReverse", ia, argc, argv);
+    if (check_argc("ToggleReverse", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -3032,14 +3032,14 @@ ToggleReverse_eaction(ia_t ia, unsigned argc, const char **argv)
  * field, or if the field is full, to the last character in the field.
  */
 Boolean
-FieldEnd_eaction(ia_t ia, unsigned argc, const char **argv)
+FieldEnd_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr, faddr;
     unsigned char fa, c;
     int	last_nonblank = -1;
 
-    eaction_debug("FieldEnd", ia, argc, argv);
-    if (check_eusage("FieldEnd", argc, 0, 0) < 0) {
+    action_debug("FieldEnd", ia, argc, argv);
+    if (check_argc("FieldEnd", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -3090,13 +3090,13 @@ FieldEnd_eaction(ia_t ia, unsigned argc, const char **argv)
  * MoveCursor action. Moves to a specific location.
  */
 Boolean
-MoveCursor_eaction(ia_t ia, unsigned argc, const char **argv)
+MoveCursor_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
     int row, col;
 
-    eaction_debug("MoveCursor", ia, argc, argv);
-    if (check_eusage("MoveCursor", argc, 2, 2) < 0) {
+    action_debug("MoveCursor", ia, argc, argv);
+    if (check_argc("MoveCursor", argc, 2, 2) < 0) {
 	return False;
     }
 
@@ -3128,14 +3128,14 @@ MoveCursor_eaction(ia_t ia, unsigned argc, const char **argv)
  * Key action.
  */
 Boolean
-Key_eaction(ia_t ia, unsigned argc, const char **argv)
+Key_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned i;
     KeySym k;
     enum keytype keytype;
     ucs4_t ucs4;
 
-    eaction_debug("Key", ia, argc, argv);
+    action_debug("Key", ia, argc, argv);
     reset_idle_timer();
 
     for (i = 0; i < argc; i++) {
@@ -3169,13 +3169,13 @@ Key_eaction(ia_t ia, unsigned argc, const char **argv)
  * String action.
  */
 Boolean
-String_eaction(ia_t ia, unsigned argc, const char **argv)
+String_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned i;
     int len = 0;
     char *s;
 
-    eaction_debug("String", ia, argc, argv);
+    action_debug("String", ia, argc, argv);
     reset_idle_timer();
 
     /* Determine the total length of the strings. */
@@ -3203,14 +3203,14 @@ String_eaction(ia_t ia, unsigned argc, const char **argv)
  * HexString action.
  */
 Boolean
-HexString_eaction(ia_t ia, unsigned argc, const char **argv)
+HexString_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned i;
     int len = 0;
     char *s;
     const char *t;
 
-    eaction_debug("HexString", ia, argc, argv);
+    action_debug("HexString", ia, argc, argv);
     reset_idle_timer();
 
     /* Determine the total length of the strings. */
@@ -3248,10 +3248,10 @@ HexString_eaction(ia_t ia, unsigned argc, const char **argv)
  * is still defined here for backwards compatibility with old keymaps.
  */
 Boolean
-CircumNot_eaction(ia_t ia, unsigned argc, const char **argv)
+CircumNot_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("CircumNot", ia, argc, argv);
-    if (check_eusage("CircumNot", argc, 0, 0) < 0) {
+    action_debug("CircumNot", ia, argc, argv);
+    if (check_argc("CircumNot", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -3454,13 +3454,13 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 	case BASE:
 	    switch (c) {
 	    case '\b':
-		run_eaction("Left", ia, NULL, NULL);
+		run_action("Left", ia, NULL, NULL);
 		break;
 	    case '\f':
 		if (pasting) {
 		    key_UCharacter(0x20, KT_STD, ia);
 		} else {
-		    run_eaction("Clear", ia, NULL, NULL);
+		    run_action("Clear", ia, NULL, NULL);
 		    if (IN_3270) {
 			return xlen-1;
 		    }
@@ -3470,7 +3470,7 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 		if (pasting) {
 		    if (auto_skip) {
 			if (!just_wrapped) {
-			    run_eaction("Newline", ia, NULL, NULL);
+			    run_action("Newline", ia, NULL, NULL);
 			    last_row = BA_TO_ROW(cursor_addr);
 			}
 		    } else {
@@ -3494,7 +3494,7 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 			cursor_move(baddr);
 		    }
 		} else {
-		    run_eaction("Enter", ia, NULL, NULL);
+		    run_action("Enter", ia, NULL, NULL);
 		    if (IN_3270) {
 			return xlen-1;
 		    }
@@ -3502,11 +3502,11 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 		break;
 	    case '\r':
 		if (!pasting) {
-		    run_eaction("Newline", ia, NULL, NULL);
+		    run_action("Newline", ia, NULL, NULL);
 		}
 		break;
 	    case '\t':
-		run_eaction("Tab", ia, NULL, NULL);
+		run_action("Tab", ia, NULL, NULL);
 		break;
 	    case '\\':	/* backslashes are NOT special when pasting */
 		if (!pasting) {
@@ -3572,18 +3572,18 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 		state = BASE;
 		break;
 	    case 'b':
-		run_eaction("Left", ia, NULL, NULL);
+		run_action("Left", ia, NULL, NULL);
 		state = BASE;
 		break;
 	    case 'f':
-		run_eaction("Clear", ia, NULL, NULL);
+		run_action("Clear", ia, NULL, NULL);
 		state = BASE;
 		if (IN_3270) {
 		    return xlen-1;
 		}
 		break;
 	    case 'n':
-		run_eaction("Enter", ia, NULL, NULL);
+		run_action("Enter", ia, NULL, NULL);
 		state = BASE;
 		if (IN_3270) {
 		    return xlen-1;
@@ -3593,15 +3593,15 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 		state = BACKP;
 		break;
 	    case 'r':
-		run_eaction("Newline", ia, NULL, NULL);
+		run_action("Newline", ia, NULL, NULL);
 		state = BASE;
 		break;
 	    case 't':
-		run_eaction("Tab", ia, NULL, NULL);
+		run_action("Tab", ia, NULL, NULL);
 		state = BASE;
 		break;
 	    case 'T':
-		run_eaction("BackTab", ia, NULL, NULL);
+		run_action("BackTab", ia, NULL, NULL);
 		state = BASE;
 		break;
 	    case 'v':
@@ -4142,10 +4142,10 @@ build_composites(void)
  * then a non-data key.  Oh well.
  */
 Boolean
-Compose_eaction(ia_t ia, unsigned argc, const char **argv)
+Compose_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Compose", ia, argc, argv);
-    if (check_eusage("Compose", argc, 0, 0) < 0) {
+    action_debug("Compose", ia, argc, argv);
+    if (check_argc("Compose", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();

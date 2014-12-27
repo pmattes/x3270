@@ -65,7 +65,7 @@
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>
 
-static void action_ndebug(const char *aname, XEvent *event, String *params,
+static void xaction_ndebug(const char *aname, XEvent *event, String *params,
 	Cardinal *num_params);
 
 #define MODMAP_SIZE	8
@@ -98,15 +98,15 @@ static char *aliased_actions[] = {
 };
 
 /*
- * xtwrapper(foo) creates an Xt action named foo_action(), which calls
- * foo_eaction.
+ * xtwrapper(foo) creates an Xt action named foo_xaction(), which calls
+ * foo_action.
  */
 #define xtwrapper(name) \
-    void name ## _action (Widget w _is_unused, XEvent *event, String *params, \
+    void name ## _xaction (Widget w _is_unused, XEvent *event, String *params, \
 	    Cardinal *num_params) \
 { \
-    action_ndebug(#name, event, params, num_params); \
-    (void) name ## _eaction(IA_KEYMAP, *num_params, (const char **)params); \
+    xaction_ndebug(#name, event, params, num_params); \
+    (void) name ## _action(IA_KEYMAP, *num_params, (const char **)params); \
 }
 
 /* Xt action wrappers for emulator actions. */
@@ -174,118 +174,118 @@ xtwrapper(Up)
 xtwrapper(Wait)
 xtwrapper(WindowState)
 
-XtActionsRec all_actions[] = {
-    { "AltCursor",  	AltCursor_action },
-    { "Attn",		Attn_action },
-    { "BackSpace",	BackSpace_action },
-    { "BackTab",	BackTab_action },
-    { "Bell",		Bell_action },
-    { "CircumNot",	CircumNot_action },
-    { "Clear",		Clear_action },
-    { "Compose",	Compose_action },
-    { "Connect",	Connect_action },
-    { "ContinueScript",	ContinueScript_action },
-    { "CursorSelect",	CursorSelect_action },
-    { "Cut",		Cut_action },
-    { "Default",	Default_action },
-    { "Delete", 	Delete_action },
-    { "DeleteField",	DeleteField_action },
-    { "DeleteWord",	DeleteWord_action },
-    { "Disconnect",	Disconnect_action },
-    { "Down",		Down_action },
-    { "Dup",		Dup_action },
-    { "Enter",		Enter_action },
-    { "EraseEOF",	EraseEOF_action },
-    { "Erase",		Erase_action },
-    { "EraseInput",	EraseInput_action },
-    { "Execute",	Execute_action },
-    { "FieldEnd",	FieldEnd_action },
-    { "FieldMark",	FieldMark_action },
-    { "Flip",		Flip_action },
-    { "HandleMenu",	HandleMenu_action },
-    { "HexString",	HexString_action},
-    { "Home",		Home_action },
-    { "ignore",		ignore_action },
-    { "Insert",		Insert_action },
-    { "insert-selection",	insert_selection_action },
-    { "Interrupt",	Interrupt_action },
-    { "Key",		Key_action },
-    { "Keymap",		TemporaryKeymap_action },
-    { "KybdSelect",	KybdSelect_action },
-    { "Left2", 		Left2_action },
-    { "Left",		Left_action },
-    { "Macro", 		Macro_action },
-    { "MonoCase",	MonoCase_action },
-    { "MouseSelect",	MouseSelect_action },
-    { "MoveCursor",	MoveCursor_action },
-    { "move-select",	move_select_action },
-    { "Newline",	Newline_action },
-    { "NextWord",	NextWord_action },
-    { "Open",		Connect_action },
-    { PA_END,		PA_End_action },
-    { PA_KEYMAP_TRACE,	PA_KeymapTrace_action },
-    { "PA",		PA_action },
-    { PA_PFX "ConfigureNotify", PA_ConfigureNotify_action },
-    { PA_PFX "confirm",	PA_confirm_action },
-    { PA_PFX "dialog-focus", PA_dialog_focus_action },
-    { PA_PFX "dialog-next",	PA_dialog_next_action },
-    { PA_PFX "EnterLeave",	PA_EnterLeave_action },
-    { PA_PFX "Expose",	PA_Expose_action },
-    { PA_PFX "Focus",	PA_Focus_action },
-    { PA_PFX "GraphicsExpose", PA_GraphicsExpose_action },
-    { PA_PFX "KeymapNotify", PA_KeymapNotify_action },
-    { PA_PFX "Shift",	PA_Shift_action },
-    { PA_PFX "StateChanged", PA_StateChanged_action },
-    { PA_PFX "VisibilityNotify",PA_VisibilityNotify_action },
-    { PA_PFX "WMProtocols",	PA_WMProtocols_action },
-    { "PF",		PF_action },
-    { "PreviousWord",	PreviousWord_action },
-    { "Printer",	Printer_action },
-    { "PrintText",	PrintText_action },
-    { "PrintWindow",	PrintWindow_action },
-    { "Quit",		Quit_action },
-    { "Reconnect",	Reconnect_action },
-    { "Redraw",		Redraw_action },
-    { "Reset",		Reset_action },
-    { "Right2",		Right2_action },
-    { "Right",		Right_action },
-    { "Script",		Script_action },
-    { "Scroll",		Scroll_action },
-    { "SelectAll",	SelectAll_action },
-    { "SelectDown",	SelectDown_action },
-    { "select-end",	select_end_action },
-    { "select-extend",	select_extend_action },
-    { "SelectMotion",	SelectMotion_action },
-    { "select-start",	select_start_action },
-    { "SelectUp",	SelectUp_action },
-    { "SetFont",	SetFont_action },
-    { "set-select",	set_select_action },
-    { "Source",		Source_action },
-    { "start-extend",	start_extend_action },
-    { "String",		String_action },
-    { "SysReq",		SysReq_action },
-    { "Tab",		Tab_action },
-    { "TemporaryKeymap",TemporaryKeymap_action },
-    { "Title",		Title_action },
-    { "ToggleInsert",	ToggleInsert_action },
-    { "ToggleReverse",	ToggleReverse_action },
-    { "Toggle",		Toggle_action },
-    { "Transfer",	Transfer_action },
-    { "Unselect",	Unselect_action },
-    { "Up",		Up_action },
-    { "Wait",		Wait_action },
-    { "WindowState",	WindowState_action },
+static XtActionsRec all_xactions[] = {
+    { "AltCursor",  	AltCursor_xaction },
+    { "Attn",		Attn_xaction },
+    { "BackSpace",	BackSpace_xaction },
+    { "BackTab",	BackTab_xaction },
+    { "Bell",		Bell_xaction },
+    { "CircumNot",	CircumNot_xaction },
+    { "Clear",		Clear_xaction },
+    { "Compose",	Compose_xaction },
+    { "Connect",	Connect_xaction },
+    { "ContinueScript",	ContinueScript_xaction },
+    { "CursorSelect",	CursorSelect_xaction },
+    { "Cut",		Cut_xaction },
+    { "Default",	Default_xaction },
+    { "Delete", 	Delete_xaction },
+    { "DeleteField",	DeleteField_xaction },
+    { "DeleteWord",	DeleteWord_xaction },
+    { "Disconnect",	Disconnect_xaction },
+    { "Down",		Down_xaction },
+    { "Dup",		Dup_xaction },
+    { "Enter",		Enter_xaction },
+    { "EraseEOF",	EraseEOF_xaction },
+    { "Erase",		Erase_xaction },
+    { "EraseInput",	EraseInput_xaction },
+    { "Execute",	Execute_xaction },
+    { "FieldEnd",	FieldEnd_xaction },
+    { "FieldMark",	FieldMark_xaction },
+    { "Flip",		Flip_xaction },
+    { "HandleMenu",	HandleMenu_xaction },
+    { "HexString",	HexString_xaction},
+    { "Home",		Home_xaction },
+    { "ignore",		ignore_xaction },
+    { "Insert",		Insert_xaction },
+    { "insert-selection",	insert_selection_xaction },
+    { "Interrupt",	Interrupt_xaction },
+    { "Key",		Key_xaction },
+    { "Keymap",		TemporaryKeymap_xaction },
+    { "KybdSelect",	KybdSelect_xaction },
+    { "Left2", 		Left2_xaction },
+    { "Left",		Left_xaction },
+    { "Macro", 		Macro_xaction },
+    { "MonoCase",	MonoCase_xaction },
+    { "MouseSelect",	MouseSelect_xaction },
+    { "MoveCursor",	MoveCursor_xaction },
+    { "move-select",	move_select_xaction },
+    { "Newline",	Newline_xaction },
+    { "NextWord",	NextWord_xaction },
+    { "Open",		Connect_xaction },
+    { PA_END,		PA_End_xaction },
+    { PA_KEYMAP_TRACE,	PA_KeymapTrace_xaction },
+    { "PA",		PA_xaction },
+    { PA_PFX "ConfigureNotify", PA_ConfigureNotify_xaction },
+    { PA_PFX "confirm",	PA_confirm_xaction },
+    { PA_PFX "dialog-focus", PA_dialog_focus_xaction },
+    { PA_PFX "dialog-next",	PA_dialog_next_xaction },
+    { PA_PFX "EnterLeave",	PA_EnterLeave_xaction },
+    { PA_PFX "Expose",	PA_Expose_xaction },
+    { PA_PFX "Focus",	PA_Focus_xaction },
+    { PA_PFX "GraphicsExpose", PA_GraphicsExpose_xaction },
+    { PA_PFX "KeymapNotify", PA_KeymapNotify_xaction },
+    { PA_PFX "Shift",	PA_Shift_xaction },
+    { PA_PFX "StateChanged", PA_StateChanged_xaction },
+    { PA_PFX "VisibilityNotify",PA_VisibilityNotify_xaction },
+    { PA_PFX "WMProtocols",	PA_WMProtocols_xaction },
+    { "PF",		PF_xaction },
+    { "PreviousWord",	PreviousWord_xaction },
+    { "Printer",	Printer_xaction },
+    { "PrintText",	PrintText_xaction },
+    { "PrintWindow",	PrintWindow_xaction },
+    { "Quit",		Quit_xaction },
+    { "Reconnect",	Reconnect_xaction },
+    { "Redraw",		Redraw_xaction },
+    { "Reset",		Reset_xaction },
+    { "Right2",		Right2_xaction },
+    { "Right",		Right_xaction },
+    { "Script",		Script_xaction },
+    { "Scroll",		Scroll_xaction },
+    { "SelectAll",	SelectAll_xaction },
+    { "SelectDown",	SelectDown_xaction },
+    { "select-end",	select_end_xaction },
+    { "select-extend",	select_extend_xaction },
+    { "SelectMotion",	SelectMotion_xaction },
+    { "select-start",	select_start_xaction },
+    { "SelectUp",	SelectUp_xaction },
+    { "SetFont",	SetFont_xaction },
+    { "set-select",	set_select_xaction },
+    { "Source",		Source_xaction },
+    { "start-extend",	start_extend_xaction },
+    { "String",		String_xaction },
+    { "SysReq",		SysReq_xaction },
+    { "Tab",		Tab_xaction },
+    { "TemporaryKeymap",TemporaryKeymap_xaction },
+    { "Title",		Title_xaction },
+    { "ToggleInsert",	ToggleInsert_xaction },
+    { "ToggleReverse",	ToggleReverse_xaction },
+    { "Toggle",		Toggle_xaction },
+    { "Transfer",	Transfer_xaction },
+    { "Unselect",	Unselect_xaction },
+    { "Up",		Up_xaction },
+    { "Wait",		Wait_xaction },
+    { "WindowState",	WindowState_xaction },
 };
 
-int xactioncount = XtNumber(all_actions);
+int xactioncount = XtNumber(all_xactions);
 XtActionsRec *xactions = NULL;
 
 /* No-op action for suppressed actions. */
 static void
-suppressed_action(Widget w _is_unused, XEvent *event, String *params,
+suppressed_xaction(Widget w _is_unused, XEvent *event, String *params,
 	Cardinal *num_params)
 {
-	action_debug(suppressed_action, event, params, num_params);
+    xaction_debug(suppressed_xaction, event, params, num_params);
 }
 
 /*
@@ -301,16 +301,16 @@ xaction_init(void)
     /* See if there are any filters at all. */
     suppress = get_resource(ResSuppressActions);
     if (suppress == NULL) {
-	xactions = all_actions;
+	xactions = all_xactions;
 	return;
     }
 
     /* Yes, we'll need to copy the table and prune it. */
-    xactions = (XtActionsRec *)Malloc(sizeof(all_actions));
-    memcpy(xactions, all_actions, sizeof(all_actions));
+    xactions = (XtActionsRec *)Malloc(sizeof(all_xactions));
+    memcpy(xactions, all_xactions, sizeof(all_xactions));
     for (i = 0; i < xactioncount; i++) {
 	if (action_suppressed(xactions[i].string, suppress)) {
-	    xactions[i].proc = suppressed_action;
+	    xactions[i].proc = suppressed_xaction;
 	}
     }
 }
@@ -327,7 +327,7 @@ action_name(XtActionProc action)
      * XXX: It would be better if the real name could be displayed, with a
      * message indicating it is suppressed.
      */
-    if (action == suppressed_action) {
+    if (action == suppressed_xaction) {
 	return "(suppressed)";
     }
 
@@ -572,19 +572,21 @@ key_state(unsigned int state)
  * Returns 0 if the argument count is correct, -1 otherwise.
  */
 int
-check_usage(XtActionProc action, Cardinal nargs, Cardinal nargs_min,
-    Cardinal nargs_max)
+xcheck_usage(XtActionProc action, Cardinal nargs, Cardinal nargs_min,
+	Cardinal nargs_max)
 {
-	if (nargs >= nargs_min && nargs <= nargs_max)
-		return 0;
-	if (nargs_min == nargs_max)
-		popup_an_error("%s requires %d argument%s",
-		    action_name(action), nargs_min, nargs_min == 1 ? "" : "s");
-	else
-		popup_an_error("%s requires %d or %d arguments",
-		    action_name(action), nargs_min, nargs_max);
-	cancel_if_idle_command();
-	return -1;
+    if (nargs >= nargs_min && nargs <= nargs_max) {
+	return 0;
+    }
+    if (nargs_min == nargs_max) {
+	popup_an_error("%s requires %d argument%s", action_name(action),
+		nargs_min, nargs_min == 1 ? "" : "s");
+    } else {
+	popup_an_error("%s requires %d or %d arguments", action_name(action),
+		nargs_min, nargs_max);
+    }
+    cancel_if_idle_command();
+    return -1;
 }
 
 /**
@@ -749,7 +751,7 @@ trace_event(XEvent *event)
  * Display an action debug message, given an action name.
  */
 static void
-action_ndebug(const char *aname, XEvent *event, String *params,
+xaction_ndebug(const char *aname, XEvent *event, String *params,
 	Cardinal *num_params)
 {
     Cardinal i;
@@ -774,46 +776,46 @@ action_ndebug(const char *aname, XEvent *event, String *params,
  * Display an action debug message, given an action function.
  */
 void
-action_debug(XtActionProc action, XEvent *event, String *params,
+xaction_debug(XtActionProc action, XEvent *event, String *params,
 	Cardinal *num_params)
 {
-    action_ndebug(action_name(action), event, params, num_params);
+    xaction_ndebug(action_name(action), event, params, num_params);
 }
 
 /*
  * Wrapper for calling an X11 action internally.
  */
 void
-action_internal(XtActionProc action, enum iaction cause, const char *parm1,
-    const char *parm2)
+xaction_internal(XtActionProc action, enum iaction cause, const char *parm1,
+	const char *parm2)
 {
-	Cardinal count = 0;
-	String parms[2];
+    Cardinal count = 0;
+    String parms[2];
 
-	/* Duplicate the parms, because XtActionProc doesn't grok 'const'. */
-	if (parm1 != NULL) {
-		parms[0] = NewString(parm1);
-		count++;
-		if (parm2 != NULL) {
-			parms[1] = NewString(parm2);
-			count++;
-		}
+    /* Duplicate the parms, because XtActionProc doesn't grok 'const'. */
+    if (parm1 != NULL) {
+	parms[0] = NewString(parm1);
+	count++;
+	if (parm2 != NULL) {
+	    parms[1] = NewString(parm2);
+	    count++;
 	}
+    }
 
-	ia_cause = cause;
-	(*action)((Widget) NULL, (XEvent *) NULL,
+    ia_cause = cause;
+    (*action)((Widget) NULL, (XEvent *) NULL,
 	    count ? parms : (String *) NULL,
 	    &count);
 
-	/* Free the parm copies. */
-	switch (count) {
-	    case 2:
-		Free(parms[1]);
-		/* fall through... */
-	    case 1:
-		Free(parms[0]);
-		break;
-	    default:
-		break;
-	}
+    /* Free the parm copies. */
+    switch (count) {
+    case 2:
+	Free(parms[1]);
+	/* fall through... */
+    case 1:
+	Free(parms[0]);
+	break;
+    default:
+	break;
+    }
 }

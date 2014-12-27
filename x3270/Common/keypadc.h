@@ -65,7 +65,7 @@ extern void keypad_key(int k, ucs4_t u);
 #  if defined(_WIN32) /*[*/
 extern void keypad_click(int x, int y);
 #  endif /*]*/
-extern eaction_t Keypad_eaction;
+extern action_t Keypad_action;
 # endif /*]*/
 
 # define keypad_qheight()	0

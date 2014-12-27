@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -38,4 +38,4 @@ extern void do_menu_toggle(int);
 extern void do_toggle(int);
 extern void initialize_toggles(void);
 extern void shutdown_toggles(void);
-extern eaction_t Toggle_eaction;
+extern action_t Toggle_action;

@@ -142,13 +142,13 @@ shutdown_toggles(void)
 }
 
 Boolean
-Toggle_eaction(ia_t ia, unsigned argc, const char **argv)
+Toggle_action(ia_t ia, unsigned argc, const char **argv)
 {
     int j;
     int ix;
 
-    eaction_debug("Toggle", ia, argc, argv);
-    if (check_eusage("Toggle", argc, 1, 2) < 0) {
+    action_debug("Toggle", ia, argc, argv);
+    if (check_argc("Toggle", argc, 1, 2) < 0) {
 	return False;
     }
     for (j = 0; toggle_names[j].name != NULL; j++) {

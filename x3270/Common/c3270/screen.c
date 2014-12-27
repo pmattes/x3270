@@ -1407,26 +1407,26 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	/* These first cases apply to both 3270 and NVT modes. */
 	switch (k) {
 	case KEY_UP:
-		run_eaction("Up", IA_DEFAULT, NULL, NULL);
+		run_action("Up", IA_DEFAULT, NULL, NULL);
 		return;
 	case KEY_DOWN:
-		run_eaction("Down", IA_DEFAULT, NULL, NULL);
+		run_action("Down", IA_DEFAULT, NULL, NULL);
 		return;
 	case KEY_LEFT:
-		run_eaction("Left", IA_DEFAULT, NULL, NULL);
+		run_action("Left", IA_DEFAULT, NULL, NULL);
 		return;
 	case KEY_RIGHT:
-		run_eaction("Right", IA_DEFAULT, NULL, NULL);
+		run_action("Right", IA_DEFAULT, NULL, NULL);
 		return;
 	case KEY_HOME:
-		run_eaction("Right", IA_DEFAULT, NULL, NULL);
+		run_action("Right", IA_DEFAULT, NULL, NULL);
 		return;
 	default:
 		break;
 	}
 	switch (ucs4) {
 	case 0x1d:
-		run_eaction("Escape", IA_DEFAULT, NULL, NULL);
+		run_action("Escape", IA_DEFAULT, NULL, NULL);
 		return;
 	}
 
@@ -1434,41 +1434,41 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	if (IN_3270) {
 	    	switch(k) {
 		case KEY_DC:
-			run_eaction("Delete", IA_DEFAULT, NULL, NULL);
+			run_action("Delete", IA_DEFAULT, NULL, NULL);
 			return;
 		case KEY_BACKSPACE:
-			run_eaction("BackSpace", IA_DEFAULT, NULL, NULL);
+			run_action("BackSpace", IA_DEFAULT, NULL, NULL);
 			return;
 		case KEY_HOME:
-			run_eaction("Home", IA_DEFAULT, NULL, NULL);
+			run_action("Home", IA_DEFAULT, NULL, NULL);
 			return;
 		default:
 			break;
 		}
 	    	switch(ucs4) {
 		case 0x03:
-			run_eaction("Clear", IA_DEFAULT, NULL, NULL);
+			run_action("Clear", IA_DEFAULT, NULL, NULL);
 			return;
 		case 0x12:
-			run_eaction("Reset", IA_DEFAULT, NULL, NULL);
+			run_action("Reset", IA_DEFAULT, NULL, NULL);
 			return;
 		case 'L' & 0x1f:
-			run_eaction("Redraw", IA_DEFAULT, NULL, NULL);
+			run_action("Redraw", IA_DEFAULT, NULL, NULL);
 			return;
 		case '\t':
-			run_eaction("Tab", IA_DEFAULT, NULL, NULL);
+			run_action("Tab", IA_DEFAULT, NULL, NULL);
 			return;
 		case 0177:
-			run_eaction("Delete", IA_DEFAULT, NULL, NULL);
+			run_action("Delete", IA_DEFAULT, NULL, NULL);
 			return;
 		case '\b':
-			run_eaction("BackSpace", IA_DEFAULT, NULL, NULL);
+			run_action("BackSpace", IA_DEFAULT, NULL, NULL);
 			return;
 		case '\r':
-			run_eaction("Enter", IA_DEFAULT, NULL, NULL);
+			run_action("Enter", IA_DEFAULT, NULL, NULL);
 			return;
 		case '\n':
-			run_eaction("Newline", IA_DEFAULT, NULL, NULL);
+			run_action("Newline", IA_DEFAULT, NULL, NULL);
 			return;
 		default:
 			break;
@@ -1492,7 +1492,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	for (i = 1; i <= 24; i++) {
 		if (k == KEY_F(i)) {
 			(void) sprintf(buf, "%d", i);
-			run_eaction("PF", IA_DEFAULT, buf, NULL);
+			run_action("PF", IA_DEFAULT, buf, NULL);
 			return;
 		}
 	}
@@ -1505,7 +1505,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 		sprintf(ks, "U+%04x", ucs4);
 		params[0] = ks;
 		params[1] = NULL;
-		Key_eaction(IA_DEFAULT, 1, params);
+		Key_action(IA_DEFAULT, 1, params);
 		return;
 	}
 	vtrace(" dropped (no default)\n");
@@ -2041,10 +2041,10 @@ draw_oia(void)
 }
 
 Boolean
-Redraw_eaction(ia_t ia, unsigned argc, const char **argv)
+Redraw_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Redraw", ia, argc, argv);
-    if (check_eusage("Redraw", argc, 0, 0) < 0) {
+    action_debug("Redraw", ia, argc, argv);
+    if (check_argc("Redraw", argc, 0, 0) < 0) {
 	return False;
     }
 

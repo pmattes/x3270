@@ -504,10 +504,10 @@ keypad_key(int k, ucs4_t u)
 }
 
 Boolean
-Keypad_eaction(ia_t ia, unsigned argc, const char **argv)
+Keypad_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Keypad", ia, argc, argv);
-    if (check_eusage("Keypad", argc, 0, 0) < 0) {
+    action_debug("Keypad", ia, argc, argv);
+    if (check_argc("Keypad", argc, 0, 0) < 0) {
 	return False;
     }
     pop_up_keypad(True);

@@ -359,7 +359,7 @@ idle_popup_callback(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
     /* Set the focus to the command widget. */
-    PA_dialog_focus_action(command_value, NULL, NULL, NULL);
+    PA_dialog_focus_xaction(command_value, NULL, NULL, NULL);
 }
 
 /* Cancel button pushed. */

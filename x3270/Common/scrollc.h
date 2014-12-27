@@ -40,4 +40,4 @@ extern void scroll_round(void);
 extern void scroll_save(int n, Boolean trim_blanks);
 extern void scroll_to_bottom(void);
 
-extern eaction_t Scroll_eaction;
+extern action_t Scroll_action;

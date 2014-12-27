@@ -772,7 +772,7 @@ ft_popup_callback(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
     /* Set the focus to the local file widget. */
-    PA_dialog_focus_action(local_file, NULL, NULL, NULL);
+    PA_dialog_focus_xaction(local_file, NULL, NULL, NULL);
 
     /* Disallow overwrites. */
     ft_private.allow_overwrite = False;

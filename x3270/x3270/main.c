@@ -800,7 +800,7 @@ label_init(void)
 }
 
 /*
- * Peek at X events before Xt does, calling PA_KeymapNotify_action if we see a
+ * Peek at X events before Xt does, calling PA_KeymapNotify_xaction if we see a
  * KeymapEvent.  This is to get around an (apparent) server bug that causes
  * Keymap events to come in with a window id of 0, so Xt never calls our
  * event handler.
@@ -814,7 +814,7 @@ peek_at_xevent(XEvent *e)
 
 	if (e->type == KeymapNotify) {
 		ia_cause = IA_PEEK;
-		PA_KeymapNotify_action(NULL, e, NULL, &zero);
+		PA_KeymapNotify_xaction(NULL, e, NULL, &zero);
 		ia_cause = IA_DEFAULT;
 	}
 }

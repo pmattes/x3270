@@ -86,13 +86,13 @@ static enum { SORT_EVENT, SORT_KEYMAP, SORT_ACTION } sort = SORT_KEYMAP;
 
 static Boolean km_isup = False;
 static Boolean km_exists = False;
-static Widget km_shell, sort_event, sort_keymap, sort_action, text;
+static Widget km_shell, sort_event, sort_keymap, sort_byaction, text;
 static char km_file[128];
 static void create_text(void);
 static void km_up(Widget w, XtPointer client_data, XtPointer call_data);
 static void km_down(Widget w, XtPointer client_data, XtPointer call_data);
 static void km_done(Widget w, XtPointer client_data, XtPointer call_data);
-static void do_sort_action(Widget w, XtPointer client_data,
+static void do_sort_byaction(Widget w, XtPointer client_data,
     XtPointer call_data);
 static void do_sort_keymap(Widget w, XtPointer client_data,
     XtPointer call_data);
@@ -553,17 +553,18 @@ expand_table(const char *name, char *table)
  * Trace a keymap.
  *
  * This function leaves a value in the global "keymap_trace", which is used
- * by the action_debug function when subsequent actions are called.
+ * by the xaction_debug function when subsequent actions are called.
  */
 void
-PA_KeymapTrace_action(Widget w _is_unused, XEvent *event _is_unused, String *params,
-    Cardinal *num_params)
+PA_KeymapTrace_xaction(Widget w _is_unused, XEvent *event _is_unused,
+	String *params, Cardinal *num_params)
 {
-	if (!toggled(TRACING) || *num_params != 2)
-		return;
-	Replace(keymap_trace, XtMalloc(strlen(params[0]) + 1 +
-				       strlen(params[1]) + 1));
-	(void) sprintf(keymap_trace, "%s:%s", params[0], params[1]);
+    if (!toggled(TRACING) || *num_params != 2) {
+	return;
+    }
+    Replace(keymap_trace, XtMalloc(strlen(params[0]) + 1 +
+				   strlen(params[1]) + 1));
+    (void) sprintf(keymap_trace, "%s:%s", params[0], params[1]);
 }
 
 /*
@@ -572,10 +573,10 @@ PA_KeymapTrace_action(Widget w _is_unused, XEvent *event _is_unused, String *par
  * This function clears the value in the global "keymap_trace".
  */
 void
-PA_End_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_unused,
-    Cardinal *num_params _is_unused)
+PA_End_xaction(Widget w _is_unused, XEvent *event _is_unused,
+	String *params _is_unused, Cardinal *num_params _is_unused)
 {
-	Replace(keymap_trace, NULL);
+    Replace(keymap_trace, NULL);
 }
 
 /*
@@ -763,18 +764,18 @@ do_keymap_display(Widget w _is_unused, XtPointer userdata _is_unused,
 	    XtNleftBitmap, sort == SORT_KEYMAP ? diamond : no_diamond,
 	    NULL);
 	XtAddCallback(sort_keymap, XtNcallback, do_sort_keymap, NULL);
-	sort_action = XtVaCreateManagedWidget("sortActionOption",
+	sort_byaction = XtVaCreateManagedWidget("sortActionOption",
 	    commandWidgetClass, form,
 	    XtNborderWidth, 0,
 	    XtNfromVert, sort_keymap,
 	    XtNleftBitmap, sort == SORT_ACTION ? diamond : no_diamond,
 	    NULL);
-	XtAddCallback(sort_action, XtNcallback, do_sort_action, NULL);
+	XtAddCallback(sort_byaction, XtNcallback, do_sort_byaction, NULL);
 
 	/* Create a text widget attached to the file. */
 	text = XtVaCreateManagedWidget(
 	    "text", asciiTextWidgetClass, form,
-	    XtNfromVert, sort_action,
+	    XtNfromVert, sort_byaction,
 	    XtNscrollHorizontal, XawtextScrollAlways,
 	    XtNscrollVertical, XawtextScrollAlways,
 	    XtNdisplayCaret, False,
@@ -875,7 +876,7 @@ do_sort_event(Widget w _is_unused, XtPointer client_data _is_unused,
 {
 	if (sort != SORT_EVENT) {
 		sort = SORT_EVENT;
-		XtVaSetValues(sort_action, XtNleftBitmap, no_diamond, NULL);
+		XtVaSetValues(sort_byaction, XtNleftBitmap, no_diamond, NULL);
 		XtVaSetValues(sort_keymap, XtNleftBitmap, no_diamond, NULL);
 		XtVaSetValues(sort_event, XtNleftBitmap, diamond, NULL);
 		create_text();
@@ -889,7 +890,7 @@ do_sort_keymap(Widget w _is_unused, XtPointer client_data _is_unused,
 {
 	if (sort != SORT_KEYMAP) {
 		sort = SORT_KEYMAP;
-		XtVaSetValues(sort_action, XtNleftBitmap, no_diamond, NULL);
+		XtVaSetValues(sort_byaction, XtNleftBitmap, no_diamond, NULL);
 		XtVaSetValues(sort_keymap, XtNleftBitmap, diamond, NULL);
 		XtVaSetValues(sort_event, XtNleftBitmap, no_diamond, NULL);
 		create_text();
@@ -898,12 +899,12 @@ do_sort_keymap(Widget w _is_unused, XtPointer client_data _is_unused,
 
 /* "Sort-by-action" button callback. */
 static void
-do_sort_action(Widget w _is_unused, XtPointer client_data _is_unused,
+do_sort_byaction(Widget w _is_unused, XtPointer client_data _is_unused,
     XtPointer call_data _is_unused)
 {
 	if (sort != SORT_ACTION) {
 		sort = SORT_ACTION;
-		XtVaSetValues(sort_action, XtNleftBitmap, diamond, NULL);
+		XtVaSetValues(sort_byaction, XtNleftBitmap, diamond, NULL);
 		XtVaSetValues(sort_keymap, XtNleftBitmap, no_diamond, NULL);
 		XtVaSetValues(sort_event, XtNleftBitmap, no_diamond, NULL);
 		create_text();

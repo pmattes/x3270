@@ -71,9 +71,9 @@ extern void dialog_text_callback(Widget w, XtPointer client_data,
 extern void dialog_match_dimension(Widget w1, Widget w2, const char *n);
 extern void dialog_mark_toggle(Widget w, Pixmap p);
 
-extern void PA_dialog_focus_action(Widget w, XEvent *event, String *parms,
+extern void PA_dialog_focus_xaction(Widget w, XEvent *event, String *parms,
     Cardinal *num_parms);
-extern void PA_dialog_next_action(Widget w, XEvent *event, String *parms,
+extern void PA_dialog_next_xaction(Widget w, XEvent *event, String *parms,
     Cardinal *num_parms);
 
 #endif /*]*/

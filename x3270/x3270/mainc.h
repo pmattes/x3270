@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,6 @@
  *		Global declarations for main.c.
  */
 
-extern void Quit_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
 extern void x3270_exit(int n);
 extern void x_add_input(int net_sock);
 extern void x_except_off(void);

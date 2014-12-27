@@ -1085,10 +1085,10 @@ st_changed(int tx, Boolean mode)
 /* Explicit connect/disconnect actions. */
 
 Boolean
-Connect_eaction(ia_t ia, unsigned argc, const char **argv)
+Connect_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Connect", ia, argc, argv);
-    if (check_eusage("Connect", argc, 1, 1) < 0) {
+    action_debug("Connect", ia, argc, argv);
+    if (check_argc("Connect", argc, 1, 1) < 0) {
 	return False;
     }
     if (CONNECTED || HALF_CONNECTED) {
@@ -1115,11 +1115,11 @@ Connect_eaction(ia_t ia, unsigned argc, const char **argv)
 
 #if defined(X3270_INTERACTIVE) /*[*/
 Boolean
-Reconnect_eaction(ia_t ia, unsigned argc, const char **argv)
+Reconnect_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Reconnect", ia, argc, argv);
-    if (check_eusage("Reconnect", argc, 0, 0) < 0) {
-	    return False;
+    action_debug("Reconnect", ia, argc, argv);
+    if (check_argc("Reconnect", argc, 0, 0) < 0) {
+	return False;
     }
     if (CONNECTED || HALF_CONNECTED) {
 	popup_an_error("Already connected");
@@ -1149,10 +1149,10 @@ Reconnect_eaction(ia_t ia, unsigned argc, const char **argv)
 #endif /*]*/
 
 Boolean
-Disconnect_eaction(ia_t ia, unsigned argc, const char **argv)
+Disconnect_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Disconnect", ia, argc, argv);
-    if (check_eusage("Disconnect", argc, 0, 0) < 0) {
+    action_debug("Disconnect", ia, argc, argv);
+    if (check_argc("Disconnect", argc, 0, 0) < 0) {
 	return False;
     }
     host_disconnect(False);

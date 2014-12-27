@@ -338,7 +338,7 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 
 		scheme_init();
 		charsets_init();
-		XtRegisterGrabAction(HandleMenu_action, True,
+		XtRegisterGrabAction(HandleMenu_xaction, True,
 		    (ButtonPressMask|ButtonReleaseMask),
 		    GrabModeAsync, GrabModeAsync);
 
@@ -2204,28 +2204,31 @@ menubar_retoggle(struct toggle *t, int ix _is_unused)
 }
 
 void
-HandleMenu_action(Widget w _is_unused, XEvent *event, String *params,
+HandleMenu_xaction(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
-	String p;
+    String p;
 
-	action_debug(HandleMenu_action, event, params, num_params);
-	if (check_usage(HandleMenu_action, *num_params, 1, 2) < 0)
-		return;
-	if (!CONNECTED || *num_params == 1)
-		p = params[0];
-	else
-		p = params[1];
-	if (!XtNameToWidget(menu_parent, p)) {
+    xaction_debug(HandleMenu_xaction, event, params, num_params);
+    if (xcheck_usage(HandleMenu_xaction, *num_params, 1, 2) < 0) {
+	return;
+    }
+    if (!CONNECTED || *num_params == 1) {
+	p = params[0];
+    } else {
+	p = params[1];
+    }
+    if (!XtNameToWidget(menu_parent, p)) {
 #if 0
-		if (strcmp(p, MACROS_MENU))
-			popup_an_error("%s: cannot find menu %s",
-			    action_name(HandleMenu_action), p);
-#endif
-		return;
+	if (strcmp(p, MACROS_MENU)) {
+	    popup_an_error("%s: cannot find menu %s",
+		    action_name(HandleMenu_xaction), p);
 	}
-	XtCallActionProc(menu_parent, "XawPositionComplexMenu", event, &p, 1);
-	XtCallActionProc(menu_parent, "MenuPopup", event, &p, 1);
+#endif
+	return;
+    }
+    XtCallActionProc(menu_parent, "XawPositionComplexMenu", event, &p, 1);
+    XtCallActionProc(menu_parent, "MenuPopup", event, &p, 1);
 }
 
 static void

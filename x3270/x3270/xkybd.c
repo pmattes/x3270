@@ -1,4 +1,4 @@
-/* * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+/* Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -105,10 +105,10 @@ key_ACharacter(char *mb, enum keytype keytype, enum iaction cause)
 }
 
 Boolean
-AltCursor_eaction(ia_t ia, unsigned argc, const char **argv)
+AltCursor_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("AltCursor", ia, argc, argv);
-    if (check_eusage("AltCursor", argc, 0, 0) < 0) {
+    action_debug("AltCursor", ia, argc, argv);
+    if (check_argc("AltCursor", argc, 0, 0) < 0) {
 	return False;
     }
     reset_idle_timer();
@@ -120,11 +120,11 @@ AltCursor_eaction(ia_t ia, unsigned argc, const char **argv)
  * Cursor Select mouse action (light pen simulator).
  */
 void
-MouseSelect_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params)
+MouseSelect_xaction(Widget w, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-    action_debug(MouseSelect_action, event, params, num_params);
-    if (check_usage(MouseSelect_action, *num_params, 0, 0) < 0) {
+    xaction_debug(MouseSelect_xaction, event, params, num_params);
+    if (xcheck_usage(MouseSelect_xaction, *num_params, 0, 0) < 0) {
 	return;
     }
     if (w != *screen) {
@@ -145,10 +145,10 @@ MouseSelect_action(Widget w, XEvent *event, String *params,
  * mouse cursor position, or to an absolute location.
  */
 void
-MoveCursor_action(Widget w, XEvent *event, String *params,
+MoveCursor_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params)
 {
-    action_debug(MoveCursor_action, event, params, num_params);
+    xaction_debug(MoveCursor_xaction, event, params, num_params);
 
     /* With arguments, this isn't a mouse call. */
     if (*num_params != 0) {
@@ -156,7 +156,7 @@ MoveCursor_action(Widget w, XEvent *event, String *params,
 	    popup_an_error("MoveCursor takes 0 or 2 arguments");
 	    return;
 	}
-	run_eaction("MoveCursor", IA_KEYMAP, params[0], params[1]);
+	run_action("MoveCursor", IA_KEYMAP, params[0], params[1]);
 	return;
     }
 
@@ -236,10 +236,11 @@ xim_lookup(XKeyEvent *event)
 #endif /*]*/
 
 void
-ignore_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
+ignore_xaction(Widget w _is_unused, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-	action_debug(ignore_action, event, params, num_params);
-	reset_idle_timer();
+    xaction_debug(ignore_xaction, event, params, num_params);
+    reset_idle_timer();
 }
 
 /*
@@ -293,250 +294,250 @@ state_from_keymap(char keymap[32])
  * This function is also called as part of Focus event processing.
  */
 void
-PA_Shift_action(Widget w _is_unused, XEvent *event _is_unused, String *params _is_unused,
-    Cardinal *num_params _is_unused)
+PA_Shift_xaction(Widget w _is_unused, XEvent *event _is_unused,
+	String *params _is_unused, Cardinal *num_params _is_unused)
 {
-	char	keys[32];
+    char keys[32];
 
 #if defined(INTERNAL_ACTION_DEBUG) /*[*/
-	action_debug(PA_Shift_action, event, params, num_params);
+    xaction_debug(PA_Shift_xaction, event, params, num_params);
 #endif /*]*/
-	XQueryKeymap(display, keys);
-	shift_event(state_from_keymap(keys));
+    XQueryKeymap(display, keys);
+    shift_event(state_from_keymap(keys));
 }
 
 /*
  * Called by the toolkit for any key without special actions.
  */
 void
-Default_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
+Default_xaction(Widget w _is_unused, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-	XKeyEvent	*kevent = (XKeyEvent *)event;
-	char		buf[32];
-	KeySym		ks;
-	int		ll;
+    XKeyEvent	*kevent = (XKeyEvent *)event;
+    char	buf[32];
+    KeySym	ks;
+    int		ll;
 
-	action_debug(Default_action, event, params, num_params);
-	if (check_usage(Default_action, *num_params, 0, 0) < 0)
-		return;
-	switch (event->type) {
-	    case KeyPress:
+    xaction_debug(Default_xaction, event, params, num_params);
+    if (xcheck_usage(Default_xaction, *num_params, 0, 0) < 0) {
+	return;
+    }
+    switch (event->type) {
+    case KeyPress:
 #if defined(X3270_DBCS) /*[*/
-		if (!xim_lookup((XKeyEvent *)event))
-			return;
+	if (!xim_lookup((XKeyEvent *)event)) {
+	    return;
+	}
 #endif /*]*/
-		ll = XLookupString(kevent, buf, 32, &ks, (XComposeStatus *) 0);
-		buf[ll] = '\0';
-		if (ll > 1) {
-			key_ACharacter(buf, KT_STD, IA_DEFAULT);
-			return;
-		}
-		if (ll == 1) {
-			/* Remap certain control characters. */
-			if (!IN_NVT) switch (buf[0]) {
-			    case '\t':
-				run_eaction("Tab", IA_DEFAULT, NULL, NULL);
-				break;
-			   case '\177':
-				run_eaction("Delete", IA_DEFAULT, NULL, NULL);
-				break;
-			    case '\b':
-				run_eaction("Erase", IA_DEFAULT, NULL, NULL);
-				break;
-			    case '\r':
-				run_eaction("Enter", IA_DEFAULT, NULL, NULL);
-				break;
-			    case '\n':
-				run_eaction("Newline", IA_DEFAULT, NULL, NULL);
-				break;
-			    default:
-				key_ACharacter(buf, KT_STD, IA_DEFAULT);
-				break;
-			} else {
-				key_ACharacter(buf, KT_STD, IA_DEFAULT);
-			}
-			return;
-		}
+	ll = XLookupString(kevent, buf, 32, &ks, NULL);
+	buf[ll] = '\0';
+	if (ll > 1) {
+	    key_ACharacter(buf, KT_STD, IA_DEFAULT);
+	    return;
+	}
+	if (ll == 1) {
+	    /* Remap certain control characters. */
+	    if (!IN_NVT) switch (buf[0]) {
+		case '\t':
+		    run_action("Tab", IA_DEFAULT, NULL, NULL);
+		    break;
+	       case '\177':
+		    run_action("Delete", IA_DEFAULT, NULL, NULL);
+		    break;
+		case '\b':
+		    run_action("Erase", IA_DEFAULT, NULL, NULL);
+		    break;
+		case '\r':
+		    run_action("Enter", IA_DEFAULT, NULL, NULL);
+		    break;
+		case '\n':
+		    run_action("Newline", IA_DEFAULT, NULL, NULL);
+		    break;
+		default:
+		    key_ACharacter(buf, KT_STD, IA_DEFAULT);
+		    break;
+	    } else {
+		key_ACharacter(buf, KT_STD, IA_DEFAULT);
+	    }
+	    return;
+	}
 
-		/* Pick some other reasonable defaults. */
-		switch (ks) {
-		    case XK_Up:
-			run_eaction("Up", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_Down:
-			run_eaction("Down", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_Left:
-			run_eaction("Left", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_Right:
-			run_eaction("Right", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_Insert:
+	/* Pick some other reasonable defaults. */
+	switch (ks) {
+	case XK_Up:
+	    run_action("Up", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_Down:
+	    run_action("Down", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_Left:
+	    run_action("Left", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_Right:
+	    run_action("Right", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_Insert:
 #if defined(XK_KP_Insert) /*[*/
-		    case XK_KP_Insert:
+	case XK_KP_Insert:
 #endif /*]*/
-			run_eaction("Insert", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_Delete:
-			run_eaction("Delete", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_Home:
-			run_eaction("Home", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_Tab:
-			run_eaction("Tab", IA_DEFAULT, NULL, NULL);
-			break;
+	    run_action("Insert", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_Delete:
+	    run_action("Delete", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_Home:
+	    run_action("Home", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_Tab:
+	    run_action("Tab", IA_DEFAULT, NULL, NULL);
+	    break;
 #if defined(XK_ISO_Left_Tab) /*[*/
-		    case XK_ISO_Left_Tab:
-			run_eaction("BackTab", IA_DEFAULT, NULL, NULL);
-			break;
+	case XK_ISO_Left_Tab:
+	    run_action("BackTab", IA_DEFAULT, NULL, NULL);
+	    break;
 #endif /*]*/
-		    case XK_Clear:
-			run_eaction("Clear", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_Sys_Req:
-			run_eaction("SysReq", IA_DEFAULT, NULL, NULL);
-			break;
+	case XK_Clear:
+	    run_action("Clear", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_Sys_Req:
+	    run_action("SysReq", IA_DEFAULT, NULL, NULL);
+	    break;
 #if defined(XK_EuroSign) /*[*/
-		    case XK_EuroSign:
-			run_eaction("Key", IA_DEFAULT, "currency", NULL);
-			break;
+	case XK_EuroSign:
+	    run_action("Key", IA_DEFAULT, "currency", NULL);
+	    break;
 #endif /*]*/
 
 #if defined(XK_3270_Duplicate) /*[*/
-		    /* Funky 3270 keysyms. */
-		    case XK_3270_Duplicate:
-			run_eaction("Dup", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_3270_FieldMark:
-			run_eaction("FieldMark", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_3270_Right2:
-			run_eaction("Right2", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_3270_Left2:
-			run_eaction("Left2", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_3270_BackTab:
-			run_eaction("BackTab", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_3270_EraseEOF:
-			run_eaction("EraseEOF", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_3270_EraseInput:
-			run_eaction("EraseInput", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_3270_Reset:
-			run_eaction("Reset", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_3270_PA1:
-			run_eaction("PA", IA_DEFAULT, "1", NULL);
-			break;
-		    case XK_3270_PA2:
-			run_eaction("PA", IA_DEFAULT, "2", NULL);
-			break;
-		    case XK_3270_PA3:
-			run_eaction("PA", IA_DEFAULT, "3", NULL);
-			break;
-		    case XK_3270_Attn:
-			run_eaction("Attn", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_3270_AltCursor:
-			run_eaction("AltCursor", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_3270_CursorSelect:
-			run_eaction("CursorSelect", IA_DEFAULT, NULL, NULL);
-			break;
-		    case XK_3270_Enter:
-			run_eaction("Enter", IA_DEFAULT, NULL, NULL);
-			break;
+	/* Funky 3270 keysyms. */
+	case XK_3270_Duplicate:
+	    run_action("Dup", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_3270_FieldMark:
+	    run_action("FieldMark", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_3270_Right2:
+	    run_action("Right2", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_3270_Left2:
+	    run_action("Left2", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_3270_BackTab:
+	    run_action("BackTab", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_3270_EraseEOF:
+	    run_action("EraseEOF", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_3270_EraseInput:
+	    run_action("EraseInput", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_3270_Reset:
+	    run_action("Reset", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_3270_PA1:
+	    run_action("PA", IA_DEFAULT, "1", NULL);
+	    break;
+	case XK_3270_PA2:
+	    run_action("PA", IA_DEFAULT, "2", NULL);
+	    break;
+	case XK_3270_PA3:
+	    run_action("PA", IA_DEFAULT, "3", NULL);
+	    break;
+	case XK_3270_Attn:
+	    run_action("Attn", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_3270_AltCursor:
+	    run_action("AltCursor", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_3270_CursorSelect:
+	    run_action("CursorSelect", IA_DEFAULT, NULL, NULL);
+	    break;
+	case XK_3270_Enter:
+	    run_action("Enter", IA_DEFAULT, NULL, NULL);
+	    break;
 #endif /*]*/
 
 #if defined(X3270_APL) /*[*/
-		    /* Funky APL keysyms. */
-		    case XK_downcaret:
-			run_eaction("Key", IA_DEFAULT, "apl_downcaret", NULL);
-			break;
-		    case XK_upcaret:
-			run_eaction("Key", IA_DEFAULT, "apl_upcaret", NULL);
-			break;
-		    case XK_overbar:
-			run_eaction("Key", IA_DEFAULT, "apl_overbar", NULL);
-			break;
-		    case XK_downtack:
-			run_eaction("Key", IA_DEFAULT, "apl_downtack", NULL);
-			break;
-		    case XK_upshoe:
-			run_eaction("Key", IA_DEFAULT, "apl_upshoe", NULL);
-			break;
-		    case XK_downstile:
-			run_eaction("Key", IA_DEFAULT, "apl_downstile", NULL);
-			break;
-		    case XK_underbar:
-			run_eaction("Key", IA_DEFAULT, "apl_underbar", NULL);
-			break;
-		    case XK_jot:
-			run_eaction("Key", IA_DEFAULT, "apl_jot", NULL);
-			break;
-		    case XK_quad:
-			run_eaction("Key", IA_DEFAULT, "apl_quad", NULL);
-			break;
-		    case XK_uptack:
-			run_eaction("Key", IA_DEFAULT, "apl_uptack", NULL);
-			break;
-		    case XK_circle:
-			run_eaction("Key", IA_DEFAULT, "apl_circle", NULL);
-			break;
-		    case XK_upstile:
-			run_eaction("Key", IA_DEFAULT, "apl_upstile", NULL);
-			break;
-		    case XK_downshoe:
-			run_eaction("Key", IA_DEFAULT, "apl_downshoe", NULL);
-			break;
-		    case XK_rightshoe:
-			run_eaction("Key", IA_DEFAULT, "apl_rightshoe", NULL);
-			break;
-		    case XK_leftshoe:
-			run_eaction("Key", IA_DEFAULT, "apl_leftshoe", NULL);
-			break;
-		    case XK_lefttack:
-			run_eaction("Key", IA_DEFAULT, "apl_lefttack", NULL);
-			break;
-		    case XK_righttack:
-			run_eaction("Key", IA_DEFAULT, "apl_righttack", NULL);
-			break;
+	/* Funky APL keysyms. */
+	case XK_downcaret:
+	    run_action("Key", IA_DEFAULT, "apl_downcaret", NULL);
+	    break;
+	case XK_upcaret:
+	    run_action("Key", IA_DEFAULT, "apl_upcaret", NULL);
+	    break;
+	case XK_overbar:
+	    run_action("Key", IA_DEFAULT, "apl_overbar", NULL);
+	    break;
+	case XK_downtack:
+	    run_action("Key", IA_DEFAULT, "apl_downtack", NULL);
+	    break;
+	case XK_upshoe:
+	    run_action("Key", IA_DEFAULT, "apl_upshoe", NULL);
+	    break;
+	case XK_downstile:
+	    run_action("Key", IA_DEFAULT, "apl_downstile", NULL);
+	    break;
+	case XK_underbar:
+	    run_action("Key", IA_DEFAULT, "apl_underbar", NULL);
+	    break;
+	case XK_jot:
+	    run_action("Key", IA_DEFAULT, "apl_jot", NULL);
+	    break;
+	case XK_quad:
+	    run_action("Key", IA_DEFAULT, "apl_quad", NULL);
+	    break;
+	case XK_uptack:
+	    run_action("Key", IA_DEFAULT, "apl_uptack", NULL);
+	    break;
+	case XK_circle:
+	    run_action("Key", IA_DEFAULT, "apl_circle", NULL);
+	    break;
+	case XK_upstile:
+	    run_action("Key", IA_DEFAULT, "apl_upstile", NULL);
+	    break;
+	case XK_downshoe:
+	    run_action("Key", IA_DEFAULT, "apl_downshoe", NULL);
+	    break;
+	case XK_rightshoe:
+	    run_action("Key", IA_DEFAULT, "apl_rightshoe", NULL);
+	    break;
+	case XK_leftshoe:
+	    run_action("Key", IA_DEFAULT, "apl_leftshoe", NULL);
+	    break;
+	case XK_lefttack:
+	    run_action("Key", IA_DEFAULT, "apl_lefttack", NULL);
+	    break;
+	case XK_righttack:
+	    run_action("Key", IA_DEFAULT, "apl_righttack", NULL);
+	    break;
 #endif /*]*/
 
-		    default:
-			if (ks >= XK_F1 && ks <= XK_F24) {
-				(void) snprintf(buf, sizeof(buf), "%ld",
-					ks - XK_F1 + 1);
-				run_eaction("PF", IA_DEFAULT, buf, NULL);
-			} else {
-				ucs4_t ucs4;
+	default:
+	    if (ks >= XK_F1 && ks <= XK_F24) {
+		(void) snprintf(buf, sizeof(buf), "%ld", ks - XK_F1 + 1);
+		run_action("PF", IA_DEFAULT, buf, NULL);
+	    } else {
+		ucs4_t ucs4;
 
-			    	ucs4 = keysym2ucs(ks);
-				if (ucs4 != (ucs4_t)-1) {
-				    	key_UCharacter(ucs4, KT_STD, IA_KEY);
-				} else {
-					vtrace(
-					    " Default: dropped (unknown "
-					    "keysym)\n");
-				}
-			}
-			break;
+		ucs4 = keysym2ucs(ks);
+		if (ucs4 != (ucs4_t)-1) {
+		    key_UCharacter(ucs4, KT_STD, IA_KEY);
+		} else {
+		    vtrace(" Default: dropped (unknown keysym)\n");
 		}
-		break;
-
-	    case ButtonPress:
-	    case ButtonRelease:
-		vtrace(" Default: dropped (no action configured)\n");
-		break;
-	    default:
-		vtrace(" Default: dropped (unknown event type)\n");
-		break;
+	    }
+	    break;
 	}
+	break;
+
+    case ButtonPress:
+    case ButtonRelease:
+	vtrace(" Default: dropped (no action configured)\n");
+	break;
+    default:
+	vtrace(" Default: dropped (unknown event type)\n");
+	break;
+    }
 }
 
 /*
@@ -548,10 +549,10 @@ Default_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num
  *   TemporaryKeymap(None)	removes the previous keymap, if any
  */
 Boolean
-TemporaryKeymap_eaction(ia_t ia, unsigned argc, const char **argv)
+TemporaryKeymap_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("TemporaryKeymap", ia, argc, argv);
-    if (check_eusage("TemporaryKeymap", argc, 0, 1) < 0) {
+    action_debug("TemporaryKeymap", ia, argc, argv);
+    if (check_argc("TemporaryKeymap", argc, 0, 1) < 0) {
 	return False;
     }
 

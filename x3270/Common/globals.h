@@ -430,4 +430,4 @@ typedef enum iaction {
 } ia_t;
 extern enum iaction ia_cause;
 
-typedef Boolean (eaction_t)(ia_t ia, unsigned argc, const char **argv);
+typedef Boolean (action_t)(ia_t ia, unsigned argc, const char **argv);

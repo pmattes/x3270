@@ -477,25 +477,28 @@ move_popup(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
 
 /* Action called when "Return" is pressed in data entry popup */
 void
-PA_confirm_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
+PA_confirm_xaction(Widget w, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-	Widget w2;
+    Widget w2;
 
-	/* Find the Confirm or Okay button */
+    /* Find the Confirm or Okay button */
+    w2 = XtNameToWidget(XtParent(w), ObjConfirmButton);
+    if (w2 == NULL) {
 	w2 = XtNameToWidget(XtParent(w), ObjConfirmButton);
-	if (w2 == NULL)
-		w2 = XtNameToWidget(XtParent(w), ObjConfirmButton);
-	if (w2 == NULL)
-		w2 = XtNameToWidget(w, ObjConfirmButton);
-	if (w2 == NULL) {
-		xs_warning("confirm: cannot find %s", ObjConfirmButton);
-		return;
-	}
+    }
+    if (w2 == NULL) {
+	w2 = XtNameToWidget(w, ObjConfirmButton);
+    }
+    if (w2 == NULL) {
+	xs_warning("confirm: cannot find %s", ObjConfirmButton);
+	return;
+    }
 
-	/* Call its "notify" event */
-	XtCallActionProc(w2, "set", event, params, *num_params);
-	XtCallActionProc(w2, "notify", event, params, *num_params);
-	XtCallActionProc(w2, "unset", event, params, *num_params);
+    /* Call its "notify" event */
+    XtCallActionProc(w2, "set", event, params, *num_params);
+    XtCallActionProc(w2, "notify", event, params, *num_params);
+    XtCallActionProc(w2, "unset", event, params, *num_params);
 }
 
 /* Callback for "Cancel" button in data entry popup */
@@ -1049,10 +1052,10 @@ popup_child_output(Boolean is_err, abort_callback_t *a, const char *fmt, ...)
  * Script actions
  */
 Boolean
-Info_eaction(ia_t ia, unsigned argc, const char **argv)
+Info_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Info", ia, argc, argv);
-    if (check_eusage("Info", argc, 1, 1) < 0) {
+    action_debug("Info", ia, argc, argv);
+    if (check_argc("Info", argc, 1, 1) < 0) {
 	return False;
     }
     popup_an_info("%s", argv[0]);

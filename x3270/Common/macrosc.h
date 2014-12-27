@@ -32,42 +32,42 @@
 
 /* macro definition */
 struct macro_def {
-	char			*name;
-	char			**parents;
-	char			*action;
-	struct macro_def	*next;
+    char		*name;
+    char		**parents;
+    char		*action;
+    struct macro_def	*next;
 };
 extern struct macro_def *macro_defs;
 extern Boolean macro_output;
 
 extern void abort_script(void);
-extern eaction_t Abort_eaction;
-extern eaction_t AnsiText_eaction;
-extern eaction_t AsciiField_eaction;
-extern eaction_t Ascii_eaction;
+extern action_t Abort_action;
+extern action_t AnsiText_action;
+extern action_t AsciiField_action;
+extern action_t Ascii_action;
 extern void cancel_if_idle_command(void);
-extern eaction_t Bell_eaction;
-extern eaction_t CloseScript_eaction;
-extern eaction_t ContinueScript_eaction;
-extern eaction_t EbcdicField_eaction;
-extern eaction_t Ebcdic_eaction;
-extern eaction_t Execute_eaction;
-extern eaction_t Expect_eaction;
+extern action_t Bell_action;
+extern action_t CloseScript_action;
+extern action_t ContinueScript_action;
+extern action_t EbcdicField_action;
+extern action_t Ebcdic_action;
+extern action_t Execute_action;
+extern action_t Expect_action;
 extern void login_macro(char *s);
 extern void macros_init(void);
-extern eaction_t Macro_eaction;
+extern action_t Macro_action;
 extern void macro_command(struct macro_def *m);
-extern eaction_t PauseScript_eaction;
+extern action_t PauseScript_action;
 extern void peer_script_init(void);
 extern void ps_set(char *s, Boolean is_hex);
-extern eaction_t Printer_eaction;
+extern action_t Printer_action;
 extern void push_command(char *);
 extern void push_idle(char *);
 extern void push_keymap_action(char *);
 extern void push_macro(char *, Boolean);
-extern eaction_t Query_eaction;
-extern eaction_t ReadBuffer_eaction;
-extern eaction_t Script_eaction;
+extern action_t Query_action;
+extern action_t ReadBuffer_action;
+extern action_t Script_action;
 #if !defined(TCL3270) /*[*/
 extern void sms_accumulate_time(struct timeval *, struct timeval *);
 #else /*][*/
@@ -83,12 +83,12 @@ extern void sms_init(void);
 extern Boolean sms_in_macro(void);
 extern Boolean sms_redirect(void);
 extern void sms_store(unsigned char c);
-extern eaction_t Snap_eaction;
+extern action_t Snap_action;
 #if defined(TCL3270) /*[*/
-extern eaction_t Status_eaction;
+extern action_t Status_action;
 #endif /*]*/
-extern eaction_t Source_eaction;
-extern eaction_t Wait_eaction;
+extern action_t Source_action;
+extern action_t Wait_action;
 
 typedef void *sms_cbh;
 typedef void (*sms_data_cb)(sms_cbh handle, const char *buf, size_t len);
@@ -102,7 +102,3 @@ typedef struct {
 } sms_cb_t;
 extern void push_cb(const char *buf, size_t len, const sms_cb_t *cb,
 	sms_cbh handle);
-#if defined(CB_DEBUG) /*[*/
-extern void Cb_action(Widget w, XEvent *event, String *params,
-	Cardinal *num_params);
-#endif /*]*/

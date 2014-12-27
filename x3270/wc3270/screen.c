@@ -229,7 +229,7 @@ cc_handler(DWORD type)
 		push_keymap_action(action);
 	    }
 	} else {
-	    run_eaction("Key", IA_DEFAULT, "0x03", NULL);
+	    run_action("Key", IA_DEFAULT, "0x03", NULL);
 	}
 
 	return TRUE;
@@ -2196,22 +2196,22 @@ kybd_input2(INPUT_RECORD *ir)
 	/* These first cases apply to both 3270 and NVT modes. */
 	switch (k) {
 	case VK_ESCAPE:
-		run_eaction("Escape", IA_DEFAULT, NULL, NULL);
+		run_action("Escape", IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_UP:
-		run_eaction("Up", IA_DEFAULT, NULL, NULL);
+		run_action("Up", IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_DOWN:
-		run_eaction("Down", IA_DEFAULT, NULL, NULL);
+		run_action("Down", IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_LEFT:
-		run_eaction("Left", IA_DEFAULT, NULL, NULL);
+		run_action("Left", IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_RIGHT:
-		run_eaction("Right", IA_DEFAULT, NULL, NULL);
+		run_action("Right", IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_HOME:
-		run_eaction("Home", IA_DEFAULT, NULL, NULL);
+		run_action("Home", IA_DEFAULT, NULL, NULL);
 		return;
 	default:
 		break;
@@ -2221,16 +2221,16 @@ kybd_input2(INPUT_RECORD *ir)
 	if (IN_3270) switch(k) {
 	/* These cases apply only to 3270 mode. */
 	case VK_TAB:
-		run_eaction("Tab", IA_DEFAULT, NULL, NULL);
+		run_action("Tab", IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_DELETE:
-		run_eaction("Delete", IA_DEFAULT, NULL, NULL);
+		run_action("Delete", IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_BACK:
-		run_eaction("BackSpace", IA_DEFAULT, NULL, NULL);
+		run_action("BackSpace", IA_DEFAULT, NULL, NULL);
 		return;
 	case VK_RETURN:
-		run_eaction("Enter", IA_DEFAULT, NULL, NULL);
+		run_action("Enter", IA_DEFAULT, NULL, NULL);
 		return;
 	default:
 		break;
@@ -2239,7 +2239,7 @@ kybd_input2(INPUT_RECORD *ir)
 	/* Catch PF keys. */
 	if (k >= VK_F1 && k <= VK_F24) {
 		(void) sprintf(buf, "%d", k - VK_F1 + 1);
-		run_eaction("PF", IA_DEFAULT, buf, NULL);
+		run_action("PF", IA_DEFAULT, buf, NULL);
 		return;
 	}
 
@@ -2249,7 +2249,7 @@ kybd_input2(INPUT_RECORD *ir)
 
 		(void) sprintf(ks, "U+%04x",
 			       ir->Event.KeyEvent.uChar.UnicodeChar);
-		run_eaction("Key", IA_DEFAULT, ks, NULL);
+		run_action("Key", IA_DEFAULT, ks, NULL);
 	} else {
 		vtrace(" dropped (no default)\n");
 	}
@@ -2694,10 +2694,10 @@ draw_oia(void)
 }
 
 Boolean
-Redraw_eaction(ia_t ia, unsigned argc, const char **argv)
+Redraw_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Redraw", ia, argc, argv);
-    if (check_eusage("Redraw", argc, 0, 0) < 0) {
+    action_debug("Redraw", ia, argc, argv);
+    if (check_argc("Redraw", argc, 0, 0) < 0) {
 	return False;
     }
 
@@ -2804,14 +2804,14 @@ screen_80(void)
  * instrastructure for multi-line paste.
  */
 Boolean
-Paste_eaction(ia_t ia, unsigned argc, const char **argv)
+Paste_action(ia_t ia, unsigned argc, const char **argv)
 {
     HGLOBAL hglb;
     LPTSTR lptstr;
     UINT format = CF_UNICODETEXT;
 
-    eaction_debug("Paste", ia, argc, argv);
-    if (check_eusage("Paste", argc, 0, 0) < 0) {
+    action_debug("Paste", ia, argc, argv);
+    if (check_argc("Paste", argc, 0, 0) < 0) {
 	return False;
     }
 
@@ -2862,10 +2862,10 @@ screen_title(const char *text)
 }
 
 Boolean
-Title_eaction(ia_t ia, unsigned argc, const char **argv)
+Title_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Title", ia, argc, argv);
-    if (check_eusage("Title", argc, 1, 1) < 0) {
+    action_debug("Title", ia, argc, argv);
+    if (check_argc("Title", argc, 1, 1) < 0) {
 	return False;
     }
 

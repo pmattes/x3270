@@ -43,8 +43,8 @@ extern struct trans_list *temp_keymaps;
 extern void do_keymap_display(Widget w, XtPointer userdata, XtPointer calldata);
 extern void keymap_init(const char *km, Boolean interactive);
 extern XtTranslations lookup_tt(const char *name, char *table);
-extern void PA_End_action(Widget w, XEvent *event, String *params,
+extern void PA_End_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_KeymapTrace_action(Widget w, XEvent *event, String *params,
+extern void PA_KeymapTrace_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern int temporary_keymap(const char *k);

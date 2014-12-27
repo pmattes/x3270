@@ -501,73 +501,74 @@ cut_control_code(void)
 static void
 cut_data_request(void)
 {
-	unsigned char seq = ea_buf[O_DR_FRAME_SEQ].cc;
-	int count;
-	unsigned char cs;
-	int c;
-	int i;
-	unsigned char attr;
+    unsigned char seq = ea_buf[O_DR_FRAME_SEQ].cc;
+    int count;
+    unsigned char cs;
+    int c;
+    int i;
+    unsigned char attr;
 
-	trace_ds("< FT DATA_REQUEST %u\n", from6(seq));
-	if (ft_state == FT_ABORT_WAIT) {
-		cut_abort(get_message("ftUserCancel"), SC_ABORT_FILE);
-		return;
+    trace_ds("< FT DATA_REQUEST %u\n", from6(seq));
+    if (ft_state == FT_ABORT_WAIT) {
+	cut_abort(get_message("ftUserCancel"), SC_ABORT_FILE);
+	return;
+    }
+
+    /* Copy data into the screen buffer. */
+    count = 0;
+    while (count < O_UP_MAX && !cut_eof) {
+	if ((c = xlate_getc()) == EOF) {
+	    cut_eof = True;
+	    break;
+	}
+	ctlr_add(O_UP_DATA + count, c, 0);
+	count++;
+    }
+
+    /* Check for errors. */
+    if (ferror(ft_local_file)) {
+	int j;
+	char *msg;
+
+	/* Clean out any data we may have written. */
+	for (j = 0; j < count; j++) {
+	    ctlr_add(O_UP_DATA + j, 0, 0);
 	}
 
-	/* Copy data into the screen buffer. */
-	count = 0;
-	while (count < O_UP_MAX && !cut_eof) {
-		if ((c = xlate_getc()) == EOF) {
-		    cut_eof = True;
-		    break;
-		}
-		ctlr_add(O_UP_DATA + count, c, 0);
-		count++;
-	}
+	/* Abort the transfer. */
+	msg = xs_buffer("read(%s): %s", ft_local_filename, strerror(errno));
+	cut_abort(msg, SC_ABORT_FILE);
+	Free(msg);
+	return;
+    }
 
-	/* Check for errors. */
-	if (ferror(ft_local_file)) {
-		int j;
-		char *msg;
+    /* Send special data for EOF. */
+    if (!count && cut_eof) {
+	ctlr_add(O_UP_DATA, EOF_DATA1, 0);
+	ctlr_add(O_UP_DATA+1, EOF_DATA2, 0);
+	count = 2;
+    }
 
-		/* Clean out any data we may have written. */
-		for (j = 0; j < count; j++)
-			ctlr_add(O_UP_DATA + j, 0, 0);
+    /* Compute the other fields. */
+    ctlr_add(O_UP_FRAME_SEQ, seq, 0);
+    cs = 0;
+    for (i = 0; i < count; i++) {
+	cs ^= ea_buf[O_UP_DATA + i].cc;
+    }
+    ctlr_add(O_UP_CSUM, asc2ebc0[(int)table6[cs & 0x3f]], 0);
+    ctlr_add(O_UP_LEN, asc2ebc0[(int)table6[(count >> 6) & 0x3f]], 0);
+    ctlr_add(O_UP_LEN+1, asc2ebc0[(int)table6[count & 0x3f]], 0);
 
-		/* Abort the transfer. */
-		msg = xs_buffer("read(%s): %s", ft_local_filename,
-		    strerror(errno));
-		cut_abort(msg, SC_ABORT_FILE);
-		Free(msg);
-		return;
-	}
+    /* XXX: Change the data field attribute so it doesn't display. */
+    attr = ea_buf[O_DR_SF].fa;
+    attr = (attr & ~FA_INTENSITY) | FA_INT_ZERO_NSEL;
+    ctlr_add_fa(O_DR_SF, attr, 0);
 
-	/* Send special data for EOF. */
-	if (!count && cut_eof) {
-		ctlr_add(O_UP_DATA, EOF_DATA1, 0);
-		ctlr_add(O_UP_DATA+1, EOF_DATA2, 0);
-		count = 2;
-	}
-
-	/* Compute the other fields. */
-	ctlr_add(O_UP_FRAME_SEQ, seq, 0);
-	cs = 0;
-	for (i = 0; i < count; i++)
-		cs ^= ea_buf[O_UP_DATA + i].cc;
-	ctlr_add(O_UP_CSUM, asc2ebc0[(int)table6[cs & 0x3f]], 0);
-	ctlr_add(O_UP_LEN, asc2ebc0[(int)table6[(count >> 6) & 0x3f]], 0);
-	ctlr_add(O_UP_LEN+1, asc2ebc0[(int)table6[count & 0x3f]], 0);
-
-	/* XXX: Change the data field attribute so it doesn't display. */
-	attr = ea_buf[O_DR_SF].fa;
-	attr = (attr & ~FA_INTENSITY) | FA_INT_ZERO_NSEL;
-	ctlr_add_fa(O_DR_SF, attr, 0);
-
-	/* Send it up to the host. */
-	trace_ds("> FT DATA %u\n", from6(seq));
-	ft_update_length();
-	expanded_length += count;
-	run_eaction("Enter", IA_FT, NULL, NULL);
+    /* Send it up to the host. */
+    trace_ds("> FT DATA %u\n", from6(seq));
+    ft_update_length();
+    expanded_length += count;
+    run_action("Enter", IA_FT, NULL, NULL);
 }
 
 /*
@@ -653,8 +654,8 @@ cut_data(void)
 static void
 cut_ack(void)
 {
-	trace_ds("> FT ACK\n");
-	run_eaction("Enter", IA_FT, NULL, NULL);
+    trace_ds("> FT ACK\n");
+    run_action("Enter", IA_FT, NULL, NULL);
 }
 
 /*
@@ -663,19 +664,19 @@ cut_ack(void)
 static void
 cut_abort(const char *s, unsigned short reason)
 {
-	/* Save the error message. */
-	Replace(saved_errmsg, NewString(s));
+    /* Save the error message. */
+    Replace(saved_errmsg, NewString(s));
 
-	/* Send the abort sequence. */
-	ctlr_add(RO_FRAME_TYPE, RFT_CONTROL_CODE, 0);
-	ctlr_add(RO_FRAME_SEQ, ea_buf[O_DT_FRAME_SEQ].cc, 0);
-	ctlr_add(RO_REASON_CODE, HIGH8(reason), 0);
-	ctlr_add(RO_REASON_CODE+1, LOW8(reason), 0);
-	trace_ds("> FT CONTROL_CODE ABORT\n");
-	run_eaction("PF", IA_FT, "2", NULL);
+    /* Send the abort sequence. */
+    ctlr_add(RO_FRAME_TYPE, RFT_CONTROL_CODE, 0);
+    ctlr_add(RO_FRAME_SEQ, ea_buf[O_DT_FRAME_SEQ].cc, 0);
+    ctlr_add(RO_REASON_CODE, HIGH8(reason), 0);
+    ctlr_add(RO_REASON_CODE+1, LOW8(reason), 0);
+    trace_ds("> FT CONTROL_CODE ABORT\n");
+    run_action("PF", IA_FT, "2", NULL);
 
-	/* Update the in-progress pop-up. */
-	ft_aborting();
+    /* Update the in-progress pop-up. */
+    ft_aborting();
 }
 
 /*

@@ -365,7 +365,7 @@ static struct {
 };
 
 Boolean  
-Transfer_eaction(ia_t ia, unsigned argc, const char **argv)
+Transfer_action(ia_t ia, unsigned argc, const char **argv)
 {
     int i, k;
     unsigned j;
@@ -377,7 +377,7 @@ Transfer_eaction(ia_t ia, unsigned argc, const char **argv)
     char **xparams = (char **)argv;
     unsigned xnparams = argc;
 
-    eaction_debug("Transfer", ia, argc, argv);
+    action_debug("Transfer", ia, argc, argv);
 
     ft_private.is_action = True;
 

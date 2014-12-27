@@ -245,14 +245,14 @@ static struct {
 
 /* c3270-specific actions. */
 Boolean
-Help_eaction(ia_t ia, unsigned argc, const char **argv)
+Help_action(ia_t ia, unsigned argc, const char **argv)
 {
     int i;
     int overall = -1;
     int match = 0;
 
-    eaction_debug("Help", ia, argc, argv);
-    if (check_eusage("Help", argc, 0, 1) < 0) {
+    action_debug("Help", ia, argc, argv);
+    if (check_argc("Help", argc, 0, 1) < 0) {
 	return False;
     }
 
@@ -279,8 +279,8 @@ Help_eaction(ia_t ia, unsigned argc, const char **argv)
 	for (i = 0; cmd_help[i].name; i++) {
 	    Boolean found = False;
 
-	    for (j = 0; j < num_eactions; j++) {
-		if (!strcasecmp(cmd_help[i].name, eaction_table[j].name)) {
+	    for (j = 0; j < num_actions; j++) {
+		if (!strcasecmp(cmd_help[i].name, action_table[j].name)) {
 		    found = True;
 		    break;
 		}
@@ -295,18 +295,18 @@ Help_eaction(ia_t ia, unsigned argc, const char **argv)
 	    action_output("No orphaned help messages.");
 	}
 	any = False;
-	for (j = 0; j < num_eactions; j++) {
+	for (j = 0; j < num_actions; j++) {
 	    Boolean found = False;
 
 	    for (i = 0; cmd_help[i].name; i++) {
 
-		if (!strcasecmp(cmd_help[i].name, eaction_table[j].name)) {
+		if (!strcasecmp(cmd_help[i].name, action_table[j].name)) {
 		    found = True;
 		    break;
 		}
 	    }
 	    if (!found) {
-		action_output("No Help for %s", eaction_table[j].name);
+		action_output("No Help for %s", action_table[j].name);
 		any = True;
 	    }
 	}

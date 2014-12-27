@@ -32,20 +32,20 @@
 
 typedef struct {
     const char *name;
-    eaction_t *eaction;
+    action_t *action;
     const char *help;
-} eaction_table_t;
+} action_table_t;
 
-extern eaction_table_t *eaction_table;
-extern unsigned num_eactions;
+extern action_table_t *action_table;
+extern unsigned num_actions;
 
 extern const char       *ia_name[];
 
 extern Boolean action_suppressed(const char *name, const char *suppress);
-extern void eaction_debug(const char *aname, ia_t ia, unsigned argc,
+extern void action_debug(const char *aname, ia_t ia, unsigned argc,
 	const char **argv);
 extern void action_init(void);
-extern void run_eaction(const char *name, enum iaction cause,
+extern void run_action(const char *name, enum iaction cause,
 	const char *parm1, const char *parm2);
-extern int check_eusage(const char *aname, unsigned nargs, unsigned nargs_min,
+extern int check_argc(const char *aname, unsigned nargs, unsigned nargs_min,
 	unsigned nargs_max);

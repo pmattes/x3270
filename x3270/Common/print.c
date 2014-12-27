@@ -162,7 +162,7 @@ default_caption(void)
 
 /* Print or save the contents of the screen as text. */
 Boolean
-PrintText_eaction(ia_t ia, unsigned argc, const char **argv)
+PrintText_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned i;
     const char *name = NULL;
@@ -177,7 +177,7 @@ PrintText_eaction(ia_t ia, unsigned argc, const char **argv)
     FILE *f;
     int fd = -1;
 
-    eaction_debug("PrintText", ia, argc, argv);
+    action_debug("PrintText", ia, argc, argv);
 
     /*
      * Pick off optional arguments:

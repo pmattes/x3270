@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -53,9 +53,9 @@ extern void child_popup_init(void);
 extern void error_init(void);
 extern void error_popup_init(void);
 extern Boolean error_popup_visible(void);
-extern eaction_t Info_eaction;
+extern action_t Info_action;
 extern void info_popup_init(void);
-extern void PA_confirm_action(Widget w, XEvent *event, String *params,
+extern void PA_confirm_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void place_popup(Widget w, XtPointer client_data, XtPointer call_data);
 extern void move_popup(Widget w, XtPointer client_data, XtPointer call_data);

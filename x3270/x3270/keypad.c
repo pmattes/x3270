@@ -291,11 +291,12 @@ keypad_placement_init(void)
  * client data.
  */
 static void
-callfn(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_unused)
+callfn(Widget w _is_unused, XtPointer client_data, XtPointer
+	call_data _is_unused)
 {
-	struct button_list *keyd = (struct button_list *) client_data;
+    struct button_list *keyd = (struct button_list *) client_data;
 
-	run_eaction(keyd->action_name, IA_KEYPAD, keyd->parm, NULL);
+    run_action(keyd->action_name, IA_KEYPAD, keyd->parm, NULL);
 }
 
 /*

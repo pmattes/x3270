@@ -30,5 +30,5 @@
  *		Global declarations for print.c.
  */
 
-extern eaction_t PrintText_eaction;
+extern action_t PrintText_action;
 extern char *default_caption(void);

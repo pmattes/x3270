@@ -723,10 +723,10 @@ copy_cut_action(Boolean cutting)
  * The Copy() action, generally mapped onto ^C.
  */
 Boolean
-Copy_eaction(ia_t ia, unsigned argc, const char **argv)
+Copy_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Copy", ia, argc, argv);
-    if (check_eusage("Copy", argc, 0, 0) < 0) {
+    action_debug("Copy", ia, argc, argv);
+    if (check_argc("Copy", argc, 0, 0) < 0) {
 	return False;
     }
     copy_cut_action(False);
@@ -737,10 +737,10 @@ Copy_eaction(ia_t ia, unsigned argc, const char **argv)
  * The Cut() action, generally mapped onto ^X.
  */
 Boolean
-Cut_eaction(ia_t ia, unsigned argc, const char **argv)
+Cut_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Cut", ia, argc, argv);
-    if (check_eusage("Cut", argc, 0, 0) < 0) {
+    action_debug("Cut", ia, argc, argv);
+    if (check_argc("Cut", argc, 0, 0) < 0) {
 	return False;
     }
     copy_cut_action(True);

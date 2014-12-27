@@ -62,28 +62,28 @@ extern void icon_init(void);
 extern void mcursor_locked(void);
 extern void mcursor_normal(void);
 extern void mcursor_waiting(void);
-extern void PA_ConfigureNotify_action(Widget w, XEvent *event, String *params,
+extern void PA_ConfigureNotify_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_EnterLeave_action(Widget w, XEvent *event, String *params,
+extern void PA_EnterLeave_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_Expose_action(Widget w, XEvent *event, String *params,
+extern void PA_Expose_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_Focus_action(Widget w, XEvent *event, String *params,
+extern void PA_Focus_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_GraphicsExpose_action(Widget w, XEvent *event, String *params,
+extern void PA_GraphicsExpose_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_KeymapNotify_action(Widget w, XEvent *event, String *params,
+extern void PA_KeymapNotify_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_StateChanged_action(Widget w, XEvent *event, String *params,
+extern void PA_StateChanged_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_VisibilityNotify_action(Widget w, XEvent *event, String *params,
+extern void PA_VisibilityNotify_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_WMProtocols_action(Widget w, XEvent *event, String *params,
+extern void PA_WMProtocols_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void Redraw_action(Widget w, XEvent *event, String *params,
+extern void Redraw_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern eaction_t Title_eaction;
-extern eaction_t WindowState_eaction;
+extern action_t Title_action;
+extern action_t WindowState_action;
 extern void ring_bell(void);
 extern void save_00translations(Widget w, XtTranslations *t00);
 #define screen_80()
@@ -109,7 +109,7 @@ extern void screen_set_keymap(void);
 extern void screen_set_temp_keymap(XtTranslations trans);
 extern void screen_set_thumb(float top, float shown);
 extern void screen_showikeypad(Boolean on);
-extern eaction_t SetFont_eaction;
+extern action_t SetFont_action;
 extern void set_aicon_label(char *l);
 extern void set_translations(Widget w, XtTranslations *t00, XtTranslations *t0);
 extern void shift_event(int event_state);

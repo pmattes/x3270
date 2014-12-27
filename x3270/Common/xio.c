@@ -159,9 +159,12 @@ x3270_exit(int n)
 }
 
 Boolean
-Quit_eaction(ia_t ia, unsigned argc, const char **argv)
+Quit_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Quit", ia, argc, argv);
+    action_debug("Quit", ia, argc, argv);
+    if (check_argc("Quit", argc, 0, 0) < 0) {
+	return False;
+    }
 
     /*
      * We allow Quit() to succeed if invoked from anything besides a keymap, and

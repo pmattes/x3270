@@ -1184,10 +1184,10 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
 }
 
 Boolean
-Menu_eaction(ia_t ia, unsigned argc, const char **argv)
+Menu_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Menu", ia, argc, argv);
-    if (check_eusage("Menu", argc, 0, 0) < 0) {
+    action_debug("Menu", ia, argc, argv);
+    if (check_argc("Menu", argc, 0, 0) < 0) {
 	return False;
     }
 

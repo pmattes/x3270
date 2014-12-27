@@ -33,12 +33,12 @@
 extern int              xactioncount;
 extern XtActionsRec     *xactions;
 
-extern void action_debug(XtActionProc action, XEvent *event, String *params,
+extern void xaction_debug(XtActionProc action, XEvent *event, String *params,
 	Cardinal *num_params);
 extern void xaction_init(void);
-extern void action_internal(XtActionProc action, enum iaction cause,
+extern void xaction_internal(XtActionProc action, enum iaction cause,
 	const char *parm1, const char *parm2);
 extern const char *action_name(XtActionProc action);
-extern int check_usage(XtActionProc action, Cardinal nargs, Cardinal nargs_min,
-	Cardinal nargs_max);
+extern int xcheck_usage(XtActionProc action, Cardinal nargs,
+	Cardinal nargs_min, Cardinal nargs_max);
 extern Boolean event_is_meta(int state);

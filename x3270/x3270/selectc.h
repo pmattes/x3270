@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,36 +33,36 @@
  */
 
 extern Boolean area_is_selected(int baddr, int len);
-extern void insert_selection_action(Widget w, XEvent *event, String *params,
+extern void insert_selection_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void Cut_action(Widget w, XEvent *event, String *params,
+extern void Cut_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void KybdSelect_action(Widget w, XEvent *event, String *params,
+extern void KybdSelect_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern int mouse_baddr(Widget w, XEvent *e);
-extern void move_select_action(Widget w, XEvent *event, String *params,
+extern void move_select_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void SelectAll_action(Widget w, XEvent *event, String *params,
+extern void SelectAll_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void SelectDown_action(Widget w, XEvent *event, String *params,
+extern void SelectDown_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void reclass(char *s);
-extern void SelectDown_action(Widget w, XEvent *event, String *params,
+extern void SelectDown_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void SelectMotion_action(Widget w, XEvent *event, String *params,
+extern void SelectMotion_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void SelectUp_action(Widget w, XEvent *event, String *params,
+extern void SelectUp_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void select_end_action(Widget w, XEvent *event, String *params,
+extern void select_end_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void select_extend_action(Widget w, XEvent *event, String *params,
+extern void select_extend_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void select_start_action(Widget w, XEvent *event, String *params,
+extern void select_start_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void set_select_action(Widget w, XEvent *event, String *params,
+extern void set_select_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void start_extend_action(Widget w, XEvent *event, String *params,
+extern void start_extend_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void unselect(int baddr, int len);
-extern void Unselect_action(Widget w, XEvent *event, String *params,
+extern void Unselect_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);

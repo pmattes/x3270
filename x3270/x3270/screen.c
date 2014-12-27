@@ -804,7 +804,7 @@ screen_reinit(unsigned cmask)
 	line_changed = True;
 
 	/* Redraw the screen. */
-	action_internal(PA_Expose_action, IA_REDRAW, NULL, NULL);
+	xaction_internal(PA_Expose_xaction, IA_REDRAW, NULL, NULL);
 }
 
 
@@ -1420,22 +1420,22 @@ do_redraw(Widget w, XEvent *event, String *params _is_unused,
  * Explicitly redraw the screen (invoked from the keyboard).
  */
 void
-Redraw_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
+Redraw_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
-	action_debug(Redraw_action, event, params, num_params);
-	do_redraw(w, event, params, num_params);
+    xaction_debug(Redraw_xaction, event, params, num_params);
+    do_redraw(w, event, params, num_params);
 }
 
 /*
  * Implicitly redraw the screen (triggered by Expose events).
  */
 void
-PA_Expose_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
+PA_Expose_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
 #if defined(INTERNAL_ACTION_DEBUG) /*[*/
-	action_debug(PA_Expose_action, event, params, num_params);
+    xaction_debug(PA_Expose_xaction, event, params, num_params);
 #endif /*]*/
-	do_redraw(w, event, params, num_params);
+    do_redraw(w, event, params, num_params);
 }
 
 
@@ -2276,14 +2276,14 @@ void
 screen_flip(void)
 {
 #if defined(X3270_DBCS) /*[*/
-	/* Flip mode is broken in the DBCS version. */
-	if (!dbcs)
+    /* Flip mode is broken in the DBCS version. */
+    if (!dbcs)
 #endif /*]*/
-	{
-		flipped = !flipped;
+    {
+	flipped = !flipped;
 
-		action_internal(PA_Expose_action, IA_REDRAW, NULL, NULL);
-	}
+	xaction_internal(PA_Expose_xaction, IA_REDRAW, NULL, NULL);
+    }
 }
 
 /*
@@ -3495,61 +3495,63 @@ static Boolean toplevel_focused = False;
 static Boolean keypad_entered = False;
 
 void
-PA_Focus_action(Widget w _is_unused, XEvent *event, String *params _is_unused,
-    Cardinal *num_params _is_unused)
+PA_Focus_xaction(Widget w _is_unused, XEvent *event, String *params _is_unused,
+	Cardinal *num_params _is_unused)
 {
-	XFocusChangeEvent *fe = (XFocusChangeEvent *)event;
+    XFocusChangeEvent *fe = (XFocusChangeEvent *)event;
 
 #if defined(INTERNAL_ACTION_DEBUG) /*[*/
-	action_debug(PA_Focus_action, event, params, num_params);
+    xaction_debug(PA_Focus_xaction, event, params, num_params);
 #endif /*]*/
-	switch (fe->type) {
-	    case FocusIn:
-		if (fe->detail != NotifyPointer) {
-			toplevel_focused = True;
-			screen_focus(True);
-		}
-		break;
-	    case FocusOut:
-		toplevel_focused = False;
-		if (!toplevel_focused && !keypad_entered)
-			screen_focus(False);
-		break;
+    switch (fe->type) {
+    case FocusIn:
+	if (fe->detail != NotifyPointer) {
+	    toplevel_focused = True;
+	    screen_focus(True);
 	}
+	break;
+    case FocusOut:
+	toplevel_focused = False;
+	if (!toplevel_focused && !keypad_entered) {
+	    screen_focus(False);
+	}
+	break;
+    }
 }
 
 void
-PA_EnterLeave_action(Widget w _is_unused, XEvent *event _is_unused,
-    String *params _is_unused, Cardinal *num_params _is_unused)
+PA_EnterLeave_xaction(Widget w _is_unused, XEvent *event _is_unused,
+	String *params _is_unused, Cardinal *num_params _is_unused)
 {
-	XCrossingEvent *ce = (XCrossingEvent *)event;
+    XCrossingEvent *ce = (XCrossingEvent *)event;
 
 #if defined(INTERNAL_ACTION_DEBUG) /*[*/
-	action_debug(PA_EnterLeave_action, event, params, num_params);
+    xaction_debug(PA_EnterLeave_xaction, event, params, num_params);
 #endif /*]*/
-	switch (ce->type) {
-	    case EnterNotify:
-		keypad_entered = True;
-		screen_focus(True);
-		break;
-	    case LeaveNotify:
-		keypad_entered = False;
-		if (!toplevel_focused && !keypad_entered)
-			screen_focus(False);
-		break;
+    switch (ce->type) {
+    case EnterNotify:
+	keypad_entered = True;
+	screen_focus(True);
+	break;
+    case LeaveNotify:
+	keypad_entered = False;
+	if (!toplevel_focused && !keypad_entered) {
+	    screen_focus(False);
 	}
+	break;
+    }
 }
 
 void
-PA_KeymapNotify_action(Widget w _is_unused, XEvent *event, String *params _is_unused,
-    Cardinal *num_params _is_unused)
+PA_KeymapNotify_xaction(Widget w _is_unused, XEvent *event,
+	String *params _is_unused, Cardinal *num_params _is_unused)
 {
-	XKeymapEvent *k = (XKeymapEvent *)event;
+    XKeymapEvent *k = (XKeymapEvent *)event;
 
 #if defined(INTERNAL_ACTION_DEBUG) /*[*/
-	action_debug(PA_KeymapNotify_action, event, params, num_params);
+    xaction_debug(PA_KeymapNotify_xaction, event, params, num_params);
 #endif /*]*/
-	shift_event(state_from_keymap(k->key_vector));
+    shift_event(state_from_keymap(k->key_vector));
 }
 
 static void
@@ -3584,13 +3586,13 @@ query_window_state(void)
 }
 
 void
-PA_StateChanged_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+PA_StateChanged_xaction(Widget w _is_unused, XEvent *event, String *params,
+	Cardinal *num_params)
 {
 #if defined(INTERNAL_ACTION_DEBUG) /*[*/
-	action_debug(PA_StateChanged_action, event, params, num_params);
+    xaction_debug(PA_StateChanged_xaction, event, params, num_params);
 #endif /*]*/
-	query_window_state();
+    query_window_state();
 }
 
 /*
@@ -3601,18 +3603,18 @@ PA_StateChanged_action(Widget w _is_unused, XEvent *event, String *params,
 void
 shift_event(int event_state)
 {
-	static int old_state;
-	Boolean shifted_now =
-	    (event_state & (ShiftKeyDown | MetaKeyDown | AltKeyDown)) != 0;
+    static int old_state;
+    Boolean shifted_now =
+	(event_state & (ShiftKeyDown | MetaKeyDown | AltKeyDown)) != 0;
 
-	if (event_state != old_state) {
-		old_state = event_state;
-		status_shift_mode(event_state);
-		if (shifted != shifted_now) {
-			shifted = shifted_now;
-			keypad_shift();
-		}
+    if (event_state != old_state) {
+	old_state = event_state;
+	status_shift_mode(event_state);
+	if (shifted != shifted_now) {
+	    shifted = shifted_now;
+	    keypad_shift();
 	}
+    }
 }
 
 /*
@@ -3668,10 +3670,10 @@ screen_focus(Boolean in)
  * Change fonts.
  */
 Boolean
-SetFont_eaction(ia_t ia, unsigned argc, const char **argv)
+SetFont_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("SetFont", ia, argc, argv);
-    if (check_eusage("SetFont", argc, 1, 1) < 0) {
+    action_debug("SetFont", ia, argc, argv);
+    if (check_argc("SetFont", argc, 1, 1) < 0) {
 	return False;
     }
 
@@ -4406,22 +4408,23 @@ ring_bell(void)
  * Window deletion
  */
 void
-PA_WMProtocols_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params)
+PA_WMProtocols_xaction(Widget w, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-	XClientMessageEvent *cme = (XClientMessageEvent *)event;
+    XClientMessageEvent *cme = (XClientMessageEvent *)event;
 
 #if defined(INTERNAL_ACTION_DEBUG) /*[*/
-	action_debug(PA_WMProtocols_action, event, params, num_params);
+    xaction_debug(PA_WMProtocols_xaction, event, params, num_params);
 #endif /*]*/
-	if ((Atom)cme->data.l[0] == a_delete_me) {
-		if (w == toplevel)
-			x3270_exit(0);
-		else
-			XtPopdown(w);
-	} else if ((Atom)cme->data.l[0] == a_save_yourself && w == toplevel) {
-		save_yourself();
+    if ((Atom)cme->data.l[0] == a_delete_me) {
+	if (w == toplevel) {
+	    x3270_exit(0);
+	} else {
+	    XtPopdown(w);
 	}
+    } else if ((Atom)cme->data.l[0] == a_save_yourself && w == toplevel) {
+	save_yourself();
+    }
 }
 
 
@@ -5169,40 +5172,40 @@ stream_end(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 }
 
 void
-PA_ConfigureNotify_action(Widget w _is_unused, XEvent *event, String *params _is_unused,
-    Cardinal *num_params _is_unused)
+PA_ConfigureNotify_xaction(Widget w _is_unused, XEvent *event,
+	String *params _is_unused, Cardinal *num_params _is_unused)
 {
-	XConfigureEvent *re = (XConfigureEvent *) event;
-	Position xx, yy;
+    XConfigureEvent *re = (XConfigureEvent *) event;
+    Position xx, yy;
 
 #if defined(INTERNAL_ACTION_DEBUG) /*[*/
-	action_debug(PA_ConfigureNotify_action, event, params, num_params);
+    xaction_debug(PA_ConfigureNotify_xaction, event, params, num_params);
 #endif /*]*/
 
-	/*
-	 * Get the new window coordinates.  If the configure event reports it
-	 * as (0,0), ask for it explicitly.
-	 */
-	if (re->x || re->y) {
-		xx = re->x;
-		yy = re->y;
-	} else {
-		XtVaGetValues(toplevel, XtNx, &xx, XtNy, &yy, NULL);
-	}
-	vtrace("ConfigureNotify %hux%hu+%hd+%hd\n",
-	    re->width, re->height, xx, yy);
-	
-	/* Save the latest values. */
-	cn.x = xx;
-	cn.y = yy;
-	cn.width = re->width;
-	cn.height = re->height;
+    /*
+     * Get the new window coordinates.  If the configure event reports it
+     * as (0,0), ask for it explicitly.
+     */
+    if (re->x || re->y) {
+	xx = re->x;
+	yy = re->y;
+    } else {
+	XtVaGetValues(toplevel, XtNx, &xx, XtNy, &yy, NULL);
+    }
+    vtrace("ConfigureNotify %hux%hu+%hd+%hd\n", re->width, re->height, xx, yy);
+    
+    /* Save the latest values. */
+    cn.x = xx;
+    cn.y = yy;
+    cn.width = re->width;
+    cn.height = re->height;
 
-	/* Set the stream timer for 0.5 sec from now. */
-	if (cn.ticking)
-		XtRemoveTimeOut(cn.id);
-	cn.id = XtAppAddTimeOut(appcontext, 500, stream_end, 0);
-	cn.ticking = True;
+    /* Set the stream timer for 0.5 sec from now. */
+    if (cn.ticking) {
+	XtRemoveTimeOut(cn.id);
+    }
+    cn.id = XtAppAddTimeOut(appcontext, 500, stream_end, 0);
+    cn.ticking = True;
 }
 
 /*
@@ -5210,16 +5213,16 @@ PA_ConfigureNotify_action(Widget w _is_unused, XEvent *event, String *params _is
  * This will switch the behavior of screen scrolling.
  */
 void
-PA_VisibilityNotify_action(Widget w _is_unused, XEvent *event _is_unused,
-    String *params _is_unused, Cardinal *num_params _is_unused)
+PA_VisibilityNotify_xaction(Widget w _is_unused, XEvent *event _is_unused,
+	String *params _is_unused, Cardinal *num_params _is_unused)
 {
-	XVisibilityEvent *e;
+    XVisibilityEvent *e;
 
 #if defined(INTERNAL_ACTION_DEBUG) /*[*/
-	action_debug(PA_VisibilityNotify_action, event, params, num_params);
+    xaction_debug(PA_VisibilityNotify_xaction, event, params, num_params);
 #endif /*]*/
-	e = (XVisibilityEvent *)event;
-	nss.obscured = (e->state != VisibilityUnobscured);
+    e = (XVisibilityEvent *)event;
+    nss.obscured = (e->state != VisibilityUnobscured);
 }
 
 /*
@@ -5227,29 +5230,31 @@ PA_VisibilityNotify_action(Widget w _is_unused, XEvent *event _is_unused,
  * one or more failed XCopyArea calls.
  */
 void
-PA_GraphicsExpose_action(Widget w _is_unused, XEvent *event _is_unused,
-    String *params _is_unused, Cardinal *num_params _is_unused)
+PA_GraphicsExpose_xaction(Widget w _is_unused, XEvent *event _is_unused,
+	String *params _is_unused, Cardinal *num_params _is_unused)
 {
-	int i;
+    int i;
 
 #if defined(INTERNAL_ACTION_DEBUG) /*[*/
-	action_debug(PA_GraphicsExpose_action, event, params, num_params);
+    xaction_debug(PA_GraphicsExpose_xaction, event, params, num_params);
 #endif /*]*/
 
-	if (nss.copied) {
-		/*
-		 * Force a screen redraw.
-		 */
-		(void) memset((char *) ss->image, 0,
-		              (maxROWS*maxCOLS) * sizeof(union sp));
-		if (visible_control)
-			for (i = 0; i < maxROWS*maxCOLS; i++)
-				ss->image[i].bits.cc = EBC_space;
-		ctlr_changed(0, ROWS*COLS);
-		cursor_changed = True;
-
-		nss.copied = False;
+    if (nss.copied) {
+	/*
+	 * Force a screen redraw.
+	 */
+	(void) memset((char *) ss->image, 0,
+		(maxROWS*maxCOLS) * sizeof(union sp));
+	if (visible_control) {
+	    for (i = 0; i < maxROWS*maxCOLS; i++) {
+		ss->image[i].bits.cc = EBC_space;
+	    }
 	}
+	ctlr_changed(0, ROWS*COLS);
+	cursor_changed = True;
+
+	nss.copied = False;
+    }
 }
 
 /* Display size functions. */
@@ -5551,10 +5556,10 @@ send_spot_loc(void)
 
 /* Change the window title. */
 Boolean
-Title_eaction(ia_t ia, unsigned argc, const char **argv)
+Title_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Title", ia, argc, argv);
-    if (check_eusage("Title", argc, 1, 1) < 0) {
+    action_debug("Title", ia, argc, argv);
+    if (check_argc("Title", argc, 1, 1) < 0) {
 	return False;
     }
 
@@ -5565,12 +5570,12 @@ Title_eaction(ia_t ia, unsigned argc, const char **argv)
 
 /* Change the window state. */
 Boolean
-WindowState_eaction(ia_t ia, unsigned argc, const char **argv)
+WindowState_action(ia_t ia, unsigned argc, const char **argv)
 {
     int state;
 
-    eaction_debug("WindowState", ia, argc, argv);
-    if (check_eusage("WindowState", argc, 1, 1) < 0) {
+    action_debug("WindowState", ia, argc, argv);
+    if (check_argc("WindowState", argc, 1, 1) < 0) {
 	return False;
     }
 

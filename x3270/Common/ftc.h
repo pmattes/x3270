@@ -68,7 +68,7 @@ extern void ft_update_length(void);
 #if defined(X3270_DISPLAY) /*[*/
 extern void popup_ft(Widget w, XtPointer call_parms, XtPointer call_data);
 #endif /*]*/
-extern eaction_t Transfer_eaction;
+extern action_t Transfer_action;
 extern char *ft_local_fflag(void);
 
 # if defined(_WIN32) /*[*/

@@ -37,7 +37,7 @@ extern Pixmap dot, no_dot;
 extern Pixmap diamond, no_diamond;
 extern Pixmap null;
 
-extern void HandleMenu_action(Widget w, XEvent *event, String *params,
+extern void HandleMenu_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void menubar_as_set(Boolean sensitive);
 extern void menubar_init(Widget container, Dimension overall_width,
@@ -79,7 +79,7 @@ extern void popup_menu(int x, int click);
 extern void menu_cursor(int *row, int *col);
 extern void menubar_retoggle(struct toggle *t, int ix);
 extern void map_acs(unsigned char c, ucs4_t *u, unsigned char *acs);
-extern eaction_t Menu_eaction;
+extern action_t Menu_action;
 
 #else /*][*/
 # define menubar_as_set(n)

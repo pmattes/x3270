@@ -451,10 +451,10 @@ rethumb(void)
 
 #if defined(X3270_INTERACTIVE) /*[*/
 Boolean
-Scroll_eaction(ia_t ia, unsigned argc, const char **argv)
+Scroll_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Scroll", ia, argc, argv);
-    if (check_eusage("Scroll", argc, 1, 1) < 0) {
+    action_debug("Scroll", ia, argc, argv);
+    if (check_argc("Scroll", argc, 1, 1) < 0) {
 	return False;
     }
 

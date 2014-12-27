@@ -56,7 +56,7 @@ static char *print_window_command = NULL;
 
 /*
  * Printing the window bitmap is a rather convoluted process:
- *    The PrintWindow action calls PrintWindow_eaction(), or a menu option calls
+ *    The PrintWindow action calls PrintWindow_action(), or a menu option calls
  *	print_window_option().
  *    print_window_option() pops up the dialog.
  *    The OK button on the dialog triggers print_window_callback.
@@ -145,12 +145,12 @@ print_window_callback(Widget w _is_unused, XtPointer client_data,
 
 /* Print the contents of the screen as a bitmap. */
 Boolean
-PrintWindow_eaction(ia_t ia, unsigned argc, const char **argv)
+PrintWindow_action(ia_t ia, unsigned argc, const char **argv)
 {
     const char *command;
     Boolean secure = appres.secure;
 
-    eaction_debug("PrintWindow", ia, argc, argv);
+    action_debug("PrintWindow", ia, argc, argv);
 
     /* Figure out what the command is. */
     command = get_resource(ResPrintWindowCommand);
@@ -199,5 +199,5 @@ void
 print_window_option(Widget w, XtPointer client_data _is_unused,
     XtPointer call_data _is_unused)
 {
-    (void) PrintWindow_eaction(IA_KEYMAP, 0, NULL);
+    (void) PrintWindow_action(IA_KEYMAP, 0, NULL);
 }

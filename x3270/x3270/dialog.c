@@ -324,8 +324,8 @@ dialog_mark_toggle(Widget w, Pixmap p)
 
 /* Proceed to the next input field. */
 void
-PA_dialog_next_action(Widget w, XEvent *event _is_unused, String *parms _is_unused,
-	Cardinal *num_parms _is_unused)
+PA_dialog_next_xaction(Widget w, XEvent *event _is_unused,
+	String *parms _is_unused, Cardinal *num_parms _is_unused)
 {
 	sr_t *s;
 
@@ -339,8 +339,8 @@ PA_dialog_next_action(Widget w, XEvent *event _is_unused, String *parms _is_unus
 
 /* Set keyboard focus to an input field. */
 void
-PA_dialog_focus_action(Widget w, XEvent *event _is_unused, String *parms _is_unused,
-	Cardinal *num_parms _is_unused)
+PA_dialog_focus_xaction(Widget w, XEvent *event _is_unused,
+	String *parms _is_unused, Cardinal *num_parms _is_unused)
 {
 	sr_t *s;
 

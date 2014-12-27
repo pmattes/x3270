@@ -41,9 +41,9 @@ struct host {
 };
 extern struct host *hosts;
 
-extern eaction_t Connect_eaction;
-extern eaction_t Disconnect_eaction;
-extern eaction_t Reconnect_eaction;
+extern action_t Connect_action;
+extern action_t Disconnect_action;
+extern action_t Reconnect_action;
 
 /* Host connect/disconnect and state change. */
 extern void hostfile_init(void);

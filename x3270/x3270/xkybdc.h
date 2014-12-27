@@ -30,15 +30,15 @@
  *		Global declarations for xkybd.c.
  */
 
-extern eaction_t AltCursor_eaction;
-extern void Default_action(Widget w, XEvent *event, String *params,
+extern action_t AltCursor_action;
+extern void Default_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void ignore_action(Widget w, XEvent *event, String *params,
+extern void ignore_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void MouseSelect_action(Widget w, XEvent *event, String *params,
+extern void MouseSelect_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void MoveCursor_action(Widget w, XEvent *event, String *params,
+extern void MoveCursor_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_Shift_action(Widget w, XEvent *event, String *params,
+extern void PA_Shift_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern eaction_t TemporaryKeymap_eaction;
+extern action_t TemporaryKeymap_action;

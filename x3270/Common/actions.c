@@ -73,176 +73,176 @@ const char *ia_name[] = {
 };
 
 /* The emulator action table. */
-eaction_table_t all_eactions[] = {
+action_table_t all_actions[] = {
 #if defined(C3270) /*[*/
-    { "Abort",		Abort_eaction, NULL },
+    { "Abort",		Abort_action, NULL },
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
-    { "AltCursor",  	AltCursor_eaction, NULL },
+    { "AltCursor",  	AltCursor_action, NULL },
 #endif /*]*/
 #if defined(X3270_INTERACTIVE) /*[*/
-    { "Compose",	Compose_eaction, NULL },
+    { "Compose",	Compose_action, NULL },
 #endif /*]*/
 #if defined(WC3270) /*[*/
-    { "Copy",		Copy_eaction, NULL },
+    { "Copy",		Copy_action, NULL },
 #endif /*]*/
 #if defined(WC3270) /*[*/
-    { "Cut",		Cut_eaction, NULL },
+    { "Cut",		Cut_action, NULL },
 #endif /*]*/
-    { "HexString",	HexString_eaction, NULL },
+    { "HexString",	HexString_action, NULL },
 #if defined(X3270_INTERACTIVE) /*[*/
-    { "Info",		Info_eaction, NULL },
+    { "Info",		Info_action, NULL },
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
-    { "Keymap",		TemporaryKeymap_eaction, NULL },
+    { "Keymap",		TemporaryKeymap_action, NULL },
 #endif /*]*/
 #if defined(C3270) /*[*/
-    { "Escape",		Escape_eaction, NULL },
+    { "Escape",		Escape_action, NULL },
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
-    { "PrintWindow",	PrintWindow_eaction, NULL },
+    { "PrintWindow",	PrintWindow_action, NULL },
 #endif /*]*/
-    { "PrintText",	PrintText_eaction, NULL },
+    { "PrintText",	PrintText_action, NULL },
 #if defined(X3270_INTERACTIVE) /*[*/
-    { "Flip",		Flip_eaction, NULL },
+    { "Flip",		Flip_action, NULL },
 #endif /*]*/
 #if defined(C3270) /*[*/
-    { "Redraw",		Redraw_eaction, NULL },
+    { "Redraw",		Redraw_action, NULL },
 #endif /*]*/
 #if defined(X3270_INTERACTIVE) /*[*/
-    { "Scroll",		Scroll_eaction, NULL },
+    { "Scroll",		Scroll_action, NULL },
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
-    { "SetFont",	SetFont_eaction, NULL },
-    { "TemporaryKeymap",TemporaryKeymap_eaction, NULL },
+    { "SetFont",	SetFont_action, NULL },
+    { "TemporaryKeymap",TemporaryKeymap_action, NULL },
 #endif /*]*/
 #if !defined(TCL3270) /*[*/
-    { "AnsiText",	AnsiText_eaction, NULL },
+    { "AnsiText",	AnsiText_action, NULL },
 #endif /*]*/
-    { "Ascii",		Ascii_eaction, NULL },
-    { "AsciiField",	AsciiField_eaction, NULL },
-    { "Attn",		Attn_eaction, NULL },
-    { "BackSpace",	BackSpace_eaction, NULL },
-    { "BackTab",	BackTab_eaction, NULL },
+    { "Ascii",		Ascii_action, NULL },
+    { "AsciiField",	AsciiField_action, NULL },
+    { "Attn",		Attn_action, NULL },
+    { "BackSpace",	BackSpace_action, NULL },
+    { "BackTab",	BackTab_action, NULL },
 #if defined(X3270_INTERACTIVE) /*[*/
-    { "Bell",		Bell_eaction, NULL },
+    { "Bell",		Bell_action, NULL },
 #endif /*]*/
-    { "CircumNot",	CircumNot_eaction, NULL },
-    { "Clear",		Clear_eaction, NULL },
-    { "Close",		Disconnect_eaction, NULL },
+    { "CircumNot",	CircumNot_action, NULL },
+    { "Clear",		Clear_action, NULL },
+    { "Close",		Disconnect_action, NULL },
 #if !defined(TCL3270) /*[*/
-    { "CloseScript",	CloseScript_eaction, NULL },
+    { "CloseScript",	CloseScript_action, NULL },
 #endif /*]*/
-    { "Connect",	Connect_eaction, NULL },
+    { "Connect",	Connect_action, NULL },
 #if !defined(TCL3270) /*[*/
-    { "ContinueScript",	ContinueScript_eaction, NULL },
+    { "ContinueScript",	ContinueScript_action, NULL },
 #endif /*]*/
-    { "CursorSelect",	CursorSelect_eaction, NULL },
-    { "Delete", 	Delete_eaction, NULL },
-    { "DeleteField",	DeleteField_eaction, NULL },
-    { "DeleteWord",	DeleteWord_eaction, NULL },
-    { "Disconnect",	Disconnect_eaction, NULL },
-    { "Down",		Down_eaction, NULL },
-    { "Dup",		Dup_eaction, NULL },
-    { "Ebcdic",		Ebcdic_eaction, NULL },
-    { "EbcdicField",	EbcdicField_eaction, NULL },
-    { "Enter",		Enter_eaction, NULL },
-    { "Erase",		Erase_eaction, NULL },
-    { "EraseEOF",	EraseEOF_eaction, NULL },
-    { "EraseInput",	EraseInput_eaction, NULL },
+    { "CursorSelect",	CursorSelect_action, NULL },
+    { "Delete", 	Delete_action, NULL },
+    { "DeleteField",	DeleteField_action, NULL },
+    { "DeleteWord",	DeleteWord_action, NULL },
+    { "Disconnect",	Disconnect_action, NULL },
+    { "Down",		Down_action, NULL },
+    { "Dup",		Dup_action, NULL },
+    { "Ebcdic",		Ebcdic_action, NULL },
+    { "EbcdicField",	EbcdicField_action, NULL },
+    { "Enter",		Enter_action, NULL },
+    { "Erase",		Erase_action, NULL },
+    { "EraseEOF",	EraseEOF_action, NULL },
+    { "EraseInput",	EraseInput_action, NULL },
 #if !defined(TCL3270) /*[*/
-    { "Execute",	Execute_eaction, NULL },
+    { "Execute",	Execute_action, NULL },
 #endif /*]*/
 #if defined(C3270) /*[*/
-    { "Exit",		Quit_eaction, NULL },
+    { "Exit",		Quit_action, NULL },
 #endif /*]*/
 #if !defined(TCL3270) /*[*/
-    { "Expect",		Expect_eaction, NULL },
+    { "Expect",		Expect_action, NULL },
 #endif /*]*/
-    { "FieldEnd",	FieldEnd_eaction, NULL },
-    { "FieldMark",	FieldMark_eaction, NULL },
-    { "HexString",	HexString_eaction},
+    { "FieldEnd",	FieldEnd_action, NULL },
+    { "FieldMark",	FieldMark_action, NULL },
+    { "HexString",	HexString_action},
 #if defined(C3270) /*[*/
-    { "Help",		Help_eaction},
+    { "Help",		Help_action},
 #endif/*]*/
-    { "Home",		Home_eaction, NULL },
-    { "Insert",		Insert_eaction, NULL },
-    { "Interrupt",	Interrupt_eaction, NULL },
-    { "Key",		Key_eaction, NULL },
+    { "Home",		Home_action, NULL },
+    { "Insert",		Insert_action, NULL },
+    { "Interrupt",	Interrupt_action, NULL },
+    { "Key",		Key_action, NULL },
 #if defined(C3270) /*[*/
-    { "Keypad",		Keypad_eaction, NULL },
+    { "Keypad",		Keypad_action, NULL },
 #endif /*]*/
-    { "Left",		Left_eaction, NULL },
-    { "Left2", 		Left2_eaction, NULL },
+    { "Left",		Left_action, NULL },
+    { "Left2", 		Left2_action, NULL },
 #if !defined(TCL3270) /*[*/
-    { "Macro", 		Macro_eaction, NULL },
+    { "Macro", 		Macro_action, NULL },
 #endif /*]*/
 #if defined(C3270) /*[*/
-    { "Menu",		Menu_eaction, NULL },
+    { "Menu",		Menu_action, NULL },
 #endif /*]*/
-    { "MonoCase",	MonoCase_eaction, NULL },
-    { "MoveCursor",	MoveCursor_eaction, NULL },
-    { "Newline",	Newline_eaction, NULL },
-    { "NextWord",	NextWord_eaction, NULL },
-    { "Open",		Connect_eaction, NULL },
-    { "PA",		PA_eaction, NULL },
-    { "PF",		PF_eaction, NULL },
+    { "MonoCase",	MonoCase_action, NULL },
+    { "MoveCursor",	MoveCursor_action, NULL },
+    { "Newline",	Newline_action, NULL },
+    { "NextWord",	NextWord_action, NULL },
+    { "Open",		Connect_action, NULL },
+    { "PA",		PA_action, NULL },
+    { "PF",		PF_action, NULL },
 #if defined(WC3270) /*[*/
-    { "Paste",		Paste_eaction, NULL },
+    { "Paste",		Paste_action, NULL },
 #endif /*]*/
 #if !defined(TCL3270) /*[*/
-    { "PauseScript",	PauseScript_eaction, NULL },
+    { "PauseScript",	PauseScript_action, NULL },
 #endif /*]*/
-    { "PreviousWord",	PreviousWord_eaction, NULL },
+    { "PreviousWord",	PreviousWord_action, NULL },
 #if defined(X3270_INTERACTIVE) /*[*/
-    { "Printer",	Printer_eaction, NULL },
+    { "Printer",	Printer_action, NULL },
 #endif /*]*/
-    { "Query",		Query_eaction, NULL },
-    { "Quit",		Quit_eaction, NULL },
-    { "ReadBuffer",	ReadBuffer_eaction, NULL },
+    { "Query",		Query_action, NULL },
+    { "Quit",		Quit_action, NULL },
+    { "ReadBuffer",	ReadBuffer_action, NULL },
 #if defined(X3270_INTERACTIVE) /*[*/
-    { "Reconnect",	Reconnect_eaction, NULL },
+    { "Reconnect",	Reconnect_action, NULL },
 #endif /*]*/
-    { "Reset",		Reset_eaction, NULL },
-    { "Right",		Right_eaction, NULL },
-    { "Right2",		Right2_eaction, NULL },
+    { "Reset",		Reset_action, NULL },
+    { "Right",		Right_action, NULL },
+    { "Right2",		Right2_action, NULL },
 #if defined(C3270) /*[*/
-    { "ScreenTrace",	ScreenTrace_eaction, NULL },
+    { "ScreenTrace",	ScreenTrace_action, NULL },
 #endif/*]*/
 #if !defined(TCL3270) /*[*/
-    { "Script",		Script_eaction, NULL },
+    { "Script",		Script_action, NULL },
 #endif /*]*/
 #if defined(C3270) /*[*/
-    { "Show",		Show_eaction, NULL },
+    { "Show",		Show_action, NULL },
 #endif/*]*/
-    { "Snap",		Snap_eaction, NULL },
+    { "Snap",		Snap_action, NULL },
 #if !defined(TCL3270) /*[*/
-    { "Source",		Source_eaction, NULL },
+    { "Source",		Source_action, NULL },
 #endif /*]*/
 #if defined(TCL3270) /*[*/
-    { "Status",		Status_eaction, NULL },
+    { "Status",		Status_action, NULL },
 #endif /*]*/
-    { "String",		String_eaction, NULL },
-    { "SysReq",		SysReq_eaction, NULL },
-    { "Tab",		Tab_eaction, NULL },
+    { "String",		String_action, NULL },
+    { "SysReq",		SysReq_action, NULL },
+    { "Tab",		Tab_action, NULL },
 #if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
-    { "Title",		Title_eaction, NULL },
+    { "Title",		Title_action, NULL },
 #endif /*]*/
-    { "Toggle",		Toggle_eaction, NULL },
-    { "ToggleInsert",	ToggleInsert_eaction, NULL },
-    { "ToggleReverse",	ToggleReverse_eaction, NULL },
+    { "Toggle",		Toggle_action, NULL },
+    { "ToggleInsert",	ToggleInsert_action, NULL },
+    { "ToggleReverse",	ToggleReverse_action, NULL },
 #if defined(C3270) /*[*/
-    { "Trace",		Trace_eaction, NULL },
+    { "Trace",		Trace_action, NULL },
 #endif/*]*/
-    { "Transfer",	Transfer_eaction, NULL },
-    { "Up",		Up_eaction, NULL },
-    { "Wait",		Wait_eaction, NULL },
+    { "Transfer",	Transfer_action, NULL },
+    { "Up",		Up_action, NULL },
+    { "Wait",		Wait_action, NULL },
 #if defined(X3270_DISPLAY) /*[*/
-    { "WindowState",	WindowState_eaction, NULL },
+    { "WindowState",	WindowState_action, NULL },
 #endif /*]*/
 };
-eaction_table_t *eaction_table = all_eactions;
-unsigned num_eactions = sizeof(all_eactions) / sizeof(all_eactions[0]);
+action_table_t *action_table = all_actions;
+unsigned num_actions = sizeof(all_actions) / sizeof(all_actions[0]);
 
 /* Look up an action name in the suppressed actions resource. */
 Boolean
@@ -304,8 +304,8 @@ action_init(void)
  * Returns 0 if the argument count is correct, -1 otherwise.
  */
 int
-check_eusage(const char *aname, unsigned nargs, unsigned nargs_min,
-    unsigned nargs_max)
+check_argc(const char *aname, unsigned nargs, unsigned nargs_min,
+	unsigned nargs_max)
 {
     if (nargs >= nargs_min && nargs <= nargs_max) {
 	return 0;
@@ -325,7 +325,7 @@ check_eusage(const char *aname, unsigned nargs, unsigned nargs_min,
  * Trace the execution of an emulator action.
  */
 void
-eaction_debug(const char *aname, ia_t ia, unsigned argc, const char **argv)
+action_debug(const char *aname, ia_t ia, unsigned argc, const char **argv)
 {
     unsigned i;
     char pbuf[1024];
@@ -348,21 +348,21 @@ eaction_debug(const char *aname, ia_t ia, unsigned argc, const char **argv)
  * Run an emulator action.
  */
 void
-run_eaction(const char *name, enum iaction cause, const char *parm1,
+run_action(const char *name, enum iaction cause, const char *parm1,
 	const char *parm2)
 {
     unsigned i;
-    eaction_t *eaction = NULL;
+    action_t *action = NULL;
     unsigned count = 0;
     const char *parms[2];
 
-    for (i = 0; i < num_eactions; i++) {
-	if (!strcasecmp(eaction_table[i].name, name)) {
-	    eaction = eaction_table[i].eaction;
+    for (i = 0; i < num_actions; i++) {
+	if (!strcasecmp(action_table[i].name, name)) {
+	    action = action_table[i].action;
 	    break;
 	}
     }
-    if (eaction == NULL) {
+    if (action == NULL) {
 	return; /* XXX: And do something? */
     }
 
@@ -376,5 +376,5 @@ run_eaction(const char *name, enum iaction cause, const char *parm1,
     }
 
     ia_cause = cause;
-    (void)(*eaction)(cause, count, parms);
+    (void)(*action)(cause, count, parms);
 }

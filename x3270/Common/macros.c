@@ -1232,15 +1232,15 @@ success:
     }
     any = -1;
     exact = -1;
-    for (i = 0; i < num_eactions; i++) {
-	if (!strcasecmp(aname, eaction_table[i].name)) {
+    for (i = 0; i < num_actions; i++) {
+	if (!strcasecmp(aname, action_table[i].name)) {
 	    exact = any = i;
 	    break;
 	}
     }
     if (exact < 0) {
-	for (i = 0; i < num_eactions; i++) {
-	    if (!strncasecmp(aname, eaction_table[i].name, strlen(aname))) {
+	for (i = 0; i < num_actions; i++) {
+	    if (!strncasecmp(aname, action_table[i].name, strlen(aname))) {
 		if (any >= 0) {
 		    popup_an_error("Ambiguous action name: %s", aname);
 		    return EM_ERROR;
@@ -1253,7 +1253,7 @@ success:
 	sms->accumulated = False;
 	sms->msec = 0L;
 	ia_cause = cause;
-	(*eaction_table[any].eaction)(cause, count, count? params: NULL);
+	(*action_table[any].action)(cause, count, count? params: NULL);
 	screen_disp(False);
     } else {
 	popup_an_error("Unknown action: %s", aname);
@@ -1437,14 +1437,14 @@ push_command(char *s)
     push_xmacro(ST_COMMAND, s, strlen(s), False);
 }
 
-/* Push an keymap action on the stack. */
+/* Push a keymap action on the stack. */
 void
 push_keymap_action(char *s)
 {
     push_xmacro(ST_KEYMAP, s, strlen(s), False);
 }
 
-/* Push an keymap action on the stack. */
+/* Push an idle action on the stack. */
 void
 push_idle(char *s)
 {
@@ -2246,27 +2246,27 @@ dump_field(unsigned count, const char *name, Boolean in_ascii)
 }
 
 Boolean
-Ascii_eaction(ia_t ia _is_unused, unsigned argc, const char **argv)
+Ascii_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     return dump_fixed(argv, argc, "Ascii", True, ea_buf, ROWS, COLS,
 	    cursor_addr);
 }
 
 Boolean
-AsciiField_eaction(ia_t ia _is_unused, unsigned argc, const char **argv)
+AsciiField_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     return dump_field(argc, "AsciiField", True);
 }
 
 Boolean
-Ebcdic_eaction(ia_t ia _is_unused, unsigned argc, const char **argv)
+Ebcdic_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     return dump_fixed(argv, argc, "Ebcdic", False, ea_buf, ROWS, COLS,
 	    cursor_addr);
 }
 
 Boolean
-EbcdicField_eaction(ia_t ia _is_unused, unsigned argc, const char **argv)
+EbcdicField_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     return dump_field(argc, "EbcdicField", False);
 }
@@ -2456,7 +2456,7 @@ done:
  * ReadBuffer action.
  */
 Boolean
-ReadBuffer_eaction(ia_t ia _is_unused, unsigned argc, const char **argv)
+ReadBuffer_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     return do_read_buffer(argv, argc, ea_buf, -1);
 }
@@ -2665,7 +2665,7 @@ snap_save(void)
  *      wait for the screen to change, then do a Snap Save
  */
 Boolean
-Snap_eaction(ia_t ia _is_unused, unsigned argc, const char **argv)
+Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     if (sms == NULL || sms->state != SS_RUNNING) {
 	popup_an_error("Snap can only be called from scripts or macros");
@@ -2798,7 +2798,7 @@ Snap_eaction(ia_t ia _is_unused, unsigned argc, const char **argv)
  * Wait for various conditions.
  */
 Boolean
-Wait_eaction(ia_t ia _is_unused, unsigned argc, const char **argv)
+Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     enum sms_state next_state = SS_WAIT_IFIELD;
     long tmo = -1;
@@ -3102,7 +3102,7 @@ sms_store(unsigned char c)
 
 /* Dump whatever NVT data has been sent by the host since last called. */
 Boolean
-AnsiText_eaction(ia_t ia, unsigned argc, const char **argv)
+AnsiText_action(ia_t ia, unsigned argc, const char **argv)
 {
     int i;
     int ix;
@@ -3110,8 +3110,8 @@ AnsiText_eaction(ia_t ia, unsigned argc, const char **argv)
     char linebuf[NVT_SAVE_SIZE * 4 + 1];
     char *s = linebuf;
 
-    eaction_debug("AnsiText", ia, argc, argv);
-    if (check_eusage("AnsiText", argc, 0, 0) < 0) {
+    action_debug("AnsiText", ia, argc, argv);
+    if (check_argc("AnsiText", argc, 0, 0) < 0) {
 	return False;
     }
 
@@ -3150,10 +3150,10 @@ AnsiText_eaction(ia_t ia, unsigned argc, const char **argv)
 
 /* Pause a script. */
 Boolean
-PauseScript_eaction(ia_t ia, unsigned argc, const char **argv)
+PauseScript_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("PauseScript", ia, argc, argv);
-    if (check_eusage("PauseScript", argc, 0, 0) < 0) {
+    action_debug("PauseScript", ia, argc, argv);
+    if (check_argc("PauseScript", argc, 0, 0) < 0) {
 	return False;
     }
     if (sms == NULL || (sms->type != ST_PEER && sms->type != ST_CHILD)) {
@@ -3166,12 +3166,12 @@ PauseScript_eaction(ia_t ia, unsigned argc, const char **argv)
 
 /* Continue a script. */
 Boolean
-ContinueScript_eaction(ia_t ia, unsigned argc, const char **argv)
+ContinueScript_action(ia_t ia, unsigned argc, const char **argv)
 {
     sms_t *s;
 
-    eaction_debug("ContinueScript", ia, argc, argv);
-    if (check_eusage("ContinueScript", argc, 1, 1) < 0) {
+    action_debug("ContinueScript", ia, argc, argv);
+    if (check_argc("ContinueScript", argc, 1, 1) < 0) {
 	return False;
     }
 
@@ -3204,10 +3204,10 @@ ContinueScript_eaction(ia_t ia, unsigned argc, const char **argv)
 
 /* Stop listening to stdin. */
 Boolean
-CloseScript_eaction(ia_t ia, unsigned argc, const char **argv)
+CloseScript_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("CloseScript", ia, argc, argv);
-    if (check_eusage("CloseScript", argc, 0, 1) < 0) {
+    action_debug("CloseScript", ia, argc, argv);
+    if (check_argc("CloseScript", argc, 0, 1) < 0) {
 	return False;
     }
 
@@ -3235,13 +3235,13 @@ CloseScript_eaction(ia_t ia, unsigned argc, const char **argv)
 
 /* Execute an arbitrary shell command. */
 Boolean
-Execute_eaction(ia_t ia, unsigned argc, const char **argv)
+Execute_action(ia_t ia, unsigned argc, const char **argv)
 {
     int status;
     Boolean rv = True;
 
-    eaction_debug("Execute", ia, argc, argv);
-    if (check_eusage("Execute", argc, 1, 1) < 0) {
+    action_debug("Execute", ia, argc, argv);
+    if (check_argc("Execute", argc, 1, 1) < 0) {
 	return False;
     }
 
@@ -3328,12 +3328,12 @@ wait_timed_out(ioid_t id _is_unused)
 
 /* Wait for a string from the host (NVT mode only). */
 Boolean
-Expect_eaction(ia_t ia, unsigned argc, const char **argv)
+Expect_action(ia_t ia, unsigned argc, const char **argv)
 {
     int tmo;
 
-    eaction_debug("Expect", ia, argc, argv);
-    if (check_eusage("Expect", argc, 1, 2) < 0) {
+    action_debug("Expect", ia, argc, argv);
+    if (check_argc("Expect", argc, 1, 2) < 0) {
 	return False;
     }
 
@@ -3408,7 +3408,7 @@ pick_port(int *sp)
 /* "Script" action, runs a script as a child process. */
 #if !defined(_WIN32) /*[*/
 Boolean
-Script_eaction(ia_t ia, unsigned argc, const char **argv)
+Script_action(ia_t ia, unsigned argc, const char **argv)
 {
     int inpipe[2];
     int outpipe[2];
@@ -3510,7 +3510,7 @@ Script_eaction(ia_t ia, unsigned argc, const char **argv)
 #if defined(_WIN32) /*[*/
 /* "Script" action, runs a script as a child process. */
 Boolean
-Script_eaction(ia_t ia, unsigned argc, const char **argv)
+Script_action(ia_t ia, unsigned argc, const char **argv)
 {
     int s = -1;
     unsigned short port = 0;
@@ -3521,7 +3521,7 @@ Script_eaction(ia_t ia, unsigned argc, const char **argv)
     char *args;
     unsigned i;
 
-    eaction_debug("Script", ia, argc, argv);
+    action_debug("Script", ia, argc, argv);
 
     if (argc < 1) {
 	popup_an_error("Script requires at least one argument");
@@ -3615,12 +3615,12 @@ Script_eaction(ia_t ia, unsigned argc, const char **argv)
 
 /* "Macro" action, explicitly invokes a named macro. */
 Boolean
-Macro_eaction(ia_t ia, unsigned argc, const char **argv)
+Macro_action(ia_t ia, unsigned argc, const char **argv)
 {
 	struct macro_def *m;
 
-    eaction_debug("Macro", ia, argc, argv);
-    if (check_eusage("Macro", argc, 1, 1) < 0) {
+    action_debug("Macro", ia, argc, argv);
+    if (check_argc("Macro", argc, 1, 1) < 0) {
 	return False;
     }
     for (m = macro_defs; m != NULL; m = m->next) {
@@ -3655,10 +3655,10 @@ cancel_if_idle_command(void)
 #if defined(X3270_INTERACTIVE) /*[*/
 /* "Printer" action, starts or stops a printer session. */
 Boolean
-Printer_eaction(ia_t ia, unsigned argc, const char **argv)
+Printer_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Printer", ia, argc, argv);
-    if (check_eusage("Printer", argc, 1, 2) < 0) {
+    action_debug("Printer", ia, argc, argv);
+    if (check_argc("Printer", argc, 1, 2) < 0) {
 	return False;
     }
     if (!strcasecmp(argv[0], "Start")) {
@@ -3692,10 +3692,10 @@ abort_script(void)
 
 /* "Abort" action, stops pending scripts. */
 Boolean
-Abort_eaction(ia_t ia, unsigned argc, const char **argv)
+Abort_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Abort", ia, argc, argv);
-    if (check_eusage("Abort", argc, 0, 0) < 0) {
+    action_debug("Abort", ia, argc, argv);
+    if (check_argc("Abort", argc, 0, 0) < 0) {
 	return False;
     }
 #if !defined(_WIN32) /*[*/
@@ -3731,7 +3731,7 @@ sms_accumulate_time(struct timeval *t0, struct timeval *t1)
 }
 
 Boolean
-Query_eaction(ia_t ia, unsigned argc, const char **argv)
+Query_action(ia_t ia, unsigned argc, const char **argv)
 {
     static struct {
 	char *name;
@@ -3790,10 +3790,10 @@ Query_eaction(ia_t ia, unsigned argc, const char **argv)
  * into the trace log.
  */
 Boolean
-Bell_eaction(ia_t ia, unsigned argc, const char **argv)
+Bell_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Bell", ia, argc, argv);
-    if (check_eusage("Bell", argc, 0, 0) < 0) {
+    action_debug("Bell", ia, argc, argv);
+    if (check_argc("Bell", argc, 0, 0) < 0) {
 	return False;
     }
     ring_bell();
@@ -3802,13 +3802,13 @@ Bell_eaction(ia_t ia, unsigned argc, const char **argv)
 #endif /*]*/
 
 Boolean
-Source_eaction(ia_t ia, unsigned argc, const char **argv)
+Source_action(ia_t ia, unsigned argc, const char **argv)
 {
     int fd;
     char *expanded_filename;
 
-    eaction_debug("Source", ia, argc, argv);
-    if (check_eusage("Source", argc, 1, 1) < 0) {
+    action_debug("Source", ia, argc, argv);
+    if (check_argc("Source", argc, 1, 1) < 0) {
 	return False;
     }
     expanded_filename = do_subst(argv[0], DS_VARS | DS_TILDE);

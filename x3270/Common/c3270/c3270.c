@@ -898,8 +898,8 @@ attempted_completion(const char *text, int start, int end)
 	}
 
 	/* Search for matches. */
-	for (i = 0, match_count = 0; i < num_eactions; i++) {
-		if (!strncasecmp(eaction_table[i].name, s, strlen(s)))
+	for (i = 0, match_count = 0; i < num_actions; i++) {
+		if (!strncasecmp(action_table[i].name, s, strlen(s)))
 			match_count++;
 	}
 	if (!match_count)
@@ -907,9 +907,9 @@ attempted_completion(const char *text, int start, int end)
 
 	/* Return what we got. */
 	next_match = matches = Malloc((match_count + 1) * sizeof(char **));
-	for (i = 0, j = 0; i < num_eactions; i++) {
-		if (!strncasecmp(eaction_table[i].name, s, strlen(s))) {
-			matches[j++] = NewString(eaction_table[i].name);
+	for (i = 0, j = 0; i < num_actions; i++) {
+		if (!strncasecmp(action_table[i].name, s, strlen(s))) {
+			matches[j++] = NewString(action_table[i].name);
 		}
 	}
 	matches[j] = NULL;
@@ -1201,10 +1201,10 @@ copyright_dump(void)
 }
 
 Boolean
-Show_eaction(ia_t ia, unsigned argc, const char **argv)
+Show_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Show", ia, argc, argv);
-    if (check_eusage("Show", argc, 0, 1) < 0) {
+    action_debug("Show", ia, argc, argv);
+    if (check_argc("Show", argc, 0, 1) < 0) {
 	return False;
     }
 
@@ -1231,12 +1231,12 @@ Show_eaction(ia_t ia, unsigned argc, const char **argv)
 
 /* Trace([data|keyboard][on [filename]|off]) */
 Boolean
-Trace_eaction(ia_t ia, unsigned argc, const char **argv)
+Trace_action(ia_t ia, unsigned argc, const char **argv)
 {
     Boolean on = False;
     unsigned arg0 = 0;
 
-    eaction_debug("Trace", ia, argc, argv);
+    action_debug("Trace", ia, argc, argv);
 
     if (argc == 0) {
 	if (toggled(TRACING) && tracefile_name != NULL) {
@@ -1309,7 +1309,7 @@ Trace_eaction(ia_t ia, unsigned argc, const char **argv)
  * ScreenTrace(Off)
  */
 Boolean
-ScreenTrace_eaction(ia_t ia, unsigned argc, const char **argv)
+ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 {
     Boolean on = False;
 #if defined(_WIN32) /*[*/
@@ -1320,7 +1320,7 @@ ScreenTrace_eaction(ia_t ia, unsigned argc, const char **argv)
     const char *name = NULL;
     unsigned px;
 
-    eaction_debug("ScreenTrace", ia, argc, argv);
+    action_debug("ScreenTrace", ia, argc, argv);
 
     if (argc == 0) {
 	how = trace_get_screentrace_how();
@@ -1467,10 +1467,10 @@ toggle_it:
 
 /* Break to the command prompt. */
 Boolean
-Escape_eaction(ia_t ia, unsigned argc, const char **argv)
+Escape_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Escape", ia, argc, argv);
-    if (check_eusage("Escape", argc, 0, 0) < 0) {
+    action_debug("Escape", ia, argc, argv);
+    if (check_argc("Escape", argc, 0, 0) < 0) {
 	return False;
     }
 
@@ -1518,9 +1518,9 @@ popup_an_info(const char *fmt, ...)
 }
 
 Boolean
-Info_eaction(ia_t ia, unsigned argc, const char **argv)
+Info_action(ia_t ia, unsigned argc, const char **argv)
 {
-    eaction_debug("Info", ia, argc, argv);
+    action_debug("Info", ia, argc, argv);
 
     if (!argc) {
 	return True;

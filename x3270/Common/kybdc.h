@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,50 +49,50 @@ extern unsigned int kybdlock;
 extern unsigned char aid;
 
 /* actions */
-extern eaction_t AltCursor_eaction;
-extern eaction_t Attn_eaction;
-extern eaction_t BackSpace_eaction;
-extern eaction_t BackTab_eaction;
-extern eaction_t CircumNot_eaction;
-extern eaction_t Clear_eaction;
-extern eaction_t Compose_eaction;
-extern eaction_t CursorSelect_eaction;
-extern eaction_t Delete_eaction;
-extern eaction_t DeleteField_eaction;
-extern eaction_t DeleteWord_eaction;
-extern eaction_t Down_eaction;
-extern eaction_t Dup_eaction;
-extern eaction_t Enter_eaction;
-extern eaction_t Erase_eaction;
-extern eaction_t EraseEOF_eaction;
-extern eaction_t EraseInput_eaction;
-extern eaction_t FieldEnd_eaction;
-extern eaction_t FieldMark_eaction;
-extern eaction_t Flip_eaction;
-extern eaction_t HexString_eaction;
-extern eaction_t Home_eaction;
-extern eaction_t Insert_eaction;
-extern eaction_t Interrupt_eaction;
-extern eaction_t Key_eaction;
-extern eaction_t Left2_eaction;
-extern eaction_t Left_eaction;
-extern eaction_t MonoCase_eaction;
-extern eaction_t MoveCursor_eaction;
-extern eaction_t Newline_eaction;
-extern eaction_t NextWord_eaction;
-extern eaction_t PA_eaction;
-extern eaction_t PF_eaction;
-extern eaction_t PreviousWord_eaction;
-extern eaction_t Reset_eaction;
-extern eaction_t Right2_eaction;
-extern eaction_t Right_eaction;
-extern eaction_t String_eaction;
-extern eaction_t SysReq_eaction;
-extern eaction_t Tab_eaction;
-extern eaction_t TemporaryKeymap_eaction;
-extern eaction_t ToggleInsert_eaction;
-extern eaction_t ToggleReverse_eaction;
-extern eaction_t Up_eaction;
+extern action_t AltCursor_action;
+extern action_t Attn_action;
+extern action_t BackSpace_action;
+extern action_t BackTab_action;
+extern action_t CircumNot_action;
+extern action_t Clear_action;
+extern action_t Compose_action;
+extern action_t CursorSelect_action;
+extern action_t Delete_action;
+extern action_t DeleteField_action;
+extern action_t DeleteWord_action;
+extern action_t Down_action;
+extern action_t Dup_action;
+extern action_t Enter_action;
+extern action_t Erase_action;
+extern action_t EraseEOF_action;
+extern action_t EraseInput_action;
+extern action_t FieldEnd_action;
+extern action_t FieldMark_action;
+extern action_t Flip_action;
+extern action_t HexString_action;
+extern action_t Home_action;
+extern action_t Insert_action;
+extern action_t Interrupt_action;
+extern action_t Key_action;
+extern action_t Left2_action;
+extern action_t Left_action;
+extern action_t MonoCase_action;
+extern action_t MoveCursor_action;
+extern action_t Newline_action;
+extern action_t NextWord_action;
+extern action_t PA_action;
+extern action_t PF_action;
+extern action_t PreviousWord_action;
+extern action_t Reset_action;
+extern action_t Right2_action;
+extern action_t Right_action;
+extern action_t String_action;
+extern action_t SysReq_action;
+extern action_t Tab_action;
+extern action_t TemporaryKeymap_action;
+extern action_t ToggleInsert_action;
+extern action_t ToggleReverse_action;
+extern action_t Up_action;
 
 /* other functions */
 extern void do_reset(Boolean explicit);

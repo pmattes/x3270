@@ -34,8 +34,8 @@
  */
 
 /* Actions. */
-extern eaction_t Copy_eaction;
-extern eaction_t Cut_eaction;
+extern action_t Copy_action;
+extern action_t Cut_action;
 
 /* Used by the screen logic. */
 extern Boolean select_changed(unsigned row, unsigned col, unsigned rows,

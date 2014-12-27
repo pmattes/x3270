@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -286,33 +286,35 @@ select_line(int baddr, Time t)
  * Usually bound to <Btn1Down>.
  */
 void
-select_start_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params)
+select_start_xaction(Widget w, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-	int x, y;
-	register int baddr;
+    int x, y;
+    int baddr;
 
-	action_debug(select_start_action, event, params, num_params);
-	if (event == NULL) {
-		popup_an_error("%s can only be used as a keymap action",
-		    action_name(select_start_action));
-		return;
-	}
-	if (w != *screen)
-		return;
-	BOUNDED_XY(event, x, y);
-	baddr = ROWCOL_TO_BA(y, x);
-	f_start = f_end = v_start = v_end = baddr;
-	down1_time = down_time = event_time(event);
-	down1_x = event_x(event);
-	down1_y = event_y(event);
-	if (down_time - up_time > CLICK_INTERVAL) {
-		num_clicks = 0;
-		/* Commit any previous cursor move. */
-		cursor_moved = False;
-	}
-	if (num_clicks == 0)
-		unselect(0, ROWS*COLS);
+    xaction_debug(select_start_xaction, event, params, num_params);
+    if (event == NULL) {
+	popup_an_error("%s can only be used as a keymap action",
+		action_name(select_start_xaction));
+	return;
+    }
+    if (w != *screen) {
+	return;
+    }
+    BOUNDED_XY(event, x, y);
+    baddr = ROWCOL_TO_BA(y, x);
+    f_start = f_end = v_start = v_end = baddr;
+    down1_time = down_time = event_time(event);
+    down1_x = event_x(event);
+    down1_y = event_y(event);
+    if (down_time - up_time > CLICK_INTERVAL) {
+	num_clicks = 0;
+	/* Commit any previous cursor move. */
+	cursor_moved = False;
+    }
+    if (num_clicks == 0) {
+	unselect(0, ROWS*COLS);
+    }
 }
 
 /*
@@ -320,42 +322,43 @@ select_start_action(Widget w, XEvent *event, String *params,
  * Usually bound to <Btn1Down> in a user-specified keymap.
  */
 void
-move_select_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params)
+move_select_xaction(Widget w, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-	int x, y;
-	register int baddr;
+    int x, y;
+    int baddr;
 
-	action_debug(move_select_action, event, params, num_params);
-	if (event == NULL) {
-		popup_an_error("%s can only be used as a keymap action",
-		    action_name(move_select_action));
-		return;
-	}
-	if (w != *screen)
-		return;
-	BOUNDED_XY(event, x, y);
-	baddr = ROWCOL_TO_BA(y, x);
+    xaction_debug(move_select_xaction, event, params, num_params);
+    if (event == NULL) {
+	popup_an_error("%s can only be used as a keymap action",
+		action_name(move_select_xaction));
+	return;
+    }
+    if (w != *screen) {
+	return;
+    }
+    BOUNDED_XY(event, x, y);
+    baddr = ROWCOL_TO_BA(y, x);
 
-	f_start = f_end = v_start = v_end = baddr;
-	down1_time = down_time = event_time(event);
-	down1_x = event_x(event);
-	down1_y = event_y(event);
+    f_start = f_end = v_start = v_end = baddr;
+    down1_time = down_time = event_time(event);
+    down1_x = event_x(event);
+    down1_y = event_y(event);
 
-	if (down_time - up_time > CLICK_INTERVAL) {
-		num_clicks = 0;
-		/* Commit any previous cursor move. */
-		cursor_moved = False;
+    if (down_time - up_time > CLICK_INTERVAL) {
+	num_clicks = 0;
+	/* Commit any previous cursor move. */
+	cursor_moved = False;
+    }
+    if (num_clicks == 0) {
+	if (any_selected) {
+	    unselect(0, ROWS*COLS);
+	} else {
+	    cursor_moved = True;
+	    saved_cursor_addr = cursor_addr;
+	    cursor_move(baddr);
 	}
-	if (num_clicks == 0) {
-		if (any_selected) {
-			unselect(0, ROWS*COLS);
-		} else {
-			cursor_moved = True;
-			saved_cursor_addr = cursor_addr;
-			cursor_move(baddr);
-		}
-	}
+    }
 }
 
 /*
@@ -363,73 +366,77 @@ move_select_action(Widget w, XEvent *event, String *params,
  * Usually bound to <Btn3Down>.
  */
 void
-start_extend_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params)
+start_extend_xaction(Widget w, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-	int x, y;
-	int baddr;
-	Boolean continuous = (!ever_3270 && !toggled(RECTANGLE_SELECT));
+    int x, y;
+    int baddr;
+    Boolean continuous = (!ever_3270 && !toggled(RECTANGLE_SELECT));
 
-	action_debug(start_extend_action, event, params, num_params);
-	if (event == NULL) {
-		popup_an_error("%s can only be used as a keymap action",
-		    action_name(start_extend_action));
-		return;
-	}
-	if (w != *screen)
-		return;
+    xaction_debug(start_extend_xaction, event, params, num_params);
+    if (event == NULL) {
+	popup_an_error("%s can only be used as a keymap action",
+		action_name(start_extend_xaction));
+	return;
+    }
+    if (w != *screen) {
+	return;
+    }
 
-	down1_time = 0L;
+    down1_time = 0L;
 
-	BOUNDED_XY(event, x, y);
-	baddr = ROWCOL_TO_BA(y, x);
+    BOUNDED_XY(event, x, y);
+    baddr = ROWCOL_TO_BA(y, x);
 
-	if (continuous) {
-		/* Think linearly. */
-		if (baddr < f_start)
-			v_start = baddr;
-		else if (baddr > f_end)
-			v_end = baddr;
-		else if (baddr - f_start > f_end - baddr)
-			v_end = baddr;
-		else
-			v_start = baddr;
+    if (continuous) {
+	/* Think linearly. */
+	if (baddr < f_start) {
+	    v_start = baddr;
+	} else if (baddr > f_end) {
+	    v_end = baddr;
+	} else if (baddr - f_start > f_end - baddr) {
+	    v_end = baddr;
 	} else {
-		/* Think rectangularly. */
-		int nrow = baddr / COLS;
-		int ncol = baddr % COLS;
-		int vrow_ul = v_start / COLS;
-		int vrow_lr = v_end / COLS;
-		int vcol_ul = Min(v_start % COLS, v_end % COLS);
-		int vcol_lr = Max(v_start % COLS, v_end % COLS);
+	    v_start = baddr;
+	}
+    } else {
+	/* Think rectangularly. */
+	int nrow = baddr / COLS;
+	int ncol = baddr % COLS;
+	int vrow_ul = v_start / COLS;
+	int vrow_lr = v_end / COLS;
+	int vcol_ul = Min(v_start % COLS, v_end % COLS);
+	int vcol_lr = Max(v_start % COLS, v_end % COLS);
 
-		/* Set up the row. */
-		if (nrow <= vrow_ul)
-			vrow_ul = nrow;
-		else if (nrow >= vrow_lr)
-			vrow_lr = nrow;
-		else if (nrow - vrow_ul > vrow_lr - nrow)
-			vrow_lr = nrow;
-		else
-			vrow_ul = nrow;
-
-		/* Set up the column. */
-		if (ncol <= vcol_ul)
-			vcol_ul = ncol;
-		else if (ncol >= vcol_lr)
-			vcol_lr = ncol;
-		else if (ncol - vcol_ul > vcol_lr - ncol)
-			vcol_lr = ncol;
-		else
-			vcol_ul = ncol;
-
-		v_start = (vrow_ul * COLS) + vcol_ul;
-		v_end = (vrow_lr * COLS) + vcol_lr;
+	/* Set up the row. */
+	if (nrow <= vrow_ul) {
+	    vrow_ul = nrow;
+	} else if (nrow >= vrow_lr) {
+	    vrow_lr = nrow;
+	} else if (nrow - vrow_ul > vrow_lr - nrow) {
+	    vrow_lr = nrow;
+	} else {
+	    vrow_ul = nrow;
 	}
 
-	grab_sel(v_start, v_end, True, event_time(event));
-	saw_motion = 1;
-	num_clicks = 0;
+	/* Set up the column. */
+	if (ncol <= vcol_ul) {
+	    vcol_ul = ncol;
+	} else if (ncol >= vcol_lr) {
+	    vcol_lr = ncol;
+	} else if (ncol - vcol_ul > vcol_lr - ncol) {
+	    vcol_lr = ncol;
+	} else {
+	    vcol_ul = ncol;
+	}
+
+	v_start = (vrow_ul * COLS) + vcol_ul;
+	v_end = (vrow_lr * COLS) + vcol_lr;
+    }
+
+    grab_sel(v_start, v_end, True, event_time(event));
+    saw_motion = 1;
+    num_clicks = 0;
 }
 
 /*
@@ -437,66 +444,69 @@ start_extend_action(Widget w, XEvent *event, String *params,
  * Usually bound to <Btn1Motion> and <Btn3Motion>.
  */
 void
-select_extend_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params)
+select_extend_xaction(Widget w, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-	int x, y;
-	int baddr;
+    int x, y;
+    int baddr;
 
-	action_debug(select_extend_action, event, params, num_params);
-	if (event == NULL) {
-		popup_an_error("%s can only be used as a keymap action",
-		    action_name(select_extend_action));
-		return;
+    xaction_debug(select_extend_xaction, event, params, num_params);
+    if (event == NULL) {
+	popup_an_error("%s can only be used as a keymap action",
+		action_name(select_extend_xaction));
+	return;
+    }
+    if (w != *screen) {
+	return;
+    }
+
+    /* Ignore initial drag events if are too near. */
+    if (down1_time != 0L &&
+	abs((int) event_x(event) - (int) down1_x) < *char_width &&
+	abs((int) event_y(event) - (int) down1_y) < *char_height) {
+	return;
+    } else {
+	down1_time = 0L;
+    }
+
+    /* If we moved the 3270 cursor on the first click, put it back. */
+    if (cursor_moved) {
+	cursor_move(saved_cursor_addr);
+	cursor_moved = False;
+    }
+
+    BOUNDED_XY(event, x, y);
+    baddr = ROWCOL_TO_BA(y, x);
+
+    /*
+     * If baddr falls outside if the v range, open up the v range.  In
+     * addition, if we are extending one end of the v range, make sure the
+     * other end at least covers the f range.
+     */
+    if (baddr <= v_start) {
+	v_start = baddr;
+	v_end = f_end;
+    }
+    if (baddr >= v_end) {
+	v_end = baddr;
+	v_start = f_start;
+    }
+
+    /*
+     * If baddr falls within the v range, narrow up the nearer end of the
+     * v range.
+     */
+    if (baddr > v_start && baddr < v_end) {
+	if (baddr - v_start < v_end - baddr) {
+	    v_start = baddr;
+	} else {
+	    v_end = baddr;
 	}
-	if (w != *screen)
-		return;
+    }
 
-	/* Ignore initial drag events if are too near. */
-	if (down1_time != 0L &&
-	    abs((int) event_x(event) - (int) down1_x) < *char_width &&
-	    abs((int) event_y(event) - (int) down1_y) < *char_height)
-		return;
-	else
-		down1_time = 0L;
-
-	/* If we moved the 3270 cursor on the first click, put it back. */
-	if (cursor_moved) {
-		cursor_move(saved_cursor_addr);
-		cursor_moved = False;
-	}
-
-	BOUNDED_XY(event, x, y);
-	baddr = ROWCOL_TO_BA(y, x);
-
-	/*
-	 * If baddr falls outside if the v range, open up the v range.  In
-	 * addition, if we are extending one end of the v range, make sure the
-	 * other end at least covers the f range.
-	 */
-	if (baddr <= v_start) {
-		v_start = baddr;
-		v_end = f_end;
-	}
-	if (baddr >= v_end) {
-		v_end = baddr;
-		v_start = f_start;
-	}
-
-	/*
-	 * If baddr falls within the v range, narrow up the nearer end of the
-	 * v range.
-	 */
-	if (baddr > v_start && baddr < v_end) {
-		if (baddr - v_start < v_end - baddr)
-			v_start = baddr;
-		else
-			v_end = baddr;
-	}
-
-	num_clicks = 0;
-	saw_motion = 1;
-	grab_sel(v_start, v_end, False, event_time(event));
+    num_clicks = 0;
+    saw_motion = 1;
+    grab_sel(v_start, v_end, False, event_time(event));
 }
 
 /*
@@ -504,66 +514,73 @@ select_extend_action(Widget w, XEvent *event, String *params,
  * Usually bound to <BtnUp>.
  */
 void
-select_end_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+select_end_xaction(Widget w _is_unused, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-	Cardinal i;
-	int x, y;
+    Cardinal i;
+    int x, y;
 
-	action_debug(select_end_action, event, params, num_params);
-	if (event == NULL) {
-		popup_an_error("%s can only be used as a keymap action",
-		    action_name(select_end_action));
-		return;
+    xaction_debug(select_end_xaction, event, params, num_params);
+    if (event == NULL) {
+	popup_an_error("%s can only be used as a keymap action",
+		action_name(select_end_xaction));
+	return;
+    }
+    if (w != *screen) {
+	return;
+    }
+
+    if (n_owned == -1) {
+	for (i = 0; i < NS; i++) {
+	    own_sel[i].atom = None;
 	}
-	if (w != *screen)
-		return;
-
-	if (n_owned == -1) {
-		for (i = 0; i < NS; i++)
-			own_sel[i].atom = None;
-		n_owned = 0;
+	n_owned = 0;
+    }
+    for (i = 0; i < NS; i++) {
+	if (i < *num_params) {
+	    want_sel[i] = XInternAtom(display, params[i], False);
+	} else {
+	    want_sel[i] = None;
 	}
-	for (i = 0; i < NS; i++)
-		if (i < *num_params)
-			want_sel[i] = XInternAtom(display, params[i], False);
-		else
-			want_sel[i] = None;
-	if (*num_params == 0)
-		want_sel[0] = XA_PRIMARY;
+    }
+    if (*num_params == 0) {
+	want_sel[0] = XA_PRIMARY;
+    }
 
-	BOUNDED_XY(event, x, y);
-	up_time = event_time(event);
+    BOUNDED_XY(event, x, y);
+    up_time = event_time(event);
 
-	if (up_time - down_time > CLICK_INTERVAL)
-		num_clicks = 0;
+    if (up_time - down_time > CLICK_INTERVAL) {
+	num_clicks = 0;
+    }
 
-	if (++num_clicks > 3)
-		num_clicks = 1;
+    if (++num_clicks > 3) {
+	num_clicks = 1;
+    }
 
-	switch (num_clicks) {
-	    case 1:
-		if (saw_motion) {
-			f_start = v_start;
-			f_end = v_end;
-			grab_sel(f_start, f_end, True, event_time(event));
-		}
-		break;
-	    case 2:
-		/*
-		 * If we moved the 3270 cursor on the first click, put it back.
-		 */
-		if (cursor_moved) {
-			cursor_move(saved_cursor_addr);
-			cursor_moved = False;
-		}
-		select_word(f_start, event_time(event));
-		break;
-	    case 3:
-		select_line(f_start, event_time(event));
-		break;
+    switch (num_clicks) {
+    case 1:
+	if (saw_motion) {
+	    f_start = v_start;
+	    f_end = v_end;
+	    grab_sel(f_start, f_end, True, event_time(event));
 	}
-	saw_motion = 0;
+	break;
+    case 2:
+	/*
+	 * If we moved the 3270 cursor on the first click, put it back.
+	 */
+	if (cursor_moved) {
+	    cursor_move(saved_cursor_addr);
+	    cursor_moved = False;
+	}
+	select_word(f_start, event_time(event));
+	break;
+    case 3:
+	select_line(f_start, event_time(event));
+	break;
+    }
+    saw_motion = 0;
 }
 
 /*
@@ -586,170 +603,179 @@ select_end_action(Widget w _is_unused, XEvent *event, String *params,
  */
 
 void
-SelectDown_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+SelectDown_xaction(Widget w _is_unused, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-	int x, y;
-	register int baddr;
+    int x, y;
+    int baddr;
 
-	action_debug(SelectDown_action, event, params, num_params);
-	if (event == NULL) {
-		popup_an_error("%s can only be used as a keymap action",
-		    action_name(SelectDown_action));
-		return;
-	}
-	if (w != *screen)
-		return;
-	BOUNDED_XY(event, x, y);
-	baddr = ROWCOL_TO_BA(y, x);
+    xaction_debug(SelectDown_xaction, event, params, num_params);
+    if (event == NULL) {
+	popup_an_error("%s can only be used as a keymap action",
+		action_name(SelectDown_xaction));
+	return;
+    }
+    if (w != *screen) {
+	return;
+    }
+    BOUNDED_XY(event, x, y);
+    baddr = ROWCOL_TO_BA(y, x);
 
-	if (event_time(event) - down_time > CLICK_INTERVAL)
-		num_clicks = 0;
-
-	down_time = event_time(event);
-	if (num_clicks == 0) {
-		f_start = f_end = v_start = v_end = baddr;
-		down1_time = down_time;
-		if (any_selected) {
-			unselect(0, ROWS*COLS);
-		}
-	}
-}
-
-void
-SelectMotion_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
-{
-	int x, y;
-	register int baddr;
-
-	action_debug(SelectMotion_action, event, params, num_params);
-	if (event == NULL) {
-		popup_an_error("%s can only be used as a keymap action",
-		    action_name(SelectMotion_action));
-		return;
-	}
-	if (w != *screen)
-		return;
-
-	/* Ignore initial drag events if are too near. */
-	if (down1_time != 0L &&
-	    abs((int) event_x(event) - (int) down1_x) < *char_width &&
-	    abs((int) event_y(event) - (int) down1_y) < *char_height)
-		return;
-	else
-		down1_time = 0L;
-
-	BOUNDED_XY(event, x, y);
-	baddr = ROWCOL_TO_BA(y, x);
-
-	/*
-	 * If baddr falls outside if the v range, open up the v range.  In
-	 * addition, if we are extending one end of the v range, make sure the
-	 * other end at least covers the f range.
-	 */
-	if (baddr <= v_start) {
-		v_start = baddr;
-		v_end = f_end;
-	}
-	if (baddr >= v_end) {
-		v_end = baddr;
-		v_start = f_start;
-	}
-
-	/*
-	 * If baddr falls within the v range, narrow up the nearer end of the
-	 * v range.
-	 */
-	if (baddr > v_start && baddr < v_end) {
-		if (baddr - v_start < v_end - baddr)
-			v_start = baddr;
-		else
-			v_end = baddr;
-	}
-
+    if (event_time(event) - down_time > CLICK_INTERVAL) {
 	num_clicks = 0;
-	saw_motion = 1;
-	grab_sel(v_start, v_end, False, event_time(event));
+    }
+
+    down_time = event_time(event);
+    if (num_clicks == 0) {
+	f_start = f_end = v_start = v_end = baddr;
+	down1_time = down_time;
+	if (any_selected) {
+	    unselect(0, ROWS*COLS);
+	}
+    }
 }
 
 void
-SelectUp_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+SelectMotion_xaction(Widget w _is_unused, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-	int x, y;
-	register int baddr;
-	Cardinal i;
+    int x, y;
+    int baddr;
 
-	action_debug(SelectUp_action, event, params, num_params);
-	if (event == NULL) {
-		popup_an_error("%s can only be used as a keymap action",
-		    action_name(SelectUp_action));
-		return;
-	}
-	if (w != *screen)
-		return;
+    xaction_debug(SelectMotion_xaction, event, params, num_params);
+    if (event == NULL) {
+	popup_an_error("%s can only be used as a keymap action",
+		action_name(SelectMotion_xaction));
+	return;
+    }
+    if (w != *screen) {
+	return;
+    }
 
-	if (n_owned == -1) {
-		for (i = 0; i < NS; i++)
-			own_sel[i].atom = None;
-		n_owned = 0;
+    /* Ignore initial drag events if are too near. */
+    if (down1_time != 0L &&
+	abs((int) event_x(event) - (int) down1_x) < *char_width &&
+	abs((int) event_y(event) - (int) down1_y) < *char_height) {
+	return;
+    } else {
+	down1_time = 0L;
+    }
+
+    BOUNDED_XY(event, x, y);
+    baddr = ROWCOL_TO_BA(y, x);
+
+    /*
+     * If baddr falls outside if the v range, open up the v range.  In
+     * addition, if we are extending one end of the v range, make sure the
+     * other end at least covers the f range.
+     */
+    if (baddr <= v_start) {
+	v_start = baddr;
+	v_end = f_end;
+    }
+    if (baddr >= v_end) {
+	v_end = baddr;
+	v_start = f_start;
+    }
+
+    /*
+     * If baddr falls within the v range, narrow up the nearer end of the
+     * v range.
+     */
+    if (baddr > v_start && baddr < v_end) {
+	if (baddr - v_start < v_end - baddr) {
+	    v_start = baddr;
+	} else {
+	    v_end = baddr;
 	}
+    }
+
+    num_clicks = 0;
+    saw_motion = 1;
+    grab_sel(v_start, v_end, False, event_time(event));
+}
+
+void
+SelectUp_xaction(Widget w _is_unused, XEvent *event, String *params,
+	Cardinal *num_params)
+{
+    int x, y;
+    int baddr;
+    Cardinal i;
+
+    xaction_debug(SelectUp_xaction, event, params, num_params);
+    if (event == NULL) {
+	popup_an_error("%s can only be used as a keymap action",
+		action_name(SelectUp_xaction));
+	return;
+    }
+    if (w != *screen) {
+	return;
+    }
+
+    if (n_owned == -1) {
 	for (i = 0; i < NS; i++) {
-		if (i < *num_params)
-			want_sel[i] = XInternAtom(display, params[i], False);
-		else
-			want_sel[i] = None;
+	    own_sel[i].atom = None;
 	}
-	if (*num_params == 0)
-		want_sel[0] = XA_PRIMARY;
+	n_owned = 0;
+    }
+    for (i = 0; i < NS; i++) {
+	if (i < *num_params) {
+	    want_sel[i] = XInternAtom(display, params[i], False);
+	} else {
+	    want_sel[i] = None;
+	}
+    }
+    if (*num_params == 0) {
+	want_sel[0] = XA_PRIMARY;
+    }
 
-	BOUNDED_XY(event, x, y);
-	baddr = ROWCOL_TO_BA(y, x);
+    BOUNDED_XY(event, x, y);
+    baddr = ROWCOL_TO_BA(y, x);
 
-	if (event_time(event) - up_time > CLICK_INTERVAL) {
+    if (event_time(event) - up_time > CLICK_INTERVAL) {
 #if defined(DEBUG_CLICKS) /*[*/
-		printf("too long, reset\n");
+	printf("too long, reset\n");
 #endif /*]*/
-		num_clicks = 0;
-	}
-	up_time = event_time(event);
+	num_clicks = 0;
+    }
+    up_time = event_time(event);
 
-	if (++num_clicks > 3) {
+    if (++num_clicks > 3) {
 #if defined(DEBUG_CLICKS) /*[*/
-		printf("wrap\n");
+	printf("wrap\n");
 #endif /*]*/
-		num_clicks = 1;
-	}
+	num_clicks = 1;
+    }
 
 #if defined(DEBUG_CLICKS) /*[*/
-	printf("%d clicks\n", num_clicks);
+    printf("%d clicks\n", num_clicks);
 #endif /*]*/
-	switch (num_clicks) {
-	    case 1:
-	        /*
-		 * If we saw motion, then take the selection.
-		 * Otherwise, if we're in 3270 mode, move the cursor.
-		 */
-		if (saw_motion) {
-			f_start = v_start;
-			f_end = v_end;
-			grab_sel(f_start, f_end, True, event_time(event));
-		} else if (IN_3270) {
-			cursor_move(baddr);
-		}
-		break;
-	    case 2:
-		/*
-		 * If we moved the 3270 cursor on the first click, put it back.
-		 */
-		select_word(f_start, event_time(event));
-		break;
-	    case 3:
-		select_line(f_start, event_time(event));
-		break;
+    switch (num_clicks) {
+    case 1:
+	/*
+	 * If we saw motion, then take the selection.
+	 * Otherwise, if we're in 3270 mode, move the cursor.
+	 */
+	if (saw_motion) {
+	    f_start = v_start;
+	    f_end = v_end;
+	    grab_sel(f_start, f_end, True, event_time(event));
+	} else if (IN_3270) {
+	    cursor_move(baddr);
 	}
-	saw_motion = 0;
+	break;
+    case 2:
+	/*
+	 * If we moved the 3270 cursor on the first click, put it back.
+	 */
+	select_word(f_start, event_time(event));
+	break;
+    case 3:
+	select_line(f_start, event_time(event));
+	break;
+    }
+    saw_motion = 0;
 }
 
 /*
@@ -757,28 +783,32 @@ SelectUp_action(Widget w _is_unused, XEvent *event, String *params,
  * Usually bound to the Copy key.
  */
 void
-set_select_action(Widget w _is_unused, XEvent *event, String *params,
+set_select_xaction(Widget w _is_unused, XEvent *event, String *params,
     Cardinal *num_params)
 {
-	Cardinal i;
+    Cardinal i;
 
-	action_debug(set_select_action, event, params, num_params);
+    xaction_debug(set_select_xaction, event, params, num_params);
 
-	if (!any_selected)
-		return;
-	if (n_owned == -1) {
-		for (i = 0; i < NS; i++)
-			own_sel[i].atom = None;
-		n_owned = 0;
+    if (!any_selected) {
+	return;
+    }
+    if (n_owned == -1) {
+	for (i = 0; i < NS; i++) {
+	    own_sel[i].atom = None;
 	}
-	for (i = 0; i < NS; i++)
-		if (i < *num_params)
-			want_sel[i] = XInternAtom(display, params[i], False);
-		else
-			want_sel[i] = None;
-	if (*num_params == 0)
-		want_sel[0] = XA_PRIMARY;
-	own_sels(event_time(event));
+	n_owned = 0;
+    }
+    for (i = 0; i < NS; i++)
+	if (i < *num_params) {
+	    want_sel[i] = XInternAtom(display, params[i], False);
+	} else {
+	    want_sel[i] = None;
+	}
+    if (*num_params == 0) {
+	want_sel[0] = XA_PRIMARY;
+    }
+    own_sels(event_time(event));
 }
 
 /*
@@ -804,174 +834,192 @@ mouse_baddr(Widget w, XEvent *event)
 #define ULBS	(ULS * 8)
 
 void
-Cut_action(Widget w _is_unused, XEvent *event, String *params, Cardinal *num_params)
+Cut_xaction(Widget w _is_unused, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-	register int baddr;
-	unsigned char fa = get_field_attribute(0);
-	unsigned long *target;
-	register unsigned char repl;
+    int baddr;
+    unsigned char fa = get_field_attribute(0);
+    unsigned long *target;
+    unsigned char repl;
 
-	action_debug(Cut_action, event, params, num_params);
+    xaction_debug(Cut_xaction, event, params, num_params);
 
-	target = (unsigned long *)XtCalloc(ULS, ((ROWS*COLS)+(ULBS-1))/ULBS);
+    target = (unsigned long *)XtCalloc(ULS, ((ROWS*COLS)+(ULBS-1))/ULBS);
 
-	/* Identify the positions to empty. */
-	for (baddr = 0; baddr < ROWS*COLS; baddr++) {
-		if (ea_buf[baddr].fa)
-			fa = ea_buf[baddr].fa;
-		else if ((IN_NVT || !FA_IS_PROTECTED(fa)) && SELECTED(baddr))
-			target[baddr/ULBS] |= 1 << (baddr%ULBS);
+    /* Identify the positions to empty. */
+    for (baddr = 0; baddr < ROWS*COLS; baddr++) {
+	if (ea_buf[baddr].fa) {
+	    fa = ea_buf[baddr].fa;
+	} else if ((IN_NVT || !FA_IS_PROTECTED(fa)) && SELECTED(baddr)) {
+	    target[baddr/ULBS] |= 1 << (baddr%ULBS);
 	}
+    }
 
-	/* Erase them. */
-	if (IN_3270)
-		repl = EBC_null;
-	else
-		repl = EBC_space;
-	for (baddr = 0; baddr < ROWS*COLS; baddr++)
-		if (target[baddr/ULBS] & (1 << (baddr%ULBS)))
-			ctlr_add(baddr, repl, 0);
+    /* Erase them. */
+    if (IN_3270) {
+	repl = EBC_null;
+    } else {
+	repl = EBC_space;
+    }
+    for (baddr = 0; baddr < ROWS*COLS; baddr++) {
+	if (target[baddr/ULBS] & (1 << (baddr%ULBS))) {
+	    ctlr_add(baddr, repl, 0);
+	}
+    }
 
-	Free(target);
+    Free(target);
 }
 
 /*
  * KybdSelect action.  Extends the selection area in the indicated direction.
  */
 void
-KybdSelect_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+KybdSelect_xaction(Widget w _is_unused, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-	enum { UP, DOWN, LEFT, RIGHT } direction;
-	int x_start, x_end;
-	Cardinal i;
+    enum { UP, DOWN, LEFT, RIGHT } direction;
+    int x_start, x_end;
+    Cardinal i;
 
-	action_debug(KybdSelect_action, event, params, num_params);
-	if (event == NULL) {
-		popup_an_error("%s can only be used as a keymap action",
-		    action_name(select_start_action));
-		return;
-	}
-	if (w != *screen)
-		return;
+    xaction_debug(KybdSelect_xaction, event, params, num_params);
+    if (event == NULL) {
+	popup_an_error("%s can only be used as a keymap action",
+		action_name(select_start_xaction));
+	return;
+    }
+    if (w != *screen) {
+	return;
+    }
 
-	if (*num_params < 1) {
-		popup_an_error("%s requires one argument",
-		    action_name(KybdSelect_action));
-		return;
-	}
-	if (!strcasecmp(params[0], "Up")) {
-		direction = UP;
-	} else if (!strcasecmp(params[0], "Down")) {
-		direction = DOWN;
-	} else if (!strcasecmp(params[0], "Left")) {
-		direction = LEFT;
-	} else if (!strcasecmp(params[0], "Right")) {
-		direction = RIGHT;
+    if (*num_params < 1) {
+	popup_an_error("%s requires one argument",
+		action_name(KybdSelect_xaction));
+	return;
+    }
+    if (!strcasecmp(params[0], "Up")) {
+	direction = UP;
+    } else if (!strcasecmp(params[0], "Down")) {
+	direction = DOWN;
+    } else if (!strcasecmp(params[0], "Left")) {
+	direction = LEFT;
+    } else if (!strcasecmp(params[0], "Right")) {
+	direction = RIGHT;
+    } else {
+	popup_an_error("%s first argument must be Up, Down, Left, or "
+		"Right", action_name(KybdSelect_xaction));
+	return;
+    }
+
+    if (!any_selected) {
+	x_start = x_end = cursor_addr;
+    } else {
+	if (f_start < f_end) {
+	    x_start = f_start;
+	    x_end = f_end;
 	} else {
-		popup_an_error("%s first argument must be Up, Down, Left, or "
-		    "Right", action_name(KybdSelect_action));
-		return;
+	    x_start = f_end;
+	    x_end = f_start;
 	}
+    }
 
-	if (!any_selected)
-		x_start = x_end = cursor_addr;
-	else {
-		if (f_start < f_end) {
-			x_start = f_start;
-			x_end = f_end;
-		} else {
-			x_start = f_end;
-			x_end = f_start;
-		}
+    switch (direction) {
+    case UP:
+	if (!(x_start / COLS)) {
+	    return;
 	}
-
-	switch (direction) {
-	    case UP:
-		if (!(x_start / COLS))
-			return;
-		x_start -= COLS;
-		break;
-	    case DOWN:
-		if ((x_end / COLS) == ROWS - 1)
-			return;
-		x_end += COLS;
-		break;
-	    case LEFT:
-		if (!(x_start % COLS))
-			return;
-		x_start--;
-		break;
-	    case RIGHT:
-		if ((x_end % COLS) == COLS - 1)
-			return;
-		x_end++;
-		break;
+	x_start -= COLS;
+	break;
+    case DOWN:
+	if ((x_end / COLS) == ROWS - 1) {
+	    return;
 	}
-
-	/* Figure out the atoms they want. */
-	if (n_owned == -1) {
-		for (i = 0; i < NS; i++)
-			own_sel[i].atom = None;
-		n_owned = 0;
+	x_end += COLS;
+	break;
+    case LEFT:
+	if (!(x_start % COLS)) {
+	    return;
 	}
-	for (i = 1; i < NS; i++)
-		if (i < *num_params)
-			want_sel[i] = XInternAtom(display, params[i], False);
-		else
-			want_sel[i] = None;
-	if (*num_params == 1)
-		want_sel[0] = XA_PRIMARY;
+	x_start--;
+	break;
+    case RIGHT:
+	if ((x_end % COLS) == COLS - 1) {
+	    return;
+	}
+	x_end++;
+	break;
+    }
 
-	/* Grab the selection. */
-	f_start = v_start = x_start;
-	f_end = v_end = x_end;
-	grab_sel(f_start, f_end, True, event_time(event));
+    /* Figure out the atoms they want. */
+    if (n_owned == -1) {
+	for (i = 0; i < NS; i++) {
+	    own_sel[i].atom = None;
+	}
+	n_owned = 0;
+    }
+    for (i = 1; i < NS; i++) {
+	if (i < *num_params) {
+	    want_sel[i] = XInternAtom(display, params[i], False);
+	} else {
+	    want_sel[i] = None;
+	}
+    }
+    if (*num_params == 1) {
+	want_sel[0] = XA_PRIMARY;
+    }
+
+    /* Grab the selection. */
+    f_start = v_start = x_start;
+    f_end = v_end = x_end;
+    grab_sel(f_start, f_end, True, event_time(event));
 }
 
 /*
  * unselect action.  Removes a selection.
  */
 void
-Unselect_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+Unselect_xaction(Widget w _is_unused, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-	action_debug(Unselect_action, event, params, num_params);
+    xaction_debug(Unselect_xaction, event, params, num_params);
 
-	/* It's just cosmetic. */
-	unselect(0, ROWS*COLS);
+    /* It's just cosmetic. */
+    unselect(0, ROWS*COLS);
 }
 
 void
-SelectAll_action(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+SelectAll_xaction(Widget w _is_unused, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-	Cardinal i;
+    Cardinal i;
 
-	action_debug(SelectUp_action, event, params, num_params);
-	if (event == NULL) {
-		popup_an_error("%s can only be used as a keymap action",
-		    action_name(SelectAll_action));
-		return;
-	}
-	if (w != *screen)
-		return;
+    xaction_debug(SelectUp_xaction, event, params, num_params);
+    if (event == NULL) {
+	popup_an_error("%s can only be used as a keymap action",
+		action_name(SelectAll_xaction));
+	return;
+    }
+    if (w != *screen) {
+	return;
+    }
 
-	if (n_owned == -1) {
-		for (i = 0; i < NS; i++)
-			own_sel[i].atom = None;
-		n_owned = 0;
-	}
+    if (n_owned == -1) {
 	for (i = 0; i < NS; i++) {
-		if (i < *num_params)
-			want_sel[i] = XInternAtom(display, params[i], False);
-		else
-			want_sel[i] = None;
+	    own_sel[i].atom = None;
 	}
-	if (*num_params == 0)
-		want_sel[0] = XA_PRIMARY;
+	n_owned = 0;
+    }
+    for (i = 0; i < NS; i++) {
+	if (i < *num_params) {
+	    want_sel[i] = XInternAtom(display, params[i], False);
+	} else {
+	    want_sel[i] = None;
+	}
+    }
+    if (*num_params == 0) {
+	want_sel[0] = XA_PRIMARY;
+    }
 
-	grab_sel(0, (ROWS * COLS) - 1, True, event_time(event));
+    grab_sel(0, (ROWS * COLS) - 1, True, event_time(event));
 }
 
 
@@ -1342,7 +1390,7 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 static void
 own_sels(Time t)
 {
-	register int i, j;
+	int i, j;
 
 	/*
 	 * Try to grab any new selections we may want.
@@ -1402,7 +1450,7 @@ own_sels(Time t)
 static void
 grab_sel(int start, int end, Boolean really, Time t)
 {
-	register int i, j;
+	int i, j;
 	int start_row, end_row;
 	int nulls = 0;
 	unsigned char osc[16];
@@ -1557,12 +1605,14 @@ grab_sel(int start, int end, Boolean really, Time t)
 Boolean
 area_is_selected(int baddr, int len)
 {
-	register int i;
+    int i;
 
-	for (i = 0; i < len; i++)
-		if (SELECTED(baddr+i))
-			return True;
-	return False;
+    for (i = 0; i < len; i++) {
+	if (SELECTED(baddr+i)) {
+	    return True;
+	}
+    }
+    return False;
 }
 
 /*
@@ -1571,11 +1621,11 @@ area_is_selected(int baddr, int len)
 void
 unselect(int baddr _is_unused, int len _is_unused)
 {
-	if (any_selected) {
-		(void) memset((char *) selected, 0, (ROWS*COLS + 7) / 8);
-		ctlr_changed(0, ROWS*COLS);
-		any_selected = False;
-	}
+    if (any_selected) {
+	(void) memset((char *) selected, 0, (ROWS*COLS + 7) / 8);
+	    ctlr_changed(0, ROWS*COLS);
+	    any_selected = False;
+    }
 }
 
 /* Selection insertion. */
@@ -1589,125 +1639,128 @@ static Boolean	paste_utf8;
 #endif /*]*/
 
 static void
-paste_callback(Widget w, XtPointer client_data _is_unused, Atom *selection _is_unused,
-    Atom *type _is_unused, XtPointer value, unsigned long *length,
-    int *format _is_unused)
+paste_callback(Widget w, XtPointer client_data _is_unused,
+	Atom *selection _is_unused, Atom *type _is_unused, XtPointer value,
+	unsigned long *length, int *format _is_unused)
 {
-	char *s, *t;
-	unsigned long s_len, t_len;
-	char *ei_buf;
-	int ei_len;
+    char *s, *t;
+    unsigned long s_len, t_len;
+    char *ei_buf;
+    int ei_len;
 
-	if ((value == NULL) || (*length == 0)) {
-		XtFree(value);
-
-		/* Try the next one. */
-#if defined(XA_UTF8_STRING) /*[*/
-		if (paste_utf8) {
-		    	paste_utf8 = False;
-			XtGetSelectionValue(w, paste_atom[(pix - 1)], XA_STRING,
-				paste_callback, NULL, paste_time);
-		} else
-#endif /*]*/
-		if (n_pasting > pix) {
-#if defined(XA_UTF8_STRING) /*[*/
-		    	paste_utf8 = True;
-#endif /*]*/
-			XtGetSelectionValue(w, paste_atom[pix++],
-#if defined(XA_UTF8_STRING) /*[*/
-				XA_UTF8_STRING(display),
-#else /*][*/
-				XA_STRING,
-#endif /*]*/
-				paste_callback, NULL,
-				paste_time);
-		}
-		return;
-	}
-
-	/* Convert the selection to local multibyte. */
-	t_len = 2 * *length;
-	t = ei_buf = Malloc(t_len);
-	s_len = *length;
-	s = (char *)value;
-	ei_len = 0;
-
-	while (s_len) {
-	    	ucs4_t uc;
-		int nm;
-
-#if defined(XA_UTF8_STRING) /*[*/
-	    	if (paste_utf8) {
-		    	int nu;
-
-		    	nu = utf8_to_unicode(s, s_len, &uc);
-			if (nu <= 0)
-			    	break;
-			s += nu;
-			s_len -= nu;
-		} else
-#endif /*]*/
-		{
-		    	/* ISO 8859-1. */
-		    	uc = *s & 0xff;
-			s++;
-			s_len--;
-		}
-		nm = unicode_to_multibyte(uc, t, t_len);
-		if (nm > 0)
-			nm--;
-		t += nm;
-		t_len -= nm;
-		ei_len += nm;
-	}
-	(void) emulate_input(ei_buf, ei_len, True);
-
-	XtFree(ei_buf);
+    if ((value == NULL) || (*length == 0)) {
 	XtFree(value);
 
-	n_pasting = 0;
+	/* Try the next one. */
+#if defined(XA_UTF8_STRING) /*[*/
+	if (paste_utf8) {
+	    paste_utf8 = False;
+	    XtGetSelectionValue(w, paste_atom[(pix - 1)], XA_STRING,
+		    paste_callback, NULL, paste_time);
+	} else
+#endif /*]*/
+	if (n_pasting > pix) {
+#if defined(XA_UTF8_STRING) /*[*/
+	    paste_utf8 = True;
+#endif /*]*/
+	    XtGetSelectionValue(w, paste_atom[pix++],
+#if defined(XA_UTF8_STRING) /*[*/
+		    XA_UTF8_STRING(display),
+#else /*][*/
+		    XA_STRING,
+#endif /*]*/
+		    paste_callback, NULL,
+		    paste_time);
+	}
+	return;
+    }
+
+    /* Convert the selection to local multibyte. */
+    t_len = 2 * *length;
+    t = ei_buf = Malloc(t_len);
+    s_len = *length;
+    s = (char *)value;
+    ei_len = 0;
+
+    while (s_len) {
+	ucs4_t uc;
+	int nm;
+
+#if defined(XA_UTF8_STRING) /*[*/
+	if (paste_utf8) {
+	    int nu;
+
+	    nu = utf8_to_unicode(s, s_len, &uc);
+	    if (nu <= 0) {
+		break;
+	    }
+	    s += nu;
+	    s_len -= nu;
+	} else
+#endif /*]*/
+	{
+	    /* ISO 8859-1. */
+	    uc = *s & 0xff;
+	    s++;
+	    s_len--;
+	}
+	nm = unicode_to_multibyte(uc, t, t_len);
+	if (nm > 0) {
+	    nm--;
+	}
+	t += nm;
+	t_len -= nm;
+	ei_len += nm;
+    }
+    (void) emulate_input(ei_buf, ei_len, True);
+
+    XtFree(ei_buf);
+    XtFree(value);
+
+    n_pasting = 0;
 }
 
 void
-insert_selection_action(Widget w, XEvent *event, String *params,
-    Cardinal *num_params)
+insert_selection_xaction(Widget w, XEvent *event, String *params,
+	Cardinal *num_params)
 {
-	Cardinal i;
-	Atom	a;
-	XButtonEvent *be = (XButtonEvent *)event;
+    Cardinal i;
+    Atom a;
+    XButtonEvent *be = (XButtonEvent *)event;
 
-	action_debug(insert_selection_action, event, params, num_params);
+    xaction_debug(insert_selection_xaction, event, params, num_params);
 
-	if (event == NULL) {
-	    	popup_an_error("%s must be called from a keymap\n",
-			action_name(insert_selection_action));
-		return;
+    if (event == NULL) {
+	popup_an_error("%s must be called from a keymap\n",
+		    action_name(insert_selection_xaction));
+	return;
+    }
+
+    n_pasting = 0;
+    for (i = 0; i < *num_params; i++) {
+	a = XInternAtom(display, params[i], True);
+	if (a == None) {
+	    popup_an_error("%s: No atom for selection",
+		    action_name(insert_selection_xaction));
+	    continue;
 	}
-
-	n_pasting = 0;
-	for (i = 0; i < *num_params; i++) {
-		a = XInternAtom(display, params[i], True);
-		if (a == None) {
-			popup_an_error("%s: No atom for selection",
-			    action_name(insert_selection_action));
-			continue;
-		}
-		if (n_pasting < NP)
-			paste_atom[n_pasting++] = a;
+	if (n_pasting < NP) {
+	    paste_atom[n_pasting++] = a;
 	}
-	pix = 0;
+    }
+    pix = 0;
 #if defined(XA_UTF8_STRING) /*[*/
-	paste_utf8 = True;
+    paste_utf8 = True;
 #endif /*]*/
-	if (n_pasting > pix) {
-		paste_time = be->time;
-		XtGetSelectionValue(w, paste_atom[pix++],
+    if (n_pasting > pix) {
+	paste_time = be->time;
+	XtGetSelectionValue(w, paste_atom[pix++],
 #if defined(XA_UTF8_STRING) /*[*/
-			XA_UTF8_STRING(display),
+		XA_UTF8_STRING(display),
 #else /*][*/
-			XA_STRING,
+		XA_STRING,
 #endif /*]*/
-			paste_callback, NULL,
-			paste_time);
-	}
+		paste_callback, NULL,
+		paste_time);
+    }
 }
