@@ -94,6 +94,10 @@ extern action_t ToggleInsert_action;
 extern action_t ToggleReverse_action;
 extern action_t Up_action;
 
+#if defined(C3270) /*[*/
+extern action_t ignore_action;
+#endif /*]*/
+
 /* other functions */
 extern void do_reset(Boolean explicit);
 extern int emulate_input(const char *s, int len, Boolean pasting);

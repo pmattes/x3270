@@ -166,6 +166,9 @@ action_table_t all_actions[] = {
     { "Help",		Help_action},
 #endif/*]*/
     { "Home",		Home_action, NULL },
+#if defined(C3270) /*[*/
+    { "ignore",		ignore_action, NULL },
+#endif /*]*/
     { "Insert",		Insert_action, NULL },
     { "Interrupt",	Interrupt_action, NULL },
     { "Key",		Key_action, NULL },

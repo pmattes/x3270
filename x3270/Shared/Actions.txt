@@ -51,7 +51,7 @@ HandleMenu		X	-	-	-	-	-
 Help			-	S	S	-	-	-
 HexString		WS	S	S	S	S	S
 Home			WS	S	S	S	S	S
-ignore			S	-	-	-	-	-
+ignore			S	S	S	-	-	-
 Info			S	S	S	-	-	-
 insert-selection	X	-	-	-	-	-
 Insert			WS	S	S	S	S	S

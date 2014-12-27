@@ -1530,6 +1530,13 @@ Info_action(ia_t ia, unsigned argc, const char **argv)
     return True;
 }
 
+Boolean
+ignore_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug("ignore", ia, argc, argv);
+    return True;
+}
+
 #if !defined(_WIN32) /*[*/
 
 /* Support for c3270 profiles. */
