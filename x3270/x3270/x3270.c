@@ -30,7 +30,7 @@
  */
 
 /*
- *	main.c
+ *	x3270.c
  *		A 3270 Terminal Emulator for X11
  *		Main proceudre.
  */
