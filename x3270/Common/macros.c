@@ -3168,27 +3168,36 @@ PauseScript_eaction(ia_t ia, unsigned argc, const char **argv)
 Boolean
 ContinueScript_eaction(ia_t ia, unsigned argc, const char **argv)
 {
+    sms_t *s;
+
     eaction_debug("ContinueScript", ia, argc, argv);
     if (check_eusage("ContinueScript", argc, 1, 1) < 0) {
 	return False;
     }
 
     /*
-     * If this is a nested script, this action aborts the current script,
-     * then applies to the previous one.
+     * Skip past whatever scripts are RUNNING or INCOMPLETE at the top of the
+     * stack, until we find one that is PAUSED.
      */
-    if (!IA_FROM_KEYMAP(ia) && sms_depth > 1) {
-	sms_pop(False);
+    for (s = sms; s != NULL; s = s->next) {
+	if (s->state != SS_RUNNING && s->state != SS_INCOMPLETE) {
+	    break;
+	}
     }
-
-    /* Continue the previous script. */
-    if (sms == NULL || sms->state != SS_PAUSED) {
-	popup_an_error("ContineScript: No script waiting");
+    if (s == NULL || s->state != SS_PAUSED) {
+	popup_an_error("ContinueScript: No script waiting");
 	sms_continue();
 	return False;
     }
-    action_output("%s", argv[0]);
+
+    /* Pop the RUNNING and INCOMPLETE scripts. */
+    while (sms != NULL && sms->state == SS_RUNNING) {
+	sms_pop(False);
+    }
+
+    /* Continue the running script and output the token to it. */
     sms->state = SS_RUNNING;
+    action_output("%s", argv[0]);
     sms_continue();
     return True;
 }
