@@ -1098,11 +1098,16 @@ Connect_eaction(ia_t ia, unsigned argc, const char **argv)
     (void) host_connect(argv[0]);
 
     /*
-     * If called from a script and the connection was successful (or
+     * If not called from a keymap and the connection was successful (or
      * half-successful), pause the script until we are connected and
      * we have identified the host type.
+     *
+     * The reason for the check against keymaps is so the GUI doesn't stall
+     * if someone puts a Connect() in a keymap. This is an imperfect check,
+     * since someone could put a Source() in a keymap for a file that includes
+     * a Connect(), and it would still stall here.
      */
-    if (ia != IA_KEYMAP && (CONNECTED || HALF_CONNECTED)) {
+    if (ia != IA_KEYMAP) {
 	sms_connect_wait();
     }
     return True;
@@ -1130,8 +1135,13 @@ Reconnect_eaction(ia_t ia, unsigned argc, const char **argv)
      * If called from a script and the connection was successful (or
      * half-successful), pause the script until we are connected and
      * we have identified the host type.
+     *
+     * The reason for the check against keymaps is so the GUI doesn't stall
+     * if someone puts a Reconnect() in a keymap. This is an imperfect check,
+     * since someone could put a Source() in a keymap for a file that includes
+     * a Reconnect(), and it would still stall here.
      */
-    if (ia != IA_KEYMAP && (CONNECTED || HALF_CONNECTED)) {
+    if (ia != IA_KEYMAP) {
 	sms_connect_wait();
     }
     return True;

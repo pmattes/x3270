@@ -162,6 +162,15 @@ Boolean
 Quit_eaction(ia_t ia, unsigned argc, const char **argv)
 {
     eaction_debug("Quit", ia, argc, argv);
+
+    /*
+     * We allow Quit() to succeed if invoked from anything besides a keymap, and
+     * from a keymap if we're not connected.
+     *
+     * This test is imperfect. Someone could put a Source() in a keymap and
+     * read in a file that includes a Quit(). If we are connected, it will
+     * fail.
+     */
     if (ia != IA_KEYMAP || !CONNECTED) {
 	x3270_exit(0);
     }

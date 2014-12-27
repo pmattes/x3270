@@ -429,6 +429,5 @@ typedef enum iaction {
     IA_SCRIPT, IA_PEEK, IA_TYPEAHEAD, IA_FT, IA_COMMAND, IA_KEYMAP, IA_IDLE
 } ia_t;
 extern enum iaction ia_cause;
-#define IA_FROM_KEYMAP(ia)	((ia) == IA_KEYMAP || (ia) == IA_DEFAULT)
 
 typedef Boolean (eaction_t)(ia_t ia, unsigned argc, const char **argv);

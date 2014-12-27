@@ -2893,10 +2893,10 @@ sms_connect_wait(void)
 {
     if (sms != NULL &&
 	(int)sms->state >= (int)SS_RUNNING &&
-	sms->state != SS_WAIT_IFIELD) {
-	if (HALF_CONNECTED || (CONNECTED && (kybdlock & KL_AWAITING_FIRST))) {
-	    sms->state = SS_CONNECT_WAIT;
-	}
+	sms->state != SS_WAIT_IFIELD &&
+	(HALF_CONNECTED || (CONNECTED && (kybdlock & KL_AWAITING_FIRST)))) {
+
+	sms->state = SS_CONNECT_WAIT;
     }
 }
 
