@@ -492,6 +492,8 @@ set_appres_defaults(void)
 #endif /*]*/
 #if defined(WC3270) /*[*/
 	appres.trace_monitor = True;
+#else /*][*/
+	appres.trace_monitor = False;
 #endif /*]*/
 	appres.oversize = NULL;
 #if defined(C3270) /*[*/
@@ -1148,9 +1150,7 @@ static struct {
 	{ ResTraceDir,	offset(trace_dir),	XRM_STRING },
 	{ ResTraceFile,	offset(trace_file),	XRM_STRING },
 	{ ResTraceFileSize,offset(trace_file_size),XRM_STRING },
-#if defined(WC3270) /*[*/
 	{ ResTraceMonitor,offset(trace_monitor),XRM_BOOLEAN },
-#endif /*]*/
 	{ ResTypeahead,	offset(typeahead),	XRM_BOOLEAN },
 	{ ResUnlockDelay,offset(unlock_delay),	XRM_BOOLEAN },
 	{ ResUnlockDelayMs,offset(unlock_delay_ms),XRM_INT },

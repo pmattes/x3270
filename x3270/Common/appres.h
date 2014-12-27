@@ -229,9 +229,7 @@ typedef struct {
 	char	*trace_file_size;
 	Boolean  dsTrace_bc;
 	Boolean  eventTrace_bc;
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
 	Boolean	trace_monitor;
-#endif /*]*/
 	char	*oversize;
 	char	*ft_command;
 	int	dft_buffer_size;

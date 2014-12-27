@@ -27,8 +27,9 @@ COMMON_HEADERS = 3270ds.h actionsc.h aplc.h appres.h arpa_telnet.h \
 	menubarc.h nvt_guic.h nvtc.h objects.h popupsc.h print_guic.h \
 	printc.h proxy.h proxyc.h resolverc.h resources.h rpqc.h savec.h \
 	screen.h screenc.h scrollc.h seec.h selectc.h sfc.h statusc.h \
-	tablesc.h telnetc.h tn3270e.h togglesc.h trace_dsc.h unicode_dbcsc.h \
-	unicodec.h utf8c.h utilc.h varbufc.h w3miscc.h xioc.h xl.h
+	tablesc.h telnetc.h tn3270e.h togglesc.h trace_ds_guic.h trace_dsc.h \
+	unicode_dbcsc.h unicodec.h utf8c.h utilc.h varbufc.h w3miscc.h xioc.h \
+	xl.h
 
 # HTTPD header files
 HTTPD_HEADERS = bind-optc.h httpd-corec.h httpd-ioc.h httpd-nodesc.h 

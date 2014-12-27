@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2014, Paul Mattes.
+ * Copyright (c) 2014, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,34 +26,17 @@
  */
 
 /*
- *	trace_dsc.h
- *		Global declarations for trace_ds.c.
+ *	trace_ds_guic.h
+ *		Global declarations for trace_ds_gui.c.
  */
 
-typedef enum {
-    TSS_FILE,	/* trace to file */
-    TSS_PRINTER	/* trace to printer */
-} tss_t;
-
-extern Boolean trace_skipping;
-extern char *tracefile_name;
-extern struct timeval ds_ts;
-
-const char *rcba(int baddr);
-char *screentrace_default_file(ptype_t ptype);
-char *screentrace_default_printer(void);
-void toggle_tracing(struct toggle *t, enum toggle_type tt);
-void toggle_screenTrace(struct toggle *t, enum toggle_type tt);
-void trace_nvt_disc(void);
-void trace_char(char c);
-void trace_ds(const char *fmt, ...) printflike(1, 2);
-void vtrace(const char *fmt, ...) printflike(1, 2);
-void ntvtrace(const char *fmt, ...) printflike(1, 2);
-tss_t trace_get_screentrace_how(void);
-tss_t trace_get_screentrace_last_how(void);
-const char *trace_get_screentrace_name(void);
-void trace_set_trace_file(const char *path);
-void trace_set_screentrace_file(tss_t how, ptype_t ptype, const char *name);
-void trace_screen(Boolean is_clear);
-void trace_rollover_check(void);
-extern void tracefile_ok(const char *tfn);
+#if defined(X3270_DISPLAY) /*[*/
+extern void trace_ds_gui_bad_size(const char *default_value);
+extern Boolean trace_ds_gui_on(int reason, enum toggle_type tt,
+	const char *tracefile);
+extern void trace_ds_gui_toggle(void);
+#else /*][*/
+#define trace_ds_gui_bad_size(default_value)
+#define trace_ds_gui_on(reason, tt, tracefile) False
+#define trace_ds_gui_toggle()
+#endif /*]*/
