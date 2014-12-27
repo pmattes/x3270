@@ -84,6 +84,9 @@ static struct {
 	{ "Copy", NULL, P_3270, "Copy selected text to Windows clipboard" },
 #endif /*]*/
 	{ "CursorSelect", NULL, P_3270, "Light pen select at cursor location" },
+#if defined(WC3270) /*[*/
+	{ "Cut", NULL, P_3270, "Copy selected text to Windows clipboard, then erase" },
+#endif /*]*/
 	{ "Delete", NULL, P_3270, "Delete character at cursor" },
 	{ "DeleteField", NULL, P_3270, "Erase field at cursor location (^U)" },
 	{ "DeleteWord", NULL, P_3270, "Erase word before cursor location (^W)" },
