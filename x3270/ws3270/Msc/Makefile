@@ -48,7 +48,7 @@ VOBJS = XtGlue.obj actions.obj apl.obj asprintf.obj bind-opt.obj charset.obj \
 	ft_cut.obj ft_dft.obj glue.obj host.obj httpd-core.obj httpd-io.obj \
 	httpd-nodes.obj idle.obj kybd.obj linemode.obj macros.obj nvt.obj \
 	print.obj printer.obj proxy.obj readres.obj resolver.obj \
-	resources.obj rpq.obj see.obj sf.obj smain.obj snprintf.obj \
+	resources.obj rpq.obj see.obj sf.obj s3270.obj snprintf.obj \
 	ssl_dll.obj tables.obj telnet.obj toggles.obj trace_ds.obj \
 	unicode.obj unicode_dbcs.obj utf8.obj util.obj varbuf.obj w3misc.obj \
 	windirs.obj winprint.obj winvers.obj ws3270.RES xio.obj
@@ -157,8 +157,8 @@ sf.obj: sf.c
 	$(CC) $(CFLAGS) /c sf.c
 shortcut.obj: shortcut.c
 	$(CC) $(CFLAGS) /c shortcut.c
-smain.obj: smain.c
-	$(CC) $(CFLAGS) /c smain.c
+s3270.obj: s3270.c
+	$(CC) $(CFLAGS) /c s3270.c
 snprintf.obj: snprintf.c
 	$(CC) $(CFLAGS) /c snprintf.c
 ssl_dll.obj: ssl_dll.c

@@ -42,7 +42,7 @@
     <ClCompile Include="..\..\ws3270-3.3\rpq.c" />
     <ClCompile Include="..\..\ws3270-3.3\see.c" />
     <ClCompile Include="..\..\ws3270-3.3\sf.c" />
-    <ClCompile Include="..\..\ws3270-3.3\smain.c" />
+    <ClCompile Include="..\..\ws3270-3.3\s3270.c" />
     <ClCompile Include="..\..\ws3270-3.3\snprintf.c" />
     <ClCompile Include="..\..\ws3270-3.3\ssl_dll.c" />
     <ClCompile Include="..\..\ws3270-3.3\strtok_r.c" />
