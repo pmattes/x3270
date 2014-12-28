@@ -51,7 +51,6 @@
 #include "actionsc.h"
 #include "aboutc.h"
 #include "charsetc.h"
-/*#include "ftc.h"*/
 #include "ft_guic.h"
 #include "hostc.h"
 #include "idle_guic.h"
