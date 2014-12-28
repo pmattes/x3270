@@ -30,10 +30,10 @@
  *		Global declarations for keypad.c.
  */
 
+#if defined(X3270_DISPLAY) /*[*/
+
 extern Boolean keypad_changed;
 extern Boolean keypad_popped;
-
-#if defined(X3270_DISPLAY) /*[*/
 
 extern Widget keypad_shell;
 extern enum kp_placement {
@@ -54,31 +54,16 @@ extern Dimension min_keypad_width(void);
 extern void keypad_popdown(Boolean *was_up);
 extern void keypad_popup(void);
 
-#else /*][*/
+#elif defined(C3270) /*[*/
 
-# if defined(C3270) /*[*/
 extern Boolean keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted,
 	unsigned char *acs);
 extern void keypad_cursor(int *row, int *col);
 extern void pop_up_keypad(Boolean up);
 extern void keypad_key(int k, ucs4_t u);
-#  if defined(_WIN32) /*[*/
+# if defined(_WIN32) /*[*/
 extern void keypad_click(int x, int y);
-#  endif /*]*/
-extern action_t Keypad_action;
 # endif /*]*/
-
-# define keypad_qheight()	0
-# define min_keypad_width()	0
-# define keypad_first_up()
-# define keypad_init(a, b, c, d, e)	0
-# define keypad_move()
-# define keypad_placement_init()
-# define keypad_popup_init()
-# define keypad_set_keymap()
-# define keypad_set_temp_keymap(n)
-# define keypad_shift()
-# define keypad_popdown(w)
-# define keypad_popup()
+extern action_t Keypad_action;
 
 #endif /*]*/
