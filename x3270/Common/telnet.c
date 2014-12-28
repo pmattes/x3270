@@ -82,20 +82,16 @@
 #if defined(C3270) /*[*/
 # include "screenc.h"
 #endif /*]*/
+#include "ssl_passwd_guic.h"
 #include "statusc.h"
 #include "tablesc.h"
 #include "telnetc.h"
+#include "telnet_private.h"
 #include "trace_dsc.h"
 #include "unicodec.h"
 #include "utilc.h"
 #include "w3miscc.h"
 #include "xioc.h"
-
-#if defined(X3270_DISPLAY) && defined(HAVE_LIBSSL) /*[*/
-# include "objects.h"
-# include <X11/StringDefs.h>
-# include <X11/Xaw/Dialog.h>
-#endif /*]*/
 
 #if defined(_WIN32) && defined(HAVE_LIBSSL) /*[*/
 #define ROOT_CERTS	"root_certs.txt"
@@ -292,11 +288,11 @@ Boolean secure_connection = False;
 Boolean secure_unverified = False;
 char **unverified_reasons = NULL;
 static int n_unverified_reasons = 0;
-static SSL_CTX *ssl_ctx;
+SSL_CTX *ssl_ctx;
 static SSL *ssl_con;
 static Boolean need_tls_follows = False;
-static char *ssl_cl_hostname;
-static Boolean *ssl_pending;
+char *ssl_cl_hostname;
+Boolean *ssl_pending;
 static Boolean accept_specified_host;
 static char *accept_dnsname;
 struct in_addr host_inaddr;
@@ -304,12 +300,6 @@ static Boolean host_inaddr_valid;
 # if defined(X3270_IPV6) /*[*/
 struct in6_addr host_in6addr;
 static Boolean host_in6addr_valid;
-# endif /*]*/
-# if defined(X3270_DISPLAY) /*[*/
-static char *ssl_password;
-# endif /*]*/
-# if defined(X3270_INTERACTIVE) /*[*/
-static Boolean ssl_password_prompted;
 # endif /*]*/
 # if OPENSSL_VERSION_NUMBER >= 0x00907000L /*[*/
 #  define INFO_CONST const
@@ -375,11 +365,6 @@ static Boolean hin[NUM_HA];
 #endif /*]*/
 static int num_ha = 0;
 static int ha_ix = 0;
-
-#if defined(X3270_DISPLAY) && defined(HAVE_LIBSSL) /*[*/
-static Widget password_shell = NULL;
-static void popup_password(void);
-#endif /*]*/
 
 #if defined(_WIN32) /*[*/
 void
@@ -3503,82 +3488,20 @@ non_blocking(Boolean on)
 
 #if defined(HAVE_LIBSSL) /*[*/
 
-#if defined(C3270) /*[*/
-static char *
-gets_noecho(char *buf, int size)
-{
-#if !defined(_WIN32) /*[*/
-    	char *s;
-	int e;
-	size_t sl;
-
-	e = system("stty -echo");
-	s = fgets(buf, size - 1, stdin);
-	e = system("stty echo");
-	e = e; /* keep gcc happy */
-	if (s != NULL) {
-		sl = strlen(buf);
-		if (sl && buf[sl - 1] == '\n')
-			buf[sl - 1] = '\0';
-	}
-	return s;
-#else /*][*/
-	int cc = 0;
-
-	while (True) {
-		char c;
-
-		(void) screen_wait_for_key(&c);
-		if (c == '\r') {
-			buf[cc] = '\0';
-			return buf;
-		} else if (c == '\b' || c == 0x7f) {
-			if (cc)
-				cc--;
-		} else if (c == 0x1b) {
-			cc = 0;
-		} else if ((unsigned char)c >= ' ' && cc < size - 1) {
-		    	buf[cc++] = c;
-		}
-	}
-#endif /*]*/
-}
-#endif /*]*/
-
 /* Password callback. */
 static int
 passwd_cb(char *buf, int size, int rwflag _is_unused,
 	void *userdata _is_unused)
 {
     	if (appres.key_passwd == NULL) {
-#if defined(C3270) /*[*/
-		char *s;
+		int psize = ssl_passwd_gui_callback(buf, size);
 
-		fprintf(stdout, "\nEnter password for Private Key: ");
-		fflush(stdout);
-		s = gets_noecho(buf, size);
-		fprintf(stdout, "\n");
-		fflush(stdout);
-		ssl_password_prompted = True;
-		return s? strlen(s): 0;
-#elif defined(X3270_DISPLAY) /*][*/
-		if (ssl_pending != NULL) {
-		    	*ssl_pending = True;
-			popup_password();
-			ssl_password_prompted = True;
-			return 0;
-		} else if (ssl_password != NULL) {
-			snprintf(buf, size, "%s", ssl_password);
-			Replace(ssl_password, NULL);
-			return strlen(buf);
+		if (psize >= 0) {
+		    return psize;
 		} else {
-			popup_an_error("No OpenSSL private key password specified");
-			return 0;
+		    popup_an_error("No OpenSSL private key password specified");
+		    return 0;
 		}
-#else /*][*/
-		popup_an_error("No OpenSSL private key password specified");
-#endif /*]*/
-		return 0;
 	}
 
 	if (!strncasecmp(appres.key_passwd, "string:", 7)) {
@@ -3727,12 +3650,8 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 
 	SSL_load_error_strings();
 	SSL_library_init();
-#if defined(C3270) /*[*/
     try_again:
-#endif /*]*/
-#if defined(X3270_INTERACTIVE) /*[*/
-	ssl_password_prompted = False;
-#endif /*]*/
+	ssl_passwd_gui_reset();
 	ssl_ctx = SSL_CTX_new(SSLv23_method());
 	if (ssl_ctx == NULL) {
 		popup_an_error("SSL_CTX_new failed");
@@ -3879,17 +3798,11 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 	return;
 
 password_fail:
-#if defined(C3270) /*[*/
-	SSL_CTX_free(ssl_ctx);
-	ssl_ctx = NULL;
-	if (ssl_password_prompted)
-		goto try_again;
-#endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
-	/* Pop up the password dialog again when the error pop-up pops down. */
-	if (ssl_password_prompted)
-		add_error_popdown_callback(popup_password);
-#endif /*]*/
+	if (ssl_passwd_gui_retry()) {
+	    SSL_CTX_free(ssl_ctx);
+	    ssl_ctx = NULL;
+	    goto try_again;
+	}
 
 fail:
 	ssl_pending = NULL;
@@ -4537,71 +4450,6 @@ net_bound(void)
 {
     	return (IN_E && tn3270e_bound);
 }
-
-#if defined(X3270_DISPLAY) && defined(HAVE_LIBSSL) /*[*/
-/* Callback for "OK" button on the password popup. */
-static void
-password_callback(Widget w _is_unused, XtPointer client_data,
-    XtPointer call_data _is_unused)
-{
-	char *password;
-
-	password = XawDialogGetValueString((Widget)client_data);
-	ssl_password = NewString(password);
-	XtPopdown(password_shell);
-
-	/* Try init again, with the right password. */
-	ssl_base_init(NULL, NULL);
-
-	/*
-	 * Now try connecting to the command-line hostname, if SSL init
-	 *  succeeded and there is one.
-	 * If SSL init failed because of a password problem, the password
-	 *  dialog will be popped back up.
-	 */
-	if (ssl_ctx != NULL && ssl_cl_hostname) {
-	    	(void) host_connect(ssl_cl_hostname);
-		Replace(ssl_cl_hostname, NULL);
-	}
-}
-
-/* The password dialog was popped down. */
-static void
-password_popdown(Widget w _is_unused, XtPointer client_data _is_unused,
-	XtPointer call_data _is_unused)
-{
-	/* If there's no password (they cancelled), don't pop up again. */
-	if (ssl_password == NULL) {
-		/* Don't pop up again. */
-		add_error_popdown_callback(NULL);
-
-		/* Try connecting to the command-line host. */
-		if (ssl_cl_hostname != NULL) {
-			(void) host_connect(ssl_cl_hostname);
-			Replace(ssl_cl_hostname, NULL);
-		}
-	}
-}
-
-/* Pop up the password dialog. */
-static void
-popup_password(void)
-{
-	if (password_shell == NULL) {
-		password_shell = create_form_popup("Password",
-		    password_callback, NULL,
-		    FORM_AS_IS);
-		XtAddCallback(password_shell, XtNpopdownCallback,
-			password_popdown, NULL);
-	}
-	XtVaSetValues(XtNameToWidget(password_shell, ObjDialog),
-		XtNvalue, "",
-		NULL);
-	Replace(ssl_password, NULL);
-
-	popup_popup(password_shell, XtGrabExclusive);
-}
-#endif /*]*/
 
 /*
  * 256-bit bitmap functions.

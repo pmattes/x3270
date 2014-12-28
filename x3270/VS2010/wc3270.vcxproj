@@ -156,6 +156,7 @@
     <ClCompile Include="..\wc3270-3.3\shortcut.c" />
     <ClCompile Include="..\wc3270-3.3\snprintf.c" />
     <ClCompile Include="..\wc3270-3.3\ssl_dll.c" />
+    <ClCompile Include="..\wc3270-3.3\ssl_passwd_gui.c" />
     <ClCompile Include="..\wc3270-3.3\tables.c" />
     <ClCompile Include="..\wc3270-3.3\telnet.c" />
     <ClCompile Include="..\wc3270-3.3\toggles.c" />

@@ -140,6 +140,9 @@
     <ClCompile Include="..\wc3270-3.3\ssl_dll.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\wc3270-3.3\ssl_dll_gui.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\wc3270-3.3\tables.c">
       <Filter>Source Files</Filter>
     </ClCompile>

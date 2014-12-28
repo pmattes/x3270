@@ -44,7 +44,7 @@ SSLLIB = gdi32.lib
 XCPPFLAGS = /D_WIN32 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /DWINVER=0x500 /D_CRT_SECURE_NO_DEPRECATE /W3 /WX $(SSLDEF)
 CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I.
 
-VOBJS = XtGlue.obj actions.obj apl.obj asprintf.obj bind-opt.obj c3270.obj \
+VOBJS = XtGlue.obj \ actions.obj apl.obj asprintf.obj bind-opt.obj c3270.obj \
 	charset.obj ctlr.obj fallbacks.obj favicon.obj fprint_screen.obj \
 	ft.obj ft_cut.obj ft_dft.obj ft_gui.obj gdi_print.obj glue.obj \
 	help.obj host.obj httpd-core.obj httpd-io.obj httpd-nodes.obj \
@@ -52,10 +52,10 @@ VOBJS = XtGlue.obj actions.obj apl.obj asprintf.obj bind-opt.obj c3270.obj \
 	macros.obj menubar.obj nvt.obj nvt_gui.obj print.obj printer.obj \
 	proxy.obj readres.obj relink.obj resolver.obj resources.obj rpq.obj \
 	screen.obj scroll.obj see.obj select.obj sf.obj shortcut.obj \
-	snprintf.obj ssl_dll.obj tables.obj telnet.obj toggles.obj \
-	trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj \
-	varbuf.obj w3misc.obj wc3270.RES windirs.obj winprint.obj winvers.obj \
-	xio.obj
+	snprintf.obj ssl_dll.obj ssl_passwd_gui.obj tables.obj telnet.obj \
+	toggles.obj trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj \
+	util.obj varbuf.obj w3misc.obj wc3270.RES windirs.obj winprint.obj \
+	winvers.obj xio.obj
 
 OBJECTS = $(VOBJS) version.obj
 WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
@@ -222,6 +222,8 @@ snprintf.obj: snprintf.c
 	$(CC) $(CFLAGS) /c snprintf.c
 ssl_dll.obj: ssl_dll.c
 	$(CC) $(CFLAGS) /c ssl_dll.c
+ssl_passwd_gui.obj: ssl_dll.c
+	$(CC) $(CFLAGS) /c ssl_passwd_gui.c
 tables.obj: tables.c
 	$(CC) $(CFLAGS) /c tables.c
 telnet.obj: telnet.c
