@@ -26,17 +26,17 @@
  */
 
 /*
- *	trace_ds_guic.h
- *		Global declarations for trace_ds_gui.c.
+ *	trace_gui.h
+ *		Global declarations for trace_gui.c.
  */
 
 #if defined(X3270_DISPLAY) /*[*/
-extern void trace_ds_gui_bad_size(const char *default_value);
-extern Boolean trace_ds_gui_on(int reason, enum toggle_type tt,
+extern void trace_gui_bad_size(const char *default_value);
+extern Boolean trace_gui_on(int reason, enum toggle_type tt,
 	const char *tracefile);
-extern void trace_ds_gui_toggle(void);
+extern void trace_gui_toggle(void);
 #else /*][*/
-#define trace_ds_gui_bad_size(default_value)
-#define trace_ds_gui_on(reason, tt, tracefile) False
-#define trace_ds_gui_toggle()
+#define trace_gui_bad_size(default_value)
+#define trace_gui_on(reason, tt, tracefile) False
+#define trace_gui_toggle()
 #endif /*]*/

@@ -26,7 +26,7 @@
  */
 
 /*
- *	trace_ds_gui.c
+ *	trace_gui.c
  *		GUI for 3270 data stream tracing.
  *
  */
@@ -44,14 +44,14 @@
 #include "objects.h"
 #include "popupsc.h"
 #include "trace.h"
-#include "trace_ds_guic.h"
+#include "trace_gui.h"
 
 /* Statics */
 static Widget trace_shell = NULL;
 
 /* Pop up an info about a bogus trace file maximum size. */
 void
-trace_ds_gui_bad_size(const char *default_value)
+trace_gui_bad_size(const char *default_value)
 {
     popup_an_info("Invalid %s '%s', assuming %s",
 	    ResTraceFileSize, appres.trace_file_size,
@@ -90,7 +90,7 @@ no_tracefile_callback(Widget w, XtPointer client_data,
  * Returns True for dialog up, False to go ahead and start tracing.
  */
 Boolean
-trace_ds_gui_on(int reason, enum toggle_type tt, const char *tracefile)
+trace_gui_on(int reason, enum toggle_type tt, const char *tracefile)
 {
     if (tt == TT_INITIAL || tt == TT_ACTION) {
 	/* Start tracing now. */
@@ -115,7 +115,7 @@ trace_ds_gui_on(int reason, enum toggle_type tt, const char *tracefile)
 
 /* Change the menu option for tracing when the toggle is changed. */
 void
-trace_ds_gui_toggle(void)
+trace_gui_toggle(void)
 {
     if (appres.toggle[SCREEN_TRACE].w[0] != NULL) {
 	XtVaSetValues(appres.toggle[SCREEN_TRACE].w[0],

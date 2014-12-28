@@ -56,7 +56,7 @@
 #include "tablesc.h"
 #include "telnetc.h"
 #include "trace.h"
-#include "trace_ds_guic.h"
+#include "trace_gui.h"
 #include "utf8c.h"
 #include "utilc.h"
 #if defined(_WIN32) /*[*/
@@ -668,7 +668,7 @@ get_tracef_max(void)
 
     if (bad) {
 	tracef_max = MIN_TRACEFILE_SIZE;
-	trace_ds_gui_bad_size(MIN_TRACEFILE_SIZE_NAME);
+	trace_gui_bad_size(MIN_TRACEFILE_SIZE_NAME);
     } else if (tracef_max < MIN_TRACEFILE_SIZE) {
 	tracef_max = MIN_TRACEFILE_SIZE;
     }
@@ -902,7 +902,7 @@ tracefile_on(int reason, enum toggle_type tt)
 	tracefile = tracefile_buf;
     }
 
-    if (!trace_ds_gui_on(reason, tt, tracefile)) {
+    if (!trace_gui_on(reason, tt, tracefile)) {
 	tracefile_ok(tracefile);
     } else {
 	/* Turn the toggle _off_ until the popup succeeds. */
@@ -1236,5 +1236,5 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 		Free(tracefile_buf);
 	}
 
-	trace_ds_gui_toggle();
+	trace_gui_toggle();
 }
