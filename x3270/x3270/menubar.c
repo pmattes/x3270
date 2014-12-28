@@ -51,7 +51,8 @@
 #include "actionsc.h"
 #include "aboutc.h"
 #include "charsetc.h"
-#include "ftc.h"
+/*#include "ftc.h"*/
+#include "ft_guic.h"
 #include "hostc.h"
 #include "idle_guic.h"
 #include "keymapc.h"
@@ -831,6 +832,13 @@ add_menu_itemv(char *name, Widget menu, XtCallbackProc callback, XtPointer arg,
 		return w;
 	} else
 		return NULL;
+}
+
+static void
+popup_ft(Widget w _is_unused, XtPointer call_parms _is_unused,
+	XtPointer call_data _is_unused)
+{
+    ft_gui_popup_ft();
 }
 
 static void

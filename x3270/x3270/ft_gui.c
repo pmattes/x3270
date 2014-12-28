@@ -152,8 +152,7 @@ static void units_callback(Widget w, XtPointer user_data, XtPointer call_data);
  * Called back from the "File Transfer" option on the File menu.
  */
 void
-popup_ft(Widget w _is_unused, XtPointer call_parms _is_unused,
-	XtPointer call_data _is_unused)
+ft_gui_popup_ft(void)
 {
     /* Initialize it. */
     if (ft_shell == NULL) {

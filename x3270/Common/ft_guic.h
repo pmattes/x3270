@@ -42,6 +42,9 @@ extern void ft_gui_running(unsigned long length);
 extern void ft_gui_aborting(void);
 extern Boolean ft_gui_interact(char ***params, unsigned *num_params);
 extern void ft_gui_awaiting(void);
+# if defined(X3270_DISPLAY) /*[*/
+extern void ft_gui_popup_ft(void);
+# endif /*]*/
 #else /*][*/
 # define ft_gui_progress_popdown()
 # define ft_gui_errmsg_prepare(msg)
