@@ -26,7 +26,7 @@
  */
 
 /*
- *	trace_ds.c
+ *	trace.c
  *		3270 data stream tracing.
  *
  */
@@ -43,7 +43,7 @@
 #include "ctlrc.h"
 #include "seec.h"
 #include "tablesc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 
 /* Maximum length of printer-data output. */
 #define PD_MAX	77

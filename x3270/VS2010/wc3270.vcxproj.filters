@@ -152,7 +152,7 @@
     <ClCompile Include="..\wc3270-3.3\toggles.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270-3.3\trace_ds.c">
+    <ClCompile Include="..\wc3270-3.3\trace.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\wc3270-3.3\unicode.c">

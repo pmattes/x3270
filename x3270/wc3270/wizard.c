@@ -51,7 +51,7 @@
 #include "resources.h"
 #include "screenc.h"
 #include "tablesc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "utilc.h"
 #include "xioc.h"
 

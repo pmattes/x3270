@@ -69,7 +69,7 @@
 #include "tablesc.h"
 #include "telnetc.h"
 #include "togglesc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "utilc.h"
 
 #if defined(_WIN32) /*[*/

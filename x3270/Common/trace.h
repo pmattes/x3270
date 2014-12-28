@@ -26,8 +26,8 @@
  */
 
 /*
- *	trace_dsc.h
- *		Global declarations for trace_ds.c.
+ *	trace.h
+ *		Global declarations for trace.c.
  */
 
 typedef enum {

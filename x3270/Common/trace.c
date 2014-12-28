@@ -26,7 +26,7 @@
  */
 
 /*
- *	trace_ds.c
+ *	trace.c
  *		3270 data stream tracing.
  *
  */
@@ -55,7 +55,7 @@
 #include "statusc.h"
 #include "tablesc.h"
 #include "telnetc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "trace_ds_guic.h"
 #include "utf8c.h"
 #include "utilc.h"

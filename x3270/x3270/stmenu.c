@@ -52,7 +52,7 @@
 #include "popupsc.h"
 #include "printc.h"
 #include "togglesc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 
 #include "stmenuc.h"
 

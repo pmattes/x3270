@@ -52,7 +52,7 @@
 #include "proxyc.h"
 #include "resolverc.h"
 #include "telnetc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "w3miscc.h"
 
 #if defined(PR3287) /*[*/

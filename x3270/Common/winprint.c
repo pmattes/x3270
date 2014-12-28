@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2013, Paul Mattes.
+ * Copyright (c) 1994-2014, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@
 #include "popupsc.h"
 #include "resources.h"
 #include "printc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "utilc.h"
 
 #include "winprintc.h"

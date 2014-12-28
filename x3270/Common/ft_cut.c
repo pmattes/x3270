@@ -48,7 +48,7 @@
 #include "kybdc.h"
 #include "tablesc.h"
 #include "telnetc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "utilc.h"
 
 static Boolean cut_xfer_in_progress = False;

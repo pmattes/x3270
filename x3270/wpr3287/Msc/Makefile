@@ -44,7 +44,7 @@ CFLAGS = $(XCPPFLAGS) -I.
 
 VOBJS = asprintf.obj charset.obj ctlr.obj pr3287.obj proxy.obj resolver.obj \
 	see.obj sf.obj snprintf.obj ssl_dll.obj tables.obj telnet.obj \
-	trace_ds.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj \
+	trace.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj \
 	varbuf.obj w3misc.obj windirs.obj winvers.obj wpr3287.RES ws.obj \
 	xtable.obj
 
@@ -95,8 +95,8 @@ tables.obj: tables.c
 	$(CC) $(CFLAGS) /c tables.c
 telnet.obj: telnet.c
 	$(CC) $(CFLAGS) /c telnet.c
-trace_ds.obj: trace_ds.c
-	$(CC) $(CFLAGS) /c trace_ds.c
+trace.obj: trace.c
+	$(CC) $(CFLAGS) /c trace.c
 unicode.obj: unicode.c
 	$(CC) $(CFLAGS) /c unicode.c
 unicode_dbcs.obj: unicode_dbcs.c

@@ -46,7 +46,7 @@
 #if defined(WC3270) /*[*/
 #include "gdi_printc.h"
 #endif /*]*/
-#include "trace_dsc.h"
+#include "trace.h"
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"

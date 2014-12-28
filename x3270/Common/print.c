@@ -50,7 +50,7 @@
 #include "popupsc.h"
 #include "printc.h"
 #include "print_guic.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"

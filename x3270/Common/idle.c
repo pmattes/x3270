@@ -43,7 +43,7 @@
 # include "macrosc.h"
 # include "popupsc.h"
 # include "resources.h"
-# include "trace_dsc.h"
+# include "trace.h"
 # include "utilc.h"
 
 /* Macros. */

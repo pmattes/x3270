@@ -160,7 +160,7 @@
     <ClCompile Include="..\wc3270-3.3\tables.c" />
     <ClCompile Include="..\wc3270-3.3\telnet.c" />
     <ClCompile Include="..\wc3270-3.3\toggles.c" />
-    <ClCompile Include="..\wc3270-3.3\trace_ds.c" />
+    <ClCompile Include="..\wc3270-3.3\trace.c" />
     <ClCompile Include="..\wc3270-3.3\unicode.c" />
     <ClCompile Include="..\wc3270-3.3\unicode_dbcs.c" />
     <ClCompile Include="..\wc3270-3.3\utf8.c" />

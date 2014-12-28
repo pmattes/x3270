@@ -42,7 +42,7 @@
 #include "actionsc.h"
 #include "popupsc.h"
 #include "print_windowc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "utilc.h"
 #include "varbufc.h"
 

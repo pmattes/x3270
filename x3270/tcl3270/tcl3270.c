@@ -81,7 +81,7 @@
 #include "tablesc.h"
 #include "telnetc.h"
 #include "togglesc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"

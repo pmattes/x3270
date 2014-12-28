@@ -52,7 +52,7 @@
 #include "screenc.h"
 #include "togglesc.h"
 #include "tablesc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"

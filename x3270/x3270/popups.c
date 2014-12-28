@@ -50,7 +50,7 @@
 #include "menubarc.h"
 #include "popupsc.h"
 #include "screenc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "utilc.h"
 #include "xioc.h"
 

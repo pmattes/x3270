@@ -50,7 +50,7 @@
 #include "scrollc.h"
 #include "selectc.h"
 #include "togglesc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "utilc.h"
 #include "xactionsc.h"
 #include "xioc.h"

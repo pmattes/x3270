@@ -53,7 +53,7 @@
 #include "3270ds.h"
 #include "charsetc.h"
 #include "ctlrc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "sfc.h"
 #include "tablesc.h"
 #include "unicodec.h"

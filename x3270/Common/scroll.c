@@ -45,7 +45,7 @@
 #include "scrollc.h"
 #include "selectc.h"
 #include "statusc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 
 /* Globals */
 Boolean	scroll_initted = False;

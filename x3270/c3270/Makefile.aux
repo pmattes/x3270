@@ -60,7 +60,7 @@ HTML = html/$(PRODUCT)-man.html html/Bugs.html html/Build.html html/FAQ.html \
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
-tarlist: Makefile.aux
+tarlist: Makefile.aux common_files.mk c3270_files.mk
 	$(RM) tarlist
 	for i in $(FILES); \
 	do echo $(TARDIR)/$$i; \

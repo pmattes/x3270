@@ -81,7 +81,7 @@
 
 #include "ctlrc.h"
 #include "resolverc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "telnetc.h"
 
 #if defined(_WIN32) && defined(HAVE_LIBSSL) /*[*/

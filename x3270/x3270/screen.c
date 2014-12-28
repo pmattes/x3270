@@ -75,7 +75,7 @@
 #include "seec.h"
 #include "statusc.h"
 #include "tablesc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "unicodec.h"
 #include "unicode_dbcsc.h"
 #include "utf8c.h"

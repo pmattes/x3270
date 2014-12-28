@@ -31,7 +31,7 @@
 
 #include "globals.h"
 #include "appres.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "utilc.h"
 #if defined(_WIN32) /*[*/
 #include "xioc.h"

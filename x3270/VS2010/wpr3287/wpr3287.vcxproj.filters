@@ -51,7 +51,7 @@
     <ClCompile Include="..\..\wpr3287-3.3\telnet.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\trace_ds.c">
+    <ClCompile Include="..\..\wpr3287-3.3\trace.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\wpr3287-3.3\unicode.c">

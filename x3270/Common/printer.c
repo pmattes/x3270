@@ -61,7 +61,7 @@
 #endif /*]*/
 #include "tablesc.h"
 #include "telnetc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "utilc.h"
 #include "w3miscc.h"
 #include "xioc.h"

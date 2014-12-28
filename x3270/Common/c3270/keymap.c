@@ -44,7 +44,7 @@
 #include "popupsc.h"
 #include "screenc.h"
 #include "statusc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "unicodec.h"
 #include "utilc.h"
 

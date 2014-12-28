@@ -47,7 +47,7 @@
 #include "actionsc.h"
 #include "macrosc.h"
 #include "popupsc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "utilc.h"
 #include "varbufc.h"
 

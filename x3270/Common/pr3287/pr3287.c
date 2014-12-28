@@ -132,7 +132,7 @@
 
 #include "globals.h"
 #include "charsetc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "ctlrc.h"
 #include "popupsc.h"
 #include "proxyc.h"

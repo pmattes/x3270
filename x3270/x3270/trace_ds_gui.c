@@ -43,7 +43,7 @@
 #include "menubarc.h"
 #include "objects.h"
 #include "popupsc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "trace_ds_guic.h"
 
 /* Statics */

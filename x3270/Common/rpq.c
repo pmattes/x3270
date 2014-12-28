@@ -52,7 +52,7 @@
 #include "rpqc.h"
 #include "tablesc.h"
 #include "telnetc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "unicodec.h"
 #include "utilc.h"
 

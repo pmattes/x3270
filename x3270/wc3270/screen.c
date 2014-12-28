@@ -53,7 +53,7 @@
 #include "scrollc.h"
 #include "selectc.h"
 #include "tablesc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "unicodec.h"
 #include "utilc.h"
 #include "w3miscc.h"

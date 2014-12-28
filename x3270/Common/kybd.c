@@ -1,4 +1,4 @@
-/* * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+/* Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -70,7 +70,7 @@
 #include "tablesc.h"
 #include "telnetc.h"
 #include "togglesc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "utf8c.h"
 #include "utilc.h"
 

@@ -49,7 +49,7 @@ VOBJS = XtGlue.obj actions.obj apl.obj asprintf.obj bind-opt.obj charset.obj \
 	httpd-nodes.obj idle.obj kybd.obj linemode.obj macros.obj nvt.obj \
 	print.obj printer.obj proxy.obj readres.obj resolver.obj \
 	resources.obj rpq.obj see.obj sf.obj s3270.obj snprintf.obj \
-	ssl_dll.obj tables.obj telnet.obj toggles.obj trace_ds.obj \
+	ssl_dll.obj tables.obj telnet.obj toggles.obj trace.obj \
 	unicode.obj unicode_dbcs.obj utf8.obj util.obj varbuf.obj w3misc.obj \
 	windirs.obj winprint.obj winvers.obj ws3270.RES xio.obj
 
@@ -169,8 +169,8 @@ telnet.obj: telnet.c
 	$(CC) $(CFLAGS) /c telnet.c
 toggles.obj: toggles.c
 	$(CC) $(CFLAGS) /c toggles.c
-trace_ds.obj: trace_ds.c
-	$(CC) $(CFLAGS) /c trace_ds.c
+trace.obj: trace.c
+	$(CC) $(CFLAGS) /c trace.c
 unicode.obj: unicode.c
 	$(CC) $(CFLAGS) /c unicode.c
 unicode_dbcs.obj: unicode_dbcs.c

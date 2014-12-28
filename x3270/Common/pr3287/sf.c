@@ -49,7 +49,7 @@
 # include <sys/socket.h>
 #endif /*]*/
 #include "telnetc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 
 /* Statics */
 static Boolean  qr_in_progress = False;

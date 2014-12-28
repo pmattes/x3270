@@ -64,7 +64,7 @@
 #include "statusc.h"
 #include "tablesc.h"
 #include "telnetc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "utilc.h"
 
 /* Globals */

@@ -73,7 +73,7 @@
 #include "statusc.h"
 #include "tablesc.h"
 #include "telnetc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "utf8c.h"
 #include "utilc.h"
 #include "varbufc.h"

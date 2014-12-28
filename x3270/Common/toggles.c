@@ -43,7 +43,7 @@
 #include "nvtc.h"
 #include "popupsc.h"
 #include "screenc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "togglesc.h"
 
 

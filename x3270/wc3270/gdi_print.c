@@ -50,7 +50,7 @@
 #include "fprint_screenc.h"
 #include "gdi_printc.h"
 #include "popupsc.h"
-#include "trace_dsc.h"
+#include "trace.h"
 #include "unicodec.h"
 #include "utilc.h"
 #include "w3miscc.h"
