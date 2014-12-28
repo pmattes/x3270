@@ -61,15 +61,6 @@
 
 #define IDLE_MAX	15
 
-#if !defined(_WIN32) /*[*/
-typedef int socket_t;
-#define INVALID_SOCKET	(-1)
-# define SOCK_CLOSE(s)	close(s)
-#else /*][*/
-typedef SOCKET socket_t;
-# define SOCK_CLOSE(s)	closesocket(s)
-#endif /*]*/
-
 #define N_SESSIONS	32
 typedef struct {
     llist_t link;	/* list linkage */
@@ -236,7 +227,7 @@ hio_socket_input(unsigned long fd, ioid_t id)
 void
 hio_connection(unsigned long fd, ioid_t id)
 {
-    int t;
+    socket_t t;
     struct sockaddr_in sin;
     socklen_t len;
     char namebuf[256];
@@ -244,7 +235,7 @@ hio_connection(unsigned long fd, ioid_t id)
 
     len = sizeof(sin);
     t = accept(listen_s, (struct sockaddr *)&sin, &len);
-    if (t < 0) {
+    if (t == INVALID_SOCKET) {
 	popup_an_error("httpd accept: %s", socket_errtext());
 	return;
     }
@@ -303,7 +294,7 @@ hio_init(struct sockaddr *sa, socklen_t sa_len)
     int on = 1;
 
     listen_s = socket(sa->sa_family, SOCK_STREAM, 0);
-    if (listen_s < 0) {
+    if (listen_s == INVALID_SOCKET) {
 	popup_an_error("httpd socket: %s", socket_errtext());
 	return;
     }

@@ -90,12 +90,12 @@ static enum {
 	P_SHUTDOWN,	/* pr3287 graceful shutdown requested */
 	P_TERMINATING	/* pr3287 forcible termination requested */
 } printer_state = P_NONE;
-static int	printer_ls = -1;	/* printer sync listening socket */
+static socket_t	printer_ls = INVALID_SOCKET;	/* printer sync listening socket */
 static ioid_t	printer_ls_id = NULL_IOID; /* input ID */
 #if defined(_WIN32) /*[*/
 static HANDLE	printer_ls_handle = NULL;
 #endif /*]*/
-static int	printer_sync = -1;	/* printer sync socket */
+static socket_t	printer_sync = INVALID_SOCKET;	/* printer sync socket */
 static ioid_t	printer_sync_id = NULL_IOID; /* input ID */
 #if defined(_WIN32) /*[*/
 static HANDLE	printer_sync_handle = NULL;
@@ -344,7 +344,7 @@ printer_start_now(const char *lu, Boolean associated)
 
 	/* Create a listening socket for pr3287 to connect back to. */
 	printer_ls = socket(PF_INET, SOCK_STREAM, 0);
-	if (printer_ls < 0) {
+	if (printer_ls == INVALID_SOCKET) {
 		popup_a_sockerr("socket(printer sync)");
 		return;
 	}
@@ -379,14 +379,14 @@ printer_start_now(const char *lu, Boolean associated)
 		popup_an_error("CreateEvent: %s",
 			win32_strerror(GetLastError()));
 		SOCK_CLOSE(printer_ls);
-		printer_ls = -1;
+		printer_ls = INVALID_SOCKET;
 		return;
 	}
 	if (WSAEventSelect(printer_ls, printer_ls_handle, FD_ACCEPT) != 0) {
 		popup_an_error("WSAEventSelect: %s",
 			win32_strerror(GetLastError()));
 		SOCK_CLOSE(printer_ls);
-		printer_ls = -1;
+		printer_ls = INVALID_SOCKET;
 		return;
 	}
 	printer_ls_id = AddInput((int)printer_ls_handle, printer_accept);
@@ -881,7 +881,7 @@ printer_stop_sync(void)
 	printer_sync_handle = NULL;
 #endif /*]*/
 	SOCK_CLOSE(printer_sync);
-	printer_sync = -1;
+	printer_sync = INVALID_SOCKET;
 }
 
 /* Input from pr3287 on the synchronization socket. */
@@ -911,7 +911,7 @@ static void
 printer_stop_listening(void)
 {
 	assert(printer_ls_id != NULL_IOID);
-	assert(printer_ls != -1);
+	assert(printer_ls != INVALID_SOCKET);
 #if defined(_WIN32) /*[*/
 	assert(printer_ls_handle != NULL);
 #endif /*]*/
@@ -923,7 +923,7 @@ printer_stop_listening(void)
 	printer_ls_handle = NULL;
 #endif /*]*/
 	SOCK_CLOSE(printer_ls);
-	printer_ls = -1;
+	printer_ls = INVALID_SOCKET;
 }
 
 /* Accept a synchronization connection from pr3287. */
@@ -936,7 +936,7 @@ printer_accept(unsigned long fd _is_unused, ioid_t id)
 	/* Accept the connection. */
 	assert(printer_state == P_RUNNING);
 	printer_sync = accept(printer_ls, (struct sockaddr *)&sin, &len);
-	if (printer_sync < 0) {
+	if (printer_sync == INVALID_SOCKET) {
 		popup_a_sockerr("accept(printer sync)");
 	} else {
 		vtrace("Accepted sync connection from printer.\n");
@@ -1131,9 +1131,9 @@ printer_stop()
 	 *
 	 * Then set a timeout to terminate it not so gracefully.
 	 */
-	if (printer_sync >= 0) {
+	if (printer_sync != INVALID_SOCKET) {
 		vtrace("Stopping printer by shutting down sync socket.\n");
-		assert(printer_ls == -1);
+		assert(printer_ls == INVALID_SOCKET);
 
 		/* The separate shutdown() call is likely redundant. */
 #if !defined(_WIN32) /*[*/

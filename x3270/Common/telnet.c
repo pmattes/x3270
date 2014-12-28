@@ -127,7 +127,7 @@ Boolean		local_process = False;
 char           *termtype;
 
 /* Statics */
-static int      sock = -1;	/* active socket */
+static socket_t sock = INVALID_SOCKET;	/* active socket */
 #if defined(_WIN32) /*[*/
 static HANDLE	sock_handle = NULL;
 #endif /*]*/
@@ -327,7 +327,6 @@ static void output_possible(unsigned long fd, ioid_t id);
 # define SE_EAGAIN	WSAEINPROGRESS
 # define SE_EPIPE	WSAECONNABORTED
 # define SE_EINPROGRESS	WSAEINPROGRESS
-# define SOCK_CLOSE(s)	closesocket(s)
 # define SOCK_IOCTL(s, f, v)	ioctlsocket(s, f, (DWORD *)v)
 # define IOCTL_T	u_long
 #else /*][*/
@@ -341,7 +340,6 @@ static void output_possible(unsigned long fd, ioid_t id);
 # if defined(EINPROGRESS) /*[*/
 #  define SE_EINPROGRESS	EINPROGRESS
 # endif /*]*/
-# define SOCK_CLOSE(s)	close(s)
 # define SOCK_IOCTL	ioctl
 # define IOCTL_T	int
 #endif /*]*/
@@ -403,7 +401,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 #if defined(OMTU) /*[*/
 	int			mtu = OMTU;
 #endif /*]*/
-#	define close_fail	{ (void) SOCK_CLOSE(sock); sock = -1; return -1; }
+#	define close_fail	{ (void) SOCK_CLOSE(sock); sock = INVALID_SOCKET; return -1; }
 #if defined(HAVE_LIBSSL) /*[*/
 	/* Set host_inaddr and host_in6addr for IP address validation. */
 	if (!accept_specified_host && hin[ix]) {
@@ -427,7 +425,8 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 #endif /*]*/
 
 	/* create the socket */
-	if ((sock = socket(haddr[ix].sa.sa_family, SOCK_STREAM, 0)) == -1) {
+	if ((sock = socket(haddr[ix].sa.sa_family, SOCK_STREAM, 0)) ==
+		    INVALID_SOCKET) {
 		popup_a_sockerr("socket");
 		return -1;
 	}
@@ -503,7 +502,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 		net_connected();
 
 		/* net_connected() can cause the connection to fail. */
-		if (sock < 0)
+		if (sock == INVALID_SOCKET)
 			close_fail;
 	}
 
@@ -533,12 +532,6 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 	return sock;
 #endif /*]*/
 }
-
-#if defined(_WIN32) /*[*/
-#define INET_ADDR_T	unsigned long
-#else /*][*/
-#define INET_ADDR_T	in_addr_t
-#endif /*]*/
 
 #if defined(HAVE_LIBSSL) /*[*/
 static Boolean
@@ -573,7 +566,7 @@ is_numeric_host(const char *host)
  *	Called only once and is responsible for setting up the telnet
  *	variables.  Returns the file descriptor of the connected socket.
  */
-int
+socket_t
 net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
     Boolean *pending)
 {
@@ -1153,7 +1146,7 @@ net_disconnect(void)
 	if (CONNECTED)
 		(void) shutdown(sock, 2);
 	(void) SOCK_CLOSE(sock);
-	sock = -1;
+	sock = INVALID_SOCKET;
 	vtrace("SENT disconnect\n");
 
 	/* We're not connected to an LU any more. */
@@ -1307,7 +1300,7 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 				    "port %d", hostname, current_port);
 			} else {
 				Boolean dummy;
-				int s;
+				socket_t s;
 
 				net_disconnect();
 				if (ssl_host) {
@@ -1320,7 +1313,7 @@ net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 					s = connect_to(ha_ix,
 						(ha_ix == num_ha - 1),
 						&dummy);
-					if (s >= 0) {
+					if (s != INVALID_SOCKET) {
 						host_newfd(s);
 						return;
 					}

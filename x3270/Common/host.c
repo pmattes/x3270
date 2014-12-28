@@ -74,7 +74,7 @@ char	       *qualified_host = NULL;
 struct host *hosts = NULL;
 static struct host *last_host = NULL;
 static Boolean auto_reconnect_inprogress = False;
-static int net_sock = -1;
+static socket_t net_sock = INVALID_SOCKET;
 #if defined(X3270_INTERACTIVE) /*[*/
 static ioid_t reconnect_id = NULL_IOID;
 #endif /*]*/
@@ -650,9 +650,9 @@ host_connect(const char *n)
 
 	/* Attempt contact. */
 	ever_3270 = False;
-	net_sock = net_connect(chost, port, localprocess_cmd != NULL, &resolving,
-	    &pending);
-	if (net_sock < 0 && !resolving) {
+	net_sock = net_connect(chost, port, localprocess_cmd != NULL,
+		&resolving, &pending);
+	if (net_sock == INVALID_SOCKET && !resolving) {
 #if defined(X3270_INTERACTIVE) /*[*/
 # if defined(X3270_DISPLAY) /*[*/
 		if (appres.once) {
@@ -748,7 +748,7 @@ host_disconnect(Boolean failed)
 	if (PCONNECTED) {
 		x_remove_input();
 		net_disconnect();
-		net_sock = -1;
+		net_sock = INVALID_SOCKET;
 #if defined(X3270_INTERACTIVE) /*[*/
 # if defined(X3270_DISPLAY) /*[*/
 		if (appres.once) {
@@ -816,7 +816,7 @@ host_connected(void)
 
 /* Swap out net_sock. */
 void
-host_newfd(int s)
+host_newfd(socket_t s)
 {
     	/* Shut off the old. */
 	x_remove_input();

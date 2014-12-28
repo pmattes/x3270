@@ -162,7 +162,7 @@ typedef struct sms {
 } sms_t;
 static sms_t *sms = NULL;
 static int sms_depth = 0;
-static int socketfd = -1;
+static socket_t socketfd = INVALID_SOCKET;
 static ioid_t socket_id = NULL_IOID;
 #if defined(_WIN32) /*[*/
 static HANDLE socket_event = NULL;
@@ -667,7 +667,7 @@ peer_script_init(void)
 
 	/* Create the listening socket. */
 	socketfd = socket(sa->sa_family, SOCK_STREAM, 0);
-	if (socketfd < 0) {
+	if (socketfd == INVALID_SOCKET) {
 #if !defined(_WIN32) /*[*/
 	    popup_an_errno(errno, "socket()");
 #else /*][*/
@@ -821,7 +821,7 @@ peer_script_init(void)
 static void
 socket_connection(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
-    int accept_fd;
+    socket_t accept_fd;
     sms_t *s;
 
     /* Accept the connection. */
@@ -847,7 +847,7 @@ socket_connection(unsigned long fd _is_unused, ioid_t id _is_unused)
     }
 #endif /*]*/
 
-    if (accept_fd < 0) {
+    if (accept_fd == INVALID_SOCKET) {
 	popup_an_errno(errno, "socket accept");
 	return;
     }
@@ -886,7 +886,7 @@ socket_connection(unsigned long fd _is_unused, ioid_t id _is_unused)
 static void
 child_socket_connection(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
-    int accept_fd;
+    socket_t accept_fd;
     sms_t *old_sms;
     sms_t *s;
     struct sockaddr_in sin;
@@ -897,7 +897,7 @@ child_socket_connection(unsigned long fd _is_unused, ioid_t id _is_unused)
     sin.sin_family = AF_INET;
     accept_fd = accept(sms->infd, (struct sockaddr *)&sin, &len);
 
-    if (accept_fd < 0) {
+    if (accept_fd == INVALID_SOCKET) {
 	popup_an_error("socket accept: %s", win32_strerror(GetLastError()));
 	return;
     }
@@ -3371,12 +3371,12 @@ Expect_action(ia_t ia, unsigned argc, const char **argv)
 static unsigned short
 pick_port(int *sp)
 {
-    	int s;
+    	socket_t s;
     	struct sockaddr_in sin;
 	socklen_t len;
 
 	s = socket(PF_INET, SOCK_STREAM, 0);
-	if (s < 0) {
+	if (s == INVALID_SOCKET) {
 	    	popup_an_error("socket: %s\n", win32_strerror(GetLastError()));
 		return 0;
 	}
@@ -3385,19 +3385,19 @@ pick_port(int *sp)
 	sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	if (bind(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
 	    	popup_an_error("bind: %s\n", win32_strerror(GetLastError()));
-		closesocket(s);
+		SOCK_CLOSE(s);
 		return 0;
 	}
 	len = sizeof(sin);
 	if (getsockname(s, (struct sockaddr *)&sin, &len) < 0) {
 	    	popup_an_error("getsockaddr: %s\n",
 			win32_strerror(GetLastError()));
-		closesocket(s);
+		SOCK_CLOSE(s);
 		return 0;
 	}
 	if (listen(s, 10) < 0) {
 	    	popup_an_error("listen: %s\n", win32_strerror(GetLastError()));
-		closesocket(s);
+		SOCK_CLOSE(s);
 		return 0;
 	}
 	*sp = s;

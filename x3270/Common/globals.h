@@ -431,3 +431,15 @@ typedef enum iaction {
 extern enum iaction ia_cause;
 
 typedef Boolean (action_t)(ia_t ia, unsigned argc, const char **argv);
+
+/* Common socket definitions. */
+#if !defined(_WIN32) /*[*/
+typedef int socket_t;
+#define INVALID_SOCKET  (-1)
+#define INET_ADDR_T	in_addr_t
+# define SOCK_CLOSE(s)  close(s)
+#else /*][*/
+typedef SOCKET socket_t;
+#define INET_ADDR_T	unsigned long
+# define SOCK_CLOSE(s)  closesocket(s)
+#endif /*]*/
