@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,12 +42,10 @@ extern Boolean oversize_changed;
 extern Boolean scheme_changed;
 extern Window *screen_window;
 extern Boolean scrollbar_changed;
-#if defined(X3270_DBCS) /*[*/
 extern const char *efont_charset_dbcs;
 extern XIM im;
 extern XIC ic;
 extern Boolean xim_error;
-#endif /*]*/
 
 extern void blink_start(void);
 extern void cursor_move(int baddr);

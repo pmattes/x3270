@@ -539,15 +539,12 @@ fprint_screen_body(fps_t ofps)
 			fa_ital = mi && FA_IS_MODIFIED(fa);
 		}
 		if (FA_IS_ZERO(fa)) {
-#if defined(X3270_DBCS) /*[*/
 			if (ctlr_dbcs_state(i) == DBCS_LEFT)
 			    	uc = 0x3000;
 			else
-#endif /*]*/
 				uc = ' ';
 		} else {
 		    	/* Convert EBCDIC to Unicode. */
-#if defined(X3270_DBCS) /*[*/
 			switch (ctlr_dbcs_state(i)) {
 			case DBCS_NONE:
 			case DBCS_SB:
@@ -571,27 +568,18 @@ fprint_screen_body(fps_t ofps)
 				uc = ' ';
 				break;
 			}
-#else /*][*/
-			uc = ebcdic_to_unicode(ea_buf[i].cc, ea_buf[i].cs,
-				EUO_NONE);
-			if (uc == 0)
-				uc = ' ';
-#endif /*]*/
 		}
 
 		/* Translate to a type-specific format and write it out. */
-		if (uc == ' ' && fps->ptype != P_HTML)
+		if (uc == ' ' && fps->ptype != P_HTML) {
 			ns++;
-#if defined(X3270_DBCS) /*[*/
-		else if (uc == 0x3000) {
+		} else if (uc == 0x3000) {
 		    	if (fps->ptype == P_HTML) {
 			    	if (fprintf(fps->file, "  ") < 0)
 					FAIL;
 			} else
 				ns += 2;
-		}
-#endif /*]*/
-		else {
+		} else {
 			while (nr) {
 			    	if (fps->ptype == P_RTF)
 				    	if (fprintf(fps->file, "\\par") < 0)

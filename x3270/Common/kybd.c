@@ -100,9 +100,7 @@ static void kybdlock_set(unsigned int bits, const char *cause);
 static KeySym MyStringToKeysym(const char *s, enum keytype *keytypep,
 	ucs4_t *ucs4);
 
-#if defined(X3270_DBCS) /*[*/
 static Boolean key_WCharacter(unsigned char code[]);
-#endif /*]*/
 
 static Boolean		insert = False;		/* insert mode */
 static Boolean		reverse = False;	/* reverse-input mode */
@@ -511,10 +509,7 @@ insert_mode(Boolean on)
 static void
 reverse_mode(Boolean on)
 {
-#if defined(X3270_DBCS) /*[*/
-	if (!dbcs)
-#endif /*]*/
-	{
+	if (!dbcs) {
 		reverse = on;
 		status_reverse_mode(on);
 	}
@@ -1103,7 +1098,6 @@ key_Character(unsigned ebc, Boolean with_ge, Boolean pasting)
 	return True;
 }
 
-#if defined(X3270_DBCS) /*[*/
 static Boolean
 key_WCharacter_wrapper(ia_t ia _is_unused, unsigned argc _is_unused,
 	const char **argv)
@@ -1146,10 +1140,7 @@ key_WCharacter(unsigned char ebc_pair[])
 		return False;
 	}
 
-#if defined(X3270_DBCS) /*[*/
-	if (!dbcs)
-#endif /*]*/
-	{
+	if (!dbcs) {
 		vtrace("DBCS character received when not in DBCS mode, "
 		    "ignoring.\n");
 		return True;
@@ -1408,7 +1399,6 @@ retry:
 		return False;
 	}
 }
-#endif /*]*/
 
 /*
  * Handle an ordinary character key, given its Unicode value.
@@ -1496,17 +1486,16 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause)
 			vtrace("  dropped (no EBCDIC translation)\n");
 			return;
 		}
-#if defined(X3270_DBCS) /*[*/
 		if (ebc & 0xff00) {
 		    	unsigned char ebc_pair[2];
 
 			ebc_pair[0] = (ebc & 0xff00)>> 8;
 			ebc_pair[1] = ebc & 0xff;
 			(void) key_WCharacter(ebc_pair);
-		} else
-#endif /*]*/
+		} else {
 			(void) key_Character(ebc, (keytype == KT_GE) || ge,
 				(cause == IA_PASTE));
+		}
 	}
 	else if (IN_NVT) {
 	    	char mb[16];
@@ -1559,11 +1548,9 @@ Flip_action(ia_t ia, unsigned argc, const char **argv)
 	return False;
     }
     reset_idle_timer();
-#if defined(X3270_DBCS) /*[*/
     if (dbcs) {
 	return False;
     }
-#endif /*]*/
     screen_flip();
     return True;
 }
@@ -2612,9 +2599,7 @@ lightpen_select(int baddr)
 	int faddr;
 	register unsigned char	fa;
 	int designator;
-#if defined(X3270_DBCS) /*[*/
 	int designator2;
-#endif /*]*/
 
 	faddr = find_field_attribute(baddr);
 	fa = ea_buf[faddr].fa;
@@ -2625,7 +2610,6 @@ lightpen_select(int baddr)
 	designator = faddr;
 	INC_BA(designator);
 
-#if defined(X3270_DBCS) /*[*/
 	if (dbcs) {
 		if (ea_buf[baddr].cs == CS_DBCS) {
 			designator2 = designator;
@@ -2662,7 +2646,6 @@ lightpen_select(int baddr)
 			return;
 		}
 	} 
-#endif /*]*/
 
 	switch (ea_buf[designator].cc) {
 	    case EBC_greater:		/* > */
@@ -3747,16 +3730,11 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 		if (!(literal & ~0xff)) {
 		    key_Character((unsigned char) literal, False, True);
 		} else {
-#if defined(X3270_DBCS) /*[*/
 		    unsigned char ebc_pair[2];
 
 		    ebc_pair[0] = (literal >> 8) & 0xff;
 		    ebc_pair[1] = literal & 0xff;
 		    key_WCharacter(ebc_pair);
-#else /*][*/
-		    popup_an_error("String: EBCDIC code > 255");
-		    cancel_if_idle_command();
-#endif /*]*/
 		}
 		state = BASE;
 		continue;

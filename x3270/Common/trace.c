@@ -535,11 +535,9 @@ create_tracefile_header(const char *mode)
 # endif /*]*/
 #endif /*]*/
     wtrace(False, " Host codepage: %d", (int)(cgcsgid & 0xffff));
-#if defined(X3270_DBCS) /*[*/
     if (dbcs) {
 	wtrace(False, "+%d", (int)(cgcsgid_dbcs & 0xffff));
     }
-#endif /*]*/
     wtrace(False, "\n");
 #if defined(_WIN32) && (defined(C3270) || defined(S3270)) /*[*/
     wtrace(False, " AppData: %s\n", myappdata? myappdata: "(null)");

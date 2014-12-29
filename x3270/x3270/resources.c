@@ -286,14 +286,12 @@ XtResource resources[] = {
 	  offset(eof), XtRString, "^D" },
 	{ ResPrinterLu, ClsPrinterLu, XtRString, sizeof(char *),
 	  offset(printer_lu), XtRString, 0 },
-#if defined(X3270_DBCS) /*[*/
 	{ ResInputMethod, ClsInputMethod, XtRString, sizeof(char *),
 	  offset(input_method), XtRString, 0 },
 	{ ResPreeditType, ClsPreeditType, XtRString, sizeof(char *),
 	  offset(preedit_type), XtRString, PT_OVER_THE_SPOT "+1" },
 	{ ResDbcsCgcsgid, ClsDbcsCgcsgid, XtRString, sizeof(char *),
 	  offset(dbcs_cgcsgid), XtRString, 0 },
-#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 	{ ResAcceptHostname, ClsAcceptHostname, XtRString, sizeof(char *),
 	  offset(accept_hostname), XtRString, 0 },

@@ -999,13 +999,7 @@ status_dump(void)
 	if (bplu != NULL && bplu[0])
 	    	action_output("%s %s", get_message("bindPluName"), bplu);
 	action_output("%s %s (%s)", get_message("characterSet"),
-	    get_charset_name(),
-#if defined(X3270_DBCS) /*[*/
-	    dbcs? "DBCS": "SBCS"
-#else /*][*/
-	    "SBCS"
-#endif /*]*/
-	    );
+	    get_charset_name(), dbcs? "DBCS": "SBCS");
 	action_output("%s %s",
 		get_message("hostCodePage"),
 		get_host_codepage());
@@ -1013,13 +1007,12 @@ status_dump(void)
 		get_message("sbcsCgcsgid"),
 		(unsigned short)((cgcsgid >> 16) & 0xffff),
 		(unsigned short)(cgcsgid & 0xffff));
-#if defined(X3270_DBCS) /*[*/
-	if (dbcs)
+	if (dbcs) {
 		action_output("%s GCSGID %u, CPGID %u",
 			get_message("dbcsCgcsgid"),
 			(unsigned short)((cgcsgid_dbcs >> 16) & 0xffff),
 			(unsigned short)(cgcsgid_dbcs & 0xffff));
-#endif /*]*/
+	}
 #if !defined(_WIN32) /*[*/
 	action_output("%s %s", get_message("localeCodeset"), locale_codeset);
 	action_output("%s DBCS %s, wide curses %s",

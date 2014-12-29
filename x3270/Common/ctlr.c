@@ -1219,9 +1219,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 	enum dbcs_state	d;
 	enum dbcs_why	why = DBCS_FIELD;
 	Boolean		aborted = False;
-#if defined(X3270_DBCS) /*[*/
 	char		mb[16];
-#endif /*]*/
 
 #define END_TEXT0	{ if (previous == TEXT) trace_ds("'"); }
 #define END_TEXT(cmd)	{ END_TEXT0; trace_ds(" %s", cmd); }
@@ -1395,7 +1393,6 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			add_dbcs = False;
 			ra_ge = False;
 			previous = ORDER;
-#if defined(X3270_DBCS) /*[*/
 			if (dbcs) {
 				d = ctlr_lookleft_state(buffer_addr, &why);
 				if (d == DBCS_RIGHT) {
@@ -1440,9 +1437,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 					   (add_c1 << 8) | add_c2,
 					   mb, sizeof(mb));
 			        trace_ds("'%s'", mb);
-			} else
-#endif /*]*/
-			{
+			} else {
 				if (*cp == ORDER_GE) {
 					ra_ge = True;
 					trace_ds("GraphicEscape");
@@ -1888,7 +1883,6 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			if (previous != TEXT)
 				trace_ds(" '");
 			previous = TEXT;
-#if defined(X3270_DBCS) /*[*/
 			add_dbcs = False;
 			d = ctlr_lookleft_state(buffer_addr, &why);
 			if (d == DBCS_RIGHT) {
@@ -1913,19 +1907,15 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 					   sizeof(mb));
 			        trace_ds("%s", mb);
 			} else {
-#endif /*]*/
 				add_c1 = *cp;
 				trace_ds("%s", see_ebc(*cp));
-#if defined(X3270_DBCS) /*[*/
 			}
-#endif /*]*/
 			ctlr_add(buffer_addr, add_c1, default_cs);
 			ctlr_add_fg(buffer_addr, default_fg);
 			ctlr_add_bg(buffer_addr, default_bg);
 			ctlr_add_gr(buffer_addr, default_gr);
 			ctlr_add_ic(buffer_addr, default_ic);
 			INC_BA(buffer_addr);
-#if defined(X3270_DBCS) /*[*/
 			if (add_dbcs) {
 				ctlr_add(buffer_addr, add_c2, default_cs);
 				ctlr_add_fg(buffer_addr, default_fg);
@@ -1934,7 +1924,6 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				ctlr_add_ic(buffer_addr, default_ic);
 				INC_BA(buffer_addr);
 			}
-#endif /*]*/
 			last_cmd = False;
 			last_zpt = False;
 			break;
@@ -2103,8 +2092,6 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 	/* Let a script go. */
 	sms_host_output();
 }
-
-#if defined(X3270_DBCS) /*[*/
 
 /*
  * Determine the DBCS state of a buffer location strictly by looking left.
@@ -2382,7 +2369,6 @@ ctlr_dbcs_postprocess(void)
 
 	return rc;
 }
-#endif /*]*/
 
 /*
  * Process pending input.
@@ -2788,7 +2774,6 @@ ctlr_shrink(void)
 	screen_disp(False);
 }
 
-#if defined(X3270_DBCS) /*[*/
 /*
  * DBCS state query.
  * Returns:
@@ -2813,7 +2798,6 @@ ctlr_dbcs_state(int baddr)
 {
 	return ctlr_dbcs_state_ea(baddr, ea_buf);
 }
-#endif /*]*/
 
 
 /*

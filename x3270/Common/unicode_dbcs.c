@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012, Paul Mattes.
+ * Copyright (c) 2008-2012, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,8 +44,6 @@
  * DBCS EBCDIC-to-Unicode translation tables.
  */
 
-#if defined(X3270_DBCS) /*[*/
-
 typedef struct {
     char *name;
     const char *codepage;
@@ -54,6 +52,7 @@ typedef struct {
     const char *ebc2u[512];	/* EBCDIC to Unicode vectors */
 } uni16_t;
 
+#if defined(X3270_DBCS) /*[*/
 static uni16_t uni16[] = {
     { "cp930", "0x0172012c" /* 370, 300 */, "jisx0208.1983-0,iso10646-1",
 /* Unicode to EBCDIC DBCS translation table for ibm-300_P110-1997 */ {
@@ -4169,6 +4168,7 @@ static uni16_t uni16[] = {
     },
     { NULL }
 };
+#endif /*]*/
 
 /* Code page aliases. */
 
@@ -4177,6 +4177,7 @@ typedef struct {
     char *canon;
 } cpalias_t;
 
+#if defined(X3270_DBCS) /*[*/
 cpalias_t cpaliases16[] = {
     { "chinese-gb18030",	"cp1388" },
     { "cp1027",			"cp930" },	/* historical error */
@@ -4191,12 +4192,14 @@ cpalias_t cpaliases16[] = {
     { "traditional-chinese",	"cp937" },
     { NULL,			NULL }
 };
+#endif /*]*/
 
 static uni16_t *cur_uni16 = NULL;
 
 void
 charset_list_dbcs(void)
 {
+#if defined(X3270_DBCS) /*[*/
     	int i;
 	int j;
 	char *sep = "";
@@ -4220,6 +4223,7 @@ charset_list_dbcs(void)
 		sep = ", ";
 	}
 	printf("\n");
+#endif /*]*/
 }
 
 /*
@@ -4284,6 +4288,7 @@ int
 set_uni_dbcs(const char *csname, const char **codepage,
 	const char **display_charsets)
 {
+#if defined(X3270_DBCS) /*[*/
 	int i;
 	const char *realname = csname;
 	int rc = -1;
@@ -4315,6 +4320,7 @@ set_uni_dbcs(const char *csname, const char **codepage,
 	    	cur_uni16 = NULL;
 
 	return rc;
-}
-
+#else /*][*/
+	return -1;
 #endif /*]*/
+}

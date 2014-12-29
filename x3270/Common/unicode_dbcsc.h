@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009, Paul Mattes.
+ * Copyright (c) 2008-2009, 2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,10 +25,8 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(X3270_DBCS) /*[*/
 extern ucs4_t ebcdic_dbcs_to_unicode(ebc_t e, unsigned flags);
 extern ebc_t unicode_to_ebcdic_dbcs(ucs4_t u);
 extern int set_uni_dbcs(const char *csname, const char **codepage,
 	const char **display_charsets);
 extern void charset_list_dbcs(void);
-#endif /*]*/

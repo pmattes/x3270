@@ -296,7 +296,6 @@ dft_data_insert(struct data_buffer *data_bufr)
 				 * from there.
 				 */
 
-#if defined(X3270_DBCS) /*[*/
 				switch (ft_dbcs_state) {
 				    case FT_DBCS_NONE:
 					if (c == EBC_so) {
@@ -331,7 +330,6 @@ dft_data_insert(struct data_buffer *data_bufr)
 					ft_dbcs_state = FT_DBCS_SO;
 					continue;
 				}
-#endif /*]*/
 
 				if (c < 0x20 ||
 				    (c >= 0x80 && c < 0xa0 && c != 0x9f)) {
@@ -417,7 +415,6 @@ dft_set_cur_req(void)
 	/* Currently doesn't do anything. */
 }
 
-#if defined(X3270_DBCS) /*[*/
 /* Store a byte inthe input buffer or ungetc cache. */
 static void
 store_inbyte(unsigned char c, unsigned char **bufptr, size_t *numbytes)
@@ -430,7 +427,6 @@ store_inbyte(unsigned char c, unsigned char **bufptr, size_t *numbytes)
 	    	dft_ungetc_cache[dft_ungetc_count++] = c;
 	}
 }
-#endif /*]*/
 
 /*
  * Read a character from a local file in ASCII mode.
@@ -473,13 +469,11 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 
 			c = fgetc(ft_local_file);
 			if (c == EOF) {
-#if defined(X3270_DBCS) /*[*/
 				if (ft_last_dbcs) {
 					*bufptr = EBC_si;
 					ft_last_dbcs = False;
 					return 1;
 				}
-#endif /*]*/
 				return -1;
 			}
 			error = ME_NONE;
@@ -501,7 +495,6 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 
 	/* Expand NL to CR/LF. */
 	if (cr_flag && !ft_last_cr && c == '\n') {
-#if defined(X3270_DBCS) /*[*/
 	    	if (ft_last_dbcs) {
 		    	*bufptr = EBC_si;
 			dft_ungetc_cache[0] = '\r';
@@ -509,9 +502,7 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 			dft_ungetc_count = 2;
 			ft_last_dbcs = False;
 			return 1;
-		} else
-#endif /*]*/
-		{
+		} else {
 			*bufptr = '\r';
 			dft_ungetc_cache[0] = '\n';
 			dft_ungetc_count = 1;
@@ -540,7 +531,6 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 	else
 		e = unicode_to_ebcdic(u);
 	if (e & 0xff00) {
-#if defined(X3270_DBCS) /*[*/
 		unsigned char *bp0 = bufptr;
 
 		if (!ft_last_dbcs)
@@ -549,22 +539,17 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 		store_inbyte(i_ft2asc[e & 0xff],        &bufptr, &numbytes);
 		ft_last_dbcs = True;
 		return bufptr - bp0;
-#else /*][*/
-		*bufptr = '?';
-		return 1;
-#endif /*]*/
 	} else {
 	    	unsigned char nc = e? i_ft2asc[e]: '?';
 
-#if defined(X3270_DBCS) /*[*/
 	    	if (ft_last_dbcs) {
 		    	*bufptr = EBC_si;
 			dft_ungetc_cache[0] = nc;
 			dft_ungetc_count = 1;
 			ft_last_dbcs = False;
-		} else
-#endif /*]*/
+		} else {
 			*bufptr = nc;
+		}
 		return 1;
 	}
 }

@@ -270,9 +270,7 @@ charset_list(void)
 	}
 	printf("\n");
 
-#if defined(X3270_DBCS) /*[*/
 	charset_list_dbcs();
-#endif /*]*/
 }
 
 /*
@@ -340,10 +338,8 @@ ebcdic_to_unicode(ebc_t c, unsigned char cs, unsigned flags)
 ucs4_t
 ebcdic_base_to_unicode(ebc_t c, unsigned flags)
 {
-#if defined(X3270_DBCS) /*[*/
     if (c & 0xff00)
 	return ebcdic_dbcs_to_unicode(c, flags);
-#endif /*]*/
 
     if (c == 0x40)
 	return 0x0020;
@@ -387,9 +383,7 @@ ebc_t
 unicode_to_ebcdic(ucs4_t u)
 {
     int i;
-#if defined(X3270_DBCS) /*[*/
     ebc_t d;
-#endif /*]*/
 
     if (!u)
 	return 0;
@@ -401,12 +395,10 @@ unicode_to_ebcdic(ucs4_t u)
 	    return UT_OFFSET + i;
 	}
     }
-#if defined(X3270_DBCS) /*[*/
     /* See if it's DBCS. */
     d = unicode_to_ebcdic_dbcs(u);
     if (d)
 	return d;
-#endif /*]*/
 
     return 0;
 }

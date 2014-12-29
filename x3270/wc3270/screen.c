@@ -70,13 +70,11 @@
 
 #define XTRA_ROWS	(1 + 2 * (appres.menubar == True))
 
-#if defined(X3270_DBCS) /*[*/
-# if !defined(COMMON_LVB_LEAD_BYTE) /*[*/
-#  define COMMON_LVB_LEAD_BYTE		0x100
-# endif /*]*/
-# if !defined(COMMON_LVB_TRAILING_BYTE) /*[*/
-#  define COMMON_LVB_TRAILING_BYTE	0x200
-# endif /*]*/
+#if !defined(COMMON_LVB_LEAD_BYTE) /*[*/
+# define COMMON_LVB_LEAD_BYTE		0x100
+#endif /*]*/
+#if !defined(COMMON_LVB_TRAILING_BYTE) /*[*/
+# define COMMON_LVB_TRAILING_BYTE	0x200
 #endif /*]*/
 
 #define MAX_COLORS	16
@@ -995,12 +993,10 @@ refresh(void)
 	/* Move the cursor. */
 	coord.X = cur_col;
 	coord.Y = cur_row;
-#if defined(X3270_DBCS) /*[*/
 	if (onscreen[ix(cur_row, cur_col)].Attributes &
 		COMMON_LVB_TRAILING_BYTE) {
 	    coord.X--;
 	}
-#endif /*]*/
 	if (SetConsoleCursorPosition(sbuf, coord) == 0) {
 		fprintf(stderr,
 			"\nrefresh: SetConsoleCursorPosition(x=%d,y=%d) "
@@ -1582,9 +1578,7 @@ screen_disp(Boolean erasing _is_unused)
 	Boolean a_blinking = False;
 	int c;
 	unsigned char fa;
-#if defined(X3270_DBCS) /*[*/
 	enum dbcs_state d;
-#endif /*]*/
 	int fa_addr;
 
 	/* This may be called when it isn't time. */
@@ -1616,12 +1610,10 @@ screen_disp(Boolean erasing _is_unused)
 
 			coord.X = cur_col;
 			coord.Y = cur_row;
-#if defined(X3270_DBCS) /*[*/
 			if (onscreen[ix(cur_row, cur_col)].Attributes &
 				COMMON_LVB_TRAILING_BYTE) {
 			    coord.X--;
 			}
-#endif /*]*/
 			if (SetConsoleCursorPosition(sbuf, coord) == 0) {
 				fprintf(stderr,
 					"\nscreen_disp: "
@@ -1784,7 +1776,6 @@ screen_disp(Boolean erasing _is_unused)
 					underlined = b_underlined;
 					blinking = b_blinking;
 				}
-#if defined(X3270_DBCS) /*[*/
 				d = ctlr_dbcs_state(baddr);
 				if (IS_LEFT(d)) {
 					int xaddr = baddr;
@@ -1803,7 +1794,6 @@ screen_disp(Boolean erasing _is_unused)
 					addch(' ');
 					cur_attr &= ~COMMON_LVB_TRAILING_BYTE;
 				} else if (!IS_RIGHT(d)) {
-#endif /*]*/
 					c = ebcdic_to_unicode(ea_buf[baddr].cc,
 						ea_buf[baddr].cs,
 						appres.ascii_box_draw?
@@ -1816,9 +1806,7 @@ screen_disp(Boolean erasing _is_unused)
 						c = towupper(c);
 					addch(blinkmap(blinking, underlined,
 						    c));
-#if defined(X3270_DBCS) /*[*/
 				}
-#endif /*]*/
 			}
 		}
 	}

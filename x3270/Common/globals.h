@@ -184,9 +184,7 @@ extern char		*connected_lu;
 extern char		*connected_type;
 extern char		*current_host;
 extern unsigned short	current_port;
-#if defined(X3270_DBCS) /*[*/
 extern Boolean		dbcs;
-#endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
 extern int		default_screen;
 #endif /*]*/
@@ -202,16 +200,12 @@ extern Boolean		*font_8bit;
 extern Boolean		flipped;
 extern char		*full_current_host;
 extern char		*full_efontname;
-#if defined(X3270_DBCS) /*[*/
 extern char		*full_efontname_dbcs;
-#endif /*]*/
 extern char		full_model_name[];
 extern char		*funky_font;
 extern char		*hostname;
-#if defined(X3270_DBCS) /*[*/
 #if defined(X3270_DISPLAY) /*[*/
 extern char		*locale_name;
-#endif /*]*/
 #endif /*]*/
 extern char		luname[];
 #if defined(LOCAL_PROCESS) /*[*/
@@ -395,12 +389,10 @@ enum keytype { KT_STD, KT_GE };
 #endif /*]*/
 
 /* DBCS Preedit Types */
-#if defined(X3270_DBCS) /*[*/
-# define PT_ROOT		"Root"
-# define PT_OVER_THE_SPOT	"OverTheSpot"
-# define PT_OFF_THE_SPOT	"OffTheSpot"
-# define PT_ON_THE_SPOT		"OnTheSpot"
-#endif /*]*/
+#define PT_ROOT		"Root"
+#define PT_OVER_THE_SPOT	"OverTheSpot"
+#define PT_OFF_THE_SPOT	"OffTheSpot"
+#define PT_ON_THE_SPOT		"OnTheSpot"
 
 /* I/O ID typedef */
 typedef unsigned long ioid_t;

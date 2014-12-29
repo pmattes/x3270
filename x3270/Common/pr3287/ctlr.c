@@ -135,9 +135,7 @@ static Boolean any_scs_output = False;
 static int scs_leftover_len = 0;
 static int scs_leftover_buf[256];
 static int scs_dbcs_subfield = 0;
-#if defined(X3270_DBCS) /*[*/
 static unsigned char scs_dbcs_c1 = 0;
-#endif /*]*/
 static unsigned scs_cs = 0;
 static Boolean ffeoj_last = False;
 
@@ -600,9 +598,7 @@ init_scs(void)
 	}
 	scs_leftover_len = 0;
 	scs_dbcs_subfield = 0;
-#if defined(X3270_DBCS) /*[*/
 	scs_dbcs_c1 = 0;
-#endif /*]*/
 	scs_cs = 0;
 
 	scs_initted = True;
@@ -1012,9 +1008,7 @@ process_scs_contig(unsigned char *buf, int buflen)
 			switch (*(cp + 1)) {
 			case SCS_SA_RESET:
 				trace_ds(" Reset(%02x)", *(cp + 2));
-#if defined(X3270_DBCS) /*[*/
 				scs_dbcs_subfield = 0;
-#endif /*]*/
 				scs_cs = 0;
 				break;
 			case SCS_SA_HIGHLIGHT:
@@ -1023,12 +1017,11 @@ process_scs_contig(unsigned char *buf, int buflen)
 			case SCS_SA_CS:
 				trace_ds(" CharacterSet(%02x)", *(cp + 2));
 				if (scs_cs != *(cp + 2)) {
-#if defined(X3270_DBCS) /*[*/
-					if (scs_cs == 0xf8)
+					if (scs_cs == 0xf8) {
 						scs_dbcs_subfield = 0;
-					else if (*(cp + 2) == 0xf8)
+					} else if (*(cp + 2) == 0xf8) {
 						scs_dbcs_subfield = 1;
-#endif /*]*/
+					}
 					scs_cs = *(cp + 2);
 				}
 				break;
@@ -1066,9 +1059,7 @@ process_scs_contig(unsigned char *buf, int buflen)
 			/* Copy out the data literally. */
 			add_scs_trn(cp+1, cnt);
 			cp += cnt;
-#if defined(X3270_DBCS) /*[*/
 			scs_dbcs_subfield = 0;
-#endif /*]*/
 			break;
 		case SCS_SET:	/* set... */
 			/* Skip over the first byte of the order. */
@@ -1219,7 +1210,6 @@ process_scs_contig(unsigned char *buf, int buflen)
 					break;
 			}
 			break;
-#if defined(X3270_DBCS) /*[*/
 		case SCS_SO:	/* DBCS subfield start */
 			END_TEXT("SO");
 			scs_dbcs_subfield = 1;
@@ -1228,7 +1218,6 @@ process_scs_contig(unsigned char *buf, int buflen)
 			END_TEXT("SI");
 			scs_dbcs_subfield = 0;
 			break;
-#endif /*]*/
 		default:
 			/*
 			 * Stray control codes are spaces, all else gets
@@ -1246,7 +1235,6 @@ process_scs_contig(unsigned char *buf, int buflen)
 				trace_ds("'");
 			else if (last == ORDER)
 				trace_ds(" '");
-#if defined(X3270_DBCS) /*[*/
 			if (scs_dbcs_subfield && dbcs) {
 				if (scs_dbcs_subfield % 2) {
 					scs_dbcs_c1 = *cp;
@@ -1282,7 +1270,6 @@ process_scs_contig(unsigned char *buf, int buflen)
 				last = DATA;
 				break;
 			}
-#endif /*]*/
 			uc = ebcdic_to_unicode(*cp, CS_BASE, EUO_NONE);
 			{
 			    	char mb[16];

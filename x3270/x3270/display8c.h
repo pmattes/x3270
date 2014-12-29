@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009, Paul Mattes.
+ * Copyright (c) 2008-2009, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,5 @@
 
 int display8_init(char *cset);
 int display8_lookup(int d8_ix, ucs4_t ucs4);
-#if defined(X3270_DBCS) /*[*/
 int display16_init(char *cset);
 int display16_lookup(int d16_ix, ucs4_t ucs4);
-#endif /*]*/

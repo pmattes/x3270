@@ -104,12 +104,10 @@ charset_init(const char *csname)
 	if (!(cgcsgid & ~0xffff))
 	    	cgcsgid |= 0x02b90000;
 
-#if defined(X3270_DBCS) /*[*/
 	if (set_uni_dbcs(csname, &cgcsgid_str, &display_charsets) == 0) {
 	    	dbcs = 1;
 		cgcsgid_dbcs = strtoul(cgcsgid_str, NULL, 0);
 	}
-#endif /*]*/
 
 	return CS_OKAY;
 }

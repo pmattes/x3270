@@ -974,9 +974,7 @@ ft_start(void)
 
     ft_private.is_action = False;
 
-#if defined(X3270_DBCS) /*[*/
     ft_dbcs_state = FT_DBCS_NONE;
-#endif /*]*/
 
     /* Get the DFT buffer size. */
     XtVaGetValues(buffersize_widget, XtNstring, &buffersize, NULL);
@@ -1140,9 +1138,7 @@ ft_start(void)
     ft_state = FT_AWAIT_ACK;
     ft_private.is_cut = False;
     ft_last_cr = False;
-#if defined(X3270_DBCS) /*[*/
     ft_last_dbcs = False;
-#endif /*]*/
 
     return True;
 }

@@ -76,9 +76,7 @@ static unsigned char supported_replies[] = {
 	QR_COLOR,		/* 0x86 */
 	QR_HIGHLIGHTING,	/* 0x87 */
 	QR_REPLY_MODES,		/* 0x88 */
-#if defined(X3270_DBCS) /*[*/
 	QR_DBCS_ASIA,		/* 0x91 */
-#endif /*]*/
 	QR_IMP_PART,		/* 0xa6 */
 	QR_DDM,			/* 0x95 */
 };
@@ -213,10 +211,9 @@ sf_read_part(unsigned char buf[], unsigned buflen)
 		trace_ds("\n");
 		query_reply_start();
 		for (i = 0; i < NSR; i++) {
-#if defined(X3270_DBCS) /*[*/
-			if (dbcs || supported_replies[i] != QR_DBCS_ASIA)
-#endif /*]*/
+			if (dbcs || supported_replies[i] != QR_DBCS_ASIA) {
 				do_query_reply(supported_replies[i]);
+			}
 		}
  		query_reply_end();
 		break;
@@ -248,11 +245,8 @@ sf_read_part(unsigned char buf[], unsigned buflen)
 					if (memchr((char *)&buf[6],
 						   (char)supported_replies[i],
 						   buflen-6)
-#if defined(X3270_DBCS) /*[*/
 						   && (dbcs ||
-						       supported_replies[i] != QR_DBCS_ASIA)
-#endif /*]*/
-						   ) {
+						       supported_replies[i] != QR_DBCS_ASIA)) {
 						do_query_reply(supported_replies[i]);
 						any++;
 					}
@@ -269,19 +263,19 @@ sf_read_part(unsigned char buf[], unsigned buflen)
 				comma = ",";
 			}
 			trace_ds(")\n");
-			for (i = 0; i < NSR; i++)
-#if defined(X3270_DBCS) /*[*/
-				if (dbcs || supported_replies[i] != QR_DBCS_ASIA)
-#endif /*]*/
+			for (i = 0; i < NSR; i++) {
+				if (dbcs || supported_replies[i] != QR_DBCS_ASIA) {
 					do_query_reply(supported_replies[i]);
+				}
+			}
 			break;
 		    case SF_RPQ_ALL:
 			trace_ds("All\n");
-			for (i = 0; i < NSR; i++)
-#if defined(X3270_DBCS) /*[*/
-				if (dbcs || supported_replies[i] != QR_DBCS_ASIA)
-#endif /*]*/
+			for (i = 0; i < NSR; i++) {
+				if (dbcs || supported_replies[i] != QR_DBCS_ASIA) {
 					do_query_reply(supported_replies[i]);
+				}
+			}
 			break;
 		    default:
 			trace_ds("unknown request type 0x%02x\n", buf[5]);
@@ -458,11 +452,9 @@ do_query_reply(unsigned char code)
 	    case QR_CHARSETS:
 		trace_ds("> QueryReply(CharacterSets)\n");
 		space3270out(64);
-#if defined(X3270_DBCS) /*[*/
 		if (dbcs)
 			*obptr++ = 0x8e;	/* flags: GE, CGCSGID, DBCS */
 		else
-#endif /*]*/
 			*obptr++ = 0x82;	/* flags: GE, CGCSGID present */
 		*obptr++ = 0x00;		/* more flags */
 		*obptr++ = char_width;		/* SDW */
@@ -471,32 +463,26 @@ do_query_reply(unsigned char code)
 		*obptr++ = 0x00;
 		*obptr++ = 0x00;
 		*obptr++ = 0x00;
-#if defined(X3270_DBCS) /*[*/
 		if (dbcs)
 			*obptr++ = 0x0b;	/* DL (11 bytes) */
 		else
-#endif /*]*/
 			*obptr++ = 0x07;	/* DL (7 bytes) */
 
 		*obptr++ = 0x00;		/* SET 0: */
-#if defined(X3270_DBCS) /*[*/
 		if (dbcs)
 			*obptr++ = 0x00;	/*  FLAGS: non-load, single-
 						    plane, single-bute */
 		else
-#endif /*]*/
 			*obptr++ = 0x10;	/*  FLAGS: non-loadable,
 						    single-plane, single-byte,
 						    no compare */
 		*obptr++ = 0x00;		/*  LCID 0 */
-#if defined(X3270_DBCS) /*[*/
 		if (dbcs) {
 			*obptr++ = 0x00;	/*  SW 0 */
 			*obptr++ = 0x00;	/*  SH 0 */
 			*obptr++ = 0x00;	/*  SUBSN */
 			*obptr++ = 0x00;	/*  SUBSN */
 		}
-#endif /*]*/
 		SET32(obptr, cgcsgid);		/*  CGCSGID */
 		if (!standard_font) {
 			/* special 3270 font, includes APL */
@@ -504,20 +490,17 @@ do_query_reply(unsigned char code)
 			*obptr++ = 0x10;/*  FLAGS: non-loadable, single-plane,
 					     single-byte, no compare */
 			*obptr++ = 0xf1;/*  LCID */
-#if defined(X3270_DBCS) /*[*/
 			if (dbcs) {
 				*obptr++ = 0x00;/*  SW 0 */
 				*obptr++ = 0x00;/*  SH 0 */
 				*obptr++ = 0x00;/*  SUBSN */
 				*obptr++ = 0x00;/*  SUBSN */
 			}
-#endif /*]*/
 			*obptr++ = 0x03;/*  CGCSGID: 3179-style APL2 */
 			*obptr++ = 0xc3;
 			*obptr++ = 0x01;
 			*obptr++ = 0x36;
 		}
-#if defined(X3270_DBCS) /*[*/
 		if (dbcs) {
 			*obptr++ = 0x80;	/* SET 0x80: */
 			*obptr++ = 0x20;	/*  FLAGS: DBCS */
@@ -528,7 +511,6 @@ do_query_reply(unsigned char code)
 			*obptr++ = 0x7f;	/*  SUBSN */
 			SET32(obptr, cgcsgid_dbcs); /* CGCSGID */
 		}
-#endif /*]*/
 		break;
 
 	    case QR_IMP_PART:
@@ -553,16 +535,12 @@ do_query_reply(unsigned char code)
 		trace_ds("> QueryReply(Summary(");
 		space3270out(NSR);
 		for (i = 0; i < NSR; i++) {
-#if defined(X3270_DBCS) /*[*/
 			if (dbcs || supported_replies[i] != QR_DBCS_ASIA) {
-#endif /*]*/
 				trace_ds("%s%s", comma,
 				    see_qcode(supported_replies[i]));
 				comma = ",";
 				*obptr++ = supported_replies[i];
-#if defined(X3270_DBCS) /*[*/
 			}
-#endif /*]*/
 		}
 		trace_ds("))\n");
 		break;
@@ -633,7 +611,6 @@ do_query_reply(unsigned char code)
 		*obptr++ = SF_SRM_CHAR;
 		break;
 
-#if defined(X3270_DBCS) /*[*/
 	    case QR_DBCS_ASIA:
 		/* XXX: Should we support this, even when not in DBCS mode? */
 		trace_ds("> QueryReply(DbcsAsia)\n");
@@ -646,7 +623,6 @@ do_query_reply(unsigned char code)
 		*obptr++ = 0x02;	/* input control */
 		*obptr++ = 0x01;	/* creation supported */
 		break;
-#endif /*]*/
 
 	    case QR_ALPHA_PART:
 		trace_ds("> QueryReply(AlphanumericPartitions)\n");

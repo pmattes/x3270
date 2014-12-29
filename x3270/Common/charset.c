@@ -94,11 +94,9 @@ charset_init(const char *csname)
 	const char *codepage;
 	const char *cgcsgid;
 	const char *display_charsets;
-#if defined(X3270_DBCS) /*[*/
 	const char *dbcs_cgcsgid = NULL;
 	const char *dbcs_display_charsets = NULL;
 	Boolean need_free = False;
-#endif /*]*/
 
 #if !defined(_WIN32) /*[*/
 	/* Get all of the locale stuff right. */
@@ -137,9 +135,7 @@ charset_init(const char *csname)
 		    "us");
 #endif /*]*/
 		(void) set_uni(NULL, &codepage, &cgcsgid, &display_charsets);
-#if defined(X3270_DBCS) /*[*/
 		(void) set_uni_dbcs("", NULL, NULL);
-#endif /*]*/
 		return CS_OKAY;
 	}
 
@@ -147,7 +143,6 @@ charset_init(const char *csname)
 		return CS_NOTFOUND;
 	if (appres.sbcs_cgcsgid != NULL)
 	    	cgcsgid = appres.sbcs_cgcsgid; /* override */
-#if defined(X3270_DBCS) /*[*/
 	if (set_uni_dbcs(csname, &dbcs_cgcsgid, &dbcs_display_charsets) == 0) {
 	    if (appres.dbcs_cgcsgid != NULL)
 		    dbcs_cgcsgid = appres.dbcs_cgcsgid; /* override */
@@ -156,15 +151,12 @@ charset_init(const char *csname)
 		    dbcs_display_charsets);
 	    need_free = True;
 	}
-#endif /*]*/
 
 	rc = charset_init2(csname, codepage, cgcsgid, display_charsets);
-#if defined(X3270_DBCS) /*[*/
 	if (need_free) {
 	    Free((char *)cgcsgid);
 	    Free((char *)display_charsets);
 	}
-#endif /*]*/
 	if (rc != CS_OKAY) {
 		return rc;
 	}
@@ -211,11 +203,9 @@ set_cgcsgids(const char *spec)
 			case 0:
 			    idp = &cgcsgid;
 			    break;
-#if defined(X3270_DBCS) /*[*/
 			case 1:
 			    idp = &cgcsgid_dbcs;
 			    break;
-#endif /*]*/
 			default:
 			    popup_an_error("Extra CGCSGID(s), ignoring");
 			    break;
@@ -239,12 +229,10 @@ set_cgcsgids(const char *spec)
 	    	cgcsgid = strtoul(appres.sbcs_cgcsgid, NULL, 0);
 	else
 		cgcsgid = DEFAULT_CGEN | DEFAULT_CSET;
-#if defined(X3270_DBCS) /*[*/
 	if (appres.dbcs_cgcsgid != NULL)
 	    	cgcsgid_dbcs = strtoul(appres.dbcs_cgcsgid, NULL, 0);
 	else
 		cgcsgid_dbcs = 0L;
-#endif /*]*/
 }
 
 /* Set the host codepage. */
@@ -291,9 +279,7 @@ charset_init2(const char *csname, const char *codepage, const char *cgcsgid,
 		buf = NULL;
 		switch (n_rcs) {
 		case 0:
-#if defined(X3270_DBCS) /*[*/
 		case 1:
-#endif /*]*/
 		    break;
 		default:
 		    popup_an_error("Extra charset value(s), ignoring");
@@ -303,13 +289,11 @@ charset_init2(const char *csname, const char *codepage, const char *cgcsgid,
 	}
 	Free(rcs_copy);
 
-#if defined(X3270_DBCS) /*[*/
 	/* Can't swap DBCS modes while connected. */
 	if (IN_3270 && (n_rcs == 2) != dbcs) {
 		popup_an_error("Can't change DBCS modes while connected");
 		return CS_ILLEGAL;
 	}
-#endif /*]*/
 
 #if defined(X3270_DISPLAY) /*[*/
 	if (!screen_new_display_charsets(
@@ -318,12 +302,10 @@ charset_init2(const char *csname, const char *codepage, const char *cgcsgid,
 		return CS_PREREQ;
 	}
 #else /*][*/
-#if defined(X3270_DBCS) /*[*/
 	if (n_rcs > 1)
 		dbcs = True;
 	else
 		dbcs = False;
-#endif /*]*/
 #endif /*]*/
 
 	/* Set up the cgcsgids. */

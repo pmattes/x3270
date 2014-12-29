@@ -1052,9 +1052,7 @@ static struct {
 	{ ResCommandTimeout, offset(command_timeout), XRM_INT },
 #endif /*]*/
 	{ ResConfDir,	offset(conf_dir),	XRM_STRING },
-#if defined(X3270_DBCS) /*[*/
 	{ ResDbcsCgcsgid, offset(dbcs_cgcsgid),	XRM_STRING },
-#endif /*]*/
 #if defined(C3270) /*[*/
 # if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
 	{ ResDefaultFgBg,offset(default_fgbg),	XRM_BOOLEAN },

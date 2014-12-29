@@ -1018,9 +1018,7 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 {
 	int nc;
 	unsigned short ebc_ch;
-#if defined(X3270_DBCS) /*[*/
 	enum dbcs_state d;
-#endif /*]*/
 
 	if ((pmi == 0) && (nvt_ch & 0x80)) {
 	    	char mbs[2];
@@ -1053,10 +1051,7 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 	/* Translate to EBCDIC to see if it's DBCS. */
 	ebc_ch = unicode_to_ebcdic(nvt_ch);
 	if (ebc_ch & ~0xff) {
-#if defined(X3270_DBCS) /*[*/
-		if (!dbcs)
-#endif
-		{
+		if (!dbcs) {
 			nvt_ch = '?';
 			ebc_ch = asc2ebc0['?'];
 		}
@@ -1069,9 +1064,7 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 
 	if (insert_mode)
 		(void) ansi_insert_chars(1, 0);
-#if defined(X3270_DBCS) /*[*/
 	d = ctlr_dbcs_state(cursor_addr);
-#endif /*]*/
 	switch (csd[(once_cset != -1) ? once_cset : cset]) {
 	    case CSD_LD:	/* line drawing "0" */
 		if (nvt_ch >= 0x5f && nvt_ch <= 0x7e)
@@ -1095,14 +1088,6 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 			ctlr_add(cursor_addr, (unsigned char)ebc_ch, CS_BASE);
 		break;
 	    case CSD_US:	/* US "B" */
-#if !defined(X3270_DBCS) /*[*/
-		if (ebc_ch & ~0xff)
-			ctlr_add(cursor_addr,
-				(unsigned char)unicode_to_ebcdic('?'),
-				CS_BASE);
-		else
-			ctlr_add(cursor_addr, (unsigned char)ebc_ch, CS_BASE);
-#else /*][*/
 		if (ebc_ch & ~0xff) {
 
 		    	/* Add a DBCS character to the buffer. */
@@ -1166,11 +1151,9 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 
 		/* Add an SBCS character to the buffer. */
 		ctlr_add(cursor_addr, (unsigned char)ebc_ch, CS_BASE);
-#endif /*]*/
 		break;
 	}
 
-#if defined(X3270_DBCS) /*[*/
 	/* Handle conflicts with existing DBCS characters. */
 	if (d == DBCS_RIGHT || d == DBCS_RIGHT_WRAP) {
 		int xaddr;
@@ -1192,7 +1175,6 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 		ea_buf[cursor_addr].db = DBCS_NONE;
 		(void) ctlr_dbcs_postprocess();
 	}
-#endif /*]*/
 
 	once_cset = -1;
 	ctlr_add_gr(cursor_addr, gr);

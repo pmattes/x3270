@@ -165,10 +165,8 @@ XrmOptionDescRec options[]= {
 	{ OptTermName,	DotTermName,	XrmoptionSepArg,	NULL },
 	{ OptTraceFile,	DotTraceFile,	XrmoptionSepArg,	NULL },
 	{ OptTraceFileSize,DotTraceFileSize,XrmoptionSepArg,	NULL },
-#if defined(X3270_DBCS) /*[*/
 	{ OptInputMethod,DotInputMethod,XrmoptionSepArg,	NULL },
 	{ OptPreeditType,DotPreeditType,XrmoptionSepArg,	NULL },
-#endif /*]*/
 	{ OptUser,	DotUser,	XrmoptionSepArg,	NULL },
 	{ OptV,		DotV,		XrmoptionNoArg,		ResTrue },
 #if defined(HAVE_LIBSSL) /*[*/
@@ -242,10 +240,8 @@ static struct {
 	{ OptTrace, NULL, "Enable tracing" },
 	{ OptTraceFile, "<file>", "Write traces to <file>" },
 	{ OptTraceFileSize, "<n>[KM]", "Limit trace file to <n> bytes" },
-#if defined(X3270_DBCS) /*[*/
 	{ OptInputMethod, "<name>", "Specify multi-byte input method" },
 	{ OptPreeditType, "<style>", "Define input method pre-edit type" },
-#endif /*]*/
 	{ OptUser, "<name>", "Specify user name for RFC 4777" },
 	{ OptV, NULL, "Display build options and character sets" },
 #if defined(HAVE_LIBSSL) /*[*/

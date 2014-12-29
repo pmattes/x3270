@@ -190,7 +190,6 @@ static Widget	icon_shell;
 
 static struct font_list *font_last = (struct font_list *) NULL;
 
-#if defined(X3270_DBCS) /*[*/
 static struct {
     Font font;
     XFontStruct *font_struct;
@@ -215,7 +214,6 @@ typedef struct {
 static XIMStyle style;
 char ic_focus;
 static void send_spot_loc(void);
-#endif /*]*/
 
 /* Globals for undoing reconfigurations. */
 static enum {
@@ -375,9 +373,7 @@ static void lock_icon(enum mcursor_state state);
 static char *expand_cslist(const char *s);
 static void hollow_cursor(int baddr);
 static void revert_later(XtPointer closure _is_unused, XtIntervalId *id _is_unused);
-#if defined(X3270_DBCS) /*[*/
 static void xlate_dbcs(unsigned char, unsigned char, XChar2b *);
-#endif /*]*/
 static void dfc_init(void);
 static const char *dfc_search_family(const char *charset, dfc_t **dfc,
 	void **cookie);
@@ -584,7 +580,6 @@ screen_reinit(unsigned cmask)
 		              sizeof(union sp) * maxROWS * maxCOLS);
 
 	/* Compute SBCS/DBCS size differences. */
-#if defined(X3270_DBCS) /*[*/
 	if ((cmask & FONT_CHANGE) && dbcs) {
 		int wdiff, adiff, ddiff;
 		char *xs;
@@ -686,7 +681,6 @@ screen_reinit(unsigned cmask)
 			}
 		}
 	}
-#endif /*]*/
 
 	/* Set up a container for the menubar, screen and keypad */
 
@@ -793,11 +787,10 @@ screen_reinit(unsigned cmask)
 	/* Reinitialize the status line. */
 	status_reinit(cmask);
 
-#if defined(X3270_DBCS) /*[*/
 	/* Initialize the input method. */
-	if ((cmask & CHARSET_CHANGE) && dbcs)
+	if ((cmask & CHARSET_CHANGE) && dbcs) {
 		xim_init();
-#endif /*]*/
+	}
 
 	cursor_changed = True;
 
@@ -1458,7 +1451,6 @@ screen_disp(Boolean erasing)
 	if (cursor_addr != ss->cursor_daddr)
 		cursor_changed = True;
 
-#if defined(X3270_DBCS) /*[*/
 	/* If the cursor has moved, tell the input method. */
 	if (cursor_changed && ic != NULL &&
 			style == (XIMPreeditPosition|XIMStatusNothing)) {
@@ -1467,7 +1459,6 @@ screen_disp(Boolean erasing)
 #endif /*]*/
 		send_spot_loc();
 	}
-#endif /*]*/
 
 	/*
 	 * If only the cursor has changed (and not the screen image), draw it.
@@ -1879,9 +1870,7 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 	Boolean in_dbcs = False;
 	int clear_len = 0;
 	int n_sbcs = 0;
-#if defined(X3270_DBCS) /*[*/
 	int n_dbcs = 0;
-#endif /*]*/
 
 #if defined(_ST) /*[*/
 	(void) printf("render_text(baddr=%s, len=%d)\n", rcba(baddr), len);
@@ -1909,9 +1898,7 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 	}
 
 	for (i = 0, j = 0; i < len; i++) {
-#if defined(X3270_DBCS) /*[*/
 		if (buffer[i].bits.cs != CS_DBCS || !dbcs || iconic) {
-#endif /*]*/
 			if (n_texts < 0 || in_dbcs) {
 				/* Switch from nothing or DBCS, to SBCS. */
 #if defined(_ST) /*[*/
@@ -1928,7 +1915,6 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 			}
 			/* In SBCS. */
 			clear_len += ss->char_width;
-#if defined(X3270_DBCS) /*[*/
 		} else {
 			if (n_texts < 0 || !in_dbcs) {
 				/* Switch from nothing or SBCS, to DBCS. */
@@ -1947,7 +1933,6 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 			/* In DBCS. */
 			clear_len += 2 * ss->char_width;
 		}
-#endif /*]*/
 
 		switch (buffer[i].bits.cs) {
 		    case CS_BASE:	/* latin-1 */
@@ -2029,7 +2014,6 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 			j++;
 			break;
 		    case CS_DBCS:	/* DBCS */
-#if defined(X3270_DBCS) /*[*/
 			if (dbcs) {
 				xlate_dbcs(buffer[i].bits.cc,
 					   buffer[i+1].bits.cc,
@@ -2041,10 +2025,6 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 				rt_buf[j].byte2 = font_index(EBC_space, d8_ix,
 					False);
 			}
-#else /*][*/
-			rt_buf[j].byte1 = 0;
-			rt_buf[j].byte2 = font_index(EBC_space, d8_ix, False);
-#endif /*]*/
 			j++;
 			break;
 		}
@@ -2120,21 +2100,14 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 	}
 #endif /*]*/
 	if (one_at_a_time ||
-	    (n_sbcs && ss->xtra_width)
-#if defined(X3270_DBCS) /*[*/
-	     ||
-	    (n_dbcs && dbcs_font.xtra_width)
-#endif /*]*/
-	   ) {
+	    (n_sbcs && ss->xtra_width) || (n_dbcs && dbcs_font.xtra_width)) {
 		int i, j;
 		int xn = x;
 		XTextItem16 text1;
 
 		/* XXX: do overstrike */
 		for (i = 0; i < n_texts; i++) {
-#if defined(X3270_DBCS) /*[*/
 			if (one_at_a_time || text[i].font == ss->fid) {
-#endif /*]*/
 				if (one_at_a_time || ss->xtra_width) {
 					for (j = 0; j < text[i].nchars;
 					     j++) {
@@ -2157,7 +2130,6 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 					xn += ss->char_width *
 						text[i].nchars;
 				}
-#if defined(X3270_DBCS) /*[*/
 			} else {
 				if (dbcs_font.xtra_width) {
 					for (j = 0; j < text[i].nchars;
@@ -2186,7 +2158,6 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 						text[i].nchars;
 				}
 			}
-#endif /*]*/
 		}
 	} else {
 		XDrawText16(display, ss->window, dgc, x, y, text, n_texts);
@@ -2275,11 +2246,8 @@ toggle_monocase(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 void
 screen_flip(void)
 {
-#if defined(X3270_DBCS) /*[*/
     /* Flip mode is broken in the DBCS version. */
-    if (!dbcs)
-#endif /*]*/
-    {
+    if (!dbcs) {
 	flipped = !flipped;
 
 	xaction_internal(PA_Expose_xaction, IA_REDRAW, NULL, NULL);
@@ -2779,10 +2747,8 @@ redraw_char(int baddr, Boolean invert)
 #if defined(_ST) /*[*/
 		printf("%s:%d: rt%s\n", __FUNCTION__, __LINE__, rcba(flb));
 #endif /*]*/
-#if defined(X3270_DBCS) /*[*/
 		if (dbcs && ((baddr % COLS) != (COLS - 1)) && len == 1)
 			len = 2;
-#endif /*]*/
 		render_text(&ss->image[flb], flb, len, False, &ss->image[flb]);
 		return;
 	}
@@ -3623,7 +3589,6 @@ shift_event(int event_state)
 static void
 screen_focus(Boolean in)
 {
-#if defined(X3270_DBCS) /*[*/
 	/*
 	 * Update the input context focus.
 	 */
@@ -3633,7 +3598,6 @@ screen_focus(Boolean in)
 		else
 			XUnsetICFocus(ic);
 	}
-#endif /*]*/
 
 	/*
 	 * Cancel any pending cursor blink.  If we just came into focus and
@@ -3975,7 +3939,6 @@ load_fixed_font(const char *names, const char *reqd_display_charsets)
 		name2 = NULL;
 	}
 
-#if defined(X3270_DBCS) /*[*/
 	/* If there's a DBCS font, load that first. */
 	if (name2 != NULL) {
 		/* Load the second font. */
@@ -3990,7 +3953,6 @@ load_fixed_font(const char *names, const char *reqd_display_charsets)
 		dbcs_font.font = None;
 		dbcs = False;
 	}
-#endif /*]*/
 
 	/* Load the SBCS font. */
 	r = lff_single(name1, charset1, False);
@@ -4160,7 +4122,6 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 	Free(family_name);
 	Free(font_encoding);
 
-#if defined(X3270_DBCS) /*[*/
 	if (is_dbcs) {
 		/* Hack. */
 		dbcs_font.font_struct = f;
@@ -4176,7 +4137,6 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 		Replace(efont_charset_dbcs, font_charset);
 		return;
 	}
-#endif /*]*/
 	Replace(efontname, XtNewString(ef));
 	Replace(full_efontname, XtNewString(fef));
 	Replace(efont_charset, font_charset);
@@ -4809,14 +4769,13 @@ init_rsfonts(char *charset_name)
 		free(ns);
 	}
 
-#if defined(X3270_DBCS) /*[*/
 	/*
 	 * In DBCS mode, if we've found at least one appropriate font from the
 	 * list, we're done.
 	 */
-	if (dbcs)
+	if (dbcs) {
 		return;
-#endif /*]*/
+	}
 
 	/* Add 'fixed' to the menu, so there's at least one alternative. */
 	(void) add_font_to_menu("fixed", "!fixed");
@@ -5282,7 +5241,6 @@ display_heightMM(void)
 	return XDisplayHeightMM(display, default_screen);
 }
 
-#if defined(X3270_DBCS) /*[*/
 /* Translate an EBCDIC DBCS character to a display character. */
 static void
 xlate_dbcs(unsigned char c0, unsigned char c1, XChar2b *r)
@@ -5552,7 +5510,6 @@ send_spot_loc(void)
 	XSetICValues(ic, XNPreeditAttributes, preedit_attr, NULL);
 	XFree(preedit_attr);
 }
-#endif /*]*/
 
 /* Change the window title. */
 Boolean

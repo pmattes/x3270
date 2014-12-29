@@ -2121,21 +2121,16 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 		s += sprintf(s, " ");
 	    } else if (is_zero) {
 		s += sprintf(s, " ");
-	    } else
-#if defined(X3270_DBCS) /*[*/
-		if (IS_LEFT(ctlr_dbcs_state(first + i))) {
-		    xlen = ebcdic_to_multibyte(
-			    (buf[first + i].cc << 8) |
-			     buf[first + i + 1].cc,
-			    mb, sizeof(mb));
-		    for (j = 0; j < xlen - 1; j++) {
-			    s += sprintf(s, "%c", mb[j]);
-		    }
-		} else if (IS_RIGHT(ctlr_dbcs_state(first + i))) {
-		    continue;
-		} else
-#endif /*]*/
-	    {
+	    } else if (IS_LEFT(ctlr_dbcs_state(first + i))) {
+		xlen = ebcdic_to_multibyte(
+			(buf[first + i].cc << 8) | buf[first + i + 1].cc,
+			mb, sizeof(mb));
+		for (j = 0; j < xlen - 1; j++) {
+		    s += sprintf(s, "%c", mb[j]);
+		}
+	    } else if (IS_RIGHT(ctlr_dbcs_state(first + i))) {
+		continue;
+	    } else {
 		xlen = ebcdic_to_multibyte_x(
 			buf[first + i].cc,
 			buf[first + i].cs,
@@ -2388,7 +2383,6 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 		char mb[16];
 		int j;
 		ucs4_t uc;
-#if defined(X3270_DBCS) /*[*/
 		int len;
 
 		if (IS_LEFT(ctlr_dbcs_state(baddr))) {
@@ -2403,7 +2397,6 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 		    vb_appendf(&r, " -");
 		    done = True;
 		}
-#endif /*]*/
 
 		switch (buf[baddr].cc) {
 		case EBC_null:

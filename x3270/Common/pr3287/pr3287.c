@@ -897,10 +897,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 			GetACP(), options.printercp);
 #endif /*]*/
 		vtrace_nts(" Host codepage: %d", (int)(cgcsgid & 0xffff));
-#if defined(X3270_DBCS) /*[*/
-		if (dbcs)
+		if (dbcs) {
 			vtrace_nts("+%d", (int)(cgcsgid_dbcs & 0xffff));
-#endif /*]*/
+		}
 		vtrace_nts("\n");
 		vtrace_nts(" Command:");
 		for (i = 0; i < argc; i++) {

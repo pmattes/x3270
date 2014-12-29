@@ -918,9 +918,7 @@ screen_disp(Boolean erasing _is_unused)
 	int field_attrs;
 	unsigned char fa;
 	struct screen_spec *cur_spec;
-#if defined(X3270_DBCS) /*[*/
 	enum dbcs_state d;
-#endif /*]*/
 	int fa_addr;
 
 	/* This may be called when it isn't time. */
@@ -1110,7 +1108,6 @@ screen_disp(Boolean erasing _is_unused)
 					if (buf_attrs & A_UNDERLINE)
 					    underlined = True;
 				}
-#if defined(X3270_DBCS) /*[*/
 				d = ctlr_dbcs_state(baddr);
 				if (IS_LEFT(d)) {
 					int xaddr = baddr;
@@ -1122,7 +1119,6 @@ screen_disp(Boolean erasing _is_unused)
 						mb, sizeof(mb));
 					addstr(mb);
 				} else if (!IS_RIGHT(d)) {
-#endif /*]*/
 					if (ea_buf[baddr].cs == CS_LINEDRAW) {
 					    	display_linedraw(
 							ea_buf[baddr].cc);
@@ -1160,9 +1156,7 @@ screen_disp(Boolean erasing _is_unused)
 						    	addch(mb[0] & 0xff);
 #endif /*]*/
 					}
-#if defined(X3270_DBCS) /*[*/
 				}
-#endif /*]*/
 			}
 		}
 	}

@@ -354,12 +354,10 @@ popup_about_config(void)
 	MAKE_LABEL(xbuf, 0);
 	XtFree(xbuf);
 
-#if defined(X3270_DBCS) /*[*/
 	if (dbcs) {
 		MAKE_LABEL(get_message("emulatorFontDbcs"), 4);
 		MAKE_VALUE(full_efontname_dbcs);
 	}
-#endif /*]*/
 
 	MAKE_LABEL(get_message("displayCharacterSet"), 4);
 	if (!efont_matches) {
@@ -371,12 +369,10 @@ popup_about_config(void)
 	} else {
 		MAKE_VALUE(efont_charset);
 	}
-#if defined(X3270_DBCS) /*[*/
 	if (dbcs) {
 		MAKE_LABEL(get_message("displayCharacterSetDbcs"), 4);
 		MAKE_VALUE(efont_charset_dbcs);
 	}
-#endif /*]*/
 
 	MAKE_LABEL(get_message("charset"), 4);
 	xbuf = xs_buffer("%s (code page %s)", get_charset_name(),
@@ -390,7 +386,6 @@ popup_about_config(void)
 	    (unsigned short)(cgcsgid & 0xffff));
 	MAKE_VALUE(xbuf);
 	XtFree(xbuf);
-#if defined(X3270_DBCS) /*[*/
 	if (dbcs) {
 		MAKE_LABEL(get_message("dbcsCgcsgid"), 4);
 		xbuf = xs_buffer("GCSGID %u, CPGID %u",
@@ -421,7 +416,6 @@ popup_about_config(void)
 			MAKE_VALUE("(error)");
 		}
 	}
-#endif /*]*/
 	MAKE_LABEL(get_message("localeCodeset"), 4);
 	MAKE_VALUE(locale_codeset);
 

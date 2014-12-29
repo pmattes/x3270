@@ -176,7 +176,6 @@ MoveCursor_xaction(Widget w, XEvent *event, String *params,
 }
 
 
-#if defined(X3270_DBCS) /*[*/
 /*
  * Run a KeyPress through XIM.
  * Returns True if there is further processing to do, False otherwise.
@@ -233,7 +232,6 @@ xim_lookup(XKeyEvent *event)
 	}
 	return rv;
 }
-#endif /*]*/
 
 void
 ignore_xaction(Widget w _is_unused, XEvent *event, String *params,
@@ -324,11 +322,9 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
     }
     switch (event->type) {
     case KeyPress:
-#if defined(X3270_DBCS) /*[*/
 	if (!xim_lookup((XKeyEvent *)event)) {
 	    return;
 	}
-#endif /*]*/
 	ll = XLookupString(kevent, buf, 32, &ks, NULL);
 	buf[ll] = '\0';
 	if (ll > 1) {

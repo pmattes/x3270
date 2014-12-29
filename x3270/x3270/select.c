@@ -1258,9 +1258,7 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 	static int osc_baddr;
 	static unsigned char fa;
 	ucs4_t uc;
-#if defined(X3270_DBCS) /*[*/
 	int baddr2;
-#endif /*]*/
 
 	*rlen = 1;
 
@@ -1291,7 +1289,6 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 		return;
 	}
 
-#if defined(X3270_DBCS) /*[*/
 	/* Handle DBCS. */
 	switch (ctlr_dbcs_state(baddr)) {
 	case DBCS_LEFT:
@@ -1315,13 +1312,11 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 	default:
 	    break;
 	}
-#endif /*]*/
 
 	switch (ea_buf[baddr].cs) {
 	    case CS_BASE:
 	    default:
 		switch (ea_buf[baddr].cc) {
-#if defined(X3270_DBCS) /*[*/
 		    case EBC_so:
 			/*
 			 * Suppress SO's altogether.  They'll expand back on
@@ -1329,7 +1324,6 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 			 */
 			*rlen = 0;
 			return;
-#endif /*]*/
 		    case EBC_null:
 			*r = 0;
 			return;
