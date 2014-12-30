@@ -1019,183 +1019,180 @@ hms(time_t ts)
 static void
 status_dump(void)
 {
-	const char *emode, *ftype, *ts;
-	const char *clu;
-	const char *eopts;
-	const char *bplu;
-	const char *ptype;
+    const char *emode, *ftype, *ts;
+    const char *clu;
+    const char *eopts;
+    const char *bplu;
+    const char *ptype;
 
-	action_output("%s", build);
-	action_output("%s %s: %d %s x %d %s, %s, %s",
+    action_output("%s", build);
+    action_output("%s %s: %d %s x %d %s, %s, %s",
 	    get_message("model"), model_name,
 	    maxCOLS, get_message("columns"),
 	    maxROWS, get_message("rows"),
 	    appres.m3279? get_message("fullColor"): get_message("mono"),
-	    (appres.extended && !std_ds_host) ? get_message("extendedDs") :
+	    (appres.extended && !std_ds_host)? get_message("extendedDs"):
 		get_message("standardDs"));
-	action_output("%s %s", get_message("terminalName"), termtype);
-	clu = net_query_lu_name();
-	if (clu != NULL && clu[0])
-		action_output("%s %s", get_message("luName"), clu);
-	bplu = net_query_bind_plu_name();
-	if (bplu != NULL && bplu[0])
-	    	action_output("%s %s", get_message("bindPluName"), bplu);
-	action_output("%s %s (%s)", get_message("characterSet"),
+    action_output("%s %s", get_message("terminalName"), termtype);
+    clu = net_query_lu_name();
+    if (clu != NULL && clu[0]) {
+	action_output("%s %s", get_message("luName"), clu);
+    }
+    bplu = net_query_bind_plu_name();
+    if (bplu != NULL && bplu[0]) {
+	action_output("%s %s", get_message("bindPluName"), bplu);
+    }
+    action_output("%s %s (%s)", get_message("characterSet"),
 	    get_charset_name(), dbcs? "DBCS": "SBCS");
-	action_output("%s %s",
-		get_message("hostCodePage"),
-		get_host_codepage());
+    action_output("%s %s",
+	    get_message("hostCodePage"),
+	    get_host_codepage());
+    action_output("%s GCSGID %u, CPGID %u",
+	    get_message("sbcsCgcsgid"),
+	    (unsigned short)((cgcsgid >> 16) & 0xffff),
+	    (unsigned short)(cgcsgid & 0xffff));
+    if (dbcs) {
 	action_output("%s GCSGID %u, CPGID %u",
-		get_message("sbcsCgcsgid"),
-		(unsigned short)((cgcsgid >> 16) & 0xffff),
-		(unsigned short)(cgcsgid & 0xffff));
-	if (dbcs) {
-		action_output("%s GCSGID %u, CPGID %u",
-			get_message("dbcsCgcsgid"),
-			(unsigned short)((cgcsgid_dbcs >> 16) & 0xffff),
-			(unsigned short)(cgcsgid_dbcs & 0xffff));
-	}
+		get_message("dbcsCgcsgid"),
+		(unsigned short)((cgcsgid_dbcs >> 16) & 0xffff),
+		(unsigned short)(cgcsgid_dbcs & 0xffff));
+    }
 #if !defined(_WIN32) /*[*/
-	action_output("%s %s", get_message("localeCodeset"), locale_codeset);
-	action_output("%s DBCS %s, wide curses %s",
-		get_message("buildOpts"),
-#if defined(X3270_DBCS) /*[*/
-		get_message("buildEnabled"),
+    action_output("%s %s", get_message("localeCodeset"), locale_codeset);
+    action_output("%s DBCS %s, wide curses %s",
+	    get_message("buildOpts"),
+# if defined(X3270_DBCS) /*[*/
+	    get_message("buildEnabled"),
+# else /*][*/
+	    get_message("buildDisabled"),
+# endif /*]*/
+# if defined(CURSES_WIDE) /*[*/
+	    get_message("buildEnabled")
+# else /*][*/
+	    get_message("buildDisabled")
+# endif /*]*/
+	    );
 #else /*][*/
-		get_message("buildDisabled"),
+    action_output("%s OEM %d ANSI %d", get_message("windowsCodePage"),
+	    windows_cp, GetACP());
 #endif /*]*/
-#if defined(CURSES_WIDE) /*[*/
-		get_message("buildEnabled")
-#else /*][*/
-		get_message("buildDisabled")
+    if (appres.key_map) {
+	action_output("%s %s", get_message("keyboardMap"), appres.key_map);
+    }
+    if (CONNECTED) {
+	action_output("%s %s", get_message("connectedTo"),
+#if defined(LOCAL_PROCESS) /*[*/
+		(local_process && !strlen(current_host))? "(shell)":
 #endif /*]*/
-		);
-#else /*][*/
-	action_output("%s OEM %d ANSI %d", get_message("windowsCodePage"),
-		windows_cp, GetACP());
+		current_host);
+#if defined(LOCAL_PROCESS) /*[*/
+	if (!local_process)
 #endif /*]*/
-	if (appres.key_map) {
-		action_output("%s %s", get_message("keyboardMap"),
-		    appres.key_map);
+	{
+	    action_output("  %s %d", get_message("port"), current_port);
 	}
-	if (CONNECTED) {
-		action_output("%s %s",
-		    get_message("connectedTo"),
 #if defined(LOCAL_PROCESS) /*[*/
-		    (local_process && !strlen(current_host))? "(shell)":
-#endif /*]*/
-			current_host);
-#if defined(LOCAL_PROCESS) /*[*/
-		if (!local_process) {
-#endif /*]*/
-			action_output("  %s %d", get_message("port"),
-			    current_port);
-#if defined(LOCAL_PROCESS) /*[*/
-		}
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
-		if (secure_connection) {
-			action_output("  %s%s%s", get_message("secure"),
-			    secure_unverified? ", ": "",
-			    secure_unverified? get_message("unverified"): "");
-			if (secure_unverified) {
-				int i;
+	if (secure_connection) {
+	    action_output("  %s%s%s", get_message("secure"),
+			secure_unverified? ", ": "",
+			secure_unverified? get_message("unverified"): "");
+	    if (secure_unverified) {
+		int i;
 
-				for (i = 0; unverified_reasons[i] != NULL; i++) {
-					action_output("   %s",
-						unverified_reasons[i]);
-				}
-			}
+		for (i = 0; unverified_reasons[i] != NULL; i++) {
+		    action_output("   %s", unverified_reasons[i]);
 		}
+	    }
+	}
 #endif /*]*/
-		ptype = net_proxy_type();
-		if (ptype) {
-		    	action_output("  %s %s  %s %s  %s %s",
-				get_message("proxyType"), ptype,
-				get_message("server"), net_proxy_host(),
-				get_message("port"), net_proxy_port());
-		}
-		ts = hms(ns_time);
-		if (IN_E)
-			emode = "TN3270E ";
-		else
-			emode = "";
-		if (IN_NVT) {
-			if (linemode) {
-				ftype = get_message("lineMode");
-			} else {
-				ftype = get_message("charMode");
-			}
-			action_output("  %s%s, %s", emode, ftype, ts);
-		} else if (IN_SSCP) {
-			action_output("  %s%s, %s", emode,
-			    get_message("sscpMode"), ts);
-		} else if (IN_3270) {
-			action_output("  %s%s, %s", emode,
-			    get_message("dsMode"), ts);
-		} else if (cstate == CONNECTED_UNBOUND) {
-			action_output("  %s%s, %s", emode,
-			    get_message("unboundMode"), ts);
-		} else {
-			action_output("  %s, %s",
-				get_message("unnegotiated"), ts);
-		}
+	ptype = net_proxy_type();
+	if (ptype) {
+	    action_output("  %s %s  %s %s  %s %s",
+		    get_message("proxyType"), ptype,
+		    get_message("server"), net_proxy_host(),
+		    get_message("port"), net_proxy_port());
+	}
+	ts = hms(ns_time);
+	if (IN_E) {
+	    emode = "TN3270E ";
+	} else {
+	    emode = "";
+	}
+	if (IN_NVT) {
+	    if (linemode) {
+		ftype = get_message("lineMode");
+	    } else {
+		ftype = get_message("charMode");
+	    }
+	    action_output("  %s%s, %s", emode, ftype, ts);
+	} else if (IN_SSCP) {
+	    action_output("  %s%s, %s", emode, get_message("sscpMode"), ts);
+	} else if (IN_3270) {
+	    action_output("  %s%s, %s", emode, get_message("dsMode"), ts);
+	} else if (cstate == CONNECTED_UNBOUND) {
+	    action_output("  %s%s, %s", emode, get_message("unboundMode"), ts);
+	} else {
+	    action_output("  %s, %s", get_message("unnegotiated"), ts);
+	}
 
-		eopts = tn3270e_current_opts();
-		if (eopts != NULL) {
-			action_output("  %s %s", get_message("tn3270eOpts"),
-			    eopts);
-		} else if (IN_E) {
-			action_output("  %s", get_message("tn3270eNoOpts"));
+	eopts = tn3270e_current_opts();
+	if (eopts != NULL) {
+	    action_output("  %s %s", get_message("tn3270eOpts"), eopts);
+	} else if (IN_E) {
+	    action_output("  %s", get_message("tn3270eNoOpts"));
+	}
+
+	if (IN_3270) {
+	    action_output("%s %d %s, %d %s\n%s %d %s, %d %s",
+		    get_message("sent"),
+		    ns_bsent, (ns_bsent == 1)?
+			get_message("byte") : get_message("bytes"),
+		    ns_rsent, (ns_rsent == 1)?
+			get_message("record") : get_message("records"),
+		    get_message("Received"), ns_brcvd,
+			(ns_brcvd == 1)? get_message("byte"):
+					 get_message("bytes"),
+		    ns_rrcvd,
+		    (ns_rrcvd == 1)? get_message("record"):
+				     get_message("records"));
+	} else {
+	    action_output("%s %d %s, %s %d %s",
+		    get_message("sent"), ns_bsent,
+		    (ns_bsent == 1)? get_message("byte"):
+				     get_message("bytes"),
+		    get_message("received"), ns_brcvd,
+		    (ns_brcvd == 1)? get_message("byte"):
+				     get_message("bytes"));
+	}
+
+	if (IN_NVT) {
+	    struct ctl_char *c = linemode_chars();
+	    int i;
+	    char buf[128];
+	    char *s = buf;
+
+	    action_output("%s", get_message("specialCharacters"));
+	    for (i = 0; c[i].name; i++) {
+		if (i && !(i % 4)) {
+		    *s = '\0';
+		    action_output("%s", buf);
+		    s = buf;
 		}
-
-		if (IN_3270)
-			action_output("%s %d %s, %d %s\n%s %d %s, %d %s",
-			    get_message("sent"),
-			    ns_bsent, (ns_bsent == 1) ?
-				get_message("byte") : get_message("bytes"),
-			    ns_rsent, (ns_rsent == 1) ?
-				get_message("record") : get_message("records"),
-			    get_message("Received"),
-			    ns_brcvd, (ns_brcvd == 1) ?
-				get_message("byte") : get_message("bytes"),
-			    ns_rrcvd, (ns_rrcvd == 1) ?
-				get_message("record") : get_message("records"));
-		else
-			action_output("%s %d %s, %s %d %s",
-			    get_message("sent"),
-			    ns_bsent, (ns_bsent == 1) ?
-				get_message("byte") : get_message("bytes"),
-			    get_message("received"),
-			    ns_brcvd, (ns_brcvd == 1) ?
-				get_message("byte") : get_message("bytes"));
-
-		if (IN_NVT) {
-			struct ctl_char *c = linemode_chars();
-			int i;
-			char buf[128];
-			char *s = buf;
-
-			action_output("%s", get_message("specialCharacters"));
-			for (i = 0; c[i].name; i++) {
-				if (i && !(i % 4)) {
-					*s = '\0';
-					action_output("%s", buf);
-					s = buf;
-				}
-				s += sprintf(s, "  %s %s", c[i].name,
-				    c[i].value);
-			}
-			if (s != buf) {
-				*s = '\0';
-				action_output("%s", buf);
-			}
-		}
-	} else if (HALF_CONNECTED) {
-		action_output("%s %s", get_message("connectionPending"),
-		    current_host);
-	} else
-		action_output("%s", get_message("notConnected"));
+		s += sprintf(s, "  %s %s", c[i].name, c[i].value);
+	    }
+	    if (s != buf) {
+		*s = '\0';
+		action_output("%s", buf);
+	    }
+	}
+    } else if (HALF_CONNECTED) {
+	action_output("%s %s", get_message("connectionPending"),
+	    current_host);
+    } else {
+	action_output("%s", get_message("notConnected"));
+    }
 }
 
 static void
