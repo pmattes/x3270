@@ -65,7 +65,6 @@
 #include "nvtc.h"
 #include "popupsc.h"
 #include "printc.h"
-#include "printerc.h"
 #include "screenc.h"
 #include "selectc.h"
 #include "tablesc.h"
@@ -148,7 +147,6 @@ main(int argc, char *argv[])
 	register_schange(ST_CONNECT, main_connect);
         register_schange(ST_3270_MODE, main_connect);
 	ft_init();
-	printer_init();
 	xio_init();
 	print_init();
 	toggles_init();

@@ -11,6 +11,6 @@ WC3270_OBJECTS = XtGlue.o c3270.o ft_gui.o gdi_print.o glue.o help.o icmd.o \
 	ssl_passwd_gui.o w3misc.o windirs.o winprint.o winvers.o
 
 # wc3270-specific header files
-WC3270_HEADERS = X11/keysym.h conf.h gdi_printc.h gluec.h icmdc.h printerc.h \
-	readresc.h relinkc.h shlobj_missing.h shortcutc.h ssl_dll.h wincmn.h \
-	windirsc.h winprintc.h winversc.h
+WC3270_HEADERS = X11/keysym.h conf.h gdi_printc.h gluec.h help.h icmdc.h \
+	printerc.h readresc.h relinkc.h shlobj_missing.h shortcutc.h \
+	ssl_dll.h wincmn.h windirsc.h winprintc.h winversc.h

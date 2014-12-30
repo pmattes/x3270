@@ -9,4 +9,5 @@ C3270_OBJECTS = XtGlue.o c3270.o child.o ft_gui.o glue.o help.o icmd.o \
 	scroll.o ssl_passwd_gui.o
 
 # c3270-specific header files
-C3270_HEADERS = X11/keysym.h conf.h gluec.h icmdc.h printerc.h readresc.h
+C3270_HEADERS = X11/keysym.h conf.h gluec.h help.h icmdc.h printerc.h \
+	readresc.h

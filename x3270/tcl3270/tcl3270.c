@@ -77,7 +77,6 @@
 #include "nvtc.h"
 #include "popupsc.h"
 #include "printc.h"
-#include "printerc.h"
 #include "screenc.h"
 #include "selectc.h"
 #include "tablesc.h"
@@ -431,7 +430,6 @@ tcl3270_main(int argc, const char *argv[])
 	kybd_init();
 	nvt_init();
 	ft_init();
-	printer_init();
 	xio_init();
 	print_init();
 	toggles_init();
