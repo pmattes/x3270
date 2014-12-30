@@ -83,7 +83,7 @@ static void scroll_reset(void);
  * Initialize (or re-initialize) the scrolling parameters and save area.
  */
 void
-scroll_init(void)
+scroll_buf_init(void)
 {
 	register int i;
 	int sa_size;
@@ -469,3 +469,15 @@ Scroll_action(ia_t ia, unsigned argc, const char **argv)
     return True;
 }
 #endif /*]*/
+
+void
+scroll_init(void)
+{
+#if defined(X3270_INTERACTIVE) /*[*/
+    static action_table_t scroll_actions[] = {
+	{ "Scroll",		Scroll_action,	ACTION_KE }
+    };
+
+    register_actions(scroll_actions, array_count(scroll_actions));
+#endif /*]*/
+}

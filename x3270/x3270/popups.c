@@ -1086,3 +1086,14 @@ popups_move(void)
 		}
 	}
 }
+
+/* Global popup init. */
+void
+popups_init(void)
+{
+    static action_table_t popup_actions[] = {
+	{ "Info",		Info_action	}
+    };
+
+    register_actions(popup_actions, array_count(popup_actions));
+}

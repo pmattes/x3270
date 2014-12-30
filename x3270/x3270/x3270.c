@@ -62,10 +62,13 @@
 #include "menubarc.h"
 #include "nvtc.h"
 #include "popupsc.h"
+#include "printc.h"
 #include "printerc.h"
+#include "print_windowc.h"
 #include "resourcesc.h"
 #include "savec.h"
 #include "screenc.h"
+#include "scrollc.h"
 #include "selectc.h"
 #include "statusc.h"
 #include "telnetc.h"
@@ -73,6 +76,8 @@
 #include "trace.h"
 #include "utilc.h"
 #include "xactionsc.h"
+#include "xioc.h"
+#include "xkybdc.h"
 
 /* Globals */
 const char     *programname;
@@ -509,9 +514,41 @@ main(int argc, char *argv[])
 	a_encoding = XInternAtom(display, "CHARSET_ENCODING", False);
 	a_state = XInternAtom(display, "WM_STATE", False);
 
+	/* Add the Xt-only actions. */
 	xaction_init();
-	XtAppAddActions(appcontext, xactions, xactioncount);
 
+	popups_init();
+	print_init();
+	print_window_init();
+	kybd_init();
+	xkybd_init();
+	scroll_init();
+	idle_init();
+	nvt_init();
+	sms_init();
+	if (appres.httpd_port) {
+	    struct sockaddr *sa;
+	    socklen_t sa_len;
+
+	    if (!parse_bind_opt(appres.httpd_port, &sa, &sa_len)) {
+		xs_warning("Invalid -httpd port \"%s\"", appres.httpd_port);
+	    } else {
+		httpd_objects_init();
+		hio_init(sa, sa_len);
+	    }
+	}
+	info_popup_init();
+	error_popup_init();
+	printer_popup_init();
+	printer_init();
+	ft_init();
+	xio_init();
+	toggles_init();
+
+	/* Add the wrapped actions. */
+	xaction_init2();
+
+	/* Define the keymap. */
 	keymap_init(appres.key_map, False);
 
 	if (appres.apl_mode) {
@@ -583,26 +620,6 @@ main(int argc, char *argv[])
 		reclass(appres.char_class);
 
 	screen_init();
-	kybd_init();
-	idle_init();
-	nvt_init();
-	sms_init();
-	if (appres.httpd_port) {
-	    struct sockaddr *sa;
-	    socklen_t sa_len;
-
-	    if (!parse_bind_opt(appres.httpd_port, &sa, &sa_len)) {
-		xs_warning("Invalid -httpd port \"%s\"", appres.httpd_port);
-	    } else {
-		httpd_objects_init();
-		hio_init(sa, sa_len);
-	    }
-	}
-	info_popup_init();
-	error_popup_init();
-	printer_popup_init();
-	printer_init();
-	ft_init();
 
 	protocols[0] = a_delete_me;
 	protocols[1] = a_save_yourself;

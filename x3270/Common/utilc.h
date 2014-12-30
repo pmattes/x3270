@@ -77,11 +77,6 @@ extern void start_html_help(void);
 #endif /*]*/
 
 /* Doubly-linked lists. */
-typedef struct llist {
-    struct llist *next;
-    struct llist *prev;
-} llist_t;
-
 extern Boolean llist_isempty(llist_t *l);
 extern void llist_init(llist_t *l);
 extern void llist_insert_before(llist_t *element, llist_t *before);

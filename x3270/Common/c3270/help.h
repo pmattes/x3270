@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,35 +26,8 @@
  */
 
 /*
- *	actionsc.h
- *		Global declarations for actions.c.
+ *	help.h
+ *		Header file for help.c
  */
 
-typedef struct {
-    const char *name;
-    action_t *action;
-    unsigned flags;
-    unsigned help_flags;
-    const char *help_parms;
-    const char *help_text;
-} action_table_t;
-#define ACTION_KE	0x1	/* action is valid from key events */
-
-typedef struct action_elt {
-    llist_t list;		/* linkage */
-    action_table_t t;		/* payload */
-} action_elt_t;
-
-extern llist_t actions_list;
-extern unsigned actions_list_count;
-
-extern const char       *ia_name[];
-
-extern Boolean action_suppressed(const char *name, const char *suppress);
-extern void action_debug(const char *aname, ia_t ia, unsigned argc,
-	const char **argv);
-extern void run_action(const char *name, enum iaction cause,
-	const char *parm1, const char *parm2);
-extern int check_argc(const char *aname, unsigned nargs, unsigned nargs_min,
-	unsigned nargs_max);
-extern void register_actions(action_table_t *actions, unsigned count);
+extern void help_init(void);

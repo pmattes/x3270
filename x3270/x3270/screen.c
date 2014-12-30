@@ -379,6 +379,10 @@ static const char *dfc_search_family(const char *charset, dfc_t **dfc,
 	void **cookie);
 static Boolean dfc_search_name(const char *name);
 
+static action_t SetFont_action;
+static action_t Title_action;
+static action_t WindowState_action;
+
 /* Resize font list. */
 struct rsfont {
 	struct rsfont *next;
@@ -475,9 +479,18 @@ void
 screen_init(void)
 {
 	register int i;
+	static action_table_t screen_actions[] = {
+	    { "SetFont",	SetFont_action,		ACTION_KE },
+	    { "Title",		Title_action,		ACTION_KE },
+	    { "WindowState",	WindowState_action,	ACTION_KE }
+	};
 
-	if (!appres.m3279)
+	/* Register our actions. */
+	register_actions(screen_actions, array_count(screen_actions));
+
+	if (!appres.m3279) {
 	    	appres.highlight_bold = True;
+	}
 
 	visible_control = toggled(VISIBLE_CONTROL);
 
@@ -971,10 +984,11 @@ scrollbar_init(Boolean is_reset)
 	 * If the screen dimensions have changed, reallocate the scroll
 	 * save area.
 	 */
-	if (is_reset || !scroll_initted)
-		scroll_init();
-	else
+	if (is_reset || !scroll_initted) {
+		scroll_buf_init();
+	} else {
 		rethumb();
+	}
 }
 
 /* Turn the scrollbar on or off */
@@ -3633,7 +3647,7 @@ screen_focus(Boolean in)
 /*
  * Change fonts.
  */
-Boolean
+static Boolean
 SetFont_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("SetFont", ia, argc, argv);
@@ -5512,7 +5526,7 @@ send_spot_loc(void)
 }
 
 /* Change the window title. */
-Boolean
+static Boolean
 Title_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Title", ia, argc, argv);
@@ -5526,7 +5540,7 @@ Title_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /* Change the window state. */
-Boolean
+static Boolean
 WindowState_action(ia_t ia, unsigned argc, const char **argv)
 {
     int state;

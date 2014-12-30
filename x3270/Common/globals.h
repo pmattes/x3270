@@ -435,3 +435,12 @@ typedef SOCKET socket_t;
 #define INET_ADDR_T	unsigned long
 # define SOCK_CLOSE(s)  closesocket(s)
 #endif /*]*/
+
+/* Handy stuff. */
+#define array_count(a)	sizeof(a)/sizeof(a[0])
+
+/* Doubly-linked lists. */
+typedef struct llist {
+    struct llist *next;
+    struct llist *prev;
+} llist_t;

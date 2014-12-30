@@ -80,8 +80,6 @@ extern void PA_WMProtocols_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void Redraw_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern action_t Title_action;
-extern action_t WindowState_action;
 extern void ring_bell(void);
 extern void save_00translations(Widget w, XtTranslations *t00);
 #define screen_80()
@@ -107,7 +105,6 @@ extern void screen_set_keymap(void);
 extern void screen_set_temp_keymap(XtTranslations trans);
 extern void screen_set_thumb(float top, float shown);
 extern void screen_showikeypad(Boolean on);
-extern action_t SetFont_action;
 extern void set_aicon_label(char *l);
 extern void set_translations(Widget w, XtTranslations *t00, XtTranslations *t0);
 extern void shift_event(int event_state);

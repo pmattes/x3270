@@ -30,7 +30,6 @@
  *		Global declarations for xkybd.c.
  */
 
-extern action_t AltCursor_action;
 extern void Default_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void ignore_xaction(Widget w, XEvent *event, String *params,
@@ -41,4 +40,4 @@ extern void MoveCursor_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void PA_Shift_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern action_t TemporaryKeymap_action;
+extern void xkybd_init(void);

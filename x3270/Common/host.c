@@ -72,7 +72,9 @@ char	       *reconnect_host = NULL;
 char	       *qualified_host = NULL;
 
 struct host *hosts = NULL;
+#if defined(X3270_INTERACTIVE) /*[*/
 static struct host *last_host = NULL;
+#endif /*]*/
 static Boolean auto_reconnect_inprogress = False;
 static socket_t net_sock = INVALID_SOCKET;
 #if defined(X3270_INTERACTIVE) /*[*/
@@ -87,6 +89,13 @@ static void save_recent(const char *);
 static void try_reconnect(ioid_t id);
 #endif /*]*/
 
+static action_t Connect_action;
+static action_t Disconnect_action;
+#if defined(X3270_INTERACTIVE) /*[*/
+static action_t Reconnect_action;
+#endif /*]*/
+
+#if defined(X3270_INTERACTIVE) /*[*/
 static char *
 stoken(char **s)
 {
@@ -106,6 +115,7 @@ stoken(char **s)
 	*s = ss;
 	return r;
 }
+#endif /*]*/
 
 
 /*
@@ -114,16 +124,35 @@ stoken(char **s)
 void
 hostfile_init(void)
 {
+	static Boolean hostfile_initted = False;
+#if defined(X3270_INTERACTIVE) /*[*/
 	FILE *hf;
 	char buf[1024];
-	static Boolean hostfile_initted = False;
 	struct host *h;
 	char *hostfile_name;
+#endif /*]*/
+	static action_table_t host_actions[] = {
+#if defined(C3270) /*[*/
+	    { "Close",		Disconnect_action,	ACTION_KE },
+#endif /*]*/
+	    { "Connect",	Connect_action,		ACTION_KE },
+	    { "Disconnect",	Disconnect_action,	ACTION_KE },
+#if defined(C3270) /*[*/
+	    { "Open",		Connect_action,		ACTION_KE },
+#endif /*]*/
+#if defined(X3270_INTERACTIVE) /*[*/
+	    { "Reconnect",	Reconnect_action,	ACTION_KE }
+#endif /*]*/
+	};
 
-	if (hostfile_initted)
+	if (hostfile_initted) {
 		return;
+	}
+
+	register_actions(host_actions, array_count(host_actions));
 
 	hostfile_initted = True;
+#if defined(X3270_INTERACTIVE) /*[*/
 	hostfile_name = appres.hostsfile;
 	if (hostfile_name == NULL)
 		hostfile_name = xs_buffer("%s/ibm_hosts", appres.conf_dir);
@@ -190,11 +219,12 @@ hostfile_init(void)
 	}
 	Free(hostfile_name);
 
-#if defined(X3270_DISPLAY) /*[*/
+# if defined(X3270_DISPLAY) /*[*/
 	/*
 	 * Read the recent-connection file, and prepend it to the hosts list.
 	 */
 	save_recent(NULL);
+# endif /*]*/
 #endif /*]*/
 }
 
@@ -1084,7 +1114,7 @@ st_changed(int tx, Boolean mode)
 
 /* Explicit connect/disconnect actions. */
 
-Boolean
+static Boolean
 Connect_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Connect", ia, argc, argv);
@@ -1114,7 +1144,7 @@ Connect_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 #if defined(X3270_INTERACTIVE) /*[*/
-Boolean
+static Boolean
 Reconnect_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Reconnect", ia, argc, argv);
@@ -1148,7 +1178,7 @@ Reconnect_action(ia_t ia, unsigned argc, const char **argv)
 }
 #endif /*]*/
 
-Boolean
+static Boolean
 Disconnect_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Disconnect", ia, argc, argv);

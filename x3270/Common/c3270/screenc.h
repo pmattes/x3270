@@ -59,16 +59,7 @@ extern void toggle_monocase(struct toggle *t, enum toggle_type tt);
 
 extern Boolean escaped;
 
-extern action_t Escape_action;
-extern action_t Help_action;
-extern action_t Redraw_action;
-extern action_t ScreenTrace_action;
-extern action_t Show_action;
-extern action_t Trace_action;
-
 #if defined(WC3270) /*[*/
-extern action_t Paste_action;
-extern action_t Title_action;
 extern void screen_title(const char *text);
 extern int windows_cp;
 #endif /*]*/

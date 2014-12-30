@@ -36,6 +36,7 @@
 
 #include "actionsc.h"
 #include "gluec.h"
+#include "help.h"
 #include "popupsc.h"
 #include "screenc.h"
 #include "utilc.h"
@@ -250,7 +251,7 @@ static struct {
 };
 
 /* c3270-specific actions. */
-Boolean
+static Boolean
 Help_action(ia_t ia, unsigned argc, const char **argv)
 {
     int i;
@@ -279,18 +280,18 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     if (!strcmp(argv[0], "verify")) {
-	unsigned j;
+	action_elt_t *e;
 	Boolean any = False;
 
 	for (i = 0; cmd_help[i].name; i++) {
 	    Boolean found = False;
 
-	    for (j = 0; j < num_actions; j++) {
-		if (!strcasecmp(cmd_help[i].name, action_table[j].name)) {
+	    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+		if (!strcasecmp(cmd_help[i].name, e->t.name)) {
 		    found = True;
 		    break;
 		}
-	    }
+	    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
 	    if (!found) {
 		action_output("Help for nonexistent action: %s",
 			cmd_help[i].name);
@@ -301,21 +302,21 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
 	    action_output("No orphaned help messages.");
 	}
 	any = False;
-	for (j = 0; j < num_actions; j++) {
+	FOREACH_LLIST(&actions_list, e, action_elt_t *) {
 	    Boolean found = False;
 
 	    for (i = 0; cmd_help[i].name; i++) {
 
-		if (!strcasecmp(cmd_help[i].name, action_table[j].name)) {
+		if (!strcasecmp(cmd_help[i].name, e->t.name)) {
 		    found = True;
 		    break;
 		}
 	    }
 	    if (!found) {
-		action_output("No Help for %s", action_table[j].name);
+		action_output("No Help for %s", e->t.name);
 		any = True;
 	    }
-	}
+	} FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
 	if (!any) {
 	    printf("No orphaned actions.\n");
 	}
@@ -392,3 +393,13 @@ html_help(Boolean ignored _is_unused)
 	start_html_help();
 }
 #endif /*]*/
+
+void
+help_init(void)
+{
+    static action_table_t help_actions[] = {
+	{ "Help",	Help_action,	ACTION_KE }
+    };
+
+    register_actions(help_actions, array_count(help_actions));
+}

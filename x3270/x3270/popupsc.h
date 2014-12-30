@@ -53,7 +53,6 @@ extern void child_popup_init(void);
 extern void error_init(void);
 extern void error_popup_init(void);
 extern Boolean error_popup_visible(void);
-extern action_t Info_action;
 extern void info_popup_init(void);
 extern void PA_confirm_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
@@ -72,6 +71,6 @@ extern void popups_move(void);
 extern void printer_popup_init(void);
 extern void toplevel_geometry(Position *x, Position *y, Dimension *width,
     Dimension *height);
-
 extern void
 add_error_popdown_callback(void (*callback)(void));
+extern void popups_init(void);

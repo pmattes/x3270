@@ -33,10 +33,6 @@
  *		Screen selections
  */
 
-/* Actions. */
-extern action_t Copy_action;
-extern action_t Cut_action;
-
 /* Used by the screen logic. */
 extern Boolean select_changed(unsigned row, unsigned col, unsigned rows,
 	unsigned cols);

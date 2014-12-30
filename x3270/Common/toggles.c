@@ -179,3 +179,13 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
     }
     return True;
 }
+
+void
+toggles_init(void)
+{
+    static action_table_t toggle_actions[] = {
+	{ "Toggle",		Toggle_action,	ACTION_KE }
+    };
+
+    register_actions(toggle_actions, array_count(toggle_actions));
+}

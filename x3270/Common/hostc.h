@@ -41,10 +41,6 @@ struct host {
 };
 extern struct host *hosts;
 
-extern action_t Connect_action;
-extern action_t Disconnect_action;
-extern action_t Reconnect_action;
-
 /* Host connect/disconnect and state change. */
 extern void hostfile_init(void);
 extern void host_cancel_reconnect(void);

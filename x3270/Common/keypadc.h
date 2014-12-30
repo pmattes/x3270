@@ -64,6 +64,6 @@ extern void keypad_key(int k, ucs4_t u);
 # if defined(_WIN32) /*[*/
 extern void keypad_click(int x, int y);
 # endif /*]*/
-extern action_t Keypad_action;
+extern void keypad_init(void);
 
 #endif /*]*/

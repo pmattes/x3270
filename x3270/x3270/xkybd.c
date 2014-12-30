@@ -104,7 +104,7 @@ key_ACharacter(char *mb, enum keytype keytype, enum iaction cause)
 	key_UCharacter(ucs4, keytype, cause);
 }
 
-Boolean
+static Boolean
 AltCursor_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("AltCursor", ia, argc, argv);
@@ -566,4 +566,17 @@ TemporaryKeymap_action(ia_t ia, unsigned argc, const char **argv)
 	return False;
     }
     return True;
+}
+
+/* Initialize X11-specific keyboard functions. */
+void
+xkybd_init(void)
+{
+    static action_table_t xkybd_actions[] = {
+	{ "AltCursor",		AltCursor_action,	ACTION_KE },
+	{ "Keymap",		TemporaryKeymap_action,	ACTION_KE },
+	{ "TemporaryKeymap",	TemporaryKeymap_action,	ACTION_KE }
+    };
+
+    register_actions(xkybd_actions, array_count(xkybd_actions));
 }

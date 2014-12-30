@@ -236,6 +236,30 @@ static sms_t *sms_redirect_to(void);
     (IN_NVT && !(kybdlock & KL_AWAITING_FIRST)) \
 )
 
+static action_t Abort_action;
+static action_t AnsiText_action;
+static action_t Ascii_action;
+static action_t AsciiField_action;
+static action_t CloseScript_action;
+static action_t ContinueScript_action;
+static action_t Ebcdic_action;
+static action_t EbcdicField_action;
+static action_t Execute_action;
+static action_t Expect_action;
+static action_t Macro_action;
+static action_t PauseScript_action;
+static action_t Query_action;
+static action_t ReadBuffer_action;
+static action_t Script_action;
+static action_t Snap_action;
+static action_t Source_action;
+static action_t Wait_action;
+
+#if defined(X3270_INTERACTIVE) /*[*/
+static action_t Bell_action;
+static action_t Printer_action;
+#endif /*]*/
+
 static void
 trace_script_output(const char *fmt, ...)
 {
@@ -298,8 +322,36 @@ sms_in3270(Boolean in3270)
 void
 sms_init(void)
 {
+    static action_table_t macros_actions[] = {
+	{ "Abort",		Abort_action, ACTION_KE },
+	{ "AnsiText",		AnsiText_action, 0 },
+	{ "Ascii",		Ascii_action, 0 },
+	{ "AsciiField",		AsciiField_action, 0 },
+#if defined(X3270_INTERACTIVE) /*[*/
+	{ "Bell",		Bell_action, 0 },
+#endif /*]*/
+	{ "CloseScript",	CloseScript_action, 0 },
+	{ "ContinueScript",	ContinueScript_action, ACTION_KE },
+	{ "Ebcdic",		Ebcdic_action, 0 },
+	{ "EbcdicField",	EbcdicField_action, 0 },
+	{ "Execute",		Execute_action, ACTION_KE },
+	{ "Expect",		Expect_action, 0 },
+	{ "Macro",		Macro_action, ACTION_KE },
+	{ "PauseScript",	PauseScript_action, 0 },
+#if defined(X3270_INTERACTIVE) /*[*/
+	{ "Printer",		Printer_action, ACTION_KE },
+#endif /*]*/
+	{ "Query",		Query_action, 0 },
+	{ "ReadBuffer",		ReadBuffer_action, 0 },
+	{ "Script",		Script_action, ACTION_KE },
+	{ "Snap",		Snap_action, 0 },
+	{ "Source",		Source_action, ACTION_KE },
+	{ "Wait",		Wait_action, ACTION_KE }
+    };
+
     register_schange(ST_CONNECT, sms_connect);
     register_schange(ST_3270_MODE, sms_in3270);
+    register_actions(macros_actions, array_count(macros_actions));
 }
 
 /* Parse the macros resource into the macro list */
@@ -999,9 +1051,10 @@ execute_command(enum iaction cause, char *s, char **np)
     int nx = 0;
     unsigned count = 0;
     const char *params[64];
-    unsigned i;
-    int any, exact;
     int failreason = 0;
+    action_elt_t *e;
+    action_elt_t *any = NULL;
+    action_elt_t *exact = NULL;
     static const char *fail_text[] = {
 	/*1*/ "Action name must begin with an alphanumeric character",
 	/*2*/ "Syntax error in action name",
@@ -1230,30 +1283,28 @@ success:
 	popup_an_error("Invalid action: %s", aname);
 	return EM_ERROR;
     }
-    any = -1;
-    exact = -1;
-    for (i = 0; i < num_actions; i++) {
-	if (!strcasecmp(aname, action_table[i].name)) {
-	    exact = any = i;
+    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	if (!strcasecmp(aname, e->t.name)) {
+	    exact = any = e;
 	    break;
 	}
-    }
-    if (exact < 0) {
-	for (i = 0; i < num_actions; i++) {
-	    if (!strncasecmp(aname, action_table[i].name, strlen(aname))) {
-		if (any >= 0) {
+    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
+    if (exact == NULL) {
+	FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	    if (!strncasecmp(aname, e->t.name, strlen(aname))) {
+		if (any != NULL) {
 		    popup_an_error("Ambiguous action name: %s", aname);
 		    return EM_ERROR;
 		}
-		any = i;
+		any = e;
 	    }
-	}
+	} FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
     }
-    if (any >= 0) {
+    if (any != NULL) {
 	sms->accumulated = False;
 	sms->msec = 0L;
 	ia_cause = cause;
-	(*action_table[any].action)(cause, count, count? params: NULL);
+	(*any->t.action)(cause, count, count? params: NULL);
 	screen_disp(False);
     } else {
 	popup_an_error("Unknown action: %s", aname);
@@ -2240,27 +2291,27 @@ dump_field(unsigned count, const char *name, Boolean in_ascii)
     return True;
 }
 
-Boolean
+static Boolean
 Ascii_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     return dump_fixed(argv, argc, "Ascii", True, ea_buf, ROWS, COLS,
 	    cursor_addr);
 }
 
-Boolean
+static Boolean
 AsciiField_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     return dump_field(argc, "AsciiField", True);
 }
 
-Boolean
+static Boolean
 Ebcdic_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     return dump_fixed(argv, argc, "Ebcdic", False, ea_buf, ROWS, COLS,
 	    cursor_addr);
 }
 
-Boolean
+static Boolean
 EbcdicField_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     return dump_field(argc, "EbcdicField", False);
@@ -2448,7 +2499,7 @@ done:
 /*
  * ReadBuffer action.
  */
-Boolean
+static Boolean
 ReadBuffer_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     return do_read_buffer(argv, argc, ea_buf, -1);
@@ -2657,7 +2708,7 @@ snap_save(void)
  *  Snap Wait [tmo] Output
  *      wait for the screen to change, then do a Snap Save
  */
-Boolean
+static Boolean
 Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     if (sms == NULL || sms->state != SS_RUNNING) {
@@ -2790,7 +2841,7 @@ Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 /*
  * Wait for various conditions.
  */
-Boolean
+static Boolean
 Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     enum sms_state next_state = SS_WAIT_IFIELD;
@@ -3094,7 +3145,7 @@ sms_store(unsigned char c)
 }
 
 /* Dump whatever NVT data has been sent by the host since last called. */
-Boolean
+static Boolean
 AnsiText_action(ia_t ia, unsigned argc, const char **argv)
 {
     int i;
@@ -3142,7 +3193,7 @@ AnsiText_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /* Pause a script. */
-Boolean
+static Boolean
 PauseScript_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("PauseScript", ia, argc, argv);
@@ -3158,7 +3209,7 @@ PauseScript_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /* Continue a script. */
-Boolean
+static Boolean
 ContinueScript_action(ia_t ia, unsigned argc, const char **argv)
 {
     sms_t *s;
@@ -3196,7 +3247,7 @@ ContinueScript_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /* Stop listening to stdin. */
-Boolean
+static Boolean
 CloseScript_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("CloseScript", ia, argc, argv);
@@ -3227,7 +3278,7 @@ CloseScript_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /* Execute an arbitrary shell command. */
-Boolean
+static Boolean
 Execute_action(ia_t ia, unsigned argc, const char **argv)
 {
     int status;
@@ -3320,7 +3371,7 @@ wait_timed_out(ioid_t id _is_unused)
 }
 
 /* Wait for a string from the host (NVT mode only). */
-Boolean
+static Boolean
 Expect_action(ia_t ia, unsigned argc, const char **argv)
 {
     int tmo;
@@ -3400,7 +3451,7 @@ pick_port(int *sp)
 
 /* "Script" action, runs a script as a child process. */
 #if !defined(_WIN32) /*[*/
-Boolean
+static Boolean
 Script_action(ia_t ia, unsigned argc, const char **argv)
 {
     int inpipe[2];
@@ -3502,7 +3553,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 
 #if defined(_WIN32) /*[*/
 /* "Script" action, runs a script as a child process. */
-Boolean
+static Boolean
 Script_action(ia_t ia, unsigned argc, const char **argv)
 {
     int s = -1;
@@ -3607,7 +3658,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 #endif /*]*/
 
 /* "Macro" action, explicitly invokes a named macro. */
-Boolean
+static Boolean
 Macro_action(ia_t ia, unsigned argc, const char **argv)
 {
 	struct macro_def *m;
@@ -3647,7 +3698,7 @@ cancel_if_idle_command(void)
 
 #if defined(X3270_INTERACTIVE) /*[*/
 /* "Printer" action, starts or stops a printer session. */
-Boolean
+static Boolean
 Printer_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Printer", ia, argc, argv);
@@ -3684,7 +3735,7 @@ abort_script(void)
 }
 
 /* "Abort" action, stops pending scripts. */
-Boolean
+static Boolean
 Abort_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Abort", ia, argc, argv);
@@ -3723,7 +3774,7 @@ sms_accumulate_time(struct timeval *t0, struct timeval *t1)
     }
 }
 
-Boolean
+static Boolean
 Query_action(ia_t ia, unsigned argc, const char **argv)
 {
     static struct {
@@ -3782,7 +3833,7 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
  * Bell action, used by scripts to ring the console bell and enter a comment
  * into the trace log.
  */
-Boolean
+static Boolean
 Bell_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Bell", ia, argc, argv);
@@ -3794,7 +3845,7 @@ Bell_action(ia_t ia, unsigned argc, const char **argv)
 }
 #endif /*]*/
 
-Boolean
+static Boolean
 Source_action(ia_t ia, unsigned argc, const char **argv)
 {
     int fd;

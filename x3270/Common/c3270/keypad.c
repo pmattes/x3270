@@ -513,3 +513,13 @@ Keypad_action(ia_t ia, unsigned argc, const char **argv)
     pop_up_keypad(True);
     return True;
 }
+
+void
+keypad_init(void)
+{
+    static action_table_t keypad_actions[] = {
+	{ "Keypad",	Keypad_action,	ACTION_KE }
+    };
+
+    register_actions(keypad_actions, array_count(keypad_actions));
+}

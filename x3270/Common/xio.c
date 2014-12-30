@@ -179,3 +179,16 @@ Quit_action(ia_t ia, unsigned argc, const char **argv)
     }
     return False;
 }
+
+void
+xio_init(void)
+{
+    static action_table_t xio_actions[] = {
+	{ "Quit",		Quit_action,	ACTION_KE },
+#if defined(C3270) /*[*/
+	{ "Exit",		Quit_action,	ACTION_KE }
+#endif /*]*/
+    };
+
+    register_actions(xio_actions, array_count(xio_actions));
+}

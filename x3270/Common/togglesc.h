@@ -38,4 +38,4 @@ extern void do_menu_toggle(int);
 extern void do_toggle(int);
 extern void initialize_toggles(void);
 extern void shutdown_toggles(void);
-extern action_t Toggle_action;
+extern void toggles_init(void);

@@ -225,12 +225,19 @@ static void init_user_colors(void);
 static void init_user_attribute_colors(void);
 static void screen_init2(void);
 
+static action_t Redraw_action;
+
 /* Initialize the screen. */
 void
 screen_init(void)
 {
+	static action_table_t screen_actions[] = {
+	    { "Redraw",	Redraw_action,	ACTION_KE }
+	};
+
     	menu_init();
 	register_schange(ST_CONNECT, screen_connect);
+	register_actions(screen_actions, array_count(screen_actions));
 
 #if !defined(C3270_80_132) /*[*/
 	/* Disallow altscreen/defscreen. */
@@ -1494,12 +1501,9 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	/* Then any other 8-bit ASCII character. */
 	if (ucs4) {
 		char ks[16];
-		const char *params[2];
 
 		sprintf(ks, "U+%04x", ucs4);
-		params[0] = ks;
-		params[1] = NULL;
-		Key_action(IA_DEFAULT, 1, params);
+		run_action("Key", IA_DEFAULT, ks, NULL);
 		return;
 	}
 	vtrace(" dropped (no default)\n");

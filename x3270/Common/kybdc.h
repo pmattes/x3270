@@ -48,57 +48,6 @@ extern unsigned int kybdlock;
 
 extern unsigned char aid;
 
-/* actions */
-extern action_t AltCursor_action;
-extern action_t Attn_action;
-extern action_t BackSpace_action;
-extern action_t BackTab_action;
-extern action_t CircumNot_action;
-extern action_t Clear_action;
-extern action_t Compose_action;
-extern action_t CursorSelect_action;
-extern action_t Delete_action;
-extern action_t DeleteField_action;
-extern action_t DeleteWord_action;
-extern action_t Down_action;
-extern action_t Dup_action;
-extern action_t Enter_action;
-extern action_t Erase_action;
-extern action_t EraseEOF_action;
-extern action_t EraseInput_action;
-extern action_t FieldEnd_action;
-extern action_t FieldMark_action;
-extern action_t Flip_action;
-extern action_t HexString_action;
-extern action_t Home_action;
-extern action_t Insert_action;
-extern action_t Interrupt_action;
-extern action_t Key_action;
-extern action_t Left2_action;
-extern action_t Left_action;
-extern action_t MonoCase_action;
-extern action_t MoveCursor_action;
-extern action_t Newline_action;
-extern action_t NextWord_action;
-extern action_t PA_action;
-extern action_t PF_action;
-extern action_t PreviousWord_action;
-extern action_t Reset_action;
-extern action_t Right2_action;
-extern action_t Right_action;
-extern action_t String_action;
-extern action_t SysReq_action;
-extern action_t Tab_action;
-extern action_t TemporaryKeymap_action;
-extern action_t ToggleInsert_action;
-extern action_t ToggleReverse_action;
-extern action_t Up_action;
-
-#if defined(C3270) /*[*/
-extern action_t ignore_action;
-#endif /*]*/
-
-/* other functions */
 extern void do_reset(Boolean explicit);
 extern int emulate_input(const char *s, int len, Boolean pasting);
 extern int emulate_uinput(const ucs4_t *s, int len, Boolean pasting);

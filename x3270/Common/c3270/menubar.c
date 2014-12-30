@@ -1194,3 +1194,13 @@ Menu_action(ia_t ia, unsigned argc, const char **argv)
     popup_menu(0, False);
     return True;
 }
+
+void
+menubar_init(void)
+{
+    static action_table_t menubar_actions[] = {
+	{ "Menu",	Menu_action,	ACTION_KE }
+    };
+
+    register_actions(menubar_actions, array_count(menubar_actions));
+}

@@ -206,6 +206,10 @@ static unsigned long blink_id = 0;	/* timeout ID */
 static Boolean blink_wasticking = False;
 static void blink_em(ioid_t id);
 
+static action_t Paste_action;
+static action_t Redraw_action;
+static action_t Title_action;
+
 /*
  * Console event handler.
  */
@@ -1080,6 +1084,11 @@ endwin(void)
 void
 screen_init(void)
 {
+	 static action_table_t screen_actions[] = {
+	     { "Paste",		Paste_action,	ACTION_KE },
+	     { "Redraw",	Redraw_action,	ACTION_KE },
+	     { "Title",		Title_action,	ACTION_KE }
+	 };
 	int want_ov_rows;
 	int want_ov_cols;
 	Boolean oversize = False;
@@ -1165,6 +1174,9 @@ screen_init(void)
 	register_schange(ST_HALF_CONNECT, relabel);
 	register_schange(ST_CONNECT, relabel);
 	register_schange(ST_3270_MODE, relabel);
+
+	/* Register actions. */
+	register_actions(screen_actions, array_count(screen_actions));
 
 	/* See about all-bold behavior. */
 	if (appres.all_bold_on)
@@ -2681,7 +2693,7 @@ draw_oia(void)
 		    "%03d/%03d", cursor_addr/cCOLS + 1, cursor_addr%cCOLS + 1);
 }
 
-Boolean
+static Boolean
 Redraw_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Redraw", ia, argc, argv);
@@ -2791,7 +2803,7 @@ screen_80(void)
  * Windows-specific Paste action, that takes advantage of the existing x3270
  * instrastructure for multi-line paste.
  */
-Boolean
+static Boolean
 Paste_action(ia_t ia, unsigned argc, const char **argv)
 {
     HGLOBAL hglb;
@@ -2849,7 +2861,7 @@ screen_title(const char *text)
     (void) SetConsoleTitle(text);
 }
 
-Boolean
+static Boolean
 Title_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Title", ia, argc, argv);

@@ -54,6 +54,7 @@
 #include "unicodec.h"
 #include "ftc.h"
 #include "gluec.h"
+#include "help.h"
 #include "hostc.h"
 #include "httpd-corec.h"
 #include "httpd-nodesc.h"
@@ -61,13 +62,17 @@
 #include "icmdc.h"
 #include "idlec.h"
 #include "keymapc.h"
+#include "keypadc.h"
 #include "kybdc.h"
 #include "linemodec.h"
 #include "macrosc.h"
+#include "menubarc.h"
 #include "nvtc.h"
 #include "popupsc.h"
+#include "printc.h"
 #include "printerc.h"
 #include "screenc.h"
+#include "scrollc.h"
 #include "selectc.h"
 #include "statusc.h"
 #include "telnetc.h"
@@ -281,6 +286,22 @@ int is_installed;
 static void start_auto_shortcut(void);
 #endif /*]*/
 
+static action_t Escape_action;
+static action_t ignore_action;
+static action_t Info_action;
+static action_t ScreenTrace_action;
+static action_t Show_action;
+static action_t Trace_action;
+
+static action_table_t main_actions[] = {
+    { "Escape",		Escape_action,		ACTION_KE },
+    { "ignore",		ignore_action,		ACTION_KE },
+    { "Info",		Info_action,		ACTION_KE },
+    { "ScreenTrace",	ScreenTrace_action,	ACTION_KE },
+    { "Show",		Show_action,		ACTION_KE },
+    { "Trace",		Trace_action,		ACTION_KE },
+};
+
 void
 usage(const char *msg)
 {
@@ -401,7 +422,6 @@ main(int argc, char *argv[])
 		xs_warning("Cannot find charset \"%s\"", appres.charset);
 		(void) charset_init(NULL);
 	}
-	action_init();
 	model_init();
 
 #if defined(HAVE_LIBREADLINE) /*[*/
@@ -442,8 +462,16 @@ main(int argc, char *argv[])
 	register_schange(ST_CONNECT, main_connect);
 	register_schange(ST_3270_MODE, main_connect);
         register_schange(ST_EXITING, main_exiting);
+	register_actions(main_actions, array_count(main_actions));
 	ft_init();
 	printer_init();
+	xio_init();
+	print_init();
+	keypad_init();
+	toggles_init();
+	menubar_init();
+	scroll_init();
+	help_init();
 
 #if !defined(_WIN32) /*[*/
 	/* Make sure we don't fall over any SIGPIPEs. */
@@ -809,128 +837,142 @@ static char **next_match;
 static char **
 attempted_completion(const char *text, int start, int end)
 {
-	char *s;
-	unsigned i, j;
-	int match_count;
+    char *s;
+    unsigned i, j;
+    int match_count;
+    action_elt_t *e;
 
-	/* If this is not the first word, fail. */
-	s = rl_line_buffer;
-	while (*s && isspace(*s))
-		s++;
-	if (s - rl_line_buffer < start) {
-		char *t = s;
-		struct host *h;
+    /* If this is not the first word, fail. */
+    s = rl_line_buffer;
+    while (*s && isspace(*s)) {
+	s++;
+    }
+    if (s - rl_line_buffer < start) {
+	char *t = s;
+	struct host *h;
 
-		/*
-		 * If the first word is 'Connect' or 'Open', and the
-		 * completion is on the second word, expand from the
-		 * hostname list.
-		 */
+	/*
+	 * If the first word is 'Connect' or 'Open', and the
+	 * completion is on the second word, expand from the
+	 * hostname list.
+	 */
 
-		/* See if we're in the second word. */
-		while (*t && !isspace(*t))
-			t++;
-		while (*t && isspace(*t))
-			t++;
-		if (t - rl_line_buffer < start)
-			return NULL;
-
-		/*
-		 * See if the first word is 'Open' or 'Connect'.  In future,
-		 * we might do other expansions, and this code would need to
-		 * be generalized.
-		 */
-		if (!((!strncasecmp(s, "Open", 4) && isspace(*(s + 4))) ||
-		      (!strncasecmp(s, "Connect", 7) && isspace(*(s + 7)))))
-			return NULL;
-
-		/* Look for any matches.  Note that these are case-sensitive. */
-		for (h = hosts, match_count = 0; h; h = h->next) {
-			if (!strncmp(h->name, t, strlen(t)))
-				match_count++;
-		}
-		if (!match_count)
-			return NULL;
-
-		/* Allocate the return array. */
-		next_match = matches =
-		    Malloc((match_count + 1) * sizeof(char **));
-
-		/* Scan again for matches to fill in the array. */
-		for (h = hosts, j = 0; h; h = h->next) {
-			int skip = 0;
-
-			if (strncmp(h->name, t, strlen(t)))
-				continue;
-
-			/*
-			 * Skip hostsfile entries that are duplicates of
-			 * RECENT entries we've already recorded.
-			 */
-			if (h->entry_type != RECENT) {
-				for (i = 0; i < j; i++) {
-					if (!strcmp(matches[i],
-					    h->name)) {
-						skip = 1;
-						break;
-					}
-				}
-			}
-			if (skip)
-				continue;
-
-			/*
-			 * If the string contains spaces, put it in double
-			 * quotes.  Otherwise, just copy it.  (Yes, this code
-			 * is fairly stupid, and can be fooled by other
-			 * whitespace and embedded double quotes.)
-			 */
-			if (strchr(h->name, ' ') != NULL) {
-				matches[j] = Malloc(strlen(h->name) + 3);
-				(void) sprintf(matches[j], "\"%s\"", h->name);
-				j++;
-			} else {
-				matches[j++] = NewString(h->name);
-			}
-		}
-		matches[j] = NULL;
-		return NULL;
+	/* See if we're in the second word. */
+	while (*t && !isspace(*t)) {
+	    t++;
+	}
+	while (*t && isspace(*t)) {
+	    t++;
+	}
+	if (t - rl_line_buffer < start) {
+	    return NULL;
 	}
 
-	/* Search for matches. */
-	for (i = 0, match_count = 0; i < num_actions; i++) {
-		if (!strncasecmp(action_table[i].name, s, strlen(s)))
-			match_count++;
+	/*
+	 * See if the first word is 'Open' or 'Connect'.  In future,
+	 * we might do other expansions, and this code would need to
+	 * be generalized.
+	 */
+	if (!((!strncasecmp(s, "Open", 4) && isspace(*(s + 4))) ||
+	      (!strncasecmp(s, "Connect", 7) && isspace(*(s + 7))))) {
+	    return NULL;
 	}
-	if (!match_count)
-		return NULL;
 
-	/* Return what we got. */
+	/* Look for any matches.  Note that these are case-sensitive. */
+	for (h = hosts, match_count = 0; h; h = h->next) {
+	    if (!strncmp(h->name, t, strlen(t))) {
+		match_count++;
+	    }
+	}
+	if (!match_count) {
+	    return NULL;
+	}
+
+	/* Allocate the return array. */
 	next_match = matches = Malloc((match_count + 1) * sizeof(char **));
-	for (i = 0, j = 0; i < num_actions; i++) {
-		if (!strncasecmp(action_table[i].name, s, strlen(s))) {
-			matches[j++] = NewString(action_table[i].name);
+
+	/* Scan again for matches to fill in the array. */
+	for (h = hosts, j = 0; h; h = h->next) {
+	    int skip = 0;
+
+	    if (strncmp(h->name, t, strlen(t))) {
+		continue;
+	    }
+
+	    /*
+	     * Skip hostsfile entries that are duplicates of
+	     * RECENT entries we've already recorded.
+	     */
+	    if (h->entry_type != RECENT) {
+		for (i = 0; i < j; i++) {
+		    if (!strcmp(matches[i], h->name)) {
+			skip = 1;
+			break;
+		    }
 		}
+	    }
+	    if (skip) {
+		continue;
+	    }
+
+	    /*
+	     * If the string contains spaces, put it in double
+	     * quotes.  Otherwise, just copy it.  (Yes, this code
+	     * is fairly stupid, and can be fooled by other
+	     * whitespace and embedded double quotes.)
+	     */
+	    if (strchr(h->name, ' ') != NULL) {
+		matches[j] = Malloc(strlen(h->name) + 3);
+		(void) sprintf(matches[j], "\"%s\"", h->name);
+		j++;
+	    } else {
+		matches[j++] = NewString(h->name);
+	    }
 	}
 	matches[j] = NULL;
 	return NULL;
+    }
+
+    /* Search for matches. */
+    match_count = 0;
+    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	if (!strncasecmp(e->t.name, s, strlen(s))) {
+	    match_count++;
+	}
+    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
+    if (!match_count) {
+	return NULL;
+    }
+
+    /* Return what we got. */
+    next_match = matches = Malloc((match_count + 1) * sizeof(char **));
+    j = 0;
+    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	if (!strncasecmp(e->t.name, s, strlen(s))) {
+	    matches[j++] = NewString(e->t.name);
+	}
+    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
+    matches[j] = NULL;
+    return NULL;
 }
 
 /* Return the match list. */
 static char *
 completion_entry(const char *text, int state)
 {
-	char *r;
+    char *r;
 
-	if (next_match == NULL)
-		return NULL;
+    if (next_match == NULL) {
+	return NULL;
+    }
 
-	if ((r = *next_match++) == NULL) {
-		Free(matches);
-		next_match = matches = NULL;
-		return NULL;
-	} else
-		return r;
+    if ((r = *next_match++) == NULL) {
+	Free(matches);
+	next_match = matches = NULL;
+	return NULL;
+    } else {
+	return r;
+    }
 }
 
 #endif /*]*/
@@ -1193,7 +1235,7 @@ copyright_dump(void)
 	action_output(" ");
 }
 
-Boolean
+static Boolean
 Show_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Show", ia, argc, argv);
@@ -1223,7 +1265,7 @@ Show_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /* Trace([data|keyboard][on [filename]|off]) */
-Boolean
+static Boolean
 Trace_action(ia_t ia, unsigned argc, const char **argv)
 {
     Boolean on = False;
@@ -1301,7 +1343,7 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
  * ScreenTrace(On,Printer[,Gdi|WordPad],printername) Windows
  * ScreenTrace(Off)
  */
-Boolean
+static Boolean
 ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 {
     Boolean on = False;
@@ -1459,7 +1501,7 @@ toggle_it:
 }
 
 /* Break to the command prompt. */
-Boolean
+static Boolean
 Escape_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Escape", ia, argc, argv);
@@ -1510,7 +1552,7 @@ popup_an_info(const char *fmt, ...)
 	}
 }
 
-Boolean
+static Boolean
 Info_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Info", ia, argc, argv);
@@ -1523,7 +1565,7 @@ Info_action(ia_t ia, unsigned argc, const char **argv)
     return True;
 }
 
-Boolean
+static Boolean
 ignore_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("ignore", ia, argc, argv);

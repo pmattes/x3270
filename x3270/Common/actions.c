@@ -38,32 +38,13 @@
 #include "appres.h"
 
 #include "actionsc.h"
-#include "hostc.h"
-#include "keymapc.h"
-#include "kybdc.h"
 #include "macrosc.h"
 #include "popupsc.h"
-#include "printc.h"
-#if defined(X3270_DISPLAY) /*[*/
-# include "print_windowc.h"
-#endif /*]*/
-#include "resources.h"
-#include "scrollc.h"
-#include "selectc.h"
-#include "togglesc.h"
 #include "trace.h"
 #include "utilc.h"
-#include "xioc.h"
 
-#include "unicodec.h"
-#include "ftc.h"
-#if defined(X3270_INTERACTIVE) /*[*/
-#include "keypadc.h"
-#include "menubarc.h"
-#endif /*]*/
-#if defined(X3270_INTERACTIVE) /*[*/
-#include "screenc.h"
-#endif /*]*/
+llist_t actions_list = LLIST_INIT(actions_list);
+unsigned actions_list_count;
 
 enum iaction ia_cause;
 const char *ia_name[] = {
@@ -71,181 +52,6 @@ const char *ia_name[] = {
     "Macro", "Script", "Peek", "Typeahead", "File transfer", "Command",
     "Keymap", "Idle"
 };
-
-/* The emulator action table. */
-action_table_t all_actions[] = {
-#if defined(C3270) /*[*/
-    { "Abort",		Abort_action, NULL },
-#endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
-    { "AltCursor",  	AltCursor_action, NULL },
-#endif /*]*/
-#if defined(X3270_INTERACTIVE) /*[*/
-    { "Compose",	Compose_action, NULL },
-#endif /*]*/
-#if defined(WC3270) /*[*/
-    { "Copy",		Copy_action, NULL },
-#endif /*]*/
-#if defined(WC3270) /*[*/
-    { "Cut",		Cut_action, NULL },
-#endif /*]*/
-    { "HexString",	HexString_action, NULL },
-#if defined(X3270_INTERACTIVE) /*[*/
-    { "Info",		Info_action, NULL },
-#endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
-    { "Keymap",		TemporaryKeymap_action, NULL },
-#endif /*]*/
-#if defined(C3270) /*[*/
-    { "Escape",		Escape_action, NULL },
-#endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
-    { "PrintWindow",	PrintWindow_action, NULL },
-#endif /*]*/
-    { "PrintText",	PrintText_action, NULL },
-#if defined(X3270_INTERACTIVE) /*[*/
-    { "Flip",		Flip_action, NULL },
-#endif /*]*/
-#if defined(C3270) /*[*/
-    { "Redraw",		Redraw_action, NULL },
-#endif /*]*/
-#if defined(X3270_INTERACTIVE) /*[*/
-    { "Scroll",		Scroll_action, NULL },
-#endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
-    { "SetFont",	SetFont_action, NULL },
-    { "TemporaryKeymap",TemporaryKeymap_action, NULL },
-#endif /*]*/
-#if !defined(TCL3270) /*[*/
-    { "AnsiText",	AnsiText_action, NULL },
-#endif /*]*/
-    { "Ascii",		Ascii_action, NULL },
-    { "AsciiField",	AsciiField_action, NULL },
-    { "Attn",		Attn_action, NULL },
-    { "BackSpace",	BackSpace_action, NULL },
-    { "BackTab",	BackTab_action, NULL },
-#if defined(X3270_INTERACTIVE) /*[*/
-    { "Bell",		Bell_action, NULL },
-#endif /*]*/
-    { "CircumNot",	CircumNot_action, NULL },
-    { "Clear",		Clear_action, NULL },
-    { "Close",		Disconnect_action, NULL },
-#if !defined(TCL3270) /*[*/
-    { "CloseScript",	CloseScript_action, NULL },
-#endif /*]*/
-    { "Connect",	Connect_action, NULL },
-#if !defined(TCL3270) /*[*/
-    { "ContinueScript",	ContinueScript_action, NULL },
-#endif /*]*/
-    { "CursorSelect",	CursorSelect_action, NULL },
-    { "Delete", 	Delete_action, NULL },
-    { "DeleteField",	DeleteField_action, NULL },
-    { "DeleteWord",	DeleteWord_action, NULL },
-    { "Disconnect",	Disconnect_action, NULL },
-    { "Down",		Down_action, NULL },
-    { "Dup",		Dup_action, NULL },
-    { "Ebcdic",		Ebcdic_action, NULL },
-    { "EbcdicField",	EbcdicField_action, NULL },
-    { "Enter",		Enter_action, NULL },
-    { "Erase",		Erase_action, NULL },
-    { "EraseEOF",	EraseEOF_action, NULL },
-    { "EraseInput",	EraseInput_action, NULL },
-#if !defined(TCL3270) /*[*/
-    { "Execute",	Execute_action, NULL },
-#endif /*]*/
-#if defined(C3270) /*[*/
-    { "Exit",		Quit_action, NULL },
-#endif /*]*/
-#if !defined(TCL3270) /*[*/
-    { "Expect",		Expect_action, NULL },
-#endif /*]*/
-    { "FieldEnd",	FieldEnd_action, NULL },
-    { "FieldMark",	FieldMark_action, NULL },
-    { "HexString",	HexString_action},
-#if defined(C3270) /*[*/
-    { "Help",		Help_action},
-#endif/*]*/
-    { "Home",		Home_action, NULL },
-#if defined(C3270) /*[*/
-    { "ignore",		ignore_action, NULL },
-#endif /*]*/
-    { "Insert",		Insert_action, NULL },
-    { "Interrupt",	Interrupt_action, NULL },
-    { "Key",		Key_action, NULL },
-#if defined(C3270) /*[*/
-    { "Keypad",		Keypad_action, NULL },
-#endif /*]*/
-    { "Left",		Left_action, NULL },
-    { "Left2", 		Left2_action, NULL },
-#if !defined(TCL3270) /*[*/
-    { "Macro", 		Macro_action, NULL },
-#endif /*]*/
-#if defined(C3270) /*[*/
-    { "Menu",		Menu_action, NULL },
-#endif /*]*/
-    { "MonoCase",	MonoCase_action, NULL },
-    { "MoveCursor",	MoveCursor_action, NULL },
-    { "Newline",	Newline_action, NULL },
-    { "NextWord",	NextWord_action, NULL },
-    { "Open",		Connect_action, NULL },
-    { "PA",		PA_action, NULL },
-    { "PF",		PF_action, NULL },
-#if defined(WC3270) /*[*/
-    { "Paste",		Paste_action, NULL },
-#endif /*]*/
-#if !defined(TCL3270) /*[*/
-    { "PauseScript",	PauseScript_action, NULL },
-#endif /*]*/
-    { "PreviousWord",	PreviousWord_action, NULL },
-#if defined(X3270_INTERACTIVE) /*[*/
-    { "Printer",	Printer_action, NULL },
-#endif /*]*/
-    { "Query",		Query_action, NULL },
-    { "Quit",		Quit_action, NULL },
-    { "ReadBuffer",	ReadBuffer_action, NULL },
-#if defined(X3270_INTERACTIVE) /*[*/
-    { "Reconnect",	Reconnect_action, NULL },
-#endif /*]*/
-    { "Reset",		Reset_action, NULL },
-    { "Right",		Right_action, NULL },
-    { "Right2",		Right2_action, NULL },
-#if defined(C3270) /*[*/
-    { "ScreenTrace",	ScreenTrace_action, NULL },
-#endif/*]*/
-#if !defined(TCL3270) /*[*/
-    { "Script",		Script_action, NULL },
-#endif /*]*/
-#if defined(C3270) /*[*/
-    { "Show",		Show_action, NULL },
-#endif/*]*/
-    { "Snap",		Snap_action, NULL },
-#if !defined(TCL3270) /*[*/
-    { "Source",		Source_action, NULL },
-#endif /*]*/
-#if defined(TCL3270) /*[*/
-    { "Status",		Status_action, NULL },
-#endif /*]*/
-    { "String",		String_action, NULL },
-    { "SysReq",		SysReq_action, NULL },
-    { "Tab",		Tab_action, NULL },
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
-    { "Title",		Title_action, NULL },
-#endif /*]*/
-    { "Toggle",		Toggle_action, NULL },
-    { "ToggleInsert",	ToggleInsert_action, NULL },
-    { "ToggleReverse",	ToggleReverse_action, NULL },
-#if defined(C3270) /*[*/
-    { "Trace",		Trace_action, NULL },
-#endif/*]*/
-    { "Transfer",	Transfer_action, NULL },
-    { "Up",		Up_action, NULL },
-    { "Wait",		Wait_action, NULL },
-#if defined(X3270_DISPLAY) /*[*/
-    { "WindowState",	WindowState_action, NULL },
-#endif /*]*/
-};
-action_table_t *action_table = all_actions;
-unsigned num_actions = sizeof(all_actions) / sizeof(all_actions[0]);
 
 /* Look up an action name in the suppressed actions resource. */
 Boolean
@@ -270,34 +76,6 @@ action_suppressed(const char *name, const char *suppress)
 	s = t + strlen(name);
     }
     return False;
-}
-
-/*
- * Action table initialization.
- * Uses the suppressActions resource to prune the actions table.
- */
-void
-action_init(void)
-{
-#if 0
-	char *suppress;
-	int i;
-
-	/* See if there are any filters at all. */
-	suppress = get_resource(ResSuppressActions);
-	if (suppress == NULL) {
-		actions = all_actions;
-		return;
-	}
-
-	/* Yes, we'll need to copy the table and prune it. */
-	actions = (XtActionsRec *)Malloc(sizeof(all_actions));
-	memcpy(actions, all_actions, sizeof(all_actions));
-	for (i = 0; i < actioncount; i++) {
-		if (action_suppressed(actions[i].string, suppress))
-			actions[i].proc = suppressed_action;
-	}
-#endif
 }
 
 /*
@@ -354,17 +132,17 @@ void
 run_action(const char *name, enum iaction cause, const char *parm1,
 	const char *parm2)
 {
-    unsigned i;
+    action_elt_t *e;
     action_t *action = NULL;
     unsigned count = 0;
     const char *parms[2];
 
-    for (i = 0; i < num_actions; i++) {
-	if (!strcasecmp(action_table[i].name, name)) {
-	    action = action_table[i].action;
+    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	if (!strcasecmp(e->t.name, name)) {
+	    action = e->t.action;
 	    break;
 	}
-    }
+    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
     if (action == NULL) {
 	return; /* XXX: And do something? */
     }
@@ -380,4 +158,52 @@ run_action(const char *name, enum iaction cause, const char *parm1,
 
     ia_cause = cause;
     (void)(*action)(cause, count, parms);
+}
+
+/*
+ * Register a group of actions.
+ *
+ * Duplicate actions will override older ones.
+ * The memory for the table is not kept, but the memory for the strings
+ * referenced by the table will be re-used.
+ */
+void
+register_actions(action_table_t *new_actions, unsigned count)
+{
+    unsigned i;
+
+    for (i = 0; i < count; i++) {
+	action_elt_t *e;
+	action_elt_t *before;
+
+	before = NULL;
+	FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	    int cmp;
+
+	    cmp = strcasecmp(e->t.name, new_actions[i].name);
+	    if (cmp == 0) {
+		/* Replace. */
+		e->t = new_actions[i]; /* struct copy */
+		return;
+	    } else if (cmp < 0) {
+		/* Goes ahead of this one. */
+		before = e;
+		break;
+	    }
+	} FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
+
+	e = Malloc(sizeof(action_elt_t));
+	e->t = new_actions[i]; /* struct copy */
+	llist_init(&e->list);
+
+	if (before) {
+	    /* Insert before found element. */
+	    llist_insert_before(&e->list, &before->list);
+	} else {
+		/* Insert before head (at the end of the list). */
+	    llist_insert_before(&e->list, actions_list.next);
+	}
+
+	actions_list_count++;
+    }
 }

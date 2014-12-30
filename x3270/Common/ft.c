@@ -131,14 +131,23 @@ static ioid_t ft_start_id = NULL_IOID;
 static void ft_connected(Boolean ignored);
 static void ft_in3270(Boolean ignored);
 
+static action_t Transfer_action;
+
 /* Main external entry point. */
 
 void
 ft_init(void)
 {
+    static action_table_t ft_actions[] = {
+	{ "Transfer",	Transfer_action,	ACTION_KE }
+    };
+
     /* Register for state changes. */
     register_schange(ST_CONNECT, ft_connected);
     register_schange(ST_3270_MODE, ft_in3270);
+
+    /* Register actions. */
+    register_actions(ft_actions, array_count(ft_actions));
 
     /* Initialize the private state. */
     ft_private.receive_flag = True;
@@ -362,7 +371,7 @@ static struct {
 #endif /*]*/
 };
 
-Boolean  
+static Boolean  
 Transfer_action(ia_t ia, unsigned argc, const char **argv)
 {
     int i, k;

@@ -35,35 +35,29 @@
  */
 
 #include "globals.h"
+
+#include <assert.h>
+
 #include "appres.h"
 
 #include "actionsc.h"
 #include "dialogc.h"
-#include "hostc.h"
 #include "keymapc.h"
-#include "kybdc.h"
 #include "macrosc.h"
+#include "menubarc.h"
 #include "popupsc.h"
-#include "printc.h"
-#include "print_windowc.h"
 #include "resources.h"
-#include "scrollc.h"
+#include "screenc.h"
 #include "selectc.h"
-#include "togglesc.h"
 #include "trace.h"
 #include "utilc.h"
 #include "xactionsc.h"
-#include "xioc.h"
 #include "xkybdc.h"
-
-#include "unicodec.h"
-#include "ftc.h"
-#include "keypadc.h"
-#include "menubarc.h"
-#include "screenc.h"
 
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>
+
+#define N_WRAPPERS	100
 
 static void xaction_ndebug(const char *aname, XEvent *event, String *params,
 	Cardinal *num_params);
@@ -97,134 +91,19 @@ static char *aliased_actions[] = {
     "Close", "HardPrint", "Open", NULL
 };
 
-/*
- * xtwrapper(foo) creates an Xt action named foo_xaction(), which calls
- * foo_action.
- */
-#define xtwrapper(name) \
-    void name ## _xaction (Widget w _is_unused, XEvent *event, String *params, \
-	    Cardinal *num_params) \
-{ \
-    xaction_ndebug(#name, event, params, num_params); \
-    (void) name ## _action(IA_KEYMAP, *num_params, (const char **)params); \
-}
-
-/* Xt action wrappers for emulator actions. */
-xtwrapper(AltCursor)
-xtwrapper(Attn)
-xtwrapper(BackSpace)
-xtwrapper(BackTab)
-xtwrapper(Bell)
-xtwrapper(CircumNot)
-xtwrapper(Clear)
-xtwrapper(Compose)
-xtwrapper(Connect)
-xtwrapper(ContinueScript)
-xtwrapper(CursorSelect)
-xtwrapper(Delete)
-xtwrapper(DeleteField)
-xtwrapper(DeleteWord)
-xtwrapper(Disconnect)
-xtwrapper(Down)
-xtwrapper(Dup)
-xtwrapper(Enter)
-xtwrapper(Erase)
-xtwrapper(EraseEOF)
-xtwrapper(EraseInput)
-xtwrapper(Execute)
-xtwrapper(FieldEnd)
-xtwrapper(FieldMark)
-xtwrapper(Flip)
-xtwrapper(HexString)
-xtwrapper(Home)
-xtwrapper(Insert)
-xtwrapper(Interrupt)
-xtwrapper(Key)
-xtwrapper(Left)
-xtwrapper(Left2)
-xtwrapper(Macro)
-xtwrapper(MonoCase)
-xtwrapper(Newline)
-xtwrapper(NextWord)
-xtwrapper(PA)
-xtwrapper(PF)
-xtwrapper(PreviousWord)
-xtwrapper(Printer)
-xtwrapper(PrintText)
-xtwrapper(PrintWindow)
-xtwrapper(Quit)
-xtwrapper(Reconnect)
-xtwrapper(Reset)
-xtwrapper(Right)
-xtwrapper(Right2)
-xtwrapper(Script)
-xtwrapper(Scroll)
-xtwrapper(SetFont)
-xtwrapper(Source)
-xtwrapper(String)
-xtwrapper(SysReq)
-xtwrapper(Tab)
-xtwrapper(Title)
-xtwrapper(TemporaryKeymap)
-xtwrapper(Toggle)
-xtwrapper(ToggleInsert)
-xtwrapper(ToggleReverse)
-xtwrapper(Transfer)
-xtwrapper(Up)
-xtwrapper(Wait)
-xtwrapper(WindowState)
-
-static XtActionsRec all_xactions[] = {
-    { "AltCursor",  	AltCursor_xaction },
-    { "Attn",		Attn_xaction },
-    { "BackSpace",	BackSpace_xaction },
-    { "BackTab",	BackTab_xaction },
-    { "Bell",		Bell_xaction },
-    { "CircumNot",	CircumNot_xaction },
-    { "Clear",		Clear_xaction },
-    { "Compose",	Compose_xaction },
-    { "Connect",	Connect_xaction },
-    { "ContinueScript",	ContinueScript_xaction },
-    { "CursorSelect",	CursorSelect_xaction },
+/* Pure Xt actions. */
+static XtActionsRec all_xonly_actions[] = {
     { "Cut",		Cut_xaction },
     { "Default",	Default_xaction },
-    { "Delete", 	Delete_xaction },
-    { "DeleteField",	DeleteField_xaction },
-    { "DeleteWord",	DeleteWord_xaction },
-    { "Disconnect",	Disconnect_xaction },
-    { "Down",		Down_xaction },
-    { "Dup",		Dup_xaction },
-    { "Enter",		Enter_xaction },
-    { "EraseEOF",	EraseEOF_xaction },
-    { "Erase",		Erase_xaction },
-    { "EraseInput",	EraseInput_xaction },
-    { "Execute",	Execute_xaction },
-    { "FieldEnd",	FieldEnd_xaction },
-    { "FieldMark",	FieldMark_xaction },
-    { "Flip",		Flip_xaction },
     { "HandleMenu",	HandleMenu_xaction },
-    { "HexString",	HexString_xaction},
-    { "Home",		Home_xaction },
     { "ignore",		ignore_xaction },
-    { "Insert",		Insert_xaction },
     { "insert-selection",	insert_selection_xaction },
-    { "Interrupt",	Interrupt_xaction },
-    { "Key",		Key_xaction },
-    { "Keymap",		TemporaryKeymap_xaction },
     { "KybdSelect",	KybdSelect_xaction },
-    { "Left2", 		Left2_xaction },
-    { "Left",		Left_xaction },
-    { "Macro", 		Macro_xaction },
-    { "MonoCase",	MonoCase_xaction },
     { "MouseSelect",	MouseSelect_xaction },
     { "MoveCursor",	MoveCursor_xaction },
     { "move-select",	move_select_xaction },
-    { "Newline",	Newline_xaction },
-    { "NextWord",	NextWord_xaction },
-    { "Open",		Connect_xaction },
     { PA_END,		PA_End_xaction },
     { PA_KEYMAP_TRACE,	PA_KeymapTrace_xaction },
-    { "PA",		PA_xaction },
     { PA_PFX "ConfigureNotify", PA_ConfigureNotify_xaction },
     { PA_PFX "confirm",	PA_confirm_xaction },
     { PA_PFX "dialog-focus", PA_dialog_focus_xaction },
@@ -238,19 +117,7 @@ static XtActionsRec all_xactions[] = {
     { PA_PFX "StateChanged", PA_StateChanged_xaction },
     { PA_PFX "VisibilityNotify",PA_VisibilityNotify_xaction },
     { PA_PFX "WMProtocols",	PA_WMProtocols_xaction },
-    { "PF",		PF_xaction },
-    { "PreviousWord",	PreviousWord_xaction },
-    { "Printer",	Printer_xaction },
-    { "PrintText",	PrintText_xaction },
-    { "PrintWindow",	PrintWindow_xaction },
-    { "Quit",		Quit_xaction },
-    { "Reconnect",	Reconnect_xaction },
     { "Redraw",		Redraw_xaction },
-    { "Reset",		Reset_xaction },
-    { "Right2",		Right2_xaction },
-    { "Right",		Right_xaction },
-    { "Script",		Script_xaction },
-    { "Scroll",		Scroll_xaction },
     { "SelectAll",	SelectAll_xaction },
     { "SelectDown",	SelectDown_xaction },
     { "select-end",	select_end_xaction },
@@ -258,27 +125,175 @@ static XtActionsRec all_xactions[] = {
     { "SelectMotion",	SelectMotion_xaction },
     { "select-start",	select_start_xaction },
     { "SelectUp",	SelectUp_xaction },
-    { "SetFont",	SetFont_xaction },
     { "set-select",	set_select_xaction },
-    { "Source",		Source_xaction },
     { "start-extend",	start_extend_xaction },
-    { "String",		String_xaction },
-    { "SysReq",		SysReq_xaction },
-    { "Tab",		Tab_xaction },
-    { "TemporaryKeymap",TemporaryKeymap_xaction },
-    { "Title",		Title_xaction },
-    { "ToggleInsert",	ToggleInsert_xaction },
-    { "ToggleReverse",	ToggleReverse_xaction },
-    { "Toggle",		Toggle_xaction },
-    { "Transfer",	Transfer_xaction },
-    { "Unselect",	Unselect_xaction },
-    { "Up",		Up_xaction },
-    { "Wait",		Wait_xaction },
-    { "WindowState",	WindowState_xaction },
+    { "Unselect",	Unselect_xaction }
 };
 
-int xactioncount = XtNumber(all_xactions);
-XtActionsRec *xactions = NULL;
+static int xactioncount = XtNumber(all_xonly_actions);
+static XtActionsRec *xactions = NULL;
+
+/* Table of Xt actions that wrap emulator actions. */
+XtActionsRec *wrapper_actions;
+int nwrappers = 0;
+
+/* Xt action function for wrappers. */
+static void
+xt_wrapper(int n, Widget w _is_unused, XEvent *event, String *params,
+	Cardinal *num_params)
+{
+    if (n < nwrappers) {
+	/* Trace the Xt event. */
+	xaction_ndebug(wrapper_actions[n].string, event, params, num_params);
+
+	/* Run the emulator action. */
+	run_action(wrapper_actions[n].string, IA_KEYMAP,
+		(*num_params > 0)? params[0]: NULL,
+		(*num_params > 1)? params[1]: NULL);
+    }
+}
+
+/*
+ * wrapper(n) creates an Xt action named mapped_action<n>(), which calls
+ * xt_wrapper(n).
+ */
+#define wrapper(n) \
+static void mapped_action ## n (Widget w _is_unused, XEvent *event, \
+	String *params, Cardinal *num_params) \
+{ \
+    xt_wrapper(n, w, event, params, num_params); \
+}
+
+/* Create 100 wrapper functions, mapped_action0 through mapped_action99. */
+wrapper(0)
+wrapper(1)
+wrapper(2)
+wrapper(3)
+wrapper(4)
+wrapper(5)
+wrapper(6)
+wrapper(7)
+wrapper(8)
+wrapper(9)
+wrapper(10)
+wrapper(11)
+wrapper(12)
+wrapper(13)
+wrapper(14)
+wrapper(15)
+wrapper(16)
+wrapper(17)
+wrapper(18)
+wrapper(19)
+wrapper(20)
+wrapper(21)
+wrapper(22)
+wrapper(23)
+wrapper(24)
+wrapper(25)
+wrapper(26)
+wrapper(27)
+wrapper(28)
+wrapper(29)
+wrapper(30)
+wrapper(31)
+wrapper(32)
+wrapper(33)
+wrapper(34)
+wrapper(35)
+wrapper(36)
+wrapper(37)
+wrapper(38)
+wrapper(39)
+wrapper(40)
+wrapper(41)
+wrapper(42)
+wrapper(43)
+wrapper(44)
+wrapper(45)
+wrapper(46)
+wrapper(47)
+wrapper(48)
+wrapper(49)
+wrapper(50)
+wrapper(51)
+wrapper(52)
+wrapper(53)
+wrapper(54)
+wrapper(55)
+wrapper(56)
+wrapper(57)
+wrapper(58)
+wrapper(59)
+wrapper(60)
+wrapper(61)
+wrapper(62)
+wrapper(63)
+wrapper(64)
+wrapper(65)
+wrapper(66)
+wrapper(67)
+wrapper(68)
+wrapper(69)
+wrapper(70)
+wrapper(71)
+wrapper(72)
+wrapper(73)
+wrapper(74)
+wrapper(75)
+wrapper(76)
+wrapper(77)
+wrapper(78)
+wrapper(79)
+wrapper(80)
+wrapper(81)
+wrapper(82)
+wrapper(83)
+wrapper(84)
+wrapper(85)
+wrapper(86)
+wrapper(87)
+wrapper(88)
+wrapper(89)
+wrapper(90)
+wrapper(91)
+wrapper(92)
+wrapper(93)
+wrapper(94)
+wrapper(95)
+wrapper(96)
+wrapper(97)
+wrapper(98)
+wrapper(99)
+
+/* Create an array of pointers to those functions. */
+XtActionProc xt_mapped_actions[N_WRAPPERS] = {
+    &mapped_action0, &mapped_action1, &mapped_action2, &mapped_action3,
+    &mapped_action4, &mapped_action5, &mapped_action6, &mapped_action7,
+    &mapped_action8, &mapped_action9, &mapped_action10, &mapped_action11,
+    &mapped_action12, &mapped_action13, &mapped_action14, &mapped_action15,
+    &mapped_action16, &mapped_action17, &mapped_action18, &mapped_action19,
+    &mapped_action20, &mapped_action21, &mapped_action22, &mapped_action23,
+    &mapped_action24, &mapped_action25, &mapped_action26, &mapped_action27,
+    &mapped_action28, &mapped_action29, &mapped_action30, &mapped_action31,
+    &mapped_action32, &mapped_action33, &mapped_action34, &mapped_action35,
+    &mapped_action36, &mapped_action37, &mapped_action38, &mapped_action39,
+    &mapped_action40, &mapped_action41, &mapped_action42, &mapped_action43,
+    &mapped_action44, &mapped_action45, &mapped_action46, &mapped_action47,
+    &mapped_action48, &mapped_action49, &mapped_action50, &mapped_action51,
+    &mapped_action52, &mapped_action53, &mapped_action54, &mapped_action55,
+    &mapped_action56, &mapped_action57, &mapped_action58, &mapped_action59,
+    &mapped_action60, &mapped_action61, &mapped_action62, &mapped_action63,
+    &mapped_action64, &mapped_action65, &mapped_action66, &mapped_action67,
+    &mapped_action68, &mapped_action69, &mapped_action70, &mapped_action71,
+    &mapped_action72, &mapped_action73, &mapped_action74, &mapped_action75,
+    &mapped_action76, &mapped_action77, &mapped_action78, &mapped_action79,
+    &mapped_action80, &mapped_action81, &mapped_action82, &mapped_action83,
+    &mapped_action84, &mapped_action85, &mapped_action86, &mapped_action87,
+    &mapped_action88, &mapped_action89, &mapped_action90, &mapped_action91,
+    &mapped_action92, &mapped_action93, &mapped_action94, &mapped_action95,
+    &mapped_action96, &mapped_action97, &mapped_action98, &mapped_action99
+};
 
 /* No-op action for suppressed actions. */
 static void
@@ -289,7 +304,7 @@ suppressed_xaction(Widget w _is_unused, XEvent *event, String *params,
 }
 
 /*
- * Xt action table initialization.
+ * Primary Xt action table initialization.
  * Uses the suppressActions resource to prune the actions table.
  */
 void
@@ -301,22 +316,49 @@ xaction_init(void)
     /* See if there are any filters at all. */
     suppress = get_resource(ResSuppressActions);
     if (suppress == NULL) {
-	xactions = all_xactions;
-	return;
+	xactions = all_xonly_actions;
+	goto done;
     }
 
     /* Yes, we'll need to copy the table and prune it. */
-    xactions = (XtActionsRec *)Malloc(sizeof(all_xactions));
-    memcpy(xactions, all_xactions, sizeof(all_xactions));
+    xactions = (XtActionsRec *)Malloc(sizeof(all_xonly_actions));
+    memcpy(xactions, all_xonly_actions, sizeof(all_xonly_actions));
     for (i = 0; i < xactioncount; i++) {
 	if (action_suppressed(xactions[i].string, suppress)) {
 	    xactions[i].proc = suppressed_xaction;
 	}
     }
+
+done:
+    /* Add the actions to Xt. */
+    XtAppAddActions(appcontext, xactions, xactioncount);
+}
+
+/* Secondary Xt action table initialization. */
+void
+xaction_init2(void)
+{
+    action_elt_t *e;
+
+    /* Allocate the array of Xt actions to add. */
+    wrapper_actions = Malloc(actions_list_count * sizeof(XtActionsRec));
+
+    /* Fill in the table. */
+    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	if (strcmp(e->t.name, "MoveCursor") && (e->t.flags & ACTION_KE)) {
+	    wrapper_actions[nwrappers].string = (String)e->t.name;
+	    wrapper_actions[nwrappers].proc = xt_mapped_actions[nwrappers];
+	    nwrappers++;
+	    assert(nwrappers <= N_WRAPPERS);
+	}
+    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
+
+    /* Add the actions to Xt. */
+    XtAppAddActions(appcontext, wrapper_actions, nwrappers);
 }
 
 /*
- * Return a name for an action.
+ * Return a name for an Xt-only action.
  */
 const char *
 action_name(XtActionProc action)

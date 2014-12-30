@@ -41,33 +41,16 @@ extern struct macro_def *macro_defs;
 extern Boolean macro_output;
 
 extern void abort_script(void);
-extern action_t Abort_action;
-extern action_t AnsiText_action;
-extern action_t AsciiField_action;
-extern action_t Ascii_action;
 extern void cancel_if_idle_command(void);
-extern action_t Bell_action;
-extern action_t CloseScript_action;
-extern action_t ContinueScript_action;
-extern action_t EbcdicField_action;
-extern action_t Ebcdic_action;
-extern action_t Execute_action;
-extern action_t Expect_action;
 extern void login_macro(char *s);
 extern void macros_init(void);
-extern action_t Macro_action;
 extern void macro_command(struct macro_def *m);
-extern action_t PauseScript_action;
 extern void peer_script_init(void);
 extern void ps_set(char *s, Boolean is_hex);
-extern action_t Printer_action;
 extern void push_command(char *);
 extern void push_idle(char *);
 extern void push_keymap_action(char *);
 extern void push_macro(char *, Boolean);
-extern action_t Query_action;
-extern action_t ReadBuffer_action;
-extern action_t Script_action;
 #if !defined(TCL3270) /*[*/
 extern void sms_accumulate_time(struct timeval *, struct timeval *);
 #else /*][*/
@@ -83,12 +66,6 @@ extern void sms_init(void);
 extern Boolean sms_in_macro(void);
 extern Boolean sms_redirect(void);
 extern void sms_store(unsigned char c);
-extern action_t Snap_action;
-#if defined(TCL3270) /*[*/
-extern action_t Status_action;
-#endif /*]*/
-extern action_t Source_action;
-extern action_t Wait_action;
 
 typedef void *sms_cbh;
 typedef void (*sms_data_cb)(sms_cbh handle, const char *buf, size_t len);

@@ -63,7 +63,6 @@ extern void ft_complete(const char *errmsg);
 extern void ft_init(void);
 extern void ft_running(Boolean is_cut);
 extern void ft_update_length(void);
-extern action_t Transfer_action;
 extern char *ft_local_fflag(void);
 
 # if defined(_WIN32) /*[*/

@@ -35,9 +35,8 @@
 extern void jump_proc(float top);
 extern void rethumb(void);
 extern void scroll_init(void);
+extern void scroll_buf_init(void);
 extern void scroll_proc(int n, int total);
 extern void scroll_round(void);
 extern void scroll_save(int n, Boolean trim_blanks);
 extern void scroll_to_bottom(void);
-
-extern action_t Scroll_action;

@@ -76,6 +76,8 @@
 #include "menubarc.h"
 #include "nvtc.h"
 #include "popupsc.h"
+#include "printc.h"
+#include "printerc.h"
 #include "screenc.h"
 #include "selectc.h"
 #include "tablesc.h"
@@ -85,6 +87,7 @@
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
+#include "xioc.h"
 
 /*
  * The following variable is a special hack that is needed in order for
@@ -142,6 +145,26 @@ static ioid_t command_timeout_id = NULL_IOID;
 static int cmd_ret;
 static char *action = NULL;
 static Boolean interactive = False;
+static action_t Ascii_action;
+static action_t AsciiField_action;
+static action_t Ebcdic_action;
+static action_t EbcdicField_action;
+static action_t Status_action;
+static action_t ReadBuffer_action;
+static action_t Snap_action;
+static action_t Wait_action;
+static action_t Query_action;
+static action_table_t main_actions[] = {
+    { "Ascii",		Ascii_action,		ACTION_KE },
+    { "AsciiField",	AsciiField_action,	ACTION_KE },
+    { "Ebcdic",		Ebcdic_action,		ACTION_KE },
+    { "EbcdicField",	EbcdicField_action,	ACTION_KE },
+    { "Status",		Status_action,		ACTION_KE },
+    { "ReadBuffer",	ReadBuffer_action,	ACTION_KE },
+    { "Snap",		Snap_action,		ACTION_KE },
+    { "Wait",		Wait_action,		ACTION_KE },
+    { "Query",		Query_action,		ACTION_KE }
+};
 
 /* Local prototypes. */
 static void ps_clear(void);
@@ -240,6 +263,7 @@ Tcl_AppInit(Tcl_Interp *interp)
     int j;
     Tcl_Obj *argv_obj;
     char argc_buf[32];
+    action_elt_t *e;
 
     if (Tcl_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
@@ -294,13 +318,12 @@ Tcl_AppInit(Tcl_Interp *interp)
      * Call Tcl_CreateCommands for the application-specific commands, if
      * they weren't already created by the init procedures called above.
      */
-    action_init();
-    for (i = 0; i < num_actions; i++) {
-	if (Tcl_CreateObjCommand(interp, action_table[i].name, x3270_cmd,
-		    NULL, NULL) == NULL) {
+    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	if (Tcl_CreateObjCommand(interp, e->t.name, x3270_cmd, NULL, NULL)
+		== NULL) {
 	    return TCL_ERROR;
 	}
-    }
+    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
     if (Tcl_CreateObjCommand(interp, "Rows", Rows_cmd, NULL, NULL) == NULL)
 	return TCL_ERROR;
     if (Tcl_CreateObjCommand(interp, "Cols", Cols_cmd, NULL, NULL) == NULL)
@@ -408,9 +431,14 @@ tcl3270_main(int argc, const char *argv[])
 	kybd_init();
 	nvt_init();
 	ft_init();
+	printer_init();
+	xio_init();
+	print_init();
+	toggles_init();
 
 	register_schange(ST_CONNECT, main_connect);
 	register_schange(ST_3270_MODE, main_connect);
+	register_actions(main_actions, array_count(main_actions));
 
 	/* Make sure we don't fall over any SIGPIPEs. */
 	(void) signal(SIGPIPE, SIG_IGN);
@@ -494,11 +522,12 @@ static int
 x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 		Tcl_Obj *CONST objv[])
 {
-    unsigned i;
     unsigned j;
     unsigned count;
     const char **argv = NULL;
     int old_mode;
+    action_elt_t *e;
+    Boolean found;
 
     /* Set up ugly global variables. */
     in_cmd = True;
@@ -519,12 +548,14 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 
     /* Look up the action. */
     Replace(action, NewString(Tcl_GetString(objv[0])));
-    for (i = 0; i < num_actions; i++) {
-	if (!strcmp(action, action_table[i].name)) {
+    found = False;
+    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	if (!strcmp(action, e->t.name)) {
+	    found = True;
 	    break;
 	}
-    }
-    if (i >= num_actions) {
+    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
+    if (!found) {
 	Tcl_SetResult(interp, "No such action", TCL_STATIC);
 	return TCL_ERROR;
     }
@@ -554,7 +585,7 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
     /* Set up more ugly global variables and run the action. */
     ia_cause = IA_SCRIPT;
     cmd_ret = TCL_OK;
-    (*action_table[i].action)(IA_SCRIPT, count, argv);
+    (*e->t.action)(IA_SCRIPT, count, argv);
 
     /* Set implicit wait state. */
     if (ft_state != FT_NONE) {
@@ -983,7 +1014,7 @@ dump_field(unsigned count, const char *name, Boolean in_ascii)
     return True;
 }
 
-Boolean
+static Boolean
 Ascii_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Ascii", ia, argc, argv);
@@ -991,14 +1022,14 @@ Ascii_action(ia_t ia, unsigned argc, const char **argv)
 	    cursor_addr);
 }
 
-Boolean
+static Boolean
 AsciiField_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("AsciiField", ia, argc, argv);
     return dump_field(argc, "AsciiField", True);
 }
 
-Boolean
+static Boolean
 Ebcdic_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Ebcdic", ia, argc, argv);
@@ -1006,7 +1037,7 @@ Ebcdic_action(ia_t ia, unsigned argc, const char **argv)
 	    cursor_addr);
 }
 
-Boolean
+static Boolean
 EbcdicField_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("EbcdicField", ia, argc, argv);
@@ -1084,7 +1115,7 @@ status_string(void)
 	return r;
 }
 
-Boolean
+static Boolean
 Status_action(ia_t ia, unsigned argc, const char **argv)
 {
     char *s;
@@ -1262,7 +1293,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 /*
  * ReadBuffer action.
  */
-Boolean
+static Boolean
 ReadBuffer_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("ReadBuffer", ia, argc, argv);
@@ -1328,7 +1359,7 @@ snap_save(void)
 	snap_caddr = cursor_addr;
 }
 
-Boolean
+static Boolean
 Snap_action(ia_t ia, unsigned argc, const char **argv)
 {
     char nbuf[16];
@@ -1463,7 +1494,7 @@ wait_timed_out(ioid_t id _is_unused)
 	UNBLOCK();
 }
 
-Boolean
+static Boolean
 Wait_action(ia_t ia, unsigned argc, const char **argv)
 {
     long tmo = -1;
@@ -1583,7 +1614,7 @@ Cols_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	return TCL_OK;
 }
 
-Boolean
+static Boolean
 Query_action(ia_t ia, unsigned argc, const char **argv)
 {
     Tcl_Obj *q_obj;

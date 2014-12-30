@@ -201,3 +201,14 @@ print_window_option(Widget w, XtPointer client_data _is_unused,
 {
     (void) PrintWindow_action(IA_KEYMAP, 0, NULL);
 }
+
+/* Initialize print_window module. */
+void
+print_window_init(void)
+{
+    static action_table_t print_window_actions[] = {
+	{ "PrintWindow",	PrintWindow_action,	ACTION_KE }
+    };
+
+    register_actions(print_window_actions, array_count(print_window_actions));
+}

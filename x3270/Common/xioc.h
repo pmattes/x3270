@@ -30,10 +30,9 @@
  *		Global declarations for xio.c.
  */
 
-extern action_t Quit_action;
 extern void x3270_exit(int n);
 extern void x_add_input(int net_sock);
 extern void x_except_off(void);
 extern void x_except_on(int net_sock);
 extern void x_remove_input(void);
-
+extern void xio_init(void);

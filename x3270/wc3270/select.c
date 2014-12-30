@@ -80,12 +80,22 @@ static int select_start_col;
 static int select_end_row;
 static int select_end_col;
 
+static action_t Copy_action;
+static action_t Cut_action;
+
 /*
  * Initialize the selection logic, given the maximum screen dimensions.
  */
 void
 select_init(unsigned max_rows, unsigned max_cols)
 {
+	static action_table_t select_actions[] = {
+	    { "Copy",	Copy_action,	ACTION_KE },
+	    { "Cut",	Cut_action,	ACTION_KE }
+	};
+
+	register_actions(select_actions, array_count(select_actions));
+
 	s_pending = Malloc(max_rows * max_cols);
 	s_onscreen = Malloc(max_rows * max_cols);
 	unselect(0, max_rows * max_cols);
@@ -722,7 +732,7 @@ copy_cut_action(Boolean cutting)
 /*
  * The Copy() action, generally mapped onto ^C.
  */
-Boolean
+static Boolean
 Copy_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Copy", ia, argc, argv);
@@ -736,7 +746,7 @@ Copy_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * The Cut() action, generally mapped onto ^X.
  */
-Boolean
+static Boolean
 Cut_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Cut", ia, argc, argv);

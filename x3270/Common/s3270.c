@@ -64,6 +64,8 @@
 #include "menubarc.h"
 #include "nvtc.h"
 #include "popupsc.h"
+#include "printc.h"
+#include "printerc.h"
 #include "screenc.h"
 #include "selectc.h"
 #include "tablesc.h"
@@ -71,6 +73,7 @@
 #include "togglesc.h"
 #include "trace.h"
 #include "utilc.h"
+#include "xioc.h"
 
 #if defined(_WIN32) /*[*/
 #include "w3miscc.h"
@@ -124,7 +127,6 @@ main(int argc, char *argv[])
 		xs_warning("Cannot find charset \"%s\"", appres.charset);
 		(void) charset_init(NULL);
 	}
-	action_init();
 	model_init();
 	ctlr_init(-1);
 	ctlr_reinit(-1);
@@ -146,6 +148,11 @@ main(int argc, char *argv[])
 	register_schange(ST_CONNECT, main_connect);
         register_schange(ST_3270_MODE, main_connect);
 	ft_init();
+	printer_init();
+	xio_init();
+	print_init();
+	toggles_init();
+	hostfile_init();
 
 #if !defined(_WIN32) /*[*/
 	/* Make sure we don't fall over any SIGPIPEs. */

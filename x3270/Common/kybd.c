@@ -140,6 +140,101 @@ static char dxl[] = "0123456789abcdef";
 
 #define KYBDLOCK_IS_OERR	(kybdlock && !(kybdlock & ~KL_OERR_MASK))
 
+static action_t Attn_action;
+static action_t BackSpace_action;
+static action_t BackTab_action;
+static action_t Attn_action;
+static action_t BackSpace_action;
+static action_t BackTab_action;
+static action_t CircumNot_action;
+static action_t Clear_action;
+#if defined(X3270_INTERACTIVE) /*[*/
+static action_t Compose_action;
+#endif /*]*/
+static action_t CursorSelect_action;
+static action_t Delete_action;
+static action_t DeleteField_action;
+static action_t DeleteWord_action;
+static action_t Down_action;
+static action_t Dup_action;
+static action_t Enter_action;
+static action_t Erase_action;
+static action_t EraseEOF_action;
+static action_t EraseInput_action;
+static action_t FieldEnd_action;
+static action_t FieldMark_action;
+static action_t Flip_action;
+static action_t HexString_action;
+static action_t Home_action;
+static action_t Insert_action;
+static action_t Interrupt_action;
+static action_t Key_action;
+static action_t Left2_action;
+static action_t Left_action;
+static action_t MonoCase_action;
+static action_t MoveCursor_action;
+static action_t Newline_action;
+static action_t NextWord_action;
+static action_t PA_action;
+static action_t PF_action;
+static action_t PreviousWord_action;
+static action_t Reset_action;
+static action_t Right2_action;
+static action_t Right_action;
+static action_t String_action;
+static action_t SysReq_action;
+static action_t Tab_action;
+static action_t ToggleInsert_action;
+static action_t ToggleReverse_action;
+static action_t Up_action;
+
+static action_table_t kybd_actions[] = {
+    { "Attn",		Attn_action,		ACTION_KE },
+    { "BackSpace",	BackSpace_action,	ACTION_KE },
+    { "BackTab",	BackTab_action,		ACTION_KE },
+    { "CircumNot",	CircumNot_action,	ACTION_KE },
+    { "Clear",		Clear_action,		ACTION_KE },
+#if defined(X3270_INTERACTIVE) /*[*/
+    { "Compose",	Compose_action,		ACTION_KE },
+#endif /*]*/
+    { "CursorSelect",	CursorSelect_action,	ACTION_KE },
+    { "Delete",		Delete_action,		ACTION_KE },
+    { "DeleteField",	DeleteField_action,	ACTION_KE },
+    { "DeleteWord",	DeleteWord_action,	ACTION_KE },
+    { "Down",		Down_action,		ACTION_KE },
+    { "Dup",		Dup_action,		ACTION_KE },
+    { "Enter",		Enter_action,		ACTION_KE },
+    { "Erase",		Erase_action,		ACTION_KE },
+    { "EraseEOF",	EraseEOF_action,	ACTION_KE },
+    { "EraseInput",	EraseInput_action,	ACTION_KE },
+    { "FieldEnd",	FieldEnd_action,	ACTION_KE },
+    { "FieldMark",	FieldMark_action,	ACTION_KE },
+    { "Flip",		Flip_action,		ACTION_KE },
+    { "HexString",	HexString_action,	ACTION_KE },
+    { "Home",		Home_action,		ACTION_KE },
+    { "Insert",		Insert_action,		ACTION_KE },
+    { "Interrupt",	Interrupt_action,	ACTION_KE },
+    { "Key",		Key_action,		ACTION_KE },
+    { "Left2",		Left2_action,		ACTION_KE },
+    { "Left",		Left_action,		ACTION_KE },
+    { "MonoCase",	MonoCase_action,	ACTION_KE },
+    { "MoveCursor",	MoveCursor_action,	ACTION_KE },
+    { "Newline",	Newline_action,		ACTION_KE },
+    { "NextWord",	NextWord_action,	ACTION_KE },
+    { "PA",		PA_action,		ACTION_KE },
+    { "PF",		PF_action,		ACTION_KE },
+    { "PreviousWord",	PreviousWord_action,	ACTION_KE },
+    { "Reset",		Reset_action,		ACTION_KE },
+    { "Right2",		Right2_action,		ACTION_KE },
+    { "Right",		Right_action,		ACTION_KE },
+    { "String",		String_action,		ACTION_KE },
+    { "SysReq",		SysReq_action,		ACTION_KE },
+    { "Tab",		Tab_action,		ACTION_KE },
+    { "ToggleInsert",	ToggleInsert_action,	ACTION_KE },
+    { "ToggleReverse",	ToggleReverse_action,	ACTION_KE },
+    { "Up",		Up_action,		ACTION_KE }
+};
+
 
 /*
  * Put a function or action on the typeahead queue.
@@ -491,6 +586,9 @@ kybd_init(void)
 	/* Register interest in connect and disconnect events. */
 	register_schange(ST_CONNECT, kybd_connect);
 	register_schange(ST_3270_MODE, kybd_in3270);
+
+	/* Register the actions. */
+	register_actions(kybd_actions, array_count(kybd_actions));
 }
 
 /*
@@ -597,7 +695,7 @@ key_AID(unsigned char aid_code)
 	status_ctlr_done();
 }
 
-Boolean
+static Boolean
 PF_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned k;
@@ -624,7 +722,7 @@ PF_action(ia_t ia, unsigned argc, const char **argv)
     return True;
 }
 
-Boolean
+static Boolean
 PA_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned k;
@@ -655,7 +753,7 @@ PA_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * ATTN key, per RFC 2355.  Sends IP, regardless.
  */
-Boolean
+static Boolean
 Attn_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Attn", ia, argc, argv);
@@ -686,7 +784,7 @@ Attn_action(ia_t ia, unsigned argc, const char **argv)
  *
  * This is now the same as the Attn action.
  */
-Boolean
+static Boolean
 Interrupt_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Interrupt", ia, argc, argv);
@@ -1525,7 +1623,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause)
 	}
 }
 
-Boolean
+static Boolean
 MonoCase_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("MonoCase", ia, argc, argv);
@@ -1540,7 +1638,7 @@ MonoCase_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Flip the display left-to-right
  */
-Boolean
+static Boolean
 Flip_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Flip", ia, argc, argv);
@@ -1560,7 +1658,7 @@ Flip_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Tab forward to next field.
  */
-Boolean
+static Boolean
 Tab_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Tab", ia, argc, argv);
@@ -1589,7 +1687,7 @@ Tab_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Tab backward to previous field.
  */
-Boolean
+static Boolean
 BackTab_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr, nbaddr;
@@ -1720,7 +1818,7 @@ do_reset(Boolean explicit)
 	status_compose(False, 0, KT_STD);
 }
 
-Boolean
+static Boolean
 Reset_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Reset", ia, argc, argv);
@@ -1736,7 +1834,7 @@ Reset_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Move to first unprotected field on screen.
  */
-Boolean
+static Boolean
 Home_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Home", ia, argc, argv);
@@ -1784,7 +1882,7 @@ do_left(void)
 	cursor_move(baddr);
 }
 
-Boolean
+static Boolean
 Left_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Left", ia, argc, argv);
@@ -1898,7 +1996,7 @@ do_delete(void)
 	return True;
 }
 
-Boolean
+static Boolean
 Delete_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Delete", ia, argc, argv);
@@ -1932,7 +2030,7 @@ Delete_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * 3270-style backspace.
  */
-Boolean
+static Boolean
 BackSpace_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("BackSpace", ia, argc, argv);
@@ -2022,7 +2120,7 @@ do_erase(void)
 	}
 }
 
-Boolean
+static Boolean
 Erase_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Erase", ia, argc, argv);
@@ -2050,7 +2148,7 @@ Erase_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Cursor right 1 position.
  */
-Boolean
+static Boolean
 Right_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
@@ -2092,7 +2190,7 @@ Right_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Cursor left 2 positions.
  */
-Boolean
+static Boolean
 Left2_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
@@ -2134,7 +2232,7 @@ Left2_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Cursor to previous word.
  */
-Boolean
+static Boolean
 PreviousWord_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
@@ -2206,7 +2304,7 @@ PreviousWord_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Cursor right 2 positions.
  */
-Boolean
+static Boolean
 Right2_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
@@ -2296,7 +2394,7 @@ nt_word(int baddr)
 /*
  * Cursor to next unprotected word.
  */
-Boolean
+static Boolean
 NextWord_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
@@ -2364,7 +2462,7 @@ NextWord_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Cursor up 1 position.
  */
-Boolean
+static Boolean
 Up_action(ia_t ia, unsigned argc, const char **argv)
 {
     register int baddr;
@@ -2399,7 +2497,7 @@ Up_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Cursor down 1 position.
  */
-Boolean
+static Boolean
 Down_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
@@ -2431,7 +2529,7 @@ Down_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Cursor to first field on next line or any lines after that.
  */
-Boolean
+static Boolean
 Newline_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr, faddr;
@@ -2466,7 +2564,7 @@ Newline_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * DUP key
  */
-Boolean
+static Boolean
 Dup_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Dup", ia, argc, argv);
@@ -2491,7 +2589,7 @@ Dup_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * FM key
  */
-Boolean
+static Boolean
 FieldMark_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("FieldMark", ia, argc, argv);
@@ -2514,7 +2612,7 @@ FieldMark_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Vanilla AID keys.
  */
-Boolean
+static Boolean
 Enter_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Enter", ia, argc, argv);
@@ -2532,7 +2630,7 @@ Enter_action(ia_t ia, unsigned argc, const char **argv)
     return True;
 }
 
-Boolean
+static Boolean
 SysReq_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("SysReq", ia, argc, argv);
@@ -2561,7 +2659,7 @@ SysReq_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Clear AID key
  */
-Boolean
+static Boolean
 Clear_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Clear", ia, argc, argv);
@@ -2674,7 +2772,7 @@ lightpen_select(int baddr)
 /*
  * Cursor Select key (light pen simulator) -- at the current cursor location.
  */
-Boolean
+static Boolean
 CursorSelect_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("CursorSelect", ia, argc, argv);
@@ -2697,7 +2795,7 @@ CursorSelect_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Erase End Of Field Key.
  */
-Boolean
+static Boolean
 EraseEOF_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
@@ -2755,7 +2853,7 @@ EraseEOF_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Erase all Input Key.
  */
-Boolean
+static Boolean
 EraseInput_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr, sbaddr;
@@ -2823,7 +2921,7 @@ EraseInput_action(ia_t ia, unsigned argc, const char **argv)
  *
  * Which is to say, does a ^W.
  */
-Boolean
+static Boolean
 DeleteWord_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
@@ -2894,7 +2992,7 @@ DeleteWord_action(ia_t ia, unsigned argc, const char **argv)
  *
  * Which is to say, does a ^U.
  */
-Boolean
+static Boolean
 DeleteField_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
@@ -2940,7 +3038,7 @@ DeleteField_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Set insert mode key.
  */
-Boolean
+static Boolean
 Insert_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Insert", ia, argc, argv);
@@ -2963,7 +3061,7 @@ Insert_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Toggle insert mode key.
  */
-Boolean
+static Boolean
 ToggleInsert_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("ToggleInsert", ia, argc, argv);
@@ -2990,7 +3088,7 @@ ToggleInsert_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Toggle reverse mode key.
  */
-Boolean
+static Boolean
 ToggleReverse_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("ToggleReverse", ia, argc, argv);
@@ -3014,7 +3112,7 @@ ToggleReverse_action(ia_t ia, unsigned argc, const char **argv)
  * Move the cursor to the first blank after the last nonblank in the
  * field, or if the field is full, to the last character in the field.
  */
-Boolean
+static Boolean
 FieldEnd_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr, faddr;
@@ -3072,7 +3170,7 @@ FieldEnd_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * MoveCursor action. Moves to a specific location.
  */
-Boolean
+static Boolean
 MoveCursor_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
@@ -3110,7 +3208,7 @@ MoveCursor_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Key action.
  */
-Boolean
+static Boolean
 Key_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned i;
@@ -3151,7 +3249,7 @@ Key_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * String action.
  */
-Boolean
+static Boolean
 String_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned i;
@@ -3185,7 +3283,7 @@ String_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * HexString action.
  */
-Boolean
+static Boolean
 HexString_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned i;
@@ -3230,7 +3328,7 @@ HexString_action(ia_t ia, unsigned argc, const char **argv)
  * This action is obsoleted by the use of 3270-mode and NVT-mode keymaps, but
  * is still defined here for backwards compatibility with old keymaps.
  */
-Boolean
+static Boolean
 CircumNot_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("CircumNot", ia, argc, argv);
@@ -4119,7 +4217,7 @@ build_composites(void)
  * The mechanism breaks down a little when the user presses "Compose" and
  * then a non-data key.  Oh well.
  */
-Boolean
+static Boolean
 Compose_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Compose", ia, argc, argv);
