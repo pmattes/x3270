@@ -91,6 +91,47 @@ static char *aliased_actions[] = {
     "Close", "HardPrint", "Open", NULL
 };
 
+/*
+ * The set-up of Xt actions is not straightforward.
+ *
+ * Some actions exist only as Xt actions, such as Default(). They can only be
+ * called from keymaps (Xt translation tables). These actions are statically
+ * defined in the array all_xonly_actions[].
+ *
+ * Other actions are wrappers around common emulator actions such as Enter().
+ * These take a more convoluted path, for several reasons. First, the set of
+ * emulator actions is established at runtime, not compile-time. Second, Xt
+ * actions have no way of accessing their own names, so it is impossible to
+ * write an Xt action that behaves differently based on what name was used to
+ * run it. So there can't just be one XtActionProc function that wraps all of
+ * the common emulator functions. Instead, there needs to be an unknown
+ * number of distinct C action functions defined, one for each common emulator
+ * function, and each of those functions has to figure out which common
+ * emulator function to call. So here is what happens:
+ * - 100 functions are defined with the signature of an XtActionProc. They are
+ *   named wrapper0 through wrapper99. (Currently about 60 are in use.)
+ * - The body of each wrapper function wrapper<n> calls the function
+ *   xt_wrapper(), passing it <n> and its XtActionProc arguments (event,
+ *   params, etc.).
+ * - There is a fixed array of each of the wrapper<n> functions' addresses,
+ *   called xt_mapped_actions[].
+ * - There is a dynamically-allocated array of XtActionsRec structures called
+ *   wrapper_actions[].
+ * - Each element of wrapper_actions[] is populated with the name of a common
+ *   emulator action and the address of a sequential element of the
+ *   xt_mapped_actions[] array.
+ * So assume (for example) that the common function "Enter" is the fifth
+ * member of actions_list. So it is assigned to element 4 of wrapper_actions[].
+ * The corresponding function is wrapper4(), which calls xt_wrapper() with the
+ * value 4. xt_wrapper() indexes the wrapper_actions[] array and finds the
+ * proper name ("Enter"). It uses that for debug tracing and to call
+ * run_action() to run the real code for Enter(), which (by way of searching
+ * actions_list) is Enter_action(), which was registered by kybd.c.
+ *
+ * If I could figure out a simpler way to do this, and still automatically get
+ * an Xt action for each (eligible) common emulator action, I would do it.
+ */
+
 /* Pure Xt actions. */
 static XtActionsRec all_xonly_actions[] = {
     { "Cut",		Cut_xaction },
@@ -134,8 +175,8 @@ static int xactioncount = XtNumber(all_xonly_actions);
 static XtActionsRec *xactions = NULL;
 
 /* Table of Xt actions that wrap emulator actions. */
-XtActionsRec *wrapper_actions;
-int nwrappers = 0;
+static XtActionsRec *wrapper_actions;
+static int nwrappers = 0;
 
 /* Xt action function for wrappers. */
 static void
