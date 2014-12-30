@@ -1203,7 +1203,7 @@ screen_init(void)
 	ctlr_reinit(-1);
 
 	/* Set up the scrollbar. */
-	scroll_init();
+	scroll_buf_init();
 
 	/* Set the window label. */
 	if (appres.title != NULL)

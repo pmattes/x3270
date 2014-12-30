@@ -557,7 +557,7 @@ finish_screen_init(void)
 	ctlr_reinit(-1);
 
 	/* Set up the scrollbar. */
-	scroll_init();
+	scroll_buf_init();
 
 	screen_init2();
 }
