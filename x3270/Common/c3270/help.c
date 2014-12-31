@@ -49,9 +49,9 @@
 #define P_HTML		0x0020	/* HTML help */
 
 #if defined(WC3270) /*[*/
-#define PROGRAM	"wc3270"
+#define HELP_W	"w"
 #else /*][*/
-#define PROGRAM	"c3270"
+#define HELP_W	""
 #endif /*]*/
 
 static struct {
@@ -63,67 +63,73 @@ static struct {
 	{ "Abort",	NULL, P_SCRIPTING, "Abort pending scripts and macros" },
 	{ "AnsiText",	NULL, P_SCRIPTING, "Dump pending NVT text" },
 	{ "Ascii",	NULL, P_SCRIPTING, "Screen contents in ASCII" },
-	{ "Ascii",	"<n>", P_SCRIPTING, "<n> bytes of screen contents from cursor, in ASCII" },
-	{ "Ascii",	"<row> <col> <n>", P_SCRIPTING, "<n> bytes of screen contents from <row>,<col>, in ASCII" },
-	{ "Ascii",	"<row> <col> <rows> <cols>", P_SCRIPTING, "<rows>x<cols> of screen contents from <row>,<col>, in ASCII" },
-	{ "AsciiField", NULL, P_SCRIPTING, "Contents of current field, in ASCII" },
+	{ "Ascii",	"<n>", P_SCRIPTING,
+	    "<n> bytes of screen contents from cursor, in ASCII" },
+	{ "Ascii",	"<row> <col> <n>", P_SCRIPTING,
+	    "<n> bytes of screen contents from <row>,<col>, in ASCII" },
+	{ "Ascii",	"<row> <col> <rows> <cols>", P_SCRIPTING,
+	    "<rows>x<cols> of screen contents from <row>,<col>, in ASCII" },
+	{ "AsciiField", NULL, P_SCRIPTING,
+	    "Contents of current field, in ASCII" },
 	{ "Attn", NULL, P_3270, "Send 3270 ATTN sequence (TELNET IP)" },
 	{ "BackSpace", NULL, P_3270, "Move cursor left" },
 	{ "BackTab", NULL, P_3270, "Move to previous field" },
 	{ "Bell", NULL, P_SCRIPTING, "Ring the terminal bell" },
-	{ "CircumNot", NULL, P_3270, "Send ~ in NVT mode, \254 in 3270 mode" },
+	{ "CircumNot", NULL, P_3270,
+	    "Send ~ in NVT mode, notsign (X'5F', U+00AC) in 3270 mode" },
 	{ "Clear", NULL, P_3270, "Send CLEAR AID (clear screen)" },
 	{ "Close", NULL, P_INTERACTIVE, "Alias for 'Disconnect'" },
 	{ "CloseScript", NULL, P_SCRIPTING, "Exit peer script" },
-	{ "Compose", NULL, P_INTERACTIVE, "Interpret next two keystrokes according to the compose map" },
-	{ "Connect", "[<lu>@]<host>[:<port>]", P_INTERACTIVE, "Open connection to <host>" },
+	{ "Compose", NULL, P_INTERACTIVE,
+	    "Interpret next two keystrokes according to the compose map" },
+	{ "Connect", "[<lu>@]<host>[:<port>]", P_INTERACTIVE,
+	    "Open connection to <host>" },
 #if defined(LOCAL_PROCESS) /*[*/
-	{ "Connect", "-e [<command> [<arg>...]]", P_INTERACTIVE, "Open connection to a local shell or command" },
+	{ "Connect", "-e [<command> [<arg>...]]", P_INTERACTIVE,
+	    "Open connection to a local shell or command" },
 #endif /*]*/
 	{ "ContinueScript", NULL, P_SCRIPTING, "Resume paused script" },
 #if defined(WC3270) /*[*/
 	{ "Copy", NULL, P_3270, "Copy selected text to Windows clipboard" },
 #endif /*]*/
-	{ "CursorSelect", NULL, P_3270, "Light pen select at cursor location" },
+	{ "CursorSelect", NULL, P_3270,
+	    "Light pen select at cursor location" },
 #if defined(WC3270) /*[*/
-	{ "Cut", NULL, P_3270, "Copy selected text to Windows clipboard, then erase" },
+	{ "Cut", NULL, P_3270,
+	    "Copy selected text to Windows clipboard, then erase" },
 #endif /*]*/
 	{ "Delete", NULL, P_3270, "Delete character at cursor" },
 	{ "DeleteField", NULL, P_3270, "Erase field at cursor location (^U)" },
-	{ "DeleteWord", NULL, P_3270, "Erase word before cursor location (^W)" },
+	{ "DeleteWord", NULL, P_3270,
+	    "Erase word before cursor location (^W)" },
 	{ "Disconnect", NULL, P_INTERACTIVE, "Close connection to host" },
 	{ "Down", NULL, P_3270, "Move cursor down" },
 	{ "Dup", NULL, P_3270, "3270 DUP key (X'1C')" },
 	{ "Ebcdic",	NULL, P_SCRIPTING, "Screen contents in EBCDIC" },
-	{ "Ebcdic",	"<n>", P_SCRIPTING, "<n> bytes of screen contents from cursor, in EBCDIC" },
-	{ "Ebcdic",	"<row> <col> <n>", P_SCRIPTING, "<n> bytes of screen contents from <row>,<col>, in EBCDIC" },
-	{ "Ebcdic",	"<row> <col> <rows> <cols>", P_SCRIPTING, "<rows>x<cols> of screen contents from <row>,<col>, in EBCDIC" },
-	{ "EbcdicField", NULL, P_SCRIPTING, "Contents of current field, in EBCDIC" },
+	{ "Ebcdic",	"<n>", P_SCRIPTING,
+	    "<n> bytes of screen contents from cursor, in EBCDIC" },
+	{ "Ebcdic",	"<row> <col> <n>", P_SCRIPTING,
+	    "<n> bytes of screen contents from <row>,<col>, in EBCDIC" },
+	{ "Ebcdic",	"<row> <col> <rows> <cols>", P_SCRIPTING,
+	    "<rows>x<cols> of screen contents from <row>,<col>, in EBCDIC" },
+	{ "EbcdicField", NULL, P_SCRIPTING,
+	    "Contents of current field, in EBCDIC" },
 	{ "Enter", NULL, P_3270, "Send ENTER AID" },
 	{ "Erase", NULL, P_3270, "Destructive backspace" },
 	{ "EraseEOF", NULL, P_3270, "Erase from cursor to end of field" },
 	{ "EraseInput", NULL, P_3270, "Erase all input fields" },
-	{ "Escape", NULL, P_INTERACTIVE, "Escape to "
-#if defined(WC3270) /*[*/
-	                                           "'wc3270>'"
-#else /*][*/
-	                                           "'c3270>'"
-#endif /*]*/
-						               " prompt" },
+	{ "Escape", NULL, P_INTERACTIVE,
+	    "Escape to '" HELP_W "c3270>' prompt" },
 	{ "Execute", "<command>", P_SCRIPTING, "Execute a shell command" },
-	{ "Exit", NULL, P_INTERACTIVE, "Exit "
-#if defined(WC3270) /*[*/
-	                                    "wc3270"
-#else /*][*/
-	                                    "c3270"
-#endif /*]*/
-					    	    },
+	{ "Exit", NULL, P_INTERACTIVE, "Exit " HELP_W "c3270" },
 	{ "Expect", "<pattern>", P_SCRIPTING, "Wait for NVT output" },
 	{ "FieldEnd", NULL, P_3270, "Move to end of field" },
 	{ "FieldMark", NULL, P_3270, "3270 FIELD MARK key (X'1E')" },
 	{ "Flip", NULL, P_3270, "Flip display left-to-right" },
-	{ "Help", "all|interactive|3270|scripting|transfer|<cmd>", P_INTERACTIVE, "Get help" },
-	{ "HexString", "<digits>", P_3270|P_SCRIPTING, "Input field data in hex" },
+	{ "Help", "all|interactive|3270|scripting|transfer|<cmd>",
+	    P_INTERACTIVE, "Get help" },
+	{ "HexString", "<digits>", P_3270|P_SCRIPTING,
+	    "Input field data in hex" },
 	{ "Home", NULL, P_3270, "Move cursor to first field" },
 	{ "ignore", NULL, P_3270, "Do nothing" },
 	{ "Info", "<text>", P_SCRIPTING|P_INTERACTIVE, "Display text in OIA" },
@@ -136,7 +142,8 @@ static struct {
 	{ "Macro", "<name>", P_SCRIPTING, "Execute a predefined macro" },
 	{ "Menu", NULL, P_INTERACTIVE, "Pop up the command menu" },
 	{ "MonoCase", NULL, P_3270, "Toggle monocase mode" },
-	{ "MoveCursor", "<row> <col>", P_3270|P_SCRIPTING, "Move cursor to specific location" },
+	{ "MoveCursor", "<row> <col>", P_3270|P_SCRIPTING,
+	    "Move cursor to specific location" },
 	{ "Newline", NULL, P_3270, "Move cursor to first field in next row" },
 	{ "NextWord", NULL, P_3270, "Move cursor to next word" },
 	{ "Open", NULL, P_INTERACTIVE, "Alias for 'Connect'" },
@@ -148,51 +155,59 @@ static struct {
 	{ "PF", "<n>", P_3270, "Send 3270 PF AID" },
 	{ "PreviousWord", NULL, P_3270, "Move cursor to previous word" },
 	{ "Printer", "Start[,lu]|Stop", P_3270|P_SCRIPTING|P_INTERACTIVE,
-#if defined(WC3270) /*[*/
-	    "Start or stop wpr3287 printer session" },
-#else /*][*/
-	    "Start or stop pr3287 printer session" },
-#endif /*]*/
+	    "Start or stop " HELP_W "pr3287 printer session" },
         { "PrintText",
-#if defined(_WIN32) /*[*/
-	    "[html] [rtf] [modi] [caption <caption>] [[file] <filename>]|<printer-name>",
+	    "[Html] [Rtf] [Modi] [Caption <caption>] [Replace|Append] File <filename>",
+	    P_INTERACTIVE|P_SCRIPTING,
+	    "Save screen image in a file" },
+        { "PrintText",
+	    "[Modi] [Caption <caption>] "
+#if defined(WC3270) /*[*/
+	    "[Gdi|Wordpad] [<printer-name>]",
 #else /*][*/
-	    "[html] [rtf] [modi] [caption <caption>] [[file] <filename>]|<print-command>",
+	    "[<print-command>]",
 #endif /*]*/
-	    P_SCRIPTING|P_INTERACTIVE, "Dump screen image to file or printer" },
+	    P_INTERACTIVE|P_SCRIPTING,
+	    "Print screen image" },
         { "Query", "<keyword>", P_SCRIPTING|P_INTERACTIVE,
 	    "Query operational parameters" },
-	{ "Quit", NULL, P_INTERACTIVE, "Exit " PROGRAM },
-        { "ReadBuffer", "ASCII|EBCDIC", P_SCRIPTING, "Dump display buffer" },
+	{ "Quit", NULL, P_INTERACTIVE, "Exit " HELP_W "3270" },
+        { "ReadBuffer", "Ascii|Ebcdic", P_SCRIPTING, "Dump display buffer" },
 	{ "Reconnect", NULL, P_INTERACTIVE, "Reconnect to previous host" },
 	{ "Redraw", NULL, P_INTERACTIVE|P_3270, "Redraw screen" },
 	{ "Reset", NULL, P_3270, "Clear keyboard lock" },
 	{ "Right", NULL, P_3270, "Move cursor right" },
 	{ "Right2", NULL, P_3270, "Move cursor right 2 columns" },
+	{ "ScreenTrace", "On [[File] <filename>]",  P_INTERACTIVE,
+	    "Save screen images to file" },
 	{ "ScreenTrace",
 # if defined(_WIN32) /*[*/
-	    "[on [[file] <filename>]|on printer [<printer-name>]|off]",
+	    "On Printer [Gdi|WordPad] [<printer-name>]",
 # else /*][*/
-	    "[on [[file] <filename>]|on printer [<print-command>]|off]",
+	    "On Printer [<print-command>]",
 # endif /*]*/
-	    P_INTERACTIVE, "Configure screen tracing" },
+	    P_INTERACTIVE, "Save screen images to printer" },
+	{ "ScreenTrace", "Off", P_INTERACTIVE, "Stop saving screen images" },
 	{ "Script", "<path> [<arg>...]", P_SCRIPTING, "Run a child script" },
 	{ "Scroll", "Forward|Backward", P_INTERACTIVE, "Scroll screen" },
-	{ "Show", NULL, P_INTERACTIVE, "Display status and settings" },
+	{ "Show", "Copyright|Stats|Keymap", P_INTERACTIVE,
+	    "Display status and settings" },
 	{ "Snap", "<args>", P_SCRIPTING, "Screen snapshot manipulation" },
         { "Source", "<file>", P_SCRIPTING|P_INTERACTIVE, "Read actions from file" },
 	{ "String", "<text>", P_3270|P_SCRIPTING, "Input a string" },
-	{ "SysReq", NULL, P_3270, "Send 3270 Attention (TELNET ABORT or SYSREQ AID)" },
+	{ "SysReq", NULL, P_3270,
+	    "Send 3270 Attention (TELNET ABORT or SYSREQ AID)" },
 	{ "Tab", NULL, P_3270, "Move cursor to next field" },
 #if defined(WC3270) /*[*/
 	{ "Title", "<text>", P_SCRIPTING|P_INTERACTIVE, "Change window title" },
 #endif /*]*/
-	{ "Toggle", "<toggle-name> [set|clear]", P_INTERACTIVE|P_SCRIPTING,
+	{ "Toggle", "<toggle-name> [Set|Clear]", P_INTERACTIVE|P_SCRIPTING,
 	    "Change a toggle" },
 	{ "ToggleInsert", NULL, P_3270, "Set or clear 3270 insert mode" },
 	{ "ToggleReverse", NULL, P_3270, "Set or clear reverse-input mode" },
-	{ "Trace", "[data|keyboard] on [<file>]|off", P_INTERACTIVE, "Configure tracing" },
-	{ "Transfer", "[<args>]", P_INTERACTIVE, "IND$FILE file transfer (see 'help file-transfer')" },
+	{ "Trace", "On [<file>]|Off", P_INTERACTIVE, "Configure tracing" },
+	{ "Transfer", "[<args>]", P_INTERACTIVE,
+	    "IND$FILE file transfer (see 'help file-transfer')" },
 	{ "Up", NULL, P_3270, "Move cursor up" },
 	{ "Wait", "<args>", P_SCRIPTING, "Wait for host events" },
 	{ NULL,  NULL, 0, NULL }
@@ -279,6 +294,7 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
 	return True;
     }
 
+    /* The (hidden) verify option verifies the integrity of the help list. */
     if (!strcmp(argv[0], "verify")) {
 	action_elt_t *e;
 	Boolean any = False;
@@ -323,38 +339,38 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
 	return True;
     }
 
+    /* Check for an exact match on one of the topics. */
     for (i = 0; help_subcommand[i].name != NULL; i++) {
-	if (!strncasecmp(help_subcommand[i].name, argv[0], strlen(argv[0]))) {
+	if (!strcasecmp(help_subcommand[i].name, argv[0])) {
 	    match = help_subcommand[i].flag;
 	    overall = i;
 	    break;
 	}
     }
+
     if (match) {
-	for (i = 0; cmd_help[i].name != NULL; i++) {
-	    if (!strncasecmp(cmd_help[i].name, argv[0], strlen(argv[0]))) {
-		action_output("Ambiguous: matches '%s' and one or more "
-			"commands",
-			help_subcommand[overall].name);
-		return False;
-	    }
-	}
+	/* Matched on a topic. */
 	if (help_subcommand[overall].text != NULL) {
+	    /* One-line topic. */
 	    action_output("%s", help_subcommand[overall].text);
 	    return True;
 	}
 	if (help_subcommand[overall].block != NULL) {
 	    int j;
 
+	    /* Multi-line topic. */
 	    for (j = 0; help_subcommand[overall].block[j] != NULL; j++) {
 		action_output("%s", help_subcommand[overall].block[j]);
 	    }
 	    return True;
 	}
 	if (help_subcommand[overall].fn != NULL) {
+	    /* Indirect output for topic. */
 	    (*help_subcommand[overall].fn)(True);
 	    return True;
 	}
+
+	/* Category. */
 	for (i = 0; cmd_help[i].name != NULL; i++) {
 	    if (cmd_help[i].purpose & match) {
 		action_output("  %s %s\n    %s",
@@ -366,10 +382,8 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
     } else {
 	Boolean any = False;
 
+	/* Do a substring match on all of the actions. */
 	for (i = 0; cmd_help[i].name != NULL; i++) {
-	    if (cmd_help[i].purpose == P_SCRIPTING) {
-		continue;
-	    }
 	    if (!strncasecmp(cmd_help[i].name, argv[0], strlen(argv[0]))) {
 		action_output("  %s %s\n    %s",
 			cmd_help[i].name,
