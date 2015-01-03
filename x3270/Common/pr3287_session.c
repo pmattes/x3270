@@ -663,6 +663,7 @@ pr3287_data(struct pr3o *p, Boolean is_err)
 	return;
     }
     if (nr == 0) {
+	vtrace("Printer session %s EOF.\n", is_err? "stderr": "stdout");
 	if (pr3287_stderr.timeout_id != NULL_IOID) {
 	    /*
 	     * Append a termination error message to whatever the
@@ -682,7 +683,7 @@ pr3287_data(struct pr3o *p, Boolean is_err)
 	    }
 	    pr3287_dump(p, True, True);
 	} else {
-	    popup_an_error("Printer session: %s", exitmsg);
+	    popup_an_error("%s", exitmsg);
 	}
 
 	/* Now that we've gotten EOF, make sure we stop the process. */
@@ -788,7 +789,7 @@ pr3287_stop_sync(void)
 static void
 pr3287_sync_input(unsigned long fd _is_unused, ioid_t id _is_unused)
 {
-    vtrace("Input/EOF on printer sync socket.\n");
+    vtrace("Input or EOF on printer sync socket.\n");
     assert(pr3287_state >= P_RUNNING);
 
     /*
@@ -860,6 +861,57 @@ pr3287_accept(unsigned long fd _is_unused, ioid_t id)
 
     /* No more need for the listening socket. */
     pr3287_stop_listening();
+}
+
+/* Clean up all connections to pr3287. */
+static void
+pr3287_cleanup_io(void)
+{
+    /* Remove inputs. */
+    if (pr3287_stdout.input_id) {
+	RemoveInput(pr3287_stdout.input_id);
+	pr3287_stdout.input_id = 0L;
+    }
+    if (pr3287_stderr.input_id) {
+	RemoveInput(pr3287_stderr.input_id);
+	pr3287_stderr.input_id = 0L;
+    }
+
+    /* Cancel timeouts. */
+    if (pr3287_stdout.timeout_id != NULL_IOID) {
+	RemoveTimeOut(pr3287_stdout.timeout_id);
+	pr3287_stdout.timeout_id = NULL_IOID;
+    }
+    if (pr3287_stderr.timeout_id != NULL_IOID) {
+	RemoveTimeOut(pr3287_stderr.timeout_id);
+	pr3287_stderr.timeout_id = NULL_IOID;
+    }
+
+    /* Clear buffers. */
+    pr3287_stdout.count = 0;
+    pr3287_stderr.count = 0;
+
+    /*
+     * If we have a sync socket connection, shut it down to signal pr3287
+     * to exit gracefully.
+     */
+    if (pr3287_sync != INVALID_SOCKET) {
+	vtrace("Stopping printer by shutting down sync socket.\n");
+	assert(pr3287_ls == INVALID_SOCKET);
+
+	/* The separate shutdown() call is likely redundant. */
+#if !defined(_WIN32) /*[*/
+	shutdown(pr3287_sync, SHUT_WR);
+#else /*][*/
+	shutdown(pr3287_sync, SD_SEND);
+#endif /*]*/
+
+	/* We no longer care about printer sync input. */
+	pr3287_stop_sync();
+    } else if (pr3287_ls_id != NULL_IOID) {
+	/* Stop listening for sync connections. */
+	pr3287_stop_listening();
+    }
 }
 
 /*
@@ -945,6 +997,13 @@ pr3287_session_check(
 	pr3287_stop_sync();
     }
 
+    /*
+     * Clean up I/O.
+     * It would be better to wait for EOF first so we can display errors from
+     * pr3287, but for now, we just need to get the state straight.
+     */
+    pr3287_cleanup_io();
+
     pr3287_state = P_NONE;
 
     /* Propagate the state. */
@@ -979,6 +1038,7 @@ pr3287_kill(ioid_t id _is_unused)
     pr3287_state = P_TERMINATING;
 }
 
+
 /* Close the printer session. */
 void
 pr3287_session_stop()
@@ -993,7 +1053,7 @@ pr3287_session_stop()
 	Free(pr3287_delay_lu);
 	pr3287_delay_lu = NULL;
 	break;
-    case P_RUNNING:	/* Got EOF before SIGCHLD. */
+    case P_RUNNING:
 	/* Run through the logic below. */
 	break;
     default:
@@ -1003,54 +1063,7 @@ pr3287_session_stop()
 
     vtrace("Stopping printer session.\n");
 
-    /* Remove inputs. */
-    if (pr3287_stdout.input_id) {
-	RemoveInput(pr3287_stdout.input_id);
-	pr3287_stdout.input_id = 0L;
-    }
-    if (pr3287_stderr.input_id) {
-	RemoveInput(pr3287_stderr.input_id);
-	pr3287_stderr.input_id = 0L;
-    }
-
-    /* Cancel timeouts. */
-    if (pr3287_stdout.timeout_id != NULL_IOID) {
-	RemoveTimeOut(pr3287_stdout.timeout_id);
-	pr3287_stdout.timeout_id = NULL_IOID;
-    }
-    if (pr3287_stderr.timeout_id != NULL_IOID) {
-	RemoveTimeOut(pr3287_stderr.timeout_id);
-	pr3287_stderr.timeout_id = NULL_IOID;
-    }
-
-    /* Clear buffers. */
-    pr3287_stdout.count = 0;
-    pr3287_stderr.count = 0;
-
-    /*
-     * If we have a sync socket connection, shut it down to signal pr3287
-     * to exit gracefully.
-     */
-    if (pr3287_sync != INVALID_SOCKET) {
-	vtrace("Stopping printer by shutting down sync socket.\n");
-	assert(pr3287_ls == INVALID_SOCKET);
-
-	/* The separate shutdown() call is likely redundant. */
-#if !defined(_WIN32) /*[*/
-	shutdown(pr3287_sync, SHUT_WR);
-#else /*][*/
-	shutdown(pr3287_sync, SD_SEND);
-#endif /*]*/
-
-	/* We no longer care about printer sync input. */
-	pr3287_stop_sync();
-    } else {
-	/*
-	 * No sync socket. Too late to get one.
-	 */
-	vtrace("No sync socket.\n");
-	pr3287_stop_listening();
-    }
+    pr3287_cleanup_io();
 
     /* Set a timeout to terminate it not so gracefully. */
     pr3287_state = P_SHUTDOWN;
