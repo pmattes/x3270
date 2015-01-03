@@ -512,11 +512,11 @@ menubar_connect(Boolean ignored _is_unused)
 		    NULL);
 	if (assoc_button != NULL)
 		XtVaSetValues(assoc_button, XtNsensitive,
-		    !printer_running() && IN_3270 && IN_TN3270E,
+		    !pr3287_session_running() && IN_3270 && IN_TN3270E,
 		    NULL);
 	if (lu_button != NULL)
 		XtVaSetValues(lu_button, XtNsensitive,
-		    !printer_running() && IN_3270,
+		    !pr3287_session_running() && IN_3270,
 		    NULL);
 	if (linemode_button != NULL)
 		XtVaSetValues(linemode_button, XtNsensitive, IN_NVT, NULL);
@@ -604,11 +604,11 @@ menubar_in3270(Boolean in3270)
 		    NULL);
 	if (assoc_button != NULL)
 		XtVaSetValues(assoc_button, XtNsensitive,
-		    !printer_running() && IN_3270 && IN_TN3270E,
+		    !pr3287_session_running() && IN_3270 && IN_TN3270E,
 		    NULL);
 	if (lu_button != NULL)
 		XtVaSetValues(lu_button, XtNsensitive,
-		    !printer_running() && IN_3270,
+		    !pr3287_session_running() && IN_3270,
 		    NULL);
 	if (linemode_button != NULL)
 		XtVaSetValues(linemode_button,
@@ -743,12 +743,13 @@ do_save_options(Widget w _is_unused, XtPointer client_data _is_unused,
 static void
 do_printer(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_unused)
 {
-	if (client_data == NULL)
-		printer_start(NULL);
-	else if (!strcmp(client_data, "lu"))
-		printer_lu_dialog();
-	else
-		printer_stop();
+    if (client_data == NULL) {
+	pr3287_session_start(NULL);
+    } else if (!strcmp(client_data, "lu")) {
+	printer_lu_dialog();
+    } else {
+	pr3287_session_stop();
+    }
 }
 
 /* Figure out if a Widget is suppressed. */
@@ -911,7 +912,7 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 				NULL);
 		printer_off_button = add_menu_itemv("printerOffButton", w,
 				do_printer, "off", NULL,
-				XtNsensitive, printer_running(),
+				XtNsensitive, pr3287_session_running(),
 				NULL);
 
 		if (assoc_button != NULL ||

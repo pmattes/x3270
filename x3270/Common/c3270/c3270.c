@@ -550,11 +550,11 @@ main(int argc, char *argv[])
 
 #if !defined(_WIN32) /*[*/
 		if (children && (pid = waitpid(-1, &status, WNOHANG)) > 0) {
-			printer_check(pid, status);
+			pr3287_session_check(pid, status);
 			--children;
 		}
 #else /*][*/
-		printer_check();
+		pr3287_session_check();
 #endif /*]*/
 		screen_disp(False);
 	}

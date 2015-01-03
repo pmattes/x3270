@@ -677,7 +677,7 @@ main(int argc, char *argv[])
 		XtAppProcessEvent(appcontext, XtIMAll);
 
 		if (children && (pid = waitpid(-1, &status, WNOHANG)) > 0) {
-			printer_check(pid, status);
+			pr3287_session_check(pid, status);
 			--children;
 		}
 	}

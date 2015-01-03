@@ -58,7 +58,7 @@ lu_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
     } else {
 	lu = (char *)client_data;
     }
-    printer_start(lu);
+    pr3287_session_start(lu);
 }
 
 /* Pop up the LU dialog box. */

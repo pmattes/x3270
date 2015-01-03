@@ -3706,15 +3706,15 @@ Printer_action(ia_t ia, unsigned argc, const char **argv)
 	return False;
     }
     if (!strcasecmp(argv[0], "Start")) {
-	printer_start((argc > 1)? argv[1] : NULL);
+	pr3287_session_start((argc > 1)? argv[1] : NULL);
     } else if (!strcasecmp(argv[0], "Stop")) {
 	if (argc != 1) {
 	    popup_an_error("Printer: Extra argument(s)");
 	    return False;
 	}
-	printer_stop();
+	pr3287_session_stop();
     } else {
-	popup_an_error("Printer: Argument must Start or Stop");
+	popup_an_error("Printer: Argument must be Start or Stop");
 	return False;
     }
     return True;
