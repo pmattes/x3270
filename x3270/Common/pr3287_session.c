@@ -63,6 +63,7 @@
 #include "telnetc.h"
 #include "trace.h"
 #include "utilc.h"
+#include "varbufc.h"
 #include "w3miscc.h"
 #include "xioc.h"
 
@@ -307,7 +308,6 @@ pr3287_start_now(const char *lu, Boolean associated)
 #else /*][*/
     const char *printerName;
 #endif /*]*/
-    int cmd_len = 0;
     const char *s;
     char *cmd_text;
     char c;
@@ -328,6 +328,7 @@ pr3287_start_now(const char *lu, Boolean associated)
     struct sockaddr_in pr3287_lsa;
     socklen_t len;
     char syncopt[64];
+    varbuf_t r;
 
     assert(pr3287_state == P_NONE);
 
@@ -429,205 +430,107 @@ pr3287_start_now(const char *lu, Boolean associated)
     }
 #endif /*]*/
 
-	/* Get printer options. */
+    /* Get printer options. */
 #if defined(C3270) /*[*/
     pr3287_opts = appres.printer_opts;
 #else /*][*/
     pr3287_opts = get_resource(ResPrinterOptions);
 #endif /*]*/
 
-	/* Construct the command line. */
+    /* Construct the command line. */
 
-    /* Figure out how long it will be. */
-    cmd_len = strlen(cmdline) + 1;
-    s = cmdline;
-    while ((s = strstr(s, "%L%")) != NULL) {
-	cmd_len += strlen(lu) - 3;
-	s += 3;
-    }
-    s = cmdline;
-    while ((s = strstr(s, "%H%")) != NULL) {
-	cmd_len += strlen(qualified_host) - 3;
-	s += 3;
-    }
-#if !defined(_WIN32) /*[*/
-    s = cmdline;
-    while ((s = strstr(s, "%C%")) != NULL) {
-	cmd_len += strlen(cmd) - 3;
-	s += 3;
-    }
-#endif /*]*/
-    s = cmdline;
-    while ((s = strstr(s, "%R%")) != NULL) {
-	cmd_len += strlen(charset_cmd) - 3;
-	s += 3;
-    }
-    s = cmdline;
-    while ((s = strstr(s, "%P%")) != NULL) {
-	cmd_len += (proxy_cmd? strlen(proxy_cmd): 0) - 3;
-	s += 3;
-    }
-#if defined(_WIN32) /*[*/
-    s = cmdline;
-    while ((s = strstr(s, "%I%")) != NULL) {
-	cmd_len += (printercp? strlen(printercp): 0) - 3;
-	s += 3;
-    }
-#endif /*]*/
-    s = cmdline;
-    while ((s = strstr(s, "%O%")) != NULL) {
-	cmd_len += (pr3287_opts? strlen(pr3287_opts): 0) - 3;
-	s += 3;
-    }
-    s = cmdline;
-    while ((s = strstr(s, "%V%")) != NULL) {
-#if defined(HAVE_LIBSSL) /*[*/
-	cmd_len += appres.verify_host_cert? strlen(OptVerifyHostCert) + 1: 0;
-	cmd_len += appres.self_signed_ok?  strlen(OptSelfSignedOk) + 1: 0;
-	cmd_len += appres.ca_dir?
-	    strlen(OptCaDir) + 4 + strlen(appres.ca_dir): 0;
-	cmd_len += appres.ca_file?
-	    strlen(OptCaFile) + 4 + strlen(appres.ca_file): 0;
-	cmd_len += appres.cert_file?
-	    strlen(OptCertFile) + 4 + strlen(appres.cert_file): 0;
-	cmd_len += appres.cert_file_type?
-	    strlen(OptCertFileType) + 2 + strlen(appres.cert_file_type): 0;
-	cmd_len += appres.chain_file?
-	    strlen(OptChainFile) + 4 + strlen(appres.chain_file): 0;
-	cmd_len += appres.key_file?
-	    strlen(OptChainFile) + 4 + strlen(appres.key_file): 0;
-	/*
-	 * XXX: I hope the key password has no double quotes. I could
-	 * fix it on Unix, but not on Windows.
-	 */
-	cmd_len += appres.key_passwd?
-	    strlen(OptKeyPasswd) + 4 + strlen(appres.key_passwd): 0;
-	cmd_len += appres.accept_hostname?
-	    strlen(OptAcceptHostname) + 4 +
-	    strlen(appres.accept_hostname): 0;
-#endif /*]*/
-	cmd_len -= 3;
-	s += 3;
-    }
-    s = cmdline;
-    while ((s = strstr(s, "%S%")) != NULL) {
-	cmd_len += strlen(syncopt) - 3;
-	s += 3;
-    }
-
-    /* Allocate a string buffer and substitute into it. */
-    cmd_text = Malloc(cmd_len);
-    cmd_text[0] = '\0';
+    /* Substitute. */
+    vb_init(&r);
     for (s = cmdline; (c = *s) != '\0'; s++) {
-	char buf1[2];
 
 	if (c == '%') {
 	    if (!strncmp(s+1, "L%", 2)) {
-		(void) strcat(cmd_text, lu);
+		vb_appends(&r, lu);
 		s += 2;
 		continue;
 	    } else if (!strncmp(s+1, "H%", 2)) {
-		(void) strcat(cmd_text, qualified_host);
+		vb_appends(&r, qualified_host);
 		s += 2;
 		continue;
 #if !defined(_WIN32) /*[*/
 	    } else if (!strncmp(s+1, "C%", 2)) {
-		(void) strcat(cmd_text, cmd);
+		vb_appends(&r, cmd);
 		s += 2;
 		continue;
 #endif /*]*/
 	    } else if (!strncmp(s+1, "R%", 2)) {
-		(void) strcat(cmd_text, charset_cmd);
+		vb_appends(&r, charset_cmd);
 		s += 2;
 		continue;
 	    } else if (!strncmp(s+1, "P%", 2)) {
 		if (proxy_cmd != NULL) {
-		    (void) strcat(cmd_text, proxy_cmd);
+		    vb_appends(&r, proxy_cmd);
 		}
 		s += 2;
 		continue;
 #if defined(_WIN32) /*[*/
 	    } else if (!strncmp(s+1, "I%", 2)) {
 		if (printercp != NULL) {
-		    (void) strcat(cmd_text, printercp);
+		    vb_appends(&r, printercp);
 		}
 		s += 2;
 		continue;
 #endif /*]*/
 	    } else if (!strncmp(s+1, "O%", 2)) {
 		if (pr3287_opts != NULL) {
-		    (void) strcat(cmd_text, pr3287_opts);
+		    vb_appends(&r, pr3287_opts);
 		}
 		s += 2;
 		continue;
 	    } else if (!strncmp(s+1, "V%", 2)) {
 #if defined(HAVE_LIBSSL) /*[*/
 		if (appres.verify_host_cert) {
-		    (void) strcat(cmd_text, " " OptVerifyHostCert);
+		    vb_appends(&r, " " OptVerifyHostCert);
 		}
 		if (appres.self_signed_ok) {
-		    (void) strcat(cmd_text, " " OptSelfSignedOk);
+		    vb_appends(&r, " " OptSelfSignedOk);
 		}
 		if (appres.ca_dir) {
-		    (void) strcat(cmd_text, " " OptCaDir);
-		    (void) strcat(cmd_text, " ");
-		    (void) sprintf(strchr(cmd_text, '\0'), "\"%s\"",
-			    appres.ca_dir);
+		    vb_appendf(&r, " %s \"%s\"", OptCaDir, appres.ca_dir);
 		}
 		if (appres.ca_file) {
-		    (void) strcat(cmd_text, " " OptCaFile);
-		    (void) strcat(cmd_text, " ");
-		    (void) sprintf(strchr(cmd_text, '\0'), "\"%s\"",
-			    appres.ca_file);
+		    vb_appendf(&r, " %s \"%s\"", OptCaFile, appres.ca_file);
 		}
 		if (appres.cert_file) {
-		    (void) strcat(cmd_text, " " OptCertFile);
-		    (void) strcat(cmd_text, " ");
-		    (void) sprintf(strchr(cmd_text, '\0'), "\"%s\"",
+		    vb_appendf(&r, " %s \"%s\"", OptCertFile,
 			    appres.cert_file);
 		}
 		if (appres.cert_file_type) {
-		    (void) strcat(cmd_text, " " OptCertFileType);
-		    (void) strcat(cmd_text, " ");
-		    (void) strcat(cmd_text, appres.cert_file_type);
+		    vb_appendf(&r, " %s %s", OptCertFileType,
+			    appres.cert_file_type);
 		}
 		if (appres.chain_file) {
-		    (void) strcat(cmd_text, " " OptChainFile);
-		    (void) strcat(cmd_text, " ");
-		    (void) sprintf(strchr(cmd_text, '\0'), "\"%s\"",
+		    vb_appendf(&r, " %s \"%s\"", OptChainFile,
 			    appres.chain_file);
 		}
 		if (appres.key_file) {
-		    (void) strcat(cmd_text, " " OptKeyFile);
-		    (void) strcat(cmd_text, " ");
-		    (void) sprintf(strchr(cmd_text, '\0'), "\"%s\"",
-			    appres.key_file);
+		    vb_appendf(&r, " %s \"%s\"", OptKeyFile, appres.key_file);
 		}
 		if (appres.key_passwd) {
-		    (void) strcat(cmd_text, " " OptKeyPasswd);
-		    (void) strcat(cmd_text, " ");
-		    (void) sprintf(strchr(cmd_text, '\0'), "\"%s\"",
+		    vb_appendf(&r, " %s \"%s\"", OptKeyPasswd,
 			    appres.key_passwd);
 		}
 		if (appres.accept_hostname) {
-		    (void) strcat(cmd_text, " " OptAcceptHostname);
-		    (void) strcat(cmd_text, " ");
-		    (void) sprintf(strchr(cmd_text, '\0'), "\"%s\"",
+		    vb_appendf(&r, " %s \"%s\"", OptAcceptHostname,
 			    appres.accept_hostname);
 		}
 #endif /*]*/
 		s += 2;
 		continue;
 	    } else if (!strncmp(s+1, "S%", 2)) {
-		strcat(cmd_text, syncopt);
+		vb_appends(&r, syncopt);
 		s += 2;
 		continue;
 	    }
 	}
-	buf1[0] = c;
-	buf1[1] = '\0';
-	(void) strcat(cmd_text, buf1);
+	vb_append(&r, &c, 1);
     }
+    cmd_text = vb_consume(&r);
 
 #if !defined(_WIN32) /*[*/
     vtrace("Printer command: %s\n", cmd_text);
@@ -755,7 +658,7 @@ pr3287_data(struct pr3o *p, Boolean is_err)
 
     /* Handle read errors and end-of-file. */
     if (nr < 0) {
-	popup_an_errno(errno, "printer session pipe input");
+	popup_an_errno(errno, "Printer session pipe input failed");
 	pr3287_session_stop();
 	return;
     }
@@ -779,8 +682,10 @@ pr3287_data(struct pr3o *p, Boolean is_err)
 	    }
 	    pr3287_dump(p, True, True);
 	} else {
-	    popup_an_error("%s", exitmsg);
+	    popup_an_error("Printer session: %s", exitmsg);
 	}
+
+	/* Now that we've gotten EOF, make sure we stop the process. */
 	pr3287_session_stop();
 	return;
     }
@@ -970,11 +875,11 @@ pr3287_accept(unsigned long fd _is_unused, ioid_t id)
 void
 pr3287_session_check(
 #if !defined(_WIN32) /*[*/
-	      pid_t pid, int status
+	             pid_t pid, int status
 #else /*][*/
-	      void
+	             void
 #endif /*]*/
-	                           )
+	                                  )
 {
 #if defined(_WIN32) /*[*/
     DWORD exit_code;
@@ -1025,21 +930,24 @@ pr3287_session_check(
     }
 #endif /*]*/
 
-    /*
-     * Stop the pending printer kill request.
-     */
+    vtrace("Printer session exited.\n");
+
+    /* Stop any pending printer kill request. */
     if (pr3287_state == P_SHUTDOWN) {
 	assert(pr3287_kill_id != NULL_IOID);
 	RemoveTimeOut(pr3287_kill_id);
 	pr3287_kill_id = NULL_IOID;
+	pr3287_state = P_NONE;
     }
 
-    /* Update and propagate the state. */
-    vtrace("Printer session exited.\n");
+    /* No need for sync input any more. */
     if (pr3287_sync_id != NULL_IOID) {
 	pr3287_stop_sync();
     }
+
     pr3287_state = P_NONE;
+
+    /* Propagate the state. */
     st_changed(ST_PRINTER, False);
 
     /*
@@ -1085,7 +993,7 @@ pr3287_session_stop()
 	Free(pr3287_delay_lu);
 	pr3287_delay_lu = NULL;
 	break;
-    case P_RUNNING:
+    case P_RUNNING:	/* Got EOF before SIGCHLD. */
 	/* Run through the logic below. */
 	break;
     default:
@@ -1122,14 +1030,12 @@ pr3287_session_stop()
     /*
      * If we have a sync socket connection, shut it down to signal pr3287
      * to exit gracefully.
-     *
-     * Then set a timeout to terminate it not so gracefully.
      */
     if (pr3287_sync != INVALID_SOCKET) {
 	vtrace("Stopping printer by shutting down sync socket.\n");
 	assert(pr3287_ls == INVALID_SOCKET);
 
-		/* The separate shutdown() call is likely redundant. */
+	/* The separate shutdown() call is likely redundant. */
 #if !defined(_WIN32) /*[*/
 	shutdown(pr3287_sync, SHUT_WR);
 #else /*][*/
@@ -1146,6 +1052,7 @@ pr3287_session_stop()
 	pr3287_stop_listening();
     }
 
+    /* Set a timeout to terminate it not so gracefully. */
     pr3287_state = P_SHUTDOWN;
     pr3287_kill_id = AddTimeOut(PRINTER_KILL_MS, pr3287_kill);
 }
