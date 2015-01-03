@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013-2014 Paul Mattes.
+# Copyright (c) 2007-2009, 2013-2015 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -59,6 +59,7 @@ endif
 XCPPFLAGS = -D_WIN32 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWINVER=0x500
 CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
 
+OBJ = o
 include common_files.mk wc3270_files.mk
 
 SRCS = $(COMMON_SOURCES) $(HTTPD_SOURCES) $(WC3270_SOURCES)

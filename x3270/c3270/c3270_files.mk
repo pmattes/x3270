@@ -4,9 +4,10 @@ C3270_SOURCES = XtGlue.c c3270.c child.c ft_gui.c glue.c help.c icmd.c \
 	screen.c scroll.c ssl_passwd_gui.c
 
 # c3270-specific object files
-C3270_OBJECTS = XtGlue.o c3270.o child.o ft_gui.o glue.o help.o icmd.o \
-	keymap.o keypad.o macros.o menubar.o pr3287_session.o readres.o \
-	screen.o scroll.o ssl_passwd_gui.o
+C3270_OBJECTS = XtGlue.$(OBJ) c3270.$(OBJ) child.$(OBJ) ft_gui.$(OBJ) \
+	glue.$(OBJ) help.$(OBJ) icmd.$(OBJ) keymap.$(OBJ) keypad.$(OBJ) \
+	macros.$(OBJ) menubar.$(OBJ) pr3287_session.$(OBJ) readres.$(OBJ) \
+	screen.$(OBJ) scroll.$(OBJ) ssl_passwd_gui.$(OBJ)
 
 # c3270-specific header files
 C3270_HEADERS = X11/keysym.h conf.h gluec.h help.h icmdc.h pr3287_session.h \

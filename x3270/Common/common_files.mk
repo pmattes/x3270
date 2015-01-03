@@ -9,14 +9,17 @@ COMMON_SOURCES = actions.c apl.c asprintf.c charset.c ctlr.c fprint_screen.c \
 HTTPD_SOURCES = bind-opt.c favicon.c httpd-core.c httpd-io.c httpd-nodes.c
 
 # Object files common to all 3270 emulators
-COMMON_OBJECTS = actions.o apl.o asprintf.o charset.o ctlr.o fprint_screen.o \
-	ft.o ft_cut.o ft_dft.o host.o idle.o kybd.o linemode.o nvt.o \
-	print_screen.o proxy.o resolver.o resources.o rpq.o see.o sf.o \
-	tables.o telnet.o toggles.o trace.o unicode.o unicode_dbcs.o utf8.o \
-	util.o varbuf.o xio.o
+COMMON_OBJECTS = actions.$(OBJ) apl.$(OBJ) asprintf.$(OBJ) charset.$(OBJ) \
+	ctlr.$(OBJ) fprint_screen.$(OBJ) ft.$(OBJ) ft_cut.$(OBJ) \
+	ft_dft.$(OBJ) host.$(OBJ) idle.$(OBJ) kybd.$(OBJ) linemode.$(OBJ) \
+	nvt.$(OBJ) print_screen.$(OBJ) proxy.$(OBJ) resolver.$(OBJ) \
+	resources.$(OBJ) rpq.$(OBJ) see.$(OBJ) sf.$(OBJ) tables.$(OBJ) \
+	telnet.$(OBJ) toggles.$(OBJ) trace.$(OBJ) unicode.$(OBJ) \
+	unicode_dbcs.$(OBJ) utf8.$(OBJ) util.$(OBJ) varbuf.$(OBJ) xio.$(OBJ)
 
 # HTTPD object files
-HTTPD_OBJECTS = bind-opt.o favicon.o httpd-core.o httpd-io.o httpd-nodes.o
+HTTPD_OBJECTS = bind-opt.$(OBJ) favicon.$(OBJ) httpd-core.$(OBJ) \
+	httpd-io.$(OBJ) httpd-nodes.$(OBJ)
 
 # Header files common to all 3270 emulators
 COMMON_HEADERS = 3270ds.h actionsc.h aplc.h appres.h arpa_telnet.h \

@@ -43,15 +43,12 @@ SSLLIB = gdi32.lib
 XCPPFLAGS = /D_WIN32 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /D_CRT_SECURE_NO_DEPRECATE /DWIN32_LEAN_AND_MEAN /W3 /WX $(SSLDEF)
 CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I.
 
-VOBJS = XtGlue.obj actions.obj apl.obj asprintf.obj bind-opt.obj charset.obj \
-	ctlr.obj fallbacks.obj favicon.obj fprint_screen.obj ft.obj \
-	ft_cut.obj ft_dft.obj glue.obj host.obj httpd-core.obj httpd-io.obj \
-	httpd-nodes.obj idle.obj kybd.obj linemode.obj macros.obj nvt.obj \
-	print.obj printer.obj proxy.obj readres.obj resolver.obj \
-	resources.obj rpq.obj see.obj sf.obj s3270.obj snprintf.obj \
-	ssl_dll.obj tables.obj telnet.obj toggles.obj trace.obj \
-	unicode.obj unicode_dbcs.obj utf8.obj util.obj varbuf.obj w3misc.obj \
-	windirs.obj winprint.obj winvers.obj ws3270.RES xio.obj
+OBJ = obj
+!INCLUDE common_files.mk
+!INCLUDE ws3270_files.mk
+
+VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(WS3270_OBJECTS) ws3270.RES \
+	fallbacks.obj
 
 OBJECTS = $(VOBJS) version.obj
 LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib shell32.lib

@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2009, 2013-2014 Paul Mattes.
+# Copyright (c) 1999-2009, 2013-2015 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@ CC = @CC@
 
 all:: c3270 x3270if
 
+OBJ = o
 include common_files.mk c3270_files.mk
 
 SRCS = $(COMMON_SOURCES) $(HTTPD_SOURCES) $(C3270_SOURCES)

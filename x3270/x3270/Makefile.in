@@ -1,4 +1,4 @@
-# Copyright (c) 1999-2014, Paul Mattes.
+# Copyright (c) 1999-2015 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,7 @@
 RM = rm -f
 CC = @CC@
 
+OBJ = o
 include common_files.mk x3270_files.mk
 
 SRCS = $(COMMON_SOURCES) $(HTTPD_SOURCES) $(X3270_SOURCES)

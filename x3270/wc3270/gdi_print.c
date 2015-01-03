@@ -572,7 +572,7 @@ gdi_init(const char *printer_name, const char **fail)
      */
     if (uparm.font_size) {
 	/* User-specified fixed font size. */
-	fheight = uparm.font_size * pstate.yptscale;
+	fheight = (int)(uparm.font_size * pstate.yptscale);
 	fwidth = 0;
     } else {
 	if (uparm.spp > 1) {

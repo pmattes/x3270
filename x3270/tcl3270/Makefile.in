@@ -1,4 +1,4 @@
-# Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+# Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@ CC = @CC@
 
 all:: tcl3270
 
+OBJ = o
 include common_files.mk tcl3270_files.mk
 
 SRCS = $(COMMON_SOURCES) $(TCL3270_SOURCES)
