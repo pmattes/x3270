@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2010, 2013 Paul Mattes.
+ * Copyright (c) 2000-2010, 2013, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1162,7 +1162,7 @@ printer_stop()
 
 		/* We no longer care about printer sync input. */
 		printer_stop_sync();
-	} else {
+	} else if (printer_ls_id != NULL_IOID) {
 		/*
 		 * No sync socket. Too late to get one.
 		 */
