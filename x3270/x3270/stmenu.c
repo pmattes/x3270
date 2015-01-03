@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Paul Mattes.
+ * Copyright (c) 2013-2015, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
 #include "dialogc.h"
 #include "menubarc.h"
 #include "popupsc.h"
-#include "printc.h"
+#include "print_screen.h"
 #include "togglesc.h"
 #include "trace.h"
 

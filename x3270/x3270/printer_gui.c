@@ -27,7 +27,7 @@
 
 /*
  *	printer_gui.c
- *		GUI for printer session support
+ *		GUI for 3287 printer session support
  */
 
 #include "globals.h"
@@ -36,7 +36,7 @@
 #include <X11/Xaw/Dialog.h>
 
 #include "popupsc.h"
-#include "printerc.h"
+#include "pr3287_session.h"
 #include "printer_guic.h"
 
 static Widget lu_shell = NULL;

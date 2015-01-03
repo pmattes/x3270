@@ -1,4 +1,4 @@
-/* Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+/* Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -63,7 +63,7 @@
 #include "macrosc.h"
 #include "nvtc.h"
 #include "popupsc.h"
-#include "printc.h"
+#include "print_screen.h"
 #include "screenc.h"
 #include "scrollc.h"
 #include "statusc.h"

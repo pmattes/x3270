@@ -95,10 +95,10 @@
     <ClCompile Include="..\wc3270-3.3\nvt_gui.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270-3.3\print.c">
+    <ClCompile Include="..\wc3270-3.3\pr3287_session.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270-3.3\printer.c">
+    <ClCompile Include="..\wc3270-3.3\print_screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\wc3270-3.3\proxy.c">

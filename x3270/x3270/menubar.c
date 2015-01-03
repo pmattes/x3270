@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -60,9 +60,9 @@
 #include "macrosc.h"
 #include "menubarc.h"
 #include "popupsc.h"
-#include "printc.h"
+#include "print_screen.h"
 #include "print_windowc.h"
-#include "printerc.h"
+#include "pr3287_session.h"
 #include "printer_guic.h"
 #include "savec.h"
 #include "screenc.h"

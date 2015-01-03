@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2014, Paul Mattes.
+ * Copyright (c) 1994-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
  */
 
 /*
- *	print.c
+ *	print_screen.c
  *		Screen printing functions.
  */
 
@@ -48,7 +48,7 @@
 #include "charsetc.h"
 #include "fprint_screenc.h"
 #include "popupsc.h"
-#include "printc.h"
+#include "print_screen.h"
 #include "print_guic.h"
 #include "trace.h"
 #include "unicodec.h"
@@ -418,7 +418,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 
 /* Global initialization. */
 void
-print_init(void)
+print_screen_init(void)
 {
     static action_table_t print_text_actions[] = {
 	{ "PrintText",		PrintText_action,	ACTION_KE }

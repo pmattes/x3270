@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -64,7 +64,7 @@
 #include "menubarc.h"
 #include "nvtc.h"
 #include "popupsc.h"
-#include "printc.h"
+#include "print_screen.h"
 #include "screenc.h"
 #include "selectc.h"
 #include "tablesc.h"
@@ -148,7 +148,7 @@ main(int argc, char *argv[])
         register_schange(ST_3270_MODE, main_connect);
 	ft_init();
 	xio_init();
-	print_init();
+	print_screen_init();
 	toggles_init();
 	hostfile_init();
 

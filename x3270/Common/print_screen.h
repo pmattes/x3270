@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,27 +25,10 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*     
- *	printerc.h
- *		Printer session support
- */             
+/*
+ *	print_screen.h
+ *		Global declarations for print_screen.c.
+ */
 
-#if defined(X3270_INTERACTIVE) /*[*/
-extern void printer_init(void);
-extern void printer_lu_dialog(void);
-extern void printer_start(const char *lu);
-extern void printer_stop(void);
-extern Boolean printer_running(void);
-# if !defined(_WIN32) /*[*/
-extern void printer_check(pid_t pid, int status);
-# else /*][*/
-extern void printer_check(void);
-# endif /*]*/
-#else /*][*/
-# define printer_init()
-# define printer_lu_dialog()
-# define printer_start(lu)
-# define printer_stop()
-# define printer_running() FALSE
-# define printer_check(pid, status)
-#endif /*]*/
+extern char *default_caption(void);
+extern void print_screen_init(void);

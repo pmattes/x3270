@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2014, Paul Mattes.
+# Copyright (c) 2007-2015, Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -49,13 +49,13 @@ VOBJS = XtGlue.obj \ actions.obj apl.obj asprintf.obj bind-opt.obj c3270.obj \
 	ft.obj ft_cut.obj ft_dft.obj ft_gui.obj gdi_print.obj glue.obj \
 	help.obj host.obj httpd-core.obj httpd-io.obj httpd-nodes.obj \
 	icmd.obj idle.obj keymap.obj keypad.obj kybd.obj linemode.obj \
-	macros.obj menubar.obj nvt.obj nvt_gui.obj print.obj printer.obj \
-	proxy.obj readres.obj relink.obj resolver.obj resources.obj rpq.obj \
-	screen.obj scroll.obj see.obj select.obj sf.obj shortcut.obj \
-	snprintf.obj ssl_dll.obj ssl_passwd_gui.obj tables.obj telnet.obj \
-	toggles.obj trace.obj unicode.obj unicode_dbcs.obj utf8.obj \
-	util.obj varbuf.obj w3misc.obj wc3270.RES windirs.obj winprint.obj \
-	winvers.obj xio.obj
+	macros.obj menubar.obj nvt.obj nvt_gui.obj pr3287_session.obj \
+	print_screen.obj proxy.obj readres.obj relink.obj resolver.obj \
+	resources.obj rpq.obj screen.obj scroll.obj see.obj select.obj sf.obj \
+	shortcut.obj snprintf.obj ssl_dll.obj ssl_passwd_gui.obj tables.obj \
+	telnet.obj toggles.obj trace.obj unicode.obj unicode_dbcs.obj \
+	utf8.obj util.obj varbuf.obj w3misc.obj wc3270.RES windirs.obj \
+	winprint.obj winvers.obj xio.obj
 
 OBJECTS = $(VOBJS) version.obj
 WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
@@ -190,10 +190,10 @@ nvt.obj: nvt.c
 	$(CC) $(CFLAGS) /c nvt.c
 nvt_gui.obj: nvt_gui.c
 	$(CC) $(CFLAGS) /c nvt_gui.c
-print.obj: print.c
-	$(CC) $(CFLAGS) /c print.c
-printer.obj: printer.c
-	$(CC) $(CFLAGS) /c printer.c
+pr3287_session.obj: pr3287_session.c
+	$(CC) $(CFLAGS) /c pr3287_session.c
+print_screen.obj: print_screen.c
+	$(CC) $(CFLAGS) /c print_screen.c
 proxy.obj: proxy.c
 	$(CC) $(CFLAGS) /c proxy.c
 readres.obj: readres.c

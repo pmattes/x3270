@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2010, 2013-2014 Paul Mattes.
+ * Copyright (c) 2000-2010, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,8 @@
  */
 
 /*
- *	printer.c
- *		Printer session support
+ *	pr3287_session.c
+ *		3287 printer session support
  */
 
 #include "globals.h"
@@ -53,8 +53,8 @@
 #include "hostc.h"
 #include "menubarc.h"
 #include "popupsc.h"
-#include "printerc.h"
-#include "printc.h"
+#include "pr3287_session.h"
+#include "print_screen.h"
 #include "savec.h"
 #if defined(C3270) /*[*/
 #include "screenc.h"
@@ -131,12 +131,12 @@ static void	printer_start_now(const char *lu, Boolean associated);
  * Printer initialization function.
  */
 void
-printer_init(void)
+pr3287_session_init(void)
 {
-	/* Register interest in host connects and mode changes. */
-	register_schange(ST_CONNECT, printer_host_connect);
-	register_schange(ST_3270_MODE, printer_host_connect);
-	register_schange(ST_EXITING, printer_exiting);
+    /* Register interest in host connects and mode changes. */
+    register_schange(ST_CONNECT, printer_host_connect);
+    register_schange(ST_3270_MODE, printer_host_connect);
+    register_schange(ST_EXITING, printer_exiting);
 }
 
 /*

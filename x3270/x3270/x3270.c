@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -62,8 +62,8 @@
 #include "menubarc.h"
 #include "nvtc.h"
 #include "popupsc.h"
-#include "printc.h"
-#include "printerc.h"
+#include "print_screen.h"
+#include "pr3287_session.h"
 #include "print_windowc.h"
 #include "resourcesc.h"
 #include "savec.h"
@@ -518,7 +518,7 @@ main(int argc, char *argv[])
 	xaction_init();
 
 	popups_init();
-	print_init();
+	print_screen_init();
 	print_window_init();
 	kybd_init();
 	xkybd_init();
@@ -540,7 +540,7 @@ main(int argc, char *argv[])
 	info_popup_init();
 	error_popup_init();
 	printer_popup_init();
-	printer_init();
+	pr3287_session_init();
 	ft_init();
 	xio_init();
 	toggles_init();

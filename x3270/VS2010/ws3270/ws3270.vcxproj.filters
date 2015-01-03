@@ -60,10 +60,10 @@
     <ClCompile Include="..\..\ws3270-3.3\nvt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\print.c">
+    <ClCompile Include="..\..\ws3270-3.3\pr3287_sessio.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\printer.c">
+    <ClCompile Include="..\..\ws3270-3.3\print_screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\ws3270-3.3\proxy.c">

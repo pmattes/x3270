@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,7 +50,7 @@
 #include "menubarc.h"
 #include "nvtc.h"
 #include "popupsc.h"
-#include "printc.h"
+#include "print_screen.h"
 #include "savec.h"
 #include "statusc.h"
 #include "tablesc.h"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2014, Paul Mattes.
+ * Copyright (c) 1994-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
 
 /*
  *	winprint.c
- *		Windows printing functions.
+ *		Windows screen printing functions.
  */
 
 #include "globals.h"
@@ -44,7 +44,7 @@
 #include "objects.h"
 #include "popupsc.h"
 #include "resources.h"
-#include "printc.h"
+#include "print_screen.h"
 #include "trace.h"
 #include "utilc.h"
 

@@ -33,8 +33,8 @@
     <ClCompile Include="..\..\ws3270-3.3\linemode.c" />
     <ClCompile Include="..\..\ws3270-3.3\macros.c" />
     <ClCompile Include="..\..\ws3270-3.3\ansi.c" />
-    <ClCompile Include="..\..\ws3270-3.3\print.c" />
-    <ClCompile Include="..\..\ws3270-3.3\printer.c" />
+    <ClCompile Include="..\..\ws3270-3.3\pr3287_session.c" />
+    <ClCompile Include="..\..\ws3270-3.3\print_screen.c" />
     <ClCompile Include="..\..\ws3270-3.3\proxy.c" />
     <ClCompile Include="..\..\ws3270-3.3\readres.c" />
     <ClCompile Include="..\..\ws3270-3.3\resolver.c" />

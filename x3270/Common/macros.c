@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -66,7 +66,7 @@
 #include "menubarc.h"
 #include "popupsc.h"
 #if defined(X3270_INTERACTIVE) /*[*/
-#include "printerc.h"
+# include "pr3287_session.h"
 #endif /*]*/
 #include "screenc.h"
 #include "seec.h"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -69,8 +69,8 @@
 #include "menubarc.h"
 #include "nvtc.h"
 #include "popupsc.h"
-#include "printc.h"
-#include "printerc.h"
+#include "print_screen.h"
+#include "pr3287_session.h"
 #include "screenc.h"
 #include "scrollc.h"
 #include "selectc.h"
@@ -464,9 +464,9 @@ main(int argc, char *argv[])
         register_schange(ST_EXITING, main_exiting);
 	register_actions(main_actions, array_count(main_actions));
 	ft_init();
-	printer_init();
+	pr3287_session_init();
 	xio_init();
-	print_init();
+	print_screen_init();
 	keypad_init();
 	toggles_init();
 	menubar_init();
