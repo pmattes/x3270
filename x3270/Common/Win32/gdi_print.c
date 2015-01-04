@@ -825,7 +825,6 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
     int row, col, baddr;
     int rc = 0;
     int status;
-
     int fa_addr = find_field_attribute_ea(0, ea);
     unsigned char fa = ea[fa_addr].fa;
     Boolean fa_high, high;
@@ -835,6 +834,10 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
     Boolean is_dbcs;
     char c;
     int usable_rows;
+    HFONT got_font = NULL, want_font;
+    const char *want_font_name;
+    enum { COLOR_NONE, COLOR_NORMAL, COLOR_REVERSE } got_color = COLOR_NONE,
+	want_color;
 
     devmode = (LPDEVMODE)GlobalLock(pstate.dlg.hDevMode);
 
@@ -939,17 +942,13 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 	    }
 	    is_dbcs = FALSE;
 	    if (FA_IS_ZERO(fa)) {
-#if defined(X3270_DBCS) /*[*/
 		if (ctlr_dbcs_state_ea(baddr, ea) == DBCS_LEFT) {
 		    uc = 0x3000;
-		} else
-#endif /*]*/
-		{
+		} else {
 		    uc = ' ';
 		}
 	    } else {
 		/* Convert EBCDIC to Unicode. */
-#if defined(X3270_DBCS) /*[*/
 		switch (ctlr_dbcs_state(baddr)) {
 		case DBCS_NONE:
 		case DBCS_SB:
@@ -975,12 +974,6 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		    uc = ' ';
 		    break;
 		}
-#else /*][*/
-		uc = ebcdic_to_unicode(ea[baddr].cc, ea[baddr].cs, EUO_NONE);
-		if (uc == 0) {
-		    uc = ' ';
-		}
-#endif /*]*/
 	    }
 
 	    /* Figure out the attributes of the current buffer position. */
@@ -997,27 +990,48 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		underline = fa_underline;
 	    }
 
-	    /*
-	     * Set the bg/fg color and font. Obviously this could be optimized
-	     * quite a bit.
-	     */
+	    /* Set the bg/fg color and font. */
 	    if (reverse) {
-		SetTextColor(dc, 0xffffff);
-		SetBkColor(dc, 0);
-		SetBkMode(dc, OPAQUE);
+		want_color = COLOR_REVERSE;
 	    } else {
-		SetTextColor(dc, 0);
-		SetBkColor(dc, 0xffffff);
-		SetBkMode(dc, TRANSPARENT);
+		want_color = COLOR_NORMAL;
+	    }
+	    if (want_color != got_color) {
+		switch (want_color) {
+		case COLOR_REVERSE:
+		    SetTextColor(dc, 0xffffff);
+		    SetBkColor(dc, 0);
+		    SetBkMode(dc, OPAQUE);
+		    break;
+		case COLOR_NORMAL:
+		    SetTextColor(dc, 0);
+		    SetBkColor(dc, 0xffffff);
+		    SetBkMode(dc, TRANSPARENT);
+		    break;
+		default:
+		    break;
+		}
+		got_color = want_color;
 	    }
 	    if (!high && !underline) {
-		SelectObject(dc, pstate.font);
+		want_font = pstate.font;
+		want_font_name = "Roman";
 	    } else if (high && !underline) {
-		SelectObject(dc, pstate.bold_font);
+		want_font = pstate.bold_font;
+		want_font_name = "Bold";
 	    } else if (!high && underline) {
-		SelectObject(dc, pstate.underscore_font);
+		want_font = pstate.underscore_font;
+		want_font_name = "Underscore";
 	    } else {
-		SelectObject(dc, pstate.bold_underscore_font);
+		want_font = pstate.bold_underscore_font;
+		want_font_name = "Underscore";
+	    }
+	    if (want_font != got_font) {
+		SelectObject(dc, want_font);
+		got_font = want_font;
+#if defined(GDI_DEBUG) /*[*/
+		vtrace("[gdi] selecting %s\n", want_font_name);
+#endif /*]*/
 	    }
 
 	    /*
@@ -1047,7 +1061,11 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		}
 		continue;
 	    }
-#if defined(X3270_DBCS) /*[*/
+
+	    /*
+	     * Emit one character at a time. This should be optimized to print
+	     * strings of characters with the same attributes.
+	     */
 	    if (is_dbcs) {
 		wchar_t w;
 		INT wdx;
@@ -1071,7 +1089,6 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		}
 		continue;
 	    }
-#endif
 	    c = (char)uc;
 	    status = ExtTextOut(dc,
 		    pstate.hmargin_pixels + (col * pstate.space_size.cx) -
@@ -1081,6 +1098,18 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 			pchar.poffY,
 		    0, NULL,
 		    &c, 1, pstate.dx);
+#if defined(GDI_DEBUG) /*[*/
+	    if (c != ' ') {
+		vtrace("[gdi] row %d col %d x=%ld y=%ld '%c'\n",
+			row, col,
+			pstate.hmargin_pixels + (col * pstate.space_size.cx) -
+			    pchar.poffX,
+			pstate.vmargin_pixels +
+			    ((pstate.out_row + row + 1) * pstate.space_size.cy) -
+			    pchar.poffY,
+			c);
+	    }
+#endif /*]*/
 	    if (status <= 0) {
 		*fail = "ExtTextOut failed";
 		rc = -1;

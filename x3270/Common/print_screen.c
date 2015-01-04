@@ -370,9 +370,12 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	return False;
     }
-    if (caption == NULL) {
+
+    /* Captions look nice on GDI, so create a default one. */
+    if (ptype == P_GDI && caption == NULL) {
 	caption = default_caption();
     }
+
     status = fprint_screen(f, ptype, opts, caption, name);
     switch (status) {
     case FPS_STATUS_SUCCESS:
