@@ -48,5 +48,5 @@ typedef enum {
 } gdi_status_t;
 #define GDI_STATUS_IS_ERROR(gs) ((int)gs < 0)
 
-extern gdi_status_t gdi_print_start(const char *printer_name);
+extern gdi_status_t gdi_print_start(const char *printer_name, unsigned opts);
 extern gdi_status_t gdi_print_finish(FILE *f, const char *caption);

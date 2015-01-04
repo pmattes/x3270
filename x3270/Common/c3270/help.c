@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -163,7 +163,7 @@ static struct {
         { "PrintText",
 	    "[Modi] [Caption <caption>] "
 #if defined(WC3270) /*[*/
-	    "[Gdi|Wordpad] [<printer-name>]",
+	    "[Gdi|Wordpad] [NoDialog] [<printer-name>]",
 #else /*][*/
 	    "[<print-command>]",
 #endif /*]*/

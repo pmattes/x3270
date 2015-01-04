@@ -1,4 +1,4 @@
-dnl Copyright (c) 1993-2014, Paul Mattes.
+dnl Copyright (c) 1993-2015, Paul Mattes.
 dnl Copyright (c) 1990, Jeff Sparkes.
 dnl All rights reserved.
 dnl 
@@ -1070,7 +1070,7 @@ XX_TR(XX_TDH(XX_BLOCK()PF`'XX_LPAREN`'XX_FI(n)`'XX_RPAREN)	XX_TD(Program Functio
 XX_TR(XX_TDH(`PreviousWord')	XX_TD(move cursor to previous word))
 ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(`Paste')	XX_TD(insert clipboard contents))')dnl
 ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,tcl3270,,`XX_TR(XX_TDH(Printer(Start[,XX_FI(lu)]|Stop))	XX_TD(start or stop printer session))
-ifelse(XX_PLATFORM,windows,`XX_TR(XX_TDH(PrintText([gdi|wordpad,]XX_FI([printer-name])))	XX_TD(print screen text on printer))',
+ifelse(XX_PLATFORM,windows,`XX_TR(XX_TDH(PrintText([gdi|wordpad,][nodialog,]XX_FI([printer-name])))	XX_TD(print screen text on printer))',
 `XX_TR(XX_TDH(PrintText(XX_FI(command)))	XX_TD(print screen text on printer))')
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(PrintWindow(XX_FI(command)))	XX_TD(print screen image (bitmap) on printer))
 ')')dnl
@@ -1233,6 +1233,8 @@ XX_TPS()dnl
 ifelse(XX_PRODUCT,wc3270,`XX_TP(XX_FB(gdi))
 Print directly to the printer using GDI, instead of creating an RTF file and
 running WordPad to print it. (This is the default).
+XX_TP(XX_FB(nodialog))
+In GDI mode, skip the usual Windows print dialog.
 XX_TP(XX_FB(wordpad))
 Create an RTF file and run WordPad to print it. (This was the former default).
 ')dnl
@@ -1630,7 +1632,7 @@ RFC 1646, TN3270 Extensions for LUname and Printer Selection
 XX_BR
 RFC 2355, TN3270 Enhancements
 XX_SH(Copyrights)
-Copyright`'XX_COPY()1993-2014, Paul Mattes.
+Copyright`'XX_COPY()1993-2015, Paul Mattes.
 XX_BR
 Copyright`'XX_COPY()2004-2005, Don Russell.
 XX_BR

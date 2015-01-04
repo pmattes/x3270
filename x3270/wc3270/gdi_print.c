@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2014, Paul Mattes.
+ * Copyright (c) 1994-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -97,7 +97,8 @@ static struct {			/* printer state */
 
 /* Forward declarations. */
 static void gdi_get_params(uparm_t *up);
-static gdi_status_t gdi_init(const char *printer_name, const char **fail);
+static gdi_status_t gdi_init(const char *printer_name, unsigned opts,
+	const char **fail);
 static int gdi_screenful(struct ea *ea, unsigned short rows,
 	unsigned short cols, const char **fail);
 static int gdi_done(const char **fail);
@@ -110,7 +111,7 @@ static BOOL get_printer_device(const char *printer_name, HGLOBAL *pdevnames,
  * Initialize printing to a GDI printer.
  */
 gdi_status_t
-gdi_print_start(const char *printer_name)
+gdi_print_start(const char *printer_name, unsigned opts)
 {
     const char *fail = "";
 
@@ -131,7 +132,7 @@ gdi_print_start(const char *printer_name)
     }
 
     /* Initialize the printer and pop up the dialog. */
-    switch (gdi_init(printer_name, &fail)) {
+    switch (gdi_init(printer_name, opts, &fail)) {
     case GDI_STATUS_SUCCESS:
 	vtrace("[gdi] initialized\n");
 	break;
@@ -344,6 +345,14 @@ cleanup_fonts(void)
 static int
 create_roman_font(HDC dc, int fheight, int fwidth, const char **fail)
 {
+    char *w, *h;
+
+    w = fwidth? xs_buffer("%d", fwidth): NewString("(auto)");
+    h = fheight? xs_buffer("%d", fheight): NewString("(auto)");
+    vtrace("[gdi] requesting a font %sx%s logical units\n", w, h);
+    Free(w);
+    Free(h);
+
     pstate.font = CreateFont(
 	    fheight,		/* height */
 	    fwidth,		/* width */
@@ -380,12 +389,33 @@ create_roman_font(HDC dc, int fheight, int fwidth, const char **fail)
 }
 
 /*
+ * Return the default printer name.
+ */
+static char *
+get_default_printer_name(char *errbuf, size_t errbuf_size)
+{
+    DWORD size;
+    char *buf;
+
+    /* Figure out how much memory to allocate. */
+    size = 0;
+    (void) GetDefaultPrinter(NULL, &size);
+    buf = Malloc(size);
+    if (GetDefaultPrinter(buf, &size) == 0) {
+	snprintf(errbuf, errbuf_size, "Cannot determine default printer");
+	return NULL;
+    }
+    return buf;
+}
+
+/*
  * Initalize the named GDI printer. If the name is NULL, use the default
  * printer.
  */
 static gdi_status_t
-gdi_init(const char *printer_name, const char **fail)
+gdi_init(const char *printer_name, unsigned opts, const char **fail)
 {
+    char *default_printer_name;
     LPDEVMODE devmode;
     HDC dc;
     DOCINFO docinfo;
@@ -401,28 +431,58 @@ gdi_init(const char *printer_name, const char **fail)
     pstate.dlg.Flags = PD_RETURNDC | PD_NOPAGENUMS | PD_HIDEPRINTTOFILE |
 	PD_NOSELECTION;
 
-    if (printer_name != NULL && *printer_name) {
-	if (!get_printer_device(printer_name, &pstate.dlg.hDevNames,
-		    &pstate.dlg.hDevMode)) {
-	    snprintf(get_fail, sizeof(get_fail),
-		    "GetPrinter(%s) failed: %s",
-		    printer_name? printer_name: "system default",
-		    win32_strerror(GetLastError()));
+    if (printer_name == NULL || !*printer_name) {
+	default_printer_name = get_default_printer_name(get_fail,
+		sizeof(get_fail));
+	if (default_printer_name == NULL) {
 	    *fail = get_fail;
 	    goto failed;
 	}
-	if (uparm.orientation) {
-	    devmode = (LPDEVMODE)GlobalLock(pstate.dlg.hDevMode);
-	    devmode->dmFields |= DM_ORIENTATION;
-	    devmode->dmOrientation = uparm.orientation;
-	    GlobalUnlock(devmode);
-	}
+	printer_name = default_printer_name;
+    }
+    if (!get_printer_device(printer_name, &pstate.dlg.hDevNames,
+		&pstate.dlg.hDevMode)) {
+	snprintf(get_fail, sizeof(get_fail),
+		"GetPrinter(%s) failed: %s",
+		printer_name, win32_strerror(GetLastError()));
+	*fail = get_fail;
+	goto failed;
+    }
+    if (uparm.orientation) {
+	devmode = (LPDEVMODE)GlobalLock(pstate.dlg.hDevMode);
+	devmode->dmFields |= DM_ORIENTATION;
+	devmode->dmOrientation = uparm.orientation;
+	GlobalUnlock(devmode);
     }
 
-    if (!PrintDlg(&pstate.dlg)) {
-	return GDI_STATUS_CANCEL;
+    if (opts & FPS_NO_DIALOG) {
+	/* They don't want the print dialog. Allocate a DC for it. */
+	devmode = (LPDEVMODE)GlobalLock(pstate.dlg.hDevMode);
+	pstate.dlg.hDC = CreateDC("WINSPOOL", printer_name, NULL, devmode);
+	GlobalUnlock(devmode);
+	if (pstate.dlg.hDC == NULL) {
+	    snprintf(get_fail, sizeof(get_fail), "Cannot create DC for "
+		    "printer '%s'", printer_name);
+	    *fail = get_fail;
+	    goto failed;
+	}
+    } else {
+	if (default_printer_name != NULL) {
+	    Free(default_printer_name);
+	    default_printer_name = NULL;
+	}
+
+	/* Pop up the dialog to get the printer characteristics. */
+	if (!PrintDlg(&pstate.dlg)) {
+	    return GDI_STATUS_CANCEL;
+	}
     }
     dc = pstate.dlg.hDC;
+
+    if (default_printer_name != NULL) {
+	Free(default_printer_name);
+	default_printer_name = NULL;
+    }
 
     /* Find out the printer characteristics. */
 
@@ -746,6 +806,9 @@ gdi_init(const char *printer_name, const char **fail)
 
 failed:
     /* Clean up what we can and return failure. */
+    if (default_printer_name != NULL) {
+	Free(default_printer_name);
+    }
     cleanup_fonts();
     return GDI_STATUS_ERROR;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2014, Paul Mattes.
+ * Copyright (c) 1994-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,7 @@
 #define FPS_MODIFIED_ITALIC	0x2	/* print modified fields in italic */
 #define FPS_FF_SEP		0x4	/* use FFs to divide pages in text */
 #define FPS_NO_HEADER		0x8	/* do not generate HTML header */
+#define FPS_NO_DIALOG		0x10	/* do not use Windows print dialog */
 
 typedef struct _fps *fps_t;
 

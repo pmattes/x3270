@@ -188,6 +188,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
      *  rtf      generates RTF output instead of ASCII text (and implies
      *            'file')
      *  gdi      prints to a GDI printer (wc3270 only)
+     *  nodialog skip print dialog (wc3270 only)
      *  replace  replace the file
      *  append   append to the file, if it exists (default)
      *  wordpad  prints via WordPad (wc3270 only)
@@ -223,6 +224,8 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	    ptype = P_GDI;
 	} else if (!strcasecmp(argv[i], "wordpad")) {
 	    ptype = P_RTF;
+	} else if (!strcasecmp(argv[i], "nodialog")) {
+	    opts |= FPS_NO_DIALOG;
 	}
 #endif /*]*/
 	else if (!strcasecmp(argv[i], "secure")) {

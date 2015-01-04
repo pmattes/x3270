@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2014, Paul Mattes.
+ * Copyright (c) 1994-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,7 @@
 
 #include "fprint_screenc.h"
 #if defined(WC3270) /*[*/
-#include "gdi_printc.h"
+# include "gdi_printc.h"
 #endif /*]*/
 #include "trace.h"
 #include "unicodec.h"
@@ -221,162 +221,170 @@ fps_status_t
 fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 	const char *printer_name, fps_t *fps_ret)
 {
-	real_fps_t *fps;
-	int rv = FPS_STATUS_SUCCESS;
-	char *pt_spp;
+    real_fps_t *fps;
+    int rv = FPS_STATUS_SUCCESS;
+    char *pt_spp;
 
-	/* Non-text types can always generate blank output. */
-	if (ptype != P_TEXT) {
-		opts |= FPS_EVEN_IF_EMPTY;
-	}
+    /* Non-text types can always generate blank output. */
+    if (ptype != P_TEXT) {
+	opts |= FPS_EVEN_IF_EMPTY;
+    }
 
-	/* Reset and save the state. */
-	fps = (real_fps_t *)Malloc(sizeof(real_fps_t));
-	fps->ptype = ptype;
-	fps->opts = opts;
-	fps->need_separator = False;
-	fps->broken = False;
-	fps->spp = 1;
-	fps->screens = 0;
-	fps->file = f;
+    /* Reset and save the state. */
+    fps = (real_fps_t *)Malloc(sizeof(real_fps_t));
+    fps->ptype = ptype;
+    fps->opts = opts;
+    fps->need_separator = False;
+    fps->broken = False;
+    fps->spp = 1;
+    fps->screens = 0;
+    fps->file = f;
 
-	if (caption != NULL) {
-		char *xcaption;
-	    	char *ts = strstr(caption, "%T%");
+    if (caption != NULL) {
+	char *xcaption;
+	char *ts = strstr(caption, "%T%");
 
-		if (ts != NULL) {
-		    	time_t t = time(NULL);
-			struct tm *tm = localtime(&t);
+	if (ts != NULL) {
+	    time_t t = time(NULL);
+	    struct tm *tm = localtime(&t);
 
-		    	xcaption = Malloc(strlen(caption) + 1 - 3 + 19);
-			strncpy(xcaption, caption, ts - caption);
-			sprintf(xcaption + (ts - caption),
-				"%04d-%02d-%02d %02d:%02d:%02d",
-				tm->tm_year + 1900,
-				tm->tm_mon + 1,
-				tm->tm_mday,
-				tm->tm_hour,
-				tm->tm_min,
-				tm->tm_sec);
-			strcat(xcaption, ts + 3);
-		} else {
-		    	xcaption = NewString(caption);
-		}
-		fps->caption = xcaption;
+	    xcaption = Malloc(strlen(caption) + 1 - 3 + 19);
+	    strncpy(xcaption, caption, ts - caption);
+	    sprintf(xcaption + (ts - caption),
+		    "%04d-%02d-%02d %02d:%02d:%02d",
+		    tm->tm_year + 1900,
+		    tm->tm_mon + 1,
+		    tm->tm_mday,
+		    tm->tm_hour,
+		    tm->tm_min,
+		    tm->tm_sec);
+	    strcat(xcaption, ts + 3);
 	} else {
-		fps->caption = NULL;
+	    xcaption = NewString(caption);
+	}
+	fps->caption = xcaption;
+    } else {
+	fps->caption = NULL;
+    }
+
+    if (printer_name != NULL && printer_name[0]) {
+	fps->printer_name = NewString(printer_name);
+    } else {
+	fps->printer_name = NULL;
+    }
+
+    switch (ptype) {
+    case P_RTF: {
+	char *pt_font = get_resource(ResPrintTextFont);
+	char *pt_size = get_resource(ResPrintTextSize);
+	int pt_nsize;
+
+	if (pt_font == NULL) {
+	    pt_font = "Courier New";
+	}
+	if (pt_size == NULL) {
+	    pt_size = "8";
+	}
+	pt_nsize = atoi(pt_size);
+	if (pt_nsize <= 0) {
+	    pt_nsize = 8;
 	}
 
-	if (printer_name != NULL && printer_name[0]) {
-		fps->printer_name = NewString(printer_name);
-	} else {
-		fps->printer_name = NULL;
-	}
-
-	switch (ptype) {
-	case P_RTF: {
-		char *pt_font = get_resource(ResPrintTextFont);
-		char *pt_size = get_resource(ResPrintTextSize);
-		int pt_nsize;
-
-		if (pt_font == NULL)
-			pt_font = "Courier New";
-		if (pt_size == NULL)
-			pt_size = "8";
-		pt_nsize = atoi(pt_size);
-		if (pt_nsize <= 0)
-			pt_nsize = 8;
-
-		if (fprintf(f, "{\\rtf1\\ansi\\ansicpg%u\\deff0\\deflang1033{\\fonttbl{\\f0\\fmodern\\fprq1\\fcharset0 %s;}}\n"
-			    "\\viewkind4\\uc1\\pard\\f0\\fs%d ",
+	if (fprintf(f, "{\\rtf1\\ansi\\ansicpg%u\\deff0\\deflang1033{"
+		    "\\fonttbl{\\f0\\fmodern\\fprq1\\fcharset0 %s;}}\n"
+		    "\\viewkind4\\uc1\\pard\\f0\\fs%d ",
 #if defined(_WIN32) /*[*/
-			    GetACP(),
+		    GetACP(),
 #else /*][*/
-			    1252, /* the number doesn't matter */
+		    1252, /* the number doesn't matter */
 #endif /*]*/
-			    pt_font, pt_nsize * 2) < 0) {
-			rv = FPS_STATUS_ERROR;
-		}
-		if (rv == FPS_STATUS_SUCCESS && fps->caption != NULL) {
-			char *hcaption = rtf_caption(fps->caption);
-
-			if (fprintf(f, "%s\\par\\par\n", hcaption) < 0)
-				rv = FPS_STATUS_ERROR;
-			Free(hcaption);
-		}
-		break;
+		    pt_font, pt_nsize * 2) < 0) {
+	    rv = FPS_STATUS_ERROR;
 	}
-	case P_HTML: {
-		char *hcaption = NULL;
+	if (rv == FPS_STATUS_SUCCESS && fps->caption != NULL) {
+	    char *hcaption = rtf_caption(fps->caption);
 
-		/* Make the caption HTML-safe. */
-		if (fps->caption != NULL)
-			hcaption = html_caption(fps->caption);
-
-		/* Print the preamble. */
-		if (!(opts & FPS_NO_HEADER) &&
-			fprintf(f, "<html>\n"
-			   "<head>\n"
-			   " <meta http-equiv=\"Content-Type\" "
-			     "content=\"text/html; charset=UTF-8\">\n"
-			   "</head>\n"
-			   " <body>\n") < 0)
-			rv = FPS_STATUS_ERROR;
-		if (rv == FPS_STATUS_SUCCESS && hcaption) {
-			if (fprintf(f, "<p>%s</p>\n", hcaption) < 0)
-				rv = FPS_STATUS_ERROR;
-			Free(hcaption);
-		}
-		break;
+	    if (fprintf(f, "%s\\par\\par\n", hcaption) < 0) {
+		rv = FPS_STATUS_ERROR;
+	    }
+	    Free(hcaption);
 	}
-	case P_TEXT:
-		if (fps->caption != NULL) {
-			if (fprintf(f, "%s\n\n", fps->caption) < 0) {
-				rv = FPS_STATUS_ERROR;
-			}
-		}
-		break;
-	case P_GDI:
+	break;
+    }
+    case P_HTML: {
+	char *hcaption = NULL;
+
+	/* Make the caption HTML-safe. */
+	if (fps->caption != NULL) {
+	    hcaption = html_caption(fps->caption);
+	}
+
+	/* Print the preamble. */
+	if (!(opts & FPS_NO_HEADER) &&
+		fprintf(f, "<html>\n"
+		   "<head>\n"
+		   " <meta http-equiv=\"Content-Type\" "
+		     "content=\"text/html; charset=UTF-8\">\n"
+		   "</head>\n"
+		   " <body>\n") < 0) {
+	    rv = FPS_STATUS_ERROR;
+	}
+	if (rv == FPS_STATUS_SUCCESS && hcaption) {
+	    if (fprintf(f, "<p>%s</p>\n", hcaption) < 0) {
+		rv = FPS_STATUS_ERROR;
+	    }
+	    Free(hcaption);
+	}
+	break;
+    }
+    case P_TEXT:
+	if (fps->caption != NULL) {
+	    if (fprintf(f, "%s\n\n", fps->caption) < 0) {
+		rv = FPS_STATUS_ERROR;
+	    }
+	}
+	break;
+    case P_GDI:
 #if defined(WC3270) /*[*/
-		switch (gdi_print_start(printer_name)) {
-		case GDI_STATUS_SUCCESS:
-			break;
-		case GDI_STATUS_ERROR:
-			rv = FPS_STATUS_ERROR;
-			break;
-		case GDI_STATUS_CANCEL:
-			rv = FPS_STATUS_CANCEL;
-			break;
-		}
+	switch (gdi_print_start(printer_name, opts)) {
+	case GDI_STATUS_SUCCESS:
+	    break;
+	case GDI_STATUS_ERROR:
+	    rv = FPS_STATUS_ERROR;
+	    break;
+	case GDI_STATUS_CANCEL:
+	    rv = FPS_STATUS_CANCEL;
+	    break;
+	}
 #endif /*]*/
-		break;
-	}
+	break;
+    }
 
-	/* Set up screens-per-page. */
-	pt_spp = get_resource(ResPrintTextScreensPerPage);
-	if (pt_spp != NULL) {
-		fps->spp = atoi(pt_spp);
-		if (fps->spp < 1 || fps->spp > 5) {
-			fps->spp = 1;
-		}
+    /* Set up screens-per-page. */
+    pt_spp = get_resource(ResPrintTextScreensPerPage);
+    if (pt_spp != NULL) {
+	fps->spp = atoi(pt_spp);
+	if (fps->spp < 1 || fps->spp > 5) {
+	    fps->spp = 1;
 	}
+    }
 
-	if (rv != FPS_STATUS_SUCCESS) {
-		/* We've failed; there's no point in returning the context. */
-		Free(fps->caption);
-		Free(fps->printer_name);
-		Free(fps);
-		*fps_ret = NULL;
-	} else {
-		*fps_ret = (fps_t)(void *)fps;
-	}
+    if (rv != FPS_STATUS_SUCCESS) {
+	/* We've failed; there's no point in returning the context. */
+	Free(fps->caption);
+	Free(fps->printer_name);
+	Free(fps);
+	*fps_ret = NULL;
+    } else {
+	*fps_ret = (fps_t)(void *)fps;
+    }
 
-	return rv;
+    return rv;
 }
 
 #define FAIL do { \
-	rv = -1; \
-	goto done; \
+    rv = -1; \
+    goto done; \
 } while(False)
 
 /*
