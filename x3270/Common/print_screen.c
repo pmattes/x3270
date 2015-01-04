@@ -172,10 +172,15 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     Boolean use_string = False;
     Boolean replace = False;
     char *temp_name = NULL;
+#if defined(WS3270) /*[*/
+    unsigned opts = FPS_EVEN_IF_EMPTY | FPS_NO_DIALOG;
+#else /*][*/
     unsigned opts = FPS_EVEN_IF_EMPTY;
+#endif /*]*/
     const char *caption = NULL;
     FILE *f;
     int fd = -1;
+    fps_status_t status;
 
     action_debug("PrintText", ia, argc, argv);
 
@@ -187,8 +192,11 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
      *            'file')
      *  rtf      generates RTF output instead of ASCII text (and implies
      *            'file')
-     *  gdi      prints to a GDI printer (wc3270 only)
-     *  nodialog skip print dialog (wc3270 only)
+     *  gdi      prints to a GDI printer (Windows only)
+     *  nodialog skip print dialog (Windows only)
+     *            this is the default for ws3270
+     *  dialog use print dialog (Windows only)
+     *            this is the default for wc3270
      *  replace  replace the file
      *  append   append to the file, if it exists (default)
      *  wordpad  prints via WordPad (wc3270 only)
@@ -197,7 +205,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
      *           Adds caption text above the screen
      *           %T% is replaced by a timestamp
      *  secure   disables the pop-up dialog, if this action is invoked from
-     *            a keymap
+     *            a keymap (x3270 only)
      *  command  directs the output to a command (this is the default, but
      *            allows the command to be one of the other keywords);
      *  	      must be the last keyword
@@ -219,13 +227,15 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	} else if (!strcasecmp(argv[i], "append")) {
 	    replace = False;
 	}
-#if defined(WC3270) /*[*/
+#if defined(_WIN32) /*[*/
 	else if (!strcasecmp(argv[i], "gdi")) {
 	    ptype = P_GDI;
 	} else if (!strcasecmp(argv[i], "wordpad")) {
 	    ptype = P_RTF;
 	} else if (!strcasecmp(argv[i], "nodialog")) {
 	    opts |= FPS_NO_DIALOG;
+	} else if (!strcasecmp(argv[i], "dialog")) {
+	    opts &= ~FPS_NO_DIALOG;
 	}
 #endif /*]*/
 	else if (!strcasecmp(argv[i], "secure")) {
@@ -324,6 +334,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 		return False;
 	    }
 	    f = fdopen(fd, "w+");
+	    vtrace("PrintText: using '%s'\n", temp_name);
 	} else {
 	    if (name == NULL || !*name) {
 		popup_an_error("PrintText: missing filename");
@@ -345,6 +356,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	} else {
 	    f = fdopen(fd, "w+");
 	}
+	vtrace("PrintText: using '%s'\n", temp_name);
 #endif /*]*/
     }
     if (f == NULL) {
@@ -361,14 +373,19 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     if (caption == NULL) {
 	caption = default_caption();
     }
-    switch (fprint_screen(f, ptype, opts, caption, name)) {
+    status = fprint_screen(f, ptype, opts, caption, name);
+    switch (status) {
     case FPS_STATUS_SUCCESS:
     case FPS_STATUS_SUCCESS_WRITTEN:
+	vtrace("PrintText: printing succeeded.\n");
 	break;
     case FPS_STATUS_ERROR:
 	popup_an_error("Screen print failed.");
 	/* fall through */
     case FPS_STATUS_CANCEL:
+	if (status == FPS_STATUS_CANCEL) {
+	    vtrace("PrintText: printing canceled.\n");
+	}
 	fclose(f);
 	if (temp_name) {
 	    unlink(temp_name);
@@ -376,46 +393,51 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	return False;
     }
+
     if (use_string) {
 	char buf[8192];
 
+	/* Print to string. */
 	rewind(f);
 	while (fgets(buf, sizeof(buf), f) != NULL) {
 	    action_output("%s", buf);
 	}
-	if (use_file) {
-	    fclose(f);
-	} else {
-#if !defined(_WIN32) /*[*/
-	    print_text_done(f);
-#else /*][*/
-	    fclose(f);
-	    if (ptype == P_RTF) {
-# if defined(S3270) /*[*/
-		/* Run WordPad to print the file, synchronusly. */
-		start_wordpad_sync("PrintText", temp_name, name);
-# else /*][*/
-		/* Run WordPad to print the file, asynchronusly. */
-		start_wordpad_async("PrintText", temp_name, name);
-# endif /*]*/
-	    } else if (ptype == P_GDI) {
-		/* All done with the temp file. */
-		unlink(temp_name);
-	    }
-# if !defined(S3270) /*[*/
-	    if (appres.do_confirms) {
-		popup_an_info("Screen image printing.\n");
-	    }
-# endif /*]*/
-#endif /*]*/
-	}
-#if !defined(WC3270) /*[*/
-	if (temp_name) {
-	    unlink(temp_name);
-	    Free(temp_name);
-	}
-#endif /*]*/
+	unlink(temp_name);
+	Free(temp_name);
+	return True;
     }
+
+    if (use_file) {
+	/* Print to specified file. */
+	fclose(f);
+	return True;
+    }
+
+    /* Print to printer. */
+#if !defined(_WIN32) /*[*/
+    print_text_done(f);
+#else /*][*/
+    fclose(f);
+    if (ptype == P_RTF) {
+# if defined(S3270) /*[*/
+	/* Run WordPad to print the file, synchronusly. */
+	start_wordpad_sync("PrintText", temp_name, name);
+	unlink(temp_name);
+# else /*][*/
+	/* Run WordPad to print the file, asynchronusly. */
+	start_wordpad_async("PrintText", temp_name, name);
+# endif /*]*/
+    } else if (ptype == P_GDI) {
+	/* All done with the temp file. */
+	unlink(temp_name);
+    }
+# if !defined(S3270) /*[*/
+    if (appres.do_confirms) {
+	popup_an_info("Screen image printing.\n");
+    }
+# endif /*]*/
+#endif /*]*/
+    Free(temp_name);
     return True;
 }
 

@@ -43,7 +43,7 @@
 #include "resources.h"
 
 #include "fprint_screenc.h"
-#if defined(WC3270) /*[*/
+#if defined(_WIN32) /*[*/
 # include "gdi_printc.h"
 #endif /*]*/
 #include "trace.h"
@@ -345,7 +345,7 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 	}
 	break;
     case P_GDI:
-#if defined(WC3270) /*[*/
+#if defined(_WIN32) /*[*/
 	switch (gdi_print_start(printer_name, opts)) {
 	case GDI_STATUS_SUCCESS:
 	    break;
@@ -408,7 +408,7 @@ fprint_screen_body(fps_t ofps)
 	Boolean fa_high, current_high;
 	Boolean fa_ital, current_ital;
 	Boolean mi;
-#if defined(WC3270) /*[*/
+#if defined(_WIN32) /*[*/
 	gdi_header_t h;
 #endif /*]*/
 	fps_status_t rv = FPS_STATUS_SUCCESS;
@@ -490,7 +490,7 @@ fprint_screen_body(fps_t ofps)
 			}
 		}
 		break;
-#if defined(WC3270) /*[*/
+#if defined(_WIN32) /*[*/
 	case P_GDI:
 		/*
 		 * Write the current screen buffer to the file.
@@ -796,7 +796,7 @@ fprint_screen_done(fps_t *ofps)
 				rv = FPS_STATUS_ERROR;
 			}
 			break;
-#if defined(WC3270) /*[*/
+#if defined(_WIN32) /*[*/
 		case P_GDI:
 			vtrace("Printing to GDI printer\n");
 			if (gdi_print_finish(fps->file, fps->caption) < 0) {

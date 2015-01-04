@@ -23,6 +23,7 @@
     <ClCompile Include="..\..\ws3270-3.3\ft.c" />
     <ClCompile Include="..\..\ws3270-3.3\ft_cut.c" />
     <ClCompile Include="..\..\ws3270-3.3\ft_dft.c" />
+    <ClCompile Include="..\..\ws3270-3.3\gdi_print.c" />
     <ClCompile Include="..\..\ws3270-3.3\glue.c" />
     <ClCompile Include="..\..\ws3270-3.3\host.c" />
     <ClCompile Include="..\..\ws3270-3.3\httpd-core.c" />

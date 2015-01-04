@@ -65,7 +65,7 @@ SRCS = $(COMMON_SOURCES) $(HTTPD_SOURCES) $(WS3270_SOURCES)
 VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(WS3270_OBJECTS) fallbacks.o
 
 OBJECTS = $(VOBJS) version.o
-LIBS = $(SSLLIB) -lws2_32
+LIBS = $(SSLLIB) -lws2_32 -lcomdlg32 -lgdi32 -lwinspool
 SHRTLIBS = -lole32 -luuid
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 

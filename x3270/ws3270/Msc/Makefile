@@ -51,7 +51,8 @@ VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(WS3270_OBJECTS) ws3270.RES \
 	fallbacks.obj
 
 OBJECTS = $(VOBJS) version.obj
-LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib shell32.lib
+LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib shell32.lib comdlg32.lib \
+       gdi32.lib winspool.lib
 SHRTLIBS = ole32.lib
 WIZLIBS = ole32.lib winspool.lib advapi32.lib
 

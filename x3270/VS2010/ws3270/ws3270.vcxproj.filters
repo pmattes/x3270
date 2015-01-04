@@ -39,6 +39,9 @@
     <ClCompile Include="..\..\ws3270-3.3\ft_dft.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\ws3270-3.3\gdi_print.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\ws3270-3.3\glue.c">
       <Filter>Source Files</Filter>
     </ClCompile>
