@@ -1069,11 +1069,16 @@ XX_TR(XX_TDH(XX_BLOCK()PA`'XX_LPAREN`'XX_FI(n)`'XX_RPAREN)	XX_TD(Program Attenti
 XX_TR(XX_TDH(XX_BLOCK()PF`'XX_LPAREN`'XX_FI(n)`'XX_RPAREN)	XX_TD(Program Function XX_SM(AID) (XX_FI(n) from 1 to 24)))
 XX_TR(XX_TDH(`PreviousWord')	XX_TD(move cursor to previous word))
 ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(`Paste')	XX_TD(insert clipboard contents))')dnl
-ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,tcl3270,,`XX_TR(XX_TDH(Printer(Start[,XX_FI(lu)]|Stop))	XX_TD(start or stop printer session))
-ifelse(XX_PLATFORM,windows,`XX_TR(XX_TDH(PrintText([gdi|wordpad,][nodialog,]XX_FI([printer-name])))	XX_TD(print screen text on printer))',
-`XX_TR(XX_TDH(PrintText(XX_FI(command)))	XX_TD(print screen text on printer))')
+ifelse(XX_PRODUCT,s3270,,XX_PRODUCT,ws3270,,XX_PRODUCT,tcl3270,,
+`XX_TR(XX_TDH(Printer(Start[,XX_FI(lu)]|Stop))	XX_TD(start or stop printer session))
+')dnl
+ifelse(XX_PLATFORM,windows,`XX_TR(XX_TDH(PrintText([gdi|wordpad,][dialog|nodialog,]XX_FI([printer-name])))	XX_TD(print screen text on printer))
+')dnl
+ifelse(XX_PRODUCT,ws3270,,XX_PRODUCT,wc3270,,XX_PRODUCT,tcl3270,,
+`XX_TR(XX_TDH(PrintText(XX_FI(command)))	XX_TD(print screen text on printer))
+')dnl
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(PrintWindow(XX_FI(command)))	XX_TD(print screen image (bitmap) on printer))
-')')dnl
+')dnl
 XX_TR(XX_TDH(Quit)	XX_TD(exit XX_FB(XX_PRODUCT)))
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(XX_BLOCK()Reconnect)	XX_TD(reconnect to previous host))
 ')dnl
@@ -1230,13 +1235,19 @@ XX_LP
 Multiple arguments can include keywords to control the output of
 XX_FB(PrintText):
 XX_TPS()dnl
-ifelse(XX_PRODUCT,wc3270,`XX_TP(XX_FB(gdi))
+ifelse(XX_PLATFORM,windows,`XX_TP(XX_FB(gdi))
 Print directly to the printer using GDI, instead of creating an RTF file and
 running WordPad to print it. (This is the default).
-XX_TP(XX_FB(nodialog))
-In GDI mode, skip the usual Windows print dialog.
 XX_TP(XX_FB(wordpad))
 Create an RTF file and run WordPad to print it. (This was the former default).
+XX_TP(XX_FB(dialog))
+In GDI mode, pop up the Windows print dialog.
+ifelse(XX_PRODUCT,wc3270,`(This is the default.)
+')dnl
+XX_TP(XX_FB(nodialog))
+In GDI mode, skip the usual Windows print dialog.
+ifelse(XX_PRODUCT,ws3270,`(This is the default.)
+')dnl
 ')dnl
 XX_TP(XX_FB(file) XX_FI(filename))
 Save the output in a file.
@@ -1413,7 +1424,7 @@ a keymap that maps some other keysym onto the XX_FB(Compose) action.
 ')dnl
 ifelse(XX_PRODUCT,x3270,`include(apl.inc)')dnl
 ifelse(XX_PRODUCT,c3270,
-`XX_SH(Printer Support)
+`XX_SH(Printer Session Support)
 XX_PRODUCT supports associated printer sessions via the XX_FI(pr3287)(1)
 program.
 The XX_FB(Printer) action is used to start or stop a XX_FI(pr3287) session.
@@ -1426,28 +1437,8 @@ with a specific XX_FI(lu).
 XX_LP
 The action XX_FB(Printer Stop) stops a printer session.
 XX_LP
-The resource XX_FB(c3270.printer.command) specifies the command used to print
-each job; it defaults to XX_FB(lpr).
-The resource XX_FB(c3270.printer.assocCommandLine) specifies the command
-used to start an associated printer session.  It defaults to:
-XX_LP
-XX_RS(pr3287 -assoc %L% -command "%C%" %P% %H%)
-XX_LP
-The resource XX_FB(c3270.printer.luCommandLine) specifies the command used
-to start a specific-LU printer session.  It defaults to:
-XX_LP
-XX_RS(pr3287 -command "%C%" %R% %P% %L%@%H%)
-XX_LP
-When the printer session command is run, the following substitutions are made:
-XX_LP
-XX_TS(2,l l.)
-XX_TR(XX_TD(Token)	XX_TD(Substitition))
-XX_TR(XX_TD(%C%)	XX_TD(Command (value of XX_FB(c3270.printer.command))))
-XX_TR(XX_TD(%H%)	XX_TD(Host IP address))
-XX_TR(XX_TD(%L%)	XX_TD(Current or specified LU))
-XX_TR(XX_TD(%P%)	XX_TD(Proxy specification))
-XX_TR(XX_TD(%R%)	XX_TD(Character set))
-XX_TE
+The resource XX_FB(c3270.printer.options) specifies extra options, such as
+XX_FB(-trace) to pass to XX_FI(pr3287).
 XX_LP
 See XX_FI(pr3287)(1) for further details.
 XX_LP
@@ -1458,7 +1449,7 @@ session.  If it is set an LU name, then the automatic printer session will be
 associated with the specified LU.
 ')dnl
 ifelse(XX_PRODUCT,wc3270,
-`XX_SH(Printer Support)
+`XX_SH(Printer Session Support)
 XX_PRODUCT supports associated printer sessions via the XX_FI(wpr3287)(1)
 program.
 The XX_FB(Printer) action is used to start or stop a XX_FI(wpr3287) session.
@@ -1478,25 +1469,8 @@ variable, if set.
 Otherwise the default system printer is used.
 This resource also controls the printer used by the XX_FB(PrintText) action.
 XX_LP
-The resource XX_FB(wc3270.printer.assocCommandLine) specifies the command
-used to start an associated printer session.  It defaults to:
-XX_LP
-XX_RS(wpr3287.exe -assoc %L% %R% %P% %H%)
-XX_LP
-The resource XX_FB(wc3270.printer.luCommandLine) specifies the command used
-to start a specific-LU printer session.  It defaults to:
-XX_LP
-XX_RS(wpr3287.exe %R% %P% %L%@%H%)
-XX_LP
-When the printer session command is run, the following substitutions are made:
-XX_LP
-XX_TS(2,l l.)
-XX_TR(XX_TD(Token)	XX_TD(Substitition))
-XX_TR(XX_TD(%H%)	XX_TD(Host IP address))
-XX_TR(XX_TD(%L%)	XX_TD(Current or specified LU))
-XX_TR(XX_TD(%P%)	XX_TD(Proxy specification))
-XX_TR(XX_TD(%R%)	XX_TD(Character set))
-XX_TE
+The resource XX_FB(wc3270.printer.options) specifies extra options, such as
+XX_FB(-trace) to pass to XX_FI(wpr3287).
 XX_LP
 See XX_FI(wpr3287)(1) for further details.
 XX_LP
