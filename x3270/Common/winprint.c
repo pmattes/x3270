@@ -223,7 +223,7 @@ run_wordpad(LPVOID lpParameter)
  * Close a completed thread handle.
  */
 static void
-close_wsh(unsigned long fd, ioid_t id)
+close_wsh(iosrc_t fd, ioid_t id)
 {
     CloseHandle((HANDLE)fd);
     RemoveInput(id);
@@ -324,5 +324,5 @@ start_wordpad_async(const char *action_name, const char *filename,
      * Make sure the thread handle is closed when the screen printing is
      * done.
      */
-    (void) AddInput((unsigned long)print_thread, close_wsh);
+    (void) AddInput(print_thread, close_wsh);
 }

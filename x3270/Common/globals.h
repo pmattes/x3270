@@ -394,7 +394,12 @@ enum keytype { KT_STD, KT_GE };
 #define PT_OFF_THE_SPOT	"OffTheSpot"
 #define PT_ON_THE_SPOT		"OnTheSpot"
 
-/* I/O ID typedef */
+/* I/O typedefs */
+#if !defined(_WIN32) /*[*/
+typedef int iosrc_t;
+#else /*][*/
+typedef HANDLE iosrc_t;
+#endif /*]*/
 typedef unsigned long ioid_t;
 
 /* Screen print types. */

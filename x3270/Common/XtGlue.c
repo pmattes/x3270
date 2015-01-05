@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1999-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -471,7 +471,7 @@ RemoveTimeOut(ioid_t timer)
 /* Input events. */ 
 typedef struct input {  
         struct input *next;
-        unsigned long source; 
+        iosrc_t source; 
         int condition;
 	iofn_t proc;
 } input_t;          
@@ -479,7 +479,7 @@ static input_t *inputs = NULL;
 static Boolean inputs_changed = False;
 
 ioid_t
-AddInput(unsigned long source, iofn_t fn)
+AddInput(iosrc_t source, iofn_t fn)
 {
 	input_t *ip;
 
@@ -494,7 +494,7 @@ AddInput(unsigned long source, iofn_t fn)
 }
 
 ioid_t
-AddExcept(unsigned long source, iofn_t fn)
+AddExcept(iosrc_t source, iofn_t fn)
 {
 #if defined(_WIN32) /*[*/
 	return 0;
@@ -514,7 +514,7 @@ AddExcept(unsigned long source, iofn_t fn)
 
 #if !defined(_WIN32) /*[*/
 ioid_t
-AddOutput(unsigned long source, iofn_t fn)
+AddOutput(iosrc_t source, iofn_t fn)
 {
 	input_t *ip;
 
@@ -565,19 +565,19 @@ select_setup(int *nfds, fd_set *readfds, fd_set *writefds,
 	for (ip = inputs; ip != NULL; ip = ip->next) {
 		if ((unsigned long)ip->condition & InputReadMask) {
 			FD_SET(ip->source, readfds);
-			if ((int)ip->source >= *nfds)
+			if (ip->source >= *nfds)
 				*nfds = ip->source + 1;
 			r = 1;
 		}
 		if ((unsigned long)ip->condition & InputWriteMask) {
 			FD_SET(ip->source, writefds);
-			if ((int)ip->source >= *nfds)
+			if (ip->source >= *nfds)
 				*nfds = ip->source + 1;
 			r = 1;
 		}
 		if ((unsigned long)ip->condition & InputExceptMask) {
 			FD_SET(ip->source, exceptfds);
-			if ((int)ip->source >= *nfds)
+			if (ip->source >= *nfds)
 				*nfds = ip->source + 1;
 			r = 1;
 		}
@@ -653,7 +653,7 @@ process_events(Boolean block)
 	for (ip = inputs; ip != NULL; ip = ip->next) {
 		if ((unsigned long)ip->condition & InputReadMask) {
 #if defined(_WIN32) /*[*/
-			ha[nha++] = (HANDLE)ip->source;
+			ha[nha++] = ip->source;
 #else /*][*/
 			FD_SET(ip->source, &rfds);
 #endif /*]*/

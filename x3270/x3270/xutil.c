@@ -86,7 +86,7 @@ io_fn(XtPointer closure, int *source, XtInputId *id)
 }
 
 ioid_t
-AddInput(unsigned long sock, iofn_t fn)
+AddInput(iosrc_t sock, iofn_t fn)
 {
     iorec_t *iorec;
 
@@ -102,7 +102,7 @@ AddInput(unsigned long sock, iofn_t fn)
 }
 
 ioid_t
-AddExcept(unsigned long sock, iofn_t fn)
+AddExcept(iosrc_t sock, iofn_t fn)
 {
     iorec_t *iorec;
 
@@ -117,7 +117,7 @@ AddExcept(unsigned long sock, iofn_t fn)
 }
 
 ioid_t
-AddOutput(unsigned long sock, iofn_t fn)
+AddOutput(iosrc_t sock, iofn_t fn)
 {
     iorec_t *iorec;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2014, Paul Mattes.
+ * Copyright (c) 2000-2015, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -170,7 +170,7 @@ static int screen_yoffset = 0;	/* Vertical offset to top of screen.
 				   If nonzero (2, actually), menu bar is at the
 				   top of the display. */
 
-static void kybd_input(unsigned long fd, ioid_t id);
+static void kybd_input(iosrc_t fd, ioid_t id);
 static void kybd_input2(INPUT_RECORD *ir);
 static void draw_oia(void);
 static void status_half_connect(Boolean ignored);
@@ -1997,7 +1997,7 @@ handle_mouse_event(MOUSE_EVENT_RECORD *me)
 
 /* Keyboard input. */
 static void
-kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
+kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
     	int rc;
 	INPUT_RECORD ir;
@@ -2297,7 +2297,7 @@ screen_resume(void)
 	screen_disp(False);
 	onscreen_valid = FALSE;
 	refresh();
-	input_id = AddInput((unsigned long)chandle, kybd_input);
+	input_id = AddInput(chandle, kybd_input);
 
 	if (SetConsoleMode(chandle, ENABLE_PROCESSED_INPUT |
 		    		    ENABLE_MOUSE_INPUT) == 0) {

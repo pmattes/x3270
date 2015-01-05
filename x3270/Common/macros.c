@@ -214,12 +214,12 @@ int peer_errno;
 
 static void cleanup_socket(Boolean b);
 static void script_prompt(Boolean success);
-static void script_input(unsigned long fd, ioid_t id);
+static void script_input(iosrc_t fd, ioid_t id);
 static void sms_pop(Boolean can_exit);
-static void socket_connection(unsigned long fd, ioid_t id);
+static void socket_connection(iosrc_t fd, ioid_t id);
 #if defined(_WIN32) /*[*/
-static void child_socket_connection(unsigned long fd, ioid_t id);
-static void child_exited(unsigned long fd, ioid_t id);
+static void child_socket_connection(iosrc_t fd, ioid_t id);
+static void child_exited(iosrc_t fd, ioid_t id);
 #endif /*]*/
 static void wait_timed_out(ioid_t id);
 static void read_from_file(void);
@@ -430,7 +430,7 @@ script_enable(void)
 #if defined(_WIN32) /*[*/
     /* Windows child scripts are listening sockets. */
     if (sms->type == ST_CHILD && sms->inhandle != INVALID_HANDLE_VALUE) {
-	sms->listen_id = AddInput((int)sms->inhandle, child_socket_connection);
+	sms->listen_id = AddInput(sms->inhandle, child_socket_connection);
 	return;
     }
 #endif /*]*/
@@ -438,7 +438,7 @@ script_enable(void)
     if (sms->infd >= 0 && stdin_id == 0) {
 	vtrace("Enabling input for %s[%d]\n", ST_NAME, sms_depth);
 #if defined(_WIN32) /*[*/
-	stdin_id = AddInput((int)sms->inhandle, script_input);
+	stdin_id = AddInput(sms->inhandle, script_input);
 #else /*][*/
 	stdin_id = AddInput(sms->infd, script_input);
 #endif /*]*/
@@ -616,7 +616,7 @@ sms_pop(Boolean can_exit)
     /* If this was a -socket peer, get ready for another connection. */
     if (sms->type == ST_PEER && sms->is_external) {
 #if defined(_WIN32) /*[*/
-	socket_id = AddInput((int)socket_event, socket_connection);
+	socket_id = AddInput(socket_event, socket_connection);
 #else /*][*/
 	socket_id = AddInput(socketfd, socket_connection);
 #endif /*]*/
@@ -777,7 +777,7 @@ peer_script_init(void)
 	    socketfd = -1;
 	    return;
 	}
-	socket_id = AddInput((int)socket_event, socket_connection);
+	socket_id = AddInput(socket_event, socket_connection);
 #else /*][*/
 	socket_id = AddInput(socketfd, socket_connection);
 #endif/*]*/
@@ -871,7 +871,7 @@ peer_script_init(void)
 
 /* Accept a new socket connection. */
 static void
-socket_connection(unsigned long fd _is_unused, ioid_t id _is_unused)
+socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
     socket_t accept_fd;
     sms_t *s;
@@ -936,7 +936,7 @@ socket_connection(unsigned long fd _is_unused, ioid_t id _is_unused)
 # if defined(_WIN32) /*[*/
 /* Accept a new socket connection from a child process. */
 static void
-child_socket_connection(unsigned long fd _is_unused, ioid_t id _is_unused)
+child_socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
     socket_t accept_fd;
     sms_t *old_sms;
@@ -994,7 +994,7 @@ cleanup_socket(Boolean b _is_unused)
 #if defined(_WIN32) /*[*/
 /* Process an event on a child script handle (presumably a process exit). */
 static void
-child_exited(unsigned long fd _is_unused, ioid_t id _is_unused)
+child_exited(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
     sms_t *s;
     DWORD status;
@@ -1866,7 +1866,7 @@ sms_info(const char *fmt, ...)
 
 /* Process available input from a script. */
 static void
-script_input(unsigned long fd _is_unused, ioid_t id _is_unused)
+script_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
     char buf[128];
     size_t n2r;
@@ -3644,11 +3644,10 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
      * Note that this is an asynchronous event -- exits for multiple
      * children can happen in any order.
      */
-    sms->exit_id = AddInput((unsigned long)process_information.hProcess,
-	    child_exited);
+    sms->exit_id = AddInput(process_information.hProcess, child_exited);
 
     /* Allow the child script to connect back to us. */
-    sms->listen_id = AddInput((unsigned long)hevent, child_socket_connection);
+    sms->listen_id = AddInput(hevent, child_socket_connection);
 
     /* Enable input. */
     script_enable();

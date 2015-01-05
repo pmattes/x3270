@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,8 @@
  */
 
 extern void x3270_exit(int n);
-extern void x_add_input(int net_sock);
+extern void x_add_input(socket_t net_sock);
 extern void x_except_off(void);
-extern void x_except_on(int net_sock);
+extern void x_except_on(socket_t net_sock);
 extern void x_remove_input(void);
 extern void xio_init(void);

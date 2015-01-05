@@ -53,12 +53,12 @@ extern void xs_error(const char *fmt, ...) printflike(1, 2);
 extern void xs_warning(const char *fmt, ...) printflike(1, 2);
 
 #if !defined(PR3287) /*[*/
-typedef void (*iofn_t)(unsigned long fd, ioid_t id);
+typedef void (*iofn_t)(iosrc_t, ioid_t id);
 typedef void (*tofn_t)(ioid_t id);
 # define NULL_IOID	0L
-extern ioid_t AddInput(unsigned long, iofn_t);
-extern ioid_t AddExcept(unsigned long, iofn_t);
-extern ioid_t AddOutput(unsigned long, iofn_t);
+extern ioid_t AddInput(iosrc_t fd, iofn_t fn);
+extern ioid_t AddExcept(iosrc_t fd, iofn_t fn);
+extern ioid_t AddOutput(iosrc_t fd, iofn_t fn);
 extern void RemoveInput(ioid_t);
 extern ioid_t AddTimeOut(unsigned long msec, tofn_t);
 extern void RemoveTimeOut(ioid_t id);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2014, Paul Mattes.
+ * Copyright (c) 2000-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -207,7 +207,7 @@ static Boolean default_colors = False;
 #endif /*]*/
 static Boolean screen_initted = False;
 
-static void kybd_input(unsigned long fd, ioid_t id);
+static void kybd_input(iosrc_t fd, ioid_t id);
 static void kybd_input2(int k, ucs4_t ucs4, int alt);
 static void draw_oia(void);
 static void screen_connect(Boolean connected);
@@ -1200,7 +1200,7 @@ escape_timeout(ioid_t id _is_unused)
 
 /* Keyboard input. */
 static void
-kybd_input(unsigned long fd _is_unused, ioid_t id _is_unused)
+kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
 	int k = 0;		/* KEY_XXX, or 0 */
 	ucs4_t ucs4 = 0;	/* input character, or 0 */

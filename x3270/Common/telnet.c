@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -315,7 +315,7 @@ static Boolean refused_tls = False;
 static Boolean any_host_data = False;
 
 #if !defined(_WIN32) /*[*/
-static void output_possible(unsigned long fd, ioid_t id);
+static void output_possible(iosrc_t fd, ioid_t id);
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
@@ -1098,30 +1098,30 @@ connection_complete(void)
  *	pending, to determine that the connection is complete.
  */
 static void
-output_possible(unsigned long fd, ioid_t id _is_unused)
+output_possible(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
-	vtrace("Output possible\n");
+    vtrace("Output possible\n");
 	
-	/*
-	 * Try a connect() again to see if the connection completed sucessfully.
-	 * On some systems, such as Linux, this is harmless and succeeds.
-	 * On others, such as MacOS, this is mostly harmless and fails
-	 * with EISCONN.
-	 */
-	if (connect(sock, &haddr[ha_ix].sa, sizeof(haddr[0])) < 0) {
-		if (errno != EISCONN) {
-			vtrace("RCVD socket error %d (%s)\n", socket_errno(),
-				strerror(errno));
-			popup_a_sockerr("Connection failed");
-			host_disconnect(True);
-			return;
-		}
+    /*
+     * Try a connect() again to see if the connection completed sucessfully.
+     * On some systems, such as Linux, this is harmless and succeeds.
+     * On others, such as MacOS, this is mostly harmless and fails
+     * with EISCONN.
+     */
+    if (connect(sock, &haddr[ha_ix].sa, sizeof(haddr[0])) < 0) {
+	if (errno != EISCONN) {
+	    vtrace("RCVD socket error %d (%s)\n", socket_errno(),
+		    strerror(errno));
+	    popup_a_sockerr("Connection failed");
+	    host_disconnect(True);
+	    return;
 	}
+    }
 
-	if (HALF_CONNECTED) {
-		connection_complete();
-	}
-	remove_output();
+    if (HALF_CONNECTED) {
+	connection_complete();
+    }
+    remove_output();
 }
 #endif /*]*/
 
@@ -1182,7 +1182,7 @@ net_disconnect(void)
  *	and calls process_ds to process the 3270 data stream.
  */
 void
-net_input(unsigned long fd _is_unused, ioid_t id _is_unused)
+net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
 	register unsigned char	*cp;
 	int	nr;
@@ -2570,20 +2570,20 @@ process_eor(void)
  *	Called when there is an exceptional condition on the socket.
  */
 void
-net_exception(unsigned long fd _is_unused, ioid_t id _is_unused)
+net_exception(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
 #if defined(LOCAL_PROCESS) /*[*/
-	if (local_process) {
-		vtrace("RCVD exception\n");
-	} else
+    if (local_process) {
+	vtrace("RCVD exception\n");
+    } else
 #endif /*[*/
-	{
-		vtrace("RCVD urgent data indication\n");
-		if (!syncing) {
-			syncing = 1;
-			x_except_off();
-		}
+    {
+	vtrace("RCVD urgent data indication\n");
+	if (!syncing) {
+	    syncing = 1;
+	    x_except_off();
 	}
+    }
 }
 
 /*

@@ -115,15 +115,15 @@ static struct pr3o {
   pr3287_stderr = { -1, 0L, 0L, 0 };
 
 #if !defined(_WIN32) /*[*/
-static void	pr3287_output(unsigned long fd, ioid_t id);
-static void	pr3287_error(unsigned long fd, ioid_t id);
+static void	pr3287_output(iosrc_t fd, ioid_t id);
+static void	pr3287_error(iosrc_t fd, ioid_t id);
 static void	pr3287_otimeout(ioid_t id);
 static void	pr3287_etimeout(ioid_t id);
 static void	pr3287_dump(struct pr3o *p, Boolean is_err, Boolean is_dead);
 #endif /*]*/
 static void	pr3287_host_connect(Boolean connected _is_unused);
 static void	pr3287_exiting(Boolean b _is_unused);
-static void	pr3287_accept(unsigned long fd, ioid_t id);
+static void	pr3287_accept(iosrc_t fd, ioid_t id);
 static void	pr3287_start_now(const char *lu, Boolean associated);
 
 /* Globals */
@@ -386,7 +386,7 @@ pr3287_start_now(const char *lu, Boolean associated)
 	pr3287_ls = INVALID_SOCKET;
 	return;
     }
-    pr3287_ls_id = AddInput((int)pr3287_ls_handle, pr3287_accept);
+    pr3287_ls_id = AddInput(pr3287_ls_handle, pr3287_accept);
 #else /*][*/
     pr3287_ls_id = AddInput(pr3287_ls, pr3287_accept);
 #endif /*]*/
@@ -709,14 +709,14 @@ pr3287_data(struct pr3o *p, Boolean is_err)
 
 /* The printer process has some output for us. */
 static void
-pr3287_output(unsigned long fd _is_unused, ioid_t id _is_unused)
+pr3287_output(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
     pr3287_data(&pr3287_stdout, False);
 }
 
 /* The printer process has some error output for us. */
 static void
-pr3287_error(unsigned long fd _is_unused, ioid_t id _is_unused)
+pr3287_error(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
     pr3287_data(&pr3287_stderr, True);
 }
@@ -787,7 +787,7 @@ pr3287_stop_sync(void)
 
 /* Input from pr3287 on the synchronization socket. */
 static void
-pr3287_sync_input(unsigned long fd _is_unused, ioid_t id _is_unused)
+pr3287_sync_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
     vtrace("Input or EOF on printer sync socket.\n");
     assert(pr3287_state >= P_RUNNING);
@@ -829,7 +829,7 @@ pr3287_stop_listening(void)
 
 /* Accept a synchronization connection from pr3287. */
 static void
-pr3287_accept(unsigned long fd _is_unused, ioid_t id)
+pr3287_accept(iosrc_t fd _is_unused, ioid_t id)
 {
     struct sockaddr_in sin;
     socklen_t len = sizeof(sin);
@@ -853,7 +853,7 @@ pr3287_accept(unsigned long fd _is_unused, ioid_t id)
 	    popup_an_error("Can't set socket handle events\n");
 	    x3270_exit(1);
 	}
-	pr3287_sync_id = AddInput((int)pr3287_sync_handle, pr3287_sync_input);
+	pr3287_sync_id = AddInput(pr3287_sync_handle, pr3287_sync_input);
 #else /*][*/
 	pr3287_sync_id = AddInput(pr3287_sync, pr3287_sync_input);
 #endif /*]*/

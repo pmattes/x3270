@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Paul Mattes.
+ * Copyright (c) 2014-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -160,7 +160,7 @@ hio_timeout(ioid_t id)
  * @param[in] id	I/O ID
  */
 void
-hio_socket_input(unsigned long fd, ioid_t id)
+hio_socket_input(iosrc_t fd, ioid_t id)
 {
     session_t *session;
     char buf[1024];
@@ -225,7 +225,7 @@ hio_socket_input(unsigned long fd, ioid_t id)
  * @param[in] id	I/O ID
  */
 void
-hio_connection(unsigned long fd, ioid_t id)
+hio_connection(iosrc_t fd, ioid_t id)
 {
     socket_t t;
     struct sockaddr_in sin;
@@ -271,8 +271,7 @@ hio_connection(unsigned long fd, ioid_t id)
 #if !defined(_WIN32) /*[*/
     session->ioid = AddInput(t, hio_socket_input);
 #else /*][*/
-    session->ioid = AddInput((unsigned long)session->event,
-	    hio_socket_input);
+    session->ioid = AddInput(session->event, hio_socket_input);
 #endif /*]*/
 
     /* Set the timeout for the first line of input. */
@@ -333,9 +332,10 @@ hio_init(struct sockaddr *sa, socklen_t sa_len)
 	SOCK_CLOSE(listen_s);
 	listen_s = INVALID_SOCKET;
     }
-    (void) AddInput((unsigned long)listen_event, hio_connection);
-#endif /*]*/
+    (void) AddInput(listen_event, hio_connection);
+#else /*][*/
     (void) AddInput(listen_s, hio_connection);
+#endif /*]*/
 }
 
 /**
@@ -497,8 +497,7 @@ hio_async_done(void *dhandle, httpd_status_t rv)
 #if !defined(_WIN32) /*[*/
 	session->ioid = AddInput(session->s, hio_socket_input);
 #else /*][*/
-	session->ioid = AddInput((unsigned long)session->event,
-		hio_socket_input);
+	session->ioid = AddInput(session->event, hio_socket_input);
 #endif /*]*/
     }
 

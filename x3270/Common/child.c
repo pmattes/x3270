@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009, 2013, Paul Mattes.
+ * Copyright (c) 2001-2009, 2013, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,8 +54,8 @@ static struct pr3o {
 } child_stdout = { -1, 0L, 0L, 0 },
   child_stderr = { -1, 0L, 0L, 0 };
 
-static void child_output(unsigned long fd, ioid_t id);
-static void child_error(unsigned long fd, ioid_t id);
+static void child_output(iosrc_t fd, ioid_t id);
+static void child_error(iosrc_t fd, ioid_t id);
 static void child_otimeout(ioid_t id);
 static void child_etimeout(ioid_t id);
 static void child_dump(struct pr3o *p, Boolean is_err);
@@ -195,14 +195,14 @@ child_data(struct pr3o *p, Boolean is_err)
 
 /* The child process has some output for us. */
 static void
-child_output(unsigned long fd _is_unused, ioid_t id _is_unused)
+child_output(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
 	child_data(&child_stdout, False);
 }
 
 /* The child process has some error output for us. */
 static void
-child_error(unsigned long fd _is_unused, ioid_t id _is_unused)
+child_error(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
 	child_data(&child_stderr, True);
 }

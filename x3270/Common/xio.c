@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2013, Paul Mattes.
+ * Copyright (c) 1993-2013, 2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -54,12 +54,12 @@ static Boolean excepting = False;
  * Called to set up input on a new network connection.
  */
 void
-x_add_input(int net_sock)
+x_add_input(socket_t net_sock)
 {
-	ns_exception_id = AddExcept(net_sock, net_exception);
-	excepting = True;
-	ns_read_id = AddInput(net_sock, net_input);
-	reading = True;
+    ns_exception_id = AddExcept((iosrc_t)net_sock, net_exception);
+    excepting = True;
+    ns_read_id = AddInput((iosrc_t)net_sock, net_input);
+    reading = True;
 }
 
 /*
@@ -68,10 +68,10 @@ x_add_input(int net_sock)
 void
 x_except_off(void)
 {
-	if (excepting) {
-		RemoveInput(ns_exception_id);
-		excepting = False;
-	}
+    if (excepting) {
+	RemoveInput(ns_exception_id);
+	excepting = False;
+    }
 }
 
 /*
@@ -80,16 +80,19 @@ x_except_off(void)
  * processed first.
  */
 void
-x_except_on(int net_sock)
+x_except_on(socket_t net_sock)
 {
-	if (excepting)
-		return;
-	if (reading)
-		RemoveInput(ns_read_id);
-	ns_exception_id = AddExcept(net_sock, net_exception);
-	excepting = True;
-	if (reading)
-		ns_read_id = AddInput(net_sock, net_input);
+    if (excepting) {
+	return;
+    }
+    if (reading) {
+	RemoveInput(ns_read_id);
+    }
+    ns_exception_id = AddExcept((iosrc_t)net_sock, net_exception);
+    excepting = True;
+    if (reading) {
+	ns_read_id = AddInput((iosrc_t)net_sock, net_input);
+    }
 }
 
 /*
@@ -98,14 +101,14 @@ x_except_on(int net_sock)
 void
 x_remove_input(void)
 {
-	if (reading) {
-		RemoveInput(ns_read_id);
-		reading = False;
-	}
-	if (excepting) {
-		RemoveInput(ns_exception_id);
-		excepting = False;
-	}
+    if (reading) {
+	RemoveInput(ns_read_id);
+	reading = False;
+    }
+    if (excepting) {
+	RemoveInput(ns_exception_id);
+	excepting = False;
+    }
 }
 
 /*
@@ -114,47 +117,47 @@ x_remove_input(void)
 void
 x3270_exit(int n)
 {
-	static Boolean already_exiting = 0;
+    static Boolean already_exiting = False;
 
-	/* Handle unintentional recursion. */
-	if (already_exiting)
-		return;
+    /* Handle unintentional recursion. */
+    if (already_exiting) {
+	return;
+    }
 
-	already_exiting = True;
+    already_exiting = True;
 
-	/* Flush any pending output (mostly for Windows). */
+    /* Flush any pending output (mostly for Windows). */
+    fflush(stdout);
+    fflush(stderr);
+
+    /* Turn off toggle-related activity. */
+    shutdown_toggles();
+
+    /* Shut down the socket gracefully. */
+    host_disconnect(False);
+
+    /* Tell anyone else who's interested. */
+    st_changed(ST_EXITING, True);
+
+    if (n) {
+	char buf[2];
+	char *r;
+
+	printf("\n[Press <Enter>] ");
 	fflush(stdout);
-	fflush(stderr);
-
-	/* Turn off toggle-related activity. */
-	shutdown_toggles();
-
-	/* Shut down the socket gracefully. */
-	host_disconnect(False);
-
-	/* Tell anyone else who's interested. */
-	st_changed(ST_EXITING, True);
-
-	if (n) {
-		char buf[2];
-		char *r;
-
-		printf("\n[Press <Enter>] ");
-		fflush(stdout);
-		r = fgets(buf, sizeof(buf), stdin);
-		r = r; /* keep gcc happy */
-
-	}
+	r = fgets(buf, sizeof(buf), stdin);
+	r = r; /* keep gcc happy */
+    }
 
 #if !defined(_WIN32) /*[*/
-	exit(n);
+    exit(n);
 #else /*][*/
-	/*
-	 * On Windows, call ExitProcess() instead of the POSIXish exit().
-	 * Apparently calling exit() in a ConsoleCtrlHandler is a bad thing on
-	 * XP, and causes a hang.
-	 */
-	ExitProcess(n);
+    /*
+     * On Windows, call ExitProcess() instead of the POSIXish exit().
+     * Apparently calling exit() in a ConsoleCtrlHandler is a bad thing on
+     * XP, and causes a hang.
+     */
+    ExitProcess(n);
 #endif /*]*/
 }
 
