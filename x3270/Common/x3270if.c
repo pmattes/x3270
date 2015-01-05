@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -727,9 +727,9 @@ iterative_io(int pid, unsigned short port)
 	if (verbose) {
 		fprintf(stderr, "<connected to port %d>\n", port);
 	}
-	socket_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+	socket_event = WSACreateEvent();
 	if (socket_event == NULL) {
-		fprintf(stderr, "CreateEvent failed: %s\n",
+		fprintf(stderr, "WSACreateEvent failed: %s\n",
 			win32_strerror(GetLastError()));
 		exit(2);
 	}

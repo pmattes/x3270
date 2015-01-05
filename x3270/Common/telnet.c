@@ -391,7 +391,7 @@ popup_a_sockerr(char *fmt, ...)
 #endif /*]*/
 
 /* Connect to one of the addresses in haddr[]. */
-static int
+static iosrc_t
 connect_to(int ix, Boolean noisy, Boolean *pending)
 {
 	int			on = 1;
@@ -401,7 +401,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 #if defined(OMTU) /*[*/
 	int			mtu = OMTU;
 #endif /*]*/
-#	define close_fail	{ (void) SOCK_CLOSE(sock); sock = INVALID_SOCKET; return -1; }
+#	define close_fail	{ (void) SOCK_CLOSE(sock); sock = INVALID_SOCKET; return INVALID_IOSRC; }
 #if defined(HAVE_LIBSSL) /*[*/
 	/* Set host_inaddr and host_in6addr for IP address validation. */
 	if (!accept_specified_host && hin[ix]) {
@@ -428,7 +428,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 	if ((sock = socket(haddr[ix].sa.sa_family, SOCK_STREAM, 0)) ==
 		    INVALID_SOCKET) {
 		popup_a_sockerr("socket");
-		return -1;
+		return INVALID_IOSRC;
 	}
 
 	/* set options for inline out-of-band data and keepalives */
@@ -509,11 +509,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 	/* all done */
 #if defined(_WIN32) /*[*/
 	if (sock_handle == NULL) {
-		char ename[256];
-
-		(void) snprintf(ename, sizeof(ename), "wc3270-%d", getpid());
-
-		sock_handle = CreateEvent(NULL, TRUE, FALSE, ename);
+		sock_handle = WSACreateEvent();
 		if (sock_handle == NULL) {
 			fprintf(stderr, "Cannot create socket handle: %s\n",
 			    win32_strerror(GetLastError()));
@@ -527,7 +523,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 		x3270_exit(1);
 	}
 
-	return (int)sock_handle;
+	return sock_handle;
 #else /*][*/
 	return sock;
 #endif /*]*/
@@ -566,7 +562,7 @@ is_numeric_host(const char *host)
  *	Called only once and is responsible for setting up the telnet
  *	variables.  Returns the file descriptor of the connected socket.
  */
-socket_t
+iosrc_t
 net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
     Boolean *pending)
 {
@@ -576,7 +572,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	int			passthru_len = 0;
 	unsigned short		passthru_port = 0;
 	char			errmsg[1024];
-	int			s;
+	iosrc_t			s;
 #if defined(HAVE_LIBSSL) /*[*/
 	Boolean			inh;
 #endif /*]*/
@@ -626,7 +622,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 		hp = gethostbyname(hn);
 		if (hp == (struct hostent *) 0) {
 			popup_an_error("Unknown passthru host: %s", hn);
-			return -1;
+			return INVALID_IOSRC;
 		}
 		(void) memmove(passthru_haddr, hp->h_addr, hp->h_length);
 		passthru_len = hp->h_length;
@@ -649,14 +645,14 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 				if (!(sp = getservbyname(portname, "tcp"))) {
 					popup_an_error("Unknown port number "
 						"or service: %s", portname);
-					return -1;
+					return INVALID_IOSRC;
 				}
 				current_port = ntohs(sp->s_port);
 			} else
 				current_port = (unsigned short)lport;
 		}
 		if (proxy_type < 0)
-		    	return -1;
+		    	return INVALID_IOSRC;
 	}
 
 	/* fill in the socket address of the given host */
@@ -688,7 +684,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 			sizeof(errmsg), NULL);
 	    	if (RHP_IS_ERROR(rv)) {
 		    	popup_an_error("%s", errmsg);
-		    	return -1;
+		    	return INVALID_IOSRC;
 		}
 #if defined(HAVE_LIBSSL) /*[*/
 		hin[0] = False;
@@ -716,7 +712,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 					&last);
 				if (RHP_IS_ERROR(rv)) {
 					popup_an_error("%s", errmsg);
-					return -1;
+					return INVALID_IOSRC;
 				}
 #if defined(HAVE_LIBSSL) /*[*/
 				hin[i] = inh;
@@ -762,9 +758,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 			break;
 		    default:	/* parent */
 			sock = amaster;
-#if !defined(_WIN32) /*[*/
 			(void) fcntl(sock, F_SETFD, 1);
-#endif /*]*/
 			connection_complete();
 			host_in3270(CONNECTED_NVT);
 			break;
@@ -776,13 +770,14 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	/* Try each of the haddrs. */
 	while (ha_ix < num_ha) {
 		if ((s = connect_to(ha_ix, (ha_ix == num_ha - 1),
-				pending)) >= 0)
+				pending)) != INVALID_IOSRC) {
 			return s;
+		}
 		ha_ix++;
 	}
 
 	/* Ran out. */
-	return -1;
+	return INVALID_IOSRC;
 }
 #undef close_fail
 
@@ -1147,6 +1142,10 @@ net_disconnect(void)
 		(void) shutdown(sock, 2);
 	(void) SOCK_CLOSE(sock);
 	sock = INVALID_SOCKET;
+#if defined(_WIN32) /*[*/
+	CloseHandle(sock_handle);
+	sock_handle = INVALID_HANDLE_VALUE;
+#endif /*]*/
 	vtrace("SENT disconnect\n");
 
 	/* We're not connected to an LU any more. */
@@ -1300,7 +1299,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 				    "port %d", hostname, current_port);
 			} else {
 				Boolean dummy;
-				socket_t s;
+				iosrc_t s;
 
 				net_disconnect();
 				if (ssl_host) {
@@ -1313,7 +1312,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 					s = connect_to(ha_ix,
 						(ha_ix == num_ha - 1),
 						&dummy);
-					if (s != INVALID_SOCKET) {
+					if (s != INVALID_IOSRC) {
 						host_newfd(s);
 						return;
 					}
@@ -1606,7 +1605,11 @@ telnet_fsm(unsigned char c)
 			vtrace("\n");
 			if (syncing) {
 				syncing = 0;
+#if !defined(_WIN32) /*[*/
 				x_except_on(sock);
+#else /*][*/
+				x_except_on(sock_handle);
+#endif /*]*/
 			}
 			telnet_state = TNS_DATA;
 			break;

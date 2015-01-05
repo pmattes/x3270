@@ -54,11 +54,11 @@ static Boolean excepting = False;
  * Called to set up input on a new network connection.
  */
 void
-x_add_input(socket_t net_sock)
+x_add_input(iosrc_t iosrc)
 {
-    ns_exception_id = AddExcept((iosrc_t)net_sock, net_exception);
+    ns_exception_id = AddExcept(iosrc, net_exception);
     excepting = True;
-    ns_read_id = AddInput((iosrc_t)net_sock, net_input);
+    ns_read_id = AddInput(iosrc, net_input);
     reading = True;
 }
 
@@ -80,7 +80,7 @@ x_except_off(void)
  * processed first.
  */
 void
-x_except_on(socket_t net_sock)
+x_except_on(iosrc_t iosrc)
 {
     if (excepting) {
 	return;
@@ -88,10 +88,10 @@ x_except_on(socket_t net_sock)
     if (reading) {
 	RemoveInput(ns_read_id);
     }
-    ns_exception_id = AddExcept((iosrc_t)net_sock, net_exception);
+    ns_exception_id = AddExcept(iosrc, net_exception);
     excepting = True;
     if (reading) {
-	ns_read_id = AddInput((iosrc_t)net_sock, net_input);
+	ns_read_id = AddInput(iosrc, net_input);
     }
 }
 

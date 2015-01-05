@@ -763,9 +763,10 @@ peer_script_init(void)
 	    return;
 	}
 #if defined(_WIN32) /*[*/
-	socket_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+	socket_event = WSACreateEvent();
 	if (socket_event == NULL) {
-	    popup_an_error("CreateEvent: %s", win32_strerror(GetLastError()));
+	    popup_an_error("WSACreateEvent: %s",
+		    win32_strerror(GetLastError()));
 	    SOCK_CLOSE(socketfd);
 	    socketfd = -1;
 	    return;
@@ -915,7 +916,7 @@ socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
     s->outfile = fdopen(dup(accept_fd), "w");
 #endif /*]*/
 #if defined(_WIN32) /*[*/
-    s->inhandle = CreateEvent(NULL, FALSE, FALSE, NULL);
+    s->inhandle = WSACreateEvent();
     if (s->inhandle == NULL) {
 	fprintf(stderr, "Can't create socket handle\n");
 	exit(1);
@@ -961,7 +962,7 @@ child_socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
     s = sms;
     s->is_transient = True;
     s->infd = accept_fd;
-    s->inhandle = CreateEvent(NULL, FALSE, FALSE, NULL);
+    s->inhandle = WSACreateEvent();
     if (s->inhandle == NULL) {
 	fprintf(stderr, "Can't create socket handle\n");
 	exit(1);
@@ -3577,9 +3578,9 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     if (port == 0) {
 	return False;
     }
-    hevent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    hevent = WSACreateEvent();
     if (hevent == NULL) {
-	popup_an_error("CreateEvent: %s", win32_strerror(GetLastError()));
+	popup_an_error("WSACreateEvent: %s", win32_strerror(GetLastError()));
 	closesocket(s);
 	return False;
     }

@@ -48,6 +48,6 @@ extern int host_connect(const char *n);
 extern void host_connected(void);
 extern void host_disconnect(Boolean disable);
 extern void host_in3270(enum cstate);
-extern void host_newfd(socket_t s);
+extern void host_newfd(iosrc_t s);
 extern void register_schange(int tx, void (*func)(Boolean));
 extern void st_changed(int tx, Boolean mode);

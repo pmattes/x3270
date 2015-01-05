@@ -252,7 +252,7 @@ hio_connection(iosrc_t fd, ioid_t id)
     vb_init(&session->pending.result);
     session->s = t;
 #if defined(_WIN32) /*[*/
-    session->event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    session->event = WSACreateEvent();
     if (session->event == NULL) {
 	popup_an_error("httpd: can't create socket handle");
 	SOCK_CLOSE(t);
@@ -317,7 +317,7 @@ hio_init(struct sockaddr *sa, socklen_t sa_len)
 	return;
     }
 #if defined(_WIN32) /*[*/
-    listen_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+    listen_event = WSACreateEvent();
     if (listen_event == NULL) {
 	popup_an_error("httpd: cannot create listen handle");
 	SOCK_CLOSE(listen_s);

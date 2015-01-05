@@ -397,8 +397,10 @@ enum keytype { KT_STD, KT_GE };
 /* I/O typedefs */
 #if !defined(_WIN32) /*[*/
 typedef int iosrc_t;
+# define INVALID_IOSRC	(-1)
 #else /*][*/
 typedef HANDLE iosrc_t;
+# define INVALID_IOSRC	INVALID_HANDLE_VALUE
 #endif /*]*/
 typedef unsigned long ioid_t;
 

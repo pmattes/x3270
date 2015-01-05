@@ -31,8 +31,8 @@
  */
 
 extern void x3270_exit(int n);
-extern void x_add_input(socket_t net_sock);
+extern void x_add_input(iosrc_t iosrc);
 extern void x_except_off(void);
-extern void x_except_on(socket_t net_sock);
+extern void x_except_on(iosrc_t iosrc);
 extern void x_remove_input(void);
 extern void xio_init(void);
