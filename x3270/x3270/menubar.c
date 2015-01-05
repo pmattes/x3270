@@ -668,75 +668,79 @@ static Widget save_shell = (Widget) NULL;
 
 /* Called from "Exit x3270" button on "File..." menu */
 static void
-Bye(Widget w _is_unused, XtPointer client_data _is_unused, XtPointer call_data _is_unused)
+Bye(Widget w _is_unused, XtPointer client_data _is_unused,
+	XtPointer call_data _is_unused)
 {
-	x3270_exit(0);
+    x3270_exit(0);
 }
 
 /* Called from the "Disconnect" button on the "File..." menu */
 static void
 disconnect(Widget w _is_unused, XtPointer client_data _is_unused,
-    XtPointer call_data _is_unused)
+	XtPointer call_data _is_unused)
 {
-	host_disconnect(False);
+    host_disconnect(False);
 }
 
 /* Called from the "Abort Script" button on the "File..." menu */
 static void
 script_abort_callback(Widget w _is_unused, XtPointer client_data _is_unused,
-    XtPointer call_data _is_unused)
+	XtPointer call_data _is_unused)
 {
-	abort_script();
+    abort_script();
 }
 
 /* "About x3270" popups */
 static void
 show_about_copyright(Widget w _is_unused, XtPointer userdata _is_unused,
-    XtPointer calldata _is_unused)
+	XtPointer calldata _is_unused)
 {
-	popup_about_copyright();
+    popup_about_copyright();
 }
 
 static void
 show_about_config(Widget w _is_unused, XtPointer userdata _is_unused,
-    XtPointer calldata _is_unused)
+	XtPointer calldata _is_unused)
 {
-	popup_about_config();
+    popup_about_config();
 }
 
 static void
 show_about_status(Widget w _is_unused, XtPointer userdata _is_unused,
     XtPointer calldata _is_unused)
 {
-	popup_about_status();
+    popup_about_status();
 }
 
 /* Called from the "Save" button on the save options dialog */
 static void
 save_button_callback(Widget w _is_unused, XtPointer client_data,
-    XtPointer call_data _is_unused)
+	XtPointer call_data _is_unused)
 {
-	char *s;
+    char *s;
 
-	s = XawDialogGetValueString((Widget)client_data);
-	if (!s || !*s)
-		return;
-	if (!save_options(s))
-		XtPopdown(save_shell);
+    s = XawDialogGetValueString((Widget)client_data);
+    if (!s || !*s) {
+	return;
+    }
+    if (save_options(s)) {
+	XtPopdown(save_shell);
+    }
 }
 
 /* Called from the "Save Options in File" button on the "File..." menu */
 static void
 do_save_options(Widget w _is_unused, XtPointer client_data _is_unused,
-    XtPointer call_data _is_unused)
+	XtPointer call_data _is_unused)
 {
-	if (save_shell == NULL)
-		save_shell = create_form_popup("SaveOptions",
-		    save_button_callback, NULL, FORM_NO_WHITE);
-	XtVaSetValues(XtNameToWidget(save_shell, ObjDialog),
+    if (save_shell == NULL) {
+	save_shell = create_form_popup("SaveOptions", save_button_callback,
+		NULL, FORM_NO_WHITE);
+    }
+    XtVaSetValues(XtNameToWidget(save_shell, ObjDialog),
 	    XtNvalue, profile_name,
 	    NULL);
-	popup_popup(save_shell, XtGrabExclusive);
+    popup_popup(save_shell, XtGrabExclusive);
 }
 
 /* Callback for printer session options. */
@@ -1048,15 +1052,17 @@ host_connect_callback(Widget w _is_unused, XtPointer client_data,
 /* Called from the lone "Connect" button on the connect dialog */
 static void
 connect_button_callback(Widget w _is_unused, XtPointer client_data,
-    XtPointer call_data _is_unused)
+	XtPointer call_data _is_unused)
 {
-	char *s;
+    char *s;
 
-	s = XawDialogGetValueString((Widget)client_data);
-	if (!s || !*s)
-		return;
-	if (!host_connect(s))
-		XtPopdown(connect_shell);
+    s = XawDialogGetValueString((Widget)client_data);
+    if (!s || !*s) {
+	return;
+    }
+    if (host_connect(s)) {
+	XtPopdown(connect_shell);
+    }
 }
 
 /* Called from the "Other..." button on the "Connect..." menu */

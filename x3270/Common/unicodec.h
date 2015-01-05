@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009, Paul Mattes.
+ * Copyright (c) 2008-2009, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@ extern ucs4_t ebcdic_to_unicode(ebc_t e, unsigned char cs, unsigned flags);
 extern ucs4_t ebcdic_base_to_unicode(ebc_t e, unsigned flags);
 extern ebc_t unicode_to_ebcdic(ucs4_t u);
 extern ebc_t unicode_to_ebcdic_ge(ucs4_t u, Boolean *ge);
-extern int set_uni(const char *csname, const char **host_codepage,
+extern Boolean set_uni(const char *csname, const char **host_codepage,
 	const char **cgcsgid, const char **display_charsets);
 extern int linedraw_to_unicode(ebc_t e);
 extern int apl_to_unicode(ebc_t e, unsigned flags);

@@ -4282,45 +4282,46 @@ unicode_to_ebcdic_dbcs(ucs4_t u)
 
 /*
  * Set the EBCDIC-to-Unicode DBCS translation table.
- * Returns 0 for success, -1 for failure.
+ * Returns True for success, False for failure.
  */
-int
+Boolean
 set_uni_dbcs(const char *csname, const char **codepage,
 	const char **display_charsets)
 {
 #if defined(X3270_DBCS) /*[*/
-	int i;
-	const char *realname = csname;
-	int rc = -1;
+    int i;
+    const char *realname = csname;
+    Boolean rc = False;
 
-	/* Search for an alias. */
-	for (i = 0; cpaliases16[i].alias != NULL; i++) {
-		if (!strcasecmp(csname, cpaliases16[i].alias)) {
-			realname = cpaliases16[i].canon;
-			break;
-		}
+    /* Search for an alias. */
+    for (i = 0; cpaliases16[i].alias != NULL; i++) {
+	if (!strcasecmp(csname, cpaliases16[i].alias)) {
+	    realname = cpaliases16[i].canon;
+	    break;
 	}
+    }
 
-	/* Search for a match. */
-	for (i = 0; uni16[i].name != NULL; i++) {
-		if (!strcasecmp(realname, uni16[i].name)) {
-			cur_uni16 = &uni16[i];
-			*codepage = uni16[i].codepage;
-			*display_charsets = uni16[i].display_charset;
-			rc = 0;
-			break;
-		}
+    /* Search for a match. */
+    for (i = 0; uni16[i].name != NULL; i++) {
+	if (!strcasecmp(realname, uni16[i].name)) {
+	    cur_uni16 = &uni16[i];
+	    *codepage = uni16[i].codepage;
+	    *display_charsets = uni16[i].display_charset;
+	    rc = True;
+	    break;
 	}
+    }
 
-	/*
-	 * If this fails (which we sometimes do on purpose), forget any
-	 * old setting.
-	 */
-	if (rc == -1)
-	    	cur_uni16 = NULL;
+    /*
+     * If this fails (which we sometimes do on purpose), forget any
+     * old setting.
+     */
+    if (!rc) {
+	cur_uni16 = NULL;
+    }
 
-	return rc;
+    return rc;
 #else /*][*/
-	return -1;
+    return False;
 #endif /*]*/
 }

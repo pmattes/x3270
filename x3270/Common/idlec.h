@@ -46,7 +46,7 @@ extern Boolean idle_changed;
 extern char *idle_command;
 extern char *idle_timeout_string;
 extern enum idle_enum idle_user_enabled;
-extern int process_idle_timeout_value(const char *string);
+extern Boolean process_idle_timeout_value(const char *string);
 #else /*][*/
 # define cancel_idle_timer()
 # define idle_init()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -91,7 +91,7 @@ idle_init(void)
 		idle_user_enabled = IDLE_DISABLED;
 	if (idle_user_enabled &&
 	    idle_command != NULL &&
-	    process_idle_timeout_value(idle_timeout_string) == 0) {
+	    process_idle_timeout_value(idle_timeout_string)) {
 		;
 	}
 
@@ -105,10 +105,10 @@ idle_init(void)
 
 /*
  * Process a timeout value: <empty> or ~?[0-9]+[HhMmSs]
- * Returns 0 for success, -1 for failure.
+ * Returns True for success, False for failure.
  * Sets idle_enabled, idle_ms and idle_randomize as side-effects.
  */
-int
+Boolean
 process_idle_timeout_value(const char *t)
 {
 	const char *s = t;
@@ -118,7 +118,7 @@ process_idle_timeout_value(const char *t)
 		idle_ms = IDLE_MS;
 		idle_randomize = True;
 		idle_enabled = True;
-		return 0;
+		return True;
 	}
 
 	if (*s == '~') {
@@ -147,13 +147,13 @@ process_idle_timeout_value(const char *t)
 	}
 	idle_ms = idle_n * idle_multiplier * MSEC_PER_SEC;
 	idle_enabled = True;
-	return 0;
+	return True;
 
     bad_idle:
 	popup_an_error("Invalid idle timeout value '%s'", t);
 	idle_ms = 0L;
 	idle_randomize = False;
-	return -1;
+	return False;
 }
 
 /* Called when a host connects or disconnects. */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014 Paul Mattes.
+ * Copyright (c) 2009, 2014-2015 Paul Mattes.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,4 +32,4 @@
 
 extern int validate_and_split_resource(const char *where, const char *arg,
 	const char **left, unsigned *rnlenp, const char **right);
-extern int read_resource_filex(const char *filename, Boolean fatal);
+extern Boolean read_resource_filex(const char *filename, Boolean fatal);

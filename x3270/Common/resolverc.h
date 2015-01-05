@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2014 Paul Mattes.
+ * Copyright (c) 2007-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,6 @@ extern rhp_t
 resolve_host_and_port(const char *host, char *portname, int ix,
 	unsigned short *pport, struct sockaddr *sa, socklen_t *sa_len,
 	char *errmsg, int em_size, int *lastp);
-extern int
+extern Boolean
 numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
 	size_t hostlen, char *serv, size_t servlen, char *errmsg, int em_len);

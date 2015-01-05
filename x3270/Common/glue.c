@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -261,8 +261,9 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 
 		const char *pname;
 
-		if (read_resource_file(*cl_hostname, True) < 0)
+		if (!read_resource_file(*cl_hostname, True)) {
 		    	x3270_exit(1);
+		}
 
 		read_session_or_profile = True;
 
@@ -1522,10 +1523,10 @@ safe_string(const char *s)
 }
 
 /* Read resources from a file. */
-int
+Boolean
 read_resource_file(const char *filename, Boolean fatal)
 {
-    	return read_resource_filex(filename, fatal);
+    return read_resource_filex(filename, fatal);
 }
 
 /* Screen globals. */

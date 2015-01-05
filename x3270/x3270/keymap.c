@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2010, 2013-2014 Paul Mattes.
+ * Copyright (c) 1996-2010, 2013-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -617,102 +617,109 @@ lookup_tt(const char *name, char *table)
  * If the parameter is NULL, removes all keymaps.
  * Otherwise, toggles the keymap by that name.
  *
- * Returns 0 if the action was successful, -1 otherwise.
+ * Returns True if the action was successful, False otherwise.
  *
  */
-int
+Boolean
 temporary_keymap(const char *k)
 {
-	char *km;
-	XtTranslations trans;
-	struct trans_list *t, *prev;
-	char *path = NULL;
+    char *km;
+    XtTranslations trans;
+    struct trans_list *t, *prev;
+    char *path = NULL;
 
-	if (k == NULL) {
-		struct trans_list *next;
+    if (k == NULL) {
+	struct trans_list *next;
 
-		/* Delete all temporary keymaps. */
-		for (t = temp_keymaps; t != NULL; t = next) {
-			Free(t->name);
-			Free(t->pathname);
-			next = t->next;
-			Free(t);
-		}
-		tkm_last = temp_keymaps = NULL;
-		screen_set_temp_keymap(NULL);
-		keypad_set_temp_keymap(NULL);
-		status_kmap(False);
-		km_regen();
-		return 0;
+	/* Delete all temporary keymaps. */
+	for (t = temp_keymaps; t != NULL; t = next) {
+	    Free(t->name);
+	    Free(t->pathname);
+	    next = t->next;
+	    Free(t);
 	}
+	tkm_last = temp_keymaps = NULL;
+	screen_set_temp_keymap(NULL);
+	keypad_set_temp_keymap(NULL);
+	status_kmap(False);
+	km_regen();
+	return True;
+    }
 
-	/* Check for deleting one keymap. */
-	for (prev = NULL, t = temp_keymaps; t != NULL; prev = t, t = t->next)
-		if (!strcmp(k, t->name))
-			break;
-	if (t != NULL) {
-
-		/* Delete the keymap from the list. */
-		if (prev != NULL)
-			prev->next = t->next;
-		else
-			temp_keymaps = t->next;
-		if (tkm_last == t)
-			tkm_last = prev;
-		Free(t->name);
-		Free(t);
-
-		/* Rebuild the translation tables from the remaining ones. */
-		screen_set_temp_keymap(NULL);
-		keypad_set_temp_keymap(NULL);
-		for (t = temp_keymaps; t != NULL; t = t->next) {
-			trans = lookup_tt(t->name, NULL);
-			screen_set_temp_keymap(trans);
-			keypad_set_temp_keymap(trans);
-		}
-
-		/* Update the status line. */
-		if (temp_keymaps == NULL)
-			status_kmap(False);
-		km_regen();
-		return 0;
+    /* Check for deleting one keymap. */
+    for (prev = NULL, t = temp_keymaps; t != NULL; prev = t, t = t->next) {
+	if (!strcmp(k, t->name)) {
+	    break;
 	}
+    }
+    if (t != NULL) {
 
-	/* Add a keymap. */
-
-	/* Try a file first. */
-	km = get_file_keymap(k, &path);
-	if (km == NULL) {
-		/* Then try a resource. */
-		km = get_fresource("%s.%s", ResKeymap, k);
-		if (km == NULL)
-			return -1;
+	/* Delete the keymap from the list. */
+	if (prev != NULL) {
+	    prev->next = t->next;
+	} else {
+	    temp_keymaps = t->next;
 	}
+	if (tkm_last == t) {
+	    tkm_last = prev;
+	}
+	Free(t->name);
+	Free(t);
 
-	/* Update the translation tables. */
-	trans = lookup_tt(k, km);
-	screen_set_temp_keymap(trans);
-	keypad_set_temp_keymap(trans);
-
-	/* Add it to the list. */
-	t = (struct trans_list *)XtMalloc(sizeof(*t));
-	t->name = XtNewString(k);
-	t->pathname = path;
-	t->is_temp = True;
-	t->from_server = False;
-	t->next = NULL;
-	if (tkm_last != NULL)
-		tkm_last->next = t;
-	else
-		temp_keymaps = t;
-	tkm_last = t;
+	/* Rebuild the translation tables from the remaining ones. */
+	screen_set_temp_keymap(NULL);
+	keypad_set_temp_keymap(NULL);
+	for (t = temp_keymaps; t != NULL; t = t->next) {
+	    trans = lookup_tt(t->name, NULL);
+	    screen_set_temp_keymap(trans);
+	    keypad_set_temp_keymap(trans);
+	}
 
 	/* Update the status line. */
-	status_kmap(True);
+	if (temp_keymaps == NULL) {
+	    status_kmap(False);
+	}
 	km_regen();
+	return True;
+    }
 
-	/* Success. */
-	return 0;
+    /* Add a keymap. */
+
+    /* Try a file first. */
+    km = get_file_keymap(k, &path);
+    if (km == NULL) {
+	/* Then try a resource. */
+	km = get_fresource("%s.%s", ResKeymap, k);
+	if (km == NULL) {
+	    return False;
+	}
+    }
+
+    /* Update the translation tables. */
+    trans = lookup_tt(k, km);
+    screen_set_temp_keymap(trans);
+    keypad_set_temp_keymap(trans);
+
+    /* Add it to the list. */
+    t = (struct trans_list *)XtMalloc(sizeof(*t));
+    t->name = XtNewString(k);
+    t->pathname = path;
+    t->is_temp = True;
+    t->from_server = False;
+    t->next = NULL;
+    if (tkm_last != NULL) {
+	tkm_last->next = t;
+    } else {
+	temp_keymaps = t;
+    }
+    tkm_last = t;
+
+    /* Update the status line. */
+    status_kmap(True);
+    km_regen();
+
+    /* Success. */
+    return True;
 }
 
 /* Create and pop up the current keymap pop-up. */

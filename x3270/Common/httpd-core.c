@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Paul Mattes.
+ * Copyright (c) 2014-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -276,7 +276,7 @@ static void
 httpd_vprint(httpd_t *h, httpd_print_t type, const char *format, va_list ap)
 {
     char *buf;
-    size_t sl;
+    int sl;
     char *sp;			/* pointer through the string */
 
     /* Expand the text. */
@@ -633,9 +633,9 @@ httpd_error(httpd_t *h, errmode_t mode, int status_code,
  * @param[out] nlp	Returned length of number (number of bytes)
  * @param[out] np	Returned numeric value
  *
- * @return <0 for no valid number present, >=0 for success
+ * @return False for no valid number present, True for success
  */
-static int
+static Boolean
 httpd_parse_number(const char *s, size_t *nlp, unsigned long *np)
 {
     unsigned long int u;
@@ -645,11 +645,11 @@ httpd_parse_number(const char *s, size_t *nlp, unsigned long *np)
     if ((u == ULONG_MAX && errno == ERANGE) || end == s) {
 	*nlp = 0;
 	*np = 0;
-	return -1;
+	return False;
     }
     *nlp = end - s;
     *np = u;
-    return 0;
+    return True;
 }
 
 /**
@@ -725,11 +725,11 @@ httpd_digest_request_line(httpd_t *h)
      */
     if (protocol != NULL) {
 	if (strncasecmp(protocol, http_token, HTTP_TOKEN_SIZE) ||
-		httpd_parse_number(protocol + HTTP_TOKEN_SIZE, &major_len,
-		    &major) < 0 ||
+		!httpd_parse_number(protocol + HTTP_TOKEN_SIZE, &major_len,
+		    &major) ||
 		protocol[HTTP_TOKEN_SIZE + major_len] != '.' ||
-		httpd_parse_number(protocol + HTTP_TOKEN_SIZE + major_len + 1,
-		    &minor_len, &minor) < 0) {
+		!httpd_parse_number(protocol + HTTP_TOKEN_SIZE + major_len + 1,
+		    &minor_len, &minor)) {
 	    if (!strcmp(verb, "HEAD")) {
 		r->verb = VERB_HEAD;
 	    }

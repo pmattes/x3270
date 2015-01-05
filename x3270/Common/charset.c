@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -76,7 +76,7 @@ char *default_display_charset = "3270cg-1a,3270cg-1,iso8859-1";
 static enum cs_result charset_init2(const char *csname, const char *codepage,
 	const char *cgcsgid, const char *display_charsets);
 static void set_cgcsgids(const char *spec);
-static int set_cgcsgid(char *spec, unsigned long *idp);
+static Boolean set_cgcsgid(char *spec, unsigned long *idp);
 static void set_host_codepage(char *codepage);
 static void set_charset_name(const char *csname);
 
@@ -89,150 +89,156 @@ static char *charset_name = NULL;
 enum cs_result
 charset_init(const char *csname)
 {
-    	enum cs_result rc;
-	char *codeset_name;
-	const char *codepage;
-	const char *cgcsgid;
-	const char *display_charsets;
-	const char *dbcs_cgcsgid = NULL;
-	const char *dbcs_display_charsets = NULL;
-	Boolean need_free = False;
+    enum cs_result rc;
+    char *codeset_name;
+    const char *codepage;
+    const char *cgcsgid;
+    const char *display_charsets;
+    const char *dbcs_cgcsgid = NULL;
+    const char *dbcs_display_charsets = NULL;
+    Boolean need_free = False;
 
 #if !defined(_WIN32) /*[*/
-	/* Get all of the locale stuff right. */
-	setlocale(LC_ALL, "");
+    /* Get all of the locale stuff right. */
+    setlocale(LC_ALL, "");
 
-	/* Figure out the locale code set (character set encoding). */
-	codeset_name = NewString(nl_langinfo(CODESET));
+    /* Figure out the locale code set (character set encoding). */
+    codeset_name = NewString(nl_langinfo(CODESET));
 # if defined(__CYGWIN__) /*[*/
-	/*
-	 * Cygwin's locale support is quite limited.  If the locale
-	 * indicates "US-ASCII", which appears to be the only supported
-	 * encoding, ignore it and use the Windows ANSI code page, which
-	 * observation indicates is what is actually supported.
-	 *
-	 * Hopefully at some point Cygwin will start returning something
-	 * meaningful here and this logic will stop triggering.
-	 */
-	if (!strcmp(codeset_name, "US-ASCII")) {
-		Free(codeset_name);
-	    	codeset_name = xs_buffer("CP%d", GetACP());
-	}
+    /*
+     * Cygwin's locale support is quite limited.  If the locale
+     * indicates "US-ASCII", which appears to be the only supported
+     * encoding, ignore it and use the Windows ANSI code page, which
+     * observation indicates is what is actually supported.
+     *
+     * Hopefully at some point Cygwin will start returning something
+     * meaningful here and this logic will stop triggering.
+     */
+    if (!strcmp(codeset_name, "US-ASCII")) {
+	Free(codeset_name);
+	codeset_name = xs_buffer("CP%d", GetACP());
+    }
 # endif /*]*/
 #else /*][*/
-	codeset_name = xs_buffer("CP%d", appres.local_cp);
+    codeset_name = xs_buffer("CP%d", appres.local_cp);
 #endif /*]*/
-	set_codeset(codeset_name);
-	Free(codeset_name);
+    set_codeset(codeset_name);
+    Free(codeset_name);
 
-	/* Do nothing, successfully. */
-	if (csname == NULL || !strcasecmp(csname, "us")) {
-		set_cgcsgids(NULL);
-		set_host_codepage(NULL);
-		set_charset_name(NULL);
+    /* Do nothing, successfully. */
+    if (csname == NULL || !strcasecmp(csname, "us")) {
+	set_cgcsgids(NULL);
+	set_host_codepage(NULL);
+	set_charset_name(NULL);
 #if defined(X3270_DISPLAY) /*[*/
-		(void) screen_new_display_charsets(default_display_charset,
-		    "us");
+	(void) screen_new_display_charsets(default_display_charset, "us");
 #endif /*]*/
-		(void) set_uni(NULL, &codepage, &cgcsgid, &display_charsets);
-		(void) set_uni_dbcs("", NULL, NULL);
-		return CS_OKAY;
-	}
-
-	if (set_uni(csname, &codepage, &cgcsgid, &display_charsets) < 0)
-		return CS_NOTFOUND;
-	if (appres.sbcs_cgcsgid != NULL)
-	    	cgcsgid = appres.sbcs_cgcsgid; /* override */
-	if (set_uni_dbcs(csname, &dbcs_cgcsgid, &dbcs_display_charsets) == 0) {
-	    if (appres.dbcs_cgcsgid != NULL)
-		    dbcs_cgcsgid = appres.dbcs_cgcsgid; /* override */
-	    cgcsgid = xs_buffer("%s+%s", cgcsgid, dbcs_cgcsgid);
-	    display_charsets = xs_buffer("%s+%s", display_charsets,
-		    dbcs_display_charsets);
-	    need_free = True;
-	}
-
-	rc = charset_init2(csname, codepage, cgcsgid, display_charsets);
-	if (need_free) {
-	    Free((char *)cgcsgid);
-	    Free((char *)display_charsets);
-	}
-	if (rc != CS_OKAY) {
-		return rc;
-	}
-
+	(void) set_uni(NULL, &codepage, &cgcsgid, &display_charsets);
+	(void) set_uni_dbcs("", NULL, NULL);
 	return CS_OKAY;
+    }
+
+    if (!set_uni(csname, &codepage, &cgcsgid, &display_charsets)) {
+	return CS_NOTFOUND;
+    }
+    if (appres.sbcs_cgcsgid != NULL) {
+	cgcsgid = appres.sbcs_cgcsgid; /* override */
+    }
+    if (set_uni_dbcs(csname, &dbcs_cgcsgid, &dbcs_display_charsets)) {
+	if (appres.dbcs_cgcsgid != NULL) {
+	    dbcs_cgcsgid = appres.dbcs_cgcsgid; /* override */
+	}
+	cgcsgid = xs_buffer("%s+%s", cgcsgid, dbcs_cgcsgid);
+	display_charsets = xs_buffer("%s+%s", display_charsets,
+	    dbcs_display_charsets);
+	need_free = True;
+    }
+
+    rc = charset_init2(csname, codepage, cgcsgid, display_charsets);
+    if (need_free) {
+	Free((char *)cgcsgid);
+	Free((char *)display_charsets);
+    }
+    if (rc != CS_OKAY) {
+	return rc;
+    }
+
+    return CS_OKAY;
 }
 
-/* Set a CGCSGID.  Return 0 for success, -1 for failure. */
-static int
+/* Set a CGCSGID.  Return True for success, False for failure. */
+static Boolean
 set_cgcsgid(char *spec, unsigned long *r)
 {
-	unsigned long cp;
-	char *ptr;
+    unsigned long cp;
+    char *ptr;
 
-	if (spec != NULL &&
+    if (spec != NULL &&
 	    (cp = strtoul(spec, &ptr, 0)) &&
 	    ptr != spec &&
 	    *ptr == '\0') {
-		if (!(cp & ~0xffffL))
-			*r = DEFAULT_CGEN | cp;
-		else
-			*r = cp;
-		return 0;
-	} else
-		return -1;
+	if (!(cp & ~0xffffL)) {
+	    *r = DEFAULT_CGEN | cp;
+	} else {
+	    *r = cp;
+	}
+	return True;
+    } else {
+	return False;
+    }
 }
 
 /* Set the CGCSGIDs. */
 static void
 set_cgcsgids(const char *spec)
 {
-	int n_ids = 0;
-	char *spec_copy;
-	char *buf;
-	char *token;
+    int n_ids = 0;
+    char *spec_copy;
+    char *buf;
+    char *token;
 
-	if (spec != NULL) {
-		buf = spec_copy = NewString(spec);
-		while (n_ids >= 0 && (token = strtok(buf, "+")) != NULL) {
-			unsigned long *idp = NULL;
+    if (spec != NULL) {
+	buf = spec_copy = NewString(spec);
+	while (n_ids >= 0 && (token = strtok(buf, "+")) != NULL) {
+	    unsigned long *idp = NULL;
 
-			buf = NULL;
-			switch (n_ids) {
-			case 0:
-			    idp = &cgcsgid;
-			    break;
-			case 1:
-			    idp = &cgcsgid_dbcs;
-			    break;
-			default:
-			    popup_an_error("Extra CGCSGID(s), ignoring");
-			    break;
-			}
-			if (idp == NULL)
-				break;
-			if (set_cgcsgid(token, idp) < 0) {
-				popup_an_error("Invalid CGCSGID '%s', ignoring",
-				    token);
-				n_ids = -1;
-				break;
-			}
-			n_ids++;
-		}
-		Free(spec_copy);
-		if (n_ids > 0)
-			return;
+	    buf = NULL;
+	    switch (n_ids) {
+	    case 0:
+		idp = &cgcsgid;
+		break;
+	    case 1:
+		idp = &cgcsgid_dbcs;
+		break;
+	    default:
+		popup_an_error("Extra CGCSGID(s), ignoring");
+		break;
+	    }
+	    if (idp == NULL)
+		break;
+	    if (!set_cgcsgid(token, idp)) {
+		popup_an_error("Invalid CGCSGID '%s', ignoring", token);
+		n_ids = -1;
+		break;
+	    }
+	    n_ids++;
 	}
+	Free(spec_copy);
+	if (n_ids > 0) {
+	    return;
+	}
+    }
 
-	if (appres.sbcs_cgcsgid != NULL)
-	    	cgcsgid = strtoul(appres.sbcs_cgcsgid, NULL, 0);
-	else
-		cgcsgid = DEFAULT_CGEN | DEFAULT_CSET;
-	if (appres.dbcs_cgcsgid != NULL)
-	    	cgcsgid_dbcs = strtoul(appres.dbcs_cgcsgid, NULL, 0);
-	else
-		cgcsgid_dbcs = 0L;
+    if (appres.sbcs_cgcsgid != NULL) {
+	cgcsgid = strtoul(appres.sbcs_cgcsgid, NULL, 0);
+    } else {
+	cgcsgid = DEFAULT_CGEN | DEFAULT_CSET;
+    }
+    if (appres.dbcs_cgcsgid != NULL) {
+	cgcsgid_dbcs = strtoul(appres.dbcs_cgcsgid, NULL, 0);
+    } else {
+	cgcsgid_dbcs = 0L;
+    }
 }
 
 /* Set the host codepage. */

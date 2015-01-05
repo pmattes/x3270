@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 2001-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,54 +60,54 @@ char *converters = NULL;
 
 /*
  * Change character sets.
- * Returns 0 if the new character set was found, -1 otherwise.
  */
 enum cs_result
 charset_init(const char *csname)
 {
 #if !defined(_WIN32) /*[*/
-	char *codeset_name;
+    char *codeset_name;
 #endif /*]*/
-	const char *host_codepage;
-    	const char *cgcsgid_str;
-	const char *display_charsets;
+    const char *host_codepage;
+    const char *cgcsgid_str;
+    const char *display_charsets;
 
 #if !defined(_WIN32) /*[*/
-	setlocale(LC_ALL, "");
-	codeset_name = nl_langinfo(CODESET);
+    setlocale(LC_ALL, "");
+    codeset_name = nl_langinfo(CODESET);
 #if defined(__CYGWIN__) /*[*/
-	/*
-	 * Cygwin's locale support is quite limited.  If the locale
-	 * indicates "US-ASCII", which appears to be the only supported
-	 * encoding, ignore it and use the Windows ANSI code page, which
-	 * observation indicates is what is actually supported.
-	 *
-	 * Hopefully at some point Cygwin will start returning something
-	 * meaningful here and this logic will stop triggering.
-	 *
-	 * If this (lack of) functionality persists, then it will probably
-	 * become necessary for pr3287 to support the wpr3287 '-printercp'
-	 * option, so that the printer code page can be configured.
-	 */
-	if (!strcmp(codeset_name, "US-ASCII")) {
-		codeset_name = Malloc(64);
-		sprintf(codeset_name, "CP%d", GetACP());
-	}
+    /*
+     * Cygwin's locale support is quite limited.  If the locale
+     * indicates "US-ASCII", which appears to be the only supported
+     * encoding, ignore it and use the Windows ANSI code page, which
+     * observation indicates is what is actually supported.
+     *
+     * Hopefully at some point Cygwin will start returning something
+     * meaningful here and this logic will stop triggering.
+     *
+     * If this (lack of) functionality persists, then it will probably
+     * become necessary for pr3287 to support the wpr3287 '-printercp'
+     * option, so that the printer code page can be configured.
+     */
+    if (!strcmp(codeset_name, "US-ASCII")) {
+	codeset_name = Malloc(64);
+	sprintf(codeset_name, "CP%d", GetACP());
+    }
 #endif /*]*/
-	set_codeset(codeset_name);
+    set_codeset(codeset_name);
 #endif /*]*/
 
-    	if (set_uni(csname, &host_codepage, &cgcsgid_str,
-		    &display_charsets) < 0)
-		return CS_NOTFOUND;
-	cgcsgid = strtoul(cgcsgid_str, NULL, 0);
-	if (!(cgcsgid & ~0xffff))
-	    	cgcsgid |= 0x02b90000;
+    if (!set_uni(csname, &host_codepage, &cgcsgid_str, &display_charsets)) {
+	return CS_NOTFOUND;
+    }
+    cgcsgid = strtoul(cgcsgid_str, NULL, 0);
+    if (!(cgcsgid & ~0xffff)) {
+	cgcsgid |= 0x02b90000;
+    }
 
-	if (set_uni_dbcs(csname, &cgcsgid_str, &display_charsets) == 0) {
-	    	dbcs = 1;
-		cgcsgid_dbcs = strtoul(cgcsgid_str, NULL, 0);
-	}
+    if (set_uni_dbcs(csname, &cgcsgid_str, &display_charsets) == 0) {
+	dbcs = 1;
+	cgcsgid_dbcs = strtoul(cgcsgid_str, NULL, 0);
+    }
 
-	return CS_OKAY;
+    return CS_OKAY;
 }

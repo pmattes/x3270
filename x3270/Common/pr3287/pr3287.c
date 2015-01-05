@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2014, Paul Mattes.
+ * Copyright (c) 2000-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -828,8 +828,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 #endif /*]*/
 
 	/* Set up the character set. */
-	if (charset_init(options.charset) < 0)
+	if (charset_init(options.charset) != CS_OKAY) {
 		pr3287_exit(1);
+	}
 
 	/* Set up the custom translation table. */
 	if (xtable != NULL && xtable_init(xtable) < 0)

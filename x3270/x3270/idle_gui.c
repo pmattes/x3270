@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -80,7 +80,7 @@ static void idle_cancel(Widget w, XtPointer client_data, XtPointer call_data);
 static void idle_popup_callback(Widget w, XtPointer client_data,
     XtPointer call_data);
 static void idle_popup_init(void);
-static int idle_start(void);
+static Boolean idle_start(void);
 static void okay_callback(Widget w, XtPointer call_parms,
     XtPointer call_data);
 static void toggle_enable(Widget w, XtPointer client_data,
@@ -375,7 +375,7 @@ static void
 okay_callback(Widget w _is_unused, XtPointer call_parms _is_unused,
 	XtPointer call_data _is_unused)
 {
-    if (idle_start() == 0) {
+    if (idle_start()) {
 	idle_changed = True;
 	XtPopdown(idle_shell);
     }
@@ -433,9 +433,9 @@ toggle_enable(Widget w _is_unused, XtPointer client_data,
 
 /*
  * Called when the user presses the OK button on the idle command dialog.
- * Returns 0 for success, -1 otherwise.
+ * Returns True for success, False otherwise.
  */
-static int
+static Boolean
 idle_start(void)
 {
     char *cmd, *tmo, *its;
@@ -452,19 +452,19 @@ idle_start(void)
     if (!idle_user_enabled) {
 	/* If they're turned it off, cancel the timer. */
 	cancel_idle_timer();
-	return 0;
+	return True;
     }
 
     /* They've turned it on, and possibly reconfigured it. */
 
     /* Validate the timeout.  It should work, yes? */
-    if (process_idle_timeout_value(its) < 0) {
-	return -1;
+    if (!process_idle_timeout_value(its)) {
+	return False;
     }
 
     /* Seems okay.  Reset to the new interval and command. */
     if (IN_3270) {
 	    reset_idle_timer();
     }
-    return 0;
+    return True;
 }

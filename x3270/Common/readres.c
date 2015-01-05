@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 2009, 2013-2015 Paul Mattes.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -139,93 +139,91 @@ validate_and_split_resource(const char *where, const char *arg,
 }
 
 /* Read resources from a file. */
-int
+Boolean
 read_resource_filex(const char *filename, Boolean fatal)
 {
-	FILE *f;
-	int ilen;
-	char buf[4096];
-	char *where;
-	int lno = 0;
+    FILE *f;
+    int ilen;
+    char buf[4096];
+    char *where;
+    int lno = 0;
 
-	f = fopen(filename, "r");
-	if (f == NULL) {
-		if (fatal)
-			xs_warning("Cannot open '%s': %s", filename,
-			    strerror(errno));
-		return -1;
+    f = fopen(filename, "r");
+    if (f == NULL) {
+	if (fatal) {
+	    xs_warning("Cannot open '%s': %s", filename, strerror(errno));
+	}
+	return False;
+    }
+
+    /* Merge in what's in the file into the resource database. */
+    ilen = 0;
+    while (fgets(buf + ilen, sizeof(buf) - ilen, f) != NULL || ilen) {
+	char *s;
+	unsigned sl;
+	Boolean bsl = False;
+
+	lno++;
+
+	/* Stip any trailing newline. */
+	sl = strlen(buf + ilen);
+	if (sl && (buf + ilen)[sl-1] == '\n') {
+	    (buf + ilen)[--sl] = '\0';
 	}
 
-	/* Merge in what's in the file into the resource database. */
-	where = Malloc(strlen(filename) + 64);
-
-	ilen = 0;
-	while (fgets(buf + ilen, sizeof(buf) - ilen, f) != NULL || ilen) {
-		char *s;
-		unsigned sl;
-		Boolean bsl = False;
-
-		lno++;
-
-		/* Stip any trailing newline. */
-		sl = strlen(buf + ilen);
-		if (sl && (buf + ilen)[sl-1] == '\n')
-			(buf + ilen)[--sl] = '\0';
-
-		/* Check for a trailing backslash. */
-		s = buf + ilen;
-		if ((sl > 0) && (s[sl - 1] == '\\')) {
-		    	s[sl - 1] = '\0';
-			bsl = True;
-		}
-
-		/* Skip leading whitespace. */
-		s = buf;
-		while (isspace(*s))
-			s++;
-
-		/* If this line is a continuation, try again. */
-		if (bsl) {
-			ilen += strlen(buf + ilen);
-			if ((unsigned)ilen >= sizeof(buf) - 1) {
-				(void) sprintf(where, "%s:%d: Line too long\n",
-				    filename, lno);
-				Warning(where);
-				break;
-			}
-			continue;
-		}
-
-		/* Skip comments. */
-		if (*s == '!') {
-		    ilen = 0;
-		    continue;
-		}
-		if (*s == '#') {
-			(void) sprintf(where, "%s:%d: Invalid profile "
-			    "syntax ('#' ignored)", filename, lno);
-			Warning(where);
-			ilen = 0;
-			continue;
-		}
-
-		/* Strip trailing whitespace and check for empty lines. */
-		sl = strlen(s);
-		while (sl && isspace(s[sl-1]))
-			s[--sl] = '\0';
-		if (!sl) {
-			ilen = 0;
-			continue;
-		}
-
-		/* Digest it. */
-		(void) sprintf(where, "%s:%d", filename, lno);
-		parse_xrm(s, where);
-
-		/* Get ready for the next iteration. */
-		ilen = 0;
+	/* Check for a trailing backslash. */
+	s = buf + ilen;
+	if ((sl > 0) && (s[sl - 1] == '\\')) {
+	    s[sl - 1] = '\0';
+	    bsl = True;
 	}
+
+	/* Skip leading whitespace. */
+	s = buf;
+	while (isspace(*s)) {
+	    s++;
+	}
+
+	/* If this line is a continuation, try again. */
+	if (bsl) {
+	    ilen += strlen(buf + ilen);
+	    if ((unsigned)ilen >= sizeof(buf) - 1) {
+		xs_warning("%s:%d: Line too long\n", filename, lno);
+		break;
+	    }
+	    continue;
+	}
+
+	/* Skip comments. */
+	if (*s == '!') {
+	    ilen = 0;
+	    continue;
+	}
+	if (*s == '#') {
+	    xs_warning("%s:%d: Invalid profile syntax ('#' ignored)", filename,
+		    lno);
+	    ilen = 0;
+	    continue;
+	}
+
+	/* Strip trailing whitespace and check for empty lines. */
+	sl = strlen(s);
+	while (sl && isspace(s[sl-1])) {
+	    s[--sl] = '\0';
+	}
+	if (!sl) {
+	    ilen = 0;
+	    continue;
+	}
+
+	/* Digest it. */
+	where = xs_buffer("%s:%d", filename, lno);
+	parse_xrm(s, where);
 	Free(where);
-	fclose(f);
-	return 0;
+
+	/* Get ready for the next iteration. */
+	ilen = 0;
+    }
+    fclose(f);
+    return True;
 }

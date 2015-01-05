@@ -201,7 +201,7 @@ static Boolean b8_none_added(b8_t *want, b8_t *got);
 
 static b8_t e_funcs;		/* negotiated TN3270E functions */
 
-static int telnet_fsm(unsigned char c);
+static Boolean telnet_fsm(unsigned char c);
 static void net_rawout(unsigned const char *buf, int len);
 static void check_in3270(void);
 static void store3270in(unsigned char c);
@@ -471,7 +471,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 
 	if (numeric_host_and_port(&haddr[ix].sa, ha_len[ix], hn,
 		    sizeof(hn), pn, sizeof(pn), errmsg,
-		    sizeof(errmsg)) == 0) {
+		    sizeof(errmsg))) {
 		vtrace("Trying %s, port %s...\n", hn, pn);
 #if defined(C3270) /*[*/
 		popup_an_info("Trying %s, port %s...", hn, pn);
@@ -951,8 +951,8 @@ net_connected(void)
 	    	vtrace("Connected to proxy server %s, port %u.\n",
 			proxy_host, proxy_port);
 
-	    	if (proxy_negotiate(proxy_type, sock, hostname,
-			    current_port) < 0) {
+	    	if (!proxy_negotiate(proxy_type, sock, hostname,
+			    current_port)) {
 		    	host_disconnect(True);
 			return;
 		}
@@ -1360,7 +1360,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 			nvt_process((unsigned int) *cp);
 		} else {
 #endif /*]*/
-			if (telnet_fsm(*cp)) {
+			if (!telnet_fsm(*cp)) {
 				(void) ctlr_dbcs_postprocess();
 				host_disconnect(True);
 				return;
@@ -1480,16 +1480,17 @@ force_ascii(const char *s)
 void
 force_local(char *s)
 {
-	unsigned char c, e;
+    unsigned char c, e;
 
-	while ((c = *s) != '\0') {
-		e = asc2ebc0[c];
-		if (e)
-			*s = e;
-		else
-			*s = '?';
-		s++;
+    while ((c = *s) != '\0') {
+	e = asc2ebc0[c];
+	if (e) {
+	    *s = e;
+	} else {
+	    *s = '?';
 	}
+	s++;
+    }
 }
 #else /*][*/
 #define force_local(s)
@@ -1498,420 +1499,395 @@ force_local(char *s)
 /*
  * telnet_fsm
  *	Telnet finite-state machine.
- *	Returns 0 for okay, -1 for errors.
+ *	Returns True for okay, False for errors.
  */
-static int
+static Boolean
 telnet_fsm(unsigned char c)
 {
-	char	*see_chr;
-	int	sl;
+    char *see_chr;
+    int	sl;
 
-	switch (telnet_state) {
-	    case TNS_DATA:	/* normal data processing */
-		if (c == IAC) {	/* got a telnet command */
-			telnet_state = TNS_IAC;
-			if (nvt_data) {
-				vtrace("\n");
-				nvt_data = 0;
-			}
-			break;
-		}
-		if (IN_NEITHER) {	/* now can assume NVT mode */
-			if (linemode) {
-				linemode_buf_init();
-			}
-			host_in3270(CONNECTED_NVT);
-			kybdlock_clr(KL_AWAITING_FIRST, "telnet_fsm");
-			status_reset();
-			ps_process();
-		}
-		if (IN_NVT && !IN_E) {
-			if (!nvt_data) {
-				vtrace("<.. ");
-				nvt_data = 4;
-			}
-			see_chr = ctl_see((int) c);
-			nvt_data += (sl = strlen(see_chr));
-			if (nvt_data >= TRACELINE) {
-				vtrace(" ...\n... ");
-				nvt_data = 4 + sl;
-			}
-			vtrace("%s", see_chr);
-			if (!syncing) {
-				if (linemode && appres.onlcr && c == '\n')
-					nvt_process((unsigned int) '\r');
-				nvt_process((unsigned int) c);
-				sms_store(c);
-			}
-		} else {
-			store3270in(c);
-		}
-		break;
-	    case TNS_IAC:	/* process a telnet command */
-		if (c != EOR && c != IAC) {
-			vtrace("RCVD %s ", cmd(c));
-		}
-		switch (c) {
-		    case IAC:	/* escaped IAC, insert it */
-			if (IN_NVT && !IN_E) {
-				if (!nvt_data) {
-					vtrace("<.. ");
-					nvt_data = 4;
-				}
-				see_chr = ctl_see((int) c);
-				nvt_data += (sl = strlen(see_chr));
-				if (nvt_data >= TRACELINE) {
-					vtrace(" ...\n ...");
-					nvt_data = 4 + sl;
-				}
-				vtrace("%s", see_chr);
-				nvt_process((unsigned int) c);
-				sms_store(c);
-			} else
-				store3270in(c);
-			telnet_state = TNS_DATA;
-			break;
-		    case EOR:	/* eor, process accumulated input */
-			if (IN_3270 || (IN_E && tn3270e_negotiated)) {
-				ns_rrcvd++;
-				if (process_eor())
-					return -1;
-			} else
-				Warning("EOR received when not in 3270 mode, "
-				    "ignored.");
-			vtrace("RCVD EOR\n");
-			ibptr = ibuf;
-			telnet_state = TNS_DATA;
-			break;
-		    case WILL:
-			telnet_state = TNS_WILL;
-			break;
-		    case WONT:
-			telnet_state = TNS_WONT;
-			break;
-		    case DO:
-			telnet_state = TNS_DO;
-			break;
-		    case DONT:
-			telnet_state = TNS_DONT;
-			break;
-		    case SB:
-			telnet_state = TNS_SB;
-			if (sbbuf == NULL)
-				sbbuf = (unsigned char *)Malloc(1024);
-			sbptr = sbbuf;
-			break;
-		    case DM:
-			vtrace("\n");
-			if (syncing) {
-				syncing = 0;
-#if !defined(_WIN32) /*[*/
-				x_except_on(sock);
-#else /*][*/
-				x_except_on(sock_handle);
-#endif /*]*/
-			}
-			telnet_state = TNS_DATA;
-			break;
-		    case GA:
-		    case NOP:
-			vtrace("\n");
-			telnet_state = TNS_DATA;
-			break;
-		    default:
-			vtrace("???\n");
-			telnet_state = TNS_DATA;
-			break;
-		}
-		break;
-	    case TNS_WILL:	/* telnet WILL DO OPTION command */
-		vtrace("%s\n", opt(c));
-		switch (c) {
-		    case TELOPT_SGA:
-		    case TELOPT_BINARY:
-		    case TELOPT_EOR:
-		    case TELOPT_TTYPE:
-		    case TELOPT_ECHO:
-		    case TELOPT_TN3270E:
-			if (c != TELOPT_TN3270E || !non_tn3270e_host) {
-				if (!hisopts[c]) {
-					hisopts[c] = 1;
-					do_opt[2] = c;
-					net_rawout(do_opt, sizeof(do_opt));
-					vtrace("SENT %s %s\n",
-						cmd(DO), opt(c));
-
-					/*
-					 * For UTS, volunteer to do EOR when
-					 * they do.
-					 */
-					if (c == TELOPT_EOR && !myopts[c]) {
-						myopts[c] = 1;
-						will_opt[2] = c;
-						net_rawout(will_opt,
-							sizeof(will_opt));
-						vtrace("SENT %s %s\n",
-							cmd(WILL), opt(c));
-					}
-
-					check_in3270();
-					check_linemode(False);
-				}
-				break;
-			}
-		    default:
-			dont_opt[2] = c;
-			net_rawout(dont_opt, sizeof(dont_opt));
-			vtrace("SENT %s %s\n", cmd(DONT), opt(c));
-			break;
-		}
-		telnet_state = TNS_DATA;
-		break;
-	    case TNS_WONT:	/* telnet WONT DO OPTION command */
-		vtrace("%s\n", opt(c));
-		if (hisopts[c]) {
-			hisopts[c] = 0;
-			dont_opt[2] = c;
-			net_rawout(dont_opt, sizeof(dont_opt));
-			vtrace("SENT %s %s\n", cmd(DONT), opt(c));
-			check_in3270();
-			check_linemode(False);
-		}
-		telnet_state = TNS_DATA;
-		break;
-	    case TNS_DO:	/* telnet PLEASE DO OPTION command */
-		vtrace("%s\n", opt(c));
-		switch (c) {
-		    case TELOPT_BINARY:
-		    case TELOPT_EOR:
-		    case TELOPT_TTYPE:
-		    case TELOPT_SGA:
-		    case TELOPT_NAWS:
-		    case TELOPT_TM:
-		    case TELOPT_TN3270E:
-		    case TELOPT_STARTTLS:
-#if defined(HAVE_LIBSSL) /*[*/
-			if (c == TELOPT_STARTTLS &&
-				(!ssl_supported || !appres.tls)) {
-
-				refused_tls = True;
-			    	goto wont;
-			}
-#else /*][*/
-			if (c == TELOPT_STARTTLS) {
-				refused_tls = True;
-			    	goto wont;
-			}
-#endif /*]*/
-		    case TELOPT_NEW_ENVIRON:
-			if (c == TELOPT_TN3270E && non_tn3270e_host)
-				goto wont;
-			if (c == TELOPT_TM && !appres.bsd_tm)
-				goto wont;
-			if (c == TELOPT_NEW_ENVIRON && !appres.new_environ) {
-				goto wont;
-			}
-			if (c == TELOPT_TTYPE &&
-			    myopts[TELOPT_NEW_ENVIRON] &&
-			    !did_ne_send) {
-				/*
-				 * Defer sending WILL TTYPE until after the
-				 * host asks for SB NEW_ENVIRON SEND.
-				 * */
-				myopts[c] = 1;
-				deferred_will_ttype = True;
-				break;
-			}
-
-			if (!myopts[c]) {
-				if (c != TELOPT_TM)
-					myopts[c] = 1;
-				will_opt[2] = c;
-				net_rawout(will_opt, sizeof(will_opt));
-				vtrace("SENT %s %s\n", cmd(WILL),
-					opt(c));
-				check_in3270();
-				check_linemode(False);
-			}
-			if (c == TELOPT_NAWS)
-				send_naws();
-#if defined(HAVE_LIBSSL) /*[*/
-			if (c == TELOPT_STARTTLS) {
-				static unsigned char follows_msg[] = {
-					IAC, SB, TELOPT_STARTTLS,
-					TLS_FOLLOWS, IAC, SE
-				};
-
-				/*
-				 * Send IAC SB STARTTLS FOLLOWS IAC SE
-				 * to announce that what follows is TLS.
-				 */
-				net_rawout(follows_msg,
-						sizeof(follows_msg));
-				vtrace("SENT %s %s FOLLOWS %s\n",
-						cmd(SB),
-						opt(TELOPT_STARTTLS),
-						cmd(SE));
-				need_tls_follows = True;
-			}
-#endif /*]*/
-			break;
-		    default:
-		    wont:
-			wont_opt[2] = c;
-			net_rawout(wont_opt, sizeof(wont_opt));
-			vtrace("SENT %s %s\n", cmd(WONT), opt(c));
-			break;
-		}
-		telnet_state = TNS_DATA;
-		break;
-	    case TNS_DONT:	/* telnet PLEASE DON'T DO OPTION command */
-		vtrace("%s\n", opt(c));
-		if (myopts[c]) {
-			myopts[c] = 0;
-			wont_opt[2] = c;
-			net_rawout(wont_opt, sizeof(wont_opt));
-			vtrace("SENT %s %s\n", cmd(WONT), opt(c));
-			check_in3270();
-			check_linemode(False);
-		}
-		if (c == TELOPT_TTYPE && deferred_will_ttype)
-			deferred_will_ttype = False;
-		telnet_state = TNS_DATA;
-		break;
-	    case TNS_SB:	/* telnet sub-option string command */
-		if (c == IAC)
-			telnet_state = TNS_SB_IAC;
-		else
-			*sbptr++ = c;
-		break;
-	    case TNS_SB_IAC:	/* telnet sub-option string command */
-		*sbptr++ = c;
-		if (c == SE) {
-			telnet_state = TNS_DATA;
-			if (sbbuf[0] == TELOPT_TTYPE &&
-			    sbbuf[1] == TELQUAL_SEND) {
-				int tt_len, tb_len;
-				char *tt_out;
-
-				vtrace("%s %s\n", opt(sbbuf[0]),
-				    telquals[sbbuf[1]]);
-				if (lus != NULL && try_lu == NULL) {
-					/* None of the LUs worked. */
-					popup_an_error("Cannot connect to "
-						"specified LU");
-					return -1;
-				}
-
-				tt_len = strlen(termtype);
-				if (try_lu != NULL && *try_lu) {
-					tt_len += strlen(try_lu) + 1;
-					connected_lu = try_lu;
-				} else
-					connected_lu = NULL;
-				status_lu(connected_lu);
-
-				tb_len = 4 + tt_len + 2;
-				tt_out = Malloc(tb_len + 1);
-				(void) sprintf(tt_out, "%c%c%c%c%s%s%s%c%c",
-				    IAC, SB, TELOPT_TTYPE, TELQUAL_IS,
-				    force_ascii(termtype),
-				    (try_lu != NULL && *try_lu) ? "@" : "",
-				    (try_lu != NULL && *try_lu) ?
-					force_ascii(try_lu) : "",
-				    IAC, SE);
-				net_rawout((unsigned char *)tt_out, tb_len);
-				Free(tt_out);
-
-				vtrace("SENT %s %s %s %s%s%s %s\n",
-				    cmd(SB), opt(TELOPT_TTYPE),
-				    telquals[TELQUAL_IS],
-				    termtype,
-				    (try_lu != NULL && *try_lu) ? "@" : "",
-				    (try_lu != NULL && *try_lu) ? try_lu : "",
-				    cmd(SE));
-
-				/* Advance to the next LU name. */
-				next_lu();
-			} else if (myopts[TELOPT_TN3270E] &&
-				   sbbuf[0] == TELOPT_TN3270E) {
-				if (tn3270e_negotiate())
-					return -1;
-			}
-#if defined(HAVE_LIBSSL) /*[*/
-			else if (need_tls_follows &&
-				   myopts[TELOPT_STARTTLS] &&
-				   sbbuf[0] == TELOPT_STARTTLS) {
-				continue_tls(sbbuf, sbptr - sbbuf);
-			}
-#endif /*]*/
-			else if (sbbuf[0] == TELOPT_NEW_ENVIRON &&
-			         sbbuf[1] == TELQUAL_SEND &&
-				 appres.new_environ) {
-				int tb_len;
-				char *tt_out;
-				char *user;
-
-				vtrace("%s %s %s\n", opt(sbbuf[0]),
-				    telquals[sbbuf[1]],
-				    telobjs[sbbuf[2]]);
-
-				/* Send out NEW-ENVIRON. */
-				user = appres.user? appres.user: getenv("USER");
-				if (user == NULL)
-					user = "unknown";
-				tb_len = 21 + strlen(user) +
-				    strlen(appres.devname);
-				tt_out = Malloc(tb_len + 1);
-				(void) sprintf(tt_out,
-					"%c%c%c%c%c%s%c%s%c%s%c%s%c%c",
-					IAC, SB, TELOPT_NEW_ENVIRON, TELQUAL_IS,
-					TELOBJ_VAR, force_ascii("USER"),
-					TELOBJ_VALUE, force_ascii(user),
-					TELOBJ_USERVAR, force_ascii("DEVNAME"),
-					TELOBJ_VALUE,
-					    force_ascii(appres.devname),
-					IAC, SE);
-				net_rawout((unsigned char *)tt_out, tb_len);
-				Free(tt_out);
-				vtrace("SENT %s %s "
-					"%s "
-					"%s \"%s\" "
-					"%s \"%s\" "
-					"%s \"%s\" "
-					"%s \"%s\"\n",
-					cmd(SB), opt(TELOPT_NEW_ENVIRON),
-					telquals[TELQUAL_IS],
-					telobjs[TELOBJ_VAR], "USER",
-					telobjs[TELOBJ_VALUE], user,
-					telobjs[TELOBJ_USERVAR], "DEVNAME",
-					telobjs[TELOBJ_VALUE], appres.devname);
-
-				/*
-				 * Remember that we did a NEW_ENVIRON SEND,
-				 * so we won't defer a future DO TTYPE.
-				 */
-				did_ne_send = True;
-
-				/* Now respond to DO TTYPE. */
-				if (deferred_will_ttype &&
-				    myopts[TELOPT_TTYPE]) {
-					will_opt[2] = TELOPT_TTYPE;
-					net_rawout(will_opt, sizeof(will_opt));
-					vtrace("SENT %s %s\n", cmd(WILL),
-						opt(TELOPT_TTYPE));
-					check_in3270();
-					check_linemode(False);
-					deferred_will_ttype = False;
-				}
-			}
-
-		} else {
-			telnet_state = TNS_SB;
-		}
-		break;
+    switch (telnet_state) {
+    case TNS_DATA:	/* normal data processing */
+	if (c == IAC) {	/* got a telnet command */
+	    telnet_state = TNS_IAC;
+	    if (nvt_data) {
+		vtrace("\n");
+		nvt_data = 0;
+	    }
+	    break;
 	}
-	return 0;
+	if (IN_NEITHER) {	/* now can assume NVT mode */
+	    if (linemode) {
+		linemode_buf_init();
+	    }
+	    host_in3270(CONNECTED_NVT);
+	    kybdlock_clr(KL_AWAITING_FIRST, "telnet_fsm");
+	    status_reset();
+	    ps_process();
+	}
+	if (IN_NVT && !IN_E) {
+	    if (!nvt_data) {
+		vtrace("<.. ");
+		nvt_data = 4;
+	    }
+	    see_chr = ctl_see((int) c);
+	    nvt_data += (sl = strlen(see_chr));
+	    if (nvt_data >= TRACELINE) {
+		vtrace(" ...\n... ");
+		nvt_data = 4 + sl;
+	    }
+	    vtrace("%s", see_chr);
+	    if (!syncing) {
+		if (linemode && appres.onlcr && c == '\n') {
+		    nvt_process((unsigned int) '\r');
+		}
+		nvt_process((unsigned int) c);
+		sms_store(c);
+	    }
+	} else {
+	    store3270in(c);
+	}
+	break;
+    case TNS_IAC:	/* process a telnet command */
+	if (c != EOR && c != IAC) {
+	    vtrace("RCVD %s ", cmd(c));
+	}
+	switch (c) {
+	case IAC:	/* escaped IAC, insert it */
+	    if (IN_NVT && !IN_E) {
+		if (!nvt_data) {
+		    vtrace("<.. ");
+		    nvt_data = 4;
+		}
+		see_chr = ctl_see((int) c);
+		nvt_data += (sl = strlen(see_chr));
+		if (nvt_data >= TRACELINE) {
+		    vtrace(" ...\n ...");
+		    nvt_data = 4 + sl;
+		}
+		vtrace("%s", see_chr);
+		nvt_process((unsigned int) c);
+		sms_store(c);
+	    } else {
+		store3270in(c);
+	    }
+	    telnet_state = TNS_DATA;
+	    break;
+	case EOR:	/* eor, process accumulated input */
+	    if (IN_3270 || (IN_E && tn3270e_negotiated)) {
+		ns_rrcvd++;
+		if (process_eor()) {
+		    return False;
+		}
+	    } else {
+		Warning("EOR received when not in 3270 mode, ignored.");
+	    }
+	    vtrace("RCVD EOR\n");
+	    ibptr = ibuf;
+	    telnet_state = TNS_DATA;
+	    break;
+	case WILL:
+	    telnet_state = TNS_WILL;
+	    break;
+	case WONT:
+	    telnet_state = TNS_WONT;
+	    break;
+	case DO:
+	    telnet_state = TNS_DO;
+	    break;
+	case DONT:
+	    telnet_state = TNS_DONT;
+	    break;
+	case SB:
+	    telnet_state = TNS_SB;
+	    if (sbbuf == NULL) {
+		sbbuf = (unsigned char *)Malloc(1024);
+	    }
+	    sbptr = sbbuf;
+	    break;
+	case DM:
+	    vtrace("\n");
+	    if (syncing) {
+		syncing = 0;
+#if !defined(_WIN32) /*[*/
+		x_except_on(sock);
+#else /*][*/
+		x_except_on(sock_handle);
+#endif /*]*/
+	    }
+	    telnet_state = TNS_DATA;
+	    break;
+	case GA:
+	case NOP:
+	    vtrace("\n");
+	    telnet_state = TNS_DATA;
+	    break;
+	default:
+	    vtrace("???\n");
+	    telnet_state = TNS_DATA;
+	    break;
+	}
+	break;
+    case TNS_WILL:	/* telnet WILL DO OPTION command */
+	vtrace("%s\n", opt(c));
+	switch (c) {
+	case TELOPT_SGA:
+	case TELOPT_BINARY:
+	case TELOPT_EOR:
+	case TELOPT_TTYPE:
+	case TELOPT_ECHO:
+	case TELOPT_TN3270E:
+	    if (c != TELOPT_TN3270E || !non_tn3270e_host) {
+		if (!hisopts[c]) {
+		    hisopts[c] = 1;
+		    do_opt[2] = c;
+		    net_rawout(do_opt, sizeof(do_opt));
+		    vtrace("SENT %s %s\n", cmd(DO), opt(c));
+
+		    /* For UTS, volunteer to do EOR when they do. */
+		    if (c == TELOPT_EOR && !myopts[c]) {
+			myopts[c] = 1;
+			will_opt[2] = c;
+			net_rawout(will_opt, sizeof(will_opt));
+			vtrace("SENT %s %s\n", cmd(WILL), opt(c));
+		    }
+
+		    check_in3270();
+		    check_linemode(False);
+		}
+		break;
+	    }
+	default:
+	    dont_opt[2] = c;
+	    net_rawout(dont_opt, sizeof(dont_opt));
+	    vtrace("SENT %s %s\n", cmd(DONT), opt(c));
+	    break;
+	}
+	telnet_state = TNS_DATA;
+	break;
+    case TNS_WONT:	/* telnet WONT DO OPTION command */
+	vtrace("%s\n", opt(c));
+	if (hisopts[c]) {
+	    hisopts[c] = 0;
+	    dont_opt[2] = c;
+	    net_rawout(dont_opt, sizeof(dont_opt));
+	    vtrace("SENT %s %s\n", cmd(DONT), opt(c));
+	    check_in3270();
+	    check_linemode(False);
+	}
+	telnet_state = TNS_DATA;
+	break;
+    case TNS_DO:	/* telnet PLEASE DO OPTION command */
+	vtrace("%s\n", opt(c));
+	switch (c) {
+	case TELOPT_BINARY:
+	case TELOPT_EOR:
+	case TELOPT_TTYPE:
+	case TELOPT_SGA:
+	case TELOPT_NAWS:
+	case TELOPT_TM:
+	case TELOPT_TN3270E:
+	case TELOPT_STARTTLS:
+#if defined(HAVE_LIBSSL) /*[*/
+	    if (c == TELOPT_STARTTLS && (!ssl_supported || !appres.tls)) {
+		refused_tls = True;
+		goto wont;
+	    }
+#else /*][*/
+	    if (c == TELOPT_STARTTLS) {
+		refused_tls = True;
+		goto wont;
+	    }
+#endif /*]*/
+	case TELOPT_NEW_ENVIRON:
+	    if (c == TELOPT_TN3270E && non_tn3270e_host) {
+		goto wont;
+	    }
+	    if (c == TELOPT_TM && !appres.bsd_tm) {
+		goto wont;
+	    }
+	    if (c == TELOPT_NEW_ENVIRON && !appres.new_environ) {
+		goto wont;
+	    }
+	    if (c == TELOPT_TTYPE && myopts[TELOPT_NEW_ENVIRON] &&
+		    !did_ne_send) {
+		/*
+		 * Defer sending WILL TTYPE until after the host asks for SB
+		 * NEW_ENVIRON SEND.
+		 */
+		myopts[c] = 1;
+		deferred_will_ttype = True;
+		break;
+	    }
+
+	    if (!myopts[c]) {
+		if (c != TELOPT_TM) {
+		    myopts[c] = 1;
+		}
+		will_opt[2] = c;
+		net_rawout(will_opt, sizeof(will_opt));
+		vtrace("SENT %s %s\n", cmd(WILL), opt(c));
+		check_in3270();
+		check_linemode(False);
+	    }
+	    if (c == TELOPT_NAWS) {
+		send_naws();
+	    }
+#if defined(HAVE_LIBSSL) /*[*/
+	    if (c == TELOPT_STARTTLS) {
+		static unsigned char follows_msg[] = {
+		    IAC, SB, TELOPT_STARTTLS, TLS_FOLLOWS, IAC, SE
+		};
+
+		/*
+		 * Send IAC SB STARTTLS FOLLOWS IAC SE to announce that what
+		 * follows is TLS.
+		 */
+		net_rawout(follows_msg, sizeof(follows_msg));
+		vtrace("SENT %s %s FOLLOWS %s\n", cmd(SB),
+			opt(TELOPT_STARTTLS), cmd(SE));
+		need_tls_follows = True;
+	    }
+#endif /*]*/
+	    break;
+	default:
+	wont:
+	    wont_opt[2] = c;
+	    net_rawout(wont_opt, sizeof(wont_opt));
+	    vtrace("SENT %s %s\n", cmd(WONT), opt(c));
+	    break;
+	}
+	telnet_state = TNS_DATA;
+	break;
+    case TNS_DONT:	/* telnet PLEASE DON'T DO OPTION command */
+	vtrace("%s\n", opt(c));
+	if (myopts[c]) {
+	    myopts[c] = 0;
+	    wont_opt[2] = c;
+	    net_rawout(wont_opt, sizeof(wont_opt));
+	    vtrace("SENT %s %s\n", cmd(WONT), opt(c));
+	    check_in3270();
+	    check_linemode(False);
+	}
+	if (c == TELOPT_TTYPE && deferred_will_ttype) {
+	    deferred_will_ttype = False;
+	}
+	telnet_state = TNS_DATA;
+	break;
+    case TNS_SB:	/* telnet sub-option string command */
+	if (c == IAC) {
+	    telnet_state = TNS_SB_IAC;
+	} else {
+	    *sbptr++ = c;
+	}
+	break;
+    case TNS_SB_IAC:	/* telnet sub-option string command */
+	*sbptr++ = c;
+	if (c == SE) {
+	    telnet_state = TNS_DATA;
+	    if (sbbuf[0] == TELOPT_TTYPE && sbbuf[1] == TELQUAL_SEND) {
+		int tt_len, tb_len;
+		char *tt_out;
+
+		vtrace("%s %s\n", opt(sbbuf[0]), telquals[sbbuf[1]]);
+		if (lus != NULL && try_lu == NULL) {
+		    /* None of the LUs worked. */
+		    popup_an_error("Cannot connect to specified LU");
+		    return False;
+		}
+
+		tt_len = strlen(termtype);
+		if (try_lu != NULL && *try_lu) {
+		    tt_len += strlen(try_lu) + 1;
+		    connected_lu = try_lu;
+		} else {
+		    connected_lu = NULL;
+		}
+		status_lu(connected_lu);
+
+		tb_len = 4 + tt_len + 2;
+		tt_out = Malloc(tb_len + 1);
+		(void) sprintf(tt_out, "%c%c%c%c%s%s%s%c%c",
+			IAC, SB, TELOPT_TTYPE, TELQUAL_IS,
+			force_ascii(termtype),
+			(try_lu != NULL && *try_lu)? "@": "",
+			(try_lu != NULL && *try_lu)?  force_ascii(try_lu) : "",
+			IAC, SE);
+		net_rawout((unsigned char *)tt_out, tb_len);
+		Free(tt_out);
+
+		vtrace("SENT %s %s %s %s%s%s %s\n", cmd(SB), opt(TELOPT_TTYPE),
+			telquals[TELQUAL_IS], termtype,
+			(try_lu != NULL && *try_lu)? "@": "",
+			(try_lu != NULL && *try_lu)? try_lu: "",
+			cmd(SE));
+
+		/* Advance to the next LU name. */
+		next_lu();
+	    } else if (myopts[TELOPT_TN3270E] && sbbuf[0] == TELOPT_TN3270E) {
+		if (tn3270e_negotiate()) {
+		    return False;
+		}
+	    }
+#if defined(HAVE_LIBSSL) /*[*/
+	    else if (need_tls_follows && myopts[TELOPT_STARTTLS] &&
+		    sbbuf[0] == TELOPT_STARTTLS) {
+		continue_tls(sbbuf, sbptr - sbbuf);
+	    }
+#endif /*]*/
+	    else if (sbbuf[0] == TELOPT_NEW_ENVIRON &&
+		    sbbuf[1] == TELQUAL_SEND && appres.new_environ) {
+		int tb_len;
+		char *tt_out;
+		char *user;
+
+		vtrace("%s %s %s\n", opt(sbbuf[0]), telquals[sbbuf[1]],
+			telobjs[sbbuf[2]]);
+
+		/* Send out NEW-ENVIRON. */
+		user = appres.user? appres.user: getenv("USER");
+		if (user == NULL) {
+		    user = "unknown";
+		}
+		tb_len = 21 + strlen(user) + strlen(appres.devname);
+		tt_out = Malloc(tb_len + 1);
+		(void) sprintf(tt_out, "%c%c%c%c%c%s%c%s%c%s%c%s%c%c",
+			IAC, SB, TELOPT_NEW_ENVIRON, TELQUAL_IS, TELOBJ_VAR,
+			force_ascii("USER"), TELOBJ_VALUE, force_ascii(user),
+			TELOBJ_USERVAR, force_ascii("DEVNAME"), TELOBJ_VALUE,
+			force_ascii(appres.devname), IAC, SE);
+		net_rawout((unsigned char *)tt_out, tb_len);
+		Free(tt_out);
+		vtrace("SENT %s %s %s %s \"%s\" %s \"%s\" %s \"%s\" %s \"%s\""
+			"\n", cmd(SB), opt(TELOPT_NEW_ENVIRON),
+			telquals[TELQUAL_IS], telobjs[TELOBJ_VAR], "USER",
+			telobjs[TELOBJ_VALUE], user, telobjs[TELOBJ_USERVAR],
+			"DEVNAME", telobjs[TELOBJ_VALUE], appres.devname);
+
+		/*
+		 * Remember that we did a NEW_ENVIRON SEND, so we won't defer a
+		 * future DO TTYPE.
+		 */
+		did_ne_send = True;
+
+		/* Now respond to DO TTYPE. */
+		if (deferred_will_ttype && myopts[TELOPT_TTYPE]) {
+		    will_opt[2] = TELOPT_TTYPE;
+		    net_rawout(will_opt, sizeof(will_opt));
+		    vtrace("SENT %s %s\n", cmd(WILL), opt(TELOPT_TTYPE));
+		    check_in3270();
+		    check_linemode(False);
+		    deferred_will_ttype = False;
+		}
+	    }
+
+	} else {
+	    telnet_state = TNS_SB;
+	}
+	break;
+    }
+    return True;
 }
 
 /* Send a TN3270E terminal type request. */

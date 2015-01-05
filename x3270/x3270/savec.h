@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -39,5 +39,5 @@ extern void charset_list_changed(char *charset);
 extern void merge_profile(XrmDatabase *d, char *session, Boolean mono);
 extern void save_args(int argc, char *argv[]);
 extern void save_init(int argc, char *hostname, char *port);
-extern int save_options(char *n);
+extern Boolean save_options(char *n);
 extern void save_yourself(void);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2014, Paul Mattes.
+ * Copyright (c) 2008-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -431,97 +431,99 @@ unicode_to_ebcdic_ge(ucs4_t u, Boolean *ge)
 
 /*
  * Set the SBCS EBCDIC-to-Unicode translation table.
- * Returns 0 for success, -1 for failure.
+ * Returns True for success, False for failure.
  */
-int
+Boolean
 set_uni(const char *csname, const char **host_codepage,
 	const char **cgcsgid, const char **display_charsets)
 {
-	int i;
-	const char *realname;
-	int rc = -1;
-	Boolean cannot_fail = False;
+    int i;
+    const char *realname;
+    Boolean rc = False;
+    Boolean cannot_fail = False;
 
-	/*
-	 * If the csname is NULL, this is a fallback to the default
-	 * and the iconv lookup cannot fail.
-	 */
-	if (csname == NULL) {
-	    	csname = DEFAULT_CSNAME;
-		cannot_fail = True;
+    /*
+     * If the csname is NULL, this is a fallback to the default
+     * and the iconv lookup cannot fail.
+     */
+    if (csname == NULL) {
+	csname = DEFAULT_CSNAME;
+	cannot_fail = True;
+    }
+    realname = csname;
+
+    /* Search for an alias. */
+    for (i = 0; cpaliases[i].alias != NULL; i++) {
+	if (!strcasecmp(csname, cpaliases[i].alias)) {
+	    realname = cpaliases[i].canon;
+	    break;
 	}
-	realname = csname;
+    }
 
-	/* Search for an alias. */
-	for (i = 0; cpaliases[i].alias != NULL; i++) {
-		if (!strcasecmp(csname, cpaliases[i].alias)) {
-			realname = cpaliases[i].canon;
-			break;
-		}
+    /* Search for a match. */
+    for (i = 0; uni[i].name != NULL; i++) {
+	if (!strcasecmp(realname, uni[i].name)) {
+	    cur_uni = &uni[i];
+	    *host_codepage = uni[i].host_codepage;
+	    *cgcsgid = uni[i].cgcsgid;
+	    *display_charsets = uni[i].display_charset;
+	    rc = True;
+	    break;
 	}
+    }
 
-	/* Search for a match. */
-	for (i = 0; uni[i].name != NULL; i++) {
-		if (!strcasecmp(realname, uni[i].name)) {
-			cur_uni = &uni[i];
-			*host_codepage = uni[i].host_codepage;
-			*cgcsgid = uni[i].cgcsgid;
-			*display_charsets = uni[i].display_charset;
-			rc = 0;
-			break;
-		}
-	}
-
-	if (cannot_fail && rc == -1)
-		Error("Cannot find default charset definition");
+    if (cannot_fail && !rc) {
+	Error("Cannot find default charset definition");
+    }
 
 #if defined(USE_ICONV) /*[*/
-	/*
-	 * wchar_t's are not Unicode, so getting to/from Unicode is only half
-	 * the battle.  We need to use iconv() to get between Unicode to the
-	 * local multi-byte representation.  We'll explicitly use UTF-8, which
-	 * appears to be the most broadly-supported translation.
-	 */
-	if (rc == 0) {
-		if (!is_utf8) {
-			/*
-			 * If iconv doesn't support the locale's codeset, then
-			 * this box is hosed.
-			 */
-			i_u2mb = iconv_open(locale_codeset, "UTF-8");
-			if (i_u2mb == (iconv_t)(-1))
-				rc = -1;
-			else {
-				i_mb2u = iconv_open("UTF-8", locale_codeset);
-				if (i_mb2u == (iconv_t)(-1)) {
-					iconv_close(i_u2mb);
-					rc = -1;
-				}
-			}
+    /*
+     * wchar_t's are not Unicode, so getting to/from Unicode is only half
+     * the battle.  We need to use iconv() to get between Unicode to the
+     * local multi-byte representation.  We'll explicitly use UTF-8, which
+     * appears to be the most broadly-supported translation.
+     */
+    if (rc) {
+	if (!is_utf8) {
+	    /*
+	     * If iconv doesn't support the locale's codeset, then
+	     * this box is hosed.
+	     */
+	    i_u2mb = iconv_open(locale_codeset, "UTF-8");
+	    if (i_u2mb == (iconv_t)(-1)) {
+		rc = False;
+	    } else {
+		i_mb2u = iconv_open("UTF-8", locale_codeset);
+		if (i_mb2u == (iconv_t)(-1)) {
+		    iconv_close(i_u2mb);
+		    rc = False;
 		}
-
-		if (rc == -1 && cannot_fail) {
-		    	/* Try again with plain-old ASCII. */
-#if defined(PR3287) /*[*/
-		    	errmsg("Cannot find iconv translation from locale "
-				"codeset to UTF-8, using ASCII");
-#else /*][*/
-		    	xs_warning("Cannot find iconv translation from locale "
-				"codeset '%s' to UTF-8, using ASCII",
-				locale_codeset);
-#endif /*]*/
-			i_u2mb = iconv_open("ASCII", "UTF-8");
-			if (i_u2mb == (iconv_t)-1)
-			    	Error("No iconv UTF-8 to ASCII translation");
-			i_mb2u = iconv_open("UTF-8", "ASCII");
-			if (i_mb2u == (iconv_t)-1)
-			    	Error("No iconv ASCII to UTF-8 translation");
-			rc = 0;
-		}
+	    }
 	}
+
+	if (!rc && cannot_fail) {
+	    /* Try again with plain-old ASCII. */
+#if defined(PR3287) /*[*/
+	    errmsg("Cannot find iconv translation from locale codeset to "
+		    "UTF-8, using ASCII");
+#else /*][*/
+	    xs_warning("Cannot find iconv translation from locale codeset "
+		    "'%s' to UTF-8, using ASCII", locale_codeset);
+#endif /*]*/
+	    i_u2mb = iconv_open("ASCII", "UTF-8");
+	    if (i_u2mb == (iconv_t)-1) {
+		Error("No iconv UTF-8 to ASCII translation");
+	    }
+	    i_mb2u = iconv_open("UTF-8", "ASCII");
+	    if (i_mb2u == (iconv_t)-1) {
+		Error("No iconv ASCII to UTF-8 translation");
+	    }
+	    rc = True;
+	}
+    }
 #endif /*]*/
 
-	return rc;
+    return rc;
 }
 
 /*

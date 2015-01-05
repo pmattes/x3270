@@ -815,7 +815,8 @@ struct codepair {
   { 0x20ac, 0x20ac }, /*                    EuroSign € EURO SIGN */
 };
 
-long keysym2ucs(KeySym keysym)
+long
+keysym2ucs(KeySym keysym)
 {
     int min = 0;
     int max = sizeof(keysymtab) / sizeof(struct codepair) - 1;
@@ -833,11 +834,11 @@ long keysym2ucs(KeySym keysym)
     /* binary search in table */
     while (max >= min) {
 	mid = (min + max) / 2;
-	if (keysymtab[mid].keysym < keysym)
+	if (keysymtab[mid].keysym < keysym) {
 	    min = mid + 1;
-	else if (keysymtab[mid].keysym > keysym)
+	} else if (keysymtab[mid].keysym > keysym) {
 	    max = mid - 1;
-	else {
+	} else {
 	    /* found it */
 	    return keysymtab[mid].ucs;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -66,7 +66,7 @@ extern void RemoveTimeOut(ioid_t id);
 
 extern KeySym StringToKeysym(char *s);
 extern char *KeysymToString(KeySym k);
-extern int read_resource_file(const char *filename, Boolean fatal);
+extern Boolean read_resource_file(const char *filename, Boolean fatal);
 extern Boolean split_hier(char *label, char **base, char ***parents);
 
 extern const char *build_options(void);

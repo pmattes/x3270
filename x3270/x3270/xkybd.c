@@ -559,7 +559,7 @@ TemporaryKeymap_action(ia_t ia, unsigned argc, const char **argv)
 	return True;
     }
 
-    if (temporary_keymap(argv[0]) < 0) {
+    if (!temporary_keymap(argv[0])) {
 	popup_an_error("TemporaryKeymap: Can't find %s %s", ResKeymap,
 		argv[0]);
 	cancel_if_idle_command();

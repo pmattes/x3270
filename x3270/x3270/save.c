@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1994-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -576,111 +576,115 @@ save_opt(FILE *f, const char *full_name, const char *opt_name,
 }
 
 /* Save the current options settings in a profile. */
-int
+Boolean
 save_options(char *n)
 {
-	FILE *f;
-	Boolean exists = False;
-	char *ct;
-	int i;
-	time_t clk;
-	char buf[64];
-	Boolean any_toggles = False;
+    FILE *f;
+    Boolean exists = False;
+    char *ct;
+    int i;
+    time_t clk;
+    char *buf;
+    Boolean any_toggles = False;
 
-	if (n == NULL || *n == '\0')
-		return -1;
+    if (n == NULL || *n == '\0') {
+	return False;
+    }
 
-	/* Open the file. */
-	n = do_subst(n, DS_VARS | DS_TILDE);
-	f = fopen(n, "r");
-	if (f != NULL) {
-		(void) fclose(f);
-		exists = True;
-	}
-	f = fopen(n, "a");
-	if (f == NULL) {
-		popup_an_errno(errno, "Cannot open %s", n);
-		XtFree(n);
-		return -1;
-	}
+    /* Open the file. */
+    n = do_subst(n, DS_VARS | DS_TILDE);
+    f = fopen(n, "r");
+    if (f != NULL) {
+	(void) fclose(f);
+	exists = True;
+    }
+    f = fopen(n, "a");
+    if (f == NULL) {
+	popup_an_errno(errno, "Cannot open %s", n);
+	XtFree(n);
+	return False;
+    }
 
-	/* Save the name. */
-	Replace(profile_name, n);
+    /* Save the name. */
+    Replace(profile_name, n);
 
-	/* Print the header. */
-	clk = time((time_t *)0);
-	ct = ctime(&clk);
-	if (ct[strlen(ct)-1] == '\n')
-		ct[strlen(ct)-1] = '\0';
-	if (exists)
-		(void) fprintf(f, "! File updated %s by %s\n", ct, build);
-	else
-		(void) fprintf(f,
+    /* Print the header. */
+    clk = time((time_t *)0);
+    ct = ctime(&clk);
+    if (ct[strlen(ct)-1] == '\n') {
+	ct[strlen(ct)-1] = '\0';
+    }
+    if (exists) {
+	(void) fprintf(f, "! File updated %s by %s\n", ct, build);
+    } else {
+	(void) fprintf(f,
 "! x3270 profile\n\
 ! File created %s by %s\n\
 ! This file overrides xrdb and .Xdefaults.\n\
 ! To skip reading this file, set %s in the environment.\n\
 !\n",
-		    ct, build, NO_PROFILE_ENV);
+		ct, build, NO_PROFILE_ENV);
+    }
 
-	/* Save most of the toggles. */
-	for (i = 0; i < N_TOGGLES; i++) {
-		if (toggle_names[i].index < 0 || !appres.toggle[i].changed) {
-			continue;
-		}
-		if (i == TRACING || i == SCREEN_TRACE) {
-			continue;
-		}
-		if (!any_toggles) {
-			(void) fprintf(f, "! toggles (%s, %s)\n",
-			    OptSet, OptClear);
-			any_toggles = True;
-		}
-		(void) fprintf(f, "%s.%s: %s\n", XtName(toplevel),
-	            toggle_names[i].name,
-		    appres.toggle[i].value ? ResTrue : ResFalse);
+    /* Save most of the toggles. */
+    for (i = 0; i < N_TOGGLES; i++) {
+	if (toggle_names[i].index < 0 || !appres.toggle[i].changed) {
+	    continue;
 	}
+	if (i == TRACING || i == SCREEN_TRACE) {
+	    continue;
+	}
+	if (!any_toggles) {
+	    (void) fprintf(f, "! toggles (%s, %s)\n", OptSet, OptClear);
+	    any_toggles = True;
+	}
+	(void) fprintf(f, "%s.%s: %s\n", XtName(toplevel),
+		toggle_names[i].name,
+		appres.toggle[i].value ? ResTrue : ResFalse);
+    }
 
-	/* Save the keypad state. */
-	if (keypad_changed) {
-		save_opt(f, "keypad state", OptKeypadOn, ResKeypadOn,
-			(appres.keypad_on || keypad_popped) ?
-			    ResTrue : ResFalse);
-	}
+    /* Save the keypad state. */
+    if (keypad_changed) {
+	save_opt(f, "keypad state", OptKeypadOn, ResKeypadOn,
+		(appres.keypad_on || keypad_popped)? ResTrue: ResFalse);
+    }
 
-	/* Save other menu-changeable options. */
-	if (efont_changed)
-		save_opt(f, "emulator font", OptEmulatorFont, ResEmulatorFont,
-		    efontname);
-	if (model_changed) {
-		(void) snprintf(buf, sizeof(buf), "%d", model_num);
-		save_opt(f, "model", OptModel, ResModel, buf);
-	}
-	if (oversize_changed) {
-		(void) snprintf(buf, sizeof(buf), "%dx%d", ov_cols, ov_rows);
-		save_opt(f, "oversize", OptOversize, ResOversize, buf);
-	}
-	if (scheme_changed && appres.color_scheme != NULL)
-		save_opt(f, "color scheme", OptColorScheme, ResColorScheme,
-		    appres.color_scheme);
-	if (keymap_changed && current_keymap != NULL)
-		save_opt(f, "keymap", OptKeymap, ResKeymap, current_keymap);
-	if (charset_changed)
-		save_opt(f, "charset", OptCharset, ResCharset,
-		    get_charset_name());
-	if (idle_changed) {
-		save_opt(f, "idle command", NULL, ResIdleCommand, idle_command);
-		save_opt(f, "idle timeout", NULL, ResIdleTimeout,
-				idle_timeout_string);
-		save_opt(f, "idle enabled", NULL, ResIdleCommandEnabled,
-				(idle_user_enabled == IDLE_PERM)?
-				    "True": "False");
-	}
+    /* Save other menu-changeable options. */
+    if (efont_changed) {
+	save_opt(f, "emulator font", OptEmulatorFont, ResEmulatorFont,
+		efontname);
+    }
+    if (model_changed) {
+	buf = xs_buffer("%d", model_num);
+	save_opt(f, "model", OptModel, ResModel, buf);
+	Free(buf);
+    }
+    if (oversize_changed) {
+	buf = xs_buffer("%dx%d", ov_cols, ov_rows);
+	save_opt(f, "oversize", OptOversize, ResOversize, buf);
+	Free(buf);
+    }
+    if (scheme_changed && appres.color_scheme != NULL) {
+	save_opt(f, "color scheme", OptColorScheme, ResColorScheme,
+	    appres.color_scheme);
+    }
+    if (keymap_changed && current_keymap != NULL) {
+	save_opt(f, "keymap", OptKeymap, ResKeymap, current_keymap);
+    }
+    if (charset_changed) {
+	save_opt(f, "charset", OptCharset, ResCharset, get_charset_name());
+    }
+    if (idle_changed) {
+	save_opt(f, "idle command", NULL, ResIdleCommand, idle_command);
+	save_opt(f, "idle timeout", NULL, ResIdleTimeout, idle_timeout_string);
+	save_opt(f, "idle enabled", NULL, ResIdleCommandEnabled,
+		(idle_user_enabled == IDLE_PERM)?  "True": "False");
+    }
 
-	/* Done. */
-	(void) fclose(f);
+    /* Done. */
+    (void) fclose(f);
 
-	return 0;
+    return True;
 }
 
 /* Save a copy of the command-line options. */
@@ -838,18 +842,19 @@ merge_profile(XrmDatabase *d, char *session, Boolean mono)
 	Replace(xargv, NULL);
 }
 
-int
+Boolean
 read_resource_file(const char *filename, Boolean fatal)
 {
-	XrmDatabase dd, rdb;
+    XrmDatabase dd, rdb;
 
-	dd = XrmGetFileDatabase(filename);
-	if (dd == NULL)
-		return -1;
+    dd = XrmGetFileDatabase(filename);
+    if (dd == NULL) {
+	return False;
+    }
 
-	rdb = XtDatabase(display);
-	XrmMergeDatabases(dd, &rdb);
-	return 0;
+    rdb = XtDatabase(display);
+    XrmMergeDatabases(dd, &rdb);
+    return True;
 }
 
 /*

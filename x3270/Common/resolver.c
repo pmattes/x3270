@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2014 Paul Mattes.
+ * Copyright (c) 2007-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -253,9 +253,9 @@ resolve_host_and_port(const char *host, char *portname, int ix,
 #if defined(X3270_IPV6) /*[*/
 /*
  * Resolve a sockaddr into a numeric hostname and port, IPv4 or IPv6.
- * Returns 0 for success, -1 for failure.
+ * Returns True for success, False for failure.
  */
-static int
+static Boolean
 numeric_host_and_port_v46(const struct sockaddr *sa, socklen_t salen,
 	char *host, size_t hostlen, char *serv, size_t servlen, char *errmsg,
 	int em_len)
@@ -267,18 +267,18 @@ numeric_host_and_port_v46(const struct sockaddr *sa, socklen_t salen,
 	    NI_NUMERICHOST | NI_NUMERICSERV);
     if (rc != 0) {
 	snprintf(errmsg, em_len, "%s", gai_strerror(rc));
-	return -1;
+	return False;
     }
-    return 0;
+    return True;
 }
 #endif /*]*/
 
 #if defined(_WIN32) || !defined(X3270_IPV6) /*[*/
 /*
  * Resolve a sockaddr into a numeric hostname and port, IPv4 only.
- * Returns 0 for success, -1 for failure.
+ * Returns True for success, False for failure.
  */
-static int
+static Boolean
 numeric_host_and_port_v4(const struct sockaddr *sa, socklen_t salen,
 	char *host, size_t hostlen, char *serv, size_t servlen, char *errmsg,
 	int em_len)
@@ -288,15 +288,15 @@ numeric_host_and_port_v4(const struct sockaddr *sa, socklen_t salen,
     /* Use inet_ntoa() and snprintf(). */
     snprintf(host, hostlen, "%s", inet_ntoa(sin->sin_addr));
     snprintf(serv, servlen, "%u", ntohs(sin->sin_port));
-    return 0;
+    return True;
 }
 #endif /*]*/
 
 /*
  * Resolve a sockaddr into a numeric hostname and port.
- * Returns 0 for success, -1 for failure.
+ * Returns Trur for success, False for failure.
  */
-int
+Boolean
 numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
 	size_t hostlen, char *serv, size_t servlen, char *errmsg, int em_len)
 {

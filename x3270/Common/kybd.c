@@ -1,4 +1,5 @@
-/* Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+/*
+ * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -73,6 +74,7 @@
 #include "trace.h"
 #include "utf8c.h"
 #include "utilc.h"
+#include "varbufc.h"
 
 /*#define KYBDLOCK_TRACE	1*/
 
@@ -373,68 +375,72 @@ flush_ta(void)
 static char *
 kybdlock_decode(char *how, unsigned int bits)
 {
-    	static char buf[1024];
-	char *s = buf;
-	char *space = "";
+    static char *rs = NULL;
+    varbuf_t r;
+    char *space = "";
 
-	if (bits == (unsigned int)-1)
-	    	return "all";
-	if (bits & KL_OERR_MASK) {
-	    	s += sprintf(s, "%sOERR(", how);
-	    	switch(bits & KL_OERR_MASK) {
-		    case KL_OERR_PROTECTED:
-			s += sprintf(s, "PROTECTED");
-			break;
-		    case KL_OERR_NUMERIC:
-			s += sprintf(s, "NUMERIC");
-			break;
-		    case KL_OERR_OVERFLOW:
-			s += sprintf(s, "OVERFLOW");
-			break;
-		    case KL_OERR_DBCS:
-			s += sprintf(s, "DBCS");
-			break;
-		    default:
-			s += sprintf(s, "?%d", bits & KL_OERR_MASK);
-			break;
-		}
-		s += sprintf(s, ")");
-		space = " ";
-	}
-	if (bits & KL_NOT_CONNECTED) {
-	    s += sprintf(s, "%s%sNOT_CONNECTED", space, how);
-	    space = " ";
-	}
-	if (bits & KL_AWAITING_FIRST) {
-	    s += sprintf(s, "%s%sAWAITING_FIRST", space, how);
-	    space = " ";
-	}
-	if (bits & KL_OIA_TWAIT) {
-	    s += sprintf(s, "%s%sOIA_TWAIT", space, how);
-	    space = " ";
-	}
-	if (bits & KL_OIA_LOCKED) {
-	    s += sprintf(s, "%s%sOIA_LOCKED", space, how);
-	    space = " ";
-	}
-	if (bits & KL_DEFERRED_UNLOCK) {
-	    s += sprintf(s, "%s%sDEFERRED_UNLOCK", space, how);
-	    space = " ";
-	}
-	if (bits & KL_ENTER_INHIBIT) {
-	    s += sprintf(s, "%s%sENTER_INHIBIT", space, how);
-	    space = " ";
-	}
-	if (bits & KL_SCROLLED) {
-	    s += sprintf(s, "%s%sSCROLLED", space, how);
-	    space = " ";
-	}
-	if (bits & KL_OIA_MINUS) {
-	    s += sprintf(s, "%s%sOIA_MINUS", space, how);
-	    space = " ";
-	}
+    if (bits == (unsigned int)-1) {
+	return "all";
+    }
 
-	return buf;
+    vb_init(&r);
+    if (bits & KL_OERR_MASK) {
+	vb_appendf(&r, "%sOERR(", how);
+	switch(bits & KL_OERR_MASK) {
+	case KL_OERR_PROTECTED:
+	    vb_appends(&r, "PROTECTED");
+	    break;
+	case KL_OERR_NUMERIC:
+	    vb_appends(&r, "NUMERIC");
+	    break;
+	case KL_OERR_OVERFLOW:
+	    vb_appends(&r, "OVERFLOW");
+	    break;
+	case KL_OERR_DBCS:
+	    vb_appends(&r, "DBCS");
+	    break;
+	default:
+	    vb_appendf(&r, "?%d", bits & KL_OERR_MASK);
+	    break;
+	}
+	vb_appendf(&r, ")");
+	space = " ";
+    }
+    if (bits & KL_NOT_CONNECTED) {
+	vb_appendf(&r, "%s%sNOT_CONNECTED", space, how);
+	space = " ";
+    }
+    if (bits & KL_AWAITING_FIRST) {
+	vb_appendf(&r, "%s%sAWAITING_FIRST", space, how);
+	space = " ";
+    }
+    if (bits & KL_OIA_TWAIT) {
+	vb_appendf(&r, "%s%sOIA_TWAIT", space, how);
+	space = " ";
+    }
+    if (bits & KL_OIA_LOCKED) {
+	vb_appendf(&r, "%s%sOIA_LOCKED", space, how);
+	space = " ";
+    }
+    if (bits & KL_DEFERRED_UNLOCK) {
+	vb_appendf(&r, "%s%sDEFERRED_UNLOCK", space, how);
+	space = " ";
+    }
+    if (bits & KL_ENTER_INHIBIT) {
+	vb_appendf(&r, "%s%sENTER_INHIBIT", space, how);
+	space = " ";
+    }
+    if (bits & KL_SCROLLED) {
+	vb_appendf(&r, "%s%sSCROLLED", space, how);
+	space = " ";
+    }
+    if (bits & KL_OIA_MINUS) {
+	vb_appendf(&r, "%s%sOIA_MINUS", space, how);
+	space = " ";
+    }
+
+    Replace(rs, vb_consume(&r));
+    return rs;
 }
 
 /* Set bits in the keyboard lock. */
@@ -3349,38 +3355,38 @@ CircumNot_action(ia_t ia, unsigned argc, const char **argv)
 static void
 do_pa(unsigned n)
 {
-	if (n < 1 || n > PA_SZ) {
-		popup_an_error("Unknown PA key %d", n);
-		cancel_if_idle_command();
-		return;
-	}
-	if (kybdlock) {
-		char nn[3];
+    if (n < 1 || n > PA_SZ) {
+	popup_an_error("Unknown PA key %d", n);
+	cancel_if_idle_command();
+	return;
+    }
+    if (kybdlock) {
+	char nn[3];
 
-		(void) sprintf(nn, "%d", n);
-		enq_ta("PA", nn, NULL);
-		return;
-	}
-	key_AID(pa_xlate[n-1]);
+	(void) snprintf(nn, sizeof(nn), "%d", n);
+	enq_ta("PA", nn, NULL);
+	return;
+    }
+    key_AID(pa_xlate[n-1]);
 }
 
 /* PF key action for String actions */
 static void
 do_pf(unsigned n)
 {
-	if (n < 1 || n > PF_SZ) {
-		popup_an_error("Unknown PF key %d", n);
-		cancel_if_idle_command();
-		return;
-	}
-	if (kybdlock) {
-		char nn[3];
+    if (n < 1 || n > PF_SZ) {
+	popup_an_error("Unknown PF key %d", n);
+	cancel_if_idle_command();
+	return;
+    }
+    if (kybdlock) {
+	char nn[3];
 
-		(void) sprintf(nn, "%d", n);
-		enq_ta("PF", nn, NULL);
-		return;
-	}
-	key_AID(pf_xlate[n-1]);
+	(void) snprintf(nn, sizeof(nn), "%d", n);
+	enq_ta("PF", nn, NULL);
+	return;
+    }
+    key_AID(pf_xlate[n-1]);
 }
 
 /*

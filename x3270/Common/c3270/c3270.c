@@ -1581,22 +1581,24 @@ ignore_action(ia_t ia, unsigned argc, const char **argv)
 Boolean
 merge_profile(void)
 {
-	const char *fname;
-	char *profile_name;
-	Boolean did_read = False;
+    const char *fname;
+    char *profile_name;
+    Boolean did_read = False;
 
-	/* Check for the no-profile environment variable. */
-	if (getenv(NO_PROFILE_ENV) != NULL)
-		return did_read;
-
-	/* Read the file. */
-	fname = getenv(PROFILE_ENV);
-	if (fname == NULL || *fname == '\0')
-		fname = DEFAULT_PROFILE;
-	profile_name = do_subst(fname, DS_VARS | DS_TILDE);
-	did_read = (read_resource_file(profile_name, False) >= 0);
-	Free(profile_name);
+    /* Check for the no-profile environment variable. */
+    if (getenv(NO_PROFILE_ENV) != NULL) {
 	return did_read;
+    }
+
+    /* Read the file. */
+    fname = getenv(PROFILE_ENV);
+    if (fname == NULL || *fname == '\0') {
+	fname = DEFAULT_PROFILE;
+    }
+    profile_name = do_subst(fname, DS_VARS | DS_TILDE);
+    did_read = read_resource_file(profile_name, False);
+    Free(profile_name);
+    return did_read;
 }
 
 #endif /*]*/

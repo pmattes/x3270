@@ -2137,11 +2137,9 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
     int i;
     Boolean any = False;
     Boolean is_zero = False;
-    char *linebuf;
-    char *s;
+    varbuf_t r;
 
-    linebuf = Malloc(maxCOLS * 4 + 1);
-    s = linebuf;
+    vb_init(&r);
 
     /*
      * If the client has looked at the live screen, then if they later
@@ -2157,9 +2155,8 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 
     for (i = 0; i < len; i++) {
 	if (i && !((first + i) % rel_cols)) {
-	    *s = '\0';
-	    action_output("%s", linebuf);
-	    s = linebuf;
+	    action_output("%s", vb_buf(&r));
+	    vb_reset(&r);
 	    any = False;
 	}
 	if (in_ascii) {
@@ -2170,15 +2167,15 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 
 	    if (buf[first + i].fa) {
 		is_zero = FA_IS_ZERO(buf[first + i].fa);
-		s += sprintf(s, " ");
+		vb_appends(&r, " ");
 	    } else if (is_zero) {
-		s += sprintf(s, " ");
+		vb_appends(&r, " ");
 	    } else if (IS_LEFT(ctlr_dbcs_state(first + i))) {
 		xlen = ebcdic_to_multibyte(
 			(buf[first + i].cc << 8) | buf[first + i + 1].cc,
 			mb, sizeof(mb));
 		for (j = 0; j < xlen - 1; j++) {
-		    s += sprintf(s, "%c", mb[j]);
+		    vb_appendf(&r, "%c", mb[j]);
 		}
 	    } else if (IS_RIGHT(ctlr_dbcs_state(first + i))) {
 		continue;
@@ -2190,19 +2187,18 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 			EUO_BLANK_UNDEF,
 			&uc);
 		for (j = 0; j < xlen - 1; j++) {
-		    s += sprintf(s, "%c", mb[j]);
+		    vb_appendf(&r, "%c", mb[j]);
 		}
 	    }
 	} else {
-	    s += sprintf(s, "%s%02x", any ? " " : "", buf[first + i].cc);
+	    vb_appendf(&r, "%s%02x", any ? " " : "", buf[first + i].cc);
 	}
 	any = True;
     }
     if (any) {
-	*s = '\0';
-	action_output("%s", linebuf);
+	action_output("%s", vb_buf(&r));
     }
-    Free(linebuf);
+    vb_free(&r);
 }
 
 static Boolean
@@ -2408,7 +2404,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 		vb_appendf(&r, ",%02x=%02x", XA_CHARSET,
 			calc_cs(buf[baddr].cs));
 	    }
-	    vb_appendf(&r, ")");
+	    vb_appends(&r, ")");
 	} else {
 	    if (buf[baddr].fg != current_fg) {
 		vb_appendf(&r, " SA(%02x=%02x)", XA_FOREGROUND, buf[baddr].fg);
@@ -2440,13 +2436,13 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 		if (IS_LEFT(ctlr_dbcs_state(baddr))) {
 		    len = ebcdic_to_multibyte( (buf[baddr].cc << 8) |
 			    buf[baddr + 1].cc, mb, sizeof(mb));
-		    vb_appendf(&r, " ");
+		    vb_appends(&r, " ");
 		    for (j = 0; j < len-1; j++) {
 			vb_appendf(&r, "%02x", mb[j] & 0xff);
 		    }
 		    done = True;
 		} else if (IS_RIGHT(ctlr_dbcs_state(baddr))) {
-		    vb_appendf(&r, " -");
+		    vb_appends(&r, " -");
 		    done = True;
 		}
 
@@ -2469,9 +2465,9 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 		}
 
 		if (!done) {
-		    vb_appendf(&r, " ");
+		    vb_appends(&r, " ");
 		    if (mb[0] == '\0') {
-			vb_appendf(&r, "00");
+			vb_appends(&r, "00");
 		    } else {
 			for (j = 0; mb[j]; j++) {
 			    vb_appendf(&r, "%02x", mb[j] & 0xff);
@@ -3152,8 +3148,7 @@ AnsiText_action(ia_t ia, unsigned argc, const char **argv)
     int i;
     int ix;
     unsigned char c;
-    char linebuf[NVT_SAVE_SIZE * 4 + 1];
-    char *s = linebuf;
+    varbuf_t r;
 
     action_debug("AnsiText", ia, argc, argv);
     if (check_argc("AnsiText", argc, 0, 0) < 0) {
@@ -3165,29 +3160,30 @@ AnsiText_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     ix = (nvt_save_ix + NVT_SAVE_SIZE - nvt_save_cnt) % NVT_SAVE_SIZE;
+    vb_init(&r);
     for (i = 0; i < nvt_save_cnt; i++) {
 	c = nvt_save_buf[(ix + i) % NVT_SAVE_SIZE];
 	if (!(c & ~0x1f)) switch (c) {
 	    case '\n':
-		s += sprintf(s, "\\n");
+		vb_appends(&r, "\\n");
 		break;
 	    case '\r':
-		s += sprintf(s, "\\r");
+		vb_appends(&r, "\\r");
 		break;
 	    case '\b':
-		s += sprintf(s, "\\b");
+		vb_appends(&r, "\\b");
 		break;
 	    default:
-		s += sprintf(s, "\\%03o", c);
+		vb_appendf(&r, "\\%03o", c);
 		break;
 	} else if (c == '\\') {
-	    s += sprintf(s, "\\\\");
+	    vb_appends(&r, "\\\\");
 	} else {
-	    *s++ = (char)c;
+	    vb_append(&r, (char *)&c, 1);
 	}
     }
-    *s = '\0';
-    action_output("%s", linebuf);
+    action_output("%s", vb_buf(&r));
+    vb_free(&r);
     nvt_save_cnt = 0;
     nvt_save_ix = 0;
     return True;
