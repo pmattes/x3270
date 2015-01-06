@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Paul Mattes.
+ * Copyright (c) 2013, 2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,9 +37,8 @@
 #endif /*]*/
 
 #define IS_SNPRINTF_C 1
-#include "wincmn.h"
-
 #include <stdio.h>
+#include "wincmn.h"
 
 /*
  * Version of {,v}snprintf that work more like the standard versions, and

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009, 2013 Paul Mattes.
+ * Copyright (c) 2008-2009, 2013, 2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,9 +37,9 @@
 #error For Windows only.
 #endif /*]*/
 
+#include <stdio.h>
 #include "wincmn.h"
 
-#include <stdio.h>
 #include <limits.h>
 
 #include "windirsc.h"

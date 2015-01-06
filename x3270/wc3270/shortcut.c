@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, 2014 Paul Mattes.
+ * Copyright (c) 1996-2009, 2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -37,9 +37,9 @@
 #error For Windows only.
 #endif /*]*/
 
+#include <stdio.h>
 #include "wincmn.h"
 #include "shlobj_missing.h"
-#include <stdio.h>
 
 #include "shortcutc.h"
 #include "winversc.h"

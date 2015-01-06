@@ -835,7 +835,9 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
     char c;
     int usable_rows;
     HFONT got_font = NULL, want_font;
+#if defined(GDI_DEBUG) /*[*/
     const char *want_font_name;
+#endif /*]*/
     enum { COLOR_NONE, COLOR_NORMAL, COLOR_REVERSE } got_color = COLOR_NONE,
 	want_color;
 
@@ -1015,16 +1017,24 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 	    }
 	    if (!high && !underline) {
 		want_font = pstate.font;
+#if defined(GDI_DEBUG) /*[*/
 		want_font_name = "Roman";
+#endif /*]*/
 	    } else if (high && !underline) {
 		want_font = pstate.bold_font;
+#if defined(GDI_DEBUG) /*[*/
 		want_font_name = "Bold";
+#endif /*]*/
 	    } else if (!high && underline) {
 		want_font = pstate.underscore_font;
+#if defined(GDI_DEBUG) /*[*/
 		want_font_name = "Underscore";
+#endif /*]*/
 	    } else {
 		want_font = pstate.bold_underscore_font;
+#if defined(GDI_DEBUG) /*[*/
 		want_font_name = "Underscore";
+#endif /*]*/
 	    }
 	    if (want_font != got_font) {
 		SelectObject(dc, want_font);

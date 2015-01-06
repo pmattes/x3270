@@ -48,10 +48,10 @@
  */
 
 #include "conf.h"
+#include <stdio.h>
 #if defined(_WIN32) /*[*/
 # include "wincmn.h"
 #endif /*]*/
-#include <stdio.h>
 #if !defined(_MSC_VER) /*[*/
 # include <unistd.h>
 #endif /*]*/
