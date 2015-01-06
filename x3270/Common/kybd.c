@@ -3553,24 +3553,26 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 			    last_row = BA_TO_ROW(cursor_addr);
 			}
 		    } else {
-			int baddr = cursor_addr;
+			int baddr;
 			int row;
 
 			/*
 			 * Overlay paste mode: Move to the beginning of the
-			 * next row.
+			 * next row, unless we just wrapped there.
 			 *
 			 * If this is the last pasted character, ignore it.
 			 */
 			if (xlen == 1) {
 			    return 0;
 			}
-			row = BA_TO_ROW(cursor_addr);
-			if (row >= ROWS - 1) {
-			    return xlen - 1;
+			if (!just_wrapped) {
+			    row = BA_TO_ROW(cursor_addr);
+			    if (row >= ROWS - 1) {
+				return xlen - 1;
+			    }
+			    baddr = ROWCOL_TO_BA(row + 1, 0);
+			    cursor_move(baddr);
 			}
-			baddr = ROWCOL_TO_BA(row + 1, 0);
-			cursor_move(baddr);
 		    }
 		} else {
 		    run_action("Enter", ia, NULL, NULL);

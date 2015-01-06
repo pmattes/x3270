@@ -64,7 +64,8 @@ include common_files.mk wc3270_files.mk
 
 SRCS = $(COMMON_SOURCES) $(HTTPD_SOURCES) $(WC3270_SOURCES)
 
-VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(WC3270_OBJECTS) fallbacks.o
+VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(WC3270_OBJECTS) fallbacks.o \
+	wc3270res.o
 
 OBJECTS = $(VOBJS) version.o
 WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o winvers.o windirs.o \
