@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -66,6 +66,7 @@
 #include "keymapc.h"
 #include "keypadc.h"
 #include "kybdc.h"
+#include "lazya.h"
 #include "menubarc.h"
 #include "nvtc.h"
 #include "popupsc.h"
@@ -3282,94 +3283,95 @@ xfer_color_scheme(char *cs, Boolean do_popup)
 static GC
 get_gc(struct sstate *s, int color)
 {
-	int pixel_index;
-	XGCValues xgcv;
-	GC r;
-	static Boolean in_gc_error = False;
+    int pixel_index;
+    XGCValues xgcv;
+    GC r;
+    static Boolean in_gc_error = False;
 
-	if (color & GC_NONDEFAULT)
-		color &= ~GC_NONDEFAULT;
-	else
-		color = (color & INVERT_MASK) | DEFAULT_PIXEL;
+    if (color & GC_NONDEFAULT) {
+	color &= ~GC_NONDEFAULT;
+    } else {
+	color = (color & INVERT_MASK) | DEFAULT_PIXEL;
+    }
 
-	if ((r = s->gc[color]) != (GC)None)
-		return r;
+    if ((r = s->gc[color]) != (GC)None) {
+	return r;
+    }
 
-	/* Allocate the pixel. */
-	pixel_index = PIXEL_INDEX(color);
-	if (!cpx_done[pixel_index]) {
-		if (!alloc_color(color_name[pixel_index], ibm_fb,
-				 &cpx[pixel_index])) {
-			static char nbuf[16];
-
-			(void) snprintf(nbuf, sizeof(nbuf), "%d", pixel_index);
-			if (!in_gc_error) {
-				in_gc_error = True;
-				popup_an_error("Cannot allocate colormap \"%s\" for 3279 color %s (%s), using \"%s\"",
-				    color_name[pixel_index], nbuf,
-				    see_color((unsigned char)(pixel_index + 0xf0)),
-				    fb_name(ibm_fb));
-				in_gc_error = False;
-			}
-		}
-		cpx_done[pixel_index] = True;
+    /* Allocate the pixel. */
+    pixel_index = PIXEL_INDEX(color);
+    if (!cpx_done[pixel_index]) {
+	if (!alloc_color(color_name[pixel_index], ibm_fb, &cpx[pixel_index])) {
+	    if (!in_gc_error) {
+		in_gc_error = True;
+		popup_an_error("Cannot allocate colormap \"%s\" for 3279 "
+			"color %d (%s), using \"%s\"",
+			color_name[pixel_index],
+			pixel_index,
+			see_color((unsigned char)(pixel_index + 0xf0)),
+			fb_name(ibm_fb));
+		in_gc_error = False;
+	    }
 	}
+	cpx_done[pixel_index] = True;
+    }
 
-	/* Allocate the GC. */
-	xgcv.font = s->fid;
-	if (!(color & INVERT_MASK)) {
-		xgcv.foreground = cpx[pixel_index];
-		xgcv.background = colorbg_pixel;
-	} else {
-		xgcv.foreground = colorbg_pixel;
-		xgcv.background = cpx[pixel_index];
-	}
-	if (s == &nss && pixel_index == DEFAULT_PIXEL) {
-		xgcv.graphics_exposures = True;
-		r = XtGetGC(toplevel,
-		    GCForeground|GCBackground|GCFont|GCGraphicsExposures,
-		    &xgcv);
-	} else
-		r = XtGetGC(toplevel,
-		    GCForeground|GCBackground|GCFont,
-		    &xgcv);
-	return s->gc[color] = r;
+    /* Allocate the GC. */
+    xgcv.font = s->fid;
+    if (!(color & INVERT_MASK)) {
+	xgcv.foreground = cpx[pixel_index];
+	xgcv.background = colorbg_pixel;
+    } else {
+	xgcv.foreground = colorbg_pixel;
+	xgcv.background = cpx[pixel_index];
+    }
+    if (s == &nss && pixel_index == DEFAULT_PIXEL) {
+	xgcv.graphics_exposures = True;
+	r = XtGetGC(toplevel,
+		GCForeground|GCBackground|GCFont|GCGraphicsExposures,
+		&xgcv);
+    } else {
+	r = XtGetGC(toplevel,
+		GCForeground|GCBackground|GCFont,
+		&xgcv);
+    }
+    return s->gc[color] = r;
 }
 
 /* Look up a selection GC, allocating it if necessary. */
 static GC
 get_selgc(struct sstate *s, int color)
 {
-	XGCValues xgcv;
-	GC r;
+    XGCValues xgcv;
+    GC r;
 
-	if (color & GC_NONDEFAULT)
-		color = PIXEL_INDEX(color);
-	else
-		color = DEFAULT_PIXEL;
+    if (color & GC_NONDEFAULT) {
+	color = PIXEL_INDEX(color);
+    } else {
+	color = DEFAULT_PIXEL;
+    }
 
-	if ((r = s->selgc[color]) != (GC)None)
-		return r;
+    if ((r = s->selgc[color]) != (GC)None) {
+	return r;
+    }
 
-	/* Allocate the pixel. */
-	if (!cpx_done[color]) {
-		if (!alloc_color(color_name[color], FB_WHITE, &cpx[color])) {
-			static char nbuf[16];
+    /* Allocate the pixel. */
+    if (!cpx_done[color]) {
+	if (!alloc_color(color_name[color], FB_WHITE, &cpx[color])) {
+	    popup_an_error("Cannot allocate colormap \"%s\" for 3279 color "
+		    "%d (%s), using \"white\"",
+		    color_name[color], color,
+		    see_color((unsigned char)(color + 0xf0)));
+	    }
+	cpx_done[color] = True;
+    }
 
-			(void) snprintf(nbuf, sizeof(nbuf), "%d", color);
-			popup_an_error("Cannot allocate colormap \"%s\" for 3279 color %s (%s), using \"white\"",
-			    color_name[color], nbuf,
-			    see_color((unsigned char)(color + 0xf0)));
-		}
-		cpx_done[color] = True;
-	}
-
-	/* Allocate the GC. */
-	xgcv.font = s->fid;
-	xgcv.foreground = cpx[color];
-	xgcv.background = selbg_pixel;
-	return s->selgc[color] =
-	    XtGetGC(toplevel, GCForeground|GCBackground|GCFont, &xgcv);
+    /* Allocate the GC. */
+    xgcv.font = s->fid;
+    xgcv.foreground = cpx[color];
+    xgcv.background = selbg_pixel;
+    return s->selgc[color] =
+	XtGetGC(toplevel, GCForeground|GCBackground|GCFont, &xgcv);
 }
 
 /* External entry points for GC allocation. */
@@ -5474,42 +5476,41 @@ cleanup_xim(Boolean b _is_unused)
 static void
 xim_init(void)
 {
-	char buf[1024];
-	static Boolean xim_initted = False;
-	char *s;
+    char *buf = "";
+    static Boolean xim_initted = False;
+    char *s;
 
-	if (!dbcs || xim_initted)
-		return;
-
-	xim_initted = True;
-
-	s = setlocale(LC_CTYPE, "");
-	if (s != NULL)
-		s = NewString(s);
-	Replace(locale_name, s);
-	if (s == NULL) {
-		popup_an_error("setlocale(LC_CTYPE) failed\n"
-		    "XIM-based input disabled");
-		xim_error = True;
-		return;
-	}
-
-	(void) memset(buf, '\0', sizeof(buf));
-	if (appres.input_method != NULL)
-		(void) snprintf(buf, sizeof(buf), "@im=%s",
-			appres.input_method);
-	if (XSetLocaleModifiers(buf) == NULL) {
-		popup_an_error("XSetLocaleModifiers failed\n"
-		    "XIM-based input disabled");
-		xim_error = True;
-	} else if (XRegisterIMInstantiateCallback(display, NULL, NULL, NULL,
-				im_callback, NULL) != True) {
-		popup_an_error("XRegisterIMInstantiateCallback failed\n"
-			       "XIM-based input disabled");
-		xim_error = True;
-	}
-	register_schange(ST_EXITING, cleanup_xim);
+    if (!dbcs || xim_initted) {
 	return;
+    }
+
+    xim_initted = True;
+
+    s = setlocale(LC_CTYPE, "");
+    if (s != NULL) {
+	s = NewString(s);
+    }
+    Replace(locale_name, s);
+    if (s == NULL) {
+	popup_an_error("setlocale(LC_CTYPE) failed\nXIM-based input disabled");
+	xim_error = True;
+	return;
+    }
+
+    if (appres.input_method != NULL) {
+	buf = lazyaf("@im=%s", appres.input_method);
+    }
+    if (XSetLocaleModifiers(buf) == NULL) {
+	popup_an_error("XSetLocaleModifiers failed\nXIM-based input disabled");
+	xim_error = True;
+    } else if (XRegisterIMInstantiateCallback(display, NULL, NULL, NULL,
+		im_callback, NULL) != True) {
+	popup_an_error("XRegisterIMInstantiateCallback failed\n"
+		"XIM-based input disabled");
+	xim_error = True;
+    }
+    register_schange(ST_EXITING, cleanup_xim);
+    return;
 }
 
 static void

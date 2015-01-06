@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Paul Mattes.
+ * Copyright (c) 2014-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -85,7 +85,6 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
     char *host_str;
     char *port_str;
     unsigned short port;
-    char errmsg[256];
     rhp_t rv;
 
     /* Start with nothing. */
@@ -157,7 +156,7 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
     /* Use the resolver to resolve the components we've split apart. */
     *addr = Malloc(sizeof(sau_t));
     rv = resolve_host_and_port(host_str, port_str, 0, &port, *addr, addrlen,
-	    errmsg, sizeof(errmsg), NULL);
+	    NULL, NULL);
     Free(host_str);
     Free(port_str);
     if (RHP_IS_ERROR(rv)) {

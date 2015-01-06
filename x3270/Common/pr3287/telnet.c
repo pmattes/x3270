@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -2039,11 +2039,11 @@ ssl_base_init(void)
 			unsigned short port;
 			sockaddr_46_t ahaddr;
 			socklen_t len;
-			char err[256];
+			char *err;
 
 			if (resolve_host_and_port(&options.ssl.accept_hostname[3],
-				"0", 0, &port, &ahaddr.sa, &len, err,
-				sizeof(err), NULL) < 0) {
+				"0", 0, &port, &ahaddr.sa, &len, &err,
+				NULL) < 0) {
 
 				errmsg("Invalid acceptHostname '%s': "
 					"%s", options.ssl.accept_hostname,

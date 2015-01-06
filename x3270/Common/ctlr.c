@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -54,6 +54,7 @@
 #include "ft_dftc.h"
 #include "hostc.h"
 #include "kybdc.h"
+#include "lazya.h"
 #include "macrosc.h"
 #include "popupsc.h"
 #include "screenc.h"
@@ -2907,33 +2908,23 @@ toggle_nop(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 const char *
 ctlr_query_cur_size(void)
 {
-	static char result[32];
-
-	snprintf(result, sizeof(result), "%u %u", ROWS, COLS);
-	return result;
+    return lazyaf("%u %u", ROWS, COLS);
 }
 
 const char *
 ctlr_query_cursor(void)
 {
-	static char result[32];
-
-	snprintf(result, sizeof(result), "%u %u",
-		cursor_addr / COLS, cursor_addr % COLS);
-	return result;
+    return lazyaf("%u %u", cursor_addr / COLS, cursor_addr % COLS);
 }
 
 const char *
 ctlr_query_formatted(void)
 {
-	return formatted? "formatted": "unformatted";
+    return formatted? "formatted": "unformatted";
 }
 
 const char *
 ctlr_query_max_size(void)
 {
-	static char result[32];
-
-	snprintf(result, sizeof(result), "%u %u", maxROWS, maxCOLS);
-	return result;
+    return lazyaf("%u %u", maxROWS, maxCOLS);
 }

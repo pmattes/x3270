@@ -45,6 +45,7 @@
 
 #include "appres.h"
 #include "actionsc.h"
+#include "lazya.h"
 #include "macrosc.h"
 #include "popupsc.h"
 #include "trace.h"
@@ -190,13 +191,13 @@ hio_socket_input(iosrc_t fd, ioid_t id)
 
     nr = recv(session->s, buf, sizeof(buf), 0);
     if (nr <= 0) {
-	char ebuf[1024];
+	const char *ebuf;
 
 	if (nr < 0) {
-	    snprintf(ebuf, sizeof(ebuf), "recv error: %s", socket_errtext());
+	    ebuf = lazyaf("recv error: %s", socket_errtext());
 	    popup_an_error("httpd %s", ebuf);
 	} else {
-	    strcpy(ebuf, "session EOF");
+	    ebuf = "session EOF";
 	}
 	httpd_close(session->dhandle, ebuf);
 	hio_socket_close(session);
@@ -230,7 +231,6 @@ hio_connection(iosrc_t fd, ioid_t id)
     socket_t t;
     struct sockaddr_in sin;
     socklen_t len;
-    char namebuf[256];
     session_t *session;
 
     len = sizeof(sin);
@@ -239,8 +239,6 @@ hio_connection(iosrc_t fd, ioid_t id)
 	popup_an_error("httpd accept: %s", socket_errtext());
 	return;
     }
-    snprintf(namebuf, sizeof(namebuf), "%s:%u", inet_ntoa(sin.sin_addr),
-	    ntohs(sin.sin_port));
     if (n_sessions >= N_SESSIONS) {
 	vtrace("Too many connections.\n");
 	SOCK_CLOSE(t);
@@ -267,7 +265,9 @@ hio_connection(iosrc_t fd, ioid_t id)
 	return;
     }
 #endif /*]*/
-    session->dhandle = httpd_new(session, namebuf);
+    /* XXX: Assumes AF_INET. */
+    session->dhandle = httpd_new(session,
+	    lazyaf("%s:%u", inet_ntoa(sin.sin_addr), ntohs(sin.sin_port)));
 #if !defined(_WIN32) /*[*/
     session->ioid = AddInput(t, hio_socket_input);
 #else /*][*/

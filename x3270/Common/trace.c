@@ -47,6 +47,7 @@
 #include "childc.h"
 #include "ctlrc.h"
 #include "fprint_screenc.h"
+#include "lazya.h"
 #include "menubarc.h"
 #include "nvtc.h"
 #include "popupsc.h"
@@ -131,16 +132,10 @@ static Boolean 	 wrote_ts = False;
 const char *
 rcba(int baddr)
 {
-    static char buf[16];
-
-    (void) snprintf(buf, sizeof(buf), "(%d,%d)",
-	    baddr/COLS + 1, baddr%COLS + 1);
-    return buf;
+    return lazyaf("(%d,%d)", baddr/COLS + 1, baddr%COLS + 1);
 }
 
 /* Data Stream trace print, handles line wraps */
-
-static char *tdsbuf = NULL;
 
 /*
  * This function is careful to do line breaks based on wchar_t's, not
@@ -241,22 +236,18 @@ void
 trace_ds(const char *fmt, ...)
 {
     va_list args;
+    char *s;
 
     if (!toggled(TRACING) || tracef == NULL) {
 	return;
     }
 
-    va_start(args, fmt);
-
-    /* allocate buffer */
-    if (tdsbuf == NULL) {
-	tdsbuf = Malloc(TRACE_DS_BUFSIZE);
-    }
-
     /* print out remainder of message */
-    (void) vsnprintf(tdsbuf, TRACE_DS_BUFSIZE, fmt, args);
-    trace_ds_s(tdsbuf, True);
+    va_start(args, fmt);
+    s = xs_vbuffer(fmt, args);
     va_end(args);
+    trace_ds_s(s, True);
+    Free(s);
 }
 
 /* Conditional event trace. */
@@ -294,8 +285,8 @@ ntvtrace(const char *fmt, ...)
 /*
  * Generate a timestamp for the trace file.
  */
-static void
-gen_ts(char *buf, size_t bufsize)
+static char *
+gen_ts(void)
 {
     struct timeval tv;
     time_t t;
@@ -304,8 +295,7 @@ gen_ts(char *buf, size_t bufsize)
     (void) gettimeofday(&tv, NULL);
     t = tv.tv_sec;
     tm = localtime(&t);
-    (void) snprintf(buf, bufsize,
-	    "%d%02d%02d.%02d%02d%02d.%03d ",
+    return lazyaf("%d%02d%02d.%02d%02d%02d.%03d ",
 	    tm->tm_year + 1900,
 	    tm->tm_mon + 1,
 	    tm->tm_mday,
@@ -324,15 +314,14 @@ static void
 vwtrace(Boolean do_ts, const char *fmt, va_list args)
 {
     int n2w_left, n2w, nw;
-    char ts_buf[1024];
-    char buf[16384];
+    char *ts;
+    char *buf = NULL;
     char *bp;
 
     /* Ugly hack to write into a memory buffer. */
     if (tracef_bufptr != NULL) {
 	if (do_ts) {
-	    gen_ts(ts_buf, sizeof(ts_buf));
-	    tracef_bufptr += sprintf(tracef_bufptr, "%s", ts_buf);
+	    tracef_bufptr += sprintf(tracef_bufptr, "%s", gen_ts());
 	}
 	tracef_bufptr += vsprintf(tracef_bufptr, fmt, args);
 	return;
@@ -342,9 +331,9 @@ vwtrace(Boolean do_ts, const char *fmt, va_list args)
 	return;
     }
 
-    ts_buf[0] = '\0';
+    ts = NULL;
 
-    (void) vsnprintf(buf, sizeof(buf), fmt, args);
+    buf = xs_vbuffer(fmt, args);
     n2w_left = strlen(buf);
     bp = buf;
 
@@ -353,13 +342,13 @@ vwtrace(Boolean do_ts, const char *fmt, va_list args)
 	Boolean wrote_nl = False;
 
 	if (do_ts && !wrote_ts) {
-	    if (ts_buf[0] == '\0') {
-		gen_ts(ts_buf, sizeof(ts_buf));
+	    if (ts == NULL) {
+		ts = gen_ts();
 	    }
-	    (void) fwrite(ts_buf, strlen(ts_buf), 1, tracef);
+	    (void) fwrite(ts, strlen(ts), 1, tracef);
 	    fflush(tracef);
 	    if (tracef_pipe != NULL) {
-		(void) fwrite(ts_buf, strlen(ts_buf), 1, tracef_pipe);
+		(void) fwrite(ts, strlen(ts), 1, tracef_pipe);
 		fflush(tracef);
 	    }
 	    wrote_ts = True;
@@ -389,7 +378,7 @@ vwtrace(Boolean do_ts, const char *fmt, va_list args)
 #endif /*]*/
 	    {
 		stop_tracing();
-		return;
+		goto done;
 	    }
 	}
 
@@ -412,6 +401,12 @@ vwtrace(Boolean do_ts, const char *fmt, va_list args)
     }
 
     tracef_size = ftello(tracef);
+
+done:
+    if (buf != NULL) {
+	Free(buf);
+    }
+    return;
 }
 
 /* Write to the trace file. */
@@ -790,11 +785,11 @@ tracefile_ok(const char *tfn)
     if (tracef != stdout && appres.trace_monitor) {
 	switch (tracewindow_pid = fork_child()) {
 	case 0: {	/* child process */
-	    char cmd[64];
-
-	    (void) snprintf(cmd, sizeof(cmd), "cat <&%d", pipefd[0]);
-	    (void) execlp("xterm", "xterm", "-title", just_piped? "trace": stfn,
-		    "-sb", "-e", "/bin/sh", "-c", cmd, NULL);
+	    (void) execlp("xterm", "xterm", "-title",
+		    just_piped? "trace": stfn,
+		    "-sb", "-e", "/bin/sh", "-c",
+		    xs_buffer("cat <&%d", pipefd[0]),
+		    NULL);
 	    (void) perror("exec(xterm) failed");
 	    _exit(1);
 	    break;

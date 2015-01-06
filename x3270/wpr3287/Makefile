@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2014, Paul Mattes.
+# Copyright (c) 2007-2015, Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -52,13 +52,13 @@ endif
 XCPPFLAGS = -D_WIN32 -DX3270_DBCS=1 -D_WIN32_WINNT=0x500 -D_WIN32_IE=0x0500 -DWINVER=0x500
 CFLAGS = -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP) $(CDEBUGFLAGS)
 
-SRCS = asprintf.c charset.c ctlr.c pr3287.c proxy.c resolver.c see.c sf.c \
-	snprintf.c ssl_dll.c tables.c telnet.c trace.c unicode.c \
+SRCS = asprintf.c charset.c ctlr.c lazya.c pr3287.c proxy.c resolver.c see.c \
+	sf.c snprintf.c ssl_dll.c tables.c telnet.c trace.c unicode.c \
 	unicode_dbcs.c utf8.c util.c varbuf.c w3misc.c windirs.c winvers.c \
 	xtable.c
 
-VOBJS = asprintf.o charset.o ctlr.o pr3287.o proxy.o resolver.o see.o sf.o \
-	snprintf.o ssl_dll.o tables.o telnet.o trace.o unicode.o \
+VOBJS = asprintf.o charset.o ctlr.o lazya.o pr3287.o proxy.o resolver.o see.o \
+	sf.o snprintf.o ssl_dll.o tables.o telnet.o trace.o unicode.o \
 	unicode_dbcs.o utf8.o util.o varbuf.o w3misc.o windirs.o winvers.o \
 	wpr3287res.o ws.o xtable.o
 

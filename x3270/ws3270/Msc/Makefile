@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2014, Paul Mattes.
+# Copyright (c) 2007-2015, Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -129,6 +129,8 @@ idle.obj: idle.c
 	$(CC) $(CFLAGS) /c idle.c
 kybd.obj: kybd.c
 	$(CC) $(CFLAGS) /c kybd.c
+lazya.obj: lazya.c
+	$(CC) $(CFLAGS) /c lazya.c
 linemode.obj: linemode.c
 	$(CC) $(CFLAGS) /c linemode.c
 macros.obj: macros.c

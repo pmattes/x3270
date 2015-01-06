@@ -135,6 +135,7 @@
     <ClCompile Include="..\wc3270-3.3\keymap.c" />
     <ClCompile Include="..\wc3270-3.3\keypad.c" />
     <ClCompile Include="..\wc3270-3.3\kybd.c" />
+    <ClCompile Include="..\wc3270-3.3\lazya.c" />
     <ClCompile Include="..\wc3270-3.3\linemode.c" />
     <ClCompile Include="..\wc3270-3.3\macros.c" />
     <ClCompile Include="..\wc3270-3.3\menubar.c" />

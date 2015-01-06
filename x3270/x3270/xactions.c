@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -43,6 +43,7 @@
 #include "actionsc.h"
 #include "dialogc.h"
 #include "keymapc.h"
+#include "lazya.h"
 #include "macrosc.h"
 #include "menubarc.h"
 #include "popupsc.h"
@@ -693,7 +694,6 @@ trace_event(XEvent *event)
     int ambiguous = 0;
     int state;
     const char *symname = "";
-    char snbuf[11];
 
     if (event == NULL) {
 	vtrace(" %s", ia_name[(int)ia_cause]);
@@ -714,8 +714,7 @@ trace_event(XEvent *event)
 	} if (ks == NoSymbol) {
 	    symname = "NoSymbol";
 	} else if ((symname = XKeysymToString(ks)) == NULL) {
-	    (void) snprintf(snbuf, sizeof(snbuf), "0x%lx", (unsigned long)ks);
-	    symname = snbuf;
+	    symname = lazyaf("0x%lx", (unsigned long)ks);
 	}
 	do {
 	    int was_ambiguous = ambiguous;

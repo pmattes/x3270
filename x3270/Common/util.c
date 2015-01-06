@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -47,6 +47,8 @@
 #endif /*]*/
 #include "asprintfc.h"
 #include "charsetc.h"
+#include "lazya.h"
+#include "varbufc.h"
 
 #include "utilc.h"
 
@@ -168,44 +170,38 @@ fcatv(FILE *f, char *s)
 char *
 scatv(const char *s, char *buf, size_t len)
 {
-	char c;
-	char *dst = buf;
+    char c;
+    varbuf_t r;
 
-	while ((c = *s++) && len > 0) {
-		char cbuf[5];
-		char *t = cbuf;
+    vb_init(&r);
+    while ((c = *s++)) {
 
-		/* Expand this character. */
-		switch (c) {
-		    case '\n':
-			(void) strcpy(cbuf, "\\n");
-			break;
-		    case '\t':
-			(void) strcpy(cbuf, "\\t");
-			break;
-		    case '\b':
-			(void) strcpy(cbuf, "\\b");
-			break;
-		    default:
-			if ((c & 0x7f) < ' ')
-				(void) snprintf(cbuf, sizeof(cbuf), "\\%03o",
-					c & 0xff);
-			else {
-				cbuf[0] = c;
-				cbuf[1] = '\0';
-			}
-			break;
-		}
-		/* Copy as much as will fit. */
-		while ((c = *t++) && len > 0) {
-			*dst++ = c;
-			len--;
-		}
+	/* Expand this character. */
+	switch (c) {
+	case '\n':
+	    vb_appends(&r, "\\n");
+	    break;
+	case '\t':
+	    vb_appends(&r, "\\t");
+	    break;
+	case '\b':
+	    vb_appends(&r, "\\b");
+	    break;
+	default:
+	    if ((c & 0x7f) < ' ') {
+		vb_appendf(&r, "\\%03o", c & 0xff);
+	    } else {
+		vb_append(&r, &c, 1);
+	    }
+	    break;
 	}
-	if (len > 0)
-		*dst = '\0';
+    }
 
-	return buf;
+    /* Copy what fits. */
+    (void) snprintf(buf, len, "%s", vb_buf(&r));
+    vb_free(&r);
+
+    return buf;
 }
 
 /*
@@ -414,57 +410,47 @@ split_lresource(char **st, char **value)
 const char *
 get_message(const char *key)
 {
-	static char namebuf[128];
-	char *r;
+    char *r;
 
-	(void) snprintf(namebuf, sizeof(namebuf), "%s.%s", ResMessage, key);
-	if ((r = get_resource(namebuf)) != NULL)
-		return r;
-	else {
-		(void) snprintf(namebuf, sizeof(namebuf),
-			"[missing \"%s\" message]", key);
-		return namebuf;
-	}
+    if ((r = get_resource(lazyaf("%s.%s", ResMessage, key))) != NULL) {
+	return r;
+    } else {
+	return lazyaf("[missing \"%s\" message]", key);
+    }
 }
 
 static char *
 ex_getenv(const char *name, unsigned long flags, int *up)
 {
-	if (!strcasecmp(name, "TIMESTAMP")) {
-		/* YYYYMMDDHHMMSSUUUUUU */
-		static char ts[21];
-		struct timeval tv;
-		time_t t; /* on Windows, timeval.tv_sec is a long */
-		struct tm *tm;
+    if (!strcasecmp(name, "TIMESTAMP")) {
+	/* YYYYMMDDHHMMSSUUUUUU */
+	struct timeval tv;
+	time_t t; /* on Windows, timeval.tv_sec is a long */
+	struct tm *tm;
 
-		if (gettimeofday(&tv, NULL) < 0)
-			return NewString("?");
-		t = tv.tv_sec;
-		tm = localtime(&t);
-		(void) snprintf(ts, sizeof(ts),
-			"%04u%02u%02u%02u%02u%02u%06u",
-			tm->tm_year + 1900,
-			tm->tm_mon + 1,
-			tm->tm_mday,
-			tm->tm_hour,
-			tm->tm_min,
-			tm->tm_sec,
-			(unsigned)tv.tv_usec);
-		return NewString(ts);
-	} else if (!strcasecmp(name, "UNIQUE")) {
-		char buf[64];
-
-		++*up;
-		if (*up == 0)
-			(void) snprintf(buf, sizeof(buf), "%u",
-				(unsigned)getpid());
-		else
-			(void) snprintf(buf, sizeof(buf), "%u-%u",
-				(unsigned)getpid(), *up);
-		return NewString(buf);
-	} else {
-		return getenv(name);
+	if (gettimeofday(&tv, NULL) < 0) {
+	    return NewString("?");
 	}
+	t = tv.tv_sec;
+	tm = localtime(&t);
+	return xs_buffer("%04u%02u%02u%02u%02u%02u%06u",
+		tm->tm_year + 1900,
+		tm->tm_mon + 1,
+		tm->tm_mday,
+		tm->tm_hour,
+		tm->tm_min,
+		tm->tm_sec,
+		(unsigned)tv.tv_usec);
+    } else if (!strcasecmp(name, "UNIQUE")) {
+	++*up;
+	if (*up == 0) {
+	    return xs_buffer("%u", (unsigned)getpid());
+	} else {
+	    return xs_buffer("%u-%u", (unsigned)getpid(), *up);
+	}
+    } else {
+	return getenv(name);
+    }
 }
 
 /* Variable and tilde substitution functions. */
@@ -887,7 +873,7 @@ dump_version(void)
 	printf("%s\n%s\n", build, build_options());
 	charset_list();
 	printf("\n"
-"Copyright 1989-2014, Paul Mattes, GTRC and others.\n"
+"Copyright 1989-2015, Paul Mattes, GTRC and others.\n"
 "See the source code or documentation for licensing details.\n"
 "Distributed WITHOUT ANY WARRANTY; without even the implied warranty of\n"
 "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
@@ -896,32 +882,25 @@ dump_version(void)
 
 /* Scale a number for display. */
 const char *
-display_scale(double d, char *buf, size_t buflen)
+display_scale(double d)
 {
-	if (d >= 1000000.0)
-		snprintf(buf, buflen, "%.3g M", d / 1000000.0);
-	else if (d >= 1000.0)
-		snprintf(buf, buflen, "%.3g K", d / 1000.0);
-	else
-		snprintf(buf, buflen, "%.3g ", d);
-
-	/* Don't trust snprintf. */
-	buf[buflen - 1] = '\0';
-
-	return buf;
+    if (d >= 1000000.0) {
+	return lazyaf("%.3g M", d / 1000000.0);
+    } else if (d >= 1000.0) {
+	return lazyaf("%.3g K", d / 1000.0);
+    } else {
+	return lazyaf("%.3g ", d);
+    }
 }
 
 #if defined(WC3270) /*[*/
 void
 start_html_help(void)
 {
-	char *cmd;
+    system(lazyaf("start \"wc3270 Help\" \"%shtml\\README.html\"", instdir));
 
-	cmd = xs_buffer("start \"wc3270 Help\" \"%shtml\\README.html\"",
-		instdir);
-	system(cmd);
-	Free(cmd);
-	screen_fixup(); /* get back mouse events */
+    /* Get back mouse events */
+    screen_fixup();
 }
 #endif /*]*/
 

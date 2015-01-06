@@ -49,6 +49,7 @@
 #include "idlec.h"
 #include "keymapc.h"
 #include "keypadc.h"
+#include "lazya.h"
 #include "popupsc.h"
 #include "screenc.h"
 #include "utilc.h"
@@ -108,121 +109,129 @@ cmd_delete(int ix)
 static void
 save_xy(void)
 {
-	char tbuf[64];
-	Window window, frame, child;
-	XWindowAttributes wa;
-	int x, y;
-	int ix;
+    char *tbuf;
+    Window window, frame, child;
+    XWindowAttributes wa;
+    int x, y;
+    int ix;
 
-	window = XtWindow(toplevel);
-	if (!x_get_window_attributes(window, &wa))
-		return;
-	(void) XTranslateCoordinates(display, window, wa.root, 
-		-wa.border_width, -wa.border_width,
-		&x, &y, &child);
+    window = XtWindow(toplevel);
+    if (!x_get_window_attributes(window, &wa))
+	return;
+    (void) XTranslateCoordinates(display, window, wa.root, 
+	    -wa.border_width, -wa.border_width,
+	    &x, &y, &child);
 
-	frame = XtWindow(toplevel);
-	while (True) {
-		Window root, parent;
-		Window *wchildren;
-		unsigned int nchildren;
+    frame = XtWindow(toplevel);
+    while (True) {
+	Window root, parent;
+	Window *wchildren;
+	unsigned int nchildren;
 
-		int status = XQueryTree(display, frame, &root, &parent,
-		    &wchildren, &nchildren);
-		if (status && wchildren)
-			XFree((char *)wchildren);
-		if (parent == root || !parent || !status)
-			break;
-		frame = parent;
+	int status = XQueryTree(display, frame, &root, &parent, &wchildren,
+		&nchildren);
+	if (status && wchildren) {
+	    XFree((char *)wchildren);
 	}
-	if (frame != window) {
-		if (!x_get_window_attributes(frame, &wa))
-			return;
-		x = wa.x;
-		y = wa.y;
+	if (parent == root || !parent || !status) {
+	    break;
 	}
+	frame = parent;
+    }
+    if (frame != window) {
+	if (!x_get_window_attributes(frame, &wa)) {
+	    return;
+	}
+	x = wa.x;
+	y = wa.y;
+    }
 
-	(void) snprintf(tbuf, sizeof(tbuf), "+%d+%d", x, y);
-	if ((ix = cmd_srch("-geometry")))
-		cmd_replace(ix + 1, tbuf);
-	else {
-		cmd_append("-geometry");
-		cmd_append(tbuf);
-	}
+    tbuf = lazyaf("+%d+%d", x, y);
+    if ((ix = cmd_srch("-geometry"))) {
+	cmd_replace(ix + 1, tbuf);
+    } else {
+	cmd_append("-geometry");
+	cmd_append(tbuf);
+    }
 }
 
 /* Save the icon information: state, label, geometry. */
 static void
 save_icon(void)
 {
-	unsigned char *data;
-	int iconX, iconY;
-	char tbuf[64];
-	int ix;
-	unsigned long nitems;
+    unsigned char *data;
+    int iconX, iconY;
+    char *tbuf;
+    int ix;
+    unsigned long nitems;
 
-	{
-		Atom actual_type;
-		int actual_format;
-		unsigned long leftover;
+    {
+	Atom actual_type;
+	int actual_format;
+	unsigned long leftover;
 
-		if (XGetWindowProperty(display, XtWindow(toplevel), a_state,
-		    0L, 2L, False, a_state, &actual_type, &actual_format,
-		    &nitems, &leftover, &data) != Success)
-			return;
-		if (actual_type != a_state ||
-		    actual_format != 32 ||
-		    nitems < 1)
-			return;
+	if (XGetWindowProperty(display, XtWindow(toplevel), a_state, 0L, 2L,
+		    False, a_state, &actual_type, &actual_format, &nitems,
+		    &leftover, &data) != Success) {
+	    return;
 	}
-
-	ix = cmd_srch("-iconic");
-	if (*(unsigned long *)data == IconicState) {
-		if (!ix)
-			cmd_append("-iconic");
-	} else {
-		if (ix)
-			cmd_delete(ix);
+	if (actual_type != a_state || actual_format != 32 || nitems < 1) {
+	    return;
 	}
+    }
 
-	if (nitems < 2)
-		return;
-
-	{
-		Window icon_window;
-		XWindowAttributes wa;
-		Window child;
-
-		icon_window = *(Window *)(data + sizeof(unsigned long));
-		if (icon_window == None)
-			return;
-		if (!x_get_window_attributes(icon_window, &wa))
-			return;
-		(void) XTranslateCoordinates(display, icon_window, wa.root,
-		    -wa.border_width, -wa.border_width, &iconX, &iconY,
-		    &child);
-		if (!iconX && !iconY)
-			return;
+    ix = cmd_srch("-iconic");
+    if (*(unsigned long *)data == IconicState) {
+	if (!ix) {
+	    cmd_append("-iconic");
 	}
-
-	(void) snprintf(tbuf, sizeof(tbuf), "%d", iconX);
-	ix = cmd_srch(OptIconX);
-	if (ix)
-		cmd_replace(ix + 1, tbuf);
-	else {
-		cmd_append(OptIconX);
-		cmd_append(tbuf);
+    } else {
+	if (ix) {
+	    cmd_delete(ix);
 	}
+    }
 
-	(void) snprintf(tbuf, sizeof(tbuf), "%d", iconY);
-	ix = cmd_srch(OptIconY);
-	if (ix)
-		cmd_replace(ix + 1, tbuf);
-	else {
-		cmd_append(OptIconY);
-		cmd_append(tbuf);
-	}
+    if (nitems < 2) {
 	return;
+    }
+
+    {
+	Window icon_window;
+	XWindowAttributes wa;
+	Window child;
+
+	icon_window = *(Window *)(data + sizeof(unsigned long));
+	if (icon_window == None) {
+	    return;
+	}
+	if (!x_get_window_attributes(icon_window, &wa)) {
+	    return;
+	}
+	(void) XTranslateCoordinates(display, icon_window, wa.root,
+		-wa.border_width, -wa.border_width, &iconX, &iconY, &child);
+	if (!iconX && !iconY) {
+	    return;
+	}
+    }
+
+    tbuf = lazyaf("%d", iconX);
+    ix = cmd_srch(OptIconX);
+    if (ix) {
+	cmd_replace(ix + 1, tbuf);
+    } else {
+	cmd_append(OptIconX);
+	cmd_append(tbuf);
+    }
+
+    tbuf = lazyaf("%d", iconY);
+    ix = cmd_srch(OptIconY);
+    if (ix) {
+	cmd_replace(ix + 1, tbuf);
+    } else {
+	cmd_append(OptIconY);
+	cmd_append(tbuf);
+    }
+    return;
 }
 
 /* Save the keymap information. */

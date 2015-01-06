@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -640,12 +640,12 @@ proxy_socks5(int fd, char *host, unsigned short port, int force_d)
     if (force_d) {
 	use_name = 1;
     } else {
-	char errmsg[1024];
+	char *errmsg;
 	rhp_t rv;
 
 	/* Resolve the hostname. */
 	rv = resolve_host_and_port(host, NULL, 0, &rport, &ha.sa, &ha_len,
-		errmsg, sizeof(errmsg), NULL);
+		&errmsg, NULL);
 	if (rv == RHP_CANNOT_RESOLVE) {
 	    use_name = 1;
 	} else if (RHP_IS_ERROR(rv)) {

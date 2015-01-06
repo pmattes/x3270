@@ -51,6 +51,7 @@
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "hostc.h"
+#include "lazya.h"
 #include "menubarc.h"
 #include "popupsc.h"
 #include "pr3287_session.h"
@@ -311,7 +312,7 @@ pr3287_start_now(const char *lu, Boolean associated)
     const char *s;
     char *cmd_text;
     char c;
-    char charset_cmd[256];	/* -charset <csname> */
+    char *charset_cmd;		/* -charset <csname> */
     char *proxy_cmd = NULL;	/* -proxy <spec> */
 #if defined(_WIN32) /*[*/
     char *pcp_res = NULL;
@@ -327,7 +328,7 @@ pr3287_start_now(const char *lu, Boolean associated)
     Boolean success = True;
     struct sockaddr_in pr3287_lsa;
     socklen_t len;
-    char syncopt[64];
+    char *syncopt;
     varbuf_t r;
 
     assert(pr3287_state == P_NONE);
@@ -365,8 +366,7 @@ pr3287_start_now(const char *lu, Boolean associated)
 	SOCK_CLOSE(pr3287_ls);
 	return;
     }
-    snprintf(syncopt, sizeof(syncopt), "%s %d", OptSyncPort,
-	    ntohs(pr3287_lsa.sin_port));
+    syncopt = lazyaf("%s %d", OptSyncPort, ntohs(pr3287_lsa.sin_port));
     if (listen(pr3287_ls, 5) < 0) {
 	popup_a_sockerr("listen(printer sync)");
 	SOCK_CLOSE(pr3287_ls);
@@ -410,15 +410,14 @@ pr3287_start_now(const char *lu, Boolean associated)
 #endif /*]*/
 
     /* Construct the charset option. */
-    (void) snprintf(charset_cmd, sizeof(charset_cmd), "-charset %s",
-	    get_charset_name());
+    charset_cmd = lazyaf("-charset %s", get_charset_name());
 
     /* Construct proxy option. */
     if (appres.proxy != NULL) {
 #if !defined(_WIN32) /*[*/
-	proxy_cmd = xs_buffer("-proxy \"%s\"", appres.proxy);
+	proxy_cmd = lazyaf("-proxy \"%s\"", appres.proxy);
 #else /*][ */
-	proxy_cmd = xs_buffer("-proxy %s", appres.proxy);
+	proxy_cmd = lazyaf("-proxy %s", appres.proxy);
 #endif /*]*/
     }
 
@@ -426,7 +425,7 @@ pr3287_start_now(const char *lu, Boolean associated)
     /* Get the codepage for the printer. */
     pcp_res = get_resource(ResPrinterCodepage);
     if (pcp_res) {
-	printercp = xs_buffer("-printercp %s", pcp_res);
+	printercp = lazyaf("-printercp %s", pcp_res);
     }
 #endif /*]*/
 
@@ -539,9 +538,6 @@ pr3287_start_now(const char *lu, Boolean associated)
     if (pipe(stdout_pipe) < 0) {
 	popup_an_errno(errno, "pipe() failed");
 	Free(cmd_text);
-	if (proxy_cmd != NULL) {
-	    Free(proxy_cmd);
-	}
 	SOCK_CLOSE(pr3287_ls);
 	return;
     }
@@ -551,9 +547,6 @@ pr3287_start_now(const char *lu, Boolean associated)
 	(void) close(stdout_pipe[0]);
 	(void) close(stdout_pipe[1]);
 	Free(cmd_text);
-	if (proxy_cmd != NULL) {
-	    Free(proxy_cmd);
-	}
 	SOCK_CLOSE(pr3287_ls);
 	return;
     }
@@ -594,17 +587,14 @@ pr3287_start_now(const char *lu, Boolean associated)
 #else /*][*/
 /* Pass the command via the environment. */
     if (printerName != NULL) {
-	static char pn_buf[1024];
-
-	(void) snprintf(pn_buf, sizeof(pn_buf), "PRINTER=%s", printerName);
-	putenv(pn_buf);
+	putenv(lazyaf("PRINTER=%s", printerName));
     }
 
     /* Create the wpr3287 process. */
     if (!strncasecmp(cmd_text, "wpr3287.exe", 11)) {
-	cp_cmdline = xs_buffer("%s%s", instdir, cmd_text);
+	cp_cmdline = lazyaf("%s%s", instdir, cmd_text);
     } else {
-	cp_cmdline = NewString(cmd_text);
+	cp_cmdline = cmd_text;
     }
 
     vtrace("Printer command: %s\n", cp_cmdline);
@@ -623,18 +613,9 @@ pr3287_start_now(const char *lu, Boolean associated)
 	pr3287_handle = pi.hProcess;
 	CloseHandle(pi.hThread);
     }
-    Free(cp_cmdline);
 #endif /*]*/
 
     Free(cmd_text);
-    if (proxy_cmd != NULL) {
-	Free(proxy_cmd);
-    }
-#if defined(_WIN32) /*[*/
-    if (printercp != NULL) {
-	Free(printercp);
-    }
-#endif /*]*/
 
     /* Tell everyone else. */
     if (success) {

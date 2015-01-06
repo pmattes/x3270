@@ -62,6 +62,7 @@
 #include "hostc.h"
 #include "idlec.h"
 #include "kybdc.h"
+#include "lazya.h"
 #include "macrosc.h"
 #include "menubarc.h"
 #include "popupsc.h"
@@ -274,6 +275,7 @@ trace_script_output(const char *fmt, ...)
     }
 
     va_start(args, fmt);
+    /* XXX: Fixed-size buffer? */
     vsnprintf(msgbuf, sizeof(msgbuf), fmt, args);
     va_end(args);
 
@@ -985,10 +987,7 @@ static void
 cleanup_socket(Boolean b _is_unused)
 {
 #if !defined(_WIN32) /*[*/
-    char buf[1024];
-
-    (void) snprintf(buf, sizeof(buf), "/tmp/x3sck.%u", getpid());
-    (void) unlink(buf);
+    (void) unlink(lazyaf("/tmp/x3sck.%u", getpid()));
 #endif /*]*/
 }
 
@@ -2607,24 +2606,22 @@ static void
 script_prompt(Boolean success)
 {
     char *s;
-    char timing[64];
+    const char *timing;
     char *t;
 
     s = status_string();
 
     if (sms != NULL && sms->accumulated) {
-	(void) snprintf(timing, sizeof(timing), "%ld.%03ld",
-		sms->msec / 1000L, sms->msec % 1000L);
+	timing = lazyaf("%ld.%03ld", sms->msec / 1000L, sms->msec % 1000L);
     } else {
-	(void) strcpy(timing, "-");
+	timing = "-";
     }
 
-    t = Malloc(strlen(s) + 1 + strlen(timing) + 1 + 6 + 1);
     if (sms->type == ST_CB) {
-	sprintf(t, "%s %s", s, timing);
+	t = lazyaf("%s %s", s, timing);
 	trace_script_output("%s\n", t);
     } else {
-	sprintf(t, "%s %s\n%s\n", s, timing, success ? "ok" : "error");
+	t = lazyaf("%s %s\n%s\n", s, timing, success ? "ok" : "error");
 	trace_script_output("%s", t);
     }
     Free(s);
@@ -2641,7 +2638,6 @@ script_prompt(Boolean success)
 	(void) fprintf(sms->outfile, "%s", t);
 	(void) fflush(sms->outfile);
     }
-    free(t);
 }
 
 /* Save the state of the screen for Snap queries. */
@@ -3506,19 +3502,14 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     if (sms->pid == 0) {
 	char **child_argv;
 	unsigned i;
-	char env_buf[2][32];
 
 	/* Clean up the pipes. */
 	(void) close(outpipe[1]);
 	(void) close(inpipe[0]);
 
 	/* Export the names of the pipes into the environment. */
-	(void) snprintf(env_buf[0], sizeof(env_buf[0]), "X3270OUTPUT=%d",
-		outpipe[0]);
-	(void) putenv(env_buf[0]);
-	(void) snprintf(env_buf[1], sizeof(env_buf[1]), "X3270INPUT=%d",
-		inpipe[1]);
-	(void) putenv(env_buf[1]);
+	(void) putenv(xs_buffer("X3270OUTPUT=%d", outpipe[0]));
+	(void) putenv(xs_buffer("X3270INPUT=%d", inpipe[1]));
 
 	/* Set up arguments. */
 	child_argv = (char **)Malloc((argc + 1) * sizeof(char *));

@@ -37,6 +37,7 @@
 
 #include "appres.h"
 #include "asprintfc.h"
+#include "lazya.h"
 #include "trace.h"
 #include "utilc.h"
 #include "varbufc.h"
@@ -356,11 +357,11 @@ httpd_print(httpd_t *h, httpd_print_t type, const char *format, ...)
 static void
 httpd_content_len(httpd_t *h, size_t len)
 {
-    char buf[256];
+    char *cl;
 
     /* Do our own CR+LF expansion and send directly. */
-    snprintf(buf, sizeof(buf), "Content-Length: %u\r\n\r\n", (unsigned)len);
-    httpd_send(h, buf, strlen(buf));
+    cl = lazyaf("Content-Length: %u\r\n\r\n", (unsigned)len);
+    httpd_send(h, cl, strlen(cl));
 }
 
 /**

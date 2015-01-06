@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -47,12 +47,14 @@
 #include "aboutc.h"
 #include "charsetc.h"
 #include "keymapc.h"
+#include "lazya.h"
 #include "linemodec.h"
 #include "popupsc.h"
 #include "screenc.h"
 #include "telnetc.h"
 #include "utf8c.h"
 #include "utilc.h"
+#include "varbufc.h"
 
 static Widget about_shell = NULL;
 static Widget about_form;
@@ -78,37 +80,35 @@ destroy_about(Widget w _is_unused, XtPointer client_data _is_unused,
 static char *
 hms(time_t ts)
 {
-	time_t t, td;
-	long hr, mn, sc;
-	static char buf[128];
+    time_t t, td;
+    long hr, mn, sc;
 
-	(void) time(&t);
+    (void) time(&t);
 
-	td = t - ts;
-	hr = td / 3600;
-	mn = (td % 3600) / 60;
-	sc = td % 60;
+    td = t - ts;
+    hr = td / 3600;
+    mn = (td % 3600) / 60;
+    sc = td % 60;
 
-	if (hr > 0)
-		(void) snprintf(buf, sizeof(buf), "%ld %s %ld %s %ld %s",
-		    hr, (hr == 1) ?
-			get_message("hour") : get_message("hours"),
-		    mn, (mn == 1) ?
-			get_message("minute") : get_message("minutes"),
-		    sc, (sc == 1) ?
-			get_message("second") : get_message("seconds"));
-	else if (mn > 0)
-		(void) snprintf(buf, sizeof(buf), "%ld %s %ld %s",
-		    mn, (mn == 1) ?
-			get_message("minute") : get_message("minutes"),
-		    sc, (sc == 1) ?
-			get_message("second") : get_message("seconds"));
-	else
-		(void) snprintf(buf, sizeof(buf), "%ld %s",
-		    sc, (sc == 1) ?
-			get_message("second") : get_message("seconds"));
-
-	return buf;
+    if (hr > 0) {
+	return lazyaf("%ld %s %ld %s %ld %s",
+		hr, (hr == 1)?
+		    get_message("hour"): get_message("hours"),
+		mn, (mn == 1)?
+		    get_message("minute"): get_message("minutes"),
+		sc, (sc == 1)?
+		    get_message("second"): get_message("seconds"));
+    } else if (mn > 0) {
+	return lazyaf("%ld %s %ld %s",
+		mn, (mn == 1)?
+		    get_message("minute"): get_message("minutes"),
+		sc, (sc == 1)?
+		    get_message("second"): get_message("seconds"));
+    } else {
+	    return lazyaf("%ld %s",
+		sc, (sc == 1)?
+		    get_message("second"): get_message("seconds"));
+    }
 }
 
 #define MAKE_SMALL(label, n) { \
@@ -249,7 +249,7 @@ DAMAGE.";
 	left_anchor = NULL;
 
 	MAKE_SMALL(
-"Copyright \251 1993-2013, Paul Mattes.\n\
+"Copyright \251 1993-2015, Paul Mattes.\n\
 Copyright \251 2004-2005, Don Russell.\n\
 Copyright \251 1995, Dick Altenbern.\n\
 Copyright \251 1990, Jeff Sparkes.\n\
@@ -281,420 +281,385 @@ are met:", 4);
 void
 popup_about_config(void)
 {
-	Widget w = NULL, w_prev = NULL;
-	Widget v = NULL;
-	Widget left_anchor = NULL;
-	int vd = 4;
-	char fbuf[1024];
-	const char *ftype;
-	char *xbuf;
+    Widget w = NULL, w_prev = NULL;
+    Widget v = NULL;
+    Widget left_anchor = NULL;
+    int vd = 4;
+    const char *ftype;
+    char *xbuf;
 
-	/* Create the popup */
+    /* Create the popup */
+    about_shell = XtVaCreatePopupShell(
+	"aboutConfigPopup", transientShellWidgetClass, toplevel,
+	NULL);
+    XtAddCallback(about_shell, XtNpopupCallback, place_popup,
+	(XtPointer) CenterP);
+    XtAddCallback(about_shell, XtNpopdownCallback, destroy_about,
+	NULL);
 
-	about_shell = XtVaCreatePopupShell(
-	    "aboutConfigPopup", transientShellWidgetClass, toplevel,
-	    NULL);
-	XtAddCallback(about_shell, XtNpopupCallback, place_popup,
-	    (XtPointer) CenterP);
-	XtAddCallback(about_shell, XtNpopdownCallback, destroy_about,
-	    NULL);
+    /* Create a form in the popup */
+    about_form = XtVaCreateManagedWidget(
+	ObjDialog, formWidgetClass, about_shell,
+	NULL);
 
-	/* Create a form in the popup */
+    /* Pretty picture */
+    left_anchor = XtVaCreateManagedWidget(
+	"icon", labelWidgetClass, about_form,
+	XtNborderWidth, 0,
+	XtNbitmap, icon,
+	XtNfromVert, w,
+	XtNleft, XtChainLeft,
+	NULL);
 
-	about_form = XtVaCreateManagedWidget(
-	    ObjDialog, formWidgetClass, about_shell,
-	    NULL);
+    /* Miscellany */
+    MAKE_LABEL(build, 4);
+    MAKE_LABEL(get_message("processId"), 4);
+    MAKE_VALUE(lazyaf("%d", getpid()));
+    MAKE_LABEL2(get_message("windowId"));
+    MAKE_VALUE(lazyaf("0x%lx", XtWindow(toplevel)));
 
-	/* Pretty picture */
+    /* Everything else at the left margin under the bitmap */
+    w = left_anchor;
+    left_anchor = NULL;
 
-	left_anchor = XtVaCreateManagedWidget(
-	    "icon", labelWidgetClass, about_form,
-	    XtNborderWidth, 0,
-	    XtNbitmap, icon,
-	    XtNfromVert, w,
-	    XtNleft, XtChainLeft,
-	    NULL);
+    MAKE_LABEL(lazyaf("%s %s: %d %s x %d %s, %s, %s",
+	get_message("model"), model_name,
+	maxCOLS, get_message("columns"),
+	maxROWS, get_message("rows"),
+	appres.mono ? get_message("mono") :
+	    (appres.m3279 ? get_message("fullColor") :
+		get_message("pseudoColor")),
+	(appres.extended && !std_ds_host) ? get_message("extendedDs") :
+	    get_message("standardDs")), 4);
 
-	/* Miscellany */
+    MAKE_LABEL(get_message("terminalName"), 4);
+    MAKE_VALUE(termtype);
 
-	MAKE_LABEL(build, 4);
-	MAKE_LABEL(get_message("processId"), 4);
-	(void) snprintf(fbuf, sizeof(fbuf), "%d", getpid());
-	MAKE_VALUE(fbuf);
-	MAKE_LABEL2(get_message("windowId"));
-	(void) snprintf(fbuf, sizeof(fbuf), "0x%lx", XtWindow(toplevel));
-	MAKE_VALUE(fbuf);
+    MAKE_LABEL(get_message("emulatorFont"), 4);
+    MAKE_VALUE(full_efontname);
+    if (*standard_font) {
+	ftype = get_message("xFont");
+    } else {
+	ftype = get_message("cgFont");
+    }
+    xbuf = xs_buffer("  %s", ftype);
+    MAKE_LABEL(xbuf, 0);
+    XtFree(xbuf);
 
-	/* Everything else at the left margin under the bitmap */
-	w = left_anchor;
-	left_anchor = NULL;
+    if (dbcs) {
+	MAKE_LABEL(get_message("emulatorFontDbcs"), 4);
+	MAKE_VALUE(full_efontname_dbcs);
+    }
 
-	(void) snprintf(fbuf, sizeof(fbuf), "%s %s: %d %s x %d %s, %s, %s",
-	    get_message("model"), model_name,
-	    maxCOLS, get_message("columns"),
-	    maxROWS, get_message("rows"),
-	    appres.mono ? get_message("mono") :
-		(appres.m3279 ? get_message("fullColor") :
-		    get_message("pseudoColor")),
-	    (appres.extended && !std_ds_host) ? get_message("extendedDs") :
-		get_message("standardDs"));
-	MAKE_LABEL(fbuf, 4);
-
-	MAKE_LABEL(get_message("terminalName"), 4);
-	MAKE_VALUE(termtype);
-
-	MAKE_LABEL(get_message("emulatorFont"), 4);
-	MAKE_VALUE(full_efontname);
-	if (*standard_font) {
-		ftype = get_message("xFont");
-	} else {
-		ftype = get_message("cgFont");
-	}
-	xbuf = xs_buffer("  %s", ftype);
-	MAKE_LABEL(xbuf, 0);
-	XtFree(xbuf);
-
-	if (dbcs) {
-		MAKE_LABEL(get_message("emulatorFontDbcs"), 4);
-		MAKE_VALUE(full_efontname_dbcs);
-	}
-
-	MAKE_LABEL(get_message("displayCharacterSet"), 4);
-	if (!efont_matches) {
-		xbuf = xs_buffer("ascii-7 (%s %s, %s %s)",
-		    get_message("require"), display_charset(),
-		    get_message("have"), efont_charset);
-		MAKE_VALUE(xbuf);
-		XtFree(xbuf);
-	} else {
-		MAKE_VALUE(efont_charset);
-	}
-	if (dbcs) {
-		MAKE_LABEL(get_message("displayCharacterSetDbcs"), 4);
-		MAKE_VALUE(efont_charset_dbcs);
-	}
-
-	MAKE_LABEL(get_message("charset"), 4);
-	xbuf = xs_buffer("%s (code page %s)", get_charset_name(),
-	     get_host_codepage());
+    MAKE_LABEL(get_message("displayCharacterSet"), 4);
+    if (!efont_matches) {
+	xbuf = xs_buffer("ascii-7 (%s %s, %s %s)",
+		get_message("require"), display_charset(),
+		get_message("have"), efont_charset);
 	MAKE_VALUE(xbuf);
 	XtFree(xbuf);
+    } else {
+	MAKE_VALUE(efont_charset);
+    }
+    if (dbcs) {
+	MAKE_LABEL(get_message("displayCharacterSetDbcs"), 4);
+	MAKE_VALUE(efont_charset_dbcs);
+    }
 
-	MAKE_LABEL(get_message("sbcsCgcsgid"), 4);
-	xbuf = xs_buffer("GCSGID %u, CPGID %u",
+    MAKE_LABEL(get_message("charset"), 4);
+    xbuf = xs_buffer("%s (code page %s)", get_charset_name(),
+	    get_host_codepage());
+    MAKE_VALUE(xbuf);
+    XtFree(xbuf);
+
+    MAKE_LABEL(get_message("sbcsCgcsgid"), 4);
+    xbuf = xs_buffer("GCSGID %u, CPGID %u",
 	    (unsigned short)((cgcsgid >> 16) & 0xffff),
 	    (unsigned short)(cgcsgid & 0xffff));
+    MAKE_VALUE(xbuf);
+    XtFree(xbuf);
+    if (dbcs) {
+	MAKE_LABEL(get_message("dbcsCgcsgid"), 4);
+	xbuf = xs_buffer("GCSGID %u, CPGID %u",
+		(unsigned short)((cgcsgid_dbcs >> 16) & 0xffff),
+		(unsigned short)(cgcsgid_dbcs & 0xffff));
 	MAKE_VALUE(xbuf);
 	XtFree(xbuf);
-	if (dbcs) {
-		MAKE_LABEL(get_message("dbcsCgcsgid"), 4);
-		xbuf = xs_buffer("GCSGID %u, CPGID %u",
-		    (unsigned short)((cgcsgid_dbcs >> 16) & 0xffff),
-		    (unsigned short)(cgcsgid_dbcs & 0xffff));
-		MAKE_VALUE(xbuf);
-		XtFree(xbuf);
-		MAKE_LABEL(get_message("inputMethod"), 4);
-		if (appres.input_method) {
-			MAKE_VALUE(appres.input_method);
-		} else if (getenv("XMODIFIERS") != NULL) {
-			MAKE_VALUE("(via environment)");
-		} else {
-			MAKE_VALUE("(unspecified)");
-		}
-		MAKE_LABEL2(get_message("ximState"));
-		if (xim_error)
-			ftype = get_message("ximDisabled");
-		else if (im == NULL)
-			ftype = get_message("ximNotFound");
-		else
-			ftype = get_message("ximActive");
-		MAKE_VALUE(ftype);
-		MAKE_LABEL2(get_message("ximLocale"));
-		if (locale_name != NULL) {
-			MAKE_VALUE(locale_name);
-		} else {
-			MAKE_VALUE("(error)");
-		}
-	}
-	MAKE_LABEL(get_message("localeCodeset"), 4);
-	MAKE_VALUE(locale_codeset);
-
-	if (trans_list != NULL || temp_keymaps != NULL) {
-		struct trans_list *t;
-
-		fbuf[0] = '\0';
-		for (t = trans_list; t; t = t->next) {
-			if (fbuf[0])
-				(void) strcat(fbuf, ",");
-			(void) strcat(fbuf, t->name);
-		}
-		for (t = temp_keymaps; t; t = t->next) {
-			if (fbuf[0])
-				(void) strcat(fbuf, " ");
-			(void) strcat(fbuf, "+");
-			(void) strcat(fbuf, t->name);
-		}
-		MAKE_LABEL(get_message("keyboardMap"), 4)
-		MAKE_VALUE(fbuf);
-	} else
-		MAKE_LABEL(get_message("defaultKeyboardMap"), 4);
-	if (appres.compose_map) {
-		MAKE_LABEL(get_message("composeMap"), 4);
-		MAKE_VALUE(appres.compose_map);
+	MAKE_LABEL(get_message("inputMethod"), 4);
+	if (appres.input_method) {
+	    MAKE_VALUE(appres.input_method);
+	} else if (getenv("XMODIFIERS") != NULL) {
+	    MAKE_VALUE("(via environment)");
 	} else {
-		MAKE_LABEL(get_message("noComposeMap"), 4);
+	    MAKE_VALUE("(unspecified)");
 	}
+	MAKE_LABEL2(get_message("ximState"));
+	if (xim_error) {
+	    ftype = get_message("ximDisabled");
+	} else if (im == NULL) {
+	    ftype = get_message("ximNotFound");
+	} else {
+	    ftype = get_message("ximActive");
+	}
+	MAKE_VALUE(ftype);
+	MAKE_LABEL2(get_message("ximLocale"));
+	if (locale_name != NULL) {
+	    MAKE_VALUE(locale_name);
+	} else {
+	    MAKE_VALUE("(error)");
+	}
+    }
+    MAKE_LABEL(get_message("localeCodeset"), 4);
+    MAKE_VALUE(locale_codeset);
 
-	if (appres.active_icon) {
-		MAKE_LABEL(get_message("activeIcon"), 4);
-		xbuf = xs_buffer("  %s", get_message("iconFont"));
-		MAKE_LABEL(xbuf, 0);
-		XtFree(xbuf);
-		MAKE_VALUE(appres.icon_font);
-		if (appres.label_icon) {
-			xbuf = xs_buffer("  %s", get_message("iconLabelFont"));
-			MAKE_LABEL(xbuf, 0);
-			XtFree(xbuf);
-			MAKE_VALUE(appres.icon_label_font);
-		}
-	} else
-		MAKE_LABEL(get_message("staticIcon"), 4);
+    if (trans_list != NULL || temp_keymaps != NULL) {
+	struct trans_list *t;
+	varbuf_t r;
 
-	/* Add "OK" button at the lower left */
+	vb_init(&r);
+	for (t = trans_list; t; t = t->next) {
+	    if (vb_len(&r)) {
+		vb_appends(&r, ",");
+	    }
+	    vb_appends(&r, t->name);
+	}
+	for (t = temp_keymaps; t; t = t->next) {
+	    if (vb_len(&r)) {
+		vb_appends(&r, " ");
+	    }
+	    vb_appends(&r, "+");
+	    vb_appends(&r, t->name);
+	}
+	MAKE_LABEL(get_message("keyboardMap"), 4)
+	MAKE_VALUE(vb_buf(&r));
+	vb_free(&r);
+    } else {
+	MAKE_LABEL(get_message("defaultKeyboardMap"), 4);
+    }
+    if (appres.compose_map) {
+	MAKE_LABEL(get_message("composeMap"), 4);
+	MAKE_VALUE(appres.compose_map);
+    } else {
+	MAKE_LABEL(get_message("noComposeMap"), 4);
+    }
 
-	w = XtVaCreateManagedWidget(
-	    ObjConfirmButton, commandWidgetClass, about_form,
-	    XtNfromVert, w,
-	    XtNleft, XtChainLeft,
-	    XtNbottom, XtChainBottom,
-	    NULL);
-	XtAddCallback(w, XtNcallback, saw_about, 0);
+    if (appres.active_icon) {
+	MAKE_LABEL(get_message("activeIcon"), 4);
+	xbuf = xs_buffer("  %s", get_message("iconFont"));
+	MAKE_LABEL(xbuf, 0);
+	XtFree(xbuf);
+	MAKE_VALUE(appres.icon_font);
+	if (appres.label_icon) {
+	    xbuf = xs_buffer("  %s", get_message("iconLabelFont"));
+	    MAKE_LABEL(xbuf, 0);
+	    XtFree(xbuf);
+	    MAKE_VALUE(appres.icon_label_font);
+	}
+    } else {
+	MAKE_LABEL(get_message("staticIcon"), 4);
+    }
 
-	/* Pop it up */
+    /* Add "OK" button at the lower left */
+    w = XtVaCreateManagedWidget(
+	ObjConfirmButton, commandWidgetClass, about_form,
+	XtNfromVert, w,
+	XtNleft, XtChainLeft,
+	XtNbottom, XtChainBottom,
+	NULL);
+    XtAddCallback(w, XtNcallback, saw_about, 0);
 
-	popup_popup(about_shell, XtGrabExclusive);
+    /* Pop it up */
+    popup_popup(about_shell, XtGrabExclusive);
 }
 
 /* Called when the "About x3270->Connection Status" button is pressed */
 void
 popup_about_status(void)
 {
-	Widget w = NULL, w_prev = NULL;
-	Widget v = NULL;
-	Widget left_anchor = NULL;
-	int vd = 4;
-	char fbuf[1024];
-	const char *ftype;
-	const char *emode;
-	const char *eopts;
-	const char *ptype;
-	const char *bplu;
+    Widget w = NULL, w_prev = NULL;
+    Widget v = NULL;
+    Widget left_anchor = NULL;
+    int vd = 4;
+    const char *fbuf;
+    const char *ftype;
+    const char *emode;
+    const char *eopts;
+    const char *ptype;
+    const char *bplu;
 
-	/* Create the popup */
+    /* Create the popup */
+    about_shell = XtVaCreatePopupShell(
+	"aboutStatusPopup", transientShellWidgetClass, toplevel,
+	NULL);
+    XtAddCallback(about_shell, XtNpopupCallback, place_popup,
+	(XtPointer) CenterP);
+    XtAddCallback(about_shell, XtNpopdownCallback, destroy_about,
+	NULL);
 
-	about_shell = XtVaCreatePopupShell(
-	    "aboutStatusPopup", transientShellWidgetClass, toplevel,
-	    NULL);
-	XtAddCallback(about_shell, XtNpopupCallback, place_popup,
-	    (XtPointer) CenterP);
-	XtAddCallback(about_shell, XtNpopdownCallback, destroy_about,
-	    NULL);
+    /* Create a form in the popup */
+    about_form = XtVaCreateManagedWidget(
+	ObjDialog, formWidgetClass, about_shell,
+	NULL);
 
-	/* Create a form in the popup */
+    /* Pretty picture */
+    left_anchor = XtVaCreateManagedWidget(
+	"icon", labelWidgetClass, about_form,
+	XtNborderWidth, 0,
+	XtNbitmap, icon,
+	XtNfromVert, w,
+	XtNleft, XtChainLeft,
+	NULL);
 
-	about_form = XtVaCreateManagedWidget(
-	    ObjDialog, formWidgetClass, about_shell,
-	    NULL);
+    /* Miscellany */
+    MAKE_LABEL(build, 4);
 
-	/* Pretty picture */
+    /* Everything else at the left margin under the bitmap */
+    w = left_anchor;
+    left_anchor = NULL;
 
-	left_anchor = XtVaCreateManagedWidget(
-	    "icon", labelWidgetClass, about_form,
-	    XtNborderWidth, 0,
-	    XtNbitmap, icon,
-	    XtNfromVert, w,
-	    XtNleft, XtChainLeft,
-	    NULL);
-
-	/* Miscellany */
-
-	MAKE_LABEL(build, 4);
-
-	/* Everything else at the left margin under the bitmap */
-	w = left_anchor;
-	left_anchor = NULL;
-
-	if (CONNECTED) {
-		MAKE_LABEL(get_message("connectedTo"), 4);
+    if (CONNECTED) {
+	MAKE_LABEL(get_message("connectedTo"), 4);
 #if defined(LOCAL_PROCESS) /*[*/
-		if (local_process && !strlen(current_host)) {
-			MAKE_VALUE("(shell)");
-		} else
+	if (local_process && !strlen(current_host)) {
+	    MAKE_VALUE("(shell)");
+	} else
 #endif /*]*/
-		{
-			if (!appres.suppress_host) {
-				MAKE_VALUE(current_host);
-			}
-		}
+	{
+	    if (!appres.suppress_host) {
+		MAKE_VALUE(current_host);
+	    }
+	}
 #if defined(LOCAL_PROCESS) /*[*/
-		if (!local_process) {
+	if (!local_process) {
 #endif /*]*/
-			(void) snprintf(fbuf, sizeof(fbuf), "  %s",
-				get_message("port"));
-			MAKE_LABEL2(fbuf);
-			(void) snprintf(fbuf, sizeof(fbuf), "%d",
-				current_port);
-			MAKE_VALUE(fbuf);
+	    MAKE_LABEL2(lazyaf("  %s", get_message("port")));
+	    MAKE_VALUE(lazyaf("%d", current_port));
 #if defined(LOCAL_PROCESS) /*[*/
-		}
+	}
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
-		if (secure_connection) {
-			(void) snprintf(fbuf, sizeof(fbuf), "%s%s%s",
-				get_message("secure"),
-				secure_unverified? ", ": "",
-				secure_unverified? get_message("unverified"):
-						   "");
-			MAKE_LABEL2(fbuf);
-			if (secure_unverified) {
-			    	int i;
+	if (secure_connection) {
+	    MAKE_LABEL2(lazyaf("%s%s%s",
+			get_message("secure"),
+			secure_unverified? ", ": "",
+			secure_unverified? get_message("unverified"): ""));
+	    if (secure_unverified) {
+		int i;
 
-				for (i = 0; unverified_reasons[i] != NULL; i++) {
-				    	snprintf(fbuf, sizeof(fbuf), "   %s",
-						unverified_reasons[i]);
-					MAKE_LABEL(fbuf, 0);
-				}
-			}
+		for (i = 0; unverified_reasons[i] != NULL; i++) {
+		    MAKE_LABEL(lazyaf("   %s", unverified_reasons[i]), 0);
 		}
+	    }
+	}
 #endif /*]*/
-		ptype = net_proxy_type();
-		if (ptype) {
-		    	MAKE_LABEL(get_message("proxyType"), 4);
-			MAKE_VALUE(ptype);
-			(void) snprintf(fbuf, sizeof(fbuf), "  %s",
-				get_message("server"));
-			MAKE_LABEL2(fbuf);
-			MAKE_VALUE(net_proxy_host());
-			(void) snprintf(fbuf, sizeof(fbuf), "  %s",
-				get_message("port"));
-			MAKE_LABEL2(fbuf);
-			MAKE_VALUE(net_proxy_port());
-		}
+	ptype = net_proxy_type();
+	if (ptype) {
+	    MAKE_LABEL(get_message("proxyType"), 4);
+	    MAKE_VALUE(ptype);
+	    MAKE_LABEL2(lazyaf("  %s", get_message("server")));
+	    MAKE_VALUE(net_proxy_host());
+	    MAKE_LABEL2(lazyaf("  %s", get_message("port")));
+	    MAKE_VALUE(net_proxy_port());
+	}
 
-		if (IN_E)
-			emode = "TN3270E ";
-		else
-			emode = "";
-		if (IN_NVT) {
-			if (linemode) {
-				ftype = get_message("lineMode");
-			} else {
-				ftype = get_message("charMode");
-			}
-			(void) snprintf(fbuf, sizeof(fbuf), "  %s%s, ",
-				emode, ftype);
-		} else if (IN_SSCP) {
-			(void) snprintf(fbuf, sizeof(fbuf), "  %s%s, ", emode,
-			    get_message("sscpMode"));
-		} else if (IN_3270) {
-			(void) snprintf(fbuf, sizeof(fbuf), "  %s%s, ", emode,
-			    get_message("dsMode"));
-		} else if (cstate == CONNECTED_UNBOUND) {
-			(void) snprintf(fbuf, sizeof(fbuf), "  %s%s, ", emode,
-			    get_message("unboundMode"));
+	if (IN_E) {
+	    emode = "TN3270E ";
+	} else {
+	    emode = "";
+	}
+	if (IN_NVT) {
+	    if (linemode) {
+		ftype = get_message("lineMode");
+	    } else {
+		ftype = get_message("charMode");
+	    }
+	    fbuf = lazyaf("  %s%s, ", emode, ftype);
+	} else if (IN_SSCP) {
+	    fbuf = lazyaf("  %s%s, ", emode, get_message("sscpMode"));
+	} else if (IN_3270) {
+	    fbuf = lazyaf("  %s%s, ", emode, get_message("dsMode"));
+	} else if (cstate == CONNECTED_UNBOUND) {
+	    fbuf = lazyaf("  %s%s, ", emode, get_message("unboundMode"));
+	} else {
+	    fbuf = "  ";
+	}
+	fbuf = lazyaf("%s%s", fbuf, hms(ns_time));
+	MAKE_LABEL(fbuf, 0);
+
+	if (connected_lu != NULL && connected_lu[0]) {
+	    MAKE_LABEL(lazyaf("  %s", get_message("luName")), 0);
+	    MAKE_VALUE(connected_lu);
+	}
+	bplu = net_query_bind_plu_name();
+	if (bplu != NULL && bplu[0]) {
+	    MAKE_LABEL(lazyaf("  %s", get_message("bindPluName")), 0);
+	    MAKE_VALUE(bplu);
+	}
+
+	eopts = tn3270e_current_opts();
+	if (eopts != NULL) {
+	    MAKE_LABEL(lazyaf("  %s", get_message("tn3270eOpts")), 0);
+	    MAKE_VALUE(eopts);
+	} else if (IN_E) {
+	    MAKE_LABEL(lazyaf("  %s", get_message("tn3270eNoOpts")), 0);
+	}
+
+	if (IN_3270) {
+	    fbuf = lazyaf("%s %d %s, %d %s\n%s %d %s, %d %s",
+		    get_message("sent"),
+		    ns_bsent, (ns_bsent == 1) ?
+			get_message("byte") : get_message("bytes"),
+			ns_rsent, (ns_rsent == 1) ?
+		    get_message("record") : get_message("records"),
+		    get_message("Received"),
+		    ns_brcvd, (ns_brcvd == 1) ?
+			get_message("byte") : get_message("bytes"),
+		    ns_rrcvd, (ns_rrcvd == 1) ?
+			get_message("record") :
+			get_message("records"));
+	} else {
+	    fbuf = lazyaf("%s %d %s, %s %d %s",
+		    get_message("sent"),
+		    ns_bsent, (ns_bsent == 1) ?
+			get_message("byte") : get_message("bytes"),
+		    get_message("received"),
+		    ns_brcvd, (ns_brcvd == 1) ?
+			get_message("byte") : get_message("bytes"));
+	}
+	MAKE_LABEL(fbuf, 4);
+
+	if (IN_NVT) {
+	    struct ctl_char *c = linemode_chars();
+	    int i;
+
+	    MAKE_LABEL(get_message("specialCharacters"), 4);
+	    for (i = 0; c[i].name; i++) {
+		if (!i || !(i % 4)) {
+		    MAKE_LABEL(lazyaf("  %s", c[i].name), 0);
 		} else {
-			(void) strcpy(fbuf, "  ");
+		    MAKE_LABEL2(c[i].name);
 		}
-		(void) strcat(fbuf, hms(ns_time));
+		MAKE_VALUE(c[i].value);
+	    }
+	}
+    } else if (HALF_CONNECTED) {
+	MAKE_LABEL(get_message("connectionPending"), 4);
+	MAKE_VALUE(current_host);
+    } else {
+	MAKE_LABEL(get_message("notConnected"), 4);
+    }
 
-		MAKE_LABEL(fbuf, 0);
+    /* Add "OK" button at the lower left */
+    w = XtVaCreateManagedWidget(
+	ObjConfirmButton, commandWidgetClass, about_form,
+	XtNfromVert, w,
+	XtNleft, XtChainLeft,
+	XtNbottom, XtChainBottom,
+	NULL);
+    XtAddCallback(w, XtNcallback, saw_about, 0);
 
-		if (connected_lu != NULL && connected_lu[0]) {
-		    	(void) snprintf(fbuf, sizeof(fbuf), "  %s",
-				get_message("luName"));
-			MAKE_LABEL(fbuf, 0);
-			MAKE_VALUE(connected_lu);
-		}
-		bplu = net_query_bind_plu_name();
-		if (bplu != NULL && bplu[0]) {
-		    	(void) snprintf(fbuf, sizeof(fbuf), "  %s",
-				get_message("bindPluName"));
-			MAKE_LABEL(fbuf, 0);
-			MAKE_VALUE(bplu);
-		}
-
-		eopts = tn3270e_current_opts();
-		if (eopts != NULL) {
-			(void) snprintf(fbuf, sizeof(fbuf), "  %s",
-	 			get_message("tn3270eOpts"));
-			MAKE_LABEL(fbuf, 0);
-			MAKE_VALUE(eopts);
-		} else if (IN_E) {
-			(void) snprintf(fbuf, sizeof(fbuf), "  %s",
-				get_message("tn3270eNoOpts"));
-			MAKE_LABEL(fbuf, 0);
-		}
-
-		if (IN_3270)
-			(void) snprintf(fbuf, sizeof(fbuf),
-				"%s %d %s, %d %s\n%s %d %s, %d %s",
-				get_message("sent"),
-				ns_bsent, (ns_bsent == 1) ?
-				    get_message("byte") : get_message("bytes"),
-				    ns_rsent, (ns_rsent == 1) ?
-				get_message("record") : get_message("records"),
-				get_message("Received"),
-				ns_brcvd, (ns_brcvd == 1) ?
-				    get_message("byte") : get_message("bytes"),
-				ns_rrcvd, (ns_rrcvd == 1) ?
-				    get_message("record") :
-				    get_message("records"));
-		else
-			(void) snprintf(fbuf, sizeof(fbuf),
-				"%s %d %s, %s %d %s",
-				get_message("sent"),
-				ns_bsent, (ns_bsent == 1) ?
-				    get_message("byte") : get_message("bytes"),
-				get_message("received"),
-				ns_brcvd, (ns_brcvd == 1) ?
-				    get_message("byte") : get_message("bytes"));
-		MAKE_LABEL(fbuf, 4);
-
-		if (IN_NVT) {
-			struct ctl_char *c = linemode_chars();
-			int i;
-
-			MAKE_LABEL(get_message("specialCharacters"), 4);
-			for (i = 0; c[i].name; i++) {
-				if (!i || !(i % 4)) {
-					(void) snprintf(fbuf, sizeof(fbuf),
-						"  %s", c[i].name);
-					MAKE_LABEL(fbuf, 0);
-				} else {
-					MAKE_LABEL2(c[i].name);
-				}
-				MAKE_VALUE(c[i].value);
-			}
-		}
-	} else if (HALF_CONNECTED) {
-		MAKE_LABEL(get_message("connectionPending"), 4);
-		MAKE_VALUE(current_host);
-	} else
-		MAKE_LABEL(get_message("notConnected"), 4);
-
-	/* Add "OK" button at the lower left */
-
-	w = XtVaCreateManagedWidget(
-	    ObjConfirmButton, commandWidgetClass, about_form,
-	    XtNfromVert, w,
-	    XtNleft, XtChainLeft,
-	    XtNbottom, XtChainBottom,
-	    NULL);
-	XtAddCallback(w, XtNcallback, saw_about, 0);
-
-	/* Pop it up */
-
-	popup_popup(about_shell, XtGrabExclusive);
+    /* Pop it up */
+    popup_popup(about_shell, XtGrabExclusive);
 }
 
 #undef MAKE_LABEL

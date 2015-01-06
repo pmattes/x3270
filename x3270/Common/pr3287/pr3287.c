@@ -1007,7 +1007,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 	 * option is in effect.
 	 */
 	for (;;) {
-		char errtxt[1024];
+		char *errtxt;
 
 		/* Resolve the host name. */
 	    	if (proxy_type > 0) {
@@ -1016,8 +1016,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 			struct servent *sp;
 
 			if (resolve_host_and_port(proxy_host, proxy_portname,
-				    0, &proxy_port, &ha.sa, &ha_len, errtxt,
-				    sizeof(errtxt), NULL) < 0) {
+				    0, &proxy_port, &ha.sa, &ha_len, &errtxt,
+				    NULL) < 0) {
 			    popup_an_error("%s/%s: %s", proxy_host,
 				    proxy_portname, errtxt);
 			    rc = 1;
@@ -1038,8 +1038,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 				p = (unsigned short)lport;
 		} else {
 			if (resolve_host_and_port(host, port, 0, &p, &ha.sa,
-				    &ha_len, errtxt, sizeof(errtxt),
-				    NULL) < 0) {
+				    &ha_len, &errtxt, NULL) < 0) {
 			    popup_an_error("%s/%s: %s", host, port, errtxt);
 			    rc = 1;
 			    goto retry;

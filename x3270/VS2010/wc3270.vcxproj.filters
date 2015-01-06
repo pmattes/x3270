@@ -80,6 +80,9 @@
     <ClCompile Include="..\wc3270-3.3\kybd.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\wc3270-3.3\lazya.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\wc3270-3.3\linemode.c">
       <Filter>Source Files</Filter>
     </ClCompile>

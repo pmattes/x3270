@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,19 +26,11 @@
  */
 
 /*
- *	resolverc.h
- *		Hostname resolution.
+ *      lazya.h
+ *              Lazy allocations.
  */
 
-typedef enum {
-    RHP_SUCCESS = 0,
-    RHP_FATAL = -1,
-    RHP_CANNOT_RESOLVE = -2
-} rhp_t;
-#define RHP_IS_ERROR(r)	((r) < 0)
-extern rhp_t resolve_host_and_port(const char *host, char *portname, int ix,
-	unsigned short *pport, struct sockaddr *sa, socklen_t *sa_len,
-	char **errmsg, int *lastp);
-extern Boolean numeric_host_and_port(const struct sockaddr *sa,
-	socklen_t salen, char *host, size_t hostlen, char *serv,
-	size_t servlen, char **errmsg);
+extern char *lazya(char *buf);
+extern char *lazyaf(const char *fmt, ...);
+extern char *vlazyaf(const char *fmt, va_list args);
+extern void lazya_flush();

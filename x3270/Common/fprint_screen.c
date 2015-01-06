@@ -50,6 +50,7 @@
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
+#include "varbufc.h"
 
 /* Typedefs */
 typedef struct {
@@ -123,94 +124,75 @@ html_color(int color)
 static char *
 rtf_caption(const char *caption)
 {
-    	ucs4_t u;
-	int consumed;
-	enum me_fail error;
-	char *result = Malloc(1);
-	int rlen = 1;
-	char uubuf[64];
-	char mb[16];
+    ucs4_t u;
+    int consumed;
+    enum me_fail error;
+    char mb[16];
+    varbuf_t r;
 
-	result[0] = '\0';
+    vb_init(&r);
 
-	while (*caption) {
-		u = multibyte_to_unicode(caption, strlen(caption), &consumed,
-			&error);
-		if (u == 0)
-		    	break;
-		if (u & ~0x7f) {
-			(void) snprintf(uubuf, sizeof(uubuf), "\\u%u?", u);
-		} else {
-			(void) unicode_to_multibyte(u, mb, sizeof(mb));
-			if (mb[0] == '\\' ||
-			    mb[0] == '{' ||
-			    mb[0] == '}')
-				(void) snprintf(uubuf, sizeof(uubuf), "\\%c",
-					mb[0]);
-			else if (mb[0] == '-')
-				(void) snprintf(uubuf, sizeof(uubuf), "\\_");
-			else if (mb[0] == ' ')
-				(void) snprintf(uubuf, sizeof(uubuf), "\\~");
-			else {
-			    	uubuf[0] = mb[0];
-				uubuf[1] = '\0';
-			}
-		}
-		result = Realloc(result, rlen + strlen(uubuf));
-		strcat(result, uubuf);
-		rlen += strlen(uubuf);
-
-		caption += consumed;
+    while (*caption) {
+	u = multibyte_to_unicode(caption, strlen(caption), &consumed, &error);
+	if (u == 0) {
+	    break;
 	}
-	return result;
+	if (u & ~0x7f) {
+	    vb_appendf(&r, "\\u%u?", u);
+	} else {
+	    (void) unicode_to_multibyte(u, mb, sizeof(mb));
+	    if (mb[0] == '\\' || mb[0] == '{' || mb[0] == '}') {
+		vb_appendf(&r, "\\%c", mb[0]);
+	    } else if (mb[0] == '-') {
+		vb_appends(&r, "\\_");
+	    } else if (mb[0] == ' ') {
+		vb_appends(&r, "\\~");
+	    } else {
+		vb_append(&r, &mb[0], 1);
+	    }
+	}
+
+	caption += consumed;
+    }
+    return vb_consume(&r);
 }
 
 /* Convert a caption string to UTF-8 HTML. */
 static char *
 html_caption(const char *caption)
 {
-    	ucs4_t u;
-	int consumed;
-	enum me_fail error;
-	char *result = Malloc(1);
-	int rlen = 1;
-	char u8buf[16];
-	int nu8;
+    ucs4_t u;
+    int consumed;
+    enum me_fail error;
+    char u8buf[16];
+    int nu8;
+    varbuf_t r;
 
-	result[0] = '\0';
+    vb_init(&r);
 
-	while (*caption) {
-		u = multibyte_to_unicode(caption, strlen(caption), &consumed,
-			&error);
-		if (u == 0)
-		    	break;
-		switch (u) {
-		case '<':
-		    	result = Realloc(result, rlen + 4);
-			strcat(result, "&lt;");
-			rlen += 4;
-			break;
-		case '>':
-		    	result = Realloc(result, rlen + 4);
-			strcat(result, "&gt;");
-			rlen += 4;
-			break;
-		case '&':
-		    	result = Realloc(result, rlen + 5);
-			strcat(result, "&amp;");
-			rlen += 5;
-			break;
-		default:
-			nu8 = unicode_to_utf8(u, u8buf);
-			result = Realloc(result, rlen + nu8);
-			memcpy(result + rlen - 1, u8buf, nu8);
-			rlen += nu8;
-			result[rlen - 1] = '\0';
-			break;
-		}
-		caption += consumed;
+    while (*caption) {
+	u = multibyte_to_unicode(caption, strlen(caption), &consumed, &error);
+	if (u == 0) {
+	    break;
 	}
-	return result;
+	switch (u) {
+	case '<':
+	    vb_appends(&r, "&lt;");
+	    break;
+	case '>':
+	    vb_appends(&r, "&gt;");
+	    break;
+	case '&':
+	    vb_appends(&r, "&amp;");
+	    break;
+	default:
+	    nu8 = unicode_to_utf8(u, u8buf);
+	    vb_append(&r, u8buf, nu8);
+	    break;
+	}
+	caption += consumed;
+    }
+    return vb_consume(&r);
 }
 
 /*
@@ -248,17 +230,15 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 	    time_t t = time(NULL);
 	    struct tm *tm = localtime(&t);
 
-	    xcaption = Malloc(strlen(caption) + 1 - 3 + 19);
-	    strncpy(xcaption, caption, ts - caption);
-	    sprintf(xcaption + (ts - caption),
-		    "%04d-%02d-%02d %02d:%02d:%02d",
+	    xcaption = xs_buffer("%.*s" "%04d-%02d-%02d %02d:%02d:%02d" "%s",
+		    (int)(ts - caption), caption,
 		    tm->tm_year + 1900,
 		    tm->tm_mon + 1,
 		    tm->tm_mday,
 		    tm->tm_hour,
 		    tm->tm_min,
-		    tm->tm_sec);
-	    strcat(xcaption, ts + 3);
+		    tm->tm_sec,
+		    ts + 3);
 	} else {
 	    xcaption = NewString(caption);
 	}

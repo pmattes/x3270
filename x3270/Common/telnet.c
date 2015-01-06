@@ -73,6 +73,7 @@
 #include "ctlrc.h"
 #include "hostc.h"
 #include "kybdc.h"
+#include "lazya.h"
 #include "linemodec.h"
 #include "macrosc.h"
 #include "nvtc.h"
@@ -368,25 +369,25 @@ static int ha_ix = 0;
 void
 popup_a_sockerr(char *fmt, ...)
 {
-	va_list args;
-	char buffer[4096];
+    va_list args;
+    char *buffer;
 
-	va_start(args, fmt);
-	(void) vsnprintf(buffer, sizeof(buffer), fmt, args);
-	va_end(args);
-	popup_an_error("%s: %s", buffer, win32_strerror(socket_errno()));
+    va_start(args, fmt);
+    buffer = vlazyaf(fmt, args);
+    va_end(args);
+    popup_an_error("%s: %s", buffer, win32_strerror(socket_errno()));
 }
 #else /*][*/
 void
 popup_a_sockerr(char *fmt, ...)
 {
-	va_list args;
-	char buffer[4096];
+    va_list args;
+    char *buffer;
 
-	va_start(args, fmt);
-	(void) vsnprintf(buffer, sizeof(buffer), fmt, args);
-	va_end(args);
-	popup_an_errno(errno, "%s", buffer);
+    va_start(args, fmt);
+    buffer = vlazyaf(fmt, args);
+    va_end(args);
+    popup_an_errno(errno, "%s", buffer);
 }
 #endif /*]*/
 
@@ -397,7 +398,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 	int			on = 1;
 	char			hn[256];
 	char			pn[256];
-	char			errmsg[1024];
+	char			*errmsg;
 #if defined(OMTU) /*[*/
 	int			mtu = OMTU;
 #endif /*]*/
@@ -470,8 +471,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 	}
 
 	if (numeric_host_and_port(&haddr[ix].sa, ha_len[ix], hn,
-		    sizeof(hn), pn, sizeof(pn), errmsg,
-		    sizeof(errmsg))) {
+		    sizeof(hn), pn, sizeof(pn), &errmsg)) {
 		vtrace("Trying %s, port %s...\n", hn, pn);
 #if defined(C3270) /*[*/
 		popup_an_info("Trying %s, port %s...", hn, pn);
@@ -571,7 +571,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	char	        	passthru_haddr[8];
 	int			passthru_len = 0;
 	unsigned short		passthru_port = 0;
-	char			errmsg[1024];
+	char			*errmsg;
 	iosrc_t			s;
 #if defined(HAVE_LIBSSL) /*[*/
 	Boolean			inh;
@@ -680,8 +680,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 		rhp_t rv;
 
 	    	rv = resolve_host_and_port(proxy_host, proxy_portname, 0,
-			&proxy_port, &haddr[0].sa, &ha_len[0], errmsg,
-			sizeof(errmsg), NULL);
+			&proxy_port, &haddr[0].sa, &ha_len[0], &errmsg, NULL);
 	    	if (RHP_IS_ERROR(rv)) {
 		    	popup_an_error("%s", errmsg);
 		    	return INVALID_IOSRC;
@@ -708,8 +707,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 			for (i = 0; i < NUM_HA && !last; i++) {
 				rv = resolve_host_and_port(host, portname, i,
 					&current_port, &haddr[i].sa,
-					&ha_len[i], errmsg, sizeof(errmsg),
-					&last);
+					&ha_len[i], &errmsg, &last);
 				if (RHP_IS_ERROR(rv)) {
 					popup_an_error("%s", errmsg);
 					return INVALID_IOSRC;
@@ -2392,35 +2390,32 @@ process_bind(unsigned char *buf, int buflen)
 static const char *
 unbind_reason (unsigned char r)
 {
-	static char unk[32];
-
-	switch (r) {
-	case TN3270E_UNBIND_NORMAL:
-		return "normal";
-	case TN3270E_UNBIND_BIND_FORTHCOMING:
-		return "BIND forthcoming";
-	case TN3270E_UNBIND_VR_INOPERATIVE:
-		return "virtual route inoperative";
-	case TN3270E_UNBIND_RX_INOPERATIVE:
-		return "route extension inoperative";
-	case TN3270E_UNBIND_HRESET:
-		return "hierarchical reset";
-	case TN3270E_UNBIND_SSCP_GONE:
-		return "SSCP gone";
-	case TN3270E_UNBIND_VR_DEACTIVATED:
-		return "virtual route deactivated";
-	case TN3270E_UNBIND_LU_FAILURE_PERM:
-		return "unrecoverable LU failure";
-	case TN3270E_UNBIND_LU_FAILURE_TEMP:
-		return "recoverable LU failure";
-	case TN3270E_UNBIND_CLEANUP:
-		return "cleanup";
-	case TN3270E_UNBIND_BAD_SENSE:
-		return "bad sense code or user-supplied sense code";
-	default:
-		snprintf(unk, sizeof(unk), "unknown X'%02x'", r);
-		return unk;
-	}
+    switch (r) {
+    case TN3270E_UNBIND_NORMAL:
+	return "normal";
+    case TN3270E_UNBIND_BIND_FORTHCOMING:
+	return "BIND forthcoming";
+    case TN3270E_UNBIND_VR_INOPERATIVE:
+	return "virtual route inoperative";
+    case TN3270E_UNBIND_RX_INOPERATIVE:
+	return "route extension inoperative";
+    case TN3270E_UNBIND_HRESET:
+	return "hierarchical reset";
+    case TN3270E_UNBIND_SSCP_GONE:
+	return "SSCP gone";
+    case TN3270E_UNBIND_VR_DEACTIVATED:
+	return "virtual route deactivated";
+    case TN3270E_UNBIND_LU_FAILURE_PERM:
+	return "unrecoverable LU failure";
+    case TN3270E_UNBIND_LU_FAILURE_TEMP:
+	return "recoverable LU failure";
+    case TN3270E_UNBIND_CLEANUP:
+	return "cleanup";
+    case TN3270E_UNBIND_BAD_SENSE:
+	return "bad sense code or user-supplied sense code";
+    default:
+	return lazyaf("unknown X'%02x'", r);
+    }
 }
 
 static int
@@ -2928,10 +2923,7 @@ check_linemode(Boolean init)
 static const char *
 nnn(int c)
 {
-	static char	buf[64];
-
-	(void) snprintf(buf, sizeof(buf), "%d", c);
-	return buf;
+    return lazyaf("%d", c);
 }
 
 /*
@@ -2941,10 +2933,11 @@ nnn(int c)
 static const char *
 cmd(int c)
 {
-	if (TELCMD_OK(c))
-		return TELCMD(c);
-	else
-		return nnn(c);
+    if (TELCMD_OK(c)) {
+	return TELCMD(c);
+    } else {
+	return nnn(c);
+    }
 }
 
 /*
@@ -2954,14 +2947,15 @@ cmd(int c)
 static const char *
 opt(unsigned char c)
 {
-	if (TELOPT_OK(c))
-		return TELOPT(c);
-	else if (c == TELOPT_TN3270E)
-		return "TN3270E";
-	else if (c == TELOPT_STARTTLS)
-		return "START-TLS";
-	else
-		return nnn((int)c);
+    if (TELOPT_OK(c)) {
+	return TELOPT(c);
+    } else if (c == TELOPT_TN3270E) {
+	return "TN3270E";
+    } else if (c == TELOPT_STARTTLS) {
+	return "START-TLS";
+    } else {
+	return nnn((int)c);
+    }
 }
 
 
@@ -3573,12 +3567,12 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 			unsigned short port;
 			sockaddr_46_t ahaddr;
 			socklen_t len;
-			char errmsg[256];
+			char *errmsg;
 			rhp_t rv;
 
 			rv = resolve_host_and_port(&appres.accept_hostname[3],
-				"0", 0, &port, &ahaddr.sa, &len, errmsg,
-				sizeof(errmsg), NULL);
+				"0", 0, &port, &ahaddr.sa, &len, &errmsg,
+				NULL);
 			if (RHP_IS_ERROR(rv)) {
 				popup_an_error("Invalid acceptHostname '%s': "
 					"%s", appres.accept_hostname, errmsg);

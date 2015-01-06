@@ -172,6 +172,8 @@ keypad.obj: keypad.c compiled_keypad.h
 	$(CC) $(CFLAGS) /c keypad.c
 kybd.obj: kybd.c
 	$(CC) $(CFLAGS) /c kybd.c
+lazya.obj: lazya.c
+	$(CC) $(CFLAGS) /c lazya.c
 linemode.obj: linemode.c
 	$(CC) $(CFLAGS) /c linemode.c
 macros.obj: macros.c

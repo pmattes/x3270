@@ -24,6 +24,9 @@
     <ClCompile Include="..\..\wpr3287-3.3\ctlr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\wpr3287-3.3\lazya.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\wpr3287-3.3\pr3287.c">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *
@@ -40,6 +40,7 @@
 #include <fcntl.h>
 #include "3270ds.h"
 
+#include "lazya.h"
 #include "tablesc.h"
 #include "utf8c.h"
 #include "utilc.h"
@@ -55,13 +56,9 @@
  * @return Encoded text representation of the value, good for only one call.
  */
 static const char *
-unknown(unsigned char value, char **rs)
+unknown(unsigned char value)
 {
-    char *r;
-
-    r = xs_buffer("unknown[0x%x]", value);
-    Replace((*rs), r);
-    return r;
+    return lazyaf("unknown[0x%x]", value);
 }
 
 /**
@@ -74,8 +71,6 @@ unknown(unsigned char value, char **rs)
 const char *
 see_ebc(unsigned char ch)
 {
-    static char *rs = NULL;
-    char *r;
     char mb[16];
     ucs4_t uc;
 
@@ -108,12 +103,10 @@ see_ebc(unsigned char ch)
 
     if (ebcdic_to_multibyte_x(ch, CS_BASE, mb, sizeof(mb), EUO_NONE, &uc)
 	    && (mb[0] != ' ' || ch == 0x40)) {
-	r = NewString(mb);
+	return lazya(NewString(mb));
     } else {
-	r = xs_buffer("X'%02X'", ch);
+	return lazyaf("X'%02X'", ch);
     }
-    Replace(rs, r);
-    return r;
 }
 
 /**
@@ -126,8 +119,6 @@ see_ebc(unsigned char ch)
 const char *
 see_aid(unsigned char code)
 {
-    static char *rs = NULL;
-
     switch (code) {
     case AID_NO: 
 	return "NoAID";
@@ -200,7 +191,7 @@ see_aid(unsigned char code)
     case AID_QREPLY:
 	return "QueryReplyAID";
     default: 
-	return unknown(code, &rs);
+	return unknown(code);
     }
 }
 
@@ -214,7 +205,6 @@ see_aid(unsigned char code)
 const char *
 see_attr(unsigned char fa)
 {
-    static char *rs = NULL;
     varbuf_t r;
     const char *sep = "(";
 
@@ -257,8 +247,7 @@ see_attr(unsigned char fa)
 	vb_appends(&r, "(default)");
     }
 
-    Replace(rs, vb_consume(&r));
-    return rs;
+    return lazya(vb_consume(&r));
 }
 
 /**
@@ -271,8 +260,6 @@ see_attr(unsigned char fa)
 static const char *
 see_highlight(unsigned char setting)
 {
-    static char *rs = NULL;
-
     switch (setting) {
     case XAH_DEFAULT:
 	return "default";
@@ -287,7 +274,7 @@ see_highlight(unsigned char setting)
     case XAH_INTENSIFY:
 	return "intensify";
     default:
-	return unknown(setting, &rs);
+	return unknown(setting);
     }
 }
 
@@ -301,7 +288,6 @@ see_highlight(unsigned char setting)
 const char *
 see_color(unsigned char setting)
 {
-    static char *rs = NULL;
     static const char *color_name[] = {
 	"neutralBlack",
 	"blue",
@@ -324,7 +310,7 @@ see_color(unsigned char setting)
     if (setting == XAC_DEFAULT) {
 	return "default";
     } else if (setting < 0xf0) {
-	return unknown(setting, &rs);
+	return unknown(setting);
     } else {
 	return color_name[setting - 0xf0];
     }
@@ -340,8 +326,6 @@ see_color(unsigned char setting)
 static const char *
 see_transparency(unsigned char setting)
 {
-    static char *rs = NULL;
-
     switch (setting) {
     case XAT_DEFAULT:
 	return "default";
@@ -352,7 +336,7 @@ see_transparency(unsigned char setting)
     case XAT_OPAQUE:
 	return "opaque";
     default:
-	return unknown(setting, &rs);
+	return unknown(setting);
     }
 }
 
@@ -366,7 +350,6 @@ see_transparency(unsigned char setting)
 static const char *
 see_validation(unsigned char setting)
 {
-    static char *rs = NULL;
     varbuf_t r;
     const char *sep = "(";
 
@@ -388,8 +371,7 @@ see_validation(unsigned char setting)
     } else {
 	vb_appends(&r, "(none)");
     }
-    Replace(rs, vb_consume(&r));
-    return rs;
+    return lazya(vb_consume(&r));
 }
 
 /**
@@ -402,7 +384,6 @@ see_validation(unsigned char setting)
 static const char *
 see_outline(unsigned char setting)
 {
-    static char *rs = NULL;
     varbuf_t r;
     const char *sep = "(";
 
@@ -428,8 +409,7 @@ see_outline(unsigned char setting)
     } else {
 	vb_appends(&r, "(none)");
     }
-    Replace(rs, vb_consume(&r));
-    return rs;
+    return lazya(vb_consume(&r));
 }
 
 /**
@@ -442,15 +422,13 @@ see_outline(unsigned char setting)
 static const char *
 see_input_control(unsigned char setting)
 {
-    static char *rs = NULL;
-
     switch (setting) {
     case XAI_DISABLED:
 	return "disabled";
     case XAI_ENABLED:
 	return "enabled";
     default:
-	return unknown(setting, &rs);
+	return unknown(setting);
     }
 }
 
@@ -465,48 +443,30 @@ see_input_control(unsigned char setting)
 const char *
 see_efa(unsigned char efa, unsigned char value)
 {
-    static char *urs = NULL;
-    static char *rs = NULL;
-    char *r;
-
     switch (efa) {
     case XA_ALL:
-	r = xs_buffer(" all(%x)", value);
-	break;
+	return lazyaf(" all(%x)", value);
     case XA_3270:
-	r = xs_buffer(" 3270%s", see_attr(value));
-	break;
+	return lazyaf(" 3270%s", see_attr(value));
     case XA_VALIDATION:
-	r = xs_buffer(" validation%s", see_validation(value));
-	break;
+	return lazyaf(" validation%s", see_validation(value));
     case XA_OUTLINING:
-	r = xs_buffer(" outlining(%s)", see_outline(value));
-	break;
+	return lazyaf(" outlining(%s)", see_outline(value));
     case XA_HIGHLIGHTING:
-	r = xs_buffer(" highlighting(%s)", see_highlight(value));
-	break;
+	return lazyaf(" highlighting(%s)", see_highlight(value));
     case XA_FOREGROUND:
-	r = xs_buffer(" foreground(%s)", see_color(value));
-	break;
+	return lazyaf(" foreground(%s)", see_color(value));
     case XA_CHARSET:
-	r = xs_buffer(" charset(%x)", value);
-	break;
+	return lazyaf(" charset(%x)", value);
     case XA_BACKGROUND:
-	r = xs_buffer(" background(%s)", see_color(value));
-	break;
+	return lazyaf(" background(%s)", see_color(value));
     case XA_TRANSPARENCY:
-	r = xs_buffer(" transparency(%s)", see_transparency(value));
-	break;
+	return lazyaf(" transparency(%s)", see_transparency(value));
     case XA_INPUT_CONTROL:
-	r = xs_buffer(" input-control(%s)", see_input_control(value));
-	break;
+	return lazyaf(" input-control(%s)", see_input_control(value));
     default:
-	r = xs_buffer(" %s[0x%x]", unknown(efa, &urs), value);
-	break;
+	return lazyaf(" %s[0x%x]", unknown(efa), value);
     }
-
-    Replace(rs, r);
-    return r;
 }
 
 /**
@@ -519,8 +479,6 @@ see_efa(unsigned char efa, unsigned char value)
 const char *
 see_efa_only(unsigned char efa)
 {
-    static char *rs = NULL;
-
     switch (efa) {
     case XA_ALL:
 	return "all";
@@ -541,7 +499,7 @@ see_efa_only(unsigned char efa)
     case XA_TRANSPARENCY:
 	return "transparency";
     default:
-	return unknown(efa, &rs);
+	return unknown(efa);
     }
 }
 
@@ -555,8 +513,6 @@ see_efa_only(unsigned char efa)
 const char *
 see_qcode(unsigned char id)
 {
-    static char *rs = NULL;
-
     switch (id) {
     case QR_CHARSETS:
 	return "CharacterSets";
@@ -581,6 +537,6 @@ see_qcode(unsigned char id)
     case QR_RPQNAMES:
 	return "RPQNames";
     default:
-	return unknown(id, &rs);
+	return unknown(id);
     }
 }

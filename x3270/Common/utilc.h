@@ -71,7 +71,7 @@ extern Boolean split_hier(char *label, char **base, char ***parents);
 
 extern const char *build_options(void);
 extern void dump_version(void);
-extern const char *display_scale(double d, char *buf, size_t buflen);
+extern const char *display_scale(double d);
 #if defined(WC3270) /*[*/
 extern void start_html_help(void);
 #endif /*]*/

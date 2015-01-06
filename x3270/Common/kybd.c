@@ -60,6 +60,7 @@
 #include "keymapc.h"
 #include "keypadc.h"
 #include "kybdc.h"
+#include "lazya.h"
 #include "linemodec.h"
 #include "macrosc.h"
 #include "nvtc.h"
@@ -961,9 +962,9 @@ key_Character(unsigned ebc, Boolean with_ge, Boolean pasting)
 	reset_idle_timer();
 
 	if (kybdlock) {
-		char codename[64];
+		char *codename;
 
-		(void) snprintf(codename, sizeof(codename), "%d", ebc |
+		codename = lazyaf("%d", ebc |
 			(with_ge ? GE_WFLAG : 0) |
 			(pasting ? PASTE_WFLAG : 0));
 		enq_fta(key_Character_wrapper, codename, NULL);
@@ -1236,9 +1237,9 @@ key_WCharacter(unsigned char ebc_pair[])
 	reset_idle_timer();
 
 	if (kybdlock) {
-		char codename[64];
+		char *codename;
 
-		(void) snprintf(codename, sizeof(codename), "%d",
+		codename = lazyaf("%d",
 			(ebc_pair[0] << 8) | ebc_pair[1]);
 		enq_fta(key_WCharacter_wrapper, codename, NULL);
 		return False;
@@ -1516,18 +1517,15 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause)
 	reset_idle_timer();
 
 	if (kybdlock) {
-	    char ubuf[32];
 	    const char *apl_name;
 
 	    if (keytype == KT_STD) {
-		snprintf(ubuf, sizeof(ubuf), "U+%04x", ucs4);
-		enq_ta("Key", ubuf, NULL);
+		enq_ta("Key", lazyaf("U+%04x", ucs4), NULL);
 	    } else {
 		/* APL character */
 		apl_name = KeySymToAPLString(ucs4);
 		if (apl_name != NULL) {
-		    snprintf(ubuf, sizeof(ubuf), "apl_%s", apl_name);
-		    enq_ta("Key", ubuf, NULL);
+		    enq_ta("Key", lazyaf("apl_%s", apl_name), NULL);
 		} else {
 		    vtrace("  dropped (invalid key type or name)\n");
 		}
@@ -3361,10 +3359,7 @@ do_pa(unsigned n)
 	return;
     }
     if (kybdlock) {
-	char nn[3];
-
-	(void) snprintf(nn, sizeof(nn), "%d", n);
-	enq_ta("PA", nn, NULL);
+	enq_ta("PA", lazyaf("%d", n), NULL);
 	return;
     }
     key_AID(pa_xlate[n-1]);
@@ -3380,10 +3375,7 @@ do_pf(unsigned n)
 	return;
     }
     if (kybdlock) {
-	char nn[3];
-
-	(void) snprintf(nn, sizeof(nn), "%d", n);
-	enq_ta("PF", nn, NULL);
+	enq_ta("PF", lazyaf("%d", n), NULL);
 	return;
     }
     key_AID(pf_xlate[n-1]);

@@ -42,9 +42,9 @@ SSLLIB = gdi32.lib user32.lib
 XCPPFLAGS = /D_WIN32 /DX3270_DBCS=1 /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /W3 /WX $(SSLDEF)
 CFLAGS = $(XCPPFLAGS) -I.
 
-VOBJS = asprintf.obj charset.obj ctlr.obj pr3287.obj proxy.obj resolver.obj \
-	see.obj sf.obj snprintf.obj ssl_dll.obj tables.obj telnet.obj \
-	trace.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj \
+VOBJS = asprintf.obj charset.obj ctlr.obj lazya.obj pr3287.obj proxy.obj \
+	resolver.obj see.obj sf.obj snprintf.obj ssl_dll.obj tables.obj \
+	telnet.obj trace.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj \
 	varbuf.obj w3misc.obj windirs.obj winvers.obj wpr3287.RES ws.obj \
 	xtable.obj
 
@@ -77,6 +77,8 @@ charset.obj: charset.c
 	$(CC) $(CFLAGS) /c charset.c
 ctlr.obj: ctlr.c
 	$(CC) $(CFLAGS) /c ctlr.c
+lazya.obj: lazya.c
+	$(CC) $(CFLAGS) /c lazya.c
 pr3287.obj: pr3287.c
 	$(CC) $(CFLAGS) /c pr3287.c
 proxy.obj: proxy.c

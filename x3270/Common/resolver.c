@@ -39,6 +39,7 @@
 #endif /*]*/
 
 #include <stdio.h>
+#include "lazya.h"
 #include "resolverc.h"
 #include "w3miscc.h"
 
@@ -96,7 +97,7 @@ ipv6_works(void)
 static rhp_t
 resolve_host_and_port_v46(const char *host, char *portname, int ix,
 	unsigned short *pport, struct sockaddr *sa, socklen_t *sa_len,
-	char *errmsg, int em_len, int *lastp)
+	char **errmsg, int *lastp)
 {
     struct addrinfo hints, *res0, *res;
     int rc;
@@ -108,9 +109,10 @@ resolve_host_and_port_v46(const char *host, char *portname, int ix,
     hints.ai_protocol = IPPROTO_TCP;
     rc = getaddrinfo(host, portname, &hints, &res0);
     if (rc != 0) {
-	snprintf(errmsg, em_len, "%s/%s:\n%s", host,
-		portname? portname: "(none)",
-		gai_strerror(rc));
+	if (errmsg) {
+	    *errmsg = lazyaf("%s/%s:\n%s", host, portname? portname: "(none)",
+		    gai_strerror(rc));
+	}
 	return RHP_CANNOT_RESOLVE;
     }
     res = res0;
@@ -125,9 +127,10 @@ resolve_host_and_port_v46(const char *host, char *portname, int ix,
     }
     if (res == NULL) {
 	/* Ran off the end?  The list must have changed. */
-	snprintf(errmsg, em_len, "%s/%s:\n%s", host,
-		portname? portname: "(none)",
-		gai_strerror(EAI_AGAIN));
+	if (errmsg) {
+	    *errmsg = lazyaf("%s/%s:\n%s", host, portname? portname: "(none)",
+		    gai_strerror(EAI_AGAIN));
+	}
 	freeaddrinfo(res);
 	return RHP_CANNOT_RESOLVE;
     }
@@ -140,8 +143,9 @@ resolve_host_and_port_v46(const char *host, char *portname, int ix,
 	*pport = ntohs(((struct sockaddr_in6 *) res->ai_addr)->sin6_port);
 	break;
     default:
-	snprintf(errmsg, em_len, "%s:\nunknown family %d", host,
-		res->ai_family);
+	if (errmsg) {
+	    *errmsg = lazyaf("%s:\nunknown family %d", host, res->ai_family);
+	}
 	freeaddrinfo(res);
 	return RHP_FATAL;
     }
@@ -166,7 +170,7 @@ resolve_host_and_port_v46(const char *host, char *portname, int ix,
 static rhp_t
 resolve_host_and_port_v4(const char *host, char *portname, int ix,
 	unsigned short *pport, struct sockaddr *sa, socklen_t *sa_len,
-	char *errmsg, int em_len, int *lastp)
+	char **errmsg, int *lastp)
 {
     struct hostent *hp;
     struct servent *sp;
@@ -179,8 +183,10 @@ resolve_host_and_port_v4(const char *host, char *portname, int ix,
     lport = strtoul(portname, &ptr, 0);
     if (ptr == portname || *ptr != '\0' || lport == 0L || lport & ~0xffff) {
 	if (!(sp = getservbyname(portname, "tcp"))) {
-	    snprintf(errmsg, em_len, "Unknown port number or service: %s",
-		    portname);
+	    if (errmsg) {
+		*errmsg = lazyaf("Unknown port number or service: %s",
+			portname);
+	    }
 	    return RHP_FATAL;
 	}
 	port = sp->s_port;
@@ -195,7 +201,9 @@ resolve_host_and_port_v4(const char *host, char *portname, int ix,
 	sin->sin_family = AF_INET;
 	sin->sin_addr.s_addr = inet_addr(host);
 	if (sin->sin_addr.s_addr == INADDR_NONE) {
-	    snprintf(errmsg, em_len, "Unknown host:\n%s", host);
+	    if (errmsg) {
+		*errmsg = lazyaf("Unknown host:\n%s", host);
+	    }
 	    return RHP_CANNOT_RESOLVE;
 	}
 	if (lastp != NULL) {
@@ -206,7 +214,9 @@ resolve_host_and_port_v4(const char *host, char *portname, int ix,
 
 	for (i = 0; i < ix; i++) {
 	    if (hp->h_addr_list[i] == NULL) {
-		snprintf(errmsg, em_len, "Unknown host:\n%s", host);
+		if (errmsg) {
+		    *errmsg = lazyaf("Unknown host:\n%s", host);
+		}
 		return RHP_CANNOT_RESOLVE;
 	    }
 	}
@@ -231,22 +241,22 @@ resolve_host_and_port_v4(const char *host, char *portname, int ix,
 rhp_t
 resolve_host_and_port(const char *host, char *portname, int ix,
 	unsigned short *pport, struct sockaddr *sa, socklen_t *sa_len,
-	char *errmsg, int em_len, int *lastp)
+	char **errmsg, int *lastp)
 {
 #if !defined(X3270_IPV6) /*[*/
     return resolve_host_and_port_v4(host, portname, ix, pport, sa, sa_len,
-	    errmsg, em_len, lastp);
+	    errmsg, lastp);
 #elif defined(_WIN32) /*[*/
     if (ipv6_works()) {
 	return resolve_host_and_port_v46(host, portname, ix, pport, sa, sa_len,
-		errmsg, em_len, lastp);
+		errmsg, lastp);
     } else {
 	return resolve_host_and_port_v4(host, portname, ix, pport, sa, sa_len,
-		errmsg, em_len, lastp);
+		errmsg, lastp);
     }
 #else /*][*/
     return resolve_host_and_port_v46(host, portname, ix, pport, sa, sa_len,
-	    errmsg, em_len, lastp);
+	    errmsg, lastp);
 #endif
 }
 
@@ -257,8 +267,7 @@ resolve_host_and_port(const char *host, char *portname, int ix,
  */
 static Boolean
 numeric_host_and_port_v46(const struct sockaddr *sa, socklen_t salen,
-	char *host, size_t hostlen, char *serv, size_t servlen, char *errmsg,
-	int em_len)
+	char *host, size_t hostlen, char *serv, size_t servlen, char **errmsg)
 {
     int rc;
 
@@ -266,7 +275,9 @@ numeric_host_and_port_v46(const struct sockaddr *sa, socklen_t salen,
     rc = getnameinfo(sa, salen, host, hostlen, serv, servlen,
 	    NI_NUMERICHOST | NI_NUMERICSERV);
     if (rc != 0) {
-	snprintf(errmsg, em_len, "%s", gai_strerror(rc));
+	if (errmsg) {
+	    *errmsg = lazyaf("%s", gai_strerror(rc));
+	}
 	return False;
     }
     return True;
@@ -280,8 +291,7 @@ numeric_host_and_port_v46(const struct sockaddr *sa, socklen_t salen,
  */
 static Boolean
 numeric_host_and_port_v4(const struct sockaddr *sa, socklen_t salen,
-	char *host, size_t hostlen, char *serv, size_t servlen, char *errmsg,
-	int em_len)
+	char *host, size_t hostlen, char *serv, size_t servlen, char **errmsg)
 {
     struct sockaddr_in *sin = (struct sockaddr_in *)sa;
 
@@ -298,22 +308,22 @@ numeric_host_and_port_v4(const struct sockaddr *sa, socklen_t salen,
  */
 Boolean
 numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
-	size_t hostlen, char *serv, size_t servlen, char *errmsg, int em_len)
+	size_t hostlen, char *serv, size_t servlen, char **errmsg)
 {
 #if !defined(X3270_IPV6) /*[*/
     return numeric_host_and_port_v4(sa, salen, host, hostlen, serv, servlen,
-	    errmsg, em_len);
+	    errmsg);
 #elif defined(_WIN32) /*[*/
     if (ipv6_works()) {
 	return numeric_host_and_port_v46(sa, salen, host, hostlen, serv,
-		servlen, errmsg, em_len);
+		servlen, errmsg);
     } else {
 	return numeric_host_and_port_v4(sa, salen, host, hostlen, serv,
-		servlen, errmsg, em_len);
+		servlen, errmsg);
     }
 #else /*][*/
     return numeric_host_and_port_v46(sa, salen, host, hostlen, serv, servlen,
-	    errmsg, em_len);
+	    errmsg);
 #endif /*]*/
 }
 

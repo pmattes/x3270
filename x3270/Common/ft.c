@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2014, Paul Mattes.
+ * Copyright (c) 1996-2015, Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -228,14 +228,13 @@ ft_complete(const char *errmsg)
 	struct timeval t1;
 	double bytes_sec;
 	char *buf;
-	char kbuf[256];
 
 	(void) gettimeofday(&t1, NULL);
 	bytes_sec = (double)ft_length /
 		((double)(t1.tv_sec - t0.tv_sec) + 
 		 (double)(t1.tv_usec - t0.tv_usec) / 1.0e6);
 	buf = xs_buffer(get_message("ftComplete"), ft_length,
-		display_scale(bytes_sec, kbuf, sizeof(kbuf)),
+		display_scale(bytes_sec),
 		ft_private.is_cut ? "CUT" : "DFT");
 	if (ft_private.is_action) {
 	    /* Clear out the progress display. */
