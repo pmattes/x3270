@@ -38,7 +38,7 @@
 
 #define XK_3270
 #if defined(X3270_APL) /*[*/
-#define XK_APL
+# define XK_APL
 #endif /*]*/
 #include <X11/keysym.h>
 
@@ -974,11 +974,9 @@ key_Character(unsigned ebc, Boolean with_ge, Boolean pasting)
 	faddr = find_field_attribute(baddr);
 	fa = get_field_attribute(baddr);
 
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
 	if (pasting && toggled(OVERLAY_PASTE)) {
 	    auto_skip = False;
 	}
-#endif /*]*/
 
 	if (ea_buf[baddr].fa || FA_IS_PROTECTED(fa)) {
 	    if (!auto_skip) {
@@ -3395,7 +3393,6 @@ kybd_scroll_lock(Boolean lock)
 		kybdlock_clr(KL_SCROLLED, "kybd_scroll_lock");
 }
 
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
 /*
  * Move the cursor back within the legal paste area.
  * Returns a Boolean indicating success.
@@ -3408,7 +3405,6 @@ remargin(int lmargin)
 	int faddr;
 	unsigned char fa;
 
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
 	if (toggled(OVERLAY_PASTE)) {
 	    /*
 	     * If doing overlay paste as well, just drop down to the margin
@@ -3418,7 +3414,6 @@ remargin(int lmargin)
 	    cursor_move(baddr);
 	    return True;
 	}
-#endif /*]*/
 
 	baddr = cursor_addr;
 	while (BA_TO_COL(baddr) < lmargin) {
@@ -3439,7 +3434,6 @@ remargin(int lmargin)
 	cursor_move(baddr);
 	return True;
 }
-#endif /*]*/
 
 /*
  * Pretend that a sequence of keys was entered at the keyboard.
@@ -3470,20 +3464,16 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
     int nc = 0;
     enum iaction ia = pasting ? IA_PASTE : IA_STRING;
     int orig_addr = cursor_addr;
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
     int orig_col = BA_TO_COL(cursor_addr);
-#endif /*]*/
     int last_addr = cursor_addr;
     int last_row = BA_TO_ROW(cursor_addr);
     Boolean just_wrapped = False;
     ucs4_t c;
     Boolean auto_skip = True;
 
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
     if (pasting && toggled(OVERLAY_PASTE)) {
 	auto_skip = False;
     }
-#endif /*]*/
 
     /*
      * In the switch statements below, "break" generally means "consume
@@ -3507,14 +3497,12 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 		return xlen-1;		/* wrapped */
 	    }
 
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
 	    /* Jump cursor over left margin. */
 	    if (MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
 		if (!remargin(orig_col)) {
 		    return xlen-1;
 		}
 	    }
-#endif /*]*/
 	}
 
 	if (last_addr != cursor_addr) {
@@ -3858,31 +3846,25 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 
     switch (state) {
     case BASE:
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
 	if (MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
 	    (void) remargin(orig_col);
 	}
-#endif /*]*/
 	break;
     case OCTAL:
     case HEX:
 	key_UCharacter((unsigned char) literal, KT_STD, ia);
 	state = BASE;
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
 	if (MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
 	    (void) remargin(orig_col);
 	}
-#endif /*]*/
 	break;
     case EBC:
 	vtrace(" %s -> Key(X'%02X')\n", ia_name[(int) ia], literal);
 	key_Character((unsigned char) literal, False, True);
 	state = BASE;
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
 	if (MarginedPaste() && BA_TO_COL(cursor_addr) < orig_col) {
 	    (void) remargin(orig_col);
 	}
-#endif /*]*/
 	break;
     case BACKPF:
 	if (nc > 0) {

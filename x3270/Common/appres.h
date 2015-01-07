@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, 2014 Paul Mattes.
+ * Copyright (c) 1993-2012, 2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -43,45 +43,35 @@ enum toggle_type {
     TT_FINAL		/* at shutdown */
 };
 struct toggle {
-	Boolean value;		/* toggle value */
-	Boolean changed;	/* has the value changed since init */
-	void *w[2];		/* the menu item widgets */
-	const char *label[2];	/* labels */
-	void (*upcall)(struct toggle *, enum toggle_type); /* change value */
+    Boolean value;	/* toggle value */
+    Boolean changed;	/* has the value changed since init */
+    void *w[2];		/* the menu item widgets */
+    const char *label[2]; /* labels */
+    void (*upcall)(struct toggle *, enum toggle_type); /* change value */
 };
 
 typedef enum {
     MONOCASE,		/* all-uppercase display */
-#if defined(X3270_DISPLAY) /*[*/
-    ALT_CURSOR,		/* block cursor */
-    CURSOR_BLINK,	/* blinking cursor */
-#endif /*]*/
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
-    SHOW_TIMING,	/* display command execution time in the OIA */
-    CURSOR_POS,		/* display cursor position in the OIA */
-#endif /*]*/
+    ALT_CURSOR,		/* block cursor (x3270) */
+    CURSOR_BLINK,	/* blinking cursor (x3270) */
+    SHOW_TIMING,	/* display command execution time in the OIA
+			    (interactive) */
+    CURSOR_POS,		/* display cursor position in the OIA (interactive) */
     TRACING,		/* trace data and events */
-#if defined(X3270_DISPLAY) /*[*/
-    SCROLL_BAR,		/* include scroll bar */
-#endif /*]*/
+    SCROLL_BAR,		/* include scroll bar (x3270) */
     LINE_WRAP,		/* NVT xterm line-wrap mode (auto-wraparound) */
     BLANK_FILL,		/* treat trailing blanks like NULLs on input */
     SCREEN_TRACE,	/* trace screen contents to file or printer */
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
-    MARGINED_PASTE,	/* respect left margin when pasting */
-#endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
-    RECTANGLE_SELECT,	/* select by rectangles */
-    CROSSHAIR,		/* display cursor crosshair */
-    VISIBLE_CONTROL,	/* display visible control characters */
-#endif /*]*/
+    MARGINED_PASTE,	/* respect left margin when pasting (x3270 and
+			   wc3270) */
+    RECTANGLE_SELECT,	/* select by rectangles (x3270) */
+    CROSSHAIR,		/* display cursor crosshair (x3270) */
+    VISIBLE_CONTROL,	/* display visible control characters (x3270) */
     AID_WAIT,		/* make scripts wait for AIDs to complete */
-#if defined(C3270) /*[*/
-    UNDERSCORE,		/* special c3270/wc3270 underscore display mode */
-#endif /*]*/
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
-    OVERLAY_PASTE,	/* overlay protected fields when pasting */
-#endif /*]*/
+    UNDERSCORE,		/* special c3270/wc3270 underscore display mode
+			    (c3270 and wc320) */
+    OVERLAY_PASTE,	/* overlay protected fields when pasting (x3270 and
+			    wc3270) */
     N_TOGGLES
 } toggle_index_t;
 

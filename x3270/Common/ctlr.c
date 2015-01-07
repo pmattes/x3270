@@ -2808,16 +2808,16 @@ ctlr_dbcs_state(int baddr)
  * the unlock, the time should be fairly accurate.
  */
 static struct timeval t_start;
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 static Boolean ticking = False;
 #endif /*]*/
 static Boolean mticking = False;
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 static ioid_t tick_id;
 static struct timeval t_want;
 #endif /*]*/
 
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 /* Return the difference in milliseconds between two timevals. */
 static long
 delta_msec(struct timeval *t1, struct timeval *t0)
@@ -2827,7 +2827,7 @@ delta_msec(struct timeval *t1, struct timeval *t0)
 }
 #endif /*]*/
 
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 static void
 keep_ticking(ioid_t id _is_unused)
 {
@@ -2850,7 +2850,7 @@ ticking_start(Boolean anyway)
 	(void) gettimeofday(&t_start, (struct timezone *) 0);
 	mticking = True;
 
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 	if (!toggled(SHOW_TIMING) && !anyway)
 		return;
 	status_untiming();
@@ -2875,7 +2875,7 @@ ticking_stop(void)
 		return;
 	}
 
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 	if (!ticking)
 		return;
 	RemoveTimeOut(tick_id);
@@ -2884,7 +2884,7 @@ ticking_stop(void)
 #endif /*]*/
 }
 
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
+#if defined(X3270_INTERACTIVE) /*[*/
 void
 toggle_showTiming(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 {
