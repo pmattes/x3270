@@ -85,10 +85,8 @@ init_child(void)
 	(void) fcntl(child_outpipe[0], F_SETFD, 1);
 	(void) fcntl(child_errpipe[0], F_SETFD, 1);
 
-#if defined(X3270_DISPLAY) /*[*/
 	/* Initialize the pop-ups. */
 	child_popup_init();
-#endif
 
 	/* Express interest in their output. */
 	child_stdout.fd = child_outpipe[0];
@@ -261,22 +259,20 @@ child_ignore_output(void)
 static void
 child_dump(struct pr3o *p, Boolean is_err)
 {
-	if (p->count) {
-		/*
-		 * Strip any trailing newline, and make sure the buffer is
-		 * NULL terminated.
-		 */
-		if (p->buf[p->count - 1] == '\n')
-			p->buf[--(p->count)] = '\0';
-		else if (p->buf[p->count])
-			p->buf[p->count] = '\0';
-
-		/* Dump it and clear the buffer. */
-#if defined(X3270_DISPLAY) /*[*/
-		popup_child_output(is_err, child_ignore_output, "%s", p->buf);
-#else /*][*/
-		action_output("%s", p->buf);
-#endif
-		p->count = 0;
+    if (p->count) {
+	/*
+	 * Strip any trailing newline, and make sure the buffer is
+	 * NULL terminated.
+	 */
+	if (p->buf[p->count - 1] == '\n') {
+	    p->buf[--(p->count)] = '\0';
+	} else if (p->buf[p->count]) {
+	    p->buf[p->count] = '\0';
 	}
+
+	/* Dump it and clear the buffer. */
+	popup_child_output(is_err, child_ignore_output, "%s", p->buf);
+
+	p->count = 0;
+    }
 }

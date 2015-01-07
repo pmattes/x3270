@@ -355,7 +355,6 @@ split_dbcs_resource(const char *value, char sep, char **part1, char **part2)
 	}
 }
 
-#if defined(X3270_DISPLAY) /*[*/
 /*
  * List resource splitter, for lists of elements speparated by newlines.
  *
@@ -405,7 +404,6 @@ split_lresource(char **st, char **value)
 	/* Done. */
 	return 1;
 }
-#endif /*]*/
 
 const char *
 get_message(const char *key)

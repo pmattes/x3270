@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -127,3 +127,5 @@ struct font_list {
 };
 extern struct font_list *font_list;
 extern int font_count;
+
+#define screen_has_bg_color()	False

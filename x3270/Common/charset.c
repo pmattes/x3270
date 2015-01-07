@@ -39,28 +39,25 @@
 #include "3270ds.h"
 #include "resources.h"
 #include "appres.h"
-#include "cg.h"
 
 #include "charsetc.h"
-#include "kybdc.h"
+#include "lazya.h"
 #include "popupsc.h"
-#if defined(X3270_DISPLAY) || (defined(C3270) && !defined(_WIN32)) /*[*/
-#include "screenc.h"
+#if defined(X3270_DISPLAY) /*[*/
+# include "screenc.h"
 #endif /*]*/
-#include "tablesc.h"
 #include "unicodec.h"
 #include "unicode_dbcsc.h"
 #include "utf8c.h"
 #include "utilc.h"
 
-#include <errno.h>
 #include <locale.h>
 #if !defined(_WIN32) /*[*/
-#include <langinfo.h>
+# include <langinfo.h>
 #endif /*]*/
 
 #if defined(__CYGWIN__) /*[*/
-#include <w32api/windows.h>
+# include <w32api/windows.h>
 #undef _WIN32
 #endif /*]*/
 
@@ -96,14 +93,13 @@ charset_init(const char *csname)
     const char *display_charsets;
     const char *dbcs_cgcsgid = NULL;
     const char *dbcs_display_charsets = NULL;
-    Boolean need_free = False;
 
 #if !defined(_WIN32) /*[*/
     /* Get all of the locale stuff right. */
     setlocale(LC_ALL, "");
 
     /* Figure out the locale code set (character set encoding). */
-    codeset_name = NewString(nl_langinfo(CODESET));
+    codeset_name = nl_langinfo(CODESET);
 # if defined(__CYGWIN__) /*[*/
     /*
      * Cygwin's locale support is quite limited.  If the locale
@@ -115,15 +111,13 @@ charset_init(const char *csname)
      * meaningful here and this logic will stop triggering.
      */
     if (!strcmp(codeset_name, "US-ASCII")) {
-	Free(codeset_name);
-	codeset_name = xs_buffer("CP%d", GetACP());
+	codeset_name = lazyaf("CP%d", GetACP());
     }
 # endif /*]*/
 #else /*][*/
-    codeset_name = xs_buffer("CP%d", appres.local_cp);
+    codeset_name = lazyaf("CP%d", appres.local_cp);
 #endif /*]*/
     set_codeset(codeset_name);
-    Free(codeset_name);
 
     /* Do nothing, successfully. */
     if (csname == NULL || !strcasecmp(csname, "us")) {
@@ -148,17 +142,12 @@ charset_init(const char *csname)
 	if (appres.dbcs_cgcsgid != NULL) {
 	    dbcs_cgcsgid = appres.dbcs_cgcsgid; /* override */
 	}
-	cgcsgid = xs_buffer("%s+%s", cgcsgid, dbcs_cgcsgid);
-	display_charsets = xs_buffer("%s+%s", display_charsets,
-	    dbcs_display_charsets);
-	need_free = True;
+	cgcsgid = lazyaf("%s+%s", cgcsgid, dbcs_cgcsgid);
+	display_charsets = lazyaf("%s+%s", display_charsets,
+		dbcs_display_charsets);
     }
 
     rc = charset_init2(csname, codepage, cgcsgid, display_charsets);
-    if (need_free) {
-	Free((char *)cgcsgid);
-	Free((char *)display_charsets);
-    }
     if (rc != CS_OKAY) {
 	return rc;
     }
@@ -245,29 +234,29 @@ set_cgcsgids(const char *spec)
 static void
 set_host_codepage(char *codepage)
 {
-	if (codepage == NULL) {
-		Replace(host_codepage, NewString("037"));
-		return;
-	}
-	if (host_codepage == NULL || strcmp(host_codepage, codepage)) {
-	    	Replace(host_codepage, NewString(codepage));
-	}
+    if (codepage == NULL) {
+	Replace(host_codepage, NewString("037"));
+	return;
+    }
+    if (host_codepage == NULL || strcmp(host_codepage, codepage)) {
+	Replace(host_codepage, NewString(codepage));
+    }
 }
 
 /* Set the global charset name. */
 static void
 set_charset_name(const char *csname)
 {
-	if (csname == NULL) {
-		Replace(charset_name, NewString("us"));
-		charset_changed = False;
-		return;
-	}
-	if ((charset_name != NULL && strcmp(charset_name, csname)) ||
+    if (csname == NULL) {
+	Replace(charset_name, NewString("us"));
+	charset_changed = False;
+	return;
+    }
+    if ((charset_name != NULL && strcmp(charset_name, csname)) ||
 	    (appres.charset != NULL && strcmp(appres.charset, csname))) {
-		Replace(charset_name, NewString(csname));
-		charset_changed = True;
-	}
+	Replace(charset_name, NewString(csname));
+	charset_changed = True;
+    }
 }
 
 /* Character set init, part 2. */
@@ -275,68 +264,69 @@ static enum cs_result
 charset_init2(const char *csname, const char *codepage, const char *cgcsgid,
 	const char *display_charsets)
 {
-	const char *rcs = display_charsets;
-	int n_rcs = 0;
-	char *rcs_copy, *buf, *token;
+    const char *rcs = display_charsets;
+    int n_rcs = 0;
+    char *rcs_copy, *buf, *token;
 
-	/* Isolate the pieces. */
-	buf = rcs_copy = NewString(rcs);
-	while ((token = strtok(buf, "+")) != NULL) {
-		buf = NULL;
-		switch (n_rcs) {
-		case 0:
-		case 1:
-		    break;
-		default:
-		    popup_an_error("Extra charset value(s), ignoring");
-		    break;
-		}
-		n_rcs++;
+    /* Isolate the pieces. */
+    buf = rcs_copy = NewString(rcs);
+    while ((token = strtok(buf, "+")) != NULL) {
+	buf = NULL;
+	switch (n_rcs) {
+	case 0:
+	case 1:
+	    break;
+	default:
+	    popup_an_error("Extra charset value(s), ignoring");
+	    break;
 	}
-	Free(rcs_copy);
+	n_rcs++;
+    }
+    Free(rcs_copy);
 
-	/* Can't swap DBCS modes while connected. */
-	if (IN_3270 && (n_rcs == 2) != dbcs) {
-		popup_an_error("Can't change DBCS modes while connected");
-		return CS_ILLEGAL;
-	}
+    /* Can't swap DBCS modes while connected. */
+    if (IN_3270 && (n_rcs == 2) != dbcs) {
+	popup_an_error("Can't change DBCS modes while connected");
+	return CS_ILLEGAL;
+    }
 
 #if defined(X3270_DISPLAY) /*[*/
-	if (!screen_new_display_charsets(
-		    rcs? rcs: default_display_charset,
-		    csname)) {
-		return CS_PREREQ;
-	}
+    if (!screen_new_display_charsets(
+		rcs? rcs: default_display_charset,
+		csname)) {
+	return CS_PREREQ;
+    }
 #else /*][*/
-	if (n_rcs > 1)
-		dbcs = True;
-	else
-		dbcs = False;
+    if (n_rcs > 1) {
+	dbcs = True;
+    } else {
+	dbcs = False;
+    }
 #endif /*]*/
 
-	/* Set up the cgcsgids. */
-	set_cgcsgids(cgcsgid);
+    /* Set up the cgcsgids. */
+    set_cgcsgids(cgcsgid);
 
-	/* Set up the host code page. */
-	set_host_codepage((char *)codepage);
+    /* Set up the host code page. */
+    set_host_codepage((char *)codepage);
 
-	/* Set up the character set name. */
-	set_charset_name(csname);
+    /* Set up the character set name. */
+    set_charset_name(csname);
 
-	return CS_OKAY;
+    return CS_OKAY;
 }
 
 /* Return the current host codepage. */
 const char *
 get_host_codepage(void)
 {
-	return (host_codepage != NULL)? host_codepage: "037";
+    return (host_codepage != NULL)? host_codepage: "037";
 }
 
 /* Return the current character set name. */
-char *
+const char *
 get_charset_name(void)
 {
-	return (charset_name != NULL)? charset_name:
-	    ((appres.charset != NULL)? appres.charset: "us");
+    return (charset_name != NULL)? charset_name:
+	((appres.charset != NULL)? appres.charset: "us");
 }

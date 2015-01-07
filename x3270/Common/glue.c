@@ -141,7 +141,7 @@ struct toggle_name toggle_names[] = {
 #if defined(C3270) /*[*/
 	{ ResUnderscore,      UNDERSCORE,	False },
 #endif /*]*/
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
+#if defined(WC3270) /*[*/
 	{ ResOverlayPaste,    OVERLAY_PASTE,	False },
 #endif /*]*/
 	{ NULL,               0,		False }
@@ -692,8 +692,6 @@ static struct {
 { OptNoPrompt, OPT_BOOLEAN, True,  ResNoPrompt,  offset(secure),
     NULL, "Alias for -secure" },
 #endif /*]*/
-{ OptOnce,     OPT_BOOLEAN, True,  ResOnce,      offset(once),
-    NULL, "Exit as soon as the host disconnects" },
 { OptOversize, OPT_STRING,  False, ResOversize,  offset(oversize),
     "<cols>x<rows>", "Specify larger screen" },
 { OptPort,     OPT_STRING,  False, ResPort,      offset(port),
@@ -1639,4 +1637,23 @@ popup_printer_output(Boolean is_err _is_unused, abort_callback_t *a _is_unused,
     va_end(args);
     action_output("%s", m);
     Free(m);
+}
+
+void
+popup_child_output(Boolean is_err _is_unused, abort_callback_t *a _is_unused,
+	const char *fmt, ...)
+{
+    va_list args;
+    char *m;
+
+    va_start(args, fmt);
+    m = xs_vbuffer(fmt, args);
+    va_end(args);
+    action_output("%s", m);
+    Free(m);
+}
+
+void
+child_popup_init(void)
+{
 }

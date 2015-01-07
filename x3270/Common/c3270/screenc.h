@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2010, 2014 Paul Mattes.
+ * Copyright (c) 1999-2010, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -70,3 +70,5 @@ extern void screen_final(void);
 #endif /*]*/
 
 #define screen_window_number()	0L
+
+#define screen_has_bg_color()	True

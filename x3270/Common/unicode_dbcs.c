@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012, 2014 Paul Mattes.
+ * Copyright (c) 2008-2012, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,19 +26,21 @@
  */
 
 /*
- *	unicode.c
+ *	unicode_dbcs.c
  *		A Windows console-based 3270 Terminal Emulator
  *		DBCS EBCDIC/Unicode translation functions
  */
 #include "globals.h"
-#include <stdio.h>
-#if !defined(_WIN32) /*[*/
-#include <strings.h>
-#endif /*]*/
-#include "3270ds.h"
+
 #include "unicodec.h"
 #include "unicode_dbcsc.h"
-#include "utf8c.h"
+
+/*
+ * Note: #undef'ing X3270_DBCS disables the ability to configure a DBCS host
+ *  codepage, but it does not disable the internal logic that supports DBCS.
+ *  Its purpose is to save space in the executable by removing the translation
+ *  tables, not by turning the code into #ifdef spaghetti.
+ */
 
 /*
  * DBCS EBCDIC-to-Unicode translation tables.

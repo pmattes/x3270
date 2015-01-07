@@ -64,6 +64,7 @@
 #include "keymapc.h"
 #include "keypadc.h"
 #include "kybdc.h"
+#include "lazya.h"
 #include "linemodec.h"
 #include "macrosc.h"
 #include "menubarc.h"
@@ -305,54 +306,60 @@ static action_table_t main_actions[] = {
 void
 usage(const char *msg)
 {
-	if (msg != NULL)
-		fprintf(stderr, "%s\n", msg);
-	fprintf(stderr, "Usage: %s [options] [ps:][LUname@]hostname[:port]\n",
-		programname);
-	fprintf(stderr, "Options:\n");
-	cmdline_help(False);
-	exit(1);
+    if (msg != NULL) {
+	fprintf(stderr, "%s\n", msg);
+    }
+    fprintf(stderr, "Usage: %s [options] [ps:][LUname@]hostname[:port]\n",
+	    programname);
+    fprintf(stderr, "Options:\n");
+    cmdline_help(False);
+    exit(1);
 }
 
 /* Callback for connection state changes. */
 static void
 main_connect(Boolean ignored)
 {
-	if (CONNECTED || appres.disconnect_clear) {
+    if (CONNECTED || appres.disconnect_clear) {
 #if defined(C3270_80_132) /*[*/
-		if (appres.altscreen != NULL)
-			ctlr_erase(False);
-		else
+	if (appres.altscreen != NULL) {
+	    ctlr_erase(False);
+	} else
 #endif /*]*/
-			ctlr_erase(True);
+	{
+	    ctlr_erase(True);
 	}
+    }
 } 
 
 /* Callback for application exit. */
 static void
 main_exiting(Boolean ignored)
 {       
-	if (escaped)
-		stop_pager();
-	else
-		if (screen_suspend())
-		    	screen_final();
+    if (escaped) {
+	stop_pager();
+    } else {
+	if (screen_suspend()) {
+	    screen_final();
+	}
+    }
 } 
 
 /* Make sure error messages are seen. */
 static void
 pause_for_errors(void)
 {
-	char s[10];
+    char s[10];
 
-	if (any_error_output) {
-	    	screen_suspend();
-		printf("[Press <Enter>] ");
-		fflush(stdout);
-		if (fgets(s, sizeof(s), stdin) == NULL)
-			x3270_exit(1);
-		any_error_output = False;
+    if (any_error_output) {
+	screen_suspend();
+	printf("[Press <Enter>] ");
+	fflush(stdout);
+	if (fgets(s, sizeof(s), stdin) == NULL) {
+	    x3270_exit(1);
 	}
+	any_error_output = False;
+    }
 }
 
 #if !defined(_WIN32) /*[*/
@@ -361,7 +368,7 @@ static void
 sigchld_handler(int ignored)
 {
 #if !defined(_AIX) /*[*/
-	(void) signal(SIGCHLD, sigchld_handler);
+    (void) signal(SIGCHLD, sigchld_handler);
 #endif /*]*/
 }
 #endif /*]*/
@@ -369,195 +376,198 @@ sigchld_handler(int ignored)
 int
 main(int argc, char *argv[])
 {
-	const char	*cl_hostname = NULL;
+    const char	*cl_hostname = NULL;
 #if !defined(_WIN32) /*[*/
-	pid_t		 pid;
-	int		 status;
+    pid_t	 pid;
+    int		 status;
 #else /*][*/
-	char		*delenv;
+    char	*delenv;
 #endif /*]*/
+    Boolean	 once = False;
 
 #if defined(_WIN32) /*[*/
-	(void) get_version_info();
-	if (get_dirs(argv[0], "wc3270", &instdir, &mydesktop, &myappdata, NULL,
-		    &commonappdata, &is_installed) < 0)
-	    	x3270_exit(1);
-	if (sockstart())
-	    	x3270_exit(1);
+    (void) get_version_info();
+    if (get_dirs(argv[0], "wc3270", &instdir, &mydesktop, &myappdata, NULL,
+		&commonappdata, &is_installed) < 0) {
+	x3270_exit(1);
+    }
+    if (sockstart()) {
+	x3270_exit(1);
+    }
 #endif /*]*/
 
-	add_resource("keymap.base",
+    add_resource("keymap.base",
 #if defined(_WIN32) /*[*/
-	    base_keymap
+	base_keymap
 #else /*][*/
-	    xs_buffer("%s%s%s", base_keymap1, base_keymap2, base_keymap3)
+	xs_buffer("%s%s%s", base_keymap1, base_keymap2, base_keymap3)
 #endif /*]*/
-	    );
-	add_resource("keymap.base.3270", NewString(base_3270_keymap));
+	);
+    add_resource("keymap.base.3270", NewString(base_3270_keymap));
 
-	argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
+    argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
-	printf("%s\n\n"
-		"Copyright 1989-2014 by Paul Mattes, GTRC and others.\n"
-		"Type 'show copyright' for full copyright information.\n"
-		"Type 'help' for help information.\n\n",
-		build);
+    printf("%s\n\n"
+	    "Copyright 1989-2015 by Paul Mattes, GTRC and others.\n"
+	    "Type 'show copyright' for full copyright information.\n"
+	    "Type 'help' for help information.\n\n",
+	    build);
 
 #if defined(_WIN32) /*[*/
-	/* Delete the link file, if we've been told do. */
-	delenv = getenv(DELENV);
-	if (delenv != NULL) {
-		unlink(delenv);
-		putenv(DELENV "=");
-	}
+    /* Delete the link file, if we've been told do. */
+    delenv = getenv(DELENV);
+    if (delenv != NULL) {
+	unlink(delenv);
+	putenv(DELENV "=");
+    }
 
-	/* Check for auto-shortcut mode. */
-	if (appres.auto_shortcut) {
-		start_auto_shortcut();
-		exit(0);
-	}
+    /* Check for auto-shortcut mode. */
+    if (appres.auto_shortcut) {
+	start_auto_shortcut();
+	exit(0);
+    }
 #endif /*]*/
 
-	if (charset_init(appres.charset) != CS_OKAY) {
-		xs_warning("Cannot find charset \"%s\"", appres.charset);
-		(void) charset_init(NULL);
-	}
-	model_init();
+    if (charset_init(appres.charset) != CS_OKAY) {
+	xs_warning("Cannot find charset \"%s\"", appres.charset);
+	(void) charset_init(NULL);
+    }
+    model_init();
 
 #if defined(HAVE_LIBREADLINE) /*[*/
-	/* Set up readline. */
-	rl_readline_name = "c3270";
-	rl_initialize();
-	rl_attempted_completion_function = attempted_completion;
+    /* Set up readline. */
+    rl_readline_name = "c3270";
+    rl_initialize();
+    rl_attempted_completion_function = attempted_completion;
 #if defined(RL_READLINE_VERSION) && (RL_READLINE_VERSION > 0x0402) /*[*/
-	rl_completion_entry_function = completion_entry;
+    rl_completion_entry_function = completion_entry;
 #else /*][*/
-	rl_completion_entry_function = (Function *)completion_entry;
+    rl_completion_entry_function = (Function *)completion_entry;
 #endif /*]*/
 #endif /*]*/
 
-	/* Get the screen set up as early as possible. */
-	screen_init();
+    /* Get the screen set up as early as possible. */
+    screen_init();
 
-	kybd_init();
-	idle_init();
-	keymap_init();
-	hostfile_init();
-	nvt_init();
+    kybd_init();
+    idle_init();
+    keymap_init();
+    hostfile_init();
+    nvt_init();
 
-	sms_init();
+    sms_init();
 
-	if (appres.httpd_port) {
-	    struct sockaddr *sa;
-	    socklen_t sa_len;
+    if (appres.httpd_port) {
+	struct sockaddr *sa;
+	socklen_t sa_len;
 
-	    if (!parse_bind_opt(appres.httpd_port, &sa, &sa_len)) {
-		xs_warning("Invalid -httpd port \"%s\"", appres.httpd_port);
-	    } else {
-		httpd_objects_init();
-		hio_init(sa, sa_len);
-	    }
+	if (!parse_bind_opt(appres.httpd_port, &sa, &sa_len)) {
+	    xs_warning("Invalid -httpd port \"%s\"", appres.httpd_port);
+	} else {
+	    httpd_objects_init();
+	    hio_init(sa, sa_len);
 	}
+    }
 
-	register_schange(ST_CONNECT, main_connect);
-	register_schange(ST_3270_MODE, main_connect);
-        register_schange(ST_EXITING, main_exiting);
-	register_actions(main_actions, array_count(main_actions));
-	ft_init();
-	pr3287_session_init();
-	xio_init();
-	print_screen_init();
-	keypad_init();
-	toggles_init();
-	menubar_init();
-	scroll_init();
-	help_init();
+    register_schange(ST_CONNECT, main_connect);
+    register_schange(ST_3270_MODE, main_connect);
+    register_schange(ST_EXITING, main_exiting);
+    register_actions(main_actions, array_count(main_actions));
+    ft_init();
+    pr3287_session_init();
+    xio_init();
+    print_screen_init();
+    keypad_init();
+    toggles_init();
+    menubar_init();
+    scroll_init();
+    help_init();
 
 #if !defined(_WIN32) /*[*/
-	/* Make sure we don't fall over any SIGPIPEs. */
-	(void) signal(SIGPIPE, SIG_IGN);
+    /* Make sure we don't fall over any SIGPIPEs. */
+    (void) signal(SIGPIPE, SIG_IGN);
 
-	/* Make sure we can collect child exit status. */
-	(void) signal(SIGCHLD, sigchld_handler);
+    /* Make sure we can collect child exit status. */
+    (void) signal(SIGCHLD, sigchld_handler);
 #endif /*]*/
 
-	/* Handle initial toggle settings. */
-	initialize_toggles();
-	icmd_init();
+    /* Handle initial toggle settings. */
+    initialize_toggles();
+    icmd_init();
 
 #if defined(HAVE_LIBSSL) /*[*/
-	/* Initialize SSL and ask for the password, if needed. */
-	ssl_base_init(NULL, NULL);
+    /* Initialize SSL and ask for the password, if needed. */
+    ssl_base_init(NULL, NULL);
 #endif /*]*/
 
-	if (cl_hostname != NULL) {
-		pause_for_errors();
-		/* Connect to the host. */
-		appres.once = True;
-		if (host_connect(cl_hostname) < 0)
-			x3270_exit(1);
-		/* Wait for negotiations to complete or fail. */
-		while (!IN_NVT && !IN_3270) {
-			(void) process_events(True);
-			if (!PCONNECTED)
-				x3270_exit(1);
-			if (escaped) {
-			    	printf("Connection aborted.\n");
-				x3270_exit(1);
-			}
-		}
-		pause_for_errors();
-		screen_disp(False);
-	} else {
-	    	/* Drop to the prompt. */
-		appres.once = False;
-		if (!appres.secure) {
-			interact();
-			screen_disp(False);
-		} else {
-			pause_for_errors();
-			screen_resume();
-		}
+    if (cl_hostname != NULL) {
+	pause_for_errors();
+	/* Connect to the host. */
+	once = True;
+	if (host_connect(cl_hostname) < 0) {
+	    x3270_exit(1);
 	}
-	peer_script_init();
+	/* Wait for negotiations to complete or fail. */
+	while (!IN_NVT && !IN_3270) {
+	    (void) process_events(True);
+	    if (!PCONNECTED) {
+		x3270_exit(1);
+	    }
+	    if (escaped) {
+		printf("Connection aborted.\n");
+		x3270_exit(1);
+	    }
+	}
+	pause_for_errors();
+	screen_disp(False);
+    } else {
+	/* Drop to the prompt. */
+	if (!appres.secure) {
+	    interact();
+	    screen_disp(False);
+	} else {
+	    pause_for_errors();
+	    screen_resume();
+	}
+    }
+    peer_script_init();
 
-	/* Process events forever. */
-	while (1) {
-		if (!escaped || ft_state != FT_NONE) {
-			(void) process_events(True);
-		}
-		if (appres.cbreak_mode && escape_pending) {
-			escape_pending = False;
-			screen_suspend();
-		}
-		if (!appres.secure && !CONNECTED && !appres.reconnect) {
-			screen_suspend();
-			(void) printf("Disconnected.\n");
-			if (appres.once)
-				x3270_exit(0);
-			interact();
-			screen_resume();
-		} else if (escaped && ft_state == FT_NONE) {
-			interact();
-			vtrace("Done interacting.\n");
-			screen_resume();
-		} else if (!CONNECTED &&
-			   !appres.reconnect &&
-			   cl_hostname != NULL) {
-			screen_suspend();
-			x3270_exit(0);
-		}
+    /* Process events forever. */
+    while (1) {
+	if (!escaped || ft_state != FT_NONE) {
+	    (void) process_events(True);
+	}
+	if (appres.cbreak_mode && escape_pending) {
+	    escape_pending = False;
+	    screen_suspend();
+	}
+	if (!appres.secure && !CONNECTED && !appres.reconnect) {
+	    screen_suspend();
+	    (void) printf("Disconnected.\n");
+	    if (once) {
+		x3270_exit(0);
+	    }
+	    interact();
+	    screen_resume();
+	} else if (escaped && ft_state == FT_NONE) {
+	    interact();
+	    vtrace("Done interacting.\n");
+	    screen_resume();
+	} else if (!CONNECTED && !appres.reconnect && cl_hostname != NULL) {
+	    screen_suspend();
+	    x3270_exit(0);
+	}
 
 #if !defined(_WIN32) /*[*/
-		if (children && (pid = waitpid(-1, &status, WNOHANG)) > 0) {
-			pr3287_session_check(pid, status);
-			--children;
-		}
-#else /*][*/
-		pr3287_session_check();
-#endif /*]*/
-		screen_disp(False);
+	if (children && (pid = waitpid(-1, &status, WNOHANG)) > 0) {
+	    pr3287_session_check(pid, status);
+	    --children;
 	}
+#else /*][*/
+	pr3287_session_check();
+#endif /*]*/
+	screen_disp(False);
+    }
 }
 
 #if !defined(_WIN32) /*[*/
@@ -568,8 +578,8 @@ main(int argc, char *argv[])
 static void
 running_sigtstp_handler(int ignored _is_unused)
 {
-	signal(SIGTSTP, SIG_IGN);
-	stop_pending = True;
+    signal(SIGTSTP, SIG_IGN);
+    stop_pending = True;
 }
 
 /*
@@ -581,147 +591,155 @@ running_sigtstp_handler(int ignored _is_unused)
 static void
 prompt_sigtstp_handler(int ignored _is_unused)
 {
-	if (CONNECTED)
-		dont_return = True;
-	signal(SIGTSTP, SIG_DFL);
-	kill(getpid(), SIGTSTP);
+    if (CONNECTED) {
+	dont_return = True;
+    }
+    signal(SIGTSTP, SIG_DFL);
+    kill(getpid(), SIGTSTP);
 }
 #endif /*]*/
 
 /*static*/ void
 interact(void)
 {
-	/* In case we got here because a command output, stop the pager. */
-	stop_pager();
+    /* In case we got here because a command output, stop the pager. */
+    stop_pager();
 
-	vtrace("Interacting.\n");
-	if (appres.secure) {
-		char s[10];
+    vtrace("Interacting.\n");
+    if (appres.secure) {
+	char s[10];
 
-		printf("[Press <Enter>] ");
-		fflush(stdout);
-		if (fgets(s, sizeof(s), stdin) == NULL)
-		    	x3270_exit(1);
-		return;
+	printf("[Press <Enter>] ");
+	fflush(stdout);
+	if (fgets(s, sizeof(s), stdin) == NULL) {
+	    x3270_exit(1);
+	}
+	return;
+    }
+
+#if !defined(_WIN32) /*[*/
+    /* Handle SIGTSTP differently at the prompt. */
+    signal(SIGTSTP, SIG_DFL);
+#endif /*]*/
+
+    /*
+     * Ignore SIGINT at the prompt.
+     * I'm sure there's more we could do.
+     */
+    signal(SIGINT, SIG_IGN);
+
+    for (;;) {
+	int sl;
+	char *s;
+#if defined(HAVE_LIBREADLINE) /*[*/
+	char *rl_s;
+#else /*][*/
+	char buf[1024];
+#endif /*]*/
+
+	dont_return = False;
+
+	/* Process a pending stop now. */
+	if (stop_pending) {
+	    stop_pending = False;
+#if !defined(_WIN32) /*[*/
+	    signal(SIGTSTP, SIG_DFL);
+	    kill(getpid(), SIGTSTP);
+#endif /*]*/
+	    continue;
 	}
 
 #if !defined(_WIN32) /*[*/
-	/* Handle SIGTSTP differently at the prompt. */
-	signal(SIGTSTP, SIG_DFL);
+	/* Process SIGTSTPs immediately. */
+	signal(SIGTSTP, prompt_sigtstp_handler);
 #endif /*]*/
+	/* Display the prompt. */
+	if (CONNECTED) {
+	    (void) printf("Press <Enter> to resume session.\n");
+	}
+#if defined(HAVE_LIBREADLINE) /*[*/
+	s = rl_s = readline("c3270> ");
+	if (s == NULL) {
+	    printf("\n");
+	    exit(0);
+	}
+#else /*][*/
+	(void) printf(PROGRAM_NAME "> ");
+	(void) fflush(stdout);
+
+	/* Get the command, and trim white space. */
+	if (fgets(buf, sizeof(buf), stdin) == NULL) {
+	    printf("\n");
+#if defined(_WIN32) /*[*/
+	    continue;
+#else /*][*/
+	    x3270_exit(0);
+#endif /*]*/
+	}
+	s = buf;
+#endif /*]*/
+#if !defined(_WIN32) /*[*/
+	/* Defer SIGTSTP until the next prompt display. */
+	signal(SIGTSTP, running_sigtstp_handler);
+#endif /*]*/
+
+	while (isspace(*s)) {
+	    s++;
+	}
+	sl = strlen(s);
+	while (sl && isspace(s[sl-1])) {
+	    s[--sl] = '\0';
+	}
+
+	/* A null command means go back. */
+	if (!sl) {
+	    if (CONNECTED && !dont_return) {
+		break;
+	    } else {
+		continue;
+	    }
+	}
+
+#if defined(HAVE_LIBREADLINE) /*[*/
+	/* Save this command in the history buffer. */
+	add_history(s);
+#endif /*]*/
+
+	/* "?" is an alias for "Help". */
+	if (!strcmp(s, "?")) {
+	    s = "Help";
+	}
 
 	/*
-	 * Ignore SIGINT at the prompt.
-	 * I'm sure there's more we could do.
+	 * Process the command like a macro, and spin until it
+	 * completes.
 	 */
-	signal(SIGINT, SIG_IGN);
-
-	for (;;) {
-		int sl;
-		char *s;
-#if defined(HAVE_LIBREADLINE) /*[*/
-		char *rl_s;
-#else /*][*/
-		char buf[1024];
-#endif /*]*/
-
-		dont_return = False;
-
-		/* Process a pending stop now. */
-		if (stop_pending) {
-			stop_pending = False;
-#if !defined(_WIN32) /*[*/
-			signal(SIGTSTP, SIG_DFL);
-			kill(getpid(), SIGTSTP);
-#endif /*]*/
-			continue;
-		}
-
-#if !defined(_WIN32) /*[*/
-		/* Process SIGTSTPs immediately. */
-		signal(SIGTSTP, prompt_sigtstp_handler);
-#endif /*]*/
-		/* Display the prompt. */
-		if (CONNECTED)
-		    	(void) printf("Press <Enter> to resume session.\n");
-#if defined(HAVE_LIBREADLINE) /*[*/
-		s = rl_s = readline("c3270> ");
-		if (s == NULL) {
-			printf("\n");
-			exit(0);
-		}
-#else /*][*/
-		(void) printf(PROGRAM_NAME "> ");
-		(void) fflush(stdout);
-
-		/* Get the command, and trim white space. */
-		if (fgets(buf, sizeof(buf), stdin) == NULL) {
-			printf("\n");
-#if defined(_WIN32) /*[*/
-		    	continue;
-#else /*][*/
-			x3270_exit(0);
-#endif /*]*/
-		}
-		s = buf;
-#endif /*]*/
-#if !defined(_WIN32) /*[*/
-		/* Defer SIGTSTP until the next prompt display. */
-		signal(SIGTSTP, running_sigtstp_handler);
-#endif /*]*/
-
-		while (isspace(*s))
-			s++;
-		sl = strlen(s);
-		while (sl && isspace(s[sl-1]))
-			s[--sl] = '\0';
-
-		/* A null command means go back. */
-		if (!sl) {
-			if (CONNECTED && !dont_return)
-				break;
-			else
-				continue;
-		}
-
-#if defined(HAVE_LIBREADLINE) /*[*/
-		/* Save this command in the history buffer. */
-		add_history(s);
-#endif /*]*/
-
-		/* "?" is an alias for "Help". */
-		if (!strcmp(s, "?"))
-			s = "Help";
-
-		/*
-		 * Process the command like a macro, and spin until it
-		 * completes.
-		 */
-		push_command(s);
-		while (sms_active()) {
-			(void) process_events(True);
-		}
-
-		/* Close the pager. */
-		stop_pager();
-
-#if defined(HAVE_LIBREADLINE) /*[*/
-		/* Give back readline's buffer. */
-		free(rl_s);
-#endif /*]*/
-
-		/* If it succeeded, return to the session. */
-		if (!macro_output && CONNECTED)
-			break;
+	push_command(s);
+	while (sms_active()) {
+	    (void) process_events(True);
 	}
 
-	/* Ignore SIGTSTP again. */
-	stop_pending = False;
+	/* Close the pager. */
+	stop_pager();
+
+#if defined(HAVE_LIBREADLINE) /*[*/
+	/* Give back readline's buffer. */
+	free(rl_s);
+#endif /*]*/
+
+	/* If it succeeded, return to the session. */
+	if (!macro_output && CONNECTED) {
+	    break;
+	}
+    }
+
+    /* Ignore SIGTSTP again. */
+    stop_pending = False;
 #if !defined(_WIN32) /*[*/
-	signal(SIGTSTP, SIG_IGN);
+    signal(SIGTSTP, SIG_IGN);
 #endif /*]*/
 #if defined(_WIN32) /*[*/
-	signal(SIGINT, SIG_DFL);
+    signal(SIGINT, SIG_DFL);
 #endif /*]*/
 }
 
@@ -730,37 +748,41 @@ FILE *
 start_pager(void)
 {
 #if !defined(_WIN32) /*[*/
-	static char *lesspath = LESSPATH;
-	static char *lesscmd = LESSPATH " -EX";
-	static char *morepath = MOREPATH;
-	static char *or_cat = " || cat";
-	char *pager_env;
-	char *pager_cmd = NULL;
+    static char *lesspath = LESSPATH;
+    static char *lesscmd = LESSPATH " -EX";
+    static char *morepath = MOREPATH;
+    static char *or_cat = " || cat";
+    char *pager_env;
+    char *pager_cmd = NULL;
 
-	if (pager != NULL)
-		return pager;
-
-	if ((pager_env = getenv("PAGER")) != NULL)
-		pager_cmd = pager_env;
-	else if (strlen(lesspath))
-		pager_cmd = lesscmd;
-	else if (strlen(morepath))
-		pager_cmd = morepath;
-	if (pager_cmd != NULL) {
-		char *s;
-
-		s = Malloc(strlen(pager_cmd) + strlen(or_cat) + 1);
-		(void) sprintf(s, "%s%s", pager_cmd, or_cat);
-		pager = popen(s, "w");
-		Free(s);
-		if (pager == NULL)
-			(void) perror(pager_cmd);
-	}
-	if (pager == NULL)
-		pager = stdout;
+    if (pager != NULL) {
 	return pager;
+    }
+
+    if ((pager_env = getenv("PAGER")) != NULL) {
+	pager_cmd = pager_env;
+    } else if (strlen(lesspath)) {
+	pager_cmd = lesscmd;
+    } else if (strlen(morepath)) {
+	pager_cmd = morepath;
+    }
+    if (pager_cmd != NULL) {
+	char *s;
+
+	s = Malloc(strlen(pager_cmd) + strlen(or_cat) + 1);
+	(void) sprintf(s, "%s%s", pager_cmd, or_cat);
+	pager = popen(s, "w");
+	Free(s);
+	if (pager == NULL) {
+	    (void) perror(pager_cmd);
+	}
+    }
+    if (pager == NULL) {
+	pager = stdout;
+    }
+    return pager;
 #else /*][*/
-	return stdout;
+    return stdout;
 #endif /*]*/
 }
 
@@ -769,14 +791,15 @@ static void
 stop_pager(void)
 {
 #if !defined(_WIN32) /*[*/
-	if (pager != NULL) {
-		if (pager != stdout)
-			pclose(pager);
-		pager = NULL;
+    if (pager != NULL) {
+	if (pager != stdout) {
+	    pclose(pager);
 	}
+	pager = NULL;
+    }
 #else /*][*/
-	pager_rowcnt = 0;
-	pager_q = False;
+    pager_rowcnt = 0;
+    pager_q = False;
 #endif /*]*/
 }
 
@@ -784,47 +807,49 @@ stop_pager(void)
 void
 pager_output(const char *s)
 {
-    	if (pager_q)
-	    	return;
+    if (pager_q) {
+	return;
+    }
 
-	do {
-		char *nl;
-	    	int sl;
+    do {
+	char *nl;
+	int sl;
 
-		/* Pause for a screenful. */
-		if (pager_rowcnt >= maxROWS) {
-			printf("Press any key to continue . . . ");
-			fflush(stdout);
-			pager_q = screen_wait_for_key(NULL);
-			printf("\r                                \r");
-			pager_rowcnt = 0;
-			if (pager_q)
-			    	return;
-		}
+	/* Pause for a screenful. */
+	if (pager_rowcnt >= maxROWS) {
+	    printf("Press any key to continue . . . ");
+	    fflush(stdout);
+	    pager_q = screen_wait_for_key(NULL);
+	    printf("\r                                \r");
+	    pager_rowcnt = 0;
+	    if (pager_q) {
+		return;
+	    }
+	}
 
-		/*
-		 * Look for an embedded newline.  If one is found, just print
-		 * up to it, so we can count the newline and possibly pause
-		 * partway through the string.
-		 */
-		nl = strchr(s, '\n');
-		if (nl != NULL) {
-		    	sl = nl - s;
-			printf("%.*s\n", sl, s);
-			s = nl + 1;
-		} else {
-			printf("%s\n", s);
-			sl = strlen(s);
-			s = NULL;
-		}
+	/*
+	 * Look for an embedded newline.  If one is found, just print
+	 * up to it, so we can count the newline and possibly pause
+	 * partway through the string.
+	 */
+	nl = strchr(s, '\n');
+	if (nl != NULL) {
+	    sl = nl - s;
+	    printf("%.*s\n", sl, s);
+	    s = nl + 1;
+	} else {
+	    printf("%s\n", s);
+	    sl = strlen(s);
+	    s = NULL;
+	}
 
-		/* Account for the newline. */
-		pager_rowcnt++;
+	/* Account for the newline. */
+	pager_rowcnt++;
 
-		/* Account (conservatively) for any line wrap. */
-		pager_rowcnt += sl / maxCOLS;
+	/* Account (conservatively) for any line wrap. */
+	pager_rowcnt += sl / maxCOLS;
 
-	} while (s != NULL);
+    } while (s != NULL);
 }
 #endif /*]*/
 
@@ -983,37 +1008,35 @@ completion_entry(const char *text, int state)
 static char *
 hms(time_t ts)
 {
-	time_t t, td;
-	long hr, mn, sc;
-	static char buf[128];
+    time_t t, td;
+    long hr, mn, sc;
 
-	(void) time(&t);
+    (void) time(&t);
 
-	td = t - ts;
-	hr = (long)(td / 3600);
-	mn = (td % 3600) / 60;
-	sc = td % 60;
+    td = t - ts;
+    hr = (long)(td / 3600);
+    mn = (td % 3600) / 60;
+    sc = td % 60;
 
-	if (hr > 0)
-		(void) sprintf(buf, "%ld %s %ld %s %ld %s",
-		    hr, (hr == 1) ?
-			get_message("hour") : get_message("hours"),
-		    mn, (mn == 1) ?
-			get_message("minute") : get_message("minutes"),
-		    sc, (sc == 1) ?
-			get_message("second") : get_message("seconds"));
-	else if (mn > 0)
-		(void) sprintf(buf, "%ld %s %ld %s",
-		    mn, (mn == 1) ?
-			get_message("minute") : get_message("minutes"),
-		    sc, (sc == 1) ?
-			get_message("second") : get_message("seconds"));
-	else
-		(void) sprintf(buf, "%ld %s",
-		    sc, (sc == 1) ?
-			get_message("second") : get_message("seconds"));
-
-	return buf;
+    if (hr > 0) {
+	return lazyaf("%ld %s %ld %s %ld %s",
+	    hr, (hr == 1) ?
+		get_message("hour") : get_message("hours"),
+	    mn, (mn == 1) ?
+		get_message("minute") : get_message("minutes"),
+	    sc, (sc == 1) ?
+		get_message("second") : get_message("seconds"));
+    } else if (mn > 0) {
+	return lazyaf("%ld %s %ld %s",
+	    mn, (mn == 1) ?
+		get_message("minute") : get_message("minutes"),
+	    sc, (sc == 1) ?
+		get_message("second") : get_message("seconds"));
+    } else {
+	return lazyaf("%ld %s",
+	    sc, (sc == 1) ?
+		get_message("second") : get_message("seconds"));
+    }
 }
 
 static void
@@ -1198,38 +1221,38 @@ status_dump(void)
 static void
 copyright_dump(void)
 {
-	action_output(" ");
-	action_output("%s", build);
-	action_output(" ");
-	action_output("Copyright (c) 1993-2014, Paul Mattes.");
-	action_output("Copyright (c) 1990, Jeff Sparkes.");
-	action_output("Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA");
-	action_output(" 30332.");
-	action_output("All rights reserved.");
-	action_output(" ");
-	action_output("Redistribution and use in source and binary forms, with or without");
-	action_output("modification, are permitted provided that the following conditions are met:");
-	action_output("    * Redistributions of source code must retain the above copyright");
-	action_output("      notice, this list of conditions and the following disclaimer.");
-	action_output("    * Redistributions in binary form must reproduce the above copyright");
-	action_output("      notice, this list of conditions and the following disclaimer in the");
-	action_output("      documentation and/or other materials provided with the distribution.");
-	action_output("    * Neither the names of Paul Mattes, Jeff Sparkes, GTRC nor the names of");
-	action_output("      their contributors may be used to endorse or promote products derived");
-	action_output("      from this software without specific prior written permission.");
-	action_output(" ");
-	action_output("THIS SOFTWARE IS PROVIDED BY PAUL MATTES, JEFF SPARKES AND GTRC \"AS IS\" AND");
-	action_output("ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE");
-	action_output("IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE");
-	action_output("ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES, JEFF SPARKES OR GTRC BE");
-	action_output("LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR");
-	action_output("CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF");
-	action_output("SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS");
-	action_output("INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN");
-	action_output("CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)");
-	action_output("ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE");
-	action_output("POSSIBILITY OF SUCH DAMAGE.");
-	action_output(" ");
+    action_output(" ");
+    action_output("%s", build);
+    action_output(" ");
+    action_output("Copyright (c) 1993-2015, Paul Mattes.");
+    action_output("Copyright (c) 1990, Jeff Sparkes.");
+    action_output("Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA");
+    action_output(" 30332.");
+    action_output("All rights reserved.");
+    action_output(" ");
+    action_output("Redistribution and use in source and binary forms, with or without");
+    action_output("modification, are permitted provided that the following conditions are met:");
+    action_output("    * Redistributions of source code must retain the above copyright");
+    action_output("      notice, this list of conditions and the following disclaimer.");
+    action_output("    * Redistributions in binary form must reproduce the above copyright");
+    action_output("      notice, this list of conditions and the following disclaimer in the");
+    action_output("      documentation and/or other materials provided with the distribution.");
+    action_output("    * Neither the names of Paul Mattes, Jeff Sparkes, GTRC nor the names of");
+    action_output("      their contributors may be used to endorse or promote products derived");
+    action_output("      from this software without specific prior written permission.");
+    action_output(" ");
+    action_output("THIS SOFTWARE IS PROVIDED BY PAUL MATTES, JEFF SPARKES AND GTRC \"AS IS\" AND");
+    action_output("ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE");
+    action_output("IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE");
+    action_output("ARE DISCLAIMED. IN NO EVENT SHALL PAUL MATTES, JEFF SPARKES OR GTRC BE");
+    action_output("LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR");
+    action_output("CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF");
+    action_output("SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS");
+    action_output("INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN");
+    action_output("CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)");
+    action_output("ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE");
+    action_output("POSSIBILITY OF SUCH DAMAGE.");
+    action_output(" ");
 }
 
 static Boolean
@@ -1520,33 +1543,35 @@ Escape_action(ia_t ia, unsigned argc, const char **argv)
 void
 popup_an_info(const char *fmt, ...)
 {
-    	va_list args;
-	static char vmsgbuf[4096];
-	size_t sl;
+    va_list args;
+    static char vmsgbuf[4096];
+    size_t sl;
 
-	/* Expand it. */
-	va_start(args, fmt);
-	(void) vsprintf(vmsgbuf, fmt, args);
-	va_end(args);
+    /* Expand it. */
+    va_start(args, fmt);
+    (void) vsprintf(vmsgbuf, fmt, args);
+    va_end(args);
 
-	/* Remove trailing newlines. */
-	sl = strlen(vmsgbuf);
-	while (sl && vmsgbuf[sl - 1] == '\n')
-		vmsgbuf[--sl] = '\0';
+    /* Remove trailing newlines. */
+    sl = strlen(vmsgbuf);
+    while (sl && vmsgbuf[sl - 1] == '\n') {
+	vmsgbuf[--sl] = '\0';
+    }
 
-	/* Push it out. */
-	if (sl) {
-		if (escaped) {
-			printf("%s\n", vmsgbuf);
-			fflush(stdout);
-		} else {
-			char *s;
+    /* Push it out. */
+    if (sl) {
+	if (escaped) {
+	    printf("%s\n", vmsgbuf);
+	    fflush(stdout);
+	} else {
+	    char *s;
 
-			while ((s = strchr(vmsgbuf, '\n')) != NULL)
-				*s = ' ';
-			status_push(vmsgbuf);
-		}
+	    while ((s = strchr(vmsgbuf, '\n')) != NULL) {
+		*s = ' ';
+	    }
+	    status_push(vmsgbuf);
 	}
+    }
 }
 
 static Boolean
@@ -1608,94 +1633,93 @@ merge_profile(void)
 static void
 start_auto_shortcut(void)
 {
-    	char *tempdir;
-	FILE *f;
-	session_t s;
-	HRESULT hres;
-	char exepath[MAX_PATH];
-	char linkpath[MAX_PATH];
-	char sesspath[MAX_PATH];
-	char delenv[32 + MAX_PATH];
-	char args[1024];
-	HINSTANCE h;
-	char *cwd;
+    char *tempdir;
+    FILE *f;
+    session_t s;
+    HRESULT hres;
+    char exepath[MAX_PATH];
+    char linkpath[MAX_PATH];
+    char sesspath[MAX_PATH];
+    char delenv[32 + MAX_PATH];
+    char args[1024];
+    HINSTANCE h;
+    char *cwd;
 
-	/* Make sure there is a session file. */
-	if (profile_path == NULL) {
-		fprintf(stderr, "Can't use auto-shortcut mode without a "
-			"session file\n");
-		fflush(stderr);
-		return;
-	}
-
-#if defined(AS_DEBUG) /*[*/
-	printf("Running auto-shortcut\n");
-	fflush(stdout);
-#endif /*]*/
-
-	/* Read the session file into 's'. */
-	f = fopen(profile_path, "r");
-	if (f == NULL) {
-	    	fprintf(stderr, "%s: %s\n", profile_path, strerror(errno));
-		x3270_exit(1);
-	}
-	memset(&s, '\0', sizeof(session_t));
-	if (read_session(f, &s, NULL) == 0) {
-	    	fprintf(stderr, "%s: invalid format\n", profile_path);
-		x3270_exit(1);
-	}
-#if defined(AS_DEBUG) /*[*/
-	printf("Reading session file '%s'\n", profile_path);
-	fflush(stdout);
-#endif /*]*/
-
-	/* Create the shortcut. */
-	tempdir = getenv("TEMP");
-	if (tempdir == NULL) {
-	    	fprintf(stderr, "No %%TEMP%%?\n");
-		x3270_exit(1);
-	}
-	sprintf(linkpath, "%s\\wcsa%u.lnk", tempdir, getpid());
-	sprintf(exepath, "%s%s", instdir, "wc3270.exe");
-#if defined(AS_DEBUG) /*[*/
-	printf("Executable path is '%s'\n", exepath);
-	fflush(stdout);
-#endif /*]*/
-	if (GetFullPathName(profile_path, MAX_PATH, sesspath, NULL) == 0) {
-	    	fprintf(stderr, "%s: Error %ld\n", profile_path,
-			GetLastError());
-		x3270_exit(1);
-	}
-	sprintf(args, "+S \"%s\"", sesspath);
-	cwd = getcwd(NULL, 0);
-	hres = create_shortcut(&s,		/* session */
-			       exepath,		/* .exe    */
-			       linkpath,	/* .lnk    */
-			       args,		/* args    */
-			       cwd		/* cwd     */);
-	if (!SUCCEEDED(hres)) {
-	    	fprintf(stderr, "Cannot create ShellLink '%s'\n", linkpath);
-		x3270_exit(1);
-	}
-#if defined(AS_DEBUG) /*[*/
-	printf("Created ShellLink '%s'\n", linkpath);
-	fflush(stdout);
-#endif /*]*/
-
-	/* Execute it. */
-	sprintf(delenv, "%s=%s", DELENV, linkpath);
-	putenv(delenv);
-	h = ShellExecute(NULL, "open", linkpath, "", tempdir, SW_SHOW);
-	if ((int)h <= 32) {
-	    fprintf(stderr, "ShellExecute failed, error %d\n", (int)h);
-	    x3270_exit(1);
-	}
+    /* Make sure there is a session file. */
+    if (profile_path == NULL) {
+	fprintf(stderr, "Can't use auto-shortcut mode without a "
+		    "session file\n");
+	fflush(stderr);
+	return;
+    }
 
 #if defined(AS_DEBUG) /*[*/
-	printf("Started ShellLink\n");
-	fflush(stdout);
+    printf("Running auto-shortcut\n");
+    fflush(stdout);
 #endif /*]*/
 
-	exit(0);
+    /* Read the session file into 's'. */
+    f = fopen(profile_path, "r");
+    if (f == NULL) {
+	fprintf(stderr, "%s: %s\n", profile_path, strerror(errno));
+	x3270_exit(1);
+    }
+    memset(&s, '\0', sizeof(session_t));
+    if (read_session(f, &s, NULL) == 0) {
+	fprintf(stderr, "%s: invalid format\n", profile_path);
+	x3270_exit(1);
+    }
+#if defined(AS_DEBUG) /*[*/
+    printf("Reading session file '%s'\n", profile_path);
+    fflush(stdout);
+#endif /*]*/
+
+    /* Create the shortcut. */
+    tempdir = getenv("TEMP");
+    if (tempdir == NULL) {
+	fprintf(stderr, "No %%TEMP%%?\n");
+	x3270_exit(1);
+    }
+    sprintf(linkpath, "%s\\wcsa%u.lnk", tempdir, getpid());
+    sprintf(exepath, "%s%s", instdir, "wc3270.exe");
+#if defined(AS_DEBUG) /*[*/
+    printf("Executable path is '%s'\n", exepath);
+    fflush(stdout);
+#endif /*]*/
+    if (GetFullPathName(profile_path, MAX_PATH, sesspath, NULL) == 0) {
+	fprintf(stderr, "%s: Error %ld\n", profile_path, GetLastError());
+	x3270_exit(1);
+    }
+    sprintf(args, "+S \"%s\"", sesspath);
+    cwd = getcwd(NULL, 0);
+    hres = create_shortcut(&s,		/* session */
+			   exepath,	/* .exe    */
+			   linkpath,	/* .lnk    */
+			   args,	/* args    */
+			   cwd		/* cwd     */);
+    if (!SUCCEEDED(hres)) {
+	fprintf(stderr, "Cannot create ShellLink '%s'\n", linkpath);
+	x3270_exit(1);
+    }
+#if defined(AS_DEBUG) /*[*/
+    printf("Created ShellLink '%s'\n", linkpath);
+    fflush(stdout);
+#endif /*]*/
+
+    /* Execute it. */
+    sprintf(delenv, "%s=%s", DELENV, linkpath);
+    putenv(delenv);
+    h = ShellExecute(NULL, "open", linkpath, "", tempdir, SW_SHOW);
+    if ((int)h <= 32) {
+	fprintf(stderr, "ShellExecute failed, error %d\n", (int)h);
+	x3270_exit(1);
+    }
+
+#if defined(AS_DEBUG) /*[*/
+    printf("Started ShellLink\n");
+    fflush(stdout);
+#endif /*]*/
+
+    exit(0);
 }
 #endif /*]*/

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2010, 2013-2014 Paul Mattes.
+ * Copyright (c) 1994-2010, 2013-2015 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -37,7 +37,7 @@
 #include "globals.h"
 #include <errno.h>
 #if !defined(_WIN32) /*[*/
-#include <netinet/in.h>
+# include <netinet/in.h>
 #endif /*]*/
 #include "3270ds.h"
 #include "appres.h"
@@ -57,9 +57,6 @@
 #include "telnetc.h"
 #include "trace.h"
 #include "utilc.h"
-
-/* #define X3270_COMPAT 1	make x3270 compatible with all of the other
-			   emulators */
 
 #define SW_3279_2	0x09
 #define SH_3279_2	0x0c
@@ -720,36 +717,37 @@ do_qr_usable_area(void)
 static void
 do_qr_color(void)
 {
-	int i;
-	int color_max;
+    int i;
+    int color_max;
 
-	trace_ds("> QueryReply(Color)\n");
+    trace_ds("> QueryReply(Color)\n");
 
-	color_max = (appres.color8 || !appres.m3279)? 8: 16;
+    color_max = (appres.color8 || !appres.m3279)? 8: 16;
 
-	space3270out(4 + 2*15);
-	*obptr++ = 0x00;	/* no options */
-	*obptr++ = color_max; /* report on 8 or 16 colors */
-	*obptr++ = 0x00;	/* default color: */
-	*obptr++ = 0xf0 + HOST_COLOR_GREEN;	/*  green */
-	for (i = 0xf1; i < 0xf1 + color_max - 1; i++) {
-		*obptr++ = i;
-		if (appres.m3279)
-			*obptr++ = i;
-		else
-			*obptr++ = 0x00;
+    space3270out(4 + 2*15);
+    *obptr++ = 0x00;		/* no options */
+    *obptr++ = color_max;	/* report on 8 or 16 colors */
+    *obptr++ = 0x00;		/* default color: */
+    *obptr++ = 0xf0 + HOST_COLOR_GREEN;	/*  green */
+    for (i = 0xf1; i < 0xf1 + color_max - 1; i++) {
+	*obptr++ = i;
+	if (appres.m3279) {
+	    *obptr++ = i;
+	} else {
+	    *obptr++ = 0x00;
 	}
+    }
 
-#if defined(X3270_COMPAT) || !defined(X3270_DISPLAY) /*[*/
+    if (screen_has_bg_color()) {
 	/* Add background color. */
 	if (appres.m3279 && appres.qr_bg_color) {
-		space3270out(4);
-		*obptr++ = 4;		/* length */
-		*obptr++ = 0x02;	/* background color */
-		*obptr++ = 0x00;	/* attribute */
-		*obptr++ = 0xf0;	/* default color */
+	    space3270out(4);
+	    *obptr++ = 4;	/* length */
+	    *obptr++ = 0x02;	/* background color */
+	    *obptr++ = 0x00;	/* attribute */
+	    *obptr++ = 0xf0;	/* default color */
 	}
-#endif /*]*/
+    }
 }
 
 static void

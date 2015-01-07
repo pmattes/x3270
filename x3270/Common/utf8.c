@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
 #include "globals.h"
 
 #if !defined(PR3287) /*[*/
-#include "appres.h"
+# include "appres.h"
 #endif /*]*/
 #include "popupsc.h"
 #include "utf8c.h"
@@ -49,34 +49,35 @@ void
 set_codeset(char *codeset_name)
 {
 #if defined(S3270) /*[*/
-	/*
-	 * s3270 and ws3270 have a '-utf8' option and a utf8 resource to force
-	 * UTF-8 mode.
-	 */
-    	if (appres.utf8) {
-		is_utf8 = True;
-# if defined(WS3270) /*[*/
-		appres.local_cp = CP_UTF8;
-# endif /*]*/
-		codeset_name = "UTF-8";
-	}
-#elif defined(TCL3270) /*][*/
-	/*
-	 * tcl3270 is always in UTF-8 mode, because it needs to
-	 * supply UTF-8 strings to libtcl and vice-versa.
-	 */
+    /*
+     * s3270 and ws3270 have a '-utf8' option and a utf8 resource to force
+     * UTF-8 mode.
+     */
+    if (appres.utf8) {
 	is_utf8 = True;
+# if defined(WS3270) /*[*/
+	appres.local_cp = CP_UTF8;
+# endif /*]*/
+	codeset_name = "UTF-8";
+    }
+#elif defined(TCL3270) /*][*/
+    /*
+     * tcl3270 is always in UTF-8 mode, because it needs to
+     * supply UTF-8 strings to libtcl and vice-versa.
+     */
+    is_utf8 = True;
 #else /*][*/
-	/*
-	 * We're in UTF-8 mode if the codeset looks like 'UTF8'.
-	 */
-	if (!is_utf8)
-		is_utf8 = (!strcasecmp(codeset_name, "utf-8") ||
-			   !strcasecmp(codeset_name, "utf8") ||
-			   !strcasecmp(codeset_name, "utf_8"));
+    /*
+     * We're in UTF-8 mode if the codeset looks like 'UTF8'.
+     */
+    if (!is_utf8) {
+	is_utf8 = (!strcasecmp(codeset_name, "utf-8") ||
+		   !strcasecmp(codeset_name, "utf8") ||
+		   !strcasecmp(codeset_name, "utf_8"));
+    }
 #endif /*]*/
 
-	Replace(locale_codeset, NewString(codeset_name));
+    Replace(locale_codeset, NewString(codeset_name));
 }
 
 /*
@@ -85,7 +86,7 @@ set_codeset(char *codeset_name)
 const char *
 get_codeset(void)
 {
-	return locale_codeset;
+    return locale_codeset;
 }
 
 /*
@@ -97,8 +98,9 @@ get_codeset(void)
 int
 unicode_to_utf8(ucs4_t ucs4, char *utf8)
 {
-    if (ucs4 & 0x80000000)
+    if (ucs4 & 0x80000000) {
 	return -1;
+    }
 
     if (ucs4 <= 0x0000007f) {
 	utf8[0] = ucs4 & 0x7f;				/*  7 bits */
@@ -152,8 +154,9 @@ int
 utf8_to_unicode(const char *utf8, int len, ucs4_t *ucs4)
 {
     /* No input is by definition incomplete. */
-    if (!len)
+    if (!len) {
 	return 0;
+    }
 
     /* See if it's ASCII-7. */
     if ((utf8[0] & 0xff) < 0x80) {
@@ -165,90 +168,105 @@ utf8_to_unicode(const char *utf8, int len, ucs4_t *ucs4)
     if ((utf8[0] & 0xe0) == 0xc0) {
 	/* 110xxxxx 10xxxxxx
 	 * 0x00000080-0x000007ff */
-	if (len < 2)
+	if (len < 2) {
 	    return 0;
-	if ((utf8[1] & 0xc0) != 0x80)
+	}
+	if ((utf8[1] & 0xc0) != 0x80) {
 	    return -1;
+	}
 	*ucs4 = ((utf8[0] << 6) & 0x7c0) |
 	    	 (utf8[1] &       0x03f);
-	if (*ucs4 < 0x00000080)
+	if (*ucs4 < 0x00000080) {
 	    return -1;
+	}
 	return 2;
     }
 
     if ((utf8[0] & 0xf0) == 0xe0) {
 	/* 1110xxxx 10xxxxxx 10xxxxxx
 	 * 0x00000800-0x0000ffff */
-	if (len < 3)
+	if (len < 3) {
 	    return 0;
+	}
 	if (((utf8[1] & 0xc0) != 0x80) ||
-	    ((utf8[2] & 0xc0) != 0x80))
+	    ((utf8[2] & 0xc0) != 0x80)) {
 	    return -1;
+	}
 	*ucs4 = ((utf8[0] << 12) & 0xf000) |
 	        ((utf8[1] << 6)  & 0x0fc0) |
 		((utf8[2])       & 0x003f);
-	if (*ucs4 < 0x00000800)
+	if (*ucs4 < 0x00000800) {
 	    return -2;
+	}
 	return 3;
     }
 
     if ((utf8[0] & 0xf8) == 0xf0) {
 	/* 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
 	 * 0x00010000-0x001fffff */
-	if (len < 4)
+	if (len < 4) {
 	    return 0;
+	}
 	if (((utf8[1] & 0xc0) != 0x80) ||
 	    ((utf8[2] & 0xc0) != 0x80) ||
-	    ((utf8[3] & 0xc0) != 0x80))
+	    ((utf8[3] & 0xc0) != 0x80)) {
 	    return -1;
+	}
 	*ucs4 = ((utf8[0] << 18) & 0x1c0000) |
 		((utf8[1] << 12) & 0x03f000) |
 	        ((utf8[2] << 6)  & 0x000fc0) |
 		((utf8[3])       & 0x00003f);
-	if (*ucs4 < 0x00010000)
+	if (*ucs4 < 0x00010000) {
 	    return -2;
+	}
 	return 4;
     }
 
     if ((utf8[0] & 0xfc) == 0xf8) {
 	/* 111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
 	 * 0x00200000-0x03ffffff */
-	if (len < 5)
+	if (len < 5) {
 	    return 0;
+	}
 	if (((utf8[1] & 0xc0) != 0x80) ||
 	    ((utf8[2] & 0xc0) != 0x80) ||
 	    ((utf8[3] & 0xc0) != 0x80) ||
-	    ((utf8[4] & 0xc0) != 0x80))
+	    ((utf8[4] & 0xc0) != 0x80)) {
 	    return -1;
+	}
 	*ucs4 = ((utf8[0] << 24) & 0x3000000) |
 		((utf8[1] << 18) & 0x0fc0000) |
 		((utf8[2] << 12) & 0x003f000) |
 	        ((utf8[3] << 6)  & 0x0000fc0) |
 		((utf8[4])       & 0x000003f);
-	if (*ucs4 < 0x00200000)
+	if (*ucs4 < 0x00200000) {
 	    return -2;
+	}
 	return 5;
     }
 
     if ((utf8[0] & 0xfe) == 0xfc) {
 	/* 1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
 	 * 0x04000000-0x7fffffff */
-	if (len < 6)
+	if (len < 6) {
 	    return 0;
+	}
 	if (((utf8[1] & 0xc0) != 0x80) ||
 	    ((utf8[2] & 0xc0) != 0x80) ||
 	    ((utf8[3] & 0xc0) != 0x80) ||
 	    ((utf8[4] & 0xc0) != 0x80) ||
-	    ((utf8[5] & 0xc0) != 0x80))
+	    ((utf8[5] & 0xc0) != 0x80)) {
 	    return -1;
+	}
 	*ucs4 = ((utf8[0] << 30) & 0x40000000) |
 		((utf8[1] << 24) & 0x3f000000) |
 		((utf8[2] << 18) & 0x00fc0000) |
 		((utf8[3] << 12) & 0x0003f000) |
 	        ((utf8[4] << 6)  & 0x00000fc0) |
 		((utf8[5])       & 0x0000003f);
-	if (*ucs4 < 0x04000000)
+	if (*ucs4 < 0x04000000) {
 	    return -2;
+	}
 	return 6;
     }
 

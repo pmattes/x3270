@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2014 Paul Mattes.
+ * Copyright (c) 1999-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,3 +36,6 @@ extern void popup_an_info(const char *fmt, ...) printflike(1, 2);
 typedef void abort_callback_t(void);
 extern void popup_printer_output(Boolean is_err, abort_callback_t *a,
 	const char *fmt, ...);
+extern void popup_child_output(Boolean is_err, abort_callback_t *a,
+	const char *fmt, ...);
+extern void child_popup_init(void);
