@@ -118,225 +118,224 @@ AppRes          appres;
 int		children = 0;
 Boolean		exiting = False;
 char	       *command_string = NULL;
-static Boolean	sfont = False;
-Boolean	       *standard_font = &sfont;
 char	       *profile_name = NULL;
 char	       *profile_path = NULL;
 
-struct toggle_name toggle_names[] = {
-#if defined(C3270) /*[*/
-	{ ResMonoCase,        MONOCASE,		False },
-	{ ResShowTiming,      SHOW_TIMING,	False },
-#endif /*]*/
-	{ ResTrace,           TRACING,		False },
-	{ ResDsTrace,         TRACING,		True },
-	{ ResLineWrap,        LINE_WRAP,	False },
-	{ ResBlankFill,       BLANK_FILL,	False },
-	{ ResScreenTrace,     SCREEN_TRACE,	False },
-	{ ResEventTrace,      TRACING,		True },
-#if defined(WC3270) /*[*/
-	{ ResMarginedPaste,   MARGINED_PASTE,	False },
-#endif /*]*/
-	{ ResAidWait,         AID_WAIT,		False },
-#if defined(C3270) /*[*/
-	{ ResUnderscore,      UNDERSCORE,	False },
-#endif /*]*/
-#if defined(WC3270) /*[*/
-	{ ResOverlayPaste,    OVERLAY_PASTE,	False },
-#endif /*]*/
-	{ NULL,               0,		False }
+/*
+ * Toggle names. Note that this is the whole list of names, and it not
+ * #ifdef'd by application. Which names are valid is controlled by the
+ * toggles_supported bitmap.
+ */
+toggle_name_t toggle_names[] = {
+    { ResMonoCase,        MONOCASE,	False },
+    { ResShowTiming,      SHOW_TIMING,	False },
+    { ResTrace,           TRACING,	False },
+    { ResDsTrace,         TRACING,	True },
+    { ResLineWrap,        LINE_WRAP,	False },
+    { ResBlankFill,       BLANK_FILL,	False },
+    { ResScreenTrace,     SCREEN_TRACE,	False },
+    { ResEventTrace,      TRACING,	True },
+    { ResMarginedPaste,   MARGINED_PASTE,False },
+    { ResAidWait,         AID_WAIT,	False },
+    { ResUnderscore,      UNDERSCORE,	False },
+    { ResOverlayPaste,    OVERLAY_PASTE,False },
+    { NULL,               0,		False }
 };
 
 
 int
 parse_command_line(int argc, const char **argv, const char **cl_hostname)
 {
-	int cl, i;
-	int hn_argc;
-	int sl;
-	int xcmd_len = 0;
-	char *xcmd;
-	int xargc;
-	const char **xargv;
-	Boolean read_session_or_profile = False;
+    int cl, i;
+    int hn_argc;
+    int sl;
+    int xcmd_len = 0;
+    char *xcmd;
+    int xargc;
+    const char **xargv;
+    Boolean read_session_or_profile = False;
 
-	/* Figure out who we are */
+    /* Figure out who we are */
 #if defined(_WIN32) /*[*/
-	programname = strrchr(argv[0], '\\');
+    programname = strrchr(argv[0], '\\');
 #else /*][*/
-	programname = strrchr(argv[0], '/');
+    programname = strrchr(argv[0], '/');
 #endif /*]*/
-	if (programname)
-		++programname;
-	else
-		programname = argv[0];
+    if (programname) {
+	++programname;
+    } else {
+	programname = argv[0];
+    }
 
-	/* Save the command string for tracing purposes. */
-	cl = strlen(programname);
-	for (i = 0; i < argc; i++) {
-		cl += 1 + strlen(argv[i]);
-	}
-	cl++;
-	command_string = Malloc(cl);
-	(void) strcpy(command_string, programname);
-	for (i = 0; i < argc; i++) {
-		(void) strcat(strcat(command_string, " "), argv[i]);
-	}
+    /* Save the command string for tracing purposes. */
+    cl = strlen(programname);
+    for (i = 0; i < argc; i++) {
+	cl += 1 + strlen(argv[i]);
+    }
+    cl++;
+    command_string = Malloc(cl);
+    (void) strcpy(command_string, programname);
+    for (i = 0; i < argc; i++) {
+	(void) strcat(strcat(command_string, " "), argv[i]);
+    }
 
-	/*
-	 * Save the command-line options so they can be reapplied after
-	 * the session file or profile has been read in.
-	 */
-	xcmd_len = 0;
-	for (i = 0; i < argc; i++)
-		xcmd_len += strlen(argv[i]) + 1;
-	xcmd = Malloc(xcmd_len + 1);
-	xargv = (const char **)Malloc((argc + 1) * sizeof(char *));
-	xcmd_len = 0;
-	for (i = 0; i < argc; i++) {
-		xargv[i] = xcmd + xcmd_len;
-		(void) strcpy(xcmd + xcmd_len, argv[i]);
-		xcmd_len += strlen(argv[i]) + 1;
-	}
-	xargv[i] = NULL;
-	*(xcmd + xcmd_len) = '\0';
-	xargc = argc;
+    /*
+     * Save the command-line options so they can be reapplied after
+     * the session file or profile has been read in.
+     */
+    xcmd_len = 0;
+    for (i = 0; i < argc; i++) {
+	xcmd_len += strlen(argv[i]) + 1;
+    }
+    xcmd = Malloc(xcmd_len + 1);
+    xargv = (const char **)Malloc((argc + 1) * sizeof(char *));
+    xcmd_len = 0;
+    for (i = 0; i < argc; i++) {
+	xargv[i] = xcmd + xcmd_len;
+	(void) strcpy(xcmd + xcmd_len, argv[i]);
+	xcmd_len += strlen(argv[i]) + 1;
+    }
+    xargv[i] = NULL;
+    *(xcmd + xcmd_len) = '\0';
+    xargc = argc;
 
 #if defined(LOCAL_PROCESS) /*[*/ 
-        /* Pick out the -e option. */
-        parse_local_process(&argc, argv, cl_hostname);
+    /* Pick out the -e option. */
+    parse_local_process(&argc, argv, cl_hostname);
 #endif /*]*/    
 
-	/* Set the defaults. */
-	set_appres_defaults();
+    /* Set the defaults. */
+    set_appres_defaults();
 
-	/* Parse command-line options. */
-	parse_options(&argc, argv);
+    /* Parse command-line options. */
+    parse_options(&argc, argv);
 
-	/* Pick out the remaining -set and -clear toggle options. */
-	parse_set_clear(&argc, argv);
+    /* Pick out the remaining -set and -clear toggle options. */
+    parse_set_clear(&argc, argv);
 
-	/* Now figure out if there's a hostname. */
-	for (hn_argc = 1; hn_argc < argc; hn_argc++) {
-		if (!strcmp(argv[hn_argc], LAST_ARG))
-			break;
+    /* Now figure out if there's a hostname. */
+    for (hn_argc = 1; hn_argc < argc; hn_argc++) {
+	if (!strcmp(argv[hn_argc], LAST_ARG)) {
+	    break;
 	}
+    }
 
-	/* Verify command-line syntax. */
-	switch (hn_argc) {
-	    case 1:
-		break;
-	    case 2:
-		no_minus(argv[1]);
-		*cl_hostname = argv[1];
-		break;
-	    case 3:
-		no_minus(argv[1]);
-		no_minus(argv[2]);
-		*cl_hostname = xs_buffer("%s:%s", argv[1], argv[2]);
-		break;
-	    default:
-		usage("Too many command-line arguments");
-		break;
+    /* Verify command-line syntax. */
+    switch (hn_argc) {
+    case 1:
+	break;
+    case 2:
+	no_minus(argv[1]);
+	*cl_hostname = argv[1];
+	break;
+    case 3:
+	no_minus(argv[1]);
+	no_minus(argv[2]);
+	*cl_hostname = xs_buffer("%s:%s", argv[1], argv[2]);
+	break;
+    default:
+	usage("Too many command-line arguments");
+	break;
+    }
+
+    /* Delete the host name and any "--". */
+    if (argv[hn_argc] != NULL && !strcmp(argv[hn_argc], LAST_ARG)) {
+	hn_argc++;
+    }
+    if (hn_argc > 1) {
+	for (i = 1; i < argc - hn_argc + 2; i++) {
+	    argv[i] = argv[i + hn_argc - 1];
 	}
+    }
 
-	/* Delete the host name and any "--". */
-	if (argv[hn_argc] != NULL && !strcmp(argv[hn_argc], LAST_ARG))
-		hn_argc++;
-	if (hn_argc > 1) {
-		for (i = 1; i < argc - hn_argc + 2; i++) {
-			argv[i] = argv[i + hn_argc - 1];
-		}
-	}
-
-	/* Merge in the session. */
-	if (*cl_hostname != NULL &&
-	    (((sl = strlen(*cl_hostname)) > SESSION_SFX_LEN &&
-	      !strcasecmp(*cl_hostname + sl - SESSION_SFX_LEN, SESSION_SFX))
+    /* Merge in the session. */
+    if (*cl_hostname != NULL &&
+	(((sl = strlen(*cl_hostname)) > SESSION_SFX_LEN &&
+	  !strcasecmp(*cl_hostname + sl - SESSION_SFX_LEN, SESSION_SFX))
 #if defined(_WIN32) /*[*/
-	     || ((sl = strlen(*cl_hostname)) > SESSION_SSFX_LEN &&
-	      !strcasecmp(*cl_hostname + sl - SESSION_SSFX_LEN, SESSION_SSFX))
+	 || ((sl = strlen(*cl_hostname)) > SESSION_SSFX_LEN &&
+	  !strcasecmp(*cl_hostname + sl - SESSION_SSFX_LEN, SESSION_SSFX))
 #endif /*]*/
-	     )) {
+	 )) {
 
-		const char *pname;
+	const char *pname;
 
-		if (!read_resource_file(*cl_hostname, True)) {
-		    	x3270_exit(1);
-		}
+	if (!read_resource_file(*cl_hostname, True)) {
+	    x3270_exit(1);
+	}
 
-		read_session_or_profile = True;
+	read_session_or_profile = True;
 
-		pname = strrchr(*cl_hostname, '\\');
-		if (pname != NULL)
-		    	pname++;
-		else
-		    	pname = *cl_hostname;
-		profile_name = NewString(pname);
-		Replace(profile_path, NewString(profile_name));
-
-		sl = strlen(profile_name);
-		if (sl > SESSION_SFX_LEN &&
-			!strcasecmp(profile_name + sl - SESSION_SFX_LEN,
-				SESSION_SFX)) {
-			profile_name[sl - SESSION_SFX_LEN] = '\0';
-#if defined(_WIN32) /*[*/
-		} else if (sl > SESSION_SSFX_LEN &&
-			!strcasecmp(profile_name + sl - SESSION_SSFX_LEN,
-				SESSION_SSFX)) {
-			profile_name[sl - SESSION_SSFX_LEN] = '\0';
-#endif /*]*/
-		}
-
-		*cl_hostname = appres.hostname; /* might be NULL */
+	pname = strrchr(*cl_hostname, '\\');
+	if (pname != NULL) {
+	    pname++;
 	} else {
-	    	/* There is no session file. */
+	    pname = *cl_hostname;
+	}
+	profile_name = NewString(pname);
+	Replace(profile_path, NewString(profile_name));
+
+	sl = strlen(profile_name);
+	if (sl > SESSION_SFX_LEN &&
+		!strcasecmp(profile_name + sl - SESSION_SFX_LEN,
+		    SESSION_SFX)) {
+	    profile_name[sl - SESSION_SFX_LEN] = '\0';
+#if defined(_WIN32) /*[*/
+	} else if (sl > SESSION_SSFX_LEN &&
+		!strcasecmp(profile_name + sl - SESSION_SSFX_LEN,
+			SESSION_SSFX)) {
+	    profile_name[sl - SESSION_SSFX_LEN] = '\0';
+#endif /*]*/
+	}
+
+	*cl_hostname = appres.hostname; /* might be NULL */
+    } else {
+	/* There is no session file. */
 
 #if defined(C3270) && !defined(_WIN32) /*[*/
-		/*
-		 * For c3270 only, read in the c3270 profile (~/.c3270pro).
-		 */
-	    	read_session_or_profile = merge_profile();
+	/* For c3270 only, read in the c3270 profile (~/.c3270pro). */
+	read_session_or_profile = merge_profile();
 #endif /*]*/
-		/*
-		 * If there was a hostname resource defined somewhere, but not
-		 * as a positional command-line argument, pretend it was one,
-		 * so we will connect to it at start-up.
-		 */
-		if (*cl_hostname == NULL && appres.hostname != NULL)
-		    	*cl_hostname = appres.hostname;
-	}
-
 	/*
-	 * Now parse the command-line arguments again, so they take
-	 * precedence over the session file or profile.
+	 * If there was a hostname resource defined somewhere, but not
+	 * as a positional command-line argument, pretend it was one,
+	 * so we will connect to it at start-up.
 	 */
-	if (read_session_or_profile) {
-		parse_options(&xargc, xargv);
-		parse_set_clear(&xargc, xargv);
+	if (*cl_hostname == NULL && appres.hostname != NULL) {
+	    *cl_hostname = appres.hostname;
 	}
-	/* Can't free xcmd, parts of it are still in use. */
-	Free((char *)xargv);
+    }
 
-	/*
-	 * All right, we have all of the resources defined.
-	 * Sort out the contradictory and implicit settings.
-	 */
+    /*
+     * Now parse the command-line arguments again, so they take
+     * precedence over the session file or profile.
+     */
+    if (read_session_or_profile) {
+	parse_options(&xargc, xargv);
+	parse_set_clear(&xargc, xargv);
+    }
+    /* Can't free xcmd, parts of it are still in use. */
+    Free((char *)xargv);
 
-	if (appres.apl_mode) {
-		appres.charset = Apl;
-	}
-	if (*cl_hostname == NULL) {
-		appres.once = False;
-	}
-	if (appres.conf_dir == NULL) {
-		appres.conf_dir = LIBX3270DIR;
-	}
-	if (!appres.debug_tracing) {
-		 appres.toggle[TRACING].value = False;
-	}
+    /*
+     * All right, we have all of the resources defined.
+     * Sort out the contradictory and implicit settings.
+     */
 
-	return argc;
+    if (appres.apl_mode) {
+	appres.charset = Apl;
+    }
+    if (*cl_hostname == NULL) {
+	appres.once = False;
+    }
+    if (appres.conf_dir == NULL) {
+	appres.conf_dir = LIBX3270DIR;
+    }
+    if (!appres.debug_tracing) {
+	 appres.toggle[TRACING].value = False;
+    }
+
+    return argc;
 }
 
 /*
@@ -346,72 +345,73 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 void
 model_init(void)
 {
-	int model_number;
-	int ovc, ovr;
+    int model_number;
+    int ovc, ovr;
 
-	/*
-	 * Sort out model and color modes, based on the model number resource.
-	 */
-	model_number = parse_model_number(appres.model);
-	if (model_number < 0) {
-		popup_an_error("Invalid model number: %s", appres.model);
-		model_number = 0;
-	}
-	if (!model_number) {
+    /*
+     * Sort out model and color modes, based on the model number resource.
+     */
+    model_number = parse_model_number(appres.model);
+    if (model_number < 0) {
+	popup_an_error("Invalid model number: %s", appres.model);
+	model_number = 0;
+    }
+    if (!model_number) {
 #if defined(RESTRICT_3279) /*[*/
-		model_number = 3;
+	model_number = 3;
 #else /*][*/
-		model_number = 4;
+	model_number = 4;
 #endif /*]*/
-	}
+    }
 #if defined(RESTRICT_3279) /*[*/
-	if (appres.m3279 && model_number == 4) {
-		model_number = 3;
-	}
+    if (appres.m3279 && model_number == 4) {
+	model_number = 3;
+    }
 #endif /*]*/
 #if defined(C3270) && !defined(_WIN32) /*[*/
-	if (appres.mono)
-		appres.m3279 = False;
+    if (appres.mono) {
+	appres.m3279 = False;
+    }
 #endif /*]*/
 
-	if (!appres.extended) {
-		appres.oversize = NULL;
-	}
+    if (!appres.extended) {
+	appres.oversize = NULL;
+    }
 
-	ovc = 0;
-	ovr = 0;
-	if (appres.extended && appres.oversize != NULL) {
+    ovc = 0;
+    ovr = 0;
+    if (appres.extended && appres.oversize != NULL) {
 #if defined(C3270) /*[*/
-	    	if (!strcasecmp(appres.oversize, "auto")) {
-		    	ovc = -1;
-			ovr = -1;
-		} else
+	if (!strcasecmp(appres.oversize, "auto")) {
+	    ovc = -1;
+	    ovr = -1;
+	} else
 #endif /*]*/
-		{
-		    	int x_ovc, x_ovr;
-			char junk;
+	{
+	    int x_ovc, x_ovr;
+	    char junk;
 
-			if (sscanf(appres.oversize, "%dx%d%c", &x_ovc, &x_ovr,
-				    &junk) == 2) {
-			    	ovc = x_ovc;
-				ovr = x_ovr;
-			}
-		}
+	    if (sscanf(appres.oversize, "%dx%d%c", &x_ovc, &x_ovr,
+			&junk) == 2) {
+		ovc = x_ovc;
+		ovr = x_ovr;
+	    }
 	}
-	set_rows_cols(model_number, ovc, ovr);
-	if (appres.termname != NULL) {
-		termtype = appres.termname;
-	} else {
-		termtype = full_model_name;
-	}
+    }
+    set_rows_cols(model_number, ovc, ovr);
+    if (appres.termname != NULL) {
+	termtype = appres.termname;
+    } else {
+	termtype = full_model_name;
+    }
 }
-
 
 static void
 no_minus(const char *arg)
 {
-	if (arg[0] == '-')
-	    usage(xs_buffer("Unknown or incomplete option: %s", arg));
+    if (arg[0] == '-') {
+	usage(xs_buffer("Unknown or incomplete option: %s", arg));
+    }
 }
 
 #if defined(LOCAL_PROCESS) /*[*/
@@ -421,138 +421,137 @@ no_minus(const char *arg)
 static void
 parse_local_process(int *argcp, const char **argv, const char **cmds)
 {
-	int i, j;
-	int e_len = -1;
-	char *cmds_buf = NULL;
+    int i, j;
+    int e_len = -1;
+    char *cmds_buf = NULL;
 
-	for (i = 1; i < *argcp; i++) {
-		if (strcmp(argv[i], OptLocalProcess))
-			continue;
-
-		/* Matched.  Copy 'em. */
-		e_len = strlen(OptLocalProcess) + 1;
-		for (j = i+1; j < *argcp; j++) {
-			e_len += 1 + strlen(argv[j]);
-		}
-		e_len++;
-		cmds_buf = Malloc(e_len);
-		(void) strcpy(cmds_buf, OptLocalProcess);
-		for (j = i+1; j < *argcp; j++) {
-			(void) strcat(strcat(cmds_buf, " "), argv[j]);
-		}
-
-		/* Stamp out the remaining args. */
-		*argcp = i;
-		argv[i] = NULL;
-		break;
+    for (i = 1; i < *argcp; i++) {
+	if (strcmp(argv[i], OptLocalProcess)) {
+	    continue;
 	}
-	*cmds = cmds_buf;
+
+	/* Matched.  Copy 'em. */
+	e_len = strlen(OptLocalProcess) + 1;
+	for (j = i+1; j < *argcp; j++) {
+	    e_len += 1 + strlen(argv[j]);
+	}
+	e_len++;
+	cmds_buf = Malloc(e_len);
+	(void) strcpy(cmds_buf, OptLocalProcess);
+	for (j = i+1; j < *argcp; j++) {
+	    (void) strcat(strcat(cmds_buf, " "), argv[j]);
+	}
+
+	/* Stamp out the remaining args. */
+	*argcp = i;
+	argv[i] = NULL;
+	break;
+    }
+    *cmds = cmds_buf;
 }
 #endif /*]*/
 
 static void
 set_appres_defaults(void)
 {
-	/* Set the defaults. */
+    /* Set the defaults. */
 #if defined(C3270) && !defined(_WIN32) /*[*/
-	appres.mono = False;
+    appres.mono = False;
 #endif /*]*/
-	appres.extended = True;
-	appres.m3279 = True;
-	appres.modified_sel = False;
-	appres.apl_mode = False;
+    appres.extended = True;
+    appres.m3279 = True;
+    appres.modified_sel = False;
+    appres.apl_mode = False;
 #if defined(C3270) || defined(TCL3270) /*[*/
-	appres.scripted = False;
+    appres.scripted = False;
 #else /*][*/
-	appres.scripted = True;
+    appres.scripted = True;
 #endif /*]*/
-	appres.numeric_lock = False;
-	appres.secure = False;
+    appres.numeric_lock = False;
+    appres.secure = False;
 #if defined(C3270) /*[*/
-	appres.oerr_lock = True;
+    appres.oerr_lock = True;
 #else /*][*/
-	appres.oerr_lock = False;
+    appres.oerr_lock = False;
 #endif /*]*/
-	appres.typeahead = True;
-	appres.debug_tracing = True;
+    appres.typeahead = True;
+    appres.debug_tracing = True;
 #if defined(C3270) /*[*/
-	appres.compose_map = "latin1";
-	appres.do_confirms = True;
-	appres.menubar = True;
-	appres.reconnect = False;
+    appres.compose_map = "latin1";
+    appres.do_confirms = True;
+    appres.menubar = True;
+    appres.reconnect = False;
 #endif /*]*/
 
-	appres.model = "4";
-	appres.hostsfile = NULL;
-	appres.port = "23";
-	appres.charset = "bracket";
-	appres.termname = NULL;
-	appres.macros = NULL;
+    appres.model = "4";
+    appres.hostsfile = NULL;
+    appres.port = "23";
+    appres.charset = "bracket";
+    appres.termname = NULL;
+    appres.macros = NULL;
 #if !defined(_WIN32) /*[*/
-	appres.trace_dir = "/tmp";
+    appres.trace_dir = "/tmp";
 #endif /*]*/
 #if defined(WC3270) /*[*/
-	appres.trace_monitor = True;
+    appres.trace_monitor = True;
 #else /*][*/
-	appres.trace_monitor = False;
+    appres.trace_monitor = False;
 #endif /*]*/
-	appres.oversize = NULL;
+    appres.oversize = NULL;
 #if defined(C3270) /*[*/
-	appres.meta_escape = "auto";
-	appres.curses_keypad = True;
-	appres.cbreak_mode = False;
+    appres.meta_escape = "auto";
+    appres.curses_keypad = True;
+    appres.cbreak_mode = False;
 # if !defined(_WIN32) && !defined(CURSES_WIDE) /*[*/
-	appres.ascii_box_draw = True;
+    appres.ascii_box_draw = True;
 # else /*][*/
-	appres.ascii_box_draw = False;
+    appres.ascii_box_draw = False;
 # endif /*]*/
 # if !defined(_WIN32) /*[*/
-	appres.mouse = True;
+    appres.mouse = True;
 # endif /*]*/
 #if defined(CURSES_WIDE) /*[*/
-	appres.acs = True;
+    appres.acs = True;
 #endif /*]*/
 #endif /*]*/
-	appres.bind_limit = True;
-	appres.new_environ = True;
+    appres.bind_limit = True;
+    appres.new_environ = True;
 
-	appres.icrnl = True;
-	appres.inlcr = False;
-	appres.onlcr = True;
-	appres.erase = "^H";
-	appres.kill = "^U";
-	appres.werase = "^W";
-	appres.rprnt = "^R";
-	appres.lnext = "^V";
-	appres.intr = "^C";
-	appres.quit = "^\\";
-	appres.eof = "^D";
+    appres.icrnl = True;
+    appres.inlcr = False;
+    appres.onlcr = True;
+    appres.erase = "^H";
+    appres.kill = "^U";
+    appres.werase = "^W";
+    appres.rprnt = "^R";
+    appres.lnext = "^V";
+    appres.intr = "^C";
+    appres.quit = "^\\";
+    appres.eof = "^D";
 
-	appres.unlock_delay = True;
-	appres.unlock_delay_ms = 350;
+    appres.unlock_delay = True;
+    appres.unlock_delay_ms = 350;
 
-	appres.dft_buffer_size = DFT_BUF;
+    appres.dft_buffer_size = DFT_BUF;
 
-#if defined(C3270) /*[*/
-	appres.toggle[CURSOR_POS].value = True;
-#endif /*]*/
-	appres.toggle[AID_WAIT].value = True;
+    appres.toggle[CURSOR_POS].value = True;
+    appres.toggle[AID_WAIT].value = True;
 #if defined(WC3270) /*[*/
-	appres.toggle[UNDERSCORE].value = True;
+    appres.toggle[UNDERSCORE].value = True;
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-	appres.local_cp = GetACP();
+    appres.local_cp = GetACP();
 #endif /*]*/
-	appres.devname = "x3270";
+    appres.devname = "x3270";
 
 #if defined(HAVE_LIBSSL) /*[*/
-	appres.verify_host_cert = False;
-	appres.tls = True;
+    appres.verify_host_cert = False;
+    appres.tls = True;
 #endif /*]*/
 
 #if defined(C3270) /*[*/
-	appres.save_lines = 4096;
+    appres.save_lines = 4096;
 #endif /*]*/
 }
 
@@ -582,16 +581,16 @@ set_appres_defaults(void)
 #define offset(n) (void *)&appres.n
 #define toggle_offset(index) offset(toggle[index].value)
 static struct {
-	const char *name;
-	enum {
-	    OPT_BOOLEAN, OPT_STRING, OPT_XRM, OPT_SKIP2, OPT_NOP,
-	    OPT_INT, OPT_V, OPT_DONE
-	} type;
-	Boolean flag;
-	const char *res_name;
-	void *aoff;
-	char *help_opts;
-	char *help_text;
+    const char *name;
+    enum {
+	OPT_BOOLEAN, OPT_STRING, OPT_XRM, OPT_SKIP2, OPT_NOP,
+	OPT_INT, OPT_V, OPT_DONE
+    } type;
+    Boolean flag;
+    const char *res_name;
+    void *aoff;
+    char *help_opts;
+    char *help_text;
 } opts[] = {
 #if defined(HAVE_LIBSSL) /*[*/
 { OptAcceptHostname,OPT_STRING,False,ResAcceptHostname,offset(accept_hostname),
@@ -772,82 +771,83 @@ static struct {
 static void
 parse_options(int *argcp, const char **argv)
 {
-	int i, j;
-	int argc_out = 0;
-	const char **argv_out =
-	    (const char **) Malloc((*argcp + 1) * sizeof(char *));
+    int i, j;
+    int argc_out = 0;
+    const char **argv_out =
+	(const char **) Malloc((*argcp + 1) * sizeof(char *));
 
-	/* Parse the command-line options. */
-	argv_out[argc_out++] = argv[0];
+    /* Parse the command-line options. */
+    argv_out[argc_out++] = argv[0];
 
-	for (i = 1; i < *argcp; i++) {
-		for (j = 0; opts[j].name != NULL; j++) {
-			if (!strcmp(argv[i], opts[j].name))
-				break;
-		}
-		if (opts[j].name == NULL) {
-			argv_out[argc_out++] = argv[i];
-			continue;
-		}
-
-		switch (opts[j].type) {
-		    case OPT_BOOLEAN:
-			*(Boolean *)opts[j].aoff = opts[j].flag;
-			if (opts[j].res_name != NULL)
-				add_resource(NewString(opts[j].name),
-					     opts[j].flag? "True": "False");
-			break;
-		    case OPT_STRING:
-			if (i == *argcp - 1) {	/* missing arg */
-				popup_an_error("Missing value for '%s'",
-					argv[i]);
-				continue;
-			}
-			*(const char **)opts[j].aoff = argv[++i];
-			if (opts[j].res_name != NULL)
-				add_resource(NewString(opts[j].res_name),
-					     NewString(argv[i]));
-			break;
-		    case OPT_XRM:
-			if (i == *argcp - 1) {	/* missing arg */
-				popup_an_error("Missing value for '%s'",
-					argv[i]);
-				continue;
-			}
-			parse_xrm(argv[++i], "-xrm");
-			break;
-		    case OPT_SKIP2:
-			argv_out[argc_out++] = argv[i++];
-			if (i < *argcp)
-				argv_out[argc_out++] = argv[i];
-			break;
-		    case OPT_NOP:
-			break;
-		    case OPT_INT:
-			if (i == *argcp - 1) {	/* missing arg */
-				popup_an_error("Missing value for '%s'",
-					argv[i]);
-				continue;
-			}
-			*(int *)opts[j].aoff = atoi(argv[++i]);
-			if (opts[j].res_name != NULL)
-				add_resource(NewString(opts[j].name),
-					     NewString(argv[i]));
-			break;
-		    case OPT_V:
-			dump_version();
-			break;
-		    case OPT_DONE:
-			while (i < *argcp)
-				argv_out[argc_out++] = argv[i++];
-			break;
-		}
+    for (i = 1; i < *argcp; i++) {
+	for (j = 0; opts[j].name != NULL; j++) {
+	    if (!strcmp(argv[i], opts[j].name)) {
+		break;
+	    }
 	}
-	*argcp = argc_out;
-	argv_out[argc_out] = NULL;
-	(void) memcpy((char *)argv, (char *)argv_out,
-	    (argc_out + 1) * sizeof(char *));
-	Free((char *)argv_out);
+	if (opts[j].name == NULL) {
+	    argv_out[argc_out++] = argv[i];
+	    continue;
+	}
+
+	switch (opts[j].type) {
+	case OPT_BOOLEAN:
+	    *(Boolean *)opts[j].aoff = opts[j].flag;
+	    if (opts[j].res_name != NULL) {
+		add_resource(NewString(opts[j].name),
+			opts[j].flag? "True": "False");
+	    }
+	    break;
+	case OPT_STRING:
+	    if (i == *argcp - 1) {	/* missing arg */
+		popup_an_error("Missing value for '%s'", argv[i]);
+		continue;
+	    }
+	    *(const char **)opts[j].aoff = argv[++i];
+	    if (opts[j].res_name != NULL) {
+		add_resource(NewString(opts[j].res_name), NewString(argv[i]));
+	    }
+	    break;
+	case OPT_XRM:
+	    if (i == *argcp - 1) {	/* missing arg */
+		popup_an_error("Missing value for '%s'", argv[i]);
+		continue;
+	    }
+	    parse_xrm(argv[++i], "-xrm");
+	    break;
+	case OPT_SKIP2:
+	    argv_out[argc_out++] = argv[i++];
+	    if (i < *argcp) {
+		argv_out[argc_out++] = argv[i];
+	    }
+	    break;
+	case OPT_NOP:
+	    break;
+	case OPT_INT:
+	    if (i == *argcp - 1) {	/* missing arg */
+		popup_an_error("Missing value for '%s'", argv[i]);
+		continue;
+	    }
+	    *(int *)opts[j].aoff = atoi(argv[++i]);
+	    if (opts[j].res_name != NULL) {
+		add_resource(NewString(opts[j].name), NewString(argv[i]));
+	    }
+	    break;
+	case OPT_V:
+	    dump_version();
+	    break;
+	case OPT_DONE:
+	    while (i < *argcp) {
+		argv_out[argc_out++] = argv[i++];
+	    }
+	    break;
+	}
+    }
+    *argcp = argc_out;
+    argv_out[argc_out] = NULL;
+    (void) memcpy((char *)argv, (char *)argv_out,
+    (argc_out + 1) * sizeof(char *));
+    Free((char *)argv_out);
 }
 
 /* Disply command-line help. */
@@ -888,63 +888,69 @@ name_cmp(const void *p1, const void *p2)
 static void
 parse_set_clear(int *argcp, const char **argv)
 {
-	int i, j;
-	int argc_out = 0;
-	const char **argv_out =
-	    (const char **) Malloc((*argcp + 1) * sizeof(char *));
+    int i, j;
+    int argc_out = 0;
+    const char **argv_out =
+	(const char **) Malloc((*argcp + 1) * sizeof(char *));
 
-	argv_out[argc_out++] = argv[0];
+    argv_out[argc_out++] = argv[0];
 
-	for (i = 1; i < *argcp; i++) {
-		Boolean is_set = False;
+    for (i = 1; i < *argcp; i++) {
+	Boolean is_set = False;
 
-		if (!strcmp(argv[i], OptSet))
-			is_set = True;
-		else if (strcmp(argv[i], OptClear)) {
-			argv_out[argc_out++] = argv[i];
-			continue;
-		}
-
-		if (i == *argcp - 1)	/* missing arg */
-			continue;
-
-		/* Delete the argument. */
-		i++;
-
-		for (j = 0; toggle_names[j].name != NULL; j++) {
-			if (!strcasecmp(argv[i], toggle_names[j].name)) {
-				appres.toggle[toggle_names[j].index].value =
-				    is_set;
-				break;
-			}
-		}
-		if (toggle_names[j].name == NULL) {
-			ccp_t *tn;
-			int ntn = 0;
-
-			tn = (ccp_t *)Calloc(N_TOGGLES, sizeof(ccp_t));
-			for (j = 0; toggle_names[j].name != NULL; j++) {
-				if (!toggle_names[j].is_alias) {
-					tn[ntn++] = toggle_names[j].name;
-				}
-			}
-			qsort((void *)tn, ntn, sizeof(const char *), name_cmp);
-			fprintf(stderr, "Unknown toggle name '%s'. Toggle "
-				"names are:\n", argv[i]);
-			for (j = 0; j < ntn; j++) {
-				fprintf(stderr, " %s", tn[j]);
-			}
-			fprintf(stderr, "\n");
-			Free((void *)tn);
-			exit(1);
-		}
-
+	if (!strcmp(argv[i], OptSet)) {
+	    is_set = True;
+	} else if (strcmp(argv[i], OptClear)) {
+	    argv_out[argc_out++] = argv[i];
+	    continue;
 	}
-	*argcp = argc_out;
-	argv_out[argc_out] = NULL;
-	(void) memcpy((char *)argv, (char *)argv_out,
+
+	if (i == *argcp - 1) {	/* missing arg */
+	    continue;
+	}
+
+	/* Delete the argument. */
+	i++;
+
+	for (j = 0; toggle_names[j].name != NULL; j++) {
+	    if (!TOGGLE_SUPPORTED(toggle_names[j].index)) {
+		continue;
+	    }
+	    if (!strcasecmp(argv[i], toggle_names[j].name)) {
+		appres.toggle[toggle_names[j].index].value = is_set;
+		break;
+	    }
+	}
+	if (toggle_names[j].name == NULL) {
+	    ccp_t *tn;
+	    int ntn = 0;
+
+	    tn = (ccp_t *)Calloc(N_TOGGLES, sizeof(ccp_t));
+	    for (j = 0; toggle_names[j].name != NULL; j++) {
+		if (!TOGGLE_SUPPORTED(toggle_names[j].index)) {
+		    continue;
+		}
+		if (!toggle_names[j].is_alias) {
+		    tn[ntn++] = toggle_names[j].name;
+		}
+	    }
+	    qsort((void *)tn, ntn, sizeof(const char *), name_cmp);
+	    fprintf(stderr, "Unknown toggle name '%s'. Toggle names are:\n",
+		    argv[i]);
+	    for (j = 0; j < ntn; j++) {
+		fprintf(stderr, " %s", tn[j]);
+	    }
+	    fprintf(stderr, "\n");
+	    Free((void *)tn);
+	    exit(1);
+	}
+
+    }
+    *argcp = argc_out;
+    argv_out[argc_out] = NULL;
+    (void) memcpy((char *)argv, (char *)argv_out,
 	    (argc_out + 1) * sizeof(char *));
-	Free((char *)argv_out);
+    Free((char *)argv_out);
 }
 
 /*
@@ -1023,143 +1029,143 @@ parse_model_number(char *m)
  */
 
 static struct {
-	const char *name;
-	void *address;
-	enum resource_type { XRM_STRING, XRM_BOOLEAN, XRM_INT } type;
+    const char *name;
+    void *address;
+    enum resource_type { XRM_STRING, XRM_BOOLEAN, XRM_INT } type;
 } resources[] = {
 #if defined(C3270) /*[*/
-	{ ResAllBold,	offset(all_bold),	XRM_STRING },
-	{ ResAltScreen,	offset(altscreen),	XRM_STRING },
+    { ResAllBold,	offset(all_bold),	XRM_STRING },
+    { ResAltScreen,	offset(altscreen),	XRM_STRING },
 #endif /*]*/
 #if defined(WC3270) /*[*/
-	{ ResAutoShortcut,offset(auto_shortcut),XRM_BOOLEAN },
-	{ ResBellMode,offset(bell_mode),	XRM_STRING },
+    { ResAutoShortcut,offset(auto_shortcut),XRM_BOOLEAN },
+    { ResBellMode,offset(bell_mode),		XRM_STRING },
 #endif /*]*/
-	{ ResBindLimit,	offset(bind_limit),	XRM_BOOLEAN },
-	{ ResBsdTm,	offset(bsd_tm),		XRM_BOOLEAN },
+    { ResBindLimit,	offset(bind_limit),	XRM_BOOLEAN },
+    { ResBsdTm,	offset(bsd_tm),			XRM_BOOLEAN },
 #if defined(HAVE_LIBSSL) /*[*/
-	{ ResAcceptHostname,offset(accept_hostname),XRM_STRING },
-	{ ResCaDir,	offset(ca_dir),		XRM_STRING },
-	{ ResCaFile,	offset(ca_file),	XRM_STRING },
-	{ ResCertFile,	offset(cert_file),	XRM_STRING },
-	{ ResCertFileType,offset(cert_file_type),XRM_STRING },
-	{ ResChainFile,	offset(chain_file),	XRM_STRING },
+    { ResAcceptHostname,offset(accept_hostname),XRM_STRING },
+    { ResCaDir,	offset(ca_dir),			XRM_STRING },
+    { ResCaFile,	offset(ca_file),	XRM_STRING },
+    { ResCertFile,	offset(cert_file),	XRM_STRING },
+    { ResCertFileType,offset(cert_file_type),	XRM_STRING },
+    { ResChainFile,	offset(chain_file),	XRM_STRING },
 #endif /*]*/
-	{ ResCharset,	offset(charset),	XRM_STRING },
-	{ ResColor8,	offset(color8),		XRM_BOOLEAN },
+    { ResCharset,	offset(charset),	XRM_STRING },
+    { ResColor8,	offset(color8),		XRM_BOOLEAN },
 #if defined(TCL3270) /*[*/
-	{ ResCommandTimeout, offset(command_timeout), XRM_INT },
+    { ResCommandTimeout, offset(command_timeout), XRM_INT },
 #endif /*]*/
-	{ ResConfDir,	offset(conf_dir),	XRM_STRING },
-	{ ResDbcsCgcsgid, offset(dbcs_cgcsgid),	XRM_STRING },
+    { ResConfDir,	offset(conf_dir),	XRM_STRING },
+    { ResDbcsCgcsgid, offset(dbcs_cgcsgid),	XRM_STRING },
 #if defined(C3270) /*[*/
 # if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
-	{ ResDefaultFgBg,offset(default_fgbg),	XRM_BOOLEAN },
+    { ResDefaultFgBg,offset(default_fgbg),	XRM_BOOLEAN },
 # endif /*]*/
-	{ ResDefScreen,	offset(defscreen),	XRM_STRING },
+    { ResDefScreen,	offset(defscreen),	XRM_STRING },
 #endif /*]*/
-	{ ResEof,	offset(eof),		XRM_STRING },
-	{ ResErase,	offset(erase),		XRM_STRING },
-	{ ResExtended,	offset(extended),	XRM_BOOLEAN },
-	{ ResDftBufferSize,offset(dft_buffer_size),XRM_INT },
-	{ ResHostname,	offset(hostname),	XRM_STRING },
-	{ ResHostsFile,	offset(hostsfile),	XRM_STRING },
-	{ ResIcrnl,	offset(icrnl),		XRM_BOOLEAN },
-	{ ResInlcr,	offset(inlcr),		XRM_BOOLEAN },
-	{ ResOnlcr,	offset(onlcr),		XRM_BOOLEAN },
-	{ ResIntr,	offset(intr),		XRM_STRING },
+    { ResEof,	offset(eof),			XRM_STRING },
+    { ResErase,	offset(erase),			XRM_STRING },
+    { ResExtended,	offset(extended),	XRM_BOOLEAN },
+    { ResDftBufferSize,offset(dft_buffer_size),XRM_INT },
+    { ResHostname,	offset(hostname),	XRM_STRING },
+    { ResHostsFile,	offset(hostsfile),	XRM_STRING },
+    { ResIcrnl,	offset(icrnl),			XRM_BOOLEAN },
+    { ResInlcr,	offset(inlcr),			XRM_BOOLEAN },
+    { ResOnlcr,	offset(onlcr),			XRM_BOOLEAN },
+    { ResIntr,	offset(intr),			XRM_STRING },
 #if defined(C3270) || defined(S3270) /*[*/
-	{ ResIdleCommand,offset(idle_command),	XRM_STRING },
-	{ ResIdleCommandEnabled,offset(idle_command_enabled),	XRM_BOOLEAN },
-	{ ResIdleTimeout,offset(idle_timeout),	XRM_STRING },
+    { ResIdleCommand,offset(idle_command),	XRM_STRING },
+    { ResIdleCommandEnabled,offset(idle_command_enabled),XRM_BOOLEAN },
+    { ResIdleTimeout,offset(idle_timeout),	XRM_STRING },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
-	{ ResKeyFile,	offset(key_file),	XRM_STRING },
-	{ ResKeyFileType,offset(key_file_type),	XRM_STRING },
-	{ ResKeyPasswd,	offset(key_passwd),	XRM_STRING },
+    { ResKeyFile,	offset(key_file),	XRM_STRING },
+    { ResKeyFileType,offset(key_file_type),	XRM_STRING },
+    { ResKeyPasswd,	offset(key_passwd),	XRM_STRING },
 #endif /*]*/
 #if defined(C3270) /*[*/
-	{ ResKeymap,	offset(key_map),	XRM_STRING },
-	{ ResMetaEscape,offset(meta_escape),	XRM_STRING },
-	{ ResCursesKeypad,offset(curses_keypad),XRM_BOOLEAN },
-	{ ResCbreak,	offset(cbreak_mode),	XRM_BOOLEAN },
-	{ ResAsciiBoxDraw,offset(ascii_box_draw),	XRM_BOOLEAN },
+    { ResKeymap,	offset(key_map),	XRM_STRING },
+    { ResMetaEscape,offset(meta_escape),	XRM_STRING },
+    { ResCursesKeypad,offset(curses_keypad),	XRM_BOOLEAN },
+    { ResCbreak,	offset(cbreak_mode),	XRM_BOOLEAN },
+    { ResAsciiBoxDraw,offset(ascii_box_draw),	XRM_BOOLEAN },
 #if defined(CURSES_WIDE) /*[*/
-	{ ResAcs,	offset(acs),		XRM_BOOLEAN },
+    { ResAcs,	offset(acs),			XRM_BOOLEAN },
 #endif /*]*/
 #endif /*]*/
-	{ ResKill,	offset(kill),		XRM_STRING },
-	{ ResLnext,	offset(lnext),		XRM_STRING },
+    { ResKill,	offset(kill),			XRM_STRING },
+    { ResLnext,	offset(lnext),			XRM_STRING },
 #if defined(_WIN32) /*[*/
-	{ ResLocalCp,	offset(local_cp),	XRM_INT },
-	{ ResFtCodePage, offset(ft_cp),		XRM_INT },
+    { ResLocalCp,	offset(local_cp),	XRM_INT },
+    { ResFtCodePage, offset(ft_cp),		XRM_INT },
 #endif /*]*/
-	{ ResLoginMacro,offset(login_macro),	XRM_STRING },
-	{ ResM3279,	offset(m3279),		XRM_BOOLEAN },
+    { ResLoginMacro,offset(login_macro),	XRM_STRING },
+    { ResM3279,	offset(m3279),			XRM_BOOLEAN },
 #if defined(C3270) /*[*/
-	{ ResMenuBar,	offset(menubar),	XRM_BOOLEAN },
+    { ResMenuBar,	offset(menubar),	XRM_BOOLEAN },
 #endif /*]*/
-	{ ResModel,	offset(model),		XRM_STRING },
-	{ ResModifiedSel, offset(modified_sel),	XRM_BOOLEAN },
+    { ResModel,	offset(model),			XRM_STRING },
+    { ResModifiedSel, offset(modified_sel),	XRM_BOOLEAN },
 #if defined(C3270) /*[*/
 # if !defined(_WIN32) /*[*/
-	{ ResMono,	offset(mono),		XRM_BOOLEAN },
-	{ ResMouse,	offset(mouse),		XRM_BOOLEAN },
+    { ResMono,	offset(mono),			XRM_BOOLEAN },
+    { ResMouse,	offset(mouse),			XRM_BOOLEAN },
 # endif /*]*/
-	{ ResNoPrompt,	offset(secure),		XRM_BOOLEAN },
+    { ResNoPrompt,	offset(secure),		XRM_BOOLEAN },
 #endif /*]*/
-	{ ResNewEnviron,offset(new_environ),	XRM_BOOLEAN },
-	{ ResNumericLock, offset(numeric_lock),	XRM_BOOLEAN },
-	{ ResOerrLock,	offset(oerr_lock),	XRM_BOOLEAN },
-	{ ResOversize,	offset(oversize),	XRM_STRING },
-	{ ResPort,	offset(port),		XRM_STRING },
+    { ResNewEnviron,offset(new_environ),	XRM_BOOLEAN },
+    { ResNumericLock, offset(numeric_lock),	XRM_BOOLEAN },
+    { ResOerrLock,	offset(oerr_lock),	XRM_BOOLEAN },
+    { ResOversize,	offset(oversize),	XRM_STRING },
+    { ResPort,	offset(port),			XRM_STRING },
 #if defined(C3270) /*[*/
-	{ ResPrinterLu,	offset(printer_lu),	XRM_STRING },
-	{ ResPrinterOptions,offset(printer_opts),XRM_STRING },
+    { ResPrinterLu,	offset(printer_lu),	XRM_STRING },
+    { ResPrinterOptions,offset(printer_opts),	XRM_STRING },
 #endif /*]*/
-	{ ResProxy,	offset(proxy),		XRM_STRING },
-	{ ResQrBgColor,	offset(qr_bg_color),	XRM_BOOLEAN },
-	{ ResQuit,	offset(quit),		XRM_STRING },
-	{ ResRprnt,	offset(rprnt),		XRM_STRING },
+    { ResProxy,	offset(proxy),			XRM_STRING },
+    { ResQrBgColor,	offset(qr_bg_color),	XRM_BOOLEAN },
+    { ResQuit,	offset(quit),			XRM_STRING },
+    { ResRprnt,	offset(rprnt),			XRM_STRING },
 #if defined(C3270) /*[*/
-	{ ResReconnect,	offset(reconnect),	XRM_BOOLEAN },
+    { ResReconnect,	offset(reconnect),	XRM_BOOLEAN },
 #if !defined(_WIN32) /*[*/
-	{ ResReverseVideo,offset(reverse_video),XRM_BOOLEAN },
+    { ResReverseVideo,offset(reverse_video),	XRM_BOOLEAN },
 #endif /*]*/
 #endif /*]*/
 #if defined(C3270) /*[*/
-	{ ResSaveLines,	offset(save_lines),	XRM_INT },
+    { ResSaveLines,	offset(save_lines),	XRM_INT },
 #endif /*]*/
-	{ ResScreenTraceFile,offset(screentrace_file),XRM_STRING },
-	{ ResSecure,	offset(secure),		XRM_BOOLEAN },
+    { ResScreenTraceFile,offset(screentrace_file),XRM_STRING },
+    { ResSecure,	offset(secure),		XRM_BOOLEAN },
 #if defined(HAVE_LIBSSL) /*[*/
-	{ ResSelfSignedOk,offset(self_signed_ok),XRM_BOOLEAN },
+    { ResSelfSignedOk,offset(self_signed_ok),	XRM_BOOLEAN },
 #endif /*]*/
-	{ ResSbcsCgcsgid, offset(sbcs_cgcsgid),	XRM_STRING },
-	{ ResScriptPort,offset(script_port),	XRM_STRING },
-	{ ResTermName,	offset(termname),	XRM_STRING },
+    { ResSbcsCgcsgid, offset(sbcs_cgcsgid),	XRM_STRING },
+    { ResScriptPort,offset(script_port),	XRM_STRING },
+    { ResTermName,	offset(termname),	XRM_STRING },
 #if defined(WC3270) /*[*/
-	{ ResTitle,	offset(title),		XRM_STRING },
+    { ResTitle,	offset(title),			XRM_STRING },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
-	{ ResTls,	offset(tls),		XRM_BOOLEAN },
+    { ResTls,	offset(tls),			XRM_BOOLEAN },
 #endif /*]*/
-	{ ResTraceDir,	offset(trace_dir),	XRM_STRING },
-	{ ResTraceFile,	offset(trace_file),	XRM_STRING },
-	{ ResTraceFileSize,offset(trace_file_size),XRM_STRING },
-	{ ResTraceMonitor,offset(trace_monitor),XRM_BOOLEAN },
-	{ ResTypeahead,	offset(typeahead),	XRM_BOOLEAN },
-	{ ResUnlockDelay,offset(unlock_delay),	XRM_BOOLEAN },
-	{ ResUnlockDelayMs,offset(unlock_delay_ms),XRM_INT },
+    { ResTraceDir,	offset(trace_dir),	XRM_STRING },
+    { ResTraceFile,	offset(trace_file),	XRM_STRING },
+    { ResTraceFileSize,offset(trace_file_size),	XRM_STRING },
+    { ResTraceMonitor,offset(trace_monitor),	XRM_BOOLEAN },
+    { ResTypeahead,	offset(typeahead),	XRM_BOOLEAN },
+    { ResUnlockDelay,offset(unlock_delay),	XRM_BOOLEAN },
+    { ResUnlockDelayMs,offset(unlock_delay_ms),	XRM_INT },
 #if defined(HAVE_LIBSSL) /*[*/
-	{ ResVerifyHostCert,offset(verify_host_cert),XRM_BOOLEAN },
+    { ResVerifyHostCert,offset(verify_host_cert),XRM_BOOLEAN },
 #endif /*]*/
 #if defined(WC3270) /*[*/
-	{ ResVisualBell,offset(visual_bell),	XRM_BOOLEAN },
+    { ResVisualBell,offset(visual_bell),	XRM_BOOLEAN },
 #endif /*]*/
-	{ ResWerase,	offset(werase),		XRM_STRING },
+    { ResWerase,	offset(werase),		XRM_STRING },
 
-	{ NULL,		0,			XRM_STRING }
+    { NULL,		0,			XRM_STRING }
 };
 
 /*
@@ -1169,15 +1175,18 @@ static struct {
 static int
 strncapcmp(const char *known, const char *unknown, unsigned unk_len)
 {
-	if (unk_len != strlen(known))
-		return -1;
-	if (!strncmp(known, unknown, unk_len))
-		return 0;
-	if (unk_len > 1 &&
-	    unknown[0] == toupper(known[0]) &&
-	    !strncmp(known + 1, unknown + 1, unk_len - 1))
-		return 0;
+    if (unk_len != strlen(known)) {
 	return -1;
+    }
+    if (!strncmp(known, unknown, unk_len)) {
+	return 0;
+    }
+    if (unk_len > 1 &&
+	unknown[0] == toupper(known[0]) &&
+	!strncmp(known + 1, unknown + 1, unk_len - 1)) {
+	return 0;
+    }
+    return -1;
 }
 
 #if defined(C3270) /*[*/
@@ -1208,86 +1217,88 @@ struct host_color host_color[] = {
 static int
 valid_explicit(const char *resname, unsigned len)
 {
-	static struct {
-	    char *name;
-	    enum { V_FLAT, V_WILD, V_COLOR } type;
-	} explicit_resources[] =  {
-	    { ResKeymap,			V_WILD },
-	    { ResAssocCommand,			V_FLAT },
-	    { ResLuCommandLine,			V_FLAT },
-	    { ResPrintTextScreensPerPage,	V_FLAT },
+    static struct {
+	char *name;
+	enum { V_FLAT, V_WILD, V_COLOR } type;
+    } explicit_resources[] =  {
+	{ ResKeymap,			V_WILD },
+	{ ResAssocCommand,		V_FLAT },
+	{ ResLuCommandLine,		V_FLAT },
+	{ ResPrintTextScreensPerPage,	V_FLAT },
 #if defined(_WIN32) /*[*/
-	    { ResPrinterCodepage,		V_FLAT },
-	    { ResPrinterCommand,		V_FLAT },
-	    { ResPrinterName, 			V_FLAT },
-	    { ResPrintTextFont, 		V_FLAT },
-	    { ResPrintTextHorizontalMargin,	V_FLAT },
-	    { ResPrintTextOrientation,		V_FLAT },
-	    { ResPrintTextSize, 		V_FLAT },
-	    { ResPrintTextVerticalMargin,	V_FLAT },
-	    { ResHostColorForDefault,		V_FLAT },
-	    { ResHostColorForIntensified,	V_FLAT },
-	    { ResHostColorForProtected,		V_FLAT },
-	    { ResHostColorForProtectedIntensified,V_FLAT },
-	    { ResConsoleColorForHostColor,	V_COLOR },
+	{ ResPrinterCodepage,		V_FLAT },
+	{ ResPrinterCommand,		V_FLAT },
+	{ ResPrinterName, 		V_FLAT },
+	{ ResPrintTextFont, 		V_FLAT },
+	{ ResPrintTextHorizontalMargin,	V_FLAT },
+	{ ResPrintTextOrientation,	V_FLAT },
+	{ ResPrintTextSize, 		V_FLAT },
+	{ ResPrintTextVerticalMargin,	V_FLAT },
+	{ ResHostColorForDefault,	V_FLAT },
+	{ ResHostColorForIntensified,	V_FLAT },
+	{ ResHostColorForProtected,	V_FLAT },
+	{ ResHostColorForProtectedIntensified,V_FLAT },
+	{ ResConsoleColorForHostColor,	V_COLOR },
 #else /*][*/
-	    { ResPrinterCommand,		V_FLAT },
-	    { ResPrintTextCommand,		V_FLAT },
-	    { ResCursesColorForDefault,		V_FLAT },
-	    { ResCursesColorForIntensified,	V_FLAT },
-	    { ResCursesColorForProtected,	V_FLAT },
-	    { ResCursesColorForProtectedIntensified,V_FLAT },
-	    { ResCursesColorForHostColor,	V_COLOR },
+	{ ResPrinterCommand,		V_FLAT },
+	{ ResPrintTextCommand,		V_FLAT },
+	{ ResCursesColorForDefault,	V_FLAT },
+	{ ResCursesColorForIntensified,	V_FLAT },
+	{ ResCursesColorForProtected,	V_FLAT },
+	{ ResCursesColorForProtectedIntensified,V_FLAT },
+	{ ResCursesColorForHostColor,	V_COLOR },
 #endif /*]*/
-	    { NULL, V_WILD }
-	};
-	int i;
-	int j;
+	{ NULL, V_WILD }
+    };
+    int i;
+    int j;
 
-	for (i = 0; explicit_resources[i].name != NULL; i++) {
-		unsigned sl = strlen(explicit_resources[i].name);
+    for (i = 0; explicit_resources[i].name != NULL; i++) {
+	unsigned sl = strlen(explicit_resources[i].name);
 
-	    	switch (explicit_resources[i].type) {
-		case V_FLAT:
-		    /* Exact match. */
-		    if (len == sl &&
-			!strncmp(explicit_resources[i].name, resname, sl))
+	switch (explicit_resources[i].type) {
+	case V_FLAT:
+	    /* Exact match. */
+	    if (len == sl &&
+		!strncmp(explicit_resources[i].name, resname, sl)) {
+		return 0;
+	    }
+	    break;
+	case V_WILD:
+	    /* xxx.* match. */
+	    if (len > sl + 1 &&
+		resname[sl] == '.' &&
+		!strncmp(explicit_resources[i].name, resname, sl)) {
+		return 0;
+	    }
+	    break;
+	case V_COLOR:
+	    /* xxx<host-color> or xxx<host-color-index> match. */
+	    for (j = 0; host_color[j].name != NULL; j++) {
+		char *x;
+
+		x = xs_buffer("%s%s", explicit_resources[i].name,
+			host_color[j].name);
+		if (strlen(x) == len &&
+		    !strncmp(x, resname, len)) {
+			Free(x);
 			return 0;
-		    break;
-		case V_WILD:
-		    /* xxx.* match. */
-		    if (len > sl + 1 &&
-			resname[sl] == '.' &&
-			!strncmp(explicit_resources[i].name, resname, sl))
-			return 0;
-		    break;
-		case V_COLOR:
-		    /* xxx<host-color> or xxx<host-color-index> match. */
-		    for (j = 0; host_color[j].name != NULL; j++) {
-			    char *x;
-
-			    x = xs_buffer("%s%s", explicit_resources[i].name,
-				    host_color[j].name);
-			    if (strlen(x) == len &&
-				!strncmp(x, resname, len)) {
-				    Free(x);
-				    return 0;
-			    }
-			    Free(x);
-			    x = xs_buffer("%s%d", explicit_resources[i].name,
-				    host_color[j].index);
-			    if (strlen(x) == len &&
-				!strncmp(x, resname, len)) {
-				    Free(x);
-				    return 0;
-			    }
-			    Free(x);
-		    }
-		    break;
 		}
+		Free(x);
+		x = xs_buffer("%s%d", explicit_resources[i].name,
+			host_color[j].index);
+		if (strlen(x) == len &&
+		    !strncmp(x, resname, len)) {
+			Free(x);
+			return 0;
+		}
+		Free(x);
+	    }
+	    break;
 	}
+    }
 
-	return -1;
+    return -1;
 
 }
 #endif /*]*/
@@ -1295,154 +1306,152 @@ valid_explicit(const char *resname, unsigned len)
 void
 parse_xrm(const char *arg, const char *where)
 {
-	const char *name;
-	unsigned rnlen;
-	const char *s;
-	int i;
-	char *t;
-	void *address = NULL;
-	enum resource_type type = XRM_STRING;
-	Boolean quoted;
-	char c;
+    const char *name;
+    unsigned rnlen;
+    const char *s;
+    int i;
+    char *t;
+    void *address = NULL;
+    enum resource_type type = XRM_STRING;
+    Boolean quoted;
+    char c;
 #if defined(C3270) /*[*/
-	char *hide;
-	Boolean arbitrary = False;
+    char *hide;
+    Boolean arbitrary = False;
 #endif /*]*/
 
-	/* Validate and split. */
-	if (validate_and_split_resource(where, arg, &name, &rnlen, &s) < 0)
-	    	return;
+    /* Validate and split. */
+    if (validate_and_split_resource(where, arg, &name, &rnlen, &s) < 0) {
+	return;
+    }
 
-	/* Look up the name. */
-	for (i = 0; resources[i].name != NULL; i++) {
-		if (!strncapcmp(resources[i].name, name, rnlen)) {
-			address = resources[i].address;
-			type = resources[i].type;
-			break;
-		}
+    /* Look up the name. */
+    for (i = 0; resources[i].name != NULL; i++) {
+	if (!strncapcmp(resources[i].name, name, rnlen)) {
+	    address = resources[i].address;
+	    type = resources[i].type;
+	    break;
 	}
-	if (address == NULL) {
-		for (i = 0; toggle_names[i].name != NULL; i++) {
-			if (!strncapcmp(toggle_names[i].name, name, rnlen)) {
-				address =
-				    &appres.toggle[toggle_names[i].index].value;
-				type = XRM_BOOLEAN;
-				break;
-			}
-		}
-	}
-	/* XXX: This needs to work for s3270, too. */
-#if defined(C3270) /*[*/
-	if (address == NULL && valid_explicit(name, rnlen) == 0) {
-		/*
-		 * Handle resources that are accessed only via get_resource().
-		 */
-		address = &hide;
-		type = XRM_STRING;
-		arbitrary = True;
-	}
-#endif /*]*/
-	if (address == NULL) {
-		xs_warning("%s: Unknown resource name: %.*s",
-		    where, (int)rnlen, name);
-		return;
-	}
-	switch (type) {
-	case XRM_BOOLEAN:
-		if (!strcasecmp(s, "true") ||
-		    !strcasecmp(s, "t") ||
-		    !strcmp(s, "1")) {
-			*(Boolean *)address = True;
-		} else if (!strcasecmp(s, "false") ||
-		    !strcasecmp(s, "f") ||
-		    !strcmp(s, "0")) {
-			*(Boolean *)address = False;
-		} else {
-			xs_warning("%s: Invalid Boolean value: %s", where, s);
-			*(Boolean *)address = False;
-		}
+    }
+    if (address == NULL) {
+	for (i = 0; toggle_names[i].name != NULL; i++) {
+	    if (!TOGGLE_SUPPORTED(toggle_names[i].index)) {
+		continue;
+	    }
+	    if (!strncapcmp(toggle_names[i].name, name, rnlen)) {
+		address = &appres.toggle[toggle_names[i].index].value;
+		type = XRM_BOOLEAN;
 		break;
-	case XRM_STRING:
-		t = Malloc(strlen(s) + 1);
-		*(char **)address = t;
-		quoted = False;
+	    }
+	}
+    }
+    /* XXX: This needs to work for s3270, too. */
+#if defined(C3270) /*[*/
+    if (address == NULL && valid_explicit(name, rnlen) == 0) {
+	/* Handle resources that are accessed only via get_resource(). */
+	address = &hide;
+	type = XRM_STRING;
+	arbitrary = True;
+    }
+#endif /*]*/
+    if (address == NULL) {
+	xs_warning("%s: Unknown resource name: %.*s", where, (int)rnlen, name);
+	return;
+    }
+    switch (type) {
+    case XRM_BOOLEAN:
+	if (!strcasecmp(s, "true") || !strcasecmp(s, "t") || !strcmp(s, "1")) {
+	    *(Boolean *)address = True;
+	} else if (!strcasecmp(s, "false") || !strcasecmp(s, "f") ||
+		!strcmp(s, "0")) {
+	    *(Boolean *)address = False;
+	} else {
+	    xs_warning("%s: Invalid Boolean value: %s", where, s);
+	    *(Boolean *)address = False;
+	}
+	break;
+    case XRM_STRING:
+	t = Malloc(strlen(s) + 1);
+	*(char **)address = t;
+	quoted = False;
 #if defined(WC3270) /*[*/
-		/*
-		 * Hack to allow unquoted UNC-path printer names from older
-		 * versions of the Session Wizard to continue to work, even
-		 * though the rules now require quoted backslashes in resource
-		 * values.
-		 */
-		if (!strncapcmp(ResPrinterName, name, rnlen) &&
-		    s[0] == '\\' &&
-		    s[1] == '\\' &&
-		    s[2] != '\\' &&
-		    strchr(s + 2, '\\') != NULL) {
-			strcpy(t, s);
-			break;
-		}
+	/*
+	 * Hack to allow unquoted UNC-path printer names from older
+	 * versions of the Session Wizard to continue to work, even
+	 * though the rules now require quoted backslashes in resource
+	 * values.
+	 */
+	if (!strncapcmp(ResPrinterName, name, rnlen) &&
+	    s[0] == '\\' &&
+	    s[1] == '\\' &&
+	    s[2] != '\\' &&
+	    strchr(s + 2, '\\') != NULL) {
+
+	    strcpy(t, s);
+	    break;
+	}
 #endif /*]*/
 
-		while ((c = *s++) != '\0') {
-			if (quoted) {
-				switch (c) {
-				case 'b':
-					*t++ = '\b';
-					break;
-				case 'f':
-					*t++ = '\f';
-					break;
-				case 'n':
-					*t++ = '\n';
-					break;
-				case 'r':
-					*t++ = '\r';
-					break;
-				case 't':
-					*t++ = '\t';
-					break;
-				case '\\':
-					/* Quote the backslash. */
-					*t++ = '\\';
-					break;
-				default:
-					/* Eat the backslash. */
-					*t++ = c;
-					break;
-				}
-				quoted = False;
-			} else if (c == '\\') {
-				quoted = True;
-			} else {
-				*t++ = c;
-			}
+	while ((c = *s++) != '\0') {
+	    if (quoted) {
+		switch (c) {
+		case 'b':
+		    *t++ = '\b';
+		    break;
+		case 'f':
+		    *t++ = '\f';
+		    break;
+		case 'n':
+		    *t++ = '\n';
+		    break;
+		case 'r':
+		    *t++ = '\r';
+		    break;
+		case 't':
+		    *t++ = '\t';
+		    break;
+		case '\\':
+		    /* Quote the backslash. */
+		    *t++ = '\\';
+		    break;
+		default:
+		    /* Eat the backslash. */
+		    *t++ = c;
+		    break;
 		}
-		*t = '\0';
-		break;
-	case XRM_INT: {
-		long n;
-		char *ptr;
-
-		n = strtol(s, &ptr, 0);
-		if (*ptr != '\0') {
-			xs_warning("%s: Invalid Integer value: %s", where, s);
-		} else {
-			*(int *)address = (int)n;
-		}
-		break;
-		}
+		quoted = False;
+	    } else if (c == '\\') {
+		quoted = True;
+	    } else {
+		*t++ = c;
+	    }
 	}
+	*t = '\0';
+	break;
+    case XRM_INT: {
+	long n;
+	char *ptr;
+
+	n = strtol(s, &ptr, 0);
+	if (*ptr != '\0') {
+	    xs_warning("%s: Invalid Integer value: %s", where, s);
+	} else {
+	    *(int *)address = (int)n;
+	}
+	break;
+	}
+    }
 
 #if defined(C3270) /*[*/
-	/* Add a new, arbitrarily-named resource. */
-	if (arbitrary) {
-		char *rsname;
+    /* Add a new, arbitrarily-named resource. */
+    if (arbitrary) {
+	char *rsname;
 
-		rsname = Malloc(rnlen + 1);
-		(void) strncpy(rsname, name, rnlen);
-		rsname[rnlen] = '\0';
-		add_resource(rsname, hide);
-	}
+	rsname = Malloc(rnlen + 1);
+	(void) strncpy(rsname, name, rnlen);
+	rsname[rnlen] = '\0';
+	add_resource(rsname, hide);
+    }
 #endif /*]*/
 }
 
@@ -1452,72 +1461,73 @@ parse_xrm(const char *arg, const char *where)
 char *
 safe_string(const char *s)
 {
-    	char *t = Malloc(1);
-	int tlen = 1;
+    char *t = Malloc(1);
+    int tlen = 1;
 
-	*t = '\0';
+    *t = '\0';
 
-    	/*
-	 * Translate the string to UCS4 a character at a time.
-	 * If the result is a control code or backslash, expand it.
-	 * Otherwise, translate it back to the local encoding and
-	 * append it to the output.
-	 */
-    	while (*s) {
-	    	ucs4_t u;
-		int consumed;
-		enum me_fail error;
+    /*
+     * Translate the string to UCS4 a character at a time.
+     * If the result is a control code or backslash, expand it.
+     * Otherwise, translate it back to the local encoding and
+     * append it to the output.
+     */
+    while (*s) {
+	ucs4_t u;
+	int consumed;
+	enum me_fail error;
 
-	    	u = multibyte_to_unicode(s, strlen(s), &consumed, &error);
-		if (u == 0)
-		    	break;
-		if (u < ' ') {
-		    	char c = 0;
-			int inc = 0;
-
-		    	switch (u) {
-			case '\b':
-			    	c = 'b';
-				inc = 2;
-				break;
-			case '\f':
-			    	c = 'f';
-				inc = 2;
-				break;
-			case '\n':
-			    	c = 'n';
-				inc = 2;
-				break;
-			case '\r':
-			    	c = 'r';
-				inc = 2;
-				break;
-			case '\t':
-			    	c = 't';
-				inc = 2;
-				break;
-			default:
-				inc = 6;
-				break;
-			}
-
-			t = Realloc(t, tlen + inc);
-			if (inc == 2) {
-				*(t + tlen - 1) = '\\';
-				*(t + tlen) = c;
-			} else {
-			    	sprintf(t, "\\u%04x", u);
-			}
-			tlen += inc;
-		} else {
-		    	t = Realloc(t, tlen + consumed);
-			memcpy(t + tlen - 1, s, consumed);
-			tlen += consumed;
-		}
-		s += consumed;
+	u = multibyte_to_unicode(s, strlen(s), &consumed, &error);
+	if (u == 0) {
+	    break;
 	}
-	*(t + tlen - 1) = '\0';
-	return t;
+	if (u < ' ') {
+	    char c = 0;
+	    int inc = 0;
+
+	    switch (u) {
+	    case '\b':
+		c = 'b';
+		inc = 2;
+		break;
+	    case '\f':
+		c = 'f';
+		inc = 2;
+		break;
+	    case '\n':
+		c = 'n';
+		inc = 2;
+		break;
+	    case '\r':
+		c = 'r';
+		inc = 2;
+		break;
+	    case '\t':
+		c = 't';
+		inc = 2;
+		break;
+	    default:
+		inc = 6;
+		break;
+	    }
+
+	    t = Realloc(t, tlen + inc);
+	    if (inc == 2) {
+		*(t + tlen - 1) = '\\';
+		*(t + tlen) = c;
+	    } else {
+		sprintf(t, "\\u%04x", u);
+	    }
+	    tlen += inc;
+	} else {
+	    t = Realloc(t, tlen + consumed);
+	    memcpy(t + tlen - 1, s, consumed);
+	    tlen += consumed;
+	}
+	s += consumed;
+    }
+    *(t + tlen - 1) = '\0';
+    return t;
 }
 
 /* Read resources from a file. */
@@ -1549,80 +1559,81 @@ static char vmsgbuf[4096];
 void
 popup_an_error(const char *fmt, ...)
 {
-	va_list args;
+    va_list args;
 
-	va_start(args, fmt);
-	(void) vsnprintf(vmsgbuf, sizeof(vmsgbuf), fmt, args);
-	va_end(args);
+    va_start(args, fmt);
+    (void) vsnprintf(vmsgbuf, sizeof(vmsgbuf), fmt, args);
+    va_end(args);
 
-	/* Log to the trace file. */
-	vtrace("%s\n", vmsgbuf);
+    /* Log to the trace file. */
+    vtrace("%s\n", vmsgbuf);
 
-	if (sms_redirect()) {
-		sms_error(vmsgbuf);
-		return;
-	} else {
+    if (sms_redirect()) {
+	sms_error(vmsgbuf);
+	return;
+    } else {
 #if defined(C3270) /*[*/
-		screen_suspend();
-		any_error_output = True;
+	screen_suspend();
+	any_error_output = True;
 #endif /*]*/
-		(void) fprintf(stderr, "%s\n", vmsgbuf);
-		fflush(stderr);
-		macro_output = True;
-	}
+	(void) fprintf(stderr, "%s\n", vmsgbuf);
+	fflush(stderr);
+	macro_output = True;
+    }
 }
 
 /* Pop up an error dialog, based on an error number. */
 void
 popup_an_errno(int errn, const char *fmt, ...)
 {
-	va_list args;
-	char *s;
+    va_list args;
+    char *s;
 
-	va_start(args, fmt);
-	(void) vsnprintf(vmsgbuf, sizeof(vmsgbuf), fmt, args);
-	va_end(args);
-	s = NewString(vmsgbuf);
+    va_start(args, fmt);
+    (void) vsnprintf(vmsgbuf, sizeof(vmsgbuf), fmt, args);
+    va_end(args);
+    s = NewString(vmsgbuf);
 
-	if (errn > 0)
-		popup_an_error("%s: %s", s, strerror(errn));
-	else
-		popup_an_error("%s", s);
-	Free(s);
+    if (errn > 0) {
+	popup_an_error("%s: %s", s, strerror(errn));
+    } else {
+	popup_an_error("%s", s);
+    }
+    Free(s);
 }
 
 void
 action_output(const char *fmt, ...)
 {
-	va_list args;
+    va_list args;
 
-	va_start(args, fmt);
-	(void) vsnprintf(vmsgbuf, sizeof(vmsgbuf), fmt, args);
-	va_end(args);
-	if (sms_redirect()) {
-		sms_info("%s", vmsgbuf);
-		return;
-	} else {
+    va_start(args, fmt);
+    (void) vsnprintf(vmsgbuf, sizeof(vmsgbuf), fmt, args);
+    va_end(args);
+    if (sms_redirect()) {
+	sms_info("%s", vmsgbuf);
+	return;
+    } else {
 #if !defined(WC3270) /*[*/
-		FILE *aout;
+	FILE *aout;
 #endif /*]*/
 
 #if defined(C3270) /*[*/
-		any_error_output = True;
-		screen_suspend();
+	any_error_output = True;
+	screen_suspend();
 # if defined(WC3270) /*[*/
-		pager_output(vmsgbuf);
+	pager_output(vmsgbuf);
 # else /*][*/
-		aout = start_pager();
+	aout = start_pager();
 # endif /*]*/
 #else /*][*/
-		aout = stdout;
+	aout = stdout;
 #endif /*]*/
 #if !defined(WC3270) /*[*/
-		(void) fprintf(aout, "%s\n", vmsgbuf);
+	(void) fprintf(aout, "%s\n", vmsgbuf);
 #endif /*]*/
-		macro_output = True;
-	}
+	macro_output = True;
+    }
 }
 
 void

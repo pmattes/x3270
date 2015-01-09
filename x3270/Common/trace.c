@@ -542,7 +542,10 @@ create_tracefile_header(const char *mode)
 #endif /*]*/
     wtrace(False, " Toggles:");
     for (i = 0; toggle_names[i].name != NULL; i++) {
-	if (!toggle_names[i].is_alias && toggled(toggle_names[i].index)) {
+	if (TOGGLE_SUPPORTED(toggle_names[i].index) &&
+	    !toggle_names[i].is_alias &&
+	    toggled(toggle_names[i].index)) {
+
 	    wtrace(False, " %s", toggle_names[i].name);
 	}
     }

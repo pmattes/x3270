@@ -98,6 +98,14 @@ extern int matherr();
 int *tclDummyMathPtr = (int *) matherr;
 #endif /*]*/
 
+/* Bitmap of supported toggles. */
+unsigned toggles_supported =
+    TOGGLE_BIT(TRACING) |
+    TOGGLE_BIT(LINE_WRAP) |
+    TOGGLE_BIT(BLANK_FILL) |
+    TOGGLE_BIT(SCREEN_TRACE) |
+    TOGGLE_BIT(AID_WAIT);
+
 static Tcl_ObjCmdProc x3270_cmd;
 static Tcl_ObjCmdProc Rows_cmd, Cols_cmd;
 static enum {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -266,17 +266,17 @@ extern HWND		console_window;
 
 /*   connection state */
 enum cstate {
-	NOT_CONNECTED,		/* no socket, unknown mode */
-	RESOLVING,		/* resolving hostname */
-	PENDING,		/* socket connection pending */
-	NEGOTIATING,		/* SSL/proxy negotiation in progress */
-	CONNECTED_INITIAL,	/* connected, no 3270 mode yet */
-	CONNECTED_NVT,		/* connected in NVT mode */
-	CONNECTED_3270,		/* connected in old-style 3270 mode */
-	CONNECTED_UNBOUND,	/* connected in TN3270E mode, unbound */
-	CONNECTED_E_NVT,	/* connected in TN3270E mode, NVT mode */
-	CONNECTED_SSCP,		/* connected in TN3270E mode, SSCP-LU mode */
-	CONNECTED_TN3270E	/* connected in TN3270E mode, 3270 mode */
+    NOT_CONNECTED,	/* no socket, unknown mode */
+    RESOLVING,		/* resolving hostname */
+    PENDING,		/* socket connection pending */
+    NEGOTIATING,	/* SSL/proxy negotiation in progress */
+    CONNECTED_INITIAL,	/* connected, no 3270 mode yet */
+    CONNECTED_NVT,	/* connected in NVT mode */
+    CONNECTED_3270,	/* connected in old-style 3270 mode */
+    CONNECTED_UNBOUND,	/* connected in TN3270E mode, unbound */
+    CONNECTED_E_NVT,	/* connected in TN3270E mode, NVT mode */
+    CONNECTED_SSCP,	/* connected in TN3270E mode, SSCP-LU mode */
+    CONNECTED_TN3270E	/* connected in TN3270E mode, 3270 mode */
 };
 extern enum cstate cstate;
 
@@ -296,23 +296,24 @@ extern enum cstate cstate;
 #define AltKeyDown	0x04
 
 /*   toggle names */
-struct toggle_name {
-	const char *name;
-	int index;
-	Boolean is_alias;
-};
-extern struct toggle_name toggle_names[];
+typedef struct {
+    const char *name;
+    int index;
+    Boolean is_alias;
+} toggle_name_t;
+extern toggle_name_t toggle_names[];
+extern unsigned toggles_supported;
 
 /*   extended attributes */
 struct ea {
-	unsigned char cc;	/* EBCDIC or ASCII character code */
-	unsigned char fa;	/* field attribute, it nonzero */
-	unsigned char fg;	/* foreground color (0x00 or 0xf<n>) */
-	unsigned char bg;	/* background color (0x00 or 0xf<n>) */
-	unsigned char gr;	/* ANSI graphics rendition bits */
-	unsigned char cs;	/* character set (GE flag, or 0..2) */
-	unsigned char ic;	/* input control (DBCS) */
-	unsigned char db;	/* DBCS state */
+    unsigned char cc;	/* EBCDIC or ASCII character code */
+    unsigned char fa;	/* field attribute, it nonzero */
+    unsigned char fg;	/* foreground color (0x00 or 0xf<n>) */
+    unsigned char bg;	/* background color (0x00 or 0xf<n>) */
+    unsigned char gr;	/* ANSI graphics rendition bits */
+    unsigned char cs;	/* character set (GE flag, or 0..2) */
+    unsigned char ic;	/* input control (DBCS) */
+    unsigned char db;	/* DBCS state */
 };
 #define GR_BLINK	0x01
 #define GR_REVERSE	0x02
@@ -325,16 +326,6 @@ struct ea {
 #define CS_LINEDRAW	0x02	/*  DEC line-drawing character set (ANSI) */
 #define CS_DBCS		0x03	/*  DBCS character set (X'F8') */
 #define CS_GE		0x04	/* cs flag for Graphic Escape */
-
-/*   translation lists */
-struct trans_list {
-	char			*name;
-	char			*pathname;
-	Boolean			is_temp;
-	Boolean			from_server;
-	struct trans_list	*next;
-};
-extern struct trans_list *trans_list;
 
 /*   input key type */
 enum keytype { KT_STD, KT_GE };
@@ -350,9 +341,6 @@ enum keytype { KT_STD, KT_GE };
 #define ST_EXITING	8
 #define ST_CHARSET	9
 #define N_ST		10
-
-/* Naming convention for private actions. */
-#define PA_PFX	"PA-"
 
 /* Shorthand macros */
 
@@ -376,12 +364,6 @@ enum keytype { KT_STD, KT_GE };
 #else /*][*/
 # define SETLINEBUF(s)	setlinebuf(s)
 #endif /*]*/
-
-/*   Motorola version of gettimeofday */
-
-#if defined(MOTOROLA)
-# define gettimeofday(tp,tz)	gettimeofday(tp)
-#endif
 
 /* Default DFT file transfer buffer size. */
 #if !defined(DFT_BUF) /*[*/

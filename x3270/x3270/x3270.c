@@ -263,7 +263,7 @@ static String fallbacks[] = {
 	NULL
 };
 
-struct toggle_name toggle_names[] = {
+toggle_name_t toggle_names[] = {
 	{ ResMonoCase,        MONOCASE,		False },
 	{ ResAltCursor,       ALT_CURSOR,	False },
 	{ ResCursorBlink,     CURSOR_BLINK,	False },
@@ -284,6 +284,25 @@ struct toggle_name toggle_names[] = {
 	{ ResOverlayPaste,    OVERLAY_PASTE,	False },
 	{ NULL,               0,		False }
 };
+
+/* Bitmap of supported toggles. */
+unsigned toggles_supported =
+    TOGGLE_BIT(MONOCASE) |
+    TOGGLE_BIT(ALT_CURSOR) |
+    TOGGLE_BIT(CURSOR_BLINK) |
+    TOGGLE_BIT(SHOW_TIMING) |
+    TOGGLE_BIT(CURSOR_POS) |
+    TOGGLE_BIT(TRACING) |
+    TOGGLE_BIT(SCROLL_BAR) |
+    TOGGLE_BIT(LINE_WRAP) |
+    TOGGLE_BIT(BLANK_FILL) |
+    TOGGLE_BIT(SCREEN_TRACE) |
+    TOGGLE_BIT(MARGINED_PASTE) |
+    TOGGLE_BIT(RECTANGLE_SELECT) |
+    TOGGLE_BIT(CROSSHAIR) |
+    TOGGLE_BIT(VISIBLE_CONTROL) |
+    TOGGLE_BIT(AID_WAIT) |
+    TOGGLE_BIT(OVERLAY_PASTE);
 
 
 void

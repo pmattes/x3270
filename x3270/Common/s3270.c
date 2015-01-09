@@ -87,6 +87,14 @@ char *commonappdata = NULL;
 char *mydesktop = NULL;
 #endif /*]*/
 
+/* Bitmap of supported toggles. */
+unsigned toggles_supported =
+    TOGGLE_BIT(TRACING) |
+    TOGGLE_BIT(LINE_WRAP) |
+    TOGGLE_BIT(BLANK_FILL) |
+    TOGGLE_BIT(SCREEN_TRACE) |
+    TOGGLE_BIT(AID_WAIT);
+
 void
 usage(const char *msg)
 {

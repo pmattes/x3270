@@ -151,6 +151,9 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
 	return False;
     }
     for (j = 0; toggle_names[j].name != NULL; j++) {
+	if (!TOGGLE_SUPPORTED(toggle_names[j].index)) {
+	    continue;
+	}
 	if (!strcasecmp(argv[0], toggle_names[j].name)) {
 	    ix = toggle_names[j].index;
 	    break;

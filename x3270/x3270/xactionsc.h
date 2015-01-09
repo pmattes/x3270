@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,8 @@
  *	xactionsc.h
  *		Global declarations for xactions.c.
  */
+
+#define PA_PFX	"PX-"
 
 extern void xaction_debug(XtActionProc action, XEvent *event, String *params,
 	Cardinal *num_params);

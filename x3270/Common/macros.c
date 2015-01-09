@@ -1279,10 +1279,6 @@ success:
      */
 
     /* Search the action list. */
-    if (!strncasecmp(aname, PA_PFX, strlen(PA_PFX))) {
-	popup_an_error("Invalid action: %s", aname);
-	return EM_ERROR;
-    }
     FOREACH_LLIST(&actions_list, e, action_elt_t *) {
 	if (!strcasecmp(aname, e->t.name)) {
 	    exact = any = e;

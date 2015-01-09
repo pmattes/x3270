@@ -35,6 +35,16 @@
 #define PA_KEYMAP_TRACE		PA_PFX "KeymapTrace"
 #define PA_END			PA_PFX "End"
 
+/*  translation lists */
+struct trans_list {
+    char    *name;
+    char    *pathname;
+    Boolean  is_temp;
+    Boolean  from_server;
+    struct trans_list *next;
+};
+extern struct trans_list *trans_list;
+
 extern char *current_keymap;
 extern Boolean keymap_changed;
 extern char *keymap_trace;

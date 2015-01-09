@@ -78,6 +78,8 @@ typedef enum {
 #define toggled(ix)		(appres.toggle[ix].value)
 #define toggle_toggle(t) \
 	{ (t)->value = !(t)->value; (t)->changed = True; }
+#define TOGGLE_BIT(ix)	(1 << (ix))
+#define TOGGLE_SUPPORTED(ix)	(toggles_supported & TOGGLE_BIT(ix))
 
 /* Application resources */
 

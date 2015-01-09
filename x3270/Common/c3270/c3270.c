@@ -303,6 +303,24 @@ static action_table_t main_actions[] = {
     { "Trace",		Trace_action,		ACTION_KE },
 };
 
+/* Bitmap of supported toggles. */
+unsigned toggles_supported =
+    TOGGLE_BIT(MONOCASE) |
+    TOGGLE_BIT(SHOW_TIMING) |
+    TOGGLE_BIT(TRACING) |
+    TOGGLE_BIT(LINE_WRAP) |
+    TOGGLE_BIT(BLANK_FILL) |
+    TOGGLE_BIT(SCREEN_TRACE) |
+#if defined(_WIN32) /*[*/
+    TOGGLE_BIT(MARGINED_PASTE) |
+#endif /*]*/
+    TOGGLE_BIT(AID_WAIT) |
+    TOGGLE_BIT(UNDERSCORE) |
+#if defined(_WIN32) /*[*/
+    TOGGLE_BIT(OVERLAY_PASTE) |
+#endif /*]*/
+    0;
+
 void
 usage(const char *msg)
 {
