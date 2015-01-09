@@ -2893,15 +2893,6 @@ toggle_showTiming(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
 }
 #endif /*]*/
 
-
-/*
- * No-op toggle.
- */
-void
-toggle_nop(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
-{
-}
-
 /*
  * Queries.
  */

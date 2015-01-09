@@ -95,15 +95,6 @@ init_toggle_fallible(int ix)
 void
 initialize_toggles(void)
 {
-    int i;
-
-    /* Default everthing to begin with. */
-    for (i = 0; i < N_TOGGLES; i++) {
-	appres.toggle[i].upcall = toggle_nop;
-    }
-
-    /* Set individual toggles. */
-
     appres.toggle[TRACING].upcall =          toggle_tracing;
     appres.toggle[SCREEN_TRACE].upcall =     toggle_screenTrace;
     appres.toggle[LINE_WRAP].upcall =        toggle_lineWrap;

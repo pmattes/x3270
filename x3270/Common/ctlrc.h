@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 2005-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -88,7 +88,6 @@ enum pds process_ds(unsigned char *buf, int buflen);
 void ps_process(void);
 void set_rows_cols(int mn, int ovc, int ovr);
 void ticking_start(Boolean anyway);
-void toggle_nop(struct toggle *t, enum toggle_type tt);
 void toggle_showTiming(struct toggle *t, enum toggle_type tt);
 
 enum dbcs_state {
