@@ -497,6 +497,7 @@ static char *
 create_tracefile_header(const char *mode)
 {
     char *buf;
+    int i;
 
     /* Create a buffer and redirect output. */
     buf = Malloc(MAX_HEADER_SIZE);
@@ -539,6 +540,14 @@ create_tracefile_header(const char *mode)
     wtrace(False, " Install dir: %s\n", instdir? instdir: "(null)");
     wtrace(False, " Desktop: %s\n", mydesktop? mydesktop: "(null)");
 #endif /*]*/
+    wtrace(False, " Toggles:");
+    for (i = 0; toggle_names[i].name != NULL; i++) {
+	if (!toggle_names[i].is_alias && toggled(toggle_names[i].index)) {
+	    wtrace(False, " %s", toggle_names[i].name);
+	}
+    }
+    wtrace(False, "\n");
+
     if (CONNECTED) {
 	wtrace(False, " Connected to %s, port %u\n", current_host,
 		current_port);
