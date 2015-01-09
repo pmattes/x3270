@@ -3538,7 +3538,6 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 		    if (auto_skip) {
 			if (!just_wrapped) {
 			    run_action("Newline", ia, NULL, NULL);
-			    last_row = BA_TO_ROW(cursor_addr);
 			}
 		    } else {
 			int baddr;
@@ -3562,6 +3561,8 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 			    cursor_move(baddr);
 			}
 		    }
+		    last_row = BA_TO_ROW(cursor_addr);
+		    just_wrapped = False;
 		} else {
 		    run_action("Enter", ia, NULL, NULL);
 		    if (IN_3270) {
