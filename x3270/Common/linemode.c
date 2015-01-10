@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -108,14 +108,14 @@ linemode_init(void)
 	return;
     }
 
-    vintr   = parse_ctlchar(appres.intr);
-    vquit   = parse_ctlchar(appres.quit);
-    verase  = parse_ctlchar(appres.erase);
-    vkill   = parse_ctlchar(appres.kill);
-    veof    = parse_ctlchar(appres.eof);
-    vwerase = parse_ctlchar(appres.werase);
-    vrprnt  = parse_ctlchar(appres.rprnt);
-    vlnext  = parse_ctlchar(appres.lnext);
+    vintr   = parse_ctlchar(appresp->intr);
+    vquit   = parse_ctlchar(appresp->quit);
+    verase  = parse_ctlchar(appresp->erase);
+    vkill   = parse_ctlchar(appresp->kill);
+    veof    = parse_ctlchar(appresp->eof);
+    vwerase = parse_ctlchar(appresp->werase);
+    vrprnt  = parse_ctlchar(appresp->rprnt);
+    vlnext  = parse_ctlchar(appresp->lnext);
 
     t_valid = True;
 }
@@ -133,9 +133,9 @@ linemode_out(const char *buf, int len)
 	char c = buf[i];
 
 	/* Input conversions. */
-	if (!lnext && c == '\r' && appres.icrnl) {
+	if (!lnext && c == '\r' && appresp->icrnl) {
 	    c = '\n';
-	} else if (!lnext && c == '\n' && appres.inlcr) {
+	} else if (!lnext && c == '\n' && appresp->inlcr) {
 	    c = '\r';
 	}
 

@@ -228,7 +228,7 @@ close_wsh(iosrc_t fd, ioid_t id)
     CloseHandle((HANDLE)fd);
     RemoveInput(id);
 #if defined(C3270) /*[*/
-    if (appres.do_confirms) {
+    if (appresp->do_confirms) {
 	popup_an_info("Screen image printed.\n");
     }
 #endif /*]*/

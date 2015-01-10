@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2014, Paul Mattes.
+ * Copyright (c) 1994-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,7 +78,7 @@ print_window_done(int status)
     if (status) {
 	popup_an_error("Print program exited with status %d.",
 		(status & 0xff00) >> 8);
-    } else if (appres.do_confirms) {
+    } else if (appresp->do_confirms) {
 	popup_an_info("Bitmap printed.");
     }
 }
@@ -148,7 +148,7 @@ Boolean
 PrintWindow_action(ia_t ia, unsigned argc, const char **argv)
 {
     const char *command;
-    Boolean secure = appres.secure;
+    Boolean secure = appresp->secure;
 
     action_debug("PrintWindow", ia, argc, argv);
 

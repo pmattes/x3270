@@ -53,10 +53,10 @@ set_codeset(char *codeset_name)
      * s3270 and ws3270 have a '-utf8' option and a utf8 resource to force
      * UTF-8 mode.
      */
-    if (appres.utf8) {
+    if (appresp->utf8) {
 	is_utf8 = True;
 # if defined(WS3270) /*[*/
-	appres.local_cp = CP_UTF8;
+	appresp->local_cp = CP_UTF8;
 # endif /*]*/
 	codeset_name = "UTF-8";
     }

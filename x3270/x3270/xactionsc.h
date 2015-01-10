@@ -30,7 +30,7 @@
  *		Global declarations for xactions.c.
  */
 
-#define PA_PFX	"PX-"
+#define PA_PFX	"PA-"
 
 extern void xaction_debug(XtActionProc action, XEvent *event, String *params,
 	Cardinal *num_params);

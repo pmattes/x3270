@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -93,7 +93,8 @@ char		full_model_name[13] = "IBM-";
 char	       *model_name = &full_model_name[4];
 Pixmap          gray;
 XrmDatabase     rdb;
-AppRes          appres;
+static AppRes   appres;
+AppResptr	appresp = &appres;
 int		children = 0;
 Boolean		exiting = False;
 char           *user_title = NULL;

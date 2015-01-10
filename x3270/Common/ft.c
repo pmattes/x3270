@@ -528,10 +528,10 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 #if defined(_WIN32) /*[*/
     if (tp[PARM_WINDOWS_CODEPAGE].value != NULL) {
 	ft_windows_codepage = atoi(tp[PARM_WINDOWS_CODEPAGE].value);
-    } else if (appres.ft_cp) {
-	ft_windows_codepage = appres.ft_cp;
+    } else if (appresp->ft_cp) {
+	ft_windows_codepage = appresp->ft_cp;
     } else {
-	ft_windows_codepage = appres.local_cp;
+	ft_windows_codepage = appresp->local_cp;
     }
 #endif /*]*/
 
@@ -685,24 +685,24 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 int
 ft_ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len)
 {
-    int local_cp = appres.local_cp;
+    int local_cp = appresp->local_cp;
     int rc;
 
-    appres.local_cp = ft_windows_codepage;
+    appresp->local_cp = ft_windows_codepage;
     rc = ebcdic_to_multibyte(ebc, mb, mb_len);
-    appres.local_cp = local_cp;
+    appresp->local_cp = local_cp;
     return rc;
 }
 
 int
 ft_unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len)
 {
-    int local_cp = appres.local_cp;
+    int local_cp = appresp->local_cp;
     int rc;
 
-    appres.local_cp = ft_windows_codepage;
+    appresp->local_cp = ft_windows_codepage;
     rc = unicode_to_multibyte(ucs4, mb, mb_len);
-    appres.local_cp = local_cp;
+    appresp->local_cp = local_cp;
     return rc;
 }
 
@@ -710,12 +710,12 @@ ucs4_t
 ft_multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 	enum me_fail *errorp)
 {
-    int local_cp = appres.local_cp;
+    int local_cp = appresp->local_cp;
     ucs4_t rc;
 
-    appres.local_cp = ft_windows_codepage;
+    appresp->local_cp = ft_windows_codepage;
     rc = multibyte_to_unicode(mb, mb_len, consumedp, errorp);
-    appres.local_cp = local_cp;
+    appresp->local_cp = local_cp;
     return rc;
 }
 

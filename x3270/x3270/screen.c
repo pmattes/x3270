@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -405,7 +405,7 @@ static struct rsfont *rsfonts;
 #define INVERT_COLOR(c)		((c) ^ INVERT_MASK)
 #define NO_INVERT(c)		((c) & ~INVERT_MASK)
 
-#define DEFAULT_PIXEL		(appres.m3279 ? HOST_COLOR_BLUE : FA_INT_NORM_NSEL)
+#define DEFAULT_PIXEL		(appresp->m3279 ? HOST_COLOR_BLUE : FA_INT_NORM_NSEL)
 #define PIXEL_INDEX(c)		((c) & BASE_MASK)
 
 
@@ -489,17 +489,17 @@ screen_init(void)
 	/* Register our actions. */
 	register_actions(screen_actions, array_count(screen_actions));
 
-	if (!appres.m3279) {
-	    	appres.highlight_bold = True;
+	if (!appresp->m3279) {
+	    	appresp->highlight_bold = True;
 	}
 
 	visible_control = toggled(VISIBLE_CONTROL);
 
 	/* Parse the fixed window size, if there is any. */
-	if (appres.fixed_size) {
+	if (appresp->fixed_size) {
 		char c;
 
-		if (sscanf(appres.fixed_size, "%ux%u%c", &fixed_width,
+		if (sscanf(appresp->fixed_size, "%ux%u%c", &fixed_width,
 					&fixed_height, &c) != 2 ||
 				!fixed_width ||
 				!fixed_height) {
@@ -514,11 +514,11 @@ screen_init(void)
 	nss.exposed_yet = False;
 
 	/* Initialize "gray" bitmap. */
-	if (appres.mono)
+	if (appresp->mono)
 		gray = XCreatePixmapFromBitmapData(display,
 		    root_window, (char *)gray_bits,
 		    gray_width, gray_height,
-		    appres.foreground, appres.background, screen_depth);
+		    appresp->foreground, appresp->background, screen_depth);
 
 	/* Initialize the blank map. */
 	(void) memset((char *)blank_map, '\0', sizeof(blank_map));
@@ -559,9 +559,9 @@ screen_reinit(unsigned cmask)
 
 	/* Allocate colors. */
 	if (cmask & COLOR_CHANGE) {
-		if (appres.m3279) {
+		if (appresp->m3279) {
 			default_color_scheme();
-			(void) xfer_color_scheme(appres.color_scheme, False);
+			(void) xfer_color_scheme(appresp->color_scheme, False);
 		}
 		allocate_pixels();
 	}
@@ -759,7 +759,7 @@ screen_reinit(unsigned cmask)
 		save_00translations(container, &container_t00);
 		set_translations(container, NULL,
 		    &container_t0);
-		if (appres.mono)
+		if (appresp->mono)
 			XtVaSetValues(container, XtNbackgroundPixmap, gray,
 			    NULL);
 		else
@@ -769,7 +769,7 @@ screen_reinit(unsigned cmask)
 
 	/* Initialize the menu bar and integral keypad */
 
-	cwidth_curr = appres.keypad_on ? container_width : cwidth_nkp;
+	cwidth_curr = appresp->keypad_on ? container_width : cwidth_nkp;
 	menubar_height = menubar_qheight(cwidth_curr);
 	menubar_init(container, container_width, cwidth_curr);
 
@@ -820,8 +820,8 @@ set_toplevel_sizes(void)
 {
 	Dimension tw, th;
 
-	tw = container_width - (appres.keypad_on ? 0 : keypad_xwidth);
-	th = container_height - (appres.keypad_on ? 0 : keypad_height);
+	tw = container_width - (appresp->keypad_on ? 0 : keypad_xwidth);
+	th = container_height - (appresp->keypad_on ? 0 : keypad_height);
 	if (fixed_width) {
 		XtVaSetValues(toplevel,
 		    XtNwidth, fixed_width,
@@ -891,10 +891,10 @@ inflate_screen(void)
 		    "screen", widgetClass, container,
 		    XtNwidth, nss.screen_width,
 		    XtNheight, nss.screen_height,
-		    XtNx, appres.keypad_on ? (keypad_xwidth / 2) : 0,
+		    XtNx, appresp->keypad_on ? (keypad_xwidth / 2) : 0,
 		    XtNy, menubar_height,
 		    XtNbackground,
-			appres.mono ? appres.background : colorbg_pixel,
+			appresp->mono ? appresp->background : colorbg_pixel,
 		    NULL);
 		save_00translations(nss.widget, &screen_t00);
 		set_translations(nss.widget, NULL,
@@ -903,10 +903,10 @@ inflate_screen(void)
 		XtVaSetValues(nss.widget,
 		    XtNwidth, nss.screen_width,
 		    XtNheight, nss.screen_height,
-		    XtNx, appres.keypad_on ? (keypad_xwidth / 2) : 0,
+		    XtNx, appresp->keypad_on ? (keypad_xwidth / 2) : 0,
 		    XtNy, menubar_height,
 		    XtNbackground,
-			appres.mono ? appres.background : colorbg_pixel,
+			appresp->mono ? appresp->background : colorbg_pixel,
 		    NULL);
 	}
 
@@ -954,12 +954,12 @@ scrollbar_init(Boolean is_reset)
 			    "scrollbar", scrollbarWidgetClass,
 			    container,
 			    XtNx, nss.screen_width+1
-				    + (appres.keypad_on ? (keypad_xwidth / 2) : 0),
+				    + (appresp->keypad_on ? (keypad_xwidth / 2) : 0),
 			    XtNy, menubar_height,
 			    XtNwidth, scrollbar_width-1,
 			    XtNheight, nss.screen_height,
-			    XtNbackground, appres.mono ?
-				appres.background : keypadbg_pixel,
+			    XtNbackground, appresp->mono ?
+				appresp->background : keypadbg_pixel,
 			    NULL);
 			XtAddCallback(scrollbar, XtNscrollProc,
 			    screen_scroll_proc, NULL);
@@ -968,12 +968,12 @@ scrollbar_init(Boolean is_reset)
 		} else {
 			XtVaSetValues(scrollbar,
 			    XtNx, nss.screen_width+1
-				    + (appres.keypad_on ? (keypad_xwidth / 2) : 0),
+				    + (appresp->keypad_on ? (keypad_xwidth / 2) : 0),
 			    XtNy, menubar_height,
 			    XtNwidth, scrollbar_width-1,
 			    XtNheight, nss.screen_height,
-			    XtNbackground, appres.mono ?
-				appres.background : keypadbg_pixel,
+			    XtNbackground, appresp->mono ?
+				appresp->background : keypadbg_pixel,
 			    NULL);
 			XtMapWidget(scrollbar);
 		}
@@ -1032,7 +1032,7 @@ screen_connect(Boolean ignored _is_unused)
 		cursor_on();
 		schedule_cursor_blink();
 	} else {
-		if (appres.disconnect_clear)
+		if (appresp->disconnect_clear)
 			ctlr_erase(True);
 		(void) cursor_off();
 	}
@@ -1055,13 +1055,13 @@ set_mcursor(void)
 {
 	switch (mcursor_state) {
 	    case LOCKED:
-		XDefineCursor(display, nss.window, appres.locked_mcursor);
+		XDefineCursor(display, nss.window, appresp->locked_mcursor);
 		break;
 	    case NORMAL:
-		XDefineCursor(display, nss.window, appres.normal_mcursor);
+		XDefineCursor(display, nss.window, appresp->normal_mcursor);
 		break;
 	    case WAIT:
-		XDefineCursor(display, nss.window, appres.wait_mcursor);
+		XDefineCursor(display, nss.window, appresp->wait_mcursor);
 		break;
 	}
 	lock_icon(mcursor_state);
@@ -1354,12 +1354,12 @@ do_redraw(Widget w, XEvent *event, String *params _is_unused,
 
 	if (w == nss.widget) {
 		keypad_first_up();
-		if (appres.active_icon && iconic) {
+		if (appresp->active_icon && iconic) {
 			ss = &nss;
 			iconic = False;
 		}
-	} else if (appres.active_icon && w == iss.widget) {
-		if (appres.active_icon && !iconic) {
+	} else if (appresp->active_icon && w == iss.widget) {
+		if (appresp->active_icon && !iconic) {
 			ss = &iss;
 			iconic = True;
 		}
@@ -1418,7 +1418,7 @@ do_redraw(Widget w, XEvent *event, String *params _is_unused,
 	}
 	ctlr_changed(0, ROWS*COLS);
 	cursor_changed = True;
-	if (!appres.active_icon || !iconic) {
+	if (!appresp->active_icon || !iconic) {
 		line_changed = True;
 		status_touch();
 	}
@@ -1522,7 +1522,7 @@ screen_disp(Boolean erasing)
 		last_changed = -1;
 	}
 
-	if (!appres.active_icon || !iconic) {
+	if (!appresp->active_icon || !iconic) {
 		/* Refresh the status line. */
 		status_disp();
 
@@ -2066,7 +2066,7 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 	/* Select the GCs. */
 	if (sel && !block_cursor) {
 		/* Selected, but not a block cursor. */
-		if (!appres.mono) {
+		if (!appresp->mono) {
 			/* Color: Use the special select GCs. */
 			dgc = get_selgc(ss, color);
 			cleargc = ss->clrselgc;
@@ -2075,9 +2075,9 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 			dgc = get_gc(ss, INVERT_COLOR(color));
 			cleargc = get_gc(ss, color);
 		}
-	} else if (block_cursor && !(appres.mono && sel)) {
+	} else if (block_cursor && !(appresp->mono && sel)) {
 		/* Block cursor, but neither mono nor selected. */
-		if (appres.use_cursor_color) {
+		if (appresp->use_cursor_color) {
 			/* Use the specific-color inverted GC. */
 			dgc = ss->invucgc;
 			cleargc = ss->ucgc;
@@ -2178,7 +2178,7 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 		XDrawText16(display, ss->window, dgc, x, y, text, n_texts);
 		if (ss->overstrike &&
 		    ((attrs->bits.gr & GR_INTENSIFY) ||
-		     ((appres.mono || (!appres.m3279 && appres.highlight_bold)) &&
+		     ((appresp->mono || (!appresp->m3279 && appresp->highlight_bold)) &&
 		      ((color & BASE_MASK) == FA_INT_HIGH_SEL)))) {
 			XDrawText16(display, ss->window, dgc, x+1, y,
 			    text, n_texts);
@@ -2314,7 +2314,7 @@ draw_fields(union sp *buffer, int first, int last)
 		last = 0;
 
 	zero = FA_IS_ZERO(fa);
-	if (field_ea->fg && (!appres.modified_sel || !FA_IS_MODIFIED(fa)))
+	if (field_ea->fg && (!appresp->modified_sel || !FA_IS_MODIFIED(fa)))
 		field_color = field_ea->fg & COLOR_MASK;
 	else
 		field_color = fa_color(fa);
@@ -2332,7 +2332,7 @@ draw_fields(union sp *buffer, int first, int last)
 		    fa = ea_buf[baddr].fa;
 		    field_ea = sbp;
 			zero = FA_IS_ZERO(fa);
-			if (field_ea->fg && (!appres.modified_sel || !FA_IS_MODIFIED(fa)))
+			if (field_ea->fg && (!appresp->modified_sel || !FA_IS_MODIFIED(fa)))
 				field_color = field_ea->fg & COLOR_MASK;
 			else
 				field_color = fa_color(fa);
@@ -2359,7 +2359,7 @@ draw_fields(union sp *buffer, int first, int last)
 					gr = field_ea->gr;
 				if (gr & GR_BLINK)
 					any_blink = True;
-				if (appres.highlight_bold && FA_IS_HIGH(fa))
+				if (appresp->highlight_bold && FA_IS_HIGH(fa))
 					gr |= GR_INTENSIFY;
 			}
 
@@ -2369,7 +2369,7 @@ draw_fields(union sp *buffer, int first, int last)
 			} else {
 				if (sbp->fg)
 					e_color = sbp->fg & COLOR_MASK;
-				else if (appres.mono && (gr & GR_INTENSIFY))
+				else if (appresp->mono && (gr & GR_INTENSIFY))
 					e_color = fa_color(FA_INT_HIGH_SEL);
 				else
 					e_color = field_color;
@@ -2378,7 +2378,7 @@ draw_fields(union sp *buffer, int first, int last)
 					reverse = True;
 				}
 			}
-			if (!appres.mono)
+			if (!appresp->mono)
 				b.bits.fg = e_color;
 
 			/* Find the right character and character set. */
@@ -2663,7 +2663,7 @@ char_color(int baddr)
 	 */
 	if (FA_IS_ZERO(fa)) {
 		color = fa_color(fa);
-		if (appres.mono && SELECTED(baddr)) {
+		if (appresp->mono && SELECTED(baddr)) {
 			color = INVERT_COLOR(color);
 		}
 		return color;
@@ -2674,7 +2674,7 @@ char_color(int baddr)
 	 */
 	if (ea_buf[baddr].fg)
 		color = ea_buf[baddr].fg & COLOR_MASK;
-	else if (fa2ea(faddr)->fg && (!appres.modified_sel ||
+	else if (fa2ea(faddr)->fg && (!appresp->modified_sel ||
 				      !FA_IS_MODIFIED(fa)))
 		color = fa2ea(faddr)->fg & COLOR_MASK;
 	else
@@ -2695,7 +2695,7 @@ char_color(int baddr)
 	/*
 	 * In monochrome, apply selection status as well.
 	 */
-	if (appres.mono && SELECTED(baddr))
+	if (appresp->mono && SELECTED(baddr))
 		color = INVERT_COLOR(color);
 
 	return color;
@@ -2711,7 +2711,7 @@ cursor_gc(int baddr)
 	/*
 	 * If they say use a particular color, use it.
 	 */
-	if (appres.use_cursor_color)
+	if (appresp->use_cursor_color)
 		return ss->ucgc;
 	else
 		return get_gc(ss, char_color(baddr));
@@ -2848,9 +2848,9 @@ hollow_cursor(int baddr)
 	    cursor_gc(baddr),
 	    ssCOL_TO_X(BA_TO_COL(fl_baddr(baddr))),
 	    ssROW_TO_Y(BA_TO_ROW(baddr)) - ss->ascent +
-		(appres.mono ? 1 : 0),
+		(appresp->mono ? 1 : 0),
 	    cwidth,
-	    ss->char_height - (appres.mono ? 2 : 1));
+	    ss->char_height - (appresp->mono ? 2 : 1));
 }
 
 /*
@@ -2941,7 +2941,7 @@ put_cursor(int baddr, Boolean on)
 	/*
 	 * If monochrome, invert a small square over the characters.
 	 */
-	if (appres.mono) {
+	if (appresp->mono) {
 		small_inv_cursor(baddr);
 		return;
 	}
@@ -3017,36 +3017,36 @@ static void
 allocate_pixels(void)
 {
 
-	if (appres.mono)
+	if (appresp->mono)
 		return;
 
 	/* Allocate constant elements. */
-	if (!alloc_color(appres.colorbg_name, FB_BLACK, &colorbg_pixel))
+	if (!alloc_color(appresp->colorbg_name, FB_BLACK, &colorbg_pixel))
 		popup_an_error("Cannot allocate colormap \"%s\" for screen background, using \"black\"",
-		    appres.colorbg_name);
-	if (!alloc_color(appres.selbg_name, FB_BLACK, &selbg_pixel))
+		    appresp->colorbg_name);
+	if (!alloc_color(appresp->selbg_name, FB_BLACK, &selbg_pixel))
 		popup_an_error("Cannot allocate colormap \"%s\" for select background, using \"black\"",
-		    appres.selbg_name);
-	if (!alloc_color(appres.keypadbg_name, FB_WHITE, &keypadbg_pixel))
+		    appresp->selbg_name);
+	if (!alloc_color(appresp->keypadbg_name, FB_WHITE, &keypadbg_pixel))
 		popup_an_error("Cannot allocate colormap \"%s\" for keypad background, using \"white\"",
-		    appres.keypadbg_name);
-	if (appres.use_cursor_color) {
-		if (!alloc_color(appres.cursor_color_name, FB_WHITE, &cursor_pixel))
+		    appresp->keypadbg_name);
+	if (appresp->use_cursor_color) {
+		if (!alloc_color(appresp->cursor_color_name, FB_WHITE, &cursor_pixel))
 			popup_an_error("Cannot allocate colormap \"%s\" for cursor color, using \"white\"",
-			    appres.cursor_color_name);
+			    appresp->cursor_color_name);
 	}
 
 	/* Allocate pseudocolors. */
-	if (!appres.m3279) {
-		if (!alloc_color(appres.normal_name, FB_WHITE, &normal_pixel))
+	if (!appresp->m3279) {
+		if (!alloc_color(appresp->normal_name, FB_WHITE, &normal_pixel))
 			popup_an_error("Cannot allocate colormap \"%s\" for text, using \"white\"",
-			    appres.normal_name);
-		if (!alloc_color(appres.select_name, FB_WHITE, &select_pixel))
+			    appresp->normal_name);
+		if (!alloc_color(appresp->select_name, FB_WHITE, &select_pixel))
 			popup_an_error("Cannot allocate colormap \"%s\" for selectable text, using \"white\"",
-			    appres.select_name);
-		if (!alloc_color(appres.bold_name, FB_WHITE, &bold_pixel))
+			    appresp->select_name);
+		if (!alloc_color(appresp->bold_name, FB_WHITE, &bold_pixel))
 			popup_an_error("Cannot allocate colormap \"%s\" for bold text, using \"white\"",
-			    appres.bold_name);
+			    appresp->bold_name);
 		return;
 	}
 }
@@ -3076,7 +3076,7 @@ make_gcs(struct sstate *s)
 {
 	XGCValues xgcv;
 
-	if (appres.m3279) {
+	if (appresp->m3279) {
 		int i;
 
 		for (i = 0; i < NGCS; i++) {
@@ -3094,7 +3094,7 @@ make_gcs(struct sstate *s)
 			}
 		}
 	} else {
-		if (!appres.mono) {
+		if (!appresp->mono) {
 			make_gc_set(s, FA_INT_NORM_NSEL, normal_pixel,
 			    colorbg_pixel);
 			make_gc_set(s, FA_INT_NORM_SEL,  select_pixel,
@@ -3102,12 +3102,12 @@ make_gcs(struct sstate *s)
 			make_gc_set(s, FA_INT_HIGH_SEL,  bold_pixel,
 			    colorbg_pixel);
 		} else {
-			make_gc_set(s, FA_INT_NORM_NSEL, appres.foreground,
-			    appres.background);
-			make_gc_set(s, FA_INT_NORM_SEL,  appres.foreground,
-			    appres.background);
-			make_gc_set(s, FA_INT_HIGH_SEL,  appres.foreground,
-			    appres.background);
+			make_gc_set(s, FA_INT_NORM_NSEL, appresp->foreground,
+			    appresp->background);
+			make_gc_set(s, FA_INT_NORM_SEL,  appresp->foreground,
+			    appresp->background);
+			make_gc_set(s, FA_INT_HIGH_SEL,  appresp->foreground,
+			    appresp->background);
 		}
 	}
 	if (s->clrselgc != (GC)None) {
@@ -3118,7 +3118,7 @@ make_gcs(struct sstate *s)
 	s->clrselgc = XtGetGC(toplevel, GCForeground, &xgcv);
 
 	/* Create monochrome block cursor GC. */
-	if (appres.mono && s->mcgc == (GC)None) {
+	if (appresp->mono && s->mcgc == (GC)None) {
 		if (screen_depth > 1)
 			xgcv.function = GXinvert;
 		else
@@ -3128,7 +3128,7 @@ make_gcs(struct sstate *s)
 	}
 
 	/* Create explicit cursor color cursor GCs. */
-	if (appres.use_cursor_color) {
+	if (appresp->use_cursor_color) {
 		if (s->ucgc != (GC)None) {
 			XtReleaseGC(toplevel, s->ucgc);
 			s->ucgc = (GC)None;
@@ -3263,8 +3263,8 @@ xfer_color_scheme(char *cs, Boolean do_popup)
 		color_name[i] = XtNewString(tmp_color_name[i]);
 	}
 	ibm_fb = tmp_ibm_fb;
-	appres.colorbg_name = XtNewString(tmp_colorbg_name);
-	appres.selbg_name = XtNewString(tmp_selbg_name);
+	appresp->colorbg_name = XtNewString(tmp_colorbg_name);
+	appresp->selbg_name = XtNewString(tmp_selbg_name);
 	for (i = 0; i < 4; i++)
 		field_colors[i] = tmp_field_colors[i];
 
@@ -3418,7 +3418,7 @@ make_gc_set(struct sstate *s, int i, Pixel fg, Pixel bg)
 	xgcv.background = fg;
 	s->gc[NGCS + i] = XtGetGC(toplevel, GCForeground|GCBackground|GCFont,
 	    &xgcv);
-	if (!appres.mono) {
+	if (!appresp->mono) {
 		if (s->selgc[i] != (GC)None)
 			XtReleaseGC(toplevel, s->selgc[i]);
 		xgcv.foreground = fg;
@@ -3438,19 +3438,19 @@ fa_color(unsigned char fa)
 #	define DEFCOLOR_MAP(f) \
 		((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
 
-	if (appres.m3279) {
+	if (appresp->m3279) {
 		/*
 		 * Color indices are the low-order 4 bits of a 3279 color
 		 * identifier (0 through 15)
 		 */
-		if (appres.modified_sel && FA_IS_MODIFIED(fa)) {
+		if (appresp->modified_sel && FA_IS_MODIFIED(fa)) {
 			return GC_NONDEFAULT |
-				(appres.modified_sel_color & 0xf);
-		} else if (appres.visual_select &&
+				(appresp->modified_sel_color & 0xf);
+		} else if (appresp->visual_select &&
 			 FA_IS_SELECTABLE(fa) &&
 			 !FA_IS_INTENSE(fa)) {
 			return GC_NONDEFAULT |
-				(appres.visual_select_color & 0xf);
+				(appresp->visual_select_color & 0xf);
 		} else {
 			return field_colors[DEFCOLOR_MAP(fa)];
 		}
@@ -3459,7 +3459,7 @@ fa_color(unsigned char fa)
 		 * Color indices are the intensity bits (0 through 2)
 		 */
 		if (FA_IS_ZERO(fa) ||
-		    (appres.modified_sel && FA_IS_MODIFIED(fa)))
+		    (appresp->modified_sel && FA_IS_MODIFIED(fa)))
 			return GC_NONDEFAULT | FA_INT_NORM_SEL;
 		else
 			return GC_NONDEFAULT | (fa & 0x0c);
@@ -3737,15 +3737,15 @@ screen_new_display_charsets(const char *display_charsets, const char *csnames)
 	 * If the user chose an emulator font, but we haven't tried it yet,
 	 * see if it implements the right charset.
 	 */
-	if (efontname == NULL && appres.efontname != NULL) {
-		lff = load_fixed_font(appres.efontname, display_charsets);
+	if (efontname == NULL && appresp->efontname != NULL) {
+		lff = load_fixed_font(appresp->efontname, display_charsets);
 		if (lff != NULL) {
-			if (strcmp(appres.efontname, "3270")) {
+			if (strcmp(appresp->efontname, "3270")) {
 				popup_an_error("%s", lff);
 			}
 			Free(lff);
 		} else
-			fontname = appres.efontname;
+			fontname = appresp->efontname;
 	}
 
 	/*
@@ -3843,7 +3843,7 @@ screen_new_display_charsets(const char *display_charsets, const char *csnames)
 			return False;
 		}
 	}
-	allow_resize = appres.allow_resize;
+	allow_resize = appresp->allow_resize;
 
     done:
 	/* Set the appropriate global. */
@@ -4286,13 +4286,13 @@ screen_newscheme(char *s)
 {
 	Boolean xferred;
 
-	if (!appres.m3279)
+	if (!appresp->m3279)
 		return;
 
 	destroy_pixels();
 	xferred = xfer_color_scheme(s, True);
 	if (xferred)
-		appres.color_scheme = s;
+		appresp->color_scheme = s;
 	screen_reinit(COLOR_CHANGE);
 	scheme_changed = True;
 }
@@ -4346,11 +4346,11 @@ ring_bell(void)
 	struct timeval tv;
 
 	/* Ring the real display's bell. */
-	if (!appres.visual_bell)
-		XBell(display, appres.bell_volume);
+	if (!appresp->visual_bell)
+		XBell(display, appresp->bell_volume);
 
 	/* If we're iconic, invert the icon and return. */
-	if (!appres.active_icon) {
+	if (!appresp->active_icon) {
 		query_window_state();
 		if (iconic) {
 			invert_icon(True);
@@ -4358,7 +4358,7 @@ ring_bell(void)
 		}
 	}
 
-	if (!appres.visual_bell || !ss->exposed_yet)
+	if (!appresp->visual_bell || !ss->exposed_yet)
 		return;
 
 	/* Do a screen flash. */
@@ -4411,7 +4411,7 @@ icon_init(void)
 	icon = XCreateBitmapFromData(display, root_window,
 	    (char *) x3270_bits, x3270_width, x3270_height);
 
-	if (appres.active_icon) {
+	if (appresp->active_icon) {
 		Dimension iw, ih;
 
 		aicon_font_init();
@@ -4429,9 +4429,9 @@ icon_init(void)
 		XtVaSetValues(toplevel,
 		    XtNiconWindow, XtWindow(icon_shell),
 		    NULL);
-		if (appres.active_icon) {
+		if (appresp->active_icon) {
 			XtVaSetValues(icon_shell,
-			    XtNbackground, appres.mono ? appres.background
+			    XtNbackground, appresp->mono ? appresp->background
 						       : colorbg_pixel,
 			    NULL);
 		}
@@ -4466,16 +4466,16 @@ aicon_font_init(void)
 	char **matches;
 	int count;
 
-	if (!appres.active_icon) {
-		appres.label_icon = False;
+	if (!appresp->active_icon) {
+		appresp->label_icon = False;
 		return;
 	}
 
-	matches = XListFontsWithInfo(display, appres.icon_font, 1, &count, &f);
+	matches = XListFontsWithInfo(display, appresp->icon_font, 1, &count, &f);
 	if (matches == NULL) {
 		popup_an_error("No font %s \"%s\"\nactiveIcon will not work",
-		    ResIconFont, appres.icon_font);
-		appres.active_icon = False;
+		    ResIconFont, appresp->icon_font);
+		appresp->active_icon = False;
 		return;
 	}
 	ff = XLoadFont(display, matches[0]);
@@ -4490,13 +4490,13 @@ aicon_font_init(void)
 	iss.font_8bit = False;
 	iss.obscured = True;
 	iss.d8_ix = display8_init("ascii-7");
-	if (appres.label_icon) {
-		matches = XListFontsWithInfo(display, appres.icon_label_font,
+	if (appresp->label_icon) {
+		matches = XListFontsWithInfo(display, appresp->icon_label_font,
 		    1, &count, &ailabel_font);
 		if (matches == NULL) {
 			popup_an_error("Cannot load %s \"%s\" font\nlabelIcon will not work",
-			    ResIconLabelFont, appres.icon_label_font);
-			appres.label_icon = False;
+			    ResIconLabelFont, appresp->icon_label_font);
+			appresp->label_icon = False;
 			return;
 		}
 		ailabel_font->fid = XLoadFont(display, matches[0]);
@@ -4533,19 +4533,19 @@ aicon_size(Dimension *iw, Dimension *ih)
 static void
 aicon_init(void)
 {
-	if (!appres.active_icon)
+	if (!appresp->active_icon)
 		return;
 
 	iss.widget = icon_shell;
 	iss.window = XtWindow(iss.widget);
 	iss.cursor_daddr = 0;
 	iss.exposed_yet = False;
-	if (appres.label_icon) {
+	if (appresp->label_icon) {
 		XGCValues xgcv;
 
 		xgcv.font = ailabel_font->fid;
-		xgcv.foreground = appres.foreground;
-		xgcv.background = appres.background;
+		xgcv.foreground = appresp->foreground;
+		xgcv.background = appresp->background;
 		ailabel_gc = XtGetGC(toplevel,
 		    GCFont|GCForeground|GCBackground,
 		    &xgcv);
@@ -4558,7 +4558,7 @@ aicon_init(void)
 static void
 aicon_reinit(unsigned cmask)
 {
-	if (!appres.active_icon)
+	if (!appresp->active_icon)
 		return;
 
 	if (cmask & (FONT_CHANGE | COLOR_CHANGE))
@@ -4585,7 +4585,7 @@ draw_aicon_label(void)
 	int len;
 	Position x;
 
-	if (!appres.label_icon || !iconic)
+	if (!appresp->label_icon || !iconic)
 		return;
 
 	XFillRectangle(display, iss.window,
@@ -4619,7 +4619,7 @@ flip_icon(Boolean inverted, enum mcursor_state mstate)
 	
 	if (mstate == LOCKED)
 		mstate = NORMAL;
-	if (appres.active_icon
+	if (appresp->active_icon
 	    || (inverted == icon_inverted && mstate == icon_cstate))
 		return;
 	switch (mstate) {
@@ -4895,13 +4895,13 @@ do_resize(void)
 
 		cw = SCREEN_WIDTH(r->width)+2 + scrollbar_width;
 		mkw = min_keypad_width();
-		if (kp_placement == kp_integral && appres.keypad_on
+		if (kp_placement == kp_integral && appresp->keypad_on
 			&& cw < mkw) {
 			cw = mkw;
 		}
 
 		ch = SCREEN_HEIGHT(r->height)+2 + menubar_qheight(cw);
-		if (kp_placement == kp_integral && appres.keypad_on)
+		if (kp_placement == kp_integral && appresp->keypad_on)
 			ch += keypad_qheight();
 		r->total_width = cw;
 		r->total_height = ch;
@@ -5040,13 +5040,13 @@ revert_screen(void)
 		break;
 	    case REDO_KEYPAD:
 		revert = "keypad configuration";
-		screen_showikeypad(appres.keypad_on = False);
+		screen_showikeypad(appresp->keypad_on = False);
 		break;
 	    case REDO_SCROLLBAR:
 		revert = "scrollbar configuration";
 		if (toggled(SCROLL_BAR)) {
-			toggle_toggle(&appres.toggle[SCROLL_BAR]);
-			toggle_scrollBar(&appres.toggle[SCROLL_BAR],
+			toggle_toggle(&appresp->toggle[SCROLL_BAR]);
+			toggle_scrollBar(&appresp->toggle[SCROLL_BAR],
 			    TT_INTERACTIVE);
 		}
 		break;
@@ -5321,8 +5321,8 @@ im_callback(Display *display, XPointer client_data, XPointer call_data)
 		{ XIMPreeditCallbacks| XIMStatusCallbacks,  PT_ON_THE_SPOT },
 		{ (XIMStyle)0,                              NULL }
 	};
-	char *im_style = (appres.preedit_type != NULL)?
-	    strip_whitespace(appres.preedit_type): PT_OVER_THE_SPOT;
+	char *im_style = (appresp->preedit_type != NULL)?
+	    strip_whitespace(appresp->preedit_type): PT_OVER_THE_SPOT;
 	char c;
 
 #if defined(_ST) /*[*/
@@ -5497,8 +5497,8 @@ xim_init(void)
 	return;
     }
 
-    if (appres.input_method != NULL) {
-	buf = lazyaf("@im=%s", appres.input_method);
+    if (appresp->input_method != NULL) {
+	buf = lazyaf("@im=%s", appresp->input_method);
     }
     if (XSetLocaleModifiers(buf) == NULL) {
 	popup_an_error("XSetLocaleModifiers failed\nXIM-based input disabled");

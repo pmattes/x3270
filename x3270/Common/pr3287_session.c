@@ -413,11 +413,11 @@ pr3287_start_now(const char *lu, Boolean associated)
     charset_cmd = lazyaf("-charset %s", get_charset_name());
 
     /* Construct proxy option. */
-    if (appres.proxy != NULL) {
+    if (appresp->proxy != NULL) {
 #if !defined(_WIN32) /*[*/
-	proxy_cmd = lazyaf("-proxy \"%s\"", appres.proxy);
+	proxy_cmd = lazyaf("-proxy \"%s\"", appresp->proxy);
 #else /*][ */
-	proxy_cmd = lazyaf("-proxy %s", appres.proxy);
+	proxy_cmd = lazyaf("-proxy %s", appresp->proxy);
 #endif /*]*/
     }
 
@@ -431,7 +431,7 @@ pr3287_start_now(const char *lu, Boolean associated)
 
     /* Get printer options. */
 #if defined(C3270) /*[*/
-    pr3287_opts = appres.printer_opts;
+    pr3287_opts = appresp->printer_opts;
 #else /*][*/
     pr3287_opts = get_resource(ResPrinterOptions);
 #endif /*]*/
@@ -483,40 +483,40 @@ pr3287_start_now(const char *lu, Boolean associated)
 		continue;
 	    } else if (!strncmp(s+1, "V%", 2)) {
 #if defined(HAVE_LIBSSL) /*[*/
-		if (appres.verify_host_cert) {
+		if (appresp->verify_host_cert) {
 		    vb_appends(&r, " " OptVerifyHostCert);
 		}
-		if (appres.self_signed_ok) {
+		if (appresp->self_signed_ok) {
 		    vb_appends(&r, " " OptSelfSignedOk);
 		}
-		if (appres.ca_dir) {
-		    vb_appendf(&r, " %s \"%s\"", OptCaDir, appres.ca_dir);
+		if (appresp->ca_dir) {
+		    vb_appendf(&r, " %s \"%s\"", OptCaDir, appresp->ca_dir);
 		}
-		if (appres.ca_file) {
-		    vb_appendf(&r, " %s \"%s\"", OptCaFile, appres.ca_file);
+		if (appresp->ca_file) {
+		    vb_appendf(&r, " %s \"%s\"", OptCaFile, appresp->ca_file);
 		}
-		if (appres.cert_file) {
+		if (appresp->cert_file) {
 		    vb_appendf(&r, " %s \"%s\"", OptCertFile,
-			    appres.cert_file);
+			    appresp->cert_file);
 		}
-		if (appres.cert_file_type) {
+		if (appresp->cert_file_type) {
 		    vb_appendf(&r, " %s %s", OptCertFileType,
-			    appres.cert_file_type);
+			    appresp->cert_file_type);
 		}
-		if (appres.chain_file) {
+		if (appresp->chain_file) {
 		    vb_appendf(&r, " %s \"%s\"", OptChainFile,
-			    appres.chain_file);
+			    appresp->chain_file);
 		}
-		if (appres.key_file) {
-		    vb_appendf(&r, " %s \"%s\"", OptKeyFile, appres.key_file);
+		if (appresp->key_file) {
+		    vb_appendf(&r, " %s \"%s\"", OptKeyFile, appresp->key_file);
 		}
-		if (appres.key_passwd) {
+		if (appresp->key_passwd) {
 		    vb_appendf(&r, " %s \"%s\"", OptKeyPasswd,
-			    appres.key_passwd);
+			    appresp->key_passwd);
 		}
-		if (appres.accept_hostname) {
+		if (appresp->accept_hostname) {
 		    vb_appendf(&r, " %s \"%s\"", OptAcceptHostname,
-			    appres.accept_hostname);
+			    appresp->accept_hostname);
 		}
 #endif /*]*/
 		s += 2;
@@ -1065,7 +1065,7 @@ static void
 pr3287_host_connect(Boolean connected _is_unused)
 {
     if (IN_3270) {
-	char *pr3287_lu = appres.printer_lu;
+	char *pr3287_lu = appresp->printer_lu;
 
 	if (pr3287_lu != NULL && !pr3287_session_running()) {
 	    if (!strcmp(pr3287_lu, ".")) {

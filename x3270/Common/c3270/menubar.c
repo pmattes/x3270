@@ -338,7 +338,7 @@ popup_menu(int x, int click)
 	int row, col;
 	int next_col;
 
-	if (!appres.menubar)
+	if (!appresp->menubar)
 	    	return;
 
 	/* Find which menu to start with. */
@@ -927,7 +927,7 @@ menu_init(void)
 
 	file_menu = add_menu("File");
 	for (j = 0; j < FM_COUNT; j++) {
-	    	if (appres.secure && j == FM_PROMPT) {
+	    	if (appresp->secure && j == FM_PROMPT) {
 		    	continue;
 		}
 #if defined(WC3270) /*[*/
@@ -993,7 +993,7 @@ menubar_retoggle(struct toggle *t, int ix)
     int j;
     char *s;
 
-    if (!appres.menubar) {
+    if (!appresp->menubar) {
 	return;
     }
 
@@ -1053,7 +1053,7 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
      *
      * Otherwise (no wide curses, no Windows), ASCII art is all we can do.
      */
-    if (appres.ascii_box_draw)
+    if (appresp->ascii_box_draw)
 #endif /*]*/
     {
 	/* ASCII art. */
@@ -1086,7 +1086,7 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
 	return;
     }
 #if defined(CURSES_WIDE) /*[*/
-    else if (appres.acs) {
+    else if (appresp->acs) {
 	/* ncurses ACS. */
 	*is_acs = 1;
 	switch (c) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,7 @@ void
 trace_gui_bad_size(const char *default_value)
 {
     popup_an_info("Invalid %s '%s', assuming %s",
-	    ResTraceFileSize, appres.trace_file_size,
+	    ResTraceFileSize, appresp->trace_file_size,
 	    default_value);
 }
 
@@ -100,7 +100,7 @@ trace_gui_on(int reason, enum toggle_type tt, const char *tracefile)
     if (trace_shell == NULL) {
 	trace_shell = create_form_popup("trace",
 		tracefile_callback,
-		appres.trace_monitor? no_tracefile_callback: NULL,
+		appresp->trace_monitor? no_tracefile_callback: NULL,
 		FORM_NO_WHITE);
 	XtVaSetValues(XtNameToWidget(trace_shell, ObjDialog),
 		XtNvalue, tracefile,
@@ -117,10 +117,10 @@ trace_gui_on(int reason, enum toggle_type tt, const char *tracefile)
 void
 trace_gui_toggle(void)
 {
-    if (appres.toggle[SCREEN_TRACE].w[0] != NULL) {
-	XtVaSetValues(appres.toggle[SCREEN_TRACE].w[0],
+    if (appresp->toggle[SCREEN_TRACE].w[0] != NULL) {
+	XtVaSetValues(appresp->toggle[SCREEN_TRACE].w[0],
 		XtNleftBitmap,
-		appres.toggle[SCREEN_TRACE].value? dot: None,
+		appresp->toggle[SCREEN_TRACE].value? dot: None,
 		NULL);
     }
 }

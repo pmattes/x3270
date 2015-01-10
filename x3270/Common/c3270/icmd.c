@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -284,8 +284,8 @@ ASCII on the workstation.\n\
 
 			cp = windows_cp;
 			if (cp == 0) {
-				cp = appres.ft_cp? appres.ft_cp:
-						   appres.local_cp;
+				cp = appresp->ft_cp? appresp->ft_cp:
+						     appresp->local_cp;
 			}
 			printf("Windows code page for transfer: [%d] ", cp);
 			windows_cp = getnum(cp);

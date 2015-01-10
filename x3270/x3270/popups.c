@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -878,7 +878,7 @@ popup_an_error(const char *fmt, ...)
 	va_list args;
 
 	va_start(args, fmt);
-	popup_rop(&error_popup, appres.reconnect? error_exit: NULL, fmt, args);
+	popup_rop(&error_popup, appresp->reconnect? error_exit: NULL, fmt, args);
 	va_end(args);
 }
 

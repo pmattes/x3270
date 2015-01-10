@@ -132,11 +132,11 @@ read_hosts_file(void)
     struct host *h;
     char *hostfile_name;
 
-    hostfile_name = appres.hostsfile;
+    hostfile_name = appresp->hostsfile;
     if (hostfile_name == NULL) {
-	hostfile_name = xs_buffer("%s/ibm_hosts", appres.conf_dir);
+	hostfile_name = xs_buffer("%s/ibm_hosts", appresp->conf_dir);
     } else {
-	hostfile_name = do_subst(appres.hostsfile, DS_VARS | DS_TILDE);
+	hostfile_name = do_subst(appresp->hostsfile, DS_VARS | DS_TILDE);
     }
     hf = fopen(hostfile_name, "r");
     if (hf != NULL) {
@@ -196,9 +196,9 @@ read_hosts_file(void)
 	    last_host = h;
 	}
 	(void) fclose(hf);
-    } else if (appres.hostsfile != NULL) {
+    } else if (appresp->hostsfile != NULL) {
 	popup_an_errno(errno, "Cannot open " ResHostsFile " '%s'",
-		appres.hostsfile);
+		appresp->hostsfile);
     }
     Free(hostfile_name);
 
@@ -261,7 +261,7 @@ hostfile_lookup(const char *name, char **hostname, char **loginstring)
 	    if (h->loginstring != NULL) {
 		*loginstring = h->loginstring;
 	    } else {
-		*loginstring = appres.login_macro;
+		*loginstring = appresp->login_macro;
 	    }
 	    return 1;
 	}
@@ -643,7 +643,7 @@ host_connect(const char *n)
 #if defined(LOCAL_PROCESS) /*[*/
     if ((localprocess_cmd = parse_localprocess(nb)) != NULL) {
 	chost = localprocess_cmd;
-	port = appres.port;
+	port = appresp->port;
     } else
 #endif /*]*/
     {
@@ -674,7 +674,7 @@ host_connect(const char *n)
 
 	/* Default the port. */
 	if (port == NULL) {
-	    port = appres.port;
+	    port = appresp->port;
 	}
     }
 
@@ -714,12 +714,12 @@ host_connect(const char *n)
     if (net_sock == INVALID_IOSRC && !resolving) {
 #if defined(X3270_INTERACTIVE) /*[*/
 # if defined(X3270_DISPLAY) /*[*/
-	if (appres.once) {
+	if (appresp->once) {
 	    /* Exit when the error pop-up pops down. */
 	    exiting = True;
 	} else
 # endif /*]*/
-	    if (appres.reconnect) {
+	    if (appresp->reconnect) {
 		auto_reconnect_inprogress = True;
 		reconnect_id = AddTimeOut(RECONNECT_ERR_MS, try_reconnect);
 	    }
@@ -740,7 +740,7 @@ host_connect(const char *n)
 
     /* Set pending string. */
     if (ps == NULL) {
-	ps = appres.login_macro;
+	ps = appresp->login_macro;
     }
     if (ps != NULL) {
 	login_macro(ps);
@@ -757,7 +757,7 @@ host_connect(const char *n)
 	cstate = CONNECTED_INITIAL;
 	st_changed(ST_CONNECT, True);
 #if defined(X3270_DISPLAY) /*[*/
-	if (appres.reconnect && error_popup_visible()) {
+	if (appresp->reconnect && error_popup_visible()) {
 	    popdown_an_error();
 	}
 #endif /*]*/
@@ -827,7 +827,7 @@ host_disconnect(Boolean failed)
     net_sock = INVALID_IOSRC;
 #if defined(X3270_INTERACTIVE) /*[*/
 # if defined(X3270_DISPLAY) /*[*/
-    if (appres.once) {
+    if (appresp->once) {
 	if (error_popup_visible()) {
 	    /* If there is an error pop-up, exit when it pops down. */
 	    exiting = True;
@@ -838,7 +838,7 @@ host_disconnect(Boolean failed)
 	}
     } else
 # endif /*]*/
-	if (appres.reconnect && !auto_reconnect_inprogress) {
+	if (appresp->reconnect && !auto_reconnect_inprogress) {
 	    /* Schedule an automatic reconnection. */
 	    auto_reconnect_inprogress = True;
 	    reconnect_id = AddTimeOut(failed? RECONNECT_ERR_MS:
@@ -881,7 +881,7 @@ host_connected(void)
     st_changed(ST_CONNECT, True);
 
 #if defined(X3270_DISPLAY) /*[*/
-    if (appres.reconnect && error_popup_visible()) {
+    if (appresp->reconnect && error_popup_visible()) {
 	popdown_an_error();
     }
 #endif /*]*/
@@ -998,9 +998,9 @@ save_recent(const char *hn)
      * Read the last-connection file, to capture the any changes made by
      * other instances of x3270.  
      */
-    if (appres.connectfile_name != NULL &&
-	    strcasecmp(appres.connectfile_name, "none")) {
-	lcf_name = do_subst(appres.connectfile_name, DS_VARS | DS_TILDE);
+    if (appresp->connectfile_name != NULL &&
+	    strcasecmp(appresp->connectfile_name, "none")) {
+	lcf_name = do_subst(appresp->connectfile_name, DS_VARS | DS_TILDE);
 	lcf = fopen(lcf_name, "r");
     }
     if (lcf != NULL) {

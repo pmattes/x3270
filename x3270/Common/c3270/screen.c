@@ -241,25 +241,25 @@ screen_init(void)
 
 #if !defined(C3270_80_132) /*[*/
 	/* Disallow altscreen/defscreen. */
-	if ((appres.altscreen != NULL) || (appres.defscreen != NULL)) {
+	if ((appresp->altscreen != NULL) || (appresp->defscreen != NULL)) {
 		(void) fprintf(stderr, "altscreen/defscreen not supported\n");
 		exit(1);
 	}
 #else /*][*/
 	/* Parse altscreen/defscreen. */
-	if ((appres.altscreen != NULL) ^ (appres.defscreen != NULL)) {
+	if ((appresp->altscreen != NULL) ^ (appresp->defscreen != NULL)) {
 		(void) fprintf(stderr,
 		    "Must specify both altscreen and defscreen\n");
 		exit(1);
 	}
-	if (appres.altscreen != NULL) {
-		parse_screen_spec(appres.altscreen, &altscreen_spec);
+	if (appresp->altscreen != NULL) {
+		parse_screen_spec(appresp->altscreen, &altscreen_spec);
 		if (altscreen_spec.rows < 27 || altscreen_spec.cols < 132) {
 		    (void) fprintf(stderr, "Rows and/or cols too small on "
 			"alternate screen (mininum 27x132)\n");
 		    exit(1);
 		}
-		parse_screen_spec(appres.defscreen, &defscreen_spec);
+		parse_screen_spec(appresp->defscreen, &defscreen_spec);
 		if (defscreen_spec.rows < 24 || defscreen_spec.cols < 80) {
 		    (void) fprintf(stderr, "Rows and/or cols too small on "
 			"default screen (mininum 24x80)\n");
@@ -280,20 +280,20 @@ screen_init(void)
 	 * Setting the high bit for the Meta key is a pretty achaic idea, IMO,
 	 * so we no loger support it.
 	 */
-	if (!ts_value(appres.meta_escape, &me_mode))
+	if (!ts_value(appresp->meta_escape, &me_mode))
 		popup_an_error("Invalid %s value: '%s', "
-		    "assuming 'auto'\n", ResMetaEscape, appres.meta_escape);
+		    "assuming 'auto'\n", ResMetaEscape, appresp->meta_escape);
 	if (me_mode == TS_AUTO)
 		me_mode = TS_ON;
 
 	/* See about all-bold behavior. */
-	if (appres.all_bold_on)
+	if (appresp->all_bold_on)
 		ab_mode = TS_ON;
-	else if (!ts_value(appres.all_bold, &ab_mode))
+	else if (!ts_value(appresp->all_bold, &ab_mode))
 		popup_an_error("Invalid %s value: '%s', "
-		    "assuming 'auto'\n", ResAllBold, appres.all_bold);
+		    "assuming 'auto'\n", ResAllBold, appresp->all_bold);
 	if (ab_mode == TS_AUTO)
-		ab_mode = (appres.m3279 && (appres.color8 || COLORS < 16))? 
+		ab_mode = (appresp->m3279 && (appresp->color8 || COLORS < 16))? 
 		    TS_ON: TS_OFF;
 	if (ab_mode == TS_ON)
 		defattr |= A_BOLD;
@@ -302,8 +302,8 @@ screen_init(void)
 	 * If they don't want ACS and they're not in a UTF-8 locale, switch
 	 * to ASCII-art mode for box drawing.
 	 */
-	if (!appres.acs && !is_utf8)
-		appres.ascii_box_draw = True;
+	if (!appresp->acs && !is_utf8)
+		appresp->ascii_box_draw = True;
 
 	/* Pull in the user's color mappings. */
 	init_user_colors();
@@ -329,7 +329,7 @@ finish_screen_init(void)
 
 	/* Clear the (original) screen first. */
 #if defined(C3270_80_132) /*[*/
-	if (appres.defscreen != NULL) {
+	if (appresp->defscreen != NULL) {
 		char nbuf[64];
 
 		(void) sprintf(nbuf, "COLUMNS=%d", defscreen_spec.cols);
@@ -351,7 +351,7 @@ finish_screen_init(void)
 	initscr_done = True;
 #else /*][*/
 	/* Set up ncurses, and see if it's within bounds. */
-	if (appres.defscreen != NULL) {
+	if (appresp->defscreen != NULL) {
 		char nbuf[64];
 
 		(void) sprintf(nbuf, "COLUMNS=%d", defscreen_spec.cols);
@@ -372,7 +372,7 @@ finish_screen_init(void)
 		    	exit(1);
 		}
 	}
-	if (appres.altscreen) {
+	if (appresp->altscreen) {
 		char nbuf[64];
 
 		(void) sprintf(nbuf, "COLUMNS=%d", altscreen_spec.cols);
@@ -390,7 +390,7 @@ finish_screen_init(void)
 	    	def_screen = alt_screen;
 		cur_screen = def_screen;
 	}
-	if (appres.altscreen) {
+	if (appresp->altscreen) {
 		set_term(alt_screen);
 		cur_screen = alt_screen;
 	}
@@ -446,9 +446,9 @@ finish_screen_init(void)
 		set_rows_cols(model_num, cursesCOLS, cursesLINES - 2);
 
 #if defined(NCURSES_MOUSE_VERSION) /*[*/
-	if (appres.mouse)
+	if (appresp->mouse)
 		if (mousemask(BUTTON1_RELEASED, NULL) == 0)
-		    	appres.mouse = False;
+		    	appresp->mouse = False;
 #endif /*]*/
 
 	/* Figure out where the status line goes, if it fits. */
@@ -470,7 +470,7 @@ finish_screen_init(void)
 	register_schange(ST_PRINTER, status_printer);
 
 	/* Implement reverse video. */
-	if (appres.reverse_video) {
+	if (appresp->reverse_video) {
 	    	int c;
 
 		bg_color = COLOR_WHITE;
@@ -487,13 +487,13 @@ finish_screen_init(void)
 	}
 
 	/* Play with curses color. */
-	if (!appres.mono) {
+	if (!appresp->mono) {
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
 	    	char *colorterm;
 #endif /*]*/
 		start_color();
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
-		if ((appres.default_fgbg ||
+		if ((appresp->default_fgbg ||
 		     ((colorterm = getenv("COLORTERM")) != NULL &&
 		      !strcmp(colorterm, "gnome-terminal"))) &&
 		    use_default_colors() != ERR) {
@@ -502,14 +502,14 @@ finish_screen_init(void)
 		}
 #endif /*]*/
 		if (has_colors() && COLORS >= 8) {
-		    	if (!appres.color8 && COLORS >= 16) {
+		    	if (!appresp->color8 && COLORS >= 16) {
 				cmap = cmap16;
 				field_colors = field_colors16;
 				defcolor_offset = 8;
-				if (appres.reverse_video)
+				if (appresp->reverse_video)
 					bg_color += defcolor_offset;
 			}
-		    	if (appres.m3279)
+		    	if (appresp->m3279)
 				defattr =
 				    get_color_pair(
 					    defcolor_offset + COLOR_BLUE,
@@ -520,7 +520,7 @@ finish_screen_init(void)
 					    defcolor_offset + COLOR_GREEN,
 					    bg_color);
 			if (COLORS < 16)
-			    	appres.color8 = True;
+			    	appresp->color8 = True;
 #if defined(C3270_80_132) && defined(NCURSES_VERSION)  /*[*/
 			if (def_screen != alt_screen) {
 				SCREEN *s = cur_screen;
@@ -544,8 +544,8 @@ finish_screen_init(void)
 #endif /*]*/
 		}
 		else {
-		    	appres.mono = True;
-			appres.m3279 = False;
+		    	appresp->mono = True;
+			appresp->m3279 = False;
 			/* Get the terminal name right. */
 			set_rows_cols(model_num, want_ov_cols, want_ov_rows);
 		}
@@ -574,14 +574,14 @@ screen_connect(Boolean connected)
 static void
 setup_tty(void)
 {
-	if (appres.cbreak_mode)
+	if (appresp->cbreak_mode)
 		cbreak();
 	else
 		raw();
 	noecho();
 	nonl();
 	intrflush(stdscr,FALSE);
-	if (appres.curses_keypad)
+	if (appresp->curses_keypad)
 		keypad(stdscr, TRUE);
 	meta(stdscr, TRUE);
 	nodelay(stdscr, TRUE);
@@ -626,7 +626,7 @@ screen_init2(void)
 		setup_tty();
 		scrollok(stdscr, FALSE);
 #if defined(NCURSES_MOUSE_VERSION) /*[*/
-		if (appres.mouse)
+		if (appresp->mouse)
 			mousemask(BUTTON1_RELEASED, NULL);
 #endif /*]*/
 	}
@@ -662,7 +662,7 @@ set_status_row(int screen_rows, int emulator_rows)
 	}
 
 	/* Then check for menubar room.  Use 2 rows, 1 in a pinch. */
-	if (appres.menubar && appres.mouse) {
+	if (appresp->menubar && appresp->mouse) {
 		if (screen_rows >= emulator_rows + (status_row != 0) + 2)
 			screen_yoffset = 2;
 		else if (screen_rows >= emulator_rows + (status_row != 0) + 1)
@@ -789,13 +789,13 @@ default_color_from_fa(unsigned char fa)
 static int
 color_from_fa(unsigned char fa)
 {
-	if (appres.m3279) {
+	if (appresp->m3279) {
 		int fg;
 
 		fg = default_color_from_fa(fa);
 		return get_color_pair(fg, bg_color) |
 		    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
-	} else if (!appres.mono) {
+	} else if (!appresp->mono) {
 		return get_color_pair(defcolor_offset + COLOR_GREEN,
 			bg_color) |
 		    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
@@ -866,7 +866,7 @@ calc_attrs(int baddr, int fa_addr, int fa)
 	 * Monochrome is easy, and so is color if nothing is
 	 * specified.
 	 */
-	if (!appres.m3279 ||
+	if (!appresp->m3279 ||
 		(!ea_buf[baddr].fg &&
 		 !ea_buf[fa_addr].fg &&
 		 !ea_buf[baddr].bg &&
@@ -971,7 +971,7 @@ screen_disp(Boolean erasing _is_unused)
 		int norm, high;
 
 		if (menu_is_up) {
-			if (appres.m3279) {
+			if (appresp->m3279) {
 				norm = get_color_pair(COLOR_WHITE, COLOR_BLACK);
 				high = get_color_pair(COLOR_BLACK, COLOR_WHITE);
 			} else {
@@ -979,7 +979,7 @@ screen_disp(Boolean erasing _is_unused)
 				high = defattr | A_BOLD;
 			}
 		} else {
-			if (appres.m3279) {
+			if (appresp->m3279) {
 				norm = get_color_pair(COLOR_WHITE, COLOR_BLACK);
 				high = get_color_pair(COLOR_WHITE, COLOR_BLACK);
 			} else {
@@ -1044,7 +1044,7 @@ screen_disp(Boolean erasing _is_unused)
 
 				if (!u)
 					abort();
-				if (appres.m3279) {
+				if (appresp->m3279) {
 					if (highlight)
 						(void) attrset(
 							get_color_pair(
@@ -1138,7 +1138,7 @@ screen_disp(Boolean erasing _is_unused)
 							CS_BASE, mb,
 							sizeof(mb),
 							EUO_BLANK_UNDEF |
-				     (appres.ascii_box_draw? EUO_ASCII_BOX: 0),
+				     (appresp->ascii_box_draw? EUO_ASCII_BOX: 0),
 							NULL);
 						if (len > 0)
 							len--;
@@ -1924,7 +1924,7 @@ draw_oia(void)
 	}
 
 	/* Black out the parts of the screen we aren't using. */
-	if (!appres.mono && !filled_extra[!!curses_alt]) {
+	if (!appresp->mono && !filled_extra[!!curses_alt]) {
 	    	int r, c;
 
 		(void) attrset(defattr);
@@ -1943,7 +1943,7 @@ draw_oia(void)
 	}
 
 	/* Make sure the status line region is filled in properly. */
-	if (!appres.mono) {
+	if (!appresp->mono) {
 		int i;
 
 		(void) attrset(defattr);
@@ -2015,7 +2015,7 @@ draw_oia(void)
 	    status_im? 'I': ' ',
 	    oia_printer? 'P': ' ');
 	if (status_secure != SS_INSECURE) {
-	    	if (appres.m3279)
+	    	if (appresp->m3279)
 			(void) attrset(get_color_pair(defcolor_offset +
 				    ((status_secure == SS_SECURE)?
 					COLOR_GREEN: COLOR_YELLOW),
@@ -2283,7 +2283,7 @@ display_linedraw(unsigned char ebc)
 	int len;
 
 #if defined(CURSES_WIDE) /*[*/
-	if (appres.acs)
+	if (appresp->acs)
 #endif /*]*/
 	{
 	    	/* Try UCS first. */
@@ -2296,7 +2296,7 @@ display_linedraw(unsigned char ebc)
 
 	/* Then try Unicode. */
 	len = ebcdic_to_multibyte_x(ebc, CS_LINEDRAW, mb, sizeof(mb),
-		EUO_BLANK_UNDEF | (appres.ascii_box_draw? EUO_ASCII_BOX: 0),
+		EUO_BLANK_UNDEF | (appresp->ascii_box_draw? EUO_ASCII_BOX: 0),
 		NULL);
 	if (len > 0)
 		len--;
@@ -2395,7 +2395,7 @@ display_ge(unsigned char ebc)
 	int len;
 
 #if defined(CURSES_WIDE) /*[*/
-	if (appres.acs)
+	if (appresp->acs)
 #endif /*]*/
 	{
 	    	/* Try UCS first. */
@@ -2408,7 +2408,7 @@ display_ge(unsigned char ebc)
 
 	/* Then try Unicode. */
 	len = ebcdic_to_multibyte_x(ebc, CS_GE, mb, sizeof(mb),
-		EUO_BLANK_UNDEF | (appres.ascii_box_draw? EUO_ASCII_BOX: 0),
+		EUO_BLANK_UNDEF | (appresp->ascii_box_draw? EUO_ASCII_BOX: 0),
 		NULL);
 	if (len > 0)
 		len--;

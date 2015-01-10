@@ -215,7 +215,7 @@ setup_keymaps(const char *km, Boolean do_popup)
 
 		XtFree(n0);
 	}
-	if (appres.apl_mode && !saw_apl_keymod)
+	if (appresp->apl_mode && !saw_apl_keymod)
 		add_keymap(Apl, do_popup);
 	XtFree(bkm);
 }
@@ -237,7 +237,7 @@ get_file_keymap(const char *name, char **pathp)
 
 	/* Look for a global keymap file. */
 	if (dd == NULL) {
-		path = xs_buffer("%s/keymap.%s", appres.conf_dir, name);
+		path = xs_buffer("%s/keymap.%s", appresp->conf_dir, name);
 		dd = XrmGetFileDatabase(path);
 		if (dd != NULL)
 			*pathp = path;

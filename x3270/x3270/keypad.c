@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -267,15 +267,15 @@ static XtTranslations saved_xt = (XtTranslations) NULL;
 void
 keypad_placement_init(void)
 {
-	if (!strcmp(appres.keypad, KpLeft))
+	if (!strcmp(appresp->keypad, KpLeft))
 		kp_placement = kp_left;
-	else if (!strcmp(appres.keypad, KpRight))
+	else if (!strcmp(appresp->keypad, KpRight))
 		kp_placement = kp_right;
-	else if (!strcmp(appres.keypad, KpBottom))
+	else if (!strcmp(appresp->keypad, KpBottom))
 		kp_placement = kp_bottom;
-	else if (!strcmp(appres.keypad, KpIntegral))
+	else if (!strcmp(appresp->keypad, KpIntegral))
 		kp_placement = kp_integral;
-	else if (!strcmp(appres.keypad, KpInsideRight))
+	else if (!strcmp(appresp->keypad, KpInsideRight))
 		kp_placement = kp_inside_right;
 	else
 		xs_error("Unknown value for %s", ResKeypad);
@@ -418,14 +418,14 @@ keypad_keys_vert(Widget container)
 	    XtNwidth, VERT_WIDTH,
 	    XtNheight, TOP_MARGIN+4*(key_height+2*BORDER)+3*SPACING,
 	    NULL);
-	if (appres.mono)
+	if (appresp->mono)
 		XtVaSetValues(spf_container, XtNbackgroundPixmap, gray, NULL);
 	else
 		XtVaSetValues(spf_container, XtNbackground, keypadbg_pixel,
 		    NULL);
 
 	/* PF keys */
-	if (appres.invert_kpshift) {
+	if (appresp->invert_kpshift) {
 		c1 = spf_container;
 		c2 = container;
 	} else {
@@ -568,7 +568,7 @@ keypad_init(Widget container, Dimension voffset, Dimension screen_width, Boolean
 		    XtNwidth, width,
 		    XtNheight, height,
 		    NULL);
-		if (appres.mono)
+		if (appresp->mono)
 			XtVaSetValues(key_pad, XtNbackgroundPixmap, gray,
 			    NULL);
 		else
@@ -628,7 +628,7 @@ static enum placement *pp;
 void
 keypad_first_up(void)
 {
-	if (!appres.keypad_on || kp_placement == kp_integral)
+	if (!appresp->keypad_on || kp_placement == kp_integral)
 		return;
 	keypad_popup_init();
 	popup_popup(keypad_shell, XtGrabNone);
@@ -638,7 +638,7 @@ keypad_first_up(void)
 static void
 keypad_updown(Widget w _is_unused, XtPointer client_data, XtPointer call_data)
 {
-	appres.keypad_on = keypad_popped = *(Boolean *)client_data;
+	appresp->keypad_on = keypad_popped = *(Boolean *)client_data;
 	if (!keypad_popped) {
 	    	XtDestroyWidget(keypad_shell);
 		keypad_shell = NULL;
@@ -647,7 +647,7 @@ keypad_updown(Widget w _is_unused, XtPointer client_data, XtPointer call_data)
 		spf_container = NULL;
 	}
 
-	if (appres.keypad_on)
+	if (appresp->keypad_on)
 		place_popup(w, (XtPointer)pp, call_data);
 	menubar_keypad_changed();
 }
@@ -792,6 +792,6 @@ keypad_popup(void)
     	if (keypad_shell != NULL)
 	    	XtPopup(keypad_shell, XtGrabNone);
 #endif
-	appres.keypad_on = True;
+	appresp->keypad_on = True;
 	keypad_first_up();
 }

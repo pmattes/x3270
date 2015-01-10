@@ -110,7 +110,7 @@ usage(const char *msg)
 static void
 main_connect(Boolean ignored)
 {       
-	if (CONNECTED || appres.disconnect_clear)
+	if (CONNECTED || appresp->disconnect_clear)
                 ctlr_erase(True);
 } 
 
@@ -130,8 +130,8 @@ main(int argc, char *argv[])
 
 	argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
-	if (charset_init(appres.charset) != CS_OKAY) {
-		xs_warning("Cannot find charset \"%s\"", appres.charset);
+	if (charset_init(appresp->charset) != CS_OKAY) {
+		xs_warning("Cannot find charset \"%s\"", appresp->charset);
 		(void) charset_init(NULL);
 	}
 	model_init();
@@ -141,12 +141,12 @@ main(int argc, char *argv[])
 	idle_init();
 	nvt_init();
 	sms_init();
-	if (appres.httpd_port) {
+	if (appresp->httpd_port) {
 	    struct sockaddr *sa;
 	    socklen_t sa_len;
 
-	    if (!parse_bind_opt(appres.httpd_port, &sa, &sa_len)) {
-		xs_warning("Invalid -httpd port \"%s\"", appres.httpd_port);
+	    if (!parse_bind_opt(appresp->httpd_port, &sa, &sa_len)) {
+		xs_warning("Invalid -httpd port \"%s\"", appresp->httpd_port);
 	    } else {
 		httpd_objects_init();
 		hio_init(sa, sa_len);

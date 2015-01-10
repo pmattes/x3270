@@ -192,7 +192,7 @@ Boolean macro_output = False;
 
 /* Is the keyboard is locked due to user input? */
 #define KBWAIT	(kybdlock & (KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK))
-#define CKBWAIT (appres.toggle[AID_WAIT].value && KBWAIT)
+#define CKBWAIT (appresp->toggle[AID_WAIT].value && KBWAIT)
 
 /* Is it safe to continue a script waiting for an input field? */
 #define INPUT_OKAY ( \
@@ -401,7 +401,7 @@ main_connect(Boolean ignored)
 			break;
 		}
 	} else {
-		if (appres.disconnect_clear)
+		if (appresp->disconnect_clear)
 			ctlr_erase(True);
 		ps_clear();
 
@@ -428,8 +428,8 @@ tcl3270_main(int argc, const char *argv[])
 
 	argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
-	if (charset_init(appres.charset) != CS_OKAY) {
-		xs_warning("Cannot find charset \"%s\"", appres.charset);
+	if (charset_init(appresp->charset) != CS_OKAY) {
+		xs_warning("Cannot find charset \"%s\"", appresp->charset);
 		(void) charset_init(NULL);
 	}
 	model_init();
@@ -516,7 +516,7 @@ static void
 command_timed_out(ioid_t id _is_unused)
 {
     	popup_an_error("Command timed out after %ds.\n",
-		appres.command_timeout);
+		appresp->command_timeout);
 	command_timeout_id = NULL_IOID;
 
 	/* Let the command complete unsuccessfully. */
@@ -602,8 +602,8 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 
     if (waiting != NOT_WAITING) {
 	vtrace("Blocked %s (%s)\n", action, wait_name[waiting]);
-	if (appres.command_timeout) {
-	    command_timeout_id = AddTimeOut(appres.command_timeout * 1000,
+	if (appresp->command_timeout) {
+	    command_timeout_id = AddTimeOut(appresp->command_timeout * 1000,
 		    command_timed_out);
 	}
     }

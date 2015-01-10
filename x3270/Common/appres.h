@@ -75,7 +75,7 @@ typedef enum {
     N_TOGGLES
 } toggle_index_t;
 
-#define toggled(ix)		(appres.toggle[ix].value)
+#define toggled(ix)		(appresp->toggle[ix].value)
 #define toggle_toggle(t) \
 	{ (t)->value = !(t)->value; (t)->changed = True; }
 #define TOGGLE_BIT(ix)	(1 << (ix))
@@ -290,4 +290,4 @@ typedef struct {
 
 } AppRes, *AppResptr;
 
-extern AppRes appres;
+extern AppResptr appresp;

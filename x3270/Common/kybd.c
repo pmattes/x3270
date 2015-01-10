@@ -268,7 +268,7 @@ enq_xta(const char *name, action_t *fn, const char *parm1, const char *parm2)
 	}
 
 	/* If typeahead disabled, complain and drop it. */
-	if (!appres.typeahead) {
+	if (!appresp->typeahead) {
 		vtrace("  dropped (no typeahead)\n");
 		return;
 	}
@@ -628,7 +628,7 @@ operator_error(int error_type)
 {
 	if (sms_redirect())
 		popup_an_error("Keyboard locked");
-	if (appres.oerr_lock || sms_redirect()) {
+	if (appresp->oerr_lock || sms_redirect()) {
 		status_oerr(error_type);
 		mcursor_locked();
 		kybdlock_set((unsigned int)error_type, "operator_error");
@@ -992,7 +992,7 @@ key_Character(unsigned ebc, Boolean with_ge, Boolean pasting)
 		return False;
 	    }
 	}
-	if (appres.numeric_lock && FA_IS_NUMERIC(fa) &&
+	if (appresp->numeric_lock && FA_IS_NUMERIC(fa) &&
 	    !((ebc >= EBC_0 && ebc <= EBC_9) ||
 	      ebc == EBC_minus || ebc == EBC_period)) {
 		operator_error(KL_OERR_NUMERIC);
@@ -1270,7 +1270,7 @@ key_WCharacter(unsigned char ebc_pair[])
 	}
 
 	/* Numeric? */
-	if (appres.numeric_lock && FA_IS_NUMERIC(fa)) {
+	if (appresp->numeric_lock && FA_IS_NUMERIC(fa)) {
 		operator_error(KL_OERR_NUMERIC);
 		return False;
 	}
@@ -1800,17 +1800,17 @@ do_reset(Boolean explicit)
 	 */
 	if (explicit
 	    || ft_state != FT_NONE
-	    || (!appres.unlock_delay && !sms_in_macro())
+	    || (!appresp->unlock_delay && !sms_in_macro())
 	    || (unlock_delay_time != 0 && (time(NULL) - unlock_delay_time) > 1)
-	    || !appres.unlock_delay_ms) {
+	    || !appresp->unlock_delay_ms) {
 		kybdlock_clr(-1, "do_reset");
 	} else if (kybdlock &
   (KL_DEFERRED_UNLOCK | KL_OIA_TWAIT | KL_OIA_LOCKED | KL_AWAITING_FIRST)) {
 		kybdlock_clr(~KL_DEFERRED_UNLOCK, "do_reset");
 		kybdlock_set(KL_DEFERRED_UNLOCK, "do_reset");
-		unlock_id = AddTimeOut(appres.unlock_delay_ms, defer_unlock);
+		unlock_id = AddTimeOut(appresp->unlock_delay_ms, defer_unlock);
 		vtrace("Deferring keyboard unlock %dms\n",
-			appres.unlock_delay_ms);
+			appresp->unlock_delay_ms);
 	}
 
 	/* Clean up other modes. */
@@ -3591,14 +3591,14 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 		}
 		break;
 	    case '[':	/* APL left bracket */
-		if (pasting && appres.apl_mode) {
+		if (pasting && appresp->apl_mode) {
 			key_UCharacter(XK_Yacute, KT_GE, ia);
 		} else {
 			key_UCharacter((unsigned char)c, KT_STD, ia);
 		}
 		break;
 	    case ']':	/* APL right bracket */
-		if (pasting && appres.apl_mode) {
+		if (pasting && appresp->apl_mode) {
 		    key_UCharacter(XK_diaeresis, KT_GE, ia);
 		} else {
 		    key_UCharacter((unsigned char)c, KT_STD, ia);
@@ -4141,14 +4141,14 @@ build_composites(void)
 	int i;
 	struct composite *cp;
 
-	if (appres.compose_map == NULL) {
+	if (appresp->compose_map == NULL) {
 		popup_an_error("Compose: No %s defined", ResComposeMap);
 		return False;
 	}
-	c0 = get_fresource("%s.%s", ResComposeMap, appres.compose_map);
+	c0 = get_fresource("%s.%s", ResComposeMap, appresp->compose_map);
 	if (c0 == NULL) {
 		popup_an_error("Compose: Cannot find %s \"%s\"",
-			ResComposeMap, appres.compose_map);
+			ResComposeMap, appresp->compose_map);
 		return False;
 	}
 	c1 = c = NewString(c0);	/* will be modified by strtok */

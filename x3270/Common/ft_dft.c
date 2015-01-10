@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -722,7 +722,7 @@ void
 set_dft_buffersize(void)
 {
 	if (dft_buffersize == 0) {
-		dft_buffersize = appres.dft_buffer_size;
+		dft_buffersize = appresp->dft_buffer_size;
 		if (dft_buffersize == 0)
 			dft_buffersize = DFT_BUF;
 	}

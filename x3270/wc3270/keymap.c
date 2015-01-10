@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -928,8 +928,8 @@ keymap_init(void)
 	read_keymap("base");
 
 	/* Read the user-defined keymaps. */
-	if (appres.key_map != NULL) {
-		s = s0 = NewString(appres.key_map);
+	if (appresp->key_map != NULL) {
+		s = s0 = NewString(appresp->key_map);
 		while ((comma = strchr(s, ',')) != NULL) {
 			*comma = '\0';
 			if (*s)

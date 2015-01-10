@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -326,10 +326,10 @@ popup_about_config(void)
 	get_message("model"), model_name,
 	maxCOLS, get_message("columns"),
 	maxROWS, get_message("rows"),
-	appres.mono ? get_message("mono") :
-	    (appres.m3279 ? get_message("fullColor") :
+	appresp->mono ? get_message("mono") :
+	    (appresp->m3279 ? get_message("fullColor") :
 		get_message("pseudoColor")),
-	(appres.extended && !std_ds_host) ? get_message("extendedDs") :
+	(appresp->extended && !std_ds_host) ? get_message("extendedDs") :
 	    get_message("standardDs")), 4);
 
     MAKE_LABEL(get_message("terminalName"), 4);
@@ -386,8 +386,8 @@ popup_about_config(void)
 	MAKE_VALUE(xbuf);
 	XtFree(xbuf);
 	MAKE_LABEL(get_message("inputMethod"), 4);
-	if (appres.input_method) {
-	    MAKE_VALUE(appres.input_method);
+	if (appresp->input_method) {
+	    MAKE_VALUE(appresp->input_method);
 	} else if (getenv("XMODIFIERS") != NULL) {
 	    MAKE_VALUE("(via environment)");
 	} else {
@@ -436,24 +436,24 @@ popup_about_config(void)
     } else {
 	MAKE_LABEL(get_message("defaultKeyboardMap"), 4);
     }
-    if (appres.compose_map) {
+    if (appresp->compose_map) {
 	MAKE_LABEL(get_message("composeMap"), 4);
-	MAKE_VALUE(appres.compose_map);
+	MAKE_VALUE(appresp->compose_map);
     } else {
 	MAKE_LABEL(get_message("noComposeMap"), 4);
     }
 
-    if (appres.active_icon) {
+    if (appresp->active_icon) {
 	MAKE_LABEL(get_message("activeIcon"), 4);
 	xbuf = xs_buffer("  %s", get_message("iconFont"));
 	MAKE_LABEL(xbuf, 0);
 	XtFree(xbuf);
-	MAKE_VALUE(appres.icon_font);
-	if (appres.label_icon) {
+	MAKE_VALUE(appresp->icon_font);
+	if (appresp->label_icon) {
 	    xbuf = xs_buffer("  %s", get_message("iconLabelFont"));
 	    MAKE_LABEL(xbuf, 0);
 	    XtFree(xbuf);
-	    MAKE_VALUE(appres.icon_label_font);
+	    MAKE_VALUE(appresp->icon_label_font);
 	}
     } else {
 	MAKE_LABEL(get_message("staticIcon"), 4);
@@ -525,7 +525,7 @@ popup_about_status(void)
 	} else
 #endif /*]*/
 	{
-	    if (!appres.suppress_host) {
+	    if (!appresp->suppress_host) {
 		MAKE_VALUE(current_host);
 	    }
 	}

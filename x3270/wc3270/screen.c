@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2015, Paul Mattes.
+ * Copyright (c) 2000-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -68,7 +68,7 @@
 
 #define CM (60*10)	/* csec per minute */
 
-#define XTRA_ROWS	(1 + 2 * (appres.menubar == True))
+#define XTRA_ROWS	(1 + 2 * (appresp->menubar == True))
 
 #if !defined(COMMON_LVB_LEAD_BYTE) /*[*/
 # define COMMON_LVB_LEAD_BYTE		0x100
@@ -1093,12 +1093,12 @@ screen_init(void)
 	int want_ov_cols;
 	Boolean oversize = False;
 
-	if (appres.menubar)
+	if (appresp->menubar)
 		menu_init();
-	appres.mouse = True;
+	appresp->mouse = True;
 
 	/* Disallow altscreen/defscreen. */
-	if ((appres.altscreen != NULL) || (appres.defscreen != NULL)) {
+	if ((appresp->altscreen != NULL) || (appresp->defscreen != NULL)) {
 		(void) fprintf(stderr, "altscreen/defscreen not supported\n");
 		x3270_exit(1);
 	}
@@ -1179,16 +1179,16 @@ screen_init(void)
 	register_actions(screen_actions, array_count(screen_actions));
 
 	/* See about all-bold behavior. */
-	if (appres.all_bold_on)
+	if (appresp->all_bold_on)
 		ab_mode = TS_ON;
-	else if (!ts_value(appres.all_bold, &ab_mode))
+	else if (!ts_value(appresp->all_bold, &ab_mode))
 		(void) fprintf(stderr, "invalid %s value: '%s', "
-		    "assuming 'auto'\n", ResAllBold, appres.all_bold);
+		    "assuming 'auto'\n", ResAllBold, appresp->all_bold);
 	if (ab_mode == TS_AUTO)
-		ab_mode = appres.m3279? TS_ON: TS_OFF;
+		ab_mode = appresp->m3279? TS_ON: TS_OFF;
 
 	/* If the want monochrome, assume they want green. */
-	if (!appres.m3279) {
+	if (!appresp->m3279) {
 	    	defattr |= FOREGROUND_GREEN;
 		if (ab_mode == TS_ON)
 			defattr |= FOREGROUND_INTENSITY;
@@ -1206,8 +1206,8 @@ screen_init(void)
 	scroll_buf_init();
 
 	/* Set the window label. */
-	if (appres.title != NULL)
-		screen_title(appres.title);
+	if (appresp->title != NULL)
+		screen_title(appresp->title);
 	else if (profile_name != NULL)
 	    	screen_title(profile_name);
 	else
@@ -1243,7 +1243,7 @@ set_status_row(int screen_rows, int emulator_rows)
 	}
 
 	/* Then check for menubar room.  Use 2 rows, 1 in a pinch. */
-	if (appres.menubar && appres.mouse) {
+	if (appresp->menubar && appresp->mouse) {
 		if (screen_rows >= emulator_rows + (status_row != 0) + 2)
 			screen_yoffset = 2;
 		else if (screen_rows >= emulator_rows + (status_row != 0) + 1)
@@ -1347,7 +1347,7 @@ color3270_from_fa(unsigned char fa)
 static int
 color_from_fa(unsigned char fa)
 {
-	if (appres.m3279) {
+	if (appresp->m3279) {
 		int fg;
 
 		fg = color3270_from_fa(fa);
@@ -1423,7 +1423,7 @@ init_user_colors(void)
 	    	init_user_color(host_color[i].name, host_color[i].index);
 	}
 
-	if (appres.m3279)
+	if (appresp->m3279)
 		defattr = cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
 			  cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
 	else
@@ -1474,7 +1474,7 @@ calc_attrs(int baddr, int fa_addr, int fa, Boolean *underlined,
 	/* Compute the color. */
 
 	/* Monochrome is easy, and so is color if nothing is specified. */
-	if (!appres.m3279 ||
+	if (!appresp->m3279 ||
 		(!ea_buf[baddr].fg &&
 		 !ea_buf[fa_addr].fg &&
 		 !ea_buf[baddr].bg &&
@@ -1512,7 +1512,7 @@ calc_attrs(int baddr, int fa_addr, int fa, Boolean *underlined,
 		gr = 0;
 
 	if (!toggled(UNDERSCORE) &&
-		appres.m3279 &&
+		appresp->m3279 &&
 		(gr & (GR_BLINK | GR_UNDERLINE)) &&
 		!(gr & GR_REVERSE) &&
 		!bg) {
@@ -1520,7 +1520,7 @@ calc_attrs(int baddr, int fa_addr, int fa, Boolean *underlined,
 	    	a |= BACKGROUND_INTENSITY;
 	}
 
-	if (!appres.m3279 &&
+	if (!appresp->m3279 &&
 		((gr & GR_INTENSIFY) || (ab_mode == TS_ON) || FA_IS_HIGH(fa))) {
 
 		a |= FOREGROUND_INTENSITY;
@@ -1808,7 +1808,7 @@ screen_disp(Boolean erasing _is_unused)
 				} else if (!IS_RIGHT(d)) {
 					c = ebcdic_to_unicode(ea_buf[baddr].cc,
 						ea_buf[baddr].cs,
-						appres.ascii_box_draw?
+						appresp->ascii_box_draw?
 						    EUO_ASCII_BOX: 0);
 					if (c == 0)
 					    	c = ' ';
@@ -2633,7 +2633,7 @@ draw_oia(void)
 		printw(" ");
 	}
 
-	if (appres.m3279) {
+	if (appresp->m3279) {
 	    	attrset(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
 			cmap_bg[HOST_COLOR_GREY]);
 	} else {
@@ -2655,7 +2655,7 @@ draw_oia(void)
 		printw("?");
 	}
 
-	if (appres.m3279)
+	if (appresp->m3279)
 	    	attrset(cmap_fg[HOST_COLOR_GREY] |
 			cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
 	else
@@ -2674,7 +2674,7 @@ draw_oia(void)
 				    HOST_COLOR_GREEN: HOST_COLOR_YELLOW] |
 			cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
 		printw("S");
-		if (appres.m3279)
+		if (appresp->m3279)
 			attrset(cmap_fg[HOST_COLOR_GREY] |
 				cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
 		else
@@ -2719,7 +2719,7 @@ ring_bell(void)
 	} bell_mode = 0;
 
 	if (!(bell_mode & BELL_KNOWN)) {
-	    	if (appres.bell_mode != NULL) {
+	    	if (appresp->bell_mode != NULL) {
 			/*
 			 * New config: wc3270.bellMode
 			 * 		none		do nothing
@@ -2729,14 +2729,14 @@ ring_bell(void)
 			 * 		flashBeep	beep and flash
 			 * 		anything else	do nothing
 			 */
-			if (!strcasecmp(appres.bell_mode, "none")) {
+			if (!strcasecmp(appresp->bell_mode, "none")) {
 			    	bell_mode = BELL_NOTHING;
-			} else if (!strcasecmp(appres.bell_mode, "beep")) {
+			} else if (!strcasecmp(appresp->bell_mode, "beep")) {
 			    	bell_mode = BELL_BEEP;
-			} else if (!strcasecmp(appres.bell_mode, "flash")) {
+			} else if (!strcasecmp(appresp->bell_mode, "flash")) {
 			    	bell_mode = BELL_FLASH;
-			} else if (!strcasecmp(appres.bell_mode, "beepFlash") ||
-				 !strcasecmp(appres.bell_mode, "flashBeep")) {
+			} else if (!strcasecmp(appresp->bell_mode, "beepFlash") ||
+				 !strcasecmp(appresp->bell_mode, "flashBeep")) {
 			    	bell_mode = BELL_BEEP | BELL_FLASH;
 			} else {
 			    	/*
@@ -2745,7 +2745,7 @@ ring_bell(void)
 				 */
 			    	bell_mode = BELL_NOTHING;
 			}
-		} else if (appres.visual_bell) {
+		} else if (appresp->visual_bell) {
 		    	/*
 			 * Old config: wc3270.visualBell
 			 * 		true		just flash
@@ -2878,7 +2878,7 @@ relabel(Boolean ignored _is_unused)
 {
 	char *title;
 
-	if (appres.title != NULL)
+	if (appresp->title != NULL)
 	    	return;
 
 	if (PCONNECTED) {

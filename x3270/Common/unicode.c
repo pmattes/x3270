@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Paul Mattes.
+ * Copyright (c) 2008-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,7 +63,7 @@ typedef const char *ici_t;	/* new iconv */
 # if defined(PR3287) /*[*/
 #  define LOCAL_CODEPAGE	CP_ACP
 # else /*][*/
-#  define LOCAL_CODEPAGE	appres.local_cp
+#  define LOCAL_CODEPAGE	appresp->local_cp
 # endif /*]*/ 
 #endif /*]*/
 
