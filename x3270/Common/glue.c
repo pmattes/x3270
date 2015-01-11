@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -41,7 +41,6 @@
 #endif /*]*/
 #include <signal.h>
 #include <errno.h>
-#include <inttypes.h>
 #include "appres.h"
 #include "3270ds.h"
 #include "resources.h"
@@ -115,8 +114,7 @@ static int parse_model_number(char *m);
 const char     *programname;
 char		full_model_name[13] = "IBM-";
 char	       *model_name = &full_model_name[4];
-static AppRes   appres;
-AppResptr       appresp = &appres;
+AppRes          appres;
 int		children = 0;
 Boolean		exiting = False;
 char	       *command_string = NULL;
@@ -290,7 +288,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 #endif /*]*/
 	}
 
-	*cl_hostname = appresp->hostname; /* might be NULL */
+	*cl_hostname = appres.hostname; /* might be NULL */
     } else {
 	/* There is no session file. */
 
@@ -303,8 +301,8 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	 * as a positional command-line argument, pretend it was one,
 	 * so we will connect to it at start-up.
 	 */
-	if (*cl_hostname == NULL && appresp->hostname != NULL) {
-	    *cl_hostname = appresp->hostname;
+	if (*cl_hostname == NULL && appres.hostname != NULL) {
+	    *cl_hostname = appres.hostname;
 	}
     }
 
@@ -324,17 +322,17 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
      * Sort out the contradictory and implicit settings.
      */
 
-    if (appresp->apl_mode) {
-	appresp->charset = Apl;
+    if (appres.apl_mode) {
+	appres.charset = Apl;
     }
     if (*cl_hostname == NULL) {
-	appresp->once = False;
+	appres.once = False;
     }
-    if (appresp->conf_dir == NULL) {
-	appresp->conf_dir = LIBX3270DIR;
+    if (appres.conf_dir == NULL) {
+	appres.conf_dir = LIBX3270DIR;
     }
-    if (!appresp->debug_tracing) {
-	 appresp->toggle[TRACING].value = False;
+    if (!appres.debug_tracing) {
+	 appres.toggle[TRACING].value = False;
     }
 
     return argc;
@@ -353,9 +351,9 @@ model_init(void)
     /*
      * Sort out model and color modes, based on the model number resource.
      */
-    model_number = parse_model_number(appresp->model);
+    model_number = parse_model_number(appres.model);
     if (model_number < 0) {
-	popup_an_error("Invalid model number: %s", appresp->model);
+	popup_an_error("Invalid model number: %s", appres.model);
 	model_number = 0;
     }
     if (!model_number) {
@@ -366,25 +364,25 @@ model_init(void)
 #endif /*]*/
     }
 #if defined(RESTRICT_3279) /*[*/
-    if (appresp->m3279 && model_number == 4) {
+    if (appres.m3279 && model_number == 4) {
 	model_number = 3;
     }
 #endif /*]*/
 #if defined(C3270) && !defined(_WIN32) /*[*/
-    if (appresp->mono) {
-	appresp->m3279 = False;
+    if (appres.mono) {
+	appres.m3279 = False;
     }
 #endif /*]*/
 
-    if (!appresp->extended) {
-	appresp->oversize = NULL;
+    if (!appres.extended) {
+	appres.oversize = NULL;
     }
 
     ovc = 0;
     ovr = 0;
-    if (appresp->extended && appresp->oversize != NULL) {
+    if (appres.extended && appres.oversize != NULL) {
 #if defined(C3270) /*[*/
-	if (!strcasecmp(appresp->oversize, "auto")) {
+	if (!strcasecmp(appres.oversize, "auto")) {
 	    ovc = -1;
 	    ovr = -1;
 	} else
@@ -393,7 +391,7 @@ model_init(void)
 	    int x_ovc, x_ovr;
 	    char junk;
 
-	    if (sscanf(appresp->oversize, "%dx%d%c", &x_ovc, &x_ovr,
+	    if (sscanf(appres.oversize, "%dx%d%c", &x_ovc, &x_ovr,
 			&junk) == 2) {
 		ovc = x_ovc;
 		ovr = x_ovr;
@@ -401,8 +399,8 @@ model_init(void)
 	}
     }
     set_rows_cols(model_number, ovc, ovr);
-    if (appresp->termname != NULL) {
-	termtype = appresp->termname;
+    if (appres.termname != NULL) {
+	termtype = appres.termname;
     } else {
 	termtype = full_model_name;
     }
@@ -458,102 +456,102 @@ set_appres_defaults(void)
 {
     /* Set the defaults. */
 #if defined(C3270) && !defined(_WIN32) /*[*/
-    appresp->mono = False;
+    appres.mono = False;
 #endif /*]*/
-    appresp->extended = True;
-    appresp->m3279 = True;
-    appresp->modified_sel = False;
-    appresp->apl_mode = False;
+    appres.extended = True;
+    appres.m3279 = True;
+    appres.modified_sel = False;
+    appres.apl_mode = False;
 #if defined(C3270) || defined(TCL3270) /*[*/
-    appresp->scripted = False;
+    appres.scripted = False;
 #else /*][*/
-    appresp->scripted = True;
+    appres.scripted = True;
 #endif /*]*/
-    appresp->numeric_lock = False;
-    appresp->secure = False;
+    appres.numeric_lock = False;
+    appres.secure = False;
 #if defined(C3270) /*[*/
-    appresp->oerr_lock = True;
+    appres.oerr_lock = True;
 #else /*][*/
-    appresp->oerr_lock = False;
+    appres.oerr_lock = False;
 #endif /*]*/
-    appresp->typeahead = True;
-    appresp->debug_tracing = True;
+    appres.typeahead = True;
+    appres.debug_tracing = True;
 #if defined(C3270) /*[*/
-    appresp->compose_map = "latin1";
-    appresp->do_confirms = True;
-    appresp->menubar = True;
-    appresp->reconnect = False;
+    appres.compose_map = "latin1";
+    appres.do_confirms = True;
+    appres.menubar = True;
+    appres.reconnect = False;
 #endif /*]*/
 
-    appresp->model = "4";
-    appresp->hostsfile = NULL;
-    appresp->port = "23";
-    appresp->charset = "bracket";
-    appresp->termname = NULL;
-    appresp->macros = NULL;
+    appres.model = "4";
+    appres.hostsfile = NULL;
+    appres.port = "23";
+    appres.charset = "bracket";
+    appres.termname = NULL;
+    appres.macros = NULL;
 #if !defined(_WIN32) /*[*/
-    appresp->trace_dir = "/tmp";
+    appres.trace_dir = "/tmp";
 #endif /*]*/
 #if defined(WC3270) /*[*/
-    appresp->trace_monitor = True;
+    appres.trace_monitor = True;
 #else /*][*/
-    appresp->trace_monitor = False;
+    appres.trace_monitor = False;
 #endif /*]*/
-    appresp->oversize = NULL;
+    appres.oversize = NULL;
 #if defined(C3270) /*[*/
-    appresp->meta_escape = "auto";
-    appresp->curses_keypad = True;
-    appresp->cbreak_mode = False;
+    appres.meta_escape = "auto";
+    appres.curses_keypad = True;
+    appres.cbreak_mode = False;
 # if !defined(_WIN32) && !defined(CURSES_WIDE) /*[*/
-    appresp->ascii_box_draw = True;
+    appres.ascii_box_draw = True;
 # else /*][*/
-    appresp->ascii_box_draw = False;
+    appres.ascii_box_draw = False;
 # endif /*]*/
 # if !defined(_WIN32) /*[*/
-    appresp->mouse = True;
+    appres.mouse = True;
 # endif /*]*/
 #if defined(CURSES_WIDE) /*[*/
-    appresp->acs = True;
+    appres.acs = True;
 #endif /*]*/
 #endif /*]*/
-    appresp->bind_limit = True;
-    appresp->new_environ = True;
+    appres.bind_limit = True;
+    appres.new_environ = True;
 
-    appresp->icrnl = True;
-    appresp->inlcr = False;
-    appresp->onlcr = True;
-    appresp->erase = "^H";
-    appresp->kill = "^U";
-    appresp->werase = "^W";
-    appresp->rprnt = "^R";
-    appresp->lnext = "^V";
-    appresp->intr = "^C";
-    appresp->quit = "^\\";
-    appresp->eof = "^D";
+    appres.icrnl = True;
+    appres.inlcr = False;
+    appres.onlcr = True;
+    appres.erase = "^H";
+    appres.kill = "^U";
+    appres.werase = "^W";
+    appres.rprnt = "^R";
+    appres.lnext = "^V";
+    appres.intr = "^C";
+    appres.quit = "^\\";
+    appres.eof = "^D";
 
-    appresp->unlock_delay = True;
-    appresp->unlock_delay_ms = 350;
+    appres.unlock_delay = True;
+    appres.unlock_delay_ms = 350;
 
-    appresp->dft_buffer_size = DFT_BUF;
+    appres.dft_buffer_size = DFT_BUF;
 
-    appresp->toggle[CURSOR_POS].value = True;
-    appresp->toggle[AID_WAIT].value = True;
+    appres.toggle[CURSOR_POS].value = True;
+    appres.toggle[AID_WAIT].value = True;
 #if defined(WC3270) /*[*/
-    appresp->toggle[UNDERSCORE].value = True;
+    appres.toggle[UNDERSCORE].value = True;
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-    appresp->local_cp = GetACP();
+    appres.local_cp = GetACP();
 #endif /*]*/
-    appresp->devname = "x3270";
+    appres.devname = "x3270";
 
 #if defined(HAVE_LIBSSL) /*[*/
-    appresp->verify_host_cert = False;
-    appresp->tls = True;
+    appres.verify_host_cert = False;
+    appres.tls = True;
 #endif /*]*/
 
 #if defined(C3270) /*[*/
-    appresp->save_lines = 4096;
+    appres.save_lines = 4096;
 #endif /*]*/
 }
 
@@ -580,7 +578,7 @@ set_appres_defaults(void)
 # define PR3287_NAME "pr3287"
 #endif /*]*/
 
-#define offset(n) (uintptr_t)(void *)&(((AppResptr)0)->n)
+#define offset(n) (void *)&appres.n
 #define toggle_offset(index) offset(toggle[index].value)
 static struct {
     const char *name;
@@ -590,7 +588,7 @@ static struct {
     } type;
     Boolean flag;
     const char *res_name;
-    uintptr_t aoff;
+    void *aoff;
     char *help_opts;
     char *help_text;
 } opts[] = {
@@ -634,7 +632,7 @@ static struct {
 #endif /*]*/
 { OptCharset,  OPT_STRING,  False, ResCharset,   offset(charset),
     "<name>", "Use host ECBDIC character set (code page) <name>"},
-{ OptClear,    OPT_SKIP2,   False, NULL,         0,
+{ OptClear,    OPT_SKIP2,   False, NULL,         NULL,
     "<toggle>", "Turn on <toggle>" },
 #if defined(C3270) && !defined(_WIN32) /*[*/
 # if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
@@ -651,7 +649,7 @@ static struct {
 { OptDevName,  OPT_STRING,  False, ResDevName,   offset(devname),
     "<name>", "Specify device name (workstation ID) for RFC 4777" },
 #if defined(LOCAL_PROCESS) /*[*/
-{ OptLocalProcess,OPT_SKIP2,False, NULL,         0,
+{ OptLocalProcess,OPT_SKIP2,False, NULL,         NULL,
     "<command> [<arg>...]", "Run <command> instead of making TELNET conection"
 },
 #endif /*]*/
@@ -714,7 +712,7 @@ static struct {
     "<lines>", "Specify the number of lines to save for scrolling" },
 #endif /*]*/
 #if defined(S3270) /*[*/
-{ OptScripted, OPT_NOP,     False, ResScripted,  0,
+{ OptScripted, OPT_NOP,     False, ResScripted,  NULL,
     NULL, "Turn on scripting" },
 #endif /*]*/
 { OptScriptPort,OPT_STRING, False, ResScriptPort, offset(script_port),
@@ -727,7 +725,7 @@ static struct {
 { OptSelfSignedOk, OPT_BOOLEAN, True, ResSelfSignedOk, offset(self_signed_ok),
     NULL, "Allow self-signed host certificates" },
 #endif /*]*/
-{ OptSet,      OPT_SKIP2,   False, NULL,         0,
+{ OptSet,      OPT_SKIP2,   False, NULL,         NULL,
     "<toggle>", "Turn on <toggle>" },
 { OptSocket,   OPT_BOOLEAN, True,  ResSocket,    offset(socket),
     NULL, "Create socket for script control" },
@@ -750,25 +748,25 @@ static struct {
     NULL,       "Force local codeset to be UTF-8"
 },
 #endif /*]*/
-{ OptV,        OPT_V,	False, NULL,	     0,
+{ OptV,        OPT_V,	False, NULL,	     NULL,
     NULL, "Display build options and character sets" },
 #if defined(HAVE_LIBSSL) /*[*/
 { OptVerifyHostCert,OPT_BOOLEAN,True,ResVerifyHostCert,offset(verify_host_cert),
     NULL, "Enable OpenSSL host certificate validation" },
 #endif /*]*/
-{ OptVersion,  OPT_V,	False, NULL,	     0,
+{ OptVersion,  OPT_V,	False, NULL,	     NULL,
     NULL, "Display build options and character sets" },
-{ "-xrm",      OPT_XRM,     False, NULL,         0,
+{ "-xrm",      OPT_XRM,     False, NULL,         NULL,
     "'" APPNAME ".<resource>: <value>'", "Set <resource> to <value>"
 },
-{ LAST_ARG,    OPT_DONE,    False, NULL,         0,
+{ LAST_ARG,    OPT_DONE,    False, NULL,         NULL,
     NULL, "Terminate argument list" },
-{ NULL,          OPT_SKIP2,   False, NULL,         0,
+{ NULL,          OPT_SKIP2,   False, NULL,         NULL,
     NULL, NULL }
 };
 
 /*
- * Pick out command-line options and set up appresp->
+ * Pick out command-line options and set up appres.
  */
 static void
 parse_options(int *argcp, const char **argv)
@@ -794,7 +792,7 @@ parse_options(int *argcp, const char **argv)
 
 	switch (opts[j].type) {
 	case OPT_BOOLEAN:
-	    *(Boolean *)((char *)appresp + opts[j].aoff) = opts[j].flag;
+	    *(Boolean *)opts[j].aoff = opts[j].flag;
 	    if (opts[j].res_name != NULL) {
 		add_resource(NewString(opts[j].name),
 			opts[j].flag? "True": "False");
@@ -805,7 +803,7 @@ parse_options(int *argcp, const char **argv)
 		popup_an_error("Missing value for '%s'", argv[i]);
 		continue;
 	    }
-	    *(const char **)((char *)appresp + opts[j].aoff) = argv[++i];
+	    *(const char **)opts[j].aoff = argv[++i];
 	    if (opts[j].res_name != NULL) {
 		add_resource(NewString(opts[j].res_name), NewString(argv[i]));
 	    }
@@ -830,7 +828,7 @@ parse_options(int *argcp, const char **argv)
 		popup_an_error("Missing value for '%s'", argv[i]);
 		continue;
 	    }
-	    *(int *)((char *)appresp + opts[j].aoff) = atoi(argv[++i]);
+	    *(int *)opts[j].aoff = atoi(argv[++i]);
 	    if (opts[j].res_name != NULL) {
 		add_resource(NewString(opts[j].name), NewString(argv[i]));
 	    }
@@ -919,7 +917,7 @@ parse_set_clear(int *argcp, const char **argv)
 		continue;
 	    }
 	    if (!strcasecmp(argv[i], toggle_names[j].name)) {
-		appresp->toggle[toggle_names[j].index].value = is_set;
+		appres.toggle[toggle_names[j].index].value = is_set;
 		break;
 	    }
 	}
@@ -978,9 +976,9 @@ parse_model_number(char *m)
 		 * '327[89]', and it sets the m3279 resource.
 		 */
 		if (!strncmp(m, "3278", 4)) {
-			appresp->m3279 = False;
+			appres.m3279 = False;
 		} else if (!strncmp(m, "3279", 4)) {
-			appresp->m3279 = True;
+			appres.m3279 = True;
 		} else {
 			return -1;
 		}
@@ -1032,7 +1030,7 @@ parse_model_number(char *m)
 
 static struct {
     const char *name;
-    uintptr_t address;
+    void *address;
     enum resource_type { XRM_STRING, XRM_BOOLEAN, XRM_INT } type;
 } resources[] = {
 #if defined(C3270) /*[*/
@@ -1214,7 +1212,7 @@ struct host_color host_color[] = {
 };
 
 /*
- * Validate a resource that is fetched explicitly, rather than via appresp->
+ * Validate a resource that is fetched explicitly, rather than via appres.
  */
 static int
 valid_explicit(const char *resname, unsigned len)
@@ -1330,7 +1328,7 @@ parse_xrm(const char *arg, const char *where)
     /* Look up the name. */
     for (i = 0; resources[i].name != NULL; i++) {
 	if (!strncapcmp(resources[i].name, name, rnlen)) {
-	    address = (char *)appresp + resources[i].address;
+	    address = resources[i].address;
 	    type = resources[i].type;
 	    break;
 	}
@@ -1341,7 +1339,7 @@ parse_xrm(const char *arg, const char *where)
 		continue;
 	    }
 	    if (!strncapcmp(toggle_names[i].name, name, rnlen)) {
-		address = &appresp->toggle[toggle_names[i].index].value;
+		address = &appres.toggle[toggle_names[i].index].value;
 		type = XRM_BOOLEAN;
 		break;
 	    }

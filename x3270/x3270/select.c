@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -1358,7 +1358,7 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 			/* Translate APL to Unicode. */
 			uc = apl_to_unicode(ea_buf[baddr].cc, EUO_NONE);
 			if (uc == (ucs4_t)-1 ||
-			    (appresp->apl_mode && (uc < 0x100))) {
+			    (appres.apl_mode && (uc < 0x100))) {
 			    	/*
 				 * No translation, or we're in APL mode and the
 				 * GE character maps back onto a non-GE

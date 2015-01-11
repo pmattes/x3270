@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -38,6 +38,7 @@
 #include "globals.h"
 #include "appres.h"
 #include "resources.h"
+#include "xappres.h"
 
 #include <X11/StringDefs.h>
 
@@ -46,10 +47,6 @@
 #define offset(field)		XtOffset(AppResptr, field)
 #define toggle_offset(index)	offset(toggle[index].value)
 XtResource resources[] = {
-	{ XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
-	  offset(foreground), XtRString, "XtDefaultForeground" },
-	{ XtNbackground, XtCBackground, XtRPixel, sizeof(Pixel),
-	  offset(background), XtRString, "XtDefaultBackground" },
 	{ ResColorBackground, ClsColorBackground, XtRString, sizeof(String),
 	  offset(colorbg_name), XtRString, "black" },
 	{ ResSelectBackground, ClsSelectBackground, XtRString, sizeof(String),
@@ -188,12 +185,6 @@ XtResource resources[] = {
 	  offset(icon_font), XtRString, "nil2" },
 	{ ResIconLabelFont, ClsIconLabelFont, XtRString, sizeof(char *),
 	  offset(icon_label_font), XtRString, "8x13" },
-	{ ResNormalCursor, ClsNormalCursor, XtRCursor, sizeof(Cursor),
-	  offset(normal_mcursor), XtRString, "top_left_arrow" },
-	{ ResWaitCursor, ClsWaitCursor, XtRCursor, sizeof(Cursor),
-	  offset(wait_mcursor), XtRString, "watch" },
-	{ ResLockedCursor, ClsLockedCursor, XtRCursor, sizeof(Cursor),
-	  offset(locked_mcursor), XtRString, "X_cursor" },
 	{ ResMacros, ClsMacros, XtRString, sizeof(char *),
 	  offset(macros), XtRString, 0 },
 	{ ResFixedSize, ClsFixedSize, XtRString, sizeof(char *),
@@ -328,3 +319,19 @@ XtResource resources[] = {
 #undef toggle_offset
 
 Cardinal num_resources = XtNumber(resources);
+
+#define offset(field)		XtOffset(xappresptr_t, field)
+XtResource xresources[] = {
+	{ XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
+	  offset(foreground), XtRString, "XtDefaultForeground" },
+	{ XtNbackground, XtCBackground, XtRPixel, sizeof(Pixel),
+	  offset(background), XtRString, "XtDefaultBackground" },
+	{ ResNormalCursor, ClsNormalCursor, XtRCursor, sizeof(Cursor),
+	  offset(normal_mcursor), XtRString, "top_left_arrow" },
+	{ ResWaitCursor, ClsWaitCursor, XtRCursor, sizeof(Cursor),
+	  offset(wait_mcursor), XtRString, "watch" },
+	{ ResLockedCursor, ClsLockedCursor, XtRCursor, sizeof(Cursor),
+	  offset(locked_mcursor), XtRString, "X_cursor" },
+};
+
+Cardinal num_xresources = XtNumber(xresources);

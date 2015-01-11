@@ -228,7 +228,7 @@ static sms_t *sms_redirect_to(void);
 
 /* Macro that defines that the keyboard is locked due to user input. */
 #define KBWAIT	(kybdlock & (KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK|KL_ENTER_INHIBIT))
-#define CKBWAIT	(appresp->toggle[AID_WAIT].value && KBWAIT)
+#define CKBWAIT	(appres.toggle[AID_WAIT].value && KBWAIT)
 
 /* Macro that defines when it's safe to continue a Wait()ing sms. */
 #define CAN_PROCEED ( \
@@ -393,10 +393,10 @@ macros_init(void)
 	Free(rname);
     }
     if (s == NULL) {
-	if (appresp->macros == NULL) {
+	if (appres.macros == NULL) {
 	    return;
 	}
-	s = NewString(appresp->macros);
+	s = NewString(appres.macros);
     } else {
 	s = NewString(s);
     }
@@ -698,26 +698,26 @@ peer_script_init(void)
     sms_t *s;
     Boolean on_top;
 
-    if (appresp->script_port) {
+    if (appres.script_port) {
 	struct sockaddr *sa;
 	socklen_t sa_len;
 	int on = 1;
 
 #if !defined(TCL3270) /*[*/
-	if (!parse_bind_opt(appresp->script_port, &sa, &sa_len)) {
+	if (!parse_bind_opt(appres.script_port, &sa, &sa_len)) {
 	    popup_an_error("Invalid script port value '%s', "
-		    "ignoring", appresp->script_port);
+		    "ignoring", appres.script_port);
 	    return;
 	}
 #endif /*]*/
 #if !defined(_WIN32) /*[*/
-	if (appresp->socket) {
+	if (appres.socket) {
 	    xs_warning("-scriptport overrides -socket");
 	}
 #endif /*]*/
 
 	/* -scriptport overrides -script */
-	appresp->scripted = False;
+	appres.scripted = False;
 
 	/* Create the listening socket. */
 	socketfd = socket(sa->sa_family, SOCK_STREAM, 0);
@@ -788,11 +788,11 @@ peer_script_init(void)
 	return;
     }
 #if !defined(_WIN32) /*[*/
-    if (appresp->socket && !appresp->script_port) {
+    if (appres.socket && !appres.script_port) {
 	struct sockaddr_un ssun;
 
 	/* -socket overrides -script */
-	appresp->scripted = False;
+	appres.scripted = False;
 
 	/* Create the listening socket. */
 	socketfd = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -824,11 +824,11 @@ peer_script_init(void)
     }
 #endif /*]*/
 
-    if (appresp->httpd_port) {
-	appresp->scripted = False;
+    if (appres.httpd_port) {
+	appres.scripted = False;
     }
 
-    if (!appresp->scripted) {
+    if (!appres.scripted) {
 	return;
     }
 
@@ -881,7 +881,7 @@ socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
 
     /* Accept the connection. */
 #if !defined(_WIN32) /*[*/
-    if (appresp->script_port)
+    if (appres.script_port)
 #endif /*]*/
     {
 	struct sockaddr_in sin;

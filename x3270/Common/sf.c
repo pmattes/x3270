@@ -722,7 +722,7 @@ do_qr_color(void)
 
     trace_ds("> QueryReply(Color)\n");
 
-    color_max = (appresp->color8 || !appresp->m3279)? 8: 16;
+    color_max = (appres.color8 || !appres.m3279)? 8: 16;
 
     space3270out(4 + 2*15);
     *obptr++ = 0x00;		/* no options */
@@ -731,7 +731,7 @@ do_qr_color(void)
     *obptr++ = 0xf0 + HOST_COLOR_GREEN;	/*  green */
     for (i = 0xf1; i < 0xf1 + color_max - 1; i++) {
 	*obptr++ = i;
-	if (appresp->m3279) {
+	if (appres.m3279) {
 	    *obptr++ = i;
 	} else {
 	    *obptr++ = 0x00;
@@ -740,7 +740,7 @@ do_qr_color(void)
 
     if (screen_has_bg_color()) {
 	/* Add background color. */
-	if (appresp->m3279 && appresp->qr_bg_color) {
+	if (appres.m3279 && appres.qr_bg_color) {
 	    space3270out(4);
 	    *obptr++ = 4;	/* length */
 	    *obptr++ = 0x02;	/* background color */
@@ -846,7 +846,7 @@ do_qr_charsets(void)
 
 	/* special 3270 font, includes APL */
 	*obptr++ = 0x01;/* SET 1: */
-	if (appresp->apl_mode)
+	if (appres.apl_mode)
 		*obptr++ = 0x00;	/*  FLAGS: non-loadable, single-plane,
 					    single-byte, no compare */
 	else

@@ -338,9 +338,9 @@ usage(const char *msg)
 static void
 main_connect(Boolean ignored)
 {
-    if (CONNECTED || appresp->disconnect_clear) {
+    if (CONNECTED || appres.disconnect_clear) {
 #if defined(C3270_80_132) /*[*/
-	if (appresp->altscreen != NULL) {
+	if (appres.altscreen != NULL) {
 	    ctlr_erase(False);
 	} else
 #endif /*]*/
@@ -440,14 +440,14 @@ main(int argc, char *argv[])
     }
 
     /* Check for auto-shortcut mode. */
-    if (appresp->auto_shortcut) {
+    if (appres.auto_shortcut) {
 	start_auto_shortcut();
 	exit(0);
     }
 #endif /*]*/
 
-    if (charset_init(appresp->charset) != CS_OKAY) {
-	xs_warning("Cannot find charset \"%s\"", appresp->charset);
+    if (charset_init(appres.charset) != CS_OKAY) {
+	xs_warning("Cannot find charset \"%s\"", appres.charset);
 	(void) charset_init(NULL);
     }
     model_init();
@@ -475,12 +475,12 @@ main(int argc, char *argv[])
 
     sms_init();
 
-    if (appresp->httpd_port) {
+    if (appres.httpd_port) {
 	struct sockaddr *sa;
 	socklen_t sa_len;
 
-	if (!parse_bind_opt(appresp->httpd_port, &sa, &sa_len)) {
-	    xs_warning("Invalid -httpd port \"%s\"", appresp->httpd_port);
+	if (!parse_bind_opt(appres.httpd_port, &sa, &sa_len)) {
+	    xs_warning("Invalid -httpd port \"%s\"", appres.httpd_port);
 	} else {
 	    httpd_objects_init();
 	    hio_init(sa, sa_len);
@@ -540,7 +540,7 @@ main(int argc, char *argv[])
 	screen_disp(False);
     } else {
 	/* Drop to the prompt. */
-	if (!appresp->secure) {
+	if (!appres.secure) {
 	    interact();
 	    screen_disp(False);
 	} else {
@@ -555,11 +555,11 @@ main(int argc, char *argv[])
 	if (!escaped || ft_state != FT_NONE) {
 	    (void) process_events(True);
 	}
-	if (appresp->cbreak_mode && escape_pending) {
+	if (appres.cbreak_mode && escape_pending) {
 	    escape_pending = False;
 	    screen_suspend();
 	}
-	if (!appresp->secure && !CONNECTED && !appresp->reconnect) {
+	if (!appres.secure && !CONNECTED && !appres.reconnect) {
 	    screen_suspend();
 	    (void) printf("Disconnected.\n");
 	    if (once) {
@@ -571,7 +571,7 @@ main(int argc, char *argv[])
 	    interact();
 	    vtrace("Done interacting.\n");
 	    screen_resume();
-	} else if (!CONNECTED && !appresp->reconnect && cl_hostname != NULL) {
+	} else if (!CONNECTED && !appres.reconnect && cl_hostname != NULL) {
 	    screen_suspend();
 	    x3270_exit(0);
 	}
@@ -624,7 +624,7 @@ interact(void)
     stop_pager();
 
     vtrace("Interacting.\n");
-    if (appresp->secure) {
+    if (appres.secure) {
 	char s[10];
 
 	printf("[Press <Enter>] ");
@@ -1071,8 +1071,8 @@ status_dump(void)
 	    get_message("model"), model_name,
 	    maxCOLS, get_message("columns"),
 	    maxROWS, get_message("rows"),
-	    appresp->m3279? get_message("fullColor"): get_message("mono"),
-	    (appresp->extended && !std_ds_host)? get_message("extendedDs"):
+	    appres.m3279? get_message("fullColor"): get_message("mono"),
+	    (appres.extended && !std_ds_host)? get_message("extendedDs"):
 		get_message("standardDs"));
     action_output("%s %s", get_message("terminalName"), termtype);
     clu = net_query_lu_name();
@@ -1117,8 +1117,8 @@ status_dump(void)
     action_output("%s OEM %d ANSI %d", get_message("windowsCodePage"),
 	    windows_cp, GetACP());
 #endif /*]*/
-    if (appresp->key_map) {
-	action_output("%s %s", get_message("keyboardMap"), appresp->key_map);
+    if (appres.key_map) {
+	action_output("%s %s", get_message("keyboardMap"), appres.key_map);
     }
     if (CONNECTED) {
 	action_output("%s %s", get_message("connectedTo"),
@@ -1547,7 +1547,7 @@ Escape_action(ia_t ia, unsigned argc, const char **argv)
 	return False;
     }
 
-    if (!appresp->secure) {
+    if (!appres.secure) {
 	host_cancel_reconnect();
 	screen_suspend();
 #if 0 /* this fix is in there for something, but I don't know what */

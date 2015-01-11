@@ -434,8 +434,8 @@ stop_tracing(void)
 	tracef_pipe = NULL;
     }
     if (toggled(TRACING)) {
-	toggle_toggle(&appresp->toggle[TRACING]);
-	menubar_retoggle(&appresp->toggle[TRACING], TRACING);
+	toggle_toggle(&appres.toggle[TRACING]);
+	menubar_retoggle(&appres.toggle[TRACING], TRACING);
     }
 }
 
@@ -511,14 +511,14 @@ create_tracefile_header(const char *mode)
     wtrace(False, " Command: %s\n", command_string);
     wtrace(False, " Model %s, %d rows x %d cols", model_name, maxROWS, maxCOLS);
 #if defined(X3270_INTERACTIVE) && !defined(_WIN32) /*[*/
-    wtrace(False, ", %s display", appresp->mono ? "monochrome" : "color");
+    wtrace(False, ", %s display", appres.mono ? "monochrome" : "color");
 #endif /*]*/
-    if (appresp->extended) {
+    if (appres.extended) {
 	wtrace(False, ", extended data stream");
     }
-    wtrace(False, ", %s emulation", appresp->m3279 ? "color" : "monochrome");
+    wtrace(False, ", %s emulation", appres.m3279 ? "color" : "monochrome");
     wtrace(False, ", %s charset", get_charset_name());
-    if (appresp->apl_mode) {
+    if (appres.apl_mode) {
 	wtrace(False, ", APL mode");
     }
     wtrace(False, "\n");
@@ -527,7 +527,7 @@ create_tracefile_header(const char *mode)
 #else /*][*/
     wtrace(False, " ANSI codepage: %d\n", GetACP());
 # if defined(_WIN32) /*[*/
-    wtrace(False, " Local codepage: %d\n", appresp->local_cp);
+    wtrace(False, " Local codepage: %d\n", appres.local_cp);
 # endif /*]*/
 #endif /*]*/
     wtrace(False, " Host codepage: %d", (int)(cgcsgid & 0xffff));
@@ -644,16 +644,16 @@ get_tracef_max(void)
 
     calculated = True;
 
-    if (appresp->trace_file_size == NULL ||
-	!strcmp(appresp->trace_file_size, "0") ||
-	!strncasecmp(appresp->trace_file_size, "none",
-		     strlen(appresp->trace_file_size))) {
+    if (appres.trace_file_size == NULL ||
+	!strcmp(appres.trace_file_size, "0") ||
+	!strncasecmp(appres.trace_file_size, "none",
+		     strlen(appres.trace_file_size))) {
 	tracef_max = 0;
 	return;
     }
 
-    tracef_max = strtoul(appresp->trace_file_size, &ptr, 0);
-    if (tracef_max == 0 || ptr == appresp->trace_file_size || *(ptr + 1)) {
+    tracef_max = strtoul(appres.trace_file_size, &ptr, 0);
+    if (tracef_max == 0 || ptr == appres.trace_file_size || *(ptr + 1)) {
 	bad = True;
     } else switch (*ptr) {
     case 'k':
@@ -726,14 +726,14 @@ tracefile_ok(const char *tfn)
 
 	if (!strcmp(stfn, "none") || !stfn[0]) {
 	    just_piped = True;
-	    if (!appresp->trace_monitor) {
+	    if (!appres.trace_monitor) {
 		popup_an_error("Must specify a trace file name");
 		free(stfn);
 		goto done;
 	    }
 	}
 
-	if (appresp->trace_monitor) {
+	if (appres.trace_monitor) {
 	    if (pipe(pipefd) < 0) {
 		popup_an_errno(errno, "pipe() failed");
 		Free(stfn);
@@ -794,7 +794,7 @@ tracefile_ok(const char *tfn)
 
 #if !defined(_WIN32) /*[*/
     /* Start the monitor window */
-    if (tracef != stdout && appresp->trace_monitor) {
+    if (tracef != stdout && appres.trace_monitor) {
 	switch (tracewindow_pid = fork_child()) {
 	case 0: {	/* child process */
 	    (void) execlp("xterm", "xterm", "-title",
@@ -819,7 +819,7 @@ tracefile_ok(const char *tfn)
 
 #if defined(_WIN32) /*[*/
     /* Start the monitor window. */
-    if (tracef != stdout && appresp->trace_monitor
+    if (tracef != stdout && appres.trace_monitor
 #if defined(WC3270) /*[*/
 	    && is_installed
 #endif /*]*/
@@ -863,9 +863,9 @@ tracefile_ok(const char *tfn)
     Free(stfn);
 
     /* We're really tracing, turn the flag on. */
-    appresp->toggle[trace_reason].value = True;
-    appresp->toggle[trace_reason].changed = True;
-    menubar_retoggle(&appresp->toggle[trace_reason], trace_reason);
+    appres.toggle[trace_reason].value = True;
+    appres.toggle[trace_reason].changed = True;
+    menubar_retoggle(&appres.toggle[trace_reason], trace_reason);
 
     /* Display current status. */
     buf = create_tracefile_header("started");
@@ -887,22 +887,22 @@ tracefile_on(int reason, enum toggle_type tt)
     }
 
     trace_reason = reason;
-    if (appresp->secure && tt != TT_INITIAL) {
+    if (appres.secure && tt != TT_INITIAL) {
 	tracefile_ok("none");
 	return;
     }
     if (onetime_tracefile_name != NULL) {
 	tracefile = tracefile_buf = onetime_tracefile_name;
 	onetime_tracefile_name = NULL;
-    } else if (appresp->trace_file) {
-	tracefile = appresp->trace_file;
+    } else if (appres.trace_file) {
+	tracefile = appres.trace_file;
     } else {
 #if defined(_WIN32) /*[*/
 	tracefile_buf = xs_buffer("%s%sx3trc.$UNIQUE.txt",
-		appresp->trace_dir? appresp->trace_dir: DEFAULT_TRACE_DIR,
-		appresp->trace_dir? "\\": "");
+		appres.trace_dir? appres.trace_dir: DEFAULT_TRACE_DIR,
+		appres.trace_dir? "\\": "");
 #else /*][*/
-	tracefile_buf = xs_buffer("%s/x3trc.$UNIQUE", appresp->trace_dir);
+	tracefile_buf = xs_buffer("%s/x3trc.$UNIQUE", appres.trace_dir);
 #endif /*]*/
 	tracefile = tracefile_buf;
     }
@@ -911,8 +911,8 @@ tracefile_on(int reason, enum toggle_type tt)
 	tracefile_ok(tracefile);
     } else {
 	/* Turn the toggle _off_ until the popup succeeds. */
-	appresp->toggle[reason].value = False;
-	appresp->toggle[reason].changed = True;
+	appres.toggle[reason].value = False;
+	appres.toggle[reason].changed = True;
     }
 
     if (tracefile_buf != NULL) {
@@ -954,7 +954,7 @@ toggle_tracing(struct toggle *t _is_unused, enum toggle_type tt)
     if (toggled(TRACING) && tracef == NULL) {
 	tracefile_on(TRACING, tt);
 	if (tracef == NULL) {
-	    appresp->toggle[TRACING].value = False;
+	    appres.toggle[TRACING].value = False;
 	}
     } else if (!toggled(TRACING)) {
 	/* If turning off trace and not still tracing events, close the
@@ -1090,9 +1090,9 @@ screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 	}
 
 	/* We're really tracing, turn the flag on. */
-	appresp->toggle[SCREEN_TRACE].value = True;
-	appresp->toggle[SCREEN_TRACE].changed = True;
-	menubar_retoggle(&appresp->toggle[SCREEN_TRACE], SCREEN_TRACE);
+	appres.toggle[SCREEN_TRACE].value = True;
+	appres.toggle[SCREEN_TRACE].changed = True;
+	menubar_retoggle(&appres.toggle[SCREEN_TRACE], SCREEN_TRACE);
 	return True;
 }
 
@@ -1170,11 +1170,11 @@ screentrace_default_file(ptype_t ptype)
 	}
 #if defined(_WIN32) /*[*/
 	return xs_buffer("%s%sx3scr.$UNIQUE.%s",
-		appresp->trace_dir? appresp->trace_dir: DEFAULT_TRACE_DIR,
-		appresp->trace_dir? "\\": "",
+		appres.trace_dir? appres.trace_dir: DEFAULT_TRACE_DIR,
+		appres.trace_dir? "\\": "",
 		suffix);
 #else /*][*/
-	return xs_buffer("%s/x3scr.$UNIQUE.%s", appresp->trace_dir, suffix);
+	return xs_buffer("%s/x3scr.$UNIQUE.%s", appres.trace_dir, suffix);
 #endif /*]*/
 }
 
@@ -1210,8 +1210,8 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 			    onetime_screentrace_name;
 			onetime_screentrace_name = NULL;
 		} else if (screentrace_how == TSS_FILE &&
-			   appresp->screentrace_file != NULL)
-			tracefile = appresp->screentrace_file;
+			   appres.screentrace_file != NULL)
+			tracefile = appres.screentrace_file;
 		else {
 			if (screentrace_how == TSS_FILE)
 				tracefile = tracefile_buf =
@@ -1223,7 +1223,7 @@ toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
 		if (!screentrace_cb(screentrace_how, screentrace_ptype,
 			NewString(tracefile))) {
 
-			appresp->toggle[SCREEN_TRACE].value = False;
+			appres.toggle[SCREEN_TRACE].value = False;
 			status_screentrace((screentrace_count = -1));
 		}
 	} else {

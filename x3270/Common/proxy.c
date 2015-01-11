@@ -123,7 +123,7 @@ proxy_setup(char **phost, char **pport)
 #if defined(PR3287) /*[*/
     proxy = options.proxy_spec;
 #else /*][*/
-    proxy = appresp->proxy;
+    proxy = appres.proxy;
 #endif /*]*/
     if (proxy == NULL) {
 	return PT_NONE;

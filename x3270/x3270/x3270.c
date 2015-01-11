@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -76,6 +76,7 @@
 #include "trace.h"
 #include "utilc.h"
 #include "xactionsc.h"
+#include "xappres.h"
 #include "xioc.h"
 #include "xkybdc.h"
 
@@ -93,8 +94,8 @@ char		full_model_name[13] = "IBM-";
 char	       *model_name = &full_model_name[4];
 Pixmap          gray;
 XrmDatabase     rdb;
-static AppRes   appres;
-AppResptr	appresp = &appres;
+AppRes		appres;
+xappres_t	xappres;
 int		children = 0;
 Boolean		exiting = False;
 char           *user_title = NULL;
@@ -469,6 +470,8 @@ main(int argc, char *argv[])
 	    (XtErrorMsgHandler)trap_colormaps);
 	XtGetApplicationResources(toplevel, (XtPointer)&appres, resources,
 	    num_resources, 0, 0);
+	XtGetApplicationResources(toplevel, (XtPointer)&xappres, xresources,
+	    num_xresources, 0, 0);
 	(void) XtAppSetWarningMsgHandler(appcontext, old_emh);
 
 	/*

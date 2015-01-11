@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1994-2009, 2013, 2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -89,17 +89,17 @@ scroll_buf_init(void)
 	int sa_size;
 	unsigned char *s;
 
-	if (appresp->save_lines % maxROWS)
-		appresp->save_lines =
-		    ((appresp->save_lines+maxROWS-1)/maxROWS) * maxROWS;
-	if (!appresp->save_lines)
-		appresp->save_lines = maxROWS;
+	if (appres.save_lines % maxROWS)
+		appres.save_lines =
+		    ((appres.save_lines+maxROWS-1)/maxROWS) * maxROWS;
+	if (!appres.save_lines)
+		appres.save_lines = maxROWS;
 	if (sbuf != NULL) {
 		Free(sbuf);
 		Free(zbuf);
 		Free(ea_save);
 	}
-	sa_size = appresp->save_lines + maxROWS;
+	sa_size = appres.save_lines + maxROWS;
 	ea_save = (struct ea **)Calloc(sizeof(struct ea *), sa_size);
 	sa_bufsize = (sa_size *
 		(sizeof(unsigned char) + sizeof(struct ea))) * maxCOLS;
@@ -197,8 +197,8 @@ scroll_save(int n, Boolean trim_blanks)
 			(void) memset((char *)ea_save[scroll_next], '\0',
 			    maxCOLS*sizeof(struct ea));
 		}
-		scroll_next = (scroll_next + 1) % appresp->save_lines;
-		if (n_saved < appresp->save_lines) {
+		scroll_next = (scroll_next + 1) % appres.save_lines;
+		if (n_saved < appres.save_lines) {
 			n_saved++;
 		}
 	}
@@ -206,7 +206,7 @@ scroll_save(int n, Boolean trim_blanks)
 	/* Reset the thumb. */
 	thumb_top_base =
 	    thumb_top =
-	    ((float)n_saved / (float)(appresp->save_lines + maxROWS));
+	    ((float)n_saved / (float)(appres.save_lines + maxROWS));
 	thumb_shown = (float)(1.0 - thumb_top);
 	screen_set_thumb_traced(thumb_top, thumb_shown);
 }
@@ -227,15 +227,15 @@ scroll_round(void)
 	for (n = maxROWS - (n_saved % maxROWS); n; n--) {
 		(void) memset((char *)ea_save[scroll_next], '\0',
 			    maxCOLS*sizeof(struct ea));
-		scroll_next = (scroll_next + 1) % appresp->save_lines;
-		if (n_saved < appresp->save_lines)
+		scroll_next = (scroll_next + 1) % appres.save_lines;
+		if (n_saved < appres.save_lines)
 			n_saved++;
 	}
 
 	/* Reset the thumb. */
 	thumb_top_base =
 	    thumb_top =
-	    ((float)n_saved / (float)(appresp->save_lines + maxROWS));
+	    ((float)n_saved / (float)(appres.save_lines + maxROWS));
 	thumb_shown = (float)(1.0 - thumb_top);
 	screen_set_thumb_traced(thumb_top, thumb_shown);
 }
@@ -265,7 +265,7 @@ save_image(void)
 		return;
 
 	for (i = 0; i < maxROWS; i++) {
-		(void) memmove(ea_save[appresp->save_lines+i],
+		(void) memmove(ea_save[appres.save_lines+i],
 		            (ea_buf + (i*COLS)),
 		            COLS*sizeof(struct ea));
 	}
@@ -320,19 +320,19 @@ sync_scroll(int sb)
 		vscreen_swapped = False;
 	}
 
-	scroll_first = (scroll_next + appresp->save_lines-sb) %
-			appresp->save_lines;
+	scroll_first = (scroll_next + appres.save_lines-sb) %
+			appres.save_lines;
 
 	/* Update the screen. */
 	for (i = 0; i < maxROWS; i++)
 		if (i < sb) {
 			(void) memmove((ea_buf + (i*COLS)),
 				    ea_save[(scroll_first+i) %
-					appresp->save_lines],
+					appres.save_lines],
 				    COLS*sizeof(struct ea));
 		} else {
 			(void) memmove((ea_buf + (i*COLS)),
-				    ea_save[appresp->save_lines+i-sb],
+				    ea_save[appres.save_lines+i-sb],
 				    COLS*sizeof(struct ea));
 		}
 
@@ -343,10 +343,10 @@ sync_scroll(int sb)
 	ctlr_changed(0, ROWS*COLS);
 	blink_start();
 
-	tt0 = ((float)n_saved / (float)(appresp->save_lines + maxROWS));
+	tt0 = ((float)n_saved / (float)(appres.save_lines + maxROWS));
 	thumb_shown = (float)(1.0 - tt0);
 	thumb_top = ((float)(n_saved-sb) /
-			(float)(appresp->save_lines + maxROWS));
+			(float)(appres.save_lines + maxROWS));
 	screen_set_thumb_traced(thumb_top, thumb_shown);
 }
 
@@ -389,7 +389,7 @@ scroll_n(int nss, int direction)
 	}
 
 	screen_set_thumb_traced((float)(n_saved - scrolled_back) /
-				    (float)(appresp->save_lines + maxROWS),
+				    (float)(appres.save_lines + maxROWS),
 	    thumb_shown);
 }
 

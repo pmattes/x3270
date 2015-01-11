@@ -294,7 +294,7 @@ save_keypad(void)
 	int ix;
 
 	ix = cmd_srch(OptKeypadOn);
-	if (appresp->keypad_on || keypad_popped) {
+	if (appres.keypad_on || keypad_popped) {
 		if (!ix)
 			cmd_append(OptKeypadOn);
 	} else {
@@ -365,7 +365,7 @@ save_toggles(void)
 	int ix;
 
 	for (i = 0; i < N_TOGGLES; i++) {
-		if (toggle_names[i].index < 0 || !appresp->toggle[i].changed)
+		if (toggle_names[i].index < 0 || !appres.toggle[i].changed)
 			continue;
 
 		/*
@@ -393,7 +393,7 @@ save_toggles(void)
 			continue;	/* +sb/-sb done separately */
 		    case TRACING:
 			ix = cmd_srch(OptTrace);
-			if (appresp->toggle[TRACING].value) {
+			if (appres.toggle[TRACING].value) {
 				if (!ix) {
 					cmd_append(OptTrace);
 				}
@@ -406,7 +406,7 @@ save_toggles(void)
 		}
 
 		/* If need be, switch "-set" with "-clear", or append one. */
-		if (appresp->toggle[i].value) {
+		if (appres.toggle[i].value) {
 			if (ix && strcmp(tmp_cmd[ix], OptSet))
 				cmd_replace(ix, OptSet);
 			else if (!ix) {
@@ -637,7 +637,7 @@ save_options(char *n)
 
     /* Save most of the toggles. */
     for (i = 0; i < N_TOGGLES; i++) {
-	if (toggle_names[i].index < 0 || !appresp->toggle[i].changed) {
+	if (toggle_names[i].index < 0 || !appres.toggle[i].changed) {
 	    continue;
 	}
 	if (i == TRACING || i == SCREEN_TRACE) {
@@ -649,13 +649,13 @@ save_options(char *n)
 	}
 	(void) fprintf(f, "%s.%s: %s\n", XtName(toplevel),
 		toggle_names[i].name,
-		appresp->toggle[i].value ? ResTrue : ResFalse);
+		appres.toggle[i].value ? ResTrue : ResFalse);
     }
 
     /* Save the keypad state. */
     if (keypad_changed) {
 	save_opt(f, "keypad state", OptKeypadOn, ResKeypadOn,
-		(appresp->keypad_on || keypad_popped)? ResTrue: ResFalse);
+		(appres.keypad_on || keypad_popped)? ResTrue: ResFalse);
     }
 
     /* Save other menu-changeable options. */
@@ -673,9 +673,9 @@ save_options(char *n)
 	save_opt(f, "oversize", OptOversize, ResOversize, buf);
 	Free(buf);
     }
-    if (scheme_changed && appresp->color_scheme != NULL) {
+    if (scheme_changed && appres.color_scheme != NULL) {
 	save_opt(f, "color scheme", OptColorScheme, ResColorScheme,
-	    appresp->color_scheme);
+	    appres.color_scheme);
     }
     if (keymap_changed && current_keymap != NULL) {
 	save_opt(f, "keymap", OptKeymap, ResKeymap, current_keymap);

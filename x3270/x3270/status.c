@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -362,7 +362,7 @@ status_reinit(unsigned cmask)
 		Replace(display_2b,
 		    (XChar2b *)XtCalloc(sizeof(XChar2b), maxCOLS));
 		offsets[SSZ] = maxCOLS;
-		if (appresp->mono)
+		if (appres.mono)
 			colors[1] = FA_INT_NORM_NSEL;
 		for (i = 0; i < SSZ; i++) {
 			status_line[i].start = offsets[i];
@@ -375,7 +375,7 @@ status_reinit(unsigned cmask)
 		(void) memset(display_2b, 0, maxCOLS * sizeof(XChar2b));
 	if (cmask & (COLOR_CHANGE | MODEL_CHANGE)) {
 		for (i = 0; i < SSZ; i++) {
-			status_line[i].color = appresp->m3279 ?
+			status_line[i].color = appres.m3279 ?
 			    colors3279[i] : colors[i];
 		}
 	}
@@ -934,8 +934,8 @@ paint_msg(enum msg t)
 {
 	oia_msg = t;
 	(*msg_proc[(int)t])();
-	if (!appresp->mono)
-		status_line[WAIT_REGION].color = appresp->m3279 ?
+	if (!appres.mono)
+		status_line[WAIT_REGION].color = appres.m3279 ?
 		    msg_color3279[(int)t] : msg_color[(int)t];
 }
 

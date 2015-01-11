@@ -75,7 +75,7 @@ typedef enum {
     N_TOGGLES
 } toggle_index_t;
 
-#define toggled(ix)		(appresp->toggle[ix].value)
+#define toggled(ix)		(appres.toggle[ix].value)
 #define toggle_toggle(t) \
 	{ (t)->value = !(t)->value; (t)->changed = True; }
 #define TOGGLE_BIT(ix)	(1 << (ix))
@@ -84,12 +84,6 @@ typedef enum {
 /* Application resources */
 
 typedef struct {
-	/* Basic colors */
-#if defined(X3270_DISPLAY) /*[*/
-	Pixel	foreground;
-	Pixel	background;
-#endif /*]*/
-
 	/* Options (not toggles) */
 #if defined(X3270_INTERACTIVE) && !defined(_WIN32) /*[*/
 	Boolean mono;
@@ -249,13 +243,6 @@ typedef struct {
 	/* Toggles */
 	struct toggle toggle[N_TOGGLES];
 
-#if defined(X3270_DISPLAY) /*[*/
-	/* Simple widget resources */
-	Cursor	normal_mcursor;
-	Cursor	wait_mcursor;
-	Cursor	locked_mcursor;
-#endif /*]*/
-
 	/* Line-mode TTY parameters */
 	Boolean	icrnl;
 	Boolean	inlcr;
@@ -290,4 +277,4 @@ typedef struct {
 
 } AppRes, *AppResptr;
 
-extern AppResptr appresp;
+extern AppRes appres;

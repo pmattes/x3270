@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -37,3 +37,6 @@
 
 extern XtResource resources[];
 extern Cardinal num_resources;
+
+extern XtResource xresources[];
+extern Cardinal num_xresources;

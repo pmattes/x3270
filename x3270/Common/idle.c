@@ -81,11 +81,11 @@ idle_init(void)
 	register_schange(ST_CONNECT, idle_in3270);
 
 	/* Get values from resources. */
-	cmd = appresp->idle_command;
+	cmd = appres.idle_command;
 	idle_command = cmd? NewString(cmd): NULL;
-	tmo = appresp->idle_timeout;
+	tmo = appres.idle_timeout;
 	idle_timeout_string = tmo? NewString(tmo): NULL;
-	if (appresp->idle_command_enabled)
+	if (appres.idle_command_enabled)
 		idle_user_enabled = IDLE_PERM;
 	else
 		idle_user_enabled = IDLE_DISABLED;

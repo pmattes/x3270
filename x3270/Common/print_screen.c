@@ -86,7 +86,7 @@ print_text_done(FILE *f)
 		(status & 0xff00) > 8);
     } else {
 # if defined(X3270_INTERACTIVE) /*[*/
-	if (appresp->do_confirms) {
+	if (appres.do_confirms) {
 	    popup_an_info("Screen image printed.");
 	}
 # endif /*]*/
@@ -166,7 +166,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned i;
     const char *name = NULL;
-    Boolean secure = appresp->secure;
+    Boolean secure = appres.secure;
     ptype_t ptype = P_TEXT;
     Boolean use_file = False;
     Boolean use_string = False;
@@ -435,7 +435,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	unlink(temp_name);
     }
 # if !defined(S3270) /*[*/
-    if (appresp->do_confirms) {
+    if (appres.do_confirms) {
 	popup_an_info("Screen image printing.\n");
     }
 # endif /*]*/

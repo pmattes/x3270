@@ -115,7 +115,7 @@ charset_init(const char *csname)
     }
 # endif /*]*/
 #else /*][*/
-    codeset_name = lazyaf("CP%d", appresp->local_cp);
+    codeset_name = lazyaf("CP%d", appres.local_cp);
 #endif /*]*/
     set_codeset(codeset_name);
 
@@ -135,12 +135,12 @@ charset_init(const char *csname)
     if (!set_uni(csname, &codepage, &cgcsgid, &display_charsets)) {
 	return CS_NOTFOUND;
     }
-    if (appresp->sbcs_cgcsgid != NULL) {
-	cgcsgid = appresp->sbcs_cgcsgid; /* override */
+    if (appres.sbcs_cgcsgid != NULL) {
+	cgcsgid = appres.sbcs_cgcsgid; /* override */
     }
     if (set_uni_dbcs(csname, &dbcs_cgcsgid, &dbcs_display_charsets)) {
-	if (appresp->dbcs_cgcsgid != NULL) {
-	    dbcs_cgcsgid = appresp->dbcs_cgcsgid; /* override */
+	if (appres.dbcs_cgcsgid != NULL) {
+	    dbcs_cgcsgid = appres.dbcs_cgcsgid; /* override */
 	}
 	cgcsgid = lazyaf("%s+%s", cgcsgid, dbcs_cgcsgid);
 	display_charsets = lazyaf("%s+%s", display_charsets,
@@ -218,13 +218,13 @@ set_cgcsgids(const char *spec)
 	}
     }
 
-    if (appresp->sbcs_cgcsgid != NULL) {
-	cgcsgid = strtoul(appresp->sbcs_cgcsgid, NULL, 0);
+    if (appres.sbcs_cgcsgid != NULL) {
+	cgcsgid = strtoul(appres.sbcs_cgcsgid, NULL, 0);
     } else {
 	cgcsgid = DEFAULT_CGEN | DEFAULT_CSET;
     }
-    if (appresp->dbcs_cgcsgid != NULL) {
-	cgcsgid_dbcs = strtoul(appresp->dbcs_cgcsgid, NULL, 0);
+    if (appres.dbcs_cgcsgid != NULL) {
+	cgcsgid_dbcs = strtoul(appres.dbcs_cgcsgid, NULL, 0);
     } else {
 	cgcsgid_dbcs = 0L;
     }
@@ -253,7 +253,7 @@ set_charset_name(const char *csname)
 	return;
     }
     if ((charset_name != NULL && strcmp(charset_name, csname)) ||
-	    (appresp->charset != NULL && strcmp(appresp->charset, csname))) {
+	    (appres.charset != NULL && strcmp(appres.charset, csname))) {
 	Replace(charset_name, NewString(csname));
 	charset_changed = True;
     }
@@ -328,5 +328,5 @@ const char *
 get_charset_name(void)
 {
     return (charset_name != NULL)? charset_name:
-	((appresp->charset != NULL)? appresp->charset: "us");
+	((appres.charset != NULL)? appres.charset: "us");
 }

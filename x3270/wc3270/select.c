@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 Paul Mattes.
+ * Copyright (c) 2013-2014, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -187,7 +187,7 @@ is_blank(int baddr)
 	} else {
 		c = ebcdic_to_unicode(ea_buf[baddr].cc,
 			ea_buf[baddr].cs,
-			appresp->ascii_box_draw?
+			appres.ascii_box_draw?
 			    EUO_ASCII_BOX: 0);
 		if (c == 0 || c == ' ') {
 			return True;
@@ -390,7 +390,7 @@ copy_clipboard_unicode(LPTSTR lptstr)
 				} else {
 					ch = ebcdic_to_unicode(ea_buf[baddr].cc,
 						ea_buf[baddr].cs,
-						appresp->ascii_box_draw?
+						appres.ascii_box_draw?
 						    EUO_ASCII_BOX: 0);
 					if (ch == 0) {
 						ch = ' ';
@@ -486,7 +486,7 @@ copy_clipboard_oemtext(LPTSTR lptstr)
 				} else {
 					ch = ebcdic_to_unicode(ea_buf[baddr].cc,
 						ea_buf[baddr].cs,
-						appresp->ascii_box_draw?
+						appres.ascii_box_draw?
 						    EUO_ASCII_BOX: 0);
 					if (ch == 0) {
 						ch = ' ';
@@ -561,7 +561,7 @@ copy_clipboard_text(LPTSTR lptstr)
 				nc = ebcdic_to_multibyte_x(ea_buf[baddr].cc,
 					ea_buf[baddr].cs, buf, sizeof(buf),
 					EUO_BLANK_UNDEF |
-					    (appresp->ascii_box_draw?
+					    (appres.ascii_box_draw?
 					     EUO_ASCII_BOX: 0),
 					&u);
 				if (nc == 2) {

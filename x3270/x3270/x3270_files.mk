@@ -22,4 +22,4 @@ X3270_HEADERS = Cme.h CmeBSB.h CmeBSBP.h CmeLine.h CmeLineP.h CmeP.h \
 	CmplxMenu.h CmplxMenuP.h Husk.h HuskP.h aboutc.h childc.h dialogc.h \
 	display8c.h idle_guic.h keysym2ucs.h pr3287_session.h print_windowc.h \
 	printer_guic.h resourcesc.h stmenuc.h w3miscc.h xaac.h xactionsc.h \
-	xkybdc.h
+	xappres.h xkybdc.h
