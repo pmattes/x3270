@@ -52,6 +52,7 @@
 #include "lazya.h"
 #include "popupsc.h"
 #include "screenc.h"
+#include "togglesc.h"
 #include "utilc.h"
 
 
@@ -365,7 +366,7 @@ save_toggles(void)
 	int ix;
 
 	for (i = 0; i < N_TOGGLES; i++) {
-		if (toggle_names[i].index < 0 || !appres.toggle[i].changed)
+		if (toggle_names[i].index < 0 || !toggle[i].changed)
 			continue;
 
 		/*
@@ -393,7 +394,7 @@ save_toggles(void)
 			continue;	/* +sb/-sb done separately */
 		    case TRACING:
 			ix = cmd_srch(OptTrace);
-			if (appres.toggle[TRACING].value) {
+			if (toggled(TRACING)) {
 				if (!ix) {
 					cmd_append(OptTrace);
 				}
@@ -406,7 +407,7 @@ save_toggles(void)
 		}
 
 		/* If need be, switch "-set" with "-clear", or append one. */
-		if (appres.toggle[i].value) {
+		if (toggled(i)) {
 			if (ix && strcmp(tmp_cmd[ix], OptSet))
 				cmd_replace(ix, OptSet);
 			else if (!ix) {
@@ -637,7 +638,7 @@ save_options(char *n)
 
     /* Save most of the toggles. */
     for (i = 0; i < N_TOGGLES; i++) {
-	if (toggle_names[i].index < 0 || !appres.toggle[i].changed) {
+	if (toggle_names[i].index < 0 || !toggle[i].changed) {
 	    continue;
 	}
 	if (i == TRACING || i == SCREEN_TRACE) {
@@ -649,7 +650,7 @@ save_options(char *n)
 	}
 	(void) fprintf(f, "%s.%s: %s\n", XtName(toplevel),
 		toggle_names[i].name,
-		appres.toggle[i].value ? ResTrue : ResFalse);
+		toggled(i)? ResTrue: ResFalse);
     }
 
     /* Save the keypad state. */

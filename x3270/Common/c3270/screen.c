@@ -1606,15 +1606,15 @@ cursor_move(int baddr)
 }
 
 void
-toggle_monocase(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
+toggle_monocase(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
-	screen_disp(False);
+    screen_disp(False);
 }
 
 void
-toggle_underscore(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
+toggle_underscore(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
-	screen_disp(False);
+    screen_disp(False);
 }
 
 /* Status line stuff. */

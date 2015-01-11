@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,4 +42,4 @@ extern void nvt_send_right(void);
 extern void nvt_send_up(void);
 extern void nvt_snap(void);
 extern void nvt_snap_modes(void);
-extern void toggle_lineWrap(struct toggle *t, enum toggle_type type);
+extern void toggle_lineWrap(toggle_index_t ix, enum toggle_type type);

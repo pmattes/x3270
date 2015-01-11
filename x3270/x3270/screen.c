@@ -76,6 +76,7 @@
 #include "seec.h"
 #include "statusc.h"
 #include "tablesc.h"
+#include "togglesc.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "unicode_dbcsc.h"
@@ -995,21 +996,22 @@ scrollbar_init(Boolean is_reset)
 
 /* Turn the scrollbar on or off */
 void
-toggle_scrollBar(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
+toggle_scrollBar(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
-	scrollbar_changed = True;
+    scrollbar_changed = True;
 
-	if (toggled(SCROLL_BAR)) {
-		scrollbar_width = SCROLLBAR_WIDTH;
-		screen_redo = REDO_SCROLLBAR;
-	} else {
-		scroll_to_bottom();
-		scrollbar_width = 0;
-	}
+    if (toggled(SCROLL_BAR)) {
+	scrollbar_width = SCROLLBAR_WIDTH;
+	screen_redo = REDO_SCROLLBAR;
+    } else {
+	scroll_to_bottom();
+	scrollbar_width = 0;
+    }
 
-	screen_reinit(SCROLL_CHANGE);
-	if (toggled(SCROLL_BAR))
-		rethumb();
+    screen_reinit(SCROLL_CHANGE);
+    if (toggled(SCROLL_BAR)) {
+	rethumb();
+    }
 }
 
 /*
@@ -1219,15 +1221,17 @@ cancel_blink(void)
  * Toggle cursor blinking (called from menu)
  */
 void
-toggle_cursorBlink(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
+toggle_cursorBlink(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
-	if (!CONNECTED)
-		return;
+    if (!CONNECTED) {
+	return;
+    }
 
-	if (toggled(CURSOR_BLINK))
-		schedule_cursor_blink();
-	else
-		cursor_on();
+    if (toggled(CURSOR_BLINK)) {
+	schedule_cursor_blink();
+    } else {
+	cursor_on();
+    }
 }
 
 /*
@@ -1249,20 +1253,21 @@ cursor_on(void)
  * Toggle the cursor (block/underline).
  */
 void
-toggle_altCursor(struct toggle *t, enum toggle_type tt _is_unused)
+toggle_altCursor(toggle_index_t ix, enum toggle_type tt _is_unused)
 {
-	Boolean was_on;
+    Boolean was_on;
 
-	/* do_toggle already changed the value; temporarily change it back */
-	toggle_toggle(t);
+    /* do_toggle already changed the value; temporarily change it back */
+    toggle_toggle(ix);
 
-	was_on = cursor_off();
+    was_on = cursor_off();
 
-	/* Now change it back again */
-	toggle_toggle(t);
+    /* Now change it back again */
+    toggle_toggle(ix);
 
-	if (was_on)
-		cursor_on();
+    if (was_on) {
+	cursor_on();
+    }
 }
 
 
@@ -1291,12 +1296,13 @@ cursor_pos(void)
  * Toggle the display of the cursor position
  */
 void
-toggle_cursorPos(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
+toggle_cursorPos(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
-	if (toggled(CURSOR_POS))
-		cursor_pos();
-	else
-		status_uncursor_pos();
+    if (toggled(CURSOR_POS)) {
+	cursor_pos();
+    } else {
+	status_uncursor_pos();
+    }
 }
 
 /*
@@ -1317,12 +1323,12 @@ enable_cursor(Boolean on)
  * Toggle the crosshair cursor.
  */
 void
-toggle_crosshair(struct toggle *t, enum toggle_type tt _is_unused)
+toggle_crosshair(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
-	screen_changed = True;
-	first_changed = 0;
-	last_changed = ROWS*COLS;
-	screen_disp(False);
+    screen_changed = True;
+    first_changed = 0;
+    last_changed = ROWS*COLS;
+    screen_disp(False);
 }
 
 
@@ -1330,13 +1336,14 @@ toggle_crosshair(struct toggle *t, enum toggle_type tt _is_unused)
  * Toggle visible control characters.
  */
 void
-toggle_visible_control(struct toggle *t, enum toggle_type tt _is_unused)
+toggle_visible_control(toggle_index_t ix _is_unused,
+	enum toggle_type tt _is_unused)
 {
-	visible_control = toggled(VISIBLE_CONTROL);
-	screen_changed = True;
-	first_changed = 0;
-	last_changed = ROWS*COLS;
-	screen_disp(False);
+    visible_control = toggled(VISIBLE_CONTROL);
+    screen_changed = True;
+    first_changed = 0;
+    last_changed = ROWS*COLS;
+    screen_disp(False);
 }
 
 
@@ -2249,11 +2256,10 @@ screen_scroll(void)
  * Toggle mono-/dual-case mode.
  */
 void
-toggle_monocase(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
+toggle_monocase(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
-	(void) memset((char *) ss->image, 0,
-		      (ROWS*COLS) * sizeof(union sp));
-	ctlr_changed(0, ROWS*COLS);
+    (void) memset((char *)ss->image, 0, (ROWS*COLS) * sizeof(union sp));
+    ctlr_changed(0, ROWS*COLS);
 }
 
 /*
@@ -5026,54 +5032,52 @@ do_resize(void)
 static void
 revert_screen(void)
 {
-	const char *revert = NULL;
+    const char *revert = NULL;
 
-	/* If there's a reconfiguration pending, try to undo it. */
-	switch (screen_redo) {
-	    case REDO_FONT:
-		revert = "font";
-		screen_newfont(redo_old_font, False, False);
-		break;
-	    case REDO_MODEL:
-		revert = "model number";
-		screen_change_model(redo_old_model,
-		    redo_old_ov_cols, redo_old_ov_rows);
-		break;
-	    case REDO_KEYPAD:
-		revert = "keypad configuration";
-		screen_showikeypad(appres.keypad_on = False);
-		break;
-	    case REDO_SCROLLBAR:
-		revert = "scrollbar configuration";
-		if (toggled(SCROLL_BAR)) {
-			toggle_toggle(&appres.toggle[SCROLL_BAR]);
-			toggle_scrollBar(&appres.toggle[SCROLL_BAR],
-			    TT_INTERACTIVE);
-		}
-		break;
-	    case REDO_RESIZE:
-		/* Changed fonts in response to a previous user resize. */
-		vtrace("  size reassertion failed, window truncated\n"
-			"  doing nothing\n");
-		screen_redo = REDO_NONE;
-		return;
-	    case REDO_NONE:
-	        /* Initial configuration, or user-generated resize. */
-		do_resize();
-		return;
-	    default:
-		break;
+    /* If there's a reconfiguration pending, try to undo it. */
+    switch (screen_redo) {
+    case REDO_FONT:
+	revert = "font";
+	screen_newfont(redo_old_font, False, False);
+	break;
+    case REDO_MODEL:
+	revert = "model number";
+	screen_change_model(redo_old_model,
+	    redo_old_ov_cols, redo_old_ov_rows);
+	break;
+    case REDO_KEYPAD:
+	revert = "keypad configuration";
+	screen_showikeypad(appres.keypad_on = False);
+	break;
+    case REDO_SCROLLBAR:
+	revert = "scrollbar configuration";
+	if (toggled(SCROLL_BAR)) {
+	    toggle_toggle(SCROLL_BAR);
+	    toggle_scrollBar(SCROLL_BAR, TT_INTERACTIVE);
 	}
-
-	/* Tell the user what we're doing. */
-	if (revert != NULL) {
-		vtrace("    reverting to previous %s\n", revert);
-		popup_an_error("Main window does not fit on the "
-		    "X display\n"
-		    "Reverting to previous %s", revert);
-	}
-
+	break;
+    case REDO_RESIZE:
+	/* Changed fonts in response to a previous user resize. */
+	vtrace("  size reassertion failed, window truncated\n"
+		"  doing nothing\n");
 	screen_redo = REDO_NONE;
+	return;
+    case REDO_NONE:
+	/* Initial configuration, or user-generated resize. */
+	do_resize();
+	return;
+    default:
+	break;
+    }
+
+    /* Tell the user what we're doing. */
+    if (revert != NULL) {
+	vtrace("    reverting to previous %s\n", revert);
+	popup_an_error("Main window does not fit on the X display\n"
+		"Reverting to previous %s", revert);
+    }
+
+    screen_redo = REDO_NONE;
 }
 
 static void

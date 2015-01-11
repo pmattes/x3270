@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2010, 2013-2014 Paul Mattes.
+ * Copyright (c) 1995-2010, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@ extern void menubar_init(Widget container, Dimension overall_width,
 extern void menubar_keypad_changed(void);
 extern Dimension menubar_qheight(Dimension container_width);
 extern void menubar_resize(Dimension width);
-extern void menubar_retoggle(struct toggle *t, int ix);
+extern void menubar_retoggle(toggle_index_t ix);
 
 #elif defined(C3270) /*][*/
 
@@ -77,11 +77,11 @@ extern void menu_click(int x, int y);
 # endif /*]*/
 extern void popup_menu(int x, int click);
 extern void menu_cursor(int *row, int *col);
-extern void menubar_retoggle(struct toggle *t, int ix);
+extern void menubar_retoggle(toggle_index_t ix);
 extern void map_acs(unsigned char c, ucs4_t *u, unsigned char *acs);
 extern void menubar_init(void);
 
 #else /*][*/
 # define menubar_as_set(n)
-# define menubar_retoggle(t, ix)
+# define menubar_retoggle(ix)
 #endif /*]*/

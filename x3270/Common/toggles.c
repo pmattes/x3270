@@ -46,24 +46,25 @@
 #include "trace.h"
 #include "togglesc.h"
 
-
+toggle_t toggle[N_TOGGLES];
+
 /*
  * Generic toggle stuff
  */
 static void
-do_toggle_reason(int ix, enum toggle_type reason)
+do_toggle_reason(toggle_index_t ix, enum toggle_type reason)
 {
-    struct toggle *t = &appres.toggle[ix];
+    struct toggle *t = &toggle[ix];
 
     /*
      * Change the value, call the internal update routine, and reset the
      * menu label(s).
      */
-    toggle_toggle(t);
+    toggle_toggle(ix);
     if (t->upcall != NULL) {
-	t->upcall(t, reason);
+	t->upcall(ix, reason);
     }
-    menubar_retoggle(t, ix);
+    menubar_retoggle(ix);
 }
 
 void
@@ -79,12 +80,12 @@ do_menu_toggle(int ix)
 }
 
 static void
-init_toggle_fallible(int ix)
+init_toggle_fallible(toggle_index_t ix)
 {
     if (toggled(ix)) {
-	appres.toggle[ix].upcall(&appres.toggle[ix], TT_INITIAL);
+	toggle[ix].upcall(ix, TT_INITIAL);
 	if (!toggled(ix)) {
-	    menubar_retoggle(&appres.toggle[ix], ix);
+	    menubar_retoggle(ix);
 	}
     }
 }
@@ -95,26 +96,26 @@ init_toggle_fallible(int ix)
 void
 initialize_toggles(void)
 {
-    appres.toggle[TRACING].upcall =          toggle_tracing;
-    appres.toggle[SCREEN_TRACE].upcall =     toggle_screenTrace;
-    appres.toggle[LINE_WRAP].upcall =        toggle_lineWrap;
+    toggle[TRACING].upcall =          toggle_tracing;
+    toggle[SCREEN_TRACE].upcall =     toggle_screenTrace;
+    toggle[LINE_WRAP].upcall =        toggle_lineWrap;
 
 #if defined(X3270_INTERACTIVE) /*[*/
-    appres.toggle[MONOCASE].upcall =         toggle_monocase;
+    toggle[MONOCASE].upcall =         toggle_monocase;
 #endif /*]*/
 
 #if defined(X3270_DISPLAY) /*[*/
-    appres.toggle[ALT_CURSOR].upcall =       toggle_altCursor;
-    appres.toggle[CURSOR_BLINK].upcall =     toggle_cursorBlink;
-    appres.toggle[SHOW_TIMING].upcall =      toggle_showTiming;
-    appres.toggle[CURSOR_POS].upcall =       toggle_cursorPos;
-    appres.toggle[SCROLL_BAR].upcall =       toggle_scrollBar;
-    appres.toggle[CROSSHAIR].upcall =        toggle_crosshair;
-    appres.toggle[VISIBLE_CONTROL].upcall =  toggle_visible_control;
+    toggle[ALT_CURSOR].upcall =       toggle_altCursor;
+    toggle[CURSOR_BLINK].upcall =     toggle_cursorBlink;
+    toggle[SHOW_TIMING].upcall =      toggle_showTiming;
+    toggle[CURSOR_POS].upcall =       toggle_cursorPos;
+    toggle[SCROLL_BAR].upcall =       toggle_scrollBar;
+    toggle[CROSSHAIR].upcall =        toggle_crosshair;
+    toggle[VISIBLE_CONTROL].upcall =  toggle_visible_control;
 #endif /*]*/
 
 #if defined(C3270) /*[*/
-    appres.toggle[UNDERSCORE].upcall =	     toggle_underscore;
+    toggle[UNDERSCORE].upcall =	     toggle_underscore;
 #endif /*]*/
 
     init_toggle_fallible(TRACING);
@@ -129,14 +130,14 @@ shutdown_toggles(void)
 {
     /* Clean up the data stream trace monitor window. */
     if (toggled(TRACING)) {
-	appres.toggle[TRACING].value = False;
-	toggle_tracing(&appres.toggle[TRACING], TT_FINAL);
+	set_toggle(TRACING, False);
+	toggle_tracing(TRACING, TT_FINAL);
     }
 
     /* Clean up the screen trace file. */
     if (toggled(SCREEN_TRACE)) {
-	appres.toggle[SCREEN_TRACE].value = False;
-	toggle_screenTrace(&appres.toggle[SCREEN_TRACE], TT_FINAL);
+	set_toggle(SCREEN_TRACE, False);
+	toggle_screenTrace(SCREEN_TRACE, TT_FINAL);
     }
 }
 

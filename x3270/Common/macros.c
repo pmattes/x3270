@@ -228,7 +228,7 @@ static sms_t *sms_redirect_to(void);
 
 /* Macro that defines that the keyboard is locked due to user input. */
 #define KBWAIT	(kybdlock & (KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK|KL_ENTER_INHIBIT))
-#define CKBWAIT	(appres.toggle[AID_WAIT].value && KBWAIT)
+#define CKBWAIT	(toggled(AID_WAIT) && KBWAIT)
 
 /* Macro that defines when it's safe to continue a Wait()ing sms. */
 #define CAN_PROCEED ( \

@@ -295,14 +295,45 @@ extern enum cstate cstate;
 #define MetaKeyDown	0x02
 #define AltKeyDown	0x04
 
-/*   toggle names */
+/*   toggles */
+typedef enum {
+    MONOCASE,		/* all-uppercase display */
+    ALT_CURSOR,		/* block cursor (x3270) */
+    CURSOR_BLINK,	/* blinking cursor (x3270) */
+    SHOW_TIMING,	/* display command execution time in the OIA
+			   (interactive) */
+    CURSOR_POS,		/* display cursor position in the OIA (interactive) */
+    TRACING,		/* trace data and events */
+    SCROLL_BAR,		/* include scroll bar (x3270) */
+    LINE_WRAP,		/* NVT xterm line-wrap mode (auto-wraparound) */
+    BLANK_FILL,		/* treat trailing blanks like NULLs on input */
+    SCREEN_TRACE,	/* trace screen contents to file or printer */
+    MARGINED_PASTE,	/* respect left margin when pasting (x3270 and
+			   wc3270) */
+    RECTANGLE_SELECT,	/* select by rectangles (x3270) */
+    CROSSHAIR,		/* display cursor crosshair (x3270) */
+    VISIBLE_CONTROL,	/* display visible control characters (x3270) */
+    AID_WAIT,		/* make scripts wait for AIDs to complete */
+    UNDERSCORE,		/* special c3270/wc3270 underscore display mode
+			   (c3270 and wc320) */
+    OVERLAY_PASTE,	/* overlay protected fields when pasting (x3270 and
+			   wc3270) */
+    N_TOGGLES
+} toggle_index_t;
 typedef struct {
     const char *name;
-    int index;
+    toggle_index_t index;
     Boolean is_alias;
 } toggle_name_t;
 extern toggle_name_t toggle_names[];
 extern unsigned toggles_supported;
+enum toggle_type {
+    TT_INITIAL,		/* at start-up */
+    TT_INTERACTIVE,	/* at the prompt */
+    TT_ACTION,		/* from a keymap, script or macro */
+    TT_XMENU,		/* from a GUI menu */
+    TT_FINAL		/* at shutdown */
+};
 
 /*   extended attributes */
 struct ea {

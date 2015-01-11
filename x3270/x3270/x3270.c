@@ -666,10 +666,10 @@ main(int argc, char *argv[])
 	/* Handle initial toggle settings. */
 	if (appres.dsTrace_bc || appres.eventTrace_bc) {
 	    	/* Backwards compatibility with old resource names. */
-		appres.toggle[TRACING].value = True;
+		set_toggle(TRACING, True);
 	}
 	if (!appres.debug_tracing) {
-		appres.toggle[TRACING].value = False;
+		set_toggle(TRACING, False);
 	}
 	initialize_toggles();
 
@@ -941,8 +941,7 @@ parse_set_clear(int *argcp, char **argv)
 		i++;
 		for (j = 0; toggle_names[j].name != NULL; j++)
 			if (!strcasecmp(argv[i], toggle_names[j].name)) {
-				appres.toggle[toggle_names[j].index].value =
-				    is_set;
+				set_toggle(toggle_names[j].index, is_set);
 				break;
 			}
 		if (toggle_names[j].name == NULL) {

@@ -56,6 +56,7 @@
 #include "statusc.h"
 #include "tablesc.h"
 #include "telnetc.h"
+#include "togglesc.h"
 #include "trace.h"
 #include "trace_gui.h"
 #include "utf8c.h"
@@ -434,8 +435,8 @@ stop_tracing(void)
 	tracef_pipe = NULL;
     }
     if (toggled(TRACING)) {
-	toggle_toggle(&appres.toggle[TRACING]);
-	menubar_retoggle(&appres.toggle[TRACING], TRACING);
+	toggle_toggle(TRACING);
+	menubar_retoggle(TRACING);
     }
 }
 
@@ -863,9 +864,9 @@ tracefile_ok(const char *tfn)
     Free(stfn);
 
     /* We're really tracing, turn the flag on. */
-    appres.toggle[trace_reason].value = True;
-    appres.toggle[trace_reason].changed = True;
-    menubar_retoggle(&appres.toggle[trace_reason], trace_reason);
+    set_toggle(trace_reason, True);
+    toggle[trace_reason].changed = True;
+    menubar_retoggle(trace_reason);
 
     /* Display current status. */
     buf = create_tracefile_header("started");
@@ -911,8 +912,8 @@ tracefile_on(int reason, enum toggle_type tt)
 	tracefile_ok(tracefile);
     } else {
 	/* Turn the toggle _off_ until the popup succeeds. */
-	appres.toggle[reason].value = False;
-	appres.toggle[reason].changed = True;
+	set_toggle(reason, False);
+	toggle[reason].changed = True;
     }
 
     if (tracefile_buf != NULL) {
@@ -948,13 +949,13 @@ trace_set_trace_file(const char *path)
 }
 
 void
-toggle_tracing(struct toggle *t _is_unused, enum toggle_type tt)
+toggle_tracing(toggle_index_t ix _is_unused, enum toggle_type tt)
 {
     /* If turning on trace and no trace file, open one. */
     if (toggled(TRACING) && tracef == NULL) {
 	tracefile_on(TRACING, tt);
 	if (tracef == NULL) {
-	    appres.toggle[TRACING].value = False;
+	    set_toggle(TRACING, False);
 	}
     } else if (!toggled(TRACING)) {
 	/* If turning off trace and not still tracing events, close the
@@ -1090,9 +1091,9 @@ screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 	}
 
 	/* We're really tracing, turn the flag on. */
-	appres.toggle[SCREEN_TRACE].value = True;
-	appres.toggle[SCREEN_TRACE].changed = True;
-	menubar_retoggle(&appres.toggle[SCREEN_TRACE], SCREEN_TRACE);
+	set_toggle(SCREEN_TRACE, True);
+	toggle[SCREEN_TRACE].changed = True;
+	menubar_retoggle(SCREEN_TRACE);
 	return True;
 }
 
@@ -1197,49 +1198,49 @@ screentrace_default_printer(void)
  *  file, printer command (Unix) or printer (Windows).
  */
 void
-toggle_screenTrace(struct toggle *t _is_unused, enum toggle_type tt)
+toggle_screenTrace(toggle_index_t ix _is_unused, enum toggle_type tt)
 {
-	char *tracefile_buf = NULL;
-	char *tracefile;
+    char *tracefile_buf = NULL;
+    char *tracefile;
 
-	if (toggled(SCREEN_TRACE)) {
-		/* Turn it on. */
-		status_screentrace((screentrace_count = 0));
-	    	if (onetime_screentrace_name != NULL) {
-		    	tracefile = tracefile_buf =
-			    onetime_screentrace_name;
-			onetime_screentrace_name = NULL;
-		} else if (screentrace_how == TSS_FILE &&
-			   appres.screentrace_file != NULL)
-			tracefile = appres.screentrace_file;
-		else {
-			if (screentrace_how == TSS_FILE)
-				tracefile = tracefile_buf =
-				    screentrace_default_file(screentrace_ptype);
-			else
-				tracefile = tracefile_buf =
-				    screentrace_default_printer();
-		}
-		if (!screentrace_cb(screentrace_how, screentrace_ptype,
-			NewString(tracefile))) {
-
-			appres.toggle[SCREEN_TRACE].value = False;
-			status_screentrace((screentrace_count = -1));
-		}
+    if (toggled(SCREEN_TRACE)) {
+	/* Turn it on. */
+	status_screentrace((screentrace_count = 0));
+	if (onetime_screentrace_name != NULL) {
+	    tracefile = tracefile_buf = onetime_screentrace_name;
+	    onetime_screentrace_name = NULL;
+	} else if (screentrace_how == TSS_FILE &&
+		appres.screentrace_file != NULL) {
+	    tracefile = appres.screentrace_file;
 	} else {
-		/* Turn it off. */
-		if (ctlr_any_data() && !trace_skipping)
-			do_screentrace(False);
-		end_screentrace(tt == TT_FINAL);
-		screentrace_last_how = screentrace_how;
-		screentrace_how = TSS_FILE; /* back to the default */
-		screentrace_ptype = P_TEXT; /* back to the default */
-		status_screentrace((screentrace_count = -1));
+	    if (screentrace_how == TSS_FILE) {
+		tracefile = tracefile_buf =
+		    screentrace_default_file(screentrace_ptype);
+	    } else {
+		tracefile = tracefile_buf = screentrace_default_printer();
+	    }
 	}
+	if (!screentrace_cb(screentrace_how, screentrace_ptype,
+		    NewString(tracefile))) {
 
-	if (tracefile_buf != NULL) {
-		Free(tracefile_buf);
+	    set_toggle(SCREEN_TRACE, False);
+	    status_screentrace((screentrace_count = -1));
 	}
+    } else {
+	/* Turn it off. */
+	if (ctlr_any_data() && !trace_skipping) {
+	    do_screentrace(False);
+	}
+	end_screentrace(tt == TT_FINAL);
+	screentrace_last_how = screentrace_how;
+	screentrace_how = TSS_FILE; /* back to the default */
+	screentrace_ptype = P_TEXT; /* back to the default */
+	status_screentrace((screentrace_count = -1));
+    }
 
-	trace_gui_toggle();
+    if (tracefile_buf != NULL) {
+	Free(tracefile_buf);
+    }
+
+    trace_gui_toggle();
 }

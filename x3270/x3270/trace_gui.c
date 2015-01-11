@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,7 @@
 #include "menubarc.h"
 #include "objects.h"
 #include "popupsc.h"
+#include "togglesc.h"
 #include "trace.h"
 #include "trace_gui.h"
 
@@ -117,10 +118,9 @@ trace_gui_on(int reason, enum toggle_type tt, const char *tracefile)
 void
 trace_gui_toggle(void)
 {
-    if (appres.toggle[SCREEN_TRACE].w[0] != NULL) {
-	XtVaSetValues(appres.toggle[SCREEN_TRACE].w[0],
-		XtNleftBitmap,
-		appres.toggle[SCREEN_TRACE].value? dot: None,
+    if (toggle[SCREEN_TRACE].w[0] != NULL) {
+	XtVaSetValues(toggle[SCREEN_TRACE].w[0],
+		XtNleftBitmap, toggled(SCREEN_TRACE)? dot: None,
 		NULL);
     }
 }

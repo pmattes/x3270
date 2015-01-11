@@ -1803,12 +1803,13 @@ nvt_send_pa(int nn)
 }
 
 void
-toggle_lineWrap(struct toggle *t _is_unused, enum toggle_type type _is_unused)
+toggle_lineWrap(toggle_index_t ix _is_unused, enum toggle_type type _is_unused)
 {
-	if (toggled(LINE_WRAP))
-		wraparound_mode = 1;
-	else
-		wraparound_mode = 0;
+    if (toggled(LINE_WRAP)) {
+	wraparound_mode = 1;
+    } else {
+	wraparound_mode = 0;
+    }
 }
 
 /* Emit an SGR command. */

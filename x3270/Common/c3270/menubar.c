@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014 Paul Mattes.
+ * Copyright (c) 2010-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -868,7 +868,7 @@ typedef enum {
     OM_COUNT
 } options_menu_enum;
 cmenu_item_t *options_menu_items[OM_COUNT];
-int option_index[OM_COUNT] = {
+toggle_index_t option_index[OM_COUNT] = {
     MONOCASE,
     BLANK_FILL,
     SHOW_TIMING,
@@ -951,7 +951,7 @@ menu_init(void)
 	}
 	options_menu = add_menu("Options");
 	for (j = 0; j < OM_COUNT; j++) {
-		int k;
+		toggle_index_t k;
 		char *name;
 
 		for (k = 0; k < N_TOGGLES; k++) {
@@ -988,7 +988,7 @@ menu_init(void)
 }
 
 void
-menubar_retoggle(struct toggle *t, int ix)
+menubar_retoggle(toggle_index_t ix)
 {
     int j;
     char *s;

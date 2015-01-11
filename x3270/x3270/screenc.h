@@ -108,13 +108,13 @@ extern void screen_showikeypad(Boolean on);
 extern void set_aicon_label(char *l);
 extern void set_translations(Widget w, XtTranslations *t00, XtTranslations *t0);
 extern void shift_event(int event_state);
-extern void toggle_altCursor(struct toggle *t, enum toggle_type tt);
-extern void toggle_crosshair(struct toggle *t, enum toggle_type tt);
-extern void toggle_cursorBlink(struct toggle *t, enum toggle_type tt);
-extern void toggle_cursorPos(struct toggle *t, enum toggle_type tt);
-extern void toggle_monocase(struct toggle *t, enum toggle_type tt);
-extern void toggle_scrollBar(struct toggle *t, enum toggle_type tt);
-extern void toggle_visible_control(struct toggle *t, enum toggle_type tt);
+extern void toggle_altCursor(toggle_index_t ix, enum toggle_type tt);
+extern void toggle_crosshair(toggle_index_t ix, enum toggle_type tt);
+extern void toggle_cursorBlink(toggle_index_t ix, enum toggle_type tt);
+extern void toggle_cursorPos(toggle_index_t ix, enum toggle_type tt);
+extern void toggle_monocase(toggle_index_t ix, enum toggle_type tt);
+extern void toggle_scrollBar(toggle_index_t ix, enum toggle_type tt);
+extern void toggle_visible_control(toggle_index_t ix, enum toggle_type tt);
 extern unsigned long screen_window_number(void);
 
 /* font list */

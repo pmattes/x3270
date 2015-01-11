@@ -2886,10 +2886,11 @@ ticking_stop(void)
 
 #if defined(X3270_INTERACTIVE) /*[*/
 void
-toggle_showTiming(struct toggle *t _is_unused, enum toggle_type tt _is_unused)
+toggle_showTiming(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
-	if (!toggled(SHOW_TIMING))
-		status_untiming();
+    if (!toggled(SHOW_TIMING)) {
+	status_untiming();
+    }
 }
 #endif /*]*/
 

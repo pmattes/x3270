@@ -45,7 +45,7 @@
 #include "resourcesc.h"
 
 #define offset(field)		XtOffset(AppResptr, field)
-#define toggle_offset(index)	offset(toggle[index].value)
+#define toggle_offset(index)	offset(toggle[index])
 XtResource resources[] = {
 	{ ResColorBackground, ClsColorBackground, XtRString, sizeof(String),
 	  offset(colorbg_name), XtRString, "black" },

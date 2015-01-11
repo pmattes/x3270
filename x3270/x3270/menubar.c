@@ -522,12 +522,12 @@ menubar_connect(Boolean ignored _is_unused)
 		XtVaSetValues(linemode_button, XtNsensitive, IN_NVT, NULL);
 	if (charmode_button != NULL)
 		XtVaSetValues(charmode_button, XtNsensitive, IN_NVT, NULL);
-	if (appres.toggle[LINE_WRAP].w[0] != NULL)
-		XtVaSetValues(appres.toggle[LINE_WRAP].w[0],
+	if (toggle[LINE_WRAP].w[0] != NULL)
+		XtVaSetValues(toggle[LINE_WRAP].w[0],
 		    XtNsensitive, IN_NVT,
 		    NULL);
-	if (appres.toggle[RECTANGLE_SELECT].w[0] != NULL)
-		XtVaSetValues(appres.toggle[RECTANGLE_SELECT].w[0],
+	if (toggle[RECTANGLE_SELECT].w[0] != NULL)
+		XtVaSetValues(toggle[RECTANGLE_SELECT].w[0],
 		    XtNsensitive, IN_NVT,
 		    NULL);
 	if (models_option != NULL)
@@ -622,12 +622,12 @@ menubar_in3270(Boolean in3270)
 		    XtNleftBitmap, in3270 ? no_diamond
 					: (linemode ? no_diamond : diamond),
 		    NULL);
-	if (appres.toggle[LINE_WRAP].w[0] != NULL)
-		XtVaSetValues(appres.toggle[LINE_WRAP].w[0],
+	if (toggle[LINE_WRAP].w[0] != NULL)
+		XtVaSetValues(toggle[LINE_WRAP].w[0],
 		    XtNsensitive, !in3270,
 		    NULL);
-	if (appres.toggle[RECTANGLE_SELECT].w[0] != NULL)
-		XtVaSetValues(appres.toggle[RECTANGLE_SELECT].w[0],
+	if (toggle[RECTANGLE_SELECT].w[0] != NULL)
+		XtVaSetValues(toggle[RECTANGLE_SELECT].w[0],
 		    XtNsensitive, !in3270,
 		    NULL);
 	if (idle_button != NULL)
@@ -950,7 +950,7 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 			    NULL);
 		if (w != NULL) {
 			any = True;
-			appres.toggle[SCREEN_TRACE].w[0] = w;
+			toggle[SCREEN_TRACE].w[0] = w;
 			XtVaSetValues(w, XtNleftBitmap,
 				toggled(SCREEN_TRACE)? dot: None,
 				NULL);
@@ -1276,7 +1276,7 @@ macros_menu_init(Boolean regen, Position x, Position y)
 		    NULL);
 }
 
-/* Called toggle the keypad */
+/* Called to toggle the keypad */
 static void
 toggle_keypad(Widget w _is_unused, XtPointer client_data _is_unused,
     XtPointer call_data _is_unused)
@@ -1397,18 +1397,20 @@ menubar_resize(Dimension width)
 static void
 toggle_callback(Widget w, XtPointer userdata, XtPointer calldata _is_unused)
 {
-	struct toggle *t = (struct toggle *) userdata;
+    toggle_t *t = (toggle_t *)userdata;
+    toggle_index_t ix = toggle_ix(t);
 
-	/*
-	 * If this is a two-button radio group, rather than a simple toggle,
-	 * there is nothing to do if they are clicking on the current value.
-	 *
-	 * t->w[0] is the "toggle true" button; t->w[1] is "toggle false".
-	 */
-	if (t->w[1] != 0 && w == t->w[!t->value])
-		return;
+    /*
+     * If this is a two-button radio group, rather than a simple toggle,
+     * there is nothing to do if they are clicking on the current value.
+     *
+     * t->w[0] is the "toggle true" button; t->w[1] is "toggle false".
+     */
+    if (t->w[1] != 0 && w == t->w[!toggled(ix)]) {
+	return;
+    }
 
-	do_menu_toggle(t - appres.toggle);
+    do_menu_toggle(t - toggle);
 }
 
 static Widget oversize_shell = NULL;
@@ -1449,34 +1451,35 @@ static Boolean
 toggle_init(Widget menu, int ix, const char *name1, const char *name2,
 		Boolean *spaced)
 {
-	struct toggle *t = &appres.toggle[ix];
+    toggle_t *t = &toggle[ix];
 
-	if (!item_suppressed(menu, name1) &&
+    if (!item_suppressed(menu, name1) &&
 	    (name2 == NULL || !item_suppressed(menu, name2))) {
-		if (spaced != NULL)
-			cond_space(menu, spaced);
-		t->label[0] = name1;
-		t->label[1] = name2;
-		t->w[0] = XtVaCreateManagedWidget(
-		    name1, cmeBSBObjectClass, menu,
-		    XtNleftBitmap,
-		     t->value? (name2? diamond: dot):
-		               (name2? no_diamond: None),
+	if (spaced != NULL) {
+	    cond_space(menu, spaced);
+	}
+	t->label[0] = name1;
+	t->label[1] = name2;
+	t->w[0] = XtVaCreateManagedWidget(
+		name1, cmeBSBObjectClass, menu,
+		XtNleftBitmap,
+		 toggled(ix)? (name2? diamond: dot):
+			      (name2? no_diamond: None),
+		NULL);
+	XtAddCallback(t->w[0], XtNcallback, toggle_callback, (XtPointer)t);
+	if (name2 != NULL) {
+	    t->w[1] = XtVaCreateManagedWidget(
+		    name2, cmeBSBObjectClass, menu,
+		    XtNleftBitmap, toggled(ix)? no_diamond: diamond,
 		    NULL);
-		XtAddCallback(t->w[0], XtNcallback, toggle_callback,
-				(XtPointer) t);
-		if (name2 != NULL) {
-			t->w[1] = XtVaCreateManagedWidget(
-			    name2, cmeBSBObjectClass, menu,
-			    XtNleftBitmap, t->value? no_diamond: diamond,
-			    NULL);
-			XtAddCallback(t->w[1], XtNcallback, toggle_callback,
-			    (XtPointer) t);
-		} else
-			t->w[1] = NULL;
-		return True;
-	} else
-		return False;
+	    XtAddCallback(t->w[1], XtNcallback, toggle_callback, (XtPointer)t);
+	} else {
+	    t->w[1] = NULL;
+	}
+	return True;
+    } else {
+	return False;
+    }
 }
 
 static Widget *font_widgets = NULL;
@@ -1955,18 +1958,18 @@ options_menu_init(Boolean regen, Position x, Position y)
 				XtNsensitive, !PCONNECTED,
 				NULL);
 		if (keypad_option_button != NULL ||
-		    appres.toggle[MONOCASE].w[0] != NULL ||
-		    appres.toggle[CURSOR_BLINK].w[0] != NULL ||
-		    appres.toggle[BLANK_FILL].w[0] != NULL ||
-		    appres.toggle[SHOW_TIMING].w[0] != NULL ||
-		    appres.toggle[CURSOR_POS].w[0] != NULL ||
-		    appres.toggle[SCROLL_BAR].w[0] != NULL ||
-		    appres.toggle[LINE_WRAP].w[0] != NULL ||
-		    appres.toggle[MARGINED_PASTE].w[0] != NULL ||
-		    appres.toggle[RECTANGLE_SELECT].w[0] != NULL ||
-		    appres.toggle[CROSSHAIR].w[0] != NULL ||
-		    appres.toggle[VISIBLE_CONTROL].w[0] != NULL ||
-		    appres.toggle[ALT_CURSOR].w[0] != NULL ||
+		    toggle[MONOCASE].w[0] != NULL ||
+		    toggle[CURSOR_BLINK].w[0] != NULL ||
+		    toggle[BLANK_FILL].w[0] != NULL ||
+		    toggle[SHOW_TIMING].w[0] != NULL ||
+		    toggle[CURSOR_POS].w[0] != NULL ||
+		    toggle[SCROLL_BAR].w[0] != NULL ||
+		    toggle[LINE_WRAP].w[0] != NULL ||
+		    toggle[MARGINED_PASTE].w[0] != NULL ||
+		    toggle[RECTANGLE_SELECT].w[0] != NULL ||
+		    toggle[CROSSHAIR].w[0] != NULL ||
+		    toggle[VISIBLE_CONTROL].w[0] != NULL ||
+		    toggle[ALT_CURSOR].w[0] != NULL ||
 		    linemode_button != NULL ||
 		    charmode_button != NULL ||
 		    m3278_button != NULL ||
@@ -2205,16 +2208,19 @@ options_menu_init(Boolean regen, Position x, Position y)
  * Change a menu checkmark
  */
 void
-menubar_retoggle(struct toggle *t, int ix _is_unused)
+menubar_retoggle(toggle_index_t ix)
 {
-	if (t->w[0] != NULL)
-		XtVaSetValues(t->w[0],
-		    XtNleftBitmap, t->value ? (t->w[1] ? diamond : dot) : None,
-		    NULL);
-	if (t->w[1] != NULL)
-		XtVaSetValues(t->w[1],
-		    XtNleftBitmap, t->value ? no_diamond : diamond,
-		    NULL);
+    toggle_t *t = &toggle[ix];
+    if (t->w[0] != NULL) {
+	XtVaSetValues(t->w[0],
+		XtNleftBitmap, toggled(ix)? (t->w[1]? diamond: dot): None,
+		NULL);
+    }
+    if (t->w[1] != NULL) {
+	XtVaSetValues(t->w[1],
+		XtNleftBitmap, toggled(ix)? no_diamond: diamond,
+		NULL);
+    }
 }
 
 void

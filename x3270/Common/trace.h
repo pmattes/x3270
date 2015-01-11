@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2014, Paul Mattes.
+ * Copyright (c) 1995-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,8 +42,8 @@ extern struct timeval ds_ts;
 const char *rcba(int baddr);
 char *screentrace_default_file(ptype_t ptype);
 char *screentrace_default_printer(void);
-void toggle_tracing(struct toggle *t, enum toggle_type tt);
-void toggle_screenTrace(struct toggle *t, enum toggle_type tt);
+void toggle_tracing(toggle_index_t ix, enum toggle_type tt);
+void toggle_screenTrace(toggle_index_t ix, enum toggle_type tt);
 void trace_nvt_disc(void);
 void trace_char(char c);
 void trace_ds(const char *fmt, ...) printflike(1, 2);

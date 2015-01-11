@@ -192,7 +192,7 @@ Boolean macro_output = False;
 
 /* Is the keyboard is locked due to user input? */
 #define KBWAIT	(kybdlock & (KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK))
-#define CKBWAIT (appres.toggle[AID_WAIT].value && KBWAIT)
+#define CKBWAIT (toggled(AID_WAIT) && KBWAIT)
 
 /* Is it safe to continue a script waiting for an input field? */
 #define INPUT_OKAY ( \

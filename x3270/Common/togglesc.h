@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -30,9 +30,27 @@
  */
 
 /*
- *	toggles.c
+ *	togglesc.h
  *		Global declarations for toggles.c.
  */
+
+typedef struct toggle {
+    Boolean changed;    /* has the value changed since init */
+    void *w[2];         /* the menu item widgets */
+    const char *label[2]; /* labels */
+    void (*upcall)(toggle_index_t ix, enum toggle_type); /* change value */
+} toggle_t;
+
+extern toggle_t toggle[];
+
+#define set_toggle(ix, value)	appres.toggle[ix] = value
+#define toggle_toggle(ix) { \
+    set_toggle(ix, !toggled(ix)); \
+    toggle[ix].changed = True; \
+}
+#define toggle_ix(t)		(toggle_index_t)((t) - toggle)
+#define TOGGLE_BIT(ix)		(1 << (ix))
+#define TOGGLE_SUPPORTED(ix)	(toggles_supported & TOGGLE_BIT(ix))
 
 extern void do_menu_toggle(int);
 extern void do_toggle(int);

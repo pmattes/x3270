@@ -53,7 +53,7 @@ extern void screen_fixup(void);
 extern void pager_output(const char *s);
 extern Boolean screen_wait_for_key(char *c);
 #endif /*]*/
-extern void toggle_monocase(struct toggle *t, enum toggle_type tt);
+extern void toggle_monocase(toggle_index_t ix, enum toggle_type tt);
 #define screen_set_thumb(top, shown)
 #define enable_cursor(on)
 
@@ -65,7 +65,7 @@ extern int windows_cp;
 #endif /*]*/
 
 #if defined(C3270) /*[*/
-extern void toggle_underscore(struct toggle *t, enum toggle_type type);
+extern void toggle_underscore(toggle_index_t ix, enum toggle_type type);
 extern void screen_final(void);
 #endif /*]*/
 

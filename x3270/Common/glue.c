@@ -332,7 +332,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	appres.conf_dir = LIBX3270DIR;
     }
     if (!appres.debug_tracing) {
-	 appres.toggle[TRACING].value = False;
+	 set_toggle(TRACING, False);
     }
 
     return argc;
@@ -534,10 +534,10 @@ set_appres_defaults(void)
 
     appres.dft_buffer_size = DFT_BUF;
 
-    appres.toggle[CURSOR_POS].value = True;
-    appres.toggle[AID_WAIT].value = True;
+    set_toggle(CURSOR_POS, True);
+    set_toggle(AID_WAIT, True);
 #if defined(WC3270) /*[*/
-    appres.toggle[UNDERSCORE].value = True;
+    set_toggle(UNDERSCORE, True);
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
@@ -579,7 +579,7 @@ set_appres_defaults(void)
 #endif /*]*/
 
 #define offset(n) (void *)&appres.n
-#define toggle_offset(index) offset(toggle[index].value)
+#define toggle_offset(index) offset(toggle[index])
 static struct {
     const char *name;
     enum {
@@ -917,7 +917,7 @@ parse_set_clear(int *argcp, const char **argv)
 		continue;
 	    }
 	    if (!strcasecmp(argv[i], toggle_names[j].name)) {
-		appres.toggle[toggle_names[j].index].value = is_set;
+		set_toggle(toggle_names[j].index, is_set);
 		break;
 	    }
 	}
@@ -1339,7 +1339,7 @@ parse_xrm(const char *arg, const char *where)
 		continue;
 	    }
 	    if (!strncapcmp(toggle_names[i].name, name, rnlen)) {
-		address = &appres.toggle[toggle_names[i].index].value;
+		address = &appres.toggle[toggle_names[i].index];
 		type = XRM_BOOLEAN;
 		break;
 	    }
