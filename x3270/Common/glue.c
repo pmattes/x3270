@@ -917,7 +917,7 @@ parse_set_clear(int *argcp, const char **argv)
 		continue;
 	    }
 	    if (!strcasecmp(argv[i], toggle_names[j].name)) {
-		set_toggle(toggle_names[j].index, is_set);
+		appres.toggle[toggle_names[j].index] = is_set;
 		break;
 	    }
 	}
