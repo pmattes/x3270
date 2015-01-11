@@ -47,75 +47,68 @@ extern XIM im;
 extern XIC ic;
 extern Boolean xim_error;
 
-extern void blink_start(void);
-extern void cursor_move(int baddr);
-extern unsigned display_height(void);
-extern char *display_charset();
-extern unsigned display_heightMM(void);
-extern unsigned display_width(void);
-extern unsigned display_widthMM(void);
-extern void enable_cursor(Boolean on);
-extern void font_init(void);
-extern void icon_init(void);
-extern void mcursor_locked(void);
-extern void mcursor_normal(void);
-extern void mcursor_waiting(void);
-extern void PA_ConfigureNotify_xaction(Widget w, XEvent *event, String *params,
+void blink_start(void);
+void cursor_move(int baddr);
+unsigned display_height(void);
+char *display_charset();
+unsigned display_heightMM(void);
+unsigned display_width(void);
+unsigned display_widthMM(void);
+void enable_cursor(Boolean on);
+void font_init(void);
+void icon_init(void);
+void mcursor_locked(void);
+void mcursor_normal(void);
+void mcursor_waiting(void);
+void PA_ConfigureNotify_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_EnterLeave_xaction(Widget w, XEvent *event, String *params,
+void PA_EnterLeave_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_Expose_xaction(Widget w, XEvent *event, String *params,
+void PA_Expose_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_Focus_xaction(Widget w, XEvent *event, String *params,
+void PA_Focus_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_GraphicsExpose_xaction(Widget w, XEvent *event, String *params,
+void PA_GraphicsExpose_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_KeymapNotify_xaction(Widget w, XEvent *event, String *params,
+void PA_KeymapNotify_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_StateChanged_xaction(Widget w, XEvent *event, String *params,
+void PA_StateChanged_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_VisibilityNotify_xaction(Widget w, XEvent *event, String *params,
+void PA_VisibilityNotify_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void PA_WMProtocols_xaction(Widget w, XEvent *event, String *params,
+void PA_WMProtocols_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void Redraw_xaction(Widget w, XEvent *event, String *params,
+void Redraw_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void ring_bell(void);
-extern void save_00translations(Widget w, XtTranslations *t00);
+void ring_bell(void);
+void save_00translations(Widget w, XtTranslations *t00);
 #define screen_80()
 #define screen_132()
-extern void screen_change_model(int mn, int ovc, int ovr);
-extern void screen_disp(Boolean erasing);
-extern void screen_extended(Boolean extended);
-extern void screen_flip(void);
-extern GC screen_gc(int color);
-extern void screen_init(void);
-extern GC screen_invgc(int color);
-extern void screen_m3279(Boolean m3279);
-extern Boolean screen_new_display_charsets(const char *display_charsets,
+void screen_change_model(int mn, int ovc, int ovr);
+void screen_disp(Boolean erasing);
+void screen_extended(Boolean extended);
+void screen_flip(void);
+GC screen_gc(int color);
+void screen_init(void);
+GC screen_invgc(int color);
+void screen_m3279(Boolean m3279);
+Boolean screen_new_display_charsets(const char *display_charsets,
     const char *csnames);
-extern void screen_newcharset(char *csname);
-extern void screen_newfont(const char *fontname, Boolean do_popup,
+void screen_newcharset(char *csname);
+void screen_newfont(const char *fontname, Boolean do_popup,
 	Boolean is_cs);
-extern void screen_newscheme(char *s);
-extern Boolean screen_obscured(void);
-extern void screen_preinit(void);
-extern void screen_scroll(void);
-extern void screen_set_keymap(void);
-extern void screen_set_temp_keymap(XtTranslations trans);
-extern void screen_set_thumb(float top, float shown);
-extern void screen_showikeypad(Boolean on);
-extern void set_aicon_label(char *l);
-extern void set_translations(Widget w, XtTranslations *t00, XtTranslations *t0);
-extern void shift_event(int event_state);
-extern void toggle_altCursor(toggle_index_t ix, enum toggle_type tt);
-extern void toggle_crosshair(toggle_index_t ix, enum toggle_type tt);
-extern void toggle_cursorBlink(toggle_index_t ix, enum toggle_type tt);
-extern void toggle_cursorPos(toggle_index_t ix, enum toggle_type tt);
-extern void toggle_monocase(toggle_index_t ix, enum toggle_type tt);
-extern void toggle_scrollBar(toggle_index_t ix, enum toggle_type tt);
-extern void toggle_visible_control(toggle_index_t ix, enum toggle_type tt);
-extern unsigned long screen_window_number(void);
+void screen_newscheme(char *s);
+Boolean screen_obscured(void);
+void screen_preinit(void);
+void screen_scroll(void);
+void screen_set_keymap(void);
+void screen_set_temp_keymap(XtTranslations trans);
+void screen_set_thumb(float top, float shown);
+void screen_showikeypad(Boolean on);
+void set_aicon_label(char *l);
+void set_translations(Widget w, XtTranslations *t00, XtTranslations *t0);
+void shift_event(int event_state);
+unsigned long screen_window_number(void);
 
 /* font list */
 struct font_list {
@@ -125,7 +118,7 @@ struct font_list {
 	struct font_list	*next;
 	char			*mlabel;
 };
-extern struct font_list *font_list;
-extern int font_count;
+struct font_list *font_list;
+int font_count;
 
 #define screen_has_bg_color()	False

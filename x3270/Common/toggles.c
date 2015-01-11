@@ -46,7 +46,19 @@
 #include "trace.h"
 #include "togglesc.h"
 
-toggle_t toggle[N_TOGGLES];
+#include "ctlr_toggle.h"
+#include "nvt_toggle.h"
+#if defined(X3270_INTERACTIVE) /*[*/
+# include "screen_toggle.h"
+#endif /*]*/
+#include "trace_toggle.h"
+
+typedef struct toggle {
+    Boolean changed;		/* has the value changed since init */
+    toggle_upcall_t *upcall;	/* change value */
+} toggle_t;
+
+static toggle_t toggle[N_TOGGLES];
 
 /*
  * Generic toggle stuff
@@ -191,4 +203,35 @@ toggles_init(void)
     };
 
     register_actions(toggle_actions, array_count(toggle_actions));
+}
+
+void
+toggle_toggle(toggle_index_t ix)
+{
+    set_toggle(ix, !toggled(ix));
+}
+
+void
+set_toggle(toggle_index_t ix, Boolean value)
+{
+    appres.toggle[ix] = value; /* XXX: should not be changing appres */
+    toggle[ix].changed = True;
+}
+
+void
+set_toggle_initial(toggle_index_t ix, Boolean value)
+{
+    appres.toggle[ix] = value; /* XXX: should not be changing appres */
+}
+
+Boolean
+toggled(toggle_index_t ix)
+{
+    return appres.toggle[ix];
+}
+
+Boolean
+toggle_changed(toggle_index_t ix)
+{
+    return toggle[ix].changed;
 }

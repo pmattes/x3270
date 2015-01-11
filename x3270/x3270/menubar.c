@@ -77,7 +77,7 @@
 #define MACROS_MENU	"macrosMenu"
 
 /* Menu widgets associated with toggles. */
-Widget toggle_widget[N_TOGGLES][2];
+toggle_widget_t toggle_widget[N_TOGGLES];
 
 static struct scheme {
 	char *label;
@@ -527,11 +527,13 @@ menubar_connect(Boolean ignored _is_unused)
     if (charmode_button != NULL) {
 	XtVaSetValues(charmode_button, XtNsensitive, IN_NVT, NULL);
     }
-    if (toggle_widget[LINE_WRAP][0] != NULL) {
-	XtVaSetValues(toggle_widget[LINE_WRAP][0], XtNsensitive, IN_NVT, NULL);
+    if (toggle_widget[LINE_WRAP].w[0] != NULL) {
+	XtVaSetValues(toggle_widget[LINE_WRAP].w[0],
+		XtNsensitive, IN_NVT,
+		NULL);
     }
-    if (toggle_widget[RECTANGLE_SELECT][0] != NULL) {
-	XtVaSetValues(toggle_widget[RECTANGLE_SELECT][0],
+    if (toggle_widget[RECTANGLE_SELECT].w[0] != NULL) {
+	XtVaSetValues(toggle_widget[RECTANGLE_SELECT].w[0],
 		XtNsensitive, IN_NVT,
 		NULL);
     }
@@ -635,13 +637,13 @@ menubar_in3270(Boolean in3270)
 				       (linemode? no_diamond: diamond),
 		NULL);
     }
-    if (toggle_widget[LINE_WRAP][0] != NULL) {
-	XtVaSetValues(toggle_widget[LINE_WRAP][0],
+    if (toggle_widget[LINE_WRAP].w[0] != NULL) {
+	XtVaSetValues(toggle_widget[LINE_WRAP].w[0],
 		XtNsensitive, !in3270,
 		NULL);
     }
-    if (toggle_widget[RECTANGLE_SELECT][0] != NULL) {
-	XtVaSetValues(toggle_widget[RECTANGLE_SELECT][0],
+    if (toggle_widget[RECTANGLE_SELECT].w[0] != NULL) {
+	XtVaSetValues(toggle_widget[RECTANGLE_SELECT].w[0],
 		XtNsensitive, !in3270,
 		NULL);
     }
@@ -965,7 +967,7 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 		NULL);
 	if (w != NULL) {
 	    any = True;
-	    toggle_widget[SCREEN_TRACE][0] = w;
+	    toggle_widget[SCREEN_TRACE].w[0] = w;
 	    XtVaSetValues(w, XtNleftBitmap,
 		    toggled(SCREEN_TRACE)? dot: None,
 		    NULL);
@@ -1413,8 +1415,8 @@ menubar_resize(Dimension width)
 static void
 toggle_callback(Widget w, XtPointer userdata, XtPointer calldata _is_unused)
 {
-    toggle_t *t = (toggle_t *)userdata;
-    toggle_index_t ix = toggle_ix(t);
+    toggle_widget_t *wx = (toggle_widget_t *)userdata;
+    toggle_index_t ix = wx - toggle_widget;
 
     /*
      * If this is a two-button radio group, rather than a simple toggle,
@@ -1423,11 +1425,11 @@ toggle_callback(Widget w, XtPointer userdata, XtPointer calldata _is_unused)
      * toggle_widget[ix][0] is the "toggle true" button; toggle_widget[ix][1]
      * is "toggle false".
      */
-    if (toggle_widget[ix][1] != 0 && w == toggle_widget[ix][!toggled(ix)]) {
+    if (wx->w[1] != 0 && w == wx->w[!toggled(ix)]) {
 	return;
     }
 
-    do_menu_toggle(t - toggle);
+    do_menu_toggle(ix);
 }
 
 static Widget oversize_shell = NULL;
@@ -1468,30 +1470,29 @@ static Boolean
 toggle_init(Widget menu, int ix, const char *name1, const char *name2,
 		Boolean *spaced)
 {
-    toggle_t *t = &toggle[ix];
+    toggle_widget_t *wx = &toggle_widget[ix];
 
     if (!item_suppressed(menu, name1) &&
 	    (name2 == NULL || !item_suppressed(menu, name2))) {
 	if (spaced != NULL) {
 	    cond_space(menu, spaced);
 	}
-	toggle_widget[ix][0] = XtVaCreateManagedWidget(
+	wx->w[0] = XtVaCreateManagedWidget(
 		name1, cmeBSBObjectClass, menu,
 		XtNleftBitmap,
 		 toggled(ix)? (name2? diamond: dot):
 			      (name2? no_diamond: None),
 		NULL);
-	XtAddCallback(toggle_widget[ix][0], XtNcallback, toggle_callback,
-		(XtPointer)t);
+	XtAddCallback(wx->w[0], XtNcallback, toggle_callback, (XtPointer)wx);
 	if (name2 != NULL) {
-	    toggle_widget[ix][1] = XtVaCreateManagedWidget(
+	    wx->w[1] = XtVaCreateManagedWidget(
 		    name2, cmeBSBObjectClass, menu,
 		    XtNleftBitmap, toggled(ix)? no_diamond: diamond,
 		    NULL);
-	    XtAddCallback(toggle_widget[ix][1], XtNcallback, toggle_callback,
-		    (XtPointer)t);
+	    XtAddCallback(wx->w[1], XtNcallback, toggle_callback,
+		    (XtPointer)wx);
 	} else {
-	    toggle_widget[ix][1] = NULL;
+	    wx->w[1] = NULL;
 	}
 	return True;
     } else {
@@ -1969,18 +1970,18 @@ options_menu_init(Boolean regen, Position x, Position y)
 		    XtNsensitive, !PCONNECTED,
 		    NULL);
 	if (keypad_option_button != NULL ||
-	    toggle_widget[MONOCASE][0] != NULL ||
-	    toggle_widget[CURSOR_BLINK][0] != NULL ||
-	    toggle_widget[BLANK_FILL][0] != NULL ||
-	    toggle_widget[SHOW_TIMING][0] != NULL ||
-	    toggle_widget[CURSOR_POS][0] != NULL ||
-	    toggle_widget[SCROLL_BAR][0] != NULL ||
-	    toggle_widget[LINE_WRAP][0] != NULL ||
-	    toggle_widget[MARGINED_PASTE][0] != NULL ||
-	    toggle_widget[RECTANGLE_SELECT][0] != NULL ||
-	    toggle_widget[CROSSHAIR][0] != NULL ||
-	    toggle_widget[VISIBLE_CONTROL][0] != NULL ||
-	    toggle_widget[ALT_CURSOR][0] != NULL ||
+	    toggle_widget[MONOCASE].w[0] != NULL ||
+	    toggle_widget[CURSOR_BLINK].w[0] != NULL ||
+	    toggle_widget[BLANK_FILL].w[0] != NULL ||
+	    toggle_widget[SHOW_TIMING].w[0] != NULL ||
+	    toggle_widget[CURSOR_POS].w[0] != NULL ||
+	    toggle_widget[SCROLL_BAR].w[0] != NULL ||
+	    toggle_widget[LINE_WRAP].w[0] != NULL ||
+	    toggle_widget[MARGINED_PASTE].w[0] != NULL ||
+	    toggle_widget[RECTANGLE_SELECT].w[0] != NULL ||
+	    toggle_widget[CROSSHAIR].w[0] != NULL ||
+	    toggle_widget[VISIBLE_CONTROL].w[0] != NULL ||
+	    toggle_widget[ALT_CURSOR].w[0] != NULL ||
 	    linemode_button != NULL ||
 	    charmode_button != NULL ||
 	    m3278_button != NULL ||
@@ -2219,15 +2220,15 @@ options_menu_init(Boolean regen, Position x, Position y)
 void
 menubar_retoggle(toggle_index_t ix)
 {
-    if (toggle_widget[ix][0] != NULL) {
-	XtVaSetValues(toggle_widget[ix][0],
-		XtNleftBitmap, toggled(ix)? (toggle_widget[ix][1]? diamond:
-		                                                   dot):
+    if (toggle_widget[ix].w[0] != NULL) {
+	XtVaSetValues(toggle_widget[ix].w[0],
+		XtNleftBitmap, toggled(ix)? (toggle_widget[ix].w[1]? diamond:
+		                                                     dot):
 		                            None,
 		NULL);
     }
-    if (toggle_widget[ix][1] != NULL) {
-	XtVaSetValues(toggle_widget[ix][1],
+    if (toggle_widget[ix].w[1] != NULL) {
+	XtVaSetValues(toggle_widget[ix].w[1],
 		XtNleftBitmap, toggled(ix)? no_diamond: diamond,
 		NULL);
     }

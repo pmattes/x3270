@@ -38,36 +38,32 @@
 #define screen_obscured()	False
 #define screen_scroll()
 
-extern void cursor_move(int baddr);
-extern void ring_bell(void);
-extern void screen_132(void);
-extern void screen_80(void);
-extern void screen_disp(Boolean erasing);
-extern void screen_init(void);
-extern void screen_flip(void);
-extern void screen_resume(void);
-extern Boolean screen_suspend(void);
-extern FILE *start_pager(void);
+void cursor_move(int baddr);
+void ring_bell(void);
+void screen_132(void);
+void screen_80(void);
+void screen_disp(Boolean erasing);
+void screen_init(void);
+void screen_flip(void);
+void screen_resume(void);
+Boolean screen_suspend(void);
+FILE *start_pager(void);
 #if defined(WC3270) /*[*/
-extern void screen_fixup(void);
-extern void pager_output(const char *s);
-extern Boolean screen_wait_for_key(char *c);
+void screen_fixup(void);
+void pager_output(const char *s);
+Boolean screen_wait_for_key(char *c);
 #endif /*]*/
-extern void toggle_monocase(toggle_index_t ix, enum toggle_type tt);
 #define screen_set_thumb(top, shown)
 #define enable_cursor(on)
 
 extern Boolean escaped;
 
 #if defined(WC3270) /*[*/
-extern void screen_title(const char *text);
+void screen_title(const char *text);
 extern int windows_cp;
 #endif /*]*/
 
-#if defined(C3270) /*[*/
-extern void toggle_underscore(toggle_index_t ix, enum toggle_type type);
-extern void screen_final(void);
-#endif /*]*/
+void screen_final(void);
 
 #define screen_window_number()	0L
 

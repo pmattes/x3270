@@ -26,19 +26,8 @@
  */
 
 /*
- *	nvtc.h
- *		Global declarations for nvt.c.
+ *	nvt_toggle.h
+ *		nvt.c toggle declarations
  */
 
-void nvt_init(void);
-void nvt_process(unsigned int c);
-void nvt_send_clear(void);
-void nvt_send_down(void);
-void nvt_send_home(void);
-void nvt_send_left(void);
-void nvt_send_pa(int nn);
-void nvt_send_pf(int nn);
-void nvt_send_right(void);
-void nvt_send_up(void);
-void nvt_snap(void);
-void nvt_snap_modes(void);
+void toggle_lineWrap(toggle_index_t ix, enum toggle_type type);

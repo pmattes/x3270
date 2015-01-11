@@ -44,10 +44,12 @@
 #include "ctlr.h"
 #include "screen.h"
 #include "resources.h"
+#include "togglesc.h"
 
 #include "actionsc.h"
 #include "charsetc.h"
 #include "ctlrc.h"
+#include "ctlr_toggle.h"
 #include "unicodec.h"
 #include "ftc.h"
 #include "ft_cutc.h"

@@ -37,7 +37,10 @@ extern Pixmap dot, no_dot;
 extern Pixmap diamond, no_diamond;
 extern Pixmap null;
 
-extern Widget toggle_widget[N_TOGGLES][2];
+typedef struct {
+    Widget w[2];
+} toggle_widget_t;
+extern toggle_widget_t toggle_widget[N_TOGGLES];
 
 extern void HandleMenu_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);

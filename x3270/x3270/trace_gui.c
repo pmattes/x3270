@@ -118,8 +118,8 @@ trace_gui_on(int reason, enum toggle_type tt, const char *tracefile)
 void
 trace_gui_toggle(void)
 {
-    if (toggle_widget[SCREEN_TRACE][0] != NULL) {
-	XtVaSetValues(toggle_widget[SCREEN_TRACE][0],
+    if (toggle_widget[SCREEN_TRACE].w[0] != NULL) {
+	XtVaSetValues(toggle_widget[SCREEN_TRACE].w[0],
 		XtNleftBitmap, toggled(SCREEN_TRACE)? dot: None,
 		NULL);
     }

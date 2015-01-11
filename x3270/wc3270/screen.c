@@ -39,6 +39,7 @@
 #include "3270ds.h"
 #include "resources.h"
 #include "ctlr.h"
+#include "togglesc.h"
 
 #include "actionsc.h"
 #include "ctlrc.h"
@@ -50,6 +51,7 @@
 #include "menubarc.h"
 #include "popupsc.h"
 #include "screenc.h"
+#include "screen_toggle.h"
 #include "scrollc.h"
 #include "selectc.h"
 #include "tablesc.h"

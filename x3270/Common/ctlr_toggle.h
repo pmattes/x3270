@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 2005-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,19 +26,8 @@
  */
 
 /*
- *	nvtc.h
- *		Global declarations for nvt.c.
+ *	ctlr_toggle.h
+ *		ctlr.c toggle declarations
  */
 
-void nvt_init(void);
-void nvt_process(unsigned int c);
-void nvt_send_clear(void);
-void nvt_send_down(void);
-void nvt_send_home(void);
-void nvt_send_left(void);
-void nvt_send_pa(int nn);
-void nvt_send_pf(int nn);
-void nvt_send_right(void);
-void nvt_send_up(void);
-void nvt_snap(void);
-void nvt_snap_modes(void);
+void toggle_showTiming(toggle_index_t ix, enum toggle_type tt);

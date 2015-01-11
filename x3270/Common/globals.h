@@ -320,20 +320,7 @@ typedef enum {
 			   wc3270) */
     N_TOGGLES
 } toggle_index_t;
-typedef struct {
-    const char *name;
-    toggle_index_t index;
-    Boolean is_alias;
-} toggle_name_t;
-extern toggle_name_t toggle_names[];
-extern unsigned toggles_supported;
-enum toggle_type {
-    TT_INITIAL,		/* at start-up */
-    TT_INTERACTIVE,	/* at the prompt */
-    TT_ACTION,		/* from a keymap, script or macro */
-    TT_XMENU,		/* from a GUI menu */
-    TT_FINAL		/* at shutdown */
-};
+Boolean toggled(toggle_index_t ix);
 
 /*   extended attributes */
 struct ea {
@@ -421,7 +408,7 @@ typedef unsigned long ioid_t;
 typedef enum { P_TEXT, P_HTML, P_RTF, P_GDI } ptype_t;
 
 /* Usage message with error exit. */
-extern void usage(const char *);
+void usage(const char *);
 
 /* Xt options. */
 #if defined(X3270_DISPLAY) /*[*/
@@ -431,7 +418,7 @@ extern int num_options;
 
 #if defined(C3270) /*[*/
 /* c3270 profile merge. */
-extern Boolean merge_profile(void);
+Boolean merge_profile(void);
 #endif /*]*/
 
 /* Emulator actions. */

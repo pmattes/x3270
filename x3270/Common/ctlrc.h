@@ -88,7 +88,6 @@ enum pds process_ds(unsigned char *buf, int buflen);
 void ps_process(void);
 void set_rows_cols(int mn, int ovc, int ovr);
 void ticking_start(Boolean anyway);
-void toggle_showTiming(toggle_index_t ix, enum toggle_type tt);
 
 enum dbcs_state {
 	DBCS_NONE = 0,		/* position is not DBCS */

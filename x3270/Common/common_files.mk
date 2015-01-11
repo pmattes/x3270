@@ -24,16 +24,17 @@ HTTPD_OBJECTS = bind-opt.$(OBJ) favicon.$(OBJ) httpd-core.$(OBJ) \
 
 # Header files common to all 3270 emulators
 COMMON_HEADERS = 3270ds.h actionsc.h aplc.h appres.h arpa_telnet.h \
-	asprintfc.h cg.h charsetc.h childc.h ctlr.h ctlrc.h dialogc.h \
-	fallbacksc.h fprint_screenc.h ft_cut_ds.h ft_cutc.h ft_dft_ds.h \
-	ft_dftc.h ft_guic.h ft_private.h ftc.h globals.h hostc.h idlec.h \
-	keymapc.h keypadc.h kybdc.h lazya.h linemodec.h localdefs.h macrosc.h \
-	menubarc.h nvt_guic.h nvtc.h objects.h popupsc.h print_guic.h \
-	print_screen.h proxy.h proxyc.h resolverc.h resources.h rpqc.h \
-	savec.h screen.h screenc.h scrollc.h seec.h selectc.h sfc.h \
-	ssl_passwd_guic.h statusc.h tablesc.h telnet_private.h telnetc.h \
-	tn3270e.h togglesc.h trace.h trace_gui.h unicode_dbcsc.h unicodec.h \
-	utf8c.h utilc.h varbufc.h w3miscc.h xioc.h xl.h
+	asprintfc.h cg.h charsetc.h childc.h ctlr.h ctlr_toggle.h ctlrc.h \
+	dialogc.h fallbacksc.h fprint_screenc.h ft_cut_ds.h ft_cutc.h \
+	ft_dft_ds.h ft_dftc.h ft_guic.h ft_private.h ftc.h globals.h hostc.h \
+	idlec.h keymapc.h keypadc.h kybdc.h lazya.h linemodec.h localdefs.h \
+	macrosc.h menubarc.h nvt_guic.h nvt_toggle.h nvtc.h objects.h \
+	popupsc.h print_guic.h print_screen.h proxy.h proxyc.h resolverc.h \
+	resources.h rpqc.h savec.h screen.h screenc.h scrollc.h seec.h \
+	selectc.h sfc.h ssl_passwd_guic.h statusc.h tablesc.h \
+	telnet_private.h telnetc.h tn3270e.h togglesc.h trace.h trace_gui.h \
+	trace_toggle.h unicode_dbcsc.h unicodec.h utf8c.h utilc.h varbufc.h \
+	w3miscc.h xioc.h xl.h
 
 # HTTPD header files
 HTTPD_HEADERS = bind-optc.h httpd-corec.h httpd-ioc.h httpd-nodesc.h 

@@ -666,10 +666,10 @@ main(int argc, char *argv[])
 	/* Handle initial toggle settings. */
 	if (appres.dsTrace_bc || appres.eventTrace_bc) {
 	    	/* Backwards compatibility with old resource names. */
-		set_toggle(TRACING, True);
+		set_toggle_initial(TRACING, True);
 	}
 	if (!appres.debug_tracing) {
-		set_toggle(TRACING, False);
+		set_toggle_initial(TRACING, False);
 	}
 	initialize_toggles();
 

@@ -42,8 +42,6 @@ extern struct timeval ds_ts;
 const char *rcba(int baddr);
 char *screentrace_default_file(ptype_t ptype);
 char *screentrace_default_printer(void);
-void toggle_tracing(toggle_index_t ix, enum toggle_type tt);
-void toggle_screenTrace(toggle_index_t ix, enum toggle_type tt);
 void trace_nvt_disc(void);
 void trace_char(char c);
 void trace_ds(const char *fmt, ...) printflike(1, 2);

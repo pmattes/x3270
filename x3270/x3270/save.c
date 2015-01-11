@@ -362,81 +362,89 @@ save_host(void)
 static void
 save_toggles(void)
 {
-	int i, j;
-	int ix;
+    toggle_index_t i;
+    int j;
+    int ix;
 
-	for (i = 0; i < N_TOGGLES; i++) {
-		if (toggle_names[i].index < 0 || !toggle[i].changed)
-			continue;
-
-		/*
-		 * Find the last "-set" or "-clear" for this toggle.
-		 * If there is a preferred alias, delete them instead.
-		 */
-		ix = 0;
-		for (j = 1; j < tcs; j++)
-			if (tmp_cmd[j] &&
-			    (!strcmp(tmp_cmd[j], OptSet) ||
-			     !strcmp(tmp_cmd[j], OptClear)) &&
-			    tmp_cmd[j+1] &&
-			    !strcmp(tmp_cmd[j+1], toggle_names[i].name)) {
-				if (i == SCROLL_BAR || i == TRACING) {
-					cmd_delete(j);
-					cmd_delete(j + 1);
-				} else {
-					ix = j;
-				}
-		}
-
-		/* Handle aliased switches. */
-		switch (i) {
-		    case SCROLL_BAR:
-			continue;	/* +sb/-sb done separately */
-		    case TRACING:
-			ix = cmd_srch(OptTrace);
-			if (toggled(TRACING)) {
-				if (!ix) {
-					cmd_append(OptTrace);
-				}
-			} else {
-				if (ix) {
-					cmd_delete(ix);
-				}
-			}
-			continue;
-		}
-
-		/* If need be, switch "-set" with "-clear", or append one. */
-		if (toggled(i)) {
-			if (ix && strcmp(tmp_cmd[ix], OptSet))
-				cmd_replace(ix, OptSet);
-			else if (!ix) {
-				cmd_append(OptSet);
-				cmd_append(toggle_names[i].name);
-			}
-		} else {
-			if (ix && strcmp(tmp_cmd[ix], OptClear))
-				cmd_replace(ix, OptClear);
-			else if (!ix) {
-				cmd_append(OptClear);
-				cmd_append(toggle_names[i].name);
-			}
-		}
+    for (i = 0; i < N_TOGGLES; i++) {
+	if (toggle_names[i].index < 0 || !toggle_changed(i)) {
+	    continue;
 	}
+
+	/*
+	 * Find the last "-set" or "-clear" for this toggle.
+	 * If there is a preferred alias, delete them instead.
+	 */
+	ix = 0;
+	for (j = 1; j < tcs; j++) {
+	    if (tmp_cmd[j] &&
+		(!strcmp(tmp_cmd[j], OptSet) ||
+		 !strcmp(tmp_cmd[j], OptClear)) &&
+		tmp_cmd[j+1] &&
+		!strcmp(tmp_cmd[j+1], toggle_names[i].name)) {
+
+		if (i == SCROLL_BAR || i == TRACING) {
+		    cmd_delete(j);
+		    cmd_delete(j + 1);
+		} else {
+		    ix = j;
+		}
+	    }
+	}
+
+	/* Handle aliased switches. */
+	switch (i) {
+	case SCROLL_BAR:
+	    continue;	/* +sb/-sb done separately */
+	case TRACING:
+	    ix = cmd_srch(OptTrace);
+	    if (toggled(TRACING)) {
+		if (!ix) {
+		    cmd_append(OptTrace);
+		}
+	    } else {
+		if (ix) {
+		    cmd_delete(ix);
+		}
+	    }
+	    continue;
+	default:
+	    break;
+	}
+
+	/* If need be, switch "-set" with "-clear", or append one. */
+	if (toggled(i)) {
+	    if (ix && strcmp(tmp_cmd[ix], OptSet)) {
+		cmd_replace(ix, OptSet);
+	    } else if (!ix) {
+		cmd_append(OptSet);
+		cmd_append(toggle_names[i].name);
+	    }
+	} else {
+	    if (ix && strcmp(tmp_cmd[ix], OptClear)) {
+		cmd_replace(ix, OptClear);
+	    } else if (!ix) {
+		cmd_append(OptClear);
+		    cmd_append(toggle_names[i].name);
+	    }
+	}
+    }
 }
 
 /* Remove a positional parameter from the command line. */
 static void
 remove_positional(char *s)
 {
-	char *c;
+    char *c;
 
-	c = cmd + cmd_len - 2;	/* last byte of last arg */
-	while (*c && c >= cmd)
-		c--;
-	if (strcmp(s, c + 1))
-		XtError("Command-line switches must precede positional arguments");
-	cmd_len = c - cmd;
+    c = cmd + cmd_len - 2;	/* last byte of last arg */
+    while (*c && c >= cmd) {
+	    c--;
+    }
+    if (strcmp(s, c + 1)) {
+	XtError("Command-line switches must precede positional arguments");
+    }
+    cmd_len = c - cmd;
 }
 
 /* Save a copy of he XA_WM_COMMAND poperty. */
@@ -592,7 +600,7 @@ save_options(char *n)
     FILE *f;
     Boolean exists = False;
     char *ct;
-    int i;
+    toggle_index_t i;
     time_t clk;
     char *buf;
     Boolean any_toggles = False;
@@ -638,7 +646,7 @@ save_options(char *n)
 
     /* Save most of the toggles. */
     for (i = 0; i < N_TOGGLES; i++) {
-	if (toggle_names[i].index < 0 || !toggle[i].changed) {
+	if (toggle_names[i].index < 0 || !toggle_changed(i)) {
 	    continue;
 	}
 	if (i == TRACING || i == SCREEN_TRACE) {

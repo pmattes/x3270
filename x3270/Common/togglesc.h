@@ -34,24 +34,34 @@
  *		Global declarations for toggles.c.
  */
 
-typedef struct toggle {
-    Boolean changed;		/* has the value changed since init */
-    void (*upcall)(toggle_index_t ix, enum toggle_type); /* change value */
-} toggle_t;
+typedef struct {
+    const char *name;
+    toggle_index_t index;
+    Boolean is_alias;
+} toggle_name_t;
+extern toggle_name_t toggle_names[];
 
-extern toggle_t toggle[];
+extern unsigned toggles_supported;
 
-#define set_toggle(ix, value)	appres.toggle[ix] = value
-#define toggle_toggle(ix) { \
-    set_toggle(ix, !toggled(ix)); \
-    toggle[ix].changed = True; \
-}
+enum toggle_type {
+    TT_INITIAL,		/* at start-up */
+    TT_INTERACTIVE,	/* at the prompt */
+    TT_ACTION,		/* from a keymap, script or macro */
+    TT_XMENU,		/* from a GUI menu */
+    TT_FINAL		/* at shutdown */
+};
+typedef void toggle_upcall_t(toggle_index_t ix, enum toggle_type type);
+
 #define toggle_ix(t)		(toggle_index_t)((t) - toggle)
 #define TOGGLE_BIT(ix)		(1 << (ix))
 #define TOGGLE_SUPPORTED(ix)	(toggles_supported & TOGGLE_BIT(ix))
 
-extern void do_menu_toggle(int);
-extern void do_toggle(int);
-extern void initialize_toggles(void);
-extern void shutdown_toggles(void);
-extern void toggles_init(void);
+void do_menu_toggle(int);
+void do_toggle(int);
+void initialize_toggles(void);
+void shutdown_toggles(void);
+void toggles_init(void);
+void toggle_toggle(toggle_index_t ix);
+void set_toggle(toggle_index_t ix, Boolean value);
+void set_toggle_initial(toggle_index_t ix, Boolean value);
+Boolean toggle_changed(toggle_index_t ix);

@@ -865,7 +865,6 @@ tracefile_ok(const char *tfn)
 
     /* We're really tracing, turn the flag on. */
     set_toggle(trace_reason, True);
-    toggle[trace_reason].changed = True;
     menubar_retoggle(trace_reason);
 
     /* Display current status. */
@@ -913,7 +912,6 @@ tracefile_on(int reason, enum toggle_type tt)
     } else {
 	/* Turn the toggle _off_ until the popup succeeds. */
 	set_toggle(reason, False);
-	toggle[reason].changed = True;
     }
 
     if (tracefile_buf != NULL) {
@@ -1092,7 +1090,6 @@ screentrace_cb(tss_t how, ptype_t ptype, char *tfn)
 
 	/* We're really tracing, turn the flag on. */
 	set_toggle(SCREEN_TRACE, True);
-	toggle[SCREEN_TRACE].changed = True;
 	menubar_retoggle(SCREEN_TRACE);
 	return True;
 }

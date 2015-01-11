@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 1999-2010, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,20 +25,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- *	nvtc.h
- *		Global declarations for nvt.c.
- */
+/* screen.c toggle declarations */
 
-void nvt_init(void);
-void nvt_process(unsigned int c);
-void nvt_send_clear(void);
-void nvt_send_down(void);
-void nvt_send_home(void);
-void nvt_send_left(void);
-void nvt_send_pa(int nn);
-void nvt_send_pf(int nn);
-void nvt_send_right(void);
-void nvt_send_up(void);
-void nvt_snap(void);
-void nvt_snap_modes(void);
+void toggle_monocase(toggle_index_t ix, enum toggle_type tt);
+void toggle_underscore(toggle_index_t ix, enum toggle_type type);
