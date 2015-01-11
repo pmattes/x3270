@@ -35,9 +35,7 @@
  */
 
 typedef struct toggle {
-    Boolean changed;    /* has the value changed since init */
-    void *w[2];         /* the menu item widgets */
-    const char *label[2]; /* labels */
+    Boolean changed;		/* has the value changed since init */
     void (*upcall)(toggle_index_t ix, enum toggle_type); /* change value */
 } toggle_t;
 

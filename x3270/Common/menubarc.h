@@ -37,6 +37,8 @@ extern Pixmap dot, no_dot;
 extern Pixmap diamond, no_diamond;
 extern Pixmap null;
 
+extern Widget toggle_widget[N_TOGGLES][2];
+
 extern void HandleMenu_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void menubar_as_set(Boolean sensitive);
