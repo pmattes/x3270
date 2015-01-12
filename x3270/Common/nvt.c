@@ -1680,12 +1680,6 @@ nvt_in3270(Boolean in3270)
  */
 
 void
-nvt_init(void)
-{
-	register_schange(ST_3270_MODE, nvt_in3270);
-}
-
-void
 nvt_process(unsigned int c)
 {
     afn_t fn;
@@ -2394,6 +2388,9 @@ nvt_register(void)
 	{ LINE_WRAP, toggle_lineWrap, 0 }
     };
 
+    /* Register our toggles. */
     register_toggles(toggles, array_count(toggles));
 
+    /* Register for state changes. */
+    register_schange(ST_3270_MODE, nvt_in3270);
 }

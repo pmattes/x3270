@@ -359,16 +359,6 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 			no_diamond_height);
 		null = XCreateBitmapFromData(display, root_window,
 		    (char *) null_bits, null_width, null_height);
-
-		/* Register interest in state transtions. */
-		register_schange(ST_3270_MODE, menubar_in3270);
-		register_schange(ST_LINE_MODE, menubar_linemode);
-		register_schange(ST_HALF_CONNECT, menubar_connect);
-		register_schange(ST_CONNECT, menubar_connect);
-		register_schange(ST_PRINTER, menubar_printer);
-		register_schange(ST_REMODEL, menubar_remodel);
-		register_schange(ST_CHARSET, menubar_charset);
-
 		ever = True;
 	}
 
@@ -2270,3 +2260,20 @@ screensave_option(Widget w _is_unused, XtPointer client_data _is_unused,
 {
 	stmenu_popup(STMP_AS_IS);
 }
+
+/**
+ * Menu module registration.
+ */
+void
+menubar_register(void)
+{
+    /* Register interest in state transtions. */
+    register_schange(ST_3270_MODE, menubar_in3270);
+    register_schange(ST_LINE_MODE, menubar_linemode);
+    register_schange(ST_HALF_CONNECT, menubar_connect);
+    register_schange(ST_CONNECT, menubar_connect);
+    register_schange(ST_PRINTER, menubar_printer);
+    register_schange(ST_REMODEL, menubar_remodel);
+    register_schange(ST_CHARSET, menubar_charset);
+}
+

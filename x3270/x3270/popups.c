@@ -967,7 +967,6 @@ dump_errmsgs(Boolean b _is_unused)
 void
 error_init(void)
 {
-	register_schange(ST_EXITING, dump_errmsgs);
 }
 
 void
@@ -1087,13 +1086,19 @@ popups_move(void)
 	}
 }
 
-/* Global popup init. */
+/**
+ * Pop-ups module registration.
+ */
 void
-popups_init(void)
+popups_register(void)
 {
     static action_table_t popup_actions[] = {
 	{ "Info",		Info_action	}
     };
 
+    /* Register actions. */
     register_actions(popup_actions, array_count(popup_actions));
+
+    /* Register for status change notifications. */
+    register_schange(ST_EXITING, dump_errmsgs);
 }

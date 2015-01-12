@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -310,32 +310,38 @@ static void status_half_connect(Boolean ignored);
 static void status_printer(Boolean on);
 
 
+/**
+ * Status line module registration.
+ */
+void
+status_register(void)
+{
+    register_schange(ST_RESOLVING, status_resolving);
+    register_schange(ST_HALF_CONNECT, status_half_connect);
+    register_schange(ST_CONNECT, status_connect);
+    register_schange(ST_3270_MODE, status_3270_mode);
+    register_schange(ST_PRINTER, status_printer);
+}
+
 /* Initialize the status line */
 void
 status_init(void)
 {
-	a_not_connected = make_amsg("statusNotConnected");
-	disc_msg = make_emsg(disc_pfx, "statusNotConnected",
-	    &disc_len);
-	a_resolving = make_amsg("statusResolving");
-	rslv_msg = make_emsg(rslv_pfx, "statusResolving", &rslv_len);
-	a_connecting = make_amsg("statusConnecting");
-	cnct_msg = make_emsg(cnct_pfx, "statusConnecting", &cnct_len);
-	a_inhibit = make_amsg("statusInhibit");
-	a_twait = make_amsg("statusTwait");
-	a_syswait = make_amsg("statusSyswait");
-	a_protected = make_amsg("statusProtected");
-	a_numeric = make_amsg("statusNumeric");
-	a_overflow = make_amsg("statusOverflow");
-	a_dbcs = make_amsg("statusDbcs");
-	a_scrolled = make_amsg("statusScrolled");
-	a_minus = make_amsg("statusMinus");
-
-	register_schange(ST_RESOLVING, status_resolving);
-	register_schange(ST_HALF_CONNECT, status_half_connect);
-	register_schange(ST_CONNECT, status_connect);
-	register_schange(ST_3270_MODE, status_3270_mode);
-	register_schange(ST_PRINTER, status_printer);
+    a_not_connected = make_amsg("statusNotConnected");
+    disc_msg = make_emsg(disc_pfx, "statusNotConnected", &disc_len);
+    a_resolving = make_amsg("statusResolving");
+    rslv_msg = make_emsg(rslv_pfx, "statusResolving", &rslv_len);
+    a_connecting = make_amsg("statusConnecting");
+    cnct_msg = make_emsg(cnct_pfx, "statusConnecting", &cnct_len);
+    a_inhibit = make_amsg("statusInhibit");
+    a_twait = make_amsg("statusTwait");
+    a_syswait = make_amsg("statusSyswait");
+    a_protected = make_amsg("statusProtected");
+    a_numeric = make_amsg("statusNumeric");
+    a_overflow = make_amsg("statusOverflow");
+    a_dbcs = make_amsg("statusDbcs");
+    a_scrolled = make_amsg("statusScrolled");
+    a_minus = make_amsg("statusMinus");
 }
 
 /* Reinitialize the status line */

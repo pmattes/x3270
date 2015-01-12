@@ -341,10 +341,13 @@ main(int argc, char *argv[])
 	idle_register();
 	keymap_register();
 	macros_register();
+	menubar_register();
 	nvt_register();
+	popups_register();
 	pr3287_session_register();
 	screen_register();
 	select_register();
+	status_register();
 	trace_register();
 	x3270_register();
 
@@ -520,14 +523,12 @@ main(int argc, char *argv[])
 	/* Add the Xt-only actions. */
 	xaction_init();
 
-	popups_init();
 	print_screen_init();
 	print_window_init();
 	kybd_init();
 	xkybd_init();
 	scroll_init();
 	idle_init();
-	nvt_init();
 	if (appres.httpd_port) {
 	    struct sockaddr *sa;
 	    socklen_t sa_len;

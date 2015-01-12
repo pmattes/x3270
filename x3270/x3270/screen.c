@@ -482,14 +482,6 @@ void
 screen_init(void)
 {
 	register int i;
-	static action_table_t screen_actions[] = {
-	    { "SetFont",	SetFont_action,		ACTION_KE },
-	    { "Title",		Title_action,		ACTION_KE },
-	    { "WindowState",	WindowState_action,	ACTION_KE }
-	};
-
-	/* Register our actions. */
-	register_actions(screen_actions, array_count(screen_actions));
 
 	if (!appres.m3279) {
 	    	appres.highlight_bold = True;
@@ -528,11 +520,6 @@ screen_init(void)
 		if (ebc2asc0[i] == 0x20 || ebc2asc0[i] == 0xa0)
 			BKM_SET(i);
 	}
-
-	/* Register state change callbacks. */
-	register_schange(ST_HALF_CONNECT, screen_connect);
-	register_schange(ST_CONNECT, screen_connect);
-	register_schange(ST_3270_MODE, screen_connect);
 
 	/* Initialize the emulated 3270 controller hardware. */
 	ctlr_init(ALL_CHANGE);
@@ -5759,6 +5746,20 @@ screen_register(void)
 	{ MARGINED_PASTE,	NULL,			0 },
 	{ OVERLAY_PASTE,	NULL,			0 }
     };
+    static action_table_t screen_actions[] = {
+	{ "SetFont",		SetFont_action,		ACTION_KE },
+	{ "Title",		Title_action,		ACTION_KE },
+	{ "WindowState",	WindowState_action,	ACTION_KE }
+    };
 
+    /* Register our toggles. */
     register_toggles(toggles, array_count(toggles));
+
+    /* Register our actions. */
+    register_actions(screen_actions, array_count(screen_actions));
+
+    /* Register state change callbacks. */
+    register_schange(ST_HALF_CONNECT, screen_connect);
+    register_schange(ST_CONNECT, screen_connect);
+    register_schange(ST_3270_MODE, screen_connect);
 }

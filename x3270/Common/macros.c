@@ -357,7 +357,6 @@ macros_register(void)
 	{ AID_WAIT,	NULL,	0 }
     };
 
-
     /* Register for state changes. */
     register_schange(ST_CONNECT, sms_connect);
     register_schange(ST_3270_MODE, sms_in3270);

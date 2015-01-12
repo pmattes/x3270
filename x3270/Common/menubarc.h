@@ -42,15 +42,16 @@ typedef struct {
 } toggle_widget_t;
 extern toggle_widget_t toggle_widget[N_TOGGLES];
 
-extern void HandleMenu_xaction(Widget w, XEvent *event, String *params,
+void HandleMenu_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void menubar_as_set(Boolean sensitive);
-extern void menubar_init(Widget container, Dimension overall_width,
+void menubar_as_set(Boolean sensitive);
+void menubar_init(Widget container, Dimension overall_width,
     Dimension current_width);
-extern void menubar_keypad_changed(void);
-extern Dimension menubar_qheight(Dimension container_width);
-extern void menubar_resize(Dimension width);
-extern void menubar_retoggle(toggle_index_t ix);
+void menubar_keypad_changed(void);
+Dimension menubar_qheight(Dimension container_width);
+void menubar_resize(Dimension width);
+void menubar_retoggle(toggle_index_t ix);
+void menubar_register(void);
 
 #elif defined(C3270) /*][*/
 
@@ -74,17 +75,17 @@ typedef enum {
 # define KEYPAD_IS_UP	0x2
 extern unsigned menu_is_up;
 extern void menu_init(void);
-extern Boolean menu_char(int row, int col, Boolean persistent, ucs4_t *u,
+Boolean menu_char(int row, int col, Boolean persistent, ucs4_t *u,
 	Boolean *highlighted, unsigned char *acs);
-extern void menu_key(menu_key_t k, ucs4_t u);
+void menu_key(menu_key_t k, ucs4_t u);
 # if defined(_WIN32) /*[*/
-extern void menu_click(int x, int y);
+void menu_click(int x, int y);
 # endif /*]*/
-extern void popup_menu(int x, int click);
-extern void menu_cursor(int *row, int *col);
-extern void menubar_retoggle(toggle_index_t ix);
-extern void map_acs(unsigned char c, ucs4_t *u, unsigned char *acs);
-extern void menubar_init(void);
+void popup_menu(int x, int click);
+void menu_cursor(int *row, int *col);
+void menubar_retoggle(toggle_index_t ix);
+void map_acs(unsigned char c, ucs4_t *u, unsigned char *acs);
+void menubar_register(void);
 
 #else /*][*/
 # define menubar_as_set(n)

@@ -406,6 +406,7 @@ main(int argc, char *argv[])
     idle_register();
     kybd_register();
     macros_register();
+    menubar_register();
     nvt_register();
     pr3287_session_register();
     screen_register();
@@ -468,7 +469,6 @@ main(int argc, char *argv[])
     idle_init();
     keymap_init();
     hostfile_init();
-    nvt_init();
 
     if (appres.httpd_port) {
 	struct sockaddr *sa;
@@ -491,7 +491,6 @@ main(int argc, char *argv[])
     print_screen_init();
     keypad_init();
     toggles_init();
-    menubar_init();
     scroll_init();
     help_init();
 

@@ -1195,12 +1195,16 @@ Menu_action(ia_t ia, unsigned argc, const char **argv)
     return True;
 }
 
+/**
+ * Menu bar module registration.
+ */
 void
-menubar_init(void)
+menubar_register(void)
 {
     static action_table_t menubar_actions[] = {
 	{ "Menu",	Menu_action,	ACTION_KE }
     };
 
+    /* Register our actions. */
     register_actions(menubar_actions, array_count(menubar_actions));
 }

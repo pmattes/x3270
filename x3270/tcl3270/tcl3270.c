@@ -441,7 +441,6 @@ tcl3270_main(int argc, const char *argv[])
 	ctlr_init(-1);
 	ctlr_reinit(-1);
 	kybd_init();
-	nvt_init();
 	ft_init();
 	xio_init();
 	print_screen_init();

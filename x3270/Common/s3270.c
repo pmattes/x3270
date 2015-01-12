@@ -144,7 +144,6 @@ main(int argc, char *argv[])
 	ctlr_reinit(-1);
 	kybd_init();
 	idle_init();
-	nvt_init();
 	if (appres.httpd_port) {
 	    struct sockaddr *sa;
 	    socklen_t sa_len;
