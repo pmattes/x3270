@@ -321,9 +321,11 @@ sms_in3270(Boolean in3270)
     }
 }
 
-/* One-time initialization. */
+/**
+ * Macros module registration.
+ */
 void
-sms_init(void)
+macros_register(void)
 {
     static action_table_t macros_actions[] = {
 	{ "Abort",		Abort_action, ACTION_KE },
@@ -351,10 +353,20 @@ sms_init(void)
 	{ "Source",		Source_action, ACTION_KE },
 	{ "Wait",		Wait_action, ACTION_KE }
     };
+    static toggle_register_t toggles[] = {
+	{ AID_WAIT,	NULL,	0 }
+    };
 
+
+    /* Register for state changes. */
     register_schange(ST_CONNECT, sms_connect);
     register_schange(ST_3270_MODE, sms_in3270);
+
+    /* Register actions.*/
     register_actions(macros_actions, array_count(macros_actions));
+
+    /* Register toggles. */
+    register_toggles(toggles, array_count(toggles));
 }
 
 /* Parse the macros resource into the macro list */
@@ -3849,17 +3861,4 @@ Source_action(ia_t ia, unsigned argc, const char **argv)
     Free(expanded_filename);
     push_file(fd);
     return True;
-}
-
-/**
- * Macros module registration.
- */
-void
-macros_register(void)
-{
-    static toggle_register_t toggles[] = {
-	{ AID_WAIT,	NULL,	0 }
-    };
-
-    register_toggles(toggles, array_count(toggles));
 }

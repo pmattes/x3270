@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, 2014 Paul Mattes.
+ * Copyright (c) 1996-2009, 2014-2015 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -38,12 +38,12 @@ extern unsigned long ft_length;
 extern FILE *ft_local_file;
 extern char *ft_local_filename;
 enum ft_state {
-	FT_NONE,	/* No transfer in progress */
-	FT_AWAIT_ACK,	/* IND$FILE sent, awaiting acknowledgement message */
-	FT_RUNNING,	/* Ack received, data flowing */
-	FT_ABORT_WAIT,	/* Awaiting chance to send an abort */
-	FT_ABORT_SENT	/* Abort sent; awaiting response */
-	};
+    FT_NONE,		/* No transfer in progress */
+    FT_AWAIT_ACK,	/* IND$FILE sent, awaiting acknowledgement message */
+    FT_RUNNING,		/* Ack received, data flowing */
+    FT_ABORT_WAIT,	/* Awaiting chance to send an abort */
+    FT_ABORT_SENT	/* Abort sent; awaiting response */
+};
 extern Boolean ft_last_cr;
 extern enum ft_state ft_state;
 extern Boolean remap_flag;
@@ -58,17 +58,18 @@ extern enum ftd ft_dbcs_state;
 extern unsigned char ft_dbcs_byte1;
 extern Boolean ft_last_dbcs;
 
-extern void ft_aborting(void);
-extern void ft_complete(const char *errmsg);
-extern void ft_init(void);
-extern void ft_running(Boolean is_cut);
-extern void ft_update_length(void);
-extern char *ft_local_fflag(void);
+void ft_aborting(void);
+void ft_complete(const char *errmsg);
+void ft_init(void);
+void ft_running(Boolean is_cut);
+void ft_update_length(void);
+char *ft_local_fflag(void);
+void ft_register(void);
 
 # if defined(_WIN32) /*[*/
-extern int ft_ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len);
-extern int ft_unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len);
-extern ucs4_t ft_multibyte_to_unicode(const char *mb, size_t mb_len,
+int ft_ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len);
+int ft_unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len);
+ucs4_t ft_multibyte_to_unicode(const char *mb, size_t mb_len,
 	int *consumedp, enum me_fail *errorp);
 # else /*][*/
 #  define ft_ebcdic_to_multibyte(ebc, mb, mb_len) \

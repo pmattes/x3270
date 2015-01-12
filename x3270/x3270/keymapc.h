@@ -50,11 +50,12 @@ extern Boolean keymap_changed;
 extern char *keymap_trace;
 extern struct trans_list *temp_keymaps;
 
-extern void do_keymap_display(Widget w, XtPointer userdata, XtPointer calldata);
-extern void keymap_init(const char *km, Boolean interactive);
-extern XtTranslations lookup_tt(const char *name, char *table);
-extern void PA_End_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void PA_KeymapTrace_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern Boolean temporary_keymap(const char *k);
+void do_keymap_display(Widget w, XtPointer userdata, XtPointer calldata);
+void keymap_init(const char *km, Boolean interactive);
+XtTranslations lookup_tt(const char *name, char *table);
+void PA_End_xaction(Widget w, XEvent *event, String *params,
+	Cardinal *num_params);
+void PA_KeymapTrace_xaction(Widget w, XEvent *event, String *params,
+	Cardinal *num_params);
+Boolean temporary_keymap(const char *k);
+void keymap_register();

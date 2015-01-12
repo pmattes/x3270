@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,23 +31,24 @@
  */
 
 struct host {
-	char *name;
-	char **parents;
-	char *hostname;
-	enum { PRIMARY, ALIAS, RECENT } entry_type;
-	char *loginstring;
-	time_t connect_time;
-	struct host *prev, *next;
+    char *name;
+    char **parents;
+    char *hostname;
+    enum { PRIMARY, ALIAS, RECENT } entry_type;
+    char *loginstring;
+    time_t connect_time;
+    struct host *prev, *next;
 };
 extern struct host *hosts;
 
 /* Host connect/disconnect and state change. */
-extern void hostfile_init(void);
-extern void host_cancel_reconnect(void);
-extern Boolean host_connect(const char *n);
-extern void host_connected(void);
-extern void host_disconnect(Boolean disable);
-extern void host_in3270(enum cstate);
-extern void host_newfd(iosrc_t s);
-extern void register_schange(int tx, void (*func)(Boolean));
-extern void st_changed(int tx, Boolean mode);
+void hostfile_init(void);
+void host_cancel_reconnect(void);
+Boolean host_connect(const char *n);
+void host_connected(void);
+void host_disconnect(Boolean disable);
+void host_in3270(enum cstate);
+void host_newfd(iosrc_t s);
+void register_schange(int tx, void (*func)(Boolean));
+void st_changed(int tx, Boolean mode);
+void host_register(void);

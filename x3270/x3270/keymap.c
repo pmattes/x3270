@@ -109,43 +109,52 @@ static void km_regen(void);
 
 char *current_keymap = NULL;
 
+/**
+ * Keymap module registration.
+ */
+void
+keymap_register(void)
+{
+    register_schange(ST_3270_MODE, keymap_3270_mode);
+    register_schange(ST_CONNECT, keymap_3270_mode);
+}
+
 /* Keymap initialization. */
 void
 keymap_init(const char *km, Boolean interactive)
 {
-	static Boolean initted = False;
+    static Boolean initted = False;
 
-	if (km == NULL)
-		if ((km = (char *)getenv("KEYMAP")) == NULL)
-			if ((km = (char *)getenv("KEYBD")) == NULL)
-				km = "@server";
-	setup_keymaps(km, interactive);
-	if (!initted) {
-		initted = True;
-		last_nvt = IN_NVT;
-		last_3270 = IN_3270;
-		register_schange(ST_3270_MODE, keymap_3270_mode);
-		register_schange(ST_CONNECT, keymap_3270_mode);
-	} else {
-		struct trans_list *t;
-		XtTranslations trans;
+    if (km == NULL &&
+	(km = (char *)getenv("KEYMAP")) == NULL &&
+	(km = (char *)getenv("KEYBD")) == NULL) {
+	km = "@server";
+    }
+    setup_keymaps(km, interactive);
+    if (!initted) {
+	initted = True;
+	last_nvt = IN_NVT;
+	last_3270 = IN_3270;
+    } else {
+	struct trans_list *t;
+	XtTranslations trans;
 
-		screen_set_keymap();
-		keypad_set_keymap();
+	screen_set_keymap();
+	keypad_set_keymap();
 
-		/* Re-apply any temporary keymaps. */
-		for (t = temp_keymaps; t != NULL; t = t->next) {
-			trans = lookup_tt(t->name, NULL);
-			screen_set_temp_keymap(trans);
-			keypad_set_temp_keymap(trans);
-		}
+	/* Re-apply any temporary keymaps. */
+	for (t = temp_keymaps; t != NULL; t = t->next) {
+	    trans = lookup_tt(t->name, NULL);
+	    screen_set_temp_keymap(trans);
+	    keypad_set_temp_keymap(trans);
 	}
-	km_regen();
+    }
+    km_regen();
 
-	/* Save the name(s) of the last keymap, so we can switch modes later. */
-	if (km != last_keymap) {
-		Replace(last_keymap, km? NewString(km): NULL);
-	}
+    /* Save the name(s) of the last keymap, so we can switch modes later. */
+    if (km != last_keymap) {
+	Replace(last_keymap, km? NewString(km): NULL);
+    }
 }
 
 /*

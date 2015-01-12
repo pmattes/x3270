@@ -400,12 +400,16 @@ main(int argc, char *argv[])
      * Call the module registration functions, to build up the tables of
      * actions, options and callbacks.
      */
-    trace_register();
-    nvt_register();
-    screen_register();
+    ctlr_register();
+    ft_register();
+    host_register();
+    idle_register();
     kybd_register();
     macros_register();
-    /* ... */
+    nvt_register();
+    pr3287_session_register();
+    screen_register();
+    trace_register();
 
     add_resource("keymap.base",
 #if defined(_WIN32) /*[*/
@@ -466,8 +470,6 @@ main(int argc, char *argv[])
     hostfile_init();
     nvt_init();
 
-    sms_init();
-
     if (appres.httpd_port) {
 	struct sockaddr *sa;
 	socklen_t sa_len;
@@ -485,7 +487,6 @@ main(int argc, char *argv[])
     register_schange(ST_EXITING, main_exiting);
     register_actions(main_actions, array_count(main_actions));
     ft_init();
-    pr3287_session_init();
     xio_init();
     print_screen_init();
     keypad_init();

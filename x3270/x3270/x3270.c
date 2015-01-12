@@ -265,6 +265,8 @@ static String fallbacks[] = {
 	NULL
 };
 
+static void x3270_register(void);
+
 
 void
 usage(const char *msg)
@@ -329,15 +331,22 @@ main(int argc, char *argv[])
 
 	/*
 	 * Call the module registration functions, to build up the tables of
-	 * actions, options and callbacks.
+	 * actions, options and callbacks. These functions have no
+	 * interdependencies and cannot depend on resource values.
 	 */
-	trace_register();
-	nvt_register();
-	screen_register();
+	ctlr_register();
 	kybd_register();
+	ft_register();
+	host_register();
+	idle_register();
+	keymap_register();
 	macros_register();
+	nvt_register();
+	pr3287_session_register();
+	screen_register();
 	select_register();
-	/* ... */
+	trace_register();
+	x3270_register();
 
 	/* Translate and validate -set and -clear toggle options. */
 	parse_set_clear(&argc, argv);
@@ -519,7 +528,6 @@ main(int argc, char *argv[])
 	scroll_init();
 	idle_init();
 	nvt_init();
-	sms_init();
 	if (appres.httpd_port) {
 	    struct sockaddr *sa;
 	    socklen_t sa_len;
@@ -534,7 +542,6 @@ main(int argc, char *argv[])
 	info_popup_init();
 	error_popup_init();
 	printer_popup_init();
-	pr3287_session_init();
 	ft_init();
 	xio_init();
 	toggles_init();
@@ -800,10 +807,18 @@ label_init(void)
 	if (user_icon_name != NULL)
 		set_aicon_label(user_icon_name);
 
-	register_schange(ST_HALF_CONNECT, relabel);
-	register_schange(ST_CONNECT, relabel);
-	register_schange(ST_3270_MODE, relabel);
-	register_schange(ST_REMODEL, relabel);
+}
+
+/*
+ * x3270 module registration.
+ */
+static void
+x3270_register(void)
+{
+    register_schange(ST_HALF_CONNECT, relabel);
+    register_schange(ST_CONNECT, relabel);
+    register_schange(ST_3270_MODE, relabel);
+    register_schange(ST_REMODEL, relabel);
 }
 
 /*

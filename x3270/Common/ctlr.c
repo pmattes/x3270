@@ -153,17 +153,26 @@ static unsigned char	code_table[64] = {
     }
 
 
+/**
+ * Controller module registration.
+ */
+void
+ctlr_register(void)
+{
+    /* Register callback routines. */
+    register_schange(ST_HALF_CONNECT, ctlr_half_connect);
+    register_schange(ST_CONNECT, ctlr_connect);
+    register_schange(ST_3270_MODE, ctlr_connect);
+}
+
 /*
  * Initialize the emulated 3270 hardware.
  */
 void
 ctlr_init(unsigned cmask _is_unused)
 {
-	/* Register callback routines. */
-	register_schange(ST_HALF_CONNECT, ctlr_half_connect);
-	register_schange(ST_CONNECT, ctlr_connect);
-	register_schange(ST_3270_MODE, ctlr_connect);
 }
+
 /*
  * Reinitialize the emulated 3270 hardware.
  */

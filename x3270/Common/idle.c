@@ -70,36 +70,44 @@ static Boolean idle_ticking = False;
 
 static void idle_in3270(Boolean in3270);
 
+/**
+ * Idle module registration.
+ */
+void
+idle_register(void)
+{
+    /* Register for state changes. */
+    register_schange(ST_3270_MODE, idle_in3270);
+    register_schange(ST_CONNECT, idle_in3270);
+}
+
 /* Initialization. */
 void
 idle_init(void)
 {
-	char *cmd, *tmo;
+    char *cmd, *tmo;
 
-	/* Register for state changes. */
-	register_schange(ST_3270_MODE, idle_in3270);
-	register_schange(ST_CONNECT, idle_in3270);
+    /* Get values from resources. */
+    cmd = appres.idle_command;
+    idle_command = cmd? NewString(cmd): NULL;
+    tmo = appres.idle_timeout;
+    idle_timeout_string = tmo? NewString(tmo): NULL;
+    if (appres.idle_command_enabled) {
+	idle_user_enabled = IDLE_PERM;
+    } else {
+	idle_user_enabled = IDLE_DISABLED;
+    }
+    if (idle_user_enabled &&
+	idle_command != NULL &&
+	process_idle_timeout_value(idle_timeout_string)) {
+	;
+    }
 
-	/* Get values from resources. */
-	cmd = appres.idle_command;
-	idle_command = cmd? NewString(cmd): NULL;
-	tmo = appres.idle_timeout;
-	idle_timeout_string = tmo? NewString(tmo): NULL;
-	if (appres.idle_command_enabled)
-		idle_user_enabled = IDLE_PERM;
-	else
-		idle_user_enabled = IDLE_DISABLED;
-	if (idle_user_enabled &&
-	    idle_command != NULL &&
-	    process_idle_timeout_value(idle_timeout_string)) {
-		;
-	}
-
-	/* Seed the random number generator (we seem to be the only user). */
+    /* Seed the random number generator (we seem to be the only user). */
 # if defined(_WIN32) /*[*/
-	srand((unsigned int)time(NULL));
+    srand((unsigned int)time(NULL));
 # else /*][*/
-	srandom(time(NULL));
+    srandom(time(NULL));
 # endif /*]*/
 }
 

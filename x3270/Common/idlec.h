@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2009, 2013, 2014 Paul Mattes.
+ * Copyright (c) 2002-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,22 +31,23 @@
  */
 
 enum idle_enum {
-	IDLE_DISABLED = 0,
-	IDLE_SESSION = 1,
-	IDLE_PERM = 2
+    IDLE_DISABLED = 0,
+    IDLE_SESSION = 1,
+    IDLE_PERM = 2
 };
 
 #if defined(X3270_INTERACTIVE) || defined(S3270) /*[*/
-extern void cancel_idle_timer(void);
-extern void idle_init(void);
-extern void reset_idle_timer(void);
-extern char *get_idle_command();
-extern char *get_idle_timeout();
+void cancel_idle_timer(void);
+void idle_init(void);
+void reset_idle_timer(void);
+char *get_idle_command();
+char *get_idle_timeout();
 extern Boolean idle_changed;
 extern char *idle_command;
 extern char *idle_timeout_string;
 extern enum idle_enum idle_user_enabled;
-extern Boolean process_idle_timeout_value(const char *string);
+Boolean process_idle_timeout_value(const char *string);
+void idle_register();
 #else /*][*/
 # define cancel_idle_timer()
 # define idle_init()

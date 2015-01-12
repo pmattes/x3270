@@ -273,11 +273,13 @@ Tcl_AppInit(Tcl_Interp *interp)
      * Call the module registration functions, to build up the tables of
      * actions, options and callbacks.
      */
-    trace_register();
-    nvt_register();
+    ctlr_register();
+    ft_register();
+    host_register();
     kybd_register();
+    nvt_register();
     tcl3270_register();
-    /* ... */
+    trace_register();
 
     /* Use argv and argv0 to figure out our command-line arguments. */
     s0 = Tcl_GetVar(interp, "argv0", 0);

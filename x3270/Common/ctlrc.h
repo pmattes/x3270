@@ -88,6 +88,7 @@ enum pds process_ds(unsigned char *buf, int buflen);
 void ps_process(void);
 void set_rows_cols(int mn, int ovc, int ovr);
 void ticking_start(Boolean anyway);
+void ctlr_register(void);
 
 enum dbcs_state {
 	DBCS_NONE = 0,		/* position is not DBCS */

@@ -124,11 +124,14 @@ main(int argc, char *argv[])
 	 * Call the module registration functions, to build up the tables of
 	 * actions, options and callbacks.
 	 */
-	trace_register();
-	nvt_register();
+	ctlr_register();
+	ft_register();
+	host_register();
+	idle_register();
 	kybd_register();
 	macros_register();
-	/* ... */
+	nvt_register();
+	trace_register();
 
 	argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
@@ -142,7 +145,6 @@ main(int argc, char *argv[])
 	kybd_init();
 	idle_init();
 	nvt_init();
-	sms_init();
 	if (appres.httpd_port) {
 	    struct sockaddr *sa;
 	    socklen_t sa_len;

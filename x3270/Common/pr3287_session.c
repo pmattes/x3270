@@ -129,11 +129,11 @@ static void	pr3287_start_now(const char *lu, Boolean associated);
 
 /* Globals */
 
-/*
- * Printer initialization function.
+/**
+ * Printer session module registration.
  */
 void
-pr3287_session_init(void)
+pr3287_session_register(void)
 {
     /* Register interest in host connects and mode changes. */
     register_schange(ST_CONNECT, pr3287_host_connect);

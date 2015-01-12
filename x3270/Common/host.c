@@ -211,13 +211,12 @@ read_hosts_file(void)
 #endif /*]*/
 }
 
-/*
- * Initialize the hosts module.
+/**
+ * Hosts module registration.
  */
 void
-hostfile_init(void)
+host_register(void)
 {
-    static Boolean hostfile_initted = False;
     static action_table_t host_actions[] = {
 #if defined(C3270) /*[*/
 	{ "Close",	Disconnect_action,	ACTION_KE },
@@ -232,11 +231,21 @@ hostfile_init(void)
 #endif /*]*/
     };
 
+    register_actions(host_actions, array_count(host_actions));
+}
+
+/**
+ * Read in the hosts file.
+ */
+void
+hostfile_init(void)
+{
+    static Boolean hostfile_initted = False;
+
     if (hostfile_initted) {
 	return;
     }
 
-    register_actions(host_actions, array_count(host_actions));
     read_hosts_file();
 
     hostfile_initted = True;

@@ -62,7 +62,6 @@ void sms_continue(void);
 void sms_error(const char *msg);
 void sms_host_output(void);
 void sms_info(const char *fmt, ...) printflike(1, 2);
-void sms_init(void);
 Boolean sms_in_macro(void);
 Boolean sms_redirect(void);
 void sms_store(unsigned char c);

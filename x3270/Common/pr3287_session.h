@@ -30,7 +30,7 @@
  *		Printer session support
  */             
 
-extern void pr3287_session_init(void);
+extern void pr3287_session_register(void);
 extern void pr3287_session_start(const char *lu);
 extern void pr3287_session_stop(void);
 extern Boolean pr3287_session_running(void);

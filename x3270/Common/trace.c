@@ -1242,7 +1242,9 @@ toggle_screenTrace(toggle_index_t ix _is_unused, enum toggle_type tt)
     trace_gui_toggle();
 }
 
-/* Register the trace component. */
+/**
+ * Trace module registration.
+ */
 void
 trace_register(void)
 {

@@ -133,10 +133,11 @@ static void ft_in3270(Boolean ignored);
 
 static action_t Transfer_action;
 
-/* Main external entry point. */
-
+/**
+ * File transfer module registration.
+ */
 void
-ft_init(void)
+ft_register(void)
 {
     static action_table_t ft_actions[] = {
 	{ "Transfer",	Transfer_action,	ACTION_KE }
@@ -148,7 +149,11 @@ ft_init(void)
 
     /* Register actions. */
     register_actions(ft_actions, array_count(ft_actions));
+}
 
+void
+ft_init(void)
+{
     /* Initialize the private state. */
     ft_private.receive_flag = True;
     ft_private.host_type = HT_TSO;
