@@ -49,6 +49,7 @@
 #include "ctlr.h"
 #include "screen.h"
 #include "resources.h"
+#include "togglesc.h"
 
 #include "actionsc.h"
 #if !defined(TCL3270) /*[*/
@@ -3848,4 +3849,17 @@ Source_action(ia_t ia, unsigned argc, const char **argv)
     Free(expanded_filename);
     push_file(fd);
     return True;
+}
+
+/**
+ * Macros module registration.
+ */
+void
+macros_register(void)
+{
+    static toggle_register_t toggles[] = {
+	{ AID_WAIT,	NULL,	0 }
+    };
+
+    register_toggles(toggles, array_count(toggles));
 }

@@ -1425,7 +1425,7 @@ toggle_callback(Widget w, XtPointer userdata, XtPointer calldata _is_unused)
      * toggle_widget[ix][0] is the "toggle true" button; toggle_widget[ix][1]
      * is "toggle false".
      */
-    if (wx->w[1] != 0 && w == wx->w[!toggled(ix)]) {
+    if (wx->w[1] != NULL && w == wx->w[!toggled(ix)]) {
 	return;
     }
 
@@ -1505,34 +1505,36 @@ static Widget other_font;
 static Widget font_shell = NULL;
 
 static void
-do_newfont(Widget w _is_unused, XtPointer userdata, XtPointer calldata _is_unused)
+do_newfont(Widget w _is_unused, XtPointer userdata, XtPointer
+	calldata _is_unused)
 {
-	screen_newfont((char *)userdata, True, False);
+    screen_newfont((char *)userdata, True, False);
 }
 
 /* Called from the "Select Font" button on the font dialog */
 static void
 font_button_callback(Widget w, XtPointer client_data,
-    XtPointer call_data _is_unused)
+	XtPointer call_data _is_unused)
 {
-	char *s;
+    char *s;
 
-	s = XawDialogGetValueString((Widget)client_data);
-	if (!s || !*s)
-		return;
-	XtPopdown(font_shell);
-	do_newfont(w, s, NULL);
+    s = XawDialogGetValueString((Widget)client_data);
+    if (!s || !*s) {
+	return;
+    }
+    XtPopdown(font_shell);
+    do_newfont(w, s, NULL);
 }
 
 static void
 do_otherfont(Widget w _is_unused, XtPointer userdata _is_unused,
-    XtPointer calldata _is_unused)
+	XtPointer calldata _is_unused)
 {
-	if (font_shell == NULL)
-		font_shell = create_form_popup("Font", font_button_callback,
-						NULL,
-						FORM_NO_CC);
-	popup_popup(font_shell, XtGrabExclusive);
+    if (font_shell == NULL) {
+	font_shell = create_form_popup("Font", font_button_callback, NULL,
+		FORM_NO_CC);
+    }
+    popup_popup(font_shell, XtGrabExclusive);
 }
 
 /* Initialze the color scheme list. */

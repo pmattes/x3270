@@ -265,47 +265,6 @@ static String fallbacks[] = {
 	NULL
 };
 
-toggle_name_t toggle_names[] = {
-	{ ResMonoCase,        MONOCASE,		False },
-	{ ResAltCursor,       ALT_CURSOR,	False },
-	{ ResCursorBlink,     CURSOR_BLINK,	False },
-	{ ResShowTiming,      SHOW_TIMING,	False },
-	{ ResCursorPos,       CURSOR_POS,	False },
-	{ ResTrace,           TRACING,		False },
-	{ ResDsTrace,         TRACING,		True }, /* compatibility */
-	{ ResScrollBar,       SCROLL_BAR,	False },
-	{ ResLineWrap,        LINE_WRAP,	False },
-	{ ResBlankFill,       BLANK_FILL,	False },
-	{ ResScreenTrace,     SCREEN_TRACE,	False },
-	{ ResEventTrace,      TRACING,		True }, /* compatibility */
-	{ ResMarginedPaste,   MARGINED_PASTE,	False },
-	{ ResRectangleSelect, RECTANGLE_SELECT,	False },
-	{ ResCrosshair,	      CROSSHAIR,	False },
-	{ ResVisibleControl,  VISIBLE_CONTROL,	False },
-	{ ResAidWait,         AID_WAIT,		False },
-	{ ResOverlayPaste,    OVERLAY_PASTE,	False },
-	{ NULL,               0,		False }
-};
-
-/* Bitmap of supported toggles. */
-unsigned toggles_supported =
-    TOGGLE_BIT(MONOCASE) |
-    TOGGLE_BIT(ALT_CURSOR) |
-    TOGGLE_BIT(CURSOR_BLINK) |
-    TOGGLE_BIT(SHOW_TIMING) |
-    TOGGLE_BIT(CURSOR_POS) |
-    TOGGLE_BIT(TRACING) |
-    TOGGLE_BIT(SCROLL_BAR) |
-    TOGGLE_BIT(LINE_WRAP) |
-    TOGGLE_BIT(BLANK_FILL) |
-    TOGGLE_BIT(SCREEN_TRACE) |
-    TOGGLE_BIT(MARGINED_PASTE) |
-    TOGGLE_BIT(RECTANGLE_SELECT) |
-    TOGGLE_BIT(CROSSHAIR) |
-    TOGGLE_BIT(VISIBLE_CONTROL) |
-    TOGGLE_BIT(AID_WAIT) |
-    TOGGLE_BIT(OVERLAY_PASTE);
-
 
 void
 usage(const char *msg)
@@ -367,6 +326,18 @@ main(int argc, char *argv[])
 		          !strcmp(argv[1], OptVersion))) {
 	    	dump_version();
 	}
+
+	/*
+	 * Call the module registration functions, to build up the tables of
+	 * actions, options and callbacks.
+	 */
+	trace_register();
+	nvt_register();
+	screen_register();
+	kybd_register();
+	macros_register();
+	select_register();
+	/* ... */
 
 	/* Translate and validate -set and -clear toggle options. */
 	parse_set_clear(&argc, argv);

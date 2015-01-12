@@ -109,6 +109,7 @@ void set_aicon_label(char *l);
 void set_translations(Widget w, XtTranslations *t00, XtTranslations *t0);
 void shift_event(int event_state);
 unsigned long screen_window_number(void);
+void screen_register(void);
 
 /* font list */
 struct font_list {

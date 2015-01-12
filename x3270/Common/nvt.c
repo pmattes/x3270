@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,6 @@
 #include "macrosc.h"
 #include "nvtc.h"
 #include "nvt_guic.h"
-#include "nvt_toggle.h"
 #include "screenc.h"
 #include "scrollc.h"
 #include "tablesc.h"
@@ -1804,7 +1803,7 @@ nvt_send_pa(int nn)
     Free(s);
 }
 
-void
+static void
 toggle_lineWrap(toggle_index_t ix _is_unused, enum toggle_type type _is_unused)
 {
     if (toggled(LINE_WRAP)) {
@@ -2383,4 +2382,18 @@ nvt_snap_modes(void)
 		    	*obptr++ = pending_mbs[i];
 		}
 	}
+}
+
+/**
+ * NVT-mode module registration.
+ */
+void
+nvt_register(void)
+{
+    static toggle_register_t toggles[] = {
+	{ LINE_WRAP, toggle_lineWrap, 0 }
+    };
+
+    register_toggles(toggles, array_count(toggles));
+
 }

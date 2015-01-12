@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -65,6 +65,7 @@
 #include "ctlr.h"
 #include "screen.h"
 #include "resources.h"
+#include "togglesc.h"
 
 #include "actionsc.h"
 #include "charsetc.h"
@@ -1757,4 +1758,17 @@ insert_selection_xaction(Widget w, XEvent *event, String *params,
 		paste_callback, NULL,
 		paste_time);
     }
+}
+
+/**
+ * Select module registration.
+ */
+void
+select_register(void)
+{
+    static toggle_register_t toggles[] = {
+	{ RECTANGLE_SELECT,	NULL,	0 }
+    };
+
+    register_toggles(toggles, array_count(toggles));
 }

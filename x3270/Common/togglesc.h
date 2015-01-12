@@ -41,8 +41,6 @@ typedef struct {
 } toggle_name_t;
 extern toggle_name_t toggle_names[];
 
-extern unsigned toggles_supported;
-
 enum toggle_type {
     TT_INITIAL,		/* at start-up */
     TT_INTERACTIVE,	/* at the prompt */
@@ -51,10 +49,6 @@ enum toggle_type {
     TT_FINAL		/* at shutdown */
 };
 typedef void toggle_upcall_t(toggle_index_t ix, enum toggle_type type);
-
-#define toggle_ix(t)		(toggle_index_t)((t) - toggle)
-#define TOGGLE_BIT(ix)		(1 << (ix))
-#define TOGGLE_SUPPORTED(ix)	(toggles_supported & TOGGLE_BIT(ix))
 
 void do_menu_toggle(int);
 void do_toggle(int);
@@ -65,3 +59,13 @@ void toggle_toggle(toggle_index_t ix);
 void set_toggle(toggle_index_t ix, Boolean value);
 void set_toggle_initial(toggle_index_t ix, Boolean value);
 Boolean toggle_changed(toggle_index_t ix);
+Boolean toggle_supported(toggle_index_t ix);
+
+#define TOGGLE_NEED_INIT	0x1	/* needs start-up initialization */
+#define TOGGLE_NEED_CLEANUP	0x2	/* needs shutdown clean-up */
+typedef struct {
+    toggle_index_t ix;
+    toggle_upcall_t *upcall;
+    unsigned flags;
+} toggle_register_t;
+void register_toggles(toggle_register_t toggles[], unsigned count);

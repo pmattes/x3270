@@ -48,18 +48,17 @@ extern unsigned int kybdlock;
 
 extern unsigned char aid;
 
-extern void do_reset(Boolean explicit);
-extern int emulate_input(const char *s, int len, Boolean pasting);
-extern int emulate_uinput(const ucs4_t *s, int len, Boolean pasting);
-extern void hex_input(const char *s);
-extern void kybdlock_clr(unsigned int bits, const char *cause);
-extern void kybd_inhibit(Boolean inhibit);
-extern void kybd_init(void);
-extern int kybd_prime(void);
-extern void kybd_scroll_lock(Boolean lock);
-extern Boolean run_ta(void);
-extern int state_from_keymap(char keymap[32]);
-extern void lightpen_select(int baddr);
-extern void key_UCharacter(ucs4_t ucs4, enum keytype keytype,
-	enum iaction cause);
-
+void do_reset(Boolean explicit);
+int emulate_input(const char *s, int len, Boolean pasting);
+int emulate_uinput(const ucs4_t *s, int len, Boolean pasting);
+void hex_input(const char *s);
+void kybdlock_clr(unsigned int bits, const char *cause);
+void kybd_inhibit(Boolean inhibit);
+void kybd_init(void);
+int kybd_prime(void);
+void kybd_scroll_lock(Boolean lock);
+Boolean run_ta(void);
+int state_from_keymap(char keymap[32]);
+void lightpen_select(int baddr);
+void key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause);
+void kybd_register(void);

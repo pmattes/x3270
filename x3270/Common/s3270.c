@@ -87,14 +87,6 @@ char *commonappdata = NULL;
 char *mydesktop = NULL;
 #endif /*]*/
 
-/* Bitmap of supported toggles. */
-unsigned toggles_supported =
-    TOGGLE_BIT(TRACING) |
-    TOGGLE_BIT(LINE_WRAP) |
-    TOGGLE_BIT(BLANK_FILL) |
-    TOGGLE_BIT(SCREEN_TRACE) |
-    TOGGLE_BIT(AID_WAIT);
-
 void
 usage(const char *msg)
 {
@@ -127,6 +119,16 @@ main(int argc, char *argv[])
 	if (sockstart() < 0)
 	    	exit(1);
 #endif /*]*/
+
+	/*
+	 * Call the module registration functions, to build up the tables of
+	 * actions, options and callbacks.
+	 */
+	trace_register();
+	nvt_register();
+	kybd_register();
+	macros_register();
+	/* ... */
 
 	argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 

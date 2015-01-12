@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,32 +40,32 @@ struct macro_def {
 extern struct macro_def *macro_defs;
 extern Boolean macro_output;
 
-extern void abort_script(void);
-extern void cancel_if_idle_command(void);
-extern void login_macro(char *s);
-extern void macros_init(void);
-extern void macro_command(struct macro_def *m);
-extern void peer_script_init(void);
-extern void ps_set(char *s, Boolean is_hex);
-extern void push_command(char *);
-extern void push_idle(char *);
-extern void push_keymap_action(char *);
-extern void push_macro(char *, Boolean);
+void abort_script(void);
+void cancel_if_idle_command(void);
+void login_macro(char *s);
+void macros_init(void);
+void macro_command(struct macro_def *m);
+void peer_script_init(void);
+void ps_set(char *s, Boolean is_hex);
+void push_command(char *);
+void push_idle(char *);
+void push_keymap_action(char *);
+void push_macro(char *, Boolean);
 #if !defined(TCL3270) /*[*/
-extern void sms_accumulate_time(struct timeval *, struct timeval *);
+void sms_accumulate_time(struct timeval *, struct timeval *);
 #else /*][*/
 #define sms_accumulate_time(t0, t1)
 #endif /*]*/
-extern Boolean sms_active(void);
-extern void sms_connect_wait(void);
-extern void sms_continue(void);
-extern void sms_error(const char *msg);
-extern void sms_host_output(void);
-extern void sms_info(const char *fmt, ...) printflike(1, 2);
-extern void sms_init(void);
-extern Boolean sms_in_macro(void);
-extern Boolean sms_redirect(void);
-extern void sms_store(unsigned char c);
+Boolean sms_active(void);
+void sms_connect_wait(void);
+void sms_continue(void);
+void sms_error(const char *msg);
+void sms_host_output(void);
+void sms_info(const char *fmt, ...) printflike(1, 2);
+void sms_init(void);
+Boolean sms_in_macro(void);
+Boolean sms_redirect(void);
+void sms_store(unsigned char c);
 
 typedef void *sms_cbh;
 typedef void (*sms_data_cb)(sms_cbh handle, const char *buf, size_t len);
@@ -77,5 +77,6 @@ typedef struct {
     sms_data_cb data;
     sms_done_cb done;
 } sms_cb_t;
-extern void push_cb(const char *buf, size_t len, const sms_cb_t *cb,
+void push_cb(const char *buf, size_t len, const sms_cb_t *cb,
 	sms_cbh handle);
+void macros_register(void);

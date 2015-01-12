@@ -4220,3 +4220,16 @@ Compose_action(ia_t ia, unsigned argc, const char **argv)
     return True;
 }
 #endif /*]*/
+
+/**
+ * Keyboard module registration.
+ */
+void
+kybd_register(void)
+{
+    static toggle_register_t toggles[] = {
+	{ BLANK_FILL,	NULL,	0 }
+    };
+
+    register_toggles(toggles, array_count(toggles));
+}

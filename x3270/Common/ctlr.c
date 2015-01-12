@@ -49,7 +49,6 @@
 #include "actionsc.h"
 #include "charsetc.h"
 #include "ctlrc.h"
-#include "ctlr_toggle.h"
 #include "unicodec.h"
 #include "ftc.h"
 #include "ft_cutc.h"
@@ -2885,16 +2884,6 @@ ticking_stop(void)
 	status_timing(&t_start, &t1);
 #endif /*]*/
 }
-
-#if defined(X3270_INTERACTIVE) /*[*/
-void
-toggle_showTiming(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
-{
-    if (!toggled(SHOW_TIMING)) {
-	status_untiming();
-    }
-}
-#endif /*]*/
 
 /*
  * Queries.

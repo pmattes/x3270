@@ -98,14 +98,6 @@ extern int matherr();
 int *tclDummyMathPtr = (int *) matherr;
 #endif /*]*/
 
-/* Bitmap of supported toggles. */
-unsigned toggles_supported =
-    TOGGLE_BIT(TRACING) |
-    TOGGLE_BIT(LINE_WRAP) |
-    TOGGLE_BIT(BLANK_FILL) |
-    TOGGLE_BIT(SCREEN_TRACE) |
-    TOGGLE_BIT(AID_WAIT);
-
 static Tcl_ObjCmdProc x3270_cmd;
 static Tcl_ObjCmdProc Rows_cmd, Cols_cmd;
 static enum {
@@ -180,6 +172,7 @@ static void negotiate(void);
 static char *tc_scatv(const char *s);
 static void snap_save(void);
 static void wait_timed_out(ioid_t);
+static void tcl3270_register(void);
 
 /* Macros.c stuff. */
 static Boolean in_cmd = False;
@@ -275,6 +268,16 @@ Tcl_AppInit(Tcl_Interp *interp)
     if (Tcl_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
+
+    /*
+     * Call the module registration functions, to build up the tables of
+     * actions, options and callbacks.
+     */
+    trace_register();
+    nvt_register();
+    kybd_register();
+    tcl3270_register();
+    /* ... */
 
     /* Use argv and argv0 to figure out our command-line arguments. */
     s0 = Tcl_GetVar(interp, "argv0", 0);
@@ -1769,4 +1772,17 @@ tc_scatv(const char *s)
 void
 cancel_if_idle_command(void)
 {
+}
+
+/**
+ * Registration for tcl3270 main module.
+ */
+static void
+tcl3270_register(void)
+{
+    static toggle_register_t toggles[] = {
+	{ AID_WAIT,	NULL,	0 }
+    };
+
+    register_toggles(toggles, array_count(toggles));
 }

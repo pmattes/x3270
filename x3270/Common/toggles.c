@@ -36,6 +36,7 @@
 
 #include "globals.h"
 #include "appres.h"
+#include "resources.h"
 
 #include "actionsc.h"
 #include "ctlrc.h"
@@ -46,20 +47,39 @@
 #include "trace.h"
 #include "togglesc.h"
 
-#include "ctlr_toggle.h"
-#include "nvt_toggle.h"
-#if defined(X3270_INTERACTIVE) /*[*/
-# include "screen_toggle.h"
-#endif /*]*/
-#include "trace_toggle.h"
-
+/* Live state of toggles. */
 typedef struct toggle {
     Boolean value;		/* current value */
     Boolean changed;		/* has the value changed since init */
+    Boolean supported;		/* is the toggle supported */
+    unsigned flags;		/* miscellaneous flags */
     toggle_upcall_t *upcall;	/* notify folks it has changed */
 } toggle_t;
-
 static toggle_t toggle[N_TOGGLES];
+
+/* Toggle name dictionary. */
+toggle_name_t toggle_names[] = {
+    { ResMonoCase,        MONOCASE,		False },
+    { ResAltCursor,       ALT_CURSOR,		False },
+    { ResCursorBlink,     CURSOR_BLINK,		False },
+    { ResShowTiming,      SHOW_TIMING,		False },
+    { ResCursorPos,       CURSOR_POS,		False },
+    { ResTrace,           TRACING,		False },
+    { ResDsTrace,         TRACING,		True }, /* compatibility */
+    { ResScrollBar,       SCROLL_BAR,		False },
+    { ResLineWrap,        LINE_WRAP,		False },
+    { ResBlankFill,       BLANK_FILL,		False },
+    { ResScreenTrace,     SCREEN_TRACE,		False },
+    { ResEventTrace,      TRACING,		True }, /* compatibility */
+    { ResMarginedPaste,   MARGINED_PASTE,	False },
+    { ResRectangleSelect, RECTANGLE_SELECT,	False },
+    { ResCrosshair,	  CROSSHAIR,		False },
+    { ResVisibleControl,  VISIBLE_CONTROL,	False },
+    { ResAidWait,         AID_WAIT,		False },
+    { ResUnderscore,	  UNDERSCORE,		False },
+    { ResOverlayPaste,    OVERLAY_PASTE,	False },
+    { NULL,               0,			False }
+};
 
 /*
  * Generic toggle stuff
@@ -92,47 +112,25 @@ do_menu_toggle(int ix)
     do_toggle_reason(ix, TT_XMENU);
 }
 
-static void
-init_toggle_fallible(toggle_index_t ix)
-{
-    if (toggled(ix)) {
-	toggle[ix].upcall(ix, TT_INITIAL);
-	if (!toggled(ix)) {
-	    menubar_retoggle(ix);
-	}
-    }
-}
-
 /*
  * Called from system initialization code to handle initial toggle settings.
  */
 void
 initialize_toggles(void)
 {
-    toggle[TRACING].upcall =          toggle_tracing;
-    toggle[SCREEN_TRACE].upcall =     toggle_screenTrace;
-    toggle[LINE_WRAP].upcall =        toggle_lineWrap;
+    toggle_index_t ix;
 
-#if defined(X3270_INTERACTIVE) /*[*/
-    toggle[MONOCASE].upcall =         toggle_monocase;
-#endif /*]*/
+    for (ix = 0; ix < N_TOGGLES; ix++) {
+	if (toggled(ix) && (toggle[ix].flags & TOGGLE_NEED_INIT)) {
+	    /* Make the upcall. */
+	    toggle[ix].upcall(ix, TT_INITIAL);
 
-#if defined(X3270_DISPLAY) /*[*/
-    toggle[ALT_CURSOR].upcall =       toggle_altCursor;
-    toggle[CURSOR_BLINK].upcall =     toggle_cursorBlink;
-    toggle[SHOW_TIMING].upcall =      toggle_showTiming;
-    toggle[CURSOR_POS].upcall =       toggle_cursorPos;
-    toggle[SCROLL_BAR].upcall =       toggle_scrollBar;
-    toggle[CROSSHAIR].upcall =        toggle_crosshair;
-    toggle[VISIBLE_CONTROL].upcall =  toggle_visible_control;
-#endif /*]*/
-
-#if defined(C3270) /*[*/
-    toggle[UNDERSCORE].upcall =	     toggle_underscore;
-#endif /*]*/
-
-    init_toggle_fallible(TRACING);
-    init_toggle_fallible(SCREEN_TRACE);
+	    /* It might have failed. Fix up the menu if it did. */
+	    if (!toggled(ix)) {
+		menubar_retoggle(ix);
+	    }
+	}
+    }
 }
 
 /*
@@ -141,16 +139,13 @@ initialize_toggles(void)
 void
 shutdown_toggles(void)
 {
-    /* Clean up the data stream trace monitor window. */
-    if (toggled(TRACING)) {
-	set_toggle(TRACING, False);
-	toggle_tracing(TRACING, TT_FINAL);
-    }
+    toggle_index_t ix;
 
-    /* Clean up the screen trace file. */
-    if (toggled(SCREEN_TRACE)) {
-	set_toggle(SCREEN_TRACE, False);
-	toggle_screenTrace(SCREEN_TRACE, TT_FINAL);
+    for (ix = 0; ix < N_TOGGLES; ix++) {
+	if (toggled(ix) && toggle[ix].flags & TOGGLE_NEED_CLEANUP) {
+	    set_toggle(ix, False);
+	    toggle[ix].upcall(ix, TT_FINAL);
+	}
     }
 }
 
@@ -165,7 +160,7 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
 	return False;
     }
     for (j = 0; toggle_names[j].name != NULL; j++) {
-	if (!TOGGLE_SUPPORTED(toggle_names[j].index)) {
+	if (!toggle_supported(toggle_names[j].index)) {
 	    continue;
 	}
 	if (!strcasecmp(argv[0], toggle_names[j].name)) {
@@ -275,7 +270,7 @@ Boolean
 toggled(toggle_index_t ix)
 {
     toggle_setup();
-    return appres.toggle[ix];
+    return toggle[ix].value;
 }
 
 /**
@@ -289,4 +284,35 @@ Boolean
 toggle_changed(toggle_index_t ix)
 {
     return toggle[ix].changed;
+}
+
+/**
+ * Check for a toggle being supported in this app.
+ *
+ * @param[in] ix	Toggle index
+ *
+ * @return True if supported, False otherwise.
+ */
+Boolean
+toggle_supported(toggle_index_t ix)
+{
+    return toggle[ix].supported;
+}
+
+/**
+ * Register a group of toggle callbacks.
+ *
+ * @param[in] toggles	Array of callbacks to register
+ * @param[in] count	Number of elements in toggles[]
+ */
+void
+register_toggles(toggle_register_t toggles[], unsigned count)
+{
+    unsigned i;
+
+    for (i = 0; i < count; i++) {
+	toggle[toggles[i].ix].supported = True;
+	toggle[toggles[i].ix].upcall = toggles[i].upcall;
+	toggle[toggles[i].ix].flags = toggles[i].flags;
+    }
 }

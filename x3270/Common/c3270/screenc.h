@@ -48,6 +48,7 @@ void screen_flip(void);
 void screen_resume(void);
 Boolean screen_suspend(void);
 FILE *start_pager(void);
+void screen_register(void);
 #if defined(WC3270) /*[*/
 void screen_fixup(void);
 void pager_output(const char *s);

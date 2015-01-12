@@ -73,7 +73,6 @@
 #include "popupsc.h"
 #include "savec.h"
 #include "screenc.h"
-#include "screen_toggle.h"
 #include "scrollc.h"
 #include "seec.h"
 #include "statusc.h"
@@ -996,7 +995,7 @@ scrollbar_init(Boolean is_reset)
 }
 
 /* Turn the scrollbar on or off */
-void
+static void
 toggle_scrollBar(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
     scrollbar_changed = True;
@@ -1221,7 +1220,7 @@ cancel_blink(void)
 /*
  * Toggle cursor blinking (called from menu)
  */
-void
+static void
 toggle_cursorBlink(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
     if (!CONNECTED) {
@@ -1253,7 +1252,7 @@ cursor_on(void)
 /*
  * Toggle the cursor (block/underline).
  */
-void
+static void
 toggle_altCursor(toggle_index_t ix, enum toggle_type tt _is_unused)
 {
     Boolean was_on;
@@ -1296,7 +1295,7 @@ cursor_pos(void)
 /*
  * Toggle the display of the cursor position
  */
-void
+static void
 toggle_cursorPos(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
     if (toggled(CURSOR_POS)) {
@@ -1323,7 +1322,7 @@ enable_cursor(Boolean on)
 /*
  * Toggle the crosshair cursor.
  */
-void
+static void
 toggle_crosshair(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
     screen_changed = True;
@@ -1336,7 +1335,7 @@ toggle_crosshair(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 /*
  * Toggle visible control characters.
  */
-void
+static void
 toggle_visible_control(toggle_index_t ix _is_unused,
 	enum toggle_type tt _is_unused)
 {
@@ -2256,11 +2255,22 @@ screen_scroll(void)
 /*
  * Toggle mono-/dual-case mode.
  */
-void
+static void
 toggle_monocase(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
     (void) memset((char *)ss->image, 0, (ROWS*COLS) * sizeof(union sp));
     ctlr_changed(0, ROWS*COLS);
+}
+
+/**
+ * Toggle timing display.
+ */
+static void
+toggle_showTiming(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
+{
+    if (!toggled(SHOW_TIMING)) {
+	status_untiming();
+    }
 }
 
 /*
@@ -5729,4 +5739,26 @@ unsigned long
 screen_window_number(void)
 {
     return XtWindow(toplevel);
+}
+
+/**
+ * Screen module registration.
+ */
+void
+screen_register(void)
+{
+    static toggle_register_t toggles[] = {
+	{ MONOCASE,		toggle_monocase,	0 },
+	{ ALT_CURSOR,		toggle_altCursor,	0 },
+	{ CURSOR_BLINK,		toggle_cursorBlink,	0 },
+	{ SHOW_TIMING,		toggle_showTiming,	0 },
+	{ CURSOR_POS,		toggle_cursorPos,	0 },
+	{ CROSSHAIR,		toggle_crosshair,	0 },
+	{ VISIBLE_CONTROL,	toggle_visible_control, 0 },
+	{ SCROLL_BAR,		toggle_scrollBar,	0 },
+	{ MARGINED_PASTE,	NULL,			0 },
+	{ OVERLAY_PASTE,	NULL,			0 }
+    };
+
+    register_toggles(toggles, array_count(toggles));
 }

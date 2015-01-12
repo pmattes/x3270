@@ -42,3 +42,4 @@ void nvt_send_right(void);
 void nvt_send_up(void);
 void nvt_snap(void);
 void nvt_snap_modes(void);
+void nvt_register(void);

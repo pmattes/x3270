@@ -121,27 +121,6 @@ char	       *command_string = NULL;
 char	       *profile_name = NULL;
 char	       *profile_path = NULL;
 
-/*
- * Toggle names. Note that this is the whole list of names, and it not
- * #ifdef'd by application. Which names are valid is controlled by the
- * toggles_supported bitmap.
- */
-toggle_name_t toggle_names[] = {
-    { ResMonoCase,        MONOCASE,	False },
-    { ResShowTiming,      SHOW_TIMING,	False },
-    { ResTrace,           TRACING,	False },
-    { ResDsTrace,         TRACING,	True },
-    { ResLineWrap,        LINE_WRAP,	False },
-    { ResBlankFill,       BLANK_FILL,	False },
-    { ResScreenTrace,     SCREEN_TRACE,	False },
-    { ResEventTrace,      TRACING,	True },
-    { ResMarginedPaste,   MARGINED_PASTE,False },
-    { ResAidWait,         AID_WAIT,	False },
-    { ResUnderscore,      UNDERSCORE,	False },
-    { ResOverlayPaste,    OVERLAY_PASTE,False },
-    { NULL,               0,		False }
-};
-
 
 int
 parse_command_line(int argc, const char **argv, const char **cl_hostname)
@@ -913,7 +892,7 @@ parse_set_clear(int *argcp, const char **argv)
 	i++;
 
 	for (j = 0; toggle_names[j].name != NULL; j++) {
-	    if (!TOGGLE_SUPPORTED(toggle_names[j].index)) {
+	    if (!toggle_supported(toggle_names[j].index)) {
 		continue;
 	    }
 	    if (!strcasecmp(argv[i], toggle_names[j].name)) {
@@ -927,7 +906,7 @@ parse_set_clear(int *argcp, const char **argv)
 
 	    tn = (ccp_t *)Calloc(N_TOGGLES, sizeof(ccp_t));
 	    for (j = 0; toggle_names[j].name != NULL; j++) {
-		if (!TOGGLE_SUPPORTED(toggle_names[j].index)) {
+		if (!toggle_supported(toggle_names[j].index)) {
 		    continue;
 		}
 		if (!toggle_names[j].is_alias) {
@@ -1335,7 +1314,7 @@ parse_xrm(const char *arg, const char *where)
     }
     if (address == NULL) {
 	for (i = 0; toggle_names[i].name != NULL; i++) {
-	    if (!TOGGLE_SUPPORTED(toggle_names[i].index)) {
+	    if (!toggle_supported(toggle_names[i].index)) {
 		continue;
 	    }
 	    if (!strncapcmp(toggle_names[i].name, name, rnlen)) {

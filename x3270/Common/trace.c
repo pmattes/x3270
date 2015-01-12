@@ -543,7 +543,7 @@ create_tracefile_header(const char *mode)
 #endif /*]*/
     wtrace(False, " Toggles:");
     for (i = 0; toggle_names[i].name != NULL; i++) {
-	if (TOGGLE_SUPPORTED(toggle_names[i].index) &&
+	if (toggle_supported(toggle_names[i].index) &&
 	    !toggle_names[i].is_alias &&
 	    toggled(toggle_names[i].index)) {
 
@@ -946,7 +946,7 @@ trace_set_trace_file(const char *path)
     Replace(onetime_tracefile_name, NewString(path));
 }
 
-void
+static void
 toggle_tracing(toggle_index_t ix _is_unused, enum toggle_type tt)
 {
     /* If turning on trace and no trace file, open one. */
@@ -1194,7 +1194,7 @@ screentrace_default_printer(void)
  *  and screentrace_name is NULL (use the default) or the name of a
  *  file, printer command (Unix) or printer (Windows).
  */
-void
+static void
 toggle_screenTrace(toggle_index_t ix _is_unused, enum toggle_type tt)
 {
     char *tracefile_buf = NULL;
@@ -1240,4 +1240,20 @@ toggle_screenTrace(toggle_index_t ix _is_unused, enum toggle_type tt)
     }
 
     trace_gui_toggle();
+}
+
+/* Register the trace component. */
+void
+trace_register(void)
+{
+    static toggle_register_t toggles[] = {
+	{ TRACING,
+	  toggle_tracing,
+	  TOGGLE_NEED_INIT | TOGGLE_NEED_CLEANUP },
+	{ SCREEN_TRACE,
+	  toggle_screenTrace,
+	  TOGGLE_NEED_INIT | TOGGLE_NEED_CLEANUP }
+    };
+
+    register_toggles(toggles, array_count(toggles));
 }

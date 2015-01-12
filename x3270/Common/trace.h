@@ -55,3 +55,4 @@ void trace_set_screentrace_file(tss_t how, ptype_t ptype, const char *name);
 void trace_screen(Boolean is_clear);
 void trace_rollover_check(void);
 extern void tracefile_ok(const char *tfn);
+extern void trace_register(void);

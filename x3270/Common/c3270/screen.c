@@ -49,8 +49,8 @@
 #include "macrosc.h"
 #include "popupsc.h"
 #include "screenc.h"
-#include "screen_toggle.h"
 #include "scrollc.h"
+#include "statusc.h"
 #include "tablesc.h"
 #include "trace.h"
 #include "unicodec.h"
@@ -1607,17 +1607,29 @@ cursor_move(int baddr)
 	cursor_addr = baddr;
 }
 
-void
+static void
 toggle_monocase(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
     screen_disp(False);
 }
 
-void
+static void
 toggle_underscore(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
     screen_disp(False);
 }
+
+/**
+ * Toggle timing display.
+ */
+static void
+toggle_showTiming(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
+{
+    if (!toggled(SHOW_TIMING)) {
+	status_untiming();
+    }
+}
+
 
 /* Status line stuff. */
 
@@ -2431,4 +2443,19 @@ screen_final()
 
 	if ((cl = tigetstr("clear")) != NULL)
 	    	putp(cl);
+}
+
+/**
+ * Screen module registration.
+ */
+void
+screen_register(void)
+{
+    static toggle_register_t toggles[] = {
+	{ MONOCASE,	toggle_monocase,	0 },
+	{ SHOW_TIMING,	toggle_showTiming,	0 },
+	{ UNDERSCORE,	toggle_underscore,	0 }
+    };
+
+    register_toggles(toggles, array_count(toggles));
 }
