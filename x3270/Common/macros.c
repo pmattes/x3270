@@ -91,6 +91,7 @@
 #define SOCK_CLOSE(s)	close(s)
 #endif /*[*/
 
+/* Maximum size of a macro (a line of script input). */
 #define MSC_BUF	1024
 
 /* Globals */
@@ -266,9 +267,9 @@ static void
 trace_script_output(const char *fmt, ...)
 {
     va_list args;
-    char msgbuf[4096];
+    char *msgbuf;
     char *s;
-    char *m = msgbuf;
+    char *m;
     char c;
 
     if (!toggled(TRACING)) {
@@ -276,10 +277,10 @@ trace_script_output(const char *fmt, ...)
     }
 
     va_start(args, fmt);
-    /* XXX: Fixed-size buffer? */
-    vsnprintf(msgbuf, sizeof(msgbuf), fmt, args);
+    msgbuf = xs_buffer(fmt, args);
     va_end(args);
 
+    m = msgbuf;
     s = msgbuf;
     while ((c = *s++)) {
 	if (c == '\n') {
@@ -289,6 +290,7 @@ trace_script_output(const char *fmt, ...)
 	    continue;
 	}
     }
+    Free(msgbuf);
 }
 
 /* Callbacks for state changes. */
@@ -1827,15 +1829,16 @@ void
 sms_info(const char *fmt, ...)
 {
     char *nl;
-    char msgbuf[4096];
-    char *msg = msgbuf;
+    char *msgbuf;
+    char *msg;
     va_list args;
     sms_t *s;
 
     va_start(args, fmt);
-    (void) vsnprintf(msgbuf, sizeof(msgbuf), fmt, args);
+    msgbuf = xs_vbuffer(fmt, args);
     va_end(args);
 
+    msg = msgbuf;
     do {
 	int nc;
 
@@ -1868,6 +1871,8 @@ sms_info(const char *fmt, ...)
 	}
 	msg = nl + 1;
     } while (nl);
+
+    Free(msgbuf);
 
     macro_output = True;
 }
