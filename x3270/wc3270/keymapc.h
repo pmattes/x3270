@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, Paul Mattes.
+ * Copyright (c) 2000-2009, 2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -38,8 +38,9 @@
 #define KM_ALT		(KM_LALT | KM_RALT)
 #define KM_ENHANCED	0x0020
 
-extern void keymap_init(void);
-extern char *lookup_key(unsigned long xk, unsigned long state);
-extern void keymap_dump(void);
-extern const char *decode_key(int k, int hint, char *buf);
-extern const char *lookup_cname(unsigned long ccode, Boolean special_only);
+void keymap_init(void);
+char *lookup_key(unsigned long xk, unsigned long state);
+void keymap_dump(void);
+const char *decode_key(int k, int hint, char *buf);
+const char *lookup_cname(unsigned long ccode, Boolean special_only);
+void keymap_register(void);

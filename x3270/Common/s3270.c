@@ -87,6 +87,8 @@ char *commonappdata = NULL;
 char *mydesktop = NULL;
 #endif /*]*/
 
+static void s3270_register(void);
+
 void
 usage(const char *msg)
 {
@@ -131,7 +133,11 @@ main(int argc, char *argv[])
 	kybd_register();
 	macros_register();
 	nvt_register();
+	print_screen_register();
+	s3270_register();
+	toggles_register();
 	trace_register();
+	xio_register();
 
 	argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
@@ -142,7 +148,6 @@ main(int argc, char *argv[])
 	model_init();
 	ctlr_init(-1);
 	ctlr_reinit(-1);
-	kybd_init();
 	idle_init();
 	if (appres.httpd_port) {
 	    struct sockaddr *sa;
@@ -155,12 +160,7 @@ main(int argc, char *argv[])
 		hio_init(sa, sa_len);
 	    }
 	}
-	register_schange(ST_CONNECT, main_connect);
-        register_schange(ST_3270_MODE, main_connect);
 	ft_init();
-	xio_init();
-	print_screen_init();
-	toggles_init();
 	hostfile_init();
 
 #if !defined(_WIN32) /*[*/
@@ -199,4 +199,14 @@ main(int argc, char *argv[])
 			--children;
 #endif /*]*/
 	}
+}
+
+/**
+ * Main module registration.
+ */
+static void
+s3270_register(void)
+{
+    register_schange(ST_CONNECT, main_connect);
+    register_schange(ST_3270_MODE, main_connect);
 }

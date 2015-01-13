@@ -40,4 +40,4 @@ extern void MoveCursor_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
 extern void PA_Shift_xaction(Widget w, XEvent *event, String *params,
     Cardinal *num_params);
-extern void xkybd_init(void);
+extern void xkybd_register(void);

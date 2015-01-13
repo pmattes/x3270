@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Paul Mattes.
+ * Copyright (c) 2013-2015, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -80,26 +80,16 @@ static int select_start_col;
 static int select_end_row;
 static int select_end_col;
 
-static action_t Copy_action;
-static action_t Cut_action;
-
 /*
  * Initialize the selection logic, given the maximum screen dimensions.
  */
 void
 select_init(unsigned max_rows, unsigned max_cols)
 {
-	static action_table_t select_actions[] = {
-	    { "Copy",	Copy_action,	ACTION_KE },
-	    { "Cut",	Cut_action,	ACTION_KE }
-	};
-
-	register_actions(select_actions, array_count(select_actions));
-
-	s_pending = Malloc(max_rows * max_cols);
-	s_onscreen = Malloc(max_rows * max_cols);
-	unselect(0, max_rows * max_cols);
-	memset(s_onscreen, 0, max_rows * max_cols);
+    s_pending = Malloc(max_rows * max_cols);
+    s_onscreen = Malloc(max_rows * max_cols);
+    unselect(0, max_rows * max_cols);
+    memset(s_onscreen, 0, max_rows * max_cols);
 }
 
 /*
@@ -805,4 +795,18 @@ select_sync(unsigned row, unsigned col, unsigned rows, unsigned cols)
 		       &s_pending [(r * COLS) + col],
 		       cols);
 	}
+}
+
+/**
+ * Selection module registration.
+ */
+void
+select_register(void)
+{
+    static action_table_t select_actions[] = {
+	{ "Copy",	Copy_action,	ACTION_KE },
+	{ "Cut",	Cut_action,	ACTION_KE }
+    };
+
+    register_actions(select_actions, array_count(select_actions));
 }

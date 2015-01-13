@@ -144,7 +144,7 @@ print_window_callback(Widget w _is_unused, XtPointer client_data,
 }
 
 /* Print the contents of the screen as a bitmap. */
-Boolean
+static Boolean
 PrintWindow_action(ia_t ia, unsigned argc, const char **argv)
 {
     const char *command;
@@ -202,13 +202,16 @@ print_window_option(Widget w, XtPointer client_data _is_unused,
     (void) PrintWindow_action(IA_KEYMAP, 0, NULL);
 }
 
-/* Initialize print_window module. */
+/**
+ * Window printing module registration.
+ */
 void
-print_window_init(void)
+print_window_register(void)
 {
     static action_table_t print_window_actions[] = {
 	{ "PrintWindow",	PrintWindow_action,	ACTION_KE }
     };
 
+    /* Register the actions. */
     register_actions(print_window_actions, array_count(print_window_actions));
 }

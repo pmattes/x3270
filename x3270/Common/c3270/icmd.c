@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,13 +53,13 @@ icmd_connected(Boolean ignored)
 	strcpy(host_type, "tso");
 }
 
-/*
- * Initialize the interactive commands.
+/**
+ * Interactive command module registration.
  */
 void
-icmd_init(void)
+icmd_register(void)
 {
-	register_schange(ST_CONNECT, icmd_connected);
+    register_schange(ST_CONNECT, icmd_connected);
 }
 
 /*

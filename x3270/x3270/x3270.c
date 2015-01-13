@@ -335,21 +335,27 @@ main(int argc, char *argv[])
 	 * interdependencies and cannot depend on resource values.
 	 */
 	ctlr_register();
-	kybd_register();
 	ft_register();
 	host_register();
 	idle_register();
 	keymap_register();
+	kybd_register();
 	macros_register();
 	menubar_register();
 	nvt_register();
 	popups_register();
 	pr3287_session_register();
+	print_screen_register();
+	print_window_register();
 	screen_register();
+	scroll_register();
 	select_register();
 	status_register();
+	toggles_register();
 	trace_register();
 	x3270_register();
+	xio_register();
+	xkybd_register();
 
 	/* Translate and validate -set and -clear toggle options. */
 	parse_set_clear(&argc, argv);
@@ -523,11 +529,6 @@ main(int argc, char *argv[])
 	/* Add the Xt-only actions. */
 	xaction_init();
 
-	print_screen_init();
-	print_window_init();
-	kybd_init();
-	xkybd_init();
-	scroll_init();
 	idle_init();
 	if (appres.httpd_port) {
 	    struct sockaddr *sa;
@@ -544,8 +545,6 @@ main(int argc, char *argv[])
 	error_popup_init();
 	printer_popup_init();
 	ft_init();
-	xio_init();
-	toggles_init();
 
 	/* Add the wrapped actions. */
 	xaction_init2();

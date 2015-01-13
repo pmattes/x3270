@@ -161,7 +161,7 @@ x3270_exit(int n)
 #endif /*]*/
 }
 
-Boolean
+static Boolean
 Quit_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Quit", ia, argc, argv);
@@ -183,8 +183,11 @@ Quit_action(ia_t ia, unsigned argc, const char **argv)
     return False;
 }
 
+/*
+ * X I/O module registration.
+ */
 void
-xio_init(void)
+xio_register(void)
 {
     static action_table_t xio_actions[] = {
 	{ "Quit",		Quit_action,	ACTION_KE },
@@ -193,5 +196,6 @@ xio_init(void)
 #endif /*]*/
     };
 
+    /* Register our actions. */
     register_actions(xio_actions, array_count(xio_actions));
 }

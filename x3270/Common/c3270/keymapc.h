@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, Paul Mattes.
+ * Copyright (c) 2000-2009, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,8 @@
 #define KM_CTRL		0x0001
 #define KM_ALT		0x0002
 
-extern void keymap_init(void);
-extern char *lookup_key(int k, ucs4_t ucs4, int modifiers);
-extern void keymap_dump(void);
-extern const char *decode_key(int k, ucs4_t ucs4, int hint, char *buf);
+void keymap_register(void);
+void keymap_init(void);
+char *lookup_key(int k, ucs4_t ucs4, int modifiers);
+void keymap_dump(void);
+const char *decode_key(int k, ucs4_t ucs4, int hint, char *buf);

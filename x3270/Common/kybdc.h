@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,7 @@ int emulate_uinput(const ucs4_t *s, int len, Boolean pasting);
 void hex_input(const char *s);
 void kybdlock_clr(unsigned int bits, const char *cause);
 void kybd_inhibit(Boolean inhibit);
-void kybd_init(void);
+void kybd_register(void);
 int kybd_prime(void);
 void kybd_scroll_lock(Boolean lock);
 Boolean run_ta(void);

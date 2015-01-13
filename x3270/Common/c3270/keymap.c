@@ -838,43 +838,49 @@ lookup_cname(int ccode)
 	return NULL;
 }
 
+/**
+ * Keymap module registrations.
+ */
+void
+keymap_register(void)
+{
+    /* Register for state changes. */
+    register_schange(ST_3270_MODE, keymap_3270_mode);
+    register_schange(ST_CONNECT, keymap_3270_mode);
+}
+
 /* Read each of the keymaps specified by the keymap resource. */
 void
 keymap_init(void)
 {
-	char *s0, *s;
-	char *comma;
-	static Boolean initted = False;
+    char *s0, *s;
+    char *comma;
 
-	/* In case this is a subsequent call, wipe out the current keymap. */
-	clear_keymap();
+    /* In case this is a subsequent call, wipe out the current keymap. */
+    clear_keymap();
 
-	/* Read the base keymap. */
-	read_keymap("base");
+    /* Read the base keymap. */
+    read_keymap("base");
 
-	/* Read the user-defined keymaps. */
-	if (appres.key_map != NULL) {
-		s = s0 = NewString(appres.key_map);
-		while ((comma = strchr(s, ',')) != NULL) {
-			*comma = '\0';
-			if (*s)
-				read_keymap(s);
-			s = comma + 1;
-		}
-		if (*s)
-			read_keymap(s);
-		Free(s0);
+    /* Read the user-defined keymaps. */
+    if (appres.key_map != NULL) {
+	s = s0 = NewString(appres.key_map);
+	while ((comma = strchr(s, ',')) != NULL) {
+	    *comma = '\0';
+	    if (*s) {
+		read_keymap(s);
+	    }
+	    s = comma + 1;
 	}
-
-	last_3270 = IN_3270;
-	last_nvt = IN_NVT;
-	set_inactive();
-
-	if (!initted) {
-		register_schange(ST_3270_MODE, keymap_3270_mode);
-		register_schange(ST_CONNECT, keymap_3270_mode);
-		initted = True;
+	if (*s) {
+	    read_keymap(s);
 	}
+	Free(s0);
+    }
+
+    last_3270 = IN_3270;
+    last_nvt = IN_NVT;
+    set_inactive();
 }
 
 /* Erase the current keymap. */

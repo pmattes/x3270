@@ -585,17 +585,24 @@ kybd_in3270(Boolean in3270 _is_unused)
 }
 
 /*
- * Called to initialize the keyboard logic.
+ * Keyboard module registration.
  */
 void
-kybd_init(void)
+kybd_register(void)
 {
-	/* Register interest in connect and disconnect events. */
-	register_schange(ST_CONNECT, kybd_connect);
-	register_schange(ST_3270_MODE, kybd_in3270);
+    static toggle_register_t toggles[] = {
+	{ BLANK_FILL,	NULL,	0 }
+    };
 
-	/* Register the actions. */
-	register_actions(kybd_actions, array_count(kybd_actions));
+    /* Register interest in connect and disconnect events. */
+    register_schange(ST_CONNECT, kybd_connect);
+    register_schange(ST_3270_MODE, kybd_in3270);
+
+    /* Register the actions. */
+    register_actions(kybd_actions, array_count(kybd_actions));
+
+    /* Register the toggles. */
+    register_toggles(toggles, array_count(toggles));
 }
 
 /*
@@ -4220,16 +4227,3 @@ Compose_action(ia_t ia, unsigned argc, const char **argv)
     return True;
 }
 #endif /*]*/
-
-/**
- * Keyboard module registration.
- */
-void
-kybd_register(void)
-{
-    static toggle_register_t toggles[] = {
-	{ BLANK_FILL,	NULL,	0 }
-    };
-
-    register_toggles(toggles, array_count(toggles));
-}

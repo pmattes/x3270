@@ -287,21 +287,7 @@ int is_installed;
 static void start_auto_shortcut(void);
 #endif /*]*/
 
-static action_t Escape_action;
-static action_t ignore_action;
-static action_t Info_action;
-static action_t ScreenTrace_action;
-static action_t Show_action;
-static action_t Trace_action;
-
-static action_table_t main_actions[] = {
-    { "Escape",		Escape_action,		ACTION_KE },
-    { "ignore",		ignore_action,		ACTION_KE },
-    { "Info",		Info_action,		ACTION_KE },
-    { "ScreenTrace",	ScreenTrace_action,	ACTION_KE },
-    { "Show",		Show_action,		ACTION_KE },
-    { "Trace",		Trace_action,		ACTION_KE },
-};
+static void c3270_register(void);
 
 void
 usage(const char *msg)
@@ -400,17 +386,29 @@ main(int argc, char *argv[])
      * Call the module registration functions, to build up the tables of
      * actions, options and callbacks.
      */
+    c3270_register();
     ctlr_register();
     ft_register();
+    help_register();
     host_register();
+    icmd_register();
     idle_register();
+    keymap_register();
+    keypad_register();
     kybd_register();
     macros_register();
     menubar_register();
     nvt_register();
     pr3287_session_register();
+    print_screen_register();
+#if defined(_WIN32) /*[*/
+    select_register();
+#endif /*]*/
     screen_register();
+    scroll_register();
+    toggles_register();
     trace_register();
+    xio_register();
 
     add_resource("keymap.base",
 #if defined(_WIN32) /*[*/
@@ -465,7 +463,6 @@ main(int argc, char *argv[])
     /* Get the screen set up as early as possible. */
     screen_init();
 
-    kybd_init();
     idle_init();
     keymap_init();
     hostfile_init();
@@ -482,17 +479,7 @@ main(int argc, char *argv[])
 	}
     }
 
-    register_schange(ST_CONNECT, main_connect);
-    register_schange(ST_3270_MODE, main_connect);
-    register_schange(ST_EXITING, main_exiting);
-    register_actions(main_actions, array_count(main_actions));
     ft_init();
-    xio_init();
-    print_screen_init();
-    keypad_init();
-    toggles_init();
-    scroll_init();
-    help_init();
 
 #if !defined(_WIN32) /*[*/
     /* Make sure we don't fall over any SIGPIPEs. */
@@ -504,7 +491,6 @@ main(int argc, char *argv[])
 
     /* Handle initial toggle settings. */
     initialize_toggles();
-    icmd_init();
 
 #if defined(HAVE_LIBSSL) /*[*/
     /* Initialize SSL and ask for the password, if needed. */
@@ -1734,3 +1720,27 @@ start_auto_shortcut(void)
     exit(0);
 }
 #endif /*]*/
+
+/**
+ * c3270 main module registration.
+ */
+static void
+c3270_register(void)
+{
+    static action_table_t actions[] = {
+	{ "Escape",		Escape_action,		ACTION_KE },
+	{ "ignore",		ignore_action,		ACTION_KE },
+	{ "Info",		Info_action,		ACTION_KE },
+	{ "ScreenTrace",	ScreenTrace_action,	ACTION_KE },
+	{ "Show",		Show_action,		ACTION_KE },
+	{ "Trace",		Trace_action,		ACTION_KE },
+    };
+
+    /* Register for state changes. */
+    register_schange(ST_CONNECT, main_connect);
+    register_schange(ST_3270_MODE, main_connect);
+    register_schange(ST_EXITING, main_exiting);
+
+    /* Register our actions. */
+    register_actions(actions, array_count(actions));
+}

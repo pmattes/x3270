@@ -233,13 +233,7 @@ static action_t Redraw_action;
 void
 screen_init(void)
 {
-	static action_table_t screen_actions[] = {
-	    { "Redraw",	Redraw_action,	ACTION_KE }
-	};
-
     	menu_init();
-	register_schange(ST_CONNECT, screen_connect);
-	register_actions(screen_actions, array_count(screen_actions));
 
 #if !defined(C3270_80_132) /*[*/
 	/* Disallow altscreen/defscreen. */
@@ -464,12 +458,6 @@ finish_screen_init(void)
 		/* Start out in altscreen mode. */
 		set_status_row(cursesLINES, maxROWS);
 	}
-
-	/* Set up callbacks for state changes. */
-	register_schange(ST_HALF_CONNECT, status_half_connect);
-	register_schange(ST_CONNECT, status_connect);
-	register_schange(ST_3270_MODE, status_3270_mode);
-	register_schange(ST_PRINTER, status_printer);
 
 	/* Implement reverse video. */
 	if (appres.reverse_video) {
@@ -2456,6 +2444,20 @@ screen_register(void)
 	{ SHOW_TIMING,	toggle_showTiming,	0 },
 	{ UNDERSCORE,	toggle_underscore,	0 }
     };
+    static action_table_t screen_actions[] = {
+	{ "Redraw",	Redraw_action,	ACTION_KE }
+    };
 
+    /* Register the toggles. */
     register_toggles(toggles, array_count(toggles));
+
+    /* Register for state changes. */
+    register_schange(ST_CONNECT, screen_connect);
+    register_schange(ST_HALF_CONNECT, status_half_connect);
+    register_schange(ST_CONNECT, status_connect);
+    register_schange(ST_3270_MODE, status_3270_mode);
+    register_schange(ST_PRINTER, status_printer);
+
+    /* Register the actions. */
+    register_actions(screen_actions, array_count(screen_actions));
 }

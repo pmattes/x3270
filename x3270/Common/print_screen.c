@@ -444,13 +444,16 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     return True;
 }
 
-/* Global initialization. */
+/**
+ * Print screen module registration.
+ */
 void
-print_screen_init(void)
+print_screen_register(void)
 {
     static action_table_t print_text_actions[] = {
 	{ "PrintText",		PrintText_action,	ACTION_KE }
     };
 
+    /* Register the actions. */
     register_actions(print_text_actions, array_count(print_text_actions));
 }

@@ -31,4 +31,4 @@
  */
 
 extern char *default_caption(void);
-extern void print_screen_init(void);
+extern void print_screen_register(void);

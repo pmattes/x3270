@@ -191,13 +191,17 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
     return True;
 }
 
+/**
+ * Toggles module registration.
+ */
 void
-toggles_init(void)
+toggles_register(void)
 {
     static action_table_t toggle_actions[] = {
 	{ "Toggle",		Toggle_action,	ACTION_KE }
     };
 
+    /* Register the actions. */
     register_actions(toggle_actions, array_count(toggle_actions));
 }
 

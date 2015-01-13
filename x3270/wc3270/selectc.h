@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Paul Mattes.
+ * Copyright (c) 2013-2015, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
  */
 
 /* Used by the screen logic. */
-extern Boolean select_changed(unsigned row, unsigned col, unsigned rows,
+Boolean select_changed(unsigned row, unsigned col, unsigned rows,
 	unsigned cols);
 typedef enum {
 	SE_BUTTON_DOWN,
@@ -42,13 +42,14 @@ typedef enum {
 	SE_MOVE,
 	SE_DOUBLE_CLICK
 } select_event_t;
-extern Boolean select_event(unsigned row, unsigned col, select_event_t event,
+Boolean select_event(unsigned row, unsigned col, select_event_t event,
 	Boolean shift);
-extern void select_init(unsigned max_rows, unsigned max_cols);
-extern void select_sync(unsigned row, unsigned col, unsigned rows,
+void select_init(unsigned max_rows, unsigned max_cols);
+void select_sync(unsigned row, unsigned col, unsigned rows,
 	unsigned cols);
 
 /* Used by common code. */
-extern void unselect(int baddr, int len);
-extern Boolean area_is_selected(int baddr, int len);
+void unselect(int baddr, int len);
+Boolean area_is_selected(int baddr, int len);
+void select_register(void);
 

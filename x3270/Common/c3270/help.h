@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,4 +30,4 @@
  *		Header file for help.c
  */
 
-extern void help_init(void);
+extern void help_register(void);

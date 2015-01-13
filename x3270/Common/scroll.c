@@ -449,8 +449,7 @@ rethumb(void)
 	screen_set_thumb_traced(thumb_top, thumb_shown);
 }
 
-#if defined(X3270_INTERACTIVE) /*[*/
-Boolean
+static Boolean
 Scroll_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Scroll", ia, argc, argv);
@@ -468,16 +467,17 @@ Scroll_action(ia_t ia, unsigned argc, const char **argv)
     }
     return True;
 }
-#endif /*]*/
 
+/**
+ * Scrollbar module registration.
+ */
 void
-scroll_init(void)
+scroll_register(void)
 {
-#if defined(X3270_INTERACTIVE) /*[*/
     static action_table_t scroll_actions[] = {
 	{ "Scroll",		Scroll_action,	ACTION_KE }
     };
 
+    /* Register the actions. */
     register_actions(scroll_actions, array_count(scroll_actions));
-#endif /*]*/
 }

@@ -544,7 +544,7 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
  *   TemporaryKeymap()		removes the previous keymap, if any
  *   TemporaryKeymap(None)	removes the previous keymap, if any
  */
-Boolean
+static Boolean
 TemporaryKeymap_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("TemporaryKeymap", ia, argc, argv);
@@ -568,9 +568,11 @@ TemporaryKeymap_action(ia_t ia, unsigned argc, const char **argv)
     return True;
 }
 
-/* Initialize X11-specific keyboard functions. */
+/**
+ * X keyboard module registration.
+ */
 void
-xkybd_init(void)
+xkybd_register(void)
 {
     static action_table_t xkybd_actions[] = {
 	{ "AltCursor",		AltCursor_action,	ACTION_KE },
@@ -578,5 +580,6 @@ xkybd_init(void)
 	{ "TemporaryKeymap",	TemporaryKeymap_action,	ACTION_KE }
     };
 
+    /* Register the actions. */
     register_actions(xkybd_actions, array_count(xkybd_actions));
 }

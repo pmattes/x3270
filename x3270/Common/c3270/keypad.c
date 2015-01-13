@@ -514,12 +514,16 @@ Keypad_action(ia_t ia, unsigned argc, const char **argv)
     return True;
 }
 
+/**
+ * Keypad module registration.
+ */
 void
-keypad_init(void)
+keypad_register(void)
 {
     static action_table_t keypad_actions[] = {
 	{ "Keypad",	Keypad_action,	ACTION_KE }
     };
 
+    /* Register the actions. */
     register_actions(keypad_actions, array_count(keypad_actions));
 }

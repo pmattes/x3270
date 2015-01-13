@@ -408,12 +408,16 @@ html_help(Boolean ignored _is_unused)
 }
 #endif /*]*/
 
+/**
+ * Help module registration.
+ */
 void
-help_init(void)
+help_register(void)
 {
     static action_table_t help_actions[] = {
 	{ "Help",	Help_action,	ACTION_KE }
     };
 
+    /* Register the actions. */
     register_actions(help_actions, array_count(help_actions));
 }

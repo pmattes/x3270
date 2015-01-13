@@ -1086,11 +1086,6 @@ endwin(void)
 void
 screen_init(void)
 {
-	 static action_table_t screen_actions[] = {
-	     { "Paste",		Paste_action,	ACTION_KE },
-	     { "Redraw",	Redraw_action,	ACTION_KE },
-	     { "Title",		Title_action,	ACTION_KE }
-	 };
 	int want_ov_rows;
 	int want_ov_cols;
 	Boolean oversize = False;
@@ -1176,9 +1171,6 @@ screen_init(void)
 	register_schange(ST_HALF_CONNECT, relabel);
 	register_schange(ST_CONNECT, relabel);
 	register_schange(ST_3270_MODE, relabel);
-
-	/* Register actions. */
-	register_actions(screen_actions, array_count(screen_actions));
 
 	/* See about all-bold behavior. */
 	if (appres.all_bold_on)
@@ -2979,6 +2971,16 @@ screen_register(void)
 	{ MARGINED_PASTE,	NULL,			0 },
 	{ OVERLAY_PASTE,	NULL,			0 }
     };
+    static action_table_t screen_actions[] = {
+	{ "Paste",	Paste_action,	ACTION_KE },
+	{ "Redraw",	Redraw_action,	ACTION_KE },
+	{ "Title",	Title_action,	ACTION_KE }
+    };
 
+    /* Register the toggles. */
     register_toggles(toggles, array_count(toggles));
+
+    /* Register the actions. */
+    register_actions(screen_actions, array_count(screen_actions));
+
 }

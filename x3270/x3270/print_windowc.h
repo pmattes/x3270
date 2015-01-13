@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,5 @@
  *		Global declarations for print_window.c.
  */
 
-extern void print_window_option(Widget w, XtPointer client_data,
-    XtPointer call_data);
-extern void print_window_init(void);
+void print_window_option(Widget w, XtPointer client_data, XtPointer call_data);
+void print_window_register(void);

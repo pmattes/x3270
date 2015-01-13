@@ -72,6 +72,7 @@
 #include "hostc.h"
 #include "keymapc.h"
 #include "kybdc.h"
+#include "lazya.h"
 #include "macrosc.h"
 #include "menubarc.h"
 #include "nvtc.h"
@@ -86,6 +87,7 @@
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
+#include "varbufc.h"
 #include "xioc.h"
 
 /*
@@ -101,43 +103,43 @@ int *tclDummyMathPtr = (int *) matherr;
 static Tcl_ObjCmdProc x3270_cmd;
 static Tcl_ObjCmdProc Rows_cmd, Cols_cmd;
 static enum {
-	NOT_WAITING,		/* Not waiting */
-	AWAITING_CONNECT,	/* Connect (negotiation completion) */
-	AWAITING_RESET,		/* Keyboard locked */
-	AWAITING_FT,		/* File transfer in progress */
-	AWAITING_IFIELD,	/* Wait InputField */
-	AWAITING_3270,		/* Wait 3270Mode */
-	AWAITING_NVT,		/* Wait NVTMode */
-	AWAITING_OUTPUT,	/* Wait Output */
-	AWAITING_SOUTPUT,	/* Snap Wait */
-	AWAITING_DISCONNECT,	/* Wait Disconnect */
-	AWAITING_UNLOCK		/* Wait Unlock */
+    NOT_WAITING,	/* Not waiting */
+    AWAITING_CONNECT,	/* Connect (negotiation completion) */
+    AWAITING_RESET,	/* Keyboard locked */
+    AWAITING_FT,	/* File transfer in progress */
+    AWAITING_IFIELD,	/* Wait InputField */
+    AWAITING_3270,	/* Wait 3270Mode */
+    AWAITING_NVT,	/* Wait NVTMode */
+    AWAITING_OUTPUT,	/* Wait Output */
+    AWAITING_SOUTPUT,	/* Snap Wait */
+    AWAITING_DISCONNECT,/* Wait Disconnect */
+    AWAITING_UNLOCK	/* Wait Unlock */
 } waiting = NOT_WAITING;
 static const char *wait_name[] = {
-	"not waiting",
-	"connection incomplete",
-	"keyboard locked",
-	"file transfer in progress",
-	"need input field",
-	"need 3270 mode",
-	"need NVT mode",
-	"need host output",
-	"need snap host output",
-	"need host disconnect",
-	"need keyboard unlock"
+    "not waiting",
+    "connection incomplete",
+    "keyboard locked",
+    "file transfer in progress",
+    "need input field",
+    "need 3270 mode",
+    "need NVT mode",
+    "need host output",
+    "need snap host output",
+    "need host disconnect",
+    "need keyboard unlock"
 };
 static const char *unwait_name[] = {
-	"wasn't waiting",
-	"connection complete",
-	"keyboard unlocked",
-	"file transfer complete",
-	"input field found",
-	"in 3270 mode",
-	"in NVT mode",
-	"host generated output",
-	"host generated snap output",
-	"host disconnected",
-	"keyboard unlocked"
+    "wasn't waiting",
+    "connection complete",
+    "keyboard unlocked",
+    "file transfer complete",
+    "input field found",
+    "in 3270 mode",
+    "in NVT mode",
+    "host generated output",
+    "host generated snap output",
+    "host disconnected",
+    "keyboard unlocked"
 };
 static ioid_t wait_id = NULL_IOID;
 static ioid_t command_timeout_id = NULL_IOID;
@@ -153,17 +155,6 @@ static action_t ReadBuffer_action;
 static action_t Snap_action;
 static action_t Wait_action;
 static action_t Query_action;
-static action_table_t main_actions[] = {
-    { "Ascii",		Ascii_action,		ACTION_KE },
-    { "AsciiField",	AsciiField_action,	ACTION_KE },
-    { "Ebcdic",		Ebcdic_action,		ACTION_KE },
-    { "EbcdicField",	EbcdicField_action,	ACTION_KE },
-    { "Status",		Status_action,		ACTION_KE },
-    { "ReadBuffer",	ReadBuffer_action,	ACTION_KE },
-    { "Snap",		Snap_action,		ACTION_KE },
-    { "Wait",		Wait_action,		ACTION_KE },
-    { "Query",		Query_action,		ACTION_KE }
-};
 
 /* Local prototypes. */
 static void ps_clear(void);
@@ -262,7 +253,6 @@ Tcl_AppInit(Tcl_Interp *interp)
     unsigned i;
     int j;
     Tcl_Obj *argv_obj;
-    char argc_buf[32];
     action_elt_t *e;
 
     if (Tcl_Init(interp) == TCL_ERROR) {
@@ -278,16 +268,21 @@ Tcl_AppInit(Tcl_Interp *interp)
     host_register();
     kybd_register();
     nvt_register();
+    print_screen_register();
     tcl3270_register();
+    toggles_register();
     trace_register();
+    xio_register();
 
     /* Use argv and argv0 to figure out our command-line arguments. */
     s0 = Tcl_GetVar(interp, "argv0", 0);
-    if (s0 == NULL)
+    if (s0 == NULL) {
 	return TCL_ERROR;
+    }
     s = Tcl_GetVar(interp, "argv", 0);
-    if (s == NULL)
+    if (s == NULL) {
 	return TCL_ERROR;
+    }
     (void) Tcl_SplitList(interp, s, &tcl_argc, &tcl_argv);
     argc = tcl_argc + 1;
     argv = (const char **)Malloc((argc + 1) * sizeof(char *));
@@ -302,8 +297,9 @@ Tcl_AppInit(Tcl_Interp *interp)
     interactive = (s != NULL && !strcmp(s, "1"));
 
     /* Call main. */
-    if (tcl3270_main(argc, argv) == TCL_ERROR)
+    if (tcl3270_main(argc, argv) == TCL_ERROR) {
 	return TCL_ERROR;
+    }
 
     /* Replace tcl's argc and argv with whatever was left. */
     argv_obj = Tcl_NewListObj(0, NULL);
@@ -312,8 +308,7 @@ Tcl_AppInit(Tcl_Interp *interp)
 		strlen(argv[i])));
     }
     Tcl_SetVar2Ex(interp, "argv", NULL, argv_obj, 0);
-    (void) sprintf(argc_buf, "%d", i?i-1:0);
-    Tcl_SetVar(interp, "argc", argc_buf, 0);
+    Tcl_SetVar(interp, "argc", lazyaf("%d", i? i - 1: 0), 0);
 
     /*
      * Call the init procedures for included packages.  Each call should
@@ -336,10 +331,12 @@ Tcl_AppInit(Tcl_Interp *interp)
 	    return TCL_ERROR;
 	}
     } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
-    if (Tcl_CreateObjCommand(interp, "Rows", Rows_cmd, NULL, NULL) == NULL)
+    if (Tcl_CreateObjCommand(interp, "Rows", Rows_cmd, NULL, NULL) == NULL) {
 	return TCL_ERROR;
-    if (Tcl_CreateObjCommand(interp, "Cols", Cols_cmd, NULL, NULL) == NULL)
+    }
+    if (Tcl_CreateObjCommand(interp, "Cols", Cols_cmd, NULL, NULL) == NULL) {
 	return TCL_ERROR;
+    }
 
     /*
      * Specify a user-specific startup file to invoke if the application
@@ -358,19 +355,21 @@ Tcl_AppInit(Tcl_Interp *interp)
 void
 usage(const char *msg)
 {
-	const char *sn = "";
+    const char *sn = "";
 
-	if (!strcmp(programname, "tcl3270"))
-		sn = " [scriptname]";
+    if (!strcmp(programname, "tcl3270")) {
+	sn = " [scriptname]";
+    }
 
-	if (msg != NULL)
-		fprintf(stderr, "%s\n", msg);
-	fprintf(stderr, "Usage: %s%s [tcl3270-options] [host] [-- script-args]\n"
+    if (msg != NULL) {
+	fprintf(stderr, "%s\n", msg);
+    }
+    fprintf(stderr, "Usage: %s%s [tcl3270-options] [host] [-- script-args]\n"
 "       <host> is [ps:][LUname@]hostname[:port]\n",
-			programname, sn);
-	fprintf(stderr, "Options:\n");
-	cmdline_help(False);
-	exit(1);
+	    programname, sn);
+    fprintf(stderr, "Options:\n");
+    cmdline_help(False);
+    exit(1);
 }
 
 /*
@@ -382,96 +381,89 @@ usage(const char *msg)
 static void
 main_connect(Boolean ignored)
 {
-	if (CONNECTED) {
-		ctlr_erase(True);
-		/* Check for various wait conditions. */
-		switch (waiting) {
-		case AWAITING_CONNECT:
-			if (CONNECT_DONE) {
-				UNBLOCK();
-			}
-			break;
-		case AWAITING_3270:
-			if (IN_3270) {
-				UNBLOCK();
-			}
-			break;
-		case AWAITING_NVT:
-			if (IN_NVT) {
-				UNBLOCK();
-			}
-			break;
-		default:
-			/* Nothing we can figure out here. */
-			break;
-		}
-	} else {
-		if (appres.disconnect_clear)
-			ctlr_erase(True);
-		ps_clear();
-
-		/* Cause (almost) any pending Wait command to fail. */
-		if (waiting != NOT_WAITING) {
-			if (waiting == AWAITING_DISCONNECT) {
-				UNBLOCK();
-			} else {
-				vtrace("Unblocked %s (was '%s') -- "
-					"failure\n", action,
-					wait_name[waiting]);
-				popup_an_error("Host disconnected");
-				waiting = NOT_WAITING;
-			}
-		}
+    if (CONNECTED) {
+	ctlr_erase(True);
+	/* Check for various wait conditions. */
+	switch (waiting) {
+	case AWAITING_CONNECT:
+	    if (CONNECT_DONE) {
+		    UNBLOCK();
+	    }
+	    break;
+	case AWAITING_3270:
+	    if (IN_3270) {
+		UNBLOCK();
+	    }
+	    break;
+	case AWAITING_NVT:
+	    if (IN_NVT) {
+		UNBLOCK();
+	    }
+	    break;
+	default:
+	    /* Nothing we can figure out here. */
+	    break;
 	}
+    } else {
+	if (appres.disconnect_clear) {
+	    ctlr_erase(True);
+	}
+	ps_clear();
+
+	/* Cause (almost) any pending Wait command to fail. */
+	if (waiting != NOT_WAITING) {
+	    if (waiting == AWAITING_DISCONNECT) {
+		UNBLOCK();
+	    } else {
+		vtrace("Unblocked %s (was '%s') -- failure\n", action,
+			wait_name[waiting]);
+		popup_an_error("Host disconnected");
+		waiting = NOT_WAITING;
+	    }
+	}
+    }
 }
 
 /* Initialization procedure for tcl3270. */
 static int
 tcl3270_main(int argc, const char *argv[])
 {
-	const char	*cl_hostname = NULL;
+    const char	*cl_hostname = NULL;
 
-	argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
+    argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
-	if (charset_init(appres.charset) != CS_OKAY) {
-		xs_warning("Cannot find charset \"%s\"", appres.charset);
-		(void) charset_init(NULL);
-	}
-	model_init();
-	ctlr_init(-1);
-	ctlr_reinit(-1);
-	kybd_init();
-	ft_init();
-	xio_init();
-	print_screen_init();
-	toggles_init();
+    if (charset_init(appres.charset) != CS_OKAY) {
+	xs_warning("Cannot find charset \"%s\"", appres.charset);
+	(void) charset_init(NULL);
+    }
+    model_init();
+    ctlr_init(-1);
+    ctlr_reinit(-1);
+    ft_init();
 
-	register_schange(ST_CONNECT, main_connect);
-	register_schange(ST_3270_MODE, main_connect);
-	register_actions(main_actions, array_count(main_actions));
+    /* Make sure we don't fall over any SIGPIPEs. */
+    (void) signal(SIGPIPE, SIG_IGN);
 
-	/* Make sure we don't fall over any SIGPIPEs. */
-	(void) signal(SIGPIPE, SIG_IGN);
-
-	/* Handle initial toggle settings. */
-	initialize_toggles();
+    /* Handle initial toggle settings. */
+    initialize_toggles();
 
 #if defined(HAVE_LIBSSL) /*[*/
-	ssl_base_init(NULL, NULL);
+    ssl_base_init(NULL, NULL);
 #endif /*]*/
 
-	/* Connect to the host, and wait for negotiation to complete. */
-	if (cl_hostname != NULL) {
-		action = NewString("[initial connection]");
-		if (host_connect(cl_hostname) < 0)
-			exit(1);
-		if (CONNECTED || HALF_CONNECTED) {
-			sms_connect_wait();
-			negotiate();
-		}
+    /* Connect to the host, and wait for negotiation to complete. */
+    if (cl_hostname != NULL) {
+	action = NewString("[initial connection]");
+	if (host_connect(cl_hostname) < 0) {
+	    exit(1);
 	}
+	if (CONNECTED || HALF_CONNECTED) {
+	    sms_connect_wait();
+	    negotiate();
+	}
+    }
 
-	return TCL_OK;
+    return TCL_OK;
 }
 
 
@@ -482,55 +474,56 @@ tcl3270_main(int argc, const char *argv[])
 static void
 process_pending_string(void)
 {
-	if (pending_string_ptr == NULL || waiting != NOT_WAITING)
-		return;
+    if (pending_string_ptr == NULL || waiting != NOT_WAITING) {
+	return;
+    }
 
-	if (pending_hex) {
-		hex_input(pending_string_ptr);
-		ps_clear();
+    if (pending_hex) {
+	hex_input(pending_string_ptr);
+	ps_clear();
+    } else {
+	int len = strlen(pending_string_ptr);
+	int len_left;
+
+	len_left = emulate_input(pending_string_ptr, len, False);
+	if (len_left) {
+	    pending_string_ptr += len - len_left;
+	    return;
 	} else {
-		int len = strlen(pending_string_ptr);
-		int len_left;
-
-		len_left = emulate_input(pending_string_ptr, len, False);
-		if (len_left) {
-			pending_string_ptr += len - len_left;
-			return;
-		} else
-			ps_clear();
+	    ps_clear();
 	}
-	if (CKBWAIT) {
-		vtrace("Blocked %s (keyboard locked)\n", action);
-		waiting = AWAITING_RESET;
-	}
+    }
+    if (CKBWAIT) {
+	vtrace("Blocked %s (keyboard locked)\n", action);
+	waiting = AWAITING_RESET;
+    }
 }
 
 /* Clear out the pending string. */
 static void
 ps_clear(void)
 {
-	if (pending_string != NULL) {
-		pending_string_ptr = NULL;
-		Replace(pending_string, NULL);
-	}
+    if (pending_string != NULL) {
+	pending_string_ptr = NULL;
+	Replace(pending_string, NULL);
+    }
 }
 
 /* Command timeout function. */
 static void
 command_timed_out(ioid_t id _is_unused)
 {
-    	popup_an_error("Command timed out after %ds.\n",
-		appres.command_timeout);
-	command_timeout_id = NULL_IOID;
+    popup_an_error("Command timed out after %ds.\n", appres.command_timeout);
+    command_timeout_id = NULL_IOID;
 
-	/* Let the command complete unsuccessfully. */
-	UNBLOCK();
+    /* Let the command complete unsuccessfully. */
+    UNBLOCK();
 }
 
 /* The tcl "x3270" command: The root of all 3270 access. */
 static int
 x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
-		Tcl_Obj *CONST objv[])
+	Tcl_Obj *CONST objv[])
 {
     unsigned j;
     unsigned count;
@@ -690,30 +683,31 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 void
 negotiate(void)
 {
-	int old_mode;
+    int old_mode;
 
-	old_mode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-	while (CKBWAIT || (waiting == AWAITING_CONNECT && !CONNECT_DONE)) {
-		(void) process_events(True);
-		if (!PCONNECTED)
-			exit(1);
+    old_mode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
+    while (CKBWAIT || (waiting == AWAITING_CONNECT && !CONNECT_DONE)) {
+	(void) process_events(True);
+	if (!PCONNECTED) {
+	    exit(1);
 	}
-	(void) Tcl_SetServiceMode(old_mode);
+    }
+    (void) Tcl_SetServiceMode(old_mode);
 }
 
 /* Indicates whether errors should go to stderr, or be returned to tcl. */
 Boolean
 sms_redirect(void)
 {
-	return in_cmd;
+    return in_cmd;
 }
 
 /* Returns an error to tcl. */
 void
 sms_error(const char *s)
 {
-	Tcl_SetResult(sms_interp, (char *)s, TCL_VOLATILE);
-	cmd_ret = TCL_ERROR;
+    Tcl_SetResult(sms_interp, (char *)s, TCL_VOLATILE);
+    cmd_ret = TCL_ERROR;
 }
 
 /* For now, a no-op.  Used to implement 'Expect'. */
@@ -726,36 +720,36 @@ sms_store(unsigned char c)
 void
 ps_set(char *s, Boolean is_hex)
 {
-	Replace(pending_string, NewString(s));
-	pending_string_ptr = pending_string;
-	pending_hex = is_hex;
+    Replace(pending_string, NewString(s));
+    pending_string_ptr = pending_string;
+    pending_hex = is_hex;
 }
 
 /* Signal a new connection. */
 void
 sms_connect_wait(void)
 {
-	waiting = AWAITING_CONNECT;
+    waiting = AWAITING_CONNECT;
 }
 
 /* Signal host output. */
 void
 sms_host_output(void)
 {
-	/* Release the script, if it is waiting now. */
-	switch (waiting) {
-	    case AWAITING_SOUTPUT:
-		snap_save();
-		/* fall through... */
-	    case AWAITING_OUTPUT:
-		UNBLOCK();
-		break;
-	    default:
-		break;
-	}
+    /* Release the script, if it is waiting now. */
+    switch (waiting) {
+    case AWAITING_SOUTPUT:
+	snap_save();
+	/* fall through... */
+    case AWAITING_OUTPUT:
+	UNBLOCK();
+	break;
+    default:
+	break;
+    }
 
-	/* If there was no script waiting, ensure that it won't later. */
-	output_wait_needed = False;
+    /* If there was no script waiting, ensure that it won't later. */
+    output_wait_needed = False;
 }
 
 /* More no-ops. */
@@ -763,6 +757,7 @@ void
 login_macro(char *s)
 {
 }
+
 void
 sms_continue(void)
 {
@@ -774,172 +769,170 @@ static void
 dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
     int rel_rows _is_unused, int rel_cols)
 {
-	register int i;
-	Tcl_Obj *o = NULL;
-	Tcl_Obj *row = NULL;
-	Boolean is_zero = False;
+    int i;
+    Tcl_Obj *o = NULL;
+    Tcl_Obj *row = NULL;
+    Boolean is_zero = False;
 
-	/*
-	 * The client has now 'looked' at the screen, so should they later
-	 * execute 'Wait(output)', they will actually need to wait for output
-	 * from the host.  output_wait_needed is cleared by sms_host_output,
-	 * which is called from the write logic in ctlr.c.
-	 */
-	if (buf == ea_buf)
-		output_wait_needed = True;
+    /*
+     * The client has now 'looked' at the screen, so should they later
+     * execute 'Wait(output)', they will actually need to wait for output
+     * from the host.  output_wait_needed is cleared by sms_host_output,
+     * which is called from the write logic in ctlr.c.
+     */
+    if (buf == ea_buf) {
+	output_wait_needed = True;
+    }
 
-	is_zero = FA_IS_ZERO(get_field_attribute(first));
+    is_zero = FA_IS_ZERO(get_field_attribute(first));
 
-	for (i = 0; i < len; i++) {
+    for (i = 0; i < len; i++) {
 
-		/* Check for a new row. */
-		if (i && !((first + i) % rel_cols)) {
-			/* Done with this row. */
-			if (o == NULL)
-				o = Tcl_NewListObj(0, NULL);
-			Tcl_ListObjAppendElement(sms_interp, o, row);
-			row = NULL;
-		}
-		if (!row) {
-			if (in_ascii)
-				row = Tcl_NewObj();
-			else
-				row = Tcl_NewListObj(0, NULL);
-		}
-		if (in_ascii) {
-			int len;
-			char mb[16];
-			ucs4_t uc;
-
-			mb[0] = ' ';
-			mb[1] = '\0';
-			len = 2;
-			if (buf[first + i].fa) {
-				is_zero = FA_IS_ZERO(buf[first + i].fa);
-				/* leave mb[] as " " */
-			} else if (is_zero) {
-				/* leave mb[] as " " */
-			} else
-#if defined(X3270_DBCS) /*[*/
-			if (IS_LEFT(ctlr_dbcs_state(first + i))) {
-				len = ebcdic_to_multibyte(
-					(buf[first + i].cc << 8) |
-					 buf[first + i + 1].cc,
-					mb, sizeof(mb));
-			} else if (IS_RIGHT(ctlr_dbcs_state(first + i))) {
-				continue;
-			} else
-#endif /*]*/
-			{
-			    	len = ebcdic_to_multibyte_x(buf[first + i].cc,
-					buf[first + i].cs & CS_MASK,
-					mb, sizeof(mb), EUO_BLANK_UNDEF,
-					&uc);
-			}
-			if (len > 0)
-				Tcl_AppendToObj(row, mb, len - 1);
-		} else {
-			char s[5];
-
-			(void) sprintf(s, "0x%02x", buf[first + i].cc);
-			Tcl_ListObjAppendElement(sms_interp, row,
-				Tcl_NewStringObj(s, -1));
-		}
+	/* Check for a new row. */
+	if (i && !((first + i) % rel_cols)) {
+	    /* Done with this row. */
+	    if (o == NULL) {
+		o = Tcl_NewListObj(0, NULL);
+	    }
+	    Tcl_ListObjAppendElement(sms_interp, o, row);
+	    row = NULL;
 	}
-
-	/* Return it. */
-	if (row) {
-		if (o) {
-			Tcl_ListObjAppendElement(sms_interp, o, row);
-			Tcl_SetObjResult(sms_interp, o);
-		} else
-			Tcl_SetObjResult(sms_interp, row);
+	if (!row) {
+	    if (in_ascii) {
+		row = Tcl_NewObj();
+	    } else {
+		row = Tcl_NewListObj(0, NULL);
+	    }
 	}
+	if (in_ascii) {
+	    int len;
+	    char mb[16];
+	    ucs4_t uc;
+
+	    mb[0] = ' ';
+	    mb[1] = '\0';
+	    len = 2;
+	    if (buf[first + i].fa) {
+		is_zero = FA_IS_ZERO(buf[first + i].fa);
+		/* leave mb[] as " " */
+	    } else if (is_zero) {
+		/* leave mb[] as " " */
+	    } else if (IS_LEFT(ctlr_dbcs_state(first + i))) {
+		len = ebcdic_to_multibyte((buf[first + i].cc << 8) |
+			    buf[first + i + 1].cc,
+			mb, sizeof(mb));
+	    } else if (IS_RIGHT(ctlr_dbcs_state(first + i))) {
+		continue;
+	    } else {
+		len = ebcdic_to_multibyte_x(buf[first + i].cc,
+			buf[first + i].cs & CS_MASK, mb, sizeof(mb),
+			EUO_BLANK_UNDEF, &uc);
+	    }
+	    if (len > 0) {
+		Tcl_AppendToObj(row, mb, len - 1);
+	    }
+	} else {
+	    char *s;
+
+	    s = xs_buffer("0x%02x", buf[first + i].cc);
+	    Tcl_ListObjAppendElement(sms_interp, row, Tcl_NewStringObj(s, -1));
+	    Free(s);
+	}
+    }
+
+    /* Return it. */
+    if (row) {
+	if (o) {
+	    Tcl_ListObjAppendElement(sms_interp, o, row);
+	    Tcl_SetObjResult(sms_interp, o);
+	} else {
+	    Tcl_SetObjResult(sms_interp, row);
+	}
+    }
 }
 
 static void
 dump_rectangle(int start_row, int start_col, int rows, int cols,
     Boolean in_ascii, struct ea *buf, int rel_cols)
 {
-	register int r, c;
-	Tcl_Obj *o = NULL;
-	Tcl_Obj *row = NULL;
+    int r, c;
+    Tcl_Obj *o = NULL;
+    Tcl_Obj *row = NULL;
 
-	/*
-	 * The client has now 'looked' at the screen, so should they later
-	 * execute 'Wait(output)', they will actually need to wait for output
-	 * from the host.  output_wait_needed is cleared by sms_host_output,
-	 * which is called from the write logic in ctlr.c.
-	 */
-	if (buf == ea_buf)
-		output_wait_needed = True;
+    /*
+     * The client has now 'looked' at the screen, so should they later
+     * execute 'Wait(output)', they will actually need to wait for output
+     * from the host.  output_wait_needed is cleared by sms_host_output,
+     * which is called from the write logic in ctlr.c.
+     */
+    if (buf == ea_buf) {
+	output_wait_needed = True;
+    }
 
-	if (!rows || !cols)
-		return;
+    if (!rows || !cols) {
+	return;
+    }
 
-	for (r = start_row; r < start_row + rows; r++) {
-		/* New row. */
-		if (o == NULL)
-			o = Tcl_NewListObj(0, NULL);
-		if (row != NULL)
-			Tcl_ListObjAppendElement(sms_interp, o, row);
-		if (in_ascii)
-			row = Tcl_NewObj();
-		else
-			row = Tcl_NewListObj(0, NULL);
+    for (r = start_row; r < start_row + rows; r++) {
+	/* New row. */
+	if (o == NULL) {
+	    o = Tcl_NewListObj(0, NULL);
+	}
+	if (row != NULL) {
+	    Tcl_ListObjAppendElement(sms_interp, o, row);
+	}
+	if (in_ascii) {
+	    row = Tcl_NewObj();
+	} else {
+	    row = Tcl_NewListObj(0, NULL);
+	}
 
-		for (c = start_col; c < start_col + cols; c++) {
-			int loc = (r * rel_cols) + c;
+	for (c = start_col; c < start_col + cols; c++) {
+	    int loc = (r * rel_cols) + c;
 
-			if (in_ascii) {
-				int len;
-				char mb[16];
-				ucs4_t uc;
+	    if (in_ascii) {
+		int len;
+		char mb[16];
+		ucs4_t uc;
 
-				if (FA_IS_ZERO(get_field_attribute(loc))) {
-					mb[0] = ' ';
-					mb[1] = '\0';
-					len = 2;
-				} else
-
-#if defined(X3270_DBCS) /*[*/
-				if (IS_LEFT(ctlr_dbcs_state(loc))) {
-				    	len = ebcdic_to_multibyte(
-						(buf[loc].cc << 8) |
-						 buf[loc + 1].cc,
-						mb, sizeof(mb));
-				} else if (IS_RIGHT(ctlr_dbcs_state(loc))) {
-					continue;
-				} else
-#endif /*]*/
-				{
-				    	len = ebcdic_to_multibyte_x(
-						buf[loc].cc,
-						buf[loc].cs & CS_MASK,
-						mb, sizeof(mb), EUO_BLANK_UNDEF,
-						&uc);
-				}
-				if (len > 0)
-					Tcl_AppendToObj(row, mb, len - 1);
-			} else {
-				char s[5];
-
-				(void) sprintf(s, "0x%02x", buf[loc].cc);
-				Tcl_ListObjAppendElement(sms_interp, row,
-					Tcl_NewStringObj(s, -1));
-			}
-
+		if (FA_IS_ZERO(get_field_attribute(loc))) {
+		    mb[0] = ' ';
+		    mb[1] = '\0';
+		    len = 2;
+		} else if (IS_LEFT(ctlr_dbcs_state(loc))) {
+		    len = ebcdic_to_multibyte((buf[loc].cc << 8) |
+			    buf[loc + 1].cc, mb, sizeof(mb));
+		} else if (IS_RIGHT(ctlr_dbcs_state(loc))) {
+		    continue;
+		} else {
+		    len = ebcdic_to_multibyte_x(buf[loc].cc,
+			    buf[loc].cs & CS_MASK, mb, sizeof(mb),
+			    EUO_BLANK_UNDEF, &uc);
 		}
-	}
+		if (len > 0) {
+		    Tcl_AppendToObj(row, mb, len - 1);
+		}
+	    } else {
+		char *s;
 
-	/* Return it. */
-	if (row) {
-		if (o) {
-			Tcl_ListObjAppendElement(sms_interp, o, row);
-			Tcl_SetObjResult(sms_interp, o);
-		} else
-			Tcl_SetObjResult(sms_interp, row);
+		s = xs_buffer("0x%02x", buf[loc].cc);
+		Tcl_ListObjAppendElement(sms_interp, row,
+			Tcl_NewStringObj(s, -1));
+		Free(s);
+	    }
+
 	}
+    }
+
+    /* Return it. */
+    if (row) {
+	if (o) {
+	    Tcl_ListObjAppendElement(sms_interp, o, row);
+	    Tcl_SetObjResult(sms_interp, o);
+	} else {
+	    Tcl_SetObjResult(sms_interp, row);
+	}
+    }
 }
 
 static Boolean
@@ -1058,71 +1051,72 @@ EbcdicField_action(ia_t ia, unsigned argc, const char **argv)
 static char *
 status_string(void)
 {
-	char kb_stat;
-	char fmt_stat;
-	char prot_stat;
-	char *connect_stat = NULL;
-	char em_mode;
-	char *r;
+    char kb_stat;
+    char fmt_stat;
+    char prot_stat;
+    char *connect_stat;
+    char em_mode;
 
-	if (!kybdlock)
-		kb_stat = 'U';
-	else if (!CONNECTED || KBWAIT)
-		kb_stat = 'L';
-	else
-		kb_stat = 'E';
+    if (!kybdlock) {
+	kb_stat = 'U';
+    } else if (!CONNECTED || KBWAIT) {
+	kb_stat = 'L';
+    } else {
+	kb_stat = 'E';
+    }
 
-	if (formatted)
-		fmt_stat = 'F';
-	else
-		fmt_stat = 'U';
+    if (formatted) {
+	fmt_stat = 'F';
+    } else {
+	fmt_stat = 'U';
+    }
 
-	if (!formatted)
-		prot_stat = 'U';
-	else {
-		unsigned char fa;
+    if (!formatted) {
+	prot_stat = 'U';
+    } else {
+	unsigned char fa;
 
-		fa = get_field_attribute(cursor_addr);
-		if (FA_IS_PROTECTED(fa))
-			prot_stat = 'P';
-		else
-			prot_stat = 'U';
-	}
-
-	if (CONNECTED)
-		connect_stat = xs_buffer("C(%s)", current_host);
-	else
-		connect_stat = NewString("N");
-
-	if (CONNECTED) {
-		if (IN_NVT) {
-			if (linemode) {
-				em_mode = 'L';
-			} else {
-				em_mode = 'C';
-			}
-		} else if (IN_SSCP) {
-			em_mode = 'S';
-		} else if (IN_3270) {
-			em_mode = 'I';
-		} else {
-			em_mode = 'P';
-		}
+	fa = get_field_attribute(cursor_addr);
+	if (FA_IS_PROTECTED(fa)) {
+	    prot_stat = 'P';
 	} else {
-		em_mode = 'N';
+	    prot_stat = 'U';
 	}
+    }
 
-	r = xs_buffer("%c %c %c %s %c %d %d %d %d %d",
-	    kb_stat,
-	    fmt_stat,
-	    prot_stat,
-	    connect_stat,
-	    em_mode,
-	    model_num,
-	    ROWS, COLS,
-	    cursor_addr / COLS, cursor_addr % COLS);
-	Free(connect_stat);
-	return r;
+    if (CONNECTED) {
+	connect_stat = lazyaf("C(%s)", current_host);
+    } else {
+	connect_stat = "N";
+    }
+
+    if (CONNECTED) {
+	if (IN_NVT) {
+	    if (linemode) {
+		em_mode = 'L';
+	    } else {
+		em_mode = 'C';
+	    }
+	} else if (IN_SSCP) {
+	    em_mode = 'S';
+	} else if (IN_3270) {
+	    em_mode = 'I';
+	} else {
+	    em_mode = 'P';
+	}
+    } else {
+	em_mode = 'N';
+    }
+
+    return xs_buffer("%c %c %c %s %c %d %d %d %d %d",
+	kb_stat,
+	fmt_stat,
+	prot_stat,
+	connect_stat,
+	em_mode,
+	model_num,
+	ROWS, COLS,
+	cursor_addr / COLS, cursor_addr % COLS);
 }
 
 static Boolean
@@ -1144,16 +1138,16 @@ Status_action(ia_t ia, unsigned argc, const char **argv)
 static unsigned char
 calc_cs(unsigned char cs)
 {
-	switch (cs & CS_MASK) { 
-	case CS_APL:
-	    return 0xf1;
-	case CS_LINEDRAW:
-	    return 0xf2;
-	case CS_DBCS:
-	    return 0xf8;
-	default:
-	    return 0x00;
-	}
+    switch (cs & CS_MASK) { 
+    case CS_APL:
+	return 0xf1;
+    case CS_LINEDRAW:
+	return 0xf2;
+    case CS_DBCS:
+	return 0xf8;
+    default:
+	return 0x00;
+    }
 }
 
 /*
@@ -1170,7 +1164,8 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
     unsigned char current_fg = 0x00;
     unsigned char current_gr = 0x00;
     unsigned char current_cs = 0x00;
-    char field_buf[1024];
+    varbuf_t r;
+    char *rbuf;
     Boolean in_ebcdic = False;
 
     if (num_params > 0) {
@@ -1189,6 +1184,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 	}
     }
 
+    vb_init(&r);
     baddr = 0;
     do {
 	if (!(baddr % COLS)) {
@@ -1202,88 +1198,83 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 	    row = Tcl_NewListObj(0, NULL);
 	}
 	if (buf[baddr].fa) {
-	    char *s = field_buf;
-	    s += sprintf(s, "SF(%02x=%02x", XA_3270, buf[baddr].fa);
+	    vb_appendf(&r, "SF(%02x=%02x", XA_3270, buf[baddr].fa);
 	    if (buf[baddr].fg) {
-		s += sprintf(s, ",%02x=%02x", XA_FOREGROUND,
-			buf[baddr].fg);
+		vb_appendf(&r, ",%02x=%02x", XA_FOREGROUND, buf[baddr].fg);
 	    }
 	    if (buf[baddr].gr) {
-		s += sprintf(s, ",%02x=%02x", XA_HIGHLIGHTING,
+		vb_appendf(&r, ",%02x=%02x", XA_HIGHLIGHTING,
 			buf[baddr].gr | 0xf0);
 	    }
 	    if (buf[baddr].cs & CS_MASK) {
-		s += sprintf(s, ",%02x=%02x", XA_CHARSET,
+		vb_appendf(&r, ",%02x=%02x", XA_CHARSET,
 			calc_cs(buf[baddr].cs));
 	    }
-	    s += sprintf(s, ")");
+	    vb_appends(&r, ")");
 	    Tcl_ListObjAppendElement(sms_interp, row,
-		    Tcl_NewStringObj(field_buf, -1));
+		    Tcl_NewStringObj(vb_consume(&r), -1));
 	} else {
 	    if (buf[baddr].fg != current_fg) {
-		sprintf(field_buf, "SA(%02x=%02x)", XA_FOREGROUND,
+		rbuf = xs_buffer("SA(%02x=%02x)", XA_FOREGROUND,
 			buf[baddr].fg);
 		Tcl_ListObjAppendElement(sms_interp, row,
-			Tcl_NewStringObj(field_buf, -1));
+			Tcl_NewStringObj(rbuf, -1));
+		Free(rbuf);
 		current_fg = buf[baddr].fg;
 	    }
 	    if (buf[baddr].gr != current_gr) {
-		sprintf(field_buf, "SA(%02x=%02x)", XA_HIGHLIGHTING,
+		rbuf = xs_buffer("SA(%02x=%02x)", XA_HIGHLIGHTING,
 			buf[baddr].gr | 0xf0);
 		Tcl_ListObjAppendElement(sms_interp, row,
-			Tcl_NewStringObj(field_buf, -1));
+			Tcl_NewStringObj(rbuf, -1));
+		Free(rbuf);
 		current_gr = buf[baddr].gr;
 	    }
 	    if ((buf[baddr].cs & ~CS_GE) != (current_cs & ~CS_GE)) {
-		sprintf(field_buf, "SA(%02x=%02x)", XA_CHARSET,
+		rbuf = xs_buffer("SA(%02x=%02x)", XA_CHARSET,
 			calc_cs(buf[baddr].cs));
 		Tcl_ListObjAppendElement(sms_interp, row,
-			Tcl_NewStringObj(field_buf, -1));
+			Tcl_NewStringObj(rbuf, -1));
+		Free(rbuf);
 		current_cs = buf[baddr].cs;
 	    }
 	    if (in_ebcdic) {
 		if (buf[baddr].cs & CS_GE) {
-		    sprintf(field_buf, "GE(%02x)", buf[baddr].cc);
+		    rbuf = xs_buffer("GE(%02x)", buf[baddr].cc);
 		} else {
-		    sprintf(field_buf, "%02x", buf[baddr].cc);
+		    rbuf = xs_buffer("%02x", buf[baddr].cc);
 		}
 		Tcl_ListObjAppendElement(sms_interp, row,
-			Tcl_NewStringObj(field_buf, -1));
+			Tcl_NewStringObj(rbuf, -1));
+		Free(rbuf);
 	    } else {
 		int len;
 		char mb[16];
 		int j;
 		ucs4_t uc;
 
-#if defined(X3270_DBCS) /*[*/
 		if (IS_LEFT(ctlr_dbcs_state(baddr))) {
 		    len = ebcdic_to_multibyte((buf[baddr].cc << 8) |
 			    buf[baddr + 1].cc,
 			    mb, sizeof(mb));
-		    field_buf[0] = '\0';
 		    for (j = 0; j < len - 1; j++) {
-			sprintf(strchr(field_buf, '\0'), "%02x",
-				mb[j] & 0xff);
+			vb_appendf(&r, "%02x", mb[j] & 0xff);
 		    }
 		} else if (IS_RIGHT(ctlr_dbcs_state(baddr))) {
-		    strcpy(field_buf, " -");
-		} else
-#endif /*]*/
-		if (buf[baddr].cc == EBC_null) {
-		    strcpy(field_buf, "00");
+		    vb_appends(&r, " -");
+		} else if (buf[baddr].cc == EBC_null) {
+		    vb_appends(&r, "00");
 		} else {
 		    len = ebcdic_to_multibyte_x(buf[baddr].cc,
 			    buf[baddr].cs & CS_MASK,
 			    mb, sizeof(mb), EUO_BLANK_UNDEF,
 			    &uc);
-		    field_buf[0] = '\0';
 		    for (j = 0; j < len - 1; j++) {
-			sprintf(strchr(field_buf, '\0'), "%02x",
-				mb[j] & 0xff);
+			vb_appendf(&r, "%02x", mb[j] & 0xff);
 		    }
 		}
 		Tcl_ListObjAppendElement(sms_interp, row,
-			Tcl_NewStringObj(field_buf, -1));
+			Tcl_NewStringObj(vb_consume(&r), -1));
 	    }
 	}
 	INC_BA(baddr);
@@ -1340,40 +1331,39 @@ static int snap_caddr = 0;
 static void
 snap_save(void)
 {
-	output_wait_needed = True;
-	Replace(snap_status, status_string());
+    output_wait_needed = True;
+    Replace(snap_status, status_string());
 
-	Replace(snap_buf, (struct ea *)Malloc(sizeof(struct ea) * ROWS*COLS));
-	(void) memcpy(snap_buf, ea_buf, sizeof(struct ea) * ROWS*COLS);
+    Replace(snap_buf, (struct ea *)Malloc(sizeof(struct ea) * ROWS*COLS));
+    (void) memcpy(snap_buf, ea_buf, sizeof(struct ea) * ROWS*COLS);
 
-	snap_rows = ROWS;
-	snap_cols = COLS;
+    snap_rows = ROWS;
+    snap_cols = COLS;
 
-	if (!formatted) {
-		snap_field_start = -1;
-		snap_field_length = -1;
-	} else {
-		int baddr;
+    if (!formatted) {
+	snap_field_start = -1;
+	snap_field_length = -1;
+    } else {
+	int baddr;
 
-		snap_field_length = 0;
-		snap_field_start = find_field_attribute(cursor_addr);
-		INC_BA(snap_field_start);
-		baddr = snap_field_start;
-		do {
-			if (ea_buf[baddr].fa)
-				break;
-			snap_field_length++;
-			INC_BA(baddr);
-		} while (baddr != snap_field_start);
-	}
-	snap_caddr = cursor_addr;
+	snap_field_length = 0;
+	snap_field_start = find_field_attribute(cursor_addr);
+	INC_BA(snap_field_start);
+	baddr = snap_field_start;
+	do {
+	    if (ea_buf[baddr].fa) {
+		break;
+	    }
+	    snap_field_length++;
+	    INC_BA(baddr);
+	} while (baddr != snap_field_start);
+    }
+    snap_caddr = cursor_addr;
 }
 
 static Boolean
 Snap_action(ia_t ia, unsigned argc, const char **argv)
 {
-    char nbuf[16];
-
     action_debug("Snap", ia, argc, argv);
     if (argc == 0) {
 	snap_save();
@@ -1458,15 +1448,13 @@ Snap_action(ia_t ia, unsigned argc, const char **argv)
 	    popup_an_error("No saved state");
 	    return False;
 	}
-	(void) sprintf(nbuf, "%d", snap_rows);
-	Tcl_SetResult(sms_interp, nbuf, TCL_VOLATILE);
+	Tcl_SetResult(sms_interp, lazyaf("%d", snap_rows), TCL_VOLATILE);
     } else if (!strcasecmp(argv[0], "Cols")) {
 	if (argc != 1) {
 	    popup_an_error("extra argument(s)");
 	    return False;
 	}
-	(void) sprintf(nbuf, "%d", snap_cols);
-	Tcl_SetResult(sms_interp, nbuf, TCL_VOLATILE);
+	Tcl_SetResult(sms_interp, lazyaf("%d", snap_cols), TCL_VOLATILE);
     } else if (!strcasecmp(argv[0], "Ascii")) {
 	if (snap_status == NULL) {
 	    popup_an_error("No saved state");
@@ -1598,30 +1586,32 @@ static int
 Rows_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 		Tcl_Obj *CONST objv[])
 {
-	char buf[32];
+    char *buf;
 
-	if (objc > 1) {
-		Tcl_SetResult(interp, "Too many arguments", TCL_STATIC);
-		return TCL_ERROR;
-	}
-	(void) sprintf(buf, "%d", ROWS);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
-	return TCL_OK;
+    if (objc > 1) {
+	Tcl_SetResult(interp, "Too many arguments", TCL_STATIC);
+	return TCL_ERROR;
+    }
+    buf = xs_buffer("%d", ROWS);
+    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+    Free(buf);
+    return TCL_OK;
 }
 
 static int
 Cols_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 		Tcl_Obj *CONST objv[])
 {
-	char buf[32];
+    char *buf;
 
-	if (objc > 1) {
-		Tcl_SetResult(interp, "Too many arguments", TCL_STATIC);
-		return TCL_ERROR;
-	}
-	(void) sprintf(buf, "%d", COLS);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
-	return TCL_OK;
+    if (objc > 1) {
+	Tcl_SetResult(interp, "Too many arguments", TCL_STATIC);
+	return TCL_ERROR;
+    }
+    buf = xs_buffer("%d", COLS);
+    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+    Free(buf);
+    return TCL_OK;
 }
 
 static Boolean
@@ -1692,13 +1682,14 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 void
 sms_info(const char *fmt, ...)
 {
-	va_list args;
-	char buf[4096];
+    va_list args;
+    char *buf;
 
-	va_start(args, fmt);
-	(void) vsprintf(buf, fmt, args);
-	va_end(args);
-	Tcl_AppendResult(sms_interp, buf, NULL);
+    va_start(args, fmt);
+    buf = xs_vbuffer(fmt, args);
+    va_end(args);
+    Tcl_AppendResult(sms_interp, buf, NULL);
+    Free(buf);
 }
 
 /*
@@ -1707,66 +1698,45 @@ sms_info(const char *fmt, ...)
 Boolean
 sms_in_macro(void)
 {
-	return pending_string != NULL;
+    return pending_string != NULL;
 }
 
 /* Like fcatv, but goes to a dynamically-allocated buffer. */
 static char *
 tc_scatv(const char *s)
 {
-#define ALLOC_INC	1024
-	char *buf;
-	int buflen;
-	int bufused = 0;
-	char c;
-#define add_space(n) \
-		if (bufused + (n) >= buflen) { \
-			buflen += ALLOC_INC; \
-			buf = Realloc(buf, buflen); \
-		} \
-		bufused += (n);
+    char c;
+    varbuf_t r;
 
-	buf = Malloc(ALLOC_INC);
-	buflen = ALLOC_INC;
-	*buf = '\0';
+    vb_init(&r);
 
-	while ((c = *s++))  {
-		switch (c) {
-		case '\n':
-			add_space(2);
-			(void) strcat(buf, "\\n");
-			break;
-		case '\t':
-			add_space(2);
-			(void) strcat(buf, "\\t");
-			break;
-		case '\b':
-			add_space(2);
-			(void) strcat(buf, "\\b");
-			break;
-		case '\f':
-			add_space(2);
-			(void) strcat(buf, "\\f");
-			break;
-		case ' ':
-			add_space(2);
-			(void) strcat(buf, "\\ ");
-			break;
-		default:
-			if ((c & 0x7f) < ' ') {
-				add_space(4);
-				(void) sprintf(buf + bufused, "\\%03o",
-					c & 0xff);
-				break;
-			} else {
-				add_space(1);
-				*(buf + bufused - 1) = c;
-				*(buf + bufused) = '\0';
-			}
-		}
+    while ((c = *s++))  {
+	switch (c) {
+	case '\n':
+	    vb_appends(&r, "\\n");
+	    break;
+	case '\t':
+	    vb_appends(&r, "\\t");
+	    break;
+	case '\b':
+	    vb_appends(&r, "\\b");
+	    break;
+	case '\f':
+	    vb_appends(&r, "\\f");
+	    break;
+	case ' ':
+	    vb_appends(&r, "\\ ");
+	    break;
+	default:
+	    if ((c & 0x7f) < ' ') {
+		vb_appendf(&r, "\\%03o", c & 0xff);
+		break;
+	    } else {
+		vb_append(&r, &c, 1);
+	    }
 	}
-	return buf;
-#undef add_space
+    }
+    return vb_consume(&r);
 }
 
 /* Dummy version of function in macros.c. */
@@ -1784,6 +1754,25 @@ tcl3270_register(void)
     static toggle_register_t toggles[] = {
 	{ AID_WAIT,	NULL,	0 }
     };
+    static action_table_t actions[] = {
+	{ "Ascii",		Ascii_action,		ACTION_KE },
+	{ "AsciiField",		AsciiField_action,	ACTION_KE },
+	{ "Ebcdic",		Ebcdic_action,		ACTION_KE },
+	{ "EbcdicField",	EbcdicField_action,	ACTION_KE },
+	{ "Status",		Status_action,		ACTION_KE },
+	{ "ReadBuffer",		ReadBuffer_action,	ACTION_KE },
+	{ "Snap",		Snap_action,		ACTION_KE },
+	{ "Wait",		Wait_action,		ACTION_KE },
+	{ "Query",		Query_action,		ACTION_KE }
+    };
 
+    /* Register our toggles. */
     register_toggles(toggles, array_count(toggles));
+
+    /* Register for state changes. */
+    register_schange(ST_CONNECT, main_connect);
+    register_schange(ST_3270_MODE, main_connect);
+
+    /* Register out actions. */
+    register_actions(actions, array_count(actions));
 }

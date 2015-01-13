@@ -54,7 +54,7 @@ void do_menu_toggle(int);
 void do_toggle(int);
 void initialize_toggles(void);
 void shutdown_toggles(void);
-void toggles_init(void);
+void toggles_register(void);
 void toggle_toggle(toggle_index_t ix);
 void set_toggle(toggle_index_t ix, Boolean value);
 void set_toggle_initial(toggle_index_t ix, Boolean value);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2014 Paul Mattes.
+ * Copyright (c) 2007-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,5 +31,5 @@
  *		Declarations for icmd.c.
  */
 
-void icmd_init(void);
+void icmd_register(void);
 int interactive_transfer(char ***params, unsigned *num_params);
