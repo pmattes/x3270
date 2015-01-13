@@ -62,7 +62,7 @@
 #include "actionsc.h"
 #include "charsetc.h"
 #include "ctlrc.h"
-#include "display8c.h"
+#include "display8.h"
 #include "hostc.h"
 #include "keymapc.h"
 #include "keypadc.h"
@@ -82,7 +82,7 @@
 #include "unicode_dbcsc.h"
 #include "utf8c.h"
 #include "utilc.h"
-#include "xactionsc.h"
+#include "xactions.h"
 #include "xappres.h"
 #include "xioc.h"
 

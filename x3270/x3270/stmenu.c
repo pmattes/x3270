@@ -51,10 +51,9 @@
 #include "menubarc.h"
 #include "popupsc.h"
 #include "print_screen.h"
+#include "stmenu.h"
 #include "togglesc.h"
 #include "trace.h"
-
-#include "stmenuc.h"
 
 #define CLOSE_VGAP	0
 #define FAR_VGAP	10

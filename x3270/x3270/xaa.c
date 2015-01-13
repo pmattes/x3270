@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 #include "actionsc.h"
 #include "macrosc.h"
 #include "popupsc.h"
-#include "xaac.h"
+#include "xaa.h"
 
 /* Macros */
 

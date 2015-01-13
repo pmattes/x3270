@@ -42,42 +42,23 @@
 #endif /*]*/
 #include <X11/keysym.h>
 
-#include <fcntl.h>
-#include "3270ds.h"
-#include "appres.h"
-#include "ctlr.h"
-#include "keysym2ucs.h"
 #include "resources.h"
-#include "screen.h"
 
 #include "actionsc.h"
 #include "aplc.h"
-#include "charsetc.h"
-#include "ctlrc.h"
-#include "unicodec.h"
-#include "ftc.h"
-#include "hostc.h"
 #include "idlec.h"
 #include "keymapc.h"
-#include "keypadc.h"
+#include "keysym2ucs.h"
 #include "kybdc.h"
-#include "linemodec.h"
 #include "macrosc.h"
-#include "nvtc.h"
 #include "popupsc.h"
-#include "print_screen.h"
+#include "screen.h"
 #include "screenc.h"
-#include "scrollc.h"
 #include "selectc.h"
-#include "statusc.h"
-#include "tablesc.h"
-#include "telnetc.h"
 #include "togglesc.h"
 #include "trace.h"
-#include "utf8c.h"
-#include "utilc.h"
-#include "xactionsc.h"
-#include "xkybdc.h"
+#include "unicodec.h"
+#include "xactions.h"
 
 
 /*

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, Paul Mattes.
+ * Copyright (c) 1995-2009, 2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -28,10 +28,10 @@
  */
 
 /*
- *	aboutc.h
+ *	about.h
  *		Global declarations for about.c.
  */
 
-extern void popup_about_copyright(void);
-extern void popup_about_config(void);
-extern void popup_about_status(void);
+void popup_about_copyright(void);
+void popup_about_config(void);
+void popup_about_status(void);

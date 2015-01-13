@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 2000-2010, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,9 +26,8 @@
  */
 
 /*
- *      xaac.h
- *              Header file for the Execute an Action menu item.
+ *	printer_gui.h
+ *		Header file for GUI for printer session support
  */
 
-extern void execute_action_option(Widget w, XtPointer client_data,
-	XtPointer call_data);
+void printer_lu_dialog(void);

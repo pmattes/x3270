@@ -37,7 +37,7 @@
 
 #include "popupsc.h"
 #include "pr3287_session.h"
-#include "printer_guic.h"
+#include "printer_gui.h"
 
 static Widget lu_shell = NULL;
 

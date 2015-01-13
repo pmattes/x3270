@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2010, 2013-2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,18 @@
  */
 
 /*
- *	printer_guic.h
- *		Header file for GUI for printer session support
+ *	xkybd.h
+ *		Global declarations for xkybd.c.
  */
 
-extern void printer_lu_dialog(void);
+void Default_xaction(Widget w, XEvent *event, String *params,
+	Cardinal *num_params);
+void ignore_xaction(Widget w, XEvent *event, String *params,
+	Cardinal *num_params);
+void MouseSelect_xaction(Widget w, XEvent *event, String *params,
+	Cardinal *num_params);
+void MoveCursor_xaction(Widget w, XEvent *event, String *params,
+	Cardinal *num_params);
+void PA_Shift_xaction(Widget w, XEvent *event, String *params,
+	Cardinal *num_params);
+void xkybd_register(void);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,18 +26,19 @@
  */
 
 /*
- *	xkybdc.h
- *		Global declarations for xkybd.c.
+ *	xactions.h
+ *		Global declarations for xactions.c.
  */
 
-extern void Default_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void ignore_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void MouseSelect_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void MoveCursor_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void PA_Shift_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-extern void xkybd_register(void);
+#define PA_PFX	"PA-"
+
+void xaction_debug(XtActionProc action, XEvent *event, String *params,
+	Cardinal *num_params);
+void xaction_init(void);
+void xaction_init2(void);
+void xaction_internal(XtActionProc action, enum iaction cause,
+	const char *parm1, const char *parm2);
+const char *action_name(XtActionProc action);
+int xcheck_usage(XtActionProc action, Cardinal nargs, Cardinal nargs_min,
+	Cardinal nargs_max);
+Boolean event_is_meta(int state);

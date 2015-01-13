@@ -52,8 +52,8 @@
 #include "selectc.h"
 #include "trace.h"
 #include "utilc.h"
-#include "xactionsc.h"
-#include "xkybdc.h"
+#include "xactions.h"
+#include "xkybd.h"
 
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>

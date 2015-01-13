@@ -44,7 +44,7 @@
 #include "objects.h"
 #include "resources.h"
 
-#include "aboutc.h"
+#include "about.h"
 #include "charsetc.h"
 #include "keymapc.h"
 #include "lazya.h"

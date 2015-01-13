@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009, 2014 Paul Mattes.
+ * Copyright (c) 2008-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
 #include "globals.h"
 
 #include "3270ds.h"
-#include "display8c.h"
+#include "display8.h"
 
 #define ISO10646_IX	100
 

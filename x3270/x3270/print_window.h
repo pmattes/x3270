@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2009, 2013, 2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,9 @@
  */
 
 /*
- *	idle_guic.h
- *		Global declarations for idle_gui.c.
+ *	print_window.h
+ *		Global declarations for print_window.c.
  */
 
-extern void popup_idle(void);
+void print_window_option(Widget w, XtPointer client_data, XtPointer call_data);
+void print_window_register(void);

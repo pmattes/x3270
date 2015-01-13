@@ -64,7 +64,7 @@
 #include "popupsc.h"
 #include "print_screen.h"
 #include "pr3287_session.h"
-#include "print_windowc.h"
+#include "print_window.h"
 #include "resourcesc.h"
 #include "savec.h"
 #include "screenc.h"
@@ -75,10 +75,10 @@
 #include "togglesc.h"
 #include "trace.h"
 #include "utilc.h"
-#include "xactionsc.h"
+#include "xactions.h"
 #include "xappres.h"
 #include "xioc.h"
-#include "xkybdc.h"
+#include "xkybd.h"
 
 /* Globals */
 const char     *programname;

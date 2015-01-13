@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2014, Paul Mattes.
+ * Copyright (c) 1994-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
 
 #include "actionsc.h"
 #include "print_guic.h"
-#include "stmenuc.h"
+#include "stmenu.h"
 
 /* Typedefs */
 

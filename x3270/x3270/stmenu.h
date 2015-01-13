@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Paul Mattes.
+ * Copyright (c) 2013-2015, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -27,13 +27,13 @@
  */
 
 /*
- *	stmenuc.h
+ *	stmenu.h
  *		Pop-up window to initiate screen tracing.
  */
 
 typedef enum {
-	STMP_AS_IS,	/* pop up using current or default state */
-	STMP_TEXT,	/* force to a text file */
-	STMP_PRINTER	/* force to use the printer */
+    STMP_AS_IS,		/* pop up using current or default state */
+    STMP_TEXT,		/* force to a text file */
+    STMP_PRINTER	/* force to use the printer */
 } stmp_t;
-extern void stmenu_popup(stmp_t stmp);
+void stmenu_popup(stmp_t stmp);

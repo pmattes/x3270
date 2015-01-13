@@ -57,7 +57,7 @@
 #include "screenc.h"
 #include "statusc.h"
 #include "utilc.h"
-#include "xactionsc.h"
+#include "xactions.h"
 
 #define PA_ENDL		" " PA_END "()"
 #define Res3270		"3270"

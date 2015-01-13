@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2015 Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,19 +26,9 @@
  */
 
 /*
- *	xactionsc.h
- *		Global declarations for xactions.c.
+ *      xaa.h
+ *              Header file for the Execute an Action menu item.
  */
 
-#define PA_PFX	"PA-"
-
-extern void xaction_debug(XtActionProc action, XEvent *event, String *params,
-	Cardinal *num_params);
-extern void xaction_init(void);
-extern void xaction_init2(void);
-extern void xaction_internal(XtActionProc action, enum iaction cause,
-	const char *parm1, const char *parm2);
-extern const char *action_name(XtActionProc action);
-extern int xcheck_usage(XtActionProc action, Cardinal nargs,
-	Cardinal nargs_min, Cardinal nargs_max);
-extern Boolean event_is_meta(int state);
+void execute_action_option(Widget w, XtPointer client_data,
+	XtPointer call_data);
