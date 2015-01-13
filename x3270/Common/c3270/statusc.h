@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2013 Paul Mattes.
+ * Copyright (c) 1999-2009, 2013, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,20 +30,19 @@
 #define status_kybdlock()
 #define status_script(on)
 
-extern void status_compose(Boolean on, unsigned char c, enum keytype keytype);
-extern void status_ctlr_done(void);
-extern void status_insert_mode(Boolean on);
-extern void status_lu(const char *);
-extern void status_minus(void);
-extern void status_oerr(int error_type);
-extern void status_reset(void);
-extern void status_reverse_mode(Boolean on);
-extern void status_screentrace(int n);
-extern void status_scrolled(int n);
-extern void status_syswait(void);
-extern void status_timing(struct timeval *t0, struct timeval *t1);
-extern void status_twait(void);
-extern void status_typeahead(Boolean on);
-extern void status_untiming(void);
-
-extern void status_push(char *msg);
+void status_compose(Boolean on, unsigned char c, enum keytype keytype);
+void status_ctlr_done(void);
+void status_insert_mode(Boolean on);
+void status_lu(const char *);
+void status_minus(void);
+void status_oerr(int error_type);
+void status_push(char *msg);
+void status_reset(void);
+void status_reverse_mode(Boolean on);
+void status_screentrace(int n);
+void status_scrolled(int n);
+void status_syswait(void);
+void status_timing(struct timeval *t0, struct timeval *t1);
+void status_twait(void);
+void status_typeahead(Boolean on);
+void status_untiming(void);
