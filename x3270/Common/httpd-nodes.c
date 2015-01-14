@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Paul Mattes.
+ * Copyright (c) 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@
 #include "httpd-nodesc.h"
 
 #if defined(_WIN32) /*[*/
-# include "winprintc.h"
+# include "winprint.h"
 #endif /*]*/
 
 extern unsigned char icon[];

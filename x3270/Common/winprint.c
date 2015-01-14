@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2015, Paul Mattes.
+ * Copyright (c) 1994-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,7 +47,7 @@
 #include "trace.h"
 #include "utilc.h"
 
-#include "winprintc.h"
+#include "winprint.h"
 
 #include <fcntl.h>
 #include <sys/stat.h>

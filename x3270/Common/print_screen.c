@@ -58,7 +58,7 @@
 # include <fcntl.h>
 # include <sys/stat.h>
 # include "w3miscc.h"
-# include "winprintc.h"
+# include "winprint.h"
 #  if defined(WC3270) /*[*/
 #   include <screenc.h>
 #  endif /*]*/

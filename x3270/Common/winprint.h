@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, Paul Mattes.
+ * Copyright (c) 2013-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,12 +26,12 @@
  */
 
 /*
- * 	winprintc.h
+ * 	winprint.h
  *		Global declaratoins for winprint.c.
  */
 
-extern int win_mkstemp(char **path, ptype_t ptype);
-extern void start_wordpad_sync(const char *action_name, const char *filename,
+int win_mkstemp(char **path, ptype_t ptype);
+void start_wordpad_sync(const char *action_name, const char *filename,
 	const char *printer);
-extern void start_wordpad_async(const char *action_name, const char *filename,
+void start_wordpad_async(const char *action_name, const char *filename,
 	const char *printer);

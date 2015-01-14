@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,7 @@
 #include "utilc.h"
 #if defined(_WIN32) /*[*/
 # include "w3miscc.h"
-# include "winprintc.h"
+# include "winprint.h"
 #endif /*]*/
 
 /* Size of the data stream trace buffer. */
