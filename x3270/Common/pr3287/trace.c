@@ -41,7 +41,6 @@
 #include "3270ds.h"
 
 #include "ctlrc.h"
-#include "tablesc.h"
 #include "trace.h"
 
 /* Maximum length of printer-data output. */

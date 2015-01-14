@@ -53,7 +53,6 @@
 #include "readresc.h"
 #include "screenc.h"
 #include "selectc.h"
-#include "tablesc.h"
 #include "telnetc.h"
 #include "togglesc.h"
 #include "trace.h"

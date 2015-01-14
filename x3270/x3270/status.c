@@ -44,7 +44,7 @@
 #include "hostc.h"
 #include "screenc.h"
 #include "statusc.h"
-#include "tablesc.h"
+#include "tables.h"
 #include "utilc.h"
 
 static XChar2b *status_2b;

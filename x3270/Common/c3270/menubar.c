@@ -51,7 +51,6 @@
 #include "popupsc.h"
 #include "screenc.h"
 #include "togglesc.h"
-#include "tablesc.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utf8c.h"

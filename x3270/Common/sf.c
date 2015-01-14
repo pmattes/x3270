@@ -53,7 +53,6 @@
 #include "see.h"
 #include "sfc.h"	/* has to come before rpqc.h */
 #include "rpqc.h"
-#include "tablesc.h"
 #include "telnetc.h"
 #include "trace.h"
 #include "utilc.h"

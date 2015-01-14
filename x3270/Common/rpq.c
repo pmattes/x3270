@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 2005-2009, 2013-2015 Paul Mattes.
  * Copyright (c) 2004-2005, Don Russell.
  * All rights reserved.
  *
@@ -50,7 +50,7 @@
 #include "popupsc.h"
 #include "sfc.h"	 /* has to come before rpqc.h */
 #include "rpqc.h"
-#include "tablesc.h"
+#include "tables.h"
 #include "telnetc.h"
 #include "trace.h"
 #include "unicodec.h"

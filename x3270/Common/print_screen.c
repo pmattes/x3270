@@ -37,7 +37,6 @@
 #include "ctlr.h"
 
 #include "ctlrc.h"
-#include "tablesc.h"
 
 #include <errno.h>
 

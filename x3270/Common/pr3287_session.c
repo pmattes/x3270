@@ -60,7 +60,6 @@
 #if defined(C3270) /*[*/
 #include "screenc.h"
 #endif /*]*/
-#include "tablesc.h"
 #include "telnetc.h"
 #include "trace.h"
 #include "utilc.h"

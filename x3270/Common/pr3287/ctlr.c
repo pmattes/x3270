@@ -55,7 +55,7 @@
 #include "ctlrc.h"
 #include "trace.h"
 #include "sfc.h"
-#include "tablesc.h"
+#include "tables.h"
 #include "unicodec.h"
 #include "xtablec.h"
 #if defined(_WIN32) /*[*/

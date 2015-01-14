@@ -46,7 +46,7 @@
 #include "unicodec.h"
 #include "ftc.h"
 #include "kybdc.h"
-#include "tablesc.h"
+#include "tables.h"
 #include "telnetc.h"
 #include "trace.h"
 #include "utilc.h"

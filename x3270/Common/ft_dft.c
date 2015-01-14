@@ -45,7 +45,6 @@
 #include "unicodec.h"
 #include "ftc.h"
 #include "popupsc.h"
-#include "tablesc.h"
 #include "telnetc.h"
 #include "trace.h"
 #include "utilc.h"

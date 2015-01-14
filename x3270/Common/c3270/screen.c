@@ -51,7 +51,6 @@
 #include "screenc.h"
 #include "scrollc.h"
 #include "statusc.h"
-#include "tablesc.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utf8c.h"

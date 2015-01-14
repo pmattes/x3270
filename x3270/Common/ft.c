@@ -54,7 +54,6 @@
 #include "objects.h"
 #include "popupsc.h"
 #include "screenc.h"
-#include "tablesc.h"
 #include "telnetc.h"
 #include "utilc.h"
 #include "varbufc.h"

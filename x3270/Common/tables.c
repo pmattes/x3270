@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, Paul Mattes.
+ * Copyright (c) 1993-2009, 2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -38,7 +38,7 @@
  */
 
 #include "globals.h"
-#include "tablesc.h"
+#include "tables.h"
 
 const unsigned char asc2cg0[256] = {
 /*00*/	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

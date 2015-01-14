@@ -64,7 +64,7 @@
 #include "selectc.h"
 #include "sfc.h"
 #include "statusc.h"
-#include "tablesc.h"
+#include "tables.h"
 #include "telnetc.h"
 #include "trace.h"
 #include "utilc.h"

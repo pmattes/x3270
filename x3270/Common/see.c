@@ -41,7 +41,6 @@
 #include "3270ds.h"
 
 #include "lazya.h"
-#include "tablesc.h"
 #include "utf8c.h"
 #include "utilc.h"
 #include "see.h"

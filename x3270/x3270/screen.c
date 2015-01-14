@@ -76,7 +76,7 @@
 #include "scrollc.h"
 #include "see.h"
 #include "statusc.h"
-#include "tablesc.h"
+#include "tables.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "unicode_dbcsc.h"

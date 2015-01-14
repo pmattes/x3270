@@ -73,7 +73,7 @@
 #include "popupsc.h"
 #include "screenc.h"
 #include "selectc.h"
-#include "tablesc.h"
+#include "tables.h"
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"

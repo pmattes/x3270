@@ -54,7 +54,6 @@
 #include "scrollc.h"
 #include "selectc.h"
 #include "statusc.h"
-#include "tablesc.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utilc.h"

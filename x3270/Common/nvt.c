@@ -45,7 +45,7 @@
 #include "nvt_guic.h"
 #include "screenc.h"
 #include "scrollc.h"
-#include "tablesc.h"
+#include "tables.h"
 #include "telnetc.h"
 #include "trace.h"
 #include "unicodec.h"

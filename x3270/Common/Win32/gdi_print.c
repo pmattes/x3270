@@ -42,7 +42,6 @@
 #include "ctlr.h"
 
 #include "ctlrc.h"
-#include "tablesc.h"
 
 #include "objects.h"
 #include "resources.h"

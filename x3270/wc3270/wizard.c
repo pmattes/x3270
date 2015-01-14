@@ -48,7 +48,6 @@
 #include "proxy.h"
 #include "resources.h"
 #include "screenc.h"
-#include "tablesc.h"
 #include "trace.h"
 #include "utilc.h"
 #include "xioc.h"
