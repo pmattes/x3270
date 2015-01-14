@@ -71,7 +71,7 @@
 #include "menubarc.h"
 #include "nvtc.h"
 #include "popupsc.h"
-#include "savec.h"
+#include "save.h"
 #include "screenc.h"
 #include "scrollc.h"
 #include "see.h"

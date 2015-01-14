@@ -64,7 +64,7 @@
 #include "print_window.h"
 #include "pr3287_session.h"
 #include "printer_gui.h"
-#include "savec.h"
+#include "save.h"
 #include "screenc.h"
 #include "stmenu.h"
 #include "telnetc.h"

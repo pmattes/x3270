@@ -66,7 +66,7 @@
 #include "pr3287_session.h"
 #include "print_window.h"
 #include "resourcesc.h"
-#include "savec.h"
+#include "save.h"
 #include "screenc.h"
 #include "scrollc.h"
 #include "selectc.h"

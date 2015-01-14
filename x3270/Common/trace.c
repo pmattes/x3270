@@ -52,7 +52,7 @@
 #include "nvtc.h"
 #include "popupsc.h"
 #include "print_screen.h"
-#include "savec.h"
+#include "save.h"
 #include "statusc.h"
 #include "telnetc.h"
 #include "togglesc.h"

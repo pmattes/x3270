@@ -28,16 +28,16 @@
  */
 
 /*
- *	savec.h
+ *	save.h
  *		Global declarations for save.c.
  */
 
 extern char *command_string;
 extern char *profile_name;
 
-extern void charset_list_changed(char *charset);
-extern void merge_profile(XrmDatabase *d, char *session, Boolean mono);
-extern void save_args(int argc, char *argv[]);
-extern void save_init(int argc, char *hostname, char *port);
-extern Boolean save_options(char *n);
-extern void save_yourself(void);
+void charset_list_changed(char *charset);
+void merge_profile(XrmDatabase *d, char *session, Boolean mono);
+void save_args(int argc, char *argv[]);
+void save_init(int argc, char *hostname, char *port);
+Boolean save_options(char *n);
+void save_yourself(void);

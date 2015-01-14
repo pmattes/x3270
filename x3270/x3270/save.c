@@ -41,7 +41,7 @@
 #include "appres.h"
 #include "resources.h"
 
-#include "savec.h"
+#include "save.h"
 #include "charsetc.h"
 #if !defined(USE_APP_DEFAULTS) /*[*/
 # include "fallbacksc.h"

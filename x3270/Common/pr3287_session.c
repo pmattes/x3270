@@ -56,7 +56,7 @@
 #include "popupsc.h"
 #include "pr3287_session.h"
 #include "print_screen.h"
-#include "savec.h"
+#include "save.h"
 #if defined(C3270) /*[*/
 # include "screenc.h"
 #endif /*]*/
