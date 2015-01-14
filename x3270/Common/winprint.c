@@ -51,7 +51,7 @@
 
 #include <fcntl.h>
 #include <sys/stat.h>
-#include "w3miscc.h"
+#include "w3misc.h"
 #if defined(WC3270) /*[*/
 # include <screenc.h>
 #endif /*]*/

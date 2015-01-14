@@ -57,7 +57,7 @@
 #if defined(_WIN32) /*[*/
 # include <fcntl.h>
 # include <sys/stat.h>
-# include "w3miscc.h"
+# include "w3misc.h"
 # include "winprint.h"
 #  if defined(WC3270) /*[*/
 #   include <screenc.h>

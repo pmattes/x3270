@@ -34,9 +34,9 @@
 
 #if defined(X3270_INTERACTIVE) /*[*/
 #if !defined(_WIN32) /*[*/
-#include <sys/wait.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+# include <sys/wait.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
 #endif /*]*/
 #include <errno.h>
 #include <signal.h>
@@ -58,13 +58,13 @@
 #include "print_screen.h"
 #include "savec.h"
 #if defined(C3270) /*[*/
-#include "screenc.h"
+# include "screenc.h"
 #endif /*]*/
 #include "telnetc.h"
 #include "trace.h"
 #include "utilc.h"
 #include "varbufc.h"
-#include "w3miscc.h"
+#include "w3misc.h"
 #include "xio.h"
 
 #define PRINTER_BUF	1024

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2015, Paul Mattes.
+ * Copyright (c) 2000-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -110,21 +110,21 @@
 #include <errno.h>
 #include <string.h>
 #if !defined(_WIN32) /*[*/
-#include <syslog.h>
-#include <netdb.h>
+# include <syslog.h>
+# include <netdb.h>
 #endif /*]*/
 #include <sys/types.h>
 #if !defined(_MSC_VER) /*[*/
-#include <unistd.h>
+# include <unistd.h>
 #endif /*]*/
 #if !defined(_WIN32) /*[*/
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+# include <sys/socket.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
 #else /*][*/
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#undef AF_INET6
+# include <winsock2.h>
+# include <ws2tcpip.h>
+# undef AF_INET6
 #endif /*]*/
 #include <time.h>
 #include <signal.h>
@@ -142,21 +142,21 @@
 #include "xtablec.h"
 
 #if defined(_WIN32) /*[*/
-#include "w3miscc.h"
-#include "wsc.h"
-#include "windirsc.h"
+# include "w3misc.h"
+# include "wsc.h"
+# include "windirsc.h"
 #endif /*]*/
 
 #include "pr3287.h"
 
 #if defined(_IOLBF) /*[*/
-#define SETLINEBUF(s)	setvbuf(s, NULL, _IOLBF, BUFSIZ)
+# define SETLINEBUF(s)	setvbuf(s, NULL, _IOLBF, BUFSIZ)
 #else /*][*/
-#define SETLINEBUF(s)	setlinebuf(s)
+# define SETLINEBUF(s)	setlinebuf(s)
 #endif /*]*/
 
 #if !defined(INADDR_NONE) /*[*/
-#define INADDR_NONE	0xffffffffL
+# define INADDR_NONE	0xffffffffL
 #endif /*]*/
 
 /* Globals. */

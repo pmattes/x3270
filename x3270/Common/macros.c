@@ -79,7 +79,7 @@
 #include "varbufc.h"
 #include "xio.h"
 
-#include "w3miscc.h"
+#include "w3misc.h"
 
 #define NVT_SAVE_SIZE	4096
 

@@ -73,7 +73,7 @@
 # endif /*]*/
 #endif /*]*/
 
-#include "w3miscc.h"
+#include "w3misc.h"
 
 #define IBS	4096
 

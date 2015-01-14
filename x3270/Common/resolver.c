@@ -41,7 +41,7 @@
 #include <stdio.h>
 #include "lazya.h"
 #include "resolverc.h"
-#include "w3miscc.h"
+#include "w3misc.h"
 
 #if defined(_WIN32) && defined(X3270_IPV6) /*[*/
 static int win32_getaddrinfo(const char *node, const char *service,
@@ -49,12 +49,12 @@ static int win32_getaddrinfo(const char *node, const char *service,
 static void win32_freeaddrinfo(struct addrinfo *res);
 static int win32_getnameinfo(const struct sockaddr *sa, socklen_t salen,
 	char *host, size_t hostlen, char *serv, size_t servlen, int flags);
-#undef getaddrinfo
-#define getaddrinfo	win32_getaddrinfo
-#undef freeaddrinfo
-#define freeaddrinfo	win32_freeaddrinfo
-#undef getnameinfo
-#define getnameinfo	win32_getnameinfo
+# undef getaddrinfo
+# define getaddrinfo	win32_getaddrinfo
+# undef freeaddrinfo
+# define freeaddrinfo	win32_freeaddrinfo
+# undef getnameinfo
+# define getnameinfo	win32_getnameinfo
 
 /* Run-time check for IPv6 availability. */
 static Boolean

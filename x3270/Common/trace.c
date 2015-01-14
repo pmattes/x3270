@@ -61,7 +61,7 @@
 #include "utf8c.h"
 #include "utilc.h"
 #if defined(_WIN32) /*[*/
-# include "w3miscc.h"
+# include "w3misc.h"
 # include "winprint.h"
 #endif /*]*/
 

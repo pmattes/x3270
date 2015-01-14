@@ -54,7 +54,7 @@
 #include "telnetc.h"
 #include "trace.h"
 #include "utilc.h"
-#include "w3miscc.h"
+#include "w3misc.h"
 
 #if defined(PR3287) /*[*/
 #include "pr3287.h"

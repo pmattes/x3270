@@ -57,7 +57,7 @@
 #include "trace.h"
 #include "unicodec.h"
 #include "utilc.h"
-#include "w3miscc.h"
+#include "w3misc.h"
 #include "xio.h"
 
 #include <wincon.h>

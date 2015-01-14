@@ -90,11 +90,11 @@
 #include "trace.h"
 #include "unicodec.h"
 #include "utilc.h"
-#include "w3miscc.h"
+#include "w3misc.h"
 #include "xio.h"
 
 #if defined(_WIN32) && defined(HAVE_LIBSSL) /*[*/
-#define ROOT_CERTS	"root_certs.txt"
+# define ROOT_CERTS	"root_certs.txt"
 #endif /*]*/
 
 #if !defined(TELOPT_NAWS) /*[*/

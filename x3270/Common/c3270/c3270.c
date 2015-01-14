@@ -91,7 +91,7 @@
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-#include "w3miscc.h"
+#include "w3misc.h"
 #include "winversc.h"
 #include "windirsc.h"
 #include "relinkc.h"

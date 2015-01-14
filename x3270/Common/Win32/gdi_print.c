@@ -52,7 +52,7 @@
 #include "trace.h"
 #include "unicodec.h"
 #include "utilc.h"
-#include "w3miscc.h"
+#include "w3misc.h"
 
 /* Defines */
 #define PPI			72	/* points per inch */

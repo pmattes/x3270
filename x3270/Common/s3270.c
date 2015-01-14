@@ -74,7 +74,7 @@
 #include "xio.h"
 
 #if defined(_WIN32) /*[*/
-#include "w3miscc.h"
+#include "w3misc.h"
 #include "windirsc.h"
 #include "winversc.h"
 #endif /*]*/

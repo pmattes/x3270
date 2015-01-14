@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,18 +26,17 @@
  */
 
 /*
- *	w3misc.c
+ *	w3misc.h
  *		Miscellaneous Win32 functions.
  */
 
 /*
- * Note: This header file declares only the 'new' functions in w3misc.c.
- * The replacement functions defined in w3misc.c are declared in wincmn.h.
+ * Note: This header file declares only the x3270-specific functions in
+ * w3misc.c.  The libc replacement functions defined in w3misc.c are declared
+ * in wincmn.h.
  */
 
 #if defined(_WIN32) /*[*/
-
-extern int sockstart(void);
-extern const char *win32_strerror(int e);
-
+int sockstart(void);
+const char *win32_strerror(int e);
 #endif /*]*/
