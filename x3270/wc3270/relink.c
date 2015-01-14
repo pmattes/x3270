@@ -44,7 +44,6 @@
 
 #include "ctlrc.h"
 #include "hostc.h"
-#include "keymapc.h"
 #include "kybdc.h"
 #include "macrosc.h"
 #include "screenc.h"

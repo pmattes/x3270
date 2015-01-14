@@ -56,7 +56,7 @@
 #include "httpd-nodesc.h"
 #include "httpd-ioc.h"
 #include "idlec.h"
-#include "keymapc.h"
+#include "keymap.h"
 #include "kybdc.h"
 #include "macrosc.h"
 #include "menubarc.h"

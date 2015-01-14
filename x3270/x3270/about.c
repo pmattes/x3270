@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  * 
@@ -46,7 +46,7 @@
 
 #include "about.h"
 #include "charsetc.h"
-#include "keymapc.h"
+#include "keymap.h"
 #include "lazya.h"
 #include "linemodec.h"
 #include "popupsc.h"

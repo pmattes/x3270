@@ -54,7 +54,7 @@
 #include "ft_guic.h"
 #include "hostc.h"
 #include "idle_gui.h"
-#include "keymapc.h"
+#include "keymap.h"
 #include "keypadc.h"
 #include "kybdc.h"
 #include "macrosc.h"

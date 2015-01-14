@@ -61,7 +61,7 @@
 #include "httpd-ioc.h"
 #include "icmdc.h"
 #include "idlec.h"
-#include "keymapc.h"
+#include "keymap.h"
 #include "keypadc.h"
 #include "kybdc.h"
 #include "lazya.h"

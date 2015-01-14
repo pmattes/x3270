@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,7 @@
 #include "actions.h"
 #include "gluec.h"
 #include "hostc.h"
-#include "keymapc.h"
+#include "keymap.h"
 #include "macrosc.h"
 #include "popupsc.h"
 #include "screenc.h"

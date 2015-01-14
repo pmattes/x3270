@@ -42,7 +42,7 @@
 
 #include "actions.h"
 #include "dialogc.h"
-#include "keymapc.h"
+#include "keymap.h"
 #include "lazya.h"
 #include "macrosc.h"
 #include "menubarc.h"

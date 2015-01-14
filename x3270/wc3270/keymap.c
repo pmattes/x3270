@@ -41,7 +41,7 @@
 #include "actions.h"
 #include "gluec.h"
 #include "hostc.h"
-#include "keymapc.h"
+#include "keymap.h"
 #include "macrosc.h"
 #include "popupsc.h"
 #include "screenc.h"

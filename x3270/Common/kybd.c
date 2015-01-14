@@ -57,7 +57,7 @@
 #include "ftc.h"
 #include "hostc.h"
 #include "idlec.h"
-#include "keymapc.h"
+#include "keymap.h"
 #include "keypadc.h"
 #include "kybdc.h"
 #include "lazya.h"

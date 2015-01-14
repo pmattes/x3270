@@ -47,7 +47,7 @@
 # include "fallbacksc.h"
 #endif /*]*/
 #include "idlec.h"
-#include "keymapc.h"
+#include "keymap.h"
 #include "keypadc.h"
 #include "lazya.h"
 #include "popupsc.h"

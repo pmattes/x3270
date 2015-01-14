@@ -49,7 +49,7 @@
 #include "screen.h"
 
 #include "hostc.h"
-#include "keymapc.h"
+#include "keymap.h"
 #include "keypadc.h"
 #include "kybdc.h"
 #include "menubarc.h"

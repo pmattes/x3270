@@ -47,7 +47,7 @@
 #include "actions.h"
 #include "aplc.h"
 #include "idlec.h"
-#include "keymapc.h"
+#include "keymap.h"
 #include "keysym2ucs.h"
 #include "kybdc.h"
 #include "macrosc.h"

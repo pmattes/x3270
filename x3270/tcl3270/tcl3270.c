@@ -70,7 +70,7 @@
 #include "ftc.h"
 #include "gluec.h"
 #include "hostc.h"
-#include "keymapc.h"
+#include "keymap.h"
 #include "kybdc.h"
 #include "lazya.h"
 #include "macrosc.h"
