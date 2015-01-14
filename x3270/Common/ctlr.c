@@ -60,7 +60,7 @@
 #include "popupsc.h"
 #include "screenc.h"
 #include "scrollc.h"
-#include "seec.h"
+#include "see.h"
 #include "selectc.h"
 #include "sfc.h"
 #include "statusc.h"

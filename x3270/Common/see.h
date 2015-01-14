@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,15 +26,15 @@
  */
 
 /*
- *	seec.h
+ *	see.h
  *		Declarations for see.c
  *
  */
 
-extern const char *see_aid(unsigned char code);
-extern const char *see_attr(unsigned char fa);
-extern const char *see_color(unsigned char setting);
-extern const char *see_ebc(unsigned char ch);
-extern const char *see_efa(unsigned char efa, unsigned char value);
-extern const char *see_efa_only(unsigned char efa);
-extern const char *see_qcode(unsigned char id);
+const char *see_aid(unsigned char code);
+const char *see_attr(unsigned char fa);
+const char *see_color(unsigned char setting);
+const char *see_ebc(unsigned char ch);
+const char *see_efa(unsigned char efa, unsigned char value);
+const char *see_efa_only(unsigned char efa);
+const char *see_qcode(unsigned char id);

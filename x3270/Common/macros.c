@@ -71,7 +71,6 @@
 # include "pr3287_session.h"
 #endif /*]*/
 #include "screenc.h"
-#include "seec.h"
 #include "statusc.h"
 #include "tablesc.h"
 #include "telnetc.h"

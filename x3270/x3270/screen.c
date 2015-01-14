@@ -74,7 +74,7 @@
 #include "savec.h"
 #include "screenc.h"
 #include "scrollc.h"
-#include "seec.h"
+#include "see.h"
 #include "statusc.h"
 #include "tablesc.h"
 #include "trace.h"

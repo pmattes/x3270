@@ -44,7 +44,7 @@
 #include "tablesc.h"
 #include "utf8c.h"
 #include "utilc.h"
-#include "seec.h"
+#include "see.h"
 #include "unicodec.h"
 #include "varbufc.h"
 

@@ -40,6 +40,16 @@ ws3270-dir:
 x3270-dir:
 	cd x3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
 
+depend:
+	cd c3270 && $(MAKE) $@
+	cd pr3287 && $(MAKE) $@
+	cd s3270 && $(MAKE) $@
+	cd tcl3270 && $(MAKE) $@
+	cd wc3270 && $(MAKE) $@
+	cd wpr3287 && $(MAKE) $@
+	cd ws3270 && $(MAKE) $@
+	cd x3270 && $(MAKE) $@
+
 clean:
 	cd c3270 && $(MAKE) $@
 	cd pr3287 && $(MAKE) $@

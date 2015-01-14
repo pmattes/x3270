@@ -50,7 +50,7 @@
 #include "ft_dftc.h"
 #include "kybdc.h"
 #include "screenc.h"
-#include "seec.h"
+#include "see.h"
 #include "sfc.h"	/* has to come before rpqc.h */
 #include "rpqc.h"
 #include "tablesc.h"

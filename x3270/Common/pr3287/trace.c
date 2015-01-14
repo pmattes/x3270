@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,6 @@
 #include "3270ds.h"
 
 #include "ctlrc.h"
-#include "seec.h"
 #include "tablesc.h"
 #include "trace.h"
 
