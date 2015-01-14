@@ -87,7 +87,7 @@
 #include "utf8c.h"
 #include "utilc.h"
 #include "varbufc.h"
-#include "xioc.h"
+#include "xio.h"
 
 /*
  * The following variable is a special hack that is needed in order for

@@ -71,7 +71,7 @@
 #include "togglesc.h"
 #include "trace.h"
 #include "utilc.h"
-#include "xioc.h"
+#include "xio.h"
 
 #if defined(_WIN32) /*[*/
 #include "w3miscc.h"

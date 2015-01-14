@@ -26,13 +26,13 @@
  */
 
 /*
- *	xioc.h
+ *	xio.h
  *		Global declarations for xio.c.
  */
 
-extern void x3270_exit(int n);
-extern void x_add_input(iosrc_t iosrc);
-extern void x_except_off(void);
-extern void x_except_on(iosrc_t iosrc);
-extern void x_remove_input(void);
-extern void xio_register(void);
+void x3270_exit(int n);
+void x_add_input(iosrc_t iosrc);
+void x_except_off(void);
+void x_except_on(iosrc_t iosrc);
+void xio_register(void);
+void x_remove_input(void);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -81,7 +81,7 @@
 #include "trace.h"
 #include "utf8c.h"
 #include "utilc.h"
-#include "xioc.h"
+#include "xio.h"
 
 #if defined(HAVE_LIBREADLINE) /*[*/
 #include <readline/readline.h>

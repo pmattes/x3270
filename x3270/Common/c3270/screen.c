@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2015, Paul Mattes.
+ * Copyright (c) 2000-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,7 @@
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
-#include "xioc.h"
+#include "xio.h"
 
 #include "menubarc.h"
 

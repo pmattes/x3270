@@ -52,7 +52,7 @@
 #include "screenc.h"
 #include "trace.h"
 #include "utilc.h"
-#include "xioc.h"
+#include "xio.h"
 
 static char vmsgbuf[4096];
 

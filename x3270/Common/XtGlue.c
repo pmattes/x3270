@@ -34,7 +34,7 @@
 #include "trace.h"
 #include "utilc.h"
 #if defined(_WIN32) /*[*/
-#include "xioc.h"
+# include "xio.h"
 #endif /*]*/
 
 #include <stdio.h>

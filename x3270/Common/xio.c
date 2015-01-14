@@ -42,7 +42,7 @@
 #include "telnetc.h"
 #include "togglesc.h"
 #include "utilc.h"
-#include "xioc.h"
+#include "xio.h"
 
 /* Statics. */
 static ioid_t ns_read_id;

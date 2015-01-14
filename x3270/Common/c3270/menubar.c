@@ -55,7 +55,6 @@
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
-#include "xioc.h"
 
 #include "menubarc.h"
 

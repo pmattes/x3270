@@ -50,7 +50,6 @@
 #include "screenc.h"
 #include "trace.h"
 #include "utilc.h"
-#include "xioc.h"
 
 #include <wincon.h>
 

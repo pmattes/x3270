@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,7 @@
 #include "telnetc.h"
 #include "trace.h"
 #include "utilc.h"
-#include "xioc.h"
+#include "xio.h"
 
 #include <errno.h>
 

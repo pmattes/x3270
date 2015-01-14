@@ -58,7 +58,7 @@
 #include "unicodec.h"
 #include "utilc.h"
 #include "w3miscc.h"
-#include "xioc.h"
+#include "xio.h"
 
 #include <wincon.h>
 #include "winversc.h"

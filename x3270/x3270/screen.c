@@ -84,7 +84,7 @@
 #include "utilc.h"
 #include "xactions.h"
 #include "xappres.h"
-#include "xioc.h"
+#include "xio.h"
 
 #if defined(HAVE_SYS_SELECT_H) /*[*/
 #include <sys/select.h>		/* fd_set declaration */

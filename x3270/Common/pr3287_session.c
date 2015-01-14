@@ -65,7 +65,7 @@
 #include "utilc.h"
 #include "varbufc.h"
 #include "w3miscc.h"
-#include "xioc.h"
+#include "xio.h"
 
 #define PRINTER_BUF	1024
 

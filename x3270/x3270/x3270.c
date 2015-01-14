@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -77,7 +77,7 @@
 #include "utilc.h"
 #include "xactions.h"
 #include "xappres.h"
-#include "xioc.h"
+#include "xio.h"
 #include "xkybd.h"
 
 /* Globals */

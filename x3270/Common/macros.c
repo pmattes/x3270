@@ -77,7 +77,7 @@
 #include "utf8c.h"
 #include "utilc.h"
 #include "varbufc.h"
-#include "xioc.h"
+#include "xio.h"
 
 #include "w3miscc.h"
 
