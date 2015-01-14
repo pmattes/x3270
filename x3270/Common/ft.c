@@ -38,7 +38,7 @@
 #include <errno.h>
 
 #include "appres.h"
-#include "actionsc.h"
+#include "actions.h"
 #include "charsetc.h"
 #include "ft_cutc.h"
 #include "ft_dftc.h"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,7 @@
 #include "objects.h"
 #include "appres.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "hostc.h"
 #include "macrosc.h"
 #include "menubarc.h"

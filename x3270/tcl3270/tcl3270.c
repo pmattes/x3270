@@ -64,7 +64,7 @@
 #include "resources.h"
 #include "ctlr.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "ftc.h"

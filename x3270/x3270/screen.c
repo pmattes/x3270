@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -59,7 +59,7 @@
 #include "resources.h"
 #include "togglesc.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "display8.h"

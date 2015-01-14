@@ -39,7 +39,7 @@
 #include "ctlr.h"
 #include "togglesc.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "gluec.h"

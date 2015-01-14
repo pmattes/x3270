@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@
 #include "resources.h"
 #include "screen.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "about.h"
 #include "charsetc.h"
 #include "ft_guic.h"

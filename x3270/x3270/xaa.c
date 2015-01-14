@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,6 @@
 #include <X11/StringDefs.h>
 #include <X11/Xaw/Dialog.h>
 
-#include "actionsc.h"
 #include "macrosc.h"
 #include "popupsc.h"
 #include "xaa.h"

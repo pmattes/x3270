@@ -51,7 +51,7 @@
 #include "resources.h"
 #include "togglesc.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #if !defined(TCL3270) /*[*/
 # include "bind-optc.h"
 #endif /*]*/

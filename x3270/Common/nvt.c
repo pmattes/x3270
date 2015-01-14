@@ -37,7 +37,6 @@
 #include "3270ds.h"
 #include "togglesc.h"
 
-#include "actionsc.h"
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "hostc.h"

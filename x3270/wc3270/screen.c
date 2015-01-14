@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2015, Paul Mattes.
+ * Copyright (c) 2000-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@
 #include "ctlr.h"
 #include "togglesc.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "ctlrc.h"
 #include "gluec.h"
 #include "hostc.h"

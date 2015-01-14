@@ -69,7 +69,7 @@
 
 #include "appres.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "ctlrc.h"
 #include "hostc.h"
 #include "kybdc.h"

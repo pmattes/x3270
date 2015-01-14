@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
 
 #include "globals.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "macrosc.h"
 #include "3270ds.h"
 #include "appres.h"

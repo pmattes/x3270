@@ -39,7 +39,7 @@
 #include "3270ds.h"
 #include "appres.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "ctlr.h"
 #include "ctlrc.h"
 #include "popupsc.h"

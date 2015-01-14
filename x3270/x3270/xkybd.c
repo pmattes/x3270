@@ -44,7 +44,7 @@
 
 #include "resources.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "aplc.h"
 #include "idlec.h"
 #include "keymapc.h"

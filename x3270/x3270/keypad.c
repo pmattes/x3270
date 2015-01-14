@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@
 #include "resources.h"
 #include "screen.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "keypadc.h"
 #include "kybdc.h"
 #include "menubarc.h"

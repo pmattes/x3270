@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -38,7 +38,7 @@
 #include "3270ds.h"
 #include "ft_dft_ds.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "charsetc.h"
 #include "kybdc.h"
 #include "ft_dftc.h"

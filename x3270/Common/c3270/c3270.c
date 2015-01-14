@@ -47,7 +47,7 @@
 #include "3270ds.h"
 #include "resources.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "bind-optc.h"
 #include "charsetc.h"
 #include "ctlrc.h"

@@ -32,7 +32,6 @@
 
 #include "globals.h"
 
-#include "actionsc.h"
 #include "print_guic.h"
 #include "stmenu.h"
 

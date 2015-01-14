@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
  */
 
 /*
- *	actionsc.h
+ *	actions.h
  *		Global declarations for actions.c.
  */
 
@@ -50,11 +50,11 @@ extern unsigned actions_list_count;
 
 extern const char       *ia_name[];
 
-extern Boolean action_suppressed(const char *name, const char *suppress);
-extern void action_debug(const char *aname, ia_t ia, unsigned argc,
+Boolean action_suppressed(const char *name, const char *suppress);
+void action_debug(const char *aname, ia_t ia, unsigned argc,
 	const char **argv);
-extern void run_action(const char *name, enum iaction cause,
-	const char *parm1, const char *parm2);
-extern int check_argc(const char *aname, unsigned nargs, unsigned nargs_min,
+void run_action(const char *name, enum iaction cause, const char *parm1,
+	const char *parm2);
+int check_argc(const char *aname, unsigned nargs, unsigned nargs_min,
 	unsigned nargs_max);
-extern void register_actions(action_table_t *actions, unsigned count);
+void register_actions(action_table_t *actions, unsigned count);

@@ -44,7 +44,6 @@
 #include <assert.h>
 
 #include "appres.h"
-#include "actionsc.h"
 #include "lazya.h"
 #include "macrosc.h"
 #include "popupsc.h"

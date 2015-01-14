@@ -23,7 +23,7 @@ HTTPD_OBJECTS = bind-opt.$(OBJ) favicon.$(OBJ) httpd-core.$(OBJ) \
 	httpd-io.$(OBJ) httpd-nodes.$(OBJ)
 
 # Header files common to all 3270 emulators
-COMMON_HEADERS = 3270ds.h actionsc.h aplc.h appres.h arpa_telnet.h \
+COMMON_HEADERS = 3270ds.h actions.h aplc.h appres.h arpa_telnet.h \
 	asprintfc.h cg.h charsetc.h childc.h ctlr.h ctlrc.h dialogc.h \
 	fallbacksc.h fprint_screenc.h ft_cut_ds.h ft_cutc.h ft_dft_ds.h \
 	ft_dftc.h ft_guic.h ft_private.h ftc.h globals.h hostc.h idlec.h \

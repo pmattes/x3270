@@ -49,7 +49,7 @@
 #include "resources.h"
 #include "screen.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "aplc.h"
 #include "charsetc.h"
 #include "ctlrc.h"

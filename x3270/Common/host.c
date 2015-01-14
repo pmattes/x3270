@@ -36,7 +36,7 @@
 #include "appres.h"
 #include "resources.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "hostc.h"
 #include "macrosc.h"
 #include "menubarc.h"

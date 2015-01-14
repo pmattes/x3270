@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2012, 2014 Paul Mattes.
+ * Copyright (c) 1996-2012, 2014-2015 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  * 
@@ -48,7 +48,6 @@
 #include <errno.h>
 
 #include "appres.h"
-#include "actionsc.h"
 #include "dialogc.h"
 #include "ft_cutc.h"
 #include "ft_dftc.h"

@@ -34,7 +34,7 @@
 #include "appres.h"
 #include "resources.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "gluec.h"
 #include "help.h"
 #include "popupsc.h"

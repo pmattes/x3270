@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2012, 2014 Paul Mattes.
+ * Copyright (c) 1996-2012, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 #include "ctlr.h"
 #include "3270ds.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "ft_cutc.h"

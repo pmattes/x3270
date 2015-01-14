@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015, Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -37,7 +37,7 @@
 #include "globals.h"
 #include "appres.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "macrosc.h"
 #include "popupsc.h"
 #include "trace.h"

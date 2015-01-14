@@ -37,7 +37,7 @@
 
 #include "globals.h"
 
-#include "actionsc.h"
+#include "actions.h"
 #include "hostc.h"
 #include "telnetc.h"
 #include "togglesc.h"

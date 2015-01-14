@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2014, Paul Mattes.
+ * Copyright (c) 2006-2015, Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -36,12 +36,10 @@
 #include "globals.h"
 
 #include <signal.h>
-#include "appres.h"
 #include "3270ds.h"
 #include "resources.h"
 #include "ctlr.h"
 
-#include "actionsc.h"
 #include "ctlrc.h"
 #include "hostc.h"
 #include "keymapc.h"
