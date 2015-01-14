@@ -83,7 +83,7 @@
 #if defined(C3270) /*[*/
 # include "screenc.h"
 #endif /*]*/
-#include "ssl_passwd_guic.h"
+#include "ssl_passwd_gui.h"
 #include "statusc.h"
 #include "telnetc.h"
 #include "telnet_private.h"

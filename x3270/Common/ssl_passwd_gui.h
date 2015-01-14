@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Paul Mattes.
+ * Copyright (c) 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,14 +26,14 @@
  */
 
 /*
- *	ssl_passwd_guic.h
+ *	ssl_passwd_gui.h
  *		Global declarations for ssl_passwd_gui.c.
  */
 
 #if defined(X3270_INTERACTIVE) /*[*/
-extern int ssl_passwd_gui_callback(char *buf, int size);
-extern void ssl_passwd_gui_reset(void);
-extern Boolean ssl_passwd_gui_retry(void);
+int ssl_passwd_gui_callback(char *buf, int size);
+void ssl_passwd_gui_reset(void);
+Boolean ssl_passwd_gui_retry(void);
 #else /*][*/
 #define ssl_passwd_gui_callback(buf, size)	(-1)
 #define ssl_passwd_gui_reset()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -44,7 +44,7 @@
 # if defined(WC3270) /*[*/
 #  include "screenc.h"
 # endif /*]*/
-# include "ssl_passwd_guic.h"
+# include "ssl_passwd_gui.h"
 
 /* Statics. */
 static Boolean ssl_password_prompted;

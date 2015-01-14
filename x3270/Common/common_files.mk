@@ -31,7 +31,7 @@ COMMON_HEADERS = 3270ds.h actions.h aplc.h appres.h arpa_telnet.h asprintfc.h \
 	menubarc.h nvt_guic.h nvtc.h objects.h popupsc.h print_guic.h \
 	print_screen.h proxy.h proxyc.h resolverc.h resources.h rpqc.h \
 	savec.h screen.h screenc.h scrollc.h see.h selectc.h sfc.h \
-	ssl_passwd_guic.h statusc.h tables.h telnet_private.h telnetc.h \
+	ssl_passwd_gui.h statusc.h tables.h telnet_private.h telnetc.h \
 	tn3270e.h togglesc.h trace.h trace_gui.h unicode_dbcsc.h unicodec.h \
 	utf8c.h utilc.h varbufc.h w3miscc.h xioc.h xl.h
 

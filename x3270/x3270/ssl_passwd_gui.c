@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -48,7 +48,7 @@
 #include "hostc.h"
 #include "objects.h"
 #include "popupsc.h"
-#include "ssl_passwd_guic.h"
+#include "ssl_passwd_gui.h"
 #include "telnetc.h"
 #include "telnet_private.h"
 
