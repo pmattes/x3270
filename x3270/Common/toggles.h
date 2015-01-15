@@ -30,7 +30,7 @@
  */
 
 /*
- *	togglesc.h
+ *	toggles.h
  *		Global declarations for toggles.c.
  */
 

@@ -40,7 +40,7 @@
 #include "actions.h"
 #include "hostc.h"
 #include "telnetc.h"
-#include "togglesc.h"
+#include "toggles.h"
 #include "utilc.h"
 #include "xio.h"
 

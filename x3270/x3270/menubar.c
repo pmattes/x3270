@@ -68,7 +68,7 @@
 #include "screenc.h"
 #include "stmenu.h"
 #include "telnetc.h"
-#include "togglesc.h"
+#include "toggles.h"
 #include "utilc.h"
 #include "xaa.h"
 #include "xactions.h"

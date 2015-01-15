@@ -1,4 +1,5 @@
-/* Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+/*
+ * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -55,7 +56,7 @@
 #include "screen.h"
 #include "screenc.h"
 #include "selectc.h"
-#include "togglesc.h"
+#include "toggles.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "xactions.h"

@@ -39,7 +39,7 @@
 #include "3270ds.h"
 #include "resources.h"
 #include "ctlr.h"
-#include "togglesc.h"
+#include "toggles.h"
 
 #include "actions.h"
 #include "ctlrc.h"

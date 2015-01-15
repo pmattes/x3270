@@ -55,7 +55,7 @@
 #include "save.h"
 #include "statusc.h"
 #include "telnetc.h"
-#include "togglesc.h"
+#include "toggles.h"
 #include "trace.h"
 #include "trace_gui.h"
 #include "utf8c.h"

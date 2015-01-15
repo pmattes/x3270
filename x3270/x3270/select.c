@@ -65,7 +65,7 @@
 #include "ctlr.h"
 #include "screen.h"
 #include "resources.h"
-#include "togglesc.h"
+#include "toggles.h"
 
 #include "charsetc.h"
 #include "ctlrc.h"

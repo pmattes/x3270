@@ -35,7 +35,7 @@
 #include "appres.h"
 #include "ctlr.h"
 #include "3270ds.h"
-#include "togglesc.h"
+#include "toggles.h"
 
 #include "charsetc.h"
 #include "ctlrc.h"

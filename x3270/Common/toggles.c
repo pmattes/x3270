@@ -45,7 +45,7 @@
 #include "popupsc.h"
 #include "screenc.h"
 #include "trace.h"
-#include "togglesc.h"
+#include "toggles.h"
 
 /* Live state of toggles. */
 typedef struct toggle {

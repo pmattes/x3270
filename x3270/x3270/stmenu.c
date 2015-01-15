@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015, Paul Mattes.
+ * Copyright (c) 2013-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@
 #include "popupsc.h"
 #include "print_screen.h"
 #include "stmenu.h"
-#include "togglesc.h"
+#include "toggles.h"
 #include "trace.h"
 
 #define CLOSE_VGAP	0

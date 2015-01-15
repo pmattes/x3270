@@ -72,7 +72,7 @@
 #include "selectc.h"
 #include "statusc.h"
 #include "telnetc.h"
-#include "togglesc.h"
+#include "toggles.h"
 #include "trace.h"
 #include "utilc.h"
 #include "xactions.h"

@@ -54,7 +54,7 @@
 #include "screenc.h"
 #include "selectc.h"
 #include "telnetc.h"
-#include "togglesc.h"
+#include "toggles.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utilc.h"

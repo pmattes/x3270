@@ -68,7 +68,7 @@
 #include "screenc.h"
 #include "selectc.h"
 #include "telnetc.h"
-#include "togglesc.h"
+#include "toggles.h"
 #include "trace.h"
 #include "utilc.h"
 #include "xio.h"

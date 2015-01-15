@@ -44,7 +44,7 @@
 #include "ctlr.h"
 #include "screen.h"
 #include "resources.h"
-#include "togglesc.h"
+#include "toggles.h"
 
 #include "actions.h"
 #include "charsetc.h"

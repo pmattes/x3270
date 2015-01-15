@@ -52,7 +52,7 @@
 #include "lazya.h"
 #include "popupsc.h"
 #include "screenc.h"
-#include "togglesc.h"
+#include "toggles.h"
 #include "utilc.h"
 
 

@@ -77,7 +77,7 @@
 #include "selectc.h"
 #include "statusc.h"
 #include "telnetc.h"
-#include "togglesc.h"
+#include "toggles.h"
 #include "trace.h"
 #include "utf8c.h"
 #include "utilc.h"

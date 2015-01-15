@@ -50,7 +50,7 @@
 #include "macrosc.h"
 #include "popupsc.h"
 #include "screenc.h"
-#include "togglesc.h"
+#include "toggles.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utf8c.h"
@@ -126,276 +126,286 @@ unsigned menu_is_up = 0;
 cmenu_t *
 add_menu(char *title)
 {
-	cmenu_t *c;
+    cmenu_t *c;
 
-	c = (cmenu_t *)Malloc(sizeof(cmenu_t) + strlen(title) + 1);
-	c->title = (char *)(c + 1);
-	c->offset = current_offset;
-	c->width = strlen(title) + 2;
-	current_offset += MENU_WIDTH;
-	strcpy(c->title, title);
-	c->callback = NULL;
-	c->param = NULL;
-	c->items = NULL;
-	c->last = NULL;
+    c = (cmenu_t *)Malloc(sizeof(cmenu_t) + strlen(title) + 1);
+    c->title = (char *)(c + 1);
+    c->offset = current_offset;
+    c->width = strlen(title) + 2;
+    current_offset += MENU_WIDTH;
+    strcpy(c->title, title);
+    c->callback = NULL;
+    c->param = NULL;
+    c->items = NULL;
+    c->last = NULL;
 
-	c->prev = menu_last;
-	c->next = NULL;
-	if (menu_last != NULL)
-		menu_last->next = c;
-	else
-		menus = c;
-	menu_last = c;
-	return c;
+    c->prev = menu_last;
+    c->next = NULL;
+    if (menu_last != NULL) {
+	menu_last->next = c;
+    } else {
+    }
+	menus = c;
+    menu_last = c;
+    return c;
 }
 
 /* Add an item to a menu. */
 cmenu_item_t *
 add_item(cmenu_t *cmenu, char *label, void (*action)(void *), void *param)
 {
-	cmenu_item_t *i;
+    cmenu_item_t *i;
 
-	i = (cmenu_item_t *)Malloc(sizeof(cmenu_item_t));
-	i->label = Malloc(strlen(label) + 1);
-	strcpy(i->label, label);
-	i->action = action;
-	i->param = param;
-	i->enabled = True;
-	i->next = NULL;
-	i->prev = cmenu->last;
-	i->cmenu = cmenu;
-	if (cmenu->last)
-		cmenu->last->next = i;
-	else
-		cmenu->items = i;
-	cmenu->last = i;
-	if (strlen(label) + 2 > cmenu->width)
-		cmenu->width = strlen(label) + 2;
-	return i;
+    i = (cmenu_item_t *)Malloc(sizeof(cmenu_item_t));
+    i->label = Malloc(strlen(label) + 1);
+    strcpy(i->label, label);
+    i->action = action;
+    i->param = param;
+    i->enabled = True;
+    i->next = NULL;
+    i->prev = cmenu->last;
+    i->cmenu = cmenu;
+    if (cmenu->last) {
+	cmenu->last->next = i;
+    } else {
+	cmenu->items = i;
+    }
+    cmenu->last = i;
+    if (strlen(label) + 2 > cmenu->width) {
+	cmenu->width = strlen(label) + 2;
+    }
+    return i;
 }
 
 void
 enable_item(cmenu_item_t *i, Boolean enabled)
 {
-	i->enabled = enabled;
-	/* TODO: Do more here. */
+    i->enabled = enabled;
+    /* TODO: Do more here. */
 }
 
 void
 rename_item(cmenu_item_t *i, char *name)
 {
-	Replace(i->label, NewString(name));
-	if (strlen(name) + 2 > i->cmenu->width)
-		i->cmenu->width = strlen(name) + 2;
+    Replace(i->label, NewString(name));
+    if (strlen(name) + 2 > i->cmenu->width) {
+	i->cmenu->width = strlen(name) + 2;
+    }
 }
 
 void
 set_callback(cmenu_t *cmenu, void (*callback)(void *), void *param)
 {
-	cmenu->callback = callback;
-	cmenu->param = param;
+    cmenu->callback = callback;
+    cmenu->param = param;
 }
 
 void
 basic_menu_init(void)
 {
-	memset(menu_screen, 0, sizeof(ucs4_t) * MODEL_2_COLS * MODEL_2_ROWS);
-	memset(menu_rv, 0, sizeof(unsigned char) * MODEL_2_COLS * MODEL_2_ROWS);
-	current_menu = NULL;
-	current_item = NULL;
-	menu_is_up &= ~MENU_IS_UP;
-	pop_up_keypad(False);
-	screen_changed = True;
+    memset(menu_screen, 0, sizeof(ucs4_t) * MODEL_2_COLS * MODEL_2_ROWS);
+    memset(menu_rv, 0, sizeof(unsigned char) * MODEL_2_COLS * MODEL_2_ROWS);
+    current_menu = NULL;
+    current_item = NULL;
+    menu_is_up &= ~MENU_IS_UP;
+    pop_up_keypad(False);
+    screen_changed = True;
 }
 
 /* Undraw a menu. */
 void
 undraw_menu(cmenu_t *cmenu)
 {
-	int row, col;
-	cmenu_item_t *i;
+    int row, col;
+    cmenu_item_t *i;
 
-	screen_changed = True;
+    screen_changed = True;
 
-	/* Unhighlight the menu title. */
-	for (col = cmenu->offset; col < cmenu->offset + MENU_WIDTH; col++)
-		menu_rv[(0 * MODEL_2_COLS) + col] = False;
+    /* Unhighlight the menu title. */
+    for (col = cmenu->offset; col < cmenu->offset + MENU_WIDTH; col++) {
+	menu_rv[(0 * MODEL_2_COLS) + col] = False;
+    }
 
-	if (!cmenu->items)
-		return;
+    if (!cmenu->items) {
+	return;
+    }
 
-	/* Erase the top border. */
-	row = 1;
-	for (col = cmenu->offset;
-	     (size_t)col < cmenu->offset + cmenu->width;
-	     col++) {
-		menu_screen[(row * MODEL_2_COLS) + col] = 0;
+    /* Erase the top border. */
+    row = 1;
+    for (col = cmenu->offset;
+	 (size_t)col < cmenu->offset + cmenu->width;
+	 col++) {
+	menu_screen[(row * MODEL_2_COLS) + col] = 0;
+    }
+
+    /* Erase the menu items. */
+    row = 2;
+    for (i = cmenu->items; i != NULL; i = i->next) {
+	col = cmenu->offset;
+	while ((size_t)col < cmenu->offset + cmenu->width + 2) {
+	    menu_screen[(row * MODEL_2_COLS) + col] = 0;
+	    menu_rv[(row * MODEL_2_COLS) + col] = False;
+	    col++;
 	}
+	row++;
+    }
 
-	/* Erase the menu items. */
-	row = 2;
-	for (i = cmenu->items; i != NULL; i = i->next) {
-		col = cmenu->offset;
-		while ((size_t)col < cmenu->offset + cmenu->width + 2) {
-			menu_screen[(row * MODEL_2_COLS) + col] = 0;
-			menu_rv[(row * MODEL_2_COLS) + col] = False;
-			col++;
-		}
-		row++;
-	}
-
-	/* Erase the bottom border. */
-	for (col = cmenu->offset;
-	     (size_t)col < cmenu->offset + cmenu->width;
-	     col++) {
-		menu_screen[(row * MODEL_2_COLS) +col] = 0;
-	}
+    /* Erase the bottom border. */
+    for (col = cmenu->offset;
+	 (size_t)col < cmenu->offset + cmenu->width;
+	 col++) {
+	menu_screen[(row * MODEL_2_COLS) +col] = 0;
+    }
 }
 
 /* Draw a menu. */
 void
 draw_menu(cmenu_t *cmenu)
 {
-	int row, col;
-	cmenu_item_t *i;
+    int row, col;
+    cmenu_item_t *i;
 
-	screen_changed = True;
+    screen_changed = True;
 
-	/* Highlight the title. */
-	row = 0;
-	for (col = cmenu->offset;
-	     col < cmenu->offset + MENU_WIDTH - 1;
-	     col++) {
-		menu_rv[(row * MODEL_2_COLS) + col] = True;
+    /* Highlight the title. */
+    row = 0;
+    for (col = cmenu->offset;
+	 col < cmenu->offset + MENU_WIDTH - 1;
+	 col++) {
+	menu_rv[(row * MODEL_2_COLS) + col] = True;
+    }
+    if (!cmenu->items) {
+	return;
+    }
+
+    /* Draw the top border. */
+    row = 1;
+    for (col = cmenu->offset;
+	 (size_t)col < cmenu->offset + cmenu->width;
+	 col++) {
+	int ix = (row * MODEL_2_COLS) + col;
+
+	if (col == cmenu->offset) {
+	    map_acs('l', &menu_screen[ix], &menu_acs[ix]);
+	} else if ((size_t)col < cmenu->offset + cmenu->width - 1) {
+	    map_acs('q', &menu_screen[ix], &menu_acs[ix]);
+	} else {
+	    map_acs('k', &menu_screen[ix], &menu_acs[ix]);
 	}
-	if (!cmenu->items)
-		return;
+    }
 
-	/* Draw the top border. */
-	row = 1;
-	for (col = cmenu->offset;
-	     (size_t)col < cmenu->offset + cmenu->width;
-	     col++) {
-	    	int ix = (row * MODEL_2_COLS) + col;
+    /* Draw the items. */
+    row = 2;
+    for (i = cmenu->items; i != NULL; i = i->next) {
+	char *d;
 
-		if (col == cmenu->offset)
-			map_acs('l', &menu_screen[ix], &menu_acs[ix]);
-		else if ((size_t)col < cmenu->offset + cmenu->width - 1)
-		    	map_acs('q', &menu_screen[ix], &menu_acs[ix]);
-		else
-		    	map_acs('k', &menu_screen[ix], &menu_acs[ix]);
+	col = cmenu->offset;
+	map_acs('x', &menu_screen[(row * MODEL_2_COLS) + col],
+		&menu_acs[(row * MODEL_2_COLS) + col]);
+	col++; /* start at column one */
+	for (d = i->label; *d; d++) {
+	    menu_screen[(row * MODEL_2_COLS) + col] = *d & 0xff;
+	    menu_rv[(row * MODEL_2_COLS) + col] = (i == current_item);
+	    col++;
 	}
-
-	/* Draw the items. */
-	row = 2;
-	for (i = cmenu->items; i != NULL; i = i->next) {
-		char *d;
-
-		col = cmenu->offset;
-		map_acs('x', &menu_screen[(row * MODEL_2_COLS) + col],
-			&menu_acs[(row * MODEL_2_COLS) + col]);
-		col++; /* start at column one */
-		for (d = i->label; *d; d++) {
-			menu_screen[(row * MODEL_2_COLS) + col] = *d & 0xff;
-			menu_rv[(row * MODEL_2_COLS) + col] =
-			    (i == current_item);
-			col++;
-		}
-		while ((size_t)col < cmenu->offset + cmenu->width - 1) {
-			menu_screen[(row * MODEL_2_COLS) + col] = ' ';
-			menu_rv[(row * MODEL_2_COLS) + col] =
-			    (i == current_item);
-			col++;
-		}
-		map_acs('x', &menu_screen[(row * MODEL_2_COLS) + col],
-			&menu_acs[(row * MODEL_2_COLS) + col]);
-		row++;
+	while ((size_t)col < cmenu->offset + cmenu->width - 1) {
+	    menu_screen[(row * MODEL_2_COLS) + col] = ' ';
+	    menu_rv[(row * MODEL_2_COLS) + col] = (i == current_item);
+	    col++;
 	}
+	map_acs('x', &menu_screen[(row * MODEL_2_COLS) + col],
+		&menu_acs[(row * MODEL_2_COLS) + col]);
+	row++;
+    }
 
-	/* Draw the bottom border. */
-	for (col = cmenu->offset;
-	     (size_t)col < cmenu->offset + cmenu->width;
-	     col++) {
-	    	int ix = (row * MODEL_2_COLS) + col;
+    /* Draw the bottom border. */
+    for (col = cmenu->offset;
+	 (size_t)col < cmenu->offset + cmenu->width;
+	 col++) {
+	int ix = (row * MODEL_2_COLS) + col;
 
-		if (col == cmenu->offset)
-			map_acs('m', &menu_screen[ix], &menu_acs[ix]);
-		else if ((size_t)col < cmenu->offset + cmenu->width - 1)
-			map_acs('q', &menu_screen[ix], &menu_acs[ix]);
-		else
-			map_acs('j', &menu_screen[ix], &menu_acs[ix]);
+	if (col == cmenu->offset) {
+	    map_acs('m', &menu_screen[ix], &menu_acs[ix]);
+	} else if ((size_t)col < cmenu->offset + cmenu->width - 1) {
+	    map_acs('q', &menu_screen[ix], &menu_acs[ix]);
+	} else {
+	    map_acs('j', &menu_screen[ix], &menu_acs[ix]);
 	}
+    }
 }
 
 /* Pop up a menu. */
 void
 popup_menu(int x, int click)
 {
-	cmenu_t *cmenu;
-	cmenu_t *c;
-	int row, col;
-	int next_col;
+    cmenu_t *cmenu;
+    cmenu_t *c;
+    int row, col;
+    int next_col;
 
-	if (!appres.menubar)
-	    	return;
+    if (!appres.menubar) {
+	return;
+    }
 
-	/* Find which menu to start with. */
-	for (cmenu = menus; cmenu != NULL; cmenu = cmenu->next) {
-		if (x >= cmenu->offset && x < cmenu->offset + MENU_WIDTH)
-			break;
+    /* Find which menu to start with. */
+    for (cmenu = menus; cmenu != NULL; cmenu = cmenu->next) {
+	if (x >= cmenu->offset && x < cmenu->offset + MENU_WIDTH) {
+	    break;
 	}
-	if (cmenu == NULL)
-		return;
+    }
+    if (cmenu == NULL) {
+	return;
+    }
 
-	/* If it was a direct click, see if the menu has a direct callback. */
-	if (click && cmenu->callback != NULL) {
-		(*cmenu->callback)(cmenu->param);
-		if (after_callback != NULL) {
-			(*after_callback)(after_param);
-			after_callback = NULL;
-			after_param = NULL;
-		}
-		return;
+    /* If it was a direct click, see if the menu has a direct callback. */
+    if (click && cmenu->callback != NULL) {
+	(*cmenu->callback)(cmenu->param);
+	if (after_callback != NULL) {
+	    (*after_callback)(after_param);
+	    after_callback = NULL;
+	    after_param = NULL;
 	}
+	return;
+    }
 
-	/* Start with nothing. */
-	basic_menu_init();
+    /* Start with nothing. */
+    basic_menu_init();
 
-	/*
-	 * Draw the menu names on the top line, with the active one highlighted.
-	 */
-	row = 0;
-	col = 0;
-	next_col = MENU_WIDTH;
-	for (c = menus; c != NULL; c = c->next) {
-		char *d;
+    /*
+     * Draw the menu names on the top line, with the active one highlighted.
+     */
+    row = 0;
+    col = 0;
+    next_col = MENU_WIDTH;
+    for (c = menus; c != NULL; c = c->next) {
+	char *d;
 
-		for (d = c->title; *d; d++) {
-			menu_screen[(row * MODEL_2_COLS) + col] = *d & 0xff;
-			menu_rv[(row * MODEL_2_COLS) + col] = (c == cmenu);
-			col++;
-		}
-		while (col < next_col) {
-			menu_screen[(row * MODEL_2_COLS) + col] = ' ';
-			col++;
-		}
-		next_col += MENU_WIDTH;
+	for (d = c->title; *d; d++) {
+	    menu_screen[(row * MODEL_2_COLS) + col] = *d & 0xff;
+	    menu_rv[(row * MODEL_2_COLS) + col] = (c == cmenu);
+	    col++;
 	}
-	current_menu = cmenu;
-
-	/* Draw the current menu, with the active item highlighted. */
-	if (cmenu->items) {
-		current_item = cmenu->items;
-		while (current_item && !current_item->enabled) {
-			current_item = current_item->next;
-		}
-		draw_menu(cmenu);
-	} else {
-		current_item = NULL;
+	while (col < next_col) {
+	    menu_screen[(row * MODEL_2_COLS) + col] = ' ';
+	    col++;
 	}
+	next_col += MENU_WIDTH;
+    }
+    current_menu = cmenu;
 
-	/* We're up. */
-	menu_is_up |= MENU_IS_UP;
+    /* Draw the current menu, with the active item highlighted. */
+    if (cmenu->items) {
+	current_item = cmenu->items;
+	while (current_item && !current_item->enabled) {
+	    current_item = current_item->next;
+	}
+	draw_menu(cmenu);
+    } else {
+	current_item = NULL;
+    }
+
+    /* We're up. */
+    menu_is_up |= MENU_IS_UP;
 }
 
 #if defined(NCURSES_MOUSE_VERSION) || defined(_WIN32) /*[*/
@@ -407,76 +417,86 @@ popup_menu(int x, int click)
 Boolean
 find_mouse(int x, int y)
 {
-	cmenu_t *c = NULL;
-	cmenu_item_t *i = NULL;
-	int row;
+    cmenu_t *c = NULL;
+    cmenu_item_t *i = NULL;
+    int row;
 
-	/* It's gotta be in the ballpark. */
-	if (x >= MODEL_2_COLS ||
-	    y >= MODEL_2_ROWS ||
-	    menu_screen[(y * MODEL_2_COLS) + x] == 0) {
-		return False;
-	}
-
-	if (y == 0) {
-		/* Menu title. */
-		for (c = menus; c != NULL; c = c->next) {
-			if (x >= c->offset && x < c->offset + MENU_WIDTH) {
-			    	if (c == current_menu)
-				    	return False;
-				if (c->items == NULL)
-					goto selected;
-				if (c == current_menu)
-					return True;
-				undraw_menu(current_menu);
-				current_menu = c;
-				current_item = current_menu->items;
-				while (current_item && !current_item->enabled) {
-					current_item = current_item->next;
-				}
-				draw_menu(current_menu);
-				return True;
-			}
-		}
-		return False;
-	}
-
-	if (x < current_menu->offset ||
-	    (size_t)x > current_menu->offset + current_menu->width)
-		return False;
-	if (y == 1) /* top border */
-		return True;
-	row = 2;
-	for (i = current_menu->items; i != NULL; i = i->next) {
-		if (y == row)
-			break;
-		row++;
-	}
-	if (i != NULL) {
-		if (i->enabled)
-			goto selected;
-		else
-			return True;
-	}
-	if (y == row + 1)
-		return True;
-
+    /* It's gotta be in the ballpark. */
+    if (x >= MODEL_2_COLS ||
+	y >= MODEL_2_ROWS ||
+	menu_screen[(y * MODEL_2_COLS) + x] == 0) {
 	return False;
+    }
+
+    if (y == 0) {
+	/* Menu title. */
+	for (c = menus; c != NULL; c = c->next) {
+	    if (x >= c->offset && x < c->offset + MENU_WIDTH) {
+		if (c == current_menu) {
+		    return False;
+		}
+		if (c->items == NULL) {
+		    goto selected;
+		}
+		if (c == current_menu) {
+		    return True;
+		}
+		undraw_menu(current_menu);
+		current_menu = c;
+		current_item = current_menu->items;
+		while (current_item && !current_item->enabled) {
+		    current_item = current_item->next;
+		}
+		draw_menu(current_menu);
+		return True;
+	    }
+	}
+	return False;
+    }
+
+    if (x < current_menu->offset ||
+	(size_t)x > current_menu->offset + current_menu->width) {
+	return False;
+    }
+    if (y == 1) { /* top border */
+	return True;
+    }
+    row = 2;
+    for (i = current_menu->items; i != NULL; i = i->next) {
+	if (y == row) {
+	    break;
+	}
+	row++;
+    }
+    if (i != NULL) {
+	if (i->enabled) {
+	    goto selected;
+	} else {
+	    return True;
+	}
+    }
+    if (y == row + 1) {
+	return True;
+    }
+
+
+    return False;
 
 selected:
-	if (i == NULL) {
-		if (c->callback)
-			(*c->callback)(c->param);
-	} else {
-		(*i->action)(i->param);
+    if (i == NULL) {
+	if (c->callback) {
+	    (*c->callback)(c->param);
 	}
-	basic_menu_init();
-	if (after_callback != NULL) {
-		(*after_callback)(after_param);
-		after_callback = NULL;
-		after_param = NULL;
-	}
-	return True;
+    } else {
+	(*i->action)(i->param);
+    }
+    basic_menu_init();
+    if (after_callback != NULL) {
+	(*after_callback)(after_param);
+	after_callback = NULL;
+	after_param = NULL;
+    }
+    return True;
 }
 #endif /*]*/
 
@@ -484,12 +504,13 @@ selected:
 void
 menu_click(int x, int y)
 {
-	if (menu_is_up & KEYPAD_IS_UP) {
-		keypad_click(x, y);
-		return;
-	}
-	if (!find_mouse(x, y))
-	    	basic_menu_init();
+    if (menu_is_up & KEYPAD_IS_UP) {
+	keypad_click(x, y);
+	return;
+    }
+    if (!find_mouse(x, y)) {
+	basic_menu_init();
+    }
 }
 #endif /*]*/
 
@@ -500,142 +521,151 @@ menu_click(int x, int y)
 void
 menu_key(menu_key_t k, ucs4_t u)
 {
-	cmenu_item_t *i;
-	Boolean selected = False;
+    cmenu_item_t *i;
+    Boolean selected = False;
 
-	if (menu_is_up & KEYPAD_IS_UP) {
-		keypad_key(k, u);
-		return;
-	}
+    if (menu_is_up & KEYPAD_IS_UP) {
+	keypad_key(k, u);
+	return;
+    }
 
-	switch (k) {
+    switch (k) {
 
 #if defined(NCURSES_MOUSE_VERSION) /*[*/
-	case MK_MOUSE: {
-		MEVENT m;
+    case MK_MOUSE: {
+	MEVENT m;
 
-		if (getmouse(&m) != OK)
-			return;
-		if (!(m.bstate & (BUTTON1_PRESSED || BUTTON1_RELEASED)))
-		    return;
+	if (getmouse(&m) != OK) {
+	    return;
+	}
+	if (!(m.bstate & (BUTTON1_PRESSED || BUTTON1_RELEASED))) {
+	    return;
+	}
 
-		/* See if it lands somewhere we can figure out. */
-		if (!find_mouse(m.x, m.y))
-			basic_menu_init();
-		break;
+	/* See if it lands somewhere we can figure out. */
+	if (!find_mouse(m.x, m.y)) {
+	    basic_menu_init();
+	}
+	break;
 	}
 #endif /*]*/
 
-	case MK_UP:
-		i = current_item;
-		if (current_item && current_item->prev) {
-			current_item = current_item->prev;
-			while (current_item && !current_item->enabled) {
-				current_item = current_item->prev;
-			}
-			if (current_item == NULL)
-				current_item = i;
-			else
-				draw_menu(current_menu);
-		}
-		break;
-
-	case MK_DOWN:
-		i = current_item;
-		if (current_item && current_item->next) {
-			current_item = current_item->next;
-			while (current_item && !current_item->enabled) {
-				current_item = current_item->next;
-			}
-			if (current_item == NULL)
-				current_item = i;
-			else
-				draw_menu(current_menu);
-		}
-		break;
-
-	case MK_LEFT:
-		undraw_menu(current_menu);
-		if (current_menu->prev)
-			current_menu = current_menu->prev;
-		else
-			current_menu = menus;
-		current_item = current_menu->items;
-		while (current_item && !current_item->enabled) {
-			current_item = current_item->next;
-		}
-		draw_menu(current_menu);
-		break;
-
-	case MK_RIGHT:
-		undraw_menu(current_menu);
-		if (current_menu->next)
-			current_menu = current_menu->next;
-		else
-			current_menu = menus;
-		current_item = current_menu->items;
-		while (current_item && !current_item->enabled) {
-			current_item = current_item->next;
-		}
-		draw_menu(current_menu);
-		break;
-
-	case MK_HOME:
-		if (current_item) {
-			current_item = current_menu->items;
-			while (current_item && !current_item->enabled) {
-				current_item = current_item->next;
-			}
-			draw_menu(current_menu);
-		}
-		break;
-
-	case MK_END:
-		i = current_item;
-		while (current_item) {
-			current_item = current_item->next;
-			if (current_item && current_item->enabled)
-				i = current_item;
-		}
+    case MK_UP:
+	i = current_item;
+	if (current_item && current_item->prev) {
+	    current_item = current_item->prev;
+	    while (current_item && !current_item->enabled) {
+		    current_item = current_item->prev;
+	    }
+	    if (current_item == NULL) {
 		current_item = i;
+	    } else {
 		draw_menu(current_menu);
-		break;
+	    }
+	}
+	break;
 
-	case MK_ENTER:
-		selected = True;
-		break;
+    case MK_DOWN:
+	i = current_item;
+	if (current_item && current_item->next) {
+	    current_item = current_item->next;
+	    while (current_item && !current_item->enabled) {
+		current_item = current_item->next;
+	    }
+	    if (current_item == NULL) {
+		current_item = i;
+	    } else {
+		draw_menu(current_menu);
+	    }
+	}
+	break;
 
-	case MK_NONE:
-		switch (u) {
-		case '\r':
-		case '\n':
-			selected = True;
-			break;
-		default:
-			basic_menu_init();
-		}
-		break;
+    case MK_LEFT:
+	undraw_menu(current_menu);
+	if (current_menu->prev) {
+	    current_menu = current_menu->prev;
+	} else {
+	    current_menu = menus;
+	}
+	current_item = current_menu->items;
+	while (current_item && !current_item->enabled) {
+	    current_item = current_item->next;
+	}
+	draw_menu(current_menu);
+	break;
+
+    case MK_RIGHT:
+	undraw_menu(current_menu);
+	if (current_menu->next) {
+	    current_menu = current_menu->next;
+	} else {
+	    current_menu = menus;
+	}
+	current_item = current_menu->items;
+	while (current_item && !current_item->enabled) {
+	    current_item = current_item->next;
+	}
+	draw_menu(current_menu);
+	break;
+
+    case MK_HOME:
+	if (current_item) {
+	    current_item = current_menu->items;
+	    while (current_item && !current_item->enabled) {
+		current_item = current_item->next;
+	    }
+	    draw_menu(current_menu);
+	}
+	break;
+
+    case MK_END:
+	i = current_item;
+	while (current_item) {
+	    current_item = current_item->next;
+	    if (current_item && current_item->enabled) {
+		i = current_item;
+	    }
+	}
+	current_item = i;
+	draw_menu(current_menu);
+	break;
+
+    case MK_ENTER:
+	selected = True;
+	break;
+
+    case MK_NONE:
+	switch (u) {
+	case '\r':
+	case '\n':
+	    selected = True;
+	    break;
+	default:
+	    basic_menu_init();
+	}
+	break;
 
 	default:
-	case MK_OTHER:
-		basic_menu_init();
-		break;
-	}
+    case MK_OTHER:
+	basic_menu_init();
+	break;
+    }
 
-	if (selected) {
-		if (current_item)
-			(*current_item->action)(current_item->param);
-		else if (!current_menu->items)
-			(*current_menu->callback)(current_menu->param);
-		basic_menu_init();
-		if (after_callback != NULL) {
-			(*after_callback)(after_param);
-			after_callback = NULL;
-			after_param = NULL;
-		}
+    if (selected) {
+	if (current_item) {
+	    (*current_item->action)(current_item->param);
+	} else if (!current_menu->items) {
+	    (*current_menu->callback)(current_menu->param);
 	}
+	basic_menu_init();
+	if (after_callback != NULL) {
+	    (*after_callback)(after_param);
+	    after_callback = NULL;
+	    after_param = NULL;
+	}
+    }
 
-	screen_changed = True;
+    screen_changed = True;
 }
 
 /* Report a character back to the screen drawing logic. */
@@ -643,45 +673,45 @@ Boolean
 menu_char(int row, int col, Boolean persistent, ucs4_t *u,
 	Boolean *highlighted, unsigned char *acs)
 {
-	if (menu_is_up & KEYPAD_IS_UP)
-		return keypad_char(row, col, u, highlighted, acs);
-	else if (col >= MODEL_2_COLS)
-		return False;
-	else if ((menu_is_up & MENU_IS_UP) &&
-		 row < MODEL_2_ROWS &&
-		 col < MODEL_2_COLS &&
-		 menu_screen[(row * MODEL_2_COLS) + col]) {
-		*u = menu_screen[(row * MODEL_2_COLS) + col];
-		*highlighted = menu_rv[(row * MODEL_2_COLS) + col];
-		*acs = menu_acs[(row * MODEL_2_COLS) + col];
-		return True;
-	} else if (persistent && row == 0 && menu_topline[col]) {
-		*u = menu_topline[col];
-		*highlighted = 0;
-		return True;
-	} else {
-		*u = 0;
-		*highlighted = False;
-		return False;
-	}
+    if (menu_is_up & KEYPAD_IS_UP) {
+	return keypad_char(row, col, u, highlighted, acs);
+    } else if (col >= MODEL_2_COLS) {
+	return False;
+    } else if ((menu_is_up & MENU_IS_UP) &&
+	     row < MODEL_2_ROWS &&
+	     col < MODEL_2_COLS &&
+	 menu_screen[(row * MODEL_2_COLS) + col]) {
+	*u = menu_screen[(row * MODEL_2_COLS) + col];
+	*highlighted = menu_rv[(row * MODEL_2_COLS) + col];
+	*acs = menu_acs[(row * MODEL_2_COLS) + col];
+	return True;
+    } else if (persistent && row == 0 && menu_topline[col]) {
+	*u = menu_topline[col];
+	*highlighted = 0;
+	return True;
+    } else {
+	*u = 0;
+	*highlighted = False;
+	return False;
+    }
 }
 
 /* Report where to land the cursor when a menu is up. */
 void
 menu_cursor(int *row, int *col)
 {
-	if (menu_is_up & KEYPAD_IS_UP) {
-		keypad_cursor(row, col);
-		return;
-	}
+    if (menu_is_up & KEYPAD_IS_UP) {
+	keypad_cursor(row, col);
+	return;
+    }
 
-	if (menu_is_up & MENU_IS_UP) {
-		*row = 0;
-		*col = current_menu->offset;
-	} else {
-		*row = 0;
-		*col = 0;
-	}
+    if (menu_is_up & MENU_IS_UP) {
+	*row = 0;
+	*col = current_menu->offset;
+    } else {
+	*row = 0;
+	*col = 0;
+    }
 }
 
 /* Functions specific to c3270. */
@@ -689,105 +719,107 @@ menu_cursor(int *row, int *col)
 static void
 fm_copyright(void *ignored _is_unused)
 {
-	push_macro("Show(copyright)", False);
-	sms_continue();
+    push_macro("Show(copyright)", False);
+    sms_continue();
 }
 
 static void
 fm_status(void *ignored _is_unused)
 {
-	push_macro("Show(status)", False);
-	sms_continue();
+    push_macro("Show(status)", False);
+    sms_continue();
 }
 
 static void
 fm_prompt(void *ignored _is_unused)
 {
-	push_macro("Escape", False);
+    push_macro("Escape", False);
 }
 
 static void
 fm_print(void *ignored _is_unused)
 {
-	push_macro("PrintText", False);
+    push_macro("PrintText", False);
 }
 
 static void
 fm_xfer(void *ignored _is_unused)
 {
-	push_macro("Escape() Transfer()", False);
+    push_macro("Escape() Transfer()", False);
 }
 
 static void
 fm_trace(void *ignored _is_unused)
 {
-	if (toggled(TRACING)) {
-		push_macro("Trace(off)", False);
-	} else {
-		push_macro("Trace(on)", False);
-	}
+    if (toggled(TRACING)) {
+	push_macro("Trace(off)", False);
+    } else {
+	push_macro("Trace(on)", False);
+    }
 }
 
 static void
 fm_screentrace(void *ignored _is_unused)
 {
-	if (toggled(SCREEN_TRACE))
-		push_macro("ScreenTrace(off)", False);
-	else
-		push_macro("ScreenTrace(on)", False);
+    if (toggled(SCREEN_TRACE)) {
+	push_macro("ScreenTrace(off)", False);
+    } else {
+	push_macro("ScreenTrace(on)", False);
+    }
 }
 
 static void
 fm_screentrace_printer(void *ignored _is_unused)
 {
-	if (toggled(SCREEN_TRACE))
-		push_macro("ScreenTrace(off)", False);
-	else
-		push_macro("ScreenTrace(on,printer,gdi)", False);
+    if (toggled(SCREEN_TRACE)) {
+	push_macro("ScreenTrace(off)", False);
+    } else {
+	push_macro("ScreenTrace(on,printer,gdi)", False);
+    }
 }
 
 static void
 fm_keymap(void *ignored _is_unused)
 {
-    	push_macro("Show(keymap)", False);
+    push_macro("Show(keymap)", False);
 }
 
 #if defined(_WIN32) /*[*/
 static void
 fm_help(void *ignored _is_unused)
 {
-	start_html_help();
+    start_html_help();
 }
 
 static void
 fm_wizard(void *session)
 {
-	char *cmd;
+    char *cmd;
 
-	if (session != NULL) {
-		cmd = xs_buffer("start \"wc3270 Session Wizard\" "
-			"\"%swc3270wiz.exe\" -e \"%s\"", instdir,
-			(char *)session);
-	} else {
-		cmd = xs_buffer("start \"wc3270 Session Wizard\" "
-			"\"%swc3270wiz.exe\"", instdir);
-	}
-	system(cmd);
-	Free(cmd);
-	screen_fixup(); /* get back mouse events */
+    if (session != NULL) {
+	cmd = xs_buffer("start \"wc3270 Session Wizard\" "
+		"\"%swc3270wiz.exe\" -e \"%s\"", instdir,
+		(char *)session);
+    } else {
+	cmd = xs_buffer("start \"wc3270 Session Wizard\" "
+		"\"%swc3270wiz.exe\"", instdir);
+    }
+    system(cmd);
+    Free(cmd);
+    screen_fixup(); /* get back mouse events */
 }
 #endif /*]*/
 
 static void
 fm_disconnect(void *ignored _is_unused)
 {
-	push_macro("Disconnect", False);
+    push_macro("Disconnect", False);
 }
 
 static void
 fm_quit(void *ignored _is_unused)
 {
-	push_macro("Quit", False);
+    push_macro("Quit", False);
 }
 
 /* File menu. */
@@ -896,93 +928,92 @@ cmenu_t *keypad_menu;
 static void
 toggle_option(void *param)
 {
-	int index = *(int *)param;
+    int index = *(int *)param;
 
-	do_toggle(index);
+    do_toggle(index);
 }
 
 static void
 really_popup_keypad(void *ignored _is_unused)
 {
-	pop_up_keypad(True);
+    pop_up_keypad(True);
 }
 
 static void
 popup_keypad(void *ignored _is_unused)
 {
-	after_callback = really_popup_keypad;
-	after_param = NULL;
+    after_callback = really_popup_keypad;
+    after_param = NULL;
 }
 
 void
 menu_init(void)
 {
-	int j;
-	int col, next_col;
-	cmenu_t *c;
+    int j;
+    int col, next_col;
+    cmenu_t *c;
 
-	basic_menu_init();
+    basic_menu_init();
 
-	file_menu = add_menu("File");
-	for (j = 0; j < FM_COUNT; j++) {
-	    	if (appres.secure && j == FM_PROMPT) {
-		    	continue;
-		}
+    file_menu = add_menu("File");
+    for (j = 0; j < FM_COUNT; j++) {
+	if (appres.secure && j == FM_PROMPT) {
+	    continue;
+	}
 #if defined(WC3270) /*[*/
-		if (j == FM_WIZARD_SESS && profile_path == NULL) {
-			continue;
-		}
-		if (j == FM_WIZARD_SESS) {
-			char *text;
+	if (j == FM_WIZARD_SESS && profile_path == NULL) {
+	    continue;
+	}
+	if (j == FM_WIZARD_SESS) {
+	    char *text;
 
-			text = xs_buffer("Edit Session %s",
-				profile_path);
+	    text = xs_buffer("Edit Session %s", profile_path);
 
-			file_menu_items[j] = add_item(file_menu,
-			    text, file_menu_actions[j], profile_path);
-		} else
+	    file_menu_items[j] = add_item(file_menu, text,
+		    file_menu_actions[j], profile_path);
+	} else
 #endif /*]*/
-		{
-			file_menu_items[j] = add_item(file_menu,
-				file_menu_names[j], file_menu_actions[j], NULL);
-		}
+	{
+	    file_menu_items[j] = add_item(file_menu, file_menu_names[j],
+		    file_menu_actions[j], NULL);
 	}
-	options_menu = add_menu("Options");
-	for (j = 0; j < OM_COUNT; j++) {
-		toggle_index_t k;
-		char *name;
+    }
+    options_menu = add_menu("Options");
+    for (j = 0; j < OM_COUNT; j++) {
+	toggle_index_t k;
+	char *name;
 
-		for (k = 0; k < N_TOGGLES; k++) {
-			if (toggle_names[k].index == option_index[j])
-				break;
-		}
-		name = xs_buffer("%s %s",
-			toggled(option_index[j])? "Disable": "Enable",
-			option_names[j]);
-		options_menu_items[j] =
-		    add_item(options_menu, name, toggle_option,
-			    &option_index[j]);
-		Free(name);
+	for (k = 0; k < N_TOGGLES; k++) {
+	    if (toggle_names[k].index == option_index[j]) {
+		break;
+	    }
 	}
-	keypad_menu = add_menu("Keypad");
-	set_callback(keypad_menu, popup_keypad, NULL);
+	name = xs_buffer("%s %s",
+		toggled(option_index[j])? "Disable": "Enable",
+		option_names[j]);
+	options_menu_items[j] = add_item(options_menu, name, toggle_option,
+		&option_index[j]);
+	Free(name);
+    }
+    keypad_menu = add_menu("Keypad");
+    set_callback(keypad_menu, popup_keypad, NULL);
 
-	/* Draw the menu names on the top line. */
-	col = 0;
-	next_col = MENU_WIDTH;
-	for (c = menus; c != NULL; c = c->next) {
-		char *d;
+    /* Draw the menu names on the top line. */
+    col = 0;
+    next_col = MENU_WIDTH;
+    for (c = menus; c != NULL; c = c->next) {
+	char *d;
 
-		for (d = c->title; *d; d++) {
-			menu_topline[col] = *d & 0xff;
-			col++;
-		}
-		while (col < next_col) {
-			menu_topline[col] = ' ';
-			col++;
-		}
-		next_col += MENU_WIDTH;
+	for (d = c->title; *d; d++) {
+	    menu_topline[col] = *d & 0xff;
+	    col++;
 	}
+	while (col < next_col) {
+	    menu_topline[col] = ' ';
+	    col++;
+	}
+	next_col += MENU_WIDTH;
+    }
 }
 
 void

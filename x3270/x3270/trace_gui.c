@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,7 @@
 #include "menubarc.h"
 #include "objects.h"
 #include "popupsc.h"
-#include "togglesc.h"
+#include "toggles.h"
 #include "trace.h"
 #include "trace_gui.h"
 
