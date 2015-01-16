@@ -169,8 +169,9 @@ ctlr_register(void)
  * Initialize the emulated 3270 hardware.
  */
 void
-ctlr_init(unsigned cmask _is_unused)
+ctlr_init(unsigned cmask)
 {
+    ctlr_reinit(cmask);
 }
 
 /*

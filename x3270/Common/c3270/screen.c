@@ -303,6 +303,9 @@ screen_init(void)
 	/* Pull in the user's color mappings. */
 	init_user_colors();
 	init_user_attribute_colors();
+
+	/* Initialize the controller. */
+	ctlr_init(ALL_CHANGE);
 }
 
 /*
@@ -540,10 +543,6 @@ finish_screen_init(void)
 		}
 	}
 
-
-	/* Set up the controller. */
-	ctlr_init(-1);
-	ctlr_reinit(-1);
 
 	/* Set up the scrollbar. */
 	scroll_buf_init();

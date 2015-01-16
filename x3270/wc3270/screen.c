@@ -1192,8 +1192,7 @@ screen_init(void)
 	init_user_attribute_colors();
 
 	/* Set up the controller. */
-	ctlr_init(-1);
-	ctlr_reinit(-1);
+	ctlr_init(ALL_CHANGE);
 
 	/* Set up the scrollbar. */
 	scroll_buf_init();

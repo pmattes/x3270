@@ -144,8 +144,8 @@ add_menu(char *title)
     if (menu_last != NULL) {
 	menu_last->next = c;
     } else {
-    }
 	menus = c;
+    }
     menu_last = c;
     return c;
 }
