@@ -10,6 +10,11 @@ $(ALL_BUT_WEBPAGE): Webpage-dir
 
 Webpage-dir: Shared-dir
 
+Shared-dir: lib-dir
+
+lib-dir:
+	cd lib && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
+
 Shared-dir:
 	cd Shared && $(MAKE)
 
@@ -41,6 +46,7 @@ x3270-dir:
 	cd x3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
 
 depend:
+	cd lib && $(MAKE) $@
 	cd c3270 && $(MAKE) $@
 	cd pr3287 && $(MAKE) $@
 	cd s3270 && $(MAKE) $@
@@ -51,6 +57,7 @@ depend:
 	cd x3270 && $(MAKE) $@
 
 clean:
+	cd lib && $(MAKE) $@
 	cd c3270 && $(MAKE) $@
 	cd pr3287 && $(MAKE) $@
 	cd s3270 && $(MAKE) $@

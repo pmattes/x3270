@@ -963,3 +963,20 @@ parse_set_clear(int *argcp, char **argv)
 	    (argc_out + 1) * sizeof(char *));
 	Free(argv_out);
 }
+
+/*
+ * Some (hopefully temporary) glue between the generic lib3270.a library and
+ * x3270.
+ *
+ * There is code in the library that calls the real Malloc() functions, rather
+ * than using x3270's Malloc() macros which are wrappers around the XtMalloc()
+ * functions. There is also a real Malloc() in the library, which resolves the
+ * dependency, but that code has a dependency on a real Error() function. We
+ * don't want to pull in the library's Error(), so we define our own here.
+ */
+#undef Error
+void
+Error(const char *s)
+{
+    XtError(s);
+}

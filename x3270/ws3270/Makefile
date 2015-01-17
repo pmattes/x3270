@@ -91,8 +91,13 @@ $(MKFB): mkfb.c Makefile
 ws3270res.o: ws3270.rc ws3270.ico Makefile
 	$(WINDRES) -i ws3270.rc -o ws3270res.o
 
-ws3270.exe: $(OBJECTS) Makefile
-	$(CC) -o ws3270$(OSUFFIX).exe $(CFLAGS) $(OBJECTS) $(LIBS)
+ws3270.exe: $(OBJECTS) Makefile ../lib/libw3270.a ../lib/libw3270stubs.a
+	$(CC) -o ws3270$(OSUFFIX).exe $(CFLAGS) $(OBJECTS) $(LIBS) -L../lib -lw3270 -lw3270stubs
+
+../lib/libw3270.a:
+	cd ../lib/w3270 && $(MAKE) all
+../lib/libw3270stubs.a:
+	cd ../lib/w3270stubs && $(MAKE) all
 
 wversion.o: version.txt mkwversion.sh
 	@chmod +x mkwversion.sh version.txt

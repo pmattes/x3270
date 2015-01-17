@@ -80,50 +80,6 @@ Warning(const char *s)
 #endif /*]*/
 }
 
-void *
-Malloc(size_t len)
-{
-	char *r;
-
-	r = malloc(len);
-	if (r == NULL)
-		Error("Out of memory");
-	return r;
-}
-
-void *
-Calloc(size_t nelem, size_t elsize)
-{
-	char *r;
-
-	r = malloc(nelem * elsize);
-	if (r == NULL)
-		Error("Out of memory");
-	return memset(r, '\0', nelem * elsize);
-}
-
-void *
-Realloc(void *p, size_t len)
-{
-	p = realloc(p, len);
-	if (p == NULL)
-		Error("Out of memory");
-	return p;
-}
-
-void
-Free(void *p)
-{
-	if (p != NULL)
-		free(p);
-}
-
-char *
-NewString(const char *s)
-{
-	return strcpy(Malloc(strlen(s) + 1), s);
-}
-
 static struct {
 	/*const*/ char *name;	/* not const because of ancient X11 API */
 	KeySym keysym;

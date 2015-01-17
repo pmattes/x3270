@@ -1,0 +1,11 @@
+bootstrap:
+	cd 3270 && $(MAKE) -f Makefile.aux $@
+	cd 3270stubs && $(MAKE) -f Makefile.aux $@
+	cd w3270 && $(MAKE) -f Makefile.aux $@
+	cd w3270stubs && $(MAKE) -f Makefile.aux $@
+
+src.tgz:
+	cd 3270 && $(MAKE) -f Makefile.aux lib3270-src.tgz
+	cd 3270stubs && $(MAKE) -f Makefile.aux lib3270stubs-src.tgz
+	cd w3270 && $(MAKE) -f Makefile.aux libw3270-src.tgz
+	cd w3270stubs && $(MAKE) -f Makefile.aux libw3270stubs-src.tgz

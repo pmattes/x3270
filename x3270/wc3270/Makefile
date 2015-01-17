@@ -105,8 +105,13 @@ $(MKKEYPAD): mkkeypad.c
 wc3270res.o: wc3270.rc wc3270.ico Makefile
 	$(WINDRES) -i wc3270.rc -o wc3270res.o
 
-wc3270.exe: $(OBJECTS) Makefile
-	$(CC) -o wc3270$(OSUFFIX).exe $(CFLAGS) $(OBJECTS) $(LIBS)
+wc3270.exe: $(OBJECTS) Makefile ../lib/libw3270.a ../lib/libw3270stubs.a
+	$(CC) -o wc3270$(OSUFFIX).exe $(CFLAGS) $(OBJECTS) $(LIBS) -L../lib -lw3270 -lw3270stubs
+
+../lib/libw3270.a:
+	cd ../lib/w3270 && $(MAKE) all
+../lib/libw3270stubs.a:
+	cd ../lib/w3270stubs && $(MAKE) all
 
 mkshort.exe: mkshort.o shortcut.o winvers.o Makefile
 	$(CC) -o mkshort.exe $(CFLAGS) \

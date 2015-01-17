@@ -15,7 +15,7 @@ export LC_ALL="C"
 
 build=1
 release=""
-all_prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270 Playback"
+all_prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270 Playback lib/3270 lib/3270stubs lib/w3270 lib/w3270stubs"
 
 function usage
 {
@@ -42,7 +42,7 @@ do	case "$1" in
 		shift
 		;;
 	-win32|--win32)
-		all_prods="wc3270 wpr3287 ws3270"
+		all_prods="wc3270 wpr3287 ws3270 lib/w3270 lib/w3270stubs"
 		just_win32=1
 		shift
 		;;
@@ -67,7 +67,9 @@ fi
 
 if [[ "$prods" =~ wc3270 && \
       "$prods" =~ ws3270 && \
-      "$prods" =~ wpr3287 ]]
+      "$prods" =~ wpr3287 && \
+      "$prods" =~ lib/w3270 && \
+      "$prods" =~ lib/w3270stubs ]]
 then	winrel=1;
 fi
 
@@ -126,14 +128,20 @@ mkdir $tmpdir
 echo "===== Building tarballs."
 for prod in $prods
 do	cd $prod
-    	make -f Makefile.aux $prod-src.tgz
-	cd ..
+	if [[ "$prod" =~ lib/ ]]
+	then	make -f Makefile.aux lib${prod#lib/}-src.tgz
+	else	make -f Makefile.aux $prod-src.tgz
+	fi
+	cd - >/dev/null
 done
 
 echo "===== Copying tarballs."
 # Copy then into the build directory.
 for prod in $prods
-do	cp $prod/$prod-src.tgz $tmpdir/
+do	if [[ "$prod" =~ lib/ ]]
+    	then	cp $prod/lib${prod#lib/}-src.tgz $tmpdir
+	else	cp $prod/$prod-src.tgz $tmpdir/
+	fi
 done
 if [ "$all" ]
 then	tar -cf - --exclude-vcs VS2010 | tar -xf - --directory $tmpdir
@@ -143,18 +151,31 @@ echo "===== Expanding tarballs."
 # Expand them.
 cd $tmpdir
 for prod in $prods
-do	tar -xzf $prod-src.tgz
+do	if [[ "$prod" =~ lib/ ]]
+    	then	tar -xzf lib${prod#lib/}-src.tgz
+	else	tar -xzf $prod-src.tgz
+	fi
 done
 
 if [ "$all" ]
 then	echo "===== Making mega-tarball."
 	# Make a mega-tarball.
-	tar -czf $suite *3270/ *3287/ Playback/ VS2010/
+	tar -czf $suite *3270/ *3287/ lib/ Playback/ VS2010/
 fi
 if [ "$tarball" ]
 then	echo "Tarball is $tmpdir/$suite."
     	exit
 fi
+
+# Make sure we build libraries first.
+unset pl px
+for prod in $prods
+do	if [[ "$prod" =~ lib/ ]]
+    	then	pl="$pl $prod"
+	else	px="$px $prod"
+	fi
+done
+prods="$pl $px"
 
 for prod in $prods
 do
