@@ -73,7 +73,6 @@
 #include "print_screen.h"
 #include "pr3287_session.h"
 #include "screenc.h"
-#include "scrollc.h"
 #include "selectc.h"
 #include "statusc.h"
 #include "telnetc.h"
@@ -82,6 +81,7 @@
 #include "utf8c.h"
 #include "utilc.h"
 #include "xio.h"
+#include "xscroll.h"
 
 #if defined(HAVE_LIBREADLINE) /*[*/
 #include <readline/readline.h>

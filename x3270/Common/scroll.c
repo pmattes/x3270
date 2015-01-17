@@ -42,10 +42,11 @@
 #include "kybdc.h"
 #include "popupsc.h"
 #include "screenc.h"
-#include "scrollc.h"
+#include "scroll.h"
 #include "selectc.h"
 #include "statusc.h"
 #include "trace.h"
+#include "xscroll.h"
 
 /* Globals */
 Boolean	scroll_initted = False;

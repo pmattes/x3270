@@ -28,8 +28,8 @@
  */
 
 /*
- *	scrollc.h
- *		Global declarations for scroll.c.
+ *	xscrollc.h
+ *		Global declarations for x3270 scroll.c.
  */
 
 void jump_proc(float top);
@@ -38,5 +38,3 @@ void scroll_buf_init(void);
 void scroll_proc(int n, int total);
 void scroll_register(void);
 void scroll_round(void);
-void scroll_save(int n, Boolean trim_blanks);
-void scroll_to_bottom(void);

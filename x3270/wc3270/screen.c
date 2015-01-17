@@ -51,7 +51,6 @@
 #include "menubarc.h"
 #include "popupsc.h"
 #include "screenc.h"
-#include "scrollc.h"
 #include "selectc.h"
 #include "statusc.h"
 #include "trace.h"
@@ -59,6 +58,7 @@
 #include "utilc.h"
 #include "w3misc.h"
 #include "xio.h"
+#include "xscroll.h"
 
 #include <wincon.h>
 #include "winversc.h"

@@ -68,7 +68,6 @@
 #include "resourcesc.h"
 #include "save.h"
 #include "screenc.h"
-#include "scrollc.h"
 #include "selectc.h"
 #include "statusc.h"
 #include "telnetc.h"
@@ -79,6 +78,7 @@
 #include "xappres.h"
 #include "xio.h"
 #include "xkybd.h"
+#include "xscroll.h"
 
 /* Globals */
 const char     *programname;

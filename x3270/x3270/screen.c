@@ -73,7 +73,7 @@
 #include "popupsc.h"
 #include "save.h"
 #include "screenc.h"
-#include "scrollc.h"
+#include "scroll.h"
 #include "see.h"
 #include "statusc.h"
 #include "tables.h"
@@ -85,6 +85,7 @@
 #include "xactions.h"
 #include "xappres.h"
 #include "xio.h"
+#include "xscroll.h"
 
 #if defined(HAVE_SYS_SELECT_H) /*[*/
 #include <sys/select.h>		/* fd_set declaration */

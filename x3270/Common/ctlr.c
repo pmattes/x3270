@@ -59,7 +59,7 @@
 #include "macrosc.h"
 #include "popupsc.h"
 #include "screenc.h"
-#include "scrollc.h"
+#include "scroll.h"
 #include "see.h"
 #include "selectc.h"
 #include "sfc.h"

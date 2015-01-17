@@ -67,7 +67,7 @@
 #include "popupsc.h"
 #include "print_screen.h"
 #include "screenc.h"
-#include "scrollc.h"
+#include "scroll.h"
 #include "statusc.h"
 #include "telnetc.h"
 #include "toggles.h"
