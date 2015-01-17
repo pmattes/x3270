@@ -45,13 +45,13 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 INSTALL = @INSTALL@
 
-SRCS = asprintf.c charset.c ctlr.c pr3287.c proxy.c resolver.c see.c sf.c \
-	tables.c telnet.c trace.c unicode.c unicode_dbcs.c utf8.c util.c \
+SRCS = asprintf.c charset.c ctlr.c lazya.c pr3287.c proxy.c resolver.c see.c \
+	sf.c tables.c telnet.c trace.c unicode.c unicode_dbcs.c utf8.c util.c \
 	varbuf.c xtable.c
 
-OBJECTS = asprintf.o charset.o ctlr.o pr3287.o proxy.o resolver.o see.o sf.o \
-	tables.o telnet.o trace.o unicode.o unicode_dbcs.o utf8.o util.o \
-	varbuf.o xtable.o
+OBJECTS = asprintf.o charset.o ctlr.o lazya.o pr3287.o proxy.o resolver.o \
+	see.o sf.o tables.o telnet.o trace.o unicode.o unicode_dbcs.o utf8.o \
+	util.o varbuf.o xtable.o
 
 XVERSION = xversion.c
 version.o: version.txt mkversion.sh

@@ -11,9 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\wc3270-3.3\mkshort.c" />
-    <ClCompile Include="..\..\wc3270-3.3\shortcut.c" />
-    <ClCompile Include="..\..\wc3270-3.3\winvers.c" />
+    <ClCompile Include="..\..\wc3270\mkshort.c" />
+    <ClCompile Include="..\..\wc3270\shortcut.c" />
+    <ClCompile Include="..\..\wc3270\winvers.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F42388CA-CE98-4F9F-96B7-D0DC1F9DA67E}</ProjectGuid>

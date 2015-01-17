@@ -15,25 +15,25 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\wc3270-3.3\wizard.c">
+    <ClCompile Include="..\..\wc3270\wizard.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wc3270-3.3\winvers.c">
+    <ClCompile Include="..\..\wc3270\winvers.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wc3270-3.3\windirs.c">
+    <ClCompile Include="..\..\wc3270\windirs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wc3270-3.3\shortcut.c">
+    <ClCompile Include="..\..\wc3270\shortcut.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wc3270-3.3\relink.c">
+    <ClCompile Include="..\..\wc3270\relink.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wc3270-3.3\snprintf.c">
+    <ClCompile Include="..\..\wc3270\snprintf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wc3270-3.3\wversion.c">
+    <ClCompile Include="..\..\wc3270\wversion.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

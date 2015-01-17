@@ -15,79 +15,79 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\wpr3287-3.3\asprintf.c">
+    <ClCompile Include="..\..\wpr3287\asprintf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\charset.c">
+    <ClCompile Include="..\..\wpr3287\charset.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\ctlr.c">
+    <ClCompile Include="..\..\wpr3287\ctlr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\lazya.c">
+    <ClCompile Include="..\..\wpr3287\lazya.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\pr3287.c">
+    <ClCompile Include="..\..\wpr3287\pr3287.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\proxy.c">
+    <ClCompile Include="..\..\wpr3287\proxy.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\resolver.c">
+    <ClCompile Include="..\..\wpr3287\resolver.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\see.c">
+    <ClCompile Include="..\..\wpr3287\see.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\sf.c">
+    <ClCompile Include="..\..\wpr3287\sf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\snprintf.c">
+    <ClCompile Include="..\..\wpr3287\snprintf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\ssl_dll.c">
+    <ClCompile Include="..\..\wpr3287\ssl_dll.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\tables.c">
+    <ClCompile Include="..\..\wpr3287\tables.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\telnet.c">
+    <ClCompile Include="..\..\wpr3287\telnet.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\trace.c">
+    <ClCompile Include="..\..\wpr3287\trace.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\unicode.c">
+    <ClCompile Include="..\..\wpr3287\unicode.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\unicode_dbcs.c">
+    <ClCompile Include="..\..\wpr3287\unicode_dbcs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\utf8.c">
+    <ClCompile Include="..\..\wpr3287\utf8.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\util.c">
+    <ClCompile Include="..\..\wpr3287\util.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\varbuf.c">
+    <ClCompile Include="..\..\wpr3287\varbuf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\w3misc.c">
+    <ClCompile Include="..\..\wpr3287\w3misc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\windirs.c">
+    <ClCompile Include="..\..\wpr3287\windirs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\winvers.c">
+    <ClCompile Include="..\..\wpr3287\winvers.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\ws.c">
+    <ClCompile Include="..\..\wpr3287\ws.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\xtable.c">
+    <ClCompile Include="..\..\wpr3287\xtable.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wpr3287-3.3\version.c">
+    <ClCompile Include="..\..\wpr3287\version.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

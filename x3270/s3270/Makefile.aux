@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2011, 2013-2014 Paul Mattes.
+# Copyright (c) 1995-2011, 2013-2015 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,6 @@
 # Auxiliary makefile for s3270
 
 PRODUCT=s3270
-TARDIR=$(PRODUCT)-3.3
 RM=rm -f
 
 all:
@@ -57,18 +56,8 @@ HTML = html/$(PRODUCT)-man.html html/Bugs.html html/Build.html html/FAQ.html \
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
-tarlist: Makefile.aux common_files.mk s3270_files.mk
-	$(RM) tarlist
-	for i in $(FILES); \
-	do echo $(TARDIR)/$$i; \
-	done >$@
-
-$(PRODUCT)-src.tgz: $(FILES) tarlist
-	$(RM) $(TARDIR)
-	ln -s . $(TARDIR)
-	$(RM) $@
-	tar -czh -T tarlist -f $@
-	$(RM) $(TARDIR)
+$(PRODUCT)-src.tgz: $(FILES) srctar.sh Makefile.aux
+	sh ./srctar.sh $(PRODUCT) $(FILES)
 
 configure: configure.in
 	autoconf

@@ -11,8 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\wc3270-3.3\ead3270.c" />
-    <ClCompile Include="..\..\wc3270-3.3\windirs.c" />
+    <ClCompile Include="..\..\wc3270\ead3270.c" />
+    <ClCompile Include="..\..\wc3270\windirs.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D44F6B8C-03C0-41A4-946F-63D1A7C7AC6B}</ProjectGuid>

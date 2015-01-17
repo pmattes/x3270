@@ -26,7 +26,6 @@
 # Auxiliary makefile for pr3287
 
 PRODUCT=pr3287
-TARDIR=$(PRODUCT)-3.3
 RM=rm -f
 
 all:
@@ -52,18 +51,8 @@ HTML = html/$(PRODUCT)-man.html html/Build.html html/ReleaseNotes.html
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML) 
 
-tarlist: Makefile.aux
-	$(RM) tarlist
-	for i in $(FILES); \
-	do echo $(TARDIR)/$$i; \
-	done >$@
-
-$(PRODUCT)-src.tgz: $(FILES) tarlist
-	$(RM) $(TARDIR)
-	ln -s . $(TARDIR)
-	$(RM) $@
-	tar -czh -T tarlist -f $@
-	$(RM) $(TARDIR)
+$(PRODUCT)-src.tgz: $(FILES) srctar.sh Makefile.aux
+	sh ./srctar.sh $(PRODUCT) $(FILES)
 
 MANDEP = man.m4 html.m4 m4man Makefile.aux version.txt
 MKMAN = ./m4man -t man -p $(PRODUCT)

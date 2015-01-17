@@ -19,7 +19,6 @@ X3270_OBJECTS = Cme.$(OBJ) CmeBSB.$(OBJ) CmeLine.$(OBJ) CmplxMenu.$(OBJ) \
 
 # x3270-specific header files
 X3270_HEADERS = Cme.h CmeBSB.h CmeBSBP.h CmeLine.h CmeLineP.h CmeP.h \
-	CmplxMenu.h CmplxMenuP.h Husk.h HuskP.h about.h childc.h dialogc.h \
-	display8.h idle_gui.h keysym2ucs.h pr3287_session.h print_window.h \
-	printer_gui.h resourcesc.h screenc.h stmenu.h w3misc.h xaa.h \
-	xactions.h xappres.h xkybd.h
+	CmplxMenu.h CmplxMenuP.h Husk.h HuskP.h about.h display8.h idle_gui.h \
+	keysym2ucs.h pr3287_session.h print_window.h printer_gui.h \
+	resourcesc.h stmenu.h xaa.h xactions.h xappres.h xkybd.h

@@ -15,7 +15,6 @@ export LC_ALL="C"
 
 build=1
 release=""
-major=3.3
 all_prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270 Playback"
 
 function usage
@@ -150,7 +149,7 @@ done
 if [ "$all" ]
 then	echo "===== Making mega-tarball."
 	# Make a mega-tarball.
-	tar -czf $suite *-$major/ Playback/ VS2010/
+	tar -czf $suite *3270/ *3287/ Playback/ VS2010/
 fi
 if [ "$tarball" ]
 then	echo "Tarball is $tmpdir/$suite."
@@ -173,8 +172,8 @@ do
 	d2=$d1/$prod
 	if [ "$build" ]
 	then	echo "===== Building $prod."
-	    	if [ -d $prod-$major ]
-		then	cd $prod-$major
+	    	if [ -d $prod ]
+		then	cd $prod
 		elif [ -d $prod ]
 		then	cd $prod
 		else	echo >&2 "No such directory: $prod"
@@ -241,7 +240,7 @@ done
 # Release wc3270 via Inno Setup under Wine.
 if [ "$winrel" ]
 then	echo "===== Building setup.exe."
-	cd $tmpdir/wc3270-$major
+	cd $tmpdir/wc3270
     	wine c:\\Program\ Files\\Inno\ Setup\ 5\\ISCC.EXE wc3270.iss
 	echo "===== Building wc3270.zip."
 	zipit -c "wc3270 $version" -o $zip wc3270.zipit
@@ -267,13 +266,13 @@ then	echo "===== Releasing."
 
 	# Release the setup.exe.
 	if [ "$winrel" ]
-	then	cp wc3270-$major/$setup $reldir/
+	then	cp wc3270/$setup $reldir/
 		chmod ugo-w $reldir/$setup
 	fi
 
 	# Release the zip file.
 	if [ "$winrel" ]
-	then	cp wc3270-$major/$zip $reldir/
+	then	cp wc3270/$zip $reldir/
 		chmod ugo-w $reldir/$zip
 	fi
 

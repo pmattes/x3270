@@ -11,8 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\wc3270-3.3\w3misc.c" />
-    <ClCompile Include="..\..\wc3270-3.3\x3270if.c" />
+    <ClCompile Include="..\..\wc3270\w3misc.c" />
+    <ClCompile Include="..\..\wc3270\x3270if.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{25CA97FA-186C-4235-8280-BF1F56FD3CFF}</ProjectGuid>

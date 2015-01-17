@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\wc3270-3.3\catf.c" />
+    <ClCompile Include="..\..\wc3270\catf.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2BA5D6CF-59E7-4747-A8BF-A5A1DA3C2567}</ProjectGuid>

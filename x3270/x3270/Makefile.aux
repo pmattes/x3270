@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2014, Paul Mattes.
+# Copyright (c) 1995-2015 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,6 @@
 # Auxiliary makefile for x3270
 
 PRODUCT=x3270
-TARDIR=$(PRODUCT)-3.3
 RM=rm -f
 
 all:
@@ -80,18 +79,8 @@ DEVKIT = Makefile.aux apl.inc ft.inc html.m4 instlist.all-xinstall \
 FILES = $(SOURCES) $(HEADERS) $(BITMAPS) $(FONTS) $(MISC) $(EXAMPLES) \
 	$(CONFIG) $(HTML) $(FT)
 
-tarlist: Makefile.aux common_files.mk x3270_files.mk
-	$(RM) tarlist
-	for i in $(FILES); \
-	do echo $(TARDIR)/$$i; \
-	done >$@
-
-$(PRODUCT)-src.tgz: $(FILES) tarlist
-	$(RM) $(TARDIR)
-	ln -s . $(TARDIR)
-	$(RM) $@
-	tar -czh -T tarlist -f $@
-	$(RM) $(TARDIR)
+$(PRODUCT)-src.tgz: $(FILES) srctar.sh Makefile.aux
+	sh ./srctar.sh $(PRODUCT) $(FILES)
 
 configure: configure.in
 	autoconf

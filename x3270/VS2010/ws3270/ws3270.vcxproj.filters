@@ -15,163 +15,163 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\ws3270-3.3\actions.c">
+    <ClCompile Include="..\..\ws3270\actions.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\apl.c">
+    <ClCompile Include="..\..\ws3270\apl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\charset.c">
+    <ClCompile Include="..\..\ws3270\charset.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\ctlr.c">
+    <ClCompile Include="..\..\ws3270\ctlr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\fprint_screen.c">
+    <ClCompile Include="..\..\ws3270\fprint_screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\ft.c">
+    <ClCompile Include="..\..\ws3270\ft.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\ft_cut.c">
+    <ClCompile Include="..\..\ws3270\ft_cut.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\ft_dft.c">
+    <ClCompile Include="..\..\ws3270\ft_dft.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\gdi_print.c">
+    <ClCompile Include="..\..\ws3270\gdi_print.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\glue.c">
+    <ClCompile Include="..\..\ws3270\glue.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\host.c">
+    <ClCompile Include="..\..\ws3270\host.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\idle.c">
+    <ClCompile Include="..\..\ws3270\idle.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\kybd.c">
+    <ClCompile Include="..\..\ws3270\kybd.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\lazya.c">
+    <ClCompile Include="..\..\ws3270\lazya.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\linemode.c">
+    <ClCompile Include="..\..\ws3270\linemode.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\macros.c">
+    <ClCompile Include="..\..\ws3270\macros.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\nvt.c">
+    <ClCompile Include="..\..\ws3270\nvt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\pr3287_sessio.c">
+    <ClCompile Include="..\..\ws3270\pr3287_sessio.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\print_screen.c">
+    <ClCompile Include="..\..\ws3270\print_screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\proxy.c">
+    <ClCompile Include="..\..\ws3270\proxy.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\readres.c">
+    <ClCompile Include="..\..\ws3270\readres.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\resolver.c">
+    <ClCompile Include="..\..\ws3270\resolver.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\resources.c">
+    <ClCompile Include="..\..\ws3270\resources.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\rpq.c">
+    <ClCompile Include="..\..\ws3270\rpq.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\see.c">
+    <ClCompile Include="..\..\ws3270\see.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\sf.c">
+    <ClCompile Include="..\..\ws3270\sf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\s3270.c">
+    <ClCompile Include="..\..\ws3270\s3270.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\snprintf.c">
+    <ClCompile Include="..\..\ws3270\snprintf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\ssl_dll.c">
+    <ClCompile Include="..\..\ws3270\ssl_dll.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\strtok_r.c">
+    <ClCompile Include="..\..\ws3270\strtok_r.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\tables.c">
+    <ClCompile Include="..\..\ws3270\tables.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\telnet.c">
+    <ClCompile Include="..\..\ws3270\telnet.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\toggles.c">
+    <ClCompile Include="..\..\ws3270\toggles.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\trace.c">
+    <ClCompile Include="..\..\ws3270\trace.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\unicode.c">
+    <ClCompile Include="..\..\ws3270\unicode.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\unicode_dbcs.c">
+    <ClCompile Include="..\..\ws3270\unicode_dbcs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\utf8.c">
+    <ClCompile Include="..\..\ws3270\utf8.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\util.c">
+    <ClCompile Include="..\..\ws3270\util.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\w3misc.c">
+    <ClCompile Include="..\..\ws3270\w3misc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\windirs.c">
+    <ClCompile Include="..\..\ws3270\windirs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\winprint.c">
+    <ClCompile Include="..\..\ws3270\winprint.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\winvers.c">
+    <ClCompile Include="..\..\ws3270\winvers.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\xio.c">
+    <ClCompile Include="..\..\ws3270\xio.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\XtGlue.c">
+    <ClCompile Include="..\..\ws3270\XtGlue.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\fallbacks.c">
+    <ClCompile Include="..\..\ws3270\fallbacks.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\version.c">
+    <ClCompile Include="..\..\ws3270\version.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\httpd-core.c">
+    <ClCompile Include="..\..\ws3270\httpd-core.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\httpd-io.c">
+    <ClCompile Include="..\..\ws3270\httpd-io.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\httpd-nodes.c">
+    <ClCompile Include="..\..\ws3270\httpd-nodes.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\asprintf.c">
+    <ClCompile Include="..\..\ws3270\asprintf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\bind-opt.c">
+    <ClCompile Include="..\..\ws3270\bind-opt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\varbuf.c">
+    <ClCompile Include="..\..\ws3270\varbuf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270-3.3\favicon.c">
+    <ClCompile Include="..\..\ws3270\favicon.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

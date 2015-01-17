@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\wc3270-3.3\ead3270.c">
+    <ClCompile Include="..\..\wc3270\ead3270.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wc3270-3.3\windirs.c">
+    <ClCompile Include="..\..\wc3270\windirs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
