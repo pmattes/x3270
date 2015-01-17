@@ -86,6 +86,7 @@
 #include "xappres.h"
 #include "xio.h"
 #include "xscroll.h"
+#include "xtables.h"
 
 #if defined(HAVE_SYS_SELECT_H) /*[*/
 #include <sys/select.h>		/* fd_set declaration */

@@ -46,6 +46,7 @@
 #include "statusc.h"
 #include "tables.h"
 #include "utilc.h"
+#include "xtables.h"
 
 static XChar2b *status_2b;
 static unsigned char *status_1b;
