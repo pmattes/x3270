@@ -48,7 +48,7 @@
 #include "ctlrc.h"
 #include "fprint_screenc.h"
 #include "lazya.h"
-#include "menubarc.h"
+#include "menubar.h"
 #include "nvtc.h"
 #include "popupsc.h"
 #include "print_screen.h"

@@ -52,12 +52,12 @@
 #include "keymap.h"
 #include "keypadc.h"
 #include "kybdc.h"
-#include "menubarc.h"
 #include "popupsc.h"
 #include "screenc.h"
 #include "statusc.h"
 #include "utilc.h"
 #include "xactions.h"
+#include "xmenubar.h"
 
 #define PA_ENDL		" " PA_END "()"
 #define Res3270		"3270"

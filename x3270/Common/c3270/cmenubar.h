@@ -26,34 +26,9 @@
  */
 
 /*
- *	menubarc.h
- *		Global declarations for menubar.c.
+ *	cmenubar.h
+ *		Global declarations for c3270 menubar.c.
  */
-
-#if defined(X3270_DISPLAY) /*[*/
-
-/* x3270 externs. */
-extern Pixmap dot, no_dot;
-extern Pixmap diamond, no_diamond;
-extern Pixmap null;
-
-typedef struct {
-    Widget w[2];
-} toggle_widget_t;
-extern toggle_widget_t toggle_widget[N_TOGGLES];
-
-void HandleMenu_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-void menubar_as_set(Boolean sensitive);
-void menubar_init(Widget container, Dimension overall_width,
-    Dimension current_width);
-void menubar_keypad_changed(void);
-Dimension menubar_qheight(Dimension container_width);
-void menubar_resize(Dimension width);
-void menubar_retoggle(toggle_index_t ix);
-void menubar_register(void);
-
-#elif defined(C3270) /*][*/
 
 typedef enum {
     MK_MOUSE = 1,	/* ncurses mouse event */
@@ -67,8 +42,6 @@ typedef enum {
     MK_NONE,		/* no symbolic key code */
     MK_OTHER		/* anything else */
 } menu_key_t;
-
-# define menubar_as_set(n)
 
 /* c3270 externs. */
 # define MENU_IS_UP	0x1
@@ -86,8 +59,3 @@ void menu_cursor(int *row, int *col);
 void menubar_retoggle(toggle_index_t ix);
 void map_acs(unsigned char c, ucs4_t *u, unsigned char *acs);
 void menubar_register(void);
-
-#else /*][*/
-# define menubar_as_set(n)
-# define menubar_retoggle(ix)
-#endif /*]*/

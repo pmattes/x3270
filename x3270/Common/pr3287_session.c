@@ -52,7 +52,6 @@
 #include "ctlrc.h"
 #include "hostc.h"
 #include "lazya.h"
-#include "menubarc.h"
 #include "popupsc.h"
 #include "pr3287_session.h"
 #include "print_screen.h"

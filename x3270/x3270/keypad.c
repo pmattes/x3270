@@ -45,10 +45,10 @@
 #include "actions.h"
 #include "keypadc.h"
 #include "kybdc.h"
-#include "menubarc.h"
 #include "popupsc.h"
 #include "screenc.h"
 #include "utilc.h"
+#include "xmenubar.h"
 
 #include "keypad.bm"
 

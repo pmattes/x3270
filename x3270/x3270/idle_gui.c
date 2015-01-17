@@ -49,9 +49,9 @@
 #include "dialogc.h"
 #include "idlec.h"
 #include "idle_gui.h"
-#include "menubarc.h"
 #include "objects.h"
 #include "popupsc.h"
+#include "xmenubar.h"
 
 /* Macros. */
 #define FILE_WIDTH	300	/* width of file name widgets */

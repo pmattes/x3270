@@ -42,6 +42,7 @@
 #include "actions.h"
 #include "charsetc.h"
 #include "ctlrc.h"
+#include "cmenubar.h"
 #include "gluec.h"
 #include "hostc.h"
 #include "keymap.h"
@@ -56,8 +57,6 @@
 #include "utilc.h"
 #include "xio.h"
 #include "xscroll.h"
-
-#include "menubarc.h"
 
 /*
  * The usual x3270 COLS variable (current number of columns in the 3270

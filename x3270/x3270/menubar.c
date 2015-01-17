@@ -58,7 +58,7 @@
 #include "keypadc.h"
 #include "kybdc.h"
 #include "macrosc.h"
-#include "menubarc.h"
+#include "menubar.h"
 #include "popupsc.h"
 #include "print_screen.h"
 #include "print_window.h"
@@ -73,6 +73,7 @@
 #include "xaa.h"
 #include "xactions.h"
 #include "xio.h"
+#include "xmenubar.h"
 
 #define MACROS_MENU	"macrosMenu"
 

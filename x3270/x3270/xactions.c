@@ -45,7 +45,6 @@
 #include "keymap.h"
 #include "lazya.h"
 #include "macrosc.h"
-#include "menubarc.h"
 #include "popupsc.h"
 #include "resources.h"
 #include "screenc.h"
@@ -54,6 +53,7 @@
 #include "utilc.h"
 #include "xactions.h"
 #include "xkybd.h"
+#include "xmenubar.h"
 
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>

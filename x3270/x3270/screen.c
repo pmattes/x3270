@@ -68,7 +68,6 @@
 #include "keypadc.h"
 #include "kybdc.h"
 #include "lazya.h"
-#include "menubarc.h"
 #include "nvtc.h"
 #include "popupsc.h"
 #include "save.h"
@@ -85,6 +84,7 @@
 #include "xactions.h"
 #include "xappres.h"
 #include "xio.h"
+#include "xmenubar.h"
 #include "xscroll.h"
 #include "xtables.h"
 

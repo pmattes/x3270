@@ -48,12 +48,12 @@
 #include "resources.h"
 
 #include "dialogc.h"
-#include "menubarc.h"
 #include "popupsc.h"
 #include "print_screen.h"
 #include "stmenu.h"
 #include "toggles.h"
 #include "trace.h"
+#include "xmenubar.h"
 
 #define CLOSE_VGAP	0
 #define FAR_VGAP	10

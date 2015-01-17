@@ -59,7 +59,6 @@
 #include "keymap.h"
 #include "kybdc.h"
 #include "macrosc.h"
-#include "menubarc.h"
 #include "nvtc.h"
 #include "popupsc.h"
 #include "print_screen.h"
@@ -78,6 +77,7 @@
 #include "xappres.h"
 #include "xio.h"
 #include "xkybd.h"
+#include "xmenubar.h"
 #include "xscroll.h"
 
 /* Globals */

@@ -50,7 +50,6 @@
 #include "hostc.h"
 #include "kybdc.h"
 #include "macrosc.h"
-#include "menubarc.h"
 #include "objects.h"
 #include "popupsc.h"
 #include "screenc.h"

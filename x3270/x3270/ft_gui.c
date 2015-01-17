@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2014, Paul Mattes.
+ * Copyright (c) 1996-2015 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -54,11 +54,11 @@
 #include "ft_dftc.h"
 #include "ft_private.h"
 #include "kybdc.h"
-#include "menubarc.h"
 #include "objects.h"
 #include "popupsc.h"
 #include "utilc.h"
 #include "varbufc.h"
+#include "xmenubar.h"
 
 #include "ft_guic.h"
 

@@ -47,12 +47,12 @@
 #include "actions.h"
 #include "hostc.h"
 #include "macrosc.h"
-#include "menubarc.h"
 #include "popupsc.h"
 #include "screenc.h"
 #include "trace.h"
 #include "utilc.h"
 #include "xio.h"
+#include "xmenubar.h"
 
 static char vmsgbuf[4096];
 

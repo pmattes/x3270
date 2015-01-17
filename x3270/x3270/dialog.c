@@ -55,11 +55,11 @@
 #include "hostc.h"
 #include "kybdc.h"
 #include "macrosc.h"
-#include "menubarc.h"
 #include "objects.h"
 #include "popupsc.h"
 #include "telnetc.h"
 #include "utilc.h"
+#include "xmenubar.h"
 
 /* Globals. */
 text_t t_numeric = T_NUMERIC;

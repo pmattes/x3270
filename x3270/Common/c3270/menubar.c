@@ -41,6 +41,7 @@
 
 #include "actions.h"
 #include "charsetc.h"
+#include "cmenubar.h"
 #include "ctlrc.h"
 #include "gluec.h"
 #include "hostc.h"
@@ -48,6 +49,7 @@
 #include "keypadc.h"
 #include "kybdc.h"
 #include "macrosc.h"
+#include "menubar.h"
 #include "popupsc.h"
 #include "screenc.h"
 #include "toggles.h"
@@ -55,8 +57,6 @@
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
-
-#include "menubarc.h"
 
 #if !defined(_WIN32) /*[*/
 # if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
@@ -1222,6 +1222,12 @@ Menu_action(ia_t ia, unsigned argc, const char **argv)
 
     popup_menu(0, False);
     return True;
+}
+
+void
+menubar_as_set(Boolean sensitive _is_unused)
+{
+    /* Do nothing, there is no Abort Script. */
 }
 
 /**

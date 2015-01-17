@@ -65,7 +65,7 @@
 #include "kybdc.h"
 #include "lazya.h"
 #include "macrosc.h"
-#include "menubarc.h"
+#include "menubar.h"
 #include "popupsc.h"
 #if defined(X3270_INTERACTIVE) /*[*/
 # include "pr3287_session.h"

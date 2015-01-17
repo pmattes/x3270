@@ -39,7 +39,7 @@
 #include "resources.h"
 
 #include "actions.h"
-#include "menubarc.h"
+#include "menubar.h"
 #include "popupsc.h"
 #include "toggles.h"
 

@@ -37,8 +37,8 @@
 #include "macrosc.h"
 #include "3270ds.h"
 #include "appres.h"
+#include "cmenubar.h"
 #include "ctlrc.h"
-#include "menubarc.h"
 #include "keypadc.h"
 
 #if !defined(_WIN32) /*[*/

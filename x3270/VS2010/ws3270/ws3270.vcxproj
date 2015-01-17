@@ -34,6 +34,7 @@
     <ClCompile Include="..\..\ws3270\lazya.c" />
     <ClCompile Include="..\..\ws3270\linemode.c" />
     <ClCompile Include="..\..\ws3270\macros.c" />
+    <ClCompile Include="..\..\ws3270\menubar_stubs.c" />
     <ClCompile Include="..\..\ws3270\ansi.c" />
     <ClCompile Include="..\..\ws3270\pr3287_session.c" />
     <ClCompile Include="..\..\ws3270\print_screen.c" />

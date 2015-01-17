@@ -63,6 +63,9 @@
     <ClCompile Include="..\..\ws3270\macros.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\ws3270\menubar_stubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\ws3270\nvt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
