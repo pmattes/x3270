@@ -39,12 +39,8 @@
 #include "resources.h"
 
 #include "actions.h"
-#include "ctlrc.h"
 #include "menubarc.h"
-#include "nvtc.h"
 #include "popupsc.h"
-#include "screenc.h"
-#include "trace.h"
 #include "toggles.h"
 
 /* Live state of toggles. */
