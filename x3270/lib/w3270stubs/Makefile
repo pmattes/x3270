@@ -70,9 +70,9 @@ clean:
 clobber: clean
 	$(RM) $(LIB3270)
 
-depend: dependencies
-dependencies: $(SRCS)
-	mingwmakedep -C $(CC) $(XCPPFLAGS) -I. $(SRCS) >dependencies
+depend: $(SRCS)
+	mingwmakedep -C $(CC) $(XCPPFLAGS) -I. $(SRCS) >dependencies-
+	mv dependencies- dependencies
 
 ifeq ($(wildcard dependencies),dependencies)
 include dependencies

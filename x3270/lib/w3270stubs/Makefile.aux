@@ -52,7 +52,8 @@ configure: configure.in
 	autoconf
 
 # Bootstrap targets.
+dependencies: Makefile
+	$(MAKE) depend
 cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
 	cs -b
-bootstrap: $(PRODUCT)-src.tgz Makefile cscope.out
-	make depend
+bootstrap: $(PRODUCT)-src.tgz dependencies cscope.out
