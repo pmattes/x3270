@@ -49,8 +49,8 @@ CC = i586-mingw32msvc-gcc
 WINDRES = i586-mingw32msvc-windres
 endif
 
-XCPPFLAGS = -D_WIN32 -DX3270_DBCS=1 -D_WIN32_WINNT=0x500 -D_WIN32_IE=0x0500 -DWINVER=0x500
-CFLAGS = -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP) $(CDEBUGFLAGS)
+XCPPFLAGS = -D_WIN32 -DX3270_DBCS=1 -D_WIN32_WINNT=0x500 -D_WIN32_IE=0x0500 -DWINVER=0x500 -I. -I../include
+CFLAGS = -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP) $(CDEBUGFLAGS)
 
 SRCS = asprintf.c charset.c ctlr.c lazya.c pr3287.c proxy.c resolver.c see.c \
 	sf.c snprintf.c ssl_dll.c tables.c telnet.c trace.c unicode.c \
@@ -82,13 +82,14 @@ wpr3287.exe: $(OBJECTS)
 	$(CC) -o wpr3287$(OSUFFIX).exe $(CFLAGS) $(OBJECTS) $(LIBS)
 
 clean:
-	rm -f *.o
+	rm -f *.o dependencies-
 
 clobber: clean
 	rm -f wpr3287.exe
 
 depend:
-	mingwmakedep -C $(CC) $(XCPPFLAGS) -I. $(SRCS) >dependencies
+	mingwmakedep -C $(CC) $(XCPPFLAGS) $(SRCS) >dependencies-
+	mv dependencies- dependencies
 
 ifeq ($(wildcard dependencies),dependencies)
 include dependencies

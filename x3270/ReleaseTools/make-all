@@ -15,7 +15,7 @@ export LC_ALL="C"
 
 build=1
 release=""
-all_prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270 Playback lib/3270 lib/3270stubs lib/w3270 lib/w3270stubs"
+all_prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270 Playback"
 
 function usage
 {
@@ -42,7 +42,7 @@ do	case "$1" in
 		shift
 		;;
 	-win32|--win32)
-		all_prods="wc3270 wpr3287 ws3270 lib/w3270 lib/w3270stubs"
+		all_prods="wc3270 wpr3287 ws3270"
 		just_win32=1
 		shift
 		;;
@@ -65,11 +65,28 @@ then	echo >&2 "Can't do tarball for specific products."
     	exit 1
 fi
 
+# c3270, x3270, s3270 and tcl3270 need lib3270 and lib3270stubs.
+# wc3270 and ws3270 need libw3270 and libw3270stubs.
+for i in $prods
+do	case $i in
+    	wc3270|ws3270)
+		need_wlibs=1
+		;;
+	c3270|s3270|tcl3270|x3270)
+		need_libs=1
+		;;
+	esac
+done
+[ "$need_libs" ] && prods="$prods lib/3270 lib/3270stubs"
+[ "$need_wlibs" ] && prods="$prods lib/w3270 lib/w3270stubs"
+
+# Add in the include directory.
+prods="$prods include"
+
+# Check for a full Windows release.
 if [[ "$prods" =~ wc3270 && \
       "$prods" =~ ws3270 && \
-      "$prods" =~ wpr3287 && \
-      "$prods" =~ lib/w3270 && \
-      "$prods" =~ lib/w3270stubs ]]
+      "$prods" =~ wpr3287 ]]
 then	winrel=1;
 fi
 
@@ -160,7 +177,7 @@ done
 if [ "$all" ]
 then	echo "===== Making mega-tarball."
 	# Make a mega-tarball.
-	tar -czf $suite *3270/ *3287/ lib/ Playback/ VS2010/
+	tar -czf $suite *3270/ *3287/ lib/ Playback/ VS2010/ include/
 fi
 if [ "$tarball" ]
 then	echo "Tarball is $tmpdir/$suite."
@@ -179,6 +196,8 @@ prods="$pl $px"
 
 for prod in $prods
 do
+    	cd $tmpdir
+
     	# Some products don't get built on Linux.
 	case "$prod" in
 	wc3270|wpr3287|ws3270)
@@ -193,24 +212,20 @@ do
 	d2=$d1/$prod
 	if [ "$build" ]
 	then	echo "===== Building $prod."
-	    	if [ -d $prod ]
-		then	cd $prod
-		elif [ -d $prod ]
-		then	cd $prod
-		else	echo >&2 "No such directory: $prod"
-		    	exit 1
-		fi
+		cd $prod || exit 1
 		if [ -f configure ]
 		then	./configure
+		elif [ ! -f Makefile ]
+		then	continue
 		fi
 		case $prod in
-		    tcl3270)
+		tcl3270)
 			xflags="-Wno-long-long"
 			;;
-		    x3270)
+		x3270)
 			xflags="-Wno-deprecated-declarations"
 			;;
-		    *)
+		*)
 			xflags=""
 			;;
 		esac
@@ -251,11 +266,7 @@ do
 			diff $d2/instlist.all-xinstall cmp.files || exit 1
 			rm -rf i
 		fi
-
 	fi
-
-	cd $tmpdir
-
 done
 
 # Release wc3270 via Inno Setup under Wine.

@@ -25,9 +25,9 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
 
-# Auxiliary makefile for stubs library
+# Auxiliary makefile for the include directory
 
-PRODUCT=lib3270
+PRODUCT=include
 RM=rm -f
 
 all:
@@ -35,12 +35,11 @@ all:
 
 # Development tools.
 
-SOURCES = lazya.c Malloc.c
+SOURCES = 
 
-HEADERS = appres.h asprintfc.h conf.h globals.h localdefs.h trace.h utilc.h
+HEADERS = lazya.h
 
-MISC = Makefile.in conf.h.in config.guess config.sub configure configure.in \
-	install-sh
+MISC = 
 
 DEVKIT = Makefile.aux
 
@@ -49,13 +48,6 @@ FILES = $(SOURCES) $(HEADERS) $(MISC)
 $(PRODUCT)-src.tgz: $(FILES) srctar.sh Makefile.aux
 	sh ./srctar.sh $(PRODUCT) $(FILES)
 
-configure: configure.in
-	autoconf
-
-# Bootstrap targets.
-Makefile: Makefile.in configure
-	./configure
-	$(MAKE) depend
 cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
 	cs -b
-bootstrap: $(PRODUCT)-src.tgz Makefile cscope.out
+bootstrap: $(PRODUCT)-src.tgz cscope.out

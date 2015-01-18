@@ -54,8 +54,8 @@ NATIVECC = gcc
 WINDRES = i586-mingw32msvc-windres
 endif
 
-XCPPFLAGS = -D_WIN32 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWIN32_LEAN_AND_MEAN
-CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
+XCPPFLAGS = -D_WIN32 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWIN32_LEAN_AND_MEAN -I. -I../include
+CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)
 
 OBJ = o
 include common_files.mk ws3270_files.mk
@@ -104,13 +104,14 @@ wversion.o: version.txt mkwversion.sh
 	sh ./mkwversion.sh $(CC)
 
 clean:
-	rm -f *.o mkfb mkfb.exe fallbacks.c
+	rm -f *.o mkfb mkfb.exe fallbacks.c dependencies-
 
 clobber: clean
 	rm -f $(PROGS)
 
 depend: $(SRCS)
-	mingwmakedep -C $(CC) $(XCPPFLAGS) -I. $(SRCS) >dependencies
+	mingwmakedep -C $(CC) $(XCPPFLAGS) $(SRCS) >dependencies-
+	mv dependencies- dependencies
 
 ifeq ($(wildcard dependencies),dependencies)
 include dependencies

@@ -56,8 +56,8 @@ NATIVECC = gcc
 WINDRES = i586-mingw32msvc-windres
 endif
 
-XCPPFLAGS = -D_WIN32 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWINVER=0x500
-CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
+XCPPFLAGS = -D_WIN32 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWINVER=0x500 -I. -I../include
+CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)
 
 OBJ = o
 include common_files.mk wc3270_files.mk
@@ -137,13 +137,14 @@ x3270if.exe: x3270if.o w3misc.o
 	$(CC) -o $@ $(CFLAGS) x3270if.o w3misc.o -lws2_32
 
 clean:
-	rm -f *.o $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c
+	rm -f *.o $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c dependencies-
 
 clobber: clean
 	rm -f $(PROGS)
 
 depend: $(SRCS) compiled_keypad.h
-	mingwmakedep -C $(CC) $(XCPPFLAGS) -I. $(SRCS) >dependencies
+	mingwmakedep -C $(CC) $(XCPPFLAGS) $(SRCS) >dependencies-
+	mv dependencies- dependencies
 
 ifeq ($(wildcard dependencies),dependencies)
 include dependencies
