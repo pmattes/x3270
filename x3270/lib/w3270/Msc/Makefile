@@ -24,49 +24,34 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# nmake Makefile for wpr3287
+# nmake Makefile for libw3270
+
+TARGET = ..\libw3270.lib
 
 # Set command paths.
 CC = cl /nologo
-RC = rc
 RM = erase
+LIB = lib /nologo
 
 # This makefile assumes that you have OpenSSL headers in c:\OpenSSL-Win32.
 # If they are somewhere else, change SSLDIR below.
 SSLDIR = C:\OpenSSL-Win32
 !IF EXISTS($(SSLDIR))
 SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
-SSLLIB = gdi32.lib user32.lib
 !ENDIF
 
-XCPPFLAGS = /D_WIN32 /DX3270_DBCS=1 /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /W3 /WX $(SSLDEF) -I. -I..\include
-CFLAGS = $(XCPPFLAGS)
+XCPPFLAGS = /D_WIN32 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /DWINVER=0x500 /D_CRT_SECURE_NO_DEPRECATE /W3 /WX $(SSLDEF)
+CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I. -I..\..\include
 
-VOBJS = asprintf.obj charset.obj ctlr.obj lazya.obj pr3287.obj proxy.obj \
-	resolver.obj see.obj sf.obj snprintf.obj ssl_dll.obj tables.obj \
-	telnet.obj trace.obj unicode.obj unicode_dbcs.obj utf8.obj util.obj \
-	varbuf.obj w3misc.obj windirs.obj winvers.obj wpr3287.RES ws.obj \
-	xtable.obj
+OBJECTS = lazya.obj Malloc.obj varbuf.obj
 
-OBJECTS = $(VOBJS) version.obj
-LIBS = $(SSLLIB) ws2_32.lib winspool.lib advapi32.lib shell32.lib
+all: $(TARGET)
 
-all: wpr3287.exe
-
-version.obj: $(VOBJS) version.txt mkversion.exe Msc\Makefile
-	mkversion.exe wpr3287
-	$(CC) $(CFLAGS) /c version.c
-mkversion.exe: Msc\mkversion.c
-	$(CC) $(CFLAGS) /Fe$@ Msc\mkversion.c
-
-wpr3287.RES: wpr3287.rc pr3287.ico
-	$(RC) wpr3287.rc
-
-wpr3287.exe: $(OBJECTS)
-	$(CC) /Fewpr3287.exe $(CFLAGS) $(OBJECTS) $(LIBS)
+$(TARGET): $(OBJECTS)
+	$(LIB) $(OBJECTS) -OUT:$@
 
 clean:
-	$(RM) *.obj *.RES mkversion.exe version.c
+	erase *.obj
 
 clobber: clean
-	$(RM) wpr3287.exe
+	erase $(TARGET)

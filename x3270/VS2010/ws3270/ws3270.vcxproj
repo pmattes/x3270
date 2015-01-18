@@ -31,12 +31,9 @@
     <ClCompile Include="..\..\ws3270\httpd-nodes.c" />
     <ClCompile Include="..\..\ws3270\idle.c" />
     <ClCompile Include="..\..\ws3270\kybd.c" />
-    <ClCompile Include="..\..\ws3270\lazya.c" />
     <ClCompile Include="..\..\ws3270\linemode.c" />
     <ClCompile Include="..\..\ws3270\macros.c" />
-    <ClCompile Include="..\..\ws3270\menubar_stubs.c" />
-    <ClCompile Include="..\..\ws3270\ansi.c" />
-    <ClCompile Include="..\..\ws3270\pr3287_session.c" />
+    <ClCompile Include="..\..\ws3270\nvt.c" />
     <ClCompile Include="..\..\ws3270\print_screen.c" />
     <ClCompile Include="..\..\ws3270\proxy.c" />
     <ClCompile Include="..\..\ws3270\readres.c" />
@@ -57,7 +54,6 @@
     <ClCompile Include="..\..\ws3270\unicode_dbcs.c" />
     <ClCompile Include="..\..\ws3270\utf8.c" />
     <ClCompile Include="..\..\ws3270\util.c" />
-    <ClCompile Include="..\..\ws3270\varbuf.c" />
     <ClCompile Include="..\..\ws3270\version.c" />
     <ClCompile Include="..\..\ws3270\w3misc.c" />
     <ClCompile Include="..\..\ws3270\windirs.c" />
@@ -107,12 +103,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32;_WIN32_WINNT=0x0500;_WIN32_IE=0x0500;WINVER=0x500;_CRT_SECURE_NO_DEPRECATE;SSLDIR=C:\OpenSSL-Win32;HAVE_LIBSSL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>C:\OpenSSL-Win32\include;%(RootDir)%(Directory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\OpenSSL-Win32\include;%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>C:\OpenSSL-Win32\lib\VC\static\ssleay32MDd.lib;C:\OpenSSL-Win32\lib\VC\static\libeay32MDd.lib;Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>C:\OpenSSL-Win32\lib\VC\static\ssleay32MDd.lib;C:\OpenSSL-Win32\lib\VC\static\libeay32MDd.lib;Ws2_32.lib;$(OutDir)libw3270.lib;$(OutDir)libw3270stubs.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

@@ -84,7 +84,8 @@ done
 prods="$prods include"
 
 # Check for a full Windows release.
-if [[ "$prods" =~ wc3270 && \
+if [[ "$build" && \
+      "$prods" =~ wc3270 && \
       "$prods" =~ ws3270 && \
       "$prods" =~ wpr3287 ]]
 then	winrel=1;
@@ -308,4 +309,5 @@ then	echo "===== Releasing."
 		chmod ugo-w $reldir/$zip
 	fi
 
+else	echo "Tarballs are in $tmpdir."
 fi

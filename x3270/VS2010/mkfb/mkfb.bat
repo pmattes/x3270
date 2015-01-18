@@ -1,4 +1,4 @@
-cd ..\..\wc3270-3.3
+cd ..\..\wc3270
 %1\mkfb.exe -c X3270.xad > fallbacks.c
-cd ..\ws3270-3.3
+cd ..\ws3270
 %1\mkfb.exe -c X3270.xad > fallbacks.c

@@ -10,46 +10,19 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\wpr3287\asprintf.c" />
-    <ClCompile Include="..\..\wpr3287\charset.c" />
-    <ClCompile Include="..\..\wpr3287\ctlr.c" />
-    <ClCompile Include="..\..\wpr3287\lazya.c" />
-    <ClCompile Include="..\..\wpr3287\pr3287.c" />
-    <ClCompile Include="..\..\wpr3287\proxy.c" />
-    <ClCompile Include="..\..\wpr3287\resolver.c" />
-    <ClCompile Include="..\..\wpr3287\see.c" />
-    <ClCompile Include="..\..\wpr3287\sf.c" />
-    <ClCompile Include="..\..\wpr3287\snprintf.c" />
-    <ClCompile Include="..\..\wpr3287\ssl_dll.c" />
-    <ClCompile Include="..\..\wpr3287\tables.c" />
-    <ClCompile Include="..\..\wpr3287\telnet.c" />
-    <ClCompile Include="..\..\wpr3287\trace.c" />
-    <ClCompile Include="..\..\wpr3287\unicode.c" />
-    <ClCompile Include="..\..\wpr3287\unicode_dbcs.c" />
-    <ClCompile Include="..\..\wpr3287\utf8.c" />
-    <ClCompile Include="..\..\wpr3287\util.c" />
-    <ClCompile Include="..\..\wpr3287\varbuf.c" />
-    <ClCompile Include="..\..\wpr3287\version.c" />
-    <ClCompile Include="..\..\wpr3287\w3misc.c" />
-    <ClCompile Include="..\..\wpr3287\windirs.c" />
-    <ClCompile Include="..\..\wpr3287\winvers.c" />
-    <ClCompile Include="..\..\wpr3287\ws.c" />
-    <ClCompile Include="..\..\wpr3287\xtable.c" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{0094B3D7-0924-4296-BED4-300B53F63562}</ProjectGuid>
+    <ProjectGuid>{7B2EBB95-B987-4FC6-BB3F-B7612B54BD00}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>wpr3287</RootNamespace>
+    <RootNamespace>libw3270</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <CharacterSet>NotSet</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
@@ -64,12 +37,7 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-  </PropertyGroup>
+  <PropertyGroup />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>
@@ -77,13 +45,11 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32;_WIN32_WINNT=0x0500;_WIN32_IE=0x0500;WINVER=0x500;_CRT_SECURE_NO_DEPRECATE;SSLDIR=C:\OpenSSL-Win32;HAVE_LIBSSL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>C:\OpenSSL-Win32\include;%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>C:\OpenSSL-Win32\lib\VC\static\ssleay32MDd.lib;C:\OpenSSL-Win32\lib\VC\static\libeay32MDd.lib;Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -94,15 +60,20 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\lib\w3270\lazya.c" />
+    <ClCompile Include="..\..\lib\w3270\Malloc.c" />
+    <ClCompile Include="..\..\lib\w3270\varbuf.c" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

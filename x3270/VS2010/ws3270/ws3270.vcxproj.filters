@@ -54,22 +54,10 @@
     <ClCompile Include="..\..\ws3270\kybd.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270\lazya.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ws3270\linemode.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\ws3270\macros.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\ws3270\menubar_stubs.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\ws3270\nvt.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\ws3270\pr3287_sessio.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\ws3270\print_screen.c">
@@ -171,10 +159,10 @@
     <ClCompile Include="..\..\ws3270\bind-opt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270\varbuf.c">
+    <ClCompile Include="..\..\ws3270\favicon.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270\favicon.c">
+    <ClCompile Include="..\..\ws3270\nvt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

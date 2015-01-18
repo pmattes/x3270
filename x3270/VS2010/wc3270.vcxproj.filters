@@ -80,9 +80,6 @@
     <ClCompile Include="..\wc3270\kybd.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\lazya.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\linemode.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -141,9 +138,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\wc3270\ssl_dll.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wc3270\ssl_dll_gui.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\wc3270\tables.c">
@@ -212,7 +206,7 @@
     <ClCompile Include="..\wc3270\httpd-nodes.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\varbuf.c">
+    <ClCompile Include="..\wc3270\ssl_passwd_gui.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

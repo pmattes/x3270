@@ -51,7 +51,7 @@
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>C:\OpenSSL-Win32\include;%(RootDir)%(Directory);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\OpenSSL-Win32\include;%(RootDir)%(Directory);%(ProjectDir)..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32;_WIN32_WINNT=0x0500;_WIN32_IE=0x0500;WINVER=0x500;_CRT_SECURE_NO_DEPRECATE;SSLDIR=C:\OpenSSL-Win32;HAVE_LIBSSL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -63,7 +63,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>C:\OpenSSL-Win32\lib\VC\static\ssleay32MDd.lib;C:\OpenSSL-Win32\lib\VC\static\libeay32MDd.lib;Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>C:\OpenSSL-Win32\lib\VC\static\ssleay32MDd.lib;C:\OpenSSL-Win32\lib\VC\static\libeay32MDd.lib;Ws2_32.lib;$(OutDir)libw3270.lib;$(OutDir)libw3270stubs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -135,7 +135,6 @@
     <ClCompile Include="..\wc3270\keymap.c" />
     <ClCompile Include="..\wc3270\keypad.c" />
     <ClCompile Include="..\wc3270\kybd.c" />
-    <ClCompile Include="..\wc3270\lazya.c" />
     <ClCompile Include="..\wc3270\linemode.c" />
     <ClCompile Include="..\wc3270\macros.c" />
     <ClCompile Include="..\wc3270\menubar.c" />
@@ -166,7 +165,6 @@
     <ClCompile Include="..\wc3270\unicode_dbcs.c" />
     <ClCompile Include="..\wc3270\utf8.c" />
     <ClCompile Include="..\wc3270\util.c" />
-    <ClCompile Include="..\wc3270\varbuf.c" />
     <ClCompile Include="..\wc3270\version.c" />
     <ClCompile Include="..\wc3270\w3misc.c" />
     <ClCompile Include="..\wc3270\windirs.c" />
