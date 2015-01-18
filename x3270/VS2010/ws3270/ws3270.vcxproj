@@ -13,7 +13,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\ws3270\actions.c" />
     <ClCompile Include="..\..\ws3270\apl.c" />
-    <ClCompile Include="..\..\ws3270\asprintf.c" />
     <ClCompile Include="..\..\ws3270\bind-opt.c" />
     <ClCompile Include="..\..\ws3270\charset.c" />
     <ClCompile Include="..\..\ws3270\ctlr.c" />

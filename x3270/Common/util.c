@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -45,7 +45,7 @@
 # include "appres.h"
 # include "screenc.h"
 #endif /*]*/
-#include "asprintfc.h"
+#include "asprintf.h"
 #include "charsetc.h"
 #include "lazya.h"
 #include "varbuf.h"

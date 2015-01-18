@@ -188,9 +188,6 @@
     <ClCompile Include="..\wc3270\scroll.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\asprintf.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\bind-opt.c">
       <Filter>Source Files</Filter>
     </ClCompile>

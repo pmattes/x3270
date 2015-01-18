@@ -32,7 +32,7 @@
 
 #include "globals.h"
 
-#include "asprintfc.h"
+#include "asprintf.h"
 
 #include "varbuf.h"
 

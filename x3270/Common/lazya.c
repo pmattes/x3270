@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Paul Mattes.
+ * Copyright (c) 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@
 #if !defined(PR3287) /*[*/
 # include "appres.h"
 #endif /*]*/
-#include "asprintfc.h"
+#include "asprintf.h"
 #include "trace.h"
 #include "utilc.h"
 

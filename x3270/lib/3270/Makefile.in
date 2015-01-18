@@ -34,9 +34,9 @@ AR = ar
 
 all:: $(LIB3270)
 
-SRCS = lazya.c Malloc.c varbuf.c
+SRCS = Malloc.c asprintf.c lazya.c varbuf.c
 
-OBJS = lazya.o Malloc.o varbuf.o
+OBJS = Malloc.o asprintf.o lazya.o varbuf.o
 
 LIBDIR = @libdir@
 prefix = @prefix@

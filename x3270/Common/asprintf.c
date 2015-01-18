@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Paul Mattes.
+ * Copyright (c) 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
 
 #include "globals.h"
 
-#include "asprintfc.h"
+#include "asprintf.h"
 
 #if !defined(_WIN32) /*[*/
 /**

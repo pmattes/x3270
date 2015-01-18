@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Paul Mattes.
+ * Copyright (c) 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
 #include <limits.h>
 
 #include "appres.h"
-#include "asprintfc.h"
+#include "asprintf.h"
 #include "lazya.h"
 #include "trace.h"
 #include "utilc.h"
