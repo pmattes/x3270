@@ -54,7 +54,7 @@
 #include "telnetc.h"
 #include "utf8c.h"
 #include "utilc.h"
-#include "varbufc.h"
+#include "varbuf.h"
 
 static Widget about_shell = NULL;
 static Widget about_form;

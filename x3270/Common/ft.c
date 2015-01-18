@@ -55,7 +55,7 @@
 #include "screenc.h"
 #include "telnetc.h"
 #include "utilc.h"
-#include "varbufc.h"
+#include "varbuf.h"
 
 /* Macros. */
 #define FILE_WIDTH	300	/* width of file name widgets */

@@ -49,7 +49,7 @@
 #include "unicodec.h"
 #include "utf8c.h"
 #include "utilc.h"
-#include "varbufc.h"
+#include "varbuf.h"
 
 /* Typedefs */
 typedef struct {

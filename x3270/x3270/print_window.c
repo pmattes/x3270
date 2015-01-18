@@ -44,7 +44,7 @@
 #include "print_window.h"
 #include "trace.h"
 #include "utilc.h"
-#include "varbufc.h"
+#include "varbuf.h"
 
 /* Typedefs */
 

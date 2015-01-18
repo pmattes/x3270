@@ -48,7 +48,7 @@
 #include "asprintfc.h"
 #include "charsetc.h"
 #include "lazya.h"
-#include "varbufc.h"
+#include "varbuf.h"
 
 #include "utilc.h"
 

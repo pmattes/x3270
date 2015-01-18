@@ -76,7 +76,7 @@
 #include "trace.h"
 #include "utf8c.h"
 #include "utilc.h"
-#include "varbufc.h"
+#include "varbuf.h"
 #include "xio.h"
 
 #include "w3misc.h"

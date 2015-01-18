@@ -57,7 +57,7 @@
 #include "objects.h"
 #include "popupsc.h"
 #include "utilc.h"
-#include "varbufc.h"
+#include "varbuf.h"
 #include "xmenubar.h"
 
 #include "ft_guic.h"

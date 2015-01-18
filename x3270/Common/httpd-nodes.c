@@ -42,7 +42,7 @@
 #include <fcntl.h>
 
 #include "fprint_screenc.h"
-#include "varbufc.h"
+#include "varbuf.h"
 
 #include "httpd-corec.h"
 #include "httpd-ioc.h"

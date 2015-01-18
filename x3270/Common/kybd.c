@@ -74,7 +74,7 @@
 #include "trace.h"
 #include "utf8c.h"
 #include "utilc.h"
-#include "varbufc.h"
+#include "varbuf.h"
 
 /*#define KYBDLOCK_TRACE	1*/
 

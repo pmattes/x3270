@@ -45,7 +45,7 @@
 #include "utilc.h"
 #include "see.h"
 #include "unicodec.h"
-#include "varbufc.h"
+#include "varbuf.h"
 
 /**
  * Return an unknown value.

@@ -62,7 +62,7 @@
 #include "telnetc.h"
 #include "trace.h"
 #include "utilc.h"
-#include "varbufc.h"
+#include "varbuf.h"
 #include "w3misc.h"
 #include "xio.h"
 
