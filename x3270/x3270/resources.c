@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -74,7 +74,7 @@ XtResource resources[] = {
 	{ ResSaveLines, ClsSaveLines, XtRInt, sizeof(int),
 	  offset(save_lines), XtRString, "4096" },
 	{ ResMenuBar, ClsMenuBar, XtRBoolean, sizeof(Boolean),
-	  offset(menubar), XtRString, ResTrue },
+	  offset(interactive.menubar), XtRString, ResTrue },
 	{ ResActiveIcon, ClsActiveIcon, XtRBoolean, sizeof(Boolean),
 	  offset(active_icon), XtRString, ResFalse },
 	{ ResLabelIcon, ClsLabelIcon, XtRBoolean, sizeof(Boolean),
@@ -120,7 +120,7 @@ XtResource resources[] = {
 	{ ResSuppressFontMenu, ClsSuppressFontMenu, XtRBoolean, sizeof(Boolean),
 	  offset(suppress_font_menu), XtRString, ResFalse },
 	{ ResDoConfirms, ClsDoConfirms, XtRBoolean, sizeof(Boolean),
-	  offset(do_confirms), XtRString, ResTrue },
+	  offset(interactive.do_confirms), XtRString, ResTrue },
 	{ ResNumericLock, ClsNumericLock, XtRBoolean, sizeof(Boolean),
 	  offset(numeric_lock), XtRString, ResFalse },
 	{ ResAllowResize, ClsAllowResize, XtRBoolean, sizeof(Boolean),

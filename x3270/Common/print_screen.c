@@ -84,11 +84,9 @@ print_text_done(FILE *f)
 	popup_an_error("Print program exited with status %d.",
 		(status & 0xff00) > 8);
     } else {
-# if defined(X3270_INTERACTIVE) /*[*/
-	if (appres.do_confirms) {
+	if (appres.interactive.do_confirms) {
 	    popup_an_info("Screen image printed.");
 	}
-# endif /*]*/
     }
 }
 #endif /*]*/
@@ -433,11 +431,9 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	/* All done with the temp file. */
 	unlink(temp_name);
     }
-# if !defined(S3270) /*[*/
-    if (appres.do_confirms) {
+    if (appres.interactive.do_confirms) {
 	popup_an_info("Screen image printing.\n");
     }
-# endif /*]*/
 #endif /*]*/
     Free(temp_name);
     return True;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,12 +25,19 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Non-display version of popupsc.h */
+/*
+ *	popups_stubs.h
+ *		Stubs for menubar.c.
+ */
 
-void action_output(const char *fmt, ...);
-void popup_an_info(const char *fmt, ...); /* a stub that will assert */
-void popup_an_errno(int errn, const char *fmt, ...);
-void popup_an_error(const char *fmt, ...);
-typedef void abort_callback_t(void);
-void popup_printer_output(Boolean is_err, abort_callback_t *a,
-	const char *fmt, ...);
+#include "globals.h"
+
+#include <assert.h>
+
+#include "popupsc.h"
+
+void
+popup_an_info(const char *fmt, ...)
+{
+    assert(!"should not be in popup_an_info");
+}

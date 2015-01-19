@@ -18,5 +18,8 @@
     <ClCompile Include="..\..\lib\w3270stubs\menubar_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270stubs\popups_stubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

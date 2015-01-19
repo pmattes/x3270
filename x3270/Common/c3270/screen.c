@@ -649,7 +649,7 @@ set_status_row(int screen_rows, int emulator_rows)
 	}
 
 	/* Then check for menubar room.  Use 2 rows, 1 in a pinch. */
-	if (appres.menubar && appres.mouse) {
+	if (appres.interactive.menubar && appres.mouse) {
 		if (screen_rows >= emulator_rows + (status_row != 0) + 2)
 			screen_yoffset = 2;
 		else if (screen_rows >= emulator_rows + (status_row != 0) + 1)

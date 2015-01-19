@@ -455,8 +455,8 @@ set_appres_defaults(void)
     appres.debug_tracing = True;
 #if defined(C3270) /*[*/
     appres.compose_map = "latin1";
-    appres.do_confirms = True;
-    appres.menubar = True;
+    appres.interactive.do_confirms = True;
+    appres.interactive.menubar = True;
     appres.reconnect = False;
 #endif /*]*/
 
@@ -1080,7 +1080,7 @@ static struct {
     { ResLoginMacro,offset(login_macro),	XRM_STRING },
     { ResM3279,	offset(m3279),			XRM_BOOLEAN },
 #if defined(C3270) /*[*/
-    { ResMenuBar,	offset(menubar),	XRM_BOOLEAN },
+    { ResMenuBar,	offset(interactive.menubar),XRM_BOOLEAN },
 #endif /*]*/
     { ResModel,	offset(model),			XRM_STRING },
     { ResModifiedSel, offset(modified_sel),	XRM_BOOLEAN },

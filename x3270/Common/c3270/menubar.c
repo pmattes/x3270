@@ -343,7 +343,7 @@ popup_menu(int x, int click)
     int row, col;
     int next_col;
 
-    if (!appres.menubar) {
+    if (!appres.interactive.menubar) {
 	return;
     }
 
@@ -1022,7 +1022,7 @@ menubar_retoggle(toggle_index_t ix)
     int j;
     char *s;
 
-    if (!appres.menubar) {
+    if (!appres.interactive.menubar) {
 	return;
     }
 

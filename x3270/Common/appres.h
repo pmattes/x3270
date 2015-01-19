@@ -47,9 +47,6 @@ typedef struct {
 #if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
     Boolean	 visual_bell;
 #endif /*]*/
-#if defined(X3270_INTERACTIVE) /*[*/
-    Boolean	 menubar;
-#endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
     Boolean	 active_icon;
     Boolean	 label_icon;
@@ -63,7 +60,6 @@ typedef struct {
     Boolean	 keypad_on;
 #endif /*]*/
 #if defined(X3270_INTERACTIVE) /*[*/
-    Boolean	 do_confirms;
     Boolean	 reconnect;
 #endif /*]*/
 #if defined(C3270) /*[*/
@@ -210,6 +206,11 @@ typedef struct {
     /* App-defaults version */
     char	*ad_version;
 #endif /*]*/
+    /* Interactive (x3270/c3270/wc3270) fields. */
+    struct {
+	Boolean	 do_confirms;
+	Boolean	 menubar;
+    } interactive;
 
     /* wc3270-specific fields. */
     struct {

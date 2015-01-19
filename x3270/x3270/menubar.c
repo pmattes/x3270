@@ -319,7 +319,7 @@ free_menu_hier(struct menu_hier *root)
 Dimension
 menubar_qheight(Dimension container_width)
 {
-	if (!appres.menubar ||
+	if (!appres.interactive.menubar ||
 	    (!fixed_width && (container_width < (unsigned) MENU_MIN_WIDTH)))
 		return 0;
 	else

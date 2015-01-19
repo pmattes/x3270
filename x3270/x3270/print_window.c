@@ -78,7 +78,7 @@ print_window_done(int status)
     if (status) {
 	popup_an_error("Print program exited with status %d.",
 		(status & 0xff00) >> 8);
-    } else if (appres.do_confirms) {
+    } else if (appres.interactive.do_confirms) {
 	popup_an_info("Bitmap printed.");
     }
 }
