@@ -52,15 +52,11 @@ endif
 XCPPFLAGS = -D_WIN32 -DX3270_DBCS=1 -D_WIN32_WINNT=0x500 -D_WIN32_IE=0x0500 -DWINVER=0x500 -I. -I../include
 CFLAGS = -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP) $(CDEBUGFLAGS)
 
-SRCS = asprintf.c charset.c ctlr.c lazya.c pr3287.c proxy.c resolver.c see.c \
-	sf.c snprintf.c ssl_dll.c tables.c telnet.c trace.c unicode.c \
-	unicode_dbcs.c utf8.c util.c varbuf.c w3misc.c windirs.c winvers.c \
-	xtable.c
-
-VOBJS = asprintf.o charset.o ctlr.o lazya.o pr3287.o proxy.o resolver.o see.o \
-	sf.o snprintf.o ssl_dll.o tables.o telnet.o trace.o unicode.o \
-	unicode_dbcs.o utf8.o util.o varbuf.o w3misc.o windirs.o winvers.o \
-	wpr3287res.o ws.o xtable.o
+OBJ = o
+include pr3287_files.mk
+include wpr3287_files.mk
+SRCS = $(PR3287_SOURCES) $(WPR3287_SOURCES)
+VOBJS = $(PR3287_OBJECTS) $(WPR3287_OBJECTS)
 
 OBJECTS = $(VOBJS) version.o
 LIBS = $(SSLLIB) -lws2_32 -lwinspool
