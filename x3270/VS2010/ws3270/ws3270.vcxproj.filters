@@ -78,9 +78,6 @@
     <ClCompile Include="..\..\ws3270\rpq.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270\see.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ws3270\sf.c">
       <Filter>Source Files</Filter>
     </ClCompile>

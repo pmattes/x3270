@@ -122,9 +122,6 @@
     <ClCompile Include="..\wc3270\screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\see.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\select.c">
       <Filter>Source Files</Filter>
     </ClCompile>

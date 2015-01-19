@@ -149,7 +149,6 @@
     <ClCompile Include="..\wc3270\rpq.c" />
     <ClCompile Include="..\wc3270\screen.c" />
     <ClCompile Include="..\wc3270\scroll.c" />
-    <ClCompile Include="..\wc3270\see.c" />
     <ClCompile Include="..\wc3270\select.c" />
     <ClCompile Include="..\wc3270\sf.c" />
     <ClCompile Include="..\wc3270\shortcut.c" />

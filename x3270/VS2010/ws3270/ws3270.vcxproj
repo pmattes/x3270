@@ -39,7 +39,6 @@
     <ClCompile Include="..\..\ws3270\resolver.c" />
     <ClCompile Include="..\..\ws3270\resources.c" />
     <ClCompile Include="..\..\ws3270\rpq.c" />
-    <ClCompile Include="..\..\ws3270\see.c" />
     <ClCompile Include="..\..\ws3270\sf.c" />
     <ClCompile Include="..\..\ws3270\s3270.c" />
     <ClCompile Include="..\..\ws3270\snprintf.c" />
