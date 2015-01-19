@@ -37,10 +37,11 @@ all:
 
 OBJ = o
 include lib3270stubs_files.mk
-SOURCES = $(LIB3270STUBS_SOURCES)
-HEADERS = $(LIB3270STUBS_HEADERS)
+include libw3270stubs_files.mk
+SOURCES = $(LIB3270STUBS_SOURCES) $(LIBW3270STUBS_SOURCES)
+HEADERS = $(LIB3270STUBS_HEADERS) $(LIBW3270STUBS_HEADERS)
 
-MISC = Makefile Msc/Makefile lib3270stubs_files.mk
+MISC = Makefile Msc/Makefile lib3270stubs_files.mk libw3270stubs_files.mk
 
 DEVKIT = Makefile.aux
 
