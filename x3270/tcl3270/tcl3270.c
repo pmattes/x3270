@@ -430,6 +430,9 @@ tcl3270_main(int argc, const char *argv[])
 
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
+    /* Set tcl3270-specific defaults. */
+    appres.utf8 = True;
+
     if (charset_init(appres.charset) != CS_OKAY) {
 	xs_warning("Cannot find charset \"%s\"", appres.charset);
 	(void) charset_init(NULL);

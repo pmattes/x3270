@@ -48,34 +48,28 @@ Boolean is_utf8 = False;
 void
 set_codeset(char *codeset_name)
 {
-#if defined(S3270) /*[*/
+#if !defined(PR3287) /*[*/
     /*
      * s3270 and ws3270 have a '-utf8' option and a utf8 resource to force
-     * UTF-8 mode.
+     * UTF-8 mode. tcl3270 forces UTF-8 mode, because that's what the TCL
+     * library uses.
      */
     if (appres.utf8) {
 	is_utf8 = True;
-# if defined(WS3270) /*[*/
+# if defined(_WIN32) /*[*/
 	appres.local_cp = CP_UTF8;
 # endif /*]*/
+	/* Force the name. */
 	codeset_name = "UTF-8";
     }
-#elif defined(TCL3270) /*][*/
-    /*
-     * tcl3270 is always in UTF-8 mode, because it needs to
-     * supply UTF-8 strings to libtcl and vice-versa.
-     */
-    is_utf8 = True;
-#else /*][*/
+#endif /*]*/
+
     /*
      * We're in UTF-8 mode if the codeset looks like 'UTF8'.
      */
-    if (!is_utf8) {
-	is_utf8 = (!strcasecmp(codeset_name, "utf-8") ||
-		   !strcasecmp(codeset_name, "utf8") ||
-		   !strcasecmp(codeset_name, "utf_8"));
-    }
-#endif /*]*/
+    is_utf8 |= (!strcasecmp(codeset_name, "utf-8") ||
+		!strcasecmp(codeset_name, "utf8") ||
+		!strcasecmp(codeset_name, "utf_8"));
 
     Replace(locale_codeset, NewString(codeset_name));
 }

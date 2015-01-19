@@ -218,9 +218,7 @@ typedef struct {
 	int	local_cp;
 	int	ft_cp;
 #endif /*]*/
-#if defined(S3270) /*[*/
 	Boolean	utf8;
-#endif /*]*/
 
 #if defined(USE_APP_DEFAULTS) /*[*/
 	/* App-defaults version */
