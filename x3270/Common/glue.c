@@ -709,7 +709,7 @@ static struct {
 { OptTermName, OPT_STRING,  False, ResTermName,  offset(termname),
     "<name>", "Send <name> as TELNET terminal name" },
 #if defined(WC3270) /*[*/
-{ OptTitle,    OPT_STRING,  False, ResTitle,     offset(title),
+{ OptTitle,    OPT_STRING,  False, ResTitle,     offset(wc3270.title),
     "<string>", "Set window title to <string>" },
 #endif /*]*/
 { OptTrace,    OPT_BOOLEAN, True,  ResTrace,     toggle_offset(TRACING),
@@ -1016,7 +1016,7 @@ static struct {
 #endif /*]*/
 #if defined(WC3270) /*[*/
     { ResAutoShortcut,offset(auto_shortcut),XRM_BOOLEAN },
-    { ResBellMode,offset(bell_mode),		XRM_STRING },
+    { ResBellMode,offset(wc3270.bell_mode),	XRM_STRING },
 #endif /*]*/
     { ResBindLimit,	offset(bind_limit),	XRM_BOOLEAN },
     { ResBsdTm,	offset(bsd_tm),			XRM_BOOLEAN },
@@ -1031,7 +1031,7 @@ static struct {
     { ResCharset,	offset(charset),	XRM_STRING },
     { ResColor8,	offset(color8),		XRM_BOOLEAN },
 #if defined(TCL3270) /*[*/
-    { ResCommandTimeout, offset(command_timeout), XRM_INT },
+    { ResCommandTimeout, offset(tcl3270.command_timeout), XRM_INT },
 #endif /*]*/
     { ResConfDir,	offset(conf_dir),	XRM_STRING },
     { ResDbcsCgcsgid, offset(dbcs_cgcsgid),	XRM_STRING },
@@ -1122,7 +1122,7 @@ static struct {
     { ResScriptPort,offset(script_port),	XRM_STRING },
     { ResTermName,	offset(termname),	XRM_STRING },
 #if defined(WC3270) /*[*/
-    { ResTitle,	offset(title),			XRM_STRING },
+    { ResTitle,	offset(wc3270.title),		XRM_STRING },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
     { ResTls,	offset(tls),			XRM_BOOLEAN },

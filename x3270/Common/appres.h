@@ -36,194 +36,191 @@
 /* Application resources */
 
 typedef struct {
-	/* Options (not toggles) */
+    /* Options (not toggles) */
 #if defined(X3270_INTERACTIVE) && !defined(_WIN32) /*[*/
-	Boolean mono;
+    Boolean	 mono;
 #endif /*]*/
-	Boolean extended;
-	Boolean m3279;
-	Boolean modified_sel;
-	Boolean	once;
+    Boolean	 extended;
+    Boolean	 m3279;
+    Boolean	 modified_sel;
+    Boolean	 once;
 #if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
-	Boolean visual_bell;
+    Boolean	 visual_bell;
 #endif /*]*/
 #if defined(X3270_INTERACTIVE) /*[*/
-	Boolean menubar;
+    Boolean	 menubar;
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
-	Boolean active_icon;
-	Boolean label_icon;
-	Boolean invert_kpshift;
-	Boolean use_cursor_color;
-	Boolean allow_resize;
-	Boolean no_other;
-	Boolean visual_select;
-	Boolean suppress_host;
-	Boolean suppress_font_menu;
-# if defined(X3270_DISPLAY) /*[*/
-	Boolean	keypad_on;
+    Boolean	 active_icon;
+    Boolean	 label_icon;
+    Boolean	 invert_kpshift;
+    Boolean	 use_cursor_color;
+    Boolean	 allow_resize;
+    Boolean	 no_other;
+    Boolean	 visual_select;
+    Boolean	 suppress_host;
+    Boolean	 suppress_font_menu;
+    Boolean	 keypad_on;
+#endif /*]*/
+#if defined(X3270_INTERACTIVE) /*[*/
+    Boolean	 do_confirms;
+    Boolean	 reconnect;
+#endif /*]*/
+#if defined(C3270) /*[*/
+    Boolean	 all_bold_on;
+    Boolean	 curses_keypad;
+    Boolean	 cbreak_mode;
+    Boolean	 default_fgbg;
+# if !defined(_WIN32) /*[*/
+    Boolean	 reverse_video;
+# endif /*]*/
+# if defined(_WIN32) /*[*/
+    Boolean	 auto_shortcut;
 # endif /*]*/
 #endif /*]*/
-#if defined(X3270_INTERACTIVE) /*[*/
-	Boolean do_confirms;
-	Boolean reconnect;
-#endif /*]*/
-#if defined(C3270) /*[*/
-	Boolean all_bold_on;
-	Boolean	curses_keypad;
-	Boolean cbreak_mode;
-	Boolean default_fgbg;
-#if !defined(_WIN32) /*[*/
-	Boolean reverse_video;
-#endif /*]*/
-#if defined(_WIN32) /*[*/
-	Boolean auto_shortcut;
-#endif /*]*/
-#endif /*]*/
-	Boolean	apl_mode;
-	Boolean scripted;
-	Boolean numeric_lock;
-	Boolean secure;
-	Boolean oerr_lock;
-	Boolean	typeahead;
-	Boolean debug_tracing;
-	Boolean disconnect_clear;
-	Boolean highlight_bold;
-	Boolean color8;
-	Boolean bsd_tm;
-	Boolean unlock_delay;
-	Boolean qr_bg_color;
-	Boolean bind_limit;
-	Boolean new_environ;
-	Boolean socket;
-	char    *script_port;
-	char	*httpd_port;
+    Boolean	 apl_mode;
+    Boolean	 scripted;
+    Boolean	 numeric_lock;
+    Boolean	 secure;
+    Boolean	 oerr_lock;
+    Boolean	 typeahead;
+    Boolean	 debug_tracing;
+    Boolean	 disconnect_clear;
+    Boolean	 highlight_bold;
+    Boolean	 color8;
+    Boolean	 bsd_tm;
+    Boolean	 unlock_delay;
+    Boolean	 qr_bg_color;
+    Boolean	 bind_limit;
+    Boolean	 new_environ;
+    Boolean	 socket;
+    char	*script_port;
+    char	*httpd_port;
 
-	/* Named resources */
+    /* Named resources */
 #if defined(X3270_DISPLAY) /*[*/
-	char	*keypad;
+    char	*keypad;
 #endif /*]*/
 #if defined(X3270_INTERACTIVE) /*[*/
-	char	*key_map;
-	char	*compose_map;
-	char	*printer_lu;
-	char	*printer_opts;
-#endif /*]*/
-#if defined(X3270_INTERACTIVE) /*[*/
-	int	save_lines;
+    char	*key_map;
+    char	*compose_map;
+    char	*printer_lu;
+    char	*printer_opts;
+    int		 save_lines;
 #endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
-	char	*efontname;
-	char	*fixed_size;
-	char	*icon_font;
-	char	*icon_label_font;
-	char	*normal_name;
-	char	*select_name;
-	char	*bold_name;
-	char	*colorbg_name;
-	char	*keypadbg_name;
-	char	*selbg_name;
-	char	*cursor_color_name;
-	char    *color_scheme;
-	int	bell_volume;
-	char	*char_class;
-	int	modified_sel_color;
-	int	visual_select_color;
-	char	*input_method;
-	char	*preedit_type;
+    char	*efontname;
+    char	*fixed_size;
+    char	*icon_font;
+    char	*icon_label_font;
+    char	*normal_name;
+    char	*select_name;
+    char	*bold_name;
+    char	*colorbg_name;
+    char	*keypadbg_name;
+    char	*selbg_name;
+    char	*cursor_color_name;
+    char	*color_scheme;
+    int		 bell_volume;
+    char	*char_class;
+    int		 modified_sel_color;
+    int		 visual_select_color;
+    char	*input_method;
+    char	*preedit_type;
 #endif /*]*/
-	char	*dbcs_cgcsgid;
+    char	*dbcs_cgcsgid;
 #if defined(C3270) /*[*/
-	char	*meta_escape;
-	char	*all_bold;
-	char	*altscreen;
-	char	*defscreen;
-#if defined(CURSES_WIDE) /*[*/
-	Boolean	acs;
+    char	*meta_escape;
+    char	*all_bold;
+    char	*altscreen;
+    char	*defscreen;
+# if defined(CURSES_WIDE) /*[*/
+    Boolean	 acs;
+# endif /*]*/
+    Boolean	 ascii_box_draw;
+    Boolean	 mouse;
 #endif /*]*/
-	Boolean ascii_box_draw;
-	Boolean mouse;
-#endif /*]*/
-	char	*conf_dir;
-	char	*model;
-	char	*hostsfile;
-	char	*port;
-	char	*charset;
-	char	*sbcs_cgcsgid;
-	char	*termname;
-	char	*devname;	/* for 5250 */
-	char	*user;		/* for 5250 */
-	char	*login_macro;
-	char	*macros;
-	char	*trace_dir;
-	char	*trace_file;
-	char	*screentrace_file;
-	char	*trace_file_size;
-	Boolean  dsTrace_bc;
-	Boolean  eventTrace_bc;
-	Boolean	trace_monitor;
-	char	*oversize;
-	char	*ft_command;
-	int	dft_buffer_size;
-	char	*connectfile_name;
-	char	*idle_command;
-	Boolean idle_command_enabled;
-	char	*idle_timeout;
+    char	*conf_dir;
+    char	*model;
+    char	*hostsfile;
+    char	*port;
+    char	*charset;
+    char	*sbcs_cgcsgid;
+    char	*termname;
+    char	*devname;	/* for 5250 */
+    char	*user;		/* for 5250 */
+    char	*login_macro;
+    char	*macros;
+    char	*trace_dir;
+    char	*trace_file;
+    char	*screentrace_file;
+    char	*trace_file_size;
+    Boolean	 dsTrace_bc;
+    Boolean	 eventTrace_bc;
+    Boolean	 trace_monitor;
+    char	*oversize;
+    char	*ft_command;
+    int		 dft_buffer_size;
+    char	*connectfile_name;
+    char	*idle_command;
+    Boolean	 idle_command_enabled;
+    char	*idle_timeout;
 #if defined(HAVE_LIBSSL) /*[*/
-	char	*ca_dir;
-	char	*ca_file;
-	char	*cert_file;
-	char	*cert_file_type;
-	char	*chain_file;
-	char	*key_file;
-	char	*key_file_type;
-	char	*key_passwd;
-	char	*accept_hostname;
-	Boolean	 self_signed_ok;
-	Boolean	 verify_host_cert;
-	Boolean	 tls;
+    char	*ca_dir;
+    char	*ca_file;
+    char	*cert_file;
+    char	*cert_file_type;
+    char	*chain_file;
+    char	*key_file;
+    char	*key_file_type;
+    char	*key_passwd;
+    char	*accept_hostname;
+    Boolean	 self_signed_ok;
+    Boolean	 verify_host_cert;
+    Boolean	 tls;
 #endif /*]*/
-	char	*proxy;
-#if defined(TCL3270) /*[*/
-	int	command_timeout;
-#endif /*]*/
-	int	unlock_delay_ms;
-#if defined(WC3270) /*[*/
-	char	*bell_mode;
-#endif /*]*/
+    char	*proxy;
+    int		 unlock_delay_ms;
 
-	/* Toggles */
-	Boolean toggle[N_TOGGLES];
+    /* Toggles */
+    Boolean toggle[N_TOGGLES];
 
-	/* Line-mode TTY parameters */
-	Boolean	icrnl;
-	Boolean	inlcr;
-	Boolean	onlcr;
-	char	*erase;
-	char	*kill;
-	char	*werase;
-	char	*rprnt;
-	char	*lnext;
-	char	*intr;
-	char	*quit;
-	char	*eof;
+    /* Line-mode TTY parameters */
+    Boolean	 icrnl;
+    Boolean	 inlcr;
+    Boolean	 onlcr;
+    char	*erase;
+    char	*kill;
+    char	*werase;
+    char	*rprnt;
+    char	*lnext;
+    char	*intr;
+    char	*quit;
+    char	*eof;
 
-	char	*hostname;
-
-#if defined(WC3270) /*[*/
-	char	*title;
-#endif /*]*/
+    char	*hostname;
 
 #if defined(_WIN32) /*[*/
-	int	local_cp;
-	int	ft_cp;
+    int		 local_cp;
+    int		 ft_cp;
 #endif /*]*/
-	Boolean	utf8;
+    Boolean	 utf8;
 
 #if defined(USE_APP_DEFAULTS) /*[*/
-	/* App-defaults version */
-	char	*ad_version;
+    /* App-defaults version */
+    char	*ad_version;
 #endif /*]*/
+
+    /* wc3270-specific fields. */
+    struct {
+	char	*title;
+	char	*bell_mode;
+    } wc3270;
+
+    /* tcl3270-specific fields. */
+    struct {
+	int	 command_timeout;
+    } tcl3270;
 
 } AppRes, *AppResptr;
 

@@ -48,6 +48,7 @@
 #include "hostc.h"
 #include "keymap.h"
 #include "kybdc.h"
+#include "lazya.h"
 #include "macrosc.h"
 #include "popupsc.h"
 #include "screenc.h"
@@ -1198,8 +1199,8 @@ screen_init(void)
 	scroll_buf_init();
 
 	/* Set the window label. */
-	if (appres.title != NULL)
-		screen_title(appres.title);
+	if (appres.wc3270.title != NULL)
+		screen_title(appres.wc3270.title);
 	else if (profile_name != NULL)
 	    	screen_title(profile_name);
 	else
@@ -2714,74 +2715,74 @@ Redraw_action(ia_t ia, unsigned argc, const char **argv)
 void
 ring_bell(void)
 {
-    	static enum {
-	    	BELL_NOTHING = 0,	/* do nothing */
-	    	BELL_KNOWN = 0x1,	/* have we decoded the option? */
-		BELL_BEEP = 0x2,	/* ring the annoying console bell */
-		BELL_FLASH = 0x4	/* flash the screen or icon */
-	} bell_mode = 0;
+    static enum {
+	BELL_NOTHING = 0,	/* do nothing */
+	BELL_KNOWN = 0x1,	/* have we decoded the option? */
+	BELL_BEEP = 0x2,	/* ring the annoying console bell */
+	BELL_FLASH = 0x4	/* flash the screen or icon */
+    } bell_mode = 0;
 
-	if (!(bell_mode & BELL_KNOWN)) {
-	    	if (appres.bell_mode != NULL) {
-			/*
-			 * New config: wc3270.bellMode
-			 * 		none		do nothing
-			 * 		beep		just beep
-			 * 		flash		just flash
-			 * 		beepFlash	beep and flash
-			 * 		flashBeep	beep and flash
-			 * 		anything else	do nothing
-			 */
-			if (!strcasecmp(appres.bell_mode, "none")) {
-			    	bell_mode = BELL_NOTHING;
-			} else if (!strcasecmp(appres.bell_mode, "beep")) {
-			    	bell_mode = BELL_BEEP;
-			} else if (!strcasecmp(appres.bell_mode, "flash")) {
-			    	bell_mode = BELL_FLASH;
-			} else if (!strcasecmp(appres.bell_mode, "beepFlash") ||
-				 !strcasecmp(appres.bell_mode, "flashBeep")) {
-			    	bell_mode = BELL_BEEP | BELL_FLASH;
-			} else {
-			    	/*
-				 * Should cough up a warning here, but it's
-				 * a bit late.
-				 */
-			    	bell_mode = BELL_NOTHING;
-			}
-		} else if (appres.visual_bell) {
-		    	/*
-			 * Old config: wc3270.visualBell
-			 * 		true		just flash
-			 * 		false		beep and flash
-			 */
-		    	bell_mode = BELL_FLASH;
-		} else {
-		    	/*
-			 * No config: beep and flash.
-			 */
-			bell_mode = BELL_BEEP | BELL_FLASH;
-		}
-
-		/* In any case, only do this once. */
-		bell_mode |= BELL_KNOWN;
+    if (!(bell_mode & BELL_KNOWN)) {
+	if (appres.wc3270.bell_mode != NULL) {
+	    /*
+	     * New config: wc3270.bellMode
+	     * 		none		do nothing
+	     * 		beep		just beep
+	     * 		flash		just flash
+	     * 		beepFlash	beep and flash
+	     * 		flashBeep	beep and flash
+	     * 		anything else	do nothing
+	     */
+	    if (!strcasecmp(appres.wc3270.bell_mode, "none")) {
+		bell_mode = BELL_NOTHING;
+	    } else if (!strcasecmp(appres.wc3270.bell_mode, "beep")) {
+		bell_mode = BELL_BEEP;
+	    } else if (!strcasecmp(appres.wc3270.bell_mode, "flash")) {
+		bell_mode = BELL_FLASH;
+	    } else if (!strcasecmp(appres.wc3270.bell_mode, "beepFlash") ||
+		       !strcasecmp(appres.wc3270.bell_mode, "flashBeep")) {
+		bell_mode = BELL_BEEP | BELL_FLASH;
+	    } else {
+		/*
+		 * Should cough up a warning here, but it's
+		 * a bit late.
+		 */
+		bell_mode = BELL_NOTHING;
+	    }
+	} else if (appres.visual_bell) {
+	    /*
+	     * Old config: wc3270.visualBell
+	     * 		true		just flash
+	     * 		false		beep and flash
+	     */
+	    bell_mode = BELL_FLASH;
+	} else {
+	    /*
+	     * No config: beep and flash.
+	     */
+	    bell_mode = BELL_BEEP | BELL_FLASH;
 	}
 
-	if ((bell_mode & BELL_FLASH) && console_window != NULL) {
-		FLASHWINFO w;
+	/* In any case, only do this once. */
+	bell_mode |= BELL_KNOWN;
+    }
 
-		memset(&w, '\0', sizeof(FLASHWINFO));
-		w.cbSize = sizeof(FLASHWINFO);
-		w.hwnd = console_window;
-		w.dwFlags = FLASHW_ALL;
-		w.uCount = 2;
-		w.dwTimeout = 250; /* 1/4s */
+    if ((bell_mode & BELL_FLASH) && console_window != NULL) {
+	FLASHWINFO w;
 
-	    	FlashWindowEx(&w);
-	}
+	memset(&w, '\0', sizeof(FLASHWINFO));
+	w.cbSize = sizeof(FLASHWINFO);
+	w.hwnd = console_window;
+	w.dwFlags = FLASHW_ALL;
+	w.uCount = 2;
+	w.dwTimeout = 250; /* 1/4s */
 
-	if (bell_mode & BELL_BEEP) {
-	    	MessageBeep(-1);
-	}
+	FlashWindowEx(&w);
+    }
+
+    if (bell_mode & BELL_BEEP) {
+	MessageBeep(-1);
+    }
 }
 
 void
@@ -2879,26 +2880,23 @@ Title_action(ia_t ia, unsigned argc, const char **argv)
 static void
 relabel(Boolean ignored _is_unused)
 {
-	char *title;
+    if (appres.wc3270.title != NULL) {
+	return;
+    }
 
-	if (appres.title != NULL)
-	    	return;
+    if (PCONNECTED) {
+	char *hostname;
 
-	if (PCONNECTED) {
-	    	char *hostname;
-
-		if (profile_name != NULL)
-		    	hostname = profile_name;
-		else
-		    	hostname = reconnect_host;
-
-		title = Malloc(10 + (PCONNECTED ? strlen(hostname) : 0));
-	    	(void) sprintf(title, "%s - wc3270", hostname);
-		screen_title(title);
-		Free(title);
+	if (profile_name != NULL) {
+	    hostname = profile_name;
 	} else {
-	    	screen_title("wc3270");
+	    hostname = reconnect_host;
 	}
+
+	screen_title(lazyaf("%s - wc3270", hostname));
+    } else {
+	screen_title("wc3270");
+    }
 }
 
 /* Get the window handle for the console. */

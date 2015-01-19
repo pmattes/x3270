@@ -514,7 +514,8 @@ ps_clear(void)
 static void
 command_timed_out(ioid_t id _is_unused)
 {
-    popup_an_error("Command timed out after %ds.\n", appres.command_timeout);
+    popup_an_error("Command timed out after %ds.\n",
+	    appres.tcl3270.command_timeout);
     command_timeout_id = NULL_IOID;
 
     /* Let the command complete unsuccessfully. */
@@ -600,9 +601,9 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 
     if (waiting != NOT_WAITING) {
 	vtrace("Blocked %s (%s)\n", action, wait_name[waiting]);
-	if (appres.command_timeout) {
-	    command_timeout_id = AddTimeOut(appres.command_timeout * 1000,
-		    command_timed_out);
+	if (appres.tcl3270.command_timeout) {
+	    command_timeout_id = AddTimeOut(appres.tcl3270.command_timeout *
+		    1000, command_timed_out);
 	}
     }
 
