@@ -43,7 +43,7 @@ SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
 XCPPFLAGS = /D_WIN32 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /DWINVER=0x500 /D_CRT_SECURE_NO_DEPRECATE /W3 /WX $(SSLDEF)
 CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I. -I..\..\include
 
-OBJECTS = Malloc.obj asprintf.obj lazya.obj varbuf.obj
+OBJECTS = Malloc.obj asprintf.obj lazya.obj see.obj varbuf.obj
 
 all: $(TARGET)
 

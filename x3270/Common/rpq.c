@@ -38,13 +38,10 @@
 #if !defined(_WIN32) /*[*/
 # include <netinet/in.h>
 # include <arpa/inet.h>
-#endif /*]*/
-#if !defined(_WIN32) /*[*/
 # include <netdb.h>
 #endif /*]*/
 #include <assert.h>
 #include "3270ds.h"
-#include "appres.h"
 
 #include "ctlrc.h"
 #include "popupsc.h"
@@ -54,7 +51,6 @@
 #include "telnetc.h"
 #include "trace.h"
 #include "unicodec.h"
-#include "utilc.h"
 
 /* Statics */
 static Boolean select_rpq_terms(void);

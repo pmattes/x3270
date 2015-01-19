@@ -35,27 +35,21 @@
  */
 
 #include "globals.h"
-#include <errno.h>
-#if !defined(_WIN32) /*[*/
-# include <netinet/in.h>
-#endif /*]*/
 #include "3270ds.h"
 #include "appres.h"
 #include "screen.h"
 #include "ctlr.h"
-#include "resources.h"
 
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "ft_dftc.h"
 #include "kybdc.h"
-#include "screenc.h"
-#include "see.h"
 #include "sfc.h"	/* has to come before rpqc.h */
 #include "rpqc.h"
+#include "screenc.h"
+#include "see.h"
 #include "telnetc.h"
 #include "trace.h"
-#include "utilc.h"
 
 #define SW_3279_2	0x09
 #define SH_3279_2	0x0c
