@@ -875,11 +875,12 @@ error_exit(void)
 void
 popup_an_error(const char *fmt, ...)
 {
-	va_list args;
+    va_list args;
 
-	va_start(args, fmt);
-	popup_rop(&error_popup, appres.reconnect? error_exit: NULL, fmt, args);
-	va_end(args);
+    va_start(args, fmt);
+    popup_rop(&error_popup, appres.interactive.reconnect? error_exit: NULL,
+	    fmt, args);
+    va_end(args);
 }
 
 /* Pop down an error dialog. */

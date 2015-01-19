@@ -1082,7 +1082,7 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
      *
      * Otherwise (no wide curses, no Windows), ASCII art is all we can do.
      */
-    if (appres.ascii_box_draw)
+    if (appres.c3270.ascii_box_draw)
 #endif /*]*/
     {
 	/* ASCII art. */
@@ -1115,7 +1115,7 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
 	return;
     }
 #if defined(CURSES_WIDE) /*[*/
-    else if (appres.acs) {
+    else if (appres.c3270.acs) {
 	/* ncurses ACS. */
 	*is_acs = 1;
 	switch (c) {

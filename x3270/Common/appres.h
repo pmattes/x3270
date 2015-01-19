@@ -37,9 +37,6 @@
 
 typedef struct {
     /* Options (not toggles) */
-#if defined(X3270_INTERACTIVE) && !defined(_WIN32) /*[*/
-    Boolean	 mono;
-#endif /*]*/
     Boolean	 extended;
     Boolean	 m3279;
     Boolean	 modified_sel;
@@ -58,21 +55,6 @@ typedef struct {
     Boolean	 suppress_host;
     Boolean	 suppress_font_menu;
     Boolean	 keypad_on;
-#endif /*]*/
-#if defined(X3270_INTERACTIVE) /*[*/
-    Boolean	 reconnect;
-#endif /*]*/
-#if defined(C3270) /*[*/
-    Boolean	 all_bold_on;
-    Boolean	 curses_keypad;
-    Boolean	 cbreak_mode;
-    Boolean	 default_fgbg;
-# if !defined(_WIN32) /*[*/
-    Boolean	 reverse_video;
-# endif /*]*/
-# if defined(_WIN32) /*[*/
-    Boolean	 auto_shortcut;
-# endif /*]*/
 #endif /*]*/
     Boolean	 apl_mode;
     Boolean	 scripted;
@@ -96,15 +78,6 @@ typedef struct {
     /* Named resources */
 #if defined(X3270_DISPLAY) /*[*/
     char	*keypad;
-#endif /*]*/
-#if defined(X3270_INTERACTIVE) /*[*/
-    char	*key_map;
-    char	*compose_map;
-    char	*printer_lu;
-    char	*printer_opts;
-    int		 save_lines;
-#endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
     char	*efontname;
     char	*fixed_size;
     char	*icon_font;
@@ -125,17 +98,6 @@ typedef struct {
     char	*preedit_type;
 #endif /*]*/
     char	*dbcs_cgcsgid;
-#if defined(C3270) /*[*/
-    char	*meta_escape;
-    char	*all_bold;
-    char	*altscreen;
-    char	*defscreen;
-# if defined(CURSES_WIDE) /*[*/
-    Boolean	 acs;
-# endif /*]*/
-    Boolean	 ascii_box_draw;
-    Boolean	 mouse;
-#endif /*]*/
     char	*conf_dir;
     char	*model;
     char	*hostsfile;
@@ -208,15 +170,48 @@ typedef struct {
 #endif /*]*/
     /* Interactive (x3270/c3270/wc3270) fields. */
     struct {
+#if !defined(_WIN32) /*[*/
+	Boolean	 mono;
+#endif /*]*/
+	Boolean	 reconnect;
 	Boolean	 do_confirms;
 	Boolean	 menubar;
+	char	*key_map;
+	char	*compose_map;
+	char	*printer_lu;
+	char	*printer_opts;
+	int	 save_lines;
     } interactive;
 
-    /* wc3270-specific fields. */
+    /* c3270/wc3270-specific fields. */
     struct {
-	char	*title;
+	Boolean	 all_bold_on;
+	Boolean	 ascii_box_draw;
+# if !defined(_WIN32) /*[*/
+	Boolean	 default_fgbg;
+	Boolean	 cbreak_mode;
+	Boolean	 curses_keypad;
+	Boolean	 mouse;
+	Boolean	 reverse_video;
+#else /*]*/
+	Boolean	 auto_shortcut;
+# endif /*]*/
+# if defined(CURSES_WIDE) /*[*/
+	Boolean	 acs;
+# endif /*]*/
+
+	char	*all_bold;
+# if !defined(_WIN32) /*[*/
+#  if defined(C3270_80_132) /*[*/
+	char	*altscreen;
+	char	*defscreen;
+#  endif /*]*/
+	char	*meta_escape;
+# else /*][*/
 	char	*bell_mode;
-    } wc3270;
+	char	*title;
+# endif /*]*/
+    } c3270;
 
     /* tcl3270-specific fields. */
     struct {

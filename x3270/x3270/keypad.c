@@ -418,7 +418,7 @@ keypad_keys_vert(Widget container)
 	    XtNwidth, VERT_WIDTH,
 	    XtNheight, TOP_MARGIN+4*(key_height+2*BORDER)+3*SPACING,
 	    NULL);
-	if (appres.mono)
+	if (appres.interactive.mono)
 		XtVaSetValues(spf_container, XtNbackgroundPixmap, gray, NULL);
 	else
 		XtVaSetValues(spf_container, XtNbackground, keypadbg_pixel,
@@ -568,7 +568,7 @@ keypad_init(Widget container, Dimension voffset, Dimension screen_width, Boolean
 		    XtNwidth, width,
 		    XtNheight, height,
 		    NULL);
-		if (appres.mono)
+		if (appres.interactive.mono)
 			XtVaSetValues(key_pad, XtNbackgroundPixmap, gray,
 			    NULL);
 		else

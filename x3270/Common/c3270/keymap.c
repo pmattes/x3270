@@ -863,8 +863,8 @@ keymap_init(void)
     read_keymap("base");
 
     /* Read the user-defined keymaps. */
-    if (appres.key_map != NULL) {
-	s = s0 = NewString(appres.key_map);
+    if (appres.interactive.key_map != NULL) {
+	s = s0 = NewString(appres.interactive.key_map);
 	while ((comma = strchr(s, ',')) != NULL) {
 	    *comma = '\0';
 	    if (*s) {

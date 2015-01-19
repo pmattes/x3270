@@ -403,7 +403,7 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 
 	/* "Connect..." menu */
 
-	if (!appres.reconnect)
+	if (!appres.interactive.reconnect)
 		connect_menu_init(mb_old != menubar_buttons,
 		    BUTTON_X((file_menu != NULL) + (options_menu != NULL)),
 		    TOP_MARGIN);
@@ -477,7 +477,7 @@ menubar_connect(Boolean ignored _is_unused)
     }
 
     /* Set up the connect menu. */
-    if (!appres.reconnect && connect_menu != NULL) {
+    if (!appres.interactive.reconnect && connect_menu != NULL) {
 	if (PCONNECTED && connect_button != NULL) {
 	    XtUnmapWidget(connect_button);
 	} else {
@@ -1940,7 +1940,7 @@ options_menu_init(Boolean regen, Position x, Position y)
 		XtNleftBitmap, linemode? no_diamond: diamond,
 		XtNsensitive, IN_NVT,
 		NULL);
-	if (!appres.mono) {
+	if (!appres.interactive.mono) {
 	    spaced = False;
 	    m3278_button = add_menu_itemv( "m3278Option", t,
 		    toggle_m3279, NULL,

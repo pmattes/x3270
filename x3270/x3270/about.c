@@ -326,7 +326,7 @@ popup_about_config(void)
 	get_message("model"), model_name,
 	maxCOLS, get_message("columns"),
 	maxROWS, get_message("rows"),
-	appres.mono ? get_message("mono") :
+	appres.interactive.mono ? get_message("mono") :
 	    (appres.m3279 ? get_message("fullColor") :
 		get_message("pseudoColor")),
 	(appres.extended && !std_ds_host) ? get_message("extendedDs") :
@@ -436,9 +436,9 @@ popup_about_config(void)
     } else {
 	MAKE_LABEL(get_message("defaultKeyboardMap"), 4);
     }
-    if (appres.compose_map) {
+    if (appres.interactive.compose_map) {
 	MAKE_LABEL(get_message("composeMap"), 4);
-	MAKE_VALUE(appres.compose_map);
+	MAKE_VALUE(appres.interactive.compose_map);
     } else {
 	MAKE_LABEL(get_message("noComposeMap"), 4);
     }

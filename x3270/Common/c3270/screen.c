@@ -233,27 +233,22 @@ screen_init(void)
 {
     	menu_init();
 
-#if !defined(C3270_80_132) /*[*/
-	/* Disallow altscreen/defscreen. */
-	if ((appres.altscreen != NULL) || (appres.defscreen != NULL)) {
-		(void) fprintf(stderr, "altscreen/defscreen not supported\n");
-		exit(1);
-	}
-#else /*][*/
+#if defined(C3270_80_132) /*[*/
 	/* Parse altscreen/defscreen. */
-	if ((appres.altscreen != NULL) ^ (appres.defscreen != NULL)) {
+	if ((appres.c3270.altscreen != NULL) ^
+	    (appres.c3270.defscreen != NULL)) {
 		(void) fprintf(stderr,
 		    "Must specify both altscreen and defscreen\n");
 		exit(1);
 	}
-	if (appres.altscreen != NULL) {
-		parse_screen_spec(appres.altscreen, &altscreen_spec);
+	if (appres.c3270.altscreen != NULL) {
+		parse_screen_spec(appres.c3270.altscreen, &altscreen_spec);
 		if (altscreen_spec.rows < 27 || altscreen_spec.cols < 132) {
 		    (void) fprintf(stderr, "Rows and/or cols too small on "
 			"alternate screen (mininum 27x132)\n");
 		    exit(1);
 		}
-		parse_screen_spec(appres.defscreen, &defscreen_spec);
+		parse_screen_spec(appres.c3270.defscreen, &defscreen_spec);
 		if (defscreen_spec.rows < 24 || defscreen_spec.cols < 80) {
 		    (void) fprintf(stderr, "Rows and/or cols too small on "
 			"default screen (mininum 24x80)\n");
@@ -274,18 +269,19 @@ screen_init(void)
 	 * Setting the high bit for the Meta key is a pretty achaic idea, IMO,
 	 * so we no loger support it.
 	 */
-	if (!ts_value(appres.meta_escape, &me_mode))
+	if (!ts_value(appres.c3270.meta_escape, &me_mode))
 		popup_an_error("Invalid %s value: '%s', "
-		    "assuming 'auto'\n", ResMetaEscape, appres.meta_escape);
+		    "assuming 'auto'\n", ResMetaEscape,
+		    appres.c3270.meta_escape);
 	if (me_mode == TS_AUTO)
 		me_mode = TS_ON;
 
 	/* See about all-bold behavior. */
-	if (appres.all_bold_on)
+	if (appres.c3270.all_bold_on)
 		ab_mode = TS_ON;
-	else if (!ts_value(appres.all_bold, &ab_mode))
+	else if (!ts_value(appres.c3270.all_bold, &ab_mode))
 		popup_an_error("Invalid %s value: '%s', "
-		    "assuming 'auto'\n", ResAllBold, appres.all_bold);
+		    "assuming 'auto'\n", ResAllBold, appres.c3270.all_bold);
 	if (ab_mode == TS_AUTO)
 		ab_mode = (appres.m3279 && (appres.color8 || COLORS < 16))? 
 		    TS_ON: TS_OFF;
@@ -296,8 +292,13 @@ screen_init(void)
 	 * If they don't want ACS and they're not in a UTF-8 locale, switch
 	 * to ASCII-art mode for box drawing.
 	 */
-	if (!appres.acs && !is_utf8)
-		appres.ascii_box_draw = True;
+	if (
+#if defined(CURSES_WIDE) /*[*/
+	    !appres.c3270.acs &&
+#endif /*]*/
+				 !is_utf8) {
+	    appres.c3270.ascii_box_draw = True;
+	}
 
 	/* Pull in the user's color mappings. */
 	init_user_colors();
@@ -314,239 +315,226 @@ screen_init(void)
 static void
 finish_screen_init(void)
 {
-	int want_ov_rows = ov_rows;
-	int want_ov_cols = ov_cols;
-	Boolean oversize = False;
-	char *cl;
+    int want_ov_rows = ov_rows;
+    int want_ov_cols = ov_cols;
+    Boolean oversize = False;
+    char *cl;
 
-	if (screen_initted)
-		return;
+    if (screen_initted) {
+	return;
+    }
 
-	screen_initted = True;
+    screen_initted = True;
 
-	/* Clear the (original) screen first. */
+    /* Clear the (original) screen first. */
 #if defined(C3270_80_132) /*[*/
-	if (appres.defscreen != NULL) {
-		char nbuf[64];
-
-		(void) sprintf(nbuf, "COLUMNS=%d", defscreen_spec.cols);
-		putenv(NewString(nbuf));
-		(void) sprintf(nbuf, "LINES=%d", defscreen_spec.rows);
-		putenv(NewString(nbuf));
-	}
+    if (appres.c3270.defscreen != NULL) {
+	putenv(xs_buffer("COLUMNS=%d", defscreen_spec.cols));
+	putenv(xs_buffer("LINES=%d", defscreen_spec.rows));
+    }
 #endif /*]*/
-	(void) setupterm(NULL, fileno(stdout), NULL);
-	if ((cl = tigetstr("clear")) != NULL)
-	    	putp(cl);
+    (void) setupterm(NULL, fileno(stdout), NULL);
+    if ((cl = tigetstr("clear")) != NULL) {
+	putp(cl);
+    }
 
 #if !defined(C3270_80_132) /*[*/
-	/* Initialize curses. */
-	if (initscr() == NULL) {
-		(void) fprintf(stderr, "Can't initialize terminal.\n");
-		exit(1);
-	}
-	initscr_done = True;
+    /* Initialize curses. */
+    if (initscr() == NULL) {
+	(void) fprintf(stderr, "Can't initialize terminal.\n");
+	exit(1);
+    }
+    initscr_done = True;
 #else /*][*/
-	/* Set up ncurses, and see if it's within bounds. */
-	if (appres.defscreen != NULL) {
-		char nbuf[64];
-
-		(void) sprintf(nbuf, "COLUMNS=%d", defscreen_spec.cols);
-		putenv(NewString(nbuf));
-		(void) sprintf(nbuf, "LINES=%d", defscreen_spec.rows);
-		putenv(NewString(nbuf));
-		def_screen = newterm(NULL, stdout, stdin);
-		initscr_done = True;
-		if (def_screen == NULL) {
-			(void) fprintf(stderr,
-			    "Can't initialize %dx%d defscreen terminal.\n",
-			    defscreen_spec.rows, defscreen_spec.cols);
-			exit(1);
-		}
-		if (write(1, defscreen_spec.mode_switch,
-		    strlen(defscreen_spec.mode_switch)) < 0) {
-			endwin();
-		    	exit(1);
-		}
-	}
-	if (appres.altscreen) {
-		char nbuf[64];
-
-		(void) sprintf(nbuf, "COLUMNS=%d", altscreen_spec.cols);
-		putenv(NewString(nbuf));
-		(void) sprintf(nbuf, "LINES=%d", altscreen_spec.rows);
-		putenv(NewString(nbuf));
-	}
-	alt_screen = newterm(NULL, stdout, stdin);
-	if (alt_screen == NULL) {
-		popup_an_error("Can't initialize terminal.\n");
-		exit(1);
-	}
+    /* Set up ncurses, and see if it's within bounds. */
+    if (appres.c3270.defscreen != NULL) {
+	putenv(xs_buffer("COLUMNS=%d", defscreen_spec.cols));
+	putenv(xs_buffer("LINES=%d", defscreen_spec.rows));
+	def_screen = newterm(NULL, stdout, stdin);
 	initscr_done = True;
 	if (def_screen == NULL) {
-	    	def_screen = alt_screen;
-		cur_screen = def_screen;
+	    (void) fprintf(stderr,
+		    "Can't initialize %dx%d defscreen terminal.\n",
+		    defscreen_spec.rows, defscreen_spec.cols);
+	    exit(1);
 	}
-	if (appres.altscreen) {
-		set_term(alt_screen);
-		cur_screen = alt_screen;
+	if (write(1, defscreen_spec.mode_switch,
+		    strlen(defscreen_spec.mode_switch)) < 0) {
+	    endwin();
+	    exit(1);
 	}
+    }
+    if (appres.c3270.altscreen) {
+	putenv(xs_buffer("COLUMNS=%d", altscreen_spec.cols));
+	putenv(xs_buffer("LINES=%d", altscreen_spec.rows));
+    }
+    alt_screen = newterm(NULL, stdout, stdin);
+    if (alt_screen == NULL) {
+	popup_an_error("Can't initialize terminal.\n");
+	exit(1);
+    }
+    initscr_done = True;
+    if (def_screen == NULL) {
+	def_screen = alt_screen;
+	cur_screen = def_screen;
+    }
+    if (appres.c3270.altscreen) {
+	set_term(alt_screen);
+	cur_screen = alt_screen;
+    }
 
-	/* If they want 80/132 switching, then they want a model 5. */
-	if (def_screen != alt_screen && model_num != 5) {
-		set_rows_cols(5, 0, 0);
-	}
+    /* If they want 80/132 switching, then they want a model 5. */
+    if (def_screen != alt_screen && model_num != 5) {
+	set_rows_cols(5, 0, 0);
+    }
 #endif /*]*/
 
-	while (cursesLINES < maxROWS || cursesCOLS < maxCOLS) {
-		/*
-		 * First, cancel any oversize.  This will get us to the correct
-		 * model number, if there is any.
-		 */
-		if ((ov_cols && ov_cols > cursesCOLS) ||
-		    (ov_rows && ov_rows > cursesLINES)) {
-			ov_cols = 0;
-			ov_rows = 0;
-			oversize = True;
-			continue;
-		}
+    while (cursesLINES < maxROWS || cursesCOLS < maxCOLS) {
+	/*
+	 * First, cancel any oversize.  This will get us to the correct
+	 * model number, if there is any.
+	 */
+	if ((ov_cols && ov_cols > cursesCOLS) ||
+	    (ov_rows && ov_rows > cursesLINES)) {
 
-		/* If we're at the smallest screen now, give up. */
-		if (model_num == 2) {
-			popup_an_error("Emulator won't fit on a %dx%d "
-			    "display.\n", cursesLINES, cursesCOLS);
-			exit(1);
-		}
-
-		/* Try a smaller model. */
-		set_rows_cols(model_num - 1, 0, 0);
+	    ov_cols = 0;
+	    ov_rows = 0;
+	    oversize = True;
+	    continue;
 	}
 
-	/*
-	 * Now, if they wanted an oversize, but didn't get it, try applying it
-	 * again.
-	 */
-	if (oversize) {
-		if (want_ov_rows > cursesLINES - 2)
-			want_ov_rows = cursesLINES - 2;
-		if (want_ov_rows < maxROWS)
-			want_ov_rows = maxROWS;
-		if (want_ov_cols > cursesCOLS)
-			want_ov_cols = cursesCOLS;
-		set_rows_cols(model_num, want_ov_cols, want_ov_rows);
+	/* If we're at the smallest screen now, give up. */
+	if (model_num == 2) {
+	    popup_an_error("Emulator won't fit on a %dx%d display.\n",
+		    cursesLINES, cursesCOLS);
+	    exit(1);
 	}
 
-	/*
-	 * Finally, if they want automatic oversize, see if that's possible.
-	 */
-	if (ov_auto && (maxROWS < cursesLINES - 2 || maxCOLS < cursesCOLS))
-		set_rows_cols(model_num, cursesCOLS, cursesLINES - 2);
+	/* Try a smaller model. */
+	set_rows_cols(model_num - 1, 0, 0);
+    }
+
+    /*
+     * Now, if they wanted an oversize, but didn't get it, try applying it
+     * again.
+     */
+    if (oversize) {
+	if (want_ov_rows > cursesLINES - 2) {
+	    want_ov_rows = cursesLINES - 2;
+	}
+	if (want_ov_rows < maxROWS) {
+	    want_ov_rows = maxROWS;
+	}
+	if (want_ov_cols > cursesCOLS) {
+	    want_ov_cols = cursesCOLS;
+	}
+	set_rows_cols(model_num, want_ov_cols, want_ov_rows);
+    }
+
+    /*
+     * Finally, if they want automatic oversize, see if that's possible.
+     */
+    if (ov_auto && (maxROWS < cursesLINES - 2 || maxCOLS < cursesCOLS)) {
+	set_rows_cols(model_num, cursesCOLS, cursesLINES - 2);
+    }
 
 #if defined(NCURSES_MOUSE_VERSION) /*[*/
-	if (appres.mouse)
-		if (mousemask(BUTTON1_RELEASED, NULL) == 0)
-		    	appres.mouse = False;
+    if (appres.c3270.mouse && mousemask(BUTTON1_RELEASED, NULL) == 0) {
+	appres.c3270.mouse = False;
+    }
 #endif /*]*/
 
-	/* Figure out where the status line goes, if it fits. */
+    /* Figure out where the status line goes, if it fits. */
 #if defined(C3270_80_132) /*[*/
-	if (def_screen != alt_screen) {
-		/* Start out in defscreen mode. */
-		set_status_row(defscreen_spec.rows, MODEL_2_ROWS);
-	} else
+    if (def_screen != alt_screen) {
+	/* Start out in defscreen mode. */
+	set_status_row(defscreen_spec.rows, MODEL_2_ROWS);
+    } else
 #endif /*]*/
-	{
-		/* Start out in altscreen mode. */
-		set_status_row(cursesLINES, maxROWS);
-	}
+    {
+	/* Start out in altscreen mode. */
+	set_status_row(cursesLINES, maxROWS);
+    }
 
-	/* Implement reverse video. */
-	if (appres.reverse_video) {
-	    	int c;
+    /* Implement reverse video. */
+    if (appres.c3270.reverse_video) {
+	int c;
 
-		bg_color = COLOR_WHITE;
+	bg_color = COLOR_WHITE;
 
-		c = cmap8[HOST_COLOR_NEUTRAL_BLACK];
-		cmap8[HOST_COLOR_NEUTRAL_BLACK] =
-		    cmap8[HOST_COLOR_NEUTRAL_WHITE];
-		cmap8[HOST_COLOR_NEUTRAL_WHITE] = c;
+	c = cmap8[HOST_COLOR_NEUTRAL_BLACK];
+	cmap8[HOST_COLOR_NEUTRAL_BLACK] = cmap8[HOST_COLOR_NEUTRAL_WHITE];
+	cmap8[HOST_COLOR_NEUTRAL_WHITE] = c;
 
-		c = cmap16[HOST_COLOR_NEUTRAL_BLACK];
-		cmap16[HOST_COLOR_NEUTRAL_BLACK] =
-		    cmap16[HOST_COLOR_NEUTRAL_WHITE];
-		cmap16[HOST_COLOR_NEUTRAL_WHITE] = c;
-	}
+	c = cmap16[HOST_COLOR_NEUTRAL_BLACK];
+	cmap16[HOST_COLOR_NEUTRAL_BLACK] = cmap16[HOST_COLOR_NEUTRAL_WHITE];
+	cmap16[HOST_COLOR_NEUTRAL_WHITE] = c;
+    }
 
-	/* Play with curses color. */
-	if (!appres.mono) {
+    /* Play with curses color. */
+    if (!appres.interactive.mono) {
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
-	    	char *colorterm;
+	char *colorterm;
 #endif /*]*/
-		start_color();
+	start_color();
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
-		if ((appres.default_fgbg ||
-		     ((colorterm = getenv("COLORTERM")) != NULL &&
-		      !strcmp(colorterm, "gnome-terminal"))) &&
-		    use_default_colors() != ERR) {
+	if ((appres.c3270.default_fgbg ||
+	     ((colorterm = getenv("COLORTERM")) != NULL &&
+	      !strcmp(colorterm, "gnome-terminal"))) &&
+	    use_default_colors() != ERR) {
 
-		    default_colors = True;
+	    default_colors = True;
+	}
+#endif /*]*/
+	if (has_colors() && COLORS >= 8) {
+	    if (!appres.color8 && COLORS >= 16) {
+		cmap = cmap16;
+		field_colors = field_colors16;
+		defcolor_offset = 8;
+		if (appres.c3270.reverse_video) {
+		    bg_color += defcolor_offset;
 		}
-#endif /*]*/
-		if (has_colors() && COLORS >= 8) {
-		    	if (!appres.color8 && COLORS >= 16) {
-				cmap = cmap16;
-				field_colors = field_colors16;
-				defcolor_offset = 8;
-				if (appres.reverse_video)
-					bg_color += defcolor_offset;
-			}
-		    	if (appres.m3279)
-				defattr =
-				    get_color_pair(
-					    defcolor_offset + COLOR_BLUE,
-					    bg_color);
-			else
-				defattr =
-				    get_color_pair(
-					    defcolor_offset + COLOR_GREEN,
-					    bg_color);
-			if (COLORS < 16)
-			    	appres.color8 = True;
+	    }
+	    if (appres.m3279) {
+		defattr = get_color_pair(defcolor_offset + COLOR_BLUE,
+			bg_color);
+	    } else {
+		defattr = get_color_pair(defcolor_offset + COLOR_GREEN,
+			bg_color);
+	    }
+	    if (COLORS < 16) {
+		appres.color8 = True;
+	    }
 #if defined(C3270_80_132) && defined(NCURSES_VERSION)  /*[*/
-			if (def_screen != alt_screen) {
-				SCREEN *s = cur_screen;
+	    if (def_screen != alt_screen) {
+		SCREEN *s = cur_screen;
 
-				/*
-				 * Initialize the colors for the other
-				 * screen.
-				 */
-				if (s == def_screen)
-					set_term(alt_screen);
-				else
-					set_term(def_screen);
-				start_color();
-				curses_alt = !curses_alt;
-				(void) get_color_pair(field_colors[2],
-						      bg_color);
-				curses_alt = !curses_alt;
-				set_term(s);
+		/* Initialize the colors for the other screen. */
+		if (s == def_screen) {
+		    set_term(alt_screen);
+		} else {
+		    set_term(def_screen);
+		}
+		start_color();
+		curses_alt = !curses_alt;
+		(void) get_color_pair(field_colors[2], bg_color);
+		curses_alt = !curses_alt;
+		set_term(s);
 
-			}
+	    }
 #endif /*]*/
-		}
-		else {
-		    	appres.mono = True;
-			appres.m3279 = False;
-			/* Get the terminal name right. */
-			set_rows_cols(model_num, want_ov_cols, want_ov_rows);
-		}
+	} else {
+	    appres.interactive.mono = True;
+	    appres.m3279 = False;
+	    /* Get the terminal name right. */
+	    set_rows_cols(model_num, want_ov_cols, want_ov_rows);
 	}
+    }
 
+    /* Set up the scrollbar. */
+    scroll_buf_init();
 
-	/* Set up the scrollbar. */
-	scroll_buf_init();
-
-	screen_init2();
+    screen_init2();
 }
 
 /* When the host connects, really initialize the screen. */
@@ -561,18 +549,20 @@ screen_connect(Boolean connected)
 static void
 setup_tty(void)
 {
-	if (appres.cbreak_mode)
-		cbreak();
-	else
-		raw();
-	noecho();
-	nonl();
-	intrflush(stdscr,FALSE);
-	if (appres.curses_keypad)
-		keypad(stdscr, TRUE);
-	meta(stdscr, TRUE);
-	nodelay(stdscr, TRUE);
-	refresh();
+    if (appres.c3270.cbreak_mode) {
+	cbreak();
+    } else {
+	raw();
+    }
+    noecho();
+    nonl();
+    intrflush(stdscr,FALSE);
+    if (appres.c3270.curses_keypad) {
+	keypad(stdscr, TRUE);
+    }
+    meta(stdscr, TRUE);
+    nodelay(stdscr, TRUE);
+    refresh();
 }
 
 #if defined(C3270_80_132) /*[*/
@@ -588,48 +578,50 @@ swap_screens(SCREEN *new_screen)
 static void
 screen_init2(void)
 {
-	escaped = False;
+    escaped = False;
 
-	/*
-	 * Finish initializing ncurses.  This should be the first time that it
-	 * will send anything to the terminal.
-	 */
+    /*
+     * Finish initializing ncurses.  This should be the first time that it
+     * will send anything to the terminal.
+     */
 
-	/* Set up the keyboard. */
+    /* Set up the keyboard. */
 #if defined(C3270_80_132) /*[*/
-	swap_screens(alt_screen);
+    swap_screens(alt_screen);
 #endif /*]*/
+    setup_tty();
+    scrollok(stdscr, FALSE);
+
+#if defined(C3270_80_132) /*[*/
+    if (def_screen != alt_screen) {
+	/*
+	 * The first setup_tty() set up altscreen.
+	 * Set up defscreen now, and leave it as the
+	 * current curses screen.
+	 */
+	swap_screens(def_screen);
 	setup_tty();
 	scrollok(stdscr, FALSE);
-
-#if defined(C3270_80_132) /*[*/
-	if (def_screen != alt_screen) {
-		/*
-		 * The first setup_tty() set up altscreen.
-		 * Set up defscreen now, and leave it as the
-		 * current curses screen.
-		 */
-		swap_screens(def_screen);
-		setup_tty();
-		scrollok(stdscr, FALSE);
 #if defined(NCURSES_MOUSE_VERSION) /*[*/
-		if (appres.mouse)
-			mousemask(BUTTON1_RELEASED, NULL);
-#endif /*]*/
+	if (appres.c3270.mouse) {
+	    mousemask(BUTTON1_RELEASED, NULL);
 	}
 #endif /*]*/
+    }
+#endif /*]*/
 
-	/* Subscribe to input events. */
-	input_id = AddInput(0, kybd_input);
+    /* Subscribe to input events. */
+    input_id = AddInput(0, kybd_input);
 
-	/* Ignore SIGINT and SIGTSTP. */
-	signal(SIGINT, SIG_IGN);
-	signal(SIGTSTP, SIG_IGN);
+    /* Ignore SIGINT and SIGTSTP. */
+    signal(SIGINT, SIG_IGN);
+    signal(SIGTSTP, SIG_IGN);
 
 #if defined(C3270_80_132) /*[*/
-	/* Ignore SIGWINCH -- it might happen when we do 80/132 changes. */
-	if (def_screen != alt_screen)
-		signal(SIGWINCH, SIG_IGN);
+    /* Ignore SIGWINCH -- it might happen when we do 80/132 changes. */
+    if (def_screen != alt_screen) {
+	signal(SIGWINCH, SIG_IGN);
+    }
 #endif /*]*/
 }
 
@@ -637,26 +629,27 @@ screen_init2(void)
 static void
 set_status_row(int screen_rows, int emulator_rows)
 {
-    	/* Check for OIA room first. */
-	if (screen_rows < emulator_rows + 1) {
-		status_row = status_skip = 0;
-	} else if (screen_rows == emulator_rows + 1) {
-		status_skip = 0;
-		status_row = emulator_rows;
-	} else {
-		status_skip = screen_rows - 2;
-		status_row = screen_rows - 1;
-	}
+    /* Check for OIA room first. */
+    if (screen_rows < emulator_rows + 1) {
+	status_row = status_skip = 0;
+    } else if (screen_rows == emulator_rows + 1) {
+	status_skip = 0;
+	status_row = emulator_rows;
+    } else {
+	status_skip = screen_rows - 2;
+	status_row = screen_rows - 1;
+    }
 
-	/* Then check for menubar room.  Use 2 rows, 1 in a pinch. */
-	if (appres.interactive.menubar && appres.mouse) {
-		if (screen_rows >= emulator_rows + (status_row != 0) + 2)
-			screen_yoffset = 2;
-		else if (screen_rows >= emulator_rows + (status_row != 0) + 1)
-			screen_yoffset = 1;
-		else
-			screen_yoffset = 0;
+    /* Then check for menubar room.  Use 2 rows, 1 in a pinch. */
+    if (appres.interactive.menubar && appres.c3270.mouse) {
+	if (screen_rows >= emulator_rows + (status_row != 0) + 2) {
+	    screen_yoffset = 2;
+	} else if (screen_rows >= emulator_rows + (status_row != 0) + 1) {
+	    screen_yoffset = 1;
+	} else {
+	    screen_yoffset = 0;
 	}
+    }
 }
 
 /*
@@ -782,7 +775,7 @@ color_from_fa(unsigned char fa)
 		fg = default_color_from_fa(fa);
 		return get_color_pair(fg, bg_color) |
 		    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
-	} else if (!appres.mono) {
+	} else if (!appres.interactive.mono) {
 		return get_color_pair(defcolor_offset + COLOR_GREEN,
 			bg_color) |
 		    (((ab_mode == TS_ON) || FA_IS_HIGH(fa))? A_BOLD: A_NORMAL);
@@ -908,267 +901,269 @@ calc_attrs(int baddr, int fa_addr, int fa)
 void
 screen_disp(Boolean erasing _is_unused)
 {
-	int row, col;
-	int field_attrs;
-	unsigned char fa;
-	struct screen_spec *cur_spec;
-	enum dbcs_state d;
-	int fa_addr;
+    int row, col;
+    int field_attrs;
+    unsigned char fa;
+    struct screen_spec *cur_spec;
+    enum dbcs_state d;
+    int fa_addr;
 
-	/* This may be called when it isn't time. */
-	if (escaped)
-		return;
+    /* This may be called when it isn't time. */
+    if (escaped) {
+	return;
+    }
 
 #if defined(C3270_80_132) /*[*/
-	/* See if they've switched screens on us. */
-	if (def_screen != alt_screen && screen_alt != curses_alt) {
-		if (screen_alt) {
-			if (write(1, altscreen_spec.mode_switch,
-			    strlen(altscreen_spec.mode_switch)) < 0)
-			    	exit(1);
-			vtrace("Switching to alt (%dx%d) screen.\n",
-			    altscreen_spec.rows, altscreen_spec.cols);
-			swap_screens(alt_screen);
-			cur_spec = &altscreen_spec;
-		} else {
-			if (write(1, defscreen_spec.mode_switch,
-			    strlen(defscreen_spec.mode_switch)) < 0)
-			    	exit(1);
-			vtrace("Switching to default (%dx%d) screen.\n",
-			    defscreen_spec.rows, defscreen_spec.cols);
-			swap_screens(def_screen);
-			cur_spec = &defscreen_spec;
-		}
-
-		/* Figure out where the status line goes now, if it fits. */
-		set_status_row(cur_spec->rows, ROWS);
-
-		curses_alt = screen_alt;
-
-		/* Tell curses to forget what may be on the screen already. */
-		clear();
-	}
-#endif /*]*/
-
-	/* If the menubar is separate, draw it first. */
-	if (screen_yoffset) {
-	    	ucs4_t u = 0;
-		Boolean highlight;
-		unsigned char acs;
-		int norm, high;
-
-		if (menu_is_up) {
-			if (appres.m3279) {
-				norm = get_color_pair(COLOR_WHITE, COLOR_BLACK);
-				high = get_color_pair(COLOR_BLACK, COLOR_WHITE);
-			} else {
-				norm = defattr & ~A_BOLD;
-				high = defattr | A_BOLD;
-			}
-		} else {
-			if (appres.m3279) {
-				norm = get_color_pair(COLOR_WHITE, COLOR_BLACK);
-				high = get_color_pair(COLOR_WHITE, COLOR_BLACK);
-			} else {
-				norm = defattr & ~A_BOLD;
-				high = defattr & ~A_BOLD;
-			}
-		}
-
-		for (row = 0; row < screen_yoffset; row++) {
-		    	move(row, 0);
-			for (col = 0; col < cCOLS; col++) {
-				if (menu_char(row, col, True, &u, &highlight,
-					    &acs)) {
-					char mb[16];
-
-				    	(void) attrset(highlight? high: norm);
-#if defined(CURSES_WIDE) /*[*/
-					if (u < 0x100 || acs)
-						addch(u);
-					else if (unicode_to_multibyte(u,
-						    mb, sizeof(mb)))
-						addstr(mb);
-					else
-					    	addch(' ');
-#else /*][*/
-					addch(u);
-#endif /*]*/
-				} else {
-					(void) attrset(norm);
-					addch(' ');
-				}
-			}
-		}
-	}
-
-	fa = get_field_attribute(0);
-	fa_addr = find_field_attribute(0);
-	field_attrs = calc_attrs(0, fa_addr, fa);
-	for (row = 0; row < ROWS; row++) {
-		int baddr;
-
-		if (!flipped)
-			move(row + screen_yoffset, 0);
-		for (col = 0; col < cCOLS; col++) {
-		    	Boolean underlined = False;
-			int attr_mask =
-			    toggled(UNDERSCORE)? (int)~A_UNDERLINE: -1;
-			Boolean is_menu = False;
-			ucs4_t u = 0;
-			Boolean highlight = False;
-			unsigned char acs = 0;
-
-			if (flipped)
-				move(row + screen_yoffset, cCOLS-1 - col);
-
-			is_menu = menu_char(row + screen_yoffset,
-				flipped? (cCOLS-1 - col): col,
-				False,
-				&u, &highlight, &acs);
-			if (is_menu) {
-			    	char mb[16];
-
-				if (!u)
-					abort();
-				if (appres.m3279) {
-					if (highlight)
-						(void) attrset(
-							get_color_pair(
-						    HOST_COLOR_NEUTRAL_BLACK,
-						    HOST_COLOR_NEUTRAL_WHITE));
-					else
-						(void) attrset(
-							get_color_pair(
-						    HOST_COLOR_NEUTRAL_WHITE,
-						    HOST_COLOR_NEUTRAL_BLACK));
-				} else {
-					if (highlight)
-						(void) attrset(defattr |
-							       A_BOLD);
-					else
-						(void) attrset(defattr);
-				}
-#if defined(CURSES_WIDE) /*[*/
-				if (u < 0x100 || acs)
-					addch(u);
-				else if (unicode_to_multibyte(u,
-					    mb, sizeof(mb)))
-					addstr(mb);
-				else
-					addch(' ');
-#else /*][*/
-				addch(u);
-#endif /*]*/
-			}
-
-			baddr = row*cCOLS+col;
-			if (ea_buf[baddr].fa) {
-			    	fa_addr = baddr;
-				fa = ea_buf[baddr].fa;
-				field_attrs = calc_attrs(baddr, baddr, fa);
-				if (!is_menu) {
-					(void) attrset(defattr);
-					addch(' ');
-				}
-			} else if (FA_IS_ZERO(fa)) {
-			    	if (!is_menu) {
-					(void) attrset(field_attrs & attr_mask);
-					if (field_attrs & A_UNDERLINE)
-					    underlined = True;
-					addch(' ');
-				}
-			} else {
-				char mb[16];
-				int len;
-
-				if (is_menu)
-				    	continue;
-
-				if (!(ea_buf[baddr].gr ||
-				      ea_buf[baddr].fg ||
-				      ea_buf[baddr].bg)) {
-
-					(void) attrset(field_attrs & attr_mask);
-					if (field_attrs & A_UNDERLINE)
-					    underlined = True;
-
-				} else {
-				    	int buf_attrs;
-		
-				    	buf_attrs = calc_attrs(baddr, fa_addr,
-						fa);
-					(void) attrset(buf_attrs & attr_mask);
-					if (buf_attrs & A_UNDERLINE)
-					    underlined = True;
-				}
-				d = ctlr_dbcs_state(baddr);
-				if (IS_LEFT(d)) {
-					int xaddr = baddr;
-
-					INC_BA(xaddr);
-					len = ebcdic_to_multibyte(
-						(ea_buf[baddr].cc << 8) |
-						 ea_buf[xaddr].cc,
-						mb, sizeof(mb));
-					addstr(mb);
-				} else if (!IS_RIGHT(d)) {
-					if (ea_buf[baddr].cs == CS_LINEDRAW) {
-					    	display_linedraw(
-							ea_buf[baddr].cc);
-					} else if (ea_buf[baddr].cs == CS_APL ||
-						   (ea_buf[baddr].cs & CS_GE)) {
-						display_ge(ea_buf[baddr].cc);
-					} else {
-						len = ebcdic_to_multibyte_x(
-							ea_buf[baddr].cc,
-							CS_BASE, mb,
-							sizeof(mb),
-							EUO_BLANK_UNDEF |
-				     (appres.ascii_box_draw? EUO_ASCII_BOX: 0),
-							NULL);
-						if (len > 0)
-							len--;
-						if (toggled(UNDERSCORE) &&
-							underlined &&
-							(len == 1) &&
-							mb[0] == ' ') {
-							mb[0] = '_';
-						}
-						if (toggled(MONOCASE) &&
-							(len == 1) &&
-							!(mb[0] & 0x80) &&
-							islower(mb[0])) {
-							mb[0] = toupper(mb[0]);
-						}
-#if defined(CURSES_WIDE) /*[*/
-						addstr(mb);
-#else /*][*/
-						if (len > 1)
-						    	addch(' ');
-						else
-						    	addch(mb[0] & 0xff);
-#endif /*]*/
-					}
-				}
-			}
-		}
-	}
-	if (status_row)
-		draw_oia();
-	(void) attrset(defattr);
-	if (menu_is_up) {
-		menu_cursor(&row, &col);
-		move(row, col);
+    /* See if they've switched screens on us. */
+    if (def_screen != alt_screen && screen_alt != curses_alt) {
+	if (screen_alt) {
+	    if (write(1, altscreen_spec.mode_switch,
+			strlen(altscreen_spec.mode_switch)) < 0) {
+		exit(1);
+	    }
+	    vtrace("Switching to alt (%dx%d) screen.\n",
+		    altscreen_spec.rows, altscreen_spec.cols);
+	    swap_screens(alt_screen);
+	    cur_spec = &altscreen_spec;
 	} else {
-		if (flipped)
-			move((cursor_addr / cCOLS + screen_yoffset),
-				cCOLS-1 - (cursor_addr % cCOLS));
-		else
-			move((cursor_addr / cCOLS) + screen_yoffset,
-				cursor_addr % cCOLS);
+	    if (write(1, defscreen_spec.mode_switch,
+			strlen(defscreen_spec.mode_switch)) < 0) {
+		exit(1);
+	    }
+	    vtrace("Switching to default (%dx%d) screen.\n",
+		    defscreen_spec.rows, defscreen_spec.cols);
+	    swap_screens(def_screen);
+	    cur_spec = &defscreen_spec;
 	}
-	refresh();
+
+	/* Figure out where the status line goes now, if it fits. */
+	set_status_row(cur_spec->rows, ROWS);
+
+	curses_alt = screen_alt;
+
+	/* Tell curses to forget what may be on the screen already. */
+	clear();
+    }
+#endif /*]*/
+
+    /* If the menubar is separate, draw it first. */
+    if (screen_yoffset) {
+	ucs4_t u = 0;
+	Boolean highlight;
+	unsigned char acs;
+	int norm, high;
+
+	if (menu_is_up) {
+	    if (appres.m3279) {
+		norm = get_color_pair(COLOR_WHITE, COLOR_BLACK);
+		high = get_color_pair(COLOR_BLACK, COLOR_WHITE);
+	    } else {
+		norm = defattr & ~A_BOLD;
+		high = defattr | A_BOLD;
+	    }
+	} else {
+	    if (appres.m3279) {
+		norm = get_color_pair(COLOR_WHITE, COLOR_BLACK);
+		high = get_color_pair(COLOR_WHITE, COLOR_BLACK);
+	    } else {
+		norm = defattr & ~A_BOLD;
+		high = defattr & ~A_BOLD;
+	    }
+	}
+
+	for (row = 0; row < screen_yoffset; row++) {
+	    move(row, 0);
+	    for (col = 0; col < cCOLS; col++) {
+		if (menu_char(row, col, True, &u, &highlight, &acs)) {
+		    char mb[16];
+
+		    (void) attrset(highlight? high: norm);
+#if defined(CURSES_WIDE) /*[*/
+		    if (u < 0x100 || acs) {
+			addch(u);
+		    } else if (unicode_to_multibyte(u, mb, sizeof(mb))) {
+			addstr(mb);
+		    } else {
+			addch(' ');
+		    }
+#else /*][*/
+		    addch(u);
+#endif /*]*/
+		} else {
+		    (void) attrset(norm);
+		    addch(' ');
+		}
+	    }
+	}
+    }
+
+    fa = get_field_attribute(0);
+    fa_addr = find_field_attribute(0);
+    field_attrs = calc_attrs(0, fa_addr, fa);
+    for (row = 0; row < ROWS; row++) {
+	int baddr;
+
+	if (!flipped) {
+	    move(row + screen_yoffset, 0);
+	}
+	for (col = 0; col < cCOLS; col++) {
+	    Boolean underlined = False;
+	    int attr_mask = toggled(UNDERSCORE)? (int)~A_UNDERLINE: -1;
+	    Boolean is_menu = False;
+	    ucs4_t u = 0;
+	    Boolean highlight = False;
+	    unsigned char acs = 0;
+
+	    if (flipped) {
+		move(row + screen_yoffset, cCOLS-1 - col);
+	    }
+
+	    is_menu = menu_char(row + screen_yoffset,
+		    flipped? (cCOLS-1 - col): col,
+		    False,
+		    &u, &highlight, &acs);
+	    if (is_menu) {
+		char mb[16];
+
+		if (!u) {
+		    abort();
+		}
+		if (appres.m3279) {
+		    if (highlight) {
+			(void) attrset(get_color_pair(HOST_COLOR_NEUTRAL_BLACK,
+				    HOST_COLOR_NEUTRAL_WHITE));
+		    } else {
+			(void) attrset(get_color_pair(HOST_COLOR_NEUTRAL_WHITE,
+				    HOST_COLOR_NEUTRAL_BLACK));
+		    }
+		} else {
+		    if (highlight) {
+			(void) attrset(defattr | A_BOLD);
+		    } else {
+			(void) attrset(defattr);
+		    }
+		}
+#if defined(CURSES_WIDE) /*[*/
+		if (u < 0x100 || acs) {
+		    addch(u);
+		} else if (unicode_to_multibyte(u, mb, sizeof(mb))) {
+		    addstr(mb);
+		} else {
+		    addch(' ');
+		}
+#else /*][*/
+		addch(u);
+#endif /*]*/
+	    }
+
+	    baddr = row*cCOLS+col;
+	    if (ea_buf[baddr].fa) {
+		fa_addr = baddr;
+		fa = ea_buf[baddr].fa;
+		field_attrs = calc_attrs(baddr, baddr, fa);
+		if (!is_menu) {
+		    (void) attrset(defattr);
+		    addch(' ');
+		}
+	    } else if (FA_IS_ZERO(fa)) {
+		if (!is_menu) {
+		    (void) attrset(field_attrs & attr_mask);
+		    if (field_attrs & A_UNDERLINE) {
+			underlined = True;
+		    }
+		    addch(' ');
+		}
+	    } else {
+		char mb[16];
+		int len;
+
+		if (is_menu) {
+		    continue;
+		}
+
+		if (!(ea_buf[baddr].gr ||
+		      ea_buf[baddr].fg ||
+		      ea_buf[baddr].bg)) {
+		    (void) attrset(field_attrs & attr_mask);
+		    if (field_attrs & A_UNDERLINE) {
+			underlined = True;
+		    }
+
+		} else {
+		    int buf_attrs;
+
+		    buf_attrs = calc_attrs(baddr, fa_addr, fa);
+		    (void) attrset(buf_attrs & attr_mask);
+		    if (buf_attrs & A_UNDERLINE) {
+			underlined = True;
+		    }
+		}
+		d = ctlr_dbcs_state(baddr);
+		if (IS_LEFT(d)) {
+		    int xaddr = baddr;
+
+		    INC_BA(xaddr);
+		    len = ebcdic_to_multibyte(
+			    (ea_buf[baddr].cc << 8) |
+			     ea_buf[xaddr].cc,
+			    mb, sizeof(mb));
+		    addstr(mb);
+		} else if (!IS_RIGHT(d)) {
+		    if (ea_buf[baddr].cs == CS_LINEDRAW) {
+			display_linedraw(ea_buf[baddr].cc);
+		    } else if (ea_buf[baddr].cs == CS_APL ||
+			    (ea_buf[baddr].cs & CS_GE)) {
+			display_ge(ea_buf[baddr].cc);
+		    } else {
+			len = ebcdic_to_multibyte_x(
+				    ea_buf[baddr].cc,
+				    CS_BASE, mb,
+				    sizeof(mb),
+				    EUO_BLANK_UNDEF |
+			       (appres.c3270.ascii_box_draw? EUO_ASCII_BOX: 0),
+				    NULL);
+			if (len > 0) {
+			    len--;
+			}
+			if (toggled(UNDERSCORE) && underlined && (len == 1) &&
+				    mb[0] == ' ') {
+			    mb[0] = '_';
+			}
+			if (toggled(MONOCASE) && (len == 1) &&
+				!(mb[0] & 0x80) && islower(mb[0])) {
+			    mb[0] = toupper(mb[0]);
+			}
+#if defined(CURSES_WIDE) /*[*/
+			addstr(mb);
+#else /*][*/
+			if (len > 1) {
+			    addch(' ');
+			} else {
+			    addch(mb[0] & 0xff);
+			}
+#endif /*]*/
+		    }
+		}
+	    }
+	}
+    }
+    if (status_row) {
+	draw_oia();
+    }
+    (void) attrset(defattr);
+    if (menu_is_up) {
+	menu_cursor(&row, &col);
+	move(row, col);
+    } else {
+	if (flipped) {
+	    move((cursor_addr / cCOLS + screen_yoffset),
+		    cCOLS-1 - (cursor_addr % cCOLS));
+	} else {
+	    move((cursor_addr / cCOLS) + screen_yoffset,
+		    cursor_addr % cCOLS);
+	}
+    }
+    refresh();
 }
 
 /* ESC processing. */
@@ -1923,7 +1918,7 @@ draw_oia(void)
 	}
 
 	/* Black out the parts of the screen we aren't using. */
-	if (!appres.mono && !filled_extra[!!curses_alt]) {
+	if (!appres.interactive.mono && !filled_extra[!!curses_alt]) {
 	    	int r, c;
 
 		(void) attrset(defattr);
@@ -1942,7 +1937,7 @@ draw_oia(void)
 	}
 
 	/* Make sure the status line region is filled in properly. */
-	if (!appres.mono) {
+	if (!appres.interactive.mono) {
 		int i;
 
 		(void) attrset(defattr);
@@ -2277,35 +2272,37 @@ linedraw_to_acs(unsigned char c)
 static void
 display_linedraw(unsigned char ebc)
 {
-    	int c;
-	char mb[16];
-	int len;
+    int c;
+    char mb[16];
+    int len;
 
 #if defined(CURSES_WIDE) /*[*/
-	if (appres.acs)
+    if (appres.c3270.acs)
 #endif /*]*/
-	{
-	    	/* Try UCS first. */
-		c = linedraw_to_acs(ebc);
-		if (c != -1) {
-			addch(c);
-			return;
-		}
+    {
+	/* Try UCS first. */
+	c = linedraw_to_acs(ebc);
+	if (c != -1) {
+	    addch(c);
+	    return;
 	}
+    }
 
-	/* Then try Unicode. */
-	len = ebcdic_to_multibyte_x(ebc, CS_LINEDRAW, mb, sizeof(mb),
-		EUO_BLANK_UNDEF | (appres.ascii_box_draw? EUO_ASCII_BOX: 0),
-		NULL);
-	if (len > 0)
-		len--;
+    /* Then try Unicode. */
+    len = ebcdic_to_multibyte_x(ebc, CS_LINEDRAW, mb, sizeof(mb),
+	    EUO_BLANK_UNDEF | (appres.c3270.ascii_box_draw? EUO_ASCII_BOX: 0),
+	    NULL);
+    if (len > 0) {
+	len--;
+    }
 #if defined(CURSES_WIDE) /*[*/
-	addstr(mb);
+    addstr(mb);
 #else /*][*/
-	if (len > 1)
-		addch(mb[0] & 0xff);
-	else
-		addch(' ');
+    if (len > 1) {
+	addch(mb[0] & 0xff);
+    } else {
+	addch(' ');
+    }
 #endif /*]*/
 }
 
@@ -2389,35 +2386,37 @@ apl_to_acs(unsigned char c)
 static void
 display_ge(unsigned char ebc)
 {
-    	int c;
-	char mb[16];
-	int len;
+    int c;
+    char mb[16];
+    int len;
 
 #if defined(CURSES_WIDE) /*[*/
-	if (appres.acs)
+    if (appres.c3270.acs)
 #endif /*]*/
-	{
-	    	/* Try UCS first. */
-		c = apl_to_acs(ebc);
-		if (c != -1) {
-			addch(c);
-			return;
-		}
+    {
+	/* Try UCS first. */
+	c = apl_to_acs(ebc);
+	if (c != -1) {
+	    addch(c);
+	    return;
 	}
+    }
 
-	/* Then try Unicode. */
-	len = ebcdic_to_multibyte_x(ebc, CS_GE, mb, sizeof(mb),
-		EUO_BLANK_UNDEF | (appres.ascii_box_draw? EUO_ASCII_BOX: 0),
-		NULL);
-	if (len > 0)
-		len--;
+    /* Then try Unicode. */
+    len = ebcdic_to_multibyte_x(ebc, CS_GE, mb, sizeof(mb),
+	    EUO_BLANK_UNDEF | (appres.c3270.ascii_box_draw? EUO_ASCII_BOX: 0),
+	    NULL);
+    if (len > 0) {
+	len--;
+    }
 #if defined(CURSES_WIDE) /*[*/
-	addstr(mb);
+    addstr(mb);
 #else /*][*/
-	if (len > 1)
-		addch(mb[0] & 0xff);
-	else
-		addch(' ');
+    if (len > 1) {
+	addch(mb[0] & 0xff);
+    } else {
+	addch(' ');
+    }
 #endif /*]*/
 }
 

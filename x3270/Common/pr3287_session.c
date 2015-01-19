@@ -429,7 +429,7 @@ pr3287_start_now(const char *lu, Boolean associated)
 
     /* Get printer options. */
 #if defined(C3270) /*[*/
-    pr3287_opts = appres.printer_opts;
+    pr3287_opts = appres.interactive.printer_opts;
 #else /*][*/
     pr3287_opts = get_resource(ResPrinterOptions);
 #endif /*]*/
@@ -1063,7 +1063,7 @@ static void
 pr3287_host_connect(Boolean connected _is_unused)
 {
     if (IN_3270) {
-	char *pr3287_lu = appres.printer_lu;
+	char *pr3287_lu = appres.interactive.printer_lu;
 
 	if (pr3287_lu != NULL && !pr3287_session_running()) {
 	    if (!strcmp(pr3287_lu, ".")) {

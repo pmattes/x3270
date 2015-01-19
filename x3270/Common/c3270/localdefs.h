@@ -41,7 +41,7 @@
 #endif /*]*/
 
 /* Conditional 80/132 mode switch support. */
-#if defined(BROKEN_NEWTERM) /*[*/
+#if defined(BROKEN_NEWTERM) || defined(_WIN32) /*[*/
 #undef C3270_80_132
 #else /*][*/
 #define C3270_80_132 1

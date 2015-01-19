@@ -1086,128 +1086,132 @@ endwin(void)
 void
 screen_init(void)
 {
-	int want_ov_rows;
-	int want_ov_cols;
-	Boolean oversize = False;
+    int want_ov_rows;
+    int want_ov_cols;
+    Boolean oversize = False;
 
-	if (appres.interactive.menubar)
-		menu_init();
-	appres.mouse = True;
+    if (appres.interactive.menubar) {
+	menu_init();
+    }
 
-	/* Disallow altscreen/defscreen. */
-	if ((appres.altscreen != NULL) || (appres.defscreen != NULL)) {
-		(void) fprintf(stderr, "altscreen/defscreen not supported\n");
-		x3270_exit(1);
-	}
-	/* Initialize the console. */
-	if (initscr() == NULL) {
-		(void) fprintf(stderr, "Can't initialize terminal.\n");
-		x3270_exit(1);
-	}
-	want_ov_rows = ov_rows;
-	want_ov_cols = ov_cols;
-	windows_cp = GetConsoleCP();
+    /* Initialize the console. */
+    if (initscr() == NULL) {
+	(void) fprintf(stderr, "Can't initialize terminal.\n");
+	x3270_exit(1);
+    }
+    want_ov_rows = ov_rows;
+    want_ov_cols = ov_cols;
+    windows_cp = GetConsoleCP();
 
+    /*
+     * Respect the console size we are given.
+     */
+    while (console_rows < maxROWS || console_cols < maxCOLS) {
 	/*
-	 * Respect the console size we are given.
+	 * First, cancel any oversize.  This will get us to the correct
+	 * model number, if there is any.
 	 */
-	while (console_rows < maxROWS || console_cols < maxCOLS) {
-		/*
-		 * First, cancel any oversize.  This will get us to the correct
-		 * model number, if there is any.
-		 */
-		if ((ov_cols && ov_cols > console_cols) ||
-		    (ov_rows && ov_rows > console_rows)) {
-			ov_cols = 0;
-			ov_rows = 0;
-			oversize = True;
-		}
+	if ((ov_cols && ov_cols > console_cols) ||
+	    (ov_rows && ov_rows > console_rows)) {
 
-		/* If we're at the smallest screen now, give up. */
-		if (model_num == 2) {
-			(void) fprintf(stderr, "Emulator won't fit on a %dx%d "
-			    "display.\n", console_rows, console_cols);
-			x3270_exit(1);
-		}
-
-		/* Try a smaller model. */
-		set_rows_cols(model_num - 1, 0, 0);
+	    ov_cols = 0;
+	    ov_rows = 0;
+	    oversize = True;
 	}
 
-	/*
-	 * Now, if they wanted an oversize, but didn't get it, try applying it
-	 * again.
-	 */
-	if (oversize) {
-		if (want_ov_rows > console_rows - 2)
-			want_ov_rows = console_rows - 2;
-		if (want_ov_rows < maxROWS)
-			want_ov_rows = maxROWS;
-		if (want_ov_cols > console_cols)
-			want_ov_cols = console_cols;
-		set_rows_cols(model_num, want_ov_cols, want_ov_rows);
+	/* If we're at the smallest screen now, give up. */
+	if (model_num == 2) {
+	    (void) fprintf(stderr, "Emulator won't fit on a %dx%d display.\n",
+		    console_rows, console_cols);
+	    x3270_exit(1);
 	}
 
-	/*
-	 * Finally, if they want automatic oversize, see if that's possible.
-	 */
-	if (ov_auto && (maxROWS < console_rows - 2 || maxCOLS < console_cols))
-	    	set_rows_cols(model_num, console_cols, console_rows - 2);
+	/* Try a smaller model. */
+	set_rows_cols(model_num - 1, 0, 0);
+    }
 
-	/* Figure out where the status line goes, if it fits. */
-	/* Start out in altscreen mode. */
-	set_status_row(console_rows, maxROWS);
-
-	/* Initialize selections. */
-	select_init(maxROWS, maxCOLS);
-
-	/* Set up callbacks for state changes. */
-	register_schange(ST_CONNECT, screen_connect);
-	register_schange(ST_HALF_CONNECT, status_half_connect);
-	register_schange(ST_CONNECT, status_connect);
-	register_schange(ST_3270_MODE, status_3270_mode);
-	register_schange(ST_PRINTER, status_printer);
-
-	register_schange(ST_HALF_CONNECT, relabel);
-	register_schange(ST_CONNECT, relabel);
-	register_schange(ST_3270_MODE, relabel);
-
-	/* See about all-bold behavior. */
-	if (appres.all_bold_on)
-		ab_mode = TS_ON;
-	else if (!ts_value(appres.all_bold, &ab_mode))
-		(void) fprintf(stderr, "invalid %s value: '%s', "
-		    "assuming 'auto'\n", ResAllBold, appres.all_bold);
-	if (ab_mode == TS_AUTO)
-		ab_mode = appres.m3279? TS_ON: TS_OFF;
-
-	/* If the want monochrome, assume they want green. */
-	if (!appres.m3279) {
-	    	defattr |= FOREGROUND_GREEN;
-		if (ab_mode == TS_ON)
-			defattr |= FOREGROUND_INTENSITY;
+    /*
+     * Now, if they wanted an oversize, but didn't get it, try applying it
+     * again.
+     */
+    if (oversize) {
+	if (want_ov_rows > console_rows - 2) {
+	    want_ov_rows = console_rows - 2;
 	}
+	if (want_ov_rows < maxROWS) {
+	    want_ov_rows = maxROWS;
+	}
+	if (want_ov_cols > console_cols) {
+	    want_ov_cols = console_cols;
+	}
+	set_rows_cols(model_num, want_ov_cols, want_ov_rows);
+    }
 
-	/* Pull in the user's color mappings. */
-	init_user_colors();
-	init_user_attribute_colors();
+    /*
+     * Finally, if they want automatic oversize, see if that's possible.
+     */
+    if (ov_auto && (maxROWS < console_rows - 2 || maxCOLS < console_cols)) {
+	set_rows_cols(model_num, console_cols, console_rows - 2);
+    }
 
-	/* Set up the controller. */
-	ctlr_init(ALL_CHANGE);
+    /* Figure out where the status line goes, if it fits. */
+    /* Start out in altscreen mode. */
+    set_status_row(console_rows, maxROWS);
 
-	/* Set up the scrollbar. */
-	scroll_buf_init();
+    /* Initialize selections. */
+    select_init(maxROWS, maxCOLS);
 
-	/* Set the window label. */
-	if (appres.wc3270.title != NULL)
-		screen_title(appres.wc3270.title);
-	else if (profile_name != NULL)
-	    	screen_title(profile_name);
-	else
-		screen_title("wc3270");
+    /* Set up callbacks for state changes. */
+    register_schange(ST_CONNECT, screen_connect);
+    register_schange(ST_HALF_CONNECT, status_half_connect);
+    register_schange(ST_CONNECT, status_connect);
+    register_schange(ST_3270_MODE, status_3270_mode);
+    register_schange(ST_PRINTER, status_printer);
 
-	/* Finish screen initialization. */
-	set_console_cooked();
+    register_schange(ST_HALF_CONNECT, relabel);
+    register_schange(ST_CONNECT, relabel);
+    register_schange(ST_3270_MODE, relabel);
+
+    /* See about all-bold behavior. */
+    if (appres.c3270.all_bold_on) {
+	ab_mode = TS_ON;
+    } else if (!ts_value(appres.c3270.all_bold, &ab_mode)) {
+	(void) fprintf(stderr, "invalid %s value: '%s', assuming 'auto'\n",
+		ResAllBold, appres.c3270.all_bold);
+    }
+    if (ab_mode == TS_AUTO) {
+	ab_mode = appres.m3279? TS_ON: TS_OFF;
+    }
+
+    /* If the want monochrome, assume they want green. */
+    if (!appres.m3279) {
+	defattr |= FOREGROUND_GREEN;
+	if (ab_mode == TS_ON) {
+	    defattr |= FOREGROUND_INTENSITY;
+	}
+    }
+
+    /* Pull in the user's color mappings. */
+    init_user_colors();
+    init_user_attribute_colors();
+
+    /* Set up the controller. */
+    ctlr_init(ALL_CHANGE);
+
+    /* Set up the scrollbar. */
+    scroll_buf_init();
+
+    /* Set the window label. */
+    if (appres.c3270.title != NULL) {
+	screen_title(appres.c3270.title);
+    } else if (profile_name != NULL) {
+	screen_title(profile_name);
+    } else {
+	screen_title("wc3270");
+    }
+
+    /* Finish screen initialization. */
+    set_console_cooked();
 }
 
 static void
@@ -1236,7 +1240,7 @@ set_status_row(int screen_rows, int emulator_rows)
 	}
 
 	/* Then check for menubar room.  Use 2 rows, 1 in a pinch. */
-	if (appres.interactive.menubar && appres.mouse) {
+	if (appres.interactive.menubar) {
 		if (screen_rows >= emulator_rows + (status_row != 0) + 2)
 			screen_yoffset = 2;
 		else if (screen_rows >= emulator_rows + (status_row != 0) + 1)
@@ -1577,256 +1581,256 @@ blinkmap(Boolean blinking, Boolean underlined, int c)
 void
 screen_disp(Boolean erasing _is_unused)
 {
-	int row, col;
-	int a;
-	Boolean a_underlined = False;
-	Boolean a_blinking = False;
-	int c;
-	unsigned char fa;
-	enum dbcs_state d;
-	int fa_addr;
+    int row, col;
+    int a;
+    Boolean a_underlined = False;
+    Boolean a_blinking = False;
+    int c;
+    unsigned char fa;
+    enum dbcs_state d;
+    int fa_addr;
 
-	/* This may be called when it isn't time. */
-	if (escaped)
-		return;
+    /* This may be called when it isn't time. */
+    if (escaped) {
+	return;
+    }
 
-	if (!screen_changed) {
+    if (!screen_changed) {
 
-		/* Draw the status line. */
-		if (status_row) {
-			draw_oia();
-		}
-
-		/* Move the cursor. */
-		if (menu_is_up) {
-		    	menu_cursor(&row, &col);
-			move(row, col);
-		} else if (flipped)
-			move((cursor_addr / cCOLS) + screen_yoffset,
-				cCOLS-1 - (cursor_addr % cCOLS));
-		else
-			move((cursor_addr / cCOLS) + screen_yoffset,
-				cursor_addr % cCOLS);
-
-		if (status_row)
-		    	refresh();
-		else {
-			COORD coord;
-
-			coord.X = cur_col;
-			coord.Y = cur_row;
-			if (onscreen[ix(cur_row, cur_col)].Attributes &
-				COMMON_LVB_TRAILING_BYTE) {
-			    coord.X--;
-			}
-			if (SetConsoleCursorPosition(sbuf, coord) == 0) {
-				fprintf(stderr,
-					"\nscreen_disp: "
-					"SetConsoleCursorPosition(x=%d,y=%d) "
-					"failed: %s\n",
-					coord.X, coord.Y,
-					win32_strerror(GetLastError()));
-				x3270_exit(1);
-			}
-		}
-
-	    	return;
+	/* Draw the status line. */
+	if (status_row) {
+	    draw_oia();
 	}
 
-	/* If the menubar is separate, draw it first. */
-	if (screen_yoffset) {
-	    	ucs4_t u;
-		Boolean highlight;
-		unsigned char acs;
-		int norm0, high0;
-		int norm1, high1;
+	/* Move the cursor. */
+	if (menu_is_up) {
+	    menu_cursor(&row, &col);
+	    move(row, col);
+	} else if (flipped) {
+	    move((cursor_addr / cCOLS) + screen_yoffset,
+		    cCOLS-1 - (cursor_addr % cCOLS));
+	} else {
+	    move((cursor_addr / cCOLS) + screen_yoffset,
+		    cursor_addr % cCOLS);
+	}
 
-		if (menu_is_up) {
-			/*
-			 * Menu is up. Both rows are white on black for normal,
-			 * black on white for highlighted.
-			 */
-			if (menu_is_up & KEYPAD_IS_UP) {
-				high0 = high1 =
-				    cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
-				    cmap_bg[HOST_COLOR_NEUTRAL_WHITE];
-				norm0 = norm1 =
-				    cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
-				    cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
-			} else {
-				norm0 =
-				    cmap_bg[HOST_COLOR_GREY] |
-				    cmap_fg[HOST_COLOR_NEUTRAL_BLACK];
-				high0 =
-				    cmap_bg[HOST_COLOR_NEUTRAL_WHITE] | 
-				    cmap_fg[HOST_COLOR_NEUTRAL_BLACK];
-				norm1 = 
-				    cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
-				    cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
-				high1 =
-				    cmap_fg[HOST_COLOR_NEUTRAL_BLACK] | 
-				    cmap_bg[HOST_COLOR_NEUTRAL_WHITE];
-			}
+	if (status_row) {
+	    refresh();
+	} else {
+	    COORD coord;
 
+	    coord.X = cur_col;
+	    coord.Y = cur_row;
+	    if (onscreen[ix(cur_row, cur_col)].Attributes &
+		    COMMON_LVB_TRAILING_BYTE) {
+		coord.X--;
+	    }
+	    if (SetConsoleCursorPosition(sbuf, coord) == 0) {
+		fprintf(stderr, "\nscreen_disp: "
+			"SetConsoleCursorPosition(x=%d,y=%d) failed: %s\n",
+			coord.X, coord.Y,
+			win32_strerror(GetLastError()));
+		x3270_exit(1);
+	    }
+	}
+
+	return;
+    }
+
+    /* If the menubar is separate, draw it first. */
+    if (screen_yoffset) {
+	ucs4_t u;
+	Boolean highlight;
+	unsigned char acs;
+	int norm0, high0;
+	int norm1, high1;
+
+	if (menu_is_up) {
+	    /*
+	     * Menu is up. Both rows are white on black for normal,
+	     * black on white for highlighted.
+	     */
+	    if (menu_is_up & KEYPAD_IS_UP) {
+		high0 = high1 = cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
+				cmap_bg[HOST_COLOR_NEUTRAL_WHITE];
+		norm0 = norm1 = cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
+				cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
+	    } else {
+		norm0 = cmap_bg[HOST_COLOR_GREY] |
+			cmap_fg[HOST_COLOR_NEUTRAL_BLACK];
+		high0 = cmap_bg[HOST_COLOR_NEUTRAL_WHITE] | 
+			cmap_fg[HOST_COLOR_NEUTRAL_BLACK];
+		norm1 = cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
+			cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
+		high1 = cmap_fg[HOST_COLOR_NEUTRAL_BLACK] | 
+			cmap_bg[HOST_COLOR_NEUTRAL_WHITE];
+	    }
+
+	} else {
+	    /*
+	     * Menu is not up.
+	     * Row 0 is a gray-background stripe.
+	     * Row 1 has a black background.
+	     */
+	    norm0 = high0 = cmap_bg[HOST_COLOR_GREY] |
+			    cmap_fg[HOST_COLOR_NEUTRAL_BLACK];
+	    norm1 = high1 = cmap_bg[HOST_COLOR_NEUTRAL_BLACK] |
+			    cmap_fg[HOST_COLOR_GREY];
+	}
+
+	for (row = 0; row < screen_yoffset; row++) {
+	    int norm, high;
+
+	    move(row, 0);
+	    if (row) {
+		norm = norm1;
+		high = high1;
+	    } else {
+		norm = norm0;
+		high = high0;
+	    }
+	    for (col = 0; col < cCOLS; col++) {
+		if (menu_char(row, col, True, &u, &highlight, &acs)) {
+		    attrset(highlight? high: norm);
+		    addch(u);
 		} else {
-			/*
-			 * Menu is not up.
-			 * Row 0 is a gray-background stripe.
-			 * Row 1 has a black background.
-			 */
-			norm0 = high0 = cmap_bg[HOST_COLOR_GREY] |
-			                cmap_fg[HOST_COLOR_NEUTRAL_BLACK];
-			norm1 = high1 = cmap_bg[HOST_COLOR_NEUTRAL_BLACK] |
-					cmap_fg[HOST_COLOR_GREY];
+		    attrset(norm);
+		    addch(' ');
 		}
-
-		for (row = 0; row < screen_yoffset; row++) {
-			int norm, high;
-
-		    	move(row, 0);
-			if (row) {
-				norm = norm1;
-				high = high1;
-			} else {
-				norm = norm0;
-				high = high0;
-			}
-			for (col = 0; col < cCOLS; col++) {
-				if (menu_char(row, col, True, &u, &highlight,
-					    &acs)) {
-				    	attrset(highlight? high: norm);
-					addch(u);
-				} else {
-					attrset(norm);
-					addch(' ');
-				}
-			}
-		}
+	    }
 	}
+    }
 
-	fa = get_field_attribute(0);
-	fa_addr = find_field_attribute(0); /* may be -1, that's okay */
-	a = calc_attrs(0, fa_addr, fa, &a_underlined, &a_blinking);
-	for (row = 0; row < ROWS; row++) {
-		int baddr;
+    fa = get_field_attribute(0);
+    fa_addr = find_field_attribute(0); /* may be -1, that's okay */
+    a = calc_attrs(0, fa_addr, fa, &a_underlined, &a_blinking);
+    for (row = 0; row < ROWS; row++) {
+	int baddr;
 
-		if (!flipped)
-			move(row + screen_yoffset, 0);
-		for (col = 0; col < cCOLS; col++) {
-		    	Boolean underlined = False;
-			Boolean blinking = False;
-			Boolean is_menu = False;
-			ucs4_t u;
-			Boolean highlight;
-			unsigned char acs;
-
-			if (flipped)
-				move(row + screen_yoffset, cCOLS-1 - col);
-
-			is_menu = menu_char(row + screen_yoffset,
-				flipped? (cCOLS-1 - col): col,
-				False,
-				&u, &highlight, &acs);
-			if (is_menu) {
-			    	if (highlight) {
-					attrset(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
-						cmap_bg[HOST_COLOR_WHITE]);
-				} else {
-					attrset(cmap_fg[HOST_COLOR_WHITE] |
-						cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
-				}
-				addch(u);
-			}
-
-			baddr = row*cCOLS+col;
-			if (ea_buf[baddr].fa) {
-			    	/* Field attribute. */
-			    	fa_addr = baddr;
-				fa = ea_buf[baddr].fa;
-				a = calc_attrs(baddr, baddr, fa, &a_underlined,
-					&a_blinking);
-				if (!is_menu) {
-					attrset(apply_select(defattr, baddr));
-					addch(' ');
-				}
-			} else if (FA_IS_ZERO(fa)) {
-			    	/* Blank. */
-			    	if (!is_menu) {
-					attrset(apply_select(a, baddr));
-					addch(' ');
-				}
-			} else {
-			    	if (is_menu)
-				    	continue;
-
-			    	/* Normal text. */
-				if (!(ea_buf[baddr].gr ||
-				      ea_buf[baddr].fg ||
-				      ea_buf[baddr].bg)) {
-					attrset(apply_select(a, baddr));
-					underlined = a_underlined;
-					blinking = a_blinking;
-				} else {
-					int b;
-					Boolean b_underlined;
-					Boolean b_blinking;
-
-					/*
-					 * Override some of the field
-					 * attributes.
-					 */
-					b = calc_attrs(baddr, fa_addr, fa,
-						&b_underlined, &b_blinking);
-					attrset(apply_select(b, baddr));
-					underlined = b_underlined;
-					blinking = b_blinking;
-				}
-				d = ctlr_dbcs_state(baddr);
-				if (IS_LEFT(d)) {
-					int xaddr = baddr;
-
-					INC_BA(xaddr);
-					c = ebcdic_to_unicode(
-						(ea_buf[baddr].cc << 8) |
-						ea_buf[xaddr].cc,
-						CS_BASE, EUO_NONE);
-					if (c == 0)
-					    	c = ' ';
-					cur_attr |= COMMON_LVB_LEAD_BYTE;
-					addch(c);
-					cur_attr &= ~COMMON_LVB_LEAD_BYTE;
-					cur_attr |= COMMON_LVB_TRAILING_BYTE;
-					addch(' ');
-					cur_attr &= ~COMMON_LVB_TRAILING_BYTE;
-				} else if (!IS_RIGHT(d)) {
-					c = ebcdic_to_unicode(ea_buf[baddr].cc,
-						ea_buf[baddr].cs,
-						appres.ascii_box_draw?
-						    EUO_ASCII_BOX: 0);
-					if (c == 0)
-					    	c = ' ';
-					if (underlined && c == ' ')
-						c = '_';
-					if (toggled(MONOCASE) && iswlower(c))
-						c = towupper(c);
-					addch(blinkmap(blinking, underlined,
-						    c));
-				}
-			}
-		}
+	if (!flipped) {
+	    move(row + screen_yoffset, 0);
 	}
-	if (status_row)
-		draw_oia();
-	attrset(defattr);
-	if (flipped)
-		move((cursor_addr / cCOLS) + screen_yoffset,
-			cCOLS-1 - (cursor_addr % cCOLS));
-	else
-		move((cursor_addr / cCOLS) + screen_yoffset,
-			cursor_addr % cCOLS);
-	refresh();
+	for (col = 0; col < cCOLS; col++) {
+	    Boolean underlined = False;
+	    Boolean blinking = False;
+	    Boolean is_menu = False;
+	    ucs4_t u;
+	    Boolean highlight;
+	    unsigned char acs;
 
-	screen_changed = FALSE;
+	    if (flipped) {
+		move(row + screen_yoffset, cCOLS-1 - col);
+	    }
+
+	    is_menu = menu_char(row + screen_yoffset,
+		    flipped? (cCOLS-1 - col): col,
+		    False,
+		    &u, &highlight, &acs);
+	    if (is_menu) {
+		if (highlight) {
+		    attrset(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
+			    cmap_bg[HOST_COLOR_WHITE]);
+		} else {
+		    attrset(cmap_fg[HOST_COLOR_WHITE] |
+			    cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
+		}
+		addch(u);
+	    }
+
+	    baddr = row*cCOLS+col;
+	    if (ea_buf[baddr].fa) {
+		/* Field attribute. */
+		fa_addr = baddr;
+		fa = ea_buf[baddr].fa;
+		a = calc_attrs(baddr, baddr, fa, &a_underlined, &a_blinking);
+		if (!is_menu) {
+		    attrset(apply_select(defattr, baddr));
+		    addch(' ');
+		}
+	    } else if (FA_IS_ZERO(fa)) {
+		/* Blank. */
+		if (!is_menu) {
+		    attrset(apply_select(a, baddr));
+		    addch(' ');
+		}
+	    } else {
+		if (is_menu) {
+		    continue;
+		}
+
+		/* Normal text. */
+		if (!(ea_buf[baddr].gr ||
+		      ea_buf[baddr].fg ||
+		      ea_buf[baddr].bg)) {
+		    attrset(apply_select(a, baddr));
+		    underlined = a_underlined;
+		    blinking = a_blinking;
+		} else {
+		    int b;
+		    Boolean b_underlined;
+		    Boolean b_blinking;
+
+		    /*
+		     * Override some of the field
+		     * attributes.
+		     */
+		    b = calc_attrs(baddr, fa_addr, fa, &b_underlined,
+			    &b_blinking);
+		    attrset(apply_select(b, baddr));
+		    underlined = b_underlined;
+		    blinking = b_blinking;
+		}
+		d = ctlr_dbcs_state(baddr);
+		if (IS_LEFT(d)) {
+		    int xaddr = baddr;
+
+		    INC_BA(xaddr);
+		    c = ebcdic_to_unicode(
+			    (ea_buf[baddr].cc << 8) |
+			    ea_buf[xaddr].cc,
+			    CS_BASE, EUO_NONE);
+		    if (c == 0) {
+			c = ' ';
+		    }
+		    cur_attr |= COMMON_LVB_LEAD_BYTE;
+		    addch(c);
+		    cur_attr &= ~COMMON_LVB_LEAD_BYTE;
+		    cur_attr |= COMMON_LVB_TRAILING_BYTE;
+		    addch(' ');
+		    cur_attr &= ~COMMON_LVB_TRAILING_BYTE;
+		} else if (!IS_RIGHT(d)) {
+		    c = ebcdic_to_unicode(ea_buf[baddr].cc,
+			    ea_buf[baddr].cs,
+			    appres.c3270.ascii_box_draw?
+				EUO_ASCII_BOX: 0);
+		    if (c == 0) {
+			c = ' ';
+		    }
+		    if (underlined && c == ' ') {
+			c = '_';
+		    }
+		    if (toggled(MONOCASE) && iswlower(c)) {
+			c = towupper(c);
+		    }
+		    addch(blinkmap(blinking, underlined, c));
+		}
+	    }
+	}
+    }
+    if (status_row) {
+	draw_oia();
+    }
+    attrset(defattr);
+    if (flipped) {
+	move((cursor_addr / cCOLS) + screen_yoffset,
+		cCOLS-1 - (cursor_addr % cCOLS));
+    } else {
+	move((cursor_addr / cCOLS) + screen_yoffset,
+		cursor_addr % cCOLS);
+    }
+    refresh();
+
+    screen_changed = FALSE;
 }
 
 static const char *
@@ -2723,7 +2727,7 @@ ring_bell(void)
     } bell_mode = 0;
 
     if (!(bell_mode & BELL_KNOWN)) {
-	if (appres.wc3270.bell_mode != NULL) {
+	if (appres.c3270.bell_mode != NULL) {
 	    /*
 	     * New config: wc3270.bellMode
 	     * 		none		do nothing
@@ -2733,14 +2737,14 @@ ring_bell(void)
 	     * 		flashBeep	beep and flash
 	     * 		anything else	do nothing
 	     */
-	    if (!strcasecmp(appres.wc3270.bell_mode, "none")) {
+	    if (!strcasecmp(appres.c3270.bell_mode, "none")) {
 		bell_mode = BELL_NOTHING;
-	    } else if (!strcasecmp(appres.wc3270.bell_mode, "beep")) {
+	    } else if (!strcasecmp(appres.c3270.bell_mode, "beep")) {
 		bell_mode = BELL_BEEP;
-	    } else if (!strcasecmp(appres.wc3270.bell_mode, "flash")) {
+	    } else if (!strcasecmp(appres.c3270.bell_mode, "flash")) {
 		bell_mode = BELL_FLASH;
-	    } else if (!strcasecmp(appres.wc3270.bell_mode, "beepFlash") ||
-		       !strcasecmp(appres.wc3270.bell_mode, "flashBeep")) {
+	    } else if (!strcasecmp(appres.c3270.bell_mode, "beepFlash") ||
+		       !strcasecmp(appres.c3270.bell_mode, "flashBeep")) {
 		bell_mode = BELL_BEEP | BELL_FLASH;
 	    } else {
 		/*
@@ -2880,7 +2884,7 @@ Title_action(ia_t ia, unsigned argc, const char **argv)
 static void
 relabel(Boolean ignored _is_unused)
 {
-    if (appres.wc3270.title != NULL) {
+    if (appres.c3270.title != NULL) {
 	return;
     }
 

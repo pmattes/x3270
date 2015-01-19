@@ -272,9 +272,9 @@ static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
 			trsp_flag[(n)] : "??")
 # define e_rsp(fn, n) (((fn) == TN3270E_DT_RESPONSE) ? e_trsp(n) : e_hrsp(n))
 
-#if defined(C3270) && defined(C3270_80_132) /*[*/
-# define XMIT_ROWS	((appres.altscreen != NULL)? MODEL_2_ROWS: maxROWS)
-# define XMIT_COLS	((appres.altscreen != NULL)? MODEL_2_COLS: maxCOLS)
+#if defined(C3270_80_132) /*[*/
+# define XMIT_ROWS	((appres.c3270.altscreen)? MODEL_2_ROWS: maxROWS)
+# define XMIT_COLS	((appres.c3270.altscreen)? MODEL_2_COLS: maxCOLS)
 #else /*][*/
 # define XMIT_ROWS	maxROWS
 # define XMIT_COLS	maxCOLS

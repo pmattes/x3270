@@ -510,7 +510,7 @@ screen_init(void)
 	nss.exposed_yet = False;
 
 	/* Initialize "gray" bitmap. */
-	if (appres.mono)
+	if (appres.interactive.mono)
 		gray = XCreatePixmapFromBitmapData(display,
 		    root_window, (char *)gray_bits,
 		    gray_width, gray_height,
@@ -750,7 +750,7 @@ screen_reinit(unsigned cmask)
 		save_00translations(container, &container_t00);
 		set_translations(container, NULL,
 		    &container_t0);
-		if (appres.mono)
+		if (appres.interactive.mono)
 			XtVaSetValues(container, XtNbackgroundPixmap, gray,
 			    NULL);
 		else
@@ -876,38 +876,38 @@ set_toplevel_sizes(void)
 static void
 inflate_screen(void)
 {
-	/* Create the screen window */
-	if (nss.widget == NULL) {
-		nss.widget = XtVaCreateManagedWidget(
-		    "screen", widgetClass, container,
-		    XtNwidth, nss.screen_width,
-		    XtNheight, nss.screen_height,
-		    XtNx, appres.keypad_on ? (keypad_xwidth / 2) : 0,
-		    XtNy, menubar_height,
-		    XtNbackground,
-			appres.mono ? xappres.background : colorbg_pixel,
-		    NULL);
-		save_00translations(nss.widget, &screen_t00);
-		set_translations(nss.widget, NULL,
-		    &screen_t0);
-	} else {
-		XtVaSetValues(nss.widget,
-		    XtNwidth, nss.screen_width,
-		    XtNheight, nss.screen_height,
-		    XtNx, appres.keypad_on ? (keypad_xwidth / 2) : 0,
-		    XtNy, menubar_height,
-		    XtNbackground,
-			appres.mono ? xappres.background : colorbg_pixel,
-		    NULL);
-	}
+    /* Create the screen window */
+    if (nss.widget == NULL) {
+	nss.widget = XtVaCreateManagedWidget(
+	    "screen", widgetClass, container,
+	    XtNwidth, nss.screen_width,
+	    XtNheight, nss.screen_height,
+	    XtNx, appres.keypad_on ? (keypad_xwidth / 2) : 0,
+	    XtNy, menubar_height,
+	    XtNbackground,
+		appres.interactive.mono? xappres.background: colorbg_pixel,
+	    NULL);
+	save_00translations(nss.widget, &screen_t00);
+	set_translations(nss.widget, NULL,
+	    &screen_t0);
+    } else {
+	XtVaSetValues(nss.widget,
+	    XtNwidth, nss.screen_width,
+	    XtNheight, nss.screen_height,
+	    XtNx, appres.keypad_on ? (keypad_xwidth / 2) : 0,
+	    XtNy, menubar_height,
+	    XtNbackground,
+		appres.interactive.mono? xappres.background: colorbg_pixel,
+	    NULL);
+    }
 
-	/* Set the container and toplevel dimensions */
-	XtVaSetValues(container,
+    /* Set the container and toplevel dimensions */
+    XtVaSetValues(container,
 	    XtNwidth, container_width,
 	    XtNheight, container_height,
 	    NULL);
 
-	set_toplevel_sizes();
+    set_toplevel_sizes();
 }
 
 /* Scrollbar support. */
@@ -949,8 +949,8 @@ scrollbar_init(Boolean is_reset)
 			    XtNy, menubar_height,
 			    XtNwidth, scrollbar_width-1,
 			    XtNheight, nss.screen_height,
-			    XtNbackground, appres.mono ?
-				xappres.background : keypadbg_pixel,
+			    XtNbackground, appres.interactive.mono?
+				xappres.background: keypadbg_pixel,
 			    NULL);
 			XtAddCallback(scrollbar, XtNscrollProc,
 			    screen_scroll_proc, NULL);
@@ -963,8 +963,8 @@ scrollbar_init(Boolean is_reset)
 			    XtNy, menubar_height,
 			    XtNwidth, scrollbar_width-1,
 			    XtNheight, nss.screen_height,
-			    XtNbackground, appres.mono ?
-				xappres.background : keypadbg_pixel,
+			    XtNbackground, appres.interactive.mono?
+				xappres.background: keypadbg_pixel,
 			    NULL);
 			XtMapWidget(scrollbar);
 		}
@@ -2063,7 +2063,7 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 	/* Select the GCs. */
 	if (sel && !block_cursor) {
 		/* Selected, but not a block cursor. */
-		if (!appres.mono) {
+		if (!appres.interactive.mono) {
 			/* Color: Use the special select GCs. */
 			dgc = get_selgc(ss, color);
 			cleargc = ss->clrselgc;
@@ -2072,7 +2072,7 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 			dgc = get_gc(ss, INVERT_COLOR(color));
 			cleargc = get_gc(ss, color);
 		}
-	} else if (block_cursor && !(appres.mono && sel)) {
+	} else if (block_cursor && !(appres.interactive.mono && sel)) {
 		/* Block cursor, but neither mono nor selected. */
 		if (appres.use_cursor_color) {
 			/* Use the specific-color inverted GC. */
@@ -2175,7 +2175,7 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 		XDrawText16(display, ss->window, dgc, x, y, text, n_texts);
 		if (ss->overstrike &&
 		    ((attrs->bits.gr & GR_INTENSIFY) ||
-		     ((appres.mono || (!appres.m3279 && appres.highlight_bold)) &&
+		     ((appres.interactive.mono || (!appres.m3279 && appres.highlight_bold)) &&
 		      ((color & BASE_MASK) == FA_INT_HIGH_SEL)))) {
 			XDrawText16(display, ss->window, dgc, x+1, y,
 			    text, n_texts);
@@ -2376,16 +2376,18 @@ draw_fields(union sp *buffer, int first, int last)
 			} else {
 				if (sbp->fg)
 					e_color = sbp->fg & COLOR_MASK;
-				else if (appres.mono && (gr & GR_INTENSIFY))
+				else if (appres.interactive.mono &&
+					(gr & GR_INTENSIFY)) {
 					e_color = fa_color(FA_INT_HIGH_SEL);
-				else
+				} else {
 					e_color = field_color;
+				}
 				if (gr & GR_REVERSE) {
 					e_color = INVERT_COLOR(e_color);
 					reverse = True;
 				}
 			}
-			if (!appres.mono)
+			if (!appres.interactive.mono)
 				b.bits.fg = e_color;
 
 			/* Find the right character and character set. */
@@ -2670,7 +2672,7 @@ char_color(int baddr)
 	 */
 	if (FA_IS_ZERO(fa)) {
 		color = fa_color(fa);
-		if (appres.mono && SELECTED(baddr)) {
+		if (appres.interactive.mono && SELECTED(baddr)) {
 			color = INVERT_COLOR(color);
 		}
 		return color;
@@ -2702,7 +2704,7 @@ char_color(int baddr)
 	/*
 	 * In monochrome, apply selection status as well.
 	 */
-	if (appres.mono && SELECTED(baddr))
+	if (appres.interactive.mono && SELECTED(baddr))
 		color = INVERT_COLOR(color);
 
 	return color;
@@ -2855,9 +2857,9 @@ hollow_cursor(int baddr)
 	    cursor_gc(baddr),
 	    ssCOL_TO_X(BA_TO_COL(fl_baddr(baddr))),
 	    ssROW_TO_Y(BA_TO_ROW(baddr)) - ss->ascent +
-		(appres.mono ? 1 : 0),
+		(appres.interactive.mono ? 1 : 0),
 	    cwidth,
-	    ss->char_height - (appres.mono ? 2 : 1));
+	    ss->char_height - (appres.interactive.mono ? 2 : 1));
 }
 
 /*
@@ -2948,7 +2950,7 @@ put_cursor(int baddr, Boolean on)
 	/*
 	 * If monochrome, invert a small square over the characters.
 	 */
-	if (appres.mono) {
+	if (appres.interactive.mono) {
 		small_inv_cursor(baddr);
 		return;
 	}
@@ -3024,7 +3026,7 @@ static void
 allocate_pixels(void)
 {
 
-	if (appres.mono)
+	if (appres.interactive.mono)
 		return;
 
 	/* Allocate constant elements. */
@@ -3101,7 +3103,7 @@ make_gcs(struct sstate *s)
 			}
 		}
 	} else {
-		if (!appres.mono) {
+		if (!appres.interactive.mono) {
 			make_gc_set(s, FA_INT_NORM_NSEL, normal_pixel,
 			    colorbg_pixel);
 			make_gc_set(s, FA_INT_NORM_SEL,  select_pixel,
@@ -3125,7 +3127,7 @@ make_gcs(struct sstate *s)
 	s->clrselgc = XtGetGC(toplevel, GCForeground, &xgcv);
 
 	/* Create monochrome block cursor GC. */
-	if (appres.mono && s->mcgc == (GC)None) {
+	if (appres.interactive.mono && s->mcgc == (GC)None) {
 		if (screen_depth > 1)
 			xgcv.function = GXinvert;
 		else
@@ -3425,7 +3427,7 @@ make_gc_set(struct sstate *s, int i, Pixel fg, Pixel bg)
 	xgcv.background = fg;
 	s->gc[NGCS + i] = XtGetGC(toplevel, GCForeground|GCBackground|GCFont,
 	    &xgcv);
-	if (!appres.mono) {
+	if (!appres.interactive.mono) {
 		if (s->selgc[i] != (GC)None)
 			XtReleaseGC(toplevel, s->selgc[i]);
 		xgcv.foreground = fg;
@@ -4438,8 +4440,9 @@ icon_init(void)
 		    NULL);
 		if (appres.active_icon) {
 			XtVaSetValues(icon_shell,
-			    XtNbackground, appres.mono ? xappres.background
-						       : colorbg_pixel,
+			    XtNbackground, appres.interactive.mono?
+						xappres.background:
+						colorbg_pixel,
 			    NULL);
 		}
 	} else {

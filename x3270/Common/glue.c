@@ -346,7 +346,7 @@ model_init(void)
     }
 #endif /*]*/
 #if defined(C3270) && !defined(_WIN32) /*[*/
-    if (appres.mono) {
+    if (appres.interactive.mono) {
 	appres.m3279 = False;
     }
 #endif /*]*/
@@ -433,7 +433,7 @@ set_appres_defaults(void)
 {
     /* Set the defaults. */
 #if defined(C3270) && !defined(_WIN32) /*[*/
-    appres.mono = False;
+    appres.interactive.mono = False;
 #endif /*]*/
     appres.extended = True;
     appres.m3279 = True;
@@ -454,10 +454,10 @@ set_appres_defaults(void)
     appres.typeahead = True;
     appres.debug_tracing = True;
 #if defined(C3270) /*[*/
-    appres.compose_map = "latin1";
+    appres.interactive.compose_map = "latin1";
     appres.interactive.do_confirms = True;
     appres.interactive.menubar = True;
-    appres.reconnect = False;
+    appres.interactive.reconnect = False;
 #endif /*]*/
 
     appres.model = "4";
@@ -476,19 +476,21 @@ set_appres_defaults(void)
 #endif /*]*/
     appres.oversize = NULL;
 #if defined(C3270) /*[*/
-    appres.meta_escape = "auto";
-    appres.curses_keypad = True;
-    appres.cbreak_mode = False;
+# if !defined(_WIN32) /*[*/
+    appres.c3270.meta_escape = "auto";
+    appres.c3270.curses_keypad = True;
+    appres.c3270.cbreak_mode = False;
+# endif /*]*/
 # if !defined(_WIN32) && !defined(CURSES_WIDE) /*[*/
-    appres.ascii_box_draw = True;
+    appres.c3270.ascii_box_draw = True;
 # else /*][*/
-    appres.ascii_box_draw = False;
+    appres.c3270.ascii_box_draw = False;
 # endif /*]*/
 # if !defined(_WIN32) /*[*/
-    appres.mouse = True;
+    appres.c3270.mouse = True;
 # endif /*]*/
 #if defined(CURSES_WIDE) /*[*/
-    appres.acs = True;
+    appres.c3270.acs = True;
 #endif /*]*/
 #endif /*]*/
     appres.bind_limit = True;
@@ -528,7 +530,7 @@ set_appres_defaults(void)
 #endif /*]*/
 
 #if defined(C3270) /*[*/
-    appres.save_lines = 4096;
+    appres.interactive.save_lines = 4096;
 #endif /*]*/
 }
 
@@ -574,17 +576,17 @@ static struct {
     "any|DNS:<name>|IP:<addr>","Host name to accept from server certificate" },
 #endif /*]*/
 #if defined(C3270) /*[*/
-{ OptAllBold,  OPT_BOOLEAN, True,  ResAllBold,   offset(all_bold_on),
+{ OptAllBold,  OPT_BOOLEAN, True,  ResAllBold,   offset(c3270.all_bold_on),
     NULL, "Display all text in bold" },
 #endif /*]*/
-#if defined(C3270) && !defined(_WIN32) /*[*/
-{ OptAltScreen,OPT_STRING,  False, ResAltScreen, offset(altscreen),
+#if defined(C3270_80_132) /*[*/
+{ OptAltScreen,OPT_STRING,  False, ResAltScreen, offset(c3270.altscreen),
     "<string>",
     "Specify string to switch terminal from 80-column mode to 132-column mode"
 },
 #endif /*]*/
 #if defined(WC3270) /*[*/
-{ OptAutoShortcut,OPT_BOOLEAN, True, ResAutoShortcut,offset(auto_shortcut),
+{ OptAutoShortcut,OPT_BOOLEAN, True, ResAutoShortcut,offset(c3270.auto_shortcut),
     NULL, "Run in auto-shortcut mode" },
 #endif /*]*/
 { OptAplMode,  OPT_BOOLEAN, True,  ResAplMode,   offset(apl_mode),
@@ -596,7 +598,7 @@ static struct {
     "<filename>", "Specify OpenSSL CA certificate file" },
 #endif /*]*/
 #if defined(C3270) && !defined(_WIN32) /*[*/
-{ OptCbreak,   OPT_BOOLEAN, True,  ResCbreak,    offset(cbreak_mode),
+{ OptCbreak,   OPT_BOOLEAN, True,  ResCbreak,    offset(c3270.cbreak_mode),
     NULL, "Force terminal CBREAK mode" },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
@@ -613,15 +615,17 @@ static struct {
     "<toggle>", "Turn on <toggle>" },
 #if defined(C3270) && !defined(_WIN32) /*[*/
 # if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
-{ OptDefaultFgBg,OPT_BOOLEAN,True, ResDefaultFgBg,offset(default_fgbg),
+{ OptDefaultFgBg,OPT_BOOLEAN,True, ResDefaultFgBg,offset(c3270.default_fgbg),
     NULL,
     "Use terminal's default foreground and background colors"
 },
 # endif /*]*/
-{ OptDefScreen,OPT_STRING,  False, ResDefScreen, offset(defscreen),
+# if defined(C3270_80_132) /*[*/
+{ OptDefScreen,OPT_STRING,  False, ResDefScreen, offset(c3270.defscreen),
     "<string>",
     "Specify string to switch terminal from 80-column mode to 132-column mode"
 },
+# endif /*]*/
 #endif /*]*/
 { OptDevName,  OPT_STRING,  False, ResDevName,   offset(devname),
     "<name>", "Specify device name (workstation ID) for RFC 4777" },
@@ -643,7 +647,7 @@ static struct {
     "file:<filename>|string:<text>","Specify OpenSSL private key password" },
 #endif /*]*/
 #if defined(C3270) /*[*/
-{ OptKeymap,   OPT_STRING,  False, ResKeymap,    offset(key_map),
+{ OptKeymap,   OPT_STRING,  False, ResKeymap,    offset(interactive.key_map),
     "<name>[,<name>...]", "Keyboard map name(s)" },
 #endif /*]*/
 #if defined(_WIN32) /*[*/
@@ -658,11 +662,11 @@ static struct {
     "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
 #if defined(C3270) /*[*/
 # if !defined(_WIN32) /*[*/
-{ OptMono,     OPT_BOOLEAN, True,  ResMono,      offset(mono),
+{ OptMono,     OPT_BOOLEAN, True,  ResMono,      offset(interactive.mono),
     NULL, "Do not use terminal color capabilities" },
 # endif /*]*/
 #if defined(WC3270) /*[*/
-{ OptNoAutoShortcut,OPT_BOOLEAN,False,ResAutoShortcut,offset(auto_shortcut),
+{ OptNoAutoShortcut,OPT_BOOLEAN,False,ResAutoShortcut,offset(c3270.auto_shortcut),
     NULL, "Do not run in auto-shortcut mode" },
 #endif /*]*/
 { OptNoPrompt, OPT_BOOLEAN, True,  ResNoPrompt,  offset(secure),
@@ -673,19 +677,19 @@ static struct {
 { OptPort,     OPT_STRING,  False, ResPort,      offset(port),
     "<port>", "Specify default TELNET port" },
 #if defined(C3270) /*[*/
-{ OptPrinterLu,OPT_STRING,  False, ResPrinterLu, offset(printer_lu),
+{ OptPrinterLu,OPT_STRING,  False, ResPrinterLu, offset(interactive.printer_lu),
     "<luname>", "Automatically start a "PR3287_NAME" printer session to <luname>" },
-{ OptReconnect,OPT_BOOLEAN, True,  ResReconnect, offset(reconnect),
+{ OptReconnect,OPT_BOOLEAN, True,  ResReconnect, offset(interactive.reconnect),
     NULL, "Reconnect to host as soon as it disconnects" },
 #if !defined(_WIN32) /*[*/
-{ OptReverseVideo,OPT_BOOLEAN,True,ResReverseVideo,offset(reverse_video),
+{ OptReverseVideo,OPT_BOOLEAN,True,ResReverseVideo,offset(c3270.reverse_video),
     NULL, "Switch to black-on-white mode" },
 #endif /*]*/
 #endif /*]*/
 { OptProxy,    OPT_STRING,  False, ResProxy,     offset(proxy),
     "<type>:<host>[:<port>]", "Specify proxy type and server" },
 #if defined(C3270) /*[*/
-{ OptSaveLines, OPT_INT,    False, ResSaveLines, offset(save_lines),
+{ OptSaveLines, OPT_INT,    False, ResSaveLines, offset(interactive.save_lines),
     "<lines>", "Specify the number of lines to save for scrolling" },
 #endif /*]*/
 #if defined(S3270) /*[*/
@@ -709,7 +713,7 @@ static struct {
 { OptTermName, OPT_STRING,  False, ResTermName,  offset(termname),
     "<name>", "Send <name> as TELNET terminal name" },
 #if defined(WC3270) /*[*/
-{ OptTitle,    OPT_STRING,  False, ResTitle,     offset(wc3270.title),
+{ OptTitle,    OPT_STRING,  False, ResTitle,     offset(c3270.title),
     "<string>", "Set window title to <string>" },
 #endif /*]*/
 { OptTrace,    OPT_BOOLEAN, True,  ResTrace,     toggle_offset(TRACING),
@@ -1011,12 +1015,14 @@ static struct {
     enum resource_type { XRM_STRING, XRM_BOOLEAN, XRM_INT } type;
 } resources[] = {
 #if defined(C3270) /*[*/
-    { ResAllBold,	offset(all_bold),	XRM_STRING },
-    { ResAltScreen,	offset(altscreen),	XRM_STRING },
+    { ResAllBold,	offset(c3270.all_bold),	XRM_STRING },
+# if defined(C3270_80_132) /*[*/
+    { ResAltScreen,	offset(c3270.altscreen),XRM_STRING },
+# endif /*]*/
 #endif /*]*/
 #if defined(WC3270) /*[*/
-    { ResAutoShortcut,offset(auto_shortcut),XRM_BOOLEAN },
-    { ResBellMode,offset(wc3270.bell_mode),	XRM_STRING },
+    { ResAutoShortcut,offset(c3270.auto_shortcut),XRM_BOOLEAN },
+    { ResBellMode,offset(c3270.bell_mode),	XRM_STRING },
 #endif /*]*/
     { ResBindLimit,	offset(bind_limit),	XRM_BOOLEAN },
     { ResBsdTm,	offset(bsd_tm),			XRM_BOOLEAN },
@@ -1037,9 +1043,11 @@ static struct {
     { ResDbcsCgcsgid, offset(dbcs_cgcsgid),	XRM_STRING },
 #if defined(C3270) /*[*/
 # if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
-    { ResDefaultFgBg,offset(default_fgbg),	XRM_BOOLEAN },
+    { ResDefaultFgBg,offset(c3270.default_fgbg),XRM_BOOLEAN },
 # endif /*]*/
-    { ResDefScreen,	offset(defscreen),	XRM_STRING },
+# if defined(C3270_80_132) /*[*/
+    { ResDefScreen,	offset(c3270.defscreen),XRM_STRING },
+# endif /*]*/
 #endif /*]*/
     { ResEof,	offset(eof),			XRM_STRING },
     { ResErase,	offset(erase),			XRM_STRING },
@@ -1062,13 +1070,15 @@ static struct {
     { ResKeyPasswd,	offset(key_passwd),	XRM_STRING },
 #endif /*]*/
 #if defined(C3270) /*[*/
-    { ResKeymap,	offset(key_map),	XRM_STRING },
-    { ResMetaEscape,offset(meta_escape),	XRM_STRING },
-    { ResCursesKeypad,offset(curses_keypad),	XRM_BOOLEAN },
-    { ResCbreak,	offset(cbreak_mode),	XRM_BOOLEAN },
-    { ResAsciiBoxDraw,offset(ascii_box_draw),	XRM_BOOLEAN },
+    { ResKeymap,	offset(interactive.key_map),XRM_STRING },
+# if !defined(_WIN32) /*[*/
+    { ResMetaEscape,offset(c3270.meta_escape),	XRM_STRING },
+    { ResCursesKeypad,offset(c3270.curses_keypad),XRM_BOOLEAN },
+    { ResCbreak,	offset(c3270.cbreak_mode),XRM_BOOLEAN },
+# endif /*]*/
+    { ResAsciiBoxDraw,offset(c3270.ascii_box_draw),XRM_BOOLEAN },
 #if defined(CURSES_WIDE) /*[*/
-    { ResAcs,	offset(acs),			XRM_BOOLEAN },
+    { ResAcs,	offset(c3270.acs),		XRM_BOOLEAN },
 #endif /*]*/
 #endif /*]*/
     { ResKill,	offset(kill),			XRM_STRING },
@@ -1086,8 +1096,8 @@ static struct {
     { ResModifiedSel, offset(modified_sel),	XRM_BOOLEAN },
 #if defined(C3270) /*[*/
 # if !defined(_WIN32) /*[*/
-    { ResMono,	offset(mono),			XRM_BOOLEAN },
-    { ResMouse,	offset(mouse),			XRM_BOOLEAN },
+    { ResMono,	offset(interactive.mono),	XRM_BOOLEAN },
+    { ResMouse,	offset(c3270.mouse),		XRM_BOOLEAN },
 # endif /*]*/
     { ResNoPrompt,	offset(secure),		XRM_BOOLEAN },
 #endif /*]*/
@@ -1097,21 +1107,21 @@ static struct {
     { ResOversize,	offset(oversize),	XRM_STRING },
     { ResPort,	offset(port),			XRM_STRING },
 #if defined(C3270) /*[*/
-    { ResPrinterLu,	offset(printer_lu),	XRM_STRING },
-    { ResPrinterOptions,offset(printer_opts),	XRM_STRING },
+    { ResPrinterLu,	offset(interactive.printer_lu),XRM_STRING },
+    { ResPrinterOptions,offset(interactive.printer_opts),XRM_STRING },
 #endif /*]*/
     { ResProxy,	offset(proxy),			XRM_STRING },
     { ResQrBgColor,	offset(qr_bg_color),	XRM_BOOLEAN },
     { ResQuit,	offset(quit),			XRM_STRING },
     { ResRprnt,	offset(rprnt),			XRM_STRING },
 #if defined(C3270) /*[*/
-    { ResReconnect,	offset(reconnect),	XRM_BOOLEAN },
+    { ResReconnect,	offset(interactive.reconnect),XRM_BOOLEAN },
 #if !defined(_WIN32) /*[*/
-    { ResReverseVideo,offset(reverse_video),	XRM_BOOLEAN },
+    { ResReverseVideo,offset(c3270.reverse_video),XRM_BOOLEAN },
 #endif /*]*/
 #endif /*]*/
 #if defined(C3270) /*[*/
-    { ResSaveLines,	offset(save_lines),	XRM_INT },
+    { ResSaveLines,	offset(interactive.save_lines),XRM_INT },
 #endif /*]*/
     { ResScreenTraceFile,offset(screentrace_file),XRM_STRING },
     { ResSecure,	offset(secure),		XRM_BOOLEAN },
@@ -1122,7 +1132,7 @@ static struct {
     { ResScriptPort,offset(script_port),	XRM_STRING },
     { ResTermName,	offset(termname),	XRM_STRING },
 #if defined(WC3270) /*[*/
-    { ResTitle,	offset(wc3270.title),		XRM_STRING },
+    { ResTitle,	offset(c3270.title),		XRM_STRING },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
     { ResTls,	offset(tls),			XRM_BOOLEAN },

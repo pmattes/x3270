@@ -4138,62 +4138,62 @@ MyStringToKeysym(const char *s, enum keytype *keytypep, ucs4_t *ucs4)
 static Boolean
 build_composites(void)
 {
-	char *c, *c0, *c1;
-	char *ln;
-	char ksname[3][64];
-	char junk[2];
-	KeySym k[3];
-	enum keytype a[3];
-	int i;
-	struct composite *cp;
+    char *c, *c0, *c1;
+    char *ln;
+    char ksname[3][64];
+    char junk[2];
+    KeySym k[3];
+    enum keytype a[3];
+    int i;
+    struct composite *cp;
 
-	if (appres.compose_map == NULL) {
-		popup_an_error("Compose: No %s defined", ResComposeMap);
-		return False;
-	}
-	c0 = get_fresource("%s.%s", ResComposeMap, appres.compose_map);
-	if (c0 == NULL) {
-		popup_an_error("Compose: Cannot find %s \"%s\"",
-			ResComposeMap, appres.compose_map);
-		return False;
-	}
-	c1 = c = NewString(c0);	/* will be modified by strtok */
-	while ((ln = strtok(c, "\n"))) {
-		Boolean okay = True;
+if (appres.interactive.compose_map == NULL) {
+    popup_an_error("Compose: No %s defined", ResComposeMap);
+    return False;
+}
+c0 = get_fresource("%s.%s", ResComposeMap, appres.interactive.compose_map);
+if (c0 == NULL) {
+    popup_an_error("Compose: Cannot find %s \"%s\"", ResComposeMap,
+	    appres.interactive.compose_map);
+    return False;
+}
+c1 = c = NewString(c0);	/* will be modified by strtok */
+while ((ln = strtok(c, "\n"))) {
+    Boolean okay = True;
 
-		c = NULL;
-		if (sscanf(ln, " %63[^+ \t] + %63[^= \t] =%63s%1s",
-		    ksname[0], ksname[1], ksname[2], junk) != 3) {
-			popup_an_error("Compose: Invalid syntax: %s", ln);
-			continue;
-		}
-		for (i = 0; i < 3; i++) {
-		    	ucs4_t ucs4;
+    c = NULL;
+    if (sscanf(ln, " %63[^+ \t] + %63[^= \t] =%63s%1s",
+		ksname[0], ksname[1], ksname[2], junk) != 3) {
+	popup_an_error("Compose: Invalid syntax: %s", ln);
+	continue;
+    }
+    for (i = 0; i < 3; i++) {
+	ucs4_t ucs4;
 
-			k[i] = MyStringToKeysym(ksname[i], &a[i], &ucs4);
-			if (k[i] == NoSymbol) {
-				/* For now, ignore UCS4.  XXX: Fix this. */
-				popup_an_error("Compose: Invalid KeySym: "
-					"\"%s\"", ksname[i]);
-				okay = False;
-				break;
-			}
-		}
-		if (!okay)
-			continue;
-		composites = (struct composite *) Realloc((char *)composites,
-		    (n_composites + 1) * sizeof(struct composite));
-		cp = composites + n_composites;
-		cp->k1.keysym = k[0];
-		cp->k1.keytype = a[0];
-		cp->k2.keysym = k[1];
-		cp->k2.keytype = a[1];
-		cp->translation.keysym = k[2];
-		cp->translation.keytype = a[2];
-		n_composites++;
+	k[i] = MyStringToKeysym(ksname[i], &a[i], &ucs4);
+	if (k[i] == NoSymbol) {
+	    /* For now, ignore UCS4.  XXX: Fix this. */
+	    popup_an_error("Compose: Invalid KeySym: \"%s\"", ksname[i]);
+	    okay = False;
+	    break;
 	}
-	Free(c1);
-	return True;
+    }
+    if (!okay) {
+	continue;
+    }
+    composites = (struct composite *) Realloc((char *)composites,
+	    (n_composites + 1) * sizeof(struct composite));
+    cp = composites + n_composites;
+    cp->k1.keysym = k[0];
+    cp->k1.keytype = a[0];
+    cp->k2.keysym = k[1];
+    cp->k2.keytype = a[1];
+    cp->translation.keysym = k[2];
+    cp->translation.keytype = a[2];
+    n_composites++;
+}
+Free(c1);
+return True;
 }
 
 /*

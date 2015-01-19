@@ -369,7 +369,7 @@ status_reinit(unsigned cmask)
 		Replace(display_2b,
 		    (XChar2b *)XtCalloc(sizeof(XChar2b), maxCOLS));
 		offsets[SSZ] = maxCOLS;
-		if (appres.mono)
+		if (appres.interactive.mono)
 			colors[1] = FA_INT_NORM_NSEL;
 		for (i = 0; i < SSZ; i++) {
 			status_line[i].start = offsets[i];
@@ -941,7 +941,7 @@ paint_msg(enum msg t)
 {
 	oia_msg = t;
 	(*msg_proc[(int)t])();
-	if (!appres.mono)
+	if (!appres.interactive.mono)
 		status_line[WAIT_REGION].color = appres.m3279 ?
 		    msg_color3279[(int)t] : msg_color[(int)t];
 }

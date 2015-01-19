@@ -511,7 +511,8 @@ create_tracefile_header(const char *mode)
     wtrace(False, " Command: %s\n", command_string);
     wtrace(False, " Model %s, %d rows x %d cols", model_name, maxROWS, maxCOLS);
 #if defined(X3270_INTERACTIVE) && !defined(_WIN32) /*[*/
-    wtrace(False, ", %s display", appres.mono ? "monochrome" : "color");
+    wtrace(False, ", %s display",
+	    appres.interactive.mono? "monochrome": "color");
 #endif /*]*/
     if (appres.extended) {
 	wtrace(False, ", extended data stream");

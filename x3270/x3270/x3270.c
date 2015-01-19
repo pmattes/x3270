@@ -509,8 +509,8 @@ main(int argc, char *argv[])
 #endif /*]*/
 	}
 	if (screen_depth <= 1 || colormap_failure)
-		appres.mono = True;
-	if (appres.mono) {
+		appres.interactive.mono = True;
+	if (appres.interactive.mono) {
 		appres.use_cursor_color = False;
 		appres.m3279 = False;
 	}
@@ -550,11 +550,11 @@ main(int argc, char *argv[])
 	xaction_init2();
 
 	/* Define the keymap. */
-	keymap_init(appres.key_map, False);
+	keymap_init(appres.interactive.key_map, False);
 
 	if (appres.apl_mode) {
-		appres.compose_map = XtNewString(Apl);
-		appres.charset = XtNewString(Apl);
+	    appres.interactive.compose_map = XtNewString(Apl);
+	    appres.charset = XtNewString(Apl);
 	}
 
 	screen_preinit();
@@ -614,7 +614,7 @@ main(int argc, char *argv[])
 		if (cl_hostname == NULL)
 #endif /*]*/
 			appres.once = False;
-		appres.reconnect = False;
+		appres.interactive.reconnect = False;
 	}
 
 	if (appres.char_class != NULL)
@@ -774,9 +774,9 @@ relabel(Boolean ignored _is_unused)
 
 	if (user_title != NULL && user_icon_name != NULL)
 		return;
-	title = XtMalloc(10 + ((PCONNECTED || appres.reconnect) ?
-						strlen(reconnect_host) : 0));
-	if (PCONNECTED || appres.reconnect) {
+	title = XtMalloc(10 + ((PCONNECTED || appres.interactive.reconnect)?
+						strlen(reconnect_host): 0));
+	if (PCONNECTED || appres.interactive.reconnect) {
 		(void) sprintf(title, "x3270-%d%s %s", model_num,
 		    (IN_NVT ? "A" : ""), reconnect_host);
 		if (user_title == NULL)

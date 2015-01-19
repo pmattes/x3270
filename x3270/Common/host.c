@@ -727,7 +727,7 @@ host_connect(const char *n)
 	    exiting = True;
 	} else
 # endif /*]*/
-	    if (appres.reconnect) {
+	    if (appres.interactive.reconnect) {
 		auto_reconnect_inprogress = True;
 		reconnect_id = AddTimeOut(RECONNECT_ERR_MS, try_reconnect);
 	    }
@@ -765,7 +765,7 @@ host_connect(const char *n)
 	cstate = CONNECTED_INITIAL;
 	st_changed(ST_CONNECT, True);
 #if defined(X3270_DISPLAY) /*[*/
-	if (appres.reconnect && error_popup_visible()) {
+	if (appres.interactive.reconnect && error_popup_visible()) {
 	    popdown_an_error();
 	}
 #endif /*]*/
@@ -846,7 +846,7 @@ host_disconnect(Boolean failed)
 	}
     } else
 # endif /*]*/
-	if (appres.reconnect && !auto_reconnect_inprogress) {
+	if (appres.interactive.reconnect && !auto_reconnect_inprogress) {
 	    /* Schedule an automatic reconnection. */
 	    auto_reconnect_inprogress = True;
 	    reconnect_id = AddTimeOut(failed? RECONNECT_ERR_MS:
@@ -889,7 +889,7 @@ host_connected(void)
     st_changed(ST_CONNECT, True);
 
 #if defined(X3270_DISPLAY) /*[*/
-    if (appres.reconnect && error_popup_visible()) {
+    if (appres.interactive.reconnect && error_popup_visible()) {
 	popdown_an_error();
     }
 #endif /*]*/

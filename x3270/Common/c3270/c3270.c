@@ -308,7 +308,7 @@ main_connect(Boolean ignored)
 {
     if (CONNECTED || appres.disconnect_clear) {
 #if defined(C3270_80_132) /*[*/
-	if (appres.altscreen != NULL) {
+	if (appres.c3270.altscreen != NULL) {
 	    ctlr_erase(False);
 	} else
 #endif /*]*/
@@ -436,7 +436,7 @@ main(int argc, char *argv[])
     }
 
     /* Check for auto-shortcut mode. */
-    if (appres.auto_shortcut) {
+    if (appres.c3270.auto_shortcut) {
 	start_auto_shortcut();
 	exit(0);
     }
@@ -534,11 +534,15 @@ main(int argc, char *argv[])
 	if (!escaped || ft_state != FT_NONE) {
 	    (void) process_events(True);
 	}
-	if (appres.cbreak_mode && escape_pending) {
+	if (
+#if !defined(_WIN32) /*[*/
+	    appres.c3270.cbreak_mode &&
+#endif /*]*/
+					escape_pending) {
 	    escape_pending = False;
 	    screen_suspend();
 	}
-	if (!appres.secure && !CONNECTED && !appres.reconnect) {
+	if (!appres.secure && !CONNECTED && !appres.interactive.reconnect) {
 	    screen_suspend();
 	    (void) printf("Disconnected.\n");
 	    if (once) {
@@ -550,7 +554,8 @@ main(int argc, char *argv[])
 	    interact();
 	    vtrace("Done interacting.\n");
 	    screen_resume();
-	} else if (!CONNECTED && !appres.reconnect && cl_hostname != NULL) {
+	} else if (!CONNECTED && !appres.interactive.reconnect &&
+		cl_hostname != NULL) {
 	    screen_suspend();
 	    x3270_exit(0);
 	}
@@ -1096,8 +1101,9 @@ status_dump(void)
     action_output("%s OEM %d ANSI %d", get_message("windowsCodePage"),
 	    windows_cp, GetACP());
 #endif /*]*/
-    if (appres.key_map) {
-	action_output("%s %s", get_message("keyboardMap"), appres.key_map);
+    if (appres.interactive.key_map) {
+	action_output("%s %s", get_message("keyboardMap"),
+		appres.interactive.key_map);
     }
     if (CONNECTED) {
 	action_output("%s %s", get_message("connectedTo"),
