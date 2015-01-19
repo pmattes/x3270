@@ -34,9 +34,10 @@ AR = ar
 
 all:: $(LIB3270)
 
-SRCS = Malloc.c asprintf.c lazya.c varbuf.c
-
-OBJS = Malloc.o asprintf.o lazya.o varbuf.o
+OBJ = o
+include lib3270_files.mk
+SRCS = $(LIB3270_SOURCES)
+OBJS = $(LIB3270_OBJECTS)
 
 LIBDIR = @libdir@
 prefix = @prefix@

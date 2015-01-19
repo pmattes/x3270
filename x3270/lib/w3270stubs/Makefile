@@ -57,9 +57,10 @@ CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
 
 all:: $(LIB3270)
 
-SRCS = menubar_stubs.c
-
-OBJS = menubar_stubs.o
+OBJ = o
+include lib3270stubs_files.mk
+SRCS = $(LIB3270STUBS_SOURCES)
+OBJS = $(LIB3270STUBS_OBJECTS)
 
 $(LIB3270): $(OBJS)
 	$(AR) crs $@ $(OBJS)

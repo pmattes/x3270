@@ -1,0 +1,1 @@
+../../Common/lib3270stubs_files.mk

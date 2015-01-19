@@ -35,11 +35,12 @@ all:
 
 # Development tools.
 
-SOURCES = menubar_stubs.c
+OBJ = o
+include lib3270stubs_files.mk
+SOURCES = $(LIB3270STUBS_SOURCES)
+HEADERS = $(LIB3270STUBS_HEADERS)
 
-HEADERS = conf.h globals.h localdefs.h menubar.h wincmn.h
-
-MISC = Makefile Msc/Makefile
+MISC = Makefile Msc/Makefile lib3270stubs_files.mk
 
 DEVKIT = Makefile.aux
 

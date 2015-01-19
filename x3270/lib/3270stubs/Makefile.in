@@ -34,9 +34,10 @@ AR = ar
 
 all:: $(LIBSTUBS)
 
-SRCS = menubar_stubs.c
-
-OBJS = menubar_stubs.o
+OBJ = o
+include lib3270stubs_files.mk
+SRCS = $(LIB3270STUBS_SOURCES)
+OBJS = $(LIB3270STUBS_OBJECTS)
 
 LIBDIR = @libdir@
 prefix = @prefix@

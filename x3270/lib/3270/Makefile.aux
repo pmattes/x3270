@@ -35,12 +35,13 @@ all:
 
 # Development tools.
 
-SOURCES = Malloc.c asprintf.c lazya.c see.c varbuf.c
-
-HEADERS = appres.h conf.h globals.h localdefs.h trace.h utilc.h
+OBJ = o
+include lib3270_files.mk
+SOURCES = $(LIB3270_SOURCES)
+HEADERS = $(LIB3270_HEADERS)
 
 MISC = Makefile.in conf.h.in config.guess config.sub configure configure.in \
-	install-sh
+	install-sh lib3270_files.mk
 
 DEVKIT = Makefile.aux
 
