@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
  */
 
 /*
- *	utf8c.h
+ *	utf8.h
  *		3270 Terminal Emulator
  *		UTF-8 conversions
  */

@@ -41,7 +41,7 @@
 #include "3270ds.h"
 
 #include "lazya.h"
-#include "utf8c.h"
+#include "utf8.h"
 #include "utilc.h"
 #include "see.h"
 #include "unicodec.h"

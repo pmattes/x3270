@@ -78,7 +78,7 @@
 #include "telnetc.h"
 #include "toggles.h"
 #include "trace.h"
-#include "utf8c.h"
+#include "utf8.h"
 #include "utilc.h"
 #include "xio.h"
 #include "xscroll.h"

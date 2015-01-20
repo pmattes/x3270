@@ -54,7 +54,7 @@ configure: configure.in
 	autoconf
 
 # Bootstrap targets.
-Makefile: Makefile.in configure
+Makefile: Makefile.in configure lib3270_files.mk
 	./configure
 	$(MAKE) depend
 cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz

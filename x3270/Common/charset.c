@@ -48,7 +48,7 @@
 #endif /*]*/
 #include "unicodec.h"
 #include "unicode_dbcsc.h"
-#include "utf8c.h"
+#include "utf8.h"
 #include "utilc.h"
 
 #include <locale.h>

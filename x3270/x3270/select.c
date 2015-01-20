@@ -75,7 +75,7 @@
 #include "selectc.h"
 #include "tables.h"
 #include "unicodec.h"
-#include "utf8c.h"
+#include "utf8.h"
 #include "utilc.h"
 #include "xactions.h"
 

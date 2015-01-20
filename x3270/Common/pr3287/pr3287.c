@@ -138,7 +138,7 @@
 #include "proxyc.h"
 #include "resolverc.h"
 #include "telnetc.h"
-#include "utf8c.h"
+#include "utf8.h"
 #include "xtablec.h"
 
 #if defined(_WIN32) /*[*/

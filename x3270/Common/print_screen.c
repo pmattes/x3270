@@ -51,7 +51,6 @@
 #include "print_guic.h"
 #include "trace.h"
 #include "unicodec.h"
-#include "utf8c.h"
 #include "utilc.h"
 
 #if defined(_WIN32) /*[*/

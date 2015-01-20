@@ -50,7 +50,6 @@
     <ClCompile Include="..\..\ws3270\trace.c" />
     <ClCompile Include="..\..\ws3270\unicode.c" />
     <ClCompile Include="..\..\ws3270\unicode_dbcs.c" />
-    <ClCompile Include="..\..\ws3270\utf8.c" />
     <ClCompile Include="..\..\ws3270\util.c" />
     <ClCompile Include="..\..\ws3270\version.c" />
     <ClCompile Include="..\..\ws3270\w3misc.c" />

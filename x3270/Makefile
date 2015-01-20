@@ -1,5 +1,6 @@
-ALL_BUT_WEBPAGE = c3270-dir pr3287-dir s3270-dir tcl3270-dir wc3270-dir \
-	wpr3287-dir ws3270-dir x3270-dir
+ALL_BUT_WEBPAGE = c3270-dir include-dir pr3287-dir s3270-dir tcl3270-dir \
+	wc3270-dir wpr3287-dir ws3270-dir x3270-dir
+
 ALL = $(ALL_BUT_WEBPAGE) Webpage-dir
 
 all: $(ALL)
@@ -23,6 +24,9 @@ Webpage-dir:
 
 c3270-dir:
 	cd c3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
+
+include-dir:
+	cd include && $(MAKE) -f Makefile.aux bootstrap
 
 pr3287-dir:
 	cd pr3287 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)

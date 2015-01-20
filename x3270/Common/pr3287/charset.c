@@ -49,7 +49,7 @@
 #include "charsetc.h"
 #include "unicodec.h"
 #include "unicode_dbcsc.h"
-#include "utf8c.h"
+#include "utf8.h"
 
 unsigned long cgcsgid = 0x02b90025;
 unsigned long cgcsgid_dbcs = 0x02b90025;

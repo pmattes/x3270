@@ -161,7 +161,6 @@
     <ClCompile Include="..\wc3270\trace.c" />
     <ClCompile Include="..\wc3270\unicode.c" />
     <ClCompile Include="..\wc3270\unicode_dbcs.c" />
-    <ClCompile Include="..\wc3270\utf8.c" />
     <ClCompile Include="..\wc3270\util.c" />
     <ClCompile Include="..\wc3270\version.c" />
     <ClCompile Include="..\wc3270\w3misc.c" />

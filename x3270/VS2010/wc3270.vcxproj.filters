@@ -155,9 +155,6 @@
     <ClCompile Include="..\wc3270\unicode_dbcs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\utf8.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\util.c">
       <Filter>Source Files</Filter>
     </ClCompile>

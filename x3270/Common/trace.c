@@ -58,7 +58,7 @@
 #include "toggles.h"
 #include "trace.h"
 #include "trace_gui.h"
-#include "utf8c.h"
+#include "utf8.h"
 #include "utilc.h"
 #if defined(_WIN32) /*[*/
 # include "w3misc.h"
