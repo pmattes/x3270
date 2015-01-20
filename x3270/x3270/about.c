@@ -386,8 +386,8 @@ popup_about_config(void)
 	MAKE_VALUE(xbuf);
 	XtFree(xbuf);
 	MAKE_LABEL(get_message("inputMethod"), 4);
-	if (appres.input_method) {
-	    MAKE_VALUE(appres.input_method);
+	if (appres.x3270.input_method) {
+	    MAKE_VALUE(appres.x3270.input_method);
 	} else if (getenv("XMODIFIERS") != NULL) {
 	    MAKE_VALUE("(via environment)");
 	} else {
@@ -443,17 +443,17 @@ popup_about_config(void)
 	MAKE_LABEL(get_message("noComposeMap"), 4);
     }
 
-    if (appres.active_icon) {
+    if (appres.x3270.active_icon) {
 	MAKE_LABEL(get_message("activeIcon"), 4);
 	xbuf = xs_buffer("  %s", get_message("iconFont"));
 	MAKE_LABEL(xbuf, 0);
 	XtFree(xbuf);
-	MAKE_VALUE(appres.icon_font);
-	if (appres.label_icon) {
+	MAKE_VALUE(appres.x3270.icon_font);
+	if (appres.x3270.label_icon) {
 	    xbuf = xs_buffer("  %s", get_message("iconLabelFont"));
 	    MAKE_LABEL(xbuf, 0);
 	    XtFree(xbuf);
-	    MAKE_VALUE(appres.icon_label_font);
+	    MAKE_VALUE(appres.x3270.icon_label_font);
 	}
     } else {
 	MAKE_LABEL(get_message("staticIcon"), 4);
@@ -525,7 +525,7 @@ popup_about_status(void)
 	} else
 #endif /*]*/
 	{
-	    if (!appres.suppress_host) {
+	    if (!appres.x3270.suppress_host) {
 		MAKE_VALUE(current_host);
 	    }
 	}

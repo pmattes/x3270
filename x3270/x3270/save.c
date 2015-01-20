@@ -292,16 +292,18 @@ save_efont(void)
 static void
 save_keypad(void)
 {
-	int ix;
+    int ix;
 
-	ix = cmd_srch(OptKeypadOn);
-	if (appres.keypad_on || keypad_popped) {
-		if (!ix)
-			cmd_append(OptKeypadOn);
-	} else {
-		if (ix)
-			cmd_delete(ix);
+    ix = cmd_srch(OptKeypadOn);
+    if (appres.x3270.keypad_on || keypad_popped) {
+	if (!ix) {
+	    cmd_append(OptKeypadOn);
 	}
+    } else {
+	if (ix) {
+	    cmd_delete(ix);
+	}
+    }
 }
 
 /* Save the scrollbar state. */
@@ -664,7 +666,7 @@ save_options(char *n)
     /* Save the keypad state. */
     if (keypad_changed) {
 	save_opt(f, "keypad state", OptKeypadOn, ResKeypadOn,
-		(appres.keypad_on || keypad_popped)? ResTrue: ResFalse);
+		(appres.x3270.keypad_on || keypad_popped)? ResTrue: ResFalse);
     }
 
     /* Save other menu-changeable options. */
@@ -682,9 +684,9 @@ save_options(char *n)
 	save_opt(f, "oversize", OptOversize, ResOversize, buf);
 	Free(buf);
     }
-    if (scheme_changed && appres.color_scheme != NULL) {
+    if (scheme_changed && appres.x3270.color_scheme != NULL) {
 	save_opt(f, "color scheme", OptColorScheme, ResColorScheme,
-	    appres.color_scheme);
+	    appres.x3270.color_scheme);
     }
     if (keymap_changed && current_keymap != NULL) {
 	save_opt(f, "keymap", OptKeymap, ResKeymap, current_keymap);

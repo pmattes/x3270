@@ -586,11 +586,12 @@ menubar_printer(Boolean printer_on)
 void
 menubar_keypad_changed(void)
 {
-	if (keypad_option_button != NULL)
-		XtVaSetValues(keypad_option_button,
-		    XtNleftBitmap,
-			appres.keypad_on || keypad_popped ? dot : None,
-		    NULL);
+    if (keypad_option_button != NULL) {
+	XtVaSetValues(keypad_option_button,
+		XtNleftBitmap,
+		    appres.x3270.keypad_on || keypad_popped ? dot : None,
+		NULL);
+    }
 }
 
 /* Called when we switch between NVT and 3270 modes. */
@@ -1169,7 +1170,7 @@ connect_menu_init(Boolean regen, Position x, Position y)
 
 	/* Add an "Other..." button at the bottom */
 
-	if (!any_hosts || !appres.no_other) {
+	if (!any_hosts || !appres.x3270.no_other) {
 		if (need_line)
 			(void) XtVaCreateManagedWidget("space",
 			    cmeLineObjectClass,
@@ -1290,23 +1291,24 @@ static void
 toggle_keypad(Widget w _is_unused, XtPointer client_data _is_unused,
     XtPointer call_data _is_unused)
 {
-	switch (kp_placement) {
-	    case kp_integral:
-		screen_showikeypad(appres.keypad_on = !appres.keypad_on);
-		break;
-	    case kp_left:
-	    case kp_right:
-	    case kp_bottom:
-	    case kp_inside_right:
-		keypad_popup_init();
-		if (keypad_popped) 
-			XtPopdown(keypad_shell);
-		else
-			popup_popup(keypad_shell, XtGrabNone);
-		break;
+    switch (kp_placement) {
+    case kp_integral:
+	screen_showikeypad(appres.x3270.keypad_on = !appres.x3270.keypad_on);
+	break;
+    case kp_left:
+    case kp_right:
+    case kp_bottom:
+    case kp_inside_right:
+	keypad_popup_init();
+	if (keypad_popped)  {
+	    XtPopdown(keypad_shell);
+	} else {
+	    popup_popup(keypad_shell, XtGrabNone);
 	}
-	menubar_keypad_changed();
-	keypad_changed = True;
+	break;
+    }
+    menubar_keypad_changed();
+    keypad_changed = True;
 }
 
 static void
@@ -1773,7 +1775,7 @@ create_font_menu(Boolean regen, Boolean even_if_unknown)
 		XtAddCallback(font_widgets[ix], XtNcallback, do_newfont,
 		    XtNewString(f->font));
 	}
-	if (!appres.no_other) {
+	if (!appres.x3270.no_other) {
 		other_font = XtVaCreateManagedWidget(
 		    "otherFontOption", cmeBSBObjectClass, t,
 		    NULL);
@@ -1787,8 +1789,9 @@ create_font_menu(Boolean regen, Boolean even_if_unknown)
 static void
 menubar_charset(Boolean ignored _is_unused)
 {
-	if (!appres.suppress_font_menu)
-		create_font_menu(False, False);
+    if (!appres.x3270.suppress_font_menu) {
+	create_font_menu(False, False);
+    }
 }
 
 /* Called to change emulation modes */
@@ -1876,8 +1879,8 @@ options_menu_init(Boolean regen, Position x, Position y)
 	s = schemes;
 	for (ix = 0, s = schemes; ix < scheme_count; ix++, s = s->next) {
 	    XtVaSetValues(scheme_widgets[ix], XtNleftBitmap,
-		    !strcmp(appres.color_scheme, s->scheme)? diamond:
-							     no_diamond,
+		    !strcmp(appres.x3270.color_scheme, s->scheme)?
+			diamond: no_diamond,
 		    NULL);
 	}
 	return;
@@ -1902,8 +1905,8 @@ options_menu_init(Boolean regen, Position x, Position y)
 	    keypad_option_button = add_menu_itemv("keypadOption", t,
 		    toggle_keypad, NULL,
 		    NULL,
-		    XtNleftBitmap, (appres.keypad_on || keypad_popped)? dot:
-									None,
+		    XtNleftBitmap, (appres.x3270.keypad_on || keypad_popped)?
+			dot: None,
 		    NULL);
 	    if (keypad_option_button != NULL) {
 		spaced = False;
@@ -1991,7 +1994,7 @@ options_menu_init(Boolean regen, Position x, Position y)
 	}
     }
 
-    if (!appres.suppress_font_menu &&
+    if (!appres.x3270.suppress_font_menu &&
 	    !item_suppressed(options_menu, "fontsOption")) {
 	/* Create the "fonts" pullright */
 
@@ -2105,8 +2108,8 @@ options_menu_init(Boolean regen, Position x, Position y)
 		    s->label, cmeBSBObjectClass,
 		    add_menu_hier(scheme_root, s->parents, NULL, 0),
 		    XtNleftBitmap,
-			!strcmp(appres.color_scheme, s->scheme)? diamond:
-								 no_diamond,
+			!strcmp(appres.x3270.color_scheme, s->scheme)?
+			    diamond: no_diamond,
 		    NULL);
 		XtAddCallback(scheme_widgets[ix], XtNcallback, do_newscheme,
 			s->scheme);
@@ -2161,7 +2164,7 @@ options_menu_init(Boolean regen, Position x, Position y)
     }
 
     /* Create the "keymap" option */
-    if (!appres.no_other) {
+    if (!appres.x3270.no_other) {
 	spaced = False;
 	w = add_menu_itemv("keymapOption", options_menu,
 		do_keymap, NULL,

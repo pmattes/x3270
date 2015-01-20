@@ -883,7 +883,7 @@ check_cert_name(void)
 
 	cert = SSL_get_peer_certificate(ssl_con);
 	if (cert == NULL) {
-		if (appres.verify_host_cert) {
+		if (appres.ssl.verify_host_cert) {
 			popup_an_error("No host certificate");
 			return False;
 		} else {
@@ -907,7 +907,7 @@ check_cert_name(void)
 		    );
 	if (unmatched_names != NULL) {
 		X509_free(cert);
-		if (appres.verify_host_cert) {
+		if (appres.ssl.verify_host_cert) {
 			popup_an_error("Host certificate name(s) do not match "
 				"'%s':\n%s", hostname, unmatched_names);
 			return False;
@@ -1154,7 +1154,7 @@ net_disconnect(void)
 	/* If we refused TLS and never entered 3270 mode, say so. */
 	if (refused_tls && !any_host_data) {
 #if defined(HAVE_LIBSSL) /*[*/
-		if (!appres.tls) {
+		if (!appres.ssl.tls) {
 			popup_an_error("Connection failed:\n"
 				"Host requested TLS but SSL disabled");
 		} else {
@@ -1536,7 +1536,7 @@ telnet_fsm(unsigned char c)
 	    }
 	    vtrace("%s", see_chr);
 	    if (!syncing) {
-		if (linemode && appres.onlcr && c == '\n') {
+		if (linemode && appres.linemode.onlcr && c == '\n') {
 		    nvt_process((unsigned int) '\r');
 		}
 		nvt_process((unsigned int) c);
@@ -1687,7 +1687,7 @@ telnet_fsm(unsigned char c)
 	case TELOPT_TN3270E:
 	case TELOPT_STARTTLS:
 #if defined(HAVE_LIBSSL) /*[*/
-	    if (c == TELOPT_STARTTLS && (!ssl_supported || !appres.tls)) {
+	    if (c == TELOPT_STARTTLS && (!ssl_supported || !appres.ssl.tls)) {
 		refused_tls = True;
 		goto wont;
 	    }
@@ -3458,7 +3458,7 @@ static int
 passwd_cb(char *buf, int size, int rwflag _is_unused,
 	void *userdata _is_unused)
 {
-    	if (appres.key_passwd == NULL) {
+    	if (appres.ssl.key_passwd == NULL) {
 		int psize = ssl_passwd_gui_callback(buf, size);
 
 		if (psize >= 0) {
@@ -3469,24 +3469,24 @@ passwd_cb(char *buf, int size, int rwflag _is_unused,
 		}
 	}
 
-	if (!strncasecmp(appres.key_passwd, "string:", 7)) {
+	if (!strncasecmp(appres.ssl.key_passwd, "string:", 7)) {
 	    	/* Plaintext in the resource. */
-		size_t len = strlen(appres.key_passwd + 7);
+		size_t len = strlen(appres.ssl.key_passwd + 7);
 
 		if (len > (size_t)size - 1)
 		    	len = size - 1;
-		strncpy(buf, appres.key_passwd + 7, len);
+		strncpy(buf, appres.ssl.key_passwd + 7, len);
 		buf[len] = '\0';
 		return len;
-	} else if (!strncasecmp(appres.key_passwd, "file:", 5)) {
+	} else if (!strncasecmp(appres.ssl.key_passwd, "file:", 5)) {
 	    	/* In a file. */
 	    	FILE *f;
 		char *s;
 
-		f = fopen(appres.key_passwd + 5, "r");
+		f = fopen(appres.ssl.key_passwd + 5, "r");
 		if (f == NULL) {
 		    	popup_an_errno(errno, "OpenSSL private key file '%s'",
-				appres.key_passwd + 5);
+				appres.ssl.key_passwd + 5);
 			return 0;
 		}
 		memset(buf, '\0', size);
@@ -3495,7 +3495,7 @@ passwd_cb(char *buf, int size, int rwflag _is_unused,
 		return s? strlen(s): 0;
 	} else {
 		popup_an_error("Unknown OpenSSL private key syntax '%s'",
-			appres.key_passwd);
+			appres.ssl.key_passwd);
 		return 0;
 	}
 }
@@ -3553,28 +3553,28 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 #endif /*]*/
 
 	/* Parse the -accepthostname option. */
-	if (appres.accept_hostname != NULL) {
-		if (!strcasecmp(appres.accept_hostname, "any") ||
-		    !strcmp(appres.accept_hostname, "*")) {
+	if (appres.ssl.accept_hostname != NULL) {
+		if (!strcasecmp(appres.ssl.accept_hostname, "any") ||
+		    !strcmp(appres.ssl.accept_hostname, "*")) {
 			accept_specified_host = True;
 			accept_dnsname = "*";
-		} else if (!strncasecmp(appres.accept_hostname, "DNS:", 4) &&
-			    appres.accept_hostname[4] != '\0') {
+		} else if (!strncasecmp(appres.ssl.accept_hostname, "DNS:", 4) &&
+			    appres.ssl.accept_hostname[4] != '\0') {
 			accept_specified_host = True;
-			accept_dnsname = &appres.accept_hostname[4];
-		} else if (!strncasecmp(appres.accept_hostname, "IP:", 3)) {
+			accept_dnsname = &appres.ssl.accept_hostname[4];
+		} else if (!strncasecmp(appres.ssl.accept_hostname, "IP:", 3)) {
 			unsigned short port;
 			sockaddr_46_t ahaddr;
 			socklen_t len;
 			char *errmsg;
 			rhp_t rv;
 
-			rv = resolve_host_and_port(&appres.accept_hostname[3],
+			rv = resolve_host_and_port(&appres.ssl.accept_hostname[3],
 				"0", 0, &port, &ahaddr.sa, &len, &errmsg,
 				NULL);
 			if (RHP_IS_ERROR(rv)) {
 				popup_an_error("Invalid acceptHostname '%s': "
-					"%s", appres.accept_hostname, errmsg);
+					"%s", appres.ssl.accept_hostname, errmsg);
 				return;
 			}
 			switch (ahaddr.sa.sa_family) {
@@ -3601,7 +3601,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 		} else {
 			popup_an_error("Cannot parse acceptHostname '%s' "
 				"(must be 'any' or 'DNS:name' or 'IP:addr')",
-				appres.accept_hostname);
+				appres.ssl.accept_hostname);
 			return;
 		}
 	}
@@ -3627,21 +3627,21 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 	SSL_CTX_set_default_passwd_cb(ssl_ctx, passwd_cb);
 
 	/* Pull in the CA certificate file. */
-	if (appres.ca_file != NULL || appres.ca_dir != NULL) {
+	if (appres.ssl.ca_file != NULL || appres.ssl.ca_dir != NULL) {
 		if (SSL_CTX_load_verify_locations(ssl_ctx,
-			    appres.ca_file,
-			    appres.ca_dir) != 1) {
+			    appres.ssl.ca_file,
+			    appres.ssl.ca_dir) != 1) {
 			popup_an_error("CA database load (%s%s%s%s%s%s%s%s%s) "
 				"failed:\n%s",
-				appres.ca_file? "file ": "",
-				appres.ca_file? "\"": "",
-				appres.ca_file? appres.ca_file: "",
-				appres.ca_file? "\"": "",
-				(appres.ca_file && appres.ca_dir)? ", ": "",
-				appres.ca_dir? "dir ": "",
-				appres.ca_dir? "\"": "",
-				appres.ca_dir? appres.ca_dir: "",
-				appres.ca_dir? "\"": "",
+				appres.ssl.ca_file? "file ": "",
+				appres.ssl.ca_file? "\"": "",
+				appres.ssl.ca_file? appres.ssl.ca_file: "",
+				appres.ssl.ca_file? "\"": "",
+				(appres.ssl.ca_file && appres.ssl.ca_dir)? ", ": "",
+				appres.ssl.ca_dir? "dir ": "",
+				appres.ssl.ca_dir? "\"": "",
+				appres.ssl.ca_dir? appres.ssl.ca_dir: "",
+				appres.ssl.ca_dir? "\"": "",
 			get_ssl_error(err_buf));
 			goto fail;
 		}
@@ -3678,81 +3678,81 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 	}
 
 	/* Pull in the client certificate file. */
-	if (appres.chain_file != NULL) {
+	if (appres.ssl.chain_file != NULL) {
 		if (SSL_CTX_use_certificate_chain_file(ssl_ctx,
-			    appres.chain_file) != 1) {
+			    appres.ssl.chain_file) != 1) {
 			popup_an_error("Client certificate chain file load "
 				"(\"%s\") failed:\n%s",
-				appres.chain_file,
+				appres.ssl.chain_file,
 				get_ssl_error(err_buf));
 			goto fail;
 		}
-	} else if (appres.cert_file != NULL) {
-		cert_file_type = parse_file_type(appres.cert_file_type);
+	} else if (appres.ssl.cert_file != NULL) {
+		cert_file_type = parse_file_type(appres.ssl.cert_file_type);
 		if (cert_file_type == -1) {
 			popup_an_error("Invalid client certificate "
 				"file type '%s'",
-				appres.cert_file_type);
+				appres.ssl.cert_file_type);
 			goto fail;
 		}
 		if (SSL_CTX_use_certificate_file(ssl_ctx,
-			    appres.cert_file,
+			    appres.ssl.cert_file,
 			    cert_file_type) != 1) {
 			popup_an_error("Client certificate file load "
 				"(\"%s\") failed:\n%s",
-				appres.cert_file,
+				appres.ssl.cert_file,
 				get_ssl_error(err_buf));
 			goto fail;
 		}
 	}
 
 	/* Pull in the private key file. */
-	if (appres.key_file != NULL) {
+	if (appres.ssl.key_file != NULL) {
 		int key_file_type =
-		    parse_file_type(appres.key_file_type);
+		    parse_file_type(appres.ssl.key_file_type);
 
 		if (key_file_type == -1) {
 			popup_an_error("Invalid private key file type "
 				"'%s'",
-				appres.key_file_type);
+				appres.ssl.key_file_type);
 			goto fail;
 		}
 		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
-			    appres.key_file,
+			    appres.ssl.key_file,
 			    key_file_type) != 1) {
 			if (pending == NULL || !*pending)
 				popup_an_error("Private key file load "
 					"(\"%s\") failed:\n%s",
-					appres.key_file,
+					appres.ssl.key_file,
 					get_ssl_error(err_buf));
 			goto password_fail;
 		}
-	} else if (appres.chain_file != NULL) {
+	} else if (appres.ssl.chain_file != NULL) {
 		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
-			    appres.chain_file,
+			    appres.ssl.chain_file,
 			    SSL_FILETYPE_PEM) != 1) {
 			if (pending == NULL || !*pending)
 				popup_an_error("Private key file load "
 					"(\"%s\") failed:\n%s",
-					appres.chain_file,
+					appres.ssl.chain_file,
 					get_ssl_error(err_buf));
 			goto password_fail;
 		}
-	} else if (appres.cert_file != NULL) {
+	} else if (appres.ssl.cert_file != NULL) {
 		if (SSL_CTX_use_PrivateKey_file(ssl_ctx,
-			    appres.cert_file,
+			    appres.ssl.cert_file,
 			    cert_file_type) != 1) {
 			if (pending == NULL || !*pending)
 				popup_an_error("Private key file load "
 					"(\"%s\") failed:\n%s",
-					appres.cert_file,
+					appres.ssl.cert_file,
 					get_ssl_error(err_buf));
 			goto password_fail;
 		}
 	}
 
 	/* Check the key. */
-	if (appres.key_file != NULL &&
+	if (appres.ssl.key_file != NULL &&
 	    SSL_CTX_check_private_key(ssl_ctx) != 1) {
 		popup_an_error("Private key check failed:\n%s",
 			get_ssl_error(err_buf));
@@ -3793,9 +3793,9 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 	err = X509_STORE_CTX_get_error(ctx);
 
 	/* We might not care. */
-	if (!appres.verify_host_cert) {
+	if (!appres.ssl.verify_host_cert) {
 		why_not = "not verifying";
-	} else if (appres.self_signed_ok &&
+	} else if (appres.ssl.self_signed_ok &&
 		(err == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT ||
 		 err == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN)) {
 		why_not = "self-signed okay";
@@ -4125,7 +4125,7 @@ ssl_init(void)
 	}
 	SSL_set_verify_depth(ssl_con, 64);
 	vtrace("SSL_init: %sverifying host certificate\n",
-		appres.verify_host_cert? "": "not ");
+		appres.ssl.verify_host_cert? "": "not ");
 	SSL_set_verify(ssl_con, SSL_VERIFY_PEER, ssl_verify_callback);
 	return 0;
 }

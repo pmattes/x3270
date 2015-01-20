@@ -267,23 +267,24 @@ static XtTranslations saved_xt = (XtTranslations) NULL;
 void
 keypad_placement_init(void)
 {
-	if (!strcmp(appres.keypad, KpLeft))
-		kp_placement = kp_left;
-	else if (!strcmp(appres.keypad, KpRight))
-		kp_placement = kp_right;
-	else if (!strcmp(appres.keypad, KpBottom))
-		kp_placement = kp_bottom;
-	else if (!strcmp(appres.keypad, KpIntegral))
-		kp_placement = kp_integral;
-	else if (!strcmp(appres.keypad, KpInsideRight))
-		kp_placement = kp_inside_right;
-	else
-		xs_error("Unknown value for %s", ResKeypad);
+    if (!strcmp(appres.x3270.keypad, KpLeft)) {
+	kp_placement = kp_left;
+    } else if (!strcmp(appres.x3270.keypad, KpRight)) {
+	kp_placement = kp_right;
+    } else if (!strcmp(appres.x3270.keypad, KpBottom)) {
+	kp_placement = kp_bottom;
+    } else if (!strcmp(appres.x3270.keypad, KpIntegral)) {
+	kp_placement = kp_integral;
+    } else if (!strcmp(appres.x3270.keypad, KpInsideRight)) {
+	kp_placement = kp_inside_right;
+    } else {
+	xs_error("Unknown value for %s", ResKeypad);
+    }
 
-	if (kp_placement == kp_integral && fixed_width) {
-		popup_an_error("Cannot have integral keypad and fixed size");
-		kp_placement = kp_right;
-	}
+    if (kp_placement == kp_integral && fixed_width) {
+	popup_an_error("Cannot have integral keypad and fixed size");
+	kp_placement = kp_right;
+    }
 }
 
 /*
@@ -403,84 +404,84 @@ static Widget spf_container;
 static void
 keypad_keys_vert(Widget container)
 {
-	unsigned i;
-	Position row, col;
-	Position x0, y0;
-	Widget c1, c2;
+    unsigned i;
+    Position row, col;
+    Position x0, y0;
+    Widget c1, c2;
 
-	vert_keypad = True;
+    vert_keypad = True;
 
-	/* Container for shifted PF keys */
-	spf_container = XtVaCreateManagedWidget(
+    /* Container for shifted PF keys */
+    spf_container = XtVaCreateManagedWidget(
 	    "shift", compositeWidgetClass, container,
 	    XtNmappedWhenManaged, False,
 	    XtNborderWidth, 0,
 	    XtNwidth, VERT_WIDTH,
 	    XtNheight, TOP_MARGIN+4*(key_height+2*BORDER)+3*SPACING,
 	    NULL);
-	if (appres.interactive.mono)
-		XtVaSetValues(spf_container, XtNbackgroundPixmap, gray, NULL);
-	else
-		XtVaSetValues(spf_container, XtNbackground, keypadbg_pixel,
-		    NULL);
+    if (appres.interactive.mono) {
+	XtVaSetValues(spf_container, XtNbackgroundPixmap, gray, NULL);
+    } else {
+	XtVaSetValues(spf_container, XtNbackground, keypadbg_pixel, NULL);
+    }
 
-	/* PF keys */
-	if (appres.invert_kpshift) {
-		c1 = spf_container;
-		c2 = container;
-	} else {
-		c1 = container;
-		c2 = spf_container;
+    /* PF keys */
+    if (appres.x3270.invert_kpshift) {
+	c1 = spf_container;
+	c2 = container;
+    } else {
+	c1 = container;
+	c2 = spf_container;
+    }
+    row = col = 0;
+    x0 = SIDE_MARGIN;
+    y0 = TOP_MARGIN;
+    for (i = 0; i < VPF_SZ; i++) {
+	vpf_w[0][i] = make_a_button(c1,
+		(Position)(x0 + (col*(pa_width+2*BORDER+SPACING))),
+		(Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
+		pa_width,
+		key_height,
+		&vpf_list[i]);
+	vpf_w[1][i] = make_a_button(c2,
+		(Position)(x0 + (col*(pa_width+2*BORDER+SPACING))),
+		(Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
+		pa_width,
+		key_height,
+		&vspf_list[i]);
+	if (++col >= 3) {
+	    col = 0;
+	    row++;
 	}
-	row = col = 0;
-	x0 = SIDE_MARGIN;
-	y0 = TOP_MARGIN;
-	for (i = 0; i < VPF_SZ; i++) {
-		vpf_w[0][i] = make_a_button(c1,
-		    (Position)(x0 + (col*(pa_width+2*BORDER+SPACING))),
-		    (Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
-		    pa_width,
-		    key_height,
-		    &vpf_list[i]);
-		vpf_w[1][i] = make_a_button(c2,
-		    (Position)(x0 + (col*(pa_width+2*BORDER+SPACING))),
-		    (Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
-		    pa_width,
-		    key_height,
-		    &vspf_list[i]);
-		if (++col >= 3) {
-			col = 0;
-			row++;
-		}
-	}
+    }
 
-	/* Cursor and PA keys */
-	for (i = 0; i < VPAD_SZ; i++) {
-		(void) make_a_button(container,
-		    (Position)(x0 + (col*(pa_width+2*BORDER+SPACING))),
-		    (Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
-		    pa_width,
-		    key_height,
-		    &vpad_list[i]);
-		if (++col >= 3) {
-			col = 0;
-			row++;
-		}
+    /* Cursor and PA keys */
+    for (i = 0; i < VPAD_SZ; i++) {
+	(void) make_a_button(container,
+		(Position)(x0 + (col*(pa_width+2*BORDER+SPACING))),
+		(Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
+		pa_width,
+		key_height,
+		&vpad_list[i]);
+	if (++col >= 3) {
+	    col = 0;
+	    row++;
 	}
+    }
 
-	/* Other keys */
-	for (i = 0; i < VFN_SZ; i++) {
-		(void) make_a_button(container,
-		    (Position)(x0 + (col*(large_key_width+2*BORDER+SPACING))),
-		    (Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
-		    large_key_width,
-		    key_height,
-		    &vfn_list[i]);
-		if (++col >= 2) {
-			col = 0;
-			row++;
-		}
+    /* Other keys */
+    for (i = 0; i < VFN_SZ; i++) {
+	(void) make_a_button(container,
+		(Position)(x0 + (col*(large_key_width+2*BORDER+SPACING))),
+		(Position)(y0 + (row*(key_height+2*BORDER+SPACING))),
+		large_key_width,
+		key_height,
+		&vfn_list[i]);
+	if (++col >= 2) {
+	    col = 0;
+	    row++;
 	}
+    }
 }
 
 static Dimension
@@ -628,28 +629,30 @@ static enum placement *pp;
 void
 keypad_first_up(void)
 {
-	if (!appres.keypad_on || kp_placement == kp_integral)
-		return;
-	keypad_popup_init();
-	popup_popup(keypad_shell, XtGrabNone);
+    if (!appres.x3270.keypad_on || kp_placement == kp_integral) {
+	return;
+    }
+    keypad_popup_init();
+    popup_popup(keypad_shell, XtGrabNone);
 }
 
 /* Called when the keypad popup pops up or down */
 static void
 keypad_updown(Widget w _is_unused, XtPointer client_data, XtPointer call_data)
 {
-	appres.keypad_on = keypad_popped = *(Boolean *)client_data;
-	if (!keypad_popped) {
-	    	XtDestroyWidget(keypad_shell);
-		keypad_shell = NULL;
-		keypad_container = NULL;
-		key_pad = NULL;
-		spf_container = NULL;
-	}
+    appres.x3270.keypad_on = keypad_popped = *(Boolean *)client_data;
+    if (!keypad_popped) {
+	XtDestroyWidget(keypad_shell);
+	keypad_shell = NULL;
+	keypad_container = NULL;
+	key_pad = NULL;
+	spf_container = NULL;
+    }
 
-	if (appres.keypad_on)
-		place_popup(w, (XtPointer)pp, call_data);
-	menubar_keypad_changed();
+    if (appres.x3270.keypad_on) {
+	place_popup(w, (XtPointer)pp, call_data);
+    }
+    menubar_keypad_changed();
 }
 
 /* Create the pop-up keypad */
@@ -789,9 +792,10 @@ void
 keypad_popup(void)
 {
 #if 0
-    	if (keypad_shell != NULL)
-	    	XtPopup(keypad_shell, XtGrabNone);
+    if (keypad_shell != NULL) {
+	XtPopup(keypad_shell, XtGrabNone);
+    }
 #endif
-	appres.keypad_on = True;
-	keypad_first_up();
+    appres.x3270.keypad_on = True;
+    keypad_first_up();
 }

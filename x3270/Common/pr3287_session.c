@@ -481,40 +481,42 @@ pr3287_start_now(const char *lu, Boolean associated)
 		continue;
 	    } else if (!strncmp(s+1, "V%", 2)) {
 #if defined(HAVE_LIBSSL) /*[*/
-		if (appres.verify_host_cert) {
+		if (appres.ssl.verify_host_cert) {
 		    vb_appends(&r, " " OptVerifyHostCert);
 		}
-		if (appres.self_signed_ok) {
+		if (appres.ssl.self_signed_ok) {
 		    vb_appends(&r, " " OptSelfSignedOk);
 		}
-		if (appres.ca_dir) {
-		    vb_appendf(&r, " %s \"%s\"", OptCaDir, appres.ca_dir);
+		if (appres.ssl.ca_dir) {
+		    vb_appendf(&r, " %s \"%s\"", OptCaDir, appres.ssl.ca_dir);
 		}
-		if (appres.ca_file) {
-		    vb_appendf(&r, " %s \"%s\"", OptCaFile, appres.ca_file);
+		if (appres.ssl.ca_file) {
+		    vb_appendf(&r, " %s \"%s\"", OptCaFile,
+			    appres.ssl.ca_file);
 		}
-		if (appres.cert_file) {
+		if (appres.ssl.cert_file) {
 		    vb_appendf(&r, " %s \"%s\"", OptCertFile,
-			    appres.cert_file);
+			    appres.ssl.cert_file);
 		}
-		if (appres.cert_file_type) {
+		if (appres.ssl.cert_file_type) {
 		    vb_appendf(&r, " %s %s", OptCertFileType,
-			    appres.cert_file_type);
+			    appres.ssl.cert_file_type);
 		}
-		if (appres.chain_file) {
+		if (appres.ssl.chain_file) {
 		    vb_appendf(&r, " %s \"%s\"", OptChainFile,
-			    appres.chain_file);
+			    appres.ssl.chain_file);
 		}
-		if (appres.key_file) {
-		    vb_appendf(&r, " %s \"%s\"", OptKeyFile, appres.key_file);
+		if (appres.ssl.key_file) {
+		    vb_appendf(&r, " %s \"%s\"", OptKeyFile,
+			    appres.ssl.key_file);
 		}
-		if (appres.key_passwd) {
+		if (appres.ssl.key_passwd) {
 		    vb_appendf(&r, " %s \"%s\"", OptKeyPasswd,
-			    appres.key_passwd);
+			    appres.ssl.key_passwd);
 		}
-		if (appres.accept_hostname) {
+		if (appres.ssl.accept_hostname) {
 		    vb_appendf(&r, " %s \"%s\"", OptAcceptHostname,
-			    appres.accept_hostname);
+			    appres.ssl.accept_hostname);
 		}
 #endif /*]*/
 		s += 2;

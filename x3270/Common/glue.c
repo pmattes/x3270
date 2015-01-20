@@ -496,17 +496,17 @@ set_appres_defaults(void)
     appres.bind_limit = True;
     appres.new_environ = True;
 
-    appres.icrnl = True;
-    appres.inlcr = False;
-    appres.onlcr = True;
-    appres.erase = "^H";
-    appres.kill = "^U";
-    appres.werase = "^W";
-    appres.rprnt = "^R";
-    appres.lnext = "^V";
-    appres.intr = "^C";
-    appres.quit = "^\\";
-    appres.eof = "^D";
+    appres.linemode.icrnl = True;
+    appres.linemode.inlcr = False;
+    appres.linemode.onlcr = True;
+    appres.linemode.erase = "^H";
+    appres.linemode.kill = "^U";
+    appres.linemode.werase = "^W";
+    appres.linemode.rprnt = "^R";
+    appres.linemode.lnext = "^V";
+    appres.linemode.intr = "^C";
+    appres.linemode.quit = "^\\";
+    appres.linemode.eof = "^D";
 
     appres.unlock_delay = True;
     appres.unlock_delay_ms = 350;
@@ -525,8 +525,8 @@ set_appres_defaults(void)
     appres.devname = "x3270";
 
 #if defined(HAVE_LIBSSL) /*[*/
-    appres.verify_host_cert = False;
-    appres.tls = True;
+    appres.ssl.verify_host_cert = False;
+    appres.ssl.tls = True;
 #endif /*]*/
 
 #if defined(C3270) /*[*/
@@ -572,7 +572,7 @@ static struct {
     char *help_text;
 } opts[] = {
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptAcceptHostname,OPT_STRING,False,ResAcceptHostname,offset(accept_hostname),
+{ OptAcceptHostname,OPT_STRING,False,ResAcceptHostname,offset(ssl.accept_hostname),
     "any|DNS:<name>|IP:<addr>","Host name to accept from server certificate" },
 #endif /*]*/
 #if defined(C3270) /*[*/
@@ -592,9 +592,9 @@ static struct {
 { OptAplMode,  OPT_BOOLEAN, True,  ResAplMode,   offset(apl_mode),
     NULL, "Turn on APL mode" },
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptCaDir,    OPT_STRING,  False, ResCaDir,     offset(ca_dir),
+{ OptCaDir,    OPT_STRING,  False, ResCaDir,     offset(ssl.ca_dir),
     "<directory>","Specify OpenSSL CA certificate database directory" },
-{ OptCaFile,   OPT_STRING,  False, ResCaFile,    offset(ca_file),
+{ OptCaFile,   OPT_STRING,  False, ResCaFile,    offset(ssl.ca_file),
     "<filename>", "Specify OpenSSL CA certificate file" },
 #endif /*]*/
 #if defined(C3270) && !defined(_WIN32) /*[*/
@@ -602,11 +602,11 @@ static struct {
     NULL, "Force terminal CBREAK mode" },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptCertFile, OPT_STRING,  False, ResCertFile,  offset(cert_file),
+{ OptCertFile, OPT_STRING,  False, ResCertFile,  offset(ssl.cert_file),
     "<filename>", "Specify OpenSSL certificate file" },
-{ OptCertFileType,OPT_STRING,False,ResCertFileType,  offset(cert_file_type),
+{ OptCertFileType,OPT_STRING,False,ResCertFileType,  offset(ssl.cert_file_type),
     "pem|asn1",   "Specify OpenSSL certificate file type" },
-{ OptChainFile,OPT_STRING,  False,ResChainFile,  offset(chain_file),
+{ OptChainFile,OPT_STRING,  False,ResChainFile,  offset(ssl.chain_file),
     "<filename>", "Specify OpenSSL certificate chain file" },
 #endif /*]*/
 { OptCharset,  OPT_STRING,  False, ResCharset,   offset(charset),
@@ -639,11 +639,11 @@ static struct {
 { OptHttpd,    OPT_STRING,  False, ResHttpd,     offset(httpd_port),
     "[<addr>:]<port>", "TCP port to listen on for http requests" },
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptKeyFile,  OPT_STRING,  False, ResKeyFile, offset(key_file),
+{ OptKeyFile,  OPT_STRING,  False, ResKeyFile, offset(ssl.key_file),
     "<filename>", "Get OpenSSL private key from <filename>" },
-{ OptKeyFileType,OPT_STRING,False, ResKeyFileType,offset(key_file_type),
+{ OptKeyFileType,OPT_STRING,False, ResKeyFileType,offset(ssl.key_file_type),
     "pem|asn1",   "Specify OpenSSL private key file type" },
-{ OptKeyPasswd,OPT_STRING,  False, ResKeyPasswd,offset(key_passwd),
+{ OptKeyPasswd,OPT_STRING,  False, ResKeyPasswd,offset(ssl.key_passwd),
     "file:<filename>|string:<text>","Specify OpenSSL private key password" },
 #endif /*]*/
 #if defined(C3270) /*[*/
@@ -703,7 +703,7 @@ static struct {
     NULL, "Restrict potentially-destructive user actions" },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptSelfSignedOk, OPT_BOOLEAN, True, ResSelfSignedOk, offset(self_signed_ok),
+{ OptSelfSignedOk, OPT_BOOLEAN, True, ResSelfSignedOk, offset(ssl.self_signed_ok),
     NULL, "Allow self-signed host certificates" },
 #endif /*]*/
 { OptSet,      OPT_SKIP2,   False, NULL,         NULL,
@@ -732,7 +732,7 @@ static struct {
 { OptV,        OPT_V,	False, NULL,	     NULL,
     NULL, "Display build options and character sets" },
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptVerifyHostCert,OPT_BOOLEAN,True,ResVerifyHostCert,offset(verify_host_cert),
+{ OptVerifyHostCert,OPT_BOOLEAN,True,ResVerifyHostCert,offset(ssl.verify_host_cert),
     NULL, "Enable OpenSSL host certificate validation" },
 #endif /*]*/
 { OptVersion,  OPT_V,	False, NULL,	     NULL,
@@ -1025,14 +1025,14 @@ static struct {
     { ResBellMode,offset(c3270.bell_mode),	XRM_STRING },
 #endif /*]*/
     { ResBindLimit,	offset(bind_limit),	XRM_BOOLEAN },
-    { ResBsdTm,	offset(bsd_tm),			XRM_BOOLEAN },
+    { ResBsdTm,		offset(bsd_tm),		XRM_BOOLEAN },
 #if defined(HAVE_LIBSSL) /*[*/
-    { ResAcceptHostname,offset(accept_hostname),XRM_STRING },
-    { ResCaDir,	offset(ca_dir),			XRM_STRING },
-    { ResCaFile,	offset(ca_file),	XRM_STRING },
-    { ResCertFile,	offset(cert_file),	XRM_STRING },
-    { ResCertFileType,offset(cert_file_type),	XRM_STRING },
-    { ResChainFile,	offset(chain_file),	XRM_STRING },
+    { ResAcceptHostname,offset(ssl.accept_hostname),XRM_STRING },
+    { ResCaDir,		offset(ssl.ca_dir),	XRM_STRING },
+    { ResCaFile,	offset(ssl.ca_file),	XRM_STRING },
+    { ResCertFile,	offset(ssl.cert_file),	XRM_STRING },
+    { ResCertFileType,offset(ssl.cert_file_type),	XRM_STRING },
+    { ResChainFile,	offset(ssl.chain_file),	XRM_STRING },
 #endif /*]*/
     { ResCharset,	offset(charset),	XRM_STRING },
     { ResColor8,	offset(color8),		XRM_BOOLEAN },
@@ -1049,25 +1049,25 @@ static struct {
     { ResDefScreen,	offset(c3270.defscreen),XRM_STRING },
 # endif /*]*/
 #endif /*]*/
-    { ResEof,	offset(eof),			XRM_STRING },
-    { ResErase,	offset(erase),			XRM_STRING },
+    { ResEof,		offset(linemode.eof),	XRM_STRING },
+    { ResErase,		offset(linemode.erase),	XRM_STRING },
     { ResExtended,	offset(extended),	XRM_BOOLEAN },
     { ResDftBufferSize,offset(dft_buffer_size),XRM_INT },
     { ResHostname,	offset(hostname),	XRM_STRING },
     { ResHostsFile,	offset(hostsfile),	XRM_STRING },
-    { ResIcrnl,	offset(icrnl),			XRM_BOOLEAN },
-    { ResInlcr,	offset(inlcr),			XRM_BOOLEAN },
-    { ResOnlcr,	offset(onlcr),			XRM_BOOLEAN },
-    { ResIntr,	offset(intr),			XRM_STRING },
+    { ResIcrnl,		offset(linemode.icrnl),	XRM_BOOLEAN },
+    { ResInlcr,		offset(linemode.inlcr),	XRM_BOOLEAN },
+    { ResOnlcr,		offset(linemode.onlcr),	XRM_BOOLEAN },
+    { ResIntr,		offset(linemode.intr),	XRM_STRING },
 #if defined(C3270) || defined(S3270) /*[*/
     { ResIdleCommand,offset(idle_command),	XRM_STRING },
     { ResIdleCommandEnabled,offset(idle_command_enabled),XRM_BOOLEAN },
     { ResIdleTimeout,offset(idle_timeout),	XRM_STRING },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
-    { ResKeyFile,	offset(key_file),	XRM_STRING },
-    { ResKeyFileType,offset(key_file_type),	XRM_STRING },
-    { ResKeyPasswd,	offset(key_passwd),	XRM_STRING },
+    { ResKeyFile,	offset(ssl.key_file),	XRM_STRING },
+    { ResKeyFileType,	offset(ssl.key_file_type),XRM_STRING },
+    { ResKeyPasswd,	offset(ssl.key_passwd),	XRM_STRING },
 #endif /*]*/
 #if defined(C3270) /*[*/
     { ResKeymap,	offset(interactive.key_map),XRM_STRING },
@@ -1078,11 +1078,11 @@ static struct {
 # endif /*]*/
     { ResAsciiBoxDraw,offset(c3270.ascii_box_draw),XRM_BOOLEAN },
 #if defined(CURSES_WIDE) /*[*/
-    { ResAcs,	offset(c3270.acs),		XRM_BOOLEAN },
+    { ResAcs,		offset(c3270.acs),	XRM_BOOLEAN },
 #endif /*]*/
 #endif /*]*/
-    { ResKill,	offset(kill),			XRM_STRING },
-    { ResLnext,	offset(lnext),			XRM_STRING },
+    { ResKill,		offset(linemode.kill),	XRM_STRING },
+    { ResLnext,		offset(linemode.lnext),	XRM_STRING },
 #if defined(_WIN32) /*[*/
     { ResLocalCp,	offset(local_cp),	XRM_INT },
     { ResFtCodePage, offset(ft_cp),		XRM_INT },
@@ -1110,10 +1110,10 @@ static struct {
     { ResPrinterLu,	offset(interactive.printer_lu),XRM_STRING },
     { ResPrinterOptions,offset(interactive.printer_opts),XRM_STRING },
 #endif /*]*/
-    { ResProxy,	offset(proxy),			XRM_STRING },
+    { ResProxy,		offset(proxy),		XRM_STRING },
     { ResQrBgColor,	offset(qr_bg_color),	XRM_BOOLEAN },
-    { ResQuit,	offset(quit),			XRM_STRING },
-    { ResRprnt,	offset(rprnt),			XRM_STRING },
+    { ResQuit,		offset(linemode.quit),	XRM_STRING },
+    { ResRprnt,		offset(linemode.rprnt),	XRM_STRING },
 #if defined(C3270) /*[*/
     { ResReconnect,	offset(interactive.reconnect),XRM_BOOLEAN },
 #if !defined(_WIN32) /*[*/
@@ -1126,7 +1126,7 @@ static struct {
     { ResScreenTraceFile,offset(screentrace_file),XRM_STRING },
     { ResSecure,	offset(secure),		XRM_BOOLEAN },
 #if defined(HAVE_LIBSSL) /*[*/
-    { ResSelfSignedOk,offset(self_signed_ok),	XRM_BOOLEAN },
+    { ResSelfSignedOk,offset(ssl.self_signed_ok),XRM_BOOLEAN },
 #endif /*]*/
     { ResSbcsCgcsgid, offset(sbcs_cgcsgid),	XRM_STRING },
     { ResScriptPort,offset(script_port),	XRM_STRING },
@@ -1135,7 +1135,7 @@ static struct {
     { ResTitle,	offset(c3270.title),		XRM_STRING },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
-    { ResTls,	offset(tls),			XRM_BOOLEAN },
+    { ResTls,	offset(ssl.tls),		XRM_BOOLEAN },
 #endif /*]*/
     { ResTraceDir,	offset(trace_dir),	XRM_STRING },
     { ResTraceFile,	offset(trace_file),	XRM_STRING },
@@ -1145,12 +1145,12 @@ static struct {
     { ResUnlockDelay,offset(unlock_delay),	XRM_BOOLEAN },
     { ResUnlockDelayMs,offset(unlock_delay_ms),	XRM_INT },
 #if defined(HAVE_LIBSSL) /*[*/
-    { ResVerifyHostCert,offset(verify_host_cert),XRM_BOOLEAN },
+    { ResVerifyHostCert,offset(ssl.verify_host_cert),XRM_BOOLEAN },
 #endif /*]*/
 #if defined(WC3270) /*[*/
-    { ResVisualBell,offset(visual_bell),	XRM_BOOLEAN },
+    { ResVisualBell,offset(interactive.visual_bell),XRM_BOOLEAN },
 #endif /*]*/
-    { ResWerase,	offset(werase),		XRM_STRING },
+    { ResWerase,	offset(linemode.werase),XRM_STRING },
 
     { NULL,		0,			XRM_STRING }
 };

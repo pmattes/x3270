@@ -472,13 +472,14 @@ main(int argc, char *argv[])
 
 #if defined(USE_APP_DEFAULTS) /*[*/
 	/* Check the app-defaults version. */
-	if (!appres.ad_version)
-		XtError("Outdated app-defaults file");
-	else if (!strcmp(appres.ad_version, "fallback"))
-		XtError("No app-defaults file");
-	else if (strcmp(appres.ad_version, app_defaults_version))
-		xs_error("app-defaults version mismatch: want %s, got %s",
-		    app_defaults_version, appres.ad_version);
+	if (!appres.x3270.ad_version) {
+	    XtError("Outdated app-defaults file");
+	} else if (!strcmp(appres.x3270.ad_version, "fallback")) {
+	    XtError("No app-defaults file");
+	} else if (strcmp(appres.x3270.ad_version, app_defaults_version)) {
+	    xs_error("app-defaults version mismatch: want %s, got %s",
+		    app_defaults_version, appres.x3270.ad_version);
+	}
 #endif /*]*/
 
 	/*
@@ -508,11 +509,12 @@ main(int argc, char *argv[])
 		model_number = 4;
 #endif /*]*/
 	}
-	if (screen_depth <= 1 || colormap_failure)
-		appres.interactive.mono = True;
+	if (screen_depth <= 1 || colormap_failure) {
+	    appres.interactive.mono = True;
+	}
 	if (appres.interactive.mono) {
-		appres.use_cursor_color = False;
-		appres.m3279 = False;
+	    appres.x3270.use_cursor_color = False;
+	    appres.m3279 = False;
 	}
 	if (!appres.extended)
 		appres.oversize = NULL;
@@ -617,8 +619,9 @@ main(int argc, char *argv[])
 		appres.interactive.reconnect = False;
 	}
 
-	if (appres.char_class != NULL)
-		reclass(appres.char_class);
+	if (appres.x3270.char_class != NULL) {
+	    reclass(appres.x3270.char_class);
+	}
 
 	screen_init();
 

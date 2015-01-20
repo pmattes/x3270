@@ -36,26 +36,11 @@
 /* Application resources */
 
 typedef struct {
-    /* Options (not toggles) */
+    /* Common options. */
     Boolean	 extended;
     Boolean	 m3279;
     Boolean	 modified_sel;
     Boolean	 once;
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
-    Boolean	 visual_bell;
-#endif /*]*/
-#if defined(X3270_DISPLAY) /*[*/
-    Boolean	 active_icon;
-    Boolean	 label_icon;
-    Boolean	 invert_kpshift;
-    Boolean	 use_cursor_color;
-    Boolean	 allow_resize;
-    Boolean	 no_other;
-    Boolean	 visual_select;
-    Boolean	 suppress_host;
-    Boolean	 suppress_font_menu;
-    Boolean	 keypad_on;
-#endif /*]*/
     Boolean	 apl_mode;
     Boolean	 scripted;
     Boolean	 numeric_lock;
@@ -72,31 +57,11 @@ typedef struct {
     Boolean	 bind_limit;
     Boolean	 new_environ;
     Boolean	 socket;
+    Boolean	 dsTrace_bc;
+    Boolean	 eventTrace_bc;
+    Boolean	 trace_monitor;
     char	*script_port;
     char	*httpd_port;
-
-    /* Named resources */
-#if defined(X3270_DISPLAY) /*[*/
-    char	*keypad;
-    char	*efontname;
-    char	*fixed_size;
-    char	*icon_font;
-    char	*icon_label_font;
-    char	*normal_name;
-    char	*select_name;
-    char	*bold_name;
-    char	*colorbg_name;
-    char	*keypadbg_name;
-    char	*selbg_name;
-    char	*cursor_color_name;
-    char	*color_scheme;
-    int		 bell_volume;
-    char	*char_class;
-    int		 modified_sel_color;
-    int		 visual_select_color;
-    char	*input_method;
-    char	*preedit_type;
-#endif /*]*/
     char	*dbcs_cgcsgid;
     char	*conf_dir;
     char	*model;
@@ -113,9 +78,6 @@ typedef struct {
     char	*trace_file;
     char	*screentrace_file;
     char	*trace_file_size;
-    Boolean	 dsTrace_bc;
-    Boolean	 eventTrace_bc;
-    Boolean	 trace_monitor;
     char	*oversize;
     char	*ft_command;
     int		 dft_buffer_size;
@@ -123,51 +85,83 @@ typedef struct {
     char	*idle_command;
     Boolean	 idle_command_enabled;
     char	*idle_timeout;
-#if defined(HAVE_LIBSSL) /*[*/
-    char	*ca_dir;
-    char	*ca_file;
-    char	*cert_file;
-    char	*cert_file_type;
-    char	*chain_file;
-    char	*key_file;
-    char	*key_file_type;
-    char	*key_passwd;
-    char	*accept_hostname;
-    Boolean	 self_signed_ok;
-    Boolean	 verify_host_cert;
-    Boolean	 tls;
-#endif /*]*/
     char	*proxy;
     int		 unlock_delay_ms;
-
-    /* Toggles */
-    Boolean toggle[N_TOGGLES];
-
-    /* Line-mode TTY parameters */
-    Boolean	 icrnl;
-    Boolean	 inlcr;
-    Boolean	 onlcr;
-    char	*erase;
-    char	*kill;
-    char	*werase;
-    char	*rprnt;
-    char	*lnext;
-    char	*intr;
-    char	*quit;
-    char	*eof;
-
     char	*hostname;
-
+    Boolean	 utf8;
 #if defined(_WIN32) /*[*/
     int		 local_cp;
     int		 ft_cp;
 #endif /*]*/
-    Boolean	 utf8;
 
-#if defined(USE_APP_DEFAULTS) /*[*/
-    /* App-defaults version */
-    char	*ad_version;
-#endif /*]*/
+    /* Toggles. */
+    Boolean toggle[N_TOGGLES];
+
+    /* Line-mode TTY parameters. */
+    struct {
+	Boolean	 icrnl;
+	Boolean	 inlcr;
+	Boolean	 onlcr;
+	char	*erase;
+	char	*kill;
+	char	*werase;
+	char	*rprnt;
+	char	*lnext;
+	char	*intr;
+	char	*quit;
+	char	*eof;
+    } linemode;
+
+    /* x3270 fields. */
+    struct {
+	Boolean	 active_icon;
+	Boolean	 label_icon;
+	Boolean	 invert_kpshift;
+	Boolean	 use_cursor_color;
+	Boolean	 allow_resize;
+	Boolean	 no_other;
+	Boolean	 visual_select;
+	Boolean	 suppress_host;
+	Boolean	 suppress_font_menu;
+	Boolean	 keypad_on;
+	char	*keypad;
+	char	*efontname;
+	char	*fixed_size;
+	char	*icon_font;
+	char	*icon_label_font;
+	char	*normal_name;
+	char	*select_name;
+	char	*bold_name;
+	char	*colorbg_name;
+	char	*keypadbg_name;
+	char	*selbg_name;
+	char	*cursor_color_name;
+	char	*color_scheme;
+	int	 bell_volume;
+	char	*char_class;
+	int	 modified_sel_color;
+	int	 visual_select_color;
+	char	*input_method;
+	char	*preedit_type;
+	char	*ad_version;
+    } x3270;
+
+    /* SSL fields. */
+    struct {
+	char	*ca_dir;
+	char	*ca_file;
+	char	*cert_file;
+	char	*cert_file_type;
+	char	*chain_file;
+	char	*key_file;
+	char	*key_file_type;
+	char	*key_passwd;
+	char	*accept_hostname;
+	Boolean	 self_signed_ok;
+	Boolean	 verify_host_cert;
+	Boolean	 tls;
+    } ssl;
+
     /* Interactive (x3270/c3270/wc3270) fields. */
     struct {
 #if !defined(_WIN32) /*[*/
@@ -176,6 +170,7 @@ typedef struct {
 	Boolean	 reconnect;
 	Boolean	 do_confirms;
 	Boolean	 menubar;
+	Boolean	 visual_bell;
 	char	*key_map;
 	char	*compose_map;
 	char	*printer_lu;
@@ -187,7 +182,8 @@ typedef struct {
     struct {
 	Boolean	 all_bold_on;
 	Boolean	 ascii_box_draw;
-# if !defined(_WIN32) /*[*/
+	Boolean	 acs;
+#if !defined(_WIN32) /*[*/
 	Boolean	 default_fgbg;
 	Boolean	 cbreak_mode;
 	Boolean	 curses_keypad;
@@ -195,22 +191,17 @@ typedef struct {
 	Boolean	 reverse_video;
 #else /*]*/
 	Boolean	 auto_shortcut;
-# endif /*]*/
-# if defined(CURSES_WIDE) /*[*/
-	Boolean	 acs;
-# endif /*]*/
+#endif /*]*/
 
 	char	*all_bold;
-# if !defined(_WIN32) /*[*/
-#  if defined(C3270_80_132) /*[*/
+#if !defined(_WIN32) /*[*/
 	char	*altscreen;
 	char	*defscreen;
-#  endif /*]*/
 	char	*meta_escape;
-# else /*][*/
+#else /*][*/
 	char	*bell_mode;
 	char	*title;
-# endif /*]*/
+#endif /*]*/
     } c3270;
 
     /* tcl3270-specific fields. */

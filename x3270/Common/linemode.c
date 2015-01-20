@@ -108,14 +108,14 @@ linemode_init(void)
 	return;
     }
 
-    vintr   = parse_ctlchar(appres.intr);
-    vquit   = parse_ctlchar(appres.quit);
-    verase  = parse_ctlchar(appres.erase);
-    vkill   = parse_ctlchar(appres.kill);
-    veof    = parse_ctlchar(appres.eof);
-    vwerase = parse_ctlchar(appres.werase);
-    vrprnt  = parse_ctlchar(appres.rprnt);
-    vlnext  = parse_ctlchar(appres.lnext);
+    vintr   = parse_ctlchar(appres.linemode.intr);
+    vquit   = parse_ctlchar(appres.linemode.quit);
+    verase  = parse_ctlchar(appres.linemode.erase);
+    vkill   = parse_ctlchar(appres.linemode.kill);
+    veof    = parse_ctlchar(appres.linemode.eof);
+    vwerase = parse_ctlchar(appres.linemode.werase);
+    vrprnt  = parse_ctlchar(appres.linemode.rprnt);
+    vlnext  = parse_ctlchar(appres.linemode.lnext);
 
     t_valid = True;
 }
@@ -133,9 +133,9 @@ linemode_out(const char *buf, int len)
 	char c = buf[i];
 
 	/* Input conversions. */
-	if (!lnext && c == '\r' && appres.icrnl) {
+	if (!lnext && c == '\r' && appres.linemode.icrnl) {
 	    c = '\n';
-	} else if (!lnext && c == '\n' && appres.inlcr) {
+	} else if (!lnext && c == '\n' && appres.linemode.inlcr) {
 	    c = '\r';
 	}
 
