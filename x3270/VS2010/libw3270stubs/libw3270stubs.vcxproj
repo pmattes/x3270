@@ -15,6 +15,7 @@
     <ClCompile Include="..\..\lib\w3270stubs\menubar_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\nvt_gui_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\popups_stubs.c" />
+    <ClCompile Include="..\..\lib\w3270stubs\print_gui_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs1.c" />
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs2.c" />
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs3.c" />

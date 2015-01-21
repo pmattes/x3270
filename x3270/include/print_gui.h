@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2015, Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,52 +26,8 @@
  */
 
 /*
- *	print_gui.c
- *		x3270-specific functions for the PrintText action.
+ *	print_gui.h
+ *		Global declarations for print_gui.c.
  */
 
-#include "globals.h"
-
-#include "print_gui.h"
-#include "stmenu.h"
-
-/* Typedefs */
-
-/* Globals */
-
-/* Statics */
-
-/**
- * GUI for the PrintText action.
- *
- * @param[in] use_file	True if the output is a file, False if the output is
- * 			going to a printer
- *
- * @return True if a confirmation dialog was popped up, False if the guts of
- *	   the action should be run now.
- */
-Boolean
-print_text_gui(Boolean use_file)
-{
-    if (ia_cause == IA_COMMAND ||
-	ia_cause == IA_MACRO ||
-	ia_cause == IA_SCRIPT) {
-
-	/* Invoked by a script. Run the guts now. */
-	return False;
-
-    } else {
-	/* Invoked from a keymap -- pop up the confirmation dialog. */
-	/* XXX: What about the globals referenced by stmenu_popup?
-	 *        file_flag
-	 *        stm_ptype
-	 *        continuously_flag
-	 */
-	if (use_file) {
-	    stmenu_popup(STMP_TEXT);
-	} else {
-	    stmenu_popup(STMP_PRINTER);
-	}
-	return True;
-    }
-}
+Boolean print_text_gui(Boolean use_file);

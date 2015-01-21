@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,12 +26,16 @@
  */
 
 /*
- *	print_guic.h
- *		Global declarations for print_gui.c.
+ *	print_gui_stubs.h
+ *		Stubs for the print text GUI.
  */
 
-#if defined(X3270_DISPLAY) /*[*/
-extern Boolean print_text_gui(Boolean use_file);
-#else /*][*/
-# define print_text_gui(use_file) False
-#endif /*]*/
+#include "globals.h"
+
+#include "print_gui.h"
+
+Boolean
+print_text_gui(Boolean use_file _is_unused)
+{
+    return False;
+}
