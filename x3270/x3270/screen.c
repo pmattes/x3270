@@ -5812,23 +5812,16 @@ screen_unselect_all(void)
     (void) memset((char *)selected, 0, (ROWS*COLS + 7) / 8);
 }
 
-/* Stubs for c3270-ish functions. */
-void
-screen_132(void)
-{
-}
-
-void
-screen_80(void)
-{
-}
-
+/**
+ * Does this display support background color? (No.)
+ *
+ * @return True if supported, False if not.
+ */
 Boolean
 screen_has_bg_color(void)
 {
     return False;
 }
-
 
 /**
  * Screen module registration.

@@ -2793,19 +2793,9 @@ ring_bell(void)
 void
 screen_flip(void)
 {
-	flipped = !flipped;
-	screen_changed = True;
-	screen_disp(False);
-}
-
-void
-screen_132(void)
-{
-}
-
-void
-screen_80(void)
-{
+    flipped = !flipped;
+    screen_changed = True;
+    screen_disp(False);
 }
 
 /*
