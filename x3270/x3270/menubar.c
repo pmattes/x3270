@@ -50,7 +50,7 @@
 #include "actions.h"
 #include "about.h"
 #include "charsetc.h"
-#include "ft_guic.h"
+#include "ft_gui.h"
 #include "hostc.h"
 #include "idle_gui.h"
 #include "keymap.h"

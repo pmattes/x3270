@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\lib\w3270stubs\ft_gui_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\menubar_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\popups_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs1.c" />

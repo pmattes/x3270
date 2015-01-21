@@ -60,7 +60,7 @@
 #include "varbuf.h"
 #include "xmenubar.h"
 
-#include "ft_guic.h"
+#include "ft_gui.h"
 
 /* Macros. */
 #define FILE_WIDTH	300	/* width of file name widgets */

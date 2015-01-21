@@ -42,7 +42,7 @@
 #include "charsetc.h"
 #include "ft_cutc.h"
 #include "ft_dftc.h"
-#include "ft_guic.h"
+#include "ft_gui.h"
 #include "ft_private.h"
 #include "unicodec.h"
 #include "ftc.h"

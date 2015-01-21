@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2014, Paul Mattes.
+ * Copyright (c) 1996-2015 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -28,31 +28,17 @@
  */
 
 /*
- *	ft_guic.h
+ *	ft_gui.h
  *		Header file for file transfer dialogs.
  */
 
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
-extern void ft_gui_progress_popdown(void);
-extern void ft_gui_errmsg_prepare(char *msg);
-extern void ft_gui_clear_progress(void);
-extern void ft_gui_complete_popup(const char *msg);
-extern void ft_gui_update_length(unsigned long length);
-extern void ft_gui_running(unsigned long length);
-extern void ft_gui_aborting(void);
-extern Boolean ft_gui_interact(char ***params, unsigned *num_params);
-extern void ft_gui_awaiting(void);
-# if defined(X3270_DISPLAY) /*[*/
-extern void ft_gui_popup_ft(void);
-# endif /*]*/
-#else /*][*/
-# define ft_gui_progress_popdown()
-# define ft_gui_errmsg_prepare(msg)
-# define ft_gui_clear_progress()
-# define ft_gui_complete_popup(msg)
-# define ft_gui_update_length(length)
-# define ft_gui_running(length)
-# define ft_gui_aborting()
-# define ft_gui_interact(params, num_params)	False
-# define ft_gui_awaiting()
-#endif /*]*/
+void ft_gui_progress_popdown(void);
+void ft_gui_errmsg_prepare(char *msg);
+void ft_gui_clear_progress(void);
+void ft_gui_complete_popup(const char *msg);
+void ft_gui_update_length(unsigned long length);
+void ft_gui_running(unsigned long length);
+void ft_gui_aborting(void);
+Boolean ft_gui_interact(char ***params, unsigned *num_params);
+void ft_gui_awaiting(void);
+void ft_gui_popup_ft(void);
