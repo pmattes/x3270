@@ -35,7 +35,7 @@
 #include <X11/Shell.h>
 
 #include "appres.h"
-#include "nvt_guic.h"
+#include "nvt_gui.h"
 #include "screen.h"
 #include "xscreen.h"
 

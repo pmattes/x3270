@@ -42,7 +42,7 @@
 #include "hostc.h"
 #include "macrosc.h"
 #include "nvtc.h"
-#include "nvt_guic.h"
+#include "nvt_gui.h"
 #include "screen.h"
 #include "scroll.h"
 #include "tables.h"

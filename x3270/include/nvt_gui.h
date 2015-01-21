@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Paul Mattes.
+ * Copyright (c) 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,12 +26,8 @@
  */
 
 /*
- *	nvt_guic.h
+ *	nvt_gui.h
  *		Global declarations for nvt_gui.c.
  */
 
-#if defined(X3270_DISPLAY) || defined(WC3270) /*[*/
-extern void xterm_text_gui(int code, const char *text);
-#else /*][*/
-# define xterm_text_gui(code, text)
-#endif /*]*/
+void xterm_text_gui(int code, const char *text);

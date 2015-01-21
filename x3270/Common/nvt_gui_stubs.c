@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,32 +26,15 @@
  */
 
 /*
- *	nvt_gui.c
- *		X11-specific functions for NVT mode.
+ *	nvt_gui_stubs.c
+ *		Stubs for the NVT-mode GUI functions.
  */
 
 #include "globals.h"
 
-#include "appres.h"
-#include "cscreen.h"
 #include "nvt_gui.h"
-#include "screen.h"
 
-/**
- * X11 version of the xterm text escape
- *
- * @param[in] opcode	Operation to perform
- * @param[in] text	Associated text
- */
 void
-xterm_text_gui(int code, const char *text)
+xterm_text_gui(int code _is_unused, const char *text _is_unused)
 {
-    switch (code) {
-    case 0:	/* icon name and window title */
-    case 2:	/* window_title */
-	screen_title(text);
-	break;
-    default:
-	break;
-    }
 }
