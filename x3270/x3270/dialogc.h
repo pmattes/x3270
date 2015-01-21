@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, 2014 Paul Mattes.
+ * Copyright (c) 1996-2009, 2014-2015 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  * 
@@ -33,23 +33,21 @@
  *		Global declarations for dialog.c.
  */
 
-#if defined(X3270_DISPLAY) /*[*/
-
 typedef struct sr {
-	struct sr *next;
-	Widget w;
-	Boolean *bvar1;
-	Boolean bval1;
-	Boolean *bvar2;
-	Boolean bval2;
-	Boolean *bvar3;
-	Boolean bval3;
-	Boolean is_value;
-	Boolean has_focus;
+    struct sr *next;
+    Widget w;
+    Boolean *bvar1;
+    Boolean bval1;
+    Boolean *bvar2;
+    Boolean bval2;
+    Boolean *bvar3;
+    Boolean bval3;
+    Boolean is_value;
+    Boolean has_focus;
 } sr_t;
 
 struct toggle_list {                    /* List of toggle widgets */
-	Widget *widgets;
+    Widget *widgets;
 };  
 
 typedef enum { T_NUMERIC, T_HOSTFILE, T_UNIXFILE, T_COMMAND } text_t;
@@ -59,21 +57,18 @@ extern text_t t_unixfile;
 extern text_t t_command;
 extern Boolean s_true, s_false;
 
-extern void dialog_set(sr_t **, Widget);
-extern void dialog_apply_bitmap(Widget w, Pixmap p);
-extern void dialog_check_sensitivity(Boolean *bvar);
-extern void dialog_register_sensitivity(Widget w, Boolean *bvar1,
-    Boolean bval1, Boolean *bvar2, Boolean bval2, Boolean *bvar3,
-    Boolean bval3);
-extern void dialog_flip_toggles(struct toggle_list *toggle_list, Widget w);
-extern void dialog_text_callback(Widget w, XtPointer client_data,
-    XtPointer call_data _is_unused);
-extern void dialog_match_dimension(Widget w1, Widget w2, const char *n);
-extern void dialog_mark_toggle(Widget w, Pixmap p);
+void dialog_set(sr_t **, Widget);
+void dialog_apply_bitmap(Widget w, Pixmap p);
+void dialog_check_sensitivity(Boolean *bvar);
+void dialog_register_sensitivity(Widget w, Boolean *bvar1, Boolean bval1,
+	Boolean *bvar2, Boolean bval2, Boolean *bvar3, Boolean bval3);
+void dialog_flip_toggles(struct toggle_list *toggle_list, Widget w);
+void dialog_text_callback(Widget w, XtPointer client_data,
+	XtPointer call_data _is_unused);
+void dialog_match_dimension(Widget w1, Widget w2, const char *n);
+void dialog_mark_toggle(Widget w, Pixmap p);
 
-extern void PA_dialog_focus_xaction(Widget w, XEvent *event, String *parms,
-    Cardinal *num_parms);
-extern void PA_dialog_next_xaction(Widget w, XEvent *event, String *parms,
-    Cardinal *num_parms);
-
-#endif /*]*/
+void PA_dialog_focus_xaction(Widget w, XEvent *event, String *parms,
+	Cardinal *num_parms);
+void PA_dialog_next_xaction(Widget w, XEvent *event, String *parms,
+	Cardinal *num_parms);

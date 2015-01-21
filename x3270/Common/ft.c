@@ -46,7 +46,6 @@
 #include "ft_private.h"
 #include "unicodec.h"
 #include "ftc.h"
-#include "dialogc.h"
 #include "hostc.h"
 #include "kybdc.h"
 #include "macrosc.h"

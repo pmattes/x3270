@@ -58,7 +58,6 @@
 #include "hostc.h"
 #include "idlec.h"
 #include "keymap.h"
-#include "keypadc.h"
 #include "kybdc.h"
 #include "lazya.h"
 #include "linemodec.h"
