@@ -66,7 +66,7 @@
 #include "print_window.h"
 #include "resourcesc.h"
 #include "save.h"
-#include "screenc.h"
+#include "screen.h"
 #include "selectc.h"
 #include "statusc.h"
 #include "telnetc.h"
@@ -78,6 +78,7 @@
 #include "xio.h"
 #include "xkybd.h"
 #include "xmenubar.h"
+#include "xscreen.h"
 #include "xscroll.h"
 
 /* Globals */

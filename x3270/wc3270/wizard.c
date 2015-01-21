@@ -46,7 +46,7 @@
 #include "macrosc.h"
 #include "proxy.h"
 #include "resources.h"
-#include "screenc.h"
+#include "screen.h"
 #include "trace.h"
 #include "utilc.h"
 

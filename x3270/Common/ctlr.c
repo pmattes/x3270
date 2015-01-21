@@ -58,7 +58,7 @@
 #include "lazya.h"
 #include "macrosc.h"
 #include "popupsc.h"
-#include "screenc.h"
+#include "screen.h"
 #include "scroll.h"
 #include "see.h"
 #include "selectc.h"

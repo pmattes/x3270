@@ -37,7 +37,6 @@
 #include "globals.h"
 #include "3270ds.h"
 #include "appres.h"
-#include "screen.h"
 #include "ctlr.h"
 
 #include "charsetc.h"
@@ -46,7 +45,7 @@
 #include "kybdc.h"
 #include "sfc.h"	/* has to come before rpqc.h */
 #include "rpqc.h"
-#include "screenc.h"
+#include "screen.h"
 #include "see.h"
 #include "telnetc.h"
 #include "trace.h"

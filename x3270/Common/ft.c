@@ -52,7 +52,7 @@
 #include "macrosc.h"
 #include "objects.h"
 #include "popupsc.h"
-#include "screenc.h"
+#include "screen.h"
 #include "telnetc.h"
 #include "utilc.h"
 #include "varbuf.h"

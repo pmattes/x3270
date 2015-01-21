@@ -63,7 +63,6 @@
 #include "3270ds.h"
 #include "appres.h"
 #include "ctlr.h"
-#include "screen.h"
 #include "resources.h"
 #include "toggles.h"
 
@@ -71,7 +70,7 @@
 #include "ctlrc.h"
 #include "kybdc.h"
 #include "popupsc.h"
-#include "screenc.h"
+#include "screen.h"
 #include "selectc.h"
 #include "tables.h"
 #include "unicodec.h"

@@ -38,10 +38,16 @@
 
 #include "3270ds.h"
 #include "actions.h"
+#if defined(C3270) /*[*/
+# include "cscreen.h"
+#endif /*]*/
 #include "ctlrc.h"
 #include "kybdc.h"
 #include "popupsc.h"
-#include "screenc.h"
+#include "screen.h"
+#if defined(X3270_DISPLAY) /*[*/
+# include "xscreen.h"
+#endif /*]*/
 #include "scroll.h"
 #include "selectc.h"
 #include "statusc.h"

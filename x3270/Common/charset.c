@@ -44,7 +44,7 @@
 #include "lazya.h"
 #include "popupsc.h"
 #if defined(X3270_DISPLAY) /*[*/
-# include "screenc.h"
+# include "xscreen.h"
 #endif /*]*/
 #include "unicodec.h"
 #include "unicode_dbcsc.h"

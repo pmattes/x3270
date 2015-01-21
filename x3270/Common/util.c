@@ -43,7 +43,8 @@
 #endif /*]*/
 #if defined(WC3270) /*[*/
 # include "appres.h"
-# include "screenc.h"
+# include "screen.h"
+# include "cscreen.h"
 #endif /*]*/
 #include "asprintf.h"
 #include "charsetc.h"

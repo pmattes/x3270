@@ -25,47 +25,27 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* c3270 version of screenc.h */
+/*
+ * 	cscreen.h
+ *		c3270/wc3270 screen declarations.
+ **/
 
-#define blink_start()
-#define display_heightMM()	100
-#define display_height()	1
-#define display_widthMM()	100
-#define display_width()		1
-#define mcursor_locked()
-#define mcursor_normal()
-#define mcursor_waiting()
-#define screen_obscured()	False
-#define screen_scroll()
+extern Boolean escaped;
+#if defined(WC3270) /*[*/
+extern int windows_cp;
+#endif /*]*/
 
-void cursor_move(int baddr);
-void ring_bell(void);
-void screen_132(void);
-void screen_80(void);
-void screen_disp(Boolean erasing);
 void screen_init(void);
-void screen_flip(void);
 void screen_resume(void);
 Boolean screen_suspend(void);
 FILE *start_pager(void);
 void screen_register(void);
+void screen_final(void);
+void screen_set_thumb(float top, float shown);
+void enable_cursor(Boolean on);
 #if defined(WC3270) /*[*/
 void screen_fixup(void);
 void pager_output(const char *s);
 Boolean screen_wait_for_key(char *c);
-#endif /*]*/
-#define screen_set_thumb(top, shown)
-#define enable_cursor(on)
-
-extern Boolean escaped;
-
-#if defined(WC3270) /*[*/
 void screen_title(const char *text);
-extern int windows_cp;
 #endif /*]*/
-
-void screen_final(void);
-
-#define screen_window_number()	0L
-
-#define screen_has_bg_color()	True

@@ -43,6 +43,7 @@
 
 #include "actions.h"
 #include "cmenubar.h"
+#include "cscreen.h"
 #include "ctlrc.h"
 #include "gluec.h"
 #include "hostc.h"
@@ -51,7 +52,7 @@
 #include "lazya.h"
 #include "macrosc.h"
 #include "popupsc.h"
-#include "screenc.h"
+#include "screen.h"
 #include "selectc.h"
 #include "statusc.h"
 #include "trace.h"
@@ -2967,6 +2968,27 @@ screen_selected(int baddr)
 
 void
 screen_final(void)
+{
+}
+
+/**
+ * Stub for scrollbar function.
+ *
+ * @param[in] top	Where the top of the scrollbar should be (percentage)
+ * @param[in] shown	How much of the scrollbar to show (percentage)
+ */
+void
+screen_set_thumb(float top _is_unused, float shown _is_unused)
+{
+}
+
+/**
+ * Stub for scrollbar function.
+ *
+ * @param[in] on	Enable (True) or disable (False) the cursor display.
+ */
+void
+enable_cursor(Boolean on _is_unused)
 {
 }
 

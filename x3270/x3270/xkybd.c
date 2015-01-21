@@ -54,7 +54,6 @@
 #include "macrosc.h"
 #include "popupsc.h"
 #include "screen.h"
-#include "screenc.h"
 #include "selectc.h"
 #include "toggles.h"
 #include "trace.h"

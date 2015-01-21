@@ -50,7 +50,7 @@
 #include "nvtc.h"
 #include "popupsc.h"
 #include "readresc.h"
-#include "screenc.h"
+#include "screen.h"
 #include "selectc.h"
 #include "telnetc.h"
 #include "toggles.h"

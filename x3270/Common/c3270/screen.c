@@ -49,7 +49,7 @@
 #include "kybdc.h"
 #include "macrosc.h"
 #include "popupsc.h"
-#include "screenc.h"
+#include "screen.h"
 #include "statusc.h"
 #include "trace.h"
 #include "unicodec.h"
@@ -2423,10 +2423,44 @@ display_ge(unsigned char ebc)
 void
 screen_final()
 {
-    	char *cl;
+    char *cl;
 
-	if ((cl = tigetstr("clear")) != NULL)
-	    	putp(cl);
+    if ((cl = tigetstr("clear")) != NULL) {
+	putp(cl);
+    }
+}
+
+/**
+ * Check if an area of the screen is selected.
+ * This is implemented by wc3270, but not c3270, so it is a stub here.
+ *
+ * @param[in] baddr	Buffer address.
+ */
+Boolean
+screen_selected(int baddr _is_unused)
+{
+    return False;
+}
+
+/**
+ * Stub for scrollbar function.
+ *
+ * @param[in] top	Where the top of the scrollbar should be (percentage)
+ * @param[in] shown	How much of the scrollbar to show (percentage)
+ */
+void
+screen_set_thumb(float top _is_unused, float shown _is_unused)
+{
+}
+
+/**
+ * Stub for scrollbar function.
+ *
+ * @param[in] on	Enable (True) or disable (False) the cursor display.
+ */
+void
+enable_cursor(Boolean on _is_unused)
+{
 }
 
 /**

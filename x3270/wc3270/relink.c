@@ -46,7 +46,7 @@
 #include "hostc.h"
 #include "kybdc.h"
 #include "macrosc.h"
-#include "screenc.h"
+#include "screen.h"
 #include "trace.h"
 #include "utilc.h"
 

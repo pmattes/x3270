@@ -47,6 +47,9 @@
 
 #include "actions.h"
 #include "charsetc.h"
+#if defined(C3270) /*[*/
+# include "cscreen.h"
+#endif /*]*/
 #include "ctlrc.h"
 #include "gluec.h"
 #include "hostc.h"
@@ -56,7 +59,7 @@
 #include "nvtc.h"
 #include "popupsc.h"
 #include "readresc.h"
-#include "screenc.h"
+#include "screen.h"
 #include "selectc.h"
 #include "telnetc.h"
 #include "toggles.h"

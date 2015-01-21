@@ -47,13 +47,14 @@
 #include "macrosc.h"
 #include "popupsc.h"
 #include "resources.h"
-#include "screenc.h"
+#include "screen.h"
 #include "selectc.h"
 #include "trace.h"
 #include "utilc.h"
 #include "xactions.h"
 #include "xkybd.h"
 #include "xmenubar.h"
+#include "xscreen.h"
 
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>

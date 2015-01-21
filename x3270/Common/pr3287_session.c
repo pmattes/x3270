@@ -57,7 +57,7 @@
 #include "print_screen.h"
 #include "save.h"
 #if defined(C3270) /*[*/
-# include "screenc.h"
+# include "screen.h"
 #endif /*]*/
 #include "telnetc.h"
 #include "trace.h"

@@ -71,7 +71,7 @@
 #include "nvtc.h"
 #include "popupsc.h"
 #include "save.h"
-#include "screenc.h"
+#include "screen.h"
 #include "scroll.h"
 #include "see.h"
 #include "statusc.h"
@@ -5811,6 +5811,24 @@ screen_unselect_all(void)
 {
     (void) memset((char *)selected, 0, (ROWS*COLS + 7) / 8);
 }
+
+/* Stubs for c3270-ish functions. */
+void
+screen_132(void)
+{
+}
+
+void
+screen_80(void)
+{
+}
+
+Boolean
+screen_has_bg_color(void)
+{
+    return False;
+}
+
 
 /**
  * Screen module registration.

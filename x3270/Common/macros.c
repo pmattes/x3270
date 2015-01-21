@@ -47,7 +47,6 @@
 #include "3270ds.h"
 #include "appres.h"
 #include "ctlr.h"
-#include "screen.h"
 #include "resources.h"
 #include "toggles.h"
 
@@ -57,6 +56,9 @@
 #endif /*]*/
 #include "charsetc.h"
 #include "childc.h"
+#if defined(WC3270) /*[*/
+# include "cscreen.h"
+#endif /*]*/
 #include "ctlrc.h"
 #include "unicodec.h"
 #include "ftc.h"
@@ -70,7 +72,7 @@
 #if defined(X3270_INTERACTIVE) /*[*/
 # include "pr3287_session.h"
 #endif /*]*/
-#include "screenc.h"
+#include "screen.h"
 #include "statusc.h"
 #include "telnetc.h"
 #include "trace.h"

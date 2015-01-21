@@ -53,7 +53,6 @@
 #include "kybdc.h"
 #include "popupsc.h"
 #include "screen.h"
-#include "screenc.h"
 #include "statusc.h"
 #include "utilc.h"
 #include "xactions.h"

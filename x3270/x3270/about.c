@@ -50,11 +50,11 @@
 #include "lazya.h"
 #include "linemodec.h"
 #include "popupsc.h"
-#include "screenc.h"
 #include "telnetc.h"
 #include "utf8.h"
 #include "utilc.h"
 #include "varbuf.h"
+#include "xscreen.h"
 
 static Widget about_shell = NULL;
 static Widget about_form;

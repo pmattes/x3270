@@ -53,7 +53,7 @@
 #include <sys/stat.h>
 #include "w3misc.h"
 #if defined(WC3270) /*[*/
-# include <screenc.h>
+# include "screen.h"
 #endif /*]*/
 
 /* Typedefs */

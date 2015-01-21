@@ -1,1 +1,0 @@
-../Common/Nodisplay/screenc.h

@@ -51,9 +51,10 @@
 #include "keypadc.h"
 #include "lazya.h"
 #include "popupsc.h"
-#include "screenc.h"
+#include "screen.h"
 #include "toggles.h"
 #include "utilc.h"
+#include "xscreen.h"
 
 
 /* Support for WM_SAVE_YOURSELF. */

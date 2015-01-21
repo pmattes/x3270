@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,9 @@
 #include "globals.h"
 
 #include "appres.h"
+#include "cscreen.h"
 #include "nvt_guic.h"
-#include "screenc.h"
+#include "screen.h"
 
 /**
  * X11 version of the xterm text escape

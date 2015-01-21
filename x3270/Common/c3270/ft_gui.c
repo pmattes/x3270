@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2014, Paul Mattes.
+ * Copyright (c) 1996-2015 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -35,12 +35,13 @@
 #include "globals.h"
 
 #include "appres.h"
+#include "cscreen.h"
 #include "unicodec.h"
 #include "ftc.h"
 #include "ft_private.h"
 #include "icmdc.h"
 #include "popupsc.h"
-#include "screenc.h"
+#include "screen.h"
 
 #include "ft_guic.h"
 

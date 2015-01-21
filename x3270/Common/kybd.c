@@ -66,7 +66,7 @@
 #include "nvtc.h"
 #include "popupsc.h"
 #include "print_screen.h"
-#include "screenc.h"
+#include "screen.h"
 #include "scroll.h"
 #include "statusc.h"
 #include "telnetc.h"

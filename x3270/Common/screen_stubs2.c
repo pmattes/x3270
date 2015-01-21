@@ -27,7 +27,8 @@
 
 /*
  *	screen_stubs2.c
- *		Stubs for screen.c.
+ *		Stubs for screen.c when there is a non-graphical display or
+ *		no display at all.
  */
 
 #include "globals.h"
@@ -39,3 +40,70 @@ int *char_width = &cw;
 
 static int ch = 7;
 int *char_height = &ch;
+
+void
+blink_start(void)
+{
+}
+
+unsigned
+display_heightMM(void)
+{
+    return 100;
+}
+
+unsigned
+display_height(void)
+{
+    return 1;
+}
+
+unsigned
+display_widthMM(void)
+{
+    return 100;
+}
+
+unsigned
+display_width(void)
+{
+    return 1;
+}
+
+void
+mcursor_locked(void)
+{
+}
+
+void
+mcursor_normal(void)
+{
+}
+
+void
+mcursor_waiting(void)
+{
+}
+
+Boolean
+screen_obscured(void)
+{
+    return False;
+}
+
+void
+screen_scroll(void)
+{
+}
+
+unsigned long
+screen_window_number(void)
+{
+    return 0L;
+}
+
+Boolean
+screen_has_bg_color(void)
+{
+    return True;
+}

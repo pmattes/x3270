@@ -36,7 +36,8 @@
 
 #include "appres.h"
 #include "nvt_guic.h"
-#include "screenc.h"
+#include "screen.h"
+#include "xscreen.h"
 
 /**
  * X11 version of the xterm text escape

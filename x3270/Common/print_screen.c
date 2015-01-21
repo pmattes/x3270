@@ -59,7 +59,7 @@
 # include "w3misc.h"
 # include "winprint.h"
 #  if defined(WC3270) /*[*/
-#   include <screenc.h>
+#   include "screen.h"
 #  endif /*]*/
 #endif /*]*/
 

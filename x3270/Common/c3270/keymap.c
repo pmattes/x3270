@@ -42,7 +42,7 @@
 #include "keymap.h"
 #include "macrosc.h"
 #include "popupsc.h"
-#include "screenc.h"
+#include "screen.h"
 #include "statusc.h"
 #include "trace.h"
 #include "unicodec.h"

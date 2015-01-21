@@ -81,7 +81,7 @@
 #include "proxyc.h"
 #include "resolverc.h"
 #if defined(C3270) /*[*/
-# include "screenc.h"
+# include "screen.h"
 #endif /*]*/
 #include "ssl_passwd_gui.h"
 #include "statusc.h"

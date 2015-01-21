@@ -37,12 +37,11 @@
 #include <X11/Shell.h>
 #include "3270ds.h"
 #include "appres.h"
-#include "screen.h"
 #include "cg.h"
 
 #include "kybdc.h"
 #include "hostc.h"
-#include "screenc.h"
+#include "screen.h"
 #include "statusc.h"
 #include "tables.h"
 #include "utilc.h"

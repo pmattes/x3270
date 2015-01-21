@@ -27,15 +27,53 @@
 
 /*
  *	screen_stubs1.c
- *		Stubs for screen.c.
+ *		Stubs for screen.c when there is no display at all.
+ *
+ *		These are defined by x3270, c3270 and wc3270, but not by
+ *		anything else.
+ *
+ *		Other screen stubs that are common to everything but x3270
+ *		are in screen_stubs2.
  */
 
 #include "globals.h"
 
+#include "ctlr.h"
 #include "screen.h"
+
+void
+cursor_move(int baddr)
+{
+    cursor_addr = baddr;
+}
 
 Boolean
 screen_selected(int baddr _is_unused)
 {
     return False;
+}
+
+void
+ring_bell(void)
+{
+}
+
+void
+screen_disp(Boolean erasing)
+{
+}
+
+void
+screen_132(void)
+{
+}
+
+void
+screen_80(void)
+{
+}
+
+void
+screen_flip(void)
+{
 }

@@ -38,7 +38,7 @@
 #include "gluec.h"
 #include "help.h"
 #include "popupsc.h"
-#include "screenc.h"
+#include "screen.h"
 #include "utilc.h"
 
 #define P_3270		0x0001	/* 3270 actions */

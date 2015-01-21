@@ -42,7 +42,7 @@
 
 #include "appres.h"
 # if defined(WC3270) /*[*/
-#  include "screenc.h"
+#  include "cscreen.h"
 # endif /*]*/
 # include "ssl_passwd_gui.h"
 

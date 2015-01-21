@@ -40,13 +40,11 @@
 #include <X11/Xaw/Command.h>
 #include "appres.h"
 #include "resources.h"
-#include "screen.h"
 
 #include "actions.h"
 #include "keypadc.h"
 #include "kybdc.h"
 #include "popupsc.h"
-#include "screenc.h"
 #include "utilc.h"
 #include "xmenubar.h"
 #include "xscreen.h"

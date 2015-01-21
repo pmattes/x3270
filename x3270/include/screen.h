@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2015 Paul Mattes.
+ * Copyright (c) 1999-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,28 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Non-display version of screen.h */
+/*
+ * 	screen.h
+ * 		Declarations for screen.c.
+ */
+extern int *char_width, *char_height;
 
+void cursor_move(int baddr);
+void blink_start(void);
+unsigned display_heightMM(void);
+unsigned display_height(void);
+unsigned display_widthMM(void);
+unsigned display_width(void);
+void mcursor_locked(void);
+void mcursor_normal(void);
+void mcursor_waiting(void);
+Boolean screen_obscured(void);
+void screen_scroll(void);
+unsigned long screen_window_number(void);
+Boolean screen_has_bg_color(void);
+void ring_bell(void);
+void screen_disp(Boolean erasing);
+void screen_80(void);
+void screen_132(void);
+void screen_flip(void);
 Boolean screen_selected(int baddr);
-int *char_width, *char_height;
