@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Paul Mattes.
+ * Copyright (c) 2014-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,13 +30,6 @@
  *		Global declarations for trace_gui.c.
  */
 
-#if defined(X3270_DISPLAY) /*[*/
-extern void trace_gui_bad_size(const char *default_value);
-extern Boolean trace_gui_on(int reason, enum toggle_type tt,
-	const char *tracefile);
+void trace_gui_bad_size(const char *default_value);
+Boolean trace_gui_on(int reason, enum toggle_type tt, const char *tracefile);
 extern void trace_gui_toggle(void);
-#else /*][*/
-#define trace_gui_bad_size(default_value)
-#define trace_gui_on(reason, tt, tracefile) False
-#define trace_gui_toggle()
-#endif /*]*/
