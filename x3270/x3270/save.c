@@ -48,12 +48,12 @@
 #endif /*]*/
 #include "idlec.h"
 #include "keymap.h"
-#include "keypadc.h"
 #include "lazya.h"
 #include "popupsc.h"
 #include "screen.h"
 #include "toggles.h"
 #include "utilc.h"
+#include "xkeypad.h"
 #include "xscreen.h"
 
 

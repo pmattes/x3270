@@ -49,13 +49,13 @@
 
 #include "hostc.h"
 #include "keymap.h"
-#include "keypadc.h"
 #include "kybdc.h"
 #include "popupsc.h"
 #include "screen.h"
 #include "statusc.h"
 #include "utilc.h"
 #include "xactions.h"
+#include "xkeypad.h"
 #include "xmenubar.h"
 #include "xscreen.h"
 

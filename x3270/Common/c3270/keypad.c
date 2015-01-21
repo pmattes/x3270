@@ -37,9 +37,9 @@
 #include "macrosc.h"
 #include "3270ds.h"
 #include "appres.h"
+#include "ckeypad.h"
 #include "cmenubar.h"
 #include "ctlrc.h"
-#include "keypadc.h"
 
 #if !defined(_WIN32) /*[*/
 # if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
