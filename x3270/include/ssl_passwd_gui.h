@@ -30,12 +30,6 @@
  *		Global declarations for ssl_passwd_gui.c.
  */
 
-#if defined(X3270_INTERACTIVE) /*[*/
 int ssl_passwd_gui_callback(char *buf, int size);
 void ssl_passwd_gui_reset(void);
 Boolean ssl_passwd_gui_retry(void);
-#else /*][*/
-#define ssl_passwd_gui_callback(buf, size)	(-1)
-#define ssl_passwd_gui_reset()
-#define ssl_passwd_gui_retry()	False
-#endif /*]*/

@@ -30,5 +30,8 @@
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270stubs\ssl_passwd_gui_stubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

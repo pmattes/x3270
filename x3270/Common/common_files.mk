@@ -27,9 +27,9 @@ COMMON_HEADERS = actions.h aplc.h appres.h arpa_telnet.h cg.h charsetc.h \
 	globals.h hostc.h idlec.h keymap.h keypadc.h kybdc.h linemodec.h \
 	localdefs.h macrosc.h menubar.h nvt_guic.h nvtc.h objects.h popupsc.h \
 	print_guic.h print_screen.h proxy.h proxyc.h resolverc.h resources.h \
-	rpqc.h save.h scroll.h selectc.h sfc.h ssl_passwd_gui.h statusc.h \
-	tables.h telnet_private.h telnetc.h tn3270e.h toggles.h trace.h \
-	trace_gui.h unicode_dbcsc.h unicodec.h utilc.h w3misc.h xio.h xl.h
+	rpqc.h save.h scroll.h selectc.h sfc.h statusc.h tables.h \
+	telnet_private.h telnetc.h tn3270e.h toggles.h trace.h trace_gui.h \
+	unicode_dbcsc.h unicodec.h utilc.h w3misc.h xio.h xl.h
 
 # HTTPD header files
 HTTPD_HEADERS = bind-optc.h httpd-corec.h httpd-ioc.h httpd-nodesc.h 

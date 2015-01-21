@@ -16,6 +16,7 @@
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs1.c" />
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs2.c" />
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs3.c" />
+    <ClCompile Include="..\..\lib\w3270stubs\ssl_passwd_gui_stubs.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A6D4C4FA-6515-416C-9EB2-244A5C40488E}</ProjectGuid>
