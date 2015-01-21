@@ -52,8 +52,8 @@ NATIVECC = gcc
 WINDRES = i586-mingw32msvc-windres
 endif
 
-XCPPFLAGS = -D_WIN32 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWINVER=0x500
-CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) -I. $(SSLCPP)
+XCPPFLAGS = -D_WIN32 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWINVER=0x500 -I. -I../../include
+CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)
 
 all:: $(LIB3270)
 
@@ -73,7 +73,7 @@ clobber: clean
 	$(RM) $(LIB3270)
 
 depend: $(SRCS)
-	mingwmakedep -C $(CC) $(XCPPFLAGS) -I. $(SRCS) >dependencies-
+	mingwmakedep -C $(CC) $(XCPPFLAGS) $(SRCS) >dependencies-
 	mv dependencies- dependencies
 
 ifeq ($(wildcard dependencies),dependencies)

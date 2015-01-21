@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, Paul Mattes.
+ * Copyright (c) 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,17 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Non-display version of screen.h */
+/*
+ *	screen_stubs2.c
+ *		Stubs for screen.c.
+ */
 
-#define SELECTED(baddr)	False
-extern int *char_width, *char_height;
+#include "globals.h"
+
+#include "screen.h"
+
+static int cw = 7;
+int *char_width = &cw;
+
+static int ch = 7;
+int *char_height = &ch;

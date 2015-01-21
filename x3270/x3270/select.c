@@ -78,6 +78,7 @@
 #include "utf8.h"
 #include "utilc.h"
 #include "xactions.h"
+#include "xscreen.h"
 
 #define Max(x, y)	(((x) > (y))? (x): (y))
 #define Min(x, y)	(((x) < (y))? (x): (y))
@@ -850,7 +851,7 @@ Cut_xaction(Widget w _is_unused, XEvent *event, String *params,
     for (baddr = 0; baddr < ROWS*COLS; baddr++) {
 	if (ea_buf[baddr].fa) {
 	    fa = ea_buf[baddr].fa;
-	} else if ((IN_NVT || !FA_IS_PROTECTED(fa)) && SELECTED(baddr)) {
+	} else if ((IN_NVT || !FA_IS_PROTECTED(fa)) && screen_selected(baddr)) {
 	    target[baddr/ULBS] |= 1 << (baddr%ULBS);
 	}
     }
@@ -1472,7 +1473,7 @@ grab_sel(int start, int end, Boolean really, Time t)
 		if (VISUAL_LEFT(ctlr_dbcs_state(end)))
 			INC_BA(end);
 		for (i = start; i <= end; i++) {
-			SET_SELECT(i);
+			screen_set_select(i);
 			if (really) {
 				if (i != start && !(i % COLS)) {
 					nulls = 0;
@@ -1506,7 +1507,7 @@ grab_sel(int start, int end, Boolean really, Time t)
 			}
 			if (all_blank) {
 				for (i = end; i < end + (COLS - (end % COLS)); i++) {
-					SET_SELECT(i);
+					screen_set_select(i);
 				}
 				if (really)
 					store_sel('\n');
@@ -1520,7 +1521,7 @@ grab_sel(int start, int end, Boolean really, Time t)
 			if (VISUAL_LEFT(ctlr_dbcs_state(end)))
 				INC_BA(end);
 			for (i = start; i <= end; i++) {
-				SET_SELECT(i);
+				screen_set_select(i);
 				if (really) {
 					onscreen_char(i, osc, &len);
 					for (j = 0; j < len; j++) {
@@ -1559,7 +1560,7 @@ grab_sel(int start, int end, Boolean really, Time t)
 					ec = ec + 1;
 
 				for (col = sc; col <= ec; col++) {
-					SET_SELECT(row*COLS + col);
+					screen_set_select(row*COLS + col);
 					if (really) {
 						onscreen_char(row*COLS + col,
 						    osc, &len);
@@ -1602,7 +1603,7 @@ area_is_selected(int baddr, int len)
     int i;
 
     for (i = 0; i < len; i++) {
-	if (SELECTED(baddr+i)) {
+	if (screen_selected(baddr+i)) {
 	    return True;
 	}
     }
@@ -1616,9 +1617,9 @@ void
 unselect(int baddr _is_unused, int len _is_unused)
 {
     if (any_selected) {
-	(void) memset((char *) selected, 0, (ROWS*COLS + 7) / 8);
-	    ctlr_changed(0, ROWS*COLS);
-	    any_selected = False;
+	screen_unselect_all();
+	ctlr_changed(0, ROWS*COLS);
+	any_selected = False;
     }
 }
 

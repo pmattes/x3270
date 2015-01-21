@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013, 2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -31,7 +31,7 @@
  */
 
 /*
- *	screen.h
+ *	xscreen.h
  *
  *		Screen definitions for x3270.
  */
@@ -64,8 +64,8 @@
 
 /* selections */
 
-#define SELECTED(baddr)		(selected[(baddr)/8] & (1 << ((baddr)%8)))
-#define SET_SELECT(baddr)	(selected[(baddr)/8] |= (1 << ((baddr)%8)))
+void screen_set_select(int baddr);
+void screen_unselect_all(void);
 
 /*
  * Screen position structure.
@@ -84,8 +84,6 @@ union sp {
 /*
  * screen.c data structures. *
  */
-extern int	 *char_width, *char_height;
-extern unsigned char *selected;		/* selection bitmap */
 extern int	 *ascent, *descent;
 extern unsigned	 fixed_width, fixed_height;
 extern int       hhalo, vhalo;

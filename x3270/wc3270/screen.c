@@ -2953,6 +2953,18 @@ screen_wait_for_key(char *c)
 	       (ir.Event.KeyEvent.uChar.AsciiChar == 'Q');
 }
 
+/**
+ * Query the screen for selections, wc3270 version.
+ * This just defers over to the select logic.
+ *
+ * @param[in] baddr	Buffer address.
+ */
+Boolean
+screen_selected(int baddr)
+{
+    return area_is_selected(baddr, 1);
+}
+
 void
 screen_final(void)
 {

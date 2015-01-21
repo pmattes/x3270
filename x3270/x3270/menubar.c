@@ -46,7 +46,6 @@
 #include "appres.h"
 #include "objects.h"
 #include "resources.h"
-#include "screen.h"
 
 #include "actions.h"
 #include "about.h"
@@ -65,6 +64,7 @@
 #include "pr3287_session.h"
 #include "printer_gui.h"
 #include "save.h"
+#include "screen.h"
 #include "screenc.h"
 #include "stmenu.h"
 #include "telnetc.h"
@@ -74,6 +74,7 @@
 #include "xactions.h"
 #include "xio.h"
 #include "xmenubar.h"
+#include "xscreen.h"
 
 #define MACROS_MENU	"macrosMenu"
 

@@ -1526,12 +1526,6 @@ read_resource_file(const char *filename, Boolean fatal)
 
 /* Screen globals. */
 
-static int cw = 7;
-int *char_width = &cw;
-
-static int ch = 7;
-int *char_height = &ch;
-
 Boolean visible_control = False;
 
 Boolean flipped = False;

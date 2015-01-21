@@ -49,6 +49,7 @@
 #include "screenc.h"
 #include "utilc.h"
 #include "xmenubar.h"
+#include "xscreen.h"
 
 #include "keypad.bm"
 

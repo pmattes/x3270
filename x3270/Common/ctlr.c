@@ -2477,24 +2477,25 @@ ctlr_blanks(void)
 void
 ctlr_add(int baddr, unsigned char c, unsigned char cs)
 {
-	unsigned char oc = 0;
+    unsigned char oc = 0;
 
-	if (ea_buf[baddr].fa ||
-	    ((oc = ea_buf[baddr].cc) != c || ea_buf[baddr].cs != cs)) {
-		if (trace_primed && !IsBlank(oc)) {
-			if (toggled(SCREEN_TRACE)) {
-				trace_screen(False);
-			}
-			scroll_save(maxROWS, False);
-			trace_primed = False;
-		}
-		if (SELECTED(baddr))
-			unselect(baddr, 1);
-		ONE_CHANGED(baddr);
-		ea_buf[baddr].cc = c;
-		ea_buf[baddr].cs = cs;
-		ea_buf[baddr].fa = 0;
+    if (ea_buf[baddr].fa ||
+	((oc = ea_buf[baddr].cc) != c || ea_buf[baddr].cs != cs)) {
+	if (trace_primed && !IsBlank(oc)) {
+	    if (toggled(SCREEN_TRACE)) {
+		trace_screen(False);
+	    }
+	    scroll_save(maxROWS, False);
+	    trace_primed = False;
 	}
+	if (screen_selected(baddr)) {
+	    unselect(baddr, 1);
+	}
+	ONE_CHANGED(baddr);
+	ea_buf[baddr].cc = c;
+	ea_buf[baddr].cs = cs;
+	ea_buf[baddr].fa = 0;
+    }
 }
 
 /* 
@@ -2503,14 +2504,14 @@ ctlr_add(int baddr, unsigned char c, unsigned char cs)
 void
 ctlr_add_fa(int baddr, unsigned char fa, unsigned char cs)
 {
-	/* Put a null in the display buffer. */
-	ctlr_add(baddr, EBC_null, cs);
+    /* Put a null in the display buffer. */
+    ctlr_add(baddr, EBC_null, cs);
 
-	/*
-	 * Store the new attribute, setting the 'printable' bits so that the
-	 * value will be non-zero.
-	 */
-	ea_buf[baddr].fa = FA_PRINTABLE | (fa & FA_MASK);
+    /*
+     * Store the new attribute, setting the 'printable' bits so that the
+     * value will be non-zero.
+     */
+    ea_buf[baddr].fa = FA_PRINTABLE | (fa & FA_MASK);
 }
 
 /* 
@@ -2519,12 +2520,13 @@ ctlr_add_fa(int baddr, unsigned char fa, unsigned char cs)
 void
 ctlr_add_cs(int baddr, unsigned char cs)
 {
-	if (ea_buf[baddr].cs != cs) {
-		if (SELECTED(baddr))
-			unselect(baddr, 1);
-		ONE_CHANGED(baddr);
-		ea_buf[baddr].cs = cs;
+    if (ea_buf[baddr].cs != cs) {
+	if (screen_selected(baddr)) {
+	    unselect(baddr, 1);
 	}
+	ONE_CHANGED(baddr);
+	ea_buf[baddr].cs = cs;
+    }
 }
 
 /*
@@ -2533,14 +2535,16 @@ ctlr_add_cs(int baddr, unsigned char cs)
 void
 ctlr_add_gr(int baddr, unsigned char gr)
 {
-	if (ea_buf[baddr].gr != gr) {
-		if (SELECTED(baddr))
-			unselect(baddr, 1);
-		ONE_CHANGED(baddr);
-		ea_buf[baddr].gr = gr;
-		if (gr & GR_BLINK)
-			blink_start();
+    if (ea_buf[baddr].gr != gr) {
+	if (screen_selected(baddr)) {
+	    unselect(baddr, 1);
 	}
+	ONE_CHANGED(baddr);
+	ea_buf[baddr].gr = gr;
+	if (gr & GR_BLINK) {
+	    blink_start();
+	}
+    }
 }
 
 /*
@@ -2549,16 +2553,19 @@ ctlr_add_gr(int baddr, unsigned char gr)
 void
 ctlr_add_fg(int baddr, unsigned char color)
 {
-	if (!appres.m3279)
-		return;
-	if ((color & 0xf0) != 0xf0)
-		color = 0;
-	if (ea_buf[baddr].fg != color) {
-		if (SELECTED(baddr))
-			unselect(baddr, 1);
-		ONE_CHANGED(baddr);
-		ea_buf[baddr].fg = color;
+    if (!appres.m3279) {
+	return;
+    }
+    if ((color & 0xf0) != 0xf0) {
+	color = 0;
+    }
+    if (ea_buf[baddr].fg != color) {
+	if (screen_selected(baddr)) {
+	    unselect(baddr, 1);
 	}
+	ONE_CHANGED(baddr);
+	ea_buf[baddr].fg = color;
+    }
 }
 
 /*
@@ -2567,16 +2574,19 @@ ctlr_add_fg(int baddr, unsigned char color)
 void
 ctlr_add_bg(int baddr, unsigned char color)
 {
-	if (!appres.m3279)
-		return;
-	if ((color & 0xf0) != 0xf0)
-		color = 0;
-	if (ea_buf[baddr].bg != color) {
-		if (SELECTED(baddr))
-			unselect(baddr, 1);
-		ONE_CHANGED(baddr);
-		ea_buf[baddr].bg = color;
+    if (!appres.m3279) {
+	return;
+    }
+    if ((color & 0xf0) != 0xf0) {
+	color = 0;
+    }
+    if (ea_buf[baddr].bg != color) {
+	if (screen_selected(baddr)) {
+	    unselect(baddr, 1);
 	}
+	ONE_CHANGED(baddr);
+	ea_buf[baddr].bg = color;
+    }
 }
 
 /*

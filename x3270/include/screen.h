@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2013 Paul Mattes.
+ * Copyright (c) 1999-2009, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* wc3270 version of screen.h */
+/* Non-display version of screen.h */
 
-#define SELECTED(baddr)	area_is_selected(baddr, 1)
-extern int *char_width, *char_height;
+Boolean screen_selected(int baddr);
+int *char_width, *char_height;

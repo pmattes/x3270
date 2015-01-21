@@ -60,6 +60,7 @@
 #include "trace.h"
 #include "unicodec.h"
 #include "xactions.h"
+#include "xscreen.h"
 
 
 /*

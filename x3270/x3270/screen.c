@@ -84,6 +84,7 @@
 #include "xappres.h"
 #include "xio.h"
 #include "xmenubar.h"
+#include "xscreen.h"
 #include "xscroll.h"
 #include "xtables.h"
 
@@ -105,8 +106,10 @@
 
 #define MAX_FONTS	50000
 
+#define SELECTED(baddr)		(selected[(baddr)/8] & (1 << ((baddr)%8)))
+#define SET_SELECT(baddr)	(selected[(baddr)/8] |= (1 << ((baddr)%8)))
+
 /* Globals */
-unsigned char  *selected;	/* selection bitmap */
 Dimension       main_width;
 Boolean         scrollbar_changed = False;
 Boolean         model_changed = False;
@@ -134,6 +137,7 @@ int		hhalo = HHALO, vhalo = VHALO;
 static char gray_bits[] = { 0x01, 0x02 };
 
 /* Statics */
+static unsigned char  *selected;	/* selection bitmap */
 static Boolean	allow_resize;
 static Dimension main_height;
 static union sp *temp_image;	/* temporary for X display */
@@ -5773,6 +5777,39 @@ unsigned long
 screen_window_number(void)
 {
     return XtWindow(toplevel);
+}
+
+/**
+ * External interface to the SELECTED macro.
+ *
+ * @param[in] baddr	Buffer address.
+ *
+ * @return True if cell is selected
+ */
+Boolean
+screen_selected(int baddr)
+{
+    return SELECTED(baddr) != 0;
+}
+
+/**
+ * External interface to the SET_SELECT macro.
+ *
+ * @param[in] baddr	Buffer address.
+ */
+void
+screen_set_select(int baddr)
+{
+    SET_SELECT(baddr);
+}
+
+/**
+ * Unselect everything.
+ */
+void
+screen_unselect_all(void)
+{
+    (void) memset((char *)selected, 0, (ROWS*COLS + 7) / 8);
 }
 
 /**

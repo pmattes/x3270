@@ -26,20 +26,16 @@
  */
 
 /*
- *	menubar_stubs.c
- *		Stubs for menubar.c.
+ *	screen_stubs1.c
+ *		Stubs for screen.c.
  */
 
 #include "globals.h"
 
-#include "menubar.h"
+#include "screen.h"
 
-void
-menubar_as_set(Boolean sensitive _is_unused)
+Boolean
+screen_selected(int baddr _is_unused)
 {
-}
-
-void
-menubar_retoggle(toggle_index_t ix _is_unused)
-{
+    return False;
 }
