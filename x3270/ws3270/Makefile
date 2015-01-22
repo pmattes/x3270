@@ -26,35 +26,13 @@
 
 # Makefile for ws3270
 
-# Figure out if they've installed MinGW OpenSSL.
-SSLDIR = /usr/local/OpenSSL-Win32
-HAVE_OPENSSL = $(shell [ -d $(SSLDIR) ] && echo yes)
-ifeq ($(HAVE_OPENSSL),yes)
-ifndef NO_SSL
-SSLCPP = -DHAVE_LIBSSL=1 -I$(SSLDIR)/include
-#SSLLIB = -L$(SSLDIR)/lib/MinGW $(SSLDIR)/lib/MinGW/ssleay32.a -leay32 -lwsock32 -ladvapi32 -lgdi32 -luser32
-SSLLIB = -lwsock32 -ladvapi32 -lgdi32 -luser32
-else
-OSUFFIX = -insecure
-endif
-endif
+# Set SSLDIR, SSLCPP, SSLLIB, GT_PFX, NATIVE_SFX, NATIVECC, CC, WINDRES and
+#  WIN32_FLAGS.
+include winenv.mk
 
-# Set command paths and mkfb (which has to run locally) based on whether
-# compiling natively on Cygwin, or cross-compiling on Linux.
-OS = $(shell uname -o)
-ifeq ($(OS),Cygwin)
-MKFB = mkfb.exe
-CC = i686-pc-mingw32-gcc
-NATIVECC = gcc
-WINDRES = i686-pc-mingw32-windres
-else
-MKFB = mkfb
-CC = i586-mingw32msvc-gcc
-NATIVECC = gcc
-WINDRES = i586-mingw32msvc-windres
-endif
+MKFB = mkfb$(NATIVE_SFX)
 
-XCPPFLAGS = -D_WIN32 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWIN32_LEAN_AND_MEAN -I. -I../include
+XCPPFLAGS = $(WIN32_FLAGS) -DWIN32_LEAN_AND_MEAN -I. -I../include
 CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)
 
 OBJ = o
@@ -92,7 +70,7 @@ ws3270res.o: ws3270.rc ws3270.ico Makefile
 	$(WINDRES) -i ws3270.rc -o ws3270res.o
 
 ws3270.exe: $(OBJECTS) Makefile ../lib/libw3270.a ../lib/libw3270stubs.a
-	$(CC) -o ws3270$(OSUFFIX).exe $(CFLAGS) $(OBJECTS) $(LIBS) -L../lib -lw3270 -lw3270stubs
+	$(CC) -o ws3270.exe $(CFLAGS) $(OBJECTS) $(LIBS) -L../lib -lw3270 -lw3270stubs
 
 ../lib/libw3270.a:
 	cd ../lib/w3270 && $(MAKE) all

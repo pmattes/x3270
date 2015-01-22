@@ -28,31 +28,9 @@
 
 LIB3270 = ../libw3270stubs.a
 
-# Figure out if they've installed MinGW OpenSSL.
-SSLDIR = /usr/local/OpenSSL-Win32
-HAVE_OPENSSL = $(shell [ -d $(SSLDIR) ] && echo yes)
-ifeq ($(HAVE_OPENSSL),yes)
-ifndef NO_SSL
-SSLCPP = -DHAVE_LIBSSL=1 -I$(SSLDIR)/include
-endif
-endif
+include winenv.mk
 
-# Set command paths based on whether compiling natively on Cygwin, or
-# cross-compiling on Linux.
-OS = $(shell uname -o)
-ifeq ($(OS),Cygwin)
-CC = i686-pc-mingw32-gcc
-AR = i686-pc-mingw32-ar
-NATIVECC = gcc
-WINDRES = i686-pc-mingw32-windres
-else
-CC = i586-mingw32msvc-gcc
-AR = i586-mingw32msvc-ar
-NATIVECC = gcc
-WINDRES = i586-mingw32msvc-windres
-endif
-
-XCPPFLAGS = -D_WIN32 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWINVER=0x500 -I. -I../../include
+XCPPFLAGS = $(WIN32_FLAGS) -I. -I../../include
 CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)
 
 all:: $(LIB3270)

@@ -26,30 +26,11 @@
 
 # Makefile for wpr3287
 
-# Figure out if they've installed MinGW OpenSSL.
-SSLDIR = /usr/local/OpenSSL-Win32
-HAVE_OPENSSL = $(shell [ -d $(SSLDIR) ] && echo yes)
-ifeq ($(HAVE_OPENSSL),yes)
-ifndef NO_SSL
-SSLCPP = -DHAVE_LIBSSL=1 -I$(SSLDIR)/include
-SSLLIB = -lwsock32 -ladvapi32 -lgdi32 -luser32
-else
-OSUFFIX = -insecure
-endif
-endif
+# Set SSLDIR, SSLCPP, SSLLIB, GT_PFX, NATIVE_SFX, NATIVECC, CC, WINDRES and
+#  WIN32_FLAGS.
+include winenv.mk
 
-# Set command paths based on whether compiling natively on Cygwin, or
-# cross-compiling on Linux.
-OS = $(shell uname -o)
-ifeq ($(OS),Cygwin)
-CC = i686-pc-mingw32-gcc
-WINDRES = i686-pc-mingw32-windres
-else
-CC = i586-mingw32msvc-gcc
-WINDRES = i586-mingw32msvc-windres
-endif
-
-XCPPFLAGS = -D_WIN32 -DX3270_DBCS=1 -D_WIN32_WINNT=0x500 -D_WIN32_IE=0x0500 -DWINVER=0x500 -I. -I../include
+XCPPFLAGS = $(WIN32_FLAGS) -I. -I../include
 CFLAGS = -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP) $(CDEBUGFLAGS)
 
 OBJ = o
@@ -75,7 +56,7 @@ wpr3287res.o: wpr3287.rc pr3287.ico
 	$(WINDRES) -i wpr3287.rc -o wpr3287res.o
 
 wpr3287.exe: $(OBJECTS)
-	$(CC) -o wpr3287$(OSUFFIX).exe $(CFLAGS) $(OBJECTS) $(LIBS)
+	$(CC) -o wpr3287.exe $(CFLAGS) $(OBJECTS) $(LIBS)
 
 clean:
 	rm -f *.o dependencies-
