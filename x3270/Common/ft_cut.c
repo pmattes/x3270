@@ -34,20 +34,16 @@
 
 #include "globals.h"
 
-#include "appres.h"
 #include "ctlr.h"
 #include "3270ds.h"
 
 #include "actions.h"
-#include "charsetc.h"
 #include "ctlrc.h"
 #include "ft_cutc.h"
 #include "ft_cut_ds.h"
 #include "unicodec.h"
 #include "ftc.h"
-#include "kybdc.h"
 #include "tables.h"
-#include "telnetc.h"
 #include "trace.h"
 #include "util.h"
 
