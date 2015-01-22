@@ -41,7 +41,7 @@
 #include "hostc.h"
 #include "telnetc.h"
 #include "toggles.h"
-#include "utilc.h"
+#include "util.h"
 #include "xio.h"
 
 /* Statics. */

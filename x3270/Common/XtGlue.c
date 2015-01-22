@@ -32,7 +32,7 @@
 #include "globals.h"
 #include "appres.h"
 #include "trace.h"
-#include "utilc.h"
+#include "util.h"
 #if defined(_WIN32) /*[*/
 # include "xio.h"
 #endif /*]*/

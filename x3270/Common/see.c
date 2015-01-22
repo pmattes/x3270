@@ -42,7 +42,7 @@
 
 #include "lazya.h"
 #include "utf8.h"
-#include "utilc.h"
+#include "util.h"
 #include "see.h"
 #include "unicodec.h"
 #include "varbuf.h"

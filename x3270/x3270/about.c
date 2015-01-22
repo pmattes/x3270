@@ -52,7 +52,7 @@
 #include "popupsc.h"
 #include "telnetc.h"
 #include "utf8.h"
-#include "utilc.h"
+#include "util.h"
 #include "varbuf.h"
 #include "xscreen.h"
 

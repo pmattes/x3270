@@ -35,7 +35,7 @@
 #include "resources.h"
 
 #include "find_fontsc.h"
-#include "utilc.h"
+#include "util.h"
 
 static int search(char *charset, char **matches, XFontStruct **f, int count,
     FILE *outfile);

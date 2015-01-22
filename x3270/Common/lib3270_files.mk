@@ -6,5 +6,4 @@ LIB3270_OBJECTS = Malloc.$(OBJ) asprintf.$(OBJ) lazya.$(OBJ) see.$(OBJ) \
 	utf8.$(OBJ) varbuf.$(OBJ)
 
 # Header files for lib3270.
-LIB3270_HEADERS = appres.h conf.h globals.h localdefs.h trace.h unicodec.h \
-	utilc.h
+LIB3270_HEADERS = conf.h localdefs.h

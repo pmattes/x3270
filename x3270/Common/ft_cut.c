@@ -49,7 +49,7 @@
 #include "tables.h"
 #include "telnetc.h"
 #include "trace.h"
-#include "utilc.h"
+#include "util.h"
 
 static Boolean cut_xfer_in_progress = False;
 

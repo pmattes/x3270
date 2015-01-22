@@ -78,7 +78,7 @@
 #include "trace.h"
 #include "unicodec.h"
 #include "unicode_dbcsc.h"
-#include "utilc.h"
+#include "util.h"
 #include "xactions.h"
 #include "xappres.h"
 #include "xio.h"

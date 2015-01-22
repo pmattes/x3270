@@ -48,7 +48,7 @@
 #include "macrosc.h"
 #include "popupsc.h"
 #include "trace.h"
-#include "utilc.h"
+#include "util.h"
 #include "varbuf.h"
 
 #include "httpd-corec.h"

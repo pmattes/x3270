@@ -26,61 +26,61 @@
  */
 
 /*
- *	utilc.h
+ *	util.h
  *		Global declarations for util.c.
  */
 
-extern void add_resource(const char *name, const char *value);
-extern char *ctl_see(int c);
-extern char *do_subst(const char *s, unsigned flags);
+void add_resource(const char *name, const char *value);
+char *ctl_see(int c);
+char *do_subst(const char *s, unsigned flags);
 #define DS_NONE		0x0
 #define DS_VARS		0x1
 #define DS_TILDE	0x2
 #define DS_UNIQUE	0x4
-extern void fcatv(FILE *f, char *s);
-extern const char *get_message(const char *key);
-extern char *get_fresource(const char *fmt, ...) printflike(1, 2);
-extern char *get_resource(const char *name);
-extern char *scatv(const char *s, char *buf, size_t len);
-extern int split_dbcs_resource(const char *value, char sep, char **part1,
-    char **part2);
-extern int split_dresource(char **st, char **left, char **right);
-extern int split_lresource(char **st, char **value);
-extern char *strip_whitespace(const char *s);
-extern char *xs_vbuffer(const char *fmt, va_list);
-extern char *xs_buffer(const char *fmt, ...) printflike(1, 2);
-extern void xs_error(const char *fmt, ...) printflike(1, 2);
-extern void xs_warning(const char *fmt, ...) printflike(1, 2);
+void fcatv(FILE *f, char *s);
+const char *get_message(const char *key);
+char *get_fresource(const char *fmt, ...) printflike(1, 2);
+char *get_resource(const char *name);
+char *scatv(const char *s, char *buf, size_t len);
+int split_dbcs_resource(const char *value, char sep, char **part1,
+	char **part2);
+int split_dresource(char **st, char **left, char **right);
+int split_lresource(char **st, char **value);
+char *strip_whitespace(const char *s);
+char *xs_vbuffer(const char *fmt, va_list);
+char *xs_buffer(const char *fmt, ...) printflike(1, 2);
+void xs_error(const char *fmt, ...) printflike(1, 2);
+void xs_warning(const char *fmt, ...) printflike(1, 2);
 
 #if !defined(PR3287) /*[*/
 typedef void (*iofn_t)(iosrc_t, ioid_t id);
 typedef void (*tofn_t)(ioid_t id);
 # define NULL_IOID	0L
-extern ioid_t AddInput(iosrc_t fd, iofn_t fn);
-extern ioid_t AddExcept(iosrc_t fd, iofn_t fn);
-extern ioid_t AddOutput(iosrc_t fd, iofn_t fn);
-extern void RemoveInput(ioid_t);
-extern ioid_t AddTimeOut(unsigned long msec, tofn_t);
-extern void RemoveTimeOut(ioid_t id);
+ioid_t AddInput(iosrc_t fd, iofn_t fn);
+ioid_t AddExcept(iosrc_t fd, iofn_t fn);
+ioid_t AddOutput(iosrc_t fd, iofn_t fn);
+void RemoveInput(ioid_t);
+ioid_t AddTimeOut(unsigned long msec, tofn_t);
+void RemoveTimeOut(ioid_t id);
 #endif /*]*/
 
-extern KeySym StringToKeysym(char *s);
-extern char *KeysymToString(KeySym k);
-extern Boolean read_resource_file(const char *filename, Boolean fatal);
-extern Boolean split_hier(char *label, char **base, char ***parents);
+KeySym StringToKeysym(char *s);
+char *KeysymToString(KeySym k);
+Boolean read_resource_file(const char *filename, Boolean fatal);
+Boolean split_hier(char *label, char **base, char ***parents);
 
-extern const char *build_options(void);
-extern void dump_version(void);
-extern const char *display_scale(double d);
+const char *build_options(void);
+void dump_version(void);
+const char *display_scale(double d);
 #if defined(WC3270) /*[*/
-extern void start_html_help(void);
+void start_html_help(void);
 #endif /*]*/
 
 /* Doubly-linked lists. */
-extern Boolean llist_isempty(llist_t *l);
-extern void llist_init(llist_t *l);
-extern void llist_insert_before(llist_t *element, llist_t *before);
-extern void llist_unlink(llist_t *element);
+Boolean llist_isempty(llist_t *l);
+void llist_init(llist_t *l);
+void llist_insert_before(llist_t *element, llist_t *before);
+void llist_unlink(llist_t *element);
 
 #define LLIST_INIT(head)	{ &head, &head }
 

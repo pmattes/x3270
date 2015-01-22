@@ -43,7 +43,7 @@
 #include "popupsc.h"
 #include "print_window.h"
 #include "trace.h"
-#include "utilc.h"
+#include "util.h"
 #include "varbuf.h"
 
 /* Typedefs */

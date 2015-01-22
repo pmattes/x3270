@@ -56,7 +56,7 @@
 #include "kybdc.h"
 #include "objects.h"
 #include "popupsc.h"
-#include "utilc.h"
+#include "util.h"
 #include "varbuf.h"
 #include "xmenubar.h"
 

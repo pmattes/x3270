@@ -57,7 +57,7 @@
 #include "statusc.h"
 #include "trace.h"
 #include "unicodec.h"
-#include "utilc.h"
+#include "util.h"
 #include "w3misc.h"
 #include "xio.h"
 #include "xscroll.h"

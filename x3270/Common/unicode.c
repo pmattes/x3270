@@ -44,7 +44,7 @@
 #include "unicode_dbcsc.h"
 #include "utf8.h"
 #if !defined(PR3287) /*[*/
-#include "utilc.h"
+#include "util.h"
 #endif /*]*/
 
 #if defined(USE_ICONV) /*[*/

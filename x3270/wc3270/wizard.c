@@ -48,7 +48,7 @@
 #include "resources.h"
 #include "screen.h"
 #include "trace.h"
-#include "utilc.h"
+#include "util.h"
 
 #include <wincon.h>
 #include <lmcons.h>

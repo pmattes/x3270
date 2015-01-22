@@ -41,7 +41,7 @@
 #include "appres.h"
 #include "linemodec.h"
 #include "nvtc.h"
-#include "utilc.h"
+#include "util.h"
 #include "telnetc.h"
 
 #define LM_BUFSZ	16384

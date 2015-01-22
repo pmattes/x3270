@@ -51,7 +51,7 @@
 #include "lazya.h"
 #include "varbuf.h"
 
-#include "utilc.h"
+#include "util.h"
 
 #define my_isspace(c)	isspace((unsigned char)c)
 

@@ -44,7 +44,7 @@
 #include "screen.h"
 #include "statusc.h"
 #include "tables.h"
-#include "utilc.h"
+#include "util.h"
 #include "xscreen.h"
 #include "xtables.h"
 

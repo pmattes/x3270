@@ -59,7 +59,7 @@
 #include "trace.h"
 #include "trace_gui.h"
 #include "utf8.h"
-#include "utilc.h"
+#include "util.h"
 #if defined(_WIN32) /*[*/
 # include "w3misc.h"
 # include "winprint.h"

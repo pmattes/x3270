@@ -35,7 +35,7 @@
 #include <fcntl.h>
 
 #include "popupsc.h"
-#include "utilc.h"
+#include "util.h"
 
 #define CHILD_BUF	1024
 

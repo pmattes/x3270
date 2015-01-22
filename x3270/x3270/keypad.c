@@ -44,7 +44,7 @@
 #include "actions.h"
 #include "kybdc.h"
 #include "popupsc.h"
-#include "utilc.h"
+#include "util.h"
 #include "xkeypad.h"
 #include "xmenubar.h"
 #include "xscreen.h"

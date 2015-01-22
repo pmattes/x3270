@@ -50,7 +50,7 @@
 #include "screen.h"
 #include "selectc.h"
 #include "trace.h"
-#include "utilc.h"
+#include "util.h"
 #include "xactions.h"
 #include "xkybd.h"
 #include "xmenubar.h"

@@ -65,7 +65,7 @@
 #include "toggles.h"
 #include "trace.h"
 #include "unicodec.h"
-#include "utilc.h"
+#include "util.h"
 #include "xio.h"
 
 #if defined(_WIN32) /*[*/

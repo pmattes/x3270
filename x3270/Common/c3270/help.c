@@ -39,7 +39,7 @@
 #include "help.h"
 #include "popupsc.h"
 #include "screen.h"
-#include "utilc.h"
+#include "util.h"
 
 #define P_3270		0x0001	/* 3270 actions */
 #define P_SCRIPTING	0x0002	/* scripting actions */

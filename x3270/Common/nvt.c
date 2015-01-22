@@ -49,7 +49,7 @@
 #include "telnetc.h"
 #include "trace.h"
 #include "unicodec.h"
-#include "utilc.h"
+#include "util.h"
 
 #define MB_MAX	16
 

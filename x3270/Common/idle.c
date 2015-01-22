@@ -43,7 +43,7 @@
 # include "popupsc.h"
 # include "resources.h"
 # include "trace.h"
-# include "utilc.h"
+# include "util.h"
 
 /* Macros. */
 # define MSEC_PER_SEC	1000L

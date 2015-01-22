@@ -47,7 +47,7 @@
 #include "screen.h"
 #include "statusc.h"
 #include "trace.h"
-#include "utilc.h"
+#include "util.h"
 
 #define ISREALLYSPACE(c) ((((c) & 0xff) <= ' ') && isspace(c))
 

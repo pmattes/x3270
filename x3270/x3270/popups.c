@@ -50,7 +50,7 @@
 #include "popupsc.h"
 #include "screen.h"
 #include "trace.h"
-#include "utilc.h"
+#include "util.h"
 #include "xio.h"
 #include "xmenubar.h"
 #include "xscreen.h"

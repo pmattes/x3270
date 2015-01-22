@@ -75,7 +75,7 @@
 #include "tables.h"
 #include "unicodec.h"
 #include "utf8.h"
-#include "utilc.h"
+#include "util.h"
 #include "xactions.h"
 #include "xscreen.h"
 

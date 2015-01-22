@@ -36,7 +36,7 @@
 #include "ssl_dll.h"	/* name translations */
 #include "globals.h"
 #if !defined(PR3287) /*[*/
-#include "utilc.h"
+#include "util.h"
 #endif /*]*/
 
 #if defined(HAVE_LIBSSL) /*[*/

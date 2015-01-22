@@ -56,7 +56,7 @@
 #include "toggles.h"
 #include "trace.h"
 #include "unicodec.h"
-#include "utilc.h"
+#include "util.h"
 
 #if !defined(_WIN32) /*[*/
 # if defined(HAVE_NCURSESW_NCURSES_H) /*[*/

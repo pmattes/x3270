@@ -37,7 +37,7 @@
 #endif /*]*/
 #include "asprintf.h"
 #include "trace.h"
-#include "utilc.h"
+#include "util.h"
 
 #include "lazya.h"
 

@@ -69,7 +69,7 @@
 #include "telnetc.h"
 #include "toggles.h"
 #include "trace.h"
-#include "utilc.h"
+#include "util.h"
 #include "xio.h"
 
 #if defined(_WIN32) /*[*/

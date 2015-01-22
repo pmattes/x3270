@@ -58,7 +58,7 @@
 #include "objects.h"
 #include "popupsc.h"
 #include "telnetc.h"
-#include "utilc.h"
+#include "util.h"
 #include "xmenubar.h"
 
 /* Globals. */

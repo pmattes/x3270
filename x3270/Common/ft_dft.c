@@ -47,7 +47,7 @@
 #include "popupsc.h"
 #include "telnetc.h"
 #include "trace.h"
-#include "utilc.h"
+#include "util.h"
 
 #include <errno.h>
 

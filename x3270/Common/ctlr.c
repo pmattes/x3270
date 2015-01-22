@@ -67,7 +67,7 @@
 #include "tables.h"
 #include "telnetc.h"
 #include "trace.h"
-#include "utilc.h"
+#include "util.h"
 
 /* Globals */
 int             ROWS, COLS;

@@ -10,4 +10,4 @@ LIB3270STUBS_OBJECTS = ft_gui_stubs.$(OBJ) menubar_stubs.$(OBJ) \
 	ssl_passwd_gui_stubs.$(OBJ) trace_gui_stubs.$(OBJ)
 
 # Header files for lib3270stubs.
-LIB3270STUBS_HEADERS = conf.h globals.h localdefs.h menubar.h popupsc.h
+LIB3270STUBS_HEADERS = conf.h localdefs.h menubar.h popupsc.h

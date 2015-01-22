@@ -53,7 +53,7 @@
 #include "popupsc.h"
 #include "screen.h"
 #include "statusc.h"
-#include "utilc.h"
+#include "util.h"
 #include "xactions.h"
 #include "xkeypad.h"
 #include "xmenubar.h"

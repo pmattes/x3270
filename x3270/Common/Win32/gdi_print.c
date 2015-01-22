@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2015, Paul Mattes.
+ * Copyright (c) 1994-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@
 #include "popupsc.h"
 #include "trace.h"
 #include "unicodec.h"
-#include "utilc.h"
+#include "util.h"
 #include "w3misc.h"
 
 /* Defines */

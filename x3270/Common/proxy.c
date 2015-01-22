@@ -53,7 +53,7 @@
 #include "resolverc.h"
 #include "telnetc.h"
 #include "trace.h"
-#include "utilc.h"
+#include "util.h"
 #include "w3misc.h"
 
 #if defined(PR3287) /*[*/

@@ -48,7 +48,7 @@
 #include "trace.h"
 #include "unicodec.h"
 #include "utf8.h"
-#include "utilc.h"
+#include "util.h"
 #include "varbuf.h"
 
 /* Typedefs */

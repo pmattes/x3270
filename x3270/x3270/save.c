@@ -52,7 +52,7 @@
 #include "popupsc.h"
 #include "screen.h"
 #include "toggles.h"
-#include "utilc.h"
+#include "util.h"
 #include "xkeypad.h"
 #include "xscreen.h"
 

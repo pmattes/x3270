@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -41,7 +41,7 @@
 #include "macrosc.h"
 #include "popupsc.h"
 #include "trace.h"
-#include "utilc.h"
+#include "util.h"
 
 llist_t actions_list = LLIST_INIT(actions_list);
 unsigned actions_list_count;

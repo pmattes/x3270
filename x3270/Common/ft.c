@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2015, Paul Mattes.
+ * Copyright (c) 1996-2015 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -53,7 +53,7 @@
 #include "popupsc.h"
 #include "screen.h"
 #include "telnetc.h"
-#include "utilc.h"
+#include "util.h"
 #include "varbuf.h"
 
 /* Macros. */
