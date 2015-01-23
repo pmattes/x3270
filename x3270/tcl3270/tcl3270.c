@@ -718,6 +718,13 @@ sms_store(unsigned char c)
 {
 }
 
+/* Also a no-op. */
+void
+sms_accumulate_time(struct timeval *t0 _is_unused,
+	struct timeval *t1 _is_unused)
+{
+}
+
 /* Set the pending string.  Used by the 'String' action. */
 void
 ps_set(char *s, Boolean is_hex)

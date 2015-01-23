@@ -51,11 +51,7 @@ void push_command(char *);
 void push_idle(char *);
 void push_keymap_action(char *);
 void push_macro(char *, Boolean);
-#if !defined(TCL3270) /*[*/
 void sms_accumulate_time(struct timeval *, struct timeval *);
-#else /*][*/
-#define sms_accumulate_time(t0, t1)
-#endif /*]*/
 Boolean sms_active(void);
 void sms_connect_wait(void);
 void sms_continue(void);
