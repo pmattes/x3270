@@ -333,7 +333,7 @@ set_formatted(void)
 static void
 ctlr_half_connect(Boolean ignored _is_unused)
 {
-	ticking_start(True);
+    ticking_start(True);
 }
 
 
@@ -343,30 +343,30 @@ ctlr_half_connect(Boolean ignored _is_unused)
 static void
 ctlr_connect(Boolean ignored _is_unused)
 {
-	ticking_stop();
-	status_untiming();
+    ticking_stop();
+    status_untiming();
 
-	if (!IN_3270 || (IN_SSCP && (kybdlock & KL_OIA_TWAIT))) {
-		kybdlock_clr(KL_OIA_TWAIT, "ctlr_connect");
-		status_reset();
-	}
+    if (!IN_3270 || (IN_SSCP && (kybdlock & KL_OIA_TWAIT))) {
+	kybdlock_clr(KL_OIA_TWAIT, "ctlr_connect");
+	status_reset();
+    }
 
-	default_fg = 0x00;
-	default_bg = 0x00;
-	default_gr = 0x00;
-	default_cs = 0x00;
-	default_ic = 0x00;
-	reply_mode = SF_SRM_FIELD;
-	crm_nattr = 0;
+    default_fg = 0x00;
+    default_bg = 0x00;
+    default_gr = 0x00;
+    default_cs = 0x00;
+    default_ic = 0x00;
+    reply_mode = SF_SRM_FIELD;
+    crm_nattr = 0;
 
-	/* On disconnect, reset the default and alternate dimensions. */
-	if (!CONNECTED) {
-	    defROWS = MODEL_2_ROWS;
-	    defCOLS = MODEL_2_COLS;
-	    altROWS = maxROWS;
-	    altCOLS = maxCOLS;
-	    ctlr_erase(False);
-	}
+    /* On disconnect, reset the default and alternate dimensions. */
+    if (!CONNECTED) {
+	defROWS = MODEL_2_ROWS;
+	defCOLS = MODEL_2_COLS;
+	altROWS = maxROWS;
+	altCOLS = maxCOLS;
+	ctlr_erase(False);
+    }
 }
 
 
@@ -2829,80 +2829,71 @@ ctlr_dbcs_state(int baddr)
  * the unlock, the time should be fairly accurate.
  */
 static struct timeval t_start;
-#if defined(X3270_INTERACTIVE) /*[*/
 static Boolean ticking = False;
-#endif /*]*/
 static Boolean mticking = False;
-#if defined(X3270_INTERACTIVE) /*[*/
 static ioid_t tick_id;
 static struct timeval t_want;
-#endif /*]*/
 
-#if defined(X3270_INTERACTIVE) /*[*/
 /* Return the difference in milliseconds between two timevals. */
 static long
 delta_msec(struct timeval *t1, struct timeval *t0)
 {
-	return (t1->tv_sec - t0->tv_sec) * 1000 +
-	       (t1->tv_usec - t0->tv_usec + 500) / 1000;
+    return (t1->tv_sec - t0->tv_sec) * 1000 +
+	   (t1->tv_usec - t0->tv_usec + 500) / 1000;
 }
-#endif /*]*/
 
-#if defined(X3270_INTERACTIVE) /*[*/
 static void
 keep_ticking(ioid_t id _is_unused)
 {
-	struct timeval t1;
-	long msec;
+    struct timeval t1;
+    long msec;
 
-	do {
-		(void) gettimeofday(&t1, (struct timezone *) 0);
-		t_want.tv_sec++;
-		msec = delta_msec(&t_want, &t1);
-	} while (msec <= 0);
-	tick_id = AddTimeOut(msec, keep_ticking);
-	status_timing(&t_start, &t1);
+    do {
+	(void) gettimeofday(&t1, (struct timezone *) 0);
+	t_want.tv_sec++;
+	msec = delta_msec(&t_want, &t1);
+    } while (msec <= 0);
+    tick_id = AddTimeOut(msec, keep_ticking);
+    status_timing(&t_start, &t1);
 }
-#endif /*]*/
 
 void
 ticking_start(Boolean anyway)
 {
-	(void) gettimeofday(&t_start, (struct timezone *) 0);
-	mticking = True;
+    (void) gettimeofday(&t_start, (struct timezone *) 0);
+    mticking = True;
 
-#if defined(X3270_INTERACTIVE) /*[*/
-	if (!toggled(SHOW_TIMING) && !anyway)
-		return;
-	status_untiming();
-	if (ticking)
-		RemoveTimeOut(tick_id);
-	ticking = True;
-	tick_id = AddTimeOut(1000, keep_ticking);
-	t_want = t_start;
-#endif /*]*/
+    if (!toggled(SHOW_TIMING) && !anyway) {
+	return;
+    }
+    status_untiming();
+    if (ticking) {
+	RemoveTimeOut(tick_id);
+    }
+    ticking = True;
+    tick_id = AddTimeOut(1000, keep_ticking);
+    t_want = t_start;
 }
 
 static void
 ticking_stop(void)
 {
-	struct timeval t1;
+    struct timeval t1;
 
-	(void) gettimeofday(&t1, (struct timezone *) 0);
-	if (mticking) {
-		sms_accumulate_time(&t_start, &t1);
-		mticking = False;
-	} else {
-		return;
-	}
+    (void) gettimeofday(&t1, (struct timezone *) 0);
+    if (mticking) {
+	sms_accumulate_time(&t_start, &t1);
+	mticking = False;
+    } else {
+	return;
+    }
 
-#if defined(X3270_INTERACTIVE) /*[*/
-	if (!ticking)
-		return;
-	RemoveTimeOut(tick_id);
-	ticking = False;
-	status_timing(&t_start, &t1);
-#endif /*]*/
+    if (!ticking) {
+	return;
+    }
+    RemoveTimeOut(tick_id);
+    ticking = False;
+    status_timing(&t_start, &t1);
 }
 
 /*
