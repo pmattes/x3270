@@ -119,8 +119,11 @@ c3270-standalone.zip: c3270 make-cygwin-standalone runc3270.bat
 	./make-cygwin-standalone
 
 clean::
-	$(RM) c3270 *.o mkfb fallbacks.c
+	$(RM) *.o mkfb fallbacks.c
 @PR@clean::
+
+clobber:: clean
+	$(RM) c3270
 
 depend:: compiled_keypad.h
 

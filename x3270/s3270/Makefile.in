@@ -94,7 +94,10 @@ install.man:
 	$(INSTALL_DATA) x3270-script.man $(DESTDIR)$(MANDIR)/man1/x3270-script.1
 
 clean::
-	$(RM) s3270 *.o
+	$(RM) *.o
+
+clobber:: clean
+	$(RM) s3270
 
 depend:
 	gccmakedep -- $(CFLAGS) -- -s "# DO NOT DELETE" $(SRCS)

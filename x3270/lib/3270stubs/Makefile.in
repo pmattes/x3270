@@ -57,7 +57,10 @@ $(LIBSTUBS): $(OBJS)
 	ranlib $@
 
 clean::
-	$(RM) $(LIBSTUBS) *.o
+	$(RM) *.o
+
+clobber:: clean
+	$(RM) $(LIBSTUBS)
 
 depend::
 	gccmakedep -- $(CFLAGS) -- -s "# DO NOT DELETE" $(SRCS)

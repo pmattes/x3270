@@ -57,7 +57,10 @@ $(LIB3270): $(OBJS)
 	ranlib $@
 
 clean::
-	$(RM) $(LIB3270) *.o
+	$(RM) *.o
+
+clobber:: clean
+	$(RM) $(LIB3270)
 
 depend::
 	gccmakedep -- $(CFLAGS) -- -s "# DO NOT DELETE" $(SRCS)

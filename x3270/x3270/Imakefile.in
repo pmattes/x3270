@@ -236,3 +236,5 @@ install.byprefix::
  ******************************************************************************/
 clean:: 
 	$(RM) $(FONTS) qcpp mkfb fallbacks.c
+clobber:: clean
+	$(RM) x3270 x3270if

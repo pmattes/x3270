@@ -90,7 +90,10 @@ install.man:
 	$(INSTALL_DATA) tcl3270.man $(DESTDIR)$(MANDIR)/man1/tcl3270.1
 
 clean::
-	$(RM) tcl3270 *.o
+	$(RM) *.o
+
+clobber:: clean
+	$(RM) tcl3270
 
 depend:
 	gccmakedep -- $(CFLAGS) -- -s "# DO NOT DELETE" $(SRCS)

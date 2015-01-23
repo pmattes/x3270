@@ -154,7 +154,9 @@ install.man:
 	$(INSTALL_DATA) ibm_hosts.man $(DESTDIR)$(MANDIR)/man5/ibm_hosts.5
 
 clean::
-	$(RM) x3270 x3270if *.o *pcf.gz mkfb fallbacks.c
+	$(RM) *.o *pcf.gz mkfb fallbacks.c
+clobber:: clean
+	$(RM) x3270 x327if
 
 depend:
 	gccmakedep -- $(CFLAGS) -- -s "# DO NOT DELETE" $(SRCS)

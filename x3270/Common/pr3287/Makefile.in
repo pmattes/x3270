@@ -72,7 +72,9 @@ install.man:
 	$(INSTALL) pr3287.man $(DESTDIR)$(MANDIR)/man1/pr3287.1
 
 clean:
-	$(RM) pr3287 *.o
+	$(RM) *.o
+clobber: clean
+	$(RM) pr3287
 
 depend:
 	gccmakedep -- $(CFLAGS) -- -s "# DO NOT DELETE" $(SRCS)
