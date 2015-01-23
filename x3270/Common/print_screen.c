@@ -40,7 +40,6 @@
 
 #include <errno.h>
 
-#include "objects.h"
 #include "resources.h"
 
 #include "actions.h"

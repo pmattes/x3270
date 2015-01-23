@@ -43,7 +43,6 @@
 
 #include "ctlrc.h"
 
-#include "objects.h"
 #include "resources.h"
 
 #include "fprint_screenc.h"

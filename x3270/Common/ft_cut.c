@@ -122,7 +122,7 @@ static void cut_ack(void);
 static void cut_abort(const char *s, unsigned short reason);
 
 static unsigned from6(unsigned char c);
-/*static*/ int xlate_getc(void);
+static int xlate_getc(void);
 
 /*
  * Convert a buffer for uploading (host->local).
@@ -668,7 +668,7 @@ cut_abort(const char *s, unsigned short reason)
  * Get the next translated character from the local file.
  * Returns the character (in EBCDIC), or EOF.
  */
-/*static*/ int
+static int
 xlate_getc(void)
 {
 	int r;

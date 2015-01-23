@@ -38,13 +38,10 @@
 #include "3270ds.h"
 #include "ft_dft_ds.h"
 
-#include "actions.h"
-#include "charsetc.h"
 #include "kybdc.h"
 #include "ft_dftc.h"
 #include "unicodec.h"
 #include "ftc.h"
-#include "popupsc.h"
 #include "telnetc.h"
 #include "trace.h"
 #include "util.h"

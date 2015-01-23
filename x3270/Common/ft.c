@@ -39,7 +39,6 @@
 
 #include "appres.h"
 #include "actions.h"
-#include "charsetc.h"
 #include "ft_cutc.h"
 #include "ft_dftc.h"
 #include "ft_gui.h"
@@ -49,20 +48,11 @@
 #include "hostc.h"
 #include "kybdc.h"
 #include "macrosc.h"
-#include "objects.h"
 #include "popupsc.h"
-#include "screen.h"
-#include "telnetc.h"
 #include "util.h"
 #include "varbuf.h"
 
 /* Macros. */
-#define FILE_WIDTH	300	/* width of file name widgets */
-#define MARGIN		3	/* distance from margins to widgets */
-#define CLOSE_VGAP	0	/* distance between paired toggles */
-#define FAR_VGAP	10	/* distance between single toggles and groups */
-#define BUTTON_GAP	5	/* horizontal distance between buttons */
-#define COLUMN_GAP	40	/* distance between columns */
 
 /* Globals. */
 enum ft_state ft_state = FT_NONE;	/* File transfer state */

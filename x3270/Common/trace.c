@@ -39,7 +39,6 @@
 #include <limits.h>
 #include "3270ds.h"
 #include "appres.h"
-#include "objects.h"
 #include "resources.h"
 #include "ctlr.h"
 

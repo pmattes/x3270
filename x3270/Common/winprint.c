@@ -40,7 +40,6 @@
 
 #include <errno.h>
 
-#include "objects.h"
 #include "popupsc.h"
 #include "resources.h"
 #include "print_screen.h"
