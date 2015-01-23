@@ -90,7 +90,7 @@ extern int       hhalo, vhalo;
 extern Widget	 *screen;
 
 extern Boolean efont_changed;
-extern const char *efont_charset;
+extern char *efont_charset;
 extern Boolean efont_matches;
 extern Pixmap icon;
 extern Dimension main_width;
@@ -99,7 +99,7 @@ extern Boolean oversize_changed;
 extern Boolean scheme_changed;
 extern Window *screen_window;
 extern Boolean scrollbar_changed;
-extern const char *efont_charset_dbcs;
+extern char *efont_charset_dbcs;
 extern XIM im;
 extern XIC ic;
 extern Boolean xim_error;
@@ -108,25 +108,25 @@ char *display_charset();
 void font_init(void);
 void icon_init(void);
 void PA_ConfigureNotify_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void PA_EnterLeave_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void PA_Expose_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void PA_Focus_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void PA_GraphicsExpose_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void PA_KeymapNotify_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void PA_StateChanged_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void PA_VisibilityNotify_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void PA_WMProtocols_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void Redraw_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void save_00translations(Widget w, XtTranslations *t00);
 void screen_change_model(int mn, int ovc, int ovr);
 void screen_disp(Boolean erasing);

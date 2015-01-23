@@ -36,17 +36,8 @@
  *		and timers.
  */
 
-/* Use X for this stuff. */
+/* We use X11 data types all over. */
 #include <X11/Intrinsic.h>
 
-#define Malloc(n)	((void *)XtMalloc(n))
-#define Free(p)		XtFree((void *)p)
-#define Calloc(n, s)	((void *)XtCalloc(n, s))
-#define Realloc(p, s)	((void *)XtRealloc((XtPointer)p, s))
-#define NewString(s)	XtNewString(s)
-
-#define Error(s)	XtError(s)
-#define Warning(s)	XtWarning(s)
-
-/* "Required" optional parts. */
+/* Identify ourselves. */
 #define X3270_DISPLAY	1

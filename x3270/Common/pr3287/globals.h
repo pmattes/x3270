@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -95,3 +95,23 @@ typedef struct llist {
     struct llist *next;
     struct llist *prev;
 } llist_t;
+
+/* Memory allocation. */
+void *Malloc(size_t);
+void Free(void *);
+void *Calloc(size_t, size_t);
+void *Realloc(void *, size_t);
+char *NewString(const char *);
+
+/* Error exits. */
+void Error(const char *);
+void Warning(const char *);
+
+/* Typedefs cribbed from X11. */
+#if !defined(X3270_DISPLAY) /*[*/
+typedef char Boolean;
+# define False 0
+# define True 1
+typedef unsigned long KeySym;
+# define NoSymbol 0L
+#endif /*]*/

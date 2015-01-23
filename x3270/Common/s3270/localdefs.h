@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2014 Paul Mattes.
+ * Copyright (c) 2000-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -41,19 +41,3 @@
 #if defined(_WIN32) /*[*/
 # define WS3270	1
 #endif /*]*/
-
-/* These first definitions were cribbed from X11 -- but no X code is used. */
-typedef char Boolean;
-#define False 0
-#define True 1
-typedef unsigned long KeySym;
-#define NoSymbol 0L
-
-/* These are local functions with similar semantics to X functions. */
-extern void *Malloc(size_t);
-extern void Free(void *);
-extern void *Calloc(size_t, size_t);
-extern void *Realloc(void *, size_t);
-extern char *NewString(const char *);
-extern void Error(const char *);
-extern void Warning(const char *);

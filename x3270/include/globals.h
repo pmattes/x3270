@@ -156,6 +156,26 @@ extern char *strtok_r(char *str, const char *sep, char **last);
 /* Stop conflicting with curses' COLS, even if we don't link with it. */
 #define COLS cCOLS
 
+/* Memory allocation. */
+void *Malloc(size_t);
+void Free(void *);
+void *Calloc(size_t, size_t);
+void *Realloc(void *, size_t);
+char *NewString(const char *);
+
+/* Error exits. */
+void Error(const char *);
+void Warning(const char *);
+
+/* Typedefs cribbed from X11. */
+#if !defined(X3270_DISPLAY) /*[*/
+typedef char Boolean;
+# define False 0
+# define True 1
+typedef unsigned long KeySym;
+# define NoSymbol 0L
+#endif /*]*/
+
 /* Simple global variables */
 
 extern int		COLS;		/* current */

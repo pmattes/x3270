@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2010, 2013-2015 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,17 +27,5 @@
 
 /*
  *	localdefs.h
- *		Local definitions for pr3287.
- *
- *		This file contains definitions for environment-specific
- *		facilities, such as memory allocation, I/O registration,
- *		and timers.
+ *		Local definitions for the stubs library.
  */
-
-#define PR3287	1
-#if defined(_WIN32) /*[*/
-# define WPR3287	1
-#endif /*]*/
-#define X3270_IPV6 1
-
-extern void errmsg(const char *, ...);
