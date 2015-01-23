@@ -60,6 +60,7 @@
 #include "unicodec.h"
 #include "xactions.h"
 #include "xscreen.h"
+#include "xselectc.h"
 
 
 /*

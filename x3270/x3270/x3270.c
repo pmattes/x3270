@@ -80,6 +80,7 @@
 #include "xmenubar.h"
 #include "xscreen.h"
 #include "xscroll.h"
+#include "xselectc.h"
 #include "xstatus.h"
 
 /* Globals */

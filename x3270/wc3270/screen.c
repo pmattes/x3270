@@ -60,6 +60,7 @@
 #include "unicodec.h"
 #include "util.h"
 #include "w3misc.h"
+#include "wselectc.h"
 #include "xio.h"
 #include "xscroll.h"
 

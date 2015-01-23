@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, Paul Mattes.
+ * Copyright (c) 1999-2009, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,22 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Non-display version of selectc.h */
+/*
+ *	select_stubs.c
+ *		Stubs for select.c.
+ */
 
-#define unselect(baddr, len)
-#define area_is_selected(baddr, len)	False
+#include "globals.h"
+
+#include "selectc.h"
+
+void
+unselect(int baddr _is_unused, int len _is_unused)
+{
+}
+
+Boolean
+area_is_selected(int baddr _is_unused, int len _is_unused)
+{
+    return False;
+}

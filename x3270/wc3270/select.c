@@ -46,6 +46,7 @@
 #include "trace.h"
 #include "unicodec.h"
 #include "winversc.h"
+#include "wselectc.h"
 
 #include "selectc.h"
 

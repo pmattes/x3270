@@ -55,6 +55,7 @@
 #include "xkybd.h"
 #include "xmenubar.h"
 #include "xscreen.h"
+#include "xselectc.h"
 
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>
