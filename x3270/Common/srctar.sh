@@ -49,3 +49,5 @@ tarfile=$product-src.tgz
 rm -f $tarfile
 tar -czh -C $tempdir -f $tarfile $topdir
 echo "Created $tarfile."
+
+rm -rf $tempdir
