@@ -44,6 +44,7 @@
 #include "actions.h"
 #include "cmenubar.h"
 #include "cscreen.h"
+#include "cstatus.h"
 #include "ctlrc.h"
 #include "gluec.h"
 #include "hostc.h"
@@ -54,7 +55,7 @@
 #include "popupsc.h"
 #include "screen.h"
 #include "selectc.h"
-#include "statusc.h"
+#include "status.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "util.h"
@@ -2619,6 +2620,12 @@ status_screentrace(int n)
     } else {
 	oia_screentrace = '+';
     }
+}
+
+void
+status_script(Boolean on _is_unused)
+{
+    /* for now, nothing */
 }
 
 static void

@@ -50,7 +50,7 @@
 #endif /*]*/
 #include "scroll.h"
 #include "selectc.h"
-#include "statusc.h"
+#include "status.h"
 #include "trace.h"
 #include "xscroll.h"
 

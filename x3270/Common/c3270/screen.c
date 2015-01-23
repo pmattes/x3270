@@ -43,6 +43,7 @@
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "cmenubar.h"
+#include "cstatus.h"
 #include "gluec.h"
 #include "hostc.h"
 #include "keymap.h"
@@ -50,7 +51,7 @@
 #include "macrosc.h"
 #include "popupsc.h"
 #include "screen.h"
-#include "statusc.h"
+#include "status.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "utf8.h"
@@ -1898,6 +1899,12 @@ status_screentrace(int n)
 	oia_screentrace = '+';
     }   
 }     
+
+void
+status_script(Boolean on _is_unused)
+{
+    /* for now, nothing */
+}
 
 static void
 draw_oia(void)

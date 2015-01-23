@@ -28,33 +28,14 @@
  */
 
 /*
- *	statusc.h
- *		Global declarations for status.c.
+ *	xstatus.h
+ *		Global declarations for x3270 status.c.
  */
 
-void status_compose(Boolean on, unsigned char c, enum keytype keytype);
-void status_ctlr_done(void);
-void status_cursor_pos(int ca);
 void status_disp(void);
 void status_init(void);
-void status_insert_mode(Boolean on);
 void status_kmap(Boolean on);
-void status_kybdlock(void);
-void status_lu(const char *);
-void status_minus(void);
-void status_oerr(int error_type);
 void status_register(void);
 void status_reinit(unsigned cmask);
-void status_reset(void);
-void status_reverse_mode(Boolean on);
-void status_screentrace(int n);
-void status_script(Boolean on);
-void status_scrolled(int n);
 void status_shift_mode(int state);
-void status_syswait(void);
-void status_timing(struct timeval *t0, struct timeval *t1);
 void status_touch(void);
-void status_twait(void);
-void status_typeahead(Boolean on);
-void status_uncursor_pos(void);
-void status_untiming(void);

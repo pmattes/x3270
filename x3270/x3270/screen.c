@@ -73,7 +73,7 @@
 #include "screen.h"
 #include "scroll.h"
 #include "see.h"
-#include "statusc.h"
+#include "status.h"
 #include "tables.h"
 #include "trace.h"
 #include "unicodec.h"
@@ -86,6 +86,7 @@
 #include "xmenubar.h"
 #include "xscreen.h"
 #include "xscroll.h"
+#include "xstatus.h"
 #include "xtables.h"
 
 #if defined(HAVE_SYS_SELECT_H) /*[*/

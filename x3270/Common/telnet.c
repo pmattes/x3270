@@ -84,7 +84,7 @@
 # include "screen.h"
 #endif /*]*/
 #include "ssl_passwd_gui.h"
-#include "statusc.h"
+#include "status.h"
 #include "telnetc.h"
 #include "telnet_private.h"
 #include "trace.h"

@@ -20,6 +20,7 @@
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs2.c" />
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs3.c" />
     <ClCompile Include="..\..\lib\w3270stubs\ssl_passwd_gui_stubs.c" />
+    <ClCompile Include="..\..\lib\w3270stubs\status_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\trace_gui_stubs.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

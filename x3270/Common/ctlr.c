@@ -63,7 +63,7 @@
 #include "see.h"
 #include "selectc.h"
 #include "sfc.h"
-#include "statusc.h"
+#include "status.h"
 #include "tables.h"
 #include "telnetc.h"
 #include "trace.h"

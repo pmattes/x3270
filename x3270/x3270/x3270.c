@@ -68,7 +68,7 @@
 #include "save.h"
 #include "screen.h"
 #include "selectc.h"
-#include "statusc.h"
+#include "status.h"
 #include "telnetc.h"
 #include "toggles.h"
 #include "trace.h"
@@ -80,6 +80,7 @@
 #include "xmenubar.h"
 #include "xscreen.h"
 #include "xscroll.h"
+#include "xstatus.h"
 
 /* Globals */
 const char     *programname;

@@ -73,7 +73,7 @@
 # include "pr3287_session.h"
 #endif /*]*/
 #include "screen.h"
-#include "statusc.h"
+#include "status.h"
 #include "telnetc.h"
 #include "trace.h"
 #include "utf8.h"

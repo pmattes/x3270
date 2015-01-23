@@ -42,7 +42,7 @@
 #include "kybdc.h"
 #include "hostc.h"
 #include "screen.h"
-#include "statusc.h"
+#include "status.h"
 #include "tables.h"
 #include "util.h"
 #include "xscreen.h"
@@ -441,13 +441,6 @@ status_touch(void)
 		    status_line[i].len * sizeof(XChar2b));
 	}
 	status_changed = True;
-}
-
-/* Keyboard lock status changed */
-void
-status_kybdlock(void)
-{
-	/* presently implemented as explicit calls */
 }
 
 /* Connected or disconnected */

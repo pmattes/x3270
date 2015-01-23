@@ -67,7 +67,7 @@
 #include "print_screen.h"
 #include "screen.h"
 #include "scroll.h"
-#include "statusc.h"
+#include "status.h"
 #include "telnetc.h"
 #include "toggles.h"
 #include "trace.h"
@@ -461,7 +461,6 @@ kybdlock_set(unsigned int bits, const char *cause _is_unused)
 			unlock_delay_time = time(NULL);
 		}
 		kybdlock = n;
-		status_kybdlock();
 	}
 }
 
@@ -485,7 +484,6 @@ kybdlock_clr(unsigned int bits, const char *cause _is_unused)
 			unlock_delay_time = 0;
 		}
 		kybdlock = n;
-		status_kybdlock();
 	}
 }
 

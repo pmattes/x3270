@@ -45,7 +45,7 @@
 #include "macrosc.h"
 #include "popupsc.h"
 #include "screen.h"
-#include "statusc.h"
+#include "status.h"
 #include "trace.h"
 #include "util.h"
 

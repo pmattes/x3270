@@ -52,7 +52,7 @@
 #include "popupsc.h"
 #include "print_screen.h"
 #include "save.h"
-#include "statusc.h"
+#include "status.h"
 #include "telnetc.h"
 #include "toggles.h"
 #include "trace.h"
@@ -108,9 +108,7 @@ static char    *screentrace_name = NULL;
 #if defined(_WIN32) /*[*/
 static char    *screentrace_tmpfn;
 #endif /*]*/
-#if defined(X3270_INTERACTIVE) /*[*/
 static int 	screentrace_count;
-#endif /*]*/
 
 #if defined(_WIN32) /*[*/
 # if defined(WC3270) /*[*/
