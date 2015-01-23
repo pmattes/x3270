@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015, Paul Mattes.
+ * Copyright (c) 2013-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -51,5 +51,3 @@ void select_sync(unsigned row, unsigned col, unsigned rows,
 /* Used by common code. */
 void unselect(int baddr, int len);
 Boolean area_is_selected(int baddr, int len);
-void select_register(void);
-

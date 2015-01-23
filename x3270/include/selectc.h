@@ -32,3 +32,4 @@
 
 void unselect(int baddr, int len);
 Boolean area_is_selected(int baddr, int len);
+void select_register(void);

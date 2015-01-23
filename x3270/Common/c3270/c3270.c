@@ -82,9 +82,6 @@
 #include "trace.h"
 #include "utf8.h"
 #include "util.h"
-#if defined(_WIN32) /*[*/
-# include "wselectc.h"
-#endif /*]*/
 #include "xio.h"
 #include "xscroll.h"
 

@@ -44,3 +44,8 @@ area_is_selected(int baddr _is_unused, int len _is_unused)
 {
     return False;
 }
+
+void
+select_register(void)
+{
+}

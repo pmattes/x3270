@@ -34,36 +34,35 @@
 
 Boolean area_is_selected(int baddr, int len);
 void insert_selection_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void Cut_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void KybdSelect_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 int mouse_baddr(Widget w, XEvent *e);
 void move_select_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void SelectAll_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void SelectDown_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void reclass(char *s);
 void SelectDown_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void SelectMotion_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void SelectUp_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void select_end_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void select_extend_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void select_start_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void set_select_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void start_extend_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
+	Cardinal *num_params);
 void unselect(int baddr, int len);
 void Unselect_xaction(Widget w, XEvent *event, String *params,
-    Cardinal *num_params);
-void select_register(void);
+	Cardinal *num_params);
