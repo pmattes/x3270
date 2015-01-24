@@ -50,7 +50,7 @@
 #include "popups.h"
 #include "proxy.h"
 #include "proxyc.h"
-#include "resolverc.h"
+#include "resolver.h"
 #include "telnetc.h"
 #include "trace.h"
 #include "util.h"

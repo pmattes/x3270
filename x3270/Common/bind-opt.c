@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Paul Mattes.
+ * Copyright (c) 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 # include <netinet/in.h>
 #endif /*]*/
 
-#include "resolverc.h"
+#include "resolver.h"
 
 #include "bind-optc.h"
 

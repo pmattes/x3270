@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -80,7 +80,7 @@
 #include "pr3287.h"
 
 #include "ctlrc.h"
-#include "resolverc.h"
+#include "resolver.h"
 #include "trace.h"
 #include "telnetc.h"
 

@@ -24,9 +24,8 @@ COMMON_HEADERS = aplc.h arpa_telnet.h cg.h charsetc.h childc.h dialogc.h \
 	fallbacksc.h fprint_screenc.h ft_cut_ds.h ft_cutc.h ft_dft_ds.h \
 	ft_dftc.h ft_private.h ftc.h hostc.h idlec.h keymap.h kybdc.h \
 	linemodec.h localdefs.h menubar.h nvtc.h print_screen.h proxy.h \
-	proxyc.h resolverc.h resources.h rpqc.h save.h sfc.h tables.h \
-	telnet_private.h telnetc.h tn3270e.h unicode_dbcsc.h w3misc.h xio.h \
-	xl.h
+	proxyc.h resources.h rpqc.h save.h sfc.h tables.h telnet_private.h \
+	telnetc.h tn3270e.h unicode_dbcsc.h xio.h xl.h
 
 # HTTPD header files
 HTTPD_HEADERS = bind-optc.h httpd-corec.h httpd-ioc.h httpd-nodesc.h 

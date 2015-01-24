@@ -15,6 +15,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\lib\w3270\actions.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\asprintf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -31,6 +34,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lib\w3270\varbuf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\w3270\w3misc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

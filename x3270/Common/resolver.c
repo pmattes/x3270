@@ -40,7 +40,7 @@
 
 #include <stdio.h>
 #include "lazya.h"
-#include "resolverc.h"
+#include "resolver.h"
 #include "w3misc.h"
 
 #if defined(_WIN32) && defined(X3270_IPV6) /*[*/
@@ -345,55 +345,58 @@ typedef int (__stdcall *gni_fn)(const struct sockaddr *, socklen_t, char *,
 static FARPROC
 get_ws2_32(const char *symbol)
 {
-	static HMODULE ws2_32_handle = NULL;
-    	FARPROC p;
+    static HMODULE ws2_32_handle = NULL;
+    FARPROC p;
 
+    if (ws2_32_handle == NULL) {
+	ws2_32_handle = LoadLibrary("ws2_32.dll");
 	if (ws2_32_handle == NULL) {
-		ws2_32_handle = LoadLibrary("ws2_32.dll");
-		if (ws2_32_handle == NULL) {
-			fprintf(stderr, "Can't load ws2_32.dll: %s\n",
-				win32_strerror(GetLastError()));
-			exit(1);
-		}
+	    fprintf(stderr, "Can't load ws2_32.dll: %s\n",
+		    win32_strerror(GetLastError()));
+	    exit(1);
 	}
-	p = GetProcAddress(ws2_32_handle, symbol);
-	if (p == NULL) {
-		fprintf(stderr, "Can't resolve %s in ws2_32.dll: %s\n",
-			symbol, win32_strerror(GetLastError()));
-		exit(1);
-	}
-	return p;
+    }
+    p = GetProcAddress(ws2_32_handle, symbol);
+    if (p == NULL) {
+	fprintf(stderr, "Can't resolve %s in ws2_32.dll: %s\n",
+	    symbol, win32_strerror(GetLastError()));
+	exit(1);
+    }
+    return p;
 }
 
 static int
 win32_getaddrinfo(const char *node, const char *service,
 	const struct addrinfo *hints, struct addrinfo **res)
 {
-	static FARPROC gai_p = NULL;
+    static FARPROC gai_p = NULL;
 
-    	if (gai_p == NULL)
-		gai_p = get_ws2_32("getaddrinfo");
-	return ((gai_fn)gai_p)(node, service, hints, res);
+    if (gai_p == NULL) {
+	gai_p = get_ws2_32("getaddrinfo");
+    }
+    return ((gai_fn)gai_p)(node, service, hints, res);
 }
 
 static void
 win32_freeaddrinfo(struct addrinfo *res)
 {
-	static FARPROC fai_p = NULL;
+    static FARPROC fai_p = NULL;
 
-    	if (fai_p == NULL)
-		fai_p = get_ws2_32("freeaddrinfo");
-	((fai_fn)fai_p)(res);
+    if (fai_p == NULL) {
+	fai_p = get_ws2_32("freeaddrinfo");
+    }
+    ((fai_fn)fai_p)(res);
 }
 
 static int
 win32_getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host,
 	size_t hostlen, char *serv, size_t servlen, int flags)
 {
-	static FARPROC gni_p = NULL;
+    static FARPROC gni_p = NULL;
 
-    	if (gni_p == NULL)
-		gni_p = get_ws2_32("getnameinfo");
-	return ((gni_fn)gni_p)(sa, salen, host, hostlen, serv, servlen, flags);
+    if (gni_p == NULL) {
+	gni_p = get_ws2_32("getnameinfo");
+    }
+    return ((gni_fn)gni_p)(sa, salen, host, hostlen, serv, servlen, flags);
 }
 #endif /*]*/

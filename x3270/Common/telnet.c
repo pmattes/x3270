@@ -79,7 +79,7 @@
 #include "nvtc.h"
 #include "popups.h"
 #include "proxyc.h"
-#include "resolverc.h"
+#include "resolver.h"
 #if defined(C3270) /*[*/
 # include "screen.h"
 #endif /*]*/

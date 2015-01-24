@@ -136,7 +136,7 @@
 #include "ctlrc.h"
 #include "popups.h"
 #include "proxyc.h"
-#include "resolverc.h"
+#include "resolver.h"
 #include "telnetc.h"
 #include "utf8.h"
 #include "xtablec.h"

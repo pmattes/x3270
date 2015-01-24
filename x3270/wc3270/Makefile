@@ -83,7 +83,7 @@ wc3270res.o: wc3270.rc wc3270.ico Makefile
 	$(WINDRES) -i wc3270.rc -o wc3270res.o
 
 wc3270.exe: $(OBJECTS) Makefile ../lib/libw3270.a ../lib/libw3270stubs.a
-	$(CC) -o wc3270.exe $(CFLAGS) $(OBJECTS) $(LIBS) -L../lib -lw3270 -lw3270stubs
+	$(CC) -o wc3270.exe $(CFLAGS) $(OBJECTS) -L../lib -lw3270 -lw3270stubs $(LIBS)
 
 ../lib/libw3270.a:
 	cd ../lib/w3270 && $(MAKE) all
@@ -110,8 +110,8 @@ ead3270.exe: ead3270.o windirs.o
 ead3270.o: ead3270.c
 	$(CC) $(CFLAGS) -c ead3270.c
 
-x3270if.exe: x3270if.o w3misc.o
-	$(CC) -o $@ $(CFLAGS) x3270if.o w3misc.o -lws2_32
+x3270if.exe: x3270if.o ../lib/libw3270.a
+	$(CC) -o $@ $(CFLAGS) x3270if.o ../lib/libw3270.a -lws2_32
 
 clean:
 	rm -f *.o $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c dependencies-

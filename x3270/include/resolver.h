@@ -26,7 +26,7 @@
  */
 
 /*
- *	resolverc.h
+ *	resolver.h
  *		Hostname resolution.
  */
 
@@ -36,9 +36,8 @@ typedef enum {
     RHP_CANNOT_RESOLVE = -2
 } rhp_t;
 #define RHP_IS_ERROR(r)	((r) < 0)
-extern rhp_t resolve_host_and_port(const char *host, char *portname, int ix,
+rhp_t resolve_host_and_port(const char *host, char *portname, int ix,
 	unsigned short *pport, struct sockaddr *sa, socklen_t *sa_len,
 	char **errmsg, int *lastp);
-extern Boolean numeric_host_and_port(const struct sockaddr *sa,
-	socklen_t salen, char *host, size_t hostlen, char *serv,
-	size_t servlen, char **errmsg);
+Boolean numeric_host_and_port(const struct sockaddr *sa, socklen_t salen,
+	char *host, size_t hostlen, char *serv, size_t servlen, char **errmsg);

@@ -45,90 +45,92 @@
 int
 sockstart(void)
 {
-	static int initted = 0;
-	WORD wVersionRequested;
-	WSADATA wsaData;
- 
-	if (initted)
-		return 0;
+    static int initted = 0;
+    WORD wVersionRequested;
+    WSADATA wsaData;
 
-	initted = 1;
-
-	wVersionRequested = MAKEWORD(2, 2);
- 
-	if (WSAStartup(wVersionRequested, &wsaData) != 0) {
-		fprintf(stderr, "WSAStartup failed: %s\n",
-			win32_strerror(GetLastError()));
-		return -1;
-	}
- 
-	if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2) {
-		fprintf(stderr, "Bad winsock version: %d.%d\n",
-			LOBYTE(wsaData.wVersion), HIBYTE(wsaData.wVersion));
-		return -1;
-	}
-
+    if (initted) {
 	return 0;
+    }
+
+    initted = 1;
+
+    wVersionRequested = MAKEWORD(2, 2);
+
+    if (WSAStartup(wVersionRequested, &wsaData) != 0) {
+	fprintf(stderr, "WSAStartup failed: %s\n",
+		win32_strerror(GetLastError()));
+	return -1;
+    }
+
+    if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2) {
+	fprintf(stderr, "Bad winsock version: %d.%d\n",
+		LOBYTE(wsaData.wVersion), HIBYTE(wsaData.wVersion));
+	return -1;
+    }
+
+    return 0;
 }
 
 /* Convert a network address to a string. */
 const char *
 inet_ntop(int af, const void *src, char *dst, socklen_t cnt)
 {
-    	union {
-	    	struct sockaddr sa;
-		struct sockaddr_in sin;
-		struct sockaddr_in6 sin6;
-	} sa;
-	DWORD ssz;
-	DWORD sz = cnt;
+    union {
+	struct sockaddr sa;
+	struct sockaddr_in sin;
+	struct sockaddr_in6 sin6;
+    } sa;
+    DWORD ssz;
+    DWORD sz = cnt;
 
-	memset(&sa, '\0', sizeof(sa));
+    memset(&sa, '\0', sizeof(sa));
 
-	switch (af) {
-	case AF_INET:
-	    	sa.sin = *(struct sockaddr_in *)src;	/* struct copy */
-		ssz = sizeof(struct sockaddr_in);
-		break;
-	case AF_INET6:
-	    	sa.sin6 = *(struct sockaddr_in6 *)src;	/* struct copy */
-		ssz = sizeof(struct sockaddr_in6);
-		break;
-	default:
-	    	if (cnt > 0)
-			dst[0] = '\0';
-		return NULL;
+    switch (af) {
+    case AF_INET:
+	sa.sin = *(struct sockaddr_in *)src;	/* struct copy */
+	ssz = sizeof(struct sockaddr_in);
+	break;
+    case AF_INET6:
+	sa.sin6 = *(struct sockaddr_in6 *)src;	/* struct copy */
+	ssz = sizeof(struct sockaddr_in6);
+	break;
+    default:
+	if (cnt > 0) {
+	    dst[0] = '\0';
 	}
+	return NULL;
+    }
 
-	sa.sa.sa_family = af;
+    sa.sa.sa_family = af;
 
-	if (WSAAddressToString(&sa.sa, ssz, NULL, dst, &sz) != 0) {
-	    	if (cnt > 0)
-			dst[0] = '\0';
-		return NULL;
+    if (WSAAddressToString(&sa.sa, ssz, NULL, dst, &sz) != 0) {
+	if (cnt > 0) {
+	    dst[0] = '\0';
 	}
+	return NULL;
+    }
 
-	return dst;
+    return dst;
 }
 
 /* Decode a Win32 error number. */
 const char *
 win32_strerror(int e)
 {
-	static char buffer[4096];
+    static char buffer[4096];
 
-	if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+    if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
 	    NULL,
 	    e,
 	    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 	    buffer,
 	    sizeof(buffer),
 	    NULL) == 0) {
-	    
-	    sprintf(buffer, "Windows error %d", e);
-	}
+	sprintf(buffer, "Windows error %d", e);
+    }
 
-	return buffer;
+    return buffer;
 }
 
 #if defined(_MSC_VER) /*[*/
@@ -141,17 +143,17 @@ win32_strerror(int e)
 int
 gettimeofday(struct timeval *tv, void *ignored)
 {
-	FILETIME t;
-	ULARGE_INTEGER u;
+    FILETIME t;
+    ULARGE_INTEGER u;
 
-	GetSystemTimeAsFileTime(&t);
-	memcpy(&u, &t, sizeof(ULARGE_INTEGER));
+    GetSystemTimeAsFileTime(&t);
+    memcpy(&u, &t, sizeof(ULARGE_INTEGER));
 
-	/* Isolate seconds and move epochs. */
-	tv->tv_sec = (DWORD)((u.QuadPart / SECS_TO_100NS) -
-			       	SECS_BETWEEN_EPOCHS);
-	tv->tv_usec = (u.QuadPart % SECS_TO_100NS) / 10ULL;
-	return 0;
+    /* Isolate seconds and move epochs. */
+    tv->tv_sec = (DWORD)((u.QuadPart / SECS_TO_100NS) -
+			    SECS_BETWEEN_EPOCHS);
+    tv->tv_usec = (u.QuadPart % SECS_TO_100NS) / 10ULL;
+    return 0;
 }
 
 /* MinGW has getopt(), but MSVC does not. */
@@ -163,57 +165,62 @@ static const char *nextchar = NULL;
 int
 getopt(int argc, char * const argv[], const char *optstring)
 {
-    	char c;
-	const char *s;
+    char c;
+    const char *s;
 
-    	if (optind == 1)
-		nextchar = argv[optind++];
+    if (optind == 1) {
+	nextchar = argv[optind++];
+    }
 
-	do {
-	    	if (nextchar == argv[optind - 1]) {
-			if (optind > argc) {
-				--optind; /* went too far */
-				return -1;
-			}
-			if (nextchar == NULL) {
-				--optind; /* went too far */
-				return -1;
-			}
-			if (!strcmp(nextchar, "--"))
-				return -1;
-			if (*nextchar++ != '-') {
-				--optind;
-				return -1;
-			}
-		}
-
-		if ((c = *nextchar++) == '\0')
-			nextchar = argv[optind++];
-	} while (nextchar == argv[optind - 1]);
-
-	s = strchr(optstring, c);
-	if (s == NULL) {
-	    	if (opterr)
-		    	fprintf(stderr, "Unknown option '%c'\n", c);
-		return '?';
+    do {
+	if (nextchar == argv[optind - 1]) {
+	    if (optind > argc) {
+		--optind; /* went too far */
+		return -1;
+	    }
+	    if (nextchar == NULL) {
+		--optind; /* went too far */
+		return -1;
+	    }
+	    if (!strcmp(nextchar, "--")) {
+		return -1;
+	    }
+	    if (*nextchar++ != '-') {
+		--optind;
+		return -1;
+	    }
 	}
-	if (*(s + 1) == ':') {
-	    	if (*nextchar) {
-		    	optarg = (char *)nextchar;
-			nextchar = argv[optind++];
-			return c;
-		} else if (optind < argc && argv[optind] != NULL) {
-		    	optarg = (char *)argv[optind++];
-			nextchar = argv[optind++];
-			return c;
-		} else {
-		    	if (opterr)
-			    	fprintf(stderr, "Missing value after '%c'\n",
-					c);
-			return -1;
-		}
-	} else
-	    	return c;
+
+	if ((c = *nextchar++) == '\0') {
+	    nextchar = argv[optind++];
+	}
+    } while (nextchar == argv[optind - 1]);
+
+    s = strchr(optstring, c);
+    if (s == NULL) {
+	if (opterr) {
+	    fprintf(stderr, "Unknown option '%c'\n", c);
+	}
+	return '?';
+    }
+    if (*(s + 1) == ':') {
+	if (*nextchar) {
+	    optarg = (char *)nextchar;
+	    nextchar = argv[optind++];
+	    return c;
+	} else if (optind < argc && argv[optind] != NULL) {
+	    optarg = (char *)argv[optind++];
+	    nextchar = argv[optind++];
+	    return c;
+	} else {
+	    if (opterr) {
+		fprintf(stderr, "Missing value after '%c'\n", c);
+	    }
+	    return -1;
+	}
+    } else {
+	return c;
+    }
 }
 
 #endif /*]*/

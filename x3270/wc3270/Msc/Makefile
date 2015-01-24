@@ -54,9 +54,9 @@ VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(WC3270_OBJECTS) wc3270.RES \
 OBJECTS = $(VOBJS) version.obj
 WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
 	windirs.obj relink.obj snprintf.obj
-LIBS = $(SSLLIB) ws2_32.lib advapi32.lib user32.lib shell32.lib ole32.lib \
-       comdlg32.lib gdi32.lib winspool.lib ..\lib\libw3270.lib \
-       ..\lib\libw3270stubs.lib
+LIBS = ..\lib\libw3270.lib ..\lib\libw3270stubs.lib $(SSLLIB) ws2_32.lib \
+       advapi32.lib user32.lib shell32.lib ole32.lib comdlg32.lib gdi32.lib \
+       winspool.lib
 SHRTLIBS = ole32.lib
 WIZLIBS = ole32.lib winspool.lib advapi32.lib shell32.lib
 
@@ -114,8 +114,8 @@ ead3270.exe: ead3270.obj windirs.obj
 ead3270.obj: ead3270.c
 	$(CC) $(CFLAGS) /c ead3270.c
 
-x3270if.exe: x3270if.obj w3misc.obj
-	$(CC) /Fe$@ $(CFLAGS) x3270if.obj w3misc.obj ws2_32.lib
+x3270if.exe: x3270if.obj ..\lib\lib3270.lib
+	$(CC) /Fe$@ $(CFLAGS) x3270if.obj ..\lib\lib3270.lib ws2_32.lib
 
 x3270if.obj: x3270if.c
 	$(CC) $(CFLAGS) /c x3270if.c
