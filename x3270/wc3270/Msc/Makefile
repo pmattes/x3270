@@ -52,8 +52,8 @@ VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(WC3270_OBJECTS) wc3270.RES \
 	fallbacks.obj
 
 OBJECTS = $(VOBJS) version.obj
-WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj winvers.obj \
-	windirs.obj relink.obj snprintf.obj
+WOBJECTS = ..\lib\libw3270.lib wizard.obj wc3270.RES wversion.obj \
+	   shortcut.obj winvers.obj windirs.obj relink.obj
 LIBS = ..\lib\libw3270.lib ..\lib\libw3270stubs.lib $(SSLLIB) ws2_32.lib \
        advapi32.lib user32.lib shell32.lib ole32.lib comdlg32.lib gdi32.lib \
        winspool.lib

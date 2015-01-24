@@ -46,10 +46,10 @@ VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(WC3270_OBJECTS) fallbacks.o \
 
 OBJECTS = $(VOBJS) version.o
 WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o winvers.o windirs.o \
-	relink.o snprintf.o
+	relink.o
 LIBS = $(SSLLIB) -lws2_32 -lole32 -luuid -lcomdlg32 -lgdi32 -lwinspool
 SHRTLIBS = -lole32 -luuid
-WIZLIBS = -lole32 -luuid -lwinspool
+WIZLIBS = ../lib/libw3270.a -lole32 -luuid -lwinspool
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
 PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe x3270if.exe

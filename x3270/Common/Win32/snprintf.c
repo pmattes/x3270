@@ -50,25 +50,25 @@
 int
 safe_vsnprintf(char *str, size_t size, const char *fmt, va_list ap)
 {
-	if (size > 0) {
-		int len;
+    if (size > 0) {
+	int len;
 
-		len = vsnprintf(str, size, fmt, ap);
-		str[size - 1] = '\0';
-		return len;
-	} else {
-		return 0;
-	}
+	len = vsnprintf(str, size, fmt, ap);
+	str[size - 1] = '\0';
+	return len;
+    } else {
+	return 0;
+    }
 }
 
 int
 safe_snprintf(char *str, size_t size, const char *fmt, ...)
 {
-	va_list ap;
-	int len;
+    va_list ap;
+    int len;
 
-	va_start(ap, fmt);
-	len = safe_vsnprintf(str, size, fmt, ap);
-	va_end(ap);
-	return len;
+    va_start(ap, fmt);
+    len = safe_vsnprintf(str, size, fmt, ap);
+    va_end(ap);
+    return len;
 }
