@@ -77,6 +77,7 @@
     <ClCompile Include="..\..\lib\w3270\resolver.c" />
     <ClCompile Include="..\..\lib\w3270\see.c" />
     <ClCompile Include="..\..\lib\w3270\snprintf.c" />
+    <ClCompile Include="..\..\lib\w3270\ssl_dll.c" />
     <ClCompile Include="..\..\lib\w3270\utf8.c" />
     <ClCompile Include="..\..\lib\w3270\varbuf.c" />
     <ClCompile Include="..\..\lib\w3270\w3misc.c" />

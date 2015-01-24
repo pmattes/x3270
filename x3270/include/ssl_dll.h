@@ -36,7 +36,7 @@
 #if !defined(_SSL_DLL_H_) /*[*/
 #define _SSL_DLL_H_ 1
 
-extern int ssl_dll_init(void);
+int ssl_dll_init(void);
 extern const char *ssl_fail_reason;
 
 #define ERR_error_string my_ERR_error_string
