@@ -35,9 +35,10 @@
 #include <X11/StringDefs.h>
 #include <X11/Xaw/Dialog.h>
 
-#include "macrosc.h"
-#include "popupsc.h"
+#include "macros.h"
+#include "popups.h"
 #include "xaa.h"
+#include "xpopups.h"
 
 /* Macros */
 

@@ -134,7 +134,7 @@
 #include "charsetc.h"
 #include "trace.h"
 #include "ctlrc.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "proxyc.h"
 #include "resolverc.h"
 #include "telnetc.h"

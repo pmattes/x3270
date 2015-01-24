@@ -40,11 +40,12 @@
 #include "resources.h"
 
 #include "actions.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "print_window.h"
 #include "trace.h"
 #include "util.h"
 #include "varbuf.h"
+#include "xpopups.h"
 
 /* Typedefs */
 

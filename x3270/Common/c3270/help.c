@@ -37,7 +37,7 @@
 #include "actions.h"
 #include "gluec.h"
 #include "help.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "screen.h"
 #include "util.h"
 

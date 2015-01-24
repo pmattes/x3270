@@ -34,7 +34,7 @@
 
 #include <assert.h>
 
-#include "popupsc.h"
+#include "popups.h"
 
 void
 popup_an_info(const char *fmt, ...)

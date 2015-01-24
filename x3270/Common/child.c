@@ -34,8 +34,14 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include "popupsc.h"
+#include "popups.h" /* must be before cpopups.h */
+#if defined(C3270) /*[*/
+# include "cpopups.h"
+#endif /*]*/
 #include "util.h"
+#if defined(X3270_DISPLAY) /*[*/
+# include "xpopups.h"
+#endif /*]*/
 
 #define CHILD_BUF	1024
 

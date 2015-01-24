@@ -47,8 +47,8 @@
 #include "ftc.h"
 #include "hostc.h"
 #include "kybdc.h"
-#include "macrosc.h"
-#include "popupsc.h"
+#include "macros.h"
+#include "popups.h"
 #include "util.h"
 #include "varbuf.h"
 

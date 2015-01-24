@@ -25,12 +25,15 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Non-display version of popupsc.h */
+/*
+ *	popups.h
+ *		Common declarations for popups.c
+ */
 
-void action_output(const char *fmt, ...);
-void popup_an_info(const char *fmt, ...); /* a stub that will assert */
-void popup_an_errno(int errn, const char *fmt, ...);
-void popup_an_error(const char *fmt, ...);
+void action_output(const char *fmt, ...) printflike(1, 2);
+void popup_an_info(const char *fmt, ...) printflike(1, 2);
+void popup_an_errno(int errn, const char *fmt, ...) printflike(2, 3);
+void popup_an_error(const char *fmt, ...) printflike(1, 2);
 typedef void abort_callback_t(void);
 void popup_printer_output(Boolean is_err, abort_callback_t *a,
-	const char *fmt, ...);
+	const char *fmt, ...) printflike(3, 4);

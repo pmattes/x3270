@@ -47,7 +47,7 @@
 
 #include "fprint_screenc.h"
 #include "gdi_printc.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "util.h"

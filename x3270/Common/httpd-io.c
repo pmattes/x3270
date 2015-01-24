@@ -45,8 +45,8 @@
 
 #include "appres.h"
 #include "lazya.h"
-#include "macrosc.h"
-#include "popupsc.h"
+#include "macros.h"
+#include "popups.h"
 #include "trace.h"
 #include "util.h"
 #include "varbuf.h"

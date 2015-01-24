@@ -38,12 +38,15 @@
 
 #include "actions.h"
 #include "hostc.h"
-#include "macrosc.h"
-#include "popupsc.h"
+#include "macros.h"
+#include "popups.h"
 #include "telnetc.h"
 #include "trace.h"
 #include "util.h"
 #include "xio.h"
+#if defined(X3270_DISPLAY) /*[*/
+# include "xpopups.h"
+#endif /*]*/
 
 #include <errno.h>
 

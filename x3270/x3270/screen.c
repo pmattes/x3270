@@ -68,7 +68,7 @@
 #include "kybdc.h"
 #include "lazya.h"
 #include "nvtc.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "save.h"
 #include "screen.h"
 #include "scroll.h"
@@ -87,6 +87,7 @@
 #include "xscreen.h"
 #include "xscroll.h"
 #include "xstatus.h"
+#include "xpopups.h"
 #include "xtables.h"
 
 #if defined(HAVE_SYS_SELECT_H) /*[*/

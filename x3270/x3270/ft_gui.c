@@ -55,10 +55,11 @@
 #include "ft_private.h"
 #include "kybdc.h"
 #include "objects.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "util.h"
 #include "varbuf.h"
 #include "xmenubar.h"
+#include "xpopups.h"
 
 #include "ft_gui.h"
 

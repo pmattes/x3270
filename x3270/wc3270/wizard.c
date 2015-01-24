@@ -43,7 +43,6 @@
 #include "ctlrc.h"
 #include "hostc.h"
 #include "kybdc.h"
-#include "macrosc.h"
 #include "proxy.h"
 #include "resources.h"
 #include "screen.h"

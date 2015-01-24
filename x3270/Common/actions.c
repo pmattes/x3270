@@ -38,8 +38,8 @@
 #include "appres.h"
 
 #include "actions.h"
-#include "macrosc.h"
-#include "popupsc.h"
+#include "macros.h"
+#include "popups.h"
 #include "trace.h"
 #include "util.h"
 

@@ -42,7 +42,7 @@
 #include "actions.h"
 #include "ctlr.h"
 #include "ctlrc.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "winversc.h"

@@ -40,7 +40,7 @@
 
 #include "actions.h"
 #include "menubar.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "toggles.h"
 
 /* Live state of toggles. */

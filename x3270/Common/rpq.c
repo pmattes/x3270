@@ -44,7 +44,7 @@
 #include "3270ds.h"
 
 #include "ctlrc.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "sfc.h"	 /* has to come before rpqc.h */
 #include "rpqc.h"
 #include "tables.h"

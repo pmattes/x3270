@@ -27,15 +27,13 @@
 
 /* c3270 version of popupsc.h */
 
-/* Note that these functions are in c3270.c or glue.c, not popups.c. */
-
-extern void action_output(const char *fmt, ...) printflike(1, 2);
-extern void popup_an_errno(int errn, const char *fmt, ...) printflike(2, 3);
-extern void popup_an_error(const char *fmt, ...) printflike(1, 2);
-extern void popup_an_info(const char *fmt, ...) printflike(1, 2);
+void action_output(const char *fmt, ...) printflike(1, 2);
+void popup_an_errno(int errn, const char *fmt, ...) printflike(2, 3);
+void popup_an_error(const char *fmt, ...) printflike(1, 2);
+void popup_an_info(const char *fmt, ...) printflike(1, 2);
 typedef void abort_callback_t(void);
-extern void popup_printer_output(Boolean is_err, abort_callback_t *a,
+void popup_printer_output(Boolean is_err, abort_callback_t *a,
 	const char *fmt, ...);
-extern void popup_child_output(Boolean is_err, abort_callback_t *a,
+void popup_child_output(Boolean is_err, abort_callback_t *a,
 	const char *fmt, ...);
-extern void child_popup_init(void);
+void child_popup_init(void);

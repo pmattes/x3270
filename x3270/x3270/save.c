@@ -49,7 +49,7 @@
 #include "idlec.h"
 #include "keymap.h"
 #include "lazya.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "screen.h"
 #include "toggles.h"
 #include "util.h"

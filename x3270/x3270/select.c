@@ -69,7 +69,7 @@
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "kybdc.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "screen.h"
 #include "selectc.h"
 #include "tables.h"

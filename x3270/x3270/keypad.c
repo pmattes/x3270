@@ -43,11 +43,12 @@
 
 #include "actions.h"
 #include "kybdc.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "util.h"
 #include "xkeypad.h"
 #include "xmenubar.h"
 #include "xscreen.h"
+#include "xpopups.h"
 
 #include "keypad.bm"
 

@@ -45,7 +45,7 @@
 #include "actions.h"
 #include "charsetc.h"
 #include "fprint_screenc.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "print_screen.h"
 #include "print_gui.h"
 #include "trace.h"

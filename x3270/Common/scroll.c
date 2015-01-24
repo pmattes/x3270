@@ -43,7 +43,7 @@
 #endif /*]*/
 #include "ctlrc.h"
 #include "kybdc.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "screen.h"
 #if defined(X3270_DISPLAY) /*[*/
 # include "xscreen.h"

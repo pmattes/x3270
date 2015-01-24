@@ -66,9 +66,9 @@
 #include "idlec.h"
 #include "kybdc.h"
 #include "lazya.h"
-#include "macrosc.h"
+#include "macros.h"
 #include "menubar.h"
-#include "popupsc.h"
+#include "popups.h"
 #if defined(X3270_INTERACTIVE) /*[*/
 # include "pr3287_session.h"
 #endif /*]*/

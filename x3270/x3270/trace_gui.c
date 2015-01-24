@@ -41,11 +41,12 @@
 #include "resources.h"
 
 #include "objects.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "toggles.h"
 #include "trace.h"
 #include "trace_gui.h"
 #include "xmenubar.h"
+#include "xpopups.h"
 
 /* Statics */
 static Widget trace_shell = NULL;

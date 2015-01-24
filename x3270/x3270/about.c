@@ -49,12 +49,13 @@
 #include "keymap.h"
 #include "lazya.h"
 #include "linemodec.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "telnetc.h"
 #include "utf8.h"
 #include "util.h"
 #include "varbuf.h"
 #include "xscreen.h"
+#include "xpopups.h"
 
 static Widget about_shell = NULL;
 static Widget about_form;

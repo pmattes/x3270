@@ -34,7 +34,7 @@
 #include "globals.h"
 
 #include "actions.h"
-#include "macrosc.h"
+#include "macros.h"
 #include "3270ds.h"
 #include "appres.h"
 #include "ckeypad.h"

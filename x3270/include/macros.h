@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2010, 2013-2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,49 +26,52 @@
  */
 
 /*
- *	printer_gui.c
- *		GUI for 3287 printer session support
+ *	macros.h
+ *		Global declarations for macros.c.
  */
 
-#include "globals.h"
+/* macro definition */
+struct macro_def {
+    char		*name;
+    char		**parents;
+    char		*action;
+    struct macro_def	*next;
+};
+extern struct macro_def *macro_defs;
+extern Boolean macro_output;
 
-#include <X11/StringDefs.h>
-#include <X11/Xaw/Dialog.h>
+void abort_script(void);
+void cancel_if_idle_command(void);
+void login_macro(char *s);
+void macros_init(void);
+void macro_command(struct macro_def *m);
+void peer_script_init(void);
+void ps_set(char *s, Boolean is_hex);
+void push_command(char *);
+void push_idle(char *);
+void push_keymap_action(char *);
+void push_macro(char *, Boolean);
+void sms_accumulate_time(struct timeval *, struct timeval *);
+Boolean sms_active(void);
+void sms_connect_wait(void);
+void sms_continue(void);
+void sms_error(const char *msg);
+void sms_host_output(void);
+void sms_info(const char *fmt, ...) printflike(1, 2);
+Boolean sms_in_macro(void);
+Boolean sms_redirect(void);
+void sms_store(unsigned char c);
 
-#include "popups.h"
-#include "pr3287_session.h"
-#include "printer_gui.h"
-#include "xpopups.h"
-
-static Widget lu_shell = NULL;
-
-/* Callback for "OK" button on printer specific-LU popup */
-static void
-lu_callback(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
-{
-    char *lu;
-
-    if (w) {
-	lu = XawDialogGetValueString((Widget)client_data);
-	if (lu == NULL || *lu == '\0') {
-	    popup_an_error("Must supply an LU");
-	    return;
-	} else {
-	    XtPopdown(lu_shell);
-	}
-    } else {
-	lu = (char *)client_data;
-    }
-    pr3287_session_start(lu);
-}
-
-/* Pop up the LU dialog box. */
-void
-printer_lu_dialog(void)
-{
-    if (lu_shell == NULL) {
-	lu_shell = create_form_popup("printerLu", lu_callback, NULL,
-		FORM_NO_WHITE);
-    }
-    popup_popup(lu_shell, XtGrabExclusive);
-}
+typedef void *sms_cbh;
+typedef void (*sms_data_cb)(sms_cbh handle, const char *buf, size_t len);
+typedef void (*sms_done_cb)(sms_cbh handle, Boolean success,
+	const char *status_buf, size_t status_len);
+typedef struct {
+    const char *shortname;
+    enum iaction ia;
+    sms_data_cb data;
+    sms_done_cb done;
+} sms_cb_t;
+void push_cb(const char *buf, size_t len, const sms_cb_t *cb,
+	sms_cbh handle);
+void macros_register(void);

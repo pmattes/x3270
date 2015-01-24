@@ -49,7 +49,7 @@
 #include "lazya.h"
 #include "menubar.h"
 #include "nvtc.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "print_screen.h"
 #include "save.h"
 #include "status.h"

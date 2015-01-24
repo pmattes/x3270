@@ -42,7 +42,7 @@
 
 #include "charsetc.h"
 #include "lazya.h"
-#include "popupsc.h"
+#include "popups.h"
 #if defined(X3270_DISPLAY) /*[*/
 # include "xscreen.h"
 #endif /*]*/

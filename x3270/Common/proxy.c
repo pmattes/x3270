@@ -47,7 +47,7 @@
 #endif /*]*/
 
 #include "3270ds.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "proxy.h"
 #include "proxyc.h"
 #include "resolverc.h"

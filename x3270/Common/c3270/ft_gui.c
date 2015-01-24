@@ -40,7 +40,7 @@
 #include "ftc.h"
 #include "ft_private.h"
 #include "icmdc.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "screen.h"
 
 #include "ft_gui.h"

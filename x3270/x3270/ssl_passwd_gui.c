@@ -47,10 +47,11 @@
 
 #include "hostc.h"
 #include "objects.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "ssl_passwd_gui.h"
 #include "telnetc.h"
 #include "telnet_private.h"
+#include "xpopups.h"
 
 /* Statics. */
 static Boolean ssl_password_prompted;

@@ -75,9 +75,9 @@
 #include "kybdc.h"
 #include "lazya.h"
 #include "linemodec.h"
-#include "macrosc.h"
+#include "macros.h"
 #include "nvtc.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "proxyc.h"
 #include "resolverc.h"
 #if defined(C3270) /*[*/

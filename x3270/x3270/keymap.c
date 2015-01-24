@@ -50,7 +50,7 @@
 #include "hostc.h"
 #include "keymap.h"
 #include "kybdc.h"
-#include "popupsc.h"
+#include "popups.h"
 #include "screen.h"
 #include "status.h"
 #include "util.h"
@@ -59,6 +59,7 @@
 #include "xmenubar.h"
 #include "xscreen.h"
 #include "xstatus.h"
+#include "xpopups.h"
 
 #define PA_ENDL		" " PA_END "()"
 #define Res3270		"3270"

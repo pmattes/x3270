@@ -44,8 +44,8 @@
 #include "dialogc.h"
 #include "keymap.h"
 #include "lazya.h"
-#include "macrosc.h"
-#include "popupsc.h"
+#include "macros.h"
+#include "popups.h"
 #include "resources.h"
 #include "screen.h"
 #include "selectc.h"
@@ -54,6 +54,7 @@
 #include "xactions.h"
 #include "xkybd.h"
 #include "xmenubar.h"
+#include "xpopups.h"
 #include "xscreen.h"
 #include "xselectc.h"
 

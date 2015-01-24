@@ -45,7 +45,7 @@
 #include "ctlrc.h"
 #include "hostc.h"
 #include "kybdc.h"
-#include "macrosc.h"
+#include "macros.h"
 #include "screen.h"
 #include "trace.h"
 #include "util.h"

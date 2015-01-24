@@ -40,7 +40,7 @@
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "hostc.h"
-#include "macrosc.h"
+#include "macros.h"
 #include "nvtc.h"
 #include "nvt_gui.h"
 #include "screen.h"
