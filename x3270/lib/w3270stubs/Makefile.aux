@@ -58,5 +58,5 @@ configure: configure.in
 dependencies: Makefile
 	$(MAKE) depend
 cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
-	cs -b
+	../../Shared/cs -b
 bootstrap: $(PRODUCT)-src.tgz dependencies cscope.out

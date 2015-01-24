@@ -57,5 +57,5 @@ configure: configure.in
 dependencies: Makefile lib3270_files.mk libw3270_files.mk
 	$(MAKE) depend
 cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
-	cs -b
+	../../Shared/cs -b
 bootstrap: $(PRODUCT)-src.tgz dependencies cscope.out

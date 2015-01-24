@@ -129,5 +129,5 @@ Makefile: Makefile.in configure
 	./configure
 	$(MAKE) depend
 cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
-	cs -b
+	../Shared/cs -b
 bootstrap: $(PRODUCT)-src.tgz Makefile cscope.out

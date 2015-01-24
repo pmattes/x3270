@@ -1,0 +1,50 @@
+#!/bin/bash
+# Wrapper for cscope
+function usage()
+{
+	echo >&2 "usage: $me [-u|-b[t]]"
+	exit 1
+}
+
+me=${0##*/}
+
+unset update build toplevel
+while [ "$1" != "" ]
+do	case "$1" in
+	-b)	build=1
+		;;
+	-bt)	build=1
+	    	toplevel=1
+		;;
+	-u)	update=1
+		;;
+	*)	usage
+		;;
+	esac
+	shift
+done
+
+[ "$update" -a "$build" ] && usage
+
+if [ "$update" ]
+then	# update the database
+	cscope -u
+elif [ "$build" ]
+then	# (re-)build the database
+	/bin/rm -f cscope.*
+	# Find plain files.
+	find * -name '*.[ch]' ! -type l -print >cscope.files
+	# Find symbolic links in the current directory.
+	if [ ! "$toplevel" ]
+	then	find * -type d -prune -o -name '*.[ch]' -type l -printf "%l\n" >>cscope.files
+		# Find symbolic links in subdirectories one level deep.
+		# What I really want is 'find' to work sort of like 'tar -h',
+		# but that doesn't seem to be possible.
+		find * -type d -print -prune | while read d
+		do	find $d/* -type d -prune -o -name '*.[ch]' -printf "%l\n" | sed 's/^\.\.\///'
+		done >>cscope.files
+	fi
+	cscope -b -i cscope.files
+else	# just run
+	cscope -d
+fi

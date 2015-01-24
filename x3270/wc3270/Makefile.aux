@@ -85,5 +85,5 @@ wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 dependencies: Makefile
 	$(MAKE) depend
 cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
-	cs -b
+	../Shared/cs -b
 bootstrap: $(PRODUCT)-src.tgz dependencies cscope.out
