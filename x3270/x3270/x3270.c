@@ -47,7 +47,7 @@
 #include "resources.h"
 
 #include "actions.h"
-#include "bind-optc.h"
+#include "bind-opt.h"
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "ftc.h"

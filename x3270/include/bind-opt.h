@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Paul Mattes.
+ * Copyright (c) 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,10 @@
  */
 
 /*
- *      httpd-optc.h
+ *      bind-opt.h
  *               Header file for option parsing for -scriptport and -httpd.
  *
  */
 
-extern Boolean parse_bind_opt(const char *spec, struct sockaddr **addr,
+Boolean parse_bind_opt(const char *spec, struct sockaddr **addr,
 	socklen_t *addrlen);

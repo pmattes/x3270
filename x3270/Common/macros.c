@@ -52,7 +52,7 @@
 
 #include "actions.h"
 #if !defined(TCL3270) /*[*/
-# include "bind-optc.h"
+# include "bind-opt.h"
 #endif /*]*/
 #include "charsetc.h"
 #include "childc.h"

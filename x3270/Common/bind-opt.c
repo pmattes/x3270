@@ -40,7 +40,7 @@
 
 #include "resolver.h"
 
-#include "bind-optc.h"
+#include "bind-opt.h"
 
 typedef union {
     struct sockaddr_in v4;

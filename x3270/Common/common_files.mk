@@ -5,7 +5,7 @@ COMMON_SOURCES = apl.c charset.c ctlr.c fprint_screen.c ft.c ft_cut.c \
 	unicode_dbcs.c util.c xio.c
 
 # HTTPD source files
-HTTPD_SOURCES = bind-opt.c favicon.c httpd-core.c httpd-io.c httpd-nodes.c
+HTTPD_SOURCES = favicon.c httpd-core.c httpd-io.c httpd-nodes.c
 
 # Object files common to all 3270 emulators
 COMMON_OBJECTS = apl.$(OBJ) charset.$(OBJ) ctlr.$(OBJ) fprint_screen.$(OBJ) \
@@ -16,7 +16,7 @@ COMMON_OBJECTS = apl.$(OBJ) charset.$(OBJ) ctlr.$(OBJ) fprint_screen.$(OBJ) \
 	unicode_dbcs.$(OBJ) util.$(OBJ) xio.$(OBJ)
 
 # HTTPD object files
-HTTPD_OBJECTS = bind-opt.$(OBJ) favicon.$(OBJ) httpd-core.$(OBJ) \
+HTTPD_OBJECTS = favicon.$(OBJ) httpd-core.$(OBJ) \
 	httpd-io.$(OBJ) httpd-nodes.$(OBJ)
 
 # Header files common to all 3270 emulators
@@ -28,4 +28,4 @@ COMMON_HEADERS = aplc.h arpa_telnet.h cg.h charsetc.h childc.h dialogc.h \
 	telnetc.h tn3270e.h unicode_dbcsc.h xio.h xl.h
 
 # HTTPD header files
-HTTPD_HEADERS = bind-optc.h httpd-corec.h httpd-ioc.h httpd-nodesc.h 
+HTTPD_HEADERS = httpd-corec.h httpd-ioc.h httpd-nodesc.h 
