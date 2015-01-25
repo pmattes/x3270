@@ -28,4 +28,4 @@ COMMON_HEADERS = aplc.h arpa_telnet.h cg.h charsetc.h childc.h dialogc.h \
 	xio.h xl.h
 
 # HTTPD header files
-HTTPD_HEADERS = httpd-corec.h httpd-ioc.h httpd-nodesc.h 
+HTTPD_HEADERS = 

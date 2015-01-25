@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Paul Mattes.
+ * Copyright (c) 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,32 +52,32 @@ typedef enum {
 
 /* Registration functions. */
 typedef httpd_status_t reg_dyn_t(const char *uri, void *dhandle);
-extern void *httpd_register_dir(const char *path, const char *desc);
-extern void *httpd_register_fixed(const char *path, const char *desc,
+void *httpd_register_dir(const char *path, const char *desc);
+void *httpd_register_fixed(const char *path, const char *desc,
 	content_t content_type, const char *content_str, unsigned flags,
 	const char *fixed);
-extern void *httpd_register_fixed_binary(const char *path, const char *desc,
+void *httpd_register_fixed_binary(const char *path, const char *desc,
 	content_t content_type, const char *content_str, unsigned flags,
 	const unsigned char *fixed, unsigned lenrth);
-extern void *httpd_register_dyn_term(const char *path, const char *desc,
+void *httpd_register_dyn_term(const char *path, const char *desc,
 	content_t content_type, const char *content_str, unsigned flags,
 	reg_dyn_t *dyn);
-extern void *httpd_register_dyn_nonterm(const char *path, const char *desc,
+void *httpd_register_dyn_nonterm(const char *path, const char *desc,
 	content_t content_type, const char *content_str, unsigned flags,
 	reg_dyn_t *dyn);
-extern void httpd_set_alias(void *nhandle, const char *text);
+void httpd_set_alias(void *nhandle, const char *text);
 
 /* Called from the main logic. */
-extern void *httpd_mhandle(void *dhandle);
-extern void *httpd_new(void *mhandle, const char *client_name);
-extern httpd_status_t httpd_input(void *dhandle, const char *data, size_t len);
-extern void httpd_close(void *dhandle, const char *why);
+void *httpd_mhandle(void *dhandle);
+void *httpd_new(void *mhandle, const char *client_name);
+httpd_status_t httpd_input(void *dhandle, const char *data, size_t len);
+void httpd_close(void *dhandle, const char *why);
 
 /* Callable from methods. */
-extern httpd_status_t httpd_dyn_complete(void *dhandle,
+httpd_status_t httpd_dyn_complete(void *dhandle,
 	const char *format, ...);
-extern httpd_status_t httpd_dyn_error(void *dhandle, int status_code,
+httpd_status_t httpd_dyn_error(void *dhandle, int status_code,
 	const char *format, ...);
-extern char *html_quote(const char *text);
-extern char *uri_quote(const char *text);
-extern const char *httpd_fetch_query(void *dhandle, const char *name);
+char *html_quote(const char *text);
+char *uri_quote(const char *text);
+const char *httpd_fetch_query(void *dhandle, const char *name);

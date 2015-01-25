@@ -44,9 +44,9 @@
 #include "fprint_screenc.h"
 #include "varbuf.h"
 
-#include "httpd-corec.h"
-#include "httpd-ioc.h"
-#include "httpd-nodesc.h"
+#include "httpd-core.h"
+#include "httpd-io.h"
+#include "httpd-nodes.h"
 
 #if defined(_WIN32) /*[*/
 # include "winprint.h"

@@ -51,8 +51,8 @@
 #include "util.h"
 #include "varbuf.h"
 
-#include "httpd-corec.h"
-#include "httpd-ioc.h"
+#include "httpd-core.h"
+#include "httpd-io.h"
 
 #if defined(_WIN32) /*[*/
 # include "w3misc.h"

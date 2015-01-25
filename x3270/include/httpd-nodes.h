@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Paul Mattes.
+ * Copyright (c) 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,4 +30,4 @@
  *              x3270 webserver, header file for objects module
  */
 
-extern void httpd_objects_init(void);
+void httpd_objects_init(void);
