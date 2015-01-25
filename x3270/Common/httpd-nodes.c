@@ -41,7 +41,7 @@
 #include <signal.h>
 #include <fcntl.h>
 
-#include "fprint_screenc.h"
+#include "fprint_screen.h"
 #include "varbuf.h"
 
 #include "httpd-core.h"

@@ -45,7 +45,7 @@
 
 #include "resources.h"
 
-#include "fprint_screenc.h"
+#include "fprint_screen.h"
 #include "gdi_printc.h"
 #include "popups.h"
 #include "trace.h"

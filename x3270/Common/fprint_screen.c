@@ -40,7 +40,7 @@
 
 #include "resources.h"
 
-#include "fprint_screenc.h"
+#include "fprint_screen.h"
 #if defined(_WIN32) /*[*/
 # include "gdi_printc.h"
 #endif /*]*/

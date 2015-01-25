@@ -44,7 +44,7 @@
 
 #include "actions.h"
 #include "charset.h"
-#include "fprint_screenc.h"
+#include "fprint_screen.h"
 #include "popups.h"
 #include "print_screen.h"
 #include "print_gui.h"

@@ -45,7 +45,7 @@
 #include "charset.h"
 #include "child.h"
 #include "ctlrc.h"
-#include "fprint_screenc.h"
+#include "fprint_screen.h"
 #include "lazya.h"
 #include "menubar.h"
 #include "nvt.h"
