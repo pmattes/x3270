@@ -78,7 +78,7 @@
 #include "macros.h"
 #include "nvt.h"
 #include "popups.h"
-#include "proxyc.h"
+#include "proxy.h"
 #include "resolver.h"
 #if defined(C3270) /*[*/
 # include "screen.h"

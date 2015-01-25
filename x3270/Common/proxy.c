@@ -49,7 +49,7 @@
 #include "3270ds.h"
 #include "popups.h"
 #include "proxy.h"
-#include "proxyc.h"
+#include "proxy_names.h"
 #include "resolver.h"
 #include "telnetc.h"
 #include "trace.h"

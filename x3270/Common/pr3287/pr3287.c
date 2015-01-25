@@ -135,7 +135,7 @@
 #include "trace.h"
 #include "ctlrc.h"
 #include "popups.h"
-#include "proxyc.h"
+#include "proxy.h"
 #include "resolver.h"
 #include "telnetc.h"
 #include "utf8.h"

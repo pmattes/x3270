@@ -26,11 +26,10 @@
  */
 
 /*
- *	proxyc.h
+ *	proxy.h
  *		Declarations for proxy.c.
  */
 
-extern int proxy_setup(char **phost, char **pport);
-extern Boolean proxy_negotiate(int type, int fd, char *host,
-	unsigned short port);
-extern char *proxy_type_name(int type);
+int proxy_setup(char **phost, char **pport);
+Boolean proxy_negotiate(int type, int fd, char *host, unsigned short port);
+char *proxy_type_name(int type);
