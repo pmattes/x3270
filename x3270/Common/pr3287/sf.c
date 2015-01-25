@@ -42,7 +42,7 @@
 #if !defined(PR3287) /*[*/
 # include "ft_dftc.h"
 #endif /*]*/
-#include "sfc.h"
+#include "sf.h"
 #if defined(_WIN32) /*[*/
 # include "ws2tcpip.h"
 #else /*][*/

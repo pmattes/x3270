@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,10 @@
  */
 
 /*
- *	sfc.h
+ *	sf.h
  *		Global declarations for sf.c.
  */
 
 typedef void qr_single_fn_t(void);
 
-extern enum pds write_structured_field(unsigned char buf[], int buflen);
+enum pds write_structured_field(unsigned char buf[], int buflen);

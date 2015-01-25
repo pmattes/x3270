@@ -54,7 +54,7 @@
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "trace.h"
-#include "sfc.h"
+#include "sf.h"
 #include "tables.h"
 #include "unicodec.h"
 #include "xtablec.h"
