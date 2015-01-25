@@ -44,7 +44,6 @@
 
 #include "ctlrc.h"
 #include "host.h"
-#include "kybdc.h"
 #include "macros.h"
 #include "screen.h"
 #include "trace.h"

@@ -53,7 +53,7 @@
 #include "ft.h"
 #include "ft_dft.h"
 #include "ft_private.h"
-#include "kybdc.h"
+#include "kybd.h"
 #include "objects.h"
 #include "popups.h"
 #include "util.h"

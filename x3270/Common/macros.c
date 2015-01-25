@@ -64,7 +64,7 @@
 #include "ft.h"
 #include "host.h"
 #include "idle.h"
-#include "kybdc.h"
+#include "kybd.h"
 #include "lazya.h"
 #include "macros.h"
 #include "menubar.h"

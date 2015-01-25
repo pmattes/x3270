@@ -68,7 +68,7 @@
 
 #include "charset.h"
 #include "ctlrc.h"
-#include "kybdc.h"
+#include "kybd.h"
 #include "popups.h"
 #include "screen.h"
 #include "selectc.h"

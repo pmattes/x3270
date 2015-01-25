@@ -49,7 +49,7 @@
 
 #include "host.h"
 #include "keymap.h"
-#include "kybdc.h"
+#include "kybd.h"
 #include "popups.h"
 #include "screen.h"
 #include "status.h"

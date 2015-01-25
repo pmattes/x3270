@@ -42,7 +42,6 @@
 
 #include "ctlrc.h"
 #include "host.h"
-#include "kybdc.h"
 #include "proxy_names.h"
 #include "resources.h"
 #include "screen.h"

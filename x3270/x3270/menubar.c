@@ -54,7 +54,7 @@
 #include "host.h"
 #include "idle_gui.h"
 #include "keymap.h"
-#include "kybdc.h"
+#include "kybd.h"
 #include "macros.h"
 #include "menubar.h"
 #include "popups.h"

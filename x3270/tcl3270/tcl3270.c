@@ -71,7 +71,7 @@
 #include "gluec.h"
 #include "host.h"
 #include "keymap.h"
-#include "kybdc.h"
+#include "kybd.h"
 #include "lazya.h"
 #include "macros.h"
 #include "nvt.h"

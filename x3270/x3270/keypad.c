@@ -42,7 +42,7 @@
 #include "resources.h"
 
 #include "actions.h"
-#include "kybdc.h"
+#include "kybd.h"
 #include "popups.h"
 #include "util.h"
 #include "xkeypad.h"

@@ -54,7 +54,7 @@
 #include "gluec.h"
 #include "host.h"
 #include "keymap.h"
-#include "kybdc.h"
+#include "kybd.h"
 #include "macros.h"
 #include "nvt.h"
 #include "popups.h"

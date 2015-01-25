@@ -54,7 +54,7 @@
 #include "ft_cut.h"
 #include "ft_dft.h"
 #include "host.h"
-#include "kybdc.h"
+#include "kybd.h"
 #include "lazya.h"
 #include "macros.h"
 #include "popups.h"

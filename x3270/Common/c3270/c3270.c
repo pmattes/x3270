@@ -66,7 +66,7 @@
 #include "icmdc.h"
 #include "idle.h"
 #include "keymap.h"
-#include "kybdc.h"
+#include "kybd.h"
 #include "lazya.h"
 #include "linemode.h"
 #include "macros.h"

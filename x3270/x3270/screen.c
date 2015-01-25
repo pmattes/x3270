@@ -65,7 +65,7 @@
 #include "display8.h"
 #include "host.h"
 #include "keymap.h"
-#include "kybdc.h"
+#include "kybd.h"
 #include "lazya.h"
 #include "nvt.h"
 #include "popups.h"

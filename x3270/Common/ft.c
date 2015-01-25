@@ -46,7 +46,7 @@
 #include "unicodec.h"
 #include "ft.h"
 #include "host.h"
-#include "kybdc.h"
+#include "kybd.h"
 #include "macros.h"
 #include "popups.h"
 #include "util.h"

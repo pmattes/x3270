@@ -50,7 +50,7 @@
 #include "idle.h"
 #include "keymap.h"
 #include "keysym2ucs.h"
-#include "kybdc.h"
+#include "kybd.h"
 #include "macros.h"
 #include "popups.h"
 #include "screen.h"

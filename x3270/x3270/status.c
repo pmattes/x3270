@@ -39,7 +39,7 @@
 #include "appres.h"
 #include "cg.h"
 
-#include "kybdc.h"
+#include "kybd.h"
 #include "host.h"
 #include "screen.h"
 #include "status.h"

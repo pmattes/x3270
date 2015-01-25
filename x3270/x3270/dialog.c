@@ -53,7 +53,7 @@
 #include "ft_dft.h"
 #include "ft.h"
 #include "host.h"
-#include "kybdc.h"
+#include "kybd.h"
 #include "macros.h"
 #include "objects.h"
 #include "popups.h"

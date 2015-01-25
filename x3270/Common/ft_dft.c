@@ -38,7 +38,7 @@
 #include "3270ds.h"
 #include "ft_dft_ds.h"
 
-#include "kybdc.h"
+#include "kybd.h"
 #include "ft_dft.h"
 #include "unicodec.h"
 #include "ft.h"

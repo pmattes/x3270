@@ -42,7 +42,7 @@
 #include "charset.h"
 #include "ctlrc.h"
 #include "ft_dft.h"
-#include "kybdc.h"
+#include "kybd.h"
 #include "sf.h"	/* has to come before rpq.h */
 #include "rpq.h"
 #include "screen.h"
