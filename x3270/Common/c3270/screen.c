@@ -45,7 +45,7 @@
 #include "cmenubar.h"
 #include "cstatus.h"
 #include "gluec.h"
-#include "hostc.h"
+#include "host.h"
 #include "keymap.h"
 #include "kybdc.h"
 #include "macros.h"

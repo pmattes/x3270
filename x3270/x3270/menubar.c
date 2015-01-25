@@ -51,7 +51,7 @@
 #include "about.h"
 #include "charsetc.h"
 #include "ft_gui.h"
-#include "hostc.h"
+#include "host.h"
 #include "idle_gui.h"
 #include "keymap.h"
 #include "kybdc.h"

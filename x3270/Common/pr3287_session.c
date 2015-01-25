@@ -49,7 +49,7 @@
 
 #include "charsetc.h"
 #include "ctlrc.h"
-#include "hostc.h"
+#include "host.h"
 #include "lazya.h"
 #include "popups.h"
 #include "pr3287_session.h"

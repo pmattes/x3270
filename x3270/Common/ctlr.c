@@ -53,7 +53,7 @@
 #include "ftc.h"
 #include "ft_cutc.h"
 #include "ft_dftc.h"
-#include "hostc.h"
+#include "host.h"
 #include "kybdc.h"
 #include "lazya.h"
 #include "macros.h"

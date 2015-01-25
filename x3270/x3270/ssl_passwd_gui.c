@@ -45,7 +45,7 @@
 
 #include <openssl/ssl.h>
 
-#include "hostc.h"
+#include "host.h"
 #include "objects.h"
 #include "popups.h"
 #include "ssl_passwd_gui.h"

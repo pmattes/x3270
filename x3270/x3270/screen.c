@@ -63,7 +63,7 @@
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "display8.h"
-#include "hostc.h"
+#include "host.h"
 #include "keymap.h"
 #include "kybdc.h"
 #include "lazya.h"

@@ -37,7 +37,7 @@
 #include "resources.h"
 
 #include "actions.h"
-#include "hostc.h"
+#include "host.h"
 #include "macros.h"
 #include "popups.h"
 #include "telnetc.h"

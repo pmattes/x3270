@@ -38,7 +38,7 @@
 
 #include "actions.h"
 #include "gluec.h"
-#include "hostc.h"
+#include "host.h"
 #include "keymap.h"
 #include "macros.h"
 #include "popups.h"

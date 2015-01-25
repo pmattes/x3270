@@ -88,7 +88,7 @@ clobber: clean
 	rm -f $(PROGS)
 
 depend: $(SRCS)
-	../Shared/mingwmakedep -C $(CC) $(XCPPFLAGS) $(SRCS) >dependencies-
+	$(CC) -MM $(XCPPFLAGS) $(SRCS) >dependencies-
 	mv dependencies- dependencies
 
 ifeq ($(wildcard dependencies),dependencies)

@@ -65,7 +65,7 @@ clobber: clean
 	rm -f wpr3287.exe
 
 depend:
-	../Shared/mingwmakedep -C $(CC) $(XCPPFLAGS) $(SRCS) >dependencies-
+	$(CC) -MM $(XCPPFLAGS) $(SRCS) >dependencies-
 	mv dependencies- dependencies
 
 ifeq ($(wildcard dependencies),dependencies)

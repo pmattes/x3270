@@ -62,7 +62,7 @@
 #include "ctlrc.h"
 #include "unicodec.h"
 #include "ftc.h"
-#include "hostc.h"
+#include "host.h"
 #include "idlec.h"
 #include "kybdc.h"
 #include "lazya.h"

@@ -45,7 +45,7 @@
 #include "ft_private.h"
 #include "unicodec.h"
 #include "ftc.h"
-#include "hostc.h"
+#include "host.h"
 #include "kybdc.h"
 #include "macros.h"
 #include "popups.h"

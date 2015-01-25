@@ -59,7 +59,7 @@
 #include "ftc.h"
 #include "gluec.h"
 #include "help.h"
-#include "hostc.h"
+#include "host.h"
 #include "httpd-corec.h"
 #include "httpd-nodesc.h"
 #include "httpd-ioc.h"

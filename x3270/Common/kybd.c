@@ -55,7 +55,7 @@
 #include "ctlrc.h"
 #include "unicodec.h"
 #include "ftc.h"
-#include "hostc.h"
+#include "host.h"
 #include "idlec.h"
 #include "keymap.h"
 #include "kybdc.h"

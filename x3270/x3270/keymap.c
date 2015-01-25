@@ -47,7 +47,7 @@
 #include "objects.h"
 #include "resources.h"
 
-#include "hostc.h"
+#include "host.h"
 #include "keymap.h"
 #include "kybdc.h"
 #include "popups.h"

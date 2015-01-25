@@ -35,7 +35,7 @@
 #include "appres.h"
 
 #include "charsetc.h"
-#include "hostc.h"
+#include "host.h"
 #include "icmdc.h"
 #include "utf8.h"
 

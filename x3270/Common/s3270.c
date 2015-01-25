@@ -53,7 +53,7 @@
 #include "unicodec.h"
 #include "ftc.h"
 #include "gluec.h"
-#include "hostc.h"
+#include "host.h"
 #include "httpd-corec.h"
 #include "httpd-nodesc.h"
 #include "httpd-ioc.h"

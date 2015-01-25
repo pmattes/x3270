@@ -71,7 +71,7 @@
 
 #include "actions.h"
 #include "ctlrc.h"
-#include "hostc.h"
+#include "host.h"
 #include "kybdc.h"
 #include "lazya.h"
 #include "linemodec.h"

@@ -39,7 +39,7 @@
 
 #include "charsetc.h"
 #include "ctlrc.h"
-#include "hostc.h"
+#include "host.h"
 #include "macros.h"
 #include "nvtc.h"
 #include "nvt_gui.h"

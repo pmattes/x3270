@@ -40,7 +40,7 @@
 #include "cg.h"
 
 #include "kybdc.h"
-#include "hostc.h"
+#include "host.h"
 #include "screen.h"
 #include "status.h"
 #include "tables.h"

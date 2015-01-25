@@ -37,7 +37,7 @@
 # include <errno.h>
 
 # include "appres.h"
-# include "hostc.h"
+# include "host.h"
 # include "idlec.h"
 # include "macros.h"
 # include "popups.h"

@@ -45,7 +45,7 @@
 #include "appres.h"
 
 #include "actions.h"
-#include "hostc.h"
+#include "host.h"
 #include "macros.h"
 #include "popups.h"
 #include "screen.h"

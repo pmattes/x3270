@@ -43,7 +43,7 @@
 #include "ctlr.h"
 
 #include "ctlrc.h"
-#include "hostc.h"
+#include "host.h"
 #include "kybdc.h"
 #include "macros.h"
 #include "screen.h"

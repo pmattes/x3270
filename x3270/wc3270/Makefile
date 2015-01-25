@@ -120,7 +120,7 @@ clobber: clean
 	rm -f $(PROGS)
 
 depend: $(SRCS) compiled_keypad.h
-	../Shared/mingwmakedep -C $(CC) $(XCPPFLAGS) $(SRCS) >dependencies-
+	$(CC) -MM $(XCPPFLAGS) $(SRCS) >dependencies-
 	mv dependencies- dependencies
 
 ifeq ($(wildcard dependencies),dependencies)

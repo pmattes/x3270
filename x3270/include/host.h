@@ -26,7 +26,7 @@
  */
 
 /*
- *	hostc.h
+ *	host.h
  *		Global declarations for host.c.
  */
 
