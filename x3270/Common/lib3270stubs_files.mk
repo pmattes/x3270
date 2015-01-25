@@ -14,4 +14,4 @@ LIB3270STUBS_OBJECTS = ft_gui_stubs.$(OBJ) idle_stubs.$(OBJ) \
 	trace_gui_stubs.$(OBJ)
 
 # Header files for lib3270stubs.
-LIB3270STUBS_HEADERS = conf.h localdefs.h menubar.h
+LIB3270STUBS_HEADERS = conf.h localdefs.h
