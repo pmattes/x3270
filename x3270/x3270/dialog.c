@@ -49,9 +49,9 @@
 
 #include "appres.h"
 #include "dialogc.h"
-#include "ft_cutc.h"
-#include "ft_dftc.h"
-#include "ftc.h"
+#include "ft_cut.h"
+#include "ft_dft.h"
+#include "ft.h"
 #include "host.h"
 #include "kybdc.h"
 #include "macros.h"

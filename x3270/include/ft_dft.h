@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, Paul Mattes.
+ * Copyright (c) 1996-2009, 2015 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -27,6 +27,6 @@
  * DAMAGE.
  */
 
-extern void ft_dft_data(unsigned char *data, int length);
-extern void dft_read_modified(void);
-extern void set_dft_buffersize(void);
+void ft_dft_data(unsigned char *data, int length);
+void dft_read_modified(void);
+void set_dft_buffersize(void);

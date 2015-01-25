@@ -40,7 +40,7 @@
 
 #include "ctlrc.h"
 #if !defined(PR3287) /*[*/
-# include "ft_dftc.h"
+# include "ft_dft.h"
 #endif /*]*/
 #include "sf.h"
 #if defined(_WIN32) /*[*/

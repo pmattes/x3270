@@ -39,10 +39,10 @@
 
 #include "actions.h"
 #include "ctlrc.h"
-#include "ft_cutc.h"
+#include "ft_cut.h"
 #include "ft_cut_ds.h"
 #include "unicodec.h"
-#include "ftc.h"
+#include "ft.h"
 #include "tables.h"
 #include "trace.h"
 #include "util.h"

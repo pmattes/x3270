@@ -50,8 +50,8 @@
 
 #include "appres.h"
 #include "dialogc.h"
-#include "ftc.h"
-#include "ft_dftc.h"
+#include "ft.h"
+#include "ft_dft.h"
 #include "ft_private.h"
 #include "kybdc.h"
 #include "objects.h"

@@ -28,7 +28,7 @@
  */
 
 /*
- *	ftc.h
+ *	ft.h
  *		Global declarations for ft.c.
  */
 

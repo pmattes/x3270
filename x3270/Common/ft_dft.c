@@ -39,9 +39,9 @@
 #include "ft_dft_ds.h"
 
 #include "kybdc.h"
-#include "ft_dftc.h"
+#include "ft_dft.h"
 #include "unicodec.h"
-#include "ftc.h"
+#include "ft.h"
 #include "telnetc.h"
 #include "trace.h"
 #include "util.h"

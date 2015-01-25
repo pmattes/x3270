@@ -56,7 +56,7 @@
 #include "ctlrc.h"
 #include "cmenubar.h"
 #include "unicodec.h"
-#include "ftc.h"
+#include "ft.h"
 #include "gluec.h"
 #include "help.h"
 #include "host.h"

@@ -61,7 +61,7 @@
 #endif /*]*/
 #include "ctlrc.h"
 #include "unicodec.h"
-#include "ftc.h"
+#include "ft.h"
 #include "host.h"
 #include "idle.h"
 #include "kybdc.h"

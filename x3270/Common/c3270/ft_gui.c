@@ -37,7 +37,7 @@
 #include "appres.h"
 #include "cscreen.h"
 #include "unicodec.h"
-#include "ftc.h"
+#include "ft.h"
 #include "ft_private.h"
 #include "icmdc.h"
 #include "popups.h"

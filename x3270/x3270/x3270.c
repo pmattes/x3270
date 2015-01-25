@@ -50,7 +50,7 @@
 #include "bind-opt.h"
 #include "charsetc.h"
 #include "ctlrc.h"
-#include "ftc.h"
+#include "ft.h"
 #include "host.h"
 #include "httpd-core.h"
 #include "httpd-nodes.h"

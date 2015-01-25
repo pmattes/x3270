@@ -41,7 +41,7 @@
 
 #include "charsetc.h"
 #include "ctlrc.h"
-#include "ft_dftc.h"
+#include "ft_dft.h"
 #include "kybdc.h"
 #include "sf.h"	/* has to come before rpqc.h */
 #include "rpqc.h"

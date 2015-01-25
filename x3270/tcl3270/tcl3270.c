@@ -67,7 +67,7 @@
 #include "actions.h"
 #include "charsetc.h"
 #include "ctlrc.h"
-#include "ftc.h"
+#include "ft.h"
 #include "gluec.h"
 #include "host.h"
 #include "keymap.h"
