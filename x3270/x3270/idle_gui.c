@@ -47,7 +47,7 @@
 
 #include "appres.h"
 #include "dialogc.h"
-#include "idlec.h"
+#include "idle.h"
 #include "idle_gui.h"
 #include "objects.h"
 #include "popups.h"

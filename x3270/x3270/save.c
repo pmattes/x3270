@@ -46,7 +46,7 @@
 #if !defined(USE_APP_DEFAULTS) /*[*/
 # include "fallbacksc.h"
 #endif /*]*/
-#include "idlec.h"
+#include "idle.h"
 #include "keymap.h"
 #include "lazya.h"
 #include "popups.h"

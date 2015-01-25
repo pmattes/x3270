@@ -57,7 +57,7 @@
 #include "httpd-corec.h"
 #include "httpd-nodesc.h"
 #include "httpd-ioc.h"
-#include "idlec.h"
+#include "idle.h"
 #include "keymap.h"
 #include "kybdc.h"
 #include "macros.h"

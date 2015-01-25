@@ -63,7 +63,7 @@
 #include "unicodec.h"
 #include "ftc.h"
 #include "host.h"
-#include "idlec.h"
+#include "idle.h"
 #include "kybdc.h"
 #include "lazya.h"
 #include "macros.h"

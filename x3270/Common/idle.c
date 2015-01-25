@@ -38,7 +38,7 @@
 
 # include "appres.h"
 # include "host.h"
-# include "idlec.h"
+# include "idle.h"
 # include "macros.h"
 # include "popups.h"
 # include "resources.h"

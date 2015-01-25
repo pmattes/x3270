@@ -64,7 +64,7 @@
 #include "httpd-nodesc.h"
 #include "httpd-ioc.h"
 #include "icmdc.h"
-#include "idlec.h"
+#include "idle.h"
 #include "keymap.h"
 #include "kybdc.h"
 #include "lazya.h"
