@@ -30,5 +30,5 @@
  *		Global declarations for print_screen.c.
  */
 
-extern char *default_caption(void);
-extern void print_screen_register(void);
+char *default_caption(void);
+void print_screen_register(void);
