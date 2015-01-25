@@ -66,7 +66,7 @@
 #include "resources.h"
 #include "toggles.h"
 
-#include "charsetc.h"
+#include "charset.h"
 #include "ctlrc.h"
 #include "kybdc.h"
 #include "popups.h"

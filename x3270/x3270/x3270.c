@@ -48,7 +48,7 @@
 
 #include "actions.h"
 #include "bind-opt.h"
-#include "charsetc.h"
+#include "charset.h"
 #include "ctlrc.h"
 #include "ft.h"
 #include "host.h"

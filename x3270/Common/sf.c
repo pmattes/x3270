@@ -39,7 +39,7 @@
 #include "appres.h"
 #include "ctlr.h"
 
-#include "charsetc.h"
+#include "charset.h"
 #include "ctlrc.h"
 #include "ft_dft.h"
 #include "kybdc.h"

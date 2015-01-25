@@ -54,7 +54,7 @@
 #if !defined(TCL3270) /*[*/
 # include "bind-opt.h"
 #endif /*]*/
-#include "charsetc.h"
+#include "charset.h"
 #include "child.h"
 #if defined(WC3270) /*[*/
 # include "cscreen.h"

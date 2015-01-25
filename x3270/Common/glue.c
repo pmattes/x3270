@@ -46,7 +46,7 @@
 #include "resources.h"
 
 #include "actions.h"
-#include "charsetc.h"
+#include "charset.h"
 #if defined(C3270) /*[*/
 # include "cscreen.h"
 #endif /*]*/

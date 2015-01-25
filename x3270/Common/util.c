@@ -47,7 +47,7 @@
 # include "cscreen.h"
 #endif /*]*/
 #include "asprintf.h"
-#include "charsetc.h"
+#include "charset.h"
 #include "lazya.h"
 #include "varbuf.h"
 

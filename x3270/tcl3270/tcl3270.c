@@ -65,7 +65,7 @@
 #include "ctlr.h"
 
 #include "actions.h"
-#include "charsetc.h"
+#include "charset.h"
 #include "ctlrc.h"
 #include "ft.h"
 #include "gluec.h"

@@ -46,7 +46,7 @@
 #endif /*]*/
 
 #include "3270ds.h"
-#include "charsetc.h"
+#include "charset.h"
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 #include "utf8.h"

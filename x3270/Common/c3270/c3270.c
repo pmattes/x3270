@@ -49,7 +49,7 @@
 
 #include "actions.h"
 #include "bind-opt.h"
-#include "charsetc.h"
+#include "charset.h"
 #include "ckeypad.h"
 #include "cscreen.h"
 #include "cstatus.h"

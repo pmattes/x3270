@@ -42,7 +42,7 @@
 #include "resources.h"
 
 #include "save.h"
-#include "charsetc.h"
+#include "charset.h"
 #if !defined(USE_APP_DEFAULTS) /*[*/
 # include "fallbacksc.h"
 #endif /*]*/

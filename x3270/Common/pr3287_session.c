@@ -47,7 +47,7 @@
 #include "resources.h"
 #include "ctlr.h"
 
-#include "charsetc.h"
+#include "charset.h"
 #include "ctlrc.h"
 #include "host.h"
 #include "lazya.h"

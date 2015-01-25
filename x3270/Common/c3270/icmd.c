@@ -34,7 +34,7 @@
 #include "globals.h"
 #include "appres.h"
 
-#include "charsetc.h"
+#include "charset.h"
 #include "host.h"
 #include "icmdc.h"
 #include "utf8.h"

@@ -42,7 +42,7 @@
 #include "resources.h"
 #include "ctlr.h"
 
-#include "charsetc.h"
+#include "charset.h"
 #include "child.h"
 #include "ctlrc.h"
 #include "fprint_screenc.h"

@@ -60,7 +60,7 @@
 #include "toggles.h"
 
 #include "actions.h"
-#include "charsetc.h"
+#include "charset.h"
 #include "ctlrc.h"
 #include "display8.h"
 #include "host.h"

@@ -49,7 +49,7 @@
 
 #include "actions.h"
 #include "about.h"
-#include "charsetc.h"
+#include "charset.h"
 #include "ft_gui.h"
 #include "host.h"
 #include "idle_gui.h"

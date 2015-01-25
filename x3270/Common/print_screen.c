@@ -43,7 +43,7 @@
 #include "resources.h"
 
 #include "actions.h"
-#include "charsetc.h"
+#include "charset.h"
 #include "fprint_screenc.h"
 #include "popups.h"
 #include "print_screen.h"

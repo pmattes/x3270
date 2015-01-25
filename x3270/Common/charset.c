@@ -40,7 +40,7 @@
 #include "resources.h"
 #include "appres.h"
 
-#include "charsetc.h"
+#include "charset.h"
 #include "lazya.h"
 #include "popups.h"
 #if defined(X3270_DISPLAY) /*[*/

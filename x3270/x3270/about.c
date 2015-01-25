@@ -45,7 +45,7 @@
 #include "resources.h"
 
 #include "about.h"
-#include "charsetc.h"
+#include "charset.h"
 #include "keymap.h"
 #include "lazya.h"
 #include "linemode.h"

@@ -40,7 +40,7 @@
 #include "toggles.h"
 
 #include "actions.h"
-#include "charsetc.h"
+#include "charset.h"
 #include "ctlrc.h"
 #include "cmenubar.h"
 #include "cstatus.h"

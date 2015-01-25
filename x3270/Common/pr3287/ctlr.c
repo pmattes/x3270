@@ -51,7 +51,7 @@
 #include "globals.h"
 #include "pr3287.h"
 #include "3270ds.h"
-#include "charsetc.h"
+#include "charset.h"
 #include "ctlrc.h"
 #include "trace.h"
 #include "sf.h"

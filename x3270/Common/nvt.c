@@ -37,7 +37,7 @@
 #include "3270ds.h"
 #include "toggles.h"
 
-#include "charsetc.h"
+#include "charset.h"
 #include "ctlrc.h"
 #include "host.h"
 #include "macros.h"

@@ -47,7 +47,7 @@
 #include "toggles.h"
 
 #include "actions.h"
-#include "charsetc.h"
+#include "charset.h"
 #include "ctlrc.h"
 #include "unicodec.h"
 #include "ft.h"

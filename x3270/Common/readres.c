@@ -40,7 +40,7 @@
 #include "3270ds.h"
 #include "resources.h"
 
-#include "charsetc.h"
+#include "charset.h"
 #include "ctlrc.h"
 #include "gluec.h"
 #include "host.h"

@@ -40,7 +40,7 @@
 #include "ctlr.h"
 
 #include "actions.h"
-#include "charsetc.h"
+#include "charset.h"
 #include "ckeypad.h"
 #include "cmenubar.h"
 #include "cscreen.h"

@@ -131,7 +131,7 @@
 #include <fcntl.h>
 
 #include "globals.h"
-#include "charsetc.h"
+#include "charset.h"
 #include "trace.h"
 #include "ctlrc.h"
 #include "popups.h"
