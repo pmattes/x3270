@@ -46,7 +46,7 @@
 #include "resources.h"
 
 #include "actions.h"
-#include "aplc.h"
+#include "apl.h"
 #include "idle.h"
 #include "keymap.h"
 #include "keysym2ucs.h"

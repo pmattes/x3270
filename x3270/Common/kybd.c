@@ -50,7 +50,7 @@
 #include "screen.h"
 
 #include "actions.h"
-#include "aplc.h"
+#include "apl.h"
 #include "charsetc.h"
 #include "ctlrc.h"
 #include "unicodec.h"
