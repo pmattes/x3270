@@ -12,5 +12,4 @@ PR3287_OBJECTS = asprintf.$(OBJ) charset.$(OBJ) ctlr.$(OBJ) lazya.$(OBJ) \
 
 # Header files common to 3287 emulators
 PR3287_HEADERS = arpa_telnet.h charsetc.h ctlrc.h globals.h localdefs.h \
-	pr3287.h proxy.h proxyc.h sfc.h tables.h telnetc.h trace.h \
-	xtablec.h
+	pr3287.h proxy.h proxyc.h sfc.h telnetc.h trace.h xtablec.h
