@@ -73,6 +73,9 @@
     <ClCompile Include="..\..\lib\w3270\actions.c" />
     <ClCompile Include="..\..\lib\w3270\asprintf.c" />
     <ClCompile Include="..\..\lib\w3270\bind-opt.c" />
+    <ClCompile Include="..\..\lib\w3270\httpd-core.c" />
+    <ClCompile Include="..\..\lib\w3270\httpd-io.c" />
+    <ClCompile Include="..\..\lib\w3270\httpd-nodes.c" />
     <ClCompile Include="..\..\lib\w3270\lazya.c" />
     <ClCompile Include="..\..\lib\w3270\Malloc.c" />
     <ClCompile Include="..\..\lib\w3270\resolver.c" />
@@ -82,6 +85,7 @@
     <ClCompile Include="..\..\lib\w3270\utf8.c" />
     <ClCompile Include="..\..\lib\w3270\varbuf.c" />
     <ClCompile Include="..\..\lib\w3270\w3misc.c" />
+    <ClCompile Include="..\..\lib\w3270\winprint.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

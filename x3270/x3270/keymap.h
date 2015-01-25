@@ -28,7 +28,7 @@
  */
 
 /*
- *	keymapc.h
+ *	keymap.h
  *		Global declarations for keymap.c.
  */
 

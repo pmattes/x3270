@@ -57,7 +57,6 @@
 #include "ft.h"
 #include "host.h"
 #include "idle.h"
-#include "keymap.h"
 #include "kybd.h"
 #include "lazya.h"
 #include "linemode.h"

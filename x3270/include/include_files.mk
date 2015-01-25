@@ -7,4 +7,4 @@ INCLUDE_HEADERS = 3270ds.h actions.h apl.h appres.h arpa_telnet.h asprintf.h \
 	save.h screen.h scroll.h see.h selectc.h sfc.h ssl_dll.h \
 	ssl_passwd_gui.h statusc.h tables.h telnet_private.h tn3270e.h \
 	toggles.h trace.h trace_gui.h unicode_dbcs.h unicodec.h utf8.h util.h \
-	varbuf.h w3misc.h wincmn.h xio.h
+	varbuf.h w3misc.h wincmn.h winprint.h xio.h

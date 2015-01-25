@@ -16,11 +16,11 @@ COMMON_OBJECTS = apl.$(OBJ) charset.$(OBJ) ctlr.$(OBJ) fprint_screen.$(OBJ) \
 	unicode_dbcs.$(OBJ) util.$(OBJ) xio.$(OBJ)
 
 # HTTPD object files
-HTTPD_OBJECTS = favicon.$(OBJ) httpd-core.$(OBJ) \
-	httpd-io.$(OBJ) httpd-nodes.$(OBJ)
+HTTPD_OBJECTS = favicon.$(OBJ) httpd-core.$(OBJ) httpd-io.$(OBJ) \
+	httpd-nodes.$(OBJ)
 
 # Header files common to all 3270 emulators
-COMMON_HEADERS = fallbacksc.h keymap.h localdefs.h telnetc.h
+COMMON_HEADERS = fallbacksc.h localdefs.h telnetc.h
 
 # HTTPD header files
 HTTPD_HEADERS = 

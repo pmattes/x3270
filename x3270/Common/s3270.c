@@ -58,7 +58,6 @@
 #include "httpd-nodes.h"
 #include "httpd-io.h"
 #include "idle.h"
-#include "keymap.h"
 #include "kybd.h"
 #include "macros.h"
 #include "nvt.h"

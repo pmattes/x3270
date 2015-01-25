@@ -25,7 +25,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* c3270 version of keymapc.h */
+/* c3270 version of keymap.h */
 
 #define KM_CTRL		0x0001
 #define KM_ALT		0x0002

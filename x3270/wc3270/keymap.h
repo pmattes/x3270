@@ -27,7 +27,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* wc3270 version of keymapc.h */
+/* wc3270 version of keymap.h */
 
 #define KM_SHIFT	0x0001
 #define KM_LCTRL	0x0002
