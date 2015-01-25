@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009, 2013 Paul Mattes.
+ * Copyright (c) 2005-2009, 2013, 2015 Paul Mattes.
  * Copyright (c) 2004-2005, Don Russell.
  * All rights reserved.
  *
@@ -28,7 +28,7 @@
  */
 
 /*
- *	rpq.c
+ *	rpq.h
  *		RPQNAMES structured field support.
  *
  */

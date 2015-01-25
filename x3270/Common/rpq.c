@@ -45,8 +45,8 @@
 
 #include "ctlrc.h"
 #include "popups.h"
-#include "sf.h"	 /* has to come before rpqc.h */
-#include "rpqc.h"
+#include "sf.h"	 /* has to come before rpq.h */
+#include "rpq.h"
 #include "tables.h"
 #include "telnetc.h"
 #include "trace.h"

@@ -43,8 +43,8 @@
 #include "ctlrc.h"
 #include "ft_dft.h"
 #include "kybdc.h"
-#include "sf.h"	/* has to come before rpqc.h */
-#include "rpqc.h"
+#include "sf.h"	/* has to come before rpq.h */
+#include "rpq.h"
 #include "screen.h"
 #include "see.h"
 #include "telnetc.h"

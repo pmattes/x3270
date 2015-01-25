@@ -21,8 +21,8 @@ HTTPD_OBJECTS = favicon.$(OBJ) httpd-core.$(OBJ) \
 
 # Header files common to all 3270 emulators
 COMMON_HEADERS = charsetc.h dialogc.h fallbacksc.h fprint_screenc.h keymap.h \
-	kybdc.h localdefs.h menubar.h print_screen.h resources.h rpqc.h \
-	save.h telnetc.h
+	kybdc.h localdefs.h menubar.h print_screen.h resources.h save.h \
+	telnetc.h
 
 # HTTPD header files
 HTTPD_HEADERS = 
