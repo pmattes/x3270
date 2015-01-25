@@ -32,7 +32,6 @@
  *		Global declarations for save.c.
  */
 
-extern char *command_string;
 extern char *profile_name;
 
 void charset_list_changed(char *charset);
@@ -40,4 +39,3 @@ void merge_profile(XrmDatabase *d, char *session, Boolean mono);
 void save_args(int argc, char *argv[]);
 void save_init(int argc, char *hostname, char *port);
 Boolean save_options(char *n);
-void save_yourself(void);

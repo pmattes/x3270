@@ -62,7 +62,6 @@
 #include "print_window.h"
 #include "pr3287_session.h"
 #include "printer_gui.h"
-#include "save.h"
 #include "stmenu.h"
 #include "telnetc.h"
 #include "toggles.h"
@@ -73,6 +72,7 @@
 #include "xio.h"
 #include "xmenubar.h"
 #include "xpopups.h"
+#include "xsave.h"
 #include "xscreen.h"
 
 #define MACROS_MENU	"macrosMenu"

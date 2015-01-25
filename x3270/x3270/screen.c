@@ -84,6 +84,7 @@
 #include "xio.h"
 #include "xkeypad.h"
 #include "xmenubar.h"
+#include "xsave.h"
 #include "xscreen.h"
 #include "xscroll.h"
 #include "xstatus.h"

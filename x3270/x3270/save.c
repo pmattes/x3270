@@ -41,7 +41,6 @@
 #include "appres.h"
 #include "resources.h"
 
-#include "save.h"
 #include "charset.h"
 #if !defined(USE_APP_DEFAULTS) /*[*/
 # include "fallbacksc.h"
@@ -50,10 +49,12 @@
 #include "keymap.h"
 #include "lazya.h"
 #include "popups.h"
+#include "save.h"
 #include "screen.h"
 #include "toggles.h"
 #include "util.h"
 #include "xkeypad.h"
+#include "xsave.h"
 #include "xscreen.h"
 
 
