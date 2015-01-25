@@ -55,7 +55,7 @@
 # include "bind-opt.h"
 #endif /*]*/
 #include "charsetc.h"
-#include "childc.h"
+#include "child.h"
 #if defined(WC3270) /*[*/
 # include "cscreen.h"
 #endif /*]*/

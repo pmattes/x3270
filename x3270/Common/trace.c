@@ -43,7 +43,7 @@
 #include "ctlr.h"
 
 #include "charsetc.h"
-#include "childc.h"
+#include "child.h"
 #include "ctlrc.h"
 #include "fprint_screenc.h"
 #include "lazya.h"

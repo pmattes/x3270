@@ -36,8 +36,9 @@ all:: $(LIBSTUBS)
 
 OBJ = o
 include lib3270stubs_files.mk
-SRCS = $(LIB3270STUBS_SOURCES)
-OBJS = $(LIB3270STUBS_OBJECTS)
+include lib3270stubsu_files.mk
+SRCS = $(LIB3270STUBS_SOURCES) $(LIB3270STUBSU_SOURCES)
+OBJS = $(LIB3270STUBS_OBJECTS) $(LIB3270STUBSU_OBJECTS)
 
 LIBDIR = @libdir@
 prefix = @prefix@

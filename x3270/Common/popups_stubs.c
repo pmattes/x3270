@@ -26,7 +26,7 @@
  */
 
 /*
- *	popups_stubs.h
+ *	popups_stubs.c
  *		Stubs for menubar.c.
  */
 

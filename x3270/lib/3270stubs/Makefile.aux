@@ -37,11 +37,12 @@ all:
 
 OBJ = o
 include lib3270stubs_files.mk
-SOURCES = $(LIB3270STUBS_SOURCES)
-HEADERS = $(LIB3270STUBS_HEADERS)
+include lib3270stubsu_files.mk
+SOURCES = $(LIB3270STUBS_SOURCES) $(LIB3270STUBSU_SOURCES)
+HEADERS = $(LIB3270STUBS_HEADERS) $(LIB3270STUBSU_HEADERS)
 
 MISC = Makefile.in conf.h.in config.guess config.sub configure configure.in \
-	install-sh lib3270stubs_files.mk
+	install-sh lib3270stubs_files.mk lib3270stubsu_files.mk
 
 DEVKIT = Makefile.aux
 

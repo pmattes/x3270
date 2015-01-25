@@ -26,14 +26,9 @@
  */
 
 /*
- *	childc.h
+ *	child.h
  *		Global declarations for child.c.
  */
 
-#if defined(X3270_INTERACTIVE) /*[*/
-extern int fork_child(void);
-extern void child_ignore_output(void);
-#else /*][*/
-#define fork_child()	fork()
-#define child_ignore_output()
-#endif /*]*/
+int fork_child(void);
+void child_ignore_output(void);

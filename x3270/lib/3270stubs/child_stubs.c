@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,16 +26,21 @@
  */
 
 /*
- *	print_gui_stubs.c
- *		Stubs for the print text GUI.
+ *	child_stubs.c
+ *		Stubs for child.c.
  */
 
 #include "globals.h"
 
-#include "print_gui.h"
+#include "child.h"
 
-Boolean
-print_text_gui(Boolean use_file _is_unused)
+int
+fork_child(void)
 {
-    return False;
+    return fork();
+}
+
+void
+child_ignore_output(void)
+{
 }

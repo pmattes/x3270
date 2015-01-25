@@ -1,5 +1,5 @@
 INCLUDE_HEADERS = 3270ds.h actions.h apl.h appres.h arpa_telnet.h asprintf.h \
-	ctlr.h ctlrc.h ft.h ft_cut.h ft_cut_ds.h ft_dft.h ft_dft_ds.h \
+	child.h ctlr.h ctlrc.h ft.h ft_cut.h ft_cut_ds.h ft_dft.h ft_dft_ds.h \
 	ft_gui.h ft_private.h globals.h host.h httpd-core.h httpd-io.h \
 	httpd-nodes.h idle.h lazya.h linemodec.h nvt.h nvt_gui.h print_gui.h \
 	proxy.h proxy_names.h resolver.h screen.h scroll.h see.h selectc.h \
