@@ -51,7 +51,7 @@ clobber: clean
 	$(RM) $(LIB3270)
 
 depend: $(SRCS)
-	../../Shared/mingwmakedep -C $(CC) $(XCPPFLAGS) $(SRCS) >dependencies-
+	$(CC) -MM $(XCPPFLAGS) $(SRCS) >dependencies-
 	mv dependencies- dependencies
 
 ifeq ($(wildcard dependencies),dependencies)
