@@ -20,9 +20,9 @@ HTTPD_OBJECTS = favicon.$(OBJ) httpd-core.$(OBJ) \
 	httpd-io.$(OBJ) httpd-nodes.$(OBJ)
 
 # Header files common to all 3270 emulators
-COMMON_HEADERS = arpa_telnet.h charsetc.h childc.h dialogc.h fallbacksc.h \
-	fprint_screenc.h keymap.h kybdc.h localdefs.h menubar.h \
-	print_screen.h proxy.h proxyc.h resources.h rpqc.h save.h telnetc.h
+COMMON_HEADERS = charsetc.h childc.h dialogc.h fallbacksc.h fprint_screenc.h \
+	keymap.h kybdc.h localdefs.h menubar.h print_screen.h proxy.h \
+	proxyc.h resources.h rpqc.h save.h telnetc.h
 
 # HTTPD header files
 HTTPD_HEADERS = 
