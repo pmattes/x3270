@@ -47,7 +47,7 @@
 # include "xscreen.h"
 #endif /*]*/
 #include "unicodec.h"
-#include "unicode_dbcsc.h"
+#include "unicode_dbcs.h"
 #include "utf8.h"
 #include "util.h"
 

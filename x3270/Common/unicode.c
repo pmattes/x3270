@@ -41,7 +41,7 @@
 #include "appres.h"
 #endif /*]*/
 #include "unicodec.h"
-#include "unicode_dbcsc.h"
+#include "unicode_dbcs.h"
 #include "utf8.h"
 #if !defined(PR3287) /*[*/
 #include "util.h"

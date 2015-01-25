@@ -33,7 +33,7 @@
 #include "globals.h"
 
 #include "unicodec.h"
-#include "unicode_dbcsc.h"
+#include "unicode_dbcs.h"
 
 /*
  * Note: #undef'ing X3270_DBCS disables the ability to configure a DBCS host

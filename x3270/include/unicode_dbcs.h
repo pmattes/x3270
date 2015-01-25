@@ -25,8 +25,8 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern ucs4_t ebcdic_dbcs_to_unicode(ebc_t e, unsigned flags);
-extern ebc_t unicode_to_ebcdic_dbcs(ucs4_t u);
-extern Boolean set_uni_dbcs(const char *csname, const char **codepage,
+ucs4_t ebcdic_dbcs_to_unicode(ebc_t e, unsigned flags);
+ebc_t unicode_to_ebcdic_dbcs(ucs4_t u);
+Boolean set_uni_dbcs(const char *csname, const char **codepage,
 	const char **display_charsets);
-extern void charset_list_dbcs(void);
+void charset_list_dbcs(void);

@@ -48,7 +48,7 @@
 #include "3270ds.h"
 #include "charsetc.h"
 #include "unicodec.h"
-#include "unicode_dbcsc.h"
+#include "unicode_dbcs.h"
 #include "utf8.h"
 
 unsigned long cgcsgid = 0x02b90025;
