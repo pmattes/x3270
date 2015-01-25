@@ -48,7 +48,7 @@
 #include <errno.h>
 
 #include "appres.h"
-#include "dialogc.h"
+#include "dialog.h"
 #include "ft_cut.h"
 #include "ft_dft.h"
 #include "ft.h"

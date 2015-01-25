@@ -47,7 +47,7 @@
 #include "objects.h"
 #include "resources.h"
 
-#include "dialogc.h"
+#include "dialog.h"
 #include "popups.h"
 #include "print_screen.h"
 #include "stmenu.h"

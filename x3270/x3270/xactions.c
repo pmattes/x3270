@@ -41,7 +41,7 @@
 #include "appres.h"
 
 #include "actions.h"
-#include "dialogc.h"
+#include "dialog.h"
 #include "keymap.h"
 #include "lazya.h"
 #include "macros.h"

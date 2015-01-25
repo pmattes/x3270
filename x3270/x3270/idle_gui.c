@@ -46,7 +46,7 @@
 #include <errno.h>
 
 #include "appres.h"
-#include "dialogc.h"
+#include "dialog.h"
 #include "idle.h"
 #include "idle_gui.h"
 #include "objects.h"
