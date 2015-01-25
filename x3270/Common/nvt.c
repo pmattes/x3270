@@ -41,7 +41,7 @@
 #include "ctlrc.h"
 #include "host.h"
 #include "macros.h"
-#include "nvtc.h"
+#include "nvt.h"
 #include "nvt_gui.h"
 #include "screen.h"
 #include "scroll.h"

@@ -76,7 +76,7 @@
 #include "lazya.h"
 #include "linemodec.h"
 #include "macros.h"
-#include "nvtc.h"
+#include "nvt.h"
 #include "popups.h"
 #include "proxyc.h"
 #include "resolver.h"

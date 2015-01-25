@@ -67,7 +67,7 @@
 #include "keymap.h"
 #include "kybdc.h"
 #include "lazya.h"
-#include "nvtc.h"
+#include "nvt.h"
 #include "popups.h"
 #include "save.h"
 #include "screen.h"

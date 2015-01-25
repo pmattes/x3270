@@ -26,7 +26,7 @@
  */
 
 /*
- *	nvtc.h
+ *	nvt.h
  *		Global declarations for nvt.c.
  */
 

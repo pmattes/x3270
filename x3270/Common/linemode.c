@@ -40,7 +40,7 @@
 
 #include "appres.h"
 #include "linemodec.h"
-#include "nvtc.h"
+#include "nvt.h"
 #include "util.h"
 #include "telnetc.h"
 

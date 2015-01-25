@@ -61,7 +61,7 @@
 #include "keymap.h"
 #include "kybdc.h"
 #include "macros.h"
-#include "nvtc.h"
+#include "nvt.h"
 #include "popups.h"
 #include "print_screen.h"
 #include "screen.h"

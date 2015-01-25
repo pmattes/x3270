@@ -47,7 +47,7 @@
 #include "keymap.h"
 #include "kybdc.h"
 #include "macros.h"
-#include "nvtc.h"
+#include "nvt.h"
 #include "popups.h"
 #include "readresc.h"
 #include "screen.h"
