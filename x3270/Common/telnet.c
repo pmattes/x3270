@@ -74,7 +74,7 @@
 #include "host.h"
 #include "kybdc.h"
 #include "lazya.h"
-#include "linemodec.h"
+#include "linemode.h"
 #include "macros.h"
 #include "nvt.h"
 #include "popups.h"

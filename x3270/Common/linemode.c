@@ -39,7 +39,7 @@
 #include "globals.h"
 
 #include "appres.h"
-#include "linemodec.h"
+#include "linemode.h"
 #include "nvt.h"
 #include "util.h"
 #include "telnetc.h"

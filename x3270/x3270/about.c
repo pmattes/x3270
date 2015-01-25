@@ -48,7 +48,7 @@
 #include "charsetc.h"
 #include "keymap.h"
 #include "lazya.h"
-#include "linemodec.h"
+#include "linemode.h"
 #include "popups.h"
 #include "telnetc.h"
 #include "utf8.h"
