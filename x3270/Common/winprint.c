@@ -51,9 +51,6 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include "w3misc.h"
-#if defined(WC3270) /*[*/
-# include "screen.h"
-#endif /*]*/
 
 /* Typedefs */
 typedef struct {	/* Windows screen print context */
