@@ -50,7 +50,7 @@
 #include "lazya.h"
 #include "linemode.h"
 #include "popups.h"
-#include "telnetc.h"
+#include "telnet.h"
 #include "utf8.h"
 #include "util.h"
 #include "varbuf.h"

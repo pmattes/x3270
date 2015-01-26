@@ -45,8 +45,8 @@ unix: $(UNIX_PRODS)
 windows: $(WINDOWS_PRODS)
 
 # Library and shared dependencies.
-$(UNIX_PRODS): unix-libs Shared-dir
-$(WINDOWS_PRODS): windows-libs Shared-dir
+$(UNIX_PRODS): unix-libs Shared-dir include-dir
+$(WINDOWS_PRODS): windows-libs Shared-dir include-dir
 
 # The webpage comes last.
 Webpage-dir: $(PRODUCTS)

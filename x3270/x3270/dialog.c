@@ -57,7 +57,7 @@
 #include "macros.h"
 #include "objects.h"
 #include "popups.h"
-#include "telnetc.h"
+#include "telnet.h"
 #include "util.h"
 #include "xmenubar.h"
 

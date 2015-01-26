@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2013, Paul Mattes.
+ * Copyright (c) 1995-2013, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,26 +26,15 @@
  */
 
 /*
- *	telnetc.h
- *		Global declarations for telnet.c.
+ *	pr_telnet.h
+ *		Global declarations for pr3287 telnet.c, beyond (or different
+ *		from) what is declared in telnet_core.h.
  */
 
-/* Output buffer. */
-extern unsigned char *obuf, *obptr;
-
-extern int negotiate(const char *host, struct sockaddr *sa, socklen_t len,
-	int s, char *lu, const char *assoc);
-extern Boolean net_add_dummy_tn3270e(void);
-extern void net_add_eor(unsigned char *buf, int len);
-extern void net_disconnect(void);
-extern void net_exception(void);
-extern int net_input(int s);
-extern void net_output(void);
-extern int process(int s);
-extern void space3270out(int n);
-extern void trace_netdata(char direction, unsigned const char *buf, int len);
-extern void popup_a_sockerr(char *fmt, ...);
+extern int pr_net_negotiate(const char *host, struct sockaddr *sa,
+	socklen_t len, int s, char *lu, const char *assoc);
+extern int pr_net_process(int s);
 
 #if defined(HAVE_LIBSSL) /*[*/
-extern void ssl_base_init(void);
+extern void pr_ssl_base_init(void);
 #endif /*]*/

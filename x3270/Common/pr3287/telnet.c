@@ -81,8 +81,9 @@
 
 #include "ctlrc.h"
 #include "resolver.h"
+#include "telnet_core.h"
 #include "trace.h"
-#include "telnetc.h"
+#include "pr_telnet.h"
 
 #if defined(_WIN32) && defined(HAVE_LIBSSL) /*[*/
 #define ROOT_CERTS		"root_certs.txt"
@@ -207,6 +208,7 @@ static void tn3270_nak(enum pds);
 static void tn3270e_ack(void);
 static void tn3270e_nak(enum pds);
 static void tn3270e_cleared(void);
+static int net_input(int s);
 
 #define trace_str(str)	vtrace("%s", (str))
 static const char *cmd(int c);
@@ -333,7 +335,7 @@ sockerrmsg(void)
 }
 
 void
-popup_a_sockerr(char *fmt, ...)
+popup_a_sockerr(const char *fmt, ...)
 {
 	va_list args;
 	char buf[1024];
@@ -347,11 +349,11 @@ popup_a_sockerr(char *fmt, ...)
 
 
 /*
- * negotiate
+ * pr_net_negotiate
  *	Initialize the connection, and negotiate TN3270 options with the host.
  */
 int
-negotiate(const char *host, struct sockaddr *sa, socklen_t len, int s,
+pr_net_negotiate(const char *host, struct sockaddr *sa, socklen_t len, int s,
 	char *lu, const char *assoc)
 {
 	/* Save the hostname. */
@@ -462,7 +464,7 @@ negotiate(const char *host, struct sockaddr *sa, socklen_t len, int s,
 }
 
 int
-process(int s)
+pr_net_process(int s)
 {
 	while (cstate != NOT_CONNECTED) {
 		fd_set rfds;
@@ -606,7 +608,7 @@ setup_lus(char *luname, const char *assoc)
  *	socket.  Reads the data, processes the special telnet commands
  *	and calls process_ds to process the 3270 data stream.
  */
-int
+static int
 net_input(int s)
 {
 	register unsigned char *cp;
@@ -1567,7 +1569,7 @@ store3270in(unsigned char c)
  *	Allocates hidden space at the front of the buffer for TN3270E.
  */
 void
-space3270out(int n)
+space3270out(unsigned n)
 {
 	unsigned nc = 0;	/* amount of data currently in obuf */
 	unsigned more = 0;
@@ -2010,7 +2012,7 @@ get_ssl_error(char *buf)
 }
 
 void
-ssl_base_init(void)
+pr_ssl_base_init(void)
 {
 	char err_buf[120];
 	int cft = SSL_FILETYPE_PEM;

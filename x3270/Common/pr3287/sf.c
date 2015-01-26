@@ -48,7 +48,7 @@
 #else /*][*/
 # include <sys/socket.h>
 #endif /*]*/
-#include "telnetc.h"
+#include "telnet_core.h"
 #include "trace.h"
 
 /* Statics */

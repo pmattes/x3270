@@ -49,7 +49,7 @@
 #include "objects.h"
 #include "popups.h"
 #include "ssl_passwd_gui.h"
-#include "telnetc.h"
+#include "telnet.h"
 #include "telnet_private.h"
 #include "xpopups.h"
 

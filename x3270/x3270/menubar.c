@@ -63,7 +63,7 @@
 #include "pr3287_session.h"
 #include "printer_gui.h"
 #include "stmenu.h"
-#include "telnetc.h"
+#include "telnet.h"
 #include "toggles.h"
 #include "util.h"
 #include "xaa.h"

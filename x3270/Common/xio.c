@@ -39,7 +39,7 @@
 
 #include "actions.h"
 #include "host.h"
-#include "telnetc.h"
+#include "telnet.h"
 #include "toggles.h"
 #include "util.h"
 #include "xio.h"

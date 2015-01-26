@@ -58,7 +58,7 @@
 #if defined(C3270) /*[*/
 # include "screen.h"
 #endif /*]*/
-#include "telnetc.h"
+#include "telnet_core.h"
 #include "trace.h"
 #include "util.h"
 #include "varbuf.h"

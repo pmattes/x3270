@@ -47,7 +47,7 @@
 #include "rpq.h"
 #include "screen.h"
 #include "see.h"
-#include "telnetc.h"
+#include "telnet_core.h"
 #include "trace.h"
 
 #define SW_3279_2	0x09

@@ -60,7 +60,7 @@
 #include "readresc.h"
 #include "screen.h"
 #include "selectc.h"
-#include "telnetc.h"
+#include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
 #include "unicodec.h"

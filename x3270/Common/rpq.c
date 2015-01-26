@@ -48,7 +48,8 @@
 #include "sf.h"	 /* has to come before rpq.h */
 #include "rpq.h"
 #include "tables.h"
-#include "telnetc.h"
+#include "telnet.h"
+#include "telnet_core.h"
 #include "trace.h"
 #include "unicodec.h"
 

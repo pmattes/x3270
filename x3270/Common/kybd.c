@@ -67,7 +67,7 @@
 #include "screen.h"
 #include "scroll.h"
 #include "status.h"
-#include "telnetc.h"
+#include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
 #include "utf8.h"

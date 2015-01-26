@@ -74,7 +74,7 @@
 #endif /*]*/
 #include "screen.h"
 #include "status.h"
-#include "telnetc.h"
+#include "telnet.h"
 #include "trace.h"
 #include "utf8.h"
 #include "util.h"

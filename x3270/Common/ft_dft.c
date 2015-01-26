@@ -42,7 +42,7 @@
 #include "ft_dft.h"
 #include "unicodec.h"
 #include "ft.h"
-#include "telnetc.h"
+#include "telnet_core.h"
 #include "trace.h"
 #include "util.h"
 

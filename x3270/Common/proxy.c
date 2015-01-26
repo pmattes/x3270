@@ -51,7 +51,7 @@
 #include "proxy.h"
 #include "proxy_names.h"
 #include "resolver.h"
-#include "telnetc.h"
+#include "telnet_core.h"
 #include "trace.h"
 #include "util.h"
 #include "w3misc.h"

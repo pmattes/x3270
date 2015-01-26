@@ -20,7 +20,7 @@ HTTPD_OBJECTS = favicon.$(OBJ) httpd-core.$(OBJ) httpd-io.$(OBJ) \
 	httpd-nodes.$(OBJ)
 
 # Header files common to all 3270 emulators
-COMMON_HEADERS = fallbacksc.h localdefs.h telnetc.h
+COMMON_HEADERS = fallbacksc.h localdefs.h
 
 # HTTPD header files
 HTTPD_HEADERS = 

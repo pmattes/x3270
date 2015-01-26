@@ -85,7 +85,8 @@
 #endif /*]*/
 #include "ssl_passwd_gui.h"
 #include "status.h"
-#include "telnetc.h"
+#include "telnet.h"
+#include "telnet_core.h"
 #include "telnet_private.h"
 #include "trace.h"
 #include "unicodec.h"
@@ -366,7 +367,7 @@ static int ha_ix = 0;
 
 #if defined(_WIN32) /*[*/
 void
-popup_a_sockerr(char *fmt, ...)
+popup_a_sockerr(const char *fmt, ...)
 {
     va_list args;
     char *buffer;
@@ -378,7 +379,7 @@ popup_a_sockerr(char *fmt, ...)
 }
 #else /*][*/
 void
-popup_a_sockerr(char *fmt, ...)
+popup_a_sockerr(const char *fmt, ...)
 {
     va_list args;
     char *buffer;
@@ -2853,7 +2854,7 @@ store3270in(unsigned char c)
  *	Allocates hidden space at the front of the buffer for TN3270E.
  */
 void
-space3270out(int n)
+space3270out(unsigned n)
 {
 	unsigned nc = 0;	/* amount of data currently in obuf */
 	unsigned more = 0;

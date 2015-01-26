@@ -65,7 +65,7 @@
 #include "sf.h"
 #include "status.h"
 #include "tables.h"
-#include "telnetc.h"
+#include "telnet_core.h"
 #include "trace.h"
 #include "util.h"
 

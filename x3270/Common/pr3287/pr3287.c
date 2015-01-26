@@ -136,8 +136,9 @@
 #include "ctlrc.h"
 #include "popups.h"
 #include "proxy.h"
+#include "pr_telnet.h"
 #include "resolver.h"
-#include "telnetc.h"
+#include "telnet_core.h"
 #include "utf8.h"
 #include "xtablec.h"
 
@@ -937,7 +938,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 	}
 
 #if defined(HAVE_LIBSSL) /*[*/
-	ssl_base_init();
+	pr_ssl_base_init();
 #endif /*]*/
 
 #if !defined(_WIN32) /*[*/
@@ -1117,7 +1118,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 #endif /*]*/
 
 		/* Negotiate. */
-		if (negotiate(host, &ha.sa, ha_len, s, lu, options.assoc) < 0) {
+		if (pr_net_negotiate(host, &ha.sa, ha_len, s, lu,
+			    options.assoc) < 0) {
 			rc = 1;
 			goto retry;
 		}
@@ -1129,7 +1131,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
 		}
 
 		/* Process what we're told to process. */
-		if (process(s) < 0) {
+		if (pr_net_process(s) < 0) {
 			rc = 1;
 			if (options.verbose)
 				(void) fprintf(stderr,

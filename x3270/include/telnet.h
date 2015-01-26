@@ -28,12 +28,14 @@
  */
 
 /*
- *	telnetc.h
- *		Global declarations for telnet.c.
+ *	telnet.h
+ *		Global declarations for telnet.c, beyond what is declared in
+ *		telnet_core.h.
  */
 
-/* Output buffer. */
-extern unsigned char *obuf, *obptr;
+#if defined(PR3287) /*[*/
+#error Do not include this file for pr3287
+#endif /*]*/
 
 extern int ns_brcvd;
 extern int ns_bsent;
@@ -42,20 +44,16 @@ extern int ns_rsent;
 extern time_t ns_time;
 
 extern void net_abort(void);
-extern Boolean net_add_dummy_tn3270e(void);
-extern void net_add_eor(unsigned char *buf, int len);
 extern void net_break(void);
 extern void net_charmode(void);
 extern iosrc_t net_connect(const char *, char *, Boolean, Boolean *,
 	Boolean *);
-extern void net_disconnect(void);
 extern void net_exception(iosrc_t fd, ioid_t id);
 extern int net_getsockname(void *buf, int *len);
 extern void net_hexnvt_out(unsigned char *buf, int len);
 extern void net_input(iosrc_t fd, ioid_t id);
 extern void net_interrupt(void);
 extern void net_linemode(void);
-extern void net_output(void);
 extern const char *net_query_bind_plu_name(void);
 extern const char *net_query_connection_state(void);
 extern const char *net_query_host(void);
@@ -64,14 +62,11 @@ extern const char *net_query_ssl(void);
 extern void net_sendc(char c);
 extern void net_sends(const char *s);
 extern Boolean net_snap_options(void);
-extern void space3270out(int n);
 extern const char *tn3270e_current_opts(void);
-extern void popup_a_sockerr(char *fmt, ...) printflike(1, 2);
 extern char *net_proxy_type(void);
 extern char *net_proxy_host(void);
 extern char *net_proxy_port(void);
 extern Boolean net_bound(void);
-extern void trace_netdata(char direction, unsigned const char *buf, int len);
 #if defined(HAVE_LIBSSL) /*[*/
 extern void ssl_base_init(char *cl_hostname, Boolean *pending);
 #endif /*]*/
