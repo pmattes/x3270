@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2009, 2014 Paul Mattes.
+dnl Copyright (c) 2000-2009, 2015 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -273,6 +273,10 @@ case "$enable_ipv6" in
 ""|yes) AC_DEFINE(X3270_IPV6,1)                 
 	;;                              
 esac
+
+AC_PATH_PROG(MAKEDEP,gccmakedep)
+test -z "$MAKEDEP" && MAKEDEP=:
+AC_SUBST(MAKEDEP)
 
 if test "$xmkmf_found" = "notfound"
 then	dnl Generate the Makefile directly.
