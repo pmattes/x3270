@@ -36,8 +36,9 @@ all:: $(LIB3270)
 
 OBJ = o
 include lib3270_files.mk
-SRCS = $(LIB3270_SOURCES)
-OBJS = $(LIB3270_OBJECTS)
+include lib3270u_files.mk
+SRCS = $(LIB3270_SOURCES) $(LIB3270U_SOURCES)
+OBJS = $(LIB3270_OBJECTS) $(LIB3270U_OBJECTS)
 
 LIBDIR = @libdir@
 prefix = @prefix@
