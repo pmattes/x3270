@@ -39,7 +39,6 @@
 #include <limits.h>
 #include "3270ds.h"
 #include "appres.h"
-#include "resources.h"
 #include "ctlr.h"
 
 #include "charset.h"
@@ -82,6 +81,12 @@
 #if !defined(HAVE_FSEEKO) /*[*/
 #define fseeko(s, o, w)	fseek(s, (long)o, w)
 #define ftello(s)	(off_t)ftell(s)
+#endif /*]*/
+
+#if defined(EILSEQ) /*[*/
+# define IS_EILSEQ(e)	((e) == EILSEQ)
+#else /*]*/
+# define IS_EILSEQ(e)	0
 #endif /*]*/
 
 /* Statics */
@@ -364,17 +369,10 @@ vwtrace(Boolean do_ts, const char *fmt, va_list args)
 	if (nw == 1) {
 	    fflush(tracef);
 	} else {
-	    if (errno != EPIPE
-#if defined(EILSEQ) /*[*/
-			       && errno != EILSEQ
-#endif /*]*/
-						 ) {
+	    if (errno != EPIPE && !IS_EILSEQ(errno)) {
 		popup_an_errno(errno, "Write to trace file failed");
 	    }
-#if defined(EILSEQ) /*[*/
-	    if (errno != EILSEQ)
-#endif /*]*/
-	    {
+	    if (!IS_EILSEQ(errno)) {
 		stop_tracing();
 		goto done;
 	    }
@@ -534,7 +532,7 @@ create_tracefile_header(const char *mode)
 	wtrace(False, "+%d", (int)(cgcsgid_dbcs & 0xffff));
     }
     wtrace(False, "\n");
-#if defined(_WIN32) && (defined(C3270) || defined(S3270)) /*[*/
+#if defined(_WIN32) /*[*/
     wtrace(False, " AppData: %s\n", myappdata? myappdata: "(null)");
     wtrace(False, " Install dir: %s\n", instdir? instdir: "(null)");
     wtrace(False, " Desktop: %s\n", mydesktop? mydesktop: "(null)");

@@ -32,10 +32,6 @@
 
 #include "globals.h"
 
-#if !defined(PR3287) /*[*/
-# include "appres.h"
-#endif /*]*/
-#include "asprintf.h"
 #include "trace.h"
 #include "util.h"
 
