@@ -8,6 +8,9 @@ function usage()
 
 me=${0##*/}
 
+# No point in doing this if cscope is not available.
+type cscope >/dev/null 2>&1 || exit 0
+
 unset update build toplevel
 while [ "$1" != "" ]
 do	case "$1" in
