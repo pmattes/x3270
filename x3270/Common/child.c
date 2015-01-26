@@ -35,13 +35,8 @@
 #include <fcntl.h>
 
 #include "popups.h" /* must be before cpopups.h */
-#if defined(C3270) /*[*/
-# include "cpopups.h"
-#endif /*]*/
+#include "child_popups.h"
 #include "util.h"
-#if defined(X3270_DISPLAY) /*[*/
-# include "xpopups.h"
-#endif /*]*/
 
 #define CHILD_BUF	1024
 

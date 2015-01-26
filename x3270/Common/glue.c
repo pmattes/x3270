@@ -56,7 +56,8 @@
 #include "kybd.h"
 #include "macros.h"
 #include "nvt.h"
-#include "popups.h"
+#include "popups.h" /* must come before child_popups.h */
+#include "child_popups.h"
 #include "readresc.h"
 #include "screen.h"
 #include "selectc.h"

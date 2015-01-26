@@ -47,7 +47,8 @@
 #include "actions.h"
 #include "host.h"
 #include "macros.h"
-#include "popups.h"
+#include "popups.h" /* must come before child_popups.h */
+#include "child_popups.h"
 #include "screen.h"
 #include "trace.h"
 #include "util.h"

@@ -26,8 +26,8 @@
  */
 
 /*
- *	cpopups.h
- *		c3270-specific popups definitions
+ *	child_popups.h
+ *		Child shell popups delarations.
  */
 
 void popup_child_output(Boolean is_err, abort_callback_t *a,

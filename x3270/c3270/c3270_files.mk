@@ -10,5 +10,5 @@ C3270_OBJECTS = XtGlue.$(OBJ) c3270.$(OBJ) child.$(OBJ) ft_gui.$(OBJ) \
 	screen.$(OBJ) scroll.$(OBJ) ssl_passwd_gui.$(OBJ)
 
 # c3270-specific header files
-C3270_HEADERS = X11/keysym.h ckeypad.h cmenubar.h conf.h cpopups.h cscreen.h \
-	cstatus.h gluec.h help.h icmdc.h keymap.h readresc.h xscroll.h
+C3270_HEADERS = X11/keysym.h ckeypad.h cmenubar.h conf.h cscreen.h cstatus.h \
+	gluec.h help.h icmdc.h keymap.h readresc.h xscroll.h

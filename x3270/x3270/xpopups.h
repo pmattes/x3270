@@ -45,7 +45,6 @@ enum form_type { FORM_NO_WHITE, FORM_NO_CC, FORM_AS_IS };
 
 Widget create_form_popup(const char *name, XtCallbackProc callback,
 	XtCallbackProc callback2, enum form_type form_type);
-void child_popup_init(void);
 void error_init(void);
 void error_popup_init(void);
 Boolean error_popup_visible(void);
@@ -55,8 +54,6 @@ void PA_confirm_xaction(Widget w, XEvent *event, String *params,
 void place_popup(Widget w, XtPointer client_data, XtPointer call_data);
 void move_popup(Widget w, XtPointer client_data, XtPointer call_data);
 void popdown_an_error(void);
-void popup_child_output(Boolean is_err, abort_callback_t *a,
-	const char *fmt, ...) printflike(3, 4);
 void popup_popup(Widget shell, XtGrabKind grab);
 void popups_move(void);
 void printer_popup_init(void);
