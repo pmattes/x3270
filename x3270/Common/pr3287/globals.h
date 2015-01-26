@@ -25,6 +25,12 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* Autoconf settings. */
+#include "conf.h"			/* autoconf settings */
+#if defined(HAVE_VASPRINTF) && !defined(_GNU_SOURCE) /*[*/
+#define _GNU_SOURCE			/* vasprintf isn't POSIX */
+#endif /*]*/
+
 #include <stdio.h>			/* Unix standard I/O library */
 #include <stdlib.h>			/* Other Unix library functions */
 #if !defined(_MSC_VER) /*[*/

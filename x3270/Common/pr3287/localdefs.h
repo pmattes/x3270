@@ -38,6 +38,5 @@
 #if defined(_WIN32) /*[*/
 # define WPR3287	1
 #endif /*]*/
-#define X3270_IPV6 1
 
 extern void errmsg(const char *, ...);
