@@ -72,9 +72,6 @@ Boolean split_hier(char *label, char **base, char ***parents);
 const char *build_options(void);
 void dump_version(void);
 const char *display_scale(double d);
-#if defined(WC3270) /*[*/
-void start_html_help(void);
-#endif /*]*/
 
 /* Doubly-linked lists. */
 Boolean llist_isempty(llist_t *l);

@@ -94,10 +94,11 @@
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-#include "w3misc.h"
-#include "winversc.h"
-#include "windirsc.h"
 #include "relinkc.h"
+#include "w3misc.h"
+#include "wc3270.h"
+#include "windirsc.h"
+#include "winversc.h"
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
@@ -1728,6 +1729,37 @@ start_auto_shortcut(void)
 
     exit(0);
 }
+
+/* Start a browser window to display wc3270 help. */
+void
+start_html_help(void)
+{
+    system(lazyaf("start \"wc3270 Help\" \"%shtml\\README.html\"", instdir));
+
+    /* Get back mouse events */
+    screen_fixup();
+}
+
+/* Start a copy of the Session Wizard. */
+void
+start_wizard(const char *session)
+{
+    char *cmd;
+
+    if (session != NULL) {
+	cmd = xs_buffer("start \"wc3270 Session Wizard\" \"%swc3270wiz.exe\" "
+		"-e \"%s\"", instdir, session);
+    } else {
+	cmd = xs_buffer("start \"wc3270 Session Wizard\" \"%swc3270wiz.exe\"",
+		instdir);
+    }
+    system(cmd);
+    Free(cmd);
+
+    /* Get back mouse events */
+    screen_fixup();
+}
+
 #endif /*]*/
 
 /*

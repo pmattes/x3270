@@ -58,6 +58,10 @@
 #include "unicodec.h"
 #include "util.h"
 
+#if defined(_WIN32) /*[*/
+# include "wc3270.h"
+#endif /*]*/
+
 #if !defined(_WIN32) /*[*/
 # if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
 #  include <ncursesw/ncurses.h>
@@ -794,19 +798,7 @@ fm_help(void *ignored _is_unused)
 static void
 fm_wizard(void *session)
 {
-    char *cmd;
-
-    if (session != NULL) {
-	cmd = xs_buffer("start \"wc3270 Session Wizard\" "
-		"\"%swc3270wiz.exe\" -e \"%s\"", instdir,
-		(char *)session);
-    } else {
-	cmd = xs_buffer("start \"wc3270 Session Wizard\" "
-		"\"%swc3270wiz.exe\"", instdir);
-    }
-    system(cmd);
-    Free(cmd);
-    screen_fixup(); /* get back mouse events */
+    start_wizard((char *)session);
 }
 #endif /*]*/
 

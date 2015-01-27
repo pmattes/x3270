@@ -15,5 +15,5 @@ WC3270_OBJECTS = XtGlue.$(OBJ) c3270.$(OBJ) ft_gui.$(OBJ) gdi_print.$(OBJ) \
 # wc3270-specific header files
 WC3270_HEADERS = X11/keysym.h ckeypad.h cmenubar.h conf.h cscreen.h cstatus.h \
 	gdi_printc.h gluec.h help.h icmdc.h keymap.h readresc.h relinkc.h \
-	shlobj_missing.h shortcutc.h windirsc.h winversc.h wselectc.h \
-	xscroll.h
+	shlobj_missing.h shortcutc.h wc3270.h windirsc.h winversc.h \
+	wselectc.h xscroll.h

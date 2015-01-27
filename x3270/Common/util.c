@@ -892,17 +892,6 @@ display_scale(double d)
     }
 }
 
-#if defined(WC3270) /*[*/
-void
-start_html_help(void)
-{
-    system(lazyaf("start \"wc3270 Help\" \"%shtml\\README.html\"", instdir));
-
-    /* Get back mouse events */
-    screen_fixup();
-}
-#endif /*]*/
-
 /*
  * Doubly-linked lists.
  */

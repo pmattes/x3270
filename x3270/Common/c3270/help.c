@@ -41,6 +41,10 @@
 #include "screen.h"
 #include "util.h"
 
+#if defined(_WIN32) /*[*/
+# include "wc3270.h"
+#endif /*]*/
+
 #define P_3270		0x0001	/* 3270 actions */
 #define P_SCRIPTING	0x0002	/* scripting actions */
 #define P_INTERACTIVE	0x0004	/* interactive (command-prompt) actions */
