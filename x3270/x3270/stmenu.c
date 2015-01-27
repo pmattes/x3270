@@ -32,6 +32,7 @@
  */
 
 #include "globals.h"
+#include "xglobals.h"
 
 #include <X11/Shell.h>
 #include <X11/StringDefs.h>

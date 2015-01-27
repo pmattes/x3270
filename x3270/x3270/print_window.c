@@ -31,6 +31,7 @@
  */
 
 #include "globals.h"
+#include "xglobals.h"
 
 #include <X11/StringDefs.h>
 #include <X11/Xaw/Dialog.h>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2015 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -33,6 +33,7 @@
  */
 
 #include "globals.h"
+#include "xglobals.h"
 
 #include "util.h"
 

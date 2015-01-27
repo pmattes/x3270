@@ -35,6 +35,7 @@
  */
 
 #include "globals.h"
+#include "xglobals.h"
 
 #include <X11/Xatom.h>
 #define XK_3270

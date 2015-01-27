@@ -114,6 +114,10 @@
 static void interact(void);
 static void stop_pager(void);
 
+#if !defined(_WIN32) /*[*/
+static Boolean merge_profile(void);
+#endif /*]*/
+
 #if defined(HAVE_LIBREADLINE) /*[*/
 static char **attempted_completion();
 static char *completion_entry(const char *, int);
@@ -422,6 +426,9 @@ main(int argc, char *argv[])
 	);
     add_resource("keymap.base.3270", NewString(base_3270_keymap));
 
+#if !defined(_WIN32) /*[*/
+    register_merge_profile(merge_profile);
+#endif /*]*/
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
     printf("%s\n\n"
@@ -1609,7 +1616,7 @@ ignore_action(ia_t ia, unsigned argc, const char **argv)
 #define DEFAULT_PROFILE	"~/.c3270pro"
 
 /* Read in the .c3270pro file. */
-Boolean
+static Boolean
 merge_profile(void)
 {
     const char *fname;

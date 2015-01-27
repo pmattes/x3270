@@ -35,6 +35,7 @@
  */
 
 #include "globals.h"
+#include "xglobals.h"
 
 #include <assert.h>
 

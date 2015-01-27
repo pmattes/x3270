@@ -33,6 +33,8 @@
  */
 
 #include "globals.h"
+#include "xglobals.h"
+
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
 #include "3270ds.h"

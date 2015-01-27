@@ -110,6 +110,7 @@ static void set_appres_defaults(void);
 static void parse_options(int *argcp, const char **argv);
 static void parse_set_clear(int *argcp, const char **argv);
 static int parse_model_number(char *m);
+static merge_profile_t *merge_profilep = NULL;
 
 /* Globals */
 const char     *programname;
@@ -123,7 +124,14 @@ char	       *profile_name = NULL;
 char	       *profile_path = NULL;
 Boolean		any_error_output = False;
 
-
+/* Register a profile merge function. */
+void
+register_merge_profile(merge_profile_t *m)
+{
+    merge_profilep = m;
+}
+
+/* Parse the command line and read in any session file. */
 int
 parse_command_line(int argc, const char **argv, const char **cl_hostname)
 {
@@ -273,10 +281,11 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     } else {
 	/* There is no session file. */
 
-#if defined(C3270) && !defined(_WIN32) /*[*/
 	/* For c3270 only, read in the c3270 profile (~/.c3270pro). */
-	read_session_or_profile = merge_profile();
-#endif /*]*/
+	if (merge_profilep != NULL) {
+	    read_session_or_profile = (*merge_profilep)();
+	}
+
 	/*
 	 * If there was a hostname resource defined somewhere, but not
 	 * as a positional command-line argument, pretend it was one,

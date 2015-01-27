@@ -186,13 +186,6 @@ extern int		defROWS;	/* default (EraseWrite) */
 extern int		defCOLS;
 extern int		altROWS;	/* alternate (EraseWriteAlternate) */
 extern int		altCOLS;
-#if defined(X3270_DISPLAY) /*[*/
-extern Atom		a_3270, a_registry, a_encoding;
-extern XtAppContext	appcontext;
-#endif /*]*/
-#if defined(USE_APP_DEFAULTS) /*[*/
-extern const char	*app_defaults_version;
-#endif /*]*/
 extern const char	*build;
 extern const char	*build_rpq_timestamp;
 extern const char 	*build_rpq_version;
@@ -202,18 +195,10 @@ extern char		*connected_type;
 extern char		*current_host;
 extern unsigned short	current_port;
 extern Boolean		dbcs;
-#if defined(X3270_DISPLAY) /*[*/
-extern int		default_screen;
-#endif /*]*/
 extern int		dft_buffersize;
 extern char		*efontname;
 extern Boolean		ever_3270;
 extern Boolean		exiting;
-#if defined(X3270_DISPLAY) /*[*/
-extern Boolean		*extended_3270font;
-extern Font		*fid;
-extern Boolean		*font_8bit;
-#endif /*]*/
 extern Boolean		flipped;
 extern char		*full_current_host;
 extern char		*full_efontname;
@@ -221,9 +206,6 @@ extern char		*full_efontname_dbcs;
 extern char		full_model_name[];
 extern char		*funky_font;
 extern char		*hostname;
-#if defined(X3270_DISPLAY) /*[*/
-extern char		*locale_name;
-#endif /*]*/
 extern char		luname[];
 #if defined(LOCAL_PROCESS) /*[*/
 extern Boolean		local_process;
@@ -253,19 +235,6 @@ extern Boolean		std_ds_host;
 extern char		*termtype;
 extern Boolean		visible_control;
 extern int		*xtra_width;
-
-#if defined(X3270_DISPLAY) /*[*/
-extern Widget		toplevel;
-extern Atom		a_delete_me;
-extern Atom		a_save_yourself;
-extern Atom		a_state;
-extern Display		*display;
-extern Pixmap		gray;
-extern Pixel		keypadbg_pixel;
-extern XrmDatabase	rdb;
-extern Window		root_window;
-extern char		*user_title;
-#endif /*]*/
 
 #if defined(_WIN32) /*[*/
 extern char		*instdir;
@@ -425,17 +394,6 @@ typedef enum { P_TEXT, P_HTML, P_RTF, P_GDI } ptype_t;
 
 /* Usage message with error exit. */
 void usage(const char *);
-
-/* Xt options. */
-#if defined(X3270_DISPLAY) /*[*/
-extern XrmOptionDescRec options[];
-extern int num_options;
-#endif /*]*/
-
-#if defined(C3270) /*[*/
-/* c3270 profile merge. */
-Boolean merge_profile(void);
-#endif /*]*/
 
 /* Emulator actions. */
 /* types of internal actions */

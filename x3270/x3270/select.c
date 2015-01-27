@@ -57,6 +57,8 @@
  */
 
 #include "globals.h"
+#include "xglobals.h"
+
 #include <X11/Xatom.h>
 #include <X11/Xmu/Atoms.h>
 #include <X11/Xmu/StdSel.h>
