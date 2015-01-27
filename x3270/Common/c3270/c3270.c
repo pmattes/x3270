@@ -102,12 +102,6 @@
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-# define PROGRAM_NAME	"wc3270"
-#else /*][*/
-# define PROGRAM_NAME	"c3270"
-#endif /*]*/
-
-#if defined(_WIN32) /*[*/
 # define DELENV		"WC3DEL"
 #endif /*]*/
 
@@ -614,6 +608,10 @@ prompt_sigtstp_handler(int ignored _is_unused)
 /*static*/ void
 interact(void)
 {
+#if defined(HAVE_LIBREADLINE) /*[*/
+    static char *prompt_string = NULL;
+#endif /*]*/
+
     /* In case we got here because a command output, stop the pager. */
     stop_pager();
 
@@ -670,13 +668,16 @@ interact(void)
 	    (void) printf("Press <Enter> to resume session.\n");
 	}
 #if defined(HAVE_LIBREADLINE) /*[*/
-	s = rl_s = readline("c3270> ");
+	if (prompt_string == NULL) {
+	    prompt_string = xs_buffer("%s> ", app);
+	}
+	s = rl_s = readline(prompt_string);
 	if (s == NULL) {
 	    printf("\n");
 	    exit(0);
 	}
 #else /*][*/
-	(void) printf(PROGRAM_NAME "> ");
+	(void) printf("%s>", app);
 	(void) fflush(stdout);
 
 	/* Get the command, and trim white space. */

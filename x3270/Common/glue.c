@@ -69,33 +69,10 @@
 #include "xio.h"
 
 #if defined(_WIN32) /*[*/
-#include "winversc.h"
+# include "winversc.h"
 #endif /*]*/
 
 #define LAST_ARG	"--"
-
-#if defined(C3270) /*[*/
-# if defined(WC3270) /*[*/
-#  define SESSION_SFX	".wc3270"
-#  define SESSION_SSFX	".wc3"
-# else /*][*/
-#  define SESSION_SFX	".c3270"
-# endif /*]*/
-#elif defined(S3270) /*[*/
-# if defined(WS3270) /*[*/
-#  define SESSION_SFX	".ws3270"
-#  define SESSION_SSFX	".ws3"
-# else /*][*/
-#  define SESSION_SFX	".s3270"
-# endif /*]*/
-#elif defined(TCL3270) /*[*/
-#  define SESSION_SFX	".tcl3270"
-#endif /*]*/
-
-#define SESSION_SFX_LEN	(int)(sizeof(SESSION_SFX) - 1)
-#if defined(_WIN32) /*[*/
-# define SESSION_SSFX_LEN (int)(sizeof(SESSION_SSFX) - 1)
-#endif /*]*/
 
 /* Typedefs */
 typedef const char *ccp_t;
@@ -104,13 +81,19 @@ typedef const char *ccp_t;
 static void no_minus(const char *arg);
 #if defined(LOCAL_PROCESS) /*[*/
 static void parse_local_process(int *argcp, const char **argv,
-    const char **cmds);
+	const char **cmds);
 #endif /*]*/
 static void set_appres_defaults(void);
 static void parse_options(int *argcp, const char **argv);
 static void parse_set_clear(int *argcp, const char **argv);
 static int parse_model_number(char *m);
 static merge_profile_t *merge_profilep = NULL;
+static char *session_suffix;
+static size_t session_suffix_len;
+#if defined(_WIN32) /*[*/
+static char *session_short_suffix;
+static size_t session_short_suffix_len;
+#endif /*]*/
 
 /* Globals */
 const char     *programname;
@@ -137,7 +120,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 {
     int cl, i;
     int hn_argc;
-    int sl;
+    size_t sl;
     int xcmd_len = 0;
     char *xcmd;
     int xargc;
@@ -238,12 +221,23 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     }
 
     /* Merge in the session. */
-    if (*cl_hostname != NULL &&
-	(((sl = strlen(*cl_hostname)) > SESSION_SFX_LEN &&
-	  !strcasecmp(*cl_hostname + sl - SESSION_SFX_LEN, SESSION_SFX))
+    if (session_suffix == NULL) {
+	session_suffix = xs_buffer(".%s", app);
+	session_suffix_len = strlen(session_suffix);
+    }
 #if defined(_WIN32) /*[*/
-	 || ((sl = strlen(*cl_hostname)) > SESSION_SSFX_LEN &&
-	  !strcasecmp(*cl_hostname + sl - SESSION_SSFX_LEN, SESSION_SSFX))
+    if (session_short_suffix == NULL) {
+	session_short_suffix = xs_buffer(".%.3s", app);
+	session_short_suffix_len = strlen(session_short_suffix);
+    }
+#endif /*]*/
+    if (*cl_hostname != NULL &&
+	(((sl = strlen(*cl_hostname)) > session_suffix_len &&
+	  !strcasecmp(*cl_hostname + sl - session_suffix_len, session_suffix))
+#if defined(_WIN32) /*[*/
+	 || ((sl = strlen(*cl_hostname)) > session_short_suffix_len &&
+	  !strcasecmp(*cl_hostname + sl - session_short_suffix_len,
+	      session_short_suffix))
 #endif /*]*/
 	 )) {
 
@@ -265,15 +259,15 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	Replace(profile_path, NewString(profile_name));
 
 	sl = strlen(profile_name);
-	if (sl > SESSION_SFX_LEN &&
-		!strcasecmp(profile_name + sl - SESSION_SFX_LEN,
-		    SESSION_SFX)) {
-	    profile_name[sl - SESSION_SFX_LEN] = '\0';
+	if (sl > session_suffix_len &&
+		!strcasecmp(profile_name + sl - session_suffix_len,
+		    session_suffix)) {
+	    profile_name[sl - session_suffix_len] = '\0';
 #if defined(_WIN32) /*[*/
-	} else if (sl > SESSION_SSFX_LEN &&
-		!strcasecmp(profile_name + sl - SESSION_SSFX_LEN,
-			SESSION_SSFX)) {
-	    profile_name[sl - SESSION_SSFX_LEN] = '\0';
+	} else if (sl > session_short_suffix_len &&
+		!strcasecmp(profile_name + sl - session_short_suffix_len,
+			session_short_suffix)) {
+	    profile_name[sl - session_short_suffix_len] = '\0';
 #endif /*]*/
 	}
 
@@ -547,23 +541,6 @@ set_appres_defaults(void)
 #endif /*]*/
 }
 
-#if defined (C3270) /*[*/
-# if defined(WIN32) /*[*/
-#  define APPNAME "wc3270"
-# else /*][*/
-#  define APPNAME "c3270"
-# endif /*]*/
-#elif defined(S3270) /*[*/
-# if defined(WIN32) /*[*/
-#  define APPNAME "ws3270"
-# else /*][*/
-#  define APPNAME "s3270"
-# endif /*]*/
-#elif defined(TCL3270) /*[*/
-# define APPNAME "tcl3270"
-#else
-# error "Unknwon application"
-#endif /*]*/
 #if defined(_WIN32) /*[*/
 # define PR3287_NAME "wpr3287"
 #else /*][*/
@@ -751,7 +728,7 @@ static struct {
 { OptVersion,  OPT_V,	False, NULL,	     NULL,
     NULL, "Display build options and character sets" },
 { "-xrm",      OPT_XRM,     False, NULL,         NULL,
-    "'" APPNAME ".<resource>: <value>'", "Set <resource> to <value>"
+    "'*.<resource>: <value>'", "Set <resource> to <value>"
 },
 { LAST_ARG,    OPT_DONE,    False, NULL,         NULL,
     NULL, "Terminate argument list" },
@@ -851,18 +828,34 @@ cmdline_help (Boolean as_action)
     int i;
     
     for (i = 0; opts[i].name != NULL; i++) {
+	char *h = opts[i].help_opts;
+	char *ht;
+	char *hx = NULL;
+	char *star;
+
+	if (opts[i].type == OPT_XRM &&
+		h != NULL && (star = strchr(h, '*')) != NULL) {
+	    ht = hx = xs_buffer("%.*s%s%s", (int)(star - h), h, app, star + 1);
+	} else {
+	    ht = h;
+	}
+
 	if (as_action) {
 	    action_output("  %s%s%s",
 		    opts[i].name,
-		    opts[i].help_opts? " ": "",
-		    opts[i].help_opts? opts[i].help_opts: "");
+		    ht? " ": "",
+		    ht? ht: "");
 	    action_output("    %s", opts[i].help_text);
-	} else
+	} else {
 	    fprintf(stderr, "  %s%s%s\n     %s\n",
 		    opts[i].name,
-		    opts[i].help_opts? " ": "",
-		    opts[i].help_opts? opts[i].help_opts: "",
+		    ht? " ": "",
+		    ht? ht: "",
 		    opts[i].help_text);
+	}
+	if (hx != NULL) {
+	    Free(hx);
+	}
     }
 }
 
@@ -954,65 +947,64 @@ parse_set_clear(int *argcp, const char **argv)
 static int
 parse_model_number(char *m)
 {
-	int sl;
-	int n;
+    int sl;
+    int n;
 
-	sl = strlen(m);
+    sl = strlen(m);
 
-	/* An empty model number is no good. */
-	if (!sl) {
-		return 0;
-	}
+    /* An empty model number is no good. */
+    if (!sl) {
+	return 0;
+    }
 
-	if (sl > 1) {
-		/*
-		 * If it's longer than one character, it needs to start with
-		 * '327[89]', and it sets the m3279 resource.
-		 */
-		if (!strncmp(m, "3278", 4)) {
-			appres.m3279 = False;
-		} else if (!strncmp(m, "3279", 4)) {
-			appres.m3279 = True;
-		} else {
-			return -1;
-		}
-		m += 4;
-		sl -= 4;
-
-		/* Check more syntax.  -E is allowed, but ignored. */
-		switch (m[0]) {
-		case '\0':
-			/* Use default model number. */
-			return 0;
-		case '-':
-			/* Model number specified. */
-			m++;
-			sl--;
-			break;
-		default:
-			return -1;
-		}
-		switch (sl) {
-		case 1: /* n */
-			break;
-		case 3:	/* n-E */
-			if (strcasecmp(m + 1, "-E")) {
-				return -1;
-			}
-			break;
-		default:
-			return -1;
-		}
-	}
-
-	/* Check the numeric model number. */
-	n = atoi(m);
-	if (n >= 2 && n <= 5) {
-		return n;
+    if (sl > 1) {
+	/*
+	 * If it's longer than one character, it needs to start with
+	 * '327[89]', and it sets the m3279 resource.
+	 */
+	if (!strncmp(m, "3278", 4)) {
+	    appres.m3279 = False;
+	} else if (!strncmp(m, "3279", 4)) {
+	    appres.m3279 = True;
 	} else {
-		return -1;
+	    return -1;
 	}
+	m += 4;
+	sl -= 4;
 
+	/* Check more syntax.  -E is allowed, but ignored. */
+	switch (m[0]) {
+	case '\0':
+	    /* Use default model number. */
+	    return 0;
+	case '-':
+	    /* Model number specified. */
+	    m++;
+	    sl--;
+	    break;
+	default:
+	    return -1;
+	}
+	switch (sl) {
+	case 1: /* n */
+	    break;
+	case 3:	/* n-E */
+	    if (strcasecmp(m + 1, "-E")) {
+		return -1;
+	    }
+	    break;
+	default:
+	    return -1;
+	}
+    }
+
+    /* Check the numeric model number. */
+    n = atoi(m);
+    if (n >= 2 && n <= 5) {
+	return n;
+    } else {
+	return -1;
+    }
 }
 
 /*

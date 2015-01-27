@@ -175,11 +175,12 @@ main(int argc, char *argv[])
 		return 1;
 	}
 	if (is_w) {
-		fprintf(f, "char *wversion = \"%s\";\n", version);
+		fprintf(f, "const char *wversion = \"%s\";\n", version);
 	} else {
-		fprintf(f, "char *build = \"%s v%s %s %s\";\n",
+		fprintf(f, "const char *app = \"%s\";\n", progname);
+		fprintf(f, "const char *build = \"%s v%s %s %s\";\n",
 			progname, version, builddate, user);
-		fprintf(f, "char *app_defaults_version = \"%s\";\n",
+		fprintf(f, "const char *app_defaults_version = \"%s\";\n",
 			adversion);
 		fprintf(f, "static char sccsid[] = \"@(#)%s v%s %s %s\";\n",
 			progname, version, sccsdate, user);

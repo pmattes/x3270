@@ -186,6 +186,7 @@ extern int		defROWS;	/* default (EraseWrite) */
 extern int		defCOLS;
 extern int		altROWS;	/* alternate (EraseWriteAlternate) */
 extern int		altCOLS;
+extern const char	*app;
 extern const char	*build;
 extern const char	*build_rpq_timestamp;
 extern const char 	*build_rpq_version;

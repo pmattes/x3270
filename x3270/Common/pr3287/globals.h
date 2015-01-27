@@ -75,7 +75,8 @@ typedef unsigned short ebc_t;
 #define CS_DBCS		0x03	/*  DBCS character set (X'F8') */
 #define CS_GE		0x04	/* cs flag for Graphic Escape */
 
-extern char *build;
+extern const char *app;
+extern const char *build;
 
 /*
  *  * Compiler-specific #defines.

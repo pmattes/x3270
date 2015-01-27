@@ -61,24 +61,6 @@
 #include "winversc.h"
 #endif /*]*/
 
-#if !defined(ME) /*[*/
-# if defined(C3270) /*[*/
-#  if defined(WC3270) /*[*/
-#   define ME	"wc3270"
-#  else /*][*/
-#   define ME	"c3270"
-# endif /*]*/
-# elif defined(S3270) /*[*/
-#  if defined(WS3270) /*[*/
-#   define ME	"ws3270"
-#  else /*][*/
-#   define ME	"s3270"
-# endif /*]*/
-# elif defined(TCL3270) /*][*/
-#  define ME	"tcl3270"
-# endif /*]*/
-#endif /*]*/
-
 /*
  * Make sure a resource definition begins with the application name, then
  * split it into the name and the value.
@@ -87,51 +69,60 @@ int
 validate_and_split_resource(const char *where, const char *arg,
 	const char **left, unsigned *rnlenp, const char **right)
 {
-    	unsigned match_len;
-	unsigned rnlen;
-	const char *s = arg;
-	static char me_dot[] = ME ".";
-	static char me_star[] = ME "*";
+    unsigned match_len;
+    unsigned rnlen;
+    const char *s = arg;
+    static char *me_dot = NULL;
+    static char *me_star = NULL;
+    static size_t me_len = 0;
 
-	/* Enforce "-3270." or "-3270*" or "*". */
-	if (!strncmp(s, me_dot, sizeof(me_dot)-1))
-		match_len = sizeof(me_dot)-1;
-	else if (!strncmp(arg, me_star, sizeof(me_star)-1))
-		match_len = sizeof(me_star)-1;
-	else if (arg[0] == '*')
-		match_len = 1;
-	else {
-		xs_warning("%s: Invalid resource syntax '%.*s', name must "
-		    "begin with '%s'",
-		    where, (int)(sizeof(me_dot)-1), arg, me_dot);
-		return -1;
-	}
+    if (me_dot == NULL) {
+	me_dot = xs_buffer("%s.", app);
+	me_star = xs_buffer("%s*", app);
+	me_len = strlen(me_dot);
+    }
 
-	/* Separate the parts. */
-	s = arg + match_len;
-	while (*s && *s != ':' && !isspace(*s))
-		s++;
-	rnlen = s - (arg + match_len);
-	if (!rnlen) {
-		xs_warning("%s: Invalid resource syntax, missing resource "
-		    "name", where);
-		return -1;
-	}
-	while (isspace(*s))
-		s++;
-	if (*s != ':') {
-		xs_warning("%s: Invalid resource syntax, missing ':'", where);
-		return -1;
-	}
+    /* Enforce "-3270." or "-3270*" or "*". */
+    if (!strncmp(s, me_dot, me_len)) {
+	match_len = me_len;
+    } else if (!strncmp(arg, me_star, me_len)) {
+	match_len = me_len;
+    } else if (arg[0] == '*') {
+	match_len = 1;
+    } else {
+	xs_warning("%s: Invalid resource syntax '%.*s', name must begin with "
+		"'%s'", where, (int)me_len, arg, me_dot);
+	return -1;
+    }
+
+    /* Separate the parts. */
+    s = arg + match_len;
+    while (*s && *s != ':' && !isspace(*s)) {
 	s++;
-	while (isspace(*s))
-		s++;
+    }
+    rnlen = s - (arg + match_len);
+    if (!rnlen) {
+	xs_warning("%s: Invalid resource syntax, missing resource name",
+		where);
+	return -1;
+    }
+    while (isspace(*s)) {
+	s++;
+    }
+    if (*s != ':') {
+	xs_warning("%s: Invalid resource syntax, missing ':'", where);
+	return -1;
+    }
+    s++;
+    while (isspace(*s)) {
+	s++;
+    }
 
-	/* Return what we got. */
-	*left = arg + match_len;
-	*rnlenp = rnlen;
-	*right = s;
-	return 0;
+    /* Return what we got. */
+    *left = arg + match_len;
+    *rnlenp = rnlen;
+    *right = s;
+    return 0;
 }
 
 /* Read resources from a file. */
