@@ -186,9 +186,6 @@ extern int		defROWS;	/* default (EraseWrite) */
 extern int		defCOLS;
 extern int		altROWS;	/* alternate (EraseWriteAlternate) */
 extern int		altCOLS;
-#if defined(C3270) /*[*/
-extern Boolean		any_error_output;
-#endif /*]*/
 #if defined(X3270_DISPLAY) /*[*/
 extern Atom		a_3270, a_registry, a_encoding;
 extern XtAppContext	appcontext;
@@ -270,7 +267,7 @@ extern Window		root_window;
 extern char		*user_title;
 #endif /*]*/
 
-#if defined(_WIN32) && (defined(C3270) || defined(S3270)) /*[*/
+#if defined(_WIN32) /*[*/
 extern char		*instdir;
 extern char		*myappdata;
 extern char		*commonappdata;
@@ -279,9 +276,6 @@ extern char		*mydesktop;
 
 #if defined(_WIN32) /*[*/
 extern int		is_installed;
-#endif /*]*/
-#if defined(WC3270) /*[*/
-extern HWND		console_window;
 #endif /*]*/
 
 /* Data types and complex global variables */

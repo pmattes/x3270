@@ -277,7 +277,6 @@ static char *base_3270_keymap =
      "Shift <Key>RIGHT: NextWord\n";
 #endif /*]*/
 
-Boolean any_error_output = False;
 Boolean escape_pending = False;
 Boolean stop_pending = False;
 Boolean dont_return = False;

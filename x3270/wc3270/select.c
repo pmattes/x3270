@@ -40,6 +40,7 @@
 #include "appres.h"
 
 #include "actions.h"
+#include "cscreen.h"
 #include "ctlr.h"
 #include "ctlrc.h"
 #include "popups.h"

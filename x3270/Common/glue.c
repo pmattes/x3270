@@ -121,6 +121,7 @@ Boolean		exiting = False;
 char	       *command_string = NULL;
 char	       *profile_name = NULL;
 char	       *profile_path = NULL;
+Boolean		any_error_output = False;
 
 
 int
@@ -1558,8 +1559,8 @@ popup_an_error(const char *fmt, ...)
     } else {
 #if defined(C3270) /*[*/
 	screen_suspend();
-	any_error_output = True;
 #endif /*]*/
+	any_error_output = True;
 	(void) fprintf(stderr, "%s\n", vmsgbuf);
 	fflush(stderr);
 	macro_output = True;
@@ -1602,8 +1603,8 @@ action_output(const char *fmt, ...)
 	FILE *aout;
 #endif /*]*/
 
-#if defined(C3270) /*[*/
 	any_error_output = True;
+#if defined(C3270) /*[*/
 	screen_suspend();
 # if defined(WC3270) /*[*/
 	pager_output(vmsgbuf);

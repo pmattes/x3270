@@ -30,6 +30,7 @@
 /* glue for missing Xt code */
 
 #include "globals.h"
+#include "gluec.h"
 #include "appres.h"
 #include "trace.h"
 #include "util.h"
@@ -58,26 +59,25 @@ void (*Warning_redirect)(const char *) = NULL;
 void
 Error(const char *s)
 {
-	fprintf(stderr, "Error: %s\n", s);
+    fprintf(stderr, "Error: %s\n", s);
+    fflush(stderr);
 #if defined(WC3270) /*[*/
-	x3270_exit(1);
+    x3270_exit(1);
 #else /*][*/
-	exit(1);
+    exit(1);
 #endif /*]*/
 }
 
 void
 Warning(const char *s)
 {
-	if (Warning_redirect != NULL)
-		(*Warning_redirect)(s);
-	else {
-		fprintf(stderr, "Warning: %s\n", s);
-		fflush(stderr);
-	}
-#if defined(C3270) /*[*/
-	any_error_output = True;
-#endif /*]*/
+    if (Warning_redirect != NULL) {
+	(*Warning_redirect)(s);
+    } else {
+	fprintf(stderr, "Warning: %s\n", s);
+	fflush(stderr);
+    }
+    any_error_output = True;
 }
 
 static struct {

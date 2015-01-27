@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
  */
 
 /* glue.c */
+extern Boolean any_error_output;
 extern int parse_command_line(int argc, const char **argv,
     const char **cl_hostname);
 extern void parse_xrm(const char *arg, const char *where);

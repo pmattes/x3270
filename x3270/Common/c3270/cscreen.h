@@ -33,6 +33,7 @@
 extern Boolean escaped;
 #if defined(WC3270) /*[*/
 extern int windows_cp;
+extern HWND console_window;
 #endif /*]*/
 
 void screen_init(void);
