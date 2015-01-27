@@ -277,8 +277,10 @@ extern char		*commonappdata;
 extern char		*mydesktop;
 #endif /*]*/
 
-#if defined(WC3270) /*[*/
+#if defined(_WIN32) /*[*/
 extern int		is_installed;
+#endif /*]*/
+#if defined(WC3270) /*[*/
 extern HWND		console_window;
 #endif /*]*/
 

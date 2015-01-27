@@ -164,9 +164,7 @@ typedef struct {
 
     /* Interactive (x3270/c3270/wc3270) fields. */
     struct {
-#if !defined(_WIN32) /*[*/
 	Boolean	 mono;
-#endif /*]*/
 	Boolean	 reconnect;
 	Boolean	 do_confirms;
 	Boolean	 menubar;

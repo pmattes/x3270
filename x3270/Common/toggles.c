@@ -44,8 +44,7 @@
 #include "toggles.h"
 
 /* Live state of toggles. */
-typedef struct toggle {
-    Boolean value;		/* current value */
+typedef struct {
     Boolean changed;		/* has the value changed since init */
     Boolean supported;		/* is the toggle supported */
     unsigned flags;		/* miscellaneous flags */
@@ -83,7 +82,7 @@ toggle_name_t toggle_names[] = {
 static void
 do_toggle_reason(toggle_index_t ix, enum toggle_type reason)
 {
-    struct toggle *t = &toggle[ix];
+    toggle_t *t = &toggle[ix];
 
     /*
      * Change the value, call the internal update routine, and reset the
@@ -213,27 +212,6 @@ toggle_toggle(toggle_index_t ix)
 }
 
 /**
- * Set the initial set of live values from the configured values, if this
- * hasn't been done already.
- */
-static void
-toggle_setup(void)
-{
-    static Boolean setup_done = False;
-    toggle_index_t i;
-
-    if (setup_done) {
-	return;
-    }
-
-    for (i = 0; i < N_TOGGLES; i++) {
-	toggle[i].value = appres.toggle[i];
-    }
-
-    setup_done = True;
-}
-
-/**
  * Set the value of a toggle, without notifying anyone.
  *
  * @param ix	Toggle index
@@ -241,8 +219,7 @@ toggle_setup(void)
 void
 set_toggle(toggle_index_t ix, Boolean value)
 {
-    toggle_setup();
-    toggle[ix].value = value;
+    appres.toggle[ix] = value;
     toggle[ix].changed = True;
 }
 
@@ -255,8 +232,7 @@ set_toggle(toggle_index_t ix, Boolean value)
 void
 set_toggle_initial(toggle_index_t ix, Boolean value)
 {
-    toggle_setup();
-    toggle[ix].value = value;
+    appres.toggle[ix] = value;
 }
 
 /**
@@ -269,8 +245,7 @@ set_toggle_initial(toggle_index_t ix, Boolean value)
 Boolean
 toggled(toggle_index_t ix)
 {
-    toggle_setup();
-    return toggle[ix].value;
+    return appres.toggle[ix];
 }
 
 /**

@@ -72,8 +72,9 @@
 #include "macros.h"
 #include "nvt.h"
 #include "popups.h"
-#include "print_screen.h"
 #include "pr3287_session.h"
+#include "print_screen.h"
+#include "product.h"
 #include "screen.h"
 #include "selectc.h"
 #include "status.h"
@@ -1728,6 +1729,15 @@ start_auto_shortcut(void)
     exit(0);
 }
 #endif /*]*/
+
+/*
+ * Product information functions.
+ */
+Boolean
+product_has_display(void)
+{   
+    return True;
+}
 
 /**
  * c3270 main module registration.

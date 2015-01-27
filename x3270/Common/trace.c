@@ -50,6 +50,7 @@
 #include "nvt.h"
 #include "popups.h"
 #include "print_screen.h"
+#include "product.h"
 #include "save.h"
 #include "status.h"
 #include "telnet.h"
@@ -115,14 +116,6 @@ static char    *screentrace_name = NULL;
 static char    *screentrace_tmpfn;
 #endif /*]*/
 static int 	screentrace_count;
-
-#if defined(_WIN32) /*[*/
-# if defined(WC3270) /*[*/
-#  define DEFAULT_TRACE_DIR	(mydesktop? mydesktop: myappdata)
-# else /*][*/
-#  define DEFAULT_TRACE_DIR	myappdata
-# endif /*]*/
-#endif /*]*/
 
 /* Globals */
 Boolean          trace_skipping = False;
@@ -506,10 +499,8 @@ create_tracefile_header(const char *mode)
     save_yourself();
     wtrace(False, " Command: %s\n", command_string);
     wtrace(False, " Model %s, %d rows x %d cols", model_name, maxROWS, maxCOLS);
-#if defined(X3270_INTERACTIVE) && !defined(_WIN32) /*[*/
     wtrace(False, ", %s display",
 	    appres.interactive.mono? "monochrome": "color");
-#endif /*]*/
     if (appres.extended) {
 	wtrace(False, ", extended data stream");
     }
@@ -693,6 +684,64 @@ get_devfd(const char *pathname)
     return fd;
 }
 
+#if !defined(_WIN32) /*[*/
+/*
+ * Start up a window to monitor the trace file.
+ *
+ * @param[in] path	Trace file path. On Unix, this can be NULL to indicate
+ * 			that the trace is just being piped.
+ * @param[in] pipefd	Array of pipe file descriptors.
+ */
+static void
+start_trace_window(const char *path, int pipefd[])
+{
+    switch (tracewindow_pid = fork_child()) {
+    case 0:	/* child process */
+	(void) execlp("xterm", "xterm", "-title", path? path: "trace",
+		"-sb", "-e", "/bin/sh", "-c", xs_buffer("cat <&%d", pipefd[0]),
+		NULL);
+	(void) perror("exec(xterm) failed");
+	_exit(1);
+	break;
+    default:	/* parent */
+	(void) close(pipefd[0]);
+	++children;
+	break;
+    case -1:	/* error */
+	popup_an_errno(errno, "fork() failed");
+	break;
+    }
+}
+
+#else /*][*/
+/*
+ * Start up a window to monitor the trace file.
+ *
+ * @param[in] path	Trace file path.
+ */
+static void
+start_trace_window(const char *path)
+{
+    STARTUPINFO startupinfo;
+    PROCESS_INFORMATION process_information;
+
+    memset(&startupinfo, 0, sizeof(STARTUPINFO));
+    startupinfo.cb = sizeof(STARTUPINFO);
+    startupinfo.lpTitle = (char *)path;
+    memset(&process_information, 0, sizeof(PROCESS_INFORMATION));
+    if (CreateProcess(lazyaf("%scatf.exe", instdir),
+		lazyaf("\"%scatf.exe\" \"%s\"", instdir, path),
+		NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL,
+		NULL, &startupinfo, &process_information) == 0) {
+	popup_an_error("CreateProcess(%s) failed: %s", path,
+		win32_strerror(GetLastError()));
+    } else {
+	tracewindow_handle = process_information.hProcess;
+	CloseHandle(process_information.hThread);
+    }
+}
+#endif /*]*/
+
 /* Start tracing, using the specified file. */
 void
 tracefile_ok(const char *tfn)
@@ -789,73 +838,16 @@ tracefile_ok(const char *tfn)
 	}
     }
 
-#if !defined(_WIN32) /*[*/
-    /* Start the monitor window */
-    if (tracef != stdout && appres.trace_monitor) {
-	switch (tracewindow_pid = fork_child()) {
-	case 0: {	/* child process */
-	    (void) execlp("xterm", "xterm", "-title",
-		    just_piped? "trace": stfn,
-		    "-sb", "-e", "/bin/sh", "-c",
-		    xs_buffer("cat <&%d", pipefd[0]),
-		    NULL);
-	    (void) perror("exec(xterm) failed");
-	    _exit(1);
-	    break;
-	    }
-	default:	/* parent */
-	    (void) close(pipefd[0]);
-	    ++children;
-	    break;
-	case -1:	/* error */
-	    popup_an_errno(errno, "fork() failed");
-	    break;
-	}
-    }
-#endif /*]*/
-
-#if defined(_WIN32) /*[*/
     /* Start the monitor window. */
-    if (tracef != stdout && appres.trace_monitor
-#if defined(WC3270) /*[*/
-	    && is_installed
-#endif /*]*/
-	    ) {
-	STARTUPINFO startupinfo;
-	PROCESS_INFORMATION process_information;
-	char *path;
-	char *args;
-
-	(void) memset(&startupinfo, '\0', sizeof(STARTUPINFO));
-	startupinfo.cb = sizeof(STARTUPINFO);
-	startupinfo.lpTitle = stfn;
-	(void) memset(&process_information, '\0', sizeof(PROCESS_INFORMATION));
-	path = xs_buffer("%scatf.exe", instdir);
-	args = xs_buffer("\"%scatf.exe\" \"%s\"", instdir, stfn);
-	if (CreateProcess(
-	    path,
-	    args,
-	    NULL,
-	    NULL,
-	    FALSE,
-	    CREATE_NEW_CONSOLE,
-	    NULL,
-	    NULL,
-	    &startupinfo,
-	    &process_information) == 0) {
-
-	    popup_an_error("CreateProcess(%s) failed: %s",
-		    path, win32_strerror(GetLastError()));
-	    Free(path);
-	    Free(args);
-	} else {
-	    Free(path);
-	    Free(args);
-	    tracewindow_handle = process_information.hProcess;
-	    CloseHandle(process_information.hThread);
+    if (tracef != stdout && appres.trace_monitor && product_has_display()) {
+#if !defined(_WIN32) /*[*/
+	start_trace_window(just_piped? NULL: stfn, pipefd);
+#else /*][*/
+	if (is_installed) {
+	    start_trace_window(stfn);
 	}
-    }
 #endif /*]*/
+    }
 
     Free(stfn);
 
@@ -870,6 +862,18 @@ tracefile_ok(const char *tfn)
 done:
     return;
 }
+
+#if defined(_WIN32) /*[*/
+const char *
+default_trace_dir(void)
+{
+    if (product_has_display()) {
+	return mydesktop? mydesktop: myappdata;
+    } else {
+	return myappdata;
+    }
+}
+#endif /*]*/
 
 /* Open the trace file. */
 static void
@@ -895,7 +899,7 @@ tracefile_on(int reason, enum toggle_type tt)
     } else {
 #if defined(_WIN32) /*[*/
 	tracefile_buf = xs_buffer("%s%sx3trc.$UNIQUE.txt",
-		appres.trace_dir? appres.trace_dir: DEFAULT_TRACE_DIR,
+		appres.trace_dir? appres.trace_dir: default_trace_dir(),
 		appres.trace_dir? "\\": "");
 #else /*][*/
 	tracefile_buf = xs_buffer("%s/x3trc.$UNIQUE", appres.trace_dir);
@@ -1164,7 +1168,7 @@ screentrace_default_file(ptype_t ptype)
 	}
 #if defined(_WIN32) /*[*/
 	return xs_buffer("%s%sx3scr.$UNIQUE.%s",
-		appres.trace_dir? appres.trace_dir: DEFAULT_TRACE_DIR,
+		appres.trace_dir? appres.trace_dir: default_trace_dir(),
 		appres.trace_dir? "\\": "",
 		suffix);
 #else /*][*/

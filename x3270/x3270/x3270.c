@@ -61,9 +61,10 @@
 #include "macros.h"
 #include "nvt.h"
 #include "popups.h"
-#include "print_screen.h"
 #include "pr3287_session.h"
+#include "print_screen.h"
 #include "print_window.h"
+#include "product.h"
 #include "resourcesc.h"
 #include "screen.h"
 #include "selectc.h"
@@ -985,4 +986,13 @@ void
 Warning(const char *s)
 {
     XtWarning(s);
+}
+
+/*
+ * Product information functions.
+ */
+Boolean
+product_has_display(void)
+{
+    return True;
 }

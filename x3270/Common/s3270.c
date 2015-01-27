@@ -82,6 +82,7 @@ char *instdir = NULL;
 char *myappdata = NULL;
 char *commonappdata = NULL;
 char *mydesktop = NULL;
+int is_installed = 0;
 #endif /*]*/
 
 static void s3270_register(void);
@@ -113,7 +114,7 @@ main(int argc, char *argv[])
 #if defined(_WIN32) /*[*/
 	(void) get_version_info();
 	if (get_dirs(argv[0], "wc3270", &instdir, NULL, &myappdata,
-		    NULL, &commonappdata, NULL) < 0)
+		    NULL, &commonappdata, &is_installed) < 0)
 		exit(1);
 	if (sockstart() < 0)
 	    	exit(1);
