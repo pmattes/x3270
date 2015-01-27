@@ -383,6 +383,15 @@ main(int argc, char *argv[])
     }
 #endif /*]*/
 
+#if !defined(X3270_DBCS) /*[*/
+    /*
+     * Explicitly turn off DBCS, in case the library was built with it but we
+     * weren't. This can happen if the system we were built on does not support
+     * wide curses.
+     */
+    allow_dbcs = False;
+#endif /*]*/
+
     /*
      * Call the module registration functions, to build up the tables of
      * actions, options and callbacks.

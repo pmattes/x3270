@@ -25,6 +25,8 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+extern Boolean dbcs_allowed;
+
 /* EBCDIC-to-Unicode options */
 #define EUO_NONE	0x00000000	/* no options */
 #define EUO_BLANK_UNDEF	0x00000001	/* if undefined, return U+0020 */
