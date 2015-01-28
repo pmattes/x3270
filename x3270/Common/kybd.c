@@ -1518,7 +1518,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause)
 		enq_ta("Key", lazyaf("U+%04x", ucs4), NULL);
 	    } else {
 		/* APL character */
-		apl_name = KeyToAPLString(ucs4);
+		apl_name = key_to_apl_string(ucs4);
 		if (apl_name != NULL) {
 		    enq_ta("Key", lazyaf("apl_%s", apl_name), NULL);
 		} else {
@@ -4088,7 +4088,7 @@ my_string_to_key(const char *s, enum keytype *keytypep, ucs4_t *ucs4)
 	if (!strncmp(s, "apl_", 4)) {
 		int is_ge;
 
-		k = APLStringToKey(s, &is_ge);
+		k = apl_string_to_key(s, &is_ge);
 		if (is_ge)
 			*keytypep = KT_GE;
 		else

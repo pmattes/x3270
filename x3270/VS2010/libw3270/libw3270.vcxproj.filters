@@ -18,6 +18,9 @@
     <ClCompile Include="..\..\lib\w3270\actions.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270\apl.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\asprintf.c">
       <Filter>Source Files</Filter>
     </ClCompile>

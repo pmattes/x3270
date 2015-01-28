@@ -196,7 +196,7 @@ static struct {
  * Translation from APL key names to indirect APL keys.
  */
 ks_t
-APLStringToKey(const char *s, int *is_gep)
+apl_string_to_key(const char *s, int *is_gep)
 {
     int i;
 
@@ -216,7 +216,7 @@ APLStringToKey(const char *s, int *is_gep)
  * Translation from latin1 symbol to APL character name.
  */
 const char *
-KeyToAPLString(ks_t k)
+key_to_apl_string(ks_t k)
 {
     int i;
 
