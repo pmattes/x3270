@@ -104,7 +104,8 @@ fi
 /usr/bin/m4 -DXX_PRODUCT=$product -DXX_PAGENAME=$name \
     -DXX_PLATFORM=$platform -DXX_MODE=$mode -DXX_INTERACTIVE=$interactive \
     -DXX_C3270=$c3270 -DXX_S3270=$s3270 -DXX_PR3287=$pr3287 -DXX_X3270=$x3270 \
-    -DXX_DATE="$date" -DXX_VERSION_NUMBER=$version $type.m4 $source |
+    -DXX_DATE="$date" -DXX_VERSION_NUMBER=$version -DXX_CYEAR=$cyear \
+    $type.m4 $source |
  if [ -n "$outfile" ]
  then	cat >$tf
  else	cat

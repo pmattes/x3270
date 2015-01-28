@@ -435,10 +435,10 @@ main(int argc, char *argv[])
     argc = parse_command_line(argc, (const char **)argv, &cl_hostname);
 
     printf("%s\n\n"
-	    "Copyright 1989-2015 by Paul Mattes, GTRC and others.\n"
+	    "Copyright 1989-%s by Paul Mattes, GTRC and others.\n"
 	    "Type 'show copyright' for full copyright information.\n"
 	    "Type 'help' for help information.\n\n",
-	    build);
+	    build, cyear);
 
 #if defined(_WIN32) /*[*/
     /* Delete the link file, if we've been told do. */
@@ -1247,7 +1247,7 @@ copyright_dump(void)
     action_output(" ");
     action_output("%s", build);
     action_output(" ");
-    action_output("Copyright (c) 1993-2015, Paul Mattes.");
+    action_output("Copyright (c) 1993-%s, Paul Mattes.", cyear);
     action_output("Copyright (c) 1990, Jeff Sparkes.");
     action_output("Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA");
     action_output(" 30332.");

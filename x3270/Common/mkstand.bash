@@ -7,6 +7,8 @@ then	echo >&2 "usage: $0 'title' infile outfile"
 	exit 1
 fi
 
+. ./version.txt
+
 tf=/tmp/mkstand$$
 rm -f $tf
 trap "rm -f $tf" exit
@@ -20,7 +22,7 @@ trap "exit" INT QUIT HUP TERM
  </head>
  <body>
 EOF
- cat $2
+ sed "s/CYEAR/$cyear/g" $2
 cat <<EOF
  </body>
 </html>

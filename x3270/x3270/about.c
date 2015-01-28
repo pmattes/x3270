@@ -201,6 +201,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT\n\
 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY\n\
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH\n\
 DAMAGE.";
+	static char *line1 = NULL;
 
 	vd = vd;		/* make gcc happy */
 	w_prev = w_prev;	/* make gcc happy */
@@ -250,13 +251,16 @@ DAMAGE.";
 	w = left_anchor;
 	left_anchor = NULL;
 
-	MAKE_SMALL(
-"Copyright \251 1993-2015, Paul Mattes.\n\
+	if (line1 == NULL) {
+	    line1 = xs_buffer(
+"Copyright \251 1993-%s, Paul Mattes.\n\
 Copyright \251 2004-2005, Don Russell.\n\
 Copyright \251 1995, Dick Altenbern.\n\
 Copyright \251 1990, Jeff Sparkes.\n\
 Copyright \251 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA 30332.\n\
-All rights reserved.", 4);
+All rights reserved.", cyear);
+	}
+	MAKE_SMALL(line1, 4);
 	MAKE_SMALL(
 "Redistribution and use in source and binary forms, with or without\n\
 modification, are permitted provided that the following conditions\n\

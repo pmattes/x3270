@@ -54,6 +54,7 @@ cat <<EOF
 const char *app = "$app";
 const char *build = "$app v$version $builddate $user";
 const char *app_defaults_version = "$adversion";
+const char *cyear = "$cyear";
 const char sccsid[] = "@(#)$app v$version $sccsdate $user";
 
 const char *build_rpq_timestamp = "$rpq_timestamp";

@@ -146,7 +146,7 @@ XX_LINK(XX_C3270-man.html,XX_C3270`'(1)),
 XX_LINK(XX_S3270-man.html,XX_S3270`'(1)),
 XX_LINK(XX_X3270-script.html,XX_X3270-script(1))
 XX_SH(Copyright)
-Copyright`'XX_COPY()1999-2009, 2013 Paul Mattes.
+Copyright`'XX_COPY()1999-2009, XX_CYEAR Paul Mattes.
 XX_BR
 All rights reserved.
 XX_LP()

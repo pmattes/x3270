@@ -1606,7 +1606,7 @@ RFC 1646, TN3270 Extensions for LUname and Printer Selection
 XX_BR
 RFC 2355, TN3270 Enhancements
 XX_SH(Copyrights)
-Copyright`'XX_COPY()1993-2015, Paul Mattes.
+Copyright`'XX_COPY()1993-XX_CYEAR, Paul Mattes.
 XX_BR
 Copyright`'XX_COPY()2004-2005, Don Russell.
 XX_BR

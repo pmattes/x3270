@@ -87,6 +87,7 @@ main(int argc, char *argv[])
 	char buf[1024];
 	char *version = NULL;
 	char *adversion = NULL;
+	char *cyear = NULL;
 	char *user;
 	__time64_t t;
 	char *builddate;
@@ -129,6 +130,17 @@ main(int argc, char *argv[])
 
 			adversion = NewString(buf + 11);
 			q = strchr(adversion, '"');
+			if (q == NULL) {
+				fprintf(stderr,
+					"syntax error in version.txt\n");
+				return 1;
+			}
+			*q = '\0';
+		} else if (!strncmp(buf, "cyear=\"", 7)) {
+			char *q;
+
+			cyear = NewString(buf + 7);
+			q = strchr(cyear, '"');
 			if (q == NULL) {
 				fprintf(stderr,
 					"syntax error in version.txt\n");
@@ -180,6 +192,7 @@ main(int argc, char *argv[])
 		fprintf(f, "const char *app = \"%s\";\n", progname);
 		fprintf(f, "const char *build = \"%s v%s %s %s\";\n",
 			progname, version, builddate, user);
+		fprintf(f, "const char *cyear = \"%s\";\n", cyear);
 		fprintf(f, "const char *app_defaults_version = \"%s\";\n",
 			adversion);
 		fprintf(f, "static char sccsid[] = \"@(#)%s v%s %s %s\";\n",

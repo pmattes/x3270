@@ -77,6 +77,7 @@ typedef unsigned short ebc_t;
 
 extern const char *app;
 extern const char *build;
+extern const char *cyear;
 
 /*
  *  * Compiler-specific #defines.

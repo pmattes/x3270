@@ -2,4 +2,4 @@
 
 . ./version.txt
 
-sed -e "s/%VERSION%/$version/g"
+sed -e "s/%VERSION%/$version/g" -e "s/%CYEAR%/$cyear/g"
