@@ -31,9 +31,9 @@
  */
 
 #if defined(X3270_APL) /*[*/
-KeySym APLStringToKeysym(const char *s, int *is_gep);
-const char *KeySymToAPLString(KeySym k);
+ks_t APLStringToKey(const char *s, int *is_gep);
+const char *KeyToAPLString(ks_t k);
 #else /*][*/
-#define APLStringToKeysym(s, is_gep)	NoSymbol
-#define KeySymToAPLString(k)		NULL
+#define APLStringToKey(s, is_gep)	KS_NONE
+#define KeyToAPLString(k)		NULL
 #endif

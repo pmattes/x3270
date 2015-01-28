@@ -172,9 +172,11 @@ void Warning(const char *);
 typedef char Boolean;
 # define False 0
 # define True 1
-typedef unsigned long KeySym;
-# define NoSymbol 0L
 #endif /*]*/
+
+/* A key symbol. */
+typedef unsigned long ks_t;
+#define KS_NONE 0L
 
 /* Simple global variables */
 

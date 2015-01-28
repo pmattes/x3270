@@ -104,8 +104,8 @@ enum {
 static char *pk_errmsg[] = {
 	"Missing <Key>",
 	"Unknown modifier",
-	"Missing keysym",
-	"Unknown keysym"
+	"Missing key",
+	"Unknown key"
 };
 
 static int
@@ -115,7 +115,7 @@ parse_keydef(char **str, int *ccode, int *hint)
 	char *t;
 	char *ks;
 	int flags = 0;
-	KeySym Ks;
+	ks_t Ks;
 	int xccode;
 
 	/* Check for nothing. */
@@ -205,8 +205,8 @@ parse_keydef(char **str, int *ccode, int *hint)
 			    	return PKE_USYM;
 		} else {
 		    	/* Try for a Latin-1 name. */
-		    	Ks = StringToKeysym(s);
-			if (Ks != NoSymbol)
+		    	Ks = string_to_key(s);
+			if (Ks != KS_NONE)
 			    	*ccode = (int)Ks;
 			else
 			    	return PKE_USYM;

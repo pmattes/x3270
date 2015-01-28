@@ -239,8 +239,8 @@ RemoveTimeOut(ioid_t cookie)
     }
 }
 
-KeySym
-StringToKeysym(char *s)
+ks_t
+string_to_key(char *s)
 {
-    return XStringToKeysym(s);
+    return (ks_t)XStringToKeysym(s);
 }

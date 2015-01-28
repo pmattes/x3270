@@ -149,7 +149,7 @@ parse_keydef(char **str, k_t *ccode, int *hint)
 	char *t;
 	char *ks;
 	int flags = 0;
-	KeySym Ks;
+	ks_t Ks;
 	Boolean matched = False;
 
 	ccode->key = 0;
@@ -222,15 +222,9 @@ parse_keydef(char **str, k_t *ccode, int *hint)
 		}
 	}
 	if (!matched) {
-	    	/*
-		 * Try an X11 keysym, for compatability with old c3270 keymaps. 
-		 * Note that X11 keysyms assume ISO 8859-1 Latin-1, so if we
-		 * are running in some other 8-bit locale (e.g., Latin-2),
-		 * keysyms > 0x7f will be wrong.  That's why we support
-		 * Unicode now.
-		 */
-		Ks = StringToKeysym(s);
-		if (Ks != NoSymbol) {
+	    	/* Try an HTML entity name or X11 keysym. */
+		Ks = string_to_key(s);
+		if (Ks != KS_NONE) {
 			ccode->ucs4 = Ks;
 			matched = True;
 		}

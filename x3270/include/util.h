@@ -64,8 +64,8 @@ ioid_t AddTimeOut(unsigned long msec, tofn_t);
 void RemoveTimeOut(ioid_t id);
 #endif /*]*/
 
-KeySym StringToKeysym(char *s);
-char *KeysymToString(KeySym k);
+ks_t string_to_key(char *s);
+char *key_to_string(ks_t k);
 Boolean read_resource_file(const char *filename, Boolean fatal);
 Boolean split_hier(char *label, char **base, char ***parents);
 

@@ -7,5 +7,4 @@ WS3270_OBJECTS = XtGlue.$(OBJ) gdi_print.$(OBJ) glue.$(OBJ) macros.$(OBJ) \
 	winvers.$(OBJ)
 
 # ws3270-specific header files
-WS3270_HEADERS = X11/keysym.h conf.h gdi_printc.h gluec.h readresc.h \
-	windirsc.h winversc.h
+WS3270_HEADERS = conf.h gdi_printc.h gluec.h readresc.h windirsc.h winversc.h

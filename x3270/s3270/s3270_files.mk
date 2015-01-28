@@ -6,4 +6,4 @@ S3270_OBJECTS = XtGlue.$(OBJ) glue.$(OBJ) macros.$(OBJ) readres.$(OBJ) \
 	s3270.$(OBJ)
 
 # s3270-specific header files
-S3270_HEADERS = X11/keysym.h gluec.h readresc.h
+S3270_HEADERS = gluec.h readresc.h

@@ -36,12 +36,6 @@
 
 #include "globals.h"
 
-#define XK_3270
-#if defined(X3270_APL) /*[*/
-# define XK_APL
-#endif /*]*/
-#include <X11/keysym.h>
-
 #include <fcntl.h>
 #include "3270ds.h"
 #include "appres.h"
@@ -58,6 +52,7 @@
 #include "host.h"
 #include "idle.h"
 #include "kybd.h"
+#include "latin1.h"
 #include "lazya.h"
 #include "linemode.h"
 #include "macros.h"
@@ -97,7 +92,7 @@ static Boolean key_Character(unsigned ebc, Boolean with_ge, Boolean pasting);
 static Boolean flush_ta(void);
 static void key_AID(unsigned char aid_code);
 static void kybdlock_set(unsigned int bits, const char *cause);
-static KeySym MyStringToKeysym(const char *s, enum keytype *keytypep,
+static ks_t my_string_to_key(const char *s, enum keytype *keytypep,
 	ucs4_t *ucs4);
 
 static Boolean key_WCharacter(unsigned char code[]);
@@ -111,18 +106,18 @@ unsigned char	aid = AID_NO;		/* current attention ID */
 
 /* Composite key mappings. */
 
-struct akeysym {
-	KeySym keysym;
+struct akey {
+	ks_t key;
 	enum keytype keytype;
 };
-static struct akeysym cc_first;
+static struct akey cc_first;
 static struct composite {
-	struct akeysym k1, k2;
-	struct akeysym translation;
+	struct akey k1, k2;
+	struct akey translation;
 } *composites = NULL;
 static int n_composites = 0;
 
-#define ak_eq(k1, k2)	(((k1).keysym  == (k2).keysym) && \
+#define ak_eq(k1, k2)	(((k1).key  == (k2).key) && \
 			 ((k1).keytype == (k2).keytype))
 
 typedef struct ta {
@@ -1512,7 +1507,7 @@ void
 key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause)
 {
 	register int i;
-	struct akeysym ak;
+	struct akey ak;
 
 	reset_idle_timer();
 
@@ -1523,7 +1518,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause)
 		enq_ta("Key", lazyaf("U+%04x", ucs4), NULL);
 	    } else {
 		/* APL character */
-		apl_name = KeySymToAPLString(ucs4);
+		apl_name = KeyToAPLString(ucs4);
 		if (apl_name != NULL) {
 		    enq_ta("Key", lazyaf("apl_%s", apl_name), NULL);
 		} else {
@@ -1533,7 +1528,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause)
 	    return;
 	}
 
-	ak.keysym = ucs4;
+	ak.key = ucs4;
 	ak.keytype = keytype;
 
 	switch (composing) {
@@ -1545,7 +1540,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause)
 			    ak_eq(composites[i].k2, ak))
 				break;
 		if (i < n_composites) {
-			cc_first.keysym = ucs4;
+			cc_first.key = ucs4;
 			cc_first.keytype = keytype;
 			composing = FIRST;
 			status_compose(True, ucs4, keytype);
@@ -1565,7 +1560,7 @@ key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause)
 			     ak_eq(composites[i].k2, cc_first)))
 				break;
 		if (i < n_composites) {
-			ucs4 = composites[i].translation.keysym;
+			ucs4 = composites[i].translation.key;
 			keytype = composites[i].translation.keytype;
 		} else {
 			ring_bell();
@@ -3216,7 +3211,7 @@ static Boolean
 Key_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned i;
-    KeySym k;
+    ks_t k;
     enum keytype keytype;
     ucs4_t ucs4;
 
@@ -3226,22 +3221,21 @@ Key_action(ia_t ia, unsigned argc, const char **argv)
     for (i = 0; i < argc; i++) {
 	const char *s = argv[i];
 
-	k = MyStringToKeysym(s, &keytype, &ucs4);
-	if (k == NoSymbol && !ucs4) {
-	    popup_an_error("Key: Nonexistent or invalid KeySym: %s", s);
+	k = my_string_to_key(s, &keytype, &ucs4);
+	if (k == KS_NONE && !ucs4) {
+	    popup_an_error("Key: Nonexistent or invalid name: %s", s);
 	    cancel_if_idle_command();
 	    continue;
 	}
 	if (k & ~0xff) {
 	    /*
-	     * Can't pass symbolic KeySyms that aren't in the
-	     * range 0x01..0xff.
+	     * Can't pass symbolic names that aren't in the range 0x01..0xff.
 	     */
-	    popup_an_error("Key: Invalid KeySym: %s", s);
+	    popup_an_error("Key: Invalid name: %s", s);
 	    cancel_if_idle_command();
 	    continue;
 	}
-	if (k != NoSymbol) {
+	if (k != KS_NONE) {
 	    key_UCharacter(k, keytype, IA_KEY);
 	} else {
 	    key_UCharacter(ucs4, keytype, IA_KEY);
@@ -3594,14 +3588,14 @@ emulate_uinput(const ucs4_t *ws, int xlen, Boolean pasting)
 		break;
 	    case '[':	/* APL left bracket */
 		if (pasting && appres.apl_mode) {
-			key_UCharacter(XK_Yacute, KT_GE, ia);
+			key_UCharacter(latin1_Yacute, KT_GE, ia);
 		} else {
 			key_UCharacter((unsigned char)c, KT_STD, ia);
 		}
 		break;
 	    case ']':	/* APL right bracket */
 		if (pasting && appres.apl_mode) {
-		    key_UCharacter(XK_diaeresis, KT_GE, ia);
+		    key_UCharacter(latin1_uml, KT_GE, ia);
 		} else {
 		    key_UCharacter((unsigned char)c, KT_STD, ia);
 		}
@@ -4077,13 +4071,12 @@ kybd_prime(void)
 }
 
 /*
- * Translate a keysym name to a keysym, including APL and extended
- * characters.
+ * Translate a key name to a key, including APL and extended characters.
  */
-static KeySym
-MyStringToKeysym(const char *s, enum keytype *keytypep, ucs4_t *ucs4)
+static ks_t
+my_string_to_key(const char *s, enum keytype *keytypep, ucs4_t *ucs4)
 {
-	KeySym k;
+	ks_t k;
 	int consumed;
 	enum me_fail error;
 
@@ -4095,7 +4088,7 @@ MyStringToKeysym(const char *s, enum keytype *keytypep, ucs4_t *ucs4)
 	if (!strncmp(s, "apl_", 4)) {
 		int is_ge;
 
-		k = APLStringToKeysym(s, &is_ge);
+		k = APLStringToKey(s, &is_ge);
 		if (is_ge)
 			*keytypep = KT_GE;
 		else
@@ -4104,30 +4097,30 @@ MyStringToKeysym(const char *s, enum keytype *keytypep, ucs4_t *ucs4)
 	} else
 #endif /*]*/
 	{
-		/* Look for a standard X11 keysym. */
-		k = StringToKeysym((char *)s);
+		/* Look for a standard HTML entity or X11 keysym name. */
+		k = string_to_key((char *)s);
 		*keytypep = KT_STD;
-		if (k != NoSymbol)
+		if (k != KS_NONE)
 		    	return k;
 	}
 
 	/* Look for "euro". */
 	if (!strcasecmp(s, "euro")) {
 	    	*ucs4 = 0x20ac;
-		return NoSymbol;
+		return KS_NONE;
 	}
 
 	/* Look for U+nnnn of 0xXXXX. */
 	if (!strncasecmp(s, "U+", 2) || !strncasecmp(s, "0x", 2)) {
 	    	*ucs4 = strtoul(s + 2, NULL, 16);
-		return NoSymbol;
+		return KS_NONE;
 	}
 
 	/* Look for a valid local multibyte character. */
 	*ucs4 = multibyte_to_unicode(s, strlen(s), &consumed, &error);
 	if ((size_t)consumed != strlen(s))
 	    	*ucs4 = 0;
-	return NoSymbol;
+	return KS_NONE;
 }
 
 #if defined(X3270_INTERACTIVE) /*[*/
@@ -4138,7 +4131,7 @@ build_composites(void)
     char *ln;
     char ksname[3][64];
     char junk[2];
-    KeySym k[3];
+    ks_t k[3];
     enum keytype a[3];
     int i;
     struct composite *cp;
@@ -4166,10 +4159,10 @@ while ((ln = strtok(c, "\n"))) {
     for (i = 0; i < 3; i++) {
 	ucs4_t ucs4;
 
-	k[i] = MyStringToKeysym(ksname[i], &a[i], &ucs4);
-	if (k[i] == NoSymbol) {
+	k[i] = my_string_to_key(ksname[i], &a[i], &ucs4);
+	if (k[i] == KS_NONE) {
 	    /* For now, ignore UCS4.  XXX: Fix this. */
-	    popup_an_error("Compose: Invalid KeySym: \"%s\"", ksname[i]);
+	    popup_an_error("Compose: Invalid name: \"%s\"", ksname[i]);
 	    okay = False;
 	    break;
 	}
@@ -4180,11 +4173,11 @@ while ((ln = strtok(c, "\n"))) {
     composites = (struct composite *) Realloc((char *)composites,
 	    (n_composites + 1) * sizeof(struct composite));
     cp = composites + n_composites;
-    cp->k1.keysym = k[0];
+    cp->k1.key = k[0];
     cp->k1.keytype = a[0];
-    cp->k2.keysym = k[1];
+    cp->k2.key = k[1];
     cp->k2.keytype = a[1];
-    cp->translation.keysym = k[2];
+    cp->translation.key = k[2];
     cp->translation.keytype = a[2];
     n_composites++;
 }
