@@ -33,6 +33,9 @@
     <ClCompile Include="..\..\lib\w3270\ft_cut.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270\gdi_print.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\httpd-core.c">
       <Filter>Source Files</Filter>
     </ClCompile>
