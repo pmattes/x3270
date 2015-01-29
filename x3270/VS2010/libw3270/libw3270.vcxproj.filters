@@ -48,6 +48,9 @@
     <ClCompile Include="..\..\lib\w3270\lazya.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270\linemode.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\Malloc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
