@@ -66,6 +66,9 @@
     <ClCompile Include="..\..\lib\w3270\ssl_dll.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270\tables.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\toggles.c">
       <Filter>Source Files</Filter>
     </ClCompile>
