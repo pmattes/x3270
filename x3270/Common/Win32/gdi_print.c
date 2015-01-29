@@ -46,7 +46,7 @@
 #include "resources.h"
 
 #include "fprint_screen.h"
-#include "gdi_printc.h"
+#include "gdi_print.h"
 #include "popups.h"
 #include "trace.h"
 #include "unicodec.h"

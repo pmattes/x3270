@@ -42,7 +42,7 @@
 
 #include "fprint_screen.h"
 #if defined(_WIN32) /*[*/
-# include "gdi_printc.h"
+# include "gdi_print.h"
 #endif /*]*/
 #include "trace.h"
 #include "unicodec.h"
