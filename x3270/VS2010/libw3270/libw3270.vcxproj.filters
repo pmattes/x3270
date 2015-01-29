@@ -30,7 +30,13 @@
     <ClCompile Include="..\..\lib\w3270\fprint_screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270\ft.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\ft_cut.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\w3270\ft_dft.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lib\w3270\gdi_print.c">
