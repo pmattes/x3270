@@ -18,6 +18,7 @@
     <ClCompile Include="..\..\lib\w3270stubs\popups_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\print_gui_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\product_stubs1.c" />
+    <ClCompile Include="..\..\lib\w3270stubs\save_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs1.c" />
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs2.c" />
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs3.c" />

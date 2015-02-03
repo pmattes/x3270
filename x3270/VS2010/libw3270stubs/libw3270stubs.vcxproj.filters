@@ -60,5 +60,8 @@
     <ClCompile Include="..\..\lib\w3270stubs\trace_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270stubs\save_stubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -20,12 +20,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\wc3270\actions.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wc3270\apl.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\c3270.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -38,22 +32,7 @@
     <ClCompile Include="..\wc3270\fallbacks.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\fprint_screen.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wc3270\ft.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wc3270\ft_cut.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wc3270\ft_dft.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\ft_gui.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wc3270\gdi_print.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\wc3270\glue.c">
@@ -78,9 +57,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\wc3270\kybd.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wc3270\linemode.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\wc3270\macros.c">
@@ -110,9 +86,6 @@
     <ClCompile Include="..\wc3270\relink.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\resolver.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\resources.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -131,19 +104,7 @@
     <ClCompile Include="..\wc3270\shortcut.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\snprintf.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wc3270\ssl_dll.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wc3270\tables.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\telnet.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wc3270\toggles.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\wc3270\trace.c">
@@ -161,13 +122,7 @@
     <ClCompile Include="..\wc3270\version.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\w3misc.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\windirs.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wc3270\winprint.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\wc3270\winvers.c">
@@ -180,21 +135,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\wc3270\scroll.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wc3270\bind-opt.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wc3270\favicon.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wc3270\httpd-core.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wc3270\httpd-io.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wc3270\httpd-nodes.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\wc3270\ssl_passwd_gui.c">

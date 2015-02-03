@@ -5,7 +5,7 @@ int
 main(int argc, char *argv[])
 {
     int c;
-    int i;
+    int i = 0;
 
     printf("unsigned char favicon[] = {\n");
     while ((c = getchar()) != EOF) {
