@@ -1178,11 +1178,11 @@ do_screentrace(int n)
     unsigned char c;
 
     if (n < 0) {
-	c = CG_space;
+	c = *standard_font? ' ': CG_space;
     } else if (n < 10) {
-	c = CG_0 + n;
+	c = *standard_font? ('0' + n): (CG_0 + n);
     } else {
-	c = CG_plus;
+	c = *standard_font? '+': CG_plus;
     }
 
     status_add(SCRNTRC, c, KT_STD);
