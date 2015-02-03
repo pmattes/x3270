@@ -135,11 +135,8 @@ GC screen_gc(int color);
 void screen_init(void);
 GC screen_invgc(int color);
 void screen_m3279(Boolean m3279);
-Boolean screen_new_display_charsets(const char *display_charsets,
-	const char *csnames);
 void screen_newcharset(char *csname);
-void screen_newfont(const char *fontname, Boolean do_popup,
-	Boolean is_cs);
+void screen_newfont(const char *fontname, Boolean do_popup, Boolean is_cs);
 void screen_newscheme(char *s);
 Boolean screen_obscured(void);
 void screen_preinit(void);

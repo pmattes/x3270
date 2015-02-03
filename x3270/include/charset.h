@@ -35,7 +35,6 @@
 extern Boolean charset_changed;
 extern unsigned long cgcsgid;
 extern unsigned long cgcsgid_dbcs;
-extern char *default_display_charset;
 enum cs_result { CS_OKAY, CS_NOTFOUND, CS_BAD, CS_PREREQ, CS_ILLEGAL };
 enum cs_result charset_init(const char *csname);
 const char *get_charset_name(void);

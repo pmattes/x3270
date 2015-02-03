@@ -4286,7 +4286,7 @@ unicode_to_ebcdic_dbcs(ucs4_t u)
  * Returns True for success, False for failure.
  */
 Boolean
-set_uni_dbcs(const char *csname, const char **codepage, const char **realnamep)
+set_uni_dbcs(const char *csname, const char **codepage)
 {
 #if defined(X3270_DBCS) /*[*/
     int i;
@@ -4306,9 +4306,6 @@ set_uni_dbcs(const char *csname, const char **codepage, const char **realnamep)
 	if (!strcasecmp(realname, uni16[i].name)) {
 	    cur_uni16 = &uni16[i];
 	    *codepage = uni16[i].codepage;
-	    if (realnamep != NULL) {
-		*realnamep = realname;
-	    }
 	    rc = True;
 	    break;
 	}

@@ -69,7 +69,6 @@ charset_init(const char *csname)
 #endif /*]*/
     const char *host_codepage;
     const char *cgcsgid_str;
-    const char *display_charsets;
 
 #if !defined(_WIN32) /*[*/
     setlocale(LC_ALL, "");
@@ -96,7 +95,7 @@ charset_init(const char *csname)
     set_codeset(codeset_name);
 #endif /*]*/
 
-    if (!set_uni(csname, &host_codepage, &cgcsgid_str, &display_charsets)) {
+    if (!set_uni(csname, &host_codepage, &cgcsgid_str, NULL, NULL)) {
 	return CS_NOTFOUND;
     }
     cgcsgid = strtoul(cgcsgid_str, NULL, 0);
@@ -104,7 +103,7 @@ charset_init(const char *csname)
 	cgcsgid |= 0x02b90000;
     }
 
-    if (set_uni_dbcs(csname, &cgcsgid_str, NULL) == 0) {
+    if (set_uni_dbcs(csname, &cgcsgid_str) == 0) {
 	dbcs = 1;
 	cgcsgid_dbcs = strtoul(cgcsgid_str, NULL, 0);
     }

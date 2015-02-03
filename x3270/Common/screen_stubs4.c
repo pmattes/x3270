@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012, 2014-2015 Paul Mattes.
+ * Copyright (c) 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,16 @@
  */
 
 /*
- *	display_charsets_dbcs.h
- *		Declarations for DBCS display chararacter set lookup.
+ *	screen_stubs4.c
+ *		Stubs for screen.c.
  */
-const char *lookup_display_charset_dbcs(const char *charset_name);
+
+#include "globals.h"
+
+#include "screen.h"
+
+Boolean
+screen_new_display_charsets(const char *realname, const char *csnames)
+{
+    return True; /* success */
+}

@@ -58,8 +58,8 @@ static dcd_t dcd[] = {
 };
 
 /**
- * Return the X11 display character sets for a given host character set (code
- * page).
+ * Return the X11 DBCS display character sets for a given host character set
+ * (code page).
  *
  * Does not support aliases. If the user-supplied name is an alias, then the
  * canonical name must be used instead.
@@ -70,7 +70,7 @@ static dcd_t dcd[] = {
  * is found.
  */
 const char *
-display_charset_dbcs(const char *charset_name)
+lookup_display_charset_dbcs(const char *charset_name)
 {
     int i;
 

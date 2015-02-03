@@ -51,6 +51,7 @@
 #include "Husk.h"
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
+#include <assert.h>
 #include <errno.h>
 #include <locale.h>
 #include "3270ds.h"
@@ -65,6 +66,8 @@
 #include "charset.h"
 #include "ctlrc.h"
 #include "display8.h"
+#include "display_charsets.h"
+#include "display_charsets_dbcs.h"
 #include "host.h"
 #include "keymap.h"
 #include "kybd.h"
@@ -249,6 +252,7 @@ static unsigned char blank_map[32];
 enum fallback_color { FB_WHITE, FB_BLACK };
 static enum fallback_color ibm_fb = FB_WHITE;
 
+static char *default_display_charset = "3270cg-1a,3270cg-1,iso8859-1";
 static char *required_display_charsets;
 
 #define CROSSABLE	(toggled(CROSSHAIR) && IN_3270 && \
@@ -3771,13 +3775,30 @@ split_font_list_entry(char *entry, char **menu_name, Boolean *noauto,
  *	screen_reinit(FONT_CHANGE)
  */
 Boolean
-screen_new_display_charsets(const char *display_charsets, const char *csnames)
+screen_new_display_charsets(const char *realname, const char *csnames)
 {
     char *rl;
     char *s0, *s;
     char *fontname = NULL;
     char *lff;
     Boolean font_found = False;
+    const char *display_charsets;
+    const char *dbcs_display_charsets;
+
+    /* Handle the default. */
+    if (realname == NULL) {
+	/* Handle the default. */
+	display_charsets = default_display_charset;
+    } else {
+	/* Look up the display character set(s). */
+	display_charsets = lookup_display_charset(realname);
+	assert(display_charsets != NULL);
+	dbcs_display_charsets = lookup_display_charset_dbcs(realname);
+	if (dbcs_display_charsets != NULL) {
+	    display_charsets = lazyaf("%s+%s", display_charsets,
+		    dbcs_display_charsets);
+	}
+    }
 
     /*
      * If the emulator fonts already implement those charsets, we're done.

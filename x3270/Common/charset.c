@@ -36,8 +36,6 @@
 
 #include "globals.h"
 
-#include <assert.h>
-
 #include "3270ds.h"
 #include "resources.h"
 #include "appres.h"
@@ -45,10 +43,7 @@
 #include "charset.h"
 #include "lazya.h"
 #include "popups.h"
-#if defined(X3270_DISPLAY) /*[*/
-# include "xscreen.h"
-# include "display_charsets_dbcs.h"
-#endif /*]*/
+#include "screen.h"
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 #include "utf8.h"
@@ -70,11 +65,10 @@ Boolean charset_changed = False;
 #define DEFAULT_CSET	0x00000025
 unsigned long cgcsgid = DEFAULT_CGEN | DEFAULT_CSET;
 unsigned long cgcsgid_dbcs = 0L;
-char *default_display_charset = "3270cg-1a,3270cg-1,iso8859-1";
 
 /* Statics. */
-static enum cs_result charset_init2(const char *csname, const char *codepage,
-	const char *cgcsgid, const char *display_charsets);
+static enum cs_result charset_init2(const char *csname, const char *realname,
+	const char *codepage, const char *cgcsgid, Boolean is_dbcs);
 static void set_cgcsgids(const char *spec);
 static Boolean set_cgcsgid(char *spec, unsigned long *idp);
 static void set_host_codepage(char *codepage);
@@ -93,9 +87,9 @@ charset_init(const char *csname)
     char *codeset_name;
     const char *codepage;
     const char *cgcsgid;
-    const char *display_charsets;
     const char *dbcs_cgcsgid = NULL;
     const char *realname;
+    Boolean is_dbcs;
 
 #if !defined(_WIN32) /*[*/
     /* Get all of the locale stuff right. */
@@ -127,38 +121,26 @@ charset_init(const char *csname)
 	set_cgcsgids(NULL);
 	set_host_codepage(NULL);
 	set_charset_name(NULL);
-#if defined(X3270_DISPLAY) /*[*/
-	(void) screen_new_display_charsets(default_display_charset, "us");
-#endif /*]*/
-	(void) set_uni(NULL, &codepage, &cgcsgid, &display_charsets);
-	(void) set_uni_dbcs("", NULL, NULL);
+	(void) screen_new_display_charsets(NULL, "us");
+	(void) set_uni(NULL, &codepage, &cgcsgid, NULL, NULL);
+	(void) set_uni_dbcs("", NULL);
 	return CS_OKAY;
     }
 
-    if (!set_uni(csname, &codepage, &cgcsgid, &display_charsets)) {
+    if (!set_uni(csname, &codepage, &cgcsgid, &realname, &is_dbcs)) {
 	return CS_NOTFOUND;
     }
     if (appres.sbcs_cgcsgid != NULL) {
 	cgcsgid = appres.sbcs_cgcsgid; /* override */
     }
-    if (set_uni_dbcs(csname, &dbcs_cgcsgid, &realname)) {
-#if defined(X3270_DISPLAY) /*[*/
-	const char *dbcs_display_charsets;
-#endif /*]*/
-
+    if (set_uni_dbcs(csname, &dbcs_cgcsgid)) {
 	if (appres.dbcs_cgcsgid != NULL) {
 	    dbcs_cgcsgid = appres.dbcs_cgcsgid; /* override */
 	}
 	cgcsgid = lazyaf("%s+%s", cgcsgid, dbcs_cgcsgid);
-#if defined(X3270_DISPLAY) /*[*/
-	dbcs_display_charsets = display_charset_dbcs(realname);
-	assert(dbcs_display_charsets != NULL);
-	display_charsets = lazyaf("%s+%s", display_charsets,
-		dbcs_display_charsets);
-#endif /*]*/
     }
 
-    rc = charset_init2(csname, codepage, cgcsgid, display_charsets);
+    rc = charset_init2(csname, realname, codepage, cgcsgid, is_dbcs);
     if (rc != CS_OKAY) {
 	return rc;
     }
@@ -272,48 +254,21 @@ set_charset_name(const char *csname)
 
 /* Character set init, part 2. */
 static enum cs_result
-charset_init2(const char *csname, const char *codepage, const char *cgcsgid,
-	const char *display_charsets)
+charset_init2(const char *csname, const char *realname, const char *codepage,
+	const char *cgcsgid, Boolean is_dbcs)
 {
-    const char *rcs = display_charsets;
-    int n_rcs = 0;
-    char *rcs_copy, *buf, *token;
-
-    /* Isolate the pieces. */
-    buf = rcs_copy = NewString(rcs);
-    while ((token = strtok(buf, "+")) != NULL) {
-	buf = NULL;
-	switch (n_rcs) {
-	case 0:
-	case 1:
-	    break;
-	default:
-	    popup_an_error("Extra charset value(s), ignoring");
-	    break;
-	}
-	n_rcs++;
-    }
-    Free(rcs_copy);
-
     /* Can't swap DBCS modes while connected. */
-    if (IN_3270 && (n_rcs == 2) != dbcs) {
+    if (IN_3270 && is_dbcs != dbcs) {
 	popup_an_error("Can't change DBCS modes while connected");
 	return CS_ILLEGAL;
     }
 
-#if defined(X3270_DISPLAY) /*[*/
-    if (!screen_new_display_charsets(
-		rcs? rcs: default_display_charset,
-		csname)) {
+    if (!screen_new_display_charsets(realname, csname)) {
 	return CS_PREREQ;
     }
-#else /*][*/
-    if (n_rcs > 1) {
-	dbcs = True;
-    } else {
-	dbcs = False;
-    }
-#endif /*]*/
+
+    /* Set the global DBCS mode. */
+    dbcs = is_dbcs;
 
     /* Set up the cgcsgids. */
     set_cgcsgids(cgcsgid);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2012, 2014-2015 Paul Mattes.
+ * Copyright (c) 2008-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,8 @@
  */
 
 /*
- *	display_charsets_dbcs.h
- *		Declarations for DBCS display chararacter set lookup.
+ *	display_charsets.h
+ *		Declarations for display character set lookup.
  */
-const char *lookup_display_charset_dbcs(const char *charset_name);
+
+const char *lookup_display_charset(const char *charset_name);
