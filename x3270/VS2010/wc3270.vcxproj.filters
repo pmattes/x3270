@@ -65,9 +65,6 @@
     <ClCompile Include="..\wc3270\pr3287_session.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\print_screen.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\readres.c">
       <Filter>Source Files</Filter>
     </ClCompile>

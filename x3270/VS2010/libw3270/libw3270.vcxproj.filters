@@ -69,6 +69,9 @@
     <ClCompile Include="..\..\lib\w3270\Malloc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270\print_screen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\proxy.c">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -48,6 +48,7 @@
 #include "popups.h"
 #include "print_screen.h"
 #include "print_gui.h"
+#include "product.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "util.h"
@@ -57,9 +58,6 @@
 # include <sys/stat.h>
 # include "w3misc.h"
 # include "winprint.h"
-#  if defined(WC3270) /*[*/
-#   include "screen.h"
-#  endif /*]*/
 #endif /*]*/
 
 /* Typedefs */
@@ -167,15 +165,15 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     Boolean use_string = False;
     Boolean replace = False;
     char *temp_name = NULL;
-#if defined(WS3270) /*[*/
-    unsigned opts = FPS_EVEN_IF_EMPTY | FPS_NO_DIALOG;
-#else /*][*/
     unsigned opts = FPS_EVEN_IF_EMPTY;
-#endif /*]*/
     const char *caption = NULL;
     FILE *f;
     int fd = -1;
     fps_status_t status;
+
+    if (!product_has_display()) {
+	opts |= FPS_NO_DIALOG;
+    }
 
     action_debug("PrintText", ia, argc, argv);
 
@@ -417,14 +415,14 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 #else /*][*/
     fclose(f);
     if (ptype == P_RTF) {
-# if defined(S3270) /*[*/
-	/* Run WordPad to print the file, synchronusly. */
-	start_wordpad_sync("PrintText", temp_name, name);
-	unlink(temp_name);
-# else /*][*/
-	/* Run WordPad to print the file, asynchronusly. */
-	start_wordpad_async("PrintText", temp_name, name);
-# endif /*]*/
+	if (product_has_display()) {
+	    /* Run WordPad to print the file, asynchronusly. */
+	    start_wordpad_async("PrintText", temp_name, name);
+	} else {
+	    /* Run WordPad to print the file, synchronusly. */
+	    start_wordpad_sync("PrintText", temp_name, name);
+	    unlink(temp_name);
+	}
     } else if (ptype == P_GDI) {
 	/* All done with the temp file. */
 	unlink(temp_name);
