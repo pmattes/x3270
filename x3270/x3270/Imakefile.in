@@ -33,7 +33,7 @@
  */
 
        PROGRAMS = x3270 x3270if
-LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB) -L../lib -l3270 -l3270stubs
+LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
 
 OBJ = o
 include common_files.mk x3270_files.mk
@@ -67,7 +67,7 @@ autoconf_mandir = @mandir@
 autoconf_fontinstdir = @CIFONTDIR@
     LIBX3270DIR = @LIBX3270DIR@
 EXTRA_LDOPTIONS = @LDFLAGS@
-EXTRA_LIBRARIES = @LIBS@
+EXTRA_LIBRARIES = -L../lib -l3270 -l3270stubs @LIBS@
  EXTRA_INCLUDES = @CPPFLAGS@ -I. -I../include
              CC = @CC@
         INSTALL = @INSTALL@

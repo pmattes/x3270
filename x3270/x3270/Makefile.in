@@ -78,7 +78,7 @@ fallbacks.c: mkfb X3270.xad
 	./mkfb X3270.xad $@
 
 x3270: $(OBJS1) ../lib/lib3270.a ../lib/lib3270stubs.a
-	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LIBS) -L../lib -l3270 -l3270stubs
+	$(CC) -o $@ $(OBJS1) $(LDFLAGS) -L../lib -l3270 -l3270stubs $(LIBS)
 x3270if: x3270if.o
 	$(CC) -o $@ x3270if.o $(LDFLAGS) $(LIBS)
 

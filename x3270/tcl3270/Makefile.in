@@ -72,7 +72,7 @@ fallbacks.c: mkfb X3270.xad
 	./mkfb -c X3270.xad $@
 
 tcl3270: $(OBJS1) ../lib/lib3270.a ../lib/lib3270stubs.a
-	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LIBS) -L../lib -l3270 -l3270stubs
+	$(CC) -o $@ $(OBJS1) $(LDFLAGS) -L../lib -l3270 -l3270stubs $(LIBS)
 
 ../lib/lib3270.a:
 	cd ../lib/3270 && $(MAKE) all
