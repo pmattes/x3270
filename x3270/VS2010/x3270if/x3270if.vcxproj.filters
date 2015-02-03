@@ -18,8 +18,5 @@
     <ClCompile Include="..\..\wc3270\x3270if.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wc3270\w3misc.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
