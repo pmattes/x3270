@@ -351,11 +351,13 @@ ebcdic_to_unicode(ebc_t c, unsigned char cs, unsigned flags)
 ucs4_t
 ebcdic_base_to_unicode(ebc_t c, unsigned flags)
 {
-    if (c & 0xff00)
+    if (c & 0xff00) {
 	return ebcdic_dbcs_to_unicode(c, flags);
+    }
 
-    if (c == 0x40)
+    if (c == 0x40) {
 	return 0x0020;
+    }
 
     if (c >= UT_OFFSET && c < 0xff) {
 	ebc_t uc = cur_uni->code[c - UT_OFFSET];
@@ -364,27 +366,26 @@ ebcdic_base_to_unicode(ebc_t c, unsigned flags)
 
     } else switch (c) {
 
-	case EBC_fm:
-	    return (flags & EUO_UPRIV)? UPRIV_fm: ';';
-	case EBC_dup:
-	    return (flags & EUO_UPRIV)? UPRIV_dup: '*';
-	case EBC_eo:
-#if defined(C3270) /*[*/
-	    if (flags & EUO_ASCII_BOX)
-		    return (flags & EUO_BLANK_UNDEF)? ' ': 0;
-#endif /*]*/
-	    return (flags & EUO_UPRIV)? UPRIV_eo: 0x25cf; /* solid circle */
-	case EBC_sub:
-#if defined(C3270) /*[*/
-	    if (flags & EUO_ASCII_BOX)
-		    return (flags & EUO_BLANK_UNDEF)? ' ': 0;
-#endif /*]*/
-	    return (flags & EUO_UPRIV)? UPRIV_sub: 0x25a0; /* solid block */
-	default:
-	    if (flags & EUO_BLANK_UNDEF)
-		return ' ';
-	    else
-		return 0;
+    case EBC_fm:
+	return (flags & EUO_UPRIV)? UPRIV_fm: ';';
+    case EBC_dup:
+	return (flags & EUO_UPRIV)? UPRIV_dup: '*';
+    case EBC_eo:
+	if (flags & EUO_ASCII_BOX) {
+	    return (flags & EUO_BLANK_UNDEF)? ' ': 0;
+	}
+	return (flags & EUO_UPRIV)? UPRIV_eo: 0x25cf; /* solid circle */
+    case EBC_sub:
+	if (flags & EUO_ASCII_BOX) {
+	    return (flags & EUO_BLANK_UNDEF)? ' ': 0;
+	}
+	return (flags & EUO_UPRIV)? UPRIV_sub: 0x25a0; /* solid block */
+    default:
+	if (flags & EUO_BLANK_UNDEF) {
+	    return ' ';
+	} else {
+	    return 0;
+	}
     }
 }
 
@@ -574,7 +575,7 @@ linedraw_to_unicode(ebc_t c)
 int
 apl_to_unicode(ebc_t c, unsigned flags)
 {
-	static ebc_t apl2uc[256] = {
+    static ebc_t apl2uc[256] = {
     /* 00 */	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
     /* 08 */	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
     /* 10 */	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
@@ -607,9 +608,8 @@ apl_to_unicode(ebc_t c, unsigned flags)
     /* e8 */	0x0000, 0x0000, 0x233f, 0x2340, 0x2235, 0x2296, 0x2339, 0x2355,
     /* f0 */	0x2070, 0x00b9, 0x00b2, 0x00b3, 0x2074, 0x2075, 0x2076, 0x2077,
     /* f8 */	0x2078, 0x2079, 0x0000, 0x236b, 0x2359, 0x235f, 0x234e, 0x0000
-	};
-#if defined(C3270) /*[*/
-	static ebc_t apla2uc[256] = {
+    };
+    static ebc_t apla2uc[256] = {
     /* 00 */	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
     /* 08 */	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
     /* 10 */	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
@@ -642,27 +642,27 @@ apl_to_unicode(ebc_t c, unsigned flags)
     /* e8 */	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
     /* f0 */	0x0000, 0x00b9, 0x00b2, 0x00b3, 0x0000, 0x0000, 0x0000, 0x0000,
     /* f8 */	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
-	};
-#endif /*]*/
+    };
 
-#if defined(C3270) /*[*/
-	if (flags & EUO_ASCII_BOX) {
-		if (c < 256 && apla2uc[c] != 0x0000) {
+    if (flags & EUO_ASCII_BOX) {
+	if (c < 256 && apla2uc[c] != 0x0000) {
 #if defined(_WIN32) /*[*/
-		    	/* Windows DBCS fonts make U+0080..U+00ff wide, too. */
-		    	if (apla2uc[c] > 0x7f)
-			    	return -1;
+	    /* Windows DBCS fonts make U+0080..U+00ff wide, too. */
+	    if (apla2uc[c] > 0x7f) {
+		return -1;
+	    }
 #endif /*]*/
-			return apla2uc[c];
-		} else
-			return -1;
+	    return apla2uc[c];
+	} else {
+	    return -1;
 	}
-#endif /*]*/
+    }
 
-	if (c < 256 && apl2uc[c] != 0x0000)
-	    	return apl2uc[c];
-	else
-	    	return -1;
+    if (c < 256 && apl2uc[c] != 0x0000) {
+	return apl2uc[c];
+    } else {
+	return -1;
+    }
 }
 
 /*

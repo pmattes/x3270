@@ -51,12 +51,6 @@
     <ClCompile Include="..\..\ws3270\trace.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270\unicode.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\ws3270\unicode_dbcs.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ws3270\util.c">
       <Filter>Source Files</Filter>
     </ClCompile>

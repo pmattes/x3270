@@ -25,8 +25,6 @@
     <ClCompile Include="..\..\ws3270\strtok_r.c" />
     <ClCompile Include="..\..\ws3270\telnet.c" />
     <ClCompile Include="..\..\ws3270\trace.c" />
-    <ClCompile Include="..\..\ws3270\unicode.c" />
-    <ClCompile Include="..\..\ws3270\unicode_dbcs.c" />
     <ClCompile Include="..\..\ws3270\util.c" />
     <ClCompile Include="..\..\ws3270\version.c" />
     <ClCompile Include="..\..\ws3270\windirs.c" />
