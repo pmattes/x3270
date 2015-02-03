@@ -72,6 +72,9 @@
     <ClCompile Include="..\..\lib\w3270\see.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270\sf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\snprintf.c">
       <Filter>Source Files</Filter>
     </ClCompile>

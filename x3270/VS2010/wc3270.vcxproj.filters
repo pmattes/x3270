@@ -92,9 +92,6 @@
     <ClCompile Include="..\wc3270\select.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\sf.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\shortcut.c">
       <Filter>Source Files</Filter>
     </ClCompile>
