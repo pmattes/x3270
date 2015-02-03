@@ -56,7 +56,7 @@ $(TARGET): $(OBJECTS)
 favicon.obj: favicon.c
 
 favicon.c: favicon.ico mkicon.exe
-	mkicon.exe <favicon.ico >favicon.c
+	mkicon.exe favicon.ico >favicon.c
 
 mkicon.exe: mkicon.c
 	$(CC) $(CFLAGS) /Fe$@ mkicon.c

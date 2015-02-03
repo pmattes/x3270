@@ -47,7 +47,7 @@ $(LIB3270): $(OBJS)
 favicon.o: favicon.c
 
 favicon.c: favicon.ico mkicon$(NATIVE_SFX)
-	./mkicon$(NATIVE_SFX) <favicon.ico >favicon.c
+	./mkicon$(NATIVE_SFX) favicon.ico >favicon.c
 
 mkicon$(NATIVE_SFX): mkicon.c
 	$(NATIVECC) $(CFLAGS) -o $@ mkicon.c

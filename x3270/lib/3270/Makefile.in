@@ -60,7 +60,7 @@ $(LIB3270): $(OBJS)
 favicon.o: favicon.c
 
 favicon.c: favicon.ico mkicon
-	./mkicon <favicon.ico >favicon.c
+	./mkicon favicon.ico >favicon.c
 
 mkicon: mkicon.c
 	$(CC) $(CFLAGS) -o $@ mkicon.c
