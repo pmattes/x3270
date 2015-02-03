@@ -131,7 +131,6 @@
     <ClCompile Include="..\wc3270\select.c" />
     <ClCompile Include="..\wc3270\shortcut.c" />
     <ClCompile Include="..\wc3270\ssl_passwd_gui.c" />
-    <ClCompile Include="..\wc3270\telnet.c" />
     <ClCompile Include="..\wc3270\trace.c" />
     <ClCompile Include="..\wc3270\util.c" />
     <ClCompile Include="..\wc3270\version.c" />

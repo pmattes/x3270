@@ -80,9 +80,6 @@
     <ClCompile Include="..\wc3270\shortcut.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\telnet.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\trace.c">
       <Filter>Source Files</Filter>
     </ClCompile>
