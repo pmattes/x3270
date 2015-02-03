@@ -37,9 +37,9 @@ all:
 
 include common_files.mk c3270_files.mk
 
-SOURCES = $(COMMON_SOURCES) $(HTTPD_SOURCES) $(C3270_SOURCES)
+SOURCES = $(COMMON_SOURCES) $(C3270_SOURCES)
 
-HEADERS = $(COMMON_HEADERS) $(HTTPD_HEADERS) $(C3270_HEADERS)
+HEADERS = $(COMMON_HEADERS) $(C3270_HEADERS)
 
 MISC = $(PRODUCT).man LICENSE Makefile.in README X3270.xad c3270_files.mk \
 	common_files.mk conf.h.in config.guess config.sub configure \

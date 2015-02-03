@@ -34,9 +34,9 @@ all: s3270 x3270if
 OBJ = o
 include common_files.mk s3270_files.mk
 
-SRCS = $(COMMON_SOURCES) $(HTTPD_SOURCES) $(S3270_SOURCES)
+SRCS = $(COMMON_SOURCES) $(S3270_SOURCES)
 
-VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(S3270_OBJECTS) fallbacks.o
+VOBJS = $(COMMON_OBJECTS) $(S3270_OBJECTS) fallbacks.o
 
 OBJS1 = $(VOBJS) version.o
 

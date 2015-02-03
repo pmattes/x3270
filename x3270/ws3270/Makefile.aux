@@ -36,9 +36,9 @@ all:
 
 include common_files.mk ws3270_files.mk
 
-SOURCES = $(COMMON_SOURCES) $(HTTPD_SOURCES) $(WS3270_SOURCES)
+SOURCES = $(COMMON_SOURCES) $(WS3270_SOURCES)
 
-HEADERS = $(COMMON_HEADERS) $(HTTPD_HEADERS) $(WS3270_HEADERS)
+HEADERS = $(COMMON_HEADERS) $(WS3270_HEADERS)
 
 MISC = Examples/cms_cmd.expect LICENSE.txt Makefile Msc/Makefile \
 	Msc/README.txt Msc/mkversion.c README.txt X3270.xad common_files.mk \

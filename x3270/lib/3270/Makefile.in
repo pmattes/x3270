@@ -57,8 +57,17 @@ $(LIB3270): $(OBJS)
 	$(AR) cr $@ $(OBJS)
 	ranlib $@
 
+favicon.o: favicon.c
+
+favicon.c: favicon.ico mkicon
+	./mkicon <favicon.ico >favicon.c
+
+mkicon: mkicon.c
+	$(CC) $(CFLAGS) -o $@ mkicon.c
+
 clean:
-	$(RM) *.o
+	$(RM) *.o favicon.c mkicon
+
 clobber: clean
 	$(RM) $(LIB3270)
 depend:

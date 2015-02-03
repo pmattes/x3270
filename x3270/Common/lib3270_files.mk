@@ -6,10 +6,10 @@ LIB3270_SOURCES = Malloc.c actions.c apl.c asprintf.c bind-opt.c \
 
 # Object files for lib3270.
 LIB3270_OBJECTS = Malloc.$(OBJ) actions.$(OBJ) apl.$(OBJ) asprintf.$(OBJ) \
-	bind-opt.$(OBJ) fprint_screen.$(OBJ) ft.$(OBJ) ft_cut.$(OBJ) \
-	ft_dft.$(OBJ) httpd-core.$(OBJ) httpd-io.$(OBJ) httpd-nodes.$(OBJ) \
-	lazya.$(OBJ) linemode.$(OBJ) resolver.$(OBJ) see.$(OBJ) tables.$(OBJ) \
-	toggles.$(OBJ) utf8.$(OBJ) varbuf.$(OBJ)
+	bind-opt.$(OBJ) favicon.$(OBJ) fprint_screen.$(OBJ) ft.$(OBJ) \
+	ft_cut.$(OBJ) ft_dft.$(OBJ) httpd-core.$(OBJ) httpd-io.$(OBJ) \
+	httpd-nodes.$(OBJ) lazya.$(OBJ) linemode.$(OBJ) resolver.$(OBJ) \
+	see.$(OBJ) tables.$(OBJ) toggles.$(OBJ) utf8.$(OBJ) varbuf.$(OBJ)
 
 # Header files for lib3270.
 LIB3270_HEADERS = conf.h localdefs.h

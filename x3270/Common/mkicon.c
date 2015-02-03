@@ -7,7 +7,7 @@ main(int argc, char *argv[])
     int c;
     int i;
 
-    printf("unsigned char icon[] = {\n");
+    printf("unsigned char favicon[] = {\n");
     while ((c = getchar()) != EOF) {
 	if (i && !(i % 16)) {
 	    printf("\n");
@@ -18,6 +18,6 @@ main(int argc, char *argv[])
     if ((i % 16) != 1) {
 	printf("\n");
     }
-    printf("};\nunsigned icon_size = sizeof(icon);\n");
+    printf("};\nunsigned favicon_size = sizeof(favicon);\n");
     return 0;
 }

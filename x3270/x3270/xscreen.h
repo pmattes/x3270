@@ -92,7 +92,7 @@ extern Widget	 *screen;
 extern Boolean efont_changed;
 extern char *efont_charset;
 extern Boolean efont_matches;
-extern Pixmap icon;
+extern Pixmap x3270_icon;
 extern Dimension main_width;
 extern Boolean model_changed;
 extern Boolean oversize_changed;

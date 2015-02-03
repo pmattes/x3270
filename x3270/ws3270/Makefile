@@ -38,10 +38,9 @@ CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)
 OBJ = o
 include common_files.mk ws3270_files.mk
 
-SRCS = $(COMMON_SOURCES) $(HTTPD_SOURCES) $(WS3270_SOURCES)
+SRCS = $(COMMON_SOURCES) $(WS3270_SOURCES)
 
-VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(WS3270_OBJECTS) fallbacks.o \
-	ws3270res.o
+VOBJS = $(COMMON_OBJECTS) $(WS3270_OBJECTS) fallbacks.o ws3270res.o
 
 OBJECTS = $(VOBJS) version.o
 LIBS = $(SSLLIB) -lws2_32 -lcomdlg32 -lgdi32 -lwinspool

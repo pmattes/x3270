@@ -53,8 +53,16 @@ all: $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(LIB) $(OBJECTS) -OUT:$@
 
+favicon.obj: favicon.c
+
+favicon.c: favicon.ico mkicon.exe
+	mkicon.exe <favicon.ico >favicon.c
+
+mkicon.exe: mkicon.c
+	$(CC) $(CFLAGS) /Fe$@ mkicon.c
+
 clean:
-	erase *.obj
+	erase *.obj favicon.c mkicon.exe
 
 clobber: clean
 	erase $(TARGET)

@@ -52,8 +52,8 @@
 # include "winprint.h"
 #endif /*]*/
 
-extern unsigned char icon[];
-extern unsigned icon_size;
+extern unsigned char favicon[];
+extern unsigned favicon_size;
 
 /**
  * Capture the screen image.
@@ -515,7 +515,8 @@ httpd_objects_init(void)
 	    CT_HTML, "text/html; charset=utf-8", HF_TRAILER, hn_interact);
     (void) httpd_register_dir("/3270/rest", "REST interface");
     (void) httpd_register_fixed_binary("/favicon.ico", "Browser icon",
-	    CT_BINARY, "image/vnd.microsoft.icon", HF_HIDDEN, icon, icon_size);
+	    CT_BINARY, "image/vnd.microsoft.icon", HF_HIDDEN, favicon,
+	    favicon_size);
     nhandle = httpd_register_dyn_nonterm("/3270/rest/text",
 	    "REST plain text interface", CT_TEXT, "text/plain; charset=utf-8",
 	    HF_NONE, rest_text_dyn);

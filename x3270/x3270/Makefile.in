@@ -32,9 +32,9 @@ CC = @CC@
 OBJ = o
 include common_files.mk x3270_files.mk
 
-SRCS = $(COMMON_SOURCES) $(HTTPD_SOURCES) $(X3270_SOURCES)
+SRCS = $(COMMON_SOURCES) $(X3270_SOURCES)
 
-VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(X3270_OBJECTS) fallbacks.o
+VOBJS = $(COMMON_OBJECTS) $(X3270_OBJECTS) fallbacks.o
 
 OBJS1 = $(VOBJS) version.o
 

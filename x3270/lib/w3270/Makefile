@@ -44,8 +44,16 @@ OBJS = $(LIB3270_OBJECTS) $(LIBW3270_OBJECTS)
 $(LIB3270): $(OBJS)
 	$(AR) crs $@ $(OBJS)
 
+favicon.o: favicon.c
+
+favicon.c: favicon.ico mkicon$(NATIVE_SFX)
+	./mkicon$(NATIVE_SFX) <favicon.ico >favicon.c
+
+mkicon$(NATIVE_SFX): mkicon.c
+	$(NATIVECC) $(CFLAGS) -o $@ mkicon.c
+
 clean:
-	$(RM) *.o
+	$(RM) *.o favicon.c mkicon$(NATIVE_SFX)
 
 clobber: clean
 	$(RM) $(LIB3270)

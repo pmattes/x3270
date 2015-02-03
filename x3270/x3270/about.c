@@ -238,7 +238,7 @@ DAMAGE.";
 	left_anchor = XtVaCreateManagedWidget(
 	    "icon", labelWidgetClass, about_form,
 	    XtNborderWidth, 0,
-	    XtNbitmap, icon,
+	    XtNbitmap, x3270_icon,
 	    XtNfromVert, w,
 	    XtNleft, XtChainLeft,
 	    NULL);
@@ -312,7 +312,7 @@ popup_about_config(void)
     left_anchor = XtVaCreateManagedWidget(
 	"icon", labelWidgetClass, about_form,
 	XtNborderWidth, 0,
-	XtNbitmap, icon,
+	XtNbitmap, x3270_icon,
 	XtNfromVert, w,
 	XtNleft, XtChainLeft,
 	NULL);
@@ -511,7 +511,7 @@ popup_about_status(void)
     left_anchor = XtVaCreateManagedWidget(
 	"icon", labelWidgetClass, about_form,
 	XtNborderWidth, 0,
-	XtNbitmap, icon,
+	XtNbitmap, x3270_icon,
 	XtNfromVert, w,
 	XtNleft, XtChainLeft,
 	NULL);

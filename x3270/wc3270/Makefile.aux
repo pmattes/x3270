@@ -36,9 +36,9 @@ all:
 
 include common_files.mk wc3270_files.mk
 
-SOURCES = $(COMMON_SOURCES) $(HTTPD_SOURCES) $(WC3270_SOURCES)
+SOURCES = $(COMMON_SOURCES) $(WC3270_SOURCES)
 
-HEADERS = $(COMMON_HEADERS) $(HTTPD_HEADERS) $(WC3270_HEADERS)
+HEADERS = $(COMMON_HEADERS) $(WC3270_HEADERS)
 
 MISC = LICENSE.txt Makefile Msc/Makefile Msc/README.txt Msc/mkversion.c \
 	NO-INSTALL.txt README-zip.txt X3270.xad catf.c common_files.mk \

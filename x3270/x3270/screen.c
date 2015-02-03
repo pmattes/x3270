@@ -123,7 +123,7 @@ Boolean		oversize_changed = False;
 Boolean		scheme_changed = False;
 Pixel           keypadbg_pixel;
 Boolean         flipped = False;
-Pixmap          icon;
+Pixmap          x3270_icon;
 Boolean		shifted = False;
 struct font_list *font_list = (struct font_list *) NULL;
 int             font_count = 0;
@@ -4465,8 +4465,8 @@ PA_WMProtocols_xaction(Widget w, XEvent *event, String *params,
 void
 icon_init(void)
 {
-    icon = XCreateBitmapFromData(display, root_window, (char *)x3270_bits,
-	    x3270_width, x3270_height);
+    x3270_icon = XCreateBitmapFromData(display, root_window,
+	    (char *)x3270_bits, x3270_width, x3270_height);
 
     if (appres.x3270.active_icon) {
 	Dimension iw, ih;
@@ -4508,8 +4508,8 @@ icon_init(void)
 	inv_wait_icon = XCreateBitmapFromData(display, root_window,
 		(char *)wait_bits, wait_width, wait_height);
 	XtVaSetValues(toplevel,
-		XtNiconPixmap, icon,
-		XtNiconMask, icon,
+		XtNiconPixmap, x3270_icon,
+		XtNiconMask, x3270_icon,
 		NULL);
     }
 }
@@ -4678,7 +4678,7 @@ set_aicon_label(char *l)
 static void
 flip_icon(Boolean inverted, enum mcursor_state mstate)
 {
-    Pixmap p = icon;
+    Pixmap p = x3270_icon;
 
     if (mstate == LOCKED) {
 	mstate = NORMAL;
@@ -4700,7 +4700,7 @@ flip_icon(Boolean inverted, enum mcursor_state mstate)
 	if (inverted) {
 	    p = inv_icon;
 	} else {
-	    p = icon;
+	    p = x3270_icon;
 	}
 	break;
     }
