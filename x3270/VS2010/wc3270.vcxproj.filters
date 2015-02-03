@@ -26,9 +26,6 @@
     <ClCompile Include="..\wc3270\charset.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\ctlr.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\fallbacks.c">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -27,6 +27,9 @@
     <ClCompile Include="..\..\lib\w3270\bind-opt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270\ctlr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\fprint_screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>

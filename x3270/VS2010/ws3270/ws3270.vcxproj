@@ -12,7 +12,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\ws3270\charset.c" />
-    <ClCompile Include="..\..\ws3270\ctlr.c" />
     <ClCompile Include="..\..\ws3270\fallbacks.c" />
     <ClCompile Include="..\..\ws3270\glue.c" />
     <ClCompile Include="..\..\ws3270\host.c" />
