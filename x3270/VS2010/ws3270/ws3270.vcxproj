@@ -20,7 +20,6 @@
     <ClCompile Include="..\..\ws3270\macros.c" />
     <ClCompile Include="..\..\ws3270\nvt.c" />
     <ClCompile Include="..\..\ws3270\print_screen.c" />
-    <ClCompile Include="..\..\ws3270\proxy.c" />
     <ClCompile Include="..\..\ws3270\readres.c" />
     <ClCompile Include="..\..\ws3270\resources.c" />
     <ClCompile Include="..\..\ws3270\s3270.c" />

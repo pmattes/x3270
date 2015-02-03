@@ -32,8 +32,8 @@
 
 #include "globals.h"
 #if !defined(PR3287) /*[*/
-#include "appres.h"
-#include "resources.h"
+# include "appres.h"
+# include "resources.h"
 #endif /*]*/
 
 #if !defined(_WIN32) /*[*/
@@ -41,9 +41,9 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
-#if defined(HAVE_SYS_SELECT_H) /*[*/
-#include <sys/select.h>		/* fd_set declaration */
-#endif /*]*/
+# if defined(HAVE_SYS_SELECT_H) /*[*/
+#  include <sys/select.h>	/* fd_set declaration */
+# endif /*]*/
 #endif /*]*/
 
 #include "3270ds.h"
@@ -57,7 +57,7 @@
 #include "w3misc.h"
 
 #if defined(PR3287) /*[*/
-#include "pr3287.h"
+# include "pr3287.h"
 #endif /*]*/
 
 /*
@@ -66,27 +66,27 @@
  * At some point we will add SOCKS.
  */
 enum {
-    	PT_NONE,
-    	PT_PASSTHRU,	/* Sun telnet-passthru */
-	PT_HTTP,	/* RFC 2817 CONNECT tunnel */
-	PT_TELNET,	/* 'connect host port' proxy */
-	PT_SOCKS4,	/* SOCKS version 4 (or 4A if necessary) */
-	PT_SOCKS4A,	/* SOCKS version 4A (force remote name resolution) */
- 	PT_SOCKS5,	/* SOCKS version 5 (RFC 1928) */
- 	PT_SOCKS5D,	/* SOCKS version 5 (force remote name resolution) */
-	PT_MAX
+    PT_NONE,
+    PT_PASSTHRU,/* Sun telnet-passthru */
+    PT_HTTP,	/* RFC 2817 CONNECT tunnel */
+    PT_TELNET,	/* 'connect host port' proxy */
+    PT_SOCKS4,	/* SOCKS version 4 (or 4A if necessary) */
+    PT_SOCKS4A,	/* SOCKS version 4A (force remote name resolution) */
+    PT_SOCKS5,	/* SOCKS version 5 (RFC 1928) */
+    PT_SOCKS5D,	/* SOCKS version 5 (force remote name resolution) */
+    PT_MAX
 } proxytype_t;
 
 /* proxy type names -- keep these in sync with proxytype_t! */
 char *type_name[] = {
-    	"unknown",
-	"passthru",
-	"HTTP",
-	"TELNET",
-	"SOCKS4",
-	"SOCKS4A",
-	"SOCKS5",
-	"SOCKS5D"
+    "unknown",
+    "passthru",
+    "HTTP",
+    "TELNET",
+    "SOCKS4",
+    "SOCKS4A",
+    "SOCKS5",
+    "SOCKS5D"
 };
 
 static Boolean parse_host_port(char *s, char **phost, char **pport);

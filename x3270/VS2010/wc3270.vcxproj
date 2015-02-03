@@ -127,7 +127,6 @@
     <ClCompile Include="..\wc3270\nvt_gui.c" />
     <ClCompile Include="..\wc3270\pr3287_session.c" />
     <ClCompile Include="..\wc3270\print_screen.c" />
-    <ClCompile Include="..\wc3270\proxy.c" />
     <ClCompile Include="..\wc3270\readres.c" />
     <ClCompile Include="..\wc3270\relink.c" />
     <ClCompile Include="..\wc3270\resources.c" />
