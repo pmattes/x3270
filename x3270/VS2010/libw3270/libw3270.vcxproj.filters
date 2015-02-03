@@ -60,6 +60,9 @@
     <ClCompile Include="..\..\lib\w3270\idle.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270\kybd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\lazya.c">
       <Filter>Source Files</Filter>
     </ClCompile>

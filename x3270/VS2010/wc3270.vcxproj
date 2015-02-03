@@ -118,7 +118,6 @@
     <ClCompile Include="..\wc3270\icmd.c" />
     <ClCompile Include="..\wc3270\keymap.c" />
     <ClCompile Include="..\wc3270\keypad.c" />
-    <ClCompile Include="..\wc3270\kybd.c" />
     <ClCompile Include="..\wc3270\macros.c" />
     <ClCompile Include="..\wc3270\menubar.c" />
     <ClCompile Include="..\wc3270\nvt.c" />

@@ -47,9 +47,6 @@
     <ClCompile Include="..\wc3270\keypad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\kybd.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\macros.c">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -59,6 +59,7 @@
 #include "nvt.h"
 #include "popups.h"
 #include "print_screen.h"
+#include "product.h"
 #include "screen.h"
 #include "scroll.h"
 #include "status.h"
@@ -143,9 +144,7 @@ static action_t BackSpace_action;
 static action_t BackTab_action;
 static action_t CircumNot_action;
 static action_t Clear_action;
-#if defined(X3270_INTERACTIVE) /*[*/
 static action_t Compose_action;
-#endif /*]*/
 static action_t CursorSelect_action;
 static action_t Delete_action;
 static action_t DeleteField_action;
@@ -189,9 +188,6 @@ static action_table_t kybd_actions[] = {
     { "BackTab",	BackTab_action,		ACTION_KE },
     { "CircumNot",	CircumNot_action,	ACTION_KE },
     { "Clear",		Clear_action,		ACTION_KE },
-#if defined(X3270_INTERACTIVE) /*[*/
-    { "Compose",	Compose_action,		ACTION_KE },
-#endif /*]*/
     { "CursorSelect",	CursorSelect_action,	ACTION_KE },
     { "Delete",		Delete_action,		ACTION_KE },
     { "DeleteField",	DeleteField_action,	ACTION_KE },
@@ -228,6 +224,10 @@ static action_table_t kybd_actions[] = {
     { "ToggleInsert",	ToggleInsert_action,	ACTION_KE },
     { "ToggleReverse",	ToggleReverse_action,	ACTION_KE },
     { "Up",		Up_action,		ACTION_KE }
+};
+
+static action_table_t kybd_dactions[] = {
+    { "Compose",	Compose_action,		ACTION_KE }
 };
 
 
@@ -590,6 +590,11 @@ kybd_register(void)
 
     /* Register the actions. */
     register_actions(kybd_actions, array_count(kybd_actions));
+
+    /* Register the interactive actions. */
+    if (product_has_display()) {
+	register_actions(kybd_dactions, array_count(kybd_dactions));
+    }
 
     /* Register the toggles. */
     register_toggles(toggles, array_count(toggles));
@@ -4123,7 +4128,6 @@ my_string_to_key(const char *s, enum keytype *keytypep, ucs4_t *ucs4)
 	return KS_NONE;
 }
 
-#if defined(X3270_INTERACTIVE) /*[*/
 static Boolean
 build_composites(void)
 {
@@ -4214,4 +4218,3 @@ Compose_action(ia_t ia, unsigned argc, const char **argv)
     }
     return True;
 }
-#endif /*]*/
