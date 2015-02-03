@@ -110,7 +110,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\wc3270\c3270.c" />
-    <ClCompile Include="..\wc3270\charset.c" />
     <ClCompile Include="..\wc3270\fallbacks.c" />
     <ClCompile Include="..\wc3270\ft_gui.c" />
     <ClCompile Include="..\wc3270\glue.c" />
