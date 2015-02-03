@@ -16,7 +16,6 @@
     <ClCompile Include="..\..\ws3270\fallbacks.c" />
     <ClCompile Include="..\..\ws3270\glue.c" />
     <ClCompile Include="..\..\ws3270\host.c" />
-    <ClCompile Include="..\..\ws3270\idle.c" />
     <ClCompile Include="..\..\ws3270\kybd.c" />
     <ClCompile Include="..\..\ws3270\macros.c" />
     <ClCompile Include="..\..\ws3270\nvt.c" />

@@ -118,7 +118,6 @@
     <ClCompile Include="..\wc3270\help.c" />
     <ClCompile Include="..\wc3270\host.c" />
     <ClCompile Include="..\wc3270\icmd.c" />
-    <ClCompile Include="..\wc3270\idle.c" />
     <ClCompile Include="..\wc3270\keymap.c" />
     <ClCompile Include="..\wc3270\keypad.c" />
     <ClCompile Include="..\wc3270\kybd.c" />

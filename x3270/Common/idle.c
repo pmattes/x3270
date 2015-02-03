@@ -32,25 +32,23 @@
 
 #include "globals.h"
 
-#if defined(X3270_INTERACTIVE) || defined(S3270) /*[*/
+#include <errno.h>
 
-# include <errno.h>
-
-# include "appres.h"
-# include "host.h"
-# include "idle.h"
-# include "macros.h"
-# include "popups.h"
-# include "resources.h"
-# include "trace.h"
-# include "util.h"
+#include "appres.h"
+#include "host.h"
+#include "idle.h"
+#include "macros.h"
+#include "popups.h"
+#include "resources.h"
+#include "trace.h"
+#include "util.h"
 
 /* Macros. */
-# define MSEC_PER_SEC	1000L
-# define IDLE_SEC	1L
-# define IDLE_MIN	60L
-# define IDLE_HR	(60L * 60L)
-# define IDLE_MS	(7L * IDLE_MIN * MSEC_PER_SEC)
+#define MSEC_PER_SEC	1000L
+#define IDLE_SEC	1L
+#define IDLE_MIN	60L
+#define IDLE_HR	(60L * 60L)
+#define IDLE_MS	(7L * IDLE_MIN * MSEC_PER_SEC)
 
 /* Globals. */
 Boolean idle_changed = False;
@@ -103,11 +101,11 @@ idle_init(void)
     }
 
     /* Seed the random number generator (we seem to be the only user). */
-# if defined(_WIN32) /*[*/
+#if defined(_WIN32) /*[*/
     srand((unsigned int)time(NULL));
-# else /*][*/
+#else /*][*/
     srandom(time(NULL));
-# endif /*]*/
+#endif /*]*/
 }
 
 /*
@@ -211,15 +209,15 @@ reset_idle_timer(void)
 		idle_ms_now = idle_ms;
 		if (idle_randomize) {
 			idle_ms_now = idle_ms;
-# if defined(_WIN32) /*[*/
+#if defined(_WIN32) /*[*/
 			idle_ms_now -= rand() % (idle_ms / 10L);
-# else /*][*/
+#else /*][*/
 			idle_ms_now -= random() % (idle_ms / 10L);
-# endif /*]*/
+#endif /*]*/
 		}
-# if defined(DEBUG_IDLE_TIMEOUT) /*[*/
+#if defined(DEBUG_IDLE_TIMEOUT) /*[*/
 		vtrace("Setting idle timeout to %lu\n", idle_ms_now);
-# endif /*]*/
+#endif /*]*/
 		idle_id = AddTimeOut(idle_ms_now, idle_timeout);
 		idle_ticking = True;
 	}
@@ -250,5 +248,3 @@ get_idle_timeout(void)
 {
 	return idle_timeout_string;
 }
-
-#endif /*]*/

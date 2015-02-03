@@ -47,9 +47,6 @@
     <ClCompile Include="..\wc3270\icmd.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\idle.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\keymap.c">
       <Filter>Source Files</Filter>
     </ClCompile>
