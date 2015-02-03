@@ -36,9 +36,6 @@
     <ClCompile Include="..\..\ws3270\strtok_r.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270\trace.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ws3270\util.c">
       <Filter>Source Files</Filter>
     </ClCompile>

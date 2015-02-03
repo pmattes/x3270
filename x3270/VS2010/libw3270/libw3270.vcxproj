@@ -101,6 +101,7 @@
     <ClCompile Include="..\..\lib\w3270\tables.c" />
     <ClCompile Include="..\..\lib\w3270\telnet.c" />
     <ClCompile Include="..\..\lib\w3270\toggles.c" />
+    <ClCompile Include="..\..\lib\w3270\trace.c" />
     <ClCompile Include="..\..\lib\w3270\unicode.c" />
     <ClCompile Include="..\..\lib\w3270\unicode_dbcs.c" />
     <ClCompile Include="..\..\lib\w3270\utf8.c" />

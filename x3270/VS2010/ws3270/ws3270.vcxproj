@@ -20,7 +20,6 @@
     <ClCompile Include="..\..\ws3270\resources.c" />
     <ClCompile Include="..\..\ws3270\s3270.c" />
     <ClCompile Include="..\..\ws3270\strtok_r.c" />
-    <ClCompile Include="..\..\ws3270\trace.c" />
     <ClCompile Include="..\..\ws3270\util.c" />
     <ClCompile Include="..\..\ws3270\version.c" />
     <ClCompile Include="..\..\ws3270\windirs.c" />
