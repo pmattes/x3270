@@ -45,7 +45,7 @@
 #include "cmenubar.h"
 #include "cscreen.h"
 #include "ctlrc.h"
-#include "gluec.h"
+#include "glue.h"
 #include "host.h"
 #include "keymap.h"
 #include "kybd.h"

@@ -51,14 +51,14 @@
 # include "cscreen.h"
 #endif /*]*/
 #include "ctlrc.h"
-#include "gluec.h"
+#include "glue.h"
 #include "host.h"
 #include "kybd.h"
 #include "macros.h"
 #include "nvt.h"
 #include "popups.h" /* must come before child_popups.h */
 #include "child_popups.h"
-#include "readresc.h"
+#include "readres.h"
 #include "screen.h"
 #include "selectc.h"
 #include "telnet.h"

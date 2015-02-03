@@ -68,7 +68,7 @@
 #include "charset.h"
 #include "ctlrc.h"
 #include "ft.h"
-#include "gluec.h"
+#include "glue.h"
 #include "host.h"
 #include "kybd.h"
 #include "lazya.h"

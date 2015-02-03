@@ -46,7 +46,7 @@
 #include "cscreen.h"
 #include "cstatus.h"
 #include "ctlrc.h"
-#include "gluec.h"
+#include "glue.h"
 #include "host.h"
 #include "keymap.h"
 #include "kybd.h"

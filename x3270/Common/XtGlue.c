@@ -30,7 +30,7 @@
 /* glue for missing Xt code */
 
 #include "globals.h"
-#include "gluec.h"
+#include "glue.h"
 #include "appres.h"
 #include "latin1.h"
 #include "trace.h"

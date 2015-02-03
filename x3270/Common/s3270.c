@@ -52,7 +52,7 @@
 #include "ctlrc.h"
 #include "unicodec.h"
 #include "ft.h"
-#include "gluec.h"
+#include "glue.h"
 #include "host.h"
 #include "httpd-core.h"
 #include "httpd-nodes.h"

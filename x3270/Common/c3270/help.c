@@ -35,7 +35,7 @@
 #include "resources.h"
 
 #include "actions.h"
-#include "gluec.h"
+#include "glue.h"
 #include "help.h"
 #include "popups.h"
 #include "screen.h"

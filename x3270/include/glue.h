@@ -26,7 +26,7 @@
  */
 
 /*
- *	gluec.h
+ *	glue.h
  *		Declarations for glue.c and XtGlue.c
  */
 

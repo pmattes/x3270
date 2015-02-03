@@ -31,35 +31,12 @@
  */
 
 #include "globals.h"
-#if !defined(_WIN32) /*[*/
-#include <sys/wait.h>
-#endif /*]*/
-#include <signal.h>
+
 #include <errno.h>
-#include "appres.h"
-#include "3270ds.h"
-#include "resources.h"
 
-#include "charset.h"
-#include "ctlrc.h"
-#include "gluec.h"
-#include "host.h"
-#include "kybd.h"
-#include "macros.h"
-#include "nvt.h"
-#include "popups.h"
-#include "readresc.h"
-#include "screen.h"
-#include "selectc.h"
-#include "telnet.h"
-#include "toggles.h"
-#include "trace.h"
-#include "unicodec.h"
+#include "glue.h"
+#include "readres.h"
 #include "util.h"
-
-#if defined(_WIN32) /*[*/
-#include "winversc.h"
-#endif /*]*/
 
 /*
  * Make sure a resource definition begins with the application name, then

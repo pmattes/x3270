@@ -39,7 +39,7 @@
 #include "resources.h"
 
 #include "actions.h"
-#include "gluec.h"
+#include "glue.h"
 #include "host.h"
 #include "keymap.h"
 #include "macros.h"
