@@ -131,7 +131,6 @@
     <ClCompile Include="..\wc3270\readres.c" />
     <ClCompile Include="..\wc3270\relink.c" />
     <ClCompile Include="..\wc3270\resources.c" />
-    <ClCompile Include="..\wc3270\rpq.c" />
     <ClCompile Include="..\wc3270\screen.c" />
     <ClCompile Include="..\wc3270\scroll.c" />
     <ClCompile Include="..\wc3270\select.c" />

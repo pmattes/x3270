@@ -23,7 +23,6 @@
     <ClCompile Include="..\..\ws3270\proxy.c" />
     <ClCompile Include="..\..\ws3270\readres.c" />
     <ClCompile Include="..\..\ws3270\resources.c" />
-    <ClCompile Include="..\..\ws3270\rpq.c" />
     <ClCompile Include="..\..\ws3270\sf.c" />
     <ClCompile Include="..\..\ws3270\s3270.c" />
     <ClCompile Include="..\..\ws3270\strtok_r.c" />

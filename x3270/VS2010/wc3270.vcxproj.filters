@@ -86,9 +86,6 @@
     <ClCompile Include="..\wc3270\resources.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\rpq.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -88,6 +88,7 @@
     <ClCompile Include="..\..\lib\w3270\linemode.c" />
     <ClCompile Include="..\..\lib\w3270\Malloc.c" />
     <ClCompile Include="..\..\lib\w3270\resolver.c" />
+    <ClCompile Include="..\..\lib\w3270\rpq.c" />
     <ClCompile Include="..\..\lib\w3270\see.c" />
     <ClCompile Include="..\..\lib\w3270\snprintf.c" />
     <ClCompile Include="..\..\lib\w3270\ssl_dll.c" />
