@@ -33,6 +33,9 @@
     <ClCompile Include="..\..\lib\w3270stubs\print_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270stubs\save_stubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs1.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -60,7 +63,7 @@
     <ClCompile Include="..\..\lib\w3270stubs\trace_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\save_stubs.c">
+    <ClCompile Include="..\..\lib\w3270stubs\telnet_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -26,6 +26,7 @@
     <ClCompile Include="..\..\lib\w3270stubs\select_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\ssl_passwd_gui_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\status_stubs.c" />
+    <ClCompile Include="..\..\lib\w3270stubs\telnet_gui_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\trace_gui_stubs.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
