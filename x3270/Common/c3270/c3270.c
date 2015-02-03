@@ -79,6 +79,7 @@
 #include "selectc.h"
 #include "status.h"
 #include "telnet.h"
+#include "telnet_gui.h"
 #include "toggles.h"
 #include "trace.h"
 #include "utf8.h"
@@ -521,10 +522,6 @@ main(int argc, char *argv[])
 	while (!IN_NVT && !IN_3270) {
 	    (void) process_events(True);
 	    if (!PCONNECTED) {
-		x3270_exit(1);
-	    }
-	    if (escaped) {
-		printf("Connection aborted.\n");
 		x3270_exit(1);
 	    }
 	}
@@ -1785,6 +1782,15 @@ Boolean
 product_has_display(void)
 {   
     return True;
+}
+
+/*
+ * Telnet GUI.
+ */
+void
+telnet_gui_connecting(const char *hostname, const char *portname)
+{
+    popup_an_info("Trying %s, port %s...", hostname, portname);
 }
 
 /**

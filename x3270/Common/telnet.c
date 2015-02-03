@@ -80,13 +80,11 @@
 #include "popups.h"
 #include "proxy.h"
 #include "resolver.h"
-#if defined(C3270) /*[*/
-# include "screen.h"
-#endif /*]*/
 #include "ssl_passwd_gui.h"
 #include "status.h"
 #include "telnet.h"
 #include "telnet_core.h"
+#include "telnet_gui.h"
 #include "telnet_private.h"
 #include "trace.h"
 #include "unicodec.h"
@@ -273,7 +271,7 @@ static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
 			trsp_flag[(n)] : "??")
 # define e_rsp(fn, n) (((fn) == TN3270E_DT_RESPONSE) ? e_trsp(n) : e_hrsp(n))
 
-#if defined(C3270_80_132) /*[*/
+#if !defined(_WIN32) /*[*/
 # define XMIT_ROWS	((appres.c3270.altscreen)? MODEL_2_ROWS: maxROWS)
 # define XMIT_COLS	((appres.c3270.altscreen)? MODEL_2_COLS: maxCOLS)
 #else /*][*/
@@ -486,9 +484,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
     if (numeric_host_and_port(&haddr[ix].sa, ha_len[ix], hn, sizeof(hn), pn,
 		sizeof(pn), &errmsg)) {
 	vtrace("Trying %s, port %s...\n", hn, pn);
-#if defined(C3270) /*[*/
-	popup_an_info("Trying %s, port %s...", hn, pn);
-#endif /*]*/
+	telnet_gui_connecting(hn, pn);
     }
 
     /* connect */
