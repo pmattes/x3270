@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 2008-2012, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,8 +25,8 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-ucs4_t ebcdic_dbcs_to_unicode(ebc_t e, unsigned flags);
-ebc_t unicode_to_ebcdic_dbcs(ucs4_t u);
-Boolean set_uni_dbcs(const char *csname, const char **codepage,
-	const char **realname);
-void charset_list_dbcs(void);
+/*
+ *	display_charsets_dbcs.h
+ *		Declarations for DBCS display chararacter set lookup.
+ */
+const char *display_charset_dbcs(const char *charset_name);

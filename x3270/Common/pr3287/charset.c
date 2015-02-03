@@ -104,7 +104,7 @@ charset_init(const char *csname)
 	cgcsgid |= 0x02b90000;
     }
 
-    if (set_uni_dbcs(csname, &cgcsgid_str, &display_charsets) == 0) {
+    if (set_uni_dbcs(csname, &cgcsgid_str, NULL) == 0) {
 	dbcs = 1;
 	cgcsgid_dbcs = strtoul(cgcsgid_str, NULL, 0);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 2008-2012, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,8 +25,59 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-ucs4_t ebcdic_dbcs_to_unicode(ebc_t e, unsigned flags);
-ebc_t unicode_to_ebcdic_dbcs(ucs4_t u);
-Boolean set_uni_dbcs(const char *csname, const char **codepage,
-	const char **realname);
-void charset_list_dbcs(void);
+/*
+ *	display_charsets_dbcs.c
+ *		DBCS display chararacter set lookup.
+ */
+#include "globals.h"
+
+#include "display_charsets_dbcs.h"
+
+/*
+ * Note: #undef'ing X3270_DBCS disables the ability to configure a DBCS host
+ *  codepage, but it does not disable the internal logic that supports DBCS.
+ *  Its purpose is to save space in the executable by removing the translation
+ *  tables, not by turning the code into #ifdef spaghetti.
+ */
+
+/*
+ * DBCS EBCDIC-to-Unicode translation tables.
+ */
+
+typedef struct {
+    const char *name;
+    const char *display_charset;
+} dcd_t;
+
+static dcd_t dcd[] = {
+    { "cp930",  "jisx0208.1983-0,iso10646-1" },
+    { "cp935",  "gb2312.1980-0,iso10646-1"   },
+    { "cp937",  "big5-0,iso10646-1"          },
+    { "cp1388", "gb18030.2000-1,iso10646-1"  },
+    { NULL, NULL }
+};
+
+/**
+ * Return the X11 display character sets for a given host character set (code
+ * page).
+ *
+ * Does not support aliases. If the user-supplied name is an alias, then the
+ * canonical name must be used instead.
+ *
+ * @param[in] charset_name	Canonical chararcter set name
+ *
+ * @return Comma-separated list of display character sets, or NULL if no match
+ * is found.
+ */
+const char *
+display_charset_dbcs(const char *charset_name)
+{
+    int i;
+
+    for (i = 0; dcd[i].name != NULL; i++) {
+	if (!strcasecmp(charset_name, dcd[i].name)) {
+	    return dcd[i].display_charset;
+	}
+    }
+    return NULL;
+}

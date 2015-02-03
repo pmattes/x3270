@@ -36,6 +36,8 @@
 
 #include "globals.h"
 
+#include <assert.h>
+
 #include "3270ds.h"
 #include "resources.h"
 #include "appres.h"
@@ -45,6 +47,7 @@
 #include "popups.h"
 #if defined(X3270_DISPLAY) /*[*/
 # include "xscreen.h"
+# include "display_charsets_dbcs.h"
 #endif /*]*/
 #include "unicodec.h"
 #include "unicode_dbcs.h"
@@ -92,7 +95,7 @@ charset_init(const char *csname)
     const char *cgcsgid;
     const char *display_charsets;
     const char *dbcs_cgcsgid = NULL;
-    const char *dbcs_display_charsets = NULL;
+    const char *realname;
 
 #if !defined(_WIN32) /*[*/
     /* Get all of the locale stuff right. */
@@ -138,13 +141,21 @@ charset_init(const char *csname)
     if (appres.sbcs_cgcsgid != NULL) {
 	cgcsgid = appres.sbcs_cgcsgid; /* override */
     }
-    if (set_uni_dbcs(csname, &dbcs_cgcsgid, &dbcs_display_charsets)) {
+    if (set_uni_dbcs(csname, &dbcs_cgcsgid, &realname)) {
+#if defined(X3270_DISPLAY) /*[*/
+	const char *dbcs_display_charsets;
+#endif /*]*/
+
 	if (appres.dbcs_cgcsgid != NULL) {
 	    dbcs_cgcsgid = appres.dbcs_cgcsgid; /* override */
 	}
 	cgcsgid = lazyaf("%s+%s", cgcsgid, dbcs_cgcsgid);
+#if defined(X3270_DISPLAY) /*[*/
+	dbcs_display_charsets = display_charset_dbcs(realname);
+	assert(dbcs_display_charsets != NULL);
 	display_charsets = lazyaf("%s+%s", display_charsets,
 		dbcs_display_charsets);
+#endif /*]*/
     }
 
     rc = charset_init2(csname, codepage, cgcsgid, display_charsets);
