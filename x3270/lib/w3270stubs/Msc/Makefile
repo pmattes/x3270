@@ -45,7 +45,7 @@ CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I. -I..\..\include
 
 OBJ = obj
 !INCLUDE lib3270stubs_files.mk
-!INCLUDE libe3270stubs_files.mk
+!INCLUDE libw3270stubs_files.mk
 OBJECTS = $(LIB3270STUBS_OBJECTS) $(LIBW3270STUBS_OBJECTS)
 
 all: $(TARGET)
