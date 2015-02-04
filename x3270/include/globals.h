@@ -148,11 +148,6 @@ typedef unsigned short ebc_t;
 # endif /*]*/
 #endif /*]*/
 
-/* Functions we may need to supply. */
-#if defined(NEED_STRTOK_R) /*[*/
-extern char *strtok_r(char *str, const char *sep, char **last);
-#endif /*]*/
-
 /* Stop conflicting with curses' COLS, even if we don't link with it. */
 #define COLS cCOLS
 

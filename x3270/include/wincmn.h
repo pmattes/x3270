@@ -62,9 +62,9 @@ typedef unsigned long in_addr_t;
 /*
  * Prior to VS2013, Windows did not define va_copy().
  */
-#if defined(_WIN32) && !defined(va_copy) /*[*/
-#define va_copy(to, from)	(to) = (from)
-#endif /*]*/
+# if !defined(va_copy) /*[*/
+#  define va_copy(to, from)	(to) = (from)
+# endif /*]*/
 
 /*
  * Windows snprintf/vsnprintf do not guarantee NUL termination, so we have our
@@ -109,7 +109,6 @@ int _CRTIMP __cdecl __MINGW_NOTHROW _vscprintf (const char *, __VALIST);
 /* Non-standard string function names. */
 #  define strcasecmp    _stricmp
 #  define strncasecmp   _strnicmp
-
 
 /* MSVC has no POSIX ssize_t. */
 typedef SSIZE_T ssize_t;
