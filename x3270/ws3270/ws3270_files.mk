@@ -1,9 +1,8 @@
 # ws3270-specific source files
-WS3270_SOURCES = XtGlue.c glue.c macros.c s3270.c strtok_r.c windirs.c \
-	winvers.c
+WS3270_SOURCES = XtGlue.c glue.c s3270.c strtok_r.c windirs.c winvers.c
 
-WS3270_OBJECTS = XtGlue.$(OBJ) glue.$(OBJ) macros.$(OBJ) s3270.$(OBJ) \
-	strtok_r.$(OBJ) windirs.$(OBJ) winvers.$(OBJ)
+WS3270_OBJECTS = XtGlue.$(OBJ) glue.$(OBJ) s3270.$(OBJ) strtok_r.$(OBJ) \
+	windirs.$(OBJ) winvers.$(OBJ)
 
 # ws3270-specific header files
 WS3270_HEADERS = conf.h windirsc.h winversc.h
