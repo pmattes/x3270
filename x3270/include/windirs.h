@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, Paul Mattes.
+ * Copyright (c) 2006-2009, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,14 @@
  */
 
 /*
- * 	windirsc.h
+ * 	windirs.h
  * 		Global declarations for windirs.c.
  */
 
-extern int get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
+#if !defined(_WIN32) /*[*/
+#error For Windows only
+#endif /*]*/
+
+int get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 	char **appdata, char **common_desktop, char **common_appdata,
 	int *installed);

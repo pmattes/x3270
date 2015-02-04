@@ -42,7 +42,7 @@
 
 #include <limits.h>
 
-#include "windirsc.h"
+#include "windirs.h"
 
 #define COMMAND "start explorer.exe"
 

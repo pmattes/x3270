@@ -36,9 +36,6 @@
     <ClCompile Include="..\..\ws3270\util.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270\windirs.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ws3270\xio.c">
       <Filter>Source Files</Filter>
     </ClCompile>

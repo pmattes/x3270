@@ -145,7 +145,7 @@
 #if defined(_WIN32) /*[*/
 # include "w3misc.h"
 # include "wsc.h"
-# include "windirsc.h"
+# include "windirs.h"
 #endif /*]*/
 
 #include "pr3287.h"

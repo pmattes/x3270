@@ -132,7 +132,6 @@
     <ClCompile Include="..\wc3270\ssl_passwd_gui.c" />
     <ClCompile Include="..\wc3270\util.c" />
     <ClCompile Include="..\wc3270\version.c" />
-    <ClCompile Include="..\wc3270\windirs.c" />
     <ClCompile Include="..\wc3270\xio.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

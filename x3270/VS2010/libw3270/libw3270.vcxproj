@@ -109,6 +109,7 @@
     <ClCompile Include="..\..\lib\w3270\util.c" />
     <ClCompile Include="..\..\lib\w3270\varbuf.c" />
     <ClCompile Include="..\..\lib\w3270\w3misc.c" />
+    <ClCompile Include="..\..\lib\w3270\windirs.c" />
     <ClCompile Include="..\..\lib\w3270\winprint.c" />
     <ClCompile Include="..\..\lib\w3270\winvers.c" />
     <ClCompile Include="..\..\lib\w3270\xio.c" />

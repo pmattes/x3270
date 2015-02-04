@@ -98,7 +98,7 @@
 #include "relinkc.h"
 #include "w3misc.h"
 #include "wc3270.h"
-#include "windirsc.h"
+#include "windirs.h"
 #include "winvers.h"
 #endif /*]*/
 

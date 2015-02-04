@@ -73,7 +73,7 @@
 
 #if defined(_WIN32) /*[*/
 # include "w3misc.h"
-# include "windirsc.h"
+# include "windirs.h"
 # include "winvers.h"
 #endif /*]*/
 

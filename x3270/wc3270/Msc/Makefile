@@ -55,8 +55,8 @@ LIB3270 = ..\lib\libw3270.lib
 LIBSTUBS = ..\lib\libw3270stubs.lib
 
 OBJECTS = $(VOBJS) version.obj
-WOBJECTS = $(LIB3270) wizard.obj wc3270.RES wversion.obj \
-	   shortcut.obj windirs.obj relink.obj
+WOBJECTS = $(LIB3270) wizard.obj wc3270.RES wversion.obj shortcut.obj \
+	   relink.obj
 LIBS = $(LIB3270) $(LIBSTUBS) $(SSLLIB) ws2_32.lib \
 	advapi32.lib user32.lib shell32.lib ole32.lib comdlg32.lib gdi32.lib \
 	winspool.lib
@@ -110,8 +110,8 @@ wc3270wiz.exe: $(WOBJECTS) $(LIB3270)
 catf.exe: catf.c
 	$(CC) /Fecatf.exe $(CFLAGS) catf.c
 
-ead3270.exe: ead3270.obj windirs.obj
-	$(CC) /Fe$@ $(CFLAGS) ead3270.obj windirs.obj advapi32.lib shell32.lib
+ead3270.exe: ead3270.obj $(LIB3270)
+	$(CC) /Fe$@ $(CFLAGS) ead3270.obj $(LIB3270) advapi32.lib shell32.lib
 
 ead3270.obj: ead3270.c
 	$(CC) $(CFLAGS) /c ead3270.c

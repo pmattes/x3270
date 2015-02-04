@@ -43,12 +43,14 @@ SRCS = $(COMMON_SOURCES) $(WC3270_SOURCES)
 
 VOBJS = $(COMMON_OBJECTS) $(WC3270_OBJECTS) fallbacks.o wc3270res.o
 
+LIB3270 = ../lib/libw3270.a
+LIBSTUBS = ../lib/libw3270stubs.a
+
 OBJECTS = $(VOBJS) version.o
-WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o windirs.o \
-	relink.o
+WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o relink.o
 LIBS = $(SSLLIB) -lws2_32 -lole32 -luuid -lcomdlg32 -lgdi32 -lwinspool
-SHRTLIBS = ../lib/libw3270.a -lole32 -luuid
-WIZLIBS = ../lib/libw3270.a -lole32 -luuid -lwinspool
+SHRTLIBS = -L../lib -lw3270 -lole32 -luuid
+WIZLIBS = -L../lib -lw3270 -lole32 -luuid -lwinspool
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
 PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe x3270if.exe
@@ -81,36 +83,35 @@ $(MKKEYPAD): mkkeypad.c
 wc3270res.o: wc3270.rc wc3270.ico Makefile
 	$(WINDRES) -i wc3270.rc -o wc3270res.o
 
-wc3270.exe: $(OBJECTS) Makefile ../lib/libw3270.a ../lib/libw3270stubs.a
+wc3270.exe: $(OBJECTS) Makefile $(LIB3270) $(LIBSTUBS)
 	$(CC) -o wc3270.exe $(CFLAGS) $(OBJECTS) -L../lib -lw3270 -lw3270stubs $(LIBS)
 
-../lib/libw3270.a:
+$(LIB3270):
 	cd ../lib/w3270 && $(MAKE) all
-../lib/libw3270stubs.a:
+$(LIBSTUBS):
 	cd ../lib/w3270stubs && $(MAKE) all
 
-mkshort.exe: mkshort.o shortcut.o ../lib/libw3270.a Makefile
-	$(CC) -o mkshort.exe $(CFLAGS) \
-		mkshort.o shortcut.o $(SHRTLIBS)
+mkshort.exe: mkshort.o shortcut.o $(LIB3270) Makefile
+	$(CC) -o mkshort.exe $(CFLAGS) mkshort.o shortcut.o $(SHRTLIBS)
 
 wversion.o: version.txt mkwversion.sh
 	@chmod +x mkwversion.sh version.txt
 	sh ./mkwversion.sh $(CC)
 
-wc3270wiz.exe: $(WOBJECTS) ../lib/libw3270.a
+wc3270wiz.exe: $(WOBJECTS) $(LIB3270)
 	$(CC) -o wc3270wiz.exe $(CFLAGS) $(WOBJECTS) $(WIZLIBS)
 
 catf.exe: catf.c
 	$(CC) -o catf.exe $(CFLAGS) catf.c
 
-ead3270.exe: ead3270.o windirs.o
-	$(CC) -o $@ $(CFLAGS) ead3270.o windirs.o
+ead3270.exe: ead3270.o $(LIB3270)
+	$(CC) -o $@ $(CFLAGS) ead3270.o -L../lib -lw3270
 
 ead3270.o: ead3270.c
 	$(CC) $(CFLAGS) -c ead3270.c
 
-x3270if.exe: x3270if.o ../lib/libw3270.a
-	$(CC) -o $@ $(CFLAGS) x3270if.o ../lib/libw3270.a -lws2_32
+x3270if.exe: x3270if.o $(LIB3270)
+	$(CC) -o $@ $(CFLAGS) x3270if.o -L../lib -lw3270 -lws2_32
 
 clean:
 	rm -f *.o $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c dependencies-

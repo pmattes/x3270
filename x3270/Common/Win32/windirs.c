@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, 2014 Paul Mattes.
+ * Copyright (c) 2006-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
 
 #include "globals.h"
 
-#include "windirsc.h"
+#include "windirs.h"
 
 /* Locate the desktop and appdata directories via the SHGetFolderPath API. */
 static int

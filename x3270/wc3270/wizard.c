@@ -53,7 +53,7 @@
 
 #include "winvers.h"
 #include "shortcutc.h"
-#include "windirsc.h"
+#include "windirs.h"
 #include "relinkc.h"
 
 #define LEGAL_CNAME	"ABCDEFGHIJKLMNOPQRSTUVWXYZ" \
