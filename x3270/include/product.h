@@ -33,4 +33,5 @@
  *		default value.
  */
 
-Boolean product_has_display(void); /* default False */
+Boolean product_has_display(void); 			/* default False */
+const char *product_specific_build_options(void);	/* default NULL */

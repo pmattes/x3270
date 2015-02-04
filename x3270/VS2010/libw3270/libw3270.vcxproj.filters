@@ -117,6 +117,9 @@
     <ClCompile Include="..\..\lib\w3270\utf8.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270\util.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\varbuf.c">
       <Filter>Source Files</Filter>
     </ClCompile>

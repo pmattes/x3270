@@ -1794,6 +1794,30 @@ telnet_gui_connecting(const char *hostname, const char *portname)
 }
 
 /**
+ * Build options.
+ *
+ * @return Product-specific build options string, beginning with a space.
+ */
+const char *
+product_specific_build_options(void)
+{
+    return
+#if defined(HAVE_LIBREADLINE) /*[*/
+	    " --with-readline"
+#else /*][*/
+	    " --without-readline"
+#endif /*]*/
+#if !defined(_WIN32) /*[*/
+# if defined(CURSES_WIDE) /*[*/
+	    " --with-curses-wide"
+# else /*][*/
+	    " --without-curses-wide"
+# endif /*]*/
+#endif /*]*/
+	    ;
+}
+
+/**
  * c3270 main module registration.
  */
 static void

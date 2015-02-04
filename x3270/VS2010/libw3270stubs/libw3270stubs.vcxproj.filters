@@ -33,6 +33,9 @@
     <ClCompile Include="..\..\lib\w3270stubs\product_stubs1.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270stubs\product_stubs2.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270stubs\print_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>

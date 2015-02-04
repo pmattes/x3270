@@ -105,6 +105,7 @@
     <ClCompile Include="..\..\lib\w3270\unicode.c" />
     <ClCompile Include="..\..\lib\w3270\unicode_dbcs.c" />
     <ClCompile Include="..\..\lib\w3270\utf8.c" />
+    <ClCompile Include="..\..\lib\w3270\util.c" />
     <ClCompile Include="..\..\lib\w3270\varbuf.c" />
     <ClCompile Include="..\..\lib\w3270\w3misc.c" />
     <ClCompile Include="..\..\lib\w3270\winprint.c" />

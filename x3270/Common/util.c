@@ -41,14 +41,10 @@
 #if !defined(PR3287) /*[*/
 # include "resources.h"
 #endif /*]*/
-#if defined(WC3270) /*[*/
-# include "appres.h"
-# include "screen.h"
-# include "cscreen.h"
-#endif /*]*/
 #include "asprintf.h"
 #include "charset.h"
 #include "lazya.h"
+#include "product.h"
 #include "varbuf.h"
 
 #include "util.h"
@@ -814,56 +810,51 @@ split_hier(char *label, char **base, char ***parents)
 const char *
 build_options(void)
 {
-    	return "Build options:"
+    const char *p = product_specific_build_options();
+
+    if (p == NULL) {
+	p = "";
+    }
+
+    return lazyaf("%s%s%s",
+	    "Build options:"
 #if defined(X3270_APL) /*[*/
-		" --enable-apl"
+	    " --enable-apl"
 #else /*][*/
-		" --disable-apl"
+	    " --disable-apl"
 #endif /*]*/
 #if defined(X3270_DBCS) /*[*/
-		" --enable-dbcs"
+	    " --enable-dbcs"
 #else /*][*/
-		" --disable-dbcs"
+	    " --disable-dbcs"
 #endif /*]*/
 #if defined(X3270_LOCAL_PROCESS) /*[*/
-		" --enable-local-process"
+	    " --enable-local-process"
 #else /*][*/
-		" --disable-local-process"
+	    " --disable-local-process"
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
-		" --with-ssl"
+	    " --with-ssl"
 #else /*][*/
-		" --without-ssl"
+	    " --without-ssl"
 #endif /*]*/
-#if defined(C3270) /*[*/
-# if defined(HAVE_LIBREADLINE) /*[*/
-		" --with-readline"
-# else /*][*/
-		" --without-readline"
-# endif /*]*/
-# if !defined(_WIN32) /*[*/
-#  if defined(CURSES_WIDE) /*[*/
-		" --with-curses-wide"
-#  else /*][*/
-		" --without-curses-wide"
-#  endif /*]*/
-# endif /*]*/
-#endif /*]*/
+	    , p,
+
 #if defined(USE_ICONV) /*[*/
-		" --with-iconv"
+	    " --with-iconv"
 #endif /*]*/
 #if defined(_MSC_VER) /*[*/
-		" via MSVC " xstr(_MSC_VER)
+	    " via MSVC " xstr(_MSC_VER)
 #endif /*]*/
 #if defined(__GNUC__) /*[*/
-		" via gcc " __VERSION__
+	    " via gcc " __VERSION__
 #endif /*]*/
 #if defined(__LP64__) || defined(__LLP64__) /*[*/
-		" 64-bit"
+	    " 64-bit"
 #else /*][*/
-		" 32-bit"
+	    " 32-bit"
 #endif /*]*/
-		;
+	    );
 }
 
 void
