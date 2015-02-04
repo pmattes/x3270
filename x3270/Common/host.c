@@ -1069,7 +1069,8 @@ save_recent(const char *hn)
 		    ctime(&t), build);
 	    for (h = hosts; h != NULL; h = h->next) {
 		if (h->entry_type == RECENT) {
-		    (void) fprintf(lcf, "%lu %s\n", h->connect_time, h->name);
+		    (void) fprintf(lcf, "%lu %s\n",
+			    (unsigned long)h->connect_time, h->name);
 		}
 	    }
 	    fclose(lcf);
