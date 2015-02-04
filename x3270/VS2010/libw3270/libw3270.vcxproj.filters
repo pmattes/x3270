@@ -33,6 +33,9 @@
     <ClCompile Include="..\..\lib\w3270\ctlr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270\favicon.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\fprint_screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -129,7 +132,7 @@
     <ClCompile Include="..\..\lib\w3270\winprint.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\favicon.c">
+    <ClCompile Include="..\..\lib\w3270\xio.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -191,9 +191,7 @@ xio_register(void)
 {
     static action_table_t xio_actions[] = {
 	{ "Quit",		Quit_action,	ACTION_KE },
-#if defined(C3270) /*[*/
 	{ "Exit",		Quit_action,	ACTION_KE }
-#endif /*]*/
     };
 
     /* Register our actions. */
