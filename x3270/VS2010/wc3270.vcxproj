@@ -114,7 +114,6 @@
     <ClCompile Include="..\wc3270\ft_gui.c" />
     <ClCompile Include="..\wc3270\glue.c" />
     <ClCompile Include="..\wc3270\help.c" />
-    <ClCompile Include="..\wc3270\host.c" />
     <ClCompile Include="..\wc3270\icmd.c" />
     <ClCompile Include="..\wc3270\keymap.c" />
     <ClCompile Include="..\wc3270\keypad.c" />

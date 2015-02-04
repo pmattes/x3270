@@ -18,6 +18,9 @@
     <ClCompile Include="..\..\lib\w3270stubs\ft_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270stubs\host_gui_stubs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270stubs\menubar_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>

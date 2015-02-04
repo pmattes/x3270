@@ -35,9 +35,6 @@
     <ClCompile Include="..\wc3270\help.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\host.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\icmd.c">
       <Filter>Source Files</Filter>
     </ClCompile>

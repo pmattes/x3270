@@ -38,16 +38,15 @@
 
 #include "actions.h"
 #include "host.h"
+#include "host_gui.h"
 #include "macros.h"
 #include "popups.h"
+#include "product.h"
 #include "telnet.h"
 #include "telnet_core.h"
 #include "trace.h"
 #include "util.h"
 #include "xio.h"
-#if defined(X3270_DISPLAY) /*[*/
-# include "xpopups.h"
-#endif /*]*/
 
 #include <errno.h>
 
@@ -75,30 +74,19 @@ char	       *reconnect_host = NULL;
 char	       *qualified_host = NULL;
 
 struct host *hosts = NULL;
-#if defined(X3270_INTERACTIVE) /*[*/
 static struct host *last_host = NULL;
-#endif /*]*/
 static Boolean auto_reconnect_inprogress = False;
 static iosrc_t net_sock = INVALID_IOSRC;
-#if defined(X3270_INTERACTIVE) /*[*/
 static ioid_t reconnect_id = NULL_IOID;
-#endif /*]*/
 
-#if defined(X3270_DISPLAY) /*[*/
 static void save_recent(const char *);
-#endif /*]*/
 
-#if defined(X3270_INTERACTIVE) /*[*/
 static void try_reconnect(ioid_t id);
-#endif /*]*/
 
 static action_t Connect_action;
 static action_t Disconnect_action;
-#if defined(X3270_INTERACTIVE) /*[*/
 static action_t Reconnect_action;
-#endif /*]*/
 
-#if defined(X3270_INTERACTIVE) /*[*/
 static char *
 stoken(char **s)
 {
@@ -121,7 +109,6 @@ stoken(char **s)
     *s = ss;
     return r;
 }
-#endif /*]*/
 
 /*
  * Read the hosts file.
@@ -129,11 +116,15 @@ stoken(char **s)
 static void
 read_hosts_file(void)
 {
-#if defined(X3270_INTERACTIVE) /*[*/
     FILE *hf;
     char buf[1024];
     struct host *h;
     char *hostfile_name;
+
+    /* This only applies to emulators with displays. */
+    if (!product_has_display()) {
+	return;
+    }
 
     hostfile_name = appres.hostsfile;
     if (hostfile_name == NULL) {
@@ -205,13 +196,10 @@ read_hosts_file(void)
     }
     Free(hostfile_name);
 
-# if defined(X3270_DISPLAY) /*[*/
     /*
      * Read the recent-connection file, and prepend it to the hosts list.
      */
     save_recent(NULL);
-# endif /*]*/
-#endif /*]*/
 }
 
 /**
@@ -221,17 +209,11 @@ void
 host_register(void)
 {
     static action_table_t host_actions[] = {
-#if defined(C3270) /*[*/
 	{ "Close",	Disconnect_action,	ACTION_KE },
-#endif /*]*/
 	{ "Connect",	Connect_action,		ACTION_KE },
 	{ "Disconnect",	Disconnect_action,	ACTION_KE },
-#if defined(C3270) /*[*/
 	{ "Open",	Connect_action,		ACTION_KE },
-#endif /*]*/
-#if defined(X3270_INTERACTIVE) /*[*/
 	{ "Reconnect",	Reconnect_action,	ACTION_KE }
-#endif /*]*/
     };
 
     register_actions(host_actions, array_count(host_actions));
@@ -647,10 +629,8 @@ host_connect(const char *n)
     /* Remember this hostname, as the last hostname we connected to. */
     Replace(reconnect_host, NewString(nb));
 
-#if defined(X3270_DISPLAY) /*[*/
     /* Remember this hostname in the recent connection list and file. */
     save_recent(nb);
-#endif /*]*/
 
 #if defined(LOCAL_PROCESS) /*[*/
     if ((localprocess_cmd = parse_localprocess(nb)) != NULL) {
@@ -724,18 +704,12 @@ host_connect(const char *n)
     net_sock = net_connect(chost, port, localprocess_cmd != NULL, &resolving,
 	    &pending);
     if (net_sock == INVALID_IOSRC && !resolving) {
-#if defined(X3270_INTERACTIVE) /*[*/
-# if defined(X3270_DISPLAY) /*[*/
-	if (appres.once) {
-	    /* Exit when the error pop-up pops down. */
-	    exiting = True;
-	} else
-# endif /*]*/
+	if (!host_gui_connect()) {
 	    if (appres.interactive.reconnect) {
 		auto_reconnect_inprogress = True;
 		reconnect_id = AddTimeOut(RECONNECT_ERR_MS, try_reconnect);
 	    }
-#endif /*]*/
+	}
 	/* Redundantly signal a disconnect. */
 	st_changed(ST_CONNECT, False);
 	goto failure;
@@ -768,11 +742,7 @@ host_connect(const char *n)
     } else {
 	cstate = CONNECTED_INITIAL;
 	st_changed(ST_CONNECT, True);
-#if defined(X3270_DISPLAY) /*[*/
-	if (appres.interactive.reconnect && error_popup_visible()) {
-	    popdown_an_error();
-	}
-#endif /*]*/
+	host_gui_connect_initial();
     }
 
 success:
@@ -788,7 +758,6 @@ failure:
     return False;
 }
 
-#if defined(X3270_INTERACTIVE) /*[*/
 /*
  * Reconnect to the last host.
  */
@@ -825,7 +794,6 @@ host_cancel_reconnect(void)
 	auto_reconnect_inprogress = False;
     }
 }
-#endif /*]*/
 
 void
 host_disconnect(Boolean failed)
@@ -837,19 +805,7 @@ host_disconnect(Boolean failed)
     x_remove_input();
     net_disconnect();
     net_sock = INVALID_IOSRC;
-#if defined(X3270_INTERACTIVE) /*[*/
-# if defined(X3270_DISPLAY) /*[*/
-    if (appres.once) {
-	if (error_popup_visible()) {
-	    /* If there is an error pop-up, exit when it pops down. */
-	    exiting = True;
-	} else {
-	    /* Exit now. */
-	    x3270_exit(0);
-	    return;
-	}
-    } else
-# endif /*]*/
+    if (!host_gui_disconnect()) {
 	if (appres.interactive.reconnect && !auto_reconnect_inprogress) {
 	    /* Schedule an automatic reconnection. */
 	    auto_reconnect_inprogress = True;
@@ -857,7 +813,7 @@ host_disconnect(Boolean failed)
 					      RECONNECT_MS,
 		  try_reconnect);
 	}
-#endif /*]*/
+    }
 
     /*
      * Remember a disconnect from NVT mode, to keep screen tracing
@@ -891,12 +847,7 @@ host_connected(void)
 {
     cstate = CONNECTED_INITIAL;
     st_changed(ST_CONNECT, True);
-
-#if defined(X3270_DISPLAY) /*[*/
-    if (appres.interactive.reconnect && error_popup_visible()) {
-	popdown_an_error();
-    }
-#endif /*]*/
+    host_gui_connected();
 }
 
 /* Swap out net_sock. */
@@ -911,7 +862,6 @@ host_newfd(iosrc_t s)
     x_add_input(net_sock);
 }
 
-#if defined(X3270_DISPLAY) /*[*/
 /* Comparison function for the qsort. */
 static int
 host_compare(const void *e1, const void *e2)
@@ -935,7 +885,6 @@ host_compare(const void *e1, const void *e2)
 #endif /*]*/
     return r;
 }
-#endif /*]*/
 
 #if defined(CFDEBUG) /*[*/
 static void
@@ -950,7 +899,6 @@ dump_array(const char *when, struct host **array, int nh)
 }
 #endif /*]*/
 
-#if defined(X3270_DISPLAY) /*[*/
 /* Save the most recent host in the recent host list. */
 static void
 save_recent(const char *hn)
@@ -1068,14 +1016,14 @@ save_recent(const char *hn)
 	Boolean delete = False;
 
 	if (n_recent >= MAX_RECENT) {
-	    delete = TRUE;
+	    delete = True;
 	} else {
 	    int j;
 
 	    for (j = nih; j < i; j++) {
 		if (h_array[j] != NULL &&
 			!strcmp(h_array[i]->name, h_array[j]->name)) {
-		    delete = TRUE;
+		    delete = True;
 		    break;
 		}
 	    }
@@ -1131,7 +1079,6 @@ save_recent(const char *hn)
 	Free(lcf_name);
     }
 }
-#endif /*]*/
 
 /* Support for state change callbacks. */
 
@@ -1201,7 +1148,6 @@ Connect_action(ia_t ia, unsigned argc, const char **argv)
     return True;
 }
 
-#if defined(X3270_INTERACTIVE) /*[*/
 static Boolean
 Reconnect_action(ia_t ia, unsigned argc, const char **argv)
 {
@@ -1234,7 +1180,6 @@ Reconnect_action(ia_t ia, unsigned argc, const char **argv)
     }
     return True;
 }
-#endif /*]*/
 
 static Boolean
 Disconnect_action(ia_t ia, unsigned argc, const char **argv)

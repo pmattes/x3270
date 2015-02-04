@@ -18,9 +18,6 @@
     <ClCompile Include="..\..\ws3270\glue.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270\host.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ws3270\macros.c">
       <Filter>Source Files</Filter>
     </ClCompile>

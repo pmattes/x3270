@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\lib\w3270stubs\ft_gui_stubs.c" />
+    <ClCompile Include="..\..\lib\w3270stubs\host_gui_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\menubar_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\nvt_gui_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\popups_stubs.c" />
