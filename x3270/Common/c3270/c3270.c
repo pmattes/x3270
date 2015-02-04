@@ -1750,7 +1750,7 @@ start_html_help(void)
     system(lazyaf("start \"wc3270 Help\" \"%shtml\\README.html\"", instdir));
 
     /* Get back mouse events */
-    screen_fixup();
+    screen_system_fixup();
 }
 
 /* Start a copy of the Session Wizard. */
@@ -1770,7 +1770,7 @@ start_wizard(const char *session)
     Free(cmd);
 
     /* Get back mouse events */
-    screen_fixup();
+    screen_system_fixup();
 }
 
 #endif /*]*/

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,29 +26,20 @@
  */
 
 /*
- * 	screen.h
- * 		Declarations for screen.c.
+ *	pr3287_session_stubs.c
+ *		Stubs for pr3287 printer sessions.
  */
-extern int *char_width, *char_height;
 
-void cursor_move(int baddr);
-void blink_start(void);
-unsigned display_heightMM(void);
-unsigned display_height(void);
-unsigned display_widthMM(void);
-unsigned display_width(void);
-void mcursor_locked(void);
-void mcursor_normal(void);
-void mcursor_waiting(void);
-Boolean screen_obscured(void);
-void screen_scroll(void);
-unsigned long screen_window_number(void);
-Boolean screen_has_bg_color(void);
-void ring_bell(void);
-void screen_disp(Boolean erasing);
-void screen_80(void);
-void screen_132(void);
-void screen_flip(void);
-Boolean screen_selected(int baddr);
-Boolean screen_new_display_charsets(const char *realname, const char *csnames);
-void screen_system_fixup(void);
+#include "globals.h"
+
+#include "pr3287_session.h"
+
+void
+pr3287_session_start(const char *lu _is_unused)
+{
+}
+
+void
+pr3287_session_stop(void)
+{
+}

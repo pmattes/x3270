@@ -2276,8 +2276,11 @@ screen_suspend(void)
 	return False;
 }
 
+/*
+ * Get mouse events back after calling system(), which apparently cancels them.
+ */
 void
-screen_fixup(void)
+screen_system_fixup(void)
 {
     	if (!escaped) {
 		if (SetConsoleMode(chandle, ENABLE_PROCESSED_INPUT |

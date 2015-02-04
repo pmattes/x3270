@@ -44,8 +44,8 @@ void screen_register(void);
 void screen_final(void);
 void screen_set_thumb(float top, float shown);
 void enable_cursor(Boolean on);
+void screen_system_fixup(void);
 #if defined(WC3270) /*[*/
-void screen_fixup(void);
 void pager_output(const char *s);
 Boolean screen_wait_for_key(char *c);
 void screen_title(const char *text);

@@ -15,6 +15,7 @@
     <ClCompile Include="..\..\lib\w3270stubs\menubar_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\nvt_gui_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\popups_stubs.c" />
+    <ClCompile Include="..\..\lib\w3270stubs\pr3287_session_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\print_gui_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\product_stubs1.c" />
     <ClCompile Include="..\..\lib\w3270stubs\save_stubs.c" />
@@ -22,6 +23,7 @@
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs2.c" />
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs3.c" />
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs4.c" />
+    <ClCompile Include="..\..\lib\w3270stubs\screen_stubs5.c" />
     <ClCompile Include="..\..\lib\w3270stubs\scroll_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\select_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\ssl_passwd_gui_stubs.c" />

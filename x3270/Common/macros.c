@@ -51,14 +51,9 @@
 #include "toggles.h"
 
 #include "actions.h"
-#if !defined(TCL3270) /*[*/
-# include "bind-opt.h"
-#endif /*]*/
+#include "bind-opt.h"
 #include "charset.h"
 #include "child.h"
-#if defined(WC3270) /*[*/
-# include "cscreen.h"
-#endif /*]*/
 #include "ctlrc.h"
 #include "unicodec.h"
 #include "ft.h"
@@ -69,9 +64,8 @@
 #include "macros.h"
 #include "menubar.h"
 #include "popups.h"
-#if defined(X3270_INTERACTIVE) /*[*/
-# include "pr3287_session.h"
-#endif /*]*/
+#include "pr3287_session.h"
+#include "product.h"
 #include "screen.h"
 #include "status.h"
 #include "telnet.h"
@@ -258,10 +252,8 @@ static action_t Snap_action;
 static action_t Source_action;
 static action_t Wait_action;
 
-#if defined(X3270_INTERACTIVE) /*[*/
 static action_t Bell_action;
 static action_t Printer_action;
-#endif /*]*/
 
 static void
 trace_script_output(const char *fmt, ...)
@@ -334,9 +326,7 @@ macros_register(void)
 	{ "AnsiText",		AnsiText_action, 0 },
 	{ "Ascii",		Ascii_action, 0 },
 	{ "AsciiField",		AsciiField_action, 0 },
-#if defined(X3270_INTERACTIVE) /*[*/
 	{ "Bell",		Bell_action, 0 },
-#endif /*]*/
 	{ "CloseScript",	CloseScript_action, 0 },
 	{ "ContinueScript",	ContinueScript_action, ACTION_KE },
 	{ "Ebcdic",		Ebcdic_action, 0 },
@@ -345,15 +335,15 @@ macros_register(void)
 	{ "Expect",		Expect_action, 0 },
 	{ "Macro",		Macro_action, ACTION_KE },
 	{ "PauseScript",	PauseScript_action, 0 },
-#if defined(X3270_INTERACTIVE) /*[*/
-	{ "Printer",		Printer_action, ACTION_KE },
-#endif /*]*/
 	{ "Query",		Query_action, 0 },
 	{ "ReadBuffer",		ReadBuffer_action, 0 },
 	{ "Script",		Script_action, ACTION_KE },
 	{ "Snap",		Snap_action, 0 },
 	{ "Source",		Source_action, ACTION_KE },
 	{ "Wait",		Wait_action, ACTION_KE }
+    };
+    static action_table_t macros_dactions[] = {
+	{ "Printer",		Printer_action, ACTION_KE },
     };
     static toggle_register_t toggles[] = {
 	{ AID_WAIT,	NULL,	0 }
@@ -365,6 +355,9 @@ macros_register(void)
 
     /* Register actions.*/
     register_actions(macros_actions, array_count(macros_actions));
+    if (product_has_display()) {
+	register_actions(macros_dactions, array_count(macros_dactions));
+    }
 
     /* Register toggles. */
     register_toggles(toggles, array_count(toggles));
@@ -717,13 +710,11 @@ peer_script_init(void)
 	socklen_t sa_len;
 	int on = 1;
 
-#if !defined(TCL3270) /*[*/
 	if (!parse_bind_opt(appres.script_port, &sa, &sa_len)) {
 	    popup_an_error("Invalid script port value '%s', "
 		    "ignoring", appres.script_port);
 	    return;
 	}
-#endif /*]*/
 #if !defined(_WIN32) /*[*/
 	if (appres.socket) {
 	    xs_warning("-scriptport overrides -socket");
@@ -3318,10 +3309,9 @@ Execute_action(ia_t ia, unsigned argc, const char **argv)
 	rv = False;
     }
 
-#if defined(_WIN32) && !defined(S3270) /*[*/
     /* Get back mouse events; system() cancels them. */
-    screen_fixup();
-#endif /*]*/
+    screen_system_fixup();
+
     return rv;
 }
 
@@ -3696,7 +3686,6 @@ cancel_if_idle_command(void)
     }
 }
 
-#if defined(X3270_INTERACTIVE) /*[*/
 /* "Printer" action, starts or stops a printer session. */
 static Boolean
 Printer_action(ia_t ia, unsigned argc, const char **argv)
@@ -3719,7 +3708,6 @@ Printer_action(ia_t ia, unsigned argc, const char **argv)
     }
     return True;
 }
-#endif /*]*/
 
 /* Abort all running scripts. */
 void
@@ -3828,7 +3816,6 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
     return True;
 }
 
-#if defined(X3270_INTERACTIVE) /*[*/
 /*
  * Bell action, used by scripts to ring the console bell and enter a comment
  * into the trace log.
@@ -3843,7 +3830,6 @@ Bell_action(ia_t ia, unsigned argc, const char **argv)
     ring_bell();
     return True;
 }
-#endif /*]*/
 
 static Boolean
 Source_action(ia_t ia, unsigned argc, const char **argv)

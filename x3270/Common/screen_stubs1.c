@@ -39,6 +39,7 @@
 #include "globals.h"
 
 #include "ctlr.h"
+#include "popups.h"
 #include "screen.h"
 
 void
@@ -56,6 +57,7 @@ screen_selected(int baddr _is_unused)
 void
 ring_bell(void)
 {
+    action_output("(ding)\n");
 }
 
 void
