@@ -135,7 +135,6 @@
     <ClCompile Include="..\wc3270\windirs.c" />
     <ClCompile Include="..\wc3270\winvers.c" />
     <ClCompile Include="..\wc3270\xio.c" />
-    <ClCompile Include="..\wc3270\XtGlue.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

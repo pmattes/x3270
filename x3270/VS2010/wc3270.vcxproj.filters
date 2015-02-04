@@ -92,9 +92,6 @@
     <ClCompile Include="..\wc3270\xio.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\XtGlue.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\scroll.c">
       <Filter>Source Files</Filter>
     </ClCompile>

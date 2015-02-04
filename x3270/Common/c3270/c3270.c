@@ -361,6 +361,23 @@ sigchld_handler(int ignored)
 }
 #endif /*]*/
 
+#if defined(_WIN32) /*[*/
+/*
+ * wc3270 version of Error, that makes sure the user has a chance to see the
+ * error message before we close the window.
+ */
+static void
+c3270_Error(const char *s)
+{
+    /* Dump the error on the console. */
+    fprintf(stderr, "Error: %s\n", s);
+    fflush(stderr);
+
+    /* Wait for the <Return> key, and then exit. */
+    x3270_exit(1);
+}
+#endif /*]*/
+
 int
 main(int argc, char *argv[])
 {
@@ -374,11 +391,17 @@ main(int argc, char *argv[])
     Boolean	 once = False;
 
 #if defined(_WIN32) /*[*/
+    /* Redirect Error(), so we pause. */
+    Error_redirect = c3270_Error;
+
+    /* Get Windows version and directories. */
     (void) get_version_info();
     if (get_dirs(argv[0], "wc3270", &instdir, &mydesktop, &myappdata, NULL,
 		&commonappdata, &is_installed) < 0) {
 	x3270_exit(1);
     }
+
+    /* Start Winsock. */
     if (sockstart()) {
 	x3270_exit(1);
     }

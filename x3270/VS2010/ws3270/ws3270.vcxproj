@@ -24,7 +24,6 @@
     <ClCompile Include="..\..\ws3270\windirs.c" />
     <ClCompile Include="..\..\ws3270\winvers.c" />
     <ClCompile Include="..\..\ws3270\xio.c" />
-    <ClCompile Include="..\..\ws3270\XtGlue.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{74911F0D-82AF-4FFC-8A43-C411597A64C1}</ProjectGuid>

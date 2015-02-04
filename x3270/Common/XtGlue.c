@@ -54,18 +54,19 @@
 
 #define MILLION		1000000L
 
+void (*Error_redirect)(const char *) = NULL;
 void (*Warning_redirect)(const char *) = NULL;
 
 void
 Error(const char *s)
 {
+    if (Error_redirect != NULL) {
+	(*Error_redirect)(s);
+	return;
+    }
     fprintf(stderr, "Error: %s\n", s);
     fflush(stderr);
-#if defined(WC3270) /*[*/
-    x3270_exit(1);
-#else /*][*/
     exit(1);
-#endif /*]*/
 }
 
 void

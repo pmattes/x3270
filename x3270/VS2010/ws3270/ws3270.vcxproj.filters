@@ -45,9 +45,6 @@
     <ClCompile Include="..\..\ws3270\xio.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270\XtGlue.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ws3270\fallbacks.c">
       <Filter>Source Files</Filter>
     </ClCompile>
