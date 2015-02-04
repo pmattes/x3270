@@ -36,116 +36,116 @@
  * spaghetti.
  */
 static struct {
-        char *name;
-        char *value;
+    char *name;
+    char *value;
 } rdb[] = {
-	{ "message.hour",       "hour" },
-	{ "message.hours",      "hours" },
-	{ "message.minute",     "minute" },
-	{ "message.bindPluName", "BIND PLU name:" },
-	{ "message.buildDisabled",	"disabled" },
-	{ "message.buildEnabled",	"enabled" },
-	{ "message.buildOpts",	"Build options:" },
-	{ "message.byte",       "byte" },
-	{ "message.bytes",      "bytes" },
-	{ "message.characterSet",       "EBCDIC character set:" },
-	{ "message.charMode",   "NVT character mode" },
-	{ "message.columns",    "columns" },
-	{ "message.connectedTo",        "Connected to:" },
-	{ "message.connectionPending",  "Connection pending to:" },
-	{ "message.dbcsCgcsgid",	"Host DBCS CGCSGID:" },
-	{ "message.defaultCharacterSet",        "Default (us) EBCDIC character set" },
-	{ "message.dsMode",     "3270 mode" },
-	{ "message.extendedDs", "extended data stream" },
-	{ "message.fullColor",  "color" },
-	{ "message.hostCodePage", "Host code page:" },
-	{ "message.keyboardMap",        "Keyboard map:" },
-	{ "message.lineMode",   "NVT line mode" },
-	{ "message.localeCodeset",	"Locale codeset:" },
-	{ "message.luName",     "LU name:" },
-	{ "message.minute",     "minute" },
-	{ "message.minutes",    "minutes" },
-	{ "message.model",      "Model" },
-	{ "message.mono",       "monochrome" },
-	{ "message.notConnected",       "Not connected" },
-	{ "message.port",       "Port:" },
-	{ "message.proxyType",  "Proxy type:" },
-	{ "message.Received",   "Received" },
-	{ "message.received",   "received" },
-	{ "message.record",     "record" },
-	{ "message.records",    "records" },
-	{ "message.rows",       "rows" },
-	{ "message.sbcsCgcsgid",	"Host SBCS CGCSGID:" },
-	{ "message.second",     "second" },
-	{ "message.seconds",    "seconds" },
-	{ "message.secure",     "via TLS/SSL" },
-	{ "message.sent",       "Sent" },
-	{ "message.server",     "Server:" },
-	{ "message.specialCharacters",  "Special characters:" },
-	{ "message.sscpMode",   "SSCP-LU mode" },
-	{ "message.standardDs", "standard data stream" },
-	{ "message.terminalName",       "Terminal name:" },
-	{ "message.tn3270eNoOpts",      "No TN3270E options" },
-	{ "message.tn3270eOpts",        "TN3270E options:" },
-	{ "message.unboundMode",	"unbound mode" },
-	{ "message.unnegotiated",       "TELNET negotiation incomplete" },
-	{ "message.unverified",       "not verified" },
+    { "message.hour",			"hour" },
+    { "message.hours",			"hours" },
+    { "message.minute",			"minute" },
+    { "message.bindPluName",		"BIND PLU name:" },
+    { "message.buildDisabled",		"disabled" },
+    { "message.buildEnabled",		"enabled" },
+    { "message.buildOpts",		"Build options:" },
+    { "message.byte",			"byte" },
+    { "message.bytes",			"bytes" },
+    { "message.characterSet",		"EBCDIC character set:" },
+    { "message.charMode",		"NVT character mode" },
+    { "message.columns",		"columns" },
+    { "message.connectedTo",		"Connected to:" },
+    { "message.connectionPending",	"Connection pending to:" },
+    { "message.dbcsCgcsgid",		"Host DBCS CGCSGID:" },
+    { "message.defaultCharacterSet",	"Default (us) EBCDIC character set" },
+    { "message.dsMode",			"3270 mode" },
+    { "message.extendedDs",		"extended data stream" },
+    { "message.fullColor",		"color" },
+    { "message.hostCodePage",		"Host code page:" },
+    { "message.keyboardMap",		"Keyboard map:" },
+    { "message.lineMode",		"NVT line mode" },
+    { "message.localeCodeset",		"Locale codeset:" },
+    { "message.luName",			"LU name:" },
+    { "message.minute",			"minute" },
+    { "message.minutes",		"minutes" },
+    { "message.model",			"Model" },
+    { "message.mono",			"monochrome" },
+    { "message.notConnected",		"Not connected" },
+    { "message.port",			"Port:" },
+    { "message.proxyType",		"Proxy type:" },
+    { "message.Received",		"Received" },
+    { "message.received",		"received" },
+    { "message.record",			"record" },
+    { "message.records",		"records" },
+    { "message.rows",			"rows" },
+    { "message.sbcsCgcsgid",		"Host SBCS CGCSGID:" },
+    { "message.second",			"second" },
+    { "message.seconds",		"seconds" },
+    { "message.secure",			"via TLS/SSL" },
+    { "message.sent",			"Sent" },
+    { "message.server",			"Server:" },
+    { "message.specialCharacters",	"Special characters:" },
+    { "message.sscpMode",		"SSCP-LU mode" },
+    { "message.standardDs",		"standard data stream" },
+    { "message.terminalName",		"Terminal name:" },
+    { "message.tn3270eNoOpts",		"No TN3270E options" },
+    { "message.tn3270eOpts",		"TN3270E options:" },
+    { "message.unboundMode",		"unbound mode" },
+    { "message.unnegotiated",		"TELNET negotiation incomplete" },
+    { "message.unverified",		"not verified" },
 #if defined(_WIN32) /*[*/
-	{ "message.windowsCodePage",	"Windows code page:" },
+    { "message.windowsCodePage",	"Windows code page:" },
 #endif /*][*/
-	{ NULL, NULL }
+    { NULL, NULL }
 };
 #endif /*]*/
 
 static struct dresource {
-	struct dresource *next;
-	const char *name;
-	char *value;
+    struct dresource *next;
+    const char *name;
+    char *value;
 } *drdb = NULL, **drdb_next = &drdb;
 
 void
 add_resource(const char *name, char *value)
 {
-	struct dresource *d;
+    struct dresource *d;
 
-	for (d = drdb; d != NULL; d = d->next) {
-		if (!strcmp(d->name, name)) {
-			d->value = value;
-			return;
-		}
+    for (d = drdb; d != NULL; d = d->next) {
+	if (!strcmp(d->name, name)) {
+	    d->value = value;
+	    return;
 	}
-	d = Malloc(sizeof(struct dresource));
-	d->next = NULL;
-	d->name = name;
-	d->value = value;
-	*drdb_next = d;
-	drdb_next = &d->next;
+    }
+    d = Malloc(sizeof(struct dresource));
+    d->next = NULL;
+    d->name = name;
+    d->value = value;
+    *drdb_next = d;
+    drdb_next = &d->next;
 }
 
 char *
 get_resource(const char *name)
 {
-	struct dresource *d;
-	int i;
+    struct dresource *d;
+    int i;
 
-	for (d = drdb; d != NULL; d = d->next) {
-		if (!strcmp(d->name, name)) {
-			return d->value;
-		}
+    for (d = drdb; d != NULL; d = d->next) {
+	if (!strcmp(d->name, name)) {
+	    return d->value;
 	}
+    }
 
-	for (i = 0; fallbacks[i] != NULL; i++) {
-		if (!strncmp(fallbacks[i], name, strlen(name)) &&
-		    *(fallbacks[i] + strlen(name)) == ':') {
-			return fallbacks[i] + strlen(name) + 2;
-		}
+    for (i = 0; fallbacks[i] != NULL; i++) {
+	if (!strncmp(fallbacks[i], name, strlen(name)) &&
+		*(fallbacks[i] + strlen(name)) == ':') {
+	    return fallbacks[i] + strlen(name) + 2;
 	}
+    }
 #if defined(C3270) /*[*/
-	for (i = 0; rdb[i].name != NULL; i++) {
-		if (!strcmp(rdb[i].name, name)) {
-			return rdb[i].value;
-		}
+    for (i = 0; rdb[i].name != NULL; i++) {
+	if (!strcmp(rdb[i].name, name)) {
+	    return rdb[i].value;
 	}
+    }
 #endif /*]*/
-	return NULL;
+    return NULL;
 }
