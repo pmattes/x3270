@@ -34,7 +34,7 @@
 #include <windows.h>
 #include <stdio.h>
 
-#include "winversc.h"
+#include "winvers.h"
 
 int has_ipv6 = 1;
 int windows_major_version;

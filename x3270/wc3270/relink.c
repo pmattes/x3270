@@ -51,7 +51,7 @@
 
 #include <wincon.h>
 
-#include "winversc.h"
+#include "winvers.h"
 #include "shortcutc.h"
 #include "windirsc.h"
 

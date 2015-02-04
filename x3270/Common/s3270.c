@@ -38,8 +38,8 @@
 
 #include "globals.h"
 #if !defined(_WIN32) /*[*/
-#include <sys/wait.h>
-#include <signal.h>
+# include <sys/wait.h>
+# include <signal.h>
 #endif /*]*/
 #include <errno.h>
 #include "appres.h"
@@ -72,9 +72,9 @@
 #include "xio.h"
 
 #if defined(_WIN32) /*[*/
-#include "w3misc.h"
-#include "windirsc.h"
-#include "winversc.h"
+# include "w3misc.h"
+# include "windirsc.h"
+# include "winvers.h"
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/

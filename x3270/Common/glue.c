@@ -69,7 +69,7 @@
 #include "xio.h"
 
 #if defined(_WIN32) /*[*/
-# include "winversc.h"
+# include "winvers.h"
 #endif /*]*/
 
 #define LAST_ARG	"--"

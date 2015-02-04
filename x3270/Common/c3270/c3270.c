@@ -99,7 +99,7 @@
 #include "w3misc.h"
 #include "wc3270.h"
 #include "windirsc.h"
-#include "winversc.h"
+#include "winvers.h"
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/

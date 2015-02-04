@@ -44,10 +44,10 @@ SRCS = $(COMMON_SOURCES) $(WC3270_SOURCES)
 VOBJS = $(COMMON_OBJECTS) $(WC3270_OBJECTS) fallbacks.o wc3270res.o
 
 OBJECTS = $(VOBJS) version.o
-WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o winvers.o windirs.o \
+WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o windirs.o \
 	relink.o
 LIBS = $(SSLLIB) -lws2_32 -lole32 -luuid -lcomdlg32 -lgdi32 -lwinspool
-SHRTLIBS = -lole32 -luuid
+SHRTLIBS = ../lib/libw3270.a -lole32 -luuid
 WIZLIBS = ../lib/libw3270.a -lole32 -luuid -lwinspool
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
@@ -89,15 +89,15 @@ wc3270.exe: $(OBJECTS) Makefile ../lib/libw3270.a ../lib/libw3270stubs.a
 ../lib/libw3270stubs.a:
 	cd ../lib/w3270stubs && $(MAKE) all
 
-mkshort.exe: mkshort.o shortcut.o winvers.o Makefile
+mkshort.exe: mkshort.o shortcut.o ../lib/libw3270.a Makefile
 	$(CC) -o mkshort.exe $(CFLAGS) \
-		mkshort.o shortcut.o winvers.o $(SHRTLIBS)
+		mkshort.o shortcut.o $(SHRTLIBS)
 
 wversion.o: version.txt mkwversion.sh
 	@chmod +x mkwversion.sh version.txt
 	sh ./mkwversion.sh $(CC)
 
-wc3270wiz.exe: $(WOBJECTS)
+wc3270wiz.exe: $(WOBJECTS) ../lib/libw3270.a
 	$(CC) -o wc3270wiz.exe $(CFLAGS) $(WOBJECTS) $(WIZLIBS)
 
 catf.exe: catf.c

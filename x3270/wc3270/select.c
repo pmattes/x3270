@@ -46,7 +46,7 @@
 #include "popups.h"
 #include "trace.h"
 #include "unicodec.h"
-#include "winversc.h"
+#include "winvers.h"
 #include "wselectc.h"
 
 #include "selectc.h"

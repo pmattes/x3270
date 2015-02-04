@@ -39,7 +39,7 @@
 #include <wincon.h>
 
 #include "shortcutc.h"
-#include "winversc.h"
+#include "winvers.h"
 
 int
 main(int argc, char *argv[])

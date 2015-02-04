@@ -51,14 +51,17 @@ OBJ = obj
 VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(WC3270_OBJECTS) wc3270.RES \
 	fallbacks.obj
 
+LIB3270 = ..\lib\libw3270.lib
+LIBSTUBS = ..\lib\libw3270stubs.lib
+
 OBJECTS = $(VOBJS) version.obj
-WOBJECTS = ..\lib\libw3270.lib wizard.obj wc3270.RES wversion.obj \
-	   shortcut.obj winvers.obj windirs.obj relink.obj
-LIBS = ..\lib\libw3270.lib ..\lib\libw3270stubs.lib $(SSLLIB) ws2_32.lib \
-       advapi32.lib user32.lib shell32.lib ole32.lib comdlg32.lib gdi32.lib \
-       winspool.lib
-SHRTLIBS = ole32.lib
-WIZLIBS = ole32.lib winspool.lib advapi32.lib shell32.lib
+WOBJECTS = $(LIB3270) wizard.obj wc3270.RES wversion.obj \
+	   shortcut.obj windirs.obj relink.obj
+LIBS = $(LIB3270) $(LIBSTUBS) $(SSLLIB) ws2_32.lib \
+	advapi32.lib user32.lib shell32.lib ole32.lib comdlg32.lib gdi32.lib \
+	winspool.lib
+SHRTLIBS = $(LIB3270) ole32.lib
+WIZLIBS = $(LIB3270) ole32.lib winspool.lib advapi32.lib shell32.lib
 
 PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe x3270if.exe
 all: $(PROGS)
@@ -86,23 +89,22 @@ $(MKKEYPAD): mkkeypad.c
 wc3270.RES: wc3270.rc wc3270.ico Msc\Makefile
 	$(RC) wc3270.rc
 
-wc3270.exe: $(OBJECTS) Msc\Makefile ..\lib\libw3270.lib ..\lib\libw3270stubs.lib
+wc3270.exe: $(OBJECTS) Msc\Makefile $(LIB3270) $(LIBSTUBS)
 	$(CC) /Fewc3270.exe $(CFLAGS) $(OBJECTS) $(LIBS)
 
-..\lib\libw3270.lib:
+$(LIB3270):
 	cd ..\lib\w3270 & $(MAKE) /nologo /fMsc\Makefile
-..\lib\libw3270stubs.lib:
+$(LIBSTUBS):
 	cd ..\lib\w3270stubs & $(MAKE) /nologo /fMsc\Makefile
 
-mkshort.exe: mkshort.obj shortcut.obj winvers.obj Msc\Makefile
-	$(CC) /Femkshort.exe $(CFLAGS) \
-		mkshort.obj shortcut.obj winvers.obj $(SHRTLIBS)
+mkshort.exe: mkshort.obj shortcut.obj $(LIB3270) Msc\Makefile
+	$(CC) /Femkshort.exe $(CFLAGS) mkshort.obj shortcut.obj $(SHRTLIBS)
 
 wversion.obj: version.txt mkversion.exe
 	mkversion.exe -w
 	$(CC) $(CFLAGS) /c wversion.c
 
-wc3270wiz.exe: $(WOBJECTS)
+wc3270wiz.exe: $(WOBJECTS) $(LIB3270)
 	$(CC) /Fewc3270wiz.exe $(CFLAGS) $(WOBJECTS) $(WIZLIBS)
 
 catf.exe: catf.c

@@ -1,1 +1,0 @@
-../Common/Win32/winversc.h

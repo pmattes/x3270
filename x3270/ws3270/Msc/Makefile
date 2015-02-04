@@ -54,8 +54,6 @@ OBJECTS = $(VOBJS) version.obj
 LIBS = ..\lib\libw3270.lib ..\lib\libw3270stubs.lib $(SSLLIB) ws2_32.lib \
        advapi32.lib user32.lib shell32.lib comdlg32.lib gdi32.lib \
        winspool.lib
-SHRTLIBS = ole32.lib
-WIZLIBS = ole32.lib winspool.lib advapi32.lib
 
 PROGS = ws3270.exe
 all: $(PROGS)

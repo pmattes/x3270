@@ -65,7 +65,7 @@
 #include "xscroll.h"
 
 #include <wincon.h>
-#include "winversc.h"
+#include "winvers.h"
 
 #define STATUS_SCROLL_START_MS	1500
 #define STATUS_SCROLL_MS	100

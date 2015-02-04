@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2014 Paul Mattes.
+ * Copyright (c) 2007-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,8 +25,17 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ *	winvers.h
+ *		Declarations for winvers.c.
+ */
+
+#if !defined(_WIN32) /*[*/
+#error For Windows only
+#endif /*[*/
+
 extern int has_ipv6;
 extern int windows_major_version;
 extern int windows_minor_version;
 
-extern int get_version_info(void);
+int get_version_info(void);

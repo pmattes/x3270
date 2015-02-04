@@ -6,4 +6,4 @@ WPR3287_OBJECTS = snprintf.$(OBJ) ssl_dll.$(OBJ) w3misc.$(OBJ) windirs.$(OBJ) \
 	winvers.$(OBJ) ws.$(OBJ)
 
 # Header files specific to wpr3287
-WPR3287_HEADERS = conf.h windirsc.h winversc.h wsc.h
+WPR3287_HEADERS = conf.h windirsc.h wsc.h

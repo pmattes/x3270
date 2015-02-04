@@ -42,7 +42,7 @@
 #include "shlobj_missing.h"
 
 #include "shortcutc.h"
-#include "winversc.h"
+#include "winvers.h"
 
 /*
  * CreateLink - uses the shell's IShellLink and IPersistFile interfaces to

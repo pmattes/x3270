@@ -9,4 +9,4 @@ INCLUDE_HEADERS = 3270ds.h actions.h apl.h appres.h arpa_telnet.h asprintf.h \
 	see.h selectc.h sf.h ssl_dll.h ssl_passwd_gui.h status.h tables.h \
 	telnet.h telnet_core.h telnet_private.h tn3270e.h toggles.h trace.h \
 	trace_gui.h unicode_dbcs.h unicodec.h utf8.h util.h varbuf.h w3misc.h \
-	wincmn.h winprint.h xio.h
+	wincmn.h winprint.h winvers.h xio.h
