@@ -3827,7 +3827,12 @@ Bell_action(ia_t ia, unsigned argc, const char **argv)
     if (check_argc("Bell", argc, 0, 0) < 0) {
 	return False;
     }
-    ring_bell();
+    if (product_has_display()) {
+	ring_bell();
+    } else {
+	action_output("(ding)");
+    }
+
     return True;
 }
 
