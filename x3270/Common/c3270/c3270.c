@@ -1808,6 +1808,12 @@ product_has_display(void)
     return True;
 }
 
+Boolean
+product_auto_oversize(void)
+{
+    return True;
+}
+
 /*
  * Telnet GUI.
  */

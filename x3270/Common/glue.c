@@ -31,8 +31,8 @@
 
 /*
  *	glue.c
- *		A displayless 3270 Terminal Emulator
- *		Glue for missing parts.
+ *		Common initialization logic, command-line parsing, reading
+ *		resources, etc.
  */
 
 #include "globals.h"
@@ -47,6 +47,8 @@
 
 #include "actions.h"
 #include "charset.h"
+#include "popups.h" /* must come before child_popups.h */
+#include "child_popups.h"
 #include "ctlrc.h"
 #include "glue.h"
 #include "glue_gui.h"
@@ -54,8 +56,7 @@
 #include "kybd.h"
 #include "macros.h"
 #include "nvt.h"
-#include "popups.h" /* must come before child_popups.h */
-#include "child_popups.h"
+#include "product.h"
 #include "readres.h"
 #include "screen.h"
 #include "selectc.h"
@@ -361,13 +362,10 @@ model_init(void)
     ovc = 0;
     ovr = 0;
     if (appres.extended && appres.oversize != NULL) {
-#if defined(C3270) /*[*/
-	if (!strcasecmp(appres.oversize, "auto")) {
+	if (product_auto_oversize() && !strcasecmp(appres.oversize, "auto")) {
 	    ovc = -1;
 	    ovr = -1;
-	} else
-#endif /*]*/
-	{
+	} else {
 	    int x_ovc, x_ovr;
 	    char junk;
 
@@ -375,6 +373,9 @@ model_init(void)
 			&junk) == 2) {
 		ovc = x_ovc;
 		ovr = x_ovr;
+	    } else {
+		xs_warning("Invalid %s value '%s'", ResOversize,
+			appres.oversize);
 	    }
 	}
     }
