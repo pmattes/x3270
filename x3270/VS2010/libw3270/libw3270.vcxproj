@@ -82,6 +82,7 @@
     <ClCompile Include="..\..\lib\w3270\ft_cut.c" />
     <ClCompile Include="..\..\lib\w3270\ft_dft.c" />
     <ClCompile Include="..\..\lib\w3270\gdi_print.c" />
+    <ClCompile Include="..\..\lib\w3270\glue.c" />
     <ClCompile Include="..\..\lib\w3270\host.c" />
     <ClCompile Include="..\..\lib\w3270\httpd-core.c" />
     <ClCompile Include="..\..\lib\w3270\httpd-io.c" />

@@ -18,9 +18,6 @@
     <ClCompile Include="..\..\ws3270\fallbacks.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ws3270\glue.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ws3270\s3270.c">
       <Filter>Source Files</Filter>
     </ClCompile>

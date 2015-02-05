@@ -1271,12 +1271,11 @@ parse_xrm(const char *arg, const char *where)
 	t = Malloc(strlen(s) + 1);
 	*(char **)address = t;
 	quoted = False;
-#if defined(WC3270) /*[*/
+#if defined(_WIN32) /*[*/
 	/*
-	 * Hack to allow unquoted UNC-path printer names from older
-	 * versions of the Session Wizard to continue to work, even
-	 * though the rules now require quoted backslashes in resource
-	 * values.
+	 * Ugly hack to allow unquoted UNC-path printer names from older
+	 * versions of the Session Wizard to continue to work, even though the
+	 * rules now require quoted backslashes in resource values.
 	 */
 	if (!strncapcmp(ResPrinterName, name, rnlen) &&
 	    s[0] == '\\' &&

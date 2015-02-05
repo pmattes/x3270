@@ -29,9 +29,6 @@
     <ClCompile Include="..\wc3270\ft_gui.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\glue.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\help.c">
       <Filter>Source Files</Filter>
     </ClCompile>
