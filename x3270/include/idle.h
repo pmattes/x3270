@@ -26,7 +26,7 @@
  */
 
 /*
- *	idlec.h
+ *	idle.h
  *		Global declarations for idle.c.
  */
 

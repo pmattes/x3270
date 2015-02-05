@@ -25,6 +25,11 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ *	unicode_dbcs.h
+ *		Declarations for DBCS Unicode functions.
+ */
+
 ucs4_t ebcdic_dbcs_to_unicode(ebc_t e, unsigned flags);
 ebc_t unicode_to_ebcdic_dbcs(ucs4_t u);
 Boolean set_uni_dbcs(const char *csname, const char **codepage);

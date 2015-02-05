@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015, Paul Mattes.
+ * Copyright (c) 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,4 +32,4 @@
 
 void trace_gui_bad_size(const char *default_value);
 Boolean trace_gui_on(int reason, enum toggle_type tt, const char *tracefile);
-extern void trace_gui_toggle(void);
+void trace_gui_toggle(void);

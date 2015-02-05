@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Paul Mattes.
+ * Copyright (c) 2014-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,9 +26,13 @@
  */
 
 /*
- *	gdi_printc.h
+ *	gdi_print.h
  *		GDI screen printing functions.
  */
+
+#if !defined(_WIN32) /*[*/
+#error For Windows ony
+#endif /*]*/
 
 /* Header for screen snapshots. */
 typedef struct {
@@ -48,5 +52,5 @@ typedef enum {
 } gdi_status_t;
 #define GDI_STATUS_IS_ERROR(gs) ((int)gs < 0)
 
-extern gdi_status_t gdi_print_start(const char *printer_name, unsigned opts);
-extern gdi_status_t gdi_print_finish(FILE *f, const char *caption);
+gdi_status_t gdi_print_start(const char *printer_name, unsigned opts);
+gdi_status_t gdi_print_finish(FILE *f, const char *caption);

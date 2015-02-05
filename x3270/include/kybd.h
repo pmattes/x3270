@@ -26,7 +26,7 @@
  */
 
 /*
- *	kybdc.h
+ *	kybd.h
  *		Global declarations for kybd.c.
  */
 

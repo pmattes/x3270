@@ -26,7 +26,7 @@
  */
 
 /*
- *      httpd-corec.h
+ *      httpd-core.h
  *              x3270 webserver, header file for core protocol module
  */
 

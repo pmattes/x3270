@@ -43,35 +43,34 @@ extern int ns_rrcvd;
 extern int ns_rsent;
 extern time_t ns_time;
 
-extern void net_abort(void);
-extern void net_break(void);
-extern void net_charmode(void);
-extern iosrc_t net_connect(const char *, char *, Boolean, Boolean *,
-	Boolean *);
-extern void net_exception(iosrc_t fd, ioid_t id);
-extern int net_getsockname(void *buf, int *len);
-extern void net_hexnvt_out(unsigned char *buf, int len);
-extern void net_input(iosrc_t fd, ioid_t id);
-extern void net_interrupt(void);
-extern void net_linemode(void);
-extern const char *net_query_bind_plu_name(void);
-extern const char *net_query_connection_state(void);
-extern const char *net_query_host(void);
-extern const char *net_query_lu_name(void);
-extern const char *net_query_ssl(void);
-extern void net_sendc(char c);
-extern void net_sends(const char *s);
-extern Boolean net_snap_options(void);
-extern const char *tn3270e_current_opts(void);
-extern char *net_proxy_type(void);
-extern char *net_proxy_host(void);
-extern char *net_proxy_port(void);
-extern Boolean net_bound(void);
+void net_abort(void);
+void net_break(void);
+void net_charmode(void);
+iosrc_t net_connect(const char *, char *, Boolean, Boolean *, Boolean *);
+void net_exception(iosrc_t fd, ioid_t id);
+int net_getsockname(void *buf, int *len);
+void net_hexnvt_out(unsigned char *buf, int len);
+void net_input(iosrc_t fd, ioid_t id);
+void net_interrupt(void);
+void net_linemode(void);
+const char *net_query_bind_plu_name(void);
+const char *net_query_connection_state(void);
+const char *net_query_host(void);
+const char *net_query_lu_name(void);
+const char *net_query_ssl(void);
+void net_sendc(char c);
+void net_sends(const char *s);
+Boolean net_snap_options(void);
+const char *tn3270e_current_opts(void);
+char *net_proxy_type(void);
+char *net_proxy_host(void);
+char *net_proxy_port(void);
+Boolean net_bound(void);
 #if defined(HAVE_LIBSSL) /*[*/
-extern void ssl_base_init(char *cl_hostname, Boolean *pending);
+void ssl_base_init(char *cl_hostname, Boolean *pending);
 #endif /*]*/
 extern int linemode;
 
 /* These are for linemode.c to call, not external users. */
-extern void net_cookedout(const char *buf, size_t len);
-extern void net_cookout(const char *buf, size_t len);
+void net_cookedout(const char *buf, size_t len);
+void net_cookout(const char *buf, size_t len);

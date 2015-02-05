@@ -36,10 +36,10 @@
 extern unsigned char *obuf, *obptr;
 
 /* Entry points. */
-extern void popup_a_sockerr(const char *fmt, ...) printflike(1, 2);
-extern Boolean net_add_dummy_tn3270e(void);
-extern void net_add_eor(unsigned char *buf, int len);
-extern void net_disconnect(void);
-extern void net_output(void);
-extern void space3270out(unsigned n);
-extern void trace_netdata(char direction, unsigned const char *buf, int len);
+void popup_a_sockerr(const char *fmt, ...) printflike(1, 2);
+Boolean net_add_dummy_tn3270e(void);
+void net_add_eor(unsigned char *buf, int len);
+void net_disconnect(void);
+void net_output(void);
+void space3270out(unsigned n);
+void trace_netdata(char direction, unsigned const char *buf, int len);

@@ -26,7 +26,7 @@
  */
 
 /*
- *      httpd-ioc.h
+ *      httpd-io.h
  *              x3270 webserver, header file for I/O module
  */
 

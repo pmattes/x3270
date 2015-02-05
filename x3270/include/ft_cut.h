@@ -25,4 +25,9 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ *	ft_cut.c
+ *		Declarations for ft_cut.c.
+ */
+
 void ft_cut_data(void);

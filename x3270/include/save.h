@@ -32,4 +32,4 @@
 
 extern char *command_string;
 
-extern void save_yourself(void);
+void save_yourself(void);

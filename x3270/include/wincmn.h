@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2014, Paul Mattes.
+ * Copyright (c) 2007-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,8 @@
  */
 
 /*
- * wincmn.h
- * 	Common Windows definitions.
+ *	wincmn.h
+ * 		Common Windows definitions.
  */
 
 #if defined(_WIN32) /*[*/

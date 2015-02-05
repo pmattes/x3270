@@ -26,7 +26,7 @@
  */
 
 /*
- *      httpd-nodec.h
+ *      httpd-node.h
  *              x3270 webserver, header file for objects module
  */
 

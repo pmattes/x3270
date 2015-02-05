@@ -33,8 +33,10 @@
  *		well as #defined renames for the functions it defines (so
  *		they are not confused with the real ones).
  */
-#if !defined(_SSL_DLL_H_) /*[*/
-#define _SSL_DLL_H_ 1
+
+#if !defined(_WIN32) /*[*/
+#error For Windows only
+#endif /*]*/
 
 int ssl_dll_init(void);
 extern const char *ssl_fail_reason;
@@ -69,5 +71,3 @@ extern const char *ssl_fail_reason;
 #define SSL_write my_SSL_write
 #define X509_STORE_CTX_get_error my_X509_STORE_CTX_get_error
 #define X509_verify_cert_error_string my_X509_verify_cert_error_string
-
-#endif /*]*/

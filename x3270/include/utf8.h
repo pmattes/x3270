@@ -27,14 +27,13 @@
 
 /*
  *	utf8.h
- *		3270 Terminal Emulator
- *		UTF-8 conversions
+ *		UTF-8 conversion functions.
  */
 
 extern char *locale_codeset;
 extern Boolean is_utf8;
 
-extern void set_codeset(char *codeset_name);
-extern int unicode_to_utf8(ucs4_t ucs4, char *utf8);
-extern int utf8_to_unicode(const char *utf8, int len, ucs4_t *ucs4);
-extern const char *get_codeset(void);
+void set_codeset(char *codeset_name);
+int unicode_to_utf8(ucs4_t ucs4, char *utf8);
+int utf8_to_unicode(const char *utf8, int len, ucs4_t *ucs4);
+const char *get_codeset(void);

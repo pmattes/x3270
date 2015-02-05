@@ -25,6 +25,11 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ *	unicode.h
+ *		Declarations for Unicode translation functions.
+ */
+
 extern Boolean dbcs_allowed;
 
 /* EBCDIC-to-Unicode options */
@@ -33,36 +38,36 @@ extern Boolean dbcs_allowed;
 #define EUO_UPRIV	0x00000002	/* translate FM/DUP/SUB/EO to UPRIV */
 #define EUO_ASCII_BOX	0x00000004	/* use ASCII for box drawing */
 
-extern ucs4_t ebcdic_to_unicode(ebc_t e, unsigned char cs, unsigned flags);
-extern ucs4_t ebcdic_base_to_unicode(ebc_t e, unsigned flags);
-extern ebc_t unicode_to_ebcdic(ucs4_t u);
-extern ebc_t unicode_to_ebcdic_ge(ucs4_t u, Boolean *ge);
-extern Boolean set_uni(const char *csname, const char **host_codepage,
+ucs4_t ebcdic_to_unicode(ebc_t e, unsigned char cs, unsigned flags);
+ucs4_t ebcdic_base_to_unicode(ebc_t e, unsigned flags);
+ebc_t unicode_to_ebcdic(ucs4_t u);
+ebc_t unicode_to_ebcdic_ge(ucs4_t u, Boolean *ge);
+Boolean set_uni(const char *csname, const char **host_codepage,
 	const char **cgcsgid, const char **realnamep, Boolean *is_dbcs);
-extern int linedraw_to_unicode(ebc_t e);
-extern int apl_to_unicode(ebc_t e, unsigned flags);
+int linedraw_to_unicode(ebc_t e);
+int apl_to_unicode(ebc_t e, unsigned flags);
 #if !defined(_WIN32) && !defined(UNICODE_WCHAR) /*[*/
 extern iconv_t i_u2mb;
 extern iconv_t i_mb2u;
 #endif /*]*/
 
-extern int ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs,
-	char mb[], int mb_len, unsigned flags, ucs4_t *uc);
-extern int ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len);
-extern int ebcdic_to_multibyte_string(unsigned char *ebc, size_t ebc_len,
-	char mb[], size_t mb_len);
-extern int mb_max_len(int len);
+int ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[], int mb_len,
+	unsigned flags, ucs4_t *uc);
+int ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len);
+int ebcdic_to_multibyte_string(unsigned char *ebc, size_t ebc_len, char mb[],
+	size_t mb_len);
+int mb_max_len(int len);
 enum me_fail {
     ME_NONE,		/* no error */
     ME_INVALID,		/* invalid sequence */
     ME_SHORT		/* incomplete sequence */
 };
-extern ucs4_t multibyte_to_unicode(const char *mb, size_t mb_len, 
-	int *consumedp, enum me_fail *errorp);
-extern int multibyte_to_unicode_string(const char *mb, size_t mb_len,
-	ucs4_t *ucs4, size_t u_len);
-extern ebc_t multibyte_to_ebcdic(const char *mb, size_t mb_len, 
-	int *consumedp, enum me_fail *errorp);
-extern int multibyte_to_ebcdic_string(char *mb, size_t mb_len, 
-	unsigned char *ebc, size_t ebc_len, enum me_fail *errorp);
-extern int unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len);
+ucs4_t multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
+	enum me_fail *errorp);
+int multibyte_to_unicode_string(const char *mb, size_t mb_len, ucs4_t *ucs4,
+	size_t u_len);
+ebc_t multibyte_to_ebcdic(const char *mb, size_t mb_len, int *consumedp,
+	enum me_fail *errorp);
+int multibyte_to_ebcdic_string(char *mb, size_t mb_len, unsigned char *ebc,
+	size_t ebc_len, enum me_fail *errorp);
+int unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len);

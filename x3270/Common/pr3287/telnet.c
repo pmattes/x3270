@@ -39,15 +39,15 @@
 #include "globals.h"
 
 #if defined(_WIN32) /*[*/
-#include <winsock2.h>
-#include <ws2tcpip.h>
+# include <winsock2.h>
+# include <ws2tcpip.h>
 #undef AF_INET6
 #else /*][*/
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+# include <sys/types.h>
+# include <sys/socket.h>
+# include <sys/ioctl.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
 #endif /*]*/
 #define TELCMDS 1
 #define TELOPTS 1
@@ -55,25 +55,25 @@
 #include <errno.h>
 #include <fcntl.h>
 #if !defined(_WIN32) /*[*/
-#include <netdb.h>
+# include <netdb.h>
 #endif /*]*/
 #include <string.h>
 #if !defined(_MSC_VER) /*[*/
-#include <sys/time.h>
+# include <sys/time.h>
 #endif /*]*/
 #if !defined(_MSC_VER) /*[*/
-#include <unistd.h>
+# include <unistd.h>
 #endif /*]*/
 #include <stdlib.h>
 #include <time.h>
 #if defined(HAVE_LIBSSL) /*[*/ 
-#if defined(_WIN32) /*[*/
-#include "ssl_dll.h"
-#endif /*]*/
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <openssl/conf.h>
-#include <openssl/x509v3.h>
+# if defined(_WIN32) /*[*/
+#  include "ssl_dll.h"
+# endif /*]*/
+# include <openssl/ssl.h>
+# include <openssl/err.h>
+# include <openssl/conf.h>
+# include <openssl/x509v3.h>
 #endif /*]*/
 #include "tn3270e.h"
 
@@ -86,11 +86,11 @@
 #include "pr_telnet.h"
 
 #if defined(_WIN32) && defined(HAVE_LIBSSL) /*[*/
-#define ROOT_CERTS		"root_certs.txt"
+# define ROOT_CERTS		"root_certs.txt"
 #endif /*]*/
 
 #if !defined(TELOPT_STARTTLS) /*[*/
-#define TELOPT_STARTTLS        46
+# define TELOPT_STARTTLS        46
 #endif /*]*/
 #define TLS_FOLLOWS    1
 

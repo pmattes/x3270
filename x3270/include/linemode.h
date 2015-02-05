@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * All rights reserved.
  *
@@ -28,7 +28,7 @@
  */
 
 /*
- *	linemodec.h
+ *	linemode.h
  *		Header file for linemode.c.
  */
 
@@ -38,10 +38,10 @@ struct ctl_char {
     char value[3];
 };
 
-extern void linemode_init(void);
-extern void linemode_buf_init(void);
-extern struct ctl_char *linemode_chars(void);
-extern void linemode_out(const char *buf, int len);
-extern void linemode_send_erase(void);
-extern void linemode_send_kill(void);
-extern void linemode_send_werase(void);
+void linemode_init(void);
+void linemode_buf_init(void);
+struct ctl_char *linemode_chars(void);
+void linemode_out(const char *buf, int len);
+void linemode_send_erase(void);
+void linemode_send_kill(void);
+void linemode_send_werase(void);

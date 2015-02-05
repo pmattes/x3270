@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, Paul Mattes.
+ * Copyright (c) 1996-2009, 2015 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -27,7 +27,10 @@
  * DAMAGE.
  */
 
-/* DFT-style file transfer codes. */
+/*
+ *	ft_dft_ds.h
+ *		DFT-style file transfer codes.
+ */
 
 /* Host requests. */
 #define TR_OPEN_REQ		0x0012	/* open request */

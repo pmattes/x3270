@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2009, Paul Mattes.
+ * Copyright (c) 1996-2009, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,7 +25,10 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Data Stream definitions for CUT-style file transfers. */
+/*
+ *	ft_cut_ds.c
+ *		Data Stream definitions for CUT-style file transfers.
+ */
 
 /* Primary Area */
 #define O_FRAME_TYPE		0	/* offset to frame type */
