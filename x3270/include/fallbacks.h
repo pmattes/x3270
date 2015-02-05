@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Paul Mattes.
+ * Copyright (c) 2013, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@
  */
 
 /*
- *	fallbacksc.h
+ *	fallbacks.h
  *		Global declarations for fallbacks.c.
  */
 

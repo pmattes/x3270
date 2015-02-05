@@ -13,13 +13,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\ws3270\fallbacks.c" />
     <ClCompile Include="..\..\ws3270\glue.c" />
-    <ClCompile Include="..\..\ws3270\macros.c" />
-    <ClCompile Include="..\..\ws3270\readres.c" />
-    <ClCompile Include="..\..\ws3270\resources.c" />
     <ClCompile Include="..\..\ws3270\s3270.c" />
-    <ClCompile Include="..\..\ws3270\util.c" />
     <ClCompile Include="..\..\ws3270\version.c" />
-    <ClCompile Include="..\..\ws3270\xio.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{74911F0D-82AF-4FFC-8A43-C411597A64C1}</ProjectGuid>

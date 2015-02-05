@@ -26,76 +26,9 @@
  */
 
 #include "globals.h"
-#include "fallbacksc.h"
+#include "fallbacks.h"
 
 /* s3270 substitute Xt resource database. */
-
-#if defined(C3270) /*[*/
-/*
- * These should be properly #ifdef'd in X3270.xad, but it would turn it into
- * spaghetti.
- */
-static struct {
-    char *name;
-    char *value;
-} rdb[] = {
-    { "message.hour",			"hour" },
-    { "message.hours",			"hours" },
-    { "message.minute",			"minute" },
-    { "message.bindPluName",		"BIND PLU name:" },
-    { "message.buildDisabled",		"disabled" },
-    { "message.buildEnabled",		"enabled" },
-    { "message.buildOpts",		"Build options:" },
-    { "message.byte",			"byte" },
-    { "message.bytes",			"bytes" },
-    { "message.characterSet",		"EBCDIC character set:" },
-    { "message.charMode",		"NVT character mode" },
-    { "message.columns",		"columns" },
-    { "message.connectedTo",		"Connected to:" },
-    { "message.connectionPending",	"Connection pending to:" },
-    { "message.dbcsCgcsgid",		"Host DBCS CGCSGID:" },
-    { "message.defaultCharacterSet",	"Default (us) EBCDIC character set" },
-    { "message.dsMode",			"3270 mode" },
-    { "message.extendedDs",		"extended data stream" },
-    { "message.fullColor",		"color" },
-    { "message.hostCodePage",		"Host code page:" },
-    { "message.keyboardMap",		"Keyboard map:" },
-    { "message.lineMode",		"NVT line mode" },
-    { "message.localeCodeset",		"Locale codeset:" },
-    { "message.luName",			"LU name:" },
-    { "message.minute",			"minute" },
-    { "message.minutes",		"minutes" },
-    { "message.model",			"Model" },
-    { "message.mono",			"monochrome" },
-    { "message.notConnected",		"Not connected" },
-    { "message.port",			"Port:" },
-    { "message.proxyType",		"Proxy type:" },
-    { "message.Received",		"Received" },
-    { "message.received",		"received" },
-    { "message.record",			"record" },
-    { "message.records",		"records" },
-    { "message.rows",			"rows" },
-    { "message.sbcsCgcsgid",		"Host SBCS CGCSGID:" },
-    { "message.second",			"second" },
-    { "message.seconds",		"seconds" },
-    { "message.secure",			"via TLS/SSL" },
-    { "message.sent",			"Sent" },
-    { "message.server",			"Server:" },
-    { "message.specialCharacters",	"Special characters:" },
-    { "message.sscpMode",		"SSCP-LU mode" },
-    { "message.standardDs",		"standard data stream" },
-    { "message.terminalName",		"Terminal name:" },
-    { "message.tn3270eNoOpts",		"No TN3270E options" },
-    { "message.tn3270eOpts",		"TN3270E options:" },
-    { "message.unboundMode",		"unbound mode" },
-    { "message.unnegotiated",		"TELNET negotiation incomplete" },
-    { "message.unverified",		"not verified" },
-#if defined(_WIN32) /*[*/
-    { "message.windowsCodePage",	"Windows code page:" },
-#endif /*][*/
-    { NULL, NULL }
-};
-#endif /*]*/
 
 static struct dresource {
     struct dresource *next;
@@ -140,12 +73,5 @@ get_resource(const char *name)
 	    return fallbacks[i] + strlen(name) + 2;
 	}
     }
-#if defined(C3270) /*[*/
-    for (i = 0; rdb[i].name != NULL; i++) {
-	if (!strcmp(rdb[i].name, name)) {
-	    return rdb[i].value;
-	}
-    }
-#endif /*]*/
     return NULL;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2014 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -337,7 +337,7 @@ main(int argc, char *argv[])
 	fprintf(t, "/* This file was created automatically from %s by mkfb. */\n\n",
 	    filename);
 	fprintf(t, "#include \"globals.h\"\n");
-	fprintf(t, "#include \"fallbacksc.h\"\n");
+	fprintf(t, "#include \"fallbacks.h\"\n");
 	if (cmode) {
 		fprintf(t, "static unsigned char fsd[] = {\n");
 	} else {

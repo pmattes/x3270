@@ -45,7 +45,7 @@
 
 #include "charset.h"
 #if !defined(USE_APP_DEFAULTS) /*[*/
-# include "fallbacksc.h"
+# include "fallbacks.h"
 #endif /*]*/
 #include "idle.h"
 #include "keymap.h"

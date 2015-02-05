@@ -95,6 +95,7 @@
     <ClCompile Include="..\..\lib\w3270\print_screen.c" />
     <ClCompile Include="..\..\lib\w3270\proxy.c" />
     <ClCompile Include="..\..\lib\w3270\resolver.c" />
+    <ClCompile Include="..\..\lib\w3270\resources.c" />
     <ClCompile Include="..\..\lib\w3270\rpq.c" />
     <ClCompile Include="..\..\lib\w3270\see.c" />
     <ClCompile Include="..\..\lib\w3270\sf.c" />

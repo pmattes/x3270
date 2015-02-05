@@ -1,5 +1,5 @@
 !
-! Copyright (c) 1995-2014, Paul Mattes.
+! Copyright (c) 1995-2015, Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -45,42 +45,8 @@
 !
 ! Resources that are likeliest to be modified by an end user.
 !=============================================================================
-!
-! Many of the resource definitions are commented out, because they are
-! the defaults defined in x3270 itself.  They are listed here so you can
-! easily uncomment and change them.
 #ifndef STANDALONE
-!
-!   Fonts
-! *.emulatorFont:			3270
-!
-!   Color schemes for full-color (3279) mode
-!   Each scheme is a list of 23 items:
-!    0  X color to use for IBM "neutral/black" (also used as ANSI color 0)
-!    1	X color to use for IBM "blue" (also used for ANSI color 4)
-!    2	X color to use for IBM "red" (also used for ANSI color 1)
-!    3	X color to use for IBM "pink" (also used for ANSI color 5)
-!    4	X color to use for IBM "green" (also used for ANSI color 2)
-!    5	X color to use for IBM "turquoise"
-!    6	X color to use for IBM "yellow" (also used for ANSI color 3)
-!    7	X color to use for IBM "neutral/white"
-!    8	X color to use for IBM "black"
-!    9	X color to use for IBM "deep blue"
-!    10	X color to use for IBM "orange"
-!    11	X color to use for IBM "purple"
-!    12	X color to use for IBM "pale green"
-!    13	X color to use for IBM "pale turquoise" (also used for ANSI color 6)
-!    14	X color to use for IBM "grey"
-!    15	X color to use for IBM "white" (also used for ANSI color 7)
-!    16 X color to use if one of 0..15 cannot be allocated (white or black)
-!    17 X color to use as the default screen background
-!    18 X color to use as the select background
-!    19 IBM color index (0..15) to use for unprotected, unhighlighted fields
-!    20 IBM color index (0..15) to use for unprotected, highlighted fields
-!    21 IBM color index (0..15) to use for protected, unhighlighted fields
-!    22 IBM color index (0..15) to use for protected, highlighted fields
-!
-! x3270.colorScheme: default
+!   Color schemes
 x3270.colorScheme.default: \
 	black deepSkyBlue red pink \
 	green turquoise yellow white \
@@ -117,214 +83,117 @@ x3270.colorScheme.greenScreen: \
 	white black dimGrey \
 	4 15 4 15
 !   Color schemes listed on the Options color menu
-x3270.schemeList:			Default 3279: default\n\
-					Bright: bright\n\
-					Reverse: reverse\n\
-					Green Screen: greenScreen
+x3270.schemeList:	Default 3279: default\n\
+			Bright: bright\n\
+			Reverse: reverse\n\
+			Green Screen: greenScreen
 !   Character sets listed on the Options menu
-x3270.charsetList:			U.S. English (CP 037): us-intl\n\
-					Bracket (CP 037, modified): bracket\n\
-					APL (CP 037): apl\n\
-					Euro>U.S. English (CP 1140): us-euro\n\
-					Euro>Belgian (CP 1148): belgian-euro\n\
-					Euro>Finnish (CP 1143): finnish-euro\n\
-					Euro>French (CP 1147): french-euro\n\
-					Euro>German (CP 1141): german-euro\n\
-					Euro>Icelandic (CP 1149): icelandic-euro\n\
-					Euro>Italian (CP 1144): italian-euro\n\
-					Euro>Norwegian (CP 1142): norwegian-euro\n\
-					Euro>Spanish (CP 1145): spanish-euro\n\
-					Euro>United Kingdom (CP 1146): uk-euro\n\
-					Belgian (CP 500): belgian\n\
-					Brazilian (CP 275): brazilian\n\
+x3270.charsetList:	U.S. English (CP 037): us-intl\n\
+			Bracket (CP 037, modified): bracket\n\
+			APL (CP 037): apl\n\
+			Euro>U.S. English (CP 1140): us-euro\n\
+			Euro>Belgian (CP 1148): belgian-euro\n\
+			Euro>Finnish (CP 1143): finnish-euro\n\
+			Euro>French (CP 1147): french-euro\n\
+			Euro>German (CP 1141): german-euro\n\
+			Euro>Icelandic (CP 1149): icelandic-euro\n\
+			Euro>Italian (CP 1144): italian-euro\n\
+			Euro>Norwegian (CP 1142): norwegian-euro\n\
+			Euro>Spanish (CP 1145): spanish-euro\n\
+			Euro>United Kingdom (CP 1146): uk-euro\n\
+			Belgian (CP 500): belgian\n\
+			Brazilian (CP 275): brazilian\n\
 #ifdef X3270_DBCS
-					Chinese Simplified (CP 935): simplified-chinese\n\
-					Chinese GB 18030 (CP 1388): chinese-gb18030\n\
-					Chinese Traditional (CP 937): traditional-chinese\n\
+			Chinese Simplified (CP 935): simplified-chinese\n\
+			Chinese GB 18030 (CP 1388): chinese-gb18030\n\
+			Chinese Traditional (CP 937): traditional-chinese\n\
 #endif
-					Finnish (CP 278): finnish\n\
-					French (CP 297): french\n\
-					German (CP 273): german\n\
-					Greek (CP 875): greek\n\
-					Hebrew (CP 424): hebrew\n\
-					Icelandic (CP 871): icelandic\n\
-					Italian (CP 280): italian\n\
+! (DBCS)
+			Finnish (CP 278): finnish\n\
+			French (CP 297): french\n\
+			German (CP 273): german\n\
+			Greek (CP 875): greek\n\
+			Hebrew (CP 424): hebrew\n\
+			Icelandic (CP 871): icelandic\n\
+			Italian (CP 280): italian\n\
 #ifdef X3270_DBCS
-					Japanese w/Kana (CP 930): japanese-kana\n\
-					Japanese w/Latin (CP 939): japanese-latin\n\
+			Japanese w/Kana (CP 930): japanese-kana\n\
+			Japanese w/Latin (CP 939): japanese-latin\n\
 #endif
-					Norwegian (CP 277): norwegian\n\
-					Open Systems (CP 1047): cp1047\n\
-					Polish (CP 870): cp870\n\
-					Russian (CP 880): russian\n\
-					Slovenian (CP 870): cp870\n\
-					Spanish (CP 284): spanish\n\
-					Thai (CP 1160): thai\n\
-					Turkish (CP 1026): turkish\n\
-					United Kingdom (CP 285): uk\n
-!
-!   Pseudo-colors for 3278 mode
-! x3270.colorBackground:		black
-! x3270.selectBackground:		dimGrey
-! x3270.normalColor:			green
-!    Note: the following values are the new defaults, which cause 3278's
-!     to display everything in green.
-! x3270.inputColor:			green
-! x3270.boldColor:			green
-!    To resurrect x3270's Pseudo-Color mode, which was how 3278's were
-!      displayed up through x3270 3.3.5, set the following resource values:
-! x3270.inputColor:			orange
-! x3270.boldColor:			cyan
-!
-!   Cursors
-! x3270.normalCursor:			top_left_arrow
-! x3270.waitCursor:			watch
-! x3270.lockedCursor:			X_cursor
-!
-!   Line-mode Telnet parameters
-! x3270.icrnl:				true
-! x3270.inlcr:				false
-! x3270.erase:				^?
-! x3270.kill:				^U
-! x3270.werase:				^W
-! x3270.rprnt:				^R
-! x3270.lnext:				^V
-! x3270.intr:				^C
-! x3270.quit:				^\\
-! x3270.eof:				^D
-!
-!   Toggles, using the same names as the "-set" and "-clear" options
-! x3270.altCursor:			false
-! x3270.blankFill:			false
-! x3270.crosshair:			false
-! x3270.cursorBlink:			false
-! x3270.cursorPos:			true
-! x3270.tracing:			false
-! x3270.lineWrap:			true
-! x3270.marginedPaste:			false
-! x3270.overlayPaste:			false
-! x3270.monoCase:			false
-! x3270.rectangleSelect:		false
-! x3270.screenTrace:			false
-! x3270.scrollBar:			false
-! x3270.showTiming:			false
-!
-!   Miscellaneous configuration parameters
-! x3270.activeIcon:			false
-! x3270.allowResize:			true
-! x3270.bellVolume:			0
-! x3270.charset:			bracket
-! x3270.composeMap:			latin1
-! x3270.connectFileName:		~/.x3270connect
-! x3270.doConfirms:			true
-! x3270.debugTracing:			true
-! x3270.disconnectClear:		false
-! x3270.hostsFile:			/usr/lib/X11/x3270/ibm_hosts
-! x3270.highlightSelect:		true
-! x3270.idleCommand:
-! x3270.idleTimeout:			~7m
-! x3270.inputMethod:
-! x3270.invertKeypadShift:		false
-! x3270.keymap:
-! x3270.keypad:				right
-! x3270.keypadOn:			false
-! x3270.labelIcon:			false
-! x3270.m3279:				false
-! x3270.macros:
-! x3270.menuBar:			true
-! x3270.modifiedSel:			false
-! x3270.modifiedSelColor:		10
-! x3270.model:				4
-! x3270.mono:				false
-! x3270.numericLock:			false
-! x3270.once:				false
-! x3270.pluginCommand:			x3270hist.pl
-! x3270.port:				telnet
-! x3270.preeditType:			OverTheSpot+1
-! x3270.saveLines:			64
-! x3270.scripted:			false
-! x3270.suppressHost:			false
-! x3270.suppressFontMenu:		false
-! x3270.termName:
-! x3270.traceDir:			/tmp
-! x3270.cursorColor:			red
-!  (note: cursorColor is not used unless useCursorColor is true, below)
-! x3270.useCursorColor:			false
-! x3270.visualBell:			false
-! x3270.visualSelect:			false
-! x3270.visualSelectColor:		6
-!
+! (DBCS)
+			Norwegian (CP 277): norwegian\n\
+			Open Systems (CP 1047): cp1047\n\
+			Polish (CP 870): cp870\n\
+			Russian (CP 880): russian\n\
+			Slovenian (CP 870): cp870\n\
+			Spanish (CP 284): spanish\n\
+			Thai (CP 1160): thai\n\
+			Turkish (CP 1026): turkish\n\
+			United Kingdom (CP 285): uk\n
 ! Fonts listed on the Options menu and for screen resizing
 x3270.emulatorFontList.3270cg-1a,3270cg-1,iso10646-1,iso8859-1: \
-					3270 Font (14 point): #resize 3270\n\
-					8-point Font: #resize 3270gt8\n\
-					12-point Font: #resize 3270-12\n\
-					16-point Font: #resize 3270gt16\n\
-					20-point Font: #resize 3270-20\n\
-					24-point Font: #resize 3270gt24\n\
-					32-point Font: #resize 3270gt32
+			3270 Font (14 point): #resize 3270\n\
+			8-point Font: #resize 3270gt8\n\
+			12-point Font: #resize 3270-12\n\
+			16-point Font: #resize 3270gt16\n\
+			20-point Font: #resize 3270-20\n\
+			24-point Font: #resize 3270gt24\n\
+			32-point Font: #resize 3270gt32
 x3270.emulatorFontList.3270cg-1a,3270cg-1,iso10646-1,iso8859-15: \
-					3270 Font (14 point): #resize 3270\n\
-					8-point Font: #resize 3270gt8\n\
-					12-point Font: #resize 3270-12\n\
-					16-point Font: #resize 3270gt16\n\
-					20-point Font: #resize 3270-20\n\
-					24-point Font: #resize 3270gt24\n\
-					32-point Font: #resize 3270gt32
+			3270 Font (14 point): #resize 3270\n\
+			8-point Font: #resize 3270gt8\n\
+			12-point Font: #resize 3270-12\n\
+			16-point Font: #resize 3270gt16\n\
+			20-point Font: #resize 3270-20\n\
+			24-point Font: #resize 3270gt24\n\
+			32-point Font: #resize 3270gt32
 x3270.emulatorFontList.3270cg-1a,iso10646-1:       3270
 x3270.emulatorFontList.3270cg-1a,3270cg-1,iso10646-1,iso8859-1+gb2312.1980-0,iso10646-1: \
-					14-point 3270: 3270+-isas-song ti-medium-r-normal--16-160-72-72-c-160-gb2312.1980-0\n\
-					20-point 3270: 3270-20+-isas-song ti-medium-r-normal--16-160-72-72-c-160-gb2312.1980-0\n\
-					8x16: 8x16+-isas-song ti-medium-r-normal--16-160-72-72-c-160-gb2312.1980-0\n\
-					12x24: 12x24+-isas-song ti-medium-r-normal--24-240-72-72-c-240-gb2312.1980-0
+			14-point 3270: 3270+-isas-song ti-medium-r-normal--16-160-72-72-c-160-gb2312.1980-0\n\
+			20-point 3270: 3270-20+-isas-song ti-medium-r-normal--16-160-72-72-c-160-gb2312.1980-0\n\
+			8x16: 8x16+-isas-song ti-medium-r-normal--16-160-72-72-c-160-gb2312.1980-0\n\
+			12x24: 12x24+-isas-song ti-medium-r-normal--24-240-72-72-c-240-gb2312.1980-0
 x3270.emulatorFontList.iso10646-1,jisx0201.1976-0+jisx0208.1983-0,iso10646-1: \
-					14-point: -misc-fixed-medium-r-normal--14-130-75-75-c-70-jisx0201.1976-0+-misc-fixed-medium-r-normal--14-130-75-75-c-140-jisx0208.1983-0\n\
-					16-point: -sony-fixed-medium-r-normal--16-150-75-75-c-80-jisx0201.1976-0+-jis-fixed-medium-r-normal--16-150-75-75-c-160-jisx0208.1983-0\n\
-					18-point: -sony-fixed-medium-r-normal--16-150-75-75-c-80-jisx0201.1976-0+-misc-fixed-medium-r-normal-ja-18-120-100-100-c-180-iso10646-1\n\
-					24-point: -sony-fixed-medium-r-normal--24-230-75-75-c-120-jisx0201.1976-0+-jis-fixed-medium-r-normal--24-230-75-75-c-240-jisx0208.1983-0
+			14-point: -misc-fixed-medium-r-normal--14-130-75-75-c-70-jisx0201.1976-0+-misc-fixed-medium-r-normal--14-130-75-75-c-140-jisx0208.1983-0\n\
+			16-point: -sony-fixed-medium-r-normal--16-150-75-75-c-80-jisx0201.1976-0+-jis-fixed-medium-r-normal--16-150-75-75-c-160-jisx0208.1983-0\n\
+			18-point: -sony-fixed-medium-r-normal--16-150-75-75-c-80-jisx0201.1976-0+-misc-fixed-medium-r-normal-ja-18-120-100-100-c-180-iso10646-1\n\
+			24-point: -sony-fixed-medium-r-normal--24-230-75-75-c-120-jisx0201.1976-0+-jis-fixed-medium-r-normal--24-230-75-75-c-240-jisx0208.1983-0
 x3270.emulatorFontList.3270cg-1a,3270cg-1,iso10646-1,iso8859-1+big5-0,iso10646-1: fixed+-wenquanyi-wenquanyi bitmap song-bold-r-normal--13-130-75-75-p-80-iso10646-1
 
 #endif
+! (!STANDALONE)
 !
 ! Print commands
 x3270.printTextCommand:			lpr
 #ifndef STANDALONE
 x3270.printWindowCommand:		xwd -id %d | xpr | lpr
-!
-! System V versions of print commands
-! x3270.printTextCommand:		lp
-! x3270.printWindowCommand:		xwd -id %d | xpr | lp
-!
 ! Trace window command
 x3270.traceCommand:			tail -f
-!
-! File transfer command
-! x3270.ftCommand:			ind$file
-!
-! Printer session options
 #endif
+! (!STANDALONE)
+! Printer session options
 #ifdef _WIN32
 x3270.printer.assocCommandLine:		wpr3287.exe -assoc %L% %R% %P% %V% %S% %I% %O% %H%
 x3270.printer.luCommandLine:		wpr3287.exe %R% %P% %V% %S% %I% %O% %L%@%H%
-! x3270.printer.name:
 #else
 x3270.printer.command:			lpr
 x3270.printer.assocCommandLine:		pr3287 -assoc %L% -command "%C%" %R% %P% %V% %S% %O% "%H%"
 x3270.printer.luCommandLine:		pr3287 -command "%C%" %R% %P% %V% %S% %O% "%L%@%H%"
 #endif
+! (_WIN32)
 #ifndef STANDALONE
-!
 ! Translation table for the '@server' pseudo-keymap, which is the keymap
 ! you get by default (in addition to the 'base' keymap, below).  Maps server
 ! vendor strings to keymap names.
 x3270.serverKeymapList: \
 	Sun Microsystems, Inc.: sun_k5\n\
 	Hewlett-Packard Company: hp-k1\n
-!
 ! Keymaps (keyboard and mouse mappings)
 !
 ! Base keymap:  What you get by default, in both 3270 and NVT modes.  Any other
 ! user-specified keymap is logically added to this keymap.
+! *WARNING* Do not change this resource if all you want to do is to define a
+! keymap!
 x3270.keymap.base: \
 	:<Key>Multi_key:		Compose()\n\
 	Ctrl<Btn1Down>:			HandleMenu(fileMenu)\n\
@@ -458,10 +327,6 @@ x3270.keymap.base.3270: #override \
 	Ctrl<Key>v:			insert-selection(CLIPBOARD)\n\
 	Alt<Key>v:			ToggleReverse()\n\
 	Meta<Key>v:			ToggleReverse()
-! Keymap that exercises the optional history plugin.
-x3270.keymap.hist:
-	Shift<Key>Prior:		Plugin(command,prev)\n\
-	Shift<Key>Next:			Plugin(command,next)
 ! Keymap that restores the old (pre 3.3) mouse-click behavior.
 x3270.keymap.oldclick: #override\n\
 	Ctrl<Btn1Down>:                 HandleMenu(fileMenu)\n\
@@ -868,6 +733,7 @@ x3270.passwordPopup.dialog*value*foreground:	lavender
 x3270.passwordPopup.dialog*value*foreground:	white
 x3270.passwordPopup.dialog*value*background:	white
 #endif
+! (COLOR)
 x3270.tracePopup.title:				x3270 Tracing
 x3270.tracePopup.dialog.label:			Enter Trace File Name
 x3270.tracePopup*confirmButton.label:		Trace
@@ -1022,31 +888,16 @@ x3270*saveOption.label:				Save Changed Options
 ! Messages
 x3270.message.processId:			Process ID:
 x3270.message.windowId:				Main window ID:
-x3270.message.model:				Model
-x3270.message.rows:				rows
-x3270.message.columns:				columns
-x3270.message.mono:				monochrome
-x3270.message.fullColor:			color
 x3270.message.pseudoColor:			pseudo-color
-x3270.message.extendedDs:			extended data stream
-x3270.message.standardDs:			standard data stream
-x3270.message.terminalName:			Terminal name:
-x3270.message.luName:				LU name:
-x3270.message.bindPluName:			BIND PLU name:
 x3270.message.emulatorFont:			Emulator font:
 x3270.message.emulatorFontDbcs:			DBCS emulator font:
 x3270.message.xFont:				standard X11 font
 x3270.message.cgFont:				special 3270 CG font
 x3270.message.charset:				Host EBCDIC character set:
-x3270.message.sbcsCgcsgid:			Host SBCS CGCSGID:
-x3270.message.dbcsCgcsgid:			Host DBCS CGCSGID:
-x3270.message.defaultCharacterSet:		Default (us) EBCDIC character set
 x3270.message.displayCharacterSet:		Display character set:
 x3270.message.displayCharacterSetDbcs:		DBCS display character set:
-x3270.message.localeCodeset:			Locale codeset:
 x3270.message.require:				require
 x3270.message.have:				have
-x3270.message.keyboardMap:			Keyboard map:
 x3270.message.defaultKeyboardMap:		Default keyboard map
 x3270.message.composeMap:			Compose-key map:
 x3270.message.noComposeMap:			No compose-key map
@@ -1054,34 +905,6 @@ x3270.message.activeIcon:			Active icon
 x3270.message.iconFont:				Icon font:
 x3270.message.iconLabelFont:			Icon label font:
 x3270.message.staticIcon:			Static bitmap icon
-x3270.message.connectedTo:			Connected to:
-x3270.message.port:				Port:
-x3270.message.secure:				via TLS/SSL
-x3270.message.proxyType:			Proxy type:
-x3270.message.server:				Server:
-x3270.message.charMode:				NVT character mode
-x3270.message.lineMode:				NVT line mode
-x3270.message.dsMode:				3270 mode
-x3270.message.sscpMode:				SSCP-LU mode
-x3270.message.unboundMode:			unbound mode
-x3270.message.tn3270eOpts:			TN3270E options:
-x3270.message.tn3270eNoOpts:			No TN3270E options
-x3270.message.connectionPending:		Connection pending to:
-x3270.message.notConnected:			Not connected
-x3270.message.specialCharacters:		Special characters:
-x3270.message.hour:				hour
-x3270.message.hours:				hours
-x3270.message.minute:				minute
-x3270.message.minutes:				minutes
-x3270.message.second:				second
-x3270.message.seconds:				seconds
-x3270.message.sent:				Sent
-x3270.message.Received:				Received
-x3270.message.received:				received
-x3270.message.byte:				byte
-x3270.message.bytes:				bytes
-x3270.message.record:				record
-x3270.message.records:				records
 x3270.message.statusDbcs:			DBCS
 x3270.message.statusNotConnected:		Not Connected
 x3270.message.statusTwait:			Wait
@@ -1092,9 +915,65 @@ x3270.message.statusOverflow:			Overflow
 x3270.message.statusInhibit:			Inhibit
 x3270.message.statusScrolled:			Scrolled
 x3270.message.statusMinus:			No Function
-x3270.message.unverified:			not verified
 x3270.message.statusConnecting:			Connecting
 #endif
+! (!STANDALONE)
+x3270.message.hour:				hour
+x3270.message.hours:				hours
+x3270.message.minute:				minute
+x3270.message.minutes:				minutes
+x3270.message.bindPluName:			BIND PLU name:
+x3270.message.byte:				byte
+x3270.message.bytes:				bytes
+x3270.message.charMode:				NVT character mode
+x3270.message.columns:				columns
+x3270.message.connectedTo:			Connected to:
+x3270.message.connectionPending:		Connection pending to:
+x3270.message.dbcsCgcsgid:			Host DBCS CGCSGID:
+x3270.message.defaultCharacterSet:		Default (us) EBCDIC character set
+x3270.message.dsMode:				3270 mode
+x3270.message.extendedDs:			extended data stream
+x3270.message.fullColor:			color
+x3270.message.keyboardMap:			Keyboard map:
+x3270.message.lineMode:				NVT line mode
+x3270.message.localeCodeset:			Locale codeset:
+x3270.message.luName:				LU name:
+x3270.message.model:				Model
+x3270.message.mono:				monochrome
+x3270.message.notConnected:			Not connected
+x3270.message.port:				Port:
+x3270.message.proxyType:			Proxy type:
+x3270.message.Received:				Received
+x3270.message.received:				received
+x3270.message.record:				record
+x3270.message.rows:				rows
+x3270.message.sbcsCgcsgid:			Host SBCS CGCSGID:
+x3270.message.records:				records
+x3270.message.second:				second
+x3270.message.seconds:				seconds
+x3270.message.secure:				via TLS/SSL
+x3270.message.sent:				Sent
+x3270.message.server:				Server:
+x3270.message.specialCharacters:		Special characters:
+x3270.message.sscpMode:				SSCP-LU mode
+x3270.message.standardDs:			standard data stream
+x3270.message.terminalName:			Terminal name:
+x3270.message.tn3270eNoOpts:			No TN3270E options
+x3270.message.tn3270eOpts:			TN3270E options:
+x3270.message.unboundMode:			unbound mode
+#ifdef STANDALONE
+x3270.message.buildDisabled:			disabled
+x3270.message.buildEnabled:			enabled
+x3270.message.buildOpts:			Build options:
+x3270.message.characterSet:			EBCDIC character set:
+x3270.message.hostCodePage:			Host code page:
+x3270.message.unnegotiated:			TELNET negotiation incomplete
+#ifdef _WIN32
+x3270.message.windowsCodePage:			Windows code page:
+#endif
+! (_WIN32)
+#endif 
+! (STANDALONE)
 x3270.message.ftComplete:			Transfer complete, %i bytes transferred\n\
 %sbytes/sec in %s mode
 x3270.message.ftUnable:				Cannot begin transfer
@@ -1109,6 +988,7 @@ x3270.message.ftCutOversize:			Illegal frame length
 x3270.message.ftDisconnected:			Host disconnected, transfer cancelled
 x3270.message.ftNot3270:			Not in 3270 mode, transfer cancelled
 x3270.message.ftDftUnknownOpen:			Uknown DFT Open type from host
+#ifndef STANDALONE
 x3270.message.inputMethod:			X11 Input Method (XIM):
 x3270.message.ximState:				state:
 x3270.message.ximDisabled:			failed
@@ -1116,7 +996,6 @@ x3270.message.ximNotFound:			not found
 x3270.message.ximActive:			active
 x3270.message.ximLocale:			locale:
 x3270.message.ximEncoding:			encoding:
-#ifndef STANDALONE
 x3270.message.kmEvent:				Event
 x3270.message.kmKeymapLine:			Keymap:Line
 x3270.message.kmActions:			Actions
@@ -1142,6 +1021,7 @@ x3270.adVersion:		3.3.4
 #ifdef X3270_APL
 x3270.aplFont:			3270
 #endif
+! (!STANDALONE)
 x3270.debugFont:		3270d
 x3270.iconFont:			nil2
 x3270.iconLabelFont:		8x13
@@ -1187,6 +1067,7 @@ x3270*connectMenuButton*borderColor:		XtDefaultBackground
 x3270*macrosMenuButton*borderColor:		XtDefaultBackground
 x3270*helpButton*borderColor:			XtDefaultBackground
 #endif
+! (COLOR)
 x3270*fileMenuButton*highlightThickness:	1
 x3270*optionsMenuButton*highlightThickness:	1
 x3270*connectMenuButton*highlightThickness:	1
@@ -1206,6 +1087,7 @@ x3270*colorsMenu*background:			grey
 x3270*charsetMenu*background:			grey
 x3270*printerMenu*background:			grey
 #endif
+! (COLOR)
 x3270*fileMenu.borderWidth:			2
 x3270*exitMenu.borderWidth:			2
 x3270*optionsMenu.borderWidth:			2
@@ -1228,6 +1110,7 @@ x3270*modelsMenu.borderColor:			grey40
 x3270*colorsMenu.borderColor:			grey40
 x3270*charsetMenu.borderColor:			grey40
 #endif
+! (COLOR)
 x3270*fileMenu*leftMargin:			20
 x3270*fileMenu*rightMargin:			20
 x3270*optionsMenu*rightMargin:			20
@@ -1254,6 +1137,7 @@ x3270**confirmButton.borderColor:		grey40
 x3270**confirm2Button.borderColor:		grey40
 x3270**cancelButton.borderColor:		grey40
 #endif
+! (COLOR)
 !  foreground and background are often overridden by other resources, so they
 !  must be specified explicitly for each instance
 #ifdef COLOR
@@ -1263,6 +1147,7 @@ x3270*dialog*confirm2Button.background:		grey80
 x3270*dialog*cancelButton.foreground:		firebrick
 x3270*dialog*cancelButton.background:		grey80
 #endif
+! (COLOR)
 !
 ! Values
 !  borderWidth and borderColor are never specified anywhere else, so these
@@ -1271,17 +1156,20 @@ x3270*dialog*cancelButton.background:		grey80
 x3270*value.borderWidth:			2
 x3270*value.borderColor:			grey40
 #endif
+! (COLOR)
 !  background is overridden by dialog*background, so it must be specified
 !  explicitly
 #ifdef COLOR
 x3270*dialog*value*background:			lavender
 #endif
+! (COLOR)
 !
 ! Overall defaults for dialog boxes
 #ifdef COLOR
 x3270*dialog*background:			grey
 x3270*dialog*foreground:			black
 #endif
+! (COLOR)
 !
 ! Fixed popup sizes
 x3270.errorPopup.width:				500
@@ -1313,6 +1201,7 @@ x3270.ftProgressPopup*filename.borderWidth:	2
 x3270.ftProgressPopup*filename.borderColor:	grey40
 x3270.ftProgressPopup*filename.background:	lavender
 #endif
+! (COLOR)
 !
 ! Keypad key dimensions, in pixels
 x3270.keypad.keyHeight:		24
@@ -1556,6 +1445,7 @@ x3270*MenuButton.translations:	#override \n\
 	Mod1 Mod2 Mod3 Mod4 Mod5<BtnDown>:	reset() PopupMenu()\n\
 	Lock Mod1 Mod2 Mod3 Mod4 Mod5<BtnDown>:	reset() PopupMenu()
 #endif
+!(STANDALONE)
 ! Default compose-key map.
 ! Each line is of the form "keysym1 + keysym2 = keysym3", meaning "when the
 ! Compose key is pressed, followed by keysym1 and keysym2 (in either order),
@@ -1726,7 +1616,9 @@ x3270.composeMap.apl: \
 	minus + parenleft	= apl_lefttack		\n\
 	minus + parenright	= apl_righttack		\n
 #endif
+! (APL)
 #endif
+! (!STANDALONE)
 #ifdef STANDALONE
 #ifdef _WIN32
 ! wc3270 keymap for more 3270-ish behavior: The Enter key is Newline and the
@@ -1735,4 +1627,6 @@ x3270.keymap.rctrl.3270: \
 	RightCtrl<Key>CTRL: Enter()\n\
 	<Key>Return: Newline()
 #endif
+! (WIN32)
 #endif
+! (STANDALONE)

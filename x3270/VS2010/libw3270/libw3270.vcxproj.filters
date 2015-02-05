@@ -90,6 +90,9 @@
     <ClCompile Include="..\..\lib\w3270\resolver.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270\resources.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\rpq.c">
       <Filter>Source Files</Filter>
     </ClCompile>

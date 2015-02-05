@@ -117,21 +117,16 @@
     <ClCompile Include="..\wc3270\icmd.c" />
     <ClCompile Include="..\wc3270\keymap.c" />
     <ClCompile Include="..\wc3270\keypad.c" />
-    <ClCompile Include="..\wc3270\macros.c" />
     <ClCompile Include="..\wc3270\menubar.c" />
     <ClCompile Include="..\wc3270\nvt_gui.c" />
     <ClCompile Include="..\wc3270\pr3287_session.c" />
-    <ClCompile Include="..\wc3270\readres.c" />
     <ClCompile Include="..\wc3270\relink.c" />
-    <ClCompile Include="..\wc3270\resources.c" />
     <ClCompile Include="..\wc3270\screen.c" />
     <ClCompile Include="..\wc3270\scroll.c" />
     <ClCompile Include="..\wc3270\select.c" />
     <ClCompile Include="..\wc3270\shortcut.c" />
     <ClCompile Include="..\wc3270\ssl_passwd_gui.c" />
-    <ClCompile Include="..\wc3270\util.c" />
     <ClCompile Include="..\wc3270\version.c" />
-    <ClCompile Include="..\wc3270\xio.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
