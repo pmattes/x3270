@@ -1982,6 +1982,37 @@ c3270_register(void)
 	    "<string>", "Set window title to <string>" },
 #endif /*]*/
     };
+    static res_t c3270_resources[] = {
+	{ ResIdleCommand,aoffset(idle_command),	XRM_STRING },
+	{ ResIdleCommandEnabled,aoffset(idle_command_enabled),XRM_BOOLEAN },
+	{ ResIdleTimeout,aoffset(idle_timeout),	XRM_STRING },
+	{ ResKeymap,	aoffset(interactive.key_map),XRM_STRING },
+	{ ResAsciiBoxDraw,aoffset(c3270.ascii_box_draw),XRM_BOOLEAN },
+	{ ResMenuBar,	aoffset(interactive.menubar),XRM_BOOLEAN },
+	{ ResNoPrompt,	aoffset(secure),		XRM_BOOLEAN },
+	{ ResPrinterLu,	aoffset(interactive.printer_lu),XRM_STRING },
+	{ ResPrinterOptions,aoffset(interactive.printer_opts),XRM_STRING },
+	{ ResReconnect,	aoffset(interactive.reconnect),XRM_BOOLEAN },
+	{ ResSaveLines,	aoffset(interactive.save_lines),XRM_INT },
+
+#if !defined(_WIN32) /*[*/
+	{ ResMetaEscape,aoffset(c3270.meta_escape),	XRM_STRING },
+	{ ResCursesKeypad,aoffset(c3270.curses_keypad),XRM_BOOLEAN },
+	{ ResCbreak,	aoffset(c3270.cbreak_mode),XRM_BOOLEAN },
+	{ ResMono,	aoffset(interactive.mono),	XRM_BOOLEAN },
+	{ ResMouse,	aoffset(c3270.mouse),		XRM_BOOLEAN },
+	{ ResReverseVideo,aoffset(c3270.reverse_video),XRM_BOOLEAN },
+#endif /*]*/
+
+#if defined(CURSES_WIDE) /*[*/
+	{ ResAcs,		aoffset(c3270.acs),	XRM_BOOLEAN },
+#endif /*]*/
+
+#if defined(_WIN32) /*[*/
+	{ ResTitle,	aoffset(c3270.title),		XRM_STRING },
+	{ ResVisualBell,aoffset(interactive.visual_bell),XRM_BOOLEAN },
+#endif /*]*/
+    };
 
     /* Register for state changes. */
     register_schange(ST_CONNECT, main_connect);
@@ -1993,4 +2024,7 @@ c3270_register(void)
 
     /* Register our options. */
     register_opts(c3270_opts, array_count(c3270_opts));
+
+    /* Register our resources. */
+    register_resources(c3270_resources, array_count(c3270_resources));
 }

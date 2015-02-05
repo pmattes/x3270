@@ -628,7 +628,6 @@ parse_options(int *argcp, const char **argv)
     int argc_out = 0;
     const char **argv_out =
 	(const char **) Malloc((*argcp + 1) * sizeof(char *));
-    Boolean found = False;
     optlist_t *o;
     opt_t *opts;
 
@@ -636,7 +635,9 @@ parse_options(int *argcp, const char **argv)
     argv_out[argc_out++] = argv[0];
 
     for (i = 1; i < *argcp; i++) {
-	for (o = optlist; o != NULL; o = o->next) {
+	Boolean found = False;
+
+	for (o = optlist; o != NULL && !found; o = o->next) {
 	    opts = o->opts;
 	    for (j = 0; j < o->count; j++) {
 		if (!strcmp(argv[i], opts[j].name)) {
@@ -970,11 +971,7 @@ parse_model_number(char *m)
  * Asterisks and class names need not apply.
  */
 
-static struct {
-    const char *name;
-    void *address;
-    enum resource_type { XRM_STRING, XRM_BOOLEAN, XRM_INT } type;
-} resources[] = {
+static res_t base_resources[] = {
     { ResBindLimit,	aoffset(bind_limit),	XRM_BOOLEAN },
     { ResBsdTm,		aoffset(bsd_tm),		XRM_BOOLEAN },
 #if defined(HAVE_LIBSSL) /*[*/
@@ -987,9 +984,6 @@ static struct {
 #endif /*]*/
     { ResCharset,	aoffset(charset),	XRM_STRING },
     { ResColor8,	aoffset(color8),		XRM_BOOLEAN },
-#if defined(TCL3270) /*[*/
-    { ResCommandTimeout, aoffset(tcl3270.command_timeout), XRM_INT },
-#endif /*]*/
     { ResConfDir,	aoffset(conf_dir),	XRM_STRING },
     { ResDbcsCgcsgid, aoffset(dbcs_cgcsgid),	XRM_STRING },
     { ResEof,		aoffset(linemode.eof),	XRM_STRING },
@@ -1002,27 +996,10 @@ static struct {
     { ResInlcr,		aoffset(linemode.inlcr),	XRM_BOOLEAN },
     { ResOnlcr,		aoffset(linemode.onlcr),	XRM_BOOLEAN },
     { ResIntr,		aoffset(linemode.intr),	XRM_STRING },
-#if defined(C3270) || defined(S3270) /*[*/
-    { ResIdleCommand,aoffset(idle_command),	XRM_STRING },
-    { ResIdleCommandEnabled,aoffset(idle_command_enabled),XRM_BOOLEAN },
-    { ResIdleTimeout,aoffset(idle_timeout),	XRM_STRING },
-#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
     { ResKeyFile,	aoffset(ssl.key_file),	XRM_STRING },
     { ResKeyFileType,	aoffset(ssl.key_file_type),XRM_STRING },
     { ResKeyPasswd,	aoffset(ssl.key_passwd),	XRM_STRING },
-#endif /*]*/
-#if defined(C3270) /*[*/
-    { ResKeymap,	aoffset(interactive.key_map),XRM_STRING },
-# if !defined(_WIN32) /*[*/
-    { ResMetaEscape,aoffset(c3270.meta_escape),	XRM_STRING },
-    { ResCursesKeypad,aoffset(c3270.curses_keypad),XRM_BOOLEAN },
-    { ResCbreak,	aoffset(c3270.cbreak_mode),XRM_BOOLEAN },
-# endif /*]*/
-    { ResAsciiBoxDraw,aoffset(c3270.ascii_box_draw),XRM_BOOLEAN },
-#if defined(CURSES_WIDE) /*[*/
-    { ResAcs,		aoffset(c3270.acs),	XRM_BOOLEAN },
-#endif /*]*/
 #endif /*]*/
     { ResKill,		aoffset(linemode.kill),	XRM_STRING },
     { ResLnext,		aoffset(linemode.lnext),	XRM_STRING },
@@ -1032,40 +1009,17 @@ static struct {
 #endif /*]*/
     { ResLoginMacro,aoffset(login_macro),	XRM_STRING },
     { ResM3279,	aoffset(m3279),			XRM_BOOLEAN },
-#if defined(C3270) /*[*/
-    { ResMenuBar,	aoffset(interactive.menubar),XRM_BOOLEAN },
-#endif /*]*/
     { ResModel,	aoffset(model),			XRM_STRING },
     { ResModifiedSel, aoffset(modified_sel),	XRM_BOOLEAN },
-#if defined(C3270) /*[*/
-# if !defined(_WIN32) /*[*/
-    { ResMono,	aoffset(interactive.mono),	XRM_BOOLEAN },
-    { ResMouse,	aoffset(c3270.mouse),		XRM_BOOLEAN },
-# endif /*]*/
-    { ResNoPrompt,	aoffset(secure),		XRM_BOOLEAN },
-#endif /*]*/
     { ResNewEnviron,aoffset(new_environ),	XRM_BOOLEAN },
     { ResNumericLock, aoffset(numeric_lock),	XRM_BOOLEAN },
     { ResOerrLock,	aoffset(oerr_lock),	XRM_BOOLEAN },
     { ResOversize,	aoffset(oversize),	XRM_STRING },
     { ResPort,	aoffset(port),			XRM_STRING },
-#if defined(C3270) /*[*/
-    { ResPrinterLu,	aoffset(interactive.printer_lu),XRM_STRING },
-    { ResPrinterOptions,aoffset(interactive.printer_opts),XRM_STRING },
-#endif /*]*/
     { ResProxy,		aoffset(proxy),		XRM_STRING },
     { ResQrBgColor,	aoffset(qr_bg_color),	XRM_BOOLEAN },
     { ResQuit,		aoffset(linemode.quit),	XRM_STRING },
     { ResRprnt,		aoffset(linemode.rprnt),	XRM_STRING },
-#if defined(C3270) /*[*/
-    { ResReconnect,	aoffset(interactive.reconnect),XRM_BOOLEAN },
-#if !defined(_WIN32) /*[*/
-    { ResReverseVideo,aoffset(c3270.reverse_video),XRM_BOOLEAN },
-#endif /*]*/
-#endif /*]*/
-#if defined(C3270) /*[*/
-    { ResSaveLines,	aoffset(interactive.save_lines),XRM_INT },
-#endif /*]*/
     { ResScreenTraceFile,aoffset(screentrace_file),XRM_STRING },
     { ResSecure,	aoffset(secure),		XRM_BOOLEAN },
 #if defined(HAVE_LIBSSL) /*[*/
@@ -1074,9 +1028,6 @@ static struct {
     { ResSbcsCgcsgid, aoffset(sbcs_cgcsgid),	XRM_STRING },
     { ResScriptPort,aoffset(script_port),	XRM_STRING },
     { ResTermName,	aoffset(termname),	XRM_STRING },
-#if defined(WC3270) /*[*/
-    { ResTitle,	aoffset(c3270.title),		XRM_STRING },
-#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
     { ResTls,	aoffset(ssl.tls),		XRM_BOOLEAN },
 #endif /*]*/
@@ -1090,13 +1041,37 @@ static struct {
 #if defined(HAVE_LIBSSL) /*[*/
     { ResVerifyHostCert,aoffset(ssl.verify_host_cert),XRM_BOOLEAN },
 #endif /*]*/
-#if defined(WC3270) /*[*/
-    { ResVisualBell,aoffset(interactive.visual_bell),XRM_BOOLEAN },
-#endif /*]*/
-    { ResWerase,	aoffset(linemode.werase),XRM_STRING },
-
-    { NULL,		0,			XRM_STRING }
+    { ResWerase,	aoffset(linemode.werase),XRM_STRING }
 };
+
+typedef struct reslist {
+    struct reslist *next;
+    res_t *resources;
+    unsigned count;
+} reslist_t;
+static reslist_t first_reslist = {
+    NULL, base_resources, array_count(base_resources)
+};
+static reslist_t *reslist = &first_reslist;
+static reslist_t **last_reslist = &first_reslist.next;
+
+/*
+ * Register an additional set of resources.
+ */
+void
+register_resources(res_t *res, unsigned num_res)
+{
+    reslist_t *r;
+
+    r = Malloc(sizeof(reslist_t));
+
+    r->next = NULL;
+    r->resources = res;
+    r->count = num_res;
+
+    *last_reslist = r;
+    last_reslist = &r->next;
+}
 
 /*
  * Compare two strings, allowing the second to differ by uppercasing the
@@ -1239,12 +1214,13 @@ parse_xrm(const char *arg, const char *where)
     const char *name;
     unsigned rnlen;
     const char *s;
-    int i;
+    unsigned i;
     char *t;
     void *address = NULL;
     enum resource_type type = XRM_STRING;
     Boolean quoted;
     char c;
+    reslist_t *r;
 #if defined(C3270) /*[*/
     char *hide;
     Boolean arbitrary = False;
@@ -1256,13 +1232,19 @@ parse_xrm(const char *arg, const char *where)
     }
 
     /* Look up the name. */
-    for (i = 0; resources[i].name != NULL; i++) {
-	if (!strncapcmp(resources[i].name, name, rnlen)) {
-	    address = resources[i].address;
-	    type = resources[i].type;
-	    break;
+    for (r = reslist; r != NULL; r = r->next) {
+	Boolean found = False;
+
+	for (i = 0; i < r->count && !found; i++) {
+	    if (!strncapcmp(r->resources[i].name, name, rnlen)) {
+		address = r->resources[i].address;
+		type = r->resources[i].type;
+		found = True;
+		break;
+	    }
 	}
     }
+
     if (address == NULL) {
 	for (i = 0; toggle_names[i].name != NULL; i++) {
 	    if (!toggle_supported(toggle_names[i].index)) {

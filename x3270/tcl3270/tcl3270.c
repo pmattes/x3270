@@ -74,6 +74,7 @@
 #include "lazya.h"
 #include "macros.h"
 #include "nvt.h"
+#include "opts.h"
 #include "popups.h"
 #include "print_screen.h"
 #include "screen.h"
@@ -1773,6 +1774,9 @@ tcl3270_register(void)
 	{ "Wait",		Wait_action,		ACTION_KE },
 	{ "Query",		Query_action,		ACTION_KE }
     };
+    static res_t tcl3270_resources[] = {
+	{ ResCommandTimeout, aoffset(tcl3270.command_timeout), XRM_INT }
+    };
 
     /* Register our toggles. */
     register_toggles(toggles, array_count(toggles));
@@ -1781,6 +1785,9 @@ tcl3270_register(void)
     register_schange(ST_CONNECT, main_connect);
     register_schange(ST_3270_MODE, main_connect);
 
-    /* Register out actions. */
+    /* Register our actions. */
     register_actions(actions, array_count(actions));
+
+    /* Register our resources. */
+    register_resources(tcl3270_resources, array_count(tcl3270_resources));
 }

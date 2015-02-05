@@ -56,3 +56,17 @@ typedef struct {
 
 /* Register an array of options. */
 void register_opts(opt_t *opts, unsigned num_opts);
+
+/* Resource definition. */
+typedef struct {
+    const char *name;
+    void *address;
+    enum resource_type {
+	XRM_STRING,	/* char * */
+	XRM_BOOLEAN,	/* Boolean */
+	XRM_INT		/* int */
+    } type;
+} res_t;
+
+/* Register an array of resources. */
+void register_resources(res_t *res, unsigned num_res);

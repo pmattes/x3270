@@ -222,9 +222,19 @@ s3270_register(void)
 	{ OptUtf8,     OPT_BOOLEAN, True,  ResUtf8,      aoffset(utf8),
 	    NULL, "Force local codeset to be UTF-8" }
     };
+    static res_t s3270_resources[] = {
+	{ ResIdleCommand,aoffset(idle_command),     XRM_STRING },
+	{ ResIdleCommandEnabled,aoffset(idle_command_enabled),XRM_BOOLEAN },
+	{ ResIdleTimeout,aoffset(idle_timeout),     XRM_STRING }
+    };
 
+    /* Register for state changes. */
     register_schange(ST_CONNECT, main_connect);
     register_schange(ST_3270_MODE, main_connect);
 
+    /* Register our options. */
     register_opts(s3270_opts, array_count(s3270_opts));
+
+    /* Register our resources. */
+    register_resources(s3270_resources, array_count(s3270_resources));
 }
