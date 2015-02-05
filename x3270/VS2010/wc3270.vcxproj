@@ -119,7 +119,6 @@
     <ClCompile Include="..\wc3270\keypad.c" />
     <ClCompile Include="..\wc3270\macros.c" />
     <ClCompile Include="..\wc3270\menubar.c" />
-    <ClCompile Include="..\wc3270\nvt.c" />
     <ClCompile Include="..\wc3270\nvt_gui.c" />
     <ClCompile Include="..\wc3270\pr3287_session.c" />
     <ClCompile Include="..\wc3270\readres.c" />

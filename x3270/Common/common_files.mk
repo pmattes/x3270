@@ -1,8 +1,8 @@
 # Source files common to all 3270 emulators
-COMMON_SOURCES = nvt.c resources.c
+COMMON_SOURCES = resources.c
 
 # Object files common to all 3270 emulators
-COMMON_OBJECTS = nvt.$(OBJ) resources.$(OBJ)
+COMMON_OBJECTS = resources.$(OBJ)
 
 # Header files common to all 3270 emulators
 COMMON_HEADERS = fallbacksc.h localdefs.h

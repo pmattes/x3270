@@ -83,32 +83,34 @@
 #endif /*]*/
 
 #define MAX_COLORS	16
-/* N.B.: "neutral black" means black on a screen (white-on-black device) and
+/*
+ * N.B.: F0 "neutral black" means black on a screen (white-on-black device) and
  *         white on a printer (black-on-white device).
- *       "neutral white" means white on a screen (white-on-black device) and
+ *       F7 "neutral white" means white on a screen (white-on-black device) and
  *         black on a printer (black-on-white device).
  */
 static int cmap_fg[MAX_COLORS] = {
-	0,						/* neutral black */
-	FOREGROUND_INTENSITY | FOREGROUND_BLUE,		/* blue */
-	FOREGROUND_INTENSITY | FOREGROUND_RED,		/* red */
+	0,						/* F0 neutral black */
+	FOREGROUND_INTENSITY | FOREGROUND_BLUE,		/* F1 blue */
+	FOREGROUND_INTENSITY | FOREGROUND_RED,		/* F2 red */
 	FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_BLUE,
-							/* pink */
-	FOREGROUND_INTENSITY | FOREGROUND_GREEN,	/* green */
+							/* F3 pink */
+	FOREGROUND_INTENSITY | FOREGROUND_GREEN,	/* F4 green */
 	FOREGROUND_INTENSITY | FOREGROUND_GREEN | FOREGROUND_BLUE,
-							/* turquoise */
+							/* F5 turquoise */
 	FOREGROUND_INTENSITY | FOREGROUND_GREEN | FOREGROUND_RED,
-							/* yellow */
+							/* F6 yellow */
 	FOREGROUND_INTENSITY | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE,
-							/* neutral white */
-	0,						/* black */
-	FOREGROUND_BLUE,				/* deep blue */
-	FOREGROUND_INTENSITY | FOREGROUND_RED,		/* orange */
-	FOREGROUND_RED | FOREGROUND_BLUE,		/* purple */
-	FOREGROUND_GREEN,				/* pale green */
-	FOREGROUND_GREEN | FOREGROUND_BLUE,		/* pale turquoise */
-	FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE, /* gray */
-	FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE,							/* white */
+							/* F7 neutral white */
+	0,						/* F8 black */
+	FOREGROUND_BLUE,				/* F9 deep blue */
+	FOREGROUND_INTENSITY | FOREGROUND_RED,		/* FA orange */
+	FOREGROUND_RED | FOREGROUND_BLUE,		/* FB purple */
+	FOREGROUND_GREEN,				/* FC pale green */
+	FOREGROUND_GREEN | FOREGROUND_BLUE,		/* FD pale turquoise */
+	FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE,
+							/* FE gray */
+	FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE,							/* FF white */
 };
 static int cmap_bg[MAX_COLORS] = {
 	0,						/* neutral black */

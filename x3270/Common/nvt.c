@@ -812,100 +812,85 @@ ansi_delete_chars(int nn, int ig2 _is_unused)
 static enum state
 ansi_sgr(int ig1 _is_unused, int ig2 _is_unused)
 {
-	int i;
+    int i;
 
-	for (i = 0; i <= nx && i < NN; i++)
-	    switch (n[i]) {
-		case 0:
-		    gr = 0;
-		    fg = 0;
-		    bg = 0;
-		    break;
-		case 1:
-		    gr |= GR_INTENSIFY;
-		    break;
-		case 4:
-		    gr |= GR_UNDERLINE;
-		    break;
-		case 5:
-		    gr |= GR_BLINK;
-		    break;
-		case 7:
-		    gr |= GR_REVERSE;
-		    break;
-		case 30:
-		    fg = 0xf0;	/* black */
-		    break;
-		case 31:
-		    fg = 0xf2;	/* red */
-		    break;
-		case 32:
-		    fg = 0xf4;	/* green */
-		    break;
-		case 33:
-		    fg = 0xf6;	/* yellow */
-		    break;
-		case 34:
-		    fg = 0xf1;	/* blue */
-		    break;
-		case 35:
-		    fg = 0xf3;	/* magenta */
-		    break;
-		case 36:
-#if defined(WC3270) /*[*/
-		    fg = 0xf6;	/* turquoise */
-#else /*][*/
-		    fg = 0xfd;	/* cyan */
-#endif /*]*/
-		    break;
-		case 37:
-#if defined(WC3270) /*[*/
-		    fg = 0xf7;	/* white */
-#else /*][*/
-		    fg = 0xff;	/* white */
-#endif /*]*/
-		    break;
-		case 39:
-		    fg = 0;	/* default */
-		    break;
-		case 40:
-		    bg = 0xf0;	/* black */
-		    break;
-		case 41:
-		    bg = 0xf2;	/* red */
-		    break;
-		case 42:
-		    bg = 0xf4;	/* green */
-		    break;
-		case 43:
-		    bg = 0xf6;	/* yellow */
-		    break;
-		case 44:
-		    bg = 0xf1;	/* blue */
-		    break;
-		case 45:
-		    bg = 0xf3;	/* magenta */
-		    break;
-		case 46:
-#if defined(WC3270) /*[*/
-		    bg = 0xf6;	/* turquoise */
-#else /*][*/
-		    bg = 0xfd;	/* cyan */
-#endif /*]*/
-		    break;
-		case 47:
-#if defined(WC3270) /*[*/
-		    bg = 0xf7;	/* white */
-#else /*][*/
-		    bg = 0xff;	/* white */
-#endif /*]*/
-		    break;
-		case 49:
-		    bg = 0;	/* default */
-		    break;
-	    }
+    for (i = 0; i <= nx && i < NN; i++) {
+	switch (n[i]) {
+	case 0:
+	    gr = 0;
+	    fg = 0;
+	    bg = 0;
+	    break;
+	case 1:
+	    gr |= GR_INTENSIFY;
+	    break;
+	case 4:
+	    gr |= GR_UNDERLINE;
+	    break;
+	case 5:
+	    gr |= GR_BLINK;
+	    break;
+	case 7:
+	    gr |= GR_REVERSE;
+	    break;
+	case 30:
+	    fg = 0xf0;	/* black -> neutral black */
+	    break;
+	case 31:
+	    fg = 0xf2;	/* red -> red */
+	    break;
+	case 32:
+	    fg = 0xf4;	/* green -> green */
+	    break;
+	case 33:
+	    fg = 0xf6;	/* yellow -> yellow */
+	    break;
+	case 34:
+	    fg = 0xf1;	/* blue -> blue */
+	    break;
+	case 35:
+	    fg = 0xf3;	/* magenta -> pink */
+	    break;
+	case 36:
+	    fg = 0xf5;	/* cyan -> turquiose */
+	    break;
+	case 37:
+	    fg = 0xf7;	/* white -> neutral white */
+	    break;
+	case 39:
+	    fg = 0;	/* default */
+	    break;
+	case 40:
+	    bg = 0xf0;	/* black -> neutral black */
+	    break;
+	case 41:
+	    bg = 0xf2;	/* red -> red */
+	    break;
+	case 42:
+	    bg = 0xf4;	/* green -> green */
+	    break;
+	case 43:
+	    bg = 0xf6;	/* yellow -> yellow */
+	    break;
+	case 44:
+	    bg = 0xf1;	/* blue -> blue */
+	    break;
+	case 45:
+	    bg = 0xf3;	/* magenta -> pink */
+	    break;
+	case 46:
+	    bg = 0xf5;	/* cyan -> turquoise */
+	    break;
+	case 47:
+	    bg = 0xf7;	/* white -> neutral white */
+	    break;
+	case 49:
+	    bg = 0;	/* default */
+	    break;
+	}
+    }
 
-	return DATA;
+    return DATA;
 }
 
 static enum state
@@ -1897,156 +1882,146 @@ ansi_dump_spaces(size_t spaces, int baddr)
 static void
 nvt_snap_one(struct ea *buf)
 {
-    	int baddr;
-	int cur_gr = 0;
-	int cur_fg = 0;
-	int cur_bg = 0;
-	int spaces = 0;
-	static int uncolor_table[16] = {
-	    /* 0xf0 */ 0,
-	    /* 0xf1 */ 4,
-	    /* 0xf2 */ 1,
-	    /* 0xf3 */ 5,
-	    /* 0xf4 */ 2,
-	    /* 0xf5 */ 0, /* can't happen */
-#if defined(WC3270) /*[*/
-	    /* 0xf6 */ 6,
-#else /*][*/
-	    /* 0xf6 */ 3,
-#endif /*]*/
-#if defined(WC3270) /*[*/
-	    /* 0xf7 */ 7,
-#else /*][*/
-	    /* 0xf7 */ 0, /* can't happen */
-#endif /*]*/
-	    /* 0xf8 */ 0, /* can't happen */
-	    /* 0xf9 */ 0, /* can't happen */
-	    /* 0xfa */ 0, /* can't happen */
-	    /* 0xfb */ 0, /* can't happen */
-	    /* 0xfc */ 0, /* can't happen */
-#if defined(WC3270) /*[*/
-	    /* 0xfd */ 0, /* can't happen */
-#else /*][*/
-	    /* 0xfd */ 6, /* can't happen */
-#endif /*]*/
-	    /* 0xfe */ 0, /* can't happen */
-#if defined(WC3270) /*[*/
-	    /* 0xff */ 0, /* can't happen */
-#else /*][*/
-	    /* 0xff */ 7, /* can't happen */
-#endif /*]*/
-	};
-	char mb[16];
-	int len;
-	int xlen;
-	int i;
-	enum dbcs_state d;
-	int c;
-	int last_sgr = 0;
-#define	EMIT_SGR(n)	{ emit_sgr(n); last_sgr = (n); }
+    int baddr;
+    int cur_gr = 0;
+    int cur_fg = 0;
+    int cur_bg = 0;
+    int spaces = 0;
+    static int uncolor_table[16] = {
+	/* 0xf0 */ 0,	/* neutral black -> black */
+	/* 0xf1 */ 4,	/*          blue -> blue */
+	/* 0xf2 */ 1,	/*           red -> red */
+	/* 0xf3 */ 5,	/*          pink -> magenta */
+	/* 0xf4 */ 2,	/*         green -> green */
+	/* 0xf5 */ 6,	/*     turquoise -> cyan */
+	/* 0xf6 */ 3,	/*        yellow -> yellow */
+	/* 0xf7 */ 7,	/* neutral white -> white */
+	/* 0xf8 */ 0,	/* (shouldn't happen) */
+	/* 0xf9 */ 0,	/* (shouldn't happen) */
+	/* 0xfa */ 0,	/* (shouldn't happen) */
+	/* 0xfb */ 0,	/* (shouldn't happen) */
+	/* 0xfc */ 0,	/* (shouldn't happen) */
+	/* 0xfd */ 0,	/* (shouldn't happen) */
+	/* 0xfe */ 0,	/* (shouldn't happen) */
+	/* 0xff */ 0	/* (shouldn't happen) */
+    };
+    char mb[16];
+    int len;
+    int xlen;
+    int i;
+    enum dbcs_state d;
+    int c;
+    int last_sgr = 0;
+#   define	EMIT_SGR(n)	{ emit_sgr(n); last_sgr = (n); }
 
-	/* Draw what's on the screen. */
-	baddr = 0;
-	do {
-	    	int xgr = buf[baddr].gr;
+    /* Draw what's on the screen. */
+    baddr = 0;
+    do {
+	int xgr = buf[baddr].gr;
 
-		/* Set the attributes. */
-	    	if (xgr != cur_gr) {
-		    	spaces = ansi_dump_spaces(spaces, baddr);
-		    	if ((xgr ^ cur_gr) & cur_gr) {
-				/*
-				 * Something turned off. Turn everything off,
-				 * then turn the remaining modes on below.
-				 */
-			    	EMIT_SGR(0);
-				xgr = 0;
-			} else {
-			    	/*
-				 * Clear the bits in xgr that are already set
-				 * in cur_gr.  Turn on the new modes.
-				 */
-			    	xgr &= ~cur_gr;
-			}
-			/* Turn on the attributes remaining in xgr. */
-		    	if (xgr & GR_INTENSIFY)
-			    	EMIT_SGR(1);
-		    	if (xgr & GR_UNDERLINE)
-			    	EMIT_SGR(4);
-		    	if (xgr & GR_BLINK)
-			    	EMIT_SGR(5);
-		    	if (xgr & GR_REVERSE)
-			    	EMIT_SGR(7);
-		    	cur_gr = buf[baddr].gr;
+	/* Set the attributes. */
+	if (xgr != cur_gr) {
+	    spaces = ansi_dump_spaces(spaces, baddr);
+	    if ((xgr ^ cur_gr) & cur_gr) {
+		/*
+		 * Something turned off. Turn everything off,
+		 * then turn the remaining modes on below.
+		 */
+		EMIT_SGR(0);
+		xgr = 0;
+	    } else {
+		/*
+		 * Clear the bits in xgr that are already set
+		 * in cur_gr.  Turn on the new modes.
+		 */
+		xgr &= ~cur_gr;
+	    }
+	    /* Turn on the attributes remaining in xgr. */
+	    if (xgr & GR_INTENSIFY) {
+		EMIT_SGR(1);
+	    }
+	    if (xgr & GR_UNDERLINE) {
+		EMIT_SGR(4);
+	    }
+	    if (xgr & GR_BLINK) {
+		EMIT_SGR(5);
+	    }
+	    if (xgr & GR_REVERSE) {
+		EMIT_SGR(7);
+	    }
+	    cur_gr = buf[baddr].gr;
+	}
+
+	/* Set the colors. */
+	if (buf[baddr].fg != cur_fg) {
+	    spaces = ansi_dump_spaces(spaces, baddr);
+	    if (buf[baddr].fg) {
+		c = uncolor_table[buf[baddr].fg & 0x0f];
+	    } else {
+		c = 9;
+	    }
+	    EMIT_SGR(30 + c);
+	    cur_fg = buf[baddr].fg;
+	}
+	if (buf[baddr].bg != cur_bg) {
+	    spaces = ansi_dump_spaces(spaces, baddr);
+	    if (buf[baddr].bg) {
+		c = uncolor_table[buf[baddr].bg & 0x0f];
+	    } else {
+		c = 9;
+	    }
+	    EMIT_SGR(40 + c);
+	    cur_bg = buf[baddr].bg;
+	}
+
+	/* Expand the current character to multibyte. */
+	d = ctlr_dbcs_state(baddr);
+	if (IS_LEFT(d)) {
+	    int xaddr = baddr;
+	    INC_BA(xaddr);
+	    len = ebcdic_to_multibyte(buf[baddr].cc << 8 | buf[xaddr].cc, mb,
+		    sizeof(mb));
+	} else if (IS_RIGHT(d)) {
+	    len = 0;
+	} else {
+	    len = ebcdic_to_multibyte(buf[baddr].cc, mb, sizeof(mb));
+	}
+	if (len > 0) {
+	    len--; /* terminating NUL */
+	}
+	xlen = 0;
+	for (i = 0; i < len; i++) {
+	    if ((mb[i] & 0xff) == 0xff) {
+		xlen++;
+	    }
+	}
+
+	/* Optimize for white space. */
+	if (!cur_fg && !cur_bg && !cur_gr &&
+	    ((len + xlen) == 1) && (mb[0] == ' ')) {
+	    spaces++;
+	} else {
+	    if (spaces) {
+		spaces = ansi_dump_spaces(spaces, baddr);
+	    }
+
+	    /* Emit the current character. */
+	    space3270out(len + xlen);
+	    for (i = 0; i < len; i++) {
+		if ((mb[i] & 0xff) == 0xff) {
+		    *obptr++ = 0xff;
 		}
+		*obptr++ = mb[i];
+	    }
+	}
 
-		/* Set the colors. */
-		if (buf[baddr].fg != cur_fg) {
-		    	spaces = ansi_dump_spaces(spaces, baddr);
-		    	if (buf[baddr].fg)
-			    	c = uncolor_table[buf[baddr].fg & 0x0f];
-			else
-			    	c = 9;
-			EMIT_SGR(30 + c);
-			cur_fg = buf[baddr].fg;
-		}
-		if (buf[baddr].bg != cur_bg) {
-		    	spaces = ansi_dump_spaces(spaces, baddr);
-		    	if (buf[baddr].bg)
-			    	c = uncolor_table[buf[baddr].bg & 0x0f];
-			else
-			    	c = 9;
-			EMIT_SGR(40 + c);
-			cur_bg = buf[baddr].bg;
-		}
+	INC_BA(baddr);
+    } while (baddr != 0);
 
-		/* Expand the current character to multibyte. */
-		d = ctlr_dbcs_state(baddr);
-		if (IS_LEFT(d)) {
-		    	int xaddr = baddr;
-			INC_BA(xaddr);
-			len = ebcdic_to_multibyte(buf[baddr].cc << 8 |
-					    buf[xaddr].cc,
-					    mb, sizeof(mb));
-		} else if (IS_RIGHT(d)) {
-		    	len = 0;
-		} else {
-			len = ebcdic_to_multibyte(buf[baddr].cc,
-					    mb, sizeof(mb));
-		}
-		if (len > 0)
-			len--; /* terminating NUL */
-		xlen = 0;
-		for (i = 0; i < len; i++) {
-			if ((mb[i] & 0xff) == 0xff)
-				xlen++;
-		}
-
-		/* Optimize for white space. */
-		if (!cur_fg &&
-		    !cur_bg &&
-		    !cur_gr &&
-		    ((len + xlen) == 1) &&
-		    (mb[0] == ' ')) {
-		    	spaces++;
-		} else {
-		    	if (spaces)
-			    	spaces = ansi_dump_spaces(spaces, baddr);
-
-			/* Emit the current character. */
-			space3270out(len + xlen);
-			for (i = 0; i < len; i++) {
-				if ((mb[i] & 0xff) == 0xff)
-					*obptr++ = 0xff;
-				*obptr++ = mb[i];
-			}
-		}
-
-		INC_BA(baddr);
-	} while (baddr != 0);
-
-	/* Remove any attributes we set above. */
-	if (last_sgr != 0)
-		emit_sgr(0);
+    /* Remove any attributes we set above. */
+    if (last_sgr != 0) {
+	emit_sgr(0);
+    }
 }
 
 /* Snap the contents of the screen buffers in NVT mode. */

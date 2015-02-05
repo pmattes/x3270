@@ -50,9 +50,6 @@
     <ClCompile Include="..\wc3270\menubar.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\nvt.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\nvt_gui.c">
       <Filter>Source Files</Filter>
     </ClCompile>
