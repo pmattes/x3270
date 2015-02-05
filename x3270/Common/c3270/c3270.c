@@ -1845,12 +1845,10 @@ void
 product_set_appres_defaults(void)
 {
     appres.oerr_lock = True;
-
     appres.interactive.compose_map = "latin1";
     appres.interactive.do_confirms = True;
     appres.interactive.menubar = True;
     appres.interactive.save_lines = 4096;
-
 #if defined(_WIN32) /*[*/
     appres.trace_monitor = True;
     set_toggle(UNDERSCORE, True);
@@ -1860,12 +1858,13 @@ product_set_appres_defaults(void)
     appres.c3270.mouse = True;
 #endif /*]*/
 
-#if defined(CURSES_WIDE) /*[*/
+#if !defined(_WIN32) /*[*/
+# if defined(CURSES_WIDE) /*[*/
     appres.c3270.acs = True;
-#else /*][*/
+# else /*][*/
     appres.c3270.ascii_box_draw = True;
+# endif /*]*/
 #endif /*]*/
-
 }
 
 /*
