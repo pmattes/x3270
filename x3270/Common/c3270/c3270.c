@@ -72,6 +72,7 @@
 #include "linemode.h"
 #include "macros.h"
 #include "nvt.h"
+#include "opts.h"
 #include "popups.h"
 #include "pr3287_session.h"
 #include "print_screen.h"
@@ -105,6 +106,12 @@
 
 #if defined(_WIN32) /*[*/
 # define DELENV		"WC3DEL"
+#endif /*]*/
+
+#if defined(_WIN32) /*[*/
+# define PR3287_NAME "wpr3287"
+#else /*][*/
+# define PR3287_NAME "pr3287"
 #endif /*]*/
 
 static void interact(void);
@@ -1906,6 +1913,75 @@ c3270_register(void)
 	{ "Show",		Show_action,		ACTION_KE },
 	{ "Trace",		Trace_action,		ACTION_KE },
     };
+    static opt_t c3270_opts[] = {
+	{ OptAllBold,  OPT_BOOLEAN, True,  ResAllBold,
+	    aoffset(c3270.all_bold_on),
+	    NULL, "Display all text in bold" },
+	{ OptKeymap,   OPT_STRING,  False, ResKeymap,
+	    aoffset(interactive.key_map),
+	    "<name>[,<name>...]", "Keyboard map name(s)" },
+	{ OptSaveLines, OPT_INT,    False, ResSaveLines,
+	    aoffset(interactive.save_lines),
+	    "<lines>", "Specify the number of lines to save for scrolling" },
+	{ OptSecure,   OPT_BOOLEAN, True,  ResSecure,
+	    aoffset(secure),
+	    NULL, "Restrict potentially-destructive user actions" },
+	{ OptNoPrompt, OPT_BOOLEAN, True,  ResNoPrompt,
+	    aoffset(secure),
+	    NULL, "Alias for -secure" },
+	{ OptPrinterLu,OPT_STRING,  False, ResPrinterLu,
+	    aoffset(interactive.printer_lu),
+	    "<luname>",
+	    "Automatically start a "PR3287_NAME" printer session to <luname>" },
+	{ OptReconnect,OPT_BOOLEAN, True,  ResReconnect,
+	    aoffset(interactive.reconnect),
+	    NULL, "Reconnect to host as soon as it disconnects" },
+
+#if defined(C3270_80_132) /*[*/
+	{ OptAltScreen,OPT_STRING,  False, ResAltScreen,
+	    aoffset(c3270.altscreen),
+	    "<string>",
+	    "Specify string to switch terminal from 80-column mode to 132-column mode"
+},
+	{ OptDefScreen,OPT_STRING,  False, ResDefScreen,
+	    aoffset(c3270.defscreen),
+	    "<string>",
+	    "Specify string to switch terminal from 80-column mode to 132-column mode"
+},
+#endif /*]*/
+
+# if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
+	{ OptDefaultFgBg,OPT_BOOLEAN,True, ResDefaultFgBg,
+	    aoffset(c3270.default_fgbg),
+	    NULL,
+	    "Use terminal's default foreground and background colors"
+	},
+# endif /*]*/
+
+#if !defined(_WIN32) /*[*/
+	{ OptCbreak,   OPT_BOOLEAN, True,  ResCbreak,
+	    aoffset(c3270.cbreak_mode),
+	    NULL, "Force terminal CBREAK mode" },
+	{ OptMono,     OPT_BOOLEAN, True,  ResMono,
+	    aoffset(interactive.mono),
+	    NULL, "Do not use terminal color capabilities" },
+	{ OptReverseVideo,OPT_BOOLEAN,True,ResReverseVideo,
+	    aoffset(c3270.reverse_video),
+	    NULL, "Switch to black-on-white mode" },
+#endif /*]*/
+
+#if defined(_WIN32) /*[*/
+	{ OptAutoShortcut,OPT_BOOLEAN, True, ResAutoShortcut,
+	    aoffset(c3270.auto_shortcut),
+	    NULL, "Run in auto-shortcut mode" },
+	{ OptNoAutoShortcut,OPT_BOOLEAN,False,ResAutoShortcut,
+	    aoffset(c3270.auto_shortcut),
+	    NULL, "Do not run in auto-shortcut mode" },
+	{ OptTitle,    OPT_STRING,  False, ResTitle,
+	    aoffset(c3270.title),
+	    "<string>", "Set window title to <string>" },
+#endif /*]*/
+    };
 
     /* Register for state changes. */
     register_schange(ST_CONNECT, main_connect);
@@ -1914,4 +1990,7 @@ c3270_register(void)
 
     /* Register our actions. */
     register_actions(actions, array_count(actions));
+
+    /* Register our options. */
+    register_opts(c3270_opts, array_count(c3270_opts));
 }

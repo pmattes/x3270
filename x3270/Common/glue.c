@@ -56,6 +56,7 @@
 #include "kybd.h"
 #include "macros.h"
 #include "nvt.h"
+#include "opts.h"
 #include "product.h"
 #include "readres.h"
 #include "screen.h"
@@ -93,6 +94,8 @@ static size_t session_suffix_len;
 static char *session_short_suffix;
 static size_t session_short_suffix_len;
 #endif /*]*/
+static opt_t *sorted_help = NULL;
+unsigned sorted_help_count = 0;
 
 /* Globals */
 const char     *programname;
@@ -492,182 +495,90 @@ set_appres_defaults(void)
 # define PR3287_NAME "pr3287"
 #endif /*]*/
 
-#define offset(n) (void *)&appres.n
-#define toggle_offset(index) offset(toggle[index])
-static struct {
-    const char *name;
-    enum {
-	OPT_BOOLEAN, OPT_STRING, OPT_XRM, OPT_SKIP2, OPT_NOP,
-	OPT_INT, OPT_V, OPT_DONE
-    } type;
-    Boolean flag;
-    const char *res_name;
-    void *aoff;
-    char *help_opts;
-    char *help_text;
-} opts[] = {
+static opt_t base_opts[] = {
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptAcceptHostname,OPT_STRING,False,ResAcceptHostname,offset(ssl.accept_hostname),
+{ OptAcceptHostname,OPT_STRING,False,ResAcceptHostname,aoffset(ssl.accept_hostname),
     "any|DNS:<name>|IP:<addr>","Host name to accept from server certificate" },
 #endif /*]*/
-#if defined(C3270) /*[*/
-{ OptAllBold,  OPT_BOOLEAN, True,  ResAllBold,   offset(c3270.all_bold_on),
-    NULL, "Display all text in bold" },
-#endif /*]*/
-#if defined(C3270_80_132) /*[*/
-{ OptAltScreen,OPT_STRING,  False, ResAltScreen, offset(c3270.altscreen),
-    "<string>",
-    "Specify string to switch terminal from 80-column mode to 132-column mode"
-},
-#endif /*]*/
-#if defined(WC3270) /*[*/
-{ OptAutoShortcut,OPT_BOOLEAN, True, ResAutoShortcut,offset(c3270.auto_shortcut),
-    NULL, "Run in auto-shortcut mode" },
-#endif /*]*/
-{ OptAplMode,  OPT_BOOLEAN, True,  ResAplMode,   offset(apl_mode),
+{ OptAplMode,  OPT_BOOLEAN, True,  ResAplMode,   aoffset(apl_mode),
     NULL, "Turn on APL mode" },
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptCaDir,    OPT_STRING,  False, ResCaDir,     offset(ssl.ca_dir),
+{ OptCaDir,    OPT_STRING,  False, ResCaDir,     aoffset(ssl.ca_dir),
     "<directory>","Specify OpenSSL CA certificate database directory" },
-{ OptCaFile,   OPT_STRING,  False, ResCaFile,    offset(ssl.ca_file),
+{ OptCaFile,   OPT_STRING,  False, ResCaFile,    aoffset(ssl.ca_file),
     "<filename>", "Specify OpenSSL CA certificate file" },
 #endif /*]*/
-#if defined(C3270) && !defined(_WIN32) /*[*/
-{ OptCbreak,   OPT_BOOLEAN, True,  ResCbreak,    offset(c3270.cbreak_mode),
-    NULL, "Force terminal CBREAK mode" },
-#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptCertFile, OPT_STRING,  False, ResCertFile,  offset(ssl.cert_file),
+{ OptCertFile, OPT_STRING,  False, ResCertFile,  aoffset(ssl.cert_file),
     "<filename>", "Specify OpenSSL certificate file" },
-{ OptCertFileType,OPT_STRING,False,ResCertFileType,  offset(ssl.cert_file_type),
+{ OptCertFileType,OPT_STRING,False,ResCertFileType,  aoffset(ssl.cert_file_type),
     "pem|asn1",   "Specify OpenSSL certificate file type" },
-{ OptChainFile,OPT_STRING,  False,ResChainFile,  offset(ssl.chain_file),
+{ OptChainFile,OPT_STRING,  False,ResChainFile,  aoffset(ssl.chain_file),
     "<filename>", "Specify OpenSSL certificate chain file" },
 #endif /*]*/
-{ OptCharset,  OPT_STRING,  False, ResCharset,   offset(charset),
+{ OptCharset,  OPT_STRING,  False, ResCharset,   aoffset(charset),
     "<name>", "Use host ECBDIC character set (code page) <name>"},
 { OptClear,    OPT_SKIP2,   False, NULL,         NULL,
     "<toggle>", "Turn on <toggle>" },
-#if defined(C3270) && !defined(_WIN32) /*[*/
-# if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
-{ OptDefaultFgBg,OPT_BOOLEAN,True, ResDefaultFgBg,offset(c3270.default_fgbg),
-    NULL,
-    "Use terminal's default foreground and background colors"
-},
-# endif /*]*/
-# if defined(C3270_80_132) /*[*/
-{ OptDefScreen,OPT_STRING,  False, ResDefScreen, offset(c3270.defscreen),
-    "<string>",
-    "Specify string to switch terminal from 80-column mode to 132-column mode"
-},
-# endif /*]*/
-#endif /*]*/
-{ OptDevName,  OPT_STRING,  False, ResDevName,   offset(devname),
+{ OptDevName,  OPT_STRING,  False, ResDevName,   aoffset(devname),
     "<name>", "Specify device name (workstation ID) for RFC 4777" },
 #if defined(LOCAL_PROCESS) /*[*/
 { OptLocalProcess,OPT_SKIP2,False, NULL,         NULL,
     "<command> [<arg>...]", "Run <command> instead of making TELNET conection"
 },
 #endif /*]*/
-{ OptHostsFile,OPT_STRING,  False, ResHostsFile, offset(hostsfile),
+{ OptHostsFile,OPT_STRING,  False, ResHostsFile, aoffset(hostsfile),
     "<filename>", "Use <hostname> as the ibm_hosts file" },
-{ OptHttpd,    OPT_STRING,  False, ResHttpd,     offset(httpd_port),
+{ OptHttpd,    OPT_STRING,  False, ResHttpd,     aoffset(httpd_port),
     "[<addr>:]<port>", "TCP port to listen on for http requests" },
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptKeyFile,  OPT_STRING,  False, ResKeyFile, offset(ssl.key_file),
+{ OptKeyFile,  OPT_STRING,  False, ResKeyFile, aoffset(ssl.key_file),
     "<filename>", "Get OpenSSL private key from <filename>" },
-{ OptKeyFileType,OPT_STRING,False, ResKeyFileType,offset(ssl.key_file_type),
+{ OptKeyFileType,OPT_STRING,False, ResKeyFileType,aoffset(ssl.key_file_type),
     "pem|asn1",   "Specify OpenSSL private key file type" },
-{ OptKeyPasswd,OPT_STRING,  False, ResKeyPasswd,offset(ssl.key_passwd),
+{ OptKeyPasswd,OPT_STRING,  False, ResKeyPasswd,aoffset(ssl.key_passwd),
     "file:<filename>|string:<text>","Specify OpenSSL private key password" },
 #endif /*]*/
-#if defined(C3270) /*[*/
-{ OptKeymap,   OPT_STRING,  False, ResKeymap,    offset(interactive.key_map),
-    "<name>[,<name>...]", "Keyboard map name(s)" },
-#endif /*]*/
 #if defined(_WIN32) /*[*/
-{ OptLocalCp,  OPT_INT,	False, ResLocalCp,   offset(local_cp),
+{ OptLocalCp,  OPT_INT,	False, ResLocalCp,   aoffset(local_cp),
     "<codepage>", "Use <codepage> instead of ANSI codepage for local I/O"
 },
 #endif /*]*/
-{ OptLoginMacro, OPT_STRING, False, ResLoginMacro, offset(login_macro),
+{ OptLoginMacro, OPT_STRING, False, ResLoginMacro, aoffset(login_macro),
     "Action([arg[,arg...]]) [...]"
 },
-{ OptModel,    OPT_STRING,  False, ResModel,     offset(model),
+{ OptModel,    OPT_STRING,  False, ResModel,     aoffset(model),
     "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
-#if defined(C3270) /*[*/
-# if !defined(_WIN32) /*[*/
-{ OptMono,     OPT_BOOLEAN, True,  ResMono,      offset(interactive.mono),
-    NULL, "Do not use terminal color capabilities" },
-# endif /*]*/
-#if defined(WC3270) /*[*/
-{ OptNoAutoShortcut,OPT_BOOLEAN,False,ResAutoShortcut,offset(c3270.auto_shortcut),
-    NULL, "Do not run in auto-shortcut mode" },
-#endif /*]*/
-{ OptNoPrompt, OPT_BOOLEAN, True,  ResNoPrompt,  offset(secure),
-    NULL, "Alias for -secure" },
-#endif /*]*/
-{ OptOversize, OPT_STRING,  False, ResOversize,  offset(oversize),
+{ OptOversize, OPT_STRING,  False, ResOversize,  aoffset(oversize),
     "<cols>x<rows>", "Specify larger screen" },
-{ OptPort,     OPT_STRING,  False, ResPort,      offset(port),
+{ OptPort,     OPT_STRING,  False, ResPort,      aoffset(port),
     "<port>", "Specify default TELNET port" },
-#if defined(C3270) /*[*/
-{ OptPrinterLu,OPT_STRING,  False, ResPrinterLu, offset(interactive.printer_lu),
-    "<luname>", "Automatically start a "PR3287_NAME" printer session to <luname>" },
-{ OptReconnect,OPT_BOOLEAN, True,  ResReconnect, offset(interactive.reconnect),
-    NULL, "Reconnect to host as soon as it disconnects" },
-#if !defined(_WIN32) /*[*/
-{ OptReverseVideo,OPT_BOOLEAN,True,ResReverseVideo,offset(c3270.reverse_video),
-    NULL, "Switch to black-on-white mode" },
-#endif /*]*/
-#endif /*]*/
-{ OptProxy,    OPT_STRING,  False, ResProxy,     offset(proxy),
+{ OptProxy,    OPT_STRING,  False, ResProxy,     aoffset(proxy),
     "<type>:<host>[:<port>]", "Specify proxy type and server" },
-#if defined(C3270) /*[*/
-{ OptSaveLines, OPT_INT,    False, ResSaveLines, offset(interactive.save_lines),
-    "<lines>", "Specify the number of lines to save for scrolling" },
-#endif /*]*/
-#if defined(S3270) /*[*/
-{ OptScripted, OPT_NOP,     False, ResScripted,  NULL,
-    NULL, "Turn on scripting" },
-#endif /*]*/
-{ OptScriptPort,OPT_STRING, False, ResScriptPort, offset(script_port),
+{ OptScriptPort,OPT_STRING, False, ResScriptPort, aoffset(script_port),
     "[<addr>:]<port>", "TCP port to listen on for script commands" },
-#if defined(C3270) /*[*/
-{ OptSecure,   OPT_BOOLEAN, True,  ResSecure,    offset(secure),
-    NULL, "Restrict potentially-destructive user actions" },
-#endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptSelfSignedOk, OPT_BOOLEAN, True, ResSelfSignedOk, offset(ssl.self_signed_ok),
+{ OptSelfSignedOk, OPT_BOOLEAN, True, ResSelfSignedOk, aoffset(ssl.self_signed_ok),
     NULL, "Allow self-signed host certificates" },
 #endif /*]*/
 { OptSet,      OPT_SKIP2,   False, NULL,         NULL,
     "<toggle>", "Turn on <toggle>" },
-{ OptSocket,   OPT_BOOLEAN, True,  ResSocket,    offset(socket),
+{ OptSocket,   OPT_BOOLEAN, True,  ResSocket,    aoffset(socket),
     NULL, "Create socket for script control" },
-{ OptTermName, OPT_STRING,  False, ResTermName,  offset(termname),
+{ OptTermName, OPT_STRING,  False, ResTermName,  aoffset(termname),
     "<name>", "Send <name> as TELNET terminal name" },
-#if defined(WC3270) /*[*/
-{ OptTitle,    OPT_STRING,  False, ResTitle,     offset(c3270.title),
-    "<string>", "Set window title to <string>" },
-#endif /*]*/
-{ OptTrace,    OPT_BOOLEAN, True,  ResTrace,     toggle_offset(TRACING),
+{ OptTrace,    OPT_BOOLEAN, True,  ResTrace,     toggle_aoffset(TRACING),
     NULL, "Enable tracing" },
-{ OptTraceFile,OPT_STRING,  False, ResTraceFile, offset(trace_file),
+{ OptTraceFile,OPT_STRING,  False, ResTraceFile, aoffset(trace_file),
     "<file>", "Write traces to <file>" },
-{ OptTraceFileSize,OPT_STRING,False,ResTraceFileSize,offset(trace_file_size),
+{ OptTraceFileSize,OPT_STRING,False,ResTraceFileSize,aoffset(trace_file_size),
     "<n>[KM]", "Limit trace file to <n> bytes" },
-{ OptUser,     OPT_STRING,  False, ResUser,      offset(user),
+{ OptUser,     OPT_STRING,  False, ResUser,      aoffset(user),
     "<name>", "Specify user name for RFC 4777" },
-#if defined(S3270) /*[*/
-{ OptUtf8,     OPT_BOOLEAN, True,  ResUtf8,      offset(utf8),
-    NULL,       "Force local codeset to be UTF-8"
-},
-#endif /*]*/
 { OptV,        OPT_V,	False, NULL,	     NULL,
     NULL, "Display build options and character sets" },
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptVerifyHostCert,OPT_BOOLEAN,True,ResVerifyHostCert,offset(ssl.verify_host_cert),
+{ OptVerifyHostCert,OPT_BOOLEAN,True,ResVerifyHostCert,aoffset(ssl.verify_host_cert),
     NULL, "Enable OpenSSL host certificate validation" },
 #endif /*]*/
 { OptVersion,  OPT_V,	False, NULL,	     NULL,
@@ -676,10 +587,35 @@ static struct {
     "'*.<resource>: <value>'", "Set <resource> to <value>"
 },
 { LAST_ARG,    OPT_DONE,    False, NULL,         NULL,
-    NULL, "Terminate argument list" },
-{ NULL,          OPT_SKIP2,   False, NULL,         NULL,
-    NULL, NULL }
+    NULL, "Terminate argument list" }
 };
+
+typedef struct optlist {
+    struct optlist *next;
+    opt_t *opts;
+    unsigned count;
+} optlist_t;
+static optlist_t first_optlist = { NULL, base_opts, array_count(base_opts) };
+static optlist_t *optlist = &first_optlist;
+static optlist_t **last_optlist = &first_optlist.next;
+
+/*
+ * Register an additional set of options.
+ */
+void
+register_opts(opt_t *opts, unsigned num_opts)
+{
+    optlist_t *o;
+
+    o = Malloc(sizeof(optlist_t));
+
+    o->next = NULL;
+    o->opts = opts;
+    o->count = num_opts;
+
+    *last_optlist = o;
+    last_optlist = &o->next;
+}
 
 /*
  * Pick out command-line options and set up appres.
@@ -687,21 +623,29 @@ static struct {
 static void
 parse_options(int *argcp, const char **argv)
 {
-    int i, j;
+    int i;
+    unsigned j;
     int argc_out = 0;
     const char **argv_out =
 	(const char **) Malloc((*argcp + 1) * sizeof(char *));
+    Boolean found = False;
+    optlist_t *o;
+    opt_t *opts;
 
     /* Parse the command-line options. */
     argv_out[argc_out++] = argv[0];
 
     for (i = 1; i < *argcp; i++) {
-	for (j = 0; opts[j].name != NULL; j++) {
-	    if (!strcmp(argv[i], opts[j].name)) {
-		break;
+	for (o = optlist; o != NULL; o = o->next) {
+	    opts = o->opts;
+	    for (j = 0; j < o->count; j++) {
+		if (!strcmp(argv[i], opts[j].name)) {
+		    found = True;
+		    break;
+		}
 	    }
 	}
-	if (opts[j].name == NULL) {
+	if (!found) {
 	    argv_out[argc_out++] = argv[i];
 	    continue;
 	}
@@ -766,37 +710,104 @@ parse_options(int *argcp, const char **argv)
     Free((char *)argv_out);
 }
 
+/* Comparison function for help qsort. */
+static int
+help_cmp(const void *p1, const void *p2)
+{
+    const opt_t *s1 = (const opt_t *)p1;
+    const opt_t *s2 = (const opt_t *)p2;
+    const char *n1 = s1->name;
+    const char *n2 = s2->name;
+
+    /* Test for equality first. */
+    if (!strcmp(n1, n2)) {
+	return 0;
+    }
+
+    /* '--' is always last. */
+    if (!strcmp(n1, "--")) {
+	return 1;
+    }
+    if (!strcmp(n2, "--")) {
+	return -1;
+    }
+
+    /* Skip leading dashes. */
+    while (*n1 == '-') {
+	n1++;
+    }
+    while (*n2 == '-') {
+	n2++;
+    }
+
+    /* Do case-instensitive string compare. */
+    return strcasecmp(n1, n2);
+}
+
+/**
+ * Sort the list of command-line options, for display purposes.
+ */
+static void
+sort_help(void)
+{
+    optlist_t *o;
+    unsigned j;
+    int oix = 0;
+
+    if (sorted_help != NULL) {
+	return;
+    }
+
+    /* Count how many slots we need. */
+    for (o = optlist; o != NULL; o = o->next) {
+	sorted_help_count += o->count;
+    }
+
+    /* Fill in the array of elements. */
+    sorted_help = (opt_t *)Malloc(sorted_help_count * sizeof(opt_t));
+    for (o = optlist; o != NULL; o = o->next) {
+	for (j = 0; j < o->count; j++) {
+	    sorted_help[oix++] = o->opts[j];
+	}
+    }
+
+    /* Sort it. */
+    qsort((void *)sorted_help, sorted_help_count, sizeof(opt_t), help_cmp);
+}
+
 /* Disply command-line help. */
 void
 cmdline_help (Boolean as_action)
 {
-    int i;
+    unsigned i;
     
-    for (i = 0; opts[i].name != NULL; i++) {
-	char *h = opts[i].help_opts;
+    sort_help();
+    for (i = 0; i < sorted_help_count; i++) {
+	char *h = sorted_help[i].help_opts;
 	char *ht;
 	char *hx = NULL;
 	char *star;
 
-	if (opts[i].type == OPT_XRM &&
+	if (sorted_help[i].type == OPT_XRM &&
 		h != NULL && (star = strchr(h, '*')) != NULL) {
-	    ht = hx = xs_buffer("%.*s%s%s", (int)(star - h), h, app, star + 1);
+	    ht = hx = xs_buffer("%.*s%s%s", (int)(star - h), h, app,
+		    star + 1);
 	} else {
 	    ht = h;
 	}
 
 	if (as_action) {
 	    action_output("  %s%s%s",
-		    opts[i].name,
+		    sorted_help[i].name,
 		    ht? " ": "",
 		    ht? ht: "");
-	    action_output("    %s", opts[i].help_text);
+	    action_output("    %s", sorted_help[i].help_text);
 	} else {
 	    fprintf(stderr, "  %s%s%s\n     %s\n",
-		    opts[i].name,
+		    sorted_help[i].name,
 		    ht? " ": "",
 		    ht? ht: "",
-		    opts[i].help_text);
+		    sorted_help[i].help_text);
 	}
 	if (hx != NULL) {
 	    Free(hx);
@@ -964,143 +975,125 @@ static struct {
     void *address;
     enum resource_type { XRM_STRING, XRM_BOOLEAN, XRM_INT } type;
 } resources[] = {
-#if defined(C3270) /*[*/
-    { ResAllBold,	offset(c3270.all_bold),	XRM_STRING },
-# if defined(C3270_80_132) /*[*/
-    { ResAltScreen,	offset(c3270.altscreen),XRM_STRING },
-# endif /*]*/
-#endif /*]*/
-#if defined(WC3270) /*[*/
-    { ResAutoShortcut,offset(c3270.auto_shortcut),XRM_BOOLEAN },
-    { ResBellMode,offset(c3270.bell_mode),	XRM_STRING },
-#endif /*]*/
-    { ResBindLimit,	offset(bind_limit),	XRM_BOOLEAN },
-    { ResBsdTm,		offset(bsd_tm),		XRM_BOOLEAN },
+    { ResBindLimit,	aoffset(bind_limit),	XRM_BOOLEAN },
+    { ResBsdTm,		aoffset(bsd_tm),		XRM_BOOLEAN },
 #if defined(HAVE_LIBSSL) /*[*/
-    { ResAcceptHostname,offset(ssl.accept_hostname),XRM_STRING },
-    { ResCaDir,		offset(ssl.ca_dir),	XRM_STRING },
-    { ResCaFile,	offset(ssl.ca_file),	XRM_STRING },
-    { ResCertFile,	offset(ssl.cert_file),	XRM_STRING },
-    { ResCertFileType,offset(ssl.cert_file_type),	XRM_STRING },
-    { ResChainFile,	offset(ssl.chain_file),	XRM_STRING },
+    { ResAcceptHostname,aoffset(ssl.accept_hostname),XRM_STRING },
+    { ResCaDir,		aoffset(ssl.ca_dir),	XRM_STRING },
+    { ResCaFile,	aoffset(ssl.ca_file),	XRM_STRING },
+    { ResCertFile,	aoffset(ssl.cert_file),	XRM_STRING },
+    { ResCertFileType,aoffset(ssl.cert_file_type),	XRM_STRING },
+    { ResChainFile,	aoffset(ssl.chain_file),	XRM_STRING },
 #endif /*]*/
-    { ResCharset,	offset(charset),	XRM_STRING },
-    { ResColor8,	offset(color8),		XRM_BOOLEAN },
+    { ResCharset,	aoffset(charset),	XRM_STRING },
+    { ResColor8,	aoffset(color8),		XRM_BOOLEAN },
 #if defined(TCL3270) /*[*/
-    { ResCommandTimeout, offset(tcl3270.command_timeout), XRM_INT },
+    { ResCommandTimeout, aoffset(tcl3270.command_timeout), XRM_INT },
 #endif /*]*/
-    { ResConfDir,	offset(conf_dir),	XRM_STRING },
-    { ResDbcsCgcsgid, offset(dbcs_cgcsgid),	XRM_STRING },
-#if defined(C3270) /*[*/
-# if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
-    { ResDefaultFgBg,offset(c3270.default_fgbg),XRM_BOOLEAN },
-# endif /*]*/
-# if defined(C3270_80_132) /*[*/
-    { ResDefScreen,	offset(c3270.defscreen),XRM_STRING },
-# endif /*]*/
-#endif /*]*/
-    { ResEof,		offset(linemode.eof),	XRM_STRING },
-    { ResErase,		offset(linemode.erase),	XRM_STRING },
-    { ResExtended,	offset(extended),	XRM_BOOLEAN },
-    { ResDftBufferSize,offset(dft_buffer_size),XRM_INT },
-    { ResHostname,	offset(hostname),	XRM_STRING },
-    { ResHostsFile,	offset(hostsfile),	XRM_STRING },
-    { ResIcrnl,		offset(linemode.icrnl),	XRM_BOOLEAN },
-    { ResInlcr,		offset(linemode.inlcr),	XRM_BOOLEAN },
-    { ResOnlcr,		offset(linemode.onlcr),	XRM_BOOLEAN },
-    { ResIntr,		offset(linemode.intr),	XRM_STRING },
+    { ResConfDir,	aoffset(conf_dir),	XRM_STRING },
+    { ResDbcsCgcsgid, aoffset(dbcs_cgcsgid),	XRM_STRING },
+    { ResEof,		aoffset(linemode.eof),	XRM_STRING },
+    { ResErase,		aoffset(linemode.erase),	XRM_STRING },
+    { ResExtended,	aoffset(extended),	XRM_BOOLEAN },
+    { ResDftBufferSize,aoffset(dft_buffer_size),XRM_INT },
+    { ResHostname,	aoffset(hostname),	XRM_STRING },
+    { ResHostsFile,	aoffset(hostsfile),	XRM_STRING },
+    { ResIcrnl,		aoffset(linemode.icrnl),	XRM_BOOLEAN },
+    { ResInlcr,		aoffset(linemode.inlcr),	XRM_BOOLEAN },
+    { ResOnlcr,		aoffset(linemode.onlcr),	XRM_BOOLEAN },
+    { ResIntr,		aoffset(linemode.intr),	XRM_STRING },
 #if defined(C3270) || defined(S3270) /*[*/
-    { ResIdleCommand,offset(idle_command),	XRM_STRING },
-    { ResIdleCommandEnabled,offset(idle_command_enabled),XRM_BOOLEAN },
-    { ResIdleTimeout,offset(idle_timeout),	XRM_STRING },
+    { ResIdleCommand,aoffset(idle_command),	XRM_STRING },
+    { ResIdleCommandEnabled,aoffset(idle_command_enabled),XRM_BOOLEAN },
+    { ResIdleTimeout,aoffset(idle_timeout),	XRM_STRING },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
-    { ResKeyFile,	offset(ssl.key_file),	XRM_STRING },
-    { ResKeyFileType,	offset(ssl.key_file_type),XRM_STRING },
-    { ResKeyPasswd,	offset(ssl.key_passwd),	XRM_STRING },
+    { ResKeyFile,	aoffset(ssl.key_file),	XRM_STRING },
+    { ResKeyFileType,	aoffset(ssl.key_file_type),XRM_STRING },
+    { ResKeyPasswd,	aoffset(ssl.key_passwd),	XRM_STRING },
 #endif /*]*/
 #if defined(C3270) /*[*/
-    { ResKeymap,	offset(interactive.key_map),XRM_STRING },
+    { ResKeymap,	aoffset(interactive.key_map),XRM_STRING },
 # if !defined(_WIN32) /*[*/
-    { ResMetaEscape,offset(c3270.meta_escape),	XRM_STRING },
-    { ResCursesKeypad,offset(c3270.curses_keypad),XRM_BOOLEAN },
-    { ResCbreak,	offset(c3270.cbreak_mode),XRM_BOOLEAN },
+    { ResMetaEscape,aoffset(c3270.meta_escape),	XRM_STRING },
+    { ResCursesKeypad,aoffset(c3270.curses_keypad),XRM_BOOLEAN },
+    { ResCbreak,	aoffset(c3270.cbreak_mode),XRM_BOOLEAN },
 # endif /*]*/
-    { ResAsciiBoxDraw,offset(c3270.ascii_box_draw),XRM_BOOLEAN },
+    { ResAsciiBoxDraw,aoffset(c3270.ascii_box_draw),XRM_BOOLEAN },
 #if defined(CURSES_WIDE) /*[*/
-    { ResAcs,		offset(c3270.acs),	XRM_BOOLEAN },
+    { ResAcs,		aoffset(c3270.acs),	XRM_BOOLEAN },
 #endif /*]*/
 #endif /*]*/
-    { ResKill,		offset(linemode.kill),	XRM_STRING },
-    { ResLnext,		offset(linemode.lnext),	XRM_STRING },
+    { ResKill,		aoffset(linemode.kill),	XRM_STRING },
+    { ResLnext,		aoffset(linemode.lnext),	XRM_STRING },
 #if defined(_WIN32) /*[*/
-    { ResLocalCp,	offset(local_cp),	XRM_INT },
-    { ResFtCodePage, offset(ft_cp),		XRM_INT },
+    { ResLocalCp,	aoffset(local_cp),	XRM_INT },
+    { ResFtCodePage, aoffset(ft_cp),		XRM_INT },
 #endif /*]*/
-    { ResLoginMacro,offset(login_macro),	XRM_STRING },
-    { ResM3279,	offset(m3279),			XRM_BOOLEAN },
+    { ResLoginMacro,aoffset(login_macro),	XRM_STRING },
+    { ResM3279,	aoffset(m3279),			XRM_BOOLEAN },
 #if defined(C3270) /*[*/
-    { ResMenuBar,	offset(interactive.menubar),XRM_BOOLEAN },
+    { ResMenuBar,	aoffset(interactive.menubar),XRM_BOOLEAN },
 #endif /*]*/
-    { ResModel,	offset(model),			XRM_STRING },
-    { ResModifiedSel, offset(modified_sel),	XRM_BOOLEAN },
+    { ResModel,	aoffset(model),			XRM_STRING },
+    { ResModifiedSel, aoffset(modified_sel),	XRM_BOOLEAN },
 #if defined(C3270) /*[*/
 # if !defined(_WIN32) /*[*/
-    { ResMono,	offset(interactive.mono),	XRM_BOOLEAN },
-    { ResMouse,	offset(c3270.mouse),		XRM_BOOLEAN },
+    { ResMono,	aoffset(interactive.mono),	XRM_BOOLEAN },
+    { ResMouse,	aoffset(c3270.mouse),		XRM_BOOLEAN },
 # endif /*]*/
-    { ResNoPrompt,	offset(secure),		XRM_BOOLEAN },
+    { ResNoPrompt,	aoffset(secure),		XRM_BOOLEAN },
 #endif /*]*/
-    { ResNewEnviron,offset(new_environ),	XRM_BOOLEAN },
-    { ResNumericLock, offset(numeric_lock),	XRM_BOOLEAN },
-    { ResOerrLock,	offset(oerr_lock),	XRM_BOOLEAN },
-    { ResOversize,	offset(oversize),	XRM_STRING },
-    { ResPort,	offset(port),			XRM_STRING },
+    { ResNewEnviron,aoffset(new_environ),	XRM_BOOLEAN },
+    { ResNumericLock, aoffset(numeric_lock),	XRM_BOOLEAN },
+    { ResOerrLock,	aoffset(oerr_lock),	XRM_BOOLEAN },
+    { ResOversize,	aoffset(oversize),	XRM_STRING },
+    { ResPort,	aoffset(port),			XRM_STRING },
 #if defined(C3270) /*[*/
-    { ResPrinterLu,	offset(interactive.printer_lu),XRM_STRING },
-    { ResPrinterOptions,offset(interactive.printer_opts),XRM_STRING },
+    { ResPrinterLu,	aoffset(interactive.printer_lu),XRM_STRING },
+    { ResPrinterOptions,aoffset(interactive.printer_opts),XRM_STRING },
 #endif /*]*/
-    { ResProxy,		offset(proxy),		XRM_STRING },
-    { ResQrBgColor,	offset(qr_bg_color),	XRM_BOOLEAN },
-    { ResQuit,		offset(linemode.quit),	XRM_STRING },
-    { ResRprnt,		offset(linemode.rprnt),	XRM_STRING },
+    { ResProxy,		aoffset(proxy),		XRM_STRING },
+    { ResQrBgColor,	aoffset(qr_bg_color),	XRM_BOOLEAN },
+    { ResQuit,		aoffset(linemode.quit),	XRM_STRING },
+    { ResRprnt,		aoffset(linemode.rprnt),	XRM_STRING },
 #if defined(C3270) /*[*/
-    { ResReconnect,	offset(interactive.reconnect),XRM_BOOLEAN },
+    { ResReconnect,	aoffset(interactive.reconnect),XRM_BOOLEAN },
 #if !defined(_WIN32) /*[*/
-    { ResReverseVideo,offset(c3270.reverse_video),XRM_BOOLEAN },
+    { ResReverseVideo,aoffset(c3270.reverse_video),XRM_BOOLEAN },
 #endif /*]*/
 #endif /*]*/
 #if defined(C3270) /*[*/
-    { ResSaveLines,	offset(interactive.save_lines),XRM_INT },
+    { ResSaveLines,	aoffset(interactive.save_lines),XRM_INT },
 #endif /*]*/
-    { ResScreenTraceFile,offset(screentrace_file),XRM_STRING },
-    { ResSecure,	offset(secure),		XRM_BOOLEAN },
+    { ResScreenTraceFile,aoffset(screentrace_file),XRM_STRING },
+    { ResSecure,	aoffset(secure),		XRM_BOOLEAN },
 #if defined(HAVE_LIBSSL) /*[*/
-    { ResSelfSignedOk,offset(ssl.self_signed_ok),XRM_BOOLEAN },
+    { ResSelfSignedOk,aoffset(ssl.self_signed_ok),XRM_BOOLEAN },
 #endif /*]*/
-    { ResSbcsCgcsgid, offset(sbcs_cgcsgid),	XRM_STRING },
-    { ResScriptPort,offset(script_port),	XRM_STRING },
-    { ResTermName,	offset(termname),	XRM_STRING },
+    { ResSbcsCgcsgid, aoffset(sbcs_cgcsgid),	XRM_STRING },
+    { ResScriptPort,aoffset(script_port),	XRM_STRING },
+    { ResTermName,	aoffset(termname),	XRM_STRING },
 #if defined(WC3270) /*[*/
-    { ResTitle,	offset(c3270.title),		XRM_STRING },
+    { ResTitle,	aoffset(c3270.title),		XRM_STRING },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
-    { ResTls,	offset(ssl.tls),		XRM_BOOLEAN },
+    { ResTls,	aoffset(ssl.tls),		XRM_BOOLEAN },
 #endif /*]*/
-    { ResTraceDir,	offset(trace_dir),	XRM_STRING },
-    { ResTraceFile,	offset(trace_file),	XRM_STRING },
-    { ResTraceFileSize,offset(trace_file_size),	XRM_STRING },
-    { ResTraceMonitor,offset(trace_monitor),	XRM_BOOLEAN },
-    { ResTypeahead,	offset(typeahead),	XRM_BOOLEAN },
-    { ResUnlockDelay,offset(unlock_delay),	XRM_BOOLEAN },
-    { ResUnlockDelayMs,offset(unlock_delay_ms),	XRM_INT },
+    { ResTraceDir,	aoffset(trace_dir),	XRM_STRING },
+    { ResTraceFile,	aoffset(trace_file),	XRM_STRING },
+    { ResTraceFileSize,aoffset(trace_file_size),	XRM_STRING },
+    { ResTraceMonitor,aoffset(trace_monitor),	XRM_BOOLEAN },
+    { ResTypeahead,	aoffset(typeahead),	XRM_BOOLEAN },
+    { ResUnlockDelay,aoffset(unlock_delay),	XRM_BOOLEAN },
+    { ResUnlockDelayMs,aoffset(unlock_delay_ms),	XRM_INT },
 #if defined(HAVE_LIBSSL) /*[*/
-    { ResVerifyHostCert,offset(ssl.verify_host_cert),XRM_BOOLEAN },
+    { ResVerifyHostCert,aoffset(ssl.verify_host_cert),XRM_BOOLEAN },
 #endif /*]*/
 #if defined(WC3270) /*[*/
-    { ResVisualBell,offset(interactive.visual_bell),XRM_BOOLEAN },
+    { ResVisualBell,aoffset(interactive.visual_bell),XRM_BOOLEAN },
 #endif /*]*/
-    { ResWerase,	offset(linemode.werase),XRM_STRING },
+    { ResWerase,	aoffset(linemode.werase),XRM_STRING },
 
     { NULL,		0,			XRM_STRING }
 };

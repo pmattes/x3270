@@ -61,6 +61,7 @@
 #include "kybd.h"
 #include "macros.h"
 #include "nvt.h"
+#include "opts.h"
 #include "popups.h"
 #include "print_screen.h"
 #include "product.h"
@@ -215,6 +216,15 @@ product_set_appres_defaults(void)
 static void
 s3270_register(void)
 {
+    static opt_t s3270_opts[] = {
+	{ OptScripted, OPT_NOP,     False, ResScripted,  NULL,
+	    NULL, "Turn on scripting" },
+	{ OptUtf8,     OPT_BOOLEAN, True,  ResUtf8,      aoffset(utf8),
+	    NULL, "Force local codeset to be UTF-8" }
+    };
+
     register_schange(ST_CONNECT, main_connect);
     register_schange(ST_3270_MODE, main_connect);
+
+    register_opts(s3270_opts, array_count(s3270_opts));
 }
