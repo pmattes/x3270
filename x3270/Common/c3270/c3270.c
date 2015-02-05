@@ -58,6 +58,7 @@
 #include "unicodec.h"
 #include "ft.h"
 #include "glue.h"
+#include "glue_gui.h"
 #include "help.h"
 #include "host.h"
 #include "httpd-core.h"
@@ -1838,6 +1839,22 @@ product_specific_build_options(void)
 # endif /*]*/
 #endif /*]*/
 	    ;
+}
+
+/**
+ * GUI function for action_output.
+ */
+Boolean
+glue_gui_output(const char *s)
+{
+    screen_suspend();
+
+#if !defined(_WIN32) /*[*/
+    (void) fprintf(start_pager(), "%s\n", s);
+#else /*][*/
+    pager_output(s);
+#endif /*]*/
+    return True;
 }
 
 /**

@@ -52,6 +52,7 @@
 #endif /*]*/
 #include "ctlrc.h"
 #include "glue.h"
+#include "glue_gui.h"
 #include "host.h"
 #include "kybd.h"
 #include "macros.h"
@@ -1539,31 +1540,30 @@ Boolean flipped = False;
 
 Boolean error_popup_visible = False;
 
-static char vmsgbuf[4096];
-
 /* Pop up an error dialog. */
 void
 popup_an_error(const char *fmt, ...)
 {
     va_list args;
+    char *s;
 
     va_start(args, fmt);
-    (void) vsnprintf(vmsgbuf, sizeof(vmsgbuf), fmt, args);
+    s = xs_vbuffer(fmt, args);
     va_end(args);
 
     /* Log to the trace file. */
-    vtrace("%s\n", vmsgbuf);
+    vtrace("%s\n", s);
 
     if (sms_redirect()) {
-	sms_error(vmsgbuf);
-	return;
+	sms_error(s);
     } else {
 	screen_suspend();
-	any_error_output = True;
-	(void) fprintf(stderr, "%s\n", vmsgbuf);
+	(void) fprintf(stderr, "%s\n", s);
 	fflush(stderr);
+	any_error_output = True;
 	macro_output = True;
     }
+    Free(s);
 }
 
 /* Pop up an error dialog, based on an error number. */
@@ -1574,9 +1574,8 @@ popup_an_errno(int errn, const char *fmt, ...)
     char *s;
 
     va_start(args, fmt);
-    (void) vsnprintf(vmsgbuf, sizeof(vmsgbuf), fmt, args);
+    s = xs_vbuffer(fmt, args);
     va_end(args);
-    s = NewString(vmsgbuf);
 
     if (errn > 0) {
 	popup_an_error("%s: %s", s, strerror(errn));
@@ -1590,34 +1589,21 @@ void
 action_output(const char *fmt, ...)
 {
     va_list args;
+    char *s;
 
     va_start(args, fmt);
-    (void) vsnprintf(vmsgbuf, sizeof(vmsgbuf), fmt, args);
+    s = xs_vbuffer(fmt, args);
     va_end(args);
     if (sms_redirect()) {
-	sms_info("%s", vmsgbuf);
-	return;
+	sms_info("%s", s);
     } else {
-#if !defined(WC3270) /*[*/
-	FILE *aout;
-#endif /*]*/
-
+	if (!glue_gui_output(s)) {
+	    (void) printf("%s\n", s);
+	}
 	any_error_output = True;
-	screen_suspend();
-#if defined(C3270) /*[*/
-# if defined(WC3270) /*[*/
-	pager_output(vmsgbuf);
-# else /*][*/
-	aout = start_pager();
-# endif /*]*/
-#else /*][*/
-	aout = stdout;
-#endif /*]*/
-#if !defined(WC3270) /*[*/
-	(void) fprintf(aout, "%s\n", vmsgbuf);
-#endif /*]*/
 	macro_output = True;
     }
+    Free(s);
 }
 
 void
