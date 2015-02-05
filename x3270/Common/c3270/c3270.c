@@ -1808,21 +1808,6 @@ product_has_display(void)
     return True;
 }
 
-Boolean
-product_auto_oversize(void)
-{
-    return True;
-}
-
-/*
- * Telnet GUI.
- */
-void
-telnet_gui_connecting(const char *hostname, const char *portname)
-{
-    popup_an_info("Trying %s, port %s...", hostname, portname);
-}
-
 /**
  * Build options.
  *
@@ -1845,6 +1830,51 @@ product_specific_build_options(void)
 # endif /*]*/
 #endif /*]*/
 	    ;
+}
+
+Boolean
+product_auto_oversize(void)
+{
+    return True;
+}
+
+/**
+ * Set appres defaults that are specific to this product.
+ */
+void
+product_set_appres_defaults(void)
+{
+    appres.oerr_lock = True;
+
+    appres.interactive.compose_map = "latin1";
+    appres.interactive.do_confirms = True;
+    appres.interactive.menubar = True;
+    appres.interactive.save_lines = 4096;
+
+#if defined(_WIN32) /*[*/
+    appres.trace_monitor = True;
+    set_toggle(UNDERSCORE, True);
+#else /*][*/
+    appres.c3270.meta_escape = "auto";
+    appres.c3270.curses_keypad = True;
+    appres.c3270.mouse = True;
+#endif /*]*/
+
+#if defined(CURSES_WIDE) /*[*/
+    appres.c3270.acs = True;
+#else /*][*/
+    appres.c3270.ascii_box_draw = True;
+#endif /*]*/
+
+}
+
+/*
+ * Telnet GUI.
+ */
+void
+telnet_gui_connecting(const char *hostname, const char *portname)
+{
+    popup_an_info("Trying %s, port %s...", hostname, portname);
 }
 
 /**

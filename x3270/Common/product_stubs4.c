@@ -28,7 +28,7 @@
  */
 
 /*
- *	product_stubs2.c
+ *	product_stubs4.c
  *		Stub functions for product information.
  */
 
@@ -36,9 +36,7 @@
 
 #include "product.h"
 
-/* By default, there is are no product-specific build options. */
-const char *
-product_specific_build_options(void)
+void
+product_set_appres_defaults(void)
 {
-    return NULL;
 }

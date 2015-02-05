@@ -28,7 +28,7 @@
  */
 
 /*
- *	product_stubs1.c
+ *	product_stubs3.c
  *		Stub functions for product information.
  */
 

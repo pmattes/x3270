@@ -63,6 +63,7 @@
 #include "nvt.h"
 #include "popups.h"
 #include "print_screen.h"
+#include "product.h"
 #include "screen.h"
 #include "selectc.h"
 #include "telnet.h"
@@ -197,6 +198,15 @@ main(int argc, char *argv[])
 			--children;
 #endif /*]*/
 	}
+}
+
+/**
+ * Set product-specific appres defaults.
+ */
+void
+product_set_appres_defaults(void)
+{
+    appres.scripted = True;
 }
 
 /**

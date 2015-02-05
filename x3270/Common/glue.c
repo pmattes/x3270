@@ -436,33 +436,10 @@ static void
 set_appres_defaults(void)
 {
     /* Set the defaults. */
-#if defined(C3270) && !defined(_WIN32) /*[*/
-    appres.interactive.mono = False;
-#endif /*]*/
     appres.extended = True;
     appres.m3279 = True;
-    appres.modified_sel = False;
-    appres.apl_mode = False;
-#if defined(C3270) || defined(TCL3270) /*[*/
-    appres.scripted = False;
-#else /*][*/
-    appres.scripted = True;
-#endif /*]*/
-    appres.numeric_lock = False;
-    appres.secure = False;
-#if defined(C3270) /*[*/
-    appres.oerr_lock = True;
-#else /*][*/
-    appres.oerr_lock = False;
-#endif /*]*/
     appres.typeahead = True;
     appres.debug_tracing = True;
-#if defined(C3270) /*[*/
-    appres.interactive.compose_map = "latin1";
-    appres.interactive.do_confirms = True;
-    appres.interactive.menubar = True;
-    appres.interactive.reconnect = False;
-#endif /*]*/
 
     appres.model = "4";
     appres.hostsfile = NULL;
@@ -473,35 +450,11 @@ set_appres_defaults(void)
 #if !defined(_WIN32) /*[*/
     appres.trace_dir = "/tmp";
 #endif /*]*/
-#if defined(WC3270) /*[*/
-    appres.trace_monitor = True;
-#else /*][*/
-    appres.trace_monitor = False;
-#endif /*]*/
     appres.oversize = NULL;
-#if defined(C3270) /*[*/
-# if !defined(_WIN32) /*[*/
-    appres.c3270.meta_escape = "auto";
-    appres.c3270.curses_keypad = True;
-    appres.c3270.cbreak_mode = False;
-# endif /*]*/
-# if !defined(_WIN32) && !defined(CURSES_WIDE) /*[*/
-    appres.c3270.ascii_box_draw = True;
-# else /*][*/
-    appres.c3270.ascii_box_draw = False;
-# endif /*]*/
-# if !defined(_WIN32) /*[*/
-    appres.c3270.mouse = True;
-# endif /*]*/
-#if defined(CURSES_WIDE) /*[*/
-    appres.c3270.acs = True;
-#endif /*]*/
-#endif /*]*/
     appres.bind_limit = True;
     appres.new_environ = True;
 
     appres.linemode.icrnl = True;
-    appres.linemode.inlcr = False;
     appres.linemode.onlcr = True;
     appres.linemode.erase = "^H";
     appres.linemode.kill = "^U";
@@ -519,9 +472,6 @@ set_appres_defaults(void)
 
     set_toggle(CURSOR_POS, True);
     set_toggle(AID_WAIT, True);
-#if defined(WC3270) /*[*/
-    set_toggle(UNDERSCORE, True);
-#endif /*]*/
 
 #if defined(_WIN32) /*[*/
     appres.local_cp = GetACP();
@@ -529,13 +479,11 @@ set_appres_defaults(void)
     appres.devname = "x3270";
 
 #if defined(HAVE_LIBSSL) /*[*/
-    appres.ssl.verify_host_cert = False;
     appres.ssl.tls = True;
 #endif /*]*/
 
-#if defined(C3270) /*[*/
-    appres.interactive.save_lines = 4096;
-#endif /*]*/
+    /* Let the product set the ones it wants. */
+    product_set_appres_defaults();
 }
 
 #if defined(_WIN32) /*[*/
