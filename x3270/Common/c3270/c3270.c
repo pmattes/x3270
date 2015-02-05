@@ -2013,6 +2013,36 @@ c3270_register(void)
 	{ ResVisualBell,aoffset(interactive.visual_bell),XRM_BOOLEAN },
 #endif /*]*/
     };
+    static xres_t c3270_xresources[] = {
+	{ ResKeymap,			V_WILD },
+	{ ResAssocCommand,		V_FLAT },
+	{ ResLuCommandLine,		V_FLAT },
+	{ ResPrintTextScreensPerPage,	V_FLAT },
+	{ ResMessage,			V_WILD },
+#if defined(_WIN32) /*[*/
+	{ ResPrinterCodepage,		V_FLAT },
+	{ ResPrinterCommand,		V_FLAT },
+	{ ResPrinterName, 		V_FLAT },
+	{ ResPrintTextFont, 		V_FLAT },
+	{ ResPrintTextHorizontalMargin,	V_FLAT },
+	{ ResPrintTextOrientation,	V_FLAT },
+	{ ResPrintTextSize, 		V_FLAT },
+	{ ResPrintTextVerticalMargin,	V_FLAT },
+	{ ResHostColorForDefault,	V_FLAT },
+	{ ResHostColorForIntensified,	V_FLAT },
+	{ ResHostColorForProtected,	V_FLAT },
+	{ ResHostColorForProtectedIntensified,V_FLAT },
+	{ ResConsoleColorForHostColor,	V_COLOR },
+#else /*][*/
+	{ ResPrinterCommand,		V_FLAT },
+	{ ResPrintTextCommand,		V_FLAT },
+	{ ResCursesColorForDefault,	V_FLAT },
+	{ ResCursesColorForIntensified,	V_FLAT },
+	{ ResCursesColorForProtected,	V_FLAT },
+	{ ResCursesColorForProtectedIntensified,V_FLAT },
+	{ ResCursesColorForHostColor,	V_COLOR },
+#endif /*]*/
+    };
 
     /* Register for state changes. */
     register_schange(ST_CONNECT, main_connect);
@@ -2027,4 +2057,5 @@ c3270_register(void)
 
     /* Register our resources. */
     register_resources(c3270_resources, array_count(c3270_resources));
+    register_xresources(c3270_xresources, array_count(c3270_xresources));
 }

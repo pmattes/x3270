@@ -70,3 +70,17 @@ typedef struct {
 
 /* Register an array of resources. */
 void register_resources(res_t *res, unsigned num_res);
+
+/* Explicit (non-appres) resource definition. */
+typedef struct {
+    const char *name;
+    enum {
+	V_FLAT,		/* match the full name: <name> */
+	V_WILD,		/* name is the root, i.e., <name>.* */
+	V_COLOR		/* match <name><host-color-name> or
+			   <name><host-color-index> */
+    } type;
+} xres_t;
+
+/* Register an array of explicit resources. */
+void register_xresources(xres_t *xres, unsigned num_xres);

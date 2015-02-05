@@ -227,6 +227,20 @@ s3270_register(void)
 	{ ResIdleCommandEnabled,aoffset(idle_command_enabled),XRM_BOOLEAN },
 	{ ResIdleTimeout,aoffset(idle_timeout),     XRM_STRING }
     };
+    static xres_t s3270_xresources[] = {
+	{ ResPrintTextScreensPerPage,	V_FLAT },
+#if defined(_WIN32) /*[*/
+	{ ResPrinterCodepage,		V_FLAT },
+	{ ResPrinterName, 		V_FLAT },
+	{ ResPrintTextFont, 		V_FLAT },
+	{ ResPrintTextHorizontalMargin,	V_FLAT },
+	{ ResPrintTextOrientation,	V_FLAT },
+	{ ResPrintTextSize, 		V_FLAT },
+	{ ResPrintTextVerticalMargin,	V_FLAT },
+#else /*][*/
+	{ ResPrintTextCommand,		V_FLAT },
+#endif /*]*/
+    };
 
     /* Register for state changes. */
     register_schange(ST_CONNECT, main_connect);
@@ -237,4 +251,5 @@ s3270_register(void)
 
     /* Register our resources. */
     register_resources(s3270_resources, array_count(s3270_resources));
+    register_xresources(s3270_xresources, array_count(s3270_xresources));
 }

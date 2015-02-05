@@ -1094,7 +1094,29 @@ strncapcmp(const char *known, const char *unknown, unsigned unk_len)
     return -1;
 }
 
-#if defined(C3270) /*[*/
+typedef struct xreslist {
+    struct xreslist *next;
+    xres_t *xresources;
+    unsigned count;
+} xreslist_t;
+static xreslist_t *xreslist = NULL;
+static xreslist_t **last_xreslist = &xreslist;
+
+void
+register_xresources(xres_t *xres, unsigned num_xres)
+{
+    xreslist_t *x;
+
+    x = Malloc(sizeof(xreslist_t));
+
+    x->next = NULL;
+    x->xresources = xres;
+    x->count = num_xres;
+
+    *last_xreslist = x;
+    last_xreslist = &x->next;
+}
+
 struct host_color host_color[] = {
     { "NeutralBlack",	HOST_COLOR_NEUTRAL_BLACK },
     { "Blue",		HOST_COLOR_BLUE },
@@ -1122,91 +1144,59 @@ struct host_color host_color[] = {
 static int
 valid_explicit(const char *resname, unsigned len)
 {
-    static struct {
-	char *name;
-	enum { V_FLAT, V_WILD, V_COLOR } type;
-    } explicit_resources[] =  {
-	{ ResKeymap,			V_WILD },
-	{ ResAssocCommand,		V_FLAT },
-	{ ResLuCommandLine,		V_FLAT },
-	{ ResPrintTextScreensPerPage,	V_FLAT },
-#if defined(_WIN32) /*[*/
-	{ ResPrinterCodepage,		V_FLAT },
-	{ ResPrinterCommand,		V_FLAT },
-	{ ResPrinterName, 		V_FLAT },
-	{ ResPrintTextFont, 		V_FLAT },
-	{ ResPrintTextHorizontalMargin,	V_FLAT },
-	{ ResPrintTextOrientation,	V_FLAT },
-	{ ResPrintTextSize, 		V_FLAT },
-	{ ResPrintTextVerticalMargin,	V_FLAT },
-	{ ResHostColorForDefault,	V_FLAT },
-	{ ResHostColorForIntensified,	V_FLAT },
-	{ ResHostColorForProtected,	V_FLAT },
-	{ ResHostColorForProtectedIntensified,V_FLAT },
-	{ ResConsoleColorForHostColor,	V_COLOR },
-#else /*][*/
-	{ ResPrinterCommand,		V_FLAT },
-	{ ResPrintTextCommand,		V_FLAT },
-	{ ResCursesColorForDefault,	V_FLAT },
-	{ ResCursesColorForIntensified,	V_FLAT },
-	{ ResCursesColorForProtected,	V_FLAT },
-	{ ResCursesColorForProtectedIntensified,V_FLAT },
-	{ ResCursesColorForHostColor,	V_COLOR },
-#endif /*]*/
-	{ NULL, V_WILD }
-    };
-    int i;
+    xreslist_t *x;
+    unsigned i;
     int j;
 
-    for (i = 0; explicit_resources[i].name != NULL; i++) {
-	unsigned sl = strlen(explicit_resources[i].name);
+    for (x = xreslist; x != NULL; x = x->next) {
+	for (i = 0; i < x->count; i++) {
+	    unsigned sl = strlen(x->xresources[i].name);
 
-	switch (explicit_resources[i].type) {
-	case V_FLAT:
-	    /* Exact match. */
-	    if (len == sl &&
-		!strncmp(explicit_resources[i].name, resname, sl)) {
-		return 0;
-	    }
-	    break;
-	case V_WILD:
-	    /* xxx.* match. */
-	    if (len > sl + 1 &&
-		resname[sl] == '.' &&
-		!strncmp(explicit_resources[i].name, resname, sl)) {
-		return 0;
-	    }
-	    break;
-	case V_COLOR:
-	    /* xxx<host-color> or xxx<host-color-index> match. */
-	    for (j = 0; host_color[j].name != NULL; j++) {
-		char *x;
+	    switch (x->xresources[i].type) {
+	    case V_FLAT:
+		/* Exact match. */
+		if (len == sl &&
+		    !strncmp(x->xresources[i].name, resname, sl)) {
+		    return 0;
+		}
+		break;
+	    case V_WILD:
+		/* xxx.* match. */
+		if (len > sl + 1 &&
+		    resname[sl] == '.' &&
+		    !strncmp(x->xresources[i].name, resname, sl)) {
+		    return 0;
+		}
+		break;
+	    case V_COLOR:
+		/* xxx<host-color> or xxx<host-color-index> match. */
+		for (j = 0; host_color[j].name != NULL; j++) {
+		    char *xbuf;
 
-		x = xs_buffer("%s%s", explicit_resources[i].name,
-			host_color[j].name);
-		if (strlen(x) == len &&
-		    !strncmp(x, resname, len)) {
-			Free(x);
-			return 0;
+		    xbuf = xs_buffer("%s%s", x->xresources[i].name,
+			    host_color[j].name);
+		    if (strlen(xbuf) == len &&
+			!strncmp(xbuf, resname, len)) {
+			    Free(xbuf);
+			    return 0;
+		    }
+		    Free(xbuf);
+		    xbuf = xs_buffer("%s%d", x->xresources[i].name,
+			    host_color[j].index);
+		    if (strlen(xbuf) == len &&
+			!strncmp(xbuf, resname, len)) {
+			    Free(xbuf);
+			    return 0;
+		    }
+		    Free(xbuf);
 		}
-		Free(x);
-		x = xs_buffer("%s%d", explicit_resources[i].name,
-			host_color[j].index);
-		if (strlen(x) == len &&
-		    !strncmp(x, resname, len)) {
-			Free(x);
-			return 0;
-		}
-		Free(x);
+		break;
 	    }
-	    break;
 	}
     }
 
     return -1;
-
 }
-#endif /*]*/
 
 void
 parse_xrm(const char *arg, const char *where)
@@ -1221,10 +1211,8 @@ parse_xrm(const char *arg, const char *where)
     Boolean quoted;
     char c;
     reslist_t *r;
-#if defined(C3270) /*[*/
     char *hide;
     Boolean arbitrary = False;
-#endif /*]*/
 
     /* Validate and split. */
     if (validate_and_split_resource(where, arg, &name, &rnlen, &s) < 0) {
@@ -1257,15 +1245,12 @@ parse_xrm(const char *arg, const char *where)
 	    }
 	}
     }
-    /* XXX: This needs to work for s3270, too. */
-#if defined(C3270) /*[*/
     if (address == NULL && valid_explicit(name, rnlen) == 0) {
 	/* Handle resources that are accessed only via get_resource(). */
 	address = &hide;
 	type = XRM_STRING;
 	arbitrary = True;
     }
-#endif /*]*/
     if (address == NULL) {
 	xs_warning("%s: Unknown resource name: %.*s", where, (int)rnlen, name);
 	return;
@@ -1354,7 +1339,6 @@ parse_xrm(const char *arg, const char *where)
 	}
     }
 
-#if defined(C3270) /*[*/
     /* Add a new, arbitrarily-named resource. */
     if (arbitrary) {
 	char *rsname;
@@ -1364,7 +1348,6 @@ parse_xrm(const char *arg, const char *where)
 	rsname[rnlen] = '\0';
 	add_resource(rsname, hide);
     }
-#endif /*]*/
 }
 
 /*
