@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2010, 2014-2015 Paul Mattes.
+ * Copyright (c) 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,26 +26,16 @@
  */
 
 /*
- * 	cscreen.h
- *		c3270/wc3270 screen declarations.
- **/
+ *	screen_stubs5.c
+ *		Stubs for screen functions.
+ */
 
-extern Boolean escaped;
-#if defined(WC3270) /*[*/
-extern int windows_cp;
-extern HWND console_window;
-#endif /*]*/
+#include "globals.h"
 
-void screen_init(void);
-void screen_resume(void);
-FILE *start_pager(void);
-void screen_register(void);
-void screen_final(void);
-void screen_set_thumb(float top, float shown);
-void enable_cursor(Boolean on);
-void screen_system_fixup(void);
-#if defined(WC3270) /*[*/
-void pager_output(const char *s);
-Boolean screen_wait_for_key(char *c);
-void screen_title(const char *text);
-#endif /*]*/
+#include "screen.h"
+
+Boolean
+screen_suspend(void)
+{
+    return False;
+}

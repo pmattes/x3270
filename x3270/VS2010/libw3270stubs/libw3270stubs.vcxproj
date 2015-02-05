@@ -26,6 +26,7 @@
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs3.c" />
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs4.c" />
     <ClCompile Include="..\..\lib\w3270stubs\screen_stubs5.c" />
+    <ClCompile Include="..\..\lib\w3270stubs\screen_stubs6.c" />
     <ClCompile Include="..\..\lib\w3270stubs\scroll_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\select_stubs.c" />
     <ClCompile Include="..\..\lib\w3270stubs\ssl_passwd_gui_stubs.c" />

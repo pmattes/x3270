@@ -1558,9 +1558,7 @@ popup_an_error(const char *fmt, ...)
 	sms_error(vmsgbuf);
 	return;
     } else {
-#if defined(C3270) /*[*/
 	screen_suspend();
-#endif /*]*/
 	any_error_output = True;
 	(void) fprintf(stderr, "%s\n", vmsgbuf);
 	fflush(stderr);
@@ -1605,8 +1603,8 @@ action_output(const char *fmt, ...)
 #endif /*]*/
 
 	any_error_output = True;
-#if defined(C3270) /*[*/
 	screen_suspend();
+#if defined(C3270) /*[*/
 # if defined(WC3270) /*[*/
 	pager_output(vmsgbuf);
 # else /*][*/
