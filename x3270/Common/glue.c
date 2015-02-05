@@ -47,9 +47,6 @@
 
 #include "actions.h"
 #include "charset.h"
-#if defined(C3270) /*[*/
-# include "cscreen.h"
-#endif /*]*/
 #include "ctlrc.h"
 #include "glue.h"
 #include "glue_gui.h"
@@ -353,11 +350,9 @@ model_init(void)
 	model_number = 3;
     }
 #endif /*]*/
-#if defined(C3270) && !defined(_WIN32) /*[*/
     if (appres.interactive.mono) {
 	appres.m3279 = False;
     }
-#endif /*]*/
 
     if (!appres.extended) {
 	appres.oversize = NULL;
