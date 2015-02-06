@@ -31,7 +31,7 @@ TARGET = ..\libw3270stubs.lib
 # Set command paths.
 CC = cl /nologo
 RM = erase
-LIB = lib /nologo
+LIBCMD = lib /nologo
 
 # This makefile assumes that you have OpenSSL headers in c:\OpenSSL-Win32.
 # If they are somewhere else, change SSLDIR below.
@@ -51,7 +51,7 @@ OBJECTS = $(LIB3270STUBS_OBJECTS) $(LIBW3270STUBS_OBJECTS)
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
-	$(LIB) $(OBJECTS) -OUT:$@
+	$(LIBCMD) $(OBJECTS) -OUT:$@
 
 clean:
 	erase *.obj

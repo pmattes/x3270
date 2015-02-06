@@ -114,14 +114,8 @@ catf.exe: catf.c
 ead3270.exe: ead3270.obj $(LIB3270)
 	$(CC) /Fe$@ $(CFLAGS) ead3270.obj $(LIB3270) advapi32.lib shell32.lib
 
-ead3270.obj: ead3270.c
-	$(CC) $(CFLAGS) /c ead3270.c
-
-x3270if.exe: x3270if.obj ..\lib\lib3270.lib
-	$(CC) /Fe$@ $(CFLAGS) x3270if.obj ..\lib\lib3270.lib ws2_32.lib
-
-x3270if.obj: x3270if.c
-	$(CC) $(CFLAGS) /c x3270if.c
+x3270if.exe: x3270if.obj $(LIB3270)
+	$(CC) /Fe$@ $(CFLAGS) x3270if.obj $(LIB3270) ws2_32.lib
 
 clean:
 	erase *.obj *.RES *.exp *.lib $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c mkversion.exe version.c wversion.c

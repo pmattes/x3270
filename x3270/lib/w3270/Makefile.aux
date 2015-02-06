@@ -37,12 +37,13 @@ all:
 
 OBJ = o
 include lib3270_files.mk
+include lib3270i_files.mk
 include libw3270_files.mk
-SOURCES = $(LIB3270_SOURCES) $(LIBW3270_SOURCES)
-HEADERS = $(LIB3270_HEADERS) $(LIBW3270_HEADERS)
+SOURCES = $(LIB3270_SOURCES) $(LIB3270I_SOURCES) $(LIBW3270_SOURCES)
+HEADERS = $(LIB3270_HEADERS) $(LIB3270I_HEADERS) $(LIBW3270_HEADERS)
 
-MISC = Makefile Msc/Makefile favicon.ico lib3270_files.mk libw3270_files.mk \
-	mkicon.c winenv.mk
+MISC = Makefile Msc/Makefile favicon.ico lib3270_files.mk lib3270i_files.mk \
+	libw3270_files.mk mkicon.c winenv.mk
 
 DEVKIT = Makefile.aux
 

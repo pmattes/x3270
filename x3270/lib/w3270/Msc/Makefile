@@ -32,7 +32,7 @@ LIB3270I = ..\libw3270i.lib
 # Set command paths.
 CC = cl /nologo
 RM = erase
-LIB = lib /nologo
+LIBCMD = lib /nologo
 
 # This makefile assumes that you have OpenSSL headers in c:\OpenSSL-Win32.
 # If they are somewhere else, change SSLDIR below.
@@ -53,10 +53,10 @@ OBJECTS = $(LIB3270_OBJECTS) $(LIBW3270_OBJECTS)
 all: $(LIB3270) $(LIB3270I)
 
 $(LIB3270): $(OBJECTS)
-	$(LIB) $(OBJECTS) -OUT:$@
+	$(LIBCMD) $(OBJECTS) -OUT:$@
 
 $(LIB3270I): $(LIB3270I_OBJECTS)
-	$(LIB) $(LIB3270I_OBJECTS) -OUT:$@
+	$(LIBCMD) $(LIB3270I_OBJECTS) -OUT:$@
 
 favicon.obj: favicon.c
 
