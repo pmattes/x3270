@@ -504,24 +504,24 @@ static opt_t base_opts[] = {
     NULL, "Turn on APL mode" },
 #if defined(HAVE_LIBSSL) /*[*/
 { OptCaDir,    OPT_STRING,  False, ResCaDir,     aoffset(ssl.ca_dir),
-    "<directory>","Specify OpenSSL CA certificate database directory" },
+    "<directory>","OpenSSL CA certificate database directory" },
 { OptCaFile,   OPT_STRING,  False, ResCaFile,    aoffset(ssl.ca_file),
-    "<filename>", "Specify OpenSSL CA certificate file" },
+    "<filename>", "OpenSSL CA certificate file" },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
 { OptCertFile, OPT_STRING,  False, ResCertFile,  aoffset(ssl.cert_file),
-    "<filename>", "Specify OpenSSL certificate file" },
+    "<filename>", "OpenSSL certificate file" },
 { OptCertFileType,OPT_STRING,False,ResCertFileType,  aoffset(ssl.cert_file_type),
-    "pem|asn1",   "Specify OpenSSL certificate file type" },
+    "pem|asn1",   "OpenSSL certificate file type" },
 { OptChainFile,OPT_STRING,  False,ResChainFile,  aoffset(ssl.chain_file),
-    "<filename>", "Specify OpenSSL certificate chain file" },
+    "<filename>", "OpenSSL certificate chain file" },
 #endif /*]*/
 { OptCharset,  OPT_STRING,  False, ResCharset,   aoffset(charset),
     "<name>", "Use host ECBDIC character set (code page) <name>"},
 { OptClear,    OPT_SKIP2,   False, NULL,         NULL,
     "<toggle>", "Turn on <toggle>" },
 { OptDevName,  OPT_STRING,  False, ResDevName,   aoffset(devname),
-    "<name>", "Specify device name (workstation ID) for RFC 4777" },
+    "<name>", "Device name (workstation ID) for RFC 4777" },
 #if defined(LOCAL_PROCESS) /*[*/
 { OptLocalProcess,OPT_SKIP2,False, NULL,         NULL,
     "<command> [<arg>...]", "Run <command> instead of making TELNET conection"
@@ -535,9 +535,9 @@ static opt_t base_opts[] = {
 { OptKeyFile,  OPT_STRING,  False, ResKeyFile, aoffset(ssl.key_file),
     "<filename>", "Get OpenSSL private key from <filename>" },
 { OptKeyFileType,OPT_STRING,False, ResKeyFileType,aoffset(ssl.key_file_type),
-    "pem|asn1",   "Specify OpenSSL private key file type" },
+    "pem|asn1",   "OpenSSL private key file type" },
 { OptKeyPasswd,OPT_STRING,  False, ResKeyPasswd,aoffset(ssl.key_passwd),
-    "file:<filename>|string:<text>","Specify OpenSSL private key password" },
+    "file:<filename>|string:<text>","OpenSSL private key password" },
 #endif /*]*/
 #if defined(_WIN32) /*[*/
 { OptLocalCp,  OPT_INT,	False, ResLocalCp,   aoffset(local_cp),
@@ -550,11 +550,11 @@ static opt_t base_opts[] = {
 { OptModel,    OPT_STRING,  False, ResModel,     aoffset(model),
     "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
 { OptOversize, OPT_STRING,  False, ResOversize,  aoffset(oversize),
-    "<cols>x<rows>", "Specify larger screen" },
+    "<cols>x<rows>", "Larger screen dimensions" },
 { OptPort,     OPT_STRING,  False, ResPort,      aoffset(port),
-    "<port>", "Specify default TELNET port" },
+    "<port>", "Default TELNET port" },
 { OptProxy,    OPT_STRING,  False, ResProxy,     aoffset(proxy),
-    "<type>:<host>[:<port>]", "Specify proxy type and server" },
+    "<type>:<host>[:<port>]", "Proxy type and server" },
 { OptScriptPort,OPT_STRING, False, ResScriptPort, aoffset(script_port),
     "[<addr>:]<port>", "TCP port to listen on for script commands" },
 #if defined(HAVE_LIBSSL) /*[*/
@@ -574,7 +574,7 @@ static opt_t base_opts[] = {
 { OptTraceFileSize,OPT_STRING,False,ResTraceFileSize,aoffset(trace_file_size),
     "<n>[KM]", "Limit trace file to <n> bytes" },
 { OptUser,     OPT_STRING,  False, ResUser,      aoffset(user),
-    "<name>", "Specify user name for RFC 4777" },
+    "<name>", "User name for RFC 4777" },
 { OptV,        OPT_V,	False, NULL,	     NULL,
     NULL, "Display build options and character sets" },
 #if defined(HAVE_LIBSSL) /*[*/

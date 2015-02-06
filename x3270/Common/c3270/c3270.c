@@ -1920,12 +1920,6 @@ c3270_register(void)
 	{ OptKeymap,   OPT_STRING,  False, ResKeymap,
 	    aoffset(interactive.key_map),
 	    "<name>[,<name>...]", "Keyboard map name(s)" },
-	{ OptSaveLines, OPT_INT,    False, ResSaveLines,
-	    aoffset(interactive.save_lines),
-	    "<lines>", "Specify the number of lines to save for scrolling" },
-	{ OptSecure,   OPT_BOOLEAN, True,  ResSecure,
-	    aoffset(secure),
-	    NULL, "Restrict potentially-destructive user actions" },
 	{ OptNoPrompt, OPT_BOOLEAN, True,  ResNoPrompt,
 	    aoffset(secure),
 	    NULL, "Alias for -secure" },
@@ -1936,28 +1930,31 @@ c3270_register(void)
 	{ OptReconnect,OPT_BOOLEAN, True,  ResReconnect,
 	    aoffset(interactive.reconnect),
 	    NULL, "Reconnect to host as soon as it disconnects" },
-
+	{ OptSaveLines, OPT_INT,    False, ResSaveLines,
+	    aoffset(interactive.save_lines),
+	    "<lines>", "Number of lines to save for scrolling" },
+	{ OptSecure,   OPT_BOOLEAN, True,  ResSecure,
+	    aoffset(secure),
+	    NULL, "Restrict potentially-destructive user actions" },
 #if defined(C3270_80_132) /*[*/
 	{ OptAltScreen,OPT_STRING,  False, ResAltScreen,
 	    aoffset(c3270.altscreen),
 	    "<string>",
-	    "Specify string to switch terminal from 80-column mode to 132-column mode"
-},
+	    "String to switch terminal from 80-column mode to 132-column mode"
+	},
 	{ OptDefScreen,OPT_STRING,  False, ResDefScreen,
 	    aoffset(c3270.defscreen),
 	    "<string>",
-	    "Specify string to switch terminal from 80-column mode to 132-column mode"
+	    "String to switch terminal from 132-column mode to 80-column mode"
 },
 #endif /*]*/
-
-# if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
+#if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
 	{ OptDefaultFgBg,OPT_BOOLEAN,True, ResDefaultFgBg,
 	    aoffset(c3270.default_fgbg),
 	    NULL,
 	    "Use terminal's default foreground and background colors"
 	},
-# endif /*]*/
-
+#endif /*]*/
 #if !defined(_WIN32) /*[*/
 	{ OptCbreak,   OPT_BOOLEAN, True,  ResCbreak,
 	    aoffset(c3270.cbreak_mode),
@@ -1969,7 +1966,6 @@ c3270_register(void)
 	    aoffset(c3270.reverse_video),
 	    NULL, "Switch to black-on-white mode" },
 #endif /*]*/
-
 #if defined(_WIN32) /*[*/
 	{ OptAutoShortcut,OPT_BOOLEAN, True, ResAutoShortcut,
 	    aoffset(c3270.auto_shortcut),
@@ -1983,32 +1979,39 @@ c3270_register(void)
 #endif /*]*/
     };
     static res_t c3270_resources[] = {
-	{ ResIdleCommand,aoffset(idle_command),	XRM_STRING },
-	{ ResIdleCommandEnabled,aoffset(idle_command_enabled),XRM_BOOLEAN },
-	{ ResIdleTimeout,aoffset(idle_timeout),	XRM_STRING },
-	{ ResKeymap,	aoffset(interactive.key_map),XRM_STRING },
+	{ ResAllBold,	aoffset(c3270.all_bold_on),	XRM_STRING },
 	{ ResAsciiBoxDraw,aoffset(c3270.ascii_box_draw),XRM_BOOLEAN },
-	{ ResMenuBar,	aoffset(interactive.menubar),XRM_BOOLEAN },
+	{ ResIdleCommand,aoffset(idle_command),		XRM_STRING },
+	{ ResIdleCommandEnabled,aoffset(idle_command_enabled),XRM_BOOLEAN },
+	{ ResIdleTimeout,aoffset(idle_timeout),		XRM_STRING },
+	{ ResKeymap,	aoffset(interactive.key_map),	XRM_STRING },
+	{ ResMenuBar,	aoffset(interactive.menubar),	XRM_BOOLEAN },
 	{ ResNoPrompt,	aoffset(secure),		XRM_BOOLEAN },
 	{ ResPrinterLu,	aoffset(interactive.printer_lu),XRM_STRING },
 	{ ResPrinterOptions,aoffset(interactive.printer_opts),XRM_STRING },
 	{ ResReconnect,	aoffset(interactive.reconnect),XRM_BOOLEAN },
 	{ ResSaveLines,	aoffset(interactive.save_lines),XRM_INT },
-
 #if !defined(_WIN32) /*[*/
+	{ ResCbreak,	aoffset(c3270.cbreak_mode),	XRM_BOOLEAN },
+	{ ResCursesKeypad,aoffset(c3270.curses_keypad),	XRM_BOOLEAN },
 	{ ResMetaEscape,aoffset(c3270.meta_escape),	XRM_STRING },
-	{ ResCursesKeypad,aoffset(c3270.curses_keypad),XRM_BOOLEAN },
-	{ ResCbreak,	aoffset(c3270.cbreak_mode),XRM_BOOLEAN },
 	{ ResMono,	aoffset(interactive.mono),	XRM_BOOLEAN },
 	{ ResMouse,	aoffset(c3270.mouse),		XRM_BOOLEAN },
 	{ ResReverseVideo,aoffset(c3270.reverse_video),XRM_BOOLEAN },
 #endif /*]*/
-
-#if defined(CURSES_WIDE) /*[*/
-	{ ResAcs,		aoffset(c3270.acs),	XRM_BOOLEAN },
+#if defined(C3270_80_132) /*[*/
+	{ ResAltScreen,	aoffset(c3270.altscreen),	XRM_STRING },
+	{ ResDefScreen,	aoffset(c3270.defscreen),	XRM_STRING },
 #endif /*]*/
-
+#if defined(CURSES_WIDE) /*[*/
+	{ ResAcs,	aoffset(c3270.acs),		XRM_BOOLEAN },
+#endif /*]*/
+#if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
+	{ ResDefaultFgBg,aoffset(c3270.default_fgbg),	XRM_BOOLEAN },
+# endif /*]*/
 #if defined(_WIN32) /*[*/
+	{ ResAutoShortcut,aoffset(c3270.auto_shortcut),	XRM_BOOLEAN },
+	{ ResBellMode,	aoffset(c3270.bell_mode),	XRM_STRING },
 	{ ResTitle,	aoffset(c3270.title),		XRM_STRING },
 	{ ResVisualBell,aoffset(interactive.visual_bell),XRM_BOOLEAN },
 #endif /*]*/
