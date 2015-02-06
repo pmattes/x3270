@@ -288,8 +288,6 @@ static Boolean refused_tls = False;
 static Boolean ever_3270 = False;
 
 #if defined(_WIN32) /*[*/
-#define socket_errno()	WSAGetLastError()
-#define SE_EWOULDBLOCK	WSAEWOULDBLOCK
 #define SE_ECONNRESET	WSAECONNRESET
 #define SE_EINTR	WSAEINTR
 #define SE_EAGAIN	WSAEINPROGRESS
@@ -298,8 +296,6 @@ static Boolean ever_3270 = False;
 #define SOCK_CLOSE(s)	closesocket(s)
 #define SOCK_IOCTL(s, f, v)	ioctlsocket(s, f, (DWORD *)v)
 #else /*][*/
-#define socket_errno()	errno
-#define SE_EWOULDBLOCK	EWOULDBLOCK
 #define SE_ECONNRESET	ECONNRESET
 #define SE_EINTR	EINTR
 #define SE_EAGAIN	EAGAIN

@@ -277,15 +277,12 @@ static void
 httpd_vprint(httpd_t *h, httpd_print_t type, const char *format, va_list ap)
 {
     char *buf;
-    int sl;
+    size_t sl;
     char *sp;			/* pointer through the string */
 
     /* Expand the text. */
-    sl = vasprintf(&buf, format, ap);
-    if (sl < 0) {
-	vtrace("httpd_vprint: bogus string\n");
-	return;
-    }
+    buf = xs_vbuffer(format, ap);
+    sl = strlen(buf);
 
     /* Write it in chunks, doing CR/LF expansion. */
     sp = buf;

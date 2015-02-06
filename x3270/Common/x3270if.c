@@ -727,7 +727,7 @@ iterative_io(int pid, unsigned short port)
 	if (verbose) {
 		fprintf(stderr, "<connected to port %d>\n", port);
 	}
-	socket_event = WSACreateEvent();
+	socket_event = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (socket_event == NULL) {
 		fprintf(stderr, "WSACreateEvent failed: %s\n",
 			win32_strerror(GetLastError()));

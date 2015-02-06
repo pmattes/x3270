@@ -124,3 +124,19 @@ typedef char Boolean;
 
 typedef unsigned long ks_t;
 #define KS_NONE 0L
+
+/* Common socket definitions. */
+#if !defined(_WIN32) /*[*/
+typedef int socket_t;
+# define INVALID_SOCKET  (-1)
+# define INET_ADDR_T    in_addr_t
+# define SOCK_CLOSE(s)  close(s)
+# define socket_errno() errno
+# define SE_EWOULDBLOCK EWOULDBLOCK
+#else /*][*/
+typedef SOCKET socket_t;
+# define INET_ADDR_T    unsigned long
+# define SOCK_CLOSE(s)  closesocket(s)
+# define socket_errno() WSAGetLastError()
+# define SE_EWOULDBLOCK WSAEWOULDBLOCK
+#endif /*]*/

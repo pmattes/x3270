@@ -518,7 +518,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
     /* all done */
 #if defined(_WIN32) /*[*/
     if (sock_handle == NULL) {
-	sock_handle = WSACreateEvent();
+	sock_handle = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (sock_handle == NULL) {
 	    fprintf(stderr, "Cannot create socket handle: %s\n",
 		    win32_strerror(GetLastError()));
@@ -1228,9 +1228,6 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 
 	nvt_data = 0;
 
-#if defined(_WIN32) /*[*/
-	(void) ResetEvent(sock_handle);
-#endif /*]*/
 	vtrace("Reading host socket\n");
 
 #if defined(HAVE_LIBSSL) /*[*/

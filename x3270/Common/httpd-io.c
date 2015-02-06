@@ -144,7 +144,7 @@ hio_timeout(ioid_t id)
 	}
     } FOREACH_LLIST_END(&sessions, session, session_t *);
     if (session == NULL) {
-	popup_an_error("httpd mystery timeout");
+	vtrace("httpd mystery timeout\n");
 	return;
     }
 
@@ -173,7 +173,7 @@ hio_socket_input(iosrc_t fd, ioid_t id)
 	}
     } FOREACH_LLIST_END(&sessions, session, session_t *);
     if (session == NULL) {
-	popup_an_error("httpd mystery input");
+	vtrace("httpd mystery input\n");
 	return;
     }
 
@@ -191,15 +191,21 @@ hio_socket_input(iosrc_t fd, ioid_t id)
     nr = recv(session->s, buf, sizeof(buf), 0);
     if (nr <= 0) {
 	const char *ebuf;
+	Boolean harmless = False;
 
 	if (nr < 0) {
+	    if (socket_errno() == SE_EWOULDBLOCK) {
+		harmless = True;
+	    }
 	    ebuf = lazyaf("recv error: %s", socket_errtext());
-	    popup_an_error("httpd %s", ebuf);
+	    vtrace("httpd %s%s\n", ebuf, harmless? " (harmless)": "");
 	} else {
 	    ebuf = "session EOF";
 	}
-	httpd_close(session->dhandle, ebuf);
-	hio_socket_close(session);
+	if (!harmless) {
+	    httpd_close(session->dhandle, ebuf);
+	    hio_socket_close(session);
+	}
     } else {
 	httpd_status_t rv;
 
@@ -235,7 +241,8 @@ hio_connection(iosrc_t fd, ioid_t id)
     len = sizeof(sin);
     t = accept(listen_s, (struct sockaddr *)&sin, &len);
     if (t == INVALID_SOCKET) {
-	popup_an_error("httpd accept: %s", socket_errtext());
+	vtrace("httpd accept error: %s%s\n", socket_errtext(),
+		(socket_errno() == SE_EWOULDBLOCK)? " (harmless)": "");
 	return;
     }
     if (n_sessions >= N_SESSIONS) {
@@ -249,15 +256,15 @@ hio_connection(iosrc_t fd, ioid_t id)
     vb_init(&session->pending.result);
     session->s = t;
 #if defined(_WIN32) /*[*/
-    session->event = WSACreateEvent();
+    session->event = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (session->event == NULL) {
-	popup_an_error("httpd: can't create socket handle");
+	vtrace("httpd: can't create socket handle\n");
 	SOCK_CLOSE(t);
 	Free(session);
 	return;
     }
     if (WSAEventSelect(session->s, session->event, FD_READ | FD_CLOSE) != 0) {
-	popup_an_error("httpd: Can't set socket handle events");
+	vtrace("httpd: Can't set socket handle events\n");
 	CloseHandle(session->event);
 	SOCK_CLOSE(t);
 	Free(session);
@@ -316,7 +323,7 @@ hio_init(struct sockaddr *sa, socklen_t sa_len)
 	return;
     }
 #if defined(_WIN32) /*[*/
-    listen_event = WSACreateEvent();
+    listen_event = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (listen_event == NULL) {
 	popup_an_error("httpd: cannot create listen handle");
 	SOCK_CLOSE(listen_s);
@@ -352,7 +359,7 @@ hio_send(void *mhandle, const char *buf, size_t len)
 
     nw = send(s->s, buf, len, 0);
     if (nw < 0) {
-	vtrace("http send error: %s", socket_errtext());
+	vtrace("http send error: %s\n", socket_errtext());
     }
 }
 

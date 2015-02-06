@@ -361,9 +361,9 @@ pr3287_start_now(const char *lu, Boolean associated)
 	return;
     }
 #if defined(_WIN32) /*[*/
-    pr3287_ls_handle = WSACreateEvent();
+    pr3287_ls_handle = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (pr3287_ls_handle == NULL) {
-	popup_an_error("WSACreateEvent: %s", win32_strerror(GetLastError()));
+	popup_an_error("CreateEvent: %s", win32_strerror(GetLastError()));
 	SOCK_CLOSE(pr3287_ls);
 	pr3287_ls = INVALID_SOCKET;
 	return;
@@ -813,9 +813,9 @@ pr3287_accept(iosrc_t fd _is_unused, ioid_t id)
 	vtrace("Accepted sync connection from printer.\n");
 
 #if defined(_WIN32) /*[*/
-	pr3287_sync_handle = WSACreateEvent();
+	pr3287_sync_handle = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (pr3287_sync_handle == NULL) {
-	    popup_an_error("WSACreateEvent failed");
+	    popup_an_error("CreateEvent failed");
 	    x3270_exit(1);
 	}
 	if (WSAEventSelect(pr3287_sync, pr3287_sync_handle,
