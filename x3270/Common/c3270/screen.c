@@ -435,8 +435,8 @@ finish_screen_init(void)
     /*
      * Finally, if they want automatic oversize, see if that's possible.
      */
-    if (ov_auto && (maxROWS < cursesLINES - 2 || maxCOLS < cursesCOLS)) {
-	set_rows_cols(model_num, cursesCOLS, cursesLINES - 2);
+    if (ov_auto && (maxROWS < cursesLINES - 3 || maxCOLS < cursesCOLS)) {
+	set_rows_cols(model_num, cursesCOLS, cursesLINES - 3);
     }
 
 #if defined(NCURSES_MOUSE_VERSION) /*[*/

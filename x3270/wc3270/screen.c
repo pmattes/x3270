@@ -1155,8 +1155,8 @@ screen_init(void)
     /*
      * Finally, if they want automatic oversize, see if that's possible.
      */
-    if (ov_auto && (maxROWS < console_rows - 2 || maxCOLS < console_cols)) {
-	set_rows_cols(model_num, console_cols, console_rows - 2);
+    if (ov_auto && (maxROWS < console_rows - 3 || maxCOLS < console_cols)) {
+	set_rows_cols(model_num, console_cols, console_rows - 3);
     }
 
     /* Figure out where the status line goes, if it fits. */
