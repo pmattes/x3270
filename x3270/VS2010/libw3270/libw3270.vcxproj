@@ -91,10 +91,12 @@
     <ClCompile Include="..\..\lib\w3270\kybd.c" />
     <ClCompile Include="..\..\lib\w3270\lazya.c" />
     <ClCompile Include="..\..\lib\w3270\linemode.c" />
+    <ClCompile Include="..\..\lib\w3270\macros.c" />
     <ClCompile Include="..\..\lib\w3270\Malloc.c" />
     <ClCompile Include="..\..\lib\w3270\nvt.c" />
     <ClCompile Include="..\..\lib\w3270\print_screen.c" />
     <ClCompile Include="..\..\lib\w3270\proxy.c" />
+    <ClCompile Include="..\..\lib\w3270\readres.c" />
     <ClCompile Include="..\..\lib\w3270\resolver.c" />
     <ClCompile Include="..\..\lib\w3270\resources.c" />
     <ClCompile Include="..\..\lib\w3270\rpq.c" />

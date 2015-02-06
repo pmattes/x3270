@@ -78,6 +78,9 @@
     <ClCompile Include="..\..\lib\w3270\linemode.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\w3270\macros.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\Malloc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -88,6 +91,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lib\w3270\proxy.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\w3270\readres.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lib\w3270\resolver.c">

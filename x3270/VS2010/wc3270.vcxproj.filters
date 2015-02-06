@@ -47,9 +47,6 @@
     <ClCompile Include="..\wc3270\nvt_gui.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\pr3287_session.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\relink.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -62,10 +59,10 @@
     <ClCompile Include="..\wc3270\shortcut.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\version.c">
+    <ClCompile Include="..\wc3270\ssl_passwd_gui.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\ssl_passwd_gui.c">
+    <ClCompile Include="..\wc3270\version.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

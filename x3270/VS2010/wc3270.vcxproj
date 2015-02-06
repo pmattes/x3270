@@ -63,7 +63,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Ws2_32.lib;$(OutDir)libw3270.lib;$(OutDir)libw3270stubs.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ws2_32.lib;$(OutDir)libw3270.lib;$(OutDir)libw3270i.lib;$(OutDir)libw3270stubs.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -118,7 +118,6 @@
     <ClCompile Include="..\wc3270\keypad.c" />
     <ClCompile Include="..\wc3270\menubar.c" />
     <ClCompile Include="..\wc3270\nvt_gui.c" />
-    <ClCompile Include="..\wc3270\pr3287_session.c" />
     <ClCompile Include="..\wc3270\relink.c" />
     <ClCompile Include="..\wc3270\screen.c" />
     <ClCompile Include="..\wc3270\select.c" />

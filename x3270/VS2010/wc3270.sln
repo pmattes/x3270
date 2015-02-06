@@ -3,6 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C++ Express 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wc3270", "wc3270.vcxproj", "{3F0E2661-72DE-4C76-B013-3FA3ED125DF3}"
 	ProjectSection(ProjectDependencies) = postProject
+		{B306FA2C-263B-423D-A42D-F1930DA727F3} = {B306FA2C-263B-423D-A42D-F1930DA727F3}
 		{7B2EBB95-B987-4FC6-BB3F-B7612B54BD00} = {7B2EBB95-B987-4FC6-BB3F-B7612B54BD00}
 		{A6D4C4FA-6515-416C-9EB2-244A5C40488E} = {A6D4C4FA-6515-416C-9EB2-244A5C40488E}
 	EndProjectSection
@@ -37,10 +38,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "x3270if", "x3270if\x3270if.
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mkshort", "mkshort\mkshort.vcxproj", "{F42388CA-CE98-4F9F-96B7-D0DC1F9DA67E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7B2EBB95-B987-4FC6-BB3F-B7612B54BD00} = {7B2EBB95-B987-4FC6-BB3F-B7612B54BD00}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "catf", "catf\catf.vcxproj", "{2BA5D6CF-59E7-4747-A8BF-A5A1DA3C2567}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ead3270", "ead3270\ead3270.vcxproj", "{D44F6B8C-03C0-41A4-946F-63D1A7C7AC6B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7B2EBB95-B987-4FC6-BB3F-B7612B54BD00} = {7B2EBB95-B987-4FC6-BB3F-B7612B54BD00}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libw3270", "libw3270\libw3270.vcxproj", "{7B2EBB95-B987-4FC6-BB3F-B7612B54BD00}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -50,6 +57,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libw3270stubs", "libw3270stubs\libw3270stubs.vcxproj", "{A6D4C4FA-6515-416C-9EB2-244A5C40488E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mkicon", "mkicon\mkicon.vcxproj", "{07A63EBF-BCDC-40E7-B1EA-6384B461A448}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libw3270i", "libw3270i\libw3270i.vcxproj", "{B306FA2C-263B-423D-A42D-F1930DA727F3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -113,6 +122,10 @@ Global
 		{07A63EBF-BCDC-40E7-B1EA-6384B461A448}.Debug|Win32.Build.0 = Debug|Win32
 		{07A63EBF-BCDC-40E7-B1EA-6384B461A448}.Release|Win32.ActiveCfg = Release|Win32
 		{07A63EBF-BCDC-40E7-B1EA-6384B461A448}.Release|Win32.Build.0 = Release|Win32
+		{B306FA2C-263B-423D-A42D-F1930DA727F3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B306FA2C-263B-423D-A42D-F1930DA727F3}.Debug|Win32.Build.0 = Debug|Win32
+		{B306FA2C-263B-423D-A42D-F1930DA727F3}.Release|Win32.ActiveCfg = Release|Win32
+		{B306FA2C-263B-423D-A42D-F1930DA727F3}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

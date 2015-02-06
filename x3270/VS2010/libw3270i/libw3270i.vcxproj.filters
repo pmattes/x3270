@@ -15,16 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\wc3270\relink.c">
+    <ClCompile Include="..\..\lib\w3270\pr3287_session.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wc3270\shortcut.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\wc3270\wizard.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\wc3270\wversion.c">
+    <ClCompile Include="..\..\lib\w3270\scroll.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

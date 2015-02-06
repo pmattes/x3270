@@ -12,7 +12,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\wc3270\ead3270.c" />
-    <ClCompile Include="..\..\wc3270\windirs.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D44F6B8C-03C0-41A4-946F-63D1A7C7AC6B}</ProjectGuid>
@@ -60,6 +59,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>$(OutDir)libw3270.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

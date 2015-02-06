@@ -18,8 +18,5 @@
     <ClCompile Include="..\..\wc3270\ead3270.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wc3270\windirs.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

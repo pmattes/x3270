@@ -21,8 +21,5 @@
     <ClCompile Include="..\..\wc3270\shortcut.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\wc3270\winvers.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
