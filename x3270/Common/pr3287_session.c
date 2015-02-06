@@ -32,7 +32,6 @@
 
 #include "globals.h"
 
-#if defined(X3270_INTERACTIVE) /*[*/
 #if !defined(_WIN32) /*[*/
 # include <sys/wait.h>
 # include <netinet/in.h>
@@ -427,11 +426,10 @@ pr3287_start_now(const char *lu, Boolean associated)
 #endif /*]*/
 
     /* Get printer options. */
-#if defined(C3270) /*[*/
     pr3287_opts = appres.interactive.printer_opts;
-#else /*][*/
-    pr3287_opts = get_resource(ResPrinterOptions);
-#endif /*]*/
+    if (pr3287_opts == NULL) {
+	pr3287_opts = get_resource(ResPrinterOptions);
+    }
 
     /* Construct the command line. */
 
@@ -1113,5 +1111,3 @@ pr3287_session_running(void)
 {
     return (pr3287_state == P_RUNNING);
 }
-
-#endif /*]*/
