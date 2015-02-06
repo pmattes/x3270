@@ -151,3 +151,14 @@ windows-bootstrap:
 	cd wpr3287 && $(MAKE) -f Makefile.aux bootstrap
 include-bootstrap:
 	cd include && $(MAKE) -f Makefile.aux bootstrap
+
+src.tgz:
+	cd c3270 && $(MAKE) -f Makefile.aux $@
+	cd s3270 && $(MAKE) -f Makefile.aux $@
+	cd tcl3270 && $(MAKE) -f Makefile.aux $@
+	cd x3270 && $(MAKE) -f Makefile.aux $@
+	cd pr3287 && $(MAKE) -f Makefile.aux $@
+	cd wc3270 && $(MAKE) -f Makefile.aux $@
+	cd ws3270 && $(MAKE) -f Makefile.aux $@
+	cd wpr3287 && $(MAKE) -f Makefile.aux $@
+	cd include && $(MAKE) -f Makefile.aux $@

@@ -86,4 +86,5 @@ dependencies: Makefile
 	$(MAKE) depend
 cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
 	../Shared/cs -b
-bootstrap: $(PRODUCT)-src.tgz dependencies cscope.out
+bootstrap:
+src.tgz: $(PRODUCT)-src.tgz

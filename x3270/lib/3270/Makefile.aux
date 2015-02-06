@@ -63,4 +63,5 @@ Makefile: Makefile.in configure lib3270_files.mk lib3270i_files.mk \
 	$(MAKE) depend
 cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
 	../../Shared/cs -b
-bootstrap: $(PRODUCT)-src.tgz Makefile cscope.out
+bootstrap: Makefile
+src.tgz: $(PRODUCT)-src.tgz

@@ -52,4 +52,5 @@ $(PRODUCT)-src.tgz: $(FILES) srctar.sh Makefile.aux
 
 cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
 	../Shared/cs -b
-bootstrap: $(PRODUCT)-src.tgz cscope.out
+bootstrap:
+src.tgz: $(PRODUCT)-src.tgz
