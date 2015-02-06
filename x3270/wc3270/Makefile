@@ -44,6 +44,7 @@ SRCS = $(COMMON_SOURCES) $(WC3270_SOURCES)
 VOBJS = $(COMMON_OBJECTS) $(WC3270_OBJECTS) fallbacks.o wc3270res.o
 
 LIB3270 = ../lib/libw3270.a
+LIB3270I = ../lib/libw3270i.a
 LIBSTUBS = ../lib/libw3270stubs.a
 
 OBJECTS = $(VOBJS) version.o
@@ -83,10 +84,10 @@ $(MKKEYPAD): mkkeypad.c
 wc3270res.o: wc3270.rc wc3270.ico Makefile
 	$(WINDRES) -i wc3270.rc -o wc3270res.o
 
-wc3270.exe: $(OBJECTS) Makefile $(LIB3270) $(LIBSTUBS)
-	$(CC) -o wc3270.exe $(CFLAGS) $(OBJECTS) -L../lib -lw3270 -lw3270stubs $(LIBS)
+wc3270.exe: $(OBJECTS) Makefile $(LIB3270) $(LIB3270I) $(LIBSTUBS)
+	$(CC) -o wc3270.exe $(CFLAGS) $(OBJECTS) -L../lib -lw3270 -lw3270i -lw3270stubs $(LIBS)
 
-$(LIB3270):
+$(LIB3270) $(LIB3270I):
 	cd ../lib/w3270 && $(MAKE) all
 $(LIBSTUBS):
 	cd ../lib/w3270stubs && $(MAKE) all

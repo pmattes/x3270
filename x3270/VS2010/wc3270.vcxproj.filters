@@ -65,9 +65,6 @@
     <ClCompile Include="..\wc3270\version.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\wc3270\scroll.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\wc3270\ssl_passwd_gui.c">
       <Filter>Source Files</Filter>
     </ClCompile>

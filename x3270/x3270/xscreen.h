@@ -142,13 +142,11 @@ Boolean screen_obscured(void);
 void screen_preinit(void);
 void screen_set_keymap(void);
 void screen_set_temp_keymap(XtTranslations trans);
-void screen_set_thumb(float top, float shown);
 void screen_showikeypad(Boolean on);
 void set_aicon_label(char *l);
 void set_translations(Widget w, XtTranslations *t00, XtTranslations *t0);
 void shift_event(int event_state);
 void screen_register(void);
-void enable_cursor(Boolean on);
 
 /* font list */
 struct font_list {

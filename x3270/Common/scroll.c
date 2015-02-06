@@ -38,21 +38,14 @@
 
 #include "3270ds.h"
 #include "actions.h"
-#if defined(C3270) /*[*/
-# include "cscreen.h"
-#endif /*]*/
 #include "ctlrc.h"
 #include "kybd.h"
 #include "popups.h"
 #include "screen.h"
-#if defined(X3270_DISPLAY) /*[*/
-# include "xscreen.h"
-#endif /*]*/
 #include "scroll.h"
 #include "selectc.h"
 #include "status.h"
 #include "trace.h"
-#include "xscroll.h"
 
 /* Globals */
 Boolean	scroll_initted = False;

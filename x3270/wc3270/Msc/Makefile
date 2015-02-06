@@ -52,12 +52,13 @@ VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(WC3270_OBJECTS) wc3270.RES \
 	fallbacks.obj
 
 LIB3270 = ..\lib\libw3270.lib
+LIB3270I = ..\lib\libw3270i.lib
 LIBSTUBS = ..\lib\libw3270stubs.lib
 
 OBJECTS = $(VOBJS) version.obj
 WOBJECTS = $(LIB3270) wizard.obj wc3270.RES wversion.obj shortcut.obj \
 	   relink.obj
-LIBS = $(LIB3270) $(LIBSTUBS) $(SSLLIB) ws2_32.lib \
+LIBS = $(LIB3270) $(LIB3270I) $(LIBSTUBS) $(SSLLIB) ws2_32.lib \
 	advapi32.lib user32.lib shell32.lib ole32.lib comdlg32.lib gdi32.lib \
 	winspool.lib
 SHRTLIBS = $(LIB3270) ole32.lib
@@ -89,10 +90,10 @@ $(MKKEYPAD): mkkeypad.c
 wc3270.RES: wc3270.rc wc3270.ico Msc\Makefile
 	$(RC) wc3270.rc
 
-wc3270.exe: $(OBJECTS) Msc\Makefile $(LIB3270) $(LIBSTUBS)
+wc3270.exe: $(OBJECTS) Msc\Makefile $(LIB3270) $(LIB3270I) $(LIBSTUBS)
 	$(CC) /Fewc3270.exe $(CFLAGS) $(OBJECTS) $(LIBS)
 
-$(LIB3270):
+$(LIB3270) $(LIB3270I):
 	cd ..\lib\w3270 & $(MAKE) /nologo /fMsc\Makefile
 $(LIBSTUBS):
 	cd ..\lib\w3270stubs & $(MAKE) /nologo /fMsc\Makefile

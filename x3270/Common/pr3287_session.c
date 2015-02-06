@@ -41,22 +41,14 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <assert.h>
-#include "3270ds.h"
 #include "appres.h"
 #include "resources.h"
-#include "ctlr.h"
 
 #include "charset.h"
-#include "ctlrc.h"
 #include "host.h"
 #include "lazya.h"
 #include "popups.h"
 #include "pr3287_session.h"
-#include "print_screen.h"
-#include "save.h"
-#if defined(C3270) /*[*/
-# include "screen.h"
-#endif /*]*/
 #include "telnet_core.h"
 #include "trace.h"
 #include "util.h"

@@ -26,7 +26,8 @@
 
 # nmake Makefile for libw3270
 
-TARGET = ..\libw3270.lib
+LIB3270 = ..\libw3270.lib
+LIB3270I = ..\libw3270i.lib
 
 # Set command paths.
 CC = cl /nologo
@@ -45,13 +46,17 @@ CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I. -I..\..\include
 
 OBJ = obj
 !INCLUDE lib3270_files.mk
+!INCLUDE lib3270i_files.mk
 !INCLUDE libw3270_files.mk
 OBJECTS = $(LIB3270_OBJECTS) $(LIBW3270_OBJECTS)
 
-all: $(TARGET)
+all: $(LIB3270) $(LIB3270I)
 
-$(TARGET): $(OBJECTS)
+$(LIB3270): $(OBJECTS)
 	$(LIB) $(OBJECTS) -OUT:$@
+
+$(LIB3270I): $(LIB3270I_OBJECTS)
+	$(LIB) $(LIB3270I_OBJECTS) -OUT:$@
 
 favicon.obj: favicon.c
 
@@ -65,4 +70,4 @@ clean:
 	erase *.obj favicon.c mkicon.exe
 
 clobber: clean
-	erase $(TARGET)
+	erase $(LIB3270) $(LIB3270I)

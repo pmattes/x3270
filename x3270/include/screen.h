@@ -53,3 +53,5 @@ Boolean screen_selected(int baddr);
 Boolean screen_new_display_charsets(const char *realname, const char *csnames);
 void screen_system_fixup(void);
 Boolean screen_suspend(void);
+void screen_set_thumb(float top, float shown);
+void enable_cursor(Boolean on);
