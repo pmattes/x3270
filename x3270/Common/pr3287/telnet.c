@@ -82,6 +82,7 @@
 #include "ctlrc.h"
 #include "resolver.h"
 #include "telnet_core.h"
+#include "util.h"
 #include "trace.h"
 #include "pr_telnet.h"
 
@@ -164,7 +165,7 @@ const char     *termtype = "IBM-3287-1";
 
 /* Statics */
 static struct timeval ds_ts;
-static int      sock = -1;	/* active socket */
+static socket_t sock = INVALID_SOCKET;	/* active socket */
 static unsigned char myopts[N_OPTS], hisopts[N_OPTS];
 			/* telnet option flags */
 static unsigned char *ibuf = (unsigned char *) NULL;
@@ -194,12 +195,12 @@ static char	*try_lu = NULL;
 static char	*try_assoc = NULL;
 
 static void setup_lus(char *luname, const char *assoc);
-static int telnet_fsm(unsigned char c);
+static Boolean telnet_fsm(unsigned char c);
 static void net_rawout(unsigned const char *buf, int len);
 static void check_in3270(void);
 static void store3270in(unsigned char c);
 static int tn3270e_negotiate(void);
-static int process_eor(void);
+static void process_eor(void);
 static const char *tn3270e_function_names(const unsigned char *, int);
 static void tn3270e_subneg_send(unsigned char, unsigned long);
 static unsigned long tn3270e_fdecode(const unsigned char *, int);
@@ -208,7 +209,7 @@ static void tn3270_nak(enum pds);
 static void tn3270e_ack(void);
 static void tn3270e_nak(enum pds);
 static void tn3270e_cleared(void);
-static int net_input(int s);
+static Boolean net_input(socket_t s);
 
 #define trace_str(str)	vtrace("%s", (str))
 static const char *cmd(int c);
@@ -287,232 +288,216 @@ static int continue_tls(unsigned char *sbbuf, int len);
 static Boolean refused_tls = False;
 static Boolean ever_3270 = False;
 
-#if defined(_WIN32) /*[*/
-#define SE_ECONNRESET	WSAECONNRESET
-#define SE_EINTR	WSAEINTR
-#define SE_EAGAIN	WSAEINPROGRESS
-#define SE_EPIPE	WSAECONNABORTED
-#define SE_EINPROGRESS	WSAEINPROGRESS
-#define SOCK_CLOSE(s)	closesocket(s)
-#define SOCK_IOCTL(s, f, v)	ioctlsocket(s, f, (DWORD *)v)
-#else /*][*/
-#define SE_ECONNRESET	ECONNRESET
-#define SE_EINTR	EINTR
-#define SE_EAGAIN	EAGAIN
-#define SE_EPIPE	EPIPE
-#if defined(EINPROGRESS) /*[*/
-#define SE_EINPROGRESS	EINPROGRESS
-#endif /*]*/
-#define SOCK_CLOSE(s)	close(s)
-#define SOCK_IOCTL	ioctl
-#endif /*]*/
-
 
 char *
 sockerrmsg(void)
 {
-	static char buf[1024];
+    static char buf[1024];
 
 #if defined(_WIN32) /*[*/
-	if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
-	    NULL,
-	    WSAGetLastError(),
-	    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-	    buf,
-	    sizeof(buf),
-	    NULL) == 0) {
+    if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+	NULL,
+	WSAGetLastError(),
+	MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+	buf,
+	sizeof(buf),
+	NULL) == 0) {
 
-		sprintf(buf, "Windows error %d", WSAGetLastError());
-	}
+	snprintf(buf, sizeof(buf), "Windows error %d", WSAGetLastError());
+    }
 #else /*][*/
-	strcpy(buf, strerror(errno));
+    snprintf(buf, sizeof(buf), "%s", strerror(errno));
 #endif /*]*/
-	return buf;
+    return buf;
 }
 
 void
 popup_a_sockerr(const char *fmt, ...)
 {
-	va_list args;
-	char buf[1024];
+    va_list args;
+    char *buf;
 
-	va_start(args, fmt);
-	(void) vsprintf(buf, fmt, args);
-	va_end(args);
-	sprintf(buf + strlen(buf), ": %s", sockerrmsg());
-	errmsg("%s", buf);
+    va_start(args, fmt);
+    buf = xs_vbuffer(fmt, args);
+    va_end(args);
+    errmsg("%s: %s", buf, sockerrmsg());
+    Free(buf);
 }
-
 
 /*
  * pr_net_negotiate
  *	Initialize the connection, and negotiate TN3270 options with the host.
+ *
+ * Returns True for success, False for failure.
  */
-int
-pr_net_negotiate(const char *host, struct sockaddr *sa, socklen_t len, int s,
-	char *lu, const char *assoc)
+Boolean
+pr_net_negotiate(const char *host, struct sockaddr *sa, socklen_t len,
+	socket_t s, char *lu, const char *assoc)
 {
-	/* Save the hostname. */
-    	char *h = Malloc(strlen(host) + 1);
-	strcpy(h, host);
-	Replace(hostname, h);
-	memcpy(&host_sa.sa, sa, len);
+    /* Save the hostname. */
+    char *h = Malloc(strlen(host) + 1);
+    strcpy(h, host);
+    Replace(hostname, h);
+    memcpy(&host_sa.sa, sa, len);
 
-	/* Set options for inline out-of-band data and keepalives. */
-	if (setsockopt(s, SOL_SOCKET, SO_OOBINLINE, (char *)&on,
-		    sizeof(on)) < 0) {
-		popup_a_sockerr("setsockopt(SO_OOBINLINE)");
-		return -1;
-	}
-	if (setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, (char *)&on,
-		    sizeof(on)) < 0) {
-		popup_a_sockerr("setsockopt(SO_KEEPALIVE)");
-		return -1;
-	}
+    /* Set options for inline out-of-band data and keepalives. */
+    if (setsockopt(s, SOL_SOCKET, SO_OOBINLINE, (char *)&on, sizeof(on)) < 0) {
+	popup_a_sockerr("setsockopt(SO_OOBINLINE)");
+	return False;
+    }
+    if (setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, (char *)&on, sizeof(on)) < 0) {
+	popup_a_sockerr("setsockopt(SO_KEEPALIVE)");
+	return False;
+    }
 
 #if !defined(_WIN32) /*[*/
-	/* Don't share the socket with our children. */
-	(void) fcntl(s, F_SETFD, 1);
+    /* Don't share the socket with our children. */
+    (void) fcntl(s, F_SETFD, 1);
 #endif /*]*/
 
 	/* init ssl */
 #if defined(HAVE_LIBSSL) /*[*/
-	if (options.ssl.ssl_host && !secure_connection) {
-		int rv;
+    if (options.ssl.ssl_host && !secure_connection) {
+	int rv;
 
-		if (ssl_init() < 0)
-			return -1;
-		SSL_set_fd(ssl_con, s);
-		rv = SSL_connect(ssl_con);
-		if (rv != 1) {
-			long v;
-
-			v = SSL_get_verify_result(ssl_con);
-			if (v != X509_V_OK)
-				errmsg("Host certificate "
-					"verification failed:\n"
-					"%s (%ld)",
-					X509_verify_cert_error_string(v), v);
-			return -1;
-		}       
-
-		/* Check the host connection. */
-		if (!check_cert_name(host)) {
-			return -1;
-		}
-
-		secure_connection = True;
-		vtrace("TLS/SSL tunneled connection complete.  "
-			   "Connection is now secure.\n");
+	if (ssl_init() < 0) {
+	    return False;
 	}
+	SSL_set_fd(ssl_con, s);
+	rv = SSL_connect(ssl_con);
+	if (rv != 1) {
+	    long v;
+
+	    v = SSL_get_verify_result(ssl_con);
+	    if (v != X509_V_OK) {
+		errmsg("Host certificate verification failed:\n%s (%ld)",
+			X509_verify_cert_error_string(v), v);
+	    }
+	    return False;
+	}       
+
+	/* Check the host connection. */
+	if (!check_cert_name(host)) {
+	    return False;
+	}
+
+	secure_connection = True;
+	vtrace("TLS/SSL tunneled connection complete.  "
+		   "Connection is now secure.\n");
+    }
 #endif /*]*/
 
-	/* Allocate the receive buffers. */
-	if (netrbuf == NULL)
-		netrbuf = (unsigned char *)Malloc(BUFSZ);
-	if (ibuf == NULL)
-		ibuf = (unsigned char *)Malloc(BUFSIZ);
-	ibuf_size = BUFSIZ;
-	ibptr = ibuf;
+    /* Allocate the receive buffers. */
+    if (netrbuf == NULL) {
+	netrbuf = (unsigned char *)Malloc(BUFSZ);
+    }
+    if (ibuf == NULL) {
+	ibuf = (unsigned char *)Malloc(BUFSIZ);
+    }
+    ibuf_size = BUFSIZ;
+    ibptr = ibuf;
 
-	/* Set up the LU list. */
-	setup_lus(lu, assoc);
+    /* Set up the LU list. */
+    setup_lus(lu, assoc);
 
-	/* Set up telnet options. */
-	(void) memset((char *) myopts, 0, sizeof(myopts));
-	(void) memset((char *) hisopts, 0, sizeof(hisopts));
-	e_funcs = E_OPT(TN3270E_FUNC_BIND_IMAGE) |
-		  E_OPT(TN3270E_FUNC_DATA_STREAM_CTL) |
-		  E_OPT(TN3270E_FUNC_RESPONSES) |
-		  E_OPT(TN3270E_FUNC_SCS_CTL_CODES) |
-		  E_OPT(TN3270E_FUNC_SYSREQ);
-	e_xmit_seq = 0;
-	response_required = TN3270E_RSF_NO_RESPONSE;
+    /* Set up telnet options. */
+    (void) memset((char *) myopts, 0, sizeof(myopts));
+    (void) memset((char *) hisopts, 0, sizeof(hisopts));
+    e_funcs = E_OPT(TN3270E_FUNC_BIND_IMAGE) |
+	      E_OPT(TN3270E_FUNC_DATA_STREAM_CTL) |
+	      E_OPT(TN3270E_FUNC_RESPONSES) |
+	      E_OPT(TN3270E_FUNC_SCS_CTL_CODES) |
+	      E_OPT(TN3270E_FUNC_SYSREQ);
+    e_xmit_seq = 0;
+    response_required = TN3270E_RSF_NO_RESPONSE;
 #if defined(HAVE_LIBSSL) /*[*/
-	need_tls_follows = False;
+    need_tls_follows = False;
 #endif /*]*/
-	telnet_state = TNS_DATA;
+    telnet_state = TNS_DATA;
 
-	/* Clear statistics and flags. */
-	(void) time(&ns_time);
-	ns_brcvd = 0;
-	ns_rrcvd = 0;
-	ns_bsent = 0;
-	ns_rsent = 0;
-	syncing = 0;
-	tn3270e_negotiated = 0;
-	tn3270e_submode = E_NONE;
-	tn3270e_bound = 0;
+    /* Clear statistics and flags. */
+    (void) time(&ns_time);
+    ns_brcvd = 0;
+    ns_rrcvd = 0;
+    ns_bsent = 0;
+    ns_rsent = 0;
+    syncing = 0;
+    tn3270e_negotiated = 0;
+    tn3270e_submode = E_NONE;
+    tn3270e_bound = 0;
 
-	/* Speak with the host until we suceed or give up. */
-	cstate = CONNECTED_INITIAL;
-	sock = s; /* hack! */
-	while (!tn3270e_negotiated &&		/* TN3270E */
-	       cstate != CONNECTED_3270 &&	/* TN3270 */
-	       cstate != NOT_CONNECTED) {	/* gave up */
+    /* Speak with the host until we suceed or give up. */
+    cstate = CONNECTED_INITIAL;
+    sock = s; /* hack! */
+    while (!tn3270e_negotiated &&	/* TN3270E */
+	   cstate != CONNECTED_3270 &&	/* TN3270 */
+	   cstate != NOT_CONNECTED) {	/* gave up */
 
-		if (net_input(s) < 0)
-			return -1;
+	if (!net_input(s)) {
+	    return False;
 	}
+    }
 
-	/* Success. */
-	return 0;
+    /* Success. */
+    return True;
 }
 
-int
-pr_net_process(int s)
+Boolean
+pr_net_process(socket_t s)
 {
-	while (cstate != NOT_CONNECTED) {
-		fd_set rfds;
-		struct timeval t;
-		struct timeval *tp;
-		int nr;
-		int maxfd = s;
+    while (cstate != NOT_CONNECTED) {
+	fd_set rfds;
+	struct timeval t;
+	struct timeval *tp;
+	int nr;
+	int maxfd = s;
 
-		FD_ZERO(&rfds);
-		FD_SET(s, &rfds);
-		if (options.eoj_timeout) {
-			t.tv_sec = options.eoj_timeout;
-			t.tv_usec = 0;
-			tp = &t;
-		} else
-			tp = NULL;
-		if (syncsock >= 0) {
-			if (syncsock > s) {
-				maxfd = syncsock;
-			}
-			FD_SET(syncsock, &rfds);
-		}
-		nr = select(maxfd + 1, &rfds, NULL, NULL, tp);
-		if (nr == 0 && options.eoj_timeout) {
-			print_eoj();
-		}
-		if (nr > 0 && FD_ISSET(s, &rfds)) {
-			if (net_input(s) < 0) {
-				return -1;
-			}
-		}
-		if (nr > 0 && syncsock >= 0 && FD_ISSET(syncsock, &rfds)) {
-			vtrace("Input on syncsock -- exiting.\n");
-			net_disconnect();
-#if defined(_WIN32) /*[*/
-			/* Let Windows send the TCP FIN. */
-			Sleep(500);
-#endif /*]*/
-			pr3287_exit(0);
-		}
+	FD_ZERO(&rfds);
+	FD_SET(s, &rfds);
+	if (options.eoj_timeout) {
+	    t.tv_sec = options.eoj_timeout;
+	    t.tv_usec = 0;
+	    tp = &t;
+	} else {
+	    tp = NULL;
 	}
-	return 0;
+	if (syncsock != INVALID_SOCKET) {
+	    if (syncsock > s) {
+		maxfd = syncsock;
+	    }
+	    FD_SET(syncsock, &rfds);
+	}
+	nr = select(maxfd + 1, &rfds, NULL, NULL, tp);
+	if (nr == 0 && options.eoj_timeout) {
+	    print_eoj();
+	}
+	if (nr > 0 && FD_ISSET(s, &rfds)) {
+	    if (!net_input(s)) {
+		return False;
+	    }
+	}
+	if (nr > 0 && syncsock != INVALID_SOCKET &&
+	    FD_ISSET(syncsock, &rfds)) {
+	    vtrace("Input on syncsock -- exiting.\n");
+	    net_disconnect();
+#if defined(_WIN32) /*[*/
+	    /* Let Windows send the TCP FIN. */
+	    Sleep(500);
+#endif /*]*/
+	    pr3287_exit(0);
+	}
+    }
+    return True;
 }
 
 /* Disconnect from the host. */
 void
 net_disconnect(void)
 {
-	if (sock != -1) {
+	if (sock != INVALID_SOCKET) {
 		vtrace("SENT disconnect\n");
 		SOCK_CLOSE(sock);
-		sock = -1;
+		sock = INVALID_SOCKET;
 #if defined(HAVE_LIBSSL) /*[*/
 		if (ssl_con != NULL) {
 			SSL_shutdown(ssl_con);
@@ -604,80 +589,78 @@ setup_lus(char *luname, const char *assoc)
  *	socket.  Reads the data, processes the special telnet commands
  *	and calls process_ds to process the 3270 data stream.
  */
-static int
-net_input(int s)
+static Boolean
+net_input(socket_t s)
 {
-	register unsigned char *cp;
-#if defined(_MSC_VER) /*[*/
-	SSIZE_T nr;
-#else /*][*/
-	ssize_t nr;
-#endif /*]*/
+    register unsigned char *cp;
+    ssize_t nr;
 
 #if defined(HAVE_LIBSSL) /*[*/
-	if (ssl_con != NULL)
-		nr = SSL_read(ssl_con, (char *) netrbuf, BUFSZ);
-	else   
+    if (ssl_con != NULL) {
+	nr = SSL_read(ssl_con, (char *) netrbuf, BUFSZ);
+    } else
 #endif /*]*/
+    {
 	nr = recv(s, (char *)netrbuf, BUFSZ, 0);
-	if (nr < 0) {
-		if (socket_errno() == SE_EWOULDBLOCK) {
-			vtrace("EWOULDBLOCK\n");
-			return 0;
-		}
+    }
+    if (nr < 0) {
+	if (socket_errno() == SE_EWOULDBLOCK) {
+	    vtrace("EWOULDBLOCK\n");
+	    return True;
+	}
 #if defined(HAVE_LIBSSL) /*[*/
-                if (ssl_con != NULL) {
-			unsigned long e;
-			char err_buf[1024];
+	if (ssl_con != NULL) {
+	    unsigned long e;
+	    char err_buf[1024];
 
-			e = ERR_get_error();
-			(void) ERR_error_string(e, err_buf);
-			vtrace("RCVD socket error %ld (%s)\n", e, err_buf);
-			errmsg("SSL_read:\n%s", err_buf);
-			cstate = NOT_CONNECTED;
-			return -1;
-		}
+	    e = ERR_get_error();
+	    (void) ERR_error_string(e, err_buf);
+	    vtrace("RCVD socket error %ld (%s)\n", e, err_buf);
+	    errmsg("SSL_read:\n%s", err_buf);
+	    cstate = NOT_CONNECTED;
+	    return False;
+	}
 #endif /*]*/
-		vtrace("RCVD socket error %s\n", sockerrmsg());
-		popup_a_sockerr("Socket read");
-		cstate = NOT_CONNECTED;
-		return -1;
-	} else if (nr == 0) {
-		/* Host disconnected. */
-		trace_str("RCVD disconnect\n");
-		cstate = NOT_CONNECTED;
-		return 0;
-	}
+	vtrace("RCVD socket error %s\n", sockerrmsg());
+	popup_a_sockerr("Socket read");
+	cstate = NOT_CONNECTED;
+	return False;
+    } else if (nr == 0) {
+	/* Host disconnected. */
+	trace_str("RCVD disconnect\n");
+	cstate = NOT_CONNECTED;
+	return True;
+    }
 
-	/* Process the data. */
-	trace_netdata('<', netrbuf, nr);
+    /* Process the data. */
+    trace_netdata('<', netrbuf, nr);
 
-	ns_brcvd += nr;
-	for (cp = netrbuf; cp < (netrbuf + nr); cp++) {
-		if (telnet_fsm(*cp)) {
-			cstate = NOT_CONNECTED;
-			return -1;
-		}
+    ns_brcvd += nr;
+    for (cp = netrbuf; cp < (netrbuf + nr); cp++) {
+	if (!telnet_fsm(*cp)) {
+	    cstate = NOT_CONNECTED;
+	    return False;
 	}
-	return 0;
+    }
+    return True;
 }
-
 
 
 /* Advance 'try_lu' to the next desired LU name. */
 static void
 next_lu(void)
 {
-	if (curr_lu != NULL && (try_lu = *++curr_lu) == NULL)
-		curr_lu = NULL;
+    if (curr_lu != NULL && (try_lu = *++curr_lu) == NULL) {
+	curr_lu = NULL;
+    }
 }
 
 /*
  * telnet_fsm
  *	Telnet finite-state machine.
- *	Returns 0 for okay, -1 for errors.
+ *	Returns True for okay, False for errors.
  */
-static int
+static Boolean
 telnet_fsm(unsigned char c)
 {
 	switch (telnet_state) {
@@ -710,8 +693,7 @@ telnet_fsm(unsigned char c)
 			if (IN_3270 || (IN_E && tn3270e_negotiated)) {
 				trace_str("\n");
 				ns_rrcvd++;
-				if (process_eor())
-					return -1;
+				process_eor();
 			} else
 				trace_str(" (ignored -- not in 3270 mode)\n");
 			ibptr = ibuf;
@@ -903,7 +885,7 @@ telnet_fsm(unsigned char c)
 					/* None of the LUs worked. */
 					errmsg("Cannot connect to specified "
 						"LU");
-					return -1;
+					return False;
 				}
 				tt_len = strlen(termtype);
 				if (try_lu != NULL && *try_lu) {
@@ -934,14 +916,14 @@ telnet_fsm(unsigned char c)
 			} else if (myopts[TELOPT_TN3270E] &&
 				   sbbuf[0] == TELOPT_TN3270E) {
 				if (tn3270e_negotiate())
-					return -1;
+					return False;
 			}
 #if defined(HAVE_LIBSSL) /*[*/
 			else if (need_tls_follows &&
 					myopts[TELOPT_STARTTLS] &&
 					sbbuf[0] == TELOPT_STARTTLS) {
 				if (continue_tls(sbbuf, sbptr - sbbuf) < 0)
-					return -1;
+					return False;
 			}
 #endif /*]*/
 		} else {
@@ -949,7 +931,7 @@ telnet_fsm(unsigned char c)
 		}
 		break;
 	}
-	return 0;
+	return True;
 }
 
 /* Send a TN3270E terminal type request. */
@@ -1251,103 +1233,113 @@ tn3270e_fdecode(const unsigned char *buf, int len)
 	return r;
 }
 
-static int
+static void
 process_eor(void)
 {
-	enum pds rv;
+    enum pds rv;
 
-	if (syncing || !(ibptr - ibuf))
-		return(0);
+    if (syncing || !(ibptr - ibuf)) {
+	return;
+    }
 
-	if (IN_E) {
-		tn3270e_header *h = (tn3270e_header *)ibuf;
+    if (IN_E) {
+	tn3270e_header *h = (tn3270e_header *)ibuf;
 
-		vtrace("RCVD TN3270E(%s%s %s %u)\n",
-		    e_dt(h->data_type),
-		    e_rq(h->data_type, h->request_flag),
-		    e_rsp(h->data_type, h->response_flag),
-		    h->seq_number[0] << 8 | h->seq_number[1]);
+	vtrace("RCVD TN3270E(%s%s %s %u)\n",
+		e_dt(h->data_type),
+		e_rq(h->data_type, h->request_flag),
+		e_rsp(h->data_type, h->response_flag),
+		h->seq_number[0] << 8 | h->seq_number[1]);
 
-		switch (h->data_type) {
-		case TN3270E_DT_3270_DATA:
-		case TN3270E_DT_SCS_DATA:
-			if ((e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE)) &&
-			    !tn3270e_bound)
-				return 0;
-			tn3270e_submode = E_3270;
-			check_in3270();
-			response_required = h->response_flag;
-			if (h->data_type == TN3270E_DT_3270_DATA)
-				rv = process_ds(ibuf + EH_SIZE,
-				    (ibptr - ibuf) - EH_SIZE);
-			else
-				rv = process_scs(ibuf + EH_SIZE,
-				    (ibptr - ibuf) - EH_SIZE);
-			if (rv < 0 &&
-			    response_required != TN3270E_RSF_NO_RESPONSE)
-				tn3270e_nak(rv);
-			else if (rv == PDS_OKAY_NO_OUTPUT &&
-			    response_required == TN3270E_RSF_ALWAYS_RESPONSE)
-				tn3270e_ack();
-			response_required = TN3270E_RSF_NO_RESPONSE;
-			return 0;
-		case TN3270E_DT_BIND_IMAGE:
-			if (!(e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE)))
-				return 0;
-			tn3270e_bound = 1;
-			check_in3270();
-			if (h->response_flag)
-				tn3270e_ack();
-			return 0;
-		case TN3270E_DT_UNBIND:
-			if (!(e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE)))
-				return 0;
-			tn3270e_bound = 0;
-			if (tn3270e_submode == E_3270)
-				tn3270e_submode = E_NONE;
-			check_in3270();
-			if (print_eoj() == 0)
-				rv = PDS_OKAY_NO_OUTPUT;
-			else
-				rv = PDS_FAILED;
-			if (h->response_flag) {
-				if (rv >= 0)
-					tn3270e_ack();
-				else
-					tn3270e_nak(rv);
-			}
-			print_unbind();
-			return 0;
-		case TN3270E_DT_SSCP_LU_DATA:
-		case TN3270E_DT_NVT_DATA:
-			if (h->response_flag)
-				tn3270e_nak(PDS_BAD_CMD);
-			return 0;
-		case TN3270E_DT_PRINT_EOJ:
-			rv = PDS_OKAY_NO_OUTPUT;
-			if (options.ignoreeoj)
-				vtrace("(ignored)\n");
-			else if (print_eoj() < 0)
-				rv = PDS_FAILED;
-			if (h->response_flag) {
-				if (rv >= 0)
-					tn3270e_ack();
-				else
-					tn3270e_nak(rv);
-			}
-			return 0;
-		default:
-			return 0;
+	switch (h->data_type) {
+	case TN3270E_DT_3270_DATA:
+	case TN3270E_DT_SCS_DATA:
+	    if ((e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE)) && !tn3270e_bound) {
+		return;
+	    }
+	    tn3270e_submode = E_3270;
+	    check_in3270();
+	    response_required = h->response_flag;
+	    if (h->data_type == TN3270E_DT_3270_DATA) {
+		rv = process_ds(ibuf + EH_SIZE, (ibptr - ibuf) - EH_SIZE);
+	    } else {
+		rv = process_scs(ibuf + EH_SIZE, (ibptr - ibuf) - EH_SIZE);
+	    }
+	    if (rv < 0 && response_required != TN3270E_RSF_NO_RESPONSE) {
+		tn3270e_nak(rv);
+	    } else if (rv == PDS_OKAY_NO_OUTPUT &&
+		    response_required == TN3270E_RSF_ALWAYS_RESPONSE) {
+		tn3270e_ack();
+	    }
+	    response_required = TN3270E_RSF_NO_RESPONSE;
+	    return;
+	case TN3270E_DT_BIND_IMAGE:
+	    if (!(e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE))) {
+		return;
+	    }
+	    tn3270e_bound = 1;
+	    check_in3270();
+	    if (h->response_flag) {
+		tn3270e_ack();
+	    }
+	    return;
+	case TN3270E_DT_UNBIND:
+	    if (!(e_funcs & E_OPT(TN3270E_FUNC_BIND_IMAGE))) {
+		return;
+	    }
+	    tn3270e_bound = 0;
+	    if (tn3270e_submode == E_3270) {
+		tn3270e_submode = E_NONE;
+	    }
+	    check_in3270();
+	    if (print_eoj() == 0) {
+		rv = PDS_OKAY_NO_OUTPUT;
+	    } else {
+		rv = PDS_FAILED;
+	    }
+	    if (h->response_flag) {
+		if (rv >= 0) {
+		    tn3270e_ack();
+		} else {
+		    tn3270e_nak(rv);
 		}
-	} else {
-		/* Plain old 3270 mode. */
-		rv = process_ds(ibuf, ibptr - ibuf);
-		if (rv < 0)
-			tn3270_nak(rv);
-		else
-			tn3270_ack();
-		return 0;
+	    }
+	    print_unbind();
+	    return;
+	case TN3270E_DT_SSCP_LU_DATA:
+	case TN3270E_DT_NVT_DATA:
+	    if (h->response_flag) {
+		tn3270e_nak(PDS_BAD_CMD);
+	    }
+	    return;
+	case TN3270E_DT_PRINT_EOJ:
+	    rv = PDS_OKAY_NO_OUTPUT;
+	    if (options.ignoreeoj) {
+		vtrace("(ignored)\n");
+	    } else if (print_eoj() < 0) {
+		rv = PDS_FAILED;
+	    }
+	    if (h->response_flag) {
+		if (rv >= 0) {
+		    tn3270e_ack();
+		} else {
+		    tn3270e_nak(rv);
+		}
+	    }
+	    return;
+	default:
+	    return;
 	}
+    } else {
+	/* Plain old 3270 mode. */
+	rv = process_ds(ibuf, ibptr - ibuf);
+	if (rv < 0) {
+	    tn3270_nak(rv);
+	} else {
+	    tn3270_ack();
+	}
+	return;
+    }
 }
 
 
@@ -1358,11 +1350,11 @@ process_eor(void)
 void
 net_exception(void)
 {
-	trace_str("RCVD urgent data indication\n");
-	if (!syncing) {
-		syncing = 1;
-		/* x_except_off(); */
-	}
+    trace_str("RCVD urgent data indication\n");
+    if (!syncing) {
+	syncing = 1;
+	/* x_except_off(); */
+    }
 }
 
 /*

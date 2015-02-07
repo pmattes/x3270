@@ -91,12 +91,12 @@ char *type_name[] = {
 
 static Boolean parse_host_port(char *s, char **phost, char **pport);
 
-static Boolean proxy_passthru(int fd, char *host, unsigned short port);
-static Boolean proxy_http(int fd, char *host, unsigned short port);
-static Boolean proxy_telnet(int fd, char *host, unsigned short port);
-static Boolean proxy_socks4(int fd, char *host, unsigned short port,
+static Boolean proxy_passthru(socket_t fd, char *host, unsigned short port);
+static Boolean proxy_http(socket_t fd, char *host, unsigned short port);
+static Boolean proxy_telnet(socket_t fd, char *host, unsigned short port);
+static Boolean proxy_socks4(socket_t fd, char *host, unsigned short port,
 	int force_a);
-static Boolean proxy_socks5(int fd, char *host, unsigned short port,
+static Boolean proxy_socks5(socket_t fd, char *host, unsigned short port,
 	int force_d);
 
 char *
@@ -277,7 +277,7 @@ parse_host_port(char *s, char **phost, char **pport)
  * Returns False for failure, True for success.
  */
 Boolean
-proxy_negotiate(int type, int fd, char *host, unsigned short port)
+proxy_negotiate(int type, socket_t fd, char *host, unsigned short port)
 {
     switch (type) {
     case PT_NONE:
@@ -303,7 +303,7 @@ proxy_negotiate(int type, int fd, char *host, unsigned short port)
 
 /* Sun PASSTHRU proxy. */
 static Boolean
-proxy_passthru(int fd, char *host, unsigned short port)
+proxy_passthru(socket_t fd, char *host, unsigned short port)
 {
     char *buf;
 
@@ -324,7 +324,7 @@ proxy_passthru(int fd, char *host, unsigned short port)
 
 /* HTTP (RFC 2817 CONNECT tunnel) proxy. */
 static Boolean
-proxy_http(int fd, char *host, unsigned short port)
+proxy_http(socket_t fd, char *host, unsigned short port)
 {
     char *buf;
     char *colon;
@@ -441,7 +441,7 @@ proxy_http(int fd, char *host, unsigned short port)
 
 /* TELNET proxy. */
 static Boolean
-proxy_telnet(int fd, char *host, unsigned short port)
+proxy_telnet(socket_t fd, char *host, unsigned short port)
 {
     char *buf;
 
@@ -462,7 +462,7 @@ proxy_telnet(int fd, char *host, unsigned short port)
 
 /* SOCKS version 4 proxy. */
 static Boolean
-proxy_socks4(int fd, char *host, unsigned short port, int force_a)
+proxy_socks4(socket_t fd, char *host, unsigned short port, int force_a)
 {
     struct hostent *hp;
     struct in_addr ipaddr;
@@ -608,7 +608,7 @@ proxy_socks4(int fd, char *host, unsigned short port, int force_a)
 
 /* SOCKS version 5 (RFC 1928) proxy. */
 static Boolean
-proxy_socks5(int fd, char *host, unsigned short port, int force_d)
+proxy_socks5(socket_t fd, char *host, unsigned short port, int force_d)
 {
     union {
 	struct sockaddr sa;

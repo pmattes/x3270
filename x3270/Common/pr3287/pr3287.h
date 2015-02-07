@@ -87,7 +87,7 @@ extern options_t options;
 extern char *appdata;
 extern char *common_appdata;
 #endif /*]*/
-extern int syncsock;
+extern socket_t syncsock;
 
 extern void pr3287_exit(int exit_code);
 

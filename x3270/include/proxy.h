@@ -31,5 +31,5 @@
  */
 
 int proxy_setup(char **phost, char **pport);
-Boolean proxy_negotiate(int type, int fd, char *host, unsigned short port);
+Boolean proxy_negotiate(int type, socket_t fd, char *host, unsigned short port);
 char *proxy_type_name(int type);

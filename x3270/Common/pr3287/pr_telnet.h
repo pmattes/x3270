@@ -31,9 +31,9 @@
  *		from) what is declared in telnet_core.h.
  */
 
-extern int pr_net_negotiate(const char *host, struct sockaddr *sa,
-	socklen_t len, int s, char *lu, const char *assoc);
-extern int pr_net_process(int s);
+extern Boolean pr_net_negotiate(const char *host, struct sockaddr *sa,
+	socklen_t len, socket_t s, char *lu, const char *assoc);
+extern Boolean pr_net_process(socket_t s);
 
 #if defined(HAVE_LIBSSL) /*[*/
 extern void pr_ssl_base_init(void);

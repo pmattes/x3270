@@ -162,7 +162,7 @@
 
 /* Globals. */
 options_t options;
-int syncsock = -1;
+socket_t syncsock = INVALID_SOCKET;
 #if defined(_WIN32) /*[*/
 char *appdata;
 char *common_appdata;
@@ -388,8 +388,9 @@ pr3287_exit(int status)
 #endif /*]*/
 
 	/* Close the synchronization socket gracefully. */
-	if (syncsock >= 0) {
-		close(syncsock);
+	if (syncsock != INVALID_SOCKET) {
+		SOCK_CLOSE(syncsock);
+		syncsock = INVALID_SOCKET;
 	}
 
 	exit(status);
@@ -477,7 +478,7 @@ main(int argc, char *argv[])
 #endif /*]*/
 	} ha;
 	socklen_t ha_len = sizeof(ha);
-	int s = -1;
+	socket_t s = INVALID_SOCKET;
 	int rc = 0;
 	int report_success = 0;
 #if defined(HAVE_LIBSSL) /*[*/
@@ -990,7 +991,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 		sin.sin_port = htons(options.syncport);
 
 		syncsock = socket(PF_INET, SOCK_STREAM, 0);
-		if (syncsock < 0) {
+		if (syncsock == INVALID_SOCKET) {
 			popup_a_sockerr("socket(syncsock)");
 			pr3287_exit(1);
 		}
@@ -1048,7 +1049,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 
 		/* Connect to the host. */
 		s = socket(ha.sa.sa_family, SOCK_STREAM, 0);
-		if (s < 0) {
+		if (s == INVALID_SOCKET) {
 			popup_a_sockerr("socket");
 			pr3287_exit(1);
 		}
@@ -1118,8 +1119,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 #endif /*]*/
 
 		/* Negotiate. */
-		if (pr_net_negotiate(host, &ha.sa, ha_len, s, lu,
-			    options.assoc) < 0) {
+		if (!pr_net_negotiate(host, &ha.sa, ha_len, s, lu,
+			    options.assoc)) {
 			rc = 1;
 			goto retry;
 		}
@@ -1131,7 +1132,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 		}
 
 		/* Process what we're told to process. */
-		if (pr_net_process(s) < 0) {
+		if (!pr_net_process(s)) {
 			rc = 1;
 			if (options.verbose)
 				(void) fprintf(stderr,
@@ -1146,9 +1147,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 		(void) print_eoj();
 
 		/* Close the socket. */
-		if (s >= 0) {
+		if (s != INVALID_SOCKET) {
 			net_disconnect();
-			s = -1;
+			s = INVALID_SOCKET;
 		}
 
 		if (!options.reconnect)
