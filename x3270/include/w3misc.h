@@ -39,4 +39,5 @@
 #if defined(_WIN32) /*[*/
 int sockstart(void);
 const char *win32_strerror(int e);
+void win32_perror(const char *fmt, ...);
 #endif /*]*/

@@ -26,7 +26,6 @@
 
 /*
  *	readres.h
- *		A displayless 3270 Terminal Emulator
  *		Header for resource file reader.
  */
 

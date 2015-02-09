@@ -44,6 +44,7 @@
 #include "ctlr.h"
 #include "ctlrc.h"
 #include "popups.h"
+#include "screen.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "winvers.h"
@@ -59,14 +60,15 @@ static char *s_onscreen;
 
 /* Event names. */
 static char *event_name[] = {
-	"BUTTON_DOWN",
-	"BUTTON_UP",
-	"MOVE",
-	"DOUBLE_CLICK"
+    "BUTTON_DOWN",
+    "RIGHT_BUTTON_DOWN",
+    "BUTTON_UP",
+    "MOVE",
+    "DOUBLE_CLICK"
 };
 
 /* If True, we are rubber-banding a selection right now. */
-static Boolean select_pending = False;
+static Boolean rubber_banding = False;
 
 /* If True, we have a stored start point. */
 static Boolean select_started = False;
@@ -101,43 +103,43 @@ select_init(unsigned max_rows, unsigned max_cols)
 void
 unselect(int baddr, int len)
 {
-    	/*
-	 * Technically, only the specified area has changed, but intuitively,
-	 * the whole selected rectangle has.
-	 */
-	select_pending = False;
-	select_started = False;
-	word_selected = False;
-	memset(s_pending, 0, ROWS * COLS);
-	screen_changed = True;
+    /*
+     * Technically, only the specified area has changed, but intuitively,
+     * the whole selected rectangle has.
+     */
+    rubber_banding = False;
+    select_started = False;
+    word_selected = False;
+    memset(s_pending, 0, ROWS * COLS);
+    screen_changed = True;
 }
 
 static void
 reselect(void)
 {
-	int rowA, colA, rowZ, colZ;
-	int row, col;
+    int rowA, colA, rowZ, colZ;
+    int row, col;
 
-	/* Clear out the current selection. */
-	memset(s_pending, 0, ROWS * COLS);
+    /* Clear out the current selection. */
+    memset(s_pending, 0, ROWS * COLS);
 
-	/* Fill in from start to end, which may be backwards. */
-	rowA = (select_start_row < select_end_row)?
-	    select_start_row: select_end_row;
-	rowZ = (select_start_row > select_end_row)?
-	    select_start_row: select_end_row;
-	colA = (select_start_col < select_end_col)?
-	    select_start_col: select_end_col;
-	colZ = (select_start_col > select_end_col)?
-	    select_start_col: select_end_col;
+    /* Fill in from start to end, which may be backwards. */
+    rowA = (select_start_row < select_end_row)?
+	select_start_row: select_end_row;
+    rowZ = (select_start_row > select_end_row)?
+	select_start_row: select_end_row;
+    colA = (select_start_col < select_end_col)?
+	select_start_col: select_end_col;
+    colZ = (select_start_col > select_end_col)?
+	select_start_col: select_end_col;
 
-	for (row = rowA; row <= rowZ; row++) {
-		for (col = colA; col <= colZ; col++) {
-			s_pending[(row * COLS) + col] = 1;
-		}
+    for (row = rowA; row <= rowZ; row++) {
+	for (col = colA; col <= colZ; col++) {
+	    s_pending[(row * COLS) + col] = 1;
 	}
+    }
 
-	screen_changed = True;
+    screen_changed = True;
 }
 
 /*
@@ -201,38 +203,38 @@ is_blank(int baddr)
 static void
 find_word_end(int row, int col, int *startp, int *endp)
 {
-	int baddr = (row * COLS) + col;
+    int baddr = (row * COLS) + col;
 
-	assert(row <= ROWS);
-	assert(col <= COLS);
+    assert(row <= ROWS);
+    assert(col <= COLS);
 
-	/*
-	 * If on a blank now, return just that, or that plus the word to the
-	 * left.
-	 */
-	if (is_blank(baddr)) {
-		*endp = col;
-		while (col && !is_blank((row * COLS) + (col - 1))) {
-			col--;
-		}
-		*endp = col;
-		return;
-	}
-
-	/* Search left. */
+    /*
+     * If on a blank now, return just that, or that plus the word to the
+     * left.
+     */
+    if (is_blank(baddr)) {
+	*endp = col;
 	while (col && !is_blank((row * COLS) + (col - 1))) {
-		col--;
-	}
-	*startp = col;
-
-	/* Search right. */
-	while (col < (COLS - 1) && !is_blank((row * COLS) + (col + 1))) {
-		col++;
-	}
-	if (col < (COLS -1)) {
-		col++;
+	    col--;
 	}
 	*endp = col;
+	return;
+    }
+
+    /* Search left. */
+    while (col && !is_blank((row * COLS) + (col - 1))) {
+	col--;
+    }
+    *startp = col;
+
+    /* Search right. */
+    while (col < (COLS - 1) && !is_blank((row * COLS) + (col + 1))) {
+	col++;
+    }
+    if (col < (COLS -1)) {
+	col++;
+    }
+    *endp = col;
 }
 
 /*
@@ -248,80 +250,115 @@ find_word_end(int row, int col, int *startp, int *endp)
 Boolean
 select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 {
-	assert((int)row <= ROWS);
-	assert((int)col <= COLS);
+    static int click_cursor_addr = -1;
 
-	vtrace("select_event(%u %u %s %s)\n", row, col, event_name[event],
-		shift? "shift": "no-shift");
+    assert((int)row <= ROWS);
+    assert((int)col <= COLS);
 
-	if (!select_pending) {
-		switch (event) {
-		case SE_BUTTON_DOWN:
-			if (shift && select_started) {
-				/* Extend selection. */
-				vtrace("Extending selection\n");
-			} else {
-				vtrace("New selection\n");
-				select_start_row = row;
-				select_start_col = col;
-			}
-			select_pending = True;
-			select_started = True;
-			word_selected = False;
-			select_end_row = row;
-			select_end_col = col;
-			reselect();
-			break;
-		case SE_DOUBLE_CLICK:
-			vtrace("Word select\n");
-			select_pending = False;
-			select_start_row = row;
-			select_end_row = row;
-			find_word_end(row, col, &select_start_col,
-				&select_end_col);
-			word_selected = True;
-			reselect();
-			break;
-		default:
-			break;
-		}
-	} else {
-		/* A selection is pending (rubber-banding). */
-		switch (event) {
-		case SE_BUTTON_UP:
-			select_pending = False;
-			word_selected = False;
-			if (row == select_start_row &&
-			    col == select_start_col) {
-				/*
-				 * No movement. Call it a cursor move,
-				 * but they might extend it later.
-				 */
-				vtrace("Cursor move\n");
-				s_pending[(row * COLS) + col] = 0;
-				screen_changed = True;
-				/* We did not consume the event. */
-				return False;
-			}
-			vtrace("Finish selection.\n");
-			select_end_row = row;
-			select_end_col = col;
-			reselect();
-			break;
-		case SE_MOVE:
-			/* Extend. */
-			vtrace("Extend\n");
-			select_end_row = row;
-			select_end_col = col;
-			reselect();
-			break;
-		default:
-			break;
-		}
+    vtrace(" select_event(%u,%u,%s,%s)\n", row, col, event_name[event],
+	    shift? "shift": "no-shift");
+
+    if (!rubber_banding) {
+	switch (event) {
+	case SE_BUTTON_DOWN:
+	    if (shift && select_started) {
+		/* Extend selection. */
+		vtrace("  Extending selection\n");
+	    } else {
+		vtrace("  New selection\n");
+		select_start_row = row;
+		select_start_col = col;
+	    }
+	    rubber_banding = True;
+	    select_started = True;
+	    word_selected = False;
+	    select_end_row = row;
+	    select_end_col = col;
+	    reselect();
+	    break;
+	case SE_DOUBLE_CLICK:
+	    vtrace("  Word select\n");
+	    rubber_banding = False;
+	    select_start_row = row;
+	    select_end_row = row;
+	    find_word_end(row, col, &select_start_col, &select_end_col);
+	    word_selected = True;
+	    reselect();
+
+	    /* If we moved the cursor for the first click, move it back now. */
+	    if (click_cursor_addr != -1) {
+		cursor_move(click_cursor_addr);
+		click_cursor_addr = -1;
+	    }
+	    break;
+	case SE_RIGHT_BUTTON_DOWN:
+	    if (memchr(s_pending, 1, COLS * ROWS) == NULL) {
+		/* No selection pending: Paste. */
+		vtrace("  Paste\n");
+		run_action("Paste", IA_KEY, NULL, NULL);
+	    } else {
+		/* Selection pending: Copy. */
+		vtrace("  Copy\n");
+		run_action("Copy", IA_KEY, NULL, NULL);
+	    }
+	    break;
+	default:
+	    break;
 	}
+    } else {
+	/* A selection is pending (rubber-banding). */
+	switch (event) {
+	case SE_BUTTON_UP:
+	    rubber_banding = False;
+	    word_selected = False;
+	    if (row == select_start_row && col == select_start_col) {
+		/*
+		 * No movement. Call it a cursor move,
+		 * but they might extend it later.
+		 */
+		vtrace("  Cursor move\n");
+		s_pending[(row * COLS) + col] = 0;
+		screen_changed = True;
+		click_cursor_addr = cursor_addr;
+		/* We did not consume the event. */
+		return False;
+	    }
+	    vtrace("  Finish selection\n");
+	    select_end_row = row;
+	    select_end_col = col;
+	    reselect();
+	    break;
+	case SE_MOVE:
+	    /* Extend. */
+	    vtrace("  Extend\n");
+	    select_end_row = row;
+	    select_end_col = col;
+	    reselect();
+	    break;
+	default:
+	    break;
+	}
+    }
 
-	/* We consumed the event. */
+    /* We consumed the event. */
+    return True;
+}
+
+/**
+ * Handle a Return key (usually marked Enter) for completing a select/copy
+ * action.
+ *
+ * @return True if key consumed, False otherwise.
+ */
+Boolean
+select_return_key(void)
+{
+    if (memchr(s_pending, 1, COLS * ROWS) != NULL) {
+	run_action("Copy", IA_KEY, NULL, NULL);
 	return True;
+    } else {
+	return False;
+    }
 }
 
 /*
@@ -756,19 +793,19 @@ Cut_action(ia_t ia, unsigned argc, const char **argv)
 Boolean
 select_changed(unsigned row, unsigned col, unsigned rows, unsigned cols)
 {
-	unsigned r;
+    unsigned r;
 
-	assert((int)(row + rows) <= ROWS);
-	assert((int)(col + cols) <= COLS);
+    assert((int)(row + rows) <= ROWS);
+    assert((int)(col + cols) <= COLS);
 
-	for (r = row; r < row + rows; r++) {
-		if (memcmp(&s_pending [(r * COLS) + col],
-			   &s_onscreen[(r * COLS) + col],
-			   cols)) {
-			return True;
-		}
+    for (r = row; r < row + rows; r++) {
+	if (memcmp(&s_pending [(r * COLS) + col],
+		    &s_onscreen[(r * COLS) + col],
+		    cols)) {
+	    return True;
 	}
-	return False;
+    }
+    return False;
 }
 
 /*
@@ -777,7 +814,7 @@ select_changed(unsigned row, unsigned col, unsigned rows, unsigned cols)
 Boolean
 area_is_selected(int baddr, int len)
 {
-    	return memchr(&s_pending[baddr], 1, len) != NULL;
+    return memchr(&s_pending[baddr], 1, len) != NULL;
 }
 
 /*
@@ -787,16 +824,16 @@ area_is_selected(int baddr, int len)
 void
 select_sync(unsigned row, unsigned col, unsigned rows, unsigned cols)
 {
-	unsigned r;
+    unsigned r;
 
-	assert((int)(row + rows) <= ROWS);
-	assert((int)(col + cols) <= COLS);
+    assert((int)(row + rows) <= ROWS);
+    assert((int)(col + cols) <= COLS);
 
-	for (r = row; r < row + rows; r++) {
-		memcpy(&s_onscreen[(r * COLS) + col],
-		       &s_pending [(r * COLS) + col],
-		       cols);
-	}
+    for (r = row; r < row + rows; r++) {
+	memcpy(&s_onscreen[(r * COLS) + col],
+		&s_pending [(r * COLS) + col],
+		cols);
+    }
 }
 
 /**

@@ -351,15 +351,13 @@ get_ws2_32(const char *symbol)
     if (ws2_32_handle == NULL) {
 	ws2_32_handle = LoadLibrary("ws2_32.dll");
 	if (ws2_32_handle == NULL) {
-	    fprintf(stderr, "Can't load ws2_32.dll: %s\n",
-		    win32_strerror(GetLastError()));
+	    win32_perror("Can't load ws2_32.dll");
 	    exit(1);
 	}
     }
     p = GetProcAddress(ws2_32_handle, symbol);
     if (p == NULL) {
-	fprintf(stderr, "Can't resolve %s in ws2_32.dll: %s\n",
-	    symbol, win32_strerror(GetLastError()));
+	win32_perror("Can't resolve %s in ws2_32.dll", symbol);
 	exit(1);
     }
     return p;

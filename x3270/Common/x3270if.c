@@ -278,8 +278,7 @@ tsock(unsigned short port)
 	fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (fd < 0) {
 #if defined(_WIN32) /*[*/
-	    	fprintf(stderr, "socket: %s\n",
-			win32_strerror(GetLastError()));
+		win32_perror("socket");
 #else /*][*/
 		perror("socket");
 #endif /*]*/
@@ -291,8 +290,7 @@ tsock(unsigned short port)
 	sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	if (connect(fd, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
 #if defined(_WIN32) /*[*/
-	    	fprintf(stderr, "connect(%u): %s\n", port,
-			win32_strerror(GetLastError()));
+	    	win32_perror("connect(%u)", port);
 #else /*][*/
 		perror("connect");
 #endif /*]*/
@@ -370,8 +368,7 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 	if (nw < 0) {
 	    	if (is_socket)
 #if defined(_WIN32) /*[*/
-		    	fprintf(stderr, "x3270if: send: %s\n",
-				win32_strerror(GetLastError()));
+		    	win32_perror("x3270if: send");
 #else /*][*/
 		    	perror("x3270if: send");
 #endif /*]*/
@@ -439,8 +436,7 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 	if (nr < 0) {
 	    	if (is_socket)
 #if defined(_WIN32) /*[*/
-			fprintf(stderr, "x3270if: recv: %s\n",
-				win32_strerror(GetLastError()));
+			win32_perror("x3270if: recv");
 #else /*][*/
 			perror("recv");
 #endif /*]*/
@@ -720,8 +716,7 @@ iterative_io(int pid, unsigned short port)
 	sin.sin_port = htons(port);
 	sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	if (connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-		fprintf(stderr, "connect(%u) failed: %s\n",
-			port, win32_strerror(WSAGetLastError()));
+		win32_perror("connect(%u) failed", port);
 		exit(2);
 	}
 	if (verbose) {
@@ -729,13 +724,11 @@ iterative_io(int pid, unsigned short port)
 	}
 	socket_event = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (socket_event == NULL) {
-		fprintf(stderr, "WSACreateEvent failed: %s\n",
-			win32_strerror(GetLastError()));
+		win32_perror("CreateEvent failed");
 		exit(2);
 	}
 	if (WSAEventSelect(s, socket_event, FD_READ|FD_CLOSE) != 0) {
-		fprintf(stderr, "WSAEventSelect failed: %s\n",
-			win32_strerror(WSAGetLastError()));
+		win32_perror("WSAEventSelect failed");
 		exit(2);
 	}
 
@@ -744,8 +737,7 @@ iterative_io(int pid, unsigned short port)
 	stdin_done_event = CreateEvent(NULL, FALSE, FALSE, NULL);
 	stdin_thread = CreateThread(NULL, 0, stdin_read, NULL, 0, NULL);
 	if (stdin_thread == NULL) {
-		fprintf(stderr, "CreateThread failed: %s\n",
-			win32_strerror(GetLastError()));
+		win32_perror("CreateThread failed");
 		exit(2);
 	}
 	SetEvent(stdin_enable_event);
@@ -762,8 +754,7 @@ iterative_io(int pid, unsigned short port)
 					nr, (nr == 1)? "": "s");
 			}
 			if (nr < 0) {
-				fprintf(stderr, "recv failed: %s\n",
-					win32_strerror(WSAGetLastError()));
+				win32_perror("recv failed");
 				exit(2);
 			}
 			if (nr == 0) {
@@ -788,8 +779,7 @@ iterative_io(int pid, unsigned short port)
 			SetEvent(stdin_enable_event);
 			break;
 		case WAIT_FAILED:
-			fprintf(stderr, "WaitForMultipleObjects failed: %s\n ",
-				win32_strerror(GetLastError()));
+			win32_perror("WaitForMultipleObjects failed");
 			exit(2);
 		default:
 			fprintf(stderr, "Unexpected return %d from "

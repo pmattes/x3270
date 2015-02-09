@@ -38,6 +38,7 @@ Boolean select_changed(unsigned row, unsigned col, unsigned rows,
 	unsigned cols);
 typedef enum {
 	SE_BUTTON_DOWN,
+	SE_RIGHT_BUTTON_DOWN,
 	SE_BUTTON_UP,
 	SE_MOVE,
 	SE_DOUBLE_CLICK
@@ -47,7 +48,4 @@ Boolean select_event(unsigned row, unsigned col, select_event_t event,
 void select_init(unsigned max_rows, unsigned max_cols);
 void select_sync(unsigned row, unsigned col, unsigned rows,
 	unsigned cols);
-
-/* Used by common code. */
-void unselect(int baddr, int len);
-Boolean area_is_selected(int baddr, int len);
+Boolean select_return_key(void);

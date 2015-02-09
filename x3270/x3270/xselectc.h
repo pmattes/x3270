@@ -32,7 +32,6 @@
  *		Global declarations for select.c.
  */
 
-Boolean area_is_selected(int baddr, int len);
 void insert_selection_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
 void Cut_xaction(Widget w, XEvent *event, String *params,
@@ -63,6 +62,5 @@ void set_select_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
 void start_extend_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
-void unselect(int baddr, int len);
 void Unselect_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);

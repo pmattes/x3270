@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <errno.h>
 
+#include "asprintf.h"
 #include "w3misc.h"
 
 /* Initialize Winsock. */
@@ -131,6 +132,24 @@ win32_strerror(int e)
     }
 
     return buffer;
+}
+
+/*
+ * Windows version of perror().
+ */
+void
+win32_perror(const char *fmt, ...)
+{
+    va_list ap;
+    char *buf;
+
+    va_start(ap, fmt);
+    (void) vasprintf(&buf, fmt, ap);
+    va_end(ap);
+
+    fprintf(stderr, "%s: %s\n", buf, win32_strerror(GetLastError()));
+    fflush(stderr);
+    free(buf);
 }
 
 #if defined(_MSC_VER) /*[*/
