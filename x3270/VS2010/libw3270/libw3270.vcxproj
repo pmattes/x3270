@@ -73,6 +73,7 @@
     <ClCompile Include="..\..\lib\w3270\actions.c" />
     <ClCompile Include="..\..\lib\w3270\apl.c" />
     <ClCompile Include="..\..\lib\w3270\asprintf.c" />
+    <ClCompile Include="..\..\lib\w3270\b8.c" />
     <ClCompile Include="..\..\lib\w3270\bind-opt.c" />
     <ClCompile Include="..\..\lib\w3270\charset.c" />
     <ClCompile Include="..\..\lib\w3270\ctlr.c" />
@@ -91,6 +92,7 @@
     <ClCompile Include="..\..\lib\w3270\kybd.c" />
     <ClCompile Include="..\..\lib\w3270\lazya.c" />
     <ClCompile Include="..\..\lib\w3270\linemode.c" />
+    <ClCompile Include="..\..\lib\w3270\llist.c" />
     <ClCompile Include="..\..\lib\w3270\macros.c" />
     <ClCompile Include="..\..\lib\w3270\Malloc.c" />
     <ClCompile Include="..\..\lib\w3270\nvt.c" />

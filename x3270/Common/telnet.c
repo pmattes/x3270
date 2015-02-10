@@ -70,6 +70,7 @@
 #include "appres.h"
 
 #include "actions.h"
+#include "b8.h"
 #include "ctlrc.h"
 #include "host.h"
 #include "kybd.h"
@@ -180,23 +181,6 @@ static int	proxy_type = 0;
 static char	*proxy_host = NULL;
 static char	*proxy_portname = NULL;
 static unsigned short proxy_port = 0;
-
-#define MX8     256             /* maxiumum number of bits */
-#define NB8     64              /* bits per unit */
-#define NU8     (MX8 / NB8)     /* units per object */
-
-typedef struct {
-	uint64_t u[NU8];
-} b8_t;
-
-static void b8_zero(b8_t *b);
-static void b8_not(b8_t *b);
-static void b8_and(b8_t *r, b8_t *a, b8_t *b);
-static void b8_set_bit(b8_t *b, unsigned bit);
-static Boolean b8_bit_is_set(b8_t *b, unsigned bit);
-static Boolean b8_is_zero(b8_t *b);
-static void b8_copy(b8_t *to, b8_t *from);
-static Boolean b8_none_added(b8_t *want, b8_t *got);
 
 static b8_t e_funcs;		/* negotiated TN3270E functions */
 
@@ -4383,101 +4367,4 @@ Boolean
 net_bound(void)
 {
     return (IN_E && tn3270e_bound);
-}
-
-/*
- * 256-bit bitmap functions.
- *
- * These are defined for TN3270E function negotiation, but could be of general
- * use.
- */
-
-/* Zero a bitmap. */
-static void
-b8_zero(b8_t *b)
-{
-    int i;
-
-    for (i = 0; i < NU8; i++) {
-	b->u[i] = 0;
-    }
-}
-
-/* 1's complement a bitmap. */
-static void
-b8_not(b8_t *b)
-{
-    int i;
-
-    for (i = 0; i < NU8; i++) {
-	b->u[i] = ~b->u[i];
-    }
-}
-
-/* AND two objects. */
-static void
-b8_and(b8_t *r, b8_t *a, b8_t *b)
-{
-    int i;
-
-    for (i = 0; i < NU8; i++) {
-	r->u[i] = a->u[i] & b->u[i];
-    }
-}
-
-/* Set a bit in a bitmap. */
-static void
-b8_set_bit(b8_t *b, unsigned bit)
-{
-    if (bit < MX8) {
-	b->u[bit / NB8] |= (uint64_t)1 << (bit % NB8);
-    }
-}
-
-/* Test a bit in a bitmap. */
-static Boolean
-b8_bit_is_set(b8_t *b, unsigned bit)
-{
-    if (bit < MX8) {
-	return (b->u[bit / NB8] & ((uint64_t)1 << (bit % NB8))) != 0;
-    } else {
-	return False;
-    }
-}
-
-/* Test a bitmap for all zeroes. */
-static Boolean
-b8_is_zero(b8_t *b)
-{
-    int i;
-
-    for (i = 0; i < NU8; i++) {
-	if (b->u[i]) {
-	    return False;
-	}
-    }
-    return True;
-}
-
-/* Copy one bitmap to another. */
-static void
-b8_copy(b8_t *to, b8_t *from)
-{
-    *to = *from; /* struct copy */
-}
-
-/* Check for bits added to a bitmap. */
-static Boolean
-b8_none_added(b8_t *want, b8_t *got)
-{
-    b8_t t;
-
-    /*
-     * The basic arithmetic is:
-     *  !(got & ~want)
-     */
-    b8_copy(&t, want);
-    b8_not(&t);
-    b8_and(&t, got, &t);
-    return b8_is_zero(&t);
 }

@@ -1,5 +1,5 @@
 INCLUDE_HEADERS = 3270ds.h actions.h apl.h appres.h arpa_telnet.h asprintf.h \
-	bind-opt.h charset.h child.h child_popups.h ctlr.h ctlrc.h \
+	b8.h bind-opt.h charset.h child.h child_popups.h ctlr.h ctlrc.h \
 	fallbacks.h fprint_screen.h ft.h ft_cut.h ft_cut_ds.h ft_dft.h \
 	ft_dft_ds.h ft_gui.h ft_private.h gdi_print.h globals.h glue.h \
 	glue_gui.h host.h host_gui.h httpd-core.h httpd-io.h httpd-nodes.h \
