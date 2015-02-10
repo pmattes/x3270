@@ -31,7 +31,7 @@ UNIX_PRODS = c3270-dir s3270-dir tcl3270-dir x3270-dir pr3287-dir
 UNIX_LIBS = lib-3270-dir lib-3270stubs-dir
 
 # Windows targets.
-WINDOWS_PRODS = wc3270-dir ws3270-dir wpr32787-dir
+WINDOWS_PRODS = wc3270-dir ws3270-dir wpr3287-dir
 WINDOWS_LIBS = lib-w3270-dir lib-w3270stubs-dir
 
 # Global targets.
