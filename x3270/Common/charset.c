@@ -114,7 +114,7 @@ charset_init(const char *csname)
 #else /*][*/
     codeset_name = lazyaf("CP%d", appres.local_cp);
 #endif /*]*/
-    set_codeset(codeset_name);
+    set_codeset(codeset_name, appres.utf8);
 
     /* Do nothing, successfully. */
     if (csname == NULL || !strcasecmp(csname, "us")) {

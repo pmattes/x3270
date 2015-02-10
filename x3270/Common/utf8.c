@@ -33,9 +33,6 @@
 
 #include "globals.h"
 
-#if !defined(PR3287) /*[*/
-# include "appres.h"
-#endif /*]*/
 #include "utf8.h"
 
 char *locale_codeset = NULL;
@@ -45,23 +42,19 @@ Boolean is_utf8 = False;
  * Save the codeset from the locale, and set globals based on known values.
  */
 void
-set_codeset(char *codeset_name)
+set_codeset(char *codeset_name, Boolean force_utf8)
 {
-#if !defined(PR3287) /*[*/
     /*
      * s3270 and ws3270 have a '-utf8' option and a utf8 resource to force
      * UTF-8 mode. tcl3270 always forces UTF-8 mode, because that's what the
      * TCL library uses.
      */
-    if (appres.utf8) {
+    if (force_utf8) {
 	is_utf8 = True;
-# if defined(_WIN32) /*[*/
-	appres.local_cp = CP_UTF8;
-# endif /*]*/
+
 	/* Force the name. */
 	codeset_name = "UTF-8";
     }
-#endif /*]*/
 
     /*
      * We're in UTF-8 mode if the codeset looks like 'UTF8'.

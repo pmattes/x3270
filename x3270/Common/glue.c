@@ -314,12 +314,16 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     if (*cl_hostname == NULL) {
 	appres.once = False;
     }
-    if (appres.conf_dir == NULL) {
-	appres.conf_dir = LIBX3270DIR;
-    }
     if (!appres.debug_tracing) {
+	/* debug_tracing was explicitly cleared */
 	 set_toggle(TRACING, False);
     }
+#if defined(_WIN32) /*[*/
+    if (appres.utf8) {
+	/* utf8 overrides local_cp */
+	appres.local_cp = CP_UTF8;
+    }
+#endif /*]*/
 
     return argc;
 }
@@ -443,6 +447,7 @@ set_appres_defaults(void)
     appres.m3279 = True;
     appres.typeahead = True;
     appres.debug_tracing = True;
+    appres.conf_dir = LIBX3270DIR;
 
     appres.model = "4";
     appres.hostsfile = NULL;
