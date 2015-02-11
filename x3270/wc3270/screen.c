@@ -568,9 +568,9 @@ printw(char *fmt, ...)
     sl = strlen(buf);
 
     wbuf = (WCHAR *)Malloc(sl * sizeof(WCHAR));
-    nc = MultiByteToWideChar(CP_ACP, 0, buf, -1, wbuf, sl);
+    nc = MultiByteToWideChar(CP_ACP, 0, buf, sl, wbuf, sl);
     Free(buf);
-    for (i = 0; i < nc - 1; i++) {
+    for (i = 0; i < nc; i++) {
 	addch(wbuf[i]);
     }
     Free(wbuf);
@@ -594,9 +594,9 @@ mvprintw(int row, int col, char *fmt, ...)
     sl = strlen(buf);
 
     wbuf = (WCHAR *)Malloc(sl * sizeof(WCHAR));
-    nc = MultiByteToWideChar(CP_ACP, 0, buf, -1, wbuf, sl);
+    nc = MultiByteToWideChar(CP_ACP, 0, buf, sl, wbuf, sl);
     Free(buf);
-    for (i = 0; i < nc - 1; i++) {
+    for (i = 0; i < nc; i++) {
 	addch(wbuf[i]);
     }
     Free(wbuf);

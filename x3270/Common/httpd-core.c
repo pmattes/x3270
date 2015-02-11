@@ -520,8 +520,9 @@ httpd_html_trailer(httpd_t *h, httpd_print_t type)
 {
     httpd_print(h, type, "\n");
     httpd_print(h, type, " <HR>\n");
-    httpd_print(h, type, " <I>%s - "
-	    "<A HREF=\"http://x3270.bgp.nu/\">x3270.bgp.nu</A><I>\n", build);
+    httpd_print(h, type,
+	    " <I>%s - <A HREF=\"http://x3270.bgp.nu/\">x3270.bgp.nu</A></I>\n",
+	    build);
     httpd_print(h, type, " </BODY>\n");
 }
 
