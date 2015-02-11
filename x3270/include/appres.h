@@ -89,6 +89,7 @@ typedef struct {
     int		 unlock_delay_ms;
     char	*hostname;
     Boolean	 utf8;
+    int	 	 max_recent;
 #if defined(_WIN32) /*[*/
     int		 local_cp;
     int		 ft_cp;

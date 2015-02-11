@@ -53,7 +53,7 @@
 #define RECONNECT_MS		2000	/* 2 sec before reconnecting to host */
 #define RECONNECT_ERR_MS	5000	/* 5 sec before reconnecting to host */
 
-#define MAX_RECENT	5
+#define MAX_RECENT		20	/* upper limit on appres.max_recent */
 
 enum cstate	cstate = NOT_CONNECTED;
 Boolean		std_ds_host = False;
@@ -914,6 +914,11 @@ save_recent(const char *hn)
     time_t t = time(NULL);
     int n_recent;
 
+    /* Don't let the user go overboard on the recent hosts list. */
+    if (appres.max_recent > MAX_RECENT) {
+	appres.max_recent = MAX_RECENT;
+    }
+
     /*
      * Copy the ibm_hosts into the array, and point r_start at the first
      * recent-host entry.
@@ -1015,7 +1020,7 @@ save_recent(const char *hn)
     for (i = nih; i < nh; i++) {
 	Boolean delete = False;
 
-	if (n_recent >= MAX_RECENT) {
+	if (n_recent >= appres.max_recent) {
 	    delete = True;
 	} else {
 	    int j;

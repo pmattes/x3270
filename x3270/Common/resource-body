@@ -1741,6 +1741,15 @@ description
     the left of the current cursor positon.
 .
 
+name maxRecent
+applies x
+groups i
+type i
+default 5
+description
+    The maximum number of entries in the Connect menu's recent host list.
+.
+
 name menuBar
 applies x wc
 groups a

@@ -461,6 +461,7 @@ set_appres_defaults(void)
     appres.oversize = NULL;
     appres.bind_limit = True;
     appres.new_environ = True;
+    appres.max_recent = 5;
 
     appres.linemode.icrnl = True;
     appres.linemode.onlcr = True;

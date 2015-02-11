@@ -216,6 +216,8 @@ XtResource resources[] = {
 	  offset(proxy), XtRString, 0 },
 	{ ResHostname, ClsHostname, XtRString, sizeof(String),
 	  offset(hostname), XtRString, 0 },
+	{ ResMaxRecent, ClsMaxRecent, XtRInt, sizeof(int),
+	  offset(max_recent), XtRString, "5" },
 
 	{ ResMonoCase, ClsMonoCase, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(MONOCASE), XtRString, ResFalse },
