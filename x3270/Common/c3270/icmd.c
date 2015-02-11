@@ -35,9 +35,9 @@
 #include "appres.h"
 
 #include "charset.h"
-#include "host.h"
 #include "icmdc.h"
 #include "utf8.h"
+#include "util.h"
 
 static char host_type[5] = "tso";
 #if defined(_WIN32) /*[*/

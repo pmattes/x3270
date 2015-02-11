@@ -53,7 +53,6 @@ typedef void toggle_upcall_t(toggle_index_t ix, enum toggle_type type);
 void do_menu_toggle(int);
 void do_toggle(int);
 void initialize_toggles(void);
-void shutdown_toggles(void);
 void toggles_register(void);
 void toggle_toggle(toggle_index_t ix);
 void set_toggle(toggle_index_t ix, Boolean value);

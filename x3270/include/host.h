@@ -49,6 +49,4 @@ void host_connected(void);
 void host_disconnect(Boolean disable);
 void host_in3270(enum cstate);
 void host_newfd(iosrc_t s);
-void register_schange(int tx, void (*func)(Boolean));
-void st_changed(int tx, Boolean mode);
 void host_register(void);

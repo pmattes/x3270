@@ -91,3 +91,22 @@ void llist_unlink(llist_t *element);
 #define FOREACH_LLIST_END(head, elt, type) \
     } \
 }
+
+/* State changes. */
+#define ST_RESOLVING	1
+#define ST_HALF_CONNECT	2
+#define ST_CONNECT	3
+#define ST_3270_MODE	4
+#define ST_LINE_MODE	5
+#define ST_REMODEL	6
+#define ST_PRINTER	7
+#define ST_EXITING	8
+#define ST_CHARSET	9
+#define N_ST		10
+
+#define ORDER_DONTCARE	0xfffe
+#define ORDER_LAST	0xffff
+void register_schange_ordered(int tx, void (*func)(Boolean),
+	unsigned short order);
+void register_schange(int tx, void (*func)(Boolean));
+void st_changed(int tx, Boolean mode);

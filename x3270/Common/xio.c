@@ -38,11 +38,12 @@
 #include "globals.h"
 
 #include "actions.h"
-#include "host.h"
 #include "telnet.h"
-#include "toggles.h"
 #include "util.h"
 #include "xio.h"
+
+/* Globals. */
+int x3270_exit_code = 0;
 
 /* Statics. */
 static ioid_t ns_read_id;
@@ -123,31 +124,17 @@ x3270_exit(int n)
     if (already_exiting) {
 	return;
     }
-
     already_exiting = True;
+
+    /* Set the exit code. */
+    x3270_exit_code = n;
 
     /* Flush any pending output (mostly for Windows). */
     fflush(stdout);
     fflush(stderr);
 
-    /* Turn off toggle-related activity. */
-    shutdown_toggles();
-
-    /* Shut down the socket gracefully. */
-    host_disconnect(False);
-
-    /* Tell anyone else who's interested. */
+    /* Tell everyone else who's interested. */
     st_changed(ST_EXITING, True);
-
-    if (n) {
-	char buf[2];
-	char *r;
-
-	printf("\n[Press <Enter>] ");
-	fflush(stdout);
-	r = fgets(buf, sizeof(buf), stdin);
-	r = r; /* keep gcc happy */
-    }
 
 #if !defined(_WIN32) /*[*/
     exit(n);

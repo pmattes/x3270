@@ -77,6 +77,7 @@
     <ClCompile Include="..\..\lib\w3270\bind-opt.c" />
     <ClCompile Include="..\..\lib\w3270\charset.c" />
     <ClCompile Include="..\..\lib\w3270\ctlr.c" />
+    <ClCompile Include="..\..\lib\w3270\event.c" />
     <ClCompile Include="..\..\lib\w3270\favicon.c" />
     <ClCompile Include="..\..\lib\w3270\fprint_screen.c" />
     <ClCompile Include="..\..\lib\w3270\ft.c" />

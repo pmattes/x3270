@@ -384,6 +384,19 @@ c3270_Error(const char *s)
     /* Wait for the <Return> key, and then exit. */
     x3270_exit(1);
 }
+
+/* Pause before exiting. */
+static void
+exit_pause(Boolean mode _is_unused)
+{
+    if (x3270_exit_code) {
+	char buf[2];
+
+	printf("\n[Press <Enter>] ");
+	fflush(stdout);
+	(void) fgets(buf, sizeof(buf), stdin);
+    }
+}
 #endif /*]*/
 
 int
@@ -399,8 +412,11 @@ main(int argc, char *argv[])
     Boolean	 once = False;
 
 #if defined(_WIN32) /*[*/
-    /* Redirect Error(), so we pause. */
+    /* Redirect Error() so we pause. */
     Error_redirect = c3270_Error;
+
+    /* Register a final exit function, so we pause. */
+    register_schange_ordered(ST_EXITING, exit_pause, ORDER_LAST);
 
     /* Get Windows version and directories. */
     (void) get_version_info();

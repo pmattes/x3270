@@ -234,6 +234,7 @@ extern Boolean		std_ds_host;
 extern char		*termtype;
 extern Boolean		visible_control;
 extern int		*xtra_width;
+extern int		x3270_exit_code;
 
 #if defined(_WIN32) /*[*/
 extern char		*instdir;
@@ -331,18 +332,6 @@ struct ea {
 
 /*   input key type */
 enum keytype { KT_STD, KT_GE };
-
-/*   state changes */
-#define ST_RESOLVING	1
-#define ST_HALF_CONNECT	2
-#define ST_CONNECT	3
-#define ST_3270_MODE	4
-#define ST_LINE_MODE	5
-#define ST_REMODEL	6
-#define ST_PRINTER	7
-#define ST_EXITING	8
-#define ST_CHARSET	9
-#define N_ST		10
 
 /* Shorthand macros */
 

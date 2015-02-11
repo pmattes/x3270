@@ -42,6 +42,7 @@
 #include "menubar.h"
 #include "popups.h"
 #include "toggles.h"
+#include "util.h"
 
 /* Live state of toggles. */
 typedef struct {
@@ -132,7 +133,7 @@ initialize_toggles(void)
  * Called from system exit code to handle toggles.
  */
 void
-shutdown_toggles(void)
+toggle_exiting(Boolean mode _is_unused)
 {
     toggle_index_t ix;
 
@@ -195,6 +196,9 @@ toggles_register(void)
     static action_table_t toggle_actions[] = {
 	{ "Toggle",		Toggle_action,	ACTION_KE }
     };
+
+    /* Register the cleanup routine. */
+    register_schange(ST_EXITING, toggle_exiting);
 
     /* Register the actions. */
     register_actions(toggle_actions, array_count(toggle_actions));

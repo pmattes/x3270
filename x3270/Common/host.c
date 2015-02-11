@@ -203,6 +203,18 @@ read_hosts_file(void)
 }
 
 /**
+ * State change callback for emulator exit.
+ *
+ * @param[in] mode	Unused.
+ */
+static void
+host_exiting(Boolean mode _is_unused)
+{
+    /* Disconnect from the host gracefully. */
+    host_disconnect(False);
+}
+
+/**
  * Hosts module registration.
  */
 void
@@ -216,6 +228,10 @@ host_register(void)
 	{ "Reconnect",	Reconnect_action,	ACTION_KE }
     };
 
+    /* Register for events. */
+    register_schange(ST_EXITING, host_exiting);
+
+    /* Register our actions. */
     register_actions(host_actions, array_count(host_actions));
 }
 
@@ -1083,43 +1099,6 @@ save_recent(const char *hn)
     }
     if (lcf_name != NULL) {
 	Free(lcf_name);
-    }
-}
-
-/* Support for state change callbacks. */
-
-struct st_callback {
-    struct st_callback *next;
-    void (*func)(Boolean);
-};
-static struct st_callback *st_callbacks[N_ST];
-static struct st_callback *st_last[N_ST];
-
-/* Register a function interested in a state change. */
-void
-register_schange(int tx, void (*func)(Boolean))
-{
-    struct st_callback *st;
-
-    st = (struct st_callback *)Malloc(sizeof(*st));
-    st->func = func;
-    st->next = NULL;
-    if (st_last[tx] != NULL) {
-	st_last[tx]->next = st;
-    } else {
-	st_callbacks[tx] = st;
-    }
-    st_last[tx] = st;
-}
-
-/* Signal a state change. */
-void
-st_changed(int tx, Boolean mode)
-{
-    struct st_callback *st;
-
-    for (st = st_callbacks[tx]; st != NULL; st = st->next) {
-	(*st->func)(mode);
     }
 }
 
