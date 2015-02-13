@@ -756,7 +756,11 @@ host_connect(const char *n)
 	cstate = PENDING;
 	st_changed(ST_HALF_CONNECT, True);
     } else {
-	cstate = CONNECTED_INITIAL;
+	if (appres.nvt_mode) {
+	    cstate = CONNECTED_NVT;
+	} else {
+	    cstate = CONNECTED_INITIAL;
+	}
 	st_changed(ST_CONNECT, True);
 	host_gui_connect_initial();
     }

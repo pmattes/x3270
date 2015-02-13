@@ -90,6 +90,7 @@ typedef struct {
     char	*hostname;
     Boolean	 utf8;
     int	 	 max_recent;
+    Boolean	 nvt_mode;
 #if defined(_WIN32) /*[*/
     int		 local_cp;
     int		 ft_cp;

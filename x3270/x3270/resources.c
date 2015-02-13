@@ -218,6 +218,8 @@ XtResource resources[] = {
 	  offset(hostname), XtRString, 0 },
 	{ ResMaxRecent, ClsMaxRecent, XtRInt, sizeof(int),
 	  offset(max_recent), XtRString, "5" },
+	{ ResNvtMode, ClsNvtMode, XtRBoolean, sizeof(Boolean),
+	  offset(nvt_mode), XtRString, ResFalse },
 
 	{ ResMonoCase, ClsMonoCase, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(MONOCASE), XtRString, ResFalse },

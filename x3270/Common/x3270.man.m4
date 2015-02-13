@@ -305,6 +305,9 @@ reported by the terminal.
 XX_TP(XX_FB(XX_DASHED(noprompt)))
 An alias for XX_DASHED(secure).
 ')dnl
+XX_TP(XX_FB(XX_DASHED(nvt)))
+Start in NVT mode instead of waiting for the host to send data, and make the
+default terminal type XX_FB(xterm).
 ifelse(XX_PRODUCT,x3270,
 XX_TP(XX_FB(XX_DASHED(once)))
 Causes XX_FB(XX_PRODUCT) to exit after a host disconnects.

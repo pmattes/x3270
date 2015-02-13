@@ -384,7 +384,7 @@ do_lnext(char c)
 }
 
 /*
- * net_linemode_chars
+ * linemode_chars
  *	Report line-mode characters.
  */
 struct ctl_char *
@@ -406,7 +406,7 @@ linemode_chars(void)
 }
 
 /*
- * net_send_erase
+ * linemode_send_erase
  *	Send the linemode ERASE character.
  */
 void
@@ -416,7 +416,7 @@ linemode_send_erase(void)
 }
 
 /*
- * net_send_kill
+ * linemode_send_kill
  *      Send the linemode KILL character.
  */
 void
@@ -426,11 +426,25 @@ linemode_send_kill(void)
 }
 
 /*
- * net_send_werase
+ * linemode_send_werase
  *      Send the linemode WERASE character.
  */
 void
 linemode_send_werase(void)
 {
     net_cookout(&vwerase, 1);
+}
+
+/*
+ * linemode_dump()
+ * 	Transition from line mode to character-at-a-time mode.
+ *
+ * 	Dump whatever is in the line mode buffer to the host.
+ * 	This might result in double-echoing, but at least we won't lose any
+ * 	input data.
+ */
+void
+linemode_dump(void)
+{
+    forward_data();
 }

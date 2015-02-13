@@ -555,6 +555,8 @@ static opt_t base_opts[] = {
 },
 { OptModel,    OPT_STRING,  False, ResModel,     aoffset(model),
     "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
+{ OptNvtMode,  OPT_BOOLEAN, True,  ResNvtMode,   aoffset(nvt_mode),
+    NULL,	"Begin in NVT mode" },
 { OptOversize, OPT_STRING,  False, ResOversize,  aoffset(oversize),
     "<cols>x<rows>", "Larger screen dimensions" },
 { OptPort,     OPT_STRING,  False, ResPort,      aoffset(port),

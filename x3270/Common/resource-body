@@ -1944,6 +1944,16 @@ desc
     locked.
 .
 
+name normalColor
+applies x
+groups a
+type s
+default green
+desc
+    On color X11 displays in 3278 mode, this is the color of normal-intensity
+    text.  On monochrome X11 displays, normal text uses the foreground color.
+.
+
 name numericLock
 applies a
 groups i
@@ -1954,14 +1964,17 @@ desc
     is entered into fields with the Numeric attribute.
 .
 
-name normalColor
-applies x
-groups a
-type s
-default green
+name nvtMode
+applies a
+groups i
+type b
+default false
+switch -nvt
 desc
-    On color X11 displays in 3278 mode, this is the color of normal-intensity
-    text.  On monochrome X11 displays, normal text uses the foreground color.
+    When true, causes %p% to start immediately in NVT mode and allow keyboard
+    input immediately, instead of waiting for the host to send data or
+    negotiate 3270 mode. It also causes the default terminal type to be
+    <b>xterm</b>.
 .
 
 name onlcr

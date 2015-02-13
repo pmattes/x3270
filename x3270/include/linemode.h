@@ -45,3 +45,4 @@ void linemode_out(const char *buf, int len);
 void linemode_send_erase(void);
 void linemode_send_kill(void);
 void linemode_send_werase(void);
+void linemode_dump(void);

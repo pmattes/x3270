@@ -594,7 +594,9 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 
     /* set up temporary termtype */
     if (appres.termname == NULL) {
-	if (appres.oversize) {
+	if (appres.nvt_mode) {
+	    termtype = "xterm";
+	} else if (appres.oversize) {
 	    termtype = "IBM-DYNAMIC";
 	} else if (std_ds_host) {
 	    (void) snprintf(ttype_tmpval, sizeof(ttype_tmpval), "IBM-327%c-%d",
@@ -988,7 +990,11 @@ net_connected(void)
 #endif /*]*/
 
     /* Done with SSL or proxy. */
-    cstate = CONNECTED_INITIAL;
+    if (appres.nvt_mode) {
+	host_in3270(CONNECTED_NVT);
+    } else {
+	cstate = CONNECTED_INITIAL;
+    }
 
     /* set up telnet options */
     memset((char *)myopts, 0, sizeof(myopts));
@@ -2767,6 +2773,8 @@ check_in3270(void)
 	} else if (cstate == CONNECTED_INITIAL) {
 		/* Nothing has happened, yet. */
 		return;
+	} else if (appres.nvt_mode) {
+		new_cstate = CONNECTED_NVT;
 	} else {
 		new_cstate = CONNECTED_INITIAL;
 	}
@@ -2865,34 +2873,38 @@ space3270out(unsigned n)
 static void
 check_linemode(Boolean init)
 {
-	int wasline = linemode;
+    int wasline = linemode;
 
-	/*
-	 * The next line is a deliberate kluge to effectively ignore the SGA
-	 * option.  If the host will echo for us, we assume
-	 * character-at-a-time; otherwise we assume fully cooked by us.
-	 *
-	 * This allows certain IBM hosts which volunteer SGA but refuse
-	 * ECHO to operate more-or-less normally, at the expense of
-	 * implementing the (hopefully useless) "character-at-a-time, local
-	 * echo" mode.
-	 *
-	 * We still implement "switch to line mode" and "switch to character
-	 * mode" properly by asking for both SGA and ECHO to be off or on, but
-	 * we basically ignore the reply for SGA.
-	 */
-	linemode = !hisopts[TELOPT_ECHO] /* && !hisopts[TELOPT_SGA] */;
+    /*
+     * The next line is a deliberate kluge to effectively ignore the SGA
+     * option.  If the host will echo for us, we assume
+     * character-at-a-time; otherwise we assume fully cooked by us.
+     *
+     * This allows certain IBM hosts which volunteer SGA but refuse
+     * ECHO to operate more-or-less normally, at the expense of
+     * implementing the (hopefully useless) "character-at-a-time, local
+     * echo" mode.
+     *
+     * We still implement "switch to line mode" and "switch to character
+     * mode" properly by asking for both SGA and ECHO to be off or on, but
+     * we basically ignore the reply for SGA.
+     */
+    linemode = !hisopts[TELOPT_ECHO] /* && !hisopts[TELOPT_SGA] */;
 
-	if (init || linemode != wasline) {
-		st_changed(ST_LINE_MODE, linemode);
-		if (!init) {
-			vtrace("Operating in %s mode.\n",
-			    linemode ? "line" : "character-at-a-time");
-		}
-		if (IN_NVT && linemode) {
-			linemode_buf_init();
-		}
+    if (init || linemode != wasline) {
+	st_changed(ST_LINE_MODE, linemode);
+	if (!init) {
+	    vtrace("Operating in %s mode.\n",
+		    linemode? "line": "character-at-a-time");
 	}
+	if (IN_NVT) {
+	    if (linemode) {
+		linemode_buf_init();
+	    } else {
+		linemode_dump();
+	    }
+	}
+    }
 }
 
 

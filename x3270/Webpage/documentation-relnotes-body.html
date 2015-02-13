@@ -2,6 +2,13 @@
 3.3 is the current development line for the x3270 suite.
 <h2>Changes in version 3.4alpha1, nn. Mon 2015</h2>
 <ul>
+ <li>[all] Added an <b>-nvt</b> option and an <b>nvtMode</b> resource to
+  force NVT mode as soon as a session is connected. This overrides the usual
+  behavior of locking the keyboard and waiting for the host to send NVT-mode
+  data or negotiate 3270 mode before unlocking. This option also changes the
+  default terminal type to <b>xterm</b>.</li>
+ <li>[<i>c3270</i>] Added a mapping from the Escape key to the <b>Escape()</b>
+  action (breaking to the c3270&gt; prompt).</li>
  <li>[<i>x3270</i>] Added a <b>maxRecent</b> resource to control the maximum
   size of the recent host list in the Connect menu.</li>
  <li>[<i>wc3270</i>] Added right-click and Enter to Copy, and right-click to

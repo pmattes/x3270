@@ -504,19 +504,21 @@ kybd_inhibit(Boolean inhibit)
 static void
 kybd_connect(Boolean connected)
 {
-	if ((kybdlock & KL_DEFERRED_UNLOCK) && unlock_id) {
-		RemoveTimeOut(unlock_id);
-		unlock_id = NULL_IOID;
-	}
-	kybdlock_clr(-1, "kybd_connect");
+    if ((kybdlock & KL_DEFERRED_UNLOCK) && unlock_id) {
+	RemoveTimeOut(unlock_id);
+	unlock_id = NULL_IOID;
+    }
+    kybdlock_clr(-1, "kybd_connect");
 
-	if (connected) {
-		/* Wait for any output or a WCC(restore) from the host */
-		kybdlock_set(KL_AWAITING_FIRST, "kybd_connect");
-	} else {
-		kybdlock_set(KL_NOT_CONNECTED, "kybd_connect");
-		(void) flush_ta();
+    if (connected) {
+	if (!appres.nvt_mode) {
+	    /* Wait for any output or a WCC(restore) from the host */
+	    kybdlock_set(KL_AWAITING_FIRST, "kybd_connect");
 	}
+    } else {
+	kybdlock_set(KL_NOT_CONNECTED, "kybd_connect");
+	(void) flush_ta();
+    }
 }
 
 /*

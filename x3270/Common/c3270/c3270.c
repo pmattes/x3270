@@ -138,6 +138,7 @@ static Boolean pager_q = False;
 /* Base keymap for c3270. */
 static char *base_keymap1 =
            "Ctrl<Key>]: Escape\n"
+          "<Key>Escape: Escape\n"
 "Ctrl<Key>a Ctrl<Key>a: Key(0x01)\n"
 "Ctrl<Key>a Ctrl<Key>]: Key(0x1d)\n"
     "Ctrl<Key>a <Key>c: Clear\n"

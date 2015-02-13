@@ -148,6 +148,7 @@
 #define ResNormalColor		"normalColor"
 #define ResNormalCursor		"normalCursor"
 #define ResNumericLock		"numericLock"
+#define ResNvtMode		"nvtMode"
 #define ResOerrLock		"oerrLock"
 #define ResOnce			"once"
 #define ResOnlcr		"onlcr"
@@ -238,6 +239,7 @@
 #define DotM3279		"." ResM3279
 #define DotModel		"." ResModel
 #define DotMono			"." ResMono
+#define DotNvtMode		"." ResNvtMode
 #define DotOnce			"." ResOnce
 #define DotOversize		"." ResOversize
 #define DotPort			"." ResPort
@@ -351,6 +353,7 @@
 #define ClsNormalColor		"NormalColor"
 #define ClsNormalCursor		"NormalCursor"
 #define ClsNumericLock		"NumericLock"
+#define ClsNvtMode		"NvtMode"
 #define ClsOerrLock		"OerrLock"
 #define ClsOnce			"Once"
 #define ClsOnlcr		"Onlcr"
@@ -439,6 +442,7 @@
 #define OptMono			"-mono"
 #define OptNoPrompt		"-noprompt"
 #define OptNoScrollBar		"+sb"
+#define OptNvtMode		"-nvt"
 #define OptOnce			"-once"
 #define OptOversize		"-oversize"
 #define OptPort			"-port"
