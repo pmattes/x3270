@@ -19,7 +19,7 @@ all_prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270 Playback"
 
 function usage
 {
-	echo >&2 "Usage: $0 [--nobuild] [--release] [--just-tarball] [--win32] [<product>...]"
+	echo >&2 "Usage: $0 [--nobuild] [--release] [--win32] [<product>...]"
 	exit 0
 }
 
@@ -37,11 +37,7 @@ do	case "$1" in
 		release=1
 		shift
 		;;
-	-just-tarball|--just-tarball)
-		tarball=1
-		shift
-		;;
-	-win32|--win32)
+	-win32|--win32|-windows|--windows)
 		all_prods="wc3270 wpr3287 ws3270"
 		just_win32=1
 		shift
@@ -59,10 +55,6 @@ if [ $# -gt 0 ]
 then	prods=$*
 else	prods=$all_prods
     	[ -z "$just_win32" ] && all=1
-fi
-if [ "$tarball" -a ! "$all" ]
-then	echo >&2 "Can't do tarball for specific products."
-    	exit 1
 fi
 
 # c3270, x3270, s3270 and tcl3270 need lib3270 and lib3270stubs.
@@ -114,6 +106,7 @@ reldir=$d1/../../Release
 suite=suite3270-$version-src.tgz
 setup=wc3270-$version-setup.exe
 zip=wc3270-$version-noinstall.zip
+ver=${version%%[a-z]*}
 
 # Check for existing targets before we do any real work.
 if [ "$release" ]
@@ -137,53 +130,17 @@ then	for prod in $prods
 	fi
 fi
 
+# Build the tarball.
+echo "===== Building the tarball."
+make -f Makefile.aux -j4 src.tgz
+
 # Work in a clean temporary directory
 tmpdir=/tmp/mka
 rm -rf $tmpdir
 mkdir $tmpdir
-
-# Build each of the tarballs.
-echo "===== Building tarballs."
-for prod in $prods
-do	cd $prod
-	if [[ "$prod" =~ lib/ ]]
-	then	make -f Makefile.aux lib${prod#lib/}-src.tgz
-	else	make -f Makefile.aux $prod-src.tgz
-	fi
-	cd - >/dev/null
-done
-
-echo "===== Copying tarballs."
-# Copy then into the build directory.
-for prod in $prods
-do	if [[ "$prod" =~ lib/ ]]
-    	then	cp $prod/lib${prod#lib/}-src.tgz $tmpdir
-	else	cp $prod/$prod-src.tgz $tmpdir/
-	fi
-done
-if [ "$all" ]
-then	tar -cf - --exclude-vcs VS2010 | tar -xf - --directory $tmpdir
-fi
-
-echo "===== Expanding tarballs."
-# Expand them.
 cd $tmpdir
-for prod in $prods
-do	if [[ "$prod" =~ lib/ ]]
-    	then	tar -xzf lib${prod#lib/}-src.tgz
-	else	tar -xzf $prod-src.tgz
-	fi
-done
-
-if [ "$all" ]
-then	echo "===== Making mega-tarball."
-	# Make a mega-tarball.
-	tar -czf $suite *3270/ *3287/ lib/ Playback/ VS2010/ include/
-fi
-if [ "$tarball" ]
-then	echo "Tarball is $tmpdir/$suite."
-    	exit
-fi
+tar -xzf $d1/$suite
+builddir=$tmpdir/suite3270-$ver
 
 # Make sure we build libraries first.
 unset pl px
@@ -197,7 +154,7 @@ prods="$pl $px"
 
 for prod in $prods
 do
-    	cd $tmpdir
+    	cd $builddir
 
     	# Some products don't get built on Linux.
 	case "$prod" in
@@ -273,41 +230,25 @@ done
 # Release wc3270 via Inno Setup under Wine.
 if [ "$winrel" ]
 then	echo "===== Building setup.exe."
-	cd $tmpdir/wc3270
+	cd $builddir/wc3270
     	wine c:\\Program\ Files\\Inno\ Setup\ 5\\ISCC.EXE wc3270.iss
 	echo "===== Building wc3270.zip."
 	zipit -c "wc3270 $version" -o $zip wc3270.zipit
 fi
 
-cd $tmpdir
-
 # Release each product.
 if [ "$release" ]
 then	echo "===== Releasing."
-    	for prod in $prods
-    	do	tarball=$reldir/$prod-$version-src.tgz
-		echo cp -p $prod-src.tgz $tarball
-		cp -p $prod-src.tgz $tarball
-		chmod ugo-w $tarball
-	done
 
-	# Release the mega-tarball.
+	# Release the tarball.
 	if [ "$all" ]
-	then	cp -p $suite $reldir/
+	then	cp -p $d1/$suite $reldir/
 		chmod ugo-w $reldir/$suite
 	fi
 
-	# Release the setup.exe.
+	# Release the setup.exe and zip file.
 	if [ "$winrel" ]
-	then	cp wc3270/$setup $reldir/
-		chmod ugo-w $reldir/$setup
+	then	cp -p $builddir/wc3270/$setup $builddir/wc3270/$zip $reldir/
+		chmod ugo-w $reldir/$setup $reldir/$zip
 	fi
-
-	# Release the zip file.
-	if [ "$winrel" ]
-	then	cp wc3270/$zip $reldir/
-		chmod ugo-w $reldir/$zip
-	fi
-
-else	echo "Tarballs are in $tmpdir."
 fi

@@ -24,7 +24,7 @@ dnl NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 dnl SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(suite3270)
+AC_INIT(x3270/x3270.c)
 AC_PREREQ(2.50)
 
 AC_ARG_ENABLE(all-unix,[  --enable-all-unix      build all Unix emulators])
