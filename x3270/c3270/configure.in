@@ -62,6 +62,38 @@ AC_SUBST(XPRECOMP)
 AC_SUBST(BROKEN_NEWTERM)
 AC_SUBST(CCOPTIONS)
 
+dnl Check for SSL header file.
+AC_ARG_WITH(ssl,[  --with-ssl=DIR          specify OpenSSL install directory])
+if test "$enable_ssl" != no
+then	orig_CPPFLAGS="$CPPFLAGS"
+	unset any
+	for dir in "$with_ssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl
+	do	header_fail=0
+		if test -n "$dir" -a ! -d "$dir/include"
+		then	header_fail=1
+			continue
+		fi
+		if test -n "$any"
+		then	AC_MSG_NOTICE(retrying with -I$dir/include)
+		fi
+		if test -n "$dir"
+		then	CPPFLAGS="$orig_CPPFLAGS -I$dir/include"
+		fi
+		AC_CHECK_HEADERS(openssl/ssl.h, ,[header_fail=1])
+		if test "$header_fail" -eq 0
+		then	break
+		fi
+		unset `echo ac_cv_header_openssl/ssl_h | $as_tr_sh`
+		CPPFLAGS="$orig_CPPFLAGS"
+		any=1
+	done
+	if test $header_fail -eq 1
+	then	AC_MSG_WARN(Disabling OpenSSL)
+		enable_ssl="no"
+		unset HAVE_LIBSSL
+	fi
+fi
+
 dnl Check for --without-readline
 AC_ARG_WITH(readline, [  --without-readline      Don't use the readline library])
 
@@ -107,7 +139,9 @@ dnl AC_HEADER_STDC
 dnl AC_HEADER_SYS_WAIT
 dnl AC_CHECK_HEADERS(fcntl.h sys/ioctl.h sys/time.h unistd.h)
 AC_CHECK_HEADERS(sys/select.h)
+if test "$with_readline" != no; then
 AC_CHECK_HEADERS(readline/history.h)
+fi
 AC_CHECK_HEADERS(pty.h)
 AC_CHECK_HEADERS(libutil.h)
 AC_CHECK_HEADERS(util.h)
@@ -121,38 +155,6 @@ AC_CHECK_HEADERS(ncursesw/ncurses.h, ,
 AC_CHECK_HEADERS(ncursesw/term.h, ,
  [AC_CHECK_HEADERS(ncurses/term.h, ,
   [AC_CHECK_HEADERS(term.h)])])
-
-dnl Check for SSL header file.
-AC_ARG_WITH(ssl,[  --with-ssl=DIR          specify OpenSSL install directory])
-if test "$enable_ssl" != no
-then	orig_CPPFLAGS="$CPPFLAGS"
-	unset any
-	for dir in "$with_ssl" /usr/local /usr/local/ssl /usr/lib/ssl /usr/pkg/ssl /usr/ssl /var/ssl /opt/ssl
-	do	header_fail=0
-		if test -n "$dir" -a ! -d "$dir/include"
-		then	header_fail=1
-			continue
-		fi
-		if test -n "$any"
-		then	AC_MSG_NOTICE(retrying with -I$dir/include)
-		fi
-		if test -n "$dir"
-		then	CPPFLAGS="$orig_CPPFLAGS -I$dir/include"
-		fi
-		AC_CHECK_HEADERS(openssl/ssl.h, ,[header_fail=1])
-		if test "$header_fail" -eq 0
-		then	break
-		fi
-		unset `echo ac_cv_header_openssl/ssl_h | $as_tr_sh`
-		CPPFLAGS="$orig_CPPFLAGS"
-		any=1
-	done
-	if test $header_fail -eq 1
-	then	AC_MSG_WARN(Disabling OpenSSL)
-		enable_ssl="no"
-		unset HAVE_LIBSSL
-	fi
-fi
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl AC_C_CONST

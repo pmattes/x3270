@@ -37,128 +37,55 @@ WINDOWS_LIBS = lib-w3270-dir lib-w3270stubs-dir
 # Global targets.
 PRODUCTS = $(UNIX_PRODS) $(WINDOWS_PRODS)
 
-# The default top-level target is all of the products.
-all: $(PRODUCTS) Webpage-dir
+all:
+	@echo "Must pick a specific make target."
 
-# Platform targets
-unix: $(UNIX_PRODS)
-windows: $(WINDOWS_PRODS)
-
-# Library and shared dependencies.
-$(UNIX_PRODS): unix-libs Shared-dir include-dir
-$(WINDOWS_PRODS): windows-libs Shared-dir include-dir
-
-# The webpage comes last.
-Webpage-dir: $(PRODUCTS)
-
-# Individual targets.
-
-unix-libs:
-	cd lib && $(MAKE) unix
-windows-libs:
-	cd lib && $(MAKE) windows
-
-Shared-dir:
-	cd Shared && $(MAKE)
-
-include-dir:
-	cd include && $(MAKE) -f Makefile.aux bootstrap
-
-c3270-dir:
-	cd c3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
-
-s3270-dir:
-	cd s3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
-
-tcl3270-dir:
-	cd tcl3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
-
-x3270-dir:
-	cd x3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
-
-pr3287-dir:
-	cd pr3287 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
-
-wc3270-dir:
-	cd wc3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
-
-ws3270-dir:
-	cd ws3270 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
-
-wpr3287-dir:
-	cd wpr3287 && $(MAKE) -f Makefile.aux bootstrap && $(MAKE)
-
-Webpage-dir:
+Webpage: FORCE
 	cd Webpage && $(MAKE)
 
-# Special pseudo-targets.
-depend: unix-depend windows-depend
-unix-depend: unix-bootstrap
-	cd lib && $(MAKE) unix-depend
-	cd c3270 && $(MAKE) depend
-	cd s3270 && $(MAKE) depend
-	cd tcl3270 && $(MAKE) depend
-	cd x3270 && $(MAKE) depend
-	cd pr3287 && $(MAKE) depend
-windows-depend: windows-bootstrap
-	cd lib && $(MAKE) windows-depend
-	cd wc3270 && $(MAKE) depend
-	cd ws3270 && $(MAKE) depend
-	cd wpr3287 && $(MAKE) depend
-
-clean: unix-clean windows-clean webpage-clean
-unix-clean:
-	cd lib && $(MAKE) unix-clean
-	cd c3270 && $(MAKE) clean
-	cd s3270 && $(MAKE) clean
-	cd tcl3270 && $(MAKE) clean
-	cd x3270 && $(MAKE) clean
-	cd pr3287 && $(MAKE) clean
-windows-clean:
-	cd lib && $(MAKE) windows-clean
-	cd wc3270 && $(MAKE) clean
-	cd wpr3287 && $(MAKE) clean
-	cd ws3270 && $(MAKE) clean
-webpage-clean:
-	cd Webpage && $(MAKE) clean
-
-clobber: unix-clobber windows-clobber webpage-clobber
-unix-clobber:
-	cd lib && $(MAKE) unix-clobber
-	cd c3270 && $(MAKE) clobber
-	cd s3270 && $(MAKE) clobber
-	cd tcl3270 && $(MAKE) clobber
-	cd x3270 && $(MAKE) clobber
-	cd pr3287 && $(MAKE) clobber
-windows-clobber:
-	cd lib && $(MAKE) windows-clobber
-	cd wc3270 && $(MAKE) clobber
-	cd wpr3287 && $(MAKE) clobber
-	cd ws3270 && $(MAKE) clobber
-webpage-clobber:
-	cd Webpage && $(MAKE) clobber
+FORCE:
 
 bootstrap: unix-bootstrap windows-bootstrap include-bootstrap
-unix-bootstrap:
+unix-bootstrap: configure c3270-bootstrap s3270-bootstrap tcl3270-bootstrap x3270-bootstrap pr3287-bootstrap
+c3270-bootstrap:
 	cd c3270 && $(MAKE) -f Makefile.aux bootstrap
+s3270-bootstrap:
 	cd s3270 && $(MAKE) -f Makefile.aux bootstrap
+tcl3270-bootstrap:
 	cd tcl3270 && $(MAKE) -f Makefile.aux bootstrap
+x3270-bootstrap:
 	cd x3270 && $(MAKE) -f Makefile.aux bootstrap
+pr3287-bootstrap:
 	cd pr3287 && $(MAKE) -f Makefile.aux bootstrap
-windows-bootstrap:
+windows-bootstrap: configure wc3270-bootstrap ws3270-bootstrap wpr3287-bootstrap
+wc3270-bootstrap:
 	cd wc3270 && $(MAKE) -f Makefile.aux bootstrap
+ws3270-bootstrap:
 	cd ws3270 && $(MAKE) -f Makefile.aux bootstrap
+wpr3287-bootstrap:
 	cd wpr3287 && $(MAKE) -f Makefile.aux bootstrap
 include-bootstrap:
 	cd include && $(MAKE) -f Makefile.aux bootstrap
+configure: configure.in
+	autoconf
 
-src.tgz:
+src.tgz: c3270-src.tgz s3270-src.tgz tcl3270-src.tgz pr3287-src.tgz wc3270-src.tgz ws3270-src.tgz wpr3287-src.tgz include-src.tgz
+	./mktar.sh
+c3270-src.tgz:
 	cd c3270 && $(MAKE) -f Makefile.aux $@
+s3270-src.tgz:
 	cd s3270 && $(MAKE) -f Makefile.aux $@
+tcl3270-src.tgz:
 	cd tcl3270 && $(MAKE) -f Makefile.aux $@
+x3270-src.tgz:
 	cd x3270 && $(MAKE) -f Makefile.aux $@
+pr3287-src.tgz:
 	cd pr3287 && $(MAKE) -f Makefile.aux $@
+wc3270-src.tgz:
 	cd wc3270 && $(MAKE) -f Makefile.aux $@
+ws3270-src.tgz:
 	cd ws3270 && $(MAKE) -f Makefile.aux $@
+wpr3287-src.tgz:
 	cd wpr3287 && $(MAKE) -f Makefile.aux $@
+include-src.tgz:
 	cd include && $(MAKE) -f Makefile.aux $@

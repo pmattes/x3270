@@ -59,8 +59,7 @@ HTML = html/$(PRODUCT)-man.html html/Bugs.html html/Build.html html/FAQ.html \
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
-$(PRODUCT)-src.tgz: $(FILES) srctar.sh Makefile.aux
-	sh ./srctar.sh $(PRODUCT) $(FILES)
+src.tgz: $(FILES) Makefile.aux
 
 configure: configure.in
 	autoconf
@@ -99,7 +98,6 @@ html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 Makefile: Makefile.in configure
 	./configure
 	$(MAKE) depend
-cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
+cscope.out: $(SOURCES) $(HEADERS)
 	../Shared/cs -b
 bootstrap: Makefile
-src.tgz: $(PRODUCT)-src.tgz

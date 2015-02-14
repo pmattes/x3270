@@ -33,7 +33,7 @@
 
 #include "globals.h"
 
-#include <inttypes.h>
+#include <stdint.h>
 
 #include "b8.h"
 

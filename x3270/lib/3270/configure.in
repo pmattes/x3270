@@ -52,36 +52,6 @@ fi
 AC_SUBST(HSOPTS)
 AC_SUBST(CCOPTIONS)
 
-dnl Check for ISO 10646 (wchar_t is Unicode) and --with-iconv
-AC_CHECK_DECLS(__STDC_ISO_10646__, unset unkw, unkw=1)
-AC_ARG_WITH(iconv,[  --with-iconv            ignore __STDC_ISO_10646__ and use iconv() instead])
-case "$with_iconv" in
-no|"")	;;
-yes|*)
-	AC_DEFINE(USE_ICONV,1)
-	unkw=1
-	;;
-esac
-AC_SUBST(USE_ICONV)
-
-dnl Check for libraries.
-dnl Note that the order here is important.  The last libraries should appear
-dnl first, so that objects in them can be used by subsequent libraries.
-AC_SEARCH_LIBS(forkpty, util)
-AC_CHECK_FUNCS(forkpty)
-AC_SEARCH_LIBS(gethostbyname, nsl)
-AC_SEARCH_LIBS(socket, socket)
-AC_CHECK_HEADERS(iconv.h)
-AC_SEARCH_LIBS(libiconv, iconv, , AC_SEARCH_LIBS(iconv, iconv, , if test "$unkw"; then AC_MSG_ERROR("No iconv library function"); fi))
-
-dnl Checks for header files.
-AC_CHECK_HEADERS(sys/select.h)
-AC_CHECK_HEADERS(readline/history.h)
-AC_CHECK_HEADERS(pty.h)
-AC_CHECK_HEADERS(libutil.h)
-AC_CHECK_HEADERS(util.h)
-AC_CHECK_HEADERS(getopt.h)
-
 dnl Check for SSL header file.
 AC_ARG_WITH(ssl,[  --with-ssl=DIR          specify OpenSSL install directory])
 if test "$enable_ssl" != no
@@ -113,6 +83,36 @@ then	orig_CPPFLAGS="$CPPFLAGS"
 		unset HAVE_LIBSSL
 	fi
 fi
+
+dnl Check for ISO 10646 (wchar_t is Unicode) and --with-iconv
+AC_CHECK_DECLS(__STDC_ISO_10646__, unset unkw, unkw=1)
+AC_ARG_WITH(iconv,[  --with-iconv            ignore __STDC_ISO_10646__ and use iconv() instead])
+case "$with_iconv" in
+no|"")	;;
+yes|*)
+	AC_DEFINE(USE_ICONV,1)
+	unkw=1
+	;;
+esac
+AC_SUBST(USE_ICONV)
+
+dnl Check for libraries.
+dnl Note that the order here is important.  The last libraries should appear
+dnl first, so that objects in them can be used by subsequent libraries.
+AC_SEARCH_LIBS(forkpty, util)
+AC_CHECK_FUNCS(forkpty)
+AC_SEARCH_LIBS(gethostbyname, nsl)
+AC_SEARCH_LIBS(socket, socket)
+AC_CHECK_HEADERS(iconv.h)
+AC_SEARCH_LIBS(libiconv, iconv, , AC_SEARCH_LIBS(iconv, iconv, , if test "$unkw"; then AC_MSG_ERROR("No iconv library function"); fi))
+
+dnl Checks for header files.
+AC_CHECK_HEADERS(sys/select.h)
+AC_CHECK_HEADERS(readline/history.h)
+AC_CHECK_HEADERS(pty.h)
+AC_CHECK_HEADERS(libutil.h)
+AC_CHECK_HEADERS(util.h)
+AC_CHECK_HEADERS(getopt.h)
 
 dnl Checks for library functions.
 AC_CHECK_FUNCS(vasprintf)

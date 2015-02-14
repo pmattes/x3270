@@ -1,0 +1,172 @@
+# Copyright (c) 2015 Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Top-level Makefile for suite3270.
+
+all: @ALL@
+
+# Library ependencies.
+c3270-all s3270-all tcl3270-all x3270-all pr3287-all: unix-libs
+wc3270-all ws3270-all wpr3287-all: windows-libs
+
+# Individual targets.
+unix-libs:
+	cd lib/3270 && $(MAKE)
+	cd lib/3270stubs && $(MAKE)
+windows-libs:
+	cd lib/w3270 && $(MAKE)
+	cd lib/w3270stubs && $(MAKE)
+c3270-all:
+	cd c3270 && $(MAKE)
+s3270-all:
+	cd s3270 && $(MAKE)
+tcl3270-all:
+	cd tcl3270 && $(MAKE)
+x3270-all:
+	cd x3270 && $(MAKE)
+pr3287-all:
+	cd pr3287 && $(MAKE)
+wc3270-all:
+	cd wc3270 && $(MAKE)
+ws3270-all:
+	cd ws3270 && $(MAKE)
+wpr3287-all:
+	cd wpr3287 && $(MAKE)
+
+# Dependency generation
+depend: @DEPEND@
+x3270-depend c3270-depend s3270-depend tcl3270-depend pr3287-depend: lib3270-depend lib3270stubs-depend
+lib3270-depend:
+	cd lib/3270 && $(MAKE) depend
+lib3270stubs-depend:
+	cd lib/3270stubs && $(MAKE) depend
+wc3270-depend ws3270-depend wpr3287-depend: libw3270-depend libw3270stubs-depend
+libw3270-depend:
+	cd lib/w3270 && $(MAKE) depend
+libw3270stubs-depend:
+	cd lib/w3270stubs && $(MAKE) depend
+x3270-depend:
+	cd x3270 && $(MAKE) depend
+c3270-depend:
+	cd c3270 && $(MAKE) depend
+s3270-depend:
+	cd s3270 && $(MAKE) depend
+tcl3270-depend:
+	cd tcl3270 && $(MAKE) depend
+pr3287-depend:
+	cd pr3287 && $(MAKE) depend
+wc3270-depend:
+	cd wc3270 && $(MAKE) depend
+ws3270-depend:
+	cd ws3270 && $(MAKE) depend
+wpr3287-depend:
+	cd wpr3287 && $(MAKE) depend
+
+# Installation
+install: @INSTALL@
+x3270-install c3270-install s3270-install tcl3270-install pr3287-install: lib3270-install lib3270stubs-install
+lib3270-install:
+	cd lib/3270 && $(MAKE) install
+lib3270stubs-install:
+	cd lib/3270stubs && $(MAKE) install
+wc3270-install ws3270-install wpr3287-install: libw3270-install libw3270stubs-install
+libw3270-install:
+	cd lib/w3270 && $(MAKE) install
+libw3270stubs-install:
+	cd lib/w3270stubs && $(MAKE) install
+x3270-install:
+	cd x3270 && $(MAKE) install
+c3270-install:
+	cd c3270 && $(MAKE) install
+s3270-install:
+	cd s3270 && $(MAKE) install
+tcl3270-install:
+	cd tcl3270 && $(MAKE) install
+pr3287-install:
+	cd pr3287 && $(MAKE) install
+wc3270-install:
+	cd wc3270 && $(MAKE) install
+ws3270-install:
+	cd ws3270 && $(MAKE) install
+wpr3287-install:
+	cd wpr3287 && $(MAKE) install
+
+# Clean and clobber targets
+clean: @CLEAN@
+x3270-clean c3270-clean s3270-clean tcl3270-clean pr3287-clean: lib3270-clean lib3270stubs-clean
+lib3270-clean:
+	cd lib/3270 && $(MAKE) clean
+lib3270stubs-clean:
+	cd lib/3270stubs && $(MAKE) clean
+wc3270-clean ws3270-clean wpr3287-clean: libw3270-clean libw3270stubs-clean
+libw3270-clean:
+	cd lib/w3270 && $(MAKE) clean
+libw3270stubs-clean:
+	cd lib/w3270stubs && $(MAKE) clean
+x3270-clean:
+	cd x3270 && $(MAKE) clean
+c3270-clean:
+	cd c3270 && $(MAKE) clean
+s3270-clean:
+	cd s3270 && $(MAKE) clean
+tcl3270-clean:
+	cd tcl3270 && $(MAKE) clean
+pr3287-clean:
+	cd pr3287 && $(MAKE) clean
+wc3270-clean:
+	cd wc3270 && $(MAKE) clean
+ws3270-clean:
+	cd ws3270 && $(MAKE) clean
+wpr3287-clean:
+	cd wpr3287 && $(MAKE) clean
+
+clobber: @CLOBBER@
+x3270-clobber c3270-clobber s3270-clobber tcl3270-clobber pr3287-clobber: lib3270-clobber lib3270stubs-clobber
+lib3270-clobber:
+	cd lib/3270 && $(MAKE) clobber
+lib3270stubs-clobber:
+	cd lib/3270stubs && $(MAKE) clobber
+wc3270-clobber ws3270-clobber wpr3287-clobber: libw3270-clobber libw3270stubs-clobber
+libw3270-clobber:
+	cd lib/w3270 && $(MAKE) clobber
+libw3270stubs-clobber:
+	cd lib/w3270stubs && $(MAKE) clobber
+x3270-clobber:
+	cd x3270 && $(MAKE) clobber
+c3270-clobber:
+	cd c3270 && $(MAKE) clobber
+s3270-clobber:
+	cd s3270 && $(MAKE) clobber
+tcl3270-clobber:
+	cd tcl3270 && $(MAKE) clobber
+pr3287-clobber:
+	cd pr3287 && $(MAKE) clobber
+wc3270-clobber:
+	cd wc3270 && $(MAKE) clobber
+ws3270-clobber:
+	cd ws3270 && $(MAKE) clobber
+wpr3287-clobber:
+	cd wpr3287 && $(MAKE) clobber

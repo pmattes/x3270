@@ -79,8 +79,7 @@ DEVKIT = Makefile.aux apl.inc ft.inc html.m4 instlist.all-xinstall \
 FILES = $(SOURCES) $(HEADERS) $(BITMAPS) $(FONTS) $(MISC) $(EXAMPLES) \
 	$(CONFIG) $(HTML) $(FT)
 
-$(PRODUCT)-src.tgz: $(FILES) srctar.sh Makefile.aux
-	sh ./srctar.sh $(PRODUCT) $(FILES)
+src.tgz: $(FILES)
 
 configure: configure.in
 	autoconf
@@ -128,7 +127,6 @@ html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 Makefile: Makefile.in configure
 	./configure
 	$(MAKE) depend
-cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
+cscope.out: $(SOURCES) $(HEADERS)
 	../Shared/cs -b
 bootstrap: Makefile
-src.tgz: $(PRODUCT)-src.tgz

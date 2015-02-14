@@ -44,8 +44,8 @@ MISC = LICENSE.txt Makefile Msc/Makefile Msc/README.txt Msc/mkversion.c \
 	NO-INSTALL.txt README-zip.txt X3270.xad catf.c common_files.mk \
 	ead3270.c install-sh keypad.callbacks keypad.full keypad.labels \
 	keypad.map keypad.outline mkfb.c mkkeypad.c mkshort.c mkversion.sh \
-	mkwversion.sh root_certs.txt srctar.sh version.txt wc3270.ico \
-	wc3270.iss wc3270.rc wc3270.zipit wc3270_files.mk winenv.mk wizard.c \
+	mkwversion.sh root_certs.txt version.txt wc3270.ico wc3270.iss \
+	wc3270.rc wc3270.zipit wc3270_files.mk winenv.mk wizard.c \
 	x3270-icon2.bmp x3270if.c
 
 HTML = html/$(PRODUCT)-man.html html/Bugs.html html/Build.html html/FAQ.html \
@@ -55,8 +55,7 @@ HTML = html/$(PRODUCT)-man.html html/Bugs.html html/Build.html html/FAQ.html \
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
-$(PRODUCT)-src.tgz: $(FILES) srctar.sh Makefile.aux
-	sh ./srctar.sh $(PRODUCT) $(FILES)
+src.tgz: $(FILES)
 
 MANDEP = html.m4 m4man Makefile.aux version.txt
 MKHTML = ./m4man -t html -p $(PRODUCT)
@@ -84,7 +83,6 @@ wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 # Bootstrap targets.
 dependencies: Makefile
 	$(MAKE) depend
-cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
+cscope.out: $(SOURCES) $(HEADERS)
 	../Shared/cs -b
 bootstrap:
-src.tgz: $(PRODUCT)-src.tgz

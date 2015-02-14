@@ -48,8 +48,7 @@ HTML = html/$(PRODUCT)-man.html html/Build.html html/ReleaseNotes.html
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML) 
 
-$(PRODUCT)-src.tgz: $(FILES) srctar.sh Makefile.aux
-	sh ./srctar.sh $(PRODUCT) $(FILES)
+src.tgz: $(FILES)
 
 MANDEP = man.m4 html.m4 m4man Makefile.aux version.txt
 MKMAN = ./m4man -t man -p $(PRODUCT)
@@ -70,7 +69,6 @@ configure: configure.in
 Makefile: Makefile.in configure
 	./configure
 	$(MAKE) depend
-cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
+cscope.out: $(SOURCES) $(HEADERS)
 	../Shared/cs -b
 bootstrap: Makefile
-src.tgz: $(PRODUCT)-src.tgz

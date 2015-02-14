@@ -48,8 +48,7 @@ DEVKIT = Makefile.aux
 
 FILES = $(SOURCES) $(HEADERS) $(MISC)
 
-$(PRODUCT)-src.tgz: $(FILES) srctar.sh Makefile.aux
-	sh ./srctar.sh $(PRODUCT) $(FILES)
+src.tgz: $(FILES)
 
 configure: configure.in
 	autoconf
@@ -57,7 +56,6 @@ configure: configure.in
 # Bootstrap targets.
 dependencies: Makefile
 	$(MAKE) depend
-cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
+cscope.out: $(SOURCES) $(HEADERS)
 	../../Shared/cs -b
 bootstrap:
-src.tgz: $(PRODUCT)-src.tgz

@@ -50,8 +50,7 @@ HTML = html/$(PRODUCT)-man.html html/Build.html html/ReleaseNotes.html
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML) 
 
-$(PRODUCT)-src.tgz: $(FILES) srctar.sh Makefile.aux
-	sh ./srctar.sh $(PRODUCT) $(FILES)
+src.tgz: $(FILES)
 
 MANDEP = html.m4 m4man Makefile.aux version.txt
 MKHTML = ./m4man -t html -p $(PRODUCT)
@@ -65,7 +64,6 @@ html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 # Bootstrap targets.
 dependencies: Makefile
 	$(MAKE) depend
-cscope.out: $(SOURCES) $(HEADERS) $(PRODUCT)-src.tgz
+cscope.out: $(SOURCES) $(HEADERS)
 	../Shared/cs -b
 bootstrap:
-src.tgz: $(PRODUCT)-src.tgz
