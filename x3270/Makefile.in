@@ -29,8 +29,8 @@
 all: @ALL@
 
 # Library ependencies.
-c3270-all s3270-all tcl3270-all x3270-all pr3287-all: unix-libs
-wc3270-all ws3270-all wpr3287-all: windows-libs
+c3270 s3270 tcl3270 x3270 pr3287: unix-libs
+wc3270 ws3270 wpr3287: windows-libs
 
 # Individual targets.
 unix-libs:
@@ -39,22 +39,27 @@ unix-libs:
 windows-libs:
 	cd lib/w3270 && $(MAKE)
 	cd lib/w3270stubs && $(MAKE)
-c3270-all:
+c3270: FORCE
 	cd c3270 && $(MAKE)
-s3270-all:
+s3270: FORCE
 	cd s3270 && $(MAKE)
-tcl3270-all:
+tcl3270: FORCE
 	cd tcl3270 && $(MAKE)
-x3270-all:
+x3270: FORCE
 	cd x3270 && $(MAKE)
-pr3287-all:
+pr3287: FORCE
 	cd pr3287 && $(MAKE)
-wc3270-all:
+wc3270: FORCE
 	cd wc3270 && $(MAKE)
-ws3270-all:
+ws3270: FORCE
 	cd ws3270 && $(MAKE)
-wpr3287-all:
+wpr3287: FORCE
 	cd wpr3287 && $(MAKE)
+
+FORCE:
+
+unix: c3270 s3270 tcl3270 x3270 pr3287
+windows: wc3270 ws3270 wpr3287
 
 # Dependency generation
 depend: @DEPEND@
@@ -86,33 +91,17 @@ wpr3287-depend:
 	cd wpr3287 && $(MAKE) depend
 
 # Installation
-install: @INSTALL@
-x3270-install c3270-install s3270-install tcl3270-install pr3287-install: lib3270-install lib3270stubs-install
-lib3270-install:
-	cd lib/3270 && $(MAKE) install
-lib3270stubs-install:
-	cd lib/3270stubs && $(MAKE) install
-wc3270-install ws3270-install wpr3287-install: libw3270-install libw3270stubs-install
-libw3270-install:
-	cd lib/w3270 && $(MAKE) install
-libw3270stubs-install:
-	cd lib/w3270stubs && $(MAKE) install
-x3270-install:
+install install-unix: @INSTALL@
+x3270-install: x3270
 	cd x3270 && $(MAKE) install
-c3270-install:
+c3270-install: c3270
 	cd c3270 && $(MAKE) install
-s3270-install:
+s3270-install: s3270
 	cd s3270 && $(MAKE) install
-tcl3270-install:
+tcl3270-install: tcl3270
 	cd tcl3270 && $(MAKE) install
-pr3287-install:
+pr3287-install: pr3287
 	cd pr3287 && $(MAKE) install
-wc3270-install:
-	cd wc3270 && $(MAKE) install
-ws3270-install:
-	cd ws3270 && $(MAKE) install
-wpr3287-install:
-	cd wpr3287 && $(MAKE) install
 
 # Clean and clobber targets
 clean: @CLEAN@

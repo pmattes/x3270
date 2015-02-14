@@ -7,23 +7,23 @@
 </head>
 <body>
 <h1> s3270 Build and Install Instructions</h1>
-  To build <i>s3270</i>, type:  
-<pre>&nbsp;&nbsp;&nbsp; ./configure<br>&nbsp;&nbsp;&nbsp; make</pre>
-  To install <i>s3270</i> in the default install directory (<tt>/usr/local/bin</tt>),
+  To build s3270, type:  
+<pre>&nbsp;&nbsp;&nbsp;./configure<br>&nbsp;&nbsp;&nbsp;make</pre>
+  To install s3270 in the default install directory (<tt>/usr/local/bin</tt>),
  type:  
-<pre>&nbsp;&nbsp;&nbsp; make install</pre>
+<pre>&nbsp;&nbsp;&nbsp;make install</pre>
     
 <h2> Notes for Solaris 2.x and Sun's C Compiler</h2>
   Do not use Sun's BSD-compatibility compiler, <tt>/usr/ucb/cc</tt>. This
-is good advice in general, but in particular, <i>s3270</i> will not build
+is good advice in general, but in particular, s3270 will not build
 with it. You should have a directory containing <tt>gcc</tt> (recommended)
 or Sun's standard compiler in your $PATH ahead of <tt>/usr/ucb</tt>.  
 <h2>Building on FreeBSD</h2>
 FreeBSD's <b>iconv</b> library is installed in <tt>/usr/local</tt>, so
 the the following options must be passed to the <tt>configure</tt> script:
-  <pre>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;./configure LDFLAGS=-L/usr/local/lib CPPFLAGS=-I/usr/local/include</pre>
+  <pre>&nbsp;&nbsp;&nbsp;./configure LDFLAGS=-L/usr/local/lib CPPFLAGS=-I/usr/local/include</pre>
 <h2> Summary of <tt>configure</tt> Options</h2>
-  The <i>s3270</i> <tt>configure</tt> script accepts the following options:
+  The s3270 <tt>configure</tt> script accepts the following options:
  <br>
  &nbsp;  
 <table border="3" cellspacing="3" cellpadding="3">
@@ -44,33 +44,24 @@ the the following options must be passed to the <tt>configure</tt> script:
   </tr>
    <tr>
   <td><tt>--bindir=<i>dir</i></tt></td>
-   <td>Install user executables (s<i>3270</i>, <i>x3270if</i>) in <i>dir</i>
- (defaults to <i>eprefix</i><tt>/bin</tt>)</td>
+   <td>Install user executables (s3270, 3270if) in <i>dir</i>
+       (defaults to <tt><i>eprefix</i>/bin</tt>)</td>
   </tr>
    <tr>
   <td><tt>--sysconfdir=<i>dir</i></tt></td>
-   <td>Install configuration files (character sets) in <i>dir</i><tt>/x3270</tt>
- (defaults to <i>prefix</i><tt>/etc</tt>).</td>
-  </tr>
-   <tr>
-  <td><tt>--disable-ansi</tt></td>
-   <td>Leave out NVT (ANSI) support. <br>
- Note that NVT support is required for TN3270E support.</td>
+  <td>Install configuration files (character sets) in <tt><i>dir</i>/x3270</tt>
+      (defaults to <tt><i>prefix</i>/etc</tt>).</td>
   </tr>
    <tr>
   <td><tt>--disable-apl</tt></td>
    <td>Leave out APL character support.</td>
   </tr>
    <tr>
-       <td valign="top"><tt>--enable-dbcs</tt><br>
+       <td valign="top"><tt>--disable-dbcs</tt><br>
        </td>
-       <td valign="top">Build in DBCS (Double Byte Character Set) support.<br>
+       <td valign="top">Leave out DBCS (Double Byte Character Set) support.<br>
        </td>
      </tr>
-          <tr>
-  <td><tt>--disable-ft</tt></td>
-   <td>Leave out IND$FILE file transfer support.</td>
-  </tr>
    <tr>
   <td><tt>--disable-local-process</tt></td>
    <td>Leave out local process (connecting to "-e <i>shell_command</i>")
@@ -92,20 +83,8 @@ the       <i>forkpty</i>() library call.</td>
  installed.<br>
        </td>
      </tr>
-     <tr>
-  <td><tt>--disable-tn3270e</tt></td>
-   <td>Leave out TN3270E support.</td>
-  </tr>
-   <tr>
-  <td><tt>--disable-trace</tt></td>
-   <td>Leave out tracing support.</td>
-  </tr>
-     
   </tbody> 
 </table>
-    
-<p>Leaving out all of the optional features will result in a smaller binary.
- </p>
  <br>
  <br>
 </body>
