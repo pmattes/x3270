@@ -164,31 +164,14 @@ AC_CHECK_HEADERS(iconv.h)
 AC_SEARCH_LIBS(libiconv, iconv, , AC_SEARCH_LIBS(iconv, iconv, , if test "$unkw"; then AC_MSG_ERROR("No iconv library function"); fi))
 
 dnl Checks for header files.
-dnl AC_HEADER_STDC
-dnl AC_HEADER_SYS_WAIT
-dnl AC_CHECK_HEADERS(fcntl.h sys/ioctl.h sys/time.h unistd.h)
 AC_CHECK_HEADERS(sys/select.h)
 AC_CHECK_HEADERS(pty.h)
 AC_CHECK_HEADERS(libutil.h)
 AC_CHECK_HEADERS(util.h)
 AC_CHECK_HEADERS(getopt.h)
 
-dnl Checks for typedefs, structures, and compiler characteristics.
-dnl AC_C_CONST
-dnl AC_TYPE_PID_T
-dnl AC_TYPE_SIZE_T
-dnl AC_HEADER_TIME
-
 dnl Checks for library functions.
-dnl AC_PROG_GCC_TRADITIONAL
-dnl AC_FUNC_MEMCMP
-dnl AC_TYPE_SIGNAL
-dnl AC_FUNC_VPRINTF
-dnl AC_CHECK_FUNCS(gettimeofday putenv select socket strerror strstr strtol strtoul)
 AC_CHECK_FUNCS(vasprintf)
-dnl AC_CHECK_FUNC(strtok_r,,AC_LIBOBJ(strtok_r))
-AC_CHECK_FUNCS(strtok_r)
-dnl AC_DEFINE(NEED_STRTOK_R))
 AC_FUNC_FSEEKO
 
 dnl Check for SSL libraries.

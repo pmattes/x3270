@@ -135,9 +135,6 @@ dnl Check for the ncurses default-color extensions.
 AC_CHECK_FUNCS(use_default_colors)
 
 dnl Checks for header files.
-dnl AC_HEADER_STDC
-dnl AC_HEADER_SYS_WAIT
-dnl AC_CHECK_HEADERS(fcntl.h sys/ioctl.h sys/time.h unistd.h)
 AC_CHECK_HEADERS(sys/select.h)
 if test "$with_readline" != no; then
 AC_CHECK_HEADERS(readline/history.h)
@@ -156,18 +153,7 @@ AC_CHECK_HEADERS(ncursesw/term.h, ,
  [AC_CHECK_HEADERS(ncurses/term.h, ,
   [AC_CHECK_HEADERS(term.h)])])
 
-dnl Checks for typedefs, structures, and compiler characteristics.
-dnl AC_C_CONST
-dnl AC_TYPE_PID_T
-dnl AC_TYPE_SIZE_T
-dnl AC_HEADER_TIME
-
 dnl Checks for library functions.
-dnl AC_PROG_GCC_TRADITIONAL
-dnl AC_FUNC_MEMCMP
-dnl AC_TYPE_SIGNAL
-dnl AC_FUNC_VPRINTF
-dnl AC_CHECK_FUNCS(gettimeofday putenv select socket strerror strstr strtol strtoul)
 AC_CHECK_FUNCS(vasprintf)
 AC_FUNC_FSEEKO
 

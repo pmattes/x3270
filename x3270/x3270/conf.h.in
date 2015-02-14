@@ -49,9 +49,6 @@
 #undef HAVE_FSEEKO
 #undef HAVE_FORKPTY
 
-/* Functions we may need to supply. */
-#undef NEED_STRTOK_R
-
 /* Configuration options. */
 #undef USE_ICONV
 
