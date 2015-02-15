@@ -28,6 +28,49 @@
 
 all: @ALL@
 
+# Cleverness for 'make targets':
+#  MIXED is true if there is at least one Unix target and at least one Windows
+#   target
+#  M1 is true if there is more than one target
+MIXED := $(shell (echo @ALL@ | grep -q '\<[^w]') && (echo @ALL@ | grep -q '\<[w]') && echo true)
+M1 := $(shell test `echo @ALL@ | wc -w` -gt 1 && echo true)
+
+# List targets
+targets:
+	@echo "Targets:"
+	@echo " all               @ALL@"
+ifdef MIXED
+	@echo "  unix              build all Unix programs"
+	@echo "  windows           build all Windows programs"
+endif
+ifdef M1
+	@echo "  <program>         build <program>"
+endif
+	@echo " depend             all dependencies"
+ifdef MIXED
+	@echo "  unix-depend       Unix dependencies"
+	@echo "  windows-depend    Windows dependencies"
+endif
+ifdef M1
+	@echo "  <program>-depend  <program> dependencies"
+endif
+	@echo " clean              remove all intermediate files"
+ifdef MIXED
+	@echo "  unix-clean        remove Unix intermediate files"
+	@echo "  windows-clean     remove Windows intermediate files"
+endif
+ifdef M1
+	@echo "  <program>-clean   remove <program> intermediate files"
+endif
+	@echo " clobber            remove all derived files"
+ifdef MIXED
+	@echo "  unix-clobber      remove Unix derived files"
+	@echo "  windows-clobber   remove Windows derived files"
+endif
+ifdef M1
+	@echo "  <program>-clobber remove <program> derived files"
+endif
+
 # Library ependencies.
 c3270 s3270 tcl3270 x3270 pr3287: unix-libs
 wc3270 ws3270 wpr3287: windows-libs
