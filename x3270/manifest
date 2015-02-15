@@ -1,3 +1,4 @@
+README.txt
 configure
 install-sh
 Makefile
@@ -820,3 +821,7 @@ include/linemode.h
 include/arpa_telnet.h
 include/utf8.h
 include/xio.h
+Webpage/Build.html
+Webpage/Build-c3270.html
+Webpage/Build-tcl3270.html
+Webpage/Build-x3270.html
