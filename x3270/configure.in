@@ -82,7 +82,6 @@ fi
 ALL=""
 DEPEND=""
 INSTALL=""
-INSTALLNP=""
 INSTALLMAN=""
 CLEAN=""
 CLOBBER=""
@@ -94,9 +93,6 @@ for i in x3270 c3270 s3270 tcl3270 pr3287 wc3270 ws3270 wpr3287; do
 	case "$i" in
 	w*)	;;
 	*)	INSTALL="$INSTALL $i-install"
-		if test "$i" != x3270; then
-		    INSTALLNP="$INSTALLNP $i-install"
-		fi
 		INSTALLMAN="$INSTALLMAN $i-install.man"
 	esac
 	CLEAN="$CLEAN $i-clean"
@@ -106,7 +102,6 @@ done
 AC_SUBST(ALL)
 AC_SUBST(DEPEND)
 AC_SUBST(INSTALL)
-AC_SUBST(INSTALLNP)
 AC_SUBST(INSTALLMAN)
 AC_SUBST(CLEAN)
 AC_SUBST(CLOBBER)

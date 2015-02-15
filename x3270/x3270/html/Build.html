@@ -13,139 +13,132 @@
 	x3270. For general build information, look
 	<a href="Build.html">here</a>.</i>
 
-	<h2> Where Things Get Installed</h2>
-	By default, parts of x3270 are installed under two different
-	directories.
+	<h2> Where Things Are Installed</h2>
+	If the <tt>configure</tt> script finds the X11 <i>xmkmf</i> utility, it
+	will generate an Imakefile and run <i>xmkmf</i> on it, which will use
+	<i>imake</i> to generate a Makefile. Otherwise, <tt>configure</tt> will
+	generate a Makefile directly. These two methods will result in objects
+	being installed in different places.
+
+	<p>By default with <i>xmkmf</i>, parts of x3270 are installed under
+	two different directories.
  
-	<p>Files which are specific to X11 (the x3270 binary, x3270 manual
-	pages, and fonts) are installed in the system X11 directory (typically
-	<tt>/usr/X11R6</tt> or <tt>/usr/openwin</tt>). This directory is
-	defined when your system is installed and cannot be easily changed.
-	This is referred to as <i>xdir</i> in the table below. </p>
+	<p>Files specific to X11 (the x3270 binary, x3270 manual pages, and
+	fonts) are installed in the system X11 directory, typically
+	<tt>/usr/X11R6</tt>. This directory is defined when your system is
+	installed and cannot be easily changed.  This is referred to as
+	<i>xdir</i> in the table below.</p>
  
-	<p>Files which are shared with other non-X11 3270 applications (the
-	<i>x3270if</i> binary and man pages, and the configuration files) are 
-	installed in the autoconf prefix directory, typically
+	<p>Files shared with other non-X11 3270 applications (such as
+	the <i>x3270if</i> binary and its man page, and the x3270 configuration
+	files) are installed under the autoconf prefix directory, typically
 	<tt>/usr/local</tt>.
 	The autoconf prefix directory can be changed with options to the
-	<tt>configure</tt> script. This is referred to as <i>prefix</i> in the
-	table below.
+	<tt>configure</tt> script. This is referred to as <i>prefixdir</i> in
+	the table below.
+	<p>You can force a directly-generated Makefile with the
+	<tt>configure --without-xmkmf</tt> option. This will result in
+	everything being installed in the autoconf prefix directory.
+
+	<p>By contrast, if you are have <i>xmkmf</i> on your system and want
+	all of the x3270 objects installed in your system X11 directory, use
+	the <tt>configure --with-all-xinstall</tt> option.
 	<table border="1" cols="2" width="100%">
 	    <tbody>
 		<tr>
 		    <td><b>Files</b></td>
-		    <td><b>Installed In</b></td>
+		    <td><b>Installed in<br>(default)</b></td>
+		    <td><b>Installed in<br>(--without-xmkmf)</b></td>
+		    <td><b>Installed in<br>(--with-all-xinstall)</b></td>
 		</tr>
 		<tr>
 		    <td>Binary for x3270</td>
+		    <td><tt><i>xdir</i>/bin</tt></td>
+		    <td><tt><i><font color="red">predfixdir</font></i>/bin</tt></td>
 		    <td><tt><i>xdir</i>/bin</tt></td>
 		</tr>
 		<tr>
 		    <td>Manual pages for x3270</td>
 		    <td><tt><i>xdir</i>/man</tt></td>
+		    <td><tt><i><font color="red">prefixdir</i></font>/man</tt></td>
+		    <td><tt><i>xdir</i>/man</tt></td>
 		</tr>
 		<tr>
 		    <td>Fonts</td>
 		    <td><tt><i>xdir</i>/fonts/misc</tt></td>
+		    <td><tt><i><font color="red">prefixdir</font></i>/fonts/misc</tt></td>
+		    <td><tt><i>xdir</i>/fonts/misc</tt></td>
 		</tr>
 		<tr>
-		    <td>Binaries for <i>x3270if</i></td>
-		    <td><tt><i>prefix</i>/bin</tt></td>
+		    <td>Binary for <i>x3270if</i></td>
+		    <td><tt><i>prefixdir</i>/bin</tt></td>
+		    <td><tt><i>prefixdir</i>/bin</tt></td>
+		    <td><tt><i><font color="red">xdir</font></i>/bin</tt></td>
 		</tr>
 		<tr>
 		    <td>Manual page for <i>x3720if</i></td>
-		    <td><tt><i>prefix</i>/man</tt></td>
+		    <td><tt><i>prefixdir</i>/man</tt></td>
+		    <td><tt><i>prefixdir</i>/man</tt></td>
+		    <td><tt><i><font color="red">xdir</font></i>/man</tt></td>
 		</tr>
 		<tr>
-		    <td>Configuration files (<tt>ibm_hosts</tt>, character set
-			definitions) used by x3270 and other programs</td>
-		    <td><tt><i>prefix</i>/etc</tt></td>
+		    <td>Configuration files used by x3270 and other
+			programs</td>
+		    <td><tt><i>prefixdir</i>/etc</tt></td>
+		    <td><tt><i>prefixdir</i>/etc</tt></td>
+		    <td><tt><i><font color="red">xdir</font></i>/etc</tt></td>
 		</tr>
-
 	    </tbody> 
 	</table>
-
-	If you want everything installed in your system X11 directory, use the
-	following <tt>configure</tt> command:
-	<pre>   configure --with-all-xinstall</pre>
-	By contrast, if you want everyting to be installed in the autoconf
-	prefix directory, use the default <tt>configure</tt> command, but use a
-	different <tt>make</tt> target:  
-	<pre>   make install.byprefix</pre>
-	The top-level target <tt>x3270-install.byprefix</tt> will also work,
-	and will install just x3270 and not all of the configured programs.
 
 	<h2>Installing Fonts</h2>
 	x3270 prefers that its fonts be installed in order to run. However,
 	a script is provided for testing a local copy of x3270 in the current
 	directory:  
-	<pre>   ./dryrun&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # test x3270</pre>
+	<pre><tt>   ./dryrun&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # test x3270</tt></pre>
 	Before running x3270, you will also need to (once):  
-	<pre>   xset fp rehash</pre>
+	<pre><tt>   xset fp rehash</tt></pre>
 
 	<h2> Vanilla X11R6</h2>
 	x3270 is set up to build and install without modifications under
-	any complete X11R6 or X11R5 implementation.  
-	<p>A "complete" R6 or R5 implementation means that <i>xmkmf</i> and
-	<i>imake</i> are configured and installed on your system, and that the
-	<tt>Xaw</tt> and <tt>Xmu</tt> libraries and header files are installed.
+	any complete X11R6 installation.  
+	<p>A "complete" installation means that besides the usual X and Xt
+	libraries, the Xaw and Xmu libraries and header files are installed.
 	Some vendors (HP, IBM, SCO) consider these optional software and do not
 	always install them.
 
-	<p>If you are running vanilla X11R6, then you simply need to ensure
-	that the X11 <tt>bin</tt> directory is in your <tt>$PATH</tt>, and you
-	can follow the standard build procedure.
-
 	<h2>IBM AIX</h2>
-	AIX may not include <i>xmkmf</i> or <i>imake</i>, but it includes the
-	source code for them. If these have not been built and installed on
-	your system (<i>e.g.</i>, if there is no such file as
-	<tt>/usr/bin/X11/imake</tt>),
-	you must first build and install it by following the instructions in
-	<tt>/usr/lpp/X11/Xamples/README</tt>.
-
-	<p>Once these have been installed, you can use the standard build
-	procedure.
-
-	<p>The default installation of AIX may also not include the
+	The default installation of AIX may also not include the
 	<i>bdftopcf</i> utility, which may need to be installed separately as
 	part of the <b>X11.fnt.util</b> package.
 
 	<h2> HP-UX</h2>
-	HP's X11 distribution may not include the <tt>Xaw</tt> libraries or
-	header files. As HP's X man page says,  
+	HP's X11 distribution may not include the Xaw and Xmu libraries or
+	their header files. As HP's X man page says,  
 	<blockquote>A number of unsupported core MIT clients and miscellaneous
 	    utilities are provided in /usr/contrib/bin. In addition, the entire
 	    core MIT distribution, compiled for Hewlett-Packard platforms, can
 	    be obtained from HP's users group INTERWORKS for a nominal fee. See
 	    the release notes for details.</blockquote>
-	What you need is the <tt>Xaw</tt> and <tt>Xmu</tt> libraries,
-	<i>imake</i>, and <i>xmkmf</i>. Then you can follow the standard build
-	and install instructions.
 
 	<h2> Sun Solaris 2.x</h2>
 	To run x3270, your <tt>LD_LIBRARY_PATH</tt> environment variable
 	must include <tt>/usr/openwin/lib</tt>.  
 
 	<h2> Mixed X Environments</h2>
-	If you are running a mixture of X environments, such as running a Sun
-	XNews server but using X11R6 libraries and header files, the supplied
-	<tt>Imakefile</tt> may not work properly, because it assumes that your
-	server and libraries are of the same type. This is not an impossible
-	situation, just a difficult one. It generally means that you will have
-	to build and install the fonts separately, perhaps even by hand.  
+	The Makefile and Imakefile that come with x3270 assume that you plan to
+	run the x3270 client on the same kind of workstation as your X server.
+	If you are running a mixture of X environments, such as a Sun XNews
+	server and standard X11R6 libraries and header files, or using an X
+	terminal, the supplied Makefile and Imakefile may not work properly,
+	because then assume that your server and libraries are of the same
+	type. This generally means that you will need to build and install the
+	fonts separately, using server-specific tools.
 
-	<h2> Building Fonts for X Terminals</h2>
-	The Imakefile that comes with x3270 assumes that you plan to run the
-	x3270 client on the same workstation as your X server. Therefore it
-	builds fonts for that kind of X server. Compiled fonts (.snf or .pcf
-	files) are not compatible between different servers, so if you run
-	x3270 with its display somewhere else (such as on an X Terminal), you
-	will need to compile the fonts for that server. It is impossible to
-	give comprehensive instructions here; however, here is an outline for
-	how to do it:  
+	It is impossible to give comprehensive instructions here; however,
+	here is an outline of how to do it:  
 	<ul>
-	    Copy all of the <tt>.bdf</tt> files from the x3270 distribution
+	    Copy all of the <tt>.bdf</tt> files from the x3270 directory
 	    into a new directory, say <tt>XXX</tt>.    
 	    <p><i>cd</i> into <tt>XXX</tt>.
 
@@ -154,12 +147,12 @@
 	    <tt>.pcf</tt> file. For example, for to build an NCD font on a
 	    Sun-4, the command is: </p>
 
-	    <pre>   /usr/local/NCD/binSun4/bdftosnf 3270.bdf &gt;3270.snf</pre>
+	    <pre><tt>   /usr/local/NCD/binSun4/bdftosnf 3270.bdf &gt;3270.snf</tt></pre>
 	    Run the server-specific version of <i>mkfontdir</i>. For example:    
-	    <pre>   /usr/local/NCD/binSun4/mkfontdir .</pre>
+	    <pre><tt>   /usr/local/NCD/binSun4/mkfontdir .</tt></pre>
 	    Then tell your X server to use this directory:    
-	    <pre>   xset fp+ XXX
-   xset fp rehash</pre>
+	    <pre><tt>   xset fp+ XXX
+   xset fp rehash</tt></pre>
 	</ul>
 
 	<h2>SCO Open Desktop 3</h2>
@@ -176,26 +169,21 @@
 	and it is difficult to run the program without doing a full
 	installation, requiring root access to your system. Also, the
 	app-defaults file generally changes whenever the program changes, and
-	making sure that x3270 finds the <b>correct</b> app-defaults file
+	making sure that x3270 finds the correct app-defaults file
 	compounds the above problems. </p>
 
 	<p>Starting with version 3.1, x3270 no longer uses a separate
 	app-defaults file. Instead, the file is compiled into x3270 itself.
 	If however, you prefer to have a separate app-defaults file, you can
-	compile x3270  to use it. </p>
+	compile x3270 to use it:
+	<ul>
+	    <li>For a color display, use <tt>configure
+		--enable-app-defaults</tt></li>
+	    <li>For a monochrome display, use <tt>configure
+		--enable-app-defaults=-UCOLOR</tt>
+	</ul>
 
-	<p>First, you must decide whether you want app-defaults for a color
-	display or a monochrome display. For a color display, the commands are:
-
-	<pre>   ./configure --enable-app-defaults
-   make clean
-   make</pre>
-	For a monochrome display, the commands are:  
-	<pre>   ./configure --enable-app-defaults=-UCOLOR
-   make clean
-   make</pre>
-
-	<h2>x3270-specific <tt>configure</tt> Options</h2>
+	<h2>x3270-specific configure Options</h2>
 	The <tt>configure</tt> script accepts the following x3270-specific
 	options:
 	<table border="3" cellspacing="3" cellpadding="3">
@@ -213,9 +201,9 @@
 		    <td><tt>--prefix=<i>prefix</i></tt></td>
 		    <td>Install common architecture-independent files under
 			<i>prefix</i> (defaults  to <tt>/usr/local</tt>).<br>
-			When using <tt>make install</tt>, this affects only the
-			configuration files.<br>
-			When using <tt>make install.byprefix</tt>, this
+			By default, this affects only the configuration
+			files.<br>
+			In combination with <tt>--without-xmkmf</tt>, this
 			affects all files.</td>
 		</tr>
 		<tr>
@@ -252,11 +240,8 @@
 		    <td>Install fonts in an alternate directory.<br>
 			If the parameter starts with "/", it specifies the full
 			pathname of a directory.<br>
-			If not, it specifies a subdirectory of the system's
-			X11 font directory (if using <tt>make install</tt>) or
-			of the <tt>fonts</tt> subdirectory of the
-			architecture-dependent install directory (if using
-			<tt>make install.byprefix</tt>).<br>
+			If not, it specifies a subdirectory of the usual font
+			directory.<br>
 			The default is <tt>misc</tt>.</td>
 		</tr>
 	    </tbody> 

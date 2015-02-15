@@ -17,7 +17,6 @@ c3270/keypad.map
 c3270/ssl_passwd_gui.c
 c3270/LICENSE
 c3270/help.h
-c3270/make-cygwin-standalone
 c3270/keymap.h
 c3270/icmdc.h
 c3270/cscreen.h

@@ -105,11 +105,6 @@ tcl3270-install: tcl3270
 pr3287-install: pr3287
 	cd pr3287 && $(MAKE) install
 
-# x3270's funky by-prefix install
-install.byprefix: x3270-install.byprefix @INSTALLNP@
-x3270-install.byprefix: x3270
-	cd x3270 && $(MAKE) install.byprefix
-
 # Manual page install
 install.man unix-install.man: @INSTALLMAN@
 x3270-install.man: x3270

@@ -84,7 +84,7 @@ HP_DEFINE = -D_HPUX_SOURCE
 EXTRA_LOAD_FLAGS=-lXpm
 #endif
 
-/* ProgramTargetName isn't defined in R5. */
+/* ProgramTargetName is not defined in R5. */
 #if !defined(ProgramTargetName)
 #define ProgramTargetName(x)x
 #endif
@@ -135,11 +135,6 @@ MakeDirectories(install,$(LIBX3270DIR))
 MakeDirectories(install,$(autoconf_bindir))
 MakeDirectories(install.man,$(autoconf_mandir)/man1)
 MakeDirectories(install.man,$(autoconf_mandir)/man5)
-MakeDirectories(install.byprefix,$(LIBX3270DIR))
-MakeDirectories(install.byprefix,$(autoconf_bindir))
-MakeDirectories(install.byprefix,$(autoconf_mandir)/man1)
-MakeDirectories(install.byprefix,$(autoconf_mandir)/man5)
-MakeDirectories(install.byprefix,$(autoconf_fontinstdir))
 
 /* Non-default build rules for certain C modules. */
 version.o: $(VOBJS) version.txt mkversion.sh
@@ -209,26 +204,6 @@ install.man:: x3270if.man x3270-script.man ibm_hosts.man
 	$(INSTALL) -c $(INSTMANFLAGS) x3270if.man $(DESTDIR)$(autoconf_mandir)/man1/x3270if.1
 	$(INSTALL) -c $(INSTMANFLAGS) x3270-script.man $(DESTDIR)$(autoconf_mandir)/man1/x3270-script.1
 	$(INSTALL) -c $(INSTMANFLAGS) ibm_hosts.man $(DESTDIR)$(autoconf_mandir)/man5/ibm_hosts.5
-
-XCOMM Rules for installing everything in $(PREFIX), rather than in the system
-XCOMM X11 directory.  This is hideous, but I see no way around it.
-install.byprefix::
-	$(INSTALL) -c $(INSTBINFLAGS) ProgramTargetName(x3270) $(DESTDIR)$(autoconf_bindir)/ProgramTargetName(x3270)
-#	$(INSTALL) -c $(INSTBINFLAGS) ProgramTargetName(x3270hist.pl) $(DESTDIR)$(autoconf_bindir)/ProgramTargetName(x3270hist.pl)
-	$(INSTALL) -c $(INSTBINFLAGS) ProgramTargetName(x3270if) $(DESTDIR)$(autoconf_bindir)/ProgramTargetName(x3270if)
-	$(INSTALL) -c $(INSTMANFLAGS) x3270.man $(DESTDIR)$(autoconf_mandir)/man1/x3270.1
-	$(INSTALL) -c $(INSTMANFLAGS) x3270if.man $(DESTDIR)$(autoconf_mandir)/man1/x3270if.1
-	$(INSTALL) -c $(INSTMANFLAGS) x3270-script.man $(DESTDIR)$(autoconf_mandir)/man1/x3270-script.1
-	$(INSTALL) -c $(INSTMANFLAGS) ibm_hosts.man $(DESTDIR)$(autoconf_mandir)/man5/ibm_hosts.5
-	@for i in $(FONTS); \
-	do	(set -x; $(INSTALL) -c $(INSTDATFLAGS) $$i $(DESTDIR)$(autoconf_fontinstdir)/$$i); \
-	done
-	-chmod u+w $(DESTDIR)$(autoconf_fontinstdir) $(DESTDIR)$(autoconf_fontinstdir)/fonts.dir
-	$(MKFONTDIR) $(DESTDIR)$(autoconf_fontinstdir)
-	chmod u=rwx,go=rx $(DESTDIR)$(autoconf_fontinstdir)
-	chmod a=r $(DESTDIR)$(autoconf_fontinstdir)/fonts.dir
-	@[ -r $(DESTDIR)$(LIBX3270DIR)/$(HOSTSFILE) ] || \
-		(set -x; $(INSTALL) -c $(INSTDATFLAGS) $(HOSTSFILE) $(DESTDIR)$(LIBX3270DIR)/$(HOSTSFILE))
 
 /******************************************************************************
  * Clean rules.                                                               *

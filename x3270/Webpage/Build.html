@@ -12,33 +12,33 @@
 
 	<h2>Building on Unix or Cygwin</h2>
 	To build the entire 3270 emulation suite, including native Unix
-	programs and cross-compiled Windows programs, type:  
-	<pre>   ./configure
+	programs and cross-compiled Windows programs, use:  
+	<pre><tt>   ./configure
    make depend
-   make</pre>
+   make</tt></pre>
 	(The <tt>make depend</tt> step is optional, but is helpful to ensure
 	that things will be rebuild if you change a header file.)
 	<p>
 	To install Unix binaries in the default install directory
-	(<tt>/usr/local</tt>), type:  
-	<pre>   make install</pre>
-	To install Unix manual pages, type:
-	<pre>   make install.man</pre>
-	To remove intermediate files, type:
-	<pre>   make clean</pre>
-	To remove all derived files, type:
-	<pre>   make clobber</pre>
+	(<tt>/usr/local</tt>), use:  
+	<pre><tt>   make install</tt></pre>
+	To install Unix manual pages, use:
+	<pre><tt>   make install.man</tt></pre>
+	To remove intermediate files, use:
+	<pre><tt>   make clean</tt></pre>
+	To remove all derived files, use:
+	<pre><tt>   make clobber</tt></pre>
 
 	<h3>Selective build targets</h3>
-	To build just the Unix programs, type:
-	<pre>   make unix</pre>
-	To cross-compile just the Windows programs, type:
-	<pre>   make windows</pre>
+	To build just the Unix programs, use:
+	<pre><tt>   make unix</tt></pre>
+	To cross-compile just the Windows programs, use:
+	<pre><tt>   make windows</tt></pre>
 	To build an individual program, such as s3270, just make it:
-	<pre>   make s3270</pre>
+	<pre><tt>   make s3270</tt></pre>
 	Each of the top-level symbolic targets can be limited to a group
 	(unix or windows) or to a program, by adding the desired prefix:
-	<pre>   make <i>group</i>-depend
+	<pre><tt>   make <i>group</i>-depend
    make <i>program</i>-depend
    make unix-install
    make unix-install.man
@@ -47,7 +47,7 @@
    make <i>group</i>-clean
    make <i>program</i>-clean
    make <i>group</i>-clobber
-   make <i>program</i>-clobber</pre>
+   make <i>program</i>-clobber</tt></pre>
 
 	<h3>Selective ./configure</h3>
 	If you only want to build a subset of the programs, you can limit the
@@ -58,43 +58,43 @@
 	    <tbody>
 		<tr>
 		    <td><tt>--enable-unix</tt></td>
-		    <td>Configure the Unix programs</td>
+		    <td>Include all of the Unix programs</td>
 		</tr>
 		<tr>
 		    <td><tt>--enable-windows</tt></td>
-		    <td>Configure the Windows programs</td>
+		    <td>Include all of the Windows programs</td>
 		</tr>
 		<tr>
 		    <td><tt>--enable-x3270</tt></td>
-		    <td>Configure x3270</td>
+		    <td>Include x3270</td>
 		</tr>
 		<tr>
 		    <td><tt>--enable-c3270</tt></td>
-		    <td>Configure c3270</td>
+		    <td>Include c3270</td>
 		</tr>
 		<tr>
 		    <td><tt>--enable-s3270</tt></td>
-		    <td>Configure s3270</td>
+		    <td>Include s3270</td>
 		</tr>
 		<tr>
 		    <td><tt>--enable-tcl3270</tt></td>
-		    <td>Configure tcl3270</td>
+		    <td>Include tcl3270</td>
 		</tr>
 		<tr>
 		    <td><tt>--enable-pr3287</tt></td>
-		    <td>Configure pr3287</td>
+		    <td>Include pr3287</td>
 		</tr>
 		<tr>
 		    <td><tt>--enable-ws3270</tt></td>
-		    <td>Configure ws3270</td>
+		    <td>Include ws3270</td>
 		</tr>
 		<tr>
 		    <td><tt>--enable-wc3270</tt></td>
-		    <td>Configure wc3270</td>
+		    <td>Include wc3270</td>
 		</tr>
 		<tr>
 		    <td><tt>--enable-wpr3287</tt></td>
-		    <td>Configure wpr3287</td>
+		    <td>Include wpr3287</td>
 		</tr>
 	    </tbody>
 	</table>
@@ -106,16 +106,16 @@
 	<h2>Building Windows Programs with Visual Studio (Command Line)</h2>
 	To build with Microsoft Visual Studio from the command prompt, first
 	open a command console with Visual Studio build environment variables
-	set. At the top level of the suite3270 source directory, type:
-	<pre>   nmake /fMsc\Makefile</pre>
+	set. At the top level of the suite3270 source directory, use:
+	<pre><tt>   nmake /fMsc\Makefile</tt></pre>
 	More-specific targets can be used. (<i>program</i> is wc3270, ws3270
 	or wpr3287.)
-	<pre>   nmake /fMsc\Makefile <i>program</i></pre>
+	<pre><tt>   nmake /fMsc\Makefile <i>program</i></tt></pre>
 	Additional targets are available:
-	<pre>   nmake /fMsc\Makefile clean
+	<pre><tt>   nmake /fMsc\Makefile clean
    nmake /fMsc\Makefile <i>program</i>-clean
    nmake /fMsc\Makefile clobber
-   nmake /fMsc\Makefile <i>program</i>-clobber</pre>
+   nmake /fMsc\Makefile <i>program</i>-clobber</tt></pre>
 	Note that the 'configure' step is not necessary with Visual Studio
 	builds, and there are no configurable options.
 
@@ -229,7 +229,7 @@
     <h2>Building on FreeBSD</h2>
     FreeBSD's <b>iconv</b> library is installed in <tt>/usr/local</tt>, so
     the the following options must be passed to the <tt>configure</tt> script:
-    <pre>   ./configure LDFLAGS=-L/usr/local/lib CPPFLAGS=-I/usr/local/include</pre>
+    <pre><tt>   ./configure LDFLAGS=-L/usr/local/lib CPPFLAGS=-I/usr/local/include</tt></pre>
 
     </body>
 </html>

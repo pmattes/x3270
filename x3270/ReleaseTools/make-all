@@ -72,9 +72,6 @@ done
 [ "$need_libs" ] && prods="$prods lib/3270 lib/3270stubs"
 [ "$need_wlibs" ] && prods="$prods lib/w3270 lib/w3270stubs"
 
-# Add in the include directory.
-prods="$prods include"
-
 # Check for a full Windows release.
 if [[ "$build" && \
       "$prods" =~ wc3270 && \
@@ -210,7 +207,8 @@ do
 		if [ -f $d2/instlist.byprefix ]
 		then	echo "===== Installing $prod (byprefix)."
 			mkdir i
-			make install.byprefix DESTDIR=$PWD/i
+			./configure --without-xmkmf
+			make install install.man DESTDIR=$PWD/i
 			find i -print | tail -n +2 | sed 's/^..//' | sort >cmp.files
 			diff $d2/instlist.byprefix cmp.files || exit 1
 			rm -rf i
@@ -218,7 +216,7 @@ do
 		if [ -f $d2/instlist.all-xinstall ]
 		then	echo "===== Installing $prod (all-xinstall)."
 			mkdir i
-			./configure --with-all-xinstall LDFLAGS=-lstdc++
+			./configure --with-all-xinstall
 			make install install.man DESTDIR=$PWD/i
 			find i -print | tail -n +2 | sed 's/^..//' | sort >cmp.files
 			diff $d2/instlist.all-xinstall cmp.files || exit 1
