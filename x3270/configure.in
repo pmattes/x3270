@@ -27,8 +27,8 @@ dnl Process this file with autoconf to produce a configure script.
 AC_INIT(x3270/x3270.c)
 AC_PREREQ(2.50)
 
-AC_ARG_ENABLE(all-unix,[  --enable-all-unix      build all Unix emulators])
-if test "x$enable_all_unix" = xyes; then
+AC_ARG_ENABLE(unix,[  --enable-unix          build all Unix emulators])
+if test "x$enable_unix" = xyes; then
     enable_x3270=yes
     enable_c3270=yes
     enable_s3270=yes
@@ -36,8 +36,8 @@ if test "x$enable_all_unix" = xyes; then
     enable_pr3287=yes
 fi
 
-AC_ARG_ENABLE(all-windows,[  --enable-all-windows   build all Windows emulators])
-if test "x$enable_all_windows" = xyes; then
+AC_ARG_ENABLE(windows,[  --enable-windows       build all Windows emulators])
+if test "x$enable_windows" = xyes; then
     enable_wc3270=yes
     enable_ws3270=yes
     enable_wpr3287=yes
@@ -82,14 +82,23 @@ fi
 ALL=""
 DEPEND=""
 INSTALL=""
+INSTALLNP=""
+INSTALLMAN=""
 CLEAN=""
 CLOBBER=""
 for i in x3270 c3270 s3270 tcl3270 pr3287 wc3270 ws3270 wpr3287; do
     eval x=\$enable_$i
     if test "x$x" = xyes; then
-	ALL="$ALL $i-all"
+	ALL="$ALL $i"
 	DEPEND="$DEPEND $i-depend"
-	INSTALL="$INSTALL $i-install"
+	case "$i" in
+	w*)	;;
+	*)	INSTALL="$INSTALL $i-install"
+		if test "$i" != x3270; then
+		    INSTALLNP="$INSTALLNP $i-install"
+		fi
+		INSTALLMAN="$INSTALLMAN $i-install.man"
+	esac
 	CLEAN="$CLEAN $i-clean"
 	CLOBBER="$CLOBBER $i-clobber"
     fi
@@ -97,6 +106,8 @@ done
 AC_SUBST(ALL)
 AC_SUBST(DEPEND)
 AC_SUBST(INSTALL)
+AC_SUBST(INSTALLNP)
+AC_SUBST(INSTALLMAN)
 AC_SUBST(CLEAN)
 AC_SUBST(CLOBBER)
 

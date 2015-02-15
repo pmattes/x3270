@@ -37,7 +37,6 @@ c3270/c3270_files.mk
 c3270/x3270if.c
 c3270/conf.h.in
 c3270/runc3270.bat
-c3270/html/Build.html
 c3270/html/Bugs.html
 c3270/html/c3270-man.html
 c3270/html/Resources.html
@@ -85,7 +84,6 @@ s3270/configure.in
 s3270/x3270if.c
 s3270/conf.h.in
 s3270/html/s3270-man.html
-s3270/html/Build.html
 s3270/html/Bugs.html
 s3270/html/Resources.html
 s3270/html/FAQ.html
@@ -121,7 +119,6 @@ tcl3270/X3270.xad
 tcl3270/config.guess
 tcl3270/configure.in
 tcl3270/conf.h.in
-tcl3270/html/Build.html
 tcl3270/html/Resources.html
 tcl3270/html/FAQ.html
 tcl3270/html/README.html
@@ -177,8 +174,8 @@ wc3270/x3270if.c
 wc3270/wc3270.zipit
 wc3270/Makefile
 wc3270/html/Keymap.html
-wc3270/html/Build.html
 wc3270/html/Bugs.html
+wc3270/html/Build.html
 wc3270/html/Resources.html
 wc3270/html/wc3270-man.html
 wc3270/html/FAQ.html
@@ -228,7 +225,6 @@ ws3270/ws3270_files.mk
 ws3270/X3270.xad
 ws3270/LICENSE.txt
 ws3270/Makefile
-ws3270/html/Build.html
 ws3270/html/ws3270-man.html
 ws3270/html/Bugs.html
 ws3270/html/Resources.html
@@ -343,7 +339,6 @@ x3270/CmeLineP.h
 x3270/objects.h
 x3270/x3270.bm
 x3270/html/Keymap.html
-x3270/html/Build.html
 x3270/html/Bugs.html
 x3270/html/x3270.jpg
 x3270/html/Brackets.html
@@ -438,7 +433,6 @@ pr3287/configure.in
 pr3287/conf.h.in
 pr3287/pr_telnet.h
 pr3287/unicode_dbcs.c
-pr3287/html/Build.html
 pr3287/html/pr3287-man.html
 pr3287/html/ReleaseNotes.html
 pr3287/ctlr.c
@@ -487,7 +481,6 @@ wpr3287/pr3287_files.mk
 wpr3287/pr_telnet.h
 wpr3287/unicode_dbcs.c
 wpr3287/Makefile
-wpr3287/html/Build.html
 wpr3287/html/wpr3287-man.html
 wpr3287/html/ReleaseNotes.html
 wpr3287/ctlr.c
