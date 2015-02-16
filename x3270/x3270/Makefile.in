@@ -73,9 +73,11 @@ version.o: $(VOBJS) version.txt mkversion.sh
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
-fallbacks.c: mkfb X3270.xad
+fallbacks.c: mkfb fallbacks.txt
 	$(RM) $@
-	./mkfb X3270.xad $@
+	./mkfb fallbacks.txt $@
+fallbacks.txt: fb-x3270 fb-printSession fb-common fb-composeMap fb-messages
+	cat fb-x3270 fb-printSession fb-common fb-composeMap fb-messages >$@
 
 x3270: $(OBJS1) ../lib/lib3270.a ../lib/lib3270i.a ../lib/lib3270stubs.a
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) -L../lib -l3270 -l3270i -l3270stubs $(LIBS)
@@ -154,7 +156,7 @@ install.man:
 	$(INSTALL_DATA) ibm_hosts.man $(DESTDIR)$(MANDIR)/man5/ibm_hosts.5
 
 clean:
-	$(RM) *.o *pcf.gz mkfb fallbacks.c
+	$(RM) *.o *pcf.gz mkfb fallbacks.txt fallbacks.c
 clobber: clean
 	$(RM) x3270 x327if
 depend:

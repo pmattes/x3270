@@ -454,7 +454,7 @@ description
     Defines the <b>Options -&gt; Character Set</b> menu.
     Can contain '<b>&gt;</b>' characters to define a menu hierarchy.
     <p class="indented">
-    See the file <b>X3270.xad</b> for an example.
+    See the file <b>fallbacks.txt</b> for an example.
 .
 
 name color8
@@ -1041,7 +1041,7 @@ host code page (%-charset%) requires display character set <i>foo</i>.
     <p class="indented">
 The list can include '>' characters to present a hierarchy of options.
     <p class="indented">
-See the file <b>X3270.xad</b> for an example.
+See the file <b>fallbacks.txt</b> for an example.
 .
 
 name eof
@@ -2431,7 +2431,7 @@ applies x
 type s
 desc
     Lists the options on the Color Scheme menu.  Can contain '>' characters to
-    indicate a menu hierarchy.  See the file X3270.xad for an example.
+    indicate a menu hierarchy.  See the file fallbacks.txt for an example.
 .
 
 name screenTrace
@@ -2581,7 +2581,7 @@ desc
     <b>x3270*executeActionOption.suppress</b> to true will remove
     the <b>Execute an Action</b> option on the <b>File</b> menu.
     The names of the menu items generally end in 'Option' and have label
-    resources in X3270.xad.
+    resources in fallbacks.txt.
 .
 
 name suppressActions

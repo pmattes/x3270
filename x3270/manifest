@@ -26,7 +26,6 @@ c3270/ckeypad.h
 c3270/c3270.c
 c3270/common_files.mk
 c3270/configure
-c3270/X3270.xad
 c3270/cmenubar.h
 c3270/screen.c
 c3270/keypad.outline
@@ -66,6 +65,11 @@ c3270/keypad.full
 c3270/x3270-script.man
 c3270/README
 c3270/conf.h
+c3270/fb-c3270
+c3270/fb-common
+c3270/fb-composeMap
+c3270/fb-messages
+c3270/fb-printSession
 s3270/x3270_glue.expect
 s3270/version.txt
 s3270/s3270.c
@@ -77,7 +81,6 @@ s3270/s3270.man
 s3270/localdefs.h
 s3270/common_files.mk
 s3270/configure
-s3270/X3270.xad
 s3270/s3270_glue.bash
 s3270/config.guess
 s3270/configure.in
@@ -104,6 +107,7 @@ s3270/x3270if.man
 s3270/x3270-script.man
 s3270/README
 s3270/s3270_files.mk
+s3270/fb-common
 tcl3270/version.txt
 tcl3270/mkversion.sh
 tcl3270/Makefile.in
@@ -115,7 +119,6 @@ tcl3270/common_files.mk
 tcl3270/tcl3270.man
 tcl3270/idle_stubs.c
 tcl3270/configure
-tcl3270/X3270.xad
 tcl3270/config.guess
 tcl3270/configure.in
 tcl3270/conf.h.in
@@ -132,6 +135,7 @@ tcl3270/mkfb.c
 tcl3270/install-sh
 tcl3270/tcl3270_files.mk
 tcl3270/README
+tcl3270/fb-common
 wc3270/menubar.c
 wc3270/mkshort.c
 wc3270/wc3270.rc
@@ -160,7 +164,6 @@ wc3270/c3270.c
 wc3270/common_files.mk
 wc3270/relinkc.h
 wc3270/shortcutc.h
-wc3270/X3270.xad
 wc3270/cmenubar.h
 wc3270/screen.c
 wc3270/keypad.outline
@@ -207,6 +210,11 @@ wc3270/xscroll.h
 wc3270/keypad.c
 wc3270/keypad.full
 wc3270/conf.h
+wc3270/fb-c3270
+wc3270/fb-common
+wc3270/fb-composeMap
+wc3270/fb-messages
+wc3270/fb-printSession
 ws3270/README.txt
 ws3270/x3270_glue.expect
 ws3270/Msc/README.txt
@@ -222,7 +230,6 @@ ws3270/localdefs.h
 ws3270/winenv.mk
 ws3270/common_files.mk
 ws3270/ws3270_files.mk
-ws3270/X3270.xad
 ws3270/LICENSE.txt
 ws3270/Makefile
 ws3270/html/ws3270-man.html
@@ -238,6 +245,7 @@ ws3270/html/SSL.html
 ws3270/html/Lineage.html
 ws3270/mkfb.c
 ws3270/conf.h
+ws3270/fb-common
 x3270/menubar.c
 x3270/xtables.c
 x3270/arrow.bm
@@ -308,7 +316,6 @@ x3270/xaa.c
 x3270/print_window.h
 x3270/configure
 x3270/3270gt32b.bdf
-x3270/X3270.xad
 x3270/3270gt12b.bdf
 x3270/save.c
 x3270/xglobals.h
@@ -403,6 +410,11 @@ x3270/CmeBSB.c
 x3270/README
 x3270/3270gt24.bdf
 x3270/wait.bm
+x3270/fb-common
+x3270/fb-composeMap
+x3270/fb-messages
+x3270/fb-printSession
+x3270/fb-x3270
 pr3287/unicode.c
 pr3287/version.txt
 pr3287/telnet.c

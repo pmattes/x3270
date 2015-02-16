@@ -26,9 +26,11 @@
  */
 
 /*
- * mkfb.c
- *	Utility to create RDB string definitions from a simple #ifdef'd .ad
- *	file
+ *	mkfb.c
+ *		Utility to create RDB string definitions from a simple
+ *		#ifdef'd .ad file.
+ *
+ * 	mkfb [-c] [infile [outfile]]
  */
 
 #include "conf.h"

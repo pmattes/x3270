@@ -1,0 +1,117 @@
+!
+! Copyright (c) 1995-2015, Paul Mattes.
+! All rights reserved.
+!
+! Redistribution and use in source and binary forms, with or without
+! modification, are permitted provided that the following conditions are met:
+!     * Redistributions of source code must retain the above copyright
+!       notice, this list of conditions and the following disclaimer.
+!     * Redistributions in binary form must reproduce the above copyright
+!       notice, this list of conditions and the following disclaimer in the
+!       documentation and/or other materials provided with the distribution.
+!     * Neither the names of Paul Mattes nor the names of his contributors
+!       may be used to endorse or promote products derived from this software
+!       without specific prior written permission.
+!
+! THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
+! WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+! MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+! EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+! SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+! PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+! OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+! WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+! OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+! ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+!
+! Default compose-key map.
+! Each line is of the form "keysym1 + keysym2 = keysym3", meaning "when the
+! Compose key is pressed, followed by keysym1 and keysym2 (in either order),
+! interpret it as keysym3."  The definitions are case-sensitive.
+x3270.composeMap.latin1: \
+	c + bar		= cent			\n\
+	c + slash	= cent			\n\
+	L + minus	= sterling		\n\
+	Y + equal	= yen			\n\
+	S + S		= section		\n\
+	C + O		= copyright		\n\
+	a + underscore	= ordfeminine		\n\
+	less + less	= guillemotleft		\n\
+	R + O		= registered		\n\
+	plus + minus	= plusminus		\n\
+	o + underscore	= masculine		\n\
+	greater + greater = guillemotright	\n\
+	1 + 4		= onequarter		\n\
+	1 + 2		= onehalf		\n\
+	3 + 4		= threequarters		\n\
+	bar + bar	= brokenbar		\n\
+	A + grave	= Agrave		\n\
+	A + apostrophe	= Aacute		\n\
+	A + asciicircum	= Acircumflex		\n\
+	A + asciitilde	= Atilde		\n\
+	A + quotedbl	= Adiaeresis		\n\
+	A + asterisk	= Aring			\n\
+	A + E		= AE			\n\
+	C + comma	= Ccedilla		\n\
+	C + apostrophe	= Ccedilla		\n\
+	E + grave	= Egrave		\n\
+	E + apostrophe	= Eacute		\n\
+	E + asciicircum	= Ecircumflex		\n\
+	E + quotedbl	= Ediaeresis		\n\
+	I + grave	= Igrave		\n\
+	I + apostrophe	= Iacute		\n\
+	I + asciicircum	= Icircumflex		\n\
+	I + quotedbl	= Idiaeresis		\n\
+	N + asciitilde	= Ntilde		\n\
+	O + grave	= Ograve		\n\
+	O + apostrophe	= Oacute		\n\
+	O + asciicircum	= Ocircumflex		\n\
+	O + asciitilde	= Otilde		\n\
+	O + quotedbl	= Odiaeresis		\n\
+	O + slash	= Ooblique		\n\
+	U + grave	= Ugrave		\n\
+	U + apostrophe	= Uacute		\n\
+	U + asciicircum	= Ucircumflex		\n\
+	U + quotedbl	= Udiaeresis		\n\
+	Y + apostrophe	= Yacute		\n\
+	s + s		= ssharp		\n\
+	a + grave	= agrave		\n\
+	a + apostrophe	= aacute		\n\
+	a + asciicircum	= acircumflex		\n\
+	a + asciitilde	= atilde		\n\
+	a + quotedbl	= adiaeresis		\n\
+	a + asterisk	= aring			\n\
+	a + e		= ae			\n\
+	c + comma	= ccedilla		\n\
+	c + apostrophe	= ccedilla		\n\
+	e + grave	= egrave		\n\
+	e + apostrophe	= eacute		\n\
+	e + asciicircum	= ecircumflex		\n\
+	e + quotedbl	= ediaeresis		\n\
+	i + grave	= igrave		\n\
+	i + apostrophe	= iacute		\n\
+	i + asciicircum	= icircumflex		\n\
+	i + quotedbl	= idiaeresis		\n\
+	n + asciitilde	= ntilde		\n\
+	o + grave	= ograve		\n\
+	o + apostrophe	= oacute		\n\
+	o + asciicircum	= ocircumflex		\n\
+	o + asciitilde	= otilde		\n\
+	o + quotedbl	= odiaeresis		\n\
+	o + slash	= oslash		\n\
+	u + grave	= ugrave		\n\
+	u + apostrophe	= uacute		\n\
+	u + asciicircum	= ucircumflex		\n\
+	u + quotedbl	= udiaeresis		\n\
+	y + apostrophe	= yacute		\n\
+	y + quotedbl	= ydiaeresis		\n\
+	apostrophe + apostrophe  = apostrophe	\n\
+	apostrophe + space = apostrophe		\n\
+	asciicircum + asciicircum = asciicircum	\n\
+	asciicircum + space = asciicircum	\n\
+	asciitilde + asciitilde  = asciitilde	\n\
+	asciitilde + space = asciitilde		\n\
+	grave + grave   = grave			\n\
+	grave + space   = grave			\n\
+	quotedbl + quotedbl = quotedbl		\n\
+	quotedbl + space = quotedbl		\n

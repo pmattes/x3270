@@ -58,9 +58,11 @@ version.o: $(VOBJS) version.txt mkversion.sh Makefile
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
-fallbacks.c: $(MKFB) X3270.xad Makefile
+fallbacks.c: $(MKFB) fallbacks.txt Makefile
 	$(RM) $@
-	./$(MKFB) -c X3270.xad $@
+	./$(MKFB) -c fallbacks.txt $@
+fallbacks.txt: fb-common
+	cat fb-common >$@
 
 $(MKFB): mkfb.c Makefile
 	$(NATIVECC) -g -o $(MKFB) -DFOR_WIN32 mkfb.c

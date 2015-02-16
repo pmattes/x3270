@@ -66,9 +66,11 @@ version.o: $(VOBJS) version.txt mkversion.sh
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
-fallbacks.c: mkfb X3270.xad
+fallbacks.c: mkfb fallbacks.txt
 	$(RM) $@
-	./mkfb -c X3270.xad $@
+	./mkfb -c fallbacks.txt $@
+fallbacks.txt: fb-common fb-printSession fb-messages fb-composeMap fb-c3270
+	cat fb-common fb-printSession fb-messages fb-composeMap fb-c3270 >$@
 
 keypad.o: keypad.c compiled_keypad.h
 

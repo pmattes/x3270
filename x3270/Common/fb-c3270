@@ -1,0 +1,185 @@
+!
+! Copyright (c) 1995-2015, Paul Mattes.
+! All rights reserved.
+!
+! Redistribution and use in source and binary forms, with or without
+! modification, are permitted provided that the following conditions are met:
+!     * Redistributions of source code must retain the above copyright
+!       notice, this list of conditions and the following disclaimer.
+!     * Redistributions in binary form must reproduce the above copyright
+!       notice, this list of conditions and the following disclaimer in the
+!       documentation and/or other materials provided with the distribution.
+!     * Neither the names of Paul Mattes nor the names of his contributors
+!       may be used to endorse or promote products derived from this software
+!       without specific prior written permission.
+!
+! THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
+! WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+! MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+! EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+! SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+! PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+! OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+! WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+! OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+! ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+!
+! c3270-specific fallbacks
+!
+! Messages
+x3270.message.buildDisabled:			disabled
+x3270.message.buildEnabled:			enabled
+x3270.message.buildOpts:			Build options:
+x3270.message.characterSet:			EBCDIC character set:
+x3270.message.hostCodePage:			Host code page:
+x3270.message.unnegotiated:			TELNET negotiation incomplete
+#ifdef _WIN32
+x3270.message.windowsCodePage:			Windows code page:
+#endif
+! (_WIN32)
+!
+! Base keymaps
+#ifdef _WIN32
+keymap.base: \n\
+        Alt <Key>1: PA(1)\n\
+        Alt <Key>2: PA(2)\n\
+        Alt <Key>3: PA(3)\n\
+        Alt <Key>^: Key(notsign)\n\
+       Ctrl <Key>c: Copy()\n\
+        Alt <Key>k: Keypad()\n\
+        Alt <Key>K: Keypad()\n\
+        Alt <Key>l: Redraw()\n\
+        Alt <Key>L: Redraw()\n\
+        Alt <Key>m: Compose()\n\
+        Alt <Key>M: Compose()\n\
+        Alt <Key>n: Menu()\n\
+        Alt <Key>N: Menu()\n\
+        Alt <Key>p: PrintText()\n\
+        Alt <Key>P: PrintText()\n\
+       Ctrl <Key>v: Paste()\n\
+       Ctrl <Key>x: Cut()\n\
+       Ctrl <Key>]: Escape()\n\
+     Shift <Key>F1: PF(13)\n\
+     Shift <Key>F2: PF(14)\n\
+     Shift <Key>F3: PF(15)\n\
+     Shift <Key>F4: PF(16)\n\
+     Shift <Key>F5: PF(17)\n\
+     Shift <Key>F6: PF(18)\n\
+     Shift <Key>F7: PF(19)\n\
+     Shift <Key>F8: PF(20)\n\
+     Shift <Key>F9: PF(21)\n\
+    Shift <Key>F10: PF(22)\n\
+    Shift <Key>F11: PF(23)\n\
+    Shift <Key>F12: PF(24)\n\
+ Shift <Key>ESCAPE: Key(0x1d)\n\
+        <Key>PRIOR: Scroll(Backward)\n\
+         <Key>NEXT: Scroll(Forward)
+keymap.base.3270: \n\
+      Ctrl <Key>a: Attn()\n\
+       Alt <Key>a: Attn()\n\
+       Alt <Key>A: Attn()\n\
+       Alt <Key>c: Clear()\n\
+       Alt <Key>C: Clear()\n\
+      Ctrl <Key>d: Dup()\n\
+       Alt <Key>d: Dup()\n\
+       Alt <Key>D: Dup()\n\
+      Ctrl <Key>f: FieldMark()\n\
+       Alt <Key>f: FieldMark()\n\
+       Alt <Key>F: FieldMark()\n\
+      Ctrl <Key>h: Erase()\n\
+       Alt <Key>i: Insert()\n\
+       Alt <Key>I: Insert()\n\
+      Ctrl <Key>i: Tab()\n\
+      Ctrl <Key>j: Newline()\n\
+      Ctrl <Key>l: Redraw()\n\
+      Ctrl <Key>m: Enter()\n\
+      Ctrl <Key>r: Reset()\n\
+       Alt <Key>r: Reset()\n\
+       Alt <Key>R: Reset()\n\
+      Ctrl <Key>u: DeleteField()\n\
+       Alt <Key>v: ToggleReverse()\n\
+       Alt <Key>x: Flip()\n\
+      <Key>INSERT: ToggleInsert()\n\
+   Shift <Key>TAB: BackTab()\n\
+        <Key>BACK: Erase()\n\
+   Shift <Key>END: EraseEOF()\n\
+         <Key>END: FieldEnd()\n\
+  Shift <Key>LEFT: PreviousWord()\n\
+ Shift <Key>RIGHT: NextWord()
+! wc3270 keymap for more 3270-ish behavior: The Enter key is Newline and the
+! Right-Ctrl key is Enter.
+x3270.keymap.rctrl.3270: \
+	RightCtrl<Key>CTRL: Enter()\n\
+	<Key>Return: Newline()
+#else
+x3270.keymap.base: \n\
+            Ctrl<Key>]: Escape()\n\
+           <Key>Escape: Escape()\n\
+ Ctrl<Key>a Ctrl<Key>a: Key(0x01)\n\
+ Ctrl<Key>a Ctrl<Key>]: Key(0x1d)\n\
+     Ctrl<Key>a <Key>c: Clear()\n\
+     Ctrl<Key>a <Key>e: Escape()\n\
+     Ctrl<Key>a <Key>i: Insert()\n\
+     Ctrl<Key>a <Key>r: Reset()\n\
+     Ctrl<Key>a <Key>k: Keypad()\n\
+     Ctrl<Key>a <Key>l: Redraw()\n\
+     Ctrl<Key>a <Key>m: Compose()\n\
+     Ctrl<Key>a <Key>n: Menu()\n\
+     Ctrl<Key>a <Key>p: PrintText()\n\
+     Ctrl<Key>a <Key>^: Key(notsign)\n\
+               <Key>DC: Delete()\n\
+               <Key>UP: Up()\n\
+             <Key>DOWN: Down()\n\
+             <Key>LEFT: Left()\n\
+            <Key>RIGHT: Right()\n\
+             <Key>HOME: Home()\n\
+     Ctrl<Key>a <Key>1: PA(1)\n\
+     Ctrl<Key>a <Key>2: PA(2)\n\
+     Ctrl<Key>a <Key>3: PA(3)\n\
+               <Key>F1: PF(1)\n\
+    Ctrl<Key>a <Key>F1: PF(13)\n\
+               <Key>F2: PF(2)\n\
+    Ctrl<Key>a <Key>F2: PF(14)\n\
+               <Key>F3: PF(3)\n\
+    Ctrl<Key>a <Key>F3: PF(15)\n\
+               <Key>F4: PF(4)\n\
+    Ctrl<Key>a <Key>F4: PF(16)\n\
+               <Key>F5: PF(5)\n\
+    Ctrl<Key>a <Key>F5: PF(17)\n\
+               <Key>F6: PF(6)\n\
+    Ctrl<Key>a <Key>F6: PF(18)\n\
+               <Key>F7: PF(7)\n\
+    Ctrl<Key>a <Key>F7: PF(19)\n\
+               <Key>F8: PF(8)\n\
+    Ctrl<Key>a <Key>F8: PF(20)\n\
+               <Key>F9: PF(9)\n\
+    Ctrl<Key>a <Key>F9: PF(21)\n\
+              <Key>F10: PF(10)\n\
+   Ctrl<Key>a <Key>F10: PF(22)\n\
+              <Key>F11: PF(11)\n\
+   Ctrl<Key>a <Key>F11: PF(23)\n\
+              <Key>F12: PF(12)\n\
+   Ctrl<Key>a <Key>F12: PF(24)\n\
+            <Key>PPAGE: Scroll(Backward)\n\
+            <Key>NPAGE: Scroll(Forward)
+x3270.keymap.base.3270: \n\
+ Ctrl<Key>a <Key>a: Attn()\n\
+        Ctrl<Key>c: Clear()\n\
+        Ctrl<Key>d: Dup()\n\
+        Ctrl<Key>f: FieldMark()\n\
+        Ctrl<Key>h: Erase()\n\
+        Ctrl<Key>i: Tab()\n\
+        Ctrl<Key>j: Newline()\n\
+        Ctrl<Key>k: Keypad()\n\
+        Ctrl<Key>l: Redraw()\n\
+        Ctrl<Key>m: Enter()\n\
+        Ctrl<Key>n: Menu()\n\
+        Ctrl<Key>r: Reset()\n\
+        Ctrl<Key>u: DeleteField()\n\
+ Ctrl<Key>a <Key>v: ToggleReverse()\n\
+ Ctrl<Key>a <Key>f: Flip()\n\
+           <Key>IC: ToggleInsert()\n\
+    <Key>BACKSPACE: Erase()\n\
+          <Key>END: FieldEnd()
+#endif
+! (_WIN32)

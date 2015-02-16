@@ -64,10 +64,12 @@ version.obj: $(VOBJS) version.txt mkversion.exe Msc\Makefile
 mkversion.exe: Msc\mkversion.c
 	$(CC) $(CFLAGS) /Fe$@ Msc\mkversion.c
 
-fallbacks.c: $(MKFB) X3270.xad Msc\Makefile
-	$(MKFB) -c X3270.xad $@
+fallbacks.c: $(MKFB) fallbacks.txt Msc\Makefile
+	$(MKFB) -c fallbacks.txt $@
 fallbacks.obj: fallbacks.c
 	$(CC) $(CFLAGS) /c fallbacks.c
+fallbacks.txt: fb-common
+	copy fb-common fallbacks.txt
 
 $(MKFB): mkfb.c Msc\Makefile
 	$(CC) /Fe$(MKFB) $(XCPPFLAGS) mkfb.c
@@ -88,7 +90,7 @@ wversion.obj: version.txt mkversion.exe
 	$(CC) $(CFLAGS) /c wversion.c
 
 clean:
-	erase *.obj *.RES *.exp *.lib $(MKFB) fallbacks.c mkversion.exe version.c wversion.c
+	erase *.obj *.RES *.exp *.lib $(MKFB) fallbacks.txt fallbacks.c mkversion.exe version.c wversion.c
 
 clobber: clean
 	erase $(PROGS)

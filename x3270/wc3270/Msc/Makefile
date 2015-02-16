@@ -73,10 +73,13 @@ version.obj: $(VOBJS) version.txt mkversion.exe Msc\Makefile
 mkversion.exe: Msc\mkversion.c
 	$(CC) $(CFLAGS) /Fe$@ Msc\mkversion.c
 
-fallbacks.c: $(MKFB) X3270.xad Msc\Makefile
-	$(MKFB) -c X3270.xad $@
+fallbacks.c: $(MKFB) fallbacks.txt Msc\Makefile
+	$(MKFB) -c fallbacks.txt $@
 fallbacks.obj: fallbacks.c
 	$(CC) $(CFLAGS) /c fallbacks.c
+fallbacks.txt: fb-common fb-printSession fb-messages fb-composeMap fb-c3270
+	$(RM) $@
+	for %f in (fb-common fb-printSession fb-messages fb-composeMap fb-c3270) do @type %f >>$@
 
 $(MKFB): mkfb.c Msc\Makefile
 	$(CC) /Fe$(MKFB) $(XCPPFLAGS)  mkfb.c
@@ -118,7 +121,7 @@ x3270if.exe: x3270if.obj $(LIB3270)
 	$(CC) /Fe$@ $(CFLAGS) x3270if.obj $(LIB3270) ws2_32.lib
 
 clean:
-	erase *.obj *.RES *.exp *.lib $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c mkversion.exe version.c wversion.c
+	erase *.obj *.RES *.exp *.lib $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.txt fallbacks.c mkversion.exe version.c wversion.c
 
 clobber: clean
 	erase $(PROGS)

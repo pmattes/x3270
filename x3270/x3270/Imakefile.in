@@ -144,9 +144,9 @@ version.o: $(VOBJS) version.txt mkversion.sh
 	$(CC) $(CFLAGS) -c -o $@ xversion.c
 	$(RM) xversion.c
 
-fallbacks.c: mkfb X3270.xad
+fallbacks.c: mkfb fallbacks.txt
 	$(RM) $@
-	./mkfb X3270.xad $@
+	./mkfb fallbacks.txt $@
 
 mkfb: mkfb.c
 	$(CC) $(CFLAGS) -o mkfb mkfb.c
@@ -163,12 +163,14 @@ ProgramTargetName(x3270if): x3270if.c conf.h
 AD_DEFINE = -DUSE_APP_DEFAULTS
 InstallAppDefaults(X3270)
 all:: X3270.ad
-X3270.ad: X3270.xad qcpp conf.h qcpp-defs.sh
+X3270.ad: fallbacks.txt qcpp conf.h qcpp-defs.sh
 	$(RM) $@
-	./qcpp @UAD_FLAGS@ `./qcpp-defs.sh` X3270.xad $@
+	./qcpp @UAD_FLAGS@ `./qcpp-defs.sh` fallbacks.txt $@
 qcpp: qcpp.c
 	$(CC) $(CFLAGS) -o $@ qcpp.c
 #endif
+fallbacks.txt: fb-x3270 fb-printSession fb-common fb-composeMap fb-messages
+	cat fb-x3270 fb-printSession fb-common fb-composeMap fb-messages >$@
 
 /* Combined EXTRA_DEFINES definition. */
 EXTRA_DEFINES = $(HP_DEFINE) $(AD_DEFINE) @XANSI@ -DLIBX3270DIR=\"$(LIBX3270DIR)\"
@@ -209,6 +211,6 @@ install.man:: x3270if.man x3270-script.man ibm_hosts.man
  * Clean rules.                                                               *
  ******************************************************************************/
 clean:: 
-	$(RM) $(FONTS) qcpp mkfb fallbacks.c
+	$(RM) $(FONTS) qcpp mkfb fallbacks.txt fallbacks.c
 clobber:: clean
 	$(RM) x3270 x3270if
