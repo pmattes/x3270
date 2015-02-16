@@ -106,19 +106,19 @@ AC_SUBST(INSTALLMAN)
 AC_SUBST(CLEAN)
 AC_SUBST(CLOBBER)
 
-if test "x$x3270_enabled" = xyes; then
+if test "x$enable_x3270" = xyes; then
     AC_CONFIG_SUBDIRS(x3270)
 fi
-if test "x$c3270_enabled" = xyes; then
+if test "x$enable_c3270" = xyes; then
     AC_CONFIG_SUBDIRS(c3270)
 fi
-if test "x$s3270_enabled" = xyes; then
+if test "x$enable_s3270" = xyes; then
     AC_CONFIG_SUBDIRS(s3270)
 fi
-if test "x$tcl3270_enabled" = xyes; then
+if test "x$enable_tcl3270" = xyes; then
     AC_CONFIG_SUBDIRS(tcl3270)
 fi
-if test "x$pr3287_enabled" = xyes; then
+if test "x$enable_pr3287" = xyes; then
     AC_CONFIG_SUBDIRS(pr3287)
 fi
 
