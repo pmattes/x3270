@@ -220,6 +220,8 @@ XtResource resources[] = {
 	  offset(max_recent), XtRString, "5" },
 	{ ResNvtMode, ClsNvtMode, XtRBoolean, sizeof(Boolean),
 	  offset(nvt_mode), XtRString, ResFalse },
+	{ ResSuppressActions, ClsSuppressActions, XtRString, sizeof(String),
+	  offset(suppress_actions), XtRString, 0 },
 
 	{ ResMonoCase, ClsMonoCase, XtRBoolean, sizeof(Boolean),
 	  toggle_offset(MONOCASE), XtRString, ResFalse },

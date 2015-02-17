@@ -50,11 +50,12 @@ extern unsigned actions_list_count;
 
 extern const char       *ia_name[];
 
-Boolean action_suppressed(const char *name, const char *suppress);
 void action_debug(const char *aname, ia_t ia, unsigned argc,
 	const char **argv);
-void run_action(const char *name, enum iaction cause, const char *parm1,
+Boolean run_action(const char *name, enum iaction cause, const char *parm1,
 	const char *parm2);
+Boolean run_action_entry(action_elt_t *e, enum iaction cause, unsigned count,
+	const char **parms);
 int check_argc(const char *aname, unsigned nargs, unsigned nargs_min,
 	unsigned nargs_max);
 void register_actions(action_table_t *actions, unsigned count);

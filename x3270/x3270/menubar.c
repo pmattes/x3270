@@ -769,27 +769,15 @@ do_printer(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_u
 static Boolean
 item_suppressed(Widget parent, const char *name)
 {
-	char *s = NULL;
-	char *t = NULL;
-	Widget p = parent;
 	char *suppress;
 
-	while (p != NULL) {
-		char *n = XtName(p);
-
-		if (n == NULL)
-			break;
-		if (s != NULL) {
-			t = xs_buffer("%s.%s", n, s);
-			Free(s);
-			s = t;
-		} else {
-			s = NewString(n);
-		}
-		p = XtParent(p);
-	}
-	suppress = get_fresource("%s.%s.%s", s, name, ResSuppress);
-	Free(s);
+	suppress = get_fresource("%s.%s.%s", XtName(parent), name,
+		ResSuppress);
+#if defined(DEBUG_SUPPRESS) /*[*/
+	printf("suppress: %s.%s.%s -> %s\n",
+		XtName(parent), name, ResSuppress,
+		suppress? suppress: "(null)");
+#endif /*]*/
 	return suppress != NULL &&
 	       !strncasecmp(suppress, "True", strlen(suppress));
 }

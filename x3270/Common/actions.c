@@ -54,7 +54,7 @@ const char *ia_name[] = {
 };
 
 /* Look up an action name in the suppressed actions resource. */
-Boolean
+static Boolean
 action_suppressed(const char *name, const char *suppress)
 {
     const char *s = suppress;
@@ -126,9 +126,9 @@ action_debug(const char *aname, ia_t ia, unsigned argc, const char **argv)
 }
 
 /*
- * Run an emulator action.
+ * Run an emulator action by name.
  */
-void
+Boolean
 run_action(const char *name, enum iaction cause, const char *parm1,
 	const char *parm2)
 {
@@ -144,7 +144,7 @@ run_action(const char *name, enum iaction cause, const char *parm1,
 	}
     } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
     if (action == NULL) {
-	return; /* XXX: And do something? */
+	return False; /* XXX: And do something? */
     }
 
     if (parm1 != NULL) {
@@ -156,8 +156,25 @@ run_action(const char *name, enum iaction cause, const char *parm1,
 	}
     }
 
+    return run_action_entry(e, cause, count, parms);
+}
+
+/*
+ * Run an action by entry.
+ * This is where action suppression happens.
+ */
+Boolean
+run_action_entry(action_elt_t *e, enum iaction cause, unsigned count,
+	const char **parms)
+{
+    if (appres.suppress_actions &&
+	    action_suppressed(e->t.name, appres.suppress_actions)) {
+	vtrace("%s() [suppressed]\n", e->t.name);
+	return False;
+    }
+
     ia_cause = cause;
-    (void)(*action)(cause, count, parms);
+    return (*e->t.action)(cause, count, parms);
 }
 
 /*

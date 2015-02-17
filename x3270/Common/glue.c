@@ -1035,6 +1035,7 @@ static res_t base_resources[] = {
 #endif /*]*/
     { ResSbcsCgcsgid, aoffset(sbcs_cgcsgid),	XRM_STRING },
     { ResScriptPort,aoffset(script_port),	XRM_STRING },
+    { ResSuppressActions,aoffset(suppress_actions),XRM_STRING },
     { ResTermName,	aoffset(termname),	XRM_STRING },
 #if defined(HAVE_LIBSSL) /*[*/
     { ResTls,	aoffset(ssl.tls),		XRM_BOOLEAN },

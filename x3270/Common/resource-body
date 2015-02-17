@@ -447,16 +447,6 @@ if wc
 endif
 .
 
-name charsetList
-applies x
-type s
-description
-    Defines the <b>Options -&gt; Character Set</b> menu.
-    Can contain '<b>&gt;</b>' characters to define a menu hierarchy.
-    <p class="indented">
-    See the file <b>fallbacks.txt</b> for an example.
-.
-
 name color8
 applies a
 groups p
@@ -1029,19 +1019,6 @@ description
     it implements a display character set compatible with the host code page
     (%-charset%).  However, the special
     OIA (status line) symbols are only available with the 3270 fonts.
-.
-
-name emulatorFontList.<i>foo</i>
-type s
-applies x
-description
-A list of fonts for display character set <i>foo</i>.
-This list will be presented by the <b>Options -&gt; Font</b> menu when the
-host code page (%-charset%) requires display character set <i>foo</i>.
-    <p class="indented">
-The list can include '>' characters to present a hierarchy of options.
-    <p class="indented">
-See the file <b>fallbacks.txt</b> for an example.
 .
 
 name eof
@@ -2431,7 +2408,9 @@ applies x
 type s
 desc
     Lists the options on the Color Scheme menu.  Can contain '>' characters to
-    indicate a menu hierarchy.  See the file fallbacks.txt for an example.
+    indicate a menu hierarchy. The format of the list is one entry per line,
+    each line containing the menu label, a colon and the name of the color
+    scheme.
 .
 
 name screenTrace
@@ -2580,8 +2559,56 @@ desc
     When true, suppresses a menu item.  For example, setting
     <b>x3270*executeActionOption.suppress</b> to true will remove
     the <b>Execute an Action</b> option on the <b>File</b> menu.
-    The names of the menu items generally end in 'Option' and have label
-    resources in fallbacks.txt.
+    The names of the menu items are:<br>
+&nbsp;&nbsp;&nbsp;aboutMenu.aboutConfig.suppress<br>
+&nbsp;&nbsp;&nbsp;aboutMenu.aboutCopyright.suppress<br>
+&nbsp;&nbsp;&nbsp;aboutMenu.aboutStatus.suppress<br>
+&nbsp;&nbsp;&nbsp;fileMenu.abortScriptOption.suppress<br>
+&nbsp;&nbsp;&nbsp;fileMenu.aboutOption.suppress<br>
+&nbsp;&nbsp;&nbsp;fileMenu.disconnectOption.suppress<br>
+&nbsp;&nbsp;&nbsp;fileMenu.executeActionOption.suppress<br>
+&nbsp;&nbsp;&nbsp;fileMenu.exitOption.suppress<br>
+&nbsp;&nbsp;&nbsp;fileMenu.ftOption.suppress<br>
+&nbsp;&nbsp;&nbsp;fileMenu.printerOption.suppress<br>
+&nbsp;&nbsp;&nbsp;fileMenu.printWindowOption.suppress<br>
+&nbsp;&nbsp;&nbsp;fileMenu.saveOption.suppress<br>
+&nbsp;&nbsp;&nbsp;fileMenu.screenTraceOption.suppress<br>
+&nbsp;&nbsp;&nbsp;fileMenu.traceOption.suppress<br>
+&nbsp;&nbsp;&nbsp;modelsMenu.model2Option.suppress<br>
+&nbsp;&nbsp;&nbsp;modelsMenu.model3Option.suppress<br>
+&nbsp;&nbsp;&nbsp;modelsMenu.model4Option.suppress<br>
+&nbsp;&nbsp;&nbsp;modelsMenu.model5Option.suppress<br>
+&nbsp;&nbsp;&nbsp;modelsMenu.oversizeOption.suppress<br>
+&nbsp;&nbsp;&nbsp;optionsMenu.charsetOption.suppress<br>
+&nbsp;&nbsp;&nbsp;optionsMenu.colorsOption.suppress<br>
+&nbsp;&nbsp;&nbsp;optionsMenu.fontsOption.suppress<br>
+&nbsp;&nbsp;&nbsp;optionsMenu.idleCommandOption.suppress<br>
+&nbsp;&nbsp;&nbsp;optionsMenu.keymapDisplayOption.suppress<br>
+&nbsp;&nbsp;&nbsp;optionsMenu.keymapOption.suppress<br>
+&nbsp;&nbsp;&nbsp;optionsMenu.modelsOption.suppress<br>
+&nbsp;&nbsp;&nbsp;optionsMenu.togglesOption.suppress<br>
+&nbsp;&nbsp;&nbsp;printerMenu.assocButton.suppress<br>
+&nbsp;&nbsp;&nbsp;printerMenu.luButton.suppress<br>
+&nbsp;&nbsp;&nbsp;printerMenu.printerOffButton.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.blankFillOption.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.blockCursorOption.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.characterModeOption.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.crosshairOption.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.cursorBlinkOption.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.cursorPosOption.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.extendedDsOption.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.lineModeOption.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.lineWrapOption.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.m3278Option.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.m3279Option.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.marginedPasteOption.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.monocaseOption.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.overlayPasteOption.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.rectangleSelectOption.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.scrollBarOption.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.showTimingOption.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.underlineCursorOption.suppress<br>
+&nbsp;&nbsp;&nbsp;togglesMenu.visibleControlOption.suppress
 .
 
 name suppressActions

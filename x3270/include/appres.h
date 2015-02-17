@@ -91,6 +91,7 @@ typedef struct {
     Boolean	 utf8;
     int	 	 max_recent;
     Boolean	 nvt_mode;
+    char	*suppress_actions;
 #if defined(_WIN32) /*[*/
     int		 local_cp;
     int		 ft_cp;

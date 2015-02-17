@@ -590,7 +590,7 @@ x3270_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
     /* Set up more ugly global variables and run the action. */
     ia_cause = IA_SCRIPT;
     cmd_ret = TCL_OK;
-    (*e->t.action)(IA_SCRIPT, count, argv);
+    run_action_entry(e, IA_SCRIPT, count, argv);
 
     /* Set implicit wait state. */
     if (ft_state != FT_NONE) {

@@ -379,6 +379,7 @@
 #define ClsSelfSignedOk		"SelfSignedOk"
 #define ClsShowTiming		"ShowTiming"
 #define ClsSocket		"Socket"
+#define ClsSuppressActions	"SuppressActions"
 #define ClsSuppressHost		"SuppressHost"
 #define ClsSuppressFontMenu	"SuppressFontMenu"
 #define ClsTermName		"TermName"

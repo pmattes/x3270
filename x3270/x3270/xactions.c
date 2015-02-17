@@ -101,7 +101,7 @@ static char *aliased_actions[] = {
  *
  * Some actions exist only as Xt actions, such as Default(). They can only be
  * called from keymaps (Xt translation tables). These actions are statically
- * defined in the array all_xonly_actions[].
+ * defined in the array xactions[].
  *
  * Other actions are wrappers around common emulator actions such as Enter().
  * These take a more convoluted path, for several reasons. First, the set of
@@ -138,7 +138,7 @@ static char *aliased_actions[] = {
  */
 
 /* Pure Xt actions. */
-static XtActionsRec all_xonly_actions[] = {
+static XtActionsRec xactions[] = {
     { "Cut",		Cut_xaction },
     { "Default",	Default_xaction },
     { "HandleMenu",	HandleMenu_xaction },
@@ -176,8 +176,7 @@ static XtActionsRec all_xonly_actions[] = {
     { "Unselect",	Unselect_xaction }
 };
 
-static int xactioncount = XtNumber(all_xonly_actions);
-static XtActionsRec *xactions = NULL;
+static int xactioncount = XtNumber(xactions);
 
 /* Table of Xt actions that wrap emulator actions. */
 static XtActionsRec *wrapper_actions;
@@ -341,41 +340,12 @@ XtActionProc xt_mapped_actions[N_WRAPPERS] = {
     &mapped_action96, &mapped_action97, &mapped_action98, &mapped_action99
 };
 
-/* No-op action for suppressed actions. */
-static void
-suppressed_xaction(Widget w _is_unused, XEvent *event, String *params,
-	Cardinal *num_params)
-{
-    xaction_debug(suppressed_xaction, event, params, num_params);
-}
-
 /*
  * Primary Xt action table initialization.
- * Uses the suppressActions resource to prune the actions table.
  */
 void
 xaction_init(void)
 {
-    char *suppress;
-    int i;
-
-    /* See if there are any filters at all. */
-    suppress = get_resource(ResSuppressActions);
-    if (suppress == NULL) {
-	xactions = all_xonly_actions;
-	goto done;
-    }
-
-    /* Yes, we'll need to copy the table and prune it. */
-    xactions = (XtActionsRec *)Malloc(sizeof(all_xonly_actions));
-    memcpy(xactions, all_xonly_actions, sizeof(all_xonly_actions));
-    for (i = 0; i < xactioncount; i++) {
-	if (action_suppressed(xactions[i].string, suppress)) {
-	    xactions[i].proc = suppressed_xaction;
-	}
-    }
-
-done:
     /* Add the actions to Xt. */
     XtAppAddActions(appcontext, xactions, xactioncount);
 }
@@ -410,14 +380,6 @@ const char *
 action_name(XtActionProc action)
 {
     int i;
-
-    /*
-     * XXX: It would be better if the real name could be displayed, with a
-     * message indicating it is suppressed.
-     */
-    if (action == suppressed_xaction) {
-	return "(suppressed)";
-    }
 
     for (i = 0; i < xactioncount; i++) {
 	if (xactions[i].proc == action) {

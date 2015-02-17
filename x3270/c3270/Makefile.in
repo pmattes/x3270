@@ -70,7 +70,8 @@ FALLBACKS = fb-common fb-printSession fb-messages fb-composeMap fb-c3270
 fallbacks.c: mkfb $(FALLBACKS)
 	$(RM) $@
 	./mkfb -c -o $@ $(FALLBACKS)
-mkfb: conf.h
+mkfb: mkfb.c conf.h
+	$(CC) $(CFLAGS) -o mkfb mkfb.c
 
 keypad.o: keypad.c compiled_keypad.h
 

@@ -77,7 +77,8 @@ FALLBACKS = fb-x3270 fb-printSession fb-common fb-composeMap fb-messages
 fallbacks.c: mkfb $(FALLBACKS)
 	$(RM) $@
 	./mkfb -o $@ $(FALLBACKS)
-mkfb: conf.h
+mkfb: mkfb.c conf.h
+	$(CC) $(CFLAGS) -o mkfb mkfb.c
 
 x3270: $(OBJS1) ../lib/lib3270.a ../lib/lib3270i.a ../lib/lib3270stubs.a
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) -L../lib -l3270 -l3270i -l3270stubs $(LIBS)
