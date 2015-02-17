@@ -69,23 +69,21 @@ include-bootstrap:
 configure: configure.in
 	autoconf
 
-src.tgz: c3270-src.tgz s3270-src.tgz tcl3270-src.tgz pr3287-src.tgz wc3270-src.tgz ws3270-src.tgz wpr3287-src.tgz include-src.tgz
+src.tgz: c3270-src.tgz s3270-src.tgz tcl3270-src.tgz pr3287-src.tgz wc3270-src.tgz ws3270-src.tgz wpr3287-src.tgz
 	./mktar.sh
 c3270-src.tgz:
-	cd c3270 && $(MAKE) -f Makefile.aux $@
+	cd c3270 && $(MAKE) -f Makefile.aux src.tgz
 s3270-src.tgz:
-	cd s3270 && $(MAKE) -f Makefile.aux $@
+	cd s3270 && $(MAKE) -f Makefile.aux src.tgz
 tcl3270-src.tgz:
-	cd tcl3270 && $(MAKE) -f Makefile.aux $@
+	cd tcl3270 && $(MAKE) -f Makefile.aux src.tgz
 x3270-src.tgz:
-	cd x3270 && $(MAKE) -f Makefile.aux $@
+	cd x3270 && $(MAKE) -f Makefile.aux src.tgz
 pr3287-src.tgz:
-	cd pr3287 && $(MAKE) -f Makefile.aux $@
+	cd pr3287 && $(MAKE) -f Makefile.aux src.tgz
 wc3270-src.tgz:
-	cd wc3270 && $(MAKE) -f Makefile.aux $@
+	cd wc3270 && $(MAKE) -f Makefile.aux src.tgz
 ws3270-src.tgz:
-	cd ws3270 && $(MAKE) -f Makefile.aux $@
+	cd ws3270 && $(MAKE) -f Makefile.aux src.tgz
 wpr3287-src.tgz:
-	cd wpr3287 && $(MAKE) -f Makefile.aux $@
-include-src.tgz:
-	cd include && $(MAKE) -f Makefile.aux $@
+	cd wpr3287 && $(MAKE) -f Makefile.aux src.tgz

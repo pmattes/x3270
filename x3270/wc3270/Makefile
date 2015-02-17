@@ -66,13 +66,12 @@ version.o: $(VOBJS) version.txt mkversion.sh Makefile
 	$(CC) $(CFLAGS) -c -o $@ xversion.c
 	$(RM) xversion.c
 
-fallbacks.c: $(MKFB) fallbacks.txt Makefile
+FALLBACKS = fb-common fb-printSession fb-messages fb-composeMap fb-c3270
+fallbacks.c: $(MKFB) $(FALLBACKS)
 	$(RM) $@
-	./$(MKFB) -c fallbacks.txt $@
-fallbacks.txt: fb-common fb-printSession fb-messages fb-composeMap fb-c3270
-	cat fb-common fb-printSession fb-messages fb-composeMap fb-c3270 >$@
+	./$(MKFB) -c -o $@ $(FALLBACKS)
 
-$(MKFB): mkfb.c Makefile
+$(MKFB): mkfb.c conf.h Makefile
 	$(NATIVECC) -g -o $(MKFB) -DFOR_WIN32 mkfb.c
 
 keypad.o: keypad.c compiled_keypad.h

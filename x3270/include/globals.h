@@ -128,11 +128,6 @@ typedef unsigned short ebc_t;
 # undef X3270_IPV6
 #endif /*]*/
 
-/* Derived #defines. */
-#if defined(X3270_DISPLAY) || defined(C3270) /*[*/
-# define X3270_INTERACTIVE	1
-#endif /*]*/
-
 /* Local process (-e) header files. */
 #if defined(X3270_LOCAL_PROCESS) && defined(HAVE_FORKPTY) /*[*/
 # define LOCAL_PROCESS	1

@@ -67,11 +67,11 @@ version.o: $(VOBJS) version.txt mkversion.sh
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
-fallbacks.c: mkfb fallbacks.txt
+FALLBACKS = fb-common
+fallbacks.c: mkfb $(FALLBACKS)
 	$(RM) $@
-	./mkfb -c fallbacks.txt $@
-fallbacks.txt: fb-common
-	cat fb-common >$@
+	./mkfb -c -o $@ $(FALLBACKS) $@
+mkfb: conf.h
 
 tcl3270: $(OBJS1) ../lib/lib3270.a ../lib/lib3270stubs.a
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) -L../lib -l3270 -l3270stubs $(LIBS)

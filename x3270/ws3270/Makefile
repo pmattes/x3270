@@ -58,13 +58,12 @@ version.o: $(VOBJS) version.txt mkversion.sh Makefile
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
-fallbacks.c: $(MKFB) fallbacks.txt Makefile
+FALLBACKS = fb-common
+fallbacks.c: $(MKFB) $(FALLBACKS)
 	$(RM) $@
-	./$(MKFB) -c fallbacks.txt $@
-fallbacks.txt: fb-common
-	cat fb-common >$@
+	./$(MKFB) -c -o $@ $(FALLBACKS) $@
 
-$(MKFB): mkfb.c Makefile
+$(MKFB): mkfb.c conf.h Makefile
 	$(NATIVECC) -g -o $(MKFB) -DFOR_WIN32 mkfb.c
 
 ws3270res.o: ws3270.rc ws3270.ico Makefile

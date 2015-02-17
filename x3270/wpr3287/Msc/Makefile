@@ -29,7 +29,6 @@
 # Set command paths.
 CC = cl /nologo
 RC = rc
-RM = erase
 
 # This makefile assumes that you have OpenSSL headers in c:\OpenSSL-Win32.
 # If they are somewhere else, change SSLDIR below.

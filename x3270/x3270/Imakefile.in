@@ -144,11 +144,12 @@ version.o: $(VOBJS) version.txt mkversion.sh
 	$(CC) $(CFLAGS) -c -o $@ xversion.c
 	$(RM) xversion.c
 
-fallbacks.c: mkfb fallbacks.txt
+FALLBACKS = fb-x3270 fb-printSession fb-common fb-composeMap fb-messages
+fallbacks.c: mkfb $(FALLBACKS)
 	$(RM) $@
-	./mkfb fallbacks.txt $@
+	./mkfb -o $@ $(FALLBACKS)
 
-mkfb: mkfb.c
+mkfb: mkfb.c conf.h
 	$(CC) $(CFLAGS) -o mkfb mkfb.c
 
 /* Build rule for x3270if.  This is specified explicitly instead of using
@@ -168,9 +169,9 @@ X3270.ad: fallbacks.txt qcpp conf.h qcpp-defs.sh
 	./qcpp @UAD_FLAGS@ `./qcpp-defs.sh` fallbacks.txt $@
 qcpp: qcpp.c
 	$(CC) $(CFLAGS) -o $@ qcpp.c
+fallbacks.txt: $(FALLBACKS_
+	cat $(FALLBACKS) >$@
 #endif
-fallbacks.txt: fb-x3270 fb-printSession fb-common fb-composeMap fb-messages
-	cat fb-x3270 fb-printSession fb-common fb-composeMap fb-messages >$@
 
 /* Combined EXTRA_DEFINES definition. */
 EXTRA_DEFINES = $(HP_DEFINE) $(AD_DEFINE) @XANSI@ -DLIBX3270DIR=\"$(LIBX3270DIR)\"
