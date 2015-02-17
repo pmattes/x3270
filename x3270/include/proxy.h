@@ -30,6 +30,6 @@
  *		Declarations for proxy.c.
  */
 
-int proxy_setup(char **phost, char **pport);
+int proxy_setup(const char *spec, char **phost, char **pport);
 Boolean proxy_negotiate(int type, socket_t fd, char *host, unsigned short port);
 char *proxy_type_name(int type);

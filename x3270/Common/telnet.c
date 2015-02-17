@@ -631,7 +631,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	    passthru_port = htons(3514);
 	}
     } else if (appres.proxy != NULL && !proxy_type) {
-	proxy_type = proxy_setup(&proxy_host, &proxy_portname);
+	proxy_type = proxy_setup(appres.proxy, &proxy_host, &proxy_portname);
 	if (proxy_type > 0) {
 	    unsigned long lport;
 	    char *ptr;

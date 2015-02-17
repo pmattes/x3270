@@ -33,19 +33,14 @@
 #include "globals.h"
 #include <stdio.h>
 #if !defined(_MSC_VER) /*[*/
-#include <strings.h>
+# include <strings.h>
 #endif /*]*/
 #include <errno.h>
 #include "3270ds.h"
-#if !defined(PR3287) /*[*/
-#include "appres.h"
-#endif /*]*/
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 #include "utf8.h"
-#if !defined(PR3287) /*[*/
 #include "util.h"
-#endif /*]*/
 
 #if defined(USE_ICONV) /*[*/
 iconv_t i_u2mb = (iconv_t)-1;
@@ -59,18 +54,14 @@ typedef const char *ici_t;	/* new iconv */
 
 #define DEFAULT_CSNAME	"us"
 
-#if defined(_WIN32) /*[*/
-# if defined(PR3287) /*[*/
-#  define LOCAL_CODEPAGE	CP_ACP
-# else /*][*/
-#  define LOCAL_CODEPAGE	appres.local_cp
-# endif /*]*/ 
-#endif /*]*/
-
 #if defined(X3270_DBCS) /*[*/
 Boolean dbcs_allowed = True;
 #else /*][*/
 Boolean dbcs_allowed = False;
+#endif /*]*/
+
+#if defined(_WIN32) /*[*/
+int u_local_cp;
 #endif /*]*/
 
 /*
@@ -448,13 +439,18 @@ unicode_to_ebcdic_ge(ucs4_t u, Boolean *ge)
  * Returns True for success, False for failure.
  */
 Boolean
-set_uni(const char *csname, const char **host_codepage,
-	const char **cgcsgid, const char **realnamep, Boolean *is_dbcs)
+set_uni(const char *csname, int local_cp _is_unused,
+	const char **host_codepage, const char **cgcsgid,
+	const char **realnamep, Boolean *is_dbcs)
 {
     int i;
     const char *realname;
     Boolean rc = False;
     Boolean cannot_fail = False;
+
+#if defined(_WIN32) /*[*/
+    u_local_cp = local_cp;
+#endif /*]*/
 
     *is_dbcs = False;
 
@@ -527,13 +523,8 @@ set_uni(const char *csname, const char **host_codepage,
 
 	if (!rc && cannot_fail) {
 	    /* Try again with plain-old ASCII. */
-#if defined(PR3287) /*[*/
-	    errmsg("Cannot find iconv translation from locale codeset to "
-		    "UTF-8, using ASCII");
-#else /*][*/
 	    xs_warning("Cannot find iconv translation from locale codeset "
 		    "'%s' to UTF-8, using ASCII", locale_codeset);
-#endif /*]*/
 	    i_u2mb = iconv_open("ASCII", "UTF-8");
 	    if (i_u2mb == (iconv_t)-1) {
 		Error("No iconv UTF-8 to ASCII translation");
@@ -728,9 +719,9 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 	 * wchar_t's are Unicode.
 	 */
 	wuc = uc;
-	nc = WideCharToMultiByte(LOCAL_CODEPAGE, 0, &wuc, 1, mb, mb_len,
-		(LOCAL_CODEPAGE == CP_UTF8)? NULL: "?",
-		(LOCAL_CODEPAGE == CP_UTF8)? NULL: &udc);
+	nc = WideCharToMultiByte(u_local_cp, 0, &wuc, 1, mb, mb_len,
+		(u_local_cp == CP_UTF8)? NULL: "?",
+		(u_local_cp == CP_UTF8)? NULL: &udc);
 	if (nc != 0) {
 		mb[nc++] = '\0';
 		return nc;
@@ -895,7 +886,7 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 
     /* Use MultiByteToWideChar() to get from the ANSI codepage to UTF-16. */
     for (i = 1; i <= mb_len; i++) {
-	nw = MultiByteToWideChar(LOCAL_CODEPAGE, MB_ERR_INVALID_CHARS,
+	nw = MultiByteToWideChar(u_local_cp, MB_ERR_INVALID_CHARS,
 		mb, i, wc, 3);
 	if (nw != 0)
 	    break;
@@ -1139,9 +1130,9 @@ unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len)
     BOOL udc;
     int nc;
 
-    nc = WideCharToMultiByte(LOCAL_CODEPAGE, 0, &wuc, 1, mb, mb_len,
-	    (LOCAL_CODEPAGE == CP_UTF8)? NULL: "?",
-	    (LOCAL_CODEPAGE == CP_UTF8)? NULL: &udc);
+    nc = WideCharToMultiByte(u_local_cp, 0, &wuc, 1, mb, mb_len,
+	    (u_local_cp == CP_UTF8)? NULL: "?",
+	    (u_local_cp == CP_UTF8)? NULL: &udc);
     if (nc > 0)
 	mb[nc++] = '\0';
     return nc;

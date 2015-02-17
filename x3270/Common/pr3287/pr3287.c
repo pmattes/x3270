@@ -140,6 +140,7 @@
 #include "resolver.h"
 #include "telnet_core.h"
 #include "utf8.h"
+#include "util.h"
 #include "xtablec.h"
 
 #if defined(_WIN32) /*[*/
@@ -301,6 +302,19 @@ errmsg(const char *fmt, ...)
 	va_start(args, fmt);
 	(void) verrmsg(fmt, args);
 	va_end(args);
+}
+
+/* xs_warning() is an alias for errmsg() */
+void
+xs_warning(const char *fmt, ...)
+{
+    va_list args;
+    char *b;
+
+    va_start(args, fmt);
+    b = xs_vbuffer(fmt, args);
+    va_end(args);
+    errmsg("%s", b);
 }
 
 /* Memory allocation. */
@@ -976,7 +990,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 
 	/* Set up the proxy. */
 	if (options.proxy_spec != NULL) {
-	    	proxy_type = proxy_setup(&proxy_host, &proxy_portname);
+	    	proxy_type = proxy_setup(options.proxy_spec, &proxy_host,
+			&proxy_portname);
 		if (proxy_type < 0)
 			pr3287_exit(1);
 	}

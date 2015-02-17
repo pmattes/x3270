@@ -31,10 +31,6 @@
  */
 
 #include "globals.h"
-#if !defined(PR3287) /*[*/
-# include "appres.h"
-# include "resources.h"
-#endif /*]*/
 
 #if !defined(_WIN32) /*[*/
 #include <sys/ioctl.h>
@@ -55,10 +51,6 @@
 #include "trace.h"
 #include "util.h"
 #include "w3misc.h"
-
-#if defined(PR3287) /*[*/
-# include "pr3287.h"
-#endif /*]*/
 
 /*
  * Supported proxy types.
@@ -114,17 +106,11 @@ proxy_type_name(int type)
  * Returns -1 for failure, 0 for no proxy, >0 (the proxy type) for success.
  */
 int
-proxy_setup(char **phost, char **pport)
+proxy_setup(const char *proxy, char **phost, char **pport)
 {
-    const char *proxy;
     char *colon;
     int sl;
 
-#if defined(PR3287) /*[*/
-    proxy = options.proxy_spec;
-#else /*][*/
-    proxy = appres.proxy;
-#endif /*]*/
     if (proxy == NULL) {
 	return PT_NONE;
     }

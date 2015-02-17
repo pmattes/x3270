@@ -36,12 +36,12 @@
 #include <ctype.h>
 #include <stdlib.h>
 #if !defined(_WIN32) /*[*/
-#include <locale.h>
-#include <langinfo.h>
+# include <locale.h>
+# include <langinfo.h>
 #endif /*]*/
 
 #if defined(__CYGWIN__) /*[*/
-#include <w32api/windows.h>
+# include <w32api/windows.h>
 #undef _WIN32
 #endif /*]*/
 
@@ -50,6 +50,12 @@
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 #include "utf8.h"
+
+#if defined(_WIN32) /*[*/
+# define LOCAL_CODEPAGE	CP_ACP
+#else /*][*/
+# define LOCAL_CODEPAGE	0
+#endif /*]*/
 
 unsigned long cgcsgid = 0x02b90025;
 unsigned long cgcsgid_dbcs = 0x02b90025;
@@ -73,7 +79,7 @@ charset_init(const char *csname)
 #if !defined(_WIN32) /*[*/
     setlocale(LC_ALL, "");
     codeset_name = nl_langinfo(CODESET);
-#if defined(__CYGWIN__) /*[*/
+# if defined(__CYGWIN__) /*[*/
     /*
      * Cygwin's locale support is quite limited.  If the locale
      * indicates "US-ASCII", which appears to be the only supported
@@ -91,11 +97,12 @@ charset_init(const char *csname)
 	codeset_name = Malloc(64);
 	sprintf(codeset_name, "CP%d", GetACP());
     }
-#endif /*]*/
+# endif /*]*/
     set_codeset(codeset_name, False);
 #endif /*]*/
 
-    if (!set_uni(csname, &host_codepage, &cgcsgid_str, NULL, NULL)) {
+    if (!set_uni(csname, LOCAL_CODEPAGE, &host_codepage, &cgcsgid_str, NULL,
+		NULL)) {
 	return CS_NOTFOUND;
     }
     cgcsgid = strtoul(cgcsgid_str, NULL, 0);

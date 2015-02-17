@@ -42,7 +42,7 @@ ucs4_t ebcdic_to_unicode(ebc_t e, unsigned char cs, unsigned flags);
 ucs4_t ebcdic_base_to_unicode(ebc_t e, unsigned flags);
 ebc_t unicode_to_ebcdic(ucs4_t u);
 ebc_t unicode_to_ebcdic_ge(ucs4_t u, Boolean *ge);
-Boolean set_uni(const char *csname, const char **host_codepage,
+Boolean set_uni(const char *csname, int local_cp, const char **host_codepage,
 	const char **cgcsgid, const char **realnamep, Boolean *is_dbcs);
 int linedraw_to_unicode(ebc_t e);
 int apl_to_unicode(ebc_t e, unsigned flags);

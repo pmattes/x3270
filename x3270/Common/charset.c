@@ -59,6 +59,12 @@
 #undef _WIN32
 #endif /*]*/
 
+#if defined(_WIN32) /*[*/
+# define LOCAL_CODEPAGE	appres.local_cp
+#else /*][*/
+# define LOCAL_CODEPAGE	0
+#endif
+
 /* Globals. */
 Boolean charset_changed = False;
 #define DEFAULT_CGEN	0x02b90000
@@ -122,12 +128,13 @@ charset_init(const char *csname)
 	set_host_codepage(NULL);
 	set_charset_name(NULL);
 	(void) screen_new_display_charsets(NULL, "us");
-	(void) set_uni(NULL, &codepage, &cgcsgid, NULL, NULL);
+	(void) set_uni(NULL, LOCAL_CODEPAGE, &codepage, &cgcsgid, NULL, NULL);
 	(void) set_uni_dbcs("", NULL);
 	return CS_OKAY;
     }
 
-    if (!set_uni(csname, &codepage, &cgcsgid, &realname, &is_dbcs)) {
+    if (!set_uni(csname, LOCAL_CODEPAGE, &codepage, &cgcsgid, &realname,
+		&is_dbcs)) {
 	return CS_NOTFOUND;
     }
     if (appres.sbcs_cgcsgid != NULL) {
