@@ -115,6 +115,17 @@ char *NewString(const char *);
 void Error(const char *);
 void Warning(const char *);
 
+/* I/O typedefs. */
+#if !defined(_WIN32) /*[*/
+typedef int iosrc_t;
+# define INVALID_IOSRC	(-1)
+#else /*][*/
+typedef HANDLE iosrc_t;
+# define INVALID_IOSRC	INVALID_HANDLE_VALUE
+#endif /*]*/
+typedef unsigned long ioid_t;
+#define NULL_IOID	0L
+
 /* Typedefs cribbed from X11. */
 #if !defined(X3270_DISPLAY) /*[*/
 typedef char Boolean;

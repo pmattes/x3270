@@ -371,6 +371,7 @@ typedef HANDLE iosrc_t;
 # define INVALID_IOSRC	INVALID_HANDLE_VALUE
 #endif /*]*/
 typedef unsigned long ioid_t;
+#define NULL_IOID	0L
 
 /* Screen print types. */
 typedef enum { P_TEXT, P_HTML, P_RTF, P_GDI } ptype_t;

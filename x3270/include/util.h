@@ -52,17 +52,14 @@ char *xs_buffer(const char *fmt, ...) printflike(1, 2);
 void xs_error(const char *fmt, ...) printflike(1, 2);
 void xs_warning(const char *fmt, ...) printflike(1, 2);
 
-#if !defined(PR3287) /*[*/
 typedef void (*iofn_t)(iosrc_t, ioid_t id);
 typedef void (*tofn_t)(ioid_t id);
-# define NULL_IOID	0L
 ioid_t AddInput(iosrc_t fd, iofn_t fn);
 ioid_t AddExcept(iosrc_t fd, iofn_t fn);
 ioid_t AddOutput(iosrc_t fd, iofn_t fn);
 void RemoveInput(ioid_t);
 ioid_t AddTimeOut(unsigned long msec, tofn_t);
 void RemoveTimeOut(ioid_t id);
-#endif /*]*/
 
 ks_t string_to_key(char *s);
 char *key_to_string(ks_t k);
