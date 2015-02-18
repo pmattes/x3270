@@ -28,13 +28,13 @@
     <ClCompile Include="..\..\wpr3287\unicode.c" />
     <ClCompile Include="..\..\wpr3287\unicode_dbcs.c" />
     <ClCompile Include="..\..\wpr3287\utf8.c" />
-    <ClCompile Include="..\..\wpr3287\util.c" />
     <ClCompile Include="..\..\wpr3287\varbuf.c" />
     <ClCompile Include="..\..\wpr3287\version.c" />
     <ClCompile Include="..\..\wpr3287\w3misc.c" />
     <ClCompile Include="..\..\wpr3287\windirs.c" />
     <ClCompile Include="..\..\wpr3287\winvers.c" />
     <ClCompile Include="..\..\wpr3287\ws.c" />
+    <ClCompile Include="..\..\wpr3287\xs_buffer.c" />
     <ClCompile Include="..\..\wpr3287\xtable.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

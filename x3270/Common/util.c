@@ -38,10 +38,7 @@
 #endif /*]*/
 #include <fcntl.h>
 #include <errno.h>
-#if !defined(PR3287) /*[*/
-# include "resources.h"
-#endif /*]*/
-#include "asprintf.h"
+#include "resources.h"
 #include "charset.h"
 #include "lazya.h"
 #include "product.h"
@@ -50,53 +47,6 @@
 #include "util.h"
 
 #define my_isspace(c)	isspace((unsigned char)c)
-
-/**
- * Local variation of vasprintf(). Returns the buffer instead of a count, and
- * crashes if it runs out of memory.
- *
- * @param[in] fmt	printf format string
- * @param[in] args	argument list
- *
- * @return malloc'd buffer, guaranteed not to be NULL. Must free() when done.
- */
-char *
-xs_vbuffer(const char *fmt, va_list args)
-{
-    char *r = NULL;
-    int nw;
-
-    nw = vasprintf(&r, fmt, args);
-    if (nw < 0) {
-	Error("xs_vbuffer: vasprintf failure");
-    }
-    if (r == NULL) {
-	Error("Out of memory");
-    }
-    return r;
-}
-
-/**
- * Local variation of vsprintf(). Returns the buffer instead of a count, and
- * crashes if it runs out of memory.
- *
- * @param[in] fmt	printf format string
- *
- * @return malloc'd buffer, guaranteed not to be NULL. Must free() when done.
- */
-char *
-xs_buffer(const char *fmt, ...)
-{
-    va_list args;
-    char *r;
-
-    va_start(args, fmt);
-    r = xs_vbuffer(fmt, args);
-    va_end(args);
-    return r;
-}
-
-#if !defined(PR3287) /*[*/
 
 /**
  * printf-like interface to Warning().
@@ -915,5 +865,3 @@ display_scale(double d)
 	return lazyaf("%.3g ", d);
     }
 }
-
-#endif /*]*/

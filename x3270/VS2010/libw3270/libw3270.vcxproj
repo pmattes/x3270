@@ -121,6 +121,7 @@
     <ClCompile Include="..\..\lib\w3270\winprint.c" />
     <ClCompile Include="..\..\lib\w3270\winvers.c" />
     <ClCompile Include="..\..\lib\w3270\xio.c" />
+    <ClCompile Include="..\..\lib\w3270\xs_buffer.c" />
     <ClCompile Include="..\..\lib\w3270\XtGlue.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
