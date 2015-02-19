@@ -159,8 +159,8 @@ mkfb: mkfb.c conf.h
 /* Build rule for x3270if.  This is specified explicitly instead of using
    ComplexProgramTarget, because we may want to install it somewhere other
    than under PROJECTROOT. */
-ProgramTargetName(x3270if): x3270if.c conf.h
-	$(CC) $(CFLAGS) -o x3270if x3270if.c $(EXTRA_LDOPTIONS) $(EXTRA_LIBRARIES)
+ProgramTargetName(x3270if): x3270if.o
+	$(CC) $(CFLAGS) -o x3270if x3270if.o
 
 /* Rules for using and installing a separate app-defaults file. */
 @DEFINE_UAD@

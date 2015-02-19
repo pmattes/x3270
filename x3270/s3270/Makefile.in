@@ -75,8 +75,8 @@ mkfb: mkfb.c conf.h
 
 s3270: $(OBJS1) ../lib/lib3270.a ../lib/lib3270stubs.a ../lib/lib32xx.a
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) -L../lib -l3270 -l32xx -l3270stubs $(LIBS)
-x3270if: x3270if.c
-	$(CC) -o $@ -I../include x3270if.c $(LDFLAGS) $(LIBS)
+x3270if: x3270if.o
+	$(CC) -o $@ -I../include x3270if.o
 
 ../lib/lib3270.a:
 	cd ../lib/3270 && $(MAKE) all

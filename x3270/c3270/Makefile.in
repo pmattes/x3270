@@ -84,7 +84,7 @@ mkkeypad: mkkeypad.o
 c3270: $(OBJS1) ../lib/lib3270.a ../lib/lib3270i.a ../lib/lib3270stubs.a ../lib/lib32xx.a
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) -L../lib -l3270 -l3270i -l32xx -l3270stubs $(LIBS)
 x3270if: x3270if.o
-	$(CC) -o $@ x3270if.o $(LDFLAGS) $(LIBS)
+	$(CC) -o $@ x3270if.o
 
 ../lib/lib3270.a:
 	cd ../lib/3270 && $(MAKE) all
