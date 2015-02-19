@@ -49,7 +49,7 @@ FONTS = 3270-12.bdf 3270-12b.bdf 3270-20.bdf 3270-20b.bdf 3270.bdf 3270b.bdf \
 	3270h.bdf
 
 MISC = $(PRODUCT).man LICENSE README README.dbcs common_files.mk dryrun \
-	ibm_hosts ibm_hosts.man install-sh mkfb.c mkversion.sh qcpp-defs.sh \
+	ibm_hosts ibm_hosts.man mkfb.c mkversion.sh qcpp-defs.sh \
 	version.txt x3270-icon2.xpm x3270-script.man x3270_files.mk \
 	x3270_glue.expect x3270hist.pl x3270if.c x3270if.man
 
@@ -59,8 +59,7 @@ EXAMPLES = Examples/child_script.bash Examples/child_script.ksh \
 	Examples/peer_script.expect Examples/peer_script.ksh \
 	Examples/peer_script.sh
 
-CONFIG = Imakefile.in Makefile.in conf.h.in config.guess config.sub configure \
-	configure.in
+CONFIG = Imakefile.in Makefile.in conf.h.in configure configure.in
 
 HTML = html/$(PRODUCT)-man.html html/Attributes.html html/Brackets.html \
 	html/Bugs.html html/Build.html html/Charset.html html/FAQ.html \

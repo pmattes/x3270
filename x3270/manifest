@@ -6,8 +6,6 @@ c3270/cmenubar.h
 c3270/common_files.mk
 c3270/conf.h
 c3270/conf.h.in
-c3270/config.guess
-c3270/config.sub
 c3270/configure
 c3270/configure.in
 c3270/cscreen.h
@@ -36,7 +34,6 @@ c3270/ibm_hosts
 c3270/ibm_hosts.man
 c3270/icmd.c
 c3270/icmdc.h
-c3270/install-sh
 c3270/keymap.c
 c3270/keymap.h
 c3270/keypad.c
@@ -63,6 +60,8 @@ c3270/x3270if.c
 c3270/x3270if.man
 c3270/x3270-script.man
 c3270/xscroll.h
+config.guess
+config.sub
 configure
 include/3270ds.h
 include/actions.h
@@ -156,8 +155,6 @@ lib/3270/charset.c
 lib/3270/child.c
 lib/3270/conf.h
 lib/3270/conf.h.in
-lib/3270/config.guess
-lib/3270/config.sub
 lib/3270/configure
 lib/3270/configure.in
 lib/3270/ctlr.c
@@ -173,7 +170,6 @@ lib/3270/httpd-core.c
 lib/3270/httpd-io.c
 lib/3270/httpd-nodes.c
 lib/3270/idle.c
-lib/3270/install-sh
 lib/3270/kybd.c
 lib/3270/lazya.c
 lib/3270/lib3270_files.mk
@@ -201,14 +197,11 @@ lib/3270/sf.c
 lib/3270stubs/child_stubs.c
 lib/3270stubs/conf.h
 lib/3270stubs/conf.h.in
-lib/3270stubs/config.guess
-lib/3270stubs/config.sub
 lib/3270stubs/configure
 lib/3270stubs/configure.in
 lib/3270stubs/ft_gui_stubs.c
 lib/3270stubs/glue_gui_stubs.c
 lib/3270stubs/host_gui_stubs.c
-lib/3270stubs/install-sh
 lib/3270stubs/lib3270stubs_files.mk
 lib/3270stubs/lib3270stubsu_files.mk
 lib/3270stubs/localdefs.h
@@ -354,8 +347,6 @@ Playback/playback.c
 Playback/playback.man
 pr3287/charset.c
 pr3287/conf.h.in
-pr3287/config.guess
-pr3287/config.sub
 pr3287/configure
 pr3287/configure.in
 pr3287/ctlr.c
@@ -363,7 +354,6 @@ pr3287/ctlrc.h
 pr3287/globals.h
 pr3287/html/pr3287-man.html
 pr3287/html/ReleaseNotes.html
-pr3287/install-sh
 pr3287/LICENSE
 pr3287/localdefs.h
 pr3287/Makefile.in
@@ -384,8 +374,6 @@ pr3287/xtablec.h
 README.txt
 s3270/common_files.mk
 s3270/conf.h.in
-s3270/config.guess
-s3270/config.sub
 s3270/configure
 s3270/configure.in
 s3270/Examples/cms_cmd.expect
@@ -403,7 +391,6 @@ s3270/html/Wishlist.html
 s3270/html/x3270if.html
 s3270/html/x3270-script.html
 s3270/html/x3270.xbm
-s3270/install-sh
 s3270/LICENSE
 s3270/localdefs.h
 s3270/Makefile.in
@@ -422,8 +409,6 @@ s3270/x3270if.man
 s3270/x3270-script.man
 tcl3270/common_files.mk
 tcl3270/conf.h.in
-tcl3270/config.guess
-tcl3270/config.sub
 tcl3270/configure
 tcl3270/configure.in
 tcl3270/Examples/cms_cmd.tcl3270
@@ -437,7 +422,6 @@ tcl3270/html/Resources.html
 tcl3270/html/SSL.html
 tcl3270/html/tcl3270-man.html
 tcl3270/idle_stubs.c
-tcl3270/install-sh
 tcl3270/LICENSE
 tcl3270/localdefs.h
 tcl3270/Makefile.in
@@ -532,7 +516,6 @@ wc3270/html/Wishlist.html
 wc3270/html/x3270if.html
 wc3270/icmd.c
 wc3270/icmdc.h
-wc3270/install-sh
 wc3270/keymap.c
 wc3270/keymap.h
 wc3270/keypad.c
@@ -680,8 +663,6 @@ x3270/CmplxMenu.h
 x3270/CmplxMenuP.h
 x3270/common_files.mk
 x3270/conf.h.in
-x3270/config.guess
-x3270/config.sub
 x3270/configure
 x3270/configure.in
 x3270/dialog.c
@@ -743,7 +724,6 @@ x3270/ibm_hosts.man
 x3270/idle_gui.c
 x3270/idle_gui.h
 x3270/Imakefile.in
-x3270/install-sh
 x3270/keymap.c
 x3270/keymap.h
 x3270/keypad.bm
