@@ -24,9 +24,8 @@ dnl NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 dnl SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(menubar_stubs.c)
+AC_INIT(3270/ctlr.c)
 AC_PREREQ(2.50)
-AC_CONFIG_HEADER(conf.h)
 
 dnl Checks for programs.
 AC_PROG_INSTALL
@@ -192,5 +191,7 @@ AC_PATH_PROG(MAKEDEP,gccmakedep)
 test -z "$MAKEDEP" && MAKEDEP=:
 AC_SUBST(MAKEDEP)
 
-dnl Generate the Makefile.
-AC_OUTPUT(Makefile)
+dnl Generate the files.
+AC_CONFIG_HEADERS(include/unix/conf.h)
+AC_CONFIG_FILES(3270/Makefile 3270i/Makefile 32xx/Makefile 3270stubs/Makefile)
+AC_OUTPUT

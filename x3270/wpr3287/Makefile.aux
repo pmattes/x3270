@@ -27,7 +27,6 @@
 # Auxiliary makefile for wpr3287
 
 PRODUCT=wpr3287
-RM=rm -f
 
 all:
 	@echo "Must pick a specific make target."
@@ -61,9 +60,4 @@ html/$(PRODUCT)-man.html: pr3287.man.m4 $(MANDEP)
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
 
-# Bootstrap targets.
-dependencies: Makefile
-	$(MAKE) depend
-cscope.out: $(SOURCES) $(HEADERS)
-	../Shared/cs -b
 bootstrap:

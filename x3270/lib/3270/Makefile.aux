@@ -27,39 +27,17 @@
 
 # Auxiliary makefile for 3270 library
 
-PRODUCT=lib3270
-RM=rm -f
-
 all:
 	@echo "Must pick a specific make target."
 
-# Development tools.
-
 OBJ = o
 include lib3270_files.mk
-include lib3270i_files.mk
 include lib3270u_files.mk
-SOURCES = $(LIB3270_SOURCES) $(LIB3270I_SOURCES) $(LIB3270U_SOURCES)
-HEADERS = $(LIB3270_HEADERS) $(LIB3270I_HEADERS) $(LIB3270U_HEADERS)
+SOURCES = $(LIB3270_SOURCES) $(LIB3270U_SOURCES)
+HEADERS = $(LIB3270_HEADERS) $(LIB3270U_HEADERS)
 
-MISC = Makefile.in conf.h.in config.guess config.sub configure configure.in \
-	favicon.ico install-sh lib3270_files.mk lib3270i_files.mk \
-	lib3270u_files.mk mkicon.c
-
-DEVKIT = Makefile.aux
-
-FILES = $(SOURCES) $(HEADERS) $(MISC)
+FILES = $(SOURCES) $(HEADERS)
 
 src.tgz: $(FILES)
 
-configure: configure.in
-	autoconf
-
-# Bootstrap targets.
-Makefile: Makefile.in configure lib3270_files.mk lib3270i_files.mk \
-    	lib3270u_files.mk
-	./configure
-	$(MAKE) depend
-cscope.out: $(SOURCES) $(HEADERS)
-	../../Shared/cs -b
-bootstrap: Makefile
+bootstrap:

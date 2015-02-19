@@ -27,7 +27,6 @@
 # Auxiliary makefile for wc3270
 
 PRODUCT=wc3270
-RM=rm -f
 
 all:
 	@echo "Must pick a specific make target."
@@ -79,9 +78,4 @@ html/Resources.html: resource-body make-resource-doc.pl version.txt
 wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 	./mkiss <wc3270.iss.tmpl >wc3270.iss
 
-# Bootstrap targets.
-dependencies: Makefile
-	$(MAKE) depend
-cscope.out: $(SOURCES) $(HEADERS)
-	../Shared/cs -b
 bootstrap:

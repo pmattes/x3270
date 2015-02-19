@@ -72,8 +72,10 @@ ws3270res.o: ws3270.rc ws3270.ico Makefile
 ws3270.exe: $(OBJECTS) Makefile ../lib/libw3270.a ../lib/libw32xx.a ../lib/libw3270stubs.a
 	$(CC) -o ws3270.exe $(CFLAGS) $(OBJECTS) -L../lib -lw3270 -lw32xx -lw3270stubs $(LIBS)
 
-../lib/libw3270.a ../lib/libw32xx.a:
+../lib/libw3270.a:
 	cd ../lib/w3270 && $(MAKE) all
+../lib/libw32xx.a:
+	cd ../lib/w32xx && $(MAKE) all
 ../lib/libw3270stubs.a:
 	cd ../lib/w3270stubs && $(MAKE) all
 

@@ -15,52 +15,52 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\lib\w3270\asprintf.c">
+    <ClCompile Include="..\..\lib\w32xx\asprintf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\lazya.c">
+    <ClCompile Include="..\..\lib\w32xx\lazya.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\proxy.c">
+    <ClCompile Include="..\..\lib\w32xx\proxy.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\resolver.c">
+    <ClCompile Include="..\..\lib\w32xx\resolver.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\see.c">
+    <ClCompile Include="..\..\lib\w32xx\see.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\snprintf.c">
+    <ClCompile Include="..\..\lib\w32xx\snprintf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\ssl_dll.c">
+    <ClCompile Include="..\..\lib\w32xx\ssl_dll.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\tables.c">
+    <ClCompile Include="..\..\lib\w32xx\tables.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\unicode.c">
+    <ClCompile Include="..\..\lib\w32xx\unicode.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\unicode_dbcs.c">
+    <ClCompile Include="..\..\lib\w32xx\unicode_dbcs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\utf8.c">
+    <ClCompile Include="..\..\lib\w32xx\utf8.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\varbuf.c">
+    <ClCompile Include="..\..\lib\w32xx\varbuf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\w3misc.c">
+    <ClCompile Include="..\..\lib\w32xx\w3misc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\windirs.c">
+    <ClCompile Include="..\..\lib\w32xx\windirs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\winvers.c">
+    <ClCompile Include="..\..\lib\w32xx\winvers.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\xs_buffer.c">
+    <ClCompile Include="..\..\lib\w32xx\xs_buffer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

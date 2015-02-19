@@ -27,8 +27,6 @@
 # nmake Makefile for libw3270
 
 LIB3270 = ..\libw3270.lib
-LIB3270I = ..\libw3270i.lib
-LIB32XX = ..\libw32xx.lib
 
 # Set command paths.
 CC = cl /nologo
@@ -43,26 +41,17 @@ SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
 !ENDIF
 
 XCPPFLAGS = /D_WIN32 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /DWINVER=0x500 /D_CRT_SECURE_NO_DEPRECATE /W3 /WX $(SSLDEF)
-CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I. -I..\..\include
+CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I. -I..\include\windows -I..\..\include
 
 OBJ = obj
 !INCLUDE lib3270_files.mk
 !INCLUDE libw3270_files.mk
-!INCLUDE lib3270i_files.mk
-!INCLUDE lib32xx_files.mk
-!INCLUDE libw32xx_files.mk
 OBJECTS = $(LIB3270_OBJECTS) $(LIBW3270_OBJECTS)
 
-all: $(LIB3270) $(LIB3270I) $(LIB32XX)
+all: $(LIB3270)
 
 $(LIB3270): $(OBJECTS)
 	$(LIBCMD) $(OBJECTS) -OUT:$@
-
-$(LIB3270I): $(LIB3270I_OBJECTS)
-	$(LIBCMD) $(LIB3270I_OBJECTS) -OUT:$@
-
-$(LIB32XX): $(LIB32XX_OBJECTS) $(LIBW32XX_OBJECTS)
-	$(LIBCMD) $(LIB32XX_OBJECTS) $(LIBW32XX_OBJECTS) -OUT:$@
 
 favicon.obj: favicon.c
 
@@ -73,7 +62,7 @@ mkicon.exe: mkicon.c
 	$(CC) $(CFLAGS) /Fe$@ mkicon.c
 
 clean:
-	erase *.obj favicon.c mkicon.exe
+	$(RM) *.obj favicon.c mkicon.exe
 
 clobber: clean
-	erase $(LIB3270) $(LIB3270I) $(LIB32XX)
+	$(RM) $(LIB3270)

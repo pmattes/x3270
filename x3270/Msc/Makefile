@@ -2,10 +2,20 @@
 
 all: wc3270 ws3270 wpr3287
 
-wc3270 ws3270 wpr3287: libw3270 libw3270stubs
+wc3270 ws3270 wpr3287: libw3270 libw3270i libw32xx libw3270stubs
 
 libw3270:
 	cd lib\w3270
+	$(MAKE) /nologo /fMsc\Makefile
+	cd ..\..
+
+libw3270i:
+	cd lib\w3270i
+	$(MAKE) /nologo /fMsc\Makefile
+	cd ..\..
+
+libw32xx:
+	cd lib\w32xx
 	$(MAKE) /nologo /fMsc\Makefile
 	cd ..\..
 
@@ -29,6 +39,10 @@ wc3270-clean ws3270-clean wpr3287-clean: lib-clean
 lib-clean:
 	cd lib\w3270
 	$(MAKE) /nologo /fMsc\Makefile clean
+	cd ..\w3270i
+	$(MAKE) /nologo /fMsc\Makefile clean
+	cd ..\w32xx
+	$(MAKE) /nologo /fMsc\Makefile clean
 	cd ..\w3270stubs
 	$(MAKE) /nologo /fMsc\Makefile clean
 	cd ..\..
@@ -49,6 +63,10 @@ clobber: wc3270-clobber ws3270-clobber wpr3287-clobber
 wc3270-clobber ws3270-clobber wpr3287-clobber: lib-clobber
 lib-clobber: lib-clean
 	cd lib\w3270
+	$(MAKE) /nologo /fMsc\Makefile clobber
+	cd ..\w3270i
+	$(MAKE) /nologo /fMsc\Makefile clobber
+	cd ..\w32xx
 	$(MAKE) /nologo /fMsc\Makefile clobber
 	cd ..\w3270stubs
 	$(MAKE) /nologo /fMsc\Makefile clobber

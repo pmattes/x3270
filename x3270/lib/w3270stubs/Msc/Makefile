@@ -41,7 +41,7 @@ SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
 !ENDIF
 
 XCPPFLAGS = /D_WIN32 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /DWINVER=0x500 /D_CRT_SECURE_NO_DEPRECATE /W3 /WX $(SSLDEF)
-CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I. -I..\..\include
+CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I. -I..\include\windows -I..\..\include
 
 OBJ = obj
 !INCLUDE lib3270stubs_files.mk
@@ -54,7 +54,7 @@ $(TARGET): $(OBJECTS)
 	$(LIBCMD) $(OBJECTS) -OUT:$@
 
 clean:
-	erase *.obj
+	$(RM) *.obj
 
 clobber: clean
-	erase $(TARGET)
+	$(RM) $(TARGET)

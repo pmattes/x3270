@@ -21,9 +21,6 @@
     <ClCompile Include="..\..\lib\w3270\apl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\asprintf.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\b8.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -78,9 +75,6 @@
     <ClCompile Include="..\..\lib\w3270\kybd.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\lazya.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\linemode.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -99,13 +93,7 @@
     <ClCompile Include="..\..\lib\w3270\print_screen.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\proxy.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\readres.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\resolver.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lib\w3270\resources.c">
@@ -114,19 +102,7 @@
     <ClCompile Include="..\..\lib\w3270\rpq.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\see.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\sf.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\snprintf.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\ssl_dll.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\tables.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lib\w3270\telnet.c">
@@ -138,37 +114,13 @@
     <ClCompile Include="..\..\lib\w3270\trace.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\unicode.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\unicode_dbcs.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\utf8.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\util.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\varbuf.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\w3misc.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\windirs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lib\w3270\winprint.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\winvers.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\lib\w3270\xio.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\w3270\xs_buffer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lib\w3270\XtGlue.c">

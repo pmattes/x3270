@@ -59,6 +59,9 @@ wpr3287res.o: wpr3287.rc pr3287.ico
 wpr3287.exe: $(OBJECTS) $(LIB32XX)
 	$(CC) -o wpr3287.exe $(CFLAGS) $(OBJECTS) -L../lib -lw32xx $(LIBS)
 
+$(LIB32XX):
+	cd ../lib/w32xx && $(MAKE) all
+
 clean:
 	rm -f *.o dependencies-
 

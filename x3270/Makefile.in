@@ -78,9 +78,13 @@ wc3270 ws3270 wpr3287: windows-libs
 # Individual targets.
 unix-libs:
 	cd lib/3270 && $(MAKE)
+	cd lib/3270i && $(MAKE)
+	cd lib/32xx && $(MAKE)
 	cd lib/3270stubs && $(MAKE)
 windows-libs:
 	cd lib/w3270 && $(MAKE)
+	cd lib/w3270i && $(MAKE)
+	cd lib/w32xx && $(MAKE)
 	cd lib/w3270stubs && $(MAKE)
 c3270: FORCE
 	cd c3270 && $(MAKE)
@@ -107,15 +111,23 @@ windows: wc3270 ws3270 wpr3287
 # Dependency generation
 depend: @DEPEND@
 unix-depend: x3270-depend c3270-depend s3270-depend tcl3270-depend pr3287-depend
-x3270-depend c3270-depend s3270-depend tcl3270-depend pr3287-depend: lib3270-depend lib3270stubs-depend
+x3270-depend c3270-depend s3270-depend tcl3270-depend pr3287-depend: lib3270-depend lib3270i-depend lib32xx-depend lib3270stubs-depend
 windows-depend: wc3270-depend ws3270-depend wpr3287-depend
-wc3270-depend ws3270-depend wpr3287-depend: libw3270-depend libw3270stubs-depend
+wc3270-depend ws3270-depend wpr3287-depend: libw3270-depend libw3270i-depend libw32xx-depend libw3270stubs-depend
 lib3270-depend:
 	cd lib/3270 && $(MAKE) depend
+lib3270i-depend:
+	cd lib/3270i && $(MAKE) depend
+lib32xx-depend:
+	cd lib/32xx && $(MAKE) depend
 lib3270stubs-depend:
 	cd lib/3270stubs && $(MAKE) depend
 libw3270-depend:
 	cd lib/w3270 && $(MAKE) depend
+libw3270i-depend:
+	cd lib/w3270i && $(MAKE) depend
+libw32xx-depend:
+	cd lib/w32xx && $(MAKE) depend
 libw3270stubs-depend:
 	cd lib/w3270stubs && $(MAKE) depend
 x3270-depend:
@@ -164,15 +176,23 @@ pr3287-install.man: pr3287
 # Clean and clobber targets
 clean: @CLEAN@
 unix-clean: x3270-clean c3270-clean s3270-clean tcl3270-clean pr3287-clean
-x3270-clean c3270-clean s3270-clean tcl3270-clean pr3287-clean: lib3270-clean lib3270stubs-clean
+x3270-clean c3270-clean s3270-clean tcl3270-clean pr3287-clean: lib3270-clean lib3270i-clean lib32xx-clean lib3270stubs-clean
 windows-clean: wc3270-clean ws3270-clean wpr3287-clean
-wc3270-clean ws3270-clean wpr3287-clean: libw3270-clean libw3270stubs-clean
+wc3270-clean ws3270-clean wpr3287-clean: libw3270-clean libw3270i-clean libw32xx-clean libw3270stubs-clean
 lib3270-clean:
 	cd lib/3270 && $(MAKE) clean
+lib3270i-clean:
+	cd lib/3270i && $(MAKE) clean
+lib32xx-clean:
+	cd lib/32xx && $(MAKE) clean
 lib3270stubs-clean:
 	cd lib/3270stubs && $(MAKE) clean
 libw3270-clean:
 	cd lib/w3270 && $(MAKE) clean
+libw3270i-clean:
+	cd lib/w3270i && $(MAKE) clean
+libw32xx-clean:
+	cd lib/w32xx && $(MAKE) clean
 libw3270stubs-clean:
 	cd lib/w3270stubs && $(MAKE) clean
 x3270-clean:
@@ -194,15 +214,23 @@ wpr3287-clean:
 
 clobber: @CLOBBER@
 unix-clobber: x3270-clobber c3270-clobber s3270-clobber tcl3270-clobber pr3287-clobber
-x3270-clobber c3270-clobber s3270-clobber tcl3270-clobber pr3287-clobber: lib3270-clobber lib3270stubs-clobber
+x3270-clobber c3270-clobber s3270-clobber tcl3270-clobber pr3287-clobber: lib3270-clobber lib3270i-clobber lib32xx-clobber lib3270stubs-clobber
 windows-clobber: wc3270-clobber ws3270-clobber wpr3287-clobber
-wc3270-clobber ws3270-clobber wpr3287-clobber: libw3270-clobber libw3270stubs-clobber
+wc3270-clobber ws3270-clobber wpr3287-clobber: libw3270-clobber libw3270i-clobber libw32xx-clobber libw3270stubs-clobber
 lib3270-clobber:
 	cd lib/3270 && $(MAKE) clobber
+lib3270i-clobber:
+	cd lib/3270i && $(MAKE) clobber
+lib32xx-clobber:
+	cd lib/32xx && $(MAKE) clobber
 lib3270stubs-clobber:
 	cd lib/3270stubs && $(MAKE) clobber
 libw3270-clobber:
 	cd lib/w3270 && $(MAKE) clobber
+libw3270i-clobber:
+	cd lib/w3270i && $(MAKE) clobber
+libw32xx-clobber:
+	cd lib/w32xx && $(MAKE) clobber
 libw3270stubs-clobber:
 	cd lib/w3270stubs && $(MAKE) clobber
 x3270-clobber:

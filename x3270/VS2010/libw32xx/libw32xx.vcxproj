@@ -11,22 +11,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\lib\w3270\asprintf.c" />
-    <ClCompile Include="..\..\lib\w3270\lazya.c" />
-    <ClCompile Include="..\..\lib\w3270\proxy.c" />
-    <ClCompile Include="..\..\lib\w3270\resolver.c" />
-    <ClCompile Include="..\..\lib\w3270\see.c" />
-    <ClCompile Include="..\..\lib\w3270\snprintf.c" />
-    <ClCompile Include="..\..\lib\w3270\ssl_dll.c" />
-    <ClCompile Include="..\..\lib\w3270\tables.c" />
-    <ClCompile Include="..\..\lib\w3270\unicode.c" />
-    <ClCompile Include="..\..\lib\w3270\unicode_dbcs.c" />
-    <ClCompile Include="..\..\lib\w3270\utf8.c" />
-    <ClCompile Include="..\..\lib\w3270\varbuf.c" />
-    <ClCompile Include="..\..\lib\w3270\w3misc.c" />
-    <ClCompile Include="..\..\lib\w3270\windirs.c" />
-    <ClCompile Include="..\..\lib\w3270\winvers.c" />
-    <ClCompile Include="..\..\lib\w3270\xs_buffer.c" />
+    <ClCompile Include="..\..\lib\w32xx\asprintf.c" />
+    <ClCompile Include="..\..\lib\w32xx\lazya.c" />
+    <ClCompile Include="..\..\lib\w32xx\proxy.c" />
+    <ClCompile Include="..\..\lib\w32xx\resolver.c" />
+    <ClCompile Include="..\..\lib\w32xx\see.c" />
+    <ClCompile Include="..\..\lib\w32xx\snprintf.c" />
+    <ClCompile Include="..\..\lib\w32xx\ssl_dll.c" />
+    <ClCompile Include="..\..\lib\w32xx\tables.c" />
+    <ClCompile Include="..\..\lib\w32xx\unicode.c" />
+    <ClCompile Include="..\..\lib\w32xx\unicode_dbcs.c" />
+    <ClCompile Include="..\..\lib\w32xx\utf8.c" />
+    <ClCompile Include="..\..\lib\w32xx\varbuf.c" />
+    <ClCompile Include="..\..\lib\w32xx\w3misc.c" />
+    <ClCompile Include="..\..\lib\w32xx\windirs.c" />
+    <ClCompile Include="..\..\lib\w32xx\winvers.c" />
+    <ClCompile Include="..\..\lib\w32xx\xs_buffer.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9403B3C3-2EA9-44F8-99D4-45DE7692BB1A}</ProjectGuid>
@@ -63,7 +63,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32;_WIN32_WINNT=0x0500;_WIN32_IE=0x0500;WINVER=0x500;_CRT_SECURE_NO_DEPRECATE;SSLDIR=C:\OpenSSL-Win32;HAVE_LIBSSL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\OpenSSL-Win32\include;%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\OpenSSL-Win32\include;%(RootDir)%(Directory);%(ProjectDir)..\..\lib\include\windows;%(ProjectDir)..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

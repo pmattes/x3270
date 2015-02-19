@@ -1,11 +1,19 @@
 bootstrap:
 	cd 3270 && $(MAKE) -f Makefile.aux $@
+	cd 3270i && $(MAKE) -f Makefile.aux $@
+	cd 32xx && $(MAKE) -f Makefile.aux $@
 	cd 3270stubs && $(MAKE) -f Makefile.aux $@
 	cd w3270 && $(MAKE) -f Makefile.aux $@
+	cd w3270i && $(MAKE) -f Makefile.aux $@
+	cd w32xx && $(MAKE) -f Makefile.aux $@
 	cd w3270stubs && $(MAKE) -f Makefile.aux $@
 
 src.tgz:
 	cd 3270 && $(MAKE) -f Makefile.aux $@
+	cd 3270i && $(MAKE) -f Makefile.aux $@
+	cd 32xx && $(MAKE) -f Makefile.aux $@
 	cd 3270stubs && $(MAKE) -f Makefile.aux $@
 	cd w3270 && $(MAKE) -f Makefile.aux $@
+	cd w3270i && $(MAKE) -f Makefile.aux $@
+	cd w32xx && $(MAKE) -f Makefile.aux $@
 	cd w3270stubs && $(MAKE) -f Makefile.aux $@

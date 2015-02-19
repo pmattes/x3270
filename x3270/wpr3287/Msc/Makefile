@@ -64,6 +64,9 @@ wpr3287.RES: wpr3287.rc pr3287.ico
 wpr3287.exe: $(OBJECTS) $(LIB32XX)
 	$(CC) /Fewpr3287.exe $(CFLAGS) $(OBJECTS) $(LIB32XX) $(LIBS)
 
+$(LIB32XX):
+	cd ..\lib\w32xx & $(MAKE) /nologo /fMsc\Makefile
+
 clean:
 	$(RM) *.obj *.RES mkversion.exe version.c
 

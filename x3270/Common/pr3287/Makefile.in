@@ -63,7 +63,7 @@ pr3287: $(OBJECTS) version.o $(LIB32XX)
 	$(CC) -o $@ $(OBJECTS) version.o $(LDFLAGS) $(LIBS) -L../lib -l32xx
 
 $(LIB32XX):
-	cd ..\lib\3270 && $(MAKE)
+	cd ..\lib\32xx && $(MAKE)
 
 install: pr3287
 	[ -d $(DESTDIR)$(BINDIR) ] || \

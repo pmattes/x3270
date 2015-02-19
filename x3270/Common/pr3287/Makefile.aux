@@ -26,7 +26,6 @@
 # Auxiliary makefile for pr3287
 
 PRODUCT=pr3287
-RM=rm -f
 
 all:
 	@echo "Must pick a specific make target."
@@ -38,14 +37,11 @@ include pr3287_files.mk
 SOURCES = $(PR3287_SOURCES)
 HEADERS = $(PR3287_HEADERS)
 
-MISC = $(PRODUCT).man LICENSE Makefile.in README conf.h.in configure \
-	configure.in mkversion.sh pr3287_files.mk version.txt
-
-DEVKIT = $(PRODUCT).man.m4 instlist.base instlist.man m42man
+MISC = $(PRODUCT).man
 
 HTML = html/$(PRODUCT)-man.html html/ReleaseNotes.html
 
-FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML) 
+FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
 src.tgz: $(FILES)
 
@@ -61,13 +57,4 @@ html/$(PRODUCT)-man.html: $(PRODUCT).man.m4 $(MANDEP)
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
 
-configure: configure.in
-	autoconf
-
-# Bootstrap targets.
-Makefile: Makefile.in configure
-	./configure
-	$(MAKE) depend
-cscope.out: $(SOURCES) $(HEADERS)
-	../Shared/cs -b
 bootstrap: Makefile

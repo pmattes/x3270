@@ -76,7 +76,7 @@ if test "x$enable_x3270" = xyes -o \
         "x$enable_s3270" = xyes -o \
         "x$enable_tcl3270" = xyes -o \
         "x$enable_pr3287" = xyes; then
-    AC_CONFIG_SUBDIRS(lib/3270 lib/3270stubs)
+    AC_CONFIG_SUBDIRS(lib)
 fi
 
 ALL=""

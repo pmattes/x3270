@@ -27,7 +27,6 @@
 # Auxiliary makefile for x3270
 
 PRODUCT=x3270
-RM=rm -f
 
 all:
 	@echo "Must pick a specific make target."
@@ -122,10 +121,4 @@ html/Resources.html: resource-body make-resource-doc.pl version.txt
 html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@
 
-# Bootstrap targets.
-Makefile: Makefile.in configure
-	./configure
-	$(MAKE) depend
-cscope.out: $(SOURCES) $(HEADERS)
-	../Shared/cs -b
-bootstrap: Makefile
+bootstrap:

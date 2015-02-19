@@ -11,8 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\lib\w3270\pr3287_session.c" />
-    <ClCompile Include="..\..\lib\w3270\scroll.c" />
+    <ClCompile Include="..\..\lib\w3270i\pr3287_session.c" />
+    <ClCompile Include="..\..\lib\w3270i\scroll.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B306FA2C-263B-423D-A42D-F1930DA727F3}</ProjectGuid>
@@ -49,7 +49,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32;_WIN32_WINNT=0x0500;_WIN32_IE=0x0500;WINVER=0x500;_CRT_SECURE_NO_DEPRECATE;SSLDIR=C:\OpenSSL-Win32;HAVE_LIBSSL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\OpenSSL-Win32\include;%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\OpenSSL-Win32\include;%(RootDir)%(Directory);%(ProjectDir)..\..\lib\include\windows;%(ProjectDir)..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

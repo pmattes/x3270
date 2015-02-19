@@ -45,7 +45,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WIN32;_WIN32_WINNT=0x0500;_WIN32_IE=0x0500;WINVER=0x500;_CRT_SECURE_NO_DEPRECATE;SSLDIR=C:\OpenSSL-Win32;HAVE_LIBSSL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\OpenSSL-Win32\include;%(RootDir)%(Directory);%(ProjectDir)..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\OpenSSL-Win32\include;%(RootDir)%(Directory);%(ProjectDir)..\..\lib\include\windows;%(ProjectDir)..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -72,7 +72,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\lib\w3270\actions.c" />
     <ClCompile Include="..\..\lib\w3270\apl.c" />
-    <ClCompile Include="..\..\lib\w3270\asprintf.c" />
     <ClCompile Include="..\..\lib\w3270\b8.c" />
     <ClCompile Include="..\..\lib\w3270\bind-opt.c" />
     <ClCompile Include="..\..\lib\w3270\charset.c" />
@@ -91,37 +90,22 @@
     <ClCompile Include="..\..\lib\w3270\httpd-nodes.c" />
     <ClCompile Include="..\..\lib\w3270\idle.c" />
     <ClCompile Include="..\..\lib\w3270\kybd.c" />
-    <ClCompile Include="..\..\lib\w3270\lazya.c" />
     <ClCompile Include="..\..\lib\w3270\linemode.c" />
     <ClCompile Include="..\..\lib\w3270\llist.c" />
     <ClCompile Include="..\..\lib\w3270\macros.c" />
     <ClCompile Include="..\..\lib\w3270\Malloc.c" />
     <ClCompile Include="..\..\lib\w3270\nvt.c" />
     <ClCompile Include="..\..\lib\w3270\print_screen.c" />
-    <ClCompile Include="..\..\lib\w3270\proxy.c" />
     <ClCompile Include="..\..\lib\w3270\readres.c" />
-    <ClCompile Include="..\..\lib\w3270\resolver.c" />
     <ClCompile Include="..\..\lib\w3270\resources.c" />
     <ClCompile Include="..\..\lib\w3270\rpq.c" />
-    <ClCompile Include="..\..\lib\w3270\see.c" />
     <ClCompile Include="..\..\lib\w3270\sf.c" />
-    <ClCompile Include="..\..\lib\w3270\snprintf.c" />
-    <ClCompile Include="..\..\lib\w3270\ssl_dll.c" />
-    <ClCompile Include="..\..\lib\w3270\tables.c" />
     <ClCompile Include="..\..\lib\w3270\telnet.c" />
     <ClCompile Include="..\..\lib\w3270\toggles.c" />
     <ClCompile Include="..\..\lib\w3270\trace.c" />
-    <ClCompile Include="..\..\lib\w3270\unicode.c" />
-    <ClCompile Include="..\..\lib\w3270\unicode_dbcs.c" />
-    <ClCompile Include="..\..\lib\w3270\utf8.c" />
     <ClCompile Include="..\..\lib\w3270\util.c" />
-    <ClCompile Include="..\..\lib\w3270\varbuf.c" />
-    <ClCompile Include="..\..\lib\w3270\w3misc.c" />
-    <ClCompile Include="..\..\lib\w3270\windirs.c" />
     <ClCompile Include="..\..\lib\w3270\winprint.c" />
-    <ClCompile Include="..\..\lib\w3270\winvers.c" />
     <ClCompile Include="..\..\lib\w3270\xio.c" />
-    <ClCompile Include="..\..\lib\w3270\xs_buffer.c" />
     <ClCompile Include="..\..\lib\w3270\XtGlue.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

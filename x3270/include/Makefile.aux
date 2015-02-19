@@ -27,9 +27,6 @@
 
 # Auxiliary makefile for the include directory
 
-PRODUCT=include
-RM=rm -f
-
 all:
 	@echo "Must pick a specific make target."
 
@@ -41,13 +38,8 @@ SOURCES =
 
 HEADERS = $(INCLUDE_HEADERS)
 
-MISC = include_files.mk
+FILES = $(SOURCES) $(HEADERS)
 
-DEVKIT = Makefile.aux
-
-FILES = $(SOURCES) $(HEADERS) $(MISC)
-
-cscope.out: $(SOURCES) $(HEADERS)
-	../Shared/cs -b
-bootstrap:
 src.tgz: $(FILES)
+
+bootstrap:

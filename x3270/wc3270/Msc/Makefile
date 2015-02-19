@@ -94,8 +94,12 @@ wc3270.RES: wc3270.rc wc3270.ico Msc\Makefile
 wc3270.exe: $(OBJECTS) Msc\Makefile $(LIB3270) $(LIB3270I) $(LIB32XX) $(LIBSTUBS)
 	$(CC) /Fewc3270.exe $(CFLAGS) $(OBJECTS) $(LIBS)
 
-$(LIB3270) $(LIB3270I) $(LIB32XX):
+$(LIB3270):
 	cd ..\lib\w3270 & $(MAKE) /nologo /fMsc\Makefile
+$(LIB3270I):
+	cd ..\lib\w3270i & $(MAKE) /nologo /fMsc\Makefile
+$(LIB32XX):
+	cd ..\lib\w32xx & $(MAKE) /nologo /fMsc\Makefile
 $(LIBSTUBS):
 	cd ..\lib\w3270stubs & $(MAKE) /nologo /fMsc\Makefile
 
