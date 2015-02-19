@@ -61,6 +61,7 @@ if test "x$enable_x3270" != xyes -a \
         "x$enable_wc3270" != xyes -a \
         "x$enable_ws3270" != xyes -a \
         "x$enable_wpr3287" != xyes; then
+    AC_MSG_NOTICE(configuring all emulators... use --enable options to pick a subset)
     enable_x3270=yes
     enable_c3270=yes
     enable_s3270=yes
@@ -85,6 +86,7 @@ INSTALL=""
 INSTALLMAN=""
 CLEAN=""
 CLOBBER=""
+
 for i in x3270 c3270 s3270 tcl3270 pr3287 wc3270 ws3270 wpr3287; do
     eval x=\$enable_$i
     if test "x$x" = xyes; then
@@ -99,6 +101,23 @@ for i in x3270 c3270 s3270 tcl3270 pr3287 wc3270 ws3270 wpr3287; do
 	CLOBBER="$CLOBBER $i-clobber"
     fi
 done
+
+if test "x$enable_x3270" = xyes -o \
+        "x$enable_c3270" = xyes -o \
+        "x$enable_s3270" = xyes -o \
+        "x$enable_tcl3270" = xyes -o \
+        "x$enable_pr3287" = xyes; then
+    CLEAN="$CLEAN unix-lib-clean"
+    CLOBBER="$CLOBBER unix-lib-clobber"
+fi
+
+if test "x$enable_wc3270" = xyes -o \
+        "x$enable_ws3270" = xyes -o \
+        "x$enable_wpr3287" = xyes; then
+    CLEAN="$CLEAN windows-lib-clean"
+    CLOBBER="$CLOBBER windows-lib-clobber"
+fi
+
 AC_SUBST(ALL)
 AC_SUBST(DEPEND)
 AC_SUBST(INSTALL)
