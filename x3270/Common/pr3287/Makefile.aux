@@ -25,7 +25,7 @@
 
 # Auxiliary makefile for pr3287
 
-PRODUCT=pr3287
+PRODUCT = pr3287
 
 all:
 	@echo "Must pick a specific make target."
@@ -56,5 +56,3 @@ html/$(PRODUCT)-man.html: $(PRODUCT).man.m4 $(MANDEP)
 	$(MKHTML) -n $(PRODUCT) -o $@ $(PRODUCT).man.m4
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
-
-bootstrap: Makefile

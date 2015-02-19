@@ -26,7 +26,7 @@
 
 # Auxiliary makefile for tcl3270
 
-PRODUCT=tcl3270
+PRODUCT = tcl3270
 
 all:
 	@echo "Must pick a specific make target."
@@ -42,8 +42,6 @@ HEADERS = $(COMMON_HEADERS) $(TCL3270_HEADERS)
 MISC = $(PRODUCT).man Examples/cms_cmd.tcl3270 LICENSE Makefile.in README \
 	common_files.mk conf.h.in configure configure.in mkfb.c mkversion.sh \
 	tcl3270_files.mk version.txt
-
-DEVKIT = Makefile.aux instlist.base instlist.man m42html m42man
 
 HTML = html/$(PRODUCT)-man.html html/Build.html html/FAQ.html html/Intro.html \
 	html/Lineage.html html/README.html html/ReleaseNotes.html \
@@ -72,5 +70,3 @@ html/Resources.html: resource-body make-resource-doc.pl version.txt
 	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
 html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@
-
-bootstrap: Makefile

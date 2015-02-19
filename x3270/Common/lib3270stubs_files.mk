@@ -19,4 +19,4 @@ LIB3270STUBS_OBJECTS = ft_gui_stubs.$(OBJ) glue_gui_stubs.$(OBJ) \
 	status_stubs.$(OBJ) telnet_gui_stubs.$(OBJ) trace_gui_stubs.$(OBJ)
 
 # Header files for lib3270stubs.
-LIB3270STUBS_HEADERS = conf.h localdefs.h
+LIB3270STUBS_HEADERS =

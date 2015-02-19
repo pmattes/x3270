@@ -26,17 +26,6 @@
 
 # Top-level Makefile for suite3270.
 
-# Unix targets.
-UNIX_PRODS = c3270-dir s3270-dir tcl3270-dir x3270-dir pr3287-dir
-UNIX_LIBS = lib-3270-dir lib-3270stubs-dir
-
-# Windows targets.
-WINDOWS_PRODS = wc3270-dir ws3270-dir wpr3287-dir
-WINDOWS_LIBS = lib-w3270-dir lib-w3270stubs-dir
-
-# Global targets.
-PRODUCTS = $(UNIX_PRODS) $(WINDOWS_PRODS)
-
 all:
 	@echo "Must pick a specific make target."
 
@@ -45,32 +34,10 @@ Webpage: FORCE
 
 FORCE:
 
-bootstrap: unix-bootstrap windows-bootstrap include-bootstrap
-unix-bootstrap: configure c3270-bootstrap s3270-bootstrap tcl3270-bootstrap x3270-bootstrap pr3287-bootstrap
-c3270-bootstrap:
-	cd c3270 && $(MAKE) -f Makefile.aux bootstrap
-s3270-bootstrap:
-	cd s3270 && $(MAKE) -f Makefile.aux bootstrap
-tcl3270-bootstrap:
-	cd tcl3270 && $(MAKE) -f Makefile.aux bootstrap
-x3270-bootstrap:
-	cd x3270 && $(MAKE) -f Makefile.aux bootstrap
-pr3287-bootstrap:
-	cd pr3287 && $(MAKE) -f Makefile.aux bootstrap
-windows-bootstrap: configure wc3270-bootstrap ws3270-bootstrap wpr3287-bootstrap
-wc3270-bootstrap:
-	cd wc3270 && $(MAKE) -f Makefile.aux bootstrap
-ws3270-bootstrap:
-	cd ws3270 && $(MAKE) -f Makefile.aux bootstrap
-wpr3287-bootstrap:
-	cd wpr3287 && $(MAKE) -f Makefile.aux bootstrap
-include-bootstrap:
-	cd include && $(MAKE) -f Makefile.aux bootstrap
-configure: configure.in
-	autoconf
-
-src.tgz: c3270-src.tgz s3270-src.tgz tcl3270-src.tgz pr3287-src.tgz wc3270-src.tgz ws3270-src.tgz wpr3287-src.tgz
+src.tgz: c3270-src.tgz s3270-src.tgz tcl3270-src.tgz pr3287-src.tgz wc3270-src.tgz ws3270-src.tgz wpr3287-src.tgz lib-src.tgz
 	./mktar.sh
+lib-src.tgz:
+	cd lib && $(MAKE) -f Makefile.aux src.tgz
 c3270-src.tgz:
 	cd c3270 && $(MAKE) -f Makefile.aux src.tgz
 s3270-src.tgz:

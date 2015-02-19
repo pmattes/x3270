@@ -26,7 +26,7 @@
 
 # Auxiliary makefile for x3270
 
-PRODUCT=x3270
+PRODUCT = x3270
 
 all:
 	@echo "Must pick a specific make target."
@@ -69,10 +69,6 @@ HTML = html/$(PRODUCT)-man.html html/Attributes.html html/Brackets.html \
 	html/x3270if.html
 
 FT = ft/all.chars ft/print.chars
-
-DEVKIT = Makefile.aux apl.inc ft.inc html.m4 instlist.all-xinstall \
-	instlist.base instlist.byprefix m4man man.m4 menus.inc x3270.man.m4 \
-	x3270/instlist.man xkeymaps.inc
 
 FILES = $(SOURCES) $(HEADERS) $(BITMAPS) $(FONTS) $(MISC) $(EXAMPLES) \
 	$(CONFIG) $(HTML) $(FT)
@@ -120,5 +116,3 @@ html/Resources.html: resource-body make-resource-doc.pl version.txt
 	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
 html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@
-
-bootstrap:

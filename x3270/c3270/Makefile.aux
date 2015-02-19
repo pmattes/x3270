@@ -27,7 +27,7 @@
 
 # Auxiliary makefile for c3270
 
-PRODUCT=c3270
+PRODUCT = c3270
 
 all:
 	@echo "Must pick a specific make target."
@@ -46,9 +46,6 @@ MISC = $(PRODUCT).man LICENSE Makefile.in README c3270_files.mk \
 	keypad.outline mkfb.c mkkeypad.c mkversion.sh runc3270.bat \
 	version.txt x3270-script.man x3270_glue.expect x3270hist.pl x3270if.c \
 	x3270if.man
-
-DEVKIT = Makefile.aux ft.inc html.m4 instlist.base instlist.man keymaps.inc \
-	m4man man.m4 x3270.man.m4
 
 HTML = html/$(PRODUCT)-man.html html/Bugs.html html/Build.html html/FAQ.html \
 	html/Intro.html html/Lineage.html html/README.html \
@@ -91,5 +88,3 @@ html/Resources.html: resource-body make-resource-doc.pl version.txt
 	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
 html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@
-
-bootstrap:

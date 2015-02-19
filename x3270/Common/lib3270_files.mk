@@ -17,4 +17,4 @@ LIB3270_OBJECTS = Malloc.$(OBJ) XtGlue.$(OBJ) actions.$(OBJ) apl.$(OBJ) \
 	xio.$(OBJ)
 
 # Header files for lib3270.
-LIB3270_HEADERS = conf.h localdefs.h
+LIB3270_HEADERS =

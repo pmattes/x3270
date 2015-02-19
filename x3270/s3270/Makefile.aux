@@ -44,8 +44,6 @@ MISC = $(PRODUCT).man Examples/cms_cmd.expect LICENSE Makefile.in README \
 	parts.h.in s3270_files.mk s3270_glue.bash version.txt \
 	x3270-script.man x3270_glue.expect x3270if.c x3270if.man
 
-DEVKIT = Makefile.aux instlist.base instlist.man m42html m42man
-
 HTML = html/$(PRODUCT)-man.html html/Bugs.html html/FAQ.html html/Intro.html \
 	html/Lineage.html html/README.html html/ReleaseNotes.html \
 	html/Resources.html html/SSL.html html/Wishlist.html \
@@ -83,5 +81,3 @@ html/Resources.html: resource-body make-resource-doc.pl version.txt
 	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
 html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@
-
-bootstrap: Makefile
