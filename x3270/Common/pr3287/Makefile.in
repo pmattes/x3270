@@ -49,6 +49,7 @@ OBJ = o
 include pr3287_files.mk
 SRCS = $(PR3287_SOURCES)
 OBJECTS = $(PR3287_OBJECTS)
+LIB32XX = ../lib/lib32xx.a
 
 XVERSION = xversion.c
 version.o: version.txt mkversion.sh
@@ -58,8 +59,11 @@ version.o: version.txt mkversion.sh
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
-pr3287: $(OBJECTS) version.o
-	$(CC) -o $@ $(OBJECTS) version.o $(LDFLAGS) $(LIBS)
+pr3287: $(OBJECTS) version.o $(LIB32XX)
+	$(CC) -o $@ $(OBJECTS) version.o $(LDFLAGS) $(LIBS) -L../lib -l32xx
+
+$(LIB32XX):
+	cd ..\lib\3270 && $(MAKE)
 
 install: pr3287
 	[ -d $(DESTDIR)$(BINDIR) ] || \

@@ -41,6 +41,7 @@ VOBJS = $(PR3287_OBJECTS) $(WPR3287_OBJECTS)
 
 OBJECTS = $(VOBJS) version.o
 LIBS = $(SSLLIB) -lws2_32 -lwinspool
+LIB32XX = ../lib/libw32xx.a
 
 all: wpr3287.exe
 
@@ -55,8 +56,8 @@ version.o: $(VOBJS) version.txt mkversion.sh
 wpr3287res.o: wpr3287.rc pr3287.ico
 	$(WINDRES) -i wpr3287.rc -o wpr3287res.o
 
-wpr3287.exe: $(OBJECTS)
-	$(CC) -o wpr3287.exe $(CFLAGS) $(OBJECTS) $(LIBS)
+wpr3287.exe: $(OBJECTS) $(LIB32XX)
+	$(CC) -o wpr3287.exe $(CFLAGS) $(OBJECTS) -L../lib -lw32xx $(LIBS)
 
 clean:
 	rm -f *.o dependencies-

@@ -28,18 +28,21 @@
 
 LIB3270 = ../libw3270.a
 LIB3270I = ../libw3270i.a
+LIB32XX = ../libw32xx.a
 
 include winenv.mk
 
 XCPPFLAGS = $(WIN32_FLAGS) -I. -I../../include
 CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)
 
-all:: $(LIB3270) $(LIB3270I)
+all:: $(LIB3270) $(LIB3270I) $(LIB32XX)
 
 OBJ = o
 include lib3270_files.mk
-include lib3270i_files.mk
 include libw3270_files.mk
+include lib3270i_files.mk
+include lib32xx_files.mk
+include libw32xx_files.mk
 SRCS = $(LIB3270_SOURCES) $(LIBW3270_SOURCES)
 OBJS = $(LIB3270_OBJECTS) $(LIBW3270_OBJECTS)
 
@@ -48,6 +51,9 @@ $(LIB3270): $(OBJS)
 
 $(LIB3270I): $(LIB3270I_OBJECTS)
 	$(AR) crs $@ $(LIB3270I_OBJECTS)
+
+$(LIB32XX): $(LIB32XX_OBJECTS) $(LIBW32XX_OBJECTS)
+	$(AR) crs $@ $(LIB32XX_OBJECTS) $(LIBW32XX_OBJECTS)
 
 favicon.o: favicon.c
 
@@ -64,7 +70,7 @@ clobber: clean
 	$(RM) $(LIB3270)
 
 depend: $(SRCS) $(LIB3270I_SOURCES) Makefile lib3270_files.mk lib3270i_files.mk libw3270_files.mk
-	$(CC) -MM $(XCPPFLAGS) -I. $(SRCS) $(LIB3270I_SOURCES) >dependencies-
+	$(CC) -MM $(XCPPFLAGS) -I. $(SRCS) $(LIB3270I_SOURCES) $(LIB32XX_SOURCES) >dependencies-
 	mv dependencies- dependencies
 
 ifeq ($(wildcard dependencies),dependencies)

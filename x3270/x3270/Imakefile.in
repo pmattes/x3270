@@ -67,7 +67,7 @@ autoconf_mandir = @mandir@
 autoconf_fontinstdir = @CIFONTDIR@
     LIBX3270DIR = @LIBX3270DIR@
 EXTRA_LDOPTIONS = @LDFLAGS@
-EXTRA_LIBRARIES = -L../lib -l3270 -l3270i -l3270stubs @LIBS@
+EXTRA_LIBRARIES = -L../lib -l3270 -l3270i -l32xx -l3270stubs @LIBS@
  EXTRA_INCLUDES = @CPPFLAGS@ -I. -I../include
              CC = @CC@
         INSTALL = @INSTALL@
@@ -103,9 +103,9 @@ AllTarget($(FONTS) ProgramTargetName(x3270) ProgramTargetName(x3270if))
 /* Build/install/man target for x3720.  Requires extra libraries. */
 ComplexProgramTarget_1(x3270,,$(LOCAL_LIBRARIES))
 
-x3270: ../lib/lib3270.a ../lib/lib3270i.a ../lib/lib3270stubs.a
+x3270: ../lib/lib3270.a ../lib/lib3270i.a ../lib/lib3270stubs.a ../lib/lib32xx.a
 
-../lib/lib3270.a ../lib/lib3270i.a:
+../lib/lib3270.a ../lib/lib3270i.a ../lib/lib32xx.a:
 	cd ../lib/3270 && $(MAKE) all
 ../lib/lib3270stubs.a:
 	cd ../lib/3270stubs && $(MAKE) all

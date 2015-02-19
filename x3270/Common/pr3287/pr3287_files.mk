@@ -1,14 +1,9 @@
 # Source files common to 3287 emulators
-PR3287_SOURCES = asprintf.c charset.c ctlr.c lazya.c pr3287.c proxy.c \
-	resolver.c see.c sf.c tables.c telnet.c trace.c unicode.c \
-	unicode_dbcs.c utf8.c varbuf.c xs_buffer.c xtable.c
+PR3287_SOURCES = charset.c ctlr.c pr3287.c sf.c telnet.c trace.c xtable.c
 
 # Object files common to 3287 emulators
-PR3287_OBJECTS = asprintf.$(OBJ) charset.$(OBJ) ctlr.$(OBJ) lazya.$(OBJ) \
-	pr3287.$(OBJ) proxy.$(OBJ) resolver.$(OBJ) see.$(OBJ) sf.$(OBJ) \
-	tables.$(OBJ) telnet.$(OBJ) trace.$(OBJ) unicode.$(OBJ) \
-	unicode_dbcs.$(OBJ) utf8.$(OBJ) varbuf.$(OBJ) xs_buffer.$(OBJ) \
-	xtable.$(OBJ)
+PR3287_OBJECTS = charset.$(OBJ) ctlr.$(OBJ) pr3287.$(OBJ) sf.$(OBJ) \
+	telnet.$(OBJ) trace.$(OBJ) xtable.$(OBJ)
 
 # Header files common to 3287 emulators
 PR3287_HEADERS = ctlrc.h globals.h localdefs.h pr3287.h pr_telnet.h trace.h \

@@ -80,12 +80,12 @@ fallbacks.c: mkfb $(FALLBACKS)
 mkfb: mkfb.c conf.h
 	$(CC) $(CFLAGS) -o mkfb mkfb.c
 
-x3270: $(OBJS1) ../lib/lib3270.a ../lib/lib3270i.a ../lib/lib3270stubs.a
-	$(CC) -o $@ $(OBJS1) $(LDFLAGS) -L../lib -l3270 -l3270i -l3270stubs $(LIBS)
+x3270: $(OBJS1) ../lib/lib3270.a ../lib/lib3270i.a ../lib/lib32xx.a ../lib/lib3270stubs.a
+	$(CC) -o $@ $(OBJS1) $(LDFLAGS) -L../lib -l3270 -l3270i -l32xx -l3270stubs $(LIBS)
 x3270if: x3270if.o
 	$(CC) -o $@ x3270if.o $(LDFLAGS) $(LIBS)
 
-../lib/lib3270.a ../lib/lib3270i.a:
+../lib/lib3270.a ../lib/lib3270i.a ../lib/lib32xx.a:
 	cd ../lib/3270 && $(MAKE) all
 ../lib/lib3270stubs.a:
 	cd ../lib/3270stubs && $(MAKE) all

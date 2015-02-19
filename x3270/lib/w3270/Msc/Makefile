@@ -28,6 +28,7 @@
 
 LIB3270 = ..\libw3270.lib
 LIB3270I = ..\libw3270i.lib
+LIB32XX = ..\libw32xx.lib
 
 # Set command paths.
 CC = cl /nologo
@@ -46,17 +47,22 @@ CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS) -I. -I..\..\include
 
 OBJ = obj
 !INCLUDE lib3270_files.mk
-!INCLUDE lib3270i_files.mk
 !INCLUDE libw3270_files.mk
+!INCLUDE lib3270i_files.mk
+!INCLUDE lib32xx_files.mk
+!INCLUDE libw32xx_files.mk
 OBJECTS = $(LIB3270_OBJECTS) $(LIBW3270_OBJECTS)
 
-all: $(LIB3270) $(LIB3270I)
+all: $(LIB3270) $(LIB3270I) $(LIB32XX)
 
 $(LIB3270): $(OBJECTS)
 	$(LIBCMD) $(OBJECTS) -OUT:$@
 
 $(LIB3270I): $(LIB3270I_OBJECTS)
 	$(LIBCMD) $(LIB3270I_OBJECTS) -OUT:$@
+
+$(LIB32XX): $(LIB32XX_OBJECTS) $(LIBW32XX_OBJECTS)
+	$(LIBCMD) $(LIB32XX_OBJECTS) $(LIBW32XX_OBJECTS) -OUT:$@
 
 favicon.obj: favicon.c
 
@@ -70,4 +76,4 @@ clean:
 	erase *.obj favicon.c mkicon.exe
 
 clobber: clean
-	erase $(LIB3270) $(LIB3270I)
+	erase $(LIB3270) $(LIB3270I) $(LIB32XX)

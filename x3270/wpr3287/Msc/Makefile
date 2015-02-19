@@ -48,6 +48,7 @@ VOBJS = $(PR3287_OBJECTS) $(WPR3287_OBJECTS)
 
 OBJECTS = $(VOBJS) version.obj
 LIBS = $(SSLLIB) ws2_32.lib winspool.lib advapi32.lib shell32.lib
+LIB32XX = ..\lib\libw32xx.lib
 
 all: wpr3287.exe
 
@@ -60,8 +61,8 @@ mkversion.exe: Msc\mkversion.c
 wpr3287.RES: wpr3287.rc pr3287.ico
 	$(RC) wpr3287.rc
 
-wpr3287.exe: $(OBJECTS)
-	$(CC) /Fewpr3287.exe $(CFLAGS) $(OBJECTS) $(LIBS)
+wpr3287.exe: $(OBJECTS) $(LIB32XX)
+	$(CC) /Fewpr3287.exe $(CFLAGS) $(OBJECTS) $(LIB32XX) $(LIBS)
 
 clean:
 	$(RM) *.obj *.RES mkversion.exe version.c

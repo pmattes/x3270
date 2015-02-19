@@ -54,15 +54,15 @@ VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(WC3270_OBJECTS) wc3270.RES \
 LIB3270 = ..\lib\libw3270.lib
 LIB3270I = ..\lib\libw3270i.lib
 LIBSTUBS = ..\lib\libw3270stubs.lib
+LIB32XX = ..\lib\libw32xx.lib
 
 OBJECTS = $(VOBJS) version.obj
-WOBJECTS = $(LIB3270) wizard.obj wc3270.RES wversion.obj shortcut.obj \
-	   relink.obj
-LIBS = $(LIB3270) $(LIB3270I) $(LIBSTUBS) $(SSLLIB) ws2_32.lib \
+WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj relink.obj
+LIBS = $(LIB3270) $(LIB3270I) $(LIB32XX) $(LIBSTUBS) $(SSLLIB) ws2_32.lib \
 	advapi32.lib user32.lib shell32.lib ole32.lib comdlg32.lib gdi32.lib \
 	winspool.lib
-SHRTLIBS = $(LIB3270) ole32.lib
-WIZLIBS = $(LIB3270) ole32.lib winspool.lib advapi32.lib shell32.lib
+SHRTLIBS = $(LIB32XX) ole32.lib
+WIZLIBS = $(LIB32XX) ole32.lib winspool.lib advapi32.lib shell32.lib
 
 PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe x3270if.exe
 all: $(PROGS)
@@ -91,32 +91,32 @@ $(MKKEYPAD): mkkeypad.c
 wc3270.RES: wc3270.rc wc3270.ico Msc\Makefile
 	$(RC) wc3270.rc
 
-wc3270.exe: $(OBJECTS) Msc\Makefile $(LIB3270) $(LIB3270I) $(LIBSTUBS)
+wc3270.exe: $(OBJECTS) Msc\Makefile $(LIB3270) $(LIB3270I) $(LIB32XX) $(LIBSTUBS)
 	$(CC) /Fewc3270.exe $(CFLAGS) $(OBJECTS) $(LIBS)
 
-$(LIB3270) $(LIB3270I):
+$(LIB3270) $(LIB3270I) $(LIB32XX):
 	cd ..\lib\w3270 & $(MAKE) /nologo /fMsc\Makefile
 $(LIBSTUBS):
 	cd ..\lib\w3270stubs & $(MAKE) /nologo /fMsc\Makefile
 
-mkshort.exe: mkshort.obj shortcut.obj $(LIB3270) Msc\Makefile
+mkshort.exe: mkshort.obj shortcut.obj $(LIB32XX) Msc\Makefile
 	$(CC) /Femkshort.exe $(CFLAGS) mkshort.obj shortcut.obj $(SHRTLIBS)
 
 wversion.obj: version.txt mkversion.exe
 	mkversion.exe -w
 	$(CC) $(CFLAGS) /c wversion.c
 
-wc3270wiz.exe: $(WOBJECTS) $(LIB3270)
+wc3270wiz.exe: $(WOBJECTS) $(LIB32XX)
 	$(CC) /Fewc3270wiz.exe $(CFLAGS) $(WOBJECTS) $(WIZLIBS)
 
 catf.exe: catf.c
 	$(CC) /Fecatf.exe $(CFLAGS) catf.c
 
-ead3270.exe: ead3270.obj $(LIB3270)
-	$(CC) /Fe$@ $(CFLAGS) ead3270.obj $(LIB3270) advapi32.lib shell32.lib
+ead3270.exe: ead3270.obj $(LIB32XX)
+	$(CC) /Fe$@ $(CFLAGS) ead3270.obj $(LIB32XX) advapi32.lib shell32.lib
 
-x3270if.exe: x3270if.obj $(LIB3270)
-	$(CC) /Fe$@ $(CFLAGS) x3270if.obj $(LIB3270) ws2_32.lib
+x3270if.exe: x3270if.obj $(LIB32XX)
+	$(CC) /Fe$@ $(CFLAGS) x3270if.obj $(LIB32XX) ws2_32.lib
 
 clean:
 	$(RM) *.obj *.RES *.exp *.lib $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c mkversion.exe version.c wversion.c
