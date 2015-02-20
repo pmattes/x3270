@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\wc3270\x3270if.c">
+    <ClCompile Include="..\..\ws3270\x3270if.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

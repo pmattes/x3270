@@ -120,14 +120,14 @@
 	builds, and there are no configurable options.
 
 	<h2>Building Windows Programs with Visual Studio (GUI)</h2>
-	The Visual Studio solution is called <tt>wc3270.sln</tt> in the
+	The Visual Studio solution is called <tt>suite3270.sln</tt> in the
 	<tt>VS2010</tt> folder. There are individual projects for each of the
 	programs and components.
 
 	<h2> Summary of common <tt>configure</tt> Options</h2>
 	The top-level <tt>configure</tt> script accepts the following
 	options. Note that these apply only to Unix; the options for Windows
-	programs are fixed.<br>
+	programs are fixed.
 	<table border="3" cellspacing="3" cellpadding="3">
 	    <tbody>
 		<tr>
@@ -162,26 +162,26 @@
 		<tr>
 		    <td valign="top"><tt>--disable-dbcs</tt></td>
 		    <td valign="top">Leave out DBCS (Double Byte Character Set)
-			support.<br>
+			support.
 		</td>
 		</tr>
 		<tr>
 		    <td><tt>--disable-local-process</tt></td>
 		    <td>Leave out local process (connecting to
-			"-e <i>shell_command</i>") support.<br>
+			"-e <i>shell_command</i>") support.
 			This will be automatically disabled if the local system
 			does not support the <i>forkpty</i>() library call.</td>
 		</tr>
 		<tr>
 		    <td valign="top"><tt>--disable-ssl</tt></td>
 		    <td valign="top">Leave out SSL (Secure Sockets Layer)
-			support. SSL support requires the OpenSSL library.<br>
+			support. SSL support requires the OpenSSL library.
 		    </td>
 		</tr>
 		<tr>
 		    <td valign="top"><tt>--with-ssl=<i>dir</i></tt></td>
 		    <td valign="top">Specify the directory where the OpenSSL
-			library is installed.<br>
+			library is installed.
 		    </td>
 		</tr>
 	    </tbody> 
