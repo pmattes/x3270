@@ -25,8 +25,12 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Auxiliary Makefile for lib.
-#
-src.tgz:
+
+prepare: configure
+configure: configure.in
+	autoconf
+
+src.tgz: prepare
 	cd 3270 && $(MAKE) -f Makefile.aux $@
 	cd 3270i && $(MAKE) -f Makefile.aux $@
 	cd 32xx && $(MAKE) -f Makefile.aux $@

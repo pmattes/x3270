@@ -51,8 +51,9 @@ HTML = html/$(PRODUCT)-man.html html/Bugs.html html/FAQ.html html/Intro.html \
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
-src.tgz: $(FILES)
+src.tgz: prepare $(FILES)
 
+prepare: configure
 configure: configure.in
 	autoconf
 

@@ -34,7 +34,24 @@ Webpage: FORCE
 
 FORCE:
 
-src.tgz: c3270-src.tgz s3270-src.tgz tcl3270-src.tgz pr3287-src.tgz wc3270-src.tgz ws3270-src.tgz wpr3287-src.tgz lib-src.tgz
+prepare: configure
+configure: configure.in
+	autoconf
+prepare: lib-prepare c3270-prepare s3270-prepare tcl3270-prepare x3270-prepare pr3287-prepare
+lib-prepare:
+	cd lib && $(MAKE) -f Makefile.aux prepare
+c3270-prepare:
+	cd c3270 && $(MAKE) -f Makefile.aux prepare
+s3270-prepare:
+	cd s3270 && $(MAKE) -f Makefile.aux prepare
+tcl3270-prepare:
+	cd tcl3270 && $(MAKE) -f Makefile.aux prepare
+x3270-prepare:
+	cd x3270 && $(MAKE) -f Makefile.aux prepare
+pr3287-prepare:
+	cd pr3287 && $(MAKE) -f Makefile.aux prepare
+
+src.tgz: prepare c3270-src.tgz s3270-src.tgz tcl3270-src.tgz pr3287-src.tgz wc3270-src.tgz ws3270-src.tgz wpr3287-src.tgz lib-src.tgz
 	./mktar.sh
 lib-src.tgz:
 	cd lib && $(MAKE) -f Makefile.aux src.tgz

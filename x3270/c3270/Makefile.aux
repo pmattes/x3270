@@ -53,8 +53,9 @@ HTML = html/$(PRODUCT)-man.html html/Bugs.html html/Build.html html/FAQ.html \
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
-src.tgz: $(FILES) Makefile.aux
+src.tgz: prepare $(FILES) Makefile.aux
 
+prepare: configure
 configure: configure.in
 	autoconf
 

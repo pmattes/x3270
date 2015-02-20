@@ -73,8 +73,9 @@ FT = ft/all.chars ft/print.chars
 FILES = $(SOURCES) $(HEADERS) $(BITMAPS) $(FONTS) $(MISC) $(EXAMPLES) \
 	$(CONFIG) $(HTML) $(FT)
 
-src.tgz: $(FILES)
+src.tgz: prepare $(FILES)
 
+prepare: configure
 configure: configure.in
 	autoconf
 
