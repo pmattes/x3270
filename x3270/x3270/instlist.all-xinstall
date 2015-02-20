@@ -1,7 +1,6 @@
 usr
 usr/bin
 usr/bin/x3270
-usr/bin/x3270if
 usr/etc
 usr/etc/x3270
 usr/etc/x3270/ibm_hosts
@@ -31,6 +30,5 @@ usr/share/man
 usr/share/man/man1
 usr/share/man/man1/x3270-script.1
 usr/share/man/man1/x3270.1x
-usr/share/man/man1/x3270if.1
 usr/share/man/man5
 usr/share/man/man5/ibm_hosts.5

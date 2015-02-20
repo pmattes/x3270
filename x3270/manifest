@@ -28,7 +28,6 @@ c3270/html/ReleaseNotes.html
 c3270/html/Resources.html
 c3270/html/SSL.html
 c3270/html/Wishlist.html
-c3270/html/x3270if.html
 c3270/html/x3270-script.html
 c3270/ibm_hosts
 c3270/ibm_hosts.man
@@ -56,8 +55,6 @@ c3270/ssl_passwd_gui.c
 c3270/version.txt
 c3270/x3270_glue.expect
 c3270/x3270hist.pl
-c3270/x3270if.c
-c3270/x3270if.man
 c3270/x3270-script.man
 c3270/xscroll.h
 config.guess
@@ -166,7 +163,6 @@ lib/3270/httpd-io.c
 lib/3270/httpd-nodes.c
 lib/3270/idle.c
 lib/3270i/lib3270i_files.mk
-lib/3270i/Makefile.aux
 lib/3270i/Makefile.in
 lib/3270i/pr3287_session.c
 lib/3270i/scroll.c
@@ -223,7 +219,6 @@ lib/3270/XtGlue.c
 lib/32xx/asprintf.c
 lib/32xx/lazya.c
 lib/32xx/lib32xx_files.mk
-lib/32xx/Makefile.aux
 lib/32xx/Makefile.in
 lib/32xx/proxy.c
 lib/32xx/resolver.c
@@ -234,6 +229,8 @@ lib/32xx/unicode_dbcs.c
 lib/32xx/utf8.c
 lib/32xx/varbuf.c
 lib/32xx/xs_buffer.c
+lib/configure
+lib/configure.in
 lib/include/unix/conf.h.in
 lib/include/unix/localdefs.h
 lib/include/windows/conf.h
@@ -259,7 +256,6 @@ lib/w3270/httpd-nodes.c
 lib/w3270/idle.c
 lib/w3270i/lib3270i_files.mk
 lib/w3270i/Makefile
-lib/w3270i/Makefile.aux
 lib/w3270i/Msc/Makefile
 lib/w3270i/pr3287_session.c
 lib/w3270i/scroll.c
@@ -323,7 +319,6 @@ lib/w32xx/lazya.c
 lib/w32xx/lib32xx_files.mk
 lib/w32xx/libw32xx_files.mk
 lib/w32xx/Makefile
-lib/w32xx/Makefile.aux
 lib/w32xx/Msc/Makefile
 lib/w32xx/proxy.c
 lib/w32xx/resolver.c
@@ -341,7 +336,6 @@ lib/w32xx/winenv.mk
 lib/w32xx/winvers.c
 lib/w32xx/xs_buffer.c
 Makefile
-Makefile.aux
 Makefile.in
 Msc/Makefile
 Playback/Makefile
@@ -518,7 +512,6 @@ wc3270/html/SSL.html
 wc3270/html/wc3270-man.html
 wc3270/html/wc3270-script.html
 wc3270/html/Wishlist.html
-wc3270/html/x3270if.html
 wc3270/icmd.c
 wc3270/icmdc.h
 wc3270/keymap.c
@@ -564,7 +557,6 @@ wc3270/winenv.mk
 wc3270/wizard.c
 wc3270/wselectc.h
 wc3270/x3270-icon2.bmp
-wc3270/x3270if.c
 wc3270/xscroll.h
 Webpage/Build-c3270.html
 Webpage/Build.html
@@ -580,7 +572,6 @@ wpr3287/html/wpr3287-man.html
 wpr3287/LICENSE
 wpr3287/localdefs.h
 wpr3287/Makefile
-wpr3287/Makefile.aux
 wpr3287/mkversion.sh
 wpr3287/Msc/Makefile
 wpr3287/Msc/mkversion.c
@@ -617,6 +608,7 @@ ws3270/html/SSL.html
 ws3270/html/wc3270-script.html
 ws3270/html/Wishlist.html
 ws3270/html/ws3270-man.html
+ws3270/html/x3270if.html
 ws3270/LICENSE.txt
 ws3270/localdefs.h
 ws3270/Makefile
@@ -633,6 +625,7 @@ ws3270/ws3270_files.mk
 ws3270/ws3270.ico
 ws3270/ws3270.rc
 ws3270/x3270_glue.expect
+ws3270/x3270if.c
 x3270/3270-12b.bdf
 x3270/3270-12.bdf
 x3270/3270-20b.bdf
@@ -776,8 +769,6 @@ x3270/x3270_files.mk
 x3270/x3270_glue.expect
 x3270/x3270hist.pl
 x3270/x3270-icon2.xpm
-x3270/x3270if.c
-x3270/x3270if.man
 x3270/x3270.man
 x3270/x3270-script.man
 x3270/xaa.c

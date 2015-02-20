@@ -41,6 +41,11 @@ SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
 SSLLIB = gdi32.lib
 !ENDIF
 
+LIB3270 = ..\lib\libw3270.lib
+LIB3270I = ..\lib\libw3270i.lib
+LIBSTUBS = ..\lib\libw3270stubs.lib
+LIB32XX = ..\lib\libw32xx.lib
+
 XCPPFLAGS = /D_WIN32 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /DWINVER=0x500 /D_CRT_SECURE_NO_DEPRECATE /W3 /WX $(SSLDEF) -I. -I..\include
 CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS)
 
@@ -51,11 +56,6 @@ OBJ = obj
 VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(WC3270_OBJECTS) wc3270.RES \
 	fallbacks.obj
 
-LIB3270 = ..\lib\libw3270.lib
-LIB3270I = ..\lib\libw3270i.lib
-LIBSTUBS = ..\lib\libw3270stubs.lib
-LIB32XX = ..\lib\libw32xx.lib
-
 OBJECTS = $(VOBJS) version.obj
 WOBJECTS = wizard.obj wc3270.RES wversion.obj shortcut.obj relink.obj
 LIBS = $(LIB3270) $(LIB3270I) $(LIB32XX) $(LIBSTUBS) $(SSLLIB) ws2_32.lib \
@@ -64,7 +64,7 @@ LIBS = $(LIB3270) $(LIB3270I) $(LIB32XX) $(LIBSTUBS) $(SSLLIB) ws2_32.lib \
 SHRTLIBS = $(LIB32XX) ole32.lib
 WIZLIBS = $(LIB32XX) ole32.lib winspool.lib advapi32.lib shell32.lib
 
-PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe x3270if.exe
+PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe
 all: $(PROGS)
 
 version.obj: $(VOBJS) version.txt mkversion.exe Msc\Makefile
@@ -118,9 +118,6 @@ catf.exe: catf.c
 
 ead3270.exe: ead3270.obj $(LIB32XX)
 	$(CC) /Fe$@ $(CFLAGS) ead3270.obj $(LIB32XX) advapi32.lib shell32.lib
-
-x3270if.exe: x3270if.obj $(LIB32XX)
-	$(CC) /Fe$@ $(CFLAGS) x3270if.obj $(LIB32XX) ws2_32.lib
 
 clean:
 	$(RM) *.obj *.RES *.exp *.lib $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c mkversion.exe version.c wversion.c

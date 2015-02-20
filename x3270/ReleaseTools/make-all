@@ -69,8 +69,6 @@ do	case $i in
 		;;
 	esac
 done
-[ "$need_libs" ] && prods="$prods lib/3270 lib/3270stubs"
-[ "$need_wlibs" ] && prods="$prods lib/w3270 lib/w3270stubs"
 
 # Check for a full Windows release.
 if [[ "$build" && \
@@ -139,19 +137,19 @@ cd $tmpdir
 tar -xzf $d1/$suite
 builddir=$tmpdir/suite3270-$ver
 
-# Make sure we build libraries first.
-unset pl px
-for prod in $prods
-do	if [[ "$prod" =~ lib/ ]]
-    	then	pl="$pl $prod"
-	else	px="$px $prod"
-	fi
-done
-prods="$pl $px"
+cd $builddir
+
+# Configure libraries.
+if [ "$need_libs" -o "$need_wlibs" ]
+then	echo "===== Configuring libraries."
+    	./configure \
+	    ${need_libs+--enable-unix-lib} \
+	    ${need_wlibs+--enable-windows-lib}
+fi
 
 for prod in $prods
 do
-    	cd $builddir
+	cd $builddir
 
     	# Some products don't get built on Linux.
 	case "$prod" in

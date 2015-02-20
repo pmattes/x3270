@@ -97,23 +97,21 @@ static void
 usage(void)
 {
 	(void) fprintf(stderr, "\
-usage: %s [options] action[(param[,...])]\n\
-           execute the named action\n\
-       %s [options] -s field\n\
-           display status field 0..12\n\
-       %s [options] -S\n\
-           display all status fields\n\
-       %s [options] -i\n\
-           shuttle commands and responses between stdin/stdout and emulator\n\
-    options:\n\
-       -v\n\
-           verbose operation\n"
+usage:\n\
+ %s [options] \"action[(param[,...])]\"\n\
+   execute the named action\n\
+ %s [options] -s field\n\
+   display status field 0..12\n\
+ %s [options] -S\n\
+   display all status fields\n\
+ %s [options] -i\n\
+   shuttle commands and responses between stdin/stdout and emulator\n\
+options:\n\
+ -v       verbose operation\n"
 #if !defined(_WIN32) /*[*/
-"       -p pid\n\
-           connect to process <pid>\n"
+" -p pid   connect to process <pid>\n"
 #endif /*]*/
-"       -t port\n\
-           connect to TCP port <port>\n",
+" -t port  connect to TCP port <port>\n",
 	    me, me, me, me);
 	exit(2);
 }
@@ -225,6 +223,9 @@ main(int argc, char *argv[])
 		/* Got positional arguments. */
 		if (iterative)
 			usage();
+		if (argc - optind > 1) {
+		    usage();
+		}
 	}
 	if (pid && port) {
 	    	usage();

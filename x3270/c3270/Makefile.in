@@ -29,7 +29,7 @@
 RM = rm -f
 CC = @CC@
 
-all: c3270 x3270if
+all: c3270
 
 OBJ = o
 include common_files.mk c3270_files.mk
@@ -83,8 +83,6 @@ mkkeypad: mkkeypad.o
 
 c3270: $(OBJS1) ../lib/lib3270.a ../lib/lib3270i.a ../lib/lib3270stubs.a ../lib/lib32xx.a
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) -L../lib -l3270 -l3270i -l32xx -l3270stubs $(LIBS)
-x3270if: x3270if.o
-	$(CC) -o $@ x3270if.o
 
 ../lib/lib3270.a:
 	cd ../lib/3270 && $(MAKE) all
@@ -95,11 +93,10 @@ x3270if: x3270if.o
 ../lib/lib3270stubs.a:
 	cd ../lib/3270stubs && $(MAKE) all
 
-install:: c3270 x3270if
+install:: c3270
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)
 	$(INSTALL_PROGRAM) c3270 $(DESTDIR)$(BINDIR)/c3270
-	$(INSTALL_PROGRAM) x3270if $(DESTDIR)$(BINDIR)/x3270if
 install::
 	[ -d $(DESTDIR)$(LIBX3270DIR) ] || \
 		mkdir -p $(DESTDIR)$(LIBX3270DIR)
@@ -112,7 +109,6 @@ install.man:
 	[ -d $(DESTDIR)$(MANDIR)/man5 ] || \
 		mkdir -p $(DESTDIR)$(MANDIR)/man5
 	$(INSTALL_DATA) c3270.man $(DESTDIR)$(MANDIR)/man1/c3270.1
-	$(INSTALL_DATA) x3270if.man $(DESTDIR)$(MANDIR)/man1/x3270if.1
 	$(INSTALL_DATA) x3270-script.man $(DESTDIR)$(MANDIR)/man1/x3270-script.1
 	$(INSTALL_DATA) ibm_hosts.man $(DESTDIR)$(MANDIR)/man5/ibm_hosts.5
 

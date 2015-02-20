@@ -44,12 +44,12 @@ MISC = LICENSE.txt Makefile Msc/Makefile Msc/README.txt Msc/mkversion.c \
 	keypad.callbacks keypad.full keypad.labels keypad.map keypad.outline \
 	mkfb.c mkkeypad.c mkshort.c mkversion.sh mkwversion.sh root_certs.txt \
 	version.txt wc3270.ico wc3270.iss wc3270.rc wc3270.zipit \
-	wc3270_files.mk winenv.mk wizard.c x3270-icon2.bmp x3270if.c
+	wc3270_files.mk winenv.mk wizard.c x3270-icon2.bmp
 
 HTML = html/$(PRODUCT)-man.html html/Bugs.html html/FAQ.html html/Intro.html \
 	html/Keymap.html html/Lineage.html html/README.html \
 	html/ReleaseNotes.html html/Resources.html html/SSL.html \
-	html/Wishlist.html html/wc3270-script.html html/x3270if.html
+	html/Wishlist.html html/wc3270-script.html
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
@@ -58,7 +58,7 @@ src.tgz: $(FILES)
 MANDEP = html.m4 m4man Makefile.aux version.txt
 MKHTML = ./m4man -t html -p $(PRODUCT)
 
-man: html/$(PRODUCT)-man.html html/x3270if.html html/wc3270-script.html
+man: html/$(PRODUCT)-man.html html/wc3270-script.html
 
 html/$(PRODUCT)-man.html: x3270.man.m4 ft.inc resources.inc hostname.inc \
     	keymaps.inc $(MANDEP)
@@ -67,11 +67,8 @@ html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
 html/SSL.html: html/documentation-ssl-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@
-html/x3270if.html:  x3270if.man.m4 $(MANDEP)
-	$(MKHTML) -n x3270if -o $@ x3270if.man.m4
 html/wc3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
 	$(MKHTML) -n wc3270-script -o $@ x3270-script.man.m4
-
 html/Resources.html: resource-body make-resource-doc.pl version.txt
 	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
 

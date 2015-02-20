@@ -40,6 +40,10 @@ SSLDEF = /DHAVE_LIBSSL=1 /I$(SSLDIR)\include
 SSLLIB = gdi32.lib
 !ENDIF
 
+LIB3270 = ..\lib\libw3270.lib
+LIBSTUBS = ..\lib\libw3270stubs.lib
+LIB32XX = ..\lib\libw32xx.lib
+
 XCPPFLAGS = /D_WIN32 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /D_CRT_SECURE_NO_DEPRECATE /DWIN32_LEAN_AND_MEAN /W3 /WX $(SSLDEF) -I. -I..\include
 CFLAGS = $(EXTRA_FLAGS) $(XCPPFLAGS)
 
@@ -51,11 +55,11 @@ VOBJS = $(COMMON_OBJECTS) $(HTTPD_OBJECTS) $(WS3270_OBJECTS) ws3270.RES \
 	fallbacks.obj
 
 OBJECTS = $(VOBJS) version.obj
-LIBS = ..\lib\libw3270.lib ..\lib\libw32xx.lib ..\lib\libw3270stubs.lib $(SSLLIB) ws2_32.lib \
+LIBS = $(LIB3270) $(LIB32XX) $(LIB3270STUBS) $(SSLLIB) ws2_32.lib \
        advapi32.lib user32.lib shell32.lib comdlg32.lib gdi32.lib \
        winspool.lib
 
-PROGS = ws3270.exe
+PROGS = ws3270.exe x3270if.exe
 all: $(PROGS)
 
 version.obj: $(VOBJS) version.txt mkversion.exe Msc\Makefile
@@ -76,14 +80,17 @@ $(MKFB): mkfb.c conf.h
 ws3270.RES: ws3270.rc ws3270.ico Msc\Makefile
 	$(RC) ws3270.rc
 
-ws3270.exe: $(OBJECTS) Msc\Makefile ..\lib\libw3270.lib ..\lib\libw32xx.lib ..\lib\libw3270stubs.lib
+ws3270.exe: $(OBJECTS) Msc\Makefile $(LIB3270) $(LIB32XX) $(LIB3270STUBS)
 	$(CC) /Fews3270.exe $(CFLAGS) $(OBJECTS) $(LIBS)
 
-..\lib\libw3270.lib:
+x3270if.exe: x3270if.obj $(LIB32XX)
+	$(CC) /Fe$@ $(CFLAGS) x3270if.obj $(LIB32XX) ws2_32.lib
+
+$(LIB3270):
 	cd ..\lib\w3270 & $(MAKE) /nologo /fMsc\Makefile
-..\lib\libw32xx.lib:
+$(LIB32XX):
 	cd ..\lib\w32xx & $(MAKE) /nologo /fMsc\Makefile
-..\lib\libw3270stubs.lib:
+$(LIB3270STUBS):
 	cd ..\lib\w3270stubs & $(MAKE) /nologo /fMsc\Makefile
 
 wversion.obj: version.txt mkversion.exe

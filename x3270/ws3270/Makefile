@@ -30,6 +30,10 @@
 #  WIN32_FLAGS.
 include winenv.mk
 
+LIB3270 = ../lib/libw3270.a
+LIBSTUBS = ../lib/libw3270stubs.a
+LIB32XX = ../lib/libw32xx.a
+
 MKFB = mkfb$(NATIVE_SFX)
 
 XCPPFLAGS = $(WIN32_FLAGS) -DWIN32_LEAN_AND_MEAN -I. -I../include
@@ -47,7 +51,7 @@ LIBS = $(SSLLIB) -lws2_32 -lcomdlg32 -lgdi32 -lwinspool
 SHRTLIBS = -lole32 -luuid
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
-PROGS = ws3270.exe
+PROGS = ws3270.exe x3270if.exe
 all: $(PROGS)
 
 XVERSION = xversion.c
@@ -69,14 +73,17 @@ $(MKFB): mkfb.c conf.h Makefile
 ws3270res.o: ws3270.rc ws3270.ico Makefile
 	$(WINDRES) -i ws3270.rc -o ws3270res.o
 
-ws3270.exe: $(OBJECTS) Makefile ../lib/libw3270.a ../lib/libw32xx.a ../lib/libw3270stubs.a
+ws3270.exe: $(OBJECTS) Makefile $(LIB3270) $(LIB32XX) $(LIB3270STUBS)
 	$(CC) -o ws3270.exe $(CFLAGS) $(OBJECTS) -L../lib -lw3270 -lw32xx -lw3270stubs $(LIBS)
 
-../lib/libw3270.a:
+x3270if.exe: x3270if.o $(LIB32XX)
+	$(CC) -o $@ $(CFLAGS) x3270if.o -L../lib -lw32xx -lws2_32
+
+$(LIB3270):
 	cd ../lib/w3270 && $(MAKE) all
-../lib/libw32xx.a:
+$(LIB32XX):
 	cd ../lib/w32xx && $(MAKE) all
-../lib/libw3270stubs.a:
+$(LIB3270STUBS):
 	cd ../lib/w3270stubs && $(MAKE) all
 
 wversion.o: version.txt mkwversion.sh
@@ -89,11 +96,10 @@ clean:
 clobber: clean
 	rm -f $(PROGS)
 
-depend: $(SRCS)
-	$(CC) -MM $(XCPPFLAGS) $(SRCS) >dependencies-
+depend: $(SRCS) x3270if.c
+	$(CC) -MM $(XCPPFLAGS) $(SRCS) x3270if.c >dependencies-
 	mv dependencies- dependencies
 
 ifeq ($(wildcard dependencies),dependencies)
 include dependencies
 endif
-

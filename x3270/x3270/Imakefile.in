@@ -32,7 +32,7 @@
  *  @configure_input@
  */
 
-       PROGRAMS = x3270 x3270if
+       PROGRAMS = x3270
 LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) $(XLIB)
 
 OBJ = o
@@ -97,8 +97,8 @@ EXTRA_LOAD_FLAGS=-lXpm
  */
 DEPENDFLAGS = -I/usr/local/include
 
-/* Main targets: x3270 and x3270if. */
-AllTarget($(FONTS) ProgramTargetName(x3270) ProgramTargetName(x3270if))
+/* Main targets: x3270 and fonts. */
+AllTarget($(FONTS) ProgramTargetName(x3270))
 
 /* Build/install/man target for x3720.  Requires extra libraries. */
 ComplexProgramTarget_1(x3270,,$(LOCAL_LIBRARIES))
@@ -156,12 +156,6 @@ fallbacks.c: mkfb $(FALLBACKS)
 mkfb: mkfb.c conf.h
 	$(CC) $(CFLAGS) -o mkfb mkfb.c
 
-/* Build rule for x3270if.  This is specified explicitly instead of using
-   ComplexProgramTarget, because we may want to install it somewhere other
-   than under PROJECTROOT. */
-ProgramTargetName(x3270if): x3270if.o
-	$(CC) $(CFLAGS) -o x3270if x3270if.o
-
 /* Rules for using and installing a separate app-defaults file. */
 @DEFINE_UAD@
 #ifdef USE_APP_DEFAULTS
@@ -184,10 +178,6 @@ EXTRA_DEFINES = $(HP_DEFINE) $(AD_DEFINE) @XANSI@ -DLIBX3270DIR=\"$(LIBX3270DIR)
  * Install rules.                                                             *
  ******************************************************************************/
 
-/* Install rule for x3270if. */
-install:: ProgramTargetName(x3270if)
-	$(INSTALL) $(INSTALLFLAGS) $(INSTPGMFLAGS) ProgramTargetName(x3270if) $(DESTDIR)$(autoconf_bindir)/ProgramTargetName(x3270if)
-
 /* Extra install rule to regenerate fonts.dir. */
 install:: $(DESTDIR)$(FONTINSTDIR)/fonts.dir
 $(DESTDIR)$(FONTINSTDIR)/fonts.dir::
@@ -203,12 +193,11 @@ install:: $(HOSTSFILE)
 		$(INSTALL) -c $(INSTDATFLAGS) $(HOSTSFILE) $(DESTDIR)$(LIBX3270DIR)/$(HOSTSFILE)
 
 /*
- * Install rules for x3270if, x3270-script and ibm_hosts man pages.
+ * Install rules for x3270-script and ibm_hosts man pages.
  * These are specified explicitly, instead of using the standard Imake macros,
  * because we may want to install in a directory other than PROJECTROOT.
  */
-install.man:: x3270if.man x3270-script.man ibm_hosts.man
-	$(INSTALL) -c $(INSTMANFLAGS) x3270if.man $(DESTDIR)$(autoconf_mandir)/man1/x3270if.1
+install.man:: x3270-script.man ibm_hosts.man
 	$(INSTALL) -c $(INSTMANFLAGS) x3270-script.man $(DESTDIR)$(autoconf_mandir)/man1/x3270-script.1
 	$(INSTALL) -c $(INSTMANFLAGS) ibm_hosts.man $(DESTDIR)$(autoconf_mandir)/man5/ibm_hosts.5
 
@@ -218,4 +207,4 @@ install.man:: x3270if.man x3270-script.man ibm_hosts.man
 clean:: 
 	$(RM) $(FONTS) qcpp mkfb fallbacks.txt fallbacks.c
 clobber:: clean
-	$(RM) x3270 x3270if
+	$(RM) x3270
