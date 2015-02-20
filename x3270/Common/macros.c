@@ -350,7 +350,7 @@ macros_register(void)
     };
 
     /* Register for state changes. */
-    register_schange(ST_CONNECT, sms_connect);
+    register_schange_ordered(ST_CONNECT, sms_connect, 2000);
     register_schange(ST_3270_MODE, sms_in3270);
 
     /* Register actions.*/

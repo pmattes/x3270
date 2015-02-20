@@ -36,7 +36,7 @@
 
 typedef struct st_callback {
     llist_t list;
-    void (*func)(Boolean);
+    schange_callback_t *func;
     unsigned short order;
 } st_callback_t;
 llist_t st_callbacks[N_ST];
@@ -68,7 +68,8 @@ init_schange(void)
  *   0 through 65533		specific ordering
  */
 void
-register_schange_ordered(int tx, void (*func)(Boolean), unsigned short order)
+register_schange_ordered(int tx, schange_callback_t *func,
+	unsigned short order)
 {
     st_callback_t *st;
     st_callback_t *before;
@@ -93,7 +94,7 @@ register_schange_ordered(int tx, void (*func)(Boolean), unsigned short order)
 
 /* Register a function interested in a state change. */
 void
-register_schange(int tx, void (*func)(Boolean))
+register_schange(int tx, schange_callback_t *func)
 {
     register_schange_ordered(tx, func, ORDER_DONTCARE);
 }

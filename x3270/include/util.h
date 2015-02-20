@@ -103,7 +103,9 @@ void llist_unlink(llist_t *element);
 
 #define ORDER_DONTCARE	0xfffe
 #define ORDER_LAST	0xffff
-void register_schange_ordered(int tx, void (*func)(Boolean),
+
+typedef void schange_callback_t(Boolean);
+void register_schange_ordered(int tx, schange_callback_t *func,
 	unsigned short order);
-void register_schange(int tx, void (*func)(Boolean));
+void register_schange(int tx, schange_callback_t *func);
 void st_changed(int tx, Boolean mode);
