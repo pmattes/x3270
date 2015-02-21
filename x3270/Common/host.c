@@ -856,10 +856,15 @@ host_in3270(enum cstate new_cstate)
     Boolean now3270 = (new_cstate == CONNECTED_3270 ||
 		       new_cstate == CONNECTED_SSCP ||
 		       new_cstate == CONNECTED_TN3270E);
+    Boolean was3270 = (cstate == CONNECTED_3270 ||
+	    	       cstate == CONNECTED_SSCP ||
+		       cstate == CONNECTED_TN3270E);
 
     cstate = new_cstate;
     ever_3270 = now3270;
-    st_changed(ST_3270_MODE, now3270);
+    if (now3270 != was3270) {
+	st_changed(ST_3270_MODE, now3270);
+    }
 }
 
 void

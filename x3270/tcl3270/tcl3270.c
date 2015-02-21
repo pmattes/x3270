@@ -377,7 +377,7 @@ usage(const char *msg)
  * feed it to a dead host.
  */
 static void
-main_connect(Boolean ignored)
+tcl3270_connect(Boolean ignored)
 {
     if (CONNECTED) {
 	ctlr_erase(True);
@@ -1782,8 +1782,8 @@ tcl3270_register(void)
     register_toggles(toggles, array_count(toggles));
 
     /* Register for state changes. */
-    register_schange(ST_CONNECT, main_connect);
-    register_schange(ST_3270_MODE, main_connect);
+    register_schange(ST_CONNECT, tcl3270_connect);
+    register_schange(ST_3270_MODE, tcl3270_connect);
 
     /* Register our actions. */
     register_actions(actions, array_count(actions));

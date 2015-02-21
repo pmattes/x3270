@@ -164,7 +164,7 @@ usage(const char *msg)
 
 /* Callback for connection state changes. */
 static void
-main_connect(Boolean ignored)
+c3270_connect(Boolean ignored)
 {
     if (CONNECTED || appres.disconnect_clear) {
 #if defined(C3270_80_132) /*[*/
@@ -1905,8 +1905,8 @@ c3270_register(void)
     };
 
     /* Register for state changes. */
-    register_schange(ST_CONNECT, main_connect);
-    register_schange(ST_3270_MODE, main_connect);
+    register_schange(ST_CONNECT, c3270_connect);
+    register_schange(ST_3270_MODE, c3270_connect);
     register_schange(ST_EXITING, main_exiting);
 
     /* Register our actions. */
