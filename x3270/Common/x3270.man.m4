@@ -72,6 +72,7 @@ ifelse(XX_PRODUCT,c3270,
 `If the console is capable of displaying colors, then XX_FB(c3270) emulates an
 XX_SM(IBM) 3279.  Otherwise, it emulates a 3278.
 ')dnl
+include(hostname.inc)
 XX_SH(Options)
 ifelse(XX_PRODUCT,x3270,`XX_FB(x3270) is a toolkit based program, so it understands standard Xt options and
 resources.

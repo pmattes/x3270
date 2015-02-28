@@ -50,7 +50,7 @@ FONTS = 3270-12.bdf 3270-12b.bdf 3270-20.bdf 3270-20b.bdf 3270.bdf 3270b.bdf \
 MISC = $(PRODUCT).man LICENSE README README.dbcs common_files.mk dryrun \
 	ibm_hosts ibm_hosts.man mkfb.c mkversion.sh qcpp-defs.sh \
 	version.txt x3270-icon2.xpm x3270-script.man x3270_files.mk \
-	x3270_glue.expect x3270hist.pl x3270if.c x3270if.man
+	x3270_glue.expect x3270hist.pl
 
 EXAMPLES = Examples/child_script.bash Examples/child_script.ksh \
 	Examples/child_script.sh Examples/cms_logon.bash \
@@ -65,8 +65,7 @@ HTML = html/$(PRODUCT)-man.html html/Attributes.html html/Brackets.html \
 	html/Intro.html html/Keymap.html html/Lineage.html html/README.html \
 	html/ReleaseNotes.html html/Resources.html html/SSL.html \
 	html/Wishlist.html html/del.jpg html/delta.jpg html/ibm_hosts.html \
-	html/x3270-script.html html/x3270.jpg html/x3270.xbm \
-	html/x3270if.html
+	html/x3270-script.html html/x3270.jpg html/x3270.xbm
 
 FT = ft/all.chars ft/print.chars
 
@@ -84,18 +83,14 @@ MKMAN = ./m4man -t man -p $(PRODUCT)
 MKHTML = ./m4man -t html -p $(PRODUCT)
 
 MANSRC = x3270.man.m4 menus.inc apl.inc xkeymaps.inc hostname.inc
-man: $(PRODUCT).man x3270if.man ibm_hosts.man x3270-script.man \
-	html/$(PRODUCT)-man.html html/x3270if.html html/ibm_hosts.html \
+man: $(PRODUCT).man ibm_hosts.man x3270-script.man \
+	html/$(PRODUCT)-man.html html/ibm_hosts.html \
 	html/x3270-script.html
 
 $(PRODUCT).man: $(MANSRC) $(MANDEP)
 	$(MKMAN) -n x3270 -o $@ x3270.man.m4
 html/$(PRODUCT)-man.html: $(MANSRC) $(MANDEP)
 	$(MKHTML) -n x3270 -o $@ x3270.man.m4
-x3270if.man: x3270if.man.m4 $(MANDEP)
-	$(MKMAN) -n x3270if -o $@ x3270if.man.m4
-html/x3270if.html: x3270if.man.m4 ft.inc $(MANDEP)
-	$(MKHTML) -n x3270if -o $@ x3270if.man.m4
 ibm_hosts.man: ibm_hosts.man.m4 man.m4 $(MANDEP)
 	$(MKMAN) -n ibm_hosts -o $@ ibm_hosts.man.m4
 html/ibm_hosts.html: ibm_hosts.man.m4 ft.inc $(MANDEP)

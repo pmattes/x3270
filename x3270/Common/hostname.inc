@@ -21,6 +21,12 @@ Note that TLS-encrypted sessions using the TELNET START-TLS option are
 negotiated with the host automatically; for these sessions the XX_FB(L:) prefix
 should not be used.
 XX_LP
+Prepending a XX_FB(B:) onto XX_FI(hostname) changes the interaction of
+scripts and the host BIND-IMAGE message.
+Without XX_FB(B:), XX_PRODUCT will unlock the keyboard as soon as a
+BIND-IMAGE is received. With XX_FB(B:), it will wait for a Write command that
+explicitly unlocks the keyboard.
+XX_LP
 A specific Logical Unit (LU) name to use may be specified by prepending it to
 the XX_FI(hostname) with an XX_DQUOTED(XX_FB(@)).
 Multiple LU names to try can be separated by commas.
