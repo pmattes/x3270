@@ -61,6 +61,7 @@ Boolean		no_login_host = False;
 Boolean		non_tn3270e_host = False;
 Boolean		passthru_host = False;
 Boolean		ssl_host = False;
+Boolean		bind_lock_host = False;
 #define		LUNAME_SIZE	16
 char		luname[LUNAME_SIZE+1];
 char		*connected_lu = NULL;
@@ -304,7 +305,7 @@ parse_localprocess(const char *s)
 }
 #endif /*]*/
 
-static char *pfxstr = "AaCcLlNnPpSs";
+static char *pfxstr = "AaCcLlNnPpSsBb";
 
 /*
  * A new hostname parser.  A bit more general.
@@ -558,13 +559,13 @@ done:
  */
 static char *
 split_host(char *s, Boolean *ansi, Boolean *std_ds, Boolean *passthru,
-	Boolean *non_e, Boolean *secure, Boolean *no_login, char *xluname,
-	char **port, Boolean *needed)
+	Boolean *non_e, Boolean *secure, Boolean *no_login,
+	Boolean *bind_lock, char *xluname, char **port, Boolean *needed)
 {
     char *lu;
     char *host;
     unsigned prefixes;
-    Boolean *pfxptr[6];
+    Boolean *pfxptr[7];
     int i;
 
     *needed = False;
@@ -586,7 +587,8 @@ split_host(char *s, Boolean *ansi, Boolean *std_ds, Boolean *passthru,
     pfxptr[3] = non_e;		/* N: */
     pfxptr[4] = passthru;	/* P: */
     pfxptr[5] = std_ds;		/* S: */
-    for (i = 0; i < 6; i++) {
+    pfxptr[6] = bind_lock;	/* B: */
+    for (i = 0; i < 7; i++) {
 	if (prefixes & (1 << i)) {
 	    *pfxptr[i] = True;
 	} else {
@@ -659,8 +661,8 @@ host_connect(const char *n)
 
 	/* Strip off and remember leading qualifiers. */
 	if ((s = split_host(nb, &ansi_host, &std_ds_host, &passthru_host,
-			&non_tn3270e_host, &ssl_host, &no_login_host, luname,
-			&port, &needed)) == NULL) {
+			&non_tn3270e_host, &ssl_host, &no_login_host,
+			&bind_lock_host, luname, &port, &needed)) == NULL) {
 	    goto failure;
 	}
 
@@ -674,7 +676,8 @@ host_connect(const char *n)
 	    Free(s);
 	    if (!(s = split_host(target_name, &ansi_host, &std_ds_host,
 			    &passthru_host, &non_tn3270e_host, &ssl_host,
-			    &no_login_host, luname, &port, &needed))) {
+			    &no_login_host, &bind_lock_host, luname, &port,
+			    &needed))) {
 		goto failure;
 	    }
 	}

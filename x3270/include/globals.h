@@ -179,6 +179,7 @@ extern int		defCOLS;
 extern int		altROWS;	/* alternate (EraseWriteAlternate) */
 extern int		altCOLS;
 extern const char	*app;
+extern Boolean		bind_lock_host;
 extern const char	*build;
 extern const char	*cyear;
 extern const char	*build_rpq_timestamp;
