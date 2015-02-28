@@ -2916,6 +2916,10 @@ EraseInput_action(ia_t ia, unsigned argc, const char **argv)
 	ctlr_clear(True);
 	cursor_move(0);
     }
+
+    /* Synchronize the DBCS state. */
+    (void) ctlr_dbcs_postprocess();
+
     return True;
 }
 

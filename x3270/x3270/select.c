@@ -780,17 +780,10 @@ SelectUp_xaction(Widget w _is_unused, XEvent *event, String *params,
     saw_motion = 0;
 }
 
-/*
- * Set the selection.
- * Usually bound to the Copy key.
- */
-void
-set_select_xaction(Widget w _is_unused, XEvent *event, String *params,
-    Cardinal *num_params)
+static void
+set_select(XEvent *event, String *params, Cardinal *num_params)
 {
     Cardinal i;
-
-    xaction_debug(set_select_xaction, event, params, num_params);
 
     if (!any_selected) {
 	return;
@@ -814,23 +807,35 @@ set_select_xaction(Widget w _is_unused, XEvent *event, String *params,
 }
 
 /*
+ * Set the selection.
+ * Usually bound to the Copy key.
+ */
+void
+set_select_xaction(Widget w _is_unused, XEvent *event, String *params,
+    Cardinal *num_params)
+{
+    xaction_debug(set_select_xaction, event, params, num_params);
+
+    set_select(event, params, num_params);
+}
+
+/*
  * Translate the mouse position to a buffer address.
  */
 int
 mouse_baddr(Widget w, XEvent *event)
 {
-	int x, y;
+    int x, y;
 
-	if (w != *screen)
-		return 0;
-	BOUNDED_XY(event, x, y);
-	return ROWCOL_TO_BA(y, x);
+    if (w != *screen) {
+	return 0;
+    }
+    BOUNDED_XY(event, x, y);
+    return ROWCOL_TO_BA(y, x);
 }
 
 /*
  * Cut action.
- * For now, merely erases all unprotected characters currently selected.
- * In future, it may interact more with selections.
  */
 #define ULS	sizeof(unsigned long)
 #define ULBS	(ULS * 8)
@@ -840,32 +845,55 @@ Cut_xaction(Widget w _is_unused, XEvent *event, String *params,
 	Cardinal *num_params)
 {
     int baddr;
+    int ba2;
     unsigned char fa = get_field_attribute(0);
     unsigned long *target;
-    unsigned char repl;
 
     xaction_debug(Cut_xaction, event, params, num_params);
 
-    target = (unsigned long *)XtCalloc(ULS, ((ROWS*COLS)+(ULBS-1))/ULBS);
+    if (!any_selected) {
+	return;
+    }
+
+    set_select(event, params, num_params);
+
+    target = (unsigned long *)XtCalloc(ULS, ((ROWS*COLS)+(ULBS-1)) / ULBS);
 
     /* Identify the positions to empty. */
     for (baddr = 0; baddr < ROWS*COLS; baddr++) {
 	if (ea_buf[baddr].fa) {
 	    fa = ea_buf[baddr].fa;
 	} else if ((IN_NVT || !FA_IS_PROTECTED(fa)) && screen_selected(baddr)) {
-	    target[baddr/ULBS] |= 1 << (baddr%ULBS);
+	    target[baddr/ULBS] |= 1L << (baddr%ULBS);
 	}
     }
 
     /* Erase them. */
-    if (IN_3270) {
-	repl = EBC_null;
-    } else {
-	repl = EBC_space;
-    }
     for (baddr = 0; baddr < ROWS*COLS; baddr++) {
-	if (target[baddr/ULBS] & (1 << (baddr%ULBS))) {
-	    ctlr_add(baddr, repl, 0);
+	if ((target[baddr/ULBS] & (1L << (baddr%ULBS)))
+		    && ea_buf[baddr].cc != EBC_so
+		    && ea_buf[baddr].cc != EBC_si) {
+	    switch (ctlr_dbcs_state(baddr)) {
+	    case DBCS_NONE:
+	    case DBCS_SB:
+		ctlr_add(baddr, EBC_space, ea_buf[baddr].cs);
+		break;
+	    case DBCS_LEFT:
+		ctlr_add(baddr, EBC_space, ea_buf[baddr].cs);
+		ba2 = baddr;
+		INC_BA(ba2);
+		ctlr_add(ba2, EBC_space, ea_buf[baddr].cs);
+		break;
+	    case DBCS_RIGHT:
+		ba2 = baddr;
+		DEC_BA(ba2);
+		ctlr_add(ba2, EBC_space, ea_buf[baddr].cs);
+		ctlr_add(baddr, EBC_space, ea_buf[baddr].cs);
+		break;
+	    default:
+		break;
+	    }
+	    mdt_set(baddr);
 	}
     }
 

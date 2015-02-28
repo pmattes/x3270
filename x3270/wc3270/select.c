@@ -727,11 +727,15 @@ copy_cut_action(Boolean cutting)
 	    if (ea_buf[baddr].fa) {
 		fa = ea_buf[baddr].fa;
 	    } else {
-		if (!sp_save[baddr] || FA_IS_PROTECTED(fa)) {
+		if (!sp_save[baddr]
+			|| FA_IS_PROTECTED(fa)
+			|| ea_buf[baddr].cc == EBC_so
+			|| ea_buf[baddr].cc != EBC_si) {
 		    continue;
 		}
 		switch (ctlr_dbcs_state(baddr)) {
 		case DBCS_NONE:
+		case DBCS_SB:
 		    ctlr_add(baddr, EBC_space, ea_buf[baddr].cs);
 		    break;
 		case DBCS_LEFT:
@@ -749,6 +753,7 @@ copy_cut_action(Boolean cutting)
 		default:
 		    break;
 		}
+		mdt_set(baddr);
 	    }
 	}
 	Free(sp_save);
