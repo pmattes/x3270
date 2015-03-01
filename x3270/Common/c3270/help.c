@@ -92,7 +92,7 @@ static struct {
 	{ "Connect", "-e [<command> [<arg>...]]", P_INTERACTIVE,
 	    "Open connection to a local shell or command" },
 #endif /*]*/
-	{ "ContinueScript", NULL, P_SCRIPTING, "Resume paused script" },
+	{ "ContinueScript", "<result>", P_SCRIPTING, "Resume paused script" },
 #if defined(WC3270) /*[*/
 	{ "Copy", NULL, P_3270, "Copy selected text to Windows clipboard" },
 #endif /*]*/
@@ -155,7 +155,7 @@ static struct {
 #if defined(WC3270) /*[*/
 	{ "Paste", NULL, P_3270, "Paste clipboard contents" },
 #endif /*]*/
-	{ "PauseScript", NULL, P_SCRIPTING, "Pause script until ResumeScript" },
+	{ "PauseScript", NULL, P_SCRIPTING, "Pause script until ContinueScript" },
 	{ "PF", "<n>", P_3270, "Send 3270 PF AID" },
 	{ "PreviousWord", NULL, P_3270, "Move cursor to previous word" },
 	{ "Printer", "Start[,lu]|Stop", P_3270|P_SCRIPTING|P_INTERACTIVE,
