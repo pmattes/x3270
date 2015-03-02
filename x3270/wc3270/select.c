@@ -730,7 +730,7 @@ copy_cut_action(Boolean cutting)
 		if (!sp_save[baddr]
 			|| FA_IS_PROTECTED(fa)
 			|| ea_buf[baddr].cc == EBC_so
-			|| ea_buf[baddr].cc != EBC_si) {
+			|| ea_buf[baddr].cc == EBC_si) {
 		    continue;
 		}
 		switch (ctlr_dbcs_state(baddr)) {
