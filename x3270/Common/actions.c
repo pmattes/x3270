@@ -38,8 +38,10 @@
 #include "appres.h"
 
 #include "actions.h"
+#include "lazya.h"
 #include "macros.h"
 #include "popups.h"
+#include "resources.h"
 #include "trace.h"
 #include "util.h"
 
@@ -53,28 +55,77 @@ const char *ia_name[] = {
     "Keymap", "Idle"
 };
 
+typedef struct {
+    llist_t list;
+    char *name;
+} suppress_t;
+static llist_t suppressed = LLIST_INIT(suppressed);
+static Boolean suppressed_initted = False;
+
+/* Initialize the list of suppressed actions. */
+static void
+init_suppressed(const char *actions)
+{
+    char *a = lazya(NewString(actions));
+    char *action;
+    suppress_t *s;
+
+    while ((action = strtok(a, " \t\r\n")) != NULL) {
+	size_t sl = strlen(action);
+	action_elt_t *e;
+	Boolean found = False;
+
+	/* Prime for the next strtok() call. */
+	a = NULL;
+
+	/* Chop off any trailing parentheses. */
+	if (sl > 2 && !strcmp(action + sl - 2, "()")) {
+	    sl -= 2;
+	    *(action + sl) = '\0';
+	}
+
+	/* Make sure the action they are suppressing is real. */
+	FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	    if (!strcasecmp(e->t.name, action)) {
+		found = True;
+		break;
+	    }
+	} FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
+	if (!found) {
+	    vtrace("Warning: action '%s' in %s not found\n", action,
+		    ResSuppressActions);
+	    continue;
+	}
+
+	/* Add it to the list. */
+	s = (suppress_t *)Malloc(sizeof(suppress_t) + sl + 1);
+	s->name = (char *)(s + 1);
+	strcpy(s->name, action);
+	llist_init(&s->list);
+	llist_insert_before(&s->list, &suppressed);
+    }
+}
+
 /* Look up an action name in the suppressed actions resource. */
 static Boolean
-action_suppressed(const char *name, const char *suppress)
+action_suppressed(const char *name)
 {
-    const char *s = suppress;
-    char *t;
+    suppress_t *s;
 
-    while ((t = strstr(s, name)) != NULL) {
-	char b;
-	char e = t[strlen(name)];
+    if (!suppressed_initted) {
+	init_suppressed(appres.suppress_actions);
+	suppressed_initted = True;
+    }
+    if (llist_isempty(&suppressed)) {
+	return False;
+    }
 
-	if (t == suppress) {
-	    b = '\0';
-	} else {
-	    b = *(t - 1);
-	}
-	if ((b == '\0' || b == ')' || isspace(b)) &&
-	    (e == '\0' || e == '(' || isspace(e))) {
+    FOREACH_LLIST(&suppressed, s, suppress_t *) {
+	if (!strcasecmp(name, s->name)) {
 	    return True;
 	}
-	s = t + strlen(name);
-    }
+    } FOREACH_LLIST_END(&suppressed, s, suppress_t *);
+
     return False;
 }
 
@@ -167,8 +218,7 @@ Boolean
 run_action_entry(action_elt_t *e, enum iaction cause, unsigned count,
 	const char **parms)
 {
-    if (appres.suppress_actions &&
-	    action_suppressed(e->t.name, appres.suppress_actions)) {
+    if (action_suppressed(e->t.name)) {
 	vtrace("%s() [suppressed]\n", e->t.name);
 	return False;
     }
