@@ -569,8 +569,6 @@ main(int argc, char *argv[])
 	    hio_init(sa, sa_len);
 	}
     }
-    info_popup_init();
-    error_popup_init();
     printer_popup_init();
     ft_init();
 
@@ -654,6 +652,8 @@ main(int argc, char *argv[])
     }
 
     screen_init();
+    info_popup_init();
+    error_popup_init();
 
     protocols[0] = a_delete_me;
     protocols[1] = a_save_yourself;

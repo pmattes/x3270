@@ -66,10 +66,14 @@ static Boolean suppressed_initted = False;
 static void
 init_suppressed(const char *actions)
 {
-    char *a = lazya(NewString(actions));
+    char *a;
     char *action;
     suppress_t *s;
 
+    if (actions == NULL) {
+	return;
+    }
+    a = lazya(NewString(actions));
     while ((action = strtok(a, " \t\r\n")) != NULL) {
 	size_t sl = strlen(action);
 	action_elt_t *e;

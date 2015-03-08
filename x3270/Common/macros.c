@@ -808,7 +808,7 @@ peer_script_init(void)
 	(void) memset(&ssun, '\0', sizeof(ssun));
 	ssun.sun_family = AF_UNIX;
 	(void) snprintf(ssun.sun_path, sizeof(ssun.sun_path),
-		"/tmp/x3sck.%u", getpid());
+		"/tmp/x3sck.%u", (unsigned)getpid());
 	(void) unlink(ssun.sun_path);
 	if (bind(socketfd, (struct sockaddr *)&ssun, sizeof(ssun)) < 0) {
 	    popup_an_errno(errno, "Unix-domain socket bind");
