@@ -57,6 +57,13 @@ AC_SUBST(XPRECOMP)
 AC_SUBST(NIXCCOPTIONS)
 AC_SUBST(CCOPTIONS)
 
+dnl Checks for header files.
+AC_CHECK_HEADERS(sys/select.h)
+AC_CHECK_HEADERS(pty.h)
+AC_CHECK_HEADERS(libutil.h)
+AC_CHECK_HEADERS(util.h)
+AC_CHECK_HEADERS(getopt.h)
+
 dnl Check for SSL header file.
 AC_ARG_WITH(ssl,[  --with-ssl=DIR          specify OpenSSL install directory])
 if test "$enable_ssl" != no
@@ -162,13 +169,6 @@ AC_SEARCH_LIBS(gethostbyname, nsl_s nsl)
 AC_SEARCH_LIBS(socket, socket)
 AC_CHECK_HEADERS(iconv.h)
 AC_SEARCH_LIBS(libiconv, iconv, , AC_SEARCH_LIBS(iconv, iconv, , if test "$unkw"; then AC_MSG_ERROR("No iconv library function"); fi))
-
-dnl Checks for header files.
-AC_CHECK_HEADERS(sys/select.h)
-AC_CHECK_HEADERS(pty.h)
-AC_CHECK_HEADERS(libutil.h)
-AC_CHECK_HEADERS(util.h)
-AC_CHECK_HEADERS(getopt.h)
 
 dnl Checks for library functions.
 AC_CHECK_FUNCS(vasprintf)

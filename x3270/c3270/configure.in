@@ -62,6 +62,25 @@ AC_SUBST(XPRECOMP)
 AC_SUBST(BROKEN_NEWTERM)
 AC_SUBST(CCOPTIONS)
 
+dnl Checks for header files.
+AC_CHECK_HEADERS(sys/select.h)
+if test "$with_readline" != no; then
+AC_CHECK_HEADERS(readline/history.h)
+fi
+AC_CHECK_HEADERS(pty.h)
+AC_CHECK_HEADERS(libutil.h)
+AC_CHECK_HEADERS(util.h)
+AC_CHECK_HEADERS(getopt.h)
+dnl Find the best curses header file and hope it's consistent with the library
+dnl we found.
+AC_CHECK_HEADERS(ncursesw/ncurses.h, ,
+ [AC_CHECK_HEADERS(ncurses/ncurses.h, ,
+  [AC_CHECK_HEADERS(ncurses.h, ,
+   [AC_CHECK_HEADERS(curses.h, , [AC_MSG_ERROR(No curses header file)])])])])
+AC_CHECK_HEADERS(ncursesw/term.h, ,
+ [AC_CHECK_HEADERS(ncurses/term.h, ,
+  [AC_CHECK_HEADERS(term.h)])])
+
 dnl Check for SSL header file.
 AC_ARG_WITH(ssl,[  --with-ssl=DIR          specify OpenSSL install directory])
 if test "$enable_ssl" != no
@@ -133,25 +152,6 @@ fi
 
 dnl Check for the ncurses default-color extensions.
 AC_CHECK_FUNCS(use_default_colors)
-
-dnl Checks for header files.
-AC_CHECK_HEADERS(sys/select.h)
-if test "$with_readline" != no; then
-AC_CHECK_HEADERS(readline/history.h)
-fi
-AC_CHECK_HEADERS(pty.h)
-AC_CHECK_HEADERS(libutil.h)
-AC_CHECK_HEADERS(util.h)
-AC_CHECK_HEADERS(getopt.h)
-dnl Find the best curses header file and hope it's consistent with the library
-dnl we found.
-AC_CHECK_HEADERS(ncursesw/ncurses.h, ,
- [AC_CHECK_HEADERS(ncurses/ncurses.h, ,
-  [AC_CHECK_HEADERS(ncurses.h, ,
-   [AC_CHECK_HEADERS(curses.h, , [AC_MSG_ERROR(No curses header file)])])])])
-AC_CHECK_HEADERS(ncursesw/term.h, ,
- [AC_CHECK_HEADERS(ncurses/term.h, ,
-  [AC_CHECK_HEADERS(term.h)])])
 
 dnl Checks for library functions.
 AC_CHECK_FUNCS(vasprintf)

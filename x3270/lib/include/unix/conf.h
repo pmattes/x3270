@@ -51,6 +51,9 @@
 /* Configuration options. */
 /* #undef USE_ICONV */
 
+/* Platform-specific oddness. */
+/* #undef CONNECT_GETPEERNAME */
+
 /* Optional parts. */
 #define X3270_APL 1
 #define X3270_DBCS 1

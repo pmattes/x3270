@@ -1082,15 +1082,26 @@ connection_complete(void)
 static void
 output_possible(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
+#if defined(CONNECT_GETPEERNAME) /*[*/
+    sockaddr_46_t sa;
+    socklen_t len = sizeof(sa);
+# define COMPLETE_CONNECT(s)	getpeername(s, &sa.sa, &len)
+# else /*][*/
+# define COMPLETE_CONNECT(s)	connect(s, &haddr[ha_ix].sa, sizeof(haddr[0]))
+#endif /*]*/
+
     vtrace("Output possible\n");
-	
+
     /*
      * Try a connect() again to see if the connection completed sucessfully.
      * On some systems, such as Linux, this is harmless and succeeds.
      * On others, such as MacOS, this is mostly harmless and fails
      * with EISCONN.
+     *
+     * On Solaris, we do a getpeername() instead of a connect(). The second
+     * connect() would fail with EINVAL there.
      */
-    if (connect(sock, &haddr[ha_ix].sa, sizeof(haddr[0])) < 0) {
+    if (COMPLETE_CONNECT(sock) < 0) {
 	if (errno != EISCONN) {
 	    vtrace("RCVD socket error %d (%s)\n", socket_errno(),
 		    strerror(errno));
