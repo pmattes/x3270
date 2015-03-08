@@ -44,6 +44,7 @@ case "$host_os" in
 hpux|*cygwin*)	XPOSIX=-D_XOPEN_SOURCE_EXTENDED
 		;;
 solaris2*)	XANSI=-D__EXTENSIONS__
+    		XPOSIX=-D_XOPEN_SOURCE_EXTENDED
 		;;
 darwin*)	XPRECOMP=-no-cpp-precomp
     		XPOSIX=-D_XOPEN_SOURCE_EXTENDED

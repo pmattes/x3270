@@ -1208,12 +1208,12 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 #endif /*]*/
 		vtrace("k=%d "
 # if defined(CURSES_WIDE) /*[*/
-			            "wch=%u "
+			            "wch=%lu "
 # endif /*]*/
 				              "\n",
 			                            k
 # if defined(CURSES_WIDE) /*[*/
-			                             , wch
+			                             , (unsigned long)wch
 # endif /*]*/
 			                                  );
 		if (k == ERR) {
@@ -1259,7 +1259,8 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 			wcs[1] = 0;
 			sz = wcstombs(mbs, wcs, sizeof(mbs));
 			if (sz == (size_t)-1) {
-				vtrace("Invalid input wchar 0x%x\n", wch);
+				vtrace("Invalid input wchar 0x%lx\n",
+					(unsigned long)wch);
 				return;
 			}
 			if (sz == 1) {
@@ -1272,7 +1273,8 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 					&error);
 				if (ucs4 == 0) {
 					vtrace("Unsupported input "
-						"wchar %x\n", wch);
+						"wchar 0x%lx\n",
+						(unsigned long)wch);
 					return;
 				}
 			}

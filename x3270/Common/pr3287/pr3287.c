@@ -885,8 +885,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 				getpid(), dashu);
 #else /*][*/
 			(void) snprintf(tracefile, sizeof(tracefile),
-				"%s/x3trc.%d%s",
-				options.tracedir, getpid(), dashu);
+				"%s/x3trc.%u%s",
+				options.tracedir, (unsigned)getpid(), dashu);
 #endif /*]*/
 			fd = open(tracefile, O_WRONLY | O_CREAT | O_EXCL, 0600);
 			if (fd < 0) {

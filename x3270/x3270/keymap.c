@@ -832,7 +832,8 @@ create_text(void)
 	static Widget source = NULL;
 
 	/* Ready a file. */
-	(void) snprintf(km_file, sizeof(km_file), "/tmp/km.%d", getpid());
+	(void) snprintf(km_file, sizeof(km_file), "/tmp/km.%u",
+		(unsigned)getpid());
 	f = fopen(km_file, "w");
 	if (f == NULL) {
 		popup_an_errno(errno, "temporary file open");
