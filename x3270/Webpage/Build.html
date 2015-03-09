@@ -122,7 +122,11 @@
 	<h2>Building Windows Programs with Visual Studio (GUI)</h2>
 	The Visual Studio solution is called <tt>suite3270.sln</tt> in the
 	<tt>VS2010</tt> folder. There are individual projects for each of the
-	programs and components.
+	programs and components. The Debug and Release configurations build
+	code without OpenSSL support. The SSL-Debug and SSL-Release
+	configurations build code with OpenSSL support, and require standard
+	OpenSSL header files to be installed in the folder
+	<tt>C:\OpenSSL-Win32\include</tt>.
 
 	<h2> Summary of common <tt>configure</tt> Options</h2>
 	The top-level <tt>configure</tt> script accepts the following

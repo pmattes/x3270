@@ -4,7 +4,6 @@ c3270/c3270.man
 c3270/ckeypad.h
 c3270/cmenubar.h
 c3270/common_files.mk
-c3270/conf.h
 c3270/conf.h.in
 c3270/configure
 c3270/configure.in
