@@ -809,7 +809,7 @@ percent_decode(const char *uri, size_t len, Boolean plus)
 	PS_PCT,		/* saw % */
 	PS_HEX1		/* saw % and one hex digit */
     } state = PS_BASE;
-    int hex1, hex2;
+    int hex1 = 0, hex2;
     const char *s;
     char c;
     varbuf_t r;
@@ -1811,7 +1811,7 @@ httpd_input(void *dhandle, const char *data, size_t len)
     httpd_t *h = (httpd_t *)dhandle;
     request_t *r = &h->request;
     size_t i;
-    httpd_status_t rv;
+    httpd_status_t rv = HS_CONTINUE;
 
     httpd_data_trace(h, "<", data, len, &r->it_offset);
 

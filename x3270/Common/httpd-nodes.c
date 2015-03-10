@@ -179,7 +179,7 @@ dyn_form_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	size_t len, const char *sl_buf, size_t sl_len)
 {
     varbuf_t r;
-    httpd_status_t rv;
+    httpd_status_t rv = HS_CONTINUE;
 
     switch (cbs) {
     case SC_SUCCESS:
@@ -294,7 +294,7 @@ static void
 rest_dyn_text_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	size_t len, const char *sl_buf, size_t sl_len)
 {
-    httpd_status_t rv;
+    httpd_status_t rv = HS_CONTINUE;
 
     switch (cbs) {
     case SC_SUCCESS:
@@ -353,7 +353,7 @@ static void
 rest_dyn_status_text_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	size_t len, const char *sl_buf, size_t sl_len)
 {
-    httpd_status_t rv;
+    httpd_status_t rv = HS_CONTINUE;
 
     switch (cbs) {
     case SC_SUCCESS:
@@ -414,7 +414,7 @@ static void
 rest_dyn_html_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	size_t len, const char *sl_buf, size_t sl_len)
 {
-    httpd_status_t rv;
+    httpd_status_t rv = HS_CONTINUE;
 
     switch (cbs) {
     case SC_SUCCESS:
