@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1995-2009, Paul Mattes.
+# Copyright (c) 1995-2009, 2015 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -30,13 +30,21 @@
 
 # Bomb on any error
 set -e
-d=`pwd`
+
+# Figure out the pathname of the directory dryrun is in.
+d=`dirname $0`
+case "$d" in
+.)	d=`pwd`
+    	;;
+/*)	;;
+*)	d=`pwd`/$d
+esac
 
 # Say what you're doing
 set -x
 
 # Set up the fonts
-mkfontdir .
+mkfontdir $d
 xset +fp $d/
 xset fp rehash
 
@@ -49,13 +57,12 @@ then  LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/ucblib
 fi
 export LD_LIBRARY_PATH
 
-# Set up the PATH to include pr3287.
-PATH=$PATH:$d/pr3287
-export PATH
+# Set up the PATH to include pr3287 and s3270 (for x3270if).
+export PATH=$d/pr3287:$d/s3270:$PATH
 
-# Run x3270, pointing it to the current directory for its configuration files
+# Run x3270, pointing it to the build directory for its configuration files
 set +e
-./x3270 -xrm "x3270.confDir: $d" "$@"
+$d/x3270 -xrm "x3270.confDir: $d" "$@"
 
 # Clean up
 xset -fp $d/
