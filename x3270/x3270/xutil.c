@@ -40,23 +40,40 @@
 /* Glue between x3270 and the X libraries. */
 
 /*
- * A way to work around problems with Xt resources.  It seems to be impossible
- * to get arbitrarily named resources.  Someday this should be hacked to
- * add classes too.
+ * Get an arbitrarily-named resource.
  */
 char *
-get_resource(const char *name)
+get_resource(const char *resource)
 {
-    XrmValue value;
-    char *type;
-    char *str;
-    char *r = NULL;
+    char *tlname;	/* top-level name */
+    char *fq_resource;	/* fully-qualified resource name */
+    char *class;	/* class name, derived from resource name */
+    char *fq_class;	/* fully-qualified class name */
+    char *type;		/* resource type */
+    XrmValue value;	/* resource value */
+    char *r = NULL;	/* returned value */
 
-    str = xs_buffer("%s.%s", XtName(toplevel), name);
-    if ((XrmGetResource(rdb, str, 0, &type, &value) == True) && *value.addr) {
-	r = value.addr;
+    /* Find the toplevel name. */
+    tlname = XtName(toplevel);
+
+    /* Figure out the full resource name. */
+    fq_resource = xs_buffer("%s.%s", tlname, resource);
+
+    /* Figure out the full class name. */
+    class = XtNewString(resource);
+    class[0] = toupper(class[0]);
+    fq_class = xs_buffer("%s.%s", tlname, class);
+    XtFree(class);
+
+    /* Look up the resource. */
+    if (XrmGetResource(rdb, fq_resource, fq_class, &type, &value) == True &&
+	    *value.addr) {
+        r = value.addr;
     }
-    XtFree(str);
+
+    /* Clean up and return the value. */
+    XtFree(fq_class);
+    XtFree(fq_resource);
     return r;
 }
 

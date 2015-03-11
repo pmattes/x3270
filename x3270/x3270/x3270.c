@@ -404,7 +404,6 @@ main(int argc, char *argv[])
 #endif /*]*/
 
     /* Initialize. */
-    XrmInitialize();
     toplevel = XtVaAppInitialize(
 	    &appcontext,
 #if defined(USE_APP_DEFAULTS) /*[*/

@@ -53,10 +53,6 @@ export LD_LIBRARY_PATH
 PATH=$PATH:$d/pr3287
 export PATH
 
-# Set up ICU_DATA, for DBCS translations.
-ICU_DATA=.:$ICU_DATA
-export ICU_DATA
-
 # Run x3270, pointing it to the current directory for its configuration files
 set +e
 ./x3270 -xrm "x3270.confDir: $d" "$@"
