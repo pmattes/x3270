@@ -47,7 +47,7 @@ get_resource(const char *resource)
 {
     char *tlname;	/* top-level name */
     char *fq_resource;	/* fully-qualified resource name */
-    char *class;	/* class name, derived from resource name */
+    char *lcomp;	/* last component in resource name */
     char *fq_class;	/* fully-qualified class name */
     char *type;		/* resource type */
     XrmValue value;	/* resource value */
@@ -60,10 +60,9 @@ get_resource(const char *resource)
     fq_resource = xs_buffer("%s.%s", tlname, resource);
 
     /* Figure out the full class name. */
-    class = XtNewString(resource);
-    class[0] = toupper(class[0]);
-    fq_class = xs_buffer("%s.%s", tlname, class);
-    XtFree(class);
+    fq_class = XtNewString(fq_resource);
+    lcomp = strrchr(fq_class, '.') + 1;
+    *lcomp = toupper(*lcomp);
 
     /* Look up the resource. */
     if (XrmGetResource(rdb, fq_resource, fq_class, &type, &value) == True &&
