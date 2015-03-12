@@ -1869,6 +1869,7 @@ c3270_register(void)
 #if defined(_WIN32) /*[*/
 	{ ResAutoShortcut,aoffset(c3270.auto_shortcut),	XRM_BOOLEAN },
 	{ ResBellMode,	aoffset(c3270.bell_mode),	XRM_STRING },
+	{ ResLightPenPrimary,aoffset(c3270.lightpen_primary),XRM_BOOLEAN },
 	{ ResTitle,	aoffset(c3270.title),		XRM_STRING },
 	{ ResVisualBell,aoffset(interactive.visual_bell),XRM_BOOLEAN },
 #endif /*]*/

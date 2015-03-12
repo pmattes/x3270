@@ -124,6 +124,7 @@
 #define ResKeyPasswd		"keyPasswd"
 #define ResKill			"kill"
 #define ResLabelIcon		"labelIcon"
+#define ResLightPenPrimary	"lightPenPrimary"
 #define ResLineWrap		"lineWrap"
 #define ResLnext		"lnext"
 #define ResLocalCp		"localCp"

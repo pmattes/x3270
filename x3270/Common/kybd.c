@@ -2708,6 +2708,7 @@ lightpen_select(int baddr)
 	faddr = find_field_attribute(baddr);
 	fa = ea_buf[faddr].fa;
 	if (!FA_IS_SELECTABLE(fa)) {
+		vtrace("  lightpen select on non-selectable field\n");
 		ring_bell();
 		return;
 	}

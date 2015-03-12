@@ -1933,6 +1933,7 @@ handle_mouse_event(MOUSE_EVENT_RECORD *me)
     int x, y;
     int row, col;
     select_event_t event;
+    Boolean is_alt;
 
     x = me->dwMousePosition.X;
     y = me->dwMousePosition.Y;
@@ -2008,11 +2009,37 @@ handle_mouse_event(MOUSE_EVENT_RECORD *me)
     }
 
     /*
+     * Check for lightpen select.
+     *
+     * The lightPenPrimary resource controls the meaning of left-click with and
+     * without the Alt key:
+     *
+     *                          lightPenSelect
+     * Event               False              True
+     * --------------- ---------------- -----------------
+     * Left-click      Cursor move      Lightpen select
+     *                 or copy/select
+     *
+     * Alt-Left-click  Lightpen select  Cursor move
+     *                                  or copy/select
+     */
+    is_alt = (me->dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
+	!= 0;
+    if (appres.c3270.lightpen_primary? !is_alt: is_alt) {
+	if (event == SE_BUTTON_DOWN) {
+	    vtrace(" lightpen select\n");
+	    lightpen_select((row * COLS) + col);
+	}
+	return;
+    }
+
+    /*
      * Pass it to the selection logic. If the event is not consumed, treat
      * it as a cursor move.
      */
-    if (!select_event(row, col, event,
+    if ( !select_event(row, col, event,
 		(me->dwControlKeyState & SHIFT_PRESSED) != 0)) {
+	vtrace(" cursor move\n");
 	cursor_move((row * COLS) + col);
     }
 }

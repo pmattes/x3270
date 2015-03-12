@@ -192,6 +192,7 @@ typedef struct {
 	Boolean	 reverse_video;
 #else /*]*/
 	Boolean	 auto_shortcut;
+	Boolean  lightpen_primary;
 #endif /*]*/
 
 	char	*all_bold;

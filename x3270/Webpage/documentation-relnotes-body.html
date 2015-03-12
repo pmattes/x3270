@@ -2,6 +2,12 @@
 3.3 is the current development line for the x3270 suite.
 <h2>Changes in version 3.4alpha1, nn. Mon 2015</h2>
 <ul>
+ <li>[all] Overhauled the build structure. Now there are libraries for common
+  functions.</li>
+ <li>[<i>wc3270</i>] Mapped Alt-left-click onto a lightpen select operation.
+  Added a <b>lightPenPrimary</b> resource to switch this, so that an unmodified
+  left-click is a lightpen select and Alt-left-click is a cursor move or
+  copy/paste highlight.</li>
  <li>[all] Added a <b>B:</b> prefix to disable the automatic keyboard unlock
   when a BIND-IMAGE is received.</li>
  <li>[all] Added an <b>-nvt</b> option and an <b>nvtMode</b> resource to

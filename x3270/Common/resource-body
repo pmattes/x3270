@@ -1605,6 +1605,24 @@ desc
     keypad.
 .
 
+name lightPenPrimary
+applies wc
+groups i
+type b
+default false
+description
+    Controls how a left mouse button works with the Alt key.
+    When set to the default of false, clicking the left mouse button without a
+    modifier will move the cursor or highlight an area for copy and paste.
+    Clicking the left mouse button with Alt pressed will cause a lightpen
+    select operation at the screen location where the mouse cursor is (it will
+    not move the 3270 cursor).
+    <p class=indented>
+    When set to true, these are reversed. The left mouse button without a
+    modifier will do a lightpen select; with Alt it will move the cursor or
+    select for copy and paste.
+.
+
 name lineWrap
 applies a
 groups n
