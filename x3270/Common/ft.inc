@@ -1,17 +1,17 @@
 XX_SH(File Transfer)
-The XX_FB(XX_LA()Transfer) XX_action implements XX_FB(IND$FILE) file transfer.
+The XX_FB(Transfer) XX_action implements XX_FB(IND$FILE) file transfer.
 This XX_action requires that the XX_FB(IND$FILE)
 program be installed on the XX_SM(IBM) host, and that the 3270 cursor
 be located in a field that will accept a XX_SM(TSO) or XX_SM(VM/CMS) command.
 XX_LP
-ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,tcl3270,,`The XX_FB(XX_LA()Transfer) XX_action
+ifelse(XX_PRODUCT,x3270,,XX_PRODUCT,s3270,,XX_PRODUCT,tcl3270,,`The XX_FB(Transfer) XX_action
 can be entered at the command prompt with no parameters, which will cause it
 to prompt interactively for the file names and options.
 It can also be invoked with parameters to define the entire transfer.
 ')dnl
 XX_LP
 Because of the complexity and number of options for file transfer, the
-parameters to the XX_FB(XX_LA()Transfer) XX_action take the unique form
+parameters to the XX_FB(Transfer) XX_action take the unique form
 of XX_FI(option)=XX_FI(value), and can appear in any order.
 Note that if the XX_FI(value) contains spaces (such as a VM/CMS file name),
 then the entire parameter must be quoted, e.g., "HostFile=xxx foo a".
@@ -72,7 +72,7 @@ as-is, leaving all translation to the XX_FB(IND$FILE) program on the host.
 XX_TP(XX_FB(Exist))
 Controls what happens when the destination file already exists.
 XX_FB(keep) (the default) preserves the file, causing the
-XX_FB(XX_LA()Transfer) XX_action to fail.
+XX_FB(Transfer) XX_action to fail.
 XX_FB(replace) overwrites the destination file with the source file.
 XX_FB(append) appends the source file to the destination file.
 XX_TP(XX_FB(Recfm))
