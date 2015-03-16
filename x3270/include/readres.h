@@ -31,4 +31,4 @@
 
 int validate_and_split_resource(const char *where, const char *arg,
 	const char **left, unsigned *rnlenp, const char **right);
-Boolean read_resource_filex(const char *filename, Boolean fatal);
+bool read_resource_filex(const char *filename, bool fatal);

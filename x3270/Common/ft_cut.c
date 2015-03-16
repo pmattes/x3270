@@ -47,7 +47,7 @@
 #include "trace.h"
 #include "util.h"
 
-static Boolean cut_xfer_in_progress = False;
+static bool cut_xfer_in_progress = false;
 
 /* Data stream conversion tables. */
 
@@ -111,7 +111,7 @@ static char *saved_errmsg = NULL;
 static int xlate_buffered = 0;			/* buffer count */
 static int xlate_buf_ix = 0;			/* buffer index */
 static unsigned char xlate_buf[XLATE_NBUF];	/* buffer */
-static Boolean cut_eof = False;
+static bool cut_eof = false;
 
 static void cut_control_code(void);
 static void cut_data_request(void);
@@ -316,7 +316,7 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 		if (!c) {
 		    	if (ft_last_dbcs) {
 			    	ob += store_download(EBC_si, ob);
-				ft_last_dbcs = False;
+				ft_last_dbcs = false;
 			}
 			if (quadrant != OTHER_2) {
 				quadrant = OTHER_2;
@@ -359,11 +359,11 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 				ob += store_download(EBC_so, ob);
 			ob += store_download(i_ft2asc[(e >> 8) & 0xff], ob);
 			ob += store_download(i_ft2asc[e & 0xff], ob);
-			ft_last_dbcs = True;
+			ft_last_dbcs = true;
 		} else {
 		    	if (ft_last_dbcs) {
 			    	ob += store_download(EBC_si, ob);
-				ft_last_dbcs = False;
+				ft_last_dbcs = false;
 			}
 			if (e == 0) {
 				ob += store_download('?', ob);
@@ -422,25 +422,25 @@ cut_control_code(void)
 	switch (code) {
 	    case SC_HOST_ACK:
 		trace_ds("HOST_ACK\n");
-		cut_xfer_in_progress = True;
+		cut_xfer_in_progress = true;
 		expanded_length = 0;
 		quadrant = -1;
 		xlate_buffered = 0;
 		xlate_buf_ix = 0;
-		cut_eof = False;
+		cut_eof = false;
 		cut_ack();
-		ft_running(True);
+		ft_running(true);
 		break;
 	    case SC_XFER_COMPLETE:
 		trace_ds("XFER_COMPLETE\n");
 		cut_ack();
-		cut_xfer_in_progress = False;
+		cut_xfer_in_progress = false;
 		ft_complete(NULL);
 		break;
 	    case SC_ABORT_FILE:
 	    case SC_ABORT_XMIT:
 		trace_ds("ABORT\n");
-		cut_xfer_in_progress = False;
+		cut_xfer_in_progress = false;
 		cut_ack();
 		if (ft_state == FT_ABORT_SENT && saved_errmsg != NULL) {
 			buf = saved_errmsg;
@@ -503,7 +503,7 @@ cut_data_request(void)
     count = 0;
     while (count < O_UP_MAX && !cut_eof) {
 	if ((c = xlate_getc()) == EOF) {
-	    cut_eof = True;
+	    cut_eof = true;
 	    break;
 	}
 	ctlr_add(O_UP_DATA + count, c, 0);
@@ -696,7 +696,7 @@ xlate_getc(void)
 			c = fgetc(ft_local_file);
 			if (c == EOF) {
 				if (ft_last_dbcs) {
-					ft_last_dbcs = False;
+					ft_last_dbcs = false;
 					return EBC_si;
 				}
 				return c;

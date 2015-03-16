@@ -39,10 +39,10 @@ unselect(int baddr _is_unused, int len _is_unused)
 {
 }
 
-Boolean
+bool
 area_is_selected(int baddr _is_unused, int len _is_unused)
 {
-    return False;
+    return false;
 }
 
 void

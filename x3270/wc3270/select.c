@@ -67,14 +67,14 @@ static char *event_name[] = {
     "DOUBLE_CLICK"
 };
 
-/* If True, we are rubber-banding a selection right now. */
-static Boolean rubber_banding = False;
+/* If true, we are rubber-banding a selection right now. */
+static bool rubber_banding = false;
 
-/* If True, we have a stored start point. */
-static Boolean select_started = False;
+/* If true, we have a stored start point. */
+static bool select_started = false;
 
-/* If True, the current selection was from a double-click. */
-static Boolean word_selected = False;
+/* If true, the current selection was from a double-click. */
+static bool word_selected = false;
 
 /* Start of selected area. */
 static int select_start_row;
@@ -107,11 +107,11 @@ unselect(int baddr, int len)
      * Technically, only the specified area has changed, but intuitively,
      * the whole selected rectangle has.
      */
-    rubber_banding = False;
-    select_started = False;
-    word_selected = False;
+    rubber_banding = false;
+    select_started = false;
+    word_selected = false;
     memset(s_pending, 0, ROWS * COLS);
-    screen_changed = True;
+    screen_changed = true;
 }
 
 static void
@@ -139,14 +139,14 @@ reselect(void)
 	}
     }
 
-    screen_changed = True;
+    screen_changed = true;
 }
 
 /*
- * Returns True if the character at the given location is displayed as a
+ * Returns true if the character at the given location is displayed as a
  * blank.
  */
-static Boolean
+static bool
 is_blank(int baddr)
 {
     unsigned char fa;
@@ -156,7 +156,7 @@ is_blank(int baddr)
     /* Check for FA or blanked field. */
     fa = get_field_attribute(baddr);
     if (ea_buf[baddr].fa || FA_IS_ZERO(fa)) {
-	return True;
+	return true;
     }
 
     /* Translate to Unicode, exactly as we would display it. */
@@ -167,7 +167,7 @@ is_blank(int baddr)
 			      ea_buf[baddr].cc,
 			      CS_BASE, EUO_NONE);
 	if (c == 0 || c == IDEOGRAPHIC_SPACE) {
-	    return True;
+	    return true;
 	}
     } else if (IS_RIGHT(baddr)) {
 	xbaddr = baddr;
@@ -176,7 +176,7 @@ is_blank(int baddr)
 			      ea_buf[xbaddr].cc,
 			      CS_BASE, EUO_NONE);
 	if (c == 0 || c == IDEOGRAPHIC_SPACE) {
-	    return True;
+	    return true;
 	}
     } else {
 	c = ebcdic_to_unicode(ea_buf[baddr].cc,
@@ -184,11 +184,11 @@ is_blank(int baddr)
 		appres.c3270.ascii_box_draw?
 		    EUO_ASCII_BOX: 0);
 	if (c == 0 || c == ' ') {
-	    return True;
+	    return true;
 	}
     }
 
-    return False;
+    return false;
 }
 
 /*
@@ -244,11 +244,11 @@ find_word_end(int row, int col, int *startp, int *endp)
  * display coordinates (not screen coordinates), and the status of the left
  * mouse button. select_event() infers the user's actions from that.
  *
- * Returns True if the event was consumed, or False if it was a cursor-move
+ * Returns true if the event was consumed, or false if it was a cursor-move
  * event (button up without movement).
  */
-Boolean
-select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
+bool
+select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 {
     static int click_cursor_addr = -1;
 
@@ -269,20 +269,20 @@ select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 		select_start_row = row;
 		select_start_col = col;
 	    }
-	    rubber_banding = True;
-	    select_started = True;
-	    word_selected = False;
+	    rubber_banding = true;
+	    select_started = true;
+	    word_selected = false;
 	    select_end_row = row;
 	    select_end_col = col;
 	    reselect();
 	    break;
 	case SE_DOUBLE_CLICK:
 	    vtrace("  Word select\n");
-	    rubber_banding = False;
+	    rubber_banding = false;
 	    select_start_row = row;
 	    select_end_row = row;
 	    find_word_end(row, col, &select_start_col, &select_end_col);
-	    word_selected = True;
+	    word_selected = true;
 	    reselect();
 
 	    /* If we moved the cursor for the first click, move it back now. */
@@ -309,8 +309,8 @@ select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 	/* A selection is pending (rubber-banding). */
 	switch (event) {
 	case SE_BUTTON_UP:
-	    rubber_banding = False;
-	    word_selected = False;
+	    rubber_banding = false;
+	    word_selected = false;
 	    if (row == select_start_row && col == select_start_col) {
 		/*
 		 * No movement. Call it a cursor move,
@@ -318,10 +318,10 @@ select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
 		 */
 		vtrace("  Cursor move\n");
 		s_pending[(row * COLS) + col] = 0;
-		screen_changed = True;
+		screen_changed = true;
 		click_cursor_addr = cursor_addr;
 		/* We did not consume the event. */
-		return False;
+		return false;
 	    }
 	    vtrace("  Finish selection\n");
 	    select_end_row = row;
@@ -341,23 +341,23 @@ select_event(unsigned row, unsigned col, select_event_t event, Boolean shift)
     }
 
     /* We consumed the event. */
-    return True;
+    return true;
 }
 
 /**
  * Handle a Return key (usually marked Enter) for completing a select/copy
  * action.
  *
- * @return True if key consumed, False otherwise.
+ * @return true if key consumed, false otherwise.
  */
-Boolean
+bool
 select_return_key(void)
 {
     if (memchr(s_pending, 1, COLS * ROWS) != NULL) {
 	run_action("Copy", IA_KEY, NULL, NULL);
-	return True;
+	return true;
     } else {
-	return False;
+	return false;
     }
 }
 
@@ -370,7 +370,7 @@ copy_clipboard_unicode(LPTSTR lptstr)
     int r, c;
     int any_row = -1;
     int ns = 0;
-    Boolean last_cjk_space = False;
+    bool last_cjk_space = false;
     wchar_t *bp = (wchar_t *)lptstr;
     enum dbcs_state d;
     int ch;
@@ -392,7 +392,7 @@ copy_clipboard_unicode(LPTSTR lptstr)
 		*bp++ = '\r';
 		*bp++ = '\n';
 		ns = 0;
-		last_cjk_space = False;
+		last_cjk_space = false;
 	    }
 	    any_row = r;
 
@@ -460,7 +460,7 @@ copy_clipboard_oemtext(LPTSTR lptstr)
     int r, c;
     int any_row = -1;
     int ns = 0;
-    Boolean last_cjk_space = False;
+    bool last_cjk_space = false;
     char *bp = lptstr;
     enum dbcs_state d;
     wchar_t ch;
@@ -482,7 +482,7 @@ copy_clipboard_oemtext(LPTSTR lptstr)
 		*bp++ = '\r';
 		*bp++ = '\n';
 		ns = 0;
-		last_cjk_space = False;
+		last_cjk_space = false;
 	    }
 	    any_row = r;
 	    d = ctlr_dbcs_state(baddr);
@@ -537,7 +537,7 @@ copy_clipboard_oemtext(LPTSTR lptstr)
 		    }
 		    bp += WideCharToMultiByte(CP_OEMCP, 0,
 			    &ch, 1, bp, 1, "?", NULL);
-		    last_cjk_space = False;
+		    last_cjk_space = false;
 		}
 	    }
 	}
@@ -623,7 +623,7 @@ copy_clipboard_text(LPTSTR lptstr)
  * Common code for Copy and Cut.
  */
 void
-copy_cut_action(Boolean cutting)
+copy_cut_action(bool cutting)
 {
     size_t sl;
     HGLOBAL hglb;
@@ -766,36 +766,36 @@ copy_cut_action(Boolean cutting)
 /*
  * The Copy() action, generally mapped onto ^C.
  */
-static Boolean
+static bool
 Copy_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Copy", ia, argc, argv);
     if (check_argc("Copy", argc, 0, 0) < 0) {
-	return False;
+	return false;
     }
-    copy_cut_action(False);
-    return True;
+    copy_cut_action(false);
+    return true;
 }
 
 /*
  * The Cut() action, generally mapped onto ^X.
  */
-static Boolean
+static bool
 Cut_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Cut", ia, argc, argv);
     if (check_argc("Cut", argc, 0, 0) < 0) {
-	return False;
+	return false;
     }
-    copy_cut_action(True);
-    return True;
+    copy_cut_action(true);
+    return true;
 }
 
 /*
- * Return True if a cell in the specified region is out of sync with the
+ * Return true if a cell in the specified region is out of sync with the
  * screen with regard to selection.
  */
-Boolean
+bool
 select_changed(unsigned row, unsigned col, unsigned rows, unsigned cols)
 {
     unsigned r;
@@ -807,16 +807,16 @@ select_changed(unsigned row, unsigned col, unsigned rows, unsigned cols)
 	if (memcmp(&s_pending [(r * COLS) + col],
 		    &s_onscreen[(r * COLS) + col],
 		    cols)) {
-	    return True;
+	    return true;
 	}
     }
-    return False;
+    return false;
 }
 
 /*
  * Return TRUE if any cell in a region is selected.
  */
-Boolean
+bool
 area_is_selected(int baddr, int len)
 {
     return memchr(&s_pending[baddr], 1, len) != NULL;

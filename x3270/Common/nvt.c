@@ -466,7 +466,7 @@ static int	allow_wide_mode = 0;
 static int	saved_allow_wide_mode = 0;
 static int	wide_mode = 0;
 static int	saved_wide_mode = 0;
-static Boolean  saved_altbuffer = False;
+static bool  saved_altbuffer = false;
 static int      scroll_top = -1;
 static int      scroll_bottom = -1;
 static unsigned char *tabs = (unsigned char *) NULL;
@@ -478,7 +478,7 @@ static char	pending_mbs[MB_MAX];
 static int	pe = 0;
 static unsigned char ped[PE_MAX];
 
-static Boolean  held_wrap = False;
+static bool  held_wrap = false;
 
 static void	nvt_scroll(void);
 
@@ -515,7 +515,7 @@ dec_restore_cursor(int ig1 _is_unused, int ig2 _is_unused)
 	bg = saved_bg;
 	gr = saved_gr;
 	cursor_move(saved_cursor);
-	held_wrap = False;
+	held_wrap = false;
 	return DATA;
 }
 
@@ -530,7 +530,7 @@ ansi_newline(int ig1 _is_unused, int ig2 _is_unused)
 		cursor_move(nc);
 	else
 		nvt_scroll();
-	held_wrap = False;
+	held_wrap = false;
 	return DATA;
 }
 
@@ -546,7 +546,7 @@ ansi_cursor_up(int nn, int ig2 _is_unused)
 		cursor_move(cursor_addr % COLS);
 	else
 		cursor_move(cursor_addr - (nn * COLS));
-	held_wrap = False;
+	held_wrap = false;
 	return DATA;
 }
 
@@ -565,7 +565,7 @@ static enum state
 ansi_reset(int ig1 _is_unused, int ig2 _is_unused)
 {
 	int i;
-	static Boolean first = True;
+	static bool first = true;
 
 	gr = 0;
 	saved_gr = 0;
@@ -591,21 +591,21 @@ ansi_reset(int ig1 _is_unused, int ig2 _is_unused)
 	saved_allow_wide_mode = 0;
 	wide_mode = 0;
 	allow_wide_mode = 0;
-	saved_altbuffer = False;
+	saved_altbuffer = false;
 	scroll_top = 1;
 	scroll_bottom = ROWS;
 	Replace(tabs, (unsigned char *)Malloc((COLS+7)/8));
 	for (i = 0; i < (COLS+7)/8; i++)
 		tabs[i] = 0x01;
-	held_wrap = False;
+	held_wrap = false;
 	if (!first) {
-		ctlr_altbuffer(True);
+		ctlr_altbuffer(true);
 		ctlr_aclear(0, ROWS * COLS, 1);
-		ctlr_altbuffer(False);
-		ctlr_clear(False);
+		ctlr_altbuffer(false);
+		ctlr_clear(false);
 		screen_80();
 	}
-	first = False;
+	first = false;
 	pmi = 0;
 	return DATA;
 }
@@ -644,7 +644,7 @@ ansi_cursor_down(int nn, int ig2 _is_unused)
 		cursor_move((ROWS-1)*COLS + (cursor_addr%COLS));
 	else
 		cursor_move(cursor_addr + (nn * COLS));
-	held_wrap = False;
+	held_wrap = false;
 	return DATA;
 }
 
@@ -661,7 +661,7 @@ ansi_cursor_right(int nn, int ig2 _is_unused)
 	if (cc + nn >= COLS)
 		nn = COLS - 1 - cc;
 	cursor_move(cursor_addr + nn);
-	held_wrap = False;
+	held_wrap = false;
 	return DATA;
 }
 
@@ -671,7 +671,7 @@ ansi_cursor_left(int nn, int ig2 _is_unused)
 	int cc;
 
 	if (held_wrap) {
-		held_wrap = False;
+		held_wrap = false;
 		return DATA;
 	}
 	if (nn < 1)
@@ -693,7 +693,7 @@ ansi_cursor_motion(int n1, int n2)
 	if (n2 < 1) n2 = 1;
 	if (n2 > COLS) n2 = COLS;
 	cursor_move((n1 - 1) * COLS + (n2 - 1));
-	held_wrap = False;
+	held_wrap = false;
 	return DATA;
 }
 
@@ -709,7 +709,7 @@ ansi_erase_in_display(int nn, int ig2 _is_unused)
 		break;
 	    case 2:	/* all (without moving cursor) */
 		if (cursor_addr == 0 && !is_altbuffer)
-			scroll_save(ROWS, True);
+			scroll_save(ROWS, true);
 		ctlr_aclear(0, ROWS * COLS, 1);
 		break;
 	}
@@ -903,7 +903,7 @@ ansi_bell(int ig1 _is_unused, int ig2 _is_unused)
 static enum state
 ansi_newpage(int ig1 _is_unused, int ig2 _is_unused)
 {
-	ctlr_clear(False);
+	ctlr_clear(false);
 	return DATA;
 }
 
@@ -911,7 +911,7 @@ static enum state
 ansi_backspace(int ig1 _is_unused, int ig2 _is_unused)
 {
 	if (held_wrap) {
-		held_wrap = False;
+		held_wrap = false;
 		return DATA;
 	}
 	if (rev_wraparound_mode) {
@@ -931,7 +931,7 @@ ansi_cr(int ig1 _is_unused, int ig2 _is_unused)
 		cursor_move(cursor_addr - (cursor_addr % COLS));
 	if (auto_newline_mode)
 		(void) ansi_lf(0, 0);
-	held_wrap = False;
+	held_wrap = false;
 	return DATA;
 }
 
@@ -940,7 +940,7 @@ ansi_lf(int ig1 _is_unused, int ig2 _is_unused)
 {
 	int nc = cursor_addr + COLS;
 
-	held_wrap = False;
+	held_wrap = false;
 
 	/* If we're below the scrolling region, don't scroll. */
 	if ((cursor_addr / COLS) >= scroll_bottom) {
@@ -962,7 +962,7 @@ ansi_htab(int ig1 _is_unused, int ig2 _is_unused)
 	int col = cursor_addr % COLS;
 	int i;
 
-	held_wrap = False;
+	held_wrap = false;
 	if (col == COLS-1)
 		return DATA;
 	for (i = col+1; i < COLS-1; i++)
@@ -1044,7 +1044,7 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 
 	if (held_wrap) {
 		PWRAP;
-		held_wrap = False;
+		held_wrap = false;
 	}
 
 	if (insert_mode)
@@ -1122,7 +1122,7 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 			/* Handle cursor wrap. */
 			if (wraparound_mode) {
 			    	if (!((cursor_addr + 1) % COLS)) {
-					held_wrap = True;
+					held_wrap = true;
 				} else {
 					PWRAP;
 				}
@@ -1180,7 +1180,7 @@ ansi_printing(int ig1 _is_unused, int ig2 _is_unused)
 		 * depends on it!
 		 */
 		if (!((cursor_addr + 1) % COLS)) {
-			held_wrap = True;
+			held_wrap = true;
 		} else {
 			PWRAP;
 		}
@@ -1262,7 +1262,7 @@ ansi_reverse_index(int ig1 _is_unused, int ig2 _is_unused)
 	int ns;				/* number of rows to scroll */
 	int nn = 1;			/* number of rows to index */
 
-	held_wrap = False;
+	held_wrap = false;
 
 	/* If the cursor is above the scrolling region, do a simple margined
 	   cursor up.  */
@@ -1442,7 +1442,7 @@ dec_set(int ig1 _is_unused, int ig2 _is_unused)
 			break;
 		    case 47:	/* alt buffer */
 		    case 1049:
-			ctlr_altbuffer(True);
+			ctlr_altbuffer(true);
 			break;
 		}
 	return DATA;
@@ -1475,7 +1475,7 @@ dec_reset(int ig1 _is_unused, int ig2 _is_unused)
 			break;
 		    case 47:	/* alt buffer */
 		    case 1049:
-			ctlr_altbuffer(False);
+			ctlr_altbuffer(false);
 			break;
 		}
 	return DATA;
@@ -1629,12 +1629,12 @@ ansi_htab_clear(int nn, int ig2 _is_unused)
 static void
 nvt_scroll(void)
 {
-	held_wrap = False;
+	held_wrap = false;
 
 	/* Save the top line */
 	if (scroll_top == 1 && scroll_bottom == ROWS) {
 		if (!is_altbuffer)
-			scroll_save(1, False);
+			scroll_save(1, false);
 		ctlr_scroll();
 		return;
 	}
@@ -1652,7 +1652,7 @@ nvt_scroll(void)
 
 /* Callback for when we enter NVT mode. */
 static void
-nvt_in3270(Boolean in3270)
+nvt_in3270(bool in3270)
 {
 	if (!in3270)
 		(void) ansi_reset(0, 0);

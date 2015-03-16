@@ -39,5 +39,5 @@ typedef enum {
 rhp_t resolve_host_and_port(const char *host, char *portname, int ix,
 	unsigned short *pport, struct sockaddr *sa, socklen_t *sa_len,
 	char **errmsg, int *lastp);
-Boolean numeric_host_and_port(const struct sockaddr *sa, socklen_t salen,
+bool numeric_host_and_port(const struct sockaddr *sa, socklen_t salen,
 	char *host, size_t hostlen, char *serv, size_t servlen, char **errmsg);

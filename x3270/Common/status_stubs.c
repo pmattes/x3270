@@ -37,7 +37,7 @@
 #include "status.h"
 
 void
-status_compose(Boolean on _is_unused, unsigned char c _is_unused,
+status_compose(bool on _is_unused, unsigned char c _is_unused,
 	enum keytype keytype _is_unused)
 {
 }
@@ -48,7 +48,7 @@ status_ctlr_done(void)
 }
 
 void
-status_insert_mode(Boolean on _is_unused)
+status_insert_mode(bool on _is_unused)
 {
 }
 
@@ -73,7 +73,7 @@ status_reset(void)
 }
 
 void
-status_reverse_mode(Boolean on _is_unused)
+status_reverse_mode(bool on _is_unused)
 {
 }
 
@@ -83,7 +83,7 @@ status_screentrace(int n _is_unused)
 }
 
 void
-status_script(Boolean on _is_unused)
+status_script(bool on _is_unused)
 {
 }
 
@@ -108,7 +108,7 @@ status_twait(void)
 }
 
 void
-status_typeahead(Boolean on _is_unused)
+status_typeahead(bool on _is_unused)
 {
 }
 

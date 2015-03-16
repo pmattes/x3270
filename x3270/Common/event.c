@@ -41,7 +41,7 @@ typedef struct st_callback {
 } st_callback_t;
 llist_t st_callbacks[N_ST];
 
-static Boolean schange_initted = False;
+static bool schange_initted = false;
 
 /* Callback initialization. */
 static void
@@ -54,7 +54,7 @@ init_schange(void)
 	    llist_init(&st_callbacks[i]);
 	}
 
-	schange_initted = True;
+	schange_initted = true;
     }
 }
 
@@ -101,7 +101,7 @@ register_schange(int tx, schange_callback_t *func)
 
 /* Signal a state change. */
 void
-st_changed(int tx, Boolean mode)
+st_changed(int tx, bool mode)
 {
     struct st_callback *st;
 

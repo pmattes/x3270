@@ -118,7 +118,7 @@ static void interact(void);
 static void stop_pager(void);
 
 #if !defined(_WIN32) /*[*/
-static Boolean merge_profile(void);
+static bool merge_profile(void);
 #endif /*]*/
 
 #if defined(HAVE_LIBREADLINE) /*[*/
@@ -131,12 +131,12 @@ static char *completion_entry(const char *, int);
 static FILE *pager = NULL;
 #else /*][*/
 static int pager_rowcnt = 0;
-static Boolean pager_q = False;
+static bool pager_q = false;
 #endif /*]*/
 
-Boolean escape_pending = False;
-Boolean stop_pending = False;
-Boolean dont_return = False;
+bool escape_pending = false;
+bool stop_pending = false;
+bool dont_return = false;
 
 #if defined(_WIN32) /*[*/
 char *instdir = NULL;
@@ -158,29 +158,29 @@ usage(const char *msg)
     fprintf(stderr, "Usage: %s [options] [ps:][LUname@]hostname[:port]\n",
 	    programname);
     fprintf(stderr, "Options:\n");
-    cmdline_help(False);
+    cmdline_help(false);
     exit(1);
 }
 
 /* Callback for connection state changes. */
 static void
-c3270_connect(Boolean ignored)
+c3270_connect(bool ignored)
 {
     if (CONNECTED || appres.disconnect_clear) {
 #if defined(C3270_80_132) /*[*/
 	if (appres.c3270.altscreen != NULL) {
-	    ctlr_erase(False);
+	    ctlr_erase(false);
 	} else
 #endif /*]*/
 	{
-	    ctlr_erase(True);
+	    ctlr_erase(true);
 	}
     }
 } 
 
 /* Callback for application exit. */
 static void
-main_exiting(Boolean ignored)
+main_exiting(bool ignored)
 {       
     if (escaped) {
 	stop_pager();
@@ -204,7 +204,7 @@ pause_for_errors(void)
 	if (fgets(s, sizeof(s), stdin) == NULL) {
 	    x3270_exit(1);
 	}
-	any_error_output = False;
+	any_error_output = false;
     }
 }
 
@@ -237,7 +237,7 @@ c3270_Error(const char *s)
 
 /* Pause before exiting. */
 static void
-exit_pause(Boolean mode _is_unused)
+exit_pause(bool mode _is_unused)
 {
     if (x3270_exit_code) {
 	char buf[2];
@@ -259,7 +259,7 @@ main(int argc, char *argv[])
 #else /*][*/
     char	*delenv;
 #endif /*]*/
-    Boolean	 once = False;
+    bool	 once = false;
 
 #if defined(_WIN32) /*[*/
     /* Redirect Error() so we pause. */
@@ -287,7 +287,7 @@ main(int argc, char *argv[])
      * weren't. This can happen if the system we were built on does not support
      * wide curses.
      */
-    allow_dbcs = False;
+    allow_dbcs = false;
 #endif /*]*/
 
     /*
@@ -402,24 +402,24 @@ main(int argc, char *argv[])
     if (cl_hostname != NULL) {
 	pause_for_errors();
 	/* Connect to the host. */
-	once = True;
+	once = true;
 	if (host_connect(cl_hostname) < 0) {
 	    x3270_exit(1);
 	}
 	/* Wait for negotiations to complete or fail. */
 	while (!IN_NVT && !IN_3270) {
-	    (void) process_events(True);
+	    (void) process_events(true);
 	    if (!PCONNECTED) {
 		x3270_exit(1);
 	    }
 	}
 	pause_for_errors();
-	screen_disp(False);
+	screen_disp(false);
     } else {
 	/* Drop to the prompt. */
 	if (!appres.secure) {
 	    interact();
-	    screen_disp(False);
+	    screen_disp(false);
 	} else {
 	    pause_for_errors();
 	    screen_resume();
@@ -430,14 +430,14 @@ main(int argc, char *argv[])
     /* Process events forever. */
     while (1) {
 	if (!escaped || ft_state != FT_NONE) {
-	    (void) process_events(True);
+	    (void) process_events(true);
 	}
 	if (
 #if !defined(_WIN32) /*[*/
 	    appres.c3270.cbreak_mode &&
 #endif /*]*/
 					escape_pending) {
-	    escape_pending = False;
+	    escape_pending = false;
 	    screen_suspend();
 	}
 	if (!appres.secure && !CONNECTED && !appres.interactive.reconnect) {
@@ -466,7 +466,7 @@ main(int argc, char *argv[])
 #else /*][*/
 	pr3287_session_check();
 #endif /*]*/
-	screen_disp(False);
+	screen_disp(false);
     }
 }
 
@@ -479,7 +479,7 @@ static void
 running_sigtstp_handler(int ignored _is_unused)
 {
     signal(SIGTSTP, SIG_IGN);
-    stop_pending = True;
+    stop_pending = true;
 }
 
 /*
@@ -492,7 +492,7 @@ static void
 prompt_sigtstp_handler(int ignored _is_unused)
 {
     if (CONNECTED) {
-	dont_return = True;
+	dont_return = true;
     }
     signal(SIGTSTP, SIG_DFL);
     kill(getpid(), SIGTSTP);
@@ -541,11 +541,11 @@ interact(void)
 	char buf[1024];
 #endif /*]*/
 
-	dont_return = False;
+	dont_return = false;
 
 	/* Process a pending stop now. */
 	if (stop_pending) {
-	    stop_pending = False;
+	    stop_pending = false;
 #if !defined(_WIN32) /*[*/
 	    signal(SIGTSTP, SIG_DFL);
 	    kill(getpid(), SIGTSTP);
@@ -623,7 +623,7 @@ interact(void)
 	 */
 	push_command(s);
 	while (sms_active()) {
-	    (void) process_events(True);
+	    (void) process_events(true);
 	}
 
 	/* Close the pager. */
@@ -641,7 +641,7 @@ interact(void)
     }
 
     /* Ignore SIGTSTP again. */
-    stop_pending = False;
+    stop_pending = false;
 #if !defined(_WIN32) /*[*/
     signal(SIGTSTP, SIG_IGN);
 #endif /*]*/
@@ -706,7 +706,7 @@ stop_pager(void)
     }
 #else /*][*/
     pager_rowcnt = 0;
-    pager_q = False;
+    pager_q = false;
 #endif /*]*/
 }
 
@@ -1163,12 +1163,12 @@ copyright_dump(void)
     action_output(" ");
 }
 
-static Boolean
+static bool
 Show_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Show", ia, argc, argv);
     if (check_argc("Show", argc, 0, 1) < 0) {
-	return False;
+	return false;
     }
 
     if (argc == 0) {
@@ -1176,7 +1176,7 @@ Show_action(ia_t ia, unsigned argc, const char **argv)
 	action_output("  Show stats       connection statistics");
 	action_output("  Show status      same as 'Show stats'");
 	action_output("  Show keymap      current keymap");
-	return True;
+	return true;
     }
     if (!strncasecmp(argv[0], "stats", strlen(argv[0])) ||
 	!strncasecmp(argv[0], "status", strlen(argv[0]))) {
@@ -1187,16 +1187,16 @@ Show_action(ia_t ia, unsigned argc, const char **argv)
 	copyright_dump();
     } else {
 	popup_an_error("Unknown 'Show' keyword");
-	return False;
+	return false;
     }
-    return True;
+    return true;
 }
 
 /* Trace([data|keyboard][on [filename]|off]) */
-static Boolean
+static bool
 Trace_action(ia_t ia, unsigned argc, const char **argv)
 {
-    Boolean on = False;
+    bool on = false;
     unsigned arg0 = 0;
 
     action_debug("Trace", ia, argc, argv);
@@ -1208,7 +1208,7 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
 	    action_output("Tracing is %sabled.",
 		    toggled(TRACING)? "en": "dis");
 	}
-	return True;
+	return true;
     }
 
     if (!strcasecmp(argv[0], "Data") || !strcasecmp(argv[0], "Keyboard")) {
@@ -1216,17 +1216,17 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
 	arg0++;
     }
     if (!strcasecmp(argv[arg0], "Off")) {
-	on = False;
+	on = false;
 	arg0++;
 	if (argc > arg0) {
 	    popup_an_error("Trace: Too many arguments for 'Off'");
-	    return False;
+	    return false;
 	}
 	if (!toggled(TRACING)) {
-	    return True;
+	    return true;
 	}
     } else if (!strcasecmp(argv[arg0], "On")) {
-	on = True;
+	on = true;
 	arg0++;
 	if (argc == arg0) {
 	    /* Nothing else to do. */
@@ -1238,11 +1238,11 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
 	    }
 	} else {
 	    popup_an_error("Trace: Too many arguments for 'On'");
-	    return False;
+	    return false;
 	}
     } else {
 	popup_an_error("Trace: Parameter must be On or Off");
-	return False;
+	return false;
     }
 
     if ((on && !toggled(TRACING)) || (!on && toggled(TRACING))) {
@@ -1259,7 +1259,7 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
 	    popup_an_info("Trace file is %s.", tracefile_name);
 	}
     }
-    return True;
+    return true;
 }
 
 /*
@@ -1271,12 +1271,12 @@ Trace_action(ia_t ia, unsigned argc, const char **argv)
  * ScreenTrace(On,Printer[,Gdi|WordPad],printername) Windows
  * ScreenTrace(Off)
  */
-static Boolean
+static bool
 ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 {
-    Boolean on = False;
+    bool on = false;
 #if defined(_WIN32) /*[*/
-    Boolean is_file = False;
+    bool is_file = false;
 #endif /*]*/
     tss_t how = TSS_FILE;
     ptype_t ptype = P_TEXT;
@@ -1299,33 +1299,33 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 	} else {
 	    action_output("Screen tracing is disabled.");
 	}
-	return True;
+	return true;
     }
 
     if (!strcasecmp(argv[0], "Off")) {
 	if (!toggled(SCREEN_TRACE)) {
 	    popup_an_error("Screen tracing is already disabled.");
-	    return False;
+	    return false;
 	}
-	on = False;
+	on = false;
 	if (argc > 1) {
 	    popup_an_error("ScreenTrace(): Too many arguments for 'Off'");
-	    return False;
+	    return false;
 	}
 	goto toggle_it;
     }
     if (strcasecmp(argv[0], "On")) {
 	popup_an_error("ScreenTrace(): Must be 'On' or 'Off'");
-	return False;
+	return false;
     }
 
     /* Process 'On'. */
     if (toggled(SCREEN_TRACE)) {
 	popup_an_error("Screen tracing is already enabled.");
-	return True;
+	return true;
     }
 
-    on = True;
+    on = true;
     px = 1;
 
     if (px >= argc) {
@@ -1337,7 +1337,7 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
     if (!strcasecmp(argv[px], "File")) {
 	px++;
 #if defined(_WIN32) /*[*/
-	is_file = True;
+	is_file = true;
 #endif /*]*/
     } else if (!strcasecmp(argv[px], "Printer")) {
 	px++;
@@ -1350,7 +1350,7 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
     if (px < argc && !strcasecmp(argv[px], "Gdi")) {
 	if (is_file) {
 	    popup_an_error("ScreenTrace(): Cannot specify 'File' and 'Gdi'.");
-	    return False;
+	    return false;
 	}
 	px++;
 	how = TSS_PRINTER;
@@ -1359,7 +1359,7 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
 	if (is_file) {
 	    popup_an_error("ScreenTrace(): Cannot specify 'File' and "
 		    "'WordPad'.");
-	    return False;
+	    return false;
 	}
 	px++;
 	how = TSS_PRINTER;
@@ -1372,7 +1372,7 @@ ScreenTrace_action(ia_t ia, unsigned argc, const char **argv)
     }
     if (px < argc) {
 	popup_an_error("ScreenTrace(): Too many arguments.");
-	return False;
+	return false;
     }
     if (how == TSS_PRINTER && name == NULL) {
 #if !defined(_WIN32) /*[*/
@@ -1390,7 +1390,7 @@ toggle_it:
 	do_toggle(SCREEN_TRACE);
     }
     if (on && !toggled(SCREEN_TRACE)) {
-	return True;
+	return true;
     }
 
     name = trace_get_screentrace_name();
@@ -1425,16 +1425,16 @@ toggle_it:
 	    }
 	}
     }
-    return True;
+    return true;
 }
 
 /* Break to the command prompt. */
-static Boolean
+static bool
 Escape_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Escape", ia, argc, argv);
     if (check_argc("Escape", argc, 0, 0) < 0) {
-	return False;
+	return false;
     }
 
     if (!appres.secure) {
@@ -1444,7 +1444,7 @@ Escape_action(ia_t ia, unsigned argc, const char **argv)
 	abort_script();
 #endif
     }
-    return True;
+    return true;
 }
 
 /* Popup an informational message. */
@@ -1482,24 +1482,24 @@ popup_an_info(const char *fmt, ...)
     }
 }
 
-static Boolean
+static bool
 Info_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Info", ia, argc, argv);
 
     if (!argc) {
-	return True;
+	return true;
     }
 
     popup_an_info("%s", argv[0]);
-    return True;
+    return true;
 }
 
-static Boolean
+static bool
 ignore_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("ignore", ia, argc, argv);
-    return True;
+    return true;
 }
 
 #if !defined(_WIN32) /*[*/
@@ -1511,12 +1511,12 @@ ignore_action(ia_t ia, unsigned argc, const char **argv)
 #define DEFAULT_PROFILE	"~/.c3270pro"
 
 /* Read in the .c3270pro file. */
-static Boolean
+static bool
 merge_profile(void)
 {
     const char *fname;
     char *profile_name;
-    Boolean did_read = False;
+    bool did_read = false;
 
     /* Check for the no-profile environment variable. */
     if (getenv(NO_PROFILE_ENV) != NULL) {
@@ -1529,7 +1529,7 @@ merge_profile(void)
 	fname = DEFAULT_PROFILE;
     }
     profile_name = do_subst(fname, DS_VARS | DS_TILDE);
-    did_read = read_resource_file(profile_name, False);
+    did_read = read_resource_file(profile_name, false);
     Free(profile_name);
     return did_read;
 }
@@ -1666,10 +1666,10 @@ start_wizard(const char *session)
 /*
  * Product information functions.
  */
-Boolean
+bool
 product_has_display(void)
 {   
-    return True;
+    return true;
 }
 
 /**
@@ -1696,10 +1696,10 @@ product_specific_build_options(void)
 	    ;
 }
 
-Boolean
+bool
 product_auto_oversize(void)
 {
-    return True;
+    return true;
 }
 
 /**
@@ -1708,25 +1708,25 @@ product_auto_oversize(void)
 void
 product_set_appres_defaults(void)
 {
-    appres.oerr_lock = True;
+    appres.oerr_lock = true;
     appres.interactive.compose_map = "latin1";
-    appres.interactive.do_confirms = True;
-    appres.interactive.menubar = True;
+    appres.interactive.do_confirms = true;
+    appres.interactive.menubar = true;
     appres.interactive.save_lines = 4096;
 #if defined(_WIN32) /*[*/
-    appres.trace_monitor = True;
-    set_toggle(UNDERSCORE, True);
+    appres.trace_monitor = true;
+    set_toggle(UNDERSCORE, true);
 #else /*][*/
     appres.c3270.meta_escape = "auto";
-    appres.c3270.curses_keypad = True;
-    appres.c3270.mouse = True;
+    appres.c3270.curses_keypad = true;
+    appres.c3270.mouse = true;
 #endif /*]*/
 
 #if !defined(_WIN32) /*[*/
 # if defined(CURSES_WIDE) /*[*/
-    appres.c3270.acs = True;
+    appres.c3270.acs = true;
 # else /*][*/
-    appres.c3270.ascii_box_draw = True;
+    appres.c3270.ascii_box_draw = true;
 # endif /*]*/
 #endif /*]*/
 }
@@ -1743,7 +1743,7 @@ telnet_gui_connecting(const char *hostname, const char *portname)
 /**
  * GUI function for action_output.
  */
-Boolean
+bool
 glue_gui_output(const char *s)
 {
     screen_suspend();
@@ -1753,7 +1753,7 @@ glue_gui_output(const char *s)
 #else /*][*/
     pager_output(s);
 #endif /*]*/
-    return True;
+    return true;
 }
 
 /**
@@ -1771,66 +1771,66 @@ c3270_register(void)
 	{ "Trace",		Trace_action,		ACTION_KE },
     };
     static opt_t c3270_opts[] = {
-	{ OptAllBold,  OPT_BOOLEAN, True,  ResAllBold,
+	{ OptAllBold,  OPT_BOOLEAN, true,  ResAllBold,
 	    aoffset(c3270.all_bold_on),
 	    NULL, "Display all text in bold" },
-	{ OptKeymap,   OPT_STRING,  False, ResKeymap,
+	{ OptKeymap,   OPT_STRING,  false, ResKeymap,
 	    aoffset(interactive.key_map),
 	    "<name>[,<name>...]", "Keyboard map name(s)" },
-	{ OptNoPrompt, OPT_BOOLEAN, True,  ResNoPrompt,
+	{ OptNoPrompt, OPT_BOOLEAN, true,  ResNoPrompt,
 	    aoffset(secure),
 	    NULL, "Alias for -secure" },
-	{ OptPrinterLu,OPT_STRING,  False, ResPrinterLu,
+	{ OptPrinterLu,OPT_STRING,  false, ResPrinterLu,
 	    aoffset(interactive.printer_lu),
 	    "<luname>",
 	    "Automatically start a "PR3287_NAME" printer session to <luname>" },
-	{ OptReconnect,OPT_BOOLEAN, True,  ResReconnect,
+	{ OptReconnect,OPT_BOOLEAN, true,  ResReconnect,
 	    aoffset(interactive.reconnect),
 	    NULL, "Reconnect to host as soon as it disconnects" },
-	{ OptSaveLines, OPT_INT,    False, ResSaveLines,
+	{ OptSaveLines, OPT_INT,    false, ResSaveLines,
 	    aoffset(interactive.save_lines),
 	    "<lines>", "Number of lines to save for scrolling" },
-	{ OptSecure,   OPT_BOOLEAN, True,  ResSecure,
+	{ OptSecure,   OPT_BOOLEAN, true,  ResSecure,
 	    aoffset(secure),
 	    NULL, "Restrict potentially-destructive user actions" },
 #if defined(C3270_80_132) /*[*/
-	{ OptAltScreen,OPT_STRING,  False, ResAltScreen,
+	{ OptAltScreen,OPT_STRING,  false, ResAltScreen,
 	    aoffset(c3270.altscreen),
 	    "<string>",
 	    "String to switch terminal from 80-column mode to 132-column mode"
 	},
-	{ OptDefScreen,OPT_STRING,  False, ResDefScreen,
+	{ OptDefScreen,OPT_STRING,  false, ResDefScreen,
 	    aoffset(c3270.defscreen),
 	    "<string>",
 	    "String to switch terminal from 132-column mode to 80-column mode"
 },
 #endif /*]*/
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
-	{ OptDefaultFgBg,OPT_BOOLEAN,True, ResDefaultFgBg,
+	{ OptDefaultFgBg,OPT_BOOLEAN,true, ResDefaultFgBg,
 	    aoffset(c3270.default_fgbg),
 	    NULL,
 	    "Use terminal's default foreground and background colors"
 	},
 #endif /*]*/
 #if !defined(_WIN32) /*[*/
-	{ OptCbreak,   OPT_BOOLEAN, True,  ResCbreak,
+	{ OptCbreak,   OPT_BOOLEAN, true,  ResCbreak,
 	    aoffset(c3270.cbreak_mode),
 	    NULL, "Force terminal CBREAK mode" },
-	{ OptMono,     OPT_BOOLEAN, True,  ResMono,
+	{ OptMono,     OPT_BOOLEAN, true,  ResMono,
 	    aoffset(interactive.mono),
 	    NULL, "Do not use terminal color capabilities" },
-	{ OptReverseVideo,OPT_BOOLEAN,True,ResReverseVideo,
+	{ OptReverseVideo,OPT_BOOLEAN,true,ResReverseVideo,
 	    aoffset(c3270.reverse_video),
 	    NULL, "Switch to black-on-white mode" },
 #endif /*]*/
 #if defined(_WIN32) /*[*/
-	{ OptAutoShortcut,OPT_BOOLEAN, True, ResAutoShortcut,
+	{ OptAutoShortcut,OPT_BOOLEAN, true, ResAutoShortcut,
 	    aoffset(c3270.auto_shortcut),
 	    NULL, "Run in auto-shortcut mode" },
-	{ OptNoAutoShortcut,OPT_BOOLEAN,False,ResAutoShortcut,
+	{ OptNoAutoShortcut,OPT_BOOLEAN,false,ResAutoShortcut,
 	    aoffset(c3270.auto_shortcut),
 	    NULL, "Do not run in auto-shortcut mode" },
-	{ OptTitle,    OPT_STRING,  False, ResTitle,
+	{ OptTitle,    OPT_STRING,  false, ResTitle,
 	    aoffset(c3270.title),
 	    "<string>", "Set window title to <string>" },
 #endif /*]*/

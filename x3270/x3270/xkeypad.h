@@ -30,8 +30,8 @@
  *		Global declarations for x3270 keypad.c.
  */
 
-extern Boolean keypad_changed;
-extern Boolean keypad_popped;
+extern bool keypad_changed;
+extern bool keypad_popped;
 
 extern Widget keypad_shell;
 extern enum kp_placement {
@@ -40,7 +40,7 @@ extern enum kp_placement {
 
 void keypad_first_up(void);
 Widget keypad_init(Widget container, Dimension voffset, Dimension screen_width,
-	Boolean floating, Boolean vert);
+	bool floating, bool vert);
 void keypad_move(void);
 void keypad_placement_init(void);
 void keypad_popup_init(void);
@@ -49,5 +49,5 @@ void keypad_set_keymap(void);
 void keypad_set_temp_keymap(XtTranslations trans);
 void keypad_shift(void);
 Dimension min_keypad_width(void);
-void keypad_popdown(Boolean *was_up);
+void keypad_popdown(bool *was_up);
 void keypad_popup(void);

@@ -34,18 +34,18 @@
  */
 
 /* Used by the screen logic. */
-Boolean select_changed(unsigned row, unsigned col, unsigned rows,
+bool select_changed(unsigned row, unsigned col, unsigned rows,
 	unsigned cols);
 typedef enum {
-	SE_BUTTON_DOWN,
-	SE_RIGHT_BUTTON_DOWN,
-	SE_BUTTON_UP,
-	SE_MOVE,
-	SE_DOUBLE_CLICK
+    SE_BUTTON_DOWN,
+    SE_RIGHT_BUTTON_DOWN,
+    SE_BUTTON_UP,
+    SE_MOVE,
+    SE_DOUBLE_CLICK
 } select_event_t;
-Boolean select_event(unsigned row, unsigned col, select_event_t event,
-	Boolean shift);
+bool select_event(unsigned row, unsigned col, select_event_t event,
+	bool shift);
 void select_init(unsigned max_rows, unsigned max_cols);
 void select_sync(unsigned row, unsigned col, unsigned rows,
 	unsigned cols);
-Boolean select_return_key(void);
+bool select_return_key(void);

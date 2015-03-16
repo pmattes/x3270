@@ -48,16 +48,16 @@ extern unsigned int kybdlock;
 
 extern unsigned char aid;
 
-void do_reset(Boolean explicit);
-int emulate_input(const char *s, int len, Boolean pasting);
-int emulate_uinput(const ucs4_t *s, int len, Boolean pasting);
+void do_reset(bool explicit);
+int emulate_input(const char *s, int len, bool pasting);
+int emulate_uinput(const ucs4_t *s, int len, bool pasting);
 void hex_input(const char *s);
 void kybdlock_clr(unsigned int bits, const char *cause);
-void kybd_inhibit(Boolean inhibit);
+void kybd_inhibit(bool inhibit);
 void kybd_register(void);
 int kybd_prime(void);
-void kybd_scroll_lock(Boolean lock);
-Boolean run_ta(void);
+void kybd_scroll_lock(bool lock);
+bool run_ta(void);
 int state_from_keymap(char keymap[32]);
 void lightpen_select(int baddr);
 void key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause);

@@ -36,7 +36,7 @@
 
 #include "util.h"
 
-Boolean
+bool
 llist_isempty(llist_t *l)
 {
     return l->next == l && l->prev == l;

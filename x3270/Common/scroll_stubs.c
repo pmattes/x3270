@@ -36,7 +36,7 @@
 #include "scroll.h"
 
 void
-scroll_save(int n _is_unused, Boolean trim_blanks _is_unused)
+scroll_save(int n _is_unused, bool trim_blanks _is_unused)
 {
 }
 

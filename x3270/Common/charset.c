@@ -66,7 +66,7 @@
 #endif
 
 /* Globals. */
-Boolean charset_changed = False;
+bool charset_changed = false;
 #define DEFAULT_CGEN	0x02b90000
 #define DEFAULT_CSET	0x00000025
 unsigned long cgcsgid = DEFAULT_CGEN | DEFAULT_CSET;
@@ -74,9 +74,9 @@ unsigned long cgcsgid_dbcs = 0L;
 
 /* Statics. */
 static enum cs_result charset_init2(const char *csname, const char *realname,
-	const char *codepage, const char *cgcsgid, Boolean is_dbcs);
+	const char *codepage, const char *cgcsgid, bool is_dbcs);
 static void set_cgcsgids(const char *spec);
-static Boolean set_cgcsgid(char *spec, unsigned long *idp);
+static bool set_cgcsgid(char *spec, unsigned long *idp);
 static void set_host_codepage(char *codepage);
 static void set_charset_name(const char *csname);
 
@@ -95,7 +95,7 @@ charset_init(const char *csname)
     const char *cgcsgid;
     const char *dbcs_cgcsgid = NULL;
     const char *realname;
-    Boolean is_dbcs;
+    bool is_dbcs;
 
 #if !defined(_WIN32) /*[*/
     /* Get all of the locale stuff right. */
@@ -155,8 +155,8 @@ charset_init(const char *csname)
     return CS_OKAY;
 }
 
-/* Set a CGCSGID.  Return True for success, False for failure. */
-static Boolean
+/* Set a CGCSGID.  Return true for success, false for failure. */
+static bool
 set_cgcsgid(char *spec, unsigned long *r)
 {
     unsigned long cp;
@@ -171,9 +171,9 @@ set_cgcsgid(char *spec, unsigned long *r)
 	} else {
 	    *r = cp;
 	}
-	return True;
+	return true;
     } else {
-	return False;
+	return false;
     }
 }
 
@@ -249,20 +249,20 @@ set_charset_name(const char *csname)
 {
     if (csname == NULL) {
 	Replace(charset_name, NewString("us"));
-	charset_changed = False;
+	charset_changed = false;
 	return;
     }
     if ((charset_name != NULL && strcmp(charset_name, csname)) ||
 	    (appres.charset != NULL && strcmp(appres.charset, csname))) {
 	Replace(charset_name, NewString(csname));
-	charset_changed = True;
+	charset_changed = true;
     }
 }
 
 /* Character set init, part 2. */
 static enum cs_result
 charset_init2(const char *csname, const char *realname, const char *codepage,
-	const char *cgcsgid, Boolean is_dbcs)
+	const char *cgcsgid, bool is_dbcs)
 {
     /* Can't swap DBCS modes while connected. */
     if (IN_3270 && is_dbcs != dbcs) {

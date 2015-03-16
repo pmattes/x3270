@@ -98,15 +98,15 @@ usage(const char *msg)
     fprintf(stderr, "Usage: %s [options] [ps:][LUname@]hostname[:port]\n",
 	    programname);
     fprintf(stderr, "Options:\n");
-    cmdline_help(False);
+    cmdline_help(false);
     exit(1);
 }
 
 static void
-s3270_connect(Boolean ignored)
+s3270_connect(bool ignored)
 {       
     if (CONNECTED || appres.disconnect_clear) {
-	ctlr_erase(True);
+	ctlr_erase(true);
     }
 } 
 
@@ -186,7 +186,7 @@ main(int argc, char *argv[])
 	}
 	/* Wait for negotiations to complete or fail. */
 	while (!IN_NVT && !IN_3270) {
-	    (void) process_events(True);
+	    (void) process_events(true);
 	    if (!PCONNECTED) {
 		exit(1);
 	    }
@@ -198,7 +198,7 @@ main(int argc, char *argv[])
 
     /* Process events forever. */
     while (1) {
-	(void) process_events(True);
+	(void) process_events(true);
 
 #if !defined(_WIN32) /*[*/
 	if (children && waitpid(-1, (int *)0, WNOHANG) > 0) {
@@ -214,7 +214,7 @@ main(int argc, char *argv[])
 void
 product_set_appres_defaults(void)
 {
-    appres.scripted = True;
+    appres.scripted = true;
 }
 
 /**
@@ -224,9 +224,9 @@ static void
 s3270_register(void)
 {
     static opt_t s3270_opts[] = {
-	{ OptScripted, OPT_NOP,     False, ResScripted,  NULL,
+	{ OptScripted, OPT_NOP,     false, ResScripted,  NULL,
 	    NULL, "Turn on scripting" },
-	{ OptUtf8,     OPT_BOOLEAN, True,  ResUtf8,      aoffset(utf8),
+	{ OptUtf8,     OPT_BOOLEAN, true,  ResUtf8,      aoffset(utf8),
 	    NULL, "Force local codeset to be UTF-8" }
     };
     static res_t s3270_resources[] = {

@@ -62,9 +62,9 @@ extern unsigned favicon_size;
  * @param[out] image	Image in HTML, if succeeded; must free when finished
  * @param[out] status	Error code, if failed
  *
- * @return True for success, False for failure
+ * @return true for success, false for failure
  */
-static Boolean
+static bool
 hn_image(void *dhandle, varbuf_t *image, httpd_status_t *status)
 {
     httpd_status_t rv;
@@ -85,7 +85,7 @@ hn_image(void *dhandle, varbuf_t *image, httpd_status_t *status)
 	unlink(temp_name);
 	Free(temp_name);
 	*status = rv;
-	return False;
+	return false;
     }
     f = fdopen(fd, "w+");
     if (f == NULL) {
@@ -94,7 +94,7 @@ hn_image(void *dhandle, varbuf_t *image, httpd_status_t *status)
 	unlink(temp_name);
 	Free(temp_name);
 	*status = rv;
-	return False;
+	return false;
     }
 
     /* Write the screen to it in HTML. */
@@ -109,7 +109,7 @@ hn_image(void *dhandle, varbuf_t *image, httpd_status_t *status)
 	unlink(temp_name);
 	Free(temp_name);
 	*status = rv;
-	return False;
+	return false;
     }
 
     /* Read it back into a varbuf_t. */
@@ -125,7 +125,7 @@ hn_image(void *dhandle, varbuf_t *image, httpd_status_t *status)
     Free(temp_name);
 
     /* Success. */
-    return True;
+    return true;
 }
 
 /**

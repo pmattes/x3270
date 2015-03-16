@@ -68,7 +68,7 @@ typedef struct {		/* user parameters: */
     const char *font_name;	/*  font name */
     int font_size;		/*  font size in points */
     int spp;			/*  screens per page */
-    Boolean done;		/* done fetching values */
+    bool done;		/* done fetching values */
 } uparm_t;
 static uparm_t uparm;
 static struct {			/* printer characteristics: */
@@ -126,7 +126,7 @@ gdi_print_start(const char *printer_name, unsigned opts)
 	gdi_get_params(&uparm);
 
 	/* Don't do this again. */
-	uparm.done = True;
+	uparm.done = true;
     }
 
     /* Initialize the printer and pop up the dialog. */
@@ -825,11 +825,11 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
     int status;
     int fa_addr = find_field_attribute_ea(0, ea);
     unsigned char fa = ea[fa_addr].fa;
-    Boolean fa_high, high;
-    Boolean fa_underline, underline;
-    Boolean fa_reverse, reverse;
+    bool fa_high, high;
+    bool fa_underline, underline;
+    bool fa_reverse, reverse;
     unsigned long uc;
-    Boolean is_dbcs;
+    bool is_dbcs;
     char c;
     int usable_rows;
     HFONT got_font = NULL, want_font;
@@ -912,7 +912,7 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 
     /* Now dump out a screen's worth. */
     if (ea[fa_addr].gr & GR_INTENSIFY) {
-	fa_high = True;
+	fa_high = true;
     } else {
 	fa_high = FA_IS_HIGH(fa);
     }
@@ -927,7 +927,7 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 	    if (ea[baddr].fa) {
 		fa = ea[baddr].fa;
 		if (ea[baddr].gr & GR_INTENSIFY) {
-		    fa_high = True;
+		    fa_high = true;
 		} else {
 		    fa_high = FA_IS_HIGH(fa);
 		}

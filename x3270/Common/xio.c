@@ -48,8 +48,8 @@ int x3270_exit_code = 0;
 /* Statics. */
 static ioid_t ns_read_id;
 static ioid_t ns_exception_id;
-static Boolean reading = False;
-static Boolean excepting = False;
+static bool reading = false;
+static bool excepting = false;
 
 /*
  * Called to set up input on a new network connection.
@@ -58,9 +58,9 @@ void
 x_add_input(iosrc_t iosrc)
 {
     ns_exception_id = AddExcept(iosrc, net_exception);
-    excepting = True;
+    excepting = true;
     ns_read_id = AddInput(iosrc, net_input);
-    reading = True;
+    reading = true;
 }
 
 /*
@@ -71,7 +71,7 @@ x_except_off(void)
 {
     if (excepting) {
 	RemoveInput(ns_exception_id);
-	excepting = False;
+	excepting = false;
     }
 }
 
@@ -90,7 +90,7 @@ x_except_on(iosrc_t iosrc)
 	RemoveInput(ns_read_id);
     }
     ns_exception_id = AddExcept(iosrc, net_exception);
-    excepting = True;
+    excepting = true;
     if (reading) {
 	ns_read_id = AddInput(iosrc, net_input);
     }
@@ -104,11 +104,11 @@ x_remove_input(void)
 {
     if (reading) {
 	RemoveInput(ns_read_id);
-	reading = False;
+	reading = false;
     }
     if (excepting) {
 	RemoveInput(ns_exception_id);
-	excepting = False;
+	excepting = false;
     }
 }
 
@@ -118,13 +118,13 @@ x_remove_input(void)
 void
 x3270_exit(int n)
 {
-    static Boolean already_exiting = False;
+    static bool already_exiting = false;
 
     /* Handle unintentional recursion. */
     if (already_exiting) {
 	return;
     }
-    already_exiting = True;
+    already_exiting = true;
 
     /* Set the exit code. */
     x3270_exit_code = n;
@@ -134,7 +134,7 @@ x3270_exit(int n)
     fflush(stderr);
 
     /* Tell everyone else who's interested. */
-    st_changed(ST_EXITING, True);
+    st_changed(ST_EXITING, true);
 
 #if !defined(_WIN32) /*[*/
     exit(n);
@@ -148,12 +148,12 @@ x3270_exit(int n)
 #endif /*]*/
 }
 
-static Boolean
+static bool
 Quit_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Quit", ia, argc, argv);
     if (check_argc("Quit", argc, 0, 0) < 0) {
-	return False;
+	return false;
     }
 
     /*
@@ -167,7 +167,7 @@ Quit_action(ia_t ia, unsigned argc, const char **argv)
     if (ia != IA_KEYMAP || !CONNECTED) {
 	x3270_exit(0);
     }
-    return False;
+    return false;
 }
 
 /*

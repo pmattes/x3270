@@ -91,8 +91,8 @@ static ucs4_t page_buf[MAX_BUF];
 static unsigned char *xlate_buf[MAX_BUF];
 int xlate_len[MAX_BUF];
 static int baddr = 0;
-static Boolean page_buf_initted = False;
-static Boolean any_3270_printable = False;
+static bool page_buf_initted = false;
+static bool any_3270_printable = false;
 static int any_3270_output = 0;
 #if !defined(_WIN32) /*[*/
 static FILE *prfile = NULL;
@@ -130,14 +130,14 @@ static char vtabs[MAX_MPL+1];
 static int lm, tm, bm, mpp, mpl, scs_any;
 static int pp;
 static int line;
-static Boolean scs_initted = False;
-static Boolean any_scs_output = False;
+static bool scs_initted = false;
+static bool any_scs_output = false;
 static int scs_leftover_len = 0;
 static int scs_leftover_buf[256];
 static int scs_dbcs_subfield = 0;
 static unsigned char scs_dbcs_c1 = 0;
 static unsigned scs_cs = 0;
-static Boolean ffeoj_last = False;
+static bool ffeoj_last = false;
 
 
 /*
@@ -165,7 +165,7 @@ process_ds(unsigned char *buf, int buflen)
 		if (ctlr_erase() < 0 || prflush() < 0)
 			return PDS_FAILED;
 		baddr = 0;
-		ctlr_write(buf, buflen, True);
+		ctlr_write(buf, buflen, true);
 		return PDS_OKAY_NO_OUTPUT;
 		break;
 	case CMD_EW:	/* erase/write */
@@ -174,13 +174,13 @@ process_ds(unsigned char *buf, int buflen)
 		if (ctlr_erase() < 0 || prflush() < 0)
 			return PDS_FAILED;
 		baddr = 0;
-		ctlr_write(buf, buflen, True);
+		ctlr_write(buf, buflen, true);
 		return PDS_OKAY_NO_OUTPUT;
 		break;
 	case CMD_W:	/* write */
 	case SNA_CMD_W:
 		trace_ds("Write");
-		ctlr_write(buf, buflen, False);
+		ctlr_write(buf, buflen, false);
 		return PDS_OKAY_NO_OUTPUT;
 		break;
 	case CMD_RB:	/* read buffer */
@@ -218,12 +218,12 @@ process_ds(unsigned char *buf, int buflen)
  * Process a 3270 Write command.
  */
 void
-ctlr_write(unsigned char buf[], int buflen, Boolean erase)
+ctlr_write(unsigned char buf[], int buflen, bool erase)
 {
 	register unsigned char	*cp;
-	Boolean		wcc_keyboard_restore, wcc_sound_alarm;
-	Boolean		wcc_start_printer;
-	Boolean		ra_ge;
+	bool		wcc_keyboard_restore, wcc_sound_alarm;
+	bool		wcc_start_printer;
+	bool		ra_ge;
 	int		i;
 	unsigned char	na;
 	int		any_fa;
@@ -251,7 +251,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 		(void) memset(xlate_buf, '\0',
 			MAX_BUF * sizeof(unsigned char *));
 		(void) memset(xlate_len, '\0', MAX_BUF * sizeof(int));
-		page_buf_initted = True;
+		page_buf_initted = true;
 		baddr = 0;
 	}
 
@@ -346,11 +346,11 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				trace_ds("(%d[%+d])", xbaddr, xbaddr-baddr);
 			cp++;		/* skip char to repeat */
 			if (*cp == ORDER_GE){
-				ra_ge = True;
+				ra_ge = true;
 				trace_ds("GraphicEscape");
 				cp++;
 			} else
-				ra_ge = False;
+				ra_ge = false;
 			trace_ds("'%s'", see_ebc(*cp));
 			previous = ORDER;
 			if (xbaddr > MAX_BUF || xbaddr < baddr) {
@@ -601,7 +601,7 @@ init_scs(void)
 	scs_dbcs_c1 = 0;
 	scs_cs = 0;
 
-	scs_initted = True;
+	scs_initted = true;
 }
 
 #if defined(_WIN32) /*[*/
@@ -637,10 +637,10 @@ unicode_to_printer(ucs4_t u, char mb[], int mb_len)
  * We do not observe the -skipcc option with SCS data.
  */
 static int
-dump_scs_line(Boolean reset_pp, Boolean always_nl)
+dump_scs_line(bool reset_pp, bool always_nl)
 {
 	int i;
-	Boolean any_data = False;
+	bool any_data = false;
 
 	/* Find the last non-space character in the line buffer. */
 	for (i = mpp; i >= 1; i--) {
@@ -681,8 +681,8 @@ dump_scs_line(Boolean reset_pp, Boolean always_nl)
 				if (linebuf[j] == FCORDER_NOP)
 				    	continue;
 				n_data++;
-				any_data = True;
-				scs_any = True;
+				any_data = true;
+				scs_any = true;
 #if !defined(_WIN32) /*[*/
 				len = unicode_to_multibyte(linebuf[j],
 					mb, sizeof(mb));
@@ -720,13 +720,13 @@ dump_scs_line(Boolean reset_pp, Boolean always_nl)
 #endif /*]*/
 	if (reset_pp)
 		pp = lm;
-	any_scs_output = False;
+	any_scs_output = false;
 	return 0;
 }
 
 /* SCS formfeed. */
 static int
-scs_formfeed(Boolean explicit)
+scs_formfeed(bool explicit)
 {
 	int nls = 0;
 
@@ -804,7 +804,7 @@ add_scs(ucs4_t c)
 	 * MPL, and then past the top margin.
 	 */
 	if (line > bm) {
-		if (scs_formfeed(False) < 0)
+		if (scs_formfeed(false) < 0)
 			return -1;
 	}
 
@@ -813,7 +813,7 @@ add_scs(ucs4_t c)
 	 * line and start over at the left margin.
 	 */
 	if (pp > mpp) {
-		if (dump_scs_line(True, True) < 0)
+		if (dump_scs_line(true, true) < 0)
 			return -1;
 	}
 
@@ -825,8 +825,8 @@ add_scs(ucs4_t c)
 		linebuf[pp++] = c;
 	else
 	    	pp++;
-	any_scs_output = True;
-	ffeoj_last = False;
+	any_scs_output = true;
+	ffeoj_last = false;
 	return 0;
 }
 
@@ -852,8 +852,8 @@ add_scs_trn(unsigned char *cp, int cnt)
 	}
 	(void) memcpy(trnbuf[pp].buf + trnbuf[pp].data_len, cp, cnt);
 	trnbuf[pp].data_len += cnt;
-	any_scs_output = True;
-	ffeoj_last = True;
+	any_scs_output = true;
+	ffeoj_last = true;
 }
 
 /*
@@ -921,13 +921,13 @@ process_scs_contig(unsigned char *buf, int buflen)
 		case SCS_FF:	/* form feed */
 			END_TEXT("FF");
 			/* Dump any pending data, and go to the next line. */
-			if (dump_scs_line(True, False) < 0)
+			if (dump_scs_line(true, false) < 0)
 				return PDS_FAILED;
 			/*
 			 * If there is a max page length, skip to the next
 			 * page.
 			 */
-			if (scs_formfeed(True) < 0)
+			if (scs_formfeed(true) < 0)
 				return PDS_FAILED;
 			break;
 		case SCS_HT:	/* horizontal tab */
@@ -952,7 +952,7 @@ process_scs_contig(unsigned char *buf, int buflen)
 		case SCS_NL:	/* new line */
 			if (*cp == SCS_NL)
 				END_TEXT("NL");
-			if (dump_scs_line(True, True) < 0)
+			if (dump_scs_line(true, true) < 0)
 				return PDS_FAILED;
 			break;
 		case SCS_VT:	/* vertical tab */
@@ -962,7 +962,7 @@ process_scs_contig(unsigned char *buf, int buflen)
 					break;
 			}
 			if (i <= MAX_MPL) {
-				if (dump_scs_line(False, True) < 0)
+				if (dump_scs_line(false, true) < 0)
 					return PDS_FAILED;
 				while (line < i) {
 					if (options.crlf) {
@@ -983,7 +983,7 @@ process_scs_contig(unsigned char *buf, int buflen)
 		case SCS_LF:	/* line feed */
 			if (*cp == SCS_LF)
 				END_TEXT("LF");
-			if (dump_scs_line(False, True) < 0)
+			if (dump_scs_line(false, true) < 0)
 				return PDS_FAILED;
 			break;
 		case SCS_GE:	/* graphic escape */
@@ -1504,7 +1504,7 @@ ctlr_add(unsigned char ebc, ucs4_t c, unsigned char cs, unsigned char gr)
 		xlate_len[baddr] = xtable_lookup(ebc, &xlate_buf[baddr]);
 	baddr = (baddr + 1) % MAX_BUF;
 	any_3270_output = 1;
-	ffeoj_last = False;
+	ffeoj_last = false;
 
 	/* Implement -emflush mode. */
 	if (options.emflush && !wcc_line_length && c == FCORDER_EM) {
@@ -1522,7 +1522,7 @@ static struct {
 } uo_data[MAX_UNF_MPP + 2];	/* room for full line plus carriage control */
 static unsigned uo_col;		/* current output column */
 static unsigned uo_maxcol;	/* maximum column buffered */
-static Boolean uo_last_cr = False; /* last data was CR */
+static bool uo_last_cr = false; /* last data was CR */
 
 /*
  * Dump and free any transparent unformatted data at col.
@@ -1599,7 +1599,7 @@ uoutput(char c)
 			    	return -1;
 			}
 			uo_col = uo_maxcol = 0;
-			uo_last_cr = True;
+			uo_last_cr = true;
 		} else {
 			uo_col = 0;
 		}
@@ -1615,10 +1615,10 @@ uoutput(char c)
 		if (stash(c) < 0)
 			return -1;
 		uo_col = uo_maxcol = 0;
-		uo_last_cr = False;
+		uo_last_cr = false;
 		break;
 	case '\f':
-		uo_last_cr = False;
+		uo_last_cr = false;
 		if (any_3270_printable || !options.ffskip) {
 			if (dump_uo() < 0) {
 				return -1;
@@ -1629,7 +1629,7 @@ uoutput(char c)
 		uo_col = uo_maxcol = 0;
 		break;
 	default:
-		uo_last_cr = False;
+		uo_last_cr = false;
 
 		/* Don't overwrite with spaces. */
 		if (c == ' ') {
@@ -1639,7 +1639,7 @@ uoutput(char c)
 				uo_col++;
 		} else {
 			uo_data[uo_col++].buf = c;
-			any_3270_printable = True;
+			any_3270_printable = true;
 		}
 		if (uo_col > uo_maxcol)
 			uo_maxcol = uo_col;
@@ -1781,7 +1781,7 @@ dump_unformatted(void)
 	}
 	uo_col = 0;
 	uo_maxcol = 0;
-	uo_last_cr = False;
+	uo_last_cr = false;
 
 	/* Flush buffered data. */
 #if defined(_WIN32) /*[*/
@@ -1816,7 +1816,7 @@ dump_formatted(void)
 	ucs4_t *cp = page_buf;
 	int visible = 1;
 	int newlines = 0;
-	Boolean data_without_newline = False;
+	bool data_without_newline = false;
 
 	if (!any_3270_output)
 		return 0;
@@ -1848,7 +1848,7 @@ dump_formatted(void)
 					if (stash('\n') < 0)
 						return -1;
 					newlines--;
-					data_without_newline = False;
+					data_without_newline = false;
 				}
 				if (any_3270_printable || !options.ffskip)
 					if (stash('\f') < 0)
@@ -1861,7 +1861,7 @@ dump_formatted(void)
 			case ' ':
 				blanks++;
 				any_data++;
-				data_without_newline = True;
+				data_without_newline = true;
 				break;
 			default:
 				while (newlines) {
@@ -1872,7 +1872,7 @@ dump_formatted(void)
 					if (stash('\n') < 0)
 						return -1;
 					newlines--;
-					data_without_newline = False;
+					data_without_newline = false;
 				}
 				while (blanks) {
 					if (stash(' ') < 0)
@@ -1880,7 +1880,7 @@ dump_formatted(void)
 					blanks--;
 				}
 				any_data++;
-				data_without_newline = True;
+				data_without_newline = true;
 				if (!visible) {
 				    	if (stash(' ') < 0)
 					    	return -1;
@@ -1909,7 +1909,7 @@ dump_formatted(void)
 
 				}
 				if (visible)
-					any_3270_printable = True;
+					any_3270_printable = true;
 				break;
 			}
 		}
@@ -1958,7 +1958,7 @@ print_eoj(void)
 
 	/* Dump any pending SCS-mode output. */
 	if (any_scs_output) {
-		if (dump_scs_line(True, False) < 0)
+		if (dump_scs_line(true, false) < 0)
 			rc = -1;
 	}
 
@@ -1966,8 +1966,8 @@ print_eoj(void)
 	if (options.ffeoj && !ffeoj_last) {
 	    	if (scs_any) {
 			trace_ds("Automatic SCS EOJ formfeed.\n");
-		    	scs_formfeed(True);
-			if (dump_scs_line(True, False) < 0)
+		    	scs_formfeed(true);
+			if (dump_scs_line(true, false) < 0)
 				rc = -1;
 		} else {
 			trace_ds("Automatic 3270 %s EOJ formfeed.\n",
@@ -1981,7 +1981,7 @@ print_eoj(void)
 					rc = -1;
 			}
 		}
-		ffeoj_last = True;
+		ffeoj_last = true;
 	}
 
 	/* Close the stream to the print process. */
@@ -2025,7 +2025,7 @@ print_eoj(void)
 	/*
 	 * Reset the FF suprpession logic.
 	 */
-	any_3270_printable = False;
+	any_3270_printable = false;
 
 	return rc;
 }
@@ -2036,7 +2036,7 @@ print_unbind(void)
 	/*
 	 * Make sure that the next SCS job starts with clean conditions.
 	 */
-	scs_initted = False;
+	scs_initted = false;
 }
 
 static int
@@ -2054,7 +2054,7 @@ ctlr_erase(void)
 
 	/* Dump any pending SCS-mode output. */
 	if (any_scs_output) {
-		if (dump_scs_line(True, False) < 0) /* XXX: 1st True? */
+		if (dump_scs_line(true, false) < 0) /* XXX: 1st true? */
 			return -1;
 	}
 

@@ -35,7 +35,7 @@ typedef enum {
     TSS_PRINTER	/* trace to printer */
 } tss_t;
 
-extern Boolean trace_skipping;
+extern bool trace_skipping;
 extern char *tracefile_name;
 extern struct timeval ds_ts;
 
@@ -52,7 +52,7 @@ tss_t trace_get_screentrace_last_how(void);
 const char *trace_get_screentrace_name(void);
 void trace_set_trace_file(const char *path);
 void trace_set_screentrace_file(tss_t how, ptype_t ptype, const char *name);
-void trace_screen(Boolean is_clear);
+void trace_screen(bool is_clear);
 void trace_rollover_check(void);
 void tracefile_ok(const char *tfn);
 void trace_register(void);

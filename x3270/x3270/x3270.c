@@ -36,6 +36,7 @@
  */
 
 #include "globals.h"
+#include <assert.h>
 #include <sys/wait.h>
 #include <X11/StringDefs.h>
 #include <X11/Core.h>
@@ -102,7 +103,7 @@ XrmDatabase     rdb;
 AppRes		appres;
 xappres_t	xappres;
 int		children = 0;
-Boolean		exiting = False;
+bool		exiting = false;
 char           *user_title = NULL;
 
 /* Statics */
@@ -110,7 +111,7 @@ static void	peek_at_xevent(XEvent *);
 static XtErrorMsgHandler old_emh;
 static void	trap_colormaps(String, String, String, String, String *,
 			Cardinal *);
-static Boolean  colormap_failure = False;
+static bool  colormap_failure = false;
 #if defined(LOCAL_PROCESS) /*[*/
 static void	parse_local_process(int *argcp, char **argv, char **cmds);
 #endif /*]*/
@@ -119,6 +120,7 @@ static void	parse_set_clear(int *, char **);
 static void	label_init(void);
 static void	sigchld_handler(int);
 static char    *user_icon_name = NULL;
+static void	copy_xres_to_res_bool(void);
 
 XrmOptionDescRec options[]= {
     { OptActiveIcon,	DotActiveIcon,	XrmoptionNoArg,		ResTrue },
@@ -324,13 +326,32 @@ main(int argc, char *argv[])
     int	ovc, ovr;
     char junk;
     int	model_number;
-    Boolean mono = False;
+    bool mono = false;
     char *session = NULL;
-    Boolean pending = False;
+    bool pending = false;
 
     if (XtNumber(options) != XtNumber(option_help)) {
 	Error("Help mismatch");
     }
+
+    /*
+     * Make sure the Xt and x3270 Boolean types line up.
+     * This is needed because we use the Xt resource parser to fill in all of
+     * the appres fields, including those that are used by common code. Xt uses
+     * 'Boolean'; common code uses 'bool'. They need to be the same.
+     *
+     * This requirement is no worse than the alternative, which is defining our
+     * own 'Boolean' type for the common code, and hand-crafting it to be sure
+     * that it is the same type as Xt's Boolean. It has the benefit of keeping
+     * Xt data types completely out of common code.
+     *
+     * The way to make this truly portable would be to extract the Boolean
+     * resources into an x3270-specific structure that uses Boolean data types,
+     * and then copy them, field by field, into the common appres structure.
+     */
+    assert(sizeof(Boolean) == sizeof(bool));
+    assert(True == true);
+    assert(False == false);
 
     /* Figure out who we are */
     programname = strrchr(argv[0], '/');
@@ -388,7 +409,7 @@ main(int argc, char *argv[])
     dname = NULL;
     for (i = 1; i < argc; i++) {
 	if (!strcmp(argv[i], "-mono")) {
-	    mono = True;
+	    mono = true;
 	} else if (!strcmp(argv[i], "-display") && argc > i) {
 	    dname = argv[i+1];
 	}
@@ -398,7 +419,7 @@ main(int argc, char *argv[])
 	XtError("Can't open display");
     }
     if (DefaultDepthOfScreen(XDefaultScreenOfDisplay(display)) == 1) {
-	mono = True;
+	mono = true;
     }
     XCloseDisplay(display);
 #endif /*]*/
@@ -484,6 +505,7 @@ main(int argc, char *argv[])
 	    num_resources, 0, 0);
     XtGetApplicationResources(toplevel, (XtPointer)&xappres, xresources,
 	    num_xresources, 0, 0);
+    copy_xres_to_res_bool();
     (void) XtAppSetWarningMsgHandler(appcontext, old_emh);
 
     /*
@@ -496,13 +518,13 @@ main(int argc, char *argv[])
 
 #if defined(USE_APP_DEFAULTS) /*[*/
     /* Check the app-defaults version. */
-    if (!appres.x3270.ad_version) {
+    if (!xappres.ad_version) {
 	XtError("Outdated app-defaults file");
-    } else if (!strcmp(appres.x3270.ad_version, "fallback")) {
+    } else if (!strcmp(xappres.ad_version, "fallback")) {
 	XtError("No app-defaults file");
-    } else if (strcmp(appres.x3270.ad_version, app_defaults_version)) {
+    } else if (strcmp(xappres.ad_version, app_defaults_version)) {
 	xs_error("app-defaults version mismatch: want %s, got %s",
-		app_defaults_version, appres.x3270.ad_version);
+		app_defaults_version, xappres.ad_version);
     }
 #endif /*]*/
 
@@ -534,17 +556,17 @@ main(int argc, char *argv[])
 #endif /*]*/
     }
     if (screen_depth <= 1 || colormap_failure) {
-	appres.interactive.mono = True;
+	appres.interactive.mono = true;
     }
     if (appres.interactive.mono) {
-	appres.x3270.use_cursor_color = False;
-	appres.m3279 = False;
+	xappres.use_cursor_color = False;
+	appres.m3279 = false;
     }
     if (!appres.extended) {
 	appres.oversize = NULL;
     }
     if (appres.secure) {
-	appres.disconnect_clear = True;
+	appres.disconnect_clear = true;
     }
 
     a_delete_me = XInternAtom(display, "WM_DELETE_WINDOW", False);
@@ -576,7 +598,7 @@ main(int argc, char *argv[])
     xaction_init2();
 
     /* Define the keymap. */
-    keymap_init(appres.interactive.key_map, False);
+    keymap_init(appres.interactive.key_map, false);
 
     if (appres.apl_mode) {
 	appres.interactive.compose_map = XtNewString(Apl);
@@ -642,13 +664,13 @@ main(int argc, char *argv[])
 	if (cl_hostname == NULL)
 #endif /*]*/
 	{
-	    appres.once = False;
+	    appres.once = false;
 	}
-	appres.interactive.reconnect = False;
+	appres.interactive.reconnect = false;
     }
 
-    if (appres.x3270.char_class != NULL) {
-	reclass(appres.x3270.char_class);
+    if (xappres.char_class != NULL) {
+	reclass(xappres.char_class);
     }
 
     screen_init();
@@ -677,10 +699,10 @@ main(int argc, char *argv[])
     /* Handle initial toggle settings. */
     if (appres.dsTrace_bc || appres.eventTrace_bc) {
 	/* Backwards compatibility with old resource names. */
-	set_toggle_initial(TRACING, True);
+	set_toggle_initial(TRACING, true);
     }
     if (!appres.debug_tracing) {
-	set_toggle_initial(TRACING, False);
+	set_toggle_initial(TRACING, false);
     }
     initialize_toggles();
 
@@ -707,7 +729,7 @@ main(int argc, char *argv[])
 	    }
 	    XtAppProcessEvent(appcontext, XtIMXEvent | XtIMTimer);
 	}
-	screen_disp(False);
+	screen_disp(false);
 	XtAppProcessEvent(appcontext, XtIMAll);
 
 	if (children && (pid = waitpid(-1, &status, WNOHANG)) > 0) {
@@ -753,9 +775,9 @@ parse_model_number(char *m)
 	 * '327[89]', and it sets the m3279 resource.
 	 */
 	if (!strncmp(m, "3278", 4)) {
-	    appres.m3279 = False;
+	    appres.m3279 = false;
 	} else if (!strncmp(m, "3279", 4)) {
-	    appres.m3279 = True;
+	    appres.m3279 = true;
 	} else {
 	    return -1;
 	}
@@ -800,7 +822,7 @@ parse_model_number(char *m)
 
 /* Change the window and icon labels. */
 static void
-relabel(Boolean ignored _is_unused)
+relabel(bool ignored _is_unused)
 {
     char *title;
     char icon_label[8];
@@ -886,7 +908,7 @@ trap_colormaps(String name, String type, String class, String defaultp,
 	String *params, Cardinal *num_params)
 {
     if (!strcmp(type, "cvtStringToPixel")) {
-	colormap_failure = True;
+	colormap_failure = true;
     }
     (*old_emh)(name, type, class, defaultp, params, num_params);
 }
@@ -949,10 +971,10 @@ parse_set_clear(int *argcp, char **argv)
     argv_out[argc_out++] = argv[0];
 
     for (i = 1; i < *argcp; i++) {
-	Boolean is_set = False;
+	bool is_set = false;
 
 	if (!strcmp(argv[i], OptSet)) {
-	    is_set = True;
+	    is_set = true;
 	} else if (strcmp(argv[i], OptClear)) {
 	    argv_out[argc_out++] = argv[i];
 	    continue;
@@ -1022,8 +1044,65 @@ Warning(const char *s)
 /*
  * Product information functions.
  */
-Boolean
+bool
 product_has_display(void)
 {
-    return True;
+    return true;
+}
+
+/*
+ * Copy xappres Boolean resources to appres bool resources.
+ *
+ * This is needed because we have to parse all resources with libXt calls.
+ * LibXt uses 'Boolean', but the common resources have type 'bool'. We don't
+ * know if libXt's 'Boolean' and <stdbool.h>'s 'bool' are the same type or not.
+ */
+static void
+copy_xres_to_res_bool(void)
+{
+    int i;
+#   define copy_bool(field)	appres.field = xappres.bools.field
+
+    copy_bool(extended);
+    copy_bool(m3279);
+    copy_bool(apl_mode);
+    copy_bool(once);
+    copy_bool(scripted);
+    copy_bool(modified_sel);
+    copy_bool(unlock_delay);
+    copy_bool(bind_limit);
+    copy_bool(new_environ);
+    copy_bool(socket);
+    copy_bool(numeric_lock);
+    copy_bool(secure);
+    copy_bool(oerr_lock);
+    copy_bool(typeahead);
+    copy_bool(debug_tracing);
+    copy_bool(disconnect_clear);
+    copy_bool(highlight_bold);
+    copy_bool(color8);
+    copy_bool(bsd_tm);
+    copy_bool(trace_monitor);
+    copy_bool(idle_command_enabled);
+    copy_bool(nvt_mode);
+    copy_bool(dsTrace_bc);
+    copy_bool(eventTrace_bc);
+
+    copy_bool(interactive.mono);
+    copy_bool(interactive.menubar);
+    copy_bool(interactive.visual_bell);
+    copy_bool(interactive.reconnect);
+    copy_bool(interactive.do_confirms);
+
+    for (i = 0; i < N_TOGGLES; i++) {
+	copy_bool(toggle[i]);
+    }
+
+    copy_bool(linemode.icrnl);
+    copy_bool(linemode.inlcr);
+    copy_bool(linemode.onlcr);
+
+    copy_bool(ssl.self_signed_ok);
+    copy_bool(ssl.tls);
+    copy_bool(ssl.verify_host_cert);
 }

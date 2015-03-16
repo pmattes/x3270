@@ -46,7 +46,7 @@ extern time_t ns_time;
 void net_abort(void);
 void net_break(void);
 void net_charmode(void);
-iosrc_t net_connect(const char *, char *, Boolean, Boolean *, Boolean *);
+iosrc_t net_connect(const char *, char *, bool, bool *, bool *);
 void net_exception(iosrc_t fd, ioid_t id);
 int net_getsockname(void *buf, int *len);
 void net_hexnvt_out(unsigned char *buf, int len);
@@ -60,14 +60,14 @@ const char *net_query_lu_name(void);
 const char *net_query_ssl(void);
 void net_sendc(char c);
 void net_sends(const char *s);
-Boolean net_snap_options(void);
+bool net_snap_options(void);
 const char *tn3270e_current_opts(void);
 char *net_proxy_type(void);
 char *net_proxy_host(void);
 char *net_proxy_port(void);
-Boolean net_bound(void);
+bool net_bound(void);
 #if defined(HAVE_LIBSSL) /*[*/
-void ssl_base_init(char *cl_hostname, Boolean *pending);
+void ssl_base_init(char *cl_hostname, bool *pending);
 #endif /*]*/
 extern int linemode;
 

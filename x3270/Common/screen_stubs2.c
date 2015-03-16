@@ -85,10 +85,10 @@ mcursor_waiting(void)
 {
 }
 
-Boolean
+bool
 screen_obscured(void)
 {
-    return False;
+    return false;
 }
 
 void
@@ -102,8 +102,8 @@ screen_window_number(void)
     return 0L;
 }
 
-Boolean
+bool
 screen_has_bg_color(void)
 {
-    return True;
+    return true;
 }

@@ -72,7 +72,7 @@ struct data_buffer {
 int dft_buffersize = 0;			/* Buffer size (LIMIN, LIMOUT) */
 
 /* Statics. */
-static Boolean message_flag = False;	/* Open Request for msg received */
+static bool message_flag = false;	/* Open Request for msg received */
 static int dft_eof;
 static unsigned long recnum;
 static char *abort_string = NULL;
@@ -172,12 +172,12 @@ dft_open_request(unsigned short len, unsigned char *cp)
 	}
 
 	if (!strcmp(namebuf, OPEN_MSG))
-		message_flag = True;
+		message_flag = true;
 	else {
-		message_flag = False;
-		ft_running(False);
+		message_flag = false;
+		ft_running(false);
 	}
-	dft_eof = False;
+	dft_eof = false;
 	recnum = 1;
 	dft_ungetc_count = 0;
 
@@ -467,7 +467,7 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 			if (c == EOF) {
 				if (ft_last_dbcs) {
 					*bufptr = EBC_si;
-					ft_last_dbcs = False;
+					ft_last_dbcs = false;
 					return 1;
 				}
 				return -1;
@@ -496,7 +496,7 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 			dft_ungetc_cache[0] = '\r';
 			dft_ungetc_cache[1] = '\n';
 			dft_ungetc_count = 2;
-			ft_last_dbcs = False;
+			ft_last_dbcs = false;
 			return 1;
 		} else {
 			*bufptr = '\r';
@@ -533,7 +533,7 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 			store_inbyte(EBC_so, &bufptr, &numbytes);
 		store_inbyte(i_ft2asc[(e >> 8) & 0xff], &bufptr, &numbytes);
 		store_inbyte(i_ft2asc[e & 0xff],        &bufptr, &numbytes);
-		ft_last_dbcs = True;
+		ft_last_dbcs = true;
 		return bufptr - bp0;
 	} else {
 	    	unsigned char nc = e? i_ft2asc[e]: '?';
@@ -542,7 +542,7 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 		    	*bufptr = EBC_si;
 			dft_ungetc_cache[0] = nc;
 			dft_ungetc_count = 1;
-			ft_last_dbcs = False;
+			ft_last_dbcs = false;
 		} else {
 			*bufptr = nc;
 		}
@@ -576,7 +576,7 @@ dft_get_request(void)
 	    	if (ascii_flag && (remap_flag || cr_flag)) {
 		    	numread = dft_ascii_read(bufptr, numbytes);
 			if (numread == (size_t)-1) {
-				dft_eof = True;
+				dft_eof = true;
 			    	break;
 			}
 			bufptr += numread;
@@ -592,7 +592,7 @@ dft_get_request(void)
 			numbytes -= numread;
 			total_read += numread;
 			if (feof(ft_local_file))
-				dft_eof = True;
+				dft_eof = true;
 			if (feof(ft_local_file) || ferror(ft_local_file)) {
 				break;
 			}
@@ -636,7 +636,7 @@ dft_get_request(void)
 		SET16(obptr, TR_ERROR_HDR);
 		SET16(obptr, TR_ERR_EOF);
 
-		dft_eof = True;
+		dft_eof = true;
 	}
 
 	/* Set the SF length. */

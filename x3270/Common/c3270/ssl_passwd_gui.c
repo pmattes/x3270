@@ -47,7 +47,7 @@
 # include "ssl_passwd_gui.h"
 
 /* Statics. */
-static Boolean ssl_password_prompted;
+static bool ssl_password_prompted;
 
 /* Prompt for a password on the console. */
 static char *
@@ -72,7 +72,7 @@ gets_noecho(char *buf, int size)
 # else /*][*/
     int cc = 0;
 
-    while (True) {
+    while (true) {
 	char c;
 
 	(void) screen_wait_for_key(&c);
@@ -103,7 +103,7 @@ ssl_passwd_gui_callback(char *buf, int size)
    s = gets_noecho(buf, size);
    fprintf(stdout, "\n");
    fflush(stdout);
-   ssl_password_prompted = True;
+   ssl_password_prompted = true;
    return s? strlen(s): 0;
 }
 
@@ -111,14 +111,14 @@ ssl_passwd_gui_callback(char *buf, int size)
 void
 ssl_passwd_gui_reset(void)
 {
-    ssl_password_prompted = False;
+    ssl_password_prompted = false;
 }
 
 /*
  * Password GUI retry.
- * Returns True if we should try prompting for the password again.
+ * Returns true if we should try prompting for the password again.
  */
-Boolean
+bool
 ssl_passwd_gui_retry(void)
 {
     return ssl_password_prompted;

@@ -39,6 +39,6 @@ void ft_gui_complete_popup(const char *msg);
 void ft_gui_update_length(unsigned long length);
 void ft_gui_running(unsigned long length);
 void ft_gui_aborting(void);
-Boolean ft_gui_interact(char ***params, unsigned *num_params);
+bool ft_gui_interact(char ***params, unsigned *num_params);
 void ft_gui_awaiting(void);
 void ft_gui_popup_ft(void);

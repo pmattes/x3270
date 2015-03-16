@@ -44,21 +44,21 @@
 /**
  * GUI for the PrintText action.
  *
- * @param[in] use_file	True if the output is a file, False if the output is
+ * @param[in] use_file	true if the output is a file, false if the output is
  * 			going to a printer
  *
- * @return True if a confirmation dialog was popped up, False if the guts of
+ * @return true if a confirmation dialog was popped up, false if the guts of
  *	   the action should be run now.
  */
-Boolean
-print_text_gui(Boolean use_file)
+bool
+print_text_gui(bool use_file)
 {
     if (ia_cause == IA_COMMAND ||
 	ia_cause == IA_MACRO ||
 	ia_cause == IA_SCRIPT) {
 
 	/* Invoked by a script. Run the guts now. */
-	return False;
+	return false;
 
     } else {
 	/* Invoked from a keymap -- pop up the confirmation dialog. */
@@ -72,6 +72,6 @@ print_text_gui(Boolean use_file)
 	} else {
 	    stmenu_popup(STMP_PRINTER);
 	}
-	return True;
+	return true;
     }
 }

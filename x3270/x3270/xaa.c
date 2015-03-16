@@ -59,7 +59,7 @@ execute_action_callback(Widget w _is_unused, XtPointer client_data,
     if (!text) {
 	return;
     }
-    push_macro(text, False);
+    push_macro(text, false);
 }
 
 void

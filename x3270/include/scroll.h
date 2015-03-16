@@ -32,5 +32,5 @@
  *		Global declarations for scroll.c.
  */
 
-void scroll_save(int n, Boolean trim_blanks);
+void scroll_save(int n, bool trim_blanks);
 void scroll_to_bottom(void);

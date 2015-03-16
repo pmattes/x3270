@@ -53,16 +53,16 @@ enum units {
 };
 
 typedef struct {
-    Boolean is_action;
-    Boolean is_interactive;
+    bool is_action;
+    bool is_interactive;
     char *host_filename;
-    Boolean receive_flag;
-    Boolean append_flag;
+    bool receive_flag;
+    bool append_flag;
     host_type_t host_type;
     enum recfm recfm;
     enum units units;
-    Boolean allow_overwrite;
-    Boolean is_cut;
+    bool allow_overwrite;
+    bool is_cut;
 } ft_private_t;
 
 extern ft_private_t ft_private;

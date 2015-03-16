@@ -44,6 +44,13 @@
 #endif /*]*/
 #include <time.h>			/* C library time functions */
 #include <stdarg.h>			/* Varargs */
+#if !defined(_MSC_VER) /*[*/
+# include <stdbool.h>                   /* bool, true, false */
+#else /*][*/
+typedef char bool;                      /* roll our own for MSC */
+# define true 1
+# define false 0
+#endif /*]*/
 #if defined(_WIN32) /*[*/
 # include "wincmn.h"			/* Common Windows definitions. */
 #endif /*]*/
@@ -125,13 +132,6 @@ typedef HANDLE iosrc_t;
 #endif /*]*/
 typedef unsigned long ioid_t;
 #define NULL_IOID	0L
-
-/* Typedefs cribbed from X11. */
-#if !defined(X3270_DISPLAY) /*[*/
-typedef char Boolean;
-# define False 0
-# define True 1
-#endif /*]*/
 
 typedef unsigned long ks_t;
 #define KS_NONE 0L

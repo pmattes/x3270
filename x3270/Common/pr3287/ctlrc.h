@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013, 2015 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,16 +31,16 @@
  */
 
 enum pds {
-	PDS_OKAY_NO_OUTPUT = 0,	/* command accepted, produced no output */
-	PDS_OKAY_OUTPUT = 1,	/* command accepted, produced output */
-	PDS_BAD_CMD = -1,	/* command rejected */
-	PDS_BAD_ADDR = -2,	/* command contained a bad address */
-	PDS_FAILED = -3		/* command failed */
+    PDS_OKAY_NO_OUTPUT = 0,	/* command accepted, produced no output */
+    PDS_OKAY_OUTPUT = 1,	/* command accepted, produced output */
+    PDS_BAD_CMD = -1,		/* command rejected */
+    PDS_BAD_ADDR = -2,		/* command contained a bad address */
+    PDS_FAILED = -3		/* command failed */
 };
 
-extern void ctlr_add(unsigned char ebc, ucs4_t c, unsigned char cs, unsigned char gr);
-extern void ctlr_write(unsigned char buf[], int buflen, Boolean erase);
-extern int print_eoj(void);
-extern void print_unbind(void);
-extern enum pds process_ds(unsigned char *buf, int buflen);
-extern enum pds process_scs(unsigned char *buf, int buflen);
+void ctlr_add(unsigned char ebc, ucs4_t c, unsigned char cs, unsigned char gr);
+void ctlr_write(unsigned char buf[], int buflen, bool erase);
+int print_eoj(void);
+void print_unbind(void);
+enum pds process_ds(unsigned char *buf, int buflen);
+enum pds process_scs(unsigned char *buf, int buflen);

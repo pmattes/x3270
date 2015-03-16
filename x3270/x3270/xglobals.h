@@ -37,9 +37,9 @@
 extern Atom		a_3270, a_registry, a_encoding;
 extern XtAppContext	appcontext;
 extern int		default_screen;
-extern Boolean		*extended_3270font;
+extern bool		*extended_3270font;
 extern Font		*fid;
-extern Boolean		*font_8bit;
+extern bool		*font_8bit;
 extern char		*locale_name;
 extern Widget		toplevel;
 extern Atom		a_delete_me;

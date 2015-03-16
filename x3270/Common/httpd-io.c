@@ -77,7 +77,7 @@ typedef struct {
 	sendto_callback_t *callback; /* callback function */
 	content_t content_type; /* content type */
 	varbuf_t result; /* accumulated result data */
-	Boolean done;	/* is the command done? */
+	bool done;	/* is the command done? */
     } pending;
 } session_t;
 llist_t sessions = LLIST_INIT(sessions);
@@ -191,11 +191,11 @@ hio_socket_input(iosrc_t fd, ioid_t id)
     nr = recv(session->s, buf, sizeof(buf), 0);
     if (nr <= 0) {
 	const char *ebuf;
-	Boolean harmless = False;
+	bool harmless = false;
 
 	if (nr < 0) {
 	    if (socket_errno() == SE_EWOULDBLOCK) {
-		harmless = True;
+		harmless = true;
 	    }
 	    ebuf = lazyaf("recv error: %s", socket_errtext());
 	    vtrace("httpd %s%s\n", ebuf, harmless? " (harmless)": "");
@@ -410,18 +410,18 @@ hio_data(sms_cbh handle, const char *buf, size_t len)
  * Completion callback from x3270 back to httpd.
  *
  * @param[in] handle	handle
- * @param[in] success	True if command succeeded
+ * @param[in] success	true if command succeeded
  * @param[in] status_buf status line buffer
  * @param[in] status_len size of status line buffer
  */
 static void
-hio_complete(sms_cbh handle, Boolean success, const char *status_buf,
+hio_complete(sms_cbh handle, bool success, const char *status_buf,
 	size_t status_len)
 {
     session_t *s = handle;
 
     /* We're done. */
-    s->pending.done = True;
+    s->pending.done = true;
 
     /* Pass the result up to the node. */
     s->pending.callback(s->dhandle, success? SC_SUCCESS: SC_USER_ERROR,
@@ -471,7 +471,7 @@ hio_to3270(const char *cmd, sendto_callback_t *callback, void *dhandle,
     /* Enqueue the command. */
     s->pending.callback = callback;
     s->pending.content_type = content_type;
-    s->pending.done = False;
+    s->pending.done = false;
     push_cb(cmd, sl, &httpd_cb, s);
 
     /*

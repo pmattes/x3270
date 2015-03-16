@@ -36,8 +36,8 @@
 
 #include "product.h"
 
-Boolean
+bool
 product_auto_oversize(void)
 {
-    return False;
+    return false;
 }

@@ -122,7 +122,7 @@ unsigned char  *obuf;		/* 3270 output buffer */
 unsigned char  *obptr = (unsigned char *) NULL;
 int             linemode = 1;
 #if defined(LOCAL_PROCESS) /*[*/
-Boolean		local_process = False;
+bool		local_process = false;
 #endif /*]*/
 char           *termtype;
 
@@ -133,8 +133,8 @@ static HANDLE	sock_handle = NULL;
 #endif /*]*/
 static unsigned char myopts[N_OPTS], hisopts[N_OPTS];
 			/* telnet option flags */
-static Boolean did_ne_send;
-static Boolean deferred_will_ttype;
+static bool did_ne_send;
+static bool deferred_will_ttype;
 static unsigned char *ibuf = (unsigned char *) NULL;
 			/* 3270 input buffer */
 static unsigned char *ibptr;
@@ -184,12 +184,12 @@ static unsigned short proxy_port = 0;
 
 static b8_t e_funcs;		/* negotiated TN3270E functions */
 
-static Boolean telnet_fsm(unsigned char c);
+static bool telnet_fsm(unsigned char c);
 static void net_rawout(unsigned const char *buf, int len);
 static void check_in3270(void);
 static void store3270in(unsigned char c);
-static void check_linemode(Boolean init);
-static int non_blocking(Boolean on);
+static void check_linemode(bool init);
+static int non_blocking(bool on);
 static void net_connected(void);
 static void connection_complete(void);
 static int tn3270e_negotiate(void);
@@ -266,23 +266,23 @@ static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
 static int ssl_init(void);
 
 #if defined(HAVE_LIBSSL) /*[*/
-Boolean ssl_supported = True;
-Boolean secure_connection = False;
-Boolean secure_unverified = False;
+bool ssl_supported = true;
+bool secure_connection = false;
+bool secure_unverified = false;
 char **unverified_reasons = NULL;
 static int n_unverified_reasons = 0;
 SSL_CTX *ssl_ctx;
 static SSL *ssl_con;
-static Boolean need_tls_follows = False;
+static bool need_tls_follows = false;
 char *ssl_cl_hostname;
-Boolean *ssl_pending;
-static Boolean accept_specified_host;
+bool *ssl_pending;
+static bool accept_specified_host;
 static char *accept_dnsname;
 struct in_addr host_inaddr;
-static Boolean host_inaddr_valid;
+static bool host_inaddr_valid;
 # if defined(X3270_IPV6) /*[*/
 struct in6_addr host_in6addr;
-static Boolean host_in6addr_valid;
+static bool host_in6addr_valid;
 # endif /*]*/
 # if OPENSSL_VERSION_NUMBER >= 0x00907000L /*[*/
 #  define INFO_CONST const
@@ -294,8 +294,8 @@ static void continue_tls(unsigned char *sbbuf, int len);
 static char *spc_verify_cert_hostname(X509 *cert, char *hostname,
 	unsigned char *v4addr, unsigned char *v6addr);
 #endif /*]*/
-static Boolean refused_tls = False;
-static Boolean any_host_data = False;
+static bool refused_tls = false;
+static bool any_host_data = false;
 
 #if !defined(_WIN32) /*[*/
 static void output_possible(iosrc_t fd, ioid_t id);
@@ -330,7 +330,7 @@ static void output_possible(iosrc_t fd, ioid_t id);
 #if defined(SE_EINPROGRESS) /*[*/
 # define IS_EINPROGRESS(e)	((e) == SE_EINPROGRESS)
 #else /*][*/
-# define IS_EINPROGRESS(e)	False
+# define IS_EINPROGRESS(e)	false
 #endif /*]*/
 
 
@@ -348,7 +348,7 @@ static socklen_t ha_len[NUM_HA] = {
     sizeof(haddr[0]), sizeof(haddr[0]), sizeof(haddr[0]), sizeof(haddr[0])
 };
 #if defined(HAVE_LIBSSL) /*[*/
-static Boolean hin[NUM_HA];
+static bool hin[NUM_HA];
 #endif /*]*/
 static int num_ha = 0;
 static int ha_ix = 0;
@@ -381,7 +381,7 @@ popup_a_sockerr(const char *fmt, ...)
 
 /* Connect to one of the addresses in haddr[]. */
 static iosrc_t
-connect_to(int ix, Boolean noisy, Boolean *pending)
+connect_to(int ix, bool noisy, bool *pending)
 {
     int			on = 1;
     char		hn[256];
@@ -401,17 +401,17 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 	if (haddr[ix].sa.sa_family == AF_INET) {
 	    memcpy(&host_inaddr, &haddr[ix].sin.sin_addr,
 		    sizeof(struct in_addr));
-	    host_inaddr_valid = True;
+	    host_inaddr_valid = true;
 # if defined(X3270_IPV6) /*[*/
-	    host_in6addr_valid = False;
+	    host_in6addr_valid = false;
 # endif /*]*/
 	}
 #if defined(X3270_IPV6) /*[*/
 	if (haddr[ix].sa.sa_family == AF_INET6) {
 	    memcpy(&host_in6addr, &haddr[ix].sin6.sin6_addr,
 		    sizeof(struct in6_addr));
-	    host_in6addr_valid = True;
-	    host_inaddr_valid = False;
+	    host_in6addr_valid = true;
+	    host_inaddr_valid = false;
 	}
 #endif /*]*/
     }
@@ -445,9 +445,9 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 
 	/* set the socket to be non-delaying */
 #if defined(_WIN32) /*[*/
-	if (non_blocking(False) < 0)
+	if (non_blocking(false) < 0)
 #else /*][*/
-	if (non_blocking(True) < 0)
+	if (non_blocking(true) < 0)
 #endif /*]*/
 	{
 		close_fail;
@@ -476,7 +476,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 	if (socket_errno() == SE_EWOULDBLOCK ||
 		IS_EINPROGRESS(socket_errno())) {
 	    vtrace("TCP connection pending.\n");
-	    *pending = True;
+	    *pending = true;
 #if !defined(_WIN32) /*[*/
 	    output_id = AddOutput(sock, output_possible);
 #endif /*]*/
@@ -488,7 +488,7 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 	    close_fail;
 	}
     } else {
-	if (non_blocking(False) < 0) {
+	if (non_blocking(false) < 0) {
 	    close_fail;
 	}
 	net_connected();
@@ -523,12 +523,12 @@ connect_to(int ix, Boolean noisy, Boolean *pending)
 }
 
 #if defined(HAVE_LIBSSL) /*[*/
-static Boolean
+static bool
 is_numeric_host(const char *host)
 {
 	/* Is it an IPv4 address? */
 	if (inet_addr(host) != (INET_ADDR_T)-1)
-		return True;
+		return true;
 
 # if defined(X3270_IPV6) /*[*/
 	/*
@@ -542,10 +542,10 @@ is_numeric_host(const char *host)
 	 */
 	if (strchr(host, ':') &&
 	    strspn(host, ":.0123456789abcdefABCDEF") == strlen(host))
-		return True;
+		return true;
 # endif /*]*/
 
-	return False;
+	return false;
 }
 #endif /*]*/
 
@@ -556,8 +556,8 @@ is_numeric_host(const char *host)
  *	variables.  Returns the file descriptor of the connected socket.
  */
 iosrc_t
-net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
-    Boolean *pending)
+net_connect(const char *host, char *portname, bool ls, bool *resolving,
+    bool *pending)
 {
     struct servent       *sp;
     struct hostent       *hp;
@@ -567,7 +567,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
     char		*errmsg;
     iosrc_t		s;
 #if defined(HAVE_LIBSSL) /*[*/
-    Boolean		inh;
+    bool		inh;
 #endif /*]*/
 
     if (netrbuf == NULL) {
@@ -576,19 +576,19 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 
     linemode_init();
 
-    *resolving = False;
-    *pending = False;
+    *resolving = false;
+    *pending = false;
 
     Replace(hostname, NewString(host));
 #if defined(HAVE_LIBSSL) /*[*/
     if (!accept_specified_host) {
-	host_inaddr_valid = False;
+	host_inaddr_valid = false;
 # if defined(X3270_IPV6) /*[*/
-	host_in6addr_valid = False;
+	host_in6addr_valid = false;
 # endif /*]*/
 	inh = is_numeric_host(host);
     } else {
-	inh = False;
+	inh = false;
     }
 #endif /*]*/
 
@@ -667,7 +667,7 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	haddr[0].sin.sin_port = passthru_port;
 	ha_len[0] = sizeof(struct sockaddr_in);
 #if defined(HAVE_LIBSSL) /*[*/
-	hin[0] = False;
+	hin[0] = false;
 #endif /*]*/
 	num_ha = 1;
 	ha_ix = 0;
@@ -685,22 +685,22 @@ net_connect(const char *host, char *portname, Boolean ls, Boolean *resolving,
 	    return INVALID_IOSRC;
 	}
 #if defined(HAVE_LIBSSL) /*[*/
-	hin[0] = False;
+	hin[0] = false;
 #endif /*]*/
 	num_ha = 1;
 	ha_ix = 0;
     } else {
 #if defined(LOCAL_PROCESS) /*[*/
 	if (ls) {
-	    local_process = True;
+	    local_process = true;
 	} else {
 #endif /*]*/
 	    int i;
-	    int last = False;
+	    int last = false;
 	    rhp_t rv;
 
 #if defined(LOCAL_PROCESS) /*[*/
-	    local_process = False;
+	    local_process = false;
 #endif /*]*/
 	    num_ha = 0;
 	    for (i = 0; i < NUM_HA && !last; i++) {
@@ -867,10 +867,10 @@ free_unverified_reasons(void)
 /*
  * Check the name in the host certificate.
  *
- * Returns True if the certificate is okay (or doesn't need to be), False if
+ * Returns true if the certificate is okay (or doesn't need to be), false if
  * the connection should fail because of a bad certificate.
  */
-static Boolean
+static bool
 check_cert_name(void)
 {
     X509 *cert;
@@ -880,12 +880,12 @@ check_cert_name(void)
     if (cert == NULL) {
 	if (appres.ssl.verify_host_cert) {
 	    popup_an_error("No host certificate");
-	    return False;
+	    return false;
 	} else {
-	    secure_unverified = True;
+	    secure_unverified = true;
 	    vtrace("No host certificate.\n");
 	    add_unverified_reason("No host certificate");
-	    return True;
+	    return true;
 	}
     }
 
@@ -903,22 +903,22 @@ check_cert_name(void)
 	if (appres.ssl.verify_host_cert) {
 	    popup_an_error("Host certificate name(s) do not match '%s':\n%s",
 		    hostname, unmatched_names);
-	    return False;
+	    return false;
 	} else {
 	    char *reason;
 
-	    secure_unverified = True;
+	    secure_unverified = true;
 	    vtrace("Host certificate name(s) do not match hostname.\n");
 	    reason = xs_buffer("Host certificate name(s) do not match '%s': "
 		    "%s", hostname, unmatched_names);
 	    add_unverified_reason(reason);
 	    Free(reason);
-	    return True;
+	    return true;
 	}
 	Free(unmatched_names);
     }
     X509_free(cert);
-    return True;
+    return true;
 }
 #endif /*]*/
 
@@ -940,7 +940,7 @@ net_connected(void)
 		proxy_port);
 
 	if (!proxy_negotiate(proxy_type, sock, hostname, current_port)) {
-	    host_disconnect(True);
+	    host_disconnect(true);
 	    return;
 	}
     }
@@ -969,17 +969,17 @@ net_connected(void)
 	    }
 
 	    /* No need to trace the error, it was already displayed. */
-	    host_disconnect(True);
+	    host_disconnect(true);
 	    return;
 	}
 
 	/* Check the host certificate. */
 	if (!check_cert_name()) {
-	    host_disconnect(True);
+	    host_disconnect(true);
 	    return;
 	}
 
-	secure_connection = True;
+	secure_connection = true;
 
 	vtrace("TLS/SSL tunneled connection complete. Connection is now "
 		"secure.\n");
@@ -999,8 +999,8 @@ net_connected(void)
     /* set up telnet options */
     memset((char *)myopts, 0, sizeof(myopts));
     memset((char *)hisopts, 0, sizeof(hisopts));
-    did_ne_send = False;
-    deferred_will_ttype = False;
+    did_ne_send = false;
+    deferred_will_ttype = false;
     b8_zero(&e_funcs);
     b8_set_bit(&e_funcs, TN3270E_FUNC_BIND_IMAGE);
     b8_set_bit(&e_funcs, TN3270E_FUNC_RESPONSES);
@@ -1008,7 +1008,7 @@ net_connected(void)
     e_xmit_seq = 0;
     response_required = TN3270E_RSF_NO_RESPONSE;
 #if defined(HAVE_LIBSSL) /*[*/
-    need_tls_follows = False;
+    need_tls_follows = false;
 #endif /*]*/
     telnet_state = TNS_DATA;
     ibptr = ibuf;
@@ -1026,7 +1026,7 @@ net_connected(void)
 
     setup_lus();
 
-    check_linemode(True);
+    check_linemode(true);
 
     /* write out the passthru hostname and port nubmer */
     if (passthru_host) {
@@ -1063,8 +1063,8 @@ static void
 connection_complete(void)
 {
 #if !defined(_WIN32) /*[*/
-    if (non_blocking(False) < 0) {
-	host_disconnect(True);
+    if (non_blocking(false) < 0) {
+	host_disconnect(true);
 	return;
     }
 #endif /*]*/
@@ -1106,7 +1106,7 @@ output_possible(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    vtrace("RCVD socket error %d (%s)\n", socket_errno(),
 		    strerror(errno));
 	    popup_a_sockerr("Connection failed");
-	    host_disconnect(True);
+	    host_disconnect(true);
 	    return;
 	}
     }
@@ -1132,8 +1132,8 @@ net_disconnect(void)
 	SSL_free(ssl_con);
 	ssl_con = NULL;
     }
-    secure_connection = False;
-    secure_unverified = False;
+    secure_connection = false;
+    secure_unverified = false;
     free_unverified_reasons();
 #endif /*]*/
     if (CONNECTED) {
@@ -1168,8 +1168,8 @@ net_disconnect(void)
 		"Host requested TLS but SSL not supported");
 #endif /*]*/
     }
-    refused_tls = False;
-    any_host_data = False;
+    refused_tls = false;
+    any_host_data = false;
 }
 
 
@@ -1185,7 +1185,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	register unsigned char	*cp;
 	int	nr;
 #if defined(HAVE_LIBSSL) /*[*/
-	Boolean	ignore_ssl = False;
+	bool	ignore_ssl = false;
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
@@ -1194,8 +1194,8 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	 * Note that WSAEventSelect does this automatically (and won't allow
 	 * us to change it back to blocking), except on Wine.
 	 */
-	if (sock >=0 && non_blocking(True) < 0) {
-		    host_disconnect(True);
+	if (sock >=0 && non_blocking(true) < 0) {
+		    host_disconnect(true);
 		    return;
 	}
 	for (;;) {
@@ -1241,7 +1241,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 		if (HALF_CONNECTED &&
 		    (nr = recv(sock, (char *) netrbuf, 1,
 			       MSG_PEEK)) <= 0)
-			ignore_ssl = True;
+			ignore_ssl = true;
 		else
 			nr = SSL_read(ssl_con, (char *) netrbuf, BUFSZ);
 	} else
@@ -1272,7 +1272,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 			vtrace("RCVD SSL_read error %ld (%s)\n", e,
 			    err_buf);
 			popup_an_error("SSL_read:\n%s", err_buf);
-			host_disconnect(True);
+			host_disconnect(true);
 			return;
 		}
 #endif /*]*/
@@ -1283,7 +1283,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 #if defined(LOCAL_PROCESS) /*[*/
 		if (errno == EIO && local_process) {
 			vtrace("RCVD local process disconnect\n");
-			host_disconnect(False);
+			host_disconnect(false);
 			return;
 		}
 #endif /*]*/
@@ -1294,13 +1294,13 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 				popup_a_sockerr("Connect to %s, "
 				    "port %d", hostname, current_port);
 			} else {
-				Boolean dummy;
+				bool dummy;
 				iosrc_t s;
 
 				net_disconnect();
 				if (ssl_host) {
 					if (ssl_init() < 0) {
-						host_disconnect(True);
+						host_disconnect(true);
 						return;
 					}
 				}
@@ -1317,20 +1317,20 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 		} else if (socket_errno() != SE_ECONNRESET) {
 			popup_a_sockerr("Socket read");
 		}
-		host_disconnect(True);
+		host_disconnect(true);
 		return;
 	} else if (nr == 0) {
 		/* Host disconnected. */
 		vtrace("RCVD disconnect\n");
-		host_disconnect(False);
+		host_disconnect(false);
 		return;
 	}
 
 	/* Process the data. */
 
 	if (HALF_CONNECTED) {
-		if (non_blocking(False) < 0) {
-			host_disconnect(True);
+		if (non_blocking(false) < 0) {
+			host_disconnect(true);
 			return;
 		}
 		host_connected();
@@ -1348,7 +1348,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 			if (IN_NEITHER) {	/* now can assume NVT mode */
 				host_in3270(CONNECTED_NVT);
 				hisopts[TELOPT_ECHO] = 1;
-				check_linemode(False);
+				check_linemode(false);
 				kybdlock_clr(KL_AWAITING_FIRST, "telnet_fsm");
 				status_reset();
 				ps_process();
@@ -1358,7 +1358,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 #endif /*]*/
 			if (!telnet_fsm(*cp)) {
 				(void) ctlr_dbcs_postprocess();
-				host_disconnect(True);
+				host_disconnect(true);
 				return;
 			}
 #if defined(LOCAL_PROCESS) /*[*/
@@ -1495,9 +1495,9 @@ force_local(char *s)
 /*
  * telnet_fsm
  *	Telnet finite-state machine.
- *	Returns True for okay, False for errors.
+ *	Returns true for okay, false for errors.
  */
-static Boolean
+static bool
 telnet_fsm(unsigned char c)
 {
     char *see_chr;
@@ -1574,7 +1574,7 @@ telnet_fsm(unsigned char c)
 	    if (IN_3270 || (IN_E && tn3270e_negotiated)) {
 		ns_rrcvd++;
 		if (process_eor()) {
-		    return False;
+		    return false;
 		}
 	    } else {
 		Warning("EOR received when not in 3270 mode, ignored.");
@@ -1650,7 +1650,7 @@ telnet_fsm(unsigned char c)
 		    }
 
 		    check_in3270();
-		    check_linemode(False);
+		    check_linemode(false);
 		}
 		break;
 	    }
@@ -1670,7 +1670,7 @@ telnet_fsm(unsigned char c)
 	    net_rawout(dont_opt, sizeof(dont_opt));
 	    vtrace("SENT %s %s\n", cmd(DONT), opt(c));
 	    check_in3270();
-	    check_linemode(False);
+	    check_linemode(false);
 	}
 	telnet_state = TNS_DATA;
 	break;
@@ -1687,12 +1687,12 @@ telnet_fsm(unsigned char c)
 	case TELOPT_STARTTLS:
 #if defined(HAVE_LIBSSL) /*[*/
 	    if (c == TELOPT_STARTTLS && (!ssl_supported || !appres.ssl.tls)) {
-		refused_tls = True;
+		refused_tls = true;
 		goto wont;
 	    }
 #else /*][*/
 	    if (c == TELOPT_STARTTLS) {
-		refused_tls = True;
+		refused_tls = true;
 		goto wont;
 	    }
 #endif /*]*/
@@ -1713,7 +1713,7 @@ telnet_fsm(unsigned char c)
 		 * NEW_ENVIRON SEND.
 		 */
 		myopts[c] = 1;
-		deferred_will_ttype = True;
+		deferred_will_ttype = true;
 		break;
 	    }
 
@@ -1725,7 +1725,7 @@ telnet_fsm(unsigned char c)
 		net_rawout(will_opt, sizeof(will_opt));
 		vtrace("SENT %s %s\n", cmd(WILL), opt(c));
 		check_in3270();
-		check_linemode(False);
+		check_linemode(false);
 	    }
 	    if (c == TELOPT_NAWS) {
 		send_naws();
@@ -1743,7 +1743,7 @@ telnet_fsm(unsigned char c)
 		net_rawout(follows_msg, sizeof(follows_msg));
 		vtrace("SENT %s %s FOLLOWS %s\n", cmd(SB),
 			opt(TELOPT_STARTTLS), cmd(SE));
-		need_tls_follows = True;
+		need_tls_follows = true;
 	    }
 #endif /*]*/
 	    break;
@@ -1764,10 +1764,10 @@ telnet_fsm(unsigned char c)
 	    net_rawout(wont_opt, sizeof(wont_opt));
 	    vtrace("SENT %s %s\n", cmd(WONT), opt(c));
 	    check_in3270();
-	    check_linemode(False);
+	    check_linemode(false);
 	}
 	if (c == TELOPT_TTYPE && deferred_will_ttype) {
-	    deferred_will_ttype = False;
+	    deferred_will_ttype = false;
 	}
 	telnet_state = TNS_DATA;
 	break;
@@ -1790,7 +1790,7 @@ telnet_fsm(unsigned char c)
 		if (lus != NULL && try_lu == NULL) {
 		    /* None of the LUs worked. */
 		    popup_an_error("Cannot connect to specified LU");
-		    return False;
+		    return false;
 		}
 
 		tt_len = strlen(termtype);
@@ -1823,7 +1823,7 @@ telnet_fsm(unsigned char c)
 		next_lu();
 	    } else if (myopts[TELOPT_TN3270E] && sbbuf[0] == TELOPT_TN3270E) {
 		if (tn3270e_negotiate()) {
-		    return False;
+		    return false;
 		}
 	    }
 #if defined(HAVE_LIBSSL) /*[*/
@@ -1865,7 +1865,7 @@ telnet_fsm(unsigned char c)
 		 * Remember that we did a NEW_ENVIRON SEND, so we won't defer a
 		 * future DO TTYPE.
 		 */
-		did_ne_send = True;
+		did_ne_send = true;
 
 		/* Now respond to DO TTYPE. */
 		if (deferred_will_ttype && myopts[TELOPT_TTYPE]) {
@@ -1873,8 +1873,8 @@ telnet_fsm(unsigned char c)
 		    net_rawout(will_opt, sizeof(will_opt));
 		    vtrace("SENT %s %s\n", cmd(WILL), opt(TELOPT_TTYPE));
 		    check_in3270();
-		    check_linemode(False);
-		    deferred_will_ttype = False;
+		    check_linemode(false);
+		    deferred_will_ttype = false;
 		}
 	    }
 
@@ -1883,7 +1883,7 @@ telnet_fsm(unsigned char c)
 	}
 	break;
     }
-    return True;
+    return true;
 }
 
 /* Send a TN3270E terminal type request. */
@@ -2353,7 +2353,7 @@ process_bind(unsigned char *buf, int buflen)
 		}
 	}
 
-	ctlr_erase(False);
+	ctlr_erase(false);
 
 	/* Extract the PLU name. */
 	if (buflen > BIND_OFF_PLU_NAME_LEN) {
@@ -2505,7 +2505,7 @@ process_eor(void)
 			defCOLS = MODEL_2_COLS;
 			altROWS = maxROWS;
 			altCOLS = maxCOLS;
-			ctlr_erase(False);
+			ctlr_erase(false);
 			tn3270e_submode = E_UNBOUND;
 			check_in3270();
 			return 0;
@@ -2661,7 +2661,7 @@ net_rawout(unsigned const char *buf, int len)
 				vtrace("RCVD SSL_write error %ld (%s)\n", e,
 				    err_buf);
 				popup_an_error("SSL_write:\n%s", err_buf);
-				host_disconnect(False);
+				host_disconnect(false);
 				return;
 			}
 #endif /*]*/
@@ -2670,13 +2670,13 @@ net_rawout(unsigned const char *buf, int len)
 				socket_strerror(socket_errno()));
 			if (socket_errno() == SE_EPIPE ||
 			    socket_errno() == SE_ECONNRESET) {
-				host_disconnect(False);
+				host_disconnect(false);
 				return;
 			} else if (socket_errno() == SE_EINTR) {
 				goto bot;
 			} else {
 				popup_a_sockerr("Socket write");
-				host_disconnect(True);
+				host_disconnect(true);
 				return;
 			}
 		}
@@ -2825,7 +2825,7 @@ check_in3270(void)
 		vtrace("Now operating in %s mode.\n",
 			state_name[new_cstate]);
 		if (IN_3270 || IN_NVT || IN_SSCP) {
-			any_host_data = True;
+			any_host_data = true;
 		}
 		host_in3270(new_cstate);
 	}
@@ -2882,7 +2882,7 @@ space3270out(unsigned n)
  *	character-by-character mode or line mode.
  */
 static void
-check_linemode(Boolean init)
+check_linemode(bool init)
 {
     int wasline = linemode;
 
@@ -3115,13 +3115,13 @@ tn3270e_nak(enum pds rv)
 }
 
 /* Add a dummy TN3270E header to the output buffer. */
-Boolean
+bool
 net_add_dummy_tn3270e(void)
 {
 	tn3270e_header *h;
 
 	if (!IN_E || tn3270e_submode == E_UNBOUND)
-		return False;
+		return false;
 
 	space3270out(EH_SIZE);
 	h = (tn3270e_header *)obptr;
@@ -3144,7 +3144,7 @@ net_add_dummy_tn3270e(void)
 	h->seq_number[0] = 0;
 	h->seq_number[1] = 0;
 	obptr += EH_SIZE;
-	return True;
+	return true;
 }
 
 /*
@@ -3299,12 +3299,12 @@ net_abort(void)
 
 /*
  * Construct a string to reproduce the current TELNET options.
- * Returns a Boolean indicating whether it is necessary.
+ * Returns a bool indicating whether it is necessary.
  */
-Boolean
+bool
 net_snap_options(void)
 {
-	Boolean any = False;
+	bool any = false;
 	int i;
 	static unsigned char ttype_str[] = {
 		IAC, DO, TELOPT_TTYPE,
@@ -3312,7 +3312,7 @@ net_snap_options(void)
 	};
 
 	if (!CONNECTED)
-		return False;
+		return false;
 
 	obptr = obuf;
 
@@ -3334,19 +3334,19 @@ net_snap_options(void)
 			*obptr++ = IAC;
 			*obptr++ = WILL;
 			*obptr++ = (unsigned char)i;
-			any = True;
+			any = true;
 		}
 		if (myopts[i]) {
 			*obptr++ = IAC;
 			*obptr++ = DO;
 			*obptr++ = (unsigned char)i;
-			any = True;
+			any = true;
 		}
 	}
 
 	/* If we're in TN3270E mode, snap the subnegotations as well. */
 	if (myopts[TELOPT_TN3270E]) {
-		any = True;
+		any = true;
 
 		space3270out(5 +
 			((connected_type != NULL) ? strlen(connected_type) : 0) +
@@ -3418,7 +3418,7 @@ net_snap_options(void)
  * message, but does not close the socket.
  */
 static int
-non_blocking(Boolean on)
+non_blocking(bool on)
 {
 #if !defined(BLOCKING_CONNECT_ONLY) /*[*/
 # if defined(FIONBIO) /*[*/
@@ -3549,7 +3549,7 @@ get_ssl_error(char *buf)
  * Happens once, before the screen switches modes (for c3270).
  */
 void
-ssl_base_init(char *cl_hostname, Boolean *pending)
+ssl_base_init(char *cl_hostname, bool *pending)
 {
     char err_buf[120];
     int cert_file_type = SSL_FILETYPE_PEM;
@@ -3558,7 +3558,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
     if (ssl_dll_init() < 0) {
 	/* The DLLs may not be there, or may be the wrong ones. */
 	vtrace("SSL DLL init failed: %s\n", ssl_fail_reason);
-	ssl_supported = False;
+	ssl_supported = false;
 	return;
     }
 #endif /*]*/
@@ -3567,11 +3567,11 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
     if (appres.ssl.accept_hostname != NULL) {
 	if (!strcasecmp(appres.ssl.accept_hostname, "any") ||
 	    !strcmp(appres.ssl.accept_hostname, "*")) {
-	    accept_specified_host = True;
+	    accept_specified_host = true;
 	    accept_dnsname = "*";
 	} else if (!strncasecmp(appres.ssl.accept_hostname, "DNS:", 4) &&
 		    appres.ssl.accept_hostname[4] != '\0') {
-	    accept_specified_host = True;
+	    accept_specified_host = true;
 	    accept_dnsname = &appres.ssl.accept_hostname[4];
 	} else if (!strncasecmp(appres.ssl.accept_hostname, "IP:", 3)) {
 	    unsigned short port;
@@ -3592,16 +3592,16 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
 	    case AF_INET:
 		memcpy(&host_inaddr, &ahaddr.sin.sin_addr,
 			sizeof(struct in_addr));
-		host_inaddr_valid = True;
-		accept_specified_host = True;
+		host_inaddr_valid = true;
+		accept_specified_host = true;
 		accept_dnsname = "";
 		break;
 #if defined(X3270_IPV6) /*[*/
 	    case AF_INET6:
 		memcpy(&host_in6addr, &ahaddr.sin6.sin6_addr,
 			sizeof(struct in6_addr));
-		host_in6addr_valid = True;
-		accept_specified_host = True;
+		host_in6addr_valid = true;
+		accept_specified_host = true;
 		accept_dnsname = "";
 		break;
 #endif /*]*/
@@ -3620,7 +3620,7 @@ ssl_base_init(char *cl_hostname, Boolean *pending)
     if (cl_hostname != NULL)
 	ssl_cl_hostname = NewString(cl_hostname);
     if (pending != NULL) {
-	*pending = False;
+	*pending = false;
 	ssl_pending = pending;
     }
 
@@ -3800,7 +3800,7 @@ ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 
 	vtrace("SSL_verify_callback: %s, ignoring '%s' (%d)\n",
 		why_not, X509_verify_cert_error_string(err), err);
-	secure_unverified = True;
+	secure_unverified = true;
 	s = xs_buffer("%s (%d)", X509_verify_cert_error_string(err), err);
 	add_unverified_reason(s);
 	Free(s);
@@ -4165,7 +4165,7 @@ continue_tls(unsigned char *sbbuf, int len)
     int rv;
 
     /* Whatever happens, we're not expecting another SB STARTTLS. */
-    need_tls_follows = False;
+    need_tls_follows = false;
 
     /* Make sure the option is FOLLOWS. */
     if (len < 2 || sbbuf[1] != TLS_FOLLOWS) {
@@ -4194,7 +4194,7 @@ continue_tls(unsigned char *sbbuf, int len)
 #if defined(_WIN32) /*[*/
     /* Make the socket blocking for SSL. */
     (void) WSAEventSelect(sock, sock_handle, 0);
-    (void) non_blocking(False);
+    (void) non_blocking(false);
 #endif /*]*/
 
     rv = SSL_connect(ssl_con);
@@ -4218,17 +4218,17 @@ continue_tls(unsigned char *sbbuf, int len)
 	 * No need to trace the error, it was already
 	 * displayed.
 	 */
-	host_disconnect(True);
+	host_disconnect(true);
 	return;
     }
 
     /* Check the host certificate. */
     if (!check_cert_name()) {
-	host_disconnect(True);
+	host_disconnect(true);
 	return;
     }
 
-    secure_connection = True;
+    secure_connection = true;
 
     /* Success. */
     vtrace("TLS/SSL negotiated connection complete. "
@@ -4386,7 +4386,7 @@ net_proxy_port(void)
 }
 
 /* Return the SNA binding state. */
-Boolean
+bool
 net_bound(void)
 {
     return (IN_E && tn3270e_bound);

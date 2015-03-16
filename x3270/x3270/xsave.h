@@ -35,7 +35,7 @@
 extern char *profile_name;
 
 void charset_list_changed(char *charset);
-void merge_profile(XrmDatabase *d, char *session, Boolean mono);
+void merge_profile(XrmDatabase *d, char *session, bool mono);
 void save_args(int argc, char *argv[]);
 void save_init(int argc, char *hostname, char *port);
-Boolean save_options(char *n);
+bool save_options(char *n);

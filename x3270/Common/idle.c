@@ -51,21 +51,21 @@
 #define IDLE_MS	(7L * IDLE_MIN * MSEC_PER_SEC)
 
 /* Globals. */
-Boolean idle_changed = False;
+bool idle_changed = false;
 char *idle_command = NULL;
 char *idle_timeout_string = NULL;
 enum idle_enum idle_user_enabled = IDLE_DISABLED;
 
 /* Statics. */
-static Boolean idle_enabled = False;	/* validated and user-enabled */
+static bool idle_enabled = false;	/* validated and user-enabled */
 static unsigned long idle_n = 0L;
 static unsigned long idle_multiplier = IDLE_SEC;
 static ioid_t idle_id;
 static unsigned long idle_ms;
-static Boolean idle_randomize = False;
-static Boolean idle_ticking = False;
+static bool idle_randomize = false;
+static bool idle_ticking = false;
 
-static void idle_in3270(Boolean in3270);
+static void idle_in3270(bool in3270);
 
 /**
  * Idle module registration.
@@ -110,10 +110,10 @@ idle_init(void)
 
 /*
  * Process a timeout value: <empty> or ~?[0-9]+[HhMmSs]
- * Returns True for success, False for failure.
+ * Returns true for success, false for failure.
  * Sets idle_enabled, idle_ms and idle_randomize as side-effects.
  */
-Boolean
+bool
 process_idle_timeout_value(const char *t)
 {
 	const char *s = t;
@@ -121,13 +121,13 @@ process_idle_timeout_value(const char *t)
 
 	if (s == NULL || *s == '\0') {
 		idle_ms = IDLE_MS;
-		idle_randomize = True;
-		idle_enabled = True;
-		return True;
+		idle_randomize = true;
+		idle_enabled = true;
+		return true;
 	}
 
 	if (*s == '~') {
-		idle_randomize = True;
+		idle_randomize = true;
 		s++;
 	}
 	idle_n = strtoul(s, &ptr, 0);
@@ -151,19 +151,19 @@ process_idle_timeout_value(const char *t)
 		goto bad_idle;
 	}
 	idle_ms = idle_n * idle_multiplier * MSEC_PER_SEC;
-	idle_enabled = True;
-	return True;
+	idle_enabled = true;
+	return true;
 
     bad_idle:
 	popup_an_error("Invalid idle timeout value '%s'", t);
 	idle_ms = 0L;
-	idle_randomize = False;
-	return False;
+	idle_randomize = false;
+	return false;
 }
 
 /* Called when a host connects or disconnects. */
 static void
-idle_in3270(Boolean in3270 _is_unused)
+idle_in3270(bool in3270 _is_unused)
 {
 	if (IN_3270) {
 		reset_idle_timer();
@@ -171,7 +171,7 @@ idle_in3270(Boolean in3270 _is_unused)
 		/* Not in 3270 mode any more, turn off the timeout. */
 		if (idle_ticking) {
 			RemoveTimeOut(idle_id);
-			idle_ticking = False;
+			idle_ticking = false;
 		}
 
 		/* If the user didn't want it to be permanent, disable it. */
@@ -187,7 +187,7 @@ static void
 idle_timeout(ioid_t id _is_unused)
 {
 	vtrace("Idle timeout\n");
-	idle_ticking = False;
+	idle_ticking = false;
 	push_idle(idle_command);
 	reset_idle_timer();
 }
@@ -204,7 +204,7 @@ reset_idle_timer(void)
 
 		if (idle_ticking) {
 			RemoveTimeOut(idle_id);
-			idle_ticking = False;
+			idle_ticking = false;
 		}
 		idle_ms_now = idle_ms;
 		if (idle_randomize) {
@@ -219,7 +219,7 @@ reset_idle_timer(void)
 		vtrace("Setting idle timeout to %lu\n", idle_ms_now);
 #endif /*]*/
 		idle_id = AddTimeOut(idle_ms_now, idle_timeout);
-		idle_ticking = True;
+		idle_ticking = true;
 	}
 }
 
@@ -232,9 +232,9 @@ cancel_idle_timer(void)
 {
 	if (idle_ticking) {
 		RemoveTimeOut(idle_id);
-		idle_ticking = False;
+		idle_ticking = false;
 	}
-	idle_enabled = False;
+	idle_enabled = false;
 }
 
 char *

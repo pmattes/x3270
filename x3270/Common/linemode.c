@@ -51,9 +51,9 @@
 /* Statics */
 static unsigned char *lbuf = NULL; /* line-mode input buffer */
 static unsigned char *lbptr;
-static Boolean lnext = False;
-static Boolean backslashed = False;
-static Boolean t_valid = False;
+static bool lnext = false;
+static bool backslashed = false;
+static bool t_valid = false;
 static char vintr;
 static char vquit;
 static char verase;
@@ -117,7 +117,7 @@ linemode_init(void)
     vrprnt  = parse_ctlchar(appres.linemode.rprnt);
     vlnext  = parse_ctlchar(appres.linemode.lnext);
 
-    t_valid = True;
+    t_valid = true;
 }
 
 /*
@@ -141,9 +141,9 @@ linemode_out(const char *buf, int len)
 
 	/* Backslashes. */
 	if (c == '\\' && !backslashed) {
-	    backslashed = True;
+	    backslashed = true;
 	} else {
-	    backslashed = False;
+	    backslashed = false;
 	}
 
 	/* Control chars. */
@@ -180,8 +180,8 @@ linemode_buf_init(void)
 	lbuf = (unsigned char *)Malloc(LM_BUFSZ);
     }
     lbptr = lbuf;
-    lnext = False;
-    backslashed = False;
+    lnext = false;
+    backslashed = false;
 }
 
 static void
@@ -215,8 +215,8 @@ do_data(char c)
     } else {
 	nvt_process_s("\007");
     }
-    lnext = False;
-    backslashed = False;
+    lnext = false;
+    backslashed = false;
 }
 
 static void
@@ -379,7 +379,7 @@ do_lnext(char c)
 	do_data(c);
 	return;
     }
-    lnext = True;
+    lnext = true;
     nvt_process_s("^\b");
 }
 

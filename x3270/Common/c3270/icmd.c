@@ -47,10 +47,10 @@ static int windows_cp = 0;
 /* Support functions for interactive commands. */
 
 static void
-icmd_connected(Boolean ignored)
+icmd_connected(bool ignored)
 {
-	/* Whenever we connect or disconnect, revert to the default. */
-	strcpy(host_type, "tso");
+    /* Whenever we connect or disconnect, revert to the default. */
+    strcpy(host_type, "tso");
 }
 
 /**

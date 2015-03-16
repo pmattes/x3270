@@ -119,24 +119,24 @@
 
 /* Globals */
 Dimension       main_width;
-Boolean         scrollbar_changed = False;
-Boolean         model_changed = False;
-Boolean		efont_changed = False;
-Boolean		oversize_changed = False;
-Boolean		scheme_changed = False;
+bool         scrollbar_changed = false;
+bool         model_changed = false;
+bool		efont_changed = false;
+bool		oversize_changed = false;
+bool		scheme_changed = false;
 Pixel           keypadbg_pixel;
-Boolean         flipped = False;
+bool         flipped = false;
 Pixmap          x3270_icon;
-Boolean		shifted = False;
+bool		shifted = false;
 struct font_list *font_list = (struct font_list *) NULL;
 int             font_count = 0;
 char	       *efontname;
 char           *efont_charset;
 char           *efont_charset_dbcs;
-Boolean		efont_matches = True;
+bool		efont_matches = true;
 char	       *full_efontname;
 char	       *full_efontname_dbcs;
-Boolean		visible_control = False;
+bool		visible_control = false;
 unsigned	fixed_width, fixed_height;
 int		hhalo = HHALO, vhalo = VHALO;
 
@@ -146,20 +146,20 @@ static char gray_bits[] = { 0x01, 0x02 };
 
 /* Statics */
 static unsigned char  *selected;	/* selection bitmap */
-static Boolean	allow_resize;
+static bool	allow_resize;
 static Dimension main_height;
 static union sp *temp_image;	/* temporary for X display */
 static Pixel	colorbg_pixel;
-static Boolean	crosshair_enabled = True;
-static Boolean  cursor_displayed = False;
-static Boolean  cursor_enabled = True;
-static Boolean  cursor_blink_pending = False;
+static bool	crosshair_enabled = true;
+static bool  cursor_displayed = false;
+static bool  cursor_enabled = true;
+static bool  cursor_blink_pending = false;
 static XtIntervalId cursor_blink_id;
 static int	field_colors[4];
-static Boolean  in_focus = False;
-static Boolean  line_changed = False;
-static Boolean  cursor_changed = False;
-static Boolean  iconic = False;
+static bool  in_focus = false;
+static bool  line_changed = false;
+static bool  cursor_changed = false;
+static bool  iconic = false;
 static Widget   container;
 static Widget   scrollbar;
 static Dimension menubar_height;
@@ -174,15 +174,15 @@ static XFontStruct *ailabel_font;
 static Dimension aicon_label_height = 0;
 static GC       ailabel_gc;
 static Pixel    cpx[16];
-static Boolean  cpx_done[16];
+static bool  cpx_done[16];
 static Pixel    normal_pixel;
 static Pixel    select_pixel;
 static Pixel    bold_pixel;
 static Pixel    selbg_pixel;
 static Pixel    cursor_pixel;
-static Boolean  text_blinking_on = True;
-static Boolean  text_blinkers_exist = False;
-static Boolean  text_blink_scheduled = False;
+static bool  text_blinking_on = true;
+static bool  text_blinkers_exist = false;
+static bool  text_blink_scheduled = false;
 static XtIntervalId text_blink_id;
 static XtTranslations screen_t00 = NULL;
 static XtTranslations screen_t0 = NULL;
@@ -195,13 +195,13 @@ static char    *color_name[16] = {
     NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL
 };
-static Boolean	configure_ticking = False;
+static bool	configure_ticking = false;
 static XtIntervalId configure_id;
 
 static Pixmap   inv_icon;
 static Pixmap   wait_icon;
 static Pixmap   inv_wait_icon;
-static Boolean  icon_inverted = False;
+static bool  icon_inverted = false;
 static Widget	icon_shell;
 
 static struct font_list *font_last = (struct font_list *) NULL;
@@ -209,7 +209,7 @@ static struct font_list *font_last = (struct font_list *) NULL;
 static struct {
     Font font;
     XFontStruct *font_struct;
-    Boolean unicode;
+    bool unicode;
     int char_height;
     int char_width;
     int ascent;
@@ -220,7 +220,7 @@ static struct {
 static void xim_init(void);
 XIM im;
 XIC ic;
-Boolean xim_error = False;
+bool xim_error = false;
 char *locale_name = NULL;
 int ovs_offset = 1;
 typedef struct {
@@ -270,8 +270,8 @@ struct sstate {
 	Window          window;	/* the window */
 	union sp       *image;	/* what's on the X display */
 	int             cursor_daddr;	/* displayed cursor address */
-	Boolean         exposed_yet;	/* have we been exposed yet? */
-	Boolean         overstrike;	/* are we overstriking? */
+	bool         exposed_yet;	/* have we been exposed yet? */
+	bool         overstrike;	/* are we overstriking? */
 	Dimension       screen_width;	/* screen dimensions in pixels */
 	Dimension       screen_height;
 	GC              gc[NGCS * 2],	/* standard, inverted GCs */
@@ -287,13 +287,13 @@ struct sstate {
 	int		ascent;
 	int		descent;
 	int		xtra_width;
-	Boolean         standard_font;
-	Boolean		extended_3270font;
-	Boolean         font_8bit;
-	Boolean		font_16bit;
-	Boolean		funky_font;
-	Boolean         obscured;
-	Boolean         copied;
+	bool         standard_font;
+	bool		extended_3270font;
+	bool         font_8bit;
+	bool		font_16bit;
+	bool		funky_font;
+	bool         obscured;
+	bool         copied;
 	int		d8_ix;
 	unsigned long	odd_width[256 / BPW];
 	unsigned long	odd_lbearing[256 / BPW];
@@ -321,11 +321,11 @@ int            *char_width = &nss.char_width;
 int            *char_height = &nss.char_height;
 int            *ascent = &nss.ascent;
 int            *descent = &nss.descent;
-Boolean        *standard_font = &nss.standard_font;
-Boolean        *font_8bit = &nss.font_8bit;
-Boolean        *font_16bit = &nss.font_16bit;
-Boolean        *extended_3270font = &nss.extended_3270font;
-Boolean        *funky_font = &nss.funky_font;
+bool        *standard_font = &nss.standard_font;
+bool        *font_8bit = &nss.font_8bit;
+bool        *font_16bit = &nss.font_16bit;
+bool        *extended_3270font = &nss.extended_3270font;
+bool        *funky_font = &nss.funky_font;
 int            *xtra_width = &nss.xtra_width;
 Font           *fid = &nss.fid;
 
@@ -342,39 +342,39 @@ typedef struct dfc {
 	int points;
 	char *spacing;
 	char *charset;
-	Boolean good;
+	bool good;
 } dfc_t;
 
 static void aicon_init(void);
 static void aicon_reinit(unsigned cmask);
-static void screen_focus(Boolean in);
+static void screen_focus(bool in);
 static void make_gc_set(struct sstate *s, int i, Pixel fg, Pixel bg);
 static void make_gcs(struct sstate *s);
-static void put_cursor(int baddr, Boolean on);
+static void put_cursor(int baddr, bool on);
 static void resync_display(union sp *buffer, int first, int last);
 static void draw_fields(union sp *buffer, int first, int last);
 static void render_text(union sp *buffer, int baddr, int len,
-    Boolean block_cursor, union sp *attrs);
+    bool block_cursor, union sp *attrs);
 static void cursor_pos(void);
 static void cursor_on(void);
 static void schedule_cursor_blink(void);
 static void schedule_text_blink(void);
 static void inflate_screen(void);
 static int fa_color(unsigned char fa);
-static Boolean cursor_off(void);
+static bool cursor_off(void);
 static void draw_aicon_label(void);
 static void set_mcursor(void);
-static void scrollbar_init(Boolean is_reset);
+static void scrollbar_init(bool is_reset);
 static void init_rsfonts(char *charset_name);
 static void allocate_pixels(void);
 static int fl_baddr(int baddr);
 static GC get_gc(struct sstate *s, int color);
 static GC get_selgc(struct sstate *s, int color);
 static void default_color_scheme(void);
-static Boolean xfer_color_scheme(char *cs, Boolean do_popup);
+static bool xfer_color_scheme(char *cs, bool do_popup);
 static void set_font_globals(XFontStruct *f, const char *ef, const char *fef,
-    Font ff, Boolean is_dbcs);
-static void screen_connect(Boolean ignored);
+    Font ff, bool is_dbcs);
+static void screen_connect(bool ignored);
 static void configure_stable(XtPointer closure, XtIntervalId *id);
 static void cancel_blink(void);
 static void render_blanks(int baddr, int height, union sp *buffer);
@@ -382,9 +382,9 @@ static void resync_text(int baddr, int len, union sp *buffer);
 static void screen_reinit(unsigned cmask);
 static void aicon_font_init(void);
 static void aicon_size(Dimension *iw, Dimension *ih);
-static void invert_icon(Boolean inverted);
+static void invert_icon(bool inverted);
 static char *lff_single(const char *name, const char *reqd_display_charset,
-    Boolean is_dbcs);
+    bool is_dbcs);
 static char *load_fixed_font(const char *names, const char *reqd_charsets);
 static void lock_icon(enum mcursor_state state);
 static char *expand_cslist(const char *s);
@@ -394,7 +394,7 @@ static void xlate_dbcs(unsigned char, unsigned char, XChar2b *);
 static void dfc_init(void);
 static const char *dfc_search_family(const char *charset, dfc_t **dfc,
 	void **cookie);
-static Boolean dfc_search_name(const char *name);
+static bool dfc_search_name(const char *name);
 
 static action_t SetFont_action;
 static action_t Title_action;
@@ -498,16 +498,16 @@ screen_init(void)
     int i;
 
     if (!appres.m3279) {
-	appres.highlight_bold = True;
+	appres.highlight_bold = true;
     }
 
     visible_control = toggled(VISIBLE_CONTROL);
 
     /* Parse the fixed window size, if there is any. */
-    if (appres.x3270.fixed_size) {
+    if (xappres.fixed_size) {
 	char c;
 
-	if (sscanf(appres.x3270.fixed_size, "%ux%u%c", &fixed_width,
+	if (sscanf(xappres.fixed_size, "%ux%u%c", &fixed_width,
 				&fixed_height, &c) != 2 ||
 			!fixed_width ||
 			!fixed_height) {
@@ -519,7 +519,7 @@ screen_init(void)
 
     /* Initialize ss. */
     nss.cursor_daddr = 0;
-    nss.exposed_yet = False;
+    nss.exposed_yet = false;
 
     /* Initialize "gray" bitmap. */
     if (appres.interactive.mono) {
@@ -566,7 +566,7 @@ screen_reinit(unsigned cmask)
 	if (cmask & COLOR_CHANGE) {
 	    if (appres.m3279) {
 		default_color_scheme();
-		(void) xfer_color_scheme(appres.x3270.color_scheme, False);
+		(void) xfer_color_scheme(xappres.color_scheme, false);
 	    }
 	    allocate_pixels();
 	}
@@ -774,7 +774,7 @@ screen_reinit(unsigned cmask)
 
 	/* Initialize the menu bar and integral keypad */
 
-	cwidth_curr = appres.x3270.keypad_on?
+	cwidth_curr = xappres.keypad_on?
 	    container_width: cwidth_nkp;
 	menubar_height = menubar_qheight(cwidth_curr);
 	menubar_init(container, container_width, cwidth_curr);
@@ -785,7 +785,7 @@ screen_reinit(unsigned cmask)
 		container_height = menubar_height + nss.screen_height+2;
 	if (kp_placement == kp_integral) {
 		(void) keypad_init(container, container_height,
-		    container_width, False, False);
+		    container_width, false, false);
 		keypad_height = keypad_qheight();
 	} else
 		keypad_height = 0;
@@ -812,9 +812,9 @@ screen_reinit(unsigned cmask)
 		xim_init();
 	}
 
-	cursor_changed = True;
+	cursor_changed = true;
 
-	line_changed = True;
+	line_changed = true;
 
 	/* Redraw the screen. */
 	xaction_internal(PA_Expose_xaction, IA_REDRAW, NULL, NULL);
@@ -826,8 +826,8 @@ set_toplevel_sizes(void)
 {
     Dimension tw, th;
 
-    tw = container_width - (appres.x3270.keypad_on ? 0 : keypad_xwidth);
-    th = container_height - (appres.x3270.keypad_on ? 0 : keypad_height);
+    tw = container_width - (xappres.keypad_on ? 0 : keypad_xwidth);
+    th = container_height - (xappres.keypad_on ? 0 : keypad_height);
     if (fixed_width) {
 	XtVaSetValues(toplevel,
 		XtNwidth, fixed_width,
@@ -878,13 +878,13 @@ set_toplevel_sizes(void)
 	XtRemoveTimeOut(configure_id);
     }
     configure_id = XtAppAddTimeOut(appcontext, 500, configure_stable, 0);
-    configure_ticking = True;
+    configure_ticking = true;
 
     keypad_move();
     {
-	static Boolean first = True;
+	static bool first = true;
 	if (first) {
-	    first = False;
+	    first = false;
 	} else {
 	    popups_move();
 	}
@@ -900,7 +900,7 @@ inflate_screen(void)
 	    "screen", widgetClass, container,
 	    XtNwidth, nss.screen_width,
 	    XtNheight, nss.screen_height,
-	    XtNx, appres.x3270.keypad_on? (keypad_xwidth / 2): 0,
+	    XtNx, xappres.keypad_on? (keypad_xwidth / 2): 0,
 	    XtNy, menubar_height,
 	    XtNbackground,
 		appres.interactive.mono? xappres.background: colorbg_pixel,
@@ -912,7 +912,7 @@ inflate_screen(void)
 	XtVaSetValues(nss.widget,
 	    XtNwidth, nss.screen_width,
 	    XtNheight, nss.screen_height,
-	    XtNx, appres.x3270.keypad_on? (keypad_xwidth / 2): 0,
+	    XtNx, xappres.keypad_on? (keypad_xwidth / 2): 0,
 	    XtNy, menubar_height,
 	    XtNbackground,
 		appres.interactive.mono? xappres.background: colorbg_pixel,
@@ -952,7 +952,7 @@ screen_jump_proc(Widget w _is_unused, XtPointer client_data _is_unused,
 
 /* Create, move, or reset the scrollbar. */
 static void
-scrollbar_init(Boolean is_reset)
+scrollbar_init(bool is_reset)
 {
     if (!scrollbar_width) {
 	if (scrollbar != NULL) {
@@ -964,7 +964,7 @@ scrollbar_init(Boolean is_reset)
 		    "scrollbar", scrollbarWidgetClass,
 		    container,
 		    XtNx, nss.screen_width+1
-			    + (appres.x3270.keypad_on?
+			    + (xappres.keypad_on?
 				(keypad_xwidth / 2): 0),
 		    XtNy, menubar_height,
 		    XtNwidth, scrollbar_width-1,
@@ -979,7 +979,7 @@ scrollbar_init(Boolean is_reset)
 	} else {
 	    XtVaSetValues(scrollbar,
 		    XtNx, nss.screen_width+1
-			    + (appres.x3270.keypad_on?
+			    + (xappres.keypad_on?
 				(keypad_xwidth / 2) : 0),
 		    XtNy, menubar_height,
 		    XtNwidth, scrollbar_width-1,
@@ -1007,7 +1007,7 @@ scrollbar_init(Boolean is_reset)
 static void
 toggle_scrollBar(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
-    scrollbar_changed = True;
+    scrollbar_changed = true;
 
     if (toggled(SCROLL_BAR)) {
 	scrollbar_width = SCROLLBAR_WIDTH;
@@ -1027,7 +1027,7 @@ toggle_scrollBar(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
  * Called when a host connects, disconnects or changes NVT/3270 modes.
  */
 static void
-screen_connect(Boolean ignored _is_unused)
+screen_connect(bool ignored _is_unused)
 {
 	if (ea_buf == NULL)
 		return;		/* too soon */
@@ -1038,21 +1038,21 @@ screen_connect(Boolean ignored _is_unused)
 		 * If we're in NVT mode, go to the maximum screen dimensions,
 		 * otherwise go to the default 24x80 for 3270 or SSCP mode.
 		 */
-		ctlr_erase((IN_NVT || IN_SSCP)? True: False);
+		ctlr_erase((IN_NVT || IN_SSCP)? true: false);
 		if (IN_3270)
 			scroll_round();
 		cursor_on();
 		schedule_cursor_blink();
 	} else {
 		if (appres.disconnect_clear)
-			ctlr_erase(True);
+			ctlr_erase(true);
 		(void) cursor_off();
 	}
 	if (toggled(CROSSHAIR)) {
-		screen_changed = True;
+		screen_changed = true;
 		first_changed = 0;
 		last_changed = ROWS*COLS;
-		screen_disp(False);
+		screen_disp(false);
 	}
 
 	mcursor_normal();
@@ -1109,7 +1109,7 @@ mcursor_locked(void)
  * Called from the keypad button to expose or hide the integral keypad.
  */
 void
-screen_showikeypad(Boolean on)
+screen_showikeypad(bool on)
 {
 	if (on) {
 		screen_redo = REDO_KEYPAD;
@@ -1118,7 +1118,7 @@ screen_showikeypad(Boolean on)
 	inflate_screen();
 	if (keypad_xwidth > 0) {
 		if (scrollbar != (Widget) NULL)
-			scrollbar_init(False);
+			scrollbar_init(false);
 		menubar_resize(on ? container_width : cwidth_nkp);
 	}
 }
@@ -1130,10 +1130,10 @@ screen_showikeypad(Boolean on)
 void
 blink_start(void)
 {
-	text_blinkers_exist = True;
+	text_blinkers_exist = true;
 	if (!text_blink_scheduled) {
 		/* Start in "on" state and start first iteration */
-		text_blinking_on = True;
+		text_blinking_on = true;
 		schedule_text_blink();
 	}
 }
@@ -1154,7 +1154,7 @@ text_blink_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 	if (text_blinkers_exist)
 		schedule_text_blink();
 	else
-		text_blink_scheduled = False;
+		text_blink_scheduled = false;
 }
 
 /*
@@ -1163,24 +1163,24 @@ text_blink_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 static void
 schedule_text_blink(void)
 {
-	text_blink_scheduled = True;
+	text_blink_scheduled = true;
 	text_blink_id = XtAppAddTimeOut(appcontext, 500, text_blink_it, 0);
 }
 
 
 /*
- * Make the (displayed) cursor disappear.  Returns a Boolean indiciating if
+ * Make the (displayed) cursor disappear.  Returns a bool indiciating if
  * the cursor was on before the call.
  */
-static Boolean
+static bool
 cursor_off(void)
 {
 	if (cursor_displayed) {
-		cursor_displayed = False;
-		put_cursor(ss->cursor_daddr, False);
-		return True;
+		cursor_displayed = false;
+		put_cursor(ss->cursor_daddr, false);
+		return true;
 	} else
-		return False;
+		return false;
 }
 
 
@@ -1191,7 +1191,7 @@ cursor_off(void)
 static void
 cursor_blink_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
-	cursor_blink_pending = False;
+	cursor_blink_pending = false;
 	if (!CONNECTED || !toggled(CURSOR_BLINK))
 		return;
 	if (cursor_displayed) {
@@ -1210,7 +1210,7 @@ schedule_cursor_blink(void)
 {
 	if (!toggled(CURSOR_BLINK) || cursor_blink_pending)
 		return;
-	cursor_blink_pending = True;
+	cursor_blink_pending = true;
 	cursor_blink_id = XtAppAddTimeOut(appcontext, 500, cursor_blink_it, 0);
 }
 
@@ -1222,7 +1222,7 @@ cancel_blink(void)
 {
 	if (cursor_blink_pending) {
 		XtRemoveTimeOut(cursor_blink_id);
-		cursor_blink_pending = False;
+		cursor_blink_pending = false;
 	}
 }
 
@@ -1250,10 +1250,10 @@ static void
 cursor_on(void)
 {
 	if (cursor_enabled && !cursor_displayed) {
-		cursor_displayed = True;
-		put_cursor(cursor_addr, True);
+		cursor_displayed = true;
+		put_cursor(cursor_addr, true);
 		ss->cursor_daddr = cursor_addr;
-		cursor_changed = False;
+		cursor_changed = false;
 	}
 }
 
@@ -1264,7 +1264,7 @@ cursor_on(void)
 static void
 toggle_altCursor(toggle_index_t ix, enum toggle_type tt _is_unused)
 {
-    Boolean was_on;
+    bool was_on;
 
     /* do_toggle already changed the value; temporarily change it back */
     toggle_toggle(ix);
@@ -1318,11 +1318,11 @@ toggle_cursorPos(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
  * Enable or disable cursor display (used by scroll logic)
  */
 void
-enable_cursor(Boolean on)
+enable_cursor(bool on)
 {
 	if ((cursor_enabled = on) && CONNECTED) {
 		cursor_on();
-		cursor_changed = True;
+		cursor_changed = true;
 	} else
 		(void) cursor_off();
 }
@@ -1334,10 +1334,10 @@ enable_cursor(Boolean on)
 static void
 toggle_crosshair(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
-    screen_changed = True;
+    screen_changed = true;
     first_changed = 0;
     last_changed = ROWS*COLS;
-    screen_disp(False);
+    screen_disp(false);
 }
 
 
@@ -1349,10 +1349,10 @@ toggle_visible_control(toggle_index_t ix _is_unused,
 	enum toggle_type tt _is_unused)
 {
     visible_control = toggled(VISIBLE_CONTROL);
-    screen_changed = True;
+    screen_changed = true;
     first_changed = 0;
     last_changed = ROWS*COLS;
-    screen_disp(False);
+    screen_disp(false);
 }
 
 
@@ -1371,14 +1371,14 @@ do_redraw(Widget w, XEvent *event, String *params _is_unused,
 
     if (w == nss.widget) {
 	keypad_first_up();
-	if (appres.x3270.active_icon && iconic) {
+	if (xappres.active_icon && iconic) {
 	    ss = &nss;
-	    iconic = False;
+	    iconic = false;
 	}
-    } else if (appres.x3270.active_icon && w == iss.widget) {
-	if (appres.x3270.active_icon && !iconic) {
+    } else if (xappres.active_icon && w == iss.widget) {
+	if (xappres.active_icon && !iconic) {
 	    ss = &iss;
-	    iconic = True;
+	    iconic = true;
 	}
     } else if (event) {
 	return;
@@ -1386,7 +1386,7 @@ do_redraw(Widget w, XEvent *event, String *params _is_unused,
 
     /* Only redraw as necessary for an expose event */
     if (event && event->type == Expose) {
-	ss->exposed_yet = True;
+	ss->exposed_yet = true;
 	x = event->xexpose.x;
 	y = event->xexpose.y;
 	width = event->xexpose.width;
@@ -1441,12 +1441,12 @@ do_redraw(Widget w, XEvent *event, String *params _is_unused,
 		ss->image[i].bits.cc = EBC_space;
 	    }
 	}
-	ss->copied = False;
+	ss->copied = false;
     }
     ctlr_changed(0, ROWS*COLS);
-    cursor_changed = True;
-    if (!appres.x3270.active_icon || !iconic) {
-	line_changed = True;
+    cursor_changed = true;
+    if (!xappres.active_icon || !iconic) {
+	line_changed = true;
 	status_touch();
     }
 }
@@ -1479,7 +1479,7 @@ PA_Expose_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
  */
 
 void
-screen_disp(Boolean erasing)
+screen_disp(bool erasing)
 {
     /* No point in doing anything if we aren't visible yet. */
     if (!ss->exposed_yet) {
@@ -1492,7 +1492,7 @@ screen_disp(Boolean erasing)
      * has moved since the last call to screen_disp.
      */
     if (cursor_addr != ss->cursor_daddr) {
-	cursor_changed = True;
+	cursor_changed = true;
     }
 
     /* If the cursor has moved, tell the input method. */
@@ -1512,7 +1512,7 @@ screen_disp(Boolean erasing)
 	    cursor_on();
 	}
 	if (toggled(CROSSHAIR)) {
-	    screen_changed = True; /* repaint crosshair */
+	    screen_changed = true; /* repaint crosshair */
 	}
     }
 
@@ -1521,23 +1521,23 @@ screen_disp(Boolean erasing)
      * cursor if necessary.
      */
     if (screen_changed) {
-	Boolean was_on = False;
+	bool was_on = false;
 
 	/* Draw the new screen image into "temp_image" */
 	if (screen_changed) {
 	    if (erasing) {
-		crosshair_enabled = False;
+		crosshair_enabled = false;
 	    }
 	    draw_fields(temp_image, first_changed, last_changed);
 	    if (erasing) {
-		crosshair_enabled = True;
+		crosshair_enabled = true;
 	    }
 	}
 
 	/* Set "cursor_changed" if the text under it has changed. */
 	if (ss->image[fl_baddr(cursor_addr)].word !=
 		temp_image[fl_baddr(cursor_addr)].word) {
-	    cursor_changed = True;
+	    cursor_changed = true;
 	}
 
 	/* Undraw the cursor, if necessary. */
@@ -1553,12 +1553,12 @@ screen_disp(Boolean erasing)
 	    cursor_on();
 	}
 
-	screen_changed = False;
+	screen_changed = false;
 	first_changed = -1;
 	last_changed = -1;
     }
 
-    if (!appres.x3270.active_icon || !iconic) {
+    if (!xappres.active_icon || !iconic) {
 	/* Refresh the status line. */
 	status_disp();
 
@@ -1570,7 +1570,7 @@ screen_disp(Boolean erasing)
 		    ssROW_TO_Y(maxROWS-1)+SGAP-1,
 		    ssCOL_TO_X(maxCOLS)+hhalo,
 		    ssROW_TO_Y(maxROWS-1)+SGAP-1);
-	    line_changed = False;
+	    line_changed = false;
 	}
     }
     draw_aicon_label();
@@ -1608,7 +1608,7 @@ render_blanks(int baddr, int height, union sp *buffer)
  *
  * Works _only_ with non-debug fonts.
  */
-static Boolean
+static bool
 empty_space(register union sp *buffer, int len)
 {
 	register int i;
@@ -1619,9 +1619,9 @@ empty_space(register union sp *buffer, int len)
 		    (buffer->bits.fg & INVERT_MASK) ||
 		    (buffer->bits.cs != CS_BASE) ||
 		    !BKM_ISSET(buffer->bits.cc))
-			return False;
+			return false;
 	}
-	return True;
+	return true;
 }
 
 
@@ -1633,7 +1633,7 @@ empty_space(register union sp *buffer, int len)
 static void
 resync_text(int baddr, int len, union sp *buffer)
 {
-	static Boolean ever = False;
+	static bool ever = false;
 	static unsigned long cmask = 0L;
 	static unsigned long gmask = 0L;
 
@@ -1671,7 +1671,7 @@ resync_text(int baddr, int len, union sp *buffer)
 		b.bits.gr = 0xf;
 		gmask = b.word;
 
-		ever = True;
+		ever = true;
 	}
 
 	if (!visible_control &&
@@ -1693,8 +1693,8 @@ resync_text(int baddr, int len, union sp *buffer)
 		    (ss->char_width * len) + 1, ss->char_height);
 	} else {
 		unsigned long attrs, attrs2;
-		Boolean has_gr, has_gr2;
-		Boolean empty, empty2;
+		bool has_gr, has_gr2;
+		bool empty, empty2;
 		union sp ra;
 		int i;
 		int i0 = 0;
@@ -1744,7 +1744,7 @@ resync_text(int baddr, int len, union sp *buffer)
 			printf("%s:%d: rt%s\n", __FUNCTION__, __LINE__,
 			    rcba(baddr+i0));
 #endif /*]*/
-			render_text(&buffer[baddr+i0], baddr+i0, i - i0, False,
+			render_text(&buffer[baddr+i0], baddr+i0, i - i0, false,
 			    &ra);
 			attrs = attrs2;
 			has_gr = has_gr2;
@@ -1757,7 +1757,7 @@ resync_text(int baddr, int len, union sp *buffer)
 #if defined(_ST) /*[*/
 		printf("%s:%d: rt%s\n", __FUNCTION__, __LINE__, rcba(baddr+i0));
 #endif /*]*/
-		render_text(&buffer[baddr+i0], baddr+i0, len - i0, False, &ra);
+		render_text(&buffer[baddr+i0], baddr+i0, len - i0, false, &ra);
 	}
 
 	/* The X display is now correct; update ss->image[]. */
@@ -1772,7 +1772,7 @@ resync_text(int baddr, int len, union sp *buffer)
  * be 16 bits as well.
  */
 static unsigned short
-font_index(ebc_t ebc, int d8_ix, Boolean upper)
+font_index(ebc_t ebc, int d8_ix, bool upper)
 {
 	ucs4_t ucs4;
 	int d;
@@ -1905,7 +1905,7 @@ linedraw_to_udisplay(int d8_ix, unsigned char c)
  * Render text onto the X display.  The region must not span lines.
  */
 static void
-render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
+render_text(union sp *buffer, int baddr, int len, bool block_cursor,
     union sp *attrs)
 {
 	int color;
@@ -1914,11 +1914,11 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 	GC cleargc = (GC)None;	/* clearing under undersized characters */
 	int sel = attrs->bits.sel;
 	register int i, j;
-	Boolean one_at_a_time = False;
+	bool one_at_a_time = false;
 	int d8_ix = ss->d8_ix;
 	XTextItem16 text[64]; /* fixed size is a hack */
 	int n_texts = -1;
-	Boolean in_dbcs = False;
+	bool in_dbcs = false;
 	int clear_len = 0;
 	int n_sbcs = 0;
 	int n_dbcs = 0;
@@ -1956,7 +1956,7 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 				fprintf(stderr, "SBCS starts at %s\n",
 				    rcba(baddr + i));
 #endif /*]*/
-				in_dbcs = False;
+				in_dbcs = false;
 				n_texts++;
 				text[n_texts].chars = &rt_buf[j];
 				text[n_texts].nchars = 0;
@@ -1973,7 +1973,7 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 				fprintf(stderr, "DBCS starts at %s\n",
 				    rcba(baddr + i));
 #endif /*]*/
-				in_dbcs = True;
+				in_dbcs = true;
 				n_texts++;
 				text[n_texts].chars = &rt_buf[j];
 				text[n_texts].nchars = 0;
@@ -1990,23 +1990,23 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 			rt_buf[j].byte1 = 0;
 			if (toggled(MONOCASE))
 				rt_buf[j].byte2 =
-				    font_index(buffer[i].bits.cc, d8_ix, True);
+				    font_index(buffer[i].bits.cc, d8_ix, true);
 			else {
 				if (visible_control) {
 					if (buffer[i].bits.cc == EBC_so) {
 						rt_buf[j].byte1 = 0;
 						rt_buf[j].byte2 =
 						    font_index(EBC_less, d8_ix,
-							    False);
+							    false);
 					} else if (buffer[i].bits.cc == EBC_si) {
 						rt_buf[j].byte1 = 0;
 						rt_buf[j].byte2 =
 						    font_index(EBC_greater,
-							    d8_ix, False);
+							    d8_ix, false);
 					} else {
 					    	unsigned short c = font_index(
 							buffer[i].bits.cc,
-							d8_ix, False);
+							d8_ix, false);
 
 						rt_buf[j].byte1 =
 						    (c >> 8) & 0xff;
@@ -2015,7 +2015,7 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 				} else {
 				    	unsigned short c = font_index(
 						buffer[i].bits.cc, d8_ix,
-						False);
+						false);
 
 					rt_buf[j].byte1 =
 					    (c >> 8) & 0xff;
@@ -2074,7 +2074,7 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 			} else {
 				rt_buf[j].byte1 = 0;
 				rt_buf[j].byte2 = font_index(EBC_space, d8_ix,
-					False);
+					false);
 			}
 			j++;
 			break;
@@ -2089,7 +2089,7 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 			if (!rt_buf[i].byte1 &&
 			    (IS_ODD(ss->odd_width, rt_buf[i].byte2) ||
 			     IS_ODD(ss->odd_lbearing, rt_buf[i].byte2))) {
-				one_at_a_time = True;
+				one_at_a_time = true;
 				break;
 			}
 		}
@@ -2113,7 +2113,7 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 		}
 	} else if (block_cursor && !(appres.interactive.mono && sel)) {
 		/* Block cursor, but neither mono nor selected. */
-		if (appres.x3270.use_cursor_color) {
+		if (xappres.use_cursor_color) {
 			/* Use the specific-color inverted GC. */
 			dgc = ss->invucgc;
 			cleargc = ss->ucgc;
@@ -2232,7 +2232,7 @@ render_text(union sp *buffer, int baddr, int len, Boolean block_cursor,
 }
 
 
-Boolean
+bool
 screen_obscured(void)
 {
 	return ss->obscured;
@@ -2248,7 +2248,7 @@ screen_obscured(void)
 void
 screen_scroll(void)
 {
-	Boolean was_on;
+	bool was_on;
 
 	if (!ss->exposed_yet)
 		return;
@@ -2269,7 +2269,7 @@ screen_scroll(void)
 	    ss->char_height * (ROWS - 1),
 	    ssCOL_TO_X(0),
 	    ssROW_TO_Y(0) - ss->ascent);
-	ss->copied = True;
+	ss->copied = true;
 	XFillRectangle(display, ss->window, get_gc(ss, INVERT_COLOR(0)),
 	    ssCOL_TO_X(0),
 	    ssROW_TO_Y(ROWS - 1) - ss->ascent,
@@ -2328,7 +2328,7 @@ draw_fields(union sp *buffer, int first, int last)
 	struct ea	*sbp = ea_buf;
 	int	field_color;
 	int	zero;
-	Boolean	any_blink = False;
+	bool	any_blink = false;
 	int	crossable = CROSSABLE;
 	enum dbcs_state d;
 	int	cursor_col = 0, cursor_row = 0;
@@ -2368,9 +2368,9 @@ draw_fields(union sp *buffer, int first, int last)
 	do {
 		unsigned char	c = sbp->cc;
 		union sp	b;
-		Boolean		reverse = False;
-		Boolean		is_selected = False;
-		Boolean		is_crossed = False;
+		bool		reverse = false;
+		bool		is_selected = false;
+		bool		is_crossed = false;
 
 		b.word = 0;	/* clear out all fields */
 
@@ -2394,7 +2394,7 @@ draw_fields(union sp *buffer, int first, int last)
 		} else {
 			unsigned short gr;
 			int e_color;
-			Boolean is_vc = False;
+			bool is_vc = false;
 
 			/* Find the right graphic rendition. */
 			if (zero) {
@@ -2404,7 +2404,7 @@ draw_fields(union sp *buffer, int first, int last)
 				if (!gr)
 					gr = field_ea->gr;
 				if (gr & GR_BLINK)
-					any_blink = True;
+					any_blink = true;
 				if (appres.highlight_bold && FA_IS_HIGH(fa))
 					gr |= GR_INTENSIFY;
 			}
@@ -2423,7 +2423,7 @@ draw_fields(union sp *buffer, int first, int last)
 				}
 				if (gr & GR_REVERSE) {
 					e_color = INVERT_COLOR(e_color);
-					reverse = True;
+					reverse = true;
 				}
 			}
 			if (!appres.interactive.mono)
@@ -2450,13 +2450,13 @@ draw_fields(union sp *buffer, int first, int last)
 				else {
 					if (visible_control && c == EBC_null) {
 						b.bits.cc = EBC_period;
-						is_vc = True;
+						is_vc = true;
 					} else if (visible_control &&
 					    (c == EBC_so || c == EBC_si)) {
 						b.bits.cc = (c == EBC_so)?
 						    EBC_less:
 						    EBC_greater;
-						is_vc = True;
+						is_vc = true;
 					} else
 						b.bits.cc = c;
 					if (sbp->cs)
@@ -2509,12 +2509,12 @@ draw_fields(union sp *buffer, int first, int last)
 		case DBCS_SI:
 		    if ((baddr % COLS) != (COLS - 1) &&
 			SELECTED(baddr + 1))
-			    is_selected = True;
+			    is_selected = true;
 		    break;
 		case DBCS_RIGHT:
 		case DBCS_SB: /* XXX */
 		    if ((baddr % COLS) && SELECTED(baddr - 1))
-			    is_selected = True;
+			    is_selected = true;
 		    break;
 		}
 
@@ -2530,12 +2530,12 @@ draw_fields(union sp *buffer, int first, int last)
 			case DBCS_SI:
 			    if ((baddr % COLS) != (COLS - 1) &&
 				CROSSED(baddr + 1))
-				    is_crossed = True;
+				    is_crossed = true;
 			    break;
 			case DBCS_RIGHT:
 			case DBCS_SB: /* XXX */
 			    if ((baddr % COLS) && CROSSED(baddr - 1))
-				    is_crossed = True;
+				    is_crossed = true;
 			    break;
 			}
 		}
@@ -2561,7 +2561,7 @@ draw_fields(union sp *buffer, int first, int last)
 
 	/* Cancel blink timeouts if none were seen this pass. */
 	if (!any_blink)
-		text_blinkers_exist = False;
+		text_blinkers_exist = false;
 }
 
 
@@ -2574,7 +2574,7 @@ resync_display(union sp *buffer, int first, int last)
 	register int	i, j;
 	int		b = 0;
 	int		i0 = -1;
-	Boolean		ccheck;
+	bool		ccheck;
 	int		fca = fl_baddr(cursor_addr);
 	int		first_row, last_row;
 #	define SPREAD	10
@@ -2759,7 +2759,7 @@ cursor_gc(int baddr)
     /*
      * If they say use a particular color, use it.
      */
-    if (appres.x3270.use_cursor_color) {
+    if (xappres.use_cursor_color) {
 	return ss->ucgc;
     } else {
 	return get_gc(ss, char_color(baddr));
@@ -2771,7 +2771,7 @@ cursor_gc(int baddr)
  * If 'invert' is true, invert the foreground and background colors.
  */
 static void
-redraw_char(int baddr, Boolean invert)
+redraw_char(int baddr, bool invert)
 {
 	enum dbcs_state d;
 	union sp buffer[2];
@@ -2813,7 +2813,7 @@ redraw_char(int baddr, Boolean invert)
 #endif /*]*/
 		if (dbcs && ((baddr % COLS) != (COLS - 1)) && len == 1)
 			len = 2;
-		render_text(&ss->image[flb], flb, len, False, &ss->image[flb]);
+		render_text(&ss->image[flb], flb, len, false, &ss->image[flb]);
 		return;
 	}
 
@@ -2864,7 +2864,7 @@ redraw_char(int baddr, Boolean invert)
 		if (!blank_it)
 			buffer[1].bits.cc = ea_buf[baddr2].cc;
 	}
-	render_text(buffer, fl_baddr(baddr), len, True, buffer);
+	render_text(buffer, fl_baddr(baddr), len, true, buffer);
 
 }
 
@@ -2957,13 +2957,13 @@ small_inv_cursor(int baddr)
  * Draw or remove the cursor.
  */
 static void
-put_cursor(int baddr, Boolean on)
+put_cursor(int baddr, bool on)
 {
 	/*
 	 * If the cursor is being turned off, simply redraw the text under it.
 	 */
 	if (!on) {
-		redraw_char(baddr, False);
+		redraw_char(baddr, false);
 		return;
 	}
 
@@ -2971,7 +2971,7 @@ put_cursor(int baddr, Boolean on)
 	 * If underscore cursor, redraw the character and draw the underscore.
 	 */
 	if (toggled(ALT_CURSOR)) {
-		redraw_char(baddr, False);
+		redraw_char(baddr, false);
 		underscore_cursor(baddr);
 		return;
 	}
@@ -2998,12 +2998,12 @@ put_cursor(int baddr, Boolean on)
 	/*
 	 * Color: redraw the character in reverse video.
 	 */
-	redraw_char(baddr, True);
+	redraw_char(baddr, true);
 }
 
 
 /* Allocate a named color. */
-static Boolean
+static bool
 alloc_color(char *name, enum fallback_color fb_color, Pixel *pixel)
 {
 	XColor cell, db;
@@ -3027,14 +3027,14 @@ alloc_color(char *name, enum fallback_color fb_color, Pixel *pixel)
 			if (XAllocColor(display, XDefaultColormapOfScreen(s),
 						&db) != 0) {
 				*pixel = db.pixel;
-				return True;
+				return true;
 			}
 		}
 	} else {
 		if (XAllocNamedColor(display, XDefaultColormapOfScreen(s), name,
 		    &cell, &db) != 0) {
 			*pixel = db.pixel;
-			return True;
+			return true;
 		}
 	}
 	switch (fb_color) {
@@ -3045,7 +3045,7 @@ alloc_color(char *name, enum fallback_color fb_color, Pixel *pixel)
 		*pixel = XBlackPixelOfScreen(s);
 		break;
 	}
-	return False;
+	return false;
 }
 
 /* Spell out a fallback color. */
@@ -3071,38 +3071,38 @@ allocate_pixels(void)
     }
 
     /* Allocate constant elements. */
-    if (!alloc_color(appres.x3270.colorbg_name, FB_BLACK, &colorbg_pixel)) {
+    if (!alloc_color(xappres.colorbg_name, FB_BLACK, &colorbg_pixel)) {
 	popup_an_error("Cannot allocate colormap \"%s\" for screen "
-		"background, using \"black\"", appres.x3270.colorbg_name);
+		"background, using \"black\"", xappres.colorbg_name);
     }
-    if (!alloc_color(appres.x3270.selbg_name, FB_BLACK, &selbg_pixel)) {
+    if (!alloc_color(xappres.selbg_name, FB_BLACK, &selbg_pixel)) {
 	popup_an_error("Cannot allocate colormap \"%s\" for select "
-		"background, using \"black\"", appres.x3270.selbg_name);
+		"background, using \"black\"", xappres.selbg_name);
     }
-    if (!alloc_color(appres.x3270.keypadbg_name, FB_WHITE, &keypadbg_pixel)) {
+    if (!alloc_color(xappres.keypadbg_name, FB_WHITE, &keypadbg_pixel)) {
 	popup_an_error("Cannot allocate colormap \"%s\" for keypad "
-		"background, using \"white\"", appres.x3270.keypadbg_name);
+		"background, using \"white\"", xappres.keypadbg_name);
     }
-    if (appres.x3270.use_cursor_color &&
-	    !alloc_color(appres.x3270.cursor_color_name, FB_WHITE,
+    if (xappres.use_cursor_color &&
+	    !alloc_color(xappres.cursor_color_name, FB_WHITE,
 		&cursor_pixel)) {
 	popup_an_error("Cannot allocate colormap \"%s\" for cursor color, "
-		"using \"white\"", appres.x3270.cursor_color_name);
+		"using \"white\"", xappres.cursor_color_name);
     }
 
     /* Allocate pseudocolors. */
     if (!appres.m3279) {
-	if (!alloc_color(appres.x3270.normal_name, FB_WHITE, &normal_pixel)) {
+	if (!alloc_color(xappres.normal_name, FB_WHITE, &normal_pixel)) {
 	    popup_an_error("Cannot allocate colormap \"%s\" for text, "
-		    "using \"white\"", appres.x3270.normal_name);
+		    "using \"white\"", xappres.normal_name);
 	}
-	if (!alloc_color(appres.x3270.select_name, FB_WHITE, &select_pixel)) {
+	if (!alloc_color(xappres.select_name, FB_WHITE, &select_pixel)) {
 	    popup_an_error("Cannot allocate colormap \"%s\" for selectable "
-		    "text, using \"white\"", appres.x3270.select_name);
+		    "text, using \"white\"", xappres.select_name);
 	}
-	if (!alloc_color(appres.x3270.bold_name, FB_WHITE, &bold_pixel)) {
+	if (!alloc_color(xappres.bold_name, FB_WHITE, &bold_pixel)) {
 	    popup_an_error("Cannot allocate colormap \"%s\" for bold text, "
-		    "using \"white\"", appres.x3270.bold_name);
+		    "using \"white\"", xappres.bold_name);
 	}
     }
 }
@@ -3120,7 +3120,7 @@ destroy_pixels(void)
 	 */
 
 	for (i = 0; i < 16; i++) {
-		cpx_done[i] = False;
+		cpx_done[i] = false;
 	}
 }
 
@@ -3182,7 +3182,7 @@ make_gcs(struct sstate *s)
     }
 
     /* Create explicit cursor color cursor GCs. */
-    if (appres.x3270.use_cursor_color) {
+    if (xappres.use_cursor_color) {
 	if (s->ucgc != (GC)None) {
 	    XtReleaseGC(toplevel, s->ucgc);
 	    s->ucgc = (GC)None;
@@ -3227,8 +3227,8 @@ default_color_scheme(void)
 }
 
 /* Transfer the colorScheme resource into arrays. */
-static Boolean
-xfer_color_scheme(char *cs, Boolean do_popup)
+static bool
+xfer_color_scheme(char *cs, bool do_popup)
 {
     int i;
     char *scheme_name = NULL;
@@ -3320,8 +3320,8 @@ xfer_color_scheme(char *cs, Boolean do_popup)
 	color_name[i] = XtNewString(tmp_color_name[i]);
     }
     ibm_fb = tmp_ibm_fb;
-    appres.x3270.colorbg_name = XtNewString(tmp_colorbg_name);
-    appres.x3270.selbg_name = XtNewString(tmp_selbg_name);
+    xappres.colorbg_name = XtNewString(tmp_colorbg_name);
+    xappres.selbg_name = XtNewString(tmp_selbg_name);
     for (i = 0; i < 4; i++) {
 	field_colors[i] = tmp_field_colors[i];
     }
@@ -3329,12 +3329,12 @@ xfer_color_scheme(char *cs, Boolean do_popup)
     /* Clean up and exit. */
     XtFree(scheme_name);
     XtFree(s0);
-    return True;
+    return true;
 
 failure:
     XtFree(scheme_name);
     XtFree(s0);
-    return False;
+    return false;
 }
 
 /* Look up a GC, allocating it if necessary. */
@@ -3344,7 +3344,7 @@ get_gc(struct sstate *s, int color)
     int pixel_index;
     XGCValues xgcv;
     GC r;
-    static Boolean in_gc_error = False;
+    static bool in_gc_error = false;
 
     if (color & GC_NONDEFAULT) {
 	color &= ~GC_NONDEFAULT;
@@ -3361,17 +3361,17 @@ get_gc(struct sstate *s, int color)
     if (!cpx_done[pixel_index]) {
 	if (!alloc_color(color_name[pixel_index], ibm_fb, &cpx[pixel_index])) {
 	    if (!in_gc_error) {
-		in_gc_error = True;
+		in_gc_error = true;
 		popup_an_error("Cannot allocate colormap \"%s\" for 3279 "
 			"color %d (%s), using \"%s\"",
 			color_name[pixel_index],
 			pixel_index,
 			see_color((unsigned char)(pixel_index + 0xf0)),
 			fb_name(ibm_fb));
-		in_gc_error = False;
+		in_gc_error = false;
 	    }
 	}
-	cpx_done[pixel_index] = True;
+	cpx_done[pixel_index] = true;
     }
 
     /* Allocate the GC. */
@@ -3384,7 +3384,7 @@ get_gc(struct sstate *s, int color)
 	xgcv.background = cpx[pixel_index];
     }
     if (s == &nss && pixel_index == DEFAULT_PIXEL) {
-	xgcv.graphics_exposures = True;
+	xgcv.graphics_exposures = true;
 	r = XtGetGC(toplevel,
 		GCForeground|GCBackground|GCFont|GCGraphicsExposures,
 		&xgcv);
@@ -3421,7 +3421,7 @@ get_selgc(struct sstate *s, int color)
 		    color_name[color], color,
 		    see_color((unsigned char)(color + 0xf0)));
 	    }
-	cpx_done[color] = True;
+	cpx_done[color] = true;
     }
 
     /* Allocate the GC. */
@@ -3461,7 +3461,7 @@ make_gc_set(struct sstate *s, int i, Pixel fg, Pixel bg)
 		XtReleaseGC(toplevel, s->gc[i]);
 	xgcv.foreground = fg;
 	xgcv.background = bg;
-	xgcv.graphics_exposures = True;
+	xgcv.graphics_exposures = true;
 	xgcv.font = s->fid;
 	if (s == &nss && !i)
 		s->gc[i] = XtGetGC(toplevel,
@@ -3502,11 +3502,11 @@ fa_color(unsigned char fa)
 	 * identifier (0 through 15)
 	 */
 	if (appres.modified_sel && FA_IS_MODIFIED(fa)) {
-	    return GC_NONDEFAULT | (appres.x3270.modified_sel_color & 0xf);
-	} else if (appres.x3270.visual_select &&
+	    return GC_NONDEFAULT | (xappres.modified_sel_color & 0xf);
+	} else if (xappres.visual_select &&
 		 FA_IS_SELECTABLE(fa) &&
 		 !FA_IS_INTENSE(fa)) {
-	    return GC_NONDEFAULT | (appres.x3270.visual_select_color & 0xf);
+	    return GC_NONDEFAULT | (xappres.visual_select_color & 0xf);
 	} else {
 	    return field_colors[DEFCOLOR_MAP(fa)];
 	}
@@ -3529,8 +3529,8 @@ fa_color(unsigned char fa)
  * PropertyChanged events.
  */
 
-static Boolean toplevel_focused = False;
-static Boolean keypad_entered = False;
+static bool toplevel_focused = false;
+static bool keypad_entered = false;
 
 void
 PA_Focus_xaction(Widget w _is_unused, XEvent *event, String *params _is_unused,
@@ -3544,14 +3544,14 @@ PA_Focus_xaction(Widget w _is_unused, XEvent *event, String *params _is_unused,
     switch (fe->type) {
     case FocusIn:
 	if (fe->detail != NotifyPointer) {
-	    toplevel_focused = True;
-	    screen_focus(True);
+	    toplevel_focused = true;
+	    screen_focus(true);
 	}
 	break;
     case FocusOut:
-	toplevel_focused = False;
+	toplevel_focused = false;
 	if (!toplevel_focused && !keypad_entered) {
-	    screen_focus(False);
+	    screen_focus(false);
 	}
 	break;
     }
@@ -3568,13 +3568,13 @@ PA_EnterLeave_xaction(Widget w _is_unused, XEvent *event _is_unused,
 #endif /*]*/
     switch (ce->type) {
     case EnterNotify:
-	keypad_entered = True;
-	screen_focus(True);
+	keypad_entered = true;
+	screen_focus(true);
 	break;
     case LeaveNotify:
-	keypad_entered = False;
+	keypad_entered = false;
 	if (!toplevel_focused && !keypad_entered) {
-	    screen_focus(False);
+	    screen_focus(false);
 	}
 	break;
     }
@@ -3600,23 +3600,23 @@ query_window_state(void)
 	unsigned long nitems;
 	unsigned long leftover;
 	unsigned char *data = NULL;
-	static Boolean was_up = False;
+	static bool was_up = false;
 
 	if (XGetWindowProperty(display, XtWindow(toplevel), a_state, 0L,
-	    (long)BUFSIZ, False, a_state, &actual_type, &actual_format,
+	    (long)BUFSIZ, false, a_state, &actual_type, &actual_format,
 	    &nitems, &leftover, &data) != Success)
 		return;
 	if (actual_type == a_state && actual_format == 32) {
 		if (*(unsigned long *)data == IconicState) {
-			iconic = True;
+			iconic = true;
 			keypad_popdown(&was_up);
 		} else {
-			iconic = False;
-			invert_icon(False);
+			iconic = false;
+			invert_icon(false);
 			keypad_first_up();
 			if (was_up) {
 			    	keypad_popup();
-				was_up = False;
+				was_up = false;
 			}
 		}
 	}
@@ -3642,7 +3642,7 @@ void
 shift_event(int event_state)
 {
     static int old_state;
-    Boolean shifted_now =
+    bool shifted_now =
 	(event_state & (ShiftKeyDown | MetaKeyDown | AltKeyDown)) != 0;
 
     if (event_state != old_state) {
@@ -3659,7 +3659,7 @@ shift_event(int event_state)
  * Handle the mouse entering and leaving the window.
  */
 static void
-screen_focus(Boolean in)
+screen_focus(bool in)
 {
 	/*
 	 * Update the input context focus.
@@ -3705,16 +3705,16 @@ screen_focus(Boolean in)
 /*
  * Change fonts.
  */
-static Boolean
+static bool
 SetFont_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("SetFont", ia, argc, argv);
     if (check_argc("SetFont", argc, 1, 1) < 0) {
-	return False;
+	return false;
     }
 
-    screen_newfont(argv[0], True, False);
-    return True;
+    screen_newfont(argv[0], true, false);
+    return true;
 }
 
 /*
@@ -3723,19 +3723,19 @@ SetFont_action(ia_t ia, unsigned argc, const char **argv)
  * Modifies the input string.
  */
 static void
-split_font_list_entry(char *entry, char **menu_name, Boolean *noauto,
-    Boolean *resize, char **font_name)
+split_font_list_entry(char *entry, char **menu_name, bool *noauto,
+    bool *resize, char **font_name)
 {
 	char *colon;
 	char *s;
-	Boolean any = False;
+	bool any = false;
 
 	if (menu_name != NULL)
 		*menu_name = NULL;
 	if (noauto != NULL)
-		*noauto = False;
+		*noauto = false;
 	if (resize != NULL)
-		*resize = False;
+		*resize = false;
 
 	colon = strchr(entry, ':');
 	if (colon != NULL) {
@@ -3747,21 +3747,21 @@ split_font_list_entry(char *entry, char **menu_name, Boolean *noauto,
 		s = entry;
 
 	do {
-		any = False;
+		any = false;
 		while (isspace(*s))
 			s++;
 		if (!strncmp(s, "#noauto", 7) &&
 		    (!s[7] || isspace(s[7]))) {
 			if (noauto != NULL)
-				*noauto = True;
+				*noauto = true;
 			s += 7;
-			any = True;
+			any = true;
 		} else if (!strncmp(s, "#resize", 7) &&
 			   (!s[7] || isspace(s[7]))) {
 			if (resize != NULL)
-				*resize = True;
+				*resize = true;
 			s += 7;
-			any = True;
+			any = true;
 		}
 	} while (any);
 
@@ -3770,18 +3770,18 @@ split_font_list_entry(char *entry, char **menu_name, Boolean *noauto,
 
 /*
  * Load a font with a display character set required by a charset.
- * Returns True for success, False for failure.
+ * Returns true for success, false for failure.
  * If it succeeds, the caller is responsible for calling:
  *	screen_reinit(FONT_CHANGE)
  */
-Boolean
+bool
 screen_new_display_charsets(const char *realname, const char *csnames)
 {
     char *rl;
     char *s0, *s;
     char *fontname = NULL;
     char *lff;
-    Boolean font_found = False;
+    bool font_found = false;
     const char *display_charsets;
     const char *dbcs_display_charsets;
 
@@ -3811,15 +3811,15 @@ screen_new_display_charsets(const char *realname, const char *csnames)
      * If the user chose an emulator font, but we haven't tried it yet,
      * see if it implements the right charset.
      */
-    if (efontname == NULL && appres.x3270.efontname != NULL) {
-	lff = load_fixed_font(appres.x3270.efontname, display_charsets);
+    if (efontname == NULL && xappres.efontname != NULL) {
+	lff = load_fixed_font(xappres.efontname, display_charsets);
 	if (lff != NULL) {
-	    if (strcmp(appres.x3270.efontname, "3270")) {
+	    if (strcmp(xappres.efontname, "3270")) {
 		popup_an_error("%s", lff);
 	    }
 	    Free(lff);
 	} else {
-	    fontname = appres.x3270.efontname;
+	    fontname = xappres.efontname;
 	}
     }
 
@@ -3831,7 +3831,7 @@ screen_new_display_charsets(const char *realname, const char *csnames)
 	if (rl != NULL) {
 	    s0 = s = NewString(rl);
 	    while (!font_found && split_lresource(&s, &fontname) == 1) {
-		Boolean noauto = False;
+		bool noauto = false;
 		char *fn = NULL;
 
 		split_font_list_entry(fontname, NULL, &noauto, NULL, &fn);
@@ -3843,7 +3843,7 @@ screen_new_display_charsets(const char *realname, const char *csnames)
 		if (lff != NULL) {
 		    Free(lff);
 		} else {
-		    font_found = True;
+		    font_found = true;
 		}
 	    }
 	    Free(s0);
@@ -3854,13 +3854,13 @@ screen_new_display_charsets(const char *realname, const char *csnames)
 	     !strcasecmp(display_charsets, "iso8859-1"))) {
 	    /* Try "fixed". */
 	    if ((lff = load_fixed_font("!fixed", display_charsets)) == NULL) {
-		font_found = True;
+		font_found = true;
 	    } else {
 		/* Fatal. */
 		xs_error("%s", lff);
 		Free(lff);
 		/*NOTREACHED*/
-		return False;
+		return false;
 	    }
 	}
 
@@ -3876,7 +3876,7 @@ screen_new_display_charsets(const char *realname, const char *csnames)
 		 * able to do, we don't know how to search for a
 		 * DBCS font.  Bail here.
 		 */
-		return False;
+		return false;
 	    }
 
 	    buf = cs_dup = NewString(display_charsets);
@@ -3897,7 +3897,7 @@ screen_new_display_charsets(const char *realname, const char *csnames)
 		if (lff != NULL) {
 		    Free(lff);
 		} else {
-		    font_found = True;
+		    font_found = true;
 		}
 		if (part1 != NULL) {
 		    Free(part1);
@@ -3914,10 +3914,10 @@ screen_new_display_charsets(const char *realname, const char *csnames)
 
 	    popup_an_error("No %s fonts found", xs);
 	    Free(xs);
-	    return False;
+	    return false;
 	}
     }
-    allow_resize = appres.x3270.allow_resize;
+    allow_resize = xappres.allow_resize;
 
 done:
     /* Set the appropriate global. */
@@ -3925,11 +3925,11 @@ done:
 	    display_charsets? NewString(display_charsets): NULL);
     init_rsfonts(required_display_charsets);
 
-    return True;
+    return true;
 }
 
 void
-screen_newfont(const char *fontnames, Boolean do_popup, Boolean is_cs)
+screen_newfont(const char *fontnames, bool do_popup, bool is_cs)
 {
 	char *old_font;
 	char *lff;
@@ -3955,7 +3955,7 @@ screen_newfont(const char *fontnames, Boolean do_popup, Boolean is_cs)
 	screen_redo = REDO_FONT;
 
 	screen_reinit(FONT_CHANGE);
-	efont_changed = True;
+	efont_changed = true;
 }
 
 /*
@@ -4032,7 +4032,7 @@ load_fixed_font(const char *names, const char *reqd_display_charsets)
 	/* If there's a DBCS font, load that first. */
 	if (name2 != NULL) {
 		/* Load the second font. */
-		r = lff_single(name2, charset2, True);
+		r = lff_single(name2, charset2, true);
 		if (r != NULL) {
 			Free(name1);
 			Free(charset1);
@@ -4041,11 +4041,11 @@ load_fixed_font(const char *names, const char *reqd_display_charsets)
 	} else {
 		dbcs_font.font_struct = NULL;
 		dbcs_font.font = None;
-		dbcs = False;
+		dbcs = false;
 	}
 
 	/* Load the SBCS font. */
-	r = lff_single(name1, charset1, False);
+	r = lff_single(name1, charset1, false);
 
 	/* Free the split-out names and return the final result. */
 	Free(name1);
@@ -4055,18 +4055,18 @@ load_fixed_font(const char *names, const char *reqd_display_charsets)
 	return r;
 }
 
-static Boolean
+static bool
 charset_in_reqd(const char *charset, const char *reqd)
 {
     	char *r = NewString(reqd);
 	char *str = r;
     	char *tok;
-	Boolean rv = False;
+	bool rv = false;
 
 	while ((tok = strtok(str, ",")) != NULL) {
 	    	str = NULL;
 		if (!strcasecmp(charset, tok)) {
-		    	rv = True;
+		    	rv = true;
 			break;
 		}
 	}
@@ -4079,7 +4079,7 @@ charset_in_reqd(const char *charset, const char *reqd)
  * Returns NULL (okay) or an error message.
  */
 static char *
-lff_single(const char *name, const char *reqd_display_charset, Boolean is_dbcs)
+lff_single(const char *name, const char *reqd_display_charset, bool is_dbcs)
 {
 	XFontStruct *g;
 	const char *best = NULL;
@@ -4186,7 +4186,7 @@ display_charset(void)
  */
 static void
 set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
-    Boolean is_dbcs)
+    bool is_dbcs)
 {
 	unsigned long svalue;
 	unsigned i;
@@ -4222,7 +4222,7 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 		dbcs_font.char_width  = fCHAR_WIDTH(f);
 		dbcs_font.char_height = dbcs_font.ascent + dbcs_font.descent;
 		dbcs_font.d16_ix = display16_init(font_charset);
-		dbcs = True;
+		dbcs = true;
 		Replace(full_efontname_dbcs, XtNewString(fef));
 		Replace(efont_charset_dbcs, font_charset);
 		return;
@@ -4245,33 +4245,33 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 	if (XGetFontProperty(f, XA_FAMILY_NAME, &svalue))
 		nss.standard_font = (Atom) svalue != a_3270;
 	else if (!strncmp(efontname, "3270", 4))
-		nss.standard_font = False;
+		nss.standard_font = false;
 	else
-		nss.standard_font = True;
+		nss.standard_font = true;
 
 	/* Set other globals. */
 	if (nss.standard_font) {
-		nss.extended_3270font = False;
+		nss.extended_3270font = false;
 		nss.font_8bit = efont_matches;
 		nss.font_16bit = (f->max_byte1 > 0);
 		nss.d8_ix = display8_init(nss.font_8bit? font_charset:
 							 "ascii-7");
 	} else {
 #if defined(BROKEN_MACH32)
-		nss.extended_3270font = False;
+		nss.extended_3270font = false;
 #else
 		nss.extended_3270font = f->max_byte1 > 0 ||
 			f->max_char_or_byte2 > 255;
 #endif
-		nss.font_8bit = False;
-		nss.font_16bit = False;
+		nss.font_8bit = false;
+		nss.font_16bit = false;
 		nss.d8_ix = display8_init(font_charset);
 	}
 
 	/* See if this font has any unusually-shaped characters. */
 	INIT_ODD(nss.odd_width);
 	INIT_ODD(nss.odd_lbearing);
-	nss.funky_font = False;
+	nss.funky_font = false;
 	if (!nss.extended_3270font && f->per_char != NULL) {
 		for (i = 0; i < 256; i++) {
 			if (PER_CHAR(f, i).width == 0 &&
@@ -4285,11 +4285,11 @@ set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
 
 			if (PER_CHAR(f, i).width != f->max_bounds.width) {
 				SET_ODD(nss.odd_width, i);
-				nss.funky_font = True;
+				nss.funky_font = true;
 			}
 			if (PER_CHAR(f, i).lbearing < 0) {
 				SET_ODD(nss.odd_lbearing, i);
-				nss.funky_font = True;
+				nss.funky_font = true;
 			}
 		}
 	}
@@ -4325,11 +4325,11 @@ screen_change_model(int mn, int ovc, int ovr)
 	redo_old_ov_rows = ov_rows;
 	screen_redo = REDO_MODEL;
 
-	model_changed = True;
+	model_changed = true;
 	if (ov_cols != ovc || ov_rows != ovr)
-		oversize_changed = True;
+		oversize_changed = true;
 	set_rows_cols(mn, ovc, ovr);
-	st_changed(ST_REMODEL, True);
+	st_changed(ST_REMODEL, true);
 	screen_reinit(MODEL_CHANGE);
 }
 
@@ -4337,19 +4337,19 @@ screen_change_model(int mn, int ovc, int ovr)
  * Change emulation modes.
  */
 void
-screen_extended(Boolean extended _is_unused)
+screen_extended(bool extended _is_unused)
 {
 	set_rows_cols(model_num, ov_cols, ov_rows);
-	model_changed = True;
+	model_changed = true;
 }
 
 void
-screen_m3279(Boolean m3279 _is_unused)
+screen_m3279(bool m3279 _is_unused)
 {
 	destroy_pixels();
 	screen_reinit(COLOR_CHANGE);
 	set_rows_cols(model_num, ov_cols, ov_rows);
-	model_changed = True;
+	model_changed = true;
 }
 
 /*
@@ -4358,19 +4358,19 @@ screen_m3279(Boolean m3279 _is_unused)
 void
 screen_newscheme(char *s)
 {
-    Boolean xferred;
+    bool xferred;
 
     if (!appres.m3279) {
 	return;
     }
 
     destroy_pixels();
-    xferred = xfer_color_scheme(s, True);
+    xferred = xfer_color_scheme(s, true);
     if (xferred) {
-	appres.x3270.color_scheme = s;
+	xappres.color_scheme = s;
     }
     screen_reinit(COLOR_CHANGE);
-    scheme_changed = True;
+    scheme_changed = true;
 }
 
 /*
@@ -4385,9 +4385,9 @@ screen_newcharset(char *csname)
 	    case CS_OKAY:
 		/* Success. */
 		Free(old_charset);
-		st_changed(ST_CHARSET, True);
+		st_changed(ST_CHARSET, true);
 		screen_reinit(CHARSET_CHANGE | FONT_CHANGE);
-		charset_changed = True;
+		charset_changed = true;
 		break;
 	    case CS_NOTFOUND:
 		Free(old_charset);
@@ -4423,14 +4423,14 @@ ring_bell(void)
 
     /* Ring the real display's bell. */
     if (!appres.interactive.visual_bell) {
-	XBell(display, appres.x3270.bell_volume);
+	XBell(display, xappres.bell_volume);
     }
 
     /* If we're iconic, invert the icon and return. */
-    if (!appres.x3270.active_icon) {
+    if (!xappres.active_icon) {
 	query_window_state();
 	if (iconic) {
-	    invert_icon(True);
+	    invert_icon(true);
 	    return;
 	}
     }
@@ -4446,7 +4446,7 @@ ring_bell(void)
 	bgc = XtGetGC(toplevel, GCFunction, &xgcv);
 	initted = 1;
     }
-    screen_disp(False);
+    screen_disp(false);
     XFillRectangle(display, ss->window, bgc,
 	0, 0, ss->screen_width, ss->screen_height);
     XSync(display, 0);
@@ -4489,7 +4489,7 @@ icon_init(void)
     x3270_icon = XCreateBitmapFromData(display, root_window,
 	    (char *)x3270_bits, x3270_width, x3270_height);
 
-    if (appres.x3270.active_icon) {
+    if (xappres.active_icon) {
 	Dimension iw, ih;
 
 	aicon_font_init();
@@ -4507,7 +4507,7 @@ icon_init(void)
 	XtVaSetValues(toplevel,
 	    XtNiconWindow, XtWindow(icon_shell),
 	    NULL);
-	if (appres.x3270.active_icon) {
+	if (xappres.active_icon) {
 	    XtVaSetValues(icon_shell,
 		    XtNbackground, appres.interactive.mono?
 			xappres.background: colorbg_pixel,
@@ -4546,17 +4546,17 @@ aicon_font_init(void)
     char **matches;
     int count;
 
-    if (!appres.x3270.active_icon) {
-	appres.x3270.label_icon = False;
+    if (!xappres.active_icon) {
+	xappres.label_icon = False;
 	return;
     }
 
-    matches = XListFontsWithInfo(display, appres.x3270.icon_font, 1, &count,
+    matches = XListFontsWithInfo(display, xappres.icon_font, 1, &count,
 	    &f);
     if (matches == NULL) {
 	popup_an_error("No font %s \"%s\"\nactiveIcon will not work",
-		ResIconFont, appres.x3270.icon_font);
-	appres.x3270.active_icon = False;
+		ResIconFont, xappres.icon_font);
+	xappres.active_icon = False;
 	return;
     }
     ff = XLoadFont(display, matches[0]);
@@ -4565,19 +4565,19 @@ aicon_font_init(void)
     iss.fid = ff;
     iss.font = f;
     iss.ascent = f->ascent;
-    iss.overstrike = False;
-    iss.standard_font = True;
-    iss.extended_3270font = False;
-    iss.font_8bit = False;
-    iss.obscured = True;
+    iss.overstrike = false;
+    iss.standard_font = true;
+    iss.extended_3270font = false;
+    iss.font_8bit = false;
+    iss.obscured = true;
     iss.d8_ix = display8_init("ascii-7");
-    if (appres.x3270.label_icon) {
-	matches = XListFontsWithInfo(display, appres.x3270.icon_label_font, 1,
+    if (xappres.label_icon) {
+	matches = XListFontsWithInfo(display, xappres.icon_label_font, 1,
 		&count, &ailabel_font);
 	if (matches == NULL) {
 	    popup_an_error("Cannot load %s \"%s\" font\nlabelIcon will not "
-		    "work", ResIconLabelFont, appres.x3270.icon_label_font);
-	    appres.x3270.label_icon = False;
+		    "work", ResIconLabelFont, xappres.icon_label_font);
+	    xappres.label_icon = False;
 	    return;
 	}
 	ailabel_font->fid = XLoadFont(display, matches[0]);
@@ -4585,7 +4585,7 @@ aicon_font_init(void)
     }
     INIT_ODD(iss.odd_width);
     INIT_ODD(iss.odd_lbearing);
-    iss.funky_font = False;
+    iss.funky_font = false;
 }
 
 /*
@@ -4614,15 +4614,15 @@ aicon_size(Dimension *iw, Dimension *ih)
 static void
 aicon_init(void)
 {
-    if (!appres.x3270.active_icon) {
+    if (!xappres.active_icon) {
 	return;
     }
 
     iss.widget = icon_shell;
     iss.window = XtWindow(iss.widget);
     iss.cursor_daddr = 0;
-    iss.exposed_yet = False;
-    if (appres.x3270.label_icon) {
+    iss.exposed_yet = false;
+    if (xappres.label_icon) {
 	XGCValues xgcv;
 
 	xgcv.font = ailabel_font->fid;
@@ -4639,7 +4639,7 @@ aicon_init(void)
 static void
 aicon_reinit(unsigned cmask)
 {
-    if (!appres.x3270.active_icon) {
+    if (!xappres.active_icon) {
 	return;
     }
 
@@ -4669,7 +4669,7 @@ draw_aicon_label(void)
 	int len;
 	Position x;
 
-	if (!appres.x3270.label_icon || !iconic)
+	if (!xappres.label_icon || !iconic)
 		return;
 
 	XFillRectangle(display, iss.window,
@@ -4697,14 +4697,14 @@ set_aicon_label(char *l)
 
 /* Change the bitmap icon. */
 static void
-flip_icon(Boolean inverted, enum mcursor_state mstate)
+flip_icon(bool inverted, enum mcursor_state mstate)
 {
     Pixmap p = x3270_icon;
 
     if (mstate == LOCKED) {
 	mstate = NORMAL;
     }
-    if (appres.x3270.active_icon
+    if (xappres.active_icon
 	|| (inverted == icon_inverted && mstate == icon_cstate)) {
 	return;
     }
@@ -4737,7 +4737,7 @@ flip_icon(Boolean inverted, enum mcursor_state mstate)
  * Invert the icon.
  */
 static void
-invert_icon(Boolean inverted)
+invert_icon(bool inverted)
 {
 	flip_icon(inverted, icon_cstate);
 }
@@ -4753,20 +4753,20 @@ lock_icon(enum mcursor_state state)
 
 
 /* Check the font menu for an existing name. */
-static Boolean
+static bool
 font_in_menu(const char *font)
 {
 	struct font_list *g;
 
 	for (g = font_list; g != NULL; g = g->next) {
 		if (!strcasecmp(NO_BANG(font), NO_BANG(g->font)))
-			return True;
+			return true;
 	}
-	return False;
+	return false;
 }
 
 /* Add a font to the font menu. */
-static Boolean
+static bool
 add_font_to_menu(char *label, const char *font)
 {
 	struct font_list *f;
@@ -4775,7 +4775,7 @@ add_font_to_menu(char *label, const char *font)
 	f = (struct font_list *)XtMalloc(sizeof(*f));
 	if (!split_hier(label, &f->label, &f->parents)) {
 		Free((XtPointer)f);
-		return False;
+		return false;
 	}
 	f->font = NewString(font);
 	f->next = NULL;
@@ -4786,7 +4786,7 @@ add_font_to_menu(char *label, const char *font)
 		font_list = f;
 	font_last = f;
 	font_count++;
-	return True;
+	return true;
 }
 
 /*
@@ -4832,7 +4832,7 @@ init_rsfonts(char *charset_name)
 		char *line;
 		char *label;
 		char *font;
-		Boolean resize;
+		bool resize;
 		char **matches;
 		int count;
 
@@ -4927,12 +4927,12 @@ init_rsfonts(char *charset_name)
  * Handle ConfigureNotify events.
  */
 static struct {
-	Boolean ticking;
-	Dimension width, height;
-	Position x, y;
-	XtIntervalId id;
+    bool ticking;
+    Dimension width, height;
+    Position x, y;
+    XtIntervalId id;
 } cn = {
-	False, 0, 0, 0, 0, 0
+    false, 0, 0, 0, 0, 0
 };
 static Position main_x = 0, main_y = 0;
 
@@ -4945,7 +4945,7 @@ static void
 configure_stable(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
 	vtrace("Reconfigure timer expired\n");
-	configure_ticking = False;
+	configure_ticking = false;
 	if (!cn.ticking)
 		screen_redo = REDO_NONE;
 }
@@ -4983,13 +4983,13 @@ do_resize(void)
 
 	cw = SCREEN_WIDTH(r->width)+2 + scrollbar_width;
 	mkw = min_keypad_width();
-	if (kp_placement == kp_integral && appres.x3270.keypad_on
+	if (kp_placement == kp_integral && xappres.keypad_on
 		&& cw < mkw) {
 	    cw = mkw;
 	}
 
 	ch = SCREEN_HEIGHT(r->height)+2 + menubar_qheight(cw);
-	if (kp_placement == kp_integral && appres.x3270.keypad_on) {
+	if (kp_placement == kp_integral && xappres.keypad_on) {
 	    ch += keypad_qheight();
 	}
 	r->total_width = cw;
@@ -5097,7 +5097,7 @@ do_resize(void)
     } else {
 	vtrace("    switching to font '%s', new size %dx%d\n",
 		best->name, best->total_width, best->total_height);
-	screen_newfont(best->name, False, False);
+	screen_newfont(best->name, false, false);
 
 	/* screen_newfont() sets screen_redo to REDO_FONT. */
 	screen_redo = REDO_RESIZE;
@@ -5113,7 +5113,7 @@ revert_screen(void)
     switch (screen_redo) {
     case REDO_FONT:
 	revert = "font";
-	screen_newfont(redo_old_font, False, False);
+	screen_newfont(redo_old_font, false, false);
 	break;
     case REDO_MODEL:
 	revert = "model number";
@@ -5122,7 +5122,8 @@ revert_screen(void)
 	break;
     case REDO_KEYPAD:
 	revert = "keypad configuration";
-	screen_showikeypad(appres.x3270.keypad_on = False);
+	xappres.keypad_on = False;
+	screen_showikeypad(xappres.keypad_on);
 	break;
     case REDO_SCROLLBAR:
 	revert = "scrollbar configuration";
@@ -5170,19 +5171,19 @@ revert_later(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 static void
 stream_end(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
-	Boolean needs_moving = False;
+	bool needs_moving = false;
 
 	vtrace("Stream timer expired %hux%hu+%hd+%hd\n",
 		cn.width, cn.height, cn.x, cn.y);
 
 	/* Not ticking any more. */
-	cn.ticking = False;
+	cn.ticking = false;
 
 	/* Save the new coordinates in globals for next time. */
 	if (cn.x != main_x || cn.y != main_y) {
 		main_x = cn.x;
 		main_y = cn.y;
-		needs_moving = True;
+		needs_moving = true;
 	}
 
 	/*
@@ -5216,10 +5217,10 @@ stream_end(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 	if (needs_moving && !iconic) {
 		keypad_move();
 		{
-		    	static Boolean first = True;
+		    	static bool first = true;
 
 			if (first)
-			    	first = False;
+			    	first = false;
 			else
 			    	popups_move();
 		}
@@ -5260,7 +5261,7 @@ PA_ConfigureNotify_xaction(Widget w _is_unused, XEvent *event,
 	XtRemoveTimeOut(cn.id);
     }
     cn.id = XtAppAddTimeOut(appcontext, 500, stream_end, 0);
-    cn.ticking = True;
+    cn.ticking = true;
 }
 
 /*
@@ -5306,9 +5307,9 @@ PA_GraphicsExpose_xaction(Widget w _is_unused, XEvent *event _is_unused,
 	    }
 	}
 	ctlr_changed(0, ROWS*COLS);
-	cursor_changed = True;
+	cursor_changed = true;
 
-	nss.copied = False;
+	nss.copied = false;
     }
 }
 
@@ -5401,8 +5402,8 @@ im_callback(Display *display, XPointer client_data, XPointer call_data)
 		{ XIMPreeditCallbacks| XIMStatusCallbacks,  PT_ON_THE_SPOT },
 		{ (XIMStyle)0,                              NULL }
 	};
-	char *im_style = (appres.x3270.preedit_type != NULL)?
-	    strip_whitespace(appres.x3270.preedit_type): PT_OVER_THE_SPOT;
+	char *im_style = (xappres.preedit_type != NULL)?
+	    strip_whitespace(xappres.preedit_type): PT_OVER_THE_SPOT;
 	char c;
 
 #if defined(_ST) /*[*/
@@ -5540,12 +5541,12 @@ im_callback(Display *display, XPointer client_data, XPointer call_data)
 	if (im != NULL) {
 		XCloseIM(im);
 		im = NULL;
-		xim_error = True;
+		xim_error = true;
 	}
 }
 
 static void
-cleanup_xim(Boolean b _is_unused)
+cleanup_xim(bool b _is_unused)
 {
 	if (ic != NULL)
 		XDestroyIC(ic);
@@ -5557,14 +5558,14 @@ static void
 xim_init(void)
 {
     char *buf = "";
-    static Boolean xim_initted = False;
+    static bool xim_initted = false;
     char *s;
 
     if (!dbcs || xim_initted) {
 	return;
     }
 
-    xim_initted = True;
+    xim_initted = true;
 
     s = setlocale(LC_CTYPE, "");
     if (s != NULL) {
@@ -5573,21 +5574,21 @@ xim_init(void)
     Replace(locale_name, s);
     if (s == NULL) {
 	popup_an_error("setlocale(LC_CTYPE) failed\nXIM-based input disabled");
-	xim_error = True;
+	xim_error = true;
 	return;
     }
 
-    if (appres.x3270.input_method != NULL) {
-	buf = lazyaf("@im=%s", appres.x3270.input_method);
+    if (xappres.input_method != NULL) {
+	buf = lazyaf("@im=%s", xappres.input_method);
     }
     if (XSetLocaleModifiers(buf) == NULL) {
 	popup_an_error("XSetLocaleModifiers failed\nXIM-based input disabled");
-	xim_error = True;
+	xim_error = true;
     } else if (XRegisterIMInstantiateCallback(display, NULL, NULL, NULL,
-		im_callback, NULL) != True) {
+		im_callback, NULL) != true) {
 	popup_an_error("XRegisterIMInstantiateCallback failed\n"
 		"XIM-based input disabled");
-	xim_error = True;
+	xim_error = true;
     }
     register_schange(ST_EXITING, cleanup_xim);
     return;
@@ -5607,40 +5608,40 @@ send_spot_loc(void)
 }
 
 /* Change the window title. */
-static Boolean
+static bool
 Title_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Title", ia, argc, argv);
     if (check_argc("Title", argc, 1, 1) < 0) {
-	return False;
+	return false;
     }
 
     user_title = NewString(argv[0]);
     XtVaSetValues(toplevel, XtNtitle, user_title, NULL);
-    return True;
+    return true;
 }
 
 /* Change the window state. */
-static Boolean
+static bool
 WindowState_action(ia_t ia, unsigned argc, const char **argv)
 {
     int state;
 
     action_debug("WindowState", ia, argc, argv);
     if (check_argc("WindowState", argc, 1, 1) < 0) {
-	return False;
+	return false;
     }
 
     if (!strcasecmp(argv[0], "Iconic")) {
-	state = True;
+	state = true;
     } else if (!strcasecmp(argv[0], "Normal")) {
-	state = False;
+	state = false;
     } else {
 	popup_an_error("WindowState argument must be Iconic or Normal");
-	return False;
+	return false;
     }
     XtVaSetValues(toplevel, XtNiconic, state, NULL);
-    return True;
+    return true;
 }
 
 static dfc_t *dfc = NULL, *dfc_last = NULL;
@@ -5699,7 +5700,7 @@ dfc_init(void)
 	for (i = 0; i < count; i++) {
 	    	/* Pick apart the font names. */
 	    	int nf = split_name(namelist[i], nl_arr);
-		int good = True;
+		int good = true;
 
 		if ((nf == 1 && strncmp(nl_arr[0], "3270", 4)) ||
 		    (nf != 15) ||
@@ -5709,7 +5710,7 @@ dfc_init(void)
 		     (strcasecmp(nl_arr[11], "c") &&
 		      strcasecmp(nl_arr[11], "m")) ||
 		     !strcmp(nl_arr[12], "0")))
-			good = False;
+			good = false;
 
 		/* Make sure it isn't a dup. */
 		for (e = dfc; e != NULL; e = e->next)
@@ -5786,16 +5787,16 @@ dfc_search_family(const char *charset, dfc_t **dp, void **cookie)
 }
 
 /* Search for a font by name. */
-static Boolean
+static bool
 dfc_search_name(const char *name)
 {
     	dfc_t *d;
 
 	for (d = dfc; d != NULL; d = d->next)
 	    	if (!strcasecmp(name, d->name))
-		    	return True;
+		    	return true;
 
-	return False;
+	return false;
 }
 
 /* Return the window for the screen. */
@@ -5810,9 +5811,9 @@ screen_window_number(void)
  *
  * @param[in] baddr	Buffer address.
  *
- * @return True if cell is selected
+ * @return true if cell is selected
  */
-Boolean
+bool
 screen_selected(int baddr)
 {
     return SELECTED(baddr) != 0;
@@ -5841,12 +5842,12 @@ screen_unselect_all(void)
 /**
  * Does this display support background color? (No.)
  *
- * @return True if supported, False if not.
+ * @return true if supported, false if not.
  */
-Boolean
+bool
 screen_has_bg_color(void)
 {
-    return False;
+    return false;
 }
 
 /**

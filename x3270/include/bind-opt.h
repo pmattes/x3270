@@ -31,5 +31,5 @@
  *
  */
 
-Boolean parse_bind_opt(const char *spec, struct sockaddr **addr,
+bool parse_bind_opt(const char *spec, struct sockaddr **addr,
 	socklen_t *addrlen);

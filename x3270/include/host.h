@@ -44,9 +44,9 @@ extern struct host *hosts;
 /* Host connect/disconnect and state change. */
 void hostfile_init(void);
 void host_cancel_reconnect(void);
-Boolean host_connect(const char *n);
+bool host_connect(const char *n);
 void host_connected(void);
-void host_disconnect(Boolean disable);
+void host_disconnect(bool disable);
 void host_in3270(enum cstate);
 void host_newfd(iosrc_t s);
 void host_register(void);

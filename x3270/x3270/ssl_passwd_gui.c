@@ -54,7 +54,7 @@
 #include "xpopups.h"
 
 /* Statics. */
-static Boolean ssl_password_prompted;
+static bool ssl_password_prompted;
 static char *ssl_password;
 static Widget password_shell = NULL;
 
@@ -130,11 +130,11 @@ ssl_passwd_gui_callback(char *buf, int size)
 {
     if (ssl_pending != NULL) {
 	/* Delay the host connection until the dialog is complete. */
-	*ssl_pending = True;
+	*ssl_pending = true;
 
 	/* Pop up the dialog. */
 	popup_password();
-	ssl_password_prompted = True;
+	ssl_password_prompted = true;
 	return 0;
     } else if (ssl_password != NULL) {
 	/* Dialog is complete. */
@@ -151,20 +151,20 @@ ssl_passwd_gui_callback(char *buf, int size)
 void
 ssl_passwd_gui_reset(void)
 {
-    ssl_password_prompted = False;
+    ssl_password_prompted = false;
 }
 
 /*
  * Password GUI retry.
- * Returns True if we should try prompting for the password again.
+ * Returns true if we should try prompting for the password again.
  */
-Boolean
+bool
 ssl_passwd_gui_retry(void)
 {
     /* Pop up the password dialog again when the error pop-up pops down. */
     if (ssl_password_prompted) {
 	add_error_popdown_callback(popup_password);
     }
-    return False;
+    return false;
 }
 #endif /*]*/

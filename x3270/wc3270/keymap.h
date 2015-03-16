@@ -42,5 +42,5 @@ void keymap_init(void);
 char *lookup_key(unsigned long xk, unsigned long state);
 void keymap_dump(void);
 const char *decode_key(int k, int hint, char *buf);
-const char *lookup_cname(unsigned long ccode, Boolean special_only);
+const char *lookup_cname(unsigned long ccode, bool special_only);
 void keymap_register(void);

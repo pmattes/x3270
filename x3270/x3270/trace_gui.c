@@ -89,14 +89,14 @@ no_tracefile_callback(Widget w, XtPointer client_data,
 
 /*
  * Tracing has been started. Pop up the dialog, if appropriate.
- * Returns True for dialog up, False to go ahead and start tracing.
+ * Returns true for dialog up, false to go ahead and start tracing.
  */
-Boolean
+bool
 trace_gui_on(int reason, enum toggle_type tt, const char *tracefile)
 {
     if (tt == TT_INITIAL || tt == TT_ACTION) {
 	/* Start tracing now. */
-	return False;
+	return false;
     }
 
     if (trace_shell == NULL) {
@@ -112,7 +112,7 @@ trace_gui_on(int reason, enum toggle_type tt, const char *tracefile)
     popup_popup(trace_shell, XtGrabExclusive);
 
     /* Pop-up is up and will start tracing when it completes. */
-    return True;
+    return true;
 }
 
 /* Change the menu option for tracing when the toggle is changed. */

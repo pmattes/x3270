@@ -154,16 +154,16 @@ default_caption(void)
 }
 
 /* Print or save the contents of the screen as text. */
-Boolean
+bool
 PrintText_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned i;
     const char *name = NULL;
-    Boolean secure = appres.secure;
+    bool secure = appres.secure;
     ptype_t ptype = P_TEXT;
-    Boolean use_file = False;
-    Boolean use_string = False;
-    Boolean replace = False;
+    bool use_file = false;
+    bool use_string = false;
+    bool replace = false;
     char *temp_name = NULL;
     unsigned opts = FPS_EVEN_IF_EMPTY;
     const char *caption = NULL;
@@ -206,19 +206,19 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
      */
     for (i = 0; i < argc; i++) {
 	if (!strcasecmp(argv[i], "file")) {
-	    use_file = True;
+	    use_file = true;
 	    i++;
 	    break;
 	} else if (!strcasecmp(argv[i], "html")) {
 	    ptype = P_HTML;
-	    use_file = True;
+	    use_file = true;
 	} else if (!strcasecmp(argv[i], "rtf")) {
 	    ptype = P_RTF;
-	    use_file = True;
+	    use_file = true;
 	} else if (!strcasecmp(argv[i], "replace")) {
-	    replace = True;
+	    replace = true;
 	} else if (!strcasecmp(argv[i], "append")) {
-	    replace = False;
+	    replace = false;
 	}
 #if defined(_WIN32) /*[*/
 	else if (!strcasecmp(argv[i], "gdi")) {
@@ -232,11 +232,11 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	}
 #endif /*]*/
 	else if (!strcasecmp(argv[i], "secure")) {
-	    secure = True;
+	    secure = true;
 	} else if (!strcasecmp(argv[i], "command")) {
 	    if ((ptype != P_TEXT) || use_file) {
 		popup_an_error("PrintText: contradictory options");
-		return False;
+		return false;
 	    }
 	    i++;
 	    break;
@@ -244,16 +244,16 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	    if (ia_cause != IA_SCRIPT) {
 		popup_an_error("PrintText(string) can only be used from a "
 			"script");
-		return False;
+		return false;
 	    }
-	    use_string = True;
-	    use_file = True;
+	    use_string = true;
+	    use_file = true;
 	} else if (!strcasecmp(argv[i], "modi")) {
 	    opts |= FPS_MODIFIED_ITALIC;
 	} else if (!strcasecmp(argv[i], "caption")) {
 	    if (i == argc - 1) {
 		popup_an_error("PrintText: mising caption parameter");
-		return False;
+		return false;
 	    }
 	    caption = argv[++i];
 	} else {
@@ -275,13 +275,13 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     case 1:
 	if (use_string) {
 	    popup_an_error("PrintText: extra arguments or invalid option(s)");
-	    return False;
+	    return false;
 	}
 	name = argv[i];
 	break;
     default:
 	popup_an_error("PrinText: extra arguments or invalid option(s)");
-	return False;
+	return false;
     }
 
 #if defined(_WIN32) /*[*/
@@ -297,7 +297,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	 * suppresses the pop-up dialog, as does setting the 'secure'
 	 * resource.
 	 */
-	secure = True;
+	secure = true;
 	name++;
     }
     if (!use_file && (name == NULL || !*name)) {
@@ -310,7 +310,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 
     /* See if the GUI wants to handle it. */
     if (!secure && print_text_gui(use_file)) {
-	return True;
+	return true;
     }
 
     /* Do the real work. */
@@ -324,14 +324,14 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 #endif /*]*/
 	    if (fd < 0) {
 		popup_an_errno(errno, "mkstemp");
-		return False;
+		return false;
 	    }
 	    f = fdopen(fd, "w+");
 	    vtrace("PrintText: using '%s'\n", temp_name);
 	} else {
 	    if (name == NULL || !*name) {
 		popup_an_error("PrintText: missing filename");
-		return False;
+		return false;
 	    }
 	    f = fopen(name, replace? "w": "a");
 	}
@@ -342,7 +342,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	fd = win_mkstemp(&temp_name, ptype);
 	if (fd < 0) {
 	    popup_an_errno(errno, "mkstemp");
-	    return False;
+	    return false;
 	}
 	if (ptype == P_GDI) {
 	    f = fdopen(fd, "wb+");
@@ -361,7 +361,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	    unlink(temp_name);
 	    Free(temp_name);
 	}
-	return False;
+	return false;
     }
 
     /* Captions look nice on GDI, so create a default one. */
@@ -387,7 +387,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	    unlink(temp_name);
 	    Free(temp_name);
 	}
-	return False;
+	return false;
     }
 
     if (use_string) {
@@ -400,13 +400,13 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	unlink(temp_name);
 	Free(temp_name);
-	return True;
+	return true;
     }
 
     if (use_file) {
 	/* Print to specified file. */
 	fclose(f);
-	return True;
+	return true;
     }
 
     /* Print to printer. */
@@ -432,7 +432,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     }
 #endif /*]*/
     Free(temp_name);
-    return True;
+    return true;
 }
 
 /**

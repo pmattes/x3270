@@ -162,8 +162,8 @@ static int bg_color = COLOR_BLACK;
 static int defattr = A_NORMAL;
 static unsigned long input_id;
 
-Boolean escaped = True;
-Boolean initscr_done = False;
+bool escaped = true;
+bool initscr_done = false;
 
 enum ts { TS_AUTO, TS_ON, TS_OFF };
 enum ts me_mode = TS_AUTO;
@@ -202,24 +202,24 @@ static int screen_yoffset = 0;	/* Vertical offset to top of screen.
 				   If nonzero (2, actually), menu bar is at the
 				    top of the display. */
 
-static Boolean curses_alt = False;
+static bool curses_alt = false;
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
-static Boolean default_colors = False;
+static bool default_colors = false;
 #endif /*]*/
-static Boolean screen_initted = False;
+static bool screen_initted = false;
 
 static void kybd_input(iosrc_t fd, ioid_t id);
 static void kybd_input2(int k, ucs4_t ucs4, int alt);
 static void draw_oia(void);
-static void screen_connect(Boolean connected);
-static void status_half_connect(Boolean ignored);
-static void status_connect(Boolean ignored);
-static void status_3270_mode(Boolean ignored);
-static void status_printer(Boolean on);
+static void screen_connect(bool connected);
+static void status_half_connect(bool ignored);
+static void status_connect(bool ignored);
+static void status_3270_mode(bool ignored);
+static void status_printer(bool on);
 static int get_color_pair(int fg, int bg);
 static int color_from_fa(unsigned char);
 static void set_status_row(int screen_rows, int emulator_rows);
-static Boolean ts_value(const char *s, enum ts *tsp);
+static bool ts_value(const char *s, enum ts *tsp);
 static void display_linedraw(unsigned char ebc);
 static void display_ge(unsigned char ebc);
 static void init_user_colors(void);
@@ -298,7 +298,7 @@ screen_init(void)
 	    !appres.c3270.acs &&
 #endif /*]*/
 				 !is_utf8) {
-	    appres.c3270.ascii_box_draw = True;
+	    appres.c3270.ascii_box_draw = true;
 	}
 
 	/* Pull in the user's color mappings. */
@@ -318,14 +318,14 @@ finish_screen_init(void)
 {
     int want_ov_rows = ov_rows;
     int want_ov_cols = ov_cols;
-    Boolean oversize = False;
+    bool oversize = false;
     char *cl;
 
     if (screen_initted) {
 	return;
     }
 
-    screen_initted = True;
+    screen_initted = true;
 
     /* Clear the (original) screen first. */
 #if defined(C3270_80_132) /*[*/
@@ -345,14 +345,14 @@ finish_screen_init(void)
 	(void) fprintf(stderr, "Can't initialize terminal.\n");
 	exit(1);
     }
-    initscr_done = True;
+    initscr_done = true;
 #else /*][*/
     /* Set up ncurses, and see if it's within bounds. */
     if (appres.c3270.defscreen != NULL) {
 	putenv(xs_buffer("COLUMNS=%d", defscreen_spec.cols));
 	putenv(xs_buffer("LINES=%d", defscreen_spec.rows));
 	def_screen = newterm(NULL, stdout, stdin);
-	initscr_done = True;
+	initscr_done = true;
 	if (def_screen == NULL) {
 	    (void) fprintf(stderr,
 		    "Can't initialize %dx%d defscreen terminal.\n",
@@ -374,7 +374,7 @@ finish_screen_init(void)
 	popup_an_error("Can't initialize terminal.\n");
 	exit(1);
     }
-    initscr_done = True;
+    initscr_done = true;
     if (def_screen == NULL) {
 	def_screen = alt_screen;
 	cur_screen = def_screen;
@@ -400,7 +400,7 @@ finish_screen_init(void)
 
 	    ov_cols = 0;
 	    ov_rows = 0;
-	    oversize = True;
+	    oversize = true;
 	    continue;
 	}
 
@@ -441,7 +441,7 @@ finish_screen_init(void)
 
 #if defined(NCURSES_MOUSE_VERSION) /*[*/
     if (appres.c3270.mouse && mousemask(BUTTON1_RELEASED, NULL) == 0) {
-	appres.c3270.mouse = False;
+	appres.c3270.mouse = false;
     }
 #endif /*]*/
 
@@ -484,7 +484,7 @@ finish_screen_init(void)
 	      !strcmp(colorterm, "gnome-terminal"))) &&
 	    use_default_colors() != ERR) {
 
-	    default_colors = True;
+	    default_colors = true;
 	}
 #endif /*]*/
 	if (has_colors() && COLORS >= 8) {
@@ -504,7 +504,7 @@ finish_screen_init(void)
 			bg_color);
 	    }
 	    if (COLORS < 16) {
-		appres.color8 = True;
+		appres.color8 = true;
 	    }
 #if defined(C3270_80_132) && defined(NCURSES_VERSION)  /*[*/
 	    if (def_screen != alt_screen) {
@@ -525,8 +525,8 @@ finish_screen_init(void)
 	    }
 #endif /*]*/
 	} else {
-	    appres.interactive.mono = True;
-	    appres.m3279 = False;
+	    appres.interactive.mono = true;
+	    appres.m3279 = false;
 	    /* Get the terminal name right. */
 	    set_rows_cols(model_num, want_ov_cols, want_ov_rows);
 	}
@@ -540,7 +540,7 @@ finish_screen_init(void)
 
 /* When the host connects, really initialize the screen. */
 static void
-screen_connect(Boolean connected)
+screen_connect(bool connected)
 {
 	if (connected && !screen_initted)
 	    	finish_screen_init();
@@ -579,7 +579,7 @@ swap_screens(SCREEN *new_screen)
 static void
 screen_init2(void)
 {
-    escaped = False;
+    escaped = false;
 
     /*
      * Finish initializing ncurses.  This should be the first time that it
@@ -655,9 +655,9 @@ set_status_row(int screen_rows, int emulator_rows)
 
 /*
  * Parse a tri-state resource value.
- * Returns True for success, False for failure.
+ * Returns true for success, false for failure.
  */
-static Boolean
+static bool
 ts_value(const char *s, enum ts *tsp)
 {
 	*tsp = TS_AUTO;
@@ -670,9 +670,9 @@ ts_value(const char *s, enum ts *tsp)
 		else if (!strncasecmp(s, "false", sl))
 			*tsp = TS_OFF;
 		else if (strncasecmp(s, "auto", sl))
-			return False;
+			return false;
 	}
-	return True;
+	return true;
 }
 
 /* Allocate a color pair. */
@@ -900,7 +900,7 @@ calc_attrs(int baddr, int fa_addr, int fa)
 
 /* Display what's in the buffer. */
 void
-screen_disp(Boolean erasing _is_unused)
+screen_disp(bool erasing _is_unused)
 {
     int row, col;
     int field_attrs;
@@ -950,7 +950,7 @@ screen_disp(Boolean erasing _is_unused)
     /* If the menubar is separate, draw it first. */
     if (screen_yoffset) {
 	ucs4_t u = 0;
-	Boolean highlight;
+	bool highlight;
 	unsigned char acs;
 	int norm, high;
 
@@ -975,7 +975,7 @@ screen_disp(Boolean erasing _is_unused)
 	for (row = 0; row < screen_yoffset; row++) {
 	    move(row, 0);
 	    for (col = 0; col < cCOLS; col++) {
-		if (menu_char(row, col, True, &u, &highlight, &acs)) {
+		if (menu_char(row, col, true, &u, &highlight, &acs)) {
 		    char mb[16];
 
 		    (void) attrset(highlight? high: norm);
@@ -1008,11 +1008,11 @@ screen_disp(Boolean erasing _is_unused)
 	    move(row + screen_yoffset, 0);
 	}
 	for (col = 0; col < cCOLS; col++) {
-	    Boolean underlined = False;
+	    bool underlined = false;
 	    int attr_mask = toggled(UNDERSCORE)? (int)~A_UNDERLINE: -1;
-	    Boolean is_menu = False;
+	    bool is_menu = false;
 	    ucs4_t u = 0;
-	    Boolean highlight = False;
+	    bool highlight = false;
 	    unsigned char acs = 0;
 
 	    if (flipped) {
@@ -1021,7 +1021,7 @@ screen_disp(Boolean erasing _is_unused)
 
 	    is_menu = menu_char(row + screen_yoffset,
 		    flipped? (cCOLS-1 - col): col,
-		    False,
+		    false,
 		    &u, &highlight, &acs);
 	    if (is_menu) {
 		char mb[16];
@@ -1070,7 +1070,7 @@ screen_disp(Boolean erasing _is_unused)
 		if (!is_menu) {
 		    (void) attrset(field_attrs & attr_mask);
 		    if (field_attrs & A_UNDERLINE) {
-			underlined = True;
+			underlined = true;
 		    }
 		    addch(' ');
 		}
@@ -1087,7 +1087,7 @@ screen_disp(Boolean erasing _is_unused)
 		      ea_buf[baddr].bg)) {
 		    (void) attrset(field_attrs & attr_mask);
 		    if (field_attrs & A_UNDERLINE) {
-			underlined = True;
+			underlined = true;
 		    }
 
 		} else {
@@ -1096,7 +1096,7 @@ screen_disp(Boolean erasing _is_unused)
 		    buf_attrs = calc_attrs(baddr, fa_addr, fa);
 		    (void) attrset(buf_attrs & attr_mask);
 		    if (buf_attrs & A_UNDERLINE) {
-			underlined = True;
+			underlined = true;
 		    }
 		}
 		d = ctlr_dbcs_state(baddr);
@@ -1169,7 +1169,7 @@ screen_disp(Boolean erasing _is_unused)
 
 /* ESC processing. */
 static unsigned long eto = 0L;
-static Boolean meta_escape = False;
+static bool meta_escape = false;
 
 static void
 escape_timeout(ioid_t id _is_unused)
@@ -1177,7 +1177,7 @@ escape_timeout(ioid_t id _is_unused)
 	vtrace("Timeout waiting for key following Escape, processing "
 	    "separately\n");
 	eto = 0L;
-	meta_escape = False;
+	meta_escape = false;
 	kybd_input2(0, 0x1b, 0);
 }
 
@@ -1187,8 +1187,8 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
 	int k = 0;		/* KEY_XXX, or 0 */
 	ucs4_t ucs4 = 0;	/* input character, or 0 */
-	Boolean first = True;
-	static Boolean failed_first = False;
+	bool first = true;
+	static bool failed_first = false;
 
 	for (;;) {
 		volatile int alt = 0;
@@ -1222,12 +1222,12 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 					vtrace("End of File, exiting.\n");
 					x3270_exit(1);
 				}
-				failed_first = True;
+				failed_first = true;
 			}
 			vtrace("k == ERR, return\n");
 			return;
 		} else {
-			failed_first = False;
+			failed_first = false;
 		}
 #if !defined(CURSES_WIDE) /*[*/
 		/* Differentiate between KEY_XXX and regular input. */
@@ -1297,7 +1297,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 					m.x, m.y);
 				if (screen_yoffset != 0 && m.y == 0) {
 					popup_menu(m.x, (screen_yoffset != 0));
-					screen_disp(False);
+					screen_disp(false);
 				} else if (m.x < cCOLS &&
 					   m.y - screen_yoffset >= 0 &&
 					   m.y - screen_yoffset < ROWS) {
@@ -1321,7 +1321,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 				RemoveTimeOut(eto);
 				eto = 0L;
 			}
-			meta_escape = False;
+			meta_escape = false;
 			alt = KM_ALT;
 		} else if (me_mode == TS_ON && ucs4 == 0x1b) {
 			vtrace("Key '%s' (curses key 0x%x, char code 0x%x)\n",
@@ -1329,13 +1329,13 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 			eto = AddTimeOut(100L, escape_timeout);
 			vtrace(" waiting to see if Escape is followed by"
 			    " another key\n");
-			meta_escape = True;
+			meta_escape = true;
 			continue;
 		}
 		vtrace("Key '%s' (curses key 0x%x, char code 0x%x)\n",
 			decode_key(k, ucs4, alt, dbuf), k, ucs4);
 		kybd_input2(k, ucs4, alt);
-		first = False;
+		first = false;
 	}
 }
 
@@ -1378,7 +1378,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 
 	if (menu_is_up) {
 	    menu_key(key_to_mkey(k), ucs4);
-	    screen_disp(False);
+	    screen_disp(false);
 	    return;
 	}
 
@@ -1494,14 +1494,14 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 	vtrace(" dropped (no default)\n");
 }
 
-Boolean
+bool
 screen_suspend(void)
 {
-	static Boolean need_to_scroll = False;
-	Boolean needed = False;
+	static bool need_to_scroll = false;
+	bool needed = false;
 
 	if (!initscr_done) {
-		return False;
+		return false;
 	}
 
 	if (!isendwin()) {
@@ -1526,16 +1526,16 @@ screen_suspend(void)
 #else /*][*/
 		endwin();
 #endif /*]*/
-		needed = True;
+		needed = true;
 	}
 
 	if (!escaped) {
-		escaped = True;
+		escaped = true;
 
 		if (need_to_scroll)
 			printf("\n");
 		else
-			need_to_scroll = True;
+			need_to_scroll = true;
 #if defined(C3270_80_132) /*[*/
 		if (curses_alt && def_screen != alt_screen) {
 			if (write(1, defscreen_spec.mode_switch,
@@ -1554,7 +1554,7 @@ screen_resume(void)
 {
     	char *cl;
 
-	escaped = False;
+	escaped = false;
 
 	/*
 	 * Clear the screen first, if possible, so future command output
@@ -1579,7 +1579,7 @@ screen_resume(void)
 		    	x3270_exit(1);
 	}
 #endif /*]*/
-	screen_disp(False);
+	screen_disp(false);
 	refresh();
 	input_id = AddInput(0, kybd_input);
 }
@@ -1593,13 +1593,13 @@ cursor_move(int baddr)
 static void
 toggle_monocase(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
-    screen_disp(False);
+    screen_disp(false);
 }
 
 static void
 toggle_underscore(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
-    screen_disp(False);
+    screen_disp(false);
 }
 
 /**
@@ -1616,18 +1616,18 @@ toggle_showTiming(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 
 /* Status line stuff. */
 
-static Boolean status_ta = False;
-static Boolean status_rm = False;
-static Boolean status_im = False;
+static bool status_ta = false;
+static bool status_rm = false;
+static bool status_im = false;
 static enum {
     SS_INSECURE,
     SS_UNVERIFIED,
     SS_SECURE
 } status_secure = SS_INSECURE;
-static Boolean oia_boxsolid = False;
-static Boolean oia_undera = True;
-static Boolean oia_compose = False;
-static Boolean oia_printer = False;
+static bool oia_boxsolid = false;
+static bool oia_undera = true;
+static bool oia_compose = false;
+static bool oia_printer = false;
 static unsigned char oia_compose_char = 0;
 static enum keytype oia_compose_keytype = KT_STD;
 #define LUCNT	8
@@ -1657,11 +1657,11 @@ cancel_status_push(void)
 void
 status_ctlr_done(void)
 {
-	oia_undera = True;
+	oia_undera = true;
 }
 
 void
-status_insert_mode(Boolean on)
+status_insert_mode(bool on)
 {
 	status_im = on;
 }
@@ -1748,7 +1748,7 @@ status_reset(void)
 }
 
 void
-status_reverse_mode(Boolean on)
+status_reverse_mode(bool on)
 {
 	status_rm = on;
 }
@@ -1766,18 +1766,18 @@ status_twait(void)
 {
     	cancel_status_push();
 
-	oia_undera = False;
+	oia_undera = false;
 	status_msg = "X Wait";
 }
 
 void
-status_typeahead(Boolean on)
+status_typeahead(bool on)
 {
 	status_ta = on;
 }
 
 void    
-status_compose(Boolean on, unsigned char c, enum keytype keytype)
+status_compose(bool on, unsigned char c, enum keytype keytype)
 {
         oia_compose = on;
         oia_compose_char = c;
@@ -1795,7 +1795,7 @@ status_lu(const char *lu)
 }
 
 static void
-status_half_connect(Boolean half_connected)
+status_half_connect(bool half_connected)
 {
 	if (half_connected) {
 		/* Push the 'Connecting' status under whatever is popped up. */
@@ -1803,13 +1803,13 @@ status_half_connect(Boolean half_connected)
 			saved_status_msg = "X Connecting";
 		else
 			status_msg = "X Connecting";
-		oia_boxsolid = False;
+		oia_boxsolid = false;
 		status_secure = SS_INSECURE;
 	}
 }
 
 static void
-status_connect(Boolean connected)
+status_connect(bool connected)
 {
     	cancel_status_push();
 
@@ -1829,22 +1829,22 @@ status_connect(Boolean connected)
 			status_secure = SS_INSECURE;
 #endif /*]*/
 	} else {
-		oia_boxsolid = False;
+		oia_boxsolid = false;
 		status_msg = "X Not Connected";
 		status_secure = SS_INSECURE;
 	}       
 }
 
 static void
-status_3270_mode(Boolean ignored _is_unused)
+status_3270_mode(bool ignored _is_unused)
 {
 	oia_boxsolid = IN_3270 && !IN_SSCP;
 	if (oia_boxsolid)
-		oia_undera = True;
+		oia_undera = true;
 }
 
 static void
-status_printer(Boolean on)
+status_printer(bool on)
 {
 	oia_printer = on;
 }
@@ -1903,7 +1903,7 @@ status_screentrace(int n)
 }     
 
 void
-status_script(Boolean on _is_unused)
+status_script(bool on _is_unused)
 {
     /* for now, nothing */
 }
@@ -1912,7 +1912,7 @@ static void
 draw_oia(void)
 {
 	int rmargin;
-	static Boolean filled_extra[2] = { False, False };
+	static bool filled_extra[2] = { false, false };
 
 #if defined(C3270_80_132) /*[*/
 	if (def_screen != alt_screen) {
@@ -2041,19 +2041,19 @@ draw_oia(void)
 		    "%03d/%03d ", cursor_addr/cCOLS + 1, cursor_addr%cCOLS + 1);
 }
 
-Boolean
+bool
 Redraw_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Redraw", ia, argc, argv);
     if (check_argc("Redraw", argc, 0, 0) < 0) {
-	return False;
+	return false;
     }
 
     if (!escaped) {
 	endwin();
 	refresh();
     }
-    return True;
+    return true;
 }
 
 void
@@ -2066,7 +2066,7 @@ void
 screen_flip(void)
 {
 	flipped = !flipped;
-	screen_disp(False);
+	screen_disp(false);
 }
 
 #if defined(C3270_80_132) /*[*/
@@ -2076,7 +2076,7 @@ parse_screen_spec(const char *str, struct screen_spec *spec)
 {
 	char msbuf[3];
 	char *s, *t, c;
-	Boolean escaped = False;
+	bool escaped = false;
 
 	if (sscanf(str, "%dx%d=%2s", &spec->rows, &spec->cols, msbuf) != 3) {
 		(void) fprintf(stderr, "Invalid screen screen spec '%s', must "
@@ -2111,9 +2111,9 @@ parse_screen_spec(const char *str, struct screen_spec *spec)
 			    *t++ = c;
 			    break;
 			}
-			escaped = False;
+			escaped = false;
 		} else if (c == '\\')
-			escaped = True;
+			escaped = true;
 		else
 			*t++ = c;
 	}
@@ -2130,8 +2130,8 @@ screen_132(void)
 		if (write(1, altscreen_spec.mode_switch,
 		    strlen(altscreen_spec.mode_switch)) < 0)
 		    	x3270_exit(1);
-		ctlr_erase(True);
-		screen_disp(True);
+		ctlr_erase(true);
+		screen_disp(true);
 	}
 #endif /*]*/
 }
@@ -2145,8 +2145,8 @@ screen_80(void)
 		if (write(1, defscreen_spec.mode_switch,
 		    strlen(defscreen_spec.mode_switch)) < 0)
 		    	x3270_exit(1);
-		ctlr_erase(False);
-		screen_disp(True);
+		ctlr_erase(false);
+		screen_disp(true);
 	}
 #endif /*]*/
 }
@@ -2445,10 +2445,10 @@ screen_final()
  *
  * @param[in] baddr	Buffer address.
  */
-Boolean
+bool
 screen_selected(int baddr _is_unused)
 {
-    return False;
+    return false;
 }
 
 /**
@@ -2465,10 +2465,10 @@ screen_set_thumb(float top _is_unused, float shown _is_unused)
 /**
  * Stub for scrollbar function.
  *
- * @param[in] on	Enable (True) or disable (False) the cursor display.
+ * @param[in] on	Enable (true) or disable (false) the cursor display.
  */
 void
-enable_cursor(Boolean on _is_unused)
+enable_cursor(bool on _is_unused)
 {
 }
 

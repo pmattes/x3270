@@ -31,5 +31,5 @@
  */
 
 void trace_gui_bad_size(const char *default_value);
-Boolean trace_gui_on(int reason, enum toggle_type tt, const char *tracefile);
+bool trace_gui_on(int reason, enum toggle_type tt, const char *tracefile);
 void trace_gui_toggle(void);

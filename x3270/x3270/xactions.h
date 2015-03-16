@@ -41,4 +41,4 @@ void xaction_internal(XtActionProc action, enum iaction cause,
 const char *action_name(XtActionProc action);
 int xcheck_usage(XtActionProc action, Cardinal nargs, Cardinal nargs_min,
 	Cardinal nargs_max);
-Boolean event_is_meta(int state);
+bool event_is_meta(int state);

@@ -251,7 +251,7 @@ place_popup(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
     Dimension popup_width, popup_height;
     enum placement p = *(enum placement *)client_data;
     XWindowAttributes wa;
-    Boolean parent_is_root = False;
+    bool parent_is_root = false;
     want_t *wx = NULL;
 
     /* Get and fix the popup's dimensions */
@@ -285,7 +285,7 @@ place_popup(Widget w, XtPointer client_data, XtPointer call_data _is_unused)
 #if defined(POPUP_DEBUG) /*[*/
 	printf("parent is root!\n");
 #endif /*]*/
-	parent_is_root = True;
+	parent_is_root = true;
     } else {
 	XGetWindowAttributes(display, parent_of(XtWindow(toplevel)), &wa);
 #if defined(POPUP_DEBUG) /*[*/
@@ -522,7 +522,7 @@ static void
 popup_dialog_callback(Widget w, XtPointer client_data,
 	XtPointer call_data _is_unused)
 {
-    static Boolean called_back = False;
+    static bool called_back = false;
     XawTextBlock b, nullb;	/* firstPos, length, ptr, format */
     XawTextPosition pos = 0;
     int front_len = 0;
@@ -539,7 +539,7 @@ popup_dialog_callback(Widget w, XtPointer client_data,
     if (called_back) {
 	return;
     } else {
-	called_back = True;
+	called_back = true;
     }
 
     nullb.firstPos = 0;
@@ -590,7 +590,7 @@ popup_dialog_callback(Widget w, XtPointer client_data,
 	XawTextSourceReplace(w, end_pos - front_len,
 		end_pos - front_len + end_len, &nullb);
     }
-    called_back = False;
+    called_back = false;
 }
 
 /* Create a simple data entry popup */
@@ -673,54 +673,54 @@ struct rsm {
 struct rop {
     const char *name;			/* resource name */
     XtGrabKind grab;			/* grab kind */
-    Boolean is_error;			/* is it? */
-    Boolean overwrites;			/* does it? */
+    bool is_error;			/* is it? */
+    bool overwrites;			/* does it? */
     const char *itext;			/* initial text */
     Widget shell;			/* pop-up shell */
     Widget form;			/* dialog form */
     Widget cancel_button;		/* cancel button */
     abort_callback_t *cancel_callback;	/* callback for cancel button */
-    Boolean visible;			/* visibility flag */
-    Boolean moving;			/* move in progress */
+    bool visible;			/* visibility flag */
+    bool moving;			/* move in progress */
     struct rsm *rsms;			/* stored messages */
     void (*popdown_callback)(void);	/* popdown_callback */
 };
 
 static struct rop error_popup = {
-    "errorPopup", XtGrabExclusive, True, False,
+    "errorPopup", XtGrabExclusive, true, false,
     "first line\nsecond line\nthird line",
     NULL, NULL, NULL, NULL,
-    False, False, NULL
+    false, false, NULL
 };
 static struct rop info_popup = {
-    "infoPopup", XtGrabNonexclusive, False, False,
+    "infoPopup", XtGrabNonexclusive, false, false,
     "first line\nsecond line\nthird line",
     NULL, NULL, NULL, NULL,
-    False, False, NULL
+    false, false, NULL
 };
 
 static struct rop printer_error_popup = {
-    "printerErrorPopup", XtGrabExclusive, True, True,
+    "printerErrorPopup", XtGrabExclusive, true, true,
     "first line\nsecond line\nthird line\nfourth line",
-    NULL, NULL, NULL, NULL, False, False, NULL
+    NULL, NULL, NULL, NULL, false, false, NULL
 };
 static struct rop printer_info_popup = {
-    "printerInfoPopup", XtGrabNonexclusive, False, True,
+    "printerInfoPopup", XtGrabNonexclusive, false, true,
     "first line\nsecond line\nthird line\nfourth line",
     NULL,
-    NULL, NULL, NULL, False, False, NULL
+    NULL, NULL, NULL, false, false, NULL
 };
 
 static struct rop child_error_popup = {
-    "childErrorPopup", XtGrabNonexclusive, True, True,
+    "childErrorPopup", XtGrabNonexclusive, true, true,
     "first line\nsecond line\nthird line\nfourth line",
-    NULL, NULL, NULL, NULL, False, False, NULL
+    NULL, NULL, NULL, NULL, false, false, NULL
 };
 static struct rop child_info_popup = {
-    "childInfoPopup", XtGrabNonexclusive, False, True,
+    "childInfoPopup", XtGrabNonexclusive, false, true,
     "first line\nsecond line\nthird line\nfourth line",
     NULL,
-    NULL, NULL, NULL, False, False, NULL
+    NULL, NULL, NULL, false, false, NULL
 };
 
 /* Called when OK is pressed in a read-only popup */
@@ -763,11 +763,11 @@ rop_popdown(Widget w _is_unused, XtPointer client_data,
     void (*callback)(void);
 
     if (rop->moving) {
-	rop->moving = False;
+	rop->moving = false;
 	XtPopup(rop->shell, rop->grab);
 	return;
     }
-    rop->visible = False;
+    rop->visible = false;
     if (exiting && rop->is_error) {
 	x3270_exit(1);
     }
@@ -876,7 +876,7 @@ popup_rop(struct rop *rop, abort_callback_t *a, const char *fmt, va_list args)
 	if (rop->is_error) {
 	    ring_bell();
 	}
-	rop->visible = True;
+	rop->visible = true;
 	popup_popup(rop->shell, rop->grab);
     }
 }
@@ -969,7 +969,7 @@ action_output(const char *fmt, ...)
 
 /* Callback for x3270 exit.  Dumps any undisplayed error messages to stderr. */
 static void
-dump_errmsgs(Boolean b _is_unused)
+dump_errmsgs(bool b _is_unused)
 {
     while (error_popup.rsms != NULL) {
 	fprintf(stderr, "Error: %s\n", error_popup.rsms->text);
@@ -1021,7 +1021,7 @@ child_popup_init(void)
 }
 
 /* Query. */
-Boolean
+bool
 error_popup_visible(void)
 {
     return error_popup.visible;
@@ -1030,7 +1030,7 @@ error_popup_visible(void)
 /*
  * Printer pop-up.
  * Allows both error and info popups, and a cancel button.
- *   is_err	If True, this is an error pop-up.  If false, this is an info
+ *   is_err	If true, this is an error pop-up.  If false, this is an info
  *		pop-up.
  *   a		If non-NULL, the Cancel button is enabled, and this is the
  *		callback function for it.  If NULL, there will be no Cancel
@@ -1038,7 +1038,7 @@ error_popup_visible(void)
  *   fmt...	printf()-like format and arguments.
  */
 void
-popup_printer_output(Boolean is_err, abort_callback_t *a, const char *fmt, ...)
+popup_printer_output(bool is_err, abort_callback_t *a, const char *fmt, ...)
 {
     va_list args;
 
@@ -1050,7 +1050,7 @@ popup_printer_output(Boolean is_err, abort_callback_t *a, const char *fmt, ...)
 /*
  * Child output pop-up.
  * Allows both error and info popups, and a cancel button.
- *   is_err	If True, this is an error pop-up.  If false, this is an info
+ *   is_err	If true, this is an error pop-up.  If false, this is an info
  *		pop-up.
  *   a		If non-NULL, the Cancel button is enabled, and this is the
  *		callback function for it.  If NULL, there will be no Cancel
@@ -1058,7 +1058,7 @@ popup_printer_output(Boolean is_err, abort_callback_t *a, const char *fmt, ...)
  *   fmt...	printf()-like format and arguments.
  */
 void
-popup_child_output(Boolean is_err, abort_callback_t *a, const char *fmt, ...)
+popup_child_output(bool is_err, abort_callback_t *a, const char *fmt, ...)
 {
     va_list args;
 
@@ -1070,15 +1070,15 @@ popup_child_output(Boolean is_err, abort_callback_t *a, const char *fmt, ...)
 /*
  * Script actions
  */
-Boolean
+bool
 Info_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Info", ia, argc, argv);
     if (check_argc("Info", argc, 1, 1) < 0) {
-	return False;
+	return false;
     }
     popup_an_info("%s", argv[0]);
-    return True;
+    return true;
 }
 
 /*
@@ -1100,7 +1100,7 @@ popups_move(void)
 
     for (i = 0; rops[i] != NULL; i++) {
 	if (rops[i]->visible) {
-	    rops[i]->moving = True;
+	    rops[i]->moving = true;
 	    XtPopdown(rops[i]->shell);
 	}
     }

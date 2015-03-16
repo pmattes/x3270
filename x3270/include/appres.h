@@ -37,29 +37,29 @@
 
 typedef struct {
     /* Common options. */
-    Boolean	 extended;
-    Boolean	 m3279;
-    Boolean	 modified_sel;
-    Boolean	 once;
-    Boolean	 apl_mode;
-    Boolean	 scripted;
-    Boolean	 numeric_lock;
-    Boolean	 secure;
-    Boolean	 oerr_lock;
-    Boolean	 typeahead;
-    Boolean	 debug_tracing;
-    Boolean	 disconnect_clear;
-    Boolean	 highlight_bold;
-    Boolean	 color8;
-    Boolean	 bsd_tm;
-    Boolean	 unlock_delay;
-    Boolean	 qr_bg_color;
-    Boolean	 bind_limit;
-    Boolean	 new_environ;
-    Boolean	 socket;
-    Boolean	 dsTrace_bc;
-    Boolean	 eventTrace_bc;
-    Boolean	 trace_monitor;
+    bool	 extended;
+    bool	 m3279;
+    bool	 modified_sel;
+    bool	 once;
+    bool	 apl_mode;
+    bool	 scripted;
+    bool	 numeric_lock;
+    bool	 secure;
+    bool	 oerr_lock;
+    bool	 typeahead;
+    bool	 debug_tracing;
+    bool	 disconnect_clear;
+    bool	 highlight_bold;
+    bool	 color8;
+    bool	 bsd_tm;
+    bool	 unlock_delay;
+    bool	 qr_bg_color;
+    bool	 bind_limit;
+    bool	 new_environ;
+    bool	 socket;
+    bool	 dsTrace_bc;
+    bool	 eventTrace_bc;
+    bool	 trace_monitor;
     char	*script_port;
     char	*httpd_port;
     char	*dbcs_cgcsgid;
@@ -83,14 +83,14 @@ typedef struct {
     int		 dft_buffer_size;
     char	*connectfile_name;
     char	*idle_command;
-    Boolean	 idle_command_enabled;
+    bool	 idle_command_enabled;
     char	*idle_timeout;
     char	*proxy;
     int		 unlock_delay_ms;
     char	*hostname;
-    Boolean	 utf8;
+    bool	 utf8;
     int	 	 max_recent;
-    Boolean	 nvt_mode;
+    bool	 nvt_mode;
     char	*suppress_actions;
 #if defined(_WIN32) /*[*/
     int		 local_cp;
@@ -98,13 +98,13 @@ typedef struct {
 #endif /*]*/
 
     /* Toggles. */
-    Boolean toggle[N_TOGGLES];
+    bool toggle[N_TOGGLES];
 
     /* Line-mode TTY parameters. */
     struct {
-	Boolean	 icrnl;
-	Boolean	 inlcr;
-	Boolean	 onlcr;
+	bool	 icrnl;
+	bool	 inlcr;
+	bool	 onlcr;
 	char	*erase;
 	char	*kill;
 	char	*werase;
@@ -114,40 +114,6 @@ typedef struct {
 	char	*quit;
 	char	*eof;
     } linemode;
-
-    /* x3270 fields. */
-    struct {
-	Boolean	 active_icon;
-	Boolean	 label_icon;
-	Boolean	 invert_kpshift;
-	Boolean	 use_cursor_color;
-	Boolean	 allow_resize;
-	Boolean	 no_other;
-	Boolean	 visual_select;
-	Boolean	 suppress_host;
-	Boolean	 suppress_font_menu;
-	Boolean	 keypad_on;
-	char	*keypad;
-	char	*efontname;
-	char	*fixed_size;
-	char	*icon_font;
-	char	*icon_label_font;
-	char	*normal_name;
-	char	*select_name;
-	char	*bold_name;
-	char	*colorbg_name;
-	char	*keypadbg_name;
-	char	*selbg_name;
-	char	*cursor_color_name;
-	char	*color_scheme;
-	int	 bell_volume;
-	char	*char_class;
-	int	 modified_sel_color;
-	int	 visual_select_color;
-	char	*input_method;
-	char	*preedit_type;
-	char	*ad_version;
-    } x3270;
 
     /* SSL fields. */
     struct {
@@ -160,18 +126,18 @@ typedef struct {
 	char	*key_file_type;
 	char	*key_passwd;
 	char	*accept_hostname;
-	Boolean	 self_signed_ok;
-	Boolean	 verify_host_cert;
-	Boolean	 tls;
+	bool	 self_signed_ok;
+	bool	 verify_host_cert;
+	bool	 tls;
     } ssl;
 
     /* Interactive (x3270/c3270/wc3270) fields. */
     struct {
-	Boolean	 mono;
-	Boolean	 reconnect;
-	Boolean	 do_confirms;
-	Boolean	 menubar;
-	Boolean	 visual_bell;
+	bool	 mono;
+	bool	 reconnect;
+	bool	 do_confirms;
+	bool	 menubar;
+	bool	 visual_bell;
 	char	*key_map;
 	char	*compose_map;
 	char	*printer_lu;
@@ -181,18 +147,18 @@ typedef struct {
 
     /* c3270/wc3270-specific fields. */
     struct {
-	Boolean	 all_bold_on;
-	Boolean	 ascii_box_draw;
-	Boolean	 acs;
+	bool	 all_bold_on;
+	bool	 ascii_box_draw;
+	bool	 acs;
 #if !defined(_WIN32) /*[*/
-	Boolean	 default_fgbg;
-	Boolean	 cbreak_mode;
-	Boolean	 curses_keypad;
-	Boolean	 mouse;
-	Boolean	 reverse_video;
+	bool	 default_fgbg;
+	bool	 cbreak_mode;
+	bool	 curses_keypad;
+	bool	 mouse;
+	bool	 reverse_video;
 #else /*]*/
-	Boolean	 auto_shortcut;
-	Boolean  lightpen_primary;
+	bool	 auto_shortcut;
+	bool	 lightpen_primary;
 #endif /*]*/
 
 	char	*all_bold;

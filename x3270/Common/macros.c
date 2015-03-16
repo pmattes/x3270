@@ -90,7 +90,7 @@
 
 /* Globals */
 struct macro_def *macro_defs = NULL;
-Boolean macro_output = False;
+bool macro_output = false;
 
 /* Statics */
 typedef struct sms {
@@ -128,17 +128,17 @@ typedef struct sms {
 	ST_FILE,	/* read commands from file */
 	ST_CB		/* callback (httpd or other) */
     } type;
-    Boolean	success;
-    Boolean	need_prompt;
-    Boolean	is_login;
-    Boolean	is_hex;		/* flag for ST_STRING only */
-    Boolean output_wait_needed;
-    Boolean executing;	/* recursion avoidance */
-    Boolean accumulated;	/* accumulated time flag */
-    Boolean idle_error;	/* idle command caused an error */
-    Boolean is_socket;	/* I/O is via a socket */
-    Boolean is_transient;	/* I/O is via a transient socket */
-    Boolean is_external;	/* I/O is via a transient socket to -socket */
+    bool	success;
+    bool	need_prompt;
+    bool	is_login;
+    bool	is_hex;		/* flag for ST_STRING only */
+    bool output_wait_needed;
+    bool executing;	/* recursion avoidance */
+    bool accumulated;	/* accumulated time flag */
+    bool idle_error;	/* idle command caused an error */
+    bool is_socket;	/* I/O is via a socket */
+    bool is_transient;	/* I/O is via a transient socket */
+    bool is_external;	/* I/O is via a transient socket to -socket */
     unsigned long msec;	/* total accumulated time */
     FILE   *outfile;
     int	infd;
@@ -209,10 +209,10 @@ int peer_nr;
 int peer_errno;
 #endif /*]*/
 
-static void cleanup_socket(Boolean b);
-static void script_prompt(Boolean success);
+static void cleanup_socket(bool b);
+static void script_prompt(bool success);
 static void script_input(iosrc_t fd, ioid_t id);
-static void sms_pop(Boolean can_exit);
+static void sms_pop(bool can_exit);
 static void socket_connection(iosrc_t fd, ioid_t id);
 #if defined(_WIN32) /*[*/
 static void child_socket_connection(iosrc_t fd, ioid_t id);
@@ -287,7 +287,7 @@ trace_script_output(const char *fmt, ...)
 
 /* Callbacks for state changes. */
 static void
-sms_connect(Boolean connected)
+sms_connect(bool connected)
 {
     /* Hack to ensure that disconnects don't cause infinite recursion. */
     if (sms != NULL && sms->executing) {
@@ -301,14 +301,14 @@ sms_connect(Boolean connected)
 		(void) kill(sms->pid, SIGTERM);
 	    }
 #endif /*]*/
-	    sms_pop(False);
+	    sms_pop(false);
 	}
     }
     sms_continue();
 }
 
 static void
-sms_in3270(Boolean in3270)
+sms_in3270(bool in3270)
 {
     if (in3270 || IN_SSCP) {
 	sms_continue();
@@ -478,9 +478,9 @@ new_sms(enum sms_type type)
     s->state = SS_IDLE;
     s->type = type;
     s->dptr = s->msc;
-    s->success = True;
-    s->need_prompt = False;
-    s->is_login = False;
+    s->success = true;
+    s->need_prompt = false;
+    s->is_login = false;
     s->outfile = NULL;
     s->infd = -1;
 #if defined(_WIN32) /*[*/
@@ -490,10 +490,10 @@ new_sms(enum sms_type type)
     s->pid = -1;
     s->expect_id = NULL_IOID;
     s->wait_id = NULL_IOID;
-    s->output_wait_needed = False;
-    s->executing = False;
-    s->accumulated = False;
-    s->idle_error = False;
+    s->output_wait_needed = false;
+    s->executing = false;
+    s->accumulated = false;
+    s->idle_error = false;
     s->msec = 0L;
 
     return s;
@@ -503,7 +503,7 @@ new_sms(enum sms_type type)
  * Push an sms definition on the stack.
  * Returns whether or not that is legal.
  */
-static Boolean
+static bool
 sms_push(enum sms_type type)
 {
     sms_t *s;
@@ -523,14 +523,14 @@ sms_push(enum sms_type type)
 
     /* Enable the abort button on the menu and the status indication. */
     if (++sms_depth == 1) {
-	menubar_as_set(True);
-	status_script(True);
+	menubar_as_set(true);
+	status_script(true);
     }
 
     if (nvt_save_buf == NULL) {
 	nvt_save_buf = (unsigned char *)Malloc(NVT_SAVE_SIZE);
     }
-    return True;
+    return true;
 }
 
 /*
@@ -556,8 +556,8 @@ sms_enqueue(enum sms_type type)
 	 * Enable the abort button on the menu and the status
 	 * line indication.
 	 */
-	menubar_as_set(True);
-	status_script(True);
+	menubar_as_set(true);
+	status_script(true);
     } else {			/* Add to bottom. */
 	s->next = NULL;
 	t_prev->next = s;
@@ -574,7 +574,7 @@ sms_enqueue(enum sms_type type)
 
 /* Pop an sms definition off the stack. */
 static void
-sms_pop(Boolean can_exit)
+sms_pop(bool can_exit)
 {
     sms_t *s;
 
@@ -639,8 +639,8 @@ sms_pop(Boolean can_exit)
 
     if (sms == NULL) {
 	/* Turn off the menu option. */
-	menubar_as_set(False);
-	status_script(False);
+	menubar_as_set(false);
+	status_script(false);
     } else if (CKBWAIT && (int)sms->state < (int)SS_KBWAIT) {
 	/* The child implicitly blocked the parent. */
 	sms->state = SS_KBWAIT;
@@ -658,7 +658,7 @@ sms_pop(Boolean can_exit)
     if (sms != NULL &&
 	sms->type == ST_CHILD &&
 	sms->child_handle == INVALID_HANDLE_VALUE) {
-	sms_pop(False);
+	sms_pop(false);
     }
 #endif /*]*/
 }
@@ -703,7 +703,7 @@ void
 peer_script_init(void)
 {
     sms_t *s;
-    Boolean on_top;
+    bool on_top;
 
     if (appres.script_port) {
 	struct sockaddr *sa;
@@ -722,7 +722,7 @@ peer_script_init(void)
 #endif /*]*/
 
 	/* -scriptport overrides -script */
-	appres.scripted = False;
+	appres.scripted = false;
 
 	/* Create the listening socket. */
 	socketfd = socket(sa->sa_family, SOCK_STREAM, 0);
@@ -797,7 +797,7 @@ peer_script_init(void)
 	struct sockaddr_un ssun;
 
 	/* -socket overrides -script */
-	appres.scripted = False;
+	appres.scripted = false;
 
 	/* Create the listening socket. */
 	socketfd = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -830,7 +830,7 @@ peer_script_init(void)
 #endif /*]*/
 
     if (appres.httpd_port) {
-	appres.scripted = False;
+	appres.scripted = false;
     }
 
     if (!appres.scripted) {
@@ -841,12 +841,12 @@ peer_script_init(void)
 	/* No login script running, simply push a new sms. */
 	(void) sms_push(ST_PEER);
 	s = sms;
-	on_top = True;
+	on_top = true;
     } else {
 	/* Login script already running, pretend we started it. */
 	s = sms_enqueue(ST_PEER);
 	s->state = SS_RUNNING;
-	on_top = False;
+	on_top = false;
     }
 
     s->infd = fileno(stdin);
@@ -916,8 +916,8 @@ socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
     /* Push on a peer script. */
     (void) sms_push(ST_PEER);
     s = sms;
-    s->is_transient = True;
-    s->is_external = True;
+    s->is_transient = true;
+    s->is_external = true;
     s->infd = accept_fd;
 #if !defined(_WIN32) /*[*/
     s->outfile = fdopen(dup(accept_fd), "w");
@@ -933,7 +933,7 @@ socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	exit(1);
     }
 #endif /*]*/
-    s->is_socket = True;
+    s->is_socket = true;
     script_enable();
 
     /* Don't accept any more connections. */
@@ -967,7 +967,7 @@ child_socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
     old_sms = sms;
     (void) sms_push(ST_PEER);
     s = sms;
-    s->is_transient = True;
+    s->is_transient = true;
     s->infd = accept_fd;
     s->inhandle = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (s->inhandle == NULL) {
@@ -978,7 +978,7 @@ child_socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	fprintf(stderr, "Can't set socket handle events\n");
 	exit(1);
     }
-    s->is_socket = True;
+    s->is_socket = true;
     script_enable();
 
     /* Don't accept any more connections on the global listen socket. */
@@ -989,7 +989,7 @@ child_socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
 
 /* Clean up the Unix-domain socket. */
 static void
-cleanup_socket(Boolean b _is_unused)
+cleanup_socket(bool b _is_unused)
 {
 #if !defined(_WIN32) /*[*/
     (void) unlink(lazyaf("/tmp/x3sck.%u", getpid()));
@@ -1018,7 +1018,7 @@ child_exited(iosrc_t fd _is_unused, ioid_t id _is_unused)
 		RemoveInput(s->exit_id);
 		s->exit_id = NULL_IOID;
 		if (s == sms) {
-		    sms_pop(False);
+		    sms_pop(false);
 		    sms_continue();
 		}
 		break;
@@ -1302,10 +1302,10 @@ success:
 	} FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
     }
     if (any != NULL) {
-	sms->accumulated = False;
+	sms->accumulated = false;
 	sms->msec = 0L;
 	run_action_entry(e, cause, count, count? params: NULL);
-	screen_disp(False);
+	screen_disp(false);
     } else {
 	popup_an_error("Unknown action: %s", aname);
 	return EM_ERROR;
@@ -1348,10 +1348,10 @@ run_string(void)
 		    sms_state_name[sms->state]);
 	} else {
 	    hex_input(sms->dptr);
-	    sms_pop(False);
+	    sms_pop(false);
 	}
     } else {
-	if ((len_left = emulate_input(sms->dptr, len, False))) {
+	if ((len_left = emulate_input(sms->dptr, len, false))) {
 	    sms->dptr += len - len_left;
 	    if (CKBWAIT) {
 		sms->state = SS_KBWAIT;
@@ -1359,7 +1359,7 @@ run_string(void)
 			sms_state_name[sms->state]);
 	    }
 	} else {
-	    sms_pop(False);
+	    sms_pop(false);
 	}
     }
 }
@@ -1391,7 +1391,7 @@ run_macro(void)
 
 	    /* Propagate it. */
 	    if (sms->next != NULL) {
-		sms->next->success = False;
+		sms->next->success = false;
 	    }
 	    break;
 	}
@@ -1399,8 +1399,8 @@ run_macro(void)
 	sms->state = SS_RUNNING;
 	vtrace("%s[%d]: '%s'\n", ST_NAME, sms_depth, a);
 	s = sms;
-	s->success = True;
-	s->executing = True;
+	s->success = true;
+	s->executing = true;
 
 	if (s->type == ST_MACRO &&
 	    s->next != NULL &&
@@ -1411,7 +1411,7 @@ run_macro(void)
 	}
 
 	es = execute_command(ia, a, &nextm);
-	s->executing = False;
+	s->executing = false;
 	s->dptr = nextm;
 
 	/*
@@ -1428,7 +1428,7 @@ run_macro(void)
 
 	    /* Propaogate it. */
 	    if (sms->next != NULL) {
-		    sms->next->success = False;
+		    sms->next->success = false;
 	    }
 
 	    /* If it was an idle command, cancel it. */
@@ -1452,14 +1452,14 @@ run_macro(void)
     }
 
     /* Finished with this macro. */
-    sms_pop(False);
+    sms_pop(false);
 }
 
 /* Push a macro (macro, command or keymap action) on the stack. */
 static void
-push_xmacro(enum sms_type type, const char *s, size_t len, Boolean is_login)
+push_xmacro(enum sms_type type, const char *s, size_t len, bool is_login)
 {
-    macro_output = False;
+    macro_output = false;
     if (!sms_push(type)) {
 	return;
     }
@@ -1467,7 +1467,7 @@ push_xmacro(enum sms_type type, const char *s, size_t len, Boolean is_login)
     sms->msc_len = strlen(sms->msc);
     if (is_login) {
 	sms->state = SS_WAIT_IFIELD;
-	sms->is_login = True;
+	sms->is_login = true;
     } else {
 	sms->state = SS_INCOMPLETE;
     }
@@ -1476,7 +1476,7 @@ push_xmacro(enum sms_type type, const char *s, size_t len, Boolean is_login)
 
 /* Push a macro on the stack. */
 void
-push_macro(char *s, Boolean is_login)
+push_macro(char *s, bool is_login)
 {
     push_xmacro(ST_MACRO, s, strlen(s), is_login);
 }
@@ -1485,26 +1485,26 @@ push_macro(char *s, Boolean is_login)
 void
 push_command(char *s)
 {
-    push_xmacro(ST_COMMAND, s, strlen(s), False);
+    push_xmacro(ST_COMMAND, s, strlen(s), false);
 }
 
 /* Push a keymap action on the stack. */
 void
 push_keymap_action(char *s)
 {
-    push_xmacro(ST_KEYMAP, s, strlen(s), False);
+    push_xmacro(ST_KEYMAP, s, strlen(s), false);
 }
 
 /* Push an idle action on the stack. */
 void
 push_idle(char *s)
 {
-    push_xmacro(ST_IDLE, s, strlen(s), False);
+    push_xmacro(ST_IDLE, s, strlen(s), false);
 }
 
 /* Push a string on the stack. */
 static void
-push_string(char *s, Boolean is_login, Boolean is_hex)
+push_string(char *s, bool is_login, bool is_hex)
 {
     if (!sms_push(ST_STRING)) {
 	return;
@@ -1513,7 +1513,7 @@ push_string(char *s, Boolean is_login, Boolean is_hex)
     sms->msc_len = strlen(sms->msc);
     if (is_login) {
 	sms->state = SS_WAIT_IFIELD;
-	sms->is_login = True;
+	sms->is_login = true;
     } else {
 	sms->state = SS_INCOMPLETE;
     }
@@ -1545,24 +1545,24 @@ push_cb(const char *buf, size_t len, const sms_cb_t *cb, sms_cbh handle)
     sms->cbx.cb = cb;
     sms->cbx.handle = handle;
     sms->state = SS_RUNNING;
-    sms->need_prompt = True;
+    sms->need_prompt = true;
 
     /* Push the command in as a macro on top of that. */
-    push_xmacro(ST_MACRO, buf, len, False);
+    push_xmacro(ST_MACRO, buf, len, false);
 }
 
 /* Set a pending string. */
 void
-ps_set(char *s, Boolean is_hex)
+ps_set(char *s, bool is_hex)
 {
-    push_string(s, False, is_hex);
+    push_string(s, false, is_hex);
 }
 
 /* Callback for macros menu. */
 void
 macro_command(struct macro_def *m)
 {
-    push_macro(m->action, False);
+    push_macro(m->action, false);
 }
 
 /*
@@ -1573,7 +1573,7 @@ void
 login_macro(char *s)
 {
     char *t = s;
-    Boolean looks_right = False;
+    bool looks_right = false;
 
     while (isspace(*t)) {
 	t++;
@@ -1586,14 +1586,14 @@ login_macro(char *s)
 	    t++;
 	}
 	if (*t == '(') {
-	    looks_right = True;
+	    looks_right = true;
 	}
     }
 
     if (looks_right) {
-	push_macro(s, True);
+	push_macro(s, true);
     } else {
-	push_string(s, True, False);
+	push_string(s, true, false);
     }
 }
 
@@ -1618,7 +1618,7 @@ run_script(void)
 	/* If a prompt is required, send one. */
 	if (sms->need_prompt) {
 	    script_prompt(sms->success);
-	    sms->need_prompt = False;
+	    sms->need_prompt = false;
 	}
 
 	/* If there isn't a pending command, we're done. */
@@ -1637,12 +1637,12 @@ run_script(void)
 
 	/* Execute it. */
 	sms->state = SS_RUNNING;
-	sms->success = True;
+	sms->success = true;
 	vtrace("%s[%d]: '%s'\n", ST_NAME, sms_depth, cmd);
 	s = sms;
-	s->executing = True;
+	s->executing = true;
 	es = execute_command(IA_SCRIPT, cmd, NULL);
-	s->executing = False;
+	s->executing = false;
 
 	/* Move the rest of the buffer over. */
 	if (cmd_len < s->msc_len) {
@@ -1658,7 +1658,7 @@ run_script(void)
 	 * when it completes.
 	 */
 	if (sms != s) {
-	    s->need_prompt = True;
+	    s->need_prompt = true;
 	    return;
 	}
 
@@ -1669,13 +1669,13 @@ run_script(void)
 	    }
 	    script_disable();
 	    if (sms->state == SS_CLOSING) {
-		sms_pop(False);
+		sms_pop(false);
 		return;
 	    }
-	    sms->need_prompt = True;
+	    sms->need_prompt = true;
 	} else if (es == EM_ERROR) {
 	    vtrace("%s[%d] error\n", ST_NAME, sms_depth);
-	    script_prompt(False);
+	    script_prompt(false);
 	    /* If it was an idle command, cancel it. */
 	    cancel_if_idle_command();
 	} else {
@@ -1706,13 +1706,13 @@ read_from_file(void)
 	nr = read(sms->infd, dptr, 1);
 	if (nr < 0) {
 	    vtrace("%s[%d] read error\n", ST_NAME, sms_depth);
-	    sms_pop(False);
+	    sms_pop(false);
 	    return;
 	}
 	if (nr == 0) {
 	    if (sms->msc_len == 0) {
 		vtrace("%s[%d] read EOF\n", ST_NAME, sms_depth);
-		sms_pop(False);
+		sms_pop(false);
 		return;
 	    } else {
 		vtrace("%s[%d] read EOF without newline\n", ST_NAME,
@@ -1737,7 +1737,7 @@ read_from_file(void)
     /* Run the command as a macro. */
     vtrace("%s[%d] read '%s'\n", ST_NAME, sms_depth, sms->msc);
     sms->state = SS_INCOMPLETE;
-    push_macro(sms->dptr, False);
+    push_macro(sms->dptr, false);
 }
 
 /* Handle an error generated during the execution of a script or macro. */
@@ -1745,7 +1745,7 @@ void
 sms_error(const char *msg)
 {
     sms_t *s;
-    Boolean is_script = False;
+    bool is_script = false;
 
     /* Print the error message. */
     s = sms_redirect_to();
@@ -1799,11 +1799,11 @@ sms_error(const char *msg)
     }
 
     /* Fail the current command. */
-    sms->success = False;
+    sms->success = false;
 
     /* Cancel any login. */
     if (s != NULL && s->is_login) {
-	host_disconnect(True);
+	host_disconnect(true);
     }
 }
 
@@ -1864,7 +1864,7 @@ sms_info(const char *fmt, ...)
 
     Free(msgbuf);
 
-    macro_output = True;
+    macro_output = true;
 }
 
 /* Process available input from a script. */
@@ -1914,7 +1914,7 @@ script_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	{
 	    popup_an_errno(errno, "%s[%d] read", ST_NAME, sms_depth);
 	}
-	sms_pop(True);
+	sms_pop(true);
 	sms_continue();
 	return;
     }
@@ -1925,7 +1925,7 @@ script_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	if (sms->msc_len) {
 	    popup_an_error("%s[%d]: missing newline", ST_NAME, sms_depth);
 	}
-	sms_pop(True);
+	sms_pop(true);
 	sms_continue();
 	return;
     }
@@ -1943,7 +1943,7 @@ script_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     if (sms->msc_len >= MSC_BUF - 1) {
 	if (strchr(sms->msc, '\n') == NULL) {
 	    popup_an_error("%s[%d]: input line too long", ST_NAME, sms_depth);
-	    sms_pop(True);
+	    sms_pop(true);
 	    sms_continue();
 	    return;
 	}
@@ -1958,23 +1958,23 @@ script_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 void
 sms_continue(void)
 {
-    static Boolean continuing = False;
+    static bool continuing = false;
 
     if (continuing) {
 	return;
     }
-    continuing = True;
+    continuing = true;
 
-    while (True) {
+    while (true) {
 	if (sms == NULL) {
-	    continuing = False;
+	    continuing = false;
 	    return;
 	}
 
 	switch (sms->state) {
 
 	case SS_IDLE:
-	    continuing = False;
+	    continuing = false;
 	    return;		/* nothing to do */
 
 	case SS_INCOMPLETE:
@@ -1983,7 +1983,7 @@ sms_continue(void)
 
 	case SS_KBWAIT:
 	    if (CKBWAIT) {
-		continuing = False;
+		continuing = false;
 		return;
 	    }
 	    break;
@@ -1993,7 +1993,7 @@ sms_continue(void)
 		sms->state = SS_WAIT_IFIELD;
 		continue;
 	    }
-	    continuing = False;
+	    continuing = false;
 	    return;
 
 	case SS_WAIT_3270:
@@ -2001,33 +2001,33 @@ sms_continue(void)
 		sms->state = SS_WAIT_IFIELD;
 		continue;
 	    }
-	    continuing = False;
+	    continuing = false;
 	    return;
 
 	case SS_WAIT_UNLOCK:
 	    if (KBWAIT) {
-		continuing = False;
+		continuing = false;
 		return;
 	    }
 	    break;
 
 	case SS_WAIT_IFIELD:
 	    if (!CAN_PROCEED) {
-		continuing = False;
+		continuing = false;
 		return;
 	    }
 	    /* fall through... */
 	case SS_CONNECT_WAIT:
 	    if (HALF_CONNECTED ||
 		(CONNECTED && (kybdlock & KL_AWAITING_FIRST))) {
-		continuing = False;
+		continuing = false;
 		return;
 	    }
 	    if (!CONNECTED) {
 		/* connection failed */
 		if (sms->need_prompt) {
-		    script_prompt(False);
-		    sms->need_prompt = False;
+		    script_prompt(false);
+		    sms->need_prompt = false;
 		}
 		break;
 	    }
@@ -2037,12 +2037,12 @@ sms_continue(void)
 	    if (ft_state == FT_NONE) {
 		break;
 	    } else {
-		continuing = False;
+		continuing = false;
 		return;
 	    }
 
 	case SS_TIME_WAIT:
-	    continuing = False;
+	    continuing = false;
 	    return;
 
 	case SS_WAIT_OUTPUT:
@@ -2051,27 +2051,27 @@ sms_continue(void)
 		popup_an_error("Host disconnected");
 		break;
 	    }
-	    continuing = False;
+	    continuing = false;
 	    return;
 
 	case SS_WAIT_DISC:
 	    if (!CONNECTED) {
 		break;
 	    } else {
-		continuing = False;
+		continuing = false;
 		return;
 	    }
 
 	case SS_PAUSED:
-	    continuing = False;
+	    continuing = false;
 	    return;
 
 	case SS_EXPECTING:
-	    continuing = False;
+	    continuing = false;
 	    return;
 
 	case SS_CLOSING:
-	    continuing = False;
+	    continuing = false;
 	    return;	/* can't happen, I hope */
 
 	}
@@ -2109,23 +2109,23 @@ sms_continue(void)
 	}
     }
 
-    continuing = False;
+    continuing = false;
 }
 
 /*
- * Return True if there is a pending macro.
+ * Return true if there is a pending macro.
  */
-Boolean
+bool
 sms_in_macro(void)
 {
     sms_t *s;
 
     for (s = sms; s != NULL; s = s->next) {
 	if (s->type == ST_MACRO || s->type == ST_STRING) {
-	    return True;
+	    return true;
 	}
     }
-    return False;
+    return false;
 }
 
 /*
@@ -2133,12 +2133,12 @@ sms_in_macro(void)
  */
 
 static void
-dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
+dump_range(int first, int len, bool in_ascii, struct ea *buf,
     int rel_rows _is_unused, int rel_cols)
 {
     int i;
-    Boolean any = False;
-    Boolean is_zero = False;
+    bool any = false;
+    bool is_zero = false;
     varbuf_t r;
 
     vb_init(&r);
@@ -2150,7 +2150,7 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
      * which is called from the write logic in ctlr.c.
      */     
     if (sms != NULL && buf == ea_buf) {
-	sms->output_wait_needed = True;
+	sms->output_wait_needed = true;
     }
 
     is_zero = FA_IS_ZERO(get_field_attribute(first));
@@ -2159,7 +2159,7 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 	if (i && !((first + i) % rel_cols)) {
 	    action_output("%s", vb_buf(&r));
 	    vb_reset(&r);
-	    any = False;
+	    any = false;
 	}
 	if (in_ascii) {
 	    char mb[16];
@@ -2195,7 +2195,7 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
 	} else {
 	    vb_appendf(&r, "%s%02x", any ? " " : "", buf[first + i].cc);
 	}
-	any = True;
+	any = true;
     }
     if (any) {
 	action_output("%s", vb_buf(&r));
@@ -2203,9 +2203,9 @@ dump_range(int first, int len, Boolean in_ascii, struct ea *buf,
     vb_free(&r);
 }
 
-static Boolean
+static bool
 dump_fixed(const char **params, unsigned count, const char *name,
-	Boolean in_ascii, struct ea *buf, int rel_rows, int rel_cols,
+	bool in_ascii, struct ea *buf, int rel_rows, int rel_cols,
 	int caddr)
 {
     int row, col, len, rows = 0, cols = 0;
@@ -2235,7 +2235,7 @@ dump_fixed(const char **params, unsigned count, const char *name,
 	break;
     default:
 	popup_an_error("%s requires 0, 1, 3 or 4 arguments", name);
-	return False;
+	return false;
     }
 
     if ((row < 0 || row > rel_rows || col < 0 || col > rel_cols || len < 0) ||
@@ -2244,7 +2244,7 @@ dump_fixed(const char **params, unsigned count, const char *name,
 			  col + cols > rel_cols || row + rows > rel_rows))
        ) {
 	popup_an_error("%s: Invalid argument", name);
-	return False;
+	return false;
     }
     if (count < 4) {
 	dump_range((row * rel_cols) + col, len, in_ascii, buf, rel_rows,
@@ -2257,11 +2257,11 @@ dump_fixed(const char **params, unsigned count, const char *name,
 		    rel_rows, rel_cols);
 	}
     }
-    return True;
+    return true;
 }
 
-static Boolean
-dump_field(unsigned count, const char *name, Boolean in_ascii)
+static bool
+dump_field(unsigned count, const char *name, bool in_ascii)
 {
     int faddr;
     int start, baddr;
@@ -2269,11 +2269,11 @@ dump_field(unsigned count, const char *name, Boolean in_ascii)
 
     if (count != 0) {
 	popup_an_error("%s requires 0 arguments", name);
-	return False;
+	return false;
     }
     if (!formatted) {
 	popup_an_error("%s: Screen is not formatted", name);
-	return False;
+	return false;
     }
     faddr = find_field_attribute(cursor_addr);
     start = faddr;
@@ -2287,33 +2287,33 @@ dump_field(unsigned count, const char *name, Boolean in_ascii)
 	INC_BA(baddr);
     } while (baddr != start);
     dump_range(start, len, in_ascii, ea_buf, ROWS, COLS);
-    return True;
+    return true;
 }
 
-static Boolean
+static bool
 Ascii_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
-    return dump_fixed(argv, argc, "Ascii", True, ea_buf, ROWS, COLS,
+    return dump_fixed(argv, argc, "Ascii", true, ea_buf, ROWS, COLS,
 	    cursor_addr);
 }
 
-static Boolean
+static bool
 AsciiField_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
-    return dump_field(argc, "AsciiField", True);
+    return dump_field(argc, "AsciiField", true);
 }
 
-static Boolean
+static bool
 Ebcdic_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
-    return dump_fixed(argv, argc, "Ebcdic", False, ea_buf, ROWS, COLS,
+    return dump_fixed(argv, argc, "Ebcdic", false, ea_buf, ROWS, COLS,
 	    cursor_addr);
 }
 
-static Boolean
+static bool
 EbcdicField_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
-    return dump_field(argc, "EbcdicField", False);
+    return dump_field(argc, "EbcdicField", false);
 }
 
 static unsigned char
@@ -2336,7 +2336,7 @@ calc_cs(unsigned char cs)
  * Operates on the supplied 'buf' parameter, which might be the live
  * screen buffer 'ea_buf' or a copy saved with 'Snap'.
  */
-static Boolean
+static bool
 do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	int fd)
 {
@@ -2344,22 +2344,22 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
     unsigned char current_fg = 0x00;
     unsigned char current_gr = 0x00;
     unsigned char current_cs = 0x00;
-    Boolean in_ebcdic = False;
+    bool in_ebcdic = false;
     varbuf_t r;
 
     if (num_params > 0) {
 	if (num_params > 1) {
 	    popup_an_error("ReadBuffer: extra agruments");
-	    return False;
+	    return false;
 	}
 	if (!strncasecmp(params[0], "Ascii", strlen(params[0]))) {
-	    in_ebcdic = False;
+	    in_ebcdic = false;
 	} else if (!strncasecmp(params[0], "Ebcdic", strlen(params[0]))) {
-	    in_ebcdic = True;
+	    in_ebcdic = true;
 	} else {
 	    popup_an_error("ReadBuffer: first parameter must be Ascii or "
 		    "Ebcdic");
-	    return False;
+	    return false;
 	}
     }
 
@@ -2371,7 +2371,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	nw = write(fd, s, strlen(s));
 	Free(s);
 	if (nw < 0) {
-		return False;
+		return false;
 	}
     }
 
@@ -2429,7 +2429,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 		    vb_appendf(&r, " %02x", buf[baddr].cc);
 		}
 	    } else {
-		Boolean done = False;
+		bool done = false;
 		char mb[16];
 		int j;
 		ucs4_t uc;
@@ -2442,10 +2442,10 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 		    for (j = 0; j < len-1; j++) {
 			vb_appendf(&r, "%02x", mb[j] & 0xff);
 		    }
-		    done = True;
+		    done = true;
 		} else if (IS_RIGHT(ctlr_dbcs_state(baddr))) {
 		    vb_appends(&r, " -");
-		    done = True;
+		    done = true;
 		}
 
 		switch (buf[baddr].cc) {
@@ -2492,13 +2492,13 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
     }
 done:
     vb_free(&r);
-    return True;
+    return true;
 }
 
 /*
  * ReadBuffer action.
  */
-static Boolean
+static bool
 ReadBuffer_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     return do_read_buffer(argv, argc, ea_buf, -1);
@@ -2606,7 +2606,7 @@ status_string(void)
 }
 
 static void
-script_prompt(Boolean success)
+script_prompt(bool success)
 {
     char *s;
     const char *timing;
@@ -2634,7 +2634,7 @@ script_prompt(Boolean success)
     } else if (sms->type == ST_CB) {
 	struct sms_cbx cbx = sms->cbx;
 
-	sms_pop(False);
+	sms_pop(false);
 	(*cbx.cb->done)(cbx.handle, success, t, strlen(t));
 	sms_continue();
     } else {
@@ -2655,7 +2655,7 @@ static int snap_caddr = 0;
 static void
 snap_save(void)
 {
-    sms->output_wait_needed = True;
+    sms->output_wait_needed = true;
     Replace(snap_status, status_string());
 
     Replace(snap_buf, (struct ea *)Malloc(ROWS*COLS*sizeof(struct ea)));
@@ -2704,17 +2704,17 @@ snap_save(void)
  *  Snap Wait [tmo] Output
  *      wait for the screen to change, then do a Snap Save
  */
-static Boolean
+static bool
 Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     if (sms == NULL || sms->state != SS_RUNNING) {
 	popup_an_error("Snap can only be called from scripts or macros");
-	return False;
+	return false;
     }
 
     if (argc == 0) {
 	snap_save();
-	return True;
+	return true;
     }
 
     /* Handle 'Snap Wait' separately. */
@@ -2734,21 +2734,21 @@ Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	}
 	if (argc > maxp) {
 	    popup_an_error("Too many arguments to Snap(Wait)");
-	    return False;
+	    return false;
 	}
 	if (argc < maxp) {
 	    popup_an_error("Too few arguments to Snap(Wait)");
-	    return False;
+	    return false;
 	}
 	if (strcasecmp(argv[argc - 1], "Output")) {
 	    popup_an_error("Unknown parameter to Snap(Wait)");
-	    return False;
+	    return false;
 	}
 
 	/* Must be connected. */
 	if (!(CONNECTED || HALF_CONNECTED)) {
 	    popup_an_error("Snap: Not connected");
-	    return False;
+	    return false;
 	}
 
 	/*
@@ -2757,7 +2757,7 @@ Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	 */
 	if (!sms->output_wait_needed) {
 	    snap_save();
-	    return True;
+	    return true;
 	}
 
 	/* Set the new state. */
@@ -2767,77 +2767,77 @@ Snap_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	if (tmo >= 0) {
 	    sms->wait_id = AddTimeOut(tmo? (tmo * 1000): 1, wait_timed_out);
 	}
-	return True;
+	return true;
     }
 
     if (!strcasecmp(argv[0], "Save")) {
 	if (argc != 1) {
 	    popup_an_error("Extra argument(s)");
-	    return False;
+	    return false;
 	}
 	snap_save();
     } else if (!strcasecmp(argv[0], "Status")) {
 	if (argc != 1) {
 	    popup_an_error("Extra argument(s)");
-	    return False;
+	    return false;
 	}
 	if (snap_status == NULL) {
 	    popup_an_error("No saved state");
-	    return False;
+	    return false;
 	}
 	action_output("%s", snap_status);
     } else if (!strcasecmp(argv[0], "Rows")) {
 	if (argc != 1) {
 	    popup_an_error("Extra argument(s)");
-	    return False;
+	    return false;
 	}
 	if (snap_status == NULL) {
 	    popup_an_error("No saved state");
-	    return False;
+	    return false;
 	}
 	action_output("%d", snap_rows);
     } else if (!strcasecmp(argv[0], "Cols")) {
 	if (argc != 1) {
 	    popup_an_error("Extra argument(s)");
-	    return False;
+	    return false;
 	}
 	if (snap_status == NULL) {
 	    popup_an_error("No saved state");
-	    return False;
+	    return false;
 	}
 	action_output("%d", snap_cols);
     } else if (!strcasecmp(argv[0], "Ascii")) {
 	if (snap_status == NULL) {
 	    popup_an_error("No saved state");
-	    return False;
+	    return false;
 	}
-	return dump_fixed(argv + 1, argc - 1, "Ascii", True, snap_buf,
+	return dump_fixed(argv + 1, argc - 1, "Ascii", true, snap_buf,
 		snap_rows, snap_cols, snap_caddr);
     } else if (!strcasecmp(argv[0], "Ebcdic")) {
 	if (snap_status == NULL) {
 	    popup_an_error("No saved state");
-	    return False;
+	    return false;
 	}
-	return dump_fixed(argv + 1, argc - 1, "Ebcdic", False, snap_buf,
+	return dump_fixed(argv + 1, argc - 1, "Ebcdic", false, snap_buf,
 		snap_rows, snap_cols, snap_caddr);
     } else if (!strcasecmp(argv[0], "ReadBuffer")) {
 	if (snap_status == NULL) {
 	    popup_an_error("No saved state");
-	    return False;
+	    return false;
 	}
 	return do_read_buffer(argv + 1, argc - 1, snap_buf, -1);
     } else {
 	popup_an_error("Snap: Argument must be Save, Status, Rows, Cols, "
 		"Wait, Ascii, Ebcdic, or ReadBuffer");
-	return False;
+	return false;
     }
-    return True;
+    return true;
 }
 
 /*
  * Wait for various conditions.
  */
-static Boolean
+static bool
 Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     enum sms_state next_state = SS_WAIT_IFIELD;
@@ -2861,11 +2861,11 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 
     if (np > 1) {
 	popup_an_error("Too many arguments to Wait or invalid timeout value");
-	return False;
+	return false;
     }
     if (sms == NULL || sms->state != SS_RUNNING) {
 	popup_an_error("Wait can only be called from scripts or macros");
-	return False;
+	return false;
     }
     if (np == 1) {
 	if (!strcasecmp(pr[0], "NVTMode") || !strcasecmp(pr[0], "ansi")) {
@@ -2881,19 +2881,19 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	    if (sms->output_wait_needed) {
 		next_state = SS_WAIT_OUTPUT;
 	    } else {
-		return True;
+		return true;
 	    }
 	} else if (!strcasecmp(pr[0], "Disconnect")) {
 	    if (CONNECTED) {
 		next_state = SS_WAIT_DISC;
 	    } else {
-		return True;
+		return true;
 	    }
 	} else if (!strcasecmp(pr[0], "Unlock")) {
 	    if (KBWAIT) {
 		next_state = SS_WAIT_UNLOCK;
 	    } else {
-		return True;
+		return true;
 	    }
 	} else if (tmo > 0 && !strcasecmp(pr[0], "Seconds")) {
 	    next_state = SS_TIME_WAIT;
@@ -2901,17 +2901,17 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	    popup_an_error("Wait argument must be InputField, "
 		    "NVTmode, 3270Mode, Output, Seconds, Disconnect "
 		    "or Unlock");
-	    return False;
+	    return false;
 	}
     }
     if (!(CONNECTED || HALF_CONNECTED)) {
 	popup_an_error("Wait: Not connected");
-	return False;
+	return false;
     }
 
     /* Is it already okay? */
     if (next_state == SS_WAIT_IFIELD && CAN_PROCEED) {
-	return True;
+	return true;
     }
 
     /* No, wait for it to happen. */
@@ -2921,7 +2921,7 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
     if (tmo >= 0) {
 	sms->wait_id = AddTimeOut(tmo? (tmo * 1000): 1, wait_timed_out);
     }
-    return True;
+    return true;
 }
 
 /*
@@ -2947,7 +2947,7 @@ void
 sms_host_output(void)
 {
     if (sms != NULL) {
-	sms->output_wait_needed = False;
+	sms->output_wait_needed = false;
 
 	switch (sms->state) {
 	case SS_SWAIT_OUTPUT:
@@ -2984,14 +2984,14 @@ sms_redirect_to(void)
 }
 
 /* Return whether error pop-ups and acition output should be short-circuited. */
-Boolean
+bool
 sms_redirect(void)
 {
     return sms_redirect_to() != NULL;
 }
 
 /* Return whether any scripts are active. */
-Boolean
+bool
 sms_active(void)
 {
     return sms != NULL;
@@ -3094,7 +3094,7 @@ memstr(char *s1, char *s2, int n1, int n2)
 }
 
 /* Check for a match against an expect string. */
-static Boolean
+static bool
 expect_matches(void)
 {
     int ix, i;
@@ -3110,9 +3110,9 @@ expect_matches(void)
 	nvt_save_cnt -= ((unsigned char *)t - buf) + expect_len;
 	Free(expect_text);
 	expect_text = NULL;
-	return True;
+	return true;
     } else {
-	return False;
+	return false;
     }
 }
 
@@ -3141,7 +3141,7 @@ sms_store(unsigned char c)
 }
 
 /* Dump whatever NVT data has been sent by the host since last called. */
-static Boolean
+static bool
 AnsiText_action(ia_t ia, unsigned argc, const char **argv)
 {
     int i;
@@ -3151,11 +3151,11 @@ AnsiText_action(ia_t ia, unsigned argc, const char **argv)
 
     action_debug("AnsiText", ia, argc, argv);
     if (check_argc("AnsiText", argc, 0, 0) < 0) {
-	return False;
+	return false;
     }
 
     if (!nvt_save_cnt) {
-	return True;
+	return true;
     }
 
     ix = (nvt_save_ix + NVT_SAVE_SIZE - nvt_save_cnt) % NVT_SAVE_SIZE;
@@ -3185,34 +3185,34 @@ AnsiText_action(ia_t ia, unsigned argc, const char **argv)
     vb_free(&r);
     nvt_save_cnt = 0;
     nvt_save_ix = 0;
-    return True;
+    return true;
 }
 
 /* Pause a script. */
-static Boolean
+static bool
 PauseScript_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("PauseScript", ia, argc, argv);
     if (check_argc("PauseScript", argc, 0, 0) < 0) {
-	return False;
+	return false;
     }
     if (sms == NULL || (sms->type != ST_PEER && sms->type != ST_CHILD)) {
 	popup_an_error("PauseScript can only be called from a script");
-	return False;
+	return false;
     }
     sms->state = SS_PAUSED;
-    return True;
+    return true;
 }
 
 /* Continue a script. */
-static Boolean
+static bool
 ContinueScript_action(ia_t ia, unsigned argc, const char **argv)
 {
     sms_t *s;
 
     action_debug("ContinueScript", ia, argc, argv);
     if (check_argc("ContinueScript", argc, 1, 1) < 0) {
-	return False;
+	return false;
     }
 
     /*
@@ -3227,68 +3227,68 @@ ContinueScript_action(ia_t ia, unsigned argc, const char **argv)
     if (s == NULL || s->state != SS_PAUSED) {
 	popup_an_error("ContinueScript: No script waiting");
 	sms_continue();
-	return False;
+	return false;
     }
 
     /* Pop the RUNNING and INCOMPLETE scripts. */
     while (sms != NULL && sms->state == SS_RUNNING) {
-	sms_pop(False);
+	sms_pop(false);
     }
 
     /* Continue the running script and output the token to it. */
     sms->state = SS_RUNNING;
     action_output("%s", argv[0]);
     sms_continue();
-    return True;
+    return true;
 }
 
 /* Stop listening to stdin. */
-static Boolean
+static bool
 CloseScript_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("CloseScript", ia, argc, argv);
     if (check_argc("CloseScript", argc, 0, 1) < 0) {
-	return False;
+	return false;
     }
 
     if (sms != NULL && (sms->type == ST_PEER || sms->type == ST_CHILD)) {
 
 	/* Close this script. */
 	sms->state = SS_CLOSING;
-	script_prompt(True);
+	script_prompt(true);
 
 	/* If nonzero status passed, fail the calling script. */
 	if (argc > 0 &&
 	    atoi(argv[0]) != 0 &&
 	    sms->next != NULL) {
-	    sms->next->success = False;
+	    sms->next->success = false;
 	    if (sms->is_login) {
-		host_disconnect(True);
+		host_disconnect(true);
 	    }
 	}
     } else {
 	popup_an_error("CloseScript can only be called from a script");
-	return False;
+	return false;
     }
-    return True;
+    return true;
 }
 
 /* Execute an arbitrary shell command. */
-static Boolean
+static bool
 Execute_action(ia_t ia, unsigned argc, const char **argv)
 {
     int status;
-    Boolean rv = True;
+    bool rv = true;
 
     action_debug("Execute", ia, argc, argv);
     if (check_argc("Execute", argc, 1, 1) < 0) {
-	return False;
+	return false;
     }
 
     status = system(argv[0]);
     if (status < 0) {
 	popup_an_errno(errno, "system(\"%s\") failed", argv[0]);
-	rv = False;
+	rv = false;
     } else if (status != 0) {
 #if defined(_WIN32) /*[*/
 	popup_an_error("system(\"%s\") exited with status %d\n", argv[0],
@@ -3305,7 +3305,7 @@ Execute_action(ia_t ia, unsigned argc, const char **argv)
 		    WSTOPSIG(status));
 	}
 #endif /*]*/
-	rv = False;
+	rv = false;
     }
 
     /* Get back mouse events; system() cancels them. */
@@ -3327,9 +3327,9 @@ expect_timed_out(ioid_t id _is_unused)
     popup_an_error("Expect: Timed out");
     sms->expect_id = NULL_IOID;
     sms->state = SS_INCOMPLETE;
-    sms->success = False;
+    sms->success = false;
     if (sms->is_login) {
-	host_disconnect(True);
+	host_disconnect(true);
     }
     sms_continue();
 }
@@ -3340,7 +3340,7 @@ wait_timed_out(ioid_t id _is_unused)
 {
     /* If they just wanted a delay, succeed. */
     if (sms->state == SS_TIME_WAIT) {
-	sms->success = True;
+	sms->success = true;
 	sms->state = SS_INCOMPLETE;
 	sms->wait_id = NULL_IOID;
 	sms_continue();
@@ -3355,10 +3355,10 @@ wait_timed_out(ioid_t id _is_unused)
 
     /* If this is a login macro, it has failed. */
     if (sms->is_login) {
-	host_disconnect(True);
+	host_disconnect(true);
     }
 
-    sms->success = False;
+    sms->success = false;
     sms->state = SS_INCOMPLETE;
 
     /* Let the script proceed. */
@@ -3366,30 +3366,30 @@ wait_timed_out(ioid_t id _is_unused)
 }
 
 /* Wait for a string from the host (NVT mode only). */
-static Boolean
+static bool
 Expect_action(ia_t ia, unsigned argc, const char **argv)
 {
     int tmo;
 
     action_debug("Expect", ia, argc, argv);
     if (check_argc("Expect", argc, 1, 2) < 0) {
-	return False;
+	return false;
     }
 
     /* Verify the environment and parameters. */
     if (sms == NULL || sms->state != SS_RUNNING) {
 	popup_an_error("Expect can only be called from a script or macro");
-	return False;
+	return false;
     }
     if (!IN_NVT) {
 	popup_an_error("Expect is valid only when connected in NVT mode");
-	return False;
+	return false;
     }
     if (argc == 2) {
 	tmo = atoi(argv[1]);
 	if (tmo < 1 || tmo > 600) {
 	    popup_an_error("Expect: Invalid timeout: %s", argv[1]);
-	    return False;
+	    return false;
 	}
     } else {
 	tmo = 30;
@@ -3402,7 +3402,7 @@ Expect_action(ia_t ia, unsigned argc, const char **argv)
 	sms->state = SS_EXPECTING;
     }
     /* else allow sms to proceed */
-    return True;
+    return true;
 }
 
 #if defined(_WIN32) /*[*/
@@ -3446,7 +3446,7 @@ pick_port(int *sp)
 
 /* "Script" action, runs a script as a child process. */
 #if !defined(_WIN32) /*[*/
-static Boolean
+static bool
 Script_action(ia_t ia, unsigned argc, const char **argv)
 {
     int inpipe[2];
@@ -3454,12 +3454,12 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 
     if (argc < 1) {
 	popup_an_error("Script requires at least one argument");
-	return False;
+	return false;
     }
 
     /* Create a new script description. */
     if (!sms_push(ST_CHILD)) {
-	return False;
+	return false;
     }
 
     /*
@@ -3468,25 +3468,25 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
      *  outpipe[] is written by x3270, read by the script
      */
     if (pipe(inpipe) < 0) {
-	sms_pop(False);
+	sms_pop(false);
 	popup_an_error("pipe() failed");
-	return False;
+	return false;
     }
     if (pipe(outpipe) < 0) {
 	(void) close(inpipe[0]);
 	(void) close(inpipe[1]);
-	sms_pop(False);
+	sms_pop(false);
 	popup_an_error("pipe() failed");
-	return False;
+	return false;
     }
     if ((sms->outfile = fdopen(outpipe[1], "w")) == NULL) {
 	(void) close(inpipe[0]);
 	(void) close(inpipe[1]);
 	(void) close(outpipe[0]);
 	(void) close(outpipe[1]);
-	sms_pop(False);
+	sms_pop(false);
 	popup_an_error("fdopen() failed");
-	return False;
+	return false;
     }
     (void) SETLINEBUF(sms->outfile);
 
@@ -3495,9 +3495,9 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	(void) close(inpipe[0]);
 	(void) close(inpipe[1]);
 	(void) close(outpipe[0]);
-	sms_pop(False);
+	sms_pop(false);
 	popup_an_error("fork() failed");
-	return False;
+	return false;
     }
 
     /* Child processing. */
@@ -3537,13 +3537,13 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     /* Set up to reap the child's exit status. */
     ++children;
 
-    return True;
+    return true;
 }
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
 /* "Script" action, runs a script as a child process. */
-static Boolean
+static bool
 Script_action(ia_t ia, unsigned argc, const char **argv)
 {
     int s = -1;
@@ -3559,24 +3559,24 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 
     if (argc < 1) {
 	popup_an_error("Script requires at least one argument");
-	return False;
+	return false;
     }
 
     /* Set up X3270PORT for the child process. */
     port = pick_port(&s);
     if (port == 0) {
-	return False;
+	return false;
     }
     hevent = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (hevent == NULL) {
 	popup_an_error("CreateEvent: %s", win32_strerror(GetLastError()));
 	closesocket(s);
-	return False;
+	return false;
     }
     if (WSAEventSelect(s, hevent, FD_ACCEPT) != 0) {
 	popup_an_error("WSAEventSelect: %s", win32_strerror(GetLastError()));
 	closesocket(s);
-	return False;
+	return false;
     }
 
     pe = xs_buffer("X3270PORT=%d", port);
@@ -3615,7 +3615,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 	popup_an_error("CreateProcess(%s) failed: %s", argv[0],
 		win32_strerror(GetLastError()));
 	Free(args);
-	return False;
+	return false;
     } else {
 	Free(args);
 	CloseHandle(process_information.hThread);
@@ -3623,7 +3623,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 
     /* Create a new script description. */
     if (!sms_push(ST_CHILD)) {
-	return False;
+	return false;
     }
     sms->child_handle = process_information.hProcess;
     sms->inhandle = hevent;
@@ -3642,28 +3642,28 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     /* Enable input. */
     script_enable();
 
-    return True;
+    return true;
 }
 #endif /*]*/
 
 /* "Macro" action, explicitly invokes a named macro. */
-static Boolean
+static bool
 Macro_action(ia_t ia, unsigned argc, const char **argv)
 {
 	struct macro_def *m;
 
     action_debug("Macro", ia, argc, argv);
     if (check_argc("Macro", argc, 1, 1) < 0) {
-	return False;
+	return false;
     }
     for (m = macro_defs; m != NULL; m = m->next) {
 	if (!strcmp(m->name, argv[0])) {
-	    push_macro(m->action, False);
-	    return True;
+	    push_macro(m->action, false);
+	    return true;
 	}
     }
     popup_an_error("no such macro: '%s'", argv[0]);
-    return False;
+    return false;
 }
 
 /*
@@ -3678,7 +3678,7 @@ cancel_if_idle_command(void)
     for (s = sms; s != NULL; s = s->next) {
 	if (s->type == ST_IDLE) {
 	    cancel_idle_timer();
-	    s->idle_error = True;
+	    s->idle_error = true;
 	    vtrace("Cancelling idle command");
 	    break;
 	}
@@ -3686,26 +3686,26 @@ cancel_if_idle_command(void)
 }
 
 /* "Printer" action, starts or stops a printer session. */
-static Boolean
+static bool
 Printer_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Printer", ia, argc, argv);
     if (check_argc("Printer", argc, 1, 2) < 0) {
-	return False;
+	return false;
     }
     if (!strcasecmp(argv[0], "Start")) {
 	pr3287_session_start((argc > 1)? argv[1] : NULL);
     } else if (!strcasecmp(argv[0], "Stop")) {
 	if (argc != 1) {
 	    popup_an_error("Printer: Extra argument(s)");
-	    return False;
+	    return false;
 	}
 	pr3287_session_stop();
     } else {
 	popup_an_error("Printer: Argument must be Start or Stop");
-	return False;
+	return false;
     }
-    return True;
+    return true;
 }
 
 /* Abort all running scripts. */
@@ -3717,23 +3717,23 @@ abort_script(void)
 		if (sms->type == ST_CHILD && sms->pid > 0)
 			(void) kill(sms->pid, SIGTERM);
 #endif /*]*/
-		sms_pop(True);
+		sms_pop(true);
 	}
 }
 
 /* "Abort" action, stops pending scripts. */
-static Boolean
+static bool
 Abort_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Abort", ia, argc, argv);
     if (check_argc("Abort", argc, 0, 0) < 0) {
-	return False;
+	return false;
     }
 #if !defined(_WIN32) /*[*/
     child_ignore_output();
 #endif /*]*/
     abort_script();
-    return True;
+    return true;
 }
 
 /* Accumulate command execution time. */
@@ -3747,7 +3747,7 @@ sms_accumulate_time(struct timeval *t0, struct timeval *t1)
 	   (t1->tv_usec - t0->tv_usec + 500) / 1000;
 
     if (sms != NULL) {
-	sms->accumulated = True;
+	sms->accumulated = true;
 	sms->msec += msec;
 #if defined(DEBUG_ACCUMULATE) /*[*/
 	printf("%s: accumulated %lu msec\n", ST_NAME, sms->msec);
@@ -3756,12 +3756,12 @@ sms_accumulate_time(struct timeval *t0, struct timeval *t1)
 
     s = sms_redirect_to();
     if (s != NULL) {
-	s->accumulated = True;
+	s->accumulated = true;
 	s->msec += msec;
     }
 }
 
-static Boolean
+static bool
 Query_action(ia_t ia, unsigned argc, const char **argv)
 {
     static struct {
@@ -3803,7 +3803,7 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 		    s = queries[i].string;
 		}
 		action_output("%s\n", *s? s: " ");
-		return True;
+		return true;
 	    }
 	}
 	popup_an_error("Query: Unknown parameter");
@@ -3812,19 +3812,19 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 	popup_an_error("Query: Requires 0 or 1 arguments");
 	break;
     }
-    return True;
+    return true;
 }
 
 /*
  * Bell action, used by scripts to ring the console bell and enter a comment
  * into the trace log.
  */
-static Boolean
+static bool
 Bell_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Bell", ia, argc, argv);
     if (check_argc("Bell", argc, 0, 0) < 0) {
-	return False;
+	return false;
     }
     if (product_has_display()) {
 	ring_bell();
@@ -3832,10 +3832,10 @@ Bell_action(ia_t ia, unsigned argc, const char **argv)
 	action_output("(ding)");
     }
 
-    return True;
+    return true;
 }
 
-static Boolean
+static bool
 Source_action(ia_t ia, unsigned argc, const char **argv)
 {
     int fd;
@@ -3843,16 +3843,16 @@ Source_action(ia_t ia, unsigned argc, const char **argv)
 
     action_debug("Source", ia, argc, argv);
     if (check_argc("Source", argc, 1, 1) < 0) {
-	return False;
+	return false;
     }
     expanded_filename = do_subst(argv[0], DS_VARS | DS_TILDE);
     fd = open(expanded_filename, O_RDONLY);
     if (fd < 0) {
 	Free(expanded_filename);
 	popup_an_errno(errno, "%s", argv[0]);
-	return False;
+	return false;
     }
     Free(expanded_filename);
     push_file(fd);
-    return True;
+    return true;
 }

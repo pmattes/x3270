@@ -76,9 +76,9 @@ typedef union {
  * @param[out] addr	returned address
  * @param[out] addrlen	returned length of address
  *
- * @return True if address parsed successfully, False otherwise
+ * @return true if address parsed successfully, false otherwise
  */
-Boolean
+bool
 parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
 {
     size_t hlen;
@@ -92,7 +92,7 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
     *addrlen = 0;
 
     if (spec == NULL || *spec == '\0') {
-	return False;
+	return false;
     }
 
     /* Tease apart the syntax. */
@@ -105,7 +105,7 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
 	    *(rbrack + 1) != ':' ||
 	    !*(rbrack + 2)) {
 
-	    return False;
+	    return false;
 	}
 
 	hlen = rbrack - spec - 1;
@@ -127,14 +127,14 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
 	} else if (colon == spec) {
 	    /* Just a colon and a port. */
 	    if (!*(colon + 1)) {
-		return False;
+		return false;
 	    }
 	    host_str = NewString("127.0.0.1");
 	    port_str = NewString(spec + 1);
 	} else {
 	    /* <address>:<port>. */
 	    if (colon == NULL || colon == spec || !*(colon + 1)) {
-		return False;
+		return false;
 	    }
 
 	    hlen = colon - spec;
@@ -162,8 +162,8 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
     if (RHP_IS_ERROR(rv)) {
 	Free(*addr);
 	*addr = NULL;
-	return False;
+	return false;
     }
 
-    return True;
+    return true;
 }

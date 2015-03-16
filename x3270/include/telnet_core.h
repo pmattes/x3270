@@ -37,7 +37,7 @@ extern unsigned char *obuf, *obptr;
 
 /* Entry points. */
 void popup_a_sockerr(const char *fmt, ...) printflike(1, 2);
-Boolean net_add_dummy_tn3270e(void);
+bool net_add_dummy_tn3270e(void);
 void net_add_eor(unsigned char *buf, int len);
 void net_disconnect(void);
 void net_output(void);

@@ -93,7 +93,7 @@ typedef struct cmenu_item {
     struct cmenu_item *next;	/* Next item in list. */
     struct cmenu_item *prev;	/* Next item in list. */
     char *label;		/* What to display. */
-    Boolean enabled;
+    bool enabled;
     menu_callback action;	/* What to do. */
     void *param;		/* Callback parameter. */
     struct cmenu *cmenu;	/* Backpointer to cmenu. */
@@ -165,7 +165,7 @@ add_item(cmenu_t *cmenu, char *label, void (*action)(void *), void *param)
     strcpy(i->label, label);
     i->action = action;
     i->param = param;
-    i->enabled = True;
+    i->enabled = true;
     i->next = NULL;
     i->prev = cmenu->last;
     i->cmenu = cmenu;
@@ -182,7 +182,7 @@ add_item(cmenu_t *cmenu, char *label, void (*action)(void *), void *param)
 }
 
 void
-enable_item(cmenu_item_t *i, Boolean enabled)
+enable_item(cmenu_item_t *i, bool enabled)
 {
     i->enabled = enabled;
     /* TODO: Do more here. */
@@ -212,8 +212,8 @@ basic_menu_init(void)
     current_menu = NULL;
     current_item = NULL;
     menu_is_up &= ~MENU_IS_UP;
-    pop_up_keypad(False);
-    screen_changed = True;
+    pop_up_keypad(false);
+    screen_changed = true;
 }
 
 /* Undraw a menu. */
@@ -223,11 +223,11 @@ undraw_menu(cmenu_t *cmenu)
     int row, col;
     cmenu_item_t *i;
 
-    screen_changed = True;
+    screen_changed = true;
 
     /* Unhighlight the menu title. */
     for (col = cmenu->offset; col < cmenu->offset + MENU_WIDTH; col++) {
-	menu_rv[(0 * MODEL_2_COLS) + col] = False;
+	menu_rv[(0 * MODEL_2_COLS) + col] = false;
     }
 
     if (!cmenu->items) {
@@ -248,7 +248,7 @@ undraw_menu(cmenu_t *cmenu)
 	col = cmenu->offset;
 	while ((size_t)col < cmenu->offset + cmenu->width + 2) {
 	    menu_screen[(row * MODEL_2_COLS) + col] = 0;
-	    menu_rv[(row * MODEL_2_COLS) + col] = False;
+	    menu_rv[(row * MODEL_2_COLS) + col] = false;
 	    col++;
 	}
 	row++;
@@ -269,14 +269,14 @@ draw_menu(cmenu_t *cmenu)
     int row, col;
     cmenu_item_t *i;
 
-    screen_changed = True;
+    screen_changed = true;
 
     /* Highlight the title. */
     row = 0;
     for (col = cmenu->offset;
 	 col < cmenu->offset + MENU_WIDTH - 1;
 	 col++) {
-	menu_rv[(row * MODEL_2_COLS) + col] = True;
+	menu_rv[(row * MODEL_2_COLS) + col] = true;
     }
     if (!cmenu->items) {
 	return;
@@ -416,9 +416,9 @@ popup_menu(int x, int click)
 /*
  * Find a mouse click in the menu hierarchy and act on it.
  *
- * Returns True if the coordinates are on a menu somewhere, False otherwise.
+ * Returns true if the coordinates are on a menu somewhere, false otherwise.
  */
-Boolean
+bool
 find_mouse(int x, int y)
 {
     cmenu_t *c = NULL;
@@ -429,7 +429,7 @@ find_mouse(int x, int y)
     if (x >= MODEL_2_COLS ||
 	y >= MODEL_2_ROWS ||
 	menu_screen[(y * MODEL_2_COLS) + x] == 0) {
-	return False;
+	return false;
     }
 
     if (y == 0) {
@@ -437,13 +437,13 @@ find_mouse(int x, int y)
 	for (c = menus; c != NULL; c = c->next) {
 	    if (x >= c->offset && x < c->offset + MENU_WIDTH) {
 		if (c == current_menu) {
-		    return False;
+		    return false;
 		}
 		if (c->items == NULL) {
 		    goto selected;
 		}
 		if (c == current_menu) {
-		    return True;
+		    return true;
 		}
 		undraw_menu(current_menu);
 		current_menu = c;
@@ -452,18 +452,18 @@ find_mouse(int x, int y)
 		    current_item = current_item->next;
 		}
 		draw_menu(current_menu);
-		return True;
+		return true;
 	    }
 	}
-	return False;
+	return false;
     }
 
     if (x < current_menu->offset ||
 	(size_t)x > current_menu->offset + current_menu->width) {
-	return False;
+	return false;
     }
     if (y == 1) { /* top border */
-	return True;
+	return true;
     }
     row = 2;
     for (i = current_menu->items; i != NULL; i = i->next) {
@@ -476,15 +476,15 @@ find_mouse(int x, int y)
 	if (i->enabled) {
 	    goto selected;
 	} else {
-	    return True;
+	    return true;
 	}
     }
     if (y == row + 1) {
-	return True;
+	return true;
     }
 
 
-    return False;
+    return false;
 
 selected:
     if (i == NULL) {
@@ -500,7 +500,7 @@ selected:
 	after_callback = NULL;
 	after_param = NULL;
     }
-    return True;
+    return true;
 }
 #endif /*]*/
 
@@ -526,7 +526,7 @@ void
 menu_key(menu_key_t k, ucs4_t u)
 {
     cmenu_item_t *i;
-    Boolean selected = False;
+    bool selected = false;
 
     if (menu_is_up & KEYPAD_IS_UP) {
 	keypad_key(k, u);
@@ -635,14 +635,14 @@ menu_key(menu_key_t k, ucs4_t u)
 	break;
 
     case MK_ENTER:
-	selected = True;
+	selected = true;
 	break;
 
     case MK_NONE:
 	switch (u) {
 	case '\r':
 	case '\n':
-	    selected = True;
+	    selected = true;
 	    break;
 	default:
 	    basic_menu_init();
@@ -669,18 +669,18 @@ menu_key(menu_key_t k, ucs4_t u)
 	}
     }
 
-    screen_changed = True;
+    screen_changed = true;
 }
 
 /* Report a character back to the screen drawing logic. */
-Boolean
-menu_char(int row, int col, Boolean persistent, ucs4_t *u,
-	Boolean *highlighted, unsigned char *acs)
+bool
+menu_char(int row, int col, bool persistent, ucs4_t *u,
+	bool *highlighted, unsigned char *acs)
 {
     if (menu_is_up & KEYPAD_IS_UP) {
 	return keypad_char(row, col, u, highlighted, acs);
     } else if (col >= MODEL_2_COLS) {
-	return False;
+	return false;
     } else if ((menu_is_up & MENU_IS_UP) &&
 	     row < MODEL_2_ROWS &&
 	     col < MODEL_2_COLS &&
@@ -688,15 +688,15 @@ menu_char(int row, int col, Boolean persistent, ucs4_t *u,
 	*u = menu_screen[(row * MODEL_2_COLS) + col];
 	*highlighted = menu_rv[(row * MODEL_2_COLS) + col];
 	*acs = menu_acs[(row * MODEL_2_COLS) + col];
-	return True;
+	return true;
     } else if (persistent && row == 0 && menu_topline[col]) {
 	*u = menu_topline[col];
 	*highlighted = 0;
-	return True;
+	return true;
     } else {
 	*u = 0;
-	*highlighted = False;
-	return False;
+	*highlighted = false;
+	return false;
     }
 }
 
@@ -723,42 +723,42 @@ menu_cursor(int *row, int *col)
 static void
 fm_copyright(void *ignored _is_unused)
 {
-    push_macro("Show(copyright)", False);
+    push_macro("Show(copyright)", false);
     sms_continue();
 }
 
 static void
 fm_status(void *ignored _is_unused)
 {
-    push_macro("Show(status)", False);
+    push_macro("Show(status)", false);
     sms_continue();
 }
 
 static void
 fm_prompt(void *ignored _is_unused)
 {
-    push_macro("Escape", False);
+    push_macro("Escape", false);
 }
 
 static void
 fm_print(void *ignored _is_unused)
 {
-    push_macro("PrintText", False);
+    push_macro("PrintText", false);
 }
 
 static void
 fm_xfer(void *ignored _is_unused)
 {
-    push_macro("Escape() Transfer()", False);
+    push_macro("Escape() Transfer()", false);
 }
 
 static void
 fm_trace(void *ignored _is_unused)
 {
     if (toggled(TRACING)) {
-	push_macro("Trace(off)", False);
+	push_macro("Trace(off)", false);
     } else {
-	push_macro("Trace(on)", False);
+	push_macro("Trace(on)", false);
     }
 }
 
@@ -766,9 +766,9 @@ static void
 fm_screentrace(void *ignored _is_unused)
 {
     if (toggled(SCREEN_TRACE)) {
-	push_macro("ScreenTrace(off)", False);
+	push_macro("ScreenTrace(off)", false);
     } else {
-	push_macro("ScreenTrace(on)", False);
+	push_macro("ScreenTrace(on)", false);
     }
 }
 
@@ -776,16 +776,16 @@ static void
 fm_screentrace_printer(void *ignored _is_unused)
 {
     if (toggled(SCREEN_TRACE)) {
-	push_macro("ScreenTrace(off)", False);
+	push_macro("ScreenTrace(off)", false);
     } else {
-	push_macro("ScreenTrace(on,printer,gdi)", False);
+	push_macro("ScreenTrace(on,printer,gdi)", false);
     }
 }
 
 static void
 fm_keymap(void *ignored _is_unused)
 {
-    push_macro("Show(keymap)", False);
+    push_macro("Show(keymap)", false);
 }
 
 #if defined(_WIN32) /*[*/
@@ -805,13 +805,13 @@ fm_wizard(void *session)
 static void
 fm_disconnect(void *ignored _is_unused)
 {
-    push_macro("Disconnect", False);
+    push_macro("Disconnect", false);
 }
 
 static void
 fm_quit(void *ignored _is_unused)
 {
-    push_macro("Quit", False);
+    push_macro("Quit", false);
 }
 
 /* File menu. */
@@ -928,7 +928,7 @@ toggle_option(void *param)
 static void
 really_popup_keypad(void *ignored _is_unused)
 {
-    pop_up_keypad(True);
+    pop_up_keypad(true);
 }
 
 static void
@@ -1041,10 +1041,10 @@ menubar_retoggle(toggle_index_t ix)
 	    case TSS_FILE:
 		rename_item(file_menu_items[FM_SCREENTRACE],
 			"Stop Saving Screen Images");
-		enable_item(file_menu_items[FM_SCREENTRACE_PRINTER], False);
+		enable_item(file_menu_items[FM_SCREENTRACE_PRINTER], false);
 		break;
 	    case TSS_PRINTER:
-		enable_item(file_menu_items[FM_SCREENTRACE], False);
+		enable_item(file_menu_items[FM_SCREENTRACE], false);
 		rename_item(file_menu_items[FM_SCREENTRACE_PRINTER],
 			"Stop Saving Screen Images");
 		break;
@@ -1052,10 +1052,10 @@ menubar_retoggle(toggle_index_t ix)
 	} else {
 	    rename_item(file_menu_items[FM_SCREENTRACE],
 		    "Save Screen Images in File");
-	    enable_item(file_menu_items[FM_SCREENTRACE], True);
+	    enable_item(file_menu_items[FM_SCREENTRACE], true);
 	    rename_item(file_menu_items[FM_SCREENTRACE_PRINTER],
 		    "Save Screen Images to Printer");
-	    enable_item(file_menu_items[FM_SCREENTRACE_PRINTER], True);
+	    enable_item(file_menu_items[FM_SCREENTRACE_PRINTER], true);
 	}
     }
 }
@@ -1204,20 +1204,20 @@ map_acs(unsigned char c, ucs4_t *u, unsigned char *is_acs)
 #endif /*]*/
 }
 
-Boolean
+bool
 Menu_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Menu", ia, argc, argv);
     if (check_argc("Menu", argc, 0, 0) < 0) {
-	return False;
+	return false;
     }
 
-    popup_menu(0, False);
-    return True;
+    popup_menu(0, false);
+    return true;
 }
 
 void
-menubar_as_set(Boolean sensitive _is_unused)
+menubar_as_set(bool sensitive _is_unused)
 {
     /* Do nothing, there is no Abort Script. */
 }

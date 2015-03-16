@@ -92,6 +92,13 @@
 #endif /*]*/
 #include <time.h>			/* C library time functions */
 #include <stdarg.h>			/* variable argument lists */
+#if !defined(_MSC_VER) /*[*/
+# include <stdbool.h>			/* bool, true, false */
+#else /*][*/
+typedef char bool;			/* roll our own for MSC */
+# define true 1
+# define false 0
+#endif /*]*/
 #if defined(_WIN32) /*[*/
 # include "wincmn.h"			/* Common Windows definitions */
 #endif /*]*/
@@ -157,13 +164,6 @@ char *NewString(const char *);
 void Error(const char *);
 void Warning(const char *);
 
-/* Typedefs cribbed from X11. */
-#if !defined(X3270_DISPLAY) /*[*/
-typedef char Boolean;
-# define False 0
-# define True 1
-#endif /*]*/
-
 /* A key symbol. */
 typedef unsigned long ks_t;
 #define KS_NONE 0L
@@ -179,7 +179,7 @@ extern int		defCOLS;
 extern int		altROWS;	/* alternate (EraseWriteAlternate) */
 extern int		altCOLS;
 extern const char	*app;
-extern Boolean		bind_lock_host;
+extern bool		bind_lock_host;
 extern const char	*build;
 extern const char	*cyear;
 extern const char	*build_rpq_timestamp;
@@ -189,46 +189,46 @@ extern char		*connected_lu;
 extern char		*connected_type;
 extern char		*current_host;
 extern unsigned short	current_port;
-extern Boolean		dbcs;
+extern bool		dbcs;
 extern int		dft_buffersize;
 extern char		*efontname;
-extern Boolean		ever_3270;
-extern Boolean		exiting;
-extern Boolean		flipped;
+extern bool		ever_3270;
+extern bool		exiting;
+extern bool		flipped;
 extern char		*full_current_host;
 extern char		*full_efontname;
 extern char		*full_efontname_dbcs;
 extern char		full_model_name[];
-extern char		*funky_font;
+extern bool		*funky_font;
 extern char		*hostname;
 extern char		luname[];
 #if defined(LOCAL_PROCESS) /*[*/
-extern Boolean		local_process;
+extern bool		local_process;
 #endif /*]*/
 extern char		*model_name;
 extern int		model_num;
-extern Boolean		no_login_host;
-extern Boolean		non_tn3270e_host;
+extern bool		no_login_host;
+extern bool		non_tn3270e_host;
 extern int		ov_cols, ov_rows;
-extern Boolean		ov_auto;
-extern Boolean		passthru_host;
+extern bool		ov_auto;
+extern bool		passthru_host;
 extern char		*profile_name;
 extern const char	*programname;
 extern char		*qualified_host;
 extern char		*reconnect_host;
 extern int		screen_depth;
-extern Boolean		scroll_initted;
+extern bool		scroll_initted;
 #if defined(HAVE_LIBSSL) /*[*/
-extern Boolean		secure_connection;
-extern Boolean		secure_unverified;
+extern bool		secure_connection;
+extern bool		secure_unverified;
 extern char		**unverified_reasons;
 #endif /*]*/
-extern Boolean		shifted;
-extern Boolean		ssl_host;
-extern Boolean		*standard_font;
-extern Boolean		std_ds_host;
+extern bool		shifted;
+extern bool		ssl_host;
+extern bool		*standard_font;
+extern bool		std_ds_host;
 extern char		*termtype;
-extern Boolean		visible_control;
+extern bool		visible_control;
 extern int		*xtra_width;
 extern int		x3270_exit_code;
 
@@ -301,7 +301,7 @@ typedef enum {
 			   wc3270) */
     N_TOGGLES
 } toggle_index_t;
-Boolean toggled(toggle_index_t ix);
+bool toggled(toggle_index_t ix);
 
 /*   extended attributes */
 struct ea {
@@ -331,7 +331,7 @@ enum keytype { KT_STD, KT_GE };
 
 /* Shorthand macros */
 
-#define Replace(var, value) do { Free(var); var = (value); } while(False)
+#define Replace(var, value) do { Free(var); var = (value); } while(false)
 
 /* Configuration change masks. */
 #define NO_CHANGE	0x0000	/* no change */
@@ -388,7 +388,7 @@ typedef enum iaction {
 } ia_t;
 extern enum iaction ia_cause;
 
-typedef Boolean (action_t)(ia_t ia, unsigned argc, const char **argv);
+typedef bool (action_t)(ia_t ia, unsigned argc, const char **argv);
 
 /* Common socket definitions. */
 #if !defined(_WIN32) /*[*/

@@ -31,4 +31,4 @@
  *		logic.
  */
 
-Boolean glue_gui_output(const char *s);		/* default False */
+bool glue_gui_output(const char *s);		/* default False */

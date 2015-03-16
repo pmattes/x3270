@@ -63,15 +63,15 @@ void RemoveTimeOut(ioid_t id);
 
 ks_t string_to_key(char *s);
 char *key_to_string(ks_t k);
-Boolean read_resource_file(const char *filename, Boolean fatal);
-Boolean split_hier(char *label, char **base, char ***parents);
+bool read_resource_file(const char *filename, bool fatal);
+bool split_hier(char *label, char **base, char ***parents);
 
 const char *build_options(void);
 void dump_version(void);
 const char *display_scale(double d);
 
 /* Doubly-linked lists. */
-Boolean llist_isempty(llist_t *l);
+bool llist_isempty(llist_t *l);
 void llist_init(llist_t *l);
 void llist_insert_before(llist_t *element, llist_t *before);
 void llist_unlink(llist_t *element);
@@ -104,8 +104,8 @@ void llist_unlink(llist_t *element);
 #define ORDER_DONTCARE	0xfffe
 #define ORDER_LAST	0xffff
 
-typedef void schange_callback_t(Boolean);
+typedef void schange_callback_t(bool);
 void register_schange_ordered(int tx, schange_callback_t *func,
 	unsigned short order);
 void register_schange(int tx, schange_callback_t *func);
-void st_changed(int tx, Boolean mode);
+void st_changed(int tx, bool mode);

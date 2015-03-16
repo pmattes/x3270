@@ -45,8 +45,8 @@ ssl_passwd_gui_reset(void)
 {
 }
 
-Boolean
+bool
 ssl_passwd_gui_retry(void)
 {
-    return False;
+    return false;
 }

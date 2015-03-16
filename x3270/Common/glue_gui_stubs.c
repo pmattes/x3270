@@ -34,8 +34,8 @@
 
 #include "glue_gui.h"
 
-Boolean
+bool
 glue_gui_output(const char *s _is_unused)
 {
-    return False;
+    return false;
 }

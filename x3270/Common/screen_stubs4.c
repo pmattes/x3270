@@ -34,8 +34,8 @@
 
 #include "screen.h"
 
-Boolean
+bool
 screen_new_display_charsets(const char *realname, const char *csnames)
 {
-    return True; /* success */
+    return true; /* success */
 }

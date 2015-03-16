@@ -38,15 +38,15 @@
 #include "xio.h"
 #include "xpopups.h"
 
-Boolean
+bool
 host_gui_connect(void)
 {
     if (appres.once) {
 	/* Exit when the error pop-up pops down. */
-	exiting = True;
-	return True;
+	exiting = true;
+	return true;
     } else {
-	return False;
+	return false;
     }
 }
 
@@ -58,21 +58,21 @@ host_gui_connect_initial(void)
     }
 }
 
-Boolean
+bool
 host_gui_disconnect(void)
 {
     if (appres.once) {
 	if (error_popup_visible()) {
 	    /* If there is an error pop-up, exit when it pops down. */
-	    exiting = True;
+	    exiting = true;
 	} else {
 	    /* Exit now. */
 	    x3270_exit(0);
-	    return True;
+	    return true;
 	}
-	return True;
+	return true;
     } else {
-	return False;
+	return false;
     }
 }
 

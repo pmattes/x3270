@@ -30,6 +30,6 @@
  *		Child shell popups delarations.
  */
 
-void popup_child_output(Boolean is_err, abort_callback_t *a,
+void popup_child_output(bool is_err, abort_callback_t *a,
 	const char *fmt, ...) printflike(3, 4);
 void child_popup_init(void);

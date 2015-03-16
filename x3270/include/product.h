@@ -33,7 +33,7 @@
  *		default value.
  */
 
-Boolean product_has_display(void); 			/* default False */
+bool product_has_display(void); 			/* default False */
 const char *product_specific_build_options(void);	/* default NULL */
-Boolean product_auto_oversize(void);			/* default False */
+bool product_auto_oversize(void);			/* default False */
 void product_set_appres_defaults(void);

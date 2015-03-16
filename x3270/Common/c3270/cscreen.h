@@ -30,7 +30,7 @@
  *		c3270/wc3270 screen declarations.
  **/
 
-extern Boolean escaped;
+extern bool escaped;
 #if defined(WC3270) /*[*/
 extern int windows_cp;
 extern HWND console_window;
@@ -44,6 +44,6 @@ void screen_final(void);
 void screen_system_fixup(void);
 #if defined(WC3270) /*[*/
 void pager_output(const char *s);
-Boolean screen_wait_for_key(char *c);
+bool screen_wait_for_key(char *c);
 void screen_title(const char *text);
 #endif /*]*/

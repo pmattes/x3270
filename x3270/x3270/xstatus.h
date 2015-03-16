@@ -34,7 +34,7 @@
 
 void status_disp(void);
 void status_init(void);
-void status_kmap(Boolean on);
+void status_kmap(bool on);
 void status_register(void);
 void status_reinit(unsigned cmask);
 void status_shift_mode(int state);

@@ -52,7 +52,7 @@
 #include "trace.h"
 
 /* Statics */
-static Boolean  qr_in_progress = False;
+static bool  qr_in_progress = false;
 static enum pds sf_read_part(unsigned char buf[], unsigned buflen);
 static enum pds sf_erase_reset(unsigned char buf[], int buflen);
 static enum pds sf_set_reply_mode(unsigned char buf[], int buflen);
@@ -92,10 +92,10 @@ write_structured_field(unsigned char buf[], int buflen)
 {
 	unsigned short fieldlen;
 	unsigned char *cp = buf;
-	Boolean first = True;
+	bool first = true;
 	enum pds rv = PDS_OKAY_NO_OUTPUT;
 	enum pds rv_this = PDS_OKAY_NO_OUTPUT;
-	Boolean bad_cmd = False;
+	bool bad_cmd = false;
 
 	/* Skip the WSF command itself. */
 	cp++;
@@ -108,7 +108,7 @@ write_structured_field(unsigned char buf[], int buflen)
 			trace_ds(" ");
 		else
 			trace_ds("< WriteStructuredField ");
-		first = False;
+		first = false;
 
 		/* Pick out the field length. */
 		if (buflen < 2) {
@@ -168,7 +168,7 @@ write_structured_field(unsigned char buf[], int buflen)
 		 * way to return the error indication.
 		 */
 		if (rv_this < 0)
-			bad_cmd = True;
+			bad_cmd = true;
 		else
 			rv |= rv_this;
 
@@ -391,21 +391,21 @@ sf_outbound_ds(unsigned char buf[], int buflen)
 	    case SNA_CMD_W:
 		trace_ds(" Write");
 		if (buflen > 5)
-			ctlr_write(&buf[4], buflen-4, False);
+			ctlr_write(&buf[4], buflen-4, false);
 		else
 			trace_ds("\n");
 		break;
 	    case SNA_CMD_EW:
 		trace_ds(" EraseWrite");
 		if (buflen > 5)
-			ctlr_write(&buf[4], buflen-4, True);
+			ctlr_write(&buf[4], buflen-4, true);
 		else
 			trace_ds("\n");
 		break;
 	    case SNA_CMD_EWA:
 		trace_ds(" EraseWriteAlternate");
 		if (buflen > 5)
-			ctlr_write(&buf[4], buflen-4, True);
+			ctlr_write(&buf[4], buflen-4, true);
 		else
 			trace_ds("\n");
 		break;
@@ -425,7 +425,7 @@ query_reply_start(void)
 	obptr = obuf;
 	space3270out(1);
 	*obptr++ = AID_SF;
-	qr_in_progress = True;
+	qr_in_progress = true;
 }
 
 static void
@@ -440,7 +440,7 @@ do_query_reply(unsigned char code)
 
 	if (qr_in_progress) {
 		trace_ds("> StructuredField\n");
-		qr_in_progress = False;
+		qr_in_progress = false;
 	}
 
 	space3270out(4);

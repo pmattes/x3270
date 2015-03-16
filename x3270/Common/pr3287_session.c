@@ -93,7 +93,7 @@ static HANDLE	pr3287_sync_handle = NULL;
 static ioid_t	pr3287_kill_id = NULL_IOID; /* kill timeout ID */
 static ioid_t	pr3287_delay_id = NULL_IOID; /* delay timeout ID */
 static char	*pr3287_delay_lu = NULL;
-static Boolean	pr3287_delay_associated = False;
+static bool	pr3287_delay_associated = false;
 static struct pr3o {
     int fd;			/* file descriptor */
     ioid_t input_id;		/* input ID */
@@ -108,12 +108,12 @@ static void	pr3287_output(iosrc_t fd, ioid_t id);
 static void	pr3287_error(iosrc_t fd, ioid_t id);
 static void	pr3287_otimeout(ioid_t id);
 static void	pr3287_etimeout(ioid_t id);
-static void	pr3287_dump(struct pr3o *p, Boolean is_err, Boolean is_dead);
+static void	pr3287_dump(struct pr3o *p, bool is_err, bool is_dead);
 #endif /*]*/
-static void	pr3287_host_connect(Boolean connected _is_unused);
-static void	pr3287_exiting(Boolean b _is_unused);
+static void	pr3287_host_connect(bool connected _is_unused);
+static void	pr3287_exiting(bool b _is_unused);
 static void	pr3287_accept(iosrc_t fd, ioid_t id);
-static void	pr3287_start_now(const char *lu, Boolean associated);
+static void	pr3287_start_now(const char *lu, bool associated);
 
 /* Globals */
 
@@ -181,7 +181,7 @@ pr3287_reap_now(void)
 
     vtrace("Old printer session exited.\n");
     pr3287_state = P_NONE;
-    st_changed(ST_PRINTER, False);
+    st_changed(ST_PRINTER, false);
 }
 
 /* Delayed start function. */
@@ -215,7 +215,7 @@ delayed_start(ioid_t id _is_unused)
 void
 pr3287_session_start(const char *lu)
 {
-    Boolean associated = False;
+    bool associated = false;
 
     /* Gotta be in 3270 mode. */
     if (!IN_3270) {
@@ -226,7 +226,7 @@ pr3287_session_start(const char *lu)
     /* Figure out the LU. */
     if (lu == NULL) {
 	/* Associate with the current session. */
-	associated = True;
+	associated = true;
 
 	/* Gotta be in TN3270E mode. */
 	if (!IN_TN3270E) {
@@ -288,7 +288,7 @@ pr3287_session_start(const char *lu)
  * Called when it is safe to start a pr3287 session.
  */
 static void
-pr3287_start_now(const char *lu, Boolean associated)
+pr3287_start_now(const char *lu, bool associated)
 {
     const char *cmdlineName;
     const char *cmdline;
@@ -313,7 +313,7 @@ pr3287_start_now(const char *lu, Boolean associated)
     int stderr_pipe[2];
 #endif /*]*/
     char *pr3287_opts;
-    Boolean success = True;
+    bool success = true;
     struct sockaddr_in pr3287_lsa;
     socklen_t len;
     char *syncopt;
@@ -570,7 +570,7 @@ pr3287_start_now(const char *lu, Boolean associated)
 	(void) close(stdout_pipe[1]);
 	(void) close(stderr_pipe[0]);
 	(void) close(stderr_pipe[1]);
-	success = False;
+	success = false;
 	break;
     }
 #else /*][*/
@@ -597,7 +597,7 @@ pr3287_start_now(const char *lu, Boolean associated)
 		NULL, NULL, &si, &pi)) {
 	popup_an_error("CreateProcess() for printer session failed: %s",
 		win32_strerror(GetLastError()));
-	success = False;
+	success = false;
     } else {
 	pr3287_handle = pi.hProcess;
 	CloseHandle(pi.hThread);
@@ -609,14 +609,14 @@ pr3287_start_now(const char *lu, Boolean associated)
     /* Tell everyone else. */
     if (success) {
 	pr3287_state = P_RUNNING;
-	st_changed(ST_PRINTER, True);
+	st_changed(ST_PRINTER, true);
     }
 }
 
 #if !defined(_WIN32) /*[*/
 /* There's data from the printer session. */
 static void
-pr3287_data(struct pr3o *p, Boolean is_err)
+pr3287_data(struct pr3o *p, bool is_err)
 {
     int space;
     int nr;
@@ -651,7 +651,7 @@ pr3287_data(struct pr3o *p, Boolean is_err)
 	    if (p->count >= PRINTER_BUF) {
 		p->count = PRINTER_BUF - 1;
 	    }
-	    pr3287_dump(p, True, True);
+	    pr3287_dump(p, true, true);
 	} else {
 	    popup_an_error("%s", exitmsg);
 	}
@@ -670,7 +670,7 @@ pr3287_data(struct pr3o *p, Boolean is_err)
      * give it a second to generate more output.
      */
     if (p->count >= PRINTER_BUF - 1) {
-	pr3287_dump(p, is_err, False);
+	pr3287_dump(p, is_err, false);
     } else if (p->timeout_id == NULL_IOID) {
 	p->timeout_id = AddTimeOut(1000,
 		is_err? pr3287_etimeout: pr3287_otimeout);
@@ -681,44 +681,44 @@ pr3287_data(struct pr3o *p, Boolean is_err)
 static void
 pr3287_output(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
-    pr3287_data(&pr3287_stdout, False);
+    pr3287_data(&pr3287_stdout, false);
 }
 
 /* The printer process has some error output for us. */
 static void
 pr3287_error(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
-    pr3287_data(&pr3287_stderr, True);
+    pr3287_data(&pr3287_stderr, true);
 }
 
 /* Timeout from printer output or error output. */
 static void
-pr3287_timeout(struct pr3o *p, Boolean is_err)
+pr3287_timeout(struct pr3o *p, bool is_err)
 {
     /* Forget the timeout ID. */
     p->timeout_id = NULL_IOID;
 
     /* Dump the output. */
-    pr3287_dump(p, is_err, False);
+    pr3287_dump(p, is_err, false);
 }
 
 /* Timeout from printer output. */
 static void
 pr3287_otimeout(ioid_t id _is_unused)
 {
-    pr3287_timeout(&pr3287_stdout, False);
+    pr3287_timeout(&pr3287_stdout, false);
 }
 
 /* Timeout from printer error output. */
 static void
 pr3287_etimeout(ioid_t id _is_unused)
 {
-    pr3287_timeout(&pr3287_stderr, True);
+    pr3287_timeout(&pr3287_stderr, true);
 }
 
 /* Dump pending printer process output. */
 static void
-pr3287_dump(struct pr3o *p, Boolean is_err, Boolean is_dead)
+pr3287_dump(struct pr3o *p, bool is_err, bool is_dead)
 {
     if (p->count) {
 	/*
@@ -977,7 +977,7 @@ pr3287_session_check(
     pr3287_state = P_NONE;
 
     /* Propagate the state. */
-    st_changed(ST_PRINTER, False);
+    st_changed(ST_PRINTER, false);
 
     /*
      * If there is a pending request to start the printer, set a timeout to
@@ -1042,7 +1042,7 @@ pr3287_session_stop()
 
 /* The emulator is exiting.  Make sure the printer session is cleaned up. */
 static void
-pr3287_exiting(Boolean b _is_unused)
+pr3287_exiting(bool b _is_unused)
 {
     if (pr3287_state >= P_RUNNING && pr3287_state < P_TERMINATING) {
 	pr3287_kill(NULL_IOID);
@@ -1051,7 +1051,7 @@ pr3287_exiting(Boolean b _is_unused)
 
 /* Host connect/disconnect/3270-mode event. */
 static void
-pr3287_host_connect(Boolean connected _is_unused)
+pr3287_host_connect(bool connected _is_unused)
 {
     if (IN_3270) {
 	char *pr3287_lu = appres.interactive.printer_lu;
@@ -1098,7 +1098,7 @@ pr3287_host_connect(Boolean connected _is_unused)
     }
 }
 
-Boolean
+bool
 pr3287_session_running(void)
 {
     return (pr3287_state == P_RUNNING);

@@ -54,7 +54,7 @@
 #include "unicodec.h"
 
 /* Statics */
-static Boolean select_rpq_terms(void);
+static bool select_rpq_terms(void);
 static int get_rpq_timezone(void);
 static int get_rpq_user(unsigned char buf[], const int buflen);
 #if !defined(_WIN32) /*[*/
@@ -62,9 +62,9 @@ static int get_rpq_address(unsigned char buf[], const int buflen);
 #endif /*]*/
 static void rpq_warning(const char *fmt, ...);
 static void rpq_dump_warnings(void);
-static Boolean rpq_complained = False;
+static bool rpq_complained = false;
 #if !defined(_WIN32) /*[*/
-static Boolean omit_due_space_limit = False;
+static bool omit_due_space_limit = false;
 #endif /*]*/
 
 /*
@@ -89,17 +89,17 @@ static Boolean omit_due_space_limit = False;
  * should match TIMESTAMP instead of TIMEZONE.
  */
 static struct rpq_keyword {
-    Boolean omit;	/* set from X3270RPQ="kw1:kw2..." environment var */
+    bool omit;	/* set from X3270RPQ="kw1:kw2..." environment var */
     int oride;	/* displacement */
-    const Boolean allow_oride;
+    const bool allow_oride;
     const unsigned char id;
     const char *text;
 } rpq_keywords[] = {
-    {True, 0, 	True,	RPQ_ADDRESS,	"ADDRESS"},
-    {True, 0, 	False,	RPQ_TIMESTAMP,	"TIMESTAMP"},
-    {True, 0, 	True,	RPQ_TIMEZONE,	"TIMEZONE"},
-    {True, 0, 	True,	RPQ_USER,	"USER"},
-    {True, 0, 	False,	RPQ_VERSION,	"VERSION"},
+    {true, 0, 	true,	RPQ_ADDRESS,	"ADDRESS"},
+    {true, 0, 	false,	RPQ_TIMESTAMP,	"TIMESTAMP"},
+    {true, 0, 	true,	RPQ_TIMEZONE,	"TIMEZONE"},
+    {true, 0, 	true,	RPQ_USER,	"USER"},
+    {true, 0, 	false,	RPQ_VERSION,	"VERSION"},
 };
 #define NS_RPQ (sizeof(rpq_keywords)/sizeof(rpq_keywords[0]))
 
@@ -118,7 +118,7 @@ do_qr_rpqnames(void)
     unsigned j;
     int term_id,i,x;
     int remaining = 254;	/* maximum data area for rpqname reply */
-    Boolean omit_due_space_limit;
+    bool omit_due_space_limit;
 
     trace_ds("> QueryReply(RPQNames)\n");
 
@@ -151,7 +151,7 @@ do_qr_rpqnames(void)
 	    continue;
 	}
 
-	omit_due_space_limit = False;
+	omit_due_space_limit = false;
 
 	term_id = rpq_keywords[j].id;
 
@@ -261,7 +261,7 @@ do_qr_rpqnames(void)
 }
 
 /* Utility function used by the RPQNAMES query reply. */
-static Boolean
+static bool
 select_rpq_terms(void) 
 {
     size_t i;
@@ -270,11 +270,11 @@ select_rpq_terms(void)
     char *uplist;
     char *p1, *p2;
     char *kw;
-    Boolean is_no_form;
+    bool is_no_form;
 
     /* See if the user wants any rpqname self-defining terms returned */
     if ((x3270rpq = getenv("X3270RPQ")) == NULL) {
-	return False;
+	return false;
     }
 
     /*
@@ -360,11 +360,11 @@ select_rpq_terms(void)
      */
     for (i = 0; i < NS_RPQ; i++) {
 	if (!rpq_keywords[i].omit) {
-	    return True;
+	    return true;
 	}
     }
 
-    return False;
+    return false;
 }
 
 /* Utility function used by the RPQNAMES query reply. */
@@ -491,7 +491,7 @@ get_rpq_user(unsigned char buf[], const int buflen)
 	char *p_h;
 	char c;
 	int x;
-	Boolean is_first_hex_digit;
+	bool is_first_hex_digit;
 
 	p_h = &hexstr[0];
 	/*
@@ -594,7 +594,7 @@ get_rpq_address(unsigned char *buf, const int maxlen)
     int x = 0;
 
     if (maxlen < 2) {
-	omit_due_space_limit = True;
+	omit_due_space_limit = true;
 	return 0;
     }
 
@@ -767,7 +767,7 @@ rpq_dump_warnings(void)
     if (!rpq_complained && rpq_wbcnt) {
 	popup_an_error("%s", rpq_warnbuf);
 	rpq_wbcnt = 0;
-	rpq_complained = True;
+	rpq_complained = true;
 
 	free(rpq_warnbuf);
 	rpq_warnbuf = NULL;

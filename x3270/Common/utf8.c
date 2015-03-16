@@ -36,13 +36,13 @@
 #include "utf8.h"
 
 char *locale_codeset = NULL;
-Boolean is_utf8 = False;
+bool is_utf8 = false;
 
 /*
  * Save the codeset from the locale, and set globals based on known values.
  */
 void
-set_codeset(char *codeset_name, Boolean force_utf8)
+set_codeset(char *codeset_name, bool force_utf8)
 {
     /*
      * s3270 and ws3270 have a '-utf8' option and a utf8 resource to force
@@ -50,7 +50,7 @@ set_codeset(char *codeset_name, Boolean force_utf8)
      * TCL library uses.
      */
     if (force_utf8) {
-	is_utf8 = True;
+	is_utf8 = true;
 
 	/* Force the name. */
 	codeset_name = "UTF-8";

@@ -496,7 +496,7 @@ main(int argc, char *argv[])
 	int rc = 0;
 	int report_success = 0;
 #if defined(HAVE_LIBSSL) /*[*/
-	int any_prefixes = False;
+	bool any_prefixes = false;
 #endif /*]*/
 
 	/* Learn our name. */
@@ -784,11 +784,11 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 #if defined(HAVE_LIBSSL) /*[*/
 	do {
 		if (!strncasecmp(argv[i], "l:", 2)) {
-			options.ssl.ssl_host = True;
+			options.ssl.ssl_host = true;
 			argv[i] += 2;
-			any_prefixes = True;
+			any_prefixes = true;
 		} else
-			any_prefixes = False;
+			any_prefixes = false;
 	} while (any_prefixes);
 #endif /*]*/
 	if ((at = strchr(argv[i], '@')) != NULL) {

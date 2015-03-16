@@ -88,16 +88,16 @@ key_ACharacter(char *mb, enum keytype keytype, enum iaction cause)
 	key_UCharacter(ucs4, keytype, cause);
 }
 
-static Boolean
+static bool
 AltCursor_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("AltCursor", ia, argc, argv);
     if (check_argc("AltCursor", argc, 0, 0) < 0) {
-	return False;
+	return false;
     }
     reset_idle_timer();
     do_toggle(ALT_CURSOR);
-    return True;
+    return true;
 }
 
 /*
@@ -162,9 +162,9 @@ MoveCursor_xaction(Widget w, XEvent *event, String *params,
 
 /*
  * Run a KeyPress through XIM.
- * Returns True if there is further processing to do, False otherwise.
+ * Returns true if there is further processing to do, false otherwise.
  */
-static Boolean
+static bool
 xim_lookup(XKeyEvent *event)
 {
 	static char *buf = NULL;
@@ -172,11 +172,11 @@ xim_lookup(XKeyEvent *event)
 	KeySym k;
 	Status status;
 	int i;
-	Boolean rv = False;
+	bool rv = false;
 #define BASE_BUFSIZE 50
 
 	if (ic == NULL)
-		return True;
+		return true;
 
 	if (buf == NULL) {
 		buf_len = BASE_BUFSIZE;
@@ -195,10 +195,10 @@ xim_lookup(XKeyEvent *event)
 
 	switch (status) {
 	case XLookupNone:
-		rv = False;
+		rv = false;
 		break;
 	case XLookupKeySym:
-		rv = True;
+		rv = true;
 		break;
 	case XLookupChars:
 		vtrace("%d XIM char%s:", rlen, (rlen != 1)? "s": "");
@@ -208,10 +208,10 @@ xim_lookup(XKeyEvent *event)
 		vtrace("\n");
 		buf[rlen] = '\0';
 		key_ACharacter(buf, KT_STD, ia_cause);
-		rv = False;
+		rv = false;
 		break;
 	case XLookupBoth:
-		rv = True;
+		rv = true;
 		break;
 	}
 	return rv;
@@ -237,7 +237,7 @@ ignore_xaction(Widget w _is_unused, XEvent *event, String *params,
 int
 state_from_keymap(char keymap[32])
 {
-	static Boolean	initted = False;
+	static bool	initted = false;
 	static KeyCode	kc_Shift_L, kc_Shift_R;
 	static KeyCode	kc_Meta_L, kc_Meta_R;
 	static KeyCode	kc_Alt_L, kc_Alt_R;
@@ -250,7 +250,7 @@ state_from_keymap(char keymap[32])
 		kc_Meta_R  = XKeysymToKeycode(display, XK_Meta_R);
 		kc_Alt_L   = XKeysymToKeycode(display, XK_Alt_L);
 		kc_Alt_R   = XKeysymToKeycode(display, XK_Alt_R);
-		initted = True;
+		initted = true;
 	}
 	if (key_is_down(kc_Shift_L, keymap) ||
 	    key_is_down(kc_Shift_R, keymap))
@@ -528,28 +528,28 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
  *   TemporaryKeymap()		removes the previous keymap, if any
  *   TemporaryKeymap(None)	removes the previous keymap, if any
  */
-static Boolean
+static bool
 TemporaryKeymap_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("TemporaryKeymap", ia, argc, argv);
     if (check_argc("TemporaryKeymap", argc, 0, 1) < 0) {
-	return False;
+	return false;
     }
 
     reset_idle_timer();
 
     if (argc == 0 || !strcmp(argv[0], "None")) {
 	(void) temporary_keymap(NULL);
-	return True;
+	return true;
     }
 
     if (!temporary_keymap(argv[0])) {
 	popup_an_error("TemporaryKeymap: Can't find %s %s", ResKeymap,
 		argv[0]);
 	cancel_if_idle_command();
-	return False;
+	return false;
     }
-    return True;
+    return true;
 }
 
 /**

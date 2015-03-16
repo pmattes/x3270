@@ -66,31 +66,31 @@
 #define PA_ENDL		" " PA_END "()"
 #define Res3270		"3270"
 
-Boolean keymap_changed = False;
+bool keymap_changed = false;
 struct trans_list *trans_list = NULL;
 static struct trans_list **last_trans = &trans_list;
 static struct trans_list *tkm_last;
 struct trans_list *temp_keymaps;	/* temporary keymap list */
 char *keymap_trace = NULL;
 static char *last_keymap = NULL;
-static Boolean last_nvt = False;
-static Boolean last_3270 = False;
+static bool last_nvt = false;
+static bool last_3270 = false;
 
-static void setup_keymaps(const char *km, Boolean do_popup);
-static void add_keymap(const char *name, Boolean do_popup);
+static void setup_keymaps(const char *km, bool do_popup);
+static void add_keymap(const char *name, bool do_popup);
 static void add_trans(const char *name, char *translations, char *pathname,
-    Boolean is_from_server);
+    bool is_from_server);
 static char *get_file_keymap(const char *name, char **pathp);
-static void keymap_3270_mode(Boolean);
+static void keymap_3270_mode(bool);
 
 /* Undocumented Xt function to convert translations to text. */
 extern String _XtPrintXlations(Widget w, XtTranslations xlations,
-    Widget accelWidget, Boolean includeRHS);
+    Widget accelWidget, bool includeRHS);
 
 static enum { SORT_EVENT, SORT_KEYMAP, SORT_ACTION } sort = SORT_KEYMAP;
 
-static Boolean km_isup = False;
-static Boolean km_exists = False;
+static bool km_isup = false;
+static bool km_exists = false;
 static Widget km_shell, sort_event, sort_keymap, sort_byaction, text;
 static char km_file[128];
 static void create_text(void);
@@ -106,9 +106,9 @@ static void format_xlations(String s, FILE *f);
 static int action_cmp(char *s1, char *s2);
 static int keymap_cmp(char *k1, int l1, char *k2, int l2);
 static int event_cmp(char *e1, char *e2);
-static Boolean is_temp(char *k);
+static bool is_temp(char *k);
 static char *pathname(char *k);
-static Boolean from_server(char *k);
+static bool from_server(char *k);
 static void km_regen(void);
 
 char *current_keymap = NULL;
@@ -125,9 +125,9 @@ keymap_register(void)
 
 /* Keymap initialization. */
 void
-keymap_init(const char *km, Boolean interactive)
+keymap_init(const char *km, bool interactive)
 {
-    static Boolean initted = False;
+    static bool initted = false;
 
     if (km == NULL &&
 	(km = (char *)getenv("KEYMAP")) == NULL &&
@@ -136,7 +136,7 @@ keymap_init(const char *km, Boolean interactive)
     }
     setup_keymaps(km, interactive);
     if (!initted) {
-	initted = True;
+	initted = true;
 	last_nvt = IN_NVT;
 	last_3270 = IN_3270;
     } else {
@@ -165,14 +165,14 @@ keymap_init(const char *km, Boolean interactive)
  * 3270/NVT mode change.
  */
 static void
-keymap_3270_mode(Boolean ignored _is_unused)
+keymap_3270_mode(bool ignored _is_unused)
 {
 	if (last_nvt != IN_NVT || last_3270 != IN_3270) {
 		last_nvt = IN_NVT;
 		last_3270 = IN_3270;
 
 		/* Switch between 3270 and NVT keymaps. */
-		keymap_init(last_keymap, False);
+		keymap_init(last_keymap, false);
 	}
 }
 
@@ -180,10 +180,10 @@ keymap_3270_mode(Boolean ignored _is_unused)
  * Set up a user keymap.
  */
 static void
-setup_keymaps(const char *km, Boolean do_popup)
+setup_keymaps(const char *km, bool do_popup)
 {
     	char *bkm;
-	Boolean saw_apl_keymod = False;
+	bool saw_apl_keymod = false;
 	struct trans_list *t;
 	struct trans_list *next;
 
@@ -194,7 +194,7 @@ setup_keymaps(const char *km, Boolean do_popup)
 		bkm = xs_buffer("base,%s", km);
 
 	if (do_popup)
-		keymap_changed = True;
+		keymap_changed = true;
 
 	/* Clear out any existing translations. */
 	Replace(current_keymap, NULL);
@@ -218,7 +218,7 @@ setup_keymaps(const char *km, Boolean do_popup)
 			if (comma)
 				*comma = '\0';
 			if (!strcmp(ns, Apl))
-				saw_apl_keymod = True;
+				saw_apl_keymod = true;
 			add_keymap(ns, do_popup);
 			if (comma)
 				ns = comma + 1;
@@ -278,13 +278,13 @@ get_file_keymap(const char *name, char **pathp)
  * system and user versions of a keymap.
  */
 static void
-add_keymap(const char *name, Boolean do_popup)
+add_keymap(const char *name, bool do_popup)
 {
 	char *translations, *translations_nvt, *translations_3270;
 	char *buf, *buf_nvt, *buf_3270;
 	int any = 0;
 	char *path, *path_nvt, *path_3270;
-	Boolean is_from_server = False;
+	bool is_from_server = false;
 
 	if (strcmp(name, "base")) {
 		if (current_keymap == NULL)
@@ -324,7 +324,7 @@ add_keymap(const char *name, Boolean do_popup)
 		for (sk = sk_list; sk != NULL; sk = sk->next) {
 			if (!strcmp(sk->vendor, ServerVendor(display))) {
 				name = sk->keymap;
-				is_from_server = True;
+				is_from_server = true;
 				break;
 			}
 		}
@@ -419,14 +419,14 @@ add_keymap(const char *name, Boolean do_popup)
  */
 static void
 add_trans(const char *name, char *translations, char *path_name,
-    Boolean is_from_server)
+    bool is_from_server)
 {
 	struct trans_list *t;
 
 	t = (struct trans_list *)XtMalloc(sizeof(*t));
 	t->name = XtNewString(name);
 	t->pathname = path_name;
-	t->is_temp = False;
+	t->is_temp = false;
 	t->from_server = is_from_server;
 	(void) lookup_tt(name, translations);
 	t->next = NULL;
@@ -442,16 +442,16 @@ add_trans(const char *name, char *translations, char *path_name,
 static char *
 unquoted_newline(char *s)
 {
-	Boolean bs = False;
+	bool bs = false;
 	enum { UQ_BASE, UQ_PLIST, UQ_Q } state = UQ_BASE;
 	char c;
 
 	for ( ; (c = *s); s++) {
 		if (bs) {
-			bs = False;
+			bs = false;
 			continue;
 		} else if (c == '\\') {
-			bs = True;
+			bs = true;
 			continue;
 		}
 		switch (state) {
@@ -631,10 +631,10 @@ lookup_tt(const char *name, char *table)
  * If the parameter is NULL, removes all keymaps.
  * Otherwise, toggles the keymap by that name.
  *
- * Returns True if the action was successful, False otherwise.
+ * Returns true if the action was successful, false otherwise.
  *
  */
-Boolean
+bool
 temporary_keymap(const char *k)
 {
     char *km;
@@ -655,9 +655,9 @@ temporary_keymap(const char *k)
 	tkm_last = temp_keymaps = NULL;
 	screen_set_temp_keymap(NULL);
 	keypad_set_temp_keymap(NULL);
-	status_kmap(False);
+	status_kmap(false);
 	km_regen();
-	return True;
+	return true;
     }
 
     /* Check for deleting one keymap. */
@@ -691,10 +691,10 @@ temporary_keymap(const char *k)
 
 	/* Update the status line. */
 	if (temp_keymaps == NULL) {
-	    status_kmap(False);
+	    status_kmap(false);
 	}
 	km_regen();
-	return True;
+	return true;
     }
 
     /* Add a keymap. */
@@ -705,7 +705,7 @@ temporary_keymap(const char *k)
 	/* Then try a resource. */
 	km = get_fresource("%s.%s", ResKeymap, k);
 	if (km == NULL) {
-	    return False;
+	    return false;
 	}
     }
 
@@ -718,8 +718,8 @@ temporary_keymap(const char *k)
     t = (struct trans_list *)XtMalloc(sizeof(*t));
     t->name = XtNewString(k);
     t->pathname = path;
-    t->is_temp = True;
-    t->from_server = False;
+    t->is_temp = true;
+    t->from_server = false;
     t->next = NULL;
     if (tkm_last != NULL) {
 	tkm_last->next = t;
@@ -729,11 +729,11 @@ temporary_keymap(const char *k)
     tkm_last = t;
 
     /* Update the status line. */
-    status_kmap(True);
+    status_kmap(true);
     km_regen();
 
     /* Success. */
-    return True;
+    return true;
 }
 
 /* Create and pop up the current keymap pop-up. */
@@ -811,13 +811,13 @@ do_keymap_display(Widget w _is_unused, XtPointer userdata _is_unused,
 	XtAddCallback(done, XtNcallback, km_done, NULL);
 
 	/* Pop it up. */
-	km_exists = True;
+	km_exists = true;
 	popup_popup(km_shell, XtGrabNone);
 }
 
 /* Called when x3270 is exiting. */
 static void
-remove_keymap_file(Boolean ignored _is_unused)
+remove_keymap_file(bool ignored _is_unused)
 {
 	(void) unlink(km_file);
 }
@@ -872,7 +872,7 @@ km_regen(void)
 static void
 km_up(Widget w _is_unused, XtPointer client_data _is_unused, XtPointer call_data _is_unused)
 {
-	km_isup = True;
+	km_isup = true;
 }
 
 /* Popdown callback. */
@@ -880,7 +880,7 @@ static void
 km_down(Widget w _is_unused, XtPointer client_data _is_unused,
     XtPointer call_data _is_unused)
 {
-	km_isup = False;
+	km_isup = false;
 }
 
 /* Done button callback.  Pop down the widget. */
@@ -1174,7 +1174,7 @@ km_index(char *n)
 }
 
 /* Return whether or not a keymap is temporary. */
-static Boolean
+static bool
 is_temp(char *k)
 {
 	struct trans_list *t;
@@ -1187,7 +1187,7 @@ is_temp(char *k)
 		if (!strcmp(t->name, k))
 			return t->is_temp;
 	}
-	return False;
+	return false;
 }
 
 /* Return the pathname associated with a keymap. */
@@ -1208,7 +1208,7 @@ pathname(char *k)
 }
 
 /* Return whether or not a keymap was translated from "@server". */
-static Boolean
+static bool
 from_server(char *k)
 {
 	struct trans_list *t;
@@ -1221,7 +1221,7 @@ from_server(char *k)
 		if (!strcmp(t->name, k))
 			return t->from_server;
 	}
-	return False;
+	return false;
 }
 
 /*

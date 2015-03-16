@@ -31,7 +31,7 @@
  */
 
 /* glue.c */
-extern Boolean any_error_output;
+extern bool any_error_output;
 struct host_color {
     char *name;
     int index;
@@ -42,10 +42,10 @@ extern char *profile_path;
 int parse_command_line(int argc, const char **argv, const char **cl_hostname);
 void parse_xrm(const char *arg, const char *where);
 char *safe_string(const char *s);
-Boolean process_events(Boolean block);
-void cmdline_help(Boolean as_action);
+bool process_events(bool block);
+void cmdline_help(bool as_action);
 void model_init(void);
-typedef Boolean merge_profile_t(void);
+typedef bool merge_profile_t(void);
 void register_merge_profile(merge_profile_t *);
 
 /* XtGlue.c */

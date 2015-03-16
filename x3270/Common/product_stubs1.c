@@ -37,8 +37,8 @@
 #include "product.h"
 
 /* By default, there is no display. */
-Boolean
+bool
 product_has_display(void)
 {
-    return False;
+    return false;
 }

@@ -103,11 +103,11 @@ char		full_model_name[13] = "IBM-";
 char	       *model_name = &full_model_name[4];
 AppRes          appres;
 int		children = 0;
-Boolean		exiting = False;
+bool		exiting = false;
 char	       *command_string = NULL;
 char	       *profile_name = NULL;
 char	       *profile_path = NULL;
-Boolean		any_error_output = False;
+bool		any_error_output = false;
 
 /* Register a profile merge function. */
 void
@@ -127,7 +127,7 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
     char *xcmd;
     int xargc;
     const char **xargv;
-    Boolean read_session_or_profile = False;
+    bool read_session_or_profile = false;
 
     /* Figure out who we are */
 #if defined(_WIN32) /*[*/
@@ -245,11 +245,11 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 
 	const char *pname;
 
-	if (!read_resource_file(*cl_hostname, True)) {
+	if (!read_resource_file(*cl_hostname, true)) {
 	    x3270_exit(1);
 	}
 
-	read_session_or_profile = True;
+	read_session_or_profile = true;
 
 	pname = strrchr(*cl_hostname, '\\');
 	if (pname != NULL) {
@@ -312,11 +312,11 @@ parse_command_line(int argc, const char **argv, const char **cl_hostname)
 	appres.charset = Apl;
     }
     if (*cl_hostname == NULL) {
-	appres.once = False;
+	appres.once = false;
     }
     if (!appres.debug_tracing) {
 	/* debug_tracing was explicitly cleared */
-	 set_toggle(TRACING, False);
+	 set_toggle(TRACING, false);
     }
 #if defined(_WIN32) /*[*/
     if (appres.utf8) {
@@ -359,7 +359,7 @@ model_init(void)
     }
 #endif /*]*/
     if (appres.interactive.mono) {
-	appres.m3279 = False;
+	appres.m3279 = false;
     }
 
     if (!appres.extended) {
@@ -443,10 +443,10 @@ static void
 set_appres_defaults(void)
 {
     /* Set the defaults. */
-    appres.extended = True;
-    appres.m3279 = True;
-    appres.typeahead = True;
-    appres.debug_tracing = True;
+    appres.extended = true;
+    appres.m3279 = true;
+    appres.typeahead = true;
+    appres.debug_tracing = true;
     appres.conf_dir = LIBX3270DIR;
 
     appres.model = "4";
@@ -459,12 +459,12 @@ set_appres_defaults(void)
     appres.trace_dir = "/tmp";
 #endif /*]*/
     appres.oversize = NULL;
-    appres.bind_limit = True;
-    appres.new_environ = True;
+    appres.bind_limit = true;
+    appres.new_environ = true;
     appres.max_recent = 5;
 
-    appres.linemode.icrnl = True;
-    appres.linemode.onlcr = True;
+    appres.linemode.icrnl = true;
+    appres.linemode.onlcr = true;
     appres.linemode.erase = "^H";
     appres.linemode.kill = "^U";
     appres.linemode.werase = "^W";
@@ -474,13 +474,13 @@ set_appres_defaults(void)
     appres.linemode.quit = "^\\";
     appres.linemode.eof = "^D";
 
-    appres.unlock_delay = True;
+    appres.unlock_delay = true;
     appres.unlock_delay_ms = 350;
 
     appres.dft_buffer_size = DFT_BUF;
 
-    set_toggle(CURSOR_POS, True);
-    set_toggle(AID_WAIT, True);
+    set_toggle(CURSOR_POS, true);
+    set_toggle(AID_WAIT, true);
 
 #if defined(_WIN32) /*[*/
     appres.local_cp = GetACP();
@@ -488,7 +488,7 @@ set_appres_defaults(void)
     appres.devname = "x3270";
 
 #if defined(HAVE_LIBSSL) /*[*/
-    appres.ssl.tls = True;
+    appres.ssl.tls = true;
 #endif /*]*/
 
     /* Let the product set the ones it wants. */
@@ -503,98 +503,98 @@ set_appres_defaults(void)
 
 static opt_t base_opts[] = {
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptAcceptHostname,OPT_STRING,False,ResAcceptHostname,aoffset(ssl.accept_hostname),
+{ OptAcceptHostname,OPT_STRING,false,ResAcceptHostname,aoffset(ssl.accept_hostname),
     "any|DNS:<name>|IP:<addr>","Host name to accept from server certificate" },
 #endif /*]*/
-{ OptAplMode,  OPT_BOOLEAN, True,  ResAplMode,   aoffset(apl_mode),
+{ OptAplMode,  OPT_BOOLEAN, true,  ResAplMode,   aoffset(apl_mode),
     NULL, "Turn on APL mode" },
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptCaDir,    OPT_STRING,  False, ResCaDir,     aoffset(ssl.ca_dir),
+{ OptCaDir,    OPT_STRING,  false, ResCaDir,     aoffset(ssl.ca_dir),
     "<directory>","OpenSSL CA certificate database directory" },
-{ OptCaFile,   OPT_STRING,  False, ResCaFile,    aoffset(ssl.ca_file),
+{ OptCaFile,   OPT_STRING,  false, ResCaFile,    aoffset(ssl.ca_file),
     "<filename>", "OpenSSL CA certificate file" },
 #endif /*]*/
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptCertFile, OPT_STRING,  False, ResCertFile,  aoffset(ssl.cert_file),
+{ OptCertFile, OPT_STRING,  false, ResCertFile,  aoffset(ssl.cert_file),
     "<filename>", "OpenSSL certificate file" },
-{ OptCertFileType,OPT_STRING,False,ResCertFileType,  aoffset(ssl.cert_file_type),
+{ OptCertFileType,OPT_STRING,false,ResCertFileType,  aoffset(ssl.cert_file_type),
     "pem|asn1",   "OpenSSL certificate file type" },
-{ OptChainFile,OPT_STRING,  False,ResChainFile,  aoffset(ssl.chain_file),
+{ OptChainFile,OPT_STRING,  false,ResChainFile,  aoffset(ssl.chain_file),
     "<filename>", "OpenSSL certificate chain file" },
 #endif /*]*/
-{ OptCharset,  OPT_STRING,  False, ResCharset,   aoffset(charset),
+{ OptCharset,  OPT_STRING,  false, ResCharset,   aoffset(charset),
     "<name>", "Use host ECBDIC character set (code page) <name>"},
-{ OptClear,    OPT_SKIP2,   False, NULL,         NULL,
+{ OptClear,    OPT_SKIP2,   false, NULL,         NULL,
     "<toggle>", "Turn on <toggle>" },
-{ OptDevName,  OPT_STRING,  False, ResDevName,   aoffset(devname),
+{ OptDevName,  OPT_STRING,  false, ResDevName,   aoffset(devname),
     "<name>", "Device name (workstation ID) for RFC 4777" },
 #if defined(LOCAL_PROCESS) /*[*/
-{ OptLocalProcess,OPT_SKIP2,False, NULL,         NULL,
+{ OptLocalProcess,OPT_SKIP2,false, NULL,         NULL,
     "<command> [<arg>...]", "Run <command> instead of making TELNET conection"
 },
 #endif /*]*/
-{ OptHostsFile,OPT_STRING,  False, ResHostsFile, aoffset(hostsfile),
+{ OptHostsFile,OPT_STRING,  false, ResHostsFile, aoffset(hostsfile),
     "<filename>", "Use <hostname> as the ibm_hosts file" },
-{ OptHttpd,    OPT_STRING,  False, ResHttpd,     aoffset(httpd_port),
+{ OptHttpd,    OPT_STRING,  false, ResHttpd,     aoffset(httpd_port),
     "[<addr>:]<port>", "TCP port to listen on for http requests" },
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptKeyFile,  OPT_STRING,  False, ResKeyFile, aoffset(ssl.key_file),
+{ OptKeyFile,  OPT_STRING,  false, ResKeyFile, aoffset(ssl.key_file),
     "<filename>", "Get OpenSSL private key from <filename>" },
-{ OptKeyFileType,OPT_STRING,False, ResKeyFileType,aoffset(ssl.key_file_type),
+{ OptKeyFileType,OPT_STRING,false, ResKeyFileType,aoffset(ssl.key_file_type),
     "pem|asn1",   "OpenSSL private key file type" },
-{ OptKeyPasswd,OPT_STRING,  False, ResKeyPasswd,aoffset(ssl.key_passwd),
+{ OptKeyPasswd,OPT_STRING,  false, ResKeyPasswd,aoffset(ssl.key_passwd),
     "file:<filename>|string:<text>","OpenSSL private key password" },
 #endif /*]*/
 #if defined(_WIN32) /*[*/
-{ OptLocalCp,  OPT_INT,	False, ResLocalCp,   aoffset(local_cp),
+{ OptLocalCp,  OPT_INT,	false, ResLocalCp,   aoffset(local_cp),
     "<codepage>", "Use <codepage> instead of ANSI codepage for local I/O"
 },
 #endif /*]*/
-{ OptLoginMacro, OPT_STRING, False, ResLoginMacro, aoffset(login_macro),
+{ OptLoginMacro, OPT_STRING, false, ResLoginMacro, aoffset(login_macro),
     "Action([arg[,arg...]]) [...]"
 },
-{ OptModel,    OPT_STRING,  False, ResModel,     aoffset(model),
+{ OptModel,    OPT_STRING,  false, ResModel,     aoffset(model),
     "[327{8,9}-]<n>", "Emulate a 3278 or 3279 model <n>" },
-{ OptNvtMode,  OPT_BOOLEAN, True,  ResNvtMode,   aoffset(nvt_mode),
+{ OptNvtMode,  OPT_BOOLEAN, true,  ResNvtMode,   aoffset(nvt_mode),
     NULL,	"Begin in NVT mode" },
-{ OptOversize, OPT_STRING,  False, ResOversize,  aoffset(oversize),
+{ OptOversize, OPT_STRING,  false, ResOversize,  aoffset(oversize),
     "<cols>x<rows>", "Larger screen dimensions" },
-{ OptPort,     OPT_STRING,  False, ResPort,      aoffset(port),
+{ OptPort,     OPT_STRING,  false, ResPort,      aoffset(port),
     "<port>", "Default TELNET port" },
-{ OptProxy,    OPT_STRING,  False, ResProxy,     aoffset(proxy),
+{ OptProxy,    OPT_STRING,  false, ResProxy,     aoffset(proxy),
     "<type>:<host>[:<port>]", "Proxy type and server" },
-{ OptScriptPort,OPT_STRING, False, ResScriptPort, aoffset(script_port),
+{ OptScriptPort,OPT_STRING, false, ResScriptPort, aoffset(script_port),
     "[<addr>:]<port>", "TCP port to listen on for script commands" },
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptSelfSignedOk, OPT_BOOLEAN, True, ResSelfSignedOk, aoffset(ssl.self_signed_ok),
+{ OptSelfSignedOk, OPT_BOOLEAN, true, ResSelfSignedOk, aoffset(ssl.self_signed_ok),
     NULL, "Allow self-signed host certificates" },
 #endif /*]*/
-{ OptSet,      OPT_SKIP2,   False, NULL,         NULL,
+{ OptSet,      OPT_SKIP2,   false, NULL,         NULL,
     "<toggle>", "Turn on <toggle>" },
-{ OptSocket,   OPT_BOOLEAN, True,  ResSocket,    aoffset(socket),
+{ OptSocket,   OPT_BOOLEAN, true,  ResSocket,    aoffset(socket),
     NULL, "Create socket for script control" },
-{ OptTermName, OPT_STRING,  False, ResTermName,  aoffset(termname),
+{ OptTermName, OPT_STRING,  false, ResTermName,  aoffset(termname),
     "<name>", "Send <name> as TELNET terminal name" },
-{ OptTrace,    OPT_BOOLEAN, True,  ResTrace,     toggle_aoffset(TRACING),
+{ OptTrace,    OPT_BOOLEAN, true,  ResTrace,     toggle_aoffset(TRACING),
     NULL, "Enable tracing" },
-{ OptTraceFile,OPT_STRING,  False, ResTraceFile, aoffset(trace_file),
+{ OptTraceFile,OPT_STRING,  false, ResTraceFile, aoffset(trace_file),
     "<file>", "Write traces to <file>" },
-{ OptTraceFileSize,OPT_STRING,False,ResTraceFileSize,aoffset(trace_file_size),
+{ OptTraceFileSize,OPT_STRING,false,ResTraceFileSize,aoffset(trace_file_size),
     "<n>[KM]", "Limit trace file to <n> bytes" },
-{ OptUser,     OPT_STRING,  False, ResUser,      aoffset(user),
+{ OptUser,     OPT_STRING,  false, ResUser,      aoffset(user),
     "<name>", "User name for RFC 4777" },
-{ OptV,        OPT_V,	False, NULL,	     NULL,
+{ OptV,        OPT_V,	false, NULL,	     NULL,
     NULL, "Display build options and character sets" },
 #if defined(HAVE_LIBSSL) /*[*/
-{ OptVerifyHostCert,OPT_BOOLEAN,True,ResVerifyHostCert,aoffset(ssl.verify_host_cert),
+{ OptVerifyHostCert,OPT_BOOLEAN,true,ResVerifyHostCert,aoffset(ssl.verify_host_cert),
     NULL, "Enable OpenSSL host certificate validation" },
 #endif /*]*/
-{ OptVersion,  OPT_V,	False, NULL,	     NULL,
+{ OptVersion,  OPT_V,	false, NULL,	     NULL,
     NULL, "Display build options and character sets" },
-{ "-xrm",      OPT_XRM,     False, NULL,         NULL,
+{ "-xrm",      OPT_XRM,     false, NULL,         NULL,
     "'*.<resource>: <value>'", "Set <resource> to <value>"
 },
-{ LAST_ARG,    OPT_DONE,    False, NULL,         NULL,
+{ LAST_ARG,    OPT_DONE,    false, NULL,         NULL,
     NULL, "Terminate argument list" }
 };
 
@@ -643,13 +643,13 @@ parse_options(int *argcp, const char **argv)
     argv_out[argc_out++] = argv[0];
 
     for (i = 1; i < *argcp; i++) {
-	Boolean found = False;
+	bool found = false;
 
 	for (o = optlist; o != NULL && !found; o = o->next) {
 	    opts = o->opts;
 	    for (j = 0; j < o->count; j++) {
 		if (!strcmp(argv[i], opts[j].name)) {
-		    found = True;
+		    found = true;
 		    break;
 		}
 	    }
@@ -661,10 +661,10 @@ parse_options(int *argcp, const char **argv)
 
 	switch (opts[j].type) {
 	case OPT_BOOLEAN:
-	    *(Boolean *)opts[j].aoff = opts[j].flag;
+	    *(bool *)opts[j].aoff = opts[j].flag;
 	    if (opts[j].res_name != NULL) {
 		add_resource(NewString(opts[j].name),
-			opts[j].flag? "True": "False");
+			opts[j].flag? "true": "false");
 	    }
 	    break;
 	case OPT_STRING:
@@ -786,7 +786,7 @@ sort_help(void)
 
 /* Disply command-line help. */
 void
-cmdline_help (Boolean as_action)
+cmdline_help (bool as_action)
 {
     unsigned i;
     
@@ -848,10 +848,10 @@ parse_set_clear(int *argcp, const char **argv)
     argv_out[argc_out++] = argv[0];
 
     for (i = 1; i < *argcp; i++) {
-	Boolean is_set = False;
+	bool is_set = false;
 
 	if (!strcmp(argv[i], OptSet)) {
-	    is_set = True;
+	    is_set = true;
 	} else if (strcmp(argv[i], OptClear)) {
 	    argv_out[argc_out++] = argv[i];
 	    continue;
@@ -928,9 +928,9 @@ parse_model_number(char *m)
 	 * '327[89]', and it sets the m3279 resource.
 	 */
 	if (!strncmp(m, "3278", 4)) {
-	    appres.m3279 = False;
+	    appres.m3279 = false;
 	} else if (!strncmp(m, "3279", 4)) {
-	    appres.m3279 = True;
+	    appres.m3279 = true;
 	} else {
 	    return -1;
 	}
@@ -1217,11 +1217,11 @@ parse_xrm(const char *arg, const char *where)
     char *t;
     void *address = NULL;
     enum resource_type type = XRM_STRING;
-    Boolean quoted;
+    bool quoted;
     char c;
     reslist_t *r;
     char *hide;
-    Boolean arbitrary = False;
+    bool arbitrary = false;
 
     /* Validate and split. */
     if (validate_and_split_resource(where, arg, &name, &rnlen, &s) < 0) {
@@ -1230,13 +1230,13 @@ parse_xrm(const char *arg, const char *where)
 
     /* Look up the name. */
     for (r = reslist; r != NULL; r = r->next) {
-	Boolean found = False;
+	bool found = false;
 
 	for (i = 0; i < r->count && !found; i++) {
 	    if (!strncapcmp(r->resources[i].name, name, rnlen)) {
 		address = r->resources[i].address;
 		type = r->resources[i].type;
-		found = True;
+		found = true;
 		break;
 	    }
 	}
@@ -1258,7 +1258,7 @@ parse_xrm(const char *arg, const char *where)
 	/* Handle resources that are accessed only via get_resource(). */
 	address = &hide;
 	type = XRM_STRING;
-	arbitrary = True;
+	arbitrary = true;
     }
     if (address == NULL) {
 	xs_warning("%s: Unknown resource name: %.*s", where, (int)rnlen, name);
@@ -1267,19 +1267,19 @@ parse_xrm(const char *arg, const char *where)
     switch (type) {
     case XRM_BOOLEAN:
 	if (!strcasecmp(s, "true") || !strcasecmp(s, "t") || !strcmp(s, "1")) {
-	    *(Boolean *)address = True;
+	    *(bool *)address = true;
 	} else if (!strcasecmp(s, "false") || !strcasecmp(s, "f") ||
 		!strcmp(s, "0")) {
-	    *(Boolean *)address = False;
+	    *(bool *)address = false;
 	} else {
-	    xs_warning("%s: Invalid Boolean value: %s", where, s);
-	    *(Boolean *)address = False;
+	    xs_warning("%s: Invalid bool value: %s", where, s);
+	    *(bool *)address = false;
 	}
 	break;
     case XRM_STRING:
 	t = Malloc(strlen(s) + 1);
 	*(char **)address = t;
-	quoted = False;
+	quoted = false;
 #if defined(_WIN32) /*[*/
 	/*
 	 * Ugly hack to allow unquoted UNC-path printer names from older
@@ -1324,9 +1324,9 @@ parse_xrm(const char *arg, const char *where)
 		    *t++ = c;
 		    break;
 		}
-		quoted = False;
+		quoted = false;
 	    } else if (c == '\\') {
-		quoted = True;
+		quoted = true;
 	    } else {
 		*t++ = c;
 	    }
@@ -1434,21 +1434,21 @@ safe_string(const char *s)
 }
 
 /* Read resources from a file. */
-Boolean
-read_resource_file(const char *filename, Boolean fatal)
+bool
+read_resource_file(const char *filename, bool fatal)
 {
     return read_resource_filex(filename, fatal);
 }
 
 /* Screen globals. */
 
-Boolean visible_control = False;
+bool visible_control = false;
 
-Boolean flipped = False;
+bool flipped = false;
 
 /* Replacements for functions in popups.c. */
 
-Boolean error_popup_visible = False;
+bool error_popup_visible = false;
 
 /* Pop up an error dialog. */
 void
@@ -1470,8 +1470,8 @@ popup_an_error(const char *fmt, ...)
 	screen_suspend();
 	(void) fprintf(stderr, "%s\n", s);
 	fflush(stderr);
-	any_error_output = True;
-	macro_output = True;
+	any_error_output = true;
+	macro_output = true;
     }
     Free(s);
 }
@@ -1510,14 +1510,14 @@ action_output(const char *fmt, ...)
 	if (!glue_gui_output(s)) {
 	    (void) printf("%s\n", s);
 	}
-	any_error_output = True;
-	macro_output = True;
+	any_error_output = true;
+	macro_output = true;
     }
     Free(s);
 }
 
 void
-popup_printer_output(Boolean is_err _is_unused, abort_callback_t *a _is_unused,
+popup_printer_output(bool is_err _is_unused, abort_callback_t *a _is_unused,
 	const char *fmt, ...)
 {
     va_list args;
@@ -1531,7 +1531,7 @@ popup_printer_output(Boolean is_err _is_unused, abort_callback_t *a _is_unused,
 }
 
 void
-popup_child_output(Boolean is_err _is_unused, abort_callback_t *a _is_unused,
+popup_child_output(bool is_err _is_unused, abort_callback_t *a _is_unused,
 	const char *fmt, ...)
 {
     va_list args;

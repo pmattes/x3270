@@ -53,10 +53,10 @@
 static XChar2b *status_2b;
 static unsigned char *status_1b;
 static XChar2b *display_2b;
-static Boolean  status_changed = False;
+static bool  status_changed = false;
 
 static struct status_line {
-	Boolean         changed;
+	bool         changed;
 	int             start, len, color;
 	XChar2b        *s2b;
 	unsigned char  *s1b;
@@ -173,12 +173,12 @@ static void do_dbcs(void);
 static void do_scrolled(void);
 static void do_minus(void);
 
-static Boolean  oia_undera = True;
-static Boolean  oia_boxsolid = False;
+static bool  oia_undera = true;
+static bool  oia_boxsolid = false;
 static int      oia_shift = 0;
-static Boolean  oia_typeahead = False;
+static bool  oia_typeahead = false;
 static int      oia_screentrace = -1;
-static Boolean  oia_compose = False;
+static bool  oia_compose = false;
 static unsigned char oia_compose_char = 0;
 static enum keytype oia_compose_keytype = KT_STD;
 static enum msg {
@@ -198,7 +198,7 @@ static enum msg {
 	MINUS			/* X -f */
 }               oia_msg = DISCONNECTED, saved_msg;
 static char	oia_lu[LUCNT+1];
-static Boolean  msg_is_saved = False;
+static bool  msg_is_saved = false;
 static int      n_scrolled = 0;
 static void     (*msg_proc[])(void) = {
 	do_disconnected,
@@ -246,11 +246,11 @@ static int      msg_color3279[] = {
 	HOST_COLOR_WHITE,
 	HOST_COLOR_RED
 };
-static Boolean  oia_insert = False;
-static Boolean  oia_reverse = False;
-static Boolean  oia_kmap = False;
-static Boolean	oia_script = False;
-static Boolean	oia_printer = False;
+static bool  oia_insert = false;
+static bool  oia_reverse = false;
+static bool     oia_kmap = false;
+static bool	oia_script = false;
+static bool	oia_printer = false;
 static char    *oia_cursor = (char *) 0;
 static char    *oia_timing = (char *) 0;
 
@@ -293,24 +293,24 @@ static void status_render(int region);
 static void do_ctlr(void);
 static void do_msg(enum msg t);
 static void paint_msg(enum msg t);
-static void do_insert(Boolean on);
-static void do_reverse(Boolean on);
-static void do_kmap(Boolean on);
-static void do_script(Boolean on);
-static void do_printer(Boolean on);
+static void do_insert(bool on);
+static void do_reverse(bool on);
+static void do_kmap(bool on);
+static void do_script(bool on);
+static void do_printer(bool on);
 static void do_shift(int state);
 static void do_typeahead(int state);
 static void do_screentrace(int state);
-static void do_compose(Boolean on, unsigned char c, enum keytype keytype);
+static void do_compose(bool on, unsigned char c, enum keytype keytype);
 static void do_lu(const char *lu);
 static void do_timing(char *buf);
 static void do_cursor(char *buf);
 
-static void status_connect(Boolean connected);
-static void status_3270_mode(Boolean connected);
-static void status_resolving(Boolean ignored);
-static void status_half_connect(Boolean ignored);
-static void status_printer(Boolean on);
+static void status_connect(bool connected);
+static void status_3270_mode(bool connected);
+static void status_resolving(bool ignored);
+static void status_half_connect(bool ignored);
+static void status_printer(bool on);
 
 
 /**
@@ -390,8 +390,8 @@ status_reinit(unsigned cmask)
 	}
 
 	for (i = 0; i < SSZ; i++)
-		status_line[i].changed = True;
-	status_changed = True;
+		status_line[i].changed = true;
+	status_changed = true;
 
 	/*
 	 * Always redraw all the fields; it's easier than keeping track of
@@ -426,9 +426,9 @@ status_disp(void)
 			status_render(i);
 			(void) memmove(status_line[i].d2b, status_line[i].s2b,
 				   status_line[i].len * sizeof(XChar2b));
-			status_line[i].changed = False;
+			status_line[i].changed = false;
 		}
-	status_changed = False;
+	status_changed = false;
 }
 
 /* Mark the entire status line as changed */
@@ -438,16 +438,16 @@ status_touch(void)
 	unsigned i;
 
 	for (i = 0; i < SSZ; i++) {
-		status_line[i].changed = True;
+		status_line[i].changed = true;
 		(void) memset(status_line[i].d2b, 0,
 		    status_line[i].len * sizeof(XChar2b));
 	}
-	status_changed = True;
+	status_changed = true;
 }
 
 /* Connected or disconnected */
 static void
-status_connect(Boolean connected)
+status_connect(bool connected)
 {
 	if (connected) {
 		oia_boxsolid = IN_3270 && !IN_SSCP;
@@ -458,7 +458,7 @@ status_connect(Boolean connected)
 			do_msg(BLANK);
 		status_untiming();
 	} else {
-		oia_boxsolid = False;
+		oia_boxsolid = false;
 		do_ctlr();
 		do_msg(DISCONNECTED);
 		status_uncursor_pos();
@@ -467,7 +467,7 @@ status_connect(Boolean connected)
 
 /* Changed 3270 mode */
 static void
-status_3270_mode(Boolean connected)
+status_3270_mode(bool connected)
 {
 	oia_boxsolid = IN_3270 && !IN_SSCP;
 	do_ctlr();
@@ -476,9 +476,9 @@ status_3270_mode(Boolean connected)
 
 /* Resolving */
 static void
-status_resolving(Boolean ignored _is_unused)
+status_resolving(bool ignored _is_unused)
 {
-	oia_boxsolid = False;
+	oia_boxsolid = false;
 	do_ctlr();
 	do_msg(RESOLVING);
 	status_untiming();
@@ -487,9 +487,9 @@ status_resolving(Boolean ignored _is_unused)
 
 /* Half connected */
 static void
-status_half_connect(Boolean ignored _is_unused)
+status_half_connect(bool ignored _is_unused)
 {
-	oia_boxsolid = False;
+	oia_boxsolid = false;
 	do_ctlr();
 	do_msg(CONNECTING);
 	status_untiming();
@@ -498,7 +498,7 @@ status_half_connect(Boolean ignored _is_unused)
 
 /* Toggle printer session mode */
 static void
-status_printer(Boolean on)
+status_printer(bool on)
 {
 	do_printer(oia_printer = on);
 }
@@ -507,7 +507,7 @@ status_printer(Boolean on)
 void
 status_twait(void)
 {
-	oia_undera = False;
+	oia_undera = false;
 	do_ctlr();
 	do_msg(TWAIT);
 }
@@ -516,7 +516,7 @@ status_twait(void)
 void
 status_ctlr_done(void)
 {
-	oia_undera = True;
+	oia_undera = true;
 	do_ctlr();
 }
 
@@ -554,13 +554,13 @@ status_scrolled(int n)
 	if (n != 0) {
 		if (!msg_is_saved) {
 			saved_msg = oia_msg;
-			msg_is_saved = True;
+			msg_is_saved = true;
 		}
 		n_scrolled = n;
 		paint_msg(SCROLLED);
 	} else {
 		if (msg_is_saved) {
-			msg_is_saved = False;
+			msg_is_saved = false;
 			paint_msg(saved_msg);
 		}
 	}
@@ -587,28 +587,28 @@ status_reset(void)
 
 /* Toggle insert mode */
 void
-status_insert_mode(Boolean on)
+status_insert_mode(bool on)
 {
 	do_insert(oia_insert = on);
 }
 
 /* Toggle reverse mode */
 void
-status_reverse_mode(Boolean on)
+status_reverse_mode(bool on)
 {
 	do_reverse(oia_reverse = on);
 }
 
 /* Toggle kmap mode */
 void
-status_kmap(Boolean on)
+status_kmap(bool on)
 {
 	do_kmap(oia_kmap = on);
 }
 
 /* Toggle script mode */
 void
-status_script(Boolean on)
+status_script(bool on)
 {
 	do_script(oia_script = on);
 }
@@ -622,7 +622,7 @@ status_shift_mode(int state)
 
 /* Toggle typeahead */
 void
-status_typeahead(Boolean on)
+status_typeahead(bool on)
 {
 	do_typeahead(oia_typeahead = on);
 }
@@ -636,7 +636,7 @@ status_screentrace(int n)
 
 /* Set compose character */
 void
-status_compose(Boolean on, unsigned char c, enum keytype keytype)
+status_compose(bool on, unsigned char c, enum keytype keytype)
 {
 	oia_compose = on;
 	oia_compose_char = c;
@@ -722,11 +722,11 @@ status_add(int col, unsigned char symbol, enum keytype keytype)
 		return;
 	status_2b[col] = n2b;
 	status_1b[col] = symbol;
-	status_changed = True;
+	status_changed = true;
 	for (i = 0; i < SSZ; i++)
 		if (col >= status_line[i].start &&
 		    col <  status_line[i].start + status_line[i].len) {
-			status_line[i].changed = True;
+			status_line[i].changed = true;
 			return;
 		}
 }
@@ -1126,31 +1126,31 @@ do_minus(void)
 /* Insert, reverse, kmap, script, shift, compose */
 
 static void
-do_insert(Boolean on)
+do_insert(bool on)
 {
 	status_add(INSERT, on ? (*standard_font ? 'I' : CG_insert) : nullblank, KT_STD);
 }
 
 static void
-do_reverse(Boolean on)
+do_reverse(bool on)
 {
 	status_add(REVERSE, on ? (*standard_font ? 'R' : CG_R) : nullblank, KT_STD);
 }
 
 static void
-do_kmap(Boolean on)
+do_kmap(bool on)
 {
 	status_add(KMAP, on ? (*standard_font ? 'K' : CG_K) : nullblank, KT_STD);
 }
 
 static void
-do_script(Boolean on)
+do_script(bool on)
 {
 	status_add(SCRIPT, on ? (*standard_font ? 'S' : CG_S) : nullblank, KT_STD);
 }
 
 static void
-do_printer(Boolean on)
+do_printer(bool on)
 {
 	status_add(PSESS, on ? (*standard_font ? 'P' : CG_P) : nullblank, KT_STD);
 }
@@ -1189,7 +1189,7 @@ do_screentrace(int n)
 }
 
 static void
-do_compose(Boolean on, unsigned char c, enum keytype keytype)
+do_compose(bool on, unsigned char c, enum keytype keytype)
 {
 	if (on) {
 		status_add(COMPOSE,

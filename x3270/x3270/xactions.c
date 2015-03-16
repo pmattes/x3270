@@ -73,23 +73,23 @@ static void xaction_ndebug(const char *aname, XEvent *event, String *params,
 static struct {
     const char *name[MAX_MODS_PER];
     unsigned int mask;
-    Boolean is_meta;
+    bool is_meta;
 } skeymask[MAP_SIZE] = { 
-    { { "Shift" }, ShiftMask, False },
-    { { NULL } /* Lock */, LockMask, False },
-    { { "Ctrl" }, ControlMask, False },
-    { { NULL }, Mod1Mask, False },
-    { { NULL }, Mod2Mask, False },
-    { { NULL }, Mod3Mask, False },
-    { { NULL }, Mod4Mask, False },
-    { { NULL }, Mod5Mask, False },
-    { { "Button1" }, Button1Mask, False },
-    { { "Button2" }, Button2Mask, False },
-    { { "Button3" }, Button3Mask, False },
-    { { "Button4" }, Button4Mask, False },
-    { { "Button5" }, Button5Mask, False }
+    { { "Shift" }, ShiftMask, false },
+    { { NULL } /* Lock */, LockMask, false },
+    { { "Ctrl" }, ControlMask, false },
+    { { NULL }, Mod1Mask, false },
+    { { NULL }, Mod2Mask, false },
+    { { NULL }, Mod3Mask, false },
+    { { NULL }, Mod4Mask, false },
+    { { NULL }, Mod5Mask, false },
+    { { "Button1" }, Button1Mask, false },
+    { { "Button2" }, Button2Mask, false },
+    { { "Button3" }, Button3Mask, false },
+    { { "Button4" }, Button4Mask, false },
+    { { "Button5" }, Button5Mask, false }
 };
-static Boolean know_mods = False;
+static bool know_mods = false;
 
 /* Actions that are aliases for other actions. */
 static char *aliased_actions[] = {
@@ -384,11 +384,11 @@ action_name(XtActionProc action)
     for (i = 0; i < xactioncount; i++) {
 	if (xactions[i].proc == action) {
 	    int j;
-	    Boolean aliased = False;
+	    bool aliased = false;
 
 	    for (j = 0; aliased_actions[j] != NULL; j++) {
 		if (!strcmp(aliased_actions[j], xactions[i].string)) {
-		    aliased = True;
+		    aliased = true;
 		    break;
 		}
 	    }
@@ -422,7 +422,7 @@ learn_modifiers(void)
 		for (j = 0; j < mm->max_keypermod; j++) {
 			KeyCode kc;
 			const char *name = NULL;
-			Boolean is_meta = False;
+			bool is_meta = false;
 
 			kc = mm->modifiermap[(i * mm->max_keypermod) + j];
 			if (!kc)
@@ -432,7 +432,7 @@ learn_modifiers(void)
 			    case XK_Meta_L:
 			    case XK_Meta_R:
 				name = "Meta";
-				is_meta = True;
+				is_meta = true;
 				break;
 			    case XK_Alt_L:
 			    case XK_Alt_R:
@@ -452,7 +452,7 @@ learn_modifiers(void)
 			if (name == NULL)
 				continue;
 			if (is_meta)
-				skeymask[i].is_meta = True;
+				skeymask[i].is_meta = true;
 
 			for (k = 0; k < MAX_MODS_PER; k++) {
 				if (skeymask[i].name[k] == NULL)
@@ -494,7 +494,7 @@ key_symbolic_state(unsigned int state, int *iteration)
 
 	if (!know_mods) {
 		learn_modifiers();
-		know_mods = True;
+		know_mods = true;
 	}
 
 	if (*iteration == 0) {
@@ -551,7 +551,7 @@ key_symbolic_state(unsigned int state, int *iteration)
 }
 
 /* Return whether or not an KeyPress event state includes the Meta key. */
-Boolean
+bool
 event_is_meta(int state)
 {
     int i;
@@ -559,16 +559,16 @@ event_is_meta(int state)
     /* Learn the modifier map. */
     if (!know_mods) {
 	learn_modifiers();
-	know_mods = True;
+	know_mods = true;
     }
     for (i = 0; i < MAP_SIZE; i++) {
 	if (skeymask[i].name[0] != NULL &&
 	    skeymask[i].is_meta &&
 	    (state & skeymask[i].mask)) {
-		return True;
+		return true;
 	}
     }
-    return False;
+    return false;
 }
 
 #if defined(VERBOSE_EVENTS) /*[*/

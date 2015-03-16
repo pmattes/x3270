@@ -55,6 +55,7 @@
 #include "utf8.h"
 #include "util.h"
 #include "varbuf.h"
+#include "xappres.h"
 #include "xscreen.h"
 #include "xpopups.h"
 
@@ -173,7 +174,7 @@ popup_about_copyright(void)
 	Widget w = NULL, w_prev = NULL;
 	Widget left_anchor = NULL;
 	int vd = 4;
-	static Boolean catted = False;
+	static bool catted = false;
 	static char *s1 = NULL;
 	static char *s2 = NULL;
 	static char *s1a =
@@ -214,7 +215,7 @@ DAMAGE.";
 	    s2 = Malloc(strlen(s2a) + strlen(s2b) + 1);
 	    strcpy(s2, s2a);
 	    strcat(s2, s2b);
-	    catted = True;
+	    catted = true;
 	}
 
 	/* Create the popup */
@@ -392,8 +393,8 @@ popup_about_config(void)
 	MAKE_VALUE(xbuf);
 	XtFree(xbuf);
 	MAKE_LABEL(get_message("inputMethod"), 4);
-	if (appres.x3270.input_method) {
-	    MAKE_VALUE(appres.x3270.input_method);
+	if (xappres.input_method) {
+	    MAKE_VALUE(xappres.input_method);
 	} else if (getenv("XMODIFIERS") != NULL) {
 	    MAKE_VALUE("(via environment)");
 	} else {
@@ -449,17 +450,17 @@ popup_about_config(void)
 	MAKE_LABEL(get_message("noComposeMap"), 4);
     }
 
-    if (appres.x3270.active_icon) {
+    if (xappres.active_icon) {
 	MAKE_LABEL(get_message("activeIcon"), 4);
 	xbuf = xs_buffer("  %s", get_message("iconFont"));
 	MAKE_LABEL(xbuf, 0);
 	XtFree(xbuf);
-	MAKE_VALUE(appres.x3270.icon_font);
-	if (appres.x3270.label_icon) {
+	MAKE_VALUE(xappres.icon_font);
+	if (xappres.label_icon) {
 	    xbuf = xs_buffer("  %s", get_message("iconLabelFont"));
 	    MAKE_LABEL(xbuf, 0);
 	    XtFree(xbuf);
-	    MAKE_VALUE(appres.x3270.icon_label_font);
+	    MAKE_VALUE(xappres.icon_label_font);
 	}
     } else {
 	MAKE_LABEL(get_message("staticIcon"), 4);
@@ -531,7 +532,7 @@ popup_about_status(void)
 	} else
 #endif /*]*/
 	{
-	    if (!appres.x3270.suppress_host) {
+	    if (!xappres.suppress_host) {
 		MAKE_VALUE(current_host);
 	    }
 	}

@@ -75,36 +75,36 @@ int             maxROWS, maxCOLS;
 int             defROWS, defCOLS;
 int             altROWS, altCOLS;
 int		ov_rows, ov_cols;
-Boolean		ov_auto;
+bool		ov_auto;
 int             model_num;
 int             cursor_addr, buffer_addr;
-Boolean         screen_alt = False;	/* alternate screen? */
-Boolean         is_altbuffer = False;
+bool         screen_alt = false;	/* alternate screen? */
+bool         is_altbuffer = false;
 struct ea      *ea_buf;		/* 3270 device buffer */
 				/* ea_buf[-1] is the dummy default field
 				   attribute */
 struct ea      *aea_buf;	/* alternate 3270 extended attribute buffer */
-Boolean         formatted = False;	/* set in screen_disp */
-Boolean         screen_changed = False;
+bool         formatted = false;	/* set in screen_disp */
+bool         screen_changed = false;
 int             first_changed = -1;
 int             last_changed = -1;
 unsigned char   reply_mode = SF_SRM_FIELD;
 int             crm_nattr = 0;
 unsigned char   crm_attr[16];
-Boolean		dbcs = False;
+bool		dbcs = false;
 
 /* Statics */
 static unsigned char *zero_buf;	/* empty buffer, for area clears */
 static void set_formatted(void);
 static void ctlr_blanks(void);
-static Boolean  trace_primed = False;
+static bool  trace_primed = false;
 static unsigned char default_fg;
 static unsigned char default_bg;
 static unsigned char default_gr;
 static unsigned char default_cs;
 static unsigned char default_ic;
-static void	ctlr_half_connect(Boolean ignored);
-static void	ctlr_connect(Boolean ignored);
+static void	ctlr_half_connect(bool ignored);
+static void	ctlr_connect(bool ignored);
 static int	sscp_start;
 static void ctlr_add_ic(int baddr, unsigned char ic);
 
@@ -128,10 +128,10 @@ static unsigned char	code_table[64] = {
 #define IsBlank(c)	((c == EBC_null) || (c == EBC_space))
 
 #define ALL_CHANGED	{ \
-	screen_changed = True; \
+	screen_changed = true; \
 	if (IN_NVT) { first_changed = 0; last_changed = ROWS*COLS; } }
 #define REGION_CHANGED(f, l)	{ \
-	screen_changed = True; \
+	screen_changed = true; \
 	if (IN_NVT) { \
 	    if (first_changed == -1 || f < first_changed) first_changed = f; \
 	    if (last_changed == -1 || l > last_changed) last_changed = l; } }
@@ -214,7 +214,7 @@ set_rows_cols(int mn, int ovc, int ovr)
 	int defmod;
 
 	if (ovc < 0 || ovr < 0) {
-	    	ov_auto = True;
+	    	ov_auto = true;
 		ovc = 0;
 		ovr = 0;
 	}
@@ -299,7 +299,7 @@ set_rows_cols(int mn, int ovc, int ovr)
 	/* Make sure that the current rows/cols are still 24x80. */
 	COLS = defCOLS = MODEL_2_COLS;
 	ROWS = defROWS = MODEL_2_ROWS;
-	screen_alt = False;
+	screen_alt = false;
 
 	/* Set the defaults for the alternate screen size. */
 	altROWS = maxROWS;
@@ -316,11 +316,11 @@ set_formatted(void)
 {
 	register int	baddr;
 
-	formatted = False;
+	formatted = false;
 	baddr = 0;
 	do {
 		if (ea_buf[baddr].fa) {
-			formatted = True;
+			formatted = true;
 			break;
 		}
 		INC_BA(baddr);
@@ -331,9 +331,9 @@ set_formatted(void)
  * Called when a host is half connected.
  */
 static void
-ctlr_half_connect(Boolean ignored _is_unused)
+ctlr_half_connect(bool ignored _is_unused)
 {
-    ticking_start(True);
+    ticking_start(true);
 }
 
 
@@ -341,7 +341,7 @@ ctlr_half_connect(Boolean ignored _is_unused)
  * Called when a host connects, disconnects, or changes NVT/3270 modes.
  */
 static void
-ctlr_connect(Boolean ignored _is_unused)
+ctlr_connect(bool ignored _is_unused)
 {
     ticking_stop();
     status_untiming();
@@ -365,7 +365,7 @@ ctlr_connect(Boolean ignored _is_unused)
 	defCOLS = MODEL_2_COLS;
 	altROWS = maxROWS;
 	altCOLS = maxCOLS;
-	ctlr_erase(False);
+	ctlr_erase(false);
     }
 }
 
@@ -417,9 +417,9 @@ get_field_attribute(register int baddr)
  * Find the field attribute for the given buffer address, bounded by another
  * buffer address.  Return the attribute in a parameter.
  *
- * Returns True if an attribute is found, False if boundary hit.
+ * Returns true if an attribute is found, false if boundary hit.
  */
-Boolean
+bool
 get_bounded_field_attribute(register int baddr, register int bound,
     unsigned char *fa_out)
 {
@@ -427,14 +427,14 @@ get_bounded_field_attribute(register int baddr, register int bound,
 
 	if (!formatted) {
 		*fa_out = ea_buf[-1].fa;
-		return True;
+		return true;
 	}
 
 	sbaddr = baddr;
 	do {
 		if (ea_buf[baddr].fa) {
 			*fa_out = ea_buf[baddr].fa;
-			return True;
+			return true;
 		}
 		DEC_BA(baddr);
 	} while (baddr != sbaddr && baddr != bound);
@@ -442,11 +442,11 @@ get_bounded_field_attribute(register int baddr, register int bound,
 	/* Screen is unformatted (and 'formatted' is inaccurate). */
 	if (baddr == sbaddr) {
 		*fa_out = ea_buf[-1].fa;
-		return True;
+		return true;
 	}
 
 	/* Wrapped to boundary. */
-	return False;
+	return false;
 }
 
 /*
@@ -486,13 +486,13 @@ next_unprotected(int baddr0)
  * size.
  */
 void
-ctlr_erase(Boolean alt)
+ctlr_erase(bool alt)
 {
     	int newROWS, newCOLS;
 
-	kybd_inhibit(False);
+	kybd_inhibit(false);
 
-	ctlr_clear(True);
+	ctlr_clear(true);
 
 	/* Let a script go. */
 	sms_host_output();
@@ -508,21 +508,21 @@ ctlr_erase(Boolean alt)
 	if (alt == screen_alt && ROWS == newROWS && COLS == newCOLS)
 		return;
 
-	screen_disp(True);
+	screen_disp(true);
 	if (visible_control) {
 	    	/* Blank the entire display. */
 		ctlr_blanks();
 		ROWS = maxROWS;
 		COLS = maxCOLS;
-		screen_disp(False);
+		screen_disp(false);
 	}
 
 	ROWS = newROWS;
 	COLS = newCOLS;
 	if (visible_control) {
 		/* Fill the active part of the screen with NULLs again. */
-		ctlr_clear(False);
-		screen_disp(False);
+		ctlr_clear(false);
+		screen_disp(false);
 	}
 
 	screen_alt = alt;
@@ -551,24 +551,24 @@ process_ds(unsigned char *buf, int buflen)
 		break;
 	case CMD_EWA:	/* erase/write alternate */
 	case SNA_CMD_EWA:
-		ctlr_erase(True);
+		ctlr_erase(true);
 		trace_ds("< EraseWriteAlternate");
-		if ((rv = ctlr_write(buf, buflen, True)) < 0)
+		if ((rv = ctlr_write(buf, buflen, true)) < 0)
 			return rv;
 		return PDS_OKAY_NO_OUTPUT;
 		break;
 	case CMD_EW:	/* erase/write */
 	case SNA_CMD_EW:
-		ctlr_erase(False);
+		ctlr_erase(false);
 		trace_ds("< EraseWrite");
-		if ((rv = ctlr_write(buf, buflen, True)) < 0)
+		if ((rv = ctlr_write(buf, buflen, true)) < 0)
 			return rv;
 		return PDS_OKAY_NO_OUTPUT;
 		break;
 	case CMD_W:	/* write */
 	case SNA_CMD_W:
 		trace_ds("< Write");
-		if ((rv = ctlr_write(buf, buflen, False)) < 0)
+		if ((rv = ctlr_write(buf, buflen, false)) < 0)
 			return rv;
 		return PDS_OKAY_NO_OUTPUT;
 		break;
@@ -581,13 +581,13 @@ process_ds(unsigned char *buf, int buflen)
 	case CMD_RM:	/* read modifed */
 	case SNA_CMD_RM:
 		trace_ds("< ReadModified\n");
-		ctlr_read_modified(aid, False);
+		ctlr_read_modified(aid, false);
 		return PDS_OKAY_OUTPUT;
 		break;
 	case CMD_RMA:	/* read modifed all */
 	case SNA_CMD_RMA:
 		trace_ds("< ReadModifiedAll\n");
-		ctlr_read_modified(aid, True);
+		ctlr_read_modified(aid, true);
 		return PDS_OKAY_OUTPUT;
 		break;
 	case CMD_WSF:	/* write structured field */
@@ -611,7 +611,7 @@ process_ds(unsigned char *buf, int buflen)
  * Functions to insert SA attributes into the inbound data stream.
  */
 static void
-insert_sa1(unsigned char attr, unsigned char value, unsigned char *currentp, Boolean *anyp)
+insert_sa1(unsigned char attr, unsigned char value, unsigned char *currentp, bool *anyp)
 {
 	if (value == *currentp)
 		return;
@@ -623,7 +623,7 @@ insert_sa1(unsigned char attr, unsigned char value, unsigned char *currentp, Boo
 	if (*anyp)
 		trace_ds("'");
 	trace_ds(" SetAttribute(%s)", see_efa(attr, value));
-	*anyp = False;
+	*anyp = false;
 }
 
 /*
@@ -645,7 +645,7 @@ host_cs(unsigned char cs)
 
 static void
 insert_sa(int baddr, unsigned char *current_fgp, unsigned char *current_bgp,
-	unsigned char *current_grp, unsigned char *current_csp, Boolean *anyp)
+	unsigned char *current_grp, unsigned char *current_csp, bool *anyp)
 {
 	if (reply_mode != SF_SRM_CHAR)
 		return;
@@ -674,11 +674,11 @@ insert_sa(int baddr, unsigned char *current_fgp, unsigned char *current_bgp,
  * host.
  */
 void
-ctlr_read_modified(unsigned char aid_byte, Boolean all)
+ctlr_read_modified(unsigned char aid_byte, bool all)
 {
 	register int	baddr, sbaddr;
-	Boolean		send_data = True;
-	Boolean		short_read = False;
+	bool		send_data = true;
+	bool		short_read = false;
 	unsigned char	current_fg = 0x00;
 	unsigned char	current_bg = 0x00;
 	unsigned char	current_gr = 0x00;
@@ -711,12 +711,12 @@ ctlr_read_modified(unsigned char aid_byte, Boolean all)
 	    case AID_PA3:
 	    case AID_CLEAR:
 		if (!all)
-			short_read = True;
+			short_read = true;
 		/* fall through... */
 
 	    case AID_SELECT:			/* No data on READ MODIFIED */
 		if (!all)
-			send_data = False;
+			send_data = false;
 		/* fall through... */
 
 	    default:				/* ordinary AID */
@@ -745,7 +745,7 @@ ctlr_read_modified(unsigned char aid_byte, Boolean all)
 		sbaddr = baddr;
 		do {
 			if (FA_IS_MODIFIED(ea_buf[baddr].fa)) {
-				Boolean	any = False;
+				bool	any = false;
 
 				INC_BA(baddr);
 				space3270out(3);
@@ -767,7 +767,7 @@ ctlr_read_modified(unsigned char aid_byte, Boolean all)
 							if (any)
 								trace_ds("'");
 							trace_ds(" GraphicEscape");
-							any = False;
+							any = false;
 						}
 						space3270out(1);
 						*obptr++ = ea_buf[baddr].cc;
@@ -777,12 +777,12 @@ ctlr_read_modified(unsigned char aid_byte, Boolean all)
 								trace_ds("'");
 
 							trace_ds(" %s", see_ebc(ea_buf[baddr].cc));
-							any = False;
+							any = false;
 						} else {
 							if (!any)
 								trace_ds(" '");
 							trace_ds("%s", see_ebc(ea_buf[baddr].cc));
-							any = True;
+							any = true;
 						}
 					}
 					INC_BA(baddr);
@@ -797,7 +797,7 @@ ctlr_read_modified(unsigned char aid_byte, Boolean all)
 			}
 		} while (baddr != sbaddr);
 	} else {
-		Boolean	any = False;
+		bool	any = false;
 		int nbytes = 0;
 
 		/*
@@ -821,7 +821,7 @@ ctlr_read_modified(unsigned char aid_byte, Boolean all)
 					if (any)
 						trace_ds("' ");
 					trace_ds(" GraphicEscape ");
-					any = False;
+					any = false;
 				}
 				space3270out(1);
 				*obptr++ = ea_buf[baddr].cc;
@@ -831,12 +831,12 @@ ctlr_read_modified(unsigned char aid_byte, Boolean all)
 						trace_ds("'");
 
 					trace_ds(" %s", see_ebc(ea_buf[baddr].cc));
-					any = False;
+					any = false;
 				} else {
 					if (!any)
 						trace_ds(" '");
 					trace_ds("%s", see_ebc(ea_buf[baddr].cc));
-					any = True;
+					any = true;
 				}
 				nbytes++;
 			}
@@ -867,7 +867,7 @@ ctlr_read_buffer(unsigned char aid_byte)
 {
 	register int	baddr;
 	unsigned char	fa;
-	Boolean		any = False;
+	bool		any = false;
 	int		attr_count = 0;
 	unsigned char	current_fg = 0x00;
 	unsigned char	current_bg = 0x00;
@@ -941,7 +941,7 @@ ctlr_read_buffer(unsigned char aid_byte)
 					(*(obuf + attr_count))++;
 				}
 			}
-			any = False;
+			any = false;
 		} else {
 			insert_sa(baddr,
 			    &current_fg,
@@ -955,7 +955,7 @@ ctlr_read_buffer(unsigned char aid_byte)
 				if (any)
 					trace_ds("'");
 				trace_ds(" GraphicEscape");
-				any = False;
+				any = false;
 			}
 			space3270out(1);
 			*obptr++ = ea_buf[baddr].cc;
@@ -965,12 +965,12 @@ ctlr_read_buffer(unsigned char aid_byte)
 					trace_ds("'");
 
 				trace_ds(" %s", see_ebc(ea_buf[baddr].cc));
-				any = False;
+				any = false;
 			} else {
 				if (!any)
 					trace_ds(" '");
 				trace_ds("%s", see_ebc(ea_buf[baddr].cc));
-				any = True;
+				any = true;
 			}
 		}
 		INC_BA(baddr);
@@ -1088,15 +1088,15 @@ ctlr_snap_buffer(void)
 
 /*
  * Construct a 3270 command to reproduce the reply mode.
- * Returns a Boolean indicating if one is necessary.
+ * Returns a bool indicating if one is necessary.
  */
-Boolean
+bool
 ctlr_snap_modes(void)
 {
 	int i;
 
 	if (!IN_3270 || reply_mode == SF_SRM_FIELD)
-		return False;
+		return false;
 
 	space3270out(6 + crm_nattr);
 	*obptr++ = CMD_WSF;
@@ -1108,7 +1108,7 @@ ctlr_snap_modes(void)
 	if (reply_mode == SF_SRM_CHAR)
 		for (i = 0; i < crm_nattr; i++)
 			*obptr++ = crm_attr[i];
-	return True;
+	return true;
 }
 
 /*
@@ -1154,9 +1154,9 @@ ctlr_erase_all_unprotected(void)
 {
 	register int	baddr, sbaddr;
 	unsigned char	fa;
-	Boolean		f;
+	bool		f;
 
-	kybd_inhibit(False);
+	kybd_inhibit(false);
 
 	ALL_CHANGED;
 	if (formatted) {
@@ -1168,7 +1168,7 @@ ctlr_erase_all_unprotected(void)
 			INC_BA(baddr);
 		} while (baddr != 0);
 		sbaddr = baddr;
-		f = False;
+		f = false;
 		do {
 			fa = ea_buf[baddr].fa;
 			if (!FA_IS_PROTECTED(fa)) {
@@ -1177,7 +1177,7 @@ ctlr_erase_all_unprotected(void)
 					INC_BA(baddr);
 					if (!f) {
 						cursor_move(baddr);
-						f = True;
+						f = true;
 					}
 					if (!ea_buf[baddr].fa) {
 						ctlr_add(baddr, EBC_null, 0);
@@ -1193,10 +1193,10 @@ ctlr_erase_all_unprotected(void)
 		if (!f)
 			cursor_move(0);
 	} else {
-		ctlr_clear(True);
+		ctlr_clear(true);
 	}
 	aid = AID_NO;
-	do_reset(False);
+	do_reset(false);
 }
 
 
@@ -1205,15 +1205,15 @@ ctlr_erase_all_unprotected(void)
  * Process a 3270 Write command.
  */
 enum pds
-ctlr_write(unsigned char buf[], int buflen, Boolean erase)
+ctlr_write(unsigned char buf[], int buflen, bool erase)
 {
 	register unsigned char	*cp;
 	register int	baddr;
 	unsigned char	current_fa;
-	Boolean		last_cmd;
-	Boolean		last_zpt;
-	Boolean		wcc_keyboard_restore, wcc_sound_alarm;
-	Boolean		ra_ge;
+	bool		last_cmd;
+	bool		last_zpt;
+	bool		wcc_keyboard_restore, wcc_sound_alarm;
+	bool		ra_ge;
 	int		i;
 	unsigned char	na;
 	int		any_fa;
@@ -1226,11 +1226,11 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 	enum { NONE, ORDER, SBA, TEXT, NULLCH } previous = NONE;
 	enum pds	rv = PDS_OKAY_NO_OUTPUT;
 	int		fa_addr;
-	Boolean		add_dbcs;
+	bool		add_dbcs;
 	unsigned char	add_c1, add_c2 = 0;
 	enum dbcs_state	d;
 	enum dbcs_why	why = DBCS_FIELD;
-	Boolean		aborted = False;
+	bool		aborted = false;
 	char		mb[16];
 
 #define END_TEXT0	{ if (previous == TEXT) trace_ds("'"); }
@@ -1246,10 +1246,10 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			ctlr_add_gr(buffer_addr, 0); \
 			ctlr_add_ic(buffer_addr, 0); \
 			trace_ds("%s", see_attr(fa)); \
-			formatted = True; \
+			formatted = true; \
 		}
 
-	kybd_inhibit(False);
+	kybd_inhibit(false);
 
 	if (buflen < 2)
 		return PDS_BAD_CMD;
@@ -1259,7 +1259,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 	default_gr = 0;
 	default_cs = 0;
 	default_ic = 0;
-	trace_primed = True;
+	trace_primed = true;
 	buffer_addr = cursor_addr;
 	if (WCC_RESET(buf[1])) {
 		if (erase)
@@ -1296,13 +1296,13 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 	if (strcmp(paren, "("))
 		trace_ds(")");
 
-	last_cmd = True;
-	last_zpt = False;
+	last_cmd = true;
+	last_zpt = false;
 	current_fa = get_field_attribute(buffer_addr);
 
 #define ABORT_WRITEx { \
 	rv = PDS_BAD_ADDR; \
-	aborted = True; \
+	aborted = true; \
 	break; \
 }
 #define ABORT_WRITE(s) { \
@@ -1322,8 +1322,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			ctlr_add_fg(buffer_addr, 0);
 			ctlr_add_bg(buffer_addr, 0);
 			INC_BA(buffer_addr);
-			last_cmd = True;
-			last_zpt = False;
+			last_cmd = true;
+			last_zpt = false;
 			break;
 		case ORDER_SBA:	/* set buffer address */
 			cp += 2;	/* skip buffer address */
@@ -1336,8 +1336,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				ABORT_WRITE("invalid SBA address");
 			}
 			current_fa = get_field_attribute(buffer_addr);
-			last_cmd = True;
-			last_zpt = False;
+			last_cmd = true;
+			last_zpt = false;
 			break;
 		case ORDER_IC:	/* insert cursor */
 			END_TEXT("InsertCursor");
@@ -1345,8 +1345,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				trace_ds("%s", rcba(buffer_addr));
 			previous = ORDER;
 			cursor_move(buffer_addr);
-			last_cmd = True;
-			last_zpt = False;
+			last_cmd = true;
+			last_zpt = false;
 			break;
 		case ORDER_PT:	/* program tab */
 			END_TEXT("ProgramTab");
@@ -1359,8 +1359,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			if (ea_buf[buffer_addr].fa &&
 			    !FA_IS_PROTECTED(ea_buf[buffer_addr].fa)) {
 				INC_BA(buffer_addr);
-				last_zpt = False;
-				last_cmd = True;
+				last_zpt = false;
+				last_cmd = true;
 				break;
 			}
 			/*
@@ -1390,11 +1390,11 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 					INC_BA(buffer_addr);
 				}
 				if (baddr == 0)
-					last_zpt = True;
+					last_zpt = true;
 			} else
-				last_zpt = False;
+				last_zpt = false;
 			buffer_addr = baddr;
-			last_cmd = True;
+			last_cmd = true;
 			break;
 		case ORDER_RA:	/* repeat to address */
 			END_TEXT("RepeatToAddress");
@@ -1402,8 +1402,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			baddr = DECODE_BADDR(*(cp-1), *cp);
 			trace_ds("%s", rcba(baddr));
 			cp++;		/* skip char to repeat */
-			add_dbcs = False;
-			ra_ge = False;
+			add_dbcs = false;
+			ra_ge = false;
 			previous = ORDER;
 			if (dbcs) {
 				d = ctlr_lookleft_state(buffer_addr, &why);
@@ -1411,7 +1411,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 					ABORT_WRITE("RA over right half of DBCS character");
 				}
 				if (default_cs == CS_DBCS || d == DBCS_LEFT) {
-					add_dbcs = True;
+					add_dbcs = true;
 				}
 			}
 			if (add_dbcs) {
@@ -1451,7 +1451,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			        trace_ds("'%s'", mb);
 			} else {
 				if (*cp == ORDER_GE) {
-					ra_ge = True;
+					ra_ge = true;
 					trace_ds("GraphicEscape");
 					cp++;
 				}
@@ -1495,8 +1495,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				}
 			} while (buffer_addr != baddr);
 			current_fa = get_field_attribute(buffer_addr);
-			last_cmd = True;
-			last_zpt = False;
+			last_cmd = true;
+			last_zpt = false;
 			break;
 		case ORDER_EUA:	/* erase unprotected to address */
 			cp += 2;	/* skip buffer address */
@@ -1526,8 +1526,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				INC_BA(buffer_addr);
 			} while (buffer_addr != baddr);
 			current_fa = get_field_attribute(buffer_addr);
-			last_cmd = True;
-			last_zpt = False;
+			last_cmd = true;
+			last_zpt = false;
 			break;
 		case ORDER_GE:	/* graphic escape */
 			/* XXX: DBCS? */
@@ -1546,8 +1546,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			ctlr_add_ic(buffer_addr, default_ic);
 			INC_BA(buffer_addr);
 			current_fa = get_field_attribute(buffer_addr);
-			last_cmd = False;
-			last_zpt = False;
+			last_cmd = false;
+			last_zpt = false;
 			break;
 		case ORDER_MF:	/* modify field */
 			END_TEXT("ModifyField");
@@ -1617,8 +1617,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				INC_BA(buffer_addr);
 			} else
 				cp += na * 2;
-			last_cmd = True;
-			last_zpt = False;
+			last_cmd = true;
+			last_zpt = false;
 			break;
 		case ORDER_SFE:	/* start field extended */
 			END_TEXT("StartFieldExtended");
@@ -1684,8 +1684,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			ctlr_add_gr(buffer_addr, efa_gr);
 			ctlr_add_ic(buffer_addr, efa_ic);
 			INC_BA(buffer_addr);
-			last_cmd = True;
-			last_zpt = False;
+			last_cmd = true;
+			last_zpt = false;
 			break;
 		case ORDER_SA:	/* set attribute */
 			END_TEXT("SetAttribute");
@@ -1732,8 +1732,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				trace_ds("%s[unsupported]",
 				    see_efa(*cp, *(cp + 1)));
 			cp++;
-			last_cmd = True;
-			last_zpt = False;
+			last_cmd = true;
+			last_zpt = false;
 			break;
 		case FCORDER_SUB:	/* format control orders */
 		case FCORDER_DUP:
@@ -1756,8 +1756,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			ctlr_add_gr(buffer_addr, default_gr);
 			ctlr_add_ic(buffer_addr, default_ic);
 			INC_BA(buffer_addr);
-			last_cmd = True;
-			last_zpt = False;
+			last_cmd = true;
+			last_zpt = false;
 			break;
 		case FCORDER_SO:
 			/* Look left for errors. */
@@ -1780,8 +1780,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			ctlr_add_gr(buffer_addr, default_gr);
 			ctlr_add_ic(buffer_addr, default_ic);
 			INC_BA(buffer_addr);
-			last_cmd = True;
-			last_zpt = False;
+			last_cmd = true;
+			last_zpt = false;
 			break;
 		case FCORDER_SI:
 			/* Look left for errors. */
@@ -1819,11 +1819,11 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 			ctlr_add_gr(buffer_addr, default_gr);
 			ctlr_add_ic(buffer_addr, default_ic);
 			INC_BA(buffer_addr);
-			last_cmd = True;
-			last_zpt = False;
+			last_cmd = true;
+			last_zpt = false;
 			break;
 		case FCORDER_NULL:	/* NULL or DBCS control char */
-			add_dbcs = False;
+			add_dbcs = false;
 			d = ctlr_lookleft_state(buffer_addr, &why);
 			if (d == DBCS_RIGHT) {
 				ABORT_WRITE("NULL overwriting right half of DBCS character");
@@ -1845,7 +1845,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				case EBC_fm:
 					/* DBCS control code */
 					END_TEXT(see_ebc(add_c2));
-					add_dbcs = True;
+					add_dbcs = true;
 					break;
 				case ORDER_SF:
 				case ORDER_SFE:
@@ -1880,22 +1880,22 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				ctlr_add_ic(buffer_addr, default_ic);
 				INC_BA(buffer_addr);
 			}
-			last_cmd = False;
-			last_zpt = False;
+			last_cmd = false;
+			last_zpt = false;
 			break;
 		default:	/* enter character */
 			if (*cp <= 0x3F) {
 				END_TEXT("UnsupportedOrder");
 				trace_ds("(%02X)", *cp);
 				previous = ORDER;
-				last_cmd = True;
-				last_zpt = False;
+				last_cmd = true;
+				last_zpt = false;
 				break;
 			}
 			if (previous != TEXT)
 				trace_ds(" '");
 			previous = TEXT;
-			add_dbcs = False;
+			add_dbcs = false;
 			d = ctlr_lookleft_state(buffer_addr, &why);
 			if (d == DBCS_RIGHT) {
 				ABORT_WRITE("overwriting right half of DBCS character");
@@ -1913,7 +1913,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 						add_c1, add_c2);
 					ABORT_WRITEx;
 			        }
-			        add_dbcs = True;
+			        add_dbcs = true;
 				(void) ebcdic_to_multibyte(
 					   (add_c1 << 8) | add_c2, mb,
 					   sizeof(mb));
@@ -1936,8 +1936,8 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 				ctlr_add_ic(buffer_addr, default_ic);
 				INC_BA(buffer_addr);
 			}
-			last_cmd = False;
-			last_zpt = False;
+			last_cmd = false;
+			last_zpt = false;
 			break;
 		}
 	}
@@ -1947,7 +1947,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 	kybdlock_clr(KL_AWAITING_FIRST, "ctlr_write");
 	if (wcc_keyboard_restore) {
 		aid = AID_NO;
-		do_reset(False);
+		do_reset(false);
 	} else if (kybdlock & KL_OIA_TWAIT) {
 		kybdlock_clr(KL_OIA_TWAIT, "ctlr_write");
 		status_syswait();
@@ -1959,7 +1959,7 @@ ctlr_write(unsigned char buf[], int buflen, Boolean erase)
 	if (ctlr_dbcs_postprocess() < 0 && rv == PDS_OKAY_NO_OUTPUT)
 		rv = PDS_BAD_ADDR;
 
-	trace_primed = False;
+	trace_primed = false;
 
 	ps_process();
 
@@ -1990,7 +1990,7 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 	int s_row;
 	unsigned char c;
 	int baddr;
-	int text = False;
+	int text = false;
 
 	/*
 	 * The 3174 Functionl Description says that anything but NL, NULL, FM,
@@ -2009,7 +2009,7 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 			 */
 		        if (text) {
 			    trace_ds("'");
-			    text = False;
+			    text = false;
 			}
 		        trace_ds(" NL");
 			s_row = buffer_addr / COLS;
@@ -2029,7 +2029,7 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 			i++;
 			if (text) {
 			    trace_ds("'");
-			    text = False;
+			    text = false;
 			}
 			trace_ds(" SF%s %s [translated to space]\n",
 			    rcba(buffer_addr), see_attr(*cp));
@@ -2043,7 +2043,7 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 		case ORDER_IC:
 			if (text) {
 			    trace_ds("'");
-			    text = False;
+			    text = false;
 			}
 			trace_ds(" IC%s [ignored]\n",
 			    rcba(buffer_addr));
@@ -2065,7 +2065,7 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 				c = *cp;
 			if (text) {
 			    trace_ds("'");
-			    text = False;
+			    text = false;
 			}
 			trace_ds(" GE '%s'", see_ebc(c));
 			ctlr_add(buffer_addr, c, CS_GE);
@@ -2079,7 +2079,7 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 		default:
 			if (!text) {
 			    trace_ds(" '");
-			    text = True;
+			    text = true;
 			}
 			trace_ds("%s", see_ebc(*cp));
 			ctlr_add(buffer_addr, *cp, default_cs);
@@ -2099,7 +2099,7 @@ ctlr_write_sscp_lu(unsigned char buf[], int buflen)
 
 	/* Unlock the keyboard. */
 	aid = AID_NO;
-	do_reset(False);
+	do_reset(false);
 
 	/* Let a script go. */
 	sms_host_output();
@@ -2123,7 +2123,7 @@ ctlr_lookleft_state(int baddr, enum dbcs_why *why)
 	int faddr;
 	int fdist;
 	int xaddr;
-	Boolean si = False;
+	bool si = false;
 #define	AT_END(f, b) \
 	(((f) < 0 && (b) == ROWS*COLS - 1) || \
 	 ((f) >= 0 && (b) == (f)))
@@ -2173,10 +2173,10 @@ ctlr_lookleft_state(int baddr, enum dbcs_why *why)
 	DEC_BA(xaddr);
 	while (!AT_END(faddr, xaddr)) {
 		if (ea_buf[xaddr].cc == EBC_si)
-			si = True;
+			si = true;
 		else if (ea_buf[xaddr].cc == EBC_so) {
 			if (si)
-				si = False;
+				si = false;
 			else {
 				*why = DBCS_SUBFIELD;
 				fdist = (baddr + ROWS*COLS) - xaddr;
@@ -2190,13 +2190,13 @@ ctlr_lookleft_state(int baddr, enum dbcs_why *why)
 	return DBCS_NONE;
 }
 
-static Boolean
+static bool
 valid_dbcs_char(unsigned char c1, unsigned char c2)
 {
 	if (c1 >= 0x40 && c1 < 0xff && c2 >= 0x40 && c2 < 0xff)
-		return True;
+		return true;
 	if (c1 != 0x00 || c2 < 0x40 || c2 >= 0xff)
-		return False;
+		return false;
 	switch (c2) {
 	case EBC_null:
 	case EBC_nl:
@@ -2205,9 +2205,9 @@ valid_dbcs_char(unsigned char c1, unsigned char c2)
 	case EBC_cr:
 	case EBC_dup:
 	case EBC_fm:
-		return True;
+		return true;
 	default:
-		return False;
+		return false;
 	}
 }
 
@@ -2235,8 +2235,8 @@ ctlr_dbcs_postprocess(void)
 	int pbaddr = -1;	/* previous buffer address */
 	int dbaddr = -1;	/* first data position of current DBCS (sub-)
 				   field */
-	Boolean so = False, si = False;
-	Boolean dbcs_field = False;
+	bool so = false, si = false;
+	bool dbcs_field = false;
 	int rc = 0;
 
 	/* If we're not in DBCS mode, do nothing. */
@@ -2288,8 +2288,8 @@ ctlr_dbcs_postprocess(void)
 				    INC_BA(dbaddr);
 			    }
 			    ea_buf[baddr].db = DBCS_NONE;
-			    so = True;
-			    si = False;
+			    so = true;
+			    si = false;
 			    break;
 			case EBC_si:
 			    /* Two SI's or SI in DBCS field are invalid. */
@@ -2302,8 +2302,8 @@ ctlr_dbcs_postprocess(void)
 				    ea_buf[baddr].db = DBCS_SI;
 			    }
 			    dbaddr = -1;
-			    si = True;
-			    so = False;
+			    si = true;
+			    so = false;
 			    break;
 			default:
 			    /* Non-base CS in DBCS subfield is invalid. */
@@ -2406,19 +2406,19 @@ ps_process(void)
 /*
  * Tell me if there is any data on the screen.
  */
-Boolean
+bool
 ctlr_any_data(void)
 {
 	register int i;
 
 	if (ea_buf == NULL)
-		return False;
+		return false;
 
 	for (i = 0; i < ROWS*COLS; i++) {
 		if (!IsBlank(ea_buf[i].cc))
-			return True;
+			return true;
 	}
-	return False;
+	return false;
 }
 
 /*
@@ -2426,16 +2426,16 @@ ctlr_any_data(void)
  * and buffer addresses and extended attributes.
  */
 void
-ctlr_clear(Boolean can_snap)
+ctlr_clear(bool can_snap)
 {
 	/* Snap any data that is about to be lost into the trace file. */
 	if (ctlr_any_data()) {
 		if (can_snap && !trace_skipping && toggled(SCREEN_TRACE)) {
-			trace_screen(True);
+			trace_screen(true);
 		}
-		scroll_save(maxROWS, ever_3270 ? False : True);
+		scroll_save(maxROWS, ever_3270 ? false : true);
 	}
-	trace_skipping = False;
+	trace_skipping = false;
 
 	/* Clear the screen. */
 	(void) memset((char *)ea_buf, 0, ROWS*COLS*sizeof(struct ea));
@@ -2443,7 +2443,7 @@ ctlr_clear(Boolean can_snap)
 	cursor_move(0);
 	buffer_addr = 0;
 	unselect(0, ROWS*COLS);
-	formatted = False;
+	formatted = false;
 	default_fg = 0;
 	default_bg = 0;
 	default_gr = 0;
@@ -2466,7 +2466,7 @@ ctlr_blanks(void)
 	cursor_move(0);
 	buffer_addr = 0;
 	unselect(0, ROWS*COLS);
-	formatted = False;
+	formatted = false;
 }
 
 
@@ -2483,10 +2483,10 @@ ctlr_add(int baddr, unsigned char c, unsigned char cs)
 	((oc = ea_buf[baddr].cc) != c || ea_buf[baddr].cs != cs)) {
 	if (trace_primed && !IsBlank(oc)) {
 	    if (toggled(SCREEN_TRACE)) {
-		trace_screen(False);
+		trace_screen(false);
 	    }
-	    scroll_save(maxROWS, False);
-	    trace_primed = False;
+	    scroll_save(maxROWS, false);
+	    trace_primed = false;
 	}
 	if (screen_selected(baddr)) {
 	    unselect(baddr, 1);
@@ -2614,7 +2614,7 @@ ctlr_wrapping_memmove(int baddr_to, int baddr_from, int count)
 	 */
 	if (baddr_from + count <= ROWS*COLS &&
 	    baddr_to + count <= ROWS*COLS) {
-		ctlr_bcopy(baddr_from, baddr_to, count, True);
+		ctlr_bcopy(baddr_from, baddr_to, count, true);
 	} else {
 		int i, from, to;
 
@@ -2628,7 +2628,7 @@ ctlr_wrapping_memmove(int baddr_to, int baddr_from, int count)
 			to = (baddr_to + i) % ROWS*COLS;
 			from = (baddr_from + i) % ROWS*COLS;
 		    }
-		    ctlr_bcopy(from, to, 1, True);
+		    ctlr_bcopy(from, to, 1, true);
 		}
 	}
 }
@@ -2688,7 +2688,7 @@ void
 ctlr_scroll(void)
 {
 	int qty = (ROWS - 1) * COLS;
-	Boolean obscured;
+	bool obscured;
 
 	/* Make sure nothing is selected. (later this can be fixed) */
 	unselect(0, ROWS*COLS);
@@ -2696,7 +2696,7 @@ ctlr_scroll(void)
 	/* Synchronize pending changes prior to this. */
 	obscured = screen_obscured();
 	if (!obscured && screen_changed)
-		screen_disp(False);
+		screen_disp(false);
 
 	/* Move ea_buf. */
 	(void) memmove(&ea_buf[0], &ea_buf[COLS],
@@ -2726,7 +2726,7 @@ ctlr_changed(int bstart, int bend)
  * Swap the regular and alternate screen buffers
  */
 void
-ctlr_altbuffer(Boolean alt)
+ctlr_altbuffer(bool alt)
 {
 	struct ea *etmp;
 
@@ -2793,7 +2793,7 @@ ctlr_shrink(void)
 			    visible_control? EBC_space : EBC_null;
 	}
 	ALL_CHANGED;
-	screen_disp(False);
+	screen_disp(false);
 }
 
 /*
@@ -2829,8 +2829,8 @@ ctlr_dbcs_state(int baddr)
  * the unlock, the time should be fairly accurate.
  */
 static struct timeval t_start;
-static Boolean ticking = False;
-static Boolean mticking = False;
+static bool ticking = false;
+static bool mticking = false;
 static ioid_t tick_id;
 static struct timeval t_want;
 
@@ -2858,10 +2858,10 @@ keep_ticking(ioid_t id _is_unused)
 }
 
 void
-ticking_start(Boolean anyway)
+ticking_start(bool anyway)
 {
     (void) gettimeofday(&t_start, (struct timezone *) 0);
-    mticking = True;
+    mticking = true;
 
     if (!toggled(SHOW_TIMING) && !anyway) {
 	return;
@@ -2870,7 +2870,7 @@ ticking_start(Boolean anyway)
     if (ticking) {
 	RemoveTimeOut(tick_id);
     }
-    ticking = True;
+    ticking = true;
     tick_id = AddTimeOut(1000, keep_ticking);
     t_want = t_start;
 }
@@ -2883,7 +2883,7 @@ ticking_stop(void)
     (void) gettimeofday(&t1, (struct timezone *) 0);
     if (mticking) {
 	sms_accumulate_time(&t_start, &t1);
-	mticking = False;
+	mticking = false;
     } else {
 	return;
     }
@@ -2892,7 +2892,7 @@ ticking_stop(void)
 	return;
     }
     RemoveTimeOut(tick_id);
-    ticking = False;
+    ticking = false;
     status_timing(&t_start, &t1);
 }
 

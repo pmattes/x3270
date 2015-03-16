@@ -31,7 +31,7 @@
  *		connect/disconnect logic.
  */
 
-Boolean host_gui_connect(void);		/* default False */
+bool host_gui_connect(void);	/* default False */
 void host_gui_connect_initial(void);
-Boolean host_gui_disconnect(void);	/* default False */
+bool host_gui_disconnect(void);	/* default False */
 void host_gui_connected(void);

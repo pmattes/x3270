@@ -38,7 +38,7 @@ struct macro_def {
     struct macro_def	*next;
 };
 extern struct macro_def *macro_defs;
-extern Boolean macro_output;
+extern bool macro_output;
 
 void abort_script(void);
 void cancel_if_idle_command(void);
@@ -46,25 +46,25 @@ void login_macro(char *s);
 void macros_init(void);
 void macro_command(struct macro_def *m);
 void peer_script_init(void);
-void ps_set(char *s, Boolean is_hex);
+void ps_set(char *s, bool is_hex);
 void push_command(char *);
 void push_idle(char *);
 void push_keymap_action(char *);
-void push_macro(char *, Boolean);
+void push_macro(char *, bool);
 void sms_accumulate_time(struct timeval *, struct timeval *);
-Boolean sms_active(void);
+bool sms_active(void);
 void sms_connect_wait(void);
 void sms_continue(void);
 void sms_error(const char *msg);
 void sms_host_output(void);
 void sms_info(const char *fmt, ...) printflike(1, 2);
-Boolean sms_in_macro(void);
-Boolean sms_redirect(void);
+bool sms_in_macro(void);
+bool sms_redirect(void);
 void sms_store(unsigned char c);
 
 typedef void *sms_cbh;
 typedef void (*sms_data_cb)(sms_cbh handle, const char *buf, size_t len);
-typedef void (*sms_done_cb)(sms_cbh handle, Boolean success,
+typedef void (*sms_done_cb)(sms_cbh handle, bool success,
 	const char *status_buf, size_t status_len);
 typedef struct {
     const char *shortname;

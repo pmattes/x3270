@@ -80,28 +80,28 @@ b8_set_bit(b8_t *b, unsigned bit)
 }
 
 /* Test a bit in a bitmap. */
-Boolean
+bool
 b8_bit_is_set(b8_t *b, unsigned bit)
 {
     if (bit < MX8) {
 	return (b->u[bit / NB8] & ((uint64_t)1 << (bit % NB8))) != 0;
     } else {
-	return False;
+	return false;
     }
 }
 
 /* Test a bitmap for all zeroes. */
-Boolean
+bool
 b8_is_zero(b8_t *b)
 {
     int i;
 
     for (i = 0; i < NU8; i++) {
 	if (b->u[i]) {
-	    return False;
+	    return false;
 	}
     }
-    return True;
+    return true;
 }
 
 /* Copy one bitmap to another. */
@@ -112,7 +112,7 @@ b8_copy(b8_t *to, b8_t *from)
 }
 
 /* Check for bits added to a bitmap. */
-Boolean
+bool
 b8_none_added(b8_t *want, b8_t *got)
 {
     b8_t t;

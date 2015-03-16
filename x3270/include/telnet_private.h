@@ -36,4 +36,4 @@
 extern SSL_CTX *ssl_ctx;
 #endif /*]*/
 extern char *ssl_cl_hostname;
-extern Boolean *ssl_pending;
+extern bool *ssl_pending;

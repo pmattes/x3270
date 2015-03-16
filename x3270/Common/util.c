@@ -166,7 +166,7 @@ split_dresource(char **st, char **left, char **right)
 {
     char *s = *st;
     char *t;
-    Boolean quote;
+    bool quote;
 
     /* Skip leading white space. */
     while (my_isspace(*s)) {
@@ -214,7 +214,7 @@ split_dresource(char **st, char **left, char **right)
 
     /* Scan until an unquoted newline is found. */
     *right = s;
-    quote = False;
+    quote = false;
     for (; *s; s++) {
 	if (*s == '\\' && *(s+1) == '"') {
 	    s++;
@@ -331,7 +331,7 @@ split_lresource(char **st, char **value)
 {
     char *s = *st;
     char *t;
-    Boolean quote;
+    bool quote;
 
     /* Skip leading white space. */
     while (my_isspace(*s)) {
@@ -347,7 +347,7 @@ split_lresource(char **st, char **value)
     *value = s;
 
     /* Scan until an unquoted newline is found. */
-    quote = False;
+    quote = false;
     for (; *s; s++) {
 	if (*s == '\\' && *(s+1) == '"') {
 	    s++;
@@ -750,7 +750,7 @@ strip_whitespace(const char *s)
 /*
  * Hierarchy (a>b>c) splitter.
  */
-Boolean
+bool
 split_hier(char *label, char **base, char ***parents)
 {
     int n_parents = 0;
@@ -760,12 +760,12 @@ split_hier(char *label, char **base, char ***parents)
     label = NewString(label);
     for (lp = label; (gt = strchr(lp, '>')) != NULL; lp = gt + 1) {
 	if (gt == lp) {
-	    return False;
+	    return false;
 	}
 	n_parents++;
     }
     if (!*lp) {
-	return False;
+	return false;
     }
 
     if (n_parents) {
@@ -781,7 +781,7 @@ split_hier(char *label, char **base, char ***parents)
 	(*parents) = NULL;
 	(*base) = label;
     }
-    return True;
+    return true;
 }
 
 #if defined(_MSC_VER) /*[*/

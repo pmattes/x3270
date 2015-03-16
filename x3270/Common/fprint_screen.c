@@ -54,8 +54,8 @@
 typedef struct {
 	ptype_t ptype;		/* Type P_XXX (text, html, rtf) */
 	unsigned opts;		/* FPS_XXX options */
-	Boolean need_separator;	/* Pending page indicator */
-	Boolean broken;		/* If set, output has failed already. */
+	bool need_separator;	/* Pending page indicator */
+	bool broken;		/* If set, output has failed already. */
 	int spp;		/* Screens per page. */
 	int screens;		/* Screen count this page. */
 	FILE *file;		/* Stream to write to */
@@ -214,8 +214,8 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
     fps = (real_fps_t *)Malloc(sizeof(real_fps_t));
     fps->ptype = ptype;
     fps->opts = opts;
-    fps->need_separator = False;
-    fps->broken = False;
+    fps->need_separator = false;
+    fps->broken = false;
     fps->spp = 1;
     fps->screens = 0;
     fps->file = f;
@@ -363,7 +363,7 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 #define FAIL do { \
     rv = -1; \
     goto done; \
-} while(False)
+} while(false)
 
 /*
  * Add a screen image to a stream.
@@ -378,14 +378,14 @@ fprint_screen_body(fps_t ofps)
 	unsigned long uc;
 	int ns = 0;
 	int nr = 0;
-	Boolean any = False;
+	bool any = false;
 	int fa_addr = find_field_attribute(0);
 	unsigned char fa = ea_buf[fa_addr].fa;
 	int fa_fg, current_fg;
 	int fa_bg, current_bg;
-	Boolean fa_high, current_high;
-	Boolean fa_ital, current_ital;
-	Boolean mi;
+	bool fa_high, current_high;
+	bool fa_ital, current_ital;
+	bool mi;
 #if defined(_WIN32) /*[*/
 	gdi_header_t h;
 #endif /*]*/
@@ -410,7 +410,7 @@ fprint_screen_body(fps_t ofps)
 	current_bg = fa_bg;
 
 	if (ea_buf[fa_addr].gr & GR_INTENSIFY)
-		fa_high = True;
+		fa_high = true;
 	else
 		fa_high = FA_IS_HIGH(fa);
 	current_high = fa_high;
@@ -491,7 +491,7 @@ fprint_screen_body(fps_t ofps)
 		break;
 	}
 
-	fps->need_separator = False;
+	fps->need_separator = false;
 
 	for (i = 0; i < ROWS*COLS; i++) {
 		char mb[16];
@@ -519,7 +519,7 @@ fprint_screen_body(fps_t ofps)
 			else
 				fa_bg = HOST_COLOR_BLACK;
 			if (ea_buf[i].gr & GR_INTENSIFY)
-				fa_high = True;
+				fa_high = true;
 			else
 				fa_high = FA_IS_HIGH(fa);
 			fa_ital = mi && FA_IS_MODIFIED(fa);
@@ -584,10 +584,10 @@ fprint_screen_body(fps_t ofps)
 				ns--;
 			}
 			if (fps->ptype == P_RTF) {
-				Boolean high;
+				bool high;
 
 				if (ea_buf[i].gr & GR_INTENSIFY)
-					high = True;
+					high = true;
 				else
 					high = fa_high;
 				if (high != current_high) {
@@ -604,7 +604,7 @@ fprint_screen_body(fps_t ofps)
 			}
 			if (fps->ptype == P_HTML) {
 				int fg_color, bg_color;
-				Boolean high;
+				bool high;
 
 				if (ea_buf[i].fg)
 					fg_color = ea_buf[i].fg & 0x0f;
@@ -628,7 +628,7 @@ fprint_screen_body(fps_t ofps)
 					bg_color = HOST_COLOR_RED;
 				}
 				if (ea_buf[i].gr & GR_INTENSIFY)
-					high = True;
+					high = true;
 				else
 					high = fa_high;
 
@@ -654,7 +654,7 @@ fprint_screen_body(fps_t ofps)
 					current_ital = fa_ital;
 				}
 			}
-			any = True;
+			any = true;
 			if (fps->ptype == P_RTF) {
 				if (uc & ~0x7f) {
 					if (fprintf(fps->file, "\\u%ld?", uc)
@@ -734,13 +734,13 @@ fprint_screen_body(fps_t ofps)
 		           "  </table>\n",
 			   current_high? "</b>": "") < 0)
 			FAIL;
-	fps->need_separator = True;
+	fps->need_separator = true;
 	fps->screens++;
 	rv = FPS_STATUS_SUCCESS_WRITTEN; /* wrote a screen */
 
     done:
 	if (FPS_IS_ERROR(rv)) {
-		fps->broken = True;
+		fps->broken = true;
 	}
 	return rv;
 }

@@ -46,8 +46,8 @@
 
 /* Live state of toggles. */
 typedef struct {
-    Boolean changed;		/* has the value changed since init */
-    Boolean supported;		/* is the toggle supported */
+    bool changed;		/* has the value changed since init */
+    bool supported;		/* is the toggle supported */
     unsigned flags;		/* miscellaneous flags */
     toggle_upcall_t *upcall;	/* notify folks it has changed */
 } toggle_t;
@@ -55,26 +55,26 @@ static toggle_t toggle[N_TOGGLES];
 
 /* Toggle name dictionary. */
 toggle_name_t toggle_names[] = {
-    { ResMonoCase,        MONOCASE,		False },
-    { ResAltCursor,       ALT_CURSOR,		False },
-    { ResCursorBlink,     CURSOR_BLINK,		False },
-    { ResShowTiming,      SHOW_TIMING,		False },
-    { ResCursorPos,       CURSOR_POS,		False },
-    { ResTrace,           TRACING,		False },
-    { ResDsTrace,         TRACING,		True }, /* compatibility */
-    { ResScrollBar,       SCROLL_BAR,		False },
-    { ResLineWrap,        LINE_WRAP,		False },
-    { ResBlankFill,       BLANK_FILL,		False },
-    { ResScreenTrace,     SCREEN_TRACE,		False },
-    { ResEventTrace,      TRACING,		True }, /* compatibility */
-    { ResMarginedPaste,   MARGINED_PASTE,	False },
-    { ResRectangleSelect, RECTANGLE_SELECT,	False },
-    { ResCrosshair,	  CROSSHAIR,		False },
-    { ResVisibleControl,  VISIBLE_CONTROL,	False },
-    { ResAidWait,         AID_WAIT,		False },
-    { ResUnderscore,	  UNDERSCORE,		False },
-    { ResOverlayPaste,    OVERLAY_PASTE,	False },
-    { NULL,               0,			False }
+    { ResMonoCase,        MONOCASE,		false },
+    { ResAltCursor,       ALT_CURSOR,		false },
+    { ResCursorBlink,     CURSOR_BLINK,		false },
+    { ResShowTiming,      SHOW_TIMING,		false },
+    { ResCursorPos,       CURSOR_POS,		false },
+    { ResTrace,           TRACING,		false },
+    { ResDsTrace,         TRACING,		true }, /* compatibility */
+    { ResScrollBar,       SCROLL_BAR,		false },
+    { ResLineWrap,        LINE_WRAP,		false },
+    { ResBlankFill,       BLANK_FILL,		false },
+    { ResScreenTrace,     SCREEN_TRACE,		false },
+    { ResEventTrace,      TRACING,		true }, /* compatibility */
+    { ResMarginedPaste,   MARGINED_PASTE,	false },
+    { ResRectangleSelect, RECTANGLE_SELECT,	false },
+    { ResCrosshair,	  CROSSHAIR,		false },
+    { ResVisibleControl,  VISIBLE_CONTROL,	false },
+    { ResAidWait,         AID_WAIT,		false },
+    { ResUnderscore,	  UNDERSCORE,		false },
+    { ResOverlayPaste,    OVERLAY_PASTE,	false },
+    { NULL,               0,			false }
 };
 
 /*
@@ -133,19 +133,19 @@ initialize_toggles(void)
  * Called from system exit code to handle toggles.
  */
 void
-toggle_exiting(Boolean mode _is_unused)
+toggle_exiting(bool mode _is_unused)
 {
     toggle_index_t ix;
 
     for (ix = 0; ix < N_TOGGLES; ix++) {
 	if (toggled(ix) && toggle[ix].flags & TOGGLE_NEED_CLEANUP) {
-	    set_toggle(ix, False);
+	    set_toggle(ix, false);
 	    toggle[ix].upcall(ix, TT_FINAL);
 	}
     }
 }
 
-Boolean
+bool
 Toggle_action(ia_t ia, unsigned argc, const char **argv)
 {
     int j;
@@ -153,7 +153,7 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
 
     action_debug("Toggle", ia, argc, argv);
     if (check_argc("Toggle", argc, 1, 2) < 0) {
-	return False;
+	return false;
     }
     for (j = 0; toggle_names[j].name != NULL; j++) {
 	if (!toggle_supported(toggle_names[j].index)) {
@@ -166,7 +166,7 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
     }
     if (toggle_names[j].name == NULL) {
 	popup_an_error("Toggle: Unknown toggle name '%s'", argv[0]);
-	return False;
+	return false;
     }
 
     if (argc == 1) {
@@ -182,9 +182,9 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
     } else {
 	popup_an_error("Toggle: Unknown keyword '%s' (must be 'set' or "
 		"'clear')", argv[1]);
-	return False;
+	return false;
     }
-    return True;
+    return true;
 }
 
 /**
@@ -221,10 +221,10 @@ toggle_toggle(toggle_index_t ix)
  * @param ix	Toggle index
  */
 void
-set_toggle(toggle_index_t ix, Boolean value)
+set_toggle(toggle_index_t ix, bool value)
 {
     appres.toggle[ix] = value;
-    toggle[ix].changed = True;
+    toggle[ix].changed = true;
 }
 
 /**
@@ -234,7 +234,7 @@ set_toggle(toggle_index_t ix, Boolean value)
  * @param ix	Toggle index
  */
 void
-set_toggle_initial(toggle_index_t ix, Boolean value)
+set_toggle_initial(toggle_index_t ix, bool value)
 {
     appres.toggle[ix] = value;
 }
@@ -246,7 +246,7 @@ set_toggle_initial(toggle_index_t ix, Boolean value)
  *
  * @return Toggle state
  */
-Boolean
+bool
 toggled(toggle_index_t ix)
 {
     return appres.toggle[ix];
@@ -257,9 +257,9 @@ toggled(toggle_index_t ix)
  *
  * @param ix	Toggle index
  *
- * @return True if changed, False otherwise
+ * @return true if changed, false otherwise
  */
-Boolean
+bool
 toggle_changed(toggle_index_t ix)
 {
     return toggle[ix].changed;
@@ -270,9 +270,9 @@ toggle_changed(toggle_index_t ix)
  *
  * @param[in] ix	Toggle index
  *
- * @return True if supported, False otherwise.
+ * @return true if supported, false otherwise.
  */
-Boolean
+bool
 toggle_supported(toggle_index_t ix)
 {
     return toggle[ix].supported;
@@ -290,7 +290,7 @@ register_toggles(toggle_register_t toggles[], unsigned count)
     unsigned i;
 
     for (i = 0; i < count; i++) {
-	toggle[toggles[i].ix].supported = True;
+	toggle[toggles[i].ix].supported = true;
 	toggle[toggles[i].ix].upcall = toggles[i].upcall;
 	toggle[toggles[i].ix].flags = toggles[i].flags;
     }

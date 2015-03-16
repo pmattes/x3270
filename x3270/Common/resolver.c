@@ -57,11 +57,11 @@ static int win32_getnameinfo(const struct sockaddr *sa, socklen_t salen,
 # define getnameinfo	win32_getnameinfo
 
 /* Run-time check for IPv6 availability. */
-static Boolean
+static bool
 ipv6_works(void)
 {
-    static Boolean cached = False;
-    static Boolean cached_result = False;
+    static bool cached = false;
+    static bool cached_result = false;
     OSVERSIONINFO info;
 
     /* Return the cached value, if there is one. */
@@ -81,7 +81,7 @@ ipv6_works(void)
     cached_result = (info.dwPlatformId != VER_PLATFORM_WIN32_WINDOWS &&
 	    info.dwMajorVersion >= 5 &&
 	    info.dwMinorVersion >= 1);
-    cached = True;
+    cached = true;
     return cached_result;
 }
 #endif /*]*/
@@ -207,7 +207,7 @@ resolve_host_and_port_v4(const char *host, char *portname, int ix,
 	    return RHP_CANNOT_RESOLVE;
 	}
 	if (lastp != NULL) {
-	    *lastp = True;
+	    *lastp = true;
 	}
     } else {
 	int i;
@@ -263,9 +263,9 @@ resolve_host_and_port(const char *host, char *portname, int ix,
 #if defined(X3270_IPV6) /*[*/
 /*
  * Resolve a sockaddr into a numeric hostname and port, IPv4 or IPv6.
- * Returns True for success, False for failure.
+ * Returns true for success, false for failure.
  */
-static Boolean
+static bool
 numeric_host_and_port_v46(const struct sockaddr *sa, socklen_t salen,
 	char *host, size_t hostlen, char *serv, size_t servlen, char **errmsg)
 {
@@ -278,18 +278,18 @@ numeric_host_and_port_v46(const struct sockaddr *sa, socklen_t salen,
 	if (errmsg) {
 	    *errmsg = lazyaf("%s", gai_strerror(rc));
 	}
-	return False;
+	return false;
     }
-    return True;
+    return true;
 }
 #endif /*]*/
 
 #if defined(_WIN32) || !defined(X3270_IPV6) /*[*/
 /*
  * Resolve a sockaddr into a numeric hostname and port, IPv4 only.
- * Returns True for success, False for failure.
+ * Returns true for success, false for failure.
  */
-static Boolean
+static bool
 numeric_host_and_port_v4(const struct sockaddr *sa, socklen_t salen,
 	char *host, size_t hostlen, char *serv, size_t servlen, char **errmsg)
 {
@@ -298,15 +298,15 @@ numeric_host_and_port_v4(const struct sockaddr *sa, socklen_t salen,
     /* Use inet_ntoa() and snprintf(). */
     snprintf(host, hostlen, "%s", inet_ntoa(sin->sin_addr));
     snprintf(serv, servlen, "%u", ntohs(sin->sin_port));
-    return True;
+    return true;
 }
 #endif /*]*/
 
 /*
  * Resolve a sockaddr into a numeric hostname and port.
- * Returns Trur for success, False for failure.
+ * Returns Trur for success, false for failure.
  */
-Boolean
+bool
 numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
 	size_t hostlen, char *serv, size_t servlen, char **errmsg)
 {

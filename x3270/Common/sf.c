@@ -56,7 +56,7 @@
 #define Yr_3279_2	0x0002006f
 
 /* Statics */
-static Boolean  qr_in_progress = False;
+static bool  qr_in_progress = false;
 static enum pds sf_read_part(unsigned char buf[], unsigned buflen);
 static enum pds sf_erase_reset(unsigned char buf[], int buflen);
 static enum pds sf_set_reply_mode(unsigned char buf[], int buflen);
@@ -66,7 +66,7 @@ static void query_reply_start(void);
 static void do_query_reply(unsigned char code);
 static void query_reply_end(void);
 
-typedef Boolean qr_multi_fn_t(unsigned *subindex, Boolean *more);
+typedef bool qr_multi_fn_t(unsigned *subindex, bool *more);
 
 static qr_single_fn_t do_qr_summary, do_qr_usable_area, do_qr_alpha_part,
 	do_qr_charsets, do_qr_color, do_qr_highlighting, do_qr_reply_modes,
@@ -111,10 +111,10 @@ write_structured_field(unsigned char buf[], int buflen)
 {
 	unsigned short fieldlen;
 	unsigned char *cp = buf;
-	Boolean first = True;
+	bool first = true;
 	enum pds rv = PDS_OKAY_NO_OUTPUT;
 	enum pds rv_this = PDS_OKAY_NO_OUTPUT;
-	Boolean bad_cmd = False;
+	bool bad_cmd = false;
 
 	/* Skip the WSF command itself. */
 	cp++;
@@ -127,7 +127,7 @@ write_structured_field(unsigned char buf[], int buflen)
 			trace_ds(" ");
 		else
 			trace_ds("< WriteStructuredField ");
-		first = False;
+		first = false;
 
 		/* Pick out the field length. */
 		if (buflen < 2) {
@@ -189,7 +189,7 @@ write_structured_field(unsigned char buf[], int buflen)
 		 * way to return the error indication.
 		 */
 		if (rv_this < 0)
-			bad_cmd = True;
+			bad_cmd = true;
 		else
 			rv |= rv_this;
 
@@ -310,7 +310,7 @@ sf_read_part(unsigned char buf[], unsigned buflen)
 			return PDS_BAD_CMD;
 		}
 		trace_ds("\n");
-		ctlr_read_modified(AID_QREPLY, True);
+		ctlr_read_modified(AID_QREPLY, true);
 		break;
 	    case SNA_CMD_RB:
 		trace_ds(" ReadBuffer");
@@ -328,7 +328,7 @@ sf_read_part(unsigned char buf[], unsigned buflen)
 			return PDS_BAD_CMD;
 		}
 		trace_ds("\n");
-		ctlr_read_modified(AID_QREPLY, False);
+		ctlr_read_modified(AID_QREPLY, false);
 		break;
 	    default:
 		trace_ds(" unknown type 0x%02x\n", buf[4]);
@@ -348,11 +348,11 @@ sf_erase_reset(unsigned char buf[], int buflen)
 	switch (buf[3]) {
 	    case SF_ER_DEFAULT:
 		trace_ds(" Default\n");
-		ctlr_erase(False);
+		ctlr_erase(false);
 		break;
 	    case SF_ER_ALT:
 		trace_ds(" Alternate\n");
-		ctlr_erase(True);
+		ctlr_erase(true);
 		break;
 	    default:
 		trace_ds(" unknown type 0x%02x\n", buf[3]);
@@ -565,7 +565,7 @@ sf_outbound_ds(unsigned char buf[], int buflen)
 	    case SNA_CMD_W:
 		trace_ds(" Write");
 		if (buflen > 5) {
-			if ((rv = ctlr_write(&buf[4], buflen-4, False)) < 0)
+			if ((rv = ctlr_write(&buf[4], buflen-4, false)) < 0)
 				return rv;
 		} else
 			trace_ds("\n");
@@ -574,7 +574,7 @@ sf_outbound_ds(unsigned char buf[], int buflen)
 		trace_ds(" EraseWrite");
 		ctlr_erase(screen_alt);
 		if (buflen > 5) {
-			if ((rv = ctlr_write(&buf[4], buflen-4, True)) < 0)
+			if ((rv = ctlr_write(&buf[4], buflen-4, true)) < 0)
 				return rv;
 		} else
 			trace_ds("\n");
@@ -583,7 +583,7 @@ sf_outbound_ds(unsigned char buf[], int buflen)
 		trace_ds(" EraseWriteAlternate");
 		ctlr_erase(screen_alt);
 		if (buflen > 5) {
-			if ((rv = ctlr_write(&buf[4], buflen-4, True)) < 0)
+			if ((rv = ctlr_write(&buf[4], buflen-4, true)) < 0)
 				return rv;
 		} else
 			trace_ds("\n");
@@ -605,7 +605,7 @@ query_reply_start(void)
 	obptr = obuf;
 	space3270out(1);
 	*obptr++ = AID_SF;
-	qr_in_progress = True;
+	qr_in_progress = true;
 }
 
 static void
@@ -613,7 +613,7 @@ do_query_reply(unsigned char code)
 {
 	unsigned i;
 	unsigned subindex = 0;
-	Boolean more = False;
+	bool more = false;
 
 	/* Find the right entry in the reply table. */
 	for (i = 0; i < NSR_ALL; i++) {
@@ -626,19 +626,19 @@ do_query_reply(unsigned char code)
 
 	if (qr_in_progress) {
 		trace_ds("> StructuredField\n");
-		qr_in_progress = False;
+		qr_in_progress = false;
 	}
 
 	do {
 		int obptr0 = obptr - obuf;
-		Boolean full = True;
+		bool full = true;
 
 		space3270out(4);
 		obptr += 2;	/* skip length for now */
 		*obptr++ = SFID_QREPLY;
 		*obptr++ = code;
 
-		more = False;
+		more = false;
 		if (replies[i].single_fn)
 			replies[i].single_fn();
 		else
@@ -900,5 +900,5 @@ static void
 query_reply_end(void)
 {
 	net_output();
-	kybd_inhibit(True);
+	kybd_inhibit(true);
 }

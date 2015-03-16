@@ -48,8 +48,8 @@ typedef enum {
 # define KEYPAD_IS_UP	0x2
 extern unsigned menu_is_up;
 extern void menu_init(void);
-Boolean menu_char(int row, int col, Boolean persistent, ucs4_t *u,
-	Boolean *highlighted, unsigned char *acs);
+bool menu_char(int row, int col, bool persistent, ucs4_t *u,
+	bool *highlighted, unsigned char *acs);
 void menu_key(menu_key_t k, ucs4_t u);
 # if defined(_WIN32) /*[*/
 void menu_click(int x, int y);

@@ -60,7 +60,7 @@ typedef struct {
     char *name;
 } suppress_t;
 static llist_t suppressed = LLIST_INIT(suppressed);
-static Boolean suppressed_initted = False;
+static bool suppressed_initted = false;
 
 /* Initialize the list of suppressed actions. */
 static void
@@ -77,7 +77,7 @@ init_suppressed(const char *actions)
     while ((action = strtok(a, " \t\r\n")) != NULL) {
 	size_t sl = strlen(action);
 	action_elt_t *e;
-	Boolean found = False;
+	bool found = false;
 
 	/* Prime for the next strtok() call. */
 	a = NULL;
@@ -91,7 +91,7 @@ init_suppressed(const char *actions)
 	/* Make sure the action they are suppressing is real. */
 	FOREACH_LLIST(&actions_list, e, action_elt_t *) {
 	    if (!strcasecmp(e->t.name, action)) {
-		found = True;
+		found = true;
 		break;
 	    }
 	} FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
@@ -111,26 +111,26 @@ init_suppressed(const char *actions)
 }
 
 /* Look up an action name in the suppressed actions resource. */
-static Boolean
+static bool
 action_suppressed(const char *name)
 {
     suppress_t *s;
 
     if (!suppressed_initted) {
 	init_suppressed(appres.suppress_actions);
-	suppressed_initted = True;
+	suppressed_initted = true;
     }
     if (llist_isempty(&suppressed)) {
-	return False;
+	return false;
     }
 
     FOREACH_LLIST(&suppressed, s, suppress_t *) {
 	if (!strcasecmp(name, s->name)) {
-	    return True;
+	    return true;
 	}
     } FOREACH_LLIST_END(&suppressed, s, suppress_t *);
 
-    return False;
+    return false;
 }
 
 /*
@@ -183,7 +183,7 @@ action_debug(const char *aname, ia_t ia, unsigned argc, const char **argv)
 /*
  * Run an emulator action by name.
  */
-Boolean
+bool
 run_action(const char *name, enum iaction cause, const char *parm1,
 	const char *parm2)
 {
@@ -199,7 +199,7 @@ run_action(const char *name, enum iaction cause, const char *parm1,
 	}
     } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
     if (action == NULL) {
-	return False; /* XXX: And do something? */
+	return false; /* XXX: And do something? */
     }
 
     if (parm1 != NULL) {
@@ -218,13 +218,13 @@ run_action(const char *name, enum iaction cause, const char *parm1,
  * Run an action by entry.
  * This is where action suppression happens.
  */
-Boolean
+bool
 run_action_entry(action_elt_t *e, enum iaction cause, unsigned count,
 	const char **parms)
 {
     if (action_suppressed(e->t.name)) {
 	vtrace("%s() [suppressed]\n", e->t.name);
-	return False;
+	return false;
     }
 
     ia_cause = cause;

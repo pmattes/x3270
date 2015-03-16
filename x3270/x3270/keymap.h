@@ -39,23 +39,23 @@
 struct trans_list {
     char    *name;
     char    *pathname;
-    Boolean  is_temp;
-    Boolean  from_server;
+    bool     is_temp;
+    bool     from_server;
     struct trans_list *next;
 };
 extern struct trans_list *trans_list;
 
 extern char *current_keymap;
-extern Boolean keymap_changed;
+extern bool keymap_changed;
 extern char *keymap_trace;
 extern struct trans_list *temp_keymaps;
 
 void do_keymap_display(Widget w, XtPointer userdata, XtPointer calldata);
-void keymap_init(const char *km, Boolean interactive);
+void keymap_init(const char *km, bool interactive);
 XtTranslations lookup_tt(const char *name, char *table);
 void PA_End_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
 void PA_KeymapTrace_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
-Boolean temporary_keymap(const char *k);
+bool temporary_keymap(const char *k);
 void keymap_register();

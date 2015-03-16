@@ -78,7 +78,7 @@ trace_ds(const char *fmt, ...)
 	va_list args;
 	size_t len;
 	const char *s;
-	Boolean nl = False;
+	bool nl = false;
 
 	if (tracef == NULL) {
 		return;
@@ -110,7 +110,7 @@ trace_ds(const char *fmt, ...)
 	len = strlen(s);
 	if (len && s[len-1] == '\n') {
 		len--;
-		nl = True;
+		nl = true;
 	}
 	while (tscnt + len >= 75) {
 		int plen = 75-tscnt;
@@ -187,10 +187,10 @@ vatrace(int do_ts, const char *fmt, va_list args)
 
 	sl = strlen(s);
 	if (sl > 0) {
-		Boolean nl = False;
+		bool nl = false;
 
 		if (tdsbuf[sl - 1] == '\n') {
-			nl = True;
+			nl = true;
 		}
 		fprintf(tracef, "%s", tdsbuf);
 		fflush(tracef);

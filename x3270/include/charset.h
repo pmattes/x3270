@@ -32,7 +32,7 @@
  *		Global declarations for charset.c
  */
 
-extern Boolean charset_changed;
+extern bool charset_changed;
 extern unsigned long cgcsgid;
 extern unsigned long cgcsgid_dbcs;
 enum cs_result { CS_OKAY, CS_NOTFOUND, CS_BAD, CS_PREREQ, CS_ILLEGAL };

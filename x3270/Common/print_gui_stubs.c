@@ -34,8 +34,8 @@
 
 #include "print_gui.h"
 
-Boolean
-print_text_gui(Boolean use_file _is_unused)
+bool
+print_text_gui(bool use_file _is_unused)
 {
-    return False;
+    return false;
 }

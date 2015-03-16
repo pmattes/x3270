@@ -109,7 +109,7 @@ ft_gui_aborting(void)
 }
 
 /* Check for interactive mode. */
-Boolean 
+bool 
 ft_gui_interact(char ***params, unsigned *num_params)
 {   
     if (*num_params == 0 && escaped) {
@@ -117,14 +117,14 @@ ft_gui_interact(char ***params, unsigned *num_params)
 	    printf("\n");
 	    fflush(stdout);
 	    action_output("Aborted");
-	    return True;
+	    return true;
 	}
     }
     if (escaped) {
-	ft_private.is_interactive = True;
+	ft_private.is_interactive = true;
     }
 
-    return False;
+    return false;
 }
 
 /* Display an "Awaiting start of transfer" message. */

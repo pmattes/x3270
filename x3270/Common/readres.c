@@ -103,8 +103,8 @@ validate_and_split_resource(const char *where, const char *arg,
 }
 
 /* Read resources from a file. */
-Boolean
-read_resource_filex(const char *filename, Boolean fatal)
+bool
+read_resource_filex(const char *filename, bool fatal)
 {
     FILE *f;
     int ilen;
@@ -117,7 +117,7 @@ read_resource_filex(const char *filename, Boolean fatal)
 	if (fatal) {
 	    xs_warning("Cannot open '%s': %s", filename, strerror(errno));
 	}
-	return False;
+	return false;
     }
 
     /* Merge in what's in the file into the resource database. */
@@ -125,7 +125,7 @@ read_resource_filex(const char *filename, Boolean fatal)
     while (fgets(buf + ilen, sizeof(buf) - ilen, f) != NULL || ilen) {
 	char *s;
 	unsigned sl;
-	Boolean bsl = False;
+	bool bsl = false;
 
 	lno++;
 
@@ -139,7 +139,7 @@ read_resource_filex(const char *filename, Boolean fatal)
 	s = buf + ilen;
 	if ((sl > 0) && (s[sl - 1] == '\\')) {
 	    s[sl - 1] = '\0';
-	    bsl = True;
+	    bsl = true;
 	}
 
 	/* Skip leading whitespace. */
@@ -189,5 +189,5 @@ read_resource_filex(const char *filename, Boolean fatal)
 	ilen = 0;
     }
     fclose(f);
-    return True;
+    return true;
 }

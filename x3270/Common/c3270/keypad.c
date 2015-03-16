@@ -78,8 +78,8 @@ static FILE *xxx = NULL;
 #endif
 
 /* Return the keypad character on top of the screen. */
-Boolean
-keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted,
+bool
+keypad_char(int row, int col, ucs4_t *u, bool *highlighted,
 	unsigned char *acs)
 {
 	keypad_desc_t *d;
@@ -95,7 +95,7 @@ keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted,
 			fprintf(xxx, "row %d col %d outline 0x%x !highlight\n",
 				row, col, *u);
 #endif
-			return True;
+			return true;
 		}
 		if (d->literal) {
 			*u = d->literal;
@@ -110,12 +110,12 @@ keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted,
 				(void *)current_sens,
 				current_sens->callback);
 #endif
-			return True;
+			return true;
 		}
 	}
 	*u = 0;
-	*highlighted = False;
-	return False;
+	*highlighted = false;
+	return false;
 }
 
 /* Report where to land the cursor when the keypad is up. */
@@ -133,7 +133,7 @@ keypad_cursor(int *row, int *col)
 
 /* Pop up the keypad. */
 void
-pop_up_keypad(Boolean up)
+pop_up_keypad(bool up)
 {
 	if (up) {
 		menu_is_up |= KEYPAD_IS_UP;
@@ -151,7 +151,7 @@ pop_up_keypad(Boolean up)
 		menu_is_up &= ~KEYPAD_IS_UP;
 		current_sens = NULL;
 	}
-	screen_changed = True;
+	screen_changed = true;
 }
 
 /*
@@ -233,7 +233,7 @@ find_adjacent(int xinc, int yinc)
 	fflush(xxx);
 #endif
 
-	while (True) {
+	while (true) {
 		int x, y;
 
 		for (y = ul_y; y <= lr_y; y++) {
@@ -412,11 +412,11 @@ keypad_click(int x, int y)
 	for (i = 0; i < NUM_SENSE; i++) {
 		if (x >= sens[i].ul_x && y >= sens[i].ul_y &&
 		    x <= sens[i].lr_x && y <= sens[i].lr_y) {
-			push_macro(sens[i].callback, False);
+			push_macro(sens[i].callback, false);
 			break;
 		}
 	}
-	pop_up_keypad(False);
+	pop_up_keypad(false);
 }
 #endif /*]*/
 
@@ -442,11 +442,11 @@ keypad_key(int k, ucs4_t u)
 		for (i = 0; i < NUM_SENSE; i++) {
 			if (m.x >= sens[i].ul_x && m.y >= sens[i].ul_y &&
 			    m.x <= sens[i].lr_x && m.y <= sens[i].lr_y) {
-				push_macro(sens[i].callback, False);
+				push_macro(sens[i].callback, false);
 				break;
 			}
 		}
-		pop_up_keypad(False);
+		pop_up_keypad(false);
 		break;
 	    }
 #endif /*]*/
@@ -478,40 +478,40 @@ keypad_key(int k, ucs4_t u)
 		break;
 
 	case MK_ENTER:
-		push_macro(current_sens->callback, False);
-		pop_up_keypad(False);
+		push_macro(current_sens->callback, false);
+		pop_up_keypad(false);
 		break;
 
 	case MK_NONE:
 		switch (u) {
 		case '\r':
 		case '\n':
-			push_macro(current_sens->callback, False);
+			push_macro(current_sens->callback, false);
 			break;
 		default:
 			break;
 		}
-		pop_up_keypad(False);
+		pop_up_keypad(false);
 		break;
 
 	default:
 	case MK_OTHER:
-		pop_up_keypad(False);
+		pop_up_keypad(false);
 		break;
 	}
 
-	screen_changed = True;
+	screen_changed = true;
 }
 
-Boolean
+bool
 Keypad_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Keypad", ia, argc, argv);
     if (check_argc("Keypad", argc, 0, 0) < 0) {
-	return False;
+	return false;
     }
-    pop_up_keypad(True);
-    return True;
+    pop_up_keypad(true);
+    return true;
 }
 
 /**

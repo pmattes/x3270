@@ -30,5 +30,5 @@
  *		Global declarations for menubar.c.
  */
 
-void menubar_as_set(Boolean sensitive);
+void menubar_as_set(bool sensitive);
 void menubar_retoggle(toggle_index_t ix);

@@ -67,8 +67,8 @@ text_t t_hostfile = T_HOSTFILE;
 text_t t_unixfile = T_UNIXFILE;
 text_t t_command = T_COMMAND;
 
-Boolean s_true = True;
-Boolean s_false = False;
+bool s_true = true;
+bool s_false = false;
 
 /* Statics. */
 static sr_t **srp = NULL;
@@ -148,22 +148,22 @@ dialog_text_callback(Widget w, XtPointer client_data,
 	XawTextPosition pos = 0;
 	int i;
 	text_t t = *(text_t *)client_data;
-	static Boolean called_back = False;
+	static bool called_back = false;
 
 	if (called_back)
 		return;
 	else
-		called_back = True;
+		called_back = true;
 
 	while (1) {
-		Boolean replaced = False;
+		bool replaced = false;
 
 		XawTextSourceRead(w, pos, &b, 1024);
 		if (b.length <= 0)
 			break;
 		nullb.format = b.format;
 		for (i = 0; i < b.length; i++) {
-			Boolean bad = False;
+			bool bad = false;
 			char c = *(b.ptr + i);
 
 			switch (t) {
@@ -195,7 +195,7 @@ dialog_text_callback(Widget w, XtPointer client_data,
 				XawTextSourceReplace(w, pos + i, pos + i + 1,
 				    &nullb);
 				pos = 0;
-				replaced = True;
+				replaced = true;
 				break;
 			}
 		}
@@ -205,16 +205,16 @@ dialog_text_callback(Widget w, XtPointer client_data,
 		if (b.length < 1024)
 			break;
 	}
-	called_back = False;
+	called_back = false;
 }
 
-/* Register widget sensitivity, based on zero to three Booleans. */
+/* Register widget sensitivity, based on zero to three bools. */
 void
-dialog_register_sensitivity(Widget w, Boolean *bvar1, Boolean bval1,
-    Boolean *bvar2, Boolean bval2, Boolean *bvar3, Boolean bval3)
+dialog_register_sensitivity(Widget w, bool *bvar1, bool bval1,
+    bool *bvar2, bool bval2, bool *bvar3, bool bval3)
 {
 	sr_t *s;
-	Boolean f;
+	bool f;
 
 	/* Allocate a structure. */
 	s = (sr_t *)XtMalloc(sizeof(sr_t));
@@ -226,7 +226,7 @@ dialog_register_sensitivity(Widget w, Boolean *bvar1, Boolean bval1,
 	s->bvar3 = bvar3;
 	s->bval3 = bval3;
 	s->is_value = !strcmp(XtName(w), "value");
-	s->has_focus = False;
+	s->has_focus = false;
 
 	/* Link it onto the chain. */
 	s->next = NULL;
@@ -238,7 +238,7 @@ dialog_register_sensitivity(Widget w, Boolean *bvar1, Boolean bval1,
 
 	/* Set up the initial widget sensitivity. */
 	if (bvar1 == NULL)
-		f = True;
+		f = true;
 	else {
 		f = (*bvar1 == bval1);
 		if (bvar2 != NULL)
@@ -251,13 +251,13 @@ dialog_register_sensitivity(Widget w, Boolean *bvar1, Boolean bval1,
 
 /* Scan the list of registered widgets for a sensitivity change. */
 void
-dialog_check_sensitivity(Boolean *bvar)
+dialog_check_sensitivity(bool *bvar)
 {
 	sr_t *s;
 
 	for (s = *srp; s != NULL; s = s->next) {
 		if (s->bvar1 == bvar || s->bvar2 == bvar || s->bvar3 == bvar) {
-			Boolean f;
+			bool f;
 
 			f = (s->bvar1 != NULL && (*s->bvar1 == s->bval1));
 			if (s->bvar2 != NULL)
@@ -278,10 +278,10 @@ static void
 focus_next(sr_t *s)
 {
 	sr_t *t;
-	Boolean sen;
+	bool sen;
 
 	/* Defocus this widget. */
-	s->has_focus = False;
+	s->has_focus = false;
 	XawTextDisplayCaret(s->w, False);
 
 	/* Search after. */
@@ -305,8 +305,8 @@ focus_next(sr_t *s)
 
 	/* Move the focus. */
 	if (t != NULL && t != s) {
-		t->has_focus = True;
-		XawTextDisplayCaret(t->w, True);
+		t->has_focus = true;
+		XawTextDisplayCaret(t->w, true);
 		if (focus_widget)
 			XtSetKeyboardFocus(focus_widget, t->w);
 	}
@@ -348,7 +348,7 @@ PA_dialog_focus_xaction(Widget w, XEvent *event _is_unused,
 		if (s->has_focus) {
 			if (s->w == w)
 				return;
-			s->has_focus = False;
+			s->has_focus = false;
 			XawTextDisplayCaret(s->w, False);
 			break;
 		}
@@ -363,7 +363,7 @@ PA_dialog_focus_xaction(Widget w, XEvent *event _is_unused,
 		return;
 
 	/* Give it the focus. */
-	s->has_focus = True;
+	s->has_focus = true;
 	XawTextDisplayCaret(w, True);
 	if (focus_widget)
 		XtSetKeyboardFocus(focus_widget, w);

@@ -35,7 +35,7 @@
 #include "menubar.h"
 
 void
-menubar_as_set(Boolean sensitive _is_unused)
+menubar_as_set(bool sensitive _is_unused)
 {
 }
 

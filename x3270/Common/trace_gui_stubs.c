@@ -40,11 +40,11 @@ trace_gui_bad_size(const char *default_value _is_unused)
 {
 }
 
-Boolean
+bool
 trace_gui_on(int reason _is_unused, enum toggle_type tt _is_unused,
 	const char *tracefile _is_unused)
 {
-    return False;
+    return false;
 }
 
 void

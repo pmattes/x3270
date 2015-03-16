@@ -32,21 +32,21 @@
  *		Global declarations for status.c.
  */
 
-void status_compose(Boolean on, unsigned char c, enum keytype keytype);
+void status_compose(bool on, unsigned char c, enum keytype keytype);
 void status_ctlr_done(void);
 void status_cursor_pos(int ca);
-void status_insert_mode(Boolean on);
+void status_insert_mode(bool on);
 void status_lu(const char *);
 void status_minus(void);
 void status_oerr(int error_type);
 void status_reset(void);
-void status_reverse_mode(Boolean on);
+void status_reverse_mode(bool on);
 void status_screentrace(int n);
-void status_script(Boolean on);
+void status_script(bool on);
 void status_scrolled(int n);
 void status_syswait(void);
 void status_timing(struct timeval *t0, struct timeval *t1);
 void status_twait(void);
-void status_typeahead(Boolean on);
+void status_typeahead(bool on);
 void status_uncursor_pos(void);
 void status_untiming(void);

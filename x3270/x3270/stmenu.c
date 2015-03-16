@@ -67,11 +67,11 @@
 static Widget stmenu_shell = NULL;
 static Widget stmenu_form;
 
-static Boolean continuously_flag = True;	/* save continuously */
+static bool continuously_flag = true;	/* save continuously */
 static Widget continuously_toggle = NULL;
 static Widget once_toggle = NULL;
 
-static Boolean file_flag = True;		/* save in file */
+static bool file_flag = true;		/* save in file */
 static Widget file_toggle = NULL;
 static Widget printer_toggle = NULL;
 
@@ -134,7 +134,7 @@ toggle_continuously(Widget w _is_unused, XtPointer client_data,
 	XtPointer call_data _is_unused)
 {
 	/* Toggle the flag. */
-    	continuously_flag = *(Boolean *)client_data;
+    	continuously_flag = *(bool *)client_data;
 
 	/* Change the widget states. */
 	dialog_mark_toggle(continuously_toggle,
@@ -149,7 +149,7 @@ toggle_file(Widget w _is_unused, XtPointer client_data,
 	XtPointer call_data _is_unused)
 {
 	/* Toggle the flag. */
-    	file_flag = *(Boolean *)client_data;
+    	file_flag = *(bool *)client_data;
 
 	/* Change the widget states. */
 	dialog_mark_toggle(file_toggle, file_flag? diamond: no_diamond);
@@ -178,7 +178,7 @@ toggle_ptype(Widget w _is_unused, XtPointer client_data,
 	XtVaGetValues(filename, XtNstring, &name, NULL);
 
 	/* Toggle the flag. */
-    	stm_ptype = *(Boolean *)client_data;
+    	stm_ptype = *(bool *)client_data;
 
 	/* Change the widget states. */
 	dialog_mark_toggle(text_toggle,

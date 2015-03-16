@@ -58,10 +58,10 @@
 enum ft_state ft_state = FT_NONE;	/* File transfer state */
 char *ft_local_filename;		/* Local file to transfer to/from */
 FILE *ft_local_file = NULL;		/* File descriptor for local file */
-Boolean ft_last_cr = False;		/* CR was last char in local file */
-Boolean ascii_flag = True;		/* Convert to ascii */
-Boolean cr_flag = True;			/* Add crlf to each line */
-Boolean remap_flag = True;		/* Remap ASCII<->EBCDIC */
+bool ft_last_cr = false;		/* CR was last char in local file */
+bool ascii_flag = true;		/* Convert to ascii */
+bool cr_flag = true;			/* Add crlf to each line */
+bool remap_flag = true;		/* Remap ASCII<->EBCDIC */
 unsigned long ft_length = 0;		/* Length of transfer */
 #if defined(_WIN32) /*[*/
 int ft_windows_codepage;		/* Windows code page */
@@ -111,12 +111,12 @@ unsigned char i_ft2asc[256] = {
 
 enum ftd ft_dbcs_state = FT_DBCS_NONE;
 unsigned char ft_dbcs_byte1;
-Boolean ft_last_dbcs = False;
+bool ft_last_dbcs = false;
 
 static ioid_t ft_start_id = NULL_IOID;
 
-static void ft_connected(Boolean ignored);
-static void ft_in3270(Boolean ignored);
+static void ft_connected(bool ignored);
+static void ft_in3270(bool ignored);
 
 static action_t Transfer_action;
 
@@ -142,7 +142,7 @@ void
 ft_init(void)
 {
     /* Initialize the private state. */
-    ft_private.receive_flag = True;
+    ft_private.receive_flag = true;
     ft_private.host_type = HT_TSO;
     ft_private.recfm = DEFAULT_RECFM;
     ft_private.units = DEFAULT_UNITS;
@@ -175,7 +175,7 @@ ft_didnt_start(ioid_t id _is_unused)
 	    unlink(ft_local_filename);
 	}
     }
-    ft_private.allow_overwrite = False;
+    ft_private.allow_overwrite = false;
 
     ft_complete(get_message("ftStartTimeout"));
     sms_continue();
@@ -239,7 +239,7 @@ ft_complete(const char *errmsg)
 	}
 	Free(buf);
     }
-    ft_private.is_interactive = False;
+    ft_private.is_interactive = false;
 }
 
 /* Update the bytes-transferred count on the progress pop-up. */
@@ -251,7 +251,7 @@ ft_update_length(void)
 
 /* Process a transfer acknowledgement. */
 void
-ft_running(Boolean is_cut)
+ft_running(bool is_cut)
 {
     if (ft_state == FT_AWAIT_ACK) {
 	ft_state = FT_RUNNING;
@@ -279,7 +279,7 @@ ft_aborting(void)
 
 /* Process a disconnect abort. */
 static void
-ft_connected(Boolean ignored _is_unused)
+ft_connected(bool ignored _is_unused)
 {
     if (!CONNECTED && ft_state != FT_NONE) {
 	ft_complete(get_message("ftDisconnected"));
@@ -288,7 +288,7 @@ ft_connected(Boolean ignored _is_unused)
 
 /* Process an abort from no longer being in 3270 mode. */
 static void
-ft_in3270(Boolean ignored _is_unused)
+ft_in3270(bool ignored _is_unused)
 {
     if (!IN_3270 && ft_state != FT_NONE) {
 	ft_complete(get_message("ftNot3270"));
@@ -362,7 +362,7 @@ static struct {
 #endif /*]*/
 };
 
-static Boolean  
+static bool  
 Transfer_action(ia_t ia, unsigned argc, const char **argv)
 {
     int i, k;
@@ -377,17 +377,17 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 
     action_debug("Transfer", ia, argc, argv);
 
-    ft_private.is_action = True;
+    ft_private.is_action = true;
 
     /* Make sure we're connected. */
     if (!IN_3270) {
 	popup_an_error("Not connected");
-	return False;
+	return false;
     }
 
     /* Check for interactive mode. */
     if (ft_gui_interact(&xparams, &xnparams)) {
-	return True;
+	return true;
     }
 
     /* Set everything to the default. */
@@ -409,7 +409,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	    eq = strchr(xparams[j], '=');
 	    if (eq == NULL || eq == xparams[j] || !*(eq + 1)) {
 		popup_an_error("Invalid option syntax: '%s'", xparams[j]);
-		return False;
+		return false;
 	    }
 	    kwlen = eq - xparams[j];
 	    if (!strncasecmp(xparams[j], tp[i].name, kwlen)
@@ -422,7 +422,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 		    }
 		    if (k >= 4 || tp[i].keyword[k] == NULL) {
 			popup_an_error("Invalid option value: '%s'", eq + 1);
-			return False;
+			return false;
 		    }
 		} else switch (i) {
 		    case PARM_LRECL:
@@ -438,7 +438,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 			if (ptr == eq + 1 || *ptr) {
 			    popup_an_error("Invalid option value: '%s'",
 				    eq + 1);
-			    return False;
+			    return false;
 			}
 			break;
 		    default:
@@ -450,18 +450,18 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	if (i >= N_PARMS) {
 	    popup_an_error("Unknown option: %s", xparams[j]);
-	    return False;
+	    return false;
 	}
     }
 
     /* Check for required values. */
     if (tp[PARM_HOST_FILE].value == NULL) {
 	popup_an_error("Missing 'HostFile' option");
-	return False;
+	return false;
     }
     if (tp[PARM_LOCAL_FILE].value == NULL) {
 	popup_an_error("Missing 'LocalFile' option");
-	return False;
+	return false;
     }
 
     /*
@@ -484,7 +484,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     } else {
 	if (!ascii_flag) {
 	    popup_an_error("Invalid 'Cr' option for ASCII mode");
-	    return False;
+	    return false;
 	}
 	cr_flag = !strcasecmp(tp[PARM_CR].value, "remove") ||
 		  !strcasecmp(tp[PARM_CR].value, "add");
@@ -536,7 +536,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	if (ft_local_file != NULL) {
 	    (void) fclose(ft_local_file);
 	    popup_an_error("File exists");
-	    return False;
+	    return false;
 	}
     }
 
@@ -544,7 +544,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     ft_local_file = fopen(ft_local_filename, ft_local_fflag());
     if (ft_local_file == NULL) {
 	popup_an_errno(errno, "Local file '%s'", ft_local_filename);
-	return False;
+	return false;
     }
 
     /* Build the ind$file command */
@@ -649,9 +649,9 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	    }
 	}
 	popup_an_error("%s", get_message("ftUnable"));
-	return False;
+	return false;
     }
-    (void) emulate_input(vb_buf(&r), vb_len(&r), False);
+    (void) emulate_input(vb_buf(&r), vb_len(&r), false);
     vb_free(&r);
 
     ft_gui_awaiting();
@@ -659,9 +659,9 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     /* Get this thing started. */
     ft_start_id = AddTimeOut(10 * 1000, ft_didnt_start);
     ft_state = FT_AWAIT_ACK;
-    ft_private.is_cut = False;
+    ft_private.is_cut = false;
 
-    return True;
+    return true;
 }
 
 #if defined(_WIN32) /*[*/

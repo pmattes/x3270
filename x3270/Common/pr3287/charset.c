@@ -98,7 +98,7 @@ charset_init(const char *csname)
 	sprintf(codeset_name, "CP%d", GetACP());
     }
 # endif /*]*/
-    set_codeset(codeset_name, False);
+    set_codeset(codeset_name, false);
 #endif /*]*/
 
     if (!set_uni(csname, LOCAL_CODEPAGE, &host_codepage, &cgcsgid_str, NULL,

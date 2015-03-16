@@ -36,14 +36,14 @@
 typedef struct sr {
     struct sr *next;
     Widget w;
-    Boolean *bvar1;
-    Boolean bval1;
-    Boolean *bvar2;
-    Boolean bval2;
-    Boolean *bvar3;
-    Boolean bval3;
-    Boolean is_value;
-    Boolean has_focus;
+    bool *bvar1;
+    bool bval1;
+    bool *bvar2;
+    bool bval2;
+    bool *bvar3;
+    bool bval3;
+    bool is_value;
+    bool has_focus;
 } sr_t;
 
 struct toggle_list {                    /* List of toggle widgets */
@@ -55,13 +55,13 @@ extern text_t t_numeric;
 extern text_t t_hostfile;
 extern text_t t_unixfile;
 extern text_t t_command;
-extern Boolean s_true, s_false;
+extern bool s_true, s_false;
 
 void dialog_set(sr_t **, Widget);
 void dialog_apply_bitmap(Widget w, Pixmap p);
-void dialog_check_sensitivity(Boolean *bvar);
-void dialog_register_sensitivity(Widget w, Boolean *bvar1, Boolean bval1,
-	Boolean *bvar2, Boolean bval2, Boolean *bvar3, Boolean bval3);
+void dialog_check_sensitivity(bool *bvar);
+void dialog_register_sensitivity(Widget w, bool *bvar1, bool bval1,
+	bool *bvar2, bool bval2, bool *bvar3, bool bval3);
 void dialog_flip_toggles(struct toggle_list *toggle_list, Widget w);
 void dialog_text_callback(Widget w, XtPointer client_data,
 	XtPointer call_data _is_unused);

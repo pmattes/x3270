@@ -102,18 +102,18 @@ static Dimension down1_x, down1_y;
 static unsigned long up_time = 0;
 static int      saw_motion = 0;
 static int      num_clicks = 0;
-static void grab_sel(int start, int end, Boolean really, Time t);
+static void grab_sel(int start, int end, bool really, Time t);
 #define NS		5
 static Atom     want_sel[NS];
 static struct {			/* owned selections */
 	Atom            atom;	/* atom */
 	char           *buffer;	/* buffer contents (UTF-8) */
 }               own_sel[NS];
-static Boolean  cursor_moved = False;
+static bool  cursor_moved = false;
 static int      saved_cursor_addr;
 static void own_sels(Time t);
 static int	n_owned = -1;
-static Boolean	any_selected = False;
+static bool	any_selected = false;
 
 #define CLICK_INTERVAL	300
 
@@ -269,7 +269,7 @@ select_word(int baddr, Time t)
 
 	v_start = f_start;
 	v_end = f_end;
-	grab_sel(f_start, f_end, True, t);
+	grab_sel(f_start, f_end, true, t);
 }
 
 static void
@@ -279,7 +279,7 @@ select_line(int baddr, Time t)
 	f_end = f_start + COLS - 1;
 	v_start = f_start;
 	v_end = f_end;
-	grab_sel(f_start, f_end, True, t);
+	grab_sel(f_start, f_end, true, t);
 }
 
 
@@ -312,7 +312,7 @@ select_start_xaction(Widget w, XEvent *event, String *params,
     if (down_time - up_time > CLICK_INTERVAL) {
 	num_clicks = 0;
 	/* Commit any previous cursor move. */
-	cursor_moved = False;
+	cursor_moved = false;
     }
     if (num_clicks == 0) {
 	unselect(0, ROWS*COLS);
@@ -350,13 +350,13 @@ move_select_xaction(Widget w, XEvent *event, String *params,
     if (down_time - up_time > CLICK_INTERVAL) {
 	num_clicks = 0;
 	/* Commit any previous cursor move. */
-	cursor_moved = False;
+	cursor_moved = false;
     }
     if (num_clicks == 0) {
 	if (any_selected) {
 	    unselect(0, ROWS*COLS);
 	} else {
-	    cursor_moved = True;
+	    cursor_moved = true;
 	    saved_cursor_addr = cursor_addr;
 	    cursor_move(baddr);
 	}
@@ -373,7 +373,7 @@ start_extend_xaction(Widget w, XEvent *event, String *params,
 {
     int x, y;
     int baddr;
-    Boolean continuous = (!ever_3270 && !toggled(RECTANGLE_SELECT));
+    bool continuous = (!ever_3270 && !toggled(RECTANGLE_SELECT));
 
     xaction_debug(start_extend_xaction, event, params, num_params);
     if (event == NULL) {
@@ -436,7 +436,7 @@ start_extend_xaction(Widget w, XEvent *event, String *params,
 	v_end = (vrow_lr * COLS) + vcol_lr;
     }
 
-    grab_sel(v_start, v_end, True, event_time(event));
+    grab_sel(v_start, v_end, true, event_time(event));
     saw_motion = 1;
     num_clicks = 0;
 }
@@ -474,7 +474,7 @@ select_extend_xaction(Widget w, XEvent *event, String *params,
     /* If we moved the 3270 cursor on the first click, put it back. */
     if (cursor_moved) {
 	cursor_move(saved_cursor_addr);
-	cursor_moved = False;
+	cursor_moved = false;
     }
 
     BOUNDED_XY(event, x, y);
@@ -508,7 +508,7 @@ select_extend_xaction(Widget w, XEvent *event, String *params,
 
     num_clicks = 0;
     saw_motion = 1;
-    grab_sel(v_start, v_end, False, event_time(event));
+    grab_sel(v_start, v_end, false, event_time(event));
 }
 
 /*
@@ -540,7 +540,7 @@ select_end_xaction(Widget w _is_unused, XEvent *event, String *params,
     }
     for (i = 0; i < NS; i++) {
 	if (i < *num_params) {
-	    want_sel[i] = XInternAtom(display, params[i], False);
+	    want_sel[i] = XInternAtom(display, params[i], false);
 	} else {
 	    want_sel[i] = None;
 	}
@@ -565,7 +565,7 @@ select_end_xaction(Widget w _is_unused, XEvent *event, String *params,
 	if (saw_motion) {
 	    f_start = v_start;
 	    f_end = v_end;
-	    grab_sel(f_start, f_end, True, event_time(event));
+	    grab_sel(f_start, f_end, true, event_time(event));
 	}
 	break;
     case 2:
@@ -574,7 +574,7 @@ select_end_xaction(Widget w _is_unused, XEvent *event, String *params,
 	 */
 	if (cursor_moved) {
 	    cursor_move(saved_cursor_addr);
-	    cursor_moved = False;
+	    cursor_moved = false;
 	}
 	select_word(f_start, event_time(event));
 	break;
@@ -694,7 +694,7 @@ SelectMotion_xaction(Widget w _is_unused, XEvent *event, String *params,
 
     num_clicks = 0;
     saw_motion = 1;
-    grab_sel(v_start, v_end, False, event_time(event));
+    grab_sel(v_start, v_end, false, event_time(event));
 }
 
 void
@@ -723,7 +723,7 @@ SelectUp_xaction(Widget w _is_unused, XEvent *event, String *params,
     }
     for (i = 0; i < NS; i++) {
 	if (i < *num_params) {
-	    want_sel[i] = XInternAtom(display, params[i], False);
+	    want_sel[i] = XInternAtom(display, params[i], false);
 	} else {
 	    want_sel[i] = None;
 	}
@@ -762,7 +762,7 @@ SelectUp_xaction(Widget w _is_unused, XEvent *event, String *params,
 	if (saw_motion) {
 	    f_start = v_start;
 	    f_end = v_end;
-	    grab_sel(f_start, f_end, True, event_time(event));
+	    grab_sel(f_start, f_end, true, event_time(event));
 	} else if (IN_3270) {
 	    cursor_move(baddr);
 	}
@@ -796,7 +796,7 @@ set_select(XEvent *event, String *params, Cardinal *num_params)
     }
     for (i = 0; i < NS; i++)
 	if (i < *num_params) {
-	    want_sel[i] = XInternAtom(display, params[i], False);
+	    want_sel[i] = XInternAtom(display, params[i], false);
 	} else {
 	    want_sel[i] = None;
 	}
@@ -988,7 +988,7 @@ KybdSelect_xaction(Widget w _is_unused, XEvent *event, String *params,
     }
     for (i = 1; i < NS; i++) {
 	if (i < *num_params) {
-	    want_sel[i] = XInternAtom(display, params[i], False);
+	    want_sel[i] = XInternAtom(display, params[i], false);
 	} else {
 	    want_sel[i] = None;
 	}
@@ -1000,7 +1000,7 @@ KybdSelect_xaction(Widget w _is_unused, XEvent *event, String *params,
     /* Grab the selection. */
     f_start = v_start = x_start;
     f_end = v_end = x_end;
-    grab_sel(f_start, f_end, True, event_time(event));
+    grab_sel(f_start, f_end, true, event_time(event));
 }
 
 /*
@@ -1040,7 +1040,7 @@ SelectAll_xaction(Widget w _is_unused, XEvent *event, String *params,
     }
     for (i = 0; i < NS; i++) {
 	if (i < *num_params) {
-	    want_sel[i] = XInternAtom(display, params[i], False);
+	    want_sel[i] = XInternAtom(display, params[i], false);
 	} else {
 	    want_sel[i] = None;
 	}
@@ -1049,7 +1049,7 @@ SelectAll_xaction(Widget w _is_unused, XEvent *event, String *params,
 	want_sel[0] = XA_PRIMARY;
     }
 
-    grab_sel(0, (ROWS * COLS) - 1, True, event_time(event));
+    grab_sel(0, (ROWS * COLS) - 1, true, event_time(event));
 }
 
 
@@ -1094,7 +1094,7 @@ store_icccm_string(XtPointer value, const char *buf)
 {
     	char *dst = (char *)value;
 	unsigned long len = 0;
-	Boolean skip = False;
+	bool skip = false;
 
 	while (*buf) {
 	    	int nw;
@@ -1105,14 +1105,14 @@ store_icccm_string(XtPointer value, const char *buf)
 		    	*dst++ = ' ';
 			len++;
 			buf++;
-		    	skip = True;
+		    	skip = true;
 			continue;
 		}
 	    	nw = utf8_to_unicode(buf, strlen(buf), &ucs);
 		if (nw <= 0)
 		    	return len;
 		if (skip) {
-		    	skip = False;
+		    	skip = false;
 			continue;
 		}
 		if (ucs == '\n' ||
@@ -1269,12 +1269,12 @@ lose_sel(Widget w _is_unused, Atom *selection)
  * The character has to be found indirectly from ea_buf and the field
  * attirbutes, so that zero-intensity fields become blanks.
  */
-static Boolean osc_valid = False;
+static bool osc_valid = false;
 
 static void
 osc_start(void)
 {
-	osc_valid = False;
+	osc_valid = false;
 }
 
 /*
@@ -1294,7 +1294,7 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 
 	/* If we aren't moving forward, all bets are off. */
 	if (osc_valid && baddr < osc_baddr)
-		osc_valid = False;
+		osc_valid = false;
 
 	if (osc_valid) {
 		/*
@@ -1310,7 +1310,7 @@ onscreen_char(int baddr, unsigned char *r, int *rlen)
 		 */
 		fa = get_field_attribute(baddr);
 		osc_baddr = baddr;
-		osc_valid = True;
+		osc_valid = true;
 	}
 
 	/* If it isn't visible, then make it a blank. */
@@ -1420,7 +1420,7 @@ own_sels(Time t)
 	 * Try to grab any new selections we may want.
 	 */
 	for (i = 0; i < NS; i++) {
-		Boolean already_own = False;
+		bool already_own = false;
 
 		if (want_sel[i] == None)
 			continue;
@@ -1428,7 +1428,7 @@ own_sels(Time t)
 		/* Check if we already own it. */
 		for (j = 0; j < NS; j++)
 			if (own_sel[j].atom == want_sel[i]) {
-				already_own = True;
+				already_own = true;
 				break;
 			}
 
@@ -1472,7 +1472,7 @@ own_sels(Time t)
  */
 #define VISUAL_LEFT(d)	((IS_LEFT(d)) || ((d) == DBCS_SI))
 static void
-grab_sel(int start, int end, Boolean really, Time t)
+grab_sel(int start, int end, bool really, Time t)
 {
 	int i, j;
 	int start_row, end_row;
@@ -1523,13 +1523,13 @@ grab_sel(int start, int end, Boolean really, Time t)
 		}
 		/* Check for newline extension on the last line. */
 		if ((end % COLS) != (COLS - 1)) {
-			Boolean all_blank = True;
+			bool all_blank = true;
 
 			for (i = end; i < end + (COLS - (end % COLS)); i++) {
 				onscreen_char(i, osc, &len);
 				for (j = 0; j < len; j++) {
 					if (osc[j]) {
-						all_blank = False;
+						all_blank = false;
 						break;
 					}
 				}
@@ -1617,7 +1617,7 @@ grab_sel(int start, int end, Boolean really, Time t)
 	if (really)
 		store_sel('\0');
 
-	any_selected = True;
+	any_selected = true;
 	ctlr_changed(0, ROWS*COLS);
 	if (really)
 		own_sels(t);
@@ -1626,17 +1626,17 @@ grab_sel(int start, int end, Boolean really, Time t)
 /*
  * Check if any character in a given region is selected.
  */
-Boolean
+bool
 area_is_selected(int baddr, int len)
 {
     int i;
 
     for (i = 0; i < len; i++) {
 	if (screen_selected(baddr+i)) {
-	    return True;
+	    return true;
 	}
     }
-    return False;
+    return false;
 }
 
 /*
@@ -1648,7 +1648,7 @@ unselect(int baddr _is_unused, int len _is_unused)
     if (any_selected) {
 	screen_unselect_all();
 	ctlr_changed(0, ROWS*COLS);
-	any_selected = False;
+	any_selected = false;
     }
 }
 
@@ -1659,7 +1659,7 @@ static int	n_pasting = 0;
 static int	pix = 0;
 static Time	paste_time;
 #if defined(XA_UTF8_STRING) /*[*/
-static Boolean	paste_utf8;
+static bool	paste_utf8;
 #endif /*]*/
 
 static void
@@ -1678,14 +1678,14 @@ paste_callback(Widget w, XtPointer client_data _is_unused,
 	/* Try the next one. */
 #if defined(XA_UTF8_STRING) /*[*/
 	if (paste_utf8) {
-	    paste_utf8 = False;
+	    paste_utf8 = false;
 	    XtGetSelectionValue(w, paste_atom[(pix - 1)], XA_STRING,
 		    paste_callback, NULL, paste_time);
 	} else
 #endif /*]*/
 	if (n_pasting > pix) {
 #if defined(XA_UTF8_STRING) /*[*/
-	    paste_utf8 = True;
+	    paste_utf8 = true;
 #endif /*]*/
 	    XtGetSelectionValue(w, paste_atom[pix++],
 #if defined(XA_UTF8_STRING) /*[*/
@@ -1736,7 +1736,7 @@ paste_callback(Widget w, XtPointer client_data _is_unused,
 	t_len -= nm;
 	ei_len += nm;
     }
-    (void) emulate_input(ei_buf, ei_len, True);
+    (void) emulate_input(ei_buf, ei_len, true);
 
     XtFree(ei_buf);
     XtFree(value);
@@ -1762,7 +1762,7 @@ insert_selection_xaction(Widget w, XEvent *event, String *params,
 
     n_pasting = 0;
     for (i = 0; i < *num_params; i++) {
-	a = XInternAtom(display, params[i], True);
+	a = XInternAtom(display, params[i], true);
 	if (a == None) {
 	    popup_an_error("%s: No atom for selection",
 		    action_name(insert_selection_xaction));
@@ -1774,7 +1774,7 @@ insert_selection_xaction(Widget w, XEvent *event, String *params,
     }
     pix = 0;
 #if defined(XA_UTF8_STRING) /*[*/
-    paste_utf8 = True;
+    paste_utf8 = true;
 #endif /*]*/
     if (n_pasting > pix) {
 	paste_time = be->time;

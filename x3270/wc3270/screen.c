@@ -74,7 +74,7 @@
 
 #define CM (60*10)	/* csec per minute */
 
-#define XTRA_ROWS	(1 + 2 * (appres.interactive.menubar == True))
+#define XTRA_ROWS	(1 + 2 * (appres.interactive.menubar == true))
 
 #if !defined(COMMON_LVB_LEAD_BYTE) /*[*/
 # define COMMON_LVB_LEAD_BYTE		0x100
@@ -145,8 +145,8 @@ static int field_colors[4] = {
 static int defattr = 0;
 static unsigned long input_id;
 
-Boolean escaped = True;
-Boolean isendwin = True;
+bool escaped = true;
+bool isendwin = true;
 
 enum ts { TS_AUTO, TS_ON, TS_OFF };
 enum ts ab_mode = TS_AUTO;
@@ -181,16 +181,16 @@ static int screen_yoffset = 0;	/* Vertical offset to top of screen.
 static void kybd_input(iosrc_t fd, ioid_t id);
 static void kybd_input2(INPUT_RECORD *ir);
 static void draw_oia(void);
-static void status_half_connect(Boolean ignored);
-static void status_connect(Boolean ignored);
-static void status_3270_mode(Boolean ignored);
-static void status_printer(Boolean on);
+static void status_half_connect(bool ignored);
+static void status_connect(bool ignored);
+static void status_3270_mode(bool ignored);
+static void status_printer(bool on);
 static int get_color_pair(int fg, int bg);
 static int color_from_fa(unsigned char fa);
-static void screen_connect(Boolean connected);
+static void screen_connect(bool connected);
 static void set_status_row(int screen_rows, int emulator_rows);
-static Boolean ts_value(const char *s, enum ts *tsp);
-static void relabel(Boolean ignored);
+static bool ts_value(const char *s, enum ts *tsp);
+static void relabel(bool ignored);
 static void init_user_colors(void);
 static void init_user_attribute_colors(void);
 static HWND get_console_hwnd(void);
@@ -208,10 +208,10 @@ static COORD console_max;
 
 static int screen_swapped = FALSE;
 
-static Boolean blink_on = True;		/* are we displaying them or not? */
-static Boolean blink_ticking = False;	/* is the timeout pending? */
+static bool blink_on = true;		/* are we displaying them or not? */
+static bool blink_ticking = false;	/* is the timeout pending? */
 static unsigned long blink_id = 0;	/* timeout ID */
-static Boolean blink_wasticking = False;
+static bool blink_wasticking = false;
 static void blink_em(ioid_t id);
 
 static action_t Paste_action;
@@ -317,7 +317,7 @@ resize_console(void)
 {
     COORD want_bs;
     SMALL_RECT sr;
-    Boolean ov_changed = False;
+    bool ov_changed = false;
 
     /*
      * Calculate the rows and columns we want -- start with the
@@ -398,7 +398,7 @@ resize_console(void)
 		popup_an_error("Oversize columns (%d) truncated to maximum "
 			"window width (%d)", ov_cols, console_cols);
 			ov_cols = console_cols;
-			ov_changed = True;
+			ov_changed = true;
 	    }
 	}
 
@@ -411,7 +411,7 @@ resize_console(void)
 		if (ov_rows <= model_rows(model_num)) {
 		    ov_rows = 0;
 		}
-		ov_changed = True;
+		ov_changed = true;
 	    }
 	}
     }
@@ -645,7 +645,7 @@ tos_a(int row, int col)
  * Local version of select_changed() that deals in screen coordinates, not
  * 3270 display buffer coordinates.
  */
-static Boolean
+static bool
 select_changed_s(unsigned row, unsigned col, unsigned rows, unsigned cols)
 {
     int row_adj, rows_adj;
@@ -658,30 +658,30 @@ select_changed_s(unsigned row, unsigned col, unsigned rows, unsigned cols)
 	rows_adj += row_adj;
 	row_adj = 0;
 	if (rows_adj <= 0) {
-	    return False;
+	    return false;
 	}
     }
 
     /* Adjust for overflow at the bottom. */
     if (row_adj >= ROWS) {
-	return False;
+	return false;
     }
     if (row_adj + rows_adj >= ROWS) {
 	rows_adj = ROWS - row_adj;
 	if (rows_adj <= 0) {
-	    return False;
+	    return false;
 	}
     }
 
     /* Adjust for overflow at the right. */
     if ((int)col >= COLS) {
-	return False;
+	return false;
     }
     cols_adj = cols;
     if ((int)(col + cols_adj) >= COLS) {
 	cols_adj = COLS - col;
 	if (cols_adj <= 0) {
-	    return False;
+	    return false;
 	}
     }
 
@@ -999,7 +999,7 @@ refresh(void)
 {
     COORD coord;
 
-    isendwin = False;
+    isendwin = false;
 
     /*
      * Draw the differences between 'onscreen' and 'toscreen' into
@@ -1028,7 +1028,7 @@ refresh(void)
 
     /* Start blinking again. */
     if (blink_wasticking) {
-	blink_wasticking = False;
+	blink_wasticking = false;
 	blink_id = AddTimeOut(750, blink_em);
     }
 }
@@ -1057,14 +1057,14 @@ endwin(void)
 	return;
     }
 
-    isendwin = True;
+    isendwin = true;
 
     if (blink_ticking) {
 	RemoveTimeOut(blink_id);
 	blink_id = 0;
-	blink_ticking = False;
-	blink_on = True;
-	blink_wasticking = True;
+	blink_ticking = false;
+	blink_on = true;
+	blink_wasticking = true;
     }
 
     set_console_cooked();
@@ -1087,7 +1087,7 @@ screen_init(void)
 {
     int want_ov_rows;
     int want_ov_cols;
-    Boolean oversize = False;
+    bool oversize = false;
 
     if (appres.interactive.menubar) {
 	menu_init();
@@ -1115,7 +1115,7 @@ screen_init(void)
 
 	    ov_cols = 0;
 	    ov_rows = 0;
-	    oversize = True;
+	    oversize = true;
 	}
 
 	/* If we're at the smallest screen now, give up. */
@@ -1214,12 +1214,12 @@ screen_init(void)
 }
 
 static void
-screen_connect(Boolean connected)
+screen_connect(bool connected)
 {
-    static Boolean initted = False;
+    static bool initted = false;
 
     if (!initted && connected) {
-	initted = True;
+	initted = true;
 	screen_resume();
     }
 }
@@ -1252,9 +1252,9 @@ set_status_row(int screen_rows, int emulator_rows)
 
 /*
  * Parse a tri-state resource value.
- * Returns True for success, False for failure.
+ * Returns true for success, false for failure.
  */
-static Boolean
+static bool
 ts_value(const char *s, enum ts *tsp)
 {
     *tsp = TS_AUTO;
@@ -1267,10 +1267,10 @@ ts_value(const char *s, enum ts *tsp)
 	} else if (!strncasecmp(s, "false", sl)) {
 	    *tsp = TS_OFF;
 	} else if (strncasecmp(s, "auto", sl)) {
-	    return False;
+	    return false;
 	}
     }
-    return True;
+    return true;
 }
 
 /* Allocate a color pair. */
@@ -1468,8 +1468,8 @@ apply_select(int attr, int baddr)
  * Find the display attributes for a baddr, fa_addr and fa.
  */
 static int
-calc_attrs(int baddr, int fa_addr, int fa, Boolean *underlined,
-	Boolean *blinking)
+calc_attrs(int baddr, int fa_addr, int fa, bool *underlined,
+	bool *blinking)
 {
     int fg, bg, gr, a;
 
@@ -1542,15 +1542,15 @@ calc_attrs(int baddr, int fa_addr, int fa, Boolean *underlined,
     }
 
     if (toggled(UNDERSCORE) && (gr & GR_UNDERLINE)) {
-	*underlined = True;
+	*underlined = true;
     } else {
-	*underlined = False;
+	*underlined = false;
     }
 
     if (toggled(UNDERSCORE) && (gr & GR_BLINK)) {
-	*blinking = True;
+	*blinking = true;
     } else {
-	*blinking = False;
+	*blinking = false;
     }
 
 done:
@@ -1567,13 +1567,13 @@ blink_em(ioid_t id _is_unused)
 
     /* We're not ticking any more. */
     blink_id = 0;
-    blink_ticking = False;
-    blink_wasticking = False;
+    blink_ticking = false;
+    blink_wasticking = false;
 
     /* Swap blink state and redraw the screen. */
     blink_on = !blink_on;
-    screen_changed = True;
-    screen_disp(False);
+    screen_changed = true;
+    screen_disp(false);
 }
 
 /*
@@ -1583,26 +1583,26 @@ blink_em(ioid_t id _is_unused)
  * Also sets up the timeout for the next blink if needed.
  */
 static int
-blinkmap(Boolean blinking, Boolean underlined, int c)
+blinkmap(bool blinking, bool underlined, int c)
 {
     if (!blinking) {
 	return c;
     }
     if (!blink_ticking) {
 	blink_id = AddTimeOut(500, blink_em);
-	blink_ticking = True;
+	blink_ticking = true;
     }
     return blink_on? c: (underlined? '_': ' ');
 }
 
 /* Display what's in the buffer. */
 void
-screen_disp(Boolean erasing _is_unused)
+screen_disp(bool erasing _is_unused)
 {
     int row, col;
     int a;
-    Boolean a_underlined = False;
-    Boolean a_blinking = False;
+    bool a_underlined = false;
+    bool a_blinking = false;
     int c;
     unsigned char fa;
     enum dbcs_state d;
@@ -1656,7 +1656,7 @@ screen_disp(Boolean erasing _is_unused)
     /* If the menubar is separate, draw it first. */
     if (screen_yoffset) {
 	ucs4_t u;
-	Boolean highlight;
+	bool highlight;
 	unsigned char acs;
 	int norm0, high0;
 	int norm1, high1;
@@ -1706,7 +1706,7 @@ screen_disp(Boolean erasing _is_unused)
 		high = high0;
 	    }
 	    for (col = 0; col < cCOLS; col++) {
-		if (menu_char(row, col, True, &u, &highlight, &acs)) {
+		if (menu_char(row, col, true, &u, &highlight, &acs)) {
 		    attrset(highlight? high: norm);
 		    addch(u);
 		} else {
@@ -1727,11 +1727,11 @@ screen_disp(Boolean erasing _is_unused)
 	    move(row + screen_yoffset, 0);
 	}
 	for (col = 0; col < cCOLS; col++) {
-	    Boolean underlined = False;
-	    Boolean blinking = False;
-	    Boolean is_menu = False;
+	    bool underlined = false;
+	    bool blinking = false;
+	    bool is_menu = false;
 	    ucs4_t u;
-	    Boolean highlight;
+	    bool highlight;
 	    unsigned char acs;
 
 	    if (flipped) {
@@ -1740,7 +1740,7 @@ screen_disp(Boolean erasing _is_unused)
 
 	    is_menu = menu_char(row + screen_yoffset,
 		    flipped? (cCOLS-1 - col): col,
-		    False,
+		    false,
 		    &u, &highlight, &acs);
 	    if (is_menu) {
 		if (highlight) {
@@ -1783,8 +1783,8 @@ screen_disp(Boolean erasing _is_unused)
 		    blinking = a_blinking;
 		} else {
 		    int b;
-		    Boolean b_underlined;
-		    Boolean b_blinking;
+		    bool b_underlined;
+		    bool b_blinking;
 
 		    /*
 		     * Override some of the field
@@ -1850,7 +1850,7 @@ screen_disp(Boolean erasing _is_unused)
 }
 
 static const char *
-decode_state(int state, Boolean limited, const char *skip)
+decode_state(int state, bool limited, const char *skip)
 {
     char *space = "";
     varbuf_t r;
@@ -1933,7 +1933,7 @@ handle_mouse_event(MOUSE_EVENT_RECORD *me)
     int x, y;
     int row, col;
     select_event_t event;
-    Boolean is_alt;
+    bool is_alt;
 
     x = me->dwMousePosition.X;
     y = me->dwMousePosition.Y;
@@ -1952,7 +1952,7 @@ handle_mouse_event(MOUSE_EVENT_RECORD *me)
 	if (me->dwEventFlags == 0 &&
 		me->dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
 	    popup_menu(x, (screen_yoffset != 0));
-	    screen_disp(False);
+	    screen_disp(false);
 	    return;
 	}
     }
@@ -2015,7 +2015,7 @@ handle_mouse_event(MOUSE_EVENT_RECORD *me)
      * without the Alt key:
      *
      *                          lightPenSelect
-     * Event               False              True
+     * Event               false              true
      * --------------- ---------------- -----------------
      * Left-click      Cursor move      Lightpen select
      *                 or copy/select
@@ -2086,7 +2086,7 @@ decode_mflags(DWORD flags, decode_t names[])
     unsigned f = flags;
     varbuf_t r;
     int i;
-    Boolean any = False;
+    bool any = false;
 
     vb_init(&r);
     vb_appendf(&r, "0x%x", (unsigned)f);
@@ -2094,7 +2094,7 @@ decode_mflags(DWORD flags, decode_t names[])
 	if (f & names[i].flag) {
 	    vb_appendf(&r, "%s%s", any? "|": " ", names[i].name);
 	    f &= ~names[i].flag;
-	    any = True;
+	    any = true;
 	}
     }
     if (f != 0 && f != flags) {
@@ -2135,7 +2135,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	if (!ir.Event.KeyEvent.bKeyDown) {
 	    return;
 	}
-	s = lookup_cname(ir.Event.KeyEvent.wVirtualKeyCode << 16, False);
+	s = lookup_cname(ir.Event.KeyEvent.wVirtualKeyCode << 16, false);
 	if (s == NULL) {
 	    s = "?";
 	}
@@ -2145,7 +2145,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 		ir.Event.KeyEvent.wVirtualScanCode,
 		ir.Event.KeyEvent.uChar.UnicodeChar,
 		(int)ir.Event.KeyEvent.dwControlKeyState,
-		decode_state(ir.Event.KeyEvent.dwControlKeyState, False,
+		decode_state(ir.Event.KeyEvent.dwControlKeyState, false,
 		    NULL));
 	if (!ir.Event.KeyEvent.bKeyDown) {
 	    return;
@@ -2185,12 +2185,12 @@ trace_as_keymap(unsigned long xk, KEY_EVENT_RECORD *e)
 
     vb_init(&r);
     vb_appendf(&r, "[xk 0x%lx] ", xk);
-    s = decode_state(e->dwControlKeyState, True, NULL);
+    s = decode_state(e->dwControlKeyState, true, NULL);
     if (strcmp(s, "none")) {
 	vb_appendf(&r, "%s ", s);
     }
     if (xk & 0xffff0000) {
-	const char *n = lookup_cname(xk, False);
+	const char *n = lookup_cname(xk, false);
 
 	vb_appendf(&r, "<Key>%s", n? n: "???");
     } else if (xk > 0x7f) {
@@ -2365,27 +2365,27 @@ kybd_input2(INPUT_RECORD *ir)
     }
 }
 
-Boolean
+bool
 screen_suspend(void)
 {
-    static Boolean need_to_scroll = False;
+    static bool need_to_scroll = false;
 
     if (!isendwin) {
 	endwin();
     }
 
     if (!escaped) {
-	escaped = True;
+	escaped = true;
 
 	if (need_to_scroll) {
 	    printf("\n");
 	} else {
-	    need_to_scroll = True;
+	    need_to_scroll = true;
 	}
 	RemoveInput(input_id);
     }
 
-    return False;
+    return false;
 }
 
 /*
@@ -2405,9 +2405,9 @@ screen_system_fixup(void)
 void
 screen_resume(void)
 {
-    escaped = False;
+    escaped = false;
 
-    screen_disp(False);
+    screen_disp(false);
     onscreen_valid = FALSE;
     refresh();
     input_id = AddInput(chandle, kybd_input);
@@ -2427,15 +2427,15 @@ cursor_move(int baddr)
 static void
 toggle_monocase(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
-    screen_changed = True;
-    screen_disp(False);
+    screen_changed = true;
+    screen_disp(false);
 }
 
 static void
 toggle_underscore(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
-    screen_changed = True;
-    screen_disp(False);
+    screen_changed = true;
+    screen_disp(false);
 }
 
 /**
@@ -2451,18 +2451,18 @@ toggle_showTiming(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 
 /* Status line stuff. */
 
-static Boolean status_ta = False;
-static Boolean status_rm = False;
-static Boolean status_im = False;
+static bool status_ta = false;
+static bool status_rm = false;
+static bool status_im = false;
 static enum {
     SS_INSECURE,
     SS_UNVERIFIED,
     SS_SECURE
 } status_secure = SS_INSECURE;
-static Boolean oia_boxsolid = False;
-static Boolean oia_undera = True;
-static Boolean oia_compose = False;
-static Boolean oia_printer = False;
+static bool oia_boxsolid = false;
+static bool oia_undera = true;
+static bool oia_compose = false;
+static bool oia_printer = false;
 static unsigned char oia_compose_char = 0;
 static enum keytype oia_compose_keytype = KT_STD;
 #define LUCNT	8
@@ -2492,11 +2492,11 @@ cancel_status_push(void)
 void
 status_ctlr_done(void)
 {
-    oia_undera = True;
+    oia_undera = true;
 }
 
 void
-status_insert_mode(Boolean on)
+status_insert_mode(bool on)
 {
     status_im = on;
 }
@@ -2582,7 +2582,7 @@ status_reset(void)
 }
 
 void
-status_reverse_mode(Boolean on)
+status_reverse_mode(bool on)
 {
     status_rm = on;
 }
@@ -2598,18 +2598,18 @@ void
 status_twait(void)
 {
     cancel_status_push();
-    oia_undera = False;
+    oia_undera = false;
     status_msg = "X Wait";
 }
 
 void
-status_typeahead(Boolean on)
+status_typeahead(bool on)
 {
     status_ta = on;
 }
 
 void    
-status_compose(Boolean on, unsigned char c, enum keytype keytype)
+status_compose(bool on, unsigned char c, enum keytype keytype)
 {
     oia_compose = on;
     oia_compose_char = c;
@@ -2628,7 +2628,7 @@ status_lu(const char *lu)
 }
 
 static void
-status_half_connect(Boolean half_connected)
+status_half_connect(bool half_connected)
 {
     if (half_connected) {
 	/* Push the 'Connecting' status under whatever is popped up. */
@@ -2637,13 +2637,13 @@ status_half_connect(Boolean half_connected)
 	} else {
 	    status_msg = "X Connecting";
 	}
-	oia_boxsolid = False;
+	oia_boxsolid = false;
 	status_secure = SS_INSECURE;
     }
 }
 
 static void
-status_connect(Boolean connected)
+status_connect(bool connected)
 {
     cancel_status_push();
 
@@ -2666,23 +2666,23 @@ status_connect(Boolean connected)
 	}
 #endif /*]*/
     } else {
-	oia_boxsolid = False;
+	oia_boxsolid = false;
 	status_msg = "X Not Connected";
 	status_secure = SS_INSECURE;
     }       
 }
 
 static void
-status_3270_mode(Boolean ignored _is_unused)
+status_3270_mode(bool ignored _is_unused)
 {
     oia_boxsolid = IN_3270 && !IN_SSCP;
     if (oia_boxsolid) {
-	oia_undera = True;
+	oia_undera = true;
     }
 }
 
 static void
-status_printer(Boolean on)
+status_printer(bool on)
 {
     oia_printer = on;
 }
@@ -2740,7 +2740,7 @@ status_screentrace(int n)
 }
 
 void
-status_script(Boolean on _is_unused)
+status_script(bool on _is_unused)
 {
     /* for now, nothing */
 }
@@ -2829,19 +2829,19 @@ draw_oia(void)
     }
 }
 
-static Boolean
+static bool
 Redraw_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Redraw", ia, argc, argv);
     if (check_argc("Redraw", argc, 0, 0) < 0) {
-	return False;
+	return false;
     }
 
     if (!escaped) {
 	onscreen_valid = FALSE;
 	refresh();
     }
-    return True;
+    return true;
 }
 
 void
@@ -2921,15 +2921,15 @@ void
 screen_flip(void)
 {
     flipped = !flipped;
-    screen_changed = True;
-    screen_disp(False);
+    screen_changed = true;
+    screen_disp(false);
 }
 
 /*
  * Windows-specific Paste action, that takes advantage of the existing x3270
  * instrastructure for multi-line paste.
  */
-static Boolean
+static bool
 Paste_action(ia_t ia, unsigned argc, const char **argv)
 {
     HGLOBAL hglb;
@@ -2938,14 +2938,14 @@ Paste_action(ia_t ia, unsigned argc, const char **argv)
 
     action_debug("Paste", ia, argc, argv);
     if (check_argc("Paste", argc, 0, 0) < 0) {
-	return False;
+	return false;
     }
 
     if (!IsClipboardFormatAvailable(format)) {
-	return False;
+	return false;
     }
     if (!OpenClipboard(NULL)) {
-	return False;
+	return false;
     }
     hglb = GetClipboardData(format);
     if (hglb != NULL) {
@@ -2970,14 +2970,14 @@ Paste_action(ia_t ia, unsigned argc, const char **argv)
 	    for (i = 0; i < sl; i++) {
 		*us++ = *w++;
 	    }
-	    emulate_uinput(u, sl, True);
+	    emulate_uinput(u, sl, true);
 	    Free(u);
 	}
 	GlobalUnlock(hglb); 
     }
     CloseClipboard(); 
 
-    return True;
+    return true;
 }
 
 /* Set the window title. */
@@ -2987,20 +2987,20 @@ screen_title(const char *text)
     (void) SetConsoleTitle(text);
 }
 
-static Boolean
+static bool
 Title_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Title", ia, argc, argv);
     if (check_argc("Title", argc, 1, 1) < 0) {
-	return False;
+	return false;
     }
 
     screen_title(argv[0]);
-    return True;
+    return true;
 }
 
 static void
-relabel(Boolean ignored _is_unused)
+relabel(bool ignored _is_unused)
 {
     if (appres.c3270.title != NULL) {
 	return;
@@ -3052,9 +3052,9 @@ get_console_hwnd(void)
 
 /*
  * Read and discard a (printable) key-down event from the console.
- * Returns True if the key is 'q'.
+ * Returns true if the key is 'q'.
  */
-Boolean
+bool
 screen_wait_for_key(char *c)
 {
     INPUT_RECORD ir;
@@ -3079,7 +3079,7 @@ screen_wait_for_key(char *c)
  *
  * @param[in] baddr	Buffer address.
  */
-Boolean
+bool
 screen_selected(int baddr)
 {
     return area_is_selected(baddr, 1);
@@ -3104,10 +3104,10 @@ screen_set_thumb(float top _is_unused, float shown _is_unused)
 /**
  * Stub for scrollbar function.
  *
- * @param[in] on	Enable (True) or disable (False) the cursor display.
+ * @param[in] on	Enable (true) or disable (false) the cursor display.
  */
 void
-enable_cursor(Boolean on _is_unused)
+enable_cursor(bool on _is_unused)
 {
 }
 

@@ -247,7 +247,7 @@ static const char *ft_help[] = {
 };
 
 #if defined(WC3270) /*[*/
-static void html_help(Boolean);
+static void html_help(bool);
 #endif /*]*/
 
 static struct {
@@ -255,7 +255,7 @@ static struct {
 	int flag;
 	const char *text;
 	const char **block;
-	void (*fn)(Boolean);
+	void (*fn)(bool);
 } help_subcommand[] = {
 	{ "all",		-1,		NULL, NULL, NULL },
 	{ "3270",		P_3270,		NULL, NULL, NULL },
@@ -270,7 +270,7 @@ static struct {
 };
 
 /* c3270-specific actions. */
-static Boolean
+static bool
 Help_action(ia_t ia, unsigned argc, const char **argv)
 {
     int i;
@@ -279,7 +279,7 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
 
     action_debug("Help", ia, argc, argv);
     if (check_argc("Help", argc, 0, 1) < 0) {
-	return False;
+	return false;
     }
 
     if (argc != 1) {
@@ -295,52 +295,52 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
 "  help html          display HTML help file\n"
 #endif /*]*/
 	);
-	return True;
+	return true;
     }
 
     /* The (hidden) verify option verifies the integrity of the help list. */
     if (!strcmp(argv[0], "verify")) {
 	action_elt_t *e;
-	Boolean any = False;
+	bool any = false;
 
 	for (i = 0; cmd_help[i].name; i++) {
-	    Boolean found = False;
+	    bool found = false;
 
 	    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
 		if (!strcasecmp(cmd_help[i].name, e->t.name)) {
-		    found = True;
+		    found = true;
 		    break;
 		}
 	    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
 	    if (!found) {
 		action_output("Help for nonexistent action: %s",
 			cmd_help[i].name);
-		any = True;
+		any = true;
 	    }
 	}
 	if (!any) {
 	    action_output("No orphaned help messages.");
 	}
-	any = False;
+	any = false;
 	FOREACH_LLIST(&actions_list, e, action_elt_t *) {
-	    Boolean found = False;
+	    bool found = false;
 
 	    for (i = 0; cmd_help[i].name; i++) {
 
 		if (!strcasecmp(cmd_help[i].name, e->t.name)) {
-		    found = True;
+		    found = true;
 		    break;
 		}
 	    }
 	    if (!found) {
 		action_output("No Help for %s", e->t.name);
-		any = True;
+		any = true;
 	    }
 	} FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
 	if (!any) {
 	    printf("No orphaned actions.\n");
 	}
-	return True;
+	return true;
     }
 
     /* Check for an exact match on one of the topics. */
@@ -357,7 +357,7 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
 	if (help_subcommand[overall].text != NULL) {
 	    /* One-line topic. */
 	    action_output("%s", help_subcommand[overall].text);
-	    return True;
+	    return true;
 	}
 	if (help_subcommand[overall].block != NULL) {
 	    int j;
@@ -366,12 +366,12 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
 	    for (j = 0; help_subcommand[overall].block[j] != NULL; j++) {
 		action_output("%s", help_subcommand[overall].block[j]);
 	    }
-	    return True;
+	    return true;
 	}
 	if (help_subcommand[overall].fn != NULL) {
 	    /* Indirect output for topic. */
-	    (*help_subcommand[overall].fn)(True);
-	    return True;
+	    (*help_subcommand[overall].fn)(true);
+	    return true;
 	}
 
 	/* Category. */
@@ -384,7 +384,7 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
 	    }
 	}
     } else {
-	Boolean any = False;
+	bool any = false;
 
 	/* Do a substring match on all of the actions. */
 	for (i = 0; cmd_help[i].name != NULL; i++) {
@@ -393,20 +393,20 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
 			cmd_help[i].name,
 			cmd_help[i].args? cmd_help[i].args: "",
 			cmd_help[i].help? cmd_help[i].help: "");
-			any = True;
+			any = true;
 	    }
 	}
 	if (!any) {
 	    action_output("No such command: %s", argv[0]);
-	    return False;
+	    return false;
 	}
     }
-    return True;
+    return true;
 }
 
 #if defined(WC3270) /*[*/
 static void
-html_help(Boolean ignored _is_unused)
+html_help(bool ignored _is_unused)
 {
 	start_html_help();
 }

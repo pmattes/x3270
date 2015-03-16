@@ -78,7 +78,7 @@ Warning(const char *s)
 	fprintf(stderr, "Warning: %s\n", s);
 	fflush(stderr);
     }
-    any_error_output = True;
+    any_error_output = true;
 }
 
 static struct {
@@ -443,7 +443,7 @@ typedef struct timeout {
 	struct timeval tv;
 #endif /*]*/
 	tofn_t proc;
-	Boolean in_play;
+	bool in_play;
 } timeout_t;
 static timeout_t *timeouts = NULL;
 
@@ -456,7 +456,7 @@ AddTimeOut(unsigned long interval_ms, tofn_t proc)
 
 	t_new = (timeout_t *)Malloc(sizeof(timeout_t));
 	t_new->proc = proc;
-	t_new->in_play = False;
+	t_new->in_play = false;
 #if defined(_WIN32) /*[*/
 	ms_ts(&t_new->ts);
 	t_new->ts += interval_ms;
@@ -528,7 +528,7 @@ typedef struct input {
 	iofn_t proc;
 } input_t;          
 static input_t *inputs = NULL;
-static Boolean inputs_changed = False;
+static bool inputs_changed = false;
 
 ioid_t
 AddInput(iosrc_t source, iofn_t fn)
@@ -541,7 +541,7 @@ AddInput(iosrc_t source, iofn_t fn)
 	ip->proc = fn;
 	ip->next = inputs;
 	inputs = ip;
-	inputs_changed = True;
+	inputs_changed = true;
 	return (ioid_t)ip;
 }
 
@@ -559,7 +559,7 @@ AddExcept(iosrc_t source, iofn_t fn)
 	ip->proc = fn;
 	ip->next = inputs;
 	inputs = ip;
-	inputs_changed = True;
+	inputs_changed = true;
 	return (ioid_t)ip;
 #endif /*]*/
 }
@@ -576,7 +576,7 @@ AddOutput(iosrc_t source, iofn_t fn)
 	ip->proc = fn;
 	ip->next = inputs;
 	inputs = ip;
-	inputs_changed = True;
+	inputs_changed = true;
 	return (ioid_t)ip;
 }
 #endif /*]*/
@@ -599,7 +599,7 @@ RemoveInput(ioid_t id)
 	else
 		inputs = ip->next;
 	Free(ip);
-	inputs_changed = True;
+	inputs_changed = true;
 }
 
 #if defined(_WIN32) /*[*/
@@ -607,8 +607,8 @@ RemoveInput(ioid_t id)
 #endif /*]*/
 
 /* Event dispatcher. */
-Boolean
-process_events(Boolean block)
+bool
+process_events(bool block)
 {
 #if defined(_WIN32) /*[*/
 	HANDLE ha[MAX_HA];
@@ -624,15 +624,15 @@ process_events(Boolean block)
 #endif /*]*/
 	input_t *ip, *ip_next;
 	struct timeout *t;
-	Boolean any_events;
-	Boolean processed_any = False;
+	bool any_events;
+	bool processed_any = false;
 
-	processed_any = False;
+	processed_any = false;
     retry:
 	/* If we've processed any input, then don't block again. */
 	if (processed_any)
-		block = False;
-	any_events = False;
+		block = false;
+	any_events = false;
 #if defined(_WIN32) /*[*/
 	nha = 0;
 #else /*][*/
@@ -647,16 +647,16 @@ process_events(Boolean block)
 #else /*][*/
 			FD_SET(ip->source, &rfds);
 #endif /*]*/
-			any_events = True;
+			any_events = true;
 		}
 #if !defined(_WIN32) /*[*/
 		if ((unsigned long)ip->condition & InputWriteMask) {
 			FD_SET(ip->source, &wfds);
-			any_events = True;
+			any_events = true;
 		}
 		if ((unsigned long)ip->condition & InputExceptMask) {
 			FD_SET(ip->source, &xfds);
-			any_events = True;
+			any_events = true;
 		}
 #endif /*]*/
 	}
@@ -680,7 +680,7 @@ process_events(Boolean block)
 				twait.tv_sec = twait.tv_usec = 0L;
 			tp = &twait;
 #endif /*]*/
-			any_events = True;
+			any_events = true;
 		} else {
 #if defined(_WIN32) /*[*/
 			tmo = INFINITE;
@@ -716,7 +716,7 @@ process_events(Boolean block)
 #else /*][*/
 	vtrace("Got %u event%s\n", ns, (ns == 1)? "": "s");
 #endif /*]*/
-	inputs_changed = False;
+	inputs_changed = false;
 #if defined(_WIN32) /*[*/
 	for (i = 0, ip = inputs; ip != NULL; ip = ip_next, i++) {
 #else /*][*/
@@ -730,7 +730,7 @@ process_events(Boolean block)
 		    FD_ISSET(ip->source, &rfds)) {
 #endif /*]*/
 			(*ip->proc)(ip->source, (ioid_t)ip);
-			processed_any = True;
+			processed_any = true;
 			if (inputs_changed)
 				goto retry;
 		}
@@ -738,14 +738,14 @@ process_events(Boolean block)
 		if (((unsigned long)ip->condition & InputWriteMask) &&
 		    FD_ISSET(ip->source, &wfds)) {
 			(*ip->proc)(ip->source, (ioid_t)ip);
-			processed_any = True;
+			processed_any = true;
 			if (inputs_changed)
 				goto retry;
 		}
 		if (((unsigned long)ip->condition & InputExceptMask) &&
 		    FD_ISSET(ip->source, &xfds)) {
 			(*ip->proc)(ip->source, (ioid_t)ip);
-			processed_any = True;
+			processed_any = true;
 			if (inputs_changed)
 				goto retry;
 		}
@@ -768,9 +768,9 @@ process_events(Boolean block)
 			     t->tv.tv_usec < now.tv_usec)) {
 #endif /*]*/
 				timeouts = t->next;
-				t->in_play = True;
+				t->in_play = true;
 				(*t->proc)((ioid_t)t);
-				processed_any = True;
+				processed_any = true;
 				Free(t);
 			} else
 				break;

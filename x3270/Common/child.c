@@ -40,9 +40,9 @@
 
 #define CHILD_BUF	1024
 
-static Boolean child_initted = False;
-static Boolean child_broken = False;
-static Boolean child_discarding = False;
+static bool child_initted = false;
+static bool child_broken = false;
+static bool child_discarding = false;
 static int child_outpipe[2];
 static int child_errpipe[2];
 
@@ -59,7 +59,7 @@ static void child_output(iosrc_t fd, ioid_t id);
 static void child_error(iosrc_t fd, ioid_t id);
 static void child_otimeout(ioid_t id);
 static void child_etimeout(ioid_t id);
-static void child_dump(struct pr3o *p, Boolean is_err);
+static void child_dump(struct pr3o *p, bool is_err);
 
 static void
 init_child(void)
@@ -72,14 +72,14 @@ init_child(void)
     /* Create pipes. */
     if (pipe(child_outpipe) < 0) {
 	popup_an_errno(errno, "pipe()");
-	child_broken = True;
+	child_broken = true;
 	return;
     }
     if (pipe(child_errpipe) < 0) {
 	popup_an_errno(errno, "pipe()");
 	close(child_outpipe[0]);
 	close(child_outpipe[1]);
-	child_broken = True;
+	child_broken = true;
 	return;
     }
 
@@ -96,7 +96,7 @@ init_child(void)
     child_stderr.fd = child_errpipe[0];
     child_stderr.input_id = AddInput(child_errpipe[0], child_error);
 
-    child_initted = True;
+    child_initted = true;
 }
 
 /*
@@ -115,7 +115,7 @@ fork_child(void)
 
     /* If output was being dumped, turn it back on now. */
     if (child_discarding) {
-	child_discarding = False;
+	child_discarding = false;
     }
 
     /* Fork and rearrange output. */
@@ -132,7 +132,7 @@ fork_child(void)
 
 /* There's data from a child. */
 static void
-child_data(struct pr3o *p, Boolean is_err)
+child_data(struct pr3o *p, bool is_err)
 {
     int space;
     int nr;
@@ -173,7 +173,7 @@ child_data(struct pr3o *p, Boolean is_err)
 	    if (p->count >= CHILD_BUF) {
 		p->count = CHILD_BUF - 1;
 	    }
-	    child_dump(p, True);
+	    child_dump(p, true);
 	} else {
 	    popup_an_error("%s", exitmsg);
 	}
@@ -200,19 +200,19 @@ child_data(struct pr3o *p, Boolean is_err)
 static void
 child_output(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
-    child_data(&child_stdout, False);
+    child_data(&child_stdout, false);
 }
 
 /* The child process has some error output for us. */
 static void
 child_error(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
-    child_data(&child_stderr, True);
+    child_data(&child_stderr, true);
 }
 
 /* Timeout from child output or error output. */
 static void
-child_timeout(struct pr3o *p, Boolean is_err)
+child_timeout(struct pr3o *p, bool is_err)
 {
     /* Forget the timeout ID. */
     p->timeout_id = 0L;
@@ -225,14 +225,14 @@ child_timeout(struct pr3o *p, Boolean is_err)
 static void
 child_otimeout(ioid_t id _is_unused)
 {
-    child_timeout(&child_stdout, False);
+    child_timeout(&child_stdout, false);
 }
 
 /* Timeout from child error output. */
 static void
 child_etimeout(ioid_t id _is_unused)
 {
-    child_timeout(&child_stderr, True);
+    child_timeout(&child_stderr, true);
 }
 
 /*
@@ -257,12 +257,12 @@ child_ignore_output(void)
     }
 
     /* Remember it. */
-    child_discarding = True;
+    child_discarding = true;
 }
 
 /* Dump pending child process output. */
 static void
-child_dump(struct pr3o *p, Boolean is_err)
+child_dump(struct pr3o *p, bool is_err)
 {
     if (p->count) {
 	/*

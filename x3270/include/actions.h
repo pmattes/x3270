@@ -52,9 +52,9 @@ extern const char       *ia_name[];
 
 void action_debug(const char *aname, ia_t ia, unsigned argc,
 	const char **argv);
-Boolean run_action(const char *name, enum iaction cause, const char *parm1,
+bool run_action(const char *name, enum iaction cause, const char *parm1,
 	const char *parm2);
-Boolean run_action_entry(action_elt_t *e, enum iaction cause, unsigned count,
+bool run_action_entry(action_elt_t *e, enum iaction cause, unsigned count,
 	const char **parms);
 int check_argc(const char *aname, unsigned nargs, unsigned nargs_min,
 	unsigned nargs_max);

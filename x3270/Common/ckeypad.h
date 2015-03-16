@@ -30,10 +30,10 @@
  *		Global declarations for c3270 keypad.c.
  */
 
-Boolean keypad_char(int row, int col, ucs4_t *u, Boolean *highlighted,
+bool keypad_char(int row, int col, ucs4_t *u, bool *highlighted,
 	    unsigned char *acs);
 void keypad_cursor(int *row, int *col);
-void pop_up_keypad(Boolean up);
+void pop_up_keypad(bool up);
 void keypad_key(int k, ucs4_t u);
 # if defined(_WIN32) /*[*/
 void keypad_click(int x, int y);

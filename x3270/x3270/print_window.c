@@ -146,11 +146,11 @@ print_window_callback(Widget w _is_unused, XtPointer client_data,
 }
 
 /* Print the contents of the screen as a bitmap. */
-static Boolean
+static bool
 PrintWindow_action(ia_t ia, unsigned argc, const char **argv)
 {
     const char *command;
-    Boolean secure = appres.secure;
+    bool secure = appres.secure;
 
     action_debug("PrintWindow", ia, argc, argv);
 
@@ -164,15 +164,15 @@ PrintWindow_action(ia_t ia, unsigned argc, const char **argv)
     }
     if (command == NULL || !*command) {
 	popup_an_error("PrintWindow: no %s defined", ResPrintWindowCommand);
-	return False;
+	return false;
     }
 
     /* Check for secure mode. */
     if (command[0] == '@') {
-	secure = True;
+	secure = true;
 	if (!*++command) {
 	    popup_an_error("PrintWindow: Invalid %s", ResPrintWindowCommand);
-	    return False;
+	    return false;
 	}
     }
     if (secure) {
@@ -181,7 +181,7 @@ PrintWindow_action(ia_t ia, unsigned argc, const char **argv)
 	vtrace("PrintWindow: Running '%s'\n", xcommand);
 	print_window_done(system(xcommand));
 	XtFree(xcommand);
-	return True;
+	return true;
     }
 
     /* Pop up the dialog. */
@@ -193,7 +193,7 @@ PrintWindow_action(ia_t ia, unsigned argc, const char **argv)
 	XtNvalue, command,
 	NULL);
     popup_popup(print_window_shell, XtGrabExclusive);
-    return True;
+    return true;
 }
 
 /* Callback for menu Print Window option. */

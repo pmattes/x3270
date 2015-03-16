@@ -55,6 +55,7 @@
 #include "screen.h"
 #include "toggles.h"
 #include "util.h"
+#include "xappres.h"
 #include "xkeypad.h"
 #include "xsave.h"
 #include "xscreen.h"
@@ -128,7 +129,7 @@ save_xy(void)
 	    &x, &y, &child);
 
     frame = XtWindow(toplevel);
-    while (True) {
+    while (true) {
 	Window root, parent;
 	Window *wchildren;
 	unsigned int nchildren;
@@ -299,7 +300,7 @@ save_keypad(void)
     int ix;
 
     ix = cmd_srch(OptKeypadOn);
-    if (appres.x3270.keypad_on || keypad_popped) {
+    if (xappres.keypad_on || keypad_popped) {
 	if (!ix) {
 	    cmd_append(OptKeypadOn);
 	}
@@ -600,19 +601,19 @@ save_opt(FILE *f, const char *full_name, const char *opt_name,
 }
 
 /* Save the current options settings in a profile. */
-Boolean
+bool
 save_options(char *n)
 {
     FILE *f;
-    Boolean exists = False;
+    bool exists = false;
     char *ct;
     toggle_index_t i;
     time_t clk;
     char *buf;
-    Boolean any_toggles = False;
+    bool any_toggles = false;
 
     if (n == NULL || *n == '\0') {
-	return False;
+	return false;
     }
 
     /* Open the file. */
@@ -620,13 +621,13 @@ save_options(char *n)
     f = fopen(n, "r");
     if (f != NULL) {
 	(void) fclose(f);
-	exists = True;
+	exists = true;
     }
     f = fopen(n, "a");
     if (f == NULL) {
 	popup_an_errno(errno, "Cannot open %s", n);
 	XtFree(n);
-	return False;
+	return false;
     }
 
     /* Save the name. */
@@ -660,7 +661,7 @@ save_options(char *n)
 	}
 	if (!any_toggles) {
 	    (void) fprintf(f, "! toggles (%s, %s)\n", OptSet, OptClear);
-	    any_toggles = True;
+	    any_toggles = true;
 	}
 	(void) fprintf(f, "%s.%s: %s\n", XtName(toplevel),
 		toggle_names[i].name,
@@ -670,7 +671,7 @@ save_options(char *n)
     /* Save the keypad state. */
     if (keypad_changed) {
 	save_opt(f, "keypad state", OptKeypadOn, ResKeypadOn,
-		(appres.x3270.keypad_on || keypad_popped)? ResTrue: ResFalse);
+		(xappres.keypad_on || keypad_popped)? ResTrue: ResFalse);
     }
 
     /* Save other menu-changeable options. */
@@ -688,9 +689,9 @@ save_options(char *n)
 	save_opt(f, "oversize", OptOversize, ResOversize, buf);
 	Free(buf);
     }
-    if (scheme_changed && appres.x3270.color_scheme != NULL) {
+    if (scheme_changed && xappres.color_scheme != NULL) {
 	save_opt(f, "color scheme", OptColorScheme, ResColorScheme,
-	    appres.x3270.color_scheme);
+	    xappres.color_scheme);
     }
     if (keymap_changed && current_keymap != NULL) {
 	save_opt(f, "keymap", OptKeymap, ResKeymap, current_keymap);
@@ -708,7 +709,7 @@ save_options(char *n)
     /* Done. */
     (void) fclose(f);
 
-    return True;
+    return true;
 }
 
 /* Save a copy of the command-line options. */
@@ -745,7 +746,7 @@ subst_name(unsigned char *fallbacks)
 {
 	char *tlname;
 	char *s, *t;
-	Boolean eol = True;
+	bool eol = true;
 	int nname = 0;
 	size_t nlen;
 	int flen;
@@ -762,11 +763,11 @@ subst_name(unsigned char *fallbacks)
 			    !strncmp(s, STAR_NAME, NLEN + 1))) {
 			nname++;
 			s += NLEN;
-			eol = False;
+			eol = false;
 		} else if (*s == '\n')
-			eol = True;
+			eol = true;
 		else
-			eol = False;
+			eol = false;
 		s++;
 	}
 	if (!nname)
@@ -788,11 +789,11 @@ subst_name(unsigned char *fallbacks)
 			strcpy(t, tlname);
 			t += nlen;
 			s += NLEN;
-			eol = False;
+			eol = false;
 		} else if (*s == '\n')
-			eol = True;
+			eol = true;
 		else
-			eol = False;
+			eol = false;
 		*t++ = *s++;
 	}
 	*t = '\0';
@@ -802,7 +803,7 @@ subst_name(unsigned char *fallbacks)
 
 /* Merge in the options settings from a profile. */
 void
-merge_profile(XrmDatabase *d, char *session, Boolean mono)
+merge_profile(XrmDatabase *d, char *session, bool mono)
 {
 	const char *fname;
 	char *env_resources;
@@ -866,19 +867,19 @@ merge_profile(XrmDatabase *d, char *session, Boolean mono)
 	Replace(xargv, NULL);
 }
 
-Boolean
-read_resource_file(const char *filename, Boolean fatal)
+bool
+read_resource_file(const char *filename, bool fatal)
 {
     XrmDatabase dd, rdb;
 
     dd = XrmGetFileDatabase(filename);
     if (dd == NULL) {
-	return False;
+	return false;
     }
 
     rdb = XtDatabase(display);
     XrmMergeDatabases(dd, &rdb);
-    return True;
+    return true;
 }
 
 /*

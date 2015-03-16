@@ -70,10 +70,10 @@ ft_gui_aborting(void)
 {
 }
 
-Boolean
+bool
 ft_gui_interact(char ***params _is_unused, unsigned *num_params _is_unused)
 {
-    return True;
+    return true;
 }
 
 void

@@ -48,7 +48,7 @@
 #include "trace.h"
 
 /* Globals */
-Boolean	scroll_initted = False;
+bool	scroll_initted = false;
 
 /* Statics */
 
@@ -60,8 +60,8 @@ static int      n_saved = 0;
 static int      scroll_next = 0;
 
 static int      scrolled_back = 0;
-static Boolean  need_saving = True;
-static Boolean  vscreen_swapped = False;
+static bool  need_saving = true;
+static bool  vscreen_swapped = false;
 static char    *sbuf = NULL;
 static int      sa_bufsize;
 static char    *zbuf = NULL;
@@ -113,7 +113,7 @@ scroll_buf_init(void)
 	ea_save[i] = (struct ea *)s;
     }
     scroll_reset();
-    scroll_initted = True;
+    scroll_initted = true;
 }
 
 static void
@@ -141,16 +141,16 @@ scroll_reset(void)
     scrolled_back = 0;
     thumb_top_base = thumb_top = 0.0;
     thumb_shown = 1.0;
-    need_saving = True;
+    need_saving = true;
     screen_set_thumb_traced(thumb_top, thumb_shown);
-    enable_cursor(True);
+    enable_cursor(true);
 }
 
 /*
  * Save <n> lines of data from the top of the screen.
  */
 void
-scroll_save(int n, Boolean trim_blanks)
+scroll_save(int n, bool trim_blanks)
 {
     int i;
 
@@ -251,7 +251,7 @@ scroll_to_bottom(void)
 	sync_scroll(0);
 	/* screen_set_thumb_traced(thumb_top, thumb_shown); */
     }
-    need_saving = True;
+    need_saving = true;
 }
 
 /*
@@ -270,7 +270,7 @@ save_image(void)
 	(void) memmove(ea_save[appres.interactive.save_lines+i],
 		(ea_buf + (i * COLS)), COLS*sizeof(struct ea));
     }
-    need_saving = False;
+    need_saving = false;
 }
 
 /*
@@ -299,9 +299,9 @@ sync_scroll(int sb)
 	    }
 	}
 	if (sb) {
-	    kybd_scroll_lock(True);
+	    kybd_scroll_lock(true);
 	} else {
-	    kybd_scroll_lock(False);
+	    kybd_scroll_lock(false);
 	}
     }
 
@@ -316,12 +316,12 @@ sync_scroll(int sb)
     if (sb && !scrolled_back && ((COLS < maxCOLS) || (ROWS < maxROWS))) {
 	COLS = maxCOLS;
 	ROWS = maxROWS;
-	vscreen_swapped = True;
+	vscreen_swapped = true;
     } else if (!sb && scrolled_back && vscreen_swapped) {
 	ctlr_shrink();
 	COLS = MODEL_2_COLS;
 	ROWS = MODEL_2_ROWS;
-	vscreen_swapped = False;
+	vscreen_swapped = false;
     }
 
     scroll_first = (scroll_next + appres.interactive.save_lines-sb) %
@@ -452,12 +452,12 @@ rethumb(void)
     screen_set_thumb_traced(thumb_top, thumb_shown);
 }
 
-static Boolean
+static bool
 Scroll_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Scroll", ia, argc, argv);
     if (check_argc("Scroll", argc, 1, 1) < 0) {
-	return False;
+	return false;
     }
 
     if (!strcasecmp(argv[0], "Forward")) {
@@ -466,9 +466,9 @@ Scroll_action(ia_t ia, unsigned argc, const char **argv)
 	scroll_n(maxROWS, -1);
     } else {
 	popup_an_error("Scroll parameter must be Forward or Backward");
-	return False;
+	return false;
     }
-    return True;
+    return true;
 }
 
 /**

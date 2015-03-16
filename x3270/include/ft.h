@@ -32,8 +32,8 @@
  *		Global declarations for ft.c.
  */
 
-extern Boolean ascii_flag;
-extern Boolean cr_flag;
+extern bool ascii_flag;
+extern bool cr_flag;
 extern unsigned long ft_length;
 extern FILE *ft_local_file;
 extern char *ft_local_filename;
@@ -44,9 +44,9 @@ enum ft_state {
     FT_ABORT_WAIT,	/* Awaiting chance to send an abort */
     FT_ABORT_SENT	/* Abort sent; awaiting response */
 };
-extern Boolean ft_last_cr;
+extern bool ft_last_cr;
 extern enum ft_state ft_state;
-extern Boolean remap_flag;
+extern bool remap_flag;
 extern unsigned char i_ft2asc[], i_asc2ft[];
 
 enum ftd {
@@ -56,12 +56,12 @@ enum ftd {
 };
 extern enum ftd ft_dbcs_state;
 extern unsigned char ft_dbcs_byte1;
-extern Boolean ft_last_dbcs;
+extern bool ft_last_dbcs;
 
 void ft_aborting(void);
 void ft_complete(const char *errmsg);
 void ft_init(void);
-void ft_running(Boolean is_cut);
+void ft_running(bool is_cut);
 void ft_update_length(void);
 char *ft_local_fflag(void);
 void ft_register(void);

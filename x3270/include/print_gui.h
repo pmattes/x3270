@@ -30,4 +30,4 @@
  *		Global declarations for print_gui.c.
  */
 
-Boolean print_text_gui(Boolean use_file);
+bool print_text_gui(bool use_file);

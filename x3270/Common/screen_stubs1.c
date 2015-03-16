@@ -47,10 +47,10 @@ cursor_move(int baddr)
     cursor_addr = baddr;
 }
 
-Boolean
+bool
 screen_selected(int baddr _is_unused)
 {
-    return False;
+    return false;
 }
 
 void
@@ -59,7 +59,7 @@ ring_bell(void)
 }
 
 void
-screen_disp(Boolean erasing)
+screen_disp(bool erasing _is_unused)
 {
 }
 

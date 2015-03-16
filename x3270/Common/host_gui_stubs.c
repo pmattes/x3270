@@ -35,10 +35,10 @@
 
 #include "host_gui.h"
 
-Boolean
+bool
 host_gui_connect(void)
 {
-    return False;
+    return false;
 }
 
 void
@@ -46,10 +46,10 @@ host_gui_connect_initial(void)
 {
 }
 
-Boolean
+bool
 host_gui_disconnect(void)
 {
-    return False;
+    return false;
 }
 
 void

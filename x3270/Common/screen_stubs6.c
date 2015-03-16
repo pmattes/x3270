@@ -34,8 +34,8 @@
 
 #include "screen.h"
 
-Boolean
+bool
 screen_suspend(void)
 {
-    return False;
+    return false;
 }

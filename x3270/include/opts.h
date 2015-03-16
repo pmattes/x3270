@@ -38,7 +38,7 @@
 typedef struct {
     const char *name;
     enum {
-	OPT_BOOLEAN,	/* set Boolean to True or False */
+	OPT_BOOLEAN,	/* set bool to True or False */
 	OPT_STRING,	/* set a (char *) */
 	OPT_XRM,	/* special for "-xrm" syntax */
 	OPT_SKIP2,	/* skip the next token */
@@ -47,7 +47,7 @@ typedef struct {
 	OPT_V,		/* special for "-v" */
 	OPT_DONE	/* option-list terminator */
     } type;
-    Boolean flag;	/* value if OPT_BOOLEAN */
+    bool flag;	/* value if OPT_BOOLEAN */
     const char *res_name; /* name of resource to set, or NULL */
     void *aoff;		/* appres offset */
     char *help_opts;	/* options to display for help, or NULL */
@@ -63,7 +63,7 @@ typedef struct {
     void *address;
     enum resource_type {
 	XRM_STRING,	/* char * */
-	XRM_BOOLEAN,	/* Boolean */
+	XRM_BOOLEAN,	/* bool */
 	XRM_INT		/* int */
     } type;
 } res_t;

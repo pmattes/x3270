@@ -82,11 +82,11 @@ typedef struct {
 #define MAX_HTTPD_REQUEST	(8192 - 1)
     char request_buf[MAX_HTTPD_REQUEST + 1]; /* request buffer */
     int nr;		/* length of input up through blank line */
-    Boolean saw_first;	/* we have digested the first line of the request */
+    bool saw_first;	/* we have digested the first line of the request */
     int rll;		/* length of each request line parsed */
     verb_t verb;	/* parsed verb */
-    Boolean http_1_0;	/* is the client speaking HTTP 1.0? */
-    Boolean persistent; /* is the client expecting a persistent connection? */
+    bool http_1_0;	/* is the client speaking HTTP 1.0? */
+    bool persistent; /* is the client expecting a persistent connection? */
     char *uri;		/* start of URI */
     char *query;	/* query */
     field_t *queries;	/* list of query values */
@@ -103,7 +103,7 @@ typedef struct {
 typedef struct {
     /* Global state */
     void *mhandle;	/* the handle from the main procedure */
-    Boolean cr;		/* last character seen was a CR */
+    bool cr;		/* last character seen was a CR */
     unsigned long seq;	/* connection sequence number, for tracing */
 
     /* Per-request state */
@@ -289,15 +289,15 @@ httpd_vprint(httpd_t *h, httpd_print_t type, const char *format, va_list ap)
     while (sl > 0) {
 	char *nl;		/* location of next newline */
 	ssize_t wlen;		/* number of bytes before the newline */
-	Boolean crlf;		/* True if newline found */
+	bool crlf;		/* true if newline found */
 
 	nl = strchr(sp, '\n');
 	if (nl != NULL) {
 	    wlen = nl - sp;
-	    crlf = True;
+	    crlf = true;
 	} else {
 	    wlen = sl;
-	    crlf = False;
+	    crlf = false;
 	}
 	if (wlen) {
 	    /* Send the text up to (but not including) the newline. */
@@ -411,10 +411,10 @@ static void
 httpd_reinit_request(request_t *r)
 {
     r->nr = 0;
-    r->saw_first = False;
+    r->saw_first = false;
     r->rll = 0;
-    r->http_1_0 = False;
-    r->persistent = True;
+    r->http_1_0 = false;
+    r->persistent = true;
     free_fields(&r->fields);
     r->fields_start = NULL;
     free_fields(&r->queries);
@@ -465,7 +465,7 @@ httpd_init_state(httpd_t *h, void *mhandle)
 {
     httpd_init_request(&h->request);
 
-    h->cr = False;
+    h->cr = false;
     h->mhandle = mhandle;
     h->seq = httpd_seq++;
 }
@@ -475,11 +475,11 @@ httpd_init_state(httpd_t *h, void *mhandle)
  *
  * @param[in] h			State
  * @param[in] status_code	HTTP status code
- * @param[in] do_close		True if we should send 'Connection: close'
+ * @param[in] do_close		true if we should send 'Connection: close'
  * @param[in] content_type	Value for Content-Type field
  */
 static void
-httpd_http_header(httpd_t *h, int status_code, Boolean do_close,
+httpd_http_header(httpd_t *h, int status_code, bool do_close,
 	const char *content_type)
 {
     request_t *r = &h->request;
@@ -632,9 +632,9 @@ httpd_error(httpd_t *h, errmode_t mode, int status_code,
  * @param[out] nlp	Returned length of number (number of bytes)
  * @param[out] np	Returned numeric value
  *
- * @return False for no valid number present, True for success
+ * @return false for no valid number present, true for success
  */
-static Boolean
+static bool
 httpd_parse_number(const char *s, size_t *nlp, unsigned long *np)
 {
     unsigned long int u;
@@ -644,11 +644,11 @@ httpd_parse_number(const char *s, size_t *nlp, unsigned long *np)
     if ((u == ULONG_MAX && errno == ERANGE) || end == s) {
 	*nlp = 0;
 	*np = 0;
-	return False;
+	return false;
     }
     *nlp = end - s;
     *np = u;
-    return True;
+    return true;
 }
 
 /**
@@ -740,8 +740,8 @@ httpd_digest_request_line(httpd_t *h)
 	errmode = ERRMODE_FATAL;
     } else {
 	/* No third token. Assume HTTP 1.0. */
-	r->http_1_0 = True;
-	r->persistent = False;
+	r->http_1_0 = true;
+	r->persistent = false;
     }
 
     /* Check the verb. */
@@ -802,7 +802,7 @@ hex_digit(char c)
  *  there is a syntax error
  */
 static char *
-percent_decode(const char *uri, size_t len, Boolean plus)
+percent_decode(const char *uri, size_t len, bool plus)
 {
     enum {
 	PS_BASE,	/* base state */
@@ -1297,7 +1297,7 @@ parse_queries(httpd_t *h, const char *query)
     const char *s = query;
     field_t *f;
     field_t *f_last = NULL;
-    Boolean last = False;
+    bool last = false;
     char *eov;
 
     /* Split the string at each '&'. */
@@ -1309,7 +1309,7 @@ parse_queries(httpd_t *h, const char *query)
 	eov = strchr(s, '&');
 	if (!eov) {
 	    eov = strchr(s, '\0');
-	    last = True;
+	    last = true;
 	}
 
 	eq = strchr(s, '=');
@@ -1317,8 +1317,8 @@ parse_queries(httpd_t *h, const char *query)
 	    continue;
 	}
 
-	name = percent_decode(s, eq - s, False);
-	value = percent_decode(eq + 1, eov - (eq + 1), True);
+	name = percent_decode(s, eq - s, false);
+	value = percent_decode(eq + 1, eov - (eq + 1), true);
 	f = Malloc(sizeof(*f) + strlen(name) + 1 + strlen(value) + 1);
 	f->next = NULL;
 	f->name = (char *)(f + 1);
@@ -1457,7 +1457,7 @@ httpd_digest_request(httpd_t *h)
     /* Check for connection close request. */
     if ((connection = lookup_field("Connection", r->fields)) != NULL &&
 	    !strcasecmp(connection, "close")) {
-	r->persistent = False;
+	r->persistent = false;
     }
 
     /*
@@ -1480,7 +1480,7 @@ httpd_digest_request(httpd_t *h)
     }
 
     /* Do percent substitution on the URI. */
-    cand_uri = percent_decode(r->uri, strlen(r->uri), False);
+    cand_uri = percent_decode(r->uri, strlen(r->uri), false);
     if (cand_uri == NULL) {
 	return httpd_error(h, ERRMODE_FATAL, 400,
 		"Invalid URI (percent substution error).");
@@ -1544,7 +1544,7 @@ httpd_input_char(httpd_t *h, char c)
      * after CRs.
      */
     if (h->cr) {
-	h->cr = False;
+	h->cr = false;
 
 	/* CR followed by LF. Ignore the LF. */
 	if (c == '\n') {
@@ -1552,7 +1552,7 @@ httpd_input_char(httpd_t *h, char c)
 	}
     }
     if (c == '\r') {
-	h->cr = True;
+	h->cr = true;
 
 	/* Treat CRs as Newline characters. */
 	c = '\n';
@@ -1586,7 +1586,7 @@ httpd_input_char(httpd_t *h, char c)
 	    if (!r->saw_first) {
 		r->request_buf[r->nr - 1] = '\0';
 		r->fields_start = &r->request_buf[r->nr];
-		r->saw_first = True;
+		r->saw_first = true;
 		return httpd_digest_request_line(h);
 	    }
 	}

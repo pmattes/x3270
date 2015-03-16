@@ -4207,7 +4207,7 @@ charset_list_dbcs(void)
 
 	printf("DBCS host code pages (with aliases):\n");
 	for (i = 0; uni16[i].name != NULL; i++) {
-		Boolean any = False;
+		bool any = false;
 		char *asep = " (";
 
 	    	printf("%s%s", sep, uni16[i].name);
@@ -4216,7 +4216,7 @@ charset_list_dbcs(void)
 		    	if (!strcmp(cpaliases16[j].canon, uni16[i].name)) {
 			    	printf("%s%s", asep, cpaliases16[j].alias);
 				asep = ", ";
-				any = True;
+				any = true;
 			}
 		}
 		if (any)
@@ -4283,15 +4283,15 @@ unicode_to_ebcdic_dbcs(ucs4_t u)
 
 /*
  * Set the EBCDIC-to-Unicode DBCS translation table.
- * Returns True for success, False for failure.
+ * Returns true for success, false for failure.
  */
-Boolean
+bool
 set_uni_dbcs(const char *csname, const char **codepage)
 {
 #if defined(X3270_DBCS) /*[*/
     int i;
     const char *realname = csname;
-    Boolean rc = False;
+    bool rc = false;
 
     /* Search for an alias. */
     for (i = 0; cpaliases16[i].alias != NULL; i++) {
@@ -4306,7 +4306,7 @@ set_uni_dbcs(const char *csname, const char **codepage)
 	if (!strcasecmp(realname, uni16[i].name)) {
 	    cur_uni16 = &uni16[i];
 	    *codepage = uni16[i].codepage;
-	    rc = True;
+	    rc = true;
 	    break;
 	}
     }
@@ -4321,6 +4321,6 @@ set_uni_dbcs(const char *csname, const char **codepage)
 
     return rc;
 #else /*][*/
-    return False;
+    return false;
 #endif /*]*/
 }

@@ -47,7 +47,7 @@ Widget create_form_popup(const char *name, XtCallbackProc callback,
 	XtCallbackProc callback2, enum form_type form_type);
 void error_init(void);
 void error_popup_init(void);
-Boolean error_popup_visible(void);
+bool error_popup_visible(void);
 void info_popup_init(void);
 void PA_confirm_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);

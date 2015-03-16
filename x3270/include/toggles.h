@@ -37,7 +37,7 @@
 typedef struct {
     const char *name;
     toggle_index_t index;
-    Boolean is_alias;
+    bool is_alias;
 } toggle_name_t;
 extern toggle_name_t toggle_names[];
 
@@ -55,10 +55,10 @@ void do_toggle(int);
 void initialize_toggles(void);
 void toggles_register(void);
 void toggle_toggle(toggle_index_t ix);
-void set_toggle(toggle_index_t ix, Boolean value);
-void set_toggle_initial(toggle_index_t ix, Boolean value);
-Boolean toggle_changed(toggle_index_t ix);
-Boolean toggle_supported(toggle_index_t ix);
+void set_toggle(toggle_index_t ix, bool value);
+void set_toggle_initial(toggle_index_t ix, bool value);
+bool toggle_changed(toggle_index_t ix);
+bool toggle_supported(toggle_index_t ix);
 
 #define TOGGLE_NEED_INIT	0x1	/* needs start-up initialization */
 #define TOGGLE_NEED_CLEANUP	0x2	/* needs shutdown clean-up */

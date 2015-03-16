@@ -56,17 +56,17 @@
 #define MAX_RECENT		20	/* upper limit on appres.max_recent */
 
 enum cstate	cstate = NOT_CONNECTED;
-Boolean		std_ds_host = False;
-Boolean		no_login_host = False;
-Boolean		non_tn3270e_host = False;
-Boolean		passthru_host = False;
-Boolean		ssl_host = False;
-Boolean		bind_lock_host = False;
+bool		std_ds_host = false;
+bool		no_login_host = false;
+bool		non_tn3270e_host = false;
+bool		passthru_host = false;
+bool		ssl_host = false;
+bool		bind_lock_host = false;
 #define		LUNAME_SIZE	16
 char		luname[LUNAME_SIZE+1];
 char		*connected_lu = NULL;
 char		*connected_type = NULL;
-Boolean		ever_3270 = False;
+bool		ever_3270 = false;
 
 char           *current_host = NULL;
 char           *full_current_host = NULL;
@@ -76,7 +76,7 @@ char	       *qualified_host = NULL;
 
 struct host *hosts = NULL;
 static struct host *last_host = NULL;
-static Boolean auto_reconnect_inprogress = False;
+static bool auto_reconnect_inprogress = false;
 static iosrc_t net_sock = INVALID_IOSRC;
 static ioid_t reconnect_id = NULL_IOID;
 
@@ -209,10 +209,10 @@ read_hosts_file(void)
  * @param[in] mode	Unused.
  */
 static void
-host_exiting(Boolean mode _is_unused)
+host_exiting(bool mode _is_unused)
 {
     /* Disconnect from the host gracefully. */
-    host_disconnect(False);
+    host_disconnect(false);
 }
 
 /**
@@ -242,7 +242,7 @@ host_register(void)
 void
 hostfile_init(void)
 {
-    static Boolean hostfile_initted = False;
+    static bool hostfile_initted = false;
 
     if (hostfile_initted) {
 	return;
@@ -250,7 +250,7 @@ hostfile_init(void)
 
     read_hosts_file();
 
-    hostfile_initted = True;
+    hostfile_initted = true;
 }
 
 /*
@@ -313,9 +313,9 @@ static char *pfxstr = "AaCcLlNnPpSsBb";
  * Allows [ ] to quote : and @ inside any name (LU, host or port).
  *
  * Because the syntax is so awful, it needs to be picked apart explicitly.
- * Returns True for success, False for syntax error.
+ * Returns true for success, false for syntax error.
  */
-static Boolean
+static bool
 new_split_host(char *raw, char **lu, char **host, char **port,
 	unsigned *prefixes)
 {
@@ -327,8 +327,8 @@ new_split_host(char *raw, char **lu, char **host, char **port,
     char   *qmap      = NULL;
     char   *rqmap;
     char   *errmsg    = "nonspecific";
-    Boolean rc        = False;
-    Boolean quoted    = False;
+    bool rc        = false;
+    bool quoted    = false;
     int     bracketed = 0;
     int     n_ch      = 0;
     int     n_at      = 0;
@@ -380,11 +380,11 @@ new_split_host(char *raw, char **lu, char **host, char **port,
 	}
 	if (quoted) {
 	    qmap[uq_len] = '+';
-	    quoted = False;
+	    quoted = false;
 	    uq[uq_len++] = *s;
 	    continue;
 	} else if (*s == '\\') {
-	    quoted = True;
+	    quoted = true;
 	    continue;
 	}
 	if (bracketed) {
@@ -536,7 +536,7 @@ new_split_host(char *raw, char **lu, char **host, char **port,
     part[part_ix][n_ch] = '\0';
 
     /* Success! */
-    rc = True;
+    rc = true;
 
 done:
     if (uq != NULL) {
@@ -554,21 +554,21 @@ done:
 /*
  * Strip qualifiers from a hostname.
  * Returns the hostname part in a newly-malloc'd string.
- * 'needed' is returned True if anything was actually stripped.
+ * 'needed' is returned true if anything was actually stripped.
  * Returns NULL if there is a syntax error.
  */
 static char *
-split_host(char *s, Boolean *ansi, Boolean *std_ds, Boolean *passthru,
-	Boolean *non_e, Boolean *secure, Boolean *no_login,
-	Boolean *bind_lock, char *xluname, char **port, Boolean *needed)
+split_host(char *s, bool *ansi, bool *std_ds, bool *passthru,
+	bool *non_e, bool *secure, bool *no_login,
+	bool *bind_lock, char *xluname, char **port, bool *needed)
 {
     char *lu;
     char *host;
     unsigned prefixes;
-    Boolean *pfxptr[7];
+    bool *pfxptr[7];
     int i;
 
-    *needed = False;
+    *needed = false;
 
     /* Call the sane, new version. */
     if (!new_split_host(s, &lu, &host, port, &prefixes)) {
@@ -590,9 +590,9 @@ split_host(char *s, Boolean *ansi, Boolean *std_ds, Boolean *passthru,
     pfxptr[6] = bind_lock;	/* B: */
     for (i = 0; i < 7; i++) {
 	if (prefixes & (1 << i)) {
-	    *pfxptr[i] = True;
+	    *pfxptr[i] = true;
 	} else {
-	    *pfxptr[i] = False;
+	    *pfxptr[i] = false;
 	}
     }
     *needed = (strcmp(s, host) != 0);
@@ -603,11 +603,11 @@ split_host(char *s, Boolean *ansi, Boolean *std_ds, Boolean *passthru,
 /*
  * Network connect/disconnect operations, combined with X input operations.
  *
- * Returns True for success, False for error.
+ * Returns true for success, false for error.
  * Sets 'reconnect_host', 'current_host' and 'full_current_host' as
  * side-effects.
  */
-Boolean
+bool
 host_connect(const char *n)
 {
     char *nb;		/* name buffer */
@@ -616,14 +616,14 @@ host_connect(const char *n)
     char *target_name;
     char *ps = NULL;
     char *port = NULL;
-    Boolean resolving;
-    Boolean pending;
-    static Boolean ansi_host;
+    bool resolving;
+    bool pending;
+    static bool ansi_host;
     const char *localprocess_cmd = NULL;
-    Boolean has_colons = False;
+    bool has_colons = false;
 
     if (CONNECTED || auto_reconnect_inprogress) {
-	return True;
+	return true;
     }
 
     /* Skip leading blanks. */
@@ -632,7 +632,7 @@ host_connect(const char *n)
     }
     if (!*n) {
 	popup_an_error("Invalid (empty) hostname");
-	return False;
+	return false;
     }
 
     /* Save in a modifiable buffer. */
@@ -657,7 +657,7 @@ host_connect(const char *n)
     } else
 #endif /*]*/
     {
-	Boolean needed;
+	bool needed;
 
 	/* Strip off and remember leading qualifiers. */
 	if ((s = split_host(nb, &ansi_host, &std_ds_host, &passthru_host,
@@ -719,25 +719,25 @@ host_connect(const char *n)
 		port));
 
     /* Attempt contact. */
-    ever_3270 = False;
+    ever_3270 = false;
     net_sock = net_connect(chost, port, localprocess_cmd != NULL, &resolving,
 	    &pending);
     if (net_sock == INVALID_IOSRC && !resolving) {
 	if (!host_gui_connect()) {
 	    if (appres.interactive.reconnect) {
-		auto_reconnect_inprogress = True;
+		auto_reconnect_inprogress = true;
 		reconnect_id = AddTimeOut(RECONNECT_ERR_MS, try_reconnect);
 	    }
 	}
 	/* Redundantly signal a disconnect. */
-	st_changed(ST_CONNECT, False);
+	st_changed(ST_CONNECT, false);
 	goto failure;
     }
 
     /* Still thinking about it? */
     if (resolving) {
 	cstate = RESOLVING;
-	st_changed(ST_RESOLVING, True);
+	st_changed(ST_RESOLVING, true);
 	goto success;
     }
 
@@ -757,14 +757,14 @@ host_connect(const char *n)
     /* Set state and tell the world. */
     if (pending) {
 	cstate = PENDING;
-	st_changed(ST_HALF_CONNECT, True);
+	st_changed(ST_HALF_CONNECT, true);
     } else {
 	if (appres.nvt_mode) {
 	    cstate = CONNECTED_NVT;
 	} else {
 	    cstate = CONNECTED_INITIAL;
 	}
-	st_changed(ST_CONNECT, True);
+	st_changed(ST_CONNECT, true);
 	host_gui_connect_initial();
     }
 
@@ -772,13 +772,13 @@ success:
     if (nb != NULL) {
 	Free(nb);
     }
-    return True;
+    return true;
 
 failure:
     if (nb != NULL) {
 	Free(nb);
     }
-    return False;
+    return false;
 }
 
 /*
@@ -792,7 +792,7 @@ host_reconnect(void)
 	return;
     }
     if (host_connect(reconnect_host)) {
-	auto_reconnect_inprogress = False;
+	auto_reconnect_inprogress = false;
     }
 }
 
@@ -802,7 +802,7 @@ host_reconnect(void)
 static void
 try_reconnect(ioid_t id _is_unused)
 {
-    auto_reconnect_inprogress = False;
+    auto_reconnect_inprogress = false;
     host_reconnect();
 }
 
@@ -814,12 +814,12 @@ host_cancel_reconnect(void)
 {
     if (auto_reconnect_inprogress) {
 	RemoveTimeOut(reconnect_id);
-	auto_reconnect_inprogress = False;
+	auto_reconnect_inprogress = false;
     }
 }
 
 void
-host_disconnect(Boolean failed)
+host_disconnect(bool failed)
 {
     if (!PCONNECTED) {
 	return;
@@ -831,7 +831,7 @@ host_disconnect(Boolean failed)
     if (!host_gui_disconnect()) {
 	if (appres.interactive.reconnect && !auto_reconnect_inprogress) {
 	    /* Schedule an automatic reconnection. */
-	    auto_reconnect_inprogress = True;
+	    auto_reconnect_inprogress = true;
 	    reconnect_id = AddTimeOut(failed? RECONNECT_ERR_MS:
 					      RECONNECT_MS,
 		  try_reconnect);
@@ -849,17 +849,17 @@ host_disconnect(Boolean failed)
     cstate = NOT_CONNECTED;
 
     /* Propagate the news to everyone else. */
-    st_changed(ST_CONNECT, False);
+    st_changed(ST_CONNECT, false);
 }
 
 /* The host has entered 3270 or NVT mode, or switched between them. */
 void
 host_in3270(enum cstate new_cstate)
 {
-    Boolean now3270 = (new_cstate == CONNECTED_3270 ||
+    bool now3270 = (new_cstate == CONNECTED_3270 ||
 		       new_cstate == CONNECTED_SSCP ||
 		       new_cstate == CONNECTED_TN3270E);
-    Boolean was3270 = (cstate == CONNECTED_3270 ||
+    bool was3270 = (cstate == CONNECTED_3270 ||
 	    	       cstate == CONNECTED_SSCP ||
 		       cstate == CONNECTED_TN3270E);
 
@@ -874,7 +874,7 @@ void
 host_connected(void)
 {
     cstate = CONNECTED_INITIAL;
-    st_changed(ST_CONNECT, True);
+    st_changed(ST_CONNECT, true);
     host_gui_connected();
 }
 
@@ -1046,17 +1046,17 @@ save_recent(const char *hn)
      */
     n_recent = 0;
     for (i = nih; i < nh; i++) {
-	Boolean delete = False;
+	bool delete = false;
 
 	if (n_recent >= appres.max_recent) {
-	    delete = True;
+	    delete = true;
 	} else {
 	    int j;
 
 	    for (j = nih; j < i; j++) {
 		if (h_array[j] != NULL &&
 			!strcmp(h_array[i]->name, h_array[j]->name)) {
-		    delete = True;
+		    delete = true;
 		    break;
 		}
 	    }
@@ -1116,16 +1116,16 @@ save_recent(const char *hn)
 
 /* Explicit connect/disconnect actions. */
 
-static Boolean
+static bool
 Connect_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Connect", ia, argc, argv);
     if (check_argc("Connect", argc, 1, 1) < 0) {
-	return False;
+	return false;
     }
     if (CONNECTED || HALF_CONNECTED) {
 	popup_an_error("Already connected");
-	return False;
+	return false;
     }
     (void) host_connect(argv[0]);
 
@@ -1142,23 +1142,23 @@ Connect_action(ia_t ia, unsigned argc, const char **argv)
     if (ia != IA_KEYMAP) {
 	sms_connect_wait();
     }
-    return True;
+    return true;
 }
 
-static Boolean
+static bool
 Reconnect_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Reconnect", ia, argc, argv);
     if (check_argc("Reconnect", argc, 0, 0) < 0) {
-	return False;
+	return false;
     }
     if (CONNECTED || HALF_CONNECTED) {
 	popup_an_error("Already connected");
-	return False;
+	return false;
     }
     if (current_host == NULL) {
 	popup_an_error("No previous host to connect to");
-	return False;
+	return false;
     }
     host_reconnect();
 
@@ -1175,16 +1175,16 @@ Reconnect_action(ia_t ia, unsigned argc, const char **argv)
     if (ia != IA_KEYMAP) {
 	sms_connect_wait();
     }
-    return True;
+    return true;
 }
 
-static Boolean
+static bool
 Disconnect_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Disconnect", ia, argc, argv);
     if (check_argc("Disconnect", argc, 0, 0) < 0) {
-	return False;
+	return false;
     }
-    host_disconnect(False);
-    return True;
+    host_disconnect(false);
+    return true;
 }

@@ -86,11 +86,11 @@ struct keymap {
 
 static struct keymap *master_keymap = NULL;
 
-static Boolean last_3270 = False;
-static Boolean last_nvt = False;
+static bool last_3270 = false;
+static bool last_nvt = false;
 
 static int lookup_ccode(const char *s);
-static void keymap_3270_mode(Boolean);
+static void keymap_3270_mode(bool);
 
 #define codecmp(k1, k2, len)	\
 	kvcmp((k1)->codes, (k2)->codes, len)
@@ -150,7 +150,7 @@ parse_keydef(char **str, k_t *ccode, int *hint)
 	char *ks;
 	int flags = 0;
 	ks_t Ks;
-	Boolean matched = False;
+	bool matched = false;
 
 	ccode->key = 0;
 	ccode->ucs4 = 0;
@@ -204,7 +204,7 @@ parse_keydef(char **str, k_t *ccode, int *hint)
 		if (u == 0 || *ptr != '\0')
 			return -7;
 		ccode->ucs4 = (ucs4_t)u;
-		matched = True;
+		matched = true;
 	}
 	if (!matched) {
 	    	ucs4_t u;
@@ -218,7 +218,7 @@ parse_keydef(char **str, k_t *ccode, int *hint)
 	    	u = multibyte_to_unicode(s, strlen(s), &consumed, &error);
 		if (u != 0 && (size_t)consumed == strlen(s)) {
 		    	ccode->ucs4 = u;
-			matched = True;
+			matched = true;
 		}
 	}
 	if (!matched) {
@@ -226,7 +226,7 @@ parse_keydef(char **str, k_t *ccode, int *hint)
 		Ks = string_to_key(s);
 		if (Ks != KS_NONE) {
 			ccode->ucs4 = Ks;
-			matched = True;
+			matched = true;
 		}
 	}
 	if (!matched) {
@@ -239,7 +239,7 @@ parse_keydef(char **str, k_t *ccode, int *hint)
 		if (flags || ccode->modifiers)
 			return -5; /* no Alt/Ctrl with KEY_XXX */
 		ccode->key = cc;
-		matched = True;
+		matched = true;
 	}
 
 	/* Apply Ctrl. */
@@ -554,9 +554,9 @@ status_ret(char *s, struct keymap *k)
 {
 	/* Set the compose indicator based on the new value of current_match. */
 	if (k != NULL)
-		status_compose(True, ' ', KT_STD);
+		status_compose(true, ' ', KT_STD);
 	else
-		status_compose(False, 0, KT_STD);
+		status_compose(false, 0, KT_STD);
 
 	if (s != NULL && s != ignore)
 		vtrace(" %s:%d -> %s\n", current_match->file,
@@ -936,7 +936,7 @@ set_inactive(void)
 
 /* 3270/NVT mode change. */
 static void
-keymap_3270_mode(Boolean ignored _is_unused)
+keymap_3270_mode(bool ignored _is_unused)
 {
 	if (last_3270 != IN_3270 || last_nvt != IN_NVT) {
 		last_3270 = IN_3270;

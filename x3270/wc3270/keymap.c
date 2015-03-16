@@ -76,11 +76,11 @@ struct keymap {
 
 static struct keymap *master_keymap = NULL;
 
-static Boolean last_3270 = False;
-static Boolean last_nvt = False;
+static bool last_3270 = false;
+static bool last_nvt = false;
 
 static int lookup_ccode(const char *s);
-static void keymap_3270_mode(Boolean);
+static void keymap_3270_mode(bool);
 
 static void read_one_keymap(const char *name, const char *fn, const char *r0,
     int flags);
@@ -601,9 +601,9 @@ status_ret(char *s, struct keymap *k)
 {
 	/* Set the compose indicator based on the new value of current_match. */
 	if (k != NULL)
-		status_compose(True, ' ', KT_STD);
+		status_compose(true, ' ', KT_STD);
 	else
-		status_compose(False, 0, KT_STD);
+		status_compose(false, 0, KT_STD);
 
 	if (s != NULL && s != ignore)
 		vtrace(" %s:%d -> %s\n", current_match->file,
@@ -895,7 +895,7 @@ lookup_ccode(const char *s)
 
 /* Look up a vkey code and return its name. */
 const char *
-lookup_cname(unsigned long ccode, Boolean special_only)
+lookup_cname(unsigned long ccode, bool special_only)
 {
 	int i;
 
@@ -1006,7 +1006,7 @@ set_inactive(void)
 
 /* 3270/NVT mode change. */
 static void
-keymap_3270_mode(Boolean ignored _is_unused)
+keymap_3270_mode(bool ignored _is_unused)
 {
 	if (last_3270 != IN_3270 || last_nvt != IN_NVT) {
 		last_3270 = IN_3270;
@@ -1058,7 +1058,7 @@ decode_key(int k, int hint, char *buf)
 	    	const char *n;
 
 	    	/* VK_xxx */
-		n = lookup_cname(k, False);
+		n = lookup_cname(k, false);
 		(void) sprintf(buf, "%s<Key>%s", decode_hint(hint),
 			       n? n: "???");
 	} else if (k < ' ') {

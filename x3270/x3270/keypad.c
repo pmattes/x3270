@@ -46,6 +46,7 @@
 #include "kybd.h"
 #include "popups.h"
 #include "util.h"
+#include "xappres.h"
 #include "xkeypad.h"
 #include "xmenubar.h"
 #include "xscreen.h"
@@ -95,7 +96,7 @@ struct button_list {
 	const char *parm;
 };
 
-Boolean keypad_changed = False;
+bool keypad_changed = false;
 
 static char Lg[] = "large";
 static char Bm[] = "bm";
@@ -268,15 +269,15 @@ static XtTranslations saved_xt = (XtTranslations) NULL;
 void
 keypad_placement_init(void)
 {
-    if (!strcmp(appres.x3270.keypad, KpLeft)) {
+    if (!strcmp(xappres.keypad, KpLeft)) {
 	kp_placement = kp_left;
-    } else if (!strcmp(appres.x3270.keypad, KpRight)) {
+    } else if (!strcmp(xappres.keypad, KpRight)) {
 	kp_placement = kp_right;
-    } else if (!strcmp(appres.x3270.keypad, KpBottom)) {
+    } else if (!strcmp(xappres.keypad, KpBottom)) {
 	kp_placement = kp_bottom;
-    } else if (!strcmp(appres.x3270.keypad, KpIntegral)) {
+    } else if (!strcmp(xappres.keypad, KpIntegral)) {
 	kp_placement = kp_integral;
-    } else if (!strcmp(appres.x3270.keypad, KpInsideRight)) {
+    } else if (!strcmp(xappres.keypad, KpInsideRight)) {
 	kp_placement = kp_inside_right;
     } else {
 	xs_error("Unknown value for %s", ResKeypad);
@@ -396,7 +397,7 @@ keypad_keys_horiz(Widget container)
 	}
 }
 
-static Boolean vert_keypad = False;
+static bool vert_keypad = false;
 static Widget spf_container;
 
 /*
@@ -410,7 +411,7 @@ keypad_keys_vert(Widget container)
     Position x0, y0;
     Widget c1, c2;
 
-    vert_keypad = True;
+    vert_keypad = true;
 
     /* Container for shifted PF keys */
     spf_container = XtVaCreateManagedWidget(
@@ -427,7 +428,7 @@ keypad_keys_vert(Widget container)
     }
 
     /* PF keys */
-    if (appres.x3270.invert_kpshift) {
+    if (xappres.invert_kpshift) {
 	c1 = spf_container;
 	c2 = container;
     } else {
@@ -501,7 +502,7 @@ get_keypad_dimension(const char *name)
 static void
 init_keypad_dimensions(void)
 {
-	static Boolean done = False;
+	static bool done = false;
 
 	if (done)
 		return;
@@ -510,7 +511,7 @@ init_keypad_dimensions(void)
 	pf_width = get_keypad_dimension(ResPfWidth);
 	pa_width = get_keypad_dimension(ResPaWidth);
 	large_key_width = get_keypad_dimension(ResLargeKeyWidth);
-	done = True;
+	done = true;
 }
 
 Dimension
@@ -533,7 +534,8 @@ keypad_qheight(void)
  * Create a keypad.
  */
 Widget
-keypad_init(Widget container, Dimension voffset, Dimension screen_width, Boolean floating, Boolean vert)
+keypad_init(Widget container, Dimension voffset, Dimension screen_width,
+	bool floating, bool vert)
 {
 	Dimension height;
 	Dimension width = screen_width;
@@ -615,12 +617,12 @@ keypad_shift(void)
  * Keypad popup
  */
 Widget keypad_shell = NULL;
-Boolean keypad_popped = False;
+bool keypad_popped = false;
 
-static Boolean TrueD = True;
-static Boolean *TrueP = &TrueD;
-static Boolean FalseD = False;
-static Boolean *FalseP = &FalseD;
+static bool TrueD = true;
+static bool *TrueP = &TrueD;
+static bool FalseD = false;
+static bool *FalseP = &FalseD;
 static enum placement *pp;
 
 /*
@@ -630,7 +632,7 @@ static enum placement *pp;
 void
 keypad_first_up(void)
 {
-    if (!appres.x3270.keypad_on || kp_placement == kp_integral) {
+    if (!xappres.keypad_on || kp_placement == kp_integral) {
 	return;
     }
     keypad_popup_init();
@@ -641,7 +643,7 @@ keypad_first_up(void)
 static void
 keypad_updown(Widget w _is_unused, XtPointer client_data, XtPointer call_data)
 {
-    appres.x3270.keypad_on = keypad_popped = *(Boolean *)client_data;
+    xappres.keypad_on = keypad_popped = *(bool *)client_data;
     if (!keypad_popped) {
 	XtDestroyWidget(keypad_shell);
 	keypad_shell = NULL;
@@ -650,7 +652,7 @@ keypad_updown(Widget w _is_unused, XtPointer client_data, XtPointer call_data)
 	spf_container = NULL;
     }
 
-    if (appres.x3270.keypad_on) {
+    if (xappres.keypad_on) {
 	place_popup(w, (XtPointer)pp, call_data);
     }
     menubar_keypad_changed();
@@ -662,28 +664,28 @@ keypad_popup_init(void)
 {
 	Widget w;
 	Dimension height, width, border;
-	Boolean vert = False;
+	bool vert = false;
 
 	if (keypad_shell != NULL)
 		return;
 
 	switch (kp_placement) {
 	    case kp_left:
-		vert = True;
+		vert = true;
 		pp = LeftP;
 		break;
 	    case kp_right:
-		vert = True;
+		vert = true;
 		pp = RightP;
 		break;
 	    case kp_bottom:
-		vert = False;
+		vert = false;
 		pp = BottomP;
 		break;
 	    case kp_integral:	/* can't happen */
 		return;
 	    case kp_inside_right:
-		vert = True;
+		vert = true;
 		pp = InsideRightP;
 		break;
 	}
@@ -708,7 +710,7 @@ keypad_popup_init(void)
 	    XtNheight, 10,
 	    XtNwidth, 10,
 	    NULL);
-	w = keypad_init(keypad_container, 0, 0, True, vert);
+	w = keypad_init(keypad_container, 0, 0, true, vert);
 
 	/* Fix the window size */
 
@@ -780,13 +782,13 @@ keypad_move(void)
 }
 
 void
-keypad_popdown(Boolean *was_up)
+keypad_popdown(bool *was_up)
 {
     	if (keypad_popped) {
-	    	*was_up = True;
+	    	*was_up = true;
 		XtPopdown(keypad_shell);
 	} else
-	    	*was_up = False;
+	    	*was_up = false;
 }
 
 void
@@ -797,6 +799,6 @@ keypad_popup(void)
 	XtPopup(keypad_shell, XtGrabNone);
     }
 #endif
-    appres.x3270.keypad_on = True;
+    xappres.keypad_on = True;
     keypad_first_up();
 }

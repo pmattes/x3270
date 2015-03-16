@@ -32,4 +32,4 @@
 
 int ssl_passwd_gui_callback(char *buf, int size);
 void ssl_passwd_gui_reset(void);
-Boolean ssl_passwd_gui_retry(void);
+bool ssl_passwd_gui_retry(void);

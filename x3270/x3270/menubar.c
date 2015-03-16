@@ -68,6 +68,7 @@
 #include "toggles.h"
 #include "util.h"
 #include "xaa.h"
+#include "xappres.h"
 #include "xactions.h"
 #include "xkeypad.h"
 #include "xio.h"
@@ -109,21 +110,21 @@ static Widget  *charset_widgets;
 
 static void scheme_init(void);
 static void charsets_init(void);
-static void options_menu_init(Boolean regen, Position x, Position y);
+static void options_menu_init(bool regen, Position x, Position y);
 static void keypad_button_init(Position x, Position y);
 #if defined(HAVE_LIBSSL) /*[*/
 static void ssl_icon_init(Position x, Position y);
 #endif /*]*/
-static void connect_menu_init(Boolean regen, Position x, Position y);
-static void macros_menu_init(Boolean regen, Position x, Position y);
-static void file_menu_init(Boolean regen, Dimension x, Dimension y);
+static void connect_menu_init(bool regen, Position x, Position y);
+static void macros_menu_init(bool regen, Position x, Position y);
+static void file_menu_init(bool regen, Dimension x, Dimension y);
 static void Bye(Widget w, XtPointer client_data, XtPointer call_data);
-static void menubar_in3270(Boolean in3270);
-static void menubar_linemode(Boolean in_linemode);
-static void menubar_connect(Boolean ignored);
-static void menubar_printer(Boolean printer_on);
-static void menubar_remodel(Boolean ignored _is_unused);
-static void menubar_charset(Boolean ignored _is_unused);
+static void menubar_in3270(bool in3270);
+static void menubar_linemode(bool in_linemode);
+static void menubar_connect(bool ignored);
+static void menubar_printer(bool printer_on);
+static void menubar_remodel(bool ignored _is_unused);
+static void menubar_charset(bool ignored _is_unused);
 static void screensave_option(Widget w, XtPointer client_data,
 	XtPointer call_data);
 
@@ -147,7 +148,7 @@ static void screensave_option(Widget w, XtPointer client_data,
  */
 
 static Widget	menu_parent;
-static Boolean  menubar_buttons;
+static bool  menubar_buttons;
 static Widget   disconnect_button;
 static Widget   exit_button;
 static Widget   exit_menu;
@@ -190,7 +191,7 @@ Pixmap	null;
 
 static int	n_bye;
 
-static Boolean	toggle_init(Widget, int, const char *, const char *, Boolean *);
+static bool	toggle_init(Widget, int, const char *, const char *, bool *);
 
 #define TOP_MARGIN	3
 #define BOTTOM_MARGIN	3
@@ -335,8 +336,8 @@ void
 menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 {
 	static Widget menu_bar;
-	static Boolean ever = False;
-	Boolean mb_old;
+	static bool ever = false;
+	bool mb_old;
 	Dimension height;
 
 	if (!ever) {
@@ -361,7 +362,7 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
 			no_diamond_height);
 		null = XCreateBitmapFromData(display, root_window,
 		    (char *) null_bits, null_width, null_height);
-		ever = True;
+		ever = true;
 	}
 
 	height = menubar_qheight(current_width);
@@ -441,7 +442,7 @@ menubar_init(Widget container, Dimension overall_width, Dimension current_width)
  * Called when connected to or disconnected from a host.
  */
 static void
-menubar_connect(Boolean ignored _is_unused)
+menubar_connect(bool ignored _is_unused)
 {
     /* Set the disconnect button sensitivity. */
     if (disconnect_button != NULL) {
@@ -482,7 +483,7 @@ menubar_connect(Boolean ignored _is_unused)
 	if (PCONNECTED && connect_button != NULL) {
 	    XtUnmapWidget(connect_button);
 	} else {
-	    connect_menu_init(True,
+	    connect_menu_init(true,
 		    BUTTON_X((file_menu != NULL) + (options_menu != NULL)),
 		    TOP_MARGIN);
 	    if (menubar_buttons) {
@@ -492,7 +493,7 @@ menubar_connect(Boolean ignored _is_unused)
     }
 
     /* Set up the macros menu. */
-    macros_menu_init(True,
+    macros_menu_init(true,
 	    BUTTON_X((file_menu != NULL) + (options_menu != NULL)),
 	    TOP_MARGIN);
 
@@ -568,7 +569,7 @@ menubar_connect(Boolean ignored _is_unused)
 
 /* Called when the printer starts or stops. */
 static void
-menubar_printer(Boolean printer_on)
+menubar_printer(bool printer_on)
 {
 	if (assoc_button != NULL)
 		XtVaSetValues(assoc_button, XtNsensitive,
@@ -590,14 +591,14 @@ menubar_keypad_changed(void)
     if (keypad_option_button != NULL) {
 	XtVaSetValues(keypad_option_button,
 		XtNleftBitmap,
-		    appres.x3270.keypad_on || keypad_popped ? dot : None,
+		    xappres.keypad_on || keypad_popped ? dot : None,
 		NULL);
     }
 }
 
 /* Called when we switch between NVT and 3270 modes. */
 static void
-menubar_in3270(Boolean in3270)
+menubar_in3270(bool in3270)
 {
     if (ft_button != NULL) {
 	XtVaSetValues(ft_button, XtNsensitive, IN_3270, NULL);
@@ -647,7 +648,7 @@ menubar_in3270(Boolean in3270)
 
 /* Called when we switch between NVT line and character modes. */
 static void
-menubar_linemode(Boolean in_linemode)
+menubar_linemode(bool in_linemode)
 {
 	if (linemode_button != NULL)
 		XtVaSetValues(linemode_button,
@@ -661,7 +662,7 @@ menubar_linemode(Boolean in_linemode)
 
 /* Called to change the sensitivity of the "Abort Script" button. */
 void
-menubar_as_set(Boolean sensitive)
+menubar_as_set(bool sensitive)
 {
 	if (script_abort_button != NULL)
 		XtVaSetValues(script_abort_button,
@@ -688,7 +689,7 @@ static void
 disconnect(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
-    host_disconnect(False);
+    host_disconnect(false);
 }
 
 /* Called from the "Abort Script" button on the "File..." menu */
@@ -766,7 +767,7 @@ do_printer(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_u
 }
 
 /* Figure out if a Widget is suppressed. */
-static Boolean
+static bool
 item_suppressed(Widget parent, const char *name)
 {
 	char *suppress;
@@ -783,16 +784,16 @@ item_suppressed(Widget parent, const char *name)
 }
 
 /*
- * Create a dividing line, if *spaced isn't True.
+ * Create a dividing line, if *spaced isn't true.
  */
 static void
-cond_space(Widget menu, Boolean *spaced)
+cond_space(Widget menu, bool *spaced)
 {
 	if (spaced != NULL && !*spaced) {
 		(void) XtVaCreateManagedWidget(
 		    "space", cmeLineObjectClass, menu,
 		    NULL);
-		*spaced = True;
+		*spaced = true;
 	}
 }
 
@@ -801,7 +802,7 @@ cond_space(Widget menu, Boolean *spaced)
  */
 static Widget
 add_menu_itemv(char *name, Widget menu, XtCallbackProc callback, XtPointer arg,
-		Boolean *spaced, ...)
+		bool *spaced, ...)
 {
 
 	if (!item_suppressed(menu, name)) {
@@ -843,11 +844,11 @@ popup_ft(Widget w _is_unused, XtPointer call_parms _is_unused,
 }
 
 static void
-file_menu_init(Boolean regen, Dimension x, Dimension y)
+file_menu_init(bool regen, Dimension x, Dimension y)
 {
     Widget w;
-    Boolean spaced = False;
-    Boolean any = False;
+    bool spaced = false;
+    bool any = false;
 
     if (regen && (file_menu != NULL)) {
 	XtDestroyWidget(file_menu);
@@ -868,7 +869,7 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 
     /* About x3270... */
     if (!item_suppressed(file_menu, "aboutOption")) {
-	Boolean any_about = False;
+	bool any_about = false;
 
 	w = XtVaCreatePopupShell(
 		"aboutMenu", complexMenuWidgetClass, file_menu,
@@ -885,7 +886,7 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 		    XtNrightBitmap, arrow,
 		    XtNmenuName, "aboutMenu",
 		    NULL);
-	    any = True;
+	    any = true;
 	} else {
 	    XtDestroyWidget(w);
 	}
@@ -893,7 +894,7 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 
     /* File Transfer */
     if (!appres.secure) {
-	spaced = False;
+	spaced = false;
 	ft_button = add_menu_itemv("ftOption", file_menu,
 		popup_ft, NULL, &spaced,
 		XtNsensitive, IN_3270,
@@ -929,7 +930,7 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 		    XtNrightBitmap, arrow,
 		    XtNmenuName, "printerMenu",
 		    NULL);
-	    any = True;
+	    any = true;
 	} else {
 	    XtDestroyWidget(w);
 	}
@@ -938,7 +939,7 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
     /* Trace Data Stream
        Trace X Events
        Save Screen(s) in File */
-    spaced = False;
+    spaced = false;
     if (appres.debug_tracing) {
 	any |= toggle_init(file_menu, TRACING, "traceOption", NULL, &spaced);
     }
@@ -947,7 +948,7 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 		screensave_option, NULL, &spaced,
 		NULL);
 	if (w != NULL) {
-	    any = True;
+	    any = true;
 	    toggle_widget[SCREEN_TRACE].w[0] = w;
 	    XtVaSetValues(w, XtNleftBitmap,
 		    toggled(SCREEN_TRACE)? dot: None,
@@ -956,7 +957,7 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
     }
 
     /* Print Window Bitmap */
-    spaced = False;
+    spaced = false;
     w =  add_menu_itemv("printWindowOption", file_menu,
 	    print_window_option, NULL, &spaced,
 	    NULL);
@@ -965,14 +966,14 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
     if (!appres.secure) {
 
 	/* Save Options */
-	spaced = False;
+	spaced = false;
 	w = add_menu_itemv("saveOption", file_menu,
 		do_save_options, NULL, &spaced,
 		NULL);
 	any |= (w != NULL);
 
 	/* Execute an action */
-	spaced = False;
+	spaced = false;
 	w = add_menu_itemv("executeActionOption", file_menu,
 		execute_action_option, NULL, &spaced,
 		NULL);
@@ -980,7 +981,7 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
     }
 
     /* Abort script */
-    spaced = False;
+    spaced = false;
     script_abort_button = add_menu_itemv("abortScriptOption", file_menu,
 	    script_abort_callback, NULL, &spaced,
 	    XtNsensitive, sms_active(),
@@ -988,7 +989,7 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
     any |= (script_abort_button != NULL);
 
     /* Disconnect */
-    spaced = False;
+    spaced = false;
     disconnect_button = add_menu_itemv("disconnectOption", file_menu,
 	    disconnect, NULL, &spaced,
 	    XtNsensitive, PCONNECTED,
@@ -1012,7 +1013,7 @@ file_menu_init(Boolean regen, Dimension x, Dimension y)
 	    NULL);
     if (exit_button != NULL) {
 	n_bye = 1;
-	any = True;
+	any = true;
     }
 
     /* File... */
@@ -1079,13 +1080,13 @@ do_connect_popup(Widget w _is_unused, XtPointer client_data _is_unused,
  * Initialize the "Connect..." menu
  */
 static void
-connect_menu_init(Boolean regen, Position x, Position y)
+connect_menu_init(bool regen, Position x, Position y)
 {
 	Widget w;
 	int n_hosts = 0;
-	Boolean any_hosts = False;
+	bool any_hosts = false;
 	struct host *h;
-	Boolean need_line = False;
+	bool need_line = false;
 	int n_primary = 0;
 	int n_recent = 0;
 	static struct menu_hier *root = NULL;
@@ -1112,7 +1113,7 @@ connect_menu_init(Boolean regen, Position x, Position y)
 	    menubar_buttons ? XtNlabel : NULL, NULL,
 	    NULL);
 	if (!menubar_buttons)
-		need_line = True;
+		need_line = true;
 
 	/* Walk the host list from the file to produce the host menu */
 
@@ -1137,7 +1138,7 @@ connect_menu_init(Boolean regen, Position x, Position y)
 			(void) XtVaCreateManagedWidget("space",
 			    cmeLineObjectClass, connect_menu, NULL);
 		}
-		any_hosts = True;
+		any_hosts = true;
 		w = XtVaCreateManagedWidget(
 		    h->name, cmeBSBObjectClass,
 		    (h->entry_type == PRIMARY || recent_menu == NULL)?
@@ -1155,11 +1156,11 @@ connect_menu_init(Boolean regen, Position x, Position y)
 			XtNmenuName, "recentMenu",
 			NULL);
 	if (any_hosts)
-		need_line = True;
+		need_line = true;
 
 	/* Add an "Other..." button at the bottom */
 
-	if (!any_hosts || !appres.x3270.no_other) {
+	if (!any_hosts || !xappres.no_other) {
 		if (need_line)
 			(void) XtVaCreateManagedWidget("space",
 			    cmeLineObjectClass,
@@ -1215,12 +1216,12 @@ do_macro(Widget w _is_unused, XtPointer client_data, XtPointer call_data _is_unu
  * Initialize the "Macros..." menu
  */
 static void
-macros_menu_init(Boolean regen, Position x, Position y)
+macros_menu_init(bool regen, Position x, Position y)
 {
 	static Widget macros_menu;
 	Widget w;
 	struct macro_def *m;
-	Boolean any = False;
+	bool any = false;
 	static struct menu_hier *root = NULL;
 
 	if (regen && (macros_menu != NULL)) {
@@ -1258,7 +1259,7 @@ macros_menu_init(Boolean regen, Position x, Position y)
 		    add_menu_hier(root, m->parents, NULL, 0), 
 		    NULL);
 		XtAddCallback(w, XtNcallback, do_macro, (XtPointer)m);
-		any = True;
+		any = true;
 	}
 
 	/* Add the "Macros..." button itself to the menu_parent */
@@ -1282,7 +1283,8 @@ toggle_keypad(Widget w _is_unused, XtPointer client_data _is_unused,
 {
     switch (kp_placement) {
     case kp_integral:
-	screen_showikeypad(appres.x3270.keypad_on = !appres.x3270.keypad_on);
+	xappres.keypad_on = !xappres.keypad_on;
+	screen_showikeypad(xappres.keypad_on);
 	break;
     case kp_left:
     case kp_right:
@@ -1297,7 +1299,7 @@ toggle_keypad(Widget w _is_unused, XtPointer client_data _is_unused,
 	break;
     }
     menubar_keypad_changed();
-    keypad_changed = True;
+    keypad_changed = true;
 }
 
 static void
@@ -1448,9 +1450,9 @@ do_oversize_popup(Widget w _is_unused, XtPointer client_data _is_unused,
 }
 
 /* Init a toggle, menu-wise */
-static Boolean
+static bool
 toggle_init(Widget menu, int ix, const char *name1, const char *name2,
-		Boolean *spaced)
+		bool *spaced)
 {
     toggle_widget_t *wx = &toggle_widget[ix];
 
@@ -1476,9 +1478,9 @@ toggle_init(Widget menu, int ix, const char *name1, const char *name2,
 	} else {
 	    wx->w[1] = NULL;
 	}
-	return True;
+	return true;
     } else {
-	return False;
+	return false;
     }
 }
 
@@ -1490,7 +1492,7 @@ static void
 do_newfont(Widget w _is_unused, XtPointer userdata, XtPointer
 	calldata _is_unused)
 {
-    screen_newfont((char *)userdata, True, False);
+    screen_newfont((char *)userdata, true, false);
 }
 
 /* Called from the "Select Font" button on the font dialog */
@@ -1621,7 +1623,7 @@ keymap_button_callback(Widget w _is_unused, XtPointer client_data,
 	if (s != NULL && !*s)
 		s = NULL;
 	XtPopdown(keymap_shell);
-	keymap_init(s, True);
+	keymap_init(s, true);
 }
 
 /* Callback from the "Keymap" menu option */
@@ -1693,7 +1695,7 @@ change_model_callback(Widget w, XtPointer client_data,
 
 /* Called to when model changes outside our control */
 static void
-menubar_remodel(Boolean ignored _is_unused)
+menubar_remodel(bool ignored _is_unused)
 {
 	if (model_2_button != NULL)
 		XtVaSetValues(model_2_button, XtNleftBitmap,
@@ -1710,7 +1712,7 @@ menubar_remodel(Boolean ignored _is_unused)
 }
 
 /* Compare a font name to the current emulator font name. */
-static Boolean
+static bool
 is_efont(const char *font_name)
 {
 	return !strcmp(NO_BANG(font_name), NO_BANG(efontname)) ||
@@ -1719,7 +1721,7 @@ is_efont(const char *font_name)
 
 /* Create, or re-create the font menu. */
 static void
-create_font_menu(Boolean regen, Boolean even_if_unknown)
+create_font_menu(bool regen, bool even_if_unknown)
 {
 	Widget t;
 	struct font_list *f;
@@ -1764,7 +1766,7 @@ create_font_menu(Boolean regen, Boolean even_if_unknown)
 		XtAddCallback(font_widgets[ix], XtNcallback, do_newfont,
 		    XtNewString(f->font));
 	}
-	if (!appres.x3270.no_other) {
+	if (!xappres.no_other) {
 		other_font = XtVaCreateManagedWidget(
 		    "otherFontOption", cmeBSBObjectClass, t,
 		    NULL);
@@ -1776,10 +1778,10 @@ create_font_menu(Boolean regen, Boolean even_if_unknown)
 
 /* Called when the character set changes. */
 static void
-menubar_charset(Boolean ignored _is_unused)
+menubar_charset(bool ignored _is_unused)
 {
-    if (!appres.x3270.suppress_font_menu) {
-	create_font_menu(False, False);
+    if (!xappres.suppress_font_menu) {
+	create_font_menu(false, false);
     }
 }
 
@@ -1806,9 +1808,9 @@ static void
 toggle_m3279(Widget w, XtPointer client_data _is_unused, XtPointer call_data _is_unused)
 {
 	if (w == m3278_button)
-		appres.m3279 = False;
+		appres.m3279 = false;
 	else if (w == m3279_button)
-		appres.m3279 = True;
+		appres.m3279 = true;
 	else
 		return;
 	XtVaSetValues(m3278_button, XtNleftBitmap,
@@ -1833,7 +1835,7 @@ toggle_m3279(Widget w, XtPointer client_data _is_unused, XtPointer call_data _is
 }
 
 static void
-options_menu_init(Boolean regen, Position x, Position y)
+options_menu_init(bool regen, Position x, Position y)
 {
     Widget t;
     struct font_list *f;
@@ -1843,8 +1845,8 @@ options_menu_init(Boolean regen, Position x, Position y)
     Widget dummy_font_menu, dummy_font_element;
     static struct menu_hier *scheme_root = NULL;
     static struct menu_hier *charset_root = NULL;
-    Boolean spaced = False;
-    Boolean any = False;
+    bool spaced = false;
+    bool any = false;
     Widget w;
 
     if (regen && (options_menu != NULL)) {
@@ -1868,7 +1870,7 @@ options_menu_init(Boolean regen, Position x, Position y)
 	s = schemes;
 	for (ix = 0, s = schemes; ix < scheme_count; ix++, s = s->next) {
 	    XtVaSetValues(scheme_widgets[ix], XtNleftBitmap,
-		    !strcmp(appres.x3270.color_scheme, s->scheme)?
+		    !strcmp(xappres.color_scheme, s->scheme)?
 			diamond: no_diamond,
 		    NULL);
 	}
@@ -1894,13 +1896,13 @@ options_menu_init(Boolean regen, Position x, Position y)
 	    keypad_option_button = add_menu_itemv("keypadOption", t,
 		    toggle_keypad, NULL,
 		    NULL,
-		    XtNleftBitmap, (appres.x3270.keypad_on || keypad_popped)?
+		    XtNleftBitmap, (xappres.keypad_on || keypad_popped)?
 			dot: None,
 		    NULL);
 	    if (keypad_option_button != NULL) {
-		spaced = False;
+		spaced = false;
 	    } else {
-		spaced = True;
+		spaced = true;
 	    }
 	}
 	toggle_init(t, MONOCASE, "monocaseOption", NULL, &spaced);
@@ -1916,10 +1918,10 @@ options_menu_init(Boolean regen, Position x, Position y)
 		&spaced);
 	toggle_init(t, CROSSHAIR, "crosshairOption", NULL, &spaced);
 	toggle_init(t, VISIBLE_CONTROL, "visibleControlOption", NULL, &spaced);
-	spaced = False;
+	spaced = false;
 	toggle_init(t, ALT_CURSOR, "underlineCursorOption",
 		"blockCursorOption", &spaced);
-	spaced = False;
+	spaced = false;
 	linemode_button = add_menu_itemv("lineModeOption", t,
 		linemode_callback, NULL,
 		&spaced,
@@ -1933,7 +1935,7 @@ options_menu_init(Boolean regen, Position x, Position y)
 		XtNsensitive, IN_NVT,
 		NULL);
 	if (!appres.interactive.mono) {
-	    spaced = False;
+	    spaced = false;
 	    m3278_button = add_menu_itemv( "m3278Option", t,
 		    toggle_m3279, NULL,
 		    &spaced,
@@ -1947,7 +1949,7 @@ options_menu_init(Boolean regen, Position x, Position y)
 		    XtNsensitive, !PCONNECTED,
 		    NULL);
 	}
-	spaced = False;
+	spaced = false;
 	extended_button = add_menu_itemv("extendedDsOption", t,
 		    toggle_extended, NULL,
 		    &spaced,
@@ -1977,13 +1979,13 @@ options_menu_init(Boolean regen, Position x, Position y)
 		    XtNrightBitmap, arrow,
 		    XtNmenuName, "togglesMenu",
 		    NULL);
-	    any = True;
+	    any = true;
 	} else {
 		XtDestroyWidget(t);
 	}
     }
 
-    if (!appres.x3270.suppress_font_menu &&
+    if (!xappres.suppress_font_menu &&
 	    !item_suppressed(options_menu, "fontsOption")) {
 	/* Create the "fonts" pullright */
 
@@ -2018,8 +2020,8 @@ options_menu_init(Boolean regen, Position x, Position y)
 		"fontsOption", cmeBSBObjectClass, options_menu,
 		XtNrightBitmap, arrow,
 		NULL);
-	create_font_menu(regen, True);
-	any = True;
+	create_font_menu(regen, true);
+	any = true;
     }
 
     /* Create the "models" pullright */
@@ -2073,7 +2075,7 @@ options_menu_init(Boolean regen, Position x, Position y)
 		    XtNmenuName, "modelsMenu",
 		    XtNsensitive, !PCONNECTED,
 		    NULL);
-	    any = True;
+	    any = true;
 	} else {
 	    XtDestroyWidget(t);
 	}
@@ -2097,7 +2099,7 @@ options_menu_init(Boolean regen, Position x, Position y)
 		    s->label, cmeBSBObjectClass,
 		    add_menu_hier(scheme_root, s->parents, NULL, 0),
 		    XtNleftBitmap,
-			!strcmp(appres.x3270.color_scheme, s->scheme)?
+			!strcmp(xappres.color_scheme, s->scheme)?
 			    diamond: no_diamond,
 		    NULL);
 		XtAddCallback(scheme_widgets[ix], XtNcallback, do_newscheme,
@@ -2112,7 +2114,7 @@ options_menu_init(Boolean regen, Position x, Position y)
 		XtNmenuName, "colorsMenu",
 		XtNsensitive, appres.m3279,
 		NULL);
-	any = True;
+	any = true;
     }
 
     /* Create the "character set" pullright */
@@ -2149,12 +2151,12 @@ options_menu_init(Boolean regen, Position x, Position y)
 		XtNrightBitmap, arrow,
 		XtNmenuName, "charsetMenu",
 		NULL);
-	any = True;
+	any = true;
     }
 
     /* Create the "keymap" option */
-    if (!appres.x3270.no_other) {
-	spaced = False;
+    if (!xappres.no_other) {
+	spaced = false;
 	w = add_menu_itemv("keymapOption", options_menu,
 		do_keymap, NULL,
 		&spaced,
@@ -2163,7 +2165,7 @@ options_menu_init(Boolean regen, Position x, Position y)
     }
 
     /* Create the "display keymap" option */
-    spaced = False;
+    spaced = false;
     w = add_menu_itemv("keymapDisplayOption", options_menu,
 	    do_keymap_display, NULL,
 	    &spaced,
@@ -2172,7 +2174,7 @@ options_menu_init(Boolean regen, Position x, Position y)
 
     /* Create the "Idle Command" option */
     if (!appres.secure) {
-	spaced = False;
+	spaced = false;
 	idle_button = add_menu_itemv("idleCommandOption", options_menu,
 		do_idle_command, NULL,
 		&spaced,
