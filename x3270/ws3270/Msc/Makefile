@@ -41,7 +41,7 @@ SSLLIB = gdi32.lib
 !ENDIF
 
 LIB3270 = ..\lib\libw3270.lib
-LIBSTUBS = ..\lib\libw3270stubs.lib
+LIB3270STUBS = ..\lib\libw3270stubs.lib
 LIB32XX = ..\lib\libw32xx.lib
 
 XCPPFLAGS = /D_WIN32 /D_WIN32_WINNT=0x0500 /D_WIN32_IE=0x0500 /D_CRT_SECURE_NO_DEPRECATE /DWIN32_LEAN_AND_MEAN /W3 /WX $(SSLDEF) -I. -I..\include
