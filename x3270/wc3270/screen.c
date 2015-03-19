@@ -1595,6 +1595,28 @@ blinkmap(bool blinking, bool underlined, int c)
     return blink_on? c: (underlined? '_': ' ');
 }
 
+/*
+ * Return a visible control character for a field attribute.
+ */
+static unsigned char
+visible_fa(unsigned char fa)
+{
+    static unsigned char varr[32] = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
+
+    unsigned ix;
+
+    /*
+     * This code knows that:
+     *  FA_PROTECT is   0b100000, and we map it to 0b010000
+     *  FA_NUMERIC is   0b010000, and we map it to 0b001000
+     *  FA_INTENSITY is 0b001100, and we map it to 0b000110
+     *  FA_MODIFY is    0b000001, and we copy to   0b000001
+     */
+    ix = ((fa & (FA_PROTECT | FA_NUMERIC | FA_INTENSITY)) >> 1) |
+	(fa & FA_MODIFY);
+    return varr[ix];
+}
+
 /* Display what's in the buffer. */
 void
 screen_disp(bool erasing _is_unused)
@@ -1760,8 +1782,15 @@ screen_disp(bool erasing _is_unused)
 		fa = ea_buf[baddr].fa;
 		a = calc_attrs(baddr, baddr, fa, &a_underlined, &a_blinking);
 		if (!is_menu) {
-		    attrset(apply_select(defattr, baddr));
-		    addch(' ');
+		    if (toggled(VISIBLE_CONTROL)) {
+			attrset(apply_select(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
+				             cmap_bg[HOST_COLOR_YELLOW],
+					     baddr));
+			addch(visible_fa(fa));
+		    } else {
+			attrset(apply_select(defattr, baddr));
+			addch(' ');
+		    }
 		}
 	    } else if (FA_IS_ZERO(fa)) {
 		/* Blank. */
@@ -1801,32 +1830,53 @@ screen_disp(bool erasing _is_unused)
 		    int xaddr = baddr;
 
 		    INC_BA(xaddr);
-		    c = ebcdic_to_unicode(
-			    (ea_buf[baddr].cc << 8) |
-			    ea_buf[xaddr].cc,
-			    CS_BASE, EUO_NONE);
-		    if (c == 0) {
-			c = ' ';
+		    if (toggled(VISIBLE_CONTROL) &&
+			    ea_buf[baddr].cc == EBC_null &&
+			    ea_buf[xaddr].cc == EBC_null) {
+			attrset(apply_select(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
+				             cmap_bg[HOST_COLOR_YELLOW],
+					     baddr));
+			addch('.');
+			addch('.');
+		    } else {
+			c = ebcdic_to_unicode(
+				(ea_buf[baddr].cc << 8) |
+				ea_buf[xaddr].cc,
+				CS_BASE, EUO_NONE);
+			if (c == 0) {
+			    c = ' ';
+			}
+			cur_attr |= COMMON_LVB_LEAD_BYTE;
+			addch(c);
+			cur_attr &= ~COMMON_LVB_LEAD_BYTE;
+			cur_attr |= COMMON_LVB_TRAILING_BYTE;
+			addch(' ');
+			cur_attr &= ~COMMON_LVB_TRAILING_BYTE;
 		    }
-		    cur_attr |= COMMON_LVB_LEAD_BYTE;
-		    addch(c);
-		    cur_attr &= ~COMMON_LVB_LEAD_BYTE;
-		    cur_attr |= COMMON_LVB_TRAILING_BYTE;
-		    addch(' ');
-		    cur_attr &= ~COMMON_LVB_TRAILING_BYTE;
 		} else if (!IS_RIGHT(d)) {
-		    c = ebcdic_to_unicode(ea_buf[baddr].cc,
-			    ea_buf[baddr].cs,
-			    appres.c3270.ascii_box_draw?
-				EUO_ASCII_BOX: 0);
-		    if (c == 0) {
-			c = ' ';
-		    }
-		    if (underlined && c == ' ') {
-			c = '_';
-		    }
-		    if (toggled(MONOCASE) && iswlower(c)) {
-			c = towupper(c);
+		    if (toggled(VISIBLE_CONTROL) &&
+			    ea_buf[baddr].cc == EBC_null) {
+			c = '.';
+		    } else if (toggled(VISIBLE_CONTROL) &&
+			    ea_buf[baddr].cc == EBC_so) {
+			c = '<';
+		    } else if (toggled(VISIBLE_CONTROL) &&
+			    ea_buf[baddr].cc == EBC_si) {
+			c = '>';
+		    } else {
+			c = ebcdic_to_unicode(ea_buf[baddr].cc,
+				ea_buf[baddr].cs,
+				appres.c3270.ascii_box_draw?
+				    EUO_ASCII_BOX: 0);
+			if (c == 0) {
+			    c = ' ';
+			}
+			if (underlined && c == ' ') {
+			    c = '_';
+			}
+			if (toggled(MONOCASE) && iswlower(c)) {
+			    c = towupper(c);
+			}
 		    }
 		    addch(blinkmap(blinking, underlined, c));
 		}
@@ -2447,6 +2497,14 @@ toggle_showTiming(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
     if (!toggled(SHOW_TIMING)) {
 	status_untiming();
     }
+}
+
+static void
+toggle_visibleControl(toggle_index_t ix _is_unused,
+	enum toggle_type tt _is_unused)
+{
+    screen_changed = true;
+    screen_disp(false);
 }
 
 /* Status line stuff. */
@@ -3122,7 +3180,8 @@ screen_register(void)
 	{ SHOW_TIMING,		toggle_showTiming,	0 },
 	{ UNDERSCORE,		toggle_underscore,	0 },
 	{ MARGINED_PASTE,	NULL,			0 },
-	{ OVERLAY_PASTE,	NULL,			0 }
+	{ OVERLAY_PASTE,	NULL,			0 },
+	{ VISIBLE_CONTROL,	toggle_visibleControl,	0 }
     };
     static action_table_t screen_actions[] = {
 	{ "Paste",	Paste_action,	ACTION_KE },

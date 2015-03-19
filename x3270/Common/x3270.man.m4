@@ -876,6 +876,18 @@ XX_FB(Clear), XX_FB(PA) and XX_FB(PF)).
 When set, these actions no longer block until the host unlocks the keyboard.
 It is up to the script to poll the prompt for the unlocked state, or to use
 the XX_FB(Wait(Unlock)) action to wait for the unlock.
+ifelse(XX_MODE,console,`XX_TP(XX_FB(visibleControl))
+If set, control characters (NULLs, SI/SO and field attributes), which are
+usually displayed as blanks, are visible on the display.
+NULs become periods, SO becomes XX_DQUOTED(XX_LT()),
+SI becomes XX_DQUOTED(>).
+Field attributes are mapped onto the characters 0 through 9 and A through V
+and are displayed in
+ifelse(c3270,`underlined',wc3270,`reverse-video')
+yellow.
+Field attribute mappings are part of the XX_FB(XX_PRODUCT) Resources
+documentation for the XX_FB(visibleControl) resource.
+')dnl
 XX_TPE()dnl
 XX_LP
 ')dnl

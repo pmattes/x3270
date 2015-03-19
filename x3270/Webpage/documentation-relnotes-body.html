@@ -2,14 +2,20 @@
 3.3 is the current development line for the x3270 suite.
 <h2>Changes in version 3.4alpha1, nn. Mon 2015</h2>
 <ul>
+ <li>[<i>x3270</i>, <i>c3270</i>, <i>wc3270</i>] Overhauled visible control
+  characters so that field attributes are completely decoded. Field attributes
+  are now in underlined yellow in x3270. Added visible control character
+  support to c3270 (also underlined yellow) and wc3270 (reverse-video yellow),
+  with a menu option.
+ </li>
  <li>[all] Overhauled the build structure. Now there are libraries for common
   functions.</li>
  <li>[<i>wc3270</i>] Mapped Alt-left-click onto a lightpen select operation.
   Added a <b>lightPenPrimary</b> resource to switch this, so that an unmodified
   left-click is a lightpen select and Alt-left-click is a cursor move or
   copy/paste highlight.</li>
- <li>[all] Added a <b>B:</b> prefix to disable the automatic keyboard unlock
-  when a BIND-IMAGE is received.</li>
+ <li>[all] Added a <b>B:</b> prefix option to hostnames to disable the
+  automatic keyboard unlock when a BIND-IMAGE is received.</li>
  <li>[all] Added an <b>-nvt</b> option and an <b>nvtMode</b> resource to
   force NVT mode as soon as a session is connected. This overrides the usual
   behavior of locking the keyboard and waiting for the host to send NVT-mode

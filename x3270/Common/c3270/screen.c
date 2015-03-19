@@ -898,6 +898,28 @@ calc_attrs(int baddr, int fa_addr, int fa)
 	return a;
 }
 
+/*
+ * Return a visible control character for a field attribute.
+ */
+static unsigned char
+visible_fa(unsigned char fa)
+{
+    static unsigned char varr[32] = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
+
+    unsigned ix;
+
+    /*
+     * This code knows that:
+     *  FA_PROTECT is   0b100000, and we map it to 0b010000
+     *  FA_NUMERIC is   0b010000, and we map it to 0b001000
+     *  FA_INTENSITY is 0b001100, and we map it to 0b000110
+     *  FA_MODIFY is    0b000001, and we copy to   0b000001
+     */
+    ix = ((fa & (FA_PROTECT | FA_NUMERIC | FA_INTENSITY)) >> 1) |
+	(fa & FA_MODIFY);
+    return varr[ix];
+}
+
 /* Display what's in the buffer. */
 void
 screen_disp(bool erasing _is_unused)
@@ -1063,8 +1085,14 @@ screen_disp(bool erasing _is_unused)
 		fa = ea_buf[baddr].fa;
 		field_attrs = calc_attrs(baddr, baddr, fa);
 		if (!is_menu) {
-		    (void) attrset(defattr);
-		    addch(' ');
+		    if (toggled(VISIBLE_CONTROL)) {
+			(void) attrset(get_color_pair(COLOR_YELLOW,
+				    COLOR_BLACK) | A_BOLD | A_UNDERLINE);
+			addch(visible_fa(fa));
+		    } else {
+			(void) attrset(defattr);
+			addch(' ');
+		    }
 		}
 	    } else if (FA_IS_ZERO(fa)) {
 		if (!is_menu) {
@@ -1077,6 +1105,7 @@ screen_disp(bool erasing _is_unused)
 	    } else {
 		char mb[16];
 		int len;
+		int attrs;
 
 		if (is_menu) {
 		    continue;
@@ -1085,7 +1114,8 @@ screen_disp(bool erasing _is_unused)
 		if (!(ea_buf[baddr].gr ||
 		      ea_buf[baddr].fg ||
 		      ea_buf[baddr].bg)) {
-		    (void) attrset(field_attrs & attr_mask);
+		    attrs = field_attrs & attr_mask;
+		    (void) attrset(attrs);
 		    if (field_attrs & A_UNDERLINE) {
 			underlined = true;
 		    }
@@ -1094,7 +1124,8 @@ screen_disp(bool erasing _is_unused)
 		    int buf_attrs;
 
 		    buf_attrs = calc_attrs(baddr, fa_addr, fa);
-		    (void) attrset(buf_attrs & attr_mask);
+		    attrs = buf_attrs & attr_mask;
+		    (void) attrset(attrs);
 		    if (buf_attrs & A_UNDERLINE) {
 			underlined = true;
 		    }
@@ -1104,13 +1135,32 @@ screen_disp(bool erasing _is_unused)
 		    int xaddr = baddr;
 
 		    INC_BA(xaddr);
-		    len = ebcdic_to_multibyte(
-			    (ea_buf[baddr].cc << 8) |
-			     ea_buf[xaddr].cc,
-			    mb, sizeof(mb));
-		    addstr(mb);
+		    if (toggled(VISIBLE_CONTROL) &&
+			    ea_buf[baddr].cc == EBC_null &&
+			    ea_buf[xaddr].cc == EBC_null) {
+			(void) attrset(attrs | A_UNDERLINE);
+			addstr("..");
+		    } else {
+			len = ebcdic_to_multibyte(
+				(ea_buf[baddr].cc << 8) |
+				 ea_buf[xaddr].cc,
+				mb, sizeof(mb));
+			addstr(mb);
+		    }
 		} else if (!IS_RIGHT(d)) {
-		    if (ea_buf[baddr].cs == CS_LINEDRAW) {
+		    if (toggled(VISIBLE_CONTROL) &&
+			    ea_buf[baddr].cc == EBC_null) {
+			(void) attrset(attrs | A_UNDERLINE);
+			addstr(".");
+		    } else if (toggled(VISIBLE_CONTROL) &&
+			    ea_buf[baddr].cc == EBC_so) {
+			(void) attrset(attrs | A_UNDERLINE);
+			addstr("<");
+		    } else if (toggled(VISIBLE_CONTROL) &&
+			    ea_buf[baddr].cc == EBC_si) {
+			(void) attrset(attrs | A_UNDERLINE);
+			addstr(">");
+		    } else if (ea_buf[baddr].cs == CS_LINEDRAW) {
 			display_linedraw(ea_buf[baddr].cc);
 		    } else if (ea_buf[baddr].cs == CS_APL ||
 			    (ea_buf[baddr].cs & CS_GE)) {
@@ -1598,6 +1648,13 @@ toggle_monocase(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 
 static void
 toggle_underscore(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
+{
+    screen_disp(false);
+}
+
+static void
+toggle_visibleControl(toggle_index_t ix _is_unused,
+	enum toggle_type tt _is_unused)
 {
     screen_disp(false);
 }
@@ -2481,7 +2538,8 @@ screen_register(void)
     static toggle_register_t toggles[] = {
 	{ MONOCASE,	toggle_monocase,	0 },
 	{ SHOW_TIMING,	toggle_showTiming,	0 },
-	{ UNDERSCORE,	toggle_underscore,	0 }
+	{ UNDERSCORE,	toggle_underscore,	0 },
+	{ VISIBLE_CONTROL, toggle_visibleControl, 0 },
     };
     static action_table_t screen_actions[] = {
 	{ "Redraw",	Redraw_action,	ACTION_KE }

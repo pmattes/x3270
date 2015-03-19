@@ -367,14 +367,41 @@
 #define EBC_Yacute	0xad
 #define EBC_diaeresis	0xbd
 #define EBC_minus	0xca
-#define EBC_0		0xf0    
-#define EBC_9		0xf9    
+#define EBC_0		0xf0
+#define EBC_1		0xf1
+#define EBC_2		0xf2
+#define EBC_3		0xf3
+#define EBC_4		0xf4
+#define EBC_5		0xf5
+#define EBC_6		0xf6
+#define EBC_7		0xf7
+#define EBC_8		0xf8
+#define EBC_9		0xf9
+#define EBC_A		0xc1
+#define EBC_B		0xc2
+#define EBC_C		0xc3
+#define EBC_D		0xc4
+#define EBC_E		0xc5
+#define EBC_F		0xc6
+#define EBC_G		0xc7
+#define EBC_H		0xc8
+#define EBC_I		0xc9
+#define EBC_J		0xd1
+#define EBC_K		0xd2
+#define EBC_L		0xd3
+#define EBC_M		0xd4
+#define EBC_N		0xd5
+#define EBC_O		0xd6
+#define EBC_P		0xd7
+#define EBC_Q		0xd8
+#define EBC_R		0xd9
+#define EBC_S		0xe2
+#define EBC_T		0xe3
+#define EBC_U		0xe4
+#define EBC_V		0xe5
 #define EBC_eo		0xff
 #define EBC_less	0x4c
 #define EBC_greaer	0x6e
-#define EBC_P		0xd7
-#define EBC_M		0xd4
-#define EBC_U		0xe4
 
 /* Unicode private-use definitions. */
 #define UPRIV_GE_00	0xf700	/* first GE */

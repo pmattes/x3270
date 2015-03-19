@@ -118,18 +118,21 @@ If set, XX_FB(x3270) will display a crosshair over the cursor: lines extending
 the full width and height of the screen, centered over the cursor position.
 This makes locating the cursor on the screen much easier.
 XX_TP(XX_FB(Visible Control Chars))
-If set, XX_FB(x3270) will diplay control characters as special underscored
+If set, XX_FB(x3270) will display control characters as special underscored
 symbols instead of blanks.
+Field attribute characters are displayed in underscored yellow.
+Other control characters are displayed according to their field colors and
+attributes.
 XX_LP
 XX_TS(2,c l.)
 XX_TR(XX_TD(Symbol)	XX_TD(Meaning))
-XX_TR(XX_TD(Period)	XX_TD(NUL (0)))
-XX_TR(XX_TD(P)	XX_TD(Start of protected field))
-XX_TR(XX_TD(U)	XX_TD(Start of unprotected field))
-XX_TR(XX_TD(M)	XX_TD(Start of modified field))
+XX_TR(XX_TD(Period)	XX_TD(NUL (X'00')))
 XX_TR(XX_TD(<)	XX_TD(SO (Start of DBCS subfield)))
 XX_TR(XX_TD(>)	XX_TD(SI (End of DBCS subfield)))
+XX_TR(XX_TD(0-9 A-V)	XX_TD(Field attribute))
 XX_TE()
+The mappings for field attribute characters are included in the XX_FB(x3270)
+Resource documentation for the XX_FB(visibleControl) resource.
 XX_TPE()dnl
 XX_TPE()dnl
 XX_LP

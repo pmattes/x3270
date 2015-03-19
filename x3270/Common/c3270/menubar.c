@@ -887,6 +887,7 @@ typedef enum {
     OM_MARGINED_PASTE,
     OM_OVERLAY_PASTE,
 #endif /*]*/
+    OM_VISIBLE_CONTROL,
     OM_COUNT
 } options_menu_enum;
 cmenu_item_t *options_menu_items[OM_COUNT];
@@ -898,8 +899,9 @@ toggle_index_t option_index[OM_COUNT] = {
     UNDERSCORE,
 #if defined(WC3270) /*[*/
     MARGINED_PASTE,
-    OVERLAY_PASTE
+    OVERLAY_PASTE,
 #endif /*]*/
+    VISIBLE_CONTROL
 };
 char *option_names[OM_COUNT] = {
     "Monocase",
@@ -909,8 +911,9 @@ char *option_names[OM_COUNT] = {
     "Underscore Mode",
 #if defined(WC3270) /*[*/
     "Margined Paste",
-    "Overlay Paste"
+    "Overlay Paste",
 #endif /*]*/
+    "Visible Control"
 };
 
 cmenu_t *file_menu;

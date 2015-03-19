@@ -2906,24 +2906,79 @@ description
 .
 
 name visibleControl
-applies x
+applies x C
 type b
 default false
 switch -set visibleControl
 switch -clear visibleControl
 option Options -&gt; Toggles -&gt; Visible Control Characters
 desc
-    If true, control characters will be displayed on the
-    screen (normally they are blank).  Control characters, displayed with
-    underlines, are as follows:
-    <ul>
-    <li><b>&lt;</b>: The EBCDIC SO character (begins a DBCS subfield)</li>
-    <li><b>&gt;</b>: The EBCDIC SI character (ends a DBCS subfield)</li>
-    <li><b>P</b>: The start of a protected field</li>
-    <li><b>M</b>: The start of a modified field</li>
-    <li><b>U</b>: The start of an unprotected field</li>
-    <li><b>.</b>: The EBCDIC NUL character</li>
-    </ul>
+    If true, certain control characters, which are normally displayed as
+    blanks, are displayed on the screen.
+    <p class="indented">
+    EBCDIC control characters,
+if x c
+    displayed with underlines,
+endif
+    are as follows:
+    <table cols=3 width="75%">
+    <tr> <th>Character</th>
+         <th>Meaning</th>
+    </tr>
+    <tr> <td>.</td> <td>NUL (X'00')</td> </tr>
+    <tr> <td>&lt;</td> <td>The SO character (begins a DBCS subfield)</td> </tr>
+    <tr> <td>&gt;</td> <td>The SI character (ends a DBCS subfield)</td> </tr>
+    <table>
+    <p>
+    3270 field attributes,
+if x c
+    displayed in yellow with underlines,
+endif
+if wc
+    displayed in reverse-video yellow,
+endif
+    are decoded as follows:
+    <table cols=6 width="75%">
+    <tr> <th>Character</th>
+         <th>Protected</th>
+         <th>Numeric</th>
+         <th>Display</th>
+         <th>Selectable</th>
+         <th>Modified</th>
+    </tr>
+    <tr> <td>0</td> <td>-</td> <td>-</td> <td>normal</td> <td>-</td> <td>-</td> </tr>
+    <tr> <td>1</td> <td>-</td> <td>-</td> <td>normal</td> <td>-</td> <td>modified</td> </tr>
+    <tr> <td>2</td> <td>-</td> <td>-</td> <td>normal</td> <td>selectable</td> <td>-</td> </tr>
+    <tr> <td>3</td> <td>-</td> <td>-</td> <td>normal</td> <td>selectable</td> <td>modified</td> </tr>
+    <tr> <td>4</td> <td>-</td> <td>-</td> <td>intensified</td> <td>selectable</td> <td>-</td> </tr>
+    <tr> <td>5</td> <td>-</td> <td>-</td> <td>intensified</td> <td>selectable</td> <td>modified</td> </tr>
+    <tr> <td>6</td> <td>-</td> <td>-</td> <td>nondisplay</td> <td>-</td> <td>-</td> </tr>
+    <tr> <td>7</td> <td>-</td> <td>-</td> <td>nondisplay</td> <td>-</td> <td>modified</td> </tr>
+    <tr> <td>8</td> <td>-</td> <td>numeric</td> <td>normal</td> <td>-</td> <td>-</td> </tr>
+    <tr> <td>9</td> <td>-</td> <td>numeric</td> <td>normal</td> <td>-</td> <td>modified</td> </tr>
+    <tr> <td>A</td> <td>-</td> <td>numeric</td> <td>normal</td> <td>selectable</td> <td>-</td> </tr>
+    <tr> <td>B</td> <td>-</td> <td>numeric</td> <td>normal</td> <td>selectable</td> <td>modified</td> </tr>
+    <tr> <td>C</td> <td>-</td> <td>numeric</td> <td>intensified</td> <td>selectable</td> <td>-</td> </tr>
+    <tr> <td>D</td> <td>-</td> <td>numeric</td> <td>intensified</td> <td>selectable</td> <td>modified</td> </tr>
+    <tr> <td>E</td> <td>-</td> <td>numeric</td> <td>nondisplay</td> <td>-</td> <td>-</td> </tr>
+    <tr> <td>F</td> <td>-</td> <td>numeric</td> <td>nondisplay</td> <td>-</td> <td>modified</td> </tr>
+    <tr> <td>G</td> <td>protected</td> <td>-</td> <td>normal</td> <td>-</td> <td>-</td> </tr>
+    <tr> <td>H</td> <td>protected</td> <td>-</td> <td>normal</td> <td>-</td> <td>modified</td> </tr>
+    <tr> <td>I</td> <td>protected</td> <td>-</td> <td>normal</td> <td>selectable</td> <td>-</td> </tr>
+    <tr> <td>J</td> <td>protected</td> <td>-</td> <td>normal</td> <td>selectable</td> <td>modified</td> </tr>
+    <tr> <td>K</td> <td>protected</td> <td>-</td> <td>intensified</td> <td>selectable</td> <td>-</td> </tr>
+    <tr> <td>L</td> <td>protected</td> <td>-</td> <td>intensified</td> <td>selectable</td> <td>modified</td> </tr>
+    <tr> <td>M</td> <td>protected</td> <td>-</td> <td>nondisplay</td> <td>-</td> <td>-</td> </tr>
+    <tr> <td>N</td> <td>protected</td> <td>-</td> <td>nondisplay</td> <td>-</td> <td>modified</td> </tr>
+    <tr> <td>O</td> <td>protected</td> <td>numeric</td> <td>normal</td> <td>-</td> <td>-</td> </tr>
+    <tr> <td>P</td> <td>protected</td> <td>numeric</td> <td>normal</td> <td>-</td> <td>modified</td> </tr>
+    <tr> <td>Q</td> <td>protected</td> <td>numeric</td> <td>normal</td> <td>selectable</td> <td>-</td> </tr>
+    <tr> <td>R</td> <td>protected</td> <td>numeric</td> <td>normal</td> <td>selectable</td> <td>modified</td> </tr>
+    <tr> <td>S</td> <td>protected</td> <td>numeric</td> <td>intensified</td> <td>selectable</td> <td>-</td> </tr>
+    <tr> <td>T</td> <td>protected</td> <td>numeric</td> <td>intensified</td> <td>selectable</td> <td>modified</td> </tr>
+    <tr> <td>U</td> <td>protected</td> <td>numeric</td> <td>nondisplay</td> <td>-</td> <td>-</td> </tr>
+    <tr> <td>V</td> <td>protected</td> <td>numeric</td> <td>nondisplay</td> <td>-</td> <td>modified</td> </tr>
+    </table>
 .
 
 name visualBell

@@ -2316,6 +2316,33 @@ screen_flip(void)
 }
 
 /*
+ * Return a visible control character for a field attribute.
+ */
+static unsigned char
+visible_ebcdic(unsigned char fa)
+{
+    static unsigned char varr[32] = {
+	EBC_0, EBC_1, EBC_2, EBC_3, EBC_4, EBC_5, EBC_6, EBC_7,
+	EBC_8, EBC_9, EBC_A, EBC_B, EBC_C, EBC_D, EBC_E, EBC_F,
+	EBC_G, EBC_H, EBC_I, EBC_J, EBC_K, EBC_L, EBC_M, EBC_N,
+	EBC_O, EBC_P, EBC_Q, EBC_R, EBC_S, EBC_T, EBC_U, EBC_V
+    };
+
+    unsigned ix;
+
+    /*
+     * This code knows that:
+     *  FA_PROTECT is   0b100000, and we map it to 0b010000
+     *  FA_NUMERIC is   0b010000, and we map it to 0b001000
+     *  FA_INTENSITY is 0b001100, and we map it to 0b000110
+     *  FA_MODIFY is    0b000001, and we copy to   0b000001
+     */
+    ix = ((fa & (FA_PROTECT | FA_NUMERIC | FA_INTENSITY)) >> 1) |
+	(fa & FA_MODIFY);
+    return varr[ix];
+}
+
+/*
  * "Draw" ea_buf into a buffer
  */
 static void
@@ -2383,13 +2410,9 @@ draw_fields(union sp *buffer, int first, int last)
 			else
 				field_color = fa_color(fa);
 			if (visible_control) {
-				if (FA_IS_PROTECTED(fa))
-					b.bits.cc = EBC_P;
-				else if (FA_IS_MODIFIED(fa))
-					b.bits.cc = EBC_M;
-				else
-					b.bits.cc = EBC_U;
+				b.bits.cc = visible_ebcdic(fa);
 				b.bits.gr = GR_UNDERLINE;
+				b.bits.fg = GC_NONDEFAULT | HOST_COLOR_YELLOW;
 			}
 		} else {
 			unsigned short gr;
