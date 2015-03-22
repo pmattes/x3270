@@ -30,10 +30,5 @@
  *		Global declarations for apl.c.
  */
 
-#if defined(X3270_APL) /*[*/
 ks_t apl_string_to_key(const char *s, int *is_gep);
 const char *key_to_apl_string(ks_t k);
-#else /*][*/
-#define apl_string_to_key(s, is_gep)	KS_NONE
-#define key_to_apl_string(k)		NULL
-#endif

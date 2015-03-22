@@ -54,9 +54,9 @@ unsigned n_fallbacks = 0;	/* number of fallback entries */
 
 /* ifdef state stack */
 #define MODE_COLOR	0x00000001
-#define MODE_APL	0x00000040
-#define MODE_DBCS	0x00000400
-#define MODE__WIN32	0x00000800
+#define MODE_APL	0x00000002
+#define MODE_DBCS	0x00000004
+#define MODE__WIN32	0x00000008
 
 #define MODEMASK	0x00000fff
 
@@ -79,23 +79,17 @@ struct {
 #define NPARTS	(sizeof(parts)/sizeof(parts[0]))
 
 unsigned long is_defined =
-    MODE_COLOR |
-#if defined(X3270_APL)
-	MODE_APL
-#else
-	0
-#endif
-|
+    MODE_COLOR | MODE_APL |
 #if defined(X3270_DBCS)
-	MODE_DBCS
+    MODE_DBCS
 #else
-	0
+    0
 #endif
 |
 #if defined(FOR_WIN32) || defined(_WIN32)
-	MODE__WIN32
+    MODE__WIN32
 #else
-	0
+    0
 #endif
     ;
 unsigned long is_undefined;

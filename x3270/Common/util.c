@@ -801,11 +801,6 @@ build_options(void)
 
     return lazyaf("%s%s%s",
 	    "Build options:"
-#if defined(X3270_APL) /*[*/
-	    " --enable-apl"
-#else /*][*/
-	    " --disable-apl"
-#endif /*]*/
 #if defined(X3270_DBCS) /*[*/
 	    " --enable-dbcs"
 #else /*][*/

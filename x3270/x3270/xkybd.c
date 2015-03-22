@@ -38,10 +38,9 @@
 #include "xglobals.h"
 
 #include <X11/Xatom.h>
+
 #define XK_3270
-#if defined(X3270_APL) /*[*/
-# define XK_APL
-#endif /*]*/
+#define XK_APL
 #include <X11/keysym.h>
 
 #include "resources.h"
@@ -437,7 +436,6 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
 	    break;
 #endif /*]*/
 
-#if defined(X3270_APL) /*[*/
 	/* Funky APL keysyms. */
 	case XK_downcaret:
 	    run_action("Key", IA_DEFAULT, "apl_downcaret", NULL);
@@ -490,7 +488,6 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
 	case XK_righttack:
 	    run_action("Key", IA_DEFAULT, "apl_righttack", NULL);
 	    break;
-#endif /*]*/
 
 	default:
 	    if (ks >= XK_F1 && ks <= XK_F24) {

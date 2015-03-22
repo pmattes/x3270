@@ -4088,51 +4088,51 @@ kybd_prime(void)
 static ks_t
 my_string_to_key(const char *s, enum keytype *keytypep, ucs4_t *ucs4)
 {
-	ks_t k;
-	int consumed;
-	enum me_fail error;
+    ks_t k;
+    int consumed;
+    enum me_fail error;
 
-	/* No UCS-4 yet. */
-	*ucs4 = 0L;
+    /* No UCS-4 yet. */
+    *ucs4 = 0L;
 
-#if defined(X3270_APL) /*[*/
-	/* Look for my contrived APL symbols. */
-	if (!strncmp(s, "apl_", 4)) {
-		int is_ge;
+    /* Look for my contrived APL symbols. */
+    if (!strncmp(s, "apl_", 4)) {
+	int is_ge;
 
-		k = apl_string_to_key(s, &is_ge);
-		if (is_ge)
-			*keytypep = KT_GE;
-		else
-			*keytypep = KT_STD;
-		return k;
-	} else
-#endif /*]*/
-	{
-		/* Look for a standard HTML entity or X11 keysym name. */
-		k = string_to_key((char *)s);
-		*keytypep = KT_STD;
-		if (k != KS_NONE)
-		    	return k;
+	k = apl_string_to_key(s, &is_ge);
+	if (is_ge) {
+	    *keytypep = KT_GE;
+	} else {
+	    *keytypep = KT_STD;
 	}
-
-	/* Look for "euro". */
-	if (!strcasecmp(s, "euro")) {
-	    	*ucs4 = 0x20ac;
-		return KS_NONE;
+	return k;
+    } else {
+	/* Look for a standard HTML entity or X11 keysym name. */
+	k = string_to_key((char *)s);
+	*keytypep = KT_STD;
+	if (k != KS_NONE) {
+	    return k;
 	}
+    }
 
-	/* Look for U+nnnn of 0xXXXX. */
-	if (!strncasecmp(s, "U+", 2) || !strncasecmp(s, "0x", 2)) {
-	    	*ucs4 = strtoul(s + 2, NULL, 16);
-		return KS_NONE;
-	}
-
-	/* Look for a valid local multibyte character. */
-	*ucs4 = multibyte_to_unicode(s, strlen(s), &consumed, &error);
-	if ((size_t)consumed != strlen(s))
-	    	*ucs4 = 0;
+    /* Look for "euro". */
+    if (!strcasecmp(s, "euro")) {
+	*ucs4 = 0x20ac;
 	return KS_NONE;
+    }
+
+    /* Look for U+nnnn of 0xXXXX. */
+    if (!strncasecmp(s, "U+", 2) || !strncasecmp(s, "0x", 2)) {
+	*ucs4 = strtoul(s + 2, NULL, 16);
+	return KS_NONE;
+    }
+
+    /* Look for a valid local multibyte character. */
+    *ucs4 = multibyte_to_unicode(s, strlen(s), &consumed, &error);
+    if ((size_t)consumed != strlen(s)) {
+	*ucs4 = 0;
+    }
+    return KS_NONE;
 }
 
 static bool

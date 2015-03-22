@@ -923,10 +923,7 @@ x3270.message.kmFromServer:			\ (expanded from '@server')
 x3270.adVersion:		3.3.4
 !
 ! Fonts
-#ifdef X3270_APL
 x3270.aplFont:			3270
-#endif
-! (APL)
 x3270.debugFont:		3270d
 x3270.iconFont:			nil2
 x3270.iconLabelFont:		8x13
@@ -1349,7 +1346,6 @@ x3270*MenuButton.translations:	#override \n\
 	Lock Mod2 Mod3 Mod4 Mod5<BtnDown>:	reset() PopupMenu()\n\
 	Mod1 Mod2 Mod3 Mod4 Mod5<BtnDown>:	reset() PopupMenu()\n\
 	Lock Mod1 Mod2 Mod3 Mod4 Mod5<BtnDown>:	reset() PopupMenu()
-#ifdef X3270_APL
 !
 ! Compose-key map for APL.
 x3270.composeMap.apl: \
@@ -1426,5 +1422,3 @@ x3270.composeMap.apl: \
 	C + equal		= apl_euro		\n\
 	minus + parenleft	= apl_lefttack		\n\
 	minus + parenright	= apl_righttack		\n
-#endif
-! (APL)

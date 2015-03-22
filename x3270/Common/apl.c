@@ -32,10 +32,7 @@
 
 #include "globals.h"
 
-#if defined(X3270_APL) /*[*/
-
 #include "latin1.h"
-
 #include "apl.h"
 
 
@@ -227,5 +224,3 @@ key_to_apl_string(ks_t k)
     }
     return NULL;
 }
-
-#endif /*]*/
