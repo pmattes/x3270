@@ -640,20 +640,36 @@ apl_to_unicode(ebc_t c, unsigned flags)
 #if defined(_WIN32) /*[*/
 	    /* Windows DBCS fonts make U+0080..U+00ff wide, too. */
 	    if (apla2uc[c] > 0x7f) {
-		return -1;
+		goto fail;
 	    }
 #endif /*]*/
 	    return apla2uc[c];
 	} else {
-	    return -1;
+	    goto fail;
 	}
     }
 
     if (c < 256 && apl2uc[c] != 0x0000) {
 	return apl2uc[c];
     } else {
-	return -1;
+	goto fail;
     }
+
+fail:
+    if (flags & EUO_APL_CIRCLED) {
+	static char undera[] = {
+	    0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49,
+	    0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59,
+	          0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69,
+	    0x00
+	};
+	char *x = strchr(undera, c);
+
+	if (x != NULL) {
+	    return 0x24b6 + (x - undera);
+	}
+    }
+    return -1;
 }
 
 /*

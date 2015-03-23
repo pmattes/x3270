@@ -191,6 +191,8 @@ XtResource xresources[] = {
       offset(keypad), XtRString, KpRight },
     { ResKeypadOn, ClsKeypadOn, XtRBoolean, sizeof(Boolean),
       offset(keypad_on), XtRString, ResFalse },
+    { ResAplCircledAlpha, ClsAplCircledAlpha, XtRBoolean, sizeof(Boolean),
+      offset(apl_circled_alpha), XtRString, ResFalse },
     { ResInvertKeypadShift, ClsInvertKeypadShift, XtRBoolean, sizeof(Boolean),
       offset(invert_kpshift), XtRString, ResFalse },
     { ResActiveIcon, ClsActiveIcon, XtRBoolean, sizeof(Boolean),

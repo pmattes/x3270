@@ -1846,7 +1846,8 @@ apl_to_udisplay(int d8_ix, unsigned char c)
 	int d = 0;
 
 	/* Look it up. */
-	u = apl_to_unicode(c, EUO_NONE);
+	u = apl_to_unicode(c, EUO_NONE |
+		xappres.apl_circled_alpha? EUO_APL_CIRCLED: 0);
 	if (u != -1)
 	    	d = display8_lookup(d8_ix, u);
 

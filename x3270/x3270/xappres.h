@@ -53,6 +53,7 @@ typedef struct {
     Boolean	 suppress_host;
     Boolean	 suppress_font_menu;
     Boolean	 keypad_on;
+    Boolean	 apl_circled_alpha;
     char	*keypad;
     char	*efontname;
     char	*fixed_size;

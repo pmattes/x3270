@@ -37,6 +37,8 @@ extern bool dbcs_allowed;
 #define EUO_BLANK_UNDEF	0x00000001	/* if undefined, return U+0020 */
 #define EUO_UPRIV	0x00000002	/* translate FM/DUP/SUB/EO to UPRIV */
 #define EUO_ASCII_BOX	0x00000004	/* use ASCII for box drawing */
+#define EUO_APL_CIRCLED	0x00000010	/* map APL underscored capital letters
+					   to DBCS circled alphabetics */
 
 ucs4_t ebcdic_to_unicode(ebc_t e, unsigned char cs, unsigned flags);
 ucs4_t ebcdic_base_to_unicode(ebc_t e, unsigned flags);

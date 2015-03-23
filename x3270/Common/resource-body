@@ -181,6 +181,27 @@ desc
     and the alternate (27x132) screen.
 .
 
+name aplCircledAlpha
+applies x
+groups a
+type b
+default false
+description
+    When set to true, allows %p% to work properly with special APL fonts like
+    the APL385 font.
+    APL385 maps the APL underscored alphabetic characters, which have no
+    Unicode equivalent, to the DBCS circled alphabetic characters in the range
+    U+24B6 to U+25CF.
+    Otherwise, the only way to display these characters is with one of the
+    special 3270 fonts included with %p%.
+    <p class=indented>
+    Because this mapping is non-standard, this setting affects only the
+    display. The <b>Ascii</b> action will always output underscored alphabetics
+    as blanks, and copy-and-paste operations will also represent them this way,
+    though this may change to use the Unicode Combining Low Line character
+    U+0332 at some point.
+.
+
 name aplMode
 applies x
 type b
