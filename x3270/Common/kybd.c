@@ -588,7 +588,7 @@ kybd_register(void)
 
     /* Register interest in connect and disconnect events. */
     register_schange_ordered(ST_CONNECT, kybd_connect, 1000);
-    register_schange(ST_3270_MODE, kybd_in3270);
+    register_schange_ordered(ST_3270_MODE, kybd_in3270, 1000);
 
     /* Register the actions. */
     register_actions(kybd_actions, array_count(kybd_actions));
