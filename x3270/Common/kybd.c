@@ -560,8 +560,20 @@ kybd_in3270(bool in3270 _is_unused)
 		 */
 		if (!bind_lock_host && net_bound()) {
 		    kybdlock_clr(-1, "kybd_in3270");
+		} else {
+		    /*
+		     * Clear everything but AWAITING_FIRST and LOCKED.
+		     * The former was set by this function when we were
+		     * unbound. The latter may be a leftover from the user
+		     * initiating a host switch by sending a command with an
+		     * AID. If this is a non-bind-unlock host (the B: option),
+		     * we want to preserve that until the host sends a Write
+		     * with a Keyboard Restore in it.
+		     */
+		    kybdlock_clr(~(KL_AWAITING_FIRST | KL_OIA_LOCKED),
+				"kybd_in3270");
 		}
-		/* else fall through... */
+		break;
 	default:
 		/*
 		 * We just transitioned into or out of 3270 mode.

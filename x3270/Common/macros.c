@@ -223,7 +223,7 @@ static void read_from_file(void);
 static sms_t *sms_redirect_to(void);
 
 /* Macro that defines that the keyboard is locked due to user input. */
-#define KBWAIT	(kybdlock & (KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK|KL_ENTER_INHIBIT))
+#define KBWAIT	(kybdlock & (KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK|KL_ENTER_INHIBIT|KL_AWAITING_FIRST))
 #define CKBWAIT	(toggled(AID_WAIT) && KBWAIT)
 
 /* Macro that defines when it's safe to continue a Wait()ing sms. */
@@ -312,29 +312,6 @@ sms_in3270(bool in3270)
 {
     if (in3270 || IN_SSCP) {
 	sms_continue();
-    } else if (!in3270 && sms && sms->state == SS_KBWAIT) {
-	/*
-	 * We fell out of 3270 mode while waiting for the keyboard to unlock.
-	 * This generally means an UNBIND arrived, and what the user just did
-	 * was specify connecting to a different host.
-	 *
-	 * So we change the wait mode from KBWAIT to CONNECT_WAIT. This means
-	 * that when the BIND from the new host comes in and we flip back to
-	 * 3270 mode (from unbound mode), we won't unconditionally unblock the
-	 * script -- we'll still be waiting for KL_AWAITING_FIRST, which was
-	 * set by kybd_in3270 when the UNBIND arrived.
-	 *
-	 * By default, the BIND actually will unblock the script. But if the
-	 * B: option was given on the hostname, then a BIND will not unlock the
-	 * keyboard, and the script will block until the first Write command
-	 * with an explicit keyboard reset in it.
-	 *
-	 * I wish this were simpler.
-	 */
-	vtrace("%s[%d] switching from %s to %s\n", ST_NAME, sms_depth,
-		sms_state_name[SS_KBWAIT],
-		sms_state_name[SS_CONNECT_WAIT]);
-	sms->state = SS_CONNECT_WAIT;
     }
 }
 
