@@ -36,7 +36,6 @@ extern bool ascii_flag;
 extern bool cr_flag;
 extern unsigned long ft_length;
 extern FILE *ft_local_file;
-extern char *ft_local_filename;
 enum ft_state {
     FT_NONE,		/* No transfer in progress */
     FT_AWAIT_ACK,	/* IND$FILE sent, awaiting acknowledgement message */

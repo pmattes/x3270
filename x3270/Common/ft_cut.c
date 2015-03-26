@@ -41,6 +41,7 @@
 #include "ctlrc.h"
 #include "ft_cut.h"
 #include "ft_cut_ds.h"
+#include "ft_private.h"
 #include "unicodec.h"
 #include "ft.h"
 #include "tables.h"
@@ -521,7 +522,8 @@ cut_data_request(void)
 	}
 
 	/* Abort the transfer. */
-	msg = xs_buffer("read(%s): %s", ft_local_filename, strerror(errno));
+	msg = xs_buffer("read(%s): %s", ft_private.local_filename,
+		strerror(errno));
 	cut_abort(msg, SC_ABORT_FILE);
 	Free(msg);
 	return;
@@ -622,7 +624,7 @@ cut_data(void)
 	if (fwrite((char *)cvobuf, conv_length, 1, ft_local_file) == 0) {
 		char *msg;
 
-		msg = xs_buffer("write(%s): %s", ft_local_filename,
+		msg = xs_buffer("write(%s): %s", ft_private.local_filename,
 		    strerror(errno));
 		cut_abort(msg, SC_ABORT_FILE);
 		Free(msg);

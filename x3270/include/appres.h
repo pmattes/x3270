@@ -145,6 +145,14 @@ typedef struct {
 	int	 save_lines;
     } interactive;
 
+    /* File transfer fields. */
+    struct {
+	char	*direction;
+	char	*host;
+	char	*host_file;
+	char	*local_file;
+    } ft;
+
     /* c3270/wc3270-specific fields. */
     struct {
 	bool	 all_bold_on;

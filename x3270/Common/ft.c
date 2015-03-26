@@ -49,6 +49,7 @@
 #include "kybd.h"
 #include "macros.h"
 #include "popups.h"
+#include "resources.h"
 #include "util.h"
 #include "varbuf.h"
 
@@ -56,7 +57,6 @@
 
 /* Globals. */
 enum ft_state ft_state = FT_NONE;	/* File transfer state */
-char *ft_local_filename;		/* Local file to transfer to/from */
 FILE *ft_local_file = NULL;		/* File descriptor for local file */
 bool ft_last_cr = false;		/* CR was last char in local file */
 bool ascii_flag = true;		/* Convert to ascii */
@@ -146,6 +146,42 @@ ft_init(void)
     ft_private.host_type = HT_TSO;
     ft_private.recfm = DEFAULT_RECFM;
     ft_private.units = DEFAULT_UNITS;
+
+    /* Apply resources. */
+    if (appres.ft.direction) {
+	if (!strcasecmp(appres.ft.direction, "receive")) {
+	    ft_private.receive_flag = true;
+	} else if (!strcasecmp(appres.ft.direction, "send")) {
+	    ft_private.receive_flag = false;
+	} else {
+	    xs_warning("Invalid %s '%s', ignoring",
+		    ResFtDirection, appres.ft.direction);
+	    appres.ft.direction = NULL;
+	}
+    }
+    if (appres.ft.host) {
+	if (!strcasecmp(appres.ft.host, "tso")) {
+	    ft_private.host_type = HT_TSO;
+	} else if (!strcasecmp(appres.ft.host, "vm")) {
+	    ft_private.host_type = HT_VM;
+	} else if (!strcasecmp(appres.ft.host, "cics")) {
+	    ft_private.host_type = HT_CICS;
+	} else {
+	    xs_warning("Invalid %s '%s', ignoring",
+		    ResFtHost, appres.ft.host);
+	    appres.ft.host = NULL;
+	}
+    }
+    if (appres.ft.host_file) {
+	ft_private.host_filename = appres.ft.host_file;
+    } else {
+	ft_private.host_filename = NULL;
+    }
+    if (appres.ft.local_file) {
+	ft_private.local_filename = appres.ft.local_file;
+    } else {
+	ft_private.local_filename = NULL;
+    }
 }
 
 /* Return the right value for fopen()ing the local file. */
@@ -172,7 +208,7 @@ ft_didnt_start(ioid_t id _is_unused)
 	fclose(ft_local_file);
 	ft_local_file = NULL;
 	if (ft_private.receive_flag && !ft_private.append_flag) {
-	    unlink(ft_local_filename);
+	    unlink(ft_private.local_filename);
 	}
     }
     ft_private.allow_overwrite = false;
@@ -189,7 +225,7 @@ ft_complete(const char *errmsg)
 {
     /* Close the local file. */
     if (ft_local_file != NULL && fclose(ft_local_file) < 0) {
-	popup_an_errno(errno, "close(%s)", ft_local_filename);
+	popup_an_errno(errno, "close(%s)", ft_private.local_filename);
     }
     ft_local_file = NULL;
 
@@ -390,7 +426,13 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	return true;
     }
 
+    /*
+     * Unlike the dialogs, which preserve the previous settings, the
+     * Transfer() action always reverts to the defaults.
+     */
+
     /* Set everything to the default. */
+    ft_init();
     for (i = 0; i < N_PARMS; i++) {
 	Free(tp[i].value);
 	if (tp[i].keyword[0] != NULL) {
@@ -398,6 +440,32 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	} else {
 	    tp[i].value = NULL;
 	}
+    }
+
+    /* Override defaults from resources. */
+    if (appres.ft.direction) {
+	if (tp[PARM_DIRECTION].value) {
+	    Free(tp[PARM_DIRECTION].value);
+	}
+	tp[PARM_DIRECTION].value = NewString(appres.ft.direction);
+    }
+    if (appres.ft.host) {
+	if (tp[PARM_HOST].value) {
+	    Free(tp[PARM_HOST].value);
+	}
+	tp[PARM_HOST].value = NewString(appres.ft.host);
+    }
+    if (appres.ft.host_file) {
+	if (tp[PARM_HOST_FILE].value) {
+	    Free(tp[PARM_HOST_FILE].value);
+	}
+	tp[PARM_HOST_FILE].value = NewString(appres.ft.host_file);
+    }
+    if (appres.ft.local_file) {
+	if (tp[PARM_LOCAL_FILE].value) {
+	    Free(tp[PARM_LOCAL_FILE].value);
+	}
+	tp[PARM_LOCAL_FILE].value = NewString(appres.ft.local_file);
     }
 
     /* See what they specified. */
@@ -528,11 +596,11 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 #endif /*]*/
 
     ft_private.host_filename = tp[PARM_HOST_FILE].value;
-    ft_local_filename = tp[PARM_LOCAL_FILE].value;
+    ft_private.local_filename = tp[PARM_LOCAL_FILE].value;
 
     /* See if the local file can be overwritten. */
     if (ft_private.receive_flag && !ft_private.append_flag && !ft_private.allow_overwrite) {
-	ft_local_file = fopen(ft_local_filename, ascii_flag? "r": "rb");
+	ft_local_file = fopen(ft_private.local_filename, ascii_flag? "r": "rb");
 	if (ft_local_file != NULL) {
 	    (void) fclose(ft_local_file);
 	    popup_an_error("File exists");
@@ -541,9 +609,9 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     /* Open the local file. */
-    ft_local_file = fopen(ft_local_filename, ft_local_fflag());
+    ft_local_file = fopen(ft_private.local_filename, ft_local_fflag());
     if (ft_local_file == NULL) {
-	popup_an_errno(errno, "Local file '%s'", ft_local_filename);
+	popup_an_errno(errno, "Local file '%s'", ft_private.local_filename);
 	return false;
     }
 
@@ -645,7 +713,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	    fclose(ft_local_file);
 	    ft_local_file = NULL;
 	    if (ft_private.receive_flag && !ft_private.append_flag) {
-		unlink(ft_local_filename);
+		unlink(ft_private.local_filename);
 	    }
 	}
 	popup_an_error("%s", get_message("ftUnable"));

@@ -40,6 +40,7 @@
 
 #include "kybd.h"
 #include "ft_dft.h"
+#include "ft_private.h"
 #include "unicodec.h"
 #include "ft.h"
 #include "telnet_core.h"
@@ -378,8 +379,8 @@ dft_data_insert(struct data_buffer *data_bufr)
 			/* write failed */
 			char *buf;
 
-			buf = xs_buffer("write(%s): %s", ft_local_filename,
-			    strerror(errno));
+			buf = xs_buffer("write(%s): %s",
+				ft_private.local_filename, strerror(errno));
 
 			dft_abort(buf, TR_DATA_INSERT);
 			Free(buf);
@@ -603,8 +604,8 @@ dft_get_request(void)
 	if (ferror(ft_local_file)) {
 		char *buf;
 
-		buf = xs_buffer("read(%s): %s", ft_local_filename,
-				strerror(errno));
+		buf = xs_buffer("read(%s): %s", ft_private.local_filename,
+			strerror(errno));
 		dft_abort(buf, TR_GET_REQ);
 		Free(buf);
 		return;

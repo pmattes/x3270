@@ -1146,11 +1146,48 @@ description
 name ftCodePage
 type i
 applies w
+groups i
 description
     The Windows code page to use for translating between EBCDIC and ASCII in
     IND$FILE file transfers. The default is to use the system ANSI code page.
     This value can be overridden in the File Transfer dialog and by a parameter
     to the <b>Transfer</b> action. 
+.
+
+name ftDirection
+type s
+applies a
+groups i
+description
+    Defines the default file transfer direction, from the perspective of the
+    workstation, which is usually receive.
+    The value can be either send (send file from workstation to host) or
+    receive (receive file from host to workstation).
+.
+
+name ftHost
+type s
+applies a
+groups i
+description
+    Defines the default host type for file transfers.
+    The value can be either vm, tso or cics.
+.
+
+name ftHostFile
+type s
+applies a
+groups i
+description
+    Defines the default host file name for file transfers.
+.
+
+name ftLocalFile
+type s
+applies a
+groups i
+description
+    Defines the default local file name for file transfers.
 .
 
 name highlightBold

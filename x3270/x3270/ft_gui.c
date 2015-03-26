@@ -214,6 +214,10 @@ ft_popup_init(void)
 	    XtNfromHoriz, local_label,
 	    XtNhorizDistance, 0,
 	    NULL);
+    if (ft_private.local_filename) {
+	XtVaSetValues(local_file, XtNstring, ft_private.local_filename, NULL);
+	XawTextSetInsertionPoint(local_file, strlen(ft_private.local_filename));
+    }
     dialog_match_dimension(local_label, local_file, XtNheight);
     w = XawTextGetSource(local_file);
     if (w == NULL) {
@@ -244,6 +248,10 @@ ft_popup_init(void)
 	    XtNfromHoriz, host_label,
 	    XtNhorizDistance, 0,
 	    NULL);
+    if (ft_private.host_filename) {
+	XtVaSetValues(host_file, XtNstring, ft_private.host_filename, NULL);
+	XawTextSetInsertionPoint(host_file, strlen(ft_private.host_filename));
+    }
     dialog_match_dimension(host_label, host_file, XtNheight);
     dialog_match_dimension(local_label, host_label, XtNwidth);
     w = XawTextGetSource(host_file);
@@ -744,6 +752,7 @@ ft_popup_init(void)
     set_dft_buffersize();
     s = xs_buffer("%d", dft_buffersize);
     XtVaSetValues(buffersize_widget, XtNstring, s, NULL);
+    XawTextSetInsertionPoint(buffersize_widget, strlen(s));
     XtFree(s);
 
     /* Set up the buttons at the bottom. */
@@ -998,15 +1007,15 @@ ft_start(void)
     /* XXX: probably more validation to do here */
 
     /* Get the local file from it widget */
-    XtVaGetValues(local_file, XtNstring,  &ft_local_filename, NULL);
-    if (!*ft_local_filename) {
+    XtVaGetValues(local_file, XtNstring,  &ft_private.local_filename, NULL);
+    if (!*ft_private.local_filename) {
 	return false;
     }
 
     /* See if the local file can be overwritten. */
     if (ft_private.receive_flag && !ft_private.append_flag &&
 	    !ft_private.allow_overwrite) {
-	ft_local_file = fopen(ft_local_filename, ascii_flag? "r": "rb");
+	ft_local_file = fopen(ft_private.local_filename, ascii_flag? "r": "rb");
 	if (ft_local_file != NULL) {
 	    (void) fclose(ft_local_file);
 	    ft_local_file = NULL;
@@ -1016,10 +1025,10 @@ ft_start(void)
     }
 
     /* Open the local file. */
-    ft_local_file = fopen(ft_local_filename, ft_local_fflag());
+    ft_local_file = fopen(ft_private.local_filename, ft_local_fflag());
     if (ft_local_file == NULL) {
 	    ft_private.allow_overwrite = false;
-	    popup_an_errno(errno, "Local file '%s'", ft_local_filename);
+	    popup_an_errno(errno, "Local file '%s'", ft_private.local_filename);
 	    return false;
     }
 
@@ -1126,7 +1135,7 @@ ft_start(void)
 	    fclose(ft_local_file);
 	    ft_local_file = NULL;
 	    if (ft_private.receive_flag && !ft_private.append_flag) {
-		unlink(ft_local_filename);
+		unlink(ft_private.local_filename);
 	    }
 	}
 	popup_an_error("%s", get_message("ftUnable"));
@@ -1263,10 +1272,10 @@ progress_popup_callback(Widget w _is_unused, XtPointer client_data _is_unused,
 {
     XtVaSetValues(from_file, XtNlabel,
 	    ft_private.receive_flag? ft_private.host_filename:
-				     ft_local_filename,
+				     ft_private.local_filename,
 	    NULL);
     XtVaSetValues(to_file, XtNlabel,
-	    ft_private.receive_flag? ft_local_filename:
+	    ft_private.receive_flag? ft_private.local_filename:
 				     ft_private.host_filename,
 	    NULL);
 

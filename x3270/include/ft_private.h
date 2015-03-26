@@ -56,6 +56,7 @@ typedef struct {
     bool is_action;
     bool is_interactive;
     char *host_filename;
+    char *local_filename;
     bool receive_flag;
     bool append_flag;
     host_type_t host_type;
