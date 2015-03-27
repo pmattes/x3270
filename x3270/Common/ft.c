@@ -59,7 +59,6 @@
 enum ft_state ft_state = FT_NONE;	/* File transfer state */
 FILE *ft_local_file = NULL;		/* File descriptor for local file */
 bool ft_last_cr = false;		/* CR was last char in local file */
-bool ascii_flag = true;		/* Convert to ascii */
 bool cr_flag = true;			/* Add crlf to each line */
 bool remap_flag = true;		/* Remap ASCII<->EBCDIC */
 unsigned long ft_length = 0;		/* Length of transfer */
@@ -144,6 +143,7 @@ ft_init(void)
     /* Initialize the private state. */
     ft_private.receive_flag = true;
     ft_private.host_type = HT_TSO;
+    ft_private.ascii_flag = true;
     ft_private.recfm = DEFAULT_RECFM;
     ft_private.units = DEFAULT_UNITS;
 
@@ -154,8 +154,8 @@ ft_init(void)
 	} else if (!strcasecmp(appres.ft.direction, "send")) {
 	    ft_private.receive_flag = false;
 	} else {
-	    xs_warning("Invalid %s '%s', ignoring",
-		    ResFtDirection, appres.ft.direction);
+	    xs_warning("Invalid %s '%s', ignoring", ResFtDirection,
+		    appres.ft.direction);
 	    appres.ft.direction = NULL;
 	}
     }
@@ -167,8 +167,7 @@ ft_init(void)
 	} else if (!strcasecmp(appres.ft.host, "cics")) {
 	    ft_private.host_type = HT_CICS;
 	} else {
-	    xs_warning("Invalid %s '%s', ignoring",
-		    ResFtHost, appres.ft.host);
+	    xs_warning("Invalid %s '%s', ignoring", ResFtHost, appres.ft.host);
 	    appres.ft.host = NULL;
 	}
     }
@@ -182,6 +181,16 @@ ft_init(void)
     } else {
 	ft_private.local_filename = NULL;
     }
+    if (appres.ft.mode) {
+	if (!strcasecmp(appres.ft.mode, "ascii")) {
+	    ft_private.ascii_flag = true;
+	} else if (!strcasecmp(appres.ft.mode, "binary")) {
+	    ft_private.ascii_flag = false;
+	} else {
+	    xs_warning("Invalid %s '%s', ignoring", ResFtMode, appres.ft.mode);
+	    appres.ft.host = NULL;
+	}
+    }
 }
 
 /* Return the right value for fopen()ing the local file. */
@@ -193,7 +202,7 @@ ft_local_fflag(void)
 
     ret[nr++] = ft_private.receive_flag?
 	(ft_private.append_flag? 'a': 'w' ): 'r';
-    if (!ascii_flag) {
+    if (!ft_private.ascii_flag) {
 	ret[nr++] = 'b';
     }
     ret[nr] = '\0';
@@ -467,6 +476,12 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	tp[PARM_LOCAL_FILE].value = NewString(appres.ft.local_file);
     }
+    if (appres.ft.mode) {
+	if (tp[PARM_MODE].value) {
+	    Free(tp[PARM_MODE].value);
+	}
+	tp[PARM_MODE].value = NewString(appres.ft.mode);
+    }
 
     /* See what they specified. */
     for (j = 0; j < xnparams; j++) {
@@ -546,18 +561,18 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     ft_private.receive_flag = !strcasecmp(tp[PARM_DIRECTION].value, "receive");
     ft_private.append_flag = !strcasecmp(tp[PARM_EXIST].value, "append");
     ft_private.allow_overwrite = !strcasecmp(tp[PARM_EXIST].value, "replace");
-    ascii_flag = !strcasecmp(tp[PARM_MODE].value, "ascii");
+    ft_private.ascii_flag = !strcasecmp(tp[PARM_MODE].value, "ascii");
     if (!strcasecmp(tp[PARM_CR].value, "auto")) {
-	cr_flag = ascii_flag;
+	cr_flag = ft_private.ascii_flag;
     } else {
-	if (!ascii_flag) {
+	if (!ft_private.ascii_flag) {
 	    popup_an_error("Invalid 'Cr' option for ASCII mode");
 	    return false;
 	}
 	cr_flag = !strcasecmp(tp[PARM_CR].value, "remove") ||
 		  !strcasecmp(tp[PARM_CR].value, "add");
     }
-    if (ascii_flag) {
+    if (ft_private.ascii_flag) {
 	remap_flag = !strcasecmp(tp[PARM_REMAP].value, "yes");
     }
     if (!strcasecmp(tp[PARM_HOST].value, "tso")) {
@@ -600,7 +615,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 
     /* See if the local file can be overwritten. */
     if (ft_private.receive_flag && !ft_private.append_flag && !ft_private.allow_overwrite) {
-	ft_local_file = fopen(ft_private.local_filename, ascii_flag? "r": "rb");
+	ft_local_file = fopen(ft_private.local_filename, ft_private.ascii_flag? "r": "rb");
 	if (ft_local_file != NULL) {
 	    (void) fclose(ft_local_file);
 	    popup_an_error("File exists");
@@ -621,7 +636,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	    ft_private.receive_flag? "GET": "PUT",
 	    ft_private.host_filename,
 	    (ft_private.host_type != HT_TSO)? "(": "");
-    if (ascii_flag) {
+    if (ft_private.ascii_flag) {
 	vb_appends(&r, "ASCII");
     } else if (ft_private.host_type == HT_CICS) {
 	vb_appends(&r, "BINARY");

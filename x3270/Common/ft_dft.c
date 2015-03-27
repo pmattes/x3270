@@ -262,7 +262,7 @@ dft_data_insert(struct data_buffer *data_bufr)
 		int rv = 1;
 
 		/* Write the data out to the file. */
-	    	if (ascii_flag && (remap_flag || cr_flag)) {
+	    	if (ft_private.ascii_flag && (remap_flag || cr_flag)) {
 			size_t obuf_len = 4 * my_length;
 			char *ob0 = Malloc(obuf_len);
 			char *ob = ob0;
@@ -574,7 +574,7 @@ dft_get_request(void)
 					   allowed */
 	bufptr = obuf + 17;
 	while (!dft_eof && numbytes) {
-	    	if (ascii_flag && (remap_flag || cr_flag)) {
+	    	if (ft_private.ascii_flag && (remap_flag || cr_flag)) {
 		    	numread = dft_ascii_read(bufptr, numbytes);
 			if (numread == (size_t)-1) {
 				dft_eof = true;

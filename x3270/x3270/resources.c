@@ -154,16 +154,18 @@ XtResource resources[] = {
       offset(ssl.key_file_type), XtRString, 0 },
     { ResKeyPasswd, ClsKeyPasswd, XtRString, sizeof(char *),
       offset(ssl.key_passwd), XtRString, 0 },
+#endif /*]*/
 
     { ResFtDirection, ClsFtDirection, XtRString, sizeof(char *),
-      offset(ft.direction), XtRString, "receive" },
+      offset(ft.direction), XtRString, 0 },
     { ResFtHost, ClsFtHost, XtRString, sizeof(char *),
       offset(ft.host), XtRString, 0 },
     { ResFtHostFile, ClsFtHostFile, XtRString, sizeof(char *),
       offset(ft.host_file), XtRString, 0 },
     { ResFtLocalFile, ClsFtLocalFile, XtRString, sizeof(char *),
       offset(ft.local_file), XtRString, 0 },
-#endif /*]*/
+    { ResFtMode, ClsFtMode, XtRString, sizeof(char *),
+      offset(ft.mode), XtRString, 0 },
 };
 #undef offset
 

@@ -60,6 +60,7 @@ typedef struct {
     bool receive_flag;
     bool append_flag;
     host_type_t host_type;
+    bool ascii_flag;
     enum recfm recfm;
     enum units units;
     bool allow_overwrite;

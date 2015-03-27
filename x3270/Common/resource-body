@@ -1169,6 +1169,7 @@ name ftHost
 type s
 applies a
 groups i
+default tso
 description
     Defines the default host type for file transfers.
     The value can be either vm, tso or cics.
@@ -1188,6 +1189,17 @@ applies a
 groups i
 description
     Defines the default local file name for file transfers.
+.
+
+name ftMode
+type s
+applies a
+groups i
+default ascii
+description
+    Defines the default mode for file transfers: ascii (text, with translation
+    between the workstation's code page and EBCDIC), or binary (no
+    translation).
 .
 
 name highlightBold

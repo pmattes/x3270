@@ -478,7 +478,6 @@ set_appres_defaults(void)
     appres.unlock_delay_ms = 350;
 
     appres.dft_buffer_size = DFT_BUF;
-    appres.ft.direction = "receive";
 
     set_toggle(CURSOR_POS, true);
     set_toggle(AID_WAIT, true);
@@ -1003,6 +1002,7 @@ static res_t base_resources[] = {
     { ResFtHost,	aoffset(ft.host),	XRM_STRING },
     { ResFtHostFile,	aoffset(ft.host_file),	XRM_STRING },
     { ResFtLocalFile,	aoffset(ft.local_file),	XRM_STRING },
+    { ResFtMode,	aoffset(ft.mode),	XRM_STRING },
     { ResHostname,	aoffset(hostname),	XRM_STRING },
     { ResHostsFile,	aoffset(hostsfile),	XRM_STRING },
     { ResIcrnl,		aoffset(linemode.icrnl),	XRM_BOOLEAN },

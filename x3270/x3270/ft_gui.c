@@ -308,7 +308,8 @@ ft_popup_init(void)
 	    XtNhorizDistance, MARGIN,
 	    XtNborderWidth, 0,
 	    NULL);
-    dialog_apply_bitmap(ascii_toggle, ascii_flag? diamond: no_diamond);
+    dialog_apply_bitmap(ascii_toggle,
+	    ft_private.ascii_flag? diamond: no_diamond);
     XtAddCallback(ascii_toggle, XtNcallback, toggle_ascii, (XtPointer)&s_true);
     binary_toggle = XtVaCreateManagedWidget(
 	    "binary", commandWidgetClass, ft_dialog,
@@ -317,7 +318,8 @@ ft_popup_init(void)
 	    XtNhorizDistance, MARGIN,
 	    XtNborderWidth, 0,
 	    NULL);
-    dialog_apply_bitmap(binary_toggle, ascii_flag? no_diamond: diamond);
+    dialog_apply_bitmap(binary_toggle,
+	    ft_private.ascii_flag? no_diamond: diamond);
     XtAddCallback(binary_toggle, XtNcallback, toggle_ascii,
 	    (XtPointer)&s_false);
 
@@ -543,7 +545,8 @@ ft_popup_init(void)
 	    XtNhorizDistance, COLUMN_GAP,
 	    XtNborderWidth, 0,
 	    NULL);
-    dialog_apply_bitmap(cr_widget, cr_flag? dot: no_dot);
+    dialog_apply_bitmap(cr_widget,
+	    ft_private.ascii_flag && cr_flag? dot: no_dot);
     XtAddCallback(cr_widget, XtNcallback, toggle_cr, 0);
     dialog_register_sensitivity(cr_widget,
 	    NULL, false,
@@ -559,10 +562,11 @@ ft_popup_init(void)
 	    XtNhorizDistance, COLUMN_GAP,
 	    XtNborderWidth, 0,
 	    NULL);
-    dialog_apply_bitmap(remap_widget, remap_flag? dot: no_dot);
+    dialog_apply_bitmap(remap_widget,
+	    ft_private.ascii_flag && remap_flag? dot: no_dot);
     XtAddCallback(remap_widget, XtNcallback, toggle_remap, NULL);
     dialog_register_sensitivity(remap_widget,
-	    &ascii_flag, true,
+	    &ft_private.ascii_flag, true,
 	    NULL, false,
 	    NULL, false);
 
@@ -850,16 +854,18 @@ toggle_ascii(Widget w _is_unused, XtPointer client_data,
 	XtPointer call_data _is_unused)
 {
     /* Toggle the flag. */
-    ascii_flag = *(bool *)client_data;
+    ft_private.ascii_flag = *(bool *)client_data;
 
     /* Change the widget states. */
-    dialog_mark_toggle(ascii_toggle, ascii_flag? diamond: no_diamond);
-    dialog_mark_toggle(binary_toggle, ascii_flag? no_diamond: diamond);
-    cr_flag = ascii_flag;
-    remap_flag = ascii_flag;
+    dialog_mark_toggle(ascii_toggle,
+	    ft_private.ascii_flag? diamond: no_diamond);
+    dialog_mark_toggle(binary_toggle,
+	    ft_private.ascii_flag? no_diamond: diamond);
+    cr_flag = ft_private.ascii_flag;
+    remap_flag = ft_private.ascii_flag;
     dialog_mark_toggle(cr_widget, cr_flag? dot: no_dot);
     dialog_mark_toggle(remap_widget, remap_flag? dot: no_dot);
-    dialog_check_sensitivity(&ascii_flag);
+    dialog_check_sensitivity(&ft_private.ascii_flag);
 }
 
 /* CR option. */
@@ -1015,7 +1021,8 @@ ft_start(void)
     /* See if the local file can be overwritten. */
     if (ft_private.receive_flag && !ft_private.append_flag &&
 	    !ft_private.allow_overwrite) {
-	ft_local_file = fopen(ft_private.local_filename, ascii_flag? "r": "rb");
+	ft_local_file = fopen(ft_private.local_filename,
+		ft_private.ascii_flag? "r": "rb");
 	if (ft_local_file != NULL) {
 	    (void) fclose(ft_local_file);
 	    ft_local_file = NULL;
@@ -1038,12 +1045,12 @@ ft_start(void)
 	    ft_private.receive_flag? "GET": "PUT",
 	    ft_private.host_filename,
 	    (ft_private.host_type != HT_TSO)? "(": "");
-    if (ascii_flag) {
+    if (ft_private.ascii_flag) {
 	vb_appends(&r, "ASCII");
     } else if (ft_private.host_type == HT_CICS) {
 	vb_appends(&r, "BINARY");
     }
-    if (cr_flag) {
+    if (ft_private.ascii_flag && cr_flag) {
 	vb_appends(&r, " CRLF");
     } else if (ft_private.host_type == HT_CICS) {
 	vb_appends(&r, " NOCRLF");

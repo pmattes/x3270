@@ -171,7 +171,7 @@ interactive_transfer(char ***params, unsigned *num_params)
     int kw_ix = 0;
     int receive = 1;
     enum { HT_TSO, HT_VM, HT_CICS } htype = HT_TSO;
-    int ascii = 1;
+    bool ascii = ft_private.ascii_flag;
     int remap = 1;
     int n;
     enum { CR_REMOVE, CR_ADD, CR_KEEP } cr_mode = CR_REMOVE;
@@ -319,16 +319,21 @@ ASCII on the workstation.\n\
  A 'binary' transfer does no data translation.\n");
 
     for (;;) {
-	printf("Transfer mode: (ascii/binary) [ascii] ");
+	printf("Transfer mode: (ascii/binary) [%s] ",
+		ft_private.ascii_flag? "ascii": "binary");
 	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 	    return -1;
 	}
-	if (!inbuf[0] || !strncasecmp(inbuf, "ascii", strlen(inbuf))) {
+	if ((!inbuf[0] && ft_private.ascii_flag) ||
+		(inbuf[0] && !strncasecmp(inbuf, "ascii", strlen(inbuf)))) {
+	    strcpy(kw[kw_ix++], "Mode=ascii");
+	    ascii = true;
 	    break;
 	}
-	if (!strncasecmp(inbuf, "binary", strlen(inbuf))) {
+	if ((!inbuf[0] && !ft_private.ascii_flag) ||
+		(inbuf[0] && !strncasecmp(inbuf, "binary", strlen(inbuf)))) {
 	    strcpy(kw[kw_ix++], "Mode=binary");
-	    ascii = 0;
+	    ascii = false;
 	    break;
 	}
     }

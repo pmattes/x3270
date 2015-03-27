@@ -186,9 +186,9 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 
 		/* Map it. */
 		c = conv[quadrant].xlate[ix];
-		if (ascii_flag && cr_flag && (c == '\r' || c == 0x1a))
+		if (ft_private.ascii_flag && cr_flag && (c == '\r' || c == 0x1a))
 			continue;
-		if (!(ascii_flag && remap_flag)) {
+		if (!(ft_private.ascii_flag && remap_flag)) {
 		    	/* No further translation necessary. */
 		    	*ob++ = c;
 			obuf_len--;
@@ -329,7 +329,7 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 			continue;
 		}
 
-		if (!(ascii_flag && remap_flag)) {
+		if (!(ft_private.ascii_flag && remap_flag)) {
 			ob += store_download(c, ob);
 			buf++;
 			len--;
@@ -690,7 +690,7 @@ xlate_getc(void)
 		return r;
 	}
 
-	if (ascii_flag) {
+	if (ft_private.ascii_flag) {
 		/*
 		 * Get the next (possibly multi-byte) character from the file.
 		 */
@@ -716,7 +716,7 @@ xlate_getc(void)
 		} while (error == ME_SHORT);
 
 		/* Expand it. */
-		if (ascii_flag && cr_flag && !ft_last_cr && c == '\n') {
+		if (ft_private.ascii_flag && cr_flag && !ft_last_cr && c == '\n') {
 			nc = download_convert((unsigned const char *)"\r", 1,
 				cbuf);
 		} else {
