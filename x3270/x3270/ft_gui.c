@@ -57,7 +57,7 @@
 #include "kybd.h"
 #include "objects.h"
 #include "popups.h"
-#include "util.h"
+#include "utils.h"
 #include "varbuf.h"
 #include "xmenubar.h"
 #include "xpopups.h"

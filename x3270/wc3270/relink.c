@@ -47,7 +47,7 @@
 #include "macros.h"
 #include "screen.h"
 #include "trace.h"
-#include "util.h"
+#include "utils.h"
 
 #include <wincon.h>
 

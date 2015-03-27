@@ -35,7 +35,7 @@
 #include "globals.h"
 #include "xglobals.h"
 
-#include "util.h"
+#include "utils.h"
 
 /* Glue between x3270 and the X libraries. */
 

@@ -43,7 +43,7 @@
 #include "popups.h"
 #include "resources.h"
 #include "trace.h"
-#include "util.h"
+#include "utils.h"
 
 llist_t actions_list = LLIST_INIT(actions_list);
 unsigned actions_list_count;

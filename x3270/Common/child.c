@@ -36,7 +36,7 @@
 
 #include "popups.h" /* must be before cpopups.h */
 #include "child_popups.h"
-#include "util.h"
+#include "utils.h"
 
 #define CHILD_BUF	1024
 

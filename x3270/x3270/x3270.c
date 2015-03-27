@@ -73,7 +73,7 @@
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
-#include "util.h"
+#include "utils.h"
 #include "xactions.h"
 #include "xappres.h"
 #include "xio.h"

@@ -50,7 +50,7 @@
 #include "macros.h"
 #include "popups.h"
 #include "resources.h"
-#include "util.h"
+#include "utils.h"
 #include "varbuf.h"
 
 /* Macros. */

@@ -67,7 +67,7 @@
 #include "toggles.h"
 #include "trace.h"
 #include "utf8.h"
-#include "util.h"
+#include "utils.h"
 #include "varbuf.h"
 
 /*#define KYBDLOCK_TRACE	1*/

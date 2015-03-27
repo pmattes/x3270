@@ -53,7 +53,7 @@
 #include "popups.h"
 #include "telnet.h"
 #include "utf8.h"
-#include "util.h"
+#include "utils.h"
 #include "varbuf.h"
 #include "xappres.h"
 #include "xscreen.h"

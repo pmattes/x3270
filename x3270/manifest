@@ -133,7 +133,7 @@ include/trace.h
 include/unicodec.h
 include/unicode_dbcs.h
 include/utf8.h
-include/util.h
+include/utils.h
 include/varbuf.h
 include/w3misc.h
 include/wincmn.h

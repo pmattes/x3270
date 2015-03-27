@@ -58,7 +58,7 @@
 #include "status.h"
 #include "trace.h"
 #include "unicodec.h"
-#include "util.h"
+#include "utils.h"
 #include "varbuf.h"
 #include "w3misc.h"
 #include "wselectc.h"

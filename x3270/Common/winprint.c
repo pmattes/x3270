@@ -44,7 +44,7 @@
 #include "resources.h"
 #include "print_screen.h"
 #include "trace.h"
-#include "util.h"
+#include "utils.h"
 
 #include "winprint.h"
 

@@ -32,7 +32,7 @@
 
 #include "globals.h"
 
-#include "util.h"
+#include "utils.h"
 
 typedef struct st_callback {
     llist_t list;

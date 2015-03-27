@@ -46,7 +46,7 @@
 #include "status.h"
 #include "trace.h"
 #include "unicodec.h"
-#include "util.h"
+#include "utils.h"
 
 #if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
 #include <ncursesw/ncurses.h>

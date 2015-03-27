@@ -39,7 +39,7 @@
 #include "help.h"
 #include "popups.h"
 #include "screen.h"
-#include "util.h"
+#include "utils.h"
 
 #if defined(_WIN32) /*[*/
 # include "wc3270.h"

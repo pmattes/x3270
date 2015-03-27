@@ -44,7 +44,7 @@
 #include "product.h"
 #include "varbuf.h"
 
-#include "util.h"
+#include "utils.h"
 
 #define my_isspace(c)	isspace((unsigned char)c)
 

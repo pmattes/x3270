@@ -51,7 +51,7 @@
 #include "screen.h"
 #include "selectc.h"
 #include "trace.h"
-#include "util.h"
+#include "utils.h"
 #include "xactions.h"
 #include "xkybd.h"
 #include "xmenubar.h"

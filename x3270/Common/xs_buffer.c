@@ -33,7 +33,7 @@
 #include "globals.h"
 
 #include "asprintf.h"
-#include "util.h"
+#include "utils.h"
 
 /**
  * Local variation of vasprintf(). Returns the buffer instead of a count, and

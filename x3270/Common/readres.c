@@ -36,7 +36,7 @@
 
 #include "glue.h"
 #include "readres.h"
-#include "util.h"
+#include "utils.h"
 
 /*
  * Make sure a resource definition begins with the application name, then

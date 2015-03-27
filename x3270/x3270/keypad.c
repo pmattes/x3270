@@ -45,7 +45,7 @@
 #include "actions.h"
 #include "kybd.h"
 #include "popups.h"
-#include "util.h"
+#include "utils.h"
 #include "xappres.h"
 #include "xkeypad.h"
 #include "xmenubar.h"

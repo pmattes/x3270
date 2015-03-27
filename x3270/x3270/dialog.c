@@ -58,7 +58,7 @@
 #include "objects.h"
 #include "popups.h"
 #include "telnet.h"
-#include "util.h"
+#include "utils.h"
 #include "xmenubar.h"
 
 /* Globals. */

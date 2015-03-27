@@ -140,7 +140,7 @@
 #include "resolver.h"
 #include "telnet_core.h"
 #include "utf8.h"
-#include "util.h"
+#include "utils.h"
 #include "xtablec.h"
 
 #if defined(_WIN32) /*[*/

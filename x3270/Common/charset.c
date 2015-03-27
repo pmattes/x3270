@@ -47,7 +47,7 @@
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 #include "utf8.h"
-#include "util.h"
+#include "utils.h"
 
 #include <locale.h>
 #if !defined(_WIN32) /*[*/

@@ -54,7 +54,7 @@
 #include "save.h"
 #include "screen.h"
 #include "toggles.h"
-#include "util.h"
+#include "utils.h"
 #include "xappres.h"
 #include "xkeypad.h"
 #include "xsave.h"

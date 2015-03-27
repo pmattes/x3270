@@ -51,7 +51,7 @@
 #include "product.h"
 #include "trace.h"
 #include "unicodec.h"
-#include "util.h"
+#include "utils.h"
 
 #if defined(_WIN32) /*[*/
 # include <fcntl.h>

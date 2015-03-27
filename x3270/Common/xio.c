@@ -39,7 +39,7 @@
 
 #include "actions.h"
 #include "telnet.h"
-#include "util.h"
+#include "utils.h"
 #include "xio.h"
 
 /* Globals. */

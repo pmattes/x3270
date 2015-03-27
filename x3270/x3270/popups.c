@@ -53,7 +53,7 @@
 #include "child_popups.h"
 #include "screen.h"
 #include "trace.h"
-#include "util.h"
+#include "utils.h"
 #include "xio.h"
 #include "xmenubar.h"
 #include "xpopups.h"

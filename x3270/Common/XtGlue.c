@@ -34,7 +34,7 @@
 #include "appres.h"
 #include "latin1.h"
 #include "trace.h"
-#include "util.h"
+#include "utils.h"
 #if defined(_WIN32) /*[*/
 # include "xio.h"
 #endif /*]*/

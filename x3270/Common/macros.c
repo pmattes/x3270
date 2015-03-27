@@ -71,7 +71,7 @@
 #include "telnet.h"
 #include "trace.h"
 #include "utf8.h"
-#include "util.h"
+#include "utils.h"
 #include "varbuf.h"
 #include "xio.h"
 

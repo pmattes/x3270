@@ -39,7 +39,7 @@
 #include "asprintf.h"
 #include "lazya.h"
 #include "trace.h"
-#include "util.h"
+#include "utils.h"
 #include "varbuf.h"
 
 #include "httpd-core.h"

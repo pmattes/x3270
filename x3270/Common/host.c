@@ -45,7 +45,7 @@
 #include "telnet.h"
 #include "telnet_core.h"
 #include "trace.h"
-#include "util.h"
+#include "utils.h"
 #include "xio.h"
 
 #include <errno.h>

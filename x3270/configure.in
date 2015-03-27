@@ -112,6 +112,7 @@ if test "x$enable_x3270" = xyes -o \
         "x$enable_s3270" = xyes -o \
         "x$enable_tcl3270" = xyes -o \
         "x$enable_pr3287" = xyes; then
+    DEPEND="$DEPEND unix-lib-depend"
     CLEAN="$CLEAN unix-lib-clean"
     CLOBBER="$CLOBBER unix-lib-clobber"
 fi
@@ -119,6 +120,7 @@ fi
 if test "x$enable_wc3270" = xyes -o \
         "x$enable_ws3270" = xyes -o \
         "x$enable_wpr3287" = xyes; then
+    DEPEND="$CLEAN windows-lib-depend"
     CLEAN="$CLEAN windows-lib-clean"
     CLOBBER="$CLOBBER windows-lib-clobber"
 fi

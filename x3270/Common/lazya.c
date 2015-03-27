@@ -33,7 +33,7 @@
 #include "globals.h"
 
 #include "trace.h"
-#include "util.h"
+#include "utils.h"
 
 #include "lazya.h"
 

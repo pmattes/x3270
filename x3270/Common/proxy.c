@@ -49,7 +49,7 @@
 #include "resolver.h"
 #include "telnet_core.h"
 #include "trace.h"
-#include "util.h"
+#include "utils.h"
 #include "w3misc.h"
 
 /*

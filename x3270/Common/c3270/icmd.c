@@ -38,7 +38,7 @@
 #include "ft_private.h"
 #include "icmdc.h"
 #include "utf8.h"
-#include "util.h"
+#include "utils.h"
 
 #if defined(_WIN32) /*[*/
 static int windows_cp = 0;

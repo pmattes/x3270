@@ -51,7 +51,7 @@
 #include "pr3287_session.h"
 #include "telnet_core.h"
 #include "trace.h"
-#include "util.h"
+#include "utils.h"
 #include "varbuf.h"
 #include "w3misc.h"
 #include "xio.h"

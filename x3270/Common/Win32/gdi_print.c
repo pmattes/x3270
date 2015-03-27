@@ -50,7 +50,7 @@
 #include "popups.h"
 #include "trace.h"
 #include "unicodec.h"
-#include "util.h"
+#include "utils.h"
 #include "w3misc.h"
 
 /* Defines */

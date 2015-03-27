@@ -34,7 +34,7 @@
 
 #include "globals.h"
 
-#include "util.h"
+#include "utils.h"
 
 bool
 llist_isempty(llist_t *l)

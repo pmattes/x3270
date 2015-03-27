@@ -66,7 +66,7 @@
 #include "stmenu.h"
 #include "telnet.h"
 #include "toggles.h"
-#include "util.h"
+#include "utils.h"
 #include "xaa.h"
 #include "xappres.h"
 #include "xactions.h"

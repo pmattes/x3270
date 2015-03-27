@@ -82,7 +82,7 @@
 #include "ctlrc.h"
 #include "resolver.h"
 #include "telnet_core.h"
-#include "util.h"
+#include "utils.h"
 #include "trace.h"
 #include "pr_telnet.h"
 

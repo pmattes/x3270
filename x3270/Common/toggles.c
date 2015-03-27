@@ -42,7 +42,7 @@
 #include "menubar.h"
 #include "popups.h"
 #include "toggles.h"
-#include "util.h"
+#include "utils.h"
 
 /* Live state of toggles. */
 typedef struct {

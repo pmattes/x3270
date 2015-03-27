@@ -70,7 +70,7 @@
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
-#include "util.h"
+#include "utils.h"
 #include "xio.h"
 
 #if defined(_WIN32) /*[*/

@@ -40,7 +40,7 @@
 #include "unicodec.h"
 #include "unicode_dbcs.h"
 #include "utf8.h"
-#include "util.h"
+#include "utils.h"
 
 #if defined(USE_ICONV) /*[*/
 iconv_t i_u2mb = (iconv_t)-1;

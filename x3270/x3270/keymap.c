@@ -55,7 +55,7 @@
 #include "popups.h"
 #include "screen.h"
 #include "status.h"
-#include "util.h"
+#include "utils.h"
 #include "xactions.h"
 #include "xkeypad.h"
 #include "xmenubar.h"

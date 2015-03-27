@@ -44,7 +44,7 @@
 #include "popups.h"
 #include "print_window.h"
 #include "trace.h"
-#include "util.h"
+#include "utils.h"
 #include "varbuf.h"
 #include "xpopups.h"
 

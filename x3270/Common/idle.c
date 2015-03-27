@@ -41,7 +41,7 @@
 #include "popups.h"
 #include "resources.h"
 #include "trace.h"
-#include "util.h"
+#include "utils.h"
 
 /* Macros. */
 #define MSEC_PER_SEC	1000L
