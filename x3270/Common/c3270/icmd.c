@@ -177,6 +177,7 @@ interactive_transfer(char ***params, unsigned *num_params)
     enum { CR_REMOVE, CR_ADD, CR_KEEP } cr_mode = CR_REMOVE;
     char *default_cr;
     enum { FE_KEEP, FE_REPLACE, FE_APPEND } fe_mode = FE_KEEP;
+    char *default_fe;
     enum { RF_NONE, RF_FIXED, RF_VARIABLE, RF_UNDEFINED } rf_mode = RF_NONE;
     enum { AT_NONE, AT_TRACKS, AT_CYLINDERS, AT_AVBLOCK } at_mode = AT_NONE;
     int lrecl = 0;
@@ -449,13 +450,28 @@ translation to the IND$FILE program on the host.\n\
 	printf("\
 If the destination file exists, you can choose to keep it (and abort the\n\
 transfer), replace it, or append the source file to it.\n");
+	if (ft_private.allow_overwrite) {
+	    default_fe = "replace";
+	} else if (ft_private.append_flag) {
+	    default_fe = "append";
+	} else {
+	    default_fe = "keep";
+	}
 	for (;;) {
 	    printf("Action if destination file exists: "
-		    "(keep/replace/append) [keep] ");
+		    "(keep/replace/append) [%s] ", default_fe);
 	    if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 		return -1;
 	    }
-	    if (!inbuf[0] || !strncasecmp(inbuf, "keep", strlen(inbuf))) {
+	    if (!inbuf[0]) {
+		snprintf(kw[kw_ix++], KW_SIZE, "Exist=%s", default_fe);
+		fe_mode = ft_private.allow_overwrite? FE_REPLACE:
+		    (ft_private.append_flag? FE_APPEND: FE_KEEP);
+		break;
+	    }
+	    if (!strncasecmp(inbuf, "keep", strlen(inbuf))) {
+		strcpy(kw[kw_ix++], "Exist=keep");
+		fe_mode = FE_KEEP;
 		break;
 	    }
 	    if (!strncasecmp(inbuf, "replace", strlen(inbuf))) {

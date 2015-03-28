@@ -1160,8 +1160,8 @@ applies a
 groups i
 default auto
 description
-    Defines how line separators (carriage returns and line feeds) are handled
-    when transferring ASCII files with IND$FILE.
+    Defines the default action for line separators (carriage returns and line
+    feeds) in ASCII files during IND$FILE file transfers.
     The value can be auto, which will add them when files are received from the
     host and remove them when they are sent to the host, add (same as auto),
     remove (same as auto), or keep, meaning no special processing is done.
@@ -1177,6 +1177,25 @@ description
     of the workstation.
     The value can be either send (send file from workstation to host) or
     receive (receive file from host to workstation).
+.
+
+name ftExist
+type s
+applies a
+groups i
+default keep
+description
+    Defines the default behavior for IND$FILE file transfers when the
+    destination file already exists.
+    The value keep means that the transfer will be
+if x
+    aborted (or if invoked interactively, the user will be prompted to confirm
+    the file is to be overwritten),
+else
+    aborted,
+endif
+    replace means that the file will be overwritten unconditionally, and
+    append means that the new file will be appended to the old file.
 .
 
 name ftHost
@@ -1222,8 +1241,9 @@ applies a
 groups i
 default yes
 description
-    Controls whether ASCII files undergo a secondary translation with
-    IND$FILE file transfer. When set to yes, ASCII files are translated by
+    Defines the default mapping behavior for ASCII files transferred with
+    IND$FILE.
+    When set to yes, ASCII files are translated by
     %p% to produce as accurate a mapping as possible between the workstation's
     code page and the host's EBCDIC code page. When set to no, only the fixed
     translation built into the IND$FILE application is run, which (roughly)

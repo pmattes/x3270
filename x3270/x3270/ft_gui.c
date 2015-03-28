@@ -115,6 +115,8 @@ static String status_string;
 
 static Widget overwrite_shell;
 
+static bool interactive_overwrite = false;
+
 static void ft_cancel(Widget w, XtPointer client_data, XtPointer call_data);
 static void ft_popup_callback(Widget w, XtPointer client_data,
     XtPointer call_data);
@@ -789,7 +791,7 @@ ft_popup_callback(Widget w _is_unused, XtPointer client_data _is_unused,
     PA_dialog_focus_xaction(local_file, NULL, NULL, NULL);
 
     /* Disallow overwrites. */
-    ft_private.allow_overwrite = false;
+    interactive_overwrite = false;
 }
 
 /* Cancel button pushed. */
@@ -1020,7 +1022,7 @@ ft_start(void)
 
     /* See if the local file can be overwritten. */
     if (ft_private.receive_flag && !ft_private.append_flag &&
-	    !ft_private.allow_overwrite) {
+	    !(ft_private.allow_overwrite || interactive_overwrite)) {
 	ft_local_file = fopen(ft_private.local_filename,
 		ft_private.ascii_flag? "r": "rb");
 	if (ft_local_file != NULL) {
@@ -1034,7 +1036,7 @@ ft_start(void)
     /* Open the local file. */
     ft_local_file = fopen(ft_private.local_filename, ft_local_fflag());
     if (ft_local_file == NULL) {
-	    ft_private.allow_overwrite = false;
+	    interactive_overwrite = false;
 	    popup_an_errno(errno, "Local file '%s'", ft_private.local_filename);
 	    return false;
     }
@@ -1146,7 +1148,7 @@ ft_start(void)
 	    }
 	}
 	popup_an_error("%s", get_message("ftUnable"));
-	ft_private.allow_overwrite = false;
+	interactive_overwrite = false;
 	return false;
     }
     (void) emulate_input(vb_buf(&r), vb_len(&r), false);
@@ -1409,7 +1411,7 @@ overwrite_okay_callback(Widget w _is_unused, XtPointer client_data _is_unused,
 {
     XtPopdown(overwrite_shell);
 
-    ft_private.allow_overwrite = true;
+    interactive_overwrite = true;
     if (ft_start()) {
 	XtPopdown(ft_shell);
 	popup_progress();

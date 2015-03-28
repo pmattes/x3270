@@ -1000,6 +1000,7 @@ static res_t base_resources[] = {
     { ResExtended,	aoffset(extended),	XRM_BOOLEAN },
     { ResFtCr,		aoffset(ft.cr),		XRM_STRING },
     { ResFtDirection,	aoffset(ft.direction),	XRM_STRING },
+    { ResFtExist,	aoffset(ft.exist),	XRM_STRING },
     { ResFtHost,	aoffset(ft.host),	XRM_STRING },
     { ResFtHostFile,	aoffset(ft.host_file),	XRM_STRING },
     { ResFtLocalFile,	aoffset(ft.local_file),	XRM_STRING },

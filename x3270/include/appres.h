@@ -149,6 +149,7 @@ typedef struct {
     struct {
 	char	*cr;
 	char	*direction;
+	char	*exist;
 	char	*host;
 	char	*host_file;
 	char	*local_file;

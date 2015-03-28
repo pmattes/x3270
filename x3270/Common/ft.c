@@ -144,6 +144,8 @@ ft_init(void)
     ft_private.ascii_flag = true;
     ft_private.cr_flag = ft_private.ascii_flag;
     ft_private.remap_flag = ft_private.ascii_flag;
+    ft_private.allow_overwrite = false;
+    ft_private.append_flag = false;
     ft_private.recfm = DEFAULT_RECFM;
     ft_private.units = DEFAULT_UNITS;
 
@@ -215,6 +217,22 @@ ft_init(void)
 	    appres.ft.remap = NULL;
 	}
     }
+    if (appres.ft.exist) {
+	if (!strcasecmp(appres.ft.exist, "keep")) {
+	    ft_private.allow_overwrite = false;
+	    ft_private.append_flag = false;
+	} else if (!strcasecmp(appres.ft.exist, "replace")) {
+	    ft_private.allow_overwrite = true;
+	    ft_private.append_flag = false;
+	} else if (!strcasecmp(appres.ft.exist, "append")) {
+	    ft_private.allow_overwrite = false;
+	    ft_private.append_flag = true;
+	} else {
+	    xs_warning("Invalid %s '%s', ignoring", ResFtExist,
+		    appres.ft.exist);
+	    appres.ft.exist = NULL;
+	}
+    }
 }
 
 /* Return the right value for fopen()ing the local file. */
@@ -244,7 +262,6 @@ ft_didnt_start(ioid_t id _is_unused)
 	    unlink(ft_private.local_filename);
 	}
     }
-    ft_private.allow_overwrite = false;
 
     ft_complete(get_message("ftStartTimeout"));
     sms_continue();
@@ -517,6 +534,12 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	    Free(tp[PARM_REMAP].value);
 	}
 	tp[PARM_REMAP].value = NewString(appres.ft.remap);
+    }
+    if (appres.ft.exist) {
+	if (tp[PARM_EXIST].value) {
+	    Free(tp[PARM_EXIST].value);
+	}
+	tp[PARM_EXIST].value = NewString(appres.ft.exist);
     }
 
     /* See what they specified. */

@@ -160,6 +160,8 @@ XtResource resources[] = {
       offset(ft.cr), XtRString, 0 },
     { ResFtDirection, ClsFtDirection, XtRString, sizeof(char *),
       offset(ft.direction), XtRString, 0 },
+    { ResFtExist, ClsFtExist, XtRString, sizeof(char *),
+      offset(ft.exist), XtRString, 0 },
     { ResFtHost, ClsFtHost, XtRString, sizeof(char *),
       offset(ft.host), XtRString, 0 },
     { ResFtHostFile, ClsFtHostFile, XtRString, sizeof(char *),
