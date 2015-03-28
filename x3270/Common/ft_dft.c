@@ -262,7 +262,7 @@ dft_data_insert(struct data_buffer *data_bufr)
 		int rv = 1;
 
 		/* Write the data out to the file. */
-	    	if (ft_private.ascii_flag && (remap_flag || cr_flag)) {
+	    	if (ft_private.ascii_flag && (remap_flag || ft_private.cr_flag)) {
 			size_t obuf_len = 4 * my_length;
 			char *ob0 = Malloc(obuf_len);
 			char *ob = ob0;
@@ -275,7 +275,7 @@ dft_data_insert(struct data_buffer *data_bufr)
 			    	unsigned char c = *s++;
 
 				/* Strip CR's and ^Z's. */
-				if (cr_flag && ((c == '\r' || c == 0x1a))) {
+				if (ft_private.cr_flag && ((c == '\r' || c == 0x1a))) {
 					continue;
 				}
 
@@ -491,7 +491,7 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 	}
 
 	/* Expand NL to CR/LF. */
-	if (cr_flag && !ft_last_cr && c == '\n') {
+	if (ft_private.cr_flag && !ft_last_cr && c == '\n') {
 	    	if (ft_last_dbcs) {
 		    	*bufptr = EBC_si;
 			dft_ungetc_cache[0] = '\r';
@@ -574,7 +574,7 @@ dft_get_request(void)
 					   allowed */
 	bufptr = obuf + 17;
 	while (!dft_eof && numbytes) {
-	    	if (ft_private.ascii_flag && (remap_flag || cr_flag)) {
+	    	if (ft_private.ascii_flag && (remap_flag || ft_private.cr_flag)) {
 		    	numread = dft_ascii_read(bufptr, numbytes);
 			if (numread == (size_t)-1) {
 				dft_eof = true;

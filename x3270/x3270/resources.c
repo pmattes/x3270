@@ -156,6 +156,8 @@ XtResource resources[] = {
       offset(ssl.key_passwd), XtRString, 0 },
 #endif /*]*/
 
+    { ResFtCr, ClsFtCr, XtRString, sizeof(char *),
+      offset(ft.cr), XtRString, 0 },
     { ResFtDirection, ClsFtDirection, XtRString, sizeof(char *),
       offset(ft.direction), XtRString, 0 },
     { ResFtHost, ClsFtHost, XtRString, sizeof(char *),

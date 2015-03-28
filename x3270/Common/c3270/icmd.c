@@ -169,12 +169,13 @@ interactive_transfer(char ***params, unsigned *num_params)
     char hostfile[KW_SIZE];
     char localfile[KW_SIZE];
     int kw_ix = 0;
-    int receive = 1;
+    bool receive = true;
     enum { HT_TSO, HT_VM, HT_CICS } htype = HT_TSO;
     bool ascii = ft_private.ascii_flag;
     int remap = 1;
     int n;
     enum { CR_REMOVE, CR_ADD, CR_KEEP } cr_mode = CR_REMOVE;
+    char *default_cr;
     enum { FE_KEEP, FE_REPLACE, FE_APPEND } fe_mode = FE_KEEP;
     enum { RF_NONE, RF_FIXED, RF_VARIABLE, RF_UNDEFINED } rf_mode = RF_NONE;
     enum { AT_NONE, AT_TRACKS, AT_CYLINDERS, AT_AVBLOCK } at_mode = AT_NONE;
@@ -204,13 +205,20 @@ at the VM/CMS or TSO command prompt.\n");
 	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 	    return -1;
 	}
-	if (!inbuf[0] || !strncasecmp(inbuf, "receive", strlen(inbuf))) {
+	if (!inbuf[0]) {
 	    receive = ft_private.receive_flag;
+	    snprintf(kw[kw_ix++], KW_SIZE, "Direction=%s",
+		    receive? "receive": "send");
+	    break;
+	}
+	if (!strncasecmp(inbuf, "receive", strlen(inbuf))) {
+	    strcpy(kw[kw_ix++], "Direction=receive");
+	    receive = true;
 	    break;
 	}
 	if (!strncasecmp(inbuf, "send", strlen(inbuf))) {
 	    strcpy(kw[kw_ix++], "Direction=send");
-	    receive = 0;
+	    receive = false;
 	    break;
 	}
     }
@@ -361,12 +369,23 @@ For ASCII transfers, carriage return (CR) characters can be handled specially.\n
 'remove' means that CRs will be removed during the transfer.\n\
 'add' means that CRs will be added to each record during the transfer.\n\
 'keep' means that no special action is taken with CRs.\n");
+	default_cr = ft_private.cr_flag? (receive? "remove": "add"): "keep";
 	for (;;) {
-	    printf("CR handling: (remove/add/keep) [remove] ");
-	    if (get_input(inbuf, sizeof(inbuf)) == NULL)
+	    printf("CR handling: (remove/add/keep) [%s] ", default_cr);
+	    if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 		return -1;
-	    if (!inbuf[0] || !strncasecmp(inbuf, "remove", strlen(inbuf)))
+	    }
+	    if (!inbuf[0]) {
+		cr_mode = ft_private.cr_flag? (receive? CR_REMOVE: CR_ADD):
+					      CR_KEEP;
+		snprintf(kw[kw_ix++], KW_SIZE, "Cr=%s", default_cr);
 		break;
+	    }
+	    if (!strncasecmp(inbuf, "remove", strlen(inbuf))) {
+		strcpy(kw[kw_ix++], "Cr=remove");
+		cr_mode = CR_REMOVE;
+		break;
+	    }
 	    if (!strncasecmp(inbuf, "add", strlen(inbuf))) {
 		strcpy(kw[kw_ix++], "Cr=add");
 		cr_mode = CR_ADD;

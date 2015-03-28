@@ -59,7 +59,6 @@
 enum ft_state ft_state = FT_NONE;	/* File transfer state */
 FILE *ft_local_file = NULL;		/* File descriptor for local file */
 bool ft_last_cr = false;		/* CR was last char in local file */
-bool cr_flag = true;			/* Add crlf to each line */
 bool remap_flag = true;		/* Remap ASCII<->EBCDIC */
 unsigned long ft_length = 0;		/* Length of transfer */
 #if defined(_WIN32) /*[*/
@@ -144,6 +143,7 @@ ft_init(void)
     ft_private.receive_flag = true;
     ft_private.host_type = HT_TSO;
     ft_private.ascii_flag = true;
+    ft_private.cr_flag = ft_private.ascii_flag;
     ft_private.recfm = DEFAULT_RECFM;
     ft_private.units = DEFAULT_UNITS;
 
@@ -189,6 +189,19 @@ ft_init(void)
 	} else {
 	    xs_warning("Invalid %s '%s', ignoring", ResFtMode, appres.ft.mode);
 	    appres.ft.host = NULL;
+	}
+    }
+    if (appres.ft.cr) { /* must come after processing "ascii" */
+	if (!strcasecmp(appres.ft.cr, "auto")) {
+	    ft_private.cr_flag = ft_private.ascii_flag;
+	} else if (!strcasecmp(appres.ft.cr, "add") ||
+		   !strcasecmp(appres.ft.cr, "remove")) {
+	    ft_private.cr_flag = true;
+	} else if (!strcasecmp(appres.ft.cr, "keep")) {
+	    ft_private.cr_flag = false;
+	} else {
+	    xs_warning("Invalid %s '%s', ignoring", ResFtCr, appres.ft.cr);
+	    appres.ft.cr = NULL;
 	}
     }
 }
@@ -452,6 +465,12 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     /* Override defaults from resources. */
+    if (appres.ft.cr) {
+	if (tp[PARM_CR].value) {
+	    Free(tp[PARM_CR].value);
+	}
+	tp[PARM_CR].value = NewString(appres.ft.cr);
+    }
     if (appres.ft.direction) {
 	if (tp[PARM_DIRECTION].value) {
 	    Free(tp[PARM_DIRECTION].value);
@@ -563,14 +582,14 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     ft_private.allow_overwrite = !strcasecmp(tp[PARM_EXIST].value, "replace");
     ft_private.ascii_flag = !strcasecmp(tp[PARM_MODE].value, "ascii");
     if (!strcasecmp(tp[PARM_CR].value, "auto")) {
-	cr_flag = ft_private.ascii_flag;
+	ft_private.cr_flag = ft_private.ascii_flag;
     } else {
 	if (!ft_private.ascii_flag) {
 	    popup_an_error("Invalid 'Cr' option for ASCII mode");
 	    return false;
 	}
-	cr_flag = !strcasecmp(tp[PARM_CR].value, "remove") ||
-		  !strcasecmp(tp[PARM_CR].value, "add");
+	ft_private.cr_flag = !strcasecmp(tp[PARM_CR].value, "remove") ||
+			     !strcasecmp(tp[PARM_CR].value, "add");
     }
     if (ft_private.ascii_flag) {
 	remap_flag = !strcasecmp(tp[PARM_REMAP].value, "yes");
@@ -641,7 +660,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     } else if (ft_private.host_type == HT_CICS) {
 	vb_appends(&r, "BINARY");
     }
-    if (cr_flag) {
+    if (ft_private.cr_flag) {
 	vb_appends(&r, " CRLF");
     } else if (ft_private.host_type == HT_CICS) {
 	vb_appends(&r, " NOCRLF");

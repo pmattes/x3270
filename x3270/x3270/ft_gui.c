@@ -546,7 +546,7 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(cr_widget,
-	    ft_private.ascii_flag && cr_flag? dot: no_dot);
+	    ft_private.ascii_flag && ft_private.cr_flag? dot: no_dot);
     XtAddCallback(cr_widget, XtNcallback, toggle_cr, 0);
     dialog_register_sensitivity(cr_widget,
 	    NULL, false,
@@ -861,9 +861,9 @@ toggle_ascii(Widget w _is_unused, XtPointer client_data,
 	    ft_private.ascii_flag? diamond: no_diamond);
     dialog_mark_toggle(binary_toggle,
 	    ft_private.ascii_flag? no_diamond: diamond);
-    cr_flag = ft_private.ascii_flag;
+    ft_private.cr_flag = ft_private.ascii_flag;
     remap_flag = ft_private.ascii_flag;
-    dialog_mark_toggle(cr_widget, cr_flag? dot: no_dot);
+    dialog_mark_toggle(cr_widget, ft_private.cr_flag? dot: no_dot);
     dialog_mark_toggle(remap_widget, remap_flag? dot: no_dot);
     dialog_check_sensitivity(&ft_private.ascii_flag);
 }
@@ -873,9 +873,9 @@ static void
 toggle_cr(Widget w, XtPointer client_data _is_unused, XtPointer call_data _is_unused)
 {
     /* Toggle the cr flag */
-    cr_flag = !cr_flag;
+    ft_private.cr_flag = !ft_private.cr_flag;
 
-    dialog_mark_toggle(w, cr_flag? dot: no_dot);
+    dialog_mark_toggle(w, ft_private.cr_flag? dot: no_dot);
 }
 
 /* Append option. */
@@ -1050,7 +1050,7 @@ ft_start(void)
     } else if (ft_private.host_type == HT_CICS) {
 	vb_appends(&r, "BINARY");
     }
-    if (ft_private.ascii_flag && cr_flag) {
+    if (ft_private.ascii_flag && ft_private.cr_flag) {
 	vb_appends(&r, " CRLF");
     } else if (ft_private.host_type == HT_CICS) {
 	vb_appends(&r, " NOCRLF");

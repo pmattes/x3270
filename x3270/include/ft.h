@@ -32,7 +32,6 @@
  *		Global declarations for ft.c.
  */
 
-extern bool cr_flag;
 extern unsigned long ft_length;
 extern FILE *ft_local_file;
 enum ft_state {

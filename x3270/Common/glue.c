@@ -998,6 +998,7 @@ static res_t base_resources[] = {
     { ResEof,		aoffset(linemode.eof),	XRM_STRING },
     { ResErase,		aoffset(linemode.erase),	XRM_STRING },
     { ResExtended,	aoffset(extended),	XRM_BOOLEAN },
+    { ResFtCr,		aoffset(ft.cr),		XRM_STRING },
     { ResFtDirection,	aoffset(ft.direction),	XRM_STRING },
     { ResFtHost,	aoffset(ft.host),	XRM_STRING },
     { ResFtHostFile,	aoffset(ft.host_file),	XRM_STRING },

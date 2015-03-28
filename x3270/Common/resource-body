@@ -1154,13 +1154,27 @@ description
     to the <b>Transfer</b> action. 
 .
 
+name ftCr
+type s
+applies a
+groups i
+default auto
+description
+    Defines how line separators (carriage returns and line feeds) are handled
+    when transferring ASCII files with IND$FILE.
+    The value can be auto, which will add them when files are received from the
+    host and remove them when they are sent to the host, add (same as auto),
+    remove (same as auto), or keep, meaning no special processing is done.
+.
+
 name ftDirection
 type s
 applies a
 groups i
+default receive
 description
-    Defines the default file transfer direction, from the perspective of the
-    workstation, which is usually receive.
+    Defines the default IND$FILE file transfer direction, from the perspective
+    of the workstation.
     The value can be either send (send file from workstation to host) or
     receive (receive file from host to workstation).
 .
@@ -1171,8 +1185,8 @@ applies a
 groups i
 default tso
 description
-    Defines the default host type for file transfers.
-    The value can be either vm, tso or cics.
+    Defines the default host type for IND$FILE file transfers.
+    The value can be vm, tso or cics.
 .
 
 name ftHostFile
@@ -1180,7 +1194,7 @@ type s
 applies a
 groups i
 description
-    Defines the default host file name for file transfers.
+    Defines the default host file name for IND$FILE file transfers.
 .
 
 name ftLocalFile
@@ -1188,7 +1202,7 @@ type s
 applies a
 groups i
 description
-    Defines the default local file name for file transfers.
+    Defines the default local file name for IND$FILE file transfers.
 .
 
 name ftMode
@@ -1197,8 +1211,8 @@ applies a
 groups i
 default ascii
 description
-    Defines the default mode for file transfers: ascii (text, with translation
-    between the workstation's code page and EBCDIC), or binary (no
+    Defines the default mode for IND$FILE file transfers: ascii (text, with
+    translation between the workstation's code page and EBCDIC), or binary (no
     translation).
 .
 

@@ -186,8 +186,10 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 
 		/* Map it. */
 		c = conv[quadrant].xlate[ix];
-		if (ft_private.ascii_flag && cr_flag && (c == '\r' || c == 0x1a))
+		if (ft_private.ascii_flag && ft_private.cr_flag &&
+			(c == '\r' || c == 0x1a)) {
 			continue;
+		}
 		if (!(ft_private.ascii_flag && remap_flag)) {
 		    	/* No further translation necessary. */
 		    	*ob++ = c;
@@ -716,7 +718,8 @@ xlate_getc(void)
 		} while (error == ME_SHORT);
 
 		/* Expand it. */
-		if (ft_private.ascii_flag && cr_flag && !ft_last_cr && c == '\n') {
+		if (ft_private.ascii_flag && ft_private.cr_flag &&
+			!ft_last_cr && c == '\n') {
 			nc = download_convert((unsigned const char *)"\r", 1,
 				cbuf);
 		} else {
