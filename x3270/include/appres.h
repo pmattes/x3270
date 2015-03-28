@@ -153,6 +153,7 @@ typedef struct {
 	char	*host_file;
 	char	*local_file;
 	char	*mode;
+	char	*remap;
     } ft;
 
     /* c3270/wc3270-specific fields. */

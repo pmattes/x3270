@@ -59,7 +59,6 @@
 enum ft_state ft_state = FT_NONE;	/* File transfer state */
 FILE *ft_local_file = NULL;		/* File descriptor for local file */
 bool ft_last_cr = false;		/* CR was last char in local file */
-bool remap_flag = true;		/* Remap ASCII<->EBCDIC */
 unsigned long ft_length = 0;		/* Length of transfer */
 #if defined(_WIN32) /*[*/
 int ft_windows_codepage;		/* Windows code page */
@@ -144,6 +143,7 @@ ft_init(void)
     ft_private.host_type = HT_TSO;
     ft_private.ascii_flag = true;
     ft_private.cr_flag = ft_private.ascii_flag;
+    ft_private.remap_flag = ft_private.ascii_flag;
     ft_private.recfm = DEFAULT_RECFM;
     ft_private.units = DEFAULT_UNITS;
 
@@ -202,6 +202,17 @@ ft_init(void)
 	} else {
 	    xs_warning("Invalid %s '%s', ignoring", ResFtCr, appres.ft.cr);
 	    appres.ft.cr = NULL;
+	}
+    }
+    if (appres.ft.remap) {
+	if (!strcasecmp(appres.ft.remap, "yes")) {
+	    ft_private.remap_flag = true;
+	} else if (!strcasecmp(appres.ft.remap, "no")) {
+	    ft_private.remap_flag = false;
+	} else {
+	    xs_warning("Invalid %s '%s', ignoring", ResFtRemap,
+		    appres.ft.remap);
+	    appres.ft.remap = NULL;
 	}
     }
 }
@@ -501,6 +512,12 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	tp[PARM_MODE].value = NewString(appres.ft.mode);
     }
+    if (appres.ft.remap) {
+	if (tp[PARM_REMAP].value) {
+	    Free(tp[PARM_REMAP].value);
+	}
+	tp[PARM_REMAP].value = NewString(appres.ft.remap);
+    }
 
     /* See what they specified. */
     for (j = 0; j < xnparams; j++) {
@@ -592,7 +609,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 			     !strcasecmp(tp[PARM_CR].value, "add");
     }
     if (ft_private.ascii_flag) {
-	remap_flag = !strcasecmp(tp[PARM_REMAP].value, "yes");
+	ft_private.remap_flag = !strcasecmp(tp[PARM_REMAP].value, "yes");
     }
     if (!strcasecmp(tp[PARM_HOST].value, "tso")) {
 	ft_private.host_type = HT_TSO;

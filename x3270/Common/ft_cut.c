@@ -190,7 +190,7 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 			(c == '\r' || c == 0x1a)) {
 			continue;
 		}
-		if (!(ft_private.ascii_flag && remap_flag)) {
+		if (!(ft_private.ascii_flag && ft_private.remap_flag)) {
 		    	/* No further translation necessary. */
 		    	*ob++ = c;
 			obuf_len--;
@@ -331,7 +331,7 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 			continue;
 		}
 
-		if (!(ft_private.ascii_flag && remap_flag)) {
+		if (!(ft_private.ascii_flag && ft_private.remap_flag)) {
 			ob += store_download(c, ob);
 			buf++;
 			len--;

@@ -43,7 +43,6 @@ enum ft_state {
 };
 extern bool ft_last_cr;
 extern enum ft_state ft_state;
-extern bool remap_flag;
 extern unsigned char i_ft2asc[], i_asc2ft[];
 
 enum ftd {

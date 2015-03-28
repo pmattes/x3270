@@ -262,7 +262,7 @@ dft_data_insert(struct data_buffer *data_bufr)
 		int rv = 1;
 
 		/* Write the data out to the file. */
-	    	if (ft_private.ascii_flag && (remap_flag || ft_private.cr_flag)) {
+	    	if (ft_private.ascii_flag && (ft_private.remap_flag || ft_private.cr_flag)) {
 			size_t obuf_len = 4 * my_length;
 			char *ob0 = Malloc(obuf_len);
 			char *ob = ob0;
@@ -279,7 +279,7 @@ dft_data_insert(struct data_buffer *data_bufr)
 					continue;
 				}
 
-				if (!remap_flag) {
+				if (!ft_private.remap_flag) {
 				    	*ob++ = c;
 					obuf_len--;
 					continue;
@@ -459,7 +459,7 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 		return nm;
 	}
 
-	if (remap_flag) {
+	if (ft_private.remap_flag) {
 		/* Read bytes until we have a legal multibyte sequence. */
 		do {
 			int consumed;
@@ -509,7 +509,7 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 	ft_last_cr = (c == '\r');
 
 	/* The no-remap case is pretty simple. */
-	if (!remap_flag) {
+	if (!ft_private.remap_flag) {
 	    	*bufptr = c;
 		return 1;
 	}
@@ -574,7 +574,7 @@ dft_get_request(void)
 					   allowed */
 	bufptr = obuf + 17;
 	while (!dft_eof && numbytes) {
-	    	if (ft_private.ascii_flag && (remap_flag || ft_private.cr_flag)) {
+	    	if (ft_private.ascii_flag && (ft_private.remap_flag || ft_private.cr_flag)) {
 		    	numread = dft_ascii_read(bufptr, numbytes);
 			if (numread == (size_t)-1) {
 				dft_eof = true;

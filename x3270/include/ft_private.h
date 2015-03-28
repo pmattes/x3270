@@ -62,6 +62,7 @@ typedef struct {
     host_type_t host_type;
     bool ascii_flag;
     bool cr_flag;
+    bool remap_flag;
     enum recfm recfm;
     enum units units;
     bool allow_overwrite;

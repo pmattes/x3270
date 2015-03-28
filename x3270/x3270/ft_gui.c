@@ -563,7 +563,7 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(remap_widget,
-	    ft_private.ascii_flag && remap_flag? dot: no_dot);
+	    ft_private.ascii_flag && ft_private.remap_flag? dot: no_dot);
     XtAddCallback(remap_widget, XtNcallback, toggle_remap, NULL);
     dialog_register_sensitivity(remap_widget,
 	    &ft_private.ascii_flag, true,
@@ -862,9 +862,9 @@ toggle_ascii(Widget w _is_unused, XtPointer client_data,
     dialog_mark_toggle(binary_toggle,
 	    ft_private.ascii_flag? no_diamond: diamond);
     ft_private.cr_flag = ft_private.ascii_flag;
-    remap_flag = ft_private.ascii_flag;
+    ft_private.remap_flag = ft_private.ascii_flag;
     dialog_mark_toggle(cr_widget, ft_private.cr_flag? dot: no_dot);
-    dialog_mark_toggle(remap_widget, remap_flag? dot: no_dot);
+    dialog_mark_toggle(remap_widget, ft_private.remap_flag? dot: no_dot);
     dialog_check_sensitivity(&ft_private.ascii_flag);
 }
 
@@ -895,9 +895,9 @@ toggle_remap(Widget w, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
     /* Toggle Remap Flag */
-    remap_flag = !remap_flag;
+    ft_private.remap_flag = !ft_private.remap_flag;
 
-    dialog_mark_toggle(w, remap_flag? dot: no_dot);
+    dialog_mark_toggle(w, ft_private.remap_flag? dot: no_dot);
 }
 
 /*

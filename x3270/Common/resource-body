@@ -1216,6 +1216,20 @@ description
     translation).
 .
 
+name ftRemap
+type s
+applies a
+groups i
+default yes
+description
+    Controls whether ASCII files undergo a secondary translation with
+    IND$FILE file transfer. When set to yes, ASCII files are translated by
+    %p% to produce as accurate a mapping as possible between the workstation's
+    code page and the host's EBCDIC code page. When set to no, only the fixed
+    translation built into the IND$FILE application is run, which (roughly)
+    maps ISO 8859-1 to host code page 37.
+.
+
 name highlightBold
 type b
 applies x

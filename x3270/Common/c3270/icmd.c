@@ -172,7 +172,7 @@ interactive_transfer(char ***params, unsigned *num_params)
     bool receive = true;
     enum { HT_TSO, HT_VM, HT_CICS } htype = HT_TSO;
     bool ascii = ft_private.ascii_flag;
-    int remap = 1;
+    bool remap = ft_private.remap_flag;
     int n;
     enum { CR_REMOVE, CR_ADD, CR_KEEP } cr_mode = CR_REMOVE;
     char *default_cr;
@@ -423,16 +423,23 @@ translation to the IND$FILE program on the host.\n\
 #endif /*]*/
 	    get_host_codepage());
 	for (;;) {
-	    printf("Remap character set: (yes/no) [yes] ");
+	    printf("Remap character set: (yes/no) [%s] ",
+		    remap? "yes": "no");
 	    if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 		return -1;
 	    }
-	    if (!inbuf[0] || !strncasecmp(inbuf, "yes", strlen(inbuf))) {
+	    if (!inbuf[0]) {
+		snprintf(kw[kw_ix++], KW_SIZE, "Remap=%s", remap? "yes": "no");
+		break;
+	    }
+	    if (!strncasecmp(inbuf, "yes", strlen(inbuf))) {
+		strcpy(kw[kw_ix++], "Remap=yes");
+		remap = true;
 		break;
 	    }
 	    if (!strncasecmp(inbuf, "no", strlen(inbuf))) {
 		strcpy(kw[kw_ix++], "Remap=no");
-		remap = 0;
+		remap = false;
 		break;
 	    }
 	}
