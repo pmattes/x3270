@@ -1304,7 +1304,7 @@ success:
     if (any != NULL) {
 	sms->accumulated = false;
 	sms->msec = 0L;
-	run_action_entry(e, cause, count, count? params: NULL);
+	run_action_entry(any, cause, count, count? params: NULL);
 	screen_disp(false);
     } else {
 	popup_an_error("Unknown action: %s", aname);
