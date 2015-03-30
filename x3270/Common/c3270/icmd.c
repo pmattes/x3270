@@ -290,7 +290,7 @@ at the VM/CMS or TSO command prompt.\n");
 	    htype = ft_private.host_type;
 	    break;
 	}
-	if (ft_encode_host_type(inbuf, &ft_private.host_type)) {
+	if (ft_encode_host_type(inbuf, &htype)) {
 	    snprintf(kw[kw_ix++], KW_SIZE, "Host=%s", inbuf);
 	    htype = ft_private.host_type;
 	    break;
@@ -341,18 +341,26 @@ at the VM/CMS or TSO command prompt.\n");
 	}
 #endif /*]*/
 	printf("\
- For ASCII transfers, carriage return (CR) characters can be handled specially.\n\
- 'remove' means that CRs will be removed during the transfer.\n\
- 'add' means that CRs will be added to each record during the transfer.\n\
+ For ASCII transfers, carriage return (CR) characters can be handled specially.\n");
+	if (receive) {
+	    printf("\
+ 'add' means that CRs will be added to each record during the transfer.\n");
+	} else {
+	    printf("\
+ 'remove' means that CRs will be removed during the transfer.\n");
+	}
+	printf("\
  'keep' means that no special action is taken with CRs.\n");
-	default_cr = ft_private.cr_flag? (receive? "remove": "add"): "keep";
+	default_cr = ft_private.cr_flag? (receive? "add": "remove"): "keep";
 	for (;;) {
-	    printf("CR handling: (remove/add/keep) [%s] ", default_cr);
+	    printf("CR handling: (%s/keep) [%s] ",
+		    receive? "add": "remove",
+		    default_cr);
 	    if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 		return -1;
 	    }
 	    if (!inbuf[0]) {
-		cr_mode = ft_private.cr_flag? (receive? CR_REMOVE: CR_ADD):
+		cr_mode = ft_private.cr_flag? (receive? CR_ADD: CR_REMOVE):
 					      CR_KEEP;
 		snprintf(kw[kw_ix++], KW_SIZE, "Cr=%s", default_cr);
 		break;
@@ -477,17 +485,17 @@ transfer), replace it, or append the source file to it.\n");
 		    rf_mode = ft_private.recfm;
 		    break;
 		}
-		if (ft_encode_recfm(inbuf, &ft_private.recfm)) {
+		if (ft_encode_recfm(inbuf, &rf_mode)) {
 		    snprintf(kw[kw_ix++], KW_SIZE, "Recfm=%s", inbuf);
-		    rf_mode = ft_private.recfm;
 		    break;
 		}
 	    }
 
 	    printf("[optional] Destination file logical record length: ");
 	    n = getnum(0);
-	    if (n < 0)
+	    if (n < 0) {
 		return -1;
+	    }
 	    if (n > 0) {
 		sprintf(kw[kw_ix++], "Lrecl=%d", n);
 		lrecl = n;

@@ -551,7 +551,7 @@ ft_popup_init(void)
 	    ft_private.ascii_flag && ft_private.cr_flag? dot: no_dot);
     XtAddCallback(cr_widget, XtNcallback, toggle_cr, 0);
     dialog_register_sensitivity(cr_widget,
-	    NULL, false,
+	    &ft_private.ascii_flag, true,
 	    NULL, false,
 	    NULL, false);
 
