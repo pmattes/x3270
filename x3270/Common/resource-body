@@ -1235,6 +1235,18 @@ description
     translation).
 .
 
+name ftRecfm
+type s
+applies a
+groups i
+default default
+description
+    Defines the default record format for files sent to the host using
+    IND$FILE.
+    Possibe values are default, fixed, variable, and undefined.
+    The default value of 'default' lets IND$FILE choose an appropriate format.
+.
+
 name ftRemap
 type s
 applies a

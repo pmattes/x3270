@@ -137,24 +137,6 @@ getnum(int defval)
 }
 
 /*
- * Decode a host type.
- */
-static const char *
-decode_host_type(host_type_t t)
-{
-    switch (t) {
-    case HT_TSO:
-	return "tso";
-    case HT_VM:
-	return "vm";
-    case HT_CICS:
-	return "cics";
-    }
-
-    return "tso";
-}
-
-/*
  * Interactive file transfer command.
  * Called from Transfer_action.  Returns a new set of params.
  * Returns 0 for success, -1 for failure.
@@ -170,7 +152,7 @@ interactive_transfer(char ***params, unsigned *num_params)
     char localfile[KW_SIZE];
     int kw_ix = 0;
     bool receive = true;
-    enum { HT_TSO, HT_VM, HT_CICS } htype = HT_TSO;
+    host_type_t htype = HT_TSO;
     bool ascii = ft_private.ascii_flag;
     bool remap = ft_private.remap_flag;
     int n;
@@ -178,7 +160,7 @@ interactive_transfer(char ***params, unsigned *num_params)
     char *default_cr;
     enum { FE_KEEP, FE_REPLACE, FE_APPEND } fe_mode = FE_KEEP;
     char *default_fe;
-    enum { RF_NONE, RF_FIXED, RF_VARIABLE, RF_UNDEFINED } rf_mode = RF_NONE;
+    recfm_t rf_mode = DEFAULT_RECFM;
     enum { AT_NONE, AT_TRACKS, AT_CYLINDERS, AT_AVBLOCK } at_mode = AT_NONE;
     int lrecl = 0;
     int primary_space = 0, secondary_space = 0;
@@ -298,33 +280,26 @@ at the VM/CMS or TSO command prompt.\n");
 
     for (;;) {
 	printf("Host type: (tso/vm/cics) [%s] ",
-		decode_host_type(ft_private.host_type));
+		ft_decode_host_type(ft_private.host_type));
 	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 	    return -1;
 	}
 	if (!inbuf[0]) {
-	    strcpy(inbuf, decode_host_type(ft_private.host_type));
-	}
-	if (!strncasecmp(inbuf, "tso", strlen(inbuf))) {
-	    strcpy(kw[kw_ix++], "Host=tso");
-	    ft_private.host_type = htype = HT_TSO;
+	    snprintf(kw[kw_ix++], KW_SIZE, "Host=%s",
+		    ft_decode_host_type(ft_private.host_type));
+	    htype = ft_private.host_type;
 	    break;
 	}
-	if (!strncasecmp(inbuf, "vm", strlen(inbuf))) {
-	    strcpy(kw[kw_ix++], "Host=vm");
-	    ft_private.host_type = htype = HT_VM;
-	    break;
-	}
-	if (!strncasecmp(inbuf, "cics", strlen(inbuf))) {
-	    strcpy(kw[kw_ix++], "Host=cics");
-	    ft_private.host_type = htype = HT_CICS;
+	if (ft_encode_host_type(inbuf, &ft_private.host_type)) {
+	    snprintf(kw[kw_ix++], KW_SIZE, "Host=%s", inbuf);
+	    htype = ft_private.host_type;
 	    break;
 	}
     }
 
     printf("\
  An 'ascii' transfer does automatic translation between EBCDIC on the host and\n\
-ASCII on the workstation.\n\
+ ASCII on the workstation.\n\
  A 'binary' transfer does no data translation.\n");
 
     for (;;) {
@@ -366,10 +341,10 @@ ASCII on the workstation.\n\
 	}
 #endif /*]*/
 	printf("\
-For ASCII transfers, carriage return (CR) characters can be handled specially.\n\
-'remove' means that CRs will be removed during the transfer.\n\
-'add' means that CRs will be added to each record during the transfer.\n\
-'keep' means that no special action is taken with CRs.\n");
+ For ASCII transfers, carriage return (CR) characters can be handled specially.\n\
+ 'remove' means that CRs will be removed during the transfer.\n\
+ 'add' means that CRs will be added to each record during the transfer.\n\
+ 'keep' means that no special action is taken with CRs.\n");
 	default_cr = ft_private.cr_flag? (receive? "remove": "add"): "keep";
 	for (;;) {
 	    printf("CR handling: (remove/add/keep) [%s] ", default_cr);
@@ -399,24 +374,24 @@ For ASCII transfers, carriage return (CR) characters can be handled specially.\n
 	    }
 	}
 	printf("\
-    For ASCII transfers, "
+ For ASCII transfers, "
 #if defined(WC3270) /*[*/
 	       "wc3270"
 #else /*][*/
 	       "c3270"
 #endif /*]*/
 		       " can either remap the text to ensure as\n\
-    accurate a translation between "
+ accurate a translation between "
 #if defined(WC3270) /*[*/
 			"Windows code page %d"
 #else /*][*/
 			"%s"
 #endif /*]*/
 					     " and EBCDIC code\n\
-page %s as possible, or it can transfer text as-is and leave all\n\
-translation to the IND$FILE program on the host.\n\
-'yes' means that text will be translated.\n\
-'no' means that text will be transferred as-is.\n",
+ page %s as possible, or it can transfer text as-is and leave all\n\
+ translation to the IND$FILE program on the host.\n\
+ 'yes' means that text will be translated.\n\
+ 'no' means that text will be transferred as-is.\n",
 #if defined(WC3270) /*[*/
 	    windows_cp,
 #else /*][*/
@@ -490,27 +465,21 @@ transfer), replace it, or append the source file to it.\n");
     if (!receive) {
 	if (htype != HT_CICS) {
 	    for (;;) {
-		printf("[optional] Destinaton file record "
-			"format (fixed/variable/undefined): ");
+		printf("[optional] Destination file record "
+			"format (default/fixed/variable/undefined) [%s]: ",
+			ft_decode_recfm(ft_private.recfm));
 		if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 		    return -1;
 		}
 		if (!inbuf[0]) {
+		    snprintf(kw[kw_ix++], KW_SIZE, "Recfm=%s",
+			    ft_decode_recfm(ft_private.recfm));
+		    rf_mode = ft_private.recfm;
 		    break;
 		}
-		if (!strncasecmp(inbuf, "fixed", strlen(inbuf))) {
-		    sprintf(kw[kw_ix++], "Recfm=fixed");
-		    rf_mode = RF_FIXED;
-		    break;
-		}
-		if (!strncasecmp(inbuf, "variable", strlen(inbuf))) {
-		    sprintf(kw[kw_ix++], "Recfm=variable");
-		    rf_mode = RF_VARIABLE;
-		    break;
-		}
-		if (!strncasecmp(inbuf, "undefined", strlen(inbuf))) {
-		    sprintf(kw[kw_ix++], "Recfm=undefined");
-		    rf_mode = RF_UNDEFINED;
+		if (ft_encode_recfm(inbuf, &ft_private.recfm)) {
+		    snprintf(kw[kw_ix++], KW_SIZE, "Recfm=%s", inbuf);
+		    rf_mode = ft_private.recfm;
 		    break;
 		}
 	    }
@@ -645,21 +614,21 @@ transfer), replace it, or append the source file to it.\n");
 	    break;
 	}
     }
-    if (!receive && (rf_mode != RF_NONE || lrecl || primary_space ||
+    if (!receive && (rf_mode != DEFAULT_RECFM || lrecl || primary_space ||
 		secondary_space)) {
 
 	printf(" Destination file:\n");
 
 	switch (rf_mode) {
-	case RF_NONE:
+	case DEFAULT_RECFM:
 	    break;
-	case RF_FIXED:
+	case RECFM_FIXED:
 	    printf("  Record format: fixed\n");
 	    break;
-	case RF_VARIABLE:
+	case RECFM_VARIABLE:
 	    printf("  Record format: variable\n");
 	    break;
-	case RF_UNDEFINED:
+	case RECFM_UNDEFINED:
 	    printf("  Record format: undefined\n");
 	    break;
 	}

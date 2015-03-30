@@ -106,6 +106,52 @@ unsigned char i_ft2asc[256] = {
 0x5c,0x9f,0x53,0x54,0x55,0x56,0x57,0x58,0x59,0x5a,0xf4,0xf5,0xf6,0xf7,0xf8,0xf9,
 0x30,0x31,0x32,0x33,0x34,0x35,0x36,0x37,0x38,0x39,0xfa,0xfb,0xfc,0xfd,0xfe,0xff};
 
+/* Keywords for the Transfer action. */
+enum ft_parm_name {
+    PARM_DIRECTION,
+    PARM_HOST_FILE,
+    PARM_LOCAL_FILE,
+    PARM_HOST,
+    PARM_MODE,
+    PARM_CR,
+    PARM_REMAP,
+    PARM_EXIST,
+    PARM_RECFM,
+    PARM_LRECL,
+    PARM_BLKSIZE,
+    PARM_ALLOCATION,
+    PARM_PRIMARY_SPACE,
+    PARM_SECONDARY_SPACE,
+    PARM_BUFFER_SIZE,
+#if defined(_WIN32) /*[*/
+    PARM_WINDOWS_CODEPAGE,
+#endif /*]*/
+    N_PARMS
+};
+static struct {
+    const char *name;
+    char *value;
+    const char *keyword[4];
+} tp[N_PARMS] = {
+    { "Direction",	NULL, { "receive", "send" } },
+    { "HostFile" },
+    { "LocalFile" },
+    { "Host",		NULL, { "tso", "vm", "cics" } },
+    { "Mode",		NULL, { "ascii", "binary" } },
+    { "Cr",		NULL, { "auto", "remove",	"add", "keep" } },
+    { "Remap",		NULL, { "yes", "no" } },
+    { "Exist",		NULL, { "keep", "replace", "append" } },
+    { "Recfm",		NULL, { "default", "fixed", "variable", "undefined" } },
+    { "Lrecl" },
+    { "Blksize" },
+    { "Allocation",	NULL, { "default", "tracks", "cylinders", "avblock" } },
+    { "PrimarySpace" },
+    { "SecondarySpace" },
+    { "BufferSize" },
+#if defined(_WIN32) /*[*/
+    { "WindowsCodePage" },
+#endif /*]*/
+};
 enum ftd ft_dbcs_state = FT_DBCS_NONE;
 unsigned char ft_dbcs_byte1;
 bool ft_last_dbcs = false;
@@ -135,6 +181,58 @@ ft_register(void)
     register_actions(ft_actions, array_count(ft_actions));
 }
 
+/* Encode/decode for host type. */
+bool
+ft_encode_host_type(const char *s, host_type_t *ht)
+{
+    int k;
+
+    for (k = 0; tp[PARM_HOST].keyword[k] != NULL && k < 4; k++) {
+	if (!strcasecmp(s, tp[PARM_HOST].keyword[k]))  {
+	    *ht = (host_type_t)k;
+	    return true;
+	}
+    }
+
+    *ht = HT_TSO;
+    return false;
+}
+
+const char *
+ft_decode_host_type(host_type_t ht)
+{
+    if (ht < 0 || ht >= 3) {
+	return "unknown";
+    }
+    return tp[PARM_HOST].keyword[(int)ht];
+}
+
+/* Encode/decode for recfm. */
+bool
+ft_encode_recfm(const char *s, recfm_t *recfm)
+{
+    int k;
+
+    for (k = 0; tp[PARM_RECFM].keyword[k] != NULL && k < 4; k++) {
+	if (!strcasecmp(s, tp[PARM_RECFM].keyword[k]))  {
+	    *recfm = (recfm_t)k;
+	    return true;
+	}
+    }
+
+    *recfm = DEFAULT_RECFM;
+    return false;
+}
+
+const char *
+ft_decode_recfm(recfm_t recfm)
+{
+    if (recfm < 0 || recfm >= 4) {
+	return "unknown";
+    }
+    return tp[PARM_RECFM].keyword[(int)recfm];
+}
+
 void
 ft_init(void)
 {
@@ -161,17 +259,10 @@ ft_init(void)
 	    appres.ft.direction = NULL;
 	}
     }
-    if (appres.ft.host) {
-	if (!strcasecmp(appres.ft.host, "tso")) {
-	    ft_private.host_type = HT_TSO;
-	} else if (!strcasecmp(appres.ft.host, "vm")) {
-	    ft_private.host_type = HT_VM;
-	} else if (!strcasecmp(appres.ft.host, "cics")) {
-	    ft_private.host_type = HT_CICS;
-	} else {
-	    xs_warning("Invalid %s '%s', ignoring", ResFtHost, appres.ft.host);
-	    appres.ft.host = NULL;
-	}
+    if (appres.ft.host &&
+	    !ft_encode_host_type(appres.ft.host, &ft_private.host_type)) {
+	xs_warning("Invalid %s '%s', ignoring", ResFtHost, appres.ft.host);
+	appres.ft.host = NULL;
     }
     if (appres.ft.host_file) {
 	ft_private.host_filename = appres.ft.host_file;
@@ -232,6 +323,11 @@ ft_init(void)
 		    appres.ft.exist);
 	    appres.ft.exist = NULL;
 	}
+    }
+    if (appres.ft.recfm &&
+	    !ft_encode_recfm(appres.ft.recfm, &ft_private.recfm)) {
+	xs_warning("Invalid %s '%s', ignoring", ResFtRecfm, appres.ft.recfm);
+	appres.ft.recfm = NULL;
     }
 }
 
@@ -402,51 +498,6 @@ ft_in3270(bool ignored _is_unused)
  *   BufferSize			no default
  *   WindowsCodePage=n		no default
  */
-enum ft_parm_name {
-    PARM_DIRECTION,
-    PARM_HOST_FILE,
-    PARM_LOCAL_FILE,
-    PARM_HOST,
-    PARM_MODE,
-    PARM_CR,
-    PARM_REMAP,
-    PARM_EXIST,
-    PARM_RECFM,
-    PARM_LRECL,
-    PARM_BLKSIZE,
-    PARM_ALLOCATION,
-    PARM_PRIMARY_SPACE,
-    PARM_SECONDARY_SPACE,
-    PARM_BUFFER_SIZE,
-#if defined(_WIN32) /*[*/
-    PARM_WINDOWS_CODEPAGE,
-#endif /*]*/
-    N_PARMS
-};
-static struct {
-    const char *name;
-    char *value;
-    const char *keyword[4];
-} tp[N_PARMS] = {
-    { "Direction",	NULL, { "receive", "send" } },
-    { "HostFile" },
-    { "LocalFile" },
-    { "Host",		NULL, { "tso", "vm", "cics" } },
-    { "Mode",		NULL, { "ascii", "binary" } },
-    { "Cr",		NULL, { "auto", "remove",	"add", "keep" } },
-    { "Remap",		NULL, { "yes", "no" } },
-    { "Exist",		NULL, { "keep", "replace", "append" } },
-    { "Recfm",		NULL, { "default", "fixed", "variable", "undefined" } },
-    { "Lrecl" },
-    { "Blksize" },
-    { "Allocation",	NULL, { "default", "tracks", "cylinders", "avblock" } },
-    { "PrimarySpace" },
-    { "SecondarySpace" },
-    { "BufferSize" },
-#if defined(_WIN32) /*[*/
-    { "WindowsCodePage" },
-#endif /*]*/
-};
 
 static bool  
 Transfer_action(ia_t ia, unsigned argc, const char **argv)
@@ -492,7 +543,9 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	}
     }
 
-    /* Override defaults from resources. */
+    /*
+     * Override defaults from resources.
+     */
     if (appres.ft.cr) {
 	if (tp[PARM_CR].value) {
 	    Free(tp[PARM_CR].value);
@@ -540,6 +593,12 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	    Free(tp[PARM_EXIST].value);
 	}
 	tp[PARM_EXIST].value = NewString(appres.ft.exist);
+    }
+    if (appres.ft.recfm) {
+	if (tp[PARM_RECFM].value) {
+	    Free(tp[PARM_RECFM].value);
+	}
+	tp[PARM_RECFM].value = NewString(appres.ft.recfm);
     }
 
     /* See what they specified. */
@@ -634,22 +693,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     if (ft_private.ascii_flag) {
 	ft_private.remap_flag = !strcasecmp(tp[PARM_REMAP].value, "yes");
     }
-    if (!strcasecmp(tp[PARM_HOST].value, "tso")) {
-	ft_private.host_type = HT_TSO;
-    } else if (!strcasecmp(tp[PARM_HOST].value, "vm")) {
-	ft_private.host_type = HT_VM;
-    } else if (!strcasecmp(tp[PARM_HOST].value, "cics")) {
-	ft_private.host_type = HT_CICS;
-    } else {
-	assert(0);
-    }
-    ft_private.recfm = DEFAULT_RECFM;
-    for (k = 0; tp[PARM_RECFM].keyword[k] != NULL && k < 4; k++) {
-	if (!strcasecmp(tp[PARM_RECFM].value, tp[PARM_RECFM].keyword[k]))  {
-	    ft_private.recfm = (enum recfm)k;
-	    break;
-	}
-    }
+    (void) ft_encode_host_type(tp[PARM_HOST].value, &ft_private.host_type);
     ft_private.units = DEFAULT_UNITS;
     for (k = 0; tp[PARM_ALLOCATION].keyword[k] != NULL && k < 4; k++) {
 	if (!strcasecmp(tp[PARM_ALLOCATION].value,

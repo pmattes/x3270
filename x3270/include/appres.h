@@ -154,6 +154,7 @@ typedef struct {
 	char	*host_file;
 	char	*local_file;
 	char	*mode;
+	char	*recfm;
 	char	*remap;
     } ft;
 

@@ -170,6 +170,8 @@ XtResource resources[] = {
       offset(ft.local_file), XtRString, 0 },
     { ResFtMode, ClsFtMode, XtRString, sizeof(char *),
       offset(ft.mode), XtRString, 0 },
+    { ResFtRecfm, ClsFtRecfm, XtRString, sizeof(char *),
+      offset(ft.recfm), XtRString, 0 },
     { ResFtRemap, ClsFtRemap, XtRString, sizeof(char *),
       offset(ft.remap), XtRString, 0 },
 };

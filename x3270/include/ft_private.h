@@ -37,13 +37,17 @@ typedef enum {
     HT_VM,
     HT_CICS
 } host_type_t;
+extern bool ft_encode_host_type(const char *s, host_type_t *ht);
+extern const char *ft_decode_host_type(host_type_t ht);
 
-enum recfm {
+typedef enum recfm {
     DEFAULT_RECFM,
     RECFM_FIXED,
     RECFM_VARIABLE,
     RECFM_UNDEFINED
-};
+} recfm_t;
+extern bool ft_encode_recfm(const char *s, recfm_t *recfm);
+extern const char *ft_decode_recfm(recfm_t recfm);
 
 enum units {
     DEFAULT_UNITS,
@@ -70,3 +74,4 @@ typedef struct {
 } ft_private_t;
 
 extern ft_private_t ft_private;
+
