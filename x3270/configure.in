@@ -87,23 +87,23 @@ fi
 
 ALL=""
 DEPEND=""
-INSTALL=""
-INSTALLMAN=""
 CLEAN=""
 CLOBBER=""
+INSTALL=""
+INSTALLMAN=""
 
 for i in x3270 c3270 s3270 tcl3270 pr3287 wc3270 ws3270 wpr3287; do
     eval x=\$enable_$i
     if test "x$x" = xyes; then
 	ALL="$ALL $i"
 	DEPEND="$DEPEND $i-depend"
+	CLEAN="$CLEAN $i-clean"
+	CLOBBER="$CLOBBER $i-clobber"
 	case "$i" in
 	w*)	;;
 	*)	INSTALL="$INSTALL $i-install"
 		INSTALLMAN="$INSTALLMAN $i-install.man"
 	esac
-	CLEAN="$CLEAN $i-clean"
-	CLOBBER="$CLOBBER $i-clobber"
     fi
 done
 
@@ -120,17 +120,17 @@ fi
 if test "x$enable_wc3270" = xyes -o \
         "x$enable_ws3270" = xyes -o \
         "x$enable_wpr3287" = xyes; then
-    DEPEND="$CLEAN windows-lib-depend"
+    DEPEND="$DEPEND windows-lib-depend"
     CLEAN="$CLEAN windows-lib-clean"
     CLOBBER="$CLOBBER windows-lib-clobber"
 fi
 
 AC_SUBST(ALL)
 AC_SUBST(DEPEND)
-AC_SUBST(INSTALL)
-AC_SUBST(INSTALLMAN)
 AC_SUBST(CLEAN)
 AC_SUBST(CLOBBER)
+AC_SUBST(INSTALL)
+AC_SUBST(INSTALLMAN)
 
 if test "x$enable_x3270" = xyes; then
     AC_CONFIG_SUBDIRS(x3270)
