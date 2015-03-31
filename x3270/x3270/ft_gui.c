@@ -97,16 +97,16 @@ static struct toggle_list recfm_toggles = { recfm_options };
 static struct toggle_list units_toggles = { units_options };
 
 static bool recfm_default = true;
-static enum recfm r_default_recfm = DEFAULT_RECFM;
-static enum recfm r_fixed = RECFM_FIXED;
-static enum recfm r_variable = RECFM_VARIABLE;
-static enum recfm r_undefined = RECFM_UNDEFINED;
+static recfm_t r_default_recfm = DEFAULT_RECFM;
+static recfm_t r_fixed = RECFM_FIXED;
+static recfm_t r_variable = RECFM_VARIABLE;
+static recfm_t r_undefined = RECFM_UNDEFINED;
 
 static bool units_default = true;
-static enum units u_default_units = DEFAULT_UNITS;
-static enum units u_tracks = TRACKS;
-static enum units u_cylinders = CYLINDERS;
-static enum units u_avblock = AVBLOCK;
+static units_t u_default_units = DEFAULT_UNITS;
+static units_t u_tracks = TRACKS;
+static units_t u_cylinders = CYLINDERS;
+static units_t u_avblock = AVBLOCK;
 
 static sr_t *ft_sr = NULL;
 
@@ -831,7 +831,7 @@ ft_cancel(Widget w _is_unused, XtPointer client_data _is_unused,
 static void
 recfm_callback(Widget w, XtPointer user_data, XtPointer call_data _is_unused)
 {
-    ft_private.recfm = *(enum recfm *)user_data;
+    ft_private.recfm = *(recfm_t *)user_data;
     recfm_default = (ft_private.recfm == DEFAULT_RECFM);
     dialog_check_sensitivity(&recfm_default);
     dialog_flip_toggles(&recfm_toggles, w);
@@ -841,7 +841,7 @@ recfm_callback(Widget w, XtPointer user_data, XtPointer call_data _is_unused)
 static void
 units_callback(Widget w, XtPointer user_data, XtPointer call_data _is_unused)
 {
-    ft_private.units = *(enum units *)user_data;
+    ft_private.units = *(units_t *)user_data;
     units_default = (ft_private.units == DEFAULT_UNITS);
     dialog_check_sensitivity(&units_default);
     dialog_flip_toggles(&units_toggles, w);

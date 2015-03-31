@@ -1143,6 +1143,18 @@ description
     emulator display.
 .
 
+name ftAllocation
+type s
+applies a
+groups i
+default default
+description
+    Defines the default allocation type for files sent to TSO hosts by IND$FILE
+    file transfers.
+    Possible values are default, which lets the host decide the allocation
+    type, or tracks, cylinders, or avblock.
+.
+
 name ftBlksize
 type i
 applies a

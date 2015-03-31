@@ -40,7 +40,7 @@ typedef enum {
 extern bool ft_encode_host_type(const char *s, host_type_t *ht);
 extern const char *ft_decode_host_type(host_type_t ht);
 
-typedef enum recfm {
+typedef enum {
     DEFAULT_RECFM,
     RECFM_FIXED,
     RECFM_VARIABLE,
@@ -49,12 +49,14 @@ typedef enum recfm {
 extern bool ft_encode_recfm(const char *s, recfm_t *recfm);
 extern const char *ft_decode_recfm(recfm_t recfm);
 
-enum units {
+typedef enum {
     DEFAULT_UNITS,
     TRACKS,
     CYLINDERS,
     AVBLOCK
-};
+} units_t;
+extern bool ft_encode_units(const char *s, units_t *units);
+extern const char *ft_decode_units(units_t units);
 
 typedef struct {
     bool is_action;
@@ -67,8 +69,8 @@ typedef struct {
     bool ascii_flag;
     bool cr_flag;
     bool remap_flag;
-    enum recfm recfm;
-    enum units units;
+    recfm_t recfm;
+    units_t units;
     bool allow_overwrite;
     int lrecl;
     int blksize;

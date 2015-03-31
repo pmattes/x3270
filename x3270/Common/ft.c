@@ -233,6 +233,32 @@ ft_decode_recfm(recfm_t recfm)
     return tp[PARM_RECFM].keyword[(int)recfm];
 }
 
+/* Encode/decode for units (allocation). */
+bool
+ft_encode_units(const char *s, units_t *units)
+{
+    int k;
+
+    for (k = 0; tp[PARM_ALLOCATION].keyword[k] != NULL && k < 4; k++) {
+	if (!strncasecmp(s, tp[PARM_ALLOCATION].keyword[k], strlen(s)))  {
+	    *units = (units_t)k;
+	    return true;
+	}
+    }
+
+    *units = DEFAULT_UNITS;
+    return false;
+}
+
+const char *
+ft_decode_units(units_t units)
+{
+    if (units < 0 || units >= 4) {
+	return "unknown";
+    }
+    return tp[PARM_ALLOCATION].keyword[(int)units];
+}
+
 void
 ft_init(void)
 {
@@ -344,6 +370,12 @@ ft_init(void)
     }
     if (appres.ft.lrecl) {
 	ft_private.lrecl = appres.ft.lrecl;
+    }
+    if (appres.ft.allocation &&
+	    !ft_encode_units(appres.ft.allocation, &ft_private.units)) {
+	xs_warning("Invalid %s '%s', ignoring", ResFtAllocation,
+		appres.ft.allocation);
+	appres.ft.allocation = NULL;
     }
 }
 
@@ -562,6 +594,12 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     /*
      * Override defaults from resources.
      */
+    if (appres.ft.allocation) {
+	if (tp[PARM_ALLOCATION].value) {
+	    Free(tp[PARM_ALLOCATION].value);
+	}
+	tp[PARM_ALLOCATION].value = NewString(appres.ft.allocation);
+    }
     if (appres.ft.blksize) {
 	if (tp[PARM_BLKSIZE].value) {
 	    Free(tp[PARM_BLKSIZE].value);
@@ -735,14 +773,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	ft_private.remap_flag = !strcasecmp(tp[PARM_REMAP].value, "yes");
     }
     (void) ft_encode_host_type(tp[PARM_HOST].value, &ft_private.host_type);
-    ft_private.units = DEFAULT_UNITS;
-    for (k = 0; tp[PARM_ALLOCATION].keyword[k] != NULL && k < 4; k++) {
-	if (!strcasecmp(tp[PARM_ALLOCATION].value,
-			tp[PARM_ALLOCATION].keyword[k]))  {
-	    ft_private.units = (enum units)k;
-	    break;
-	}
-    }
+    (void) ft_encode_units(tp[PARM_ALLOCATION].value, &ft_private.units);
 
 #if defined(_WIN32) /*[*/
     if (tp[PARM_WINDOWS_CODEPAGE].value != NULL) {

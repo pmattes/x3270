@@ -161,7 +161,7 @@ interactive_transfer(char ***params, unsigned *num_params)
     enum { FE_KEEP, FE_REPLACE, FE_APPEND } fe_mode = FE_KEEP;
     char *default_fe;
     recfm_t rf_mode = DEFAULT_RECFM;
-    enum { AT_NONE, AT_TRACKS, AT_CYLINDERS, AT_AVBLOCK } at_mode = AT_NONE;
+    units_t at_mode = DEFAULT_UNITS;
     int lrecl = 0;
     int blksize = 0;
     int primary_space = 0, secondary_space = 0;
@@ -526,26 +526,22 @@ transfer), replace it, or append the source file to it.\n");
 	    for (;;) {
 		printf("[optional] Destination file "
 			"allocation type "
-			"(tracks/cylinders/avblock): ");
+			"(default/tracks/cylinders/avblock)");
+		if (ft_private.units) {
+		    printf(" [%s]", ft_decode_units(ft_private.units));
+		}
+		printf(": ");
 		if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 		    return -1;
 		}
 		if (!inbuf[0]) {
+		    snprintf(kw[kw_ix++], KW_SIZE, "Allocation=%s",
+			    ft_decode_units(ft_private.units));
+		    at_mode = ft_private.units;
 		    break;
 		}
-		if (!strncasecmp(inbuf, "tracks", strlen(inbuf))) {
-		    strcpy(kw[kw_ix++], "Allocation=tracks");
-		    at_mode = AT_TRACKS;
-		    break;
-		}
-		if (!strncasecmp(inbuf, "cylinders", strlen(inbuf))) {
-		    strcpy(kw[kw_ix++], "Allocation=cylinders");
-		    at_mode = AT_CYLINDERS;
-		    break;
-		}
-		if (!strncasecmp(inbuf, "avblock", strlen(inbuf))) {
-		    strcpy(kw[kw_ix++], "Allocation=avblock");
-		    at_mode = AT_AVBLOCK;
+		if (ft_encode_units(inbuf, &at_mode)) {
+		    snprintf(kw[kw_ix++], KW_SIZE, "Allocation=%s", inbuf);
 		    break;
 		}
 	    }
@@ -673,15 +669,15 @@ transfer), replace it, or append the source file to it.\n");
 		printf(" secondary %d", secondary_space);
 	    }
 	    switch (at_mode) {
-	    case AT_NONE:
+	    case DEFAULT_UNITS:
 		break;
-	    case AT_TRACKS:
+	    case TRACKS:
 		printf(" tracks");
 		break;
-	    case AT_CYLINDERS:
+	    case CYLINDERS:
 		printf(" cylinders");
 		break;
-	    case AT_AVBLOCK:
+	    case AVBLOCK:
 		printf(" avblock");
 		break;
 	    }

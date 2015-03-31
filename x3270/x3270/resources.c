@@ -156,6 +156,8 @@ XtResource resources[] = {
       offset(ssl.key_passwd), XtRString, 0 },
 #endif /*]*/
 
+    { ResFtAllocation, ClsFtAllocation, XtRString, sizeof(char *),
+      offset(ft.allocation), XtRString, 0 },
     { ResFtBlksize, ClsFtBlksize, XtRInt, sizeof(int),
       offset(ft.blksize), XtRString, "0" },
     { ResFtCr, ClsFtCr, XtRString, sizeof(char *),
