@@ -689,6 +689,12 @@ ft_popup_init(void)
 	    XtNeditType, XawtextEdit,
 	    XtNdisplayCaret, False,
 	    NULL);
+    if (ft_private.primary_space) {
+	s = xs_buffer("%d", ft_private.primary_space);
+	XtVaSetValues(primspace_widget, XtNstring, s, NULL);
+	XawTextSetInsertionPoint(primspace_widget, strlen(s));
+	XtFree(s);
+    }
     dialog_match_dimension(primspace_label, primspace_widget, XtNheight);
     w = XawTextGetSource(primspace_widget);
     if (w == NULL) {
@@ -725,6 +731,12 @@ ft_popup_init(void)
 	    XtNeditType, XawtextEdit,
 	    XtNdisplayCaret, False,
 	    NULL);
+    if (ft_private.secondary_space) {
+	s = xs_buffer("%d", ft_private.secondary_space);
+	XtVaSetValues(secspace_widget, XtNstring, s, NULL);
+	XawTextSetInsertionPoint(secspace_widget, strlen(s));
+	XtFree(s);
+    }
     dialog_match_dimension(secspace_label, secspace_widget, XtNheight);
     w = XawTextGetSource(secspace_widget);
     if (w == NULL) {

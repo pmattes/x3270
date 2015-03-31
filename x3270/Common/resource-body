@@ -1253,6 +1253,15 @@ description
     translation).
 .
 
+name ftPrimarySpace
+type i
+applies a
+groups i
+description
+    Defines the default primary space allocation for files sent to TSO hosts
+    via IND$FILE.
+.
+
 name ftRecfm
 type s
 applies a
@@ -1278,6 +1287,15 @@ description
     code page and the host's EBCDIC code page. When set to no, only the fixed
     translation built into the IND$FILE application is run, which (roughly)
     maps ISO 8859-1 to host code page 37.
+.
+
+name ftSecondarySpace
+type i
+applies a
+groups i
+description
+    Defines the default secondary space allocation for files sent to TSO hosts
+    via IND$FILE.
 .
 
 name highlightBold

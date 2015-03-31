@@ -248,6 +248,8 @@ ft_init(void)
     ft_private.units = DEFAULT_UNITS;
     ft_private.lrecl = 0;
     ft_private.blksize = 0;
+    ft_private.primary_space = 0;
+    ft_private.secondary_space = 0;
 
     /* Apply resources. */
     if (appres.ft.blksize) {
@@ -329,10 +331,16 @@ ft_init(void)
 	    appres.ft.exist = NULL;
 	}
     }
+    if (appres.ft.primary_space) {
+	ft_private.primary_space = appres.ft.primary_space;
+    }
     if (appres.ft.recfm &&
 	    !ft_encode_recfm(appres.ft.recfm, &ft_private.recfm)) {
 	xs_warning("Invalid %s '%s', ignoring", ResFtRecfm, appres.ft.recfm);
 	appres.ft.recfm = NULL;
+    }
+    if (appres.ft.secondary_space) {
+	ft_private.secondary_space = appres.ft.secondary_space;
     }
     if (appres.ft.lrecl) {
 	ft_private.lrecl = appres.ft.lrecl;
@@ -572,6 +580,12 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	tp[PARM_DIRECTION].value = NewString(appres.ft.direction);
     }
+    if (appres.ft.exist) {
+	if (tp[PARM_EXIST].value) {
+	    Free(tp[PARM_EXIST].value);
+	}
+	tp[PARM_EXIST].value = NewString(appres.ft.exist);
+    }
     if (appres.ft.host) {
 	if (tp[PARM_HOST].value) {
 	    Free(tp[PARM_HOST].value);
@@ -602,23 +616,30 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	tp[PARM_MODE].value = NewString(appres.ft.mode);
     }
-    if (appres.ft.remap) {
-	if (tp[PARM_REMAP].value) {
-	    Free(tp[PARM_REMAP].value);
+    if (appres.ft.primary_space) {
+	if (tp[PARM_PRIMARY_SPACE].value) {
+	    Free(tp[PARM_PRIMARY_SPACE].value);
 	}
-	tp[PARM_REMAP].value = NewString(appres.ft.remap);
-    }
-    if (appres.ft.exist) {
-	if (tp[PARM_EXIST].value) {
-	    Free(tp[PARM_EXIST].value);
-	}
-	tp[PARM_EXIST].value = NewString(appres.ft.exist);
+	tp[PARM_PRIMARY_SPACE].value = xs_buffer("%d", appres.ft.primary_space);
     }
     if (appres.ft.recfm) {
 	if (tp[PARM_RECFM].value) {
 	    Free(tp[PARM_RECFM].value);
 	}
 	tp[PARM_RECFM].value = NewString(appres.ft.recfm);
+    }
+    if (appres.ft.remap) {
+	if (tp[PARM_REMAP].value) {
+	    Free(tp[PARM_REMAP].value);
+	}
+	tp[PARM_REMAP].value = NewString(appres.ft.remap);
+    }
+    if (appres.ft.primary_space) {
+	if (tp[PARM_SECONDARY_SPACE].value) {
+	    Free(tp[PARM_SECONDARY_SPACE].value);
+	}
+	tp[PARM_SECONDARY_SPACE].value = xs_buffer("%d",
+		appres.ft.primary_space);
     }
 
     /* See what they specified. */

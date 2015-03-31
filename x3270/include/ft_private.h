@@ -72,6 +72,8 @@ typedef struct {
     bool allow_overwrite;
     int lrecl;
     int blksize;
+    int primary_space;
+    int secondary_space;
     bool is_cut;
 } ft_private_t;
 

@@ -174,10 +174,14 @@ XtResource resources[] = {
       offset(ft.lrecl), XtRString, "0" },
     { ResFtMode, ClsFtMode, XtRString, sizeof(char *),
       offset(ft.mode), XtRString, 0 },
+    { ResFtPrimarySpace, ClsFtPrimarySpace, XtRInt, sizeof(int),
+      offset(ft.primary_space), XtRString, "0" },
     { ResFtRecfm, ClsFtRecfm, XtRString, sizeof(char *),
       offset(ft.recfm), XtRString, 0 },
     { ResFtRemap, ClsFtRemap, XtRString, sizeof(char *),
       offset(ft.remap), XtRString, 0 },
+    { ResFtSecondarySpace, ClsFtSecondarySpace, XtRInt, sizeof(int),
+      offset(ft.secondary_space), XtRString, "0" },
 };
 #undef offset
 

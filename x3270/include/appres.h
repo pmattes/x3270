@@ -156,8 +156,10 @@ typedef struct {
 	char	*local_file;
 	int	 lrecl;
 	char	*mode;
+	int	 primary_space;
 	char	*recfm;
 	char	*remap;
+	int	 secondary_space;
     } ft;
 
     /* c3270/wc3270-specific fields. */

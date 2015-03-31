@@ -550,8 +550,12 @@ transfer), replace it, or append the source file to it.\n");
 		}
 	    }
 
-	    printf("[optional] Destination file primary space: ");
-	    n = getnum(0);
+	    printf("[optional] Destination file primary space");
+	    if (ft_private.primary_space) {
+		printf(" [%d]", ft_private.primary_space);
+	    }
+	    printf(": ");
+	    n = getnum(ft_private.primary_space);
 	    if (n < 0) {
 		return -1;
 	    }
@@ -560,8 +564,12 @@ transfer), replace it, or append the source file to it.\n");
 		primary_space = n;
 	    }
 
-	    printf("[optional] Destination file secondary space: ");
-	    n = getnum(0);
+	    printf("[optional] Destination file secondary space");
+	    if (ft_private.secondary_space) {
+		printf(" [%d]", ft_private.secondary_space);
+	    }
+	    printf(": ");
+	    n = getnum(ft_private.secondary_space);
 	    if (n < 0) {
 		return -1;
 	    }
