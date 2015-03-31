@@ -153,6 +153,7 @@ typedef struct {
 	char	*host;
 	char	*host_file;
 	char	*local_file;
+	int	 lrecl;
 	char	*mode;
 	char	*recfm;
 	char	*remap;

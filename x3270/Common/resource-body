@@ -1224,6 +1224,15 @@ description
     Defines the default local file name for IND$FILE file transfers.
 .
 
+name ftLrecl
+type i
+applies a
+groups i
+description
+    Defines the default logical record length for files sent to the host via
+    IND$FILE.
+.
+
 name ftMode
 type s
 applies a

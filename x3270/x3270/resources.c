@@ -168,6 +168,8 @@ XtResource resources[] = {
       offset(ft.host_file), XtRString, 0 },
     { ResFtLocalFile, ClsFtLocalFile, XtRString, sizeof(char *),
       offset(ft.local_file), XtRString, 0 },
+    { ResFtLrecl, ClsFtLrecl, XtRInt, sizeof(int),
+      offset(ft.lrecl), XtRString, "0" },
     { ResFtMode, ClsFtMode, XtRString, sizeof(char *),
       offset(ft.mode), XtRString, 0 },
     { ResFtRecfm, ClsFtRecfm, XtRString, sizeof(char *),

@@ -188,7 +188,7 @@ ft_encode_host_type(const char *s, host_type_t *ht)
     int k;
 
     for (k = 0; tp[PARM_HOST].keyword[k] != NULL && k < 4; k++) {
-	if (!strcasecmp(s, tp[PARM_HOST].keyword[k]))  {
+	if (!strncasecmp(s, tp[PARM_HOST].keyword[k], strlen(s)))  {
 	    *ht = (host_type_t)k;
 	    return true;
 	}
@@ -214,7 +214,7 @@ ft_encode_recfm(const char *s, recfm_t *recfm)
     int k;
 
     for (k = 0; tp[PARM_RECFM].keyword[k] != NULL && k < 4; k++) {
-	if (!strcasecmp(s, tp[PARM_RECFM].keyword[k]))  {
+	if (!strncasecmp(s, tp[PARM_RECFM].keyword[k], strlen(s)))  {
 	    *recfm = (recfm_t)k;
 	    return true;
 	}
@@ -246,6 +246,7 @@ ft_init(void)
     ft_private.append_flag = false;
     ft_private.recfm = DEFAULT_RECFM;
     ft_private.units = DEFAULT_UNITS;
+    ft_private.lrecl = 0;
 
     /* Apply resources. */
     if (appres.ft.direction) {
@@ -328,6 +329,9 @@ ft_init(void)
 	    !ft_encode_recfm(appres.ft.recfm, &ft_private.recfm)) {
 	xs_warning("Invalid %s '%s', ignoring", ResFtRecfm, appres.ft.recfm);
 	appres.ft.recfm = NULL;
+    }
+    if (appres.ft.lrecl) {
+	ft_private.lrecl = appres.ft.lrecl;
     }
 }
 
@@ -575,6 +579,12 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	    Free(tp[PARM_LOCAL_FILE].value);
 	}
 	tp[PARM_LOCAL_FILE].value = NewString(appres.ft.local_file);
+    }
+    if (appres.ft.lrecl) {
+	if (tp[PARM_LRECL].value) {
+	    Free(tp[PARM_LRECL].value);
+	}
+	tp[PARM_LRECL].value = xs_buffer("%d", appres.ft.lrecl);
     }
     if (appres.ft.mode) {
 	if (tp[PARM_MODE].value) {

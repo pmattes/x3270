@@ -491,13 +491,17 @@ transfer), replace it, or append the source file to it.\n");
 		}
 	    }
 
-	    printf("[optional] Destination file logical record length: ");
-	    n = getnum(0);
+	    printf("[optional] Destination file logical record length");
+	    if (ft_private.lrecl) {
+		printf(" [%d]", ft_private.lrecl);
+	    }
+	    printf(": ");
+	    n = getnum(ft_private.lrecl);
 	    if (n < 0) {
 		return -1;
 	    }
 	    if (n > 0) {
-		sprintf(kw[kw_ix++], "Lrecl=%d", n);
+		snprintf(kw[kw_ix++], KW_SIZE, "Lrecl=%d", n);
 		lrecl = n;
 	    }
 	}

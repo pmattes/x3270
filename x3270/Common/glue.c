@@ -1004,6 +1004,7 @@ static res_t base_resources[] = {
     { ResFtHost,	aoffset(ft.host),	XRM_STRING },
     { ResFtHostFile,	aoffset(ft.host_file),	XRM_STRING },
     { ResFtLocalFile,	aoffset(ft.local_file),	XRM_STRING },
+    { ResFtLrecl,	aoffset(ft.lrecl),	XRM_INT },
     { ResFtMode,	aoffset(ft.mode),	XRM_STRING },
     { ResFtRecfm,	aoffset(ft.recfm),	XRM_STRING },
     { ResFtRemap,	aoffset(ft.remap),	XRM_STRING },

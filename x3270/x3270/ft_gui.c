@@ -55,6 +55,7 @@
 #include "ft_dft.h"
 #include "ft_private.h"
 #include "kybd.h"
+#include "lazya.h"
 #include "objects.h"
 #include "popups.h"
 #include "utils.h"
@@ -434,6 +435,12 @@ ft_popup_init(void)
 	    XtNeditType, XawtextEdit,
 	    XtNdisplayCaret, False,
 	    NULL);
+    if (ft_private.lrecl && ft_private.host_type != HT_CICS) {
+	char *lr = lazyaf("%d", ft_private.lrecl);
+
+	XtVaSetValues(lrecl_widget, XtNstring, lr, NULL);
+	XawTextSetInsertionPoint(lrecl_widget, strlen(lr));
+    }
     dialog_match_dimension(lrecl_label, lrecl_widget, XtNheight);
     w = XawTextGetSource(lrecl_widget);
     if (w == NULL) {
