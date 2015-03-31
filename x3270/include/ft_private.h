@@ -71,6 +71,7 @@ typedef struct {
     enum units units;
     bool allow_overwrite;
     int lrecl;
+    int blksize;
     bool is_cut;
 } ft_private_t;
 

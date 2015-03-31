@@ -247,8 +247,12 @@ ft_init(void)
     ft_private.recfm = DEFAULT_RECFM;
     ft_private.units = DEFAULT_UNITS;
     ft_private.lrecl = 0;
+    ft_private.blksize = 0;
 
     /* Apply resources. */
+    if (appres.ft.blksize) {
+	ft_private.blksize = appres.ft.blksize;
+    }
     if (appres.ft.direction) {
 	if (!strcasecmp(appres.ft.direction, "receive")) {
 	    ft_private.receive_flag = true;
@@ -550,6 +554,12 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     /*
      * Override defaults from resources.
      */
+    if (appres.ft.blksize) {
+	if (tp[PARM_BLKSIZE].value) {
+	    Free(tp[PARM_BLKSIZE].value);
+	}
+	tp[PARM_BLKSIZE].value = xs_buffer("%d", appres.ft.blksize);
+    }
     if (appres.ft.cr) {
 	if (tp[PARM_CR].value) {
 	    Free(tp[PARM_CR].value);

@@ -147,6 +147,7 @@ typedef struct {
 
     /* File transfer fields. */
     struct {
+	int	 blksize;
 	char	*cr;
 	char	*direction;
 	char	*exist;

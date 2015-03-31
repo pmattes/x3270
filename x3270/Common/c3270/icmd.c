@@ -163,6 +163,7 @@ interactive_transfer(char ***params, unsigned *num_params)
     recfm_t rf_mode = DEFAULT_RECFM;
     enum { AT_NONE, AT_TRACKS, AT_CYLINDERS, AT_AVBLOCK } at_mode = AT_NONE;
     int lrecl = 0;
+    int blksize = 0;
     int primary_space = 0, secondary_space = 0;
     int i;
 
@@ -508,13 +509,18 @@ transfer), replace it, or append the source file to it.\n");
 
 	if (htype == HT_TSO) {
 
-	    printf("[optional] Destination file block size: ");
-	    n = getnum(0);
+	    printf("[optional] Destination file block size");
+	    if (ft_private.blksize) {
+		printf(" [%d]", ft_private.blksize);
+	    }
+	    printf(": ");
+	    n = getnum(ft_private.blksize);
 	    if (n < 0) {
 		return -1;
 	    }
 	    if (n > 0) {
-		sprintf(kw[kw_ix++], "Blksize=%d", n);
+		snprintf(kw[kw_ix++], KW_SIZE, "Blksize=%d", n);
+		blksize = n;
 	    }
 
 	    for (;;) {
@@ -646,6 +652,9 @@ transfer), replace it, or append the source file to it.\n");
 	}
 	if (lrecl) {
 	    printf("  Logical record length: %d\n", lrecl);
+	}
+	if (blksize) {
+	    printf("  Block size: %d\n", blksize);
 	}
 	if (primary_space || secondary_space) {
 	    printf("  Allocation:");

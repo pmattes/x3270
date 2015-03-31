@@ -465,7 +465,7 @@ ft_popup_init(void)
     dialog_register_sensitivity(blksize_label,
 	    &ft_private.receive_flag, false,
 	    &recfm_default, false,
-	    &host_is_tso_or_vm, true);
+	    &host_is_tso, true);
     blksize_widget = XtVaCreateManagedWidget(
 	    "value", asciiTextWidgetClass, ft_dialog,
 	    XtNfromVert, lrecl_widget,
@@ -476,6 +476,12 @@ ft_popup_init(void)
 	    XtNeditType, XawtextEdit,
 	    XtNdisplayCaret, False,
 	    NULL);
+    if (ft_private.blksize && ft_private.host_type != HT_CICS) {
+	char *bs = lazyaf("%d", ft_private.blksize);
+
+	XtVaSetValues(blksize_widget, XtNstring, bs, NULL);
+	XawTextSetInsertionPoint(blksize_widget, strlen(bs));
+    }
     dialog_match_dimension(blksize_label, blksize_widget, XtNheight);
     w = XawTextGetSource(blksize_widget);
     if (w == NULL) {
@@ -487,7 +493,7 @@ ft_popup_init(void)
     dialog_register_sensitivity(blksize_widget,
 	    &ft_private.receive_flag, false,
 	    &recfm_default, false,
-	    &host_is_tso_or_vm, true);
+	    &host_is_tso, true);
 
     /* Find the widest widget in the left column. */
     XtVaGetValues(send_toggle, XtNwidth, &maxw, NULL);
@@ -973,11 +979,11 @@ toggle_host_type(Widget w _is_unused, XtPointer client_data _is_unused,
 	    dialog_flip_toggles(&units_toggles, units_toggles.widgets[0]);
 	}
 	if (ft_private.host_type == HT_CICS) {
-	    /* Reset logical record size and block size. */
+	    /* Reset logical record size. */
 	    XtVaSetValues(lrecl_widget, XtNstring, "", NULL);
-	    XtVaSetValues(blksize_widget, XtNstring, "", NULL);
 	}
-	/* Reset primary and secondary space. */
+	/* Reset block size, primary space and secondary space. */
+	XtVaSetValues(blksize_widget, XtNstring, "", NULL);
 	XtVaSetValues(primspace_widget, XtNstring, "", NULL);
 	XtVaSetValues(secspace_widget, XtNstring, "", NULL);
     }

@@ -1143,6 +1143,15 @@ description
     emulator display.
 .
 
+name ftBlksize
+type i
+applies a
+groups i
+description
+    Defines the default block size for files sent to TSO hosts by IND$FILE
+    file transfers.
+.
+
 name ftCodePage
 type i
 applies w
