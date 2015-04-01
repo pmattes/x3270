@@ -80,6 +80,7 @@
 #include "see.h"
 #include "status.h"
 #include "tables.h"
+#include "telnet.h"
 #include "trace.h"
 #include "unicodec.h"
 #include "unicode_dbcs.h"
@@ -4355,6 +4356,9 @@ screen_change_model(int mn, int ovc, int ovr)
 	set_rows_cols(mn, ovc, ovr);
 	st_changed(ST_REMODEL, true);
 	screen_reinit(MODEL_CHANGE);
+
+	/* Redo the terminal type. */
+	net_set_default_termtype();
 }
 
 /*

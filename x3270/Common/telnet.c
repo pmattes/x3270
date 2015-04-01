@@ -596,7 +596,7 @@ net_connect(const char *host, char *portname, bool ls, bool *resolving,
     if (appres.termname == NULL) {
 	if (appres.nvt_mode) {
 	    termtype = "xterm";
-	} else if (appres.oversize) {
+	} else if (ov_rows || ov_cols) {
 	    termtype = "IBM-DYNAMIC";
 	} else if (std_ds_host) {
 	    (void) snprintf(ttype_tmpval, sizeof(ttype_tmpval), "IBM-327%c-%d",
@@ -1170,6 +1170,8 @@ net_disconnect(void)
     }
     refused_tls = false;
     any_host_data = false;
+
+    net_set_default_termtype();
 }
 
 
@@ -4390,4 +4392,27 @@ bool
 net_bound(void)
 {
     return (IN_E && tn3270e_bound);
+}
+
+/*
+ * Set the default termtype.
+ *
+ * This is called at init time, whenever we disconnect, and whenever the screen
+ * dimensions change (which by definition happens while we are disconnected).
+ * It sets 'termtype' to the default value, assuming an extended data stream
+ * host. When we connect to a particular host, we may use a different value
+ * (without the -E).
+ */
+void
+net_set_default_termtype(void)
+{
+    if (appres.termname) {
+	termtype = appres.termname;
+    } else if (appres.nvt_mode) {
+	termtype = "xterm";
+    } else if (ov_rows || ov_cols) {
+	termtype = "IBM-DYNAMIC";
+    } else {
+	termtype = full_model_name;
+    }
 }

@@ -387,11 +387,7 @@ model_init(void)
 	}
     }
     set_rows_cols(model_number, ovc, ovr);
-    if (appres.termname != NULL) {
-	termtype = appres.termname;
-    } else {
-	termtype = full_model_name;
-    }
+    net_set_default_termtype();
 }
 
 static void

@@ -2,6 +2,11 @@
 3.3 is the current development line for the x3270 suite.
 <h2>Changes in version 3.4alpha1, nn. Mon 2015</h2>
 <ul>
+ <li>[<i>x3270</i>] Fixed an issue where the terminal type would not be
+  reported to the host as IBM-DYNAMIC if the screen was put into oversize mode
+  via a menu selection (it was correct if oversize came from a resource). Also
+  made sure that the 'About->Configuration' display of the terminal type is
+  always correct.</li>
  <li>[all] Added resources to define the default values for each of the
   IND$FILE file transfer parameters. With two exceptions, the resources have
   the same names as the <b>Transfer</b> action keywords, with <b>ft</b>

@@ -70,6 +70,7 @@ bool net_bound(void);
 void ssl_base_init(char *cl_hostname, bool *pending);
 #endif /*]*/
 extern int linemode;
+void net_set_default_termtype(void);
 
 /* These are for linemode.c to call, not external users. */
 void net_cookedout(const char *buf, size_t len);
