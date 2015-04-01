@@ -546,32 +546,37 @@ transfer), replace it, or append the source file to it.\n");
 		}
 	    }
 
-	    printf("[optional] Destination file primary space");
-	    if (ft_private.primary_space) {
-		printf(" [%d]", ft_private.primary_space);
-	    }
-	    printf(": ");
-	    n = getnum(ft_private.primary_space);
-	    if (n < 0) {
-		return -1;
-	    }
-	    if (n > 0) {
-		sprintf(kw[kw_ix++], "PrimarySpace=%d", n);
-		primary_space = n;
-	    }
+	    if (at_mode != DEFAULT_UNITS) {
+		for (;;) {
+		    printf("Destination file primary space");
+		    if (ft_private.primary_space) {
+			printf(" [%d]", ft_private.primary_space);
+		    }
+		    printf(": ");
+		    n = getnum(ft_private.primary_space);
+		    if (n < 0) {
+			return -1;
+		    }
+		    if (n > 0) {
+			sprintf(kw[kw_ix++], "PrimarySpace=%d", n);
+			primary_space = n;
+			break;
+		    }
+		}
 
-	    printf("[optional] Destination file secondary space");
-	    if (ft_private.secondary_space) {
-		printf(" [%d]", ft_private.secondary_space);
-	    }
-	    printf(": ");
-	    n = getnum(ft_private.secondary_space);
-	    if (n < 0) {
-		return -1;
-	    }
-	    if (n > 0) {
-		sprintf(kw[kw_ix++], "SecondarySpace=%d", n);
-		secondary_space = n;
+		printf("[optional] Destination file secondary space");
+		if (ft_private.secondary_space) {
+		    printf(" [%d]", ft_private.secondary_space);
+		}
+		printf(": ");
+		n = getnum(ft_private.secondary_space);
+		if (n < 0) {
+		    return -1;
+		}
+		if (n > 0) {
+		    sprintf(kw[kw_ix++], "SecondarySpace=%d", n);
+		    secondary_space = n;
+		}
 	    }
 
 	}

@@ -785,6 +785,13 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     }
 #endif /*]*/
 
+    if (ft_private.units != DEFAULT_UNITS &&
+	    (tp[PARM_PRIMARY_SPACE].value == NULL ||
+	     atoi(tp[PARM_PRIMARY_SPACE].value) <= 0)) {
+	popup_an_error("Missing or invalid PrimarySpace");
+	return false;
+    }
+
     ft_private.host_filename = tp[PARM_HOST_FILE].value;
     ft_private.local_filename = tp[PARM_LOCAL_FILE].value;
 
@@ -852,6 +859,11 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	    }
 	    if (ft_private.units != DEFAULT_UNITS) {
 		/* Space Entered, processs it */
+		vb_appendf(&r, " SPACE(%s", tp[PARM_PRIMARY_SPACE].value);
+		if (tp[PARM_SECONDARY_SPACE].value) {
+		    vb_appendf(&r, ",%s", tp[PARM_SECONDARY_SPACE].value);
+		}
+		vb_appends(&r, ")");
 		switch (ft_private.units) {
 		case TRACKS:
 		    vb_appends(&r, " TRACKS");
@@ -864,13 +876,6 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 		    break;
 		default:
 		    break;
-		}
-		if (tp[PARM_PRIMARY_SPACE].value != NULL) {
-		    vb_appendf(&r, " SPACE(%s", tp[PARM_PRIMARY_SPACE].value);
-		    if (tp[PARM_SECONDARY_SPACE].value) {
-			vb_appendf(&r, ",%s", tp[PARM_SECONDARY_SPACE].value);
-		    }
-		    vb_appends(&r, ")");
 		}
 	    }
 	} else if (ft_private.host_type == HT_VM) {

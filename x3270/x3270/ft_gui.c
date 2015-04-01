@@ -187,6 +187,9 @@ ft_popup_init(void)
     Widget spacer_toggle;
     char *s;
 
+    recfm_default = ft_private.recfm == DEFAULT_RECFM;
+    units_default = ft_private.units == DEFAULT_UNITS;
+
     /* Prep the dialog functions. */
     dialog_set(&ft_sr, ft_dialog);
 
@@ -1045,6 +1048,15 @@ ft_start(void)
 	return false;
     }
 
+    /* Check for primary space. */
+    if (ft_private.host_type == HT_TSO && ft_private.units != DEFAULT_UNITS) {
+	XtVaGetValues(primspace_widget, XtNstring, &primspace, NULL);
+	if (atoi(primspace) <= 0) {
+	    popup_an_error("Missing or invalid Primary Space");
+	    return false;
+	}
+    }
+
     /* See if the local file can be overwritten. */
     if (ft_private.receive_flag && !ft_private.append_flag &&
 	    !(ft_private.allow_overwrite || interactive_overwrite)) {
@@ -1115,6 +1127,15 @@ ft_start(void)
 	    }
 	    if (ft_private.units != DEFAULT_UNITS) {
 		/* Space Entered, processs it */
+		XtVaGetValues(primspace_widget, XtNstring, &primspace, NULL);
+		if (strlen(primspace) > 0) {
+		    vb_appendf(&r, " SPACE(%s", primspace);
+		    XtVaGetValues(secspace_widget, XtNstring, &secspace, NULL);
+		    if (strlen(secspace) > 0) {
+			vb_appendf(&r, ",%s", secspace);
+		    }
+		    vb_appends(&r, ")");
+		}
 		switch (ft_private.units) {
 		case TRACKS:
 		    vb_appends(&r, " TRACKS");
@@ -1128,15 +1149,6 @@ ft_start(void)
 		default:
 		    break;
 		};
-		XtVaGetValues(primspace_widget, XtNstring, &primspace, NULL);
-		if (strlen(primspace) > 0) {
-		    vb_appendf(&r, " SPACE(%s", primspace);
-		    XtVaGetValues(secspace_widget, XtNstring, &secspace, NULL);
-		    if (strlen(secspace) > 0) {
-			vb_appendf(&r, ",%s", secspace);
-		    }
-		    vb_appends(&r, ")");
-		}
 	    }
 	} else if (ft_private.host_type == HT_VM) {
 	    if (ft_private.recfm != DEFAULT_RECFM) {
