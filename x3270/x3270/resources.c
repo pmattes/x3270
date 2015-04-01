@@ -158,6 +158,8 @@ XtResource resources[] = {
 
     { ResFtAllocation, ClsFtAllocation, XtRString, sizeof(char *),
       offset(ft.allocation), XtRString, 0 },
+    { ResFtAvblock, ClsFtAvblock, XtRInt, sizeof(int),
+      offset(ft.avblock), XtRString, "0" },
     { ResFtBlksize, ClsFtBlksize, XtRInt, sizeof(int),
       offset(ft.blksize), XtRString, "0" },
     { ResFtCr, ClsFtCr, XtRString, sizeof(char *),

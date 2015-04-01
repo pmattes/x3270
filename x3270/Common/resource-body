@@ -1155,6 +1155,15 @@ description
     type, or tracks, cylinders, or avblock.
 .
 
+name ftAvblock
+type i
+applies a
+groups i
+description
+    Defines the default AVBOCK (average block) allocation size for files sent
+    to TSO hosts by IND$FILE file transfers.
+.
+
 name ftBlksize
 type i
 applies a

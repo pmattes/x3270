@@ -146,8 +146,8 @@ interactive_transfer(char ***params, unsigned *num_params)
 {
 #define KW_SIZE 1024
     char inbuf[KW_SIZE];
-    static char *kw_ret[15];
-    static char kw[14][KW_SIZE];
+    static char *kw_ret[20];
+    static char kw[19][KW_SIZE];
     char hostfile[KW_SIZE];
     char localfile[KW_SIZE];
     int kw_ix = 0;
@@ -165,6 +165,7 @@ interactive_transfer(char ***params, unsigned *num_params)
     int lrecl = 0;
     int blksize = 0;
     int primary_space = 0, secondary_space = 0;
+    int avblock = 0;
     int i;
 
     printf("\n\
@@ -577,10 +578,27 @@ transfer), replace it, or append the source file to it.\n");
 		    sprintf(kw[kw_ix++], "SecondarySpace=%d", n);
 		    secondary_space = n;
 		}
+
+		if (at_mode == AVBLOCK) {
+		    for (;;) {
+			printf("Destination file avblock size");
+			if (ft_private.avblock) {
+			    printf(" [%d]", ft_private.avblock);
+			}
+			printf(": ");
+			n = getnum(ft_private.avblock);
+			if (n < 0) {
+			    return -1;
+			}
+			if (n > 0) {
+			    sprintf(kw[kw_ix++], "Avblock=%d", n);
+			    avblock = n;
+			    break;
+			}
+		    }
+		}
 	    }
-
 	}
-
     }
 
     printf("\nFile Transfer Summary:\n");
@@ -683,7 +701,7 @@ transfer), replace it, or append the source file to it.\n");
 		printf(" cylinders");
 		break;
 	    case AVBLOCK:
-		printf(" avblock");
+		printf(" avblock %d", avblock);
 		break;
 	    }
 	    printf("\n");

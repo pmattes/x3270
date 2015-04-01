@@ -123,6 +123,7 @@ enum ft_parm_name {
     PARM_PRIMARY_SPACE,
     PARM_SECONDARY_SPACE,
     PARM_BUFFER_SIZE,
+    PARM_AVBLOCK,
 #if defined(_WIN32) /*[*/
     PARM_WINDOWS_CODEPAGE,
 #endif /*]*/
@@ -148,6 +149,7 @@ static struct {
     { "PrimarySpace" },
     { "SecondarySpace" },
     { "BufferSize" },
+    { "Avblock" },
 #if defined(_WIN32) /*[*/
     { "WindowsCodePage" },
 #endif /*]*/
@@ -276,6 +278,7 @@ ft_init(void)
     ft_private.blksize = 0;
     ft_private.primary_space = 0;
     ft_private.secondary_space = 0;
+    ft_private.avblock = 0;
 
     /* Apply resources. */
     if (appres.ft.blksize) {
@@ -376,6 +379,9 @@ ft_init(void)
 	xs_warning("Invalid %s '%s', ignoring", ResFtAllocation,
 		appres.ft.allocation);
 	appres.ft.allocation = NULL;
+    }
+    if (appres.ft.avblock) {
+	ft_private.avblock = appres.ft.avblock;
     }
 }
 
@@ -600,6 +606,12 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	}
 	tp[PARM_ALLOCATION].value = NewString(appres.ft.allocation);
     }
+    if (appres.ft.avblock) {
+	if (tp[PARM_AVBLOCK].value) {
+	    Free(tp[PARM_AVBLOCK].value);
+	}
+	tp[PARM_AVBLOCK].value = xs_buffer("%d", appres.ft.avblock);
+    }
     if (appres.ft.blksize) {
 	if (tp[PARM_BLKSIZE].value) {
 	    Free(tp[PARM_BLKSIZE].value);
@@ -785,10 +797,21 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     }
 #endif /*]*/
 
-    if (ft_private.units != DEFAULT_UNITS &&
+    if (ft_private.host_type == HT_TSO &&
+	    !ft_private.receive_flag &&
+	    ft_private.units != DEFAULT_UNITS &&
 	    (tp[PARM_PRIMARY_SPACE].value == NULL ||
 	     atoi(tp[PARM_PRIMARY_SPACE].value) <= 0)) {
 	popup_an_error("Missing or invalid PrimarySpace");
+	return false;
+    }
+
+    if (ft_private.host_type == HT_TSO &&
+	    !ft_private.receive_flag &&
+	    ft_private.units == AVBLOCK &&
+	    (tp[PARM_AVBLOCK].value == NULL ||
+	     atoi(tp[PARM_AVBLOCK].value) <= 0)) {
+	popup_an_error("Missing or invalid Avblock");
 	return false;
     }
 
@@ -872,7 +895,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 		    vb_appends(&r, " CYLINDERS");
 		    break;
 		case AVBLOCK:
-		    vb_appends(&r, " AVBLOCK");
+		    vb_appendf(&r, " AVBLOCK(%s)", tp[PARM_AVBLOCK].value);
 		    break;
 		default:
 		    break;

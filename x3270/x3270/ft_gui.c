@@ -79,6 +79,7 @@
 static Widget ft_dialog, ft_shell, local_file, host_file;
 static Widget lrecl_widget, blksize_widget;
 static Widget primspace_widget, secspace_widget;
+static Widget avblock_size_widget;
 static Widget send_toggle, receive_toggle;
 static Widget vm_toggle, tso_toggle, cics_toggle;
 static Widget ascii_toggle, binary_toggle;
@@ -103,6 +104,7 @@ static recfm_t r_variable = RECFM_VARIABLE;
 static recfm_t r_undefined = RECFM_UNDEFINED;
 
 static bool units_default = true;
+static bool units_avblock = false;
 static units_t u_default_units = DEFAULT_UNITS;
 static units_t u_tracks = TRACKS;
 static units_t u_cylinders = CYLINDERS;
@@ -178,17 +180,21 @@ ft_popup_init(void)
     Widget local_label, host_label;
     Widget append_widget;
     Widget lrecl_label, blksize_label, primspace_label, secspace_label;
+    Widget avblock_size_label;
     Widget h_ref = NULL;
+#if 0
     Dimension d1;
     Dimension maxw = 0;
+#endif
     Widget recfm_label, units_label;
     Widget buffersize_label;
     Widget start_button;
     Widget spacer_toggle;
     char *s;
 
-    recfm_default = ft_private.recfm == DEFAULT_RECFM;
-    units_default = ft_private.units == DEFAULT_UNITS;
+    recfm_default = (ft_private.recfm == DEFAULT_RECFM);
+    units_default = (ft_private.units == DEFAULT_UNITS);
+    units_avblock = (ft_private.units == AVBLOCK);
 
     /* Prep the dialog functions. */
     dialog_set(&ft_sr, ft_dialog);
@@ -499,6 +505,7 @@ ft_popup_init(void)
 	    &host_is_tso, true);
 
     /* Find the widest widget in the left column. */
+#if 0
     XtVaGetValues(send_toggle, XtNwidth, &maxw, NULL);
     h_ref = send_toggle;
 #define REMAX(w) { \
@@ -513,6 +520,8 @@ ft_popup_init(void)
     REMAX(binary_toggle);
     REMAX(append_widget);
 #undef REMAX
+#endif
+    h_ref = blksize_widget;
 
     /* Create the right column buttons. */
 
@@ -753,18 +762,60 @@ ft_popup_init(void)
 	    &host_is_tso, true,
 	    &units_default, false);
 
+    avblock_size_label = XtVaCreateManagedWidget(
+	    "avblockSize", labelWidgetClass, ft_dialog,
+	    XtNfromVert, secspace_widget,
+	    XtNvertDistance, 3,
+	    XtNfromHoriz, h_ref,
+	    XtNhorizDistance, COLUMN_GAP,
+	    XtNborderWidth, 0,
+	    NULL);
+    dialog_match_dimension(secspace_label, avblock_size_label, XtNwidth);
+    dialog_register_sensitivity(avblock_size_label,
+	    &ft_private.receive_flag, false,
+	    &host_is_tso, true,
+	    &units_avblock, true);
+    avblock_size_widget = XtVaCreateManagedWidget(
+	    "value", asciiTextWidgetClass, ft_dialog,
+	    XtNfromVert, secspace_widget,
+	    XtNvertDistance, 3,
+	    XtNfromHoriz, avblock_size_label,
+	    XtNhorizDistance, 0,
+	    XtNwidth, 100,
+	    XtNeditType, XawtextEdit,
+	    XtNdisplayCaret, False,
+	    NULL);
+    if (ft_private.avblock) {
+	s = xs_buffer("%d", ft_private.avblock);
+	XtVaSetValues(avblock_size_widget, XtNstring, s, NULL);
+	XawTextSetInsertionPoint(avblock_size_widget, strlen(s));
+	XtFree(s);
+    }
+    dialog_match_dimension(avblock_size_label, avblock_size_widget, XtNheight);
+    w = XawTextGetSource(avblock_size_widget);
+    if (w == NULL) {
+	XtWarning("Cannot find text source in dialog");
+    } else {
+	XtAddCallback(w, XtNcallback, dialog_text_callback,
+		(XtPointer)&t_numeric);
+    }
+    dialog_register_sensitivity(avblock_size_widget,
+	    &ft_private.receive_flag, false,
+	    &host_is_tso, true,
+	    &units_avblock, true);
+
     /* Set up the DFT buffer size. */
     buffersize_label = XtVaCreateManagedWidget(
 	    "buffersize", labelWidgetClass, ft_dialog,
 	    XtNfromVert, blksize_label,
-	    XtNvertDistance, FAR_VGAP,
+	    XtNvertDistance, 3,
 	    XtNhorizDistance, MARGIN,
 	    XtNborderWidth, 0,
 	    NULL);
     buffersize_widget = XtVaCreateManagedWidget(
 	    "value", asciiTextWidgetClass, ft_dialog,
 	    XtNfromVert, blksize_label,
-	    XtNvertDistance, FAR_VGAP,
+	    XtNvertDistance, 3,
 	    XtNfromHoriz, buffersize_label,
 	    XtNhorizDistance, 0,
 	    XtNwidth, 100,
@@ -846,7 +897,9 @@ units_callback(Widget w, XtPointer user_data, XtPointer call_data _is_unused)
 {
     ft_private.units = *(units_t *)user_data;
     units_default = (ft_private.units == DEFAULT_UNITS);
+    units_avblock = (ft_private.units == AVBLOCK);
     dialog_check_sensitivity(&units_default);
+    dialog_check_sensitivity(&units_avblock);
     dialog_flip_toggles(&units_toggles, w);
 }
 
@@ -991,6 +1044,7 @@ toggle_host_type(Widget w _is_unused, XtPointer client_data _is_unused,
 	if (ft_private.units != DEFAULT_UNITS) {
 	    ft_private.units = DEFAULT_UNITS;
 	    units_default = true;
+	    units_avblock = false;
 	    dialog_flip_toggles(&units_toggles, units_toggles.widgets[0]);
 	}
 	if (ft_private.host_type == HT_CICS) {

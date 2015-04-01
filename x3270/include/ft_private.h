@@ -76,6 +76,7 @@ typedef struct {
     int blksize;
     int primary_space;
     int secondary_space;
+    int avblock;
     bool is_cut;
 } ft_private_t;
 

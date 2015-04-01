@@ -791,10 +791,11 @@ x3270.ftPopup*spaceDefault.label:		Default
 x3270.ftPopup*tracks.label:			Tracks
 x3270.ftPopup*cylinders.label:			Cylinders
 x3270.ftPopup*avblock.label:			Avblock
-x3270.ftPopup*lrecl.label:			LRECL
-x3270.ftPopup*blksize.label:			BLKSIZE
+x3270.ftPopup*lrecl.label:			Record Length
+x3270.ftPopup*blksize.label:			Block Size
 x3270.ftPopup*primspace.label:			Primary Space
 x3270.ftPopup*secspace.label:			Secondary Space
+x3270.ftPopup*avblockSize.label:		Avblock Size
 x3270.ftPopup*buffersize.label:			DFT Buffer Size
 x3270.ftProgressPopup*fromLabel.label:		Source:
 x3270.ftProgressPopup*fromLabel.justify:	right

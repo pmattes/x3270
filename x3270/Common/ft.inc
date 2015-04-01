@@ -32,8 +32,9 @@ XX_TR(XX_TD(Recfm)	XX_TD(No)	XX_TD(XX_NBSP)	`XX_TD(`fixed, variable, undefined')
 XX_TR(XX_TD(Lrecl)	XX_TD(No)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP))
 XX_TR(XX_TD(Blksize)	XX_TD(No)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP))
 XX_TR(XX_TD(Allocation)	XX_TD(No)	XX_TD(XX_NBSP)	`XX_TD(`tracks, cylinders, avblock')')
-XX_TR(XX_TD(PrimarySpace)	XX_TD(No)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP))
+XX_TR(XX_TD(PrimarySpace)	XX_TD(Sometimes)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP))
 XX_TR(XX_TD(SecondarySpace)	XX_TD(No)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP))
+XX_TR(XX_TD(Avblock)	XX_TD(Sometimes)	XX_TD(XX_NBSP)	XX_TD(XX_NBSP))
 XX_TR(XX_TD(BufferSize)	XX_TD(No)	XX_TD(4096)	XX_TD(XX_NBSP))
 XX_TE()
 XX_LP
@@ -66,7 +67,7 @@ XX_TP(XX_FB(Remap))
 Controls text translation for XX_FB(Mode=ascii) files.
 The value XX_FB(yes) (the default) causes XX_PRODUCT to remap the text to ensure
 maximum compatibility between the workstation's character set and encoding
-and the host's EBCDIC code page.
+and the host's XX_SM(EBCDIC) code page.
 The value XX_FB(no) causes XX_PRODUCT to pass the text to or from the host
 as-is, leaving all translation to the XX_FB(IND$FILE) program on the host.
 XX_TP(XX_FB(Exist))
@@ -96,14 +97,36 @@ Specifies the units for the XX_FB(PrimarySpace) and
 XX_FB(SecondarySpace) options: XX_FB(tracks), XX_FB(cylinders) or
 XX_FB(avblock). (XX_SM(TSO) hosts only.)
 XX_TP(XX_FB(PrimarySpace))
-Primary allocation for a file,
-The units are given by the XX_FB(Allocation) option. (XX_SM(TSO) hosts only.)
+Primary allocation for a file.
+The units are given by the XX_FB(Allocation) option.
+Required when the XX_FB(Allocation) is specified as something other than
+XX_FB(default).
+(XX_SM(TSO) hosts only.)
 XX_TP(XX_FB(SecondarySpace))
 Secondary allocation for a file.
 The units are given by the XX_FB(Allocation) option. (XX_SM(TSO) hosts only.) 
+XX_TP(XX_FB(Avblock))
+Average block size, required when XX_FB(Allocation) specifies XX_FB(avblock).
+(XX_SM(TSO) hosts only.)
 XX_TP(XX_FB(BufferSize))
 Buffer size for DFT-mode transfers.
 Can range from 256 to 32768.
 Larger values give better performance, but some hosts may not be able to
 support them.
+ifelse(XX_PLATFORM,windows,`XX_TP(XX_FB(WindowsCodePage))
+Overrides the workstation code page used for XX_SM(ASCII) file transfers.
+By default, the system XX_SM(ANSI) code page is used.
+')dnl
 XX_TPE()dnl
+XX_LP
+There are also resources that control the default values for each of the
+file transfer parameters.
+With ifelse(XX_PLATFORM,windows,`two exceptions,',`one exception,')
+these resources have the same names as the XX_FB(Transfer) keywords, but with
+XX_FB(ft) prepended. E.g., the default for the XX_FB(Mode) keyword is the
+XX_FB(XX_PRODUCT.ftMode) resource.
+ifelse(XX_PLATFORM,windows,`The exceptions are',`The exception is')
+the XX_FB(BufferSize) keyword, which is controlled by the
+XX_FB(dftBufferSize)
+ifelse(XX_PLATFORM,windows,`resource, and the XX_FB(WindowsCodePage) keyword,
+which is controlled by the XX_FB(ftCodePage) resource.',`resource.')

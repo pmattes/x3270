@@ -148,6 +148,7 @@ typedef struct {
     /* File transfer fields. */
     struct {
 	char	*allocation;
+	int	 avblock;
 	int	 blksize;
 	char	*cr;
 	char	*direction;

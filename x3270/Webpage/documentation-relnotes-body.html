@@ -2,6 +2,15 @@
 3.3 is the current development line for the x3270 suite.
 <h2>Changes in version 3.4alpha1, nn. Mon 2015</h2>
 <ul>
+ <li>[all] Added resources to define the default values for each of the
+  IND$FILE file transfer parameters. With two exceptions, the resources have
+  the same names as the <b>Transfer</b> action keywords, with <b>ft</b>
+  prepended. E.g., the <b>Mode</b> default is controlled by the <b>ftMode</b>
+  resource. The exceptions are <b>BufferSize</b>, which is controlled by the
+  <b>dftBufferSize</b> resource, and the <b>WindowsCodePage</b> keyword, which
+  is controlled by the <b>ftCodePage</b> resource.</li>
+ <li>[all] Added missing functionality to specify the size for <b>avblock</b>
+  TSO file allocations in IND$FILE file transfers.</li>
  <li>[<i>x3270</i>] Added an <b>aplCircledAlpha</b> resource to allow x3270
   to properly display APL underscored uppercase letters with the APL385 font,
   by translating them to the (nonstandard) Unicode circled-alphabetic range
