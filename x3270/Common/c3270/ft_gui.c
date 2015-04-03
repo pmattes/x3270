@@ -109,22 +109,20 @@ ft_gui_aborting(void)
 }
 
 /* Check for interactive mode. */
-bool 
-ft_gui_interact(char ***params, unsigned *num_params)
+ft_gui_interact_t 
+ft_gui_interact(ft_private_t *p)
 {   
-    if (*num_params == 0 && escaped) {
-	if (interactive_transfer(params, num_params) < 0) {
-	    printf("\n");
-	    fflush(stdout);
-	    action_output("Aborted");
-	    return true;
-	}
+    if (!escaped) {
+	return FGI_NOP;
     }
-    if (escaped) {
-	ft_private.is_interactive = true;
+    if (interactive_transfer(p) < 0) {
+	printf("\n");
+	fflush(stdout);
+	action_output("Aborted");
+	return FGI_ABORT;
     }
-
-    return false;
+    ft_private.is_interactive = true;
+    return FGI_SUCCESS;
 }
 
 /* Display an "Awaiting start of transfer" message. */

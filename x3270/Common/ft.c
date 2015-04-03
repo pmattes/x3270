@@ -41,8 +41,8 @@
 #include "actions.h"
 #include "ft_cut.h"
 #include "ft_dft.h"
+#include "ft_private.h" /* must precede ft_gui.h */
 #include "ft_gui.h"
-#include "ft_private.h"
 #include "unicodec.h"
 #include "ft.h"
 #include "host.h"
@@ -279,6 +279,9 @@ ft_init(void)
     ft_private.primary_space = 0;
     ft_private.secondary_space = 0;
     ft_private.avblock = 0;
+#if defined(_WIN32) /*[*/
+    ft_private.windows_codepage = appres.ft_cp? appres.ft_cp: appres.local_cp;
+#endif /*]*/
 
     /* Apply resources. */
     if (appres.ft.blksize) {
@@ -386,15 +389,14 @@ ft_init(void)
 }
 
 /* Return the right value for fopen()ing the local file. */
-char *
-ft_local_fflag(void)
+static const char *
+ft_local_fflag(ft_private_t *p)
 {
     static char ret[3];
     int nr = 0;
 
-    ret[nr++] = ft_private.receive_flag?
-	(ft_private.append_flag? 'a': 'w' ): 'r';
-    if (!ft_private.ascii_flag) {
+    ret[nr++] = p->receive_flag? (p->append_flag? 'a': 'w' ): 'r';
+    if (!p->ascii_flag) {
 	ret[nr++] = 'b';
     }
     ret[nr] = '\0';
@@ -532,6 +534,152 @@ ft_in3270(bool ignored _is_unused)
 }
 
 /*
+ * Start a file transfer, based on the contents of an ft_private structure.
+ *
+ * This function will fail if the file exists and the overwrite flag is not
+ * set.
+ *
+ * Returns the local file pointer, or NULL if the transfer could not start.
+ * If an error is detected, it will call popup_an_error() with an appropriate
+ * message.
+ */
+FILE *
+ft_go(ft_private_t *p)
+{
+    FILE *f;
+    varbuf_t r;
+    unsigned flen;
+
+#if defined(_WIN32) /*[*/
+    /* Set the ugly global for code page override. */
+    ft_windows_codepage = p->windows_codepage;
+#endif /*]*/
+
+    /* See if the local file can be overwritten. */
+    if (p->receive_flag && !p->append_flag && !p->allow_overwrite) {
+	f = fopen(p->local_filename, p->ascii_flag? "r": "rb");
+	if (f != NULL) {
+	    (void) fclose(f);
+	    popup_an_error("File exists");
+	    return NULL;
+	}
+    }
+
+    /* Open the local file. */
+    f = fopen(p->local_filename, ft_local_fflag(p));
+    if (f == NULL) {
+	popup_an_errno(errno, "Local file '%s'", p->local_filename);
+	return NULL;
+    }
+
+    /* Build the ind$file command */
+    vb_init(&r);
+    vb_appendf(&r, "IND\\e005BFILE %s %s %s",
+	    p->receive_flag? "GET": "PUT",
+	    p->host_filename,
+	    (p->host_type != HT_TSO)? "(": "");
+    if (p->ascii_flag) {
+	vb_appends(&r, "ASCII");
+    } else if (p->host_type == HT_CICS) {
+	vb_appends(&r, "BINARY");
+    }
+    if (p->cr_flag) {
+	vb_appends(&r, " CRLF");
+    } else if (p->host_type == HT_CICS) {
+	vb_appends(&r, " NOCRLF");
+    }
+    if (p->append_flag && !p->receive_flag) {
+	vb_appends(&r, " APPEND");
+    }
+    if (!p->receive_flag) {
+	if (p->host_type == HT_TSO) {
+	    if (p->recfm != DEFAULT_RECFM) {
+		/* RECFM Entered, process */
+		vb_appends(&r, " RECFM(");
+		switch (p->recfm) {
+		case RECFM_FIXED:
+		    vb_appends(&r, "F");
+		    break;
+		case RECFM_VARIABLE:
+		    vb_appends(&r, "V");
+		    break;
+		case RECFM_UNDEFINED:
+		    vb_appends(&r, "U");
+		    break;
+		default:
+		    break;
+		};
+		vb_appends(&r, ")");
+		if (p->lrecl) {
+		    vb_appendf(&r, " LRECL(%d)", p->lrecl);
+		}
+		if (p->blksize) {
+		    vb_appendf(&r, " BLKSIZE(%d)", p->blksize);
+		}
+	    }
+	    if (p->units != DEFAULT_UNITS) {
+		/* Space Entered, processs it */
+		vb_appendf(&r, " SPACE(%d", p->primary_space);
+		if (p->secondary_space) {
+		    vb_appendf(&r, ",%d", p->secondary_space);
+		}
+		vb_appends(&r, ")");
+		switch (p->units) {
+		case TRACKS:
+		    vb_appends(&r, " TRACKS");
+		    break;
+		case CYLINDERS:
+		    vb_appends(&r, " CYLINDERS");
+		    break;
+		case AVBLOCK:
+		    vb_appendf(&r, " AVBLOCK(%d)", p->avblock);
+		    break;
+		default:
+		    break;
+		}
+	    }
+	} else if (p->host_type == HT_VM) {
+	    if (p->recfm != DEFAULT_RECFM) {
+		vb_appends(&r, " RECFM ");
+		switch (p->recfm) {
+		case RECFM_FIXED:
+		    vb_appends(&r, "F");
+		    break;
+		case RECFM_VARIABLE:
+		    vb_appends(&r, "V");
+		    break;
+		default:
+		    break;
+		};
+
+		if (p->lrecl) {
+		    vb_appendf(&r, " LRECL %d", p->lrecl);
+		}
+	    }
+	}
+    }
+    vb_appends(&r, "\\n");
+
+    /* Erase the line and enter the command. */
+    flen = kybd_prime();
+    if (!flen || flen < vb_len(&r) - 1) {
+	vb_free(&r);
+	if (f != NULL) {
+	    fclose(f);
+	    if (p->receive_flag && !p->append_flag) {
+		unlink(p->local_filename);
+	    }
+	}
+	popup_an_error("%s", get_message("ftUnable"));
+	return NULL;
+    }
+    (void) emulate_input(vb_buf(&r), vb_len(&r), false);
+    vb_free(&r);
+
+    return f;
+}
+
+/*
  * Script/macro action for file transfer.
  *  Transfer(option=value[,...])
  *  Options are:
@@ -550,6 +698,7 @@ ft_in3270(bool ignored _is_unused)
  *   PrimarySpace=n		no default
  *   SecondarySpace=n		no default
  *   BufferSize			no default
+ *   Avblock=n			no default
  *   WindowsCodePage=n		no default
  */
 
@@ -560,8 +709,6 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     unsigned j;
     long l;
     char *ptr;
-    unsigned flen;
-    varbuf_t r;
 
     char **xparams = (char **)argv;
     unsigned xnparams = argc;
@@ -577,8 +724,18 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     /* Check for interactive mode. */
-    if (ft_gui_interact(&xparams, &xnparams)) {
-	return true;
+    if (argc == 0) {
+	switch (ft_gui_interact(&ft_private)) {
+	case FGI_NOP:
+	    /* Hope the defaults are enough. */
+	    break;
+	case FGI_SUCCESS:
+	    /* Proceed as specified in ft_private. */
+	    /* ... */
+	    break;
+	case FGI_ABORT:
+	    return false;
+	}
     }
 
     /*
@@ -708,7 +865,8 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 		    && !tp[i].name[kwlen]) {
 		if (tp[i].keyword[0]) {
 		    for (k = 0; tp[i].keyword[k] != NULL && k < 4; k++) {
-			if (!strcasecmp(eq + 1, tp[i].keyword[k])) {
+			if (!strncasecmp(eq + 1, tp[i].keyword[k],
+				    strlen(eq + 1))) {
 			    break;
 			}
 		    }
@@ -789,11 +947,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 
 #if defined(_WIN32) /*[*/
     if (tp[PARM_WINDOWS_CODEPAGE].value != NULL) {
-	ft_windows_codepage = atoi(tp[PARM_WINDOWS_CODEPAGE].value);
-    } else if (appres.ft_cp) {
-	ft_windows_codepage = appres.ft_cp;
-    } else {
-	ft_windows_codepage = appres.local_cp;
+	ft_private.windows_codepage = atoi(tp[PARM_WINDOWS_CODEPAGE].value);
     }
 #endif /*]*/
 
@@ -818,135 +972,26 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     ft_private.host_filename = tp[PARM_HOST_FILE].value;
     ft_private.local_filename = tp[PARM_LOCAL_FILE].value;
 
-    /* See if the local file can be overwritten. */
-    if (ft_private.receive_flag && !ft_private.append_flag && !ft_private.allow_overwrite) {
-	ft_local_file = fopen(ft_private.local_filename, ft_private.ascii_flag? "r": "rb");
-	if (ft_local_file != NULL) {
-	    (void) fclose(ft_local_file);
-	    popup_an_error("File exists");
-	    return false;
-	}
-    }
-
-    /* Open the local file. */
-    ft_local_file = fopen(ft_private.local_filename, ft_local_fflag());
+    /* Start the transfer. */
+    ft_local_file = ft_go(&ft_private);
     if (ft_local_file == NULL) {
-	popup_an_errno(errno, "Local file '%s'", ft_private.local_filename);
 	return false;
     }
 
-    /* Build the ind$file command */
-    vb_init(&r);
-    vb_appendf(&r, "IND\\e005BFILE %s %s %s",
-	    ft_private.receive_flag? "GET": "PUT",
-	    ft_private.host_filename,
-	    (ft_private.host_type != HT_TSO)? "(": "");
-    if (ft_private.ascii_flag) {
-	vb_appends(&r, "ASCII");
-    } else if (ft_private.host_type == HT_CICS) {
-	vb_appends(&r, "BINARY");
-    }
-    if (ft_private.cr_flag) {
-	vb_appends(&r, " CRLF");
-    } else if (ft_private.host_type == HT_CICS) {
-	vb_appends(&r, " NOCRLF");
-    }
-    if (ft_private.append_flag && !ft_private.receive_flag) {
-	vb_appends(&r, " APPEND");
-    }
-    if (!ft_private.receive_flag) {
-	if (ft_private.host_type == HT_TSO) {
-	    if (ft_private.recfm != DEFAULT_RECFM) {
-		/* RECFM Entered, process */
-		vb_appends(&r, " RECFM(");
-		switch (ft_private.recfm) {
-		case RECFM_FIXED:
-		    vb_appends(&r, "F");
-		    break;
-		case RECFM_VARIABLE:
-		    vb_appends(&r, "V");
-		    break;
-		case RECFM_UNDEFINED:
-		    vb_appends(&r, "U");
-		    break;
-		default:
-		    break;
-		};
-		vb_appends(&r, ")");
-		if (tp[PARM_LRECL].value != NULL) {
-		    vb_appendf(&r, " LRECL(%s)", tp[PARM_LRECL].value);
-		}
-		if (tp[PARM_BLKSIZE].value != NULL) {
-		    vb_appendf(&r, " BLKSIZE(%s)", tp[PARM_BLKSIZE].value);
-		}
-	    }
-	    if (ft_private.units != DEFAULT_UNITS) {
-		/* Space Entered, processs it */
-		vb_appendf(&r, " SPACE(%s", tp[PARM_PRIMARY_SPACE].value);
-		if (tp[PARM_SECONDARY_SPACE].value) {
-		    vb_appendf(&r, ",%s", tp[PARM_SECONDARY_SPACE].value);
-		}
-		vb_appends(&r, ")");
-		switch (ft_private.units) {
-		case TRACKS:
-		    vb_appends(&r, " TRACKS");
-		    break;
-		case CYLINDERS:
-		    vb_appends(&r, " CYLINDERS");
-		    break;
-		case AVBLOCK:
-		    vb_appendf(&r, " AVBLOCK(%s)", tp[PARM_AVBLOCK].value);
-		    break;
-		default:
-		    break;
-		}
-	    }
-	} else if (ft_private.host_type == HT_VM) {
-	    if (ft_private.recfm != DEFAULT_RECFM) {
-		vb_appends(&r, " RECFM ");
-		switch (ft_private.recfm) {
-		case RECFM_FIXED:
-		    vb_appends(&r, "F");
-		    break;
-		case RECFM_VARIABLE:
-		    vb_appends(&r, "V");
-		    break;
-		default:
-		    break;
-		};
+    /* Finish initialization. */
+    ft_private.is_cut = false;
+    ft_last_cr = false;
+    ft_last_dbcs = false;
 
-		if (tp[PARM_LRECL].value) {
-		    vb_appendf(&r, " LRECL %s", tp[PARM_LRECL].value);
-		}
-	    }
-	}
-    }
-    vb_appends(&r, "\\n");
+    ft_state = FT_AWAIT_ACK;
 
-    /* Erase the line and enter the command. */
-    flen = kybd_prime();
-    if (!flen || flen < vb_len(&r) - 1) {
-	vb_free(&r);
-	if (ft_local_file != NULL) {
-	    fclose(ft_local_file);
-	    ft_local_file = NULL;
-	    if (ft_private.receive_flag && !ft_private.append_flag) {
-		unlink(ft_private.local_filename);
-	    }
-	}
-	popup_an_error("%s", get_message("ftUnable"));
-	return false;
-    }
-    (void) emulate_input(vb_buf(&r), vb_len(&r), false);
-    vb_free(&r);
-
+    /* Tell the user. */
     ft_gui_awaiting();
 
-    /* Get this thing started. */
+    /* Set a timeout for failed command start. */
     ft_start_id = AddTimeOut(10 * 1000, ft_didnt_start);
-    ft_state = FT_AWAIT_ACK;
-    ft_private.is_cut = false;
 
+    /* Success. */
     return true;
 }
 

@@ -34,6 +34,7 @@
 
 #include "globals.h"
 
+#include "ft_private.h"
 #include "ft_gui.h"
 
 void
@@ -70,10 +71,10 @@ ft_gui_aborting(void)
 {
 }
 
-bool
-ft_gui_interact(char ***params _is_unused, unsigned *num_params _is_unused)
+ft_gui_interact_t
+ft_gui_interact(ft_private_t *p)
 {
-    return true;
+    return FGI_NOP;
 }
 
 void

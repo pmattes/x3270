@@ -32,4 +32,6 @@
  */
 
 void icmd_register(void);
-int interactive_transfer(char ***params, unsigned *num_params);
+#if defined(__FT_PRIVATE_H) /*[*/
+int interactive_transfer(ft_private_t *p);
+#endif /*]*/

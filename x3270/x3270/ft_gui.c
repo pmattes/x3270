@@ -1060,6 +1060,27 @@ toggle_host_type(Widget w _is_unused, XtPointer client_data _is_unused,
     set_host_type_booleans();
 }
 
+/*
+ * Get a numerical value from a string widget.
+ *
+ * @param[in] w		Widget to interrogate
+ *
+ * @return Numerical value of widget contents.
+ */
+static int
+get_widget_n(Widget w)
+{
+    String s;
+
+    XtVaGetValues(w, XtNstring, &s, NULL);
+    if (strlen(s) > 0) {
+	return atoi(s);
+    } else {
+	return 0;
+    }
+}
+
+
 /**
  * Begin the transfer.
  *
@@ -1068,50 +1089,48 @@ toggle_host_type(Widget w _is_unused, XtPointer client_data _is_unused,
 static bool
 ft_start(void)
 {
-    varbuf_t r;
-    String buffersize, lrecl, blksize, primspace, secspace;
-    unsigned flen;
-    char *s;
-
     ft_private.is_action = false;
 
     ft_dbcs_state = FT_DBCS_NONE;
 
-    /* Get the DFT buffer size. */
-    XtVaGetValues(buffersize_widget, XtNstring, &buffersize, NULL);
-    if (*buffersize) {
-	dft_buffersize = atoi(buffersize);
-    } else {
-	dft_buffersize = 0;
-    }
+    /*
+     * Get the DFT buffer size, and update the widget with the default if they
+     * entered nothing (or an explicit 0).
+     */
+    dft_buffersize = get_widget_n(buffersize_widget);
     set_dft_buffersize();
-    s = xs_buffer("%d", dft_buffersize);
-    XtVaSetValues(buffersize_widget, XtNstring, s, NULL);
-    XtFree(s);
+    XtVaSetValues(buffersize_widget, XtNstring, lazyaf("%d", dft_buffersize),
+	    NULL);
 
     /* Get the host file from its widget */
     XtVaGetValues(host_file, XtNstring, &ft_private.host_filename, NULL);
     if (!*ft_private.host_filename) {
 	return false;
     }
-    /* XXX: probably more validation to do here */
 
-    /* Get the local file from it widget */
+    /* Get the local file from its widget */
     XtVaGetValues(local_file, XtNstring,  &ft_private.local_filename, NULL);
     if (!*ft_private.local_filename) {
 	return false;
     }
 
+    /* Fetch the rest of the numeric parameters. */
+    ft_private.lrecl = get_widget_n(lrecl_widget);
+    ft_private.blksize = get_widget_n(blksize_widget);
+    ft_private.primary_space = get_widget_n(primspace_widget);
+    ft_private.secondary_space = get_widget_n(secspace_widget);
+    ft_private.avblock = get_widget_n(avblock_size_widget);
+
     /* Check for primary space. */
-    if (ft_private.host_type == HT_TSO && ft_private.units != DEFAULT_UNITS) {
-	XtVaGetValues(primspace_widget, XtNstring, &primspace, NULL);
-	if (atoi(primspace) <= 0) {
-	    popup_an_error("Missing or invalid Primary Space");
-	    return false;
-	}
+    if (ft_private.host_type == HT_TSO &&
+	ft_private.units != DEFAULT_UNITS &&
+	ft_private.primary_space <= 0) {
+
+	popup_an_error("Missing or invalid Primary Space");
+	return false;
     }
 
-    /* See if the local file can be overwritten. */
+    /* Prompt for local file overwrite. */
     if (ft_private.receive_flag && !ft_private.append_flag &&
 	    !(ft_private.allow_overwrite || interactive_overwrite)) {
 	ft_local_file = fopen(ft_private.local_filename,
@@ -1124,132 +1143,20 @@ ft_start(void)
 	}
     }
 
-    /* Open the local file. */
-    ft_local_file = fopen(ft_private.local_filename, ft_local_fflag());
+    /* Start the transfer. */
+    ft_local_file = ft_go(&ft_private);
     if (ft_local_file == NULL) {
-	    interactive_overwrite = false;
-	    popup_an_errno(errno, "Local file '%s'", ft_private.local_filename);
-	    return false;
-    }
-
-    /* Build the ind$file command */
-    vb_init(&r);
-    vb_appendf(&r, "IND\\e005BFILE %s %s %s",
-	    ft_private.receive_flag? "GET": "PUT",
-	    ft_private.host_filename,
-	    (ft_private.host_type != HT_TSO)? "(": "");
-    if (ft_private.ascii_flag) {
-	vb_appends(&r, "ASCII");
-    } else if (ft_private.host_type == HT_CICS) {
-	vb_appends(&r, "BINARY");
-    }
-    if (ft_private.ascii_flag && ft_private.cr_flag) {
-	vb_appends(&r, " CRLF");
-    } else if (ft_private.host_type == HT_CICS) {
-	vb_appends(&r, " NOCRLF");
-    }
-    if (ft_private.append_flag && !ft_private.receive_flag) {
-	vb_appends(&r, " APPEND");
-    }
-    if (!ft_private.receive_flag) {
-	if (ft_private.host_type == HT_TSO) {
-	    if (ft_private.recfm != DEFAULT_RECFM) {
-		/* RECFM Entered, process */
-		vb_appends(&r, " RECFM(");
-		switch (ft_private.recfm) {
-		case RECFM_FIXED:
-		    vb_appends(&r, "F");
-		    break;
-		case RECFM_VARIABLE:
-		    vb_appends(&r, "V");
-		    break;
-		case RECFM_UNDEFINED:
-		    vb_appends(&r, "U");
-		    break;
-		default:
-		    break;
-		};
-		vb_appends(&r, ")");
-		XtVaGetValues(lrecl_widget, XtNstring, &lrecl, NULL);
-		if (strlen(lrecl) > 0) {
-		    vb_appendf(&r, " LRECL(%s)", lrecl);
-		}
-		XtVaGetValues(blksize_widget, XtNstring, &blksize, NULL);
-		if (strlen(blksize) > 0) {
-		    vb_appendf(&r, " BLKSIZE(%s)", blksize);
-		}
-	    }
-	    if (ft_private.units != DEFAULT_UNITS) {
-		/* Space Entered, processs it */
-		XtVaGetValues(primspace_widget, XtNstring, &primspace, NULL);
-		if (strlen(primspace) > 0) {
-		    vb_appendf(&r, " SPACE(%s", primspace);
-		    XtVaGetValues(secspace_widget, XtNstring, &secspace, NULL);
-		    if (strlen(secspace) > 0) {
-			vb_appendf(&r, ",%s", secspace);
-		    }
-		    vb_appends(&r, ")");
-		}
-		switch (ft_private.units) {
-		case TRACKS:
-		    vb_appends(&r, " TRACKS");
-		    break;
-		case CYLINDERS:
-		    vb_appends(&r, " CYLINDERS");
-		    break;
-		case AVBLOCK:
-		    vb_appends(&r, " AVBLOCK");
-		    break;
-		default:
-		    break;
-		};
-	    }
-	} else if (ft_private.host_type == HT_VM) {
-	    if (ft_private.recfm != DEFAULT_RECFM) {
-		vb_appends(&r, " RECFM ");
-		switch (ft_private.recfm) {
-		case RECFM_FIXED:
-		    vb_appends(&r, "F");
-		    break;
-		case RECFM_VARIABLE:
-		    vb_appends(&r, "V");
-		    break;
-		default:
-		    break;
-		};
-
-		XtVaGetValues(lrecl_widget, XtNstring, &lrecl, NULL);
-		if (strlen(lrecl) > 0) {
-		    vb_appendf(&r, " LRECL %s", lrecl);
-		}
-	    }
-	}
-    }
-    vb_appends(&r, "\\n");
-
-    /* Erase the line and enter the command. */
-    flen = kybd_prime();
-    if (!flen || flen < vb_len(&r) - 1) {
-	vb_free(&r);
-	if (ft_local_file != NULL) {
-	    fclose(ft_local_file);
-	    ft_local_file = NULL;
-	    if (ft_private.receive_flag && !ft_private.append_flag) {
-		unlink(ft_private.local_filename);
-	    }
-	}
-	popup_an_error("%s", get_message("ftUnable"));
 	interactive_overwrite = false;
 	return false;
     }
-    (void) emulate_input(vb_buf(&r), vb_len(&r), false);
-    vb_free(&r);
 
     /* Get this thing started. */
-    ft_state = FT_AWAIT_ACK;
+    interactive_overwrite = false;
     ft_private.is_cut = false;
     ft_last_cr = false;
     ft_last_dbcs = false;
+
+    ft_state = FT_AWAIT_ACK;
 
     return true;
 }
@@ -1601,10 +1508,10 @@ ft_gui_aborting(void)
 }
 
 /* Check for interactive mode. */
-bool
-ft_gui_interact(String **params _is_unused, Cardinal *num_params _is_unused)
+ft_gui_interact_t
+ft_gui_interact(ft_private_t *p)
 {
-    return false;
+    return FGI_NOP;
 }
 
 /* Display an "Awaiting start of transfer" message. */

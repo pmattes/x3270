@@ -40,10 +40,6 @@
 #include "utf8.h"
 #include "utils.h"
 
-#if defined(_WIN32) /*[*/
-static int windows_cp = 0;
-#endif /*]*/
-
 /* Support functions for interactive commands. */
 
 /**
@@ -138,11 +134,11 @@ getnum(int defval)
 
 /*
  * Interactive file transfer command.
- * Called from Transfer_action.  Returns a new set of params.
+ * Called from Transfer_action.  Returns an updated ft_private.
  * Returns 0 for success, -1 for failure.
  */
 int
-interactive_transfer(char ***params, unsigned *num_params)
+interactive_transfer(ft_private_t *p)
 {
 #define KW_SIZE 1024
     char inbuf[KW_SIZE];
@@ -151,10 +147,6 @@ interactive_transfer(char ***params, unsigned *num_params)
     char hostfile[KW_SIZE];
     char localfile[KW_SIZE];
     int kw_ix = 0;
-    bool receive = true;
-    host_type_t htype = HT_TSO;
-    bool ascii = ft_private.ascii_flag;
-    bool remap = ft_private.remap_flag;
     int n;
     enum { CR_REMOVE, CR_ADD, CR_KEEP } cr_mode = CR_REMOVE;
     char *default_cr;
@@ -186,42 +178,37 @@ at the VM/CMS or TSO command prompt.\n");
     printf(" 'receive' means copy a file from the host to this workstation.\n");
     for (;;) {
 	printf("Direction (send/receive) [%s]: ",
-		ft_private.receive_flag? "receive": "send");
+		p->receive_flag? "receive": "send");
 	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 	    return -1;
 	}
 	if (!inbuf[0]) {
-	    receive = ft_private.receive_flag;
-	    snprintf(kw[kw_ix++], KW_SIZE, "Direction=%s",
-		    receive? "receive": "send");
 	    break;
 	}
 	if (!strncasecmp(inbuf, "receive", strlen(inbuf))) {
-	    strcpy(kw[kw_ix++], "Direction=receive");
-	    receive = true;
+	    p->receive_flag = true;
 	    break;
 	}
 	if (!strncasecmp(inbuf, "send", strlen(inbuf))) {
-	    strcpy(kw[kw_ix++], "Direction=send");
-	    receive = false;
+	    p->receive_flag = false;
 	    break;
 	}
     }
 
     for (;;) {
 	printf("Name of source file on %s",
-		receive? "the host": "this workstation");
-	if (receive && ft_private.host_filename) {
-	    printf(" [%s]", ft_private.host_filename);
-	} else if (!receive && ft_private.local_filename) {
-	    printf(" [%s]", ft_private.local_filename);
+		p->receive_flag? "the host": "this workstation");
+	if (p->receive_flag && p->host_filename) {
+	    printf(" [%s]", p->host_filename);
+	} else if (!p->receive_flag && p->local_filename) {
+	    printf(" [%s]", p->local_filename);
 	}
 	printf(": ");
 	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 	    return -1;
 	}
 	if (inbuf[0]) {
-	    if (receive) {
+	    if (p->receive_flag) {
 		sprintf(kw[kw_ix++], "HostFile=%s", inbuf);
 		strcpy(hostfile, inbuf);
 	    } else {
@@ -229,35 +216,35 @@ at the VM/CMS or TSO command prompt.\n");
 		strcpy(localfile, inbuf);
 	    }
 	    break;
-	} else if (receive && ft_private.host_filename) {
+	} else if (p->receive_flag && p->host_filename) {
 	    snprintf(kw[kw_ix++], KW_SIZE, "HostFile=%s",
-		    ft_private.host_filename);
+		    p->host_filename);
 	    snprintf(hostfile, sizeof(hostfile), "%s",
-		    ft_private.host_filename);
+		    p->host_filename);
 	    break;
-	} else if (!receive && ft_private.local_filename) {
+	} else if (!p->receive_flag && p->local_filename) {
 	    snprintf(kw[kw_ix++], KW_SIZE, "LocalFile=%s",
-		    ft_private.local_filename);
+		    p->local_filename);
 	    snprintf(hostfile, sizeof(hostfile), "%s",
-		    ft_private.local_filename);
+		    p->local_filename);
 	    break;
 	}
     }
 
     for (;;) {
 	printf("Name of destination file on %s",
-		receive? "this workstation": "the host");
-	if (!receive && ft_private.host_filename) {
-	    printf(" [%s]", ft_private.host_filename);
-	} else if (receive && ft_private.local_filename) {
-	    printf(" [%s]", ft_private.local_filename);
+		p->receive_flag? "this workstation": "the host");
+	if (!p->receive_flag && p->host_filename) {
+	    printf(" [%s]", p->host_filename);
+	} else if (p->receive_flag && p->local_filename) {
+	    printf(" [%s]", p->local_filename);
 	}
 	printf(": ");
 	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 	    return -1;
 	}
 	if (inbuf[0]) {
-	    if (receive) {
+	    if (p->receive_flag) {
 		sprintf(kw[kw_ix++], "LocalFile=%s", inbuf);
 		strcpy(localfile, inbuf);
 	    } else {
@@ -265,36 +252,31 @@ at the VM/CMS or TSO command prompt.\n");
 		strcpy(hostfile, inbuf);
 	    }
 	    break;
-	} else if (!receive && ft_private.host_filename) {
+	} else if (!p->receive_flag && p->host_filename) {
 	    snprintf(kw[kw_ix++], KW_SIZE, "HostFile=%s",
-		    ft_private.host_filename);
+		    p->host_filename);
 	    snprintf(hostfile, sizeof(hostfile), "%s",
-		    ft_private.host_filename);
+		    p->host_filename);
 	    break;
-	} else if (receive && ft_private.local_filename) {
+	} else if (p->receive_flag && p->local_filename) {
 	    snprintf(kw[kw_ix++], KW_SIZE, "LocalFile=%s",
-		    ft_private.local_filename);
+		    p->local_filename);
 	    snprintf(hostfile, sizeof(hostfile), "%s",
-		    ft_private.local_filename);
+		    p->local_filename);
 	    break;
 	}
     }
 
     for (;;) {
 	printf("Host type: (tso/vm/cics) [%s] ",
-		ft_decode_host_type(ft_private.host_type));
+		ft_decode_host_type(p->host_type));
 	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 	    return -1;
 	}
 	if (!inbuf[0]) {
-	    snprintf(kw[kw_ix++], KW_SIZE, "Host=%s",
-		    ft_decode_host_type(ft_private.host_type));
-	    htype = ft_private.host_type;
 	    break;
 	}
-	if (ft_encode_host_type(inbuf, &htype)) {
-	    snprintf(kw[kw_ix++], KW_SIZE, "Host=%s", inbuf);
-	    htype = ft_private.host_type;
+	if (ft_encode_host_type(inbuf, &p->host_type)) {
 	    break;
 	}
     }
@@ -306,45 +288,43 @@ at the VM/CMS or TSO command prompt.\n");
 
     for (;;) {
 	printf("Transfer mode: (ascii/binary) [%s] ",
-		ft_private.ascii_flag? "ascii": "binary");
+		p->ascii_flag? "ascii": "binary");
 	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 	    return -1;
 	}
-	if ((!inbuf[0] && ft_private.ascii_flag) ||
-		(inbuf[0] && !strncasecmp(inbuf, "ascii", strlen(inbuf)))) {
-	    strcpy(kw[kw_ix++], "Mode=ascii");
-	    ascii = true;
+	if (!inbuf[0]) {
 	    break;
 	}
-	if ((!inbuf[0] && !ft_private.ascii_flag) ||
-		(inbuf[0] && !strncasecmp(inbuf, "binary", strlen(inbuf)))) {
-	    strcpy(kw[kw_ix++], "Mode=binary");
-	    ascii = false;
+	if (!strncasemcp(inbuf, "ascii", strlen(inbuf))) {
+	    p->ascii_flag = true;
+	    break;
+	}
+	if (!strncasemcp(inbuf, "binary", strlen(inbuf))) {
+	    p->ascii_flag = false;
 	    break;
 	}
     }
 
-    if (ascii) {
+    if (p->ascii_flag) {
 #if defined(_WIN32) /*[*/
 	for (;;) {
 	    int cp;
 
-	    cp = windows_cp;
-	    if (cp == 0) {
-		cp = appres.ft_cp? appres.ft_cp: appres.local_cp;
-	    }
-	    printf("Windows code page for transfer: [%d] ", cp);
-	    windows_cp = getnum(cp);
-	    if (windows_cp < 0) {
+	    printf("Windows code page for transfer: [%d] ",
+		    p->windows_codepage);
+	    cp = getnum(cp);
+	    if (cp < 0) {
 		return -1;
 	    }
-	    sprintf(kw[kw_ix++], "WindowsCodePage=%d", windows_cp);
-	    break;
+	    if (cp > 0) {
+		p->windows_cp = cp;
+		break;
+	    }
 	}
 #endif /*]*/
 	printf("\
  For ASCII transfers, carriage return (CR) characters can be handled specially.\n");
-	if (receive) {
+	if (p->receive_flag) {
 	    printf("\
  'add' means that CRs will be added to each record during the transfer.\n");
 	} else {
@@ -353,32 +333,31 @@ at the VM/CMS or TSO command prompt.\n");
 	}
 	printf("\
  'keep' means that no special action is taken with CRs.\n");
-	default_cr = ft_private.cr_flag? (receive? "add": "remove"): "keep";
+	default_cr = p->cr_flag? (p->receive_flag? "add": "remove"): "keep";
 	for (;;) {
 	    printf("CR handling: (%s/keep) [%s] ",
-		    receive? "add": "remove",
+		    p->receive_flag? "add": "remove",
 		    default_cr);
 	    if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 		return -1;
 	    }
 	    if (!inbuf[0]) {
-		cr_mode = ft_private.cr_flag? (receive? CR_ADD: CR_REMOVE):
+		cr_mode = p->cr_flag? (p->receive_flag? CR_ADD: CR_REMOVE):
 					      CR_KEEP;
-		snprintf(kw[kw_ix++], KW_SIZE, "Cr=%s", default_cr);
 		break;
 	    }
 	    if (!strncasecmp(inbuf, "remove", strlen(inbuf))) {
-		strcpy(kw[kw_ix++], "Cr=remove");
+		p->cr_flag = true;
 		cr_mode = CR_REMOVE;
 		break;
 	    }
 	    if (!strncasecmp(inbuf, "add", strlen(inbuf))) {
-		strcpy(kw[kw_ix++], "Cr=add");
+		p->cr_flag = true;
 		cr_mode = CR_ADD;
 		break;
 	    }
 	    if (!strncasecmp(inbuf, "keep", strlen(inbuf))) {
-		strcpy(kw[kw_ix++], "Cr=keep");
+		p->cr_flag = false;
 		cr_mode = CR_KEEP;
 		break;
 	    }
@@ -410,34 +389,31 @@ at the VM/CMS or TSO command prompt.\n");
 	    get_host_codepage());
 	for (;;) {
 	    printf("Remap character set: (yes/no) [%s] ",
-		    remap? "yes": "no");
+		    p->remap_flag? "yes": "no");
 	    if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 		return -1;
 	    }
 	    if (!inbuf[0]) {
-		snprintf(kw[kw_ix++], KW_SIZE, "Remap=%s", remap? "yes": "no");
 		break;
 	    }
 	    if (!strncasecmp(inbuf, "yes", strlen(inbuf))) {
-		strcpy(kw[kw_ix++], "Remap=yes");
-		remap = true;
+		p->remap_flag = true;
 		break;
 	    }
 	    if (!strncasecmp(inbuf, "no", strlen(inbuf))) {
-		strcpy(kw[kw_ix++], "Remap=no");
-		remap = false;
+		p->remap_flag = false;
 		break;
 	    }
 	}
     }
 
-    if (receive) {
+    if (p->receive_flag) {
 	printf("\
 If the destination file exists, you can choose to keep it (and abort the\n\
 transfer), replace it, or append the source file to it.\n");
-	if (ft_private.allow_overwrite) {
+	if (p->allow_overwrite) {
 	    default_fe = "replace";
-	} else if (ft_private.append_flag) {
+	} else if (p->append_flag) {
 	    default_fe = "append";
 	} else {
 	    default_fe = "keep";
@@ -450,8 +426,8 @@ transfer), replace it, or append the source file to it.\n");
 	    }
 	    if (!inbuf[0]) {
 		snprintf(kw[kw_ix++], KW_SIZE, "Exist=%s", default_fe);
-		fe_mode = ft_private.allow_overwrite? FE_REPLACE:
-		    (ft_private.append_flag? FE_APPEND: FE_KEEP);
+		fe_mode = p->allow_overwrite? FE_REPLACE:
+		    (p->append_flag? FE_APPEND: FE_KEEP);
 		break;
 	    }
 	    if (!strncasecmp(inbuf, "keep", strlen(inbuf))) {
@@ -472,19 +448,19 @@ transfer), replace it, or append the source file to it.\n");
 	}
     }
 
-    if (!receive) {
-	if (htype != HT_CICS) {
+    if (!p->receive_flag) {
+	if (p->host_type != HT_CICS) {
 	    for (;;) {
 		printf("[optional] Destination file record "
 			"format (default/fixed/variable/undefined) [%s]: ",
-			ft_decode_recfm(ft_private.recfm));
+			ft_decode_recfm(p->recfm));
 		if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 		    return -1;
 		}
 		if (!inbuf[0]) {
 		    snprintf(kw[kw_ix++], KW_SIZE, "Recfm=%s",
-			    ft_decode_recfm(ft_private.recfm));
-		    rf_mode = ft_private.recfm;
+			    ft_decode_recfm(p->recfm));
+		    rf_mode = p->recfm;
 		    break;
 		}
 		if (ft_encode_recfm(inbuf, &rf_mode)) {
@@ -494,11 +470,11 @@ transfer), replace it, or append the source file to it.\n");
 	    }
 
 	    printf("[optional] Destination file logical record length");
-	    if (ft_private.lrecl) {
-		printf(" [%d]", ft_private.lrecl);
+	    if (p->lrecl) {
+		printf(" [%d]", p->lrecl);
 	    }
 	    printf(": ");
-	    n = getnum(ft_private.lrecl);
+	    n = getnum(p->lrecl);
 	    if (n < 0) {
 		return -1;
 	    }
@@ -508,14 +484,14 @@ transfer), replace it, or append the source file to it.\n");
 	    }
 	}
 
-	if (htype == HT_TSO) {
+	if (p->host_type == HT_TSO) {
 
 	    printf("[optional] Destination file block size");
-	    if (ft_private.blksize) {
-		printf(" [%d]", ft_private.blksize);
+	    if (p->blksize) {
+		printf(" [%d]", p->blksize);
 	    }
 	    printf(": ");
-	    n = getnum(ft_private.blksize);
+	    n = getnum(p->blksize);
 	    if (n < 0) {
 		return -1;
 	    }
@@ -528,8 +504,8 @@ transfer), replace it, or append the source file to it.\n");
 		printf("[optional] Destination file "
 			"allocation type "
 			"(default/tracks/cylinders/avblock)");
-		if (ft_private.units) {
-		    printf(" [%s]", ft_decode_units(ft_private.units));
+		if (p->units) {
+		    printf(" [%s]", ft_decode_units(p->units));
 		}
 		printf(": ");
 		if (get_input(inbuf, sizeof(inbuf)) == NULL) {
@@ -537,8 +513,8 @@ transfer), replace it, or append the source file to it.\n");
 		}
 		if (!inbuf[0]) {
 		    snprintf(kw[kw_ix++], KW_SIZE, "Allocation=%s",
-			    ft_decode_units(ft_private.units));
-		    at_mode = ft_private.units;
+			    ft_decode_units(p->units));
+		    at_mode = p->units;
 		    break;
 		}
 		if (ft_encode_units(inbuf, &at_mode)) {
@@ -550,11 +526,11 @@ transfer), replace it, or append the source file to it.\n");
 	    if (at_mode != DEFAULT_UNITS) {
 		for (;;) {
 		    printf("Destination file primary space");
-		    if (ft_private.primary_space) {
-			printf(" [%d]", ft_private.primary_space);
+		    if (p->primary_space) {
+			printf(" [%d]", p->primary_space);
 		    }
 		    printf(": ");
-		    n = getnum(ft_private.primary_space);
+		    n = getnum(p->primary_space);
 		    if (n < 0) {
 			return -1;
 		    }
@@ -566,11 +542,11 @@ transfer), replace it, or append the source file to it.\n");
 		}
 
 		printf("[optional] Destination file secondary space");
-		if (ft_private.secondary_space) {
-		    printf(" [%d]", ft_private.secondary_space);
+		if (p->secondary_space) {
+		    printf(" [%d]", p->secondary_space);
 		}
 		printf(": ");
-		n = getnum(ft_private.secondary_space);
+		n = getnum(p->secondary_space);
 		if (n < 0) {
 		    return -1;
 		}
@@ -582,11 +558,11 @@ transfer), replace it, or append the source file to it.\n");
 		if (at_mode == AVBLOCK) {
 		    for (;;) {
 			printf("Destination file avblock size");
-			if (ft_private.avblock) {
-			    printf(" [%d]", ft_private.avblock);
+			if (p->avblock) {
+			    printf(" [%d]", p->avblock);
 			}
 			printf(": ");
-			n = getnum(ft_private.avblock);
+			n = getnum(p->avblock);
 			if (n < 0) {
 			    return -1;
 			}
@@ -602,7 +578,7 @@ transfer), replace it, or append the source file to it.\n");
     }
 
     printf("\nFile Transfer Summary:\n");
-    if (receive) {
+    if (p->receive_flag) {
 	printf(" Source file on Host: %s\n", hostfile);
 	printf(" Destination file on Workstation: %s\n", localfile);
     } else {
@@ -610,7 +586,7 @@ transfer), replace it, or append the source file to it.\n");
 	printf(" Destination file on Host: %s\n", hostfile);
     }
     printf(" Host type: ");
-    switch (htype) {
+    switch (p->host_type) {
     case HT_TSO:
 	printf("TSO");
 	break;
@@ -621,8 +597,8 @@ transfer), replace it, or append the source file to it.\n");
 	printf("CICS");
 	break;
     }
-    printf(" \n Transfer mode: %s", ascii? "ASCII": "Binary");
-    if (ascii) {
+    printf(" \n Transfer mode: %s", p->ascii_flag? "ASCII": "Binary");
+    if (p->ascii_flag) {
 	switch (cr_mode) {
 	case CR_REMOVE:
 	    printf(", remove CRs");
@@ -633,7 +609,7 @@ transfer), replace it, or append the source file to it.\n");
 	case CR_KEEP:
 	    break;
 	}
-	if (remap) {
+	if (p->remap_flag) {
 	    printf(", remap text");
 	} else {
 	    printf(", don't remap text");
@@ -645,7 +621,7 @@ transfer), replace it, or append the source file to it.\n");
     } else {
 	printf("\n");
     }
-    if (receive) {
+    if (p->receive_flag) {
 	printf(" If destination file exists, ");
 	switch (fe_mode) {
 	case FE_KEEP:
@@ -659,7 +635,7 @@ transfer), replace it, or append the source file to it.\n");
 	    break;
 	}
     }
-    if (!receive && (rf_mode != DEFAULT_RECFM || lrecl || primary_space ||
+    if (!p->receive_flag && (rf_mode != DEFAULT_RECFM || lrecl || primary_space ||
 		secondary_space)) {
 
 	printf(" Destination file:\n");
@@ -732,7 +708,5 @@ transfer), replace it, or append the source file to it.\n");
     fflush(stdout);
 #endif /*]*/
     kw_ret[i] = NULL;
-    *params = kw_ret;
-    *num_params = kw_ix;
     return 0;
 }

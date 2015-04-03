@@ -39,6 +39,11 @@ void ft_gui_complete_popup(const char *msg);
 void ft_gui_update_length(unsigned long length);
 void ft_gui_running(unsigned long length);
 void ft_gui_aborting(void);
-bool ft_gui_interact(char ***params, unsigned *num_params);
+typedef enum {
+    FGI_NOP,		/* interaction not supported */
+    FGI_SUCCESS,	/* parameters set, proceed */
+    FGI_ABORT		/* user aborted transfer */
+} ft_gui_interact_t;
+ft_gui_interact_t ft_gui_interact(ft_private_t *p);
 void ft_gui_awaiting(void);
 void ft_gui_popup_ft(void);

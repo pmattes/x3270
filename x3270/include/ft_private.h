@@ -37,8 +37,8 @@ typedef enum {
     HT_VM,
     HT_CICS
 } host_type_t;
-extern bool ft_encode_host_type(const char *s, host_type_t *ht);
-extern const char *ft_decode_host_type(host_type_t ht);
+bool ft_encode_host_type(const char *s, host_type_t *ht);
+const char *ft_decode_host_type(host_type_t ht);
 
 typedef enum {
     DEFAULT_RECFM,
@@ -46,8 +46,8 @@ typedef enum {
     RECFM_VARIABLE,
     RECFM_UNDEFINED
 } recfm_t;
-extern bool ft_encode_recfm(const char *s, recfm_t *recfm);
-extern const char *ft_decode_recfm(recfm_t recfm);
+bool ft_encode_recfm(const char *s, recfm_t *recfm);
+const char *ft_decode_recfm(recfm_t recfm);
 
 typedef enum {
     DEFAULT_UNITS,
@@ -55,12 +55,11 @@ typedef enum {
     CYLINDERS,
     AVBLOCK
 } units_t;
-extern bool ft_encode_units(const char *s, units_t *units);
-extern const char *ft_decode_units(units_t units);
+bool ft_encode_units(const char *s, units_t *units);
+const char *ft_decode_units(units_t units);
 
 typedef struct {
-    bool is_action;
-    bool is_interactive;
+    /* User-specified parameters. */
     char *host_filename;
     char *local_filename;
     bool receive_flag;
@@ -77,8 +76,18 @@ typedef struct {
     int primary_space;
     int secondary_space;
     int avblock;
+#if defined(_WIN32) /*[*/
+    int windows_codepage;
+#endif /*]*/
+
+    /* Transient state. */
+    bool is_action;
+    bool is_interactive;
     bool is_cut;
 } ft_private_t;
 
 extern ft_private_t ft_private;
 
+FILE *ft_go(ft_private_t *p);
+
+#define __FT_PRIVATE_H
