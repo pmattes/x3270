@@ -262,7 +262,7 @@ dft_data_insert(struct data_buffer *data_bufr)
 		int rv = 1;
 
 		/* Write the data out to the file. */
-	    	if (ft_private.ascii_flag && (ft_private.remap_flag || ft_private.cr_flag)) {
+	    	if (ft_private->ascii_flag && (ft_private->remap_flag || ft_private->cr_flag)) {
 			size_t obuf_len = 4 * my_length;
 			char *ob0 = Malloc(obuf_len);
 			char *ob = ob0;
@@ -275,11 +275,11 @@ dft_data_insert(struct data_buffer *data_bufr)
 			    	unsigned char c = *s++;
 
 				/* Strip CR's and ^Z's. */
-				if (ft_private.cr_flag && ((c == '\r' || c == 0x1a))) {
+				if (ft_private->cr_flag && ((c == '\r' || c == 0x1a))) {
 					continue;
 				}
 
-				if (!ft_private.remap_flag) {
+				if (!ft_private->remap_flag) {
 				    	*ob++ = c;
 					obuf_len--;
 					continue;
@@ -380,7 +380,7 @@ dft_data_insert(struct data_buffer *data_bufr)
 			char *buf;
 
 			buf = xs_buffer("write(%s): %s",
-				ft_private.local_filename, strerror(errno));
+				ft_private->local_filename, strerror(errno));
 
 			dft_abort(buf, TR_DATA_INSERT);
 			Free(buf);
@@ -459,7 +459,7 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 		return nm;
 	}
 
-	if (ft_private.remap_flag) {
+	if (ft_private->remap_flag) {
 		/* Read bytes until we have a legal multibyte sequence. */
 		do {
 			int consumed;
@@ -491,7 +491,7 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 	}
 
 	/* Expand NL to CR/LF. */
-	if (ft_private.cr_flag && !ft_last_cr && c == '\n') {
+	if (ft_private->cr_flag && !ft_last_cr && c == '\n') {
 	    	if (ft_last_dbcs) {
 		    	*bufptr = EBC_si;
 			dft_ungetc_cache[0] = '\r';
@@ -509,7 +509,7 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 	ft_last_cr = (c == '\r');
 
 	/* The no-remap case is pretty simple. */
-	if (!ft_private.remap_flag) {
+	if (!ft_private->remap_flag) {
 	    	*bufptr = c;
 		return 1;
 	}
@@ -574,7 +574,7 @@ dft_get_request(void)
 					   allowed */
 	bufptr = obuf + 17;
 	while (!dft_eof && numbytes) {
-	    	if (ft_private.ascii_flag && (ft_private.remap_flag || ft_private.cr_flag)) {
+	    	if (ft_private->ascii_flag && (ft_private->remap_flag || ft_private->cr_flag)) {
 		    	numread = dft_ascii_read(bufptr, numbytes);
 			if (numread == (size_t)-1) {
 				dft_eof = true;
@@ -604,7 +604,7 @@ dft_get_request(void)
 	if (ferror(ft_local_file)) {
 		char *buf;
 
-		buf = xs_buffer("read(%s): %s", ft_private.local_filename,
+		buf = xs_buffer("read(%s): %s", ft_private->local_filename,
 			strerror(errno));
 		dft_abort(buf, TR_GET_REQ);
 		Free(buf);

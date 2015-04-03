@@ -186,11 +186,11 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 
 		/* Map it. */
 		c = conv[quadrant].xlate[ix];
-		if (ft_private.ascii_flag && ft_private.cr_flag &&
+		if (ft_private->ascii_flag && ft_private->cr_flag &&
 			(c == '\r' || c == 0x1a)) {
 			continue;
 		}
-		if (!(ft_private.ascii_flag && ft_private.remap_flag)) {
+		if (!(ft_private->ascii_flag && ft_private->remap_flag)) {
 		    	/* No further translation necessary. */
 		    	*ob++ = c;
 			obuf_len--;
@@ -331,7 +331,7 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 			continue;
 		}
 
-		if (!(ft_private.ascii_flag && ft_private.remap_flag)) {
+		if (!(ft_private->ascii_flag && ft_private->remap_flag)) {
 			ob += store_download(c, ob);
 			buf++;
 			len--;
@@ -524,7 +524,7 @@ cut_data_request(void)
 	}
 
 	/* Abort the transfer. */
-	msg = xs_buffer("read(%s): %s", ft_private.local_filename,
+	msg = xs_buffer("read(%s): %s", ft_private->local_filename,
 		strerror(errno));
 	cut_abort(msg, SC_ABORT_FILE);
 	Free(msg);
@@ -626,7 +626,7 @@ cut_data(void)
 	if (fwrite((char *)cvobuf, conv_length, 1, ft_local_file) == 0) {
 		char *msg;
 
-		msg = xs_buffer("write(%s): %s", ft_private.local_filename,
+		msg = xs_buffer("write(%s): %s", ft_private->local_filename,
 		    strerror(errno));
 		cut_abort(msg, SC_ABORT_FILE);
 		Free(msg);
@@ -692,7 +692,7 @@ xlate_getc(void)
 		return r;
 	}
 
-	if (ft_private.ascii_flag) {
+	if (ft_private->ascii_flag) {
 		/*
 		 * Get the next (possibly multi-byte) character from the file.
 		 */
@@ -718,7 +718,7 @@ xlate_getc(void)
 		} while (error == ME_SHORT);
 
 		/* Expand it. */
-		if (ft_private.ascii_flag && ft_private.cr_flag &&
+		if (ft_private->ascii_flag && ft_private->cr_flag &&
 			!ft_last_cr && c == '\n') {
 			nc = download_convert((unsigned const char *)"\r", 1,
 				cbuf);

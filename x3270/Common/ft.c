@@ -63,9 +63,13 @@ unsigned long ft_length = 0;		/* Length of transfer */
 #if defined(_WIN32) /*[*/
 int ft_windows_codepage;		/* Windows code page */
 #endif /*]*/
-ft_private_t ft_private;		/* Private state */
+ft_private_t *ft_private;		/* Private state */
 
 /* Statics. */
+static ft_private_t transfer_ft_private;
+static ft_private_t gui_ft_private;
+static bool gui_initted = false;
+
 static struct timeval t0;		/* Starting time */
 
 /* Translation table: "ASCII" to EBCDIC, as seen by IND$FILE. */
@@ -264,34 +268,48 @@ ft_decode_units(units_t units)
 void
 ft_init(void)
 {
+    /*
+     * Do a dummy initialization of the Transfer action's ft_private, to catch
+     * and display any errors in the resource defaults.
+     */
+    ft_init_private(&transfer_ft_private);
+}
+
+/*
+ * Initialize or re-initialize an ft_private structure from the appres
+ * defaults.
+ */
+void
+ft_init_private(ft_private_t *p)
+{
     /* Initialize the private state. */
-    ft_private.receive_flag = true;
-    ft_private.host_type = HT_TSO;
-    ft_private.ascii_flag = true;
-    ft_private.cr_flag = ft_private.ascii_flag;
-    ft_private.remap_flag = ft_private.ascii_flag;
-    ft_private.allow_overwrite = false;
-    ft_private.append_flag = false;
-    ft_private.recfm = DEFAULT_RECFM;
-    ft_private.units = DEFAULT_UNITS;
-    ft_private.lrecl = 0;
-    ft_private.blksize = 0;
-    ft_private.primary_space = 0;
-    ft_private.secondary_space = 0;
-    ft_private.avblock = 0;
+    p->receive_flag = true;
+    p->host_type = HT_TSO;
+    p->ascii_flag = true;
+    p->cr_flag = p->ascii_flag;
+    p->remap_flag = p->ascii_flag;
+    p->allow_overwrite = false;
+    p->append_flag = false;
+    p->recfm = DEFAULT_RECFM;
+    p->units = DEFAULT_UNITS;
+    p->lrecl = 0;
+    p->blksize = 0;
+    p->primary_space = 0;
+    p->secondary_space = 0;
+    p->avblock = 0;
 #if defined(_WIN32) /*[*/
-    ft_private.windows_codepage = appres.ft_cp? appres.ft_cp: appres.local_cp;
+    p->windows_codepage = appres.ft_cp? appres.ft_cp: appres.local_cp;
 #endif /*]*/
 
     /* Apply resources. */
     if (appres.ft.blksize) {
-	ft_private.blksize = appres.ft.blksize;
+	p->blksize = appres.ft.blksize;
     }
     if (appres.ft.direction) {
 	if (!strcasecmp(appres.ft.direction, "receive")) {
-	    ft_private.receive_flag = true;
+	    p->receive_flag = true;
 	} else if (!strcasecmp(appres.ft.direction, "send")) {
-	    ft_private.receive_flag = false;
+	    p->receive_flag = false;
 	} else {
 	    xs_warning("Invalid %s '%s', ignoring", ResFtDirection,
 		    appres.ft.direction);
@@ -299,25 +317,25 @@ ft_init(void)
 	}
     }
     if (appres.ft.host &&
-	    !ft_encode_host_type(appres.ft.host, &ft_private.host_type)) {
+	    !ft_encode_host_type(appres.ft.host, &p->host_type)) {
 	xs_warning("Invalid %s '%s', ignoring", ResFtHost, appres.ft.host);
 	appres.ft.host = NULL;
     }
     if (appres.ft.host_file) {
-	ft_private.host_filename = appres.ft.host_file;
+	Replace(p->host_filename, NewString(appres.ft.host_file));
     } else {
-	ft_private.host_filename = NULL;
+	Replace(p->host_filename, NULL);
     }
     if (appres.ft.local_file) {
-	ft_private.local_filename = appres.ft.local_file;
+	Replace(p->local_filename, NewString(appres.ft.local_file));
     } else {
-	ft_private.local_filename = NULL;
+	Replace(p->local_filename, NULL);
     }
     if (appres.ft.mode) {
 	if (!strcasecmp(appres.ft.mode, "ascii")) {
-	    ft_private.ascii_flag = true;
+	    p->ascii_flag = true;
 	} else if (!strcasecmp(appres.ft.mode, "binary")) {
-	    ft_private.ascii_flag = false;
+	    p->ascii_flag = false;
 	} else {
 	    xs_warning("Invalid %s '%s', ignoring", ResFtMode, appres.ft.mode);
 	    appres.ft.host = NULL;
@@ -325,12 +343,12 @@ ft_init(void)
     }
     if (appres.ft.cr) { /* must come after processing "ascii" */
 	if (!strcasecmp(appres.ft.cr, "auto")) {
-	    ft_private.cr_flag = ft_private.ascii_flag;
+	    p->cr_flag = p->ascii_flag;
 	} else if (!strcasecmp(appres.ft.cr, "add") ||
 		   !strcasecmp(appres.ft.cr, "remove")) {
-	    ft_private.cr_flag = true;
+	    p->cr_flag = true;
 	} else if (!strcasecmp(appres.ft.cr, "keep")) {
-	    ft_private.cr_flag = false;
+	    p->cr_flag = false;
 	} else {
 	    xs_warning("Invalid %s '%s', ignoring", ResFtCr, appres.ft.cr);
 	    appres.ft.cr = NULL;
@@ -338,9 +356,9 @@ ft_init(void)
     }
     if (appres.ft.remap) {
 	if (!strcasecmp(appres.ft.remap, "yes")) {
-	    ft_private.remap_flag = true;
+	    p->remap_flag = true;
 	} else if (!strcasecmp(appres.ft.remap, "no")) {
-	    ft_private.remap_flag = false;
+	    p->remap_flag = false;
 	} else {
 	    xs_warning("Invalid %s '%s', ignoring", ResFtRemap,
 		    appres.ft.remap);
@@ -349,14 +367,14 @@ ft_init(void)
     }
     if (appres.ft.exist) {
 	if (!strcasecmp(appres.ft.exist, "keep")) {
-	    ft_private.allow_overwrite = false;
-	    ft_private.append_flag = false;
+	    p->allow_overwrite = false;
+	    p->append_flag = false;
 	} else if (!strcasecmp(appres.ft.exist, "replace")) {
-	    ft_private.allow_overwrite = true;
-	    ft_private.append_flag = false;
+	    p->allow_overwrite = true;
+	    p->append_flag = false;
 	} else if (!strcasecmp(appres.ft.exist, "append")) {
-	    ft_private.allow_overwrite = false;
-	    ft_private.append_flag = true;
+	    p->allow_overwrite = false;
+	    p->append_flag = true;
 	} else {
 	    xs_warning("Invalid %s '%s', ignoring", ResFtExist,
 		    appres.ft.exist);
@@ -364,27 +382,27 @@ ft_init(void)
 	}
     }
     if (appres.ft.primary_space) {
-	ft_private.primary_space = appres.ft.primary_space;
+	p->primary_space = appres.ft.primary_space;
     }
     if (appres.ft.recfm &&
-	    !ft_encode_recfm(appres.ft.recfm, &ft_private.recfm)) {
+	    !ft_encode_recfm(appres.ft.recfm, &p->recfm)) {
 	xs_warning("Invalid %s '%s', ignoring", ResFtRecfm, appres.ft.recfm);
 	appres.ft.recfm = NULL;
     }
     if (appres.ft.secondary_space) {
-	ft_private.secondary_space = appres.ft.secondary_space;
+	p->secondary_space = appres.ft.secondary_space;
     }
     if (appres.ft.lrecl) {
-	ft_private.lrecl = appres.ft.lrecl;
+	p->lrecl = appres.ft.lrecl;
     }
     if (appres.ft.allocation &&
-	    !ft_encode_units(appres.ft.allocation, &ft_private.units)) {
+	    !ft_encode_units(appres.ft.allocation, &p->units)) {
 	xs_warning("Invalid %s '%s', ignoring", ResFtAllocation,
 		appres.ft.allocation);
 	appres.ft.allocation = NULL;
     }
     if (appres.ft.avblock) {
-	ft_private.avblock = appres.ft.avblock;
+	p->avblock = appres.ft.avblock;
     }
 }
 
@@ -410,8 +428,8 @@ ft_didnt_start(ioid_t id _is_unused)
     if (ft_local_file != NULL) {
 	fclose(ft_local_file);
 	ft_local_file = NULL;
-	if (ft_private.receive_flag && !ft_private.append_flag) {
-	    unlink(ft_private.local_filename);
+	if (ft_private->receive_flag && !ft_private->append_flag) {
+	    unlink(ft_private->local_filename);
 	}
     }
 
@@ -427,7 +445,7 @@ ft_complete(const char *errmsg)
 {
     /* Close the local file. */
     if (ft_local_file != NULL && fclose(ft_local_file) < 0) {
-	popup_an_errno(errno, "close(%s)", ft_private.local_filename);
+	popup_an_errno(errno, "close(%s)", ft_private->local_filename);
     }
     ft_local_file = NULL;
 
@@ -465,8 +483,8 @@ ft_complete(const char *errmsg)
 		 (double)(t1.tv_usec - t0.tv_usec) / 1.0e6);
 	buf = xs_buffer(get_message("ftComplete"), ft_length,
 		display_scale(bytes_sec),
-		ft_private.is_cut ? "CUT" : "DFT");
-	if (ft_private.is_action) {
+		ft_private->is_cut ? "CUT" : "DFT");
+	if (ft_private->is_action) {
 	    /* Clear out the progress display. */
 	    ft_gui_clear_progress();
 
@@ -477,7 +495,7 @@ ft_complete(const char *errmsg)
 	}
 	Free(buf);
     }
-    ft_private.is_interactive = false;
+    ft_private->is_interactive = false;
 }
 
 /* Update the bytes-transferred count on the progress pop-up. */
@@ -498,7 +516,7 @@ ft_running(bool is_cut)
 	    ft_start_id = NULL_IOID;
 	}
     }
-    ft_private.is_cut = is_cut;
+    ft_private->is_cut = is_cut;
     (void) gettimeofday(&t0, NULL);
     ft_length = 0;
 
@@ -676,7 +694,189 @@ ft_go(ft_private_t *p)
     (void) emulate_input(vb_buf(&r), vb_len(&r), false);
     vb_free(&r);
 
+    /* Now proceed with this context. */
+    ft_private = p;
+
     return f;
+}
+
+/*
+ * Parse the keywords for the Transfer() action.
+ *
+ * Returns a pointer to the filled-out ft_private structure, or NULL for
+ * errors.
+ */
+static ft_private_t *
+parse_ft_keywords(unsigned argc, const char **argv)
+{
+    ft_private_t *p = &transfer_ft_private;
+    int i, k;
+    unsigned j;
+    long l;
+    char *ptr;
+
+    /* Unlike the GUIs, always set everything to defaults. */
+    ft_init_private(p);
+    p->is_action = true;
+    for (i = 0; i < N_PARMS; i++) {
+	Replace(tp[i].value, NULL);
+    }
+
+    /* The special keyword 'Defaults' means 'just use the defaults'. */
+    if (argc == 1 && !strcasecmp(argv[0], "Defaults")) {
+	argc--;
+	argv++;
+    }
+
+    /* See what they specified. */
+    for (j = 0; j < argc; j++) {
+	for (i = 0; i < N_PARMS; i++) {
+	    char *eq;
+	    int kwlen;
+
+	    eq = strchr(argv[j], '=');
+	    if (eq == NULL || eq == argv[j] || !*(eq + 1)) {
+		popup_an_error("Invalid option syntax: '%s'", argv[j]);
+		return NULL;
+	    }
+	    kwlen = eq - argv[j];
+	    if (!strncasecmp(argv[j], tp[i].name, kwlen)
+		    && !tp[i].name[kwlen]) {
+		if (tp[i].keyword[0]) {
+		    for (k = 0; tp[i].keyword[k] != NULL && k < 4; k++) {
+			if (!strncasecmp(eq + 1, tp[i].keyword[k],
+				    strlen(eq + 1))) {
+			    break;
+			}
+		    }
+		    if (k >= 4 || tp[i].keyword[k] == NULL) {
+			popup_an_error("Invalid option value: '%s'", eq + 1);
+			return NULL;
+		    }
+		} else switch (i) {
+		    case PARM_LRECL:
+		    case PARM_BLKSIZE:
+		    case PARM_PRIMARY_SPACE:
+		    case PARM_SECONDARY_SPACE:
+		    case PARM_BUFFER_SIZE:
+#if defined(_WIN32) /*[*/
+		    case PARM_WINDOWS_CODEPAGE:
+#endif /*]*/
+			l = strtol(eq + 1, &ptr, 10);
+			l = l; /* keep gcc happy */
+			if (ptr == eq + 1 || *ptr) {
+			    popup_an_error("Invalid option value: '%s'",
+				    eq + 1);
+			    return NULL;
+			}
+			break;
+		    default:
+			break;
+		}
+		tp[i].value = NewString(eq + 1);
+		break;
+	    }
+	}
+	if (i >= N_PARMS) {
+	    popup_an_error("Unknown option: %s", argv[j]);
+	    return NULL;
+	}
+    }
+
+    /* Transfer from keywords to ft_private. */
+    if (tp[PARM_DIRECTION].value) {
+	p->receive_flag = !strcasecmp(tp[PARM_DIRECTION].value, "receive");
+    }
+    if (tp[PARM_HOST_FILE].value) {
+	p->host_filename = tp[PARM_HOST_FILE].value;
+    }
+    if (tp[PARM_LOCAL_FILE].value) {
+	p->local_filename = tp[PARM_LOCAL_FILE].value;
+    }
+    if (tp[PARM_HOST].value) {
+	(void) ft_encode_host_type(tp[PARM_HOST].value, &p->host_type);
+    }
+    if (tp[PARM_MODE].value) {
+	p->ascii_flag = !strcasecmp(tp[PARM_MODE].value, "ascii");
+    }
+    if (tp[PARM_CR].value) {
+	if (!strcasecmp(tp[PARM_CR].value, "auto")) {
+	    p->cr_flag = p->ascii_flag;
+	} else {
+	    if (!p->ascii_flag) {
+		popup_an_error("Invalid 'Cr' option for ASCII mode");
+		return NULL;
+	    }
+	    p->cr_flag = !strcasecmp(tp[PARM_CR].value, "remove") ||
+			 !strcasecmp(tp[PARM_CR].value, "add");
+	}
+    }
+    if (p->ascii_flag && tp[PARM_REMAP].value) {
+	p->remap_flag = !strcasecmp(tp[PARM_REMAP].value, "yes");
+    }
+    if (tp[PARM_EXIST].value) {
+	p->append_flag = !strcasecmp(tp[PARM_EXIST].value, "append");
+	p->allow_overwrite = !strcasecmp(tp[PARM_EXIST].value, "replace");
+    }
+    if (tp[PARM_RECFM].value) {
+	(void) ft_encode_recfm(tp[PARM_RECFM].value, &p->recfm);
+    }
+    if (tp[PARM_LRECL].value) {
+	p->lrecl = atoi(tp[PARM_LRECL].value);
+    }
+    if (tp[PARM_BLKSIZE].value) {
+	p->blksize = atoi(tp[PARM_BLKSIZE].value);
+    }
+    if (tp[PARM_ALLOCATION].value) {
+	(void) ft_encode_units(tp[PARM_ALLOCATION].value, &p->units);
+    }
+    if (tp[PARM_PRIMARY_SPACE].value) {
+	p->primary_space = atoi(tp[PARM_PRIMARY_SPACE].value);
+    }
+    if (tp[PARM_SECONDARY_SPACE].value) {
+	p->secondary_space = atoi(tp[PARM_SECONDARY_SPACE].value);
+    }
+    if (tp[PARM_BUFFER_SIZE].value != NULL) {
+	dft_buffersize = atoi(tp[PARM_BUFFER_SIZE].value);
+    } else {
+	dft_buffersize = 0;
+    }
+    set_dft_buffersize();
+    if (tp[PARM_AVBLOCK].value) {
+	p->avblock = atoi(tp[PARM_AVBLOCK].value);
+    }
+#if defined(_WIN32) /*[*/
+    if (tp[PARM_WINDOWS_CODEPAGE].value != NULL) {
+	p->windows_codepage = atoi(tp[PARM_WINDOWS_CODEPAGE].value);
+    }
+#endif /*]*/
+
+    /* Check for required values. */
+    if (!p->host_filename) {
+	popup_an_error("Missing 'HostFile' option");
+	return NULL;
+    }
+    if (!p->local_filename) {
+	popup_an_error("Missing 'LocalFile' option");
+	return NULL;
+    }
+    if (p->host_type == HT_TSO &&
+	    !p->receive_flag &&
+	    p->units != DEFAULT_UNITS &&
+	    p->primary_space <= 0) {
+	popup_an_error("Missing or invalid PrimarySpace");
+	return NULL;
+    }
+    if (p->host_type == HT_TSO &&
+	    !p->receive_flag &&
+	    p->units == AVBLOCK &&
+	    p->avblock <= 0) {
+	popup_an_error("Missing or invalid Avblock");
+	return NULL;
+    }
+
+    /* All set. */
+    return p;
 }
 
 /*
@@ -705,17 +905,9 @@ ft_go(ft_private_t *p)
 static bool  
 Transfer_action(ia_t ia, unsigned argc, const char **argv)
 {
-    int i, k;
-    unsigned j;
-    long l;
-    char *ptr;
-
-    char **xparams = (char **)argv;
-    unsigned xnparams = argc;
+    ft_private_t *p = NULL;
 
     action_debug("Transfer", ia, argc, argv);
-
-    ft_private.is_action = true;
 
     /* Make sure we're connected. */
     if (!IN_3270) {
@@ -725,261 +917,41 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 
     /* Check for interactive mode. */
     if (argc == 0) {
-	switch (ft_gui_interact(&ft_private)) {
+	if (!gui_initted) {
+	    ft_init_private(&gui_ft_private);
+	    gui_ft_private.is_action = true;
+	    gui_initted = true;
+	}
+	switch (ft_gui_interact(&gui_ft_private)) {
 	case FGI_NOP:
 	    /* Hope the defaults are enough. */
 	    break;
 	case FGI_SUCCESS:
 	    /* Proceed as specified in ft_private. */
-	    /* ... */
+	    p = &gui_ft_private;
 	    break;
 	case FGI_ABORT:
+	    /* User said no. */
 	    return false;
 	}
     }
 
-    /*
-     * Unlike the dialogs, which preserve the previous settings, the
-     * Transfer() action always reverts to the defaults.
-     */
-
-    /* Set everything to the default. */
-    ft_init();
-    for (i = 0; i < N_PARMS; i++) {
-	Free(tp[i].value);
-	if (tp[i].keyword[0] != NULL) {
-	    tp[i].value = NewString(tp[i].keyword[0]);
-	} else {
-	    tp[i].value = NULL;
-	}
-    }
-
-    /*
-     * Override defaults from resources.
-     */
-    if (appres.ft.allocation) {
-	if (tp[PARM_ALLOCATION].value) {
-	    Free(tp[PARM_ALLOCATION].value);
-	}
-	tp[PARM_ALLOCATION].value = NewString(appres.ft.allocation);
-    }
-    if (appres.ft.avblock) {
-	if (tp[PARM_AVBLOCK].value) {
-	    Free(tp[PARM_AVBLOCK].value);
-	}
-	tp[PARM_AVBLOCK].value = xs_buffer("%d", appres.ft.avblock);
-    }
-    if (appres.ft.blksize) {
-	if (tp[PARM_BLKSIZE].value) {
-	    Free(tp[PARM_BLKSIZE].value);
-	}
-	tp[PARM_BLKSIZE].value = xs_buffer("%d", appres.ft.blksize);
-    }
-    if (appres.ft.cr) {
-	if (tp[PARM_CR].value) {
-	    Free(tp[PARM_CR].value);
-	}
-	tp[PARM_CR].value = NewString(appres.ft.cr);
-    }
-    if (appres.ft.direction) {
-	if (tp[PARM_DIRECTION].value) {
-	    Free(tp[PARM_DIRECTION].value);
-	}
-	tp[PARM_DIRECTION].value = NewString(appres.ft.direction);
-    }
-    if (appres.ft.exist) {
-	if (tp[PARM_EXIST].value) {
-	    Free(tp[PARM_EXIST].value);
-	}
-	tp[PARM_EXIST].value = NewString(appres.ft.exist);
-    }
-    if (appres.ft.host) {
-	if (tp[PARM_HOST].value) {
-	    Free(tp[PARM_HOST].value);
-	}
-	tp[PARM_HOST].value = NewString(appres.ft.host);
-    }
-    if (appres.ft.host_file) {
-	if (tp[PARM_HOST_FILE].value) {
-	    Free(tp[PARM_HOST_FILE].value);
-	}
-	tp[PARM_HOST_FILE].value = NewString(appres.ft.host_file);
-    }
-    if (appres.ft.local_file) {
-	if (tp[PARM_LOCAL_FILE].value) {
-	    Free(tp[PARM_LOCAL_FILE].value);
-	}
-	tp[PARM_LOCAL_FILE].value = NewString(appres.ft.local_file);
-    }
-    if (appres.ft.lrecl) {
-	if (tp[PARM_LRECL].value) {
-	    Free(tp[PARM_LRECL].value);
-	}
-	tp[PARM_LRECL].value = xs_buffer("%d", appres.ft.lrecl);
-    }
-    if (appres.ft.mode) {
-	if (tp[PARM_MODE].value) {
-	    Free(tp[PARM_MODE].value);
-	}
-	tp[PARM_MODE].value = NewString(appres.ft.mode);
-    }
-    if (appres.ft.primary_space) {
-	if (tp[PARM_PRIMARY_SPACE].value) {
-	    Free(tp[PARM_PRIMARY_SPACE].value);
-	}
-	tp[PARM_PRIMARY_SPACE].value = xs_buffer("%d", appres.ft.primary_space);
-    }
-    if (appres.ft.recfm) {
-	if (tp[PARM_RECFM].value) {
-	    Free(tp[PARM_RECFM].value);
-	}
-	tp[PARM_RECFM].value = NewString(appres.ft.recfm);
-    }
-    if (appres.ft.remap) {
-	if (tp[PARM_REMAP].value) {
-	    Free(tp[PARM_REMAP].value);
-	}
-	tp[PARM_REMAP].value = NewString(appres.ft.remap);
-    }
-    if (appres.ft.primary_space) {
-	if (tp[PARM_SECONDARY_SPACE].value) {
-	    Free(tp[PARM_SECONDARY_SPACE].value);
-	}
-	tp[PARM_SECONDARY_SPACE].value = xs_buffer("%d",
-		appres.ft.primary_space);
-    }
-
-    /* See what they specified. */
-    for (j = 0; j < xnparams; j++) {
-	for (i = 0; i < N_PARMS; i++) {
-	    char *eq;
-	    int kwlen;
-
-	    eq = strchr(xparams[j], '=');
-	    if (eq == NULL || eq == xparams[j] || !*(eq + 1)) {
-		popup_an_error("Invalid option syntax: '%s'", xparams[j]);
-		return false;
-	    }
-	    kwlen = eq - xparams[j];
-	    if (!strncasecmp(xparams[j], tp[i].name, kwlen)
-		    && !tp[i].name[kwlen]) {
-		if (tp[i].keyword[0]) {
-		    for (k = 0; tp[i].keyword[k] != NULL && k < 4; k++) {
-			if (!strncasecmp(eq + 1, tp[i].keyword[k],
-				    strlen(eq + 1))) {
-			    break;
-			}
-		    }
-		    if (k >= 4 || tp[i].keyword[k] == NULL) {
-			popup_an_error("Invalid option value: '%s'", eq + 1);
-			return false;
-		    }
-		} else switch (i) {
-		    case PARM_LRECL:
-		    case PARM_BLKSIZE:
-		    case PARM_PRIMARY_SPACE:
-		    case PARM_SECONDARY_SPACE:
-		    case PARM_BUFFER_SIZE:
-#if defined(_WIN32) /*[*/
-		    case PARM_WINDOWS_CODEPAGE:
-#endif /*]*/
-			l = strtol(eq + 1, &ptr, 10);
-			l = l; /* keep gcc happy */
-			if (ptr == eq + 1 || *ptr) {
-			    popup_an_error("Invalid option value: '%s'",
-				    eq + 1);
-			    return false;
-			}
-			break;
-		    default:
-			break;
-		}
-		tp[i].value = NewString(eq + 1);
-		break;
-	    }
-	}
-	if (i >= N_PARMS) {
-	    popup_an_error("Unknown option: %s", xparams[j]);
+    if (p == NULL) {
+	/* Parse the keywords into an ft_private structure. */
+	p = parse_ft_keywords(argc, argv);
+	if (p == NULL) {
 	    return false;
 	}
     }
-
-    /* Check for required values. */
-    if (tp[PARM_HOST_FILE].value == NULL) {
-	popup_an_error("Missing 'HostFile' option");
-	return false;
-    }
-    if (tp[PARM_LOCAL_FILE].value == NULL) {
-	popup_an_error("Missing 'LocalFile' option");
-	return false;
-    }
-
-    /*
-     * Start the transfer.  Much of this is duplicated from ft_start()
-     * and should be made common.
-     */
-    if (tp[PARM_BUFFER_SIZE].value != NULL) {
-	dft_buffersize = atoi(tp[PARM_BUFFER_SIZE].value);
-    } else {
-	dft_buffersize = 0;
-    }
-    set_dft_buffersize();
-
-    ft_private.receive_flag = !strcasecmp(tp[PARM_DIRECTION].value, "receive");
-    ft_private.append_flag = !strcasecmp(tp[PARM_EXIST].value, "append");
-    ft_private.allow_overwrite = !strcasecmp(tp[PARM_EXIST].value, "replace");
-    ft_private.ascii_flag = !strcasecmp(tp[PARM_MODE].value, "ascii");
-    if (!strcasecmp(tp[PARM_CR].value, "auto")) {
-	ft_private.cr_flag = ft_private.ascii_flag;
-    } else {
-	if (!ft_private.ascii_flag) {
-	    popup_an_error("Invalid 'Cr' option for ASCII mode");
-	    return false;
-	}
-	ft_private.cr_flag = !strcasecmp(tp[PARM_CR].value, "remove") ||
-			     !strcasecmp(tp[PARM_CR].value, "add");
-    }
-    if (ft_private.ascii_flag) {
-	ft_private.remap_flag = !strcasecmp(tp[PARM_REMAP].value, "yes");
-    }
-    (void) ft_encode_host_type(tp[PARM_HOST].value, &ft_private.host_type);
-    (void) ft_encode_units(tp[PARM_ALLOCATION].value, &ft_private.units);
-
-#if defined(_WIN32) /*[*/
-    if (tp[PARM_WINDOWS_CODEPAGE].value != NULL) {
-	ft_private.windows_codepage = atoi(tp[PARM_WINDOWS_CODEPAGE].value);
-    }
-#endif /*]*/
-
-    if (ft_private.host_type == HT_TSO &&
-	    !ft_private.receive_flag &&
-	    ft_private.units != DEFAULT_UNITS &&
-	    (tp[PARM_PRIMARY_SPACE].value == NULL ||
-	     atoi(tp[PARM_PRIMARY_SPACE].value) <= 0)) {
-	popup_an_error("Missing or invalid PrimarySpace");
-	return false;
-    }
-
-    if (ft_private.host_type == HT_TSO &&
-	    !ft_private.receive_flag &&
-	    ft_private.units == AVBLOCK &&
-	    (tp[PARM_AVBLOCK].value == NULL ||
-	     atoi(tp[PARM_AVBLOCK].value) <= 0)) {
-	popup_an_error("Missing or invalid Avblock");
-	return false;
-    }
-
-    ft_private.host_filename = tp[PARM_HOST_FILE].value;
-    ft_private.local_filename = tp[PARM_LOCAL_FILE].value;
 
     /* Start the transfer. */
-    ft_local_file = ft_go(&ft_private);
+    ft_local_file = ft_go(p);
     if (ft_local_file == NULL) {
 	return false;
     }
 
     /* Finish initialization. */
-    ft_private.is_cut = false;
+    p->is_cut = false;
     ft_last_cr = false;
     ft_last_dbcs = false;
 

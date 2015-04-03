@@ -120,6 +120,9 @@ static Widget overwrite_shell;
 
 static bool interactive_overwrite = false;
 
+static ft_private_t xftp;
+static bool xftp_initted = false;
+
 static void ft_cancel(Widget w, XtPointer client_data, XtPointer call_data);
 static void ft_popup_callback(Widget w, XtPointer client_data,
     XtPointer call_data);
@@ -192,9 +195,15 @@ ft_popup_init(void)
     Widget spacer_toggle;
     char *s;
 
-    recfm_default = (ft_private.recfm == DEFAULT_RECFM);
-    units_default = (ft_private.units == DEFAULT_UNITS);
-    units_avblock = (ft_private.units == AVBLOCK);
+    /* Init the file transfer state structure from defaults. */
+    if (!xftp_initted) {
+	ft_init_private(&xftp);
+	xftp_initted = true;
+    }
+
+    recfm_default = (xftp.recfm == DEFAULT_RECFM);
+    units_default = (xftp.units == DEFAULT_UNITS);
+    units_avblock = (xftp.units == AVBLOCK);
 
     /* Prep the dialog functions. */
     dialog_set(&ft_sr, ft_dialog);
@@ -226,9 +235,9 @@ ft_popup_init(void)
 	    XtNfromHoriz, local_label,
 	    XtNhorizDistance, 0,
 	    NULL);
-    if (ft_private.local_filename) {
-	XtVaSetValues(local_file, XtNstring, ft_private.local_filename, NULL);
-	XawTextSetInsertionPoint(local_file, strlen(ft_private.local_filename));
+    if (xftp.local_filename) {
+	XtVaSetValues(local_file, XtNstring, xftp.local_filename, NULL);
+	XawTextSetInsertionPoint(local_file, strlen(xftp.local_filename));
     }
     dialog_match_dimension(local_label, local_file, XtNheight);
     w = XawTextGetSource(local_file);
@@ -260,9 +269,9 @@ ft_popup_init(void)
 	    XtNfromHoriz, host_label,
 	    XtNhorizDistance, 0,
 	    NULL);
-    if (ft_private.host_filename) {
-	XtVaSetValues(host_file, XtNstring, ft_private.host_filename, NULL);
-	XawTextSetInsertionPoint(host_file, strlen(ft_private.host_filename));
+    if (xftp.host_filename) {
+	XtVaSetValues(host_file, XtNstring, xftp.host_filename, NULL);
+	XawTextSetInsertionPoint(host_file, strlen(xftp.host_filename));
     }
     dialog_match_dimension(host_label, host_file, XtNheight);
     dialog_match_dimension(local_label, host_label, XtNwidth);
@@ -288,7 +297,7 @@ ft_popup_init(void)
 	    XtNhorizDistance, MARGIN,
 	    XtNborderWidth, 0,
 	    NULL);
-    dialog_apply_bitmap(send_toggle, ft_private.receive_flag? no_diamond:
+    dialog_apply_bitmap(send_toggle, xftp.receive_flag? no_diamond:
 							      diamond);
     XtAddCallback(send_toggle, XtNcallback, toggle_receive,
 	    (XtPointer)&s_false);
@@ -299,7 +308,7 @@ ft_popup_init(void)
 	    XtNhorizDistance, MARGIN,
 	    XtNborderWidth, 0,
 	    NULL);
-    dialog_apply_bitmap(receive_toggle, ft_private.receive_flag? diamond:
+    dialog_apply_bitmap(receive_toggle, xftp.receive_flag? diamond:
 								 no_diamond);
     XtAddCallback(receive_toggle, XtNcallback, toggle_receive,
 	    (XtPointer)&s_true);
@@ -321,7 +330,7 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(ascii_toggle,
-	    ft_private.ascii_flag? diamond: no_diamond);
+	    xftp.ascii_flag? diamond: no_diamond);
     XtAddCallback(ascii_toggle, XtNcallback, toggle_ascii, (XtPointer)&s_true);
     binary_toggle = XtVaCreateManagedWidget(
 	    "binary", commandWidgetClass, ft_dialog,
@@ -331,7 +340,7 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(binary_toggle,
-	    ft_private.ascii_flag? no_diamond: diamond);
+	    xftp.ascii_flag? no_diamond: diamond);
     XtAddCallback(binary_toggle, XtNcallback, toggle_ascii,
 	    (XtPointer)&s_false);
 
@@ -343,7 +352,7 @@ ft_popup_init(void)
 	    XtNhorizDistance, MARGIN,
 	    XtNborderWidth, 0,
 	    NULL);
-    dialog_apply_bitmap(append_widget, ft_private.append_flag? dot: no_dot);
+    dialog_apply_bitmap(append_widget, xftp.append_flag? dot: no_dot);
     XtAddCallback(append_widget, XtNcallback, toggle_append, NULL);
 
     /* Set up the recfm group. */
@@ -355,7 +364,7 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_register_sensitivity(recfm_label,
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &host_is_tso_or_vm, true,
 	    NULL, false);
 
@@ -367,11 +376,11 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(recfm_options[0],
-	    (ft_private.recfm == DEFAULT_RECFM)? diamond: no_diamond);
+	    (xftp.recfm == DEFAULT_RECFM)? diamond: no_diamond);
     XtAddCallback(recfm_options[0], XtNcallback, recfm_callback,
 	    (XtPointer)&r_default_recfm);
     dialog_register_sensitivity(recfm_options[0],
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &host_is_tso_or_vm, true,
 	    NULL, false);
 
@@ -383,11 +392,11 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(recfm_options[1],
-	    (ft_private.recfm == RECFM_FIXED)? diamond: no_diamond);
+	    (xftp.recfm == RECFM_FIXED)? diamond: no_diamond);
     XtAddCallback(recfm_options[1], XtNcallback, recfm_callback,
 	    (XtPointer)&r_fixed);
     dialog_register_sensitivity(recfm_options[1],
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &host_is_tso_or_vm, true,
 	    NULL, false);
 
@@ -399,11 +408,11 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(recfm_options[2],
-	    (ft_private.recfm == RECFM_VARIABLE)? diamond: no_diamond);
+	    (xftp.recfm == RECFM_VARIABLE)? diamond: no_diamond);
     XtAddCallback(recfm_options[2], XtNcallback, recfm_callback,
 	    (XtPointer)&r_variable);
     dialog_register_sensitivity(recfm_options[2],
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &host_is_tso_or_vm, true,
 	    NULL, false);
 
@@ -415,11 +424,11 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(recfm_options[3],
-	    (ft_private.recfm == RECFM_UNDEFINED)? diamond: no_diamond);
+	    (xftp.recfm == RECFM_UNDEFINED)? diamond: no_diamond);
     XtAddCallback(recfm_options[3], XtNcallback, recfm_callback,
 	    (XtPointer)&r_undefined);
     dialog_register_sensitivity(recfm_options[3],
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &host_is_tso, true,
 	    NULL, false);
 
@@ -431,7 +440,7 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_register_sensitivity(lrecl_label,
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &recfm_default, false,
 	    &host_is_tso_or_vm, true);
     lrecl_widget = XtVaCreateManagedWidget(
@@ -444,8 +453,8 @@ ft_popup_init(void)
 	    XtNeditType, XawtextEdit,
 	    XtNdisplayCaret, False,
 	    NULL);
-    if (ft_private.lrecl && ft_private.host_type != HT_CICS) {
-	char *lr = lazyaf("%d", ft_private.lrecl);
+    if (xftp.lrecl && xftp.host_type != HT_CICS) {
+	char *lr = lazyaf("%d", xftp.lrecl);
 
 	XtVaSetValues(lrecl_widget, XtNstring, lr, NULL);
 	XawTextSetInsertionPoint(lrecl_widget, strlen(lr));
@@ -459,7 +468,7 @@ ft_popup_init(void)
 		(XtPointer)&t_numeric);
     }
     dialog_register_sensitivity(lrecl_widget,
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &recfm_default, false,
 	    &host_is_tso_or_vm, true);
 
@@ -472,7 +481,7 @@ ft_popup_init(void)
 	    NULL);
     dialog_match_dimension(blksize_label, lrecl_label, XtNwidth);
     dialog_register_sensitivity(blksize_label,
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &recfm_default, false,
 	    &host_is_tso, true);
     blksize_widget = XtVaCreateManagedWidget(
@@ -485,8 +494,8 @@ ft_popup_init(void)
 	    XtNeditType, XawtextEdit,
 	    XtNdisplayCaret, False,
 	    NULL);
-    if (ft_private.blksize && ft_private.host_type != HT_CICS) {
-	char *bs = lazyaf("%d", ft_private.blksize);
+    if (xftp.blksize && xftp.host_type != HT_CICS) {
+	char *bs = lazyaf("%d", xftp.blksize);
 
 	XtVaSetValues(blksize_widget, XtNstring, bs, NULL);
 	XawTextSetInsertionPoint(blksize_widget, strlen(bs));
@@ -500,7 +509,7 @@ ft_popup_init(void)
 		(XtPointer)&t_numeric);
     }
     dialog_register_sensitivity(blksize_widget,
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &recfm_default, false,
 	    &host_is_tso, true);
 
@@ -535,7 +544,7 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(vm_toggle,
-	    (ft_private.host_type == HT_VM)? diamond: no_diamond);
+	    (xftp.host_type == HT_VM)? diamond: no_diamond);
     XtAddCallback(vm_toggle, XtNcallback, toggle_host_type,
 	    (XtPointer)&s_vm);
     tso_toggle =  XtVaCreateManagedWidget(
@@ -547,7 +556,7 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(tso_toggle,
-	    (ft_private.host_type == HT_TSO)? diamond : no_diamond);
+	    (xftp.host_type == HT_TSO)? diamond : no_diamond);
     XtAddCallback(tso_toggle, XtNcallback, toggle_host_type,
 	    (XtPointer)&s_tso);
     cics_toggle =  XtVaCreateManagedWidget(
@@ -559,7 +568,7 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(cics_toggle,
-	    (ft_private.host_type == HT_CICS)? diamond : no_diamond);
+	    (xftp.host_type == HT_CICS)? diamond : no_diamond);
     XtAddCallback(cics_toggle, XtNcallback, toggle_host_type,
 	    (XtPointer)&s_cics);
 
@@ -573,10 +582,10 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(cr_widget,
-	    ft_private.ascii_flag && ft_private.cr_flag? dot: no_dot);
+	    xftp.ascii_flag && xftp.cr_flag? dot: no_dot);
     XtAddCallback(cr_widget, XtNcallback, toggle_cr, 0);
     dialog_register_sensitivity(cr_widget,
-	    &ft_private.ascii_flag, true,
+	    &xftp.ascii_flag, true,
 	    NULL, false,
 	    NULL, false);
 
@@ -590,10 +599,10 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(remap_widget,
-	    ft_private.ascii_flag && ft_private.remap_flag? dot: no_dot);
+	    xftp.ascii_flag && xftp.remap_flag? dot: no_dot);
     XtAddCallback(remap_widget, XtNcallback, toggle_remap, NULL);
     dialog_register_sensitivity(remap_widget,
-	    &ft_private.ascii_flag, true,
+	    &xftp.ascii_flag, true,
 	    NULL, false,
 	    NULL, false);
 
@@ -607,7 +616,7 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_register_sensitivity(units_label,
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &host_is_tso, true,
 	    NULL, false);
 
@@ -620,11 +629,11 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(units_options[0],
-	    (ft_private.units == DEFAULT_UNITS)? diamond: no_diamond);
+	    (xftp.units == DEFAULT_UNITS)? diamond: no_diamond);
     XtAddCallback(units_options[0], XtNcallback,
 	    units_callback, (XtPointer)&u_default_units);
     dialog_register_sensitivity(units_options[0],
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &host_is_tso, true,
 	    NULL, false);
 
@@ -637,11 +646,11 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(units_options[1],
-	    (ft_private.units == TRACKS)? diamond: no_diamond);
+	    (xftp.units == TRACKS)? diamond: no_diamond);
     XtAddCallback(units_options[1], XtNcallback,
 	    units_callback, (XtPointer)&u_tracks);
     dialog_register_sensitivity(units_options[1],
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &host_is_tso, true,
 	    NULL, false);
 
@@ -654,11 +663,11 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(units_options[2],
-	    (ft_private.units == CYLINDERS)? diamond: no_diamond);
+	    (xftp.units == CYLINDERS)? diamond: no_diamond);
     XtAddCallback(units_options[2], XtNcallback,
 	    units_callback, (XtPointer)&u_cylinders);
     dialog_register_sensitivity(units_options[2],
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &host_is_tso, true,
 	    NULL, false);
 
@@ -671,11 +680,11 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_apply_bitmap(units_options[3],
-	    (ft_private.units == AVBLOCK)? diamond: no_diamond);
+	    (xftp.units == AVBLOCK)? diamond: no_diamond);
     XtAddCallback(units_options[3], XtNcallback,
 	    units_callback, (XtPointer)&u_avblock);
     dialog_register_sensitivity(units_options[3],
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &host_is_tso, true,
 	    NULL, false);
 
@@ -688,7 +697,7 @@ ft_popup_init(void)
 	    XtNborderWidth, 0,
 	    NULL);
     dialog_register_sensitivity(primspace_label,
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &host_is_tso, true,
 	    &units_default, false);
     primspace_widget = XtVaCreateManagedWidget(
@@ -701,8 +710,8 @@ ft_popup_init(void)
 	    XtNeditType, XawtextEdit,
 	    XtNdisplayCaret, False,
 	    NULL);
-    if (ft_private.primary_space) {
-	s = xs_buffer("%d", ft_private.primary_space);
+    if (xftp.primary_space) {
+	s = xs_buffer("%d", xftp.primary_space);
 	XtVaSetValues(primspace_widget, XtNstring, s, NULL);
 	XawTextSetInsertionPoint(primspace_widget, strlen(s));
 	XtFree(s);
@@ -716,7 +725,7 @@ ft_popup_init(void)
 		(XtPointer)&t_numeric);
     }
     dialog_register_sensitivity(primspace_widget,
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &host_is_tso, true,
 	    &units_default, false);
 
@@ -730,7 +739,7 @@ ft_popup_init(void)
 	    NULL);
     dialog_match_dimension(primspace_label, secspace_label, XtNwidth);
     dialog_register_sensitivity(secspace_label,
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &host_is_tso, true,
 	    &units_default, false);
     secspace_widget = XtVaCreateManagedWidget(
@@ -743,8 +752,8 @@ ft_popup_init(void)
 	    XtNeditType, XawtextEdit,
 	    XtNdisplayCaret, False,
 	    NULL);
-    if (ft_private.secondary_space) {
-	s = xs_buffer("%d", ft_private.secondary_space);
+    if (xftp.secondary_space) {
+	s = xs_buffer("%d", xftp.secondary_space);
 	XtVaSetValues(secspace_widget, XtNstring, s, NULL);
 	XawTextSetInsertionPoint(secspace_widget, strlen(s));
 	XtFree(s);
@@ -758,7 +767,7 @@ ft_popup_init(void)
 		(XtPointer)&t_numeric);
     }
     dialog_register_sensitivity(secspace_widget,
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &host_is_tso, true,
 	    &units_default, false);
 
@@ -772,7 +781,7 @@ ft_popup_init(void)
 	    NULL);
     dialog_match_dimension(secspace_label, avblock_size_label, XtNwidth);
     dialog_register_sensitivity(avblock_size_label,
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &host_is_tso, true,
 	    &units_avblock, true);
     avblock_size_widget = XtVaCreateManagedWidget(
@@ -785,8 +794,8 @@ ft_popup_init(void)
 	    XtNeditType, XawtextEdit,
 	    XtNdisplayCaret, False,
 	    NULL);
-    if (ft_private.avblock) {
-	s = xs_buffer("%d", ft_private.avblock);
+    if (xftp.avblock) {
+	s = xs_buffer("%d", xftp.avblock);
 	XtVaSetValues(avblock_size_widget, XtNstring, s, NULL);
 	XawTextSetInsertionPoint(avblock_size_widget, strlen(s));
 	XtFree(s);
@@ -800,7 +809,7 @@ ft_popup_init(void)
 		(XtPointer)&t_numeric);
     }
     dialog_register_sensitivity(avblock_size_widget,
-	    &ft_private.receive_flag, false,
+	    &xftp.receive_flag, false,
 	    &host_is_tso, true,
 	    &units_avblock, true);
 
@@ -885,8 +894,8 @@ ft_cancel(Widget w _is_unused, XtPointer client_data _is_unused,
 static void
 recfm_callback(Widget w, XtPointer user_data, XtPointer call_data _is_unused)
 {
-    ft_private.recfm = *(recfm_t *)user_data;
-    recfm_default = (ft_private.recfm == DEFAULT_RECFM);
+    xftp.recfm = *(recfm_t *)user_data;
+    recfm_default = (xftp.recfm == DEFAULT_RECFM);
     dialog_check_sensitivity(&recfm_default);
     dialog_flip_toggles(&recfm_toggles, w);
 }
@@ -895,9 +904,9 @@ recfm_callback(Widget w, XtPointer user_data, XtPointer call_data _is_unused)
 static void
 units_callback(Widget w, XtPointer user_data, XtPointer call_data _is_unused)
 {
-    ft_private.units = *(units_t *)user_data;
-    units_default = (ft_private.units == DEFAULT_UNITS);
-    units_avblock = (ft_private.units == AVBLOCK);
+    xftp.units = *(units_t *)user_data;
+    units_default = (xftp.units == DEFAULT_UNITS);
+    units_avblock = (xftp.units == AVBLOCK);
     dialog_check_sensitivity(&units_default);
     dialog_check_sensitivity(&units_avblock);
     dialog_flip_toggles(&units_toggles, w);
@@ -921,14 +930,14 @@ toggle_receive(Widget w _is_unused, XtPointer client_data,
 	XtPointer call_data _is_unused)
 {
     /* Toggle the flag */
-    ft_private.receive_flag = *(bool *)client_data;
+    xftp.receive_flag = *(bool *)client_data;
 
     /* Change the widget states. */
-    dialog_mark_toggle(receive_toggle, ft_private.receive_flag? diamond:
+    dialog_mark_toggle(receive_toggle, xftp.receive_flag? diamond:
 								no_diamond);
-    dialog_mark_toggle(send_toggle, ft_private.receive_flag? no_diamond:
+    dialog_mark_toggle(send_toggle, xftp.receive_flag? no_diamond:
 							     diamond);
-    dialog_check_sensitivity(&ft_private.receive_flag);
+    dialog_check_sensitivity(&xftp.receive_flag);
 }
 
 /* Ascii/binary options. */
@@ -937,18 +946,18 @@ toggle_ascii(Widget w _is_unused, XtPointer client_data,
 	XtPointer call_data _is_unused)
 {
     /* Toggle the flag. */
-    ft_private.ascii_flag = *(bool *)client_data;
+    xftp.ascii_flag = *(bool *)client_data;
 
     /* Change the widget states. */
     dialog_mark_toggle(ascii_toggle,
-	    ft_private.ascii_flag? diamond: no_diamond);
+	    xftp.ascii_flag? diamond: no_diamond);
     dialog_mark_toggle(binary_toggle,
-	    ft_private.ascii_flag? no_diamond: diamond);
-    ft_private.cr_flag = ft_private.ascii_flag;
-    ft_private.remap_flag = ft_private.ascii_flag;
-    dialog_mark_toggle(cr_widget, ft_private.cr_flag? dot: no_dot);
-    dialog_mark_toggle(remap_widget, ft_private.remap_flag? dot: no_dot);
-    dialog_check_sensitivity(&ft_private.ascii_flag);
+	    xftp.ascii_flag? no_diamond: diamond);
+    xftp.cr_flag = xftp.ascii_flag;
+    xftp.remap_flag = xftp.ascii_flag;
+    dialog_mark_toggle(cr_widget, xftp.cr_flag? dot: no_dot);
+    dialog_mark_toggle(remap_widget, xftp.remap_flag? dot: no_dot);
+    dialog_check_sensitivity(&xftp.ascii_flag);
 }
 
 /* CR option. */
@@ -956,9 +965,9 @@ static void
 toggle_cr(Widget w, XtPointer client_data _is_unused, XtPointer call_data _is_unused)
 {
     /* Toggle the cr flag */
-    ft_private.cr_flag = !ft_private.cr_flag;
+    xftp.cr_flag = !xftp.cr_flag;
 
-    dialog_mark_toggle(w, ft_private.cr_flag? dot: no_dot);
+    dialog_mark_toggle(w, xftp.cr_flag? dot: no_dot);
 }
 
 /* Append option. */
@@ -967,9 +976,9 @@ toggle_append(Widget w, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
     /* Toggle Append Flag */
-    ft_private.append_flag = !ft_private.append_flag;
+    xftp.append_flag = !xftp.append_flag;
 
-    dialog_mark_toggle(w, ft_private.append_flag? dot: no_dot);
+    dialog_mark_toggle(w, xftp.append_flag? dot: no_dot);
 }
 
 /* Remap option. */
@@ -978,9 +987,9 @@ toggle_remap(Widget w, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
     /* Toggle Remap Flag */
-    ft_private.remap_flag = !ft_private.remap_flag;
+    xftp.remap_flag = !xftp.remap_flag;
 
-    dialog_mark_toggle(w, ft_private.remap_flag? dot: no_dot);
+    dialog_mark_toggle(w, xftp.remap_flag? dot: no_dot);
 }
 
 /*
@@ -990,7 +999,7 @@ toggle_remap(Widget w, XtPointer client_data _is_unused,
 static void
 set_host_type_booleans(void)
 {
-    switch (ft_private.host_type) {
+    switch (xftp.host_type) {
     case HT_TSO:
 	host_is_tso = true;
 	host_is_tso_or_vm = true;
@@ -1016,38 +1025,38 @@ toggle_host_type(Widget w _is_unused, XtPointer client_data _is_unused,
     host_type_t old_host_type;
 
     /* Toggle the flag. */
-    old_host_type = ft_private.host_type;
-    ft_private.host_type = *(host_type_t *)client_data;
-    if (ft_private.host_type == old_host_type) {
+    old_host_type = xftp.host_type;
+    xftp.host_type = *(host_type_t *)client_data;
+    if (xftp.host_type == old_host_type) {
 	return;
     }
 
     /* Change the widget states. */
     dialog_mark_toggle(vm_toggle,
-	    (ft_private.host_type == HT_VM)? diamond: no_diamond);
+	    (xftp.host_type == HT_VM)? diamond: no_diamond);
     dialog_mark_toggle(tso_toggle,
-	    (ft_private.host_type == HT_TSO)? diamond: no_diamond);
+	    (xftp.host_type == HT_TSO)? diamond: no_diamond);
     dialog_mark_toggle(cics_toggle,
-	    (ft_private.host_type == HT_CICS)? diamond: no_diamond);
+	    (xftp.host_type == HT_CICS)? diamond: no_diamond);
 
-    if (ft_private.host_type != HT_TSO) {
+    if (xftp.host_type != HT_TSO) {
 	/* Reset record format. */
-	if ((ft_private.host_type == HT_VM &&
-	     ft_private.recfm == RECFM_UNDEFINED) ||
-	    (ft_private.host_type == HT_CICS &&
-	     ft_private.recfm != DEFAULT_RECFM)) {
-	    ft_private.recfm = DEFAULT_RECFM;
+	if ((xftp.host_type == HT_VM &&
+	     xftp.recfm == RECFM_UNDEFINED) ||
+	    (xftp.host_type == HT_CICS &&
+	     xftp.recfm != DEFAULT_RECFM)) {
+	    xftp.recfm = DEFAULT_RECFM;
 	    recfm_default = true;
 	    dialog_flip_toggles(&recfm_toggles, recfm_toggles.widgets[0]);
 	}
 	/* Reset units. */
-	if (ft_private.units != DEFAULT_UNITS) {
-	    ft_private.units = DEFAULT_UNITS;
+	if (xftp.units != DEFAULT_UNITS) {
+	    xftp.units = DEFAULT_UNITS;
 	    units_default = true;
 	    units_avblock = false;
 	    dialog_flip_toggles(&units_toggles, units_toggles.widgets[0]);
 	}
-	if (ft_private.host_type == HT_CICS) {
+	if (xftp.host_type == HT_CICS) {
 	    /* Reset logical record size. */
 	    XtVaSetValues(lrecl_widget, XtNstring, "", NULL);
 	}
@@ -1089,7 +1098,7 @@ get_widget_n(Widget w)
 static bool
 ft_start(void)
 {
-    ft_private.is_action = false;
+    xftp.is_action = false;
 
     ft_dbcs_state = FT_DBCS_NONE;
 
@@ -1103,38 +1112,38 @@ ft_start(void)
 	    NULL);
 
     /* Get the host file from its widget */
-    XtVaGetValues(host_file, XtNstring, &ft_private.host_filename, NULL);
-    if (!*ft_private.host_filename) {
+    XtVaGetValues(host_file, XtNstring, &xftp.host_filename, NULL);
+    if (!*xftp.host_filename) {
 	return false;
     }
 
     /* Get the local file from its widget */
-    XtVaGetValues(local_file, XtNstring,  &ft_private.local_filename, NULL);
-    if (!*ft_private.local_filename) {
+    XtVaGetValues(local_file, XtNstring,  &xftp.local_filename, NULL);
+    if (!*xftp.local_filename) {
 	return false;
     }
 
     /* Fetch the rest of the numeric parameters. */
-    ft_private.lrecl = get_widget_n(lrecl_widget);
-    ft_private.blksize = get_widget_n(blksize_widget);
-    ft_private.primary_space = get_widget_n(primspace_widget);
-    ft_private.secondary_space = get_widget_n(secspace_widget);
-    ft_private.avblock = get_widget_n(avblock_size_widget);
+    xftp.lrecl = get_widget_n(lrecl_widget);
+    xftp.blksize = get_widget_n(blksize_widget);
+    xftp.primary_space = get_widget_n(primspace_widget);
+    xftp.secondary_space = get_widget_n(secspace_widget);
+    xftp.avblock = get_widget_n(avblock_size_widget);
 
     /* Check for primary space. */
-    if (ft_private.host_type == HT_TSO &&
-	ft_private.units != DEFAULT_UNITS &&
-	ft_private.primary_space <= 0) {
+    if (xftp.host_type == HT_TSO &&
+	xftp.units != DEFAULT_UNITS &&
+	xftp.primary_space <= 0) {
 
 	popup_an_error("Missing or invalid Primary Space");
 	return false;
     }
 
     /* Prompt for local file overwrite. */
-    if (ft_private.receive_flag && !ft_private.append_flag &&
-	    !(ft_private.allow_overwrite || interactive_overwrite)) {
-	ft_local_file = fopen(ft_private.local_filename,
-		ft_private.ascii_flag? "r": "rb");
+    if (xftp.receive_flag && !xftp.append_flag &&
+	    !(xftp.allow_overwrite || interactive_overwrite)) {
+	ft_local_file = fopen(xftp.local_filename,
+		xftp.ascii_flag? "r": "rb");
 	if (ft_local_file != NULL) {
 	    (void) fclose(ft_local_file);
 	    ft_local_file = NULL;
@@ -1144,7 +1153,7 @@ ft_start(void)
     }
 
     /* Start the transfer. */
-    ft_local_file = ft_go(&ft_private);
+    ft_local_file = ft_go(&xftp);
     if (ft_local_file == NULL) {
 	interactive_overwrite = false;
 	return false;
@@ -1152,7 +1161,7 @@ ft_start(void)
 
     /* Get this thing started. */
     interactive_overwrite = false;
-    ft_private.is_cut = false;
+    xftp.is_cut = false;
     ft_last_cr = false;
     ft_last_dbcs = false;
 
@@ -1278,12 +1287,12 @@ progress_popup_callback(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
     XtVaSetValues(from_file, XtNlabel,
-	    ft_private.receive_flag? ft_private.host_filename:
-				     ft_private.local_filename,
+	    xftp.receive_flag? xftp.host_filename:
+				     xftp.local_filename,
 	    NULL);
     XtVaSetValues(to_file, XtNlabel,
-	    ft_private.receive_flag? ft_private.local_filename:
-				     ft_private.host_filename,
+	    xftp.receive_flag? xftp.local_filename:
+				     xftp.host_filename,
 	    NULL);
 
     switch (ft_state) {
@@ -1439,7 +1448,7 @@ overwrite_popdown(Widget w _is_unused, XtPointer client_data _is_unused,
 void
 ft_gui_progress_popdown(void)
 {
-    if (!ft_private.is_action) {
+    if (!xftp.is_action) {
 	XtPopdown(progress_shell);
     }
 }
@@ -1477,7 +1486,7 @@ ft_gui_complete_popup(const char *msg)
 void
 ft_gui_update_length(unsigned long length)
 {
-    if (!ft_private.is_action) {
+    if (!xftp.is_action) {
 	char *s = xs_buffer(status_string, length);
 
 	XtVaSetValues(ft_status, XtNlabel, s, NULL);
@@ -1489,7 +1498,7 @@ ft_gui_update_length(unsigned long length)
 void
 ft_gui_running(unsigned long length)
 {
-    if (!ft_private.is_action) {
+    if (!xftp.is_action) {
 	XtUnmapWidget(waiting);
 	ft_gui_update_length(length);
 	XtMapWidget(ft_status);
@@ -1500,7 +1509,7 @@ ft_gui_running(unsigned long length)
 void
 ft_gui_aborting(void)
 {
-    if (!ft_private.is_action) {
+    if (!xftp.is_action) {
 	XtUnmapWidget(waiting);
 	XtUnmapWidget(ft_status);
 	XtMapWidget(aborting);

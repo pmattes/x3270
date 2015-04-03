@@ -86,8 +86,9 @@ typedef struct {
     bool is_cut;
 } ft_private_t;
 
-extern ft_private_t ft_private;
+extern ft_private_t *ft_private;
 
 FILE *ft_go(ft_private_t *p);
+extern void ft_init_private(ft_private_t *p);
 
 #define __FT_PRIVATE_H
