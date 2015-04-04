@@ -33,5 +33,5 @@
 
 void icmd_register(void);
 #if defined(__FT_PRIVATE_H) /*[*/
-int interactive_transfer(ft_private_t *p);
+int interactive_transfer(ft_state_t *p);
 #endif /*]*/

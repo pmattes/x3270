@@ -63,11 +63,11 @@ unsigned long ft_length = 0;		/* Length of transfer */
 #if defined(_WIN32) /*[*/
 int ft_windows_codepage;		/* Windows code page */
 #endif /*]*/
-ft_private_t *ft_private;		/* Private state */
+ft_state_t *fts;			/* File transfer state */
 
 /* Statics. */
-static ft_private_t transfer_ft_private;
-static ft_private_t gui_ft_private;
+static ft_state_t transfer_ft_private;
+static ft_state_t gui_ft_private;
 static bool gui_initted = false;
 
 static struct timeval t0;		/* Starting time */
@@ -269,18 +269,18 @@ void
 ft_init(void)
 {
     /*
-     * Do a dummy initialization of the Transfer action's ft_private, to catch
+     * Do a dummy initialization of the Transfer action's ft_state, to catch
      * and display any errors in the resource defaults.
      */
     ft_init_private(&transfer_ft_private);
 }
 
 /*
- * Initialize or re-initialize an ft_private structure from the appres
+ * Initialize or re-initialize an ft_state structure from the appres
  * defaults.
  */
 void
-ft_init_private(ft_private_t *p)
+ft_init_private(ft_state_t *p)
 {
     /* Initialize the private state. */
     p->receive_flag = true;
@@ -408,7 +408,7 @@ ft_init_private(ft_private_t *p)
 
 /* Return the right value for fopen()ing the local file. */
 static const char *
-ft_local_fflag(ft_private_t *p)
+ft_local_fflag(ft_state_t *p)
 {
     static char ret[3];
     int nr = 0;
@@ -430,8 +430,8 @@ ft_didnt_start(ioid_t id _is_unused)
     if (ft_local_file != NULL) {
 	fclose(ft_local_file);
 	ft_local_file = NULL;
-	if (ft_private->receive_flag && !ft_private->append_flag) {
-	    unlink(ft_private->local_filename);
+	if (fts->receive_flag && !fts->append_flag) {
+	    unlink(fts->local_filename);
 	}
     }
 
@@ -447,7 +447,7 @@ ft_complete(const char *errmsg)
 {
     /* Close the local file. */
     if (ft_local_file != NULL && fclose(ft_local_file) < 0) {
-	popup_an_errno(errno, "close(%s)", ft_private->local_filename);
+	popup_an_errno(errno, "close(%s)", fts->local_filename);
     }
     ft_local_file = NULL;
 
@@ -485,8 +485,8 @@ ft_complete(const char *errmsg)
 		 (double)(t1.tv_usec - t0.tv_usec) / 1.0e6);
 	buf = xs_buffer(get_message("ftComplete"), ft_length,
 		display_scale(bytes_sec),
-		ft_private->is_cut ? "CUT" : "DFT");
-	if (ft_private->is_action) {
+		fts->is_cut ? "CUT" : "DFT");
+	if (fts->is_action) {
 	    /* Clear out the progress display. */
 	    ft_gui_clear_progress();
 
@@ -497,7 +497,7 @@ ft_complete(const char *errmsg)
 	}
 	Free(buf);
     }
-    ft_private->is_interactive = false;
+    fts->is_interactive = false;
 }
 
 /* Update the bytes-transferred count on the progress pop-up. */
@@ -518,7 +518,7 @@ ft_running(bool is_cut)
 	    ft_start_id = NULL_IOID;
 	}
     }
-    ft_private->is_cut = is_cut;
+    fts->is_cut = is_cut;
     (void) gettimeofday(&t0, NULL);
     ft_length = 0;
 
@@ -554,7 +554,7 @@ ft_in3270(bool ignored _is_unused)
 }
 
 /*
- * Start a file transfer, based on the contents of an ft_private structure.
+ * Start a file transfer, based on the contents of an ft_state structure.
  *
  * This function will fail if the file exists and the overwrite flag is not
  * set.
@@ -564,7 +564,7 @@ ft_in3270(bool ignored _is_unused)
  * message.
  */
 FILE *
-ft_go(ft_private_t *p)
+ft_go(ft_state_t *p)
 {
     FILE *f;
     varbuf_t r;
@@ -697,7 +697,7 @@ ft_go(ft_private_t *p)
     vb_free(&r);
 
     /* Now proceed with this context. */
-    ft_private = p;
+    fts = p;
 
     return f;
 }
@@ -705,13 +705,13 @@ ft_go(ft_private_t *p)
 /*
  * Parse the keywords for the Transfer() action.
  *
- * Returns a pointer to the filled-out ft_private structure, or NULL for
+ * Returns a pointer to the filled-out ft_state structure, or NULL for
  * errors.
  */
-static ft_private_t *
+static ft_state_t *
 parse_ft_keywords(unsigned argc, const char **argv)
 {
-    ft_private_t *p = &transfer_ft_private;
+    ft_state_t *p = &transfer_ft_private;
     int i, k;
     unsigned j;
     long l;
@@ -785,7 +785,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
 	}
     }
 
-    /* Transfer from keywords to ft_private. */
+    /* Transfer from keywords to the ft_state. */
     if (tp[PARM_DIRECTION].value) {
 	p->receive_flag = !strcasecmp(tp[PARM_DIRECTION].value, "receive");
     }
@@ -907,7 +907,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
 static bool  
 Transfer_action(ia_t ia, unsigned argc, const char **argv)
 {
-    ft_private_t *p = NULL;
+    ft_state_t *p = NULL;
 
     action_debug("Transfer", ia, argc, argv);
 
@@ -929,7 +929,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	    /* Hope the defaults are enough. */
 	    break;
 	case FGI_SUCCESS:
-	    /* Proceed as specified in ft_private. */
+	    /* Proceed as specified in the ft_state. */
 	    p = &gui_ft_private;
 	    break;
 	case FGI_ABORT:
@@ -939,7 +939,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     if (p == NULL) {
-	/* Parse the keywords into an ft_private structure. */
+	/* Parse the keywords into the ft_state structure. */
 	p = parse_ft_keywords(argc, argv);
 	if (p == NULL) {
 	    return false;

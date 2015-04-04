@@ -138,7 +138,7 @@ getnum(int defval)
  * Returns 0 for success, -1 for failure.
  */
 int
-interactive_transfer(ft_private_t *p)
+interactive_transfer(ft_state_t *p)
 {
 #define KW_SIZE 1024
     char inbuf[KW_SIZE];

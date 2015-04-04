@@ -61,8 +61,8 @@ static char alphas[NE + 1] =
 " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%&_()<+,-./:>?";
 
 static struct {
-	unsigned char selector;
-	unsigned char xlate[NE];
+    unsigned char selector;
+    unsigned char xlate[NE];
 } conv[NQ] = {
     {	0x5e,	/* ';' */
 	{ 0x40,0xc1,0xc2,0xc3, 0xc4,0xc5,0xc6,0xc7, 0xc8,0xc9,0xd1,0xd2,
@@ -133,133 +133,131 @@ static int xlate_getc(void);
 static int
 upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 {
-	unsigned char *ob0 = obuf;
-	unsigned char *ob = ob0;
-	int nx;
+    unsigned char *ob0 = obuf;
+    unsigned char *ob = ob0;
+    int nx;
 
-	while (len-- && obuf_len) {
-		unsigned char c = *buf++;
-		char *ixp;
-		int ix;
+    while (len-- && obuf_len) {
+	unsigned char c = *buf++;
+	char *ixp;
+	int ix;
 
-	    retry:
-		if (quadrant < 0) {
-			/* Find the quadrant. */
-			for (quadrant = 0; quadrant < NQ; quadrant++) {
-				if (c == conv[quadrant].selector)
-					break;
-			}
-			if (quadrant >= NQ) {
-				cut_abort(get_message("ftCutConversionError"),
-				    SC_ABORT_XMIT);
-				return -1;
-			}
-			continue;
+    retry:
+	if (quadrant < 0) {
+	    /* Find the quadrant. */
+	    for (quadrant = 0; quadrant < NQ; quadrant++) {
+		if (c == conv[quadrant].selector) {
+		    break;
 		}
-
-		/* Make sure it's in a valid range. */
-		if (c < 0x40 || c > 0xf9) {
-			cut_abort(get_message("ftCutConversionError"),
-			    SC_ABORT_XMIT);
-			return -1;
-		}
-
-		/* Translate to a quadrant index. */
-		ixp = strchr(alphas, ebc2asc0[c]);
-		if (ixp == NULL) {
-			/* Try a different quadrant. */
-			quadrant = -1;
-			goto retry;
-		}
-		ix = ixp - alphas;
-
-		/*
-		 * See if it's mapped by that quadrant, handling NULLs
-		 * specially.
-		 */
-		if (quadrant != OTHER_2 && c != XLATE_NULL &&
-		    !conv[quadrant].xlate[ix]) {
-			/* Try a different quadrant. */
-			quadrant = -1;
-			goto retry;
-		}
-
-		/* Map it. */
-		c = conv[quadrant].xlate[ix];
-		if (ft_private->ascii_flag && ft_private->cr_flag &&
-			(c == '\r' || c == 0x1a)) {
-			continue;
-		}
-		if (!(ft_private->ascii_flag && ft_private->remap_flag)) {
-		    	/* No further translation necessary. */
-		    	*ob++ = c;
-			obuf_len--;
-			continue;
-		}
-
-		/*
-		 * Convert to local multi-byte.
-		 * We do that by inverting the host's EBCDIC-to-ASCII map,
-		 * getting back to EBCDIC, and converting to multi-byte from
-		 * there.
-		 */
-		switch (ft_dbcs_state) {
-		    case FT_DBCS_NONE:
-			if (c == EBC_so) {
-			    	ft_dbcs_state = FT_DBCS_SO;
-				continue;
-			}
-			/* fall through to non-DBCS case below */
-			break;
-		    case FT_DBCS_SO:
-			if (c == EBC_si)
-			    	ft_dbcs_state = FT_DBCS_NONE;
-			else {
-			    	ft_dbcs_byte1 = i_asc2ft[c];
-				ft_dbcs_state = FT_DBCS_LEFT;
-			}
-			continue;
-		    case FT_DBCS_LEFT:
-			if (c == EBC_si) {
-			    	ft_dbcs_state = FT_DBCS_NONE;
-				continue;
-			}
-			nx = ft_ebcdic_to_multibyte((ft_dbcs_byte1 << 8) |
-				    i_asc2ft[c],
-				(char *)ob, obuf_len);
-			if (nx && (ob[nx - 1] == '\0'))
-				nx--;
-			ob += nx;
-			obuf_len -= nx;
-			ft_dbcs_state = FT_DBCS_SO;
-			continue;
-		}
-
-		if (c < 0x20 || ((c >= 0x80 && c < 0xa0 && c != 0x9f))) {
-		    	/*
-			 * Control code, treat it as Unicode.
-			 *
-			 * Note that IND$FILE and the VM 'TYPE' command think
-			 * that EBCDIC X'E1' is a control code; IND$FILE maps
-			 * it onto ASCII 0x9f.  So we skip it explicitly and
-			 * treat it as printable here.
-			 */
-		    	nx = ft_unicode_to_multibyte(c, (char *)ob, obuf_len);
-		} else if (c == 0xff) {
-		    	nx = ft_unicode_to_multibyte(0x9f, (char *)ob,
-				obuf_len);
-		} else {
-		    	/* Displayable character, remap. */
-			c = i_asc2ft[c];
-			nx = ft_ebcdic_to_multibyte(c, (char *)ob, obuf_len);
-		}
-		if (nx && (ob[nx - 1] == '\0'))
-			nx--;
-		ob += nx;
-		obuf_len -= nx;
+	    }
+	    if (quadrant >= NQ) {
+		cut_abort(get_message("ftCutConversionError"), SC_ABORT_XMIT);
+		return -1;
+	    }
+	    continue;
 	}
 
-	return ob - ob0;
+	/* Make sure it's in a valid range. */
+	if (c < 0x40 || c > 0xf9) {
+	    cut_abort(get_message("ftCutConversionError"), SC_ABORT_XMIT);
+	    return -1;
+	}
+
+	/* Translate to a quadrant index. */
+	ixp = strchr(alphas, ebc2asc0[c]);
+	if (ixp == NULL) {
+	    /* Try a different quadrant. */
+	    quadrant = -1;
+	    goto retry;
+	}
+	ix = ixp - alphas;
+
+	/*
+	 * See if it's mapped by that quadrant, handling NULLs
+	 * specially.
+	 */
+	if (quadrant != OTHER_2 && c != XLATE_NULL &&
+		!conv[quadrant].xlate[ix]) {
+	    /* Try a different quadrant. */
+	    quadrant = -1;
+	    goto retry;
+	}
+
+	/* Map it. */
+	c = conv[quadrant].xlate[ix];
+	if (fts->ascii_flag && fts->cr_flag && (c == '\r' || c == 0x1a)) {
+	    continue;
+	}
+	if (!(fts->ascii_flag && fts->remap_flag)) {
+	    /* No further translation necessary. */
+	    *ob++ = c;
+	    obuf_len--;
+	    continue;
+	}
+
+	/*
+	 * Convert to local multi-byte.
+	 * We do that by inverting the host's EBCDIC-to-ASCII map,
+	 * getting back to EBCDIC, and converting to multi-byte from
+	 * there.
+	 */
+	switch (ft_dbcs_state) {
+	case FT_DBCS_NONE:
+	    if (c == EBC_so) {
+		ft_dbcs_state = FT_DBCS_SO;
+		continue;
+	    }
+	    /* fall through to non-DBCS case below */
+	    break;
+	case FT_DBCS_SO:
+	    if (c == EBC_si) {
+		ft_dbcs_state = FT_DBCS_NONE;
+	    } else {
+		ft_dbcs_byte1 = i_asc2ft[c];
+		ft_dbcs_state = FT_DBCS_LEFT;
+	    }
+	    continue;
+	case FT_DBCS_LEFT:
+	    if (c == EBC_si) {
+		ft_dbcs_state = FT_DBCS_NONE;
+		continue;
+	    }
+	    nx = ft_ebcdic_to_multibyte((ft_dbcs_byte1 << 8) | i_asc2ft[c],
+		    (char *)ob, obuf_len);
+	    if (nx && (ob[nx - 1] == '\0')) {
+		nx--;
+	    }
+	    ob += nx;
+	    obuf_len -= nx;
+	    ft_dbcs_state = FT_DBCS_SO;
+	    continue;
+	}
+
+	if (c < 0x20 || ((c >= 0x80 && c < 0xa0 && c != 0x9f))) {
+	    /*
+	     * Control code, treat it as Unicode.
+	     *
+	     * Note that IND$FILE and the VM 'TYPE' command think
+	     * that EBCDIC X'E1' is a control code; IND$FILE maps
+	     * it onto ASCII 0x9f.  So we skip it explicitly and
+	     * treat it as printable here.
+	     */
+	    nx = ft_unicode_to_multibyte(c, (char *)ob, obuf_len);
+	} else if (c == 0xff) {
+	    nx = ft_unicode_to_multibyte(0x9f, (char *)ob, obuf_len);
+	} else {
+	    /* Displayable character, remap. */
+	    c = i_asc2ft[c];
+	    nx = ft_ebcdic_to_multibyte(c, (char *)ob, obuf_len);
+	}
+	if (nx && (ob[nx - 1] == '\0')) {
+	    nx--;
+	}
+	ob += nx;
+	obuf_len -= nx;
+    }
+
+    return ob - ob0;
 }
 
 /*
@@ -269,116 +267,119 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 static int
 store_download(unsigned char c, unsigned char *ob)
 {
-	unsigned char *ixp;
-	unsigned ix;
-	int oq;
+    unsigned char *ixp;
+    unsigned ix;
+    int oq;
 
-	/* Quadrant already defined. */
-	if (quadrant >= 0) {
-		ixp = (unsigned char *)memchr(conv[quadrant].xlate, c, NE);
-		if (ixp != NULL) {
-			ix = ixp - conv[quadrant].xlate;
-			*ob++ = asc2ebc0[(int)alphas[ix]];
-			return 1;
-		}
+    /* Quadrant already defined. */
+    if (quadrant >= 0) {
+	ixp = (unsigned char *)memchr(conv[quadrant].xlate, c, NE);
+	if (ixp != NULL) {
+	    ix = ixp - conv[quadrant].xlate;
+	    *ob++ = asc2ebc0[(int)alphas[ix]];
+	    return 1;
 	}
+    }
 
-	/* Locate a quadrant. */
-	oq = quadrant;
-	for (quadrant = 0; quadrant < NQ; quadrant++) {
-		if (quadrant == oq)
-			continue;
-		ixp = (unsigned char *)memchr(conv[quadrant].xlate, c, NE);
-		if (ixp == NULL)
-			continue;
-		ix = ixp - conv[quadrant].xlate;
-		*ob++ = conv[quadrant].selector;
-		*ob++ = asc2ebc0[(int)alphas[ix]];
-		return 2;
+    /* Locate a quadrant. */
+    oq = quadrant;
+    for (quadrant = 0; quadrant < NQ; quadrant++) {
+	if (quadrant == oq) {
+	    continue;
 	}
-	quadrant = -1;
-	fprintf(stderr, "Oops\n");
-	return 0;
+	ixp = (unsigned char *)memchr(conv[quadrant].xlate, c, NE);
+	if (ixp == NULL) {
+		continue;
+	}
+	ix = ixp - conv[quadrant].xlate;
+	*ob++ = conv[quadrant].selector;
+	*ob++ = asc2ebc0[(int)alphas[ix]];
+	return 2;
+    }
+    quadrant = -1;
+    fprintf(stderr, "Oops\n");
+    return 0;
 }
 
 /* Convert a buffer for downloading (local->host). */
-/*static*/ int
+static int
 download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 {
-	unsigned char *ob0 = xobuf;
-	unsigned char *ob = ob0;
+    unsigned char *ob0 = xobuf;
+    unsigned char *ob = ob0;
 
-	while (len) {
-		unsigned char c = *buf;
-		int consumed;
-		enum me_fail error;
-		ebc_t e;
-		ucs4_t u;
+    while (len) {
+	unsigned char c = *buf;
+	int consumed;
+	enum me_fail error;
+	ebc_t e;
+	ucs4_t u;
 
-		/* Handle nulls separately. */
-		if (!c) {
-		    	if (ft_last_dbcs) {
-			    	ob += store_download(EBC_si, ob);
-				ft_last_dbcs = false;
-			}
-			if (quadrant != OTHER_2) {
-				quadrant = OTHER_2;
-				*ob++ = conv[quadrant].selector;
-			}
-			*ob++ = XLATE_NULL;
-			buf++;
-			len--;
-			continue;
-		}
-
-		if (!(ft_private->ascii_flag && ft_private->remap_flag)) {
-			ob += store_download(c, ob);
-			buf++;
-			len--;
-			continue;
-		}
-
-		/*
-		 * Translate.
-		 *
-		 * The host uses a fixed EBCDIC-to-ASCII translation table,
-		 * which was derived empirically into i_ft2asc/i_asc2ft.
-		 * Invert that so that when the host applies its conversion,
-		 * it gets the right EBCDIC code.
-		 *
-		 * DBCS is a guess at this point, assuming that SO and SI
-		 * are unmodified by IND$FILE.
-		 */
-		u = ft_multibyte_to_unicode((const char *)buf, len, &consumed,
-			&error);
-		if (u < 0x20 || ((u >= 0x80 && u < 0x9f)))
-		    	e = i_asc2ft[u];
-		else if (u == 0x9f)
-		    	e = 0xff;
-		else
-		    	e = unicode_to_ebcdic(u);
-		if (e & 0xff00) {
-		    	if (!ft_last_dbcs)
-				ob += store_download(EBC_so, ob);
-			ob += store_download(i_ft2asc[(e >> 8) & 0xff], ob);
-			ob += store_download(i_ft2asc[e & 0xff], ob);
-			ft_last_dbcs = true;
-		} else {
-		    	if (ft_last_dbcs) {
-			    	ob += store_download(EBC_si, ob);
-				ft_last_dbcs = false;
-			}
-			if (e == 0) {
-				ob += store_download('?', ob);
-			} else {
-				ob += store_download(i_ft2asc[e], ob);
-			}
-		}
-		buf += consumed;
-		len -= consumed;
+	/* Handle nulls separately. */
+	if (!c) {
+	    if (ft_last_dbcs) {
+		ob += store_download(EBC_si, ob);
+		ft_last_dbcs = false;
+	    }
+	    if (quadrant != OTHER_2) {
+		quadrant = OTHER_2;
+		*ob++ = conv[quadrant].selector;
+	    }
+	    *ob++ = XLATE_NULL;
+	    buf++;
+	    len--;
+	    continue;
 	}
 
-	return ob - ob0;
+	if (!(fts->ascii_flag && fts->remap_flag)) {
+	    ob += store_download(c, ob);
+	    buf++;
+	    len--;
+	    continue;
+	}
+
+	/*
+	 * Translate.
+	 *
+	 * The host uses a fixed EBCDIC-to-ASCII translation table,
+	 * which was derived empirically into i_ft2asc/i_asc2ft.
+	 * Invert that so that when the host applies its conversion,
+	 * it gets the right EBCDIC code.
+	 *
+	 * DBCS is a guess at this point, assuming that SO and SI
+	 * are unmodified by IND$FILE.
+	 */
+	u = ft_multibyte_to_unicode((const char *)buf, len, &consumed, &error);
+	if (u < 0x20 || ((u >= 0x80 && u < 0x9f))) {
+	    e = i_asc2ft[u];
+	} else if (u == 0x9f) {
+	    e = 0xff;
+	} else {
+	    e = unicode_to_ebcdic(u);
+	}
+	if (e & 0xff00) {
+	    if (!ft_last_dbcs) {
+		ob += store_download(EBC_so, ob);
+	    }
+	    ob += store_download(i_ft2asc[(e >> 8) & 0xff], ob);
+	    ob += store_download(i_ft2asc[e & 0xff], ob);
+	    ft_last_dbcs = true;
+	} else {
+	    if (ft_last_dbcs) {
+		ob += store_download(EBC_si, ob);
+		ft_last_dbcs = false;
+	    }
+	    if (e == 0) {
+		ob += store_download('?', ob);
+	    } else {
+		ob += store_download(i_ft2asc[e], ob);
+	    }
+	}
+	buf += consumed;
+	len -= consumed;
+    }
+
+    return ob - ob0;
 }
 
 /*
@@ -388,24 +389,24 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 void
 ft_cut_data(void)
 {
-	switch (ea_buf[O_FRAME_TYPE].cc) {
-	    case FT_CONTROL_CODE:
-		cut_control_code();
-		break;
-	    case FT_DATA_REQUEST:
-		cut_data_request();
-		break;
-	    case FT_RETRANSMIT:
-		cut_retransmit();
-		break;
-	    case FT_DATA:
-		cut_data();
-		break;
-	    default:
-		trace_ds("< FT unknown 0x%02x\n", ea_buf[O_FRAME_TYPE].cc);
-		cut_abort(get_message("ftCutUnknownFrame"), SC_ABORT_XMIT);
-		break;
-	}
+    switch (ea_buf[O_FRAME_TYPE].cc) {
+    case FT_CONTROL_CODE:
+	cut_control_code();
+	break;
+    case FT_DATA_REQUEST:
+	cut_data_request();
+	break;
+    case FT_RETRANSMIT:
+	cut_retransmit();
+	break;
+    case FT_DATA:
+	cut_data();
+	break;
+    default:
+	trace_ds("< FT unknown 0x%02x\n", ea_buf[O_FRAME_TYPE].cc);
+	cut_abort(get_message("ftCutUnknownFrame"), SC_ABORT_XMIT);
+	break;
+    }
 }
 
 /*
@@ -414,73 +415,76 @@ ft_cut_data(void)
 static void
 cut_control_code(void)
 {
-	unsigned short code;
-	char *buf;
-	char *bp;
-	int i;
+    unsigned short code;
+    char *buf;
+    char *bp;
+    int i;
 
-	trace_ds("< FT CONTROL_CODE ");
-	code = (ea_buf[O_CC_STATUS_CODE].cc << 8) |
-		ea_buf[O_CC_STATUS_CODE + 1].cc;
-	switch (code) {
-	    case SC_HOST_ACK:
-		trace_ds("HOST_ACK\n");
-		cut_xfer_in_progress = true;
-		expanded_length = 0;
-		quadrant = -1;
-		xlate_buffered = 0;
-		xlate_buf_ix = 0;
-		cut_eof = false;
-		cut_ack();
-		ft_running(true);
-		break;
-	    case SC_XFER_COMPLETE:
-		trace_ds("XFER_COMPLETE\n");
-		cut_ack();
-		cut_xfer_in_progress = false;
-		ft_complete(NULL);
-		break;
-	    case SC_ABORT_FILE:
-	    case SC_ABORT_XMIT:
-		trace_ds("ABORT\n");
-		cut_xfer_in_progress = false;
-		cut_ack();
-		if (ft_state == FT_ABORT_SENT && saved_errmsg != NULL) {
-			buf = saved_errmsg;
-			saved_errmsg = NULL;
-		} else {
-		    	int mb_len = 161;
+    trace_ds("< FT CONTROL_CODE ");
+    code = (ea_buf[O_CC_STATUS_CODE].cc << 8) |
+	    ea_buf[O_CC_STATUS_CODE + 1].cc;
+    switch (code) {
+    case SC_HOST_ACK:
+	trace_ds("HOST_ACK\n");
+	cut_xfer_in_progress = true;
+	expanded_length = 0;
+	quadrant = -1;
+	xlate_buffered = 0;
+	xlate_buf_ix = 0;
+	cut_eof = false;
+	cut_ack();
+	ft_running(true);
+	break;
+    case SC_XFER_COMPLETE:
+	trace_ds("XFER_COMPLETE\n");
+	cut_ack();
+	cut_xfer_in_progress = false;
+	ft_complete(NULL);
+	break;
+    case SC_ABORT_FILE:
+    case SC_ABORT_XMIT:
+	trace_ds("ABORT\n");
+	cut_xfer_in_progress = false;
+	cut_ack();
+	if (ft_state == FT_ABORT_SENT && saved_errmsg != NULL) {
+	    buf = saved_errmsg;
+	    saved_errmsg = NULL;
+	} else {
+	    int mb_len = 161;
 
-			bp = buf = Malloc(mb_len);
-			for (i = 0; i < 80; i++) {
-			    	int xlen;
+	    bp = buf = Malloc(mb_len);
+	    for (i = 0; i < 80; i++) {
+		int xlen;
 
-				xlen = ft_ebcdic_to_multibyte(
-					ea_buf[O_CC_MESSAGE + i].cc,
-					bp, mb_len);
-				if (xlen) {
-				    	bp += xlen - 1;
-					mb_len -= xlen - 1;
-				}
-			}
-			*bp-- = '\0';
-			while (bp >= buf && *bp == ' ')
-				*bp-- = '\0';
-			if (bp >= buf && *bp == '$')
-				*bp-- = '\0';
-			while (bp >= buf && *bp == ' ')
-				*bp-- = '\0';
-			if (!*buf)
-				strcpy(buf, get_message("ftHostCancel"));
+		xlen = ft_ebcdic_to_multibyte(ea_buf[O_CC_MESSAGE + i].cc, bp,
+			mb_len);
+		if (xlen) {
+		    bp += xlen - 1;
+		    mb_len -= xlen - 1;
 		}
-		ft_complete(buf);
-		Free(buf);
-		break;
-	    default:
-		trace_ds("unknown 0x%04x\n", code);
-		cut_abort(get_message("ftCutUnknownControl"), SC_ABORT_XMIT);
-		break;
+	    }
+	    *bp-- = '\0';
+	    while (bp >= buf && *bp == ' ') {
+		*bp-- = '\0';
+	    }
+	    if (bp >= buf && *bp == '$') {
+		*bp-- = '\0';
+	    }
+	    while (bp >= buf && *bp == ' ') {
+		*bp-- = '\0';
+	    }
+	    if (!*buf) {
+		strcpy(buf, get_message("ftHostCancel"));
+	    }
 	}
+	ft_complete(buf);
+	Free(buf);
+	break;
+    default:
+	trace_ds("unknown 0x%04x\n", code);
+	cut_abort(get_message("ftCutUnknownControl"), SC_ABORT_XMIT);
+	break;
+    }
 }
 
 /*
@@ -524,8 +528,7 @@ cut_data_request(void)
 	}
 
 	/* Abort the transfer. */
-	msg = xs_buffer("read(%s): %s", ft_private->local_filename,
-		strerror(errno));
+	msg = xs_buffer("read(%s): %s", fts->local_filename, strerror(errno));
 	cut_abort(msg, SC_ABORT_FILE);
 	Free(msg);
 	return;
@@ -566,8 +569,8 @@ cut_data_request(void)
 static void
 cut_retransmit(void)
 {
-	trace_ds("< FT RETRANSMIT\n");
-	cut_abort(get_message("ftCutRetransmit"), SC_ABORT_XMIT);
+    trace_ds("< FT RETRANSMIT\n");
+    cut_abort(get_message("ftCutRetransmit"), SC_ABORT_XMIT);
 }
 
 /*
@@ -576,13 +579,14 @@ cut_retransmit(void)
 static unsigned
 from6(unsigned char c)
 {
-	char *p;
+    char *p;
 
-	c = ebc2asc0[c];
-	p = strchr(table6, c);
-	if (p == NULL)
-		return 0;
-	return p - table6;
+    c = ebc2asc0[c];
+    p = strchr(table6, c);
+    if (p == NULL) {
+	return 0;
+    }
+    return p - table6;
 }
 
 /*
@@ -591,50 +595,51 @@ from6(unsigned char c)
 static void
 cut_data(void)
 {
-	static unsigned char cvbuf[O_RESPONSE - O_DT_DATA];
-	static unsigned char cvobuf[4 * (O_RESPONSE - O_DT_DATA)];
-	unsigned short raw_length;
-	int conv_length;
-	register int i;
+    static unsigned char cvbuf[O_RESPONSE - O_DT_DATA];
+    static unsigned char cvobuf[4 * (O_RESPONSE - O_DT_DATA)];
+    unsigned short raw_length;
+    int conv_length;
+    register int i;
 
-	trace_ds("< FT DATA\n");
-	if (ft_state == FT_ABORT_WAIT) {
-		cut_abort(get_message("ftUserCancel"), SC_ABORT_FILE);
-		return;
-	}
+    trace_ds("< FT DATA\n");
+    if (ft_state == FT_ABORT_WAIT) {
+	cut_abort(get_message("ftUserCancel"), SC_ABORT_FILE);
+	return;
+    }
 
-	/* Copy and convert the data. */
-	raw_length = from6(ea_buf[O_DT_LEN].cc) << 6 |
-		     from6(ea_buf[O_DT_LEN + 1].cc);
-	if ((int)raw_length > O_RESPONSE - O_DT_DATA) {
-		cut_abort(get_message("ftCutOversize"), SC_ABORT_XMIT);
-		return;
-	}
-	for (i = 0; i < (int)raw_length; i++)
-		cvbuf[i] = ea_buf[O_DT_DATA + i].cc;
+    /* Copy and convert the data. */
+    raw_length = from6(ea_buf[O_DT_LEN].cc) << 6 |
+		 from6(ea_buf[O_DT_LEN + 1].cc);
+    if ((int)raw_length > O_RESPONSE - O_DT_DATA) {
+	cut_abort(get_message("ftCutOversize"), SC_ABORT_XMIT);
+	return;
+    }
+    for (i = 0; i < (int)raw_length; i++) {
+	cvbuf[i] = ea_buf[O_DT_DATA + i].cc;
+    }
 
-	if (raw_length == 2 && cvbuf[0] == EOF_DATA1 && cvbuf[1] == EOF_DATA2) {
-		trace_ds("< FT EOF\n");
-		cut_ack();
-		return;
-	}
-	conv_length = upload_convert(cvbuf, raw_length, cvobuf, sizeof(cvobuf));
-	if (conv_length < 0)
-		return;
+    if (raw_length == 2 && cvbuf[0] == EOF_DATA1 && cvbuf[1] == EOF_DATA2) {
+	trace_ds("< FT EOF\n");
+	cut_ack();
+	return;
+    }
+    conv_length = upload_convert(cvbuf, raw_length, cvobuf, sizeof(cvobuf));
+    if (conv_length < 0) {
+	return;
+    }
 
-	/* Write it to the file. */
-	if (fwrite((char *)cvobuf, conv_length, 1, ft_local_file) == 0) {
-		char *msg;
+    /* Write it to the file. */
+    if (fwrite((char *)cvobuf, conv_length, 1, ft_local_file) == 0) {
+	char *msg;
 
-		msg = xs_buffer("write(%s): %s", ft_private->local_filename,
-		    strerror(errno));
-		cut_abort(msg, SC_ABORT_FILE);
-		Free(msg);
-	} else {
-		ft_length += conv_length;
-		ft_update_length();
-		cut_ack();
-	}
+	msg = xs_buffer("write(%s): %s", fts->local_filename, strerror(errno));
+	cut_abort(msg, SC_ABORT_FILE);
+	Free(msg);
+    } else {
+	ft_length += conv_length;
+	ft_update_length();
+	cut_ack();
+    }
 }
 
 /*
@@ -675,80 +680,79 @@ cut_abort(const char *s, unsigned short reason)
 static int
 xlate_getc(void)
 {
-	int r;
-	int c;
-	unsigned char cbuf[32];
-	int nc;
-	int consumed;
-	enum me_fail error;
-	char mb[16];
-	int mb_len = 0;
+    int r;
+    int c;
+    unsigned char cbuf[32];
+    int nc;
+    int consumed;
+    enum me_fail error;
+    char mb[16];
+    int mb_len = 0;
 
-	/* If there is a data buffered, return it. */
-	if (xlate_buffered) {
-		r = xlate_buf[xlate_buf_ix];
-		xlate_buf_ix++;
-		xlate_buffered--;
-		return r;
-	}
-
-	if (ft_private->ascii_flag) {
-		/*
-		 * Get the next (possibly multi-byte) character from the file.
-		 */
-		do {
-			c = fgetc(ft_local_file);
-			if (c == EOF) {
-				if (ft_last_dbcs) {
-					ft_last_dbcs = false;
-					return EBC_si;
-				}
-				return c;
-			}
-			ft_length++;
-			mb[mb_len++] = c;
-			error = ME_NONE;
-			(void) ft_multibyte_to_unicode(mb, mb_len, &consumed,
-				&error);
-			if (error == ME_INVALID) {
-				mb[0] = '?';
-				mb_len = 1;
-				error = ME_NONE;
-			}
-		} while (error == ME_SHORT);
-
-		/* Expand it. */
-		if (ft_private->ascii_flag && ft_private->cr_flag &&
-			!ft_last_cr && c == '\n') {
-			nc = download_convert((unsigned const char *)"\r", 1,
-				cbuf);
-		} else {
-			nc = 0;
-			ft_last_cr = (c == '\r');
-		}
-
-	} else {
-		/* Binary, just read it. */
-	    	c = fgetc(ft_local_file);
-		if (c == EOF)
-			return c;
-		mb[0] = c;
-		mb_len = 1;
-		nc = 0;
-		ft_length++;
-	}
-
-	/* Convert it. */
-	nc += download_convert((unsigned char *)mb, mb_len, &cbuf[nc]);
-
-	/* Return it and buffer what's left. */
-	r = cbuf[0];
-	if (nc > 1) {
-		int i;
-
-		for (i = 1; i < nc; i++)
-			xlate_buf[xlate_buffered++] = cbuf[i];
-		xlate_buf_ix = 0;
-	}
+    /* If there is a data buffered, return it. */
+    if (xlate_buffered) {
+	r = xlate_buf[xlate_buf_ix];
+	xlate_buf_ix++;
+	xlate_buffered--;
 	return r;
+    }
+
+    if (fts->ascii_flag) {
+	/*
+	 * Get the next (possibly multi-byte) character from the file.
+	 */
+	do {
+	    c = fgetc(ft_local_file);
+	    if (c == EOF) {
+		if (ft_last_dbcs) {
+		    ft_last_dbcs = false;
+		    return EBC_si;
+		}
+		return c;
+	    }
+	    ft_length++;
+	    mb[mb_len++] = c;
+	    error = ME_NONE;
+	    (void) ft_multibyte_to_unicode(mb, mb_len, &consumed, &error);
+	    if (error == ME_INVALID) {
+		mb[0] = '?';
+		mb_len = 1;
+		error = ME_NONE;
+	    }
+	} while (error == ME_SHORT);
+
+	/* Expand it. */
+	if (fts->ascii_flag && fts->cr_flag &&
+	    !ft_last_cr && c == '\n') {
+	    nc = download_convert((unsigned const char *)"\r", 1, cbuf);
+	} else {
+	    nc = 0;
+	    ft_last_cr = (c == '\r');
+	}
+
+    } else {
+	/* Binary, just read it. */
+	c = fgetc(ft_local_file);
+	if (c == EOF)
+		return c;
+	mb[0] = c;
+	mb_len = 1;
+	nc = 0;
+	ft_length++;
+    }
+
+    /* Convert it. */
+    nc += download_convert((unsigned char *)mb, mb_len, &cbuf[nc]);
+
+    /* Return it and buffer what's left. */
+    r = cbuf[0];
+    if (nc > 1) {
+	int i;
+
+	for (i = 1; i < nc; i++) {
+	    xlate_buf[xlate_buffered++] = cbuf[i];
+	}
+	xlate_buf_ix = 0;
+    }
+    return r;
 }

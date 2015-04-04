@@ -69,7 +69,7 @@ ft_gui_errmsg_prepare(char *msg _is_unused)
 void
 ft_gui_clear_progress(void)
 {
-    if (ft_private->is_interactive) {
+    if (fts->is_interactive) {
 	printf("\r%79s\n", "");
 	fflush(stdout);
     } else {
@@ -87,7 +87,7 @@ ft_gui_complete_popup(const char *msg _is_unused)
 void
 ft_gui_update_length(unsigned long length)
 {
-    if (ft_private->is_interactive) {
+    if (fts->is_interactive) {
 	printf("\r%79s\rTransferred %lu bytes. ", "", length);
 	fflush(stdout);
     } else {
@@ -110,7 +110,7 @@ ft_gui_aborting(void)
 
 /* Check for interactive mode. */
 ft_gui_interact_t 
-ft_gui_interact(ft_private_t *p)
+ft_gui_interact(ft_state_t *p)
 {   
     if (!escaped) {
 	return FGI_NOP;
@@ -129,7 +129,7 @@ ft_gui_interact(ft_private_t *p)
 void
 ft_gui_awaiting(void)
 {   
-    if (ft_private->is_interactive) {
+    if (fts->is_interactive) {
 	printf("Awaiting start of transfer... ");
 	fflush(stdout);
     } else {

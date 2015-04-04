@@ -120,7 +120,7 @@ static Widget overwrite_shell;
 
 static bool interactive_overwrite = false;
 
-static ft_private_t xftp;
+static ft_state_t xftp;
 static bool xftp_initted = false;
 
 static void ft_cancel(Widget w, XtPointer client_data, XtPointer call_data);
@@ -1447,7 +1447,7 @@ overwrite_popdown(Widget w _is_unused, XtPointer client_data _is_unused,
 void
 ft_gui_progress_popdown(void)
 {
-    if (!ft_private->is_action) {
+    if (!fts->is_action) {
 	XtPopdown(progress_shell);
     }
 }
@@ -1485,7 +1485,7 @@ ft_gui_complete_popup(const char *msg)
 void
 ft_gui_update_length(unsigned long length)
 {
-    if (!ft_private->is_action) {
+    if (!fts->is_action) {
 	char *s = xs_buffer(status_string, length);
 
 	XtVaSetValues(ft_status, XtNlabel, s, NULL);
@@ -1497,7 +1497,7 @@ ft_gui_update_length(unsigned long length)
 void
 ft_gui_running(unsigned long length)
 {
-    if (!ft_private->is_action) {
+    if (!fts->is_action) {
 	XtUnmapWidget(waiting);
 	ft_gui_update_length(length);
 	XtMapWidget(ft_status);
@@ -1508,7 +1508,7 @@ ft_gui_running(unsigned long length)
 void
 ft_gui_aborting(void)
 {
-    if (!ft_private->is_action) {
+    if (!fts->is_action) {
 	XtUnmapWidget(waiting);
 	XtUnmapWidget(ft_status);
 	XtMapWidget(aborting);
@@ -1517,7 +1517,7 @@ ft_gui_aborting(void)
 
 /* Check for interactive mode. */
 ft_gui_interact_t
-ft_gui_interact(ft_private_t *p)
+ft_gui_interact(ft_state_t *p)
 {
     return FGI_NOP;
 }

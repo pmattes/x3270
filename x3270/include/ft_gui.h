@@ -44,6 +44,6 @@ typedef enum {
     FGI_SUCCESS,	/* parameters set, proceed */
     FGI_ABORT		/* user aborted transfer */
 } ft_gui_interact_t;
-ft_gui_interact_t ft_gui_interact(ft_private_t *p);
+ft_gui_interact_t ft_gui_interact(ft_state_t *p);
 void ft_gui_awaiting(void);
 void ft_gui_popup_ft(void);
