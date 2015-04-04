@@ -425,6 +425,8 @@ ft_local_fflag(ft_private_t *p)
 static void
 ft_didnt_start(ioid_t id _is_unused)
 {
+    ft_start_id = NULL_IOID;
+
     if (ft_local_file != NULL) {
 	fclose(ft_local_file);
 	ft_local_file = NULL;
@@ -788,10 +790,10 @@ parse_ft_keywords(unsigned argc, const char **argv)
 	p->receive_flag = !strcasecmp(tp[PARM_DIRECTION].value, "receive");
     }
     if (tp[PARM_HOST_FILE].value) {
-	p->host_filename = tp[PARM_HOST_FILE].value;
+	p->host_filename = NewString(tp[PARM_HOST_FILE].value);
     }
     if (tp[PARM_LOCAL_FILE].value) {
-	p->local_filename = tp[PARM_LOCAL_FILE].value;
+	p->local_filename = NewString(tp[PARM_LOCAL_FILE].value);
     }
     if (tp[PARM_HOST].value) {
 	(void) ft_encode_host_type(tp[PARM_HOST].value, &p->host_type);

@@ -198,6 +198,7 @@ ft_popup_init(void)
     /* Init the file transfer state structure from defaults. */
     if (!xftp_initted) {
 	ft_init_private(&xftp);
+	xftp.is_action = false;
 	xftp_initted = true;
     }
 
@@ -1098,8 +1099,6 @@ get_widget_n(Widget w)
 static bool
 ft_start(void)
 {
-    xftp.is_action = false;
-
     ft_dbcs_state = FT_DBCS_NONE;
 
     /*
@@ -1448,7 +1447,7 @@ overwrite_popdown(Widget w _is_unused, XtPointer client_data _is_unused,
 void
 ft_gui_progress_popdown(void)
 {
-    if (!xftp.is_action) {
+    if (!ft_private->is_action) {
 	XtPopdown(progress_shell);
     }
 }
@@ -1486,7 +1485,7 @@ ft_gui_complete_popup(const char *msg)
 void
 ft_gui_update_length(unsigned long length)
 {
-    if (!xftp.is_action) {
+    if (!ft_private->is_action) {
 	char *s = xs_buffer(status_string, length);
 
 	XtVaSetValues(ft_status, XtNlabel, s, NULL);
@@ -1498,7 +1497,7 @@ ft_gui_update_length(unsigned long length)
 void
 ft_gui_running(unsigned long length)
 {
-    if (!xftp.is_action) {
+    if (!ft_private->is_action) {
 	XtUnmapWidget(waiting);
 	ft_gui_update_length(length);
 	XtMapWidget(ft_status);
@@ -1509,7 +1508,7 @@ ft_gui_running(unsigned long length)
 void
 ft_gui_aborting(void)
 {
-    if (!xftp.is_action) {
+    if (!ft_private->is_action) {
 	XtUnmapWidget(waiting);
 	XtUnmapWidget(ft_status);
 	XtMapWidget(aborting);
