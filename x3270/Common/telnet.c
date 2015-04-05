@@ -129,7 +129,7 @@ char           *termtype;
 /* Statics */
 static socket_t sock = INVALID_SOCKET;	/* active socket */
 #if defined(_WIN32) /*[*/
-static HANDLE	sock_handle = NULL;
+static HANDLE	sock_handle = INVALID_HANDLE_VALUE;
 #endif /*]*/
 static unsigned char myopts[N_OPTS], hisopts[N_OPTS];
 			/* telnet option flags */
@@ -501,13 +501,11 @@ connect_to(int ix, bool noisy, bool *pending)
 
     /* all done */
 #if defined(_WIN32) /*[*/
+    sock_handle = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (sock_handle == NULL) {
-	sock_handle = CreateEvent(NULL, FALSE, FALSE, NULL);
-	if (sock_handle == NULL) {
-	    fprintf(stderr, "Cannot create socket handle: %s\n",
-		    win32_strerror(GetLastError()));
-	    x3270_exit(1);
-	}
+	fprintf(stderr, "Cannot create socket handle: %s\n",
+		win32_strerror(GetLastError()));
+	x3270_exit(1);
     }
     if (WSAEventSelect(sock, sock_handle, FD_READ | FD_CONNECT | FD_CLOSE)
 	    != 0) {
