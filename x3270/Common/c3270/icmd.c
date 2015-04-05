@@ -37,6 +37,7 @@
 #include "charset.h"
 #include "ft_private.h"
 #include "icmdc.h"
+#include "lazya.h"
 #include "utf8.h"
 #include "utils.h"
 
@@ -132,6 +133,41 @@ getnum(int defval)
 	}
 }
 
+/* Format a text string to fit on an 80-column display. */
+static void
+fmt80(const char *s)
+{
+    char *nl;
+    size_t nc;
+
+    printf("\n");
+
+    while (*s) {
+	nl = strchr(s, '\n');
+	if (nl == NULL) {
+	    nc = strlen(s);
+	} else {
+	    nc = nl - s;
+	}
+	if (nc > 78) {
+	    const char *t = s + 78;
+
+	    while (t > s && *t != ' ') {
+		t--;
+	    }
+	    if (t != s) {
+		nc = t - s;
+	    }
+	}
+
+	printf(" %.*s\n", (int)nc, s);
+	s += nc;
+	if (*s == '\n' || *s == ' ') {
+	    s++;
+	}
+    }
+}
+
 /*
  * Interactive file transfer command.
  * Called from Transfer_action.  Returns an updated ft_private.
@@ -162,10 +198,11 @@ at the VM/CMS or TSO command prompt.\n");
 	return -1;
     }
 
-    printf(" 'send' means copy a file from this workstation to the host.\n");
-    printf(" 'receive' means copy a file from the host to this workstation.\n");
+    printf("\n\
+ 'send' means copy a file from this workstation to the host.\n\
+ 'receive' means copy a file from the host to this workstation.\n");
     for (;;) {
-	printf("Direction (send/receive) [%s]: ",
+	printf("Direction: (send/receive) [%s] ",
 		p->receive_flag? "receive": "send");
 	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 	    return -1;
@@ -183,22 +220,25 @@ at the VM/CMS or TSO command prompt.\n");
 	}
     }
 
+    printf("\n");
     for (;;) {
-	printf("Name of source file on %s",
+	printf("Name of source file on %s: ",
 		p->receive_flag? "the host": "this workstation");
 	if (p->receive_flag && p->host_filename) {
-	    printf(" [%s]", p->host_filename);
+	    printf("[%s] ", p->host_filename);
 	} else if (!p->receive_flag && p->local_filename) {
-	    printf(" [%s]", p->local_filename);
+	    printf("[%s] ", p->local_filename);
 	}
-	printf(": ");
 	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 	    return -1;
 	}
-	if (!inbuf[0] &&
-		((p->receive_flag && p->host_filename) ||
-		 (!p->receive_flag && p->local_filename))) {
-	    break;
+	if (!inbuf[0]) {
+	    if ((p->receive_flag && p->host_filename) ||
+		 (!p->receive_flag && p->local_filename)) {
+		break;
+	    } else {
+		continue;
+	    }
 	}
 	if (p->receive_flag) {
 	    Replace(p->host_filename, NewString(inbuf));
@@ -209,21 +249,23 @@ at the VM/CMS or TSO command prompt.\n");
     }
 
     for (;;) {
-	printf("Name of destination file on %s",
+	printf("Name of destination file on %s: ",
 		p->receive_flag? "this workstation": "the host");
 	if (!p->receive_flag && p->host_filename) {
-	    printf(" [%s]", p->host_filename);
+	    printf("[%s] ", p->host_filename);
 	} else if (p->receive_flag && p->local_filename) {
-	    printf(" [%s]", p->local_filename);
+	    printf("[%s] ", p->local_filename);
 	}
-	printf(": ");
 	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 	    return -1;
 	}
-	if (!inbuf[0] &&
-		((!p->receive_flag && p->host_filename) ||
-		 (p->receive_flag && p->local_filename))) {
-	    break;
+	if (!inbuf[0]) {
+	    if ((!p->receive_flag && p->host_filename) ||
+		 (p->receive_flag && p->local_filename)) {
+		break;
+	    } else {
+		continue;
+	    }
 	}
 	if (!p->receive_flag) {
 	    Replace(p->host_filename, NewString(inbuf));
@@ -233,6 +275,7 @@ at the VM/CMS or TSO command prompt.\n");
 	break;
     }
 
+    printf("\n");
     for (;;) {
 	printf("Host type: (tso/vm/cics) [%s] ",
 		ft_decode_host_type(p->host_type));
@@ -247,7 +290,7 @@ at the VM/CMS or TSO command prompt.\n");
 	}
     }
 
-    printf("\
+    printf("\n\
  An 'ascii' transfer does automatic translation between EBCDIC on the host and\n\
  ASCII on the workstation.\n\
  A 'binary' transfer does no data translation.\n");
@@ -273,6 +316,7 @@ at the VM/CMS or TSO command prompt.\n");
 
     if (p->ascii_flag) {
 #if defined(_WIN32) /*[*/
+	printf("\n");
 	for (;;) {
 	    int cp;
 
@@ -288,7 +332,7 @@ at the VM/CMS or TSO command prompt.\n");
 	    }
 	}
 #endif /*]*/
-	printf("\
+	printf("\n\
  For ASCII transfers, carriage return (CR) characters can be handled specially.\n");
 	if (p->receive_flag) {
 	    printf("\
@@ -328,33 +372,29 @@ at the VM/CMS or TSO command prompt.\n");
 		break;
 	    }
 	}
-	printf("\
- For ASCII transfers, "
+	fmt80(lazyaf("For ASCII transfers, "
 #if defined(WC3270) /*[*/
-	       "wc3270"
-#else /*][*/
-	       "c3270"
+"w"
 #endif /*]*/
-		       " can either remap the text to ensure as\n\
- accurate a translation between "
+"c3270 can either remap the text to ensure as "
+"accurate a translation between "
 #if defined(WC3270) /*[*/
-			"Windows code page %d"
+"Windows code page %d"
 #else /*][*/
-			"%s"
+"%s"
 #endif /*]*/
-					     " and EBCDIC code\n\
- page %s as possible, or it can transfer text as-is and leave all\n\
- translation to the IND$FILE program on the host.\n\
- 'yes' means that text will be translated.\n\
- 'no' means that text will be transferred as-is.\n",
+" and EBCDIC code page %s as possible, or it can transfer text as-is and "
+"leave all translation to the IND$FILE program on the host.\n\
+'yes' means that text will be translated.\n\
+'no' means that text will be transferred as-is.",
 #if defined(WC3270) /*[*/
 	    p->windows_codepage,
 #else /*][*/
 	    locale_codeset,
 #endif /*]*/
-	    get_host_codepage());
+	    get_host_codepage()));
 	for (;;) {
-	    printf("Remap character set: (yes/no) [%s] ",
+	    printf("Remap character set? (yes/no) [%s] ",
 		    p->remap_flag? "yes": "no");
 	    if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 		return -1;
@@ -374,9 +414,9 @@ at the VM/CMS or TSO command prompt.\n");
     }
 
     if (p->receive_flag) {
-	printf("\
-If the destination file exists, you can choose to keep it (and abort the\n\
-transfer), replace it, or append the source file to it.\n");
+	printf("\n\
+ If the destination file exists, you can choose to keep it (and abort the\n\
+ transfer), replace it, or append the source file to it.\n");
 	if (p->allow_overwrite) {
 	    default_fe = "replace";
 	} else if (p->append_flag) {
@@ -384,6 +424,7 @@ transfer), replace it, or append the source file to it.\n");
 	} else {
 	    default_fe = "keep";
 	}
+	printf("\n");
 	for (;;) {
 	    printf("Action if destination file exists: "
 		    "(keep/replace/append) [%s] ", default_fe);
@@ -418,9 +459,10 @@ transfer), replace it, or append the source file to it.\n");
 
     if (!p->receive_flag) {
 	if (p->host_type != HT_CICS) {
+	    printf("\n");
 	    for (;;) {
 		printf("[optional] Destination file record "
-			"format (default/fixed/variable/undefined) [%s]: ",
+			"format:\n (default/fixed/variable/undefined) [%s] ",
 			ft_decode_recfm(p->recfm));
 		if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 		    return -1;
@@ -433,11 +475,11 @@ transfer), replace it, or append the source file to it.\n");
 		}
 	    }
 
-	    printf("[optional] Destination file logical record length");
+	    printf("\n");
+	    printf("[optional] Destination file logical record length: ");
 	    if (p->lrecl) {
-		printf(" [%d]", p->lrecl);
+		printf("[%d] ", p->lrecl);
 	    }
-	    printf(": ");
 	    n = getnum(p->lrecl);
 	    if (n < 0) {
 		return -1;
@@ -447,25 +489,24 @@ transfer), replace it, or append the source file to it.\n");
 
 	if (p->host_type == HT_TSO) {
 
-	    printf("[optional] Destination file block size");
+	    printf("[optional] Destination file block size: ");
 	    if (p->blksize) {
-		printf(" [%d]", p->blksize);
+		printf("[%d] ", p->blksize);
 	    }
-	    printf(": ");
 	    n = getnum(p->blksize);
 	    if (n < 0) {
 		return -1;
 	    }
 	    p->blksize = n;
 
+	    printf("\n");
 	    for (;;) {
 		printf("[optional] Destination file "
-			"allocation type "
-			"(default/tracks/cylinders/avblock)");
+			"allocation type:\n"
+			" (default/tracks/cylinders/avblock) ");
 		if (p->units) {
-		    printf(" [%s]", ft_decode_units(p->units));
+		    printf("[%s] ", ft_decode_units(p->units));
 		}
-		printf(": ");
 		if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 		    return -1;
 		}
@@ -478,12 +519,12 @@ transfer), replace it, or append the source file to it.\n");
 	    }
 
 	    if (p->units != DEFAULT_UNITS) {
+		printf("\n");
 		for (;;) {
-		    printf("Destination file primary space");
+		    printf("Destination file primary space: ");
 		    if (p->primary_space) {
-			printf(" [%d]", p->primary_space);
+			printf("[%d] ", p->primary_space);
 		    }
-		    printf(": ");
 		    n = getnum(p->primary_space);
 		    if (n < 0) {
 			return -1;
@@ -494,11 +535,10 @@ transfer), replace it, or append the source file to it.\n");
 		    }
 		}
 
-		printf("[optional] Destination file secondary space");
+		printf("[optional] Destination file secondary space: ");
 		if (p->secondary_space) {
-		    printf(" [%d]", p->secondary_space);
+		    printf("[%d] ", p->secondary_space);
 		}
-		printf(": ");
 		n = getnum(p->secondary_space);
 		if (n < 0) {
 		    return -1;
@@ -507,11 +547,10 @@ transfer), replace it, or append the source file to it.\n");
 
 		if (p->units == AVBLOCK) {
 		    for (;;) {
-			printf("Destination file avblock size");
+			printf("Destination file avblock size: ");
 			if (p->avblock) {
-			    printf(" [%d]", p->avblock);
+			    printf("[%d] ", p->avblock);
 			}
-			printf(": ");
 			n = getnum(p->avblock);
 			if (n < 0) {
 			    return -1;

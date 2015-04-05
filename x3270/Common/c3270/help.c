@@ -241,6 +241,7 @@ static const char *ft_help[] = {
 	"  Allocation=tracks|cylinders|avblock  for Direction=send Host=tso",
 	"  PrimarySpace=<n>                     for Direction=send Host=tso",
 	"  SecondarySpace=<n>                   for Direction=send Host=tso",
+	"  Avblock=<n>                          for Direction=send Host=tso Allocation=avblock",
 	"Note that to embed a space in a value, you must quote the keyword, e.g.:",
 	"  Transfer Direction=send LocalFile=/tmp/foo \"HostFile=foo text a\" Host=vm",
 	NULL
