@@ -42,6 +42,7 @@
 #include "charset.h"
 #include "ctlrc.h"
 #include "ft_dft.h"
+#include "ft_private.h"
 #include "kybd.h"
 #include "sf.h"	/* has to come before rpq.h */
 #include "rpq.h"
@@ -870,13 +871,19 @@ do_qr_charsets(void)
 static void
 do_qr_ddm(void)
 {
-	set_dft_buffersize();
+	int size;
+
+	if (ftc != NULL) {
+	    size = ftc->dft_buffersize;
+	} else {
+	    size = set_dft_buffersize(appres.dft_buffer_size);
+	}
 
 	trace_ds("> QueryReply(DistributedDataManagement)\n");
 	space3270out(8);
 	SET16(obptr,0);			/* set reserved field to 0 */
-	SET16(obptr, dft_buffersize);	/* set inbound length limit INLIM */
-	SET16(obptr, dft_buffersize);	/* set outbound length limit OUTLIM */
+	SET16(obptr, size);		/* set inbound length limit INLIM */
+	SET16(obptr, size);		/* set outbound length limit OUTLIM */
 	SET16(obptr, 0x0101);		/* NSS=01, DDMSS=01 */
 }
 

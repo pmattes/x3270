@@ -190,7 +190,6 @@ extern char		*connected_type;
 extern char		*current_host;
 extern unsigned short	current_port;
 extern bool		dbcs;
-extern int		dft_buffersize;
 extern char		*efontname;
 extern bool		ever_3270;
 extern bool		exiting;

@@ -34,4 +34,4 @@
 
 void ft_dft_data(unsigned char *data, int length);
 void dft_read_modified(void);
-void set_dft_buffersize(void);
+int set_dft_buffersize(int);

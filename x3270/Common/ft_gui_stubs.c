@@ -72,7 +72,7 @@ ft_gui_aborting(void)
 }
 
 ft_gui_interact_t
-ft_gui_interact(ft_state_t *p)
+ft_gui_interact(ft_conf_t *p)
 {
     return FGI_NOP;
 }

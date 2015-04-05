@@ -76,19 +76,34 @@ typedef struct {
     int primary_space;
     int secondary_space;
     int avblock;
+    int dft_buffersize;
 #if defined(_WIN32) /*[*/
     int windows_codepage;
 #endif /*]*/
 
-    /* Transient state. */
+    /* Invocation state. */
     bool is_action;
     bool is_interactive;
+} ft_conf_t;
+extern ft_conf_t *ftc;
+
+FILE *ft_go(ft_conf_t *p);
+extern void ft_init_conf(ft_conf_t *p);
+
+/* Transient state. */
+typedef struct {
+    FILE *local_file;
+    unsigned long length;
     bool is_cut;
-} ft_state_t;
-
-extern ft_state_t *fts;
-
-FILE *ft_go(ft_state_t *p);
-extern void ft_init_private(ft_state_t *p);
+    bool last_dbcs;
+    bool last_cr;
+    enum ftd {
+	FT_DBCS_NONE,
+	FT_DBCS_SO,
+	FT_DBCS_LEFT
+    } dbcs_state;
+    unsigned char dbcs_byte1;
+} ft_tstate_t;
+extern ft_tstate_t fts;
 
 #define __FT_PRIVATE_H

@@ -57,18 +57,13 @@
 
 /* Globals. */
 enum ft_state ft_state = FT_NONE;	/* File transfer state */
-FILE *ft_local_file = NULL;		/* File descriptor for local file */
-bool ft_last_cr = false;		/* CR was last char in local file */
-unsigned long ft_length = 0;		/* Length of transfer */
-#if defined(_WIN32) /*[*/
-int ft_windows_codepage;		/* Windows code page */
-#endif /*]*/
-ft_state_t *fts;			/* File transfer state */
+ft_conf_t *ftc;				/* Current file transfer config */
 
 /* Statics. */
-static ft_state_t transfer_ft_private;
-static ft_state_t gui_ft_private;
-static bool gui_initted = false;
+static ft_conf_t transfer_ft_conf;	/* FT config for Transfer() action */
+static ft_conf_t gui_ft_conf;		/* FT config for GUI (actually just
+					   c3270; x3270 uses its own) */
+static bool gui_conf_initted = false;
 
 static struct timeval t0;		/* Starting time */
 
@@ -158,9 +153,7 @@ static struct {
     { "WindowsCodePage" },
 #endif /*]*/
 };
-enum ftd ft_dbcs_state = FT_DBCS_NONE;
-unsigned char ft_dbcs_byte1;
-bool ft_last_dbcs = false;
+ft_tstate_t fts;
 
 static ioid_t ft_start_id = NULL_IOID;
 
@@ -269,18 +262,18 @@ void
 ft_init(void)
 {
     /*
-     * Do a dummy initialization of the Transfer action's ft_state, to catch
+     * Do a dummy initialization of the Transfer action's ft_config, to catch
      * and display any errors in the resource defaults.
      */
-    ft_init_private(&transfer_ft_private);
+    ft_init_conf(&transfer_ft_conf);
 }
 
 /*
- * Initialize or re-initialize an ft_state structure from the appres
+ * Initialize or re-initialize an ft_conf structure from the appres
  * defaults.
  */
 void
-ft_init_private(ft_state_t *p)
+ft_init_conf(ft_conf_t *p)
 {
     /* Initialize the private state. */
     p->receive_flag = true;
@@ -297,6 +290,7 @@ ft_init_private(ft_state_t *p)
     p->primary_space = 0;
     p->secondary_space = 0;
     p->avblock = 0;
+    p->dft_buffersize = set_dft_buffersize(0);
 #if defined(_WIN32) /*[*/
     p->windows_codepage = appres.ft_cp? appres.ft_cp: appres.local_cp;
 #endif /*]*/
@@ -404,11 +398,14 @@ ft_init_private(ft_state_t *p)
     if (appres.ft.avblock) {
 	p->avblock = appres.ft.avblock;
     }
+    if (appres.dft_buffer_size) {
+	p->dft_buffersize = set_dft_buffersize(appres.dft_buffer_size);
+    }
 }
 
 /* Return the right value for fopen()ing the local file. */
 static const char *
-ft_local_fflag(ft_state_t *p)
+ft_local_fflag(ft_conf_t *p)
 {
     static char ret[3];
     int nr = 0;
@@ -427,11 +424,11 @@ ft_didnt_start(ioid_t id _is_unused)
 {
     ft_start_id = NULL_IOID;
 
-    if (ft_local_file != NULL) {
-	fclose(ft_local_file);
-	ft_local_file = NULL;
-	if (fts->receive_flag && !fts->append_flag) {
-	    unlink(fts->local_filename);
+    if (fts.local_file != NULL) {
+	fclose(fts.local_file);
+	fts.local_file = NULL;
+	if (ftc->receive_flag && !ftc->append_flag) {
+	    unlink(ftc->local_filename);
 	}
     }
 
@@ -446,10 +443,10 @@ void
 ft_complete(const char *errmsg)
 {
     /* Close the local file. */
-    if (ft_local_file != NULL && fclose(ft_local_file) < 0) {
-	popup_an_errno(errno, "close(%s)", fts->local_filename);
+    if (fts.local_file != NULL && fclose(fts.local_file) < 0) {
+	popup_an_errno(errno, "close(%s)", ftc->local_filename);
     }
-    ft_local_file = NULL;
+    fts.local_file = NULL;
 
     /* Clean up the state. */
     ft_state = FT_NONE;
@@ -480,13 +477,13 @@ ft_complete(const char *errmsg)
 	char *buf;
 
 	(void) gettimeofday(&t1, NULL);
-	bytes_sec = (double)ft_length /
+	bytes_sec = (double)fts.length /
 		((double)(t1.tv_sec - t0.tv_sec) + 
 		 (double)(t1.tv_usec - t0.tv_usec) / 1.0e6);
-	buf = xs_buffer(get_message("ftComplete"), ft_length,
+	buf = xs_buffer(get_message("ftComplete"), fts.length,
 		display_scale(bytes_sec),
-		fts->is_cut ? "CUT" : "DFT");
-	if (fts->is_action) {
+		fts.is_cut ? "CUT" : "DFT");
+	if (ftc->is_action) {
 	    /* Clear out the progress display. */
 	    ft_gui_clear_progress();
 
@@ -497,14 +494,13 @@ ft_complete(const char *errmsg)
 	}
 	Free(buf);
     }
-    fts->is_interactive = false;
 }
 
 /* Update the bytes-transferred count on the progress pop-up. */
 void
 ft_update_length(void)
 {
-    ft_gui_update_length(ft_length);
+    ft_gui_update_length(fts.length);
 }
 
 /* Process a transfer acknowledgement. */
@@ -518,11 +514,11 @@ ft_running(bool is_cut)
 	    ft_start_id = NULL_IOID;
 	}
     }
-    fts->is_cut = is_cut;
+    fts.is_cut = is_cut;
     (void) gettimeofday(&t0, NULL);
-    ft_length = 0;
+    fts.length = 0;
 
-    ft_gui_running(ft_length);
+    ft_gui_running(fts.length);
 }
 
 /* Process a protocol-generated abort. */
@@ -564,16 +560,17 @@ ft_in3270(bool ignored _is_unused)
  * message.
  */
 FILE *
-ft_go(ft_state_t *p)
+ft_go(ft_conf_t *p)
 {
     FILE *f;
     varbuf_t r;
     unsigned flen;
 
-#if defined(_WIN32) /*[*/
-    /* Set the ugly global for code page override. */
-    ft_windows_codepage = p->windows_codepage;
-#endif /*]*/
+    /* Adjust the DFT buffer size. */
+    if (!p->dft_buffersize) {
+	p->dft_buffersize = appres.dft_buffer_size;
+    }
+    p->dft_buffersize = set_dft_buffersize(p->dft_buffersize);
 
     /* See if the local file can be overwritten. */
     if (p->receive_flag && !p->append_flag && !p->allow_overwrite) {
@@ -697,7 +694,15 @@ ft_go(ft_state_t *p)
     vb_free(&r);
 
     /* Now proceed with this context. */
-    fts = p;
+    ftc = p;
+
+    /* Finish common initialization. */
+    fts.last_cr = false;
+    fts.is_cut = false;
+    fts.last_dbcs = false;
+    fts.dbcs_state = FT_DBCS_NONE;
+
+    ft_state = FT_AWAIT_ACK;
 
     return f;
 }
@@ -708,17 +713,17 @@ ft_go(ft_state_t *p)
  * Returns a pointer to the filled-out ft_state structure, or NULL for
  * errors.
  */
-static ft_state_t *
+static ft_conf_t *
 parse_ft_keywords(unsigned argc, const char **argv)
 {
-    ft_state_t *p = &transfer_ft_private;
+    ft_conf_t *p = &transfer_ft_conf;
     int i, k;
     unsigned j;
     long l;
     char *ptr;
 
     /* Unlike the GUIs, always set everything to defaults. */
-    ft_init_private(p);
+    ft_init_conf(p);
     p->is_action = true;
     for (i = 0; i < N_PARMS; i++) {
 	Replace(tp[i].value, NULL);
@@ -839,11 +844,8 @@ parse_ft_keywords(unsigned argc, const char **argv)
 	p->secondary_space = atoi(tp[PARM_SECONDARY_SPACE].value);
     }
     if (tp[PARM_BUFFER_SIZE].value != NULL) {
-	dft_buffersize = atoi(tp[PARM_BUFFER_SIZE].value);
-    } else {
-	dft_buffersize = 0;
+	p->dft_buffersize = atoi(tp[PARM_BUFFER_SIZE].value);
     }
-    set_dft_buffersize();
     if (tp[PARM_AVBLOCK].value) {
 	p->avblock = atoi(tp[PARM_AVBLOCK].value);
     }
@@ -907,7 +909,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
 static bool  
 Transfer_action(ia_t ia, unsigned argc, const char **argv)
 {
-    ft_state_t *p = NULL;
+    ft_conf_t *p = NULL;
 
     action_debug("Transfer", ia, argc, argv);
 
@@ -919,18 +921,18 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 
     /* Check for interactive mode. */
     if (argc == 0) {
-	if (!gui_initted) {
-	    ft_init_private(&gui_ft_private);
-	    gui_ft_private.is_action = true;
-	    gui_initted = true;
+	if (!gui_conf_initted) {
+	    ft_init_conf(&gui_ft_conf);
+	    gui_ft_conf.is_action = true;
+	    gui_conf_initted = true;
 	}
-	switch (ft_gui_interact(&gui_ft_private)) {
+	switch (ft_gui_interact(&gui_ft_conf)) {
 	case FGI_NOP:
 	    /* Hope the defaults are enough. */
 	    break;
 	case FGI_SUCCESS:
 	    /* Proceed as specified in the ft_state. */
-	    p = &gui_ft_private;
+	    p = &gui_ft_conf;
 	    break;
 	case FGI_ABORT:
 	    /* User said no. */
@@ -947,19 +949,12 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     }
 
     /* Start the transfer. */
-    ft_local_file = ft_go(p);
-    if (ft_local_file == NULL) {
+    fts.local_file = ft_go(p);
+    if (fts.local_file == NULL) {
 	return false;
     }
 
-    /* Finish initialization. */
-    p->is_cut = false;
-    ft_last_cr = false;
-    ft_last_dbcs = false;
-
-    ft_state = FT_AWAIT_ACK;
-
-    /* Tell the user. */
+    /* If interactive, tell the user we're waiting. */
     ft_gui_awaiting();
 
     /* Set a timeout for failed command start. */
@@ -985,7 +980,7 @@ ft_ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len)
     int local_cp = appres.local_cp;
     int rc;
 
-    appres.local_cp = ft_windows_codepage;
+    appres.local_cp = ftc->windows_codepage;
     rc = ebcdic_to_multibyte(ebc, mb, mb_len);
     appres.local_cp = local_cp;
     return rc;
@@ -997,7 +992,7 @@ ft_unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len)
     int local_cp = appres.local_cp;
     int rc;
 
-    appres.local_cp = ft_windows_codepage;
+    appres.local_cp = ftc->windows_codepage;
     rc = unicode_to_multibyte(ucs4, mb, mb_len);
     appres.local_cp = local_cp;
     return rc;
@@ -1010,7 +1005,7 @@ ft_multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
     int local_cp = appres.local_cp;
     ucs4_t rc;
 
-    appres.local_cp = ft_windows_codepage;
+    appres.local_cp = ftc->windows_codepage;
     rc = multibyte_to_unicode(mb, mb_len, consumedp, errorp);
     appres.local_cp = local_cp;
     return rc;

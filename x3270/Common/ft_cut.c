@@ -185,10 +185,10 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 
 	/* Map it. */
 	c = conv[quadrant].xlate[ix];
-	if (fts->ascii_flag && fts->cr_flag && (c == '\r' || c == 0x1a)) {
+	if (ftc->ascii_flag && ftc->cr_flag && (c == '\r' || c == 0x1a)) {
 	    continue;
 	}
-	if (!(fts->ascii_flag && fts->remap_flag)) {
+	if (!(ftc->ascii_flag && ftc->remap_flag)) {
 	    /* No further translation necessary. */
 	    *ob++ = c;
 	    obuf_len--;
@@ -201,35 +201,35 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 	 * getting back to EBCDIC, and converting to multi-byte from
 	 * there.
 	 */
-	switch (ft_dbcs_state) {
+	switch (fts.dbcs_state) {
 	case FT_DBCS_NONE:
 	    if (c == EBC_so) {
-		ft_dbcs_state = FT_DBCS_SO;
+		fts.dbcs_state = FT_DBCS_SO;
 		continue;
 	    }
 	    /* fall through to non-DBCS case below */
 	    break;
 	case FT_DBCS_SO:
 	    if (c == EBC_si) {
-		ft_dbcs_state = FT_DBCS_NONE;
+		fts.dbcs_state = FT_DBCS_NONE;
 	    } else {
-		ft_dbcs_byte1 = i_asc2ft[c];
-		ft_dbcs_state = FT_DBCS_LEFT;
+		fts.dbcs_byte1 = i_asc2ft[c];
+		fts.dbcs_state = FT_DBCS_LEFT;
 	    }
 	    continue;
 	case FT_DBCS_LEFT:
 	    if (c == EBC_si) {
-		ft_dbcs_state = FT_DBCS_NONE;
+		fts.dbcs_state = FT_DBCS_NONE;
 		continue;
 	    }
-	    nx = ft_ebcdic_to_multibyte((ft_dbcs_byte1 << 8) | i_asc2ft[c],
+	    nx = ft_ebcdic_to_multibyte((fts.dbcs_byte1 << 8) | i_asc2ft[c],
 		    (char *)ob, obuf_len);
 	    if (nx && (ob[nx - 1] == '\0')) {
 		nx--;
 	    }
 	    ob += nx;
 	    obuf_len -= nx;
-	    ft_dbcs_state = FT_DBCS_SO;
+	    fts.dbcs_state = FT_DBCS_SO;
 	    continue;
 	}
 
@@ -317,9 +317,9 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 
 	/* Handle nulls separately. */
 	if (!c) {
-	    if (ft_last_dbcs) {
+	    if (fts.last_dbcs) {
 		ob += store_download(EBC_si, ob);
-		ft_last_dbcs = false;
+		fts.last_dbcs = false;
 	    }
 	    if (quadrant != OTHER_2) {
 		quadrant = OTHER_2;
@@ -331,7 +331,7 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 	    continue;
 	}
 
-	if (!(fts->ascii_flag && fts->remap_flag)) {
+	if (!(ftc->ascii_flag && ftc->remap_flag)) {
 	    ob += store_download(c, ob);
 	    buf++;
 	    len--;
@@ -358,16 +358,16 @@ download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 	    e = unicode_to_ebcdic(u);
 	}
 	if (e & 0xff00) {
-	    if (!ft_last_dbcs) {
+	    if (!fts.last_dbcs) {
 		ob += store_download(EBC_so, ob);
 	    }
 	    ob += store_download(i_ft2asc[(e >> 8) & 0xff], ob);
 	    ob += store_download(i_ft2asc[e & 0xff], ob);
-	    ft_last_dbcs = true;
+	    fts.last_dbcs = true;
 	} else {
-	    if (ft_last_dbcs) {
+	    if (fts.last_dbcs) {
 		ob += store_download(EBC_si, ob);
-		ft_last_dbcs = false;
+		fts.last_dbcs = false;
 	    }
 	    if (e == 0) {
 		ob += store_download('?', ob);
@@ -518,7 +518,7 @@ cut_data_request(void)
     }
 
     /* Check for errors. */
-    if (ferror(ft_local_file)) {
+    if (ferror(fts.local_file)) {
 	int j;
 	char *msg;
 
@@ -528,7 +528,7 @@ cut_data_request(void)
 	}
 
 	/* Abort the transfer. */
-	msg = xs_buffer("read(%s): %s", fts->local_filename, strerror(errno));
+	msg = xs_buffer("read(%s): %s", ftc->local_filename, strerror(errno));
 	cut_abort(msg, SC_ABORT_FILE);
 	Free(msg);
 	return;
@@ -629,14 +629,14 @@ cut_data(void)
     }
 
     /* Write it to the file. */
-    if (fwrite((char *)cvobuf, conv_length, 1, ft_local_file) == 0) {
+    if (fwrite((char *)cvobuf, conv_length, 1, fts.local_file) == 0) {
 	char *msg;
 
-	msg = xs_buffer("write(%s): %s", fts->local_filename, strerror(errno));
+	msg = xs_buffer("write(%s): %s", ftc->local_filename, strerror(errno));
 	cut_abort(msg, SC_ABORT_FILE);
 	Free(msg);
     } else {
-	ft_length += conv_length;
+	fts.length += conv_length;
 	ft_update_length();
 	cut_ack();
     }
@@ -697,20 +697,20 @@ xlate_getc(void)
 	return r;
     }
 
-    if (fts->ascii_flag) {
+    if (ftc->ascii_flag) {
 	/*
 	 * Get the next (possibly multi-byte) character from the file.
 	 */
 	do {
-	    c = fgetc(ft_local_file);
+	    c = fgetc(fts.local_file);
 	    if (c == EOF) {
-		if (ft_last_dbcs) {
-		    ft_last_dbcs = false;
+		if (fts.last_dbcs) {
+		    fts.last_dbcs = false;
 		    return EBC_si;
 		}
 		return c;
 	    }
-	    ft_length++;
+	    fts.length++;
 	    mb[mb_len++] = c;
 	    error = ME_NONE;
 	    (void) ft_multibyte_to_unicode(mb, mb_len, &consumed, &error);
@@ -722,23 +722,23 @@ xlate_getc(void)
 	} while (error == ME_SHORT);
 
 	/* Expand it. */
-	if (fts->ascii_flag && fts->cr_flag &&
-	    !ft_last_cr && c == '\n') {
+	if (ftc->ascii_flag && ftc->cr_flag &&
+	    !fts.last_cr && c == '\n') {
 	    nc = download_convert((unsigned const char *)"\r", 1, cbuf);
 	} else {
 	    nc = 0;
-	    ft_last_cr = (c == '\r');
+	    fts.last_cr = (c == '\r');
 	}
 
     } else {
 	/* Binary, just read it. */
-	c = fgetc(ft_local_file);
+	c = fgetc(fts.local_file);
 	if (c == EOF)
 		return c;
 	mb[0] = c;
 	mb_len = 1;
 	nc = 0;
-	ft_length++;
+	fts.length++;
     }
 
     /* Convert it. */

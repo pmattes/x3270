@@ -70,7 +70,6 @@ struct data_buffer {
 };
 
 /* Globals. */
-int dft_buffersize = 0;			/* Buffer size (LIMIN, LIMOUT) */
 
 /* Statics. */
 static bool message_flag = false;	/* Open Request for msg received */
@@ -263,7 +262,7 @@ dft_data_insert(struct data_buffer *data_bufr)
 	int rv = 1;
 
 	/* Write the data out to the file. */
-	if (fts->ascii_flag && (fts->remap_flag || fts->cr_flag)) {
+	if (ftc->ascii_flag && (ftc->remap_flag || ftc->cr_flag)) {
 	    size_t obuf_len = 4 * my_length;
 	    char *ob0 = Malloc(obuf_len);
 	    char *ob = ob0;
@@ -276,11 +275,11 @@ dft_data_insert(struct data_buffer *data_bufr)
 		unsigned char c = *s++;
 
 		/* Strip CR's and ^Z's. */
-		if (fts->cr_flag && ((c == '\r' || c == 0x1a))) {
+		if (ftc->cr_flag && ((c == '\r' || c == 0x1a))) {
 		    continue;
 		}
 
-		if (!fts->remap_flag) {
+		if (!ftc->remap_flag) {
 		    *ob++ = c;
 		    obuf_len--;
 		    continue;
@@ -294,10 +293,10 @@ dft_data_insert(struct data_buffer *data_bufr)
 		 * from there.
 		 */
 
-		switch (ft_dbcs_state) {
+		switch (fts.dbcs_state) {
 		case FT_DBCS_NONE:
 		    if (c == EBC_so) {
-			ft_dbcs_state = FT_DBCS_SO;
+			fts.dbcs_state = FT_DBCS_SO;
 			continue;
 		    }
 		    /*
@@ -306,26 +305,26 @@ dft_data_insert(struct data_buffer *data_bufr)
 		    break;
 		case FT_DBCS_SO:
 		    if (c == EBC_si) {
-			ft_dbcs_state = FT_DBCS_NONE;
+			fts.dbcs_state = FT_DBCS_NONE;
 		    } else {
-			ft_dbcs_byte1 = i_asc2ft[c];
-			ft_dbcs_state = FT_DBCS_LEFT;
+			fts.dbcs_byte1 = i_asc2ft[c];
+			fts.dbcs_state = FT_DBCS_LEFT;
 		    }
 		    continue;
 		case FT_DBCS_LEFT:
 		    if (c == EBC_si) {
-			ft_dbcs_state = FT_DBCS_NONE;
+			fts.dbcs_state = FT_DBCS_NONE;
 			continue;
 		    }
 		    nx = ft_ebcdic_to_multibyte(
-			    (ft_dbcs_byte1 << 8) | i_asc2ft[c],
+			    (fts.dbcs_byte1 << 8) | i_asc2ft[c],
 			    (char *)ob, obuf_len);
 		    if (nx && (ob[nx - 1] == '\0')) {
 			nx--;
 		    }
 		    ob += nx;
 		    obuf_len -= nx;
-		    ft_dbcs_state = FT_DBCS_SO;
+		    fts.dbcs_state = FT_DBCS_SO;
 		    continue;
 		}
 
@@ -358,22 +357,22 @@ dft_data_insert(struct data_buffer *data_bufr)
 
 	    /* Write the result to the file. */
 	    if (ob - ob0) {
-		rv = fwrite(ob0, ob - ob0, (size_t)1, ft_local_file);
-		ft_length += ob - ob0;
+		rv = fwrite(ob0, ob - ob0, (size_t)1, fts.local_file);
+		fts.length += ob - ob0;
 	    }
 	    Free(ob0);
 	} else {
 	    /* Write the buffer to the file directly. */
 	    rv = fwrite((char *)data_bufr->data, my_length, (size_t)1,
-		    ft_local_file);
-	    ft_length += my_length;
+		    fts.local_file);
+	    fts.length += my_length;
 	}
 
 	if (!rv) {
 	    /* write failed */
 	    char *buf;
 
-	    buf = xs_buffer("write(%s): %s", fts->local_filename,
+	    buf = xs_buffer("write(%s): %s", ftc->local_filename,
 		    strerror(errno));
 
 	    dft_abort(buf, TR_DATA_INSERT);
@@ -457,16 +456,16 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 	return nm;
     }
 
-    if (fts->remap_flag) {
+    if (ftc->remap_flag) {
 	/* Read bytes until we have a legal multibyte sequence. */
 	do {
 	    int consumed;
 
-	    c = fgetc(ft_local_file);
+	    c = fgetc(fts.local_file);
 	    if (c == EOF) {
-		if (ft_last_dbcs) {
+		if (fts.last_dbcs) {
 		    *bufptr = EBC_si;
-		    ft_last_dbcs = false;
+		    fts.last_dbcs = false;
 		    return 1;
 		}
 		return -1;
@@ -482,20 +481,20 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 	} while (error == ME_SHORT);
     } else {
 	/* Get a byte from the file. */
-	c = fgetc(ft_local_file);
+	c = fgetc(fts.local_file);
 	if (c == EOF) {
 	    return -1;
 	}
     }
 
     /* Expand NL to CR/LF. */
-    if (fts->cr_flag && !ft_last_cr && c == '\n') {
-	if (ft_last_dbcs) {
+    if (ftc->cr_flag && !fts.last_cr && c == '\n') {
+	if (fts.last_dbcs) {
 	    *bufptr = EBC_si;
 	    dft_ungetc_cache[0] = '\r';
 	    dft_ungetc_cache[1] = '\n';
 	    dft_ungetc_count = 2;
-	    ft_last_dbcs = false;
+	    fts.last_dbcs = false;
 	    return 1;
 	} else {
 	    *bufptr = '\r';
@@ -504,10 +503,10 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 	}
 	return 1;
     }
-    ft_last_cr = (c == '\r');
+    fts.last_cr = (c == '\r');
 
     /* The no-remap case is pretty simple. */
-    if (!fts->remap_flag) {
+    if (!ftc->remap_flag) {
 	*bufptr = c;
 	return 1;
     }
@@ -529,21 +528,21 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
     if (e & 0xff00) {
 	unsigned char *bp0 = bufptr;
 
-	if (!ft_last_dbcs) {
+	if (!fts.last_dbcs) {
 	    store_inbyte(EBC_so, &bufptr, &numbytes);
 	}
 	store_inbyte(i_ft2asc[(e >> 8) & 0xff], &bufptr, &numbytes);
 	store_inbyte(i_ft2asc[e & 0xff],        &bufptr, &numbytes);
-	ft_last_dbcs = true;
+	fts.last_dbcs = true;
 	return bufptr - bp0;
     } else {
 	unsigned char nc = e? i_ft2asc[e]: '?';
 
-	if (ft_last_dbcs) {
+	if (fts.last_dbcs) {
 	    *bufptr = EBC_si;
 	    dft_ungetc_cache[0] = nc;
 	    dft_ungetc_count = 1;
-	    ft_last_dbcs = false;
+	    fts.last_dbcs = false;
 	} else {
 	    *bufptr = nc;
 	}
@@ -568,13 +567,12 @@ dft_get_request(void)
     }
 
     /* Read a buffer's worth. */
-    set_dft_buffersize();
-    space3270out(dft_buffersize);
-    numbytes = dft_buffersize - 27; /* always read 5 bytes less than we're
-				       allowed */
+    space3270out(ftc->dft_buffersize);
+    numbytes = ftc->dft_buffersize - 27; /* always read 5 bytes less than we're
+				            allowed */
     bufptr = obuf + 17;
     while (!dft_eof && numbytes) {
-	if (fts->ascii_flag && (fts->remap_flag || fts->cr_flag)) {
+	if (ftc->ascii_flag && (ftc->remap_flag || ftc->cr_flag)) {
 	    numread = dft_ascii_read(bufptr, numbytes);
 	    if (numread == (size_t)-1) {
 		dft_eof = true;
@@ -585,27 +583,27 @@ dft_get_request(void)
 	    total_read += numread;
 	} else {
 	    /* Binary read. */
-	    numread = fread(bufptr, 1, numbytes, ft_local_file);
+	    numread = fread(bufptr, 1, numbytes, fts.local_file);
 	    if (numread <= 0) {
 		break;
 	    }
 	    bufptr += numread;
 	    numbytes -= numread;
 	    total_read += numread;
-	    if (feof(ft_local_file)) {
+	    if (feof(fts.local_file)) {
 		dft_eof = true;
 	    }
-	    if (feof(ft_local_file) || ferror(ft_local_file)) {
+	    if (feof(fts.local_file) || ferror(fts.local_file)) {
 		break;
 	    }
 	}
     }
 
     /* Check for read error. */
-    if (ferror(ft_local_file)) {
+    if (ferror(fts.local_file)) {
 	char *buf;
 
-	buf = xs_buffer("read(%s): %s", fts->local_filename, strerror(errno));
+	buf = xs_buffer("read(%s): %s", ftc->local_filename, strerror(errno));
 	dft_abort(buf, TR_GET_REQ);
 	Free(buf);
 	return;
@@ -629,7 +627,7 @@ dft_get_request(void)
 	SET16(obptr, total_read + 5);
 	obptr += total_read;
 
-	ft_length += total_read;
+	fts.length += total_read;
     } else {
 	trace_ds("> WriteStructuredField FileTransferData EOF\n");
 	*obptr++ = HIGH8(TR_GET_REQ);
@@ -714,20 +712,18 @@ dft_read_modified(void)
     }
 }
 
-/* Update the buffersize for generating a Query Reply. */
-void
-set_dft_buffersize(void)
+/* Default/bound the buffersize for generating a Query Reply. */
+int
+set_dft_buffersize(int size)
 {
-    if (dft_buffersize == 0) {
-	dft_buffersize = appres.dft_buffer_size;
-	if (dft_buffersize == 0) {
-	    dft_buffersize = DFT_BUF;
-	}
+    if (size == 0) {
+	size = DFT_BUF;
     }
-    if (dft_buffersize > DFT_MAX_BUF) {
-	dft_buffersize = DFT_MAX_BUF;
+    if (size > DFT_MAX_BUF) {
+	size = DFT_MAX_BUF;
     }
-    if (dft_buffersize < DFT_MIN_BUF) {
-	dft_buffersize = DFT_MIN_BUF;
+    if (size < DFT_MIN_BUF) {
+	size = DFT_MIN_BUF;
     }
+    return size;
 }

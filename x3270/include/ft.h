@@ -32,8 +32,6 @@
  *		Global declarations for ft.c.
  */
 
-extern unsigned long ft_length;
-extern FILE *ft_local_file;
 enum ft_state {
     FT_NONE,		/* No transfer in progress */
     FT_AWAIT_ACK,	/* IND$FILE sent, awaiting acknowledgement message */
@@ -41,18 +39,8 @@ enum ft_state {
     FT_ABORT_WAIT,	/* Awaiting chance to send an abort */
     FT_ABORT_SENT	/* Abort sent; awaiting response */
 };
-extern bool ft_last_cr;
 extern enum ft_state ft_state;
 extern unsigned char i_ft2asc[], i_asc2ft[];
-
-enum ftd {
-    FT_DBCS_NONE,
-    FT_DBCS_SO,
-    FT_DBCS_LEFT
-};
-extern enum ftd ft_dbcs_state;
-extern unsigned char ft_dbcs_byte1;
-extern bool ft_last_dbcs;
 
 void ft_aborting(void);
 void ft_complete(const char *errmsg);
