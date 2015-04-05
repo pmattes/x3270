@@ -433,7 +433,6 @@ ft_didnt_start(ioid_t id _is_unused)
     }
 
     ft_complete(get_message("ftStartTimeout"));
-    sms_continue();
 }
 
 /* External entry points called by ft_dft and ft_cut. */
@@ -488,12 +487,14 @@ ft_complete(const char *errmsg)
 	    ft_gui_clear_progress();
 
 	    sms_info("%s", buf);
-	    sms_continue();
 	} else {
 	    ft_gui_complete_popup(buf);
 	}
 	Free(buf);
     }
+
+    /* I hope I can do this unconditionally. */
+    sms_continue();
 }
 
 /* Update the bytes-transferred count on the progress pop-up. */
@@ -946,6 +947,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 	if (p == NULL) {
 	    return false;
 	}
+	p->is_interactive = (ia == IA_COMMAND);
     }
 
     /* Start the transfer. */
@@ -962,6 +964,26 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 
     /* Success. */
     return true;
+}
+
+/*
+ * Cancel a file transfer.
+ *
+ * Returns true if the transfer if the cancellation is complete, false if it
+ * is pending (because it must be coordinated with the host).
+ */
+bool
+ft_do_cancel(void)
+{
+    if (ft_state == FT_RUNNING) {
+	ft_state = FT_ABORT_WAIT;
+	return false;
+    } else {
+	if (ft_state != FT_NONE) {
+	    ft_complete(get_message("ftUserCancel"));
+	}
+	return true;
+    }
 }
 
 #if defined(_WIN32) /*[*/

@@ -1316,14 +1316,11 @@ static void
 progress_cancel_callback(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
-    if (ft_state == FT_RUNNING) {
-	ft_state = FT_ABORT_WAIT;
+    if (ft_do_cancel()) {
+	/* Waiting for the host to acknowledge our cancellation. */
 	XtUnmapWidget(waiting);
 	XtUnmapWidget(ft_status);
 	XtMapWidget(aborting);
-    } else {
-	/* Impatient user or hung host -- just clean up. */
-	ft_complete(get_message("ftUserCancel"));
     }
 }
 

@@ -28,7 +28,7 @@
 /*
  * 	cscreen.h
  *		c3270/wc3270 screen declarations.
- **/
+ */
 
 extern bool escaped;
 #if defined(WC3270) /*[*/
@@ -46,4 +46,6 @@ void screen_system_fixup(void);
 void pager_output(const char *s);
 bool screen_wait_for_key(char *c);
 void screen_title(const char *text);
+typedef void ctrlc_fn_t(void);
+void screen_set_ctrlc_fn(ctrlc_fn_t fn);
 #endif /*]*/

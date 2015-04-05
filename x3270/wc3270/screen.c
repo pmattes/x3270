@@ -202,6 +202,8 @@ static HANDLE sbuf;	/* dynamically-allocated screen buffer */
 
 HWND console_window;
 
+static ctrlc_fn_t *ctrlc_fn = NULL;
+
 static int console_rows;
 static int console_cols;
 static COORD console_max;
@@ -232,6 +234,15 @@ win32_perror_fatal(const char *fmt, ...)
 }
 
 /*
+ * Control-C handler registration.
+ */
+void
+screen_set_ctrlc_fn(ctrlc_fn_t *fn)
+{
+    ctrlc_fn = fn;
+}
+
+/*
  * Console event handler.
  */
 BOOL WINAPI
@@ -244,6 +255,9 @@ cc_handler(DWORD type)
 	vtrace("Control-C received via Console Event Handler%s\n",
 		escaped? " (should be ignored)": "");
 	if (escaped) {
+	    if (ctrlc_fn) {
+		(*ctrlc_fn)();
+	    }
 	    return TRUE;
 	}
 	action = lookup_key(0x03, LEFT_CTRL_PRESSED);

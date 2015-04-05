@@ -47,6 +47,7 @@ void ft_complete(const char *errmsg);
 void ft_init(void);
 void ft_running(bool is_cut);
 void ft_update_length(void);
+bool ft_do_cancel(void);
 void ft_register(void);
 
 # if defined(_WIN32) /*[*/
