@@ -80,7 +80,6 @@ typedef struct {
     char	*trace_file_size;
     char	*oversize;
     char	*ft_command;
-    int		 dft_buffer_size;
     char	*connectfile_name;
     char	*idle_command;
     bool	 idle_command_enabled;
@@ -162,6 +161,8 @@ typedef struct {
 	char	*recfm;
 	char	*remap;
 	int	 secondary_space;
+	int	 dft_buffer_size;
+	int	 dft_buffer_size_bc;	/* old resource value */
     } ft;
 
     /* c3270/wc3270-specific fields. */

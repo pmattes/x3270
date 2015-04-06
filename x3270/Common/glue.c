@@ -473,8 +473,6 @@ set_appres_defaults(void)
     appres.unlock_delay = true;
     appres.unlock_delay_ms = 350;
 
-    appres.dft_buffer_size = DFT_BUF;
-
     set_toggle(CURSOR_POS, true);
     set_toggle(AID_WAIT, true);
 
@@ -990,13 +988,14 @@ static res_t base_resources[] = {
     { ResColor8,	aoffset(color8),		XRM_BOOLEAN },
     { ResConfDir,	aoffset(conf_dir),	XRM_STRING },
     { ResDbcsCgcsgid, aoffset(dbcs_cgcsgid),	XRM_STRING },
-    { ResDftBufferSize,aoffset(dft_buffer_size),XRM_INT },
+    { ResDftBufferSize,aoffset(ft.dft_buffer_size_bc),XRM_INT },/* deprecated */
     { ResEof,		aoffset(linemode.eof),	XRM_STRING },
     { ResErase,		aoffset(linemode.erase),	XRM_STRING },
     { ResExtended,	aoffset(extended),	XRM_BOOLEAN },
     { ResFtAllocation,	aoffset(ft.allocation),	XRM_STRING },
     { ResFtAvblock,	aoffset(ft.avblock),	XRM_INT },
     { ResFtBlksize,	aoffset(ft.blksize),	XRM_INT },
+    { ResFtBufferSize,aoffset(ft.dft_buffer_size),XRM_INT },
     { ResFtCr,		aoffset(ft.cr),		XRM_STRING },
     { ResFtDirection,	aoffset(ft.direction),	XRM_STRING },
     { ResFtExist,	aoffset(ft.exist),	XRM_STRING },

@@ -961,6 +961,8 @@ groups p
 type i
 default 4096
 description
+    <i>Deprecated resource -- replaced by %-ftBufferSize%</i>
+    <p class=indented>
     Specifies the default buffer size for DFT IND$FILE file transfers.  This
     value can be overridden in the File Transfer dialog and by a parameter to
     the <b>Transfer</b> action.
@@ -1171,6 +1173,17 @@ groups i
 description
     Defines the default block size for files sent to TSO hosts by IND$FILE
     file transfers.
+.
+
+name ftBufferSize
+applies a
+groups p
+type i
+default 4096
+description
+    Specifies the default buffer size for DFT IND$FILE file transfers.  This
+    value can be overridden in the File Transfer dialog and by a parameter to
+    the <b>Transfer</b> action.
 .
 
 name ftCodePage

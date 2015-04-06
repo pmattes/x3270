@@ -1104,11 +1104,7 @@ ft_start(void)
      * Get the DFT buffer size, and update the widget with the default if they
      * entered nothing (or an explicit 0).
      */
-    size = get_widget_n(buffersize_widget);
-    if (size == 0) {
-	size = appres.dft_buffer_size;
-    }
-    size = set_dft_buffersize(size);
+    size = set_dft_buffersize(get_widget_n(buffersize_widget));
     XtVaSetValues(buffersize_widget, XtNstring, lazyaf("%d", size), NULL);
 
     /* Get the host file from its widget */

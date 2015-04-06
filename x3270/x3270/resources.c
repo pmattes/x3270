@@ -96,8 +96,6 @@ XtResource resources[] = {
       offset(trace_file_size), XtRString, 0 },
     { ResScreenTraceFile, ClsScreenTraceFile, XtRString, sizeof(char *),
       offset(screentrace_file), XtRString, 0 },
-    { ResDftBufferSize, ClsDftBufferSize, XtRInt, sizeof(int),
-      offset(dft_buffer_size), XtRString, "4096" },
     { ResConnectFileName, ClsConnectFileName, XtRString, sizeof(String),
       offset(connectfile_name), XtRString, "~/.x3270connect" },
     { ResIdleCommand, ClsIdleCommand, XtRString, sizeof(String),
@@ -156,12 +154,16 @@ XtResource resources[] = {
       offset(ssl.key_passwd), XtRString, 0 },
 #endif /*]*/
 
+    { ResDftBufferSize, ClsDftBufferSize, XtRInt, sizeof(int),
+      offset(ft.dft_buffer_size_bc), XtRString, 0 }, /* deprecated */
     { ResFtAllocation, ClsFtAllocation, XtRString, sizeof(char *),
       offset(ft.allocation), XtRString, 0 },
     { ResFtAvblock, ClsFtAvblock, XtRInt, sizeof(int),
       offset(ft.avblock), XtRString, "0" },
     { ResFtBlksize, ClsFtBlksize, XtRInt, sizeof(int),
       offset(ft.blksize), XtRString, "0" },
+    { ResFtBufferSize, ClsFtBufferSize, XtRInt, sizeof(int),
+      offset(ft.dft_buffer_size), XtRString, 0 },
     { ResFtCr, ClsFtCr, XtRString, sizeof(char *),
       offset(ft.cr), XtRString, 0 },
     { ResFtDirection, ClsFtDirection, XtRString, sizeof(char *),

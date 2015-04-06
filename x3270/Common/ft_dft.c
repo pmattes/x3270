@@ -716,9 +716,20 @@ dft_read_modified(void)
 int
 set_dft_buffersize(int size)
 {
-    if (size == 0) {
+    /*
+     * Pick the default:
+     * - New resource
+     * - Old resource
+     * - Hard-coded default
+     */
+    if (!size &&
+	!(size = appres.ft.dft_buffer_size) &&
+	!(size = appres.ft.dft_buffer_size_bc)) {
+
 	size = DFT_BUF;
     }
+
+    /* Bound the result. */
     if (size > DFT_MAX_BUF) {
 	size = DFT_MAX_BUF;
     }

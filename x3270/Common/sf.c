@@ -876,7 +876,7 @@ do_qr_ddm(void)
 	if (ftc != NULL) {
 	    size = ftc->dft_buffersize;
 	} else {
-	    size = set_dft_buffersize(appres.dft_buffer_size);
+	    size = set_dft_buffersize(0);
 	}
 
 	trace_ds("> QueryReply(DistributedDataManagement)\n");

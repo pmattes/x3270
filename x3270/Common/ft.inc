@@ -121,12 +121,10 @@ XX_TPE()dnl
 XX_LP
 There are also resources that control the default values for each of the
 file transfer parameters.
-With ifelse(XX_PLATFORM,windows,`two exceptions,',`one exception,')
-these resources have the same names as the XX_FB(Transfer) keywords, but with
+ifelse(XX_PLATFORM,windows,`With one exception, these',`These')
+resources have the same names as the XX_FB(Transfer) keywords, but with
 XX_FB(ft) prepended. E.g., the default for the XX_FB(Mode) keyword is the
 XX_FB(XX_PRODUCT.ftMode) resource.
-ifelse(XX_PLATFORM,windows,`The exceptions are',`The exception is')
-the XX_FB(BufferSize) keyword, which is controlled by the
-XX_FB(dftBufferSize)
-ifelse(XX_PLATFORM,windows,`resource, and the XX_FB(WindowsCodePage) keyword,
-which is controlled by the XX_FB(ftCodePage) resource.',`resource.')
+ifelse(XX_PLATFORM,windows,`The exception is the XX_FB(WindowsCodePage)
+keyword, which is controlled by the XX_FB(ftCodePage) resource.
+')dnl

@@ -398,9 +398,7 @@ ft_init_conf(ft_conf_t *p)
     if (appres.ft.avblock) {
 	p->avblock = appres.ft.avblock;
     }
-    if (appres.dft_buffer_size) {
-	p->dft_buffersize = set_dft_buffersize(appres.dft_buffer_size);
-    }
+    p->dft_buffersize = set_dft_buffersize(0);
 }
 
 /* Return the right value for fopen()ing the local file. */
@@ -568,9 +566,6 @@ ft_go(ft_conf_t *p)
     unsigned flen;
 
     /* Adjust the DFT buffer size. */
-    if (!p->dft_buffersize) {
-	p->dft_buffersize = appres.dft_buffer_size;
-    }
     p->dft_buffersize = set_dft_buffersize(p->dft_buffersize);
 
     /* See if the local file can be overwritten. */
