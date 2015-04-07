@@ -996,6 +996,10 @@ static res_t base_resources[] = {
     { ResFtAvblock,	aoffset(ft.avblock),	XRM_INT },
     { ResFtBlksize,	aoffset(ft.blksize),	XRM_INT },
     { ResFtBufferSize,aoffset(ft.dft_buffer_size),XRM_INT },
+#if defined(_WIN32) /*[*/
+    { ResFtCodePage,	aoffset(ft.codepage_bc),XRM_INT }, /* deprecated */
+    { ResFtWindowsCodePage,aoffset(ft.codepage),XRM_INT },
+#endif /*]*/
     { ResFtCr,		aoffset(ft.cr),		XRM_STRING },
     { ResFtDirection,	aoffset(ft.direction),	XRM_STRING },
     { ResFtExist,	aoffset(ft.exist),	XRM_STRING },
@@ -1023,7 +1027,6 @@ static res_t base_resources[] = {
     { ResLnext,		aoffset(linemode.lnext),	XRM_STRING },
 #if defined(_WIN32) /*[*/
     { ResLocalCp,	aoffset(local_cp),	XRM_INT },
-    { ResFtCodePage, aoffset(ft_cp),		XRM_INT },
 #endif /*]*/
     { ResLoginMacro,aoffset(login_macro),	XRM_STRING },
     { ResM3279,	aoffset(m3279),			XRM_BOOLEAN },

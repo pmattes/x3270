@@ -163,6 +163,10 @@ typedef struct {
 	int	 secondary_space;
 	int	 dft_buffer_size;
 	int	 dft_buffer_size_bc;	/* old resource value */
+#if defined(_WIN32) /*[*/
+	int	 codepage;
+	int	 codepage_bc;		/* old resource value */
+#endif /*]*/
     } ft;
 
     /* c3270/wc3270-specific fields. */

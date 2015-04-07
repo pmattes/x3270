@@ -2,26 +2,26 @@
 3.3 is the current development line for the x3270 suite.
 <h2>Changes in version 3.4alpha1, nn. Mon 2015</h2>
 <ul>
- <li>[all] Replaced the <b>dftBufferSize</b> resource with the
-  <b>ftBufferSize</b> resource. (The old name is still available.)</li>
  <li>[<i>c3270</i>, <i>wc3270</i>] Allow file transfers to be interrupted
   with Ctrl-C.</li>
  <li>[<i>x3270</i>] Fixed an issue where the terminal type would not be
-  reported to the host as IBM-DYNAMIC if the screen was put into oversize mode
-  via a menu selection (it was correct if oversize came from a resource). Also
-  made sure that the 'About->Configuration' display of the terminal type is
+  reported to the host as IBM-DYNAMIC if the screen was
+  put into oversize mode via a menu selection (it was correct if oversize came
+  from a resource). Also
+  made sure that the 'About-&gt;Configuration' display of the terminal type is
   always correct.</li>
  <li>[all] Added resources to define the default values for each of the
-  IND$FILE file transfer parameters. With two exceptions, the resources have
-  the same names as the <b>Transfer</b> action keywords, with <b>ft</b>
-  prepended. E.g., the <b>Mode</b> default is controlled by the <b>ftMode</b>
-  resource. The exceptions are <b>BufferSize</b>, which is controlled by the
-  <b>dftBufferSize</b> resource, and the <b>WindowsCodePage</b> keyword, which
-  is controlled by the <b>ftCodePage</b> resource.</li>
+  IND$FILE file transfer parameters. The resources have the same names as the
+  <b>Transfer</b> action keywords, with <b>ft</b> prepended. E.g., the
+  <b>Mode</b> default is controlled by the <b>ftMode</b> resource. For
+  consistency, deprecated <b>dftBufferSize</b> and <b>ftCodePage</b> in favor
+  of <b>ftBufferSize</b> and <b>ftWindowsCodePage</b> (the old resources are
+  still available).</li>
  <li>[all] Added missing functionality to specify the size for <b>avblock</b>
   TSO file allocations in IND$FILE file transfers.</li>
  <li>[<i>x3270</i>] Added an <b>aplCircledAlpha</b> resource to allow x3270
-  to properly display APL underscored uppercase letters with the APL385 font,
+  to properly display APL underscored uppercase letters
+  with the APL385 font,
   by translating them to the (nonstandard) Unicode circled-alphabetic range
   U+24B6 to U+25CF.</li>
  <li>[<i>x3270</i>, <i>c3270</i>, <i>wc3270</i>] Overhauled visible control
@@ -37,10 +37,13 @@
   left-click is a lightpen select and Alt-left-click is a cursor move or
   copy/paste highlight.</li>
  <li>[all] Added a <b>B:</b> prefix option to hostnames to disable the
-  automatic keyboard unlock when a BIND-IMAGE is received.</li>
+  automatic keyboard unlock when a BIND-IMAGE is
+  received.</li>
  <li>[all] Added an <b>-nvt</b> option and an <b>nvtMode</b> resource to
-  force NVT mode as soon as a session is connected. This overrides the usual
-  behavior of locking the keyboard and waiting for the host to send NVT-mode
+  force NVT mode as soon as a session is connected. This
+  overrides the usual
+  behavior of locking the keyboard and waiting for the host to send
+  NVT-mode
   data or negotiate 3270 mode before unlocking. This option also changes the
   default terminal type to <b>xterm</b>.</li>
  <li>[<i>c3270</i>] Added a mapping from the Escape key to the <b>Escape()</b>
@@ -51,16 +54,17 @@
   Paste, and Enter to Copy, like Quick Edit mode.</li>
  <li>[<i>wc3270</i>] Added a <b>nodialog</b> option to <b>PrintText</b> to
   suppress with Windows print dialog.</li>
- <li>[<i>wc3270</i>] Added font auto-sizing to GDI screen printing.</li>
+ <li>[<i>wc3270</i>] Added font auto-sizing to GDI screen
+  printing.</li>
  <li>[<i>wc3270</i>] Added <i>Paste with Left Margin</i> menu.</li>
  <li>[all] Allow the <b>-scriptport</b> option to specify an address to listen
   on.</li>
  <li>[all] Added webserver support. The <b>-httpd</b> option starts a webserver
-  listening on the specified port. The webserver supports a REST API and some
-  basic HTML objects.</li>
- <li>[all] Removed configurability of tracing, NVT mode, TN3270E support,
-  scripting, menus file transfer, the x3270 pop-up keypad and printer sessions
-  (they're always enabled now).</li>
+  listening on the specified port. The webserver supports a REST
+  API and some basic HTML objects.</li>
+ <li>[all] Removed configurability of tracing, NVT mode,
+  TN3270E support, scripting, menus file transfer, the x3270 pop-up keypad and
+  printer sessions (they're always enabled now).</li>
  <li>[<i>x3270</i>, <i>wc3270</i>] Added an <b>overlayPaste</b> toggle.
   When set, pasting over a protected field will simply increment the cursor
   position instead of locking the keyboard. This allows forms to be copied and

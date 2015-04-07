@@ -51,7 +51,7 @@ x3270-prepare:
 pr3287-prepare:
 	cd pr3287 && $(MAKE) -f Makefile.aux prepare
 
-src.tgz: prepare c3270-src.tgz s3270-src.tgz tcl3270-src.tgz x3270-src.tgz pr3287-src.tgz wc3270-src.tgz ws3270-src.tgz wpr3287-src.tgz lib-src.tgz
+src.tgz: prepare Webpage c3270-src.tgz s3270-src.tgz tcl3270-src.tgz x3270-src.tgz pr3287-src.tgz wc3270-src.tgz ws3270-src.tgz wpr3287-src.tgz lib-src.tgz
 	./mktar.sh
 lib-src.tgz:
 	cd lib && $(MAKE) -f Makefile.aux src.tgz

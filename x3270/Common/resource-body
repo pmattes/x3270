@@ -1191,6 +1191,8 @@ type i
 applies w
 groups i
 description
+    <i>Deprecated resource -- replaced by %-ftWindowsCodePage%</i>
+    <p class=indented>
     The Windows code page to use for translating between EBCDIC and ASCII in
     IND$FILE file transfers. The default is to use the system ANSI code page.
     This value can be overridden in the File Transfer dialog and by a parameter
@@ -1330,6 +1332,17 @@ groups i
 description
     Defines the default secondary space allocation for files sent to TSO hosts
     via IND$FILE.
+.
+
+name ftWindowsCodePage
+type i
+applies w
+groups i
+description
+    The Windows code page to use for translating between EBCDIC and ASCII in
+    IND$FILE file transfers. The default is to use the system ANSI code page.
+    This value can be overridden in the File Transfer dialog and by a parameter
+    to the <b>Transfer</b> action. 
 .
 
 name highlightBold
