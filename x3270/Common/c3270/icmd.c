@@ -35,6 +35,7 @@
 #include "appres.h"
 
 #include "charset.h"
+#include "ft_dft.h"
 #include "ft_private.h"
 #include "icmdc.h"
 #include "lazya.h"
@@ -315,23 +316,6 @@ at the VM/CMS or TSO command prompt.\n");
     }
 
     if (p->ascii_flag) {
-#if defined(_WIN32) /*[*/
-	printf("\n");
-	for (;;) {
-	    int cp;
-
-	    printf("Windows code page for transfer: [%d] ",
-		    p->windows_codepage);
-	    cp = getnum(p->windows_codepage);
-	    if (cp < 0) {
-		return -1;
-	    }
-	    if (cp > 0) {
-		p->windows_codepage = cp;
-		break;
-	    }
-	}
-#endif /*]*/
 	printf("\n\
  For ASCII transfers, carriage return (CR) characters can be handled specially.\n");
 	if (p->receive_flag) {
@@ -379,7 +363,7 @@ at the VM/CMS or TSO command prompt.\n");
 "c3270 can either remap the text to ensure as "
 "accurate a translation between "
 #if defined(WC3270) /*[*/
-"Windows code page %d"
+"the Windows code page"
 #else /*][*/
 "%s"
 #endif /*]*/
@@ -387,14 +371,12 @@ at the VM/CMS or TSO command prompt.\n");
 "leave all translation to the IND$FILE program on the host.\n\
 'yes' means that text will be translated.\n\
 'no' means that text will be transferred as-is.",
-#if defined(WC3270) /*[*/
-	    p->windows_codepage,
-#else /*][*/
+#if !defined(WC3270) /*[*/
 	    locale_codeset,
 #endif /*]*/
 	    get_host_codepage()));
 	for (;;) {
-	    printf("Remap character set? (yes/no) [%s] ",
+	    printf("Re-map character set? (yes/no) [%s] ",
 		    p->remap_flag? "yes": "no");
 	    if (get_input(inbuf, sizeof(inbuf)) == NULL) {
 		return -1;
@@ -411,6 +393,24 @@ at the VM/CMS or TSO command prompt.\n");
 		break;
 	    }
 	}
+#if defined(_WIN32) /*[*/
+	if (p->remap_flag) {
+	    for (;;) {
+		int cp;
+
+		printf("Windows code page for re-mapping: [%d] ",
+			p->windows_codepage);
+		cp = getnum(p->windows_codepage);
+		if (cp < 0) {
+		    return -1;
+		}
+		if (cp > 0) {
+		    p->windows_codepage = cp;
+		    break;
+		}
+	    }
+	}
+#endif /*]*/
     }
 
     if (p->receive_flag) {
@@ -565,6 +565,28 @@ at the VM/CMS or TSO command prompt.\n");
 	}
     }
 
+    if (!std_ds_host) {
+	printf("\n");
+	for (;;) {
+	    int nsize;
+
+	    printf("DFT buffer size: [%d] ", p->dft_buffersize);
+	    if (p->avblock) {
+		printf("[%d] ", p->avblock);
+	    }
+	    n = getnum(p->dft_buffersize);
+	    if (n < 0) {
+		return -1;
+	    }
+	    nsize = set_dft_buffersize(n);
+	    if (nsize != n) {
+		printf("Size changed to %d.\n", nsize);
+	    }
+	    p->dft_buffersize = nsize;
+	    break;
+	}
+    }
+
     printf("\nFile Transfer Summary:\n");
     if (p->receive_flag) {
 	printf(" Source file on Host: %s\n", p->host_filename);
@@ -603,7 +625,9 @@ at the VM/CMS or TSO command prompt.\n");
 	    printf(", don't remap text");
 	}
 #if defined(_WIN32) /*[*/
-	printf(", Windows code page %d", p->windows_codepage);
+	if (p->remap_flag) {
+	    printf(", Windows code page %d", p->windows_codepage);
+	}
 #endif /*]*/
 	printf("\n");
     } else {
@@ -671,6 +695,9 @@ at the VM/CMS or TSO command prompt.\n");
 	    }
 	    printf("\n");
 	}
+    }
+    if (!std_ds_host) {
+	printf(" DFT buffer size: %d\n", p->dft_buffersize);
     }
 
     printf("\nContinue? (y/n) [y] ");
