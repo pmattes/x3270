@@ -1781,9 +1781,9 @@ screen_disp(bool erasing _is_unused)
 	    if (is_menu) {
 		if (highlight) {
 		    attrset(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] |
-			    cmap_bg[HOST_COLOR_WHITE]);
+			    cmap_bg[HOST_COLOR_NEUTRAL_WHITE]);
 		} else {
-		    attrset(cmap_fg[HOST_COLOR_WHITE] |
+		    attrset(cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
 			    cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
 		}
 		addch(u);
