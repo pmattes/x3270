@@ -233,7 +233,7 @@ static session_t empty_session;
 static void write_user_settings(char *us, FILE *f);
 static void display_sessions(int with_numbers);
 static ws_t write_shortcut(const session_t *s, int ask, src_t src,
-	const char *path);
+	const char *path, bool change_shortcut);
 
 /**
  * Fetch a line of input from the console.
@@ -1398,7 +1398,7 @@ columns).\n",
     for (;;) {
 	printf("\nEnter oversize dimensions (rows x columns) ");
 	if (s->ov_rows || s->ov_cols) {
-	    printf("[%u x %u]: ", s->ov_rows, s->ov_cols);
+	    printf("[%ux%u]: ", s->ov_rows, s->ov_cols);
 	} else {
 	    printf("["CHOICE_NONE"]: ");
 	}
@@ -2483,6 +2483,95 @@ get_src(const char *name, src_t def)
 }
 
 /**
+ * Translate a wc3270 character set name to a font for the console.
+ *
+ * @param[in] cset	Character set name
+ * @param[out] codepage	Windows codepage
+ *
+ * @return Font name
+ */
+static wchar_t *
+reg_font_from_cset(const char *cset, int *codepage)
+{
+    unsigned i, j;
+    wchar_t *cpname = NULL;
+    wchar_t data[1024];
+    DWORD dlen;
+    HKEY key;
+    static wchar_t font[1024];
+    DWORD type;
+
+    *codepage = 0;
+
+    /* Search the table for a match. */
+    for (i = 0; charsets[i].name != NULL; i++) {
+	if (!strcmp(cset, charsets[i].name)) {
+	    cpname = charsets[i].codepage;
+	    break;
+	}
+    }
+
+    /* If no match, use Lucida Console. */
+    if (cpname == NULL) {
+	return L"Lucida Console";
+    }
+
+    /*
+     * Look in the registry for the console font associated with the
+     * Windows code page.
+     */
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		"Software\\Microsoft\\Windows NT\\CurrentVersion\\"
+		"Console\\TrueTypeFont",
+		0,
+		KEY_READ,
+		&key) != ERROR_SUCCESS) {
+	printf("RegOpenKey failed -- cannot find font\n");
+	return L"Lucida Console";
+    }
+    dlen = sizeof(data);
+    if (RegQueryValueExW(key,
+		cpname,
+		NULL,
+		&type,
+		(LPVOID)data,
+		&dlen) != ERROR_SUCCESS) {
+	/* No codepage-specific match, try the default. */
+	dlen = sizeof(data);
+	if (RegQueryValueExW(key, L"0", NULL, &type, (LPVOID)data,
+		    &dlen) != ERROR_SUCCESS) {
+	    RegCloseKey(key);
+	    printf("RegQueryValueEx failed -- cannot find font\n");
+	    return L"Lucida Console";
+	}
+    }
+    RegCloseKey(key);
+    if (type == REG_MULTI_SZ) {
+	for (i = 0; i < dlen/sizeof(wchar_t); i++) {
+	    if (data[i] == 0x0000) {
+		break;
+	    }
+	}
+	if (i+1 >= dlen/sizeof(wchar_t) || data[i+1] == 0x0000) {
+	    printf("Bad registry value -- cannot find font\n");
+	    return L"Lucida Console";
+	}
+	i++;
+    } else {
+	i = 0;
+    }
+    for (j = 0; i < dlen; i++, j++) {
+	if (j == 0 && data[i] == L'*') {
+	    i++;
+	} else if ((font[j] = data[i]) == 0x0000) {
+		break;
+	}
+    }
+    *codepage = _wtoi(cpname);
+    return font;
+}
+
+/**
  * Display the current settings for a session and allow them to be edited.
  *
  * @param[in,out] s	Session
@@ -2490,18 +2579,22 @@ get_src(const char *name, src_t def)
  * @param[in] how	How session is being edited (replace/create/update)
  * @param[in] path	Session pathname
  * @param[in] session_name Name of session
+ * @param[out] change_shortcut Returned as true if the shortcut should be
+ *                             changed
  *
  * @return 0 for success, -1 for failure
  */
 static src_t
 edit_menu(session_t *s, char **us, sp_t how, const char *path,
-	const char *session_name)
+	const char *session_name, bool *change_shortcut)
 {
     int rc;
     char choicebuf[32];
     session_t old_session;
     char *old_us = NULL;
     src_t ret = SRC_NONE;
+
+    *change_shortcut = false;
 
     switch (how) {
     case SP_REPLACE:
@@ -2865,99 +2958,27 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
     }
 
 done:
+    {
+	int old_codepage;
+	wchar_t *old_font = reg_font_from_cset(old_session.charset,
+		&old_codepage);
+	int codepage;
+	wchar_t *font = reg_font_from_cset(s->charset, &codepage);
+
+	if (old_session.model != s->model ||
+	    old_session.ov_rows != s->ov_rows ||
+	    old_session.ov_cols != s->ov_cols ||
+	    wcscmp(old_font, font) ||
+	    old_codepage != codepage) {
+
+	    *change_shortcut = true;
+	}
+    }
+
     if (old_us != NULL) {
 	free(old_us);
     }
     return ret;
-}
-
-/**
- * Translate a wc3270 character set name to a font for the console.
- *
- * @param[in] cset	Character set name
- * @param[out] codepage	Windows codepage
- *
- * @return Font name
- */
-static wchar_t *
-reg_font_from_cset(const char *cset, int *codepage)
-{
-    unsigned i, j;
-    wchar_t *cpname = NULL;
-    wchar_t data[1024];
-    DWORD dlen;
-    HKEY key;
-    static wchar_t font[1024];
-    DWORD type;
-
-    *codepage = 0;
-
-    /* Search the table for a match. */
-    for (i = 0; charsets[i].name != NULL; i++) {
-	if (!strcmp(cset, charsets[i].name)) {
-	    cpname = charsets[i].codepage;
-	    break;
-	}
-    }
-
-    /* If no match, use Lucida Console. */
-    if (cpname == NULL) {
-	return L"Lucida Console";
-    }
-
-    /*
-     * Look in the registry for the console font associated with the
-     * Windows code page.
-     */
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-		"Software\\Microsoft\\Windows NT\\CurrentVersion\\"
-		"Console\\TrueTypeFont",
-		0,
-		KEY_READ,
-		&key) != ERROR_SUCCESS) {
-	printf("RegOpenKey failed -- cannot find font\n");
-	return L"Lucida Console";
-    }
-    dlen = sizeof(data);
-    if (RegQueryValueExW(key,
-		cpname,
-		NULL,
-		&type,
-		(LPVOID)data,
-		&dlen) != ERROR_SUCCESS) {
-	/* No codepage-specific match, try the default. */
-	dlen = sizeof(data);
-	if (RegQueryValueExW(key, L"0", NULL, &type, (LPVOID)data,
-		    &dlen) != ERROR_SUCCESS) {
-	    RegCloseKey(key);
-	    printf("RegQueryValueEx failed -- cannot find font\n");
-	    return L"Lucida Console";
-	}
-    }
-    RegCloseKey(key);
-    if (type == REG_MULTI_SZ) {
-	for (i = 0; i < dlen/sizeof(wchar_t); i++) {
-	    if (data[i] == 0x0000) {
-		break;
-	    }
-	}
-	if (i+1 >= dlen/sizeof(wchar_t) || data[i+1] == 0x0000) {
-	    printf("Bad registry value -- cannot find font\n");
-	    return L"Lucida Console";
-	}
-	i++;
-    } else {
-	i = 0;
-    }
-    for (j = 0; i < dlen; i++, j++) {
-	if (j == 0 && data[i] == L'*') {
-	    i++;
-	} else if ((font[j] = data[i]) == 0x0000) {
-		break;
-	}
-    }
-    *codepage = _wtoi(cpname);
-    return font;
 }
 
 /**
@@ -3416,7 +3437,7 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
 	}
 
 	/* Create the new shortcut. */
-	wsrc = write_shortcut(&s, FALSE, to_l, to_path);
+	wsrc = write_shortcut(&s, FALSE, to_l, to_path, false);
 	switch (wsrc) {
 	case WS_ERR:
 	    return -1;
@@ -3508,7 +3529,7 @@ Create Shortcut\n");
     }
     fclose(f);
 
-    rc = write_shortcut(&s, FALSE, l, from_path);
+    rc = write_shortcut(&s, FALSE, l, from_path, false);
     switch (rc) {
     case WS_NOP:
 	break;
@@ -3681,11 +3702,13 @@ xs_name(int n, src_t *lp)
  * @param[in] ask	If TRUE, ask first
  * @param[in] src	Where the session file is (all or current user)
  * @param[in] sess_path	Pathname of session file
+ * @param[in] change_shortcut If true, the shortcut needs updating
  *
  * @return ws_t (no-op, create, replace, error)
  */
 static ws_t
-write_shortcut(const session_t *s, int ask, src_t src, const char *sess_path)
+write_shortcut(const session_t *s, int ask, src_t src, const char *sess_path,
+	bool change_shortcut)
 {
     char linkpath[MAX_PATH];
     char exepath[MAX_PATH];
@@ -3702,6 +3725,9 @@ write_shortcut(const session_t *s, int ask, src_t src, const char *sess_path)
 	    s->session);
     shortcut_exists = (access(linkpath, R_OK) == 0);
     if (ask) {
+	if (shortcut_exists && change_shortcut) {
+	    printf("\nOne or more parameters changed that require replacing the desktop shortcut.");
+	}
 	for (;;) {
 	    int rc;
 
@@ -3776,6 +3802,7 @@ session_wizard(const char *session_name, int explicit_edit, char *result,
     ws_t wsrc;
     size_t sl;
     char *us = NULL;
+    bool change_shortcut;
 
     /* Start with nothing. */
     (void) memset(&session, '\0', sizeof(session));
@@ -3891,7 +3918,7 @@ Edit Session\n");
 	src = edit_menu(&session, &us,
 		(rc == GS_OVERWRITE)? SP_REPLACE:
 		 ((rc == GS_NEW)? SP_CREATE: SP_UPDATE),
-		path, session.session);
+		path, session.session, &change_shortcut);
 	if (src == SRC_ERR) {
 	    return SW_ERR;
 	} else if (src == SRC_NONE) {
@@ -3930,7 +3957,7 @@ Edit Session\n");
     }
 
     /* Ask about creating or updating the shortcut. */
-    wsrc = write_shortcut(&session, TRUE, src, path);
+    wsrc = write_shortcut(&session, TRUE, src, path, change_shortcut);
     switch (wsrc) {
     case WS_NOP:
 	break;
