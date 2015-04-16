@@ -1,5 +1,5 @@
-<h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.3</h1>
-3.3 is the current development line for the x3270 suite.
+<h1>Changes in x3270, c3270, wc3270, s3270, tcl3270, pr3287 and wpr3287 3.4</h1>
+3.4 is the current development line for the x3270 suite.
 <h2>Changes in version 3.4alpha1, nn. Mon 2015</h2>
 <ul>
  <li>[<i>c3270</i>, <i>wc3270</i>] Allow the DFT buffer size to be changed in
@@ -428,7 +428,7 @@
 <h2>Changes in version 3.3.12ga13, 2. May 2013</h2>
 <ul>
  <li>[<i>c3270</i>, <i>wc3270</i>] Fixed a start-up crash when the tracing is
-  enabled and the menu bar is disasbled.</li>
+  enabled and the menu bar is disabled.</li>
  <li>[all] Added support for the LF (X'25') format control order.</li>
  <li>[All] Fixed a number of buffer overflow crashes.</li>
  </ul>
@@ -466,7 +466,7 @@
 </ul>
 <h2>Changes in version 3.3.12ga10, 8. July 2012</h2>
 <ul>
- <li>[all] Turned off automatic SSL host cerfication and added a
+ <li>[all] Turned off automatic SSL host certificate verification and added a
   <b>verifyHostCert</b> resource and <b>-verifycert</b> option to enable it.
  <li>[<i>wc3270</i>] Improved behavior when SSL negotiation fails.</li>
  <li>[<i>x3270, c3270, wc3270</i>] Changed the 'secure' icon to green when
@@ -503,7 +503,7 @@
 </ul>
 <h2>Changes in version 3.3.12beta6, 4. January 2011</h2>
 <ul>
- <li>[all] Added support for the TELNET NEW-ENVIRON sub-negotition, used
+ <li>[all] Added support for the TELNET NEW-ENVIRON sub-negotiation, used
   to specify the Workstation ID to iSeries hosts, as specified by RFC 4777.
   </li>
  <li>[<i>c3270</i>, <i>wc3270</i>] Corrected a problem with mouse clicks on the
@@ -719,7 +719,7 @@
  <li>[<i>c3270</i>, <i>wc3270</i>, <i>s3270</i> and <i>tcl3270</i>] Ensured
   that command-line parameters override session files.</li>
  <li>[<i>c3270</i>] Made session files replace profiles, rather than just
-  overridding any common definitions.  This is more intuitive and consistent
+  overriding any common definitions.  This is more intuitive and consistent
   with x3270.</li>
 </ul>
 <h2>Changes in version 3.3.9ga11, 27. February 2009</h2>
@@ -873,7 +873,7 @@ implementation may see unexpected differences.
   included with the code.</li>
  <li>Translation to/from the local encoding requires one of two facilities:
   Either <b>libc</b> must support <tt>__STDC_ISO_10646__</tt> (<b>wchar_t</b>s
-  are defined to be unicode values, as on Linux and Windows), or there must be
+  are defined to be Unicode values, as on Linux and Windows), or there must be
   an <b>iconv</b> library that can translate between UTF-8 and all local
   encodings.</li>
  <li>DBCS support is enabled by default, except on Windows.
@@ -891,7 +891,7 @@ implementation may see unexpected differences.
  <li>Added a <b>Source</b> action to read script commands from a file.</li>
  <li> Added a 10 second timeout to the start of the <b>Transfer</b> action.</li>
  <li>Added an <b>unlockDelayMs</b> resource to change the number of
-  milliseconds of delay before atually unlocking the keyboard after the
+  milliseconds of delay before actually unlocking the keyboard after the
   host requests it. The default is 350; use 0 to disable the delay
   altogether.</li>
  <li>IND$FILE file transfer now transfers DBCS text files properly.</li>
@@ -904,7 +904,7 @@ implementation may see unexpected differences.
   containing transparent data to send to the printer before and after
   each print job, respectively.</li>
 </ul>
-<h3>Product-Speific Changes</h3>
+<h3>Product-Specific Changes</h3>
 <ul>
  <li>[<i>x3270</i>] Commands entered into the <b>Print Screen Text</b> dialog
   are now saved by the <b>Save Changed Options in File</b> option.
@@ -945,7 +945,7 @@ implementation may see unexpected differences.
   underlined fields are displayed by substituting underscore (_)
   characters for blanks and nulls, and blinking fields actually blink.
   If it is clear, underlined and blinking fields are displayed with
-  highlighted backgrounds, which is compatible with previous verions of
+  highlighted backgrounds, which is compatible with previous versions of
   <b>wc3270</b>.</li>
  <li>[<i>wc3270</i>] Left-clicking with the mouse will now move the cursor
   to that location.</li>
@@ -1152,7 +1152,7 @@ c3270.cursesColorForProtectedIntensified
   <li>Bug Fixes:
     <ul>
       <li>Fixed a problem with transferring binary files, where <b>0x0d</b>
-       characters might be acidentally added to or removed from the data.</li>
+       characters might be accidentally added to or removed from the data.</li>
       <li>Corrected a bug which sometimes left the local file open after a
        failed file transfer.</li>
     </ul>
@@ -1186,7 +1186,7 @@ c3270.cursesColorForProtectedIntensified
 <ul>
   <li>Bug Fixes:
     <ul>
-      <li>Fixed an embarassing problem that kept <b>wpr3287</b> from
+      <li>Fixed an embarrassing problem that kept <b>wpr3287</b> from
       starting.</li>
     </ul>
   </li>
@@ -1313,7 +1313,7 @@ wc3270.hostColorForProtectedIntensified
     </ul>
   </li>
 </ul>
-<h2>Changes in tcl3270 3.3.7p3, 22. Febuary 2008</h2>
+<h2>Changes in tcl3270 3.3.7p3, 22. February 2008</h2>
 <ul>
   <li>Bug Fixes:
     <ul>
@@ -1382,7 +1382,7 @@ wc3270.hostColorForProtectedIntensified
       <li>Added proxy support via the <b>-proxy</b> option or the <b>proxy</b>
       resource.</li>
       <li>Modified <i>Blank Fill</i> mode to treat trailing underscore
-      chararacters ('<b>_</b>') like blanks when checking for input
+      characters ('<b>_</b>') like blanks when checking for input
       overflow.</li>
       <li><i>Pseudo-Color</i> mode is no more.
       This was the mode that x3270 used when a 3278 model was specified, or
@@ -1420,7 +1420,7 @@ wc3270.hostColorForProtectedIntensified
       <b>ToggleInsert</b>, <b>Ctrl&lt;Key&gt;U</b> -&gt; <b>DeleteField</b>,
       etc.).</li>
       <li>Modified <i>Blank Fill</i> mode to treat trailing underscore
-      chararacters ('<b>_</b>') like blanks when checking for input
+      characters ('<b>_</b>') like blanks when checking for input
       overflow.</li>
       <li>Like <b>x3270</b> and <b>wc3270</b>, <b>-model 3278</b> now
       specifies a green-screen 3278 (if the terminal supports color), and
@@ -1455,7 +1455,7 @@ wc3270.hostColorForProtectedIntensified
       <li>Added a window to monitor trace output.</li>
       <li>Greatly improved key event tracing.</li>
       <li>Modified <i>Blank Fill</i> mode to treat trailing underscore
-      chararacters ('<b>_</b>') like blanks when checking for input
+      characters ('<b>_</b>') like blanks when checking for input
       overflow.</li>
     </ul>
   </li>
@@ -1473,7 +1473,7 @@ wc3270.hostColorForProtectedIntensified
       <li>Added proxy support via the <b>-proxy</b> option or the <b>proxy</b>
       resource.</li>
       <li>Modified <i>Blank Fill</i> mode to treat trailing underscore
-      chararacters ('<b>_</b>') like blanks when checking for input
+      characters ('<b>_</b>') like blanks when checking for input
       overflow.</li>
     </ul>
   </li>
@@ -1491,7 +1491,7 @@ wc3270.hostColorForProtectedIntensified
       <li>Added proxy support via the <b>-proxy</b> option or the <b>proxy</b>
       resource.</li>
       <li>Modified <i>Blank Fill</i> mode to treat trailing underscore
-      chararacters ('<b>_</b>') like blanks when checking for input
+      characters ('<b>_</b>') like blanks when checking for input
       overflow.</li>
     </ul>
   </li>
@@ -1613,7 +1613,7 @@ wc3270.hostColorForProtectedIntensified
   <li>Bug Fixes:
     <ul>
       <li>Fixed a crash when the user's home directory or the ~/.x3270connect
-       file wasn't writeable.</li>
+       file wasn't writable.</li>
       <li>Fixed some endcases when pasting text that wraps lines and a field
        skip is encountered.</li>
       <li>Fixed the handling of SI characters in cut/pasted text.</li>
@@ -2001,7 +2001,7 @@ and 1399. This uses new support for combined SBCS/DBCS code pages.
  </li>
  <li>New Features:   
    <ul>
-     <li>DBCS support for Simplfied Chinese and Japanese, including x3270
+     <li>DBCS support for Simplified Chinese and Japanese, including x3270
       integration
       with XIM.</li>
      <li>Tunneled SSL support added (entire Telnet session inside of an SSL
