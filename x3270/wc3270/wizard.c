@@ -3754,17 +3754,17 @@ write_shortcut(const session_t *s, int ask, src_t src, const char *sess_path,
 
     font = reg_font_from_cset(s->charset, &codepage);
 
-    hres = CreateLink(
+    hres = create_link(
 	    exepath,		/* path to executable */
 	    linkpath,		/* where to put the link */
 	    "wc3270 session",	/* description */
-	    args,			/* arguments */
+	    args,		/* arguments */
 	    installdir,		/* working directory */
 	    (s->ov_rows?	/* console rows */
 		s->ov_rows: wrows[s->model]) + extra_height,
-	    s->ov_cols?	/* console cols */
+	    s->ov_cols?		/* console cols */
 		s->ov_cols: wcols[s->model],
-	    font,			/* font */
+	    font,		/* font */
 	    s->point_size,	/* point size */
 	    codepage);		/* code page */
 

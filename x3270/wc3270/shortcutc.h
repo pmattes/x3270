@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009, 2014 Paul Mattes.
+ * Copyright (c) 2006-2009, 2014-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-extern HRESULT CreateLink(LPCSTR lpszPathObj, LPSTR lpszPathLink,
-	LPSTR lpszDesc, LPSTR lpszArgs, LPSTR lpszDir, int rows, int cols,
-	wchar_t *font, int pointsize, int codepage);
+HRESULT create_link(LPCSTR path_obj, LPSTR path_link, LPSTR desc, LPSTR args,
+	LPSTR dir, int rows, int cols, wchar_t *font, int pointsize,
+	int codepage);

@@ -58,41 +58,41 @@
 #include "relinkc.h"
 
 charsets_t charsets[] = {
-	{ "belgian",		"500",	0, L"1252"	},
-	{ "belgian-euro",	"1148",	0, L"1252"	},
-	{ "bracket",		"37*",	0, L"1252"	},
-	{ "brazilian",		"275",	0, L"1252"	},
-	{ "cp1047",		"1047",	0, L"1252"	},
-	{ "cp870",		"870",	0, L"1250"	},
-	{ "chinese-gb18030",	"1388",	1, L"936"	},
-	{ "finnish",		"278",	0, L"1252"	},
-	{ "finnish-euro",	"1143",	0, L"1252"	},
-	{ "french",		"297",	0, L"1252"	},
-	{ "french-euro",	"1147",	0, L"1252"	},
-	{ "german",		"273",	0, L"1252"	},
-	{ "german-euro",	"1141",	0, L"1252"	},
-	{ "greek",		"875",	0, L"1253"	},
-	{ "hebrew",		"424",	0, L"1255"	},
-	{ "icelandic",		"871",	0, L"1252"	},
-	{ "icelandic-euro",	"1149",	0, L"1252"	},
-	{ "italian",		"280",	0, L"1252"	},
-	{ "italian-euro",	"1144",	0, L"1252"	},
-	{ "japanese-kana",	"930",  1, L"932"	},
-	{ "japanese-latin",	"939",  1, L"932"	},
-	{ "norwegian",		"277",	0, L"1252"	},
-	{ "norwegian-euro",	"1142",	0, L"1252"	},
-	{ "russian",		"880",	0, L"1251"	},
-	{ "simplified-chinese",	"935",  1, L"936"	},
-	{ "spanish",		"284",	0, L"1252"	},
-	{ "spanish-euro",	"1145",	0, L"1252"	},
-	{ "thai",		"838",	0, L"1252"	},
-	{ "traditional-chinese","937",	1, L"950"	},
-	{ "turkish",		"1026",	0, L"1254"	},
-	{ "uk",			"285",	0, L"1252"	},
-	{ "uk-euro",		"1146",	0, L"1252"	},
-	{ "us-euro",		"1140",	0, L"1252"	},
-	{ "us-intl",		"37",	0, L"1252"	},
-	{ NULL,			NULL,	0, NULL	}
+    { "belgian",	"500",	0, L"1252"	},
+    { "belgian-euro",	"1148",	0, L"1252"	},
+    { "bracket",	"37*",	0, L"1252"	},
+    { "brazilian",	"275",	0, L"1252"	},
+    { "cp1047",		"1047",	0, L"1252"	},
+    { "cp870",		"870",	0, L"1250"	},
+    { "chinese-gb18030","1388",	1, L"936"	},
+    { "finnish",	"278",	0, L"1252"	},
+    { "finnish-euro",	"1143",	0, L"1252"	},
+    { "french",		"297",	0, L"1252"	},
+    { "french-euro",	"1147",	0, L"1252"	},
+    { "german",		"273",	0, L"1252"	},
+    { "german-euro",	"1141",	0, L"1252"	},
+    { "greek",		"875",	0, L"1253"	},
+    { "hebrew",		"424",	0, L"1255"	},
+    { "icelandic",	"871",	0, L"1252"	},
+    { "icelandic-euro",	"1149",	0, L"1252"	},
+    { "italian",	"280",	0, L"1252"	},
+    { "italian-euro",	"1144",	0, L"1252"	},
+    { "japanese-kana",	"930",  1, L"932"	},
+    { "japanese-latin",	"939",  1, L"932"	},
+    { "norwegian",	"277",	0, L"1252"	},
+    { "norwegian-euro",	"1142",	0, L"1252"	},
+    { "russian",	"880",	0, L"1251"	},
+    { "simplified-chinese","935",1,L"936"	},
+    { "spanish",	"284",	0, L"1252"	},
+    { "spanish-euro",	"1145",	0, L"1252"	},
+    { "thai",		"838",	0, L"1252"	},
+    { "traditional-chinese","937",1,L"950"	},
+    { "turkish",	"1026",	0, L"1254"	},
+    { "uk",		"285",	0, L"1252"	},
+    { "uk-euro",	"1146",	0, L"1252"	},
+    { "us-euro",	"1140",	0, L"1252"	},
+    { "us-intl",	"37",	0, L"1252"	},
+    { NULL,		NULL,	0, NULL	}
 };
 
 size_t num_charsets = (sizeof(charsets) / sizeof(charsets[0])) - 1;
@@ -106,91 +106,93 @@ int wcols[6] = { 0, 0,
 static wchar_t *
 reg_font_from_cset(char *cset, int *codepage)
 {
-    	unsigned i, j;
-	wchar_t *cpname = NULL;
-	wchar_t data[1024];
-	DWORD dlen;
-	HKEY key;
-	static wchar_t font[1024];
-	DWORD type;
+    unsigned i, j;
+    wchar_t *cpname = NULL;
+    wchar_t data[1024];
+    DWORD dlen;
+    HKEY key;
+    static wchar_t font[1024];
+    DWORD type;
 
-	*codepage = 0;
+    *codepage = 0;
 
-    	/* Search the table for a match. */
-	for (i = 0; charsets[i].name != NULL; i++) {
-	    	if (!strcmp(cset, charsets[i].name)) {
-		    	cpname = charsets[i].codepage;
-		    	break;
-		}
+    /* Search the table for a match. */
+    for (i = 0; charsets[i].name != NULL; i++) {
+	if (!strcmp(cset, charsets[i].name)) {
+	    cpname = charsets[i].codepage;
+	    break;
 	}
+    }
 
-	/* If no match, use Lucida Console. */
-	if (cpname == NULL)
-	    	return L"Lucida Console";
+    /* If no match, use Lucida Console. */
+    if (cpname == NULL) {
+	return L"Lucida Console";
+    }
 
-	/*
-	 * Look in the registry for the console font associated with the
-	 * Windows code page.
-	 */
-	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-		    "Software\\Microsoft\\Windows NT\\CurrentVersion\\"
-		    "Console\\TrueTypeFont",
-		    0,
-		    KEY_READ,
-		    &key) != ERROR_SUCCESS) {
-	    	printf("RegOpenKey failed -- cannot find font\n");
-		return L"Lucida Console";
-	}
+    /*
+     * Look in the registry for the console font associated with the
+     * Windows code page.
+     */
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+		"Software\\Microsoft\\Windows NT\\CurrentVersion\\"
+		"Console\\TrueTypeFont",
+		0,
+		KEY_READ,
+		&key) != ERROR_SUCCESS) {
+	printf("RegOpenKey failed -- cannot find font\n");
+	return L"Lucida Console";
+    }
+    dlen = sizeof(data);
+    if (RegQueryValueExW(key, cpname, NULL, &type, (LPVOID)data,
+		&dlen) != ERROR_SUCCESS) {
+	/* No codepage-specific match, try the default. */
 	dlen = sizeof(data);
-    	if (RegQueryValueExW(key,
-		    cpname,
-		    NULL,
-		    &type,
-		    (LPVOID)data,
+	if (RegQueryValueExW(key, L"0", NULL, &type, (LPVOID)data,
 		    &dlen) != ERROR_SUCCESS) {
-	    	/* No codepage-specific match, try the default. */
-	    	dlen = sizeof(data);
-	    	if (RegQueryValueExW(key, L"0", NULL, &type, (LPVOID)data,
-			    &dlen) != ERROR_SUCCESS) {
-			RegCloseKey(key);
-			printf("RegQueryValueEx failed -- cannot find font\n");
-			return L"Lucida Console";
-		}
+	    RegCloseKey(key);
+	    printf("RegQueryValueEx failed -- cannot find font\n");
+	    return L"Lucida Console";
 	}
-	RegCloseKey(key);
-	if (type == REG_MULTI_SZ) {
-		for (i = 0; i < dlen/sizeof(wchar_t); i++) {
-			if (data[i] == 0x0000)
-				break;
-		}
-		if (i+1 >= dlen/sizeof(wchar_t) || data[i+1] == 0x0000) {
-			printf("Bad registry value -- cannot find font\n");
-			return L"Lucida Console";
-		}
-		i++;
-	} else
-	    i = 0;
-	for (j = 0; i < dlen; i++, j++) {
-		if (j == 0 && data[i] == L'*')
-		    i++;
-	    	if ((font[j] = data[i]) == 0x0000)
-		    	break;
+    }
+    RegCloseKey(key);
+    if (type == REG_MULTI_SZ) {
+	for (i = 0; i < dlen/sizeof(wchar_t); i++) {
+	    if (data[i] == 0x0000) {
+		break;
+	    }
 	}
-	*codepage = _wtoi(cpname);
-	return font;
+	if (i + 1 >= dlen / sizeof(wchar_t) || data[i + 1] == 0x0000) {
+	    printf("Bad registry value -- cannot find font\n");
+	    return L"Lucida Console";
+	}
+	i++;
+    } else {
+	i = 0;
+    }
+    for (j = 0; i < dlen; i++, j++) {
+	if (j == 0 && data[i] == L'*') {
+	    i++;
+	}
+	if ((font[j] = data[i]) == 0x0000) {
+	    break;
+	}
+    }
+    *codepage = _wtoi(cpname);
+    return font;
 }
 
 /* Convert a hexadecimal digit to a nybble. */
 static unsigned
 hex(char c)
 {
-    	static char *digits = "0123456789abcdef";
-	char *pos;
+    static char *digits = "0123456789abcdef";
+    char *pos;
 
-	pos = strchr(digits, c);
-	if (pos == NULL)
-	    	return 0; /* XXX */
-	return pos - digits;
+    pos = strchr(digits, c);
+    if (pos == NULL) {
+	return 0; /* XXX */
+    }
+    return pos - digits;
 }
 
 //#define DEBUG_EDIT 1
@@ -198,39 +200,41 @@ hex(char c)
 int
 read_user_settings(FILE *f, char **usp)
 {
-	int saw_star;
-	char buf[1024];
+    int saw_star;
+    char buf[1024];
 
-	if (usp == NULL) {
-	    return 1; /* success */
+    if (usp == NULL) {
+	return 1; /* success */
+    }
+    *usp = NULL;
+
+    /*
+     * Read the balance of the file into a temporary buffer, ignoring
+     * the '!*' line.
+     */
+    saw_star = 0;
+    while (fgets(buf, sizeof(buf), f) != NULL) {
+	if (!saw_star) {
+	    if (buf[0] == '!' && buf[1] == '*') {
+		saw_star = 1;
+	    }
+	    continue;
 	}
-	*usp = NULL;
-
-	/*
-	 * Read the balance of the file into a temporary buffer, ignoring
-	 * the '!*' line.
-	 */
-	saw_star = 0;
-	while (fgets(buf, sizeof(buf), f) != NULL) {
-	    	if (!saw_star) {
-			if (buf[0] == '!' && buf[1] == '*')
-				saw_star = 1;
-			continue;
-		}
-		if (*usp == NULL) {
-		    	*usp = malloc(strlen(buf) + 1);
-			(*usp)[0] = '\0';
-		} else
-		    	*usp = realloc(*usp, strlen(*usp) + strlen(buf) + 1);
-		if (*usp == NULL) {
+	if (*usp == NULL) {
+	    *usp = malloc(strlen(buf) + 1);
+	    (*usp)[0] = '\0';
+	} else {
+	    *usp = realloc(*usp, strlen(*usp) + strlen(buf) + 1);
+	}
+	if (*usp == NULL) {
 #if defined(DEBUG_EDIT) /*[*/
-			printf("out of memory]\n");
+	    printf("out of memory]\n");
 #endif /*]*/
-			return 0;
-		}
-		strcat(*usp, buf);
+	    return 0;
 	}
-	return 1;
+	strcat(*usp, buf);
+    }
+    return 1;
 }
 
 /*
@@ -240,133 +244,132 @@ read_user_settings(FILE *f, char **usp)
 int
 read_session(FILE *f, session_t *s, char **usp)
 {
-    	char buf[1024];
-	int saw_hex = 0;
-	int saw_star = 0;
-	unsigned long csum;
-	unsigned long fcsum = 0;
-	int ver;
-	int s_off = 0;
+    char buf[1024];
+    int saw_hex = 0;
+    int saw_star = 0;
+    unsigned long csum;
+    unsigned long fcsum = 0;
+    int ver;
+    int s_off = 0;
 
-	/*
-	 * Look for the checksum and version.  Verify the version.
-	 *
-	 * XXX: It might be a good idea to validate each '!x' line and
-	 * make sure that the length is right.
-	 */
-	while (fgets(buf, sizeof(buf), f) != NULL) {
-	    	if (buf[0] == '!' && buf[1] == 'x')
-		    	saw_hex = 1;
-		else if (buf[0] == '!' && buf[1] == '*')
-		    	saw_star = 1;
-		else if (buf[0] == '!' && buf[1] == 'c') {
-			if (sscanf(buf + 2, "%lx %d", &csum, &ver) != 2) {
+    /*
+     * Look for the checksum and version.  Verify the version.
+     *
+     * XXX: It might be a good idea to validate each '!x' line and
+     * make sure that the length is right.
+     */
+    while (fgets(buf, sizeof(buf), f) != NULL) {
+	if (buf[0] == '!' && buf[1] == 'x')
+	    saw_hex = 1;
+	else if (buf[0] == '!' && buf[1] == '*')
+	    saw_star = 1;
+	else if (buf[0] == '!' && buf[1] == 'c') {
+	    if (sscanf(buf + 2, "%lx %d", &csum, &ver) != 2) {
 #if defined(DEBUG_EDIT) /*[*/
-				printf("[bad !c line '%s']\n", buf);
+		printf("[bad !c line '%s']\n", buf);
 #endif /*]*/
-				return 0;
-			}
-			if (ver > WIZARD_VER) {
+		return 0;
+	    }
+	    if (ver > WIZARD_VER) {
 #if defined(DEBUG_EDIT) /*[*/
-				printf("[bad ver %d > %d]\n",
-					ver, WIZARD_VER);
+		printf("[bad ver %d > %d]\n", ver, WIZARD_VER);
 #endif /*]*/
-			    	return 0;
-			}
+		return 0;
+	    }
+	}
+    }
+    if (!saw_hex || !saw_star) {
+#if defined(DEBUG_EDIT) /*[*/
+	printf("[missing%s%s]\n", saw_hex? "": "hex", saw_star? "": "star");
+#endif /*]*/
+	return 0;
+    }
+
+    /* Checksum from the top up to the '!c' line. */
+    fflush(f);
+    fseek(f, 0, SEEK_SET);
+    fcsum = 0;
+    while (fgets(buf, sizeof(buf), f) != NULL) {
+	char *t;
+
+	if (buf[0] == '!' && buf[1] == 'c') {
+	    break;
+	}
+
+	for (t = buf; *t; t++) {
+	    fcsum += *t & 0xff;
+	}
+    }
+    if (fcsum != csum) {
+#if defined(DEBUG_EDIT) /*[*/
+	printf("[checksum mismatch, want 0x%08lx got 0x%08lx]\n", csum, fcsum);
+#endif /*]*/
+	return 0;
+    }
+
+    /* Once more, with feeling.  Scribble onto the session structure. */
+    fflush(f);
+    fseek(f, 0, SEEK_SET);
+    s_off = 0;
+    while (fgets(buf, sizeof(buf), f) != NULL) {
+
+	if (buf[0] == '!' && buf[1] == 'x') {
+	    char *t;
+
+	    for (t = buf + 2; *t; t += 2) {
+		if (*t == '\n') {
+		    break;
 		}
-	}
-	if (!saw_hex || !saw_star) {
+		if (s_off > sizeof(*s)) {
 #if defined(DEBUG_EDIT) /*[*/
-	    	printf("[missing%s%s]\n",
-			saw_hex? "": "hex",
-			saw_star? "": "star");
+		    printf("[s overflow: %d > %d]\n", s_off, sizeof(*s));
 #endif /*]*/
-		return 0;
+		    return 0;
+		}
+		((char *)s)[s_off++] = (hex(*t) << 4) | hex(*(t + 1));
+	    }
+	} else if (buf[0] == '!' && buf[1] == 'c') {
+	    break;
 	}
+    }
 
-	/* Checksum from the top up to the '!c' line. */
-	fflush(f);
-	fseek(f, 0, SEEK_SET);
-	fcsum = 0;
-	while (fgets(buf, sizeof(buf), f) != NULL) {
-	    	char *t;
+    /*
+     * Read the balance of the file into a temporary buffer, ignoring
+     * the '!*' line.
+     */
+    if (usp != NULL && read_user_settings(f, usp) == 0) {
+	return 0;
+    }
 
-		if (buf[0] == '!' && buf[1] == 'c')
-		    	break;
-
-		for (t = buf; *t; t++)
-		    	fcsum += *t & 0xff;
-	}
-	if (fcsum != csum) {
-#if defined(DEBUG_EDIT) /*[*/
-	    	printf("[checksum mismatch, want 0x%08lx got 0x%08lx]\n",
-			csum, fcsum);
-#endif /*]*/
-	    	return 0;
-	}
-
-	/* Once more, with feeling.  Scribble onto the session structure. */
-	fflush(f);
-	fseek(f, 0, SEEK_SET);
-	s_off = 0;
-	while (fgets(buf, sizeof(buf), f) != NULL) {
-
-	    	if (buf[0] == '!' && buf[1] == 'x') {
-		    	char *t;
-
-			for (t = buf + 2; *t; t += 2) {
-			    	if (*t == '\n')
-				    	break;
-				if (s_off > sizeof(*s)) {
-#if defined(DEBUG_EDIT) /*[*/
-					printf("[s overflow: %d > %d]\n",
-						s_off, sizeof(*s));
-#endif /*]*/
-					return 0;
-				}
-			    	((char *)s)[s_off++] =
-				    (hex(*t) << 4) | hex(*(t + 1));
-			}
-		} else if (buf[0] == '!' && buf[1] == 'c')
-		    	break;
-	}
-
-	/*
-	 * Read the balance of the file into a temporary buffer, ignoring
-	 * the '!*' line.
-	 */
-	if (usp != NULL && read_user_settings(f, usp) == 0) {
-		return 0;
-	}
-
-	/* Success */
-	return 1;
+    /* Success */
+    return 1;
 }
 
 HRESULT
-create_shortcut(session_t *session, char *exepath, char *linkpath,
-	char *args, char *workingdir)
+create_shortcut(session_t *session, char *exepath, char *linkpath, char *args,
+	char *workingdir)
 {
-	wchar_t *font;
-	int codepage = 0;
-	int extra_height = 1;
+    wchar_t *font;
+    int codepage = 0;
+    int extra_height = 1;
 
-	font = reg_font_from_cset(session->charset, &codepage);
+    font = reg_font_from_cset(session->charset, &codepage);
 
-	if (!(session->flags & WF_NO_MENUBAR))
-	    	extra_height += 2;
+    if (!(session->flags & WF_NO_MENUBAR)) {
+	extra_height += 2;
+    }
 
-	return CreateLink(
-		exepath,		/* path to executable */
-		linkpath,		/* where to put the link */
-		"wc3270 session",	/* description */
-		args,			/* arguments */
-		workingdir,		/* working directory */
-		(session->ov_rows? session->ov_rows: wrows[session->model])
-		    + extra_height,	/* console rows */
-		session->ov_cols? session->ov_cols: wcols[session->model],
-					/* console columns */
-		font,			/* font */
-		session->point_size,	/* point size */
-		codepage);		/* code page */
+    return create_link(
+	    exepath,		/* path to executable */
+	    linkpath,		/* where to put the link */
+	    "wc3270 session",	/* description */
+	    args,		/* arguments */
+	    workingdir,		/* working directory */
+	    (session->ov_rows? session->ov_rows: wrows[session->model])
+		+ extra_height,	/* console rows */
+	    session->ov_cols? session->ov_cols: wcols[session->model],
+				/* console columns */
+	    font,		/* font */
+	    session->point_size,/* point size */
+	    codepage);		/* code page */
 }

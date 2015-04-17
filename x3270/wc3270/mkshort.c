@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2010, 2013-2014 Paul Mattes.
+ * Copyright (c) 2006-2010, 2013-2015 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -44,40 +44,39 @@
 int
 main(int argc, char *argv[])
 {
-	char exe_path[MAX_PATH];
-	HRESULT hres;
-	char *install_dir;
-	char *exe_name;
-	char *link_path;
+    char exe_path[MAX_PATH];
+    HRESULT hres;
+    char *install_dir;
+    char *exe_name;
+    char *link_path;
 
-	(void) get_version_info();
+    (void) get_version_info();
 
-	/* Pull in the parameter. */
-	if (argc != 4) {
-	    	fprintf(stderr, "usage: %s install-dir exe-name link-path\n",
-			argv[0]);
-		return 1;
-	}
-	install_dir = argv[1];
-	exe_name = argv[2];
-	link_path = argv[3];
-	sprintf(exe_path, "%s\\%s", install_dir, exe_name);
+    /* Pull in the parameter. */
+    if (argc != 4) {
+	fprintf(stderr, "usage: %s install-dir exe-name link-path\n", argv[0]);
+	return 1;
+    }
+    install_dir = argv[1];
+    exe_name = argv[2];
+    link_path = argv[3];
+    sprintf(exe_path, "%s\\%s", install_dir, exe_name);
 
-	/* Create the link. */
-	hres = CreateLink(
-		exe_path,
-		link_path,
-		NULL,
-		NULL,
-		install_dir,
-		46,
-		80,
-		L"Lucida Console",
-		0,
-		0);
-	if (hres) {
-		fprintf(stderr, "link creation \"%s\" failed\n", link_path);
-	}
+    /* Create the link. */
+    hres = create_link(
+	    exe_path,
+	    link_path,
+	    NULL,
+	    NULL,
+	    install_dir,
+	    46,
+	    80,
+	    L"Lucida Console",
+	    0,
+	    0);
+    if (hres) {
+	fprintf(stderr, "link creation \"%s\" failed\n", link_path);
+    }
 
-	return hres;
+    return hres;
 }
