@@ -558,7 +558,7 @@ kybd_in3270(bool in3270 _is_unused)
 		 * BIND notifications, and we should continue to wait for a
 		 * Write command before unlocking the keyboard.
 		 */
-		if (!bind_lock_host && net_bound()) {
+		if (!HOST_FLAG(BIND_LOCK_HOST) && net_bound()) {
 		    kybdlock_clr(-1, "kybd_in3270");
 		} else {
 		    /*

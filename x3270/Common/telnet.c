@@ -231,29 +231,29 @@ static const char *telobjs[4] = { "VAR", "VALUE", "ESC", "USERVAR" };
 static const char *reason_code[8] = { "CONN-PARTNER", "DEVICE-IN-USE",
 	"INV-ASSOCIATE", "INV-NAME", "INV-DEVICE-TYPE", "TYPE-NAME-ERROR",
 	"UNKNOWN-ERROR", "UNSUPPORTED-REQ" };
-#  define rsn(n)	(((n) <= TN3270E_REASON_UNSUPPORTED_REQ) ? \
-			reason_code[(n)] : "??")
+#  define rsn(n)	(((n) <= TN3270E_REASON_UNSUPPORTED_REQ)? \
+			reason_code[(n)]: "??")
 static const char *function_name[5] = { "BIND-IMAGE", "DATA-STREAM-CTL",
 	"RESPONSES", "SCS-CTL-CODES", "SYSREQ" };
-# define fnn(n)	(((n) <= TN3270E_FUNC_SYSREQ) ? \
-			function_name[(n)] : "??")
+# define fnn(n)	(((n) <= TN3270E_FUNC_SYSREQ)? \
+			function_name[(n)]: "??")
 static const char *data_type[9] = { "3270-DATA", "SCS-DATA", "RESPONSE",
 	"BIND-IMAGE", "UNBIND", "NVT-DATA", "REQUEST", "SSCP-LU-DATA",
 	"PRINT-EOJ" };
-# define e_dt(n)	(((n) <= TN3270E_DT_PRINT_EOJ) ? \
-			data_type[(n)] : "??")
+# define e_dt(n)	(((n) <= TN3270E_DT_PRINT_EOJ)? \
+			data_type[(n)]: "??")
 static const char *req_flag[1] = { " ERR-COND-CLEARED" };
-# define e_rq(fn, n) (((fn) == TN3270E_DT_REQUEST) ? \
-			(((n) <= TN3270E_RQF_ERR_COND_CLEARED) ? \
-			req_flag[(n)] : " ??") : "")
+# define e_rq(fn, n) (((fn) == TN3270E_DT_REQUEST)? \
+			(((n) <= TN3270E_RQF_ERR_COND_CLEARED)? \
+			req_flag[(n)]: " ??"): "")
 static const char *hrsp_flag[3] = { "NO-RESPONSE", "ERROR-RESPONSE",
 	"ALWAYS-RESPONSE" };
-# define e_hrsp(n) (((n) <= TN3270E_RSF_ALWAYS_RESPONSE) ? \
-			hrsp_flag[(n)] : "??")
+# define e_hrsp(n) (((n) <= TN3270E_RSF_ALWAYS_RESPONSE)? \
+			hrsp_flag[(n)]: "??")
 static const char *trsp_flag[2] = { "POSITIVE-RESPONSE", "NEGATIVE-RESPONSE" };
-# define e_trsp(n) (((n) <= TN3270E_RSF_NEGATIVE_RESPONSE) ? \
-			trsp_flag[(n)] : "??")
-# define e_rsp(fn, n) (((fn) == TN3270E_DT_RESPONSE) ? e_trsp(n) : e_hrsp(n))
+# define e_trsp(n) (((n) <= TN3270E_RSF_NEGATIVE_RESPONSE)? \
+			trsp_flag[(n)]: "??")
+# define e_rsp(fn, n) (((fn) == TN3270E_DT_RESPONSE)? e_trsp(n): e_hrsp(n))
 
 #if !defined(_WIN32) /*[*/
 # define XMIT_ROWS	((appres.c3270.altscreen)? MODEL_2_ROWS: maxROWS)
@@ -459,7 +459,7 @@ connect_to(int ix, bool noisy, bool *pending)
 #endif /*]*/
 
     /* init ssl */
-    if (ssl_host) {
+    if (HOST_FLAG(SSL_HOST)) {
 	if (ssl_init() < 0) {
 	    close_fail;
 	}
@@ -596,7 +596,7 @@ net_connect(const char *host, char *portname, bool ls, bool *resolving,
 	    termtype = "xterm";
 	} else if (ov_rows || ov_cols) {
 	    termtype = "IBM-DYNAMIC";
-	} else if (std_ds_host) {
+	} else if (HOST_FLAG(STD_DS_HOST)) {
 	    (void) snprintf(ttype_tmpval, sizeof(ttype_tmpval), "IBM-327%c-%d",
 		    appres.m3279? '9': '8', model_num);
 	    termtype = ttype_tmpval;
@@ -606,7 +606,7 @@ net_connect(const char *host, char *portname, bool ls, bool *resolving,
     }
 
     /* get the passthru host and port number */
-    if (passthru_host) {
+    if (HOST_FLAG(PASSTHRU_HOST)) {
 	const char *hn;
 
 	hn = getenv("INTERNET_HOST");
@@ -655,7 +655,7 @@ net_connect(const char *host, char *portname, bool ls, bool *resolving,
 
     /* fill in the socket address of the given host */
     (void) memset((char *) &haddr, 0, sizeof(haddr));
-    if (passthru_host) {
+    if (HOST_FLAG(PASSTHRU_HOST)) {
 	/*
 	 * XXX: We don't try multiple addresses for the passthru
 	 * host.
@@ -944,11 +944,11 @@ net_connected(void)
     }
 
     vtrace("Connected to %s, port %u%s.\n", hostname, current_port,
-	    ssl_host? " via SSL": "");
+	    HOST_FLAG(SSL_HOST)? " via SSL": "");
 
 #if defined(HAVE_LIBSSL) /*[*/
     /* Set up SSL. */
-    if (ssl_host && !secure_connection) {
+    if (HOST_FLAG(SSL_HOST) && !secure_connection) {
 	int rv;
 
 	if (SSL_set_fd(ssl_con, sock) != 1) {
@@ -1027,7 +1027,7 @@ net_connected(void)
     check_linemode(true);
 
     /* write out the passthru hostname and port nubmer */
-    if (passthru_host) {
+    if (HOST_FLAG(PASSTHRU_HOST)) {
 	char *buf;
 
 	buf = xs_buffer("%s %d\r\n", hostname, current_port);
@@ -1298,7 +1298,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 				iosrc_t s;
 
 				net_disconnect();
-				if (ssl_host) {
+				if (HOST_FLAG(SSL_HOST)) {
 					if (ssl_init() < 0) {
 						host_disconnect(true);
 						return;
@@ -1634,7 +1634,7 @@ telnet_fsm(unsigned char c)
 	case TELOPT_TTYPE:
 	case TELOPT_ECHO:
 	case TELOPT_TN3270E:
-	    if (c != TELOPT_TN3270E || !non_tn3270e_host) {
+	    if (c != TELOPT_TN3270E || !HOST_FLAG(NON_TN3270E_HOST)) {
 		if (!hisopts[c]) {
 		    hisopts[c] = 1;
 		    do_opt[2] = c;
@@ -1697,7 +1697,7 @@ telnet_fsm(unsigned char c)
 	    }
 #endif /*]*/
 	case TELOPT_NEW_ENVIRON:
-	    if (c == TELOPT_TN3270E && non_tn3270e_host) {
+	    if (c == TELOPT_TN3270E && HOST_FLAG(NON_TN3270E_HOST)) {
 		goto wont;
 	    }
 	    if (c == TELOPT_TM && !appres.bsd_tm) {
@@ -1923,8 +1923,8 @@ tn3270e_request(void)
 	vtrace("SENT %s %s DEVICE-TYPE REQUEST %s%s%s "
 		   "%s\n",
 	    cmd(SB), opt(TELOPT_TN3270E), xtn,
-	    (try_lu != NULL && *try_lu) ? " CONNECT " : "",
-	    (try_lu != NULL && *try_lu) ? try_lu : "",
+	    (try_lu != NULL && *try_lu)? " CONNECT ": "",
+	    (try_lu != NULL && *try_lu)? try_lu: "",
 	    cmd(SE));
 
 	Free(xtn);
@@ -2158,7 +2158,7 @@ tn3270e_function_names(const unsigned char *buf, int len)
 	if (!len)
 		return("(null)");
 	for (i = 0; i < len; i++) {
-		s += sprintf(s, "%s%s", (s == text_buf) ? "" : " ",
+		s += sprintf(s, "%s%s", (s == text_buf)? "": " ",
 		    fnn(buf[i]));
 	}
 	return text_buf;
@@ -2176,7 +2176,7 @@ tn3270e_current_opts(void)
 		return NULL;
 	for (i = 0; i < MX8; i++) {
 		if (b8_bit_is_set(&e_funcs, i)) {
-			s += sprintf(s, "%s%s", (s == text_buf) ? "" : " ",
+			s += sprintf(s, "%s%s", (s == text_buf)? "": " ",
 				fnn(i));
 		}
 	}
@@ -2975,7 +2975,7 @@ trace_netdata(char direction, unsigned const char *buf, int len)
 	for (offset = 0; offset < len; offset++) {
 		if (!(offset % LINEDUMP_MAX))
 			ntvtrace("%s%c 0x%-3x ",
-			    (offset ? "\n" : ""), direction, offset);
+			    (offset? "\n": ""), direction, offset);
 		ntvtrace("%02x", buf[offset]);
 	}
 	ntvtrace("\n");
@@ -2997,7 +2997,7 @@ net_output(void)
 	int need_resize = 0;
 	unsigned char *nxoptr, *xoptr;
 
-#define BSTART	((IN_TN3270E || IN_SSCP) ? obuf_base : obuf)
+#define BSTART	((IN_TN3270E || IN_SSCP)? obuf_base: obuf)
 
 	/* Set the TN3720E header. */
 	if (IN_TN3270E || IN_SSCP) {
@@ -3010,15 +3010,15 @@ net_output(void)
 		}
 
 		/* Set the outbound TN3270E header. */
-		h->data_type = IN_TN3270E ?
-			TN3270E_DT_3270_DATA : TN3270E_DT_SSCP_LU_DATA;
+		h->data_type = IN_TN3270E?
+			TN3270E_DT_3270_DATA: TN3270E_DT_SSCP_LU_DATA;
 		h->request_flag = 0;
 		h->response_flag = 0;
 		h->seq_number[0] = (e_xmit_seq >> 8) & 0xff;
 		h->seq_number[1] = e_xmit_seq & 0xff;
 
 		vtrace("SENT TN3270E(%s NO-RESPONSE %u)\n",
-			IN_TN3270E ? "3270-DATA" : "SSCP-LU-DATA", e_xmit_seq);
+			IN_TN3270E? "3270-DATA": "SSCP-LU-DATA", e_xmit_seq);
 		if (b8_bit_is_set(&e_funcs, TN3270E_FUNC_RESPONSES)) {
 			e_xmit_seq = (e_xmit_seq + 1) & 0x7fff;
 		}
@@ -3349,8 +3349,8 @@ net_snap_options(void)
 		any = true;
 
 		space3270out(5 +
-			((connected_type != NULL) ? strlen(connected_type) : 0) +
-			((connected_lu != NULL) ? + strlen(connected_lu) : 0) +
+			((connected_type != NULL)? strlen(connected_type): 0) +
+			((connected_lu != NULL)? + strlen(connected_lu): 0) +
 			2);
 		*obptr++ = IAC;
 		*obptr++ = SB;
@@ -3422,7 +3422,7 @@ non_blocking(bool on)
 {
 #if !defined(BLOCKING_CONNECT_ONLY) /*[*/
 # if defined(FIONBIO) /*[*/
-    IOCTL_T i = on ? 1 : 0;
+    IOCTL_T i = on? 1: 0;
 
     vtrace("Making host socket %sblocking\n", on? "non-": "");
     if (sock == INVALID_SOCKET) {
@@ -4399,7 +4399,7 @@ net_bound(void)
  * dimensions change (which by definition happens while we are disconnected).
  * It sets 'termtype' to the default value, assuming an extended data stream
  * host. When we connect to a particular host, we may use a different value
- * (without the -E).
+ * (such as without the -E, for the S: prefix).
  */
 void
 net_set_default_termtype(void)

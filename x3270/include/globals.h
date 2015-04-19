@@ -168,6 +168,18 @@ void Warning(const char *);
 typedef unsigned long ks_t;
 #define KS_NONE 0L
 
+/* Host flags. */
+typedef enum {
+    ANSI_HOST,		/* A:, now a no-op */
+    NO_LOGIN_HOST,	/* C: */
+    SSL_HOST,		/* L: */
+    NON_TN3270E_HOST,	/* N: */
+    PASSTHRU_HOST,	/* P: */
+    STD_DS_HOST,	/* S: */
+    BIND_LOCK_HOST	/* B: */
+} host_flags_t;
+#define HOST_FLAG(t)	(host_flags & (1 << t))
+
 /* Simple global variables */
 
 extern int		COLS;		/* current */
@@ -179,7 +191,6 @@ extern int		defCOLS;
 extern int		altROWS;	/* alternate (EraseWriteAlternate) */
 extern int		altCOLS;
 extern const char	*app;
-extern bool		bind_lock_host;
 extern const char	*build;
 extern const char	*cyear;
 extern const char	*build_rpq_timestamp;
@@ -200,17 +211,16 @@ extern char		*full_efontname_dbcs;
 extern char		full_model_name[];
 extern bool		*funky_font;
 extern char		*hostname;
+extern unsigned		host_flags;
 extern char		luname[];
 #if defined(LOCAL_PROCESS) /*[*/
 extern bool		local_process;
 #endif /*]*/
 extern char		*model_name;
 extern int		model_num;
-extern bool		no_login_host;
 extern bool		non_tn3270e_host;
 extern int		ov_cols, ov_rows;
 extern bool		ov_auto;
-extern bool		passthru_host;
 extern char		*profile_name;
 extern const char	*programname;
 extern char		*qualified_host;
@@ -223,9 +233,7 @@ extern bool		secure_unverified;
 extern char		**unverified_reasons;
 #endif /*]*/
 extern bool		shifted;
-extern bool		ssl_host;
 extern bool		*standard_font;
-extern bool		std_ds_host;
 extern char		*termtype;
 extern bool		visible_control;
 extern int		*xtra_width;

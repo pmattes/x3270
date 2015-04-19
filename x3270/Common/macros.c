@@ -229,7 +229,8 @@ static sms_t *sms_redirect_to(void);
 /* Macro that defines when it's safe to continue a Wait()ing sms. */
 #define CAN_PROCEED ( \
     IN_SSCP || \
-    (IN_3270 && (no_login_host || (formatted && cursor_addr)) && !CKBWAIT) || \
+    (IN_3270 && (HOST_FLAG(NO_LOGIN_HOST) || \
+		 (formatted && cursor_addr)) && !CKBWAIT) || \
     (IN_NVT && !(kybdlock & KL_AWAITING_FIRST)) \
 )
 

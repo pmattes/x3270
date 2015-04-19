@@ -333,11 +333,11 @@ popup_about_config(void)
 	get_message("model"), model_name,
 	maxCOLS, get_message("columns"),
 	maxROWS, get_message("rows"),
-	appres.interactive.mono ? get_message("mono") :
-	    (appres.m3279 ? get_message("fullColor") :
+	appres.interactive.mono? get_message("mono"):
+	    (appres.m3279? get_message("fullColor"):
 		get_message("pseudoColor")),
-	(appres.extended && !std_ds_host) ? get_message("extendedDs") :
-	    get_message("standardDs")), 4);
+	(appres.extended && !HOST_FLAG(STD_DS_HOST))?
+	    get_message("extendedDs"): get_message("standardDs")), 4);
 
     MAKE_LABEL(get_message("terminalName"), 4);
     MAKE_VALUE(termtype);
@@ -614,24 +614,23 @@ popup_about_status(void)
 	if (IN_3270) {
 	    fbuf = lazyaf("%s %d %s, %d %s\n%s %d %s, %d %s",
 		    get_message("sent"),
-		    ns_bsent, (ns_bsent == 1) ?
-			get_message("byte") : get_message("bytes"),
-			ns_rsent, (ns_rsent == 1) ?
-		    get_message("record") : get_message("records"),
+		    ns_bsent, (ns_bsent == 1)?
+			get_message("byte"): get_message("bytes"),
+			ns_rsent, (ns_rsent == 1)?
+		    get_message("record"): get_message("records"),
 		    get_message("Received"),
-		    ns_brcvd, (ns_brcvd == 1) ?
-			get_message("byte") : get_message("bytes"),
-		    ns_rrcvd, (ns_rrcvd == 1) ?
-			get_message("record") :
-			get_message("records"));
+		    ns_brcvd, (ns_brcvd == 1)?
+			get_message("byte"): get_message("bytes"),
+		    ns_rrcvd, (ns_rrcvd == 1)?
+			get_message("record"): get_message("records"));
 	} else {
 	    fbuf = lazyaf("%s %d %s, %s %d %s",
 		    get_message("sent"),
-		    ns_bsent, (ns_bsent == 1) ?
-			get_message("byte") : get_message("bytes"),
+		    ns_bsent, (ns_bsent == 1)?
+			get_message("byte"): get_message("bytes"),
 		    get_message("received"),
-		    ns_brcvd, (ns_brcvd == 1) ?
-			get_message("byte") : get_message("bytes"));
+		    ns_brcvd, (ns_brcvd == 1)?
+			get_message("byte"): get_message("bytes"));
 	}
 	MAKE_LABEL(fbuf, 4);
 

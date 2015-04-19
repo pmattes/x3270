@@ -565,7 +565,7 @@ at the VM/CMS or TSO command prompt.\n");
 	}
     }
 
-    if (!std_ds_host) {
+    if (!HOST_FLAG(STD_DS_HOST)) {
 	printf("\n");
 	for (;;) {
 	    int nsize;
@@ -696,7 +696,7 @@ at the VM/CMS or TSO command prompt.\n");
 	    printf("\n");
 	}
     }
-    if (!std_ds_host) {
+    if (!HOST_FLAG(STD_DS_HOST)) {
 	printf(" DFT buffer size: %d\n", p->dft_buffersize);
     }
 

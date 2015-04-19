@@ -56,12 +56,7 @@
 #define MAX_RECENT		20	/* upper limit on appres.max_recent */
 
 enum cstate	cstate = NOT_CONNECTED;
-bool		std_ds_host = false;
-bool		no_login_host = false;
-bool		non_tn3270e_host = false;
-bool		passthru_host = false;
-bool		ssl_host = false;
-bool		bind_lock_host = false;
+unsigned	host_flags = 0;
 #define		LUNAME_SIZE	16
 char		luname[LUNAME_SIZE+1];
 char		*connected_lu = NULL;
@@ -307,17 +302,25 @@ parse_localprocess(const char *s)
 
 static char *pfxstr = "AaCcLlNnPpSsBb";
 
-/*
- * A new hostname parser.  A bit more general.
- * Allows backslashes to quote anything.
- * Allows [ ] to quote : and @ inside any name (LU, host or port).
+/**
+ * Hostname parser.
+ *  [prefix:...][lu@]hostname[:port]
+ * Backslashes to quote anything (including backslashes).
+ * [ ] quotes : and @, e.g., [1:2::3] to quote an IPv6 numeric hostname.
  *
- * Because the syntax is so awful, it needs to be picked apart explicitly.
- * Returns true for success, false for syntax error.
+ * @param[in] raw	Raw hostname, with possible decorations
+ * @param[out] lu	Returned Malloc'd LU name, or NULL
+ * @param[out] host	Returned Malloc'd hostname, isolated from other parts
+ * @param[out] port	Returned Malloc'd port, or NULL
+ * @param[out] prefixes	Returned bitmap of prefixes, indexed by ACLNPSB (bit 0
+ * 			 is A, bit 1 is C, bit 2 is L, etc.)
+ * @param[out] error	Returned error text for failure, or NULL
+ *
+ * @return true for success, false for syntax error.
  */
 static bool
 new_split_host(char *raw, char **lu, char **host, char **port,
-	unsigned *prefixes)
+	unsigned *prefixes, char **error)
 {
     char   *start     = raw;
     int     sl        = strlen(raw);
@@ -341,6 +344,7 @@ new_split_host(char *raw, char **lu, char **host, char **port,
     *host     = NULL;
     *port     = NULL;
     *prefixes = 0;
+    *error    = NULL;
 
     /* Trim leading and trailing blanks. */
     while (sl && isspace(*start)) {
@@ -546,7 +550,7 @@ done:
 	Free(qmap);
     }
     if (!rc) {
-	popup_an_error("Hostname syntax error: %s", errmsg);
+	*error = xs_buffer("Hostname syntax error: %s", errmsg);
     }
     return rc;
 }
@@ -558,20 +562,19 @@ done:
  * Returns NULL if there is a syntax error.
  */
 static char *
-split_host(char *s, bool *ansi, bool *std_ds, bool *passthru,
-	bool *non_e, bool *secure, bool *no_login,
-	bool *bind_lock, char *xluname, char **port, bool *needed)
+split_host(char *s, unsigned *flags, char *xluname, char **port, bool *needed)
 {
     char *lu;
     char *host;
-    unsigned prefixes;
-    bool *pfxptr[7];
-    int i;
+    char *error;
 
+    *flags = 0;
     *needed = false;
 
     /* Call the sane, new version. */
-    if (!new_split_host(s, &lu, &host, port, &prefixes)) {
+    if (!new_split_host(s, &lu, &host, port, flags, &error)) {
+	popup_an_error("%s", error);
+	Free(error);
 	return NULL;
     }
 
@@ -580,20 +583,6 @@ split_host(char *s, bool *ansi, bool *std_ds, bool *passthru,
 	xluname[LUNAME_SIZE] = '\0';
     } else {
 	*xluname = '\0';
-    }
-    pfxptr[0] = ansi;		/* A: */
-    pfxptr[1] = no_login;	/* C: */
-    pfxptr[2] = secure;		/* L: */
-    pfxptr[3] = non_e;		/* N: */
-    pfxptr[4] = passthru;	/* P: */
-    pfxptr[5] = std_ds;		/* S: */
-    pfxptr[6] = bind_lock;	/* B: */
-    for (i = 0; i < 7; i++) {
-	if (prefixes & (1 << i)) {
-	    *pfxptr[i] = true;
-	} else {
-	    *pfxptr[i] = false;
-	}
     }
     *needed = (strcmp(s, host) != 0);
     return host;
@@ -618,7 +607,6 @@ host_connect(const char *n)
     char *port = NULL;
     bool resolving;
     bool pending;
-    static bool ansi_host;
     const char *localprocess_cmd = NULL;
     bool has_colons = false;
 
@@ -660,9 +648,8 @@ host_connect(const char *n)
 	bool needed;
 
 	/* Strip off and remember leading qualifiers. */
-	if ((s = split_host(nb, &ansi_host, &std_ds_host, &passthru_host,
-			&non_tn3270e_host, &ssl_host, &no_login_host,
-			&bind_lock_host, luname, &port, &needed)) == NULL) {
+	if ((s = split_host(nb, &host_flags, luname, &port,
+			&needed)) == NULL) {
 	    goto failure;
 	}
 
@@ -674,9 +661,7 @@ host_connect(const char *n)
 	     * file.
 	     */
 	    Free(s);
-	    if (!(s = split_host(target_name, &ansi_host, &std_ds_host,
-			    &passthru_host, &non_tn3270e_host, &ssl_host,
-			    &no_login_host, &bind_lock_host, luname, &port,
+	    if (!(s = split_host(target_name, &host_flags, luname, &port,
 			    &needed))) {
 		goto failure;
 	    }
@@ -712,7 +697,7 @@ host_connect(const char *n)
 
     has_colons = (strchr(chost, ':') != NULL);
     Replace(qualified_host, xs_buffer("%s%s%s%s:%s",
-		ssl_host? "L:": "",
+		HOST_FLAG(SSL_HOST)? "L:": "",
 		has_colons? "[": "",
 		chost,
 		has_colons? "]": "",
