@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Update the Windows root certificates file.
+
+CA_DIR=/usr/share/ca-certificates
+TXT=wc3270/root_certs.txt
+
+if [ ! -f $TXT ]
+then	echo "Must run from top of tree."
+	exit 1
+fi
+
+tf=/tmp/recert.$$
+rm -f $tf
+
+find $CA_DIR -type f -name '*.crt' -print |
+ sort -u |
+ xargs cat |
+ sed "s/$//" >$tf
+if cmp -s $tf $TXT
+then	echo "Same."
+else	echo "Different."
+	cp $tf $TXT
+fi
+rm -f $tf
