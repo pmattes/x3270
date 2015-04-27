@@ -1,0 +1,83 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<HTML>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <link HREF="http://www.w3.org/StyleSheets/Core/Steely" TYPE="text/css" REL="stylesheet">
+  <TITLE>c3270 Frequently Asked Questions</TITLE>
+</head>
+<body>
+
+<H1>c3270 Frequently Asked Questions</H1>
+
+If you have a problem building, installing, or running c3270, please browse
+through this file first.
+
+<H2>General Questions</H2>
+
+<H3>Am I allowed to use it?</H3>
+
+    Yes.  Full copyright information is in the
+    <A HREF="Lineage.html">Lineage</A> file, but the gist
+    is that anyone is free to use the code, and anyone is free to sell copies
+    of the code.
+<P>
+    You are also free to modify it and to redistribute it, provided you
+    preserve the existing copyright notices.
+
+<H3>Why are notsign characters (and other accented characters) displayed as
+blanks or strings of garbage?</H3>
+
+<P>
+The most common cause of this is a problem with locales, in particular, the
+codeset (LC_CTYPE) in use.
+There could be a mismatch between the locale that the <b>c3270</b>
+process is using and the locale supported by the terminal hardware or
+terminal emulation software that <b>c3270</b> is running on.
+For example, <b>c3270</b> may be running in a locale that uses UTF-8
+encoding (e.g., en_US.UTF-8), while the terminal it is running on does
+not support UTF-8.
+Or it may be running on a terminal emulator (<b>xterm</b>,
+<b>gnome-terminal</b> that is running in a non-UTF-8 locale, such as
+en_US.ISO8859-1.
+<p>Use the <b>show stats</b> command at the <b>c3270&lt;</b> prompt to
+display the locale codeset that the <b>c3270</b> process is using.
+<p>Note that the locale conflict can easily arise when <b>c3270</b> is run on
+a remote host, e.g., in an <b>ssh</b> session.
+The remote host (where the output is being generated) and the local host
+(where the output is being interpreted and displayed) can often have different
+default locales.
+<p>It is also possible that <b>c3270</b> was built without UTF-8 support.
+In order to support UTF-8, <b>c3270</b> must be built with an <b>ncurses</b>
+or <b>curses</b> library that supports wide characters.
+The <b>show stats</b> command will also indicate whether or not <b>c3270</b>
+supports UTF-8.
+
+<H2>Getting Help</H2>
+
+    If you are still having a problem with c3270, feel free to send e-mail to
+    Paul Mattes, <A HREF="mailto:Paul.Mattes@usa.net"><B>Paul.Mattes@usa.net</B></A>
+    No guarantees are made about responses to
+    particular problems, but a patches are usually forthcoming in a few days.
+    It will also get you on an x3270 mailing list, which also includes
+    information on c3270, and where you can find out about new releases and
+    bug fixes.
+<P>
+    When you send a question about c3270, please include the following
+    information.  It makes it much easier to narrow down the problem.
+<OL>
+    <LI> The version of c3270 you are using, including all patches, e.g.,
+        "3.3.6p1".
+
+    <LI> What kind of machine you are running on, e.g., "Sun SPARC-10".
+
+    <LI> What operating system you are running, and what version, e.g., "SunOS
+       4.1.3_U1" or "Irix 5.2".  The "uname -a" command will usually provide
+       this information.
+
+</OL>
+    Complaints, suggestions, requests for enhancements, and porting experiences
+    are also welcome.  Code changes for bug fixes and enhancements are also
+    welcome, provided that you don't mind your code being placed (often
+    anonymously) under the x3270 license.
+</body>
+</html>

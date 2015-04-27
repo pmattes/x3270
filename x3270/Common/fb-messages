@@ -1,0 +1,70 @@
+!
+! Copyright (c) 1995-2015, Paul Mattes.
+! All rights reserved.
+!
+! Redistribution and use in source and binary forms, with or without
+! modification, are permitted provided that the following conditions are met:
+!     * Redistributions of source code must retain the above copyright
+!       notice, this list of conditions and the following disclaimer.
+!     * Redistributions in binary form must reproduce the above copyright
+!       notice, this list of conditions and the following disclaimer in the
+!       documentation and/or other materials provided with the distribution.
+!     * Neither the names of Paul Mattes nor the names of his contributors
+!       may be used to endorse or promote products derived from this software
+!       without specific prior written permission.
+!
+! THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
+! WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+! MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+! EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+! SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+! PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+! OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+! WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+! OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+! ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+!
+! Common interactive messages (x3270, c3270)
+x3270.message.hour:			hour
+x3270.message.hours:			hours
+x3270.message.minute:			minute
+x3270.message.minutes:			minutes
+x3270.message.bindPluName:		BIND PLU name:
+x3270.message.byte:			byte
+x3270.message.bytes:			bytes
+x3270.message.charMode:			NVT character mode
+x3270.message.columns:			columns
+x3270.message.connectedTo:		Connected to:
+x3270.message.connectionPending:	Connection pending to:
+x3270.message.dbcsCgcsgid:		Host DBCS CGCSGID:
+x3270.message.defaultCharacterSet:	Default (us) EBCDIC character set
+x3270.message.dsMode:			3270 mode
+x3270.message.extendedDs:		extended data stream
+x3270.message.fullColor:		color
+x3270.message.keyboardMap:		Keyboard map:
+x3270.message.lineMode:			NVT line mode
+x3270.message.localeCodeset:		Locale codeset:
+x3270.message.luName:			LU name:
+x3270.message.model:			Model
+x3270.message.mono:			monochrome
+x3270.message.notConnected:		Not connected
+x3270.message.port:			Port:
+x3270.message.proxyType:		Proxy type:
+x3270.message.Received:			Received
+x3270.message.received:			received
+x3270.message.record:			record
+x3270.message.rows:			rows
+x3270.message.sbcsCgcsgid:		Host SBCS CGCSGID:
+x3270.message.records:			records
+x3270.message.second:			second
+x3270.message.seconds:			seconds
+x3270.message.secure:			via TLS/SSL
+x3270.message.sent:			Sent
+x3270.message.server:			Server:
+x3270.message.specialCharacters:	Special characters:
+x3270.message.sscpMode:			SSCP-LU mode
+x3270.message.standardDs:		standard data stream
+x3270.message.terminalName:		Terminal name:
+x3270.message.tn3270eNoOpts:		No TN3270E options
+x3270.message.tn3270eOpts:		TN3270E options:
+x3270.message.unboundMode:		unbound mode

@@ -1,0 +1,1 @@
+../../Common/screen_stubs6.c

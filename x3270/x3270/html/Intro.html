@@ -1,0 +1,37 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>x3270 Introduction</title>
+  <link HREF="http://www.w3.org/StyleSheets/Core/Steely" TYPE="text/css" REL="stylesheet">
+</head>
+<body>
+<H1>x3270 Introduction</H1>
+
+x3270 is an IBM 3270 terminal emulator for X windows.  It can be used to
+communicate with any IBM host that supports 3270-style connections over TELNET.
+It can also communicate with hosts that use line-by-line ASCII mode to do
+initial login negotiation before switching to full-screen 3270 mode.
+<P>
+It can use its own special fonts to fully emulate the special symbols
+displayed on a 3278 or 3279, or any constant-width X font.
+<P>
+x3270 is a full-featured X client.  It participates in common X protocols,
+such as cut-and-paste and the WM_DELETE_WINDOW and WM_SAVE_YOURSELF messages.
+It is highly configurable and supports a wide range of keyboards.  A pop-up
+keypad is available for selecting common 3270 function keys.
+<P>
+x3270 emulates one of four models of an IBM 3278 or 3279 terminal.  The
+difference between the various models is the screen size.  The emulation is
+not quite complete; x3270 understands extended field orders but does not
+implement some of the extended attributes (outlining, extended validation,
+etc.).  x3270 supports color displays in one of two ways: in 3278 mode by
+displaying text with different attributes in different colors, or in 3279
+mode by implementing the full color 3270 protocols.  It does not support
+3179G bit-mapped graphics (GDDM).
+<P>
+x3270 supports the APL character set and several international character sets.
+Many APL and international symbols are entered from the keyboard using the
+"Compose" key and combinations of other keys.
+</body>
+</html>

@@ -1,0 +1,30 @@
+# Sample x3270 hosts file
+
+# name		type		hostname	login macro or string
+
+# Simple entry, no name translation.  This is usually done just so that the
+# name appears on the "Connect" menu.
+vmsys		primary		vmsys
+
+# A simple entry that creates a shorthand name for a complex hostname.
+vm		primary		ibm_server.bigbucks.com
+
+# An entry that enters a username and password into a VM login screen.
+vm-macro	primary		vmsys		String(myuser) Tab() String(mypasswd) Enter()
+
+# An old-style entry for the above, using backslash sequences embedded in a
+# string.  Note that since the "login macro or string" doesn't look like an
+# x3270 action, x3270 takes it as a parameter to the String() action.
+vm-old		primary		vmsys		myuser\tmypasswd\n
+
+# An entry that calls a script.
+tso-ksh		primary		vtamsys		Script(child_script.ksh)
+
+# An entry that calls the same script with different parameters
+tso-ksh		primary		vtamsys		Script(child_script.ksh,ibm-host2,VTAM,TSO,USER2,OTHERPASS)
+
+# An example of specifying an alternate port.
+playback	primary		localhost/4001
+
+# An example of using the Expect() action to interact with an ASCII host.
+unixbox		primary		unixbox		Expect(ogin:) String(myuser) Enter() Expect(ssword:) String(mypasswd) Enter()

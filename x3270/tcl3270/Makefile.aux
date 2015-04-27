@@ -1,0 +1,73 @@
+# Copyright (c) 1995-2011, 2013-2015 Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Auxiliary makefile for tcl3270
+
+PRODUCT = tcl3270
+
+all:
+	@echo "Must pick a specific make target."
+
+# Development tools.
+
+include common_files.mk tcl3270_files.mk
+
+SOURCES = $(COMMON_SOURCES) $(TCL3270_SOURCES)
+
+HEADERS = $(COMMON_HEADERS) $(TCL3270_HEADERS)
+
+MISC = $(PRODUCT).man Examples/cms_cmd.tcl3270 LICENSE Makefile.in README \
+	common_files.mk conf.h.in configure configure.in mkfb.c mkversion.sh \
+	tcl3270_files.mk version.txt
+
+HTML = html/$(PRODUCT)-man.html html/Build.html html/FAQ.html html/Intro.html \
+	html/Lineage.html html/README.html html/ReleaseNotes.html \
+	html/Resources.html html/SSL.html
+
+FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
+
+src.tgz: prepare $(FILES)
+
+prepare: configure
+configure: configure.in
+	autoconf
+
+MANDEP = man.m4 html.m4 m4man Makefile.aux version.txt
+MKMAN = ./m4man -t man -p $(PRODUCT)
+MKHTML = ./m4man -t html -p $(PRODUCT)
+
+man: $(PRODUCT).man html/$(PRODUCT)-man.html
+
+$(PRODUCT).man: x3270.man.m4 ft.inc resources.inc hostname.inc $(MANDEP)
+	$(MKMAN) -n $(PRODUCT) -o $@ x3270.man.m4
+html/$(PRODUCT)-man.html: x3270.man.m4 ft.inc resources.inc hostname.inc $(MANDEP)
+	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
+html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
+	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
+html/Resources.html: resource-body make-resource-doc.pl version.txt
+	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
+html/SSL.html: html/documentation-ssl-body.html mkstand.bash
+	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@

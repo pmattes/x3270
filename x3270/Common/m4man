@@ -1,0 +1,119 @@
+#!/bin/bash
+# generate a man page or html man page from m4 source
+function usage()
+{
+    echo >&2 "usage: $0 -t html|man -p product -n name [-o outfile] source"
+    exit 1
+}
+
+while [ $# -gt 0 ]
+do	case $1 in
+	    -t)
+		shift
+		case $1 in
+		    html|man)
+			type=$1
+			shift
+			;;
+		    *)
+			usage
+		esac
+		;;
+	    -p)
+		shift
+		product=$1
+		shift
+		;;
+	    -n)
+		shift
+		name=$1
+		shift
+		;;
+	    -o)
+		shift
+		outfile=$1
+		shift
+		;;
+	    -*)
+		usage
+		;;
+	    *)
+		if [ -n "$source" ]
+		then	usage
+		fi
+		source=$1
+		shift
+	esac
+done
+if [ -z "$type" -o -z "$product" -o -z "$name" -o -z "$source" ]
+then	usage
+fi
+
+. ./version.txt
+date=`date "+%d %B %Y"`
+# platform
+case $product in
+    x3270|x3270|c3270|s3270|tcl3270|pr3287)
+	platform=unix
+	c3270=c3270
+	s3270=s3270
+	pr3287=pr3287
+	x3270=x3270
+	;;
+    wc3270|ws3270|wpr3287)
+	platform=windows
+	c3270=wc3270
+	s3270=ws3270
+	pr3287=wpr3287
+	x3270=wc3270
+	;;
+    *)  
+	echo >&2 "Unknown product: $1"
+	exit 1
+esac
+# mode
+case $product in
+    c3270|wc3270)
+	mode=console
+	;;
+    s3270|ws3270)
+	mode=script
+	;;
+    *)
+	mode=$product
+	;;
+esac
+# interactive
+case $product in
+    x3270|c3270|wc3270)
+	interactive=yes
+	;;
+    *)
+	interactive=no
+	;;
+esac
+
+# set up output file, and make sure it will be deleted
+if [ -n "$outfile" ]
+then	tf=/tmp/m4man$$
+    	rm -f $tf
+	trap "rm -f $tf" exit
+	trap "exit" INT QUIT HUP TERM
+fi
+
+/usr/bin/m4 -DXX_PRODUCT=$product -DXX_PAGENAME=$name \
+    -DXX_PLATFORM=$platform -DXX_MODE=$mode -DXX_INTERACTIVE=$interactive \
+    -DXX_C3270=$c3270 -DXX_S3270=$s3270 -DXX_PR3287=$pr3287 -DXX_X3270=$x3270 \
+    -DXX_DATE="$date" -DXX_VERSION_NUMBER=$version -DXX_CYEAR=$cyear \
+    $type.m4 $source |
+ if [ -n "$outfile" ]
+ then	cat >$tf
+ else	cat
+ fi
+rc=$?
+
+if [ -n "$outfile" -a $rc -eq 0 ]
+then	mv $tf $outfile
+fi
+
+exit $rc

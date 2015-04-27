@@ -1,0 +1,45 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+    <head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<title>tcl3270 Additional Build and Install Instructions</title>
+	<link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css"
+	    rel="stylesheet">
+	</head>
+    <body>
+	<h1>tcl3270 Additional Build and Install Instructions</h1>
+	<i>This file describes build and install information specific to
+	tcl3270. For general build information, look
+	<a href="Build.html">here</a>.</i>
+
+	<h2>Notes on the Tcl Library</h2>
+	tcl3270 uses the <b>tclsh</b> command to determine the version of the
+	Tcl library to use.  When you run the <tt>configure</tt> script, make
+	sure that your <tt>$PATH</tt> points to the version of <b>tclsh</b>
+	that corresponds to the version of the Tcl library you want tcl3270 to
+	use.
+
+	<h2>tcl3270-specific <tt>configure</tt> Options</h2>
+	The tcl3270 <tt>configure</tt> script accepts the following
+	tcl3270-specific options:
+	<table border="3" cellspacing="3" cellpadding="3">
+	    <tbody>
+		<tr>
+		    <td><tt>--with-tcl=<i>version</i></tt></td>
+		    <td>Use a specific version of the Tcl library. The default
+			is <tt>8.4</tt>.</td>
+		</tr>
+		<tr>
+		    <td><tt>--with-tclx</tt><br>
+			<tt>--with-tclx=<i>version</i></tt>
+		    </td>
+		    <td>Use the Extended Tcl library. The TclX library must be
+			the same version as the Tcl library.
+			If an explicit <i>version</i> is specified, this
+			changes the Tcl library version as well.
+		    </td>
+		</tr>
+	    </tbody> 
+	</table>
+    </body>
+</html>

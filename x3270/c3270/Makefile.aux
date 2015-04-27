@@ -1,0 +1,86 @@
+#
+# Copyright (c) 1995-2011, 2013-2015 Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the names of Paul Mattes nor the names of his contributors
+#       may be used to endorse or promote products derived from this software
+#       without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+
+# Auxiliary makefile for c3270
+
+PRODUCT = c3270
+
+all:
+	@echo "Must pick a specific make target."
+
+# Development tools.
+
+include common_files.mk c3270_files.mk
+
+SOURCES = $(COMMON_SOURCES) $(C3270_SOURCES)
+
+HEADERS = $(COMMON_HEADERS) $(C3270_HEADERS)
+
+MISC = $(PRODUCT).man LICENSE Makefile.in README c3270_files.mk \
+	common_files.mk conf.h.in configure configure.in ibm_hosts \
+	ibm_hosts.man keypad.callbacks keypad.full keypad.labels keypad.map \
+	keypad.outline mkfb.c mkkeypad.c mkversion.sh runc3270.bat \
+	version.txt x3270-script.man x3270_glue.expect
+
+HTML = html/$(PRODUCT)-man.html html/Bugs.html html/Build.html html/FAQ.html \
+	html/Intro.html html/Lineage.html html/README.html \
+	html/ReleaseNotes.html html/Resources.html html/SSL.html \
+	html/Wishlist.html html/x3270-script.html
+
+FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
+
+src.tgz: prepare $(FILES) Makefile.aux
+
+prepare: configure
+configure: configure.in
+	autoconf
+
+MANDEP = man.m4 html.m4 m4man Makefile.aux version.txt
+MKMAN = ./m4man -t man -p $(PRODUCT)
+MKHTML = ./m4man -t html -p $(PRODUCT)
+
+man: $(PRODUCT).man ibm_hosts.man x3270-script.man html/$(PRODUCT)-man.html \
+	html/ibm_hosts.html html/x3270-script.html
+
+$(PRODUCT).man: x3270.man.m4 ft.inc resources.inc keymaps.inc hostname.inc $(MANDEP)
+	$(MKMAN) -n $(PRODUCT) -o $@ x3270.man.m4
+html/$(PRODUCT)-man.html: x3270.man.m4 ft.inc resources.inc keymaps.inc hostname.inc $(MANDEP)
+	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
+ibm_hosts.man: ibm_hosts.man.m4 $(MANDEP)
+	$(MKMAN) -n ibm_hosts -o $@ ibm_hosts.man.m4
+html/ibm_hosts.html: ibm_hosts.man.m4 ft.inc $(MANDEP)
+	$(MKHTML) -n ibm_hosts -o $@ ibm_hosts.man.m4
+x3270-script.man: x3270-script.man.m4 ft.inc $(MANDEP)
+	$(MKMAN) -n x3270-script -o $@ x3270-script.man.m4
+html/x3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
+	$(MKHTML) -n x3270-script -o $@ x3270-script.man.m4
+html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
+	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
+html/Resources.html: resource-body make-resource-doc.pl version.txt
+	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
+html/SSL.html: html/documentation-ssl-body.html mkstand.bash
+	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@

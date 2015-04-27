@@ -1,0 +1,152 @@
+dnl Copyright (c) 2015, Paul Mattes.
+dnl All rights reserved.
+dnl
+dnl Redistribution and use in source and binary forms, with or without
+dnl modification, are permitted provided that the following conditions are met:
+dnl     * Redistributions of source code must retain the above copyright
+dnl       notice, this list of conditions and the following disclaimer.
+dnl     * Redistributions in binary form must reproduce the above copyright
+dnl       notice, this list of conditions and the following disclaimer in the
+dnl       documentation and/or other materials provided with the distribution.
+dnl     * Neither the names of Paul Mattes nor the names of his contributors
+dnl       may be used to endorse or promote products derived from this software
+dnl       without specific prior written permission.
+dnl
+dnl THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
+dnl WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+dnl MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+dnl EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+dnl SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+dnl TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+dnl PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+dnl LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+dnl NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+dnl SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(x3270/x3270.c)
+AC_PREREQ(2.50)
+
+AC_ARG_ENABLE(unix,[  --enable-unix          build all Unix emulators])
+if test "x$enable_unix" = xyes; then
+    enable_x3270=yes
+    enable_c3270=yes
+    enable_s3270=yes
+    enable_tcl3270=yes
+    enable_pr3287=yes
+fi
+
+AC_ARG_ENABLE(windows,[  --enable-windows       build all Windows emulators])
+if test "x$enable_windows" = xyes; then
+    enable_wc3270=yes
+    enable_ws3270=yes
+    enable_wpr3287=yes
+fi
+
+AC_ARG_ENABLE(x3270,[  --enable-x3270         build x3270])
+AC_ARG_ENABLE(c3270,[  --enable-c3270         build c3270])
+AC_ARG_ENABLE(s3270,[  --enable-s3270         build s3270])
+AC_ARG_ENABLE(tcl3270,[  --enable-tcl3270       build tcl3270])
+AC_ARG_ENABLE(pr3287,[  --enable-pr3287        build pr3287])
+AC_ARG_ENABLE(unix-lib,[  --enable-lib           build unix libraries])
+
+AC_ARG_ENABLE(wc3270,[  --enable-wc3270        build wc3270])
+AC_ARG_ENABLE(ws3270,[  --enable-ws3270        build ws3270])
+AC_ARG_ENABLE(wpr3287,[  --enable-wpr3287       build wpr3287])
+AC_ARG_ENABLE(windows-lib,[  --enable-windows-lib   build Windows libraries])
+
+if test "x$enable_x3270" != xyes -a \
+        "x$enable_c3270" != xyes -a \
+        "x$enable_s3270" != xyes -a \
+        "x$enable_tcl3270" != xyes -a \
+        "x$enable_pr3287" != xyes -a \
+	"x$enable_unix_lib" != xyes -a \
+        "x$enable_wc3270" != xyes -a \
+        "x$enable_ws3270" != xyes -a \
+        "x$enable_wpr3287" != xyes -a \
+	"x$enable_windows_lib" != xyes; then
+    AC_MSG_NOTICE(configuring all emulators... use --enable options to pick a subset)
+    enable_x3270=yes
+    enable_c3270=yes
+    enable_s3270=yes
+    enable_tcl3270=yes
+    enable_pr3287=yes
+    enable_wc3270=yes
+    enable_ws3270=yes
+    enable_wpr3287=yes
+fi
+
+if test "x$enable_x3270" = xyes -o \
+        "x$enable_c3270" = xyes -o \
+        "x$enable_s3270" = xyes -o \
+        "x$enable_tcl3270" = xyes -o \
+        "x$enable_pr3287" = xyes -o \
+	"x$enable_unix_lib" = xyes; then
+    AC_CONFIG_SUBDIRS(lib)
+fi
+
+ALL=""
+DEPEND=""
+CLEAN=""
+CLOBBER=""
+INSTALL=""
+INSTALLMAN=""
+
+for i in x3270 c3270 s3270 tcl3270 pr3287 wc3270 ws3270 wpr3287; do
+    eval x=\$enable_$i
+    if test "x$x" = xyes; then
+	ALL="$ALL $i"
+	DEPEND="$DEPEND $i-depend"
+	CLEAN="$CLEAN $i-clean"
+	CLOBBER="$CLOBBER $i-clobber"
+	case "$i" in
+	w*)	;;
+	*)	INSTALL="$INSTALL $i-install"
+		INSTALLMAN="$INSTALLMAN $i-install.man"
+	esac
+    fi
+done
+
+if test "x$enable_x3270" = xyes -o \
+        "x$enable_c3270" = xyes -o \
+        "x$enable_s3270" = xyes -o \
+        "x$enable_tcl3270" = xyes -o \
+        "x$enable_pr3287" = xyes; then
+    DEPEND="$DEPEND unix-lib-depend"
+    CLEAN="$CLEAN unix-lib-clean"
+    CLOBBER="$CLOBBER unix-lib-clobber"
+fi
+
+if test "x$enable_wc3270" = xyes -o \
+        "x$enable_ws3270" = xyes -o \
+        "x$enable_wpr3287" = xyes; then
+    DEPEND="$DEPEND windows-lib-depend"
+    CLEAN="$CLEAN windows-lib-clean"
+    CLOBBER="$CLOBBER windows-lib-clobber"
+fi
+
+AC_SUBST(ALL)
+AC_SUBST(DEPEND)
+AC_SUBST(CLEAN)
+AC_SUBST(CLOBBER)
+AC_SUBST(INSTALL)
+AC_SUBST(INSTALLMAN)
+
+if test "x$enable_x3270" = xyes; then
+    AC_CONFIG_SUBDIRS(x3270)
+fi
+if test "x$enable_c3270" = xyes; then
+    AC_CONFIG_SUBDIRS(c3270)
+fi
+if test "x$enable_s3270" = xyes; then
+    AC_CONFIG_SUBDIRS(s3270)
+fi
+if test "x$enable_tcl3270" = xyes; then
+    AC_CONFIG_SUBDIRS(tcl3270)
+fi
+if test "x$enable_pr3287" = xyes; then
+    AC_CONFIG_SUBDIRS(pr3287)
+fi
+
+dnl Generate to top-level Makefile.
+AC_OUTPUT(Makefile)

@@ -1,0 +1,334 @@
+<h1>x3270, c3270, wc3270, s3270, tcl3270 and pr3287 Frequently Asked Questions</h1>
+
+If you have a problem building, installing, or running
+one of the programs in the <b class=bluer>x3270</b> suite,
+please browse through this file first.
+
+<H2>General Questions</H2>
+
+<H3>wc3270 includes <b>mkshort.exe</b>.  Isn't that some sort of keylogger?</H3>
+
+The program called <b>mkshort.exe</b> that is installed with <b>wc3270</b> is
+<i>not</i> spyware -- it's a little utility program that is used to create
+the desktop shortcuts when <b>wc3270</b> is installed.
+Unfortunately, it has the same name as a very bad program.
+<p>
+You can safely remove <b>mkshort.exe</b> from the <b>wc3270</b> installation
+directory; it is not needed once <b>wc3270</b> is installed.
+</p>
+<p>
+<b>mkshort.exe</b> will be removed (or at least renamed) in a future release
+of <b>wc3270</b>.
+
+<H3>How do I change the keyboard mapping?</H3>
+
+Look at the <A HREF="Keymap.html">x3270 Keymap</A> document,
+the <a href="c3270Keymap.html">c3270 Keymap</a> document or the
+<a href="wc3270Keymap.html">wc3270 Keymap</a> document.
+
+<h3>Why can't I map the Alt, Ctrl or Shift keys in c3270?</h3>
+
+That's because <b class=bluer>c3270</b> runs on dumb
+terminals, not on graphics displays.
+<p>
+c3270 can only respond to keys that generate input on a TTY device, and it can
+only respond differently to combinations of keys that generate different input
+on a TTY device.
+</p>
+<p>
+Most dumb terminals -- and that includes the Linux console -- do not generate
+any TTY input at all when the Alt, Ctrl or Shift keys are pressed.
+They generate input only when another key is pressed in combination with
+one of those keys.
+In addition, there is nothing in the input that indicates that the Alt or
+Shift key was pressed in combination with a key.
+The presence of the Ctrl key can be inferred by the ASCII code that is
+generated (the Ctrl key subtracts 0x20 from the ASCII value of the key without
+Ctrl).
+</p>
+<p>
+Furthermore, most terminals generate exactly the same TTY input for a given
+function key (F1..F12), whether or not Shift, Ctrl or Alt are pressed.
+This is complicated by the fact that the <i>curses</i> library, which is what
+<b class=bluer>c3270</b> uses to do its I/O, does not even
+provide a way to convey such an event to
+<b class=bluer>c3270</b> -- there is a "Function Key 1"
+event, but no "Shifted Function Key 1" event and no "Alt Function Key 1" event.
+</p>
+
+<h3>Is there a Windows version?</h3>
+
+Yes!
+<p>First, there is <b class=bluer>wc3270</b>, the native Windows console
+version of <b class=bluer>c3270</b>.</p>
+<p>Second, <b class=bluer>x3270</b> and
+<b class=bluer>c3270</b> compile and run under Cygwin,
+the free Unix emulator for Windows.
+(In fact, they are standard packages with more recent versions of Cygwin).
+You can get Cygwin <a href="http://www.cygwin.com">here</a>.</p>
+<p>
+If disk space is a concern, you can run
+<b class=bluer>c3270</b> with a minimal set of
+Cygwin DLLs and one text file -- there is no need to install all of Cygwin.
+</p>
+<p>
+Note that there is not a native Win32 port of x3270, nor are there concrete
+plans for one.
+</p>
+
+<H3>Why are the <b>[</b> and <b>]</b> characters displayed wrong?</H3>
+
+    Look at the <A HREF="Brackets.html">Brackets</A> document.
+
+<H2>Fatal Errors From 'make'</H2>
+
+<H3>Make reports: Fatal error: Don't know how to make target `FontObj(3270)'.</H3>
+
+    This generally means that you are running X11R4, rather than X11R5 or
+    X11R6.
+    <b class=bluer>x3270</b>
+    does not run under X11R4.
+
+<h2>Other Problems</h2>
+
+<H3>x3270 Isn't Using the 3270 Font</H3>
+
+One of the trickier areas;
+<b class=bluer>x3270</b>
+uses its own fonts to replicate a
+life-like IBM 3270.  This is not fatal, however;
+<b class=bluer>x3270</b>
+can use any fixed-width X font.
+If it can't find its own font, it defaults to "fixed".
+<P>
+    The simplest problem to fix is that you haven't told your X server that
+    there are new fonts it can use.  This is corrected with:
+<PRE>
+    xset fp rehash
+</PRE>
+    If this doesn't help, it is possible that your X server font path doesn't
+    include the directory that the 3270 fonts were installed in.  Run the
+    command "xset q".  The output will include an entry like:
+<PRE>
+    Font Path:
+      /usr/lib/X11/fonts/misc/,/usr/lib/X11/fonts/Speedo/,/usr/lib/X11/fonts/75dpi/,/usr/lib/X11/fonts/100dpi/
+</PRE>
+<b class=bluer>x3270</b>'s fonts are usually installed in /usr/local/fonts.  If this
+    (or some variation on it) does not appear in the "xset q" output, you can
+    try:
+<PRE>
+    xset fp+ /usr/local/fonts/
+    xset fp rehash
+</PRE>
+
+<H3>x3270 isn't paying any attention to my keymap definition.</H3>
+
+There are two likely causes for this problem: either
+<b class=bluer>x3270</b>
+isn't seeing
+    your keymap definition, or there is something wrong with the definition
+    itself.
+<P>
+You can tell exactly which keymap and keymap modifiers
+<b class=bluer>x3270</b>
+is using with
+    the "About x3270" option on the "Options" menu.  There is an entry labeled
+    "Keyboard map:" which lists the keymap(s) in effect.  If yours is missing,
+    there are a number of possible causes:
+<UL>
+<LI>
+There is a hierarchy of places that
+<b class=bluer>x3270</b>
+looks for the keymap list,
+      and the one you are assuming may not be the one it finds.  In the
+      following list, earlier objects override those below:
+<UL>
+	<LI>The -keymap switch on the command line.
+	<LI>The definition of "x3270.keymap" in your .Xdefaults file.
+	<LI>The KEYMAP environment variable.
+	<LI>The KEYBD environment variable.
+</UL>
+    <LI>You may have modified your .Xdefaults file, but not yet re-read the
+      database.  You can either log off of X and start over, or you can run
+      the command:
+<PRE>
+	xrdb $HOME/.Xdefaults
+</PRE>
+    <LI>Beware that there are some subtle interactions between .Xdefaults and
+      cpp on your system.  On a sun4 for example, cpp defines the symbol "sun"
+      as "1", so a keymap definition for "sun-k4" becomes "1-k4".
+
+    <LI>A keymap definition is in two parts, the name of the keymap and the
+      definition of the keymap.  The "x3270.keymap" resource controls the name
+      of the keymap; then for each keymap type "x" there must be an additional
+      resourced named "x3270.keymap.x".  If this definition is missing,
+      <b class=bluer>x3270</b>
+      will not recognize the keymap.
+<LI>
+    One other cause of missed keymaps is the symbol "sun" defined by the
+    C preprocessor.  If you have an entry in your .Xdefaults file that looks
+    like:
+<PRE>
+	x3270.keymap: sun-k5
+</PRE>
+    then use xrdb to read in the file, the symbol "sun" may be defined as
+    "1" as the file is read.  This turns the above into:
+<PRE>
+	x3270.keymap: 1-k5
+</PRE>
+    causing much confusion.
+<P>
+    The fix is to add the following line to the top of your .Xdefaults:
+<PRE>
+	#undef sun
+</PRE>
+</UL>
+    If your keymap appears in the list, but doesn't seem to have any effect,
+    the causes are probably more subtle.  Keymap definitions (X translation
+    tables) are an object of study in themselves; the O'Reilly books (volume 4
+    in particular) are your best guide here, along with a thorough reading of
+    the "Resources" document.
+
+<H3>The "Alt" key doesn't work.</H3>
+
+    If the "A" appears on the status line when you press the Alt key, but
+    none of the key mappings that use Alt seem to work (i.e., the APL keys),
+    perhaps your X server isn't configured with Alt as a modifier.  Try
+    the following xmodmap command:
+<PRE>
+	xmodmap -e 'add Mod2 = Alt_L'
+</PRE>
+    If this fixes the problem, you can add it to your .xinitrc file, so it
+    takes effect every time your start X.
+
+<H3>x3270 is misbehaving on a certain application.</H3>
+
+If
+<b class=bluer>x3270</b>
+produces a different display or interaction than a real 3270 or
+some other emulator, it is entirely possible that
+<b class=bluer>x3270</b>
+is at fault.
+    What you can do to help debug it is to capture a trace of the session.
+    The easiest way to do this is:
+<PRE>
+    x3270 -trace
+</PRE>
+<b class=bluer>x3270</b>
+will create a trace file in /tmp, which will contain a dump of
+all of the data that
+<b class=bluer>x3270</b>
+sent or received, along with its interpretation.
+<b class=bluer>x3270</b>
+will also pop up a window to view the file while it is being created;
+    the title of that window is the full pathname of the trace file.  If you
+    are familiar with the 3270 Data Stream protocol, you may be able to figure
+    out the problem yourself; otherwise, after suitable editing to remove
+    passwords and proprietary information, you may send it in (see below).
+
+<H3>I can't get Num Lock to work on my Sun keyboard.</H3>
+
+    If you are using an X server based directly on the MIT distribution (the
+    NumLock light does not turn on when you press the NumLock key), then you
+    are pretty much stuck; your server does not support NumLock.  (However,
+    you can get the keypad to produce numbers by holding down the Shift key.)
+
+<H3>There is no termcap entry for "IBM-3278-xxx"</H3>
+
+If you log into a non-IBM host with
+<b class=bluer>x3270</b>
+your TERM variable will be
+    set to "IBM-327x", which is not especially useful for running programs
+    like vi.
+<P>
+    One solution is to set your TERM variable to "xterm" after you log in,
+    and to set the number of lines and columns to match the current
+    <b class=bluer>x3270</b>
+    model number (this is done through the "stty" command or with environment
+    variables, depending on your system).
+<P>
+    A second solution is to create termcap entries for the 3270 terminal
+    types.  Here are some sample entries:
+<PRE>
+    I2|IBM-3278-2|x3270 Emulating 3278-2:li#24:tc=xterm:
+    I3|IBM-3278-3|x3270 Emulating 3278-3:li#32:tc=xterm:
+    I4|IBM-3278-4|x3270 Emulating 3278-4:li#43:tc=xterm:
+    I5|IBM-3278-5|x3270 Emulating 3278-5:li#27:co#127:tc=xterm:
+</PRE>
+
+<H3>My screen isn't being drawn properly</H3>
+
+    There is a bug in certain versions of the Linux Mach32 X server, which
+    causes the
+    <b class=bluer>x3270</b>
+    screen to be drawn incompletely.  The screen image can
+    be restored by iconifying and un-iconifying the window.
+<P>
+<b class=bluer>x3270</b>
+can be modified to work around this problem.  An unfortunate
+    side-effect is that it will no longer be able to display APL characters,
+    or line-drawing characters with any of the 3270 fonts.
+<P>
+To rebuild
+<b class=bluer>x3270</b>
+to work around this bug, edit the Imakefile and add a
+    line at the top:
+<PRE>
+    EXTRA_DEFINES = -DBROKEN_MACH32
+</PRE>
+Then rebuild the makefile, the module "screen.o", and
+<b class=bluer>x3270</b>:
+<PRE>
+    rm screen.o
+    xmkmf
+    make depend
+    make
+</PRE>
+
+<h3>The PF12 Key Doesn't Work on KDE</h3>
+KDE reserves the F12 key for "Mouse Emulation", so
+<b class=bluer>x3270</b>
+cannot use
+this key.
+To allow
+<b class=bluer>x3270</b>
+to use F12, pull up the KDE Control Center, look under
+"Look & Feel", and under that, "Key Bindings".  Remove the binding for F12.
+
+<H2>Getting Help</H2>
+
+If you are still having a problem with
+<b class=bluer>x3270</b>,
+feel free to send e-mail to
+    <A HREF="mailto:Paul.Mattes@usa.net"><B>Paul Mattes</B></A>
+    No guarantees are made about responses to
+    particular problems, but a patches are usually forthcoming in a few days.
+    You can also ask to be added to the
+    <b class=bluer>x3270</b>
+    mailing list, where you can find out
+    about new releases and bug fixes.
+<P>
+When you send a question about
+<b class=bluer>x3270</b>,
+please include the following
+    information.  It makes it much easier to narrow down the problem.
+<OL>
+	<LI> The version of
+	<b class=bluer>x3270</b>
+	you are using, including all patches, e.g.,
+        "3.3.2".  This is displayed at the top of the "About x3270" pop-up.
+
+    <LI> What kind of machine you are running on, e.g., "Sun SPARC-10".
+
+    <LI> What operating system you are running, and what version, e.g., "SunOS
+       4.1.3_U1" or "Irix 5.2".  The "uname -a" command will usually provide
+       this information.
+
+    <LI> What version of X Windows you are running, and where it came from, e.g.,
+        "X11R6 built from the MIT distribution", or "Sun OpenWindows 3.0 as
+        delivered with the machine".
+</OL>
+    Complaints, suggestions, requests for enhancements, and porting experiences
+    are also welcome.  Code changes for bug fixes and enhancements are also
+    welcome, provided that you don't mind your code being placed (often
+    anonymously) in the public domain.

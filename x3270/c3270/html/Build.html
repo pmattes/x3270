@@ -1,0 +1,57 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+    <head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css"
+	    rel="stylesheet">
+	<title>c3270 Additional Build and Install Instructions</title>
+    </head>
+    <body>
+
+	<h1>c3270 Additional Build and Install Instructions</h1>
+	<i>This file describes build and install information specific to
+	c3270. For general build information, look
+	<a href="Build.html">here</a>.</i>
+
+	<h2>Wide Curses Requirement</h2>
+	c3270 needs the 'wide' version of the curses or ncurses library (one
+	that supports multi-byte character encodings).
+	Without wide curses or ncurses, c3270 will be restricted to using the
+	7-bit basic ASCII character set.
+	<p>
+	On some platforms, the standard curses or ncurses library is the wide
+	version and no extra packages need be installed. On others, a special
+	wide ncurses package is needed. On still others (such as on Solaris,
+	documented below) the wide curses library is installed in a special
+	location and <tt>configure</tt> must be told where to locate it using
+	CPPFLAGS and LDFLAGS.
+
+	<h2>Notes for Cygwin</h2>
+	Additional Cygwin packages are needed to compile c3270:
+	<ul>
+	    <li>The <b>libncurses-devel</b> package from the
+		<b>Devel</b> group</li>
+	    <li>For command-line editing and history, the
+		<b>readline</b> package from the <b>Devel</b> group</li>
+	</ul>
+
+	<h2> Notes for Solaris</h2>
+	<b>c3270</b> prefers wide curses, which on Solaris is in the
+	<tt>/usr/xpg4</tt> directory. To use this version of curses, set
+	CPPFLAGS and LDFLAGS when running <tt>configure</tt>:
+	<pre><tt>   ./configure CPPFLAGS=-I/usr/xpg4/include LDFLAGS=-L/usr/xpg4/lib</tt></pre>
+
+	<h2>c3270-Specific <tt>configure</tt> Options</h2>
+	The c3270 <tt>configure</tt> script accepts the following
+	c3270-specific option:
+	<table border="3" cellspacing="3" cellpadding="3">
+	    <tbody>
+		<tr>
+		    <td><tt>--without-readline</tt></td>
+		    <td>Don't use the <i>readline</i> command-line editing
+			library, even if it is found on the system.</td>
+		</tr>
+	    </tbody> 
+	</table>
+    </body>
+</html>

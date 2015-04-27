@@ -1,0 +1,9 @@
+
+# Extensions to add to a certificate request
+
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+
+#subjectAltName=IP:1.2.3.4,DNS:hello.there.com
+subjectAltName=IP:1.2.3.4,DNS:hello.there.com,IP:1::3
+subjectAltName=IP:127.0.0.1,DNS:hello.there.com,IP:::
