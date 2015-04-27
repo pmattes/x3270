@@ -69,6 +69,9 @@ documentation-other.html: documentation-other-body.html mkpages.bash
 	./mkpages.bash documentation-other
 documentation-relnotes.html: documentation-relnotes-body.html mkpages.bash
 	./mkpages.bash documentation-relnotes
+documentation-ssl-body.html: documentation-ssl-body.tmpl dll-subst.sh \
+    	openssl-url.txt
+	./dll-subst.sh <documentation-ssl-body.tmpl >$@
 documentation-ssl.html: documentation-ssl-body.html mkpages.bash
 	./mkpages.bash documentation-ssl
 download.html: download-body.html mkpages.bash
@@ -97,7 +100,7 @@ Unix/x3270-man.html:
 Unix/x3270-script.html:
 	cd ../x3270 && $(MAKE) -f Makefile.aux html/x3270-script.html
 Unix/x3270if.html:
-	cd ../x3270 && $(MAKE) -f Makefile.aux html/x3270if.html
+	cd ../s3270 && $(MAKE) -f Makefile.aux html/x3270if.html
 
 Windows/wc3270-man.html:
 	cd ../wc3270 && $(MAKE) -f Makefile.aux html/wc3270-man.html
@@ -108,7 +111,7 @@ Windows/wpr3287-man.html:
 Windows/ws3270-man.html:
 	cd ../ws3270 && $(MAKE) -f Makefile.aux html/ws3270-man.html
 Windows/x3270if.html:
-	cd ../wc3270 && $(MAKE) -f Makefile.aux html/x3270if.html
+	cd ../ws3270 && $(MAKE) -f Makefile.aux html/x3270if.html
 
 c3270-Resources.html:
 	cd ../c3270 && $(MAKE) -f Makefile.aux html/Resources.html
