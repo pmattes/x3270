@@ -29,6 +29,10 @@ XX_PRODUCT,wc3270,`XX_FI(xxx)XX_FB(.3270.wc3270km)')
 will augment the definition
 of keymap XX_FI(xxx) in 3270 mode.
 XX_LP
+Temporary keymaps can also be added or removed while XX_PRODUCT is running
+with the XX_FB(Keymap) action.
+See XX_LINK(XX_X3270-script.html,XX_FI(XX_X3270-script)(1)) for details.
+XX_LP
 Each line (rule) in a keymap specifies actions to perform when a
 particular key or sequence of keys is pressed.
 Keymap rules have the following syntax:

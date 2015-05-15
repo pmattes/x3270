@@ -509,6 +509,9 @@ interact(void)
     /* In case we got here because a command output, stop the pager. */
     stop_pager();
 
+    /* Stop any pending scripts. */
+    abort_script();
+
     vtrace("Interacting.\n");
     if (appres.secure) {
 	char s[10];
