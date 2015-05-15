@@ -3197,7 +3197,8 @@ PauseScript_action(ia_t ia, unsigned argc, const char **argv)
     if (check_argc("PauseScript", argc, 0, 0) < 0) {
 	return false;
     }
-    if (sms == NULL || (sms->type != ST_PEER && sms->type != ST_CHILD)) {
+    if (sms == NULL || sms->type == ST_STRING || sms->type == ST_COMMAND ||
+	    sms->type == ST_IDLE) {
 	popup_an_error("PauseScript can only be called from a script");
 	return false;
     }
@@ -3212,7 +3213,7 @@ ContinueScript_action(ia_t ia, unsigned argc, const char **argv)
     sms_t *s;
 
     action_debug("ContinueScript", ia, argc, argv);
-    if (check_argc("ContinueScript", argc, 1, 1) < 0) {
+    if (check_argc("ContinueScript", argc, 0, 1) < 0) {
 	return false;
     }
 
@@ -3238,7 +3239,9 @@ ContinueScript_action(ia_t ia, unsigned argc, const char **argv)
 
     /* Continue the running script and output the token to it. */
     sms->state = SS_RUNNING;
-    action_output("%s", argv[0]);
+    if (argc) {
+	action_output("%s", argv[0]);
+    }
     sms_continue();
     return true;
 }

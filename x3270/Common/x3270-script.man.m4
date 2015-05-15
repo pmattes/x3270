@@ -331,13 +331,13 @@ will complete with an error, and if this script was invoked as part of
 login through the
 XX_FB(ibm_hosts)
 file, the connection will be broken.
-XX_TP(XX_FB(ContinueScript)(XX_FI(param)))
+XX_TP(XX_FB(ContinueScript)([XX_FI(param)]))
 Allows a script that is waiting in a
 XX_FB(PauseScript)
 action, below, to continue.
-The
+The optional
 XX_FI(param)
-given is output by the
+string is output by the
 XX_FB(PauseScript)
 action.
 XX_TP(XX_FB(Disconnect))
@@ -381,6 +381,11 @@ XX_FB(Expect)
 is valid only in
 XX_SM(NVT)
 mode.
+ifelse(XX_MODE,console,`XX_TP(XX_FB(Keymap([XX_FI(keymap)])))
+Adds or removes a temporary keymap.
+If the XX_FI(keymap) parameter is given, the named keymap is added.
+If no parameter is given, the most recently added keymap is removed.
+')dnl
 XX_TP(XX_FB(MoveCursor)(XX_FI(row),XX_FI(col)))
 Moves the cursor to the specified coordinates.
 XX_TP(XX_FB(PauseScript))
@@ -389,11 +394,11 @@ XX_FB(ContinueScript)
 action, above, is executed.
 This allows a script to wait for user input and continue.
 Outputs the single parameter to
-XX_FB(ContinueScript).
-XX_TP(XX_FB(PrintText)([XX_FB(command),]XX_FI(filter))))
+XX_FB(ContinueScript), if one is given.
+XX_TP(XX_FB(PrintText)([XX_FB(command),]XX_FI(filter)))
 Pipes an ASCII representation of the current screen image through the named
 XX_FI(filter), e.g., XX_FB(lpr).
-XX_TP(XX_FB(PrintText)([XX_FB(html),][XX_FB(append),][XX_FB(replace),]XX_FB(file),XX_FI(filename))))
+XX_TP(XX_FB(PrintText)([XX_FB(html),][XX_FB(append),][XX_FB(replace),]XX_FB(file),XX_FI(filename)))
 Saves the current screen contents in a file.
 With the XX_FB(html) option, saves it as HTML, otherwise saves it as plain
 ASCII.

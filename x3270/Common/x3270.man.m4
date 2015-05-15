@@ -1060,7 +1060,7 @@ XX_TR(XX_TDH(`HexString'`'XX_LPAREN`'XX_FI(hex_digits)`'XX_RPAREN)	XX_TD(insert 
 XX_TR(XX_TDH(`Home')	XX_TD(move cursor to first input field))
 XX_TR(XX_TDH(`Insert')	XX_TD(set insert mode))
 XX_TR(XX_TDH(XX_BLOCK()`Interrupt')	XX_TD(send XX_SM(TELNET IP) to host))
-ifelse(XX_MODE,console,`XX_TR(XX_TDH(`Keypad'XX_VOID)	XX_TD(Display pop-up keypad))
+ifelse(XX_MODE,console,`XX_TR(XX_TDH(`Keypad')	XX_TD(Display pop-up keypad))
 ')dnl
 XX_TR(XX_TDH(Key`'XX_LPAREN`'XX_FI(keysym)`'XX_RPAREN)	XX_TD(insert key XX_FI(keysym)))
 XX_TR(XX_TDH(Key`'XX_LPAREN`'0x`'XX_FI(xx)`'XX_RPAREN)	XX_TD(insert key with character code XX_FI(xx)))
@@ -1071,7 +1071,7 @@ XX_TR(XX_TDH(`Left')	XX_TD(move cursor left))
 XX_TR(XX_TDH(`Left2')	XX_TD(move cursor left 2 positions))
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(XX_BLOCK()Macro(XX_FI(macro)))	XX_TD(run a macro))
 ')dnl
-ifelse(XX_MODE,console,`XX_TR(XX_TDH(`Menu'XX_VOID)	XX_TD(Display menu bar))
+ifelse(XX_MODE,console,`XX_TR(XX_TDH(`Menu')	XX_TD(Display menu bar))
 ')dnl
 XX_TR(XX_TDH(`MonoCase')	XX_TD(toggle uppercase-only mode))
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(MoveCursor)	XX_TD(move cursor to mouse position))
