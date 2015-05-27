@@ -452,7 +452,9 @@ set_uni(const char *csname, int local_cp _is_unused,
     u_local_cp = local_cp;
 #endif /*]*/
 
-    *is_dbcs = false;
+    if (is_dbcs != NULL) {
+	*is_dbcs = false;
+    }
 
     /*
      * If the csname is NULL, this is a fallback to the default
