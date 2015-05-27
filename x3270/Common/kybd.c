@@ -750,7 +750,7 @@ PA_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned k;
 
-    action_debug("PF", ia, argc, argv);
+    action_debug("PA", ia, argc, argv);
     if (check_argc("PA", argc, 1, 1) < 0) {
 	return false;
     }
