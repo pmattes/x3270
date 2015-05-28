@@ -495,9 +495,6 @@ main(int argc, char *argv[])
 	socket_t s = INVALID_SOCKET;
 	int rc = 0;
 	int report_success = 0;
-#if defined(HAVE_LIBSSL) /*[*/
-	bool any_prefixes = false;
-#endif /*]*/
 
 	/* Learn our name. */
 #if defined(_WIN32) /*[*/
@@ -780,27 +777,35 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 	if (argc != i + 1)
 		usage();
 
-	/* Pick apart the hostname, LUs and port. */
+	/*
+	 * Pick apart the hostname, LUs and port.
+	 * We allow "L:" and "<luname>@" in either order.
+	 */
+	host = argv[i];
 #if defined(HAVE_LIBSSL) /*[*/
-	do {
-		if (!strncasecmp(argv[i], "l:", 2)) {
-			options.ssl.ssl_host = true;
-			argv[i] += 2;
-			any_prefixes = true;
-		} else
-			any_prefixes = false;
-	} while (any_prefixes);
+	while (!strncasecmp(host, "l:", 2)) {
+		options.ssl.ssl_host = true;
+		host += 2;
+	}
 #endif /*]*/
-	if ((at = strchr(argv[i], '@')) != NULL) {
-		len = at - argv[i];
+	if ((at = strchr(host, '@')) != NULL) {
+		len = at - host;
 		if (!len)
 			usage();
 		lu = Malloc(len + 1);
-		(void) strncpy(lu, argv[i], len);
+		(void) strncpy(lu, host, len);
 		lu[len] = '\0';
 		host = at + 1;
-	} else
-		host = argv[i];
+	}
+#if defined(HAVE_LIBSSL) /*[*/
+	while (!strncasecmp(host, "l:", 2)) {
+		options.ssl.ssl_host = true;
+		host += 2;
+	}
+#endif /*]*/
+	if (!*host) {
+		usage();
+	}
 
 	/*
 	 * Allow the hostname to be enclosed in '[' and ']' to quote any
