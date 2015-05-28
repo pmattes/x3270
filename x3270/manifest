@@ -688,9 +688,7 @@ x3270/fb-composeMap
 x3270/fb-messages
 x3270/fb-printSession
 x3270/fb-x3270
-x3270/ft/all.chars
 x3270/ft_gui.c
-x3270/ft/print.chars
 x3270/host_gui.c
 x3270/html/Attributes.html
 x3270/html/Brackets.html
