@@ -453,7 +453,7 @@ trace_rollover_check(void)
 #if defined(_WIN32) /*[*/
 	period = strrchr(tracefile_name, '.');
 	if (period != NULL) {
-	    alt_filename = xs_buffer("%.*s-%s", period - tracefile_name,
+	    alt_filename = xs_buffer("%.*s-%s", (int)(period - tracefile_name),
 		    tracefile_name, period);
 	} else
 #endif /*]*/

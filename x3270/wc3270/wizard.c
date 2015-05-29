@@ -691,7 +691,7 @@ new_screen(session_t *s, const char *path, const char *title)
     system("cls");
     printf("%s%*s%s\n",
 	    wizard,
-	    79 - strlen(wizard) - strlen(wversion), " ",
+	    (int)(79 - strlen(wizard) - strlen(wversion)), " ",
 	    wversion);
     if (s->session[0]) {
 	printf("\nSession: %s\n", s->session);
@@ -3039,13 +3039,13 @@ display_sessions(int with_numbers)
 	    print_n(i, with_numbers);
 	    printf(" %s", n);
 	    if (slen <= 15) { /* fits in column 0 */
-		printf("%*s", 15 - slen, "");
+		printf("%*s", (int)(15 - slen), "");
 		col = 1;
 	    } else if (slen <= 15 + 20) { /* covers 0 and 1 */
-		printf("%*s", 15 + 20 - slen, "");
+		printf("%*s", (int)(15 + 20 - slen), "");
 		col = 2;
 	    } else if (slen <= 15 + 20 + 20) { /* covers 0, 1, 2 */
-		printf("%*s", 15 + 20 + 20 - slen, "");
+		printf("%*s", (int)(15 + 20 + 20 - slen), "");
 		col = 3;
 	    } else { /* whole line */
 		printf("\n");
@@ -3060,10 +3060,10 @@ display_sessions(int with_numbers)
 	    print_n(i, with_numbers);
 	    printf(" %s", n);
 	    if (slen <= 15) { /* fits in column 1 */
-		printf("%*s", 15 - slen, "");
+		printf("%*s", (int)(15 - slen), "");
 		col = 2;
 	    } else if (slen <= 15 + 20) { /* covers 1 and 2 */
-		printf("%*s", 15 + 20 - slen, "");
+		printf("%*s", (int)(15 + 20 - slen), "");
 		col = 3;
 	    } else { /* rest of the line */
 		printf("\n");
@@ -3079,7 +3079,7 @@ display_sessions(int with_numbers)
 	    print_n(i, with_numbers);
 	    printf(" %s", n);
 	    if (slen <= 15) { /* fits in column 2 */
-		printf("%*s", 15 - slen, "");
+		printf("%*s", (int)(15 - slen), "");
 		col = 3;
 	    } else { /* rest of the line */
 		printf("\n");

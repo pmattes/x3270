@@ -10,5 +10,4 @@ WC3270_OBJECTS = c3270.$(OBJ) ft_gui.$(OBJ) help.$(OBJ) icmd.$(OBJ) \
 
 # wc3270-specific header files
 WC3270_HEADERS = ckeypad.h cmenubar.h conf.h cscreen.h cstatus.h help.h \
-	icmdc.h keymap.h relinkc.h shlobj_missing.h shortcutc.h wc3270.h \
-	wselectc.h xscroll.h
+	icmdc.h keymap.h relinkc.h shortcutc.h wc3270.h wselectc.h xscroll.h

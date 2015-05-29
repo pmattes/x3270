@@ -3430,7 +3430,7 @@ non_blocking(bool on)
     }
 
     if (SOCK_IOCTL(sock, FIONBIO, &i) < 0) {
-	popup_a_sockerr("ioctl(%d, FIONBIO, %d)", sock, on);
+	popup_a_sockerr("ioctl(FIONBIO, %d)", on);
 	return -1;
     }
 # else /*][*/

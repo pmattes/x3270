@@ -541,7 +541,6 @@ wc3270/relinkc.h
 wc3270/root_certs.txt
 wc3270/screen.c
 wc3270/select.c
-wc3270/shlobj_missing.h
 wc3270/shortcut.c
 wc3270/shortcutc.h
 wc3270/ssl_passwd_gui.c

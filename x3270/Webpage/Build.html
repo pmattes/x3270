@@ -103,6 +103,11 @@
 	install</tt>, <tt>make clean</tt> and <tt>make clobber</tt> will
 	operate only on the programs you have configured.
 
+	<h2>Cross-Compiling 64-Bit Windows Binaries</h2>
+	To cross-compile 64-bit versions of the emulators on Unix or Cygwin,
+	set the WIN64 environment variable, e.g.:
+	<pre><tt>   WIN64=1 make</tt></pre>
+
 	<h2>Building Windows Programs with Visual Studio (Command Line)</h2>
 	To build with Microsoft Visual Studio from the command prompt, first
 	open a command console with Visual Studio build environment variables
@@ -209,20 +214,12 @@
 	<li>For SSL support, the <b>openssl-devel</b> package from
 	    the <b>Devel</b> group</li>
     </ul>
-    To cross-compile native Windows binaries, you need these packages:
+    To cross-compile native Windows binaries, you need this package:
     <ul>
-	<li><b>mingw-runtime</b> from the <b>Devel</b> group</li>
-	<li><b>mingw-w32api</b> from the <b>Devel</b> group</li>
+	<li><b>mingw-w64-gcc</b> from the <b>Devel</b> group</li>
     </ul>
     Other packages are needed by the specific programs, and are listed in those
     programs' build instructions.
-    <p>
-    Note that there is currently a bug in one of Cygwin's MinGW libraries that
-    prevents the wc3270 or ws3270 from running -- it is looking for the
-    non-existent DLL winspool.dll. There is no known workaround for this
-    problem; it has long since been fixed in MinGW and Cygwin simply needs to
-    update their package version. Users are encouraged to report this issue to
-    Cygwin or to amend existing problem reports to get it fixed.
 
     <h2> Notes for Solaris 2.x and Sun's C Compiler</h2>
     Do not use Sun's BSD-compatibility compiler, <tt>/usr/ucb/cc</tt>. This

@@ -1621,8 +1621,8 @@ start_auto_shortcut(void)
     sprintf(delenv, "%s=%s", DELENV, linkpath);
     putenv(delenv);
     h = ShellExecute(NULL, "open", linkpath, "", tempdir, SW_SHOW);
-    if ((int)h <= 32) {
-	fprintf(stderr, "ShellExecute failed, error %d\n", (int)h);
+    if ((uintptr_t)h <= 32) {
+	fprintf(stderr, "ShellExecute failed, error %d\n", (int)(uintptr_t)h);
 	x3270_exit(1);
     }
 

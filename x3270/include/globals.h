@@ -83,6 +83,7 @@
 #endif /*]*/
 #include <ctype.h>			/* Character classes */
 #include <string.h>			/* String manipulations */
+#include <stdint.h>			/* Integer types */
 #include <sys/types.h>			/* Basic system data types */
 #if !defined(_WIN32) /*[*/
 # include <sys/socket.h>		/* Socket data types */
@@ -378,7 +379,7 @@ typedef int iosrc_t;
 typedef HANDLE iosrc_t;
 # define INVALID_IOSRC	INVALID_HANDLE_VALUE
 #endif /*]*/
-typedef unsigned long ioid_t;
+typedef uintptr_t ioid_t;
 #define NULL_IOID	0L
 
 /* Screen print types. */

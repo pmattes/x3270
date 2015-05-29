@@ -50,7 +50,7 @@ favicon.c: favicon.ico mkicon$(NATIVE_SFX)
 	./mkicon$(NATIVE_SFX) favicon.ico >favicon.c
 
 mkicon$(NATIVE_SFX): mkicon.c
-	$(NATIVECC) $(CFLAGS) -o $@ mkicon.c
+	$(NATIVECC) -o $@ mkicon.c
 
 clean:
 	$(RM) *.o favicon.c mkicon$(NATIVE_SFX)
