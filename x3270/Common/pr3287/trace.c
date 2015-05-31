@@ -113,9 +113,9 @@ trace_ds(const char *fmt, ...)
 		nl = true;
 	}
 	while (tscnt + len >= 75) {
-		int plen = 75-tscnt;
+		size_t plen = 75-tscnt;
 
-		(void) fprintf(tracef, "%.*s ...\n... ", plen, s);
+		(void) fprintf(tracef, "%.*s ...\n... ", (int)plen, s);
 		tscnt = 4;
 		s += plen;
 		len -= plen;

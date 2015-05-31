@@ -122,7 +122,7 @@ read_resource_filex(const char *filename, bool fatal)
 
     /* Merge in what's in the file into the resource database. */
     ilen = 0;
-    while (fgets(buf + ilen, (size_t)(sizeof(buf) - ilen), f) != NULL ||
+    while (fgets(buf + ilen, (int)(sizeof(buf) - ilen), f) != NULL ||
 	    ilen) {
 	char *s;
 	size_t sl;
