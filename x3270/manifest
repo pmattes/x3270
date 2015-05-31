@@ -255,7 +255,6 @@ lib/w3270/httpd-nodes.c
 lib/w3270/idle.c
 lib/w3270i/lib3270i_files.mk
 lib/w3270i/Makefile
-lib/w3270i/Msc/Makefile
 lib/w3270i/pr3287_session.c
 lib/w3270i/scroll.c
 lib/w3270i/winenv.mk
@@ -268,7 +267,6 @@ lib/w3270/macros.c
 lib/w3270/Makefile
 lib/w3270/Malloc.c
 lib/w3270/mkicon.c
-lib/w3270/Msc/Makefile
 lib/w3270/nvt.c
 lib/w3270/print_screen.c
 lib/w3270/readres.c
@@ -282,7 +280,6 @@ lib/w3270stubs/lib3270stubs_files.mk
 lib/w3270stubs/libw3270stubs_files.mk
 lib/w3270stubs/Makefile
 lib/w3270stubs/menubar_stubs.c
-lib/w3270stubs/Msc/Makefile
 lib/w3270stubs/nvt_gui_stubs.c
 lib/w3270stubs/popups_stubs.c
 lib/w3270stubs/pr3287_session_stubs.c
@@ -318,7 +315,6 @@ lib/w32xx/lazya.c
 lib/w32xx/lib32xx_files.mk
 lib/w32xx/libw32xx_files.mk
 lib/w32xx/Makefile
-lib/w32xx/Msc/Makefile
 lib/w32xx/proxy.c
 lib/w32xx/resolver.c
 lib/w32xx/see.c
@@ -336,7 +332,6 @@ lib/w32xx/winvers.c
 lib/w32xx/xs_buffer.c
 Makefile
 Makefile.in
-Msc/Makefile
 Playback/Makefile
 Playback/playback.c
 Playback/playback.man
@@ -530,9 +525,7 @@ wc3270/mkkeypad.c
 wc3270/mkshort.c
 wc3270/mkversion.sh
 wc3270/mkwversion.sh
-wc3270/Msc/Makefile
 wc3270/Msc/mkversion.c
-wc3270/Msc/README.txt
 wc3270/NO-INSTALL.txt
 wc3270/nvt_gui.c
 wc3270/README-zip.txt
@@ -571,9 +564,7 @@ wpr3287/LICENSE
 wpr3287/localdefs.h
 wpr3287/Makefile
 wpr3287/mkversion.sh
-wpr3287/Msc/Makefile
 wpr3287/Msc/mkversion.c
-wpr3287/Msc/README.txt
 wpr3287/pr3287.c
 wpr3287/pr3287_files.mk
 wpr3287/pr3287.h
@@ -612,9 +603,7 @@ ws3270/localdefs.h
 ws3270/Makefile
 ws3270/mkfb.c
 ws3270/mkversion.sh
-ws3270/Msc/Makefile
 ws3270/Msc/mkversion.c
-ws3270/Msc/README.txt
 ws3270/README.txt
 ws3270/s3270.c
 ws3270/version.txt
