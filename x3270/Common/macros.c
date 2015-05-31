@@ -142,9 +142,10 @@ typedef struct sms {
     unsigned long msec;	/* total accumulated time */
     FILE   *outfile;
     int	infd;
+    socket_t insocket;
 #if defined(_WIN32) /*[*/
-    HANDLE	inhandle;
-    HANDLE	child_handle;
+    HANDLE inhandle;
+    HANDLE child_handle;
     ioid_t exit_id;
     ioid_t listen_id;
 #endif /*]*/
@@ -164,6 +165,10 @@ static ioid_t socket_id = NULL_IOID;
 #if defined(_WIN32) /*[*/
 static HANDLE socket_event = NULL;
 #endif /*]*/
+
+#define VALID_INFD(sms) \
+    ((!(sms)->is_socket && (sms)->infd >= 0) || \
+     ((sms)->is_socket && (sms)->insocket != INVALID_SOCKET))
 
 static const char *sms_state_name[] = {
     "IDLE",
@@ -188,10 +193,10 @@ static const char *sms_state_name[] = {
 static struct macro_def *macro_last = (struct macro_def *) NULL;
 static ioid_t stdin_id = NULL_IOID;
 static unsigned char *nvt_save_buf;
-static int      nvt_save_cnt = 0;
+static size_t   nvt_save_cnt = 0;
 static int      nvt_save_ix = 0;
 static char    *expect_text = NULL;
-static int	expect_len = 0;
+static size_t	expect_len = 0;
 static const char *st_name[] = { "String", "Macro", "Command", "KeymapAction",
 				 "IdleCommand", "ChildScript", "PeerScript",
 				 "File", "Callback" };
@@ -445,7 +450,7 @@ script_enable(void)
     }
 #endif /*]*/
 
-    if (sms->infd >= 0 && stdin_id == 0) {
+    if (VALID_INFD(sms) && stdin_id == NULL_IOID) {
 	vtrace("Enabling input for %s[%d]\n", ST_NAME, sms_depth);
 #if defined(_WIN32) /*[*/
 	stdin_id = AddInput(sms->inhandle, script_input);
@@ -461,7 +466,7 @@ script_enable(void)
 static void
 script_disable(void)
 {
-    if (stdin_id != 0) {
+    if (stdin_id != NULL_IOID) {
 	vtrace("Disabling input for %s[%d]\n", ST_NAME, sms_depth);
 	RemoveInput(stdin_id);
 	stdin_id = NULL_IOID;
@@ -484,6 +489,7 @@ new_sms(enum sms_type type)
     s->is_login = false;
     s->outfile = NULL;
     s->infd = -1;
+    s->insocket = INVALID_SOCKET;
 #if defined(_WIN32) /*[*/
     s->inhandle = INVALID_HANDLE_VALUE;
     s->child_handle = INVALID_HANDLE_VALUE;
@@ -598,9 +604,9 @@ sms_pop(bool can_exit)
     if (sms->outfile != NULL) {
 	fclose(sms->outfile);
     }
-    if (sms->infd >= 0) {
+    if (VALID_INFD(sms)) {
 	if (sms->is_socket) {
-	    SOCK_CLOSE(sms->infd);
+	    SOCK_CLOSE(sms->insocket);
 	} else {
 	    close(sms->infd);
 	}
@@ -919,7 +925,7 @@ socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
     s = sms;
     s->is_transient = true;
     s->is_external = true;
-    s->infd = accept_fd;
+    s->insocket = accept_fd;
 #if !defined(_WIN32) /*[*/
     s->outfile = fdopen(dup(accept_fd), "w");
 #endif /*]*/
@@ -929,7 +935,7 @@ socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	fprintf(stderr, "Can't create socket handle\n");
 	exit(1);
     }
-    if (WSAEventSelect(s->infd, s->inhandle, FD_READ | FD_CLOSE) != 0) {
+    if (WSAEventSelect(s->insocket, s->inhandle, FD_READ | FD_CLOSE) != 0) {
 	fprintf(stderr, "Can't set socket handle events\n");
 	exit(1);
     }
@@ -956,7 +962,7 @@ child_socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
     /* Accept the connection. */
     (void) memset(&sin, '\0', sizeof(sin));
     sin.sin_family = AF_INET;
-    accept_fd = accept(sms->infd, (struct sockaddr *)&sin, &len);
+    accept_fd = accept(sms->insocket, (struct sockaddr *)&sin, &len);
 
     if (accept_fd == INVALID_SOCKET) {
 	popup_an_error("socket accept: %s", win32_strerror(GetLastError()));
@@ -969,13 +975,13 @@ child_socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
     (void) sms_push(ST_PEER);
     s = sms;
     s->is_transient = true;
-    s->infd = accept_fd;
+    s->insocket = accept_fd;
     s->inhandle = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (s->inhandle == NULL) {
 	fprintf(stderr, "Can't create socket handle\n");
 	exit(1);
     }
-    if (WSAEventSelect(s->infd, s->inhandle, FD_READ | FD_CLOSE) != 0) {
+    if (WSAEventSelect(s->insocket, s->inhandle, FD_READ | FD_CLOSE) != 0) {
 	fprintf(stderr, "Can't set socket handle events\n");
 	exit(1);
     }
@@ -1332,8 +1338,8 @@ failure:
 static void
 run_string(void)
 {
-    int len;
-    int len_left;
+    size_t len;
+    size_t len_left;
 
     vtrace("%s[%d] running\n", ST_NAME, sms_depth);
 
@@ -1787,7 +1793,7 @@ sms_error(const char *msg)
 	    }
 	    trace_script_output("%s", text);
 	    if (s->is_socket) {
-		send(s->infd, text, strlen(text), 0);
+		send(s->insocket, text, (int)strlen(text), 0);
 	    } else {
 		fprintf(s->outfile, "%s", text);
 	    }
@@ -1831,7 +1837,7 @@ sms_info(const char *fmt, ...)
 
     msg = msgbuf;
     do {
-	int nc;
+	size_t nc;
 
 	nl = strchr(msg, '\n');
 	if (nl != NULL) {
@@ -1847,9 +1853,9 @@ sms_info(const char *fmt, ...)
 		} else {
 		    char *text = Malloc(strlen("data: ") + nc + 2);
 
-		    sprintf(text, "data: %.*s\n", nc, msg);
+		    sprintf(text, "data: %.*s\n", (int)nc, msg);
 		    if (s->is_socket) {
-			send(s->infd, text, strlen(text), 0);
+			send(s->insocket, text, (int)strlen(text), 0);
 		    } else {
 			(void) fprintf(s->outfile, "%s", text);
 		    }
@@ -1857,7 +1863,7 @@ sms_info(const char *fmt, ...)
 		    Free(text);
 		}
 	    } else {
-		(void) printf("%.*s\n", nc, msg);
+		(void) printf("%.*s\n", (int)nc, msg);
 	    }
 	}
 	msg = nl + 1;
@@ -1881,7 +1887,7 @@ script_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     vtrace("Input for %s[%d] %s reading %s %d\n", ST_NAME, sms_depth,
 	    sms_state_name[sms->state],
 	    sms->is_socket? "socket": "fd",
-	    sms->infd);
+	    sms->is_socket? (int)sms->insocket: sms->infd);
 
     /* Read in what you can. */
     n2r = MSC_BUF - 1 - sms->msc_len;
@@ -1889,7 +1895,7 @@ script_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	n2r = sizeof(buf);
     }
     if (sms->is_socket) {
-	nr = recv(sms->infd, buf, n2r, 0);
+	nr = recv(sms->insocket, buf, (int)n2r, 0);
     }
 #if defined(_WIN32) /*[*/
     else if (sms->inhandle == peer_done_event) {
@@ -1903,7 +1909,7 @@ script_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
     }
 #endif /*]*/
     else {
-	nr = read(sms->infd, buf, n2r);
+	nr = read(sms->infd, buf, (int)n2r);
     }
     if (nr < 0) {
 #if defined(_WIN32) /*[*/
@@ -2165,8 +2171,8 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
 	if (in_ascii) {
 	    char mb[16];
 	    ucs4_t uc;
-	    int j;
-	    int xlen;
+	    size_t j;
+	    size_t xlen;
 
 	    if (buf[first + i].fa) {
 		is_zero = FA_IS_ZERO(buf[first + i].fa);
@@ -2369,7 +2375,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	int nw;
 
 	s = xs_buffer("rows %d cols %d cursor %d\n", ROWS, COLS, cursor_addr);
-	nw = write(fd, s, strlen(s));
+	nw = write(fd, s, (int)strlen(s));
 	Free(s);
 	if (nw < 0) {
 		return false;
@@ -2382,7 +2388,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	if (!(baddr % COLS)) {
 	    if (baddr) {
 		if (fd >= 0) {
-		    if (write(fd, vb_buf(&r) + 1, vb_len(&r) - 1) < 0) {
+		    if (write(fd, vb_buf(&r) + 1, (int)(vb_len(&r) - 1)) < 0) {
 			goto done;
 		    }
 		    if (write(fd, "\n", 1) < 0) {
@@ -2432,9 +2438,9 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	    } else {
 		bool done = false;
 		char mb[16];
-		int j;
+		size_t j;
 		ucs4_t uc;
-		int len;
+		size_t len;
 
 		if (IS_LEFT(ctlr_dbcs_state(baddr))) {
 		    len = ebcdic_to_multibyte( (buf[baddr].cc << 8) |
@@ -2482,7 +2488,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	INC_BA(baddr);
     } while (baddr != 0);
     if (fd >= 0) {
-	if (write(fd, vb_buf(&r) + 1, vb_len(&r) - 1) < 0) {
+	if (write(fd, vb_buf(&r) + 1, (int)(vb_len(&r) - 1)) < 0) {
 	    goto done;
 	}
 	if (write(fd, "\n", 1) < 0) {
@@ -2631,7 +2637,7 @@ script_prompt(bool success)
     Free(s);
 
     if (sms->is_socket) {
-	send(sms->infd, t, strlen(t), 0);
+	send(sms->insocket, t, (int)strlen(t), 0);
     } else if (sms->type == ST_CB) {
 	struct sms_cbx cbx = sms->cbx;
 
@@ -3063,7 +3069,7 @@ expand_expect(const char *s)
 	    break;
 	case XS_X:
 	    if (isxdigit(c)) {
-		n = (n * 16) + strchr(hexes, tolower(c)) - hexes;
+		n = (n * 16) + (int)(strchr(hexes, tolower(c)) - hexes);
 		nd++;
 	    } else {
 		if (nd) {
@@ -3098,7 +3104,7 @@ memstr(char *s1, char *s2, int n1, int n2)
 static bool
 expect_matches(void)
 {
-    int ix, i;
+    size_t ix, i;
     unsigned char buf[NVT_SAVE_SIZE];
     char *t;
 
@@ -3106,7 +3112,7 @@ expect_matches(void)
     for (i = 0; i < nvt_save_cnt; i++) {
 	buf[i] = nvt_save_buf[(ix + i) % NVT_SAVE_SIZE];
     }
-    t = memstr((char *)buf, expect_text, nvt_save_cnt, expect_len);
+    t = memstr((char *)buf, expect_text, (int)nvt_save_cnt, (int)expect_len);
     if (t != NULL) {
 	nvt_save_cnt -= ((unsigned char *)t - buf) + expect_len;
 	Free(expect_text);
@@ -3145,8 +3151,8 @@ sms_store(unsigned char c)
 static bool
 AnsiText_action(ia_t ia, unsigned argc, const char **argv)
 {
-    int i;
-    int ix;
+    size_t i;
+    size_t ix;
     unsigned char c;
     varbuf_t r;
 
@@ -3412,7 +3418,7 @@ Expect_action(ia_t ia, unsigned argc, const char **argv)
 #if defined(_WIN32) /*[*/
 /* Let the system pick a TCP port to bind to, and listen on it. */
 static unsigned short
-pick_port(int *sp)
+pick_port(socket_t *sp)
 {
     	socket_t s;
     	struct sockaddr_in sin;
@@ -3550,7 +3556,7 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
 static bool
 Script_action(ia_t ia, unsigned argc, const char **argv)
 {
-    int s = -1;
+    socket_t s = INVALID_SOCKET;
     unsigned short port = 0;
     HANDLE hevent;
     char *pe;
@@ -3631,7 +3637,8 @@ Script_action(ia_t ia, unsigned argc, const char **argv)
     }
     sms->child_handle = process_information.hProcess;
     sms->inhandle = hevent;
-    sms->infd = s;
+    sms->insocket = s;
+    sms->is_socket = true;
 
     /*
      * Wait for the child process to exit.

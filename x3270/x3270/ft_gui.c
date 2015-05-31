@@ -1471,10 +1471,10 @@ ft_gui_complete_popup(const char *msg)
 
 /* Update the bytes-transferred count on the progress pop-up. */
 void
-ft_gui_update_length(unsigned long length)
+ft_gui_update_length(size_t length)
 {
     if (!ftc->is_action) {
-	char *s = xs_buffer(status_string, length);
+	char *s = xs_buffer(status_string, (unsigned long)length);
 
 	XtVaSetValues(ft_status, XtNlabel, s, NULL);
 	XtFree(s);
@@ -1483,7 +1483,7 @@ ft_gui_update_length(unsigned long length)
 
 /* Replace the 'waiting' pop-up with the 'in-progress' pop-up. */
 void
-ft_gui_running(unsigned long length)
+ft_gui_running(size_t length)
 {
     if (!ftc->is_action) {
 	XtUnmapWidget(waiting);

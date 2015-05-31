@@ -33,4 +33,4 @@ NATIVE_SFX =
 endif
 
 # Srt up the common Windows compiler flags
-WIN32_FLAGS = -D_WIN32 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0500 -DWINVER=0x500
+WIN32_FLAGS = -D_WIN32

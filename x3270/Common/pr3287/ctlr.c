@@ -132,7 +132,7 @@ static int pp;
 static int line;
 static bool scs_initted = false;
 static bool any_scs_output = false;
-static int scs_leftover_len = 0;
+static size_t scs_leftover_len = 0;
 static int scs_leftover_buf[256];
 static int scs_dbcs_subfield = 0;
 static unsigned char scs_dbcs_c1 = 0;
@@ -144,7 +144,7 @@ static bool ffeoj_last = false;
  * Interpret an incoming 3270 command.
  */
 enum pds
-process_ds(unsigned char *buf, int buflen)
+process_ds(unsigned char *buf, size_t buflen)
 {
 	if (!buflen)
 		return PDS_OKAY_NO_OUTPUT;
@@ -218,7 +218,7 @@ process_ds(unsigned char *buf, int buflen)
  * Process a 3270 Write command.
  */
 void
-ctlr_write(unsigned char buf[], int buflen, bool erase)
+ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 {
 	register unsigned char	*cp;
 	bool		wcc_keyboard_restore, wcc_sound_alarm;
@@ -876,7 +876,7 @@ add_scs_trn(unsigned char *cp, int cnt)
  * next time.
  */
 static enum pds
-process_scs_contig(unsigned char *buf, int buflen)
+process_scs_contig(unsigned char *buf, size_t buflen)
 {
 	register unsigned char *cp;
 	int i;
@@ -1297,13 +1297,13 @@ process_scs_contig(unsigned char *buf, int buflen)
  * incomplete SCS record.
  */
 enum pds
-process_scs(unsigned char *buf, int buflen)
+process_scs(unsigned char *buf, size_t buflen)
 {
 	enum pds r;
 
 	if (scs_leftover_len) {
 		unsigned char *contig = Malloc(scs_leftover_len + buflen);
-		int total_len;
+		size_t total_len;
 
 		(void) memcpy(contig, scs_leftover_buf, scs_leftover_len);
 		(void) memcpy(contig + scs_leftover_len, buf, buflen);

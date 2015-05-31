@@ -1353,15 +1353,15 @@ ansi_status_report(int nn, int ig2 _is_unused)
 static enum state
 ansi_cs_designate(int ig1 _is_unused, int ig2 _is_unused)
 {
-	cs_to_change = strchr(gnnames, nvt_ch) - gnnames;
-	return CSDES;
+    cs_to_change = (int)(strchr(gnnames, nvt_ch) - gnnames);
+    return CSDES;
 }
 
 static enum state
 ansi_cs_designate2(int ig1 _is_unused, int ig2 _is_unused)
 {
-	csd[cs_to_change] = strchr(csnames, nvt_ch) - csnames;
-	return DATA;
+    csd[cs_to_change] = (int)(strchr(csnames, nvt_ch) - csnames);
+    return DATA;
 }
 
 static enum state
@@ -1824,7 +1824,7 @@ emit_cup(int baddr)
 {
     if (baddr) {
 	char *s;
-	int sl;
+	size_t sl;
 
 	s = xs_buffer("\033[%d;%dH", (baddr / COLS) + 1, (baddr % COLS) + 1);
 	sl = strlen(s);
@@ -1906,9 +1906,9 @@ nvt_snap_one(struct ea *buf)
 	/* 0xff */ 0	/* (shouldn't happen) */
     };
     char mb[16];
-    int len;
+    size_t len;
     int xlen;
-    int i;
+    size_t i;
     enum dbcs_state d;
     int c;
     int last_sgr = 0;

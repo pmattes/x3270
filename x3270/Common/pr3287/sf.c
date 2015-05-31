@@ -88,9 +88,9 @@ static unsigned char supported_replies[] = {
  * Process a 3270 Write Structured Field command
  */
 enum pds
-write_structured_field(unsigned char buf[], int buflen)
+write_structured_field(unsigned char buf[], size_t buflen)
 {
-	unsigned short fieldlen;
+	size_t fieldlen;
 	unsigned char *cp = buf;
 	bool first = true;
 	enum pds rv = PDS_OKAY_NO_OUTPUT;
@@ -120,13 +120,13 @@ write_structured_field(unsigned char buf[], int buflen)
 			fieldlen = buflen;
 		if (fieldlen < 3) {
 			trace_ds("error: field length %d too small\n",
-			    fieldlen);
+			    (int)fieldlen);
 			return rv ? rv : PDS_BAD_CMD;
 		}
-		if ((int)fieldlen > buflen) {
+		if (fieldlen > buflen) {
 			trace_ds("error: field length %d exceeds remaining "
 			    "message length %d\n",
-			    fieldlen, buflen);
+			    (int)fieldlen, (int)buflen);
 			return rv ? rv : PDS_BAD_CMD;
 		}
 
@@ -431,10 +431,10 @@ query_reply_start(void)
 static void
 do_query_reply(unsigned char code)
 {
-	int len;
+	size_t len;
 	unsigned i;
 	const char *comma = "";
-	int obptr0 = obptr - obuf;
+	size_t obptr0 = obptr - obuf;
 	unsigned char *obptr_len;
 	unsigned short num, denom;
 

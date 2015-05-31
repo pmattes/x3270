@@ -50,7 +50,7 @@
 typedef enum { TM_BASE, TM_EVENT, TM_DS, TM_PD } tmode_t;
 static tmode_t tmode = TM_BASE;
 
-static int      tscnt = 0;
+static size_t tscnt = 0;
 
 /* Globals */
 FILE           *tracef = (FILE *) 0;

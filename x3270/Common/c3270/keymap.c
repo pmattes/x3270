@@ -603,13 +603,13 @@ status_ret(char *s, struct keymap *k)
 
 /* Timeout for ambiguous keymaps. */
 static struct keymap *timeout_match = NULL;
-static unsigned long kto = 0L;
+static ioid_t kto = NULL_IOID;
 
 static void
 key_timeout(ioid_t id _is_unused)
 {
     vtrace("Timeout, using shortest keymap match\n");
-    kto = 0L;
+    kto = NULL_IOID;
     current_match = timeout_match;
     push_keymap_action(status_ret(timeout_match->action, NULL));
     timeout_match = NULL;
@@ -649,9 +649,9 @@ lookup_key(int kcode, ucs4_t ucs4, int modifiers)
     code.modifiers = modifiers;
 
     /* If there's a timeout pending, cancel it. */
-    if (kto) {
+    if (kto != NULL_IOID) {
 	RemoveTimeOut(kto);
-	kto = 0L;
+	kto = NULL_IOID;
 	timeout_match = NULL;
     }
 

@@ -60,34 +60,38 @@ icmd_register(void)
 static char *
 get_input(char *buf, int size)
 {
-    	int sl;
-	char *s;
+    size_t sl;
+    char *s;
 
-	fflush(stdout);
+    fflush(stdout);
 
-	/* Get the raw input. */
-    	if (fgets(buf, size, stdin) == NULL)
-	    	return NULL;
+    /* Get the raw input. */
+    if (fgets(buf, size, stdin) == NULL) {
+	return NULL;
+    }
 
-	/* Trim trailing white space. */
-	sl = strlen(buf);
-	while (sl && isspace(buf[sl - 1]))
-	    	buf[--sl] = '\0';
+    /* Trim trailing white space. */
+    sl = strlen(buf);
+    while (sl && isspace(buf[sl - 1])) {
+	buf[--sl] = '\0';
+    }
 
-	/* Trim leading white space. */
-	s = buf;
-	while (*s && isspace(*s)) {
-	    	s++;
-		sl--;
-	}
-	if (s != buf)
-	    	memmove(buf, s, sl + 1);
+    /* Trim leading white space. */
+    s = buf;
+    while (*s && isspace(*s)) {
+	s++;
+	sl--;
+    }
+    if (s != buf) {
+	memmove(buf, s, sl + 1);
+    }
 
-	/* Check for 'quit'. */
-	if (!strcasecmp(buf, "quit"))
-	    	return NULL;
+    /* Check for 'quit'. */
+    if (!strcasecmp(buf, "quit")) {
+	return NULL;
+    }
 
-	return buf;
+    return buf;
 }
 
 /* Get a yes, no or quit.  Returns 0 for no, 1 for yes, -1 for quit or error. */

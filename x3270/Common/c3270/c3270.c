@@ -536,7 +536,7 @@ interact(void)
     signal(SIGINT, SIG_IGN);
 
     for (;;) {
-	int sl;
+	size_t sl;
 	char *s;
 #if defined(HAVE_LIBREADLINE) /*[*/
 	char *rl_s;
@@ -723,7 +723,7 @@ pager_output(const char *s)
 
     do {
 	char *nl;
-	int sl;
+	size_t sl;
 
 	/* Pause for a screenful. */
 	if (pager_rowcnt >= maxROWS) {
@@ -757,7 +757,7 @@ pager_output(const char *s)
 	pager_rowcnt++;
 
 	/* Account (conservatively) for any line wrap. */
-	pager_rowcnt += sl / maxCOLS;
+	pager_rowcnt += (int)(sl / maxCOLS);
 
     } while (s != NULL);
 }

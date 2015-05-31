@@ -57,12 +57,12 @@ ft_gui_complete_popup(const char *msg _is_unused)
 }
 
 void
-ft_gui_update_length(unsigned long length _is_unused)
+ft_gui_update_length(size_t length _is_unused)
 {
 }
 
 void
-ft_gui_running(unsigned long length _is_unused)
+ft_gui_running(size_t length _is_unused)
 {
 }
 

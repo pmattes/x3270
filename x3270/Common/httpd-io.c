@@ -357,7 +357,7 @@ hio_send(void *mhandle, const char *buf, size_t len)
     session_t *s = mhandle;
     ssize_t nw;
 
-    nw = send(s->s, buf, len, 0);
+    nw = send(s->s, buf, (int)len, 0);
     if (nw < 0) {
 	vtrace("http send error: %s\n", socket_errtext());
     }

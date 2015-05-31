@@ -131,16 +131,17 @@ static int xlate_getc(void);
  * If there is a conversion error, calls cut_abort() and returns -1.
  */
 static int
-upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
+upload_convert(unsigned char *buf, int len, unsigned char *obuf,
+	size_t obuf_len)
 {
     unsigned char *ob0 = obuf;
     unsigned char *ob = ob0;
-    int nx;
+    size_t nx;
 
     while (len-- && obuf_len) {
 	unsigned char c = *buf++;
 	char *ixp;
-	int ix;
+	size_t ix;
 
     retry:
 	if (quadrant < 0) {
@@ -257,7 +258,7 @@ upload_convert(unsigned char *buf, int len, unsigned char *obuf, int obuf_len)
 	obuf_len -= nx;
     }
 
-    return ob - ob0;
+    return (int)(ob - ob0);
 }
 
 /*
@@ -268,7 +269,7 @@ static int
 store_download(unsigned char c, unsigned char *ob)
 {
     unsigned char *ixp;
-    unsigned ix;
+    size_t ix;
     int oq;
 
     /* Quadrant already defined. */
@@ -302,7 +303,7 @@ store_download(unsigned char c, unsigned char *ob)
 }
 
 /* Convert a buffer for downloading (local->host). */
-static int
+static size_t
 download_convert(unsigned const char *buf, unsigned len, unsigned char *xobuf)
 {
     unsigned char *ob0 = xobuf;
@@ -450,11 +451,11 @@ cut_control_code(void)
 	    buf = saved_errmsg;
 	    saved_errmsg = NULL;
 	} else {
-	    int mb_len = 161;
+	    size_t mb_len = 161;
 
 	    bp = buf = Malloc(mb_len);
 	    for (i = 0; i < 80; i++) {
-		int xlen;
+		size_t xlen;
 
 		xlen = ft_ebcdic_to_multibyte(ea_buf[O_CC_MESSAGE + i].cc, bp,
 			mb_len);
@@ -586,7 +587,7 @@ from6(unsigned char c)
     if (p == NULL) {
 	return 0;
     }
-    return p - table6;
+    return (unsigned)(p - table6);
 }
 
 /*
@@ -683,7 +684,7 @@ xlate_getc(void)
     int r;
     int c;
     unsigned char cbuf[32];
-    int nc;
+    size_t nc;
     int consumed;
     enum me_fail error;
     char mb[16];
@@ -747,7 +748,7 @@ xlate_getc(void)
     /* Return it and buffer what's left. */
     r = cbuf[0];
     if (nc > 1) {
-	int i;
+	size_t i;
 
 	for (i = 1; i < nc; i++) {
 	    xlate_buf[xlate_buffered++] = cbuf[i];

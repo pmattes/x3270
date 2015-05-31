@@ -1170,16 +1170,6 @@ static int
 get_host(session_t *s)
 {
     char buf[STR_SIZE];
-    OSVERSIONINFO info;
-    int has_ipv6 = 1;
-
-    /* Win2K and earlier is IPv4-only.  WinXP and later can have IPv6. */
-    memset(&info, '\0', sizeof(info));
-    info.dwOSVersionInfoSize = sizeof(info);
-    if (GetVersionEx(&info) == 0 || info.dwMajorVersion < 5 ||
-	    (info.dwMajorVersion == 5 && info.dwMinorVersion < 1)) {
-	has_ipv6 = 0;
-    }
 
 #define COMMON_HOST_TEXT1 "\
 Host Name\n\
@@ -1440,27 +1430,20 @@ columns).\n",
 static void
 dbcs_check(void)
 {
-    if (windows_major_version < 5) {
+    if (!IsWindowsVersionOrGreater(5, 1, 0)) {
 	printf("\n\
 Note: wc3270 DBCS is supported only on Windows XP and later.\n");
-	goto any_key;
     }
-    if (windows_major_version == 5) {
-	printf("\n\
-Note: wc3270 DBCS support on Windows XP requires installation of Windows East\n\
-Asian language support.\n");
-	goto any_key;
-    }
-    if (windows_major_version >= 6) {
+    if (IsWindowsVersionOrGreater(6, 0, 0)) {
 	printf("\n\
 Note: wc3270 DBCS support on Windows Vista and later requires setting the\n\
 Windows System Locale to a matching language.\n");
-	goto any_key;
+    } else {
+	printf("\n\
+Note: wc3270 DBCS support on Windows XP requires installation of Windows East\n\
+Asian language support.\n");
     }
 
-    return;
-
-any_key:
     printf("[Press Enter to continue] ");
     fflush(stdout);
     (void) getchar();
@@ -1493,7 +1476,7 @@ This specifies the EBCDIC character set (code page) used by the host.");
  --- ------------------- --------    --- ------------------- --------\n");
     k = 0;
     for (i = 0; charsets[i].name != NULL; i++) {
-	int j;
+	size_t j;
 
 	if (i) {
 	    if (!(i % CS_COLS)) {

@@ -51,7 +51,7 @@ bool ft_do_cancel(void);
 void ft_register(void);
 
 # if defined(_WIN32) /*[*/
-int ft_ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len);
+size_t ft_ebcdic_to_multibyte(ebc_t ebc, char mb[], size_t mb_len);
 int ft_unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len);
 ucs4_t ft_multibyte_to_unicode(const char *mb, size_t mb_len,
 	int *consumedp, enum me_fail *errorp);

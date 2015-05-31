@@ -41,7 +41,7 @@ struct ctl_char {
 void linemode_init(void);
 void linemode_buf_init(void);
 struct ctl_char *linemode_chars(void);
-void linemode_out(const char *buf, int len);
+void linemode_out(const char *buf, size_t len);
 void linemode_send_erase(void);
 void linemode_send_kill(void);
 void linemode_send_werase(void);

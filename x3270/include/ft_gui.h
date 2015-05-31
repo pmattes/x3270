@@ -36,8 +36,8 @@ void ft_gui_progress_popdown(void);
 void ft_gui_errmsg_prepare(char *msg);
 void ft_gui_clear_progress(void);
 void ft_gui_complete_popup(const char *msg);
-void ft_gui_update_length(unsigned long length);
-void ft_gui_running(unsigned long length);
+void ft_gui_update_length(size_t length);
+void ft_gui_running(size_t length);
 void ft_gui_aborting(void);
 typedef enum {
     FGI_NOP,		/* interaction not supported */

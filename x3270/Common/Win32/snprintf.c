@@ -37,8 +37,7 @@
 #endif /*]*/
 
 #define IS_SNPRINTF_C 1
-#include <stdio.h>
-#include "wincmn.h"
+#include "globals.h"
 
 /*
  * Version of {,v}snprintf that work more like the standard versions, and

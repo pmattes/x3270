@@ -152,9 +152,9 @@ static int on = 1;
 
 /* Globals */
 time_t          ns_time;
-int             ns_brcvd;
+size_t          ns_brcvd;
 int             ns_rrcvd;
-int             ns_bsent;
+size_t          ns_bsent;
 int             ns_rsent;
 unsigned char  *obuf;		/* 3270 output buffer */
 int             obuf_size = 0;
@@ -196,7 +196,7 @@ static char	*try_assoc = NULL;
 
 static void setup_lus(char *luname, const char *assoc);
 static bool telnet_fsm(unsigned char c);
-static void net_rawout(unsigned const char *buf, int len);
+static void net_rawout(unsigned const char *buf, size_t len);
 static void check_in3270(void);
 static void store3270in(unsigned char c);
 static int tn3270e_negotiate(void);
@@ -450,7 +450,7 @@ pr_net_process(socket_t s)
 	struct timeval t;
 	struct timeval *tp;
 	int nr;
-	int maxfd = s;
+	int maxfd = (int)s;
 
 	FD_ZERO(&rfds);
 	FD_SET(s, &rfds);
@@ -463,7 +463,7 @@ pr_net_process(socket_t s)
 	}
 	if (syncsock != INVALID_SOCKET) {
 	    if (syncsock > s) {
-		maxfd = syncsock;
+		maxfd = (int)syncsock;
 	    }
 	    FD_SET(syncsock, &rfds);
 	}
@@ -873,7 +873,7 @@ telnet_fsm(unsigned char c)
 			telnet_state = TNS_DATA;
 			if (sbbuf[0] == TELOPT_TTYPE &&
 			    sbbuf[1] == TELQUAL_SEND) {
-				int tt_len, tb_len;
+				size_t tt_len, tb_len;
 				char *tt_out;
 
 				vtrace("%s %s\n", opt(sbbuf[0]),
@@ -938,7 +938,7 @@ telnet_fsm(unsigned char c)
 static void
 tn3270e_request(void)
 {
-	int tt_len, tb_len;
+	size_t tt_len, tb_len;
 	char *tt_out;
 	char *t;
 
@@ -1372,15 +1372,15 @@ net_exception(void)
  *	EWOULDBLOCK.
  */
 static void
-net_rawout(unsigned const char *buf, int len)
+net_rawout(unsigned const char *buf, size_t len)
 {
-	int	nw;
+	size_t nw;
 
 	trace_netdata('>', buf, len);
 
 	while (len) {
 #if defined(OMTU) /*[*/
-		int n2w = len;
+		size_t n2w = len;
 		int pause = 0;
 
 		if (n2w > OMTU) {
@@ -1392,10 +1392,10 @@ net_rawout(unsigned const char *buf, int len)
 #endif
 #if defined(HAVE_LIBSSL) /*[*/
                 if (ssl_con != NULL)
-			nw = SSL_write(ssl_con, (const char *) buf, n2w);
+			nw = SSL_write(ssl_con, (const char *) buf, (int)n2w);
 		else
 #endif /*]*/    
-		nw = send(sock, (const char *) buf, n2w, 0);
+		nw = send(sock, (const char *) buf, (int)n2w, 0);
 		if (nw < 0) {
 #if defined(HAVE_LIBSSL) /*[*/ 
                         if (ssl_con != NULL) {
@@ -1557,25 +1557,25 @@ store3270in(unsigned char c)
  *	Allocates hidden space at the front of the buffer for TN3270E.
  */
 void
-space3270out(unsigned n)
+space3270out(size_t n)
 {
-	unsigned nc = 0;	/* amount of data currently in obuf */
-	unsigned more = 0;
+    size_t nc = 0;	/* amount of data currently in obuf */
+    unsigned more = 0;
 
-	if (obuf_size)
-		nc = obptr - obuf;
+    if (obuf_size) {
+	nc = obptr - obuf;
+    }
 
-	while ((nc + n + EH_SIZE) > (obuf_size + more)) {
-		more += BUFSIZ;
-	}
+    while ((nc + n + EH_SIZE) > (obuf_size + more)) {
+	more += BUFSIZ;
+    }
 
-	if (more) {
-		obuf_size += more;
-		obuf_base = (unsigned char *)Realloc((char *)obuf_base,
-			obuf_size);
-		obuf = obuf_base + EH_SIZE;
-		obptr = obuf + nc;
-	}
+    if (more) {
+	obuf_size += more;
+	obuf_base = (unsigned char *)Realloc((char *)obuf_base, obuf_size);
+	obuf = obuf_base + EH_SIZE;
+	obptr = obuf + nc;
+    }
 }
 
 
@@ -1627,9 +1627,9 @@ opt(unsigned char c)
 #define LINEDUMP_MAX	32
 
 void
-trace_netdata(char direction, unsigned const char *buf, int len)
+trace_netdata(char direction, unsigned const char *buf, size_t len)
 {
-	int offset;
+	size_t offset;
 	struct timeval ts;
 	double tdiff;
 
@@ -1645,7 +1645,7 @@ trace_netdata(char direction, unsigned const char *buf, int len)
 	for (offset = 0; offset < len; offset++) {
 		if (!(offset % LINEDUMP_MAX))
 			vtrace_nts("%s%c 0x%-3x ",
-			    (offset ? "\n" : ""), direction, offset);
+			    (offset ? "\n" : ""), direction, (unsigned)offset);
 		vtrace_nts("%02x", buf[offset]);
 	}
 	vtrace_nts("\n");
@@ -1684,7 +1684,7 @@ net_output(void)
 	/* Count the number of IACs in the message. */
 	{
 		char *buf = (char *)BSTART;
-		int len = obptr - BSTART;
+		size_t len = obptr - BSTART;
 		char *iac;
 		int cnt = 0;
 
@@ -1700,7 +1700,7 @@ net_output(void)
 
 			/* Now quote them. */
 			while (len && (iac = memchr(buf, IAC, len)) != NULL) {
-				int ml = len - (iac - buf);
+				size_t ml = len - (iac - buf);
 
 				memmove(iac + 1, iac, ml);
 				len -= iac - buf + 1;
@@ -1918,7 +1918,7 @@ net_add_dummy_tn3270e(void)
  * Add IAC EOR to a buffer.
  */
 void
-net_add_eor(unsigned char *buf, int len)
+net_add_eor(unsigned char *buf, size_t len)
 {
 	buf[len++] = IAC;
 	buf[len++] = EOR;

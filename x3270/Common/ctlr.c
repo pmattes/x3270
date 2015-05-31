@@ -533,7 +533,7 @@ ctlr_erase(bool alt)
  * Interpret an incoming 3270 command.
  */
 enum pds
-process_ds(unsigned char *buf, int buflen)
+process_ds(unsigned char *buf, size_t buflen)
 {
 	enum pds rv;
 
@@ -868,7 +868,7 @@ ctlr_read_buffer(unsigned char aid_byte)
 	register int	baddr;
 	unsigned char	fa;
 	bool		any = false;
-	int		attr_count = 0;
+	size_t		attr_count = 0;
 	unsigned char	current_fg = 0x00;
 	unsigned char	current_bg = 0x00;
 	unsigned char	current_gr = 0x00;
@@ -990,7 +990,7 @@ void
 ctlr_snap_buffer(void)
 {
 	register int	baddr = 0;
-	int		attr_count;
+	size_t		attr_count;
 	unsigned char	current_fg = 0x00;
 	unsigned char	current_bg = 0x00;
 	unsigned char	current_gr = 0x00;
@@ -1205,7 +1205,7 @@ ctlr_erase_all_unprotected(void)
  * Process a 3270 Write command.
  */
 enum pds
-ctlr_write(unsigned char buf[], int buflen, bool erase)
+ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 {
 	register unsigned char	*cp;
 	register int	baddr;
@@ -1983,9 +1983,9 @@ ctlr_write(unsigned char buf[], int buflen, bool erase)
  * output.
  */
 void
-ctlr_write_sscp_lu(unsigned char buf[], int buflen)
+ctlr_write_sscp_lu(unsigned char buf[], size_t buflen)
 {
-	int i;
+	size_t i;
 	unsigned char *cp = buf;
 	int s_row;
 	unsigned char c;

@@ -109,7 +109,7 @@ int
 proxy_setup(const char *proxy, char **phost, char **pport)
 {
     char *colon;
-    int sl;
+    size_t sl;
 
     if (proxy == NULL) {
 	return PT_NONE;
@@ -195,7 +195,7 @@ proxy_setup(const char *proxy, char **phost, char **pport)
 	}
 	return PT_SOCKS5D;
     }
-    popup_an_error("Invalid proxy type '%.*s'", sl, proxy);
+    popup_an_error("Invalid proxy type '%.*s'", (int)sl, proxy);
     return -1;
 }
 
@@ -210,7 +210,7 @@ parse_host_port(char *s, char **phost, char **pport)
 {
     char *colon;
     char *hstart;
-    int hlen;
+    size_t hlen;
 
     if (*s == '[') {
 	char *rbrack;
@@ -298,7 +298,7 @@ proxy_passthru(socket_t fd, char *host, unsigned short port)
     vtrace("Passthru Proxy: xmit '%.*s'", (int)(strlen(buf) - 2), buf);
     trace_netdata('>', (unsigned char *)buf, strlen(buf));
 
-    if (send(fd, buf, strlen(buf), 0) < 0) {
+    if (send(fd, buf, (int)strlen(buf), 0) < 0) {
 	popup_a_sockerr("Passthru Proxy: send error");
 	Free(buf);
 	return false;
@@ -330,7 +330,7 @@ proxy_http(socket_t fd, char *host, unsigned short port)
     vtrace("HTTP Proxy: xmit '%.*s'\n", (int)(strlen(buf) - 2), buf);
     trace_netdata('>', (unsigned char *)buf, strlen(buf));
 
-    if (send(fd, buf, strlen(buf), 0) < 0) {
+    if (send(fd, buf, (int)strlen(buf), 0) < 0) {
 	popup_a_sockerr("HTTP Proxy: send error");
 	Free(buf);
 	return false;
@@ -346,7 +346,7 @@ proxy_http(socket_t fd, char *host, unsigned short port)
     vtrace("HTTP Proxy: xmit '%.*s'\n", (int)(strlen(buf) - 2), buf);
     trace_netdata('>', (unsigned char *)buf, strlen(buf));
 
-    if (send(fd, buf, strlen(buf), 0) < 0) {
+    if (send(fd, buf, (int)strlen(buf), 0) < 0) {
 	popup_a_sockerr("HTTP Proxy: send error");
 	Free(buf);
 	return false;
@@ -357,7 +357,7 @@ proxy_http(socket_t fd, char *host, unsigned short port)
     vtrace("HTTP Proxy: xmit ''\n");
     trace_netdata('>', (unsigned char *)buf, strlen(buf));
 
-    if (send(fd, buf, strlen(buf), 0) < 0) {
+    if (send(fd, buf, (int)strlen(buf), 0) < 0) {
 	popup_a_sockerr("HTTP Proxy: send error");
 	return false;
     }
@@ -374,7 +374,7 @@ proxy_http(socket_t fd, char *host, unsigned short port)
 	FD_SET(fd, &rfds);
 	tv.tv_sec = 15;
 	tv.tv_usec = 0;
-	if (select(fd + 1, &rfds, NULL, NULL, &tv) < 0) {
+	if (select((int)(fd + 1), &rfds, NULL, NULL, &tv) < 0) {
 	    popup_an_error("HTTP Proxy: server timeout");
 	    if (nread) {
 		trace_netdata('<', (unsigned char *)rbuf, nread);
@@ -436,7 +436,7 @@ proxy_telnet(socket_t fd, char *host, unsigned short port)
     vtrace("TELNET Proxy: xmit '%.*s'", (int)(strlen(buf) - 2), buf);
     trace_netdata('>', (unsigned char *)buf, strlen(buf));
 
-    if (send(fd, buf, strlen(buf), 0) < 0) {
+    if (send(fd, buf, (int)strlen(buf), 0) < 0) {
 	popup_a_sockerr("TELNET Proxy: send error");
 	Free(buf);
 	return false;
@@ -499,7 +499,7 @@ proxy_socks4(socket_t fd, char *host, unsigned short port, int force_a)
 		"'%s' host '%s'\n", port, user, host);
 	trace_netdata('>', (unsigned char *)buf, s - buf);
 
-	if (send(fd, buf, s - buf, 0) < 0) {
+	if (send(fd, buf, (int)(s - buf), 0) < 0) {
 	    popup_a_sockerr("SOCKS4 Proxy: send error");
 	    Free(buf);
 	    return false;
@@ -522,7 +522,7 @@ proxy_socks4(socket_t fd, char *host, unsigned short port, int force_a)
 		"'%s'\n", port, inet_ntoa(ipaddr), user);
 	trace_netdata('>', (unsigned char *)buf, s - buf);
 
-	if (send(fd, buf, s - buf, 0) < 0) {
+	if (send(fd, buf, (int)(s - buf), 0) < 0) {
 	    Free(buf);
 	    popup_a_sockerr("SOCKS4 Proxy: send error");
 	    return false;
@@ -542,7 +542,7 @@ proxy_socks4(socket_t fd, char *host, unsigned short port, int force_a)
 	FD_SET(fd, &rfds);
 	tv.tv_sec = 15;
 	tv.tv_usec = 0;
-	if (select(fd + 1, &rfds, NULL, NULL, &tv) < 0) {
+	if (select((int)(fd + 1), &rfds, NULL, NULL, &tv) < 0) {
 	    popup_an_error("SOCKS4 Proxy: server timeout");
 	    return false;
 	}
@@ -662,7 +662,7 @@ proxy_socks5(socket_t fd, char *host, unsigned short port, int force_d)
 	FD_SET(fd, &rfds);
 	tv.tv_sec = 15;
 	tv.tv_usec = 0;
-	if (select(fd + 1, &rfds, NULL, NULL, &tv) < 0) {
+	if (select((int)(fd + 1), &rfds, NULL, NULL, &tv) < 0) {
 	    popup_an_error("SOCKS5 Proxy: server timeout");
 	    if (nread) {
 		trace_netdata('<', rbuf, nread);
@@ -712,7 +712,7 @@ proxy_socks5(socket_t fd, char *host, unsigned short port, int force_d)
     *s++ = 0x00;		/* reserved */
     if (use_name) {
 	*s++ = 0x03;	/* domain name */
-	*s++ = strlen(host);
+	*s++ = (char)strlen(host);
 	strcpy(s, host);
 	s += strlen(host);
     } else if (ha.sa.sa_family == AF_INET) {
@@ -737,7 +737,7 @@ proxy_socks5(socket_t fd, char *host, unsigned short port, int force_d)
 	    port);
     trace_netdata('>', (unsigned char *)buf, s - buf);
 
-    if (send(fd, buf, s - buf, 0) < 0) {
+    if (send(fd, buf, (int)(s - buf), 0) < 0) {
 	popup_a_sockerr("SOCKS5 Proxy: send error");
 	Free(buf);
 	return false;
@@ -761,7 +761,7 @@ proxy_socks5(socket_t fd, char *host, unsigned short port, int force_d)
 	FD_SET(fd, &rfds);
 	tv.tv_sec = 15;
 	tv.tv_usec = 0;
-	if (select(fd + 1, &rfds, NULL, NULL, &tv) < 0) {
+	if (select((int)(fd + 1), &rfds, NULL, NULL, &tv) < 0) {
 	    popup_an_error("SOCKS5 Proxy: server timeout");
 	    return false;
 	}

@@ -34,8 +34,6 @@
 #error For Windows only
 #endif /*[*/
 
-extern int has_ipv6;
-extern int windows_major_version;
-extern int windows_minor_version;
+extern bool has_ipv6;
 
 int get_version_info(void);

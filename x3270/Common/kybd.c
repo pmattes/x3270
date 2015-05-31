@@ -132,7 +132,7 @@ ta_t *ta_head = (struct ta *) NULL;
 ta_t *ta_tail = (struct ta *) NULL;
 
 static char dxl[] = "0123456789abcdef";
-#define FROM_HEX(c)	(strchr(dxl, tolower(c)) - dxl)
+#define FROM_HEX(c)	(int)(strchr(dxl, tolower(c)) - dxl)
 
 #define KYBDLOCK_IS_OERR	(kybdlock && !(kybdlock & ~KL_OERR_MASK))
 
@@ -3275,7 +3275,7 @@ static bool
 String_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned i;
-    int len = 0;
+    size_t len = 0;
     char *s;
 
     action_debug("String", ia, argc, argv);
@@ -3309,7 +3309,7 @@ static bool
 HexString_action(ia_t ia, unsigned argc, const char **argv)
 {
     unsigned i;
-    int len = 0;
+    size_t len = 0;
     char *s;
     const char *t;
 
@@ -3473,8 +3473,8 @@ remargin(int lmargin)
  *
  * Returns the number of unprocessed characters.
  */
-int
-emulate_uinput(const ucs4_t *ws, int xlen, bool pasting)
+size_t
+emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 {
     enum {
 	BASE, BACKSLASH, BACKX, BACKE, BACKP, BACKPA, BACKPF, OCTAL,
@@ -3909,15 +3909,15 @@ emulate_uinput(const ucs4_t *ws, int xlen, bool pasting)
 }
 
 /* Multibyte version of emulate_uinput. */
-int
-emulate_input(const char *s, int len, bool pasting)
+size_t
+emulate_input(const char *s, size_t len, bool pasting)
 {
 	static ucs4_t *w_ibuf = NULL;
 	static size_t w_ibuf_len = 0;
 	int xlen;
 
 	/* Convert from a multi-byte string to a Unicode string. */
-	if ((size_t)(len + 1) > w_ibuf_len) {
+	if (len + 1 > w_ibuf_len) {
 		w_ibuf_len = len + 1;
 		w_ibuf = (ucs4_t *)Realloc(w_ibuf, w_ibuf_len * sizeof(ucs4_t));
 	}

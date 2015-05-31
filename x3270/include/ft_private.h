@@ -93,7 +93,7 @@ extern void ft_init_conf(ft_conf_t *p);
 /* Transient state. */
 typedef struct {
     FILE *local_file;
-    unsigned long length;
+    size_t length;
     bool is_cut;
     bool last_dbcs;
     bool last_cr;

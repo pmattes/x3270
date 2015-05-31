@@ -49,8 +49,8 @@ extern unsigned int kybdlock;
 extern unsigned char aid;
 
 void do_reset(bool explicit);
-int emulate_input(const char *s, int len, bool pasting);
-int emulate_uinput(const ucs4_t *s, int len, bool pasting);
+size_t emulate_input(const char *s, size_t len, bool pasting);
+size_t emulate_uinput(const ucs4_t *s, size_t len, bool pasting);
 void hex_input(const char *s);
 void kybdlock_clr(unsigned int bits, const char *cause);
 void kybd_inhibit(bool inhibit);

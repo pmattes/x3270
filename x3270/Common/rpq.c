@@ -56,9 +56,9 @@
 /* Statics */
 static bool select_rpq_terms(void);
 static int get_rpq_timezone(void);
-static int get_rpq_user(unsigned char buf[], const int buflen);
+static size_t get_rpq_user(unsigned char buf[], const size_t buflen);
 #if !defined(_WIN32) /*[*/
-static int get_rpq_address(unsigned char buf[], const int buflen);
+static size_t get_rpq_address(unsigned char buf[], const size_t buflen);
 #endif /*]*/
 static void rpq_warning(const char *fmt, ...);
 static void rpq_dump_warnings(void);
@@ -90,7 +90,7 @@ static bool omit_due_space_limit = false;
  */
 static struct rpq_keyword {
     bool omit;	/* set from X3270RPQ="kw1:kw2..." environment var */
-    int oride;	/* displacement */
+    size_t oride;	/* displacement */
     const bool allow_oride;
     const unsigned char id;
     const char *text;
@@ -116,8 +116,9 @@ do_qr_rpqnames(void)
 
     unsigned char *rpql, *p_term;
     unsigned j;
-    int term_id,i,x;
-    int remaining = 254;	/* maximum data area for rpqname reply */
+    int term_id;
+    size_t i, x;
+    size_t remaining = 254;	/* maximum data area for rpqname reply */
     bool omit_due_space_limit;
 
     trace_ds("> QueryReply(RPQNames)\n");
@@ -228,7 +229,7 @@ do_qr_rpqnames(void)
 	 */
 	x = obptr-p_term;
 	if (x > TERM_PREFIX_SIZE) {
-	    *p_term = x;
+	    *p_term = (unsigned char)x;
 	    remaining -= x;	/* This includes length and id fields,
 				   correction below */
 	} else {
@@ -255,7 +256,7 @@ do_qr_rpqnames(void)
     }
 
     /* Fill in overall length of RPQNAME info */
-    *rpql = (obptr - rpql);
+    *rpql = (unsigned char)(obptr - rpql);
 
     rpq_dump_warnings();
 }
@@ -266,7 +267,7 @@ select_rpq_terms(void)
 {
     size_t i;
     unsigned j,k;
-    int len;
+    size_t len;
     char *uplist;
     char *p1, *p2;
     char *kw;
@@ -450,8 +451,8 @@ get_rpq_timezone(void)
 
 
 /* Utility function used by the RPQNAMES query reply. */
-static int
-get_rpq_user(unsigned char buf[], const int buflen) 
+static size_t
+get_rpq_user(unsigned char buf[], const size_t buflen) 
 {
     /*
      * Text may be specified in one of two ways, but not both.
@@ -468,7 +469,7 @@ get_rpq_user(unsigned char buf[], const int buflen)
      *    accepted "as is" then translated from ASCII to EBCDIC.
      */
     const char *rpqtext = NULL;
-    int x = 0;
+    size_t x = 0;
     struct rpq_keyword *kw;
     char *sbuf, *sbuf0;
     const char *s;
@@ -490,7 +491,6 @@ get_rpq_user(unsigned char buf[], const int buflen)
 	char hexstr[512];	/* more than enough room to copy */
 	char *p_h;
 	char c;
-	int x;
 	bool is_first_hex_digit;
 
 	p_h = &hexstr[0];
@@ -587,11 +587,11 @@ get_rpq_user(unsigned char buf[], const int buflen)
 }
 
 #if !defined(_WIN32) /*[*/
-static int
-get_rpq_address(unsigned char *buf, const int maxlen) 
+static size_t
+get_rpq_address(unsigned char *buf, const size_t maxlen) 
 {
     struct rpq_keyword *kw;
-    int x = 0;
+    size_t x = 0;
 
     if (maxlen < 2) {
 	omit_due_space_limit = true;

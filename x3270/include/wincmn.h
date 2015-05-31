@@ -52,7 +52,19 @@
  * Windows has inet_ntop() only in Vista and up.  We define our own in
  * w3misc.c.
  */
+# define inet_ntop my_inet_ntop
 const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
+
+/*
+ * MinGW has no IsWindowsVersionOrGreater().
+ */
+# if !defined(__GNUC__) /*[*/
+#  include <VersionHelpers.h>
+# else /*][*/
+#  define IsWindowsVersionOrGreater my_IsWindowsVersionOrGreater
+extern BOOL IsWindowsVersionOrGreater(WORD major_version, WORD minor_version,
+	        WORD service_pack_major);
+# endif /*]*/
 
 /*
  * Windows has no in_addr_t.

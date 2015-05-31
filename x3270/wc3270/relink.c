@@ -192,7 +192,7 @@ hex(char c)
     if (pos == NULL) {
 	return 0; /* XXX */
     }
-    return pos - digits;
+    return (unsigned)(pos - digits);
 }
 
 //#define DEBUG_EDIT 1

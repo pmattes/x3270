@@ -840,11 +840,11 @@ pr3287_cleanup_io(void)
     /* Remove inputs. */
     if (pr3287_stdout.input_id) {
 	RemoveInput(pr3287_stdout.input_id);
-	pr3287_stdout.input_id = 0L;
+	pr3287_stdout.input_id = NULL_IOID;
     }
     if (pr3287_stderr.input_id) {
 	RemoveInput(pr3287_stderr.input_id);
-	pr3287_stderr.input_id = 0L;
+	pr3287_stderr.input_id = NULL_IOID;
     }
 
     /* Cancel timeouts. */

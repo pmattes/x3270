@@ -33,16 +33,17 @@
  * 	mkfb [-c] [-o outfile] [infile...]
  */
 
+#include <stdio.h>
+
 #include "conf.h"
 #if defined(_WIN32) /*[*/
 # include "wincmn.h"
+#else /*][*/
+# include <string.h>
+# include <ctype.h>
+# include <stdlib.h>
+# include <errno.h>
 #endif /*]*/
-
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <errno.h>
 
 #define BUFSZ	1024		/* input line buffer size */
 #define ARRSZ	8192		/* output array size */
@@ -210,7 +211,7 @@ main(int argc, char *argv[])
 
 	while (fgets(buf, BUFSZ, stdin) != NULL) {
 	    char *s = buf;
-	    int sl;
+	    size_t sl;
 	    unsigned i;
 
 	    lno++;

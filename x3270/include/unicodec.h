@@ -53,10 +53,10 @@ extern iconv_t i_u2mb;
 extern iconv_t i_mb2u;
 #endif /*]*/
 
-int ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[], int mb_len,
-	unsigned flags, ucs4_t *uc);
-int ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len);
-int ebcdic_to_multibyte_string(unsigned char *ebc, size_t ebc_len, char mb[],
+size_t ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
+	size_t mb_len, unsigned flags, ucs4_t *uc);
+size_t ebcdic_to_multibyte(ebc_t ebc, char mb[], size_t mb_len);
+size_t ebcdic_to_multibyte_string(unsigned char *ebc, size_t ebc_len, char mb[],
 	size_t mb_len);
 int mb_max_len(int len);
 enum me_fail {

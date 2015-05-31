@@ -12,7 +12,8 @@ proxy.o: proxy.c ../../include/globals.h ../include/windows/conf.h \
  ../../include/w3misc.h
 resolver.o: resolver.c ../../include/globals.h ../include/windows/conf.h \
  ../../include/wincmn.h ../include/windows/localdefs.h \
- ../../include/lazya.h ../../include/resolver.h ../../include/w3misc.h
+ ../../include/lazya.h ../../include/resolver.h ../../include/w3misc.h \
+ ../../include/winvers.h
 see.o: see.c ../../include/globals.h ../include/windows/conf.h \
  ../../include/wincmn.h ../include/windows/localdefs.h \
  ../../include/3270ds.h ../../include/lazya.h ../../include/utf8.h \
@@ -39,7 +40,8 @@ xs_buffer.o: xs_buffer.c ../../include/globals.h \
  ../include/windows/conf.h ../../include/wincmn.h \
  ../include/windows/localdefs.h ../../include/asprintf.h \
  ../../include/utils.h
-snprintf.o: snprintf.c ../../include/wincmn.h
+snprintf.o: snprintf.c ../../include/globals.h ../include/windows/conf.h \
+ ../../include/wincmn.h ../include/windows/localdefs.h
 ssl_dll.o: ssl_dll.c ../../include/ssl_dll.h ../../include/globals.h \
  ../include/windows/conf.h ../../include/wincmn.h \
  ../include/windows/localdefs.h
@@ -49,4 +51,6 @@ w3misc.o: w3misc.c ../../include/globals.h ../include/windows/conf.h \
 windirs.o: windirs.c ../../include/globals.h ../include/windows/conf.h \
  ../../include/wincmn.h ../include/windows/localdefs.h \
  ../../include/windirs.h
-winvers.o: winvers.c ../../include/winvers.h
+winvers.o: winvers.c ../../include/globals.h ../include/windows/conf.h \
+ ../../include/wincmn.h ../include/windows/localdefs.h \
+ ../../include/winvers.h

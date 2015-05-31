@@ -478,7 +478,7 @@ main(int argc, char *argv[])
 {
 	int i;
 	char *at, *colon;
-	int len;
+	size_t len;
 	char *lu = NULL;
 	char *host = NULL;
 	char *port = "23";

@@ -737,7 +737,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
     for (j = 0; j < argc; j++) {
 	for (i = 0; i < N_PARMS; i++) {
 	    char *eq;
-	    int kwlen;
+	    size_t kwlen;
 
 	    eq = strchr(argv[j], '=');
 	    if (eq == NULL || eq == argv[j] || !*(eq + 1)) {
@@ -993,11 +993,11 @@ ft_do_cancel(void)
  * On other platforms, these functions are #defined to their 'real'
  * counterparts.
  */
-int
-ft_ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len)
+size_t
+ft_ebcdic_to_multibyte(ebc_t ebc, char mb[], size_t mb_len)
 {
     int local_cp = appres.local_cp;
-    int rc;
+    size_t rc;
 
     appres.local_cp = ftc->windows_codepage;
     rc = ebcdic_to_multibyte(ebc, mb, mb_len);

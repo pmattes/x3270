@@ -125,9 +125,9 @@ linemode_init(void)
  *	Send output in NVT line mode.
  */
 void
-linemode_out(const char *buf, int len)
+linemode_out(const char *buf, size_t len)
 {
-    int i;
+    size_t i;
 
     for (i = 0; i < len; i++) {
 	char c = buf[i];
@@ -246,7 +246,7 @@ do_quit(char c)
 static void
 do_cerase(char c)
 {
-    int len;
+    size_t len;
 
     if (backslashed) {
 	lbptr--;
@@ -271,7 +271,7 @@ static void
 do_werase(char c)
 {
     int any = 0;
-    int len;
+    size_t len;
 
     if (lnext) {
 	do_data(c);
@@ -301,7 +301,7 @@ do_werase(char c)
 static void
 do_kill(char c)
 {
-    int i, len;
+    size_t i, len;
 
     if (backslashed) {
 	lbptr--;

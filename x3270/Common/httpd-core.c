@@ -782,11 +782,11 @@ hex_digit(char c)
 
     x = strchr(xlc, c);
     if (x != NULL) {
-	return x - xlc;
+	return (int)(x - xlc);
     }
     x = strchr(xuc, c);
     if (x != NULL) {
-	return x - xuc;
+	return (int)(x - xuc);
     }
     return -1;
 }

@@ -668,7 +668,7 @@ fail:
 	char *x = strchr(undera, c);
 
 	if (x != NULL) {
-	    return 0x24b6 + (x - undera);
+	    return 0x24b6 + (int)(x - undera);
 	}
     }
     return -1;
@@ -695,9 +695,9 @@ fail:
  * Returns '?' in mb[] if there is no local multi-byte representation of
  * the EBCDIC character.
  */
-int
+size_t
 ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
-	int mb_len, unsigned flags, ucs4_t *ucp)
+	size_t mb_len, unsigned flags, ucs4_t *ucp)
 {
 	ucs4_t uc;
 
@@ -737,7 +737,7 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
 	 * wchar_t's are Unicode.
 	 */
 	wuc = uc;
-	nc = WideCharToMultiByte(u_local_cp, 0, &wuc, 1, mb, mb_len,
+	nc = WideCharToMultiByte(u_local_cp, 0, &wuc, 1, mb, (int)mb_len,
 		(u_local_cp == CP_UTF8)? NULL: "?",
 		(u_local_cp == CP_UTF8)? NULL: &udc);
 	if (nc != 0) {
@@ -823,8 +823,8 @@ ebcdic_to_multibyte_x(ebc_t ebc, unsigned char cs, char mb[],
  *  EUO_BLANK_UNDEF is set
  *  ucp is ignored
  */
-int
-ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len)
+size_t
+ebcdic_to_multibyte(ebc_t ebc, char mb[], size_t mb_len)
 {
     	return ebcdic_to_multibyte_x(ebc, CS_BASE, mb, mb_len, EUO_BLANK_UNDEF,
 		NULL);
@@ -835,14 +835,14 @@ ebcdic_to_multibyte(ebc_t ebc, char mb[], int mb_len)
  * Makes lots of assumptions: standard character set, EUO_BLANK_UNDEF.
  * Returns the length of the multibyte string.
  */
-int
+size_t
 ebcdic_to_multibyte_string(unsigned char *ebc, size_t ebc_len, char mb[],
 	size_t mb_len)
 {
-    	int nmb = 0;
+    	size_t nmb = 0;
 
     	while (ebc_len && mb_len) {
-	    	int xlen;
+	    	size_t xlen;
 
 		xlen = ebcdic_to_multibyte(*ebc, mb, mb_len);
 		if (xlen) {
@@ -1148,7 +1148,7 @@ unicode_to_multibyte(ucs4_t ucs4, char *mb, size_t mb_len)
     BOOL udc;
     int nc;
 
-    nc = WideCharToMultiByte(u_local_cp, 0, &wuc, 1, mb, mb_len,
+    nc = WideCharToMultiByte(u_local_cp, 0, &wuc, 1, mb, (int)mb_len,
 	    (u_local_cp == CP_UTF8)? NULL: "?",
 	    (u_local_cp == CP_UTF8)? NULL: &udc);
     if (nc > 0)

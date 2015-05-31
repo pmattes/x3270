@@ -38,8 +38,8 @@ extern unsigned char *obuf, *obptr;
 /* Entry points. */
 void popup_a_sockerr(const char *fmt, ...) printflike(1, 2);
 bool net_add_dummy_tn3270e(void);
-void net_add_eor(unsigned char *buf, int len);
+void net_add_eor(unsigned char *buf, size_t len);
 void net_disconnect(void);
 void net_output(void);
-void space3270out(unsigned n);
-void trace_netdata(char direction, unsigned const char *buf, int len);
+void space3270out(size_t n);
+void trace_netdata(char direction, unsigned const char *buf, size_t len);

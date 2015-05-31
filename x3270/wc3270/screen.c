@@ -143,7 +143,7 @@ static int field_colors[4] = {
 };
 
 static int defattr = 0;
-static unsigned long input_id;
+static ioid_t input_id;
 
 bool escaped = true;
 bool isendwin = true;
@@ -212,7 +212,7 @@ static int screen_swapped = FALSE;
 
 static bool blink_on = true;		/* are we displaying them or not? */
 static bool blink_ticking = false;	/* is the timeout pending? */
-static unsigned long blink_id = 0;	/* timeout ID */
+static ioid_t blink_id = NULL_IOID;	/* timeout ID */
 static bool blink_wasticking = false;
 static void blink_em(ioid_t id);
 
@@ -237,7 +237,7 @@ win32_perror_fatal(const char *fmt, ...)
  * Control-C handler registration.
  */
 void
-screen_set_ctrlc_fn(ctrlc_fn_t *fn)
+screen_set_ctrlc_fn(ctrlc_fn_t fn)
 {
     ctrlc_fn = fn;
 }
@@ -582,7 +582,7 @@ printw(char *fmt, ...)
     sl = strlen(buf);
 
     wbuf = (WCHAR *)Malloc(sl * sizeof(WCHAR));
-    nc = MultiByteToWideChar(CP_ACP, 0, buf, sl, wbuf, sl);
+    nc = MultiByteToWideChar(CP_ACP, 0, buf, (int)sl, wbuf, (int)sl);
     Free(buf);
     for (i = 0; i < nc; i++) {
 	addch(wbuf[i]);
@@ -608,7 +608,7 @@ mvprintw(int row, int col, char *fmt, ...)
     sl = strlen(buf);
 
     wbuf = (WCHAR *)Malloc(sl * sizeof(WCHAR));
-    nc = MultiByteToWideChar(CP_ACP, 0, buf, sl, wbuf, sl);
+    nc = MultiByteToWideChar(CP_ACP, 0, buf, (int)sl, wbuf, (int)sl);
     Free(buf);
     for (i = 0; i < nc; i++) {
 	addch(wbuf[i]);
@@ -1075,7 +1075,7 @@ endwin(void)
 
     if (blink_ticking) {
 	RemoveTimeOut(blink_id);
-	blink_id = 0;
+	blink_id = NULL_IOID;
 	blink_ticking = false;
 	blink_on = true;
 	blink_wasticking = true;
@@ -1274,7 +1274,7 @@ ts_value(const char *s, enum ts *tsp)
     *tsp = TS_AUTO;
 
     if (s != NULL && s[0]) {
-	int sl = strlen(s);
+	size_t sl = strlen(s);
 
 	if (!strncasecmp(s, "true", sl)) {
 	    *tsp = TS_ON;
@@ -1580,7 +1580,7 @@ blink_em(ioid_t id _is_unused)
     vtrace("blink timeout\n");
 
     /* We're not ticking any more. */
-    blink_id = 0;
+    blink_id = NULL_IOID;
     blink_ticking = false;
     blink_wasticking = false;
 

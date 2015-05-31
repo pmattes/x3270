@@ -39,8 +39,8 @@ enum pds {
 };
 
 void ctlr_add(unsigned char ebc, ucs4_t c, unsigned char cs, unsigned char gr);
-void ctlr_write(unsigned char buf[], int buflen, bool erase);
+void ctlr_write(unsigned char buf[], size_t buflen, bool erase);
 int print_eoj(void);
 void print_unbind(void);
-enum pds process_ds(unsigned char *buf, int buflen);
-enum pds process_scs(unsigned char *buf, int buflen);
+enum pds process_ds(unsigned char *buf, size_t buflen);
+enum pds process_scs(unsigned char *buf, size_t buflen);

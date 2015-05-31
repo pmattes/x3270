@@ -94,7 +94,7 @@ ft_gui_complete_popup(const char *msg _is_unused)
 
 /* Update the bytes-transferred count on the progress pop-up. */
 void
-ft_gui_update_length(unsigned long length)
+ft_gui_update_length(size_t length)
 {
     if (ftc->is_interactive) {
 	if (ft_sigint_aborting) {
@@ -104,17 +104,18 @@ ft_gui_update_length(unsigned long length)
 	    }
 	} else
 	{
-	    printf("\r%79s\rTransferred %lu bytes. ", "", length);
+	    printf("\r%79s\rTransferred %lu bytes. ", "",
+		    (unsigned long)length);
 	}
 	fflush(stdout);
     } else {
-	popup_an_info("Transferred %lu bytes.", length);
+	popup_an_info("Transferred %lu bytes.", (unsigned long)length);
     }
 }
 
 /* Replace the 'waiting' pop-up with the 'in-progress' pop-up. */
 void
-ft_gui_running(unsigned long length _is_unused)
+ft_gui_running(size_t length _is_unused)
 {
     RemoveTimeOut(ft_poll_id);
     ft_poll_id = NULL_IOID;

@@ -77,8 +77,8 @@ static int dft_eof;
 static unsigned long recnum;
 static char *abort_string = NULL;
 static unsigned char *dft_savebuf = NULL;
-static int dft_savebuf_len = 0;
-static int dft_savebuf_max = 0;
+static size_t dft_savebuf_len = 0;
+static size_t dft_savebuf_max = 0;
 static unsigned char dft_ungetc_cache[DFT_MAX_UNGETC];
 static size_t dft_ungetc_count = 0;
 
@@ -259,7 +259,7 @@ dft_data_insert(struct data_buffer *data_bufr)
 	    Free(msgp);
 	}
     } else if (my_length > 0) {
-	int rv = 1;
+	size_t rv = 1;
 
 	/* Write the data out to the file. */
 	if (ftc->ascii_flag && (ftc->remap_flag || ftc->cr_flag)) {
@@ -268,7 +268,7 @@ dft_data_insert(struct data_buffer *data_bufr)
 	    char *ob = ob0;
 	    unsigned char *s = (unsigned char *)data_bufr->data;
 	    unsigned len = my_length;
-	    int nx;
+	    size_t nx;
 
 	    /* Copy and convert data_bufr->data to ob0. */
 	    while (len-- && obuf_len) {

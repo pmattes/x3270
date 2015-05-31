@@ -61,12 +61,10 @@
  *	EOF
 */
 
-#include "wincmn.h"
-
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <time.h>
+
+#include "wincmn.h"
 
 static char *
 NewString(char *s)

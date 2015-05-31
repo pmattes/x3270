@@ -872,7 +872,7 @@ gdi_screenful(struct ea *ea, unsigned short rows, unsigned short cols,
 		    ((pstate.usable_rows - 1) * pstate.space_size.cy) -
 		    pchar.poffY,
 		0, NULL,
-		pstate.caption, strlen(pstate.caption), NULL);
+		pstate.caption, (UINT)strlen(pstate.caption), NULL);
 	if (status <= 0) {
 	    *fail = "ExtTextOut failed";
 	    rc = -1;
@@ -1255,13 +1255,13 @@ get_printer_device(const char *printer_name, HGLOBAL *pdevnames,
     assert(dn);
     memset(dn, '\0', sizeof(DEVNAMES));
     offset = sizeof(DEVNAMES);
-    dn->wDriverOffset = offset;
+    dn->wDriverOffset = (WORD)offset;
     memcpy((char *)dn + offset, pi->pDriverName, ldn);
     offset += ldn;
-    dn->wDeviceOffset = offset;
+    dn->wDeviceOffset = (WORD)offset;
     memcpy((char *)dn + offset, pi->pPrinterName, lpn);
     offset += lpn;
-    dn->wOutputOffset = offset;
+    dn->wOutputOffset = (WORD)offset;
     memcpy((char *)dn + offset, pi->pPortName, ltn);
     dn->wDefault = 0;
 

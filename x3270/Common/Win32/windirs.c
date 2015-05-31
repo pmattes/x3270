@@ -233,16 +233,7 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 	}
 
 	if (desktop != NULL || xappdata != NULL) {
-		OSVERSIONINFO info;
 		char *wsl;
-
-		/* Figure out what version of Windows this is. */
-		memset(&info, '\0', sizeof(info));
-		info.dwOSVersionInfoSize = sizeof(info);
-		if (GetVersionEx(&info) == 0) {
-			fprintf(stderr, "Can't get Windows version\n");
-			return -1;
-		}
 
 		/* Ask Windows where the directories are. */
 		if (new_get_dirs(desktop, xappdata, common_desktop,

@@ -91,7 +91,7 @@
 #endif /*]*/
 
 /* Statics */
-static int      dscnt = 0;
+static size_t   dscnt = 0;
 #if !defined(_WIN32) /*[*/
 static int      tracewindow_pid = -1;
 #else /*][*/
@@ -147,9 +147,9 @@ rcba(int baddr)
 static void
 trace_ds_s(char *s, bool can_break)
 {
-    int len = strlen(s);
-    int len0 = len + 1;
-    int wlen;
+    size_t len = strlen(s);
+    size_t len0 = len + 1;
+    size_t wlen;
     bool nl = false;
     wchar_t *w_buf;		/* wchar_t translation of s */
     wchar_t *w_cur;		/* current wchar_t pointer */
@@ -167,7 +167,7 @@ trace_ds_s(char *s, bool can_break)
     /* Convert the input string to wchar_t's. */
     w_buf = (wchar_t *)Malloc(len0 * sizeof(wchar_t));
     wlen = mbstowcs(w_buf, s, len);
-    if (wlen < 0) {
+    if (wlen == (size_t)-1) {
 	Error("trace_ds_s: mbstowcs failed");
     }
     w_cur = w_buf;
@@ -184,14 +184,14 @@ trace_ds_s(char *s, bool can_break)
     }
 
     while (dscnt + wlen >= TRACE_DS_WRAP) {
-	int plen = TRACE_DS_WRAP - dscnt;
-	int mblen;
+	size_t plen = TRACE_DS_WRAP - dscnt;
+	size_t mblen;
 
 	if (plen) {
 	    memcpy(w_chunk, w_cur, plen * sizeof(wchar_t));
 	    w_chunk[plen] = 0;
 	    mblen = wcstombs(mb_chunk, w_chunk, len0);
-	    if (mblen <= 0) {
+	    if (mblen == 0 || mblen == (size_t)-1) {
 		Error("trace_ds_s: wcstombs 1 failed");
 	    }
 	} else {
@@ -205,12 +205,12 @@ trace_ds_s(char *s, bool can_break)
 	wlen -= plen;
     }
     if (wlen) {
-	int mblen;
+	size_t mblen;
 
 	memcpy(w_chunk, w_cur, wlen * sizeof(wchar_t));
 	w_chunk[wlen] = 0;
 	mblen = wcstombs(mb_chunk, w_chunk, len0);
-	if (mblen <= 0)
+	if (mblen == 0 || mblen == (size_t)-1)
 	    Error("trace_ds_s: wcstombs 2 failed");
 	wtrace(false, "%.*s", mblen, mb_chunk);
 	dscnt += wlen;
@@ -309,7 +309,7 @@ gen_ts(void)
 static void
 vwtrace(bool do_ts, const char *fmt, va_list args)
 {
-    int n2w_left, n2w, nw;
+    size_t n2w_left, n2w, nw;
     char *ts;
     char *buf = NULL;
     char *bp;

@@ -428,7 +428,7 @@ var_subst(const char *s, unsigned long flags)
     enum { VS_BASE, VS_QUOTE, VS_DOLLAR, VS_BRACE, VS_VN, VS_VNB, VS_EOF }
 	state;
     char c;
-    int o_len;
+    size_t o_len;
     char *ob;
     char *o;
     const char *vn_start;
@@ -496,7 +496,7 @@ var_subst(const char *s, unsigned long flags)
 	    case VS_VN:
 	    case VS_VNB:
 		if (!(isalnum(c) || c == '_')) {
-		    int vn_len;
+		    size_t vn_len;
 		    char *vn;
 		    char *vv;
 

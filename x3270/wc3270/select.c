@@ -567,7 +567,7 @@ copy_clipboard_text(LPTSTR lptstr)
 	for (c = 0; c < COLS; c++) {
 	    int baddr = (r * COLS) + c;
 	    char buf[16];
-	    int nc;
+	    size_t nc;
 	    ucs4_t u;
 
 	    if (ea_buf[baddr].fa) {

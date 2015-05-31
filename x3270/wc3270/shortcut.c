@@ -37,8 +37,7 @@
 #error For Windows only.
 #endif /*]*/
 
-#include <stdio.h>
-#include "wincmn.h"
+#include "globals.h"
 
 #include "shortcutc.h"
 #include "winvers.h"
@@ -94,9 +93,7 @@ create_link(LPCSTR path_obj, LPSTR path_link, LPSTR desc, LPSTR args,
     }
 
     /* Add the icon. */
-    if (windows_major_version >= 5) {
-	psl->lpVtbl->SetIconLocation(psl, path_obj, 0);
-    }
+    psl->lpVtbl->SetIconLocation(psl, path_obj, 0);
 
     hres = psl->lpVtbl->QueryInterface(psl, &IID_IShellLinkDataList,
 	    (void **)&psldl);

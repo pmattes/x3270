@@ -32,4 +32,4 @@
 
 typedef void qr_single_fn_t(void);
 
-enum pds write_structured_field(unsigned char buf[], int buflen);
+enum pds write_structured_field(unsigned char buf[], size_t buflen);

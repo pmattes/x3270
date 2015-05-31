@@ -31,51 +31,55 @@
  *		OS version query
  */
 
-#include <windows.h>
-#include <stdio.h>
+#include "globals.h"
 
 #include "winvers.h"
 
-int has_ipv6 = 1;
-int windows_major_version;
-int windows_minor_version;
+bool has_ipv6 = true;
+
+#if defined(__GNUC__) /*[*/
+/* MinGW doesn't have IsWindowsVersionOrGreater(). */
+BOOL IsWindowsVersionOrGreater(WORD major_version, WORD minor_version,
+	WORD service_pack_major)
+{
+    OSVERSIONINFOEX version_info;
+    DWORDLONG condition_mask = 0;
+
+    memset(&version_info, 0, sizeof(OSVERSIONINFOEX));
+    version_info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    version_info.dwMajorVersion = major_version;
+    version_info.dwMinorVersion = minor_version;
+    version_info.wServicePackMajor = service_pack_major;
+    VER_SET_CONDITION(condition_mask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+    VER_SET_CONDITION(condition_mask, VER_MINORVERSION, VER_GREATER_EQUAL);
+    VER_SET_CONDITION(condition_mask, VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL);
+    return VerifyVersionInfo(&version_info,
+	    VER_MAJORVERSION | VER_MINORVERSION | VER_SERVICEPACKMAJOR,
+	    condition_mask);
+}
+#endif /*]*/
 
 int
 get_version_info(void)
 {
-        OSVERSIONINFO info;
+    /*
+     * Enforce our version requirements explicitly, though chances are
+     * missing DLL entry points will cause us to fall over long before we
+     * get to here.
+     */
+    if (!IsWindowsVersionOrGreater(5, 0, 0)) {
+	fprintf(stderr, "Minimum supported Windows version is Windows 2000 "
+		"(NT 5.0)\n");
+	return -1;
+    }
 
-	/* Figure out what version of Windows this is. */
-	memset(&info, '\0', sizeof(info));
-	info.dwOSVersionInfoSize = sizeof(info);
-	if (GetVersionEx(&info) == 0) {
-	    	fprintf(stderr, "Can't get Windows version\n");
-	    	return -1;
-	}
+    /*
+     * Win2K (5.0) and earlier is IPv4-only.  WinXP (5.1) and later can
+     * have IPv6.
+     */
+    if (!IsWindowsVersionOrGreater(5, 1, 0)) {
+	has_ipv6 = false;
+    }
 
-	/*
-	 * Enforce our version requirements explicitly, though chances are
-	 * missing DLL entry points will cause us to fall over long before we
-	 * get to here.
-	 */
-	if (info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS ||
-		info.dwMajorVersion < 5) {
-		fprintf(stderr, "Minimum supported Windows version is Windows "
-			"2000 (NT 5.0)\n");
-		return -1;
-	}
-
-	/* Save the version for applications that need fine-grained info. */
-	windows_major_version = info.dwMajorVersion;
-	windows_minor_version = info.dwMinorVersion;
-
-	/*
-	 * Win2K (5.0) and earlier is IPv4-only.  WinXP (5.1) and later can
-	 * have IPv6.
-	 */
-	if (info.dwMajorVersion == 5 && info.dwMinorVersion < 1) {
-	    has_ipv6 = 0;
-	}
-
-	return 0;
+    return 0;
 }

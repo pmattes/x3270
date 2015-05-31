@@ -47,30 +47,16 @@
  *   This port is bound by the emulators by the -scriptport option.
  */
 
-#include "conf.h"
-#include <stdio.h>
-#if defined(_WIN32) /*[*/
-# include "wincmn.h"
-#endif /*]*/
-#if !defined(_MSC_VER) /*[*/
-# include <unistd.h>
-#endif /*]*/
+#include "globals.h"
+
 #if !defined(_WIN32) /*[*/
-# include <string.h>
-# include <signal.h>
 # include <errno.h>
-# include <stdlib.h>
+# include <signal.h>
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <sys/un.h>
 # include <netinet/in.h>
 # include <arpa/inet.h>
-# if defined(HAVE_SYS_SELECT_H) /*[*/
-#  include <sys/select.h>
-# endif /*]*/
-# if defined(HAVE_GETOPT_H) /*[*/
-#  include <getopt.h>
-# endif /*]*/
 #endif /*]*/
 
 #include "w3misc.h"
@@ -94,7 +80,7 @@ static void iterative_io(int pid, unsigned short port);
 static void single_io(int pid, unsigned short port, int fn, char *cmd);
 
 static void
-usage(void)
+x3270if_usage(void)
 {
 	(void) fprintf(stderr, "\
 usage:\n\
@@ -166,7 +152,7 @@ main(int argc, char *argv[])
 		switch (c) {
 		    case 'i':
 			if (fn >= 0)
-				usage();
+				x3270if_usage();
 			iterative++;
 			break;
 #if !defined(_WIN32) /*[*/
@@ -176,24 +162,24 @@ main(int argc, char *argv[])
 				(void) fprintf(stderr,
 				    "%s: Invalid process ID: '%s'\n", me,
 				    optarg);
-				usage();
+				x3270if_usage();
 			}
 			break;
 #endif /*]*/
 		    case 's':
 			if (fn >= 0 || iterative)
-				usage();
+				x3270if_usage();
 			fn = (int)strtol(optarg, &ptr, 0);
 			if (ptr == optarg || *ptr != '\0' || fn < 0) {
 				(void) fprintf(stderr,
 				    "%s: Invalid field number: '%s'\n", me,
 				    optarg);
-				usage();
+				x3270if_usage();
 			}
 			break;
 		    case 'S':
 			if (fn >= 0 || iterative)
-				usage();
+				x3270if_usage();
 			fn = ALL_FIELDS;
 			break;
 		    case 't':
@@ -202,14 +188,14 @@ main(int argc, char *argv[])
 				(void) fprintf(stderr,
 				    "%s: Invalid port: '%s'\n", me,
 				    optarg);
-				usage();
+				x3270if_usage();
 			}
 			break;
 		    case 'v':
 			verbose++;
 			break;
 		    default:
-			usage();
+			x3270if_usage();
 			break;
 		}
 	}
@@ -218,17 +204,17 @@ main(int argc, char *argv[])
 	if (optind == argc) {
 		/* No positional arguments. */
 		if (fn == NO_STATUS && !iterative)
-			usage();
+			x3270if_usage();
 	} else {
 		/* Got positional arguments. */
 		if (iterative)
-			usage();
+			x3270if_usage();
 		if (argc - optind > 1) {
-		    usage();
+		    x3270if_usage();
 		}
 	}
 	if (pid && port) {
-	    	usage();
+	    	x3270if_usage();
 	}
 
 #if !defined(_WIN32) /*[*/
@@ -246,14 +232,14 @@ main(int argc, char *argv[])
 
 #if !defined(_WIN32) /*[*/
 /* Connect to a Unix-domain socket. */
-static int
+static socket_t
 usock(int pid)
 {
 	struct sockaddr_un ssun;
-	int fd;
+	socket_t fd;
 
 	fd = socket(AF_UNIX, SOCK_STREAM, 0);
-	if (fd < 0) {
+	if (fd == INVALID_SOCKET) {
 		perror("socket");
 		exit(2);
 	}
@@ -270,14 +256,14 @@ usock(int pid)
 #endif /*]*/
 
 /* Connect to a TCP socket. */
-static int
+static socket_t
 tsock(unsigned short port)
 {
 	struct sockaddr_in sin;
-	int fd;
+	socket_t fd;
 
 	fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (fd < 0) {
+	if (fd == INVALID_SOCKET) {
 #if defined(_WIN32) /*[*/
 		win32_perror("socket");
 #else /*][*/
@@ -305,8 +291,9 @@ static void
 single_io(int pid, unsigned short port, int fn, char *cmd)
 {
     	char *port_env;
-	int infd;
-	int outfd;
+	int infd, outfd;
+	socket_t insocket, outsocket;
+	bool is_socket = false;
 	char status[IBS] = "";
 	int nr;
 	int xs = -1;
@@ -314,32 +301,34 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 	char rbuf[IBS];
 	int sl = 0;
 	int done = 0;
-	int is_socket = 0;
 	char *cmd_nl;
 	char *wstr;
 
 	/* Verify the environment and open files. */
 #if !defined(_WIN32) /*[*/
 	if (pid) {
-		infd = outfd = usock(pid);
+		insocket = outsocket = usock(pid);
+		is_socket = true;
 	} else
 #endif /*]*/
 	if (port) {
-		infd = outfd = tsock(port);
-		is_socket = 1;
+		insocket = outsocket = tsock(port);
+		is_socket = true;
 	} else if ((port_env = getenv("X3270PORT")) != NULL) {
-	    	infd = outfd = tsock(atoi(port_env));
-		is_socket = 1;
+	    	insocket = outsocket = tsock(atoi(port_env));
+		is_socket = true;
 	} else {
 		infd  = fd_env("X3270OUTPUT");
 		outfd = fd_env("X3270INPUT");
 	}
-	if (infd < 0) {
-		perror("x3270if: input: fdopen");
+	if ((!is_socket && infd < 0) ||
+		(is_socket && insocket == INVALID_SOCKET)) {
+		perror("x3270if: input");
 		exit(2);
 	}
-	if (outfd < 0) {
-		perror("x3270if: output: fdopen");
+	if ((!is_socket && outfd < 0) ||
+		(is_socket && outsocket == INVALID_SOCKET)) {
+		perror("x3270if: output");
 		exit(2);
 	}
 
@@ -362,9 +351,9 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 	}
 
 	if (is_socket) {
-		nw = send(outfd, wstr, strlen(wstr), 0);
+		nw = send(outsocket, wstr, (int)strlen(wstr), 0);
 	} else {
-		nw = write(outfd, wstr, strlen(wstr));
+		nw = write(outfd, wstr, (int)strlen(wstr));
 	}
 	if (nw < 0) {
 	    	if (is_socket)
@@ -382,7 +371,7 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 
 	/* Get the answer. */
 	while (!done &&
-		(nr = (is_socket? recv(infd, rbuf, IBS, 0):
+		(nr = (is_socket? recv(insocket, rbuf, IBS, 0):
 				  read(infd, rbuf, IBS))) > 0) {
 	    	int i;
 		int get_more = 0;
@@ -483,11 +472,11 @@ single_io(int pid, unsigned short port, int fn, char *cmd)
 	}
 
 	if (is_socket) {
-	    	shutdown(infd, 2);
+	    	shutdown(insocket, 2);
 #if defined(_WIN32) /*[*/
-		closesocket(infd);
+		closesocket(insocket);
 #else /*][*/
-		close(infd);
+		close(insocket);
 #endif /*]*/
 	}
 
@@ -683,7 +672,7 @@ static void
 iterative_io(int pid, unsigned short port)
 {
 	char *port_env;
-    	int s;
+    	socket_t s;
 	struct sockaddr_in sin;
 	HANDLE socket_event;
 	HANDLE ha[2];

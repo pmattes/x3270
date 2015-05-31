@@ -156,12 +156,12 @@ static char     ttype_tmpval[13];
 static unsigned short e_xmit_seq; /* transmit sequence number */
 static int response_required;
 
-static int      nvt_data = 0;
+static size_t   nvt_data = 0;
 static int	tn3270e_negotiated = 0;
 static enum { E_UNBOUND, E_3270, E_NVT, E_SSCP } tn3270e_submode = E_UNBOUND;
 static int	tn3270e_bound = 0;
 static unsigned char *bind_image = NULL;
-static int	bind_image_len = 0;
+static size_t	bind_image_len = 0;
 static char	*plu_name = NULL;
 static int	maxru_sec = 0;
 static int	maxru_pri = 0;
@@ -185,7 +185,7 @@ static unsigned short proxy_port = 0;
 static b8_t e_funcs;		/* negotiated TN3270E functions */
 
 static bool telnet_fsm(unsigned char c);
-static void net_rawout(unsigned const char *buf, int len);
+static void net_rawout(unsigned const char *buf, size_t len);
 static void check_in3270(void);
 static void store3270in(unsigned char c);
 static void check_linemode(bool init);
@@ -1031,7 +1031,7 @@ net_connected(void)
 	char *buf;
 
 	buf = xs_buffer("%s %d\r\n", hostname, current_port);
-	(void) send(sock, buf, strlen(buf), 0);
+	(void) send(sock, buf, (int)strlen(buf), 0);
 	Free(buf);
     }
 }
@@ -1388,7 +1388,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
  *	Put a 16-bit value in a buffer.
  *	Returns the number of bytes required.
  */
-static int
+static size_t
 set16(char *buf, int n)
 {
 	char *b0 = buf;
@@ -1412,7 +1412,7 @@ static void
 send_naws(void)
 {
 	char naws_msg[14];
-	int naws_len = 0;
+	size_t naws_len = 0;
 
 	(void) snprintf(naws_msg, sizeof(naws_msg), "%c%c%c",
 		IAC, SB, TELOPT_NAWS);
@@ -1501,7 +1501,7 @@ static bool
 telnet_fsm(unsigned char c)
 {
     char *see_chr;
-    int	sl;
+    size_t sl;
 
     switch (telnet_state) {
     case TNS_DATA:	/* normal data processing */
@@ -1783,7 +1783,7 @@ telnet_fsm(unsigned char c)
 	if (c == SE) {
 	    telnet_state = TNS_DATA;
 	    if (sbbuf[0] == TELOPT_TTYPE && sbbuf[1] == TELQUAL_SEND) {
-		int tt_len, tb_len;
+		size_t tt_len, tb_len;
 		char *tt_out;
 
 		vtrace("%s %s\n", opt(sbbuf[0]), telquals[sbbuf[1]]);
@@ -1834,7 +1834,7 @@ telnet_fsm(unsigned char c)
 #endif /*]*/
 	    else if (sbbuf[0] == TELOPT_NEW_ENVIRON &&
 		    sbbuf[1] == TELQUAL_SEND && appres.new_environ) {
-		int tb_len;
+		size_t tb_len;
 		char *tt_out;
 		char *user;
 
@@ -1890,7 +1890,7 @@ telnet_fsm(unsigned char c)
 static void
 tn3270e_request(void)
 {
-	int tt_len, tb_len;
+	size_t tt_len, tb_len;
 	char *tt_out;
 	char *t;
 	char *xtn;
@@ -2235,10 +2235,10 @@ maxru(unsigned char c)
 }
 
 static void
-process_bind(unsigned char *buf, int buflen)
+process_bind(unsigned char *buf, size_t buflen)
 {
-	int namelen;
-	int dest_ix = 0;
+	size_t namelen;
+	size_t dest_ix = 0;
 
 	/* Save the raw image. */
 	Replace(bind_image, (unsigned char *)Malloc(buflen));
@@ -2365,10 +2365,10 @@ process_bind(unsigned char *buf, int buflen)
 			memcpy(plu_name, &buf[BIND_OFF_PLU_NAME], namelen);
 			plu_name[namelen] = '\0';
 #else /*][*/
-		    	int i;
+		    	size_t i;
 
 			for (i = 0; i < namelen; i++) {
-				int nx;
+				size_t nx;
 
 				nx = ebcdic_to_multibyte(
 					buf[BIND_OFF_PLU_NAME + i],
@@ -2621,7 +2621,7 @@ net_cookout(const char *buf, size_t len)
  *	EWOULDBLOCK.
  */
 static void
-net_rawout(unsigned const char *buf, int len)
+net_rawout(unsigned const char *buf, size_t len)
 {
 	int	nw;
 
@@ -2629,7 +2629,7 @@ net_rawout(unsigned const char *buf, int len)
 
 	while (len) {
 #if defined(OMTU) /*[*/
-		int n2w = len;
+		size_t n2w = len;
 		int pause = 0;
 
 		if (n2w > OMTU) {
@@ -2641,15 +2641,15 @@ net_rawout(unsigned const char *buf, int len)
 #endif
 #if defined(HAVE_LIBSSL) /*[*/
 		if (ssl_con != NULL)
-			nw = SSL_write(ssl_con, (const char *) buf, n2w);
+			nw = SSL_write(ssl_con, (const char *) buf, (int)n2w);
 		else
 #endif /*]*/
 #if defined(LOCAL_PROCESS) /*[*/
 		if (local_process)
-			nw = write(sock, (const char *) buf, n2w);
+			nw = write(sock, (const char *) buf, (int)n2w);
 		else
 #endif /*]*/
-			nw = send(sock, (const char *) buf, n2w, 0);
+			nw = send(sock, (const char *) buf, (int)n2w, 0);
 		if (nw < 0) {
 #if defined(HAVE_LIBSSL) /*[*/
 			if (ssl_con != NULL) {
@@ -2854,9 +2854,9 @@ store3270in(unsigned char c)
  *	Allocates hidden space at the front of the buffer for TN3270E.
  */
 void
-space3270out(unsigned n)
+space3270out(size_t n)
 {
-	unsigned nc = 0;	/* amount of data currently in obuf */
+	size_t nc = 0;	/* amount of data currently in obuf */
 	unsigned more = 0;
 
 	if (obuf_size)
@@ -2966,16 +2966,16 @@ opt(unsigned char c)
 #define LINEDUMP_MAX	32
 
 void
-trace_netdata(char direction, unsigned const char *buf, int len)
+trace_netdata(char direction, unsigned const char *buf, size_t len)
 {
-	int offset;
+	size_t offset;
 
 	if (!toggled(TRACING))
 		return;
 	for (offset = 0; offset < len; offset++) {
 		if (!(offset % LINEDUMP_MAX))
 			ntvtrace("%s%c 0x%-3x ",
-			    (offset? "\n": ""), direction, offset);
+			    (offset? "\n": ""), direction, (unsigned)offset);
 		ntvtrace("%02x", buf[offset]);
 	}
 	ntvtrace("\n");
@@ -3151,7 +3151,7 @@ net_add_dummy_tn3270e(void)
  * Add IAC EOR to a buffer.
  */
 void
-net_add_eor(unsigned char *buf, int len)
+net_add_eor(unsigned char *buf, size_t len)
 {
 	buf[len++] = IAC;
 	buf[len++] = EOR;
@@ -3385,7 +3385,7 @@ net_snap_options(void)
 
 		if (tn3270e_bound) {
 			tn3270e_header *h;
-			int i;
+			size_t i;
 			int xlen = 0;
 
 			for (i = 0; i < bind_image_len; i++)  {

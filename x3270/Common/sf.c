@@ -108,9 +108,9 @@ static struct reply {
  * Process a 3270 Write Structured Field command
  */
 enum pds
-write_structured_field(unsigned char buf[], int buflen)
+write_structured_field(unsigned char buf[], size_t buflen)
 {
-	unsigned short fieldlen;
+	size_t fieldlen;
 	unsigned char *cp = buf;
 	bool first = true;
 	enum pds rv = PDS_OKAY_NO_OUTPUT;
@@ -140,13 +140,13 @@ write_structured_field(unsigned char buf[], int buflen)
 			fieldlen = buflen;
 		if (fieldlen < 3) {
 			trace_ds("error: field length %d too small\n",
-			    fieldlen);
+			    (int)fieldlen);
 			return rv ? rv : PDS_BAD_CMD;
 		}
-		if ((int)fieldlen > buflen) {
+		if (fieldlen > buflen) {
 			trace_ds("error: field length %d exceeds remaining "
 			    "message length %d\n",
-			    fieldlen, buflen);
+			    (int)fieldlen, (int)buflen);
 			return rv ? rv : PDS_BAD_CMD;
 		}
 
@@ -631,7 +631,7 @@ do_query_reply(unsigned char code)
 	}
 
 	do {
-		int obptr0 = obptr - obuf;
+		size_t obptr0 = obptr - obuf;
 		bool full = true;
 
 		space3270out(4);
@@ -646,7 +646,7 @@ do_query_reply(unsigned char code)
 			full = replies[i].multi_fn(&subindex, &more);
 
 		if (full) {
-			int len;
+			size_t len;
 			unsigned char *obptr_len;
 
 			/* Fill in the length. */

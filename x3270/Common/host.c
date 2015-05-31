@@ -323,7 +323,7 @@ new_split_host(char *raw, char **lu, char **host, char **port,
 	unsigned *prefixes, char **error)
 {
     char   *start     = raw;
-    int     sl        = strlen(raw);
+    size_t  sl        = strlen(raw);
     char   *s;
     char   *uq        = NULL;
     int     uq_len    = 0;
@@ -377,7 +377,7 @@ new_split_host(char *raw, char **lu, char **host, char **port,
     memset(qmap, ' ', sl);
     qmap[sl] = '\0';
     rqmap = qmap;
-    for (s = start; s - start < sl; s++) {
+    for (s = start; (size_t)(s - start) < sl; s++) {
 	if (isspace(*s)) {
 	    errmsg = "contains whitespace";
 	    goto done;
@@ -403,7 +403,7 @@ new_split_host(char *raw, char **lu, char **host, char **port,
 		 * What follows has to be the end of the
 		 * string, or an unquoted ':' or a '@'.
 		 */
-		if ((s - start) == sl - 1 ||
+		if ((size_t)(s - start) == sl - 1 ||
 			*(s + 1) == '@' ||
 			*(s + 1) == ':') {
 			bracketed = 0;
@@ -985,7 +985,7 @@ save_recent(const char *hn)
 	char buf[1024];
 
 	while (fgets(buf, sizeof(buf), lcf) != NULL) {
-	    int sl;
+	    size_t sl;
 	    time_t connect_time;
 	    char *ptr;
 

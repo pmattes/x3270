@@ -41,7 +41,10 @@
 #include <stdio.h>
 #include "lazya.h"
 #include "resolver.h"
-#include "w3misc.h"
+#if defined(_WIN32) /*[*/
+# include "w3misc.h"
+# include "winvers.h"
+#endif /*]*/
 
 #if defined(_WIN32) && defined(X3270_IPV6) /*[*/
 static int win32_getaddrinfo(const char *node, const char *service,
@@ -55,35 +58,6 @@ static int win32_getnameinfo(const struct sockaddr *sa, socklen_t salen,
 # define freeaddrinfo	win32_freeaddrinfo
 # undef getnameinfo
 # define getnameinfo	win32_getnameinfo
-
-/* Run-time check for IPv6 availability. */
-static bool
-ipv6_works(void)
-{
-    static bool cached = false;
-    static bool cached_result = false;
-    OSVERSIONINFO info;
-
-    /* Return the cached value, if there is one. */
-    if (cached) {
-	return cached_result;
-    }
-
-    /* Check the OS version and cache the result. */
-    memset(&info, '\0', sizeof(info));
-    info.dwOSVersionInfoSize = sizeof(info);
-    if (GetVersionEx(&info) == 0) {
-	fprintf(stderr, "Can't get Windows version\n");
-	exit(1);
-    }
-
-    /* It works from XP forward. */
-    cached_result = (info.dwPlatformId != VER_PLATFORM_WIN32_WINDOWS &&
-	    info.dwMajorVersion >= 5 &&
-	    info.dwMinorVersion >= 1);
-    cached = true;
-    return cached_result;
-}
 #endif /*]*/
 
 #if defined(X3270_IPV6) /*[*/
@@ -150,7 +124,7 @@ resolve_host_and_port_v46(const char *host, char *portname, int ix,
 	return RHP_FATAL;
     }
     (void) memcpy(sa, res->ai_addr, res->ai_addrlen);
-    *sa_len = res->ai_addrlen;
+    *sa_len = (socklen_t)res->ai_addrlen;
     if (lastp != NULL) {
 	*lastp = (res->ai_next == NULL);
     }
@@ -247,7 +221,7 @@ resolve_host_and_port(const char *host, char *portname, int ix,
     return resolve_host_and_port_v4(host, portname, ix, pport, sa, sa_len,
 	    errmsg, lastp);
 #elif defined(_WIN32) /*[*/
-    if (ipv6_works()) {
+    if (has_ipv6) {
 	return resolve_host_and_port_v46(host, portname, ix, pport, sa, sa_len,
 		errmsg, lastp);
     } else {
@@ -314,7 +288,7 @@ numeric_host_and_port(const struct sockaddr *sa, socklen_t salen, char *host,
     return numeric_host_and_port_v4(sa, salen, host, hostlen, serv, servlen,
 	    errmsg);
 #elif defined(_WIN32) /*[*/
-    if (ipv6_works()) {
+    if (has_ipv6) {
 	return numeric_host_and_port_v46(sa, salen, host, hostlen, serv,
 		servlen, errmsg);
     } else {

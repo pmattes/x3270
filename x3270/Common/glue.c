@@ -120,10 +120,11 @@ register_merge_profile(merge_profile_t *m)
 int
 parse_command_line(int argc, const char **argv, const char **cl_hostname)
 {
-    int cl, i;
+    size_t cl;
+    int i;
     int hn_argc;
     size_t sl;
-    int xcmd_len = 0;
+    size_t xcmd_len = 0;
     char *xcmd;
     int xargc;
     const char **xargv;
@@ -906,7 +907,7 @@ parse_set_clear(int *argcp, const char **argv)
 static int
 parse_model_number(char *m)
 {
-    int sl;
+    size_t sl;
     int n;
 
     sl = strlen(m);
@@ -1100,7 +1101,7 @@ register_resources(res_t *res, unsigned num_res)
  * first character of the second.
  */
 static int
-strncapcmp(const char *known, const char *unknown, unsigned unk_len)
+strncapcmp(const char *known, const char *unknown, size_t unk_len)
 {
     if (unk_len != strlen(known)) {
 	return -1;
@@ -1164,7 +1165,7 @@ struct host_color host_color[] = {
  * Validate a resource that is fetched explicitly, rather than via appres.
  */
 static int
-valid_explicit(const char *resname, unsigned len)
+valid_explicit(const char *resname, size_t len)
 {
     xreslist_t *x;
     unsigned i;
@@ -1172,7 +1173,7 @@ valid_explicit(const char *resname, unsigned len)
 
     for (x = xreslist; x != NULL; x = x->next) {
 	for (i = 0; i < x->count; i++) {
-	    unsigned sl = strlen(x->xresources[i].name);
+	    size_t sl = strlen(x->xresources[i].name);
 
 	    switch (x->xresources[i].type) {
 	    case V_FLAT:
@@ -1224,7 +1225,7 @@ void
 parse_xrm(const char *arg, const char *where)
 {
     const char *name;
-    unsigned rnlen;
+    size_t rnlen;
     const char *s;
     unsigned i;
     char *t;

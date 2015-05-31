@@ -44,10 +44,10 @@
  */
 int
 validate_and_split_resource(const char *where, const char *arg,
-	const char **left, unsigned *rnlenp, const char **right)
+	const char **left, size_t *rnlenp, const char **right)
 {
-    unsigned match_len;
-    unsigned rnlen;
+    size_t match_len;
+    size_t rnlen;
     const char *s = arg;
     static char *me_dot = NULL;
     static char *me_star = NULL;
@@ -107,7 +107,7 @@ bool
 read_resource_filex(const char *filename, bool fatal)
 {
     FILE *f;
-    int ilen;
+    size_t ilen;
     char buf[4096];
     char *where;
     int lno = 0;
@@ -122,9 +122,10 @@ read_resource_filex(const char *filename, bool fatal)
 
     /* Merge in what's in the file into the resource database. */
     ilen = 0;
-    while (fgets(buf + ilen, sizeof(buf) - ilen, f) != NULL || ilen) {
+    while (fgets(buf + ilen, (size_t)(sizeof(buf) - ilen), f) != NULL ||
+	    ilen) {
 	char *s;
-	unsigned sl;
+	size_t sl;
 	bool bsl = false;
 
 	lno++;
