@@ -39,7 +39,6 @@
 
 #include <stdio.h>
 #include "wincmn.h"
-#include "shlobj_missing.h"
 
 #include "shortcutc.h"
 #include "winvers.h"
@@ -107,13 +106,8 @@ create_link(LPCSTR path_obj, LPSTR path_link, LPSTR desc, LPSTR args,
     }
 
     memset(&p, '\0', sizeof(NT_CONSOLE_PROPS));
-#if defined(_MSC_VER) /*[*/
     p.cbSize = sizeof(p);
     p.dwSignature = NT_CONSOLE_PROPS_SIG;
-#else /*][*/
-    p.dbh.cbSize = sizeof(p);
-    p.dbh.dwSignature = NT_CONSOLE_PROPS_SIG;
-#endif /*]*/
     p.wFillAttribute = 7;		/* ? */
     p.wPopupFillAttribute = 245;	/* ? */
     p.dwScreenBufferSize.X = cols;
@@ -165,13 +159,8 @@ create_link(LPCSTR path_obj, LPSTR path_link, LPSTR desc, LPSTR args,
 	NT_FE_CONSOLE_PROPS pfe;
 
 	memset(&pfe, '\0', sizeof(pfe));
-#if defined(_MSC_VER) /*[*/
 	pfe.cbSize = sizeof(pfe);
 	pfe.dwSignature = NT_FE_CONSOLE_PROPS_SIG;
-#else /*][*/
-	pfe.dbh.cbSize = sizeof(pfe);
-	pfe.dbh.dwSignature = NT_FE_CONSOLE_PROPS_SIG;
-#endif /*]*/
 	pfe.uCodePage = codepage;
 
 	hres = psldl->lpVtbl->AddDataBlock(psldl, &pfe);

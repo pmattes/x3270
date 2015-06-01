@@ -82,9 +82,6 @@ int safe_snprintf(char *str, size_t size, const char *fmt, ...);
  * MinGW is missing the extern for it.
  */
 # define vscprintf	_vscprintf
-# if defined(__MINGW_NOTHROW) /*[*/
-int _CRTIMP __cdecl __MINGW_NOTHROW _vscprintf (const char *, __VALIST);
-# endif /*]*/
 
 # if defined(_MSC_VER) /*[*/
 

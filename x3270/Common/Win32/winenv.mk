@@ -12,12 +12,11 @@ endif
 
 # Set the GNU tools prefix and local executable suffix, depending on whether
 # we are compiling on Cygwin or Linux.
+GT_PFX = i686-w64-mingw32-
 OS = $(shell uname -o)
 ifeq ($(OS),Cygwin)
-GT_PFX = i686-pc-mingw32-
 NATIVE_SFX = .exe
 else
-GT_PFX = i586-mingw32msvc-
 NATIVE_SFX =
 endif
 
