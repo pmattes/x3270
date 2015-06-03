@@ -39,6 +39,7 @@
 #include "ft_private.h"
 #include "icmdc.h"
 #include "lazya.h"
+#include "popups.h"
 #include "utf8.h"
 #include "utils.h"
 
@@ -711,4 +712,127 @@ at the VM/CMS or TSO command prompt.\n");
 
     /* Let it go. */
     return 0;
+}
+
+/* Help for the interactive Transfer action. */
+void
+ft_help(bool as_action _is_unused)
+{
+    ft_conf_t conf;
+    char *s;
+
+    memset(&conf, 0, sizeof(ft_conf_t));
+    ft_init_conf(&conf);
+    action_output(
+"Syntax:\n\
+  To be prompted interactively for parameters:\n\
+    Transfer\n\
+  To specify parameters on the command line:\n\
+    Transfer <keyword>=<value>...\n\
+Keywords:");
+
+    action_output(
+"  Direction=send|receive               default '%s'",
+	    conf.receive_flag? "send": "receive");
+
+    if ((conf.receive_flag && conf.host_filename) ||
+	    (!conf.receive_flag && conf.local_filename)) {
+	s = lazyaf("default '%s'",
+		conf.receive_flag? conf.host_filename: conf.local_filename);
+    } else {
+	s = "(required)";
+    }
+    action_output(
+"  HostFile=<path>                      %s", s);
+
+    if ((!conf.receive_flag && conf.host_filename) ||
+	    (conf.receive_flag && conf.local_filename)) {
+	s = lazyaf("default '%s'",
+		conf.receive_flag? conf.local_filename: conf.host_filename);
+    } else {
+	s = "(required)";
+    }
+    action_output(
+"  LocalFile=<path>                     %s", s);
+
+    action_output(
+"  Host=tso|vm                          default '%s'",
+	    ft_decode_host_type(conf.host_type));
+    action_output(
+"  Mode=ascii|binary                    default '%s'",
+	    conf.ascii_flag? "ascii": "binary");
+    action_output(
+"  Cr=remove|add|keep                   default '%s'",
+	    conf.cr_flag? (conf.receive_flag? "add": "remove"): "keep");
+    action_output(
+"  Remap=yes|no                         default '%s'",
+	    conf.remap_flag? "yes": "no");
+#if defined(_WIN32) /*[*/
+    action_output(
+"  WindowsCodePage=<n>                  default %d",
+	    conf.windows_codepage);
+#endif /*]*/
+    action_output(
+"  Exist=keep|replace|append            default '%s'",
+	    conf.allow_overwrite? "replace":
+		(conf.append_flag? "append": "keep"));
+    action_output(
+"  Recfm=fixed|variable|undefined       for Direction=send");
+    if (conf.recfm != DEFAULT_RECFM) {
+	action_output(
+"                                        default '%s'",
+		ft_decode_recfm(conf.recfm));
+    }
+    action_output(
+"  Lrecl=<n>                            for Direction=send");
+    if (conf.lrecl) {
+	action_output(
+"                                        default %d",
+		conf.lrecl);
+    }
+    action_output(
+"  Blksize=<n>                          for Direction=send Host=tso");
+    if (conf.blksize) {
+	action_output(
+"                                        default %d",
+		conf.blksize);
+    }
+    action_output(
+"  Allocation=tracks|cylinders|avblock  for Direction=send Host=tso");
+    if (conf.units != DEFAULT_UNITS) {
+	action_output(
+"                                        default '%s'",
+		ft_decode_units(conf.units));
+    }
+    action_output(
+"  PrimarySpace=<n>                     for Direction=send Host=tso");
+    if (conf.primary_space) {
+	action_output(
+"                                        default %d",
+		conf.primary_space);
+    }
+    action_output(
+"  SecondarySpace=<n>                   for Direction=send Host=tso");
+    if (conf.secondary_space) {
+	action_output(
+"                                        default %d",
+		conf.secondary_space);
+    }
+    action_output(
+"  Avblock=<n>                          for Direction=send Host=tso Allocation=avblock");
+    if (conf.avblock) {
+	action_output(
+"                                        default %d",
+		conf.avblock);
+    }
+    action_output(
+"Note that to embed a space in a value, you must quote the keyword, e.g.:\n\
+  Transfer Direction=send LocalFile=/tmp/foo \"HostFile=foo text a\" Host=vm");
+
+    if (conf.local_filename) {
+	Free(conf.local_filename);
+    }
+    if (conf.host_filename) {
+	Free(conf.host_filename);
+    }
 }

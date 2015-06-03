@@ -32,6 +32,7 @@
  */
 
 void icmd_register(void);
+void ft_help(bool as_action);
 #if defined(__FT_PRIVATE_H) /*[*/
 int interactive_transfer(ft_conf_t *p);
 #endif /*]*/

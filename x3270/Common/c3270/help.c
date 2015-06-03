@@ -37,6 +37,7 @@
 #include "actions.h"
 #include "glue.h"
 #include "help.h"
+#include "icmdc.h"
 #include "popups.h"
 #include "screen.h"
 #include "utils.h"
@@ -140,6 +141,8 @@ static struct {
 	{ "Insert", NULL, P_3270, "Set 3270 insert mode" },
 	{ "Interrupt", NULL, P_3270, "In NVT mode, send IAC IP" },
 	{ "Key", "<symbol>|0x<nn>", P_3270, "Input one character" },
+	{ "Keymap", "[<keymap-name>]", P_SCRIPTING|P_INTERACTIVE,
+	    "Push temporary keymap, or pop if none specified" },
 	{ "Keypad", NULL, P_INTERACTIVE, "Pop up the 3270 keypad" },
 	{ "Left", NULL, P_3270, "Move cursr left" },
 	{ "Left2", NULL, P_3270, "Move cursor left 2 columns" },
@@ -202,6 +205,8 @@ static struct {
 	{ "SysReq", NULL, P_3270,
 	    "Send 3270 Attention (TELNET ABORT or SYSREQ AID)" },
 	{ "Tab", NULL, P_3270, "Move cursor to next field" },
+	{ "TemporaryKeymap", "[<keymap-name>]", P_SCRIPTING|P_INTERACTIVE,
+	    "Alias for Keymap" },
 #if defined(WC3270) /*[*/
 	{ "Title", "<text>", P_SCRIPTING|P_INTERACTIVE, "Change window title" },
 #endif /*]*/
@@ -215,36 +220,6 @@ static struct {
 	{ "Up", NULL, P_3270, "Move cursor up" },
 	{ "Wait", "<args>", P_SCRIPTING, "Wait for host events" },
 	{ NULL,  NULL, 0, NULL }
-};
-
-static const char *ft_help[] = {
-	"Syntax:",
-	"  To be prompted interactively for parameters:",
-	"    Transfer",
-	"  To specify parameters on the command line:",
-	"    Transfer <keyword>=<value>...",
-	"Keywords:",
-	"  Direction=send|receive               default 'receive'",
-	"  HostFile=<path>                      required",
-	"  LocalFile=<path>                     required",
-	"  Host=tso|vm                          default 'tso'",
-	"  Mode=ascii|binary                    default 'ascii'",
-	"  Cr=remove|add|keep                   default 'remove'",
-	"  Remap=yes|no                         default 'yes'",
-# if defined(_WIN32) /*[*/
-	"  WindowsCodePage=<n>                  default is system ANSI codepage",
-# endif /*]*/
-	"  Exist=keep|replace|append            default 'keep'",
-	"  Recfm=fixed|variable|undefined       for Direction=send",
-	"  Lrecl=<n>                            for Direction=send",
-	"  Blksize=<n>                          for Direction=send Host=tso",
-	"  Allocation=tracks|cylinders|avblock  for Direction=send Host=tso",
-	"  PrimarySpace=<n>                     for Direction=send Host=tso",
-	"  SecondarySpace=<n>                   for Direction=send Host=tso",
-	"  Avblock=<n>                          for Direction=send Host=tso Allocation=avblock",
-	"Note that to embed a space in a value, you must quote the keyword, e.g.:",
-	"  Transfer Direction=send LocalFile=/tmp/foo \"HostFile=foo text a\" Host=vm",
-	NULL
 };
 
 #if defined(WC3270) /*[*/
@@ -263,7 +238,7 @@ static struct {
 	{ "interactive",	P_INTERACTIVE,	NULL, NULL, NULL },
 	{ "options",		P_OPTIONS,	NULL, NULL, &cmdline_help },
 	{ "scripting",		P_SCRIPTING,	NULL, NULL, NULL },
-	{ "file-transfer",	P_TRANSFER,	NULL, ft_help, NULL },
+	{ "file-transfer",	P_TRANSFER,	NULL, NULL, ft_help },
 #if defined(WC3270) /*[*/
 	{ "html",		P_HTML,		NULL, NULL, html_help },
 #endif /*]*/
@@ -277,6 +252,7 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
     int i;
     int overall = -1;
     int match = 0;
+    bool any = false;
 
     action_debug("Help", ia, argc, argv);
     if (check_argc("Help", argc, 0, 1) < 0) {
@@ -344,64 +320,65 @@ Help_action(ia_t ia, unsigned argc, const char **argv)
 	return true;
     }
 
+    /* Do a substring match on all of the actions. */
+    for (i = 0; cmd_help[i].name != NULL; i++) {
+	if (!strncasecmp(cmd_help[i].name, argv[0], strlen(argv[0]))) {
+	    action_output("  %s %s\n    %s",
+		    cmd_help[i].name,
+		    cmd_help[i].args? cmd_help[i].args: "",
+		    cmd_help[i].help? cmd_help[i].help: "");
+		    any = true;
+	}
+    }
+    if (any) {
+	return true;
+    }
+
     /* Check for an exact match on one of the topics. */
     for (i = 0; help_subcommand[i].name != NULL; i++) {
-	if (!strcasecmp(help_subcommand[i].name, argv[0])) {
+	if (!strncasecmp(help_subcommand[i].name, argv[0], strlen(argv[0]))) {
 	    match = help_subcommand[i].flag;
 	    overall = i;
 	    break;
 	}
     }
 
-    if (match) {
-	/* Matched on a topic. */
-	if (help_subcommand[overall].text != NULL) {
-	    /* One-line topic. */
-	    action_output("%s", help_subcommand[overall].text);
-	    return true;
-	}
-	if (help_subcommand[overall].block != NULL) {
-	    int j;
+    if (!match) {
+	action_output("No such command: %s", argv[0]);
+	return false;
+    }
 
-	    /* Multi-line topic. */
-	    for (j = 0; help_subcommand[overall].block[j] != NULL; j++) {
-		action_output("%s", help_subcommand[overall].block[j]);
-	    }
-	    return true;
-	}
-	if (help_subcommand[overall].fn != NULL) {
-	    /* Indirect output for topic. */
-	    (*help_subcommand[overall].fn)(true);
-	    return true;
-	}
+    /* Matched on a topic. */
+    if (help_subcommand[overall].text != NULL) {
+	/* One-line topic. */
+	action_output("%s", help_subcommand[overall].text);
+	return true;
+    }
+    if (help_subcommand[overall].block != NULL) {
+	int j;
 
-	/* Category. */
-	for (i = 0; cmd_help[i].name != NULL; i++) {
-	    if (cmd_help[i].purpose & match) {
-		action_output("  %s %s\n    %s",
-			cmd_help[i].name,
-			cmd_help[i].args? cmd_help[i].args: "",
-			cmd_help[i].help? cmd_help[i].help: "");
-	    }
+	/* Multi-line topic. */
+	for (j = 0; help_subcommand[overall].block[j] != NULL; j++) {
+	    action_output("%s", help_subcommand[overall].block[j]);
 	}
-    } else {
-	bool any = false;
+	return true;
+    }
+    if (help_subcommand[overall].fn != NULL) {
+	/* Indirect output for topic. */
+	(*help_subcommand[overall].fn)(true);
+	return true;
+    }
 
-	/* Do a substring match on all of the actions. */
-	for (i = 0; cmd_help[i].name != NULL; i++) {
-	    if (!strncasecmp(cmd_help[i].name, argv[0], strlen(argv[0]))) {
-		action_output("  %s %s\n    %s",
-			cmd_help[i].name,
-			cmd_help[i].args? cmd_help[i].args: "",
-			cmd_help[i].help? cmd_help[i].help: "");
-			any = true;
-	    }
-	}
-	if (!any) {
-	    action_output("No such command: %s", argv[0]);
-	    return false;
+    /* Category. */
+    for (i = 0; cmd_help[i].name != NULL; i++) {
+	if (cmd_help[i].purpose & match) {
+	    action_output("  %s %s\n    %s",
+		    cmd_help[i].name,
+		    cmd_help[i].args? cmd_help[i].args: "",
+		    cmd_help[i].help? cmd_help[i].help: "");
 	}
     }
+
     return true;
 }
 
