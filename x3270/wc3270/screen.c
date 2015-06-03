@@ -2804,8 +2804,8 @@ status_screentrace(int n)
 {
     if (n < 0) {
 	oia_screentrace = ' ';
-    } else if (n < 10) {
-	oia_screentrace = "0123456789"[n];
+    } else if (n < 9) {
+	oia_screentrace = "123456789"[n];
     } else {
 	oia_screentrace = '+';
     }

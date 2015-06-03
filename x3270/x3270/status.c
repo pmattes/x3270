@@ -1179,8 +1179,8 @@ do_screentrace(int n)
 
     if (n < 0) {
 	c = *standard_font? ' ': CG_space;
-    } else if (n < 10) {
-	c = *standard_font? ('0' + n): (CG_0 + n);
+    } else if (n < 9) {
+	c = *standard_font? ('1' + n): (CG_1 + n);
     } else {
 	c = *standard_font? '+': CG_plus;
     }
