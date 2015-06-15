@@ -107,7 +107,6 @@ x3270.charsetList:	U.S. English (CP 037): us-intl\n\
 			Chinese GB 18030 (CP 1388): chinese-gb18030\n\
 			Chinese Traditional (CP 937): traditional-chinese\n\
 #endif
-! (DBCS)
 			Finnish (CP 278): finnish\n\
 			French (CP 297): french\n\
 			German (CP 273): german\n\
@@ -119,7 +118,6 @@ x3270.charsetList:	U.S. English (CP 037): us-intl\n\
 			Japanese w/Kana (CP 930): japanese-kana\n\
 			Japanese w/Latin (CP 939): japanese-latin\n\
 #endif
-! (DBCS)
 			Norwegian (CP 277): norwegian\n\
 			Open Systems (CP 1047): cp1047\n\
 			Polish (CP 870): cp870\n\
