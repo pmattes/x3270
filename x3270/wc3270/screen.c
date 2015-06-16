@@ -3163,6 +3163,26 @@ screen_final(void)
 }
 
 /**
+ * Get the current dimensions of the console.
+ *
+ * @param[out] rows	Returned rows
+ * @param[out] cols	Returned cols
+ */
+void
+get_console_size(int *rows, int *cols)
+{
+    CONSOLE_SCREEN_BUFFER_INFO info;
+
+    if (GetConsoleScreenBufferInfo(cohandle, &info) == 0) {
+	*rows = 25;
+	*cols = 80;
+	return;
+    }
+    *rows = info.srWindow.Bottom - info.srWindow.Top + 1;
+    *cols = info.srWindow.Right - info.srWindow.Left + 1;
+}
+
+/**
  * Stub for scrollbar function.
  *
  * @param[in] top	Where the top of the scrollbar should be (percentage)

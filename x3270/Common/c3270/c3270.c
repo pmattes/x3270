@@ -132,6 +132,8 @@ static FILE *pager = NULL;
 #else /*][*/
 static int pager_rowcnt = 0;
 static bool pager_q = false;
+static int pager_rows = 25;
+static int pager_cols = 80;
 #endif /*]*/
 
 bool escape_pending = false;
@@ -580,17 +582,22 @@ interact(void)
 	/* Get the command, and trim white space. */
 	if (fgets(buf, sizeof(buf), stdin) == NULL) {
 	    printf("\n");
-#if defined(_WIN32) /*[*/
+# if defined(_WIN32) /*[*/
 	    continue;
-#else /*][*/
+# else /*][*/
 	    x3270_exit(0);
-#endif /*]*/
+# endif /*]*/
 	}
 	s = buf;
 #endif /*]*/
 #if !defined(_WIN32) /*[*/
 	/* Defer SIGTSTP until the next prompt display. */
 	signal(SIGTSTP, running_sigtstp_handler);
+#endif /*]*/
+
+#if defined(_WIN32) /*[*/
+	/* Get the current console size. */
+	get_console_size(&pager_rows, &pager_cols);
 #endif /*]*/
 
 	while (isspace(*s)) {
@@ -724,14 +731,16 @@ pager_output(const char *s)
     do {
 	char *nl;
 	int sl;
+	int nw;
 
 	/* Pause for a screenful. */
-	if (pager_rowcnt >= maxROWS) {
-	    printf("Press any key to continue . . . ");
+	if (pager_rowcnt >= (pager_rows - 1)) {
+	    nw = printf("Press any key to continue . . . ");
 	    fflush(stdout);
 	    pager_q = screen_wait_for_key(NULL);
-	    printf("\r                                \r");
+	    printf("\r%*s\r", (nw > 0)? nw: 79, "");
 	    pager_rowcnt = 0;
+	    get_console_size(&pager_rows, &pager_cols);
 	    if (pager_q) {
 		return;
 	    }
@@ -757,7 +766,7 @@ pager_output(const char *s)
 	pager_rowcnt++;
 
 	/* Account (conservatively) for any line wrap. */
-	pager_rowcnt += sl / maxCOLS;
+	pager_rowcnt += (int)(sl / pager_cols);
 
     } while (s != NULL);
 }

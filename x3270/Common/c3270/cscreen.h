@@ -48,4 +48,5 @@ bool screen_wait_for_key(char *c);
 void screen_title(const char *text);
 typedef void ctrlc_fn_t(void);
 void screen_set_ctrlc_fn(ctrlc_fn_t fn);
+void get_console_size(int *rows, int *cols);
 #endif /*]*/
