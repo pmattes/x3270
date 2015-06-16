@@ -1,52 +1,52 @@
 asprintf.o: asprintf.c ../../include/globals.h ../include/windows/conf.h \
-  ../../include/wincmn.h ../include/windows/localdefs.h \
-  ../../include/asprintf.h
+ ../../include/wincmn.h ../include/windows/localdefs.h \
+ ../../include/asprintf.h
 lazya.o: lazya.c ../../include/globals.h ../include/windows/conf.h \
-  ../../include/wincmn.h ../include/windows/localdefs.h \
-  ../../include/trace.h ../../include/utils.h ../../include/lazya.h
+ ../../include/wincmn.h ../include/windows/localdefs.h \
+ ../../include/trace.h ../../include/utils.h ../../include/lazya.h
 proxy.o: proxy.c ../../include/globals.h ../include/windows/conf.h \
-  ../../include/wincmn.h ../include/windows/localdefs.h \
-  ../../include/3270ds.h ../../include/popups.h ../../include/proxy.h \
-  ../../include/proxy_names.h ../../include/resolver.h \
-  ../../include/telnet_core.h ../../include/trace.h ../../include/utils.h \
-  ../../include/w3misc.h
+ ../../include/wincmn.h ../include/windows/localdefs.h \
+ ../../include/3270ds.h ../../include/popups.h ../../include/proxy.h \
+ ../../include/proxy_names.h ../../include/resolver.h \
+ ../../include/telnet_core.h ../../include/trace.h ../../include/utils.h \
+ ../../include/w3misc.h
 resolver.o: resolver.c ../../include/globals.h ../include/windows/conf.h \
-  ../../include/wincmn.h ../include/windows/localdefs.h \
-  ../../include/lazya.h ../../include/resolver.h ../../include/w3misc.h
+ ../../include/wincmn.h ../include/windows/localdefs.h \
+ ../../include/lazya.h ../../include/resolver.h ../../include/w3misc.h
 see.o: see.c ../../include/globals.h ../include/windows/conf.h \
-  ../../include/wincmn.h ../include/windows/localdefs.h \
-  ../../include/3270ds.h ../../include/lazya.h ../../include/utf8.h \
-  ../../include/utils.h ../../include/see.h ../../include/unicodec.h \
-  ../../include/varbuf.h
+ ../../include/wincmn.h ../include/windows/localdefs.h \
+ ../../include/3270ds.h ../../include/lazya.h ../../include/utf8.h \
+ ../../include/utils.h ../../include/see.h ../../include/unicodec.h \
+ ../../include/varbuf.h
 tables.o: tables.c ../../include/globals.h ../include/windows/conf.h \
-  ../../include/wincmn.h ../include/windows/localdefs.h \
-  ../../include/tables.h
+ ../../include/wincmn.h ../include/windows/localdefs.h \
+ ../../include/tables.h
 unicode.o: unicode.c ../../include/globals.h ../include/windows/conf.h \
-  ../../include/wincmn.h ../include/windows/localdefs.h \
-  ../../include/3270ds.h ../../include/unicodec.h \
-  ../../include/unicode_dbcs.h ../../include/utf8.h ../../include/utils.h
+ ../../include/wincmn.h ../include/windows/localdefs.h \
+ ../../include/3270ds.h ../../include/unicodec.h \
+ ../../include/unicode_dbcs.h ../../include/utf8.h ../../include/utils.h
 unicode_dbcs.o: unicode_dbcs.c ../../include/globals.h \
-  ../include/windows/conf.h ../../include/wincmn.h \
-  ../include/windows/localdefs.h ../../include/unicodec.h \
-  ../../include/unicode_dbcs.h
+ ../include/windows/conf.h ../../include/wincmn.h \
+ ../include/windows/localdefs.h ../../include/unicodec.h \
+ ../../include/unicode_dbcs.h
 utf8.o: utf8.c ../../include/globals.h ../include/windows/conf.h \
-  ../../include/wincmn.h ../include/windows/localdefs.h \
-  ../../include/utf8.h
+ ../../include/wincmn.h ../include/windows/localdefs.h \
+ ../../include/utf8.h
 varbuf.o: varbuf.c ../../include/globals.h ../include/windows/conf.h \
-  ../../include/wincmn.h ../include/windows/localdefs.h \
-  ../../include/asprintf.h ../../include/varbuf.h
+ ../../include/wincmn.h ../include/windows/localdefs.h \
+ ../../include/asprintf.h ../../include/varbuf.h
 xs_buffer.o: xs_buffer.c ../../include/globals.h \
-  ../include/windows/conf.h ../../include/wincmn.h \
-  ../include/windows/localdefs.h ../../include/asprintf.h \
-  ../../include/utils.h
+ ../include/windows/conf.h ../../include/wincmn.h \
+ ../include/windows/localdefs.h ../../include/asprintf.h \
+ ../../include/utils.h
 snprintf.o: snprintf.c ../../include/wincmn.h
 ssl_dll.o: ssl_dll.c ../../include/ssl_dll.h ../../include/globals.h \
-  ../include/windows/conf.h ../../include/wincmn.h \
-  ../include/windows/localdefs.h
+ ../include/windows/conf.h ../../include/wincmn.h \
+ ../include/windows/localdefs.h
 w3misc.o: w3misc.c ../../include/globals.h ../include/windows/conf.h \
-  ../../include/wincmn.h ../include/windows/localdefs.h \
-  ../../include/asprintf.h ../../include/w3misc.h
+ ../../include/wincmn.h ../include/windows/localdefs.h \
+ ../../include/asprintf.h ../../include/w3misc.h
 windirs.o: windirs.c ../../include/globals.h ../include/windows/conf.h \
-  ../../include/wincmn.h ../include/windows/localdefs.h \
-  ../../include/windirs.h
+ ../../include/wincmn.h ../include/windows/localdefs.h \
+ ../../include/windirs.h
 winvers.o: winvers.c ../../include/winvers.h
