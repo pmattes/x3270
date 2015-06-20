@@ -645,7 +645,8 @@ host_cs(unsigned char cs)
 
 static void
 insert_sa(int baddr, unsigned char *current_fgp, unsigned char *current_bgp,
-	unsigned char *current_grp, unsigned char *current_csp, bool *anyp)
+	unsigned char *current_grp, unsigned char *current_csp,
+	unsigned char *current_icp, bool *anyp)
 {
 	if (reply_mode != SF_SRM_CHAR)
 		return;
@@ -683,6 +684,7 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 	unsigned char	current_bg = 0x00;
 	unsigned char	current_gr = 0x00;
 	unsigned char	current_cs = 0x00;
+	unsigned char	current_ic = 0x00;
 
 	if (IN_SSCP && aid_byte != AID_ENTER)
 		return;
@@ -760,6 +762,7 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 						    &current_bg,
 						    &current_gr,
 						    &current_cs,
+						    &current_ic,
 						    &any);
 						if (ea_buf[baddr].cs & CS_GE) {
 							space3270out(1);
@@ -814,6 +817,7 @@ ctlr_read_modified(unsigned char aid_byte, bool all)
 				    &current_bg,
 				    &current_gr,
 				    &current_cs,
+				    &current_ic,
 				    &any);
 				if (ea_buf[baddr].cs & CS_GE) {
 					space3270out(1);
@@ -873,6 +877,7 @@ ctlr_read_buffer(unsigned char aid_byte)
 	unsigned char	current_bg = 0x00;
 	unsigned char	current_gr = 0x00;
 	unsigned char	current_cs = 0x00;
+	unsigned char	current_ic = 0x00;
 
 	if (aid_byte == AID_SF) {
 		dft_read_modified();
@@ -948,6 +953,7 @@ ctlr_read_buffer(unsigned char aid_byte)
 			    &current_bg,
 			    &current_gr,
 			    &current_cs,
+			    &current_ic,
 			    &any);
 			if (ea_buf[baddr].cs & CS_GE) {
 				space3270out(1);
@@ -995,6 +1001,7 @@ ctlr_snap_buffer(void)
 	unsigned char	current_bg = 0x00;
 	unsigned char	current_gr = 0x00;
 	unsigned char	current_cs = 0x00;
+	unsigned char	current_ic = 0x00;
 	unsigned char   av;
 
 	space3270out(2);
@@ -1068,6 +1075,14 @@ ctlr_snap_buffer(void)
 				space3270out(3);
 				*obptr++ = ORDER_SA;
 				*obptr++ = XA_CHARSET;
+				*obptr++ = av;
+			}
+			av = ea_buf[baddr].ic;
+			if (current_ic != av) {
+				current_ic = av;
+				space3270out(3);
+				*obptr++ = ORDER_SA;
+				*obptr++ = XA_INPUT_CONTROL;
 				*obptr++ = av;
 			}
 			if (ea_buf[baddr].cs & CS_GE) {
