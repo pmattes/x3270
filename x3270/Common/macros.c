@@ -2349,8 +2349,10 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 {
     int	baddr;
     unsigned char current_fg = 0x00;
+    unsigned char current_bg = 0x00;
     unsigned char current_gr = 0x00;
     unsigned char current_cs = 0x00;
+    unsigned char current_ic = 0x00;
     bool in_ebcdic = false;
     varbuf_t r;
 
@@ -2405,9 +2407,15 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	    if (buf[baddr].fg) {
 		vb_appendf(&r, ",%02x=%02x", XA_FOREGROUND, buf[baddr].fg);
 	    }
+	    if (buf[baddr].bg) {
+		vb_appendf(&r, ",%02x=%02x", XA_BACKGROUND, buf[baddr].bg);
+	    }
 	    if (buf[baddr].gr) {
 		vb_appendf(&r, ",%02x=%02x", XA_HIGHLIGHTING,
 			buf[baddr].gr | 0xf0);
+	    }
+	    if (buf[baddr].ic) {
+		vb_appendf(&r, ",%02x=%02x", XA_INPUT_CONTROL, buf[baddr].ic);
 	    }
 	    if (buf[baddr].cs & CS_MASK) {
 		vb_appendf(&r, ",%02x=%02x", XA_CHARSET,
@@ -2415,19 +2423,41 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	    }
 	    vb_appends(&r, ")");
 	} else {
+	    bool any_sa = false;
+#           define SA_SEP (any_sa? ",": " SA(")
+
 	    if (buf[baddr].fg != current_fg) {
-		vb_appendf(&r, " SA(%02x=%02x)", XA_FOREGROUND, buf[baddr].fg);
+		vb_appendf(&r, "%s%02x=%02x", SA_SEP, XA_FOREGROUND,
+			buf[baddr].fg);
 		current_fg = buf[baddr].fg;
+		any_sa = true;
+	    }
+	    if (buf[baddr].bg != current_bg) {
+		vb_appendf(&r, "%s%02x=%02x", SA_SEP, XA_BACKGROUND,
+			buf[baddr].fg);
+		current_bg = buf[baddr].bg;
+		any_sa = true;
 	    }
 	    if (buf[baddr].gr != current_gr) {
-		vb_appendf(&r, " SA(%02x=%02x)", XA_HIGHLIGHTING,
+		vb_appendf(&r, "%s%02x=%02x", SA_SEP, XA_HIGHLIGHTING,
 			buf[baddr].gr | 0xf0);
 		current_gr = buf[baddr].gr;
+		any_sa = true;
+	    }
+	    if (buf[baddr].ic != current_ic) {
+		vb_appendf(&r, "%s%02x=%02x", SA_SEP, XA_INPUT_CONTROL,
+			buf[baddr].ic);
+		current_gr = buf[baddr].gr;
+		any_sa = true;
 	    }
 	    if ((buf[baddr].cs & ~CS_GE) != (current_cs & ~CS_GE)) {
-		vb_appendf(&r, " SA(%02x=%02x)", XA_CHARSET,
+		vb_appendf(&r, "%s%02x=%02x", SA_SEP, XA_CHARSET,
 			calc_cs(buf[baddr].cs));
 		current_cs = buf[baddr].cs;
+		any_sa = true;
+	    }
+	    if (any_sa) {
+		vb_appends(&r, ")");
 	    }
 	    if (in_ebcdic) {
 		if (buf[baddr].cs & CS_GE) {

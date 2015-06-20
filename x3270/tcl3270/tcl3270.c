@@ -1171,8 +1171,10 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
     Tcl_Obj *row = NULL;
     int	baddr;
     unsigned char current_fg = 0x00;
+    unsigned char current_bg = 0x00;
     unsigned char current_gr = 0x00;
     unsigned char current_cs = 0x00;
+    unsigned char current_ic = 0x00;
     varbuf_t r;
     char *rbuf;
     bool in_ebcdic = false;
@@ -1211,9 +1213,15 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 	    if (buf[baddr].fg) {
 		vb_appendf(&r, ",%02x=%02x", XA_FOREGROUND, buf[baddr].fg);
 	    }
+	    if (buf[baddr].bg) {
+		vb_appendf(&r, ",%02x=%02x", XA_BACKGROUND, buf[baddr].bg);
+	    }
 	    if (buf[baddr].gr) {
 		vb_appendf(&r, ",%02x=%02x", XA_HIGHLIGHTING,
 			buf[baddr].gr | 0xf0);
+	    }
+	    if (buf[baddr].ic) {
+		vb_appendf(&r, ",%02x=%02x", XA_INPUT_CONTROL, buf[baddr].ic);
 	    }
 	    if (buf[baddr].cs & CS_MASK) {
 		vb_appendf(&r, ",%02x=%02x", XA_CHARSET,
@@ -1223,29 +1231,43 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf)
 	    Tcl_ListObjAppendElement(sms_interp, row,
 		    Tcl_NewStringObj(vb_consume(&r), -1));
 	} else {
+	    bool any_sa = false;
+#           define SA_SEP (any_sa? ",": "SA(")
+
 	    if (buf[baddr].fg != current_fg) {
-		rbuf = xs_buffer("SA(%02x=%02x)", XA_FOREGROUND,
+		vb_appendf(&r, "%s%02x=%02x", SA_SEP, XA_FOREGROUND,
 			buf[baddr].fg);
-		Tcl_ListObjAppendElement(sms_interp, row,
-			Tcl_NewStringObj(rbuf, -1));
-		Free(rbuf);
 		current_fg = buf[baddr].fg;
+		any_sa = true;
+	    }
+	    if (buf[baddr].bg != current_bg) {
+		vb_appendf(&r, "%s%02x=%02x", SA_SEP, XA_BACKGROUND,
+			buf[baddr].bg);
+		current_bg = buf[baddr].bg;
+		any_sa = true;
 	    }
 	    if (buf[baddr].gr != current_gr) {
-		rbuf = xs_buffer("SA(%02x=%02x)", XA_HIGHLIGHTING,
+		vb_appendf(&r, "%s%02x=%02x", SA_SEP, XA_HIGHLIGHTING,
 			buf[baddr].gr | 0xf0);
-		Tcl_ListObjAppendElement(sms_interp, row,
-			Tcl_NewStringObj(rbuf, -1));
-		Free(rbuf);
 		current_gr = buf[baddr].gr;
+		any_sa = true;
+	    }
+	    if (buf[baddr].ic != current_ic) {
+		vb_appendf(&r, "%s%02x=%02x", SA_SEP, XA_INPUT_CONTROL,
+			buf[baddr].ic);
+		current_ic = buf[baddr].ic;
+		any_sa = true;
 	    }
 	    if ((buf[baddr].cs & ~CS_GE) != (current_cs & ~CS_GE)) {
-		rbuf = xs_buffer("SA(%02x=%02x)", XA_CHARSET,
+		vb_appendf(&r, "%s%02x=%02x", SA_SEP, XA_CHARSET,
 			calc_cs(buf[baddr].cs));
-		Tcl_ListObjAppendElement(sms_interp, row,
-			Tcl_NewStringObj(rbuf, -1));
-		Free(rbuf);
 		current_cs = buf[baddr].cs;
+		any_sa = true;
+	    }
+	    if (any_sa) {
+		vb_appends(&r, ")");
+		Tcl_ListObjAppendElement(sms_interp, row,
+			Tcl_NewStringObj(vb_consume(&r), -1));
 	    }
 	    if (in_ebcdic) {
 		if (buf[baddr].cs & CS_GE) {
