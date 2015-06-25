@@ -43,7 +43,7 @@ solaris2*)	HSOPTS=-D__EXTENSIONS__
 		;;
 darwin*)	HSOPTS="-no-cpp-precomp -D_XOPEN_SOURCE_EXTENDED"
 		;;
-linux*)		HSOPTS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE"
+linux*)		HSOPTS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
 		;;
 esac
 if test "$GCC" = yes

@@ -1,5 +1,13 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, ws3270, tcl3270, pr3287 and wpr3287 3.4</h1>
 3.4 is the current development line for the x3270 suite.
+<h2>Changes in version 3.4ga5, Nn. Month 2015</h2>
+<ul>
+ <li>[<i>pr3287</i>] Changed the pr3287 Makefile to use $INSTALL_DATA
+  (<a href="http://sourceforge.net/p/x3270/bugs/13">bugs:#13</a>).</li>
+ <li>[All Unix] Added -D_DEFAULT_SOURCE wherever a Makefile used -D_BSD_SOURCE,
+  to get rid of compiler warnings with newer versions of glibc
+ (<a href="http://sourceforge.net/p/x3270/bugs/12">bugs:#12</a>).</li>
+</ul>
 <h2>Changes in version 3.4ga4, 16. June 2015</h2>
 <ul>
  <li>[<i>x3270</i>, <i>c3270</i>, <i>wc3270</i>] Corrected the OIA display of

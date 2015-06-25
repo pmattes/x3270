@@ -44,6 +44,8 @@ CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS) \
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
 
 OBJ = o
 include pr3287_files.mk
@@ -63,17 +65,17 @@ pr3287: $(OBJECTS) version.o $(LIB32XX)
 	$(CC) -o $@ $(OBJECTS) version.o $(LDFLAGS) $(LIBS) -L../lib -l32xx
 
 $(LIB32XX):
-	cd ..\lib\32xx && $(MAKE)
+	cd ../lib/32xx && $(MAKE)
 
 install: pr3287
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)
-	$(INSTALL) pr3287 $(DESTDIR)$(BINDIR)/pr3287
+	$(INSTALL_PROGRAM) pr3287 $(DESTDIR)$(BINDIR)/pr3287
 
 install.man:
 	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \
 		mkdir -p $(DESTDIR)$(MANDIR)/man1
-	$(INSTALL) pr3287.man $(DESTDIR)$(MANDIR)/man1/pr3287.1
+	$(INSTALL_DATA) pr3287.man $(DESTDIR)$(MANDIR)/man1/pr3287.1
 
 clean:
 	$(RM) *.o

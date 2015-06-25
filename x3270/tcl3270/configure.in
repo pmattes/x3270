@@ -42,7 +42,7 @@ solaris2*)	XANSI=-D__EXTENSIONS__
 		;;
 darwin*)	XPRECOMP=-no-cpp-precomp
 		;;
-linux*)		XANSI=-D_BSD_SOURCE
+linux*)		XANSI="-D_BSD_SOURCE -D_DEFAULT_SOURCE"
 		;;
 *)		XANSI=""
 		;;
