@@ -256,7 +256,7 @@ The XX_FB(Snap(Save)) action saves a snapshot of the screen in a special
 buffer. Then the script can use XX_FB(Snap) variants of the XX_FB(Ascii) and
 XX_FB(Ebcdic) actions (XX_FB(Snap(Ascii)) and XX_FB(Snap(Ebcdic))) to query
 the saved buffer -- which the host cannot modify -- to get the data it wants.
-Finally, XX_FB(XX_FB(Snap(Wait Output))) blocks the script until the host
+Finally, XX_FB(Snap(Wait Output)) blocks the script until the host
 modifies the screen, specifically since the last call to XX_FB(Snap(Save)).
 Thus a script can poll the screen efficiently by writing a loop that begins
 with XX_FB(Snap(Save)) and ends with XX_FB(Snap(Wait Output)).

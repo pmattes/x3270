@@ -58,13 +58,15 @@ else	prods=$all_prods
 fi
 
 # c3270, x3270, s3270 and tcl3270 need lib3270 and lib3270stubs.
+# pr3287 needs lib32xx.
 # wc3270 and ws3270 need libw3270 and libw3270stubs.
+# wpr3287 needs libw32xx.
 for i in $prods
 do	case $i in
-    	wc3270|ws3270)
+    	wc3270|ws3270|wpr3287)
 		need_wlibs=1
 		;;
-	c3270|s3270|tcl3270|x3270)
+	c3270|s3270|tcl3270|x3270|pr3287)
 		need_libs=1
 		;;
 	esac
