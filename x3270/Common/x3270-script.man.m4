@@ -256,7 +256,7 @@ The XX_FB(Snap(Save)) action saves a snapshot of the screen in a special
 buffer. Then the script can use XX_FB(Snap) variants of the XX_FB(Ascii) and
 XX_FB(Ebcdic) actions (XX_FB(Snap(Ascii)) and XX_FB(Snap(Ebcdic))) to query
 the saved buffer -- which the host cannot modify -- to get the data it wants.
-Finally, XX_FB(XX_FB(Snap(Wait Output))) blocks the script until the host
+Finally, XX_FB(Snap(Wait Output)) blocks the script until the host
 modifies the screen, specifically since the last call to XX_FB(Snap(Save)).
 Thus a script can poll the screen efficiently by writing a loop that begins
 with XX_FB(Snap(Save)) and ends with XX_FB(Snap(Wait Output)).
@@ -266,7 +266,8 @@ The following actions have been defined or modified for use with scripts.
 XX_FI(row)
 and
 XX_FI(col)
-coordinates used in these actions use [0,0] as their origin, not [1,1]).
+coordinates used in these actions use [0,0] as their origin at the upper left,
+not [1,1]).
 XX_TPS()dnl
 XX_TP(XX_FB(AnsiText))
 Outputs whatever data that has been output by the host in
@@ -290,10 +291,11 @@ Each line is preceded by the string "data:XX_NBSP", and there are no control
 characters.
 XX_IP
 If four parameters are given, a rectangular region of the screen is output.
+(Note that the row and column are zero-origin.)
 XX_IP
 If three parameters are given,
 XX_FI(length)
-characters are output, starting at the specified row and column.
+characters are output, starting at the specified zero-origin row and column.
 XX_IP
 If only the
 XX_FI(length)
@@ -350,10 +352,9 @@ The same function as
 XX_FB(Ascii)
 above, except that rather than generating
 XX_SM(ASCII)
-text, each character is output as a hexadecimal
+text, each character is output as a 2-digit or 4-digit hexadecimal
 XX_SM(EBCDIC)
-code, preceded by
-XX_FB(0x).
+code.
 XX_TP(XX_FB(EbcdicField))
 The same function as
 XX_FB(AsciiField)
@@ -387,7 +388,7 @@ If the XX_FI(keymap) parameter is given, the named keymap is added.
 If no parameter is given, the most recently added keymap is removed.
 ')dnl
 XX_TP(XX_FB(MoveCursor)(XX_FI(row),XX_FI(col)))
-Moves the cursor to the specified coordinates.
+Moves the cursor to the specified zero-origin coordinates.
 XX_TP(XX_FB(PauseScript))
 Stops a script until the
 XX_FB(ContinueScript)
@@ -418,7 +419,7 @@ XX_T_
 XX_TR(XX_TD(BindPluName)	XX_TD(BIND PLU returned by the host))
 XX_TR(XX_TD(ConnectionState)	XX_TD(TN3270/TN3270E mode and submode))
 XX_TR(XX_TD(CodePage)	XX_TD(Host code page))
-XX_TR(XX_TD(Cursor)	XX_TD(Cursor position (row col)))
+XX_TR(XX_TD(Cursor)	XX_TD(Cursor position (row col), zero-origin))
 XX_TR(XX_TD(Formatted)	XX_TD(3270 format state (formatted or unformatted)))
 XX_TR(XX_TD(Host)	XX_TD(Host name and port))
 XX_TR(XX_TD(LocalEncoding)	XX_TD(Local character encoding))
