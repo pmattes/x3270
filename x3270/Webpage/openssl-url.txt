@@ -1,1 +1,2 @@
-http://slproweb.com/download/Win32OpenSSL_Light-1_0_2a.exe
+URL32="http://slproweb.com/download/Win32OpenSSL_Light-1_0_2c.exe"
+URL64="http://slproweb.com/download/Win64OpenSSL_Light-1_0_2c.exe"
