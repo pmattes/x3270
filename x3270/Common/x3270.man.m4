@@ -947,7 +947,11 @@ the last XX_SM(AID) or the time to connect to a host.
 This display is optional.
 ')dnl
 XX_TP(XX_FB(cursor position))
-The cursor row and column are optionally displayed, separated by a "/".
+The cursor row and column are optionally displayed, zero padded and separated
+by a "/".
+Location 001/001 is at the upper left, which is different from the row and
+columns parameters used with various actions, where the upper left corner is
+row 0, column 0.
 XX_TPE()dnl
 ')dnl
 ifelse(XX_PRODUCT,x3270,
@@ -1076,7 +1080,7 @@ ifelse(XX_MODE,console,`XX_TR(XX_TDH(`Menu')	XX_TD(Display menu bar))
 XX_TR(XX_TDH(`MonoCase')	XX_TD(toggle uppercase-only mode))
 ifelse(XX_PRODUCT,x3270,`XX_TR(XX_TDH(MoveCursor)	XX_TD(move cursor to mouse position))
 ')dnl
-XX_TR(XX_TDH(MoveCursor`'XX_LPAREN`'XX_FI(row)`'XX_COMMA`'XX_FI(col)`'XX_RPAREN)	XX_TD(move cursor to (XX_FI(row),XX_FI(col))))
+XX_TR(XX_TDH(MoveCursor`'XX_LPAREN`'XX_FI(row)`'XX_COMMA`'XX_FI(col)`'XX_RPAREN)	XX_TD(move cursor to zero-origin (XX_FI(row),XX_FI(col))))
 ifelse(XX_PRODUCT,x3270,`XX_TR(`XX_TDH(XX_BLOCK()MoveCursorSelect)	XX_TD(`move cursor to mouse position, light pen selection''))
 ')dnl
 XX_TR(XX_TDH(`Newline')	XX_TD(move cursor to first field on next line (or send XX_SM(ASCII LF))))
