@@ -68,6 +68,8 @@
 #include <wincon.h>
 #include "winvers.h"
 
+#define ALL_AT_ONCE 1
+
 #define STATUS_SCROLL_START_MS	1500
 #define STATUS_SCROLL_MS	100
 #define STATUS_PUSH_MS		5000
@@ -143,6 +145,7 @@ static int field_colors[4] = {
 };
 
 static int defattr = 0;
+static int xhattr = 0;
 static ioid_t input_id;
 
 bool escaped = true;
@@ -566,6 +569,15 @@ addch(int c)
     }
 }
 
+static int
+mvinch(int y, int x)
+{
+    return toscreen[(y * console_cols) + x].Char.UnicodeChar;
+}
+
+#define A_CHARTEXT 0xffff
+
+#if 0 /* unused for now */
 static void
 printw(char *fmt, ...)
 {
@@ -589,6 +601,7 @@ printw(char *fmt, ...)
     }
     Free(wbuf);
 }
+#endif
 
 static void
 mvprintw(int row, int col, char *fmt, ...)
@@ -633,11 +646,13 @@ none_done(void)
     memset(done_array, '\0', console_rows * console_cols);
 }
 
+#if !defined(ALL_AT_ONCE) /*[*/
 static int
 is_done(int row, int col)
 {
     return done_array[ix(row, col)];
 }
+#endif /*]*/
 
 static void
 mark_done(int start_row, int end_row, int start_col, int end_col)
@@ -649,6 +664,7 @@ mark_done(int start_row, int end_row, int start_col, int end_col)
     }
 }
 
+#if !defined(ALL_AT_ONCE) /*[*/
 static int
 tos_a(int row, int col)
 {
@@ -702,6 +718,7 @@ select_changed_s(unsigned row, unsigned col, unsigned rows, unsigned cols)
     /* Now see if the area on the 3270 display has changed. */
     return select_changed(row_adj, col, rows_adj, cols_adj);
 }
+#endif /*]*/
 
 /*
  * Local version of select_sync() that deals in screen coordinates, not
@@ -826,6 +843,7 @@ hdraw(int row, int lrow, int col, int lcol)
     mark_done(row, lrow, col, lcol);
 }
 
+#if !defined(ALL_AT_ONCE) /*[*/
 /*
  * Draw a rectanglar region from 'toscreen' onto the screen, without regard to
  * what is already there.
@@ -911,6 +929,7 @@ draw_rect(int pc_start, int pc_end, int pr_start, int pr_end)
 	}
     }
 }
+#endif /*]*/
 
 /*
  * Compare 'onscreen' (what's on the screen right now) with 'toscreen' (what
@@ -927,11 +946,13 @@ draw_rect(int pc_start, int pc_end, int pr_start, int pr_end)
 static void
 sync_onscreen(void)
 {
+#if !defined(ALL_AT_ONCE) /*[*/
     int row;
     int col;
     int pending = FALSE;	/* is there a draw pending? */
     int pc_start, pc_end;	/* first and last columns in pending band */
     int pr_start;		/* first row in pending band */
+#endif /*]*/
 
     /* Clear out the 'what we've seen' array. */
     none_done();
@@ -958,6 +979,10 @@ sync_onscreen(void)
     }
 #endif /*]*/
 
+#if defined(ALL_AT_ONCE) /*[*/
+    hdraw(0, console_rows - 1, 0, console_cols - 1);
+    onscreen_valid = TRUE;
+#else /*][*/
     /* Sometimes you have to draw everything. */
     if (!onscreen_valid) {
 	draw_rect(0, console_cols - 1, 0, console_rows - 1);
@@ -1005,6 +1030,7 @@ sync_onscreen(void)
     if (pending) {
 	draw_rect(pc_start, pc_end, pr_start, console_rows - 1);
     }
+#endif /*]*/
 }
 
 /* Repaint the screen. */
@@ -1048,7 +1074,7 @@ refresh(void)
 }
 
 /* Set the console to 'cooked' mode. */
-static void
+    static void
 set_console_cooked(void)
 {
     if (SetConsoleMode(chandle, ENABLE_ECHO_INPUT |
@@ -1199,6 +1225,7 @@ screen_init(void)
     /* If the want monochrome, assume they want green. */
     if (!appres.m3279) {
 	defattr |= FOREGROUND_GREEN;
+	xhattr |= FOREGROUND_GREEN;
 	if (ab_mode == TS_ON) {
 	    defattr |= FOREGROUND_INTENSITY;
 	}
@@ -1344,7 +1371,7 @@ init_user_attribute_colors(void)
 
 /*
  * Map a field attribute to a 3270 color index.
- * Applies only to m3270 mode -- does not work for mono.
+ * Applies only to m3279 mode -- does not work for mono.
  */
 static int
 color3270_from_fa(unsigned char fa)
@@ -1448,8 +1475,12 @@ init_user_colors(void)
     if (appres.m3279) {
 	defattr = cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
 		  cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
+	xhattr = cmap_fg[HOST_COLOR_PALE_GREEN] |
+		  cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
     } else {
 	defattr = cmap_fg[HOST_COLOR_PALE_GREEN] |
+		  cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
+	xhattr = cmap_fg[HOST_COLOR_PALE_GREEN] |
 		  cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
     }
 }
@@ -1458,13 +1489,19 @@ init_user_colors(void)
 static int
 invert_colors(int a)
 {
+    unsigned char fg = a &
+	(FOREGROUND_RED|FOREGROUND_GREEN|FOREGROUND_BLUE|FOREGROUND_INTENSITY);
+
     /*
-     * Replace color 0 with color 15, color 1 with color 14, etc., through
-     * replacing color 15 with color 0.
+     * Make the background gray.
+     * If the foreground is gray, make it black.
+     * Otherwise leave it.
      */
-    return (a & ~0xff) |	/* intensity, etc. */
-	(0xf0 - (a & 0xf0)) |	/* background */
-	(0x0f - (a & 0x0f));	/* foreground */
+    if (fg == FOREGROUND_INTENSITY) {
+	fg = 0;
+    }
+
+    return (a & ~0xff) | BACKGROUND_INTENSITY | fg;
 }
 
 /* Apply selection status. */
@@ -1629,6 +1666,24 @@ visible_fa(unsigned char fa)
     ix = ((fa & (FA_PROTECT | FA_NUMERIC | FA_INTENSITY)) >> 1) |
 	(fa & FA_MODIFY);
     return varr[ix];
+}
+
+static int
+crosshair_blank(int baddr)
+{
+    if (toggled(CROSSHAIR)) {
+	bool same_row = ((baddr / cCOLS) == (cursor_addr / cCOLS));
+	bool same_col = ((baddr % cCOLS) == (cursor_addr % cCOLS));
+
+	if (same_row && same_col) {
+	    return 0x253c;
+	} else if (same_row) {
+	    return 0x2500;
+	} else if (same_col) {
+	    return 0x2502;
+	}
+    }
+    return ' ';
 }
 
 /* Display what's in the buffer. */
@@ -1802,17 +1857,29 @@ screen_disp(bool erasing _is_unused)
 					     baddr));
 			addch(visible_fa(fa));
 		    } else {
-			attrset(apply_select(defattr, baddr));
-			addch(' ');
+			c = crosshair_blank(baddr);
+			if (c != ' ') {
+			    attrset(apply_select(xhattr, baddr));
+			} else {
+			    attrset(apply_select(defattr, baddr));
+			}
+			addch(c);
 		    }
 		}
 	    } else if (FA_IS_ZERO(fa)) {
 		/* Blank. */
 		if (!is_menu) {
-		    attrset(apply_select(a, baddr));
-		    addch(' ');
+		    c = crosshair_blank(baddr);
+		    if (c == ' ') {
+			attrset(apply_select(a, baddr));
+		    } else {
+			attrset(apply_select(xhattr, baddr));
+		    }
+		    addch(c);
 		}
 	    } else {
+		int attr_this;
+
 		if (is_menu) {
 		    continue;
 		}
@@ -1821,7 +1888,7 @@ screen_disp(bool erasing _is_unused)
 		if (!(ea_buf[baddr].gr ||
 		      ea_buf[baddr].fg ||
 		      ea_buf[baddr].bg)) {
-		    attrset(apply_select(a, baddr));
+		    attr_this = apply_select(a, baddr);
 		    underlined = a_underlined;
 		    blinking = a_blinking;
 		} else {
@@ -1835,7 +1902,7 @@ screen_disp(bool erasing _is_unused)
 		     */
 		    b = calc_attrs(baddr, fa_addr, fa, &b_underlined,
 			    &b_blinking);
-		    attrset(apply_select(b, baddr));
+		    attr_this = apply_select(b, baddr);
 		    underlined = b_underlined;
 		    blinking = b_blinking;
 		}
@@ -1857,9 +1924,7 @@ screen_disp(bool erasing _is_unused)
 				(ea_buf[baddr].cc << 8) |
 				ea_buf[xaddr].cc,
 				CS_BASE, EUO_NONE);
-			if (c == 0) {
-			    c = ' ';
-			}
+			attrset(attr_this);
 			cur_attr |= COMMON_LVB_LEAD_BYTE;
 			addch(c);
 			cur_attr &= ~COMMON_LVB_LEAD_BYTE;
@@ -1883,7 +1948,15 @@ screen_disp(bool erasing _is_unused)
 				appres.c3270.ascii_box_draw?
 				    EUO_ASCII_BOX: 0);
 			if (c == 0) {
-			    c = ' ';
+			    c = crosshair_blank(baddr);
+			    if (c != ' ') {
+				attr_this = apply_select(xhattr, baddr);
+			    }
+			} else if (c == ' ' && toggled(CROSSHAIR)) {
+			    c = crosshair_blank(baddr);
+			    if (c != ' ') {
+				attr_this = apply_select(xhattr, baddr);
+			    }
 			}
 			if (underlined && c == ' ') {
 			    c = '_';
@@ -1892,6 +1965,7 @@ screen_disp(bool erasing _is_unused)
 			    c = towupper(c);
 			}
 		    }
+		    attrset(attr_this);
 		    addch(blinkmap(blinking, underlined, c));
 		}
 	    }
@@ -2101,7 +2175,7 @@ handle_mouse_event(MOUSE_EVENT_RECORD *me)
      * Pass it to the selection logic. If the event is not consumed, treat
      * it as a cursor move.
      */
-    if ( !select_event(row, col, event,
+    if (!select_event(row, col, event,
 		(me->dwControlKeyState & SHIFT_PRESSED) != 0)) {
 	vtrace(" cursor move\n");
 	cursor_move((row * COLS) + col);
@@ -2486,6 +2560,10 @@ void
 cursor_move(int baddr)
 {
     cursor_addr = baddr;
+    if (toggled(CROSSHAIR)) {
+	screen_changed = true;
+	screen_disp(false);
+    }
 }
 
 static void
@@ -2497,6 +2575,13 @@ toggle_monocase(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 
 static void
 toggle_underscore(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
+{
+    screen_changed = true;
+    screen_disp(false);
+}
+
+static void
+toggle_crosshair(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
     screen_changed = true;
     screen_disp(false);
@@ -2822,22 +2907,55 @@ draw_oia(void)
 {
     int rmargin;
     int i, j;
+    int cursor_col = (cursor_addr % cCOLS);
+    int oia_attr = appres.m3279 ?
+	   (cmap_fg[HOST_COLOR_GREY] | cmap_bg[HOST_COLOR_NEUTRAL_BLACK]):
+	   defattr;
 
     rmargin = maxCOLS - 1;
+
+    /* Extend or erase the crosshair. */
+    attrset(xhattr);
+    if (toggled(CROSSHAIR) && screen_yoffset > 1) {
+	move(1, cursor_addr % cCOLS);
+	addch(0x2502);
+    }
+    for (i = ROWS + screen_yoffset; i < status_row; i++) {
+	for (j = 0; j < maxCOLS; j++) {
+	    move(i, j);
+	    if (toggled(CROSSHAIR) && (j == cursor_col)) {
+		addch(0x2502);
+	    } else {
+		addch(' ');
+	    }
+	}
+    }
+    for (i = 0; i < ROWS; i++) {
+	for (j = cCOLS; j < maxCOLS; j++) {
+	    move(i + screen_yoffset, j);
+	    if (toggled(CROSSHAIR) && i == (cursor_addr / cCOLS)) {
+		addch(0x2500);
+	    } else {
+		addch(' ');
+	    }
+	}
+    }
 
     /* Make sure the status line region is filled in properly. */
     attrset(defattr);
     move(maxROWS + screen_yoffset, 0);
     for (i = maxROWS + screen_yoffset; i < status_row; i++) {
 	for (j = 0; j <= rmargin; j++) {
-	    printw(" ");
+	    addch(' ');
 	}
     }
     move(status_row, 0);
+    attrset(defattr);
     for (i = 0; i <= rmargin; i++) {
-	printw(" ");
+	addch(' ');
     }
 
+    /* Offsets 0, 1, 2 */
     if (appres.m3279) {
 	attrset(cmap_fg[HOST_COLOR_NEUTRAL_BLACK] | cmap_bg[HOST_COLOR_GREY]);
     } else {
@@ -2845,25 +2963,22 @@ draw_oia(void)
     }
     mvprintw(status_row, 0, "4");
     if (oia_undera) {
-	printw("%c", IN_E? 'B': 'A');
+	addch(IN_E? 'B': 'A');
     } else {
-	printw(" ");
+	addch(' ');
     }
     if (IN_NVT) {
-	printw("N");
+	addch('N');
     } else if (oia_boxsolid) {
-	printw(" ");
+	addch(' ');
     } else if (IN_SSCP) {
-	printw("S");
+	addch('S');
     } else {
-	printw("?");
+	addch('?');
     }
 
-    if (appres.m3279) {
-	attrset(cmap_fg[HOST_COLOR_GREY] | cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
-    } else {
-	attrset(defattr);
-    }
+    /* Offset 8 */
+    attrset(oia_attr);
     mvprintw(status_row, 8, "%-35.35s", status_msg);
     mvprintw(status_row, rmargin-35,
 	    "%c%c %c%c%c%c",
@@ -2877,17 +2992,12 @@ draw_oia(void)
 	attrset(cmap_fg[(status_secure == SS_SECURE)?
 			    HOST_COLOR_GREEN: HOST_COLOR_YELLOW] |
 		cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
-	printw("S");
-	if (appres.m3279) {
-	    attrset(cmap_fg[HOST_COLOR_GREY] |
-		    cmap_bg[HOST_COLOR_NEUTRAL_BLACK]);
-	} else {
-	    attrset(defattr);
-	}
+	addch('S');
+	attrset(oia_attr);
     } else {
-	printw(" ");
+	addch(' ');
     }
-    printw("%c", oia_screentrace);
+    addch(oia_screentrace);
 
     mvprintw(status_row, rmargin-25, "%s", oia_lu);
 
@@ -2898,6 +3008,15 @@ draw_oia(void)
     if (toggled(CURSOR_POS)) {
 	mvprintw(status_row, rmargin-7,
 	    "%03d/%03d", cursor_addr/cCOLS + 1, cursor_addr%cCOLS + 1);
+    }
+
+    /* Now fill in the crosshair cursor in the status line. */
+    if (toggled(CROSSHAIR) &&
+	    cursor_col > 2 &&
+	    (mvinch(status_row, cursor_col) & A_CHARTEXT) == ' ') {
+	move(status_row, cursor_col);
+	attrset(xhattr);
+	addch(0x2502);
     }
 }
 
@@ -3215,7 +3334,8 @@ screen_register(void)
 	{ UNDERSCORE,		toggle_underscore,	0 },
 	{ MARGINED_PASTE,	NULL,			0 },
 	{ OVERLAY_PASTE,	NULL,			0 },
-	{ VISIBLE_CONTROL,	toggle_visibleControl,	0 }
+	{ VISIBLE_CONTROL,	toggle_visibleControl,	0 },
+	{ CROSSHAIR,		toggle_crosshair,	0 }
     };
     static action_table_t screen_actions[] = {
 	{ "Paste",	Paste_action,	ACTION_KE },
