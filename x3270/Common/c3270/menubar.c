@@ -882,9 +882,7 @@ typedef enum {
     OM_BLANKFILL,
     OM_TIMING,
     OM_CURSOR,
-#if defined(WC3270) /*[*/
     OM_CROSSHAIR,
-#endif /*]*/
     OM_UNDERSCORE,
 #if defined(WC3270) /*[*/
     OM_MARGINED_PASTE,
@@ -899,9 +897,7 @@ toggle_index_t option_index[OM_COUNT] = {
     BLANK_FILL,
     SHOW_TIMING,
     CURSOR_POS,
-#if defined(WC3270) /*[*/
     CROSSHAIR,
-#endif /*]*/
     UNDERSCORE,
 #if defined(WC3270) /*[*/
     MARGINED_PASTE,
@@ -914,9 +910,7 @@ char *option_names[OM_COUNT] = {
     "Blank Fill",
     "Show Timing",
     "Track Cursor",
-#if defined(WC3270) /*[*/
     "Crosshair Cursor",
-#endif /*]*/
     "Underscore Mode",
 #if defined(WC3270) /*[*/
     "Margined Paste",
