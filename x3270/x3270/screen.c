@@ -153,7 +153,7 @@ static union sp *temp_image;	/* temporary for X display */
 static Pixel	colorbg_pixel;
 static bool	crosshair_enabled = true;
 static bool  cursor_displayed = false;
-static bool  cursor_enabled = true;
+/*static*/ bool  cursor_enabled = true;
 static bool  cursor_blink_pending = false;
 static XtIntervalId cursor_blink_id;
 static int	field_colors[4];
@@ -257,9 +257,11 @@ static char *default_display_charset = "3270cg-1a,3270cg-1,iso8859-1";
 static char *required_display_charsets;
 
 #define CROSSABLE	(toggled(CROSSHAIR) && IN_3270 && \
-			 cursor_enabled && crosshair_enabled)
+			 cursor_enabled && crosshair_enabled && in_focus)
 #define CROSSED(b)	((BA_TO_COL(b) == cursor_col) || \
 			 (BA_TO_ROW(b) == cursor_row))
+
+#define CROSS_COLOR	(GC_NONDEFAULT | HOST_COLOR_PURPLE)
 
 /*
  * The screen state structure.  This structure is swapped whenever we switch
@@ -1634,135 +1636,129 @@ empty_space(register union sp *buffer, int len)
 static void
 resync_text(int baddr, int len, union sp *buffer)
 {
-	static bool ever = false;
-	static unsigned long cmask = 0L;
-	static unsigned long gmask = 0L;
+    static bool ever = false;
+    static unsigned long cmask = 0L;
+    static unsigned long gmask = 0L;
 
 #if defined(_ST) /*[*/
-	(void) printf("resync_text(baddr=%s, len=%d)\n", rcba(baddr), len);
+    (void) printf("resync_text(baddr=%s, len=%d)\n", rcba(baddr), len);
 #endif /*]*/
 
-	/*
-	 * If the region begins on the right half of a DBCS character, back
-	 * up one.
-	 */
-	if (baddr % COLS) {
-		enum dbcs_state d;
+    /*
+     * If the region begins on the right half of a DBCS character, back
+     * up one.
+     */
+    if (baddr % COLS) {
+	enum dbcs_state d;
 
-		d = ctlr_dbcs_state(baddr);
-		if (IS_RIGHT(d)) {
-			baddr--;
-			len++;
+	d = ctlr_dbcs_state(baddr);
+	if (IS_RIGHT(d)) {
+	    baddr--;
+	    len++;
+	}
+    }
+
+    if (!ever) {
+	union sp b;
+
+	/* Create masks for the "important" fields in an sp. */
+	b.word = 0L;
+	b.bits.fg = COLOR_MASK | INVERT_MASK;
+	b.bits.sel = 1;
+	b.bits.gr = GR_UNDERLINE | GR_INTENSIFY;
+	cmask = b.word;
+
+	b.word = 0L;
+	b.bits.fg = INVERT_MASK;
+	b.bits.sel = 1;
+	b.bits.gr = 0xf;
+	gmask = b.word;
+
+	ever = true;
+    }
+
+    if (!visible_control && len > 1 && empty_space(&buffer[baddr], len)) {
+	int x, y;
+
+	x = ssCOL_TO_X(BA_TO_COL(baddr));
+	y = ssROW_TO_Y(BA_TO_ROW(baddr));
+
+	/* All empty, fill a rectangle */
+#if defined(_ST) /*[*/
+	(void) printf("FillRectangle(baddr=%s, len=%d)\n", rcba(baddr), len);
+#endif /*]*/
+	XFillRectangle(display, ss->window, get_gc(ss, INVERT_COLOR(0)), x,
+		y - ss->ascent, (ss->char_width * len) + 1, ss->char_height);
+    } else {
+	unsigned long attrs, attrs2;
+	bool has_gr, has_gr2;
+	bool empty, empty2;
+	union sp ra;
+	int i;
+	int i0 = 0;
+
+	ra = buffer[baddr];
+
+	/* Note the characteristics of the beginning of the region. */
+	attrs = buffer[baddr].word & cmask;
+	has_gr = (buffer[baddr].word & gmask) != 0;
+	empty = !has_gr && BKM_ISSET(buffer[baddr].bits.cc);
+
+	for (i = 0; i < len; i++) {
+	    /* Note the characteristics of this character. */
+	    attrs2 = buffer[baddr+i].word & cmask;
+	    has_gr2 = (buffer[baddr+i].word & gmask) != 0;
+	    empty2 = !has_gr2 && BKM_ISSET(buffer[baddr+i].bits.cc);
+
+	    /* If this character has exactly the same attributes
+	       as the current region, simply add it, noting that
+	       the region might now not be empty. */
+	    if (attrs2 == attrs) {
+		if (!empty2) {
+		    empty = 0;
 		}
+		continue;
+	    }
+
+	    /* If this character is empty, and the current region
+	       has no GR attributes, pretend it matches. */
+	    if (empty2 && !has_gr) {
+		continue;
+	    }
+
+	    /* If the current region is empty, this character
+	       isn't empty, and this character has no GR
+	       attributes, change the current region's attributes
+	       to this character's attributes and add it. */
+	    if (empty && !empty2 && !has_gr2) {
+		attrs = attrs2;
+		has_gr = has_gr2;
+		empty = empty2;
+		ra = buffer[baddr+i];
+		continue;
+	    }
+
+	    /* Dump the region and start a new one with this character. */
+#if defined(_ST) /*[*/
+	    printf("%s:%d: rt%s\n", __FUNCTION__, __LINE__, rcba(baddr+i0));
+#endif /*]*/
+	    render_text(&buffer[baddr+i0], baddr+i0, i - i0, false, &ra);
+	    attrs = attrs2;
+	    has_gr = has_gr2;
+	    empty = empty2;
+	    i0 = i;
+	    ra = buffer[baddr+i];
 	}
 
-	if (!ever) {
-		union sp b;
-
-		/* Create masks for the "important" fields in an sp. */
-		b.word = 0L;
-		b.bits.fg = COLOR_MASK | INVERT_MASK;
-		b.bits.sel = 1;
-		b.bits.gr = GR_UNDERLINE | GR_INTENSIFY;
-		cmask = b.word;
-
-		b.word = 0L;
-		b.bits.fg = INVERT_MASK;
-		b.bits.sel = 1;
-		b.bits.gr = 0xf;
-		gmask = b.word;
-
-		ever = true;
-	}
-
-	if (!visible_control &&
-	    len > 1 &&
-	    empty_space(&buffer[baddr], len)) {
-		int x, y;
-
-		x = ssCOL_TO_X(BA_TO_COL(baddr));
-		y = ssROW_TO_Y(BA_TO_ROW(baddr));
-
-		/* All empty, fill a rectangle */
+	/* Dump the remainder of the region. */
 #if defined(_ST) /*[*/
-		(void) printf("FillRectangle(baddr=%s, len=%d)\n", rcba(baddr),
-		    len);
+	printf("%s:%d: rt%s\n", __FUNCTION__, __LINE__, rcba(baddr+i0));
 #endif /*]*/
-		XFillRectangle(display, ss->window,
-		    get_gc(ss, INVERT_COLOR(0)),
-		    x, y - ss->ascent,
-		    (ss->char_width * len) + 1, ss->char_height);
-	} else {
-		unsigned long attrs, attrs2;
-		bool has_gr, has_gr2;
-		bool empty, empty2;
-		union sp ra;
-		int i;
-		int i0 = 0;
+	render_text(&buffer[baddr+i0], baddr+i0, len - i0, false, &ra);
+    }
 
-		ra = buffer[baddr];
-
-		/* Note the characteristics of the beginning of the region. */
-		attrs = buffer[baddr].word & cmask;
-		has_gr = (buffer[baddr].word & gmask) != 0;
-		empty = !has_gr && BKM_ISSET(buffer[baddr].bits.cc);
-
-		for (i = 0; i < len; i++) {
-			/* Note the characteristics of this character. */
-			attrs2 = buffer[baddr+i].word & cmask;
-			has_gr2 = (buffer[baddr+i].word & gmask) != 0;
-			empty2 = !has_gr2 && BKM_ISSET(buffer[baddr+i].bits.cc);
-
-			/* If this character has exactly the same attributes
-			   as the current region, simply add it, noting that
-			   the region might now not be empty. */
-			if (attrs2 == attrs) {
-				if (!empty2)
-					empty = 0;
-				continue;
-			}
-
-			/* If this character is empty, and the current region
-			   has no GR attributes, pretend it matches. */
-			if (empty2 && !has_gr)
-				continue;
-
-			/* If the current region is empty, this character
-			   isn't empty, and this character has no GR
-			   attributes, change the current region's attributes
-			   to this character's attributes and add it. */
-			if (empty && !empty2 && !has_gr2) {
-				attrs = attrs2;
-				has_gr = has_gr2;
-				empty = empty2;
-				ra = buffer[baddr+i];
-				continue;
-			}
-
-			/* Dump the region and start a new one with this
-			   character. */
-#if defined(_ST) /*[*/
-			printf("%s:%d: rt%s\n", __FUNCTION__, __LINE__,
-			    rcba(baddr+i0));
-#endif /*]*/
-			render_text(&buffer[baddr+i0], baddr+i0, i - i0, false,
-			    &ra);
-			attrs = attrs2;
-			has_gr = has_gr2;
-			empty = empty2;
-			i0 = i;
-			ra = buffer[baddr+i];
-		}
-
-		/* Dump the remainder of the region. */
-#if defined(_ST) /*[*/
-		printf("%s:%d: rt%s\n", __FUNCTION__, __LINE__, rcba(baddr+i0));
-#endif /*]*/
-		render_text(&buffer[baddr+i0], baddr+i0, len - i0, false, &ra);
-	}
-
-	/* The X display is now correct; update ss->image[]. */
-	(void) memmove(&ss->image[baddr], &buffer[baddr], len*sizeof(union sp));
+    /* The X display is now correct; update ss->image[]. */
+    (void) memmove(&ss->image[baddr], &buffer[baddr], len*sizeof(union sp));
 }
 
 /*
@@ -1908,336 +1904,288 @@ linedraw_to_udisplay(int d8_ix, unsigned char c)
  */
 static void
 render_text(union sp *buffer, int baddr, int len, bool block_cursor,
-    union sp *attrs)
+	union sp *attrs)
 {
-	int color;
-	int x, y;
-	GC dgc = (GC)None;	/* drawing text */
-	GC cleargc = (GC)None;	/* clearing under undersized characters */
-	int sel = attrs->bits.sel;
-	register int i, j;
-	bool one_at_a_time = false;
-	int d8_ix = ss->d8_ix;
-	XTextItem16 text[64]; /* fixed size is a hack */
-	int n_texts = -1;
-	bool in_dbcs = false;
-	int clear_len = 0;
-	int n_sbcs = 0;
-	int n_dbcs = 0;
+    int color;
+    int x, y;
+    GC dgc = (GC)None;	/* drawing text */
+    GC cleargc = (GC)None;	/* clearing under undersized characters */
+    int sel = attrs->bits.sel;
+    register int i, j;
+    bool one_at_a_time = false;
+    int d8_ix = ss->d8_ix;
+    XTextItem16 text[64]; /* fixed size is a hack */
+    int n_texts = -1;
+    bool in_dbcs = false;
+    int clear_len = 0;
+    int n_sbcs = 0;
+    int n_dbcs = 0;
 
 #if defined(_ST) /*[*/
-	(void) printf("render_text(baddr=%s, len=%d)\n", rcba(baddr), len);
+    (void) printf("render_text(baddr=%s, len=%d)\n", rcba(baddr), len);
 #endif /*]*/
 
+    /*
+     * If the region starts with the right-hand side of a DBCS, back off
+     * one column.
+     */
+    switch (ctlr_dbcs_state(baddr)) {
+    case DBCS_RIGHT:
 	/*
-	 * If the region starts with the right-hand side of a DBCS, back off
-	 * one column.
+	 * Lots of assumptions -- the buffer really does go back one byte,
+	 * and baddr is greater than zero.
 	 */
-	switch (ctlr_dbcs_state(baddr)) {
-	case DBCS_RIGHT:
-	    /*
-	     * Lots of assumptions -- the buffer really does go back one byte,
-	     * and baddr is greater than zero.
-	     */
 #if defined(_ST) /*[*/
-	    (void) printf("render_text: backing off\n");
+	(void) printf("render_text: backing off\n");
 #endif /*]*/
-	    buffer--;
-	    baddr--;
-	    len++;
-	    break;
-	default:
-	    break;
+	buffer--;
+	baddr--;
+	len++;
+	break;
+    default:
+	break;
+    }
+
+    for (i = 0, j = 0; i < len; i++) {
+	if (buffer[i].bits.cs != CS_DBCS || !dbcs || iconic) {
+	    if (n_texts < 0 || in_dbcs) {
+		/* Switch from nothing or DBCS, to SBCS. */
+#if defined(_ST) /*[*/
+		fprintf(stderr, "SBCS starts at %s\n", rcba(baddr + i));
+#endif /*]*/
+		in_dbcs = false;
+		n_texts++;
+		text[n_texts].chars = &rt_buf[j];
+		text[n_texts].nchars = 0;
+		text[n_texts].delta = 0;
+		text[n_texts].font = ss->fid;
+		n_sbcs++;
+	    }
+	    /* In SBCS. */
+	    clear_len += ss->char_width;
+	} else {
+	    if (n_texts < 0 || !in_dbcs) {
+		/* Switch from nothing or SBCS, to DBCS. */
+#if defined(_ST) /*[*/
+		fprintf(stderr, "DBCS starts at %s\n", rcba(baddr + i));
+#endif /*]*/
+		in_dbcs = true;
+		n_texts++;
+		text[n_texts].chars = &rt_buf[j];
+		text[n_texts].nchars = 0;
+		text[n_texts].delta = 0;
+		text[n_texts].font = dbcs_font.font;
+		n_dbcs++;
+	    }
+	    /* In DBCS. */
+	    clear_len += 2 * ss->char_width;
 	}
 
-	for (i = 0, j = 0; i < len; i++) {
-		if (buffer[i].bits.cs != CS_DBCS || !dbcs || iconic) {
-			if (n_texts < 0 || in_dbcs) {
-				/* Switch from nothing or DBCS, to SBCS. */
-#if defined(_ST) /*[*/
-				fprintf(stderr, "SBCS starts at %s\n",
-				    rcba(baddr + i));
-#endif /*]*/
-				in_dbcs = false;
-				n_texts++;
-				text[n_texts].chars = &rt_buf[j];
-				text[n_texts].nchars = 0;
-				text[n_texts].delta = 0;
-				text[n_texts].font = ss->fid;
-				n_sbcs++;
-			}
-			/* In SBCS. */
-			clear_len += ss->char_width;
-		} else {
-			if (n_texts < 0 || !in_dbcs) {
-				/* Switch from nothing or SBCS, to DBCS. */
-#if defined(_ST) /*[*/
-				fprintf(stderr, "DBCS starts at %s\n",
-				    rcba(baddr + i));
-#endif /*]*/
-				in_dbcs = true;
-				n_texts++;
-				text[n_texts].chars = &rt_buf[j];
-				text[n_texts].nchars = 0;
-				text[n_texts].delta = 0;
-				text[n_texts].font = dbcs_font.font;
-				n_dbcs++;
-			}
-			/* In DBCS. */
-			clear_len += 2 * ss->char_width;
-		}
-
-		switch (buffer[i].bits.cs) {
-		    case CS_BASE:	/* latin-1 */
+	switch (buffer[i].bits.cs) {
+	case CS_BASE:	/* latin-1 */
+	    rt_buf[j].byte1 = 0;
+	    if (toggled(MONOCASE)) {
+		rt_buf[j].byte2 = font_index(buffer[i].bits.cc, d8_ix, true);
+	    } else {
+		if (visible_control) {
+		    if (buffer[i].bits.cc == EBC_so) {
 			rt_buf[j].byte1 = 0;
-			if (toggled(MONOCASE))
-				rt_buf[j].byte2 =
-				    font_index(buffer[i].bits.cc, d8_ix, true);
-			else {
-				if (visible_control) {
-					if (buffer[i].bits.cc == EBC_so) {
-						rt_buf[j].byte1 = 0;
-						rt_buf[j].byte2 =
-						    font_index(EBC_less, d8_ix,
-							    false);
-					} else if (buffer[i].bits.cc == EBC_si) {
-						rt_buf[j].byte1 = 0;
-						rt_buf[j].byte2 =
-						    font_index(EBC_greater,
-							    d8_ix, false);
-					} else {
-					    	unsigned short c = font_index(
-							buffer[i].bits.cc,
-							d8_ix, false);
+			rt_buf[j].byte2 = font_index(EBC_less, d8_ix, false);
+		    } else if (buffer[i].bits.cc == EBC_si) {
+			rt_buf[j].byte1 = 0;
+			rt_buf[j].byte2 = font_index(EBC_greater, d8_ix, false);
+		    } else {
+			unsigned short c = font_index(buffer[i].bits.cc, d8_ix,
+				false);
 
-						rt_buf[j].byte1 =
-						    (c >> 8) & 0xff;
-						rt_buf[j].byte2 = c & 0xff;
-					}
-				} else {
-				    	unsigned short c = font_index(
-						buffer[i].bits.cc, d8_ix,
-						false);
-
-					rt_buf[j].byte1 =
-					    (c >> 8) & 0xff;
-					rt_buf[j].byte2 = c & 0xff;
-				}
-			}
-			j++;
-			break;
-		    case CS_APL:	/* GE (apl) */
-		    case CS_BASE | CS_GE:
-			if (ss->extended_3270font) {
-				rt_buf[j].byte1 = 1;
-				rt_buf[j].byte2 = ebc2cg0[buffer[i].bits.cc];
-			} else {
-			    	if (ss->font_16bit) {
-				    	rt_buf[j] = apl_to_udisplay(d8_ix,
-						buffer[i].bits.cc);
-				} else {
-				    	rt_buf[j] = apl_to_ldisplay(
-						buffer[i].bits.cc);
-				}
-			}
-			j++;
-			break;
-		    case CS_LINEDRAW:	/* DEC line drawing */
-			if (ss->standard_font) {
-			    	if (ss->font_16bit) {
-				    	rt_buf[j] = linedraw_to_udisplay(
-						d8_ix, buffer[i].bits.cc);
-				} else {
-				    	/*
-					 * Assume the first 32 characters are
-					 * line-drawing.
-					 */
-					rt_buf[j].byte1 = 0;
-					rt_buf[j].byte2 = buffer[i].bits.cc;
-				}
-			} else {
-				if (ss->extended_3270font) {
-					rt_buf[j].byte1 = 2;
-					rt_buf[j].byte2 = buffer[i].bits.cc;
-				} else {
-					rt_buf[j].byte1 = 0;
-					rt_buf[j].byte2 = 0;
-				}
-			}
-			j++;
-			break;
-		    case CS_DBCS:	/* DBCS */
-			if (dbcs) {
-				xlate_dbcs(buffer[i].bits.cc,
-					   buffer[i+1].bits.cc,
-					   &rt_buf[j]);
-				/* Skip the next byte as well. */
-				i++;
-			} else {
-				rt_buf[j].byte1 = 0;
-				rt_buf[j].byte2 = font_index(EBC_space, d8_ix,
-					false);
-			}
-			j++;
-			break;
-		}
-		text[n_texts].nchars++;
-	}
-	n_texts++;
-
-	/* Check for one-at-a-time mode. */
-	if (ss->funky_font) {
-		for (i = 0; i < len; i++) {
-			if (!rt_buf[i].byte1 &&
-			    (IS_ODD(ss->odd_width, rt_buf[i].byte2) ||
-			     IS_ODD(ss->odd_lbearing, rt_buf[i].byte2))) {
-				one_at_a_time = true;
-				break;
-			}
-		}
-	}
-
-	x = ssCOL_TO_X(BA_TO_COL(baddr));
-	y = ssROW_TO_Y(BA_TO_ROW(baddr));
-	color = attrs->bits.fg;
-
-	/* Select the GCs. */
-	if (sel && !block_cursor) {
-		/* Selected, but not a block cursor. */
-		if (!appres.interactive.mono) {
-			/* Color: Use the special select GCs. */
-			dgc = get_selgc(ss, color);
-			cleargc = ss->clrselgc;
+			rt_buf[j].byte1 = (c >> 8) & 0xff;
+			rt_buf[j].byte2 = c & 0xff;
+		    }
 		} else {
-			/* Mono: Invert the color. */
-			dgc = get_gc(ss, INVERT_COLOR(color));
-			cleargc = get_gc(ss, color);
+		    unsigned short c = font_index(buffer[i].bits.cc, d8_ix,
+			    false);
+
+		    rt_buf[j].byte1 = (c >> 8) & 0xff;
+		    rt_buf[j].byte2 = c & 0xff;
 		}
-	} else if (block_cursor && !(appres.interactive.mono && sel)) {
-		/* Block cursor, but neither mono nor selected. */
-		if (xappres.use_cursor_color) {
-			/* Use the specific-color inverted GC. */
-			dgc = ss->invucgc;
-			cleargc = ss->ucgc;
+	    }
+	    j++;
+	    break;
+	case CS_APL:	/* GE (apl) */
+	case CS_BASE | CS_GE:
+	    if (ss->extended_3270font) {
+		rt_buf[j].byte1 = 1;
+		rt_buf[j].byte2 = ebc2cg0[buffer[i].bits.cc];
+	    } else {
+		if (ss->font_16bit) {
+		    rt_buf[j] = apl_to_udisplay(d8_ix, buffer[i].bits.cc);
 		} else {
-			/* Just invert the specified color. */
-			dgc = get_gc(ss, INVERT_COLOR(color));
-			cleargc = get_gc(ss, color);
+		    rt_buf[j] = apl_to_ldisplay(buffer[i].bits.cc);
 		}
+	    }
+	    j++;
+	    break;
+	case CS_LINEDRAW:	/* DEC line drawing */
+	    if (ss->standard_font) {
+		if (ss->font_16bit) {
+		    rt_buf[j] = linedraw_to_udisplay(d8_ix, buffer[i].bits.cc);
+		} else {
+		    /* Assume the first 32 characters are line-drawing. */
+		    rt_buf[j].byte1 = 0;
+		    rt_buf[j].byte2 = buffer[i].bits.cc;
+		}
+	    } else {
+		if (ss->extended_3270font) {
+		    rt_buf[j].byte1 = 2;
+		    rt_buf[j].byte2 = buffer[i].bits.cc;
+		} else {
+		    rt_buf[j].byte1 = 0;
+		    rt_buf[j].byte2 = 0;
+		}
+	    }
+	    j++;
+	    break;
+	    case CS_DBCS:	/* DBCS */
+	    if (dbcs) {
+		xlate_dbcs(buffer[i].bits.cc, buffer[i+1].bits.cc, &rt_buf[j]);
+		/* Skip the next byte as well. */
+		i++;
+	    } else {
+		rt_buf[j].byte1 = 0;
+		rt_buf[j].byte2 = font_index(EBC_space, d8_ix, false);
+	    }
+	    j++;
+	    break;
+	}
+	text[n_texts].nchars++;
+    }
+    n_texts++;
+
+    /* Check for one-at-a-time mode. */
+    if (ss->funky_font) {
+	for (i = 0; i < len; i++) {
+	    if (!rt_buf[i].byte1 &&
+		(IS_ODD(ss->odd_width, rt_buf[i].byte2) ||
+		 IS_ODD(ss->odd_lbearing, rt_buf[i].byte2))) {
+		one_at_a_time = true;
+		break;
+	    }
+	}
+    }
+
+    x = ssCOL_TO_X(BA_TO_COL(baddr));
+    y = ssROW_TO_Y(BA_TO_ROW(baddr));
+    color = attrs->bits.fg;
+
+    /* Select the GCs. */
+    if (sel && !block_cursor) {
+	/* Selected, but not a block cursor. */
+	if (!appres.interactive.mono) {
+	    /* Color: Use the special select GCs. */
+	    dgc = get_selgc(ss, color);
+	    cleargc = ss->clrselgc;
 	} else {
-		/* Ordinary text, or a selected block cursor. */
-		dgc = get_gc(ss, color);
-		cleargc = get_gc(ss, INVERT_COLOR(color));
+	    /* Mono: Invert the color. */
+	    dgc = get_gc(ss, INVERT_COLOR(color));
+	    cleargc = get_gc(ss, color);
 	}
+    } else if (block_cursor && !(appres.interactive.mono && sel)) {
+	/* Block cursor, but neither mono nor selected. */
+	if (xappres.use_cursor_color) {
+	    /* Use the specific-color inverted GC. */
+	    dgc = ss->invucgc;
+	    cleargc = ss->ucgc;
+	} else {
+	    /* Just invert the specified color. */
+	    dgc = get_gc(ss, INVERT_COLOR(color));
+	    cleargc = get_gc(ss, color);
+	}
+    } else {
+	/* Ordinary text, or a selected block cursor. */
+	dgc = get_gc(ss, color);
+	cleargc = get_gc(ss, INVERT_COLOR(color));
+    }
 
-	/* Draw the text */
-	XFillRectangle(display, ss->window,
-		cleargc,
-		x, y - ss->ascent,
-		clear_len, ss->char_height);
+    /* Draw the text */
+    XFillRectangle(display, ss->window, cleargc, x, y - ss->ascent, clear_len,
+	    ss->char_height);
 #if defined(_ST) /*[*/
-	{
-		int k, l;
+    {
+	int k, l;
 
-		for (k = 0; k < n_texts; k++) {
-			printf("text[%d]: %d chars, %s:", k,
-			    text[k].nchars,
-			    (text[k].font == dbcs_font.font)?
-				"dbcs": "sbcs");
-			for (l = 0; l < text[k].nchars; l++) {
-			    printf(" %02x%02x", text[k].chars[l].byte1,
-				text[k].chars[l].byte2);
-			}
-			printf("\n");
-		}
+	for (k = 0; k < n_texts; k++) {
+	    printf("text[%d]: %d chars, %s:", k, text[k].nchars,
+		    (text[k].font == dbcs_font.font)? "dbcs": "sbcs");
+	    for (l = 0; l < text[k].nchars; l++) {
+		printf(" %02x%02x", text[k].chars[l].byte1,
+			text[k].chars[l].byte2);
+	    }
+	    printf("\n");
 	}
+    }
 #endif /*]*/
-	if (one_at_a_time ||
-	    (n_sbcs && ss->xtra_width) || (n_dbcs && dbcs_font.xtra_width)) {
-		int i, j;
-		int xn = x;
-		XTextItem16 text1;
+    if (one_at_a_time || (n_sbcs && ss->xtra_width) ||
+	    (n_dbcs && dbcs_font.xtra_width)) {
+	int i, j;
+	int xn = x;
+	XTextItem16 text1;
 
-		/* XXX: do overstrike */
-		for (i = 0; i < n_texts; i++) {
-			if (one_at_a_time || text[i].font == ss->fid) {
-				if (one_at_a_time || ss->xtra_width) {
-					for (j = 0; j < text[i].nchars;
-					     j++) {
-						text1.chars =
-						    &text[i].chars[j];
-						text1.nchars = 1;
-						text1.delta = 0;
-						text1.font = ss->fid;
-						XDrawText16(
-						    display,
-						    ss->window, dgc,
-						    xn, y, &text1,
-						    1);
-						xn += ss->char_width;
-					}
-				} else {
-					XDrawText16(display,
-					    ss->window, dgc, xn, y,
-					    &text[i], 1);
-					xn += ss->char_width *
-						text[i].nchars;
-				}
-			} else {
-				if (dbcs_font.xtra_width) {
-					for (j = 0; j < text[i].nchars;
-					     j++) {
-						text1.chars =
-						    &text[i].chars[j];
-						text1.nchars = 1;
-						text1.delta = 0;
-						text1.font =
-						    dbcs_font.font;
-						XDrawText16(
-						    display,
-						    ss->window, dgc,
-						    xn,
-						    y,
-						    &text1,
-						    1);
-						xn += dbcs_font.char_width;
-					}
-				} else {
-					XDrawText16(display,
-					    ss->window, dgc, xn,
-					    y,
-					    &text[i], 1);
-					xn += dbcs_font.char_width *
-						text[i].nchars;
-				}
-			}
+	/* XXX: do overstrike */
+	for (i = 0; i < n_texts; i++) {
+	    if (one_at_a_time || text[i].font == ss->fid) {
+		if (one_at_a_time || ss->xtra_width) {
+		    for (j = 0; j < text[i].nchars; j++) {
+			text1.chars = &text[i].chars[j];
+			text1.nchars = 1;
+			text1.delta = 0;
+			text1.font = ss->fid;
+			XDrawText16(display, ss->window, dgc, xn, y, &text1,
+				1);
+			xn += ss->char_width;
+		    }
+		} else {
+		    XDrawText16(display, ss->window, dgc, xn, y, &text[i], 1);
+			xn += ss->char_width * text[i].nchars;
 		}
-	} else {
-		XDrawText16(display, ss->window, dgc, x, y, text, n_texts);
-		if (ss->overstrike &&
-		    ((attrs->bits.gr & GR_INTENSIFY) ||
-		     ((appres.interactive.mono || (!appres.m3279 && appres.highlight_bold)) &&
-		      ((color & BASE_MASK) == FA_INT_HIGH_SEL)))) {
-			XDrawText16(display, ss->window, dgc, x+1, y,
-			    text, n_texts);
+	    } else {
+		if (dbcs_font.xtra_width) {
+		    for (j = 0; j < text[i].nchars; j++) {
+			text1.chars = &text[i].chars[j];
+			text1.nchars = 1;
+			text1.delta = 0;
+			text1.font = dbcs_font.font;
+			XDrawText16(display, ss->window, dgc, xn, y, &text1,
+				1);
+			xn += dbcs_font.char_width;
+		    }
+		} else {
+		    XDrawText16(display, ss->window, dgc, xn, y, &text[i], 1);
+		    xn += dbcs_font.char_width * text[i].nchars;
 		}
+	    }
 	}
+    } else {
+	XDrawText16(display, ss->window, dgc, x, y, text, n_texts);
+	if (ss->overstrike && ((attrs->bits.gr & GR_INTENSIFY) ||
+		    ((appres.interactive.mono ||
+		      (!appres.m3279 && appres.highlight_bold)) &&
+		     ((color & BASE_MASK) == FA_INT_HIGH_SEL)))) {
+	    XDrawText16(display, ss->window, dgc, x+1, y, text, n_texts);
+	}
+    }
 
-	if (attrs->bits.gr & GR_UNDERLINE)
-		XDrawLine(display,
-		    ss->window,
-		    dgc,
-		    x,
-		    y - ss->ascent + ss->char_height - 1,
-		    x + clear_len,
-		    y - ss->ascent + ss->char_height - 1);
+    if (attrs->bits.gr & GR_UNDERLINE) {
+	XDrawLine(display, ss->window, dgc, x,
+		y - ss->ascent + ss->char_height - 1, x + clear_len,
+		y - ss->ascent + ss->char_height - 1);
+    }
 }
 
 
 bool
 screen_obscured(void)
 {
-	return ss->obscured;
+    return ss->obscured;
 }
 
 /*
@@ -2345,248 +2293,286 @@ visible_ebcdic(unsigned char fa)
 }
 
 /*
+ * Map a row and column to a crosshair character.
+ */
+static unsigned char
+map_crosshair(int baddr)
+{
+    if (baddr == cursor_addr) {
+	return 0xd3;
+    } else if (baddr / cCOLS == cursor_addr / cCOLS) {
+	return 0xa2;
+    } else {
+	return 0xbf;
+    }
+}
+
+/*
  * "Draw" ea_buf into a buffer
  */
 static void
 draw_fields(union sp *buffer, int first, int last)
 {
-	int	baddr = 0;
-	int	faddr;
-	unsigned char	fa;
-	struct ea       *field_ea;
-	struct ea	*sbp = ea_buf;
-	int	field_color;
-	int	zero;
-	bool	any_blink = false;
-	int	crossable = CROSSABLE;
-	enum dbcs_state d;
-	int	cursor_col = 0, cursor_row = 0;
+    int	baddr = 0;
+    int	faddr;
+    unsigned char	fa;
+    struct ea       *field_ea;
+    struct ea	*sbp = ea_buf;
+    int	field_color;
+    int	zero;
+    bool	any_blink = false;
+    int	crossable = CROSSABLE;
+    enum dbcs_state d;
+    int	cursor_col = 0, cursor_row = 0;
 
-	/* Set up cursor_col/cursor_row. */
-	if (crossable) {
-		cursor_col = BA_TO_COL(cursor_addr);
-		cursor_row = BA_TO_ROW(cursor_addr);
-	}
+    /* Set up cursor_col/cursor_row. */
+    if (crossable) {
+	cursor_col = BA_TO_COL(cursor_addr);
+	cursor_row = BA_TO_ROW(cursor_addr);
+    }
 
-	/* If there is any blinking text, override the suggested boundaries. */
-	if (text_blinkers_exist) {
-		first = -1;
-		last = -1;
-	}
+    /* If there is any blinking text, override the suggested boundaries. */
+    if (text_blinkers_exist) {
+	first = -1;
+	last = -1;
+    }
 
-	/* Adjust pointers to start of region. */
-	if (first > 0) {
-		baddr += first;
-		sbp += first;
-		buffer += first;
-	}
-	faddr = find_field_attribute(baddr);
-	fa = ea_buf[faddr].fa;
-	field_ea = fa2ea(faddr);
+    /* Adjust pointers to start of region. */
+    if (first > 0) {
+	baddr += first;
+	sbp += first;
+	buffer += first;
+    }
+    faddr = find_field_attribute(baddr);
+    fa = ea_buf[faddr].fa;
+    field_ea = fa2ea(faddr);
 
-	/* Adjust end of region. */
-	if (last == -1 || last >= ROWS*COLS)
-		last = 0;
+    /* Adjust end of region. */
+    if (last == -1 || last >= ROWS*COLS) {
+	last = 0;
+    }
 
-	zero = FA_IS_ZERO(fa);
-	if (field_ea->fg && (!appres.modified_sel || !FA_IS_MODIFIED(fa)))
+    zero = FA_IS_ZERO(fa);
+    if (field_ea->fg && (!appres.modified_sel || !FA_IS_MODIFIED(fa))) {
+	field_color = field_ea->fg & COLOR_MASK;
+    } else {
+	field_color = fa_color(fa);
+    }
+
+    do {
+	unsigned char	c = sbp->cc;
+	union sp	b;
+	bool		reverse = false;
+	bool		is_selected = false;
+
+	b.word = 0;	/* clear out all fields */
+
+	if (ea_buf[baddr].fa) {
+	    fa = ea_buf[baddr].fa;
+	    field_ea = sbp;
+	    zero = FA_IS_ZERO(fa);
+	    if (field_ea->fg && (!appres.modified_sel || !FA_IS_MODIFIED(fa))) {
 		field_color = field_ea->fg & COLOR_MASK;
-	else
+	    } else {
 		field_color = fa_color(fa);
+	    }
+	    if (visible_control) {
+		b.bits.cc = visible_ebcdic(fa);
+		b.bits.gr = GR_UNDERLINE;
+		b.bits.fg = GC_NONDEFAULT | HOST_COLOR_YELLOW;
+	    } else if (CROSSABLE && CROSSED(baddr)) {
+		b.bits.cs = CS_APL;
+		b.bits.cc = map_crosshair(baddr);
+		b.bits.fg = CROSS_COLOR;
+	    }
+	} else {
+	    unsigned short gr;
+	    int e_color;
+	    bool is_vc = false;
 
-	do {
-		unsigned char	c = sbp->cc;
-		union sp	b;
-		bool		reverse = false;
-		bool		is_selected = false;
-		bool		is_crossed = false;
-
-		b.word = 0;	/* clear out all fields */
-
-		if (ea_buf[baddr].fa) {
-		    fa = ea_buf[baddr].fa;
-		    field_ea = sbp;
-			zero = FA_IS_ZERO(fa);
-			if (field_ea->fg && (!appres.modified_sel || !FA_IS_MODIFIED(fa)))
-				field_color = field_ea->fg & COLOR_MASK;
-			else
-				field_color = fa_color(fa);
-			if (visible_control) {
-				b.bits.cc = visible_ebcdic(fa);
-				b.bits.gr = GR_UNDERLINE;
-				b.bits.fg = GC_NONDEFAULT | HOST_COLOR_YELLOW;
-			}
-		} else {
-			unsigned short gr;
-			int e_color;
-			bool is_vc = false;
-
-			/* Find the right graphic rendition. */
-			if (zero) {
-			    	gr = 0;
-			} else {
-				gr = sbp->gr;
-				if (!gr)
-					gr = field_ea->gr;
-				if (gr & GR_BLINK)
-					any_blink = true;
-				if (appres.highlight_bold && FA_IS_HIGH(fa))
-					gr |= GR_INTENSIFY;
-			}
-
-			/* Find the right color. */
-			if (zero) {
-			    	e_color = fa_color(FA_INT_HIGH_SEL);
-			} else {
-				if (sbp->fg)
-					e_color = sbp->fg & COLOR_MASK;
-				else if (appres.interactive.mono &&
-					(gr & GR_INTENSIFY)) {
-					e_color = fa_color(FA_INT_HIGH_SEL);
-				} else {
-					e_color = field_color;
-				}
-				if (gr & GR_REVERSE) {
-					e_color = INVERT_COLOR(e_color);
-					reverse = true;
-				}
-			}
-			if (!appres.interactive.mono)
-				b.bits.fg = e_color;
-
-			/* Find the right character and character set. */
-			d = ctlr_dbcs_state(baddr);
-			if (zero) {
-				if (visible_control)
-					b.bits.cc = EBC_space;
-			} else if (((!visible_control || c != EBC_null) &&
-				    (c != EBC_space || d != DBCS_NONE)) ||
-			           (gr & (GR_REVERSE | GR_UNDERLINE)) ||
-				   visible_control) {
-
-				b.bits.fg = e_color;
-
-				/*
-				 * Replace blanked-out blinking text with
-				 * spaces.
-				 */
-				if (!text_blinking_on && (gr & GR_BLINK))
-					b.bits.cc = EBC_space;
-				else {
-					if (visible_control && c == EBC_null) {
-						b.bits.cc = EBC_period;
-						is_vc = true;
-					} else if (visible_control &&
-					    (c == EBC_so || c == EBC_si)) {
-						b.bits.cc = (c == EBC_so)?
-						    EBC_less:
-						    EBC_greater;
-						is_vc = true;
-					} else
-						b.bits.cc = c;
-					if (sbp->cs)
-						b.bits.cs = sbp->cs;
-					else
-						b.bits.cs = field_ea->cs;
-					if (b.bits.cs & CS_GE)
-						b.bits.cs = CS_APL;
-					else if ((b.bits.cs & CS_MASK) !=
-						    CS_DBCS ||
-						 d != DBCS_NONE)
-						b.bits.cs &= CS_MASK;
-					else
-						b.bits.cs = CS_BASE;
-				}
-
-			} /* otherwise, EBC_null */
-
-			if (visible_control) {
-				if (is_vc)
-					b.bits.gr = GR_UNDERLINE;
-			} else {
-				b.bits.gr = gr & (GR_UNDERLINE | GR_INTENSIFY);
-			}
-
-			/* Check for SI/SO. */
-			if (d == DBCS_LEFT || d == DBCS_RIGHT)
-				b.bits.cs = CS_DBCS;
+	    /* Find the right graphic rendition. */
+	    if (zero) {
+		gr = 0;
+	    } else {
+		gr = sbp->gr;
+		if (!gr) {
+		    gr = field_ea->gr;
 		}
+		if (gr & GR_BLINK) {
+		    any_blink = true;
+		}
+		if (appres.highlight_bold && FA_IS_HIGH(fa)) {
+		    gr |= GR_INTENSIFY;
+		}
+	    }
+
+	    /* Find the right color. */
+	    if (zero) {
+		e_color = fa_color(FA_INT_HIGH_SEL);
+	    } else {
+		if (sbp->fg) {
+		    e_color = sbp->fg & COLOR_MASK;
+		} else if (appres.interactive.mono && (gr & GR_INTENSIFY)) {
+		    e_color = fa_color(FA_INT_HIGH_SEL);
+		} else {
+		    e_color = field_color;
+		}
+		if (gr & GR_REVERSE) {
+		    e_color = INVERT_COLOR(e_color);
+		    reverse = true;
+		}
+	    }
+	    if (!appres.interactive.mono) {
+		b.bits.fg = e_color;
+	    }
+
+	    /* Find the right character and character set. */
+	    d = ctlr_dbcs_state(baddr);
+	    if (zero) {
+		if (visible_control) {
+		    b.bits.cc = EBC_space;
+		} else if (CROSSABLE && CROSSED(baddr)) {
+		    b.bits.cs = CS_APL;
+		    b.bits.cc = map_crosshair(baddr);
+		    b.bits.fg = CROSS_COLOR;
+		}
+	    } else if (((!visible_control || c != EBC_null) &&
+			(c != EBC_space || d != DBCS_NONE)) ||
+		       (gr & (GR_REVERSE | GR_UNDERLINE)) ||
+		       visible_control) {
+
+		b.bits.fg = e_color;
 
 		/*
-		 * Compute selection state.
-		 *
-		 * DBCS characters always act as a unit, with the state
-		 * determined by the selection status and crosshair
-		 * intersection of either half.
-		 * - If either half is selected, both are considered selected.
-		 * - If either half lies in the crosshair, neither is
-		 *   considered selected.
+		 * Replace blanked-out blinking text with
+		 * spaces.
 		 */
-
-		is_selected = (SELECTED(baddr) != 0);
-		switch (ctlr_dbcs_state(baddr)) {
-		case DBCS_NONE:
-		case DBCS_DEAD:
-		case DBCS_LEFT_WRAP:
-		case DBCS_RIGHT_WRAP:
-		    break;
-		case DBCS_LEFT:
-		case DBCS_SI:
-		    if ((baddr % COLS) != (COLS - 1) &&
-			SELECTED(baddr + 1))
-			    is_selected = true;
-		    break;
-		case DBCS_RIGHT:
-		case DBCS_SB: /* XXX */
-		    if ((baddr % COLS) && SELECTED(baddr - 1))
-			    is_selected = true;
-		    break;
-		}
-
-		if (crossable && !reverse) {
-			is_crossed = CROSSED(baddr);
-			switch (ctlr_dbcs_state(baddr)) {
-			case DBCS_NONE:
-			case DBCS_DEAD:
-			case DBCS_LEFT_WRAP:
-			case DBCS_RIGHT_WRAP:
-			    break;
-			case DBCS_LEFT:
-			case DBCS_SI:
-			    if ((baddr % COLS) != (COLS - 1) &&
-				CROSSED(baddr + 1))
-				    is_crossed = true;
-			    break;
-			case DBCS_RIGHT:
-			case DBCS_SB: /* XXX */
-			    if ((baddr % COLS) && CROSSED(baddr - 1))
-				    is_crossed = true;
-			    break;
-			}
-		}
-
-		/*
-		 * XOR the crosshair cursor with selections.
-		 */
-		if (crossable) {
-			if (is_selected ^ is_crossed)
-				b.bits.sel = 1;
+		if (!text_blinking_on && (gr & GR_BLINK)) {
+		    if (!CROSSABLE || !CROSSED(baddr)) {
+			b.bits.cc = EBC_space;
+		    } else {
+			b.bits.cs = CS_APL;
+			b.bits.cc = map_crosshair(baddr);
+			b.bits.fg = CROSS_COLOR;
+		    }
 		} else {
-			if (is_selected)
-				b.bits.sel = 1;
+		    if (visible_control && c == EBC_null) {
+			b.bits.cc = EBC_period;
+			is_vc = true;
+		    } else if (visible_control &&
+			(c == EBC_so || c == EBC_si)) {
+			b.bits.cc = (c == EBC_so)? EBC_less: EBC_greater;
+			is_vc = true;
+		    } else {
+			b.bits.cc = c;
+		    }
+		    if (sbp->cs) {
+			b.bits.cs = sbp->cs;
+		    } else {
+			b.bits.cs = field_ea->cs;
+		    }
+		    if (b.bits.cs & CS_GE) {
+			b.bits.cs = CS_APL;
+		    } else if ((b.bits.cs & CS_MASK) != CS_DBCS ||
+			     d != DBCS_NONE) {
+			b.bits.cs &= CS_MASK;
+		    } else {
+			b.bits.cs = CS_BASE;
+		    }
 		}
 
-		if (!flipped)
-			*buffer++ = b;
-		else
-			*(buffer + fl_baddr(baddr)) = b;
-		sbp++;
-		INC_BA(baddr);
-	} while (baddr != last);
+	    } /* otherwise, EBC_null */
 
-	/* Cancel blink timeouts if none were seen this pass. */
-	if (!any_blink)
-		text_blinkers_exist = false;
+	    if (visible_control) {
+		if (is_vc) {
+		    b.bits.gr = GR_UNDERLINE;
+		}
+	    } else {
+		b.bits.gr = gr & (GR_UNDERLINE | GR_INTENSIFY);
+	    }
+
+	    /* Check for SI/SO. */
+	    if (d == DBCS_LEFT || d == DBCS_RIGHT) {
+		b.bits.cs = CS_DBCS;
+	    }
+
+	    /* Check for blanks. */
+	    if (CROSSABLE && CROSSED(baddr) &&
+		    b.bits.cs == CS_BASE && BKM_ISSET(b.bits.cc)) {
+		b.bits.cs = CS_APL;
+		b.bits.cc = map_crosshair(baddr);
+		b.bits.fg = CROSS_COLOR;
+	    }
+	}
+
+	/*
+	 * Compute selection state.
+	 *
+	 * DBCS characters always act as a unit, with the state
+	 * determined by the selection status and crosshair
+	 * intersection of either half.
+	 * - If either half is selected, both are considered selected.
+	 * - If either half lies in the crosshair, neither is
+	 *   considered selected.
+	 */
+
+	is_selected = (SELECTED(baddr) != 0);
+	switch (ctlr_dbcs_state(baddr)) {
+	case DBCS_NONE:
+	case DBCS_DEAD:
+	case DBCS_LEFT_WRAP:
+	case DBCS_RIGHT_WRAP:
+	    break;
+	case DBCS_LEFT:
+	case DBCS_SI:
+	    if ((baddr % COLS) != (COLS - 1) && SELECTED(baddr + 1)) {
+		is_selected = true;
+	    }
+	    break;
+	case DBCS_RIGHT:
+	case DBCS_SB: /* XXX */
+	    if ((baddr % COLS) && SELECTED(baddr - 1)) {
+		is_selected = true;
+	    }
+	    break;
+	}
+
+	if (crossable && !reverse) {
+	    switch (ctlr_dbcs_state(baddr)) {
+	    case DBCS_NONE:
+	    case DBCS_DEAD:
+	    case DBCS_LEFT_WRAP:
+	    case DBCS_RIGHT_WRAP:
+		break;
+	    case DBCS_LEFT:
+	    case DBCS_SI:
+		break;
+	    case DBCS_RIGHT:
+	    case DBCS_SB: /* XXX */
+		break;
+	    }
+	}
+
+	/*
+	 * XOR the crosshair cursor with selections.
+	 */
+	if (is_selected) {
+	    b.bits.sel = 1;
+	}
+
+	if (!flipped) {
+	    *buffer++ = b;
+	} else {
+	    *(buffer + fl_baddr(baddr)) = b;
+	}
+	sbp++;
+	INC_BA(baddr);
+    } while (baddr != last);
+
+    /* Cancel blink timeouts if none were seen this pass. */
+    if (!any_blink) {
+	text_blinkers_exist = false;
+    }
 }
 
 
@@ -2798,99 +2784,116 @@ cursor_gc(int baddr)
 static void
 redraw_char(int baddr, bool invert)
 {
-	enum dbcs_state d;
-	union sp buffer[2];
-	int faddr;
-	unsigned char fa;
-	int gr;
-	int blank_it = 0;
-	int baddr2;
-	int len = 1;
+    enum dbcs_state d;
+    union sp buffer[2];
+    int faddr;
+    unsigned char fa;
+    int gr;
+    int blank_it = 0;
+    int baddr2;
+    int len = 1;
+    int cursor_col = BA_TO_COL(cursor_addr);
+    int cursor_row = BA_TO_ROW(cursor_addr);
+
+    /*
+     * Figure out the DBCS state of this position.  If it's the right-hand
+     * side of a DBCS character, repaint the left side instead.
+     */
+    switch ((d = ctlr_dbcs_state(baddr))) {
+    case DBCS_LEFT:
+    case DBCS_SI:
+	len = 2;
+	break;
+    case DBCS_RIGHT:
+	len = 2;
+	DEC_BA(baddr);
+	break;
+    default:
+	break;
+    }
+
+    if (!invert) {
+	int flb = fl_baddr(baddr);
 
 	/*
-	 * Figure out the DBCS state of this position.  If it's the right-hand
-	 * side of a DBCS character, repaint the left side instead.
+	 * Put back what belongs there.
+	 * Note that the cursor may have been covering a DBCS character
+	 * that is no longer DBCS, so if we're not at the right margin,
+	 * we should redraw two positions.
 	 */
-	switch ((d = ctlr_dbcs_state(baddr))) {
-	case DBCS_LEFT:
-	case DBCS_SI:
-	    len = 2;
-	    break;
-	case DBCS_RIGHT:
-	    len = 2;
-	    DEC_BA(baddr);
-	    break;
-	default:
-	    break;
-	}
-
-	if (!invert) {
-		int flb = fl_baddr(baddr);
-
-		/*
-		 * Put back what belongs there.
-		 * Note that the cursor may have been covering a DBCS character
-		 * that is no longer DBCS, so if we're not at the right margin,
-		 * we should redraw two positions.
-		 */
 #if defined(_ST) /*[*/
-		printf("%s:%d: rt%s\n", __FUNCTION__, __LINE__, rcba(flb));
+	printf("%s:%d: rt%s\n", __FUNCTION__, __LINE__, rcba(flb));
 #endif /*]*/
-		if (dbcs && ((baddr % COLS) != (COLS - 1)) && len == 1)
-			len = 2;
-		render_text(&ss->image[flb], flb, len, false, &ss->image[flb]);
-		return;
+	if (dbcs && ((baddr % COLS) != (COLS - 1)) && len == 1) {
+	    len = 2;
 	}
+	render_text(&ss->image[flb], flb, len, false, &ss->image[flb]);
+	return;
+    }
 
-	baddr2 = baddr;
-	INC_BA(baddr2);
+    baddr2 = baddr;
+    INC_BA(baddr2);
 
-	/*
-	 * Fabricate the right thing.
-	 * ss->image isn't going to help, because it may contain shortcuts
-	 *  for faster display, so we have to construct a buffer to use.
-	 */
-	buffer[0].word = 0L;
-	buffer[0].bits.cc = ea_buf[baddr].cc;
-	buffer[0].bits.cs = ea_buf[baddr].cs;
-	if (buffer[0].bits.cs & CS_GE)
-		buffer[0].bits.cs = CS_APL;
-	else
-		buffer[0].bits.cs &= CS_MASK;
+    /*
+     * Fabricate the right thing.
+     * ss->image isn't going to help, because it may contain shortcuts
+     *  for faster display, so we have to construct a buffer to use.
+     */
+    buffer[0].word = 0L;
+    buffer[0].bits.cc = ea_buf[baddr].cc;
+    buffer[0].bits.cs = ea_buf[baddr].cs;
+    if (buffer[0].bits.cs & CS_GE) {
+	buffer[0].bits.cs = CS_APL;
+    } else {
+	buffer[0].bits.cs &= CS_MASK;
+    }
 
-	faddr = find_field_attribute(baddr);
-	if (d == DBCS_LEFT || d == DBCS_RIGHT)
-		buffer[0].bits.cs = CS_DBCS;
-	fa = ea_buf[faddr].fa;
-	if (FA_IS_ZERO(fa)) {
-		gr = 0;
+    faddr = find_field_attribute(baddr);
+    if (d == DBCS_LEFT || d == DBCS_RIGHT) {
+	buffer[0].bits.cs = CS_DBCS;
+    }
+    fa = ea_buf[faddr].fa;
+    if (FA_IS_ZERO(fa)) {
+	gr = 0;
+    } else {
+	gr = ea_buf[baddr].gr;
+	if (!gr) {
+	    gr = fa2ea(faddr)->gr;
+	}
+    }
+    if (ea_buf[baddr].fa) {
+	if (!visible_control) {
+	    blank_it = 1;
+	}
+    } else if (FA_IS_ZERO(fa)) {
+	blank_it = 1;
+    } else if (text_blinkers_exist && !text_blinking_on) {
+	if (gr & GR_BLINK) {
+	    blank_it = 1;
+	}
+    }
+    if (buffer[0].bits.cs == CS_BASE && BKM_ISSET(buffer[0].bits.cc)) {
+	blank_it = true;
+    }
+    if (blank_it) {
+	if (CROSSABLE && CROSSED(baddr)) {
+	    buffer[0].bits.cs = CS_APL;
+	    buffer[0].bits.cc = map_crosshair(baddr);
+	    buffer[0].bits.fg = CROSS_COLOR;
 	} else {
-		gr = ea_buf[baddr].gr;
-		if (!gr)
-			gr = fa2ea(faddr)->gr;
+	    buffer[0].bits.cc = EBC_space;
+	    buffer[0].bits.cs = 0;
 	}
-	if (ea_buf[baddr].fa) {
-		if (!visible_control)
-			blank_it = 1;
-	} else if (FA_IS_ZERO(fa)) {
-		blank_it = 1;
-	} else if (text_blinkers_exist && !text_blinking_on) {
-		if (gr & GR_BLINK)
-			blank_it = 1;
+    }
+    buffer[0].bits.fg = char_color(baddr);
+    buffer[0].bits.gr |= (gr & GR_INTENSIFY);
+    if (len == 2) {
+	buffer[1].word = buffer[0].word;
+	if (!blank_it) {
+	    buffer[1].bits.cc = ea_buf[baddr2].cc;
 	}
-	if (blank_it) {
-		buffer[0].bits.cc = EBC_space;
-		buffer[0].bits.cs = 0;
-	}
-	buffer[0].bits.fg = char_color(baddr);
-	buffer[0].bits.gr |= (gr & GR_INTENSIFY);
-	if (len == 2) {
-		buffer[1].word = buffer[0].word;
-		if (!blank_it)
-			buffer[1].bits.cc = ea_buf[baddr2].cc;
-	}
-	render_text(buffer, fl_baddr(baddr), len, true, buffer);
-
+    }
+    render_text(buffer, fl_baddr(baddr), len, true, buffer);
 }
 
 /*
@@ -2984,46 +2987,46 @@ small_inv_cursor(int baddr)
 static void
 put_cursor(int baddr, bool on)
 {
-	/*
-	 * If the cursor is being turned off, simply redraw the text under it.
-	 */
-	if (!on) {
-		redraw_char(baddr, false);
-		return;
-	}
+    /*
+     * If the cursor is being turned off, simply redraw the text under it.
+     */
+    if (!on) {
+	redraw_char(baddr, false);
+	return;
+    }
 
-	/*
-	 * If underscore cursor, redraw the character and draw the underscore.
-	 */
-	if (toggled(ALT_CURSOR)) {
-		redraw_char(baddr, false);
-		underscore_cursor(baddr);
-		return;
-	}
+    /*
+     * If underscore cursor, redraw the character and draw the underscore.
+     */
+    if (toggled(ALT_CURSOR)) {
+	redraw_char(baddr, false);
+	underscore_cursor(baddr);
+	return;
+    }
 
-	/*
-	 * On, and not an underscore.
-	 *
-	 * If out of focus, either draw an empty box in its place (if block
-	 * cursor) or redraw the underscore (if underscore).
-	 */
-	if (!in_focus) {
-		hollow_cursor(baddr);
-		return;
-	}
+    /*
+     * On, and not an underscore.
+     *
+     * If out of focus, either draw an empty box in its place (if block
+     * cursor) or redraw the underscore (if underscore).
+     */
+    if (!in_focus) {
+	hollow_cursor(baddr);
+	return;
+    }
 
-	/*
-	 * If monochrome, invert a small square over the characters.
-	 */
-	if (appres.interactive.mono) {
-		small_inv_cursor(baddr);
-		return;
-	}
+    /*
+     * If monochrome, invert a small square over the characters.
+     */
+    if (appres.interactive.mono) {
+	small_inv_cursor(baddr);
+	return;
+    }
 
-	/*
-	 * Color: redraw the character in reverse video.
-	 */
-	redraw_char(baddr, true);
+    /*
+     * Color: redraw the character in reverse video.
+     */
+    redraw_char(baddr, true);
 }
 
 
@@ -3470,7 +3473,7 @@ screen_invgc(int color)
 {
 	return get_gc(ss, INVERT_COLOR(color | GC_NONDEFAULT));
 }
- 
+
 /*
  * Preallocate a set of graphics contexts for a given color.
  *
@@ -3718,6 +3721,17 @@ screen_focus(bool in)
 	(void) cursor_off();
 	in_focus = in;
 	cursor_on();
+
+	/*
+	 * Slight kludge: If the crosshair cursor is enabled, redraw the whole
+	 * screen, to draw or erase it.
+	 */
+	if (toggled(CROSSHAIR)) {
+	    screen_changed = true;
+	    first_changed = 0;
+	    last_changed = ROWS*COLS;
+	    screen_disp(false);
+	}
 
 	/*
 	 * If we just came into focus and we're supposed to have a blinking
