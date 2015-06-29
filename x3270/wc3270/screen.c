@@ -85,6 +85,11 @@
 # define COMMON_LVB_TRAILING_BYTE	0x200
 #endif /*]*/
 
+/* Unicode line-drawing characters for crosshair. */
+#define LINEDRAW_VERT	0x2502
+#define LINEDRAW_CROSS	0x253c
+#define LINEDRAW_HORIZ	0x2500
+
 #define MAX_COLORS	16
 /*
  * N.B.: F0 "neutral black" means black on a screen (white-on-black device) and
@@ -572,6 +577,7 @@ addch(int c)
 static int
 mvinch(int y, int x)
 {
+    move(y, x);
     return toscreen[(y * console_cols) + x].Char.UnicodeChar;
 }
 
@@ -1223,6 +1229,7 @@ screen_init(void)
     }
 
     /* If the want monochrome, assume they want green. */
+    /* XXX: I believe that init_user_colors makes this a no-op. */
     if (!appres.m3279) {
 	defattr |= FOREGROUND_GREEN;
 	xhattr |= FOREGROUND_GREEN;
@@ -1676,11 +1683,11 @@ crosshair_blank(int baddr)
 	bool same_col = ((baddr % cCOLS) == (cursor_addr % cCOLS));
 
 	if (same_row && same_col) {
-	    return 0x253c;
+	    return LINEDRAW_CROSS;
 	} else if (same_row) {
-	    return 0x2500;
+	    return LINEDRAW_HORIZ;
 	} else if (same_col) {
-	    return 0x2502;
+	    return LINEDRAW_VERT;
 	}
     }
     return ' ';
@@ -2916,15 +2923,23 @@ draw_oia(void)
 
     /* Extend or erase the crosshair. */
     attrset(xhattr);
-    if (toggled(CROSSHAIR) && screen_yoffset > 1) {
-	move(1, cursor_addr % cCOLS);
-	addch(0x2502);
+    if (toggled(CROSSHAIR)) {
+	if (!menu_is_up &&
+		(mvinch(0, cursor_col) & A_CHARTEXT) == ' ') {
+	    attrset(cmap_fg[HOST_COLOR_PALE_GREEN] | cmap_bg[HOST_COLOR_GREY]);
+	    addch(LINEDRAW_VERT);
+	    attrset(xhattr);
+	}
+	if (screen_yoffset > 1 &&
+		(mvinch(1, cursor_col) & A_CHARTEXT) == ' ') {
+	    addch(LINEDRAW_VERT);
+	}
     }
     for (i = ROWS + screen_yoffset; i < status_row; i++) {
 	for (j = 0; j < maxCOLS; j++) {
 	    move(i, j);
 	    if (toggled(CROSSHAIR) && (j == cursor_col)) {
-		addch(0x2502);
+		addch(LINEDRAW_VERT);
 	    } else {
 		addch(' ');
 	    }
@@ -2934,7 +2949,7 @@ draw_oia(void)
 	for (j = cCOLS; j < maxCOLS; j++) {
 	    move(i + screen_yoffset, j);
 	    if (toggled(CROSSHAIR) && i == (cursor_addr / cCOLS)) {
-		addch(0x2500);
+		addch(LINEDRAW_HORIZ);
 	    } else {
 		addch(' ');
 	    }
@@ -3016,7 +3031,7 @@ draw_oia(void)
 	    (mvinch(status_row, cursor_col) & A_CHARTEXT) == ' ') {
 	move(status_row, cursor_col);
 	attrset(xhattr);
-	addch(0x2502);
+	addch(LINEDRAW_VERT);
     }
 }
 
