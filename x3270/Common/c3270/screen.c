@@ -925,25 +925,62 @@ visible_fa(unsigned char fa)
     return varr[ix];
 }
 
+/**
+ * Return a space or a line-drawing character, depending on whether the
+ * given buffer address has a crosshair cursor on it.
+ *
+ * @param[in] baddr		Buffer address
+ * @param[out] acs		Returned true if the returned character is a
+ * 				curses ACS code
+ *
+ * @return Blank if not a crosshair region, possibly an ACS code (if acs
+ *         returned true), possibly an ASCII-art character (if asciiBoxDraw is
+ *         set), possibly a Unicode line-drawing character.
+ */
 static ucs4_t
-crosshair_blank(int baddr, unsigned char *is_acs)
+crosshair_blank(int baddr, unsigned char *acs)
 {
     ucs4_t u = ' ';
 
-    *is_acs = 0;
+    *acs = 0;
     if (toggled(CROSSHAIR)) {
 	bool same_row = ((baddr / cCOLS) == (cursor_addr / cCOLS));
 	bool same_col = ((baddr % cCOLS) == (cursor_addr % cCOLS));
 
 	if (same_row && same_col) {
-	    map_acs('n', &u, is_acs); /* 0x253c */
+	    map_acs('n', &u, acs); /* cross */
 	} else if (same_row) {
-	    map_acs('q', &u, is_acs); /* 0x2500 */
+	    map_acs('q', &u, acs); /* horizontal */
 	} else if (same_col) {
-	    map_acs('x', &u, is_acs); /* 0x2502 */
+	    map_acs('x', &u, acs); /* vertical */
 	}
     }
     return u;
+}
+
+/**
+ * Draw a crosshair line-drawing character returned by crosshair_blank().
+ *
+ * @param[in] u		Line-drawing character
+ * @param[in] acs	true if u is a curses ACS code
+ */
+static void
+draw_crosshair(ucs4_t u, bool acs)
+{
+    char mb[16];
+
+    (void) attrset(xhattr);
+#if defined(CURSES_WIDE) /*[*/
+    if (u < 0x100 || acs) {
+	addch(u);
+    } else if (unicode_to_multibyte(u, mb, sizeof(mb))) {
+	addstr(mb);
+    } else {
+	addch(' ');
+    }
+#else /*][*/
+    addch(u);
+#endif /*]*/
 }
 
 /* Display what's in the buffer. */
@@ -1119,19 +1156,7 @@ screen_disp(bool erasing _is_unused)
 			    attrset(defattr);
 			    addch(' ');
 			} else {
-			    (void) attrset(xhattr);
-#if defined(CURSES_WIDE) /*[*/
-			    if (u < 0x100 || acs) {
-				addch(u);
-			    } else if (unicode_to_multibyte(u, mb,
-					sizeof(mb))) {
-				addstr(mb);
-			    } else {
-				addch(' ');
-			    }
-#else /*][*/
-			    addch(u);
-#endif /*]*/
+			    draw_crosshair(u, acs);
 			}
 		    }
 		}
@@ -1142,18 +1167,7 @@ screen_disp(bool erasing _is_unused)
 			(void) attrset(field_attrs & attr_mask);
 			addch(' ');
 		    } else {
-			(void) attrset(xhattr);
-#if defined(CURSES_WIDE) /*[*/
-			if (u < 0x100 || acs) {
-			    addch(u);
-			} else if (unicode_to_multibyte(u, mb, sizeof(mb))) {
-			    addstr(mb);
-			} else {
-			    addch(' ');
-			}
-#else /*][*/
-			addch(u);
-#endif /*]*/
+			draw_crosshair(u, acs);
 		    }
 		    if (field_attrs & A_UNDERLINE) {
 			underlined = true;
@@ -1236,23 +1250,9 @@ screen_disp(bool erasing _is_unused)
 			    len--;
 			}
 			if ((len == 1) && (mb[0] == ' ')) {
-			    char mb2[16];
-
 			    u = crosshair_blank(baddr, &acs);
 			    if (u != ' ') {
-				(void) attrset(xhattr);
-#if defined(CURSES_WIDE) /*[*/
-				if (u < 0x100 || acs) {
-				    addch(u);
-				} else if (unicode_to_multibyte(u, mb2,
-					    sizeof(mb2))) {
-				    addstr(mb2);
-				} else {
-				    addch(' ');
-				}
-#else /*][*/
-				addch(u);
-#endif /*]*/
+				draw_crosshair(u, acs);
 				done_sbcs = true;
 			    }
 			}
@@ -2065,30 +2065,14 @@ draw_oia(void)
     int cursor_col = cursor_addr % cCOLS;
     static struct {
 	ucs4_t u;
-	unsigned char is_acs;
-	char mb[16];
+	unsigned char acs;
     } vbar, hbar;
     static bool bars_done = false;
 
+    /* Prepare the line-drawing characters for the crosshair. */
     if (toggled(CROSSHAIR) && !bars_done) {
-	vbar.mb[0] = '\0';
-	map_acs('x', &vbar.u, &vbar.is_acs); /* 0x2502 */
-#if defined(CURSES_WIDE) /*[*/
-	if (vbar.u >= 0x100 &&
-		!vbar.is_acs &&
-		!unicode_to_multibyte(vbar.u, vbar.mb, sizeof(vbar.mb))) {
-	    vbar.u = ' ';
-	}
-#endif /*]*/
-	hbar.mb[0] = '\0';
-	map_acs('q', &hbar.u, &hbar.is_acs); /* 0x2500 */
-#if defined(CURSES_WIDE) /*[*/
-	if (hbar.u >= 0x100 &&
-		!hbar.is_acs &&
-		!unicode_to_multibyte(hbar.u, hbar.mb, sizeof(hbar.mb))) {
-	    hbar.u = ' ';
-	}
-#endif /*]*/
+	map_acs('x', &vbar.u, &vbar.acs);
+	map_acs('q', &hbar.u, &hbar.acs);
 	bars_done = true;
     }
 
@@ -2148,15 +2132,7 @@ draw_oia(void)
     /* Draw the crosshair over the menubar line. */
     if (screen_yoffset && toggled(CROSSHAIR) && !menu_is_up &&
 	    (mvinch(0, cursor_col) & A_CHARTEXT) == ' ') {
-#if defined(CURSES_WIDE) /*[*/
-	if (vbar.mb[0]) {
-	    addstr(vbar.mb);
-	} else {
-	    addch(vbar.u);
-	}
-#else /*][*/
-	addch(vbar.u);
-#endif /*]*/
+	draw_crosshair(vbar.u, vbar.acs);
     }
 
     /* Draw the crosshair between the menubar and display. */
@@ -2164,15 +2140,7 @@ draw_oia(void)
 	for (j = 0; j < cursesCOLS; j++) {
 	    move(1, j);
 	    if (toggled(CROSSHAIR) && j == cursor_col) {
-#if defined(CURSES_WIDE) /*[*/
-		if (vbar.mb[0]) {
-		    addstr(vbar.mb);
-		} else {
-		    addch(vbar.u);
-		}
-#else /*][*/
-		addch(vbar.u);
-#endif /*]*/
+		draw_crosshair(vbar.u, vbar.acs);
 	    } else {
 		addch(' ');
 	    }
@@ -2184,15 +2152,7 @@ draw_oia(void)
 	for (j = cCOLS; j < cursesCOLS; j++) {
 	    move(i + screen_yoffset, j);
 	    if (toggled(CROSSHAIR) && i == cursor_row) {
-#if defined(CURSES_WIDE) /*[*/
-		if (hbar.mb[0]) {
-		    addstr(hbar.mb);
-		} else {
-		    addch(hbar.u);
-		}
-#else /*][*/
-		addch(hbar.u);
-#endif /*]*/
+		draw_crosshair(hbar.u, hbar.acs);
 	    } else {
 		addch(' ');
 	    }
@@ -2207,15 +2167,7 @@ draw_oia(void)
 	for (j = 0; j < cursesCOLS; j++) {
 	    move(i, j);
 	    if (toggled(CROSSHAIR) && j == cursor_col) {
-#if defined(CURSES_WIDE) /*[*/
-		if (vbar.mb[0]) {
-		    addstr(vbar.mb);
-		} else {
-		    addch(vbar.u);
-		}
-#else /*][*/
-		addch(vbar.u);
-#endif /*]*/
+		draw_crosshair(vbar.u, vbar.acs);
 	    } else {
 		addch(' ');
 	    }
@@ -2324,16 +2276,7 @@ draw_oia(void)
     if (toggled(CROSSHAIR) &&
 	    cursor_col > 2 &&
 	    (mvinch(status_row, cursor_col) & A_CHARTEXT) == ' ') {
-	(void) attrset(xhattr);
-#if defined(CURSES_WIDE) /*[*/
-	if (vbar.mb[0]) {
-	    addstr(vbar.mb);
-	} else {
-	    addch(vbar.u);
-	}
-#else /*][*/
-	addch(vbar.u);
-#endif /*]*/
+	draw_crosshair(vbar.u, vbar.acs);
     }
 }
 
