@@ -888,6 +888,10 @@ yellow.
 Field attribute mappings are part of the XX_FB(XX_PRODUCT) Resources
 documentation for the XX_FB(visibleControl) resource.
 ')dnl
+ifelse(XX_MODE,console,`XX_TP(XX_FB(crosshair))
+When set, XX_PRODUCT will display a crosshair to help locate the cursor on the
+screen.
+')dnl
 XX_TPE()dnl
 XX_LP
 ')dnl

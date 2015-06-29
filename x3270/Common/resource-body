@@ -729,7 +729,7 @@ desc
 .
 
 name crosshair
-applies x
+applies x C
 groups a
 type b
 default false
