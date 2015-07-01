@@ -32,6 +32,8 @@
  *		Global declarations for x3270 status.c.
  */
 
+void status_crosshair(int column);
+void status_crosshair_off(void);
 void status_disp(void);
 void status_init(void);
 void status_kmap(bool on);

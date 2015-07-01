@@ -261,7 +261,7 @@ static char *required_display_charsets;
 #define CROSSED(b)	((BA_TO_COL(b) == cursor_col) || \
 			 (BA_TO_ROW(b) == cursor_row))
 
-#define CROSS_COLOR	(GC_NONDEFAULT | HOST_COLOR_PURPLE)
+#define CROSS_COLOR	(appres.m3279? (GC_NONDEFAULT | HOST_COLOR_PURPLE) : FA_INT_NORM_NSEL)
 
 /*
  * The screen state structure.  This structure is swapped whenever we switch
@@ -269,37 +269,39 @@ static char *required_display_charsets;
  */
 #define NGCS	16
 struct sstate {
-	Widget          widget;	/* the widget */
-	Window          window;	/* the window */
-	union sp       *image;	/* what's on the X display */
-	int             cursor_daddr;	/* displayed cursor address */
-	bool         exposed_yet;	/* have we been exposed yet? */
-	bool         overstrike;	/* are we overstriking? */
-	Dimension       screen_width;	/* screen dimensions in pixels */
-	Dimension       screen_height;
-	GC              gc[NGCS * 2],	/* standard, inverted GCs */
-	                selgc[NGCS],	/* color selected text GCs */
-	                mcgc,		/* monochrome block cursor GC */
-	                ucgc,		/* unique-cursor-color cursor GC */
-	                invucgc,	/* inverse ucgc */
-			clrselgc;	/* selected clearing GC */
-	int             char_height;
-	int             char_width;
-	Font		fid;
-	XFontStruct	*font;
-	int		ascent;
-	int		descent;
-	int		xtra_width;
-	bool         standard_font;
-	bool		extended_3270font;
-	bool         font_8bit;
-	bool		font_16bit;
-	bool		funky_font;
-	bool         obscured;
-	bool         copied;
-	int		d8_ix;
-	unsigned long	odd_width[256 / BPW];
-	unsigned long	odd_lbearing[256 / BPW];
+    Widget          widget;	/* the widget */
+    Window          window;	/* the window */
+    union sp       *image;	/* what's on the X display */
+    int             cursor_daddr;	/* displayed cursor address */
+    bool            exposed_yet;	/* have we been exposed yet? */
+    bool            overstrike;	/* are we overstriking? */
+    Dimension       screen_width;	/* screen dimensions in pixels */
+    Dimension       screen_height;
+    GC              gc[NGCS * 2],	/* standard, inverted GCs */
+		    selgc[NGCS],	/* color selected text GCs */
+		    mcgc,		/* monochrome block cursor GC */
+		    ucgc,		/* unique-cursor-color cursor GC */
+		    invucgc,	/* inverse ucgc */
+		    clrselgc;	/* selected clearing GC */
+    int             char_height;
+    int             char_width;
+    Font		fid;
+    XFontStruct   *font;
+    int		   ascent;
+    int		   descent;
+    int		   xtra_width;
+    bool           standard_font;
+    bool	   extended_3270font;
+    bool           font_8bit;
+    bool	   font_16bit;
+    bool	   funky_font;
+    bool           obscured;
+    bool           copied;
+    int		   d8_ix;
+    unsigned long  odd_width[256 / BPW];
+    unsigned long  odd_lbearing[256 / BPW];
+    XChar2b       *hx_text;
+    int            nhx_text;
 };
 static struct sstate nss;
 static struct sstate iss;
@@ -402,6 +404,9 @@ static bool dfc_search_name(const char *name);
 static action_t SetFont_action;
 static action_t Title_action;
 static action_t WindowState_action;
+
+static XChar2b apl_to_udisplay(int d8_ix, unsigned char c);
+static XChar2b apl_to_ldisplay(unsigned char c);
 
 /* Resize font list. */
 struct rsfont {
@@ -577,6 +582,14 @@ screen_reinit(unsigned cmask)
 	/* Define graphics contexts. */
 	if (cmask & (FONT_CHANGE | COLOR_CHANGE))
 		make_gcs(&nss);
+
+	/* Undo the horizonal crosshair buffers. */
+	if (cmask & FONT_CHANGE) {
+		if (nss.hx_text != NULL) {
+		    Replace(nss.hx_text, NULL);
+		    nss.nhx_text = 0;
+		}
+	}
 
 	/* Reinitialize the controller. */
 	ctlr_reinit(cmask);
@@ -1170,6 +1183,121 @@ schedule_text_blink(void)
 	text_blink_id = XtAppAddTimeOut(appcontext, 500, text_blink_it, 0);
 }
 
+
+/*
+ * Fill in an XChar2b from an APL character.
+ */
+static void
+apl_display_char(XChar2b *text, unsigned char apl)
+{
+    if (ss->extended_3270font) {
+	text->byte1 = 1;
+	text->byte2 = ebc2cg0[apl];
+    } else {
+	if (ss->font_16bit) {
+	    *text = apl_to_udisplay(ss->d8_ix, apl);
+	} else {
+	    *text = apl_to_ldisplay(apl);
+	}
+    }
+}
+
+/*
+ * Return the vertical crosshair character for the current font.
+ */
+XChar2b
+screen_vcrosshair(void)
+{
+    XChar2b v;
+
+    apl_display_char(&v, 0xbf);
+    return v;
+}
+
+/*
+ * Return a GC for drawing the crosshair.
+ */
+GC
+screen_crosshair_gc(void)
+{
+    return screen_gc(CROSS_COLOR);
+}
+
+/*
+ * Draw or erase the crosshair in the margin between the primary and alternate
+ * screens.
+ */
+static void
+crosshair_margin(bool draw)
+{
+    /* To the right. */
+    if (maxCOLS > cCOLS) {
+	if (draw) {
+	    XTextItem16 text1;
+	    int i;
+
+	    if (ss->hx_text == NULL || ss->nhx_text < maxCOLS - cCOLS) {
+		ss->nhx_text = maxCOLS - cCOLS;
+		Replace(ss->hx_text,
+			(XChar2b *)Malloc(ss->nhx_text * sizeof(XChar2b)));
+	    }
+	    for (i = 0; i < ss->nhx_text; i++) {
+		apl_display_char(&ss->hx_text[i], 0xa2);
+	    }
+	    text1.chars = ss->hx_text;
+	    text1.nchars = ss->nhx_text;
+	    text1.delta = 0;
+	    text1.font = ss->fid;
+	    XDrawText16(display, ss->window, get_gc(ss, CROSS_COLOR),
+		    ssCOL_TO_X(cCOLS),
+		    ssROW_TO_Y(BA_TO_ROW(cursor_addr)),
+		    &text1, 1);
+	} else {
+	    XFillRectangle(display, ss->window,
+		    get_gc(ss, INVERT_COLOR(0)),
+		    ssCOL_TO_X(cCOLS),
+		    ssROW_TO_Y(BA_TO_ROW(ss->cursor_daddr)) - ss->ascent,
+		    (ss->char_width * (maxCOLS - cCOLS)) + 1,
+		    ss->char_height);
+	}
+    }
+
+    /* Down the bottom. */
+    if (maxROWS > ROWS) {
+	int column;
+
+	if (draw) {
+	    XTextItem16 text1;
+	    XChar2b text;
+	    int i;
+
+	    apl_display_char(&text, 0xbf);
+	    text1.chars = &text;
+	    text1.nchars = 1;
+	    text1.delta = 0;
+	    text1.font = ss->fid;
+	    column = BA_TO_COL(cursor_addr);
+	    if (flipped) {
+		column = (COLS - 1) - column;
+	    }
+	    for (i = ROWS; i < maxROWS; i++) {
+		XDrawText16(display, ss->window, get_gc(ss, CROSS_COLOR),
+			ssCOL_TO_X(column), ssROW_TO_Y(i), &text1, 1);
+	    }
+	} else {
+	    column = BA_TO_COL(ss->cursor_daddr);
+	    if (flipped) {
+		column = (COLS - 1) - column;
+	    }
+	    XFillRectangle(display, ss->window,
+		    get_gc(ss, INVERT_COLOR(0)),
+		    ssCOL_TO_X(column), ssROW_TO_Y(ROWS) - ss->ascent,
+		    ss->char_width + 1,
+		    ss->char_height * (maxROWS - ROWS));
+	}
+    }
+}
+
 
 /*
  * Make the (displayed) cursor disappear.  Returns a bool indiciating if
@@ -1178,12 +1306,23 @@ schedule_text_blink(void)
 static bool
 cursor_off(void)
 {
-	if (cursor_displayed) {
-		cursor_displayed = false;
-		put_cursor(ss->cursor_daddr, false);
-		return true;
-	} else
-		return false;
+    if (cursor_displayed) {
+	cursor_displayed = false;
+	put_cursor(ss->cursor_daddr, false);
+
+	/*
+	 * Erase the crosshair in the empty region between the primary
+	 * and alternate screens.
+	 */
+	if (toggled(CROSSHAIR)) {
+	    crosshair_margin(false);
+	    status_crosshair_off();
+	}
+
+	return true;
+    } else {
+	return false;
+    }
 }
 
 
@@ -1252,12 +1391,27 @@ toggle_cursorBlink(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 static void
 cursor_on(void)
 {
-	if (cursor_enabled && !cursor_displayed) {
-		cursor_displayed = true;
-		put_cursor(cursor_addr, true);
-		ss->cursor_daddr = cursor_addr;
-		cursor_changed = false;
+    if (cursor_enabled && !cursor_displayed) {
+	cursor_displayed = true;
+	put_cursor(cursor_addr, true);
+	ss->cursor_daddr = cursor_addr;
+	cursor_changed = false;
+
+	/*
+	 * Draw in the crosshair in the empty region between the primary
+	 * and alternate screens.
+	 */
+	if (in_focus && toggled(CROSSHAIR)) {
+	    int column;
+
+	    crosshair_margin(true);
+	    column = cursor_addr % COLS;
+	    if (flipped) {
+		column = (COLS - 1) - column;
+	    }
+	    status_crosshair(column);
 	}
+    }
 }
 
 
@@ -1337,6 +1491,35 @@ enable_cursor(bool on)
 static void
 toggle_crosshair(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
+    bool turning_off = false;
+
+    if (!toggled(CROSSHAIR)) {
+	/*
+	 * Turning it off. Turn it on momemtarily while we turn off the cursor,
+	 * so it gets erased.
+	 */
+	turning_off = true;
+	toggle_toggle(CROSSHAIR);
+    }
+
+    /*
+     * Flip the cursor, which will undraw or draw the crosshair in the margins.
+     *
+     * Don't forget to turn the toggle back off, if we temporarily turned it
+     * on above.
+     */
+    if (cursor_off()) {
+	if (turning_off) {
+	    toggle_toggle(CROSSHAIR);
+	}
+	cursor_on();
+    } else {
+	if (turning_off) {
+	    toggle_toggle(CROSSHAIR);
+	}
+    }
+
+    /* Refresh the screen. */
     screen_changed = true;
     first_changed = 0;
     last_changed = ROWS*COLS;
@@ -2299,10 +2482,13 @@ static unsigned char
 map_crosshair(int baddr)
 {
     if (baddr == cursor_addr) {
+	/* Cross. */
 	return 0xd3;
     } else if (baddr / cCOLS == cursor_addr / cCOLS) {
+	/* Horizontal. */
 	return 0xa2;
     } else {
+	/* Vertical. */
 	return 0xbf;
     }
 }
@@ -2379,11 +2565,13 @@ draw_fields(union sp *buffer, int first, int last)
 	    if (visible_control) {
 		b.bits.cc = visible_ebcdic(fa);
 		b.bits.gr = GR_UNDERLINE;
-		b.bits.fg = GC_NONDEFAULT | HOST_COLOR_YELLOW;
+		b.bits.fg = appres.m3279? (GC_NONDEFAULT | HOST_COLOR_YELLOW):
+		    FA_INT_HIGH_SEL;
 	    } else if (CROSSABLE && CROSSED(baddr)) {
 		b.bits.cs = CS_APL;
 		b.bits.cc = map_crosshair(baddr);
 		b.bits.fg = CROSS_COLOR;
+		b.bits.gr = 0;
 	    }
 	} else {
 	    unsigned short gr;
@@ -2435,6 +2623,7 @@ draw_fields(union sp *buffer, int first, int last)
 		    b.bits.cs = CS_APL;
 		    b.bits.cc = map_crosshair(baddr);
 		    b.bits.fg = CROSS_COLOR;
+		    b.bits.gr = 0;
 		}
 	    } else if (((!visible_control || c != EBC_null) &&
 			(c != EBC_space || d != DBCS_NONE)) ||
@@ -2454,6 +2643,7 @@ draw_fields(union sp *buffer, int first, int last)
 			b.bits.cs = CS_APL;
 			b.bits.cc = map_crosshair(baddr);
 			b.bits.fg = CROSS_COLOR;
+			b.bits.gr = 0;
 		    }
 		} else {
 		    if (visible_control && c == EBC_null) {
@@ -2502,6 +2692,7 @@ draw_fields(union sp *buffer, int first, int last)
 		b.bits.cs = CS_APL;
 		b.bits.cc = map_crosshair(baddr);
 		b.bits.fg = CROSS_COLOR;
+		b.bits.gr = 0;
 	    }
 	}
 
@@ -2880,6 +3071,7 @@ redraw_char(int baddr, bool invert)
 	    buffer[0].bits.cs = CS_APL;
 	    buffer[0].bits.cc = map_crosshair(baddr);
 	    buffer[0].bits.fg = CROSS_COLOR;
+	    buffer[0].bits.gr = 0;
 	} else {
 	    buffer[0].bits.cc = EBC_space;
 	    buffer[0].bits.cs = 0;

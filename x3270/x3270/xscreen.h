@@ -129,6 +129,7 @@ void Redraw_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
 void save_00translations(Widget w, XtTranslations *t00);
 void screen_change_model(int mn, int ovc, int ovr);
+GC screen_crosshair_gc(void);
 void screen_disp(bool erasing);
 void screen_extended(bool extended);
 GC screen_gc(int color);
@@ -147,6 +148,7 @@ void set_aicon_label(char *l);
 void set_translations(Widget w, XtTranslations *t00, XtTranslations *t0);
 void shift_event(int event_state);
 void screen_register(void);
+XChar2b screen_vcrosshair(void);
 
 /* font list */
 struct font_list {

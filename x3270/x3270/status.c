@@ -46,6 +46,7 @@
 #include "screen.h"
 #include "status.h"
 #include "tables.h"
+#include "trace.h" /* temp */
 #include "utils.h"
 #include "xscreen.h"
 #include "xtables.h"
@@ -53,6 +54,8 @@
 static XChar2b *status_2b;
 static unsigned char *status_1b;
 static XChar2b *display_2b;
+static bool *sxcursor_want;
+static bool *sxcursor_have;
 static bool  status_changed = false;
 
 static struct status_line {
@@ -370,6 +373,10 @@ status_reinit(unsigned cmask)
 		    (unsigned char *)XtCalloc(sizeof(unsigned char), maxCOLS));
 		Replace(display_2b,
 		    (XChar2b *)XtCalloc(sizeof(XChar2b), maxCOLS));
+		Replace(sxcursor_want,
+			(bool *)XtCalloc(sizeof(bool), maxCOLS));
+		Replace(sxcursor_have,
+			(bool *)XtCalloc(sizeof(bool), maxCOLS));
 		offsets[SSZ] = maxCOLS;
 		if (appres.interactive.mono)
 			colors[1] = FA_INT_NORM_NSEL;
@@ -413,22 +420,61 @@ status_reinit(unsigned cmask)
 	do_timing(oia_timing);
 }
 
+/* Check for a space. */
+static bool
+status_space(int col)
+{
+    return (*standard_font &&
+	    (status_1b[col] == ' ' || status_1b[col] == 0)) ||
+	   (!*standard_font &&
+	    (status_1b[col] == CG_space || status_1b[col] == CG_null));
+}
+
 /* Render the status line onto the screen */
 void
 status_disp(void)
 {
-	unsigned i;
+    unsigned i;
+    int col;
 
-	if (!status_changed)
-		return;
-	for (i = 0; i < SSZ; i++)
-		if (status_line[i].changed) {
-			status_render(i);
-			(void) memmove(status_line[i].d2b, status_line[i].s2b,
-				   status_line[i].len * sizeof(XChar2b));
-			status_line[i].changed = false;
-		}
-	status_changed = false;
+    if (!status_changed) {
+	return;
+    }
+    for (i = 0; i < SSZ; i++) {
+	if (status_line[i].changed) {
+	    status_render(i);
+	    (void) memmove(status_line[i].d2b, status_line[i].s2b,
+		    status_line[i].len * sizeof(XChar2b));
+	    status_line[i].changed = false;
+	}
+    }
+
+    /* Draw or undraw the crosshair. */
+    for (col = 0; col < maxCOLS; col++) {
+	if (sxcursor_want[col]) {
+	    if (status_space(col)) {
+		XTextItem16 text1;
+		XChar2b text = screen_vcrosshair();
+
+		text1.chars = &text;
+		text1.nchars = 1;
+		text1.delta = 0;
+		text1.font = *fid;
+		XDrawText16(display, *screen_window,
+			screen_crosshair_gc(),
+			COL_TO_X(col), status_y, &text1, 1);
+		sxcursor_have[col] = true;
+	    }
+	} else if (sxcursor_have[col]) {
+	    XFillRectangle(display, *screen_window, screen_invgc(0),
+		    COL_TO_X(col),
+		    status_y - *ascent,
+		    *char_width, *char_height);
+	    sxcursor_have[col] = false;
+	}
+    }
+
+    status_changed = false;
 }
 
 /* Mark the entire status line as changed */
@@ -708,27 +754,92 @@ status_uncursor_pos(void)
 
 /* Internal routines */
 
+/* Set the changed status for a particular status-line column. */
+static void
+set_status_changed(int col)
+{
+    unsigned i;
+
+    status_changed = true;
+    for (i = 0; i < SSZ; i++) {
+	if (col >= status_line[i].start &&
+	    col <  status_line[i].start + status_line[i].len) {
+	    status_line[i].changed = true;
+	    break;
+	}
+    }
+}
+
+#if 0
+/* Substitute a crosshair for a space in the status line. */
+static void
+substitute_crosshair(int col)
+{
+    if (sxcursor_want[col]) {
+	if (status_space(col)) {
+	    status_1b[col] = *standard_font? '|': CG_bar; /* XXX */
+	    status_2b[col] = screen_vcrosshair();
+	    sxcursor_have[col] = true;
+	} else {
+	    sxcursor_have[col] = false;
+	}
+    } else {
+	sxcursor_have[col] = false;
+    }
+}
+#endif
+
 /* Update the status line by displaying "symbol" at column "col".  */
 static void
 status_add(int col, unsigned char symbol, enum keytype keytype)
 {
-	unsigned i;
-	XChar2b n2b;
+    XChar2b n2b;
 
-	n2b.byte1 = (keytype == KT_STD) ? 0 : 1;
-	n2b.byte2 = symbol;
-	if (status_2b[col].byte1 == n2b.byte1 &&
-	    status_2b[col].byte2 == n2b.byte2)
-		return;
-	status_2b[col] = n2b;
-	status_1b[col] = symbol;
-	status_changed = true;
-	for (i = 0; i < SSZ; i++)
-		if (col >= status_line[i].start &&
-		    col <  status_line[i].start + status_line[i].len) {
-			status_line[i].changed = true;
-			return;
-		}
+    /* Store the text. */
+    n2b.byte1 = (keytype == KT_STD) ? 0 : 1;
+    n2b.byte2 = symbol;
+    if (status_2b[col].byte1 == n2b.byte1 &&
+	    status_2b[col].byte2 == n2b.byte2) {
+	return;
+    }
+    status_2b[col] = n2b;
+    status_1b[col] = symbol;
+
+#if 0
+    /* If they wrote a space and we want the crosshair there, substitute it. */
+    substitute_crosshair(col);
+#endif
+
+    /* Update change status. */
+    set_status_changed(col);
+}
+
+/**
+ * Draw the crosshair cursor.
+ *
+ * @param[in] column	Column where the cursor should be
+ */
+void
+status_crosshair(int column)
+{
+    sxcursor_want[column] = true;
+    set_status_changed(column);
+}
+
+/**
+ * Turn off the crosshair cursor, wherever it is.
+ */
+void
+status_crosshair_off(void)
+{
+    int i;
+
+    for (i = 0; i < maxCOLS; i++) {
+	if (sxcursor_want[i]) {
+	    sxcursor_want[i] = false;
+	    set_status_changed(i);
+	}
+    }
 }
 
 /*
@@ -741,127 +852,120 @@ status_add(int col, unsigned char symbol, enum keytype keytype)
 static void
 status_render(int region)
 {
-	int	i;
-	struct status_line *sl = &status_line[region];
-	int	nd = 0;
-	int	i0 = -1;
-	XTextItem16 text1;
+    int	i;
+    struct status_line *sl = &status_line[region];
+    int	nd = 0;
+    int	i0 = -1;
+    XTextItem16 text1;
 
-	/* The status region may change colors; don't be so clever */
-	if (region == WAIT_REGION) {
-		XFillRectangle(display, *screen_window,
-		    screen_invgc(sl->color),
-		    COL_TO_X(sl->start), status_y - *ascent,
-		    *char_width * sl->len, *char_height);
-		text1.chars = sl->s2b;
-		text1.nchars = sl->len;
-		text1.delta = 0;
-		text1.font = *fid;
-		XDrawText16(display, *screen_window, screen_gc(sl->color),
-		    COL_TO_X(sl->start), status_y, &text1, 1);
-	} else {
-		for (i = 0; i < sl->len; i++) {
-			if (*funky_font || *xtra_width) {
-				if (!sl->s1b[i])
-					continue;
-				XFillRectangle(display, *screen_window,
-				    screen_invgc(sl->color),
-				    COL_TO_X(sl->start + i), status_y - *ascent,
-				    *char_width, *char_height);
-				text1.chars = sl->s2b + i;
-				text1.nchars = 1;
-				text1.delta = 0;
-				text1.font = *fid;
-				XDrawText16(display,
-				    *screen_window,
-				    screen_gc(sl->color),
-				    COL_TO_X(sl->start + i),
-				    status_y,
-				    &text1, 1);
-				continue;
-			}
-			if (sl->s2b[i].byte1 == sl->d2b[i].byte1 &&
-			    sl->s2b[i].byte2 == sl->d2b[i].byte2) {
-				if (nd) {
-					XFillRectangle(display,
-					    *screen_window,
-					    screen_invgc(sl->color),
-					    COL_TO_X(sl->start + i0),
-					    status_y - *ascent,
-					    *char_width * nd, *char_height);
-					text1.chars = sl->s2b + i0;
-					text1.nchars = nd;
-					text1.delta = 0;
-					text1.font = *fid;
-					XDrawText16(display,
-					    *screen_window,
-					    screen_gc(sl->color),
-					    COL_TO_X(sl->start + i0),
-					    status_y,
-					    &text1, 1);
-					nd = 0;
-					i0 = -1;
-				}
-			} else {
-				if (!nd++)
-					i0 = i;
-			}
+    /* The status region may change colors; don't be so clever */
+    if (region == WAIT_REGION) {
+	XFillRectangle(display, *screen_window,
+		screen_invgc(sl->color),
+		COL_TO_X(sl->start), status_y - *ascent,
+		*char_width * sl->len, *char_height);
+	text1.chars = sl->s2b;
+	text1.nchars = sl->len;
+	text1.delta = 0;
+	text1.font = *fid;
+	XDrawText16(display, *screen_window, screen_gc(sl->color),
+		COL_TO_X(sl->start), status_y, &text1, 1);
+    } else {
+	for (i = 0; i < sl->len; i++) {
+	    if (*funky_font || *xtra_width) {
+		if (!sl->s1b[i]) {
+		    continue;
 		}
-		if (nd) {
-			XFillRectangle(display,
-			    *screen_window,
-			    screen_invgc(sl->color),
-			    COL_TO_X(sl->start + i0),
-			    status_y - *ascent,
-			    *char_width * nd, *char_height);
-			text1.chars = sl->s2b + i0;
-			text1.nchars = nd;
-			text1.delta = 0;
-			text1.font = *fid;
-			XDrawText16(display, *screen_window,
-			    screen_gc(sl->color),
-			    COL_TO_X(sl->start + i0), status_y,
-			    &text1, 1);
-		}
-	}
-
-	/* Leftmost region has unusual attributes */
-	if (*standard_font && region == CTLR_REGION) {
 		XFillRectangle(display, *screen_window,
-		    screen_invgc(sl->color),
-		    COL_TO_X(sl->start), status_y - *ascent,
-		    *char_width * 3, *char_height);
-		XFillRectangle(display, *screen_window,
-		    screen_gc(sl->color),
-		    COL_TO_X(sl->start + LBOX), status_y - *ascent,
-		    *char_width, *char_height);
-		XFillRectangle(display, *screen_window,
-		    screen_gc(sl->color),
-		    COL_TO_X(sl->start + RBOX), status_y - *ascent,
-		    *char_width, *char_height);
-		text1.chars = sl->s2b + LBOX;
+			screen_invgc(sl->color),
+			COL_TO_X(sl->start + i), status_y - *ascent,
+			*char_width, *char_height);
+		text1.chars = sl->s2b + i;
 		text1.nchars = 1;
 		text1.delta = 0;
 		text1.font = *fid;
-		XDrawText16(display, *screen_window,
-		    screen_invgc(sl->color),
-		    COL_TO_X(sl->start + LBOX), status_y,
-		    &text1, 1);
-		XDrawRectangle(display, *screen_window, screen_gc(sl->color),
-		    COL_TO_X(sl->start + CNCT),
-		    status_y - *ascent + *char_height - 1,
-		    *char_width - 1, 0);
-		text1.chars = sl->s2b + CNCT;
-		XDrawText16(display, *screen_window,
-		    screen_gc(sl->color),
-		    COL_TO_X(sl->start + CNCT), status_y,
-		    &text1, 1);
-		text1.chars = sl->s2b + RBOX;
-		XDrawText16(display, *screen_window,
-		    screen_invgc(sl->color),
-		    COL_TO_X(sl->start + RBOX), status_y,
-		    &text1, 1);
+		XDrawText16(display,
+			*screen_window,
+			screen_gc(sl->color),
+			COL_TO_X(sl->start + i),
+			status_y,
+			&text1, 1);
+		continue;
+	    }
+	    if (sl->s2b[i].byte1 == sl->d2b[i].byte1 &&
+		sl->s2b[i].byte2 == sl->d2b[i].byte2) {
+		if (nd) {
+		    XFillRectangle(display, *screen_window,
+			    screen_invgc(sl->color), COL_TO_X(sl->start + i0),
+			    status_y - *ascent, *char_width * nd,
+			    *char_height);
+		    text1.chars = sl->s2b + i0;
+		    text1.nchars = nd;
+		    text1.delta = 0;
+		    text1.font = *fid;
+		    XDrawText16(display, *screen_window, screen_gc(sl->color),
+			    COL_TO_X(sl->start + i0), status_y, &text1, 1);
+		    nd = 0;
+		    i0 = -1;
+		}
+	    } else {
+		if (!nd++) {
+		    i0 = i;
+		}
+	    }
 	}
+	if (nd) {
+	    XFillRectangle(display, *screen_window, screen_invgc(sl->color),
+		    COL_TO_X(sl->start + i0), status_y - *ascent,
+		    *char_width * nd, *char_height);
+	    text1.chars = sl->s2b + i0;
+	    text1.nchars = nd;
+	    text1.delta = 0;
+	    text1.font = *fid;
+	    XDrawText16(display, *screen_window,
+		screen_gc(sl->color),
+		COL_TO_X(sl->start + i0), status_y,
+		&text1, 1);
+	}
+    }
+
+    /* Leftmost region has unusual attributes */
+    if (*standard_font && region == CTLR_REGION) {
+	XFillRectangle(display, *screen_window,
+		screen_invgc(sl->color),
+		COL_TO_X(sl->start), status_y - *ascent,
+		*char_width * 3, *char_height);
+	XFillRectangle(display, *screen_window,
+		screen_gc(sl->color),
+		COL_TO_X(sl->start + LBOX), status_y - *ascent,
+		*char_width, *char_height);
+	XFillRectangle(display, *screen_window,
+		screen_gc(sl->color),
+		COL_TO_X(sl->start + RBOX), status_y - *ascent,
+		*char_width, *char_height);
+	text1.chars = sl->s2b + LBOX;
+	text1.nchars = 1;
+	text1.delta = 0;
+	text1.font = *fid;
+	XDrawText16(display, *screen_window,
+		screen_invgc(sl->color),
+		COL_TO_X(sl->start + LBOX), status_y,
+		&text1, 1);
+	XDrawRectangle(display, *screen_window, screen_gc(sl->color),
+		COL_TO_X(sl->start + CNCT),
+		status_y - *ascent + *char_height - 1,
+		*char_width - 1, 0);
+	text1.chars = sl->s2b + CNCT;
+	XDrawText16(display, *screen_window,
+		screen_gc(sl->color),
+		COL_TO_X(sl->start + CNCT), status_y,
+		&text1, 1);
+	text1.chars = sl->s2b + RBOX;
+	XDrawText16(display, *screen_window,
+		screen_invgc(sl->color),
+		COL_TO_X(sl->start + RBOX), status_y,
+		&text1, 1);
+    }
 }
 
 /* Write into the message area of the status line */
@@ -903,7 +1007,7 @@ do_ctlr(void)
 			status_add(CNCT, (IN_E ? CG_underB : CG_underA),
 				KT_STD);
 		} else {
-			status_add(CNCT, CG_null, KT_STD);
+			status_add(CNCT, CG_space, KT_STD);
 		}
 		if (IN_NVT) {
 			status_add(RBOX, CG_N, KT_STD);
