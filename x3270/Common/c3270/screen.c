@@ -2063,6 +2063,7 @@ draw_oia(void)
     int i, j;
     int cursor_row = cursor_addr / cCOLS;
     int cursor_col = cursor_addr % cCOLS;
+    int fl_cursor_col = flipped? (cursesCOLS - 1 - cursor_col): cursor_col;
     static struct {
 	ucs4_t u;
 	unsigned char acs;
@@ -2131,7 +2132,7 @@ draw_oia(void)
 
     /* Draw the crosshair over the menubar line. */
     if (screen_yoffset && toggled(CROSSHAIR) && !menu_is_up &&
-	    (mvinch(0, cursor_col) & A_CHARTEXT) == ' ') {
+	    (mvinch(0, fl_cursor_col) & A_CHARTEXT) == ' ') {
 	draw_crosshair(vbar.u, vbar.acs);
     }
 
@@ -2139,7 +2140,7 @@ draw_oia(void)
     if (!menu_is_up && screen_yoffset) {
 	for (j = 0; j < cursesCOLS; j++) {
 	    move(1, j);
-	    if (toggled(CROSSHAIR) && j == cursor_col) {
+	    if (toggled(CROSSHAIR) && j == fl_cursor_col) {
 		draw_crosshair(vbar.u, vbar.acs);
 	    } else {
 		addch(' ');
@@ -2166,7 +2167,7 @@ draw_oia(void)
     for (i = screen_yoffset + ROWS; i < status_row; i++) {
 	for (j = 0; j < cursesCOLS; j++) {
 	    move(i, j);
-	    if (toggled(CROSSHAIR) && j == cursor_col) {
+	    if (toggled(CROSSHAIR) && j == fl_cursor_col) {
 		draw_crosshair(vbar.u, vbar.acs);
 	    } else {
 		addch(' ');
@@ -2197,7 +2198,7 @@ draw_oia(void)
 	(void) attrset(A_UNDERLINE | defattr);
 	move(status_row - 1, 0);
 	for (i = 0; i < rmargin; i++) {
-	    if (toggled(CROSSHAIR) && i == cursor_col) {
+	    if (toggled(CROSSHAIR) && i == fl_cursor_col) {
 		move(status_row - 1, i + 1);
 	    } else {
 		printw(" ");
@@ -2275,7 +2276,7 @@ draw_oia(void)
     /* Draw the crosshair in the OIA. */
     if (toggled(CROSSHAIR) &&
 	    cursor_col > 2 &&
-	    (mvinch(status_row, cursor_col) & A_CHARTEXT) == ' ') {
+	    (mvinch(status_row, fl_cursor_col) & A_CHARTEXT) == ' ') {
 	draw_crosshair(vbar.u, vbar.acs);
     }
 }

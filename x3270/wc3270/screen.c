@@ -2915,6 +2915,7 @@ draw_oia(void)
     int rmargin;
     int i, j;
     int cursor_col = (cursor_addr % cCOLS);
+    int fl_cursor_col = flipped? (console_cols - 1 - cursor_col): cursor_col;
     int oia_attr = appres.m3279 ?
 	   (cmap_fg[HOST_COLOR_GREY] | cmap_bg[HOST_COLOR_NEUTRAL_BLACK]):
 	   defattr;
@@ -2925,20 +2926,20 @@ draw_oia(void)
     attrset(xhattr);
     if (toggled(CROSSHAIR)) {
 	if (!menu_is_up &&
-		(mvinch(0, cursor_col) & A_CHARTEXT) == ' ') {
+		(mvinch(0, fl_cursor_col) & A_CHARTEXT) == ' ') {
 	    attrset(cmap_fg[HOST_COLOR_PALE_GREEN] | cmap_bg[HOST_COLOR_GREY]);
 	    addch(LINEDRAW_VERT);
 	    attrset(xhattr);
 	}
 	if (screen_yoffset > 1 &&
-		(mvinch(1, cursor_col) & A_CHARTEXT) == ' ') {
+		(mvinch(1, fl_cursor_col) & A_CHARTEXT) == ' ') {
 	    addch(LINEDRAW_VERT);
 	}
     }
     for (i = ROWS + screen_yoffset; i < status_row; i++) {
 	for (j = 0; j < maxCOLS; j++) {
 	    move(i, j);
-	    if (toggled(CROSSHAIR) && (j == cursor_col)) {
+	    if (toggled(CROSSHAIR) && (j == fl_cursor_col)) {
 		addch(LINEDRAW_VERT);
 	    } else {
 		addch(' ');
@@ -3028,8 +3029,7 @@ draw_oia(void)
     /* Now fill in the crosshair cursor in the status line. */
     if (toggled(CROSSHAIR) &&
 	    cursor_col > 2 &&
-	    (mvinch(status_row, cursor_col) & A_CHARTEXT) == ' ') {
-	move(status_row, cursor_col);
+	    (mvinch(status_row, fl_cursor_col) & A_CHARTEXT) == ' ') {
 	attrset(xhattr);
 	addch(LINEDRAW_VERT);
     }
