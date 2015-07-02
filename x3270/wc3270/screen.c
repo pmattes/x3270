@@ -1484,7 +1484,7 @@ init_user_colors(void)
     if (appres.m3279) {
 	defattr = cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
 		  cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
-	xhattr = cmap_fg[HOST_COLOR_PALE_GREEN] |
+	xhattr = cmap_fg[HOST_COLOR_PURPLE] |
 		  cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
     } else {
 	defattr = cmap_fg[HOST_COLOR_PALE_GREEN] |
@@ -2933,7 +2933,7 @@ draw_oia(void)
     if (in_focus && toggled(CROSSHAIR)) {
 	if (!menu_is_up &&
 		(mvinch(0, fl_cursor_col) & A_CHARTEXT) == ' ') {
-	    attrset(cmap_fg[HOST_COLOR_PALE_GREEN] | cmap_bg[HOST_COLOR_GREY]);
+	    attrset(cmap_fg[HOST_COLOR_PURPLE] | cmap_bg[HOST_COLOR_GREY]);
 	    addch(LINEDRAW_VERT);
 	    attrset(xhattr);
 	}

@@ -500,7 +500,7 @@ finish_screen_init(void)
 	    if (appres.m3279) {
 		defattr = get_color_pair(defcolor_offset + COLOR_BLUE,
 			bg_color);
-		xhattr = get_color_pair(defcolor_offset + COLOR_GREEN,
+		xhattr = get_color_pair(defcolor_offset + COLOR_MAGENTA,
 			bg_color);
 	    } else {
 		defattr = get_color_pair(defcolor_offset + COLOR_GREEN,
