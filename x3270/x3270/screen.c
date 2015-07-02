@@ -2414,7 +2414,9 @@ draw_fields(union sp *buffer, int first, int last)
 			if (visible_control) {
 				b.bits.cc = visible_ebcdic(fa);
 				b.bits.gr = GR_UNDERLINE;
-				b.bits.fg = GC_NONDEFAULT | HOST_COLOR_YELLOW;
+				b.bits.fg = appres.m3279?
+				    (GC_NONDEFAULT | HOST_COLOR_YELLOW):
+				    FA_INT_HIGH_SEL;
 			}
 		} else {
 			unsigned short gr;
