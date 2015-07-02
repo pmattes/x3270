@@ -224,6 +224,8 @@ static ioid_t blink_id = NULL_IOID;	/* timeout ID */
 static bool blink_wasticking = false;
 static void blink_em(ioid_t id);
 
+static bool in_focus = true;
+
 static action_t Paste_action;
 static action_t Redraw_action;
 static action_t Title_action;
@@ -1678,7 +1680,7 @@ visible_fa(unsigned char fa)
 static int
 crosshair_blank(int baddr)
 {
-    if (toggled(CROSSHAIR)) {
+    if (in_focus && toggled(CROSSHAIR)) {
 	bool same_row = ((baddr / cCOLS) == (cursor_addr / cCOLS));
 	bool same_col = ((baddr % cCOLS) == (cursor_addr % cCOLS));
 
@@ -1959,7 +1961,7 @@ screen_disp(bool erasing _is_unused)
 			    if (c != ' ') {
 				attr_this = apply_select(xhattr, baddr);
 			    }
-			} else if (c == ' ' && toggled(CROSSHAIR)) {
+			} else if (c == ' ' && in_focus && toggled(CROSSHAIR)) {
 			    c = crosshair_blank(baddr);
 			    if (c != ' ') {
 				attr_this = apply_select(xhattr, baddr);
@@ -2272,9 +2274,13 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	/*
 	 * When we get a focus event, the system may have (incorrectly) redrawn
 	 * our window.  Do it again ourselves.
+	 *
+	 * We also want to redraw to get the crosshair cursor to appear or
+	 * disappear.
 	 */
-	onscreen_valid = FALSE;
-	refresh();
+	in_focus = (ir.Event.FocusEvent.bSetFocus == TRUE);
+	screen_changed = true;
+	screen_disp(false);
 	break;
     case KEY_EVENT:
 	if (!ir.Event.KeyEvent.bKeyDown) {
@@ -2567,7 +2573,7 @@ void
 cursor_move(int baddr)
 {
     cursor_addr = baddr;
-    if (toggled(CROSSHAIR)) {
+    if (in_focus && toggled(CROSSHAIR)) {
 	screen_changed = true;
 	screen_disp(false);
     }
@@ -2924,7 +2930,7 @@ draw_oia(void)
 
     /* Extend or erase the crosshair. */
     attrset(xhattr);
-    if (toggled(CROSSHAIR)) {
+    if (in_focus && toggled(CROSSHAIR)) {
 	if (!menu_is_up &&
 		(mvinch(0, fl_cursor_col) & A_CHARTEXT) == ' ') {
 	    attrset(cmap_fg[HOST_COLOR_PALE_GREEN] | cmap_bg[HOST_COLOR_GREY]);
@@ -2939,7 +2945,7 @@ draw_oia(void)
     for (i = ROWS + screen_yoffset; i < status_row; i++) {
 	for (j = 0; j < maxCOLS; j++) {
 	    move(i, j);
-	    if (toggled(CROSSHAIR) && (j == fl_cursor_col)) {
+	    if (in_focus && toggled(CROSSHAIR) && (j == fl_cursor_col)) {
 		addch(LINEDRAW_VERT);
 	    } else {
 		addch(' ');
@@ -2949,7 +2955,7 @@ draw_oia(void)
     for (i = 0; i < ROWS; i++) {
 	for (j = cCOLS; j < maxCOLS; j++) {
 	    move(i + screen_yoffset, j);
-	    if (toggled(CROSSHAIR) && i == (cursor_addr / cCOLS)) {
+	    if (in_focus && toggled(CROSSHAIR) && i == (cursor_addr / cCOLS)) {
 		addch(LINEDRAW_HORIZ);
 	    } else {
 		addch(' ');
@@ -3027,7 +3033,8 @@ draw_oia(void)
     }
 
     /* Now fill in the crosshair cursor in the status line. */
-    if (toggled(CROSSHAIR) &&
+    if (in_focus &&
+	    toggled(CROSSHAIR) &&
 	    cursor_col > 2 &&
 	    (mvinch(status_row, fl_cursor_col) & A_CHARTEXT) == ' ') {
 	attrset(xhattr);
