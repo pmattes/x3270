@@ -198,6 +198,7 @@ static char    *color_name[16] = {
 };
 static bool	configure_ticking = false;
 static XtIntervalId configure_id;
+static bool highlight_bold = false;
 
 static Pixmap   inv_icon;
 static Pixmap   wait_icon;
@@ -505,10 +506,6 @@ screen_init(void)
 {
     int i;
 
-    if (!appres.m3279) {
-	appres.highlight_bold = true;
-    }
-
     visible_control = toggled(VISIBLE_CONTROL);
 
     /* Parse the fixed window size, if there is any. */
@@ -577,6 +574,16 @@ screen_reinit(unsigned cmask)
 		(void) xfer_color_scheme(xappres.color_scheme, false);
 	    }
 	    allocate_pixels();
+
+	    /*
+	     * In color mode, set highlight_bold from the resource.
+	     * In monochrome, set it unconditionally.
+	     */
+	    if (appres.m3279) {
+		highlight_bold = appres.highlight_bold;
+	    } else {
+		highlight_bold = true;
+	    }
 	}
 
 	/* Define graphics contexts. */
@@ -2351,7 +2358,7 @@ render_text(union sp *buffer, int baddr, int len, bool block_cursor,
 	XDrawText16(display, ss->window, dgc, x, y, text, n_texts);
 	if (ss->overstrike && ((attrs->bits.gr & GR_INTENSIFY) ||
 		    ((appres.interactive.mono ||
-		      (!appres.m3279 && appres.highlight_bold)) &&
+		      (!appres.m3279 && highlight_bold)) &&
 		     ((color & BASE_MASK) == FA_INT_HIGH_SEL)))) {
 	    XDrawText16(display, ss->window, dgc, x+1, y, text, n_texts);
 	}
@@ -2589,7 +2596,7 @@ draw_fields(union sp *buffer, int first, int last)
 		if (gr & GR_BLINK) {
 		    any_blink = true;
 		}
-		if (appres.highlight_bold && FA_IS_HIGH(fa)) {
+		if (highlight_bold && FA_IS_HIGH(fa)) {
 		    gr |= GR_INTENSIFY;
 		}
 	    }
