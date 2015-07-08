@@ -200,6 +200,24 @@ dft_insert_request(void)
     /* Doesn't currently do anything. */
 }
 
+/* Send an acknowledgement frame back. */
+static void
+dft_data_ack(void)
+{
+    trace_ds("> WriteStructuredField FileTransferData DataAck(rec=%lu)\n",
+	    recnum);
+    obptr = obuf;
+    space3270out(12);
+    *obptr++ = AID_SF;
+    SET16(obptr, 11);
+    *obptr++ = SF_TRANSFER_DATA;
+    SET16(obptr, TR_NORMAL_REPLY);
+    SET16(obptr, TR_RECNUM_HDR);
+    SET32(obptr, recnum);
+    recnum++;
+    net_output();
+}
+
 /* Process a Data Insert request. */
 static void
 dft_data_insert(struct data_buffer *data_bufr)
@@ -232,6 +250,9 @@ dft_data_insert(struct data_buffer *data_bufr)
 	unsigned char *msgp;
 	unsigned char *dollarp;
 
+	/* Ack the message. */
+	dft_data_ack();
+
 	/* Get storage to copy the message. */
 	msgp = (unsigned char *)Malloc(my_length + 1);
 
@@ -258,7 +279,12 @@ dft_data_insert(struct data_buffer *data_bufr)
 	    ft_complete((char *)msgp);
 	    Free(msgp);
 	}
-    } else if (my_length > 0) {
+
+	return;
+    }
+
+    /* Process file data. */
+    if (my_length > 0) {
 	size_t rv = 1;
 
 	/* Write the data out to the file. */
@@ -384,18 +410,7 @@ dft_data_insert(struct data_buffer *data_bufr)
     }
 
     /* Send an acknowledgement frame back. */
-    trace_ds("> WriteStructuredField FileTransferData DataAck(rec=%lu)\n",
-	    recnum);
-    obptr = obuf;
-    space3270out(12);
-    *obptr++ = AID_SF;
-    SET16(obptr, 11);
-    *obptr++ = SF_TRANSFER_DATA;
-    SET16(obptr, TR_NORMAL_REPLY);
-    SET16(obptr, TR_RECNUM_HDR);
-    SET32(obptr, recnum);
-    recnum++;
-    net_output();
+    dft_data_ack();
 }
 
 /* Process a Set Cursor request. */
