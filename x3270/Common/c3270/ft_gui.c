@@ -102,13 +102,10 @@ ft_gui_update_length(unsigned long length)
 	    if (!ft_do_cancel()) {
 		printf("Aborting... waiting for host acknowledgment... ");
 	    }
-	} else
-	{
+	} else {
 	    printf("\r%79s\rTransferred %lu bytes. ", "", length);
 	}
 	fflush(stdout);
-    } else {
-	popup_an_info("Transferred %lu bytes.", length);
     }
 }
 
@@ -116,8 +113,10 @@ ft_gui_update_length(unsigned long length)
 void
 ft_gui_running(unsigned long length _is_unused)
 {
-    RemoveTimeOut(ft_poll_id);
-    ft_poll_id = NULL_IOID;
+    if (ftc->is_interactive) {
+	RemoveTimeOut(ft_poll_id);
+	ft_poll_id = NULL_IOID;
+    }
     ft_update_length();
 }
 
@@ -185,8 +184,8 @@ void
 ft_gui_awaiting(void)
 {   
     if (ftc->is_interactive) {
-	printf("Awaiting start of transfer... ");
-	printf("Press ^C to abort... ");
+	printf("Awaiting start of transfer...\nPress ^C to abort...\n");
+	fflush(stdout);
 
 	/* Set up a SIGINT handler. */
 	ft_sigint_aborting = false;
