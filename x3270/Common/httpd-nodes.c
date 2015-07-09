@@ -186,33 +186,33 @@ dyn_form_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
 	if (hn_image(dhandle, &r, &rv)) {
 	    if (len) {
 		rv = httpd_dyn_complete(dhandle,
-"<HEAD>\n\
+"<head>\n\
 <title>Interactive Form</title>\n\
-</HEAD>\n\
-<BODY>\n"
+</head>\n\
+<body>\n"
 CMD_FORM
 "<br>\n\
 %s\n\
-<H2>Status</H2>\n\
-<PRE>%.*s</PRE>\n\
-<H2>Result</H2>\n\
-<PRE>%.*s</PRE>",
+<h2>Status</h2>\n\
+<pre>%.*s</pre>\n\
+<h2>Result</h2>\n\
+<pre>%.*s</pre>",
 		    vb_buf(&r),
 		    sl_len, sl_buf,
 		    len, buf);
 	    } else {
 		rv = httpd_dyn_complete(dhandle,
-"<HEAD>\n\
+"<head>\n\
 <title>Interactive Form</title>\n\
-</HEAD>\n\
-<BODY>\n"
+</head>\n\
+<body>\n"
 CMD_FORM
 "<br>\n\
 %s\n\
-<H2>Status</H2>\n\
-<PRE>%.*s</PRE>\n\
-<H2>Result</H2>\n\
-<I>(none)</I>",
+<h2>Status</h2>\n\
+<pre>%.*s</pre>\n\
+<h2>Result</h2>\n\
+<i>(none)</i>",
 		    vb_buf(&r),
 		    sl_len, sl_buf);
 	    }
@@ -420,28 +420,28 @@ rest_dyn_html_complete(void *dhandle, sendto_cbs_t cbs, const char *buf,
     case SC_SUCCESS:
 	if (len) {
 	    rv = httpd_dyn_complete(dhandle,
-"<HEAD>\n\
-<TITLE>Success</TITLE>\n\
-</HEAD>\n\
-<BODY>\n\
-<H1>Success</H1>\n\
-<H2>Status</H2>\n\
-<PRE>%.*s</PRE>\n\
-<H2>Result</H2>\n\
-<PRE>%.*s</PRE>",
+"<head>\n\
+<title>Success</title>\n\
+</head>\n\
+<body>\n\
+<h1>Success</h1>\n\
+<h2>Status</h2>\n\
+<pre>%.*s</pre>\n\
+<h2>Result</h2>\n\
+<pre>%.*s</pre>",
 		sl_len, sl_buf,
 		len, buf);
 	} else {
 	    rv = httpd_dyn_complete(dhandle,
-"<HEAD>\n\
-<TITLE>Success</TITLE>\n\
-</HEAD>\n\
-<BODY>\n\
-<H1>Success</H1>\n\
-<H2>Status</H2>\n\
-<PRE>%.*s</PRE>\n\
-<H2>Result</H2>\n\
-<I>(none)</I>",
+"<head>\n\
+<title>Success</title>\n\
+</head>\n\
+<body>\n\
+<h1>Success</h1>\n\
+<h2>Status</h2>\n\
+<pre>%.*s</pre>\n\
+<h2>Result</h2>\n\
+<i>(none)</i>",
 		sl_len, sl_buf);
 	}
 	break;

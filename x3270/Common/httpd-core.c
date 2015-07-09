@@ -510,7 +510,7 @@ httpd_http_header(httpd_t *h, int status_code, bool do_close,
 /**
  * Write the standard trailer.
  *
- * The trailer includes the </BODY> bracket.
+ * The trailer includes the </body> bracket.
  *
  * @param[in] h		State
  * @param[in] type	Print type (send or buffer)
@@ -519,11 +519,11 @@ static void
 httpd_html_trailer(httpd_t *h, httpd_print_t type)
 {
     httpd_print(h, type, "\n");
-    httpd_print(h, type, " <HR>\n");
+    httpd_print(h, type, " <hr>\n");
     httpd_print(h, type,
-	    " <I>%s - <A HREF=\"http://x3270.bgp.nu/\">x3270.bgp.nu</A></I>\n",
+	    " <i>%s - <a href=\"http://x3270.bgp.nu/\">x3270.bgp.nu</a></i>\n",
 	    build);
-    httpd_print(h, type, " </BODY>\n");
+    httpd_print(h, type, " </body>\n");
 }
 
 /**
@@ -568,17 +568,17 @@ httpd_verror(httpd_t *h, errmode_t mode, int status_code, verb_t verb,
 	/* Generate the body. */
 	httpd_print(h, HP_BUFFER,
 		"<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n");
-	httpd_print(h, HP_BUFFER, "<HTML>\n");
-	httpd_print(h, HP_BUFFER, " <HEAD>\n");
-	httpd_print(h, HP_BUFFER, "  <TITLE>%d %s</TITLE>\n", status_code,
+	httpd_print(h, HP_BUFFER, "<html>\n");
+	httpd_print(h, HP_BUFFER, " <head>\n");
+	httpd_print(h, HP_BUFFER, "  <title>%d %s</title>\n", status_code,
 		status_text(status_code));
-	httpd_print(h, HP_BUFFER, " </HEAD>\n");
-	httpd_print(h, HP_BUFFER, " <BODY>\n");
-	httpd_print(h, HP_BUFFER, " <H1>%d %s</H1>\n", status_code,
+	httpd_print(h, HP_BUFFER, " </head>\n");
+	httpd_print(h, HP_BUFFER, " <body>\n");
+	httpd_print(h, HP_BUFFER, " <h1>%d %s</h1>\n", status_code,
 		status_text(status_code));
 	httpd_vprint(h, HP_BUFFER, format, ap);
 	httpd_html_trailer(h, HP_BUFFER);
-	httpd_print(h, HP_BUFFER, "</HTML>\n");
+	httpd_print(h, HP_BUFFER, "</html>\n");
 
 	/*
 	 * Dump the Content-Length (if HTTP) now and terminate the response
@@ -700,9 +700,9 @@ httpd_digest_request_line(httpd_t *h)
 
     /* White space at the beginning of the input is bad. */
     if (isspace((unsigned char)rq[0])) {
-	return httpd_error(h, errmode, 400, "<P>Invalid request "
-		"syntax.</P>\n<P>Whitespace at the beginning of the "
-		"request.</P>");
+	return httpd_error(h, errmode, 400, "<p>Invalid request "
+		"syntax.</p>\n<p>Whitespace at the beginning of the "
+		"request.</p>");
     }
 
     /* We expect two or three tokens. */
@@ -715,8 +715,8 @@ httpd_digest_request_line(httpd_t *h)
 	junk = NULL;
     }
     if (verb == NULL || r->uri == NULL || junk != NULL) {
-	return httpd_error(h, errmode, 400, "<P>Invalid request "
-		"syntax.</P>\n<P>Invalid number of tokens.</P>");
+	return httpd_error(h, errmode, 400, "<p>Invalid request "
+		"syntax.</p>\n<p>Invalid number of tokens.</p>");
     }
 
     /*
@@ -983,7 +983,7 @@ httpd_reply(httpd_t *h, httpd_reg_t *reg, const char *uri)
 
 	q_uri = html_quote(uri);
 	httpd_error(h, ERRMODE_NONFATAL, 409,
-		"<P>Object is busy.</P><P>Only one client may access '%s' at "
+		"<p>Object is busy.</p><p>Only one client may access '%s' at "
 		"a time.", q_uri);
 	Free(q_uri);
 	return HS_ERROR_OPEN;
@@ -1020,7 +1020,7 @@ httpd_reply(httpd_t *h, httpd_reg_t *reg, const char *uri)
 	if (reg->content_type == CT_HTML) {
 	    httpd_print(h, HP_BUFFER,
 		    "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n");
-	    httpd_print(h, HP_BUFFER, "<HTML>\n");
+	    httpd_print(h, HP_BUFFER, "<html>\n");
 	}
 
 	switch (reg->type) {
@@ -1043,7 +1043,7 @@ httpd_reply(httpd_t *h, httpd_reg_t *reg, const char *uri)
 	    if (reg->flags & HF_TRAILER) {
 		httpd_html_trailer(h, HP_BUFFER);
 	    }
-	    httpd_print(h, HP_BUFFER, "</HTML>\n");
+	    httpd_print(h, HP_BUFFER, "</html>\n");
 	}
 
 	/* Dump the Content-Length now and terminate the response header. */
@@ -1089,15 +1089,15 @@ httpd_dirlist(httpd_t *h, const char *uri)
 	q_uri = html_quote(uri);
 	httpd_print(h, HP_BUFFER,
 		"<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n");
-	httpd_print(h, HP_BUFFER, "<HTML>\n");
+	httpd_print(h, HP_BUFFER, "<html>\n");
 
-	httpd_print(h, HP_BUFFER, " <HEAD>\n");
-	httpd_print(h, HP_BUFFER, "  <TITLE>Directory of %s</TITLE>\n", q_uri);
-	httpd_print(h, HP_BUFFER, " </HEAD>\n");
+	httpd_print(h, HP_BUFFER, " <head>\n");
+	httpd_print(h, HP_BUFFER, "  <title>Directory of %s</title>\n", q_uri);
+	httpd_print(h, HP_BUFFER, " </head>\n");
 
-	httpd_print(h, HP_BUFFER, " <BODY>\n");
+	httpd_print(h, HP_BUFFER, " <body>\n");
 
-	httpd_print(h, HP_BUFFER, " <H1>Directory of %s</H1>\n", q_uri);
+	httpd_print(h, HP_BUFFER, " <h1>Directory of %s</h1>\n", q_uri);
 	Free(q_uri);
 
 	for (reg = httpd_reg; reg != NULL; reg = reg->next) {
@@ -1117,7 +1117,7 @@ httpd_dirlist(httpd_t *h, const char *uri)
 		    nlen = DIRLIST_NLEN + 2 - nlen;
 		}
 		httpd_print(h, HP_BUFFER,
-			"<P><TT><A HREF=\"%s%s\">%s%s</A>",
+			"<p><tt><a href=\"%s%s\">%s%s</a>",
 			(q1 = html_quote(reg->alias? reg->alias: reg->path)),
 			(reg->type == OR_DIR && !reg->alias)? "/": "",
 			(q2 = html_quote(reg->path + strlen(uri))),
@@ -1128,12 +1128,12 @@ httpd_dirlist(httpd_t *h, const char *uri)
 		while (nlen--) {
 		    httpd_print(h, HP_BUFFER, "&nbsp;");
 		}
-		httpd_print(h, HP_BUFFER, "</TT>%s</P>\n", reg->desc);
+		httpd_print(h, HP_BUFFER, "</tt>%s</p>\n", reg->desc);
 	    }
 	}
 
 	httpd_html_trailer(h, HP_BUFFER);
-	httpd_print(h, HP_BUFFER, "</HTML>\n");
+	httpd_print(h, HP_BUFFER, "</html>\n");
 
 	/* Dump the Content-Length now and terminate the response header. */
 	httpd_print_dump(h, DUMP_WITH_LENGTH);
@@ -1191,7 +1191,7 @@ httpd_redirect(httpd_t *h, const char *uri)
 
     r->location = xs_buffer(r->location, "http://%s%s/", host, uri);
     httpd_error(h, ERRMODE_NONFATAL, 301, "The document has moved "
-	    "<A HREF=\"http://%s%s/\">here.</A>.", host, uri);
+	    "<a href=\"http://%s%s/\">here.</a>.", host, uri);
     Free(r->location);
     r->location = NULL;
 
@@ -1920,7 +1920,7 @@ httpd_dyn_complete(void *dhandle, const char *format, ...)
 	if (reg->content_type == CT_HTML) {
 	    httpd_print(h, HP_BUFFER,
 		    "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n");
-	    httpd_print(h, HP_BUFFER, "<HTML>\n");
+	    httpd_print(h, HP_BUFFER, "<html>\n");
 	}
 	va_start(ap, format);
 	httpd_vprint(h, HP_BUFFER, format, ap);
@@ -1929,7 +1929,7 @@ httpd_dyn_complete(void *dhandle, const char *format, ...)
 	    if (reg->flags & HF_TRAILER) {
 		httpd_html_trailer(h, HP_BUFFER);
 	    }
-	    httpd_print(h, HP_BUFFER, "</HTML>\n");
+	    httpd_print(h, HP_BUFFER, "</html>\n");
 	}
 
 	/* Dump the Content-Length now and terminate the response header. */
