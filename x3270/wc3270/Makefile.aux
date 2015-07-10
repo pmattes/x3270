@@ -79,9 +79,8 @@ wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 # This depends on many external targets, and is intended to be run from only
 # from the top-level Makefile after those targets have been generated, and not
 # directly from here.
-RELFILES = $(MISC) $(HTML) wc3270.iss wc3270.zipit wc3270.exe catf.exe \
-	   wc3270wiz.exe ../ws3270/ws3270.exe ../wpr3287/wpr3287.exe \
-	   version.txt
+RELFILES = $(HTML) $(MISC) ../wpr3287/wpr3287.exe ../ws3270/ws3270.exe \
+	catf.exe version.txt wc3270.exe wc3270wiz.exe
 VERSION = $(shell . ./version.txt && echo $$version)
 windows-release: wc3270-$(VERSION)-setup.exe wc3270-$(VERSION)-noinstall.zip
 wc3270-$(VERSION)-setup.exe: $(RELFILES)
