@@ -482,14 +482,8 @@ ft_complete(const char *errmsg)
 	buf = xs_buffer(get_message("ftComplete"), fts.length,
 		display_scale(bytes_sec),
 		fts.is_cut ? "CUT" : "DFT");
-	if (ftc->is_action) {
-	    /* Clear out the progress display. */
-	    ft_gui_clear_progress();
-
-	    sms_info("%s", buf);
-	} else {
-	    ft_gui_complete_popup(buf);
-	}
+	ft_gui_clear_progress();
+	ft_gui_complete_popup(buf);
 	Free(buf);
     }
 

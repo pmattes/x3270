@@ -58,6 +58,7 @@
 #include "lazya.h"
 #include "objects.h"
 #include "popups.h"
+#include "status.h"
 #include "utils.h"
 #include "varbuf.h"
 #include "xmenubar.h"
@@ -86,6 +87,7 @@ static Widget ascii_toggle, binary_toggle;
 static Widget cr_widget;
 static Widget remap_widget;
 static Widget buffersize_widget;
+static Widget inprogress_cancel_button;
 
 static bool host_is_tso = true;	/* bools used by dialog */
 static bool host_is_tso_or_vm = true;/*  sensitivity logic */
@@ -1173,6 +1175,10 @@ popup_progress(void)
 	progress_popup_init();
     }
 
+    /* Set the sensitivity of the cancel button. */
+    XtVaSetValues(inprogress_cancel_button, XtNsensitive, !ftc->is_action,
+	    NULL);
+
     /* Pop it up. */
     popup_popup(progress_shell, XtGrabNone);
 }
@@ -1181,7 +1187,7 @@ popup_progress(void)
 static void
 progress_popup_init(void)
 {
-    Widget progress_pop, from_label, to_label, cancel_button;
+    Widget progress_pop, from_label, to_label;
 
     /* Create the shell. */
     progress_shell = XtVaCreatePopupShell(
@@ -1262,13 +1268,14 @@ progress_popup_init(void)
 	    XtNmappedWhenManaged, False,
 	    NULL);
 
-    cancel_button = XtVaCreateManagedWidget(
+    inprogress_cancel_button = XtVaCreateManagedWidget(
 	    ObjCancelButton, commandWidgetClass, progress_pop,
 	    XtNfromVert, ft_status,
 	    XtNvertDistance, FAR_VGAP,
 	    XtNhorizDistance, MARGIN,
 	    NULL);
-    XtAddCallback(cancel_button, XtNcallback, progress_cancel_callback, NULL);
+    XtAddCallback(inprogress_cancel_button, XtNcallback,
+	    progress_cancel_callback, NULL);
 }
 
 /* Callbacks for the "in progress" pop-up. */
@@ -1435,9 +1442,7 @@ overwrite_popdown(Widget w _is_unused, XtPointer client_data _is_unused,
 void
 ft_gui_progress_popdown(void)
 {
-    if (!ftc->is_action) {
-	XtPopdown(progress_shell);
-    }
+    XtPopdown(progress_shell);
 }
 
 /* Massage a file transfer error message so it will fit in the pop-up. */
@@ -1466,41 +1471,38 @@ ft_gui_clear_progress(void)
 void
 ft_gui_complete_popup(const char *msg)
 {
-    popup_an_info("%s", msg);
+    if (!ftc->is_action) {
+	popup_an_info("%s", msg);
+    }
 }
 
 /* Update the bytes-transferred count on the progress pop-up. */
 void
 ft_gui_update_length(size_t length)
 {
-    if (!ftc->is_action) {
-	char *s = xs_buffer(status_string, (unsigned long)length);
+    char *s;
 
-	XtVaSetValues(ft_status, XtNlabel, s, NULL);
-	XtFree(s);
-    }
+    s = xs_buffer(status_string, (unsigned long)length);
+    XtVaSetValues(ft_status, XtNlabel, s, NULL);
+    XtFree(s);
 }
 
 /* Replace the 'waiting' pop-up with the 'in-progress' pop-up. */
 void
 ft_gui_running(size_t length)
 {
-    if (!ftc->is_action) {
-	XtUnmapWidget(waiting);
-	ft_gui_update_length(length);
-	XtMapWidget(ft_status);
-    }
+    XtUnmapWidget(waiting);
+    ft_gui_update_length(length);
+    XtMapWidget(ft_status);
 }
 
 /* Process a protocol-generated abort. */
 void
 ft_gui_aborting(void)
 {
-    if (!ftc->is_action) {
-	XtUnmapWidget(waiting);
-	XtUnmapWidget(ft_status);
-	XtMapWidget(aborting);
-    }
+    XtUnmapWidget(waiting);
+    XtUnmapWidget(ft_status);
+    XtMapWidget(aborting);
 }
 
 /* Check for interactive mode. */
@@ -1514,4 +1516,13 @@ ft_gui_interact(ft_conf_t *p)
 void
 ft_gui_awaiting(void)
 {
+    if (ftc->is_action) {
+	popup_progress();
+	XtVaSetValues(from_file, XtNlabel,
+		ftc->receive_flag? ftc->host_filename: ftc->local_filename,
+		NULL);
+	XtVaSetValues(to_file, XtNlabel,
+		ftc->receive_flag? ftc->local_filename: ftc->host_filename,
+		NULL);
+    }
 }

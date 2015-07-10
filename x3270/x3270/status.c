@@ -198,12 +198,13 @@ static enum msg {
 	OVERFLOW,		/* X Overflow */
 	DBCS,			/* X DBCS */
 	SCROLLED,		/* X Scrolled */
-	MINUS			/* X -f */
+	MINUS,			/* X -f */
+	N_MSGS
 }               oia_msg = DISCONNECTED, saved_msg;
 static char	oia_lu[LUCNT+1];
 static bool  msg_is_saved = false;
 static int      n_scrolled = 0;
-static void     (*msg_proc[])(void) = {
+static void     (*msg_proc[N_MSGS])(void) = {
 	do_disconnected,
 	do_resolving,
 	do_connecting,
@@ -219,7 +220,7 @@ static void     (*msg_proc[])(void) = {
 	do_scrolled,
 	do_minus
 };
-static int      msg_color[] = {
+static int      msg_color[N_MSGS] = {
 	FA_INT_HIGH_SEL,
 	FA_INT_NORM_NSEL,
 	FA_INT_NORM_NSEL,
@@ -232,9 +233,10 @@ static int      msg_color[] = {
 	FA_INT_NORM_SEL,
 	FA_INT_NORM_SEL,
 	FA_INT_NORM_SEL,
+	FA_INT_NORM_SEL,
 	FA_INT_NORM_SEL
 };
-static int      msg_color3279[] = {
+static int      msg_color3279[N_MSGS] = {
 	HOST_COLOR_WHITE,
 	HOST_COLOR_WHITE,
 	HOST_COLOR_WHITE,
@@ -247,6 +249,7 @@ static int      msg_color3279[] = {
 	HOST_COLOR_RED,
 	HOST_COLOR_RED,
 	HOST_COLOR_WHITE,
+	HOST_COLOR_RED,
 	HOST_COLOR_RED
 };
 static bool  oia_insert = false;
