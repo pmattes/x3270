@@ -226,6 +226,10 @@ do
 done
 
 # Release wc3270 via Inno Setup under Wine.
+
+# Note that this is redundant with 'make -f Makefile.aux windows-release', but
+# I do not include Makefile.aux in the source tarballs right now, so I have to
+# do it separately here.
 if [ "$winrel" ]
 then	echo "===== Building setup.exe."
 	cd $builddir/wc3270
