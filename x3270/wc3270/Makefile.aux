@@ -74,3 +74,17 @@ html/Resources.html: resource-body make-resource-doc.pl version.txt
 
 wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 	./mkiss <wc3270.iss.tmpl >wc3270.iss
+
+# Generate the Inno Setup .exe and the no-install zip file.
+# This depends on many external targets, and is intended to be run from only
+# from the top-level Makefile after those targets have been generated, and not
+# directly from here.
+RELFILES = $(MISC) $(HTML) wc3270.iss wc3270.zipit wc3270.exe catf.exe \
+	   wc3270wiz.exe ../ws3270/ws3270.exe ../wpr3287/wpr3287.exe \
+	   version.txt
+VERSION = $(shell . ./version.txt && echo $$version)
+windows-release: wc3270-$(VERSION)-setup.exe wc3270-$(VERSION)-noinstall.zip
+wc3270-$(VERSION)-setup.exe: $(RELFILES)
+	wine c:\\Program\ Files\\Inno\ Setup\ 5\\ISCC.EXE wc3270.iss
+wc3270-$(VERSION)-noinstall.zip: $(RELFILES)
+	./zipit -c "wc3270 $(VERSION)" -o wc3270-$(VERSION)-noinstall.zip wc3270.zipit
