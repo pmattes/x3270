@@ -37,7 +37,7 @@
 #include "popups.h"
 
 void
-popup_an_info(const char *fmt, ...)
+popup_an_info(const char *fmt _is_unused, ...)
 {
-    assert(!"should not be in popup_an_info");
+    /* Do nothing. */
 }

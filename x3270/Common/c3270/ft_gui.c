@@ -41,6 +41,7 @@
 #include "ft.h"
 #include "ft_private.h"
 #include "icmdc.h"
+#include "macros.h"
 #include "popups.h"
 #include "screen.h"
 #include "utils.h"
@@ -73,8 +74,8 @@ ft_gui_errmsg_prepare(char *msg _is_unused)
 void
 ft_gui_clear_progress(void)
 {
-    if (ftc->is_interactive) {
-	printf("\r%79s\n", "");
+    if (ftc->is_interactive || escaped) {
+	printf("\r%79s\r", "");
 	fflush(stdout);
     } else {
 	popup_an_info(" ");
@@ -83,29 +84,43 @@ ft_gui_clear_progress(void)
 
 /* Pop up a successful completion message. */
 void
-ft_gui_complete_popup(const char *msg _is_unused)
+ft_gui_complete_popup(const char *msg)
 {
 #if !defined(_WIN32) /*[*/
     signal(SIGINT, SIG_IGN);
 #else /*][*/
     screen_set_ctrlc_fn(NULL);
 #endif /*]*/
+    if (ftc->is_interactive) {
+	/*
+	 * We call sms_info here instead of plain printf, so that
+	 * macro_output is set and the user will stay at the c3270> prompt.
+	 */
+	sms_info("%s\n", msg);
+    } else if (escaped) {
+	printf("%s\n", msg);
+	fflush(stdout);
+    }
 }
 
 /* Update the bytes-transferred count on the progress pop-up. */
 void
 ft_gui_update_length(unsigned long length)
 {
-    if (ftc->is_interactive) {
+    if (ftc->is_interactive || escaped) {
 	if (ft_sigint_aborting) {
 	    ft_sigint_aborting = false;
 	    if (!ft_do_cancel()) {
 		printf("Aborting... waiting for host acknowledgment... ");
 	    }
 	} else {
-	    printf("\r%79s\rTransferred %lu bytes. ", "", length);
+	    printf("\r%79s\rTransferred %lu bytes ", "",
+		    (unsigned long)length);
 	}
 	fflush(stdout);
+    } else {
+	/* Not interactive, put it in the OIA. */
+	popup_an_info("Transferred %lu bytes", (unsigned long)length);
     }
 }
 
@@ -184,7 +199,8 @@ void
 ft_gui_awaiting(void)
 {   
     if (ftc->is_interactive) {
-	printf("Awaiting start of transfer...\nPress ^C to abort...\n");
+	printf("Press ^C to abort\n");
+	printf("Awaiting start of transfer... ");
 	fflush(stdout);
 
 	/* Set up a SIGINT handler. */
@@ -198,7 +214,10 @@ ft_gui_awaiting(void)
 	/* Start polling for ^C. */
 	ft_poll_id = AddTimeOut(500, ft_poll_abort);
 	fflush(stdout);
+    } else if (escaped) {
+	printf("Awaiting start of transfer... ");
+	fflush(stdout);
     } else {
-	popup_an_info("Awaiting start of transfer... ");
+	popup_an_info("Awaiting start of transfer");
     }
 }
