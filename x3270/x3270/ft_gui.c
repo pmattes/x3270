@@ -58,7 +58,6 @@
 #include "lazya.h"
 #include "objects.h"
 #include "popups.h"
-#include "status.h"
 #include "utils.h"
 #include "varbuf.h"
 #include "xmenubar.h"

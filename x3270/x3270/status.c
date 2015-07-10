@@ -773,25 +773,6 @@ set_status_changed(int col)
     }
 }
 
-#if 0
-/* Substitute a crosshair for a space in the status line. */
-static void
-substitute_crosshair(int col)
-{
-    if (sxcursor_want[col]) {
-	if (status_space(col)) {
-	    status_1b[col] = *standard_font? '|': CG_bar; /* XXX */
-	    status_2b[col] = screen_vcrosshair();
-	    sxcursor_have[col] = true;
-	} else {
-	    sxcursor_have[col] = false;
-	}
-    } else {
-	sxcursor_have[col] = false;
-    }
-}
-#endif
-
 /* Update the status line by displaying "symbol" at column "col".  */
 static void
 status_add(int col, unsigned char symbol, enum keytype keytype)
@@ -807,11 +788,6 @@ status_add(int col, unsigned char symbol, enum keytype keytype)
     }
     status_2b[col] = n2b;
     status_1b[col] = symbol;
-
-#if 0
-    /* If they wrote a space and we want the crosshair there, substitute it. */
-    substitute_crosshair(col);
-#endif
 
     /* Update change status. */
     set_status_changed(col);
