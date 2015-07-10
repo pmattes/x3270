@@ -76,14 +76,17 @@ wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 	./mkiss <wc3270.iss.tmpl >wc3270.iss
 
 # Generate the Inno Setup .exe and the no-install zip file.
-# This depends on many external targets, and is intended to be run from only
-# from the top-level Makefile after those targets have been generated, and not
-# directly from here.
-RELFILES = $(HTML) $(MISC) ../wpr3287/wpr3287.exe ../ws3270/ws3270.exe \
-	catf.exe version.txt wc3270.exe wc3270wiz.exe
+# This depends on external targets, and is intended to be built recursively
+# from the top-level Makefile, which builds those targets first.
 VERSION = $(shell . ./version.txt && echo $$version)
 windows-release: wc3270-$(VERSION)-setup.exe wc3270-$(VERSION)-noinstall.zip
-wc3270-$(VERSION)-setup.exe: $(RELFILES)
+
+# Derive the Inno Setup dependencies from the .iss file.
+ISSDEP = $(shell awk '/Source:/ { print substr($$2,2,length($$2)-3) }' *.iss.tmpl | sed 's-\\-/-g')
+wc3270-$(VERSION)-setup.exe: $(ISSDEP) wc3270.iss Makefile.aux
 	wine c:\\Program\ Files\\Inno\ Setup\ 5\\ISCC.EXE wc3270.iss
-wc3270-$(VERSION)-noinstall.zip: $(RELFILES)
+
+# Figure out the zipit dependencies from the .zipit file.
+ZIPITDEP = $(shell awk '/^F/ { print $$2; }' wc3270.zipit)
+wc3270-$(VERSION)-noinstall.zip: $(ZIPITDEP) wc3270.zipit version.txt Makefile.aux
 	./zipit -c "wc3270 $(VERSION)" -o wc3270-$(VERSION)-noinstall.zip wc3270.zipit
