@@ -274,6 +274,7 @@ struct sstate {
     Window          window;	/* the window */
     union sp       *image;	/* what's on the X display */
     int             cursor_daddr;	/* displayed cursor address */
+    bool	    xh_alt;	/* crosshair was drawn in alt area */
     bool            exposed_yet;	/* have we been exposed yet? */
     bool            overstrike;	/* are we overstriking? */
     Dimension       screen_width;	/* screen dimensions in pixels */
@@ -362,12 +363,12 @@ static void draw_fields(union sp *buffer, int first, int last);
 static void render_text(union sp *buffer, int baddr, int len,
     bool block_cursor, union sp *attrs);
 static void cursor_pos(void);
-static void cursor_on(void);
+static void cursor_on(const char *why);
 static void schedule_cursor_blink(void);
 static void schedule_text_blink(void);
 static void inflate_screen(void);
 static int fa_color(unsigned char fa);
-static bool cursor_off(void);
+static bool cursor_off(const char *why);
 static void draw_aicon_label(void);
 static void set_mcursor(void);
 static void scrollbar_init(bool is_reset);
@@ -524,6 +525,7 @@ screen_init(void)
 
     /* Initialize ss. */
     nss.cursor_daddr = 0;
+    nss.xh_alt = false;
     nss.exposed_yet = false;
 
     /* Initialize "gray" bitmap. */
@@ -1064,12 +1066,12 @@ screen_connect(bool ignored _is_unused)
 		ctlr_erase((IN_NVT || IN_SSCP)? true: false);
 		if (IN_3270)
 			scroll_round();
-		cursor_on();
+		cursor_on("connect");
 		schedule_cursor_blink();
 	} else {
 		if (appres.disconnect_clear)
 			ctlr_erase(true);
-		(void) cursor_off();
+		(void) cursor_off("connect");
 	}
 	if (toggled(CROSSHAIR)) {
 		screen_changed = true;
@@ -1235,13 +1237,24 @@ screen_crosshair_gc(void)
  * screens.
  */
 static void
-crosshair_margin(bool draw)
+crosshair_margin(bool draw, const char *why)
 {
-    /* To the right. */
-    if (maxCOLS > cCOLS) {
-	if (draw) {
-	    XTextItem16 text1;
-	    int i;
+    int column;
+
+#ifdef CROSSHAIR_DEBUG /*[*/
+    vtrace("crosshair_margin(%s, %s) cursor=%d", why,
+	    draw? "draw": "undraw",
+	    draw? cursor_addr: ss->cursor_daddr);
+#endif /*]*/
+
+    if (draw) {
+	XTextItem16 text1;
+	int i;
+
+	ss->xh_alt = false;
+
+	/* To the right. */
+	if (maxCOLS > cCOLS) {
 
 	    if (ss->hx_text == NULL || ss->nhx_text < maxCOLS - cCOLS) {
 		ss->nhx_text = maxCOLS - cCOLS;
@@ -1259,24 +1272,14 @@ crosshair_margin(bool draw)
 		    ssCOL_TO_X(cCOLS),
 		    ssROW_TO_Y(BA_TO_ROW(cursor_addr)),
 		    &text1, 1);
-	} else {
-	    XFillRectangle(display, ss->window,
-		    get_gc(ss, INVERT_COLOR(0)),
-		    ssCOL_TO_X(cCOLS),
-		    ssROW_TO_Y(BA_TO_ROW(ss->cursor_daddr)) - ss->ascent,
-		    (ss->char_width * (maxCOLS - cCOLS)) + 1,
-		    ss->char_height);
+
+	    /* Remember we need to erase later. */
+	    ss->xh_alt = true;
 	}
-    }
 
-    /* Down the bottom. */
-    if (maxROWS > ROWS) {
-	int column;
-
-	if (draw) {
-	    XTextItem16 text1;
+	/* Down the bottom. */
+	if (maxROWS > ROWS) {
 	    XChar2b text;
-	    int i;
 
 	    apl_display_char(&text, 0xbf);
 	    text1.chars = &text;
@@ -1285,24 +1288,53 @@ crosshair_margin(bool draw)
 	    text1.font = ss->fid;
 	    column = BA_TO_COL(cursor_addr);
 	    if (flipped) {
-		column = (COLS - 1) - column;
+		column = (cCOLS - 1) - column;
 	    }
 	    for (i = ROWS; i < maxROWS; i++) {
 		XDrawText16(display, ss->window, get_gc(ss, CROSS_COLOR),
 			ssCOL_TO_X(column), ssROW_TO_Y(i), &text1, 1);
 	    }
-	} else {
-	    column = BA_TO_COL(ss->cursor_daddr);
-	    if (flipped) {
-		column = (COLS - 1) - column;
-	    }
-	    XFillRectangle(display, ss->window,
-		    get_gc(ss, INVERT_COLOR(0)),
-		    ssCOL_TO_X(column), ssROW_TO_Y(ROWS) - ss->ascent,
-		    ss->char_width + 1,
-		    ss->char_height * (maxROWS - ROWS));
+
+	    /* Remember we need to erase later. */
+	    ss->xh_alt = true;
 	}
+
+#ifdef CROSSHAIR_DEBUG /*[*/
+	vtrace(" -> %s\n", ss->xh_alt? "draw": "nop");
+#endif /*]*/
+	return;
     }
+
+    /* Erasing. */
+    if (!ss->xh_alt) {
+#ifdef CROSSHAIR_DEBUG /*[*/
+	vtrace(" -> nop\n");
+#endif /*]*/
+	return;
+    }
+#ifdef CROSSHAIR_DEBUG /*[*/
+    vtrace(" -> erase\n");
+#endif /*]*/
+
+    /* To the right. */
+    if (maxCOLS > defCOLS) {
+	XFillRectangle(display, ss->window, get_gc(ss, INVERT_COLOR(0)),
+		ssCOL_TO_X(defCOLS),
+		ssROW_TO_Y(BA_TO_ROW(ss->cursor_daddr)) - ss->ascent,
+		(ss->char_width * (maxCOLS - defCOLS)) + 1, ss->char_height);
+    }
+
+    /* Down the bottom. */
+    if (maxROWS > defROWS) {
+	column = BA_TO_COL(ss->cursor_daddr);
+	if (flipped) {
+	    column = (COLS - 1) - column;
+	}
+	XFillRectangle(display, ss->window, get_gc(ss, INVERT_COLOR(0)),
+		ssCOL_TO_X(column), ssROW_TO_Y(defROWS) - ss->ascent,
+		ss->char_width + 1, ss->char_height * (maxROWS - defROWS));
+    }
+    ss->xh_alt = false;
 }
 
 
@@ -1311,7 +1343,7 @@ crosshair_margin(bool draw)
  * the cursor was on before the call.
  */
 static bool
-cursor_off(void)
+cursor_off(const char *why)
 {
     if (cursor_displayed) {
 	cursor_displayed = false;
@@ -1322,7 +1354,7 @@ cursor_off(void)
 	 * and alternate screens.
 	 */
 	if (toggled(CROSSHAIR)) {
-	    crosshair_margin(false);
+	    crosshair_margin(false, why);
 	    status_crosshair_off();
 	}
 
@@ -1345,9 +1377,9 @@ cursor_blink_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 		return;
 	if (cursor_displayed) {
 		if (in_focus)
-			(void) cursor_off();
+			(void) cursor_off("blink");
 	} else
-		cursor_on();
+		cursor_on("blink");
 	schedule_cursor_blink();
 }
 
@@ -1388,7 +1420,7 @@ toggle_cursorBlink(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
     if (toggled(CURSOR_BLINK)) {
 	schedule_cursor_blink();
     } else {
-	cursor_on();
+	cursor_on("toggleBlink");
     }
 }
 
@@ -1396,7 +1428,7 @@ toggle_cursorBlink(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
  * Make the cursor visible at its (possibly new) location.
  */
 static void
-cursor_on(void)
+cursor_on(const char *why)
 {
     if (cursor_enabled && !cursor_displayed) {
 	cursor_displayed = true;
@@ -1411,7 +1443,7 @@ cursor_on(void)
 	if (in_focus && toggled(CROSSHAIR)) {
 	    int column;
 
-	    crosshair_margin(true);
+	    crosshair_margin(true, why);
 	    column = cursor_addr % COLS;
 	    if (flipped) {
 		column = (COLS - 1) - column;
@@ -1433,13 +1465,13 @@ toggle_altCursor(toggle_index_t ix, enum toggle_type tt _is_unused)
     /* do_toggle already changed the value; temporarily change it back */
     toggle_toggle(ix);
 
-    was_on = cursor_off();
+    was_on = cursor_off("toggleAlt");
 
     /* Now change it back again */
     toggle_toggle(ix);
 
     if (was_on) {
-	cursor_on();
+	cursor_on("toggleAlt");
     }
 }
 
@@ -1485,10 +1517,10 @@ void
 enable_cursor(bool on)
 {
 	if ((cursor_enabled = on) && CONNECTED) {
-		cursor_on();
+		cursor_on("enable");
 		cursor_changed = true;
 	} else
-		(void) cursor_off();
+		(void) cursor_off("enable");
 }
 
 
@@ -1515,11 +1547,11 @@ toggle_crosshair(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
      * Don't forget to turn the toggle back off, if we temporarily turned it
      * on above.
      */
-    if (cursor_off()) {
+    if (cursor_off("toggleCrosshair")) {
 	if (turning_off) {
 	    toggle_toggle(CROSSHAIR);
 	}
-	cursor_on();
+	cursor_on("toggleCrosshair");
     } else {
 	if (turning_off) {
 	    toggle_toggle(CROSSHAIR);
@@ -1701,8 +1733,8 @@ screen_disp(bool erasing)
      * If only the cursor has changed (and not the screen image), draw it.
      */
     if (cursor_changed && !screen_changed) {
-	if (cursor_off()) {
-	    cursor_on();
+	if (cursor_off("disp")) {
+	    cursor_on("disp");
 	}
 	if (toggled(CROSSHAIR)) {
 	    screen_changed = true; /* repaint crosshair */
@@ -1735,7 +1767,7 @@ screen_disp(bool erasing)
 
 	/* Undraw the cursor, if necessary. */
 	if (cursor_changed) {
-	    was_on = cursor_off();
+	    was_on = cursor_off("cursorChanged");
 	}
 
 	/* Intelligently update the X display with the new text. */
@@ -1743,7 +1775,7 @@ screen_disp(bool erasing)
 
 	/* Redraw the cursor. */
 	if (was_on) {
-	    cursor_on();
+	    cursor_on("cursorChanged");
 	}
 
 	screen_changed = false;
@@ -2393,7 +2425,7 @@ screen_scroll(void)
 	if (!ss->exposed_yet)
 		return;
 
-	was_on = cursor_off();
+	was_on = cursor_off("scroll");
 	(void) memmove(&ss->image[0], &ss->image[COLS],
 	                   (ROWS - 1) * COLS * sizeof(union sp));
 	(void) memmove(&temp_image[0], &temp_image[COLS],
@@ -2416,7 +2448,7 @@ screen_scroll(void)
 	    (ss->char_width * COLS) + 1,
 	    ss->char_height);
 	if (was_on)
-		cursor_on();
+		cursor_on("scroll");
 }
 
 
@@ -3917,9 +3949,9 @@ screen_focus(bool in)
 	 * Change the appearance of the cursor.  Make it hollow out or fill in
 	 * instantly, even if it was blinked off originally.
 	 */
-	(void) cursor_off();
+	(void) cursor_off("focus");
 	in_focus = in;
-	cursor_on();
+	cursor_on("focus");
 
 	/*
 	 * Slight kludge: If the crosshair cursor is enabled, redraw the whole
