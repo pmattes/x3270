@@ -110,7 +110,8 @@ XtResource resources[] = {
       offset(max_recent), XtRString, "5" },
     { ResSuppressActions, ClsSuppressActions, XtRString, sizeof(String),
       offset(suppress_actions), XtRString, 0 },
-
+    { ResCrosshairColor, ClsCrosshairColor, XtRString, sizeof(String),
+      offset(interactive.crosshair_color), XtRString, "purple" },
 
     { ResErase, ClsErase, XtRString, sizeof(char *),
       offset(linemode.erase), XtRString, "^?" },

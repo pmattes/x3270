@@ -54,6 +54,7 @@
 #include "macros.h"
 #include "popups.h"
 #include "screen.h"
+#include "see.h"
 #include "selectc.h"
 #include "status.h"
 #include "trace.h"
@@ -225,6 +226,8 @@ static bool blink_wasticking = false;
 static void blink_em(ioid_t id);
 
 static bool in_focus = true;
+
+static int crosshair_color = HOST_COLOR_PURPLE;
 
 static action_t Paste_action;
 static action_t Redraw_action;
@@ -1472,6 +1475,27 @@ init_user_color(const char *name, int ix)
     xs_warning("Invalid %s value '%s'", ResConsoleColorForHostColor, r);
 }
 
+/*
+ * Crosshair color init.
+ */
+static void
+crosshair_color_init(void)
+{
+    int c;
+
+    if (appres.interactive.crosshair_color != NULL) {
+	c = decode_host_color(appres.interactive.crosshair_color);
+	if (c >= 0) {
+	    crosshair_color = c;
+	    return;
+	} else {
+	    xs_warning("Invalid %s: %s", ResCrosshairColor,
+		    appres.interactive.crosshair_color);
+	}
+    }
+    crosshair_color = HOST_COLOR_PURPLE;
+}
+
 static void
 init_user_colors(void)
 {
@@ -1484,7 +1508,8 @@ init_user_colors(void)
     if (appres.m3279) {
 	defattr = cmap_fg[HOST_COLOR_NEUTRAL_WHITE] |
 		  cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
-	xhattr = cmap_fg[HOST_COLOR_PURPLE] |
+	crosshair_color_init();
+	xhattr = cmap_fg[crosshair_color] |
 		  cmap_bg[HOST_COLOR_NEUTRAL_BLACK];
     } else {
 	defattr = cmap_fg[HOST_COLOR_PALE_GREEN] |
@@ -2933,7 +2958,7 @@ draw_oia(void)
     if (in_focus && toggled(CROSSHAIR)) {
 	if (!menu_is_up &&
 		(mvinch(0, fl_cursor_col) & A_CHARTEXT) == ' ') {
-	    attrset(cmap_fg[HOST_COLOR_PURPLE] | cmap_bg[HOST_COLOR_GREY]);
+	    attrset(cmap_fg[crosshair_color] | cmap_bg[HOST_COLOR_GREY]);
 	    addch(LINEDRAW_VERT);
 	    attrset(xhattr);
 	}

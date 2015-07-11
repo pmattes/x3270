@@ -257,12 +257,14 @@ static enum fallback_color ibm_fb = FB_WHITE;
 static char *default_display_charset = "3270cg-1a,3270cg-1,iso8859-1";
 static char *required_display_charsets;
 
+static int crosshair_color = HOST_COLOR_PURPLE;
+
 #define CROSSABLE	(toggled(CROSSHAIR) && IN_3270 && \
 			 cursor_enabled && crosshair_enabled && in_focus)
 #define CROSSED(b)	((BA_TO_COL(b) == cursor_col) || \
 			 (BA_TO_ROW(b) == cursor_row))
 
-#define CROSS_COLOR	(appres.m3279? (GC_NONDEFAULT | HOST_COLOR_PURPLE) : FA_INT_NORM_NSEL)
+#define CROSS_COLOR	(appres.m3279? (GC_NONDEFAULT | crosshair_color) : FA_INT_NORM_NSEL)
 
 /*
  * The screen state structure.  This structure is swapped whenever we switch
@@ -491,6 +493,23 @@ screen_set_keymap(void)
 }
 
 /*
+ * Crosshair color init.
+ */
+static void
+crosshair_color_init(void)
+{
+    int c = decode_host_color(appres.interactive.crosshair_color);
+
+    if (c >= 0) {
+	crosshair_color = c;
+    } else {
+	xs_warning("Invalid %s: %s", ResCrosshairColor,
+		appres.interactive.crosshair_color);
+	crosshair_color = HOST_COLOR_PURPLE;
+    }
+}
+
+/*
  * Screen pre-initialization (before charset init).
  */
 void
@@ -555,6 +574,9 @@ screen_init(void)
 
     /* Initialize the placement of the pop-up keypad. */
     keypad_placement_init();
+
+    /* Initialize the crosshair color. */
+    crosshair_color_init();
 
     /* Now call the "reinitialize" function to set everything else up. */
     screen_reinit(ALL_CHANGE);

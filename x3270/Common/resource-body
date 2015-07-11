@@ -741,6 +741,36 @@ description
     cursor: lines extending with height and width of the screen.
 .
 
+name crosshairColor
+applies x C
+groups a
+type s
+default purple
+description
+    Defines the color used for the crosshair cursor (see %-crosshair%).
+    The value is a host color name or numeric host color index:
+    <table cols=2 width="75%">
+    <tr> <th>Host Color Name</th>
+         <th>Host Color Index</th>
+    <tr> <td>NeutralBlack</td> <td>0</td> </tr>
+    <tr> <td>Blue</td> <td>1</td> </tr>
+    <tr> <td>Red</td> <td>2</td> </tr>
+    <tr> <td>Pink</td> <td>3</td> </tr>
+    <tr> <td>Green</td> <td>4</td> </tr>
+    <tr> <td>Turquoise</td> <td>5</td> </tr>
+    <tr> <td>Yellow</td> <td>6</td> </tr>
+    <tr> <td>NeutralWhite</td> <td>7</td> </tr>
+    <tr> <td>Black</td> <td>8</td> </tr>
+    <tr> <td>DeepBlue</td> <td>9</td> </tr>
+    <tr> <td>Orange</td> <td>10</td> </tr>
+    <tr> <td>Purple</td> <td>11</td> </tr>
+    <tr> <td>PaleGreen</td> <td>12</td> </tr>
+    <tr> <td>PaleTurquoise</td> <td>13</td> </tr>
+    <tr> <td>Grey</td> <td>14</td> </tr>
+    <tr> <td>White</td> <td>15</td> </tr>
+    </table>
+.
+
 name cursesColorForDefault cursesColorForIntensified cursesColorForProtected cursesColorForProtectedIntensified
 applies c
 groups a

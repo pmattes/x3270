@@ -277,6 +277,26 @@ see_highlight(unsigned char setting)
     }
 }
 
+static const char *color_name[] = {
+    "neutralBlack",
+    "blue",
+    "red",
+    "pink",
+    "green",
+    "turquoise",
+    "yellow",
+    "neutralWhite",
+    "black",
+    "deepBlue",
+    "orange",
+    "purple",
+    "paleGreen",
+    "paleTurquoise",
+    "grey",
+    "white",
+    NULL
+};
+
 /**
  * Encode a color attribute.
  *
@@ -287,25 +307,6 @@ see_highlight(unsigned char setting)
 const char *
 see_color(unsigned char setting)
 {
-    static const char *color_name[] = {
-	"neutralBlack",
-	"blue",
-	"red",
-	"pink",
-	"green",
-	"turquoise",
-	"yellow",
-	"neutralWhite",
-	"black",
-	"deepBlue",
-	"orange",
-	"purple",
-	"paleGreen",
-	"paleTurquoise",
-	"grey",
-	"white"
-    };
-
     if (setting == XAC_DEFAULT) {
 	return "default";
     } else if (setting < 0xf0) {
@@ -313,6 +314,40 @@ see_color(unsigned char setting)
     } else {
 	return color_name[setting - 0xf0];
     }
+}
+
+/**
+ * Decode a host color name or index.
+ *
+ * @param[in] name	Color name or index
+ *
+ * @return Color index (HOST_COLOR_xxx) or -1.
+ */
+int
+decode_host_color(const char *name)
+{
+    int i;
+    unsigned long l;
+    char *ptr;
+
+    /* Check for invalid parameter. */
+    if (name == NULL || !*name) {
+	return -1;
+    }
+
+    /* Check for a symbolic match. */
+    for (i = 0; color_name[i] != NULL; i++) {
+	if (!strcasecmp(name, color_name[i])) {
+	    return i;
+	}
+    }
+
+    /* Check for a number. */
+    l = strtoul(name, &ptr, 0);
+    if (l > 0xf || ptr == name || *ptr != '\0') {
+	return -1;
+    }
+    return (int)l;
 }
 
 /**

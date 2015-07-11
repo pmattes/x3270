@@ -38,3 +38,5 @@ const char *see_ebc(unsigned char ch);
 const char *see_efa(unsigned char efa, unsigned char value);
 const char *see_efa_only(unsigned char efa);
 const char *see_qcode(unsigned char id);
+
+int decode_host_color(const char *name);

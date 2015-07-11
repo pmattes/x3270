@@ -142,6 +142,7 @@ typedef struct {
 	char	*printer_lu;
 	char	*printer_opts;
 	int	 save_lines;
+	char	*crosshair_color;
     } interactive;
 
     /* File transfer fields. */

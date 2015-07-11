@@ -51,6 +51,7 @@
 #include "macros.h"
 #include "popups.h"
 #include "screen.h"
+#include "see.h"
 #include "status.h"
 #include "trace.h"
 #include "unicodec.h"
@@ -203,6 +204,7 @@ static int screen_yoffset = 0;	/* Vertical offset to top of screen.
 				   If nonzero (2, actually), menu bar is at the
 				    top of the display. */
 
+static int crosshair_color = HOST_COLOR_PURPLE;
 static bool curses_alt = false;
 #if defined(HAVE_USE_DEFAULT_COLORS) /*[*/
 static bool default_colors = false;
@@ -228,6 +230,27 @@ static void init_user_attribute_colors(void);
 static void screen_init2(void);
 
 static action_t Redraw_action;
+
+/*
+ * Crosshair color init.
+ */
+static void
+crosshair_color_init(void)
+{
+    int c;
+
+    if (appres.interactive.crosshair_color != NULL) {
+	c = decode_host_color(appres.interactive.crosshair_color);
+	if (c >= 0) {
+	    crosshair_color = c;
+	    return;
+	} else {
+	    xs_warning("Invalid %s: %s", ResCrosshairColor,
+		    appres.interactive.crosshair_color);
+	}
+    }
+    crosshair_color = HOST_COLOR_PURPLE;
+}
 
 /* Initialize the screen. */
 void
@@ -305,6 +328,7 @@ screen_init(void)
 	/* Pull in the user's color mappings. */
 	init_user_colors();
 	init_user_attribute_colors();
+	crosshair_color_init();
 
 	/* Initialize the controller. */
 	ctlr_init(ALL_CHANGE);
@@ -500,12 +524,12 @@ finish_screen_init(void)
 	    if (appres.m3279) {
 		defattr = get_color_pair(defcolor_offset + COLOR_BLUE,
 			bg_color);
-		xhattr = get_color_pair(defcolor_offset + COLOR_MAGENTA,
+		xhattr = get_color_pair(defcolor_offset + cmap[crosshair_color],
 			bg_color);
 	    } else {
 		defattr = get_color_pair(defcolor_offset + COLOR_GREEN,
 			bg_color);
-		defattr = get_color_pair(defcolor_offset + COLOR_GREEN,
+		xhattr = get_color_pair(defcolor_offset + COLOR_GREEN,
 			bg_color);
 	    }
 	    if (COLORS < 16) {
@@ -555,6 +579,8 @@ screen_connect(bool connected)
 static void
 setup_tty(void)
 {
+    extern void pause_for_errors(void);
+
     if (appres.c3270.cbreak_mode) {
 	cbreak();
     } else {

@@ -550,7 +550,7 @@ done:
 	Free(qmap);
     }
     if (!rc) {
-	*error = xs_buffer("Hostname syntax error: %s", errmsg);
+	*error = xs_buffer("Hostname syntax error in '%s': %s", raw, errmsg);
     }
     return rc;
 }

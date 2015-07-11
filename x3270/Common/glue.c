@@ -971,7 +971,8 @@ parse_model_number(char *m)
  * Parse '-xrm' options.
  * Understands only:
  *   {c,s,tcl}3270.<resourcename>: value
- * Asterisks and class names need not apply.
+ *   *<resourcename>: value
+ * Class names need not apply.
  */
 
 static res_t base_resources[] = {
@@ -986,8 +987,9 @@ static res_t base_resources[] = {
     { ResChainFile,	aoffset(ssl.chain_file),	XRM_STRING },
 #endif /*]*/
     { ResCharset,	aoffset(charset),	XRM_STRING },
-    { ResColor8,	aoffset(color8),		XRM_BOOLEAN },
+    { ResColor8,	aoffset(color8),	XRM_BOOLEAN },
     { ResConfDir,	aoffset(conf_dir),	XRM_STRING },
+    { ResCrosshairColor,aoffset(interactive.crosshair_color),	XRM_STRING },
     { ResDbcsCgcsgid, aoffset(dbcs_cgcsgid),	XRM_STRING },
     { ResDftBufferSize,aoffset(ft.dft_buffer_size_bc),XRM_INT },/* deprecated */
     { ResEof,		aoffset(linemode.eof),	XRM_STRING },
