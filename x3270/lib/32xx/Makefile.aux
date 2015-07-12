@@ -30,10 +30,4 @@
 all:
 	@echo "Must pick a specific make target."
 
-OBJ = o
-include lib32xx_files.mk
-SOURCES = $(LIB32XX_SOURCES)
-
-FILES = $(SOURCES) $(HEADERS)
-
-src.tgz: $(FILES)
+src.tgz:

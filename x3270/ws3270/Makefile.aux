@@ -31,31 +31,15 @@ PRODUCT = ws3270
 all:
 	@echo "Must pick a specific make target."
 
-# Development tools.
+DOCS = html/$(PRODUCT)-man.html html/ReleaseNotes.html html/Resources.html \
+	html/SSL.html html/wc3270-script.html html/x3270if.html
 
-include common_files.mk ws3270_files.mk
-
-SOURCES = $(COMMON_SOURCES) $(WS3270_SOURCES)
-
-HEADERS = $(COMMON_HEADERS) $(WS3270_HEADERS)
-
-MISC = Examples/cms_cmd.expect LICENSE.txt Makefile Msc/mkversion.c \
-	README.txt common_files.mk mkfb.c mkversion.sh version.txt winenv.mk \
-	ws3270.ico ws3270.rc ws3270_files.mk x3270_glue.expect
-
-HTML = html/$(PRODUCT)-man.html html/Bugs.html html/FAQ.html html/Intro.html \
-	html/Lineage.html html/README.html html/ReleaseNotes.html \
-	html/Resources.html html/SSL.html html/Wishlist.html \
-	html/wc3270-script.html html/x3270if.html
-
-FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
-
-src.tgz: $(FILES)
+src.tgz: $(DOCS) Makefile.aux
 
 MANDEP = html.m4 m4man Makefile.aux version.txt
 MKHTML = ./m4man -t html -p $(PRODUCT)
 
-man: html/$(PRODUCT)-man.html html/ws3270-script.html html/x3270if.html
+man: $(DOCS)
 
 html/$(PRODUCT)-man.html: x3270.man.m4 hostname.inc $(MANDEP)
 	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4

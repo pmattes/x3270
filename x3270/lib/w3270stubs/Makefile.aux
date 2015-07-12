@@ -30,14 +30,4 @@
 all:
 	@echo "Must pick a specific make target."
 
-# Development tools.
-
-OBJ = o
-include lib3270stubs_files.mk
-include libw3270stubs_files.mk
-SOURCES = $(LIB3270STUBS_SOURCES) $(LIBW3270STUBS_SOURCES)
-HEADERS = $(LIB3270STUBS_HEADERS) $(LIBW3270STUBS_HEADERS)
-
-FILES = $(SOURCES) $(HEADERS)
-
-src.tgz: $(FILES)
+src.tgz:
