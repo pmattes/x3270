@@ -36,7 +36,7 @@ src.tgz: prepare Webpage program-src
 prepare: configure
 configure: configure.in
 	autoconf
-prepare: lib-prepare c3270-prepare s3270-prepare tcl3270-prepare x3270-prepare pr3287-prepare
+prepare: lib-prepare c3270-prepare s3270-prepare tcl3270-prepare x3270-prepare pr3287-prepare Webpage-prepare
 lib-prepare:
 	cd lib && $(MAKE) -f Makefile.aux prepare
 c3270-prepare:
@@ -49,6 +49,8 @@ x3270-prepare:
 	cd x3270 && $(MAKE) -f Makefile.aux prepare
 pr3287-prepare:
 	cd pr3287 && $(MAKE) -f Makefile.aux prepare
+Webpage-prepare:
+	cd Webpage && $(MAKE) -f Makefile.aux prepare
 
 Webpage: program-src FORCE
 	cd Webpage && $(MAKE)
