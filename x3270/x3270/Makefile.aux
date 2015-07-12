@@ -31,8 +31,10 @@ PRODUCT = x3270
 all:
 	@echo "Must pick a specific make target."
 
-DOCS = $(PRODUCT).man html/$(PRODUCT)-man.html html/ibm_hosts.html \
-	html/x3270-script.html ibm_hosts.man x3270-script.man
+DOCS = $(PRODUCT).man html/$(PRODUCT)-man.html html/FAQ.html \
+	html/Lineage.html html/ReleaseNotes.html html/Resources.html \
+	html/SSL.html html/ibm_hosts.html html/x3270-script.html \
+	ibm_hosts.man x3270-script.man
 
 # Rule for building the source tarball: run autoconf and build the
 # documentation.
