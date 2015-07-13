@@ -59,5 +59,10 @@ html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
 html/Resources.html: resource-body make-resource-doc.pl version.txt
 	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
-html/SSL.html: html/documentation-ssl-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@
+
+# Special rule to build the SSL documentation, which comes from a template.
+html/SSL.html: documentation-ssl-body.html mkstand.bash
+	./mkstand.bash "$(PRODUCT) and SSL" documentation-ssl-body.html $@
+documentation-ssl-body.html: documentation-ssl-body.tmpl dll-subst.sh \
+	openssl-url.txt
+	./dll-subst.sh <documentation-ssl-body.tmpl >$@

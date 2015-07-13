@@ -28,7 +28,7 @@
 RM = rm -f
 CC = @CC@
 
-all: pr3287
+all: pr3287 man
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@
@@ -66,6 +66,9 @@ pr3287: $(OBJECTS) version.o $(LIB32XX)
 
 $(LIB32XX):
 	cd ../lib/32xx && $(MAKE)
+
+man:
+	$(MAKE) -f Makefile.aux $@
 
 install: pr3287
 	[ -d $(DESTDIR)$(BINDIR) ] || \

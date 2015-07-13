@@ -31,11 +31,5 @@ all:
 	@echo "Must pick a specific make target."
 
 # Rule for building the source tarball.
-src.tgz: prepare
-
-# Rule for preparing a freshly-pulled working copy: build
-# documentation-ssl-body.html, which is needed elsewhere.
-prepare: documentation-ssl-body.html
-
-documentation-ssl-body.html:
-	$(MAKE) -f Makefile documentation-ssl-body.html
+src.tgz:
+prepare:

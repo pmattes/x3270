@@ -77,6 +77,6 @@ wpr3287-src.tgz:
 	cd wpr3287 && $(MAKE) -f Makefile.aux src.tgz
 
 # Target for building the Inno Setup .exe file and the .zip file.
-windows-release: src.tgz
+windows-release:
 	$(MAKE) windows
 	cd wc3270 && $(MAKE) -f Makefile.aux $@

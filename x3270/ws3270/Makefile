@@ -52,7 +52,7 @@ SHRTLIBS = -lole32 -luuid
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
 PROGS = ws3270.exe x3270if.exe
-all: $(PROGS)
+all: $(PROGS) man
 
 XVERSION = xversion.c
 version.o: $(VOBJS) version.txt mkversion.sh Makefile
@@ -89,6 +89,9 @@ $(LIB3270STUBS):
 wversion.o: version.txt mkwversion.sh
 	@chmod +x mkwversion.sh version.txt
 	sh ./mkwversion.sh $(CC)
+
+man:
+	$(MAKE) -f Makefile.aux $@
 
 clean:
 	rm -f *.o mkfb mkfb.exe fallbacks.c dependencies-

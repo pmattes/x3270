@@ -56,7 +56,7 @@ WIZLIBS = -L../lib -lw32xx -lole32 -luuid -lwinspool
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
 PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe
-all: $(PROGS)
+all: $(PROGS) man
 
 wc3270.exe : XCPPFLAGS += -DWIN32_LEAN_AND_MEAN
 
@@ -116,6 +116,9 @@ ead3270.exe: ead3270.o $(LIB32XX)
 
 ead3270.o: ead3270.c
 	$(CC) $(CFLAGS) -c ead3270.c
+
+man:
+	$(MAKE) -f Makefile.aux $@
 
 clean:
 	rm -f *.o $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c dependencies-

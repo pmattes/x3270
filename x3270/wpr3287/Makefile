@@ -43,7 +43,7 @@ OBJECTS = $(VOBJS) version.o
 LIBS = $(SSLLIB) -lws2_32 -lwinspool
 LIB32XX = ../lib/libw32xx.a
 
-all: wpr3287.exe
+all: wpr3287.exe man
 
 XVERSION = xversion.c
 version.o: $(VOBJS) version.txt mkversion.sh
@@ -61,6 +61,9 @@ wpr3287.exe: $(OBJECTS) $(LIB32XX)
 
 $(LIB32XX):
 	cd ../lib/w32xx && $(MAKE) all
+
+man:
+	$(MAKE) -f Makefile.aux $@
 
 clean:
 	rm -f *.o dependencies-

@@ -42,6 +42,7 @@ c3270/keypad.map
 c3270/keypad.outline
 c3270/LICENSE
 c3270/localdefs.h
+c3270/Makefile.aux
 c3270/Makefile.in
 c3270/menubar.c
 c3270/mkfb.c
@@ -97,6 +98,7 @@ include/latin1.h
 include/lazya.h
 include/linemode.h
 include/macros.h
+include/Makefile.aux
 include/menubar.h
 include/nvt_gui.h
 include/nvt.h
@@ -162,6 +164,7 @@ lib/3270/httpd-io.c
 lib/3270/httpd-nodes.c
 lib/3270/idle.c
 lib/3270i/lib3270i_files.mk
+lib/3270i/Makefile.aux
 lib/3270i/Makefile.in
 lib/3270i/pr3287_session.c
 lib/3270i/scroll.c
@@ -171,6 +174,7 @@ lib/3270/lib3270u_files.mk
 lib/3270/linemode.c
 lib/3270/llist.c
 lib/3270/macros.c
+lib/3270/Makefile.aux
 lib/3270/Makefile.in
 lib/3270/Malloc.c
 lib/3270/mkicon.c
@@ -186,6 +190,7 @@ lib/3270stubs/glue_gui_stubs.c
 lib/3270stubs/host_gui_stubs.c
 lib/3270stubs/lib3270stubs_files.mk
 lib/3270stubs/lib3270stubsu_files.mk
+lib/3270stubs/Makefile.aux
 lib/3270stubs/Makefile.in
 lib/3270stubs/menubar_stubs.c
 lib/3270stubs/nvt_gui_stubs.c
@@ -218,6 +223,7 @@ lib/3270/XtGlue.c
 lib/32xx/asprintf.c
 lib/32xx/lazya.c
 lib/32xx/lib32xx_files.mk
+lib/32xx/Makefile.aux
 lib/32xx/Makefile.in
 lib/32xx/proxy.c
 lib/32xx/resolver.c
@@ -234,6 +240,7 @@ lib/include/unix/conf.h.in
 lib/include/unix/localdefs.h
 lib/include/windows/conf.h
 lib/include/windows/localdefs.h
+lib/Makefile.aux
 lib/w3270/actions.c
 lib/w3270/apl.c
 lib/w3270/b8.c
@@ -255,6 +262,7 @@ lib/w3270/httpd-nodes.c
 lib/w3270/idle.c
 lib/w3270i/lib3270i_files.mk
 lib/w3270i/Makefile
+lib/w3270i/Makefile.aux
 lib/w3270i/pr3287_session.c
 lib/w3270i/scroll.c
 lib/w3270i/winenv.mk
@@ -265,6 +273,7 @@ lib/w3270/linemode.c
 lib/w3270/llist.c
 lib/w3270/macros.c
 lib/w3270/Makefile
+lib/w3270/Makefile.aux
 lib/w3270/Malloc.c
 lib/w3270/mkicon.c
 lib/w3270/nvt.c
@@ -279,6 +288,7 @@ lib/w3270stubs/host_gui_stubs.c
 lib/w3270stubs/lib3270stubs_files.mk
 lib/w3270stubs/libw3270stubs_files.mk
 lib/w3270stubs/Makefile
+lib/w3270stubs/Makefile.aux
 lib/w3270stubs/menubar_stubs.c
 lib/w3270stubs/nvt_gui_stubs.c
 lib/w3270stubs/popups_stubs.c
@@ -315,6 +325,7 @@ lib/w32xx/lazya.c
 lib/w32xx/lib32xx_files.mk
 lib/w32xx/libw32xx_files.mk
 lib/w32xx/Makefile
+lib/w32xx/Makefile.aux
 lib/w32xx/proxy.c
 lib/w32xx/resolver.c
 lib/w32xx/see.c
@@ -331,6 +342,7 @@ lib/w32xx/winenv.mk
 lib/w32xx/winvers.c
 lib/w32xx/xs_buffer.c
 Makefile
+Makefile.aux
 Makefile.in
 Playback/Makefile
 Playback/playback.c
@@ -346,6 +358,7 @@ pr3287/html/pr3287-man.html
 pr3287/html/ReleaseNotes.html
 pr3287/LICENSE
 pr3287/localdefs.h
+pr3287/Makefile.aux
 pr3287/Makefile.in
 pr3287/mkversion.sh
 pr3287/pr3287.c
@@ -383,6 +396,7 @@ s3270/html/x3270-script.html
 s3270/html/x3270.xbm
 s3270/LICENSE
 s3270/localdefs.h
+s3270/Makefile.aux
 s3270/Makefile.in
 s3270/mkfb.c
 s3270/mkversion.sh
@@ -414,6 +428,7 @@ tcl3270/html/tcl3270-man.html
 tcl3270/idle_stubs.c
 tcl3270/LICENSE
 tcl3270/localdefs.h
+tcl3270/Makefile.aux
 tcl3270/Makefile.in
 tcl3270/mkfb.c
 tcl3270/mkversion.sh
@@ -519,6 +534,7 @@ wc3270/keypad.outline
 wc3270/LICENSE.txt
 wc3270/localdefs.h
 wc3270/Makefile
+wc3270/Makefile.aux
 wc3270/menubar.c
 wc3270/mkfb.c
 wc3270/mkkeypad.c
@@ -563,6 +579,7 @@ wpr3287/html/wpr3287-man.html
 wpr3287/LICENSE
 wpr3287/localdefs.h
 wpr3287/Makefile
+wpr3287/Makefile.aux
 wpr3287/mkversion.sh
 wpr3287/Msc/mkversion.c
 wpr3287/pr3287.c
@@ -601,6 +618,7 @@ ws3270/html/x3270if.html
 ws3270/LICENSE.txt
 ws3270/localdefs.h
 ws3270/Makefile
+ws3270/Makefile.aux
 ws3270/mkfb.c
 ws3270/mkversion.sh
 ws3270/Msc/mkversion.c

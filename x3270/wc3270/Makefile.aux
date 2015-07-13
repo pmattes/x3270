@@ -48,12 +48,17 @@ html/$(PRODUCT)-man.html: x3270.man.m4 ft.inc resources.inc hostname.inc \
 	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
 html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
 	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
-html/SSL.html: html/documentation-ssl-body.html mkstand.bash
-	./mkstand.bash "$(PRODUCT) and SSL" html/documentation-ssl-body.html $@
 html/wc3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
 	$(MKHTML) -n wc3270-script -o $@ x3270-script.man.m4
 html/Resources.html: resource-body make-resource-doc.pl version.txt
 	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
+
+# Special rule to build the SSL documentation, which comes from a template.
+html/SSL.html: documentation-ssl-body.html mkstand.bash
+	./mkstand.bash "$(PRODUCT) and SSL" documentation-ssl-body.html $@
+documentation-ssl-body.html: documentation-ssl-body.tmpl dll-subst.sh \
+	openssl-url.txt
+	./dll-subst.sh <documentation-ssl-body.tmpl >$@
 
 wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 	./mkiss <wc3270.iss.tmpl >wc3270.iss
