@@ -659,6 +659,8 @@ x3270/display_charsets.c
 x3270/display_charsets_dbcs.c
 x3270/display_charsets_dbcs.h
 x3270/display_charsets.h
+x3270/dll-subst.sh
+x3270/documentation-ssl-body.tmpl
 x3270/dot.bm
 x3270/dryrun
 x3270/Examples/child_script.bash
@@ -716,6 +718,7 @@ x3270/ky.bm
 x3270/LICENSE
 x3270/localdefs.h
 x3270/locked.bm
+x3270/Makefile.aux
 x3270/Makefile.in
 x3270/menubar.c
 x3270/mkfb.c
@@ -725,6 +728,7 @@ x3270/no_dot.bm
 x3270/null.bm
 x3270/nvt_gui.c
 x3270/objects.h
+x3270/openssl-url.txt
 x3270/popups.c
 x3270/printer_gui.c
 x3270/printer_gui.h
