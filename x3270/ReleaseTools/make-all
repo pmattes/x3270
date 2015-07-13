@@ -88,9 +88,6 @@ do	if [ ! -d "$i" ]
 	fi
 done
 
-# Put ReleaseTools in our path, so we can see zipit.
-export PATH=$PATH:$PWD/ReleaseTools
-
 # Trace whatever we do.
 #set -x
 
@@ -226,16 +223,10 @@ do
 done
 
 # Release wc3270 via Inno Setup under Wine.
-
-# Note that this is redundant with 'make -f Makefile.aux windows-release', but
-# I do not include Makefile.aux in the source tarballs right now, so I have to
-# do it separately here.
 if [ "$winrel" ]
-then	echo "===== Building setup.exe."
-	cd $builddir/wc3270
-    	wine c:\\Program\ Files\\Inno\ Setup\ 5\\ISCC.EXE wc3270.iss
-	echo "===== Building wc3270.zip."
-	zipit -c "wc3270 $version" -o $zip wc3270.zipit
+then	echo "===== Building setup.exe and noinstall.zip."
+	cd $builddir
+	make -f Makefile.aux windows-release
 fi
 
 # Release each product.
