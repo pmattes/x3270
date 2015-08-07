@@ -36,7 +36,7 @@ SCREENS = c3270-thumb.png c3270.png cyrillic-thumb.png cyrillic.png \
 	wc3270-thumb.png wc3270.png x3270_main-thumb.png x3270_main.png
 
 OTHERS = $(SCREENS) Brackets.html Build-c3270.html Build-tcl3270.html \
-	Build-x3270.html Charset.html HotBugs.html Keymap.html \
+	Build-x3270.html Build.html Charset.html HotBugs.html Keymap.html \
 	SS-HCS12-1372-00.pdf Unix/c3270-man.html Unix/ibm_hosts.html \
 	Unix/pr3287-man.html Unix/s3270-man.html Unix/tcl3270-man.html \
 	Unix/x3270-man.html Unix/x3270-script.html Unix/x3270if.html \
