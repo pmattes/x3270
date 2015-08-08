@@ -1078,7 +1078,13 @@ decode_key(int k, ucs4_t ucs4, int hint, char *buf)
 
     if (ucs4 < ' ') {
 	/* Control key. */
-	(void) sprintf(s, "Ctrl<Key>%c", (int)(ucs4 + '@') & 0xff);
+	char *latin1_name = key_to_string(ucs4);
+
+	if (latin1_name != NULL) {
+	    strcpy(buf, latin1_name);
+	} else {
+	    (void) sprintf(s, "Ctrl<Key>%c", (int)(ucs4 + '@') & 0xff);
+	}
 	return buf;
     }
 

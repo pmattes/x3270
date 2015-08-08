@@ -380,7 +380,7 @@ static struct {
 #if !defined(_WIN32) /*[*/
 	{ "BackSpace",     0x08 },
 	{ "Tab",           0x09 },
-	{ "Linefeed",      0x0a },
+	{ "LineFeed",      0x0a },
 	{ "Return",        0x0d },
 	{ "Escape",        0x1b },
 	{ "Delete",        0x7f },
