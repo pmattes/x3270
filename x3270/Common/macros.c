@@ -127,6 +127,7 @@ typedef struct sms {
 	ST_PEER,	/* peer (external) process */
 	ST_FILE,	/* read commands from file */
 	ST_CB		/* callback (httpd or other) */
+#define NUM_ST (ST_CB + 1)
     } type;
     bool	success;
     bool	need_prompt;
@@ -197,11 +198,28 @@ static size_t   nvt_save_cnt = 0;
 static int      nvt_save_ix = 0;
 static char    *expect_text = NULL;
 static size_t	expect_len = 0;
-static const char *st_name[] = { "String", "Macro", "Command", "KeymapAction",
-				 "IdleCommand", "ChildScript", "PeerScript",
-				 "File", "Callback" };
-static enum iaction st_cause[] = { IA_MACRO, IA_MACRO, IA_COMMAND, IA_KEYMAP,
-				 IA_IDLE, IA_MACRO, IA_MACRO };
+static const char *st_name[NUM_ST] = {
+    "String",		/* STRING */
+    "Macro",		/* MACRO */
+    "Command",		/* COMMAND */
+    "KeymapAction",	/* KEYMAP */
+    "IdleCommand",	/* IDLE */
+    "ChildScript",	/* CHILD */
+    "PeerScript",	/* PEER */
+    "File",		/* FILE */
+    "Callback"		/* CB */
+};
+static enum iaction st_cause[NUM_ST] = {
+    IA_MACRO,		/* STRING */
+    IA_MACRO,		/* MACRO */
+    IA_COMMAND,		/* COMMAND */
+    IA_KEYMAP,		/* KEYMAP */
+    IA_IDLE,		/* IDLE */
+    IA_MACRO,		/* CHILD */
+    IA_MACRO,		/* PEER */
+    IA_MACRO,		/* FILE */
+    IA_MACRO		/* CB (unused) */
+};
 #define ST_sNAME(s)	st_name[(int)(s)->type]
 #define ST_NAME \
     ((sms->type == ST_CB) ? sms->cbx.cb->shortname : ST_sNAME(sms))
@@ -552,8 +570,9 @@ sms_enqueue(enum sms_type type)
     s = new_sms(type);
 
     /* Find the bottom of the stack. */
-    for (t = sms; t != NULL; t = t->next)
+    for (t = sms; t != NULL; t = t->next) {
 	t_prev = t;
+    }
 
     if (t_prev == NULL) {	/* Empty stack. */
 	s->next = sms;
@@ -1410,9 +1429,13 @@ run_macro(void)
 	s->executing = true;
 
 	if (s->type == ST_MACRO &&
-	    s->next != NULL &&
-	    s->next->type == ST_CB) {
+		s->next != NULL &&
+		s->next->type == ST_CB) {
 	    ia = s->next->cbx.cb->ia;
+	} else if (s->type == ST_MACRO &&
+		s->next != NULL &&
+		(s->next->type == ST_CHILD || s->next->type == ST_PEER)) {
+	    ia = IA_SCRIPT;
 	} else {
 	    ia = st_cause[s->type];
 	}
@@ -1433,9 +1456,9 @@ run_macro(void)
 	if (es == EM_ERROR) {
 	    vtrace("%s[%d] error\n", ST_NAME, sms_depth);
 
-	    /* Propaogate it. */
+	    /* Propagate it. */
 	    if (sms->next != NULL) {
-		    sms->next->success = false;
+		sms->next->success = false;
 	    }
 
 	    /* If it was an idle command, cancel it. */
@@ -1608,93 +1631,55 @@ login_macro(char *s)
 static void
 run_script(void)
 {
-    vtrace("%s[%d] running\n", ST_NAME, sms_depth);
+    char *ptr;
+    size_t cmd_len;
+    char *cmd;
 
-    for (;;) {
-	char *ptr;
-	size_t cmd_len;
-	char *cmd;
-	sms_t *s;
-	enum em_stat es;
+    vtrace("%s[%d] %s\n", ST_NAME, sms_depth,
+	    sms->need_prompt? "continuing": "running");
 
-	/* If the script isn't idle, we're done. */
-	if (sms->state != SS_IDLE) {
-	    break;
-	}
-
-	/* If a prompt is required, send one. */
-	if (sms->need_prompt) {
-	    script_prompt(sms->success);
-	    sms->need_prompt = false;
-	}
-
-	/* If there isn't a pending command, we're done. */
-	if (!sms->msc_len) {
-	    break;
-	}
-
-	/* Isolate the command. */
-	ptr = memchr(sms->msc, '\n', sms->msc_len);
-	if (!ptr) {
-	    break;
-	}
-	*ptr++ = '\0';
-	cmd_len = ptr - sms->msc;
-	cmd = sms->msc;
-
-	/* Execute it. */
-	sms->state = SS_RUNNING;
-	sms->success = true;
-	vtrace("%s[%d]: '%s'\n", ST_NAME, sms_depth, cmd);
-	s = sms;
-	s->executing = true;
-	es = execute_command(IA_SCRIPT, cmd, NULL);
-	s->executing = false;
-
-	/* Move the rest of the buffer over. */
-	if (cmd_len < s->msc_len) {
-	    s->msc_len -= cmd_len;
-	    (void) memmove(s->msc, ptr, s->msc_len);
-	    s->msc[s->msc_len] = '\0';
-	} else {
-	    s->msc_len = 0;
-	}
-
-	/*
-	 * If a new sms was started, we will be resumed
-	 * when it completes.
-	 */
-	if (sms != s) {
-	    s->need_prompt = true;
-	    return;
-	}
-
-	/* Handle what it did. */
-	if (es == EM_PAUSE || (int)sms->state >= (int)SS_KBWAIT) {
-	    if (sms->state == SS_RUNNING) {
-		sms->state = SS_KBWAIT;
-	    }
-	    script_disable();
-	    if (sms->state == SS_CLOSING) {
-		sms_pop(false);
-		return;
-	    }
-	    sms->need_prompt = true;
-	} else if (es == EM_ERROR) {
-	    vtrace("%s[%d] error\n", ST_NAME, sms_depth);
-	    script_prompt(false);
-	    /* If it was an idle command, cancel it. */
-	    cancel_if_idle_command();
-	} else {
-	    script_prompt(sms->success);
-	}
-	if (sms->state == SS_RUNNING) {
-	    sms->state = SS_IDLE;
-	} else {
-	    vtrace("%s[%d] paused %s\n", ST_NAME, sms_depth,
-		    sms_state_name[sms->state]);
-	}
+    /* If a prompt is required, send one. */
+    if (sms->need_prompt) {
+	script_prompt(sms->success);
+	sms->need_prompt = false;
     }
+
+    /* If there isn't anything left, we're done. */
+    if (!sms->msc_len) {
+	script_enable();
+	return;
+    }
+
+    /* Isolate the command. */
+    ptr = memchr(sms->msc, '\n', sms->msc_len);
+    if (!ptr) {
+	/* No newline yet. */
+	script_enable();
+	return;
+    }
+    *ptr++ = '\0';
+    cmd_len = ptr - sms->msc;
+    cmd = NewString(sms->msc);
+
+    /* Execute it. */
+    sms->state = SS_RUNNING;
+    sms->success = true;
+    vtrace("%s[%d]: '%s'\n", ST_NAME, sms_depth, cmd);
+    sms->need_prompt = true;
+
+    /* Move the rest of the buffer over. */
+    sms->msc_len -= cmd_len;
+    if (sms->msc_len) {
+	(void) memmove(sms->msc, ptr, sms->msc_len);
+    }
+    sms->msc[sms->msc_len] = '\0';
+
+    /* Push a macro for this line of input. */
+    sms->executing = true;
+    push_macro(cmd, false);
+    sms->executing = false;
+
+    Free(cmd);
 }
 
 /* Read the next command from a file. */
@@ -2104,7 +2089,6 @@ sms_continue(void)
 	    break;
 	case ST_PEER:
 	case ST_CHILD:
-	    script_enable();
 	    run_script();
 	    break;
 	case ST_FILE:
@@ -2672,6 +2656,7 @@ script_prompt(bool success)
 
     if (sms != NULL && sms->accumulated) {
 	timing = lazyaf("%ld.%03ld", sms->msec / 1000L, sms->msec % 1000L);
+	sms->accumulated = 0;
     } else {
 	timing = "-";
     }
