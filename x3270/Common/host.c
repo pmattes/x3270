@@ -842,15 +842,19 @@ void
 host_in3270(enum cstate new_cstate)
 {
     bool now3270 = (new_cstate == CONNECTED_3270 ||
-		       new_cstate == CONNECTED_SSCP ||
-		       new_cstate == CONNECTED_TN3270E);
+		    new_cstate == CONNECTED_SSCP ||
+		    new_cstate == CONNECTED_TN3270E);
     bool was3270 = (cstate == CONNECTED_3270 ||
-	    	       cstate == CONNECTED_SSCP ||
-		       cstate == CONNECTED_TN3270E);
+	    	    cstate == CONNECTED_SSCP ||
+		    cstate == CONNECTED_TN3270E);
+    bool now_nvt = (new_cstate == CONNECTED_NVT ||
+		    new_cstate == CONNECTED_E_NVT);
+    bool was_nvt = (cstate == CONNECTED_NVT ||
+		    cstate == CONNECTED_E_NVT);
 
     cstate = new_cstate;
     ever_3270 = now3270;
-    if (now3270 != was3270) {
+    if (now3270 != was3270 || now_nvt != was_nvt) {
 	st_changed(ST_3270_MODE, now3270);
     }
 }
