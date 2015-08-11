@@ -211,7 +211,7 @@ static HANDLE sbuf;	/* dynamically-allocated screen buffer */
 
 HWND console_window;
 
-static ctrlc_fn_t *ctrlc_fn = NULL;
+static ctrlc_fn_t ctrlc_fn = NULL;
 
 static int console_rows;
 static int console_cols;
