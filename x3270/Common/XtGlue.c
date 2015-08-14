@@ -39,6 +39,7 @@
 # include "xio.h"
 #endif /*]*/
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -534,6 +535,8 @@ ioid_t
 AddInput(iosrc_t source, iofn_t fn)
 {
 	input_t *ip;
+
+	assert(source != INVALID_IOSRC);
 
 	ip = (input_t *)Malloc(sizeof(input_t));
 	ip->source = source;

@@ -473,7 +473,11 @@ script_enable(void)
 #if defined(_WIN32) /*[*/
 	stdin_id = AddInput(sms->inhandle, script_input);
 #else /*][*/
-	stdin_id = AddInput(sms->infd, script_input);
+	if (sms->is_socket) {
+	    stdin_id = AddInput(sms->insocket, script_input);
+	} else {
+	    stdin_id = AddInput(sms->infd, script_input);
+	}
 #endif /*]*/
     }
 }
