@@ -855,5 +855,5 @@ process_events(bool block)
 	processed_any |= any_this_time;
     }
 
-    return processed_any;
+    return processed_any | any_this_time;
 }
