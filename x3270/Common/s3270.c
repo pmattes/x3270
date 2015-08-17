@@ -181,7 +181,7 @@ main(int argc, char *argv[])
 
     /* Connect to the host. */
     if (cl_hostname != NULL) {
-	if (host_connect(cl_hostname) < 0) {
+	if (!host_connect(cl_hostname)) {
 	    exit(1);
 	}
 	/* Wait for negotiations to complete or fail. */

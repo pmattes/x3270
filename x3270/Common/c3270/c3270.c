@@ -405,7 +405,7 @@ main(int argc, char *argv[])
 	pause_for_errors();
 	/* Connect to the host. */
 	once = true;
-	if (host_connect(cl_hostname) < 0) {
+	if (!host_connect(cl_hostname)) {
 	    x3270_exit(1);
 	}
 	/* Wait for negotiations to complete or fail. */
