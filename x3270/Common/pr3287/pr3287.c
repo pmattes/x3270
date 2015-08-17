@@ -1088,7 +1088,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 					       "server %s, port %u\n",
 					       proxy_host, proxy_port);
 			}
-		    	if (proxy_negotiate(proxy_type, s, host, p) < 0) {
+		    	if (!proxy_negotiate(proxy_type, s, host, p)) {
 				rc = 1;
 				goto retry;
 			}

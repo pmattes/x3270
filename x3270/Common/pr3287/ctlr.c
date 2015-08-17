@@ -227,9 +227,6 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 	int		i;
 	unsigned char	na;
 	int		any_fa;
-	unsigned char	efa_fg;
-	unsigned char	efa_gr;
-	unsigned char	efa_cs;
 	ucs4_t		ra_xlate = 0;
 	const char	*paren = "(";
 	int		xbaddr;
@@ -412,14 +409,6 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 			cp++;	/* skip order */
 			na = *cp;
 			any_fa = 0;
-			efa_fg = 0;
-			efa_gr = 0;
-			efa_cs = 0;
-
-			/* make gcc happy for now */
-			efa_cs = efa_cs;
-			efa_gr = efa_gr;
-			efa_fg = efa_fg;
 
 			for (i = 0; i < (int)na; i++) {
 				cp++;
@@ -431,16 +420,12 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 				} else if (*cp == XA_FOREGROUND) {
 					trace_ds("%s", see_efa(*cp, *(cp + 1)));
 					cp++;
-					efa_fg = *cp;
 				} else if (*cp == XA_HIGHLIGHTING) {
 					trace_ds("%s", see_efa(*cp, *(cp + 1)));
 					cp++;
-					efa_gr = *cp & 0x07;
 				} else if (*cp == XA_CHARSET) {
 					trace_ds("%s", see_efa(*cp, *(cp + 1)));
 					cp++;
-					if (*cp == 0xf1)
-						efa_cs = 1;
 				} else if (*cp == XA_ALL) {
 					trace_ds("%s", see_efa(*cp, *(cp + 1)));
 					cp++;

@@ -529,7 +529,7 @@ status_resolving(bool ignored _is_unused)
 {
 	oia_boxsolid = false;
 	do_ctlr();
-	do_msg(RESOLVING);
+	do_msg(XRESOLVING);
 	status_untiming();
 	status_uncursor_pos();
 }

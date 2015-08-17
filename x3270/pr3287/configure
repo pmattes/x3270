@@ -610,8 +610,7 @@ GREP
 CPP
 LIBX3270DIR
 CCOPTIONS
-XPRECOMP
-XANSI
+HSOPTS
 host_os
 host_vendor
 host_cpu
@@ -3133,19 +3132,16 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 
 case "$host_os" in
-solaris2*)	XANSI=-D__EXTENSIONS__
+solaris2*)	HSOPTS=-D__EXTENSIONS__
 		;;
-darwin*)	XPRECOMP=-no-cpp-precomp
+darwin*)	HSOPTS="-no-cpp-precomp -Wno-deprecated-declarations"
 		;;
-linux*)		XANSI="-D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_SOURCE -D_XOPEN_SOURCE"
-		;;
-*)		XANSI=""
+linux*)		HSOPTS="-D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_SOURCE -D_XOPEN_SOURCE"
 		;;
 esac
 if test "$GCC" = yes
 then    CCOPTIONS="-Wall -Wsign-compare -std=c99 -pedantic -Wno-variadic-macros"
 fi
-
 
 
 

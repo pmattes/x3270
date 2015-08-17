@@ -172,7 +172,7 @@ fallbacks.txt: $(FALLBACKS_
 #endif
 
 /* Combined EXTRA_DEFINES definition. */
-EXTRA_DEFINES = $(HP_DEFINE) $(AD_DEFINE) @XANSI@ -DLIBX3270DIR=\"$(LIBX3270DIR)\"
+EXTRA_DEFINES = $(HP_DEFINE) $(AD_DEFINE) @HSOPTS@ -DLIBX3270DIR=\"$(LIBX3270DIR)\"
 
 /* Manpage rule. */
 all:: man

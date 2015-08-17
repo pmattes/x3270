@@ -3233,7 +3233,7 @@ solaris2*)	HSOPTS=-D__EXTENSIONS__
 		$as_echo "#define CONNECT_GETPEERNAME 1" >>confdefs.h
 
 		;;
-darwin*)	HSOPTS="-no-cpp-precomp -D_XOPEN_SOURCE_EXTENDED"
+darwin*)	HSOPTS="-no-cpp-precomp -Wno-deprecated-declarations -D_XOPEN_SOURCE_EXTENDED"
 		;;
 linux*)		HSOPTS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
 		;;

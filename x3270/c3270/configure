@@ -614,9 +614,7 @@ GREP
 CPP
 CCOPTIONS
 BROKEN_NEWTERM
-XPRECOMP
-XANSI
-XPOSIX
+HSOPTS
 host_os
 host_vendor
 host_cpu
@@ -3143,18 +3141,14 @@ IFS=$ac_save_IFS
 case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 
-XPOSIX=""
-XANSI=""
 case "$host_os" in
-hpux|*cygwin*)	XPOSIX=-D_XOPEN_SOURCE_EXTENDED
+hpux|*cygwin*)	HSOPTS=-D_XOPEN_SOURCE_EXTENDED
 		;;
-solaris2*)	XANSI=-D__EXTENSIONS__
-    		XPOSIX=-D_XOPEN_SOURCE_EXTENDED
+solaris2*)	HSOPTS="-D__EXTENSIONS__ -D_XOPEN_SOURCE_EXTENDED"
 		;;
-darwin*)	XPRECOMP=-no-cpp-precomp
-    		XPOSIX=-D_XOPEN_SOURCE_EXTENDED
+darwin*)	HSOPTS="-no-cpp-precomp -Wno-deprecated-declarations -D_XOPEN_SOURCE_EXTENDED"
 		;;
-linux*)		XANSI="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
+linux*)		HSOPTS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
 		;;
 aix*)		BROKEN_NEWTERM=1
 		;;
@@ -3162,8 +3156,6 @@ esac
 if test "$GCC" = yes
 then	CCOPTIONS="-Wall -Wsign-compare -std=c99 -pedantic -Wno-variadic-macros"
 fi
-
-
 
 
 

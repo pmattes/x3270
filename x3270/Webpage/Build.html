@@ -214,7 +214,17 @@
     Other packages are needed by the specific programs, and are listed in those
     programs' build instructions.
 
-    <h2> Notes for Solaris 2.x and Sun's C Compiler</h2>
+    <h2>Notes for MacOS X</h2>
+    Everything except x3270 is built the usual (Unix) way on MacOS X.
+    But to build x3270, you first need to install XQuartz (<a
+	href="http://xquartz.macosforge.org/">http://xquartz.macosforge.org/</a>).
+    Then to build all of the emulators, use the following commands:
+    <pre><tt>   export PATH=$PATH:/opt/X11/bin
+   ./configure --enable-unix --x-includes=/opt/X11/include
+   make depend
+   make</tt></pre>
+
+    <h2>Notes for Solaris 2.x and Sun's C Compiler</h2>
     Do not use Sun's BSD-compatibility compiler, <tt>/usr/ucb/cc</tt>. This
     is good advice in general, but in particular, the 3270 suite will not build
     with it. You should have a directory containing <tt>gcc</tt> (recommended)

@@ -55,13 +55,11 @@ gets_noecho(char *buf, int size)
 {
 # if !defined(_WIN32) /*[*/
     char *s;
-    int e;
     size_t sl;
 
-    e = system("stty -echo");
+    (void) system("stty -echo");
     s = fgets(buf, size - 1, stdin);
-    e = system("stty echo");
-    e = e; /* keep gcc happy */
+    (void) system("stty echo");
     if (s != NULL) {
 	sl = strlen(buf);
 	if (sl && buf[sl - 1] == '\n') {

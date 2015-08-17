@@ -200,7 +200,7 @@ ft_encode_host_type(const char *s, host_type_t *ht)
 const char *
 ft_decode_host_type(host_type_t ht)
 {
-    if (ht < 0 || ht >= 3) {
+    if (ht < HT_TSO || ht > HT_CICS) {
 	return "unknown";
     }
     return tp[PARM_HOST].keyword[(int)ht];
@@ -226,7 +226,7 @@ ft_encode_recfm(const char *s, recfm_t *recfm)
 const char *
 ft_decode_recfm(recfm_t recfm)
 {
-    if (recfm < 0 || recfm >= 4) {
+    if (recfm < DEFAULT_RECFM || recfm > RECFM_UNDEFINED) {
 	return "unknown";
     }
     return tp[PARM_RECFM].keyword[(int)recfm];
@@ -252,7 +252,7 @@ ft_encode_units(const char *s, units_t *units)
 const char *
 ft_decode_units(units_t units)
 {
-    if (units < 0 || units >= 4) {
+    if (units < DEFAULT_UNITS || units > AVBLOCK) {
 	return "unknown";
     }
     return tp[PARM_ALLOCATION].keyword[(int)units];
@@ -711,7 +711,6 @@ parse_ft_keywords(unsigned argc, const char **argv)
     ft_conf_t *p = &transfer_ft_conf;
     int i, k;
     unsigned j;
-    long l;
     char *ptr;
 
     /* Unlike the GUIs, always set everything to defaults. */
@@ -761,8 +760,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
 #if defined(_WIN32) /*[*/
 		    case PARM_WINDOWS_CODEPAGE:
 #endif /*]*/
-			l = strtol(eq + 1, &ptr, 10);
-			l = l; /* keep gcc happy */
+			(void) strtol(eq + 1, &ptr, 10);
 			if (ptr == eq + 1 || *ptr) {
 			    popup_an_error("Invalid option value: '%s'",
 				    eq + 1);

@@ -1374,7 +1374,7 @@ net_exception(void)
 static void
 net_rawout(unsigned const char *buf, size_t len)
 {
-	size_t nw;
+	ssize_t nw;
 
 	trace_netdata('>', buf, len);
 

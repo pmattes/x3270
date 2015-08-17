@@ -167,6 +167,14 @@ hms(time_t ts)
 	    NULL); \
 	}
 
+static void ignore_vd(int vd _is_unused)
+{
+}
+
+static void ignore_w_prev(Widget w_prev _is_unused)
+{
+}
+
 /* Called when the "About x3270->Copyright" button is pressed */
 void
 popup_about_copyright(void)
@@ -203,9 +211,6 @@ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY\n\
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH\n\
 DAMAGE.";
 	static char *line1 = NULL;
-
-	vd = vd;		/* make gcc happy */
-	w_prev = w_prev;	/* make gcc happy */
 
 	if (!catted) {
 	    /* Make up for the ANSI C listerl string length limit. */
@@ -282,6 +287,10 @@ are met:", 4);
 	/* Pop it up */
 
 	popup_popup(about_shell, XtGrabExclusive);
+
+	/* Make gcc happy. */
+	ignore_vd(vd);
+	ignore_w_prev(w_prev);
 }
 
 /* Called when the "About x3270->Configuration" button is pressed */

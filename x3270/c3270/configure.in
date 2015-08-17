@@ -38,18 +38,14 @@ dnl all of the curses KEY_XXX definitions are visible.
 dnl If it's solaris2, then pass the -D__EXTENSIONS__ flas to cc, so that all
 dnl of the usual Unix functions are visible.
 AC_CANONICAL_HOST
-XPOSIX=""
-XANSI=""
 case "$host_os" in
-hpux|*cygwin*)	XPOSIX=-D_XOPEN_SOURCE_EXTENDED
+hpux|*cygwin*)	HSOPTS=-D_XOPEN_SOURCE_EXTENDED
 		;;
-solaris2*)	XANSI=-D__EXTENSIONS__
-    		XPOSIX=-D_XOPEN_SOURCE_EXTENDED
+solaris2*)	HSOPTS="-D__EXTENSIONS__ -D_XOPEN_SOURCE_EXTENDED"
 		;;
-darwin*)	XPRECOMP=-no-cpp-precomp
-    		XPOSIX=-D_XOPEN_SOURCE_EXTENDED
+darwin*)	HSOPTS="-no-cpp-precomp -Wno-deprecated-declarations -D_XOPEN_SOURCE_EXTENDED"
 		;;
-linux*)		XANSI="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
+linux*)		HSOPTS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
 		;;
 aix*)		BROKEN_NEWTERM=1
 		;;
@@ -57,9 +53,7 @@ esac
 if test "$GCC" = yes
 then	CCOPTIONS="-Wall -Wsign-compare -std=c99 -pedantic -Wno-variadic-macros"
 fi
-AC_SUBST(XPOSIX)
-AC_SUBST(XANSI)
-AC_SUBST(XPRECOMP)
+AC_SUBST(HSOPTS)
 AC_SUBST(BROKEN_NEWTERM)
 AC_SUBST(CCOPTIONS)
 

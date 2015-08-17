@@ -374,7 +374,7 @@ save_toggles(void)
     int ix;
 
     for (i = 0; i < N_TOGGLES; i++) {
-	if (toggle_names[i].index < 0 || !toggle_changed(i)) {
+	if ((int)toggle_names[i].index < 0 || !toggle_changed(i)) {
 	    continue;
 	}
 
@@ -653,7 +653,7 @@ save_options(char *n)
 
     /* Save most of the toggles. */
     for (i = 0; i < N_TOGGLES; i++) {
-	if (toggle_names[i].index < 0 || !toggle_changed(i)) {
+	if ((int)toggle_names[i].index < 0 || !toggle_changed(i)) {
 	    continue;
 	}
 	if (i == TRACING || i == SCREEN_TRACE) {

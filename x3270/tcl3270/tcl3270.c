@@ -455,7 +455,7 @@ tcl3270_main(int argc, const char *argv[])
     /* Connect to the host, and wait for negotiation to complete. */
     if (cl_hostname != NULL) {
 	action = NewString("[initial connection]");
-	if (host_connect(cl_hostname) < 0) {
+	if (!host_connect(cl_hostname)) {
 	    exit(1);
 	}
 	if (CONNECTED || HALF_CONNECTED) {

@@ -5543,7 +5543,7 @@ PA_ConfigureNotify_xaction(Widget w _is_unused, XEvent *event,
     } else {
 	XtVaGetValues(toplevel, XtNx, &xx, XtNy, &yy, NULL);
     }
-    vtrace("ConfigureNotify %hux%hu+%hd+%hd\n", re->width, re->height, xx, yy);
+    vtrace("ConfigureNotify %dx%d+%hd+%hd\n", re->width, re->height, xx, yy);
     
     /* Save the latest values. */
     cn.x = xx;
