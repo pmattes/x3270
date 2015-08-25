@@ -76,6 +76,18 @@ resolve_host_and_port_v46(const char *host, char *portname, int ix,
     struct addrinfo hints, *res0, *res;
     int rc;
 
+    /* getaddrinfo() does not appear to range-check the port. Do that here. */
+    if (portname != NULL) {
+	unsigned long l;
+
+	if ((l = strtoul(portname, NULL, 0)) && (l & ~0xffffL)) {
+	    if (errmsg) {
+		*errmsg = lazyaf("%s/%s:\n%s", host, portname, "Invalid port");
+	    }
+	    return RHP_CANNOT_RESOLVE;
+	}
+    }
+
     (void) memset(&hints, '\0', sizeof(struct addrinfo));
     hints.ai_flags = 0;
     hints.ai_family = PF_UNSPEC;

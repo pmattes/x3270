@@ -741,6 +741,7 @@ peer_script_init(void)
 	struct sockaddr *sa;
 	socklen_t sa_len;
 	int on = 1;
+	char hostbuf[256];
 
 	if (!parse_bind_opt(appres.script_port, &sa, &sa_len)) {
 	    popup_an_error("Invalid script port value '%s', "
@@ -760,9 +761,10 @@ peer_script_init(void)
 	socketfd = socket(sa->sa_family, SOCK_STREAM, 0);
 	if (socketfd == INVALID_SOCKET) {
 #if !defined(_WIN32) /*[*/
-	    popup_an_errno(errno, "socket()");
+	    popup_an_errno(errno, "script port socket()");
 #else /*][*/
-	    popup_an_error("socket(): %s", win32_strerror(GetLastError()));
+	    popup_an_error("script port socket(): %s",
+		    win32_strerror(GetLastError()));
 #endif /*]*/
 	    Free(sa);
 	    return;
@@ -770,9 +772,9 @@ peer_script_init(void)
 	if (setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, (char *)&on,
 		    sizeof(on)) < 0) {
 #if !defined(_WIN32) /*[*/
-	    popup_an_errno(errno, "setsockopt(SO_REUSEADDR)");
+	    popup_an_errno(errno, "script port setsockopt(SO_REUSEADDR)");
 #else /*][*/
-	    popup_an_error("setsockopt(SO_REUSEADDR): %s",
+	    popup_an_error("script port setsockopt(SO_REUSEADDR): %s",
 		    win32_strerror(GetLastError()));
 #endif /*]*/
 	    Free(sa);
@@ -780,9 +782,10 @@ peer_script_init(void)
 	}
 	if (bind(socketfd, sa, sa_len) < 0) {
 #if !defined(_WIN32) /*[*/
-	    popup_an_errno(errno, "socket bind");
+	    popup_an_errno(errno, "script port socket bind");
 #else /*][*/
-	    popup_an_error("socket bind: %s", win32_strerror(GetLastError()));
+	    popup_an_error("script port socket bind: %s",
+		    win32_strerror(GetLastError()));
 #endif /*]*/
 	    SOCK_CLOSE(socketfd);
 	    socketfd = -1;
@@ -791,9 +794,9 @@ peer_script_init(void)
 	}
 	if (listen(socketfd, 1) < 0) {
 #if !defined(_WIN32) /*[*/
-	    popup_an_errno(errno, "socket listen");
+	    popup_an_errno(errno, "script port socket listen");
 #else /*][*/
-	    popup_an_error("socket listen: %s",
+	    popup_an_error("script port socket listen: %s",
 		    win32_strerror(GetLastError()));
 #endif /*]*/
 	    SOCK_CLOSE(socketfd);
@@ -804,7 +807,7 @@ peer_script_init(void)
 #if defined(_WIN32) /*[*/
 	socket_event = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (socket_event == NULL) {
-	    popup_an_error("CreateEvent: %s",
+	    popup_an_error("script port CreateEvent: %s",
 		    win32_strerror(GetLastError()));
 	    SOCK_CLOSE(socketfd);
 	    socketfd = -1;
@@ -812,7 +815,7 @@ peer_script_init(void)
 	    return;
 	}
 	if (WSAEventSelect(socketfd, socket_event, FD_ACCEPT) != 0) {
-	    popup_an_error("WSAEventSelect: %s",
+	    popup_an_error("script port WSAEventSelect: %s",
 		    win32_strerror(GetLastError()));
 	    SOCK_CLOSE(socketfd);
 	    socketfd = -1;
@@ -824,30 +827,28 @@ peer_script_init(void)
 	socket_id = AddInput(socketfd, socket_connection);
 #endif/*]*/
 	register_schange(ST_EXITING, cleanup_socket);
-	{
-	    char buf[256];
 
-	    if (sa->sa_family == AF_INET) {
-		struct sockaddr_in *sin = (struct sockaddr_in *)sa;
+	if (sa->sa_family == AF_INET) {
+	    struct sockaddr_in *sin = (struct sockaddr_in *)sa;
 
-		vtrace("Scriptport listening on %s (%s, port %u).\n",
-			appres.script_port,
-			inet_ntop(sa->sa_family, &sin->sin_addr, buf,
-			    sizeof(buf)),
-			ntohs(sin->sin_port));
-	    }
-#if defined(X3270_IPV6) /*[*/
-	    else {
-		struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
-
-		vtrace("Scriptport listening on %s (%s, port %u).\n",
-			appres.script_port,
-			inet_ntop(sa->sa_family, &sin6->sin6_addr, buf,
-			    sizeof(buf)),
-			ntohs(sin6->sin6_port));
-	    }
-#endif /*]*/
+	    vtrace("Listening on script port %s (%s, port %u).\n",
+		    appres.script_port,
+		    inet_ntop(sa->sa_family, &sin->sin_addr, hostbuf,
+			sizeof(hostbuf)),
+		    ntohs(sin->sin_port));
 	}
+#if defined(X3270_IPV6) /*[*/
+	else {
+	    struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
+
+	    vtrace("Listening on script port %s (%s, port %u).\n",
+		    appres.script_port,
+		    inet_ntop(sa->sa_family, &sin6->sin6_addr, hostbuf,
+			sizeof(hostbuf)),
+		    ntohs(sin6->sin6_port));
+	}
+#endif /*]*/
+
 	Free(sa);
 	return;
     }
@@ -861,7 +862,7 @@ peer_script_init(void)
 	/* Create the listening socket. */
 	socketfd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (socketfd < 0) {
-	    popup_an_errno(errno, "Unix-domain socket");
+	    popup_an_errno(errno, "script Unix-domain socket");
 	    return;
 	}
 	(void) memset(&ssun, '\0', sizeof(ssun));
@@ -870,13 +871,13 @@ peer_script_init(void)
 		"/tmp/x3sck.%u", (unsigned)getpid());
 	(void) unlink(ssun.sun_path);
 	if (bind(socketfd, (struct sockaddr *)&ssun, sizeof(ssun)) < 0) {
-	    popup_an_errno(errno, "Unix-domain socket bind");
+	    popup_an_errno(errno, "script Unix-domain socket bind");
 	    close(socketfd);
 	    socketfd = -1;
 	    return;
 	}
 	if (listen(socketfd, 1) < 0) {
-	    popup_an_errno(errno, "Unix-domain socket listen");
+	    popup_an_errno(errno, "script Unix-domain socket listen");
 	    close(socketfd);
 	    socketfd = -1;
 	    (void) unlink(ssun.sun_path);
@@ -919,7 +920,7 @@ peer_script_init(void)
 			       0,
 			       NULL);
     if (peer_thread == NULL) {
-	popup_an_error("Cannot create peer thread: %s\n",
+	popup_an_error("Cannot create peer script thread: %s\n",
 		win32_strerror(GetLastError()));
     }
     SetEvent(peer_enable_event);
@@ -967,7 +968,7 @@ socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
 #endif /*]*/
 
     if (accept_fd == INVALID_SOCKET) {
-	popup_an_errno(errno, "socket accept");
+	popup_an_errno(errno, "script socket accept");
 	return;
     }
     vtrace("New script socket connection\n");
@@ -1017,7 +1018,8 @@ child_socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
     accept_fd = accept(sms->insocket, (struct sockaddr *)&sin, &len);
 
     if (accept_fd == INVALID_SOCKET) {
-	popup_an_error("socket accept: %s", win32_strerror(GetLastError()));
+	popup_an_error("script socket accept: %s",
+		win32_strerror(GetLastError()));
 	return;
     }
     vtrace("New child script socket connection\n");
