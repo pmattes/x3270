@@ -85,15 +85,16 @@ inet_ntop(int af, const void *src, char *dst, socklen_t cnt)
     DWORD ssz;
     DWORD sz = cnt;
 
+    *dst = '\0';
     memset(&sa, '\0', sizeof(sa));
 
     switch (af) {
     case AF_INET:
-	sa.sin = *(struct sockaddr_in *)src;	/* struct copy */
+	sa.sin.sin_addr = *(struct in_addr *)src;	/* struct copy */
 	ssz = sizeof(struct sockaddr_in);
 	break;
     case AF_INET6:
-	sa.sin6 = *(struct sockaddr_in6 *)src;	/* struct copy */
+	sa.sin6.sin6_addr = *(struct in6_addr *)src;	/* struct copy */
 	ssz = sizeof(struct sockaddr_in6);
 	break;
     default:
