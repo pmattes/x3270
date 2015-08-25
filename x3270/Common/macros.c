@@ -38,6 +38,8 @@
 #include <sys/un.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#else /*][*/
+#include "wincmn.h"
 #endif /*]*/
 #include <errno.h>
 #include <fcntl.h>
@@ -787,7 +789,6 @@ peer_script_init(void)
 	    Free(sa);
 	    return;
 	}
-	Free(sa);
 	if (listen(socketfd, 1) < 0) {
 #if !defined(_WIN32) /*[*/
 	    popup_an_errno(errno, "socket listen");
@@ -797,6 +798,7 @@ peer_script_init(void)
 #endif /*]*/
 	    SOCK_CLOSE(socketfd);
 	    socketfd = -1;
+	    Free(sa);
 	    return;
 	}
 #if defined(_WIN32) /*[*/
@@ -806,6 +808,7 @@ peer_script_init(void)
 		    win32_strerror(GetLastError()));
 	    SOCK_CLOSE(socketfd);
 	    socketfd = -1;
+	    Free(sa);
 	    return;
 	}
 	if (WSAEventSelect(socketfd, socket_event, FD_ACCEPT) != 0) {
@@ -813,6 +816,7 @@ peer_script_init(void)
 		    win32_strerror(GetLastError()));
 	    SOCK_CLOSE(socketfd);
 	    socketfd = -1;
+	    Free(sa);
 	    return;
 	}
 	socket_id = AddInput(socket_event, socket_connection);
@@ -820,6 +824,31 @@ peer_script_init(void)
 	socket_id = AddInput(socketfd, socket_connection);
 #endif/*]*/
 	register_schange(ST_EXITING, cleanup_socket);
+	{
+	    char buf[256];
+
+	    if (sa->sa_family == AF_INET) {
+		struct sockaddr_in *sin = (struct sockaddr_in *)sa;
+
+		vtrace("Scriptport listening on %s (%s, port %u).\n",
+			appres.script_port,
+			inet_ntop(sa->sa_family, &sin->sin_addr, buf,
+			    sizeof(buf)),
+			ntohs(sin->sin_port));
+	    }
+#if defined(X3270_IPV6) /*[*/
+	    else {
+		struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
+
+		vtrace("Scriptport listening on %s (%s, port %u).\n",
+			appres.script_port,
+			inet_ntop(sa->sa_family, &sin6->sin6_addr, buf,
+			    sizeof(buf)),
+			ntohs(sin6->sin6_port));
+	    }
+#endif /*]*/
+	}
+	Free(sa);
 	return;
     }
 #if !defined(_WIN32) /*[*/
