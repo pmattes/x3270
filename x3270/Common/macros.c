@@ -1372,6 +1372,11 @@ success:
 	return EM_ERROR;
     }
 
+    /* If it produced an error message, it failed. */
+    if (!sms->success) {
+	return EM_ERROR;
+    }
+
     if (ft_state != FT_NONE) {
 	sms->state = SS_FT_WAIT;
     }
