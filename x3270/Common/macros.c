@@ -2149,6 +2149,10 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
      * execute 'Wait(output)', they will need to wait for output from the
      * host.  output_wait_needed is cleared by sms_host_output,
      * which is called from the write logic in ctlr.c.
+     *
+     * Any of the following actions will enable Wait(Output):
+     * - Ascii
+     * - Ebcdic
      */     
     if (sms != NULL && buf == ea_buf) {
 	sms->output_wait_needed = true;
@@ -2374,6 +2378,21 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
 	if (nw < 0) {
 		return false;
 	}
+    }
+
+    /*
+     * If the client has looked at the live screen, then if they later
+     * execute 'Wait(output)', they will need to wait for output from the
+     * host.  output_wait_needed is cleared by sms_host_output,
+     * which is called from the write logic in ctlr.c.
+     *
+     * Any of the following actions will enable Wait(Output):
+     * - Ascii
+     * - Ebcdic
+     * - ReadBuffer
+     */     
+    if (sms != NULL && buf == ea_buf) {
+	sms->output_wait_needed = true;
     }
 
     vb_init(&r);
