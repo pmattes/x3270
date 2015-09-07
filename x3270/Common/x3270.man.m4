@@ -418,6 +418,9 @@ XX_IP
 Note that this option is mutually-exclusive with the XX_DASHED(httpd)
 option
 ifelse(XX_MODE,script,`and disables reading commands from standard input.',.)
+XX_TP(XX_FB(XX_DASHED(scriptportonce)))
+Allows XX_PRODUCT to accept only one script connection. When that connection is
+broken, XX_PRODUCT will exit.
 ')dnl
 ifelse(XX_PRODUCT,c3270,
 `XX_TP(XX_FB(XX_DASHED(secure)))

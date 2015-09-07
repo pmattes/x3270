@@ -2737,6 +2737,16 @@ desc
     is specified, it defaults to <b>127.0.0.1</b>.
 .
 
+name scriptPortOnce
+applies a
+type b
+default false
+switch -scriptportonce
+desc
+    If defined, %p% will accept only one script connection. When that
+    connection is broken, it will exit.
+.
+
 name scrollBar
 applies x
 type b

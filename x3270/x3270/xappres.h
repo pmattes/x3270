@@ -108,6 +108,7 @@ typedef struct {
 	Boolean nvt_mode;
 	Boolean dsTrace_bc;
 	Boolean eventTrace_bc;
+	Boolean script_port_once;
 	struct {
 	    Boolean mono;
 	    Boolean menubar;

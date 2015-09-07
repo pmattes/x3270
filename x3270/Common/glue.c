@@ -560,6 +560,8 @@ static opt_t base_opts[] = {
     "<type>:<host>[:<port>]", "Proxy type and server" },
 { OptScriptPort,OPT_STRING, false, ResScriptPort, aoffset(script_port),
     "[<addr>:]<port>", "TCP port to listen on for script commands" },
+{ OptScriptPortOnce,OPT_BOOLEAN,true,ResScriptPortOnce,aoffset(script_port_once),
+    NULL, "Accept one script connection, then exit" },
 #if defined(HAVE_LIBSSL) /*[*/
 { OptSelfSignedOk, OPT_BOOLEAN, true, ResSelfSignedOk, aoffset(ssl.self_signed_ok),
     NULL, "Allow self-signed host certificates" },

@@ -656,6 +656,10 @@ sms_pop(bool can_exit)
 
     /* If this was a -socket peer, get ready for another connection. */
     if (sms->type == ST_PEER && sms->is_external) {
+	if (appres.script_port_once) { 
+	    vtrace("EOF on socket with %s set, exiting\n", ResScriptPortOnce);
+	    x3270_exit(0);
+	}
 #if defined(_WIN32) /*[*/
 	socket_id = AddInput(socket_event, socket_connection);
 #else /*][*/

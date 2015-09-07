@@ -177,6 +177,7 @@ XrmOptionDescRec options[]= {
     { OptSet,		".xxx",		XrmoptionSkipArg,	NULL },
     { OptSocket,	DotSocket,	XrmoptionNoArg,		ResTrue },
     { OptScriptPort,	DotScriptPort,	XrmoptionSepArg,	NULL },
+    { OptScriptPortOnce,DotScriptPortOnce,XrmoptionNoArg,	ResTrue },
     { OptTermName,	DotTermName,	XrmoptionSepArg,	NULL },
     { OptTraceFile,	DotTraceFile,	XrmoptionSepArg,	NULL },
     { OptTraceFileSize,	DotTraceFileSize,XrmoptionSepArg,	NULL },
@@ -256,6 +257,7 @@ static struct {
     { OptSocket,  NULL, "Create socket for script control" },
     { OptScriptPort, "<port>",
 	"Listen on TCP port <port> for script connections" },
+    { OptScriptPortOnce, NULL, "Accept one script connection, then exit" },
     { OptSecure, NULL, "Set secure mode" },
     { OptTermName, "<name>", "Send <name> as TELNET terminal name" },
     { OptTrace, NULL, "Enable tracing" },
@@ -1083,6 +1085,7 @@ copy_xres_to_res_bool(void)
     copy_bool(nvt_mode);
     copy_bool(dsTrace_bc);
     copy_bool(eventTrace_bc);
+    copy_bool(script_port_once);
 
     copy_bool(interactive.mono);
     copy_bool(interactive.menubar);

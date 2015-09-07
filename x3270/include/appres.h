@@ -60,6 +60,7 @@ typedef struct {
     bool	 dsTrace_bc;
     bool	 eventTrace_bc;
     bool	 trace_monitor;
+    bool	 script_port_once;
     char	*script_port;
     char	*httpd_port;
     char	*dbcs_cgcsgid;

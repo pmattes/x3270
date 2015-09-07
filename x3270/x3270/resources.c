@@ -329,6 +329,8 @@ XtResource xresources[] = {
       boffset(idle_command_enabled), XtRString, ResFalse },
     { ResNvtMode, ClsNvtMode, XtRBoolean, sizeof(Boolean),
       boffset(nvt_mode), XtRString, ResFalse },
+    { ResScriptPortOnce, ClsScriptPortOnce, XtRBoolean, sizeof(Boolean),
+      boffset(script_port_once), XtRString, ResFalse },
 
     { ResMonoCase, ClsMonoCase, XtRBoolean, sizeof(Boolean),
       btoffset(MONOCASE), XtRString, ResFalse },

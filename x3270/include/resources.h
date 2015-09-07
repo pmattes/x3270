@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2014, Paul Mattes.
+ * Copyright (c) 1995-2015, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -195,6 +195,7 @@
 #define ResScreenTraceFile	"screenTraceFile"
 #define ResScripted		"scripted"
 #define ResScriptPort		"scriptPort"
+#define ResScriptPortOnce	"scriptPortOnce"
 #define ResScrollBar		"scrollBar"
 #define ResSecure		"secure"
 #define ResSelectBackground	"selectBackground"
@@ -270,6 +271,7 @@
 #define DotSaveLines		"." ResSaveLines
 #define DotScripted		"." ResScripted
 #define DotScriptPort		"." ResScriptPort
+#define DotScriptPortOnce	"." ResScriptPortOnce
 #define DotScrollBar		"." ResScrollBar
 #define DotSecure		"." ResSecure
 #define DotSelfSignedOk		"." ResSelfSignedOk
@@ -412,6 +414,7 @@
 #define ClsScreenTraceFile	"ScreenTraceFile"
 #define ClsScripted		"Scripted"
 #define ClsScriptPort		"ScriptPort"
+#define ClsScriptPortOnce	"ScriptPortOnce"
 #define ClsScrollBar		"ScrollBar"
 #define ClsSecure		"Secure"
 #define ClsSelectBackground	"SelectBackground"
@@ -496,6 +499,7 @@
 #define OptSelfSignedOk		"-selfsignedok"
 #define OptScripted		"-script"
 #define OptScriptPort		"-scriptport"
+#define OptScriptPortOnce	"-scriptportonce"
 #define OptScrollBar		"-sb"
 #define OptSet			"-set"
 #define OptSocket		"-socket"
