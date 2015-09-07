@@ -1102,6 +1102,7 @@ enum em_stat { EM_CONTINUE, EM_PAUSE, EM_ERROR };
 static enum em_stat
 execute_command(enum iaction cause, char *s, char **np)
 {
+#   define MAX_ANAME	64
     enum {
 	ME_GND,		/* before action name */
 	ME_COMMENT,	/* within a comment */
@@ -1118,15 +1119,17 @@ execute_command(enum iaction cause, char *s, char **np)
 	ME_S_PARMx	/* space: saw whitespace after parameter */
     } state = ME_GND;
     char c;
-    char aname[64+1];
-    char parm[MSC_BUF+1];
+    char aname[MAX_ANAME+1];
     int nx = 0;
-    unsigned count = 0;
-    const char *params[64];
+    unsigned param_count = 0;		/* parameter count */
+    unsigned vbcount = 0;	/* allocated parameter count */
+    varbuf_t *r = NULL;		/* accumulated parameters */
     int failreason = 0;
     action_elt_t *e;
     action_elt_t *any = NULL;
     action_elt_t *exact = NULL;
+    unsigned i;
+    enum em_stat rc = EM_ERROR;	/* failure return code */
     static const char *fail_text[] = {
 	/*1*/ "Action name must begin with an alphanumeric character",
 	/*2*/ "Syntax error in action name",
@@ -1136,10 +1139,16 @@ execute_command(enum iaction cause, char *s, char **np)
     };
 #define fail(n) { failreason = n; goto failure; }
 
-    parm[0] = '\0';
-    params[count] = parm;
+    while ((c = *s++)) {
 
-    while ((c = *s++)) switch (state) {
+	if ((param_count + 1) > vbcount) {
+	    /* Allocate a varbuf for the next parameter. */
+	    r = (varbuf_t *)Realloc(r, (param_count + 1) * sizeof(varbuf_t));
+	    vb_init(&r[param_count]);
+	    vbcount = param_count + 1;
+	}
+
+	switch (state) {
 	case ME_GND:
 	    if (isspace(c)) {
 		continue;
@@ -1165,7 +1174,7 @@ execute_command(enum iaction cause, char *s, char **np)
 		    state = ME_FUNCTIONx;
 		}
 	    } else if (isalnum(c) || c == '_' || c == '-') {
-		if (nx < 64) {
+		if (nx < MAX_ANAME) {
 		    aname[nx++] = c;
 		}
 	    } else {
@@ -1184,7 +1193,7 @@ execute_command(enum iaction cause, char *s, char **np)
 	    } else {
 		state = ME_S_PARM;
 		nx = 0;
-		parm[nx++] = c;
+		vb_append(&r[param_count], &c, 1);
 	    }
 	    break;
 	case ME_LPAREN:
@@ -1193,56 +1202,48 @@ execute_command(enum iaction cause, char *s, char **np)
 	    } else if (c == '"') {
 		state = ME_P_QPARM;
 	    } else if (c == ',') {
-		parm[nx++] = '\0';
-		params[++count] = &parm[nx];
+		param_count++;
 	    } else if (c == ')') {
 		goto success;
 	    } else {
 		state = ME_P_PARM;
-		parm[nx++] = c;
+		vb_append(&r[param_count], &c, 1);
 	    }
 	    break;
 	case ME_P_PARM:
 	    if (isspace(c)) {
-		parm[nx++] = '\0';
-		params[++count] = &parm[nx];
+		param_count++;
 		state = ME_P_PARMx;
 	    } else if (c == ')') {
-		parm[nx] = '\0';
-		++count;
+		param_count++;
 		goto success;
 	    } else if (c == ',') {
-		parm[nx++] = '\0';
-		params[++count] = &parm[nx];
+		param_count++;
 		state = ME_LPAREN;
 	    } else {
-		if (nx < MSC_BUF) {
-		    parm[nx++] = c;
-		}
+		vb_append(&r[param_count], &c, 1);
 	    }
 	    break;
 	case ME_P_BSL:
-	    if (c == 'n' && nx < MSC_BUF) {
-		parm[nx++] = '\n';
+	    if (c == 'n') {
+		vb_append(&r[param_count], "\n", 1);
 	    } else {
-		if (c != '"' && nx < MSC_BUF) {
-		    parm[nx++] = '\\';
+		if (c != '"') {
+		    vb_append(&r[param_count], "\\", 1);
 		}
-		if (nx < MSC_BUF) {
-		    parm[nx++] = c;
-		}
+		vb_append(&r[param_count], &c, 1);
 	    }
 	    state = ME_P_QPARM;
 	    break;
 	case ME_P_QPARM:
 	    if (c == '"') {
-		parm[nx++] = '\0';
-		params[++count] = &parm[nx];
+		param_count++;
 		state = ME_P_PARMx;
 	    } else if (c == '\\') {
 		state = ME_P_BSL;
-	    } else if (nx < MSC_BUF)
-		parm[nx++] = c;
+	    } else {
+		vb_append(&r[param_count], &c, 1);
+	    }
 	    break;
 	case ME_P_PARMx:
 	    if (isspace(c)) {
@@ -1257,37 +1258,32 @@ execute_command(enum iaction cause, char *s, char **np)
 	    break;
 	case ME_S_PARM:
 	    if (isspace(c)) {
-		parm[nx++] = '\0';
-		params[++count] = &parm[nx];
+		param_count++;
 		state = ME_S_PARMx;
 	    } else {
-		if (nx < MSC_BUF) {
-		    parm[nx++] = c;
-		}
+		vb_append(&r[param_count], &c, 1);
 	    }
 	    break;
 	case ME_S_BSL:
-	    if (c == 'n' && nx < MSC_BUF) {
-		parm[nx++] = '\n';
+	    if (c == 'n') {
+		vb_append(&r[param_count], "\n", 1);
 	    } else {
-		if (c != '"' && nx < MSC_BUF) {
-		    parm[nx++] = '\\';
+		if (c != '"') {
+		    vb_append(&r[param_count], "\\", 1);
 		}
-		if (nx < MSC_BUF) {
-		    parm[nx++] = c;
-		}
+		vb_append(&r[param_count], &c, 1);
 	    }
 	    state = ME_S_QPARM;
 	    break;
 	case ME_S_QPARM:
 	    if (c == '"') {
-		parm[nx++] = '\0';
-		params[++count] = &parm[nx];
+		param_count++;
 		state = ME_S_PARMx;
 	    } else if (c == '\\') {
 		state = ME_S_BSL;
-	    } else if (nx < MSC_BUF)
-		parm[nx++] = c;
+	    } else {
+		vb_append(&r[param_count], &c, 1);
+	    }
 	    break;
 	case ME_S_PARMx:
 	    if (isspace(c)) {
@@ -1295,10 +1291,11 @@ execute_command(enum iaction cause, char *s, char **np)
 	    } else if (c == '"') {
 		state = ME_S_QPARM;
 	    } else {
-		parm[nx++] = c;
+		vb_append(&r[param_count], &c, 1);
 		state = ME_S_PARM;
 	    }
 	    break;
+	}
     }
 
     /* Terminal state. */
@@ -1310,14 +1307,15 @@ execute_command(enum iaction cause, char *s, char **np)
 	break;
     case ME_GND:	/* nothing */
     case ME_COMMENT:
-	if (np)
-		*np = s - 1;
-	return EM_CONTINUE;
+	if (np) {
+	    *np = s - 1;
+	}
+	rc = EM_CONTINUE;
+	goto silent_failure;
     case ME_S_PARMx:	/* space after space-style parameter */
 	break;
     case ME_S_PARM:	/* mid space-style parameter */
-	parm[nx++] = '\0';
-	params[++count] = &parm[nx];
+	param_count++;
 	break;
     default:
 	fail(5);
@@ -1337,8 +1335,9 @@ success:
 	} else if (np) {
 	    *np = s;
 	}
-    } else if (np)
+    } else if (np) {
 	*np = s-1;
+    }
 
     /*
      * There used to be logic to do variable substituion here under most
@@ -1362,20 +1361,44 @@ success:
 	    if (!strncasecmp(aname, e->t.name, strlen(aname))) {
 		if (any != NULL) {
 		    popup_an_error("Ambiguous action name: %s", aname);
-		    return EM_ERROR;
+		    goto silent_failure;
 		}
 		any = e;
 	    }
 	} FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
     }
+
     if (any != NULL) {
+	const char **params = NULL;
+
 	sms->accumulated = false;
 	sms->msec = 0L;
-	run_action_entry(any, cause, count, count? params: NULL);
+
+	if (param_count) {
+	    /* Create the parameter array. */
+	    params = (const char **)Malloc(param_count * sizeof(const char *));
+	    for (i = 0; i < param_count; i++) {
+		params[i] = vb_buf(&r[i]);
+	    }
+	}
+
+	run_action_entry(any, cause, param_count, param_count? params: NULL);
+
+	if (vbcount) {
+	    /* Free the varbuf array. */
+	    Free(params);
+	    for (i = 0; i < vbcount; i++) {
+		vb_free(&r[i]);
+	    }
+	    Free(r);
+	    r = NULL;
+	}
+
+	/* Refresh the screen, in case the action changed it. */
 	screen_disp(false);
     } else {
 	popup_an_error("Unknown action: %s", aname);
-	return EM_ERROR;
+	goto silent_failure;
     }
 
     /* If it produced an error message, it failed. */
@@ -1395,7 +1418,15 @@ success:
 
 failure:
     popup_an_error("%s", fail_text[failreason-1]);
-    return EM_ERROR;
+silent_failure:
+    if (vbcount) {
+	for (i = 0; i < vbcount; i++) {
+	    vb_free(&r[i]);
+	}
+	Free(r);
+    }
+    return rc;
+
 #undef fail
 }
 
