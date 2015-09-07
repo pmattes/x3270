@@ -97,9 +97,9 @@ bool macro_output = false;
 /* Statics */
 typedef struct sms {
     struct sms *next;	/* next sms on the stack */
-    char	msc[MSC_BUF];	/* input buffer */
-    size_t	msc_len;	/* length of input buffer */
-    char   *dptr;		/* data pointer (macros only) */
+    char	*msc;	/* input buffer */
+    size_t	msc_len;/* length of input buffer */
+    char   *dptr;	/* data pointer (macros only) */
     enum sms_state {
 	SS_IDLE,	/* no command active (scripts only) */
 	SS_INCOMPLETE,	/* command(s) buffered and ready to run */
@@ -507,7 +507,6 @@ new_sms(enum sms_type type)
 
     s->state = SS_IDLE;
     s->type = type;
-    s->dptr = s->msc;
     s->success = true;
     s->need_prompt = false;
     s->is_login = false;
@@ -669,6 +668,9 @@ sms_pop(bool can_exit)
 
     /* Release the memory. */
     s = sms;
+    if (s->msc != NULL) {
+	Free(s->msc);
+    }
     sms = s->next;
     Free(s);
     sms_depth--;
@@ -1537,8 +1539,10 @@ push_xmacro(enum sms_type type, const char *s, size_t len, bool is_login)
     if (!sms_push(type)) {
 	return;
     }
-    (void) snprintf(sms->msc, MSC_BUF, "%.*s", (int)len, s);
+    sms->msc = Malloc(len + 1);
+    (void) memcpy(sms->msc, s, len + 1);
     sms->msc_len = strlen(sms->msc);
+    sms->dptr = sms->msc;
     if (is_login) {
 	sms->state = SS_WAIT_IFIELD;
 	sms->is_login = true;
@@ -1583,8 +1587,9 @@ push_string(char *s, bool is_login, bool is_hex)
     if (!sms_push(ST_STRING)) {
 	return;
     }
-    (void) snprintf(sms->msc, MSC_BUF, "%s", s);
+    sms->msc = NewString(s);
     sms->msc_len = strlen(sms->msc);
+    sms->dptr = sms->msc;
     if (is_login) {
 	sms->state = SS_WAIT_IFIELD;
 	sms->is_login = true;
@@ -1730,50 +1735,52 @@ run_script(void)
 static void
 read_from_file(void)
 {
-    char *dptr;
-    int len_left = sizeof(sms->msc);
+    varbuf_t r;
+    char *buf;
 
+    vb_init(&r);
     sms->msc_len = 0;
-    dptr = sms->msc;
 
-    while (len_left) {
+    while (true) {
+	char c;
 	int nr;
 
-	nr = read(sms->infd, dptr, 1);
+	nr = read(sms->infd, &c, 1);
 	if (nr < 0) {
 	    vtrace("%s[%d] read error\n", ST_NAME, sms_depth);
+	    vb_free(&r);
 	    sms_pop(false);
 	    return;
 	}
 	if (nr == 0) {
 	    if (sms->msc_len == 0) {
 		vtrace("%s[%d] read EOF\n", ST_NAME, sms_depth);
+		vb_free(&r);
 		sms_pop(false);
 		return;
 	    } else {
 		vtrace("%s[%d] read EOF without newline\n", ST_NAME,
 			sms_depth);
-		*dptr = '\0';
 		break;
 	    }
 	}
-	if (*dptr == '\r' || *dptr == '\n') {
-	    if (sms->msc_len) {
-		*dptr = '\0';
+	if (c == '\r' || c == '\n') {
+	    if (vb_len(&r)) {
 		break;
 	    } else {
 		continue;
 	    }
 	}
-	dptr++;
+	vb_append(&r, &c, 1);
 	sms->msc_len++;
-	len_left--;
     }
 
     /* Run the command as a macro. */
-    vtrace("%s[%d] read '%s'\n", ST_NAME, sms_depth, sms->msc);
+    buf = vb_consume(&r);
+    vtrace("%s[%d] read '%s'\n", ST_NAME, sms_depth, buf);
     sms->state = SS_INCOMPLETE;
-    push_macro(sms->dptr, false);
+    push_macro(buf, false);
+    Free(buf);
 }
 
 /* Handle an error generated during the execution of a script or macro. */
@@ -1907,7 +1914,7 @@ sms_info(const char *fmt, ...)
 static void
 script_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 {
-    char buf[128];
+    char buf[8192];
     size_t n2r;
     ssize_t nr;
     char *ptr;
@@ -1919,10 +1926,7 @@ script_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	    sms->is_socket? (int)sms->insocket: sms->infd);
 
     /* Read in what you can. */
-    n2r = MSC_BUF - 1 - sms->msc_len;
-    if (n2r > sizeof(buf)) {
-	n2r = sizeof(buf);
-    }
+    n2r = sizeof(buf);
     if (sms->is_socket) {
 	nr = recv(sms->insocket, buf, (int)n2r, 0);
     }
@@ -1966,6 +1970,13 @@ script_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	return;
     }
 
+    /* Reallocate. */
+    if (sms->msc == NULL) {
+	sms->msc = Malloc(sizeof(buf));
+    } else {
+	sms->msc = Realloc(sms->msc, sms->msc_len + nr + 1);
+    }
+
     /* Append to the pending command, stripping carriage returns. */
     ptr = buf;
     while (nr--) {
@@ -1974,16 +1985,6 @@ script_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	}
     }
     sms->msc[sms->msc_len] = '\0';
-
-    /* Check for buffer overflow. */
-    if (sms->msc_len >= MSC_BUF - 1) {
-	if (strchr(sms->msc, '\n') == NULL) {
-	    popup_an_error("%s[%d]: input line too long", ST_NAME, sms_depth);
-	    sms_pop(true);
-	    sms_continue();
-	    return;
-	}
-    }
 
     /* Run the command(s). */
     sms->state = SS_INCOMPLETE;
