@@ -1056,7 +1056,7 @@ execute_command(enum iaction cause, char *s, char **np)
     char parm[MSC_BUF+1];
     int nx = 0;
     unsigned count = 0;
-    const char *params[64];
+    const char *params[65];
     int failreason = 0;
     action_elt_t *e;
     action_elt_t *any = NULL;
@@ -1066,14 +1066,19 @@ execute_command(enum iaction cause, char *s, char **np)
 	/*2*/ "Syntax error in action name",
 	/*3*/ "Syntax error: \")\" or \",\" expected",
 	/*4*/ "Extra data after parameters",
-	/*5*/ "Syntax error: \")\" expected"
+	/*5*/ "Syntax error: \")\" expected",
+	/*6*/ "Too many parameters"
     };
 #define fail(n) { failreason = n; goto failure; }
 
     parm[0] = '\0';
     params[count] = parm;
 
-    while ((c = *s++)) switch (state) {
+    while ((c = *s++)) {
+	if (count >= 64) {
+	    fail(6);
+	}
+	switch (state) {
 	case ME_GND:
 	    if (isspace(c)) {
 		continue;
@@ -1233,6 +1238,7 @@ execute_command(enum iaction cause, char *s, char **np)
 		state = ME_S_PARM;
 	    }
 	    break;
+	}
     }
 
     /* Terminal state. */
