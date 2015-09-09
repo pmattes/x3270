@@ -1759,6 +1759,9 @@ run_script(void)
     push_macro(cmd, false);
     sms->executing = false;
 
+    /* Copy the output wait state to the child. */
+    sms->output_wait_needed = sms->next->output_wait_needed;
+
     Free(cmd);
 }
 
@@ -2195,6 +2198,24 @@ sms_in_macro(void)
     return false;
 }
 
+/* Set and propagate the output_wait_needed flag. */
+static void
+set_output_needed(bool needed)
+{
+    sms_t *next = sms->next;
+
+    /* Set the current sms' state. */
+    sms->output_wait_needed = needed;
+
+    /* If its parent is a script, set its parent's state, too. */
+    if (sms->type == ST_MACRO &&
+	    (next->type == ST_PEER ||
+	     next->type == ST_CHILD ||
+	     next->type == ST_CB)) {
+	next->output_wait_needed = needed;
+    }
+}
+
 /*
  * Macro- and script-specific actions.
  */
@@ -2221,7 +2242,7 @@ dump_range(int first, int len, bool in_ascii, struct ea *buf,
      * - Ebcdic
      */     
     if (sms != NULL && buf == ea_buf) {
-	sms->output_wait_needed = true;
+	set_output_needed(true);
     }
 
     is_zero = FA_IS_ZERO(get_field_attribute(first));
@@ -2460,7 +2481,7 @@ do_read_buffer(const char **params, unsigned num_params, struct ea *buf,
      * - ReadBuffer
      */     
     if (sms != NULL && buf == ea_buf) {
-	sms->output_wait_needed = true;
+	set_output_needed(true);
     }
 
     vb_init(&r);
@@ -2772,7 +2793,7 @@ static int snap_caddr = 0;
 static void
 snap_save(void)
 {
-    sms->output_wait_needed = true;
+    set_output_needed(true);
     Replace(snap_status, status_string());
 
     Replace(snap_buf, (struct ea *)Malloc(ROWS*COLS*sizeof(struct ea)));
@@ -3064,7 +3085,7 @@ void
 sms_host_output(void)
 {
     if (sms != NULL) {
-	sms->output_wait_needed = false;
+	set_output_needed(false);
 
 	switch (sms->state) {
 	case SS_SWAIT_OUTPUT:
