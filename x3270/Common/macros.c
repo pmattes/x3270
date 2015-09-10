@@ -616,8 +616,11 @@ sms_pop(bool can_exit)
 	x3270_exit(0);
     }
 
-    /* If this is a callback macro, propagate the state. */
-    if (sms->next != NULL && sms->next->type == ST_CB) {
+    /* If this is a callback or script macro, propagate the state. */
+    if (sms->next != NULL &&
+	    (sms->next->type == ST_CB ||
+	     sms->next->type == ST_CHILD ||
+	     sms->next->type == ST_PEER)) {
 	sms->next->success = sms->success;
     }
 
@@ -2093,14 +2096,6 @@ sms_continue(void)
 		(CONNECTED && (kybdlock & KL_AWAITING_FIRST))) {
 		continuing = false;
 		return;
-	    }
-	    if (!CONNECTED) {
-		/* connection failed */
-		if (sms->need_prompt) {
-		    script_prompt(false);
-		    sms->need_prompt = false;
-		}
-		break;
 	    }
 	    break;
 
