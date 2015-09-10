@@ -57,7 +57,7 @@
 
 enum cstate	cstate = NOT_CONNECTED;
 unsigned	host_flags = 0;
-#define		LUNAME_SIZE	16
+#define		LUNAME_SIZE	1024
 char		luname[LUNAME_SIZE+1];
 char		*connected_lu = NULL;
 char		*connected_type = NULL;
