@@ -2043,10 +2043,8 @@ tn3270e_negotiate(void)
 			/* Device type failure. */
 
 			vtrace("REJECT REASON %s SE\n", rsn(sbbuf[4]));
-			if (sbbuf[4] == TN3270E_REASON_INV_DEVICE_TYPE ||
-			    sbbuf[4] == TN3270E_REASON_UNSUPPORTED_REQ) {
-				backoff_tn3270e("Host rejected device type or "
-				    "request type");
+			if (sbbuf[4] == TN3270E_REASON_UNSUPPORTED_REQ) {
+				backoff_tn3270e("Host rejected request type");
 				break;
 			}
 
@@ -3658,20 +3656,27 @@ try_again:
 #if defined(_WIN32) /*[*/
 	char *certs;
 
-	certs = xs_buffer("%s%s", myappdata, ROOT_CERTS);
-	if (access(certs, R_OK) < 0) {
-	    if (commonappdata == NULL) {
-		popup_an_error("No %s found", ROOT_CERTS);
-		goto fail;
-	    }
-	    Free(certs);
-	    certs = xs_buffer("%s%s", commonappdata, ROOT_CERTS);
-	    if (access(certs, R_OK) < 0) {
-		popup_an_error("No %s found", ROOT_CERTS);
-		goto fail;
-	    }
+	/*
+	 * Look in:
+	 * (1) Current directory.
+	 * (2) Install directory, which if the program wasn't actually
+	 *     installed, is the directory of the path it was run from.
+	 * (3) This user's AppData.
+	 * (4) The shared AppData.
+	 */
+#define readable(path)	(access(path, R_OK) == 0)
+	if (!readable(certs = ROOT_CERTS) &&
+	    !readable(certs = lazyaf("%s%s", instdir, ROOT_CERTS)) &&
+	    !readable(certs = lazyaf("%s%s", myappdata, ROOT_CERTS)) < 0 &&
+	    (commonappdata == NULL ||
+	     !readable(certs = lazyaf("%s%s", commonappdata, ROOT_CERTS)))) {
+	    popup_an_error("No %s found", ROOT_CERTS);
+	    goto fail;
 	}
+#undef readable
 
+	fprintf(stderr, "certs is %s\n", certs);
+	fflush(stderr);
 	if (SSL_CTX_load_verify_locations(ssl_ctx, certs, NULL) != 1) {
 	    popup_an_error("CA database load (file \"%s\") failed:\n%s", certs,
 		    get_ssl_error(err_buf));
