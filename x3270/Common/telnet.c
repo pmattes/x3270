@@ -3675,8 +3675,6 @@ try_again:
 	}
 #undef readable
 
-	fprintf(stderr, "certs is %s\n", certs);
-	fflush(stderr);
 	if (SSL_CTX_load_verify_locations(ssl_ctx, certs, NULL) != 1) {
 	    popup_an_error("CA database load (file \"%s\") failed:\n%s", certs,
 		    get_ssl_error(err_buf));
