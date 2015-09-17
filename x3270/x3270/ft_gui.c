@@ -119,8 +119,6 @@ static String status_string;
 
 static Widget overwrite_shell;
 
-static bool interactive_overwrite = false;
-
 static ft_conf_t xftc;
 static bool xftc_initted = false;
 
@@ -880,7 +878,7 @@ ft_popup_callback(Widget w _is_unused, XtPointer client_data _is_unused,
     PA_dialog_focus_xaction(local_file, NULL, NULL, NULL);
 
     /* Disallow overwrites. */
-    interactive_overwrite = false;
+    xftc.allow_overwrite = false;
 }
 
 /* Cancel button pushed. */
@@ -1138,8 +1136,7 @@ ft_start(void)
     }
 
     /* Prompt for local file overwrite. */
-    if (xftc.receive_flag && !xftc.append_flag &&
-	    !(xftc.allow_overwrite || interactive_overwrite)) {
+    if (xftc.receive_flag && !xftc.append_flag && !xftc.allow_overwrite) {
 	fts.local_file = fopen(xftc.local_filename,
 		xftc.ascii_flag? "r": "rb");
 	if (fts.local_file != NULL) {
@@ -1149,9 +1146,6 @@ ft_start(void)
 	    return false;
 	}
     }
-
-    /* Forget that they approved of overwriting the local file. */
-    interactive_overwrite = false;
 
     /* Start the transfer. */
     fts.local_file = ft_go(&xftc);
@@ -1411,7 +1405,7 @@ overwrite_okay_callback(Widget w _is_unused, XtPointer client_data _is_unused,
 {
     XtPopdown(overwrite_shell);
 
-    interactive_overwrite = true;
+    xftc.allow_overwrite = true;
     if (ft_start()) {
 	XtPopdown(ft_shell);
 	popup_progress();
