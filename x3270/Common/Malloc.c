@@ -76,5 +76,9 @@ Free(void *p)
 char *
 NewString(const char *s)
 {
-    return strcpy(Malloc(strlen(s) + 1), s);
+    if (s != NULL) {
+	return strcpy(Malloc(strlen(s) + 1), s);
+    } else {
+	return NULL;
+    }
 }
