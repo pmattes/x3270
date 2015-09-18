@@ -41,7 +41,7 @@ DOCS = $(PRODUCT).man html/$(PRODUCT)-man.html html/FAQ.html \
 src.tgz: prepare $(DOCS) Makefile.aux
 
 # Rule for preparing a freshly-pulled working copy: run autoconf.
-prepare: configure
+prepare: configure $(PRODUCT).man
 configure: configure.in
 	autoconf
 
