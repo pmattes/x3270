@@ -74,7 +74,7 @@ FILES = $(SOURCES) $(HEADERS) $(BITMAPS) $(FONTS) $(MISC) $(EXAMPLES) \
 
 src.tgz: prepare $(FILES)
 
-prepare: configure
+prepare: configure $(PRODUCT).man
 configure: configure.in
 	autoconf
 
