@@ -1,3 +1,7 @@
 config.log
 config.status
+dependencies
 Makefile
+Makefile.bak
+*.a
+*.o
