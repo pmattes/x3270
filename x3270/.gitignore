@@ -12,6 +12,8 @@ favicon.c
 Imakefile
 Makefile
 Makefile.bak
+*.man
+*._man
 mkfb
 mkicon
 mkkeypad
