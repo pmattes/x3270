@@ -1,7 +1,14 @@
+*.a
 config.log
 config.status
 dependencies
+*.exe
+fallbacks.c
+favicon.c
 Makefile
 Makefile.bak
-*.a
+*.man
+*-man.html
+mkfb
+mkicon
 *.o
