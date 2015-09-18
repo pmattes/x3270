@@ -1,2 +1,7 @@
 autom4te.cache
+conf.h
+config.log
+config.status
 configure
+Imakefile
+Makefile
