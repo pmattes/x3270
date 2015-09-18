@@ -1,7 +1,12 @@
 autom4te.cache
+compiled_keypad.h
 conf.h
 config.log
 config.status
 configure
+dependencies
 Imakefile
 Makefile
+Makefile.bak
+mkkeypad
+*.o
