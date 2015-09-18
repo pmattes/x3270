@@ -1,3 +1,4 @@
+*.a
 autom4te.cache
 compiled_keypad.h
 conf.h
@@ -5,8 +6,13 @@ config.log
 config.status
 configure
 dependencies
+*.exe
+fallbacks.c
+favicon.c
 Imakefile
 Makefile
 Makefile.bak
+mkfb
+mkicon
 mkkeypad
 *.o
