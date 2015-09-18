@@ -138,7 +138,7 @@ unix: c3270 s3270 tcl3270 x3270 pr3287
 windows: wc3270 ws3270 wpr3287
 
 # Dependency generation
-depend: @DEPEND@
+depend: @T_DEPEND@
 unix-lib-depend: lib3270-depend lib3270i-depend lib32xx-depend lib3270stubs-depend
 windows-lib-depend: libw3270-depend libw3270i-depend libw32xx-depend libw3270stubs-depend
 lib-depend: unix-lib-depend windows-lib-depend
