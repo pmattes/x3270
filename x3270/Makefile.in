@@ -26,19 +26,19 @@
 
 # Top-level Makefile for suite3270.
 
-all: @ALL@
+all: @T_ALL@
 
 # Cleverness for 'make targets':
 #  MIXED is true if there is at least one Unix target and at least one Windows
 #   target
 #  M1 is true if there is more than one target
-MIXED := $(shell (echo @ALL@ | grep -q '\<[^w]') && (echo @ALL@ | grep -q '\<[w]') && echo true)
-M1 := $(shell test `echo @ALL@ | wc -w` -gt 1 && echo true)
+MIXED := $(shell (echo @T_ALL@ | grep -q '\<[^w]') && (echo @T_ALL@ | grep -q '\<[w]') && echo true)
+M1 := $(shell test `echo @T_ALL@ | wc -w` -gt 1 && echo true)
 
 # List targets
 targets:
 	@echo "Targets:"
-	@echo " all                 @ALL@"
+	@echo " all                 @T_ALL@"
 ifdef MIXED
 	@echo "  unix                build all Unix programs"
 	@echo "  windows             build all Windows programs"
@@ -178,7 +178,7 @@ wpr3287-depend:
 	cd wpr3287 && $(MAKE) depend
 
 # Installation
-install unix-install: @INSTALL@
+install unix-install: @T_INSTALL@
 x3270-install: x3270
 	cd x3270 && $(MAKE) install
 c3270-install: c3270
@@ -191,7 +191,7 @@ pr3287-install: pr3287
 	cd pr3287 && $(MAKE) install
 
 # Manual page install
-install.man unix-install.man: @INSTALLMAN@
+install.man unix-install.man: @T_INSTALL_MAN@
 x3270-install.man: x3270
 	cd x3270 && $(MAKE) install.man
 c3270-install.man: c3270
@@ -204,7 +204,7 @@ pr3287-install.man: pr3287
 	cd pr3287 && $(MAKE) install.man
 
 # Clean and clobber targets
-clean: @CLEAN@
+clean: @T_CLEAN@
 unix-lib-clean: lib3270-clean lib3270i-clean lib32xx-clean lib3270stubs-clean
 windows-lib-clean: libw3270-clean libw3270i-clean libw32xx-clean libw3270stubs-clean
 lib-clean: unix-lib-clean windows-lib-clean
@@ -243,7 +243,7 @@ ws3270-clean:
 wpr3287-clean:
 	cd wpr3287 && $(MAKE) clean
 
-clobber: @CLOBBER@
+clobber: @T_CLOBBER@
 unix-lib-clobber: lib3270-clobber lib3270i-clobber lib32xx-clobber lib3270stubs-clobber
 windows-lib-clobber: libw3270-clobber libw3270i-clobber libw32xx-clobber libw3270stubs-clobber
 lib-clobber: unix-lib-clobber windows-lib-clobber
