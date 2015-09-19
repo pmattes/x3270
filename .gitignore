@@ -14,7 +14,10 @@ Makefile
 Makefile.bak
 *.man
 *._man
+*-man.html
 mkfb
 mkicon
 mkkeypad
 *.o
+Resources.html
+*-script.html
