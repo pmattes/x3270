@@ -1,4 +1,4 @@
-# Copyright (c) 2015 Paul Mattes.
+# Copyright (c) 1995-2015 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -24,59 +24,64 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Top-level Makefile for suite3270.
+# Auxiliary makefile for x3270
+
+PRODUCT = x3270
 
 all:
 	@echo "Must pick a specific make target."
 
-FORCE:
+DOCS = $(PRODUCT).man html/$(PRODUCT)-man.html html/FAQ.html \
+	html/Lineage.html html/ReleaseNotes.html html/Resources.html \
+	html/SSL.html html/ibm_hosts.html html/x3270-script.html \
+	ibm_hosts.man x3270-script.man
 
-src.tgz: prepare Webpage program-src
+# Rule for building the source tarball: run autoconf and build the
+# documentation.
+src.tgz: prepare $(DOCS) Makefile.aux
 
-prepare: configure
+# Rule for preparing a freshly-pulled working copy: run autoconf.
+prepare: configure $(PRODUCT).man
 configure: configure.in
 	autoconf
-prepare: lib-prepare c3270-prepare s3270-prepare tcl3270-prepare x3270-prepare pr3287-prepare Webpage-prepare
-lib-prepare:
-	cd lib && $(MAKE) -f Makefile.aux prepare
-c3270-prepare:
-	cd c3270 && $(MAKE) -f Makefile.aux prepare
-s3270-prepare:
-	cd s3270 && $(MAKE) -f Makefile.aux prepare
-tcl3270-prepare:
-	cd tcl3270 && $(MAKE) -f Makefile.aux prepare
-x3270-prepare:
-	cd x3270 && $(MAKE) -f Makefile.aux prepare
-pr3287-prepare:
-	cd pr3287 && $(MAKE) -f Makefile.aux prepare
-Webpage-prepare:
-	cd Webpage && $(MAKE) -f Makefile.aux prepare
 
-Webpage: program-src FORCE
-	cd Webpage && $(MAKE)
+MANDEP = man.m4 html.m4 m4man Makefile.aux version.txt
+MKMAN = ./m4man -t man -p $(PRODUCT)
+MKHTML = ./m4man -t html -p $(PRODUCT)
 
-program-src: c3270-src.tgz s3270-src.tgz tcl3270-src.tgz x3270-src.tgz pr3287-src.tgz wc3270-src.tgz ws3270-src.tgz wpr3287-src.tgz lib-src.tgz
-	./mktar.sh
-lib-src.tgz:
-	cd lib && $(MAKE) -f Makefile.aux src.tgz
-c3270-src.tgz:
-	cd c3270 && $(MAKE) -f Makefile.aux src.tgz
-s3270-src.tgz:
-	cd s3270 && $(MAKE) -f Makefile.aux src.tgz
-tcl3270-src.tgz:
-	cd tcl3270 && $(MAKE) -f Makefile.aux src.tgz
-x3270-src.tgz:
-	cd x3270 && $(MAKE) -f Makefile.aux src.tgz
-pr3287-src.tgz:
-	cd pr3287 && $(MAKE) -f Makefile.aux src.tgz
-wc3270-src.tgz:
-	cd wc3270 && $(MAKE) -f Makefile.aux src.tgz
-ws3270-src.tgz:
-	cd ws3270 && $(MAKE) -f Makefile.aux src.tgz
-wpr3287-src.tgz:
-	cd wpr3287 && $(MAKE) -f Makefile.aux src.tgz
+MANSRC = x3270.man.m4 menus.inc apl.inc xkeymaps.inc hostname.inc
 
-# Target for building the Inno Setup .exe file and the .zip file.
-windows-release:
-	$(MAKE) windows
-	cd wc3270 && $(MAKE) -f Makefile.aux $@
+# Rule for building the documentation.
+man: $(DOCS)
+
+# Rules for building man pages and derived HTML documentation.
+$(PRODUCT).man: $(MANSRC) $(MANDEP)
+	$(MKMAN) -n x3270 -o $@ x3270.man.m4
+html/$(PRODUCT)-man.html: $(MANSRC) $(MANDEP)
+	$(MKHTML) -n x3270 -o $@ x3270.man.m4
+ibm_hosts.man: ibm_hosts.man.m4 man.m4 $(MANDEP)
+	$(MKMAN) -n ibm_hosts -o $@ ibm_hosts.man.m4
+html/ibm_hosts.html: ibm_hosts.man.m4 ft.inc $(MANDEP)
+	$(MKHTML) -n ibm_hosts -o $@ ibm_hosts.man.m4
+x3270-script.man: x3270-script.man.m4 ft.inc $(MANDEP)
+	$(MKMAN) -n x3270-script -o $@ x3270-script.man.m4
+html/x3270-script.html: x3270-script.man.m4 ft.inc $(MANDEP)
+	$(MKHTML) -n x3270-script -o $@ x3270-script.man.m4
+
+html/FAQ.html: mkstand.bash html/documentation-faq-body.html 
+	./mkstand.bash '$(PRODUCT) Frequently Asked Questions' html/documentation-faq-body.html $@
+
+html/Lineage.html: mkstand.bash html/license-body.html 
+	./mkstand.bash '$(PRODUCT) Licensing' html/license-body.html $@
+
+html/ReleaseNotes.html: html/documentation-relnotes-body.html mkstand.bash
+	./mkstand.bash "$(PRODUCT) Release Notes" html/documentation-relnotes-body.html $@
+html/Resources.html: resource-body make-resource-doc.pl version.txt
+	./make-resource-doc.pl -o $@ $(PRODUCT) <resource-body
+
+# Special rule to build the SSL documentation, which comes from a template.
+html/SSL.html: documentation-ssl-body.html mkstand.bash
+	./mkstand.bash "$(PRODUCT) and SSL" documentation-ssl-body.html $@
+documentation-ssl-body.html: documentation-ssl-body.tmpl dll-subst.sh \
+	openssl-url.txt
+	./dll-subst.sh <documentation-ssl-body.tmpl >$@

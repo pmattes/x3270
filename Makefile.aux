@@ -1,0 +1,82 @@
+# Copyright (c) 2015 Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Top-level Makefile for suite3270.
+
+all:
+	@echo "Must pick a specific make target."
+
+FORCE:
+
+src.tgz: prepare Webpage program-src
+
+prepare: configure
+configure: configure.in
+	autoconf
+prepare: lib-prepare c3270-prepare s3270-prepare tcl3270-prepare x3270-prepare pr3287-prepare Webpage-prepare
+lib-prepare:
+	cd lib && $(MAKE) -f Makefile.aux prepare
+c3270-prepare:
+	cd c3270 && $(MAKE) -f Makefile.aux prepare
+s3270-prepare:
+	cd s3270 && $(MAKE) -f Makefile.aux prepare
+tcl3270-prepare:
+	cd tcl3270 && $(MAKE) -f Makefile.aux prepare
+x3270-prepare:
+	cd x3270 && $(MAKE) -f Makefile.aux prepare
+pr3287-prepare:
+	cd pr3287 && $(MAKE) -f Makefile.aux prepare
+Webpage-prepare:
+	cd Webpage && $(MAKE) -f Makefile.aux prepare
+
+Webpage: program-src FORCE
+	cd Webpage && $(MAKE)
+
+program-src: c3270-src.tgz s3270-src.tgz tcl3270-src.tgz x3270-src.tgz pr3287-src.tgz wc3270-src.tgz ws3270-src.tgz wpr3287-src.tgz lib-src.tgz
+	./mktar.sh
+lib-src.tgz:
+	cd lib && $(MAKE) -f Makefile.aux src.tgz
+c3270-src.tgz:
+	cd c3270 && $(MAKE) -f Makefile.aux src.tgz
+s3270-src.tgz:
+	cd s3270 && $(MAKE) -f Makefile.aux src.tgz
+tcl3270-src.tgz:
+	cd tcl3270 && $(MAKE) -f Makefile.aux src.tgz
+x3270-src.tgz:
+	cd x3270 && $(MAKE) -f Makefile.aux src.tgz
+pr3287-src.tgz:
+	cd pr3287 && $(MAKE) -f Makefile.aux src.tgz
+wc3270-src.tgz:
+	cd wc3270 && $(MAKE) -f Makefile.aux src.tgz
+ws3270-src.tgz:
+	cd ws3270 && $(MAKE) -f Makefile.aux src.tgz
+wpr3287-src.tgz:
+	cd wpr3287 && $(MAKE) -f Makefile.aux src.tgz
+
+# Target for building the Inno Setup .exe file and the .zip file.
+windows-release:
+	$(MAKE) windows
+	cd wc3270 && $(MAKE) -f Makefile.aux $@
