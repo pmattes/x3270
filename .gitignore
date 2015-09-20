@@ -1,5 +1,5 @@
 *.a
-autom4te.cache
+autom4te.cache/
 compiled_keypad.h
 conf.h
 config.log
