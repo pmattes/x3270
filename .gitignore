@@ -5,6 +5,7 @@ conf.h
 config.log
 config.status
 configure
+cscope.*
 dependencies
 *.exe
 fallbacks.c
