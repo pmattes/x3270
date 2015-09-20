@@ -1,5 +1,6 @@
 #!/bin/bash
 # Create new-style x3270 webpages, using a common template.
+. ./version.txt
 if [ "X$1" = "X-g" ]
 then	geo_sub="http://x3270.bgp.nu/"
 	shift
@@ -131,7 +132,7 @@ cat <<EOF
     </td>
     <td class=content valign="top">
 EOF
- cat ${html}-body.html
+ sed "s/CYEAR/$cyear/g" ${html}-body.html
  cat <<EOF
     </td>
   </tr>
