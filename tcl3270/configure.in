@@ -62,6 +62,11 @@ if test -z "$tclver"
 then	AC_ERROR(Can't figure out Tcl version)
 fi
 AC_MSG_RESULT($tclver)
+maj=`echo $tclver | cut -d . -f 1`
+min=`echo $tclver | cut -d . -f 2`
+if test "$maj" -ge 8 -a "$min" -ge 6
+then	pthread=1
+fi
 
 dnl Set up tclvr (tclver without the period, for BSD)
 tclvr=`echo $tclver | tr -d .`
@@ -73,6 +78,11 @@ AC_CHECK_HEADERS(pty.h)
 AC_CHECK_HEADERS(libutil.h)
 AC_CHECK_HEADERS(util.h)
 AC_CHECK_HEADERS(iconv.h)
+
+dnl Check for pthreads.
+if test "$pthread"
+then	AC_SEARCH_LIBS(pthread_create, pthread)
+fi
 
 dnl Check for TCL header files.
 orig_CPPFLAGS="$CPPFLAGS"
