@@ -2,6 +2,7 @@
 config.log
 config.status
 dependencies
+documentation-ssl-body.html
 *.exe
 fallbacks.c
 favicon.c
@@ -12,3 +13,7 @@ Makefile.bak
 mkfb
 mkicon
 *.o
+ReleaseNotes.html
+Resources.html
+*-src.tgz
+SSL.html
