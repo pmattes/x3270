@@ -53,36 +53,38 @@ clean:
 	$(RM) $(PAGES) webpage.tgz
 
 # Rules for HTML files with the navigation bar.
-credits.html: credits-body.html mkpages.bash
+credits.html: credits-body.html mkpages.bash version.txt
 	./mkpages.bash credits
-documentation.html: documentation-body.html mkpages.bash
+documentation.html: documentation-body.html mkpages.bash version.txt
 	./mkpages.bash documentation
-documentation-bugs.html: documentation-bugs-body.html mkpages.bash
+documentation-bugs.html: documentation-bugs-body.html mkpages.bash version.txt
 	./mkpages.bash documentation-bugs
-documentation-faq.html: documentation-faq-body.html mkpages.bash
+documentation-faq.html: documentation-faq-body.html mkpages.bash version.txt
 	./mkpages.bash documentation-faq
-documentation-manpages.html: documentation-manpages-body.html mkpages.bash
+documentation-manpages.html: documentation-manpages-body.html mkpages.bash \
+    	version.txt
 	./mkpages.bash documentation-manpages
-documentation-misc.html: documentation-misc-body.html mkpages.bash
+documentation-misc.html: documentation-misc-body.html mkpages.bash version.txt
 	./mkpages.bash documentation-misc
-documentation-other.html: documentation-other-body.html mkpages.bash
+documentation-other.html: documentation-other-body.html mkpages.bash version.txt
 	./mkpages.bash documentation-other
-documentation-relnotes.html: documentation-relnotes-body.html mkpages.bash
+documentation-relnotes.html: documentation-relnotes-body.html mkpages.bash \
+    	version.txt
 	./mkpages.bash documentation-relnotes
 documentation-ssl-body.html: documentation-ssl-body.tmpl dll-subst.sh \
     	openssl-url.txt
 	./dll-subst.sh <documentation-ssl-body.tmpl >$@
-documentation-ssl.html: documentation-ssl-body.html mkpages.bash
+documentation-ssl.html: documentation-ssl-body.html mkpages.bash version.txt
 	./mkpages.bash documentation-ssl
-download.html: download-body.html mkpages.bash
+download.html: download-body.html mkpages.bash version.txt
 	./mkpages.bash download
-index.html: index-body.html mkpages.bash
+index.html: index-body.html mkpages.bash version.txt
 	./mkpages.bash index
-license.html: license-body.html mkpages.bash
+license.html: license-body.html mkpages.bash version.txt
 	./mkpages.bash license
-screenshots.html: screenshots-body.html mkpages.bash
+screenshots.html: screenshots-body.html mkpages.bash version.txt
 	./mkpages.bash screenshots
-x026.html: x026-body.html mkpages.bash
+x026.html: x026-body.html mkpages.bash version.txt
 	./mkpages.bash x026
 
 Unix/c3270-man.html:
