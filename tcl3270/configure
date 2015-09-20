@@ -3193,11 +3193,8 @@ then	as_fn_error $? "Can't figure out Tcl version" "$LINENO" 5
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tclver" >&5
 $as_echo "$tclver" >&6; }
-maj=`echo $tclver | cut -d . -f 1`
-min=`echo $tclver | cut -d . -f 2`
-if test "$maj" -ge 8 -a "$min" -ge 6
-then	pthread=1
-fi
+
+pthread=`echo $tclver | awk -F . '{ if ($1 > 8 || ($1 == 8 && $2 >= 6)) print "1"}'`
 
 tclvr=`echo $tclver | tr -d .`
 
