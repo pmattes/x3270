@@ -890,12 +890,34 @@ socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
     if (appres.script_port)
 #endif /*]*/
     {
-	struct sockaddr_in sin;
-	socklen_t len = sizeof(sin);
+	union {
+	    struct sockaddr sa;
+	    struct sockaddr_in sin;
+#if defined(X3270_IPV6) /*[*/
+	    struct sockaddr_in6 sin6;
+#endif /*]*/
+	} sa;
+	socklen_t len = sizeof(sa);
+	char hostbuf[128];
 
-	(void) memset(&sin, '\0', sizeof(sin));
-	sin.sin_family = AF_INET;
-	accept_fd = accept(socketfd, (struct sockaddr *)&sin, &len);
+	accept_fd = accept(socketfd, &sa.sa, &len);
+	if (accept_fd != INVALID_SOCKET) {
+	    if (sa.sa.sa_family == AF_INET) {
+		vtrace("New script socket connection from %s:%u\n",
+			inet_ntop(AF_INET, &sa.sin.sin_addr, hostbuf,
+			    sizeof(hostbuf)), ntohs(sa.sin.sin_port));
+	    }
+#if defined(X3270_IPV6) /*[*/
+	    else if (sa.sa.sa_family == AF_INET6) {
+		vtrace("New script socket connection from %s:%u\n",
+			inet_ntop(AF_INET6, &sa.sin6.sin6_addr, hostbuf,
+			    sizeof(hostbuf)), ntohs(sa.sin6.sin6_port));
+	    }
+#endif /*]*/
+	    else {
+		vtrace("New script socket connection from ???\n");
+	    }
+	}
     }
 #if !defined(_WIN32) /*[*/
     else {
@@ -905,6 +927,9 @@ socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	(void) memset(&ssun, '\0', sizeof(ssun));
 	ssun.sun_family = AF_UNIX;
 	accept_fd = accept(socketfd, (struct sockaddr *)&ssun, &len);
+	if (accept_fd != INVALID_SOCKET) {
+	    vtrace("New Unix-domain script socket connection\n");
+	}
     }
 #endif /*]*/
 
@@ -912,7 +937,6 @@ socket_connection(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	popup_an_errno(errno, "socket accept");
 	return;
     }
-    vtrace("New script socket connection\n");
 
     /* Push on a peer script. */
     (void) sms_push(ST_PEER);

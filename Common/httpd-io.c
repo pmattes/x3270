@@ -234,12 +234,19 @@ void
 hio_connection(iosrc_t fd, ioid_t id)
 {
     socket_t t;
-    struct sockaddr_in sin;
+    union {
+	struct sockaddr sa;
+	struct sockaddr_in sin;
+#if defined(X3270_IPV6) /*[*/
+	struct sockaddr_in6 sin6;
+#endif /*]*/
+    } sa;
     socklen_t len;
+    char hostbuf[128];
     session_t *session;
 
-    len = sizeof(sin);
-    t = accept(listen_s, (struct sockaddr *)&sin, &len);
+    len = sizeof(sa);
+    t = accept(listen_s, &sa.sa, &len);
     if (t == INVALID_SOCKET) {
 	vtrace("httpd accept error: %s%s\n", socket_errtext(),
 		(socket_errno() == SE_EWOULDBLOCK)? " (harmless)": "");
@@ -271,9 +278,25 @@ hio_connection(iosrc_t fd, ioid_t id)
 	return;
     }
 #endif /*]*/
-    /* XXX: Assumes AF_INET. */
-    session->dhandle = httpd_new(session,
-	    lazyaf("%s:%u", inet_ntoa(sin.sin_addr), ntohs(sin.sin_port)));
+    if (sa.sa.sa_family == AF_INET) {
+	session->dhandle = httpd_new(session,
+		lazyaf("%s:%u",
+		    inet_ntop(AF_INET, &sa.sin.sin_addr, hostbuf,
+			sizeof(hostbuf)),
+		    ntohs(sa.sin.sin_port)));
+    }
+#if defined(X3270_IPV6) /*[*/
+    else if (sa.sa.sa_family == AF_INET6) {
+	session->dhandle = httpd_new(session,
+		lazyaf("%s:%u",
+		    inet_ntop(AF_INET6, &sa.sin6.sin6_addr, hostbuf,
+			sizeof(hostbuf)),
+		    ntohs(sa.sin6.sin6_port)));
+    }
+#endif /*]*/
+    else {
+	session->dhandle = httpd_new(session, "???");
+    }
 #if !defined(_WIN32) /*[*/
     session->ioid = AddInput(t, hio_socket_input);
 #else /*][*/
