@@ -69,8 +69,6 @@
 #include <wincon.h>
 #include "winvers.h"
 
-#define ALL_AT_ONCE 1
-
 #define STATUS_SCROLL_START_MS	1500
 #define STATUS_SCROLL_MS	100
 #define STATUS_PUSH_MS		5000
@@ -651,13 +649,11 @@ none_done(void)
     memset(done_array, '\0', console_rows * console_cols);
 }
 
-#if !defined(ALL_AT_ONCE) /*[*/
 static int
 is_done(int row, int col)
 {
     return done_array[ix(row, col)];
 }
-#endif /*]*/
 
 static void
 mark_done(int start_row, int end_row, int start_col, int end_col)
@@ -669,7 +665,6 @@ mark_done(int start_row, int end_row, int start_col, int end_col)
     }
 }
 
-#if !defined(ALL_AT_ONCE) /*[*/
 static int
 tos_a(int row, int col)
 {
@@ -723,7 +718,6 @@ select_changed_s(unsigned row, unsigned col, unsigned rows, unsigned cols)
     /* Now see if the area on the 3270 display has changed. */
     return select_changed(row_adj, col, rows_adj, cols_adj);
 }
-#endif /*]*/
 
 /*
  * Local version of select_sync() that deals in screen coordinates, not
@@ -842,13 +836,12 @@ hdraw(int row, int lrow, int col, int lcol)
 	memcpy(&onscreen[ix(xrow, col)], &toscreen[ix(xrow, col)],
 		sizeof(CHAR_INFO) * (lcol - col + 1));
     }
-    select_sync_s(row, col, lrow - row, lcol - col);
+    select_sync_s(row, col, lrow - row + 1, lcol - col + 1);
 
     /* Mark the region as done. */
     mark_done(row, lrow, col, lcol);
 }
 
-#if !defined(ALL_AT_ONCE) /*[*/
 /*
  * Draw a rectanglar region from 'toscreen' onto the screen, without regard to
  * what is already there.
@@ -858,7 +851,7 @@ hdraw(int row, int lrow, int col, int lcol)
  * When done, copy the region from 'toscreen' to 'onscreen'.
  */
 static void
-draw_rect(int pc_start, int pc_end, int pr_start, int pr_end)
+draw_rect(const char *why, int pc_start, int pc_end, int pr_start, int pr_end)
 {
     int a;
     int ul_row, ul_col, xrow, xcol, lr_row, lr_col;
@@ -871,8 +864,8 @@ draw_rect(int pc_start, int pc_end, int pr_start, int pr_end)
     {
 	int trow, tcol;
 
-	vtrace("draw_rect row %d-%d col %d-%d\n",
-		pr_start, pr_end, pc_start, pc_end);
+	vtrace("draw_rect %s row %d-%d col %d-%d\n",
+		why, pr_start, pr_end, pc_start, pc_end);
 	for (trow = 0; trow < console_rows; trow++) {
 	    for (tcol = 0; tcol < console_cols; tcol++) {
 		if (trow >= pr_start && trow <= pr_end &&
@@ -934,7 +927,6 @@ draw_rect(int pc_start, int pc_end, int pr_start, int pr_end)
 	}
     }
 }
-#endif /*]*/
 
 /*
  * Compare 'onscreen' (what's on the screen right now) with 'toscreen' (what
@@ -951,13 +943,11 @@ draw_rect(int pc_start, int pc_end, int pr_start, int pr_end)
 static void
 sync_onscreen(void)
 {
-#if !defined(ALL_AT_ONCE) /*[*/
     int row;
     int col;
     int pending = FALSE;	/* is there a draw pending? */
     int pc_start, pc_end;	/* first and last columns in pending band */
     int pr_start;		/* first row in pending band */
-#endif /*]*/
 
     /* Clear out the 'what we've seen' array. */
     none_done();
@@ -984,13 +974,14 @@ sync_onscreen(void)
     }
 #endif /*]*/
 
-#if defined(ALL_AT_ONCE) /*[*/
+#if 0
     hdraw(0, console_rows - 1, 0, console_cols - 1);
     onscreen_valid = TRUE;
-#else /*][*/
+#endif
+
     /* Sometimes you have to draw everything. */
     if (!onscreen_valid) {
-	draw_rect(0, console_cols - 1, 0, console_rows - 1);
+	draw_rect("invalid", 0, console_cols - 1, 0, console_rows - 1);
 	onscreen_valid = TRUE;
 	return;
     }
@@ -1003,7 +994,7 @@ sync_onscreen(void)
 		    sizeof(CHAR_INFO) * console_cols) &&
 	     !select_changed_s(row, 0, 1, console_cols)) {
 	    if (pending) {
-		draw_rect(pc_start, pc_end, pr_start, row - 1);
+		draw_rect("middle", pc_start, pc_end, pr_start, row - 1);
 		pending = FALSE;
 	    }
 	    continue;
@@ -1033,9 +1024,8 @@ sync_onscreen(void)
     }
 
     if (pending) {
-	draw_rect(pc_start, pc_end, pr_start, console_rows - 1);
+	draw_rect("end", pc_start, pc_end, pr_start, console_rows - 1);
     }
-#endif /*]*/
 }
 
 /*
@@ -1062,6 +1052,7 @@ set_cursor_size(HANDLE handle)
 static void
 refresh(void)
 {
+    CONSOLE_SCREEN_BUFFER_INFO info;
     COORD coord;
 
     isendwin = false;
@@ -1075,9 +1066,15 @@ refresh(void)
     if (onscreen[ix(cur_row, cur_col)].Attributes & COMMON_LVB_TRAILING_BYTE) {
 	coord.X--;
     }
-    if (SetConsoleCursorPosition(sbuf, coord) == 0) {
-	win32_perror_fatal("\nrefresh: SetConsoleCursorPosition(x=%d,y=%d) "
-		"failed", coord.X, coord.Y);
+    if (GetConsoleScreenBufferInfo(sbuf, &info) == 0) {
+	win32_perror_fatal("\nrefresh: GetConsoleScreenBufferInfo failed");
+    }
+    if ((info.dwCursorPosition.X != coord.X ||
+	 info.dwCursorPosition.Y != coord.Y)) {
+	if (SetConsoleCursorPosition(sbuf, coord) == 0) {
+	    win32_perror_fatal("\nrefresh: SetConsoleCursorPosition(x=%d,y=%d) "
+		    "failed", coord.X, coord.Y);
+	}
     }
 
     /* Swap in this buffer. */
