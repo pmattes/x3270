@@ -1413,7 +1413,7 @@ success:
 
 	if (vbcount) {
 	    /* Free the varbuf array. */
-	    Free(params);
+	    Free((char *)params);
 	    for (i = 0; i < vbcount; i++) {
 		vb_free(&r[i]);
 	    }
@@ -2228,6 +2228,7 @@ set_output_needed(bool needed)
 
     /* If its parent is a script, set its parent's state, too. */
     if (sms->type == ST_MACRO &&
+		next != NULL &&
 	    (next->type == ST_PEER ||
 	     next->type == ST_CHILD ||
 	     next->type == ST_CB)) {
