@@ -152,7 +152,7 @@ description
 .
 
 name altCursor
-applies x
+applies x wc
 groups a
 type b
 default false

@@ -813,10 +813,18 @@ ifelse(XX_PRODUCT,x3270,`include(menus.inc)',`XX_SH(Toggles)
 XX_FB(XX_PRODUCT) has a number of configurable modes which may be selected by
 the XX_FB(XX_DASHED(set)) and XX_FB(XX_DASHED(clear)) options.
 These names can also be used as the first parameter to the XX_FB(Toggle)
-action.
+action, and are the names of resources that can be used to set or clear
+the value of each toggle at start-up.
 XX_TPS()dnl
-ifelse(XX_INTERACTIVE,yes,`XX_TP(XX_FB(monoCase))
-If set, XX_FB(XX_PRODUCT) operates in uppercase-only mode.
+XX_TP(XX_FB(aidWait))
+Changes the behavior of actions that send an XX_SM(AID) to the
+host (XX_FB(Enter),
+XX_FB(Clear), XX_FB(PA) and XX_FB(PF)).
+When set, these actions no longer block until the host unlocks the keyboard.
+It is up to the script to poll the prompt for the unlocked state, or to use
+the XX_FB(Wait(Unlock)) action to wait for the unlock.
+ifelse(XX_INTERACTIVE,yes,`XX_TP(XX_FB(altCursor))
+If set, the cursor will be an underline. If clear, it will be a solid block.
 ')dnl
 XX_TP(XX_FB(blankFill))
 If set, XX_FB(XX_PRODUCT) modifies interactive 3270 behavior in two ways.
@@ -826,6 +834,10 @@ This eliminates a common 3270 data-entry surprise.
 Second, in insert mode, trailing blanks in a field are treated like nulls,
 eliminating the annoying XX_DQUOTED(lock-up) that often occurs when inserting
 into an field with (apparent) space at the end.
+ifelse(XX_MODE,console,`XX_TP(XX_FB(crosshair))
+When set, XX_PRODUCT will display a crosshair to help locate the cursor on the
+screen.
+')dnl
 XX_TP(XX_FB(lineWrap))
 If set, the XX_SM(NVT) terminal emulator automatically assumes
 a XX_SM(NEWLINE) character when it reaches the end of a line.
@@ -833,13 +845,37 @@ ifelse(XX_PRODUCT,wc3270,`XX_TP(XX_FB(marginedPaste))
 If set, pasting multi-line input via the XX_FB(Paste) action will maintain a
 left margin (it will not move the cursor further left than where the paste
 begins).
-XX_TP(XX_FB(overlayPaste))
+')dnl
+ifelse(XX_INTERACTIVE,yes,`XX_TP(XX_FB(monoCase))
+If set, XX_FB(XX_PRODUCT) operates in uppercase-only mode.
+')dnl
+ifelse(XX_PRODUCT,wc3270,`XX_TP(XX_FB(overlayPaste))
 If set, pasting over a protected field will simply increment the cursor
 position instead of locking the keyboard.
 This allows forms to be copied and pasted with the protected fields
 included.
 Setting this toggle also implicitly sets the XX_FB(marginedPaste) toggle.
 ')dnl
+XX_TP(XX_FB(screenTrace))
+Turns on screen tracing at start-up.
+Each time the screen changes, its contents are appended to the file
+ifelse(XX_PRODUCT,wc3270,`XX_FB(x3scr.)`'XX_FI(pid)`'XX_FB(.txt)
+on the current XX_POSESSIVE(user) desktop',ws3270,`XX_FB(x3scr.)`'XX_FI(pid)`'XX_FB(.txt) in the wc3270 AppData
+directory',`XX_FB(/tmp/x3scr.)`'XX_FI(pid)').
+ifelse(XX_MODE,console,`XX_TP(XX_FB(showTiming))
+If set, the time taken by the host to process an XX_SM(AID) is displayed on
+the status line.
+')dnl
+XX_TP(XX_FB(trace))
+Turns on data stream and event tracing at start-up.
+Network traffic (both a hexadecimal representation and its
+interpretation) is logged to the file
+ifelse(XX_PRODUCT,wc3270,`XX_FB(x3trc.)`'XX_FI(pid)`'XX_FB(.txt)
+on the current XX_POSESSIVE(user) desktop',ws3270,`XX_FB(x3trc.)`'XX_FI(pid)`'XX_FB(.txt) in the wc3270 AppData
+directory',`XX_FB(/tmp/x3trc.)`'XX_FI(pid)').
+The directory for the trace file can be changed with
+the "XX_PRODUCT.traceDir" resource.
+Script commands are also traced.
 ifelse(XX_MODE,console,`XX_TP(XX_FB(underscore))
 If set, XX_PRODUCT will display underlined fields by substituting
 underscore XX_DQUOTED(_) characters for blanks or nulls in the field.
@@ -852,33 +888,6 @@ for blinking fields.
 XX_FB(underscore) is set by default.
 ')dnl
 ')dnl
-XX_TP(XX_FB(trace))
-Turns on data stream and event tracing at start-up.
-Network traffic (both a hexadecimal representation and its
-interpretation) is logged to the file
-ifelse(XX_PRODUCT,wc3270,`XX_FB(x3trc.)`'XX_FI(pid)`'XX_FB(.txt)
-on the current XX_POSESSIVE(user) desktop',ws3270,`XX_FB(x3trc.)`'XX_FI(pid)`'XX_FB(.txt) in the wc3270 AppData
-directory',`XX_FB(/tmp/x3trc.)`'XX_FI(pid)').
-The directory for the trace file can be changed with
-the "XX_PRODUCT.traceDir" resource.
-Script commands are also traced.
-XX_TP(XX_FB(screenTrace))
-Turns on screen tracing at start-up.
-Each time the screen changes, its contents are appended to the file
-ifelse(XX_PRODUCT,wc3270,`XX_FB(x3scr.)`'XX_FI(pid)`'XX_FB(.txt)
-on the current XX_POSESSIVE(user) desktop',ws3270,`XX_FB(x3scr.)`'XX_FI(pid)`'XX_FB(.txt) in the wc3270 AppData
-directory',`XX_FB(/tmp/x3scr.)`'XX_FI(pid)').
-ifelse(XX_MODE,console,`XX_TP(XX_FB(showTiming))
-If set, the time taken by the host to process an XX_SM(AID) is displayed on
-the status line.
-')dnl
-XX_TP(XX_FB(aidWait))
-Changes the behavior of actions that send an XX_SM(AID) to the
-host (XX_FB(Enter),
-XX_FB(Clear), XX_FB(PA) and XX_FB(PF)).
-When set, these actions no longer block until the host unlocks the keyboard.
-It is up to the script to poll the prompt for the unlocked state, or to use
-the XX_FB(Wait(Unlock)) action to wait for the unlock.
 ifelse(XX_MODE,console,`XX_TP(XX_FB(visibleControl))
 If set, control characters (NULLs, SI/SO and field attributes), which are
 usually displayed as blanks, are visible on the display.
@@ -890,10 +899,6 @@ ifelse(c3270,`underlined',wc3270,`reverse-video')
 yellow.
 Field attribute mappings are part of the XX_FB(XX_PRODUCT) Resources
 documentation for the XX_FB(visibleControl) resource.
-')dnl
-ifelse(XX_MODE,console,`XX_TP(XX_FB(crosshair))
-When set, XX_PRODUCT will display a crosshair to help locate the cursor on the
-screen.
 ')dnl
 XX_TPE()dnl
 XX_LP

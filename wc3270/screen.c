@@ -515,12 +515,6 @@ initscr(void)
 	}
     }
 
-    /* Set its cursor state. */
-    if (SetConsoleCursorInfo(sbuf, &cursor_info) == 0) {
-	win32_perror("SetConsoleCursorInfo failed");
-	return NULL;
-    }
-
     /* Define a console handler. */
     if (!SetConsoleCtrlHandler(cc_handler, TRUE)) {
 	win32_perror("SetConsoleCtrlHandler failed");
@@ -1044,6 +1038,26 @@ sync_onscreen(void)
 #endif /*]*/
 }
 
+/*
+ * Set the console cursor size.
+ */
+static void
+set_cursor_size(HANDLE handle)
+{
+    CONSOLE_CURSOR_INFO cci;
+	
+    memset(&cci, 0, sizeof(cci));
+    cci.bVisible = true;
+    if (toggled(ALT_CURSOR)) {
+	cci.dwSize = 25;
+    } else {
+	cci.dwSize = 100;
+    }
+    if (SetConsoleCursorInfo(handle, &cci) == 0) {
+	win32_perror_fatal("\nSetConsoleCursorInfo failed");
+    }
+}
+
 /* Repaint the screen. */
 static void
 refresh(void)
@@ -1052,10 +1066,7 @@ refresh(void)
 
     isendwin = false;
 
-    /*
-     * Draw the differences between 'onscreen' and 'toscreen' into
-     * sbuf.
-     */
+    /* Draw the differences between 'onscreen' and 'toscreen' into sbuf. */
     sync_onscreen();
 
     /* Move the cursor. */
@@ -1077,6 +1088,9 @@ refresh(void)
 	screen_swapped = TRUE;
     }
 
+    /* Set the cursor size. */
+    set_cursor_size(sbuf);
+
     /* Start blinking again. */
     if (blink_wasticking) {
 	blink_wasticking = false;
@@ -1085,7 +1099,7 @@ refresh(void)
 }
 
 /* Set the console to 'cooked' mode. */
-    static void
+static void
 set_console_cooked(void)
 {
     if (SetConsoleMode(chandle, ENABLE_ECHO_INPUT |
@@ -2605,6 +2619,14 @@ cursor_move(int baddr)
 }
 
 static void
+toggle_altCursor(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
+{
+    if (!isendwin) {
+	set_cursor_size(sbuf);
+    }
+}
+
+static void
 toggle_monocase(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 {
     screen_changed = true;
@@ -3376,6 +3398,7 @@ void
 screen_register(void)
 {
     static toggle_register_t toggles[] = {
+	{ ALT_CURSOR,		toggle_altCursor,	0 },
 	{ MONOCASE,		toggle_monocase,	0 },
 	{ SHOW_TIMING,		toggle_showTiming,	0 },
 	{ UNDERSCORE,		toggle_underscore,	0 },
