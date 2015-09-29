@@ -119,14 +119,14 @@
 #define SET_SELECT(baddr)	(selected[(baddr)/8] |= (1 << ((baddr)%8)))
 
 /* Globals */
-Dimension       main_width;
-bool         scrollbar_changed = false;
-bool         model_changed = false;
+Dimension       main_width;		/* desired toplevel width */
+bool            scrollbar_changed = false;
+bool            model_changed = false;
 bool		efont_changed = false;
 bool		oversize_changed = false;
 bool		scheme_changed = false;
 Pixel           keypadbg_pixel;
-bool         flipped = false;
+bool            flipped = false;
 Pixmap          x3270_icon;
 bool		shifted = false;
 struct font_list *font_list = (struct font_list *) NULL;
@@ -139,6 +139,7 @@ char	       *full_efontname;
 char	       *full_efontname_dbcs;
 bool		visible_control = false;
 unsigned	fixed_width, fixed_height;
+bool		user_resize_allowed = true;
 int		hhalo = HHALO, vhalo = VHALO;
 
 #define gray_width 2
@@ -148,26 +149,29 @@ static char gray_bits[] = { 0x01, 0x02 };
 /* Statics */
 static unsigned char  *selected;	/* selection bitmap */
 static bool	allow_resize;
-static Dimension main_height;
-static union sp *temp_image;	/* temporary for X display */
+static Dimension main_height;		/* desired toplevel width */
+static union sp *temp_image;		/* temporary for X display */
 static Pixel	colorbg_pixel;
 static bool	crosshair_enabled = true;
-static bool  cursor_displayed = false;
-/*static*/ bool  cursor_enabled = true;
-static bool  cursor_blink_pending = false;
+static bool     cursor_displayed = false;
+static bool     cursor_enabled = true;
+static bool     cursor_blink_pending = false;
 static XtIntervalId cursor_blink_id;
 static int	field_colors[4];
-static bool  in_focus = false;
-static bool  line_changed = false;
-static bool  cursor_changed = false;
-static bool  iconic = false;
+static bool     in_focus = false;
+static bool     line_changed = false;
+static bool     cursor_changed = false;
+static bool     iconic = false;
+static bool     maximized = false;
 static Widget   container;
 static Widget   scrollbar;
 static Dimension menubar_height;
 static Dimension keypad_height;
-static Dimension keypad_xwidth;
+static Dimension keypad_xwidth;		/* extra width of integral keypad, if
+					   keypad wider than screen */
 static Dimension container_width;
-static Dimension cwidth_nkp;
+static Dimension cwidth_nkp;		/* container width, without integral
+					   keypad */
 static Dimension container_height;
 static Dimension scrollbar_width;
 static char    *aicon_text = NULL;
@@ -175,15 +179,15 @@ static XFontStruct *ailabel_font;
 static Dimension aicon_label_height = 0;
 static GC       ailabel_gc;
 static Pixel    cpx[16];
-static bool  cpx_done[16];
+static bool     cpx_done[16];
 static Pixel    normal_pixel;
 static Pixel    select_pixel;
 static Pixel    bold_pixel;
 static Pixel    selbg_pixel;
 static Pixel    cursor_pixel;
-static bool  text_blinking_on = true;
-static bool  text_blinkers_exist = false;
-static bool  text_blink_scheduled = false;
+static bool     text_blinking_on = true;
+static bool     text_blinkers_exist = false;
+static bool     text_blink_scheduled = false;
 static XtIntervalId text_blink_id;
 static XtTranslations screen_t00 = NULL;
 static XtTranslations screen_t0 = NULL;
@@ -203,7 +207,7 @@ static bool highlight_bold = false;
 static Pixmap   inv_icon;
 static Pixmap   wait_icon;
 static Pixmap   inv_wait_icon;
-static bool  icon_inverted = false;
+static bool     icon_inverted = false;
 static Widget	icon_shell;
 
 static struct font_list *font_last = (struct font_list *) NULL;
@@ -226,8 +230,8 @@ bool xim_error = false;
 char *locale_name = NULL;
 int ovs_offset = 1;
 typedef struct {
-	XIMStyle style;
-	char *description;
+    XIMStyle style;
+    char *description;
 } im_style_t;
 static XIMStyle style;
 char ic_focus;
@@ -398,7 +402,6 @@ static char *load_fixed_font(const char *names, const char *reqd_charsets);
 static void lock_icon(enum mcursor_state state);
 static char *expand_cslist(const char *s);
 static void hollow_cursor(int baddr);
-static void revert_later(XtPointer closure _is_unused, XtIntervalId *id _is_unused);
 static void xlate_dbcs(unsigned char, unsigned char, XChar2b *);
 static void dfc_init(void);
 static const char *dfc_search_family(const char *charset, dfc_t **dfc,
@@ -418,6 +421,7 @@ struct rsfont {
 	char *name;
 	int width;
 	int height;
+	int descent;
 	int total_width;	/* transient */
 	int total_height;	/* transient */
 	int area;		/* transient */
@@ -517,6 +521,19 @@ screen_preinit(void)
 {
     dfc_init();
 }
+
+/*
+ * Clear fixed_width and fixed_height.
+ */
+static void
+clear_fixed(void)
+{
+    if (!maximized && user_resize_allowed && (fixed_width || fixed_height)) {
+	vtrace("clearing fixed_width and fixed_height\n");
+	fixed_width = 0;
+	fixed_height = 0;
+    }
+}
 
 /*
  * Initialize the screen.
@@ -537,8 +554,10 @@ screen_init(void)
 			!fixed_width ||
 			!fixed_height) {
 	    popup_an_error("Invalid fixed size");
-	    fixed_width = 0;
-	    fixed_height = 0;
+	    clear_fixed();
+	} else {
+	    /* Success. Don't allow user resize operations. */
+	    user_resize_allowed = false;
 	}
     }
 
@@ -588,331 +607,350 @@ screen_init(void)
 static void
 screen_reinit(unsigned cmask)
 {
-	Dimension cwidth_curr;
-	Dimension mkw;
+    Dimension cwidth_curr;
+    Dimension mkw;
 
-	/* Allocate colors. */
-	if (cmask & COLOR_CHANGE) {
-	    if (appres.m3279) {
-		default_color_scheme();
-		(void) xfer_color_scheme(xappres.color_scheme, false);
-	    }
-	    allocate_pixels();
-
-	    /*
-	     * In color mode, set highlight_bold from the resource.
-	     * In monochrome, set it unconditionally.
-	     */
-	    if (appres.m3279) {
-		highlight_bold = appres.highlight_bold;
-	    } else {
-		highlight_bold = true;
-	    }
+    /* Allocate colors. */
+    if (cmask & COLOR_CHANGE) {
+	if (appres.m3279) {
+	    default_color_scheme();
+	    (void) xfer_color_scheme(xappres.color_scheme, false);
 	}
+	allocate_pixels();
 
-	/* Define graphics contexts. */
-	if (cmask & (FONT_CHANGE | COLOR_CHANGE))
-		make_gcs(&nss);
-
-	/* Undo the horizonal crosshair buffers. */
-	if (cmask & FONT_CHANGE) {
-		if (nss.hx_text != NULL) {
-		    Replace(nss.hx_text, NULL);
-		    nss.nhx_text = 0;
-		}
-	}
-
-	/* Reinitialize the controller. */
-	ctlr_reinit(cmask);
-
-	/* Allocate buffers. */
-	if (cmask & MODEL_CHANGE) {
-		/* Selection bitmap */
-		Replace(selected,
-		    (unsigned char *)XtCalloc(sizeof(unsigned char),
-				              (maxROWS * maxCOLS + 7) / 8));
-
-		/* X display image */
-		Replace(nss.image, (union sp *)XtCalloc(sizeof(union sp),
-							maxROWS * maxCOLS));
-		Replace(temp_image, (union sp *)XtCalloc(sizeof(union sp),
-							 maxROWS*maxCOLS));
-
-		/* render_text buffers */
-		Replace(rt_buf,
-		    (XChar2b *)XtMalloc(maxCOLS * sizeof(XChar2b)));
-	} else
-		(void) memset((char *) nss.image, 0,
-		              sizeof(union sp) * maxROWS * maxCOLS);
-
-	/* Compute SBCS/DBCS size differences. */
-	if ((cmask & FONT_CHANGE) && dbcs) {
-		int wdiff, adiff, ddiff;
-		char *xs;
-		int xx;
-
-#if defined(_ST) /*[*/
-		printf("nss ascent %d descent %d\n"
-		       "dbcs ascent %d descent %d\n",
-		       nss.ascent, nss.descent,
-		       dbcs_font.ascent, dbcs_font.descent);
-#endif /*]*/
-
-		/* Compute width difference. */
-		wdiff = (2 * nss.char_width) - dbcs_font.char_width;
-		if (wdiff > 0) {
-			/* SBCS font is too wide */
-			dbcs_font.xtra_width = wdiff;
-#if defined(_ST) /*[*/
-			printf("SBCS wider %d\n", wdiff);
-#endif /*]*/
-		} else if (wdiff < 0) {
-			/* SBCS font is too narrow */
-			if (wdiff % 2) {
-				nss.xtra_width = (-wdiff)/2 + 1;
-				dbcs_font.xtra_width = 1;
-#if defined(_ST) /*[*/
-				printf("SBCS odd\n");
-#endif /*]*/
-			} else
-				nss.xtra_width = (-wdiff)/2;
-#if defined(_ST) /*[*/
-			printf("DBCS wider %d\n", -wdiff);
-#endif /*]*/
-		} else {
-			dbcs_font.xtra_width = nss.xtra_width = 0;
-#if defined(_ST) /*[*/
-			printf("Width matches.\n");
-#endif /*]*/
-		}
-		/* Add some extra on top of that. */
-		if ((xs = getenv("X3270_XWIDTH")) != NULL) {
-			xx = atoi(xs);
-			if (xx && xx < 10) {
-				nss.xtra_width += xx;
-				dbcs_font.xtra_width += 2*xx;
-			}
-		}
-		nss.char_width += nss.xtra_width;
-		dbcs_font.char_width += dbcs_font.xtra_width;
-
-		/*
-		 * Compute height difference, doing ascent and descent
-		 * separately.
-		 */
-		adiff = nss.ascent - dbcs_font.ascent;
-		if (adiff > 0) {
-#if defined(_ST) /*[*/
-			printf("SBCS higher by %d\n", adiff);
-			dbcs_font.ascent += adiff;
-			dbcs_font.char_height += adiff;
-#endif /*]*/
-		} else if (adiff < 0) {
-#if defined(_ST) /*[*/
-			printf("DBCS higher by %d\n", -adiff);
-			nss.ascent += -adiff;
-			nss.char_height += -adiff;
-#endif /*]*/
-		} else {
-#if defined(_ST) /*[*/
-			printf("Ascent matches\n");
-#endif /*]*/
-		}
-		ddiff = nss.descent - dbcs_font.descent;
-		if (ddiff > 0) {
-#if defined(_ST) /*[*/
-			printf("SBCS lower by %d\n", ddiff);
-#endif /*]*/
-			dbcs_font.descent += ddiff;
-			dbcs_font.char_height += ddiff;
-		} else if (ddiff < 0) {
-#if defined(_ST) /*[*/
-			printf("DBCS lower by %d\n", -ddiff);
-#endif /*]*/
-			nss.descent += -ddiff;
-			nss.char_height += -ddiff;
-		} else {
-#if defined(_ST) /*[*/
-			printf("Descent matches\n");
-#endif /*]*/
-		}
-		
-		/* Add a constant to the height. */
-		if ((xs = getenv("X3270_XHEIGHT")) != NULL) {
-			xx = atoi(xs);
-			if (xx && xx < 10) {
-				dbcs_font.descent += xx;
-				nss.descent += xx;
-				nss.char_height += xx;
-			}
-		}
-	}
-
-	/* Set up a container for the menubar, screen and keypad */
-
-	if (toggled(SCROLL_BAR))
-		scrollbar_width = SCROLLBAR_WIDTH;
-	else
-		scrollbar_width = 0;
-
-	if (1/*cmask & (FONT_CHANGE | MODEL_CHANGE)*/) {
-		if (fixed_width) {
-			Dimension w, h;
-
-			/* Compute the halos. */
-			hhalo = 0;
-			w = SCREEN_WIDTH(ss->char_width) + scrollbar_width;
-			if (w > fixed_width) {
-				if (screen_redo == REDO_NONE)
-					Error("Font is too wide for fixed "
-							"width");
-				hhalo = HHALO;
-				(void) XtAppAddTimeOut(appcontext, 10,
-						       revert_later, 0);
-			} else
-				hhalo = (fixed_width - w) / 2;
-			vhalo = 0;
-			h = SCREEN_HEIGHT(ss->char_height);
-			if (h > fixed_height) {
-				if (screen_redo == REDO_NONE)
-					Error("Font is too tall for fixed "
-							"width");
-				vhalo = VHALO;
-				(void) XtAppAddTimeOut(appcontext, 10,
-						       revert_later, 0);
-			} else
-				vhalo = (fixed_height - h) / 2;
-		}
-		nss.screen_width  = SCREEN_WIDTH(ss->char_width);
-		nss.screen_height = SCREEN_HEIGHT((ss->char_height));
-	}
-
-	if (fixed_width)
-		container_width = fixed_width;
-	else
-		container_width = nss.screen_width+2 + scrollbar_width;
-	cwidth_nkp = container_width;
-	mkw = min_keypad_width();
-	if (kp_placement == kp_integral && container_width < mkw) {
-		keypad_xwidth = mkw - container_width;
-		container_width = mkw;
+	/*
+	 * In color mode, set highlight_bold from the resource.
+	 * In monochrome, set it unconditionally.
+	 */
+	if (appres.m3279) {
+	    highlight_bold = appres.highlight_bold;
 	} else {
-		keypad_xwidth = 0;
+	    highlight_bold = true;
 	}
+    }
 
-	if (container == NULL) {
-		container = XtVaCreateManagedWidget(
-		    "container", huskWidgetClass, toplevel,
-		    XtNborderWidth, 0,
-		    XtNwidth, container_width,
-		    XtNheight, 10,
-			/* XXX -- a temporary lie to make Xt happy */
-		    NULL);
-		save_00translations(container, &container_t00);
-		set_translations(container, NULL,
-		    &container_t0);
-		if (appres.interactive.mono)
-			XtVaSetValues(container, XtNbackgroundPixmap, gray,
-			    NULL);
-		else
-			XtVaSetValues(container, XtNbackground, keypadbg_pixel,
-			    NULL);
+    /* Define graphics contexts. */
+    if (cmask & (FONT_CHANGE | COLOR_CHANGE)) {
+	make_gcs(&nss);
+    }
+
+    /* Undo the horizonal crosshair buffers. */
+    if (cmask & FONT_CHANGE) {
+	if (nss.hx_text != NULL) {
+	    Replace(nss.hx_text, NULL);
+	    nss.nhx_text = 0;
 	}
+    }
 
-	/* Initialize the menu bar and integral keypad */
+    /* Reinitialize the controller. */
+    ctlr_reinit(cmask);
 
-	cwidth_curr = xappres.keypad_on?
-	    container_width: cwidth_nkp;
-	menubar_height = menubar_qheight(cwidth_curr);
-	menubar_init(container, container_width, cwidth_curr);
+    /* Allocate buffers. */
+    if (cmask & MODEL_CHANGE) {
+	/* Selection bitmap */
+	Replace(selected,
+	    (unsigned char *)XtCalloc(sizeof(unsigned char),
+				      (maxROWS * maxCOLS + 7) / 8));
 
-	if (fixed_height)
-		container_height = fixed_height;
-	else
-		container_height = menubar_height + nss.screen_height+2;
-	if (kp_placement == kp_integral) {
-		(void) keypad_init(container, container_height,
-		    container_width, false, false);
-		keypad_height = keypad_qheight();
-	} else
-		keypad_height = 0;
-	container_height += keypad_height;
+	/* X display image */
+	Replace(nss.image, (union sp *)XtCalloc(sizeof(union sp),
+						maxROWS * maxCOLS));
+	Replace(temp_image, (union sp *)XtCalloc(sizeof(union sp),
+						 maxROWS*maxCOLS));
 
-	/* Create screen and set container dimensions */
-	inflate_screen();
+	/* render_text buffers */
+	Replace(rt_buf,
+	    (XChar2b *)XtMalloc(maxCOLS * sizeof(XChar2b)));
+    } else {
+	(void) memset((char *) nss.image, 0,
+		      sizeof(union sp) * maxROWS * maxCOLS);
+    }
 
-	/* Create scrollbar */
-	scrollbar_init((cmask & MODEL_CHANGE) != 0);
+    /* Compute SBCS/DBCS size differences. */
+    if ((cmask & FONT_CHANGE) && dbcs) {
+	int wdiff, adiff, ddiff;
+	char *xs;
+	int xx;
 
-	XtRealizeWidget(toplevel);
-	nss.window = XtWindow(nss.widget);
-	set_mcursor();
+#if defined(_ST) /*[*/
+	printf("nss ascent %d descent %d\n"
+	       "dbcs ascent %d descent %d\n",
+	       nss.ascent, nss.descent,
+	       dbcs_font.ascent, dbcs_font.descent);
+#endif /*]*/
 
-	/* Reinitialize the active icon. */
-	aicon_reinit(cmask);
-
-	/* Reinitialize the status line. */
-	status_reinit(cmask);
-
-	/* Initialize the input method. */
-	if ((cmask & CHARSET_CHANGE) && dbcs) {
-		xim_init();
+	/* Compute width difference. */
+	wdiff = (2 * nss.char_width) - dbcs_font.char_width;
+	if (wdiff > 0) {
+	    /* SBCS font is too wide */
+	    dbcs_font.xtra_width = wdiff;
+#if defined(_ST) /*[*/
+	    printf("SBCS wider %d\n", wdiff);
+#endif /*]*/
+	} else if (wdiff < 0) {
+	    /* SBCS font is too narrow */
+	    if (wdiff % 2) {
+		nss.xtra_width = (-wdiff)/2 + 1;
+		dbcs_font.xtra_width = 1;
+#if defined(_ST) /*[*/
+		printf("SBCS odd\n");
+#endif /*]*/
+	    } else {
+		nss.xtra_width = (-wdiff)/2;
+	    }
+#if defined(_ST) /*[*/
+	    printf("DBCS wider %d\n", -wdiff);
+#endif /*]*/
+	} else {
+	    dbcs_font.xtra_width = nss.xtra_width = 0;
+#if defined(_ST) /*[*/
+	    printf("Width matches.\n");
+#endif /*]*/
 	}
+	/* Add some extra on top of that. */
+	if ((xs = getenv("X3270_XWIDTH")) != NULL) {
+	    xx = atoi(xs);
+	    if (xx && xx < 10) {
+		nss.xtra_width += xx;
+		dbcs_font.xtra_width += 2*xx;
+	    }
+	}
+	nss.char_width += nss.xtra_width;
+	dbcs_font.char_width += dbcs_font.xtra_width;
 
-	cursor_changed = true;
+	/*
+	 * Compute height difference, doing ascent and descent
+	 * separately.
+	 */
+	adiff = nss.ascent - dbcs_font.ascent;
+	if (adiff > 0) {
+#if defined(_ST) /*[*/
+	    printf("SBCS higher by %d\n", adiff);
+#endif /*]*/
+	    dbcs_font.ascent += adiff;
+	    dbcs_font.char_height += adiff;
+	} else if (adiff < 0) {
+#if defined(_ST) /*[*/
+	    printf("DBCS higher by %d\n", -adiff);
+#endif /*]*/
+	    nss.ascent += -adiff;
+	    nss.char_height += -adiff;
+	} else {
+#if defined(_ST) /*[*/
+	    printf("Ascent matches\n");
+#endif /*]*/
+	}
+	ddiff = nss.descent - dbcs_font.descent;
+	if (ddiff > 0) {
+#if defined(_ST) /*[*/
+	    printf("SBCS lower by %d\n", ddiff);
+#endif /*]*/
+	    dbcs_font.descent += ddiff;
+	    dbcs_font.char_height += ddiff;
+	} else if (ddiff < 0) {
+#if defined(_ST) /*[*/
+	    printf("DBCS lower by %d\n", -ddiff);
+#endif /*]*/
+	    nss.descent += -ddiff;
+	    nss.char_height += -ddiff;
+	} else {
+#if defined(_ST) /*[*/
+	    printf("Descent matches\n");
+#endif /*]*/
+	}
+	
+	/* Add a constant to the height. */
+	if ((xs = getenv("X3270_XHEIGHT")) != NULL) {
+	    xx = atoi(xs);
+	    if (xx && xx < 10) {
+		dbcs_font.descent += xx;
+		nss.descent += xx;
+		nss.char_height += xx;
+	    }
+	}
+    }
 
-	line_changed = true;
+    /* Set up a container for the menubar, screen and keypad */
 
-	/* Redraw the screen. */
-	xaction_internal(PA_Expose_xaction, IA_REDRAW, NULL, NULL);
+    if (toggled(SCROLL_BAR)) {
+	scrollbar_width = SCROLLBAR_WIDTH;
+    } else {
+	scrollbar_width = 0;
+    }
+
+    if (1/*cmask & (FONT_CHANGE | MODEL_CHANGE)*/) {
+	if (fixed_width) {
+	    Dimension w, h;
+
+	    /* Compute the horizontal halo. */
+	    w = SCREEN_WIDTH(ss->char_width, 0)+2 + scrollbar_width;
+	    if (w > fixed_width) {
+		if (screen_redo == REDO_NONE) {
+		    Error("Font is too wide for fixed width");
+		}
+		hhalo = HHALO;
+	    } else {
+		hhalo = (fixed_width - w) / 2;
+	    }
+
+	    /* Compute the vertical halo. */
+	    h = menubar_qheight(fixed_width) +
+		SCREEN_HEIGHT(ss->char_height, ss->descent, 0)+2;
+	    if (h > fixed_height) {
+		if (screen_redo == REDO_NONE) {
+		    Error("Font is too tall for fixed width");
+		}
+		vhalo = VHALO;
+	    } else {
+		vhalo = (fixed_height - h) / 3;
+	    }
+	} else {
+	    vhalo = VHALO;
+	    hhalo = HHALO;
+	}
+	nss.screen_width = SCREEN_WIDTH(ss->char_width, hhalo);
+	nss.screen_height = SCREEN_HEIGHT(ss->char_height, ss->descent, vhalo);
+    }
+
+    if (fixed_width) {
+	container_width = fixed_width;
+    } else {
+	container_width = nss.screen_width+2 + scrollbar_width;
+    }
+    cwidth_nkp = container_width;
+    mkw = min_keypad_width();
+    if (kp_placement == kp_integral && container_width < mkw) {
+	keypad_xwidth = mkw - container_width;
+	container_width = mkw;
+    } else {
+	keypad_xwidth = 0;
+    }
+
+    if (container == NULL) {
+	container = XtVaCreateManagedWidget(
+		"container", huskWidgetClass, toplevel,
+		XtNborderWidth, 0,
+		XtNwidth, container_width,
+		XtNheight, 10, /* XXX -- a temporary lie to make Xt happy */
+		NULL);
+	save_00translations(container, &container_t00);
+	set_translations(container, NULL, &container_t0);
+	if (appres.interactive.mono) {
+	    XtVaSetValues(container, XtNbackgroundPixmap, gray, NULL);
+	} else {
+	    XtVaSetValues(container, XtNbackground, keypadbg_pixel, NULL);
+	}
+    }
+
+    /* Initialize the menu bar and integral keypad */
+
+    cwidth_curr = xappres.keypad_on? container_width: cwidth_nkp;
+    menubar_height = menubar_qheight(cwidth_curr);
+    menubar_init(container, container_width, cwidth_curr);
+
+    if (fixed_height) {
+	container_height = fixed_height;
+    } else {
+	container_height = menubar_height + nss.screen_height+2;
+    }
+    if (kp_placement == kp_integral) {
+	(void) keypad_init(container, container_height, container_width,
+		false, false);
+	keypad_height = keypad_qheight();
+    } else {
+	keypad_height = 0;
+    }
+    container_height += keypad_height;
+
+    /* Create screen and set container dimensions */
+    inflate_screen();
+
+    /* Create scrollbar */
+    scrollbar_init((cmask & MODEL_CHANGE) != 0);
+
+    XtRealizeWidget(toplevel);
+    nss.window = XtWindow(nss.widget);
+    set_mcursor();
+
+    /* Reinitialize the active icon. */
+    aicon_reinit(cmask);
+
+    /* Reinitialize the status line. */
+    status_reinit(cmask);
+
+    /* Initialize the input method. */
+    if ((cmask & CHARSET_CHANGE) && dbcs) {
+	    xim_init();
+    }
+
+    cursor_changed = true;
+
+    line_changed = true;
+
+    /* Redraw the screen. */
+    xaction_internal(PA_Expose_xaction, IA_REDRAW, NULL, NULL);
+    
+    /*
+     * We're all done processing the user's request, so allow normal resizing
+     * again.
+     */
+    clear_fixed();
 }
 
-
 static void
-set_toplevel_sizes(void)
+set_toplevel_sizes(const char *why)
 {
     Dimension tw, th;
 
     tw = container_width - (xappres.keypad_on ? 0 : keypad_xwidth);
     th = container_height - (xappres.keypad_on ? 0 : keypad_height);
     if (fixed_width) {
-	XtVaSetValues(toplevel,
-		XtNwidth, fixed_width,
-		XtNheight, fixed_height,
-		NULL);
-	XtVaSetValues(toplevel,
-		XtNbaseWidth, fixed_width,
-		XtNbaseHeight, fixed_height,
-		XtNminWidth, fixed_width,
-		XtNminHeight, fixed_height,
-		XtNmaxWidth, fixed_width,
-		XtNmaxHeight, fixed_height,
-		NULL);
-	XtVaSetValues(container,
-		XtNwidth, fixed_width,
-		XtNheight, fixed_height,
-		NULL);
+	if (!maximized) {
+	    XtVaSetValues(toplevel,
+		    XtNwidth, fixed_width,
+		    XtNheight, fixed_height,
+		    NULL);
+	    vtrace("set_toplevel_sizes(%s), fixed: %dx%d\n", why, fixed_width,
+		    fixed_height);
+	    if (!user_resize_allowed) {
+		XtVaSetValues(toplevel,
+			XtNbaseWidth, fixed_width,
+			XtNbaseHeight, fixed_height,
+			XtNminWidth, fixed_width,
+			XtNminHeight, fixed_height,
+			XtNmaxWidth, fixed_width,
+			XtNmaxHeight, fixed_height,
+			NULL);
+	    }
+	    XtVaSetValues(container,
+		    XtNwidth, fixed_width,
+		    XtNheight, fixed_height,
+		    NULL);
+	}
 	main_width = fixed_width;
 	main_height = fixed_height;
     } else {
-	XtVaSetValues(toplevel,
-		XtNwidth, tw,
-		XtNheight, th,
-		NULL);
-	if (!allow_resize) {
+	if (!maximized) {
 	    XtVaSetValues(toplevel,
-		    XtNbaseWidth, tw,
-		    XtNbaseHeight, th,
-		    XtNminWidth, tw,
-		    XtNminHeight, th,
-		    XtNmaxWidth, tw,
-		    XtNmaxHeight, th,
+		    XtNwidth, tw,
+		    XtNheight, th,
+		    NULL);
+	    vtrace("set_toplevel_sizes(%s), not fixed: %hux%hu\n", why, tw, th);
+	    if (!allow_resize) {
+		XtVaSetValues(toplevel,
+			XtNbaseWidth, tw,
+			XtNbaseHeight, th,
+			XtNminWidth, tw,
+			XtNminHeight, th,
+			XtNmaxWidth, tw,
+			XtNmaxHeight, th,
+			NULL);
+	    }
+	    XtVaSetValues(container,
+		    XtNwidth, container_width,
+		    XtNheight, container_height,
 		    NULL);
 	}
-	XtVaSetValues(container,
-		XtNwidth, container_width,
-		XtNheight, container_height,
-		NULL);
 	main_width = tw;
 	main_height = th;
     }
@@ -972,29 +1010,30 @@ inflate_screen(void)
 	    XtNheight, container_height,
 	    NULL);
 
-    set_toplevel_sizes();
+    set_toplevel_sizes("inflate_screen");
 }
 
 /* Scrollbar support. */
 void
 screen_set_thumb(float top, float shown)
 {
-	if (toggled(SCROLL_BAR))
-		XawScrollbarSetThumb(scrollbar, top, shown);
+    if (toggled(SCROLL_BAR)) {
+	XawScrollbarSetThumb(scrollbar, top, shown);
+    }
 }
 
 static void
 screen_scroll_proc(Widget w _is_unused, XtPointer client_data _is_unused,
     XtPointer position)
 {
-	scroll_proc((long)position, (int)nss.screen_height);
+    scroll_proc((long)position, (int)nss.screen_height);
 }
 
 static void
 screen_jump_proc(Widget w _is_unused, XtPointer client_data _is_unused,
     XtPointer percent_ptr)
 {
-	jump_proc(*(float *)percent_ptr);
+    jump_proc(*(float *)percent_ptr);
 }
 
 /* Create, move, or reset the scrollbar. */
@@ -1076,33 +1115,36 @@ toggle_scrollBar(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 static void
 screen_connect(bool ignored _is_unused)
 {
-	if (ea_buf == NULL)
-		return;		/* too soon */
+    if (ea_buf == NULL) {
+	return;		/* too soon */
+    }
 
-	if (CONNECTED) {
-		/*
-		 * Clear the screen.
-		 * If we're in NVT mode, go to the maximum screen dimensions,
-		 * otherwise go to the default 24x80 for 3270 or SSCP mode.
-		 */
-		ctlr_erase((IN_NVT || IN_SSCP)? true: false);
-		if (IN_3270)
-			scroll_round();
-		cursor_on("connect");
-		schedule_cursor_blink();
-	} else {
-		if (appres.disconnect_clear)
-			ctlr_erase(true);
-		(void) cursor_off("connect");
+    if (CONNECTED) {
+	/*
+	 * Clear the screen.
+	 * If we're in NVT mode, go to the maximum screen dimensions,
+	 * otherwise go to the default 24x80 for 3270 or SSCP mode.
+	 */
+	ctlr_erase((IN_NVT || IN_SSCP)? true: false);
+	if (IN_3270) {
+	    scroll_round();
 	}
-	if (toggled(CROSSHAIR)) {
-		screen_changed = true;
-		first_changed = 0;
-		last_changed = ROWS*COLS;
-		screen_disp(false);
+	cursor_on("connect");
+	schedule_cursor_blink();
+    } else {
+	if (appres.disconnect_clear) {
+	    ctlr_erase(true);
 	}
+	(void) cursor_off("connect");
+    }
+    if (toggled(CROSSHAIR)) {
+	screen_changed = true;
+	first_changed = 0;
+	last_changed = ROWS*COLS;
+	screen_disp(false);
+    }
 
-	mcursor_normal();
+    mcursor_normal();
 }
 
 /*
@@ -1112,44 +1154,45 @@ screen_connect(bool ignored _is_unused)
 static void
 set_mcursor(void)
 {
-	switch (mcursor_state) {
-	    case LOCKED:
-		XDefineCursor(display, nss.window, xappres.locked_mcursor);
-		break;
-	    case NORMAL:
-		XDefineCursor(display, nss.window, xappres.normal_mcursor);
-		break;
-	    case WAIT:
-		XDefineCursor(display, nss.window, xappres.wait_mcursor);
-		break;
-	}
-	lock_icon(mcursor_state);
+    switch (mcursor_state) {
+    case LOCKED:
+	XDefineCursor(display, nss.window, xappres.locked_mcursor);
+	break;
+    case NORMAL:
+	XDefineCursor(display, nss.window, xappres.normal_mcursor);
+	break;
+    case WAIT:
+	XDefineCursor(display, nss.window, xappres.wait_mcursor);
+	break;
+    }
+    lock_icon(mcursor_state);
 }
 
 void
 mcursor_normal(void)
 {
-	if (CONNECTED)
-		mcursor_state = NORMAL;
-	else if (HALF_CONNECTED)
-		mcursor_state = WAIT;
-	else
-		mcursor_state = LOCKED;
-	set_mcursor();
+    if (CONNECTED) {
+	mcursor_state = NORMAL;
+    } else if (HALF_CONNECTED) {
+	mcursor_state = WAIT;
+    } else {
+	mcursor_state = LOCKED;
+    }
+    set_mcursor();
 }
 
 void
 mcursor_waiting(void)
 {
-	mcursor_state = WAIT;
-	set_mcursor();
+    mcursor_state = WAIT;
+    set_mcursor();
 }
 
 void
 mcursor_locked(void)
 {
-	mcursor_state = LOCKED;
-	set_mcursor();
+    mcursor_state = LOCKED;
+    set_mcursor();
 }
 
 /*
@@ -1158,16 +1201,17 @@ mcursor_locked(void)
 void
 screen_showikeypad(bool on)
 {
-	if (on) {
-		screen_redo = REDO_KEYPAD;
-	}
+    if (on) {
+	screen_redo = REDO_KEYPAD;
+    }
 
-	inflate_screen();
-	if (keypad_xwidth > 0) {
-		if (scrollbar != (Widget) NULL)
-			scrollbar_init(false);
-		menubar_resize(on ? container_width : cwidth_nkp);
+    inflate_screen();
+    if (keypad_xwidth > 0) {
+	if (scrollbar != (Widget) NULL) {
+	    scrollbar_init(false);
 	}
+	menubar_resize(on ? container_width : cwidth_nkp);
+    }
 }
 
 
@@ -1177,12 +1221,12 @@ screen_showikeypad(bool on)
 void
 blink_start(void)
 {
-	text_blinkers_exist = true;
-	if (!text_blink_scheduled) {
-		/* Start in "on" state and start first iteration */
-		text_blinking_on = true;
-		schedule_text_blink();
-	}
+    text_blinkers_exist = true;
+    if (!text_blink_scheduled) {
+	/* Start in "on" state and start first iteration */
+	text_blinking_on = true;
+	schedule_text_blink();
+    }
 }
 
 /*
@@ -1191,17 +1235,18 @@ blink_start(void)
 static void
 text_blink_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
-	/* Flip the state. */
-	text_blinking_on = !text_blinking_on;
+    /* Flip the state. */
+    text_blinking_on = !text_blinking_on;
 
-	/* Force a screen redraw. */
-	ctlr_changed(0, ROWS*COLS);
+    /* Force a screen redraw. */
+    ctlr_changed(0, ROWS*COLS);
 
-	/* If there is still blinking text, schedule the next iteration */
-	if (text_blinkers_exist)
-		schedule_text_blink();
-	else
-		text_blink_scheduled = false;
+    /* If there is still blinking text, schedule the next iteration */
+    if (text_blinkers_exist) {
+	schedule_text_blink();
+    } else {
+	text_blink_scheduled = false;
+    }
 }
 
 /*
@@ -1210,8 +1255,8 @@ text_blink_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 static void
 schedule_text_blink(void)
 {
-	text_blink_scheduled = true;
-	text_blink_id = XtAppAddTimeOut(appcontext, 500, text_blink_it, 0);
+    text_blink_scheduled = true;
+    text_blink_id = XtAppAddTimeOut(appcontext, 500, text_blink_it, 0);
 }
 
 
@@ -1394,15 +1439,18 @@ cursor_off(const char *why)
 static void
 cursor_blink_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
-	cursor_blink_pending = false;
-	if (!CONNECTED || !toggled(CURSOR_BLINK))
-		return;
-	if (cursor_displayed) {
-		if (in_focus)
-			(void) cursor_off("blink");
-	} else
-		cursor_on("blink");
-	schedule_cursor_blink();
+    cursor_blink_pending = false;
+    if (!CONNECTED || !toggled(CURSOR_BLINK)) {
+	return;
+    }
+    if (cursor_displayed) {
+	if (in_focus) {
+	    (void) cursor_off("blink");
+	}
+    } else {
+	cursor_on("blink");
+    }
+    schedule_cursor_blink();
 }
 
 /*
@@ -1411,10 +1459,11 @@ cursor_blink_it(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 static void
 schedule_cursor_blink(void)
 {
-	if (!toggled(CURSOR_BLINK) || cursor_blink_pending)
-		return;
-	cursor_blink_pending = true;
-	cursor_blink_id = XtAppAddTimeOut(appcontext, 500, cursor_blink_it, 0);
+    if (!toggled(CURSOR_BLINK) || cursor_blink_pending) {
+	return;
+    }
+    cursor_blink_pending = true;
+    cursor_blink_id = XtAppAddTimeOut(appcontext, 500, cursor_blink_it, 0);
 }
 
 /*
@@ -1423,10 +1472,10 @@ schedule_cursor_blink(void)
 static void
 cancel_blink(void)
 {
-	if (cursor_blink_pending) {
-		XtRemoveTimeOut(cursor_blink_id);
-		cursor_blink_pending = false;
-	}
+    if (cursor_blink_pending) {
+	XtRemoveTimeOut(cursor_blink_id);
+	cursor_blink_pending = false;
+    }
 }
 
 /*
@@ -1504,8 +1553,8 @@ toggle_altCursor(toggle_index_t ix, enum toggle_type tt _is_unused)
 void
 cursor_move(int baddr)
 {
-	cursor_addr = baddr;
-	cursor_pos();
+    cursor_addr = baddr;
+    cursor_pos();
 }
 
 /*
@@ -1514,9 +1563,10 @@ cursor_move(int baddr)
 static void
 cursor_pos(void)
 {
-	if (!toggled(CURSOR_POS) || !CONNECTED)
-		return;
-	status_cursor_pos(cursor_addr);
+    if (!toggled(CURSOR_POS) || !CONNECTED) {
+	return;
+    }
+    status_cursor_pos(cursor_addr);
 }
 
 /*
@@ -1538,11 +1588,12 @@ toggle_cursorPos(toggle_index_t ix _is_unused, enum toggle_type tt _is_unused)
 void
 enable_cursor(bool on)
 {
-	if ((cursor_enabled = on) && CONNECTED) {
-		cursor_on("enable");
-		cursor_changed = true;
-	} else
-		(void) cursor_off("enable");
+    if ((cursor_enabled = on) && CONNECTED) {
+	cursor_on("enable");
+	cursor_changed = true;
+    } else {
+	(void) cursor_off("enable");
+    }
 }
 
 
@@ -1814,9 +1865,9 @@ screen_disp(bool erasing)
 	    XDrawLine(display, ss->window,
 		    get_gc(ss, GC_NONDEFAULT | DEFAULT_PIXEL),
 		    0,
-		    ssROW_TO_Y(maxROWS-1)+SGAP-1,
+		    ssROW_TO_Y(maxROWS-1)+SGAP(nss.descent)-1,
 		    ssCOL_TO_X(maxCOLS)+hhalo,
-		    ssROW_TO_Y(maxROWS-1)+SGAP-1);
+		    ssROW_TO_Y(maxROWS-1)+SGAP(nss.descent)-1);
 	    line_changed = false;
 	}
     }
@@ -1830,23 +1881,22 @@ screen_disp(bool erasing)
 static void
 render_blanks(int baddr, int height, union sp *buffer)
 {
-	int x, y;
+    int x, y;
 
 #if defined(_ST) /*[*/
-	(void) printf("render_blanks(baddr=%s, height=%d)\n", rcba(baddr),
-	    height);
+    (void) printf("render_blanks(baddr=%s, height=%d)\n", rcba(baddr), height);
 #endif /*]*/
 
-	x = ssCOL_TO_X(BA_TO_COL(baddr));
-	y = ssROW_TO_Y(BA_TO_ROW(baddr));
+    x = ssCOL_TO_X(BA_TO_COL(baddr));
+    y = ssROW_TO_Y(BA_TO_ROW(baddr));
 
-	XFillRectangle(display, ss->window,
-	    get_gc(ss, INVERT_COLOR(0)),
-	    x, y - ss->ascent,
-	    (ss->char_width * COLS) + 1, (ss->char_height * height));
+    XFillRectangle(display, ss->window,
+	get_gc(ss, INVERT_COLOR(0)),
+	x, y - ss->ascent,
+	(ss->char_width * COLS) + 1, (ss->char_height * height));
 
-	(void) memmove(&ss->image[baddr], &buffer[baddr],
-	                   COLS * height *sizeof(union sp));
+    (void) memmove(&ss->image[baddr], &buffer[baddr],
+	    COLS * height *sizeof(union sp));
 }
 
 /*
@@ -1858,17 +1908,18 @@ render_blanks(int baddr, int height, union sp *buffer)
 static bool
 empty_space(register union sp *buffer, int len)
 {
-	register int i;
+    int i;
 
-	for (i = 0; i < len; i++, buffer++) {
-		if (buffer->bits.gr ||
-		    buffer->bits.sel ||
-		    (buffer->bits.fg & INVERT_MASK) ||
-		    (buffer->bits.cs != CS_BASE) ||
-		    !BKM_ISSET(buffer->bits.cc))
-			return false;
+    for (i = 0; i < len; i++, buffer++) {
+	if (buffer->bits.gr ||
+	    buffer->bits.sel ||
+	    (buffer->bits.fg & INVERT_MASK) ||
+	    (buffer->bits.cs != CS_BASE) ||
+	    !BKM_ISSET(buffer->bits.cc)) {
+	    return false;
 	}
-	return true;
+    }
+    return true;
 }
 
 
@@ -2015,17 +2066,18 @@ resync_text(int baddr, int len, union sp *buffer)
 static unsigned short
 font_index(ebc_t ebc, int d8_ix, bool upper)
 {
-	ucs4_t ucs4;
-	int d;
+    ucs4_t ucs4;
+    int d;
 
-	ucs4 = ebcdic_base_to_unicode(ebc, EUO_BLANK_UNDEF | EUO_UPRIV);
-	if (upper && ucs4 < 0x80 && islower(ucs4))
-	    	ucs4 = toupper(ucs4);
-	d = display8_lookup(d8_ix, ucs4);
-	if (d < 0) {
-	    	d = display8_lookup(d8_ix, ' ');
-	}
-	return d;
+    ucs4 = ebcdic_base_to_unicode(ebc, EUO_BLANK_UNDEF | EUO_UPRIV);
+    if (upper && ucs4 < 0x80 && islower(ucs4)) {
+	ucs4 = toupper(ucs4);
+    }
+    d = display8_lookup(d8_ix, ucs4);
+    if (d < 0) {
+	d = display8_lookup(d8_ix, ' ');
+    }
+    return d;
 }
 
 /*
@@ -2035,112 +2087,117 @@ font_index(ebc_t ebc, int d8_ix, bool upper)
 static int
 apl_to_linedraw(ebc_t c)
 {
-    	switch (c) {
-	case 0xaf:	/* degree */
-	    return 0x7;
-	case 0xd4:	/* LR corner */
-	    return 0xb;
-	case 0xd5:	/* UR corner */
-	    return 0xc;
-	case 0xc5:	/* UL corner */
-	    return 0xd;
-	case 0xc4:	/* LL corner */
-	    return 0xe;
-	case 0xd3:	/* plus */
-	    return 0xf;
-	case 0xa2:	/* middle horizontal */
-	    return 0x12;
-	case 0xc6:	/* left tee */
-	    return 0x15;
-	case 0xd6:	/* right tee */
-	    return 0x16;
-	case 0xc7:	/* bottom tee */
-	    return 0x17;
-	case 0xd7:	/* top tee */
-	    return 0x18;
-	case 0xbf:	/* stile */
-	case 0x85:	/* vertical line */
-	    return 0x19;
-	case 0x8c:	/* less or equal */
-	    return 0x1a;
-	case 0xae:	/* greater or equal */
-	    return 0x1b;
-	case 0xbe:	/* not equal */
-	    return 0x1d;
-	case 0xa3:	/* bullet */
-	    return 0x1f;
-	case 0xad:
-	    return '[';
-	case 0xbd:
-	    return ']';
-	default:
-	    return -1;
-	}
+    switch (c) {
+    case 0xaf:	/* degree */
+	return 0x7;
+    case 0xd4:	/* LR corner */
+	return 0xb;
+    case 0xd5:	/* UR corner */
+	return 0xc;
+    case 0xc5:	/* UL corner */
+	return 0xd;
+    case 0xc4:	/* LL corner */
+	return 0xe;
+    case 0xd3:	/* plus */
+	return 0xf;
+    case 0xa2:	/* middle horizontal */
+	return 0x12;
+    case 0xc6:	/* left tee */
+	return 0x15;
+    case 0xd6:	/* right tee */
+	return 0x16;
+    case 0xc7:	/* bottom tee */
+	return 0x17;
+    case 0xd7:	/* top tee */
+	return 0x18;
+    case 0xbf:	/* stile */
+    case 0x85:	/* vertical line */
+	return 0x19;
+    case 0x8c:	/* less or equal */
+	return 0x1a;
+    case 0xae:	/* greater or equal */
+	return 0x1b;
+    case 0xbe:	/* not equal */
+	return 0x1d;
+    case 0xa3:	/* bullet */
+	return 0x1f;
+    case 0xad:
+	return '[';
+    case 0xbd:
+	return ']';
+    default:
+	return -1;
+    }
 }
 
 /* Map an APL character to the current display character set. */
 static XChar2b
 apl_to_udisplay(int d8_ix, unsigned char c)
 {
-	XChar2b x;
-	int u = -1;
-	int d = 0;
+    XChar2b x;
+    int u = -1;
+    int d = 0;
 
-	/* Look it up. */
-	u = apl_to_unicode(c, EUO_NONE |
-		xappres.apl_circled_alpha? EUO_APL_CIRCLED: 0);
-	if (u != -1)
-	    	d = display8_lookup(d8_ix, u);
+    /* Look it up. */
+    u = apl_to_unicode(c, EUO_NONE |
+	    xappres.apl_circled_alpha? EUO_APL_CIRCLED: 0);
+    if (u != -1) {
+	d = display8_lookup(d8_ix, u);
+    }
 
-	/* Default to a space. */
-	if (d == 0)
-		d = display8_lookup(d8_ix, ' ');
+    /* Default to a space. */
+    if (d == 0) {
+	d = display8_lookup(d8_ix, ' ');
+    }
 
-	/* Return it. */
-	x.byte1 = (d >> 8) & 0xff;
-	x.byte2 = d & 0xff;
-	return x;
+    /* Return it. */
+    x.byte1 = (d >> 8) & 0xff;
+    x.byte2 = d & 0xff;
+    return x;
 }
 
 /* Map an APL character to the old first-32 8-bit X11 display character set. */
 static XChar2b
 apl_to_ldisplay(unsigned char c)
 {
-	XChar2b x;
-	int u = -1;
+    XChar2b x;
+    int u = -1;
 
-	/* Look it up, defaulting to a space. */
-	u = apl_to_linedraw(c);
-	if (u == -1)
-	    	u = ' ';
+    /* Look it up, defaulting to a space. */
+    u = apl_to_linedraw(c);
+    if (u == -1) {
+	u = ' ';
+    }
 
-	/* Return it. */
-	x.byte1 = 0;
-	x.byte2 = u;
-	return x;
+    /* Return it. */
+    x.byte1 = 0;
+    x.byte2 = u;
+    return x;
 }
 
 /* Map a line-drawing character to the current display character set. */
 static XChar2b
 linedraw_to_udisplay(int d8_ix, unsigned char c)
 {
-	XChar2b x;
-	int u = -1;
-	int d = 0;
+    XChar2b x;
+    int u = -1;
+    int d = 0;
 
-	/* Look it up. */
-	u = linedraw_to_unicode(c);
-	if (u != -1)
-	    	d = display8_lookup(d8_ix, u);
+    /* Look it up. */
+    u = linedraw_to_unicode(c);
+    if (u != -1) {
+	d = display8_lookup(d8_ix, u);
+    }
 
-	/* Default to a space. */
-	if (d == 0)
-		d = display8_lookup(d8_ix, ' ');
+    /* Default to a space. */
+    if (d == 0) {
+	d = display8_lookup(d8_ix, ' ');
+    }
 
-	/* Return it. */
-	x.byte1 = (d >> 8) & 0xff;
-	x.byte2 = d & 0xff;
-	return x;
+    /* Return it. */
+    x.byte1 = (d >> 8) & 0xff;
+    x.byte2 = d & 0xff;
+    return x;
 }
 
 /*
@@ -2442,35 +2499,37 @@ screen_obscured(void)
 void
 screen_scroll(void)
 {
-	bool was_on;
+    bool was_on;
 
-	if (!ss->exposed_yet)
-		return;
+    if (!ss->exposed_yet) {
+	return;
+    }
 
-	was_on = cursor_off("scroll");
-	(void) memmove(&ss->image[0], &ss->image[COLS],
-	                   (ROWS - 1) * COLS * sizeof(union sp));
-	(void) memmove(&temp_image[0], &temp_image[COLS],
-	                   (ROWS - 1) * COLS * sizeof(union sp));
-	(void) memset((char *)&ss->image[(ROWS - 1) * COLS], 0,
-	              COLS * sizeof(union sp));
-	(void) memset((char *)&temp_image[(ROWS - 1) * COLS], 0,
-	              COLS * sizeof(union sp));
-	XCopyArea(display, ss->window, ss->window, get_gc(ss, 0),
-	    ssCOL_TO_X(0),
-	    ssROW_TO_Y(1) - ss->ascent,
-	    ss->char_width * COLS,
-	    ss->char_height * (ROWS - 1),
-	    ssCOL_TO_X(0),
-	    ssROW_TO_Y(0) - ss->ascent);
-	ss->copied = true;
-	XFillRectangle(display, ss->window, get_gc(ss, INVERT_COLOR(0)),
-	    ssCOL_TO_X(0),
-	    ssROW_TO_Y(ROWS - 1) - ss->ascent,
-	    (ss->char_width * COLS) + 1,
-	    ss->char_height);
-	if (was_on)
-		cursor_on("scroll");
+    was_on = cursor_off("scroll");
+    (void) memmove(&ss->image[0], &ss->image[COLS],
+		       (ROWS - 1) * COLS * sizeof(union sp));
+    (void) memmove(&temp_image[0], &temp_image[COLS],
+		       (ROWS - 1) * COLS * sizeof(union sp));
+    (void) memset((char *)&ss->image[(ROWS - 1) * COLS], 0,
+		  COLS * sizeof(union sp));
+    (void) memset((char *)&temp_image[(ROWS - 1) * COLS], 0,
+		  COLS * sizeof(union sp));
+    XCopyArea(display, ss->window, ss->window, get_gc(ss, 0),
+	ssCOL_TO_X(0),
+	ssROW_TO_Y(1) - ss->ascent,
+	ss->char_width * COLS,
+	ss->char_height * (ROWS - 1),
+	ssCOL_TO_X(0),
+	ssROW_TO_Y(0) - ss->ascent);
+    ss->copied = true;
+    XFillRectangle(display, ss->window, get_gc(ss, INVERT_COLOR(0)),
+	ssCOL_TO_X(0),
+	ssROW_TO_Y(ROWS - 1) - ss->ascent,
+	(ss->char_width * COLS) + 1,
+	ss->char_height);
+    if (was_on) {
+	cursor_on("scroll");
+    }
 }
 
 
@@ -2834,109 +2893,110 @@ draw_fields(union sp *buffer, int first, int last)
 static void
 resync_display(union sp *buffer, int first, int last)
 {
-	register int	i, j;
-	int		b = 0;
-	int		i0 = -1;
-	bool		ccheck;
-	int		fca = fl_baddr(cursor_addr);
-	int		first_row, last_row;
-#	define SPREAD	10
+    int		i, j;
+    int		b = 0;
+    int		i0 = -1;
+    bool	ccheck;
+    int		fca = fl_baddr(cursor_addr);
+    int		first_row, last_row;
+#   define SPREAD	10
 
-	if (first < 0) {
-		first_row = 0;
-		last_row = ROWS;
-	} else {
-		first_row = first / COLS;
-		b = first_row * COLS;
-		last_row = (last + (COLS-1)) / COLS;
+    if (first < 0) {
+	first_row = 0;
+	last_row = ROWS;
+    } else {
+	first_row = first / COLS;
+	b = first_row * COLS;
+	last_row = (last + (COLS-1)) / COLS;
+    }
+
+    for (i = first_row; i < last_row; b += COLS, i++) {
+	int d0 = -1;
+	int s0 = -1;
+
+	/* Has the line changed? */
+	if (!memcmp((char *) &ss->image[b], (char *) &buffer[b],
+	    COLS*sizeof(union sp))) {
+	    if (i0 >= 0) {
+		render_blanks(i0 * COLS, i - i0, buffer);
+		i0 = -1;
+	    }
+	    continue;
 	}
 
-	for (i = first_row; i < last_row; b += COLS, i++) {
-		int d0 = -1;
-		int s0 = -1;
+	/* Is the new value empty? */
+	if (!visible_control && !(fca >= b && fca < (b+COLS)) &&
+		empty_space(&buffer[b], COLS)) {
+	    if (i0 < 0) {
+		i0 = i;
+	    }
+	    continue;
+	}
 
-		/* Has the line changed? */
-		if (!memcmp((char *) &ss->image[b], (char *) &buffer[b],
-		    COLS*sizeof(union sp))) {
-			if (i0 >= 0) {
-				render_blanks(i0 * COLS, i - i0, buffer);
-				i0 = -1;
-			}
-			continue;
-		}
+	/* Yes, it changed, and it isn't blank.
+	   Dump any pending blank lines. */
+	if (i0 >= 0) {
+	    render_blanks(i0 * COLS, i - i0, buffer);
+	    i0 = -1;
+	}
 
-		/* Is the new value empty? */
-		if (!visible_control &&
-		    !(fca >= b && fca < (b+COLS)) &&
-		    empty_space(&buffer[b], COLS)) {
-			if (i0 < 0)
-				i0 = i;
-			continue;
-		}
-
-		/* Yes, it changed, and it isn't blank.
-		   Dump any pending blank lines. */
-		if (i0 >= 0) {
-			render_blanks(i0 * COLS, i - i0, buffer);
-			i0 = -1;
-		}
-
-		/* New text.  Scan it. */
-		ccheck = cursor_displayed &&
-			 fca >= b &&
-			 fca < (b+COLS);
-		for (j = 0; j < COLS; j++) {
-			if (ccheck && b+j == fca) {
-				/* Don't repaint over the cursor. */
-
-				/* Dump any pending "different" characters. */
-				if (d0 >= 0)
-					resync_text(b+d0, j-d0, buffer);
-
-				/* Start over. */
-				d0 = -1;
-				s0 = -1;
-				continue;
-			}
-			if (ss->image[b+j].word == buffer[b+j].word) {
-
-				/* Character is the same. */
-
-				if (d0 >= 0) {
-					/* Something is pending... */
-					if (s0 < 0) {
-						/* Start of "same" area */
-						s0 = j;
-					} else {
-						/* nth matching character */
-						if (j - s0 > SPREAD) {
-							/* too many */
-							resync_text(b+d0,
-							    s0-d0, buffer);
-							d0 = -1;
-							s0 = -1;
-						}
-					}
-				}
-			} else {
-
-				/* Character is different. */
-
-				/* Forget intermediate matches. */
-				s0 = -1;
-
-				if (d0 < 0)
-					/* Mark the start. */
-					d0 = j;
-			}
-		}
+	/* New text.  Scan it. */
+	ccheck = cursor_displayed && fca >= b && fca < (b+COLS);
+	for (j = 0; j < COLS; j++) {
+	    if (ccheck && b+j == fca) {
+		/* Don't repaint over the cursor. */
 
 		/* Dump any pending "different" characters. */
-		if (d0 >= 0)
-			resync_text(b+d0, COLS-d0, buffer);
+		if (d0 >= 0) {
+		    resync_text(b+d0, j-d0, buffer);
+		}
+
+		/* Start over. */
+		d0 = -1;
+		s0 = -1;
+		continue;
+	    }
+	    if (ss->image[b+j].word == buffer[b+j].word) {
+
+		/* Character is the same. */
+
+		if (d0 >= 0) {
+		    /* Something is pending... */
+		    if (s0 < 0) {
+			/* Start of "same" area */
+			s0 = j;
+		    } else {
+			/* nth matching character */
+			if (j - s0 > SPREAD) {
+			    /* too many */
+			    resync_text(b+d0, s0-d0, buffer);
+			    d0 = -1;
+			    s0 = -1;
+			}
+		    }
+		}
+	    } else {
+
+		/* Character is different. */
+
+		/* Forget intermediate matches. */
+		s0 = -1;
+
+		if (d0 < 0) {
+		    /* Mark the start. */
+		    d0 = j;
+		}
+	    }
 	}
-	if (i0 >= 0)
-		render_blanks(i0 * COLS, last_row - i0, buffer);
+
+	/* Dump any pending "different" characters. */
+	if (d0 >= 0) {
+	    resync_text(b+d0, COLS-d0, buffer);
+	}
+    }
+    if (i0 >= 0) {
+	render_blanks(i0 * COLS, last_row - i0, buffer);
+    }
 }
 
 
@@ -2950,9 +3010,10 @@ resync_display(union sp *buffer, int first, int last)
 static int
 fl_baddr(int baddr)
 {
-	if (!flipped)
-		return baddr;
-	return ((baddr / COLS) * COLS) + (COLS - (baddr % COLS) - 1);
+    if (!flipped) {
+	return baddr;
+    }
+    return ((baddr / COLS) * COLS) + (COLS - (baddr % COLS) - 1);
 }
 
 /*
@@ -2962,54 +3023,57 @@ fl_baddr(int baddr)
 static int
 char_color(int baddr)
 {
-	int faddr;
-	unsigned char fa;
-	int color;
+    int faddr;
+    unsigned char fa;
+    int color;
 
-	faddr = find_field_attribute(baddr);
-	fa = ea_buf[faddr].fa;
+    faddr = find_field_attribute(baddr);
+    fa = ea_buf[faddr].fa;
 
-	/*
-	 * For non-display fields, we ignore gr and fg.
-	 */
-	if (FA_IS_ZERO(fa)) {
-		color = fa_color(fa);
-		if (appres.interactive.mono && SELECTED(baddr)) {
-			color = INVERT_COLOR(color);
-		}
-		return color;
+    /*
+     * For non-display fields, we ignore gr and fg.
+     */
+    if (FA_IS_ZERO(fa)) {
+	color = fa_color(fa);
+	if (appres.interactive.mono && SELECTED(baddr)) {
+	    color = INVERT_COLOR(color);
 	}
-
-	/*
-	 * Find the color of the character or the field.
-	 */
-	if (ea_buf[baddr].fg)
-		color = ea_buf[baddr].fg & COLOR_MASK;
-	else if (fa2ea(faddr)->fg && (!appres.modified_sel ||
-				      !FA_IS_MODIFIED(fa)))
-		color = fa2ea(faddr)->fg & COLOR_MASK;
-	else
-		color = fa_color(fa);
-
-	/*
-	 * Now apply reverse video.
-	 *
-	 * One bit of strangeness:
-	 *  If the buffer is a field attribute and we aren't using the
-	 *  debug font, it's displayed as a blank; don't invert.
-	 */
-	if (!((ea_buf[baddr].fa && !visible_control)) &&
-	    ((ea_buf[baddr].gr & GR_REVERSE) ||
-	     (fa2ea(faddr)->gr & GR_REVERSE)))
-		color = INVERT_COLOR(color);
-
-	/*
-	 * In monochrome, apply selection status as well.
-	 */
-	if (appres.interactive.mono && SELECTED(baddr))
-		color = INVERT_COLOR(color);
-
 	return color;
+    }
+
+    /*
+     * Find the color of the character or the field.
+     */
+    if (ea_buf[baddr].fg) {
+	color = ea_buf[baddr].fg & COLOR_MASK;
+    } else if (fa2ea(faddr)->fg && (!appres.modified_sel ||
+				  !FA_IS_MODIFIED(fa))) {
+	color = fa2ea(faddr)->fg & COLOR_MASK;
+    } else {
+	color = fa_color(fa);
+    }
+
+    /*
+     * Now apply reverse video.
+     *
+     * One bit of strangeness:
+     *  If the buffer is a field attribute and we aren't using the
+     *  debug font, it's displayed as a blank; don't invert.
+     */
+    if (!((ea_buf[baddr].fa && !visible_control)) &&
+	((ea_buf[baddr].gr & GR_REVERSE) ||
+	 (fa2ea(faddr)->gr & GR_REVERSE))) {
+	color = INVERT_COLOR(color);
+    }
+
+    /*
+     * In monochrome, apply selection status as well.
+     */
+    if (appres.interactive.mono && SELECTED(baddr)) {
+	color = INVERT_COLOR(color);
+    }
+
+    return color;
 }
 
 
@@ -3155,25 +3219,25 @@ redraw_char(int baddr, bool invert)
 static void
 hollow_cursor(int baddr)
 {
-	Dimension cwidth;
-	enum dbcs_state d;
+    Dimension cwidth;
+    enum dbcs_state d;
 
-	d = ctlr_dbcs_state(baddr);
+    d = ctlr_dbcs_state(baddr);
 
-	switch (d) {
-	case DBCS_RIGHT:
-	    DEC_BA(baddr);
-	    /* fall through... */
-	case DBCS_LEFT:
-	case DBCS_SI:
-	    cwidth = (2 * ss->char_width) - 1;
-	    break;
-	default:
-	    cwidth = ss->char_width - 1;
-	    break;
-	}
+    switch (d) {
+    case DBCS_RIGHT:
+	DEC_BA(baddr);
+	/* fall through... */
+    case DBCS_LEFT:
+    case DBCS_SI:
+	cwidth = (2 * ss->char_width) - 1;
+	break;
+    default:
+	cwidth = ss->char_width - 1;
+	break;
+    }
 
-	XDrawRectangle(display,
+    XDrawRectangle(display,
 	    ss->window,
 	    cursor_gc(baddr),
 	    ssCOL_TO_X(BA_TO_COL(fl_baddr(baddr))),
@@ -3189,25 +3253,25 @@ hollow_cursor(int baddr)
 static void
 underscore_cursor(int baddr)
 {
-	Dimension cwidth;
-	enum dbcs_state d;
+    Dimension cwidth;
+    enum dbcs_state d;
 
-	d = ctlr_dbcs_state(baddr);
+    d = ctlr_dbcs_state(baddr);
 
-	switch (d) {
-	case DBCS_RIGHT:
-	    DEC_BA(baddr);
-	    /* fall through... */
-	case DBCS_LEFT:
-	case DBCS_SI:
-	    cwidth = (2 * ss->char_width) - 1;
-	    break;
-	default:
-	    cwidth = ss->char_width - 1;
-	    break;
-	}
+    switch (d) {
+    case DBCS_RIGHT:
+	DEC_BA(baddr);
+	/* fall through... */
+    case DBCS_LEFT:
+    case DBCS_SI:
+	cwidth = (2 * ss->char_width) - 1;
+	break;
+    default:
+	cwidth = ss->char_width - 1;
+	break;
+    }
 
-	XDrawRectangle(display,
+    XDrawRectangle(display,
 	    ss->window,
 	    cursor_gc(baddr),
 	    ssCOL_TO_X(BA_TO_COL(fl_baddr(baddr))),
@@ -3223,9 +3287,9 @@ underscore_cursor(int baddr)
 static void
 small_inv_cursor(int baddr)
 {
-	/* XXX: DBCS? */
+    /* XXX: DBCS? */
 
-	XFillRectangle(display,
+    XFillRectangle(display,
 	    ss->window,
 	    ss->mcgc,
 	    ssCOL_TO_X(BA_TO_COL(fl_baddr(baddr))),
@@ -3287,66 +3351,64 @@ put_cursor(int baddr, bool on)
 static bool
 alloc_color(char *name, enum fallback_color fb_color, Pixel *pixel)
 {
-	XColor cell, db;
-	Screen *s;
+    XColor cell, db;
+    Screen *s;
 
-	s = XtScreen(toplevel);
+    s = XtScreen(toplevel);
 
-	if (name[0] == '#') {
-		unsigned long rgb;
-		char *endptr;
+    if (name[0] == '#') {
+	unsigned long rgb;
+	char *endptr;
 
-		rgb = strtoul(name + 1, &endptr, 16);
-		if (endptr != name + 1 && !*endptr && !(rgb & ~0xffffff)) {
-			(void) memset(&db, '\0', sizeof(db));
-			db.red = (rgb >> 16) & 0xff;
-			db.red |= (db.red << 8);
-			db.green = (rgb >> 8) & 0xff;
-			db.green |= (db.green << 8);
-			db.blue = rgb & 0xff;
-			db.blue |= (db.blue << 8);
-			if (XAllocColor(display, XDefaultColormapOfScreen(s),
-						&db) != 0) {
-				*pixel = db.pixel;
-				return true;
-			}
-		}
-	} else {
-		if (XAllocNamedColor(display, XDefaultColormapOfScreen(s), name,
-		    &cell, &db) != 0) {
-			*pixel = db.pixel;
-			return true;
-		}
+	rgb = strtoul(name + 1, &endptr, 16);
+	if (endptr != name + 1 && !*endptr && !(rgb & ~0xffffff)) {
+	    (void) memset(&db, '\0', sizeof(db));
+	    db.red = (rgb >> 16) & 0xff;
+	    db.red |= (db.red << 8);
+	    db.green = (rgb >> 8) & 0xff;
+	    db.green |= (db.green << 8);
+	    db.blue = rgb & 0xff;
+	    db.blue |= (db.blue << 8);
+	    if (XAllocColor(display, XDefaultColormapOfScreen(s), &db) != 0) {
+		*pixel = db.pixel;
+		return true;
+	    }
 	}
-	switch (fb_color) {
-	    case FB_WHITE:
-		*pixel = XWhitePixelOfScreen(s);
-		break;
-	    case FB_BLACK:
-		*pixel = XBlackPixelOfScreen(s);
-		break;
+    } else {
+	if (XAllocNamedColor(display, XDefaultColormapOfScreen(s), name, &cell,
+		    &db) != 0) {
+	    *pixel = db.pixel;
+	    return true;
 	}
-	return false;
+    }
+    switch (fb_color) {
+    case FB_WHITE:
+	*pixel = XWhitePixelOfScreen(s);
+	break;
+    case FB_BLACK:
+	*pixel = XBlackPixelOfScreen(s);
+	break;
+    }
+    return false;
 }
 
 /* Spell out a fallback color. */
 static const char *
 fb_name(enum fallback_color fb_color)
 {
-	switch (fb_color) {
-	    case FB_WHITE:
-		return "white";
-	    case FB_BLACK:
-		return "black";
-	}
-	return "chartreuse";	/* to keep Gcc -Wall happy */
+    switch (fb_color) {
+	case FB_WHITE:
+	    return "white";
+	case FB_BLACK:
+	    return "black";
+    }
+    return "chartreuse";	/* to keep Gcc -Wall happy */
 }
 
 /* Allocate color pixels. */
 static void
 allocate_pixels(void)
 {
-
     if (appres.interactive.mono) {
 	return;
     }
@@ -3392,17 +3454,17 @@ allocate_pixels(void)
 static void
 destroy_pixels(void)
 {
-	int i;
+    int i;
 
-	/*
-	 * It would make sense to deallocate many of the pixels here, but
-	 * the only available call (XFreeColors) would deallocate cells
-	 * that may be in use by other Xt widgets.  Occh.
-	 */
+    /*
+     * It would make sense to deallocate many of the pixels here, but
+     * the only available call (XFreeColors) would deallocate cells
+     * that may be in use by other Xt widgets.  Occh.
+     */
 
-	for (i = 0; i < 16; i++) {
-		cpx_done[i] = false;
-	}
+    for (i = 0; i < 16; i++) {
+	cpx_done[i] = false;
+    }
 }
 
 /*
@@ -3490,21 +3552,22 @@ make_gcs(struct sstate *s)
 static void
 default_color_scheme(void)
 {
-	static int default_attrib_colors[4] = {
-	    GC_NONDEFAULT | HOST_COLOR_GREEN,	/* default */
-	    GC_NONDEFAULT | HOST_COLOR_RED,	/* intensified */
-	    GC_NONDEFAULT | HOST_COLOR_BLUE,	/* protected */
-	    GC_NONDEFAULT | HOST_COLOR_WHITE	/* protected, intensified */
-	};
-	int i;
+    static int default_attrib_colors[4] = {
+	GC_NONDEFAULT | HOST_COLOR_GREEN,	/* default */
+	GC_NONDEFAULT | HOST_COLOR_RED,	/* intensified */
+	GC_NONDEFAULT | HOST_COLOR_BLUE,	/* protected */
+	GC_NONDEFAULT | HOST_COLOR_WHITE	/* protected, intensified */
+    };
+    int i;
 
-	ibm_fb = FB_WHITE;
-	for (i = 0; i < 16; i++) {
-		XtFree(color_name[i]);
-		color_name[i] = XtNewString("white");
-	}
-	for (i = 0; i < 4; i++)
-		field_colors[i] = default_attrib_colors[i];
+    ibm_fb = FB_WHITE;
+    for (i = 0; i < 16; i++) {
+	XtFree(color_name[i]);
+	color_name[i] = XtNewString("white");
+    }
+    for (i = 0; i < 4; i++) {
+	field_colors[i] = default_attrib_colors[i];
+    }
 }
 
 /* Transfer the colorScheme resource into arrays. */
@@ -3718,13 +3781,13 @@ get_selgc(struct sstate *s, int color)
 GC
 screen_gc(int color)
 {
-	return get_gc(ss, color | GC_NONDEFAULT);
+    return get_gc(ss, color | GC_NONDEFAULT);
 }
 
 GC
 screen_invgc(int color)
 {
-	return get_gc(ss, INVERT_COLOR(color | GC_NONDEFAULT));
+    return get_gc(ss, INVERT_COLOR(color | GC_NONDEFAULT));
 }
 
 /*
@@ -3736,35 +3799,38 @@ screen_invgc(int color)
 static void
 make_gc_set(struct sstate *s, int i, Pixel fg, Pixel bg)
 {
-	XGCValues xgcv;
+    XGCValues xgcv;
 
-	if (s->gc[i] != (GC)None)
-		XtReleaseGC(toplevel, s->gc[i]);
-	xgcv.foreground = fg;
-	xgcv.background = bg;
-	xgcv.graphics_exposures = true;
-	xgcv.font = s->fid;
-	if (s == &nss && !i)
-		s->gc[i] = XtGetGC(toplevel,
-		    GCForeground|GCBackground|GCFont|GCGraphicsExposures,
-		    &xgcv);
-	else
-		s->gc[i] = XtGetGC(toplevel,
-		    GCForeground|GCBackground|GCFont, &xgcv);
-	if (s->gc[NGCS + i] != (GC)None)
-		XtReleaseGC(toplevel, s->gc[NGCS + i]);
-	xgcv.foreground = bg;
-	xgcv.background = fg;
-	s->gc[NGCS + i] = XtGetGC(toplevel, GCForeground|GCBackground|GCFont,
+    if (s->gc[i] != (GC)None) {
+	XtReleaseGC(toplevel, s->gc[i]);
+    }
+    xgcv.foreground = fg;
+    xgcv.background = bg;
+    xgcv.graphics_exposures = true;
+    xgcv.font = s->fid;
+    if (s == &nss && !i) {
+	s->gc[i] = XtGetGC(toplevel,
+		GCForeground|GCBackground|GCFont|GCGraphicsExposures,
+		&xgcv);
+    } else {
+	s->gc[i] = XtGetGC(toplevel, GCForeground|GCBackground|GCFont, &xgcv);
+    }
+    if (s->gc[NGCS + i] != (GC)None) {
+	XtReleaseGC(toplevel, s->gc[NGCS + i]);
+    }
+    xgcv.foreground = bg;
+    xgcv.background = fg;
+    s->gc[NGCS + i] = XtGetGC(toplevel, GCForeground|GCBackground|GCFont,
 	    &xgcv);
-	if (!appres.interactive.mono) {
-		if (s->selgc[i] != (GC)None)
-			XtReleaseGC(toplevel, s->selgc[i]);
-		xgcv.foreground = fg;
-		xgcv.background = selbg_pixel;
-		s->selgc[i] = XtGetGC(toplevel,
-		    GCForeground|GCBackground|GCFont, &xgcv);
+    if (!appres.interactive.mono) {
+	if (s->selgc[i] != (GC)None) {
+	    XtReleaseGC(toplevel, s->selgc[i]);
 	}
+	xgcv.foreground = fg;
+	xgcv.background = selbg_pixel;
+	s->selgc[i] = XtGetGC(toplevel, GCForeground|GCBackground|GCFont,
+		&xgcv);
+    }
 }
 
 
@@ -3774,7 +3840,7 @@ make_gc_set(struct sstate *s, int i, Pixel fg, Pixel bg)
 static int
 fa_color(unsigned char fa)
 {
-#    define DEFCOLOR_MAP(f) \
+#   define DEFCOLOR_MAP(f) \
 		((((f) & FA_PROTECT) >> 4) | (((f) & FA_INT_HIGH_SEL) >> 3))
 
     if (appres.m3279) {
@@ -3876,32 +3942,68 @@ PA_KeymapNotify_xaction(Widget w _is_unused, XEvent *event,
 static void
 query_window_state(void)
 {
-	Atom actual_type;
-	int actual_format;
-	unsigned long nitems;
-	unsigned long leftover;
-	unsigned char *data = NULL;
-	static bool was_up = false;
+    Atom actual_type;
+    int actual_format;
+    unsigned long nitems;
+    unsigned long leftover;
+    unsigned char *data = NULL;
+    static bool was_up = false;
+    bool maximized_horz = false;
+    bool maximized_vert = false;
+    bool was_iconic = iconic;
+    bool was_maximized = maximized;
 
-	if (XGetWindowProperty(display, XtWindow(toplevel), a_state, 0L,
-	    (long)BUFSIZ, false, a_state, &actual_type, &actual_format,
-	    &nitems, &leftover, &data) != Success)
-		return;
+    /* Get WM_STATE to see if we're iconified. */
+    if (XGetWindowProperty(display, XtWindow(toplevel), a_state, 0L,
+		(long)BUFSIZ, false, AnyPropertyType, &actual_type,
+		&actual_format, &nitems, &leftover, &data) == Success) {
 	if (actual_type == a_state && actual_format == 32) {
-		if (*(unsigned long *)data == IconicState) {
-			iconic = true;
-			keypad_popdown(&was_up);
-		} else {
-			iconic = false;
-			invert_icon(false);
-			keypad_first_up();
-			if (was_up) {
-			    	keypad_popup();
-				was_up = false;
-			}
+	    if (*(unsigned long *)data == IconicState) {
+		iconic = true;
+		keypad_popdown(&was_up);
+	    } else {
+		iconic = false;
+		invert_icon(false);
+		keypad_first_up();
+		if (was_up) {
+		    keypad_popup();
+		    was_up = false;
 		}
+	    }
 	}
 	XFree(data);
+    }
+    if (iconic != was_iconic)
+    {
+	vtrace("%s\n", iconic? "Iconified": "Not iconified");
+    }
+
+    /* Get _NET_WM_STATE to see if we're maximized. */
+    data = NULL;
+    if (XGetWindowProperty(display, XtWindow(toplevel), a_net_wm_state, 0L,
+		(long)BUFSIZ, false, AnyPropertyType, &actual_type,
+		&actual_format, &nitems, &leftover, &data) == Success) {
+	if (actual_type == a_atom && actual_format == 32) {
+	    unsigned long item;
+	    Atom *prop = (Atom *)data;
+	    for (item = 0; item < nitems; item++)
+	    {
+		if (prop[item] == a_net_wm_state_maximized_horz) {
+		    maximized_horz = true;
+		}
+		if (prop[item] == a_net_wm_state_maximized_vert) {
+		    maximized_vert = true;
+		}
+	    }
+	}
+	XFree(data);
+
+	maximized = (maximized_horz && maximized_vert);
+    }
+    if (maximized != was_maximized)
+    {
+	vtrace("%s\n", maximized? "Maximized": "Not maximized");
+    }
 }
 
 void
@@ -3942,56 +4044,58 @@ shift_event(int event_state)
 static void
 screen_focus(bool in)
 {
-	/*
-	 * Update the input context focus.
-	 */
-	if (ic != NULL) {
-		if (in)
-			XSetICFocus(ic);
-		else
-			XUnsetICFocus(ic);
+    /*
+     * Update the input context focus.
+     */
+    if (ic != NULL) {
+	if (in) {
+	    XSetICFocus(ic);
+	} else {
+	    XUnsetICFocus(ic);
 	}
+    }
 
-	/*
-	 * Cancel any pending cursor blink.  If we just came into focus and
-	 * have a blinking cursor, we will start a fresh blink cycle below, so
-	 * the filled-in cursor is visible for a full turn.
-	 */
-	cancel_blink();
+    /*
+     * Cancel any pending cursor blink.  If we just came into focus and
+     * have a blinking cursor, we will start a fresh blink cycle below, so
+     * the filled-in cursor is visible for a full turn.
+     */
+    cancel_blink();
 
-	/*
-	 * If the cursor is disabled, simply change internal state.
-	 */
-	if (!CONNECTED) {
-		in_focus = in;
-		return;
-	}
-
-	/*
-	 * Change the appearance of the cursor.  Make it hollow out or fill in
-	 * instantly, even if it was blinked off originally.
-	 */
-	(void) cursor_off("focus");
+    /*
+     * If the cursor is disabled, simply change internal state.
+     */
+    if (!CONNECTED) {
 	in_focus = in;
-	cursor_on("focus");
+	return;
+    }
 
-	/*
-	 * Slight kludge: If the crosshair cursor is enabled, redraw the whole
-	 * screen, to draw or erase it.
-	 */
-	if (toggled(CROSSHAIR)) {
-	    screen_changed = true;
-	    first_changed = 0;
-	    last_changed = ROWS*COLS;
-	    screen_disp(false);
-	}
+    /*
+     * Change the appearance of the cursor.  Make it hollow out or fill in
+     * instantly, even if it was blinked off originally.
+     */
+    (void) cursor_off("focus");
+    in_focus = in;
+    cursor_on("focus");
 
-	/*
-	 * If we just came into focus and we're supposed to have a blinking
-	 * cursor, schedule a blink.
-	 */
-	if (in_focus && toggled(CURSOR_BLINK))
-		schedule_cursor_blink();
+    /*
+     * Slight kludge: If the crosshair cursor is enabled, redraw the whole
+     * screen, to draw or erase it.
+     */
+    if (toggled(CROSSHAIR)) {
+	screen_changed = true;
+	first_changed = 0;
+	last_changed = ROWS*COLS;
+	screen_disp(false);
+    }
+
+    /*
+     * If we just came into focus and we're supposed to have a blinking
+     * cursor, schedule a blink.
+     */
+    if (in_focus && toggled(CURSOR_BLINK)) {
+	schedule_cursor_blink();
+    }
 }
 
 /*
@@ -4016,48 +4120,54 @@ SetFont_action(ia_t ia, unsigned argc, const char **argv)
  */
 static void
 split_font_list_entry(char *entry, char **menu_name, bool *noauto,
-    bool *resize, char **font_name)
+	bool *resize, char **font_name)
 {
-	char *colon;
-	char *s;
-	bool any = false;
+    char *colon;
+    char *s;
+    bool any = false;
 
-	if (menu_name != NULL)
-		*menu_name = NULL;
-	if (noauto != NULL)
-		*noauto = false;
-	if (resize != NULL)
-		*resize = false;
+    if (menu_name != NULL) {
+	*menu_name = NULL;
+    }
+    if (noauto != NULL) {
+	*noauto = false;
+    }
+    if (resize != NULL) {
+	*resize = false;
+    }
 
-	colon = strchr(entry, ':');
-	if (colon != NULL) {
-		if (menu_name != NULL)
-			*menu_name = entry;
-		*colon = '\0';
-		s = colon + 1;
-	} else
-		s = entry;
+    colon = strchr(entry, ':');
+    if (colon != NULL) {
+	if (menu_name != NULL) {
+	    *menu_name = entry;
+	}
+	*colon = '\0';
+	s = colon + 1;
+    } else {
+	s = entry;
+    }
 
-	do {
-		any = false;
-		while (isspace(*s))
-			s++;
-		if (!strncmp(s, "#noauto", 7) &&
-		    (!s[7] || isspace(s[7]))) {
-			if (noauto != NULL)
-				*noauto = true;
-			s += 7;
-			any = true;
-		} else if (!strncmp(s, "#resize", 7) &&
-			   (!s[7] || isspace(s[7]))) {
-			if (resize != NULL)
-				*resize = true;
-			s += 7;
-			any = true;
-		}
-	} while (any);
+    do {
+	any = false;
+	while (isspace(*s)) {
+	    s++;
+	}
+	if (!strncmp(s, "#noauto", 7) && (!s[7] || isspace(s[7]))) {
+	    if (noauto != NULL) {
+		*noauto = true;
+	    }
+	    s += 7;
+	    any = true;
+	} else if (!strncmp(s, "#resize", 7) && (!s[7] || isspace(s[7]))) {
+	    if (resize != NULL) {
+		*resize = true;
+	    }
+	    s += 7;
+	    any = true;
+	}
+    } while (any);
 
-	*font_name = s;
+    *font_name = s;
 }
 
 /*
@@ -4223,31 +4333,33 @@ done:
 void
 screen_newfont(const char *fontnames, bool do_popup, bool is_cs)
 {
-	char *old_font;
-	char *lff;
+    char *old_font;
+    char *lff;
 
-	/* Do nothing, successfully. */
-	if (!is_cs && efontname && !strcmp(fontnames, efontname))
-		return;
+    /* Do nothing, successfully. */
+    if (!is_cs && efontname && !strcmp(fontnames, efontname)) {
+	return;
+    }
 
-	/* Save the old font before trying the new one. */
-	old_font = XtNewString(efontname);
+    /* Save the old font before trying the new one. */
+    old_font = XtNewString(efontname);
 
-	/* Try the new one. */
-	if ((lff = load_fixed_font(fontnames, required_display_charsets)) != NULL) {
-		if (do_popup)
-			popup_an_error("%s", lff);
-		Free(lff);
-		XtFree(old_font);
-		return;
+    /* Try the new one. */
+    if ((lff = load_fixed_font(fontnames, required_display_charsets)) != NULL) {
+	if (do_popup) {
+	    popup_an_error("%s", lff);
 	}
+	Free(lff);
+	XtFree(old_font);
+	return;
+    }
 
-	/* Store the old name away, in case we have to go back to it. */
-	Replace(redo_old_font, old_font);
-	screen_redo = REDO_FONT;
+    /* Store the old name away, in case we have to go back to it. */
+    Replace(redo_old_font, old_font);
+    screen_redo = REDO_FONT;
 
-	screen_reinit(FONT_CHANGE);
-	efont_changed = true;
+    screen_reinit(FONT_CHANGE);
+    efont_changed = true;
 }
 
 /*
@@ -4256,33 +4368,35 @@ screen_newfont(const char *fontnames, bool do_popup, bool is_cs)
 static char *
 expand_cslist(const char *s)
 {
-	int commas = 0;
-	const char *t;
-	char *comma;
-	char *r;
+    int commas = 0;
+    const char *t;
+    char *comma;
+    char *r;
 
-	/* Count the commas. */
-	for (t = s; (comma = strchr(t, ',')) != NULL; t = comma + 1) {
-		commas++;
+    /* Count the commas. */
+    for (t = s; (comma = strchr(t, ',')) != NULL; t = comma + 1) {
+	commas++;
+    }
+
+    /* If there aren't any, there isn't any work to do. */
+    if (!commas) {
+	return NewString(s);
+    }
+
+    /* Allocate enough space for "a, b, c or d". */
+    r = Malloc(strlen(s) + (commas * 2) + 2 + 1);
+    *r = '\0';
+
+    /* Copy and expand. */
+    for (t = s; (comma = strchr(t, ',')) != NULL; t = comma + 1) {
+	int wl = comma - t;
+
+	if (*r) {
+	    (void) strcat(r, ", ");
 	}
-
-	/* If there aren't any, there isn't any work to do. */
-	if (!commas)
-		return NewString(s);
-
-	/* Allocate enough space for "a, b, c or d". */
-	r = Malloc(strlen(s) + (commas * 2) + 2 + 1);
-	*r = '\0';
-
-	/* Copy and expand. */
-	for (t = s; (comma = strchr(t, ',')) != NULL; t = comma + 1) {
-		int wl = comma - t;
-
-		if (*r)
-			(void) strcat(r, ", ");
-		(void) strncat(r, t, wl);
-	}
-	return strcat(strcat(r, " or "), t);
+	(void) strncat(r, t, wl);
+    }
+    return strcat(strcat(r, " or "), t);
 }
 
 /*
@@ -4292,78 +4406,80 @@ expand_cslist(const char *s)
 static char *
 load_fixed_font(const char *names, const char *reqd_display_charsets)
 {
-	int num_names = 1, num_cs = 1;
-	char *name1 = NULL, *name2 = NULL;
-	char *charset1 = NULL, *charset2 = NULL;
-	char *r;
+    int num_names = 1, num_cs = 1;
+    char *name1 = NULL, *name2 = NULL;
+    char *charset1 = NULL, *charset2 = NULL;
+    char *r;
 
 #if defined(DEBUG_FONTPICK) /*[*/
-	fprintf(stderr, "load_fixed_font(%s, %s)\n",
+    fprintf(stderr, "load_fixed_font(%s, %s)\n",
 	    names? names: "(wild)", reqd_display_charsets);
 #endif /*]*/
 
-	/* Split out the names and character sets. */
-	if (names)
-		num_names = split_dbcs_resource(names, '+', &name1, &name2);
-	num_cs = split_dbcs_resource(reqd_display_charsets, '+', &charset1,
-			&charset2);
-	if (!names)
-	    	num_names = num_cs;
-	if (num_names == 1 && num_cs >= 2) {
-		Free(name1);
-		Free(name2);
-		Free(charset1);
-		Free(charset2);
-		return NewString("Must specify two font names (SBCS+DBCS)");
-	}
-	if (num_names == 2 && num_cs < 2) {
-		Free(name2);
-		name2 = NULL;
-	}
-
-	/* If there's a DBCS font, load that first. */
-	if (name2 != NULL) {
-		/* Load the second font. */
-		r = lff_single(name2, charset2, true);
-		if (r != NULL) {
-			Free(name1);
-			Free(charset1);
-			return r;
-		}
-	} else {
-		dbcs_font.font_struct = NULL;
-		dbcs_font.font = None;
-		dbcs = false;
-	}
-
-	/* Load the SBCS font. */
-	r = lff_single(name1, charset1, false);
-
-	/* Free the split-out names and return the final result. */
+    /* Split out the names and character sets. */
+    if (names) {
+	num_names = split_dbcs_resource(names, '+', &name1, &name2);
+    }
+    num_cs = split_dbcs_resource(reqd_display_charsets, '+', &charset1,
+	    &charset2);
+    if (!names) {
+	num_names = num_cs;
+    }
+    if (num_names == 1 && num_cs >= 2) {
 	Free(name1);
 	Free(name2);
 	Free(charset1);
 	Free(charset2);
-	return r;
+	return NewString("Must specify two font names (SBCS+DBCS)");
+    }
+    if (num_names == 2 && num_cs < 2) {
+	Free(name2);
+	name2 = NULL;
+    }
+
+    /* If there's a DBCS font, load that first. */
+    if (name2 != NULL) {
+	/* Load the second font. */
+	r = lff_single(name2, charset2, true);
+	if (r != NULL) {
+	    Free(name1);
+	    Free(charset1);
+	    return r;
+	}
+    } else {
+	dbcs_font.font_struct = NULL;
+	dbcs_font.font = None;
+	dbcs = false;
+    }
+
+    /* Load the SBCS font. */
+    r = lff_single(name1, charset1, false);
+
+    /* Free the split-out names and return the final result. */
+    Free(name1);
+    Free(name2);
+    Free(charset1);
+    Free(charset2);
+    return r;
 }
 
 static bool
 charset_in_reqd(const char *charset, const char *reqd)
 {
-    	char *r = NewString(reqd);
-	char *str = r;
-    	char *tok;
-	bool rv = false;
+    char *r = NewString(reqd);
+    char *str = r;
+    char *tok;
+    bool rv = false;
 
-	while ((tok = strtok(str, ",")) != NULL) {
-	    	str = NULL;
-		if (!strcasecmp(charset, tok)) {
-		    	rv = true;
-			break;
-		}
+    while ((tok = strtok(str, ",")) != NULL) {
+	str = NULL;
+	if (!strcasecmp(charset, tok)) {
+	    rv = true;
+	    break;
 	}
-	Free(r);
-	return rv;
+    }
+    Free(r);
+    return rv;
 }
 
 /*
@@ -4373,94 +4489,93 @@ charset_in_reqd(const char *charset, const char *reqd)
 static char *
 lff_single(const char *name, const char *reqd_display_charset, bool is_dbcs)
 {
-	XFontStruct *g;
-	const char *best = NULL;
+    XFontStruct *g;
+    const char *best = NULL;
 
 #if defined(DEBUG_FONTPICK) /*[*/
-	fprintf(stderr, "lff_single: name %s, cs %s, %s\n",
-		name? name: "(wild)",
-		reqd_display_charset, is_dbcs? "dbcs": "sbcs");
+    fprintf(stderr, "lff_single: name %s, cs %s, %s\n",
+	    name? name: "(wild)",
+	    reqd_display_charset, is_dbcs? "dbcs": "sbcs");
 #endif /*]*/
 
-	if (name && *name == '!') {
-		name++;
+    if (name && *name == '!') {
+	name++;
+    }
+
+    if (name) {
+	char **names;
+	int count;
+	XFontStruct *f;
+	unsigned long svalue;
+	char *family_name, *font_encoding, *fe, *charset;
+
+	if (!dfc_search_name(name)) {
+	    return xs_buffer("Font %s\nnot found", name);
 	}
 
-	if (name) {
-	    	char **names;
-		int count;
-		XFontStruct *f;
-		unsigned long svalue;
-		char *family_name, *font_encoding, *fe, *charset;
-
-	    	if (!dfc_search_name(name))
-			return xs_buffer("Font %s\nnot found", name);
-
-		/* Check the character set */
-		names = XListFontsWithInfo(display, name, 1, &count, &f);
-		if (names == NULL)
-			return xs_buffer("Font %s\nnot found", name);
-		if (XGetFontProperty(f, a_registry, &svalue))
-			family_name = XGetAtomName(display, svalue);
-		else {
-			XFreeFontInfo(names, f, count);
-		    	return xs_buffer("Font %s\nhas no registry property",
-				name);
-		}
-		if (XGetFontProperty(f, a_encoding, &svalue))
-			font_encoding = XGetAtomName(display, svalue);
-		else {
-			XFreeFontInfo(names, f, count);
-		    	return xs_buffer("Font %s\nhas no encoding property",
-				name);
-		}
-		if (font_encoding[0] == '-')
-			fe = font_encoding + 1;
-		else
-			fe = font_encoding;
-		XFreeFontInfo(names, f, count);
-		charset = xs_buffer("%s-%s", family_name, fe);
-		Free(family_name);
-		Free(font_encoding);
-		if (!charset_in_reqd(charset, reqd_display_charset)) {
-		    	char *r = xs_buffer("Font %s\nimplements %s, not %s\n",
-				name, charset, reqd_display_charset);
-
-			Free(charset);
-			return r;
-
-		}
-		Free(charset);
-
-		best = name;
+	/* Check the character set */
+	names = XListFontsWithInfo(display, name, 1, &count, &f);
+	if (names == NULL) {
+	    return xs_buffer("Font %s\nnot found", name);
+	}
+	if (XGetFontProperty(f, a_registry, &svalue)) {
+	    family_name = XGetAtomName(display, svalue);
 	} else {
-	    	void *cookie;
-		dfc_t *d;
-		int best_pixel_size = 0;
-		char *best_weight = NULL;
-
-		cookie = NULL;
-		while (dfc_search_family(reqd_display_charset, &d, &cookie)) {
-			if (best == NULL ||
-			    (labs(d->points - 14) <
-			     labs(best_pixel_size - 14)) ||
-			    (best_weight == NULL ||
-			     (!strcasecmp(best_weight, "bold") &&
-			      strcasecmp(d->weight, "bold")))) {
-				best = d->name;
-				best_weight = d->weight;
-				best_pixel_size = d->points;
-			}
-		}
-		if (best == NULL) {
-			return xs_buffer("No %s fonts found",
-				reqd_display_charset);
-		}
+	    XFreeFontInfo(names, f, count);
+	    return xs_buffer("Font %s\nhas no registry property", name);
 	}
+	if (XGetFontProperty(f, a_encoding, &svalue)) {
+	    font_encoding = XGetAtomName(display, svalue);
+	} else {
+	    XFreeFontInfo(names, f, count);
+	    return xs_buffer("Font %s\nhas no encoding property", name);
+	}
+	if (font_encoding[0] == '-') {
+	    fe = font_encoding + 1;
+	} else {
+	    fe = font_encoding;
+	}
+	XFreeFontInfo(names, f, count);
+	charset = xs_buffer("%s-%s", family_name, fe);
+	Free(family_name);
+	Free(font_encoding);
+	if (!charset_in_reqd(charset, reqd_display_charset)) {
+	    char *r = xs_buffer("Font %s\nimplements %s, not %s\n", name,
+		    charset, reqd_display_charset);
 
-	g = XLoadQueryFont(display, best);
-	set_font_globals(g, /*name*/best, best, g->fid, is_dbcs);
-	return NULL;
+	    Free(charset);
+	    return r;
+	}
+	Free(charset);
+
+	best = name;
+    } else {
+	void *cookie;
+	dfc_t *d;
+	int best_pixel_size = 0;
+	char *best_weight = NULL;
+
+	cookie = NULL;
+	while (dfc_search_family(reqd_display_charset, &d, &cookie)) {
+	    if (best == NULL ||
+		(labs(d->points - 14) <
+		 labs(best_pixel_size - 14)) ||
+		(best_weight == NULL ||
+		 (!strcasecmp(best_weight, "bold") &&
+		  strcasecmp(d->weight, "bold")))) {
+		best = d->name;
+		best_weight = d->weight;
+		best_pixel_size = d->points;
+	    }
+	}
+	if (best == NULL) {
+	    return xs_buffer("No %s fonts found", reqd_display_charset);
+	}
+    }
+
+    g = XLoadQueryFont(display, best);
+    set_font_globals(g, /*name*/best, best, g->fid, is_dbcs);
+    return NULL;
 }
 
 /*
@@ -4469,8 +4584,8 @@ lff_single(const char *name, const char *reqd_display_charset, bool is_dbcs)
 char *
 display_charset(void)
 {
-	return (required_display_charsets != NULL)? required_display_charsets:
-	    					 default_display_charset;
+    return (required_display_charsets != NULL)? required_display_charsets:
+					        default_display_charset;
 }
 
 /*
@@ -4478,120 +4593,126 @@ display_charset(void)
  */
 static void
 set_font_globals(XFontStruct *f, const char *ef, const char *fef, Font ff,
-    bool is_dbcs)
+	bool is_dbcs)
 {
-	unsigned long svalue;
-	unsigned i;
-	char *family_name = NULL;
-	char *font_encoding = NULL;
-	char *fe = NULL;
-	char *font_charset = NULL;
+    unsigned long svalue;
+    unsigned i;
+    char *family_name = NULL;
+    char *font_encoding = NULL;
+    char *fe = NULL;
+    char *font_charset = NULL;
 
-	if (XGetFontProperty(f, a_registry, &svalue))
-		family_name = XGetAtomName(display, svalue);
-	if (family_name == NULL)
-	    	Error("Cannot get font family_name");
-	if (XGetFontProperty(f, a_encoding, &svalue))
-		font_encoding = XGetAtomName(display, svalue);
-	if (font_encoding == NULL)
-	    	Error("Cannot get font encoding");
-	if (font_encoding[0] == '-')
-		fe = font_encoding + 1;
-	else
-		fe = font_encoding;
+    if (XGetFontProperty(f, a_registry, &svalue)) {
+	family_name = XGetAtomName(display, svalue);
+    }
+    if (family_name == NULL) {
+	Error("Cannot get font family_name");
+    }
+    if (XGetFontProperty(f, a_encoding, &svalue)) {
+	font_encoding = XGetAtomName(display, svalue);
+    }
+    if (font_encoding == NULL) {
+	Error("Cannot get font encoding");
+    }
+    if (font_encoding[0] == '-') {
+	fe = font_encoding + 1;
+    } else {
+	fe = font_encoding;
+    }
 
-	font_charset = xs_buffer("%s-%s", family_name, fe);
-	Free(family_name);
-	Free(font_encoding);
+    font_charset = xs_buffer("%s-%s", family_name, fe);
+    Free(family_name);
+    Free(font_encoding);
 
-	if (is_dbcs) {
-		/* Hack. */
-		dbcs_font.font_struct = f;
-		dbcs_font.font = f->fid;
-		dbcs_font.unicode = !strcasecmp(family_name, "iso10646");
-		dbcs_font.ascent = f->max_bounds.ascent;
-		dbcs_font.descent = f->max_bounds.descent;
-		dbcs_font.char_width  = fCHAR_WIDTH(f);
-		dbcs_font.char_height = dbcs_font.ascent + dbcs_font.descent;
-		dbcs_font.d16_ix = display16_init(font_charset);
-		dbcs = true;
-		Replace(full_efontname_dbcs, XtNewString(fef));
-		Replace(efont_charset_dbcs, font_charset);
-		return;
-	}
-	Replace(efontname, XtNewString(ef));
-	Replace(full_efontname, XtNewString(fef));
-	Replace(efont_charset, font_charset);
+    if (is_dbcs) {
+	/* Hack. */
+	dbcs_font.font_struct = f;
+	dbcs_font.font = f->fid;
+	dbcs_font.unicode = !strcasecmp(family_name, "iso10646");
+	dbcs_font.ascent = f->max_bounds.ascent;
+	dbcs_font.descent = f->max_bounds.descent;
+	dbcs_font.char_width  = fCHAR_WIDTH(f);
+	dbcs_font.char_height = dbcs_font.ascent + dbcs_font.descent;
+	dbcs_font.d16_ix = display16_init(font_charset);
+	dbcs = true;
+	Replace(full_efontname_dbcs, XtNewString(fef));
+	Replace(efont_charset_dbcs, font_charset);
+	return;
+    }
+    Replace(efontname, XtNewString(ef));
+    Replace(full_efontname, XtNewString(fef));
+    Replace(efont_charset, font_charset);
 
-	/* Set the dimensions. */
-	nss.char_width  = fCHAR_WIDTH(f);
-	nss.char_height = fCHAR_HEIGHT(f);
-	nss.fid = ff;
-	if (nss.font != NULL)
-		XFreeFontInfo(NULL, nss.font, 1);
-	nss.font = f;
-	nss.ascent = f->ascent;
-	nss.descent = f->descent;
+    /* Set the dimensions. */
+    nss.char_width  = fCHAR_WIDTH(f);
+    nss.char_height = fCHAR_HEIGHT(f);
+    nss.fid = ff;
+    if (nss.font != NULL) {
+	XFreeFontInfo(NULL, nss.font, 1);
+    }
+    nss.font = f;
+    nss.ascent = f->ascent;
+    nss.descent = f->descent;
 
-	/* Figure out if this is a 3270 font, or a standard X font. */
-	if (XGetFontProperty(f, XA_FAMILY_NAME, &svalue))
-		nss.standard_font = (Atom) svalue != a_3270;
-	else if (!strncmp(efontname, "3270", 4))
-		nss.standard_font = false;
-	else
-		nss.standard_font = true;
+    /* Figure out if this is a 3270 font, or a standard X font. */
+    if (XGetFontProperty(f, XA_FAMILY_NAME, &svalue)) {
+	nss.standard_font = (Atom) svalue != a_3270;
+    } else if (!strncmp(efontname, "3270", 4)) {
+	nss.standard_font = false;
+    } else {
+	nss.standard_font = true;
+    }
 
-	/* Set other globals. */
-	if (nss.standard_font) {
-		nss.extended_3270font = false;
-		nss.font_8bit = efont_matches;
-		nss.font_16bit = (f->max_byte1 > 0);
-		nss.d8_ix = display8_init(nss.font_8bit? font_charset:
-							 "ascii-7");
-	} else {
+    /* Set other globals. */
+    if (nss.standard_font) {
+	nss.extended_3270font = false;
+	nss.font_8bit = efont_matches;
+	nss.font_16bit = (f->max_byte1 > 0);
+	nss.d8_ix = display8_init(nss.font_8bit? font_charset: "ascii-7");
+    } else {
 #if defined(BROKEN_MACH32)
-		nss.extended_3270font = false;
+	nss.extended_3270font = false;
 #else
-		nss.extended_3270font = f->max_byte1 > 0 ||
-			f->max_char_or_byte2 > 255;
+	nss.extended_3270font = f->max_byte1 > 0 || f->max_char_or_byte2 > 255;
 #endif
-		nss.font_8bit = false;
-		nss.font_16bit = false;
-		nss.d8_ix = display8_init(font_charset);
+	nss.font_8bit = false;
+	nss.font_16bit = false;
+	nss.d8_ix = display8_init(font_charset);
+    }
+
+    /* See if this font has any unusually-shaped characters. */
+    INIT_ODD(nss.odd_width);
+    INIT_ODD(nss.odd_lbearing);
+    nss.funky_font = false;
+    if (!nss.extended_3270font && f->per_char != NULL) {
+	for (i = 0; i < 256; i++) {
+	    if (PER_CHAR(f, i).width == 0 &&
+		(PER_CHAR(f, i).rbearing |
+		 PER_CHAR(f, i).lbearing |
+		 PER_CHAR(f, i).ascent |
+		 PER_CHAR(f, i).descent) == 0) {
+		/* Missing character. */
+		continue;
+	    }
+
+	    if (PER_CHAR(f, i).width != f->max_bounds.width) {
+		SET_ODD(nss.odd_width, i);
+		nss.funky_font = true;
+	    }
+	    if (PER_CHAR(f, i).lbearing < 0) {
+		SET_ODD(nss.odd_lbearing, i);
+		nss.funky_font = true;
+	    }
 	}
+    }
 
-	/* See if this font has any unusually-shaped characters. */
-	INIT_ODD(nss.odd_width);
-	INIT_ODD(nss.odd_lbearing);
-	nss.funky_font = false;
-	if (!nss.extended_3270font && f->per_char != NULL) {
-		for (i = 0; i < 256; i++) {
-			if (PER_CHAR(f, i).width == 0 &&
-			    (PER_CHAR(f, i).rbearing |
-			     PER_CHAR(f, i).lbearing |
-			     PER_CHAR(f, i).ascent |
-			     PER_CHAR(f, i).descent) == 0) {
-				/* Missing character. */
-				continue;
-			}
-
-			if (PER_CHAR(f, i).width != f->max_bounds.width) {
-				SET_ODD(nss.odd_width, i);
-				nss.funky_font = true;
-			}
-			if (PER_CHAR(f, i).lbearing < 0) {
-				SET_ODD(nss.odd_lbearing, i);
-				nss.funky_font = true;
-			}
-		}
-	}
-
-	/*
-	 * If we've changed the rules for resizing, let the window manager
-	 * know.
-	 */
-	if (container != NULL)
-		set_toplevel_sizes();
+    /*
+     * If we've changed the rules for resizing, let the window manager
+     * know.
+     */
+    if (container != NULL) {
+	vtrace("set_font_globals(%s)\n", ef);
+    }
 }
 
 /*
@@ -4608,23 +4729,25 @@ font_init(void)
 void
 screen_change_model(int mn, int ovc, int ovr)
 {
-	if (CONNECTED ||
-	    (model_num == mn && ovc == ov_cols && ovr == ov_rows))
-		return;
+    if (CONNECTED ||
+	(model_num == mn && ovc == ov_cols && ovr == ov_rows)) {
+	    return;
+    }
 
-	redo_old_model = model_num;
-	redo_old_ov_cols = ov_cols;
-	redo_old_ov_rows = ov_rows;
-	screen_redo = REDO_MODEL;
+    redo_old_model = model_num;
+    redo_old_ov_cols = ov_cols;
+    redo_old_ov_rows = ov_rows;
+    screen_redo = REDO_MODEL;
 
-	model_changed = true;
-	if (ov_cols != ovc || ov_rows != ovr)
-		oversize_changed = true;
-	set_rows_cols(mn, ovc, ovr);
-	st_changed(ST_REMODEL, true);
-	screen_reinit(MODEL_CHANGE);
+    model_changed = true;
+    if (ov_cols != ovc || ov_rows != ovr) {
+	oversize_changed = true;
+    }
+    set_rows_cols(mn, ovc, ovr);
+    st_changed(ST_REMODEL, true);
+    screen_reinit(MODEL_CHANGE);
 
-	/* Redo the terminal type. */
+    /* Redo the terminal type. */
 	net_set_default_termtype();
 }
 
@@ -4634,17 +4757,17 @@ screen_change_model(int mn, int ovc, int ovr)
 void
 screen_extended(bool extended _is_unused)
 {
-	set_rows_cols(model_num, ov_cols, ov_rows);
-	model_changed = true;
+    set_rows_cols(model_num, ov_cols, ov_rows);
+    model_changed = true;
 }
 
 void
 screen_m3279(bool m3279 _is_unused)
 {
-	destroy_pixels();
-	screen_reinit(COLOR_CHANGE);
-	set_rows_cols(model_num, ov_cols, ov_rows);
-	model_changed = true;
+    destroy_pixels();
+    screen_reinit(COLOR_CHANGE);
+    set_rows_cols(model_num, ov_cols, ov_rows);
+    model_changed = true;
 }
 
 /*
@@ -4674,35 +4797,35 @@ screen_newscheme(char *s)
 void
 screen_newcharset(char *csname)
 {
-	char *old_charset = NewString(get_charset_name());
+    char *old_charset = NewString(get_charset_name());
 
-	switch (charset_init(csname)) {
-	    case CS_OKAY:
-		/* Success. */
-		Free(old_charset);
-		st_changed(ST_CHARSET, true);
-		screen_reinit(CHARSET_CHANGE | FONT_CHANGE);
-		charset_changed = true;
-		break;
-	    case CS_NOTFOUND:
-		Free(old_charset);
-		popup_an_error("Cannot find definition of host character set \"%s\"",
-		    csname);
-		break;
-	    case CS_BAD:
-		Free(old_charset);
-		popup_an_error("Invalid charset definition for \"%s\"", csname);
-		break;
-	    case CS_PREREQ:
-		Free(old_charset);
-		popup_an_error("No fonts for host character set \"%s\"", csname);
-		break;
-	    case CS_ILLEGAL:
-		/* Error already popped up. */
-		Free(old_charset);
-		break;
+    switch (charset_init(csname)) {
+    case CS_OKAY:
+	/* Success. */
+	Free(old_charset);
+	st_changed(ST_CHARSET, true);
+	screen_reinit(CHARSET_CHANGE | FONT_CHANGE);
+	charset_changed = true;
+	break;
+    case CS_NOTFOUND:
+	Free(old_charset);
+	popup_an_error("Cannot find definition of host character set \"%s\"",
+		csname);
+	break;
+    case CS_BAD:
+	Free(old_charset);
+	popup_an_error("Invalid charset definition for \"%s\"", csname);
+	break;
+    case CS_PREREQ:
+	Free(old_charset);
+	popup_an_error("No fonts for host character set \"%s\"", csname);
+	break;
+    case CS_ILLEGAL:
+	/* Error already popped up. */
+	Free(old_charset);
+	break;
 
-	}
+    }
 }
 
 /*
@@ -4889,17 +5012,19 @@ aicon_font_init(void)
 static void
 aicon_size(Dimension *iw, Dimension *ih)
 {
-	XIconSize *is;
-	int count;
+    XIconSize *is;
+    int count;
 
-	*iw = maxCOLS*iss.char_width + 2*VHALO;
-	*ih = maxROWS*iss.char_height + 2*HHALO + aicon_label_height;
-	if (XGetIconSizes(display, root_window, &is, &count)) {
-		if (*iw > (unsigned) is[0].max_width)
-			*iw = is[0].max_width;
-		if (*ih > (unsigned) is[0].max_height)
-			*ih = is[0].max_height;
+    *iw = maxCOLS*iss.char_width + 2*VHALO;
+    *ih = maxROWS*iss.char_height + 2*HHALO + aicon_label_height;
+    if (XGetIconSizes(display, root_window, &is, &count)) {
+	if (*iw > (unsigned) is[0].max_width) {
+	    *iw = is[0].max_width;
 	}
+	if (*ih > (unsigned) is[0].max_height) {
+	    *ih = is[0].max_height;
+	}
+    }
 }
 
 /*
@@ -4961,22 +5086,23 @@ aicon_reinit(unsigned cmask)
 static void
 draw_aicon_label(void)
 {
-	int len;
-	Position x;
+    int len;
+    Position x;
 
-	if (!xappres.label_icon || !iconic)
-		return;
+    if (!xappres.label_icon || !iconic) {
+	return;
+    }
 
-	XFillRectangle(display, iss.window,
-	    get_gc(&iss, INVERT_COLOR(0)),
-	    0, iss.screen_height - aicon_label_height,
-	    iss.screen_width, aicon_label_height);
-	len = strlen(aicon_text);
-	x = ((int)iss.screen_width - XTextWidth(ailabel_font, aicon_text, len))
-	     / 2;
-	if (x < 0)
-		x = 2;
-	XDrawImageString(display, iss.window, ailabel_gc,
+    XFillRectangle(display, iss.window,
+	get_gc(&iss, INVERT_COLOR(0)),
+	0, iss.screen_height - aicon_label_height,
+	iss.screen_width, aicon_label_height);
+    len = strlen(aicon_text);
+    x = ((int)iss.screen_width - XTextWidth(ailabel_font, aicon_text, len)) / 2;
+    if (x < 0) {
+	x = 2;
+    }
+    XDrawImageString(display, iss.window, ailabel_gc,
 	    x,
 	    iss.screen_height - aicon_label_height + ailabel_font->ascent,
 	    aicon_text, len);
@@ -5034,7 +5160,7 @@ flip_icon(bool inverted, enum mcursor_state mstate)
 static void
 invert_icon(bool inverted)
 {
-	flip_icon(inverted, icon_cstate);
+    flip_icon(inverted, icon_cstate);
 }
 
 /*
@@ -5043,7 +5169,7 @@ invert_icon(bool inverted)
 static void
 lock_icon(enum mcursor_state state)
 {
-	flip_icon(icon_inverted, state);
+    flip_icon(icon_inverted, state);
 }
 
 
@@ -5051,37 +5177,39 @@ lock_icon(enum mcursor_state state)
 static bool
 font_in_menu(const char *font)
 {
-	struct font_list *g;
+    struct font_list *g;
 
-	for (g = font_list; g != NULL; g = g->next) {
-		if (!strcasecmp(NO_BANG(font), NO_BANG(g->font)))
-			return true;
+    for (g = font_list; g != NULL; g = g->next) {
+	if (!strcasecmp(NO_BANG(font), NO_BANG(g->font))) {
+	    return true;
 	}
-	return false;
+    }
+    return false;
 }
 
 /* Add a font to the font menu. */
 static bool
 add_font_to_menu(char *label, const char *font)
 {
-	struct font_list *f;
+    struct font_list *f;
 
-	label = NewString(label);
-	f = (struct font_list *)XtMalloc(sizeof(*f));
-	if (!split_hier(label, &f->label, &f->parents)) {
-		Free((XtPointer)f);
-		return false;
-	}
-	f->font = NewString(font);
-	f->next = NULL;
-	f->mlabel = label;
-	if (font_list)
-		font_last->next = f;
-	else
-		font_list = f;
-	font_last = f;
-	font_count++;
-	return true;
+    label = NewString(label);
+    f = (struct font_list *)XtMalloc(sizeof(*f));
+    if (!split_hier(label, &f->label, &f->parents)) {
+	Free((XtPointer)f);
+	return false;
+    }
+    f->font = NewString(font);
+    f->next = NULL;
+    f->mlabel = label;
+    if (font_list) {
+	font_last->next = f;
+    } else {
+	font_list = f;
+    }
+    font_last = f;
+    font_count++;
+    return true;
 }
 
 /*
@@ -5090,132 +5218,134 @@ add_font_to_menu(char *label, const char *font)
 static void
 init_rsfonts(char *charset_name)
 {
-	char *ms;
-	struct rsfont *r;
-	struct font_list *f;
-	char *dupcsn, *csn, *buf;
-	char *lasts = NULL;
-	XFontStruct *fs;
-	char *hier_name;
+    char *ms;
+    struct rsfont *r;
+    struct font_list *f;
+    char *dupcsn, *csn, *buf;
+    char *lasts = NULL;
+    XFontStruct *fs;
+    char *hier_name;
 
-	/* Clear the old lists. */
-	while (rsfonts != NULL) {
-		r = rsfonts->next;
-		Free(rsfonts);
-		rsfonts = r;
+    /* Clear the old lists. */
+    while (rsfonts != NULL) {
+	r = rsfonts->next;
+	Free(rsfonts);
+	rsfonts = r;
+    }
+    while (font_list != NULL) {
+	f = font_list->next;
+	if (font_list->parents) {
+	    Free(font_list->parents);
 	}
-	while (font_list != NULL) {
-		f = font_list->next;
-		if (font_list->parents)
-			Free(font_list->parents);
-		Free(font_list->mlabel);
-		Free(font_list->font);
-		Free(font_list);
-		font_list = f;
+	Free(font_list->mlabel);
+	Free(font_list->font);
+	Free(font_list);
+	font_list = f;
+    }
+    font_last = NULL;
+    font_count = 0;
+
+    /* If there's no character set, we're done. */
+    if (charset_name == NULL) {
+	return;
+    }
+
+    /* Get the emulatorFontList resource. */
+    ms = get_fresource("%s.%s", ResEmulatorFontList, charset_name);
+    if (ms != NULL) {
+	char *ns;
+	char *line;
+	char *label;
+	char *font;
+	bool resize;
+	char **matches;
+	int count;
+
+	ns = ms = NewString(ms);
+	while (split_lresource(&ms, &line) == 1) {
+
+	    /* Figure out what it's about. */
+	    split_font_list_entry(line, &label, NULL, &resize, &font);
+	    if (!*font) {
+		continue;
+	    }
+
+	    /* Search for duplicates. */
+	    if (font_in_menu(font)) {
+		continue;
+	    }
+
+	    /* Add it to the font_list (menu). */
+	    if (!add_font_to_menu((label != NULL)? label: NO_BANG(font),
+			font)) {
+		continue;
+	    }
+
+	    /* Add it to the resize menu, if possible. */
+	    if (!resize) {
+		continue;
+	    }
+	    matches = XListFontsWithInfo(display, NO_BANG(font), 1, &count,
+		    &fs);
+	    if (matches == NULL) {
+		continue;
+	    }
+	    r = (struct rsfont *)XtMalloc(sizeof(*r));
+	    r->name = XtNewString(font);
+	    r->width = fCHAR_WIDTH(fs);
+	    r->height = fCHAR_HEIGHT(fs);
+	    r->descent = fs->max_bounds.descent;
+	    XFreeFontInfo(matches, fs, count);
+	    r->next = rsfonts;
+	    rsfonts = r;
 	}
-	font_last = NULL;
-	font_count = 0;
+	free(ns);
+    }
 
-	/* If there's no character set, we're done. */
-	if (charset_name == NULL)
-		return;
+    /*
+     * In DBCS mode, if we've found at least one appropriate font from the
+     * list, we're done.
+     */
+    if (dbcs) {
+	return;
+    }
 
-	/* Get the emulatorFontList resource. */
-	ms = get_fresource("%s.%s", ResEmulatorFontList, charset_name);
-	if (ms != NULL) {
-		char *ns;
-		char *line;
-		char *label;
-		char *font;
-		bool resize;
-		char **matches;
-		int count;
+    /* Add 'fixed' to the menu, so there's at least one alternative. */
+    (void) add_font_to_menu("fixed", "!fixed");
 
-		ns = ms = NewString(ms);
-		while (split_lresource(&ms, &line) == 1) {
+    /* Expand out wild-cards based on the display character set names. */
+    buf = dupcsn = NewString(charset_name);
+    while ((csn = strtok_r(buf, ",", &lasts)) != NULL) {
+	void *cookie;
+	const char *name;
 
-			/* Figure out what it's about. */
-			split_font_list_entry(line, &label, NULL, &resize,
-			    &font);
-			if (!*font)
-				continue;
+	buf = NULL;
+	if (!strncasecmp(csn, "3270cg", 6)) {
+	    continue;
+	}
 
-			/* Search for duplicates. */
-			if (font_in_menu(font))
-				continue;
+	cookie = NULL;
+	while ((name = dfc_search_family(csn, NULL, &cookie)) != NULL) {
+	    if (!font_in_menu(name)) {
+		char *dash1 = NULL, *dash2 = NULL;
 
-			/* Add it to the font_list (menu). */
-			if (!add_font_to_menu((label != NULL)? label:
-						NO_BANG(font),
-					    font))
-				continue;
-
-			/* Add it to the resize menu, if possible. */
-			if (!resize)
-				continue;
-			matches = XListFontsWithInfo(display, NO_BANG(font), 1,
-						     &count, &fs);
-			if (matches == NULL)
-				continue;
-			r = (struct rsfont *)XtMalloc(sizeof(*r));
-			r->name = XtNewString(font);
-			r->width = fCHAR_WIDTH(fs);
-			r->height = fCHAR_HEIGHT(fs);
-			XFreeFontInfo(matches, fs, count);
-			r->next = rsfonts;
-			rsfonts = r;
+		if (name[0] == '-') {
+		    dash1 = strchr(name + 1, '-');
+		    if (dash1 != NULL) {
+			dash2 = strchr(dash1 + 1, '-');
+		    }
 		}
-		free(ns);
+		if (dash2 != NULL) {
+		    hier_name = xs_buffer("%s>%.*s>%s",
+			    csn, (int)(dash2 - name - 1), name + 1, dash2 + 1);
+		} else
+		    hier_name = xs_buffer("%s>%s", csn, name);
+		(void) add_font_to_menu(hier_name, name);
+		Free(hier_name);
+	    }
 	}
-
-	/*
-	 * In DBCS mode, if we've found at least one appropriate font from the
-	 * list, we're done.
-	 */
-	if (dbcs) {
-		return;
-	}
-
-	/* Add 'fixed' to the menu, so there's at least one alternative. */
-	(void) add_font_to_menu("fixed", "!fixed");
-
-	/* Expand out wild-cards based on the display character set names. */
-	buf = dupcsn = NewString(charset_name);
-	while ((csn = strtok_r(buf, ",", &lasts)) != NULL) {
-	    	void *cookie;
-		const char *name;
-
-		buf = NULL;
-	    	if (!strncasecmp(csn, "3270cg", 6))
-		    	continue;
-
-		cookie = NULL;
-		while ((name = dfc_search_family(csn, NULL, &cookie))
-			    != NULL) {
-			if (!font_in_menu(name)) {
-				char *dash1 = NULL, *dash2 = NULL;
-
-				if (name[0] == '-') {
-					dash1 = strchr(name + 1, '-');
-					if (dash1 != NULL)
-						dash2 = strchr(dash1 + 1, '-');
-				}
-				if (dash2 != NULL) {
-					hier_name =
-					    xs_buffer("%s>%.*s>%s",
-						csn,
-						(int)(dash2 - name - 1),
-						 name + 1,
-						dash2 + 1);
-				} else
-					hier_name = xs_buffer("%s>%s",
-							csn, name);
-				(void) add_font_to_menu(hier_name, name);
-				Free(hier_name);
-			}
-		}
-	}
-	Free(dupcsn);
+    }
+    Free(dupcsn);
 }
 
 /*
@@ -5239,10 +5369,11 @@ static Position main_x = 0, main_y = 0;
 static void
 configure_stable(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
-	vtrace("Reconfigure timer expired\n");
-	configure_ticking = false;
-	if (!cn.ticking)
-		screen_redo = REDO_NONE;
+    vtrace("Reconfigure timer expired\n");
+    configure_ticking = false;
+    if (!cn.ticking) {
+	screen_redo = REDO_NONE;
+    }
 }
 
 /* Perform a resize operation. */
@@ -5258,32 +5389,31 @@ do_resize(void)
     if (rsfonts == NULL || !allow_resize) {
 	/* Illegal or impossible. */
 	if (rsfonts == NULL) {
-	    vtrace("  no fonts available for resize\n"
-		    "    reasserting previous size\n");
+	    vtrace("  no fonts available for resize\n");
 	} else {
-	    vtrace("  resize prohibited by resource\n"
-		    "    reasserting previous size\n");
+	    vtrace("  resize prohibited by resource\n");
 	}
-	set_toplevel_sizes();
 	return;
     }
 
     /*
      * Recompute the resulting screen area for each font, based on the
-     * current keypad, model, and scrollbar settings.
+     * current keypad, model, and scrollbar settings, and snapped to the
+     * minimum size.
      */
     for (r = rsfonts; r != (struct rsfont *) NULL; r = r->next) {
 	Dimension cw, ch;	/* container_width, container_height */
 	Dimension mkw;
 
-	cw = SCREEN_WIDTH(r->width)+2 + scrollbar_width;
+	cw = SCREEN_WIDTH(r->width, HHALO)+2 + scrollbar_width;
 	mkw = min_keypad_width();
 	if (kp_placement == kp_integral && xappres.keypad_on
 		&& cw < mkw) {
 	    cw = mkw;
 	}
 
-	ch = SCREEN_HEIGHT(r->height)+2 + menubar_qheight(cw);
+	ch = SCREEN_HEIGHT(r->height, r->descent, VHALO)+2 +
+	    menubar_qheight(cw);
 	if (kp_placement == kp_integral && xappres.keypad_on) {
 	    ch += keypad_qheight();
 	}
@@ -5293,105 +5423,44 @@ do_resize(void)
     }
 
     /*
-     * Find the the best match for requested dimensions.
-     *
-     * In past, the "best" was the closest area that was larger or
-     * smaller than the current area, whichever was requested.
-     *
-     * Now, if they try to shrink the screen, "they" might be the
-     * window manager enforcing a size restriction, so the "best"
-     * match is the largest window that fits within the requested
+     * Find the font with the largest area that fits within the requested
      * dimensions.
-     *
-     * If they try to grow the screen, then the "best" is the
-     * smallest font that lies between the current and requested
-     * length in the requested dimension(s).
-     *
-     * An ambiguous request (one dimension larger and the other smaller)
-     * is taken to be a "larger" request.
      */
+    for (r = rsfonts; r != (struct rsfont *) NULL; r = r->next) {
+	if (r->total_width <= cn.width &&
+	    r->total_height <= cn.height &&
+	    (best == NULL || r->area > best->area)) {
+	    best = r;
+	}
+    }
 
-    if ((cn.width <= main_width && cn.height <= main_height) ||
-	(cn.width > main_width && cn.height > main_height)) {
-	/*
-	 * Shrink or two-dimensional grow: Find the largest font which
-	 * fits within the new boundaries.
-	 *
-	 * Note that a shrink in one dimension, with the other
-	 * dimension matching, is considered a two-dimensional
-	 * shrink.
-	 */
+    /*
+     * If the screen got smaller, but none of the fonts is small enough,
+     * switch to the smallest.
+     */
+    if (!best && cn.width <= main_width && cn.height <= main_height) {
 	for (r = rsfonts; r != (struct rsfont *) NULL; r = r->next) {
-	    if (r->total_width <= cn.width && r->total_height <= cn.height) {
-		if (best == NULL || r->area > best->area) {
-		    best = r;
-		}
-	    }
-	}
-	/*
-	 * If no font is small enough, see if there is a font smaller
-	 * than the current font along the requested dimension(s),
-	 * which is better than doing nothing.
-	 */
-	if (best == NULL) {
-	    for (r = rsfonts; r != (struct rsfont *) NULL; r = r->next) {
-		if (cn.width < main_width && r->total_width > main_width) {
-		    continue;
-		}
-		if (cn.height < main_height && r->total_height > main_height) {
-		    continue;
-		}
-		if (best == NULL || r->area < best->area) {
-		    best = r;
-		}
-	    }
-	}
-    } else {
-	/*
-	 * One-dimensional grow: Find the largest font which fits
-	 * within the lengthened boundary, and don't constrain the
-	 * other dimension.
-	 *
-	 * Note than an ambiguous change (grow in one dimensional and
-	 * shrink in the other) is considered a one-dimensional grow.
-	 *
-	 * In either case, the "other" dimension is considered
-	 * unconstrained.
-	 */
-	if (cn.width > main_width) {
-	    /* Wider. */
-	    for (r = rsfonts; r != (struct rsfont *) NULL; r = r->next) {
-		if (r->total_width <= cn.width &&
-		    (best == NULL ||
-		     r->total_width > best->total_width)) {
-		    best = r;
-		}
-	    }
-	} else {
-	    /* Taller. */
-	    for (r = rsfonts; r != (struct rsfont *) NULL; r = r->next) {
-		if (r->total_height <= cn.height &&
-			(best == NULL ||
-			 r->total_height > best->total_height)) {
-		    best = r;
-		}
+	    if (best == NULL || r->area < best->area) {
+		best = r;
 	    }
 	}
     }
 
-    /* Change fonts. */
     if (!best || (efontname && !strcmp(best->name, efontname))) {
-	if (cn.width > main_width || cn.height > main_height) {
-	    vtrace("  no larger font available\n"
-		   "    reasserting previous size\n");
-	} else {
-	    vtrace("  no smaller font available\n"
-		   "    reasserting previous size\n");
-	}
-	set_toplevel_sizes();
+	/* Accept the change and float inside the new size. */
+	vtrace("  no better font available\n");
+	vtrace("setting fixed_width and fixed_height\n");
+	fixed_width = cn.width;
+	fixed_height = cn.height;
+	screen_reinit(FONT_CHANGE);
+	clear_fixed();
     } else {
-	vtrace("    switching to font '%s', new size %dx%d\n",
+	/* Change fonts. */
+	vtrace("    switching to font '%s', snap size %dx%d\n",
 		best->name, best->total_width, best->total_height);
+	vtrace("setting fixed_width and fixed_height\n");
+	fixed_width = cn.width;
+	fixed_height = cn.height;
 	screen_newfont(best->name, false, false);
 
 	/* screen_newfont() sets screen_redo to REDO_FONT. */
@@ -5403,6 +5472,11 @@ static void
 revert_screen(void)
 {
     const char *revert = NULL;
+
+    /*
+     * If we took a ConfigureNotify as new screen dimensions, ignore that now.
+     */
+    clear_fixed();
 
     /* If there's a reconfiguration pending, try to undo it. */
     switch (screen_redo) {
@@ -5441,9 +5515,8 @@ revert_screen(void)
 	break;
     }
 
-    /* Tell the user what we're doing. */
+    /* Tell the user what we did. */
     if (revert != NULL) {
-	vtrace("    reverting to previous %s\n", revert);
 	popup_an_error("Main window does not fit on the X display\n"
 		"Reverting to previous %s", revert);
     }
@@ -5451,75 +5524,63 @@ revert_screen(void)
     screen_redo = REDO_NONE;
 }
 
-static void
-revert_later(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
-{
-	revert_screen();
-}
-
 /*
  * Timeout routine called 0.5 sec after x3270 receives the last ConfigureNotify
  * message.  This is for window managers that use 'continuous' move or resize
- * actions.
+ * actions, so we don't do anything until they stop sending us events.
  */
 
 static void
 stream_end(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 {
-	bool needs_moving = false;
+    bool needs_moving = false;
 
-	vtrace("Stream timer expired %hux%hu+%hd+%hd\n",
-		cn.width, cn.height, cn.x, cn.y);
+    vtrace("Stream timer expired %hux%hu+%hd+%hd\n",
+	    cn.width, cn.height, cn.x, cn.y);
 
-	/* Not ticking any more. */
-	cn.ticking = false;
+    /* Not ticking any more. */
+    cn.ticking = false;
 
-	/* Save the new coordinates in globals for next time. */
-	if (cn.x != main_x || cn.y != main_y) {
-		main_x = cn.x;
-		main_y = cn.y;
-		needs_moving = true;
+    /* Save the new coordinates in globals for next time. */
+    if (cn.x != main_x || cn.y != main_y) {
+	main_x = cn.x;
+	main_y = cn.y;
+	needs_moving = true;
+    }
+
+    /*
+     * If the dimensions are correct, do nothing, forget about any
+     * reconfig we may need to revert, and get out.
+     */
+    if (cn.width == main_width && cn.height == main_height) {
+	vtrace("  width and height match, done\n");
+	screen_redo = REDO_NONE;
+	clear_fixed();
+	goto done;
+    }
+
+    /* The desired dimensions are bigger. */
+    if (cn.width >= main_width && cn.height >= main_height) {
+	vtrace("  bigger\n");
+    } else {
+	vtrace("  smaller\n");
+    }
+    screen_redo = REDO_NONE;
+    revert_screen();
+
+done:
+    if (needs_moving && !iconic) {
+	keypad_move();
+	{
+	    static bool first = true;
+
+	    if (first) {
+		first = false;
+	    } else {
+		popups_move();
+	    }
 	}
-
-	/*
-	 * If the dimensions are correct, do nothing, forget about any
-	 * reconfig we may need to revert, and get out.
-	 */
-	if (cn.width == main_width && cn.height == main_height) {
-		vtrace("  width and height match\n"
-			"  doing nothing\n");
-		screen_redo = REDO_NONE;
-		goto done;
-	}
-
-	/*
-	 * If the dimensions are bigger, perhaps we've gotten some extra
-	 * decoration.  Be persistent
-	 */
-	if (cn.width >= main_width && cn.height >= main_height) {
-		vtrace("  bigger\n"
-			"    asserting desired size\n");
-		set_toplevel_sizes();
-		screen_redo = REDO_NONE;
-	}
-
-	/* They're not correct. */
-	vtrace("  size mismatch, want %ux%u", main_width, main_height);
-
-	revert_screen();
-
-    done:
-	if (needs_moving && !iconic) {
-		keypad_move();
-		{
-		    	static bool first = true;
-
-			if (first)
-			    	first = false;
-			else
-			    	popups_move();
-		}
-	}
+    }
 }
 
 void
@@ -5550,6 +5611,17 @@ PA_ConfigureNotify_xaction(Widget w _is_unused, XEvent *event,
     cn.y = yy;
     cn.width = re->width;
     cn.height = re->height;
+
+    /* See if we're maximized. */
+    query_window_state();
+    if (user_resize_allowed) {
+	/* Take the current dimensions as fixed. */
+	vtrace("setting fixed_width and fixed_height\n");
+	fixed_width = cn.width;
+	fixed_height = cn.height;
+	hhalo = HHALO;
+	vhalo = VHALO;
+    }
 
     /* Set the stream timer for 0.5 sec from now. */
     if (cn.ticking) {
@@ -5612,70 +5684,69 @@ PA_GraphicsExpose_xaction(Widget w _is_unused, XEvent *event _is_unused,
 unsigned
 display_width(void)
 {
-	return XDisplayWidth(display, default_screen);
+    return XDisplayWidth(display, default_screen);
 }
 
 unsigned
 display_widthMM(void)
 {
-	return XDisplayWidthMM(display, default_screen);
+    return XDisplayWidthMM(display, default_screen);
 }
 
 unsigned
 display_height(void)
 {
-	return XDisplayHeight(display, default_screen);
+    return XDisplayHeight(display, default_screen);
 }
 
 unsigned
 display_heightMM(void)
 {
-	return XDisplayHeightMM(display, default_screen);
+    return XDisplayHeightMM(display, default_screen);
 }
 
 /* Translate an EBCDIC DBCS character to a display character. */
 static void
 xlate_dbcs(unsigned char c0, unsigned char c1, XChar2b *r)
 {
-	unsigned long u;
-	int d;
+    unsigned long u;
+    int d;
 
-	/* Translate NULLs to spaces. */
-	if (c0 == EBC_null && c1 == EBC_null) {
-		c0 = EBC_space;
-		c1 = EBC_space;
-	}
-	/* Then handle special cases. */
-	if ((c0 < 0x41 && (c0 != EBC_space && c1 != EBC_space)) || c0 == 0xff) {
-		/* Junk. */
-		r->byte1 = 0;
-		r->byte2 = 0;
-	}
-	u = ebcdic_dbcs_to_unicode((c0 << 8) | c1, EUO_BLANK_UNDEF);
-	d = display16_lookup(dbcs_font.d16_ix, u);
-	if (d >= 0) {
-		r->byte1 = (d >> 8) & 0xff;
-		r->byte2 = d & 0xff;
-	} else {
-		r->byte1 = 0;
-		r->byte2 = 0;
-	}
+    /* Translate NULLs to spaces. */
+    if (c0 == EBC_null && c1 == EBC_null) {
+	c0 = EBC_space;
+	c1 = EBC_space;
+    }
+    /* Then handle special cases. */
+    if ((c0 < 0x41 && (c0 != EBC_space && c1 != EBC_space)) || c0 == 0xff) {
+	/* Junk. */
+	r->byte1 = 0;
+	r->byte2 = 0;
+    }
+    u = ebcdic_dbcs_to_unicode((c0 << 8) | c1, EUO_BLANK_UNDEF);
+    d = display16_lookup(dbcs_font.d16_ix, u);
+    if (d >= 0) {
+	r->byte1 = (d >> 8) & 0xff;
+	r->byte2 = d & 0xff;
+    } else {
+	r->byte1 = 0;
+	r->byte2 = 0;
+    }
 
 #if defined(_ST) /*[*/
-	printf("EBC %02x%02x -> X11 font %02x%02x\n",
-		c0, c1, r->byte1, r->byte2);
+    printf("EBC %02x%02x -> X11 font %02x%02x\n", c0, c1, r->byte1, r->byte2);
 #endif /*]*/
 }
 
 static void
 destroy_callback_func(XIM current_ic, XPointer client_data, XPointer call_data)
 {
-	ic = NULL;
-	im = NULL;
-	ic_focus = 0;
+    ic = NULL;
+    im = NULL;
+    ic_focus = 0;
 
 #if defined(_ST) /*[*/
-	printf("destroy_callback_func\n");
+    printf("destroy_callback_func\n");
 #endif /*]*/
 }
 
@@ -5684,169 +5755,164 @@ destroy_callback_func(XIM current_ic, XPointer client_data, XPointer call_data)
 static void
 im_callback(Display *display, XPointer client_data, XPointer call_data)
 {
-	XIMStyles *xim_styles = NULL;
-	XIMCallback destroy;
-	int i, j;
-	XVaNestedList preedit_attr = NULL;
-	XPoint spot;
-	XRectangle local_win_rect;
-	static im_style_t im_styles[] = {
-		{ XIMPreeditNothing  | XIMStatusNothing,    PT_ROOT },
-		{ XIMPreeditPosition | XIMStatusNothing,    PT_OVER_THE_SPOT },
-		{ XIMPreeditArea     | XIMStatusArea,       PT_OFF_THE_SPOT },
-		{ XIMPreeditCallbacks| XIMStatusCallbacks,  PT_ON_THE_SPOT },
-		{ (XIMStyle)0,                              NULL }
-	};
-	char *im_style = (xappres.preedit_type != NULL)?
-	    strip_whitespace(xappres.preedit_type): PT_OVER_THE_SPOT;
-	char c;
+    XIMStyles *xim_styles = NULL;
+    XIMCallback destroy;
+    int i, j;
+    XVaNestedList preedit_attr = NULL;
+    XPoint spot;
+    XRectangle local_win_rect;
+    static im_style_t im_styles[] = {
+	{ XIMPreeditNothing  | XIMStatusNothing,    PT_ROOT },
+	{ XIMPreeditPosition | XIMStatusNothing,    PT_OVER_THE_SPOT },
+	{ XIMPreeditArea     | XIMStatusArea,       PT_OFF_THE_SPOT },
+	{ XIMPreeditCallbacks| XIMStatusCallbacks,  PT_ON_THE_SPOT },
+	{ (XIMStyle)0,                              NULL }
+    };
+    char *im_style = (xappres.preedit_type != NULL)?
+	strip_whitespace(xappres.preedit_type): PT_OVER_THE_SPOT;
+    char c;
 
 #if defined(_ST) /*[*/
-	printf("im_callback\n");
+    printf("im_callback\n");
 #endif /*]*/
 
-	if (!strcasecmp(im_style, "None"))
-		return;
-
-	/* Parse the offset value for OverTheSpot. */
-	if (!strncasecmp(im_style, PT_OVER_THE_SPOT, OTS_LEN) &&
-	    ((c = im_style[OTS_LEN]) == '+' ||
-	     c == '-')) {
-		ovs_offset = atoi(im_style + OTS_LEN);
-		im_style = NewString(im_style);
-		im_style[OTS_LEN] = '\0';
-	}
-
-	/* Open connection to IM server. */
-	if ((im = XOpenIM(display, NULL, NULL, NULL)) == NULL) {
-		popup_an_error("XOpenIM failed\nXIM-based input disabled");
-		goto error_return;
-	}
-
-	destroy.callback = (XIMProc)destroy_callback_func;
-	destroy.client_data = NULL;
-	XSetIMValues(im, XNDestroyCallback, &destroy, NULL);
-
-	/* Detect the input style supported by XIM server. */
-	if (XGetIMValues(im, XNQueryInputStyle, &xim_styles, NULL) != NULL ||
-			xim_styles == NULL) {
-		popup_an_error("Input method doesn't support any styles\n"
-			       "XIM-based input disabled");
-		goto error_return;
-	}
-	for (i = 0; i < xim_styles->count_styles; i++) {
-		for (j = 0; im_styles[j].description != NULL; j++) {
-			if (im_styles[j].style ==
-					xim_styles->supported_styles[i]) {
-#if defined(_ST) /*[*/
-				printf("XIM server supports input_style %s\n",
-						im_styles[j].description);
-#endif /*]*/
-				break;
-			}
-		}
-#if defined(_ST) /*[*/
-		if (im_styles[j].description == NULL)
-			printf("XIM server supports unknown input style %x\n",
-				(unsigned)(xim_styles->supported_styles[i]));
-#endif /*]*/
-	}
-
-	/* Set my preferred style. */
-	for (j = 0; im_styles[j].description != NULL; j++) {
-		if (!strcasecmp(im_styles[j].description, im_style)) {
-			style = im_styles[j].style;
-			break;
-		}
-	}
-	if (im_styles[j].description == NULL) {
-		popup_an_error("Input style '%s' not supported\n"
-			       "XIM-based input disabled", im_style);
-		goto error_return;
-	}
-
-	if (style == (XIMPreeditPosition | XIMStatusNothing)) {
-		char *fsname;
-		XFontSet fontset;
-		char **charset_list;
-		int charset_count;
-		char *def_string;
-
-		fsname = xs_buffer("-*-%s,-*-iso8859-1", efont_charset_dbcs);
-		for (;;) {
-#if defined(_ST) /*[*/
-			printf("trying fsname: %s\n", fsname);
-#endif /*]*/
-			fontset = XCreateFontSet(display, fsname,
-					&charset_list, &charset_count,
-					&def_string);
-			if (charset_count || fontset == NULL) {
-				if (charset_count > 0) {
-					int i;
-
-					for (i = 0; i < charset_count; i++) {
-#if defined(_ST) /*[*/
-						printf("missing: %s\n",
-							charset_list[0]);
-#endif /*]*/
-						fsname = xs_buffer("%s,-*-%s",
-							fsname,
-							charset_list[i]);
-					}
-					continue;
-
-				}
-				popup_an_error("Cannot create fontset '%s' "
-					"for input context\n"
-					"XIM-based input disabled",
-					fsname);
-				goto error_return;
-			} else
-				break;
-		};
-
-		spot.x = 0;
-		spot.y = ovs_offset * nss.char_height;
-		local_win_rect.x = 1;
-		local_win_rect.y = 1;
-		local_win_rect.width  = main_width;
-		local_win_rect.height = main_height;
-		preedit_attr = XVaCreateNestedList(0,
-					XNArea, &local_win_rect,
-					XNSpotLocation, &spot,
-					XNFontSet, fontset,
-					NULL);
-	}
-
-	/* Create IC. */
-	ic = XCreateIC(im, XNInputStyle, style,
-			XNClientWindow, nss.window,
-			XNFocusWindow, nss.window,
-			(preedit_attr) ? XNPreeditAttributes : NULL,
-			preedit_attr,
-			NULL);
-	if (ic == NULL) {
-		popup_an_error("Cannot create input context\n"
-		               "XIM-based input disabled");
-		goto error_return;
-	}
+    if (!strcasecmp(im_style, "None")) {
 	return;
+    }
 
-    error_return:
-	if (im != NULL) {
-		XCloseIM(im);
-		im = NULL;
-		xim_error = true;
+    /* Parse the offset value for OverTheSpot. */
+    if (!strncasecmp(im_style, PT_OVER_THE_SPOT, OTS_LEN) &&
+	((c = im_style[OTS_LEN]) == '+' ||
+	 c == '-')) {
+	ovs_offset = atoi(im_style + OTS_LEN);
+	im_style = NewString(im_style);
+	im_style[OTS_LEN] = '\0';
+    }
+
+    /* Open connection to IM server. */
+    if ((im = XOpenIM(display, NULL, NULL, NULL)) == NULL) {
+	popup_an_error("XOpenIM failed\nXIM-based input disabled");
+	goto error_return;
+    }
+
+    destroy.callback = (XIMProc)destroy_callback_func;
+    destroy.client_data = NULL;
+    XSetIMValues(im, XNDestroyCallback, &destroy, NULL);
+
+    /* Detect the input style supported by XIM server. */
+    if (XGetIMValues(im, XNQueryInputStyle, &xim_styles, NULL) != NULL ||
+	    xim_styles == NULL) {
+	popup_an_error("Input method doesn't support any styles\n"
+		       "XIM-based input disabled");
+	goto error_return;
+    }
+    for (i = 0; i < xim_styles->count_styles; i++) {
+	for (j = 0; im_styles[j].description != NULL; j++) {
+	    if (im_styles[j].style == xim_styles->supported_styles[i]) {
+#if defined(_ST) /*[*/
+		printf("XIM server supports input_style %s\n",
+			im_styles[j].description);
+#endif /*]*/
+		break;
+	    }
 	}
+#if defined(_ST) /*[*/
+	if (im_styles[j].description == NULL) {
+	    printf("XIM server supports unknown input style %x\n",
+		    (unsigned)(xim_styles->supported_styles[i]));
+	}
+#endif /*]*/
+    }
+
+    /* Set my preferred style. */
+    for (j = 0; im_styles[j].description != NULL; j++) {
+	if (!strcasecmp(im_styles[j].description, im_style)) {
+	    style = im_styles[j].style;
+	    break;
+	}
+    }
+    if (im_styles[j].description == NULL) {
+	popup_an_error("Input style '%s' not supported\n"
+		       "XIM-based input disabled", im_style);
+	goto error_return;
+    }
+
+    if (style == (XIMPreeditPosition | XIMStatusNothing)) {
+	char *fsname;
+	XFontSet fontset;
+	char **charset_list;
+	int charset_count;
+	char *def_string;
+
+	fsname = xs_buffer("-*-%s,-*-iso8859-1", efont_charset_dbcs);
+	for (;;) {
+#if defined(_ST) /*[*/
+	    printf("trying fsname: %s\n", fsname);
+#endif /*]*/
+	    fontset = XCreateFontSet(display, fsname, &charset_list,
+		    &charset_count, &def_string);
+	    if (charset_count || fontset == NULL) {
+		if (charset_count > 0) {
+		    int i;
+
+		    for (i = 0; i < charset_count; i++) {
+#if defined(_ST) /*[*/
+			printf("missing: %s\n", charset_list[0]);
+#endif /*]*/
+			fsname = xs_buffer("%s,-*-%s", fsname,
+				charset_list[i]);
+		    }
+		    continue;
+
+		}
+		popup_an_error("Cannot create fontset '%s' "
+			"for input context\n"
+			"XIM-based input disabled",
+			fsname);
+		goto error_return;
+	    } else {
+		break;
+	    }
+	}
+
+	spot.x = 0;
+	spot.y = ovs_offset * nss.char_height;
+	local_win_rect.x = 1;
+	local_win_rect.y = 1;
+	local_win_rect.width  = main_width;
+	local_win_rect.height = main_height;
+	preedit_attr = XVaCreateNestedList(0, XNArea, &local_win_rect,
+		XNSpotLocation, &spot, XNFontSet, fontset, NULL);
+    }
+
+    /* Create IC. */
+    ic = XCreateIC(im, XNInputStyle, style, XNClientWindow, nss.window,
+	    XNFocusWindow, nss.window,
+	    (preedit_attr) ? XNPreeditAttributes : NULL, preedit_attr, NULL);
+    if (ic == NULL) {
+	popup_an_error("Cannot create input context\n"
+		       "XIM-based input disabled");
+	goto error_return;
+    }
+    return;
+
+error_return:
+    if (im != NULL) {
+	XCloseIM(im);
+	im = NULL;
+	xim_error = true;
+    }
 }
 
 static void
 cleanup_xim(bool b _is_unused)
 {
-	if (ic != NULL)
-		XDestroyIC(ic);
-	if (im != NULL)
-		XCloseIM(im);
+    if (ic != NULL) {
+	XDestroyIC(ic);
+    }
+    if (im != NULL) {
+	XCloseIM(im);
+    }
 }
 
 static void
@@ -5892,14 +5958,14 @@ xim_init(void)
 static void
 send_spot_loc(void)
 {
-	XPoint spot;
-	XVaNestedList preedit_attr;
+    XPoint spot;
+    XVaNestedList preedit_attr;
 
-	spot.x = (cursor_addr % COLS) * nss.char_width + hhalo;
-	spot.y = ((cursor_addr / COLS) + ovs_offset) * nss.char_height + vhalo;
-	preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot, NULL);
-	XSetICValues(ic, XNPreeditAttributes, preedit_attr, NULL);
-	XFree(preedit_attr);
+    spot.x = (cursor_addr % COLS) * nss.char_width + hhalo;
+    spot.y = ((cursor_addr / COLS) + ovs_offset) * nss.char_height + vhalo;
+    preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot, NULL);
+    XSetICValues(ic, XNPreeditAttributes, preedit_attr, NULL);
+    XFree(preedit_attr);
 }
 
 /* Change the window title. */
@@ -5945,153 +6011,167 @@ static dfc_t *dfc = NULL, *dfc_last = NULL;
 static int
 split_name(const char *name, char res[15][256])
 {
-    	int ns;
-	const char *dash;
-	const char *s;
+    int ns;
+    const char *dash;
+    const char *s;
 
-	ns = 0;
-	s = name;
-	while (ns < 14 && ((dash = strchr(s, '-')) != NULL)) {
-		int nc = dash - s;
+    ns = 0;
+    s = name;
+    while (ns < 14 && ((dash = strchr(s, '-')) != NULL)) {
+	int nc = dash - s;
 
-		if (nc >= 256)
-			nc = 255;
-		strncpy(res[ns], s, nc);
-		res[ns][nc] = '\0';
-		ns++;
-		s = dash + 1;
+	if (nc >= 256) {
+	    nc = 255;
 	}
-	if (*s) {
-	    	int nc = strlen(s);
+	strncpy(res[ns], s, nc);
+	res[ns][nc] = '\0';
+	ns++;
+	s = dash + 1;
+    }
+    if (*s) {
+	int nc = strlen(s);
 
-		if (nc >= 256)
-		    	nc = 255;
-		strncpy(res[ns], s, nc);
-		res[ns][nc] = '\0';
-		ns++;
+	if (nc >= 256) {
+	    nc = 255;
 	}
+	strncpy(res[ns], s, nc);
+	res[ns][nc] = '\0';
+	ns++;
+    }
 
-	return ns;
+    return ns;
 }
 
 /* Initialize the dumb font cache. */
 static void
 dfc_init(void)
 {
-    	char **namelist;
-	int count;
-	int i;
-	dfc_t *d, *e;
-	char nl_arr[15][256];
-	dfc_t *c_first = NULL;
-	dfc_t *c_last = NULL;
-	dfc_t *m_first = NULL;
-	dfc_t *m_last = NULL;
+    char **namelist;
+    int count;
+    int i;
+    dfc_t *d, *e;
+    char nl_arr[15][256];
+    dfc_t *c_first = NULL;
+    dfc_t *c_last = NULL;
+    dfc_t *m_first = NULL;
+    dfc_t *m_last = NULL;
 
-	/* Get all of the font names. */
-	namelist = XListFonts(display, "*", MAX_FONTS, &count);
-	if (namelist == NULL)
-	    	Error("No fonts");
-	for (i = 0; i < count; i++) {
-	    	/* Pick apart the font names. */
-	    	int nf = split_name(namelist[i], nl_arr);
-		int good = true;
+    /* Get all of the font names. */
+    namelist = XListFonts(display, "*", MAX_FONTS, &count);
+    if (namelist == NULL) {
+	Error("No fonts"); 
+    }
+    for (i = 0; i < count; i++) {
+	/* Pick apart the font names. */
+	int nf = split_name(namelist[i], nl_arr);
+	int good = true;
 
-		if ((nf == 1 && strncmp(nl_arr[0], "3270", 4)) ||
-		    (nf != 15) ||
-		    (strcasecmp(nl_arr[4], "r") ||
-		     !strcmp(nl_arr[7], "0") ||
-		     !strcmp(nl_arr[8], "0") ||
-		     (strcasecmp(nl_arr[11], "c") &&
-		      strcasecmp(nl_arr[11], "m")) ||
-		     !strcmp(nl_arr[12], "0")))
-			good = false;
-
-		/* Make sure it isn't a dup. */
-		for (e = dfc; e != NULL; e = e->next)
-		    	if (!strcasecmp(namelist[i], e->name))
-			    	break;
-		if (e != NULL)
-		    	continue;
-
-	    	/* Append this entry to the cache. */
-	    	d = (dfc_t *)Malloc(sizeof(dfc_t));
-		d->next = NULL;
-		d->name = NewString(namelist[i]);
-		d->weight = NewString(nl_arr[3]);
-		d->points = atoi(nl_arr[7]);
-		d->spacing = NewString(nl_arr[11]);
-		d->charset = xs_buffer("%s-%s", nl_arr[13], nl_arr[14]);
-		d->good = good;
-		if (!d->spacing[0] || !strcasecmp(d->spacing, "c")) {
-			if (c_last)
-				c_last->next = d;
-			else
-				c_first = d;
-			c_last = d;
-		} else {
-			if (m_last)
-				m_last->next = d;
-			else
-				m_first = d;
-			m_last = d;
-		}
+	if ((nf == 1 && strncmp(nl_arr[0], "3270", 4)) ||
+	    (nf != 15) ||
+	    (strcasecmp(nl_arr[4], "r") ||
+	     !strcmp(nl_arr[7], "0") ||
+	     !strcmp(nl_arr[8], "0") ||
+	     (strcasecmp(nl_arr[11], "c") &&
+	      strcasecmp(nl_arr[11], "m")) ||
+	     !strcmp(nl_arr[12], "0"))) {
+	    good = false;
 	}
 
-	if (c_first != NULL) {
-	    	c_last->next = m_first;
-		dfc = c_first;
-		if (m_last != NULL)
-		    	dfc_last = m_last;
-		else
-		    	dfc_last = c_last;
+	/* Make sure it isn't a dup. */
+	for (e = dfc; e != NULL; e = e->next) {
+	    if (!strcasecmp(namelist[i], e->name)) {
+		break;
+	    }
+	}
+	if (e != NULL) {
+	    continue;
+	}
+
+	/* Append this entry to the cache. */
+	d = (dfc_t *)Malloc(sizeof(dfc_t));
+	d->next = NULL;
+	d->name = NewString(namelist[i]);
+	d->weight = NewString(nl_arr[3]);
+	d->points = atoi(nl_arr[7]);
+	d->spacing = NewString(nl_arr[11]);
+	d->charset = xs_buffer("%s-%s", nl_arr[13], nl_arr[14]);
+	d->good = good;
+	if (!d->spacing[0] || !strcasecmp(d->spacing, "c")) {
+	    if (c_last) {
+		c_last->next = d;
+	    } else {
+		c_first = d;
+	    }
+	    c_last = d;
 	} else {
-	    	dfc = m_first;
-		dfc_last = m_last;
+	    if (m_last) {
+		m_last->next = d;
+	    } else {
+		m_first = d;
+	    }
+	    m_last = d;
 	}
+    }
+
+    if (c_first != NULL) {
+	c_last->next = m_first;
+	dfc = c_first;
+	if (m_last != NULL) {
+	    dfc_last = m_last;
+	} else {
+	    dfc_last = c_last;
+	}
+    } else {
+	dfc = m_first;
+	dfc_last = m_last;
+    }
 }
 
 /* Search iteratively for fonts whose names specify a given character set. */
 static const char *
 dfc_search_family(const char *charset, dfc_t **dp, void **cookie)
 {
-    	dfc_t *d;
+    dfc_t *d;
 
-	if (*cookie == NULL)
-	    	d = dfc;
-	else {
-	    	d = ((dfc_t *)*cookie)->next;
-		if (d == NULL) {
-		    	if (dp)
-			    	*dp = NULL;
-		    	*cookie = NULL;
-		    	return NULL;
-		}
+    if (*cookie == NULL) {
+	d = dfc;
+    } else {
+	d = ((dfc_t *)*cookie)->next;
+	if (d == NULL) {
+	    if (dp) {
+		*dp = NULL;
+	    }
+	    *cookie = NULL;
+	    return NULL;
 	}
-	while (d != NULL) {
-	    	if (d->good && !strcasecmp(charset, d->charset)) {
-		    	if (dp)
-			    	*dp = d;
-			*cookie = d;
-			return d->name;
-		}
-		d = d->next;
+    }
+    while (d != NULL) {
+	if (d->good && !strcasecmp(charset, d->charset)) {
+	    if (dp) {
+		*dp = d;
+	    }
+	    *cookie = d;
+	    return d->name;
 	}
-	*cookie = NULL;
-	return NULL;
+	d = d->next;
+    }
+    *cookie = NULL;
+    return NULL;
 }
 
 /* Search for a font by name. */
 static bool
 dfc_search_name(const char *name)
 {
-    	dfc_t *d;
+    dfc_t *d;
 
-	for (d = dfc; d != NULL; d = d->next)
-	    	if (!strcasecmp(name, d->name))
-		    	return true;
+    for (d = dfc; d != NULL; d = d->next) {
+	if (!strcasecmp(name, d->name)) {
+	    return true;
+	}
+    }
 
-	return false;
+    return false;
 }
 
 /* Return the window for the screen. */

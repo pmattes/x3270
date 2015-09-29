@@ -44,23 +44,26 @@
 
 #define cwX_TO_COL(x_pos, cw) 	(((x_pos)-hhalo) / (cw))
 #define chY_TO_ROW(y_pos, ch) 	(((y_pos)-vhalo) / (ch))
-#define cwCOL_TO_X(col, cw)	(((col) * (cw)) + hhalo)
-#define chROW_TO_Y(row, ch)	(((row)+1) * (ch) + vhalo)
+#define cwCOL_TO_X(col, cw, _hhalo)	(((col) * (cw)) + _hhalo)
+#define chROW_TO_Y(row, ch, _vhalo)	(((row)+1) * (ch) + _vhalo)
 
 #define ssX_TO_COL(x_pos) 	cwX_TO_COL(x_pos, ss->char_width)
 #define ssY_TO_ROW(y_pos) 	chY_TO_ROW(y_pos, ss->char_height)
-#define ssCOL_TO_X(col)		cwCOL_TO_X(col, ss->char_width)
-#define ssROW_TO_Y(row)		chROW_TO_Y(row, ss->char_height)
+#define ssCOL_TO_X(col)		cwCOL_TO_X(col, ss->char_width, hhalo)
+#define ssROW_TO_Y(row)		chROW_TO_Y(row, ss->char_height, vhalo)
 
 #define X_TO_COL(x_pos) 	cwX_TO_COL(x_pos, *char_width)
 #define Y_TO_ROW(y_pos) 	chY_TO_ROW(y_pos, *char_height)
-#define COL_TO_X(col)		cwCOL_TO_X(col, *char_width)
-#define ROW_TO_Y(row)		chROW_TO_Y(row, *char_height)
+#define COL_TO_X(col)		cwCOL_TO_X(col, *char_width, hhalo)
+#define ROW_TO_Y(row)		chROW_TO_Y(row, *char_height, vhalo)
 
-#define SGAP	(*descent+3) 	/* gap between screen and status line */
+#define SGAP(descent)	(descent+3) 	/* gap between screen and status line */
 
-#define SCREEN_WIDTH(cw)	(cwCOL_TO_X(maxCOLS, cw) + hhalo)
-#define SCREEN_HEIGHT(ch)	(chROW_TO_Y(maxROWS, ch) + vhalo+SGAP+vhalo)
+#define SCREEN_WIDTH(cw, _hhalo) \
+    			(cwCOL_TO_X(maxCOLS, cw, _hhalo) + _hhalo)
+#define SCREEN_HEIGHT(ch, descent, _vhalo) \
+			(chROW_TO_Y(maxROWS, ch, _vhalo) + \
+			 _vhalo+SGAP(descent)+_vhalo)
 
 /* selections */
 

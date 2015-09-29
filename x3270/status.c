@@ -154,7 +154,7 @@ static int colors3279[SSZ] =  {
 #define C0	(maxCOLS-7)	/* cursor position */
 #define CCNT	7
 
-#define STATUS_Y	(ROW_TO_Y(maxROWS)+SGAP-1)
+#define STATUS_Y	(ROW_TO_Y(maxROWS)+SGAP(*descent)-1)
 
 static unsigned char	nullblank;
 static Position		status_y;

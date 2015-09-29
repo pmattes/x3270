@@ -190,8 +190,8 @@ popup_move_again(XtPointer closure, XtIntervalId *id _is_unused)
 #endif /*]*/
 
     if (x != wx->x || y != wx->y) {
-	Position main_x, main_y;
-	Dimension main_width, main_height;
+	Position tl_x, tl_y;
+	Dimension tl_width, tl_height;
 	Dimension popup_width;
 
 	/*
@@ -206,27 +206,27 @@ popup_move_again(XtPointer closure, XtIntervalId *id _is_unused)
 	printf("wm width %u height %u\n", wm_width, wm_height);
 #endif /*]*/
 
-	XtVaGetValues(toplevel, XtNx, &main_x, XtNy, &main_y,
-		XtNwidth, &main_width, XtNheight, &main_height, NULL);
+	XtVaGetValues(toplevel, XtNx, &tl_x, XtNy, &tl_y,
+		XtNwidth, &tl_width, XtNheight, &tl_height, NULL);
 
 	switch (wx->p) {
 	case Bottom:
-	    x = main_x - wm_width;
-	    y = main_y + main_height + wm_width;
+	    x = tl_x - wm_width;
+	    y = tl_y + tl_height + wm_width;
 	    break;
 	case Left:
 	    XtVaGetValues(wx->w, XtNwidth, &popup_width, NULL);
-	    x = main_x - (3 * wm_width) - popup_width;
-	    y = main_y - wm_height;
+	    x = tl_x - (3 * wm_width) - popup_width;
+	    y = tl_y - wm_height;
 	    break;
 	case Right:
-	    x = main_x + wm_width + main_width;
-	    y = main_y - wm_height;
+	    x = tl_x + wm_width + tl_width;
+	    y = tl_y - wm_height;
 	    break;
 	case InsideRight:
 	    XtVaGetValues(wx->w, XtNwidth, &popup_width, NULL);
-	    x = main_x - (2 * wm_width) + main_width - popup_width;
-	    y = main_y + menubar_qheight(main_width);
+	    x = tl_x - (2 * wm_width) + tl_width - popup_width;
+	    y = tl_y + menubar_qheight(tl_width);
 	    break;
 	default:
 	    return;

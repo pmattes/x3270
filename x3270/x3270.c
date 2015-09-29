@@ -95,7 +95,8 @@ int             screen_depth;
 Widget          toplevel;
 XtAppContext    appcontext;
 Atom            a_delete_me, a_save_yourself, a_3270, a_registry, a_encoding,
-		a_state;
+		a_state, a_net_wm_state, a_net_wm_state_maximized_horz,
+		a_net_wm_state_maximized_vert, a_atom;
 char		full_model_name[13] = "IBM-";
 char	       *model_name = &full_model_name[4];
 Pixmap          gray;
@@ -577,6 +578,12 @@ main(int argc, char *argv[])
     a_registry = XInternAtom(display, "CHARSET_REGISTRY", False);
     a_encoding = XInternAtom(display, "CHARSET_ENCODING", False);
     a_state = XInternAtom(display, "WM_STATE", False);
+    a_net_wm_state = XInternAtom(display, "_NET_WM_STATE", False);
+    a_net_wm_state_maximized_horz = XInternAtom(display,
+	    "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+    a_net_wm_state_maximized_vert = XInternAtom(display,
+	    "_NET_WM_STATE_MAXIMIZED_VERT", False);
+    a_atom = XInternAtom(display, "ATOM", False);
 
     /* Add the Xt-only actions. */
     xaction_init();
