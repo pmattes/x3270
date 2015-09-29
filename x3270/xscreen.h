@@ -88,6 +88,7 @@ union sp {
  * screen.c data structures. *
  */
 extern int	 *ascent, *descent;
+extern Dimension *screen_height;
 extern unsigned	 fixed_width, fixed_height;
 extern int       hhalo, vhalo;
 extern Widget	 *screen;

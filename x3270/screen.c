@@ -334,13 +334,14 @@ int            *char_width = &nss.char_width;
 int            *char_height = &nss.char_height;
 int            *ascent = &nss.ascent;
 int            *descent = &nss.descent;
-bool        *standard_font = &nss.standard_font;
-bool        *font_8bit = &nss.font_8bit;
-bool        *font_16bit = &nss.font_16bit;
-bool        *extended_3270font = &nss.extended_3270font;
-bool        *funky_font = &nss.funky_font;
+bool           *standard_font = &nss.standard_font;
+bool           *font_8bit = &nss.font_8bit;
+bool           *font_16bit = &nss.font_16bit;
+bool           *extended_3270font = &nss.extended_3270font;
+bool           *funky_font = &nss.funky_font;
 int            *xtra_width = &nss.xtra_width;
 Font           *fid = &nss.fid;
+Dimension      *screen_height = &nss.screen_height;
 
 /* Mouse-cursor state */
 enum mcursor_state { LOCKED, NORMAL, WAIT };
@@ -778,7 +779,7 @@ screen_reinit(unsigned cmask)
 	scrollbar_width = 0;
     }
 
-    if (1/*cmask & (FONT_CHANGE | MODEL_CHANGE)*/) {
+    if (cmask & (FONT_CHANGE | MODEL_CHANGE | SCROLL_CHANGE)) {
 	if (fixed_width) {
 	    Dimension w, h;
 
@@ -1865,9 +1866,9 @@ screen_disp(bool erasing)
 	    XDrawLine(display, ss->window,
 		    get_gc(ss, GC_NONDEFAULT | DEFAULT_PIXEL),
 		    0,
-		    ssROW_TO_Y(maxROWS-1)+SGAP(nss.descent)-1,
+		    nss.screen_height - nss.char_height - 3,
 		    ssCOL_TO_X(maxCOLS)+hhalo,
-		    ssROW_TO_Y(maxROWS-1)+SGAP(nss.descent)-1);
+		    nss.screen_height - nss.char_height - 3);
 	    line_changed = false;
 	}
     }
