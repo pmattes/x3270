@@ -561,6 +561,7 @@ screen_init(void)
 	    user_resize_allowed = false;
 	}
     }
+    menubar_snap_enable(user_resize_allowed);
 
     /* Initialize ss. */
     nss.cursor_daddr = 0;
@@ -4097,6 +4098,7 @@ query_window_state(void)
     if (maximized != was_maximized)
     {
 	vtrace("%s\n", maximized? "Maximized": "Not maximized");
+	menubar_snap_enable(!maximized);
     }
 }
 
@@ -6311,6 +6313,20 @@ bool
 screen_has_bg_color(void)
 {
     return false;
+}
+
+/**
+ * Snap the screen to the current size.
+ */
+void
+screen_snap_size(void)
+{
+    if (!user_resize_allowed)
+    {
+	return;
+    }
+    clear_fixed();
+    screen_reinit(FONT_CHANGE);
 }
 
 /**

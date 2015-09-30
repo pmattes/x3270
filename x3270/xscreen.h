@@ -148,6 +148,7 @@ void screen_preinit(void);
 void screen_set_keymap(void);
 void screen_set_temp_keymap(XtTranslations trans);
 void screen_showikeypad(bool on);
+void screen_snap_size(void);
 void set_aicon_label(char *l);
 void set_translations(Widget w, XtTranslations *t00, XtTranslations *t0);
 void shift_event(int event_state);

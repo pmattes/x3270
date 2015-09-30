@@ -829,6 +829,7 @@ x3270*otherHostOption.label:			Other...
 x3270*togglesOption.label:			Toggles
 x3270*fontsOption.label:			Font
 x3270*modelsOption.label:			Screen Size
+x3270*snapOption.label:				Snap Window Size
 x3270*colorsOption.label:			Color Scheme
 x3270*charsetOption.label:			Character Set
 x3270*keymapOption.label:			Change Keymap...

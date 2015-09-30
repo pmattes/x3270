@@ -47,3 +47,4 @@ void menubar_init(Widget container, Dimension overall_width,
 void menubar_keypad_changed(void);
 void menubar_register(void);
 void menubar_resize(Dimension width);
+void menubar_snap_enable(bool enable);

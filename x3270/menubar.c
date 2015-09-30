@@ -99,6 +99,7 @@ static Dimension fm_borderWidth;
 static Pixel fm_borderColor;
 static Dimension fm_leftMargin;
 static Dimension fm_rightMargin;
+static bool snap_enabled = true;
 
 static struct charset {
     char **parents;
@@ -182,6 +183,7 @@ static Widget	scheme_button;
 static Widget   connect_menu;
 static Widget	script_abort_button;
 static Widget	idle_button;
+static Widget	snap_button;
 
 static Pixmap   arrow;
 Pixmap	dot;
@@ -1646,6 +1648,14 @@ do_idle_command(Widget w _is_unused, XtPointer userdata _is_unused,
 	popup_idle();
 }
 
+/* Callback from the "Snap" menu option */
+static void
+do_snap(Widget w _is_unused, XtPointer userdata _is_unused,
+	XtPointer calldata _is_unused)
+{
+    screen_snap_size();
+}
+
 /* Called to change telnet modes */
 static void
 linemode_callback(Widget w _is_unused, XtPointer client_data _is_unused, XtPointer call_data _is_unused)
@@ -2025,6 +2035,17 @@ options_menu_init(bool regen, Position x, Position y)
 	any = true;
     }
 
+    /* Create the "Snap" option. */
+    if (!item_suppressed(options_menu, "snapOption")) {
+	spaced = false;
+	snap_button = add_menu_itemv("snapOption", options_menu,
+		do_snap, NULL,
+		&spaced,
+		XtNsensitive, snap_enabled,
+		NULL);
+	any |= (snap_button != NULL);
+    }
+
     /* Create the "models" pullright */
     if (!item_suppressed(options_menu, "modelsOption")) {
 	t = XtVaCreatePopupShell(
@@ -2219,6 +2240,18 @@ menubar_retoggle(toggle_index_t ix)
 	XtVaSetValues(toggle_widget[ix].w[1],
 		XtNleftBitmap, toggled(ix)? no_diamond: diamond,
 		NULL);
+    }
+}
+
+/**
+ * Enable or disable the Snap option.
+ */
+void
+menubar_snap_enable(bool enable)
+{
+    snap_enabled = enable;
+    if (snap_button != NULL) {
+	XtVaSetValues(snap_button, XtNsensitive, enable, NULL);
     }
 }
 
