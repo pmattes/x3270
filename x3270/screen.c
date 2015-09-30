@@ -1308,6 +1308,7 @@ static void
 crosshair_margin(bool draw, const char *why)
 {
     int column;
+    int hhalo_chars = 0, vhalo_chars = 0;
 
 #ifdef CROSSHAIR_DEBUG /*[*/
     vtrace("crosshair_margin(%s, %s) cursor=%d", why,
@@ -1315,25 +1316,44 @@ crosshair_margin(bool draw, const char *why)
 	    draw? cursor_addr: ss->cursor_daddr);
 #endif /*]*/
 
+    /* Compute the number of halo characters. */
+    if (hhalo > HHALO) {
+	hhalo_chars = hhalo / ss->char_width;
+    }
+    if (vhalo > VHALO) {
+	vhalo_chars = vhalo / ss->char_height;
+    }
+
     if (draw) {
+	int nhx;
 	XTextItem16 text1;
 	int i;
 
 	ss->xh_alt = false;
 
-	/* To the right. */
-	if (maxCOLS > cCOLS) {
+	/* Compute the cursor column. */
+	column = BA_TO_COL(cursor_addr);
+	if (flipped) {
+	    column = (cCOLS - 1) - column;
+	}
 
-	    if (ss->hx_text == NULL || ss->nhx_text < maxCOLS - cCOLS) {
-		ss->nhx_text = maxCOLS - cCOLS;
-		Replace(ss->hx_text,
-			(XChar2b *)Malloc(ss->nhx_text * sizeof(XChar2b)));
-	    }
-	    for (i = 0; i < ss->nhx_text; i++) {
+	/* Set up an array of characters for drawing horizonal lines. */
+	nhx = maxCOLS - cCOLS;
+	if (hhalo_chars > nhx) {
+	    nhx = hhalo_chars;
+	}
+	if (nhx > 0 && (ss->hx_text == NULL || ss->nhx_text < nhx)) {
+	    ss->nhx_text = nhx;
+	    Replace(ss->hx_text, (XChar2b *)Malloc(nhx * sizeof(XChar2b)));
+	    for (i = 0; i < nhx; i++) {
 		apl_display_char(&ss->hx_text[i], 0xa2);
 	    }
+	}
+
+	/* To the right. */
+	if (maxCOLS > cCOLS) {
 	    text1.chars = ss->hx_text;
-	    text1.nchars = ss->nhx_text;
+	    text1.nchars = maxCOLS - cCOLS;
 	    text1.delta = 0;
 	    text1.font = ss->fid;
 	    XDrawText16(display, ss->window, get_gc(ss, CROSS_COLOR),
@@ -1354,10 +1374,6 @@ crosshair_margin(bool draw, const char *why)
 	    text1.nchars = 1;
 	    text1.delta = 0;
 	    text1.font = ss->fid;
-	    column = BA_TO_COL(cursor_addr);
-	    if (flipped) {
-		column = (cCOLS - 1) - column;
-	    }
 	    for (i = ROWS; i < maxROWS; i++) {
 		XDrawText16(display, ss->window, get_gc(ss, CROSS_COLOR),
 			ssCOL_TO_X(column), ssROW_TO_Y(i), &text1, 1);
@@ -1367,6 +1383,44 @@ crosshair_margin(bool draw, const char *why)
 	    ss->xh_alt = true;
 	}
 
+	/* Inside the vertical halo. */
+	if (vhalo_chars) {
+	    XChar2b text;
+
+	    apl_display_char(&text, 0xbf);
+	    text1.chars = &text;
+	    text1.nchars = 1;
+	    text1.delta = 0;
+	    text1.font = ss->fid;
+
+	    for (i = -vhalo_chars; i < 0; i++) {
+		XDrawText16(display, ss->window, get_gc(ss, CROSS_COLOR),
+			ssCOL_TO_X(column), ssROW_TO_Y(i), &text1, 1);
+	    }
+	    for (i = maxROWS;
+		 i < maxROWS + (2 * vhalo_chars);
+		 i++) {
+		XDrawText16(display, ss->window, get_gc(ss, CROSS_COLOR),
+			ssCOL_TO_X(column), ssROW_TO_Y(i), &text1, 1);
+	    }
+	}
+
+	/* In the horizontal halo. */
+	if (hhalo_chars) {
+	    text1.chars = ss->hx_text;
+	    text1.nchars = hhalo_chars;
+	    text1.delta = 0;
+	    text1.font = ss->fid;
+	    XDrawText16(display, ss->window, get_gc(ss, CROSS_COLOR),
+		    ssCOL_TO_X(-hhalo_chars),
+		    ssROW_TO_Y(BA_TO_ROW(cursor_addr)),
+		    &text1, 1);
+	    XDrawText16(display, ss->window, get_gc(ss, CROSS_COLOR),
+		    ssCOL_TO_X(maxCOLS),
+		    ssROW_TO_Y(BA_TO_ROW(cursor_addr)),
+		    &text1, 1);
+	}
+
 #ifdef CROSSHAIR_DEBUG /*[*/
 	vtrace(" -> %s\n", ss->xh_alt? "draw": "nop");
 #endif /*]*/
@@ -1374,6 +1428,38 @@ crosshair_margin(bool draw, const char *why)
     }
 
     /* Erasing. */
+
+    /* Compute the column. */
+    column = BA_TO_COL(ss->cursor_daddr);
+    if (flipped) {
+	column = (COLS - 1) - column;
+    }
+
+    if (vhalo_chars) {
+	/* Vertical halo. */
+	XFillRectangle(display, ss->window, get_gc(ss, INVERT_COLOR(0)),
+		ssCOL_TO_X(column), /* x */
+		ssROW_TO_Y(-vhalo_chars) - ss->ascent, /* y */
+		ss->char_width + 1, /* width */
+		ss->char_height * vhalo_chars /* height */);
+	XFillRectangle(display, ss->window, get_gc(ss, INVERT_COLOR(0)),
+		ssCOL_TO_X(column), /* x */
+		ssROW_TO_Y(maxROWS) - ss->ascent, /* y */
+		ss->char_width + 1, /* width */
+		ss->char_height * (2 * vhalo_chars) /* height */);
+    }
+    if (hhalo_chars) {
+	/* Horizontal halo. */
+	XFillRectangle(display, ss->window, get_gc(ss, INVERT_COLOR(0)),
+		ssCOL_TO_X(-hhalo_chars),
+		ssROW_TO_Y(BA_TO_ROW(ss->cursor_daddr)) - ss->ascent,
+		(ss->char_width * hhalo_chars) + 1, ss->char_height);
+	XFillRectangle(display, ss->window, get_gc(ss, INVERT_COLOR(0)),
+		ssCOL_TO_X(maxCOLS),
+		ssROW_TO_Y(BA_TO_ROW(ss->cursor_daddr)) - ss->ascent,
+		(ss->char_width * hhalo_chars) + 1, ss->char_height);
+    }
+
     if (!ss->xh_alt) {
 #ifdef CROSSHAIR_DEBUG /*[*/
 	vtrace(" -> nop\n");
@@ -1394,10 +1480,6 @@ crosshair_margin(bool draw, const char *why)
 
     /* Down the bottom. */
     if (maxROWS > defROWS) {
-	column = BA_TO_COL(ss->cursor_daddr);
-	if (flipped) {
-	    column = (COLS - 1) - column;
-	}
 	XFillRectangle(display, ss->window, get_gc(ss, INVERT_COLOR(0)),
 		ssCOL_TO_X(column), ssROW_TO_Y(defROWS) - ss->ascent,
 		ss->char_width + 1, ss->char_height * (maxROWS - defROWS));
