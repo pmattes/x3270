@@ -890,7 +890,7 @@ screen_reinit(unsigned cmask)
 
     /* Redraw the screen. */
     xaction_internal(PA_Expose_xaction, IA_REDRAW, NULL, NULL);
-    
+
     /*
      * We're all done processing the user's request, so allow normal resizing
      * again.
@@ -5596,11 +5596,8 @@ revert_screen(void)
 	}
 	break;
     case REDO_RESIZE:
-	/* Changed fonts in response to a previous user resize. */
-	vtrace("  size reassertion failed, window truncated\n"
-		"  doing nothing\n");
 	screen_redo = REDO_NONE;
-	return;
+	/* fall through... */
     case REDO_NONE:
 	/* Initial configuration, or user-generated resize. */
 	do_resize();
@@ -5653,13 +5650,12 @@ stream_end(XtPointer closure _is_unused, XtIntervalId *id _is_unused)
 	goto done;
     }
 
-    /* The desired dimensions are bigger. */
+    /* The desired dimensions are different. Revert the screen. */
     if (cn.width >= main_width && cn.height >= main_height) {
 	vtrace("  bigger\n");
     } else {
 	vtrace("  smaller\n");
     }
-    screen_redo = REDO_NONE;
     revert_screen();
 
 done:
@@ -5713,8 +5709,6 @@ PA_ConfigureNotify_xaction(Widget w _is_unused, XEvent *event,
 	vtrace("setting fixed_width and fixed_height\n");
 	fixed_width = cn.width;
 	fixed_height = cn.height;
-	hhalo = HHALO;
-	vhalo = VHALO;
     }
 
     /* Set the stream timer for 0.5 sec from now. */
