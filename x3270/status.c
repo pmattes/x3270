@@ -361,7 +361,7 @@ status_reinit(unsigned cmask)
 
 	if (cmask & FONT_CHANGE)
 		nullblank = *standard_font ? ' ' : CG_space;
-	if (cmask & (FONT_CHANGE | MODEL_CHANGE)) {
+	if (cmask & (FONT_CHANGE | MODEL_CHANGE | SCROLL_CHANGE)) {
 		status_y = STATUS_Y;
 		if (!*descent)
 			++status_y;

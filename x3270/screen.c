@@ -1300,6 +1300,18 @@ screen_crosshair_gc(void)
     return screen_gc(CROSS_COLOR);
 }
 
+/* Draw the line at the top of the OIA. */
+static void
+draw_oia_line(void)
+{
+    XDrawLine(display, ss->window,
+	    get_gc(ss, GC_NONDEFAULT | DEFAULT_PIXEL),
+	    0,
+	    nss.screen_height - nss.char_height - 3,
+	    ssCOL_TO_X(maxCOLS)+hhalo,
+	    nss.screen_height - nss.char_height - 3);
+}
+
 /*
  * Draw or erase the crosshair in the margin between the primary and alternate
  * screens.
@@ -1318,10 +1330,10 @@ crosshair_margin(bool draw, const char *why)
 
     /* Compute the number of halo characters. */
     if (hhalo > HHALO) {
-	hhalo_chars = hhalo / ss->char_width;
+	hhalo_chars = (hhalo + (ss->char_width - 1)) / ss->char_width;
     }
     if (vhalo > VHALO) {
-	vhalo_chars = vhalo / ss->char_height;
+	vhalo_chars = (vhalo + (ss->char_height - 1)) / ss->char_height;
     }
 
     if (draw) {
@@ -1424,7 +1436,7 @@ crosshair_margin(bool draw, const char *why)
 #ifdef CROSSHAIR_DEBUG /*[*/
 	vtrace(" -> %s\n", ss->xh_alt? "draw": "nop");
 #endif /*]*/
-	return;
+	goto fix_status;
     }
 
     /* Erasing. */
@@ -1464,7 +1476,7 @@ crosshair_margin(bool draw, const char *why)
 #ifdef CROSSHAIR_DEBUG /*[*/
 	vtrace(" -> nop\n");
 #endif /*]*/
-	return;
+	goto fix_status;
     }
 #ifdef CROSSHAIR_DEBUG /*[*/
     vtrace(" -> erase\n");
@@ -1485,6 +1497,11 @@ crosshair_margin(bool draw, const char *why)
 		ss->char_width + 1, ss->char_height * (maxROWS - defROWS));
     }
     ss->xh_alt = false;
+
+fix_status:
+    status_touch(); /* could be more efficient */
+    status_disp();
+    draw_oia_line();
 }
 
 
@@ -1854,7 +1871,6 @@ PA_Expose_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params)
     do_redraw(w, event, params, num_params);
 }
 
-
 /*
  * Redraw the changed parts of the screen.
  */
@@ -1945,12 +1961,7 @@ screen_disp(bool erasing)
 
 	/* Refresh the line across the bottom of the screen. */
 	if (line_changed) {
-	    XDrawLine(display, ss->window,
-		    get_gc(ss, GC_NONDEFAULT | DEFAULT_PIXEL),
-		    0,
-		    nss.screen_height - nss.char_height - 3,
-		    ssCOL_TO_X(maxCOLS)+hhalo,
-		    nss.screen_height - nss.char_height - 3);
+	    draw_oia_line();
 	    line_changed = false;
 	}
     }
