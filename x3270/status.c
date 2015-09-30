@@ -626,7 +626,9 @@ status_minus(void)
 void
 status_reset(void)
 {
-	if (kybdlock & KL_ENTER_INHIBIT)
+	if (!CONNECTED)
+	    	do_msg(DISCONNECTED);
+	else if (kybdlock & KL_ENTER_INHIBIT)
 		do_msg(INHIBIT);
 	else if (kybdlock & KL_DEFERRED_UNLOCK)
 		do_msg(NONSPECIFIC);
