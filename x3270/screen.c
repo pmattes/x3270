@@ -167,8 +167,6 @@ static Widget   container;
 static Widget   scrollbar;
 static Dimension menubar_height;
 static Dimension keypad_height;
-static Dimension keypad_xwidth;		/* extra width of integral keypad, if
-					   keypad wider than screen */
 static Dimension container_width;
 static Dimension cwidth_nkp;		/* container width, without integral
 					   keypad */
@@ -610,7 +608,6 @@ static void
 screen_reinit(unsigned cmask)
 {
     Dimension cwidth_curr;
-    Dimension mkw;
 
     /* Allocate colors. */
     if (cmask & COLOR_CHANGE) {
@@ -781,33 +778,55 @@ screen_reinit(unsigned cmask)
     }
 
     if (cmask & (FONT_CHANGE | MODEL_CHANGE | SCROLL_CHANGE)) {
+	Dimension sw;
+
 	if (fixed_width) {
 	    Dimension w, h;
 
 	    /* Compute the horizontal halo. */
 	    w = SCREEN_WIDTH(ss->char_width, 0)+2 + scrollbar_width;
 	    if (w > fixed_width) {
+		vtrace("Screen is too wide for fixed width, will clip\n");
 		hhalo = HHALO;
 	    } else {
+		/* Set the horizontal halo to center the screen. */
 		hhalo = (fixed_width - w) / 2;
 	    }
 
 	    /* Compute the vertical halo. */
 	    h = menubar_qheight(fixed_width) +
 		SCREEN_HEIGHT(ss->char_height, ss->descent, 0)+2;
-	    /* If the integral keypad is on, the fixed height includes it. */
 	    if (kp_placement == kp_integral && xappres.keypad_on) {
+		/*
+		 * If the integral keypad is on, the fixed height includes it.
+		 */
 		h += keypad_qheight();
 	    }
 	    if (h > fixed_height) {
+		vtrace("Screen is too tall for fixed height, will clip\n");
 		vhalo = VHALO;
 	    } else {
+		/*
+		 * Center the screen, sort of.
+		 * '3' is a magic number here -- the vertical halo is used once
+		 * above the screen and twice below. That should change.
+		 */
 		vhalo = (fixed_height - h) / 3;
 	    }
 	} else {
 	    vhalo = VHALO;
 	    hhalo = HHALO;
 	}
+
+	/* Increase the horizontal halo to hold the integral keypad. */
+	sw = SCREEN_WIDTH(ss->char_width, hhalo);
+	if (user_resize_allowed &&
+		kp_placement == kp_integral &&
+		xappres.keypad_on &&
+		min_keypad_width() > sw) {
+	    hhalo = (min_keypad_width() - (SCREEN_WIDTH(ss->char_width, 0)+2 + scrollbar_width)) / 2;
+	}
+
 	nss.screen_width = SCREEN_WIDTH(ss->char_width, hhalo);
 	nss.screen_height = SCREEN_HEIGHT(ss->char_height, ss->descent, vhalo);
     }
@@ -818,13 +837,6 @@ screen_reinit(unsigned cmask)
 	container_width = nss.screen_width+2 + scrollbar_width;
     }
     cwidth_nkp = container_width;
-    mkw = min_keypad_width();
-    if (kp_placement == kp_integral && container_width < mkw) {
-	keypad_xwidth = mkw - container_width;
-	container_width = mkw;
-    } else {
-	keypad_xwidth = 0;
-    }
 
     if (container == NULL) {
 	container = XtVaCreateManagedWidget(
@@ -905,7 +917,7 @@ set_toplevel_sizes(const char *why)
 {
     Dimension tw, th;
 
-    tw = container_width - (xappres.keypad_on ? 0 : keypad_xwidth);
+    tw = container_width;
     th = container_height - (xappres.keypad_on ? 0 : keypad_height);
     if (fixed_width) {
 	if (!maximized) {
@@ -988,7 +1000,7 @@ inflate_screen(void)
 	    "screen", widgetClass, container,
 	    XtNwidth, nss.screen_width,
 	    XtNheight, nss.screen_height,
-	    XtNx, xappres.keypad_on? (keypad_xwidth / 2): 0,
+	    XtNx, 0,
 	    XtNy, menubar_height,
 	    XtNbackground,
 		appres.interactive.mono? xappres.background: colorbg_pixel,
@@ -1000,7 +1012,7 @@ inflate_screen(void)
 	XtVaSetValues(nss.widget,
 	    XtNwidth, nss.screen_width,
 	    XtNheight, nss.screen_height,
-	    XtNx, xappres.keypad_on? (keypad_xwidth / 2): 0,
+	    XtNx, 0,
 	    XtNy, menubar_height,
 	    XtNbackground,
 		appres.interactive.mono? xappres.background: colorbg_pixel,
@@ -1052,9 +1064,7 @@ scrollbar_init(bool is_reset)
 	    scrollbar = XtVaCreateManagedWidget(
 		    "scrollbar", scrollbarWidgetClass,
 		    container,
-		    XtNx, nss.screen_width+1
-			    + (xappres.keypad_on?
-				(keypad_xwidth / 2): 0),
+		    XtNx, nss.screen_width+1,
 		    XtNy, menubar_height,
 		    XtNwidth, scrollbar_width-1,
 		    XtNheight, nss.screen_height,
@@ -1067,9 +1077,7 @@ scrollbar_init(bool is_reset)
 		    screen_jump_proc, NULL);
 	} else {
 	    XtVaSetValues(scrollbar,
-		    XtNx, nss.screen_width+1
-			    + (xappres.keypad_on?
-				(keypad_xwidth / 2) : 0),
+		    XtNx, nss.screen_width+1,
 		    XtNy, menubar_height,
 		    XtNwidth, scrollbar_width-1,
 		    XtNheight, nss.screen_height,
@@ -1208,13 +1216,8 @@ screen_showikeypad(bool on)
 	screen_redo = REDO_KEYPAD;
     }
 
-    inflate_screen();
-    if (keypad_xwidth > 0) {
-	if (scrollbar != NULL) {
-	    scrollbar_init(false);
-	}
-	menubar_resize(on? container_width: cwidth_nkp);
-    }
+    inflate_screen(); /* redundant now? */
+    screen_reinit(FONT_CHANGE);
 }
 
 
@@ -4100,6 +4103,14 @@ query_window_state(void)
     {
 	vtrace("%s\n", maximized? "Maximized": "Not maximized");
 	menubar_snap_enable(!maximized);
+
+	/*
+	 * If the integral keypad is on when we are maximized, then it is okay
+	 * to toggle it on and off. Otherwise, no.
+	 */
+	menubar_keypad_sensitive(!maximized ||
+		kp_placement != kp_integral ||
+		xappres.keypad_on);
     }
 }
 

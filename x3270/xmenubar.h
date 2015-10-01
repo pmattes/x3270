@@ -45,6 +45,7 @@ void HandleMenu_xaction(Widget w, XEvent *event, String *params,
 void menubar_init(Widget container, Dimension overall_width,
 	Dimension current_width);
 void menubar_keypad_changed(void);
+void menubar_keypad_sensitive(bool sensitive);
 void menubar_register(void);
 void menubar_resize(Dimension width);
 void menubar_snap_enable(bool enable);

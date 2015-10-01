@@ -100,6 +100,7 @@ static Pixel fm_borderColor;
 static Dimension fm_leftMargin;
 static Dimension fm_rightMargin;
 static bool snap_enabled = true;
+static bool keypad_sensitive = true;
 
 static struct charset {
     char **parents;
@@ -1323,6 +1324,7 @@ keypad_button_init(Position x, Position y)
 		    XtNy, y,
 		    XtNwidth, ky_width+8,
 		    XtNheight, KEY_HEIGHT,
+		    XtNsensitive, keypad_sensitive,
 		    NULL);
 		XtAddCallback(keypad_button, XtNcallback,
 		    toggle_keypad, NULL);
@@ -2253,6 +2255,20 @@ menubar_snap_enable(bool enable)
     snap_enabled = enable;
     if (snap_button != NULL) {
 	XtVaSetValues(snap_button, XtNsensitive, enable, NULL);
+    }
+}
+
+/**
+ * Enable or disable the keypad button.
+ *
+ * @param[in] sensitive		true if enabled
+ */
+void
+menubar_keypad_sensitive(bool sensitive)
+{
+    keypad_sensitive = sensitive;
+    if (keypad_button) {
+	XtVaSetValues(keypad_button, XtNsensitive, sensitive, NULL);
     }
 }
 
