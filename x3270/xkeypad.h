@@ -38,6 +38,7 @@ extern enum kp_placement {
 	kp_right, kp_left, kp_bottom, kp_integral, kp_inside_right
 } kp_placement;
 
+void ikeypad_destroy(void);
 void keypad_first_up(void);
 Widget keypad_init(Widget container, Dimension voffset, Dimension screen_width,
 	bool floating, bool vert);

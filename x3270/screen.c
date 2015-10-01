@@ -166,7 +166,6 @@ static bool     maximized = false;
 static Widget   container;
 static Widget   scrollbar;
 static Dimension menubar_height;
-static Dimension keypad_height;
 static Dimension container_width;
 static Dimension cwidth_nkp;		/* container width, without integral
 					   keypad */
@@ -779,6 +778,7 @@ screen_reinit(unsigned cmask)
 
     if (cmask & (FONT_CHANGE | MODEL_CHANGE | SCROLL_CHANGE)) {
 	Dimension sw;
+	bool h_clip = false;
 
 	if (fixed_width) {
 	    Dimension w, h;
@@ -788,6 +788,7 @@ screen_reinit(unsigned cmask)
 	    if (w > fixed_width) {
 		vtrace("Screen is too wide for fixed width, will clip\n");
 		hhalo = HHALO;
+		h_clip = true;
 	    } else {
 		/* Set the horizontal halo to center the screen. */
 		hhalo = (fixed_width - w) / 2;
@@ -819,8 +820,10 @@ screen_reinit(unsigned cmask)
 	}
 
 	/* Increase the horizontal halo to hold the integral keypad. */
-	sw = SCREEN_WIDTH(ss->char_width, hhalo);
-	if (user_resize_allowed &&
+	sw = SCREEN_WIDTH(ss->char_width, hhalo)+2 + scrollbar_width;
+	if (!h_clip &&
+		(!fixed_width || (min_keypad_width() < fixed_width)) &&
+		user_resize_allowed &&
 		kp_placement == kp_integral &&
 		xappres.keypad_on &&
 		min_keypad_width() > sw) {
@@ -862,20 +865,22 @@ screen_reinit(unsigned cmask)
 
     if (fixed_height) {
 	container_height = fixed_height;
-	if (kp_placement == kp_integral && xappres.keypad_on) {
-	    container_height -= keypad_qheight();
-	}
     } else {
 	container_height = menubar_height + nss.screen_height+2;
+	if (kp_placement == kp_integral && xappres.keypad_on) {
+	    container_height += keypad_qheight();
+	}
     }
     if (kp_placement == kp_integral) {
-	(void) keypad_init(container, container_height, container_width,
-		false, false);
-	keypad_height = keypad_qheight();
-    } else {
-	keypad_height = 0;
+	if (xappres.keypad_on) {
+	    (void) keypad_init(container,
+		    menubar_height + nss.screen_height+2,
+		    container_width,
+		    false, false);
+	} else {
+	    ikeypad_destroy();
+	}
     }
-    container_height += keypad_height;
 
     /* Create screen and set container dimensions */
     inflate_screen();
@@ -918,7 +923,7 @@ set_toplevel_sizes(const char *why)
     Dimension tw, th;
 
     tw = container_width;
-    th = container_height - (xappres.keypad_on ? 0 : keypad_height);
+    th = container_height;
     if (fixed_width) {
 	if (!maximized) {
 	    XtVaSetValues(toplevel,

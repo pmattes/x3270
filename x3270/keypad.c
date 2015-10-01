@@ -802,3 +802,12 @@ keypad_popup(void)
     xappres.keypad_on = True;
     keypad_first_up();
 }
+
+void
+ikeypad_destroy(void)
+{
+    if (key_pad != NULL) {
+	XtDestroyWidget(key_pad);
+	key_pad = NULL;
+    }
+}
