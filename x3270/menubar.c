@@ -324,12 +324,13 @@ free_menu_hier(struct menu_hier *root)
 Dimension
 menubar_qheight(Dimension container_width)
 {
-	if (!appres.interactive.menubar ||
-	    (!fixed_width && (container_width < (unsigned) MENU_MIN_WIDTH)))
-		return 0;
-	else
-		return TOP_MARGIN + KEY_HEIGHT+2*BORDER + BOTTOM_MARGIN +
-			2*MENU_BORDER;
+    if (!appres.interactive.menubar ||
+	    (container_width < (unsigned) MENU_MIN_WIDTH)) {
+	return 0;
+    } else {
+	return TOP_MARGIN + KEY_HEIGHT+2*BORDER + BOTTOM_MARGIN +
+	    2*MENU_BORDER;
+    }
 }
 
 /*

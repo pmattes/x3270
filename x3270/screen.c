@@ -787,9 +787,6 @@ screen_reinit(unsigned cmask)
 	    /* Compute the horizontal halo. */
 	    w = SCREEN_WIDTH(ss->char_width, 0)+2 + scrollbar_width;
 	    if (w > fixed_width) {
-		if (screen_redo == REDO_NONE) {
-		    Error("Font is too wide for fixed width");
-		}
 		hhalo = HHALO;
 	    } else {
 		hhalo = (fixed_width - w) / 2;
@@ -798,10 +795,11 @@ screen_reinit(unsigned cmask)
 	    /* Compute the vertical halo. */
 	    h = menubar_qheight(fixed_width) +
 		SCREEN_HEIGHT(ss->char_height, ss->descent, 0)+2;
+	    /* If the integral keypad is on, the fixed height includes it. */
+	    if (kp_placement == kp_integral && xappres.keypad_on) {
+		h += keypad_qheight();
+	    }
 	    if (h > fixed_height) {
-		if (screen_redo == REDO_NONE) {
-		    Error("Font is too tall for fixed width");
-		}
 		vhalo = VHALO;
 	    } else {
 		vhalo = (fixed_height - h) / 3;
@@ -852,6 +850,9 @@ screen_reinit(unsigned cmask)
 
     if (fixed_height) {
 	container_height = fixed_height;
+	if (kp_placement == kp_integral && xappres.keypad_on) {
+	    container_height -= keypad_qheight();
+	}
     } else {
 	container_height = menubar_height + nss.screen_height+2;
     }
@@ -1209,10 +1210,10 @@ screen_showikeypad(bool on)
 
     inflate_screen();
     if (keypad_xwidth > 0) {
-	if (scrollbar != (Widget) NULL) {
+	if (scrollbar != NULL) {
 	    scrollbar_init(false);
 	}
-	menubar_resize(on ? container_width : cwidth_nkp);
+	menubar_resize(on? container_width: cwidth_nkp);
     }
 }
 
