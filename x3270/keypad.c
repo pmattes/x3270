@@ -282,11 +282,6 @@ keypad_placement_init(void)
     } else {
 	xs_error("Unknown value for %s", ResKeypad);
     }
-
-    if (kp_placement == kp_integral && fixed_width) {
-	popup_an_error("Cannot have integral keypad and fixed size");
-	kp_placement = kp_right;
-    }
 }
 
 /*
