@@ -2999,20 +2999,20 @@ static bool
 Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 {
     enum sms_state next_state = SS_WAIT_IFIELD;
-    long tmo = -1;
+    float tmo = -1.0;
     char *ptr;
     unsigned np;
     const char **pr;
 
     /* Pick off the timeout parameter first. */
     if (argc > 0 &&
-	(tmo = strtol(argv[0], &ptr, 10)) >= 0 &&
+	(tmo = strtof(argv[0], &ptr)) >= 0.0 &&
 	ptr != argv[0] &&
 	*ptr == '\0') {
 	np = argc - 1;
 	pr = argv + 1;
     } else {
-	tmo = -1;
+	tmo = -1.0;
 	np = argc;
 	pr = argv;
     }
@@ -3053,7 +3053,7 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	    } else {
 		return true;
 	    }
-	} else if (tmo > 0 && !strcasecmp(pr[0], "Seconds")) {
+	} else if (tmo > 0.0 && !strcasecmp(pr[0], "Seconds")) {
 	    next_state = SS_TIME_WAIT;
 	} else if (strcasecmp(pr[0], "InputField")) {
 	    popup_an_error("Wait argument must be InputField, "
@@ -3076,8 +3076,13 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
     sms->state = next_state;
 
     /* Set up a timeout, if they want one. */
-    if (tmo >= 0) {
-	sms->wait_id = AddTimeOut(tmo? (tmo * 1000): 1, wait_timed_out);
+    if (tmo >= 0.0) {
+	unsigned long tmo_msec = tmo * 1000;
+
+	if (tmo_msec == 0) {
+	    tmo_msec = 1;
+	}
+	sms->wait_id = AddTimeOut(tmo_msec, wait_timed_out);
     }
     return true;
 }

@@ -1526,7 +1526,7 @@ wait_timed_out(ioid_t id _is_unused)
 static bool
 Wait_action(ia_t ia, unsigned argc, const char **argv)
 {
-    long tmo = -1;
+    float tmo = -1.0;
     char *ptr;
     unsigned np;
     const char **pr;
@@ -1534,13 +1534,13 @@ Wait_action(ia_t ia, unsigned argc, const char **argv)
     action_debug("Wait", ia, argc, argv);
 
     if (argc > 0 &&
-	(tmo = strtol(argv[0], &ptr, 10)) >= 0 &&
+	(tmo = strtof(argv[0], &ptr)) >= 0.0 &&
 	 ptr != argv[0] &&
 	 *ptr == '\0') {
 	np = argc - 1;
 	pr = argv + 1;
      } else {
-	tmo = -1;
+	tmo = -1.0;
 	np = argc;
 	pr = argv;
     }
@@ -1607,8 +1607,13 @@ Wait_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
 
-    if (waiting != NOT_WAITING && tmo >= 0) {
-	wait_id = AddTimeOut(tmo? (tmo * 1000L): 1, wait_timed_out);
+    if (waiting != NOT_WAITING && tmo >= 0.0) {
+	unsigned long tmo_msec = tmo * 1000;
+
+	if (tmo_msec == 0) {
+	    tmo_msec = 1;
+	}
+	wait_id = AddTimeOut(tmo_msec, wait_timed_out);
     }
     return true;
 }
