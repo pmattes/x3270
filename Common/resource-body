@@ -461,10 +461,9 @@ description
     command-line option.
 if wc
     <p class="indented">
-    Note that %p% DBCS support is limited. DBCS is supported only on Windows
-    XP and later. On Windows XP, Windows East Asian language support must be
-    installed. On Windows Vista and later, the Windows System Locale must be
-    set to a matching language.
+    Note that %p% DBCS support is limited. On Windows XP, Windows East Asian
+    language support must be installed. On Windows Vista and later, the Windows
+    System Locale must be set to a matching language.
 endif
 .
 
