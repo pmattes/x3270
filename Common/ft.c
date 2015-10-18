@@ -592,7 +592,7 @@ ft_go(ft_conf_t *p)
     } else if (p->host_type == HT_CICS) {
 	vb_appends(&r, "BINARY");
     }
-    if (p->cr_flag) {
+    if (p->ascii_flag && p->cr_flag) {
 	vb_appends(&r, " CRLF");
     } else if (p->host_type == HT_CICS) {
 	vb_appends(&r, " NOCRLF");
