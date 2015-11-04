@@ -63,6 +63,9 @@ documentation-ssl-body.html: documentation-ssl-body.tmpl dll-subst.sh \
 wc3270.iss: version.txt wc3270.iss.tmpl mkiss
 	./mkiss <wc3270.iss.tmpl >wc3270.iss
 
+LICENSE.txt: version.txt LICENSE.txt.tmpl mkiss
+	./mkiss <LICENSE.txt.tmpl >LICENSE.txt
+
 # Generate the Inno Setup .exe and the no-install zip file.
 # This depends on external targets, and is intended to be built recursively
 # from the top-level Makefile, which builds those targets first.
