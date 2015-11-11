@@ -46,4 +46,6 @@ extern char *idle_command;
 extern char *idle_timeout_string;
 extern enum idle_enum idle_user_enabled;
 bool process_idle_timeout_value(const char *string);
-void idle_register();
+void idle_register(void);
+void idle_ft_complete(void);
+void idle_ft_start(void);

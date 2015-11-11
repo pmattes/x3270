@@ -35,6 +35,10 @@
 #include <errno.h>
 
 #include "appres.h"
+#if defined(_WIN32) /*[*/
+# include "unicodec.h"	/* needed for ft.h */
+#endif /*]*/
+#include "ft.h"
 #include "host.h"
 #include "idle.h"
 #include "macros.h"
@@ -188,7 +192,13 @@ idle_timeout(ioid_t id _is_unused)
 {
 	vtrace("Idle timeout\n");
 	idle_ticking = false;
-	push_idle(idle_command);
+	if (ft_state != FT_NONE) {
+	    /* Should not happen, but just in case. */
+	    vtrace("File transfer in progress, ignoring\n");
+	    return;
+	} else {
+	    push_idle(idle_command);
+	}
 	reset_idle_timer();
 }
 
@@ -235,6 +245,31 @@ cancel_idle_timer(void)
 		idle_ticking = false;
 	}
 	idle_enabled = false;
+}
+
+/*
+ * Stop the idle timer when a file transfer starts.
+ */
+void
+idle_ft_start(void)
+{
+    if (idle_ticking)
+    {
+	RemoveTimeOut(idle_id);
+	idle_ticking = false;
+    }
+}
+
+/*
+ * Resume the idle timer when a file transfer completes.
+ */
+void
+idle_ft_complete(void)
+{
+    if (idle_enabled)
+    {
+	reset_idle_timer();
+    }
 }
 
 char *

@@ -1781,6 +1781,18 @@ cancel_if_idle_command(void)
 {
 }
 
+/* Dummy idle.c function. */
+void
+idle_ft_complete(void)
+{
+}
+
+/* Dummy idle.c function. */
+void
+idle_ft_start(void)
+{
+}
+
 /**
  * Registration for tcl3270 main module.
  */

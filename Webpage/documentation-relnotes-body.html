@@ -41,6 +41,40 @@
   Linux. To build for 64-bit, set the variable WIN64. 32-bit is still the
   default.</li>
 </ul>
+<h2>Changes in version 3.4ga10, Nn. Month 2015</h2>
+<ul>
+ <li>[all] Suspend the idle command while a file transfer is in progress.</li>
+</ul>
+<h2>Changes in version 3.4ga9, 23. October 2015</h2>
+<ul>
+ <li>[<i>c3270</i>, <i>wc3270</i>] Fixed binary file transfer bug.</li>
+ <li>[<i>x3270</i>] Fixed missing 'Not Connected' message when disconnecting
+  from a host.</li>
+  <li>[all] Fixed trace display of incoming IPv6 connections and the parsing of
+  the x3270 <b>-scriptport</b> option.</li>
+ <li>[<i>tcl3270</i>] Added tcl3270 support for Tcl 8.6.</li>
+ <li>[all] Renamed $INSTALL variable in the top-level configure script
+  (<a href="http://sourceforge.net/p/x3270/bugs/15/">bugs:15</a>).</li>
+</ul>
+<h2>Changes in version 3.4ga8, 18. September 2015</h2>
+<ul>
+ <li>[<i>x3270</i>] Fixed a crash in the Configure Idle Command pop-up.</li>
+ <li>[<i>x3270</i>] Fixed an issue with overwriting local files in file
+  transfers.</li>
+ <li>[<i>s3270</i>] Fixed an x3270if build problem when libiconv is needed.
+  </li>
+ <li>[all] Fixed a problem with truncating the list of LUs when connecting to
+  a host.</li>
+ <li>[all] Fixed a crash when too many parameters are passed to an action in a
+  macro or script.</li>
+</ul>
+<h2>Changes in version 3.4ga7, 28. August 2015</h2>
+<ul>
+ <li>Fixed a number of warnings found by the MacOS C compiler, which turned
+  out to be real issues.</li>
+ <li>[all] Synchronize the <b>ReadBuffer</b> action with the
+  <b>Wait(Output)</b> action, just like <b>Ascii</b> and <b>Ebcdic</b>.</li>
+</ul>
 <h2>Changes in version 3.4ga6, 10. August 2015</h2>
 <ul>
  <li>[all] Fixed an NVT-mode emulation problem.</li>
