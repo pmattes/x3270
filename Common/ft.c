@@ -46,6 +46,7 @@
 #include "unicodec.h"
 #include "ft.h"
 #include "host.h"
+#include "idle.h"
 #include "kybd.h"
 #include "macros.h"
 #include "popups.h"
@@ -454,6 +455,9 @@ ft_complete(const char *errmsg)
 	ft_start_id = NULL_IOID;
     }
 
+    /* Get the idle timeout going again. */
+    idle_ft_complete();
+
     /* Pop down the in-progress shell. */
     ft_gui_progress_popdown();
 
@@ -695,6 +699,7 @@ ft_go(ft_conf_t *p)
     fts.dbcs_state = FT_DBCS_NONE;
 
     ft_state = FT_AWAIT_ACK;
+    idle_ft_start();
 
     return f;
 }
