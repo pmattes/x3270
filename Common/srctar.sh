@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 # Create a source tarball
 # srctar <outfile> <infile>...
 

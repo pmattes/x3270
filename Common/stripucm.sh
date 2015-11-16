@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 # Strip the junk away from a .ucm file.
 # For now, outputs the length, followed by the data in two columns (Unicode and

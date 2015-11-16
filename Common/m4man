@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # generate a man page or html man page from m4 source
 function usage()
 {

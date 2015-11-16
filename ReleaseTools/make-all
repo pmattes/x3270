@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Make everything.  Really.
 # Must be run in the top-level directory.
 # By default, builds but does not release.

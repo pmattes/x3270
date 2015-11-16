@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -x
 . Common/version.txt
 ver=${version%%[a-z]*}

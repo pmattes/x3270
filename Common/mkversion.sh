@@ -1,6 +1,6 @@
-#! /bin/sh
+#!/usr/bin/env sh
 
-# Copyright (c) 1995-2009, 2014 Paul Mattes.
+# Copyright (c) 1995-2009, 2014-2015 Paul Mattes.
 # Copyright (c) 2005, Don Russell.
 # All rights reserved.
 # 

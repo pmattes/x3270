@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Make a standalone webpage from an xxx-body webpage.
 #  mkstand 'title' infile outfile
 

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Make a mega-tarball for a given release.
 # Must be run from the Release directorty.
 if [ $# -ne 1 ]

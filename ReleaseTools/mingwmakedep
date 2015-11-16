@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # gccmakedep for MinGW
 # Does not include system headers -- just local files
 #  mingwmakedep -C compiler <-I, -D, -U> <source-files>

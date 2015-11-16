@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Check the OpenSSL DLL link.
 
@@ -12,7 +12,7 @@ then	echo >&2 "Must run from top of tree."
 fi
 
 # Get the URL.
-url=$(<$urlfile)
+. $urlfile
 
 # Set up the temp file.
 tf=/tmp/ch.$$
@@ -20,7 +20,7 @@ rm -f $tf
 rc=0
 
 # See if it's accessible.
-if wget $url -O /dev/null >$tf 2>&1
+if wget $URL32 -O /dev/null >$tf 2>&1
 then	echo "The link is still good."
 else	echo "*** FAILURE ***"
 	cat $tf

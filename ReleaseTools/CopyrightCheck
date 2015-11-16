@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Check for out-of-date copyrights
 
 svn list -R | while read f
