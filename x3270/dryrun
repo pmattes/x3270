@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/usr/bin/env sh
 
 # Copyright (c) 1995-2009, 2015 Paul Mattes.
 # All rights reserved.

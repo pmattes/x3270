@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Create new-style x3270 webpages, using a common template.
 . ./version.txt
 if [ "X$1" = "X-g" ]

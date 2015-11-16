@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Run through all possible configuration combinations
 #  permute [-n] [-s] [-v] [program...]

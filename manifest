@@ -53,7 +53,6 @@ c3270/screen.c
 c3270/ssl_passwd_gui.c
 c3270/version.txt
 c3270/x3270_glue.expect
-c3270/x3270hist.pl
 c3270/x3270-script.man
 c3270/xscroll.h
 config.guess
@@ -763,7 +762,6 @@ x3270/x3270.bm
 x3270/x3270.c
 x3270/x3270_files.mk
 x3270/x3270_glue.expect
-x3270/x3270hist.pl
 x3270/x3270-icon2.xpm
 x3270/x3270.man
 x3270/x3270-script.man
