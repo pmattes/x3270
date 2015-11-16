@@ -31,8 +31,8 @@ PRODUCT = wc3270
 all:
 	@echo "Must pick a specific make target."
 
-DOCS = html/$(PRODUCT)-man.html html/ReleaseNotes.html html/Resources.html \
-	html/SSL.html html/wc3270-script.html
+DOCS = LICENSE.txt html/$(PRODUCT)-man.html html/ReleaseNotes.html \
+	html/Resources.html html/SSL.html html/wc3270-script.html
 
 src.tgz: $(DOCS) wc3270.iss Makefile.aux
 
