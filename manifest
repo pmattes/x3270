@@ -73,7 +73,6 @@ c3270/x3270_glue.expect
 c3270/x3270.man.m4
 c3270/x3270-script.man
 c3270/x3270-script.man.m4
-c3270/xscroll.h
 config.guess
 config.sub
 configure
@@ -160,6 +159,7 @@ include/windirs.h
 include/winprint.h
 include/winvers.h
 include/xio.h
+include/xscroll.h
 install-sh
 lib/3270/actions.c
 lib/3270/apl.c
@@ -640,7 +640,6 @@ wc3270/wselectc.h
 wc3270/x3270-icon2.bmp
 wc3270/x3270.man.m4
 wc3270/x3270-script.man.m4
-wc3270/xscroll.h
 wc3270/zipit
 Webpage/Build-c3270.html
 Webpage/Build.html
@@ -908,7 +907,6 @@ x3270/xmenubar.h
 x3270/xpopups.h
 x3270/xsave.h
 x3270/xscreen.h
-x3270/xscroll.h
 x3270/xselectc.h
 x3270/xstatus.h
 x3270/xtables.c
