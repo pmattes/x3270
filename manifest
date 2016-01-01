@@ -598,6 +598,7 @@ wc3270/keypad.labels
 wc3270/keypad.map
 wc3270/keypad.outline
 wc3270/LICENSE.txt
+wc3270/LICENSE.txt.tmpl
 wc3270/localdefs.h
 wc3270/m4man
 wc3270/Makefile

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2009, 2013-2016 Paul Mattes.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -74,7 +74,7 @@ validate_and_split_resource(const char *where, const char *arg,
 
     /* Separate the parts. */
     s = arg + match_len;
-    while (*s && *s != ':' && !isspace(*s)) {
+    while (*s && *s != ':' && !isspace((unsigned char)*s)) {
 	s++;
     }
     rnlen = s - (arg + match_len);
@@ -83,7 +83,7 @@ validate_and_split_resource(const char *where, const char *arg,
 		where);
 	return -1;
     }
-    while (isspace(*s)) {
+    while (isspace((unsigned char)*s)) {
 	s++;
     }
     if (*s != ':') {
@@ -91,7 +91,7 @@ validate_and_split_resource(const char *where, const char *arg,
 	return -1;
     }
     s++;
-    while (isspace(*s)) {
+    while (isspace((unsigned char)*s)) {
 	s++;
     }
 
@@ -145,7 +145,7 @@ read_resource_filex(const char *filename, bool fatal)
 
 	/* Skip leading whitespace. */
 	s = buf;
-	while (isspace(*s)) {
+	while (isspace((unsigned char)*s)) {
 	    s++;
 	}
 
@@ -173,7 +173,7 @@ read_resource_filex(const char *filename, bool fatal)
 
 	/* Strip trailing whitespace and check for empty lines. */
 	sl = strlen(s);
-	while (sl && isspace(s[sl-1])) {
+	while (sl && isspace((unsigned char)s[sl-1])) {
 	    s[--sl] = '\0';
 	}
 	if (!sl) {

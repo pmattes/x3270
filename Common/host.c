@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -138,7 +138,7 @@ read_hosts_file(void)
 	    if (strlen(buf) > (unsigned)1 && buf[strlen(buf) - 1] == '\n') {
 		buf[strlen(buf) - 1] = '\0';
 	    }
-	    while (isspace(*s)) {
+	    while (isspace((unsigned char)*s)) {
 		s++;
 	    }
 	    if (!*s || *s == '#') {
@@ -347,11 +347,11 @@ new_split_host(char *raw, char **lu, char **host, char **port,
     *error    = NULL;
 
     /* Trim leading and trailing blanks. */
-    while (sl && isspace(*start)) {
+    while (sl && isspace((unsigned char)*start)) {
 	start++;
 	sl--;
     }
-    while (sl && isspace(start[sl - 1])) {
+    while (sl && isspace((unsigned char)start[sl - 1])) {
 	sl--;
     }
     if (!sl) {
@@ -378,7 +378,7 @@ new_split_host(char *raw, char **lu, char **host, char **port,
     qmap[sl] = '\0';
     rqmap = qmap;
     for (s = start; (size_t)(s - start) < sl; s++) {
-	if (isspace(*s)) {
+	if (isspace((unsigned char)*s)) {
 	    errmsg = "contains whitespace";
 	    goto done;
 	}

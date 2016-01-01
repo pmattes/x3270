@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2000-2009, 2013-2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -162,7 +162,7 @@ parse_keydef(char **str, k_t *ccode, int *hint)
     ccode->modifiers = 0;
 
     /* Check for nothing. */
-    while (isspace(*s)) {
+    while (isspace((unsigned char)*s)) {
 	s++;
     }
     if (!*s) {
@@ -178,7 +178,7 @@ parse_keydef(char **str, k_t *ccode, int *hint)
     *s = '\0';
     s = *str;
     while (*s) {
-	while (isspace(*s)) {
+	while (isspace((unsigned char)*s)) {
 	    s++;
 	}
 	if (!*s) {
@@ -195,7 +195,7 @@ parse_keydef(char **str, k_t *ccode, int *hint)
 	}
     }
     s = ks;
-    while (isspace(*s)) {
+    while (isspace((unsigned char)*s)) {
 	s++;
     }
     if (!*s) {
@@ -203,7 +203,7 @@ parse_keydef(char **str, k_t *ccode, int *hint)
     }
 
     t = s;
-    while (*t && !isspace(*t)) {
+    while (*t && !isspace((unsigned char)*t)) {
 	t++;
     }
     if (*t) {
@@ -456,7 +456,7 @@ read_one_keymap_internal(const char *name, const char *fn, bool temp,
 	/* Skip empty lines and comments. */
 	if (r == NULL) {
 	    s = buf;
-	    while (isspace(*s)) {
+	    while (isspace((unsigned char)*s)) {
 		s++;
 	    }
 	    if (!*s || *s == '!' || *s == '#') {

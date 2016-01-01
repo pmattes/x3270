@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2015, Paul Mattes.
+dnl Copyright (c) 2000-2016, Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -37,9 +37,15 @@ dnl If it's hpux, then pass the -D_XOPEN_SOURCE_EXTENDED flag to cc, so that
 dnl all of the curses KEY_XXX definitions are visible.
 dnl If it's solaris2, then pass the -D__EXTENSIONS__ flas to cc, so that all
 dnl of the usual Unix functions are visible.
+ansi="-std=c99 -pedantic"
 AC_CANONICAL_HOST
 case "$host_os" in
-hpux|*cygwin*)	HSOPTS=-D_XOPEN_SOURCE_EXTENDED
+*cygwin*)	HSOPTS=-D_XOPEN_SOURCE_EXTENDED
+    		dnl On Cygwin, gcc -ansi or -std=xxx hides POSIX declarations,
+		dnl and there is no macro you can set to get them back.
+    		ansi=""
+		;;
+hpux)		HSOPTS=-D_XOPEN_SOURCE_EXTENDED
 		;;
 solaris2*)	HSOPTS="-D__EXTENSIONS__ -D_XOPEN_SOURCE_EXTENDED"
 		;;
@@ -51,7 +57,7 @@ aix*)		BROKEN_NEWTERM=1
 		;;
 esac
 if test "$GCC" = yes
-then	CCOPTIONS="-Wall -Wsign-compare -std=c99 -pedantic -Wno-variadic-macros"
+then	CCOPTIONS="-Wall -Wsign-compare $ansi -Wno-variadic-macros"
 fi
 AC_SUBST(HSOPTS)
 AC_SUBST(BROKEN_NEWTERM)

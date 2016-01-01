@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -217,7 +217,7 @@ main(int argc, char *argv[])
 	    lno++;
 
 	    /* Skip leading white space. */
-	    while (isspace(*s)) {
+	    while (isspace((unsigned char)*s)) {
 		s++;
 	    }
 	    if (cmode &&
@@ -226,7 +226,7 @@ main(int argc, char *argv[])
 	    }
 
 	    /* Remove trailing white space. */
-	    while ((sl = strlen(s)) && isspace(s[sl-1])) {
+	    while ((sl = strlen(s)) && isspace((unsigned char)s[sl-1])) {
 		s[sl-1] = '\0';
 	    }
 

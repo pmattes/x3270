@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2016 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -132,7 +132,7 @@ ta_t *ta_head = (struct ta *) NULL;
 ta_t *ta_tail = (struct ta *) NULL;
 
 static char dxl[] = "0123456789abcdef";
-#define FROM_HEX(c)	(int)(strchr(dxl, tolower(c)) - dxl)
+#define FROM_HEX(c)	(int)(strchr(dxl, tolower((unsigned char)c)) - dxl)
 
 #define KYBDLOCK_IS_OERR	(kybdlock && !(kybdlock & ~KL_OERR_MASK))
 
@@ -3749,7 +3749,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 	    break;
 
 	case BACKPF: /* last three characters were "\pf" */
-	    if (nc < 2 && isdigit(c)) {
+	    if (nc < 2 && isdigit((unsigned char)c)) {
 		literal = (literal * 10) + (c - '0');
 		nc++;
 	    } else if (!nc) {
@@ -3767,7 +3767,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 	    break;
 
 	case BACKPA: /* last three characters were "\pa" */
-	    if (nc < 1 && isdigit(c)) {
+	    if (nc < 1 && isdigit((unsigned char)c)) {
 		literal = (literal * 10) + (c - '0');
 		nc++;
 	    } else if (!nc) {
@@ -3784,7 +3784,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 	    }
 	    break;
 	case BACKX:	/* last two characters were "\x" or "\u" */
-	    if (isxdigit(c)) {
+	    if (isxdigit((unsigned char)c)) {
 		state = HEX;
 		literal = 0;
 		nc = 0;
@@ -3796,7 +3796,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		continue;
 	    }
 	case BACKE:	/* last two characters were "\e" */
-	    if (isxdigit(c)) {
+	    if (isxdigit((unsigned char)c)) {
 		state = EBC;
 		literal = 0;
 		nc = 0;
@@ -3808,7 +3808,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		continue;
 	    }
 	case OCTAL:	/* have seen \ and one or more octal digits */
-	    if (nc < 3 && isdigit(c) && c < '8') {
+	    if (nc < 3 && isdigit((unsigned char)c) && c < '8') {
 		literal = (literal * 8) + FROM_HEX(c);
 		nc++;
 		break;
@@ -3818,7 +3818,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		continue;
 	    }
 	case HEX:	/* have seen \x and one or more hex digits */
-	    if (nc < 4 && isxdigit(c)) {
+	    if (nc < 4 && isxdigit((unsigned char)c)) {
 		literal = (literal * 16) + FROM_HEX(c);
 		nc++;
 		break;
@@ -3828,7 +3828,7 @@ emulate_uinput(const ucs4_t *ws, size_t xlen, bool pasting)
 		continue;
 	    }
 	case EBC:	/* have seen \e and one or more hex digits */
-	    if (nc < 4 && isxdigit(c)) {
+	    if (nc < 4 && isxdigit((unsigned char)c)) {
 		literal = (literal * 16) + FROM_HEX(c);
 		nc++;
 		break;
@@ -3957,7 +3957,8 @@ hex_input(const char *s)
 	t = s;
 	escaped = false;
 	while (*t) {
-		if (isxdigit(*t) && isxdigit(*(t + 1))) {
+		if (isxdigit((unsigned char)*t) &&
+			isxdigit((unsigned char)*(t + 1))) {
 			escaped = false;
 			nbytes++;
 		} else if (!strncmp(t, "\\E", 2) || !strncmp(t, "\\e", 2)) {
@@ -3995,7 +3996,8 @@ hex_input(const char *s)
 	t = s;
 	escaped = false;
 	while (*t) {
-		if (isxdigit(*t) && isxdigit(*(t + 1))) {
+		if (isxdigit((unsigned char)*t) &&
+			isxdigit((unsigned char)*(t + 1))) {
 			unsigned c;
 
 			c = (FROM_HEX(*t) * 16) + FROM_HEX(*(t + 1));

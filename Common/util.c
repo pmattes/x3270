@@ -306,7 +306,7 @@ split_dbcs_resource(const char *value, char sep, char **part1, char **part2)
 	    if (c == '\0') {
 		return n_parts;
 	    }
-	} else if (isspace(c)) {
+	} else if (isspace((unsigned char)c)) {
 	    if (f_end == NULL) {
 		f_end = s;
 	    }
@@ -473,7 +473,7 @@ var_subst(const char *s, unsigned long flags)
 	    case VS_DOLLAR:
 		if (c == LBR) {
 		    state = VS_BRACE;
-		} else if (isalpha(c) || c == '_') {
+		} else if (isalpha((unsigned char)c) || c == '_') {
 		    vn_start = t;
 		    state = VS_VN;
 		} else {
@@ -483,7 +483,7 @@ var_subst(const char *s, unsigned long flags)
 		}
 		break;
 	    case VS_BRACE:
-		if (isalpha(c) || c == '_') {
+		if (isalpha((unsigned char)c) || c == '_') {
 		    vn_start = t;
 		    state = VS_VNB;
 		} else {
@@ -495,7 +495,7 @@ var_subst(const char *s, unsigned long flags)
 		break;
 	    case VS_VN:
 	    case VS_VNB:
-		if (!(isalnum(c) || c == '_')) {
+		if (!(isalnum((unsigned char)c) || c == '_')) {
 		    size_t vn_len;
 		    char *vn;
 		    char *vv;

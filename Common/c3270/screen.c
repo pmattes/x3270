@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2015 Paul Mattes.
+ * Copyright (c) 2000-2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1288,8 +1288,9 @@ screen_disp(bool erasing _is_unused)
 				mb[0] = '_';
 			    }
 			    if (toggled(MONOCASE) && (len == 1) &&
-				    !(mb[0] & 0x80) && islower(mb[0])) {
-				mb[0] = toupper(mb[0]);
+				    !(mb[0] & 0x80) &&
+				    islower((unsigned char)mb[0])) {
+				mb[0] = toupper((unsigned char)mb[0]);
 			    }
 #if defined(CURSES_WIDE) /*[*/
 			    addstr(mb);

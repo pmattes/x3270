@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1177,9 +1177,9 @@ execute_command(enum iaction cause, char *s, char **np)
 
 	switch (state) {
 	case ME_GND:
-	    if (isspace(c)) {
+	    if (isspace((unsigned char)c)) {
 		continue;
-	    } else if (isalnum(c)) {
+	    } else if (isalnum((unsigned char)c)) {
 		state = ME_FUNCTION;
 		nx = 0;
 		aname[nx++] = c;
@@ -1192,7 +1192,7 @@ execute_command(enum iaction cause, char *s, char **np)
 	case ME_COMMENT:
 	    break;
 	case ME_FUNCTION:	/* within function name */
-	    if (c == '(' || isspace(c)) {
+	    if (c == '(' || isspace((unsigned char)c)) {
 		aname[nx] = '\0';
 		if (c == '(') {
 		    nx = 0;
@@ -1200,7 +1200,7 @@ execute_command(enum iaction cause, char *s, char **np)
 		} else {
 		    state = ME_FUNCTIONx;
 		}
-	    } else if (isalnum(c) || c == '_' || c == '-') {
+	    } else if (isalnum((unsigned char)c) || c == '_' || c == '-') {
 		if (nx < MAX_ANAME) {
 		    aname[nx++] = c;
 		}
@@ -1209,7 +1209,7 @@ execute_command(enum iaction cause, char *s, char **np)
 	    }
 	    break;
 	case ME_FUNCTIONx:	/* space after function name */
-	    if (isspace(c)) {
+	    if (isspace((unsigned char)c)) {
 		continue;
 	    } else if (c == '(') {
 		nx = 0;
@@ -1224,7 +1224,7 @@ execute_command(enum iaction cause, char *s, char **np)
 	    }
 	    break;
 	case ME_LPAREN:
-	    if (isspace(c)) {
+	    if (isspace((unsigned char)c)) {
 		continue;
 	    } else if (c == '"') {
 		state = ME_P_QPARM;
@@ -1238,7 +1238,7 @@ execute_command(enum iaction cause, char *s, char **np)
 	    }
 	    break;
 	case ME_P_PARM:
-	    if (isspace(c)) {
+	    if (isspace((unsigned char)c)) {
 		param_count++;
 		state = ME_P_PARMx;
 	    } else if (c == ')') {
@@ -1273,7 +1273,7 @@ execute_command(enum iaction cause, char *s, char **np)
 	    }
 	    break;
 	case ME_P_PARMx:
-	    if (isspace(c)) {
+	    if (isspace((unsigned char)c)) {
 		continue;
 	    } else if (c == ',') {
 		state = ME_LPAREN;
@@ -1284,7 +1284,7 @@ execute_command(enum iaction cause, char *s, char **np)
 	    }
 	    break;
 	case ME_S_PARM:
-	    if (isspace(c)) {
+	    if (isspace((unsigned char)c)) {
 		param_count++;
 		state = ME_S_PARMx;
 	    } else {
@@ -1313,7 +1313,7 @@ execute_command(enum iaction cause, char *s, char **np)
 	    }
 	    break;
 	case ME_S_PARMx:
-	    if (isspace(c)) {
+	    if (isspace((unsigned char)c)) {
 		continue;
 	    } else if (c == '"') {
 		state = ME_S_QPARM;
@@ -1350,7 +1350,7 @@ execute_command(enum iaction cause, char *s, char **np)
 
 success:
     if (c) {
-	while (*s && isspace(*s)) {
+	while (*s && isspace((unsigned char)*s)) {
 	    s++;
 	}
 	if (*s) {
@@ -1712,14 +1712,14 @@ login_macro(char *s)
     char *t = s;
     bool looks_right = false;
 
-    while (isspace(*t)) {
+    while (isspace((unsigned char)*t)) {
 	t++;
     }
-    if (isalnum(*t)) {
-	while (isalnum(*t)) {
+    if (isalnum((unsigned char)*t)) {
+	while (isalnum((unsigned char)*t)) {
 	    t++;
 	}
-	while (isspace(*t)) {
+	while (isspace((unsigned char)*t)) {
 	    t++;
 	}
 	if (*t == '(') {
@@ -3224,8 +3224,9 @@ expand_expect(const char *s)
 	    }
 	    break;
 	case XS_X:
-	    if (isxdigit(c)) {
-		n = (n * 16) + (int)(strchr(hexes, tolower(c)) - hexes);
+	    if (isxdigit((unsigned char)c)) {
+		n = (n * 16) + (int)(strchr(hexes,
+			    tolower((unsigned char)c)) - hexes);
 		nd++;
 	    } else {
 		if (nd) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2005-2009, 2013-2016 Paul Mattes.
  * Copyright (c) 2004-2005, Don Russell.
  * All rights reserved.
  *
@@ -289,14 +289,14 @@ select_rpq_terms(void)
     p1 = uplist;
     p2 = x3270rpq;
     do {
-	*p1++ = toupper(*p2++);
+	*p1++ = toupper((unsigned char)*p2++);
     } while (*p2);
     *p1 = '\0';
 
     for (i = 0; i < strlen(x3270rpq); ) {
 	kw = uplist+i;
 	i++;
-	if (isspace(*kw)) {
+	if (isspace((unsigned char)*kw)) {
 	    continue;	/* skip leading white space */
 	}
 	if (*kw == ':') {
@@ -317,7 +317,7 @@ select_rpq_terms(void)
 	/* It might be a keyword=value item... */
 
 	for (p1 = kw; *p1; p1++) {
-	    if (!isupper(*p1)) {
+	    if (!isupper((unsigned char)*p1)) {
 		break;
 	    }
 	}
@@ -406,7 +406,7 @@ get_rpq_timezone(void)
 	    rpq_warning("RPQ TIMEZONE term is invalid - use +/-hhmm");
 	    return 4;
 	}
-	if ((*p2 != '\0') && (*p2 != ':') && (!isspace(*p2))) {
+	if ((*p2 != '\0') && (*p2 != ':') && (!isspace((unsigned char)*p2))) {
 	    return 4; 
 	}
 
@@ -486,7 +486,7 @@ get_rpq_user(unsigned char buf[], const size_t buflen)
 
     rpqtext = x3270rpq + kw->oride;
 
-    if ((*rpqtext == '0') && (toupper(*(rpqtext+1)) == 'X')) {
+    if ((*rpqtext == '0') && (toupper((unsigned char)*(rpqtext+1)) == 'X')) {
 	/* Text has 0x prefix... interpret as hex, no translation */
 	char hexstr[512];	/* more than enough room to copy */
 	char *p_h;
@@ -500,14 +500,14 @@ get_rpq_user(unsigned char buf[], const size_t buflen)
 	 */
 	rpqtext += 2;	/* skip 0x prefix */
 	for (*p_h = '\0'; *rpqtext; rpqtext++) {
-	    c  = toupper(*rpqtext);
+	    c  = toupper((unsigned char)*rpqtext);
 	    if ((c==':') || (c=='\0')) {
 		break;
 	    }
-	    if (isspace(c)) {
+	    if (isspace((unsigned char)c)) {
 		continue;	 /* skip white space */
 	    }
-	    if (!isxdigit(c)) {
+	    if (!isxdigit((unsigned char)c)) {
 		rpq_warning("RPQ USER term has non-hex character");
 		break;
 	    }
@@ -542,7 +542,7 @@ get_rpq_user(unsigned char buf[], const size_t buflen)
 	    int n;
 
 	    /* convert the hex character to a value 0-15 */
-	    n = isdigit(*p_h) ? *p_h - '0' : *p_h - 'A' + 10;
+	    n = isdigit((unsigned char)*p_h) ? *p_h - '0' : *p_h - 'A' + 10;
 	    if (is_first_hex_digit) {
 		*buf = n << 4;
 	    } else {

@@ -3070,6 +3070,7 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
+ansi="-std=c99 -pedantic"
 # Make sure we can run config.sub.
 $SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||
   as_fn_error $? "cannot run $SHELL $ac_aux_dir/config.sub" "$LINENO" 5
@@ -3142,7 +3143,10 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 
 case "$host_os" in
-hpux|*cygwin*)	HSOPTS=-D_XOPEN_SOURCE_EXTENDED
+*cygwin*)	HSOPTS=-D_XOPEN_SOURCE_EXTENDED
+    				    		ansi=""
+		;;
+hpux)		HSOPTS=-D_XOPEN_SOURCE_EXTENDED
 		;;
 solaris2*)	HSOPTS="-D__EXTENSIONS__ -D_XOPEN_SOURCE_EXTENDED"
 		;;
@@ -3154,7 +3158,7 @@ aix*)		BROKEN_NEWTERM=1
 		;;
 esac
 if test "$GCC" = yes
-then	CCOPTIONS="-Wall -Wsign-compare -std=c99 -pedantic -Wno-variadic-macros"
+then	CCOPTIONS="-Wall -Wsign-compare $ansi -Wno-variadic-macros"
 fi
 
 

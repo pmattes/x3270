@@ -3226,7 +3226,11 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 
 HSOPTS=""
+ansi="-std=c99 -pedantic"
 case "$host_os" in
+*cygwin*)	HSOPTS=-D_XOPEN_SOURCE_EXTENDED
+    		ansi=""
+		;;
 hpux|*cygwin*)	HSOPTS=-D_XOPEN_SOURCE_EXTENDED
 		;;
 solaris2*)	HSOPTS=-D__EXTENSIONS__
@@ -3239,7 +3243,7 @@ linux*)		HSOPTS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE
 		;;
 esac
 if test "$GCC" = yes
-then	CCOPTIONS="-Wall -Wsign-compare -std=c99 -pedantic -Wno-variadic-macros"
+then	CCOPTIONS="-Wall -Wsign-compare $ansi -Wno-variadic-macros"
 fi
 
 

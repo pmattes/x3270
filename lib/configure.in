@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2015, Paul Mattes.
+dnl Copyright (c) 2000-2016, Paul Mattes.
 dnl All rights reserved.
 dnl
 dnl Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,11 @@ AC_PROG_RANLIB
 dnl Figure out what sort of host this is.
 AC_CANONICAL_HOST
 HSOPTS=""
+ansi="-std=c99 -pedantic"
 case "$host_os" in
+*cygwin*)	HSOPTS=-D_XOPEN_SOURCE_EXTENDED
+    		ansi=""
+		;;
 hpux|*cygwin*)	HSOPTS=-D_XOPEN_SOURCE_EXTENDED
 		;;
 solaris2*)	HSOPTS=-D__EXTENSIONS__
@@ -47,7 +51,7 @@ linux*)		HSOPTS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE
 		;;
 esac
 if test "$GCC" = yes
-then	CCOPTIONS="-Wall -Wsign-compare -std=c99 -pedantic -Wno-variadic-macros"
+then	CCOPTIONS="-Wall -Wsign-compare $ansi -Wno-variadic-macros"
 fi
 AC_SUBST(HSOPTS)
 AC_SUBST(CCOPTIONS)

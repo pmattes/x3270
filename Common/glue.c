@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2016 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -1114,7 +1114,7 @@ strncapcmp(const char *known, const char *unknown, size_t unk_len)
 	return 0;
     }
     if (unk_len > 1 &&
-	unknown[0] == toupper(known[0]) &&
+	unknown[0] == toupper((unsigned char)known[0]) &&
 	!strncmp(known + 1, unknown + 1, unk_len - 1)) {
 	return 0;
     }

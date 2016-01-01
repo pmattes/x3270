@@ -131,16 +131,16 @@ main(int argc, char *argv[])
 	if (sl > 0 && buf[sl - 1] == '\n')
 	    buf[sl - 1] = '\0';
 	c = buf[0];
-	if (!isalnum(c)) {
+	if (!isalnum((unsigned char)c)) {
 	    fprintf(stderr, "keypad.callbacks:%d Invalid callback character.\n",
 		    cbl);
 	    exit(1);
 	}
 	t = &buf[1];
-	while (*t && isspace(*t)) {
+	while (*t && isspace((unsigned char)*t)) {
 	    t++;
 	}
-	if (!*t || !isalnum(*t)) {
+	if (!*t || !isalnum((unsigned char)*t)) {
 	    fprintf(stderr, "keypad.callbacks:%d Invalid callback string.\n",
 		    cbl);
 	    exit(1);

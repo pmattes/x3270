@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2016 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -600,11 +600,11 @@ interact(void)
 	get_console_size(&pager_rows, &pager_cols);
 #endif /*]*/
 
-	while (isspace(*s)) {
+	while (isspace((unsigned char)*s)) {
 	    s++;
 	}
 	sl = strlen(s);
-	while (sl && isspace(s[sl-1])) {
+	while (sl && isspace((unsigned char)s[sl-1])) {
 	    s[--sl] = '\0';
 	}
 

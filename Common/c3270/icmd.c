@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 2007-2009, 2013-2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -73,13 +73,13 @@ get_input(char *buf, int size)
 
     /* Trim trailing white space. */
     sl = strlen(buf);
-    while (sl && isspace(buf[sl - 1])) {
+    while (sl && isspace((unsigned char)buf[sl - 1])) {
 	buf[--sl] = '\0';
     }
 
     /* Trim leading white space. */
     s = buf;
-    while (*s && isspace(*s)) {
+    while (*s && isspace((unsigned char)*s)) {
 	s++;
 	sl--;
     }
