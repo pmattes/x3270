@@ -3077,7 +3077,7 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 
     /* Set up a timeout, if they want one. */
     if (tmo >= 0.0) {
-	unsigned long tmo_msec = tmo * 1000;
+	unsigned long tmo_msec = (unsigned long)(tmo * 1000);
 
 	if (tmo_msec == 0) {
 	    tmo_msec = 1;

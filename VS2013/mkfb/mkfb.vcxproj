@@ -151,7 +151,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>$(ProjectDir)\mkfb.bat $(OutDir)</Command>
+      <Command>"$(ProjectDir)\mkfb.bat" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -172,7 +172,7 @@
       <SubSystem>Console</SubSystem>
     </Link>
     <PostBuildEvent>
-      <Command>$(ProjectDir)\mkfb.bat $(OutDir)</Command>
+      <Command>"$(ProjectDir)\mkfb.bat" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
@@ -195,7 +195,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>$(ProjectDir)\mkfb.bat $(OutDir)</Command>
+      <Command>"$(ProjectDir)\mkfb.bat" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|x64'">
@@ -216,7 +216,7 @@
       <SubSystem>Console</SubSystem>
     </Link>
     <PostBuildEvent>
-      <Command>$(ProjectDir)\mkfb.bat $(OutDir)</Command>
+      <Command>"$(ProjectDir)\mkfb.bat" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -241,7 +241,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>$(ProjectDir)\mkfb.bat $(OutDir)</Command>
+      <Command>"$(ProjectDir)\mkfb.bat" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -265,7 +265,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
     <PostBuildEvent>
-      <Command>$(ProjectDir)\mkfb.bat $(OutDir)</Command>
+      <Command>"$(ProjectDir)\mkfb.bat" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">
@@ -290,7 +290,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>$(ProjectDir)\mkfb.bat $(OutDir)</Command>
+      <Command>"$(ProjectDir)\mkfb.bat" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|x64'">
@@ -314,7 +314,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
     <PostBuildEvent>
-      <Command>$(ProjectDir)\mkfb.bat $(OutDir)</Command>
+      <Command>"$(ProjectDir)\mkfb.bat" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
