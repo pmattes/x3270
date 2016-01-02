@@ -88,7 +88,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>$(ProjectDir)\mkfaviconc.bat $(OutDir)</Command>
+      <Command>"$(ProjectDir)\mkfaviconc.bat" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Debug|Win32'">
@@ -105,7 +105,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>$(ProjectDir)\mkfaviconc.bat $(OutDir)</Command>
+      <Command>"$(ProjectDir)\mkfaviconc.bat" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -126,7 +126,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PostBuildEvent>
-      <Command>$(ProjectDir)\mkfaviconc.bat $(OutDir)</Command>
+      <Command>"$(ProjectDir)\mkfaviconc.bat" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='SSL-Release|Win32'">
@@ -147,7 +147,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PostBuildEvent>
-      <Command>$(ProjectDir)\mkfaviconc.bat $(OutDir)</Command>
+      <Command>"$(ProjectDir)\mkfaviconc.bat" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
