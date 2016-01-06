@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 2007-2009, 2014-2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,5 @@
 #if !defined(_WIN32) /*[*/
 #error For Windows only
 #endif /*[*/
-
-extern bool has_ipv6;
 
 int get_version_info(void);

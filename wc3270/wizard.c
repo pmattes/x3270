@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2015 Paul Mattes.
+ * Copyright (c) 2006-2016 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -1190,13 +1190,8 @@ an IPv6 address in colon notation, such as 'fec0:0:0:1::27'"
 To create a session file with no hostname (one that just specifies the model\n\
 number, character set, etc.), enter '" CHOICE_NONE "'."
 
-    if (has_ipv6) {
-	new_screen(s, NULL, COMMON_HOST_TEXT1 ", " COMMON_HOST_TEXT2 " or "
-		IPV6_HOST_TEXT "." COMMON_HOST_TEXT3);
-    } else {
-	new_screen(s, NULL, COMMON_HOST_TEXT1 " or " COMMON_HOST_TEXT2 "."
-		COMMON_HOST_TEXT3);
-    }
+    new_screen(s, NULL, COMMON_HOST_TEXT1 ", " COMMON_HOST_TEXT2 " or "
+	    IPV6_HOST_TEXT "." COMMON_HOST_TEXT3);
 
     for (;;) {
 	size_t n_good;
@@ -1430,10 +1425,6 @@ columns).\n",
 static void
 dbcs_check(void)
 {
-    if (!IsWindowsVersionOrGreater(5, 1, 0)) {
-	printf("\n\
-Note: wc3270 DBCS is supported only on Windows XP and later.\n");
-    }
     if (IsWindowsVersionOrGreater(6, 0, 0)) {
 	printf("\n\
 Note: wc3270 DBCS support on Windows Vista and later requires setting the\n\

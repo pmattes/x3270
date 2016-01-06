@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2009, 2014 Paul Mattes.
+ * Copyright (c) 2007-2009, 2014, 2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,6 @@
 
 #include "winvers.h"
 
-bool has_ipv6 = true;
-
 #if defined(__GNUC__) /*[*/
 /* MinGW doesn't have IsWindowsVersionOrGreater(). */
 BOOL IsWindowsVersionOrGreater(WORD major_version, WORD minor_version,
@@ -67,18 +65,10 @@ get_version_info(void)
      * missing DLL entry points will cause us to fall over long before we
      * get to here.
      */
-    if (!IsWindowsVersionOrGreater(5, 0, 0)) {
-	fprintf(stderr, "Minimum supported Windows version is Windows 2000 "
-		"(NT 5.0)\n");
-	return -1;
-    }
-
-    /*
-     * Win2K (5.0) and earlier is IPv4-only.  WinXP (5.1) and later can
-     * have IPv6.
-     */
     if (!IsWindowsVersionOrGreater(5, 1, 0)) {
-	has_ipv6 = false;
+	fprintf(stderr, "Minimum supported Windows version is Windows XP "
+		"(NT 5.1)\n");
+	return -1;
     }
 
     return 0;

@@ -19,14 +19,13 @@ OutputDir=.
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
-MinVersion=4.0,5.0
+MinVersion=0,5.1
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Types]
-; all-users is an NT-and-later concept only
-Name: "forall"; Description: "Full installation for all users"; MinVersion: 0,5.0
+Name: "forall"; Description: "Full installation for all users"
 Name: "foruser"; Description: "Full installation for current user only"
 Name: "custom"; Description: "Custom installation"; Flags: iscustom
 
@@ -45,7 +44,6 @@ Name: "ca"; Description: "CA root certificates for OpenSSL"; Types: forall forus
 Type: files; Name: "{userappdata}\root_certs.txt"
 ; Get rid of the old New wc3270 Session desktop icon.
 Type: files; Name: "{userdesktop}\New wc3270 Session.lnk"
-Type: files; Name: "{userdesktop}\New wc3270 Session.pif"
 ; Get rid of the old 'New wc3270 Session' start menu item.  It might be in
 ; the common programs group or the user programs group.
 Type: files; Name: "{commonprograms}\{groupname}\New wc3270 Session.lnk"
@@ -115,17 +113,13 @@ Root: HKCR; Subkey: "wc3270\shell\edit\command"; ValueType: string; ValueName: "
 [Run]
 Filename: "{app}\wc3270wiz.exe"; Description: "{cm:LaunchProgram,Session Wizard}"; Components: wizard; Flags: nowait postinstall skipifsilent
 Filename: "{cmd}"; Parameters: {code:MyHelp}; Description: "{cm:LaunchProgram,Online Documentation}"; Components: help; Flags: nowait postinstall skipifsilent
-Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""{commondesktop}\wc3270.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: commondesktopicons; MinVersion: 0,5.0
-Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""{userdesktop}\wc3270.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: userdesktopicons; MinVersion: 0,5.0
-Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""{userdesktop}\wc3270.pif"""; Flags: nowait skipifsilent runhidden; Tasks: userdesktopicons; MinVersion: 4.0,0
-Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""{commondesktop}\Session Wizard.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: commondesktopicons; Components: wizard; MinVersion: 0,5.0
-Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""{userdesktop}\Session Wizard.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: userdesktopicons; Components: wizard; MinVersion: 0,5.0
-Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""{userdesktop}\Session Wizard.pif"""; Flags: nowait skipifsilent runhidden; Tasks: userdesktopicons; Components: wizard; MinVersion: 4.0,0
+Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""{commondesktop}\wc3270.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: commondesktopicons
+Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""{userdesktop}\wc3270.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: userdesktopicons
+Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""{commondesktop}\Session Wizard.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: commondesktopicons; Components: wizard
+Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""{userdesktop}\Session Wizard.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: userdesktopicons; Components: wizard
 
 [UninstallDelete]
-Type: files; Name: "{commondesktop}\wc3270.lnk"; Tasks: commondesktopicons; MinVersion: 0,4.0
-Type: files; Name: "{userdesktop}\wc3270.lnk"; Tasks: userdesktopicons; MinVersion: 0,4.0
-Type: files; Name: "{commondesktop}\Session Wizard.lnk"; Tasks: commondesktopicons; MinVersion: 0,4.0
-Type: files; Name: "{userdesktop}\Session Wizard.lnk"; Tasks: userdesktopicons; MinVersion: 0,4.0
-Type: files; Name: "{userdesktop}\wc3270.pif"; Tasks: userdesktopicons; MinVersion: 4.0,0
-Type: files; Name: "{userdesktop}\Session Wizard.pif"; Tasks: userdesktopicons; MinVersion: 4.0,0
+Type: files; Name: "{commondesktop}\wc3270.lnk"; Tasks: commondesktopicons
+Type: files; Name: "{userdesktop}\wc3270.lnk"; Tasks: userdesktopicons
+Type: files; Name: "{commondesktop}\Session Wizard.lnk"; Tasks: commondesktopicons
+Type: files; Name: "{userdesktop}\Session Wizard.lnk"; Tasks: userdesktopicons
