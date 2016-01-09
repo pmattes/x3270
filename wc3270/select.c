@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 Paul Mattes.
+ * Copyright (c) 2013-2016 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,7 @@
 #include "cscreen.h"
 #include "ctlr.h"
 #include "ctlrc.h"
+#include "kybd.h"
 #include "popups.h"
 #include "screen.h"
 #include "trace.h"
@@ -851,6 +852,99 @@ select_sync(unsigned row, unsigned col, unsigned rows, unsigned cols)
     }
 }
 
+/*
+ * Add the current location to the selection. Called from the four SelectXxx
+ * actions.
+ */
+static void
+keyboard_cursor_select(void)
+{
+    if (select_started) {
+	/* Extend selection. */
+	vtrace("  Extending selection\n");
+    } else {
+	vtrace("  New selection\n");
+	select_start_row = cursor_addr / COLS;
+	select_start_col = cursor_addr % COLS;
+    }
+    /*rubber_banding = true;*/
+    select_started = true;
+    word_selected = false;
+    select_end_row = cursor_addr / COLS;
+    select_end_col = cursor_addr % COLS;
+    reselect(true);
+}
+
+/*
+ * SelectLeft adds the current column to the selection and moves the cursor
+ * to the left.
+ */
+static bool
+SelectLeft_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug("SelectLeft", ia, argc, argv);
+    if (check_argc("SelectLeft", argc, 0, 0) < 0) {
+	return false;
+    }
+
+    keyboard_cursor_select();
+    Left_action(ia, 0, NULL);
+
+    return true;
+}
+
+/*
+ * SelectRight adds the current column to the selection and moves the cursor
+ * to the right.
+ */
+static bool
+SelectRight_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug("SelectRight", ia, argc, argv);
+    if (check_argc("SelectRight", argc, 0, 0) < 0) {
+	return false;
+    }
+
+    keyboard_cursor_select();
+    Right_action(ia, 0, NULL);
+
+    return true;
+}
+
+/*
+ * SelectUp adds the current row to the selection and moves the cursor up.
+ */
+static bool
+SelectUp_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug("SelectUp", ia, argc, argv);
+    if (check_argc("SelectUp", argc, 0, 0) < 0) {
+	return false;
+    }
+
+    keyboard_cursor_select();
+    Up_action(ia, 0, NULL);
+
+    return true;
+}
+
+/*
+ * SelectDown adds the current row to the selection and moves the cursor down.
+ */
+static bool
+SelectDown_action(ia_t ia, unsigned argc, const char **argv)
+{
+    action_debug("SelectDown", ia, argc, argv);
+    if (check_argc("SelectDown", argc, 0, 0) < 0) {
+	return false;
+    }
+
+    keyboard_cursor_select();
+    Down_action(ia, 0, NULL);
+
+    return true;
+}
+
 /**
  * Selection module registration.
  */
@@ -858,8 +952,12 @@ void
 select_register(void)
 {
     static action_table_t select_actions[] = {
-	{ "Copy",	Copy_action,	ACTION_KE },
-	{ "Cut",	Cut_action,	ACTION_KE }
+	{ "Copy",	Copy_action,		ACTION_KE },
+	{ "Cut",	Cut_action,		ACTION_KE },
+	{ "SelectDown",	SelectDown_action,	ACTION_KE },
+	{ "SelectLeft",	SelectLeft_action,	ACTION_KE },
+	{ "SelectRight",SelectRight_action,	ACTION_KE },
+	{ "SelectUp",	SelectUp_action,	ACTION_KE }
     };
 
     register_actions(select_actions, array_count(select_actions));

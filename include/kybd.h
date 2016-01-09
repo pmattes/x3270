@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,3 +62,7 @@ int state_from_keymap(char keymap[32]);
 void lightpen_select(int baddr);
 void key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause);
 void kybd_register(void);
+bool Down_action(ia_t ia, unsigned argc, const char **argv);
+bool Left_action(ia_t ia, unsigned argc, const char **argv);
+bool Right_action(ia_t ia, unsigned argc, const char **argv);
+bool Up_action(ia_t ia, unsigned argc, const char **argv);

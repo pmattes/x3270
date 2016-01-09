@@ -149,7 +149,6 @@ static action_t CursorSelect_action;
 static action_t Delete_action;
 static action_t DeleteField_action;
 static action_t DeleteWord_action;
-static action_t Down_action;
 static action_t Dup_action;
 static action_t Enter_action;
 static action_t Erase_action;
@@ -164,7 +163,6 @@ static action_t Insert_action;
 static action_t Interrupt_action;
 static action_t Key_action;
 static action_t Left2_action;
-static action_t Left_action;
 static action_t MonoCase_action;
 static action_t MoveCursor_action;
 static action_t Newline_action;
@@ -174,13 +172,11 @@ static action_t PF_action;
 static action_t PreviousWord_action;
 static action_t Reset_action;
 static action_t Right2_action;
-static action_t Right_action;
 static action_t String_action;
 static action_t SysReq_action;
 static action_t Tab_action;
 static action_t ToggleInsert_action;
 static action_t ToggleReverse_action;
-static action_t Up_action;
 
 static action_table_t kybd_actions[] = {
     { "Attn",		Attn_action,		ACTION_KE },
@@ -1900,7 +1896,7 @@ do_left(void)
 	cursor_move(baddr);
 }
 
-static bool
+bool
 Left_action(ia_t ia, unsigned argc, const char **argv)
 {
     action_debug("Left", ia, argc, argv);
@@ -2166,7 +2162,7 @@ Erase_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Cursor right 1 position.
  */
-static bool
+bool
 Right_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;
@@ -2480,7 +2476,7 @@ NextWord_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Cursor up 1 position.
  */
-static bool
+bool
 Up_action(ia_t ia, unsigned argc, const char **argv)
 {
     register int baddr;
@@ -2515,7 +2511,7 @@ Up_action(ia_t ia, unsigned argc, const char **argv)
 /*
  * Cursor down 1 position.
  */
-static bool
+bool
 Down_action(ia_t ia, unsigned argc, const char **argv)
 {
     int baddr;

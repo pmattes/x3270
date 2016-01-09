@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2015 Paul Mattes.
+ * Copyright (c) 2000-2016 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -3245,7 +3245,7 @@ static void
 set_console_title(const char *text, bool selecting)
 {
     if (selecting) {
-	(void) SetConsoleTitle(lazyaf("[select] %s", text));
+	(void) SetConsoleTitle(lazyaf("%s [select]", text));
     } else {
 	(void) SetConsoleTitle(text);
     }

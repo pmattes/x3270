@@ -104,8 +104,12 @@ keymap.base.3270: \n\
         <Key>BACK: Erase()\n\
    Shift <Key>END: EraseEOF()\n\
          <Key>END: FieldEnd()\n\
-  Shift <Key>LEFT: PreviousWord()\n\
- Shift <Key>RIGHT: NextWord()
+ Shift <Key>RIGHT: SelectRight()\n\
+  Ctrl <Key>RIGHT: NextWord()\n\
+  Shift <Key>LEFT: SelectLeft()\n\
+   Ctrl <Key>LEFT: PreviousWord()\n\
+    Shift <Key>UP: SelectUp()\n\
+  Shift <Key>DOWN: SelectDown()
 ! wc3270 keymap for more 3270-ish behavior: The Enter key is Newline and the
 ! Right-Ctrl key is Enter.
 x3270.keymap.rctrl.3270: \

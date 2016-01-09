@@ -1148,7 +1148,12 @@ ifelse(XX_PRODUCT,tcl3270,,`XX_TR(XX_TDH(XX_BLOCK()Source(XX_FI(file)))	XX_TD(re
 XX_TR(XX_TDH(Status`')	XX_TD(report connection status))
 ')dnl
 XX_TR(XX_TDH(XX_BLOCK()String`'XX_LPAREN`'XX_FI(string)`'XX_RPAREN)	XX_TD(insert string (simple macro facility)))
-XX_TR(XX_TDH(XX_BLOCK()`SysReq')	XX_TD(System Request XX_SM(AID)))
+ifelse(XX_PRODUCT,wc3270,`XX_TR(XX_TDH(XX_BLOCK()`SelectDown')	XX_TD(Extend selection down))
+XX_TR(XX_TDH(SelectLeft)	XX_TD(Extend selection left))
+XX_TR(XX_TDH(SelectUp)	XX_TD(Extend selection up))
+XX_TR(XX_TDH(SelectDown)	XX_TD(Extend selection down))
+XX_TR(XX_TDH(SysReq)	XX_TD(System Request XX_SM(AID)))
+')dnl
 XX_TR(XX_TDH(`Tab')	XX_TD(move cursor to next input field))
 XX_TR(XX_TDH(`Toggle'XX_LPAREN`'XX_FI(option)[,XX_FI(set|clear)]XX_RPAREN)	XX_TD(toggle an option))
 XX_TR(XX_TDH(`ToggleInsert')	XX_TD(toggle insert mode))
