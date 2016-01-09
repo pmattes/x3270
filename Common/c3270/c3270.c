@@ -754,7 +754,7 @@ pager_output(const char *s)
 	nl = strchr(s, '\n');
 	if (nl != NULL) {
 	    sl = nl - s;
-	    printf("%.*s\n", sl, s);
+	    printf("%.*s\n", (int)sl, s);
 	    s = nl + 1;
 	} else {
 	    printf("%s\n", s);

@@ -1483,7 +1483,7 @@ This specifies the EBCDIC character set (code page) used by the host.");
 	    k++;
 	}
 	printf(" %2d. %-*s %-*s",
-		j + 1,
+		(int)(j + 1),
 		CS_WIDTH, charsets[j].name,
 		CP_WIDTH, charsets[j].hostcp);
     }
