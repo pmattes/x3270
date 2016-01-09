@@ -99,7 +99,8 @@ void llist_unlink(llist_t *element);
 #define ST_PRINTER	7
 #define ST_EXITING	8
 #define ST_CHARSET	9
-#define N_ST		10
+#define ST_SELECTING	10
+#define N_ST		11
 
 #define ORDER_DONTCARE	0xfffe
 #define ORDER_LAST	0xffff

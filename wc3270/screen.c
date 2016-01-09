@@ -227,6 +227,9 @@ static bool in_focus = true;
 
 static int crosshair_color = HOST_COLOR_PURPLE;
 
+static char *window_title;
+static bool selecting;
+
 static action_t Paste_action;
 static action_t Redraw_action;
 static action_t Title_action;
@@ -3238,10 +3241,21 @@ Paste_action(ia_t ia, unsigned argc, const char **argv)
 }
 
 /* Set the window title. */
+static void
+set_console_title(const char *text, bool selecting)
+{
+    if (selecting) {
+	(void) SetConsoleTitle(lazyaf("[select] %s", text));
+    } else {
+	(void) SetConsoleTitle(text);
+    }
+}
+
 void
 screen_title(const char *text)
 {
-    (void) SetConsoleTitle(text);
+    Replace(window_title, NewString(text));
+    set_console_title(text, selecting);
 }
 
 static bool
@@ -3276,6 +3290,18 @@ relabel(bool ignored _is_unused)
     } else {
 	screen_title("wc3270");
     }
+}
+
+/**
+ * Callback for changes in screen selection state.
+ *
+ * @param[in] selecting		true if selection in progress
+ */
+static void
+screen_selecting_changed(bool now_selecting)
+{
+    selecting = now_selecting;
+    set_console_title(window_title? window_title: "wc3270", selecting);
 }
 
 /* Get the window handle for the console. */
@@ -3416,4 +3442,6 @@ screen_register(void)
     /* Register the actions. */
     register_actions(screen_actions, array_count(screen_actions));
 
+    /* Register for selection state changes. */
+    register_schange(ST_SELECTING, screen_selecting_changed);
 }

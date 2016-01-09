@@ -47,6 +47,7 @@
 #include "screen.h"
 #include "trace.h"
 #include "unicodec.h"
+#include "utils.h"
 #include "winvers.h"
 #include "wselectc.h"
 
@@ -112,13 +113,15 @@ unselect(int baddr, int len)
     word_selected = false;
     memset(s_pending, 0, ROWS * COLS);
     screen_changed = true;
+    st_changed(ST_SELECTING, false);
 }
 
 static void
-reselect(void)
+reselect(bool generate_event)
 {
     int rowA, colA, rowZ, colZ;
     int row, col;
+    bool any = false;
 
     /* Clear out the current selection. */
     memset(s_pending, 0, ROWS * COLS);
@@ -136,10 +139,14 @@ reselect(void)
     for (row = rowA; row <= rowZ; row++) {
 	for (col = colA; col <= colZ; col++) {
 	    s_pending[(row * COLS) + col] = 1;
+	    any = true;
 	}
     }
 
     screen_changed = true;
+    if (generate_event && any) {
+	st_changed(ST_SELECTING, true);
+    }
 }
 
 /*
@@ -268,13 +275,16 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 		vtrace("  New selection\n");
 		select_start_row = row;
 		select_start_col = col;
+
+		/* If there was a previous selection, turn it off. */
+		st_changed(ST_SELECTING, false);
 	    }
 	    rubber_banding = true;
 	    select_started = true;
 	    word_selected = false;
 	    select_end_row = row;
 	    select_end_col = col;
-	    reselect();
+	    reselect(false);
 	    break;
 	case SE_DOUBLE_CLICK:
 	    vtrace("  Word select\n");
@@ -283,7 +293,7 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 	    select_end_row = row;
 	    find_word_end(row, col, &select_start_col, &select_end_col);
 	    word_selected = true;
-	    reselect();
+	    reselect(true);
 
 	    /* If we moved the cursor for the first click, move it back now. */
 	    if (click_cursor_addr != -1) {
@@ -326,14 +336,14 @@ select_event(unsigned row, unsigned col, select_event_t event, bool shift)
 	    vtrace("  Finish selection\n");
 	    select_end_row = row;
 	    select_end_col = col;
-	    reselect();
+	    reselect(true);
 	    break;
 	case SE_MOVE:
 	    /* Extend. */
 	    vtrace("  Extend\n");
 	    select_end_row = row;
 	    select_end_col = col;
-	    reselect();
+	    reselect(true);
 	    break;
 	default:
 	    break;
