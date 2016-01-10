@@ -1,4 +1,4 @@
-ws3270 3.3 Release
+ws3270 3.4 Release
 
 ws3270 is a scripted IBM 3278/3279 terminal emulator.
 
