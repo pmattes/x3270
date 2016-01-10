@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2015, Paul Mattes.
+# Copyright (c) 2007-2016, Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,15 +37,14 @@ SCREENS = c3270-thumb.png c3270.png cyrillic-thumb.png cyrillic.png \
 
 OTHERS = $(SCREENS) Brackets.html Build-c3270.html Build-tcl3270.html \
 	Build-x3270.html Build.html Charset.html HotBugs.html Keymap.html \
-	SS-HCS12-1372-00.pdf Unix/c3270-man.html Unix/ibm_hosts.html \
-	Unix/pr3287-man.html Unix/s3270-man.html Unix/tcl3270-man.html \
-	Unix/x3270-man.html Unix/x3270-script.html Unix/x3270if.html \
-	Windows/wc3270-man.html Windows/wc3270-script.html \
-	Windows/wpr3287-man.html Windows/ws3270-man.html Windows/x3270if.html \
-	Wishlist.html c3270-Resources.html c3270Keymap.html del.jpg delta.jpg \
-	man/FAQ.html rest.html s3270-Resources.html styles.css \
-	tcl3270-Resources.html wc3270-Resources.html wc3270Keymap.html \
-	ws3270-Resources.html x026.gif x3270-Resources.html x3270.jpg
+	SS-HCS12-1372-00.pdf Unix-x3270if.html Windows-x3270if.html \
+	Wishlist.html c3270-Resources.html c3270-man.html c3270Keymap.html \
+	del.jpg delta.jpg ibm_hosts.html man/FAQ.html pr3287-man.html \
+	rest.html s3270-Resources.html s3270-man.html styles.css \
+	tcl3270-Resources.html tcl3270-man.html wc3270-Resources.html \
+	wc3270-man.html wc3270-script.html wc3270Keymap.html wpr3287-man.html \
+	ws3270-Resources.html ws3270-man.html x026.gif x3270-Resources.html \
+	x3270-man.html x3270-script.html x3270.jpg
 
 all: $(PAGES) webpage.tgz
 
@@ -87,33 +86,33 @@ screenshots.html: screenshots-body.html mkpages.bash version.txt
 x026.html: x026-body.html mkpages.bash version.txt
 	./mkpages.bash x026
 
-Unix/c3270-man.html:
+c3270-man.html:
 	cd ../c3270 && $(MAKE) -f Makefile.aux html/c3270-man.html
-Unix/ibm_hosts.html:
+ibm_hosts.html:
 	cd ../x3270 && $(MAKE) -f Makefile.aux html/ibm_hosts.html
-Unix/pr3287-man.html:
+pr3287-man.html:
 	cd ../pr3287 && $(MAKE) -f Makefile.aux html/pr3287-man.html
-Unix/s3270-man.html:
+s3270-man.html:
 	cd ../s3270 && $(MAKE) -f Makefile.aux html/s3270-man.html
-Unix/tcl3270-man.html:
+tcl3270-man.html:
 	cd ../tcl3270 && $(MAKE) -f Makefile.aux html/tcl3270-man.html
-Unix/x3270-man.html:
+x3270-man.html:
 	cd ../x3270 && $(MAKE) -f Makefile.aux html/x3270-man.html
-Unix/x3270-script.html:
+x3270-script.html:
 	cd ../x3270 && $(MAKE) -f Makefile.aux html/x3270-script.html
-Unix/x3270if.html:
-	cd ../s3270 && $(MAKE) -f Makefile.aux html/x3270if.html
+Unix-x3270if.html:
+	cd ../s3270 && $(MAKE) -f Makefile.aux html/Unix-x3270if.html
 
-Windows/wc3270-man.html:
+wc3270-man.html:
 	cd ../wc3270 && $(MAKE) -f Makefile.aux html/wc3270-man.html
-Windows/wc3270-script.html:
+wc3270-script.html:
 	cd ../wc3270 && $(MAKE) -f Makefile.aux html/wc3270-script.html
-Windows/wpr3287-man.html:
+wpr3287-man.html:
 	cd ../wpr3287 && $(MAKE) -f Makefile.aux html/wpr3287-man.html
-Windows/ws3270-man.html:
+ws3270-man.html:
 	cd ../ws3270 && $(MAKE) -f Makefile.aux html/ws3270-man.html
-Windows/x3270if.html:
-	cd ../ws3270 && $(MAKE) -f Makefile.aux html/x3270if.html
+Windows-x3270if.html:
+	cd ../ws3270 && $(MAKE) -f Makefile.aux html/Windows-x3270if.html
 
 c3270-Resources.html:
 	cd ../c3270 && $(MAKE) -f Makefile.aux html/Resources.html

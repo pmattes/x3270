@@ -1,4 +1,4 @@
-# Copyright (c) 1995-2011, 2013-2015 Paul Mattes.
+# Copyright (c) 1995-2011, 2013-2016 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -47,7 +47,7 @@ MISC = $(PRODUCT).man Examples/cms_cmd.expect LICENSE Makefile.in README \
 HTML = html/$(PRODUCT)-man.html html/Bugs.html html/FAQ.html html/Intro.html \
 	html/Lineage.html html/README.html html/ReleaseNotes.html \
 	html/Resources.html html/SSL.html html/Wishlist.html \
-	html/x3270-script.html html/x3270.xbm html/x3270if.html
+	html/x3270-script.html html/x3270.xbm html/Unix-x3270if.html
 
 FILES = $(SOURCES) $(HEADERS) $(MISC) $(HTML)
 
@@ -62,7 +62,7 @@ MKMAN = ./m4man -t man -p $(PRODUCT)
 MKHTML = ./m4man -t html -p $(PRODUCT)
 
 man: $(PRODUCT).man x3270if.man x3270-script.man html/$(PRODUCT)-man.html \
-	html/x3270if.html html/x3270-script.html
+	html/Unix-x3270if.html html/x3270-script.html
 
 $(PRODUCT).man: x3270.man.m4 ft.inc resources.inc hostname.inc $(MANDEP)
 	$(MKMAN) -n $(PRODUCT) -o $@ x3270.man.m4
@@ -70,7 +70,7 @@ html/$(PRODUCT)-man.html: x3270.man.m4 ft.inc resources.inc hostname.inc $(MANDE
 	$(MKHTML) -n $(PRODUCT) -o $@ x3270.man.m4
 x3270if.man: x3270if.man.m4 $(MANDEP)
 	$(MKMAN) -n x3270if -o $@ x3270if.man.m4
-html/x3270if.html: x3270if.man.m4 ft.inc $(MANDEP)
+html/Unix-x3270if.html: x3270if.man.m4 ft.inc $(MANDEP)
 	$(MKHTML) -n x3270if -o $@ x3270if.man.m4
 x3270-script.man: x3270-script.man.m4 ft.inc $(MANDEP)
 	$(MKMAN) -n x3270-script -o $@ x3270-script.man.m4

@@ -421,7 +421,7 @@ s3270/html/Resources.html
 s3270/html/s3270-man.html
 s3270/html/SSL.html
 s3270/html/Wishlist.html
-s3270/html/x3270if.html
+s3270/html/Unix-x3270if.html
 s3270/html/x3270-script.html
 s3270/html/x3270.xbm
 s3270/ibm_hosts.man.m4
@@ -704,7 +704,7 @@ ws3270/html/SSL.html
 ws3270/html/wc3270-script.html
 ws3270/html/Wishlist.html
 ws3270/html/ws3270-man.html
-ws3270/html/x3270if.html
+ws3270/html/Windows-x3270if.html
 ws3270/ibm_hosts.man.m4
 ws3270/LICENSE.txt
 ws3270/localdefs.h

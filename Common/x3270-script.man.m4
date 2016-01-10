@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2014, Paul Mattes.
+dnl Copyright (c) 2000-2014, 2016 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -651,7 +651,7 @@ ifelse(XX_PLATFORM,unix,`XX_BR
 XX_LINK(x3270-man.html,x3270(1))
 ')dnl
 XX_BR
-XX_LINK(x3270if.html,x3270if(1))
+ifelse(XX_PLATFORM,unix,`XX_LINK(Unix-x3270if.html,x3270if(1))',`XX_LINK(Windows-x3270if.html,x3270if(1))')
 XX_BR
 XX_LINK(XX_C3270-man.html,XX_C3270`(1)')
 XX_BR
