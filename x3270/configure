@@ -679,7 +679,6 @@ ac_user_opts='
 enable_option_checking
 with_ssl
 with_x
-with_all_xinstall
 enable_app_defaults
 with_fontdir
 with_iconv
@@ -1330,7 +1329,6 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-ssl=DIR          specify OpenSSL install directory
   --with-x                use the X Window System
-  --with-all-xinstall     install all components in system X11 directory
   --with-fontdir=DIR      install fonts in directory DIR DIR=misc
   --with-iconv            ignore __STDC_ISO_10646__ and use iconv() instead
 
@@ -3877,17 +3875,6 @@ $as_echo "libraries $x_libraries, headers $x_includes" >&6; }
 fi
 
 if test "$no_x" = "yes"; then as_fn_error $? "'Cannot find X utilities or libraries'" "$LINENO" 5; fi
-
-
-# Check whether --with-all_xinstall was given.
-if test "${with_all_xinstall+set}" = set; then :
-  withval=$with_all_xinstall;
-fi
-
-case "$with_all_xinstall" in
-yes)	prefix='$(PROJECTROOT)'
-	;;
-esac
 
 # Check whether --enable-app-defaults was given.
 if test "${enable_app_defaults+set}" = set; then :

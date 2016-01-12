@@ -62,9 +62,6 @@ version.o: mkversion.sh $(OBJECTS) version.txt
 pr3287: $(OBJECTS) version.o $(DEP32XX)
 	$(CC) -o $@ $(OBJECTS) version.o $(LDFLAGS) $(LIBS) $(LD32XX)
 
-man:
-	$(MAKE) -f Makefile.aux $@
-
 install: pr3287
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)

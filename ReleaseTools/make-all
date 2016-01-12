@@ -201,24 +201,6 @@ do
 			diff $d2/instlist.man cmp.files || exit 1
 			rm -rf i
 		fi
-		if [ -f $d2/instlist.byprefix ]
-		then	echo "===== Installing $prod (byprefix)."
-			mkdir i
-			./configure --without-xmkmf
-			make install install.man DESTDIR=$PWD/i
-			find i -print | tail -n +2 | sed 's/^..//' | sort >cmp.files
-			diff $d2/instlist.byprefix cmp.files || exit 1
-			rm -rf i
-		fi
-		if [ -f $d2/instlist.all-xinstall ]
-		then	echo "===== Installing $prod (all-xinstall)."
-			mkdir i
-			./configure --with-all-xinstall
-			make install install.man DESTDIR=$PWD/i
-			find i -print | tail -n +2 | sed 's/^..//' | sort >cmp.files
-			diff $d2/instlist.all-xinstall cmp.files || exit 1
-			rm -rf i
-		fi
 	fi
 done
 

@@ -94,13 +94,6 @@ dnl Check for X
 AC_PATH_X
 if test "$no_x" = "yes"; then AC_MSG_ERROR('Cannot find X utilities or libraries'); fi
 
-dnl Check for --with-all-xinstall
-AC_ARG_WITH(all_xinstall,[  --with-all-xinstall     install all components in system X11 directory])
-case "$with_all_xinstall" in
-yes)	prefix='$(PROJECTROOT)'
-	;;
-esac
-
 dnl Check for --enable-app-defaults
 AC_ARG_ENABLE(app-defaults,
     [  --enable-app-defaults   use a separate app-defaults file],

@@ -79,9 +79,6 @@ fallbacks.c: mkfb $(FALLBACKS)
 x3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
-man:
-	$(MAKE) -f Makefile.aux $@
-
 %.pcf.gz: %.bdf
 	bdftopcf $< | gzip >$@
 

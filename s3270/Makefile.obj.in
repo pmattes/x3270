@@ -74,9 +74,6 @@ s3270: $(OBJS1) $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
 x3270if: x3270if.o
 	$(CC) -o $@ $(LDFLAGS) -I../include x3270if.o $(LIBS)
 
-man:
-	$(MAKE) -f Makefile.aux man
-
 install: s3270 x3270if
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)

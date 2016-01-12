@@ -13,84 +13,6 @@
 	x3270. For general build information, look
 	<a href="Build.html">here</a>.</i>
 
-	<h2> Where Things Are Installed</h2>
-	If the <tt>configure</tt> script finds the X11 <i>xmkmf</i> utility, it
-	will generate an Imakefile and run <i>xmkmf</i> on it, which will use
-	<i>imake</i> to generate a Makefile. Otherwise, <tt>configure</tt> will
-	generate a Makefile directly. These two methods will result in objects
-	being installed in different places.
-
-	<p>By default with <i>xmkmf</i>, parts of x3270 are installed under
-	two different directories.
- 
-	<p>Files specific to X11 (the x3270 binary, x3270 manual pages, and
-	fonts) are installed in the system X11 directory, typically
-	<tt>/usr/X11R6</tt>. This directory is defined when your system is
-	installed and cannot be easily changed.  This is referred to as
-	<i>xdir</i> in the table below.</p>
- 
-	<p>Files shared with other non-X11 3270 applications (such as
-	the <i>x3270if</i> binary and its man page, and the x3270 configuration
-	files) are installed under the autoconf prefix directory, typically
-	<tt>/usr/local</tt>.
-	The autoconf prefix directory can be changed with options to the
-	<tt>configure</tt> script. This is referred to as <i>prefixdir</i> in
-	the table below.
-	<p>You can force a directly-generated Makefile with the
-	<tt>configure --without-xmkmf</tt> option. This will result in
-	everything being installed in the autoconf prefix directory.
-
-	<p>By contrast, if you are have <i>xmkmf</i> on your system and want
-	all of the x3270 objects installed in your system X11 directory, use
-	the <tt>configure --with-all-xinstall</tt> option.
-	<table border="1" cols="2" width="100%">
-	    <tbody>
-		<tr>
-		    <td><b>Files</b></td>
-		    <td><b>Installed in<br>(default)</b></td>
-		    <td><b>Installed in<br>(--without-xmkmf)</b></td>
-		    <td><b>Installed in<br>(--with-all-xinstall)</b></td>
-		</tr>
-		<tr>
-		    <td>Binary for x3270</td>
-		    <td><tt><i>xdir</i>/bin</tt></td>
-		    <td><tt><i><font color="red">predfixdir</font></i>/bin</tt></td>
-		    <td><tt><i>xdir</i>/bin</tt></td>
-		</tr>
-		<tr>
-		    <td>Manual pages for x3270</td>
-		    <td><tt><i>xdir</i>/man</tt></td>
-		    <td><tt><i><font color="red">prefixdir</i></font>/man</tt></td>
-		    <td><tt><i>xdir</i>/man</tt></td>
-		</tr>
-		<tr>
-		    <td>Fonts</td>
-		    <td><tt><i>xdir</i>/fonts/misc</tt></td>
-		    <td><tt><i><font color="red">prefixdir</font></i>/fonts/misc</tt></td>
-		    <td><tt><i>xdir</i>/fonts/misc</tt></td>
-		</tr>
-		<tr>
-		    <td>Binary for <i>x3270if</i></td>
-		    <td><tt><i>prefixdir</i>/bin</tt></td>
-		    <td><tt><i>prefixdir</i>/bin</tt></td>
-		    <td><tt><i><font color="red">xdir</font></i>/bin</tt></td>
-		</tr>
-		<tr>
-		    <td>Manual page for <i>x3720if</i></td>
-		    <td><tt><i>prefixdir</i>/man</tt></td>
-		    <td><tt><i>prefixdir</i>/man</tt></td>
-		    <td><tt><i><font color="red">xdir</font></i>/man</tt></td>
-		</tr>
-		<tr>
-		    <td>Configuration files used by x3270 and other
-			programs</td>
-		    <td><tt><i>prefixdir</i>/etc</tt></td>
-		    <td><tt><i>prefixdir</i>/etc</tt></td>
-		    <td><tt><i><font color="red">xdir</font></i>/etc</tt></td>
-		</tr>
-	    </tbody> 
-	</table>
-
 	<h2>Installing Fonts</h2>
 	x3270 prefers that its fonts be installed in order to run. However,
 	a script is provided for testing a local copy of x3270 in the current
@@ -188,19 +110,6 @@
 	options:
 	<table border="3" cellspacing="3" cellpadding="3">
 	    <tbody>
-		<tr>
-		    <td><tt>--without-xmkmf</tt></td>
-		    <td>Don't use xmkmf, even if it is found on the system.
-		    </td>
-		<tr>
-		    <td><tt>--with-all-xinstall</tt></td>
-		    <td>Install all files (even those that are common with
-			other non-X11 3270 programs) in the system's X11
-			directory.
-			This is compatible with earlier releases of x3270.
-			It is equivalent to <tt>--prefix='$(PROJECTROOT)'</tt>.
-		    </td>
-		</tr>
 		<tr>
 		    <td><tt>--prefix=<i>prefix</i></tt></td>
 		    <td>Install common architecture-independent files under
