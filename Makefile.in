@@ -1,4 +1,4 @@
-# Copyright (c) 2015 Paul Mattes.
+# Copyright (c) 2015-2016 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -51,19 +51,6 @@ endif
 ifdef M1
 	@echo "  <program>           build <program>"
 endif
-	@echo " depend               all dependencies"
-ifdef MIXED
-	@echo "  unix-depend         Unix dependencies"
-	@echo "  windows-depend      Windows dependencies"
-endif
-	@echo "  lib-depend          library dependencies"
-ifdef MIXED
-	@echo "  unix-lib-depend     Unix library dependencies"
-	@echo "  windows-lib-depend  Windows library dependencies"
-endif
-ifdef M1
-	@echo "  <program>-depend    <program> dependencies"
-endif
 	@echo " clean                remove all intermediate files"
 ifdef MIXED
 	@echo "  unix-clean          remove Unix intermediate files"
@@ -107,14 +94,26 @@ lib32xx:
 	cd lib/32xx && $(MAKE)
 lib3270stubs:
 	cd lib/3270stubs && $(MAKE)
-libw3270:
+libw3270: libw3270-32 libw3270-64
+libw3270-32:
 	cd lib/w3270 && $(MAKE)
-libw3270i:
+libw3270-64:
+	cd lib/w3270 && $(MAKE) WIN64=1
+libw3270i: libw3270i-32 libw3270i-64
+libw3270i-32:
 	cd lib/w3270i && $(MAKE)
-libw32xx:
+libw3270i-64:
+	cd lib/w3270i && $(MAKE) WIN64=1
+libw32xx: libw32xx-32 libw32xx-64
+libw32xx-32:
 	cd lib/w32xx && $(MAKE)
-libw3270stubs:
+libw32xx-64:
+	cd lib/w32xx && $(MAKE) WIN64=1
+libw3270stubs: libw3270stubs-32 libw3270stubs-64
+libw3270stubs-32:
 	cd lib/w3270stubs && $(MAKE)
+libw3270stubs-64:
+	cd lib/w3270stubs && $(MAKE) WIN64=1
 c3270: lib3270 lib3270i lib32xx
 	cd c3270 && $(MAKE)
 s3270: lib3270 lib32xx
@@ -125,57 +124,26 @@ x3270: lib3270 lib3270i lib32xx
 	cd x3270 && $(MAKE)
 pr3287: lib32xx
 	cd pr3287 && $(MAKE)
-wc3270: libw3270 libw3270i libw32xx
+wc3270: wc3270-32 wc3270-64
+wc3270-32: libw3270-32 libw3270i-32 libw32xx-32
 	cd wc3270 && $(MAKE)
-ws3270: libw3270 libw32xx
+wc3270-64: libw3270-64 libw3270i-64 libw32xx-64
+	cd wc3270 && $(MAKE) WIN64=1
+ws3270: ws3270-32 ws3270-64
+ws3270-32: libw3270-32 libw32xx-32
 	cd ws3270 && $(MAKE)
-wpr3287: libw32xx
+ws3270-64: libw3270-64 libw32xx-64
+	cd ws3270 && $(MAKE) WIN64=1
+wpr3287: wpr3287-32 wpr3287-64
+wpr3287-32: libw32xx-32
 	cd wpr3287 && $(MAKE)
+wpr3287-64: libw32xx-64
+	cd wpr3287 && $(MAKE) WIN64=1
 
 FORCE:
 
 unix: c3270 s3270 tcl3270 x3270 pr3287
 windows: wc3270 ws3270 wpr3287
-
-# Dependency generation
-depend: @T_DEPEND@
-unix-lib-depend: lib3270-depend lib3270i-depend lib32xx-depend lib3270stubs-depend
-windows-lib-depend: libw3270-depend libw3270i-depend libw32xx-depend libw3270stubs-depend
-lib-depend: unix-lib-depend windows-lib-depend
-unix-depend: x3270-depend c3270-depend s3270-depend tcl3270-depend pr3287-depend unix-lib-depend
-windows-depend: wc3270-depend ws3270-depend wpr3287-depend windows-lib-depend
-lib3270-depend:
-	cd lib/3270 && $(MAKE) depend
-lib3270i-depend:
-	cd lib/3270i && $(MAKE) depend
-lib32xx-depend:
-	cd lib/32xx && $(MAKE) depend
-lib3270stubs-depend:
-	cd lib/3270stubs && $(MAKE) depend
-libw3270-depend:
-	cd lib/w3270 && $(MAKE) depend
-libw3270i-depend:
-	cd lib/w3270i && $(MAKE) depend
-libw32xx-depend:
-	cd lib/w32xx && $(MAKE) depend
-libw3270stubs-depend:
-	cd lib/w3270stubs && $(MAKE) depend
-x3270-depend:
-	cd x3270 && $(MAKE) depend
-c3270-depend:
-	cd c3270 && $(MAKE) depend
-s3270-depend:
-	cd s3270 && $(MAKE) depend
-tcl3270-depend:
-	cd tcl3270 && $(MAKE) depend
-pr3287-depend:
-	cd pr3287 && $(MAKE) depend
-wc3270-depend:
-	cd wc3270 && $(MAKE) depend
-ws3270-depend:
-	cd ws3270 && $(MAKE) depend
-wpr3287-depend:
-	cd wpr3287 && $(MAKE) depend
 
 # Installation
 install unix-install: @T_INSTALL@
@@ -218,14 +186,26 @@ lib32xx-clean:
 	cd lib/32xx && $(MAKE) clean
 lib3270stubs-clean:
 	cd lib/3270stubs && $(MAKE) clean
-libw3270-clean:
+libw3270-clean: libw3270-clean-32 libw3270-clean-64
+libw3270-clean-32:
 	cd lib/w3270 && $(MAKE) clean
-libw3270i-clean:
+libw3270-clean-64:
+	cd lib/w3270 && $(MAKE) clean WIN64=1
+libw3270i-clean: libw3270i-clean-32 libw3270i-clean-64
+libw3270i-clean-32:
 	cd lib/w3270i && $(MAKE) clean
-libw32xx-clean:
+libw3270i-clean-64:
+	cd lib/w3270i && $(MAKE) clean WIN64=1
+libw32xx-clean: libw32xx-clean-32 libw32xx-clean-64
+libw32xx-clean-32:
 	cd lib/w32xx && $(MAKE) clean
-libw3270stubs-clean:
+libw32xx-clean-64:
+	cd lib/w32xx && $(MAKE) clean WIN64=1
+libw3270stubs-clean: libw3270stubs-clean-32 libw3270stubs-clean-64
+libw3270stubs-clean-32:
 	cd lib/w3270stubs && $(MAKE) clean
+libw3270stubs-clean-64:
+	cd lib/w3270stubs && $(MAKE) clean WIN64=1
 x3270-clean:
 	cd x3270 && $(MAKE) clean
 c3270-clean:
@@ -236,12 +216,21 @@ tcl3270-clean:
 	cd tcl3270 && $(MAKE) clean
 pr3287-clean:
 	cd pr3287 && $(MAKE) clean
-wc3270-clean:
+wc3270-clean: wc3270-clean-32 wc3270-clean-64
+wc3270-clean-32:
 	cd wc3270 && $(MAKE) clean
-ws3270-clean:
+wc3270-clean-64:
+	cd wc3270 && $(MAKE) clean WIN64=1
+ws3270-clean: ws3270-clean-32 ws3270-clean-64
+ws3270-clean-32:
 	cd ws3270 && $(MAKE) clean
-wpr3287-clean:
+ws3270-clean-32:
+	cd ws3270 && $(MAKE) clean WIN64=1
+wpr3287-clean: wpr3287-clean-32 wpr3287-clean-64
+wpr3287-clean-32:
 	cd wpr3287 && $(MAKE) clean
+wpr3287-clean-64:
+	cd wpr3287 && $(MAKE) clean WIN64=1
 
 clobber: @T_CLOBBER@
 unix-lib-clobber: lib3270-clobber lib3270i-clobber lib32xx-clobber lib3270stubs-clobber
@@ -257,14 +246,26 @@ lib32xx-clobber:
 	cd lib/32xx && $(MAKE) clobber
 lib3270stubs-clobber:
 	cd lib/3270stubs && $(MAKE) clobber
-libw3270-clobber:
+libw3270-clobber: libw3270-clobber-32 libw3270-clobber-64
+libw3270-clobber-32:
 	cd lib/w3270 && $(MAKE) clobber
-libw3270i-clobber:
+libw3270-clobber-64:
+	cd lib/w3270 && $(MAKE) clobber WIN64=1
+libw3270i-clobber: lib3270i-clobber-32 lib3270i-clobber-64
+libw3270i-clobber-32:
 	cd lib/w3270i && $(MAKE) clobber
-libw32xx-clobber:
+libw3270i-clobber-64:
+	cd lib/w3270i && $(MAKE) clobber WIN64=1
+libw32xx-clobber: libw32xx-clobber-32 libw32xx-clobber-64
+libw32xx-clobber-32:
 	cd lib/w32xx && $(MAKE) clobber
-libw3270stubs-clobber:
+libw32xx-clobber-64:
+	cd lib/w32xx && $(MAKE) clobber WIN64=1
+libw3270stubs-clobber: libw3270stubs-clobber-32 libw3270stubs-clobber-64
+libw3270stubs-clobber-32:
 	cd lib/w3270stubs && $(MAKE) clobber
+libw3270stubs-clobber-64:
+	cd lib/w3270stubs && $(MAKE) clobber WIN64=1
 x3270-clobber:
 	cd x3270 && $(MAKE) clobber
 c3270-clobber:
@@ -275,9 +276,18 @@ tcl3270-clobber:
 	cd tcl3270 && $(MAKE) clobber
 pr3287-clobber:
 	cd pr3287 && $(MAKE) clobber
-wc3270-clobber:
+wc3270-clobber: wc3270-clobber-32 wc3270-clobber-64
+wc3270-clobber-32:
 	cd wc3270 && $(MAKE) clobber
-ws3270-clobber:
+wc3270-clobber-64:
+	cd wc3270 && $(MAKE) clobber WIN64=1
+ws3270-clobber: ws3270-clobber-32 ws3270-clobber-64
+ws3270-clobber-32:
 	cd ws3270 && $(MAKE) clobber
-wpr3287-clobber:
+ws3270-clobber-64:
+	cd ws3270 && $(MAKE) clobber WIN64=1
+wpr3287-clobber: wpr3287-clobber-32 wpr3287-clobber-64
+wpr3287-clobber-32:
 	cd wpr3287 && $(MAKE) clobber
+wpr3287-clobber-64:
+	cd wpr3287 && $(MAKE) clobber WIN64=1
