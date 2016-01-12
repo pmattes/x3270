@@ -33,9 +33,8 @@ CC = @CC@
 all: tcl3270
 
 OBJ = o
-include common_files.mk tcl3270_files.mk
-
-SRCS = $(COMMON_SOURCES) $(TCL3270_SOURCES)
+HOST = @host@
+include common_files.mk tcl3270_files.mk libs.mk
 
 VOBJS = $(COMMON_OBJECTS) $(TCL3270_OBJECTS) fallbacks.o
 
@@ -71,17 +70,8 @@ fallbacks.c: mkfb $(FALLBACKS)
 	$(RM) $@
 	./mkfb -c -o $@ $(filter-out mkfb,$^)
 
-libobj = $(TOP)/obj/@host@
-
-tcl3270: $(OBJS1) $(OBJS1) $(libobj)/lib3270/lib3270.a $(libobj)/lib3270stubs/lib3270stubs.a $(libobj)/lib32xx/lib32xx.a
-	$(CC) -o $@ $(OBJS1) $(LDFLAGS) -L$(libobj)/lib3270 -L$(libobj)/lib32xx -L$(libobj)/lib3270stubs -l3270 -l32xx -l3270stubs $(LIBS)
-
-$(libobj)/lib3270/lib3270.a:
-	cd $(TOP)/lib/3270 && $(MAKE) all
-$(libobj)/lib32xx/lib32xx.a:
-	cd $(TOP)/lib/32xx && $(MAKE) all
-$(libobj)/lib3270stubs/lib3270stubs.a:
-	cd $(TOP)/lib/3270stubs && $(MAKE) all
+tcl3270: $(OBJS1) $(OBJS1) $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
+	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
 man:
 	$(MAKE) -f Makefile.aux man

@@ -37,25 +37,21 @@ XCPPFLAGS = $(WIN32_FLAGS) -I. -I$(THIS) -I$(TOP)/Common/c3270 -I$(TOP)/Common -
 CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS) $(SSLCPP)
 
 OBJ = o
-include common_files.mk $(THIS)/wc3270_files.mk
+ifdef WIN64
+HOST = win64
+else
+HOST = win32
+endif
+W = w
+include common_files.mk $(THIS)/wc3270_files.mk libs.mk
 
 VOBJS = $(COMMON_OBJECTS) $(WC3270_OBJECTS) fallbacks.o wc3270res.o
-
-ifdef WIN64
-arch = win64
-else
-arch = win32
-endif
-LIB3270 = $(TOP)/obj/$(arch)/lib3270/lib3270.a
-LIB3270I = $(TOP)/obj/$(arch)/lib3270i/lib3270i.a
-LIBSTUBS = $(TOP)/obj/$(arch)/lib3270stubs/lib3270stubs.a
-LIB32XX = $(TOP)/obj/$(arch)/lib32xx/lib32xx.a
 
 OBJECTS = $(VOBJS) version.o
 WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o relink.o
 LIBS = $(SSLLIB) -lws2_32 -lole32 -luuid -lcomdlg32 -lgdi32 -lwinspool
-SHRTLIBS = -L$(TOP)/obj/$(arch)/lib32xx -l32xx -lole32 -luuid
-WIZLIBS = -L$(TOP)/obj/$(arch)/lib32xx -l32xx -lole32 -luuid -lwinspool
+SHRTLIBS = $(LD32XX) -lole32 -luuid
+WIZLIBS = $(LD32XX) -lole32 -luuid -lwinspool
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
 PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe
@@ -63,7 +59,7 @@ all: $(PROGS)
 
 wc3270.exe : XCPPFLAGS += -DWIN32_LEAN_AND_MEAN
 
-version.o: mkversion.sh $(VOBJS) version.txt Makefile
+version.o: mkversion.sh $(VOBJS) version.txt
 	$(RM) xversion.c
 	sh $< wc3270 $(filter %.txt,$^) >xversion.c
 	$(CC) $(CFLAGS) -c -o $@ xversion.c
@@ -88,31 +84,22 @@ $(MKKEYPAD): CFLAGS = -g
 wc3270res.o: wc3270.rc wc3270.ico
 	$(WINDRES) -i $< -o $@
 
-wc3270.exe: $(OBJECTS) Makefile $(LIB3270) $(LIB3270I) $(LIBSTUBS) $(LIB32XX)
-	$(CC) -o wc3270.exe $(CFLAGS) $(OBJECTS) -L$(TOP)/obj/$(arch)/lib3270 -L$(TOP)/obj/$(arch)/lib3270i -L$(TOP)/obj/$(arch)/lib32xx -L$(TOP)/obj/$(arch)/lib3270stubs -l3270 -l3270i -l32xx -l3270stubs $(LIBS)
+wc3270.exe: $(OBJECTS) Makefile $(DEP3270) $(DEP3270I) $(DEP3270STUBS) $(DEP32XX)
+	$(CC) -o wc3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
-$(LIB3270):
-	cd $(TOP)/lib/v-w3270 && $(MAKE) all
-$(LIB3270I):
-	cd $(TOP)/lib/v-w3270i && $(MAKE) all
-$(LIB32XX):
-	cd $(TOP)/lib/v-w32xx && $(MAKE) all
-$(LIBSTUBS):
-	cd $(TOP)/lib/v-w3270stubs && $(MAKE) all
-
-mkshort.exe: mkshort.o shortcut.o $(LIB32XX) Makefile
+mkshort.exe: mkshort.o shortcut.o $(DEP32XX)
 	$(CC) -o mkshort.exe $(CFLAGS) mkshort.o shortcut.o $(SHRTLIBS)
 
 wversion.o: mkwversion.sh version.txt
 	sh $< $(CC) $(filter %.txt,$^)
 
-wc3270wiz.exe: $(WOBJECTS) $(LIB32XX)
+wc3270wiz.exe: $(WOBJECTS) $(DEP32XX)
 	$(CC) -o wc3270wiz.exe $(CFLAGS) $(WOBJECTS) $(WIZLIBS)
 
 catf.exe: catf.c
 
-ead3270.exe: ead3270.o $(LIB32XX)
-	$(CC) -o $@ ead3270.o -L$(TOP)/obj/$(arch)/lib32xx -l32xx
+ead3270.exe: ead3270.o $(DEP32XX)
+	$(CC) -o $@ ead3270.o $(LD32XX)
 
 clean:
 	rm -f *.o $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c
@@ -121,4 +108,4 @@ clobber: clean
 	rm -f $(PROGS) *.d
 
 # Include auto-generated dependencies.
--include $(OBJS:.o=.d) mkbf.d mkkeypad.d
+-include $(OBJS:.o=.d) mkbf.d mkkeypad.d wc3270wiz.d

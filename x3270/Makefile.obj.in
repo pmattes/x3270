@@ -30,7 +30,8 @@ RM = rm -f
 CC = @CC@
 
 OBJ = o
-include common_files.mk x3270_files.mk
+HOST = @host@
+include common_files.mk x3270_files.mk libs.mk
 
 VOBJS = $(COMMON_OBJECTS) $(X3270_OBJECTS) fallbacks.o
 
@@ -75,19 +76,8 @@ fallbacks.c: mkfb $(FALLBACKS)
 	$(RM) $@
 	./mkfb -o $@ $(filter-out mkfb,$^)
 
-libobj = $(TOP)/obj/@host@
-
-x3270: $(OBJS1) $(libobj)/lib3270/lib3270.a $(libobj)/lib3270i/lib3270i.a $(libobj)/lib32xx/lib32xx.a $(libobj)/lib3270stubs/lib3270stubs.a
-	$(CC) -o $@ $(OBJS1) $(LDFLAGS) -L$(libobj)/lib3270 -L$(libobj)/lib3270i -L$(libobj)/lib32xx -L$(libobj)/lib3270stubs -l3270 -l3270i -l32xx -l3270stubs $(LIBS)
-
-$(libobj)/lib3270/lib3270.a:
-	cd $(TOP)/lib/3270 && $(MAKE) all
-$(libobj)/lib3270i/lib3270i.a:
-	cd $(TOP)/lib/3270i && $(MAKE) all
-$(libobj)/lib32xx/lib32xx.a:
-	cd $(TOP)/lib/32xx && $(MAKE) all
-$(libobj)/lib3270stubs/lib3270stubs.a:
-	cd $(TOP)/lib/3270stubs && $(MAKE) all
+x3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
+	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
 man:
 	$(MAKE) -f Makefile.aux $@

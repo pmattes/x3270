@@ -30,22 +30,19 @@
 #  WIN32_FLAGS.
 include winenv.mk
 
-ifdef WIN64
-arch = win64
-else
-arch = win32
-endif
-LIB3270 = $(TOP)/obj/$(arch)/lib3270/lib3270.a
-LIBSTUBS = $(TOP)/obj/$(arch)/lib3270stubs/lib3270stubs.a
-LIB32XX = $(TOP)/obj/$(arch)/lib32xx/lib32xx.a
-
 MKFB = mkfb$(NATIVE_SFX)
 
 XCPPFLAGS = $(WIN32_FLAGS) -DWIN32_LEAN_AND_MEAN -I$(THIS) -I$(TOP)/Common/s3270 -I$(TOP)/include
 CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS) $(SSLCPP)
 
 OBJ = o
-include common_files.mk ws3270_files.mk
+ifdef WIN64
+HOST = win64
+else
+HOST = win32
+endif
+W = w
+include common_files.mk ws3270_files.mk libs.mk
 
 VOBJS = $(COMMON_OBJECTS) $(WS3270_OBJECTS) fallbacks.o ws3270res.o
 
@@ -75,18 +72,11 @@ $(MKFB): CFLAGS = -DFOR_WIN32 -I$(THIS)
 ws3270res.o: ws3270.rc ws3270.ico Makefile
 	$(WINDRES) -i $< -o $@
 
-ws3270.exe: $(OBJECTS) Makefile $(LIB3270) $(LIB32XX) $(LIB3270STUBS)
-	$(CC) -o ws3270.exe $(CFLAGS) $(OBJECTS) -L$(TOP)/obj/$(arch)/lib3270 -L$(TOP)/obj/$(arch)/lib32xx -L$(TOP)/obj/$(arch)/lib3270stubs -l3270 -l32xx -l3270stubs $(LIBS)
+ws3270.exe: $(OBJECTS) Makefile $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
+	$(CC) -o ws3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LIBS)
 
-x3270if.exe: x3270if.o $(LIB32XX)
-	$(CC) -o $@ $(CFLAGS) x3270if.o -L$(TOP)/obj/$(arch)/lib32xx -l32xx -lws2_32
-
-$(LIB3270):
-	cd $(TOP)/lib/v-w3270 && $(MAKE) all
-$(LIB32XX):
-	cd $(TOP)/lib/v-w32xx && $(MAKE) all
-$(LIB3270STUBS):
-	cd $(TOP)/lib/w3270stubs && $(MAKE) all
+x3270if.exe: x3270if.o $(DEP32XX)
+	$(CC) -o $@ $(CFLAGS) x3270if.o $(LD32XX) -lws2_32
 
 wversion.o: mkwversion.sh version.txt
 	sh $< ws3270 $(CC) $(filter %.txt,$^)

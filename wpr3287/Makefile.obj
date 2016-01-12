@@ -42,12 +42,12 @@ OBJECTS = $(VOBJS) version.o
 LIBS = $(SSLLIB) -lws2_32 -lwinspool
 
 ifdef WIN64
-arch = win64
+HOST = win64
 else
-arch = win32
+HOST = win32
 endif
-
-LIB32XX = $(TOP)/obj/$(arch)/lib32xx/lib32xx.a
+W = w
+include libs.mk
 
 all: wpr3287.exe
 
@@ -61,11 +61,8 @@ version.o: mkversion.sh $(VOBJS) version.txt
 wpr3287res.o: wpr3287.rc pr3287.ico
 	$(WINDRES) -i $< -o $@
 
-wpr3287.exe: $(OBJECTS) $(LIB32XX)
-	$(CC) -o wpr3287.exe $(CFLAGS) $(OBJECTS) -L$(TOP)/obj/$(arch)/lib32xx -l32xx $(LIBS)
-
-$(LIB32XX):
-	cd $(TOP)/lib/v-w32xx && $(MAKE) all
+wpr3287.exe: $(OBJECTS) $(DEP32XX)
+	$(CC) -o wpr3287.exe $(CFLAGS) $(OBJECTS) $(LD32XX) $(LIBS)
 
 clean:
 	rm -f *.o

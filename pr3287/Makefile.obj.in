@@ -48,7 +48,8 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 
 OBJ = o
-include pr3287_files.mk
+HOST = @host@
+include pr3287_files.mk libs.mk
 OBJECTS = $(PR3287_OBJECTS)
 
 XVERSION = xversion.c
@@ -58,15 +59,8 @@ version.o: mkversion.sh $(OBJECTS) version.txt
 	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
 	$(RM) $(XVERSION)
 
-libobj = $(TOP)/obj/@host@
-
-LIB32XX = $(libobj)/lib32xx/lib32xx.a
-
-pr3287: $(OBJECTS) version.o $(LIB32XX)
-	$(CC) -o $@ $(OBJECTS) version.o $(LDFLAGS) $(LIBS) -L$(libobj)/lib32xx -l32xx
-
-$(LIB32XX):
-	cd ../lib/32xx && $(MAKE)
+pr3287: $(OBJECTS) version.o $(DEP32XX)
+	$(CC) -o $@ $(OBJECTS) version.o $(LDFLAGS) $(LIBS) $(LD32XX)
 
 man:
 	$(MAKE) -f Makefile.aux $@
