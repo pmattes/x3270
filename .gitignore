@@ -4,7 +4,6 @@ config.log
 config.status
 cscope.*
 Debug/
-dependencies
 documentation-ssl-body.html
 *.exe
 fallbacks.c
@@ -14,7 +13,6 @@ Makefile.bak
 *.man
 mkfb
 mkicon
-*.o
 obj/
 ReleaseNotes.html
 Resources.html
