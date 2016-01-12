@@ -39,6 +39,8 @@ all: $(objdir)
 	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
 install: $(objdir)
 	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+nstall.man: $(objdir)
+	$(MAKE) -I../Common -f Makefile.obj $@
 clean: $(objdir)
 	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
 clobber: $(objdir)

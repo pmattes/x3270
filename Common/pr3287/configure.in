@@ -168,10 +168,6 @@ case "$enable_ipv6" in
 	;;                              
 esac
 
-AC_PATH_PROG(MAKEDEP,gccmakedep)
-test -z "$MAKEDEP" && MAKEDEP=:
-AC_SUBST(MAKEDEP)
-
 dnl Generate conf.h.
 AC_CONFIG_HEADER(conf.h)
 

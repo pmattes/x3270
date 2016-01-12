@@ -253,10 +253,6 @@ case "$enable_ipv6" in
 	;;                              
 esac
 
-AC_PATH_PROG(MAKEDEP,gccmakedep)
-test -z "$MAKEDEP" && MAKEDEP=:
-AC_SUBST(MAKEDEP)
-
 dnl Generate the Makefile.
 AC_OUTPUT(Makefile)
 AC_OUTPUT(Makefile.obj)

@@ -4,9 +4,6 @@ usr/local/share
 usr/local/share/man
 usr/local/share/man/man1
 usr/local/share/man/man1/x3270-script.1
+usr/local/share/man/man1/x3270.1
 usr/local/share/man/man5
 usr/local/share/man/man5/ibm_hosts.5
-usr/share
-usr/share/man
-usr/share/man/man1
-usr/share/man/man1/x3270.1x

@@ -81,11 +81,11 @@ install:: c3270
 	[ -d $(DESTDIR)$(BINDIR) ] || \
 		mkdir -p $(DESTDIR)$(BINDIR)
 	$(INSTALL_PROGRAM) c3270 $(DESTDIR)$(BINDIR)/c3270
-install::
+install:: ibm_hosts
 	[ -d $(DESTDIR)$(LIBX3270DIR) ] || \
 		mkdir -p $(DESTDIR)$(LIBX3270DIR)
 	[ -r $(DESTDIR)$(LIBX3270DIR)/ibm_hosts ] || \
-		$(INSTALL_DATA) ibm_hosts $(DESTDIR)$(LIBX3270DIR)/ibm_hosts
+		$(INSTALL_DATA) $< $(DESTDIR)$(LIBX3270DIR)/ibm_hosts
 
 install.man:
 	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \

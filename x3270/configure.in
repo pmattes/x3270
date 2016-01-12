@@ -226,10 +226,6 @@ case "$enable_ipv6" in
 	;;                              
 esac
 
-AC_PATH_PROG(MAKEDEP,gccmakedep)
-test -z "$MAKEDEP" && MAKEDEP=:
-AC_SUBST(MAKEDEP)
-
 if test "$x_includes"
 then	XINC=-I$x_includes
 fi
