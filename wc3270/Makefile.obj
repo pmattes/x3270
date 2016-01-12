@@ -97,6 +97,7 @@ wc3270wiz.exe: $(WOBJECTS) $(DEP32XX)
 	$(CC) -o wc3270wiz.exe $(CFLAGS) $(WOBJECTS) $(WIZLIBS)
 
 catf.exe: catf.c
+	$(CC) $(CFLAGS) -o $@ $^
 
 ead3270.exe: ead3270.o $(DEP32XX)
 	$(CC) -o $@ ead3270.o $(LD32XX)

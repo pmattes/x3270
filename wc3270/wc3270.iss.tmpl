@@ -54,14 +54,14 @@ Type: files; Name: "{app}\w3n46.dll"
 Type: files; Name: "{app}\shf.dll"
 
 [Files]
-Source: "wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\ws3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\wpr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "catf.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall
-Source: "ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\ws3270\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\obj\win32\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\obj\win32\ws3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\obj\win32\\wpr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\obj\win32\wc3270\catf.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\obj\win32\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall
+Source: "..\obj\win32\wc3270\ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\obj\win32\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\obj\win32\ws3270\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "root_certs.txt"; DestDir: "{commonappdata}\wc3270"; Flags: ignoreversion; Components: ca and commonfiles
 Source: "root_certs.txt"; DestDir: "{userappdata}\wc3270"; Flags: ignoreversion; Components: ca and userfiles
 Source: "html\Bugs.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion

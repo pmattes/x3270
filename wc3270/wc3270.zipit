@@ -19,10 +19,10 @@ F ../ws3270/html/Windows-x3270if.html html/x3270if.html
 F html/wc3270-script.html
 F ../wpr3287/html/wpr3287-man.html html/wpr3287.html
 F ../ws3270/html/ws3270-man.html html/ws3270-man.html
-F wc3270.exe
-F wc3270wiz.exe
-F ../wpr3287/wpr3287.exe wpr3287.exe
-F ../ws3270/ws3270.exe ws3270.exe
-F ../ws3270/x3270if.exe x3270if.exe
+F ../obj/win32/wc3270/wc3270.exe wc3270.exe
+F ../obj/win32/wc3270/wc3270wiz.exe wc3270wiz.exe
+F ../obj/win32/wpr3287/wpr3287.exe wpr3287.exe
+F ../obj/win32/ws3270/ws3270.exe ws3270.exe
+F ../obj/win32/ws3270/x3270if.exe x3270if.exe
 F root_certs.txt
-F catf.exe
+F ../obj/win32/wc3270/catf.exe catf.exe
