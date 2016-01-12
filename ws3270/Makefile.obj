@@ -42,9 +42,9 @@ else
 HOST = win32
 endif
 W = w
-include common_files.mk ws3270_files.mk libs.mk
+include ws3270_files.mk libs.mk
 
-VOBJS = $(COMMON_OBJECTS) $(WS3270_OBJECTS) fallbacks.o ws3270res.o
+VOBJS = $(WS3270_OBJECTS) fallbacks.o ws3270res.o
 
 OBJECTS = $(VOBJS) version.o
 LIBS = $(SSLLIB) -lws2_32 -lcomdlg32 -lgdi32 -lwinspool
@@ -66,8 +66,8 @@ fallbacks.c: $(MKFB) $(FALLBACKS)
 	$(RM) $@
 	./$(MKFB) -c -o $@ $(filter-out $(MKFB),$^)
 
-$(MKFB): CC = $(NATIVECC)
-$(MKFB): CFLAGS = -DFOR_WIN32 -I$(THIS)
+$(MKFB): mkfb.c
+	$(NATIVECC) -DFOR_WIN32 -I$(THIS) -MMD -MP -o $@ $^
 
 ws3270res.o: ws3270.rc ws3270.ico Makefile
 	$(WINDRES) -i $< -o $@

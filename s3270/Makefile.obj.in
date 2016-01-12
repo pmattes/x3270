@@ -33,9 +33,9 @@ all: s3270 x3270if
 
 OBJ = o
 HOST = @host@
-include common_files.mk s3270_files.mk libs.mk
+include s3270_files.mk libs.mk
 
-VOBJS = $(COMMON_OBJECTS) $(S3270_OBJECTS) fallbacks.o
+VOBJS = $(S3270_OBJECTS) fallbacks.o
 
 OBJS1 = $(VOBJS) version.o
 

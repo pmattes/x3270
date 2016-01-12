@@ -31,9 +31,9 @@ CC = @CC@
 
 OBJ = o
 HOST = @host@
-include common_files.mk x3270_files.mk libs.mk
+include x3270_files.mk libs.mk
 
-VOBJS = $(COMMON_OBJECTS) $(X3270_OBJECTS) fallbacks.o
+VOBJS = $(X3270_OBJECTS) fallbacks.o
 
 OBJS1 = $(VOBJS) version.o
 

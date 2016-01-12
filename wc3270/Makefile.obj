@@ -43,9 +43,9 @@ else
 HOST = win32
 endif
 W = w
-include common_files.mk $(THIS)/wc3270_files.mk libs.mk
+include $(THIS)/wc3270_files.mk libs.mk
 
-VOBJS = $(COMMON_OBJECTS) $(WC3270_OBJECTS) fallbacks.o wc3270res.o
+VOBJS = $(WC3270_OBJECTS) fallbacks.o wc3270res.o
 
 OBJECTS = $(VOBJS) version.o
 WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o relink.o
@@ -70,16 +70,16 @@ fallbacks.c: $(MKFB) $(FALLBACKS)
 	$(RM) $@
 	./$(MKFB) -c -o $@ $(filter-out $(MKFB),$^)
 
-$(MKFB): CC = $(NATIVECC)
-$(MKFB): CFLAGS = -DFOR_WIN32 -I$(THIS)
+$(MKFB): mkfb.c
+	$(NATIVECC) -DFOR_WIN32 -MMD -MP -I$(THIS) -o $@ $^
 
 keypad.o: keypad.c compiled_keypad.h
 
 compiled_keypad.h: keypad.full keypad.labels keypad.map keypad.outline keypad.callbacks $(MKKEYPAD)
 	./$(MKKEYPAD) -I$(TOP)/Common/c3270 >$@
 
-$(MKKEYPAD): CC = $(NATIVECC)
-$(MKKEYPAD): CFLAGS = -g
+$(MKKEYPAD): mkkeypad.c
+	$(NATIVECC) -MMD -MP -I$(THIS) -o $@ $^
 
 wc3270res.o: wc3270.rc wc3270.ico
 	$(WINDRES) -i $< -o $@

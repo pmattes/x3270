@@ -34,9 +34,9 @@ all: tcl3270
 
 OBJ = o
 HOST = @host@
-include common_files.mk tcl3270_files.mk libs.mk
+include tcl3270_files.mk libs.mk
 
-VOBJS = $(COMMON_OBJECTS) $(TCL3270_OBJECTS) fallbacks.o
+VOBJS = $(TCL3270_OBJECTS) fallbacks.o
 
 OBJS1 = $(VOBJS) version.o
 

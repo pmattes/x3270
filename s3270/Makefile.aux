@@ -33,16 +33,12 @@ all:
 
 # Development tools.
 
-include common_files.mk s3270_files.mk
-
-SOURCES = $(COMMON_SOURCES) $(S3270_SOURCES)
-
-HEADERS = $(COMMON_HEADERS) $(S3270_HEADERS)
+include s3270_files.mk
 
 MISC = $(PRODUCT).man Examples/cms_cmd.expect LICENSE Makefile.in README \
-	common_files.mk conf.h.in configure configure.in mkfb.c mkversion.sh \
+	conf.h.in configure configure.in mkversion.sh \
 	parts.h.in s3270_files.mk s3270_glue.bash version.txt \
-	x3270-script.man x3270_glue.expect x3270if.c x3270if.man
+	x3270-script.man x3270_glue.expect x3270if.man
 
 HTML = html/$(PRODUCT)-man.html html/Bugs.html html/FAQ.html html/Intro.html \
 	html/Lineage.html html/README.html html/ReleaseNotes.html \
