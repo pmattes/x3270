@@ -40,7 +40,7 @@ all: $(objdir)
 install: $(objdir)
 	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
 install.man: $(objdir)
-	$(MAKE) -I../Common -f Makefile.obj $@
+	$(MAKE) -I../Common -I../Common/pr3287 -f Makefile.obj $@
 clean: $(objdir)
 	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
 clobber: $(objdir)
