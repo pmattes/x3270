@@ -29,6 +29,7 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 # Create version.c from version.txt
+#  mkversion [program [path-to-version.txt]]
 #set -x
 
 # Ensure that 'date' emits 7-bit U.S. ASCII.
@@ -38,7 +39,7 @@ export LANG LC_ALL
 
 set -e
 
-. ./version.txt
+. ${2-./version.txt}
 builddate=`date`
 sccsdate=`date +%Y/%m/%d`
 user=${LOGNAME-$USER}

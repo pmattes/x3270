@@ -1,1 +1,0 @@
-../../Common/glue_gui_stubs.c

@@ -39,6 +39,26 @@ sensmap_t *sensmaps = NULL;
 sensmap_t *last_sensmap = NULL;
 int sensmap_count = 0;
 
+char *incdir = NULL;
+
+FILE *fopen_inc(const char *name)
+{
+    FILE *f;
+    char *path;
+
+    if ((f = fopen(name, "r")) != NULL) {
+	return f;
+    }
+    if (incdir == NULL) {
+	return NULL;
+    }
+    path = malloc(strlen(incdir) + 1 + strlen(name) + 1);
+    sprintf(path, "%s/%s", incdir, name);
+    f = fopen(path, "r");
+    free(path);
+    return f;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -53,23 +73,27 @@ main(int argc, char *argv[])
     char buf[128];
     int cbl = 0;
 
+    if (argc > 1 && !strncmp(argv[1], "-I", 2)) {
+	incdir = argv[1] + 2;
+    }
+
     /* Open the files. */
-    labels = fopen("keypad.labels", "r");
+    labels = fopen_inc("keypad.labels");
     if (labels == NULL) {
 	perror("keypad.labels");
 	exit(1);
     }
-    outline = fopen("keypad.outline", "r");
+    outline = fopen_inc("keypad.outline");
     if (outline == NULL) {
 	perror("keypad.outline");
 	exit(1);
     }
-    map = fopen("keypad.map", "r");
+    map = fopen_inc("keypad.map");
     if (map == NULL) {
 	perror("keypad.map");
 	exit(1);
     }
-    callbacks = fopen("keypad.callbacks", "r");
+    callbacks = fopen_inc("keypad.callbacks");
     if (callbacks == NULL) {
 	perror("keypad.callbacks");
 	exit(1);
@@ -191,12 +215,12 @@ main(int argc, char *argv[])
      * Read in the label and outline files, and use them to dump out the
      * keypad_desc[].
      */
-    labels = fopen("keypad.labels", "r");
+    labels = fopen_inc("keypad.labels");
     if (labels == NULL) {
 	perror("keypad.labels");
 	exit(1);
     }
-    outline = fopen("keypad.outline", "r");
+    outline = fopen_inc("keypad.outline");
     if (outline == NULL) {
 	perror("keypad.outline");
 	exit(1);

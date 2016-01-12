@@ -1,4 +1,4 @@
-dnl Copyright (c) 2000-2009, 2015 Paul Mattes.
+dnl Copyright (c) 2000-2009, 2016 Paul Mattes.
 dnl All rights reserved.
 dnl 
 dnl Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,7 @@ dnl IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(x3270.c)
+AC_INIT(x3270,3.x)
 AC_PREREQ(2.50)
 AC_CONFIG_HEADER(conf.h)
 
@@ -35,25 +35,20 @@ AC_PROG_INSTALL
 AC_PROG_CC
 
 dnl Compute host-specific flags.
-dnl If it's solaris, then pass the -D__EXTENSIONS__ flag to cc, so that
-dnl all of usual Unix functions are visible to strict ANSI compilers.
 AC_CANONICAL_HOST
 case "$host_os" in
-solaris2*)	HSOPTS=-D__EXTENSIONS__
-		if test "$GCC" = yes
-		then	NIXCCOPTIONS="CCOPTIONS ="
-		fi
+solaris2*)	CPPFLAGS=-D__EXTENSIONS__
 		;;
-darwin*)	HSOPTS="-no-cpp-precomp -Wno-deprecated-declarations -Wno-extended-offsetof"
+darwin*)	CCOPTIONS="-no-cpp-precomp -Wno-deprecated-declarations -Wno-extended-offsetof"
 		;;
-linux*)		HSOPTS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
+linux*)		CPPFLAGS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
 		;;
 esac
 if test "$GCC" = yes
-then	CCOPTIONS="-Wall -Wsign-compare -std=c99 -pedantic -Wno-variadic-macros"
+then	# Add common gcc options, plus flags for dependency generation.
+    	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare -std=c99 -pedantic -Wno-variadic-macros -MMD -MP"
 fi
-AC_SUBST(HSOPTS)
-AC_SUBST(NIXCCOPTIONS)
+AC_SUBST(host)
 AC_SUBST(CCOPTIONS)
 
 dnl Checks for header files.
@@ -146,15 +141,6 @@ yes|*)
 esac
 AC_SUBST(USE_ICONV)
 
-dnl Check for --without-xmkmf
-AC_ARG_WITH(xmkmf,[  --without-xmkmf         ignore xmkmf and imake])
-case "$with_xmkmf" in
-yes|"")
-	;;
-no|*)	no_xmkmf=1
-	;;
-esac
-
 # Set up the configuration directory.
 LIBX3270DIR='${sysconfdir}/x3270'
 AC_SUBST(LIBX3270DIR)
@@ -208,22 +194,13 @@ then	orig_LDFLAGS="$LDFLAGS"
 fi
 
 dnl Check for xmkmkf or bdftopcf and mkfontdir
-if test "$no_xmkmf"
-then	xmkmf_found="notfound"
-else	AC_CHECK_PROG(xmkmf_found,xmkmf,found,notfound)
-	dnl if test "$xmkmf_found" = "notfound"
-	dnl then	AC_MSG_ERROR('Cannot find xmkmf')
-	dnl fi
+AC_CHECK_PROG(bdftopcf_found,bdftopcf,found,notfound)
+if test "$bdftopcf_found" = "notfound"
+then	AC_MSG_ERROR('Cannot find bdftopcf')
 fi
-if test "$xmkmf_found" = "notfound"
-then	AC_CHECK_PROG(bdftopcf_found,bdftopcf,found,notfound)
-	if test "$bdftopcf_found" = "notfound"
-	then	AC_MSG_ERROR('Cannot find bdftopcf')
-	fi
-	AC_CHECK_PROG(mkfontdir_found,mkfontdir,found,notfound)
-	if test "$mkfontdir_found" = "notfound"
-	then	AC_MSG_ERROR('Cannot find mkfontdir')
-	fi
+AC_CHECK_PROG(mkfontdir_found,mkfontdir,found,notfound)
+if test "$mkfontdir_found" = "notfound"
+then	AC_MSG_ERROR('Cannot find mkfontdir')
 fi
 
 dnl Check for unwanted parts.
@@ -260,41 +237,13 @@ AC_PATH_PROG(MAKEDEP,gccmakedep)
 test -z "$MAKEDEP" && MAKEDEP=:
 AC_SUBST(MAKEDEP)
 
-if test "$xmkmf_found" = "notfound"
-then	dnl Generate the Makefile directly.
-	if test "$x_includes"
-	then	XINC=-I$x_includes
-	fi
-	if test "$x_libraries"
-	then	XLIB=-L$x_libraries
-	fi
-	AC_SUBST(XINC)
-	AC_SUBST(XLIB)
-	AC_OUTPUT(Makefile)
-else
-
-    dnl Save a copy of Imakefile
-    if test -f Imakefile
-    then	cp Imakefile Imakefile.old
-    fi
-
-    dnl Generate the Imakefile.
-    AC_OUTPUT(Imakefile)
-
-    dnl Generate the Makefile
-    gen_Makefile=""
-    if test ! -f Makefile; then gen_Makefile=1; fi
-    if cmp Imakefile.old Imakefile 1>/dev/null 2>/dev/null; then :; else gen_Makefile=1; fi
-    if test "$gen_Makefile"
-    then	echo "generating Makefile"
-	    xmkmf || exit 1
-	    # Get rid of the @ that AIX puts in the Makefile
-	    sed 's/@@*for/for/' Makefile >Makefile.aixfix
-	    if cmp -s Makefile Makefile.aixfix
-	    then	rm Makefile.aixfix
-	    else	mv Makefile.aixfix Makefile
-	    fi
-    else	echo "Makefile is unchanged"
-    fi
-    rm -f Imakefile.old
+if test "$x_includes"
+then	XINC=-I$x_includes
 fi
+if test "$x_libraries"
+then	XLIB=-L$x_libraries
+fi
+AC_SUBST(XINC)
+AC_SUBST(XLIB)
+AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile.obj)

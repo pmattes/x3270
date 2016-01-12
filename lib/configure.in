@@ -24,7 +24,7 @@ dnl NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 dnl SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(3270/ctlr.c)
+AC_INIT(suite3270-lib,3.x)
 AC_PREREQ(2.50)
 
 dnl Checks for programs.
@@ -34,26 +34,26 @@ AC_PROG_RANLIB
 
 dnl Figure out what sort of host this is.
 AC_CANONICAL_HOST
-HSOPTS=""
 ansi="-std=c99 -pedantic"
 case "$host_os" in
-*cygwin*)	HSOPTS=-D_XOPEN_SOURCE_EXTENDED
+*cygwin*)	CPPFLAGS=-D_XOPEN_SOURCE_EXTENDED
     		ansi=""
 		;;
-hpux|*cygwin*)	HSOPTS=-D_XOPEN_SOURCE_EXTENDED
+hpux|*cygwin*)	CPPFLAGS=-D_XOPEN_SOURCE_EXTENDED
 		;;
-solaris2*)	HSOPTS=-D__EXTENSIONS__
+solaris2*)	CPPFLAGS=-D__EXTENSIONS__
 		AC_DEFINE(CONNECT_GETPEERNAME,1)
 		;;
-darwin*)	HSOPTS="-no-cpp-precomp -Wno-deprecated-declarations -D_XOPEN_SOURCE_EXTENDED"
+darwin*)	CCOPTIONS="-no-cpp-precomp -Wno-deprecated-declarations"
+		CPPFLAGS="-D_XOPEN_SOURCE_EXTENDED"
 		;;
-linux*)		HSOPTS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
+linux*)		CPPFLAGS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
 		;;
 esac
 if test "$GCC" = yes
-then	CCOPTIONS="-Wall -Wsign-compare $ansi -Wno-variadic-macros"
+then	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
-AC_SUBST(HSOPTS)
+AC_SUBST(host)
 AC_SUBST(CCOPTIONS)
 AC_SUBST(CONNECT_GETPEERNAME)
 
@@ -191,5 +191,5 @@ AC_SUBST(MAKEDEP)
 
 dnl Generate the files.
 AC_CONFIG_HEADERS(include/unix/conf.h)
-AC_CONFIG_FILES(3270/Makefile 3270i/Makefile 32xx/Makefile 3270stubs/Makefile)
+AC_CONFIG_FILES(3270/Makefile 3270/Makefile.obj 3270i/Makefile 3270i/Makefile.obj 32xx/Makefile 32xx/Makefile.obj 3270stubs/Makefile 3270stubs/Makefile.obj)
 AC_OUTPUT

@@ -1,4 +1,4 @@
-# Copyright (c) 2016 Paul Mattes.
+# Copyright (c) 2007-2016, Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -24,29 +24,54 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# VPATH-based Makefile for libw3270stubs, can build either 32- or 64-bit
+# Makefile for wpr3287
+
+# Set SSLDIR, SSLCPP, SSLLIB, GT_PFX, NATIVE_SFX, NATIVECC, CC, WINDRES and
+#  WIN32_FLAGS.
+include winenv.mk
+
+XCPPFLAGS = $(WIN32_FLAGS) -I$(THIS) -I$(TOP)/Common/pr3287 -I$(TOP)/include
+CFLAGS = -g -Wall -Werror -MMD -MP $(XCPPFLAGS) $(SSLCPP) $(CDEBUGFLAGS)
+
+OBJ = o
+include pr3287_files.mk
+include wpr3287_files.mk
+VOBJS = $(PR3287_OBJECTS) $(WPR3287_OBJECTS)
+
+OBJECTS = $(VOBJS) version.o
+LIBS = $(SSLLIB) -lws2_32 -lwinspool
+
 ifdef WIN64
-objdir = ../../obj/win64/lib3270stubs
+arch = win64
 else
-objdir = ../../obj/win32/lib3270stubs
+arch = win32
 endif
-top = ../../..
-this = $(top)/lib/w3270stubs
 
-export VPATH = $(this):$(top)/Common/Win32:$(top)/Common
-export TOP = $(top)
-export THIS = $(this)
+LIB32XX = $(TOP)/obj/$(arch)/lib32xx/lib32xx.a
 
-MAKEINC = -I$(top)/Common -I$(top)/Common/Win32 -I$(this)
+all: wpr3287.exe
 
-all: $(objdir)
-	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
-clean: $(objdir)
-	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
-clobber: $(objdir)
-	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
-depend: $(objdir)
-	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+XVERSION = xversion.c
+version.o: mkversion.sh $(VOBJS) version.txt
+	$(RM) $(XVERSION)
+	sh $< wpr3287 $(filter %.txt,$^) >$(XVERSION)
+	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
+	$(RM) $(XVERSION)
 
-$(objdir):
-	mkdir -p $(objdir)
+wpr3287res.o: wpr3287.rc pr3287.ico
+	$(WINDRES) -i $< -o $@
+
+wpr3287.exe: $(OBJECTS) $(LIB32XX)
+	$(CC) -o wpr3287.exe $(CFLAGS) $(OBJECTS) -L$(TOP)/obj/$(arch)/lib32xx -l32xx $(LIBS)
+
+$(LIB32XX):
+	cd $(TOP)/lib/v-w32xx && $(MAKE) all
+
+clean:
+	rm -f *.o
+
+clobber: clean
+	rm -f wpr3287.exe *.d
+
+# Include auto-generated dependencies.
+-include $(OBJS:.o=.d)

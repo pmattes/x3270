@@ -1,0 +1,62 @@
+# Copyright (c) 1999-2009, 2013-2016 Paul Mattes.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the names of Paul Mattes nor the names of his contributors
+#       may be used to endorse or promote products derived from this software
+#       without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+# Makefile for 3270 interactive emulation common library
+
+LIB3270I = lib3270i.a
+
+RM = rm -f
+CC = @CC@
+AR = ar
+
+all: $(LIB3270I)
+
+OBJ = o
+include lib3270i_files.mk
+OBJS = $(LIB3270I_OBJECTS)
+
+LIBDIR = @libdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+sysconfdir = @sysconfdir@
+datarootdir = @datrootdir@
+LIBX3270DIR = @LIBX3270DIR@
+
+CCOPTIONS = @CCOPTIONS@
+XCPPFLAGS = -I$(THIS) -I$(THIS)/../include/unix -I$(TOP)/include -DLIBX3270DIR=\"$(LIBX3270DIR)\" @CPPFLAGS@
+CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS)
+
+$(LIB3270I): $(OBJS)
+	$(AR) cr $@ $(OBJS)
+	ranlib $@
+
+clean:
+	$(RM) *.o
+
+clobber: clean
+	$(RM) $(LIB3270I) *.d
+
+-include $(OBJS:.o=.d)

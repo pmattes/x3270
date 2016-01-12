@@ -31,7 +31,7 @@
 
 set -e
 
-. ./version.txt
+. ${2-./version.txt}
 
 trap 'rm -f wversion.c' 0 1 2 15
 

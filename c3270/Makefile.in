@@ -1,138 +1,48 @@
-# Copyright (c) 1999-2009, 2013-2015 Paul Mattes.
+# Copyright (c) 2016 Paul Mattes.
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
+# modification, are permitted provided that the following conditions
+# are met:
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
 #     * Redistributions in binary form must reproduce the above copyright
 #       notice, this list of conditions and the following disclaimer in the
 #       documentation and/or other materials provided with the distribution.
-#     * Neither the names of Paul Mattes nor the names of his contributors
-#       may be used to endorse or promote products derived from this software
-#       without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
-# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-# EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Makefile for c3270 (console-based 3270 emulator)
+# VPATH-based Makefile for c3270
+top = ../../..
+objdir = ../obj/@host@/c3270
+this = $(top)/c3270
 
-RM = rm -f
-CC = @CC@
+export VPATH = $(this):$(top)/Common/c3270:$(top)/Common
+export TOP = $(top)
+export THIS = $(this)
 
-all: c3270 man
+MAKEINC = -I$(this) -I$(top)/Common
 
-OBJ = o
-include common_files.mk c3270_files.mk
+all: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+clean: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+clobber: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+depend: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
 
-SRCS = $(COMMON_SOURCES) $(C3270_SOURCES)
-
-VOBJS = $(COMMON_OBJECTS) $(C3270_OBJECTS) fallbacks.o
-
-OBJS1 = $(VOBJS) version.o
-
-LIBDIR = @libdir@
-prefix = @prefix@
-exec_prefix = @exec_prefix@
-sysconfdir = @sysconfdir@
-datarootdir = @datarootdir@
-LIBX3270DIR = @LIBX3270DIR@
-MANDIR = @mandir@
-BINDIR = @bindir@
-INSTALL = @INSTALL@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_DATA = @INSTALL_DATA@
-
-CCOPTIONS = @CCOPTIONS@
-XCPPFLAGS = -I. -I../include -DLIBX3270DIR=\"$(LIBX3270DIR)\" @HSOPTS@ @CPPFLAGS@
-CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS)
-LDFLAGS = @LDFLAGS@
-LIBS = @LIBS@
-
-XVERSION = xversion.c
-version.o: $(VOBJS) version.txt mkversion.sh
-	$(RM) $(XVERSION)
-	@chmod +x mkversion.sh version.txt
-	sh ./mkversion.sh c3270 >$(XVERSION)
-	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
-	$(RM) $(XVERSION)
-
-FALLBACKS = fb-common fb-printSession fb-messages fb-composeMap fb-c3270
-fallbacks.c: mkfb $(FALLBACKS)
-	$(RM) $@
-	./mkfb -c -o $@ $(FALLBACKS)
-mkfb: mkfb.c conf.h
-	$(CC) $(CFLAGS) -o mkfb mkfb.c
-
-keypad.o: keypad.c compiled_keypad.h
-
-compiled_keypad.h: keypad.full keypad.labels keypad.map keypad.outline keypad.callbacks mkkeypad
-	./mkkeypad >$@
-
-mkkeypad: mkkeypad.o
-	$(CC) -o $@ mkkeypad.o
-
-c3270: $(OBJS1) ../lib/lib3270.a ../lib/lib3270i.a ../lib/lib3270stubs.a ../lib/lib32xx.a
-	$(CC) -o $@ $(OBJS1) $(LDFLAGS) -L../lib -l3270 -l3270i -l32xx -l3270stubs $(LIBS)
-
-../lib/lib3270.a:
-	cd ../lib/3270 && $(MAKE) all
-../lib/lib3270i.a:
-	cd ../lib/3270i && $(MAKE) all
-../lib/lib32xx.a:
-	cd ../lib/32xx && $(MAKE) all
-../lib/lib3270stubs.a:
-	cd ../lib/3270stubs && $(MAKE) all
-
-man:
-	$(MAKE) -f Makefile.aux $@
-
-install:: c3270
-	[ -d $(DESTDIR)$(BINDIR) ] || \
-		mkdir -p $(DESTDIR)$(BINDIR)
-	$(INSTALL_PROGRAM) c3270 $(DESTDIR)$(BINDIR)/c3270
-install::
-	[ -d $(DESTDIR)$(LIBX3270DIR) ] || \
-		mkdir -p $(DESTDIR)$(LIBX3270DIR)
-	[ -r $(DESTDIR)$(LIBX3270DIR)/ibm_hosts ] || \
-		$(INSTALL_DATA) ibm_hosts $(DESTDIR)$(LIBX3270DIR)/ibm_hosts
-
-install.man:
-	[ -d $(DESTDIR)$(MANDIR)/man1 ] || \
-		mkdir -p $(DESTDIR)$(MANDIR)/man1
-	[ -d $(DESTDIR)$(MANDIR)/man5 ] || \
-		mkdir -p $(DESTDIR)$(MANDIR)/man5
-	$(INSTALL_DATA) c3270.man $(DESTDIR)$(MANDIR)/man1/c3270.1
-	$(INSTALL_DATA) x3270-script.man $(DESTDIR)$(MANDIR)/man1/x3270-script.1
-	$(INSTALL_DATA) ibm_hosts.man $(DESTDIR)$(MANDIR)/man5/ibm_hosts.5
-
-# Cygwin standalone distribution
-standalone: c3270-standalone.zip
-
-c3270-standalone.zip: c3270 make-cygwin-standalone runc3270.bat
-	./make-cygwin-standalone
-
-clean:
-	$(RM) *.o mkfb fallbacks.c
-
-clobber: clean
-	$(RM) c3270
-
-depend: compiled_keypad.h
-
-depend:
-	@MAKEDEP@ -- $(CFLAGS) -- -s "# DO NOT DELETE" $(SRCS)
-
-# -------------------------------------------------------------------------
-# dependencies generated by makedepend
-
-# DO NOT DELETE
+$(objdir):
+	mkdir -p $(objdir)

@@ -24,7 +24,7 @@ dnl NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 dnl SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(c3270.c)
+AC_INIT(c3270,3.x)
 AC_PREREQ(2.50)
 AC_CONFIG_HEADER(conf.h)
 
@@ -40,26 +40,28 @@ dnl of the usual Unix functions are visible.
 ansi="-std=c99 -pedantic"
 AC_CANONICAL_HOST
 case "$host_os" in
-*cygwin*)	HSOPTS=-D_XOPEN_SOURCE_EXTENDED
+*cygwin*)	CPPFLAGS=-D_XOPEN_SOURCE_EXTENDED
     		dnl On Cygwin, gcc -ansi or -std=xxx hides POSIX declarations,
 		dnl and there is no macro you can set to get them back.
     		ansi=""
 		;;
-hpux)		HSOPTS=-D_XOPEN_SOURCE_EXTENDED
+hpux)		CPPFLAGS=-D_XOPEN_SOURCE_EXTENDED
 		;;
-solaris2*)	HSOPTS="-D__EXTENSIONS__ -D_XOPEN_SOURCE_EXTENDED"
+solaris2*)	CPPFLAGS="-D__EXTENSIONS__ -D_XOPEN_SOURCE_EXTENDED"
 		;;
-darwin*)	HSOPTS="-no-cpp-precomp -Wno-deprecated-declarations -D_XOPEN_SOURCE_EXTENDED"
+darwin*)	CCOPTIONS="-no-cpp-precomp -Wno-deprecated-declarations"
+		CPPFLAGS=-D_XOPEN_SOURCE_EXTENDED
 		;;
-linux*)		HSOPTS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
+linux*)		CPPFLAGS="-D_POSIX_SOURCE -D_BSD_SOURCE -D_DEFAULT_SOURCE -D_XOPEN_SOURCE"
 		;;
 aix*)		BROKEN_NEWTERM=1
 		;;
 esac
 if test "$GCC" = yes
-then	CCOPTIONS="-Wall -Wsign-compare $ansi -Wno-variadic-macros"
+then	# Add common gcc options, plus flags for dependency generation.
+    	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
-AC_SUBST(HSOPTS)
+AC_SUBST(host)
 AC_SUBST(BROKEN_NEWTERM)
 AC_SUBST(CCOPTIONS)
 
@@ -257,3 +259,4 @@ AC_SUBST(MAKEDEP)
 
 dnl Generate the Makefile.
 AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile.obj)

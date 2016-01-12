@@ -1,1 +1,0 @@
-../../Common/nvt_gui_stubs.c

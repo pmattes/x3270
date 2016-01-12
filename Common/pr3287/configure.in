@@ -26,32 +26,31 @@ dnl IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(pr3287.c)
+AC_INIT(pr3287,3.x)
 AC_PREREQ(2.50)
 
 dnl Checks for programs.
 AC_PROG_INSTALL
 AC_PROG_CC
 
-dnl Figure out what sort of host this is.
-dnl If it's solaris, then pass the -D__EXTENSIONS__ flag to cc, so that
-dnl all of usual Unix functions are visible to strict ANSI compilers.
+dnl Figure out what sort of host and compiler this is.
 AC_CANONICAL_HOST
 ansi="-std=c99 -pedantic"
 case "$host_os" in
 *cygwin*)	ansi=""
     		;;
-solaris2*)	HSOPTS=-D__EXTENSIONS__
+solaris2*)	CPPFLAGS=-D__EXTENSIONS__
 		;;
-darwin*)	HSOPTS="-no-cpp-precomp -Wno-deprecated-declarations"
+darwin*)	CCOPTIONS="-no-cpp-precomp -Wno-deprecated-declarations"
 		;;
-linux*)		HSOPTS="-D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_SOURCE -D_XOPEN_SOURCE"
+linux*)		CPPFLAGS="-D_BSD_SOURCE -D_DEFAULT_SOURCE -D_POSIX_SOURCE -D_XOPEN_SOURCE"
 		;;
 esac
 if test "$GCC" = yes
-then    CCOPTIONS="-Wall -Wsign-compare $ansi -Wno-variadic-macros"
+then	# Add common gcc options, plus flags for dependency generation.
+	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
-AC_SUBST(HSOPTS)
+AC_SUBST(host)
 AC_SUBST(CCOPTIONS)
 
 # Set up the configuration directory.
@@ -178,3 +177,4 @@ AC_CONFIG_HEADER(conf.h)
 
 dnl Generate the Makefile.
 AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile.obj)

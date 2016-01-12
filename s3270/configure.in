@@ -26,7 +26,7 @@ dnl IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 dnl POSSIBILITY OF SUCH DAMAGE.
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(s3270.c)
+AC_INIT(s3270,3.x)
 AC_PREREQ(2.50)
 
 dnl Checks for programs.
@@ -41,16 +41,18 @@ AC_CANONICAL_HOST
 case "$host_os" in
 *cygwin*)	ansi=""
 		;;
-solaris2*)	HSOPTS=-D__EXTENSIONS__
+solaris2*)	CPPFLAGS=-D__EXTENSIONS__
 		;;
-darwin*)	HSOPTS="-no-cpp-precomp -Wno-deprecated-declarations"
+darwin*)	CCOPTIONS="-no-cpp-precomp -Wno-deprecated-declarations"
 		;;
-linux*)		HSOPTS="-D_POSIX_SOURCE"
+linux*)		CPPFLAGS="-D_POSIX_SOURCE"
 		;;
 esac
 if test "$GCC" = yes
-then	CCOPTIONS="-Wall -Wsign-compare $ansi -Wno-variadic-macros"
+then	# Add common gcc options, plus flags for dependency generation.
+    	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
+AC_SUBST(host)
 AC_SUBST(HSOPTS)
 AC_SUBST(CCOPTIONS)
 
@@ -188,5 +190,6 @@ AC_PATH_PROG(MAKEDEP,gccmakedep)
 test -z "$MAKEDEP" && MAKEDEP=:
 AC_SUBST(MAKEDEP)
 
-dnl Generate the Makefile.
+dnl Generate the Makefiles.
 AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile.obj)

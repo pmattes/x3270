@@ -1,1 +1,0 @@
-../Common/c3270/help.c

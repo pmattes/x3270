@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013-2015 Paul Mattes.
+# Copyright (c) 2016 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -24,85 +24,29 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Makefile for ws3270
-
-# Set SSLDIR, SSLCPP, SSLLIB, GT_PFX, NATIVE_SFX, NATIVECC, CC, WINDRES and
-#  WIN32_FLAGS.
-include winenv.mk
-
-LIB3270 = ../lib/libw3270.a
-LIBSTUBS = ../lib/libw3270stubs.a
-LIB32XX = ../lib/libw32xx.a
-
-MKFB = mkfb$(NATIVE_SFX)
-
-XCPPFLAGS = $(WIN32_FLAGS) -DWIN32_LEAN_AND_MEAN -I. -I../include
-CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)
-
-OBJ = o
-include common_files.mk ws3270_files.mk
-
-SRCS = $(COMMON_SOURCES) $(WS3270_SOURCES)
-
-VOBJS = $(COMMON_OBJECTS) $(WS3270_OBJECTS) fallbacks.o ws3270res.o
-
-OBJECTS = $(VOBJS) version.o
-LIBS = $(SSLLIB) -lws2_32 -lcomdlg32 -lgdi32 -lwinspool
-SHRTLIBS = -lole32 -luuid
-DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
-
-PROGS = ws3270.exe x3270if.exe
-all: $(PROGS) man
-
-XVERSION = xversion.c
-version.o: $(VOBJS) version.txt mkversion.sh Makefile
-	$(RM) $(XVERSION)
-	@chmod +x mkversion.sh version.txt
-	sh ./mkversion.sh ws3270 >$(XVERSION)
-	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
-	$(RM) $(XVERSION)
-
-FALLBACKS = fb-common
-fallbacks.c: $(MKFB) $(FALLBACKS)
-	$(RM) $@
-	./$(MKFB) -c -o $@ $(FALLBACKS) $@
-
-$(MKFB): mkfb.c conf.h Makefile
-	$(NATIVECC) -g -o $(MKFB) -DFOR_WIN32 mkfb.c
-
-ws3270res.o: ws3270.rc ws3270.ico Makefile
-	$(WINDRES) -i ws3270.rc -o ws3270res.o
-
-ws3270.exe: $(OBJECTS) Makefile $(LIB3270) $(LIB32XX) $(LIB3270STUBS)
-	$(CC) -o ws3270.exe $(CFLAGS) $(OBJECTS) -L../lib -lw3270 -lw32xx -lw3270stubs $(LIBS)
-
-x3270if.exe: x3270if.o $(LIB32XX)
-	$(CC) -o $@ $(CFLAGS) x3270if.o -L../lib -lw32xx -lws2_32
-
-$(LIB3270):
-	cd ../lib/w3270 && $(MAKE) all
-$(LIB32XX):
-	cd ../lib/w32xx && $(MAKE) all
-$(LIB3270STUBS):
-	cd ../lib/w3270stubs && $(MAKE) all
-
-wversion.o: version.txt mkwversion.sh
-	@chmod +x mkwversion.sh version.txt
-	sh ./mkwversion.sh $(CC)
-
-man:
-	$(MAKE) -f Makefile.aux $@
-
-clean:
-	rm -f *.o mkfb mkfb.exe fallbacks.c dependencies-
-
-clobber: clean
-	rm -f $(PROGS)
-
-depend: $(SRCS) x3270if.c
-	$(CC) -MM $(XCPPFLAGS) $(SRCS) x3270if.c >dependencies-
-	mv dependencies- dependencies
-
-ifeq ($(wildcard dependencies),dependencies)
-include dependencies
+# VPATH-based Makefile for ws3270, can build either 32- or 64-bit
+ifdef WIN64
+objdir = ../obj/win64/ws3270
+else
+objdir = ../obj/win32/ws3270
 endif
+top = ../../..
+this = $(top)/ws3270
+
+export VPATH = $(this):$(top)/Common/Win32:$(top)/Common/s3270:$(top)/Common
+export TOP = $(top)
+export THIS = $(this)
+
+MAKEINC = -I$(this) -I$(top)/Common -I$(top)/Common/Win32
+
+all: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+clean: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+clobber: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+depend: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+
+$(objdir):
+	mkdir -p $(objdir)

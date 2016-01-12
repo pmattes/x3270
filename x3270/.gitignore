@@ -1,6 +1,3 @@
 conf.h
 documentation-ssl-body.html
-Imakefile
-*.pcf.gz
-x3270
-x3270._man
+Makefile.obj

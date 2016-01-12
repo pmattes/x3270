@@ -1,1 +1,0 @@
-../../Common/product_stubs1.c

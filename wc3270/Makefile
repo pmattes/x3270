@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013-2015 Paul Mattes.
+# Copyright (c) 2016 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -24,112 +24,29 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Makefile for wc3270
-
-# Set SSLDIR, SSLCPP, SSLLIB, GT_PFX, NATIVE_SFX, NATIVECC, CC, WINDRES and
-#  WIN32_FLAGS.
-include winenv.mk
-
-MKFB = mkfb$(NATIVE_SFX)
-MKKEYPAD = mkkeypad$(NATIVE_SFX)
-
-XCPPFLAGS = $(WIN32_FLAGS) -I. -I../include
-CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP)
-
-OBJ = o
-include common_files.mk wc3270_files.mk
-
-SRCS = $(COMMON_SOURCES) $(WC3270_SOURCES)
-
-VOBJS = $(COMMON_OBJECTS) $(WC3270_OBJECTS) fallbacks.o wc3270res.o
-
-LIB3270 = ../lib/libw3270.a
-LIB3270I = ../lib/libw3270i.a
-LIBSTUBS = ../lib/libw3270stubs.a
-LIB32XX = ../lib/libw32xx.a
-
-OBJECTS = $(VOBJS) version.o
-WOBJECTS = wizard.o wc3270res.o wversion.o shortcut.o relink.o
-LIBS = $(SSLLIB) -lws2_32 -lole32 -luuid -lcomdlg32 -lgdi32 -lwinspool
-SHRTLIBS = -L../lib -lw32xx -lole32 -luuid
-WIZLIBS = -L../lib -lw32xx -lole32 -luuid -lwinspool
-DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
-
-PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe
-all: $(PROGS) man
-
-wc3270.exe : XCPPFLAGS += -DWIN32_LEAN_AND_MEAN
-
-version.o: $(VOBJS) version.txt mkversion.sh Makefile
-	$(RM) xversion.c
-	@chmod +x mkversion.sh version.txt
-	sh ./mkversion.sh wc3270 >xversion.c
-	$(CC) $(CFLAGS) -c -o $@ xversion.c
-	$(RM) xversion.c
-
-FALLBACKS = fb-common fb-printSession fb-messages fb-composeMap fb-c3270
-fallbacks.c: $(MKFB) $(FALLBACKS)
-	$(RM) $@
-	./$(MKFB) -c -o $@ $(FALLBACKS)
-
-$(MKFB): mkfb.c conf.h Makefile
-	$(NATIVECC) -g -o $(MKFB) -DFOR_WIN32 mkfb.c
-
-keypad.o: keypad.c compiled_keypad.h
-
-compiled_keypad.h: keypad.full keypad.labels keypad.map keypad.outline keypad.callbacks $(MKKEYPAD)
-	./$(MKKEYPAD) >$@
-
-$(MKKEYPAD): mkkeypad.c
-	$(NATIVECC) -g -o $(MKKEYPAD) mkkeypad.c
-
-wc3270res.o: wc3270.rc wc3270.ico Makefile
-	$(WINDRES) -i wc3270.rc -o wc3270res.o
-
-wc3270.exe: $(OBJECTS) Makefile $(LIB3270) $(LIB3270I) $(LIBSTUBS) $(LIB32XX)
-	$(CC) -o wc3270.exe $(CFLAGS) $(OBJECTS) -L../lib -lw3270 -lw3270i -lw32xx -lw3270stubs $(LIBS)
-
-$(LIB3270):
-	cd ../lib/w3270 && $(MAKE) all
-$(LIB3270I):
-	cd ../lib/w3270i && $(MAKE) all
-$(LIB32XX):
-	cd ../lib/w32xx && $(MAKE) all
-$(LIBSTUBS):
-	cd ../lib/w3270stubs && $(MAKE) all
-
-mkshort.exe: mkshort.o shortcut.o $(LIB32XX) Makefile
-	$(CC) -o mkshort.exe $(CFLAGS) mkshort.o shortcut.o $(SHRTLIBS)
-
-wversion.o: version.txt mkwversion.sh
-	@chmod +x mkwversion.sh version.txt
-	sh ./mkwversion.sh $(CC)
-
-wc3270wiz.exe: $(WOBJECTS) $(LIB32XX)
-	$(CC) -o wc3270wiz.exe $(CFLAGS) $(WOBJECTS) $(WIZLIBS)
-
-catf.exe: catf.c
-	$(CC) -o catf.exe $(CFLAGS) catf.c
-
-ead3270.exe: ead3270.o $(LIB32XX)
-	$(CC) -o $@ $(CFLAGS) ead3270.o -L../lib -lw32xx
-
-ead3270.o: ead3270.c
-	$(CC) $(CFLAGS) -c ead3270.c
-
-man:
-	$(MAKE) -f Makefile.aux $@
-
-clean:
-	rm -f *.o $(MKFB) $(MKKEYPAD) compiled_keypad.h fallbacks.c dependencies-
-
-clobber: clean
-	rm -f $(PROGS)
-
-depend: $(SRCS) compiled_keypad.h
-	$(CC) -MM $(XCPPFLAGS) $(SRCS) >dependencies-
-	mv dependencies- dependencies
-
-ifeq ($(wildcard dependencies),dependencies)
-include dependencies
+# VPATH-based Makefile for wc3270, can build either 32- or 64-bit
+ifdef WIN64
+objdir = ../obj/win64/wc3270
+else
+objdir = ../obj/win32/wc3270
 endif
+top = ../../..
+this = $(top)/wc3270
+
+export VPATH = $(this):$(top)/Common/Win32:$(top)/Common/c3270:$(top)/Common
+export TOP = $(top)
+export THIS = $(this)
+
+MAKEINC = -I$(top)/Common -I$(top)/Common/Win32
+
+all: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+clean: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+clobber: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+depend: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+
+$(objdir):
+	mkdir -p $(objdir)

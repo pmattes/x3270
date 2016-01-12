@@ -1,3 +1,2 @@
 conf.h
-s3270
-x3270if
+Makefile.obj

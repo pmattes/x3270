@@ -1,1 +1,0 @@
-../../Common/screen_stubs4.c

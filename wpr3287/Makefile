@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2015, Paul Mattes.
+# Copyright (c) 2016 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -24,58 +24,29 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Makefile for wpr3287
-
-# Set SSLDIR, SSLCPP, SSLLIB, GT_PFX, NATIVE_SFX, NATIVECC, CC, WINDRES and
-#  WIN32_FLAGS.
-include winenv.mk
-
-XCPPFLAGS = $(WIN32_FLAGS) -I. -I../include
-CFLAGS = -g -Wall -Werror $(XCPPFLAGS) $(SSLCPP) $(CDEBUGFLAGS)
-
-OBJ = o
-include pr3287_files.mk
-include wpr3287_files.mk
-SRCS = $(PR3287_SOURCES) $(WPR3287_SOURCES)
-VOBJS = $(PR3287_OBJECTS) $(WPR3287_OBJECTS)
-
-OBJECTS = $(VOBJS) version.o
-LIBS = $(SSLLIB) -lws2_32 -lwinspool
-LIB32XX = ../lib/libw32xx.a
-
-all: wpr3287.exe man
-
-XVERSION = xversion.c
-version.o: $(VOBJS) version.txt mkversion.sh
-	$(RM) $(XVERSION)
-	@chmod +x mkversion.sh version.txt
-	sh ./mkversion.sh wpr3287 >$(XVERSION)
-	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
-	$(RM) $(XVERSION)
-
-wpr3287res.o: wpr3287.rc pr3287.ico
-	$(WINDRES) -i wpr3287.rc -o wpr3287res.o
-
-wpr3287.exe: $(OBJECTS) $(LIB32XX)
-	$(CC) -o wpr3287.exe $(CFLAGS) $(OBJECTS) -L../lib -lw32xx $(LIBS)
-
-$(LIB32XX):
-	cd ../lib/w32xx && $(MAKE) all
-
-man:
-	$(MAKE) -f Makefile.aux $@
-
-clean:
-	rm -f *.o dependencies-
-
-clobber: clean
-	rm -f wpr3287.exe
-
-depend:
-	$(CC) -MM $(XCPPFLAGS) $(SRCS) >dependencies-
-	mv dependencies- dependencies
-
-ifeq ($(wildcard dependencies),dependencies)
-include dependencies
+# VPATH-based Makefile for wpr3287 can build either 32- or 64-bit
+ifdef WIN64
+objdir = ../obj/win64/wpr3287
+else
+objdir = ../obj/win32/wpr3287
 endif
+top = ../../..
+this = $(top)/wpr3287
 
+export VPATH = $(this):$(top)/Common/pr3287:$(top)/Common
+export TOP = $(top)
+export THIS = $(this)
+
+MAKEINC = -I$(this) -I$(top)/Common/pr3287 -I$(top)/Common -I$(top)/Common/Win32
+
+all: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+clean: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+clobber: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+depend: $(objdir)
+	cd $(objdir) && $(MAKE) $(MAKEINC) -f $(this)/Makefile.obj $@
+
+$(objdir):
+	mkdir -p $(objdir)
