@@ -104,7 +104,7 @@ install.man:
 clean:
 	$(RM) *.o
 clobber: clean
-	$(RM) s3270
+	$(RM) s3270 x3270if
 depend:
 	@MAKEDEP@ -- $(CFLAGS) -- -s "# DO NOT DELETE" $(SRCS)
 

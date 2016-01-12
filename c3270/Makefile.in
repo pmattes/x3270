@@ -122,12 +122,10 @@ c3270-standalone.zip: c3270 make-cygwin-standalone runc3270.bat
 	./make-cygwin-standalone
 
 clean:
-	$(RM) *.o mkfb fallbacks.c
+	$(RM) *.o mkfb mkkeypad fallbacks.c compiled_keypad.h
 
 clobber: clean
 	$(RM) c3270
-
-depend: compiled_keypad.h
 
 depend:
 	@MAKEDEP@ -- $(CFLAGS) -- -s "# DO NOT DELETE" $(SRCS)
