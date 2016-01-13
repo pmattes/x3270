@@ -99,7 +99,8 @@ reldir=$d1/../../Release
 
 suite=suite3270-$version-src.tgz
 setup=wc3270-$version-setup.exe
-zip=wc3270-$version-noinstall.zip
+zip32=wc3270-$version-noinstall-32.zip
+zip64=wc3270-$version-noinstall-64.zip
 ver=${version%%[a-z]*}
 
 # Check for existing targets before we do any real work.
@@ -118,8 +119,12 @@ then	for prod in $prods
 	then	echo >&2 "$setup already exists"
 	    	exit 1
 	fi
-	if [ "$winrel" -a -f $reldir/$zip ]
-	then	echo >&2 "$zip already exists"
+	if [ "$winrel" -a -f $reldir/$zip32 ]
+	then	echo >&2 "$zip32 already exists"
+	    	exit 1
+	fi
+	if [ "$winrel" -a -f $reldir/$zip64 ]
+	then	echo >&2 "$zip64 already exists"
 	    	exit 1
 	fi
 fi
@@ -223,7 +228,7 @@ then	echo "===== Releasing."
 
 	# Release the setup.exe and zip file.
 	if [ "$winrel" ]
-	then	cp -p $builddir/wc3270/$setup $builddir/wc3270/$zip $reldir/
-		chmod ugo-w $reldir/$setup $reldir/$zip
+	then	cp -p $builddir/wc3270/$setup $builddir/wc3270/$zip32 $builddir/wc3270/$zip64 $reldir/
+		chmod ugo-w $reldir/$setup $reldir/$zip32 $reldir/$zip64
 	fi
 fi
