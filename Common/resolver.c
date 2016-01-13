@@ -229,6 +229,11 @@ resolve_host_and_port(const char *host, char *portname, int ix,
  * Resolve a sockaddr into a numeric hostname and port, IPv4 or IPv6.
  * Returns true for success, false for failure.
  */
+# if defined(_WIN32) /*[*/
+#  define LEN DWORD
+# else /*][*/
+#  define LEN size_t
+# endif /*]*/
 static bool
 numeric_host_and_port_v46(const struct sockaddr *sa, socklen_t salen,
 	char *host, size_t hostlen, char *serv, size_t servlen, char **errmsg)
@@ -236,7 +241,7 @@ numeric_host_and_port_v46(const struct sockaddr *sa, socklen_t salen,
     int rc;
 
     /* Use getnameinfo(). */
-    rc = getnameinfo(sa, salen, host, hostlen, serv, servlen,
+    rc = getnameinfo(sa, salen, host, (LEN)hostlen, serv, (LEN)servlen,
 	    NI_NUMERICHOST | NI_NUMERICSERV);
     if (rc != 0) {
 	if (errmsg) {

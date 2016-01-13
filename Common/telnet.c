@@ -951,7 +951,7 @@ net_connected(void)
     if (HOST_FLAG(SSL_HOST) && !secure_connection) {
 	int rv;
 
-	if (SSL_set_fd(ssl_con, sock) != 1) {
+	if (SSL_set_fd(ssl_con, (int)sock) != 1) {
 	    vtrace("Can't set fd!\n");
 	}
 	rv = SSL_connect(ssl_con);
@@ -1829,7 +1829,7 @@ telnet_fsm(unsigned char c)
 #if defined(HAVE_LIBSSL) /*[*/
 	    else if (need_tls_follows && myopts[TELOPT_STARTTLS] &&
 		    sbbuf[0] == TELOPT_STARTTLS) {
-		continue_tls(sbbuf, sbptr - sbbuf);
+		continue_tls(sbbuf, (int)(sbptr - sbbuf));
 	    }
 #endif /*]*/
 	    else if (sbbuf[0] == TELOPT_NEW_ENVIRON &&
@@ -3484,7 +3484,7 @@ passwd_cb(char *buf, int size, int rwflag _is_unused,
 	}
 	strncpy(buf, appres.ssl.key_passwd + 7, len);
 	buf[len] = '\0';
-	return len;
+	return (int)len;
     } else if (!strncasecmp(appres.ssl.key_passwd, "file:", 5)) {
 	/* In a file. */
 	FILE *f;
@@ -3499,7 +3499,7 @@ passwd_cb(char *buf, int size, int rwflag _is_unused,
 	memset(buf, '\0', size);
 	s = fgets(buf, size - 1, f);
 	fclose(f);
-	return s? strlen(s): 0;
+	return s? (int)strlen(s): 0;
     } else {
 	popup_an_error("Unknown OpenSSL private key syntax '%s'",
 		appres.ssl.key_passwd);
@@ -3680,7 +3680,6 @@ try_again:
 		    get_ssl_error(err_buf));
 	    goto fail;
 	}
-	Free(certs);
 #else /*][*/
 	SSL_CTX_set_default_verify_paths(ssl_ctx);
 #endif /*]*/
@@ -4190,7 +4189,7 @@ continue_tls(unsigned char *sbbuf, int len)
     }
 
     /* Set up the TLS/SSL connection. */
-    if (SSL_set_fd(ssl_con, sock) != 1) {
+    if (SSL_set_fd(ssl_con, (int)sock) != 1) {
 	vtrace("Can't set fd!\n");
     }
 

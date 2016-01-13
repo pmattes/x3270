@@ -363,7 +363,7 @@ pr_net_negotiate(const char *host, struct sockaddr *sa, socklen_t len,
 	if (ssl_init() < 0) {
 	    return false;
 	}
-	SSL_set_fd(ssl_con, s);
+	SSL_set_fd(ssl_con, (int)s);
 	rv = SSL_connect(ssl_con);
 	if (rv != 1) {
 	    long v;
@@ -922,7 +922,7 @@ telnet_fsm(unsigned char c)
 			else if (need_tls_follows &&
 					myopts[TELOPT_STARTTLS] &&
 					sbbuf[0] == TELOPT_STARTTLS) {
-				if (continue_tls(sbbuf, sbptr - sbbuf) < 0)
+				if (continue_tls(sbbuf, (int)(sbptr - sbbuf)) < 0)
 					return false;
 			}
 #endif /*]*/
@@ -1943,7 +1943,7 @@ passwd_cb(char *buf, int size, int rwflag, void *userdata)
 		    	len = size - 1;
 		strncpy(buf, options.ssl.key_passwd + 7, len);
 		buf[len] = '\0';
-		return len;
+		return (int)len;
 	} else if (!strncasecmp(options.ssl.key_passwd, "file:", 5)) {
 	    	/* In a file. */
 	    	FILE *f;
@@ -1958,7 +1958,7 @@ passwd_cb(char *buf, int size, int rwflag, void *userdata)
 		memset(buf, '\0', size);
 		s = fgets(buf, size - 1, f);
 		fclose(f);
-		return s? strlen(s): 0;
+		return s? (int)strlen(s): 0;
 	} else {
 		errmsg("Unknown OpenSSL private key syntax '%s'",
 			options.ssl.key_passwd);
@@ -2588,7 +2588,7 @@ continue_tls(unsigned char *sbbuf, int len)
 	}
 
 	/* Set up the TLS/SSL connection. */
-	SSL_set_fd(ssl_con, sock);
+	SSL_set_fd(ssl_con, (int)sock);
 	if (SSL_connect(ssl_con) != 1) {
 	    	long v;
 
