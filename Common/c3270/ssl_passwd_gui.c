@@ -102,7 +102,7 @@ ssl_passwd_gui_callback(char *buf, int size)
    fprintf(stdout, "\n");
    fflush(stdout);
    ssl_password_prompted = true;
-   return s? strlen(s): 0;
+   return s? (int)strlen(s): 0;
 }
 
 /* Password GUI reset. */
