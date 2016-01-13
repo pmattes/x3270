@@ -2,24 +2,25 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 [Setup]
+AllowNoIcons=yes
+AppCopyright=Copyright (C) 1989-%CYEAR% by Paul Mattes, GTRC and others
 AppName=wc3270
-AppVerName=wc3270 %VERSION%
 AppPublisher=Paul Mattes
 AppPublisherURL=http://x3270.bgp.nu
 AppSupportURL=http://x3270.bgp.nu
 AppUpdatesURL=http://x3270.bgp.nu
-AppCopyright=Copyright (C) 1989-%CYEAR% by Paul Mattes, GTRC and others
-WizardSmallImageFile=x3270-icon2.bmp
+AppVerName=wc3270 %VERSION%
+ArchitecturesInstallIn64BitMode=x64
+ChangesAssociations=yes
+Compression=lzma
 DefaultDirName={pf}\wc3270
-DisableDirPage=no
 DefaultGroupName=wc3270
-AllowNoIcons=yes
+DisableDirPage=no
+MinVersion=0,5.1
 OutputBaseFilename=wc3270-%VERSION%-setup
 OutputDir=.
-Compression=lzma
 SolidCompression=yes
-ChangesAssociations=yes
-MinVersion=0,5.1
+WizardSmallImageFile=x3270-icon2.bmp
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -54,14 +55,22 @@ Type: files; Name: "{app}\w3n46.dll"
 Type: files; Name: "{app}\shf.dll"
 
 [Files]
-Source: "..\obj\win32\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\obj\win32\ws3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\obj\win32\\wpr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\obj\win32\wc3270\catf.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\obj\win32\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall
-Source: "..\obj\win32\wc3270\ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\obj\win32\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\obj\win32\ws3270\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\obj\win32\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: "..\obj\win64\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: "..\obj\win32\ws3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: "..\obj\win64\ws3270\ws3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: "..\obj\win32\wpr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: "..\obj\win64\wpr3287\wpr3287.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: "..\obj\win32\wc3270\catf.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: "..\obj\win64\wc3270\catf.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: "..\obj\win32\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall; Check: not Is64BitInstallMode
+Source: "..\obj\win64\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall; Check: Is64BitInstallMode
+Source: "..\obj\win32\wc3270\ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: "..\obj\win64\wc3270\ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: "..\obj\win32\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: "..\obj\win64\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: "..\obj\win32\ws3270\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: "..\obj\win64\ws3270\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "root_certs.txt"; DestDir: "{commonappdata}\wc3270"; Flags: ignoreversion; Components: ca and commonfiles
 Source: "root_certs.txt"; DestDir: "{userappdata}\wc3270"; Flags: ignoreversion; Components: ca and userfiles
 Source: "html\Bugs.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
@@ -96,6 +105,38 @@ begin
 ; result := '/c start /b ' + GetShortName(ExpandConstant('{app}') + '\html\README.html');
  result := '/c start ' + GetShortName(ExpandConstant('{app}') + '\html\README.html');
 end;
+function InitializeSetup(): Boolean;
+var
+  uninstaller: String;
+  ErrorCode: Integer;
+begin
+  if (Is64BitInstallMode) and (RegKeyExists(HKEY_LOCAL_MACHINE_32,
+    'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\wc3270_is1')) then
+  begin
+    // We are in 64-bit mode and a 32-bit version is already installed.
+    // Ask if they want to remove it.
+    if MsgBox('A 32-bit version of wc3270 is already installed and must be removed before a 64-bit version can be installed. Remove it now?', mbConfirmation, MB_YESNO) = IDNO then
+      begin
+        // They don't want to remove the old version. Can't proceed.
+        Result := False
+      end // IDNO
+    else
+      begin
+	// They do want to remove the old version.
+        RegQueryStringValue(HKEY_LOCAL_MACHINE_32,
+          'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\wc3270_is1',
+          'UninstallString', uninstaller);
+          ShellExec('runas', uninstaller, '/SILENT', '', SW_HIDE, ewWaitUntilTerminated, ErrorCode);
+	// We can continue.
+        Result := True
+      end // IDYES
+    end
+  else
+  // There is no old 32-bit version to remove.
+  begin
+    result := True
+  end // no 32-bit to remove
+end; // InitializeSetup
 
 [Icons]
 Name: "{group}\Session Wizard"; Filename: "{app}\wc3270wiz.exe"; WorkingDir: "{app}"; Components: wizard

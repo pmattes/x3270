@@ -70,7 +70,7 @@ LICENSE.txt: version.txt LICENSE.txt.tmpl mkiss
 # This depends on external targets, and is intended to be built recursively
 # from the top-level Makefile, which builds those targets first.
 VERSION = $(shell . ./version.txt && echo $$version)
-windows-release: wc3270-$(VERSION)-setup.exe wc3270-$(VERSION)-noinstall.zip
+windows-release: wc3270-$(VERSION)-setup.exe wc3270-$(VERSION)-noinstall-32.zip wc3270-$(VERSION)-noinstall-64.zip
 
 # Rule for building the Inno Setup .exe file, deriving dependencies from the
 # .iss.tmpl file.
@@ -80,6 +80,9 @@ wc3270-$(VERSION)-setup.exe: $(ISSDEP) wc3270.iss Makefile.aux
 
 # Rule for building the noinstall.zip file, deriving dependencies from the
 # .zipit file.
-ZIPITDEP = $(shell awk '/^F/ { print $$2; }' wc3270.zipit)
-wc3270-$(VERSION)-noinstall.zip: $(ZIPITDEP) wc3270.zipit version.txt Makefile.aux
-	./zipit -c "wc3270 $(VERSION)" -o wc3270-$(VERSION)-noinstall.zip wc3270.zipit
+ZIPITDEP32 = $(shell awk '/^F/ { print $$2; }' wc3270-32.zipit)
+wc3270-$(VERSION)-noinstall-32.zip: $(ZIPITDEP32) wc3270-32.zipit version.txt Makefile.aux
+	./zipit -c "wc3270 $(VERSION)" -o wc3270-$(VERSION)-noinstall-32.zip wc3270-32.zipit
+ZIPITDEP64 = $(shell awk '/^F/ { print $$2; }' wc3270-64.zipit)
+wc3270-$(VERSION)-noinstall-64.zip: $(ZIPITDEP64) wc3270-64.zipit version.txt Makefile.aux
+	./zipit -c "wc3270 $(VERSION)" -o wc3270-$(VERSION)-noinstall-64.zip wc3270-64.zipit
