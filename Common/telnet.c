@@ -3667,7 +3667,7 @@ try_again:
 #define readable(path)	(access(path, R_OK) == 0)
 	if (!readable(certs = ROOT_CERTS) &&
 	    !readable(certs = lazyaf("%s%s", instdir, ROOT_CERTS)) &&
-	    !readable(certs = lazyaf("%s%s", myappdata, ROOT_CERTS)) < 0 &&
+	    !readable(certs = lazyaf("%s%s", myappdata, ROOT_CERTS)) &&
 	    (commonappdata == NULL ||
 	     !readable(certs = lazyaf("%s%s", commonappdata, ROOT_CERTS)))) {
 	    popup_an_error("No %s found", ROOT_CERTS);
