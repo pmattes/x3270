@@ -1,5 +1,25 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, ws3270, tcl3270, pr3287 and wpr3287 3.5</h1>
 3.5 is the current development line for the x3270 suite.
+<h2>Changes in version 3.5alpha4, Nn. Mon 2016</h2>
+<ul>
+ <li>[all] Object files (but not yet documentation) are now built in a separate
+  <b>obj</b> directory with machine-specific subdirectories. Both 32- and
+  64-bit Windows binaries are always built.</li>
+ <li>[all Windows] 64-bit executables are now installed on 64-bit Windows
+  systems. Note that upgrades from 32-bit to 64-bit wc3270 require uninstalling
+  the 32-bit version first. The installer offers to do this automatically. Note
+  also that downgrading from a 64-bit version to an older 32-bit version,
+  without first manually uninstalling the 64-bit version, will cause a mess:
+  duplicate versions of wc3270 will be listed in <i>Add or Remove Programs</i>,
+  and uninstalling one of them will half uninstall the other.<br>
+  There are also now 32-bit and 64-bit versions of the no-install ZIP
+  file.</li>
+ <li>[all Windows] OpenSSL 64-bit now builds cleanly on Visual Studio.</li>
+ <li>[all Windows] Fixed a heap corruption crash when the OpenSSL libraries
+  are found (even if a secure connections is not in use).</li>
+ <li>[<i>x3270</i>] Dropped support for xmkmf and imake. x3270 builds and
+  installs only using autoconf paths now.</li>
+</ul>
 <h2>Changes in version 3.5alpha3, 11. January 2016</h2>
 <ul>
  <li>[<i>wc3270</i>] Added <b>SelectLeft</b>, <b>SelectRight</b>,
