@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, 2015 Paul Mattes.
+ * Copyright (c) 1993-2012, 2016 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -92,6 +92,7 @@ typedef struct {
     int	 	 max_recent;
     bool	 nvt_mode;
     char	*suppress_actions;
+    char	*min_version;
 #if defined(_WIN32) /*[*/
     int		 local_cp;
     int		 ft_cp;

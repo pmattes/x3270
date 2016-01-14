@@ -261,6 +261,14 @@ ifelse(XX_PRODUCT,ws3270,`XX_TP(XX_FB(XX_DASHED(localcp) XX_FI(codepage)))
 Specifies the Windows code page to use for local I/O.
 The default is to use the XX_POSESSIVE(system) ANSI code page.
 ')dnl
+ifelse(XX_MODE,script,`XX_TP(XX_FB(XX_DASHED(minversion)) XX_FI(version))
+The minimum required version of XX_FB(XX_PRODUCT), e.g., XX_VERSION_NUMBER.
+If the running version is less than the specified version, XX_FB(XX_PRODUCT)
+will abort.
+The format of a version is
+XX_FI(major)XX_FB(.)XX_FI(minor)XX_FB(type)XX_FI(iteration). XX_FB(type) is
+ignored, and XX_FI(minor) and XX_FI(iteration) can be omitted.
+')dnl
 XX_TP(XX_FB(XX_DASHED(model)) XX_FI(name))
 The model of 3270 display to be emulated.
 The model name is in two parts, either of which may be omitted:

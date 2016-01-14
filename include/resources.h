@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2015, Paul Mattes.
+ * Copyright (c) 1995-2016, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -156,6 +156,7 @@
 #define ResMaxRecent		"maxRecent"
 #define ResMenuBar		"menuBar"
 #define ResMetaEscape		"metaEscape"
+#define ResMinVersion		"minVersion"
 #define ResModel		"model"
 #define ResModifiedSel		"modifiedSel"
 #define ResModifiedSelColor	"modifiedSelColor"
@@ -258,6 +259,7 @@
 #define DotKeyPasswd		"." ResKeyPasswd
 #define DotLoginMacro		"." ResLoginMacro
 #define DotM3279		"." ResM3279
+#define DotMinVersion		"." ResMinVersion
 #define DotModel		"." ResModel
 #define DotMono			"." ResMono
 #define DotNvtMode		"." ResNvtMode
@@ -384,6 +386,7 @@
 #define ClsMaxRecent		"MaxRecent"
 #define ClsMenuBar		"MenuBar"
 #define ClsMetaEscape		"MetaEscape"
+#define ClsMinVersion		"MinVersion"
 #define ClsModel		"Model"
 #define ClsModifiedSel		"ModifiedSel"
 #define ClsModifiedSelColor	"ModifiedSelColor"
@@ -481,6 +484,7 @@
 #define OptLocalProcess		"-e"
 #define OptLoginMacro		"-loginmacro"
 #define OptM3279		"-color"
+#define OptMinVersion		"-minversion"
 #define OptModel		"-model"
 #define OptMono			"-mono"
 #define OptNoPrompt		"-noprompt"

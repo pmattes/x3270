@@ -2023,6 +2023,23 @@ desc
     When false, ESC is treated like any other input character.
 .
 
+name minVersion
+applies S
+type s
+switch -minversion
+description
+    Defines a minimum required version for %p%. If the version of %p% is less
+    than the specified version, it will abort.
+    <p class=indented>
+    The format of a version is
+    <i>major</i><b>.</b><i>minor</i><i><b>type</b></i><i>iteration</i>, for example,
+    3.4ga5 or 3.5alpha2.
+    The version can also be under-specified, such as 3.4 or 3, where the
+    missing parts default to 0.
+    The value of <i><b>type</b></i> is ignored, so 3.4ga5 and 3.4foo5 are
+    considered equal.
+.
+
 name model
 applies a
 groups c
