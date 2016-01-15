@@ -272,8 +272,8 @@ main(int argc, char *argv[])
 
     /* Get Windows version and directories. */
     (void) get_version_info();
-    if (!get_dirs(argv[0], "wc3270", &instdir, &mydesktop, NULL, NULL, NULL,
-		NULL, NULL, &mydocs3270, &commondocs3270, &windirs_flags)) {
+    if (!get_dirs("wc3270", &instdir, &mydesktop, NULL, NULL, NULL, NULL, NULL,
+		&mydocs3270, &commondocs3270, &windirs_flags)) {
 	x3270_exit(1);
     }
 

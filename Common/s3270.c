@@ -118,8 +118,8 @@ main(int argc, char *argv[])
 
 #if defined(_WIN32) /*[*/
     (void) get_version_info();
-    if (!get_dirs(argv[0], "wc3270", &instdir, NULL, NULL, NULL, NULL, NULL,
-		NULL, NULL, NULL, &windirs_flags)) {
+    if (!get_dirs("wc3270", &instdir, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+		NULL, &windirs_flags)) {
 	exit(1);
     }
     if (sockstart() < 0) {

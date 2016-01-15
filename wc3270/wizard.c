@@ -4717,7 +4717,7 @@ main(int argc, char *argv[])
     }
 
     /* Get some paths from Windows. */
-    if (!get_dirs(program, "wc3270", &installdir, &desktop, &appdata_wc3270,
+    if (!get_dirs("wc3270", &installdir, &desktop, &appdata_wc3270,
 		&public_desktop, &common_appdata_wc3270, &documents,
 		&public_documents, &documents_wc3270, &public_documents_wc3270,
 		&windirs_flags)) {
