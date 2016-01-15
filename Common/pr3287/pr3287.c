@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2015 Paul Mattes.
+ * Copyright (c) 2000-2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -510,8 +510,8 @@ main(int argc, char *argv[])
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-	if (!get_dirs(NULL, "wc3270", &instdir, NULL, NULL, NULL, NULL, NULL,
-		    NULL, NULL, NULL, NULL))
+	if (!get_dirs("wc3270", &instdir, NULL, NULL, NULL, NULL, NULL, NULL,
+		    NULL, NULL, NULL))
 	    	exit(1);
 
 	if (sockstart() < 0)

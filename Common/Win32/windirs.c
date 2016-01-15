@@ -132,7 +132,6 @@ getcwd_bsl(void)
  * If returning AppData and the program is installed, make sure that the
  * directory exists.
  *
- * @param[in]  argv0	 	program's argv[0]
  * @param[in]  appname	 	application name (for app-data)
  * @param[out] instdir	 	installation directory (or NULL)
  * @param[out] desktop	 	desktop directory (or NULL)
@@ -153,10 +152,9 @@ getcwd_bsl(void)
  * not.  If not, appdata is returned as the cwd.
  */
 bool
-get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
-	char **appdata, char **common_desktop, char **common_appdata,
-	char **documents, char **common_documents,
-	char **docs3270, char **common_docs3270,
+get_dirs(char *appname, char **instdir, char **desktop, char **appdata,
+	char **common_desktop, char **common_appdata, char **documents,
+	char **common_documents, char **docs3270, char **common_docs3270,
 	unsigned *flags)
 {
     char **xappdata = appdata;
@@ -206,49 +204,30 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
      * installer.
      */
     if (instdir != NULL) {
+
+	/* Get the pathname of this program. */
+	HMODULE hModule = GetModuleHandle(NULL);
+	char path[MAX_PATH];
 	char *bsl;
-	char *tmp_instdir;
-	DWORD rv;
 
-	bsl = strrchr(argv0, '\\');
+	GetModuleFileName(hModule, path, MAX_PATH);
+	CloseHandle(hModule);
+
+	/* Chop it off after the last backslash. */
+	bsl = strrchr(path, '\\');
 	if (bsl == NULL) {
-	    /* Wine may pass us forward slashes. */
-	    bsl = strrchr(argv0, '/');
-	}
-	if (bsl != NULL) {
-	    /* argv0 contains a path. */
-	    tmp_instdir = malloc(strlen(argv0) + 1);
-	    if (tmp_instdir == NULL) {
-		return false;
-	    }
-	    strcpy(tmp_instdir, argv0);
-	    if (bsl - argv0 > 0 && tmp_instdir[bsl - argv0 - 1] == ':') {
-		/* X:\foo */
-		tmp_instdir[bsl - argv0 + 1] = '\0';
-	    } else {
-		/* X:\foo\bar */
-		tmp_instdir[bsl - argv0] = '\0';
-	    }
-
-	    rv = GetFullPathName(tmp_instdir, 0, NULL, NULL);
-	    *instdir = malloc(rv + 2);
-	    if (*instdir == NULL) {
-		return false;
-	    }
-	    if (GetFullPathName(tmp_instdir, rv + 1, *instdir, NULL) == 0) {
-		return false;
-	    }
-	    free(tmp_instdir);
-
-	    /* Make sure instdir ends in '\\'. */
-	    if ((*instdir)[strlen(*instdir) - 1] != '\\') {
-		strcat(*instdir, "\\");
-	    }
-	} else {
+	    /* Should not happen. */
 	    *instdir = getcwd_bsl();
 	    if (*instdir == NULL) {
 		return false;
 	    }
+	} else {
+	    *(bsl + 1) = '\0';
+	    *instdir = malloc(strlen(path) + 1);
+	    if (*instdir == NULL) {
+		return false;
+	    }
+	    strcpy(*instdir, path);
 	}
     }
 

@@ -2,7 +2,9 @@
 3.5 is the current development line for the x3270 suite.
 <h2>Changes in version 3.5beta8, Nn. Month 2016</h2>
 <ul>
- <li>[<i>all</i>] Validate the parameters to the Transfer() action better.</li>
+ <li>[all Windows] Always find root_certs.txt in the same directory as the
+  executable, if not installed.</li>
+ <li>[all] Validate the parameters to the Transfer() action better.</li>
  <li>[<i>pr3287</i>] Fix the configure script so it properly detects
   missing OpenSSL header files, even if the OpenSSL library is present.</li>
  <li>[all] Limit DFT buffer size to 32767. 32768 causes the host to send 0-byte
