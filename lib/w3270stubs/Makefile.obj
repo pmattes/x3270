@@ -30,7 +30,7 @@ LIB3270 = lib3270stubs.a
 
 include winenv.mk
 
-XCPPFLAGS = $(WIN32_FLAGS) -I$(THIS) -I$(THIS)/../include/windows -I$(TOP)/include
+XCPPFLAGS = $(WIN32_FLAGS) -I$(THIS) -I$(THIS)/../include/windows -I$(THIS)/../include -I$(TOP)/include
 CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS) $(SSLCPP)
 
 all:: $(LIB3270)

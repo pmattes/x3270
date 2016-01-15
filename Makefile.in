@@ -224,7 +224,7 @@ wc3270-clean-64:
 ws3270-clean: ws3270-clean-32 ws3270-clean-64
 ws3270-clean-32:
 	cd ws3270 && $(MAKE) clean
-ws3270-clean-32:
+ws3270-clean-64:
 	cd ws3270 && $(MAKE) clean WIN64=1
 wpr3287-clean: wpr3287-clean-32 wpr3287-clean-64
 wpr3287-clean-32:

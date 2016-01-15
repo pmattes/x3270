@@ -47,7 +47,7 @@ datarootdir = @datarootdir@
 LIBX3270DIR = @LIBX3270DIR@
 
 CCOPTIONS = @CCOPTIONS@
-XCPPFLAGS = -I$(THIS) -I$(THIS)/../include/unix -I$(TOP)/include -DLIBX3270DIR=\"$(LIBX3270DIR)\" @CPPFLAGS@
+XCPPFLAGS = -I$(THIS) -I$(THIS)/../include/unix -I$(THIS)/../include -I$(TOP)/include -DLIBX3270DIR=\"$(LIBX3270DIR)\" @CPPFLAGS@
 CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS)
 
 $(LIB3270): $(OBJS)
