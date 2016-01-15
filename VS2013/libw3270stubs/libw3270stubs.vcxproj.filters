@@ -15,76 +15,76 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\lib\w3270stubs\ft_gui_stubs.c">
+    <ClCompile Include="..\..\Common\ft_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\glue_gui_stubs.c">
+    <ClCompile Include="..\..\Common\glue_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\host_gui_stubs.c">
+    <ClCompile Include="..\..\Common\host_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\menubar_stubs.c">
+    <ClCompile Include="..\..\Common\menubar_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\nvt_gui_stubs.c">
+    <ClCompile Include="..\..\Common\nvt_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\popups_stubs.c">
+    <ClCompile Include="..\..\Common\popups_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\pr3287_session_stubs.c">
+    <ClCompile Include="..\..\Common\pr3287_session_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\product_stubs1.c">
+    <ClCompile Include="..\..\Common\print_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\product_stubs2.c">
+    <ClCompile Include="..\..\Common\product_stubs1.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\product_stubs3.c">
+    <ClCompile Include="..\..\Common\product_stubs2.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\print_gui_stubs.c">
+    <ClCompile Include="..\..\Common\product_stubs3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\save_stubs.c">
+    <ClCompile Include="..\..\Common\save_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\screen_stubs1.c">
+    <ClCompile Include="..\..\Common\screen_stubs1.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\screen_stubs2.c">
+    <ClCompile Include="..\..\Common\screen_stubs2.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\screen_stubs3.c">
+    <ClCompile Include="..\..\Common\screen_stubs3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\screen_stubs4.c">
+    <ClCompile Include="..\..\Common\screen_stubs4.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\screen_stubs5.c">
+    <ClCompile Include="..\..\Common\screen_stubs5.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\screen_stubs6.c">
+    <ClCompile Include="..\..\Common\screen_stubs6.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\scroll_stubs.c">
+    <ClCompile Include="..\..\Common\scroll_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\select_stubs.c">
+    <ClCompile Include="..\..\Common\select_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\ssl_passwd_gui_stubs.c">
+    <ClCompile Include="..\..\Common\ssl_passwd_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\status_stubs.c">
+    <ClCompile Include="..\..\Common\status_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\telnet_gui_stubs.c">
+    <ClCompile Include="..\..\Common\telnet_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270stubs\trace_gui_stubs.c">
+    <ClCompile Include="..\..\Common\trace_gui_stubs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

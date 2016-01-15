@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\wc3270\Msc\mkversion.c">
+    <ClCompile Include="..\..\Common\Win32\mkversion.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

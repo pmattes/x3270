@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\lib\w3270i\pr3287_session.c">
+    <ClCompile Include="..\..\Common\pr3287_session.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\w3270i\scroll.c">
+    <ClCompile Include="..\..\Common\scroll.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,1 +1,0 @@
-../../Common/Win32/mkversion.c

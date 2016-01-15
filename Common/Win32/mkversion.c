@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009, Paul Mattes.
+ * Copyright (c) 2008-2009, 2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -95,6 +95,7 @@ main(int argc, char *argv[])
 	int is_w = 0;
 	char *ofile = "version.c";
 	char *progname = "wc3270";
+	char *vtname = "version.txt";
 
 	if (argc > 1 && !strcmp(argv[1], "-w")) {
 		is_w = 1;
@@ -102,13 +103,21 @@ main(int argc, char *argv[])
 		argv++;
 		argc--;
 	}
-	if (argc > 1)
+	if (argc > 1) {
 		progname = argv[1];
+		argv++;
+		argc--;
+	}
+	if (argc > 1) {
+		vtname = argv[1];
+		argv++;
+		argc--;
+	}
 
 	/* Read up version.txt. */
-	f = fopen("version.txt", "r");
+	f = fopen(vtname, "r");
 	if (f == NULL) {
-		perror("version.txt");
+		perror("vtname");
 		return 1;
 	}
 	while (fgets(buf, sizeof(buf), f) != NULL) {
@@ -119,7 +128,7 @@ main(int argc, char *argv[])
 			q = strchr(version, '"');
 			if (q == NULL) {
 				fprintf(stderr,
-					"syntax error in version.txt\n");
+					"syntax error in %s\n", vtname);
 				return 1;
 			}
 			*q = '\0';
@@ -130,7 +139,7 @@ main(int argc, char *argv[])
 			q = strchr(adversion, '"');
 			if (q == NULL) {
 				fprintf(stderr,
-					"syntax error in version.txt\n");
+					"syntax error in %s\n", vtname);
 				return 1;
 			}
 			*q = '\0';
@@ -141,7 +150,7 @@ main(int argc, char *argv[])
 			q = strchr(cyear, '"');
 			if (q == NULL) {
 				fprintf(stderr,
-					"syntax error in version.txt\n");
+					"syntax error in %s\n", vtname);
 				return 1;
 			}
 			*q = '\0';
@@ -150,7 +159,7 @@ main(int argc, char *argv[])
 	fclose(f);
 	if (version == NULL || adversion == NULL) {
 		fprintf(stderr,
-			"missing version= or adversion= in version.txt\n");
+			"missing version= or adversion= in %s\n", vtname);
 		return 1;
 	}
 
