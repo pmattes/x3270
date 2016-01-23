@@ -2824,11 +2824,16 @@ EraseEOF_action(ia_t ia, unsigned argc, const char **argv)
     }
     reset_idle_timer();
     if (kybdlock) {
-	enq_ta("EraseEOF", NULL, NULL);
-	return true;
+	if (KYBDLOCK_IS_OERR) {
+	    kybdlock_clr(KL_OERR_MASK, "EraseEOF");
+	    status_reset();
+	} else {
+	    enq_ta("EraseEOF", NULL, NULL);
+	    return true;
+	}
     }
     if (IN_NVT) {
-	return false ;
+	return false;
     }
     baddr = cursor_addr;
     fa = get_field_attribute(baddr);
