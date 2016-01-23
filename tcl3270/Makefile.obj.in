@@ -70,6 +70,9 @@ fallbacks.c: mkfb $(FALLBACKS)
 	$(RM) $@
 	./mkfb -c -o $@ $(filter-out mkfb,$^)
 
+mkfb: mkfb.c
+	$(CC) $(CFLAGS) -o $@ $(filter %.c,$^)
+
 tcl3270: $(OBJS1) $(OBJS1) $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
 	$(CC) -o $@ $(OBJS1) $(LDFLAGS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LIBS)
 

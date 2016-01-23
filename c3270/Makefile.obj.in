@@ -69,6 +69,9 @@ fallbacks.c: mkfb $(FALLBACKS)
 	$(RM) $@
 	./mkfb -c -o $@ $(filter-out mkfb,$^)
 
+mkfb: mkfb.c
+	$(CC) $(CFLAGS) -o $@ $(filter %.c,$^)
+
 keypad.o: compiled_keypad.h
 
 compiled_keypad.h: keypad.full keypad.labels keypad.map keypad.outline keypad.callbacks mkkeypad
