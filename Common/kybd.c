@@ -3071,8 +3071,13 @@ Insert_action(ia_t ia, unsigned argc, const char **argv)
     }
     reset_idle_timer();
     if (kybdlock) {
-	enq_ta("Insert", NULL, NULL);
-	return true;
+	if (KYBDLOCK_IS_OERR) {
+	    kybdlock_clr(KL_OERR_MASK, "Insert");
+	    status_reset();
+	} else {
+	    enq_ta("Insert", NULL, NULL);
+	    return true;
+	}
     }
     if (IN_NVT) {
 	return false;
@@ -3094,8 +3099,13 @@ ToggleInsert_action(ia_t ia, unsigned argc, const char **argv)
     }
     reset_idle_timer();
     if (kybdlock) {
-	enq_ta("ToggleInsert", NULL, NULL);
-	return true;
+	if (KYBDLOCK_IS_OERR) {
+	    kybdlock_clr(KL_OERR_MASK, "ToggleInsert");
+	    status_reset();
+	} else {
+	    enq_ta("ToggleInsert", NULL, NULL);
+	    return true;
+	}
     }
     if (IN_NVT) {
 	return false;
