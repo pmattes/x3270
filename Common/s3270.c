@@ -84,7 +84,7 @@ char *instdir = NULL;
 char *myappdata = NULL;
 char *commonappdata = NULL;
 char *mydesktop = NULL;
-int is_installed = 0;
+unsigned windirs_flags;
 #endif /*]*/
 
 static void check_min_version(const char *min_version);
@@ -118,8 +118,8 @@ main(int argc, char *argv[])
 
 #if defined(_WIN32) /*[*/
     (void) get_version_info();
-    if (get_dirs(argv[0], "wc3270", &instdir, NULL, &myappdata, NULL,
-		&commonappdata, &is_installed) < 0) {
+    if (!get_dirs(argv[0], "wc3270", &instdir, NULL, &myappdata, NULL,
+		&commonappdata, NULL, NULL, &windirs_flags)) {
 	exit(1);
     }
     if (sockstart() < 0) {

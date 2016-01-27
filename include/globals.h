@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2016 Paul Mattes.
  * Copyright (c) 2005, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
@@ -248,7 +248,7 @@ extern char		*mydesktop;
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-extern int		is_installed;
+extern unsigned		windirs_flags;
 #endif /*]*/
 
 /* Data types and complex global variables */

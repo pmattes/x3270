@@ -78,6 +78,8 @@
 #define CHOICE_NONE	"none"
 #define DISPLAY_NONE	"(none)"
 
+#define DONE_FILE	"upgraded"
+
 enum {
     MN_NONE = 0,
     MN_HOST,		/* host name */
@@ -208,7 +210,9 @@ static char *installdir = NULL;
 static char *desktop = NULL;
 static char *common_desktop = NULL;
 static char *commona = NULL;
-static int installed = FALSE;
+static char *documents;
+static char *common_documents;
+unsigned windirs_flags;
 static TCHAR username[UNLEN + 1];
 
 static int get_printerlu(session_t *s, int explain);
@@ -231,9 +235,11 @@ static xsb_t xs_all;		/* all-users sessions */
 static session_t empty_session;
 
 static void write_user_settings(char *us, FILE *f);
-static void display_sessions(int with_numbers);
-static ws_t write_shortcut(const session_t *s, int ask, src_t src,
+static void display_sessions(bool with_numbers);
+static ws_t write_shortcut(const session_t *s, bool ask, src_t src,
 	const char *path, bool change_shortcut);
+
+static sw_t do_upgrade(void);
 
 /**
  * Fetch a line of input from the console.
@@ -395,6 +401,11 @@ typedef struct km {			/* Keymap: */
 	char *def_both;			/*  Definition (common) */
 	char *def_3270;			/*  Definition (3270 mode) */
 	char *def_nvt;			/*  Definition (NVT mode) */
+	src_t src;			/*  Where it is: */
+					/*   SRC_CURRENT per-user */
+					/*   SRC_ALL all-users */
+					/*   SRC_NON built-in */
+					/*   SRC_OTHER install dir */
 } km_t;
 km_t *km_first = NULL;
 km_t *km_last = NULL;
@@ -405,11 +416,13 @@ km_t *km_last = NULL;
  * @param[in] path		Pathname of keymap file
  * @param[in] keymap_name	Name of keymap
  * @param[in] description	Keymap description, or NULL
+ * @param[in] src		Where it is
  *
  * @return Keymap node, possibly newly-allocated.
  */
 static km_t *
-save_keymap_name(const char *path, char *keymap_name, const char *description)
+save_keymap_name(const char *path, char *keymap_name, const char *description,
+	src_t src)
 {
     km_t *km;
     size_t sl;
@@ -427,6 +440,7 @@ save_keymap_name(const char *path, char *keymap_name, const char *description)
     strcpy(km->name, keymap_name);
     km->description[0] = '\0';
     sl = strlen(km->name);
+    km->src = src;
 
     /* Slice off the '.wc3270km' suffix. */
     if (sl > KS_LEN && !strcasecmp(km->name + sl - KS_LEN, KEYMAP_SUFFIX)) {
@@ -545,14 +559,15 @@ save_keymaps(void)
 
     for (i = 0; builtin_keymaps[i].name != NULL; i++) {
 	(void) save_keymap_name(NULL, builtin_keymaps[i].name,
-		builtin_keymaps[i].description);
+		builtin_keymaps[i].description, SRC_NONE);
     }
     sprintf(dpath, "%s*%s", mya, KEYMAP_SUFFIX);
     h = FindFirstFile(dpath, &find_data);
     if (h != INVALID_HANDLE_VALUE) {
 	do {
 	    sprintf(fpath, "%s%s", mya, find_data.cFileName);
-	    (void) save_keymap_name(fpath, find_data.cFileName, NULL);
+	    (void) save_keymap_name(fpath, find_data.cFileName, NULL,
+		    SRC_CURRENT);
 	} while (FindNextFile(h, &find_data) != 0);
 	FindClose(h);
     }
@@ -562,7 +577,8 @@ save_keymaps(void)
 	if (h != INVALID_HANDLE_VALUE) {
 	    do {
 		sprintf(fpath, "%s%s", commona, find_data.cFileName);
-		(void) save_keymap_name(fpath, find_data.cFileName, NULL);
+		(void) save_keymap_name(fpath, find_data.cFileName, NULL,
+			SRC_ALL);
 	    } while (FindNextFile(h, &find_data) != 0);
 	    FindClose(h);
 	}
@@ -572,7 +588,8 @@ save_keymaps(void)
     if (h != INVALID_HANDLE_VALUE) {
 	do {
 	    sprintf(fpath, "%s%s", installdir, find_data.cFileName);
-	    (void) save_keymap_name(fpath, find_data.cFileName, NULL);
+	    (void) save_keymap_name(fpath, find_data.cFileName, NULL,
+		    SRC_OTHER);
 	} while (FindNextFile(h, &find_data) != 0);
 	FindClose(h);
     }
@@ -758,7 +775,7 @@ Overview\n\
 This wizard allows you to set up a new wc3270 session or modify an existing\n\
 one. It also lets you create or replace a shortcut on the desktop.\n");
 
-    display_sessions(0);
+    display_sessions(false);
 
     printf("\n");
     for (i = MO_FIRST; main_option[i].text != NULL; i++) {
@@ -921,12 +938,12 @@ find_session_file(const char *session_name, char *path)
  * @param[in] result		Result buffer for error message, or NULL
  * @param[in] result_size	Size of result buffer
  *
- * @return TRUE for success, FALSE for error.
+ * @return true for success, false for error.
  */
 #define SESSION_NAME_ERR \
 "Illegal character(s).\n\
 Session names can only have letters, numbers, spaces, underscores and dashes."
-static int
+static bool
 legal_session_name(const char *name, char *result, size_t result_size)
 {
     if (strspn(name, LEGAL_CNAME) != strlen(name)) {
@@ -935,9 +952,9 @@ legal_session_name(const char *name, char *result, size_t result_size)
 	} else {
 	    printf("\n%s", SESSION_NAME_ERR);
 	}
-	return FALSE;
+	return false;
     } else {
-	return TRUE;
+	return true;
     }
 }
 
@@ -958,7 +975,7 @@ legal_session_name(const char *name, char *result, size_t result_size)
  * 				the file exists) current contents
  * @param[out] us		User parameters
  * @param[out] path		Pathname of session file
- * @param[in] explicit_edit	If TRUE, -e was passed on command line; skip
+ * @param[in] explicit_edit	If true, -e was passed on command line; skip
  * 				the 'exists. Edit?' dialog
  * @param[out] src		Where the session file was found, if it exists
  *
@@ -972,7 +989,7 @@ legal_session_name(const char *name, char *result, size_t result_size)
  */
 static gs_t
 get_session(const char *session_name, session_t *s, char **us, char *path,
-	int explicit_edit, src_t *src)
+	bool explicit_edit, src_t *src)
 {
     FILE *f;
     int rc;
@@ -2089,7 +2106,7 @@ user-defined keymaps, separated by commas.");
 	char tknbuf[STR_SIZE];
 	char *t;
 	char *buf;
-	int wrong = FALSE;
+	bool wrong = false;
 
 	printf("\nEnter keymap name(s) [%s]: ",
 		s->keymaps[0]? s->keymaps: CHOICE_NONE);
@@ -2103,7 +2120,7 @@ user-defined keymaps, separated by commas.");
 	    break;
 	}
 	strcpy(tknbuf, inbuf);
-	wrong = FALSE;
+	wrong = false;
 	buf = tknbuf;
 	while (!wrong && (t = strtok(buf, ",")) != NULL) {
 	    buf = NULL;
@@ -2114,7 +2131,7 @@ user-defined keymaps, separated by commas.");
 	    }
 	    if (km == NULL) {
 		printf("Invalid keymap name '%s'.", t);
-		wrong = TRUE;
+		wrong = true;
 		break;
 	    }
 	}
@@ -2151,13 +2168,13 @@ session file, instead of being found at runtime.");
 	rc = getyn((s->flags & WF_EMBED_KEYMAPS) != 0);
 	switch (rc) {
 	case YN_ERR:
-		return -1;
+	    return -1;
 	case TRUE:
-		s->flags |= WF_EMBED_KEYMAPS;
-		break;
+	    s->flags |= WF_EMBED_KEYMAPS;
+	    break;
 	case FALSE:
-		s->flags &= ~WF_EMBED_KEYMAPS;
-		break;
+	    s->flags &= ~WF_EMBED_KEYMAPS;
+	    break;
 	}
     } while (rc < 0);
     return 0;
@@ -2959,10 +2976,10 @@ done:
  * Print the prefix for a session name (ordinal or blank)
  *
  * @param[in] n			Ordinal to display
- * @param[in] with_numbers 	If TRUE, display number, otherwise blanks
+ * @param[in] with_numbers 	If true, display number, otherwise blanks
  */
 static void
-print_n(int n, int with_numbers)
+print_n(int n, bool with_numbers)
 {
     if (with_numbers) {
 	printf(" %2d.", n + 1);
@@ -2974,10 +2991,10 @@ print_n(int n, int with_numbers)
 /**
  * Display the current set of sessions.
  *
- * @param[in] with_numbers	If TRUE, display with ordinals
+ * @param[in] with_numbers	If true, display with ordinals
  */
 static void
-display_sessions(int with_numbers)
+display_sessions(bool with_numbers)
 {
     int i;
     int col = 0;
@@ -3092,7 +3109,7 @@ get_existing_session(const char *why, const char **name, src_t *lp)
 {
     char nbuf[64];
 
-    display_sessions(1);
+    display_sessions(true);
 
     for (;;) {
 	int n;
@@ -3253,14 +3270,14 @@ failed:
  *
  * @param[in] argc	Command argument count (from main menu prompt)
  * @param[in] argv	Command argumens (from main menu prompt)
- * @param[in] is_rename	TRUE if rename, FALSE if copy
+ * @param[in] is_rename	true if rename, false if copy
  * @param[out] result	Result returned here
  * @param[in] result_size Size of 'result' buffer
  *
  * @return 0 for success, -1 for failure
  */
 static int
-rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
+rename_or_copy_session(int argc, char **argv, bool is_rename, char *result,
 	size_t result_size)
 {
     char to_name[64];
@@ -3411,7 +3428,7 @@ rename_or_copy_session(int argc, char **argv, int is_rename, char *result,
 	}
 
 	/* Create the new shortcut. */
-	wsrc = write_shortcut(&s, FALSE, to_l, to_path, false);
+	wsrc = write_shortcut(&s, false, to_l, to_path, false);
 	switch (wsrc) {
 	case WS_ERR:
 	    return -1;
@@ -3503,7 +3520,7 @@ Create Shortcut\n");
     }
     fclose(f);
 
-    rc = write_shortcut(&s, FALSE, l, from_path, false);
+    rc = write_shortcut(&s, false, l, from_path, false);
     switch (rc) {
     case WS_NOP:
 	break;
@@ -3673,7 +3690,7 @@ xs_name(int n, src_t *lp)
  * Create or re-create a shortcut.
  *
  * @param[in] s		Session
- * @param[in] ask	If TRUE, ask first
+ * @param[in] ask	If true, ask first
  * @param[in] src	Where the session file is (all or current user)
  * @param[in] sess_path	Pathname of session file
  * @param[in] change_shortcut If true, the shortcut needs updating
@@ -3681,7 +3698,7 @@ xs_name(int n, src_t *lp)
  * @return ws_t (no-op, create, replace, error)
  */
 static ws_t
-write_shortcut(const session_t *s, int ask, src_t src, const char *sess_path,
+write_shortcut(const session_t *s, bool ask, src_t src, const char *sess_path,
 	bool change_shortcut)
 {
     char linkpath[MAX_PATH];
@@ -3707,8 +3724,8 @@ write_shortcut(const session_t *s, int ask, src_t src, const char *sess_path,
 
 	    printf("\n%s desktop shortcut (y/n) [%s]: ",
 		    shortcut_exists? "Replace": "Create",
-		    installed? "y": "n");
-	    rc = getyn(installed == TRUE);
+		    (windirs_flags & /*GD_INSTALLED*/GD_CATF)? "y": "n");
+	    rc = getyn((windirs_flags & /*GD_INSTALLED*/GD_CATF) != 0);
 	    if (rc == YN_ERR) {
 		return WS_ERR;
 	    } else if (rc == FALSE) {
@@ -3754,7 +3771,7 @@ write_shortcut(const session_t *s, int ask, src_t src, const char *sess_path,
  * One pass of the session wizard.
  *
  * @param[in] session_name	Name of session to edit, or NULL
- * @param[in] explicit_edit	If TRUE, '-e' option was used (no need to
+ * @param[in] explicit_edit	If true, '-e' option was used (no need to
  * 				confirm they want to edit it)
  * @param[out] result		Buffer containing previous operation's result,
  * 				and to write current operation's result into
@@ -3763,7 +3780,7 @@ write_shortcut(const session_t *s, int ask, src_t src, const char *sess_path,
  * @return Status of operation (success/error/user-quit)
  */
 static sw_t
-session_wizard(const char *session_name, int explicit_edit, char *result,
+session_wizard(const char *session_name, bool explicit_edit, char *result,
 	size_t result_size)
 {
     session_t session;
@@ -3807,7 +3824,7 @@ Edit Session\n");
 		    return SW_SUCCESS;
 		}
 	    }
-	    explicit_edit = TRUE;
+	    explicit_edit = true;
 	    break;
 	case MO_DELETE:
 	    if (delete_session(argc, argv, result, result_size) < 0) {
@@ -3816,14 +3833,14 @@ Edit Session\n");
 		return SW_SUCCESS;
 	    }
 	case MO_COPY:
-	    if (rename_or_copy_session(argc, argv, FALSE, result,
+	    if (rename_or_copy_session(argc, argv, false, result,
 			result_size) < 0) {
 		return SW_ERR;
 	    } else {
 		return SW_SUCCESS;
 	    }
 	case MO_RENAME:
-	    if (rename_or_copy_session(argc, argv, TRUE, result,
+	    if (rename_or_copy_session(argc, argv, true, result,
 			result_size) < 0) {
 		return SW_ERR;
 	    } else {
@@ -3931,7 +3948,7 @@ Edit Session\n");
     }
 
     /* Ask about creating or updating the shortcut. */
-    wsrc = write_shortcut(&session, TRUE, src, path, change_shortcut);
+    wsrc = write_shortcut(&session, true, src, path, change_shortcut);
     switch (wsrc) {
     case WS_NOP:
 	break;
@@ -4262,8 +4279,10 @@ resize_window(int rows)
 static void
 w_usage(void)
 {
-    fprintf(stderr, "Usage: wc3270wiz [session-name]\n"
-	    "       wc3270wiz [session-file]\n");
+    fprintf(stderr, "\
+Usage: wc3270wiz [session-name]\n\
+       wc3270wiz [-e] [session-file]\n\
+       wc3270wiz -U\n");
     exit(1);
 }
 
@@ -4281,7 +4300,8 @@ main(int argc, char *argv[])
     sw_t rc;
     char *session_name = NULL;
     char *program = argv[0];
-    int explicit_edit = FALSE;
+    bool explicit_edit = false;
+    bool upgrade = false;
     DWORD name_size;
     char result[STR_SIZE];
 
@@ -4290,8 +4310,13 @@ main(int argc, char *argv[])
      * For now, there is only one -- the optional name of the session.
      */
     program = argv[0];
+    if (argc > 1 && !strcmp(argv[1], "-U")) {
+	upgrade = true;
+	argc--;
+	argv--;
+    }
     if (argc > 1 && !strcmp(argv[1], "-e")) {
-	explicit_edit = TRUE;
+	explicit_edit = true;
 	argc--;
 	argv++;
     }
@@ -4306,14 +4331,19 @@ main(int argc, char *argv[])
 	break;
     }
 
+    if (upgrade && explicit_edit) {
+	w_usage();
+    }
+
     /* Figure out the version. */
     if (get_version_info() < 0) {
 	return 1;
     }
 
     /* Get some paths from Windows. */
-    if (get_dirs(program, "wc3270", &installdir, &desktop, &mya,
-		&common_desktop, &commona, &installed) < 0) {
+    if (!get_dirs(program, "wc3270", &installdir, &desktop, &mya,
+		&common_desktop, &commona, &documents, &common_documents,
+		&windirs_flags)) {
 	return 1;
     }
     name_size = sizeof(username) / sizeof(TCHAR);
@@ -4330,15 +4360,22 @@ main(int argc, char *argv[])
 
     save_keymaps();
 
-    /* Display the main menu until they quit or something goes wrong. */
-    result[0] = '\0';
-    do {
-	rc = session_wizard(session_name, explicit_edit, result,
-		sizeof(result));
-	if (session_name != NULL) {
-		break;
-	}
-    } while (rc == SW_SUCCESS);
+    if (upgrade)
+    {
+	/* Do an upgrade. */
+	xs_init();
+	rc = do_upgrade();
+    } else {
+	/* Display the main menu until they quit or something goes wrong. */
+	result[0] = '\0';
+	do {
+	    rc = session_wizard(session_name, explicit_edit, result,
+		    sizeof(result));
+	    if (session_name != NULL) {
+		    break;
+	    }
+	} while (rc == SW_SUCCESS);
+    }
 
     /*
      * Wait for Enter before exiting, so the console window does not
@@ -4350,4 +4387,432 @@ main(int argc, char *argv[])
     }
 
     return 0;
+}
+
+/*********** Upgrade wizard. ***********/
+
+/* Write a wchar_t string to a file. */
+static void
+wwrite(FILE *f, wchar_t *s)
+{
+    fwrite(s, sizeof(wchar_t), wcslen(s), f);
+}
+
+/* Create a wc3270 folder. */
+static void
+create_wc3270_folder(const char *parent)
+{
+    char wc3270_dir[MAX_PATH];
+    char desktop_ini[MAX_PATH];
+    char wc3270_exe[MAX_PATH];
+    wchar_t lwc3270_exe[MAX_PATH];
+
+    /* Create My Documents\wc3270. */
+    snprintf(wc3270_dir, MAX_PATH, "%swc3270", parent);
+    if (access(wc3270_dir, R_OK) != 0) {
+
+	/* Create the folder. */
+	if (mkdir(wc3270_dir) < 0) {
+	    fprintf(stderr, "Cannot create %s: %s\n", wc3270_dir,
+		    strerror(errno));
+	    exit(1);
+	}
+	printf("Created folder %s.\n", wc3270_dir);
+
+	/* Make it a system folder. */
+	if (!SetFileAttributes(wc3270_dir, FILE_ATTRIBUTE_SYSTEM)) {
+	    fprintf(stderr, "SetFileAttributes(%s) failed", wc3270_dir);
+	    exit(1);
+	}
+    }
+    snprintf(desktop_ini, MAX_PATH, "%swc3270\\Desktop.ini", parent);
+    if (access(desktop_ini, R_OK) != 0) {
+
+	/* Create Desktop.ini. */
+	FILE *f = fopen(desktop_ini, "wb");
+
+	if (f == NULL) {
+	    perror(desktop_ini);
+	    exit(1);
+	}
+	fwrite("\xff\xfe", 1, 2, f); /* BOM */
+	wwrite(f, L"[.ShellClassInfo]\r\n");
+	wwrite(f, L"ConfirmFileOp=0\r\n");
+	wwrite(f, L"IconFile=");
+	snprintf(wc3270_exe, MAX_PATH, "%swc3270.exe", installdir);
+	(void) mbstowcs(lwc3270_exe, wc3270_exe, strlen(wc3270_exe) + 1);
+	wwrite(f, lwc3270_exe);
+	wwrite(f, L"\r\n");
+	wwrite(f, L"IconIndex=0\r\n");
+	fclose(f);
+
+	/* Make it a hidden system file. */
+	if (!SetFileAttributes(desktop_ini,
+		    FILE_ATTRIBUTE_SYSTEM|FILE_ATTRIBUTE_HIDDEN)) {
+	    fprintf(stderr, "SetFileAttributes(%s) failed", desktop_ini);
+	    exit(1);
+	}
+    }
+}
+
+/* Copy one session file. */
+static sw_t
+copy_session(xs_t *xs)
+{
+    FILE *f, *g;
+    int c;
+    char desktop_path[MAX_PATH];
+    char from_path[MAX_PATH];
+    char to_path[MAX_PATH];
+    static bool to_docs = false;
+    session_t s;
+    char exepath[MAX_PATH];
+    char args[MAX_PATH];
+    HRESULT hres;
+    int rc;
+
+    printf("\nFound ");
+    if (xs->location == SRC_CURRENT) {
+	printf("user '%s'", username);
+    } else {
+	printf("shared");
+    }
+    printf(" session '%s'.", xs->name);
+
+    do {
+	char answer[16];
+	size_t sl;
+
+	printf("\nCopy session to ");
+	if (xs->location == SRC_CURRENT) {
+	    printf("Desktop, My Documents");
+	} else {
+	    printf("Public Desktop, Public Documents");
+	}
+	printf(" folder or neither?\n\
+ (desktop/documents/neither) [%s] ",
+		to_docs? "documents": "desktop");
+	if (!get_input(answer, sizeof(answer))) {
+	    return SW_ERR;
+	}
+	sl = strlen(answer);
+	if (!sl) {
+	    break;
+	}
+	if (!strncasecmp(answer, "quit", sl)) {
+	    return SW_QUIT;
+	}
+	if (!strncasecmp(answer, "neither", sl)) {
+	    return SW_SUCCESS;
+	}
+	if (sl >= 2 && !strncasecmp(answer, "desktop", sl)) {
+	    to_docs = false;
+	    break;
+	}
+	if (sl >= 2 && !strncasecmp(answer, "documents", sl)) {
+	    to_docs = true;
+	    break;
+	}
+	printf("Please answer desktop, documents or neither.\n");
+    } while (true);
+
+    snprintf(from_path, MAX_PATH, "%s%s.wc3270",
+	    (xs->location == SRC_CURRENT)? mya: commona,
+	    xs->name);
+    if (to_docs) {
+	snprintf(to_path, MAX_PATH, "%swc3270\\%s.wc3270",
+		(xs->location == SRC_CURRENT)? documents : common_documents,
+		xs->name);
+    } else {
+	snprintf(to_path, MAX_PATH, "%s%s.wc3270",
+		(xs->location == SRC_CURRENT)? desktop: common_desktop,
+		xs->name);
+    }
+
+    /* Check for overwrite. */
+    if (access(to_path, R_OK) == 0) {
+	do {
+	    printf("\nReplace %s? (y/n) [y]: ", to_path);
+	    rc = getyn(TRUE);
+	    if (rc == YN_ERR) {
+		return SW_ERR;
+	    } else if (rc == FALSE) {
+		return SW_SUCCESS;
+	    }
+	} while (rc == YN_RETRY);
+    }
+
+    f = fopen(from_path, "r");
+    if (f == NULL) {
+	fprintf(stderr, "Can't open %s\n", from_path);
+	return SW_ERR;
+    }
+    g = fopen(to_path, "w");
+    if (g == NULL) {
+	fprintf(stderr, "Can't open %s\n", to_path);
+	fclose(f);
+	return SW_ERR;
+    }
+    while ((c = fgetc(f)) != EOF) {
+	fputc(c, g);
+    }
+    fclose(f);
+    fclose(g);
+    printf("Copied %s to %s.\n", xs->name, to_path);
+
+    if (!to_docs) {
+	return SW_SUCCESS;
+    }
+
+    snprintf(desktop_path, MAX_PATH, "%s%s",
+	    (xs->location == SRC_CURRENT)? desktop: common_desktop,
+	    xs->name);
+
+    do {
+	printf("\n%s desktop shortcut? (y/n) [y]: ",
+		(access(desktop_path, R_OK) == 0)? "Replace": "Create");
+	rc = getyn(TRUE);
+	if (rc == YN_ERR) {
+	    return SW_ERR;
+	} else if (rc == FALSE) {
+	    return SW_SUCCESS;
+	}
+    } while (rc == YN_RETRY);
+
+    /* Read in the session. */
+    f = fopen(to_path, "r");
+    if (!read_session(f, &s, NULL)) {
+	fprintf(stderr, "Invalid session file '%s'.\n", to_path);
+	fclose(f);
+	return SW_ERR;
+    }
+    fclose(f);
+
+    /* Create the shortcut. */
+    snprintf(exepath, MAX_PATH, "%s%s", installdir, "wc3270.exe");
+    snprintf(args, MAX_PATH, "+S \"%s\"", to_path);
+    hres = create_shortcut(&s, exepath, desktop_path, args, installdir);
+    if (!SUCCEEDED(hres)) {
+	fprintf(stderr, "Cannot create shortcut '%s'.\n", desktop_path);
+	return SW_ERR;
+    }
+
+    /* Done. */
+    return SW_SUCCESS;
+}
+
+/* Copy one keymap. */
+static sw_t
+copy_one_keymap(const char *from_dir, const char *to_dir, const char *name,
+	const char *suffix)
+{
+    char from_path[MAX_PATH];
+    char to_path[MAX_PATH];
+    FILE *f, *g;
+    int c;
+
+    /* Construct the paths. */
+    snprintf(from_path, MAX_PATH, "%s%s%s%s",
+	    from_dir, name, KEYMAP_SUFFIX, suffix);
+    snprintf(to_path, MAX_PATH, "%s%s%s%s",
+	    to_dir, name, KEYMAP_SUFFIX, suffix);
+
+    /* Check for overwrite. */
+    if (access(to_path, R_OK) == 0) {
+	int rc;
+
+	do {
+	    printf("\nOverwrite %s? (y/n) [y]: ", to_path);
+	    rc = getyn(TRUE);
+	    if (rc == TRUE) {
+		break;
+	    }
+	    if (rc == FALSE) {
+		return SW_SUCCESS;
+	    }
+	    if (rc == YN_ERR)
+	    {
+		return SW_ERR;
+	    }
+	} while (rc == YN_RETRY);
+    }
+
+    /* Copy. */
+    f = fopen(from_path, "r");
+    if (f == NULL) {
+	perror(from_path);
+	return SW_ERR;
+    }
+    g = fopen(to_path, "w");
+    if (g == NULL) {
+	perror(to_path);
+	fclose(f);
+	return SW_ERR;
+    }
+    while ((c = fgetc(f)) != EOF) {
+	fputc(c, g);
+    }
+
+    /* Done. */
+    fclose(f);
+    fclose(g);
+    printf("Copied %s to %s.\n", from_path, to_path);
+    return SW_SUCCESS;
+}
+
+/* Copy the keymaps. */
+static sw_t
+copy_keymaps(void)
+{
+    km_t *km;
+    sw_t sw;
+
+    for (km = km_first; km != NULL; km = km->next)
+    {
+	char *from_dir;
+	char to_dir[MAX_PATH];
+
+	switch (km->src) {
+	case SRC_CURRENT:
+	    from_dir = mya;
+	    snprintf(to_dir, MAX_PATH, "%swc3270\\", documents);
+	    break;
+	case SRC_ALL:
+	    from_dir = commona;
+	    snprintf(to_dir, MAX_PATH, "%swc3270\\", common_documents);
+	    break;
+	case SRC_OTHER:
+	    from_dir = installdir;
+	    snprintf(to_dir, MAX_PATH, "%swc3270\\", common_documents);
+	    break;
+	default:
+	    continue;
+	}
+
+	if (km->def_both != NULL) {
+	    sw = copy_one_keymap(from_dir, to_dir, km->name, "");
+	    if (sw != SW_SUCCESS) {
+		return sw;
+	    }
+	}
+	if (km->def_3270 != NULL) {
+	    sw = copy_one_keymap(from_dir, to_dir, km->name, KM_3270);
+	    if (sw != SW_SUCCESS) {
+		return sw;
+	    }
+	}
+	if (km->def_nvt != NULL) {
+	    sw = copy_one_keymap(from_dir, to_dir, km->name, KM_NVT);
+	    if (sw != SW_SUCCESS) {
+		return sw;
+	    }
+	}
+    }
+
+    return SW_SUCCESS;
+}
+
+/* Do an upgrade. */
+static sw_t
+do_upgrade(void)
+{
+    char done_path[MAX_PATH];
+    static char wizard[] = "wc3270 Upgrade Wizard";
+    int nkm = 0;
+    int nf = 0;
+    int rc;
+    xs_t *xs;
+    FILE *f;
+
+    /* If we did this before, we're done. */
+    snprintf(done_path, MAX_PATH, "%s%s", mya, DONE_FILE);
+    if (access(done_path, R_OK) == 0) {
+	fprintf(stderr, "Upgrade already performed.\n");
+	return SW_QUIT;
+    }
+
+    /* If there are no sessions and no keymaps, we're done. */
+    if (km_first) {
+	km_t *km;
+
+	for (km = km_first; km != NULL; km = km->next)
+	{
+	    if (km->src != SRC_NONE) {
+		nkm++;
+	    }
+	}
+    }
+    if (!xs_current.count && !xs_all.count && !nkm) {
+	return SW_QUIT;
+    }
+
+    /* Say hello. */
+    system("cls");
+    printf("%s%*s%s\n",
+	    wizard,
+	    (int)(79 - strlen(wizard) - strlen(wversion)), " ",
+	    wversion);
+
+    /* Ask if they want to upgrade. */
+    printf("\n\
+wc3270 %s no longer keeps user-defined files in AppData. Session files\n\
+are kept on desktops or in Documents folders, and keymaps are kept in Documents\n\
+folders.\n\n\
+The following files were found in wc3270 AppData folders:\n",
+	    wversion);
+    if (xs_current.count || xs_all.count)
+    {
+	int nxs = xs_current.count + xs_all.count;
+
+	printf(" %d session file%s\n", nxs, (nxs != 1)? "s": "");
+	nf = nxs;
+    }
+    if (nkm) {
+	printf(" %d keymap file%s\n", nkm, (nkm != 1)? "s": "");
+	nf += nkm;
+    }
+
+    printf("\nCopy %s to new locations? (y/n) [y]: ",
+	    (nf == 1)? "this file": "these files");
+    rc = getyn(TRUE);
+    if (rc == YN_ERR) {
+	return SW_ERR;
+    } else if (rc == FALSE) {
+	return SW_SUCCESS;
+    }
+
+    printf("\n");
+
+    /* Create wc3270 folders. */
+    create_wc3270_folder(documents);
+    create_wc3270_folder(common_documents);
+
+    /* Copy each session file. */
+    for (xs = xs_current.list; xs != NULL; xs = xs->next) {
+	rc = copy_session(xs);
+	if (rc != SW_SUCCESS) {
+	    return rc;
+	}
+    }
+    for (xs = xs_all.list; xs != NULL; xs = xs->next) {
+	rc = copy_session(xs);
+	if (rc != SW_SUCCESS) {
+	    return rc;
+	}
+    }
+
+    /* Copy each keymap. */
+    rc = copy_keymaps();
+    if (rc != SW_SUCCESS) {
+	return rc;
+    }
+
+    /* Don't do this again. */
+    f = fopen(done_path, "w");
+    if (f != NULL) {
+	fclose(f);
+    }
+
+    /* Done. */
+    return SW_SUCCESS;
 }

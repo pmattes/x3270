@@ -52,7 +52,6 @@ get_dirs_shfp(char **desktop, char **appdata, char **common_desktop,
 	if (r != S_OK) {
 	    fprintf(stderr, "SHGetFolderPath(DESKTOPDIRECTORY) failed: 0x%x\n",
 		    (int)r);
-	    fflush(stderr);
 	    return -1;
 	}
     }
@@ -66,7 +65,6 @@ get_dirs_shfp(char **desktop, char **appdata, char **common_desktop,
 		*appdata);
 	if (r != S_OK) {
 	    fprintf(stderr, "SHGetFolderPath(APPDATA) failed: 0x%x\n", (int)r);
-	    fflush(stderr);
 	    return -1;
 	}
     }
@@ -81,7 +79,6 @@ get_dirs_shfp(char **desktop, char **appdata, char **common_desktop,
 	if (r != S_OK) {
 	    fprintf(stderr, "SHGetFolderPath(COMMON_DESKTOPDIRECTORY) failed: "
 		    "0x%x\n", (int)r);
-	    fflush(stderr);
 	    return -1;
 	}
     }
@@ -96,7 +93,6 @@ get_dirs_shfp(char **desktop, char **appdata, char **common_desktop,
 	if (r != S_OK) {
 	    fprintf(stderr, "SHGetFolderPath(COMMON_APPDATA) failed: 0x%x\n",
 		    (int)r);
-	    fflush(stderr);
 	    return -1;
 	}
     }
@@ -143,36 +139,41 @@ getcwd_bsl(void)
  * @param[out] appdata	 	app-data directory (or NULL)
  * @param[out] common_desktop	common desktop directory (or NULL)
  * @param[out] common_appdata	common app-data directory (or NULL)
- * @param[out] installed 	is the program installed?
+ * @param[out] documents	My Documents directory (or NULL)
+ * @param[out] common_docunents	common Documents directory (or NULL)
+ * @param[out] flags 		Is the program installed? Does catf,exe exist?
  *
- * @returns 0 for success, -1 for an unrecoverable error.
+ * @returns true for success, false for an unrecoverable error.
  *
  * All returned directories end in '\'. 
  *
  * Uses the presence of CATF.EXE to decide if the program is installed or
  * not.  If not, appdata is returned as the cwd.
  */
-int
+bool
 get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 	char **appdata, char **common_desktop, char **common_appdata,
-	int *installed)
+	char **documents, char **common_documents, unsigned *flags)
 {
     char **xappdata = appdata;
     char **common_xappdata = common_appdata;
     bool is_installed = false;
+    HRESULT r;
 
-    if (appdata != NULL || installed != NULL) {
+    if (flags != NULL) {
+	*flags = 0;
+    }
+
+    if (appdata != NULL || flags != NULL) {
 	HMODULE h;
 
 	h = LoadLibrary("CATF.EXE");
 	if (h != NULL) {
 	    FreeLibrary(h);
 	    is_installed = true;
-	} else {
-	    is_installed = false;
-	}
-	if (installed != NULL) {
-	    *installed = is_installed;
+	    if (flags != NULL) {
+		*flags |= GD_CATF;
+	    }
 	}
     }
 
@@ -190,7 +191,7 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 	    /* argv0 contains a path. */
 	    tmp_instdir = malloc(strlen(argv0) + 1);
 	    if (tmp_instdir == NULL) {
-		return -1;
+		return false;
 	    }
 	    strcpy(tmp_instdir, argv0);
 	    if (bsl - argv0 > 0 && tmp_instdir[bsl - argv0 - 1] == ':') {
@@ -204,10 +205,10 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 	    rv = GetFullPathName(tmp_instdir, 0, NULL, NULL);
 	    *instdir = malloc(rv + 2);
 	    if (*instdir == NULL) {
-		return -1;
+		return false;
 	    }
 	    if (GetFullPathName(tmp_instdir, rv + 1, *instdir, NULL) == 0) {
-		return -1;
+		return false;
 	    }
 	    free(tmp_instdir);
 
@@ -218,7 +219,7 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 	} else {
 	    *instdir = getcwd_bsl();
 	    if (*instdir == NULL) {
-		return -1;
+		return false;
 	    }
 	}
     }
@@ -227,12 +228,12 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
     if (appdata != NULL && !is_installed) {
 	*appdata = getcwd_bsl();
 	if (*appdata == NULL) {
-	    return -1;
+	    return false;
 	}
 	if (common_appdata != NULL) {
 	    *common_appdata = strdup(*appdata);
 	    if (*common_appdata == NULL) {
-		return -1;
+		return false;
 	    }
 	}
 
@@ -247,14 +248,15 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 	/* Ask Windows where the directories are. */
 	if (get_dirs_shfp(desktop, xappdata, common_desktop,
 		    common_xappdata) < 0) {
-	    return -1;
+	    return false;
 	}
 
 	/* Append a trailing "\" to Desktop. */
 	if (desktop != NULL && (*desktop)[strlen(*desktop) - 1] != '\\') {
 	    wsl = malloc(strlen(*desktop) + 2);
-	    if (wsl == NULL)
-		    return -1;
+	    if (wsl == NULL) {
+		return false;
+	    }
 	    sprintf(wsl, "%s\\", *desktop);
 	    free(*desktop);
 	    *desktop = wsl;
@@ -266,7 +268,7 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 
 	    wsl = malloc(sl + 1 + strlen(appname) + 2);
 	    if (wsl == NULL) {
-		return -1;
+		return false;
 	    }
 
 	    sprintf(wsl, "%s\\%s\\", *xappdata, appname);
@@ -286,7 +288,7 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 
 	    wsl = malloc(strlen(*common_desktop) + 2);
 	    if (wsl == NULL) {
-		return -1;
+		return false;
 	    }
 	    sprintf(wsl, "%s\\", *common_desktop);
 	    free(*common_desktop);
@@ -304,7 +306,7 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 
 	    wsl = malloc(sl + add_bsl + strlen(appname) + 2);
 	    if (wsl == NULL) {
-		return -1;
+		return false;
 	    }
 	    sprintf(wsl, "%s%s%s\\",
 		    *common_xappdata,
@@ -317,18 +319,52 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 	}
     }
 
+    /* Get the Documents directories. */
+
+    if (documents != NULL) {
+	*documents = malloc(MAX_PATH + 1);
+	if (*documents == NULL) {
+	    return false;
+	}
+	r = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT,
+		            *documents);
+	if (r != S_OK) {
+	    free(*documents);
+	    *documents = NULL;
+	} else {
+	    strcat(*documents, "\\");
+	}
+    }
+    if (common_documents != NULL) {
+	*common_documents = malloc(MAX_PATH);
+	if (*common_documents == NULL) {
+	    return false;
+	}
+	r = SHGetFolderPath(NULL, CSIDL_COMMON_DOCUMENTS, NULL,
+		SHGFP_TYPE_CURRENT, *common_documents);
+	if (r != S_OK) {
+	    free(*common_documents);
+	    *common_documents = NULL;
+	} else {
+	    strcat(*common_documents, "\\");
+	}
+    }
+
 #if defined(DEBUG) /*[*/
     printf("get_dirs: instdir '%s', desktop '%s', appdata '%s', "
-	    "common_desktop '%s', common_appdata '%s'\n",
+	    "common_desktop '%s', common_appdata '%s' "
+	    "documents '%s', common_documents '%s'\n",
 	    instdir? *instdir: "(none)",
 	    desktop? *desktop: "(none)",
 	    appdata? *appdata: "(none)",
 	    common_desktop? *common_desktop: "(none)",
-	    common_appdata? *common_appdata: "(none)");
+	    common_appdata? *common_appdata: "(none)",
+	    documents? *documents: "(none)",
+	    common_documents? *common_documents: "(none)");
     printf("Enter...");
     fflush(stdout);
     (void) getchar();
 #endif /*]*/
 
-    return 0;
+    return true;
 }

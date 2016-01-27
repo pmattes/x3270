@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,6 +62,7 @@
 #include "utils.h"
 #if defined(_WIN32) /*[*/
 # include "w3misc.h"
+# include "windirs.h"
 # include "winprint.h"
 #endif /*]*/
 
@@ -843,7 +844,7 @@ tracefile_ok(const char *tfn)
 #if !defined(_WIN32) /*[*/
 	start_trace_window(just_piped? NULL: stfn, pipefd);
 #else /*][*/
-	if (is_installed) {
+	if (windirs_flags && GD_CATF) {
 	    start_trace_window(stfn);
 	}
 #endif /*]*/

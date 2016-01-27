@@ -145,7 +145,7 @@ char *instdir = NULL;
 char *myappdata = NULL;
 char *commonappdata = NULL;
 char *mydesktop = NULL;
-int is_installed;
+unsigned windirs_flags;
 static void start_auto_shortcut(void);
 #endif /*]*/
 
@@ -272,8 +272,8 @@ main(int argc, char *argv[])
 
     /* Get Windows version and directories. */
     (void) get_version_info();
-    if (get_dirs(argv[0], "wc3270", &instdir, &mydesktop, &myappdata, NULL,
-		&commonappdata, &is_installed) < 0) {
+    if (!get_dirs(argv[0], "wc3270", &instdir, &mydesktop, &myappdata, NULL,
+		&commonappdata, NULL, NULL, &windirs_flags)) {
 	x3270_exit(1);
     }
 

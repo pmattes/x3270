@@ -37,8 +37,7 @@
 #error For Windows only.
 #endif /*]*/
 
-#include <stdio.h>
-#include "wincmn.h"
+#include "globals.h"
 
 #include <limits.h>
 
@@ -70,8 +69,8 @@ main(int argc, char *argv[])
 	char *commonappdata = NULL;
 
 	/* Get the application data directories. */
-	if (get_dirs(NULL, "wc3270", NULL, NULL, &appdata, NULL,
-		    &commonappdata, NULL) < 0) {
+	if (!get_dirs(NULL, "wc3270", NULL, NULL, &appdata, NULL,
+		    &commonappdata, NULL, NULL, NULL)) {
 		fprintf(stderr, "get_dirs failed\n");
 		return 1;
 	}

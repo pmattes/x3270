@@ -511,8 +511,8 @@ main(int argc, char *argv[])
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-	if (get_dirs(NULL, "wc3270", NULL, NULL, &appdata, NULL,
-		    &common_appdata, NULL) < 0)
+	if (!get_dirs(NULL, "wc3270", NULL, NULL, &appdata, NULL,
+		    &common_appdata, NULL, NULL, NULL))
 	    	exit(1);
 
 	if (sockstart() < 0)
