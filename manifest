@@ -170,6 +170,7 @@ Common/utf8.c
 Common/util.c
 Common/varbuf.c
 Common/Win32/gdi_print.c
+Common/Win32/mkversion.c
 Common/Win32/snprintf.c
 Common/Win32/w3misc.c
 Common/Win32/windirs.c
@@ -285,9 +286,7 @@ lib/32xx/Makefile.obj.in
 lib/configure
 lib/configure.in
 lib/include/unix/conf.h.in
-lib/include/unix/localdefs.h
 lib/include/windows/conf.h
-lib/include/windows/localdefs.h
 lib/Makefile.aux
 lib/w3270i/Makefile
 lib/w3270i/Makefile.aux
@@ -511,7 +510,6 @@ wc3270/mkshort.c
 wc3270/mkstand.bash
 wc3270/mkversion.sh
 wc3270/mkwversion.sh
-wc3270/Msc/mkversion.c
 wc3270/NO-INSTALL.txt
 wc3270/nvt_gui.c
 wc3270/openssl-url.txt
@@ -526,14 +524,14 @@ wc3270/select.c
 wc3270/shortcut.c
 wc3270/shortcutc.h
 wc3270/version.txt
+wc3270/wc3270-32.zipit
+wc3270/wc3270-64.zipit
 wc3270/wc3270_files.mk
 wc3270/wc3270.h
 wc3270/wc3270.ico
 wc3270/wc3270.iss
 wc3270/wc3270.iss.tmpl
 wc3270/wc3270.rc
-wc3270/wc3270-32.zipit
-wc3270/wc3270-64.zipit
 wc3270/wizard.c
 wc3270/wselectc.h
 wc3270/x3270-icon2.bmp
@@ -557,7 +555,6 @@ wpr3287/Makefile.obj
 wpr3287/man.m4
 wpr3287/mkstand.bash
 wpr3287/mkversion.sh
-wpr3287/Msc/mkversion.c
 wpr3287/pr3287.ico
 wpr3287/pr3287.man.m4
 wpr3287/version.txt
@@ -595,7 +592,6 @@ ws3270/Makefile.obj
 ws3270/make-resource-doc.pl
 ws3270/mkstand.bash
 ws3270/mkversion.sh
-ws3270/Msc/mkversion.c
 ws3270/openssl-url.txt
 ws3270/README.txt
 ws3270/resource-body
