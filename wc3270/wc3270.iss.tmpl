@@ -25,34 +25,30 @@ WizardSmallImageFile=x3270-icon2.bmp
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
-[Types]
-Name: "forall"; Description: "Full installation for all users"
-Name: "foruser"; Description: "Full installation for current user only"
-Name: "custom"; Description: "Custom installation"; Flags: iscustom
-
 [Components]
-Name: "base"; Description: "Basic executables"; Types: forall foruser custom; Flags: fixed
-Name: "wizard"; Description: "Session Wizard"; Types: forall foruser
-Name: "ws3270"; Description: "ws3270 (scripting-only binary)"; Types: forall foruser
-Name: "help"; Description: "Help files"; Types: forall foruser
-Name: "commonfiles"; Description: "Shortcuts and files below go into the all-users profile"; Types: forall; Flags: exclusive
-Name: "userfiles"; Description: "Shortcuts and files below go into the current user's profile"; Types: foruser; Flags: exclusive
-Name: "ca"; Description: "CA root certificates for OpenSSL"; Types: forall foruser
+Name: "base"; Description: "Basic executables"; Types: full compact custom; Flags: fixed
+Name: "wizard"; Description: "Session Wizard"; Types: full compact custom
+Name: "ws3270"; Description: "ws3270 (scripting app)"; Types: full custom
+Name: "help"; Description: "Help files"; Types: full custom
 
 [InstallDelete]
-; Get rid of the per-user CA root certs file. The new install may put it in
-; the common AppData directory.
+; Get rid of the AppData CA root certs files. The new install puts it in {app}.
 Type: files; Name: "{userappdata}\root_certs.txt"
+Type: files; Name: "{commonappdata}\root_certs.txt"
 ; Get rid of the old New wc3270 Session desktop icon.
 Type: files; Name: "{userdesktop}\New wc3270 Session.lnk"
 ; Get rid of the old 'New wc3270 Session' start menu item.  It might be in
 ; the common programs group or the user programs group.
 Type: files; Name: "{commonprograms}\{groupname}\New wc3270 Session.lnk"
 Type: files; Name: "{userprograms}\{groupname}\New wc3270 Session.lnk"
-; Get rid of the old DLLs.
+; Get rid of the old networking DLLs.
 Type: files; Name: "{app}\w3n4.dll"
 Type: files; Name: "{app}\w3n46.dll"
 Type: files; Name: "{app}\shf.dll"
+; Get rid of ead3270.
+Type: files; Name: "{app}\ead3270.exe"
+; Get rid of Explore AppData on the Start menu.
+Type: files; Name: "{group}\wc3270 Explore AppData"
 
 [Files]
 Source: "..\obj\win32\wc3270\wc3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
@@ -65,14 +61,11 @@ Source: "..\obj\win32\wc3270\catf.exe"; DestDir: "{app}"; Flags: ignoreversion; 
 Source: "..\obj\win64\wc3270\catf.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "..\obj\win32\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall; Check: not Is64BitInstallMode
 Source: "..\obj\win64\wc3270\mkshort.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall; Check: Is64BitInstallMode
-Source: "..\obj\win32\wc3270\ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
-Source: "..\obj\win64\wc3270\ead3270.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "..\obj\win32\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: "..\obj\win64\wc3270\wc3270wiz.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "..\obj\win32\ws3270\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: "..\obj\win64\ws3270\x3270if.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: Is64BitInstallMode
-Source: "root_certs.txt"; DestDir: "{commonappdata}\wc3270"; Flags: ignoreversion; Components: ca and commonfiles
-Source: "root_certs.txt"; DestDir: "{userappdata}\wc3270"; Flags: ignoreversion; Components: ca and userfiles
+Source: "root_certs.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "html\Bugs.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
 Source: "html\Build.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
 Source: "html\FAQ.html"; DestDir: "{app}\html"; Components: help; Flags: ignoreversion
@@ -92,12 +85,8 @@ Source: "..\ws3270\html\Windows-x3270if.html"; DestDir: "{app}\html"; Components
 Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
-[Dirs]
-Name: "{userappdata}\wc3270";
-
 [Tasks]
-Name: "commondesktopicons"; Description: "Create desktop icons (all users)"; GroupDescription: "{cm:AdditionalIcons}"; Components: commonfiles
-Name: "userdesktopicons"; Description: "Create desktop icons (current user)"; GroupDescription: "{cm:AdditionalIcons}"; Components: userfiles
+Name: "commondesktopicons"; Description: "Create desktop icons"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Code]
 function myHelp(Param: String): String;
@@ -141,8 +130,7 @@ end; // InitializeSetup
 [Icons]
 Name: "{group}\Session Wizard"; Filename: "{app}\wc3270wiz.exe"; WorkingDir: "{app}"; Components: wizard
 Name: "{group}\Run wc3270"; Filename: "{app}\wc3270.exe"; WorkingDir: "{app}"
-Name: "{group}\wc3270 Documentation"; Filename: "{app}\html\README.html"; Components: wizard
-Name: "{group}\wc3270 Explore AppData"; Filename: "{app}\ead3270.exe"; Flags: runminimized; IconFilename: "{app}\wc3270.exe"
+Name: "{group}\wc3270 Documentation"; Filename: "{app}\html\README.html"; Components: help
 
 [Registry]
 Root: HKCR; Subkey: ".wc3270"; ValueType: string; ValueName: ""; ValueData: "wc3270"; Flags: uninsdeletevalue
@@ -155,12 +143,10 @@ Root: HKCR; Subkey: "wc3270\shell\edit\command"; ValueType: string; ValueName: "
 Filename: "{app}\wc3270wiz.exe"; Description: "{cm:LaunchProgram,Session Wizard}"; Components: wizard; Flags: nowait postinstall skipifsilent
 Filename: "{cmd}"; Parameters: {code:MyHelp}; Description: "{cm:LaunchProgram,Online Documentation}"; Components: help; Flags: nowait postinstall skipifsilent
 Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""{commondesktop}\wc3270.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: commondesktopicons
-Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""{userdesktop}\wc3270.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: userdesktopicons
 Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""{commondesktop}\Session Wizard.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: commondesktopicons; Components: wizard
-Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""{userdesktop}\Session Wizard.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: userdesktopicons; Components: wizard
+; Run the upgrade wizard.
+Filename: "{app}\wc3270wiz.exe.exe"; Parameters: "-U"; Flags: nowait skipifsilent; Components: wizard
 
 [UninstallDelete]
 Type: files; Name: "{commondesktop}\wc3270.lnk"; Tasks: commondesktopicons
-Type: files; Name: "{userdesktop}\wc3270.lnk"; Tasks: userdesktopicons
 Type: files; Name: "{commondesktop}\Session Wizard.lnk"; Tasks: commondesktopicons
-Type: files; Name: "{userdesktop}\Session Wizard.lnk"; Tasks: userdesktopicons
