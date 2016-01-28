@@ -1,4 +1,4 @@
-dnl Copyright (c) 1993-2015, Paul Mattes.
+dnl Copyright (c) 1993-2016, Paul Mattes.
 dnl Copyright (c) 1990, Jeff Sparkes.
 dnl All rights reserved.
 dnl 
@@ -488,7 +488,7 @@ ifelse(XX_PRODUCT,x3270,`Unlike turning it on from a menu option,
 there is no pop-up to confirm the file name, which defaults to',
 `The default trace file name is')
 ifelse(XX_PRODUCT,wc3270,`XX_FB(x3trc.)`'XX_FI(pid)XX_FB(.txt) on the
-current XX_POSESSIVE(user) Desktop',XX_PRODUCT,ws3270,`XX_FB(x3trc.)`'XX_FI(pid)XX_FB(.txt) in the wc3270 AppData directory',`XX_FB(/tmp/x3trc)').
+current XX_POSESSIVE(user) Desktop',XX_PRODUCT,ws3270,`XX_FB(x3trc.)`'XX_FI(pid)XX_FB(.txt) in the current directory',`XX_FB(/tmp/x3trc)').
 XX_TP(XX_FB(XX_DASHED(tracefile)) XX_FI(file))
 Specifies a file to save data stream and event traces into.
 If the name starts with XX_DQUOTED(>>), data will be appended to the file.
@@ -868,8 +868,7 @@ XX_TP(XX_FB(screenTrace))
 Turns on screen tracing at start-up.
 Each time the screen changes, its contents are appended to the file
 ifelse(XX_PRODUCT,wc3270,`XX_FB(x3scr.)`'XX_FI(pid)`'XX_FB(.txt)
-on the current XX_POSESSIVE(user) desktop',ws3270,`XX_FB(x3scr.)`'XX_FI(pid)`'XX_FB(.txt) in the wc3270 AppData
-directory',`XX_FB(/tmp/x3scr.)`'XX_FI(pid)').
+on the current XX_POSESSIVE(user) desktop',ws3270,`XX_FB(x3scr.)`'XX_FI(pid)`'XX_FB(.txt) in the current directory',`XX_FB(/tmp/x3scr.)`'XX_FI(pid)').
 ifelse(XX_MODE,console,`XX_TP(XX_FB(showTiming))
 If set, the time taken by the host to process an XX_SM(AID) is displayed on
 the status line.

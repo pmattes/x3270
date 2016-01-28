@@ -242,9 +242,9 @@ extern int		x3270_exit_code;
 
 #if defined(_WIN32) /*[*/
 extern char		*instdir;
-extern char		*myappdata;
-extern char		*commonappdata;
 extern char		*mydesktop;
+extern char		*mydocs3270;
+extern char		*commondocs3270;
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/

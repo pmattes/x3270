@@ -120,8 +120,8 @@ typedef enum {
 
 /* Return value from edit_menu(). */
 typedef enum {
-    SRC_ALL,		/* success, in all-users AppData */
-    SRC_CURRENT,	/* success, in current user AppData */
+    SRC_ALL,		/* success, in all-users Docs */
+    SRC_CURRENT,	/* success, in current user's Docs */
     SRC_OTHER,		/* not sure where the file is */
     SRC_NONE,		/* don't rewrite the file */
     SRC_ERR = -1	/* error */
@@ -212,6 +212,8 @@ static char *common_desktop = NULL;
 static char *commona = NULL;
 static char *documents;
 static char *common_documents;
+static char *docs3270;	/* where my wc3270 docs are */
+static char *common_docs3270;	/* where common wc3270 docs are */
 unsigned windirs_flags;
 static TCHAR username[UNLEN + 1];
 
@@ -545,7 +547,7 @@ save_keymap_name(const char *path, char *keymap_name, const char *description,
 /**
  * Initialize the set of available keymaps.
  *
- * Adds the builtin keymaps to a database, then searches the two AppData
+ * Adds the builtin keymaps to a database, then searches the two Docs
  * directories for user-defined keymaps and adds those.
  */
 static void
@@ -561,22 +563,22 @@ save_keymaps(void)
 	(void) save_keymap_name(NULL, builtin_keymaps[i].name,
 		builtin_keymaps[i].description, SRC_NONE);
     }
-    sprintf(dpath, "%s*%s", mya, KEYMAP_SUFFIX);
+    sprintf(dpath, "%s*%s", docs3270, KEYMAP_SUFFIX);
     h = FindFirstFile(dpath, &find_data);
     if (h != INVALID_HANDLE_VALUE) {
 	do {
-	    sprintf(fpath, "%s%s", mya, find_data.cFileName);
+	    sprintf(fpath, "%s%s", docs3270, find_data.cFileName);
 	    (void) save_keymap_name(fpath, find_data.cFileName, NULL,
 		    SRC_CURRENT);
 	} while (FindNextFile(h, &find_data) != 0);
 	FindClose(h);
     }
-    if (commona != NULL) {
-	sprintf(dpath, "%s*%s", commona, KEYMAP_SUFFIX);
+    if (common_docs3270 != NULL) {
+	sprintf(dpath, "%s*%s", common_docs3270, KEYMAP_SUFFIX);
 	h = FindFirstFile(dpath, &find_data);
 	if (h != INVALID_HANDLE_VALUE) {
 	    do {
-		sprintf(fpath, "%s%s", commona, find_data.cFileName);
+		sprintf(fpath, "%s%s", common_docs3270, find_data.cFileName);
 		(void) save_keymap_name(fpath, find_data.cFileName, NULL,
 			SRC_ALL);
 	    } while (FindNextFile(h, &find_data) != 0);
@@ -888,22 +890,22 @@ one. It also lets you create or replace a shortcut on the desktop.\n");
  * @param[out] path		Returned pathname
  *
  * @return SRC_XXX enumeration:
- * 	   SRC_CURRENT session is in current user's AppData directory
- * 	   SRC_ALL session is in all-users AppData directory
+ * 	   SRC_CURRENT session is in current user's Docs directory
+ * 	   SRC_ALL session is in all-users Docs directory
  * 	   SRC_OTHER session is somewhere else
  */
 static src_t
 find_session_file(const char *session_name, char *path)
 {
-    /* Try user's AppData. */
-    snprintf(path, MAX_PATH, "%s%s%s", mya, session_name, SESS_SUFFIX);
+    /* Try user's Docs. */
+    snprintf(path, MAX_PATH, "%s%s%s", docs3270, session_name, SESS_SUFFIX);
     if (access(path, R_OK) == 0) {
 	return SRC_CURRENT;
     }
 
-    /* Not there.  Try common AppData. */
-    if (commona != NULL) {
-	snprintf(path, MAX_PATH, "%s%s%s", commona, session_name, SESS_SUFFIX);
+    /* Not there.  Try common Docs. */
+    if (common_docs3270 != NULL) {
+	snprintf(path, MAX_PATH, "%s%s%s", common_docs3270, session_name, SESS_SUFFIX);
 	if (access(path, R_OK) == 0) {
 	    return SRC_ALL;
 	}
@@ -922,10 +924,10 @@ find_session_file(const char *session_name, char *path)
     }
 
     /*
-     * Put the new one in the user's AppData.
+     * Put the new one in the user's Docs.
      * I don't think this value is actually used.
      */
-    snprintf(path, MAX_PATH, "%s%s%s", mya, session_name, SESS_SUFFIX);
+    snprintf(path, MAX_PATH, "%s%s%s", docs3270, session_name, SESS_SUFFIX);
     return SRC_OTHER;
 }
 
@@ -1052,12 +1054,12 @@ get_session(const char *session_name, session_t *s, char **us, char *path,
 		 * Try to figure out where it is.  This is inherently
 		 * imperfect.
 		 */
-		if (!strncmp(path, mya, strlen(mya)) &&
-			path[strlen(mya)] == '\\') {
+		if (!strncmp(path, docs3270, strlen(docs3270)) &&
+			path[strlen(docs3270)] == '\\') {
 		    *src = SRC_CURRENT;
-		} else if (commona != NULL && !strncmp(path, commona,
-						    strlen(commona)) &&
-			path[strlen(commona)] == '\\') {
+		} else if (common_docs3270 != NULL && !strncmp(path, common_docs3270,
+						    strlen(common_docs3270)) &&
+			path[strlen(common_docs3270)] == '\\') {
 		    *src = SRC_ALL;
 		} else {
 		    *src = SRC_OTHER;
@@ -2312,7 +2314,7 @@ get_trace(session_t *s)
 Tracing\n\
 \n\
 This option causes wc3270 to begin tracing at start-up. The trace file will\n\
-be left in the wc3270 AppData directory.");
+be left on your desktop.");
 
     do {
 	printf("\nTrace at start-up? (y/n) [%s] ",
@@ -2439,7 +2441,7 @@ static char *how_name[N_SP] = {
 
 /**
  * Prompt for where a session file should go (all-users or current user's
- * AppData).
+ * Docs).
  *
  * @param[in] s		Session
  *
@@ -2937,10 +2939,10 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
     }
 
     /* Return where the file ended up. */
-    if (!strncasecmp(mya, path, strlen(mya))) {
+    if (!strncasecmp(docs3270, path, strlen(docs3270))) {
 	ret = SRC_CURRENT;
 	goto done;
-    } else if (!strncasecmp(commona, path, strlen(commona))) {
+    } else if (!strncasecmp(common_docs3270, path, strlen(common_docs3270))) {
 	ret = SRC_ALL;
 	goto done;
     } else {
@@ -3242,7 +3244,7 @@ Delete Session\n");
 	}
     }
 
-    snprintf(path, MAX_PATH, "%s%s%s", (l == SRC_CURRENT)? mya: commona,
+    snprintf(path, MAX_PATH, "%s%s%s", (l == SRC_CURRENT)? docs3270: common_docs3270,
 	    name, SESS_SUFFIX);
     if (unlink(path) < 0) {
 	printf("\nDelete of '%s' failed: %s\n", path, strerror(errno));
@@ -3357,21 +3359,21 @@ rename_or_copy_session(int argc, char **argv, bool is_rename, char *result,
 
     switch (from_l) {
     case SRC_ALL:
-	snprintf(from_path, MAX_PATH, "%s%s%s", commona, from_name,
+	snprintf(from_path, MAX_PATH, "%s%s%s", common_docs3270, from_name,
 		SESS_SUFFIX);
 	break;
     default:
     case SRC_CURRENT:
-	snprintf(from_path, MAX_PATH, "%s%s%s", mya, from_name, SESS_SUFFIX);
+	snprintf(from_path, MAX_PATH, "%s%s%s", docs3270, from_name, SESS_SUFFIX);
 	break;
     }
 
     switch ((to_l = get_src(to_name, from_l))) {
     case SRC_ALL:
-	snprintf(to_path, MAX_PATH, "%s%s%s", commona, to_name, SESS_SUFFIX);
+	snprintf(to_path, MAX_PATH, "%s%s%s", common_docs3270, to_name, SESS_SUFFIX);
 	break;
     case SRC_CURRENT:
-	snprintf(to_path, MAX_PATH, "%s%s%s", mya, to_name, SESS_SUFFIX);
+	snprintf(to_path, MAX_PATH, "%s%s%s", docs3270, to_name, SESS_SUFFIX);
 	break;
     case SRC_NONE:
 	return 0;
@@ -3501,11 +3503,11 @@ Create Shortcut\n");
 
     switch (l) {
     case SRC_ALL:
-	snprintf(from_path, MAX_PATH, "%s%s%s", commona, name, SESS_SUFFIX);
+	snprintf(from_path, MAX_PATH, "%s%s%s", common_docs3270, name, SESS_SUFFIX);
 	break;
     default:
     case SRC_CURRENT:
-	snprintf(from_path, MAX_PATH, "%s%s%s", mya, name, SESS_SUFFIX);
+	snprintf(from_path, MAX_PATH, "%s%s%s", docs3270, name, SESS_SUFFIX);
 	break;
     }
 
@@ -3647,9 +3649,9 @@ xs_init(void)
     free_xs(&xs_all);
     num_xs = 0;
 
-    xs_init_type(mya, &xs_current, SRC_CURRENT);
-    if (commona != NULL) {
-	xs_init_type(commona, &xs_all, SRC_ALL);
+    xs_init_type(docs3270, &xs_current, SRC_CURRENT);
+    if (common_docs3270 != NULL) {
+	xs_init_type(common_docs3270, &xs_all, SRC_ALL);
     }
     num_xs = xs_current.count + xs_all.count;
 }
@@ -3920,11 +3922,11 @@ Edit Session\n");
 	    }
 	} else if (src == SRC_ALL) {
 	    /* All users. */
-	    snprintf(path, MAX_PATH, "%s%s%s", commona, session.session,
+	    snprintf(path, MAX_PATH, "%s%s%s", common_docs3270, session.session,
 		    SESS_SUFFIX);
 	} else if (src == SRC_CURRENT) {
 	    /* Current user. */
-	    snprintf(path, MAX_PATH, "%s%s%s", mya, session.session,
+	    snprintf(path, MAX_PATH, "%s%s%s", docs3270, session.session,
 		    SESS_SUFFIX);
 	} /* else keep path as-is */
 
@@ -4273,6 +4275,18 @@ resize_window(int rows)
     return rv;
 }
 
+/* Compute the values of the directories where user files live. */
+static void
+get_base_dirs(bool new_way)
+{
+    if (!new_way) {
+	/* Old way: Use AppData. */
+	docs3270 = mya;
+	common_docs3270 = commona;
+	return;
+    }
+}
+
 /**
  * Usage message. Display syntax and exit.
  */
@@ -4343,7 +4357,7 @@ main(int argc, char *argv[])
     /* Get some paths from Windows. */
     if (!get_dirs(program, "wc3270", &installdir, &desktop, &mya,
 		&common_desktop, &commona, &documents, &common_documents,
-		&windirs_flags)) {
+		&docs3270, &common_docs3270, &windirs_flags)) {
 	return 1;
     }
     name_size = sizeof(username) / sizeof(TCHAR);
@@ -4358,14 +4372,15 @@ main(int argc, char *argv[])
 
     signal(SIGINT, SIG_IGN);
 
-    save_keymaps();
-
-    if (upgrade)
-    {
+    if (upgrade) {
 	/* Do an upgrade. */
+	get_base_dirs(false);
+	save_keymaps();
 	xs_init();
 	rc = do_upgrade();
     } else {
+	get_base_dirs(true);
+	save_keymaps();
 	/* Display the main menu until they quit or something goes wrong. */
 	result[0] = '\0';
 	do {

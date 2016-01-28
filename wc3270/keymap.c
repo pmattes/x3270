@@ -275,20 +275,9 @@ locate_keymap(const char *name, char **fullname, char **r)
     fnx = do_subst(name, DS_VARS | DS_TILDE);
     fny = xs_buffer("%s.%s", fnx, WC3270KM_SUFFIX);
 
-    /* AppData/foo.wc3270km? */
-    fnp = xs_buffer("%s%s", myappdata, fny);
-    a = access(fnp, R_OK);
-    if (a == 0) {
-	*fullname = fnp;
-	Free(fny);
-	Free(fnx);
-	return 1;
-    }
-    Free(fnp);
-
-    /* CommonAppData/foo.wc3270km? */
-    if (commonappdata != NULL) {
-	fnp = xs_buffer("%s%s", commonappdata, fny);
+    /* My Documents\wc3270\foo.wc3270km? */
+    if (mydocs3270 != NULL) {
+	fnp = xs_buffer("%s%s", mydocs3270, fny);
 	a = access(fnp, R_OK);
 	if (a == 0) {
 	    *fullname = fnp;
@@ -299,7 +288,20 @@ locate_keymap(const char *name, char **fullname, char **r)
 	Free(fnp);
     }
 
-    /* InstDir/foo.wc3270km? */
+    /* Public Documents\wc3270\foo.wc3270km? */
+    if (commondocs3270 != NULL) {
+	fnp = xs_buffer("%s%s", commondocs3270, fny);
+	a = access(fnp, R_OK);
+	if (a == 0) {
+	    *fullname = fnp;
+	    Free(fny);
+	    Free(fnx);
+	    return 1;
+	}
+	Free(fnp);
+    }
+
+    /* InstDir\foo.wc3270km? */
     fnp = xs_buffer("%s%s", instdir, fny);
     a = access(fnp, R_OK);
     if (a == 0) {

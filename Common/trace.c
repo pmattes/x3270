@@ -525,7 +525,7 @@ create_tracefile_header(const char *mode)
     }
     wtrace(false, "\n");
 #if defined(_WIN32) /*[*/
-    wtrace(false, " AppData: %s\n", myappdata? myappdata: "(null)");
+    wtrace(false, " Docs: %s\n", mydocs3270? mydocs3270: "(null)");
     wtrace(false, " Install dir: %s\n", instdir? instdir: "(null)");
     wtrace(false, " Desktop: %s\n", mydesktop? mydesktop: "(null)");
 #endif /*]*/
@@ -734,8 +734,8 @@ start_trace_window(const char *path)
 		lazyaf("\"%scatf.exe\" \"%s\"", instdir, path),
 		NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL,
 		NULL, &startupinfo, &process_information) == 0) {
-	popup_an_error("CreateProcess(%s) failed: %s", path,
-		win32_strerror(GetLastError()));
+	popup_an_error("CreateProcess(%scatf.exe \"%s\") failed: %s", instdir,
+		path, win32_strerror(GetLastError()));
     } else {
 	tracewindow_handle = process_information.hProcess;
 	CloseHandle(process_information.hThread);
@@ -869,9 +869,14 @@ const char *
 default_trace_dir(void)
 {
     if (product_has_display()) {
-	return mydesktop? mydesktop: myappdata;
+	/*
+	 * wc3270 puts traces on the desktop, and if that's not defined, in
+	 * the current directory.
+	 */
+	return mydesktop? mydesktop: ".\\";
     } else {
-	return myappdata;
+	/* ws3270 puts traces in the current directory. */
+	return ".\\";
     }
 }
 #endif /*]*/

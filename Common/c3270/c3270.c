@@ -142,9 +142,9 @@ bool dont_return = false;
 
 #if defined(_WIN32) /*[*/
 char *instdir = NULL;
-char *myappdata = NULL;
-char *commonappdata = NULL;
 char *mydesktop = NULL;
+char *mydocs3270 = NULL;
+char *commondocs3270 = NULL;
 unsigned windirs_flags;
 static void start_auto_shortcut(void);
 #endif /*]*/
@@ -272,8 +272,8 @@ main(int argc, char *argv[])
 
     /* Get Windows version and directories. */
     (void) get_version_info();
-    if (!get_dirs(argv[0], "wc3270", &instdir, &mydesktop, &myappdata, NULL,
-		&commonappdata, NULL, NULL, &windirs_flags)) {
+    if (!get_dirs(argv[0], "wc3270", &instdir, &mydesktop, NULL, NULL, NULL,
+		NULL, NULL, &mydocs3270, &commondocs3270, &windirs_flags)) {
 	x3270_exit(1);
     }
 

@@ -2,6 +2,15 @@
 3.5 is the current development line for the x3270 suite.
 <h2>Changes in version 3.5alpha5, Nn. Month 2016</h2>
 <ul>
+ <li>[all Windows] Simplified the installer, removing the option of doing a
+  per-user install.</li>
+ <li>[all Windows] Got rid of the wc3270 Application Data directory. The root
+  certificates file is now in the installation directory. ws3270 and wpr3287
+  trace files now go into the current directory by default. Session files and
+  keymaps are now stored in the <b>My Documents\wc3270</b> folder. When wc3270
+  is installed, an Upgrade Wizard will automatically copy existing session
+  files and keymaps to the new location. (The old files will be preserved, but
+  ignored.)</li>
  <li>[all] Made the EraseEOF, Insert and ToggleInsert actions clear insert
   overflow conditions.</li>
 </ul>

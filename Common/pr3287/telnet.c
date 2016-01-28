@@ -2099,18 +2099,13 @@ pr_ssl_base_init(void)
 		char *certs;
 
 		/*
-		 * Look for root_certs.txt in appdata, then in common_appdata.
+		 * Look for root_certs.txt in cwd, then in instdir.
 		 */
-		certs = Malloc(strlen(appdata) + 16);
-		sprintf(certs, "%s%s", appdata, ROOT_CERTS);
+		certs = NewString(ROOT_CERTS);
 		if (access(certs, R_OK) < 0) {
-			if (common_appdata == NULL) {
-				errmsg("No %s found", ROOT_CERTS);
-				goto fail;
-			}
 			Free(certs);
-			certs = Malloc(strlen(common_appdata) + 16);
-			sprintf(certs, "%s%s", common_appdata, ROOT_CERTS);
+			certs = Malloc(strlen(instdir) + 16);
+			sprintf(certs, "%s%s", instdir, ROOT_CERTS);
 			if (access(certs, R_OK) < 0) {
 				errmsg("No %s found", ROOT_CERTS);
 				goto fail;

@@ -84,7 +84,7 @@ typedef struct {
 extern options_t options;
 
 #if defined(_WIN32) /*[*/
-extern char *appdata;
+extern char *instdir;
 extern char *common_appdata;
 #endif /*]*/
 extern socket_t syncsock;

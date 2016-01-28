@@ -70,7 +70,7 @@ main(int argc, char *argv[])
 
 	/* Get the application data directories. */
 	if (!get_dirs(NULL, "wc3270", NULL, NULL, &appdata, NULL,
-		    &commonappdata, NULL, NULL, NULL)) {
+		    &commonappdata, NULL, NULL, NULL, NULL, NULL)) {
 		fprintf(stderr, "get_dirs failed\n");
 		return 1;
 	}

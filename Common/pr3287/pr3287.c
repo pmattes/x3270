@@ -165,8 +165,7 @@
 options_t options;
 socket_t syncsock = INVALID_SOCKET;
 #if defined(_WIN32) /*[*/
-char *appdata;
-char *common_appdata;
+char *instdir;
 #endif /* ]*/
 
 /* Locals. */
@@ -511,8 +510,8 @@ main(int argc, char *argv[])
 #endif /*]*/
 
 #if defined(_WIN32) /*[*/
-	if (!get_dirs(NULL, "wc3270", NULL, NULL, &appdata, NULL,
-		    &common_appdata, NULL, NULL, NULL))
+	if (!get_dirs(NULL, "wc3270", &instdir, NULL, NULL, NULL, NULL, NULL,
+		    NULL, NULL, NULL, NULL))
 	    	exit(1);
 
 	if (sockstart() < 0)
@@ -879,7 +878,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 
 #if defined(_WIN32) /*[*/
 			if (options.tracedir == NULL) {
-				options.tracedir = appdata;
+				options.tracedir = "";
 			}
 			sl = strlen(options.tracedir);
 			(void) snprintf(tracefile, sizeof(tracefile),
@@ -929,7 +928,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n", cyear);
 		}
 		vtrace_nts("\n");
 #if defined(_WIN32) /*[*/
-		vtrace_nts(" AppData: %s\n", appdata? appdata: "(null)");
+		vtrace_nts(" Instdir: %s\n", instdir? instdir: "(null)");
 #endif /*]*/
 
 		/* Dump the translation table. */

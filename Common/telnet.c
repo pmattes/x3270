@@ -3661,15 +3661,10 @@ try_again:
 	 * (1) Current directory.
 	 * (2) Install directory, which if the program wasn't actually
 	 *     installed, is the directory of the path it was run from.
-	 * (3) This user's AppData.
-	 * (4) The shared AppData.
 	 */
 #define readable(path)	(access(path, R_OK) == 0)
 	if (!readable(certs = ROOT_CERTS) &&
-	    !readable(certs = lazyaf("%s%s", instdir, ROOT_CERTS)) &&
-	    !readable(certs = lazyaf("%s%s", myappdata, ROOT_CERTS)) &&
-	    (commonappdata == NULL ||
-	     !readable(certs = lazyaf("%s%s", commonappdata, ROOT_CERTS)))) {
+	    !readable(certs = lazyaf("%s%s", instdir, ROOT_CERTS))) {
 	    popup_an_error("No %s found", ROOT_CERTS);
 	    goto fail;
 	}

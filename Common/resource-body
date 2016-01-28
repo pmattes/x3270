@@ -362,7 +362,7 @@ description
     a certificate presented by the host during SSL negotiation.
 if w
     There is no default directory. The default is to use the file
-    <tt>root_certs.txt</tt> in in the wc3270 AppData directory.
+    <tt>root_certs.txt</tt> in in the wc3270 install directory.
 else
     The default is determined by the OpenSSL library on your workstation.
 endif
@@ -378,7 +378,7 @@ description
     validate a certificate presented by the host during SSL negotiation.
 if w
     The default is to use the file <tt>root_certs.txt</tt> in in the wc3270
-    AppData directory.
+    install directory.
 else
     The default is determined by the OpenSSL library on your workstation.
 endif
@@ -1687,8 +1687,9 @@ if c
     location, nor does it have a special suffix, so %-keymap% can specify the
     full pathname of the keymap file.
 else
-    Keymap files are located in the %p% Application
-    Data directory, and have the suffix <b>.wc3270km</b>.
+    Keymap files are located in the wc3270 documents directory
+    (usually <b>My Documents\wc3270</b>)
+    and have the suffix <b>.wc3270km</b>.
 endif
 endif
 .
@@ -3010,10 +3011,10 @@ if u
 default /tmp
 endif
 if wc
-default Current user's Desktop
+default current user's Desktop
 endif
 if ws
-default wc3270 AppData directory
+default current directory
 endif
 desc
     Defines the directory that trace files are written into.

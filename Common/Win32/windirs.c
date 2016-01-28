@@ -141,6 +141,8 @@ getcwd_bsl(void)
  * @param[out] common_appdata	common app-data directory (or NULL)
  * @param[out] documents	My Documents directory (or NULL)
  * @param[out] common_docunents	common Documents directory (or NULL)
+ * @param[out] docs3270		My Documents\{appname} directory (or NULL)
+ * @param[out] common_docs3270	common Documents\{appname} directory (or NULL)
  * @param[out] flags 		Is the program installed? Does catf,exe exist?
  *
  * @returns true for success, false for an unrecoverable error.
@@ -153,12 +155,15 @@ getcwd_bsl(void)
 bool
 get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 	char **appdata, char **common_desktop, char **common_appdata,
-	char **documents, char **common_documents, unsigned *flags)
+	char **documents, char **common_documents,
+	char **docs3270, char **common_docs3270,
+	unsigned *flags)
 {
     char **xappdata = appdata;
     char **common_xappdata = common_appdata;
     bool is_installed = false;
     HRESULT r;
+    char *d, *cd;
 
     if (flags != NULL) {
 	*flags = 0;
@@ -321,46 +326,71 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 
     /* Get the Documents directories. */
 
-    if (documents != NULL) {
-	*documents = malloc(MAX_PATH + 1);
-	if (*documents == NULL) {
+    if (documents != NULL || docs3270 != NULL) {
+	d = malloc(MAX_PATH + 1);
+	if (d == NULL) {
 	    return false;
 	}
-	r = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT,
-		            *documents);
+	r = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, d);
 	if (r != S_OK) {
-	    free(*documents);
-	    *documents = NULL;
+	    free(d);
+	    d = NULL;
 	} else {
-	    strcat(*documents, "\\");
+	    strcat(d, "\\");
+	}
+	if (documents != NULL) {
+	    *documents = d;
 	}
     }
-    if (common_documents != NULL) {
-	*common_documents = malloc(MAX_PATH);
-	if (*common_documents == NULL) {
+    if (common_documents != NULL || common_docs3270 != NULL) {
+	cd = malloc(MAX_PATH);
+	if (cd == NULL) {
 	    return false;
 	}
 	r = SHGetFolderPath(NULL, CSIDL_COMMON_DOCUMENTS, NULL,
-		SHGFP_TYPE_CURRENT, *common_documents);
+		SHGFP_TYPE_CURRENT, cd);
 	if (r != S_OK) {
-	    free(*common_documents);
-	    *common_documents = NULL;
+	    free(cd);
+	    cd = NULL;
 	} else {
-	    strcat(*common_documents, "\\");
+	    strcat(cd, "\\");
 	}
+	if (common_documents != NULL) {
+	    *common_documents = cd;
+	}
+    }
+    if (d != NULL && docs3270 != NULL) {
+	size_t sl = strlen(d) + strlen(appname) + 2;
+
+	*docs3270 = malloc(sl);
+	if (*docs3270 == NULL) {
+	    return false;
+	}
+	snprintf(*docs3270, sl, "%s%s\\", d, appname);
+    }
+    if (cd != NULL && common_docs3270 != NULL) {
+	size_t sl = strlen(cd) + strlen(appname) + 2;
+	*common_docs3270 = malloc(sl);
+	if (*common_docs3270 == NULL) {
+	    return false;
+	}
+	snprintf(*common_docs3270, sl, "%s%s\\", cd, appname);
     }
 
 #if defined(DEBUG) /*[*/
     printf("get_dirs: instdir '%s', desktop '%s', appdata '%s', "
 	    "common_desktop '%s', common_appdata '%s' "
-	    "documents '%s', common_documents '%s'\n",
+	    "documents '%s', common_documents '%s' "
+	    "docs3270 '%s', common_docs3270 '%s'\n",
 	    instdir? *instdir: "(none)",
 	    desktop? *desktop: "(none)",
 	    appdata? *appdata: "(none)",
 	    common_desktop? *common_desktop: "(none)",
 	    common_appdata? *common_appdata: "(none)",
 	    documents? *documents: "(none)",
-	    common_documents? *common_documents: "(none)");
+	    common_documents? *common_documents: "(none)",
+	    docs3270? *docs3270: "(none)",
+	    common_docs3270? *common_docs3270: "(none)");
     printf("Enter...");
     fflush(stdout);
     (void) getchar();

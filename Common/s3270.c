@@ -81,9 +81,9 @@
 
 #if defined(_WIN32) /*[*/
 char *instdir = NULL;
-char *myappdata = NULL;
-char *commonappdata = NULL;
 char *mydesktop = NULL;
+char *mydocs3270 = NULL;
+char *commondocs3270 = NULL;
 unsigned windirs_flags;
 #endif /*]*/
 
@@ -118,8 +118,8 @@ main(int argc, char *argv[])
 
 #if defined(_WIN32) /*[*/
     (void) get_version_info();
-    if (!get_dirs(argv[0], "wc3270", &instdir, NULL, &myappdata, NULL,
-		&commonappdata, NULL, NULL, &windirs_flags)) {
+    if (!get_dirs(argv[0], "wc3270", &instdir, NULL, NULL, NULL, NULL, NULL,
+		NULL, NULL, NULL, &windirs_flags)) {
 	exit(1);
     }
     if (sockstart() < 0) {
