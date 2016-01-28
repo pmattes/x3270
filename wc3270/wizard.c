@@ -240,6 +240,7 @@ static void write_user_settings(char *us, FILE *f);
 static void display_sessions(bool with_numbers);
 static ws_t write_shortcut(const session_t *s, bool ask, src_t src,
 	const char *path, bool change_shortcut);
+static void create_wc3270_folder(const char *parent);
 
 static sw_t do_upgrade(void);
 
@@ -3922,10 +3923,12 @@ Edit Session\n");
 	    }
 	} else if (src == SRC_ALL) {
 	    /* All users. */
+	    create_wc3270_folder(common_documents);
 	    snprintf(path, MAX_PATH, "%s%s%s", common_docs3270, session.session,
 		    SESS_SUFFIX);
 	} else if (src == SRC_CURRENT) {
 	    /* Current user. */
+	    create_wc3270_folder(documents);
 	    snprintf(path, MAX_PATH, "%s%s%s", docs3270, session.session,
 		    SESS_SUFFIX);
 	} /* else keep path as-is */
@@ -4205,6 +4208,8 @@ wc3270." ResConsoleColorForHostColor "NeutralWhite: 0\n");
     write_user_settings(us, f);
 
     fclose(f);
+
+    printf("Wrote session file %s.\n", path);
 
     return 0;
 }
