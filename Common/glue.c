@@ -521,6 +521,8 @@ static opt_t base_opts[] = {
     "<name>", "Use host ECBDIC character set (code page) <name>"},
 { OptClear,    OPT_SKIP2,   false, NULL,         NULL,
     "<toggle>", "Turn on <toggle>" },
+{ OptConnectTimeout, OPT_INT,false,ResConnectTimeout,aoffset(connect_timeout),
+    "<seconds>", "Timeout for host connect requests" },
 { OptDevName,  OPT_STRING,  false, ResDevName,   aoffset(devname),
     "<name>", "Device name (workstation ID) for RFC 4777" },
 #if defined(LOCAL_PROCESS) /*[*/
@@ -991,6 +993,7 @@ static res_t base_resources[] = {
     { ResCharset,	aoffset(charset),	XRM_STRING },
     { ResColor8,	aoffset(color8),	XRM_BOOLEAN },
     { ResConfDir,	aoffset(conf_dir),	XRM_STRING },
+    { ResConnectTimeout,aoffset(connect_timeout),XRM_INT },
     { ResCrosshairColor,aoffset(interactive.crosshair_color),	XRM_STRING },
     { ResDbcsCgcsgid, aoffset(dbcs_cgcsgid),	XRM_STRING },
     { ResDftBufferSize,aoffset(ft.dft_buffer_size_bc),XRM_INT },/* deprecated */

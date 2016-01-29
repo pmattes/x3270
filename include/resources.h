@@ -68,6 +68,7 @@
 #define ResComposeMap		"composeMap"
 #define ResConfDir		"confDir"
 #define ResConnectFileName	"connectFileName"
+#define ResConnectTimeout	"connectTimeout"
 #define ResConsoleColorForHostColor "consoleColorForHostColor"
 #define ResCrosshair		"crosshair"
 #define ResCrosshairColor	"crosshairColor"
@@ -245,6 +246,7 @@
 #define DotCharClass		"." ResCharClass
 #define DotCharset		"." ResCharset
 #define DotColorScheme		"." ResColorScheme
+#define DotConnectTimeout	"." ResConnectTimeout
 #define DotDevName		"." ResDevName
 #define DotDsTrace		"." ResDsTrace
 #define DotEmulatorFont		"." ResEmulatorFont
@@ -317,6 +319,7 @@
 #define ClsComposeMap		"ComposeMap"
 #define ClsConfDir		"ConfDir"
 #define ClsConnectFileName	"ConnectFileName"
+#define ClsConnectTimeout	"ConnectTimeout"
 #define ClsCrosshair		"Crosshair"
 #define ClsCrosshairColor	"CrosshairColor"
 #define ClsCursorBlink		"CursorBlink"
@@ -463,6 +466,7 @@
 #define OptCharset		"-charset"
 #define OptClear		"-clear"
 #define OptColorScheme		"-scheme"
+#define OptConnectTimeout	"-connecttimeout"
 #define OptDefaultFgBg		"-defaultfgbg"
 #define OptDefScreen		"-defscreen"
 #define OptDevName		"-devname"

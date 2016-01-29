@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2016 Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -151,6 +151,7 @@ static int      syncing;
 #if !defined(_WIN32) /*[*/
 static ioid_t output_id = NULL_IOID;
 #endif /*]*/
+static ioid_t	connect_timeout_id = NULL_IOID;	/* explicit Connect timeout */
 static char     ttype_tmpval[13];
 
 static unsigned short e_xmit_seq; /* transmit sequence number */
@@ -379,6 +380,15 @@ popup_a_sockerr(const char *fmt, ...)
 }
 #endif /*]*/
 
+/* The host connection timed out. */
+static void
+connect_timed_out(ioid_t id _is_unused)
+{
+    popup_an_error("Host connection timed out");
+    connect_timeout_id = NULL_IOID;
+    host_disconnect(true);
+}
+
 /* Connect to one of the addresses in haddr[]. */
 static iosrc_t
 connect_to(int ix, bool noisy, bool *pending)
@@ -444,12 +454,7 @@ connect_to(int ix, bool noisy, bool *pending)
 #endif /*]*/
 
 	/* set the socket to be non-delaying */
-#if defined(_WIN32) /*[*/
-	if (non_blocking(false) < 0)
-#else /*][*/
-	if (non_blocking(true) < 0)
-#endif /*]*/
-	{
+	if (non_blocking(true) < 0) {
 		close_fail;
 	}
 
@@ -469,6 +474,12 @@ connect_to(int ix, bool noisy, bool *pending)
 		sizeof(pn), &errmsg)) {
 	vtrace("Trying %s, port %s...\n", hn, pn);
 	telnet_gui_connecting(hn, pn);
+    }
+
+    /* Set an explicit timeout, if configured. */
+    if (appres.connect_timeout) {
+	connect_timeout_id = AddTimeOut(appres.connect_timeout * 1000,
+		connect_timed_out);
     }
 
     /* connect */
@@ -923,6 +934,12 @@ check_cert_name(void)
 static void
 net_connected(void)
 {
+    /* Cancel the timeout. */
+    if (connect_timeout_id != NULL_IOID) {
+	RemoveTimeOut(connect_timeout_id);
+	connect_timeout_id = NULL_IOID;
+    }
+
     /*
      * If the connection went through on the first connect() call, then
      * our state is NOT_CONNECTED, so host_disconnect() will not call back
@@ -1144,6 +1161,12 @@ net_disconnect(void)
     sock_handle = INVALID_HANDLE_VALUE;
 #endif /*]*/
     vtrace("SENT disconnect\n");
+
+    /* Cancel the timeout. */
+    if (connect_timeout_id != NULL_IOID) {
+	RemoveTimeOut(connect_timeout_id);
+	connect_timeout_id = NULL_IOID;
+    }
 
     /* We're not connected to an LU any more. */
     status_lu(NULL);

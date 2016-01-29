@@ -93,6 +93,7 @@ typedef struct {
     bool	 nvt_mode;
     char	*suppress_actions;
     char	*min_version;
+    int		 connect_timeout;
 #if defined(_WIN32) /*[*/
     int		 local_cp;
     int		 ft_cp;

@@ -618,6 +618,18 @@ description
     of %p% that run under the same username.
 .
 
+name connectTimeout
+applies a
+type i
+groups c
+switch -connecttimeout
+description
+    Specifies a timeout, in seconds, that %p% will wait for a host connection
+    to complete. If this is not set, the timeout will be determined by the
+    operating system. Note that %p% will wait for the lesser of the two times
+    (the specified timeout and the system-defined timeout).
+.
+
 name consoleColorForHostColor0 consoleColorForHostColorNeutralBlack consoleColorForHostColor1 consoleColorForHostColorBlue consoleColorForHostColor2 consoleColorForHostColorRed consoleColorForHostColor3 consoleColorForHostColorPink consoleColorForHostColor4 consoleColorForHostColorGreen consoleColorForHostColor5 consoleColorForHostColorTurquoise consoleColorForHostColor6 consoleColorForHostColorYellow consoleColorForHostColor7 consoleColorForHostColorNeutralWhite consoleColorForHostColor8 consoleColorForHostColorBlack consoleColorForHostColor9 consoleColorForHostColorDeepBlue consoleColorForHostColor10 consoleColorForHostColorOrange consoleColorForHostColor12 consoleColorForHostColorPurple consoleColorForHostColor13 consoleColorForHostColorPaleGreen consoleColorForHostColor14 consoleColorForHostColorPaleTurquoise consoleColorForHostColor15 consoleColorForHostColorGrey consoleColorForHostColor16 consoleColorForHostColorWhite
 applies wc
 groups a

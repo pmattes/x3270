@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2016 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -112,6 +112,8 @@ XtResource resources[] = {
       offset(suppress_actions), XtRString, 0 },
     { ResCrosshairColor, ClsCrosshairColor, XtRString, sizeof(String),
       offset(interactive.crosshair_color), XtRString, "purple" },
+    { ResConnectTimeout, ClsConnectTimeout, XtRInt, sizeof(int),
+      offset(connect_timeout), XtRString, "0" },
 
     { ResErase, ClsErase, XtRString, sizeof(char *),
       offset(linemode.erase), XtRString, "^?" },

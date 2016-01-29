@@ -166,6 +166,9 @@ define(XX_TOGGLEREFNM,`ifelse(XX_PRODUCT,x3270,MENUS,TOGGLES)')dnl
 XX_HO(`The list of toggle names is under XX_LINK(`#'XX_TOGGLEREF,XX_SM(XX_TOGGLEREFNM))
 below.
 ')dnl
+XX_TP(XX_FB(XX_DASHED(connecttimeout)) XX_FI(seconds))
+Specifies the time that XX_PRODUCT will wait for a host connection to
+complete.
 ifelse(XX_PRODUCT,c3270,
 `XX_TP(XX_FB(XX_DASHED(defaultfgbg)))
 Causes XX_PRODUCT to use the XX_POSESSIVE(terminal) default foreground color
