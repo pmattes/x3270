@@ -136,6 +136,19 @@ static char dxl[] = "0123456789abcdef";
 
 #define KYBDLOCK_IS_OERR	(kybdlock && !(kybdlock & ~KL_OERR_MASK))
 
+/* Common kybdlock logic for actions that clear overflows */
+#define OERR_CLEAR_OR_ENQ(action) do { \
+    if (kybdlock) { \
+	if (KYBDLOCK_IS_OERR) { \
+	    kybdlock_clr(KL_OERR_MASK, action); \
+	    status_reset(); \
+	} else { \
+	    enq_ta(action, NULL, NULL); \
+	    return true; \
+	} \
+    } \
+} while(false)
+
 static action_t Attn_action;
 static action_t BackSpace_action;
 static action_t BackTab_action;
@@ -1680,15 +1693,7 @@ Tab_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    if (kybdlock) {
-	if (KYBDLOCK_IS_OERR) {
-	    kybdlock_clr(KL_OERR_MASK, "Tab");
-	    status_reset();
-	} else {
-	    enq_ta("Tab", NULL, NULL);
-	    return true;
-	}
-    }
+    OERR_CLEAR_OR_ENQ("Tab");
     if (IN_NVT) {
 	net_sendc('\t');
 	return true;
@@ -1712,15 +1717,7 @@ BackTab_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    if (kybdlock) {
-	if (KYBDLOCK_IS_OERR) {
-	    kybdlock_clr(KL_OERR_MASK, "BackTab");
-	    status_reset();
-	} else {
-	    enq_ta("BackTab", NULL, NULL);
-	    return true;
-	}
-    }
+    OERR_CLEAR_OR_ENQ("BackTab");
     if (!IN_3270) {
 	return false;
     }
@@ -1856,10 +1853,7 @@ Home_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    if (kybdlock) {
-	enq_ta("Home", NULL, NULL);
-	return true;
-    }
+    OERR_CLEAR_OR_ENQ("Home");
     if (IN_NVT) {
 	nvt_send_home();
 	return true;
@@ -1904,15 +1898,7 @@ Left_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    if (kybdlock) {
-	if (KYBDLOCK_IS_OERR) {
-	    kybdlock_clr(KL_OERR_MASK, "Left");
-	    status_reset();
-	} else {
-	    enq_ta("Left", NULL, NULL);
-	    return true;
-	}
-    }
+    OERR_CLEAR_OR_ENQ("Left");
     if (IN_NVT) {
 	nvt_send_left();
 	return true;
@@ -2173,15 +2159,7 @@ Right_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    if (kybdlock) {
-	if (KYBDLOCK_IS_OERR) {
-	    kybdlock_clr(KL_OERR_MASK, "Right");
-	    status_reset();
-	} else {
-	    enq_ta("Right", NULL, NULL);
-	    return true;
-	}
-    }
+    OERR_CLEAR_OR_ENQ("Right");
     if (IN_NVT) {
 	nvt_send_right();
 	return true;
@@ -2215,15 +2193,7 @@ Left2_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    if (kybdlock) {
-	if (KYBDLOCK_IS_OERR) {
-	    kybdlock_clr(KL_OERR_MASK, "Left2");
-	    status_reset();
-	} else {
-	    enq_ta("Left2", NULL, NULL);
-	    return true;
-	}
-    }
+    OERR_CLEAR_OR_ENQ("Left2");
     if (IN_NVT) {
 	return false;
     }
@@ -2329,15 +2299,7 @@ Right2_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    if (kybdlock) {
-	if (KYBDLOCK_IS_OERR) {
-	    kybdlock_clr(KL_OERR_MASK, "Right2");
-	    status_reset();
-	} else {
-	    enq_ta("Right2", NULL, NULL);
-	    return true;
-	}
-    }
+    OERR_CLEAR_OR_ENQ("Right2");
     if (IN_NVT) {
 	return false;
     }
@@ -2486,15 +2448,7 @@ Up_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    if (kybdlock) {
-	if (KYBDLOCK_IS_OERR) {
-	    kybdlock_clr(KL_OERR_MASK, "Up");
-	    status_reset();
-	} else {
-	    enq_ta("Up", NULL, NULL);
-	    return true;
-	}
-    }
+    OERR_CLEAR_OR_ENQ("Up");
     if (IN_NVT) {
 	nvt_send_up();
 	return true;
@@ -2521,15 +2475,7 @@ Down_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    if (kybdlock) {
-	if (KYBDLOCK_IS_OERR) {
-	    kybdlock_clr(KL_OERR_MASK, "Down");
-	    status_reset();
-	} else {
-	    enq_ta("Down", NULL, NULL);
-	    return true;
-	}
-    }
+    OERR_CLEAR_OR_ENQ("Down");
     if (IN_NVT) {
 	nvt_send_down();
 	return true;
@@ -2823,15 +2769,7 @@ EraseEOF_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    if (kybdlock) {
-	if (KYBDLOCK_IS_OERR) {
-	    kybdlock_clr(KL_OERR_MASK, "EraseEOF");
-	    status_reset();
-	} else {
-	    enq_ta("EraseEOF", NULL, NULL);
-	    return true;
-	}
-    }
+    OERR_CLEAR_OR_ENQ("EraseEOF");
     if (IN_NVT) {
 	return false;
     }
@@ -2885,10 +2823,7 @@ EraseInput_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    if (kybdlock) {
-	enq_ta("EraseInput", NULL, NULL);
-	return true;
-    }
+    OERR_CLEAR_OR_ENQ("EraseInput");
     if (IN_NVT) {
 	return false;
     }
@@ -2956,10 +2891,7 @@ DeleteWord_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    if (kybdlock) {
-	enq_ta("DeleteWord", NULL, NULL);
-	return true;
-    }
+    OERR_CLEAR_OR_ENQ("DeleteWord");
     if (IN_NVT) {
 	linemode_send_werase();
 	return true;
@@ -3027,10 +2959,7 @@ DeleteField_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    if (kybdlock) {
-	enq_ta("DeleteField", NULL, NULL);
-	return true;
-    }
+    OERR_CLEAR_OR_ENQ("DeleteField");
     if (IN_NVT) {
 	linemode_send_kill();
 	return true;
@@ -3070,15 +2999,7 @@ Insert_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    if (kybdlock) {
-	if (KYBDLOCK_IS_OERR) {
-	    kybdlock_clr(KL_OERR_MASK, "Insert");
-	    status_reset();
-	} else {
-	    enq_ta("Insert", NULL, NULL);
-	    return true;
-	}
-    }
+    OERR_CLEAR_OR_ENQ("Insert");
     if (IN_NVT) {
 	return false;
     }
@@ -3098,15 +3019,7 @@ ToggleInsert_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    if (kybdlock) {
-	if (KYBDLOCK_IS_OERR) {
-	    kybdlock_clr(KL_OERR_MASK, "ToggleInsert");
-	    status_reset();
-	} else {
-	    enq_ta("ToggleInsert", NULL, NULL);
-	    return true;
-	}
-    }
+    OERR_CLEAR_OR_ENQ("ToggleInsert");
     if (IN_NVT) {
 	return false;
     }
@@ -3158,10 +3071,7 @@ FieldEnd_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
     reset_idle_timer();
-    if (kybdlock) {
-	enq_ta("FieldEnd", NULL, NULL);
-	return true;
-    }
+    OERR_CLEAR_OR_ENQ("FieldEnd");
     if (IN_NVT) {
 	return false;
     }
