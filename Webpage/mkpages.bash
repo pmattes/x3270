@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Create new-style x3270 webpages, using a common template.
+# Create x3270 webpages, using a common template.
 . ./version.txt
 if [ "X$1" = "X-g" ]
 then	geo_sub="http://x3270.bgp.nu/"
@@ -140,4 +140,4 @@ EOF
  </body>
 </html>
 EOF
-) | sed "s~@HOME@~${geo_sub}~g" >$outfile
+) | sed -e "s~@HOME@~${geo_sub}~g" -e "s/@VERSION@/$version/g" >$outfile

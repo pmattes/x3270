@@ -10,6 +10,84 @@
 
 	<h1>suite3270 Build and Install Instructions</h1>
 
+	<h2>Windows Version Upgrades</h2>
+	Release 3.5alpha5 stopped the use of the wc3270 AppData folders. When
+	upgrading from an earlier release to 3.5alpha5 or later, any files
+	in an wc3270 AppData folder must be copied elsewhere (usually onto
+	the user's Desktop or My Documents folder). An Upgrade Wizard will be
+	run automatically to handle this, allowing user control over where the
+	files are copied. (Note that with unattended installation, the Upgrade
+	Wizard will <b>not</b> be run.)
+	<p>
+	Release 3.5alpha4 was the first with 64-bit Windows support. When
+	upgrading from an earlier release to 3.5alpha4 or later on 64-bit
+	Windows, the earlier 32-bit version must be uninstalled before 64-bit
+	installation can proceed. This will be done automatically by the 64-bit
+	installer (with the user's permission; if installing unattended, it
+	will always be performed).
+	<h2>Windows Installer Options</h2>
+	The Windows installer for wc3270 uses Inno Setup. Complete
+	documentation for the command-line options is here:
+	<p><a href="http://www.jrsoftware.org/ishelp/index.php?topic=setupcmdline">http://www.jrsoftware.org/ishelp/index.php?topic=setupcmdline</a>
+	<p>Options of interest are:</p>
+	<table cols=2 width="75%">
+	    <tr>
+		<th>Option</th>
+		<th>Purpose</th>
+	    </tr>
+	    <tr>
+		<td>/SILENT</td>
+		<td>Run the installer without user interation</td>
+	    </tr>
+	    <tr>
+		<td>/COMPONENTS="component,component..."</td>
+		<td>Install only specific <a href="#components">components</a></td>
+	    </td>
+	    <tr>
+		<td>/TASKS="task,task..."</td>
+		<td>Perform only specific install <a href="#tasks">tasks</a></td>
+	    </td>
+	</table>
+	<p>By default, all components are installed. The set of components
+	   that can be specified are:</p>
+	<a name="components"></a><table cols=2 width="75%">
+	    <tr>
+		<th>Component</th>
+		<th>Definition</th>
+	    </tr>
+	    <tr>
+		<td>base</td>
+		<td>wc3270.exe (interactive emulator)<br>
+		    wpr3287.exe (printer session emulator)<br>
+		    catf.exe (helper program for displaying trace files)<br>
+		    root_certs.txt (root CA certificate database)</td>
+	    </tr>
+	    <tr>
+		<td>wizard</td>
+		<td>wc3270wiz.exe (Session Wizard)</td>
+	    </tr>
+	    <tr>
+		<td>ws3270</td>
+		<td>ws3270.exe (scripting emulator)<br>
+		    x3270if.exe (command-line interface to ws3270 and wc3270 scrpting)</td>
+	    </tr>
+	    <tr>
+		<td>help</td>
+		<td>HTML documentation</td>
+	    </tr>
+	</table>
+	<p>By default, all tasks are performed. The set of tasks that can be specified are:</p>
+	<a name="tasks"><table cols=2 width="75%">
+	    <tr>
+		<th>Task</th>
+		<th>Definition</th>
+	    </tr>
+	    <tr>
+		<td>desktopicons</td>
+		<td>Create desktop shortcuts to wc3270 and the Session Wizard<br>
+		    To turn off this task, specify TASKS="!desktopicons"</td>
+	    </tr>
+	</table>
 	<h2>Building on Unix or Cygwin</h2>
 	To build the entire 3270 emulation suite, including native Unix
 	programs and cross-compiled Windows programs, use:  
