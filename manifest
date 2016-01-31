@@ -171,7 +171,7 @@ Common/util.c
 Common/varbuf.c
 Common/Win32/gdi_print.c
 Common/Win32/mkversion.c
-Common/Win32/root_certs.txt
+Common/Win32/root_certs.txt.in
 Common/Win32/snprintf.c
 Common/Win32/w3misc.c
 Common/Win32/windirs.c
@@ -286,6 +286,7 @@ lib/32xx/Makefile.in
 lib/32xx/Makefile.obj.in
 lib/configure
 lib/configure.in
+lib/include/localdefs.h
 lib/include/unix/conf.h.in
 lib/include/windows/conf.h
 lib/Makefile.aux

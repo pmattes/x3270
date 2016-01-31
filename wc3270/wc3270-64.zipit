@@ -24,5 +24,5 @@ F ../obj/win64/wc3270/wc3270wiz.exe wc3270wiz.exe
 F ../obj/win64/wpr3287/wpr3287.exe wpr3287.exe
 F ../obj/win64/ws3270/ws3270.exe ws3270.exe
 F ../obj/win64/ws3270/x3270if.exe x3270if.exe
-F root_certs.txt
+F ../obj/win64/wc3270/root_certs.txt root_certs.txt
 F ../obj/win64/wc3270/catf.exe catf.exe

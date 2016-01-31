@@ -3,7 +3,7 @@
 # Update the Windows root certificates file.
 
 CA_DIR=/usr/share/ca-certificates
-TXT=wc3270/root_certs.txt
+TXT=Common/Win32/root_certs.txt.in
 
 if [ ! -f $TXT ]
 then	echo "Must run from top of tree."

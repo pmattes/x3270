@@ -189,6 +189,7 @@ do
 		if [ "$islinux" ]
 		then	make -j4 CDEBUGFLAGS="-g $xflags -Werror"
 		else	make -j4
+			make -j4 WIN64=1
 		fi
 		if [ -f $d2/instlist.base ]
 		then	echo "===== Installing $prod (base)."
@@ -213,7 +214,7 @@ done
 if [ "$winrel" ]
 then	echo "===== Building setup.exe and noinstall.zip."
 	cd $builddir
-	make -f Makefile.aux windows-release
+	make -f Makefile.aux -j4 windows-release
 fi
 
 # Release each product.
