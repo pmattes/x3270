@@ -33,7 +33,7 @@ endif
 top = ../../..
 this = $(top)/wpr3287
 
-export VPATH = $(this):$(top)/Common/pr3287:$(top)/Common
+export VPATH = $(this):$(top)/Common/pr3287:$(top)/Common:$(top)/Common/Win32
 export TOP = $(top)
 export THIS = $(this)
 

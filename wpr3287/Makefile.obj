@@ -49,7 +49,7 @@ endif
 W = w
 include libs.mk
 
-all: wpr3287.exe
+all: wpr3287.exe root_certs.txt
 
 XVERSION = xversion.c
 version.o: mkversion.sh $(VOBJS) version.txt
@@ -63,6 +63,10 @@ wpr3287res.o: wpr3287.rc pr3287.ico
 
 wpr3287.exe: $(OBJECTS) $(DEP32XX)
 	$(CC) -o wpr3287.exe $(CFLAGS) $(OBJECTS) $(LD32XX) $(LIBS)
+
+root_certs.txt: root_certs.txt.in
+	@$(RM) $@
+	cp $< $@
 
 clean:
 	rm -f *.o

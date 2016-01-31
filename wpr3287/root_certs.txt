@@ -1,1 +1,0 @@
-../wc3270/root_certs.txt

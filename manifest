@@ -171,6 +171,7 @@ Common/util.c
 Common/varbuf.c
 Common/Win32/gdi_print.c
 Common/Win32/mkversion.c
+Common/Win32/root_certs.txt
 Common/Win32/snprintf.c
 Common/Win32/w3misc.c
 Common/Win32/windirs.c
@@ -518,7 +519,6 @@ wc3270/relink.c
 wc3270/relinkc.h
 wc3270/resource-body
 wc3270/resources.inc
-wc3270/root_certs.txt
 wc3270/screen.c
 wc3270/select.c
 wc3270/shortcut.c

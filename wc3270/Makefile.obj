@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2009, 2013-2015 Paul Mattes.
+# Copyright (c) 2007-2009, 2013-2016 Paul Mattes.
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,7 @@ WIZLIBS = $(LD32XX) -lole32 -luuid -lwinspool
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
 PROGS = wc3270.exe mkshort.exe wc3270wiz.exe catf.exe ead3270.exe
-all: $(PROGS)
+all: $(PROGS) root_certs.txt
 
 wc3270.exe : XCPPFLAGS += -DWIN32_LEAN_AND_MEAN
 
@@ -86,6 +86,10 @@ wc3270res.o: wc3270.rc wc3270.ico
 
 wc3270.exe: $(OBJECTS) Makefile $(DEP3270) $(DEP3270I) $(DEP3270STUBS) $(DEP32XX)
 	$(CC) -o wc3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD3270I) $(LD32XX) $(LD3270STUBS) $(LIBS)
+
+root_certs.txt: root_certs.txt.in
+	@$(RM) $@
+	cp $< $@
 
 mkshort.exe: mkshort.o shortcut.o $(DEP32XX)
 	$(CC) -o mkshort.exe $(CFLAGS) mkshort.o shortcut.o $(SHRTLIBS)

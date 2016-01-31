@@ -52,7 +52,7 @@ SHRTLIBS = -lole32 -luuid
 DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
 
 PROGS = ws3270.exe x3270if.exe
-all: $(PROGS)
+all: $(PROGS) root_certs.txt
 
 XVERSION = xversion.c
 version.o: mkversion.sh $(VOBJS) version.txt
@@ -74,6 +74,10 @@ ws3270res.o: ws3270.rc ws3270.ico Makefile
 
 ws3270.exe: $(OBJECTS) Makefile $(DEP3270) $(DEP32XX) $(DEP3270STUBS)
 	$(CC) -o ws3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LIBS)
+
+root_certs.txt: root_certs.txt.in
+	@$(RM) $@
+	cp $< $@
 
 x3270if.exe: x3270if.o $(DEP32XX)
 	$(CC) -o $@ $(CFLAGS) x3270if.o $(LD32XX) -lws2_32
