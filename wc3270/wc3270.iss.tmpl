@@ -138,6 +138,11 @@ Root: HKCR; Subkey: "wc3270"; ValueType: string; ValueName: ""; ValueData: "wc32
 Root: HKCR; Subkey: "wc3270\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\wc3270.exe,0"
 Root: HKCR; Subkey: "wc3270\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\wc3270.exe"" ""%1"""
 Root: HKCR; Subkey: "wc3270\shell\edit\command"; ValueType: string; ValueName: ""; ValueData: """{app}\wc3270wiz.exe"" -e ""%1"""; Components: wizard
+Root: HKCR; Subkey: ".wc3270km"; ValueType: string; ValueName: ""; ValueData: "wc3270 keymap"; Flags: uninsdeletevalue
+Root: HKCR; Subkey: "wc3270 keymap"; ValueType: string; ValueName: ""; ValueData: "wc3270 emulator keymap"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "wc3270 keymap\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\wc3270.exe,1"
+Root: HKCR; Subkey: "wc3270 keymap\shell\open\command"; ValueType: string; ValueName: ""; ValueData: "notepad.exe ""%1"""
+Root: HKCR; Subkey: "wc3270 keymap\shell\edit\command"; ValueType: string; ValueName: ""; ValueData: "notepad.exe ""%1"""
 
 [Run]
 Filename: "{app}\wc3270wiz.exe"; Description: "{cm:LaunchProgram,Session Wizard}"; Components: wizard; Flags: nowait postinstall skipifsilent
@@ -145,7 +150,7 @@ Filename: "{cmd}"; Parameters: {code:MyHelp}; Description: "{cm:LaunchProgram,On
 Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""{commondesktop}\wc3270.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: desktopicons
 Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""{commondesktop}\Session Wizard.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: desktopicons; Components: wizard
 ; Run the upgrade wizard.
-Filename: "{app}\wc3270wiz.exe.exe"; Parameters: "-U"; Flags: nowait skipifsilent; Components: wizard
+Filename: "{app}\wc3270wiz.exe"; Parameters: "-U"; Flags: nowait skipifsilent; Components: wizard
 
 [UninstallDelete]
 Type: files; Name: "{commondesktop}\wc3270.lnk"; Tasks: desktopicons

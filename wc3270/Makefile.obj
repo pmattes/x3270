@@ -81,7 +81,7 @@ compiled_keypad.h: keypad.full keypad.labels keypad.map keypad.outline keypad.ca
 $(MKKEYPAD): mkkeypad.c
 	$(NATIVECC) -MMD -MP -I$(THIS) -o $@ $^
 
-wc3270res.o: wc3270.rc wc3270.ico
+wc3270res.o: wc3270.rc wc3270.ico wc3270km.ico
 	$(WINDRES) -i $< -o $@
 
 wc3270.exe: $(OBJECTS) Makefile $(DEP3270) $(DEP3270I) $(DEP3270STUBS) $(DEP32XX)
