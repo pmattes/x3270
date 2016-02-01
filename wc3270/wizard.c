@@ -235,8 +235,8 @@ typedef struct {	/* Set of existing sessions: */
     int count;		/*  count */
     xs_t *list;		/*  list of sessions */
 } xsb_t;
-static xsb_t xs_current;	/* current-user sessions */
-static xsb_t xs_all;		/* all-users sessions */
+static xsb_t xs_my;	/* current-user sessions */
+static xsb_t xs_public;	/* public sessions */
 
 static session_t empty_session;
 
@@ -244,7 +244,7 @@ static void write_user_settings(char *us, FILE *f);
 static void display_sessions(bool with_numbers);
 static ws_t write_shortcut(const session_t *s, bool ask, src_t src,
 	const char *path, bool change_shortcut);
-static void create_wc3270_folder(const char *parent);
+static void create_wc3270_folder(src_t src);
 
 static sw_t do_upgrade(void);
 
@@ -2398,12 +2398,13 @@ miscellaneous resources in your session file.");
 
     t = _tempnam(NULL, "w3270wiz");
     if (t == NULL) {
-	printf("Error creating temporary session file name.\n");
+	fprintf(stderr, "Error creating temporary session file name.\n");
 	goto failed;
     }
     f = fopen(t, "w");
     if (f == NULL) {
-	printf("Error creating temporary session file.\n");
+	fprintf(stderr, "Error creating temporary session file: %s\n",
+		strerror(errno));
 	goto failed;
     }
     fprintf(f, "! Comment lines begin with '!', like this one.\n\
@@ -2421,12 +2422,13 @@ miscellaneous resources in your session file.");
 
     f = fopen(t, "r");
     if (f == NULL) {
-	printf("Error reading back temporary session file.\n");
+	fprintf(stderr, "Error reading back temporary session file: %s\n",
+		strerror(errno));
 	goto failed;
     }
     new_us = NULL;
     if (read_user_settings(f, &new_us) == 0) {
-	printf("Error reading back temporary session file.\n");
+	fprintf(stderr, "Error reading back temporary session file.\n");
 	goto failed;
     }
     fclose(f);
@@ -2473,33 +2475,35 @@ static src_t
 get_src(const char *name, src_t def)
 {
     char ac[STR_SIZE];
-    bool all = (def == SRC_PUBLIC_DOCUMENTS);
+    src_t src_out = def;
 
     /* Ask where they want the file. */
     for (;;) {
-	printf("\nCreate '%s' for all users or current user '%s'? "
-		"(all/current) [%s] ",
-		name, username, all? "all": "current");
+	printf("\nCreate '%s' in My Documents or Public Documents? "
+		"(my/public) [%s] ",
+		name, (def == SRC_PUBLIC_DOCUMENTS)? "public": "my");
 	fflush(stdout);
 	if (get_input(ac, STR_SIZE) == NULL) {
 	    return SRC_ERR;
 	} else if (!ac[0]) {
 	    break;
-	} else if (!strncasecmp(ac, "all", strlen(ac))) {
-	    all = true;
+	} else if (!strncasecmp(ac, "public", strlen(ac))) {
+	    src_out = SRC_PUBLIC_DOCUMENTS;
 	    break;
-	} else if (!strncasecmp(ac, "current", strlen(ac)) ||
+	} else if (!strncasecmp(ac, "my", strlen(ac)) ||
 		   !strcasecmp(ac, username)) {
-	    all = false;
+	    src_out = SRC_DOCUMENTS;
 	    break;
 	} else if (!strncasecmp(ac, "quit", strlen(ac))) {
 	    return SRC_NONE;
 	} else {
-	    printf("\nPlease answer (a)ll or (c)urrent.");
+	    printf("\nPlease answer 'my' or 'public'.");
 	}
     }
 
-    return all? SRC_PUBLIC_DOCUMENTS : SRC_DOCUMENTS;
+    /* Make sure the subfolder exists. */
+    create_wc3270_folder(src_out);
+    return src_out;
 }
 
 /**
@@ -3051,14 +3055,19 @@ display_sessions(bool with_numbers)
     for (i = 0; (n = xs_name(i + 1, NULL)) != NULL; i++) {
 	size_t slen;
 
-	if (i == 0 && xs_current.count != 0) {
-	    printf("Sessions for user '%s':\n", username);
-	} else if (i == xs_current.count) {
+	if (i == 0 && xs_my.count != 0) {
+	    printf("Sessions for user '%s'in %.*s:\n",
+		    username,
+		    (int)(strlen(documents_wc3270) - 1),
+		    documents_wc3270);
+	} else if (i == xs_my.count) {
 	    if (col) {
 		printf("\n");
 		col = 0;
 	    }
-	    printf("Sessions for all users:\n");
+	    printf("Sessions for all users in %.*s:\n",
+		    (int)(strlen(public_documents_wc3270) - 1),
+		    public_documents_wc3270);
 	}
 
 	slen = strlen(n);
@@ -3426,8 +3435,9 @@ rename_or_copy_session(int argc, char **argv, bool is_rename, char *result,
     /* Read in the existing session. */
     f = fopen(from_path, "r");
     if (f == NULL) {
-	perror(from_path);
-	return -1;
+	fprintf(stderr, "Cannot open %s for reading: %s\n", from_path,
+		strerror(errno));
+	goto failed;
     }
     if (!read_session(f, &s, &us)) {
 	fclose(f);
@@ -3557,7 +3567,8 @@ Create Shortcut\n");
 
     f = fopen(from_path, "r");
     if (f == NULL) {
-	perror(from_path);
+	fprintf(stderr, "Cannot open %s for reading: %s\n", from_path,
+		strerror(errno));
 	goto failed;
     } else if (!read_session(f, &s, NULL)) {
 	fclose(f);
@@ -3618,7 +3629,7 @@ xs_init_type(const char *dirname, xsb_t *xsb, src_t location)
 		int skip = 0;
 		xs_t *xsc;
 
-		for (xsc = xs_current.list; xsc != NULL; xsc = xsc->next) {
+		for (xsc = xs_my.list; xsc != NULL; xsc = xsc->next) {
 		    char *n = xsc->name;
 
 		    if (strlen(n) == nlen && !strncasecmp(n, sname, nlen)) {
@@ -3689,13 +3700,13 @@ free_xs(xsb_t *xsb)
 static void
 xs_init(void)
 {
-    free_xs(&xs_current);
-    free_xs(&xs_all);
+    free_xs(&xs_my);
+    free_xs(&xs_public);
     num_xs = 0;
 
-    xs_init_type(searchdir, &xs_current, SRC_DOCUMENTS);
-    xs_init_type(public_searchdir, &xs_all, SRC_PUBLIC_DOCUMENTS);
-    num_xs = xs_current.count + xs_all.count;
+    xs_init_type(searchdir, &xs_my, SRC_DOCUMENTS);
+    xs_init_type(public_searchdir, &xs_public, SRC_PUBLIC_DOCUMENTS);
+    num_xs = xs_my.count + xs_public.count;
 }
 
 /**
@@ -3711,7 +3722,7 @@ xs_name(int n, src_t *lp)
 {
     xs_t *xs;
 
-    for (xs = xs_current.list; xs != NULL; xs = xs->next) {
+    for (xs = xs_my.list; xs != NULL; xs = xs->next) {
 	if (!--n) {
 	    if (lp != NULL) {
 		*lp = xs->location;
@@ -3719,7 +3730,7 @@ xs_name(int n, src_t *lp)
 	    return xs->name;
 	}
     }
-    for (xs = xs_all.list; xs != NULL; xs = xs->next) {
+    for (xs = xs_public.list; xs != NULL; xs = xs->next) {
 	if (!--n) {
 	    if (lp != NULL) {
 		*lp = xs->location;
@@ -3972,12 +3983,12 @@ Edit Session\n");
 	    }
 	} else if (src == SRC_PUBLIC_DOCUMENTS) {
 	    /* All users. */
-	    create_wc3270_folder(public_documents);
+	    create_wc3270_folder(src);
 	    snprintf(path, MAX_PATH, "%s%s%s", public_documents_wc3270,
 		    session.session, SESS_SUFFIX);
 	} else if (src == SRC_DOCUMENTS) {
 	    /* Current user. */
-	    create_wc3270_folder(documents);
+	    create_wc3270_folder(src);
 	    snprintf(path, MAX_PATH, "%s%s%s", documents_wc3270, session.session,
 		    SESS_SUFFIX);
 	} else if (src == SRC_PUBLIC_DESKTOP) {
@@ -3996,7 +4007,7 @@ Edit Session\n");
 	    }
 	    goto failed;
 	}
-	snprintf(result, result_size, "Wrote session '%s'.", session.session);
+	snprintf(result, result_size, "Created session '%s'.", session.session);
 	if (us != NULL) {
 	    free(us);
 	    us = NULL;
@@ -4127,15 +4138,15 @@ write_session_file(const session_t *session, char *us, const char *path)
 
     /* Make sure the wc3270 subdirectory exists. */
     if (!strncasecmp(path, documents_wc3270, strlen(documents_wc3270))) {
-	create_wc3270_folder(documents);
+	create_wc3270_folder(SRC_DOCUMENTS);
     } else if (!strncasecmp(path, public_documents_wc3270,
 		strlen(public_documents_wc3270))) {
-	create_wc3270_folder(public_documents);
+	create_wc3270_folder(SRC_PUBLIC_DOCUMENTS);
     }
 
     f = fopen(path, "w+");
     if (f == NULL) {
-	printf("Cannot create session file: %s", strerror(errno));
+	printf("Cannot create session file %s: %s", path, strerror(errno));
 	return -1;
     }
 
@@ -4486,8 +4497,9 @@ wwrite(FILE *f, wchar_t *s)
 
 /* Create a wc3270 folder. */
 static void
-create_wc3270_folder(const char *parent)
+create_wc3270_folder(src_t src)
 {
+    char *parent = (src == SRC_DOCUMENTS)? documents: public_documents;
     char wc3270_dir[MAX_PATH];
     char desktop_ini[MAX_PATH];
     char wc3270_exe[MAX_PATH];
@@ -4518,8 +4530,9 @@ create_wc3270_folder(const char *parent)
 	FILE *f = fopen(desktop_ini, "wb");
 
 	if (f == NULL) {
-	    perror(desktop_ini);
-	    exit(1);
+	    fprintf(stderr, "Cannot create %s: %s\n", desktop_ini,
+		    strerror(errno));
+	    return;
 	}
 	fwrite("\xff\xfe", 1, 2, f); /* BOM */
 	wwrite(f, L"[.ShellClassInfo]\r\n");
@@ -4536,7 +4549,7 @@ create_wc3270_folder(const char *parent)
 	if (!SetFileAttributes(desktop_ini,
 		    FILE_ATTRIBUTE_SYSTEM|FILE_ATTRIBUTE_HIDDEN)) {
 	    fprintf(stderr, "SetFileAttributes(%s) failed", desktop_ini);
-	    exit(1);
+	    return;
 	}
     }
 }
@@ -4570,9 +4583,9 @@ copy_session(xs_t *xs)
 	size_t sl;
 
 	printf("\n\
-Copy session to current user's My Documents, all-users Documents or neither?\n\
- (current/all/neither) [%s] ",
-		xs->location == SRC_DOCUMENTS? "current": "all");
+Copy session to My Documents, Public Documents or neither?\n\
+ (my/public/neither) [%s] ",
+		xs->location == SRC_DOCUMENTS? "my": "public");
 	if (!get_input(answer, sizeof(answer))) {
 	    return SW_ERR;
 	}
@@ -4586,15 +4599,15 @@ Copy session to current user's My Documents, all-users Documents or neither?\n\
 	if (!strncasecmp(answer, "neither", sl)) {
 	    return SW_SUCCESS;
 	}
-	if (!strncasecmp(answer, "current", sl)) {
+	if (!strncasecmp(answer, "my", sl)) {
 	    to_src = SRC_DOCUMENTS;
 	    break;
 	}
-	if (!strncasecmp(answer, "all", sl)) {
+	if (!strncasecmp(answer, "public", sl)) {
 	    to_src = SRC_PUBLIC_DOCUMENTS;
 	    break;
 	}
-	printf("Please answer current, all or neither.\n");
+	printf("Please answer 'my', 'public' or 'neither'.\n");
     } while (true);
 
     snprintf(from_path, MAX_PATH, "%s%s.wc3270",
@@ -4621,18 +4634,14 @@ Copy session to current user's My Documents, all-users Documents or neither?\n\
 
     f = fopen(from_path, "r");
     if (f == NULL) {
-	fprintf(stderr, "Can't open %s for reading: %s\n",
+	fprintf(stderr, "Cannot open %s for reading: %s\n",
 		from_path, strerror(errno));
 	return SW_ERR;
     }
-    if (to_src == SRC_DOCUMENTS) {
-	create_wc3270_folder(documents);
-    } else {
-	create_wc3270_folder(public_documents);
-    }
+    create_wc3270_folder(to_src);
     g = fopen(to_path, "w");
     if (g == NULL) {
-	fprintf(stderr, "Can't open %s for writing: %s\n", to_path,
+	fprintf(stderr, "Cannot open %s for writing: %s\n", to_path,
 		strerror(errno));
 	fclose(f);
 	return SW_ERR;
@@ -4719,20 +4728,22 @@ copy_one_keymap(const char *from_dir, const char *to_dir, const char *name,
 
     /* Create the documents folder. */
     if (!strcasecmp(to_dir, documents_wc3270)) {
-	create_wc3270_folder(documents);
+	create_wc3270_folder(SRC_DOCUMENTS);
     } else {
-	create_wc3270_folder(public_documents);
+	create_wc3270_folder(SRC_PUBLIC_DOCUMENTS);
     }
 
     /* Copy. */
     f = fopen(from_path, "r");
     if (f == NULL) {
-	perror(from_path);
+	fprintf(stderr, "Cannot open %s for reading: %s\n", from_path,
+		strerror(errno));
 	return SW_ERR;
     }
     g = fopen(to_path, "w");
     if (g == NULL) {
-	perror(to_path);
+	fprintf(stderr, "Cannot open %s for reading: %s\n", to_path,
+		strerror(errno));
 	fclose(f);
 	return SW_ERR;
     }
@@ -4829,7 +4840,7 @@ do_upgrade(void)
 	    }
 	}
     }
-    if (!xs_current.count && !xs_all.count && !nkm) {
+    if (!xs_my.count && !xs_public.count && !nkm) {
 	return SW_QUIT;
     }
 
@@ -4847,9 +4858,9 @@ are kept on desktops or in Documents folders, and keymaps are kept in Documents\
 folders.\n\n\
 The following files were found in wc3270 AppData folders:\n",
 	    wversion);
-    if (xs_current.count || xs_all.count)
+    if (xs_my.count || xs_public.count)
     {
-	int nxs = xs_current.count + xs_all.count;
+	int nxs = xs_my.count + xs_public.count;
 
 	printf(" %d session file%s\n", nxs, (nxs != 1)? "s": "");
 	nf = nxs;
@@ -4871,13 +4882,13 @@ The following files were found in wc3270 AppData folders:\n",
     printf("\n");
 
     /* Copy each session file. */
-    for (xs = xs_current.list; xs != NULL; xs = xs->next) {
+    for (xs = xs_my.list; xs != NULL; xs = xs->next) {
 	rc = copy_session(xs);
 	if (rc != SW_SUCCESS) {
 	    return rc;
 	}
     }
-    for (xs = xs_all.list; xs != NULL; xs = xs->next) {
+    for (xs = xs_public.list; xs != NULL; xs = xs->next) {
 	rc = copy_session(xs);
 	if (rc != SW_SUCCESS) {
 	    return rc;
