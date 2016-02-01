@@ -120,8 +120,10 @@ typedef enum {
 
 /* Return value from edit_menu(). */
 typedef enum {
-    SRC_ALL,		/* success, in all-users Docs */
-    SRC_CURRENT,	/* success, in current user's Docs */
+    SRC_PUBLIC_DOCUMENTS,/* success, in public Documents\wc3270 */
+    SRC_DOCUMENTS,	/* success, in My Documents\wc3270 */
+    SRC_PUBLIC_DESKTOP,	/* success, on public Desktop */
+    SRC_DESKTOP,	/* success, on Desktop */
     SRC_OTHER,		/* not sure where the file is */
     SRC_NONE,		/* don't rewrite the file */
     SRC_ERR = -1	/* error */
@@ -205,15 +207,17 @@ static struct {
 
 static int write_session_file(const session_t *s, char *us, const char *path);
 
-static char *mya = NULL;
-static char *installdir = NULL;
-static char *desktop = NULL;
-static char *common_desktop = NULL;
-static char *commona = NULL;
-static char *documents;
-static char *common_documents;
-static char *docs3270;	/* where my wc3270 docs are */
-static char *common_docs3270;	/* where common wc3270 docs are */
+static char *appdata_wc3270 = NULL;	/* user's wc3270 AppData directory */
+static char *common_appdata_wc3270 = NULL;/* common wc327 AppData directory */
+static char *installdir = NULL;		/* installation directory */
+static char *desktop = NULL;		/* Desktop */
+static char *public_desktop = NULL;	/* Public Desktop */
+static char *documents;			/* My Documents directory */
+static char *public_documents;		/* public Documents directory */
+static char *documents_wc3270;		/* My Documents\wc3270 directory */
+static char *public_documents_wc3270;	/* public Documents\wc3270 directory */
+static char *searchdir;			/* where to look for current user's sessions */
+static char *public_searchdir;		/* where to look for shared sessions */
 unsigned windirs_flags;
 static TCHAR username[UNLEN + 1];
 
@@ -309,10 +313,13 @@ getyn(int defval)
     if (!yn[0]) {
 	return defval;
     }
-
+    if (!strncasecmp(yn, "quit", strlen(yn))) {
+	return YN_ERR;
+    }
     if (!strncasecmp(yn, "yes", strlen(yn))) {
 	    return TRUE;
-    } else if (!strncasecmp(yn, "no", strlen(yn))) {
+    }
+    if (!strncasecmp(yn, "no", strlen(yn))) {
 	    return FALSE;
     }
 
@@ -405,9 +412,9 @@ typedef struct km {			/* Keymap: */
 	char *def_3270;			/*  Definition (3270 mode) */
 	char *def_nvt;			/*  Definition (NVT mode) */
 	src_t src;			/*  Where it is: */
-					/*   SRC_CURRENT per-user */
-					/*   SRC_ALL all-users */
-					/*   SRC_NON built-in */
+					/*   SRC_DOCUMENTS per-user */
+					/*   SRC_PUBLIC_DOCUMENTS all-users */
+					/*   SRC_NONE built-in */
 					/*   SRC_OTHER install dir */
 } km_t;
 km_t *km_first = NULL;
@@ -564,27 +571,25 @@ save_keymaps(void)
 	(void) save_keymap_name(NULL, builtin_keymaps[i].name,
 		builtin_keymaps[i].description, SRC_NONE);
     }
-    sprintf(dpath, "%s*%s", docs3270, KEYMAP_SUFFIX);
+    sprintf(dpath, "%s*%s", searchdir, KEYMAP_SUFFIX);
     h = FindFirstFile(dpath, &find_data);
     if (h != INVALID_HANDLE_VALUE) {
 	do {
-	    sprintf(fpath, "%s%s", docs3270, find_data.cFileName);
+	    sprintf(fpath, "%s%s", searchdir, find_data.cFileName);
 	    (void) save_keymap_name(fpath, find_data.cFileName, NULL,
-		    SRC_CURRENT);
+		    SRC_DOCUMENTS);
 	} while (FindNextFile(h, &find_data) != 0);
 	FindClose(h);
     }
-    if (common_docs3270 != NULL) {
-	sprintf(dpath, "%s*%s", common_docs3270, KEYMAP_SUFFIX);
-	h = FindFirstFile(dpath, &find_data);
-	if (h != INVALID_HANDLE_VALUE) {
-	    do {
-		sprintf(fpath, "%s%s", common_docs3270, find_data.cFileName);
-		(void) save_keymap_name(fpath, find_data.cFileName, NULL,
-			SRC_ALL);
-	    } while (FindNextFile(h, &find_data) != 0);
-	    FindClose(h);
-	}
+    sprintf(dpath, "%s*%s", public_searchdir, KEYMAP_SUFFIX);
+    h = FindFirstFile(dpath, &find_data);
+    if (h != INVALID_HANDLE_VALUE) {
+	do {
+	    sprintf(fpath, "%s%s", public_searchdir, find_data.cFileName);
+	    (void) save_keymap_name(fpath, find_data.cFileName, NULL,
+		    SRC_PUBLIC_DOCUMENTS);
+	} while (FindNextFile(h, &find_data) != 0);
+	FindClose(h);
     }
     sprintf(dpath, "%s*%s", installdir, KEYMAP_SUFFIX);
     h = FindFirstFile(dpath, &find_data);
@@ -890,45 +895,57 @@ one. It also lets you create or replace a shortcut on the desktop.\n");
  * @param[in] session_name	Name of session
  * @param[out] path		Returned pathname
  *
- * @return SRC_XXX enumeration:
- * 	   SRC_CURRENT session is in current user's Docs directory
- * 	   SRC_ALL session is in all-users Docs directory
- * 	   SRC_OTHER session is somewhere else
+ * @return SRC_XXX enumeration
  */
 static src_t
 find_session_file(const char *session_name, char *path)
 {
-    /* Try user's Docs. */
-    snprintf(path, MAX_PATH, "%s%s%s", docs3270, session_name, SESS_SUFFIX);
+
+    /* Try the user's My Documents\wc3270. */
+    snprintf(path, MAX_PATH, "%s%s%s", documents_wc3270, session_name,
+	    SESS_SUFFIX);
     if (access(path, R_OK) == 0) {
-	return SRC_CURRENT;
+	return SRC_DOCUMENTS;
     }
 
-    /* Not there.  Try common Docs. */
-    if (common_docs3270 != NULL) {
-	snprintf(path, MAX_PATH, "%s%s%s", common_docs3270, session_name, SESS_SUFFIX);
-	if (access(path, R_OK) == 0) {
-	    return SRC_ALL;
-	}
+    /* Try the public Documents\wc3270. */
+    snprintf(path, MAX_PATH, "%s%s%s", public_documents_wc3270,
+	    session_name, SESS_SUFFIX);
+    if (access(path, R_OK) == 0) {
+	return SRC_PUBLIC_DOCUMENTS;
     }
 
-    /* Not there.  Try installdir. */
+    /* Try the user's Desktop. */
+    snprintf(path, MAX_PATH, "%s%s%s", desktop, session_name, SESS_SUFFIX);
+    if (access(path, R_OK) == 0) {
+	return SRC_DESKTOP;
+    }
+
+    /* Try the public Desktop. */
+    snprintf(path, MAX_PATH, "%s%s%s", public_desktop, session_name,
+	    SESS_SUFFIX);
+    if (access(path, R_OK) == 0) {
+	return SRC_PUBLIC_DESKTOP;
+    }
+
+    /* Try installdir. */
     snprintf(path, MAX_PATH, "%s%s%s", installdir, session_name, SESS_SUFFIX);
     if (access(path, R_OK) == 0) {
 	return SRC_OTHER;
     }
 
-    /* Not there.  Try cwd. */
+    /* Try cwd. */
     snprintf(path, MAX_PATH, "%s%s", session_name, SESS_SUFFIX);
     if (access(path, R_OK) == 0) {
 	return SRC_OTHER;
     }
 
     /*
-     * Put the new one in the user's Docs.
-     * I don't think this value is actually used.
+     * Put the new one in My Documents\wc3270.
+     * XXX: I don't think this value is actually used.
      */
-    snprintf(path, MAX_PATH, "%s%s%s", docs3270, session_name, SESS_SUFFIX);
+    snprintf(path, MAX_PATH, "%s%s%s", documents_wc3270, session_name,
+	    SESS_SUFFIX);
     return SRC_OTHER;
 }
 
@@ -1055,13 +1072,17 @@ get_session(const char *session_name, session_t *s, char **us, char *path,
 		 * Try to figure out where it is.  This is inherently
 		 * imperfect.
 		 */
-		if (!strncmp(path, docs3270, strlen(docs3270)) &&
-			path[strlen(docs3270)] == '\\') {
-		    *src = SRC_CURRENT;
-		} else if (common_docs3270 != NULL && !strncmp(path, common_docs3270,
-						    strlen(common_docs3270)) &&
-			path[strlen(common_docs3270)] == '\\') {
-		    *src = SRC_ALL;
+		if (!strncmp(path, documents_wc3270,
+			    strlen(documents_wc3270))) {
+		    *src = SRC_DOCUMENTS;
+		} else if (!strncmp(path, public_documents_wc3270,
+			    strlen(public_documents_wc3270))) {
+		    *src = SRC_PUBLIC_DOCUMENTS;
+		} else if (!strncmp(path, desktop, strlen(desktop))) {
+		    *src = SRC_DESKTOP;
+		} else if (!strncmp(path, public_desktop,
+			    strlen(public_desktop))) {
+		    *src = SRC_PUBLIC_DESKTOP;
 		} else {
 		    *src = SRC_OTHER;
 		}
@@ -1128,10 +1149,10 @@ shortcut.");
 	    for (;;) {
 		printf("\nSession '%s' exists", s->session);
 		switch (*src) {
-		case SRC_ALL:
+		case SRC_PUBLIC_DOCUMENTS:
 		    printf(" (defined for all users)");
 		    break;
-		case SRC_CURRENT:
+		case SRC_DOCUMENTS:
 		    printf(" (defined for user '%s')", username);
 		    break;
 		default:
@@ -2452,28 +2473,33 @@ static src_t
 get_src(const char *name, src_t def)
 {
     char ac[STR_SIZE];
+    bool all = (def == SRC_PUBLIC_DOCUMENTS);
 
     /* Ask where they want the file. */
     for (;;) {
 	printf("\nCreate '%s' for all users or current user '%s'? "
 		"(all/current) [%s] ",
-		name, username, (def == SRC_CURRENT)? "current": "all");
+		name, username, all? "all": "current");
 	fflush(stdout);
 	if (get_input(ac, STR_SIZE) == NULL) {
 	    return SRC_ERR;
 	} else if (!ac[0]) {
-	    return def;
+	    break;
 	} else if (!strncasecmp(ac, "all", strlen(ac))) {
-	    return SRC_ALL;
+	    all = true;
+	    break;
 	} else if (!strncasecmp(ac, "current", strlen(ac)) ||
 		   !strcasecmp(ac, username)) {
-	    return SRC_CURRENT;
+	    all = false;
+	    break;
 	} else if (!strncasecmp(ac, "quit", strlen(ac))) {
 	    return SRC_NONE;
 	} else {
 	    printf("\nPlease answer (a)ll or (c)urrent.");
 	}
     }
+
+    return all? SRC_PUBLIC_DOCUMENTS : SRC_DOCUMENTS;
 }
 
 /**
@@ -2716,6 +2742,10 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		done = 1;
 		break;
 	    }
+	    if (!strncasecmp(choicebuf, "quit", strlen(choicebuf))) {
+		ret = SRC_ERR;
+		goto done;
+	    }
 	    switch (atoi(choicebuf)) {
 	    case MN_HOST:
 		if (get_host(s) < 0) {
@@ -2935,16 +2965,23 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 
     /* If creating, ask where they want it written. */
     if (how == SP_CREATE) {
-	ret = get_src(session_name, SRC_CURRENT);
+	ret = get_src(session_name, SRC_DOCUMENTS);
 	goto done;
     }
 
     /* Return where the file ended up. */
-    if (!strncasecmp(docs3270, path, strlen(docs3270))) {
-	ret = SRC_CURRENT;
+    if (!strncasecmp(documents_wc3270, path, strlen(documents_wc3270))) {
+	ret = SRC_DOCUMENTS;
 	goto done;
-    } else if (!strncasecmp(common_docs3270, path, strlen(common_docs3270))) {
-	ret = SRC_ALL;
+    } else if (!strncasecmp(public_documents_wc3270, path,
+		strlen(public_documents_wc3270))) {
+	ret = SRC_PUBLIC_DOCUMENTS;
+	goto done;
+    } else if (!strncasecmp(desktop, path, strlen(desktop))) {
+	ret = SRC_DESKTOP;
+	goto done;
+    } else if (!strncasecmp(public_desktop, path, strlen(public_desktop))) {
+	ret = SRC_PUBLIC_DESKTOP;
 	goto done;
     } else {
 	ret = SRC_OTHER;
@@ -3245,14 +3282,15 @@ Delete Session\n");
 	}
     }
 
-    snprintf(path, MAX_PATH, "%s%s%s", (l == SRC_CURRENT)? docs3270: common_docs3270,
+    snprintf(path, MAX_PATH, "%s%s%s",
+	    (l == SRC_DOCUMENTS)? documents_wc3270: public_documents_wc3270,
 	    name, SESS_SUFFIX);
     if (unlink(path) < 0) {
 	printf("\nDelete of '%s' failed: %s\n", path, strerror(errno));
 	goto failed;
     }
     snprintf(path, MAX_PATH, "%s%s.lnk",
-	    (l == SRC_CURRENT)? desktop: common_desktop, name);
+	    (l == SRC_DOCUMENTS)? desktop: public_desktop, name);
     if (access(path, R_OK) == 0 && unlink(path) < 0) {
 	printf("\nDelete of '%s' failed: %s\n", path, strerror(errno));
 	goto failed;
@@ -3359,22 +3397,25 @@ rename_or_copy_session(int argc, char **argv, bool is_rename, char *result,
     }
 
     switch (from_l) {
-    case SRC_ALL:
-	snprintf(from_path, MAX_PATH, "%s%s%s", common_docs3270, from_name,
-		SESS_SUFFIX);
+    case SRC_PUBLIC_DOCUMENTS:
+	snprintf(from_path, MAX_PATH, "%s%s%s", public_documents_wc3270,
+		from_name, SESS_SUFFIX);
 	break;
     default:
-    case SRC_CURRENT:
-	snprintf(from_path, MAX_PATH, "%s%s%s", docs3270, from_name, SESS_SUFFIX);
+    case SRC_DOCUMENTS:
+	snprintf(from_path, MAX_PATH, "%s%s%s", documents_wc3270, from_name,
+		SESS_SUFFIX);
 	break;
     }
 
     switch ((to_l = get_src(to_name, from_l))) {
-    case SRC_ALL:
-	snprintf(to_path, MAX_PATH, "%s%s%s", common_docs3270, to_name, SESS_SUFFIX);
+    case SRC_PUBLIC_DOCUMENTS:
+	snprintf(to_path, MAX_PATH, "%s%s%s", public_documents_wc3270, to_name,
+		SESS_SUFFIX);
 	break;
-    case SRC_CURRENT:
-	snprintf(to_path, MAX_PATH, "%s%s%s", docs3270, to_name, SESS_SUFFIX);
+    case SRC_DOCUMENTS:
+	snprintf(to_path, MAX_PATH, "%s%s%s", documents_wc3270, to_name,
+		SESS_SUFFIX);
 	break;
     case SRC_NONE:
 	return 0;
@@ -3412,7 +3453,8 @@ rename_or_copy_session(int argc, char **argv, bool is_rename, char *result,
 
     /* See about the shortcut as well. */
     snprintf(from_linkpath, sizeof(from_linkpath), "%s%s.lnk",
-	    (from_l == SRC_ALL)? common_desktop: desktop, from_name);
+	    (from_l == SRC_PUBLIC_DOCUMENTS)? public_desktop: desktop,
+	    from_name);
     if (access(from_linkpath, R_OK) == 0) {
 	for (;;) {
 	    gs_t rc;
@@ -3503,12 +3545,13 @@ Create Shortcut\n");
     }
 
     switch (l) {
-    case SRC_ALL:
-	snprintf(from_path, MAX_PATH, "%s%s%s", common_docs3270, name, SESS_SUFFIX);
+    case SRC_PUBLIC_DOCUMENTS:
+	snprintf(from_path, MAX_PATH, "%s%s%s", public_documents_wc3270, name,
+		SESS_SUFFIX);
 	break;
     default:
-    case SRC_CURRENT:
-	snprintf(from_path, MAX_PATH, "%s%s%s", docs3270, name, SESS_SUFFIX);
+    case SRC_DOCUMENTS:
+	snprintf(from_path, MAX_PATH, "%s%s%s", documents_wc3270, name, SESS_SUFFIX);
 	break;
     }
 
@@ -3571,7 +3614,7 @@ xs_init_type(const char *dirname, xsb_t *xsb, src_t location)
 	    sname = find_data.cFileName;
 	    nlen = strlen(sname) - strlen(SESS_SUFFIX);
 
-	    if (location == SRC_ALL) {
+	    if (location == SRC_PUBLIC_DOCUMENTS) {
 		int skip = 0;
 		xs_t *xsc;
 
@@ -3650,10 +3693,8 @@ xs_init(void)
     free_xs(&xs_all);
     num_xs = 0;
 
-    xs_init_type(docs3270, &xs_current, SRC_CURRENT);
-    if (common_docs3270 != NULL) {
-	xs_init_type(common_docs3270, &xs_all, SRC_ALL);
-    }
+    xs_init_type(searchdir, &xs_current, SRC_DOCUMENTS);
+    xs_init_type(public_searchdir, &xs_all, SRC_PUBLIC_DOCUMENTS);
     num_xs = xs_current.count + xs_all.count;
 }
 
@@ -3713,9 +3754,17 @@ write_shortcut(const session_t *s, bool ask, src_t src, const char *sess_path,
     int codepage = 0;
     HRESULT hres;
 
+    /* If writing to the desktop, don't ask about a shortcut. */
+    if (src == SRC_PUBLIC_DESKTOP ||
+	src == SRC_DESKTOP ||
+	!strncasecmp(sess_path, desktop, strlen(desktop)) ||
+	!strncasecmp(sess_path, public_desktop, strlen(public_desktop))) {
+	return WS_NOP;
+    }
+
     /* Ask about the shortcut. */
     sprintf(linkpath, "%s%s.lnk",
-	    (src == SRC_ALL)? common_desktop: desktop,
+	    (src == SRC_PUBLIC_DOCUMENTS)? public_desktop: desktop,
 	    s->session);
     shortcut_exists = (access(linkpath, R_OK) == 0);
     if (ask) {
@@ -3921,15 +3970,21 @@ Edit Session\n");
 	    } else {
 		break;
 	    }
-	} else if (src == SRC_ALL) {
+	} else if (src == SRC_PUBLIC_DOCUMENTS) {
 	    /* All users. */
-	    create_wc3270_folder(common_documents);
-	    snprintf(path, MAX_PATH, "%s%s%s", common_docs3270, session.session,
-		    SESS_SUFFIX);
-	} else if (src == SRC_CURRENT) {
+	    create_wc3270_folder(public_documents);
+	    snprintf(path, MAX_PATH, "%s%s%s", public_documents_wc3270,
+		    session.session, SESS_SUFFIX);
+	} else if (src == SRC_DOCUMENTS) {
 	    /* Current user. */
 	    create_wc3270_folder(documents);
-	    snprintf(path, MAX_PATH, "%s%s%s", docs3270, session.session,
+	    snprintf(path, MAX_PATH, "%s%s%s", documents_wc3270, session.session,
+		    SESS_SUFFIX);
+	} else if (src == SRC_PUBLIC_DESKTOP) {
+	    snprintf(path, MAX_PATH, "%s%s%s", public_desktop, session.session,
+		    SESS_SUFFIX);
+	} else if (src == SRC_DESKTOP) {
+	    snprintf(path, MAX_PATH, "%s%s%s", desktop, session.session,
 		    SESS_SUFFIX);
 	} /* else keep path as-is */
 
@@ -4069,6 +4124,14 @@ write_session_file(const session_t *session, char *us, const char *path)
     unsigned long csum;
     int i;
     char buf[1024];
+
+    /* Make sure the wc3270 subdirectory exists. */
+    if (!strncasecmp(path, documents_wc3270, strlen(documents_wc3270))) {
+	create_wc3270_folder(documents);
+    } else if (!strncasecmp(path, public_documents_wc3270,
+		strlen(public_documents_wc3270))) {
+	create_wc3270_folder(public_documents);
+    }
 
     f = fopen(path, "w+");
     if (f == NULL) {
@@ -4285,9 +4348,9 @@ static void
 get_base_dirs(bool new_way)
 {
     if (!new_way) {
-	/* Old way: Use AppData. */
-	docs3270 = mya;
-	common_docs3270 = commona;
+	/* Old way: Use AppData instead of the Documents diretories. */
+	searchdir = appdata_wc3270;
+	public_searchdir = common_appdata_wc3270;
 	return;
     }
 }
@@ -4360,11 +4423,14 @@ main(int argc, char *argv[])
     }
 
     /* Get some paths from Windows. */
-    if (!get_dirs(program, "wc3270", &installdir, &desktop, &mya,
-		&common_desktop, &commona, &documents, &common_documents,
-		&docs3270, &common_docs3270, &windirs_flags)) {
+    if (!get_dirs(program, "wc3270", &installdir, &desktop, &appdata_wc3270,
+		&public_desktop, &common_appdata_wc3270, &documents,
+		&public_documents, &documents_wc3270, &public_documents_wc3270,
+		&windirs_flags)) {
 	return 1;
     }
+    searchdir = documents_wc3270;
+    public_searchdir = public_documents_wc3270;
     name_size = sizeof(username) / sizeof(TCHAR);
     if (GetUserName(username, &name_size) == 0) {
 	fprintf(stderr, "GetUserName failed, error %ld\n",
@@ -4475,7 +4541,7 @@ create_wc3270_folder(const char *parent)
     }
 }
 
-/* Copy one session file. */
+/* Copy one session file (Upgrade Wizard). */
 static sw_t
 copy_session(xs_t *xs)
 {
@@ -4484,15 +4550,15 @@ copy_session(xs_t *xs)
     char desktop_path[MAX_PATH];
     char from_path[MAX_PATH];
     char to_path[MAX_PATH];
-    static bool to_docs = false;
     session_t s;
     char exepath[MAX_PATH];
     char args[MAX_PATH];
     HRESULT hres;
     int rc;
+    src_t to_src = xs->location;
 
     printf("\nFound ");
-    if (xs->location == SRC_CURRENT) {
+    if (xs->location == SRC_DOCUMENTS) {
 	printf("user '%s'", username);
     } else {
 	printf("shared");
@@ -4503,15 +4569,10 @@ copy_session(xs_t *xs)
 	char answer[16];
 	size_t sl;
 
-	printf("\nCopy session to ");
-	if (xs->location == SRC_CURRENT) {
-	    printf("Desktop, My Documents");
-	} else {
-	    printf("Public Desktop, Public Documents");
-	}
-	printf(" folder or neither?\n\
- (desktop/documents/neither) [%s] ",
-		to_docs? "documents": "desktop");
+	printf("\n\
+Copy session to current user's My Documents, all-users Documents or neither?\n\
+ (current/all/neither) [%s] ",
+		xs->location == SRC_DOCUMENTS? "current": "all");
 	if (!get_input(answer, sizeof(answer))) {
 	    return SW_ERR;
 	}
@@ -4525,29 +4586,25 @@ copy_session(xs_t *xs)
 	if (!strncasecmp(answer, "neither", sl)) {
 	    return SW_SUCCESS;
 	}
-	if (sl >= 2 && !strncasecmp(answer, "desktop", sl)) {
-	    to_docs = false;
+	if (!strncasecmp(answer, "current", sl)) {
+	    to_src = SRC_DOCUMENTS;
 	    break;
 	}
-	if (sl >= 2 && !strncasecmp(answer, "documents", sl)) {
-	    to_docs = true;
+	if (!strncasecmp(answer, "all", sl)) {
+	    to_src = SRC_PUBLIC_DOCUMENTS;
 	    break;
 	}
-	printf("Please answer desktop, documents or neither.\n");
+	printf("Please answer current, all or neither.\n");
     } while (true);
 
     snprintf(from_path, MAX_PATH, "%s%s.wc3270",
-	    (xs->location == SRC_CURRENT)? mya: commona,
+	    (xs->location == SRC_DOCUMENTS)?
+		appdata_wc3270: common_appdata_wc3270,
 	    xs->name);
-    if (to_docs) {
-	snprintf(to_path, MAX_PATH, "%swc3270\\%s.wc3270",
-		(xs->location == SRC_CURRENT)? documents : common_documents,
-		xs->name);
-    } else {
-	snprintf(to_path, MAX_PATH, "%s%s.wc3270",
-		(xs->location == SRC_CURRENT)? desktop: common_desktop,
-		xs->name);
-    }
+    snprintf(to_path, MAX_PATH, "%s%s.wc3270",
+	    (to_src == SRC_DOCUMENTS)? documents_wc3270:
+				       public_documents_wc3270,
+	    xs->name);
 
     /* Check for overwrite. */
     if (access(to_path, R_OK) == 0) {
@@ -4564,12 +4621,19 @@ copy_session(xs_t *xs)
 
     f = fopen(from_path, "r");
     if (f == NULL) {
-	fprintf(stderr, "Can't open %s\n", from_path);
+	fprintf(stderr, "Can't open %s for reading: %s\n",
+		from_path, strerror(errno));
 	return SW_ERR;
+    }
+    if (to_src == SRC_DOCUMENTS) {
+	create_wc3270_folder(documents);
+    } else {
+	create_wc3270_folder(public_documents);
     }
     g = fopen(to_path, "w");
     if (g == NULL) {
-	fprintf(stderr, "Can't open %s\n", to_path);
+	fprintf(stderr, "Can't open %s for writing: %s\n", to_path,
+		strerror(errno));
 	fclose(f);
 	return SW_ERR;
     }
@@ -4580,12 +4644,8 @@ copy_session(xs_t *xs)
     fclose(g);
     printf("Copied %s to %s.\n", xs->name, to_path);
 
-    if (!to_docs) {
-	return SW_SUCCESS;
-    }
-
     snprintf(desktop_path, MAX_PATH, "%s%s",
-	    (xs->location == SRC_CURRENT)? desktop: common_desktop,
+	    (xs->location == SRC_DOCUMENTS)? desktop: public_desktop,
 	    xs->name);
 
     do {
@@ -4621,7 +4681,7 @@ copy_session(xs_t *xs)
     return SW_SUCCESS;
 }
 
-/* Copy one keymap. */
+/* Copy one keymap (Upgrade Wizard). */
 static sw_t
 copy_one_keymap(const char *from_dir, const char *to_dir, const char *name,
 	const char *suffix)
@@ -4655,6 +4715,13 @@ copy_one_keymap(const char *from_dir, const char *to_dir, const char *name,
 		return SW_ERR;
 	    }
 	} while (rc == YN_RETRY);
+    }
+
+    /* Create the documents folder. */
+    if (!strcasecmp(to_dir, documents_wc3270)) {
+	create_wc3270_folder(documents);
+    } else {
+	create_wc3270_folder(public_documents);
     }
 
     /* Copy. */
@@ -4693,17 +4760,17 @@ copy_keymaps(void)
 	char to_dir[MAX_PATH];
 
 	switch (km->src) {
-	case SRC_CURRENT:
-	    from_dir = mya;
+	case SRC_DOCUMENTS:
+	    from_dir = appdata_wc3270;
 	    snprintf(to_dir, MAX_PATH, "%swc3270\\", documents);
 	    break;
-	case SRC_ALL:
-	    from_dir = commona;
-	    snprintf(to_dir, MAX_PATH, "%swc3270\\", common_documents);
+	case SRC_PUBLIC_DOCUMENTS:
+	    from_dir = common_appdata_wc3270;
+	    snprintf(to_dir, MAX_PATH, "%swc3270\\", public_documents);
 	    break;
 	case SRC_OTHER:
 	    from_dir = installdir;
-	    snprintf(to_dir, MAX_PATH, "%swc3270\\", common_documents);
+	    snprintf(to_dir, MAX_PATH, "%swc3270\\", public_documents);
 	    break;
 	default:
 	    continue;
@@ -4745,7 +4812,7 @@ do_upgrade(void)
     FILE *f;
 
     /* If we did this before, we're done. */
-    snprintf(done_path, MAX_PATH, "%s%s", mya, DONE_FILE);
+    snprintf(done_path, MAX_PATH, "%s%s", appdata_wc3270, DONE_FILE);
     if (access(done_path, R_OK) == 0) {
 	fprintf(stderr, "Upgrade already performed.\n");
 	return SW_QUIT;
@@ -4802,10 +4869,6 @@ The following files were found in wc3270 AppData folders:\n",
     }
 
     printf("\n");
-
-    /* Create wc3270 folders. */
-    create_wc3270_folder(documents);
-    create_wc3270_folder(common_documents);
 
     /* Copy each session file. */
     for (xs = xs_current.list; xs != NULL; xs = xs->next) {
