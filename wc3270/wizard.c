@@ -4510,7 +4510,7 @@ create_wc3270_folder(src_t src)
     if (access(wc3270_dir, R_OK) != 0) {
 
 	/* Create the folder. */
-	if (mkdir(wc3270_dir) < 0) {
+	if (_mkdir(wc3270_dir) < 0) {
 	    fprintf(stderr, "Cannot create %s: %s\n", wc3270_dir,
 		    strerror(errno));
 	    exit(1);
