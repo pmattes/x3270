@@ -49,11 +49,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mkshort", "mkshort\mkshort.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "catf", "catf\catf.vcxproj", "{2BA5D6CF-59E7-4747-A8BF-A5A1DA3C2567}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ead3270", "ead3270\ead3270.vcxproj", "{D44F6B8C-03C0-41A4-946F-63D1A7C7AC6B}"
-	ProjectSection(ProjectDependencies) = postProject
-		{9403B3C3-2EA9-44F8-99D4-45DE7692BB1A} = {9403B3C3-2EA9-44F8-99D4-45DE7692BB1A}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libw3270", "libw3270\libw3270.vcxproj", "{7B2EBB95-B987-4FC6-BB3F-B7612B54BD00}"
 	ProjectSection(ProjectDependencies) = postProject
 		{07A63EBF-BCDC-40E7-B1EA-6384B461A448} = {07A63EBF-BCDC-40E7-B1EA-6384B461A448}
