@@ -4660,7 +4660,7 @@ create_wc3270_folder(src_t src)
 
 /* Copy one session file (Upgrade Wizard). */
 static sw_t
-copy_session(xs_t *xs)
+copy_session(xs_t *xs, int automatic)
 {
     FILE *f, *g;
     int c;
@@ -4674,45 +4674,47 @@ copy_session(xs_t *xs)
     int rc;
     src_t to_src = xs->location;
 
-    printf("\nFound ");
-    if (xs->location == SRC_DOCUMENTS) {
-	printf("user '%s'", username);
-    } else {
-	printf("shared");
+    if (!automatic) {
+	printf("\nFound ");
+	if (xs->location == SRC_DOCUMENTS) {
+	    printf("user '%s'", username);
+	} else {
+	    printf("shared");
+	}
+	printf(" session '%s'.", xs->name);
+
+	do {
+	    char answer[16];
+	    size_t sl;
+
+	    printf("\n\
+    Copy session to My Documents, Public Documents or neither?\n\
+     (my/public/neither) [%s] ",
+		    xs->location == SRC_DOCUMENTS? "my": "public");
+	    if (!get_input(answer, sizeof(answer))) {
+		return SW_ERR;
+	    }
+	    sl = strlen(answer);
+	    if (!sl) {
+		break;
+	    }
+	    if (!strncasecmp(answer, "quit", sl)) {
+		return SW_QUIT;
+	    }
+	    if (!strncasecmp(answer, "neither", sl)) {
+		return SW_SUCCESS;
+	    }
+	    if (!strncasecmp(answer, "my", sl)) {
+		to_src = SRC_DOCUMENTS;
+		break;
+	    }
+	    if (!strncasecmp(answer, "public", sl)) {
+		to_src = SRC_PUBLIC_DOCUMENTS;
+		break;
+	    }
+	    printf("Please answer 'my', 'public' or 'neither'.\n");
+	} while (true);
     }
-    printf(" session '%s'.", xs->name);
-
-    do {
-	char answer[16];
-	size_t sl;
-
-	printf("\n\
-Copy session to My Documents, Public Documents or neither?\n\
- (my/public/neither) [%s] ",
-		xs->location == SRC_DOCUMENTS? "my": "public");
-	if (!get_input(answer, sizeof(answer))) {
-	    return SW_ERR;
-	}
-	sl = strlen(answer);
-	if (!sl) {
-	    break;
-	}
-	if (!strncasecmp(answer, "quit", sl)) {
-	    return SW_QUIT;
-	}
-	if (!strncasecmp(answer, "neither", sl)) {
-	    return SW_SUCCESS;
-	}
-	if (!strncasecmp(answer, "my", sl)) {
-	    to_src = SRC_DOCUMENTS;
-	    break;
-	}
-	if (!strncasecmp(answer, "public", sl)) {
-	    to_src = SRC_PUBLIC_DOCUMENTS;
-	    break;
-	}
-	printf("Please answer 'my', 'public' or 'neither'.\n");
-    } while (true);
 
     snprintf(from_path, MAX_PATH, "%s%s.wc3270",
 	    (xs->location == SRC_DOCUMENTS)?
@@ -4755,22 +4757,30 @@ Copy session to My Documents, Public Documents or neither?\n\
     }
     fclose(f);
     fclose(g);
-    printf("Copied %s to %s.\n", xs->name, to_path);
+    printf("Copied session '%s' to %s.\n", xs->name, to_path);
 
     snprintf(desktop_path, MAX_PATH, "%s%s",
 	    (xs->location == SRC_DOCUMENTS)? desktop: public_desktop,
 	    xs->name);
 
-    do {
-	printf("\n%s desktop shortcut? (y/n) [y]: ",
-		(access(desktop_path, R_OK) == 0)? "Replace": "Create");
-	rc = getyn(TRUE);
-	if (rc == YN_ERR) {
-	    return SW_ERR;
-	} else if (rc == FALSE) {
+    if (automatic) {
+	/* Automatic -- replace the shortcut it if exists. */
+	if (access(desktop_path, R_OK) != 0) {
 	    return SW_SUCCESS;
 	}
-    } while (rc == YN_RETRY);
+    } else {
+	/* Manual -- ask. */
+	do {
+	    printf("\n%s desktop shortcut? (y/n) [y]: ",
+		    (access(desktop_path, R_OK) == 0)? "Replace": "Create");
+	    rc = getyn(TRUE);
+	    if (rc == YN_ERR) {
+		return SW_ERR;
+	    } else if (rc == FALSE) {
+		return SW_SUCCESS;
+	    }
+	} while (rc == YN_RETRY);
+    }
 
     /* Read in the session. */
     f = fopen(to_path, "r");
@@ -4815,7 +4825,7 @@ copy_one_keymap(const char *from_dir, const char *to_dir, const char *name,
 	int rc;
 
 	do {
-	    printf("\nOverwrite %s? (y/n) [y]: ", to_path);
+	    printf("\nReplace %s? (y/n) [y]: ", to_path);
 	    rc = getyn(TRUE);
 	    if (rc == TRUE) {
 		break;
@@ -4858,7 +4868,7 @@ copy_one_keymap(const char *from_dir, const char *to_dir, const char *name,
     /* Done. */
     fclose(f);
     fclose(g);
-    printf("Copied %s to %s.\n", from_path, to_path);
+    printf("Copied keymap '%s' to %s.\n", name, to_path);
     return SW_SUCCESS;
 }
 
@@ -4923,11 +4933,12 @@ do_upgrade(void)
     int nkm = 0;
     int nf = 0;
     int rc;
+    int automatic;
     xs_t *xs;
     FILE *f;
 
     /* If we did this before, we're done. */
-    snprintf(done_path, MAX_PATH, "%s%s", appdata_wc3270, DONE_FILE);
+    snprintf(done_path, MAX_PATH, "%s%s", common_appdata_wc3270, DONE_FILE);
     if (access(done_path, R_OK) == 0) {
 	fprintf(stderr, "Upgrade already performed.\n");
 	return SW_QUIT;
@@ -4974,26 +4985,50 @@ The following files were found in wc3270 AppData folders:\n",
 	nf += nkm;
     }
 
-    printf("\nCopy %s to new locations? (y/n) [y]: ",
-	    (nf == 1)? "this file": "these files");
-    rc = getyn(TRUE);
-    if (rc == YN_ERR) {
-	return SW_ERR;
-    } else if (rc == FALSE) {
-	return SW_SUCCESS;
+    while (true) {
+	printf("\nCopy %s to new locations? (y/n) [y]: ",
+		(nf == 1)? "this file": "these files");
+	rc = getyn(TRUE);
+	if (rc == YN_ERR) {
+	    return SW_ERR;
+	}
+	if (rc == FALSE) {
+	    return SW_SUCCESS;
+	}
+	if (rc == TRUE) {
+	    break;
+	}
     }
+    printf("\n\
+The files can be copied automatically, which means that:\n\
+- Session files and keymap files in your wc3270 AppDefaults folder will be\n\
+  copied to My Documents\n\
+- Session files and keymap files in the all-users wc3270 AppDefaults folder\n\
+  will be copied to Public Documents\n\
+- Existing desktop shortcuts will be re-written to point at the new sessions,\n\
+  which means that any customizations will be lost\n");
 
+    while (true) {
+	printf("\nCopy automatically? (y/n) [y]: ");
+	automatic = getyn(TRUE);
+	if (automatic == YN_ERR) {
+	    return SW_ERR;
+	}
+	if (automatic == TRUE || automatic ==FALSE) {
+	    break;
+	}
+    }
     printf("\n");
 
     /* Copy each session file. */
     for (xs = xs_my.list; xs != NULL; xs = xs->next) {
-	rc = copy_session(xs);
+	rc = copy_session(xs, automatic);
 	if (rc != SW_SUCCESS) {
 	    return rc;
 	}
     }
     for (xs = xs_public.list; xs != NULL; xs = xs->next) {
-	rc = copy_session(xs);
+	rc = copy_session(xs, automatic);
 	if (rc != SW_SUCCESS) {
 	    return rc;
 	}
@@ -5006,8 +5041,7 @@ The following files were found in wc3270 AppData folders:\n",
     }
 
     /* Don't do this again. */
-    f = fopen(done_path, "w");
-    if (f != NULL) {
+    if ((f = fopen(done_path, "w")) != NULL) {
 	fclose(f);
     }
 
