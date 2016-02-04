@@ -88,6 +88,8 @@ enum {
     MN_MODEL,		/* model number */
     MN_OVERSIZE,	/* oversize */
     MN_CHARSET,		/* character set */
+    MN_CROSSHAIR,	/* crosshair cursor */
+    MN_CURSORTYPE,	/* cursor type */
     MN_SSL,		/* SSL tunnel */
     MN_VERIFY,		/* verify host certificate */
     MN_PROXY,		/* use proxy host */
@@ -1573,6 +1575,85 @@ This specifies the EBCDIC character set (code page) used by the host.");
     return 0;
 }
 
+/**
+ * Prompt for crosshair cursor mode.
+ *
+ * @param[in,out] s	Session
+ *
+ * @return 0 for success, -1 for failure
+ */
+static int
+get_crosshair(session_t *s)
+{
+    int rc;
+
+    new_screen(s, NULL, "\
+Crosshair Cursor\n\
+\n\
+This option causes wc3270 to use a crosshair cursor.");
+
+    do {
+	printf("\nCrosshair cursor? [%s] ",
+		(s->flags & WF_CROSSHAIR)? "y" : "n");
+	fflush(stdout);
+	rc = getyn((s->flags & WF_CROSSHAIR) != 0);
+	switch (rc) {
+	case YN_ERR:
+	    return -1;
+	case TRUE:
+	    s->flags |= WF_CROSSHAIR;
+	    break;
+	case FALSE:
+	    s->flags &= ~WF_CROSSHAIR;
+	    break;
+	}
+    } while (rc < 0);
+    return 0;
+}
+
+/**
+ * Prompt for alternate cursor mode.
+ *
+ * @param[in,out] s	Session
+ *
+ * @return 0 for success, -1 for failure
+ */
+static int
+get_cursor_type(session_t *s)
+{
+    char inbuf[STR_SIZE];
+
+    new_screen(s, NULL, "\
+Cursor Type\n\
+\n\
+This option controls whether the wc3270 cursor is a block or an underscore.");
+
+    do {
+	printf("\nCursor type? (block/underscore) [%s] ",
+		(s->flags & WF_ALTCURSOR)? "underscore" : "block");
+	fflush(stdout);
+	if (get_input(inbuf, sizeof(inbuf)) == NULL) {
+	    return -1;
+	}
+	if (!inbuf[0]) {
+	    break;
+	}
+	if (!strncasecmp(inbuf, "quit", strlen(inbuf))) {
+	    return -1;
+	}
+	if (!strncasecmp(inbuf, "underscore", strlen(inbuf))) {
+	    s->flags |= WF_ALTCURSOR;
+	    break;
+	}
+	if (!strncasecmp(inbuf, "block", strlen(inbuf))) {
+	    s->flags &= ~WF_ALTCURSOR;
+	    break;
+	}
+	printf("\nPlease answer 'underscore' or 'block'.");
+    } while (true);
+    return 0;
+}
+
 #if defined(HAVE_LIBSSL) /*[*/
 /**
  * Prompt for SSL tunnel mode.
@@ -2671,6 +2752,11 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 	}
 	printf("%3d. Character Set .......... : %s (CP %s)\n",
 		MN_CHARSET, s->charset, cp);
+	printf("%3d. Crosshair Cursor ....... : %s\n",
+		MN_CROSSHAIR, (s->flags & WF_CROSSHAIR)? "Yes": "No");
+	printf("%3d. Cursor Type ............ : %s\n",
+		MN_CURSORTYPE, (s->flags & WF_ALTCURSOR)?
+		    "Underscore": "Block");
 #if defined(HAVE_LIBSSL) /*[*/
 	printf("%3d. SSL Tunnel ............. : %s\n", MN_SSL,
 		s->ssl? "Yes": "No");
@@ -2783,6 +2869,18 @@ edit_menu(session_t *s, char **us, sp_t how, const char *path,
 		break;
 	    case MN_CHARSET:
 		if (get_charset(s) < 0) {
+		    ret = SRC_ERR;
+		    goto done;
+		}
+		break;
+	    case MN_CROSSHAIR:
+		if (get_crosshair(s) < 0) {
+		    ret = SRC_ERR;
+		    goto done;
+		}
+		break;
+	    case MN_CURSORTYPE:
+		if (get_cursor_type(s) < 0) {
 		    ret = SRC_ERR;
 		    goto done;
 		}
@@ -4194,6 +4292,12 @@ write_session_file(const session_t *session, char *us, const char *path)
 		session->ov_cols, session->ov_rows);
     }
     fprintf(f, "wc3270.%s: %s\n", ResCharset, session->charset);
+    if (session->flags & WF_CROSSHAIR) {
+	fprintf(f, "wc3270.%s: %s\n", ResCrosshair, ResTrue);
+    }
+    if (session->flags & WF_ALTCURSOR) {
+	fprintf(f, "wc3270.%s: %s\n", ResAltCursor, ResTrue);
+    }
     if (session->is_dbcs) {
 	fprintf(f, "wc3270.%s: %s\n", ResAsciiBoxDraw, ResTrue);
     }

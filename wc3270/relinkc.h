@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2012, 2014 Paul Mattes.
+ * Copyright (c) 2006-2012, 2014, 2016 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -70,6 +70,8 @@ typedef struct {
 #define WF_NO_MENUBAR		0x08	/* don't leave room for menu bar */
 #define WF_VERIFY_HOST_CERTS	0x10	/* verify host certificate */
 #define WF_TRACE		0x20	/* trace at start-up */
+#define WF_CROSSHAIR		0x40	/* crosshair cursor */
+#define WF_ALTCURSOR		0x80	/* underscore cursor */
 
 typedef struct {
 	char *name;

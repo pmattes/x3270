@@ -192,6 +192,10 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
 	DWORD rv;
 
 	bsl = strrchr(argv0, '\\');
+	if (bsl == NULL) {
+	    /* Wine may pass us forward slashes. */
+	    bsl = strrchr(argv0, '/');
+	}
 	if (bsl != NULL) {
 	    /* argv0 contains a path. */
 	    tmp_instdir = malloc(strlen(argv0) + 1);
