@@ -423,9 +423,6 @@ tcl3270/x3270-script.man.m4
 VS2013/catf/catf.vcxproj
 VS2013/catf/catf.vcxproj.filters
 VS2013/catf/catf.vcxproj.user
-VS2013/ead3270/ead3270.vcxproj
-VS2013/ead3270/ead3270.vcxproj.filters
-VS2013/ead3270/ead3270.vcxproj.user
 VS2013/libw3270i/libw3270i.vcxproj
 VS2013/libw3270i/libw3270i.vcxproj.filters
 VS2013/libw3270i/libw3270i.vcxproj.user
@@ -479,7 +476,6 @@ wc3270/conf.h
 wc3270/dll-subst.sh
 wc3270/documentation-ssl-body.html
 wc3270/documentation-ssl-body.tmpl
-wc3270/ead3270.c
 wc3270/ft.inc
 wc3270/hostname.inc
 wc3270/html/Bugs.html

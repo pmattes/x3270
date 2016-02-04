@@ -2,7 +2,6 @@
 # Make everything.  Really.
 # Must be run in the top-level directory.
 # By default, builds but does not release.
-#  With -nobuild, does not build.
 #  With -release, releases.
 # By default, builds everything.
 #  Can specify individual products as arguments.
@@ -19,7 +18,7 @@ all_prods="x3270 tcl3270 s3270 pr3287 c3270 wc3270 wpr3287 ws3270 Playback"
 
 function usage
 {
-	echo >&2 "Usage: $0 [--nobuild] [--release] [--win32] [<product>...]"
+	echo >&2 "Usage: $0 [--release] [--win32] [<product>...]"
 	exit 0
 }
 
@@ -28,10 +27,6 @@ while [ $# -gt 0 ]
 do	case "$1" in
 	-help|--help)
 		usage
-		;;
-	-nobuild|--nobuild)
-		build=""
-		shift
 		;;
 	-release|--release)
 		release=1
@@ -56,21 +51,6 @@ then	prods=$*
 else	prods=$all_prods
     	[ -z "$just_win32" ] && all=1
 fi
-
-# c3270, x3270, s3270 and tcl3270 need lib3270 and lib3270stubs.
-# pr3287 needs lib32xx.
-# wc3270 and ws3270 need libw3270 and libw3270stubs.
-# wpr3287 needs libw32xx.
-for i in $prods
-do	case $i in
-    	wc3270|ws3270|wpr3287)
-		need_wlibs=1
-		;;
-	c3270|s3270|tcl3270|x3270|pr3287)
-		need_libs=1
-		;;
-	esac
-done
 
 # Check for a full Windows release.
 if [[ "$build" && \
@@ -143,56 +123,37 @@ builddir=$tmpdir/suite3270-$ver
 
 cd $builddir
 
-# Configure libraries.
-if [ "$need_libs" -o "$need_wlibs" ]
-then	echo "===== Configuring libraries."
-    	./configure \
-	    ${need_libs+--enable-unix-lib} \
-	    ${need_wlibs+--enable-windows-lib}
+# Configure.
+if [ "$prods" != Playback ]
+then	# Configure.
+	for prod in $prods
+	do	if [ "$prod" != Playback ]
+	    	then	enable="$enable --enable-$prod"
+		fi
+	done
+	echo "===== Configuring."
+	./configure $enable
+
+	# Build.
+	echo "===== Building."
+	make -j4 CDEBUGFLAGS="-g -Werror"
 fi
 
+# Test the installation.
 for prod in $prods
 do
 	cd $builddir
 
-    	# Some products don't get built on Linux.
-	case "$prod" in
-	wc3270|wpr3287|ws3270)
-		islinux=""
-		;;
-	*)
-		islinux=1
-		;;
-	esac
-
 	# Build it.
 	d2=$d1/$prod
 	if [ "$build" ]
-	then	echo "===== Building $prod."
-		cd $prod || exit 1
-		if [ -f configure ]
-		then	./configure
-		elif [ ! -f Makefile ]
-		then	continue
-		fi
-		case $prod in
-		tcl3270)
-			xflags="-Wno-long-long"
-			;;
-		x3270)
-			xflags="-Wno-deprecated-declarations"
-			;;
-		*)
-			xflags=""
-			;;
-		esac
-		if [ "$islinux" ]
-		then	make -j4 CDEBUGFLAGS="-g $xflags -Werror"
-		else	make -j4
-			make -j4 WIN64=1
+	then	cd $prod
+	    	if [ "$prod" = Playback ]
+		then	echo "===== Building $prod."
+			make -j4
 		fi
 		if [ -f $d2/instlist.base ]
-		then	echo "===== Installing $prod (base)."
+		then	echo "===== Test installing $prod (base)."
 			mkdir i
 			make install DESTDIR=$PWD/i
 			find i -print | tail -n +2 | sed 's/^..//' | sort >cmp.files
@@ -200,7 +161,7 @@ do
 			rm -rf i
 		fi
 		if [ -f $d2/instlist.man ]
-		then	echo "===== Installing $prod (man)."
+		then	echo "===== Test installing $prod (man)."
 			mkdir i
 			make install.man DESTDIR=$PWD/i
 			find i -print | tail -n +2 | sed 's/^..//' | sort >cmp.files
