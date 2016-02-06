@@ -78,7 +78,7 @@
 #define CHOICE_NONE	"none"
 #define DISPLAY_NONE	"(none)"
 
-#define DONE_FILE	"upgraded"
+#define DONE_FILE	"migrated"
 
 enum {
     MN_NONE = 0,
@@ -573,35 +573,33 @@ save_keymaps(void)
 	(void) save_keymap_name(NULL, builtin_keymaps[i].name,
 		builtin_keymaps[i].description, SRC_NONE);
     }
-    sprintf(dpath, "%s*%s", searchdir, KEYMAP_SUFFIX);
-    h = FindFirstFile(dpath, &find_data);
-    if (h != INVALID_HANDLE_VALUE) {
-	do {
-	    sprintf(fpath, "%s%s", searchdir, find_data.cFileName);
-	    (void) save_keymap_name(fpath, find_data.cFileName, NULL,
-		    SRC_DOCUMENTS);
-	} while (FindNextFile(h, &find_data) != 0);
-	FindClose(h);
+
+    sprintf(dpath, "%s%s", searchdir, DONE_FILE);
+    if (access(dpath, R_OK) != 0) {
+	sprintf(dpath, "%s*%s", searchdir, KEYMAP_SUFFIX);
+	h = FindFirstFile(dpath, &find_data);
+	if (h != INVALID_HANDLE_VALUE) {
+	    do {
+		sprintf(fpath, "%s%s", searchdir, find_data.cFileName);
+		(void) save_keymap_name(fpath, find_data.cFileName, NULL,
+			SRC_DOCUMENTS);
+	    } while (FindNextFile(h, &find_data) != 0);
+	    FindClose(h);
+	}
     }
-    sprintf(dpath, "%s*%s", public_searchdir, KEYMAP_SUFFIX);
-    h = FindFirstFile(dpath, &find_data);
-    if (h != INVALID_HANDLE_VALUE) {
-	do {
-	    sprintf(fpath, "%s%s", public_searchdir, find_data.cFileName);
-	    (void) save_keymap_name(fpath, find_data.cFileName, NULL,
-		    SRC_PUBLIC_DOCUMENTS);
-	} while (FindNextFile(h, &find_data) != 0);
-	FindClose(h);
-    }
-    sprintf(dpath, "%s*%s", installdir, KEYMAP_SUFFIX);
-    h = FindFirstFile(dpath, &find_data);
-    if (h != INVALID_HANDLE_VALUE) {
-	do {
-	    sprintf(fpath, "%s%s", installdir, find_data.cFileName);
-	    (void) save_keymap_name(fpath, find_data.cFileName, NULL,
-		    SRC_OTHER);
-	} while (FindNextFile(h, &find_data) != 0);
-	FindClose(h);
+
+    sprintf(dpath, "%s%s", public_searchdir, DONE_FILE);
+    if (access(dpath, R_OK) != 0) {
+	sprintf(dpath, "%s*%s", public_searchdir, KEYMAP_SUFFIX);
+	h = FindFirstFile(dpath, &find_data);
+	if (h != INVALID_HANDLE_VALUE) {
+	    do {
+		sprintf(fpath, "%s%s", public_searchdir, find_data.cFileName);
+		(void) save_keymap_name(fpath, find_data.cFileName, NULL,
+			SRC_PUBLIC_DOCUMENTS);
+	    } while (FindNextFile(h, &find_data) != 0);
+	    FindClose(h);
+	}
     }
 }
 
@@ -902,7 +900,6 @@ one. It also lets you create or replace a shortcut on the desktop.\n");
 static src_t
 find_session_file(const char *session_name, char *path)
 {
-
     /* Try the user's My Documents\wc3270. */
     snprintf(path, MAX_PATH, "%s%s%s", documents_wc3270, session_name,
 	    SESS_SUFFIX);
@@ -928,12 +925,6 @@ find_session_file(const char *session_name, char *path)
 	    SESS_SUFFIX);
     if (access(path, R_OK) == 0) {
 	return SRC_PUBLIC_DESKTOP;
-    }
-
-    /* Try installdir. */
-    snprintf(path, MAX_PATH, "%s%s%s", installdir, session_name, SESS_SUFFIX);
-    if (access(path, R_OK) == 0) {
-	return SRC_OTHER;
     }
 
     /* Try cwd. */
@@ -3712,6 +3703,12 @@ xs_init_type(const char *dirname, xsb_t *xsb, src_t location)
     WIN32_FIND_DATA find_data;
     xs_t *xs;
 
+    /* Check for migration complete. */
+    snprintf(dpath, MAX_PATH, "%s%s", dirname, DONE_FILE);
+    if (access(dpath, R_OK) == 0) {
+	return;
+    }
+
     sprintf(dpath, "%s*%s", dirname, SESS_SUFFIX);
     h = FindFirstFile(dpath, &find_data);
     if (h != INVALID_HANDLE_VALUE) {
@@ -4599,6 +4596,34 @@ main(int argc, char *argv[])
     return 0;
 }
 
+#if 0
+/**
+ * Check whether the current user is currently elevated (Vista or newer) or
+ * in the Administrators group (XP).
+ *
+ * @return TRUE if administrator
+ */
+static BOOL
+is_user_admin(void)
+{
+    BOOL b;
+    SID_IDENTIFIER_AUTHORITY nt_authority = SECURITY_NT_AUTHORITY;
+    PSID administrators_group;
+    b = AllocateAndInitializeSid(&nt_authority, 2,
+	    SECURITY_BUILTIN_DOMAIN_RID,
+	    DOMAIN_ALIAS_RID_ADMINS,
+	    0, 0, 0, 0, 0, 0,
+	    &administrators_group);
+    if (b) {
+	if (!CheckTokenMembership( NULL, administrators_group, &b)) {
+	    b = FALSE;
+	}
+	FreeSid(administrators_group);
+    }
+    return(b);
+}
+#endif
+
 /*********** Upgrade wizard. ***********/
 
 /* Write a wchar_t string to a file. */
@@ -4910,10 +4935,6 @@ migrate_keymaps(bool fully_automatic)
 	    from_dir = common_appdata_wc3270;
 	    snprintf(to_dir, MAX_PATH, "%swc3270\\", public_documents);
 	    break;
-	case SRC_OTHER:
-	    from_dir = installdir;
-	    snprintf(to_dir, MAX_PATH, "%swc3270\\", public_documents);
-	    break;
 	default:
 	    continue;
 	}
@@ -4957,13 +4978,6 @@ do_upgrade(bool automatic_from_cmdline)
     xs_t *xs;
     FILE *f;
 
-    /* If we did this before, we're done. */
-    snprintf(done_path, MAX_PATH, "%s%s", common_appdata_wc3270, DONE_FILE);
-    if (access(done_path, R_OK) == 0) {
-	fprintf(stderr, "Upgrade already performed.\n");
-	return SW_QUIT;
-    }
-
     /* If there are no sessions and no keymaps, we're done. */
     if (km_first) {
 	km_t *km;
@@ -4976,6 +4990,7 @@ do_upgrade(bool automatic_from_cmdline)
 	}
     }
     if (!xs_my.count && !xs_public.count && !nkm) {
+	printf("No session files or keymaps to migrate.\n");
 	return SW_QUIT;
     }
 
@@ -4989,9 +5004,8 @@ do_upgrade(bool automatic_from_cmdline)
 
 	/* Ask if they want to upgrade. */
 	printf("\n\
-wc3270 %s no longer keeps user-defined files in AppData. Session files\n\
-are kept on desktops or in Documents folders, and keymaps are kept in Documents\n\
-folders.\n\n\
+wc3270 %s no longer keeps user-defined files in AppData. Session and\n\
+keymap files are kept in Documents folders instead.\n\n\
 The following files were found in wc3270 AppData folders:\n",
 		wversion);
 	if (xs_my.count || xs_public.count) {
@@ -5065,6 +5079,12 @@ The files can be copied automatically, which means that:\n\
     }
 
     /* Don't do this again. */
+    snprintf(done_path, sizeof(done_path), "%s%s", searchdir, DONE_FILE);
+    if ((f = fopen(done_path, "w")) != NULL) {
+	fclose(f);
+    }
+    snprintf(done_path, sizeof(done_path), "%s%s", public_searchdir,
+	    DONE_FILE);
     if ((f = fopen(done_path, "w")) != NULL) {
 	fclose(f);
     }
