@@ -248,7 +248,7 @@ static ws_t write_shortcut(const session_t *s, bool ask, src_t src,
 	const char *path, bool change_shortcut);
 static void create_wc3270_folder(src_t src);
 
-static sw_t do_upgrade(void);
+static sw_t do_upgrade(bool);
 
 /**
  * Fetch a line of input from the console.
@@ -4479,7 +4479,7 @@ w_usage(void)
     fprintf(stderr, "\
 Usage: wc3270wiz [session-name]\n\
        wc3270wiz [-e] [session-file]\n\
-       wc3270wiz -U\n");
+       wc3270wiz -U[a]\n");
     exit(1);
 }
 
@@ -4499,6 +4499,7 @@ main(int argc, char *argv[])
     char *program = argv[0];
     bool explicit_edit = false;
     bool upgrade = false;
+    bool automatic_upgrade = false;
     DWORD name_size;
     char result[STR_SIZE];
 
@@ -4509,6 +4510,12 @@ main(int argc, char *argv[])
     program = argv[0];
     if (argc > 1 && !strcmp(argv[1], "-U")) {
 	upgrade = true;
+	argc--;
+	argv--;
+    }
+    if (argc > 1 && !strcmp(argv[1], "-Ua")) {
+	upgrade = true;
+	automatic_upgrade = true;
 	argc--;
 	argv--;
     }
@@ -4563,7 +4570,7 @@ main(int argc, char *argv[])
 	get_base_dirs(false);
 	save_keymaps();
 	xs_init();
-	rc = do_upgrade();
+	rc = do_upgrade(automatic_upgrade);
     } else {
 	get_base_dirs(true);
 	save_keymaps();
@@ -4584,7 +4591,9 @@ main(int argc, char *argv[])
      */
     if (rc != SW_QUIT) {
 	printf("\nWizard %s. ", (rc == SW_ERR)? "aborted": "complete");
-	ask_enter();
+	if (!automatic_upgrade) {
+	    ask_enter();
+	}
     }
 
     return 0;
@@ -4660,11 +4669,11 @@ create_wc3270_folder(src_t src)
 
 /* Copy one session file (Upgrade Wizard). */
 static sw_t
-copy_session(xs_t *xs, int automatic)
+migrate_session(xs_t *xs, int automatic, bool fully_automatic)
 {
     FILE *f, *g;
     int c;
-    char desktop_path[MAX_PATH];
+    char link_path[MAX_PATH];
     char from_path[MAX_PATH];
     char to_path[MAX_PATH];
     session_t s;
@@ -4673,6 +4682,7 @@ copy_session(xs_t *xs, int automatic)
     HRESULT hres;
     int rc;
     src_t to_src = xs->location;
+    bool shortcut_exists;
 
     if (!automatic) {
 	printf("\nFound ");
@@ -4726,16 +4736,18 @@ copy_session(xs_t *xs, int automatic)
 	    xs->name);
 
     /* Check for overwrite. */
-    if (access(to_path, R_OK) == 0) {
-	do {
-	    printf("\nReplace %s? (y/n) [y]: ", to_path);
-	    rc = getyn(TRUE);
-	    if (rc == YN_ERR) {
-		return SW_ERR;
-	    } else if (rc == FALSE) {
-		return SW_SUCCESS;
-	    }
-	} while (rc == YN_RETRY);
+    if (!fully_automatic) {
+	if (access(to_path, R_OK) == 0) {
+	    do {
+		printf("\nReplace %s? (y/n) [y]: ", to_path);
+		rc = getyn(TRUE);
+		if (rc == YN_ERR) {
+		    return SW_ERR;
+		} else if (rc == FALSE) {
+		    return SW_SUCCESS;
+		}
+	    } while (rc == YN_RETRY);
+	}
     }
 
     f = fopen(from_path, "r");
@@ -4759,20 +4771,21 @@ copy_session(xs_t *xs, int automatic)
     fclose(g);
     printf("Copied session '%s' to %s.\n", xs->name, to_path);
 
-    snprintf(desktop_path, MAX_PATH, "%s%s",
+    snprintf(link_path, MAX_PATH, "%s%s.lnk",
 	    (xs->location == SRC_DOCUMENTS)? desktop: public_desktop,
 	    xs->name);
+    shortcut_exists = (access(link_path, R_OK) == 0);
 
     if (automatic) {
-	/* Automatic -- replace the shortcut it if exists. */
-	if (access(desktop_path, R_OK) != 0) {
+	/* Automatic -- only replace the shortcut it if exists. */
+	if (!shortcut_exists) {
 	    return SW_SUCCESS;
 	}
     } else {
 	/* Manual -- ask. */
 	do {
 	    printf("\n%s desktop shortcut? (y/n) [y]: ",
-		    (access(desktop_path, R_OK) == 0)? "Replace": "Create");
+		    shortcut_exists? "Replace": "Create");
 	    rc = getyn(TRUE);
 	    if (rc == YN_ERR) {
 		return SW_ERR;
@@ -4794,11 +4807,13 @@ copy_session(xs_t *xs, int automatic)
     /* Create the shortcut. */
     snprintf(exepath, MAX_PATH, "%s%s", installdir, "wc3270.exe");
     snprintf(args, MAX_PATH, "+S \"%s\"", to_path);
-    hres = create_shortcut(&s, exepath, desktop_path, args, installdir);
+    hres = create_shortcut(&s, exepath, link_path, args, installdir);
     if (!SUCCEEDED(hres)) {
-	fprintf(stderr, "Cannot create shortcut '%s'.\n", desktop_path);
+	fprintf(stderr, "Cannot create shortcut '%s'.\n", link_path);
 	return SW_ERR;
     }
+    printf("%s shortcut %s\n", shortcut_exists? "Replaced": "Created",
+	    link_path);
 
     /* Done. */
     return SW_SUCCESS;
@@ -4806,8 +4821,8 @@ copy_session(xs_t *xs, int automatic)
 
 /* Copy one keymap (Upgrade Wizard). */
 static sw_t
-copy_one_keymap(const char *from_dir, const char *to_dir, const char *name,
-	const char *suffix)
+migrate_one_keymap(const char *from_dir, const char *to_dir, const char *name,
+	const char *suffix, bool fully_automatic)
 {
     char from_path[MAX_PATH];
     char to_path[MAX_PATH];
@@ -4820,24 +4835,26 @@ copy_one_keymap(const char *from_dir, const char *to_dir, const char *name,
     snprintf(to_path, MAX_PATH, "%s%s%s%s",
 	    to_dir, name, KEYMAP_SUFFIX, suffix);
 
-    /* Check for overwrite. */
-    if (access(to_path, R_OK) == 0) {
-	int rc;
+    if (!fully_automatic) {
+	/* Check for overwrite. */
+	if (access(to_path, R_OK) == 0) {
+	    int rc;
 
-	do {
-	    printf("\nReplace %s? (y/n) [y]: ", to_path);
-	    rc = getyn(TRUE);
-	    if (rc == TRUE) {
-		break;
-	    }
-	    if (rc == FALSE) {
-		return SW_SUCCESS;
-	    }
-	    if (rc == YN_ERR)
-	    {
-		return SW_ERR;
-	    }
-	} while (rc == YN_RETRY);
+	    do {
+		printf("\nReplace %s? (y/n) [y]: ", to_path);
+		rc = getyn(TRUE);
+		if (rc == TRUE) {
+		    break;
+		}
+		if (rc == FALSE) {
+		    return SW_SUCCESS;
+		}
+		if (rc == YN_ERR)
+		{
+		    return SW_ERR;
+		}
+	    } while (rc == YN_RETRY);
+	}
     }
 
     /* Create the documents folder. */
@@ -4872,9 +4889,9 @@ copy_one_keymap(const char *from_dir, const char *to_dir, const char *name,
     return SW_SUCCESS;
 }
 
-/* Copy the keymaps. */
+/* Copy the keymaps (Upgrade Wizard). */
 static sw_t
-copy_keymaps(void)
+migrate_keymaps(bool fully_automatic)
 {
     km_t *km;
     sw_t sw;
@@ -4902,19 +4919,22 @@ copy_keymaps(void)
 	}
 
 	if (km->def_both != NULL) {
-	    sw = copy_one_keymap(from_dir, to_dir, km->name, "");
+	    sw = migrate_one_keymap(from_dir, to_dir, km->name, "",
+		    fully_automatic);
 	    if (sw != SW_SUCCESS) {
 		return sw;
 	    }
 	}
 	if (km->def_3270 != NULL) {
-	    sw = copy_one_keymap(from_dir, to_dir, km->name, KM_3270);
+	    sw = migrate_one_keymap(from_dir, to_dir, km->name, KM_3270,
+		    fully_automatic);
 	    if (sw != SW_SUCCESS) {
 		return sw;
 	    }
 	}
 	if (km->def_nvt != NULL) {
-	    sw = copy_one_keymap(from_dir, to_dir, km->name, KM_NVT);
+	    sw = migrate_one_keymap(from_dir, to_dir, km->name, KM_NVT,
+		    fully_automatic);
 	    if (sw != SW_SUCCESS) {
 		return sw;
 	    }
@@ -4926,7 +4946,7 @@ copy_keymaps(void)
 
 /* Do an upgrade. */
 static sw_t
-do_upgrade(void)
+do_upgrade(bool automatic_from_cmdline)
 {
     char done_path[MAX_PATH];
     static char wizard[] = "wc3270 Upgrade Wizard";
@@ -4959,47 +4979,47 @@ do_upgrade(void)
 	return SW_QUIT;
     }
 
-    /* Say hello. */
-    system("cls");
-    printf("%s%*s%s\n",
-	    wizard,
-	    (int)(79 - strlen(wizard) - strlen(wversion)), " ",
-	    wversion);
+    if (!automatic_from_cmdline) {
+	/* Say hello. */
+	system("cls");
+	printf("%s%*s%s\n",
+		wizard,
+		(int)(79 - strlen(wizard) - strlen(wversion)), " ",
+		wversion);
 
-    /* Ask if they want to upgrade. */
-    printf("\n\
+	/* Ask if they want to upgrade. */
+	printf("\n\
 wc3270 %s no longer keeps user-defined files in AppData. Session files\n\
 are kept on desktops or in Documents folders, and keymaps are kept in Documents\n\
 folders.\n\n\
 The following files were found in wc3270 AppData folders:\n",
-	    wversion);
-    if (xs_my.count || xs_public.count)
-    {
-	int nxs = xs_my.count + xs_public.count;
+		wversion);
+	if (xs_my.count || xs_public.count) {
+	    int nxs = xs_my.count + xs_public.count;
 
-	printf(" %d session file%s\n", nxs, (nxs != 1)? "s": "");
-	nf = nxs;
-    }
-    if (nkm) {
-	printf(" %d keymap file%s\n", nkm, (nkm != 1)? "s": "");
-	nf += nkm;
-    }
+	    printf(" %d session file%s\n", nxs, (nxs != 1)? "s": "");
+	    nf = nxs;
+	}
+	if (nkm) {
+	    printf(" %d keymap file%s\n", nkm, (nkm != 1)? "s": "");
+	    nf += nkm;
+	}
 
-    while (true) {
-	printf("\nCopy %s to new locations? (y/n) [y]: ",
-		(nf == 1)? "this file": "these files");
-	rc = getyn(TRUE);
-	if (rc == YN_ERR) {
-	    return SW_ERR;
+	while (true) {
+	    printf("\nCopy %s to new locations? (y/n) [y]: ",
+		    (nf == 1)? "this file": "these files");
+	    rc = getyn(TRUE);
+	    if (rc == YN_ERR) {
+		return SW_ERR;
+	    }
+	    if (rc == FALSE) {
+		return SW_SUCCESS;
+	    }
+	    if (rc == TRUE) {
+		break;
+	    }
 	}
-	if (rc == FALSE) {
-	    return SW_SUCCESS;
-	}
-	if (rc == TRUE) {
-	    break;
-	}
-    }
-    printf("\n\
+	printf("\n\
 The files can be copied automatically, which means that:\n\
 - Session files and keymap files in your wc3270 AppDefaults folder will be\n\
   copied to My Documents\n\
@@ -5008,34 +5028,38 @@ The files can be copied automatically, which means that:\n\
 - Existing desktop shortcuts will be re-written to point at the new sessions,\n\
   which means that any customizations will be lost\n");
 
-    while (true) {
-	printf("\nCopy automatically? (y/n) [y]: ");
-	automatic = getyn(TRUE);
-	if (automatic == YN_ERR) {
-	    return SW_ERR;
+	while (true) {
+	    printf("\nCopy automatically? (y/n) [y]: ");
+	    automatic = getyn(TRUE);
+	    if (automatic == YN_ERR) {
+		return SW_ERR;
+	    }
+	    if (automatic == TRUE || automatic ==FALSE) {
+		break;
+	    }
 	}
-	if (automatic == TRUE || automatic ==FALSE) {
-	    break;
-	}
+	printf("\n");
+    } else {
+	/* Just do it all automatically. */
+	automatic = TRUE;
     }
-    printf("\n");
 
     /* Copy each session file. */
     for (xs = xs_my.list; xs != NULL; xs = xs->next) {
-	rc = copy_session(xs, automatic);
+	rc = migrate_session(xs, automatic, automatic_from_cmdline);
 	if (rc != SW_SUCCESS) {
 	    return rc;
 	}
     }
     for (xs = xs_public.list; xs != NULL; xs = xs->next) {
-	rc = copy_session(xs, automatic);
+	rc = migrate_session(xs, automatic, automatic_from_cmdline);
 	if (rc != SW_SUCCESS) {
 	    return rc;
 	}
     }
 
     /* Copy each keymap. */
-    rc = copy_keymaps();
+    rc = migrate_keymaps(automatic_from_cmdline);
     if (rc != SW_SUCCESS) {
 	return rc;
     }

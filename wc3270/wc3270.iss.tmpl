@@ -87,6 +87,7 @@ Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Tasks]
 Name: "desktopicons"; Description: "Create desktop icons"; GroupDescription: "{cm:AdditionalIcons}"
+Name: "migratefiles"; Description: "Migrate existing session files from AppData to Documents (can choose files)"; GroupDescription: "File Migration:"
 
 [Code]
 function myHelp(Param: String): String;
@@ -104,7 +105,7 @@ begin
   begin
     // We are in 64-bit mode and a 32-bit version is already installed.
     // Ask if they want to remove it.
-    if MsgBox('A 32-bit version of wc3270 is already installed and must be removed before a 64-bit version can be installed. Remove it now?', mbConfirmation, MB_YESNO) = IDNO then
+    if (not WizardSilent) and (MsgBox('A 32-bit version of wc3270 is already installed and must be removed before a 64-bit version can be installed. Remove it now?', mbConfirmation, MB_YESNO) = IDNO) then
       begin
         // They don't want to remove the old version. Can't proceed.
         Result := False
@@ -147,11 +148,13 @@ Root: HKCR; Subkey: "wc3270 keymap\shell\edit\command"; ValueType: string; Value
 [Run]
 Filename: "{app}\wc3270wiz.exe"; Description: "{cm:LaunchProgram,Session Wizard}"; Components: wizard; Flags: nowait postinstall skipifsilent
 Filename: "{cmd}"; Parameters: {code:MyHelp}; Description: "{cm:LaunchProgram,Online Documentation}"; Components: help; Flags: nowait postinstall skipifsilent
-Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""{commondesktop}\wc3270.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: desktopicons
-Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""{commondesktop}\Session Wizard.lnk"""; Flags: nowait skipifsilent runhidden; Tasks: desktopicons; Components: wizard
+Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270.exe ""{commondesktop}\wc3270.lnk"""; Flags: nowait runhidden; Tasks: desktopicons
+Filename: "{app}\mkshort.exe"; Parameters: """{app}"" wc3270wiz.exe ""{commondesktop}\Session Wizard.lnk"""; Flags: nowait runhidden; Tasks: desktopicons; Components: wizard
 ; Run the upgrade wizard.
-Filename: "{app}\wc3270wiz.exe"; Parameters: "-U"; Flags: nowait skipifsilent; Components: wizard
+Filename: "{app}\wc3270wiz.exe"; Parameters: "-U"; Flags: nowait skipifsilent; Components: wizard; Tasks: migratefiles
+Filename: "{app}\wc3270wiz.exe"; Parameters: "-Ua"; Flags: nowait runhidden skipifnotsilent; Components: wizard; Tasks: migratefiles
 
 [UninstallDelete]
 Type: files; Name: "{commondesktop}\wc3270.lnk"; Tasks: desktopicons
 Type: files; Name: "{commondesktop}\Session Wizard.lnk"; Tasks: desktopicons
+Type: dirifempty; Name: "{app}"
