@@ -11,17 +11,28 @@
 	<h1>suite3270 Build and Install Instructions</h1>
 
 	<h2>Windows Version Upgrades</h2>
+	<h3>AppData File Migration</h3>
 	Release 3.5alpha5 stopped the use of the wc3270 AppData folders. When
-	upgrading from an earlier release to 3.5alpha5 or later, any files
-	in an wc3270 AppData folder must be copied elsewhere (usually onto
-	the user's Desktop or My Documents folder). An Upgrade Wizard will be
-	run automatically to handle this, allowing user control over where the
-	files are copied. (Note that with unattended installation, the Upgrade
-	Wizard will <b>not</b> be run.)
+	upgrading from an earlier release to 3.5alpha5 or later, session
+	and keymap files in an wc3270 AppData folder must be copied to a
+	Documents folder (a user's My Documents or the Public Documents
+	folder) and desktop session shortcuts must be replaced.
+	A Migration Wizard will be run automatically by the installer to handle
+	this, allowing the user to control which files are copied. (Note that
+	when using unattended installation, the Migration Wizard will copy all
+	of the files.)
 	<p>
+	The Migration wizard will copy only files for the user running the
+	installer and shared files. After the upgrade, other users will be
+	offered an option in the Session Wizard to migrate their own files.
+	<p>
+	File migration will only happen once per user and for shared files.
+	The files will be preserved in the AppData folders, but will be
+	ignored.
+	<h3>Upgrading from 32-bit to 64-bit</h3>
 	Release 3.5alpha4 was the first with 64-bit Windows support. When
-	upgrading from an earlier release to 3.5alpha4 or later on 64-bit
-	Windows, the earlier 32-bit version must be uninstalled before 64-bit
+	upgrading on 64-bit Windows from an earlier release to 3.5alpha4 or
+	later, the old 32-bit version must be uninstalled before 64-bit
 	installation can proceed. This will be done automatically by the 64-bit
 	installer (with the user's permission; if installing unattended, it
 	will always be performed).
@@ -77,7 +88,7 @@
 	    </tr>
 	</table>
 	<p>By default, all tasks are performed. The set of tasks that can be specified are:</p>
-	<a name="tasks"><table cols=2 width="75%">
+	<a name="tasks"></a><table cols=2 width="75%">
 	    <tr>
 		<th>Task</th>
 		<th>Definition</th>
@@ -97,10 +108,7 @@
 	To build the entire 3270 emulation suite, including native Unix
 	programs and cross-compiled Windows programs, use:  
 	<pre><tt>   ./configure
-   make depend
    make</tt></pre>
-	(The <tt>make depend</tt> step is optional, but is helpful to ensure
-	that things will be rebuild if you change a header file.)
 	<p>
 	To install Unix binaries in the default install directory
 	(<tt>/usr/local</tt>), use:  
@@ -111,6 +119,12 @@
 	<pre><tt>   make clean</tt></pre>
 	To remove all derived files, use:
 	<pre><tt>   make clobber</tt></pre>
+	<p>
+	Object files will be placed in directories named
+	<tt>obj/<i>architecture</i></tt>. For example, 64-bit Linux object
+	files are placed in <tt>obj/x86_64-unknown-gnu-linux</tt>. 32-bit
+	Windows object files are placed in <tt>obj/win32</tt>. 64-bit Windows
+	object files are placed in <tt>obj/win64</tt>.
 
 	<h3>Selective build targets</h3>
 	To build just the Unix programs, use:
@@ -121,9 +135,7 @@
 	<pre><tt>   make s3270</tt></pre>
 	Each of the top-level symbolic targets can be limited to a group
 	(unix or windows) or to a program, by adding the desired prefix:
-	<pre><tt>   make <i>group</i>-depend
-   make <i>program</i>-depend
-   make unix-install
+	<pre><tt>   make unix-install
    make unix-install.man
    make <i>program</i>-install
    make <i>program</i>-install.man
@@ -182,14 +194,9 @@
 	    </tbody>
 	</table>
 	When you limit the configuration this way, it changes the top-level
-	make targets, so <tt>make</tt>, <tt>make depend</tt>, <tt>make
-	install</tt>, <tt>make clean</tt> and <tt>make clobber</tt> will
+	make targets, so <tt>make</tt>, <tt>make install</tt>,
+	<tt>make clean</tt> and <tt>make clobber</tt> will
 	operate only on the programs you have configured.
-
-	<h2>Cross-Compiling 64-Bit Windows Binaries</h2>
-	To cross-compile 64-bit versions of the emulators on Unix or Cygwin,
-	set the WIN64 variable, e.g.:
-	<pre><tt>   make WIN64=1</tt></pre>
 
 	<h2>Building Windows Programs with Visual Studio (GUI)</h2>
 	The Visual Studio solution is called <tt>suite3270.sln</tt> in the
@@ -198,7 +205,7 @@
 	code without OpenSSL support. The SSL-Debug and SSL-Release
 	configurations build code with OpenSSL support, and require standard
 	OpenSSL header files to be installed in the folder
-	<tt>C:\OpenSSL-Win32\include</tt>.
+	<tt>C:\OpenSSL-Win64\include</tt>.
 
 	<h2>Building Windows Programs with Visual Studio (Command Line)</h2>
 	To build with Microsoft Visual Studio from the command prompt, first
@@ -304,7 +311,6 @@
     Then to build all of the emulators, use the following commands:
     <pre><tt>   export PATH=$PATH:/opt/X11/bin
    ./configure --enable-unix --x-includes=/opt/X11/include
-   make depend
    make</tt></pre>
 
     <h2>Notes for Solaris 2.x and Sun's C Compiler</h2>
