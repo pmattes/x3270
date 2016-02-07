@@ -243,12 +243,13 @@ static xsb_t xs_public;	/* public sessions */
 static session_t empty_session;
 
 static void write_user_settings(char *us, FILE *f);
-static void display_sessions(bool with_numbers);
+static void display_sessions(bool with_numbers, bool include_public);
 static ws_t write_shortcut(const session_t *s, bool ask, src_t src,
 	const char *path, bool change_shortcut);
 static void create_wc3270_folder(src_t src);
 
 static sw_t do_upgrade(bool);
+static BOOL admin(void);
 
 /**
  * Fetch a line of input from the console.
@@ -783,7 +784,7 @@ Overview\n\
 This wizard allows you to set up a new wc3270 session or modify an existing\n\
 one. It also lets you create or replace a shortcut on the desktop.\n");
 
-    display_sessions(false);
+    display_sessions(false, true);
 
     printf("\n");
     for (i = MO_FIRST; main_option[i].text != NULL; i++) {
@@ -908,10 +909,12 @@ find_session_file(const char *session_name, char *path)
     }
 
     /* Try the public Documents\wc3270. */
-    snprintf(path, MAX_PATH, "%s%s%s", public_documents_wc3270,
-	    session_name, SESS_SUFFIX);
-    if (access(path, R_OK) == 0) {
-	return SRC_PUBLIC_DOCUMENTS;
+    if (admin()) {
+	snprintf(path, MAX_PATH, "%s%s%s", public_documents_wc3270,
+		session_name, SESS_SUFFIX);
+	if (access(path, R_OK) == 0) {
+	    return SRC_PUBLIC_DOCUMENTS;
+	}
     }
 
     /* Try the user's Desktop. */
@@ -921,10 +924,12 @@ find_session_file(const char *session_name, char *path)
     }
 
     /* Try the public Desktop. */
-    snprintf(path, MAX_PATH, "%s%s%s", public_desktop, session_name,
-	    SESS_SUFFIX);
-    if (access(path, R_OK) == 0) {
-	return SRC_PUBLIC_DESKTOP;
+    if (admin()) {
+	snprintf(path, MAX_PATH, "%s%s%s", public_desktop, session_name,
+		SESS_SUFFIX);
+	if (access(path, R_OK) == 0) {
+	    return SRC_PUBLIC_DESKTOP;
+	}
     }
 
     /* Try cwd. */
@@ -2550,27 +2555,31 @@ get_src(const char *name, src_t def)
     src_t src_out = def;
 
     /* Ask where they want the file. */
-    for (;;) {
-	printf("\nCreate '%s' in My Documents or Public Documents? "
-		"(my/public) [%s] ",
-		name, (def == SRC_PUBLIC_DOCUMENTS)? "public": "my");
-	fflush(stdout);
-	if (get_input(ac, STR_SIZE) == NULL) {
-	    return SRC_ERR;
-	} else if (!ac[0]) {
-	    break;
-	} else if (!strncasecmp(ac, "public", strlen(ac))) {
-	    src_out = SRC_PUBLIC_DOCUMENTS;
-	    break;
-	} else if (!strncasecmp(ac, "my", strlen(ac)) ||
-		   !strcasecmp(ac, username)) {
-	    src_out = SRC_DOCUMENTS;
-	    break;
-	} else if (!strncasecmp(ac, "quit", strlen(ac))) {
-	    return SRC_NONE;
-	} else {
-	    printf("\nPlease answer 'my' or 'public'.");
+    if (admin()) {
+	for (;;) {
+	    printf("\nCreate '%s' in My Documents or Public Documents? "
+		    "(my/public) [%s] ",
+		    name, (def == SRC_PUBLIC_DOCUMENTS)? "public": "my");
+	    fflush(stdout);
+	    if (get_input(ac, STR_SIZE) == NULL) {
+		return SRC_ERR;
+	    } else if (!ac[0]) {
+		break;
+	    } else if (!strncasecmp(ac, "public", strlen(ac))) {
+		src_out = SRC_PUBLIC_DOCUMENTS;
+		break;
+	    } else if (!strncasecmp(ac, "my", strlen(ac)) ||
+		       !strcasecmp(ac, username)) {
+		src_out = SRC_DOCUMENTS;
+		break;
+	    } else if (!strncasecmp(ac, "quit", strlen(ac))) {
+		return SRC_NONE;
+	    } else {
+		printf("\nPlease answer 'my' or 'public'.");
+	    }
 	}
+    } else {
+	return SRC_DOCUMENTS;
     }
 
     /* Make sure the subfolder exists. */
@@ -3125,9 +3134,10 @@ print_n(int n, bool with_numbers)
  * Display the current set of sessions.
  *
  * @param[in] with_numbers	If true, display with ordinals
+ * @param[in] include_public	If true, include public sessions
  */
 static void
-display_sessions(bool with_numbers)
+display_sessions(bool with_numbers, bool include_public)
 {
     int i;
     int col = 0;
@@ -3143,6 +3153,10 @@ display_sessions(bool with_numbers)
      */
     for (i = 0; (n = xs_name(i + 1, NULL)) != NULL; i++) {
 	size_t slen;
+
+	if (i == xs_my.count && !include_public) {
+	    break;
+	}
 
 	if (i == 0 && xs_my.count != 0) {
 	    printf("Sessions for user '%s'in %.*s:\n",
@@ -3235,25 +3249,29 @@ display_sessions(bool with_numbers)
 /**
  * Display the list of existing sessions, and return a selected session name.
  *
- * @param[in] why	Name of operation in progress
- * @param[out] name	Returned selected session name
- * @param[out] lp	Returned selected session location
+ * @param[in] why		Name of operation in progress
+ * @param[in] include_public	true if public sessions should be included
+ * @param[out] name		Returned selected session name
+ * @param[out] lp		Returned selected session location
  *
  * @return -1 for error, 0 for success
  * If no name is chosen, returns 0, but also returns NULL in name.
  */
 static int
-get_existing_session(const char *why, const char **name, src_t *lp)
+get_existing_session(const char *why, bool include_public, const char **name,
+	src_t *lp)
 {
     char nbuf[64];
+    int max = include_public? num_xs: num_xs - xs_public.count;
 
-    display_sessions(true);
+    display_sessions(true, include_public);
 
     for (;;) {
 	int n;
 
 	printf("\nEnter session name or number (1..%d) to %s, or 'q' "
-		"to quit: ", num_xs, why);
+		"to quit: ",
+		max, why);
 	fflush(stdout);
 	if (get_input(nbuf, sizeof(nbuf)) == NULL) {
 	    return -1;
@@ -3267,7 +3285,7 @@ get_existing_session(const char *why, const char **name, src_t *lp)
 	if (n == 0) {
 	    int i;
 
-	    for (i = 0; i < num_xs; i++) {
+	    for (i = 0; i < max; i++) {
 		if (!strcasecmp(nbuf, xs_name(i + 1, NULL))) {
 		    *name = xs_name(i + 1, lp);
 		    return 0;
@@ -3275,7 +3293,7 @@ get_existing_session(const char *why, const char **name, src_t *lp)
 	    }
 	    printf("\nNo such session.");
 	    continue;
-	} else if (n < 0 || n > num_xs) {
+	} else if (n < 0 || n > max) {
 	    printf("\nNo such session.");
 	    continue;
 	}
@@ -3288,6 +3306,7 @@ get_existing_session(const char *why, const char **name, src_t *lp)
  * Look up a session specified by the user on the main menu.
  *
  * @param[in] name		Session name to look up
+ * @param[in] include_public	true to include public sessions
  * @param[out] lp		Returned location of session
  * @param[out] result		Buffer to put error message in
  * @param[in] result_size	Size of 'result' buffer
@@ -3295,16 +3314,18 @@ get_existing_session(const char *why, const char **name, src_t *lp)
  * @return Session name, or NULL if not found
  */
 static char *
-menu_existing_session(char *name, src_t *lp, char *result, size_t result_size)
+menu_existing_session(char *name, bool include_public, src_t *lp,
+	char *result, size_t result_size)
 {
     int i;
+    int max = include_public? num_xs: num_xs - xs_public.count;
 
-    for (i = 0; i < num_xs; i++) {
+    for (i = 0; i < max; i++) {
 	if (!strcasecmp(name, xs_name(i + 1, lp))) {
 	    break;
 	}
     }
-    if (i >= num_xs) {
+    if (i >= max) {
 	snprintf(result, result_size, "No such session: '%s'", name);
 	return NULL;
     } else {
@@ -3347,7 +3368,8 @@ delete_session(int argc, char **argv, char *result, size_t result_size)
     char path[MAX_PATH];
 
     if (argc > 0) {
-	name = menu_existing_session(argv[0], &l, result, result_size);
+	name = menu_existing_session(argv[0], admin(), &l, result,
+		result_size);
 	if (name == NULL) {
 	    return 0;
 	}
@@ -3357,7 +3379,7 @@ delete_session(int argc, char **argv, char *result, size_t result_size)
 	new_screen(&empty_session, NULL, "\
 Delete Session\n");
 
-	if (get_existing_session("delete", &name, &l) < 0) {
+	if (get_existing_session("delete", admin(), &name, &l) < 0) {
 	    return -1;
 	} else if (name == NULL) {
 	    return 0;
@@ -3432,7 +3454,9 @@ rename_or_copy_session(int argc, char **argv, bool is_rename, char *result,
     char *us;
 
     if (argc > 0) {
-	from_name = menu_existing_session(argv[0], &from_l, result,
+	from_name = menu_existing_session(argv[0],
+		!is_rename || admin(),
+		&from_l, result,
 		result_size);
 	if (from_name == NULL) {
 	    return 0;
@@ -3447,12 +3471,19 @@ rename_or_copy_session(int argc, char **argv, bool is_rename, char *result,
 	    new_screen(&empty_session, NULL, "\
     Copy Session\n");
 	}
-	if (get_existing_session(is_rename? "rename": "copy", &from_name,
+	if (get_existing_session(is_rename? "rename": "copy",
+		    !is_rename || admin(),
+		    &from_name,
 		    &from_l) < 0) {
 	    return -1;
 	} else if (from_name == NULL) {
 	    return 0;
 	}
+    }
+
+    if (is_rename && !admin() && from_l == SRC_PUBLIC_DOCUMENTS) {
+	fprintf(stderr, "Cannot rename public session\n");
+	goto failed;
     }
 
     for (;;) {
@@ -3474,7 +3505,8 @@ rename_or_copy_session(int argc, char **argv, bool is_rename, char *result,
 		return -1;
 	    } else if (to_name[0] == '\0') {
 		continue;
-	    } else if (to_name[0] == 'q' || to_name[0] == 'Q') {
+	    } else if ((to_name[0] == 'q' || to_name[0] == 'Q') &&
+		    to_name[1] == '\0') {
 		return 0;
 	    }
 	}
@@ -3626,7 +3658,7 @@ new_shortcut(int argc, char **argv, char *result, size_t result_size)
     session_t s;
 
     if (argc > 0) {
-	name = menu_existing_session(argv[0], &l, result, result_size);
+	name = menu_existing_session(argv[0], true, &l, result, result_size);
 	if (name == NULL) {
 	    return 0;
 	}
@@ -3636,7 +3668,7 @@ new_shortcut(int argc, char **argv, char *result, size_t result_size)
 	new_screen(&empty_session, NULL, "\
 Create Shortcut\n");
 
-	if (get_existing_session("create shortcut for", &name, &l) < 0) {
+	if (get_existing_session("create shortcut for", true, &name, &l) < 0) {
 	    return -1;
 	} else if (name == NULL) {
 	    return 0;
@@ -3650,8 +3682,16 @@ Create Shortcut\n");
 	break;
     default:
     case SRC_DOCUMENTS:
-	snprintf(from_path, MAX_PATH, "%s%s%s", documents_wc3270, name, SESS_SUFFIX);
+	snprintf(from_path, MAX_PATH, "%s%s%s", documents_wc3270, name,
+		SESS_SUFFIX);
 	break;
+    }
+
+    /*
+     * If public document but not admin, create shortcut on per-user desktop.
+     */
+    if (l == SRC_PUBLIC_DOCUMENTS && !admin()) {
+	l = SRC_DOCUMENTS;
     }
 
     f = fopen(from_path, "r");
@@ -3968,15 +4008,16 @@ session_wizard(const char *session_name, bool explicit_edit, char *result,
 	    return SW_QUIT;
 	case MO_EDIT:
 	    if (argc > 0) {
-		session_name = menu_existing_session(argv[0], NULL, result,
-			result_size);
+		session_name = menu_existing_session(argv[0], admin(), NULL,
+			result, result_size);
 		if (session_name == NULL) {
 		    return SW_SUCCESS;
 		}
 	    } else {
 		new_screen(&session, NULL, "\
 Edit Session\n");
-		if (get_existing_session("edit", &session_name, NULL) < 0) {
+		if (get_existing_session("edit", admin(), &session_name,
+			    NULL) < 0) {
 		    return SW_ERR;
 		} else if (session_name == NULL) {
 		    return SW_SUCCESS;
@@ -4596,7 +4637,6 @@ main(int argc, char *argv[])
     return 0;
 }
 
-#if 0
 /**
  * Check whether the current user is currently elevated (Vista or newer) or
  * in the Administrators group (XP).
@@ -4604,11 +4644,16 @@ main(int argc, char *argv[])
  * @return TRUE if administrator
  */
 static BOOL
-is_user_admin(void)
+admin(void)
 {
     BOOL b;
-    SID_IDENTIFIER_AUTHORITY nt_authority = SECURITY_NT_AUTHORITY;
+    SID_IDENTIFIER_AUTHORITY nt_authority = { SECURITY_NT_AUTHORITY };
     PSID administrators_group;
+
+    if (getenv("NOTADMIN")) {
+	return FALSE;
+    }
+
     b = AllocateAndInitializeSid(&nt_authority, 2,
 	    SECURITY_BUILTIN_DOMAIN_RID,
 	    DOMAIN_ALIAS_RID_ADMINS,
@@ -4622,7 +4667,6 @@ is_user_admin(void)
     }
     return(b);
 }
-#endif
 
 /*********** Upgrade wizard. ***********/
 
@@ -4718,37 +4762,53 @@ migrate_session(xs_t *xs, int automatic, bool fully_automatic)
 	}
 	printf(" session '%s'.", xs->name);
 
-	do {
-	    char answer[16];
-	    size_t sl;
+	if (admin()) {
+	    do {
+		char answer[16];
+		size_t sl;
 
-	    printf("\n\
-    Copy session to My Documents, Public Documents or neither?\n\
-     (my/public/neither) [%s] ",
-		    xs->location == SRC_DOCUMENTS? "my": "public");
-	    if (!get_input(answer, sizeof(answer))) {
-		return SW_ERR;
-	    }
-	    sl = strlen(answer);
-	    if (!sl) {
-		break;
-	    }
-	    if (!strncasecmp(answer, "quit", sl)) {
-		return SW_QUIT;
-	    }
-	    if (!strncasecmp(answer, "neither", sl)) {
-		return SW_SUCCESS;
-	    }
-	    if (!strncasecmp(answer, "my", sl)) {
-		to_src = SRC_DOCUMENTS;
-		break;
-	    }
-	    if (!strncasecmp(answer, "public", sl)) {
-		to_src = SRC_PUBLIC_DOCUMENTS;
-		break;
-	    }
-	    printf("Please answer 'my', 'public' or 'neither'.\n");
-	} while (true);
+		printf("\n\
+Copy session to My Documents, Public Documents or neither?\n\
+ (my/public/neither) [%s] ",
+			xs->location == SRC_DOCUMENTS? "my": "public");
+		if (!get_input(answer, sizeof(answer))) {
+		    return SW_ERR;
+		}
+		sl = strlen(answer);
+		if (!sl) {
+		    break;
+		}
+		if (!strncasecmp(answer, "quit", sl)) {
+		    return SW_QUIT;
+		}
+		if (!strncasecmp(answer, "neither", sl)) {
+		    return SW_SUCCESS;
+		}
+		if (!strncasecmp(answer, "my", sl)) {
+		    to_src = SRC_DOCUMENTS;
+		    break;
+		}
+		if (!strncasecmp(answer, "public", sl)) {
+		    to_src = SRC_PUBLIC_DOCUMENTS;
+		    break;
+		}
+		printf("Please answer 'my', 'public' or 'neither'.\n");
+	    } while (true);
+	} else {
+	    do {
+		int rc;
+
+		printf("Copy session to My Documents? (y/n) [y]: ");
+		rc = getyn(true);
+		if (rc == YN_ERR) {
+		    return SW_ERR;
+		}
+		if (rc == TRUE || rc == FALSE) {
+		    to_src = SRC_DOCUMENTS;
+		    break;
+		}
+	    } while (true);
+	}
     }
 
     snprintf(from_path, MAX_PATH, "%s%s.wc3270",
