@@ -139,6 +139,7 @@ typedef enum {
     MO_COPY,		/* copy existing session */
     MO_RENAME,		/* rename existing session */
     MO_SHORTCUT,	/* create shortcut */
+    MO_MIGRATE,		/* migrate AppData files */
     MO_QUIT,		/* quit wizard */
     MO_ERR = -1		/* error */
 } menu_op_t;
@@ -209,6 +210,7 @@ static struct {
 
 static int write_session_file(const session_t *s, char *us, const char *path);
 
+static char *program;
 static char *appdata_wc3270 = NULL;	/* user's wc3270 AppData directory */
 static char *common_appdata_wc3270 = NULL;/* common wc327 AppData directory */
 static char *installdir = NULL;		/* installation directory */
@@ -227,7 +229,7 @@ static int get_printerlu(session_t *s, int explain);
 
 static int num_xs;
 static const char *xs_name(int n, src_t *lp);
-static void xs_init(void);
+static void xs_init(bool include_public);
 typedef struct xs {	/* Existing session: */
     src_t location;	/*  location (current user or all users) */
     char *name;		/*  session name */
@@ -250,6 +252,7 @@ static void create_wc3270_folder(src_t src);
 
 static sw_t do_upgrade(bool);
 static BOOL admin(void);
+static bool ad_exist(void);
 
 /**
  * Fetch a line of input from the console.
@@ -556,51 +559,55 @@ save_keymap_name(const char *path, char *keymap_name, const char *description,
 }
 
 /**
- * Initialize the set of available keymaps.
+ * Initialize keymaps from one directory.
  *
- * Adds the builtin keymaps to a database, then searches the two Docs
- * directories for user-defined keymaps and adds those.
+ * @param[in] src	type of directory
+ * @param[in] dirname	name of directory
  */
 static void
-save_keymaps(void)
+save_keymaps_type(src_t src, const char *dirname)
 {
-    int i;
     char dpath[MAX_PATH];
     char fpath[MAX_PATH];
     HANDLE h;
     WIN32_FIND_DATA find_data;
+
+    sprintf(dpath, "%s%s", dirname, DONE_FILE);
+    if (access(dpath, R_OK) != 0) {
+	sprintf(dpath, "%s*%s", searchdir, KEYMAP_SUFFIX);
+	h = FindFirstFile(dpath, &find_data);
+	if (h != INVALID_HANDLE_VALUE) {
+	    do {
+		sprintf(fpath, "%s%s", dirname, find_data.cFileName);
+		(void) save_keymap_name(fpath, find_data.cFileName, NULL,
+			src);
+	    } while (FindNextFile(h, &find_data) != 0);
+	    FindClose(h);
+	}
+    }
+}
+
+/**
+ * Initialize the set of available keymaps.
+ *
+ * Adds the builtin keymaps to a database, then searches the two Docs
+ * directories for user-defined keymaps and adds those.
+ *
+ * @param[in] include_public	if true, include public folder
+ */
+static void
+save_keymaps(bool include_public)
+{
+    int i;
 
     for (i = 0; builtin_keymaps[i].name != NULL; i++) {
 	(void) save_keymap_name(NULL, builtin_keymaps[i].name,
 		builtin_keymaps[i].description, SRC_NONE);
     }
 
-    sprintf(dpath, "%s%s", searchdir, DONE_FILE);
-    if (access(dpath, R_OK) != 0) {
-	sprintf(dpath, "%s*%s", searchdir, KEYMAP_SUFFIX);
-	h = FindFirstFile(dpath, &find_data);
-	if (h != INVALID_HANDLE_VALUE) {
-	    do {
-		sprintf(fpath, "%s%s", searchdir, find_data.cFileName);
-		(void) save_keymap_name(fpath, find_data.cFileName, NULL,
-			SRC_DOCUMENTS);
-	    } while (FindNextFile(h, &find_data) != 0);
-	    FindClose(h);
-	}
-    }
-
-    sprintf(dpath, "%s%s", public_searchdir, DONE_FILE);
-    if (access(dpath, R_OK) != 0) {
-	sprintf(dpath, "%s*%s", public_searchdir, KEYMAP_SUFFIX);
-	h = FindFirstFile(dpath, &find_data);
-	if (h != INVALID_HANDLE_VALUE) {
-	    do {
-		sprintf(fpath, "%s%s", public_searchdir, find_data.cFileName);
-		(void) save_keymap_name(fpath, find_data.cFileName, NULL,
-			SRC_PUBLIC_DOCUMENTS);
-	    } while (FindNextFile(h, &find_data) != 0);
-	    FindClose(h);
-	}
+    save_keymaps_type(SRC_DOCUMENTS, searchdir);
+    if (include_public) {
+	save_keymaps_type(SRC_PUBLIC_DOCUMENTS, public_searchdir);
     }
 }
 
@@ -738,17 +745,19 @@ struct {		/* Menu options: */
     const char *text;	/*  long name */
     const char *name;	/*  short name */
     const char *alias;	/*  short name alias */
-    int requires_xs;	/*  if TRUE, requires existing sessions */
+    bool requires_xs;	/*  if true, requires existing sessions */
+    bool requires_ad;	/*  if true, requires unmigrated files */
     int num_params;	/*  number of command-line parameters to accept */
 } main_option[] = {
     { NULL, NULL, FALSE, 0 }, /* intentional hole */
-    { "Create new session", "new",      "create", FALSE, 1 },
-    { "Edit session",       "edit",     NULL,     TRUE, 1 },
-    { "Delete session",     "delete",   "rm",     TRUE, 1 },
-    { "Copy session",       "copy",     "cp",     TRUE, 2 },
-    { "Rename session",     "rename",   "mv",     TRUE, 2 },
-    { "Create shortcut",    "shortcut", NULL,     TRUE, 1 },
-    { "Quit",               "quit",     "exit",   FALSE, 0 },
+    { "Create new session",         "new",      "create", false, false, 1 },
+    { "Edit session",               "edit",     NULL,     true,  false, 1 },
+    { "Delete session",             "delete",   "rm",     true,  false, 1 },
+    { "Copy session",               "copy",     "cp",     true,  false, 2 },
+    { "Rename session",             "rename",   "mv",     true,  false, 2 },
+    { "Create shortcut",            "shortcut", NULL,     true,  false, 1 },
+    { "Migrate files from AppData", "migrate",  NULL,     false, true,  0 },
+    { "Quit",                       "quit",     "exit",   false, false, 0 },
     { NULL, NULL, FALSE, 0 } /* end marker */
 };
 
@@ -789,6 +798,9 @@ one. It also lets you create or replace a shortcut on the desktop.\n");
     printf("\n");
     for (i = MO_FIRST; main_option[i].text != NULL; i++) {
 	if (!num_xs && main_option[i].requires_xs) {
+	    continue;
+	}
+	if (main_option[i].requires_ad && !ad_exist()) {
 	    continue;
 	}
 	printf("  %d. %s (%s)\n",
@@ -3764,6 +3776,10 @@ xs_init_type(const char *dirname, xsb_t *xsb, src_t location)
 		int skip = 0;
 		xs_t *xsc;
 
+		/*
+		 * Skip public documents that are the same as private ones.
+		 * This will get us into trouble.
+		 */
 		for (xsc = xs_my.list; xsc != NULL; xsc = xsc->next) {
 		    char *n = xsc->name;
 
@@ -3802,7 +3818,8 @@ xs_init_type(const char *dirname, xsb_t *xsb, src_t location)
 	    }
 	    xsb->count++;
 	} while (FindNextFile(h, &find_data) != 0);
-    FindClose(h);
+
+	FindClose(h);
     }
 }
 
@@ -3831,16 +3848,20 @@ free_xs(xsb_t *xsb)
 
 /**
  * Initialize the session names.
+ *
+ * @param[in] include_public	if true, include public sessions
  */
 static void
-xs_init(void)
+xs_init(bool include_public)
 {
     free_xs(&xs_my);
     free_xs(&xs_public);
     num_xs = 0;
 
     xs_init_type(searchdir, &xs_my, SRC_DOCUMENTS);
-    xs_init_type(public_searchdir, &xs_public, SRC_PUBLIC_DOCUMENTS);
+    if (include_public) {
+	xs_init_type(public_searchdir, &xs_public, SRC_PUBLIC_DOCUMENTS);
+    }
     num_xs = xs_my.count + xs_public.count;
 }
 
@@ -3997,7 +4018,7 @@ session_wizard(const char *session_name, bool explicit_edit, char *result,
     (void) memset(&session, '\0', sizeof(session));
 
     /* Find the existing sessions. */
-    xs_init();
+    xs_init(true);
 
     /* Intro screen. */
     if (session_name == NULL) {
@@ -4060,6 +4081,18 @@ Edit Session\n");
 	    }
 	    /* fall through below */
 	    break;
+	case MO_MIGRATE: {
+	    char *cmd = malloc(strlen(program) + strlen(" -U") + 1);
+
+	    if (cmd == NULL) {
+		fprintf(stderr, "Out of memory.\n");
+		return SW_ERR;
+	    }
+	    sprintf(cmd, "%s -U", program);
+	    system(cmd);
+	    free(cmd);
+	    return SW_SUCCESS;
+	}
 	}
     } else {
 	new_screen(&session, NULL, "");
@@ -4534,7 +4567,6 @@ main(int argc, char *argv[])
 {
     sw_t rc;
     char *session_name = NULL;
-    char *program = argv[0];
     bool explicit_edit = false;
     bool upgrade = false;
     bool automatic_upgrade = false;
@@ -4606,12 +4638,12 @@ main(int argc, char *argv[])
     if (upgrade) {
 	/* Do an upgrade. */
 	get_base_dirs(false);
-	save_keymaps();
-	xs_init();
+	save_keymaps(admin());
+	xs_init(admin());
 	rc = do_upgrade(automatic_upgrade);
     } else {
 	get_base_dirs(true);
-	save_keymaps();
+	save_keymaps(true);
 	/* Display the main menu until they quit or something goes wrong. */
 	result[0] = '\0';
 	do {
@@ -4628,7 +4660,9 @@ main(int argc, char *argv[])
      * disappear without the user seeing what it did.
      */
     if (rc != SW_QUIT) {
-	printf("\nWizard %s. ", (rc == SW_ERR)? "aborted": "complete");
+	printf("\n%sWizard %s. ",
+		upgrade? "Migration ": "",
+		(rc == SW_ERR)? "aborted": "complete");
 	if (!automatic_upgrade) {
 	    ask_enter();
 	}
@@ -4668,7 +4702,54 @@ admin(void)
     return(b);
 }
 
-/*********** Upgrade wizard. ***********/
+/**
+ * Are there any wc3270 files in a directory?
+ * 
+ * @param[in] dirname	directory name
+ *
+ * @return true if there are any wc3270 files present
+ */
+static bool
+any_in(char *dirname)
+{
+    char path[MAX_PATH];
+    HANDLE h;
+    WIN32_FIND_DATA find_data;
+    bool any = false;
+
+    snprintf(path, sizeof(path), "%s%s", dirname, DONE_FILE);
+    if (access(path, R_OK) == 0) {
+	return false;
+    }
+
+    snprintf(path, sizeof(path), "%s*" SESS_SUFFIX, dirname);
+    if ((h = FindFirstFile(path, &find_data)) != INVALID_HANDLE_VALUE) {
+	any = true;
+	FindClose(h);
+    }
+    if (any) {
+	return true;
+    }
+
+    snprintf(path, sizeof(path), "%s*" KEYMAP_SUFFIX, dirname);
+    if ((h = FindFirstFile(path, &find_data)) != INVALID_HANDLE_VALUE) {
+	any = true;
+	FindClose(h);
+    }
+    return any;
+}
+
+/**
+ * Check whether there are files to be migrated.
+ */
+static bool
+ad_exist(void)
+{
+    return (any_in(appdata_wc3270) ||
+	    (admin() && any_in(common_appdata_wc3270)));
+}
+
+/*********** Migration Wizard. ***********/
 
 /* Write a wchar_t string to a file. */
 static void
@@ -4736,7 +4817,7 @@ create_wc3270_folder(src_t src)
     }
 }
 
-/* Copy one session file (Upgrade Wizard). */
+/* Copy one session file (Migration Wizard). */
 static sw_t
 migrate_session(xs_t *xs, int automatic, bool fully_automatic)
 {
@@ -4904,7 +4985,7 @@ Copy session to My Documents, Public Documents or neither?\n\
     return SW_SUCCESS;
 }
 
-/* Copy one keymap (Upgrade Wizard). */
+/* Copy one keymap (Migration Wizard). */
 static sw_t
 migrate_one_keymap(const char *from_dir, const char *to_dir, const char *name,
 	const char *suffix, bool fully_automatic)
@@ -4974,7 +5055,7 @@ migrate_one_keymap(const char *from_dir, const char *to_dir, const char *name,
     return SW_SUCCESS;
 }
 
-/* Copy the keymaps (Upgrade Wizard). */
+/* Copy the keymaps (Migration Wizard). */
 static sw_t
 migrate_keymaps(bool fully_automatic)
 {
@@ -5030,7 +5111,7 @@ static sw_t
 do_upgrade(bool automatic_from_cmdline)
 {
     char done_path[MAX_PATH];
-    static char wizard[] = "wc3270 Upgrade Wizard";
+    static char wizard[] = "wc3270 Migration Wizard";
     int nkm = 0;
     int nf = 0;
     int rc;
@@ -5066,8 +5147,10 @@ do_upgrade(bool automatic_from_cmdline)
 	printf("\n\
 wc3270 %s no longer keeps user-defined files in AppData. Session and\n\
 keymap files are kept in Documents folders instead.\n\n\
-The following files were found in wc3270 AppData folders:\n",
-		wversion);
+The following files were found in %s:\n",
+		wversion,
+		admin()? "wc3270 AppData folders":
+		         "your wc3270 AppData folder");
 	if (xs_my.count || xs_public.count) {
 	    int nxs = xs_my.count + xs_public.count;
 
@@ -5080,8 +5163,9 @@ The following files were found in wc3270 AppData folders:\n",
 	}
 
 	while (true) {
-	    printf("\nCopy %s to new locations? (y/n) [y]: ",
-		    (nf == 1)? "this file": "these files");
+	    printf("\nCopy %s to %s? (y/n) [y]: ",
+		    (nf == 1)? "this file": "these files",
+		    admin()? "Documents folders": "My Documents");
 	    rc = getyn(TRUE);
 	    if (rc == YN_ERR) {
 		return SW_ERR;
@@ -5143,10 +5227,12 @@ The files can be copied automatically, which means that:\n\
     if ((f = fopen(done_path, "w")) != NULL) {
 	fclose(f);
     }
-    snprintf(done_path, sizeof(done_path), "%s%s", public_searchdir,
-	    DONE_FILE);
-    if ((f = fopen(done_path, "w")) != NULL) {
-	fclose(f);
+    if (admin()) {
+	snprintf(done_path, sizeof(done_path), "%s%s", public_searchdir,
+		DONE_FILE);
+	if ((f = fopen(done_path, "w")) != NULL) {
+	    fclose(f);
+	}
     }
 
     /* Done. */
