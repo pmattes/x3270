@@ -859,6 +859,10 @@ one. It also lets you create or replace a shortcut on the desktop.\n");
 		printf("\nUnknown command.");
 		continue;
 	    }
+	    if (main_option[mo].requires_ad && !ad_exist()) {
+		printf("\nUnknown command.");
+		continue;
+	    }
 	    return (menu_op_t)mo;
 	}
 
@@ -3281,9 +3285,11 @@ get_existing_session(const char *why, bool include_public, const char **name,
     for (;;) {
 	int n;
 
-	printf("\nEnter session name or number (1..%d) to %s, or 'q' "
-		"to quit: ",
-		max, why);
+	printf("\nEnter session name or number");
+	if (max > 1) {
+	    printf(" (1..%d)", max);
+	}
+	printf(" to %s, or 'q' to quit: ", why);
 	fflush(stdout);
 	if (get_input(nbuf, sizeof(nbuf)) == NULL) {
 	    return -1;
@@ -4879,12 +4885,15 @@ Copy session to My Documents, Public Documents or neither?\n\
 	    do {
 		int rc;
 
-		printf("Copy session to My Documents? (y/n) [y]: ");
+		printf("\nCopy session to My Documents? (y/n) [y]: ");
 		rc = getyn(true);
 		if (rc == YN_ERR) {
 		    return SW_ERR;
 		}
-		if (rc == TRUE || rc == FALSE) {
+		if (rc == FALSE) {
+		    return SW_SUCCESS;
+		}
+		if (rc == TRUE) {
 		    to_src = SRC_DOCUMENTS;
 		    break;
 		}
@@ -5180,11 +5189,15 @@ The following files were found in %s:\n",
 	printf("\n\
 The files can be copied automatically, which means that:\n\
 - Session files and keymap files in your wc3270 AppDefaults folder will be\n\
-  copied to My Documents\n\
+  copied to My Documents.\n");
+	if (admin()) {
+	    printf("\
 - Session files and keymap files in the all-users wc3270 AppDefaults folder\n\
-  will be copied to Public Documents\n\
+  will be copied to Public Documents.\n");
+	}
+	printf("\
 - Existing desktop shortcuts will be re-written to point at the new sessions,\n\
-  which means that any customizations will be lost\n");
+  which means that any customizations will be lost.\n");
 
 	while (true) {
 	    printf("\nCopy automatically? (y/n) [y]: ");
