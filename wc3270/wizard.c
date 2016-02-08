@@ -278,55 +278,34 @@ cls(void)
     }
 }
 
-/* Generate error output. */
+/* Generate output in specific colors. */
+static void
+color_out(char *fmt, int colors, va_list ap)
+{
+    if (!setup_stdout()) {
+	vprintf(fmt, ap);
+	fflush(stdout);
+	return;
+    }
+    fflush(stdout);
+    SetConsoleTextAttribute(stdout_handle, colors);
+    vprintf(fmt, ap);
+    fflush(stdout);
+    SetConsoleTextAttribute(stdout_handle,
+	    FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED |
+	    FOREGROUND_INTENSITY);
+}
+
+/* Generate error (actually just red) output. */
 static void
 errout(char *fmt, ...)
 {
     va_list ap;
 
-    if (!setup_stdout()) {
-	va_start(ap, fmt);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-	return;
-    }
-    fflush(stdout);
-    SetConsoleTextAttribute(stdout_handle,
-	    FOREGROUND_RED | FOREGROUND_INTENSITY);
     va_start(ap, fmt);
-    vprintf(fmt, ap);
+    color_out(fmt, FOREGROUND_RED | FOREGROUND_INTENSITY, ap);
     va_end(ap);
-    fflush(stdout);
-    SetConsoleTextAttribute(stdout_handle,
-	    FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED |
-	    FOREGROUND_INTENSITY);
 }
-
-#if 0
-/* Generate gray output. */
-static void
-grayout(char *fmt, ...)
-{
-    va_list ap;
-
-    if (!setup_stdout()) {
-	va_start(ap, fmt);
-	vprintf(fmt, ap);
-	va_end(ap);
-	fflush(stdout);
-	return;
-    }
-    fflush(stdout);
-    SetConsoleTextAttribute(stdout_handle, FOREGROUND_INTENSITY);
-    va_start(ap, fmt);
-    vprintf(fmt, ap);
-    va_end(ap);
-    fflush(stdout);
-    SetConsoleTextAttribute(stdout_handle,
-	    FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED |
-	    FOREGROUND_INTENSITY);
-}
-#endif
 
 /* Generate green output. */
 static void
@@ -334,23 +313,31 @@ greenout(char *fmt, ...)
 {
     va_list ap;
 
-    if (!setup_stdout()) {
-	va_start(ap, fmt);
-	vprintf(fmt, ap);
-	va_end(ap);
-	fflush(stdout);
-	return;
-    }
-    fflush(stdout);
-    SetConsoleTextAttribute(stdout_handle,
-	    FOREGROUND_GREEN | FOREGROUND_INTENSITY);
     va_start(ap, fmt);
-    vprintf(fmt, ap);
+    color_out(fmt, FOREGROUND_GREEN | FOREGROUND_INTENSITY, ap);
     va_end(ap);
-    fflush(stdout);
-    SetConsoleTextAttribute(stdout_handle,
-	    FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED |
-	    FOREGROUND_INTENSITY);
+}
+
+/* Generate reverse output. */
+static void
+reverseout(char *fmt, ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    color_out(fmt, BACKGROUND_RED | BACKGROUND_BLUE | BACKGROUND_GREEN, ap);
+    va_end(ap);
+}
+
+/* Generate gray output. */
+static void
+grayout(char *fmt, ...)
+{
+    va_list ap;
+
+    va_start(ap, fmt);
+    color_out(fmt, FOREGROUND_INTENSITY, ap);
+    va_end(ap);
 }
 
 /**
@@ -821,7 +808,7 @@ new_screen(session_t *s, const char *path, const char *title)
 {
     static char wizard[] = "wc3270 Session Wizard";
     cls();
-    printf("%s%*s%s\n",
+    reverseout("%s%*s%s\n",
 	    wizard,
 	    (int)(79 - strlen(wizard) - strlen(wversion)), " ",
 	    wversion);
@@ -2641,7 +2628,7 @@ miscellaneous resources in your session file.");
     return 0;
 
 failed:
-    printf("[Press <Enter>] ");
+    grayout("[Press <Enter>] ");
     fflush(stdout);
     (void) fgets(buf, 2, stdin);
     if (t != NULL) {
@@ -3471,7 +3458,7 @@ ask_enter(void)
 {
     char buf[2];
 
-    printf("[Press <Enter>] ");
+    grayout("[Press <Enter>] ");
     fflush(stdout);
     (void) fgets(buf, sizeof(buf), stdin);
 }
@@ -5257,7 +5244,7 @@ do_upgrade(bool automatic_from_cmdline)
     if (!automatic_from_cmdline) {
 	/* Say hello. */
 	cls();
-	printf("%s%*s%s\n",
+	reverseout("%s%*s%s\n",
 		wizard,
 		(int)(79 - strlen(wizard) - strlen(wversion)), " ",
 		wversion);
