@@ -4044,10 +4044,9 @@ write_shortcut(const session_t *s, bool ask, src_t src, const char *sess_path,
 	for (;;) {
 	    int rc;
 
-	    printf("\n%s desktop shortcut (y/n) [%s]: ",
-		    shortcut_exists? "Replace": "Create",
-		    (windirs_flags & /*GD_INSTALLED*/GD_CATF)? "y": "n");
-	    rc = getyn((windirs_flags & /*GD_INSTALLED*/GD_CATF) != 0);
+	    printf("\n%s desktop shortcut (y/n) [y]: ",
+		    shortcut_exists? "Replace": "Create");
+	    rc = getyn(TRUE);
 	    if (rc == YN_ERR) {
 		return WS_ERR;
 	    } else if (rc == FALSE) {

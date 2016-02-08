@@ -164,27 +164,46 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
     bool is_installed = false;
     HRESULT r;
     char *d, *cd;
+    HKEY key;
+    HMODULE h;
 
     if (flags != NULL) {
 	*flags = 0;
     }
 
-    if (appdata != NULL || flags != NULL) {
-	HMODULE h;
+    /* Check for the registry key to see if we are installed. */
+    if (RegOpenKeyEx(HKEY_CLASSES_ROOT, ".wc3270", 0, KEY_READ, &key)
+	    == ERROR_SUCCESS) {
+	RegCloseKey(key);
+	if (flags != NULL) {
+	    *flags |= GD_INSTALLED;
+	}
+	is_installed = true;
+    }
 
-	h = LoadLibrary("CATF.EXE");
-	if (h != NULL) {
-	    FreeLibrary(h);
-	    is_installed = true;
-	    if (flags != NULL) {
-		*flags |= GD_CATF;
-	    }
+    /* Check for CATF.EXE. */
+    h = LoadLibrary("CATF.EXE");
+    if (h != NULL) {
+	FreeLibrary(h);
+	if (flags != NULL) {
+	    *flags |= GD_CATF;
 	}
     }
 
     /*
      * Use arg0 and GetFullPathName() to figure out the installation
      * directory.
+     *
+     * When the Session Wizard is run from the normal install directory, this
+     * will produce the desired result. In no-install mode, this will also do
+     * the right thing, assuming that they put wc3270.exe and wc3270wiz.exe
+     * in the same place.
+     *
+     * The danger is if someone copies the Wizard somewhere different. We will
+     * end up pointing at that directory.
+     *
+     * I can't use CSIDL_PROGRAMFILES, because the user can override it in the
+     * installer.
      */
     if (instdir != NULL) {
 	char *bsl;
@@ -234,19 +253,21 @@ get_dirs(char *argv0, char *appname, char **instdir, char **desktop,
     }
 
     /* If not installed, app-data and common app-data are cwd. */
-    if (appdata != NULL && !is_installed) {
-	*appdata = getcwd_bsl();
-	if (*appdata == NULL) {
-	    return false;
+    if (!is_installed) {
+	if (appdata != NULL) {
+	    *appdata = getcwd_bsl();
+	    if (*appdata == NULL) {
+		return false;
+	    }
 	}
 	if (common_appdata != NULL) {
-	    *common_appdata = strdup(*appdata);
+	    *common_appdata = getcwd_bsl();
 	    if (*common_appdata == NULL) {
 		return false;
 	    }
 	}
 
-	/* Keep xxx_get_dirs() from resolving it below. */
+	/* Keep get_dirs_shfp() from resolving it below. */
 	xappdata = NULL;
 	common_xappdata = NULL;
     }
