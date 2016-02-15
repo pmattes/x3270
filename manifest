@@ -528,6 +528,7 @@ wc3270/wc3270.h
 wc3270/wc3270.ico
 wc3270/wc3270.iss
 wc3270/wc3270.iss.tmpl
+wc3270/wc3270km.ico
 wc3270/wc3270.rc
 wc3270/wizard.c
 wc3270/wselectc.h
