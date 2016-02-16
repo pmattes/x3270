@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2016 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -62,7 +62,7 @@ get_resource(const char *resource)
     /* Figure out the full class name. */
     fq_class = XtNewString(fq_resource);
     lcomp = strrchr(fq_class, '.') + 1;
-    *lcomp = toupper(*lcomp);
+    *lcomp = toupper((unsigned char)*lcomp);
 
     /* Look up the resource. */
     if (XrmGetResource(rdb, fq_resource, fq_class, &type, &value) == True &&

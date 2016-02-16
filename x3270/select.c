@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2016 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -186,7 +186,7 @@ reclass(char *s)
 	high = -1;
 	for (;;) {
 		c = *s++;
-		if (isdigit(c)) {
+		if (isdigit((unsigned char)c)) {
 			if (n == -1)
 				n = 0;
 			n = (n * 10) + (c - '0');

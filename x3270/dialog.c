@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2012, 2014-2015 Paul Mattes.
+ * Copyright (c) 1996-2012, 2014-2016 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  * 
@@ -169,26 +169,26 @@ dialog_text_callback(Widget w, XtPointer client_data,
 			switch (t) {
 			    case T_NUMERIC:
 				/* Only numbers. */
-				bad = !isdigit(c);
+				bad = !isdigit((unsigned char)c);
 				break;
 			    case T_HOSTFILE:
 				/*
 				 * Only printing characters and spaces; no
 				 * leading or trailing blanks.
 				 */
-				bad = !isprint(c) || (!pos && !i && c == ' ');
+				bad = !isprint((unsigned char)c) || (!pos && !i && c == ' ');
 				break;
 			    case T_UNIXFILE:
 				/* Only printing characters. */
-				bad = !isprint(c);
+				bad = !isprint((unsigned char)c);
 				break;
 			    case T_COMMAND:
 				/* Only printing characters. */
-				bad = !isprint(c);
+				bad = !isprint((unsigned char)c);
 				break;
 			    default:
 				/* Only printing characters, no spaces. */
-				bad = !isgraph(c);
+				bad = !isgraph((unsigned char)c);
 				break;
 			}
 			if (bad) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2016 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -564,7 +564,7 @@ popup_dialog_callback(Widget w, XtPointer client_data,
 	    char c;
 
 	    c = *(b.ptr + i);
-	    if (isspace(c) && (*ftp != FORM_NO_CC || c != ' ')) {
+	    if (isspace((unsigned char)c) && (*ftp != FORM_NO_CC || c != ' ')) {
 		if (place == FRONT) {
 		    front_len++;
 		    continue;
@@ -606,8 +606,8 @@ create_form_popup(const char *name, XtCallbackProc callback,
     /* Create the popup shell */
 
     widgetname = xs_buffer("%sPopup", name);
-    if (isupper(widgetname[0])) {
-	widgetname[0] = tolower(widgetname[0]);
+    if (isupper((unsigned char)widgetname[0])) {
+	widgetname[0] = tolower((unsigned char)widgetname[0]);
     }
     shell = XtVaCreatePopupShell(
 	    widgetname, transientShellWidgetClass, toplevel,
