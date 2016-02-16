@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -123,7 +123,7 @@ popup_idle(void)
 	    fuzz = false;
 	}
 	s = its;
-	while (isdigit(*s)) {
+	while (isdigit((unsigned char)*s)) {
 	    s++;
 	}
 	switch (*s) {

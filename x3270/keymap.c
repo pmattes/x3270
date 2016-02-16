@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2010, 2013-2015 Paul Mattes.
+ * Copyright (c) 1996-2010, 2013-2016 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -1248,8 +1248,8 @@ Fnn_strcmp(char *s1, char *s2)
 	static char kp[] = "<KeyPress>F";
 #	define KPL (sizeof(kp) - 1)
 
-	if (strncmp(s1, kp, KPL) || !isdigit(s1[KPL]) ||
-	    strncmp(s2, kp, KPL) || !isdigit(s2[KPL]))
+	if (strncmp(s1, kp, KPL) || !isdigit((unsigned char)s1[KPL]) ||
+	    strncmp(s2, kp, KPL) || !isdigit((unsigned char)s2[KPL]))
 		return strcmp(s1, s2);
 	return atoi(s1 + KPL) - atoi(s2 + KPL);
 }

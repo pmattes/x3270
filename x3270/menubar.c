@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2016 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -277,7 +277,7 @@ add_menu_hier(struct menu_hier *root, char **parents, ArgList args,
 			for (i = 0, m = namebuf + strlen(namebuf);
 			     (*parents)[i] && ((size_t)(m - namebuf) < sizeof(namebuf));
 			     i++) {
-				if (isalnum((*parents)[i])) {
+				if (isalnum((unsigned char)(*parents)[i])) {
 					*m++ = (*parents)[i];
 				}
 			}

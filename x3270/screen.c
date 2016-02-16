@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2016 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
  *  GA 30332.
@@ -4262,16 +4262,16 @@ split_font_list_entry(char *entry, char **menu_name, bool *noauto,
 
     do {
 	any = false;
-	while (isspace(*s)) {
+	while (isspace((unsigned char)*s)) {
 	    s++;
 	}
-	if (!strncmp(s, "#noauto", 7) && (!s[7] || isspace(s[7]))) {
+	if (!strncmp(s, "#noauto", 7) && (!s[7] || isspace((unsigned char)s[7]))) {
 	    if (noauto != NULL) {
 		*noauto = true;
 	    }
 	    s += 7;
 	    any = true;
-	} else if (!strncmp(s, "#resize", 7) && (!s[7] || isspace(s[7]))) {
+	} else if (!strncmp(s, "#resize", 7) && (!s[7] || isspace((unsigned char)s[7]))) {
 	    if (resize != NULL) {
 		*resize = true;
 	    }
