@@ -1,5 +1,18 @@
 <h1>Changes in x3270, c3270, wc3270, s3270, ws3270, tcl3270, pr3287 and wpr3287 3.5</h1>
 3.5 is the current development line for the x3270 suite.
+<h2>Changes in version 3.5ga6, nn. Month 2016</h2>
+<ul>
+ <li>[all] Changed the keyboard unlock behavior when a BIND-IMAGE is received
+  from the host. Prior to release 3.3.14, the keyboard would not be unlocked
+  on a new host connection until a Write was received. In 3.3.14, this was
+  changed so that the keyboard would be unlocked as soon as a BIND-IMAGE was
+  received, and in release 3.4, a new host option (<b>B:</b>) was added to
+  revert to the old behavior. In this release, the old behavior (waiting for
+  a Write) is the default again. A new resource, <b>bindUnock</b> is added to
+  enable the new behavior (unlocking as soon as the BIND-IMAGE is received)
+  when set to true. The <b>B:</b> host option is still supported, as a no-op.
+  </li>
+</ul>
 <h2>Changes in version 3.5beta5, 15. February 2016</h2>
 <ul>
  <li>[<i>wc3270</i>] Added crosshair cursor and cursor type to the Session

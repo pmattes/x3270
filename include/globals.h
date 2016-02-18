@@ -177,7 +177,7 @@ typedef enum {
     NON_TN3270E_HOST,	/* N: */
     PASSTHRU_HOST,	/* P: */
     STD_DS_HOST,	/* S: */
-    BIND_LOCK_HOST	/* B: */
+    BIND_LOCK_HOST	/* B:, now a no-op */
 } host_flags_t;
 #define HOST_FLAG(t)	(host_flags & (1 << t))
 

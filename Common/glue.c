@@ -981,6 +981,7 @@ parse_model_number(char *m)
 
 static res_t base_resources[] = {
     { ResBindLimit,	aoffset(bind_limit),	XRM_BOOLEAN },
+    { ResBindUnlock,	aoffset(bind_unlock),	XRM_BOOLEAN },
     { ResBsdTm,		aoffset(bsd_tm),		XRM_BOOLEAN },
 #if defined(HAVE_LIBSSL) /*[*/
     { ResAcceptHostname,aoffset(ssl.accept_hostname),XRM_STRING },

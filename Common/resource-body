@@ -304,6 +304,22 @@ description
     If false, it will not.
 .
 
+name bindUnlock
+applies a
+type b
+groups p
+default false
+description
+    When true, %p% will unlock the keyboard as soon as the host sends a BIND
+    image. Otherwise, it will wait until the host sends a Write command.
+    <p class=indented>
+    Note that in some previous releases, unlocking as soon as the BIND image
+    was recevied was the default, and this behavior could be overridden
+    (forcing %p% to wait for the Write) by the <b>B:</b> option on the
+    hostname. Since waiting for the Write is now the default, <b>B:</b> is
+    still supported as a no-op.
+.
+
 name blankFill
 applies a
 groups i
