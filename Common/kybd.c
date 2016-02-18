@@ -561,13 +561,13 @@ kybd_in3270(bool in3270 _is_unused)
 		break;
 	case CONNECTED_TN3270E:
 		/*
-		 * We are in TN3270E 3270 mode. If we were explicitly bound,
-		 * then the keyboard must be unlocked now. If not, we are
-		 * implicitly in 3270 mode because the host did not negotiate
-		 * BIND notifications, and we should continue to wait for a
-		 * Write command before unlocking the keyboard.
+		 * We are in TN3270E 3270 mode. If so configured and we were
+		 * explicitly bound, then the keyboard must be unlocked now.
+		 * If not, we are implicitly in 3270 mode because the host did
+		 * not negotiate BIND notifications, and we should continue to
+		 * wait for a Write command before unlocking the keyboard.
 		 */
-		if (!HOST_FLAG(BIND_LOCK_HOST) && net_bound()) {
+		if (appres.bind_unlock && net_bound()) {
 		    kybdlock_clr(-1, "kybd_in3270");
 		} else {
 		    /*
@@ -575,9 +575,9 @@ kybd_in3270(bool in3270 _is_unused)
 		     * The former was set by this function when we were
 		     * unbound. The latter may be a leftover from the user
 		     * initiating a host switch by sending a command with an
-		     * AID. If this is a non-bind-unlock host (the B: option),
-		     * we want to preserve that until the host sends a Write
-		     * with a Keyboard Restore in it.
+		     * AID. If this is a non-bind-unlock host (bind_unlock is
+		     * clear, the default), we want to preserve that until the
+		     * host sends a Write with a Keyboard Restore in it.
 		     */
 		    kybdlock_clr(~(KL_AWAITING_FIRST | KL_OIA_LOCKED),
 				"kybd_in3270");

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2016 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -1078,6 +1078,7 @@ copy_xres_to_res_bool(void)
     copy_bool(modified_sel);
     copy_bool(unlock_delay);
     copy_bool(bind_limit);
+    copy_bool(bind_unlock);
     copy_bool(new_environ);
     copy_bool(socket);
     copy_bool(numeric_lock);

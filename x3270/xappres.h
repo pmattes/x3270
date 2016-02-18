@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2012, 2015 Paul Mattes.
+ * Copyright (c) 1993-2012, 2015-2016 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * All rights reserved.
  *
@@ -92,6 +92,7 @@ typedef struct {
 	Boolean modified_sel;
 	Boolean unlock_delay;
 	Boolean bind_limit;
+	Boolean bind_unlock;
 	Boolean new_environ;
 	Boolean socket;
 	Boolean numeric_lock;
