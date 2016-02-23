@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2015, Paul Mattes.
+ * Copyright (c) 2008-2016, Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -225,6 +225,8 @@ cpalias_t cpaliases[] = {
     { "slovenian",	"cp870" },
     { "spanish",	"cp284" },
     { "spanish-euro",	"cp1145" },
+    { "swedish",	"cp278" },
+    { "swedish-euro",	"cp1143" },
     { "thai",		"cp1160" },
 #if defined(X3270_DBCS) /*[*/
     { "traditional-chinese", "cp937" },
