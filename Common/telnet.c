@@ -971,7 +971,16 @@ net_connected(void)
 	if (SSL_set_fd(ssl_con, (int)sock) != 1) {
 	    vtrace("Can't set fd!\n");
 	}
+#if defined(_WIN32) /*[*/
+	/* Make the socket blocking for SSL_connect. */
+	(void) WSAEventSelect(sock, sock_handle, 0);
+	(void) non_blocking(false);
+#endif /*]*/
 	rv = SSL_connect(ssl_con);
+#if defined(_WIN32) /*[*/
+	/* Make the socket non-blocking again for event processing. */
+	(void) WSAEventSelect(sock, sock_handle, FD_READ | FD_CONNECT | FD_CLOSE);
+#endif /*]*/
 	if (rv != 1) {
 	    long v;
 
@@ -1217,7 +1226,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	 * Note that WSAEventSelect does this automatically (and won't allow
 	 * us to change it back to blocking), except on Wine.
 	 */
-	if (sock >=0 && non_blocking(true) < 0) {
+	if (sock != INVALID_SOCKET && non_blocking(true) < 0) {
 		    host_disconnect(true);
 		    return;
 	}
