@@ -1,0 +1,107 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+    <head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css"
+	    rel="stylesheet">
+	<title>wc3270 Installer Documentation</title>
+    </head>
+    <body>
+
+	<h1>wc3270 Installer Documentation</h1>
+	<h2>Windows Installer Options</h2>
+	The Windows installer for wc3270 uses Inno Setup. Complete
+	documentation for the command-line options is here:
+	<p><a href="http://www.jrsoftware.org/ishelp/index.php?topic=setupcmdline">http://www.jrsoftware.org/ishelp/index.php?topic=setupcmdline</a>
+	<p>Options of interest are:</p>
+	<table cols=2 width="75%">
+	    <tr>
+		<th>Option</th>
+		<th>Purpose</th>
+	    </tr>
+	    <tr>
+		<td>/SILENT</td>
+		<td>Run the installer without user interation</td>
+	    </tr>
+	    <tr>
+		<td>/COMPONENTS="component,component..."</td>
+		<td>Install only specific <a href="#components">components</a></td>
+	    </td>
+	    <tr>
+		<td>/TASKS="task,task..."</td>
+		<td>Perform only specific install <a href="#tasks">tasks</a></td>
+	    </td>
+	</table>
+	<p>By default, all components are installed. The components are:</p>
+	<a name="components"></a><table cols=2 width="75%">
+	    <tr>
+		<th>Component</th>
+		<th>Definition</th>
+	    </tr>
+	    <tr>
+		<td>base</td>
+		<td>wc3270.exe (interactive emulator)<br>
+		    wpr3287.exe (printer session emulator)<br>
+		    catf.exe (helper program for displaying trace files)<br>
+		    root_certs.txt (root CA certificate database)</td>
+	    </tr>
+	    <tr>
+		<td>wizard</td>
+		<td>wc3270wiz.exe (Session Wizard)</td>
+	    </tr>
+	    <tr>
+		<td>ws3270</td>
+		<td>ws3270.exe (scripting emulator)<br>
+		    x3270if.exe (command-line interface to ws3270 and wc3270 scrpting)</td>
+	    </tr>
+	    <tr>
+		<td>help</td>
+		<td>HTML documentation</td>
+	    </tr>
+	</table>
+	<p>By default, all tasks are performed. The tasks are:</p>
+	<a name="tasks"></a><table cols=2 width="75%">
+	    <tr>
+		<th>Task</th>
+		<th>Definition</th>
+	    </tr>
+	    <tr>
+		<td>desktopicons</td>
+		<td>Create desktop shortcuts for wc3270 and the Session
+		    Wizard</td>
+	    </tr>
+	    <tr>
+		<td>migratefiles</td>
+		<td>Copy session files from the AppDefaults folders (from older
+		    versions of wc3270) to Documents folders</td>
+	    </tr>
+	</table>
+
+	<h2>Notes for Version Upgrades</h2>
+	<h3>AppData File Migration</h3>
+	Release 3.5beta5 stopped the use of the wc3270 AppData folders. When
+	upgrading from an earlier release to 3.5beta5 or later, session
+	and keymap files in an wc3270 AppData folder must be copied to a
+	Documents folder (a user's My Documents or the Public Documents
+	folder) and desktop session shortcuts must be replaced.
+	A Migration Wizard will be run automatically by the installer to handle
+	this, allowing the user to control which files are copied. (Note that
+	when using unattended installation, the Migration Wizard will copy all
+	of the files.)
+	<p>
+	The Migration wizard will copy only files for the user running the
+	installer and shared files. After the upgrade, other users will be
+	offered an option in the Session Wizard to migrate their own files.
+	<p>
+	File migration will only happen once per user and for shared files.
+	The files will be preserved in the AppData folders, but will be
+	ignored.
+	<h3>Upgrading from 32-bit to 64-bit</h3>
+	Release 3.5alpha4 was the first with 64-bit Windows support. When
+	upgrading on 64-bit Windows from an earlier release to 3.5alpha4 or
+	later, the old 32-bit version must be uninstalled before 64-bit
+	installation can proceed. This will be done automatically by the 64-bit
+	installer (with the user's permission; if installing unattended, it
+	will always be performed).
+    </body>
+</html>
