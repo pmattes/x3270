@@ -38,13 +38,14 @@ SCREENS = c3270-thumb.png c3270.png cyrillic-thumb.png cyrillic.png \
 OTHERS = $(SCREENS) Brackets.html Build-c3270.html Build-tcl3270.html \
 	Build-x3270.html Build.html Charset.html HotBugs.html Keymap.html \
 	SS-HCS12-1372-00.pdf Unix-x3270if.html Windows-x3270if.html \
-	Wishlist.html c3270-Resources.html c3270-man.html c3270Keymap.html \
-	del.jpg delta.jpg ibm_hosts.html man/FAQ.html pr3287-man.html \
-	rest.html s3270-Resources.html s3270-man.html styles.css \
-	tcl3270-Resources.html tcl3270-man.html wc3270-Resources.html \
-	wc3270-man.html wc3270-script.html wc3270Keymap.html wpr3287-man.html \
-	ws3270-Resources.html ws3270-man.html x026.gif x3270-Resources.html \
-	x3270-man.html x3270-script.html x3270.jpg
+	WindowsInstall.html Wishlist.html c3270-Resources.html c3270-man.html \
+	c3270Keymap.html del.jpg delta.jpg ibm_hosts.html man/FAQ.html \
+	pr3287-man.html rest.html s3270-Resources.html s3270-man.html \
+	styles.css tcl3270-Resources.html tcl3270-man.html \
+	wc3270-Resources.html wc3270-man.html wc3270-script.html \
+	wc3270Keymap.html wpr3287-man.html ws3270-Resources.html \
+	ws3270-man.html x026.gif x3270-Resources.html x3270-man.html \
+	x3270-script.html x3270.jpg
 
 all: $(PAGES) webpage.tgz
 
