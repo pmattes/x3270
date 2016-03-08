@@ -76,10 +76,12 @@ windows-release: release-files
 
 # Sign the binaries using ksign.
 SIGNFILES = $(shell awk '/Source:.*exe/ { print substr($$2,2,length($$2)-3) }' *.iss.tmpl | sed 's-\\-\\\\-g')
+CERT = z:\\hd\\xfer\\Certificate.p12
+PASS = /p `cat /tmp/pass`
 sign-files:
 	./readpass
 	for i in $(SIGNFILES); \
-	do wine c:\\Program\ Files\\ksign\\ksigncmd.exe /f Z:\\hd\\xfer\\Certificate.p12 /p `cat /tmp/pass` $$i || exit 1; \
+	do wine C:\\Program\ Files\\ksign\\ksigncmd.exe /f $(CERT) $(PASS) $$i || exit 1; \
 	   echo $$i; \
 	done
 
@@ -87,8 +89,8 @@ sign-files:
 # .iss.tmpl file.
 ISSDEP = $(shell awk '/Source:/ { print substr($$2,2,length($$2)-3) }' *.iss.tmpl | sed 's-\\-/-g')
 wc3270-$(VERSION)-setup.exe: $(ISSDEP) wc3270.iss Makefile.aux sign-files
-	wine c:\\Program\ Files\\Inno\ Setup\ 5\\ISCC.EXE \
-	    /smystandard="C:\\Program Files\\ksign\\ksigncmd.exe /f z:\\hd\\xfer\\Certificate.p12 /p `cat /tmp/pass` \$$p" \
+	wine C:\\Program\ Files\\Inno\ Setup\ 5\\ISCC.EXE \
+	    /smystandard="C:\\Program Files\\ksign\\ksigncmd.exe /f $(CERT) $(PASS) \$$p" \
 	    wc3270.iss
 
 # Rule for building the noinstall.zip file, deriving dependencies from the
