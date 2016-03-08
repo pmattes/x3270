@@ -80,10 +80,16 @@ CERT = z:\\hd\\xfer\\Certificate.p12
 PASS = /p `cat /tmp/pass`
 sign-files:
 	./readpass
-	for i in $(SIGNFILES); \
-	do wine C:\\Program\ Files\\ksign\\ksigncmd.exe /f $(CERT) $(PASS) $$i || exit 1; \
-	   echo $$i; \
-	done
+	@(echo '@echo off'; \
+	 for i in $(SIGNFILES); \
+	    do /bin/echo -E "\"C:\\Program Files\\ksign\\ksigncmd.exe\" /f $(CERT) /p `sed 's/%/%%/' /tmp/pass` $$i"; \
+	       /bin/echo "if errorlevel 1 ("; \
+	       /bin/echo "    goto :EOF"; \
+	       /bin/echo ")"; \
+	       /bin/echo -E "echo ==== $$i ===="; \
+	done) >/tmp/sign.bat
+	wine cmd /c Z:\\tmp\\sign.bat
+	$(RM) /tmp/sign.bat
 
 # Rule for building the Inno Setup .exe file, deriving dependencies from the
 # .iss.tmpl file.
