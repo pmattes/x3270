@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Get a password and put it in /tmp/pass
+
+read -p "Enter certificate password: " -r -s pass
+echo
+#echo -E $pass | sed -e 's-\\-\\\\-g' -e 's-!-\\!-g' >/tmp/pass
+echo -E $pass >/tmp/pass
