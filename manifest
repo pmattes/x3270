@@ -492,7 +492,6 @@ wc3270/html/Resources.html
 wc3270/html/SSL.html
 wc3270/html/wc3270-man.html
 wc3270/html/wc3270-script.html
-wc3270/html/WindowsInstall.html
 wc3270/html/Wishlist.html
 wc3270/keymap.c
 wc3270/keymap.h
@@ -513,6 +512,7 @@ wc3270/NO-INSTALL.txt
 wc3270/nvt_gui.c
 wc3270/openssl-url.txt
 wc3270/README-zip.txt
+wc3270/readpass
 wc3270/relink.c
 wc3270/relinkc.h
 wc3270/resource-body
@@ -541,6 +541,7 @@ Webpage/Build-c3270.html
 Webpage/Build.html
 Webpage/Build-tcl3270.html
 Webpage/Build-x3270.html
+Webpage/WindowsInstall.html
 wpr3287/conf.h
 wpr3287/html/documentation-relnotes-body.html
 wpr3287/html.m4
