@@ -114,7 +114,7 @@ echo "===== Building the tarball."
 make -f Makefile.aux -j4 src.tgz
 
 # Work in a clean temporary directory
-tmpdir=/tmp/mka
+tmpdir=/hd/xfer/mka
 rm -rf $tmpdir
 mkdir $tmpdir
 cd $tmpdir

@@ -70,19 +70,32 @@ LICENSE.txt: version.txt LICENSE.txt.tmpl mkiss
 # This depends on external targets, and is intended to be built recursively
 # from the top-level Makefile, which builds those targets first.
 VERSION = $(shell . ./version.txt && echo $$version)
-windows-release: wc3270-$(VERSION)-setup.exe wc3270-$(VERSION)-noinstall-32.zip wc3270-$(VERSION)-noinstall-64.zip
+release-files: wc3270-$(VERSION)-setup.exe wc3270-$(VERSION)-noinstall-32.zip wc3270-$(VERSION)-noinstall-64.zip
+windows-release: release-files
+	$(RM) /tmp/pass
+
+# Sign the binaries using ksign.
+SIGNFILES = $(shell awk '/Source:.*exe/ { print substr($$2,2,length($$2)-3) }' *.iss.tmpl | sed 's-\\-\\\\-g')
+sign-files:
+	./readpass
+	for i in $(SIGNFILES); \
+	do wine c:\\Program\ Files\\ksign\\ksigncmd.exe /f Z:\\hd\\xfer\\Certificate.p12 /p `cat /tmp/pass` $$i || exit 1; \
+	   echo $$i; \
+	done
 
 # Rule for building the Inno Setup .exe file, deriving dependencies from the
 # .iss.tmpl file.
 ISSDEP = $(shell awk '/Source:/ { print substr($$2,2,length($$2)-3) }' *.iss.tmpl | sed 's-\\-/-g')
-wc3270-$(VERSION)-setup.exe: $(ISSDEP) wc3270.iss Makefile.aux
-	wine c:\\Program\ Files\\Inno\ Setup\ 5\\ISCC.EXE wc3270.iss
+wc3270-$(VERSION)-setup.exe: $(ISSDEP) wc3270.iss Makefile.aux sign-files
+	wine c:\\Program\ Files\\Inno\ Setup\ 5\\ISCC.EXE \
+	    /smystandard="C:\\Program Files\\ksign\\ksigncmd.exe /f z:\\hd\\xfer\\Certificate.p12 /p `cat /tmp/pass` \$$p" \
+	    wc3270.iss
 
 # Rule for building the noinstall.zip file, deriving dependencies from the
 # .zipit file.
 ZIPITDEP32 = $(shell awk '/^F/ { print $$2; }' wc3270-32.zipit)
-wc3270-$(VERSION)-noinstall-32.zip: $(ZIPITDEP32) wc3270-32.zipit version.txt Makefile.aux
+wc3270-$(VERSION)-noinstall-32.zip: $(ZIPITDEP32) wc3270-32.zipit version.txt Makefile.aux sign-files
 	./zipit -c "wc3270 $(VERSION)" -o wc3270-$(VERSION)-noinstall-32.zip wc3270-32.zipit
 ZIPITDEP64 = $(shell awk '/^F/ { print $$2; }' wc3270-64.zipit)
-wc3270-$(VERSION)-noinstall-64.zip: $(ZIPITDEP64) wc3270-64.zipit version.txt Makefile.aux
+wc3270-$(VERSION)-noinstall-64.zip: $(ZIPITDEP64) wc3270-64.zipit version.txt Makefile.aux sign-files
 	./zipit -c "wc3270 $(VERSION)" -o wc3270-$(VERSION)-noinstall-64.zip wc3270-64.zipit
