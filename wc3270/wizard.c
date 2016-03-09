@@ -3940,7 +3940,6 @@ free_xs(xsb_t *xsb)
     list = xsb->list;
     while (list != NULL) {
 	next = list->next;
-	free(list->name);
 	free(list);
 	list = next;
     }
@@ -4304,9 +4303,8 @@ Edit Session\n");
 	sl = strlen(result);
 
 	snprintf(result + sl, result_size - sl,
-		"%c%s%s shortcut '%s'.",
-		1,
-		sl? "\n": "",
+		"%c%s shortcut '%s'.",
+		sl? '\n': 1,
 		(wsrc == WS_CREATED)? "Created": "Replaced",
 		session.session);
 	break;
