@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2016 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -54,7 +54,7 @@
 #define END_TRANSFER	"TRANS03"	/* Message for xfer complete */
 
 #define DFT_MIN_BUF	256
-#define DFT_MAX_BUF	32768
+#define DFT_MAX_BUF	32767
 
 #define DFT_MAX_UNGETC	32
 
