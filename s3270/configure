@@ -606,7 +606,6 @@ EGREP
 GREP
 CPP
 CCOPTIONS
-HSOPTS
 host_os
 host_vendor
 host_cpu
@@ -3060,7 +3059,6 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-ansi="-std=c99 -pedantic"
 # Make sure we can run config.sub.
 $SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||
   as_fn_error $? "cannot run $SHELL $ac_aux_dir/config.sub" "$LINENO" 5
@@ -3132,6 +3130,7 @@ IFS=$ac_save_IFS
 case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 
+ansi="-std=c99 -pedantic"
 case "$host_os" in
 *cygwin*)	ansi=""
 		;;
@@ -3144,9 +3143,8 @@ linux*)		CPPFLAGS="-D_POSIX_SOURCE"
 esac
 if test "$GCC" = yes
 then	# Add common gcc options, plus flags for dependency generation.
-    	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
+	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
-
 
 
 
@@ -3330,9 +3328,6 @@ if test "$ac_res" != no; then :
 
 fi
 
-
-
-ac_config_headers="$ac_config_headers conf.h"
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -4258,6 +4253,9 @@ case "$enable_ipv6" in
 
 	;;
 esac
+
+ac_config_headers="$ac_config_headers conf.h"
+
 
 ac_config_files="$ac_config_files Makefile"
 
