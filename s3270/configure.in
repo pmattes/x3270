@@ -33,11 +33,9 @@ dnl Checks for programs.
 AC_PROG_INSTALL
 AC_PROG_CC
 
-dnl Figure out what sort of host this is.
-dnl If it's solaris, then pass the -D__EXTENSIONS__ flag to cc, so that
-dnl all of usual Unix functions are visible to strict ANSI compilers.
-ansi="-std=c99 -pedantic"
+dnl Figure out what sort of host and compiler this is.
 AC_CANONICAL_HOST
+ansi="-std=c99 -pedantic"
 case "$host_os" in
 *cygwin*)	ansi=""
 		;;
@@ -50,10 +48,9 @@ linux*)		CPPFLAGS="-D_POSIX_SOURCE"
 esac
 if test "$GCC" = yes
 then	# Add common gcc options, plus flags for dependency generation.
-    	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
+	CCOPTIONS="$CCOPTIONS -Wall -Wsign-compare $ansi -Wno-variadic-macros -MMD -MP"
 fi
 AC_SUBST(host)
-AC_SUBST(HSOPTS)
 AC_SUBST(CCOPTIONS)
 
 dnl Check for libraries.
@@ -64,10 +61,7 @@ AC_CHECK_FUNCS(forkpty)
 AC_SEARCH_LIBS(gethostbyname, nsl)
 AC_SEARCH_LIBS(socket, socket)
 
-dnl Check for the iconv function.
-
 dnl Checks for header files.
-AC_CONFIG_HEADER(conf.h)
 AC_CHECK_HEADERS(sys/select.h)
 AC_CHECK_HEADERS(pty.h)
 AC_CHECK_HEADERS(libutil.h)
@@ -185,6 +179,9 @@ case "$enable_ipv6" in
 ""|yes)	AC_DEFINE(X3270_IPV6,1)
 	;;
 esac
+
+dnl Generate conf.h.
+AC_CONFIG_HEADER(conf.h)
 
 dnl Generate the Makefiles.
 AC_OUTPUT(Makefile)
