@@ -573,7 +573,7 @@ ft_go(ft_conf_t *p)
 	f = fopen(p->local_filename, p->ascii_flag? "r": "rb");
 	if (f != NULL) {
 	    (void) fclose(f);
-	    popup_an_error("File exists");
+	    popup_an_error("Transfer: File exists");
 	    return NULL;
 	}
     }
@@ -739,7 +739,8 @@ parse_ft_keywords(unsigned argc, const char **argv)
 
 	    eq = strchr(argv[j], '=');
 	    if (eq == NULL || eq == argv[j] || !*(eq + 1)) {
-		popup_an_error("Invalid option syntax: '%s'", argv[j]);
+		popup_an_error("Transfer: Invalid option syntax: '%s'",
+			argv[j]);
 		return NULL;
 	    }
 	    kwlen = eq - argv[j];
@@ -753,7 +754,8 @@ parse_ft_keywords(unsigned argc, const char **argv)
 			}
 		    }
 		    if (k >= 4 || tp[i].keyword[k] == NULL) {
-			popup_an_error("Invalid option value: '%s'", eq + 1);
+			popup_an_error("Transfer: Invalid option value: '%s'",
+				eq + 1);
 			return NULL;
 		    }
 		} else switch (i) {
@@ -767,8 +769,8 @@ parse_ft_keywords(unsigned argc, const char **argv)
 #endif /*]*/
 			(void) strtol(eq + 1, &ptr, 10);
 			if (ptr == eq + 1 || *ptr) {
-			    popup_an_error("Invalid option value: '%s'",
-				    eq + 1);
+			    popup_an_error("Transfer: Invalid option value: "
+				    "'%s'", eq + 1);
 			    return NULL;
 			}
 			break;
@@ -780,7 +782,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
 	    }
 	}
 	if (i >= N_PARMS) {
-	    popup_an_error("Unknown option: %s", argv[j]);
+	    popup_an_error("Transfer: Unknown option: '%s'", argv[j]);
 	    return NULL;
 	}
     }
@@ -806,7 +808,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
 	    p->cr_flag = p->ascii_flag;
 	} else {
 	    if (!p->ascii_flag) {
-		popup_an_error("Invalid 'Cr' option for ASCII mode");
+		popup_an_error("Transfer: Invalid 'Cr' option for ASCII mode");
 		return NULL;
 	    }
 	    p->cr_flag = !strcasecmp(tp[PARM_CR].value, "remove") ||
@@ -852,27 +854,97 @@ parse_ft_keywords(unsigned argc, const char **argv)
 
     /* Check for required values. */
     if (!p->host_filename) {
-	popup_an_error("Missing 'HostFile' option");
+	popup_an_error("Transfer: Missing 'HostFile' option");
 	return NULL;
     }
     if (!p->local_filename) {
-	popup_an_error("Missing 'LocalFile' option");
+	popup_an_error("Transfer: Missing 'LocalFile' option");
 	return NULL;
     }
     if (p->host_type == HT_TSO &&
 	    !p->receive_flag &&
 	    p->units != DEFAULT_UNITS &&
 	    p->primary_space <= 0) {
-	popup_an_error("Missing or invalid PrimarySpace");
+	popup_an_error("Transfer: Missing or invalid 'PrimarySpace'");
 	return NULL;
     }
     if (p->host_type == HT_TSO &&
 	    !p->receive_flag &&
 	    p->units == AVBLOCK &&
 	    p->avblock <= 0) {
-	popup_an_error("Missing or invalid Avblock");
+	popup_an_error("Transfer: Missing or invalid 'Avblock'");
 	return NULL;
     }
+
+    /* Check for contradictory values. */
+    if (tp[PARM_CR].value && !p->ascii_flag) {
+	popup_an_error("Transfer: 'Cr' is only for ASCII transfers");
+	return NULL;
+    }
+    if (tp[PARM_REMAP].value && !p->ascii_flag) {
+	popup_an_error("Transfer: 'Remap' is only for ASCII transfers");
+	return NULL;
+    }
+    if (tp[PARM_RECFM].value && p->receive_flag) {
+	popup_an_error("Transfer: 'Recfm' is only for sending files");
+	return NULL;
+    }
+    if (tp[PARM_RECFM].value && p->host_type != HT_TSO &&
+	    p->host_type != HT_VM) {
+	popup_an_error("Transfer: 'Recfm' is only for TSO and VM hosts");
+	return NULL;
+    }
+    if (tp[PARM_LRECL].value && p->receive_flag) {
+	popup_an_error("Transfer: 'Lrecl' is only for sending files");
+	return NULL;
+    }
+    if (tp[PARM_BLKSIZE].value && p->receive_flag) {
+	popup_an_error("Transfer: 'Blksize' is only for sending files");
+	return NULL;
+    }
+    if (tp[PARM_BLKSIZE].value && p->host_type != HT_TSO) {
+	popup_an_error("Transfer: 'Blksize' is only for TSO hosts");
+	return NULL;
+    }
+    if (tp[PARM_ALLOCATION].value && p->receive_flag) {
+	popup_an_error("Transfer: 'Allocation' is only for sending files");
+	return NULL;
+    }
+    if (tp[PARM_ALLOCATION].value && p->host_type != HT_TSO) {
+	popup_an_error("Transfer: 'Allocation' is only for TSO hosts");
+	return NULL;
+    }
+    if (tp[PARM_PRIMARY_SPACE].value && p->receive_flag) {
+	popup_an_error("Transfer: 'PrimarySpace' is only for sending files");
+	return NULL;
+    }
+    if (tp[PARM_PRIMARY_SPACE].value && p->host_type != HT_TSO) {
+	popup_an_error("Transfer: 'PrimarySpace' is only for TSO hosts");
+	return NULL;
+    }
+    if (tp[PARM_SECONDARY_SPACE].value && p->receive_flag) {
+	popup_an_error("Transfer: 'SecondarySpace' is only for sending files");
+	return NULL;
+    }
+    if (tp[PARM_SECONDARY_SPACE].value && p->host_type != HT_TSO) {
+	popup_an_error("Transfer: 'SecondarySpace' is only for TSO hosts");
+	return NULL;
+    }
+    if (tp[PARM_AVBLOCK].value && p->receive_flag) {
+	popup_an_error("Transfer: 'Avblock' is only for sending files");
+	return NULL;
+    }
+    if (tp[PARM_AVBLOCK].value && p->host_type != HT_TSO) {
+	popup_an_error("Transfer: 'Avblock' is only for TSO hosts");
+	return NULL;
+    }
+#if defined(_WIN32) /*[*/
+    if (tp[PARM_WINDOWS_CODEPAGE].value && !p->ascii_flag) {
+	popup_an_error("Transfer: 'WindowsCodePage' is only for ASCII "
+		"transfers");
+	return NULL;
+    }
+#endif /*]*/
 
     /* All set. */
     return p;
@@ -910,7 +982,7 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
 
     /* Make sure we're connected. */
     if (!IN_3270) {
-	popup_an_error("Not connected");
+	popup_an_error("Transfer: Not connected");
 	return false;
     }
 
