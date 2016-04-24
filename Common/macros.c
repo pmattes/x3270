@@ -3897,6 +3897,9 @@ Abort_action(ia_t ia, unsigned argc, const char **argv)
     if (check_argc("Abort", argc, 0, 0) < 0) {
 	return false;
     }
+    if (ia == IA_SCRIPT) {
+	return false;
+    }
 #if !defined(_WIN32) /*[*/
     child_ignore_output();
 #endif /*]*/
