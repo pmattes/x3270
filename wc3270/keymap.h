@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2009, 2015 Paul Mattes.
+ * Copyright (c) 2000-2009, 2016 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -42,5 +42,5 @@ void keymap_init(void);
 char *lookup_key(unsigned long xk, unsigned long state);
 void keymap_dump(void);
 const char *decode_key(int k, int hint, char *buf);
-const char *lookup_cname(unsigned long ccode, bool special_only);
+const char *lookup_cname(unsigned long ccode);
 void keymap_register(void);

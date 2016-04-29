@@ -119,10 +119,15 @@ for the <tt>A</tt> key.
 They can also be entered using ISO 8859-1 standard names, such as
 <tt>colon</tt> for the <tt>:</tt> key (which would otherwise confuse the
 keymap syntax).
-Finally, Unicode values (<tt>U+</tt><i>nnnn</i>) can be used.
+Finally, Unicode values (<tt>U+<i>nnnn</i></tt>) can be used.
 <p>
-The list of names for special Windows keys, such as PRIOR, NEXT and HOME,
-is on the <a href="wc3270-man.html#Keymaps">wc3270 manual page</a>.
+The list of names for special Windows keys (VKeys), such as PRIOR, NEXT and
+HOME, is on the <a href="wc3270-man.html#Keymaps">wc3270 manual page</a>.
+<p>
+wc3270 will also accept the syntax <tt>VKEY-0x<i>nn</i></tt>, where
+<tt><i>nn</i></tt>
+is a hexadecimal number between 01 and fe (254). For example, the PRIOR key is
+VKey 0x21. wc3270 will accept <tt>VKEY-0x21</tt> as an alias for PRIOR.
 <p>
 To find out which key or sequence of keys is being generated for any
 given key on your keyboard, start <b>wc3270</b> with the <b>-trace</b>
@@ -132,7 +137,7 @@ include several lines of text for each key that is pressed.
 Each entry will include the text for the left-hand side of a keymap entry
 that will match that key.
 You can copy and paste the text into a keymap definition.
-The trace file is <tt>x3trc.<i>pid</i></tt> in the current directory.
+The trace file is <tt>x3trc.<i>pid</i></tt> on your desktop.
 
 <h2>How to Find the Actions</h2>
 These are documented on the <a href="wc3270-man.html#actions"><b>wc3270</b>
