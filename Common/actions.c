@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2016 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -181,7 +181,7 @@ action_debug(const char *aname, ia_t ia, unsigned argc, const char **argv)
 }
 
 /*
- * Run an emulator action by name.
+ * Run an emulator action by name, given 0, 1 or 2 parameters.
  */
 bool
 run_action(const char *name, enum iaction cause, const char *parm1,
@@ -209,6 +209,29 @@ run_action(const char *name, enum iaction cause, const char *parm1,
 	    parms[1] = parm2;
 	    count++;
 	}
+    }
+
+    return run_action_entry(e, cause, count, parms);
+}
+
+/*
+ * Run an emulator action by name, given an array of parameters.
+ */
+bool
+run_action_a(const char *name, enum iaction cause, unsigned count,
+	const char **parms)
+{
+    action_elt_t *e;
+    action_t *action = NULL;
+
+    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	if (!strcasecmp(e->t.name, name)) {
+	    action = e->t.action;
+	    break;
+	}
+    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
+    if (action == NULL) {
+	return false; /* XXX: And do something? */
     }
 
     return run_action_entry(e, cause, count, parms);
