@@ -42,6 +42,7 @@
 #include "glue.h"
 #include "host.h"
 #include "keymap.h"
+#include "lazya.h"
 #include "macros.h"
 #include "popups.h"
 #include "screen.h"
@@ -929,17 +930,40 @@ lookup_ccode(const char *s)
 {
     int i;
 
+    /* Look it up in the table. */
     for (i = 0; vk_key[i].name != NULL; i++) {
 	if (!strcasecmp(s, vk_key[i].name)) {
 	    return vk_key[i].code;
 	}
     }
+
+    /* Check for a numeric encoding: VKEY-nnn or VKEY-0xnnn. */
+    if (!strncasecmp(s, "VKEY-", 5)) {
+	const char *t;
+	int base;
+	unsigned long u;
+	char *ptr;
+
+	if (!strncasecmp(s + 5, "0x", 2)) {
+	    t = s + 7;
+	    base = 16;
+	} else {
+	    t = s + 5;
+	    base = 10;
+	}
+
+	u = strtoul(t, &ptr, base);
+	if (ptr != t && *ptr == '\0' && u > 0 && u <= 0xfe) {
+	    return (int)(u << 16);
+	}
+    }
+
     return -1;
 }
 
 /* Look up a vkey code and return its name. */
 const char *
-lookup_cname(unsigned long ccode, bool special_only)
+lookup_cname(unsigned long ccode)
 {
     int i;
 
@@ -948,13 +972,19 @@ lookup_cname(unsigned long ccode, bool special_only)
 	    return vk_key[i].name;
 	}
     }
-    if (!special_only && (ccode >= (' ' << 16) && ccode <= ('~' << 16))) {
+
+    if (ccode >= (' ' << 16) && ccode <= ('~' << 16)) {
 	static char cbuf[2];
 
 	cbuf[0] = (char)(ccode >> 16);
 	cbuf[1] = '\0';
 	return cbuf;
     }
+
+    if (ccode >= (1 << 16) && ccode <= (0xfe << 16)) {
+	return lazyaf("VKEY-0x%02x", ccode >> 16);
+    }
+
     return NULL;
 }
 
@@ -1181,7 +1211,7 @@ decode_key(int k, int hint, char *buf)
 	const char *n;
 
 	/* VK_xxx */
-	n = lookup_cname(k, false);
+	n = lookup_cname(k);
 	(void) sprintf(buf, "%s<Key>%s", decode_hint(hint), n? n: "???");
     } else if (k < ' ') {
 	(void) sprintf(s, "%sCtrl <Key>%c", decode_hint(hint & ~KM_CTRL),

@@ -208,6 +208,8 @@ XX_FB(SUBTRACT),
 XX_FB(TAB)
 and
 XX_FB(UP).
+In addition, any Windows VKey code can be specified in hexadecimal with the
+syntax XX_FB(VKEY-0x)XX_FI(nn).
 ')dnl
 XX_LP
 The base keymap is:

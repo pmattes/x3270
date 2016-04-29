@@ -2325,7 +2325,7 @@ kybd_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	if (!ir.Event.KeyEvent.bKeyDown) {
 	    return;
 	}
-	s = lookup_cname(ir.Event.KeyEvent.wVirtualKeyCode << 16, false);
+	s = lookup_cname(ir.Event.KeyEvent.wVirtualKeyCode << 16);
 	if (s == NULL) {
 	    s = "?";
 	}
@@ -2380,7 +2380,7 @@ trace_as_keymap(unsigned long xk, KEY_EVENT_RECORD *e)
 	vb_appendf(&r, "%s ", s);
     }
     if (xk & 0xffff0000) {
-	const char *n = lookup_cname(xk, false);
+	const char *n = lookup_cname(xk);
 
 	vb_appendf(&r, "<Key>%s", n? n: "???");
     } else if (xk > 0x7f) {
