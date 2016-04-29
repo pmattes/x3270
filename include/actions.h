@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2014-2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,6 +54,8 @@ void action_debug(const char *aname, ia_t ia, unsigned argc,
 	const char **argv);
 bool run_action(const char *name, enum iaction cause, const char *parm1,
 	const char *parm2);
+bool run_action_a(const char *name, enum iaction cause, unsigned count,
+	const char **parms);
 bool run_action_entry(action_elt_t *e, enum iaction cause, unsigned count,
 	const char **parms);
 int check_argc(const char *aname, unsigned nargs, unsigned nargs_min,

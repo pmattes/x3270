@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2016 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -188,13 +188,22 @@ xt_wrapper(int n, Widget w _is_unused, XEvent *event, String *params,
 	Cardinal *num_params)
 {
     if (n < nwrappers) {
+	const char **params_a;
+	Cardinal i;
+
 	/* Trace the Xt event. */
 	xaction_ndebug(wrapper_actions[n].string, event, params, num_params);
 
 	/* Run the emulator action. */
-	run_action(wrapper_actions[n].string, IA_KEYMAP,
-		(*num_params > 0)? params[0]: NULL,
-		(*num_params > 1)? params[1]: NULL);
+	params_a = (const char **)Malloc((*num_params + 1) *
+		sizeof(const char *));
+	for (i = 0; i < *num_params; i++) {
+	    params_a[i] = params[i];
+	}
+	params_a[i] = NULL;
+	run_action_a(wrapper_actions[n].string, IA_KEYMAP, *num_params,
+		params_a);
+	Free(params_a);
     }
 }
 
