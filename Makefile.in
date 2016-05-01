@@ -251,7 +251,7 @@ libw3270-clobber-32:
 	cd lib/w3270 && $(MAKE) clobber
 libw3270-clobber-64:
 	cd lib/w3270 && $(MAKE) clobber WIN64=1
-libw3270i-clobber: lib3270i-clobber-32 lib3270i-clobber-64
+libw3270i-clobber: libw3270i-clobber-32 libw3270i-clobber-64
 libw3270i-clobber-32:
 	cd lib/w3270i && $(MAKE) clobber
 libw3270i-clobber-64:
