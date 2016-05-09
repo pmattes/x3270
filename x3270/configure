@@ -4136,6 +4136,48 @@ fi
 
 done
 
+for ac_header in X11/Shell.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "X11/Shell.h" "ac_cv_header_X11_Shell_h" "$ac_includes_default"
+if test "x$ac_cv_header_X11_Shell_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_X11_SHELL_H 1
+_ACEOF
+
+else
+  as_fn_error $? "\"Cannot find X11 header files\"" "$LINENO" 5
+fi
+
+done
+
+for ac_header in X11/Xmu/Atoms.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "X11/Xmu/Atoms.h" "ac_cv_header_X11_Xmu_Atoms_h" "$ac_includes_default"
+if test "x$ac_cv_header_X11_Xmu_Atoms_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_X11_XMU_ATOMS_H 1
+_ACEOF
+
+else
+  as_fn_error $? "\"Cannot find Xmu header files\"" "$LINENO" 5
+fi
+
+done
+
+for ac_header in X11/Xaw/Form.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "X11/Xaw/Form.h" "ac_cv_header_X11_Xaw_Form_h" "$ac_includes_default"
+if test "x$ac_cv_header_X11_Xaw_Form_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_X11_XAW_FORM_H 1
+_ACEOF
+
+else
+  as_fn_error $? "\"Cannot find Xaw header files\"" "$LINENO" 5
+fi
+
+done
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing libiconv" >&5
 $as_echo_n "checking for library containing libiconv... " >&6; }
 if ${ac_cv_search_libiconv+:} false; then :
@@ -4249,6 +4291,238 @@ else
   if test "$unkw"; then as_fn_error $? "\"No iconv library function\"" "$LINENO" 5; fi
 fi
 
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing XFillRectangle" >&5
+$as_echo_n "checking for library containing XFillRectangle... " >&6; }
+if ${ac_cv_search_XFillRectangle+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char XFillRectangle ();
+int
+main ()
+{
+return XFillRectangle ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' X11; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_search_XFillRectangle=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_XFillRectangle+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_XFillRectangle+:} false; then :
+
+else
+  ac_cv_search_XFillRectangle=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_XFillRectangle" >&5
+$as_echo "$ac_cv_search_XFillRectangle" >&6; }
+ac_res=$ac_cv_search_XFillRectangle
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+else
+  as_fn_error $? "\"Cannot find libX11\"" "$LINENO" 5
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing XtVaSetValues" >&5
+$as_echo_n "checking for library containing XtVaSetValues... " >&6; }
+if ${ac_cv_search_XtVaSetValues+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char XtVaSetValues ();
+int
+main ()
+{
+return XtVaSetValues ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' Xt; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_search_XtVaSetValues=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_XtVaSetValues+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_XtVaSetValues+:} false; then :
+
+else
+  ac_cv_search_XtVaSetValues=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_XtVaSetValues" >&5
+$as_echo "$ac_cv_search_XtVaSetValues" >&6; }
+ac_res=$ac_cv_search_XtVaSetValues
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+else
+  as_fn_error $? "\"Cannot find libXt\"" "$LINENO" 5
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing XmuAddInitializer" >&5
+$as_echo_n "checking for library containing XmuAddInitializer... " >&6; }
+if ${ac_cv_search_XmuAddInitializer+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char XmuAddInitializer ();
+int
+main ()
+{
+return XmuAddInitializer ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' Xmu; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_search_XmuAddInitializer=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_XmuAddInitializer+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_XmuAddInitializer+:} false; then :
+
+else
+  ac_cv_search_XmuAddInitializer=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_XmuAddInitializer" >&5
+$as_echo "$ac_cv_search_XmuAddInitializer" >&6; }
+ac_res=$ac_cv_search_XmuAddInitializer
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+else
+  as_fn_error $? "\"Cannot find libXmu\"" "$LINENO" 5
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing XawInitializeWidgetSet" >&5
+$as_echo_n "checking for library containing XawInitializeWidgetSet... " >&6; }
+if ${ac_cv_search_XawInitializeWidgetSet+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char XawInitializeWidgetSet ();
+int
+main ()
+{
+return XawInitializeWidgetSet ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' Xaw; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_search_XawInitializeWidgetSet=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_XawInitializeWidgetSet+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_XawInitializeWidgetSet+:} false; then :
+
+else
+  ac_cv_search_XawInitializeWidgetSet=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_XawInitializeWidgetSet" >&5
+$as_echo "$ac_cv_search_XawInitializeWidgetSet" >&6; }
+ac_res=$ac_cv_search_XawInitializeWidgetSet
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+else
+  as_fn_error $? "\"Cannot find libXaw\"" "$LINENO" 5
 fi
 
 
