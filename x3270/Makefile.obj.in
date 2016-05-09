@@ -43,7 +43,7 @@ FONTS = 3270-12.pcf.gz 3270-12b.pcf.gz 3270-20.pcf.gz 3270-20b.pcf.gz \
 	3270gt24b.pcf.gz 3270gt32.pcf.gz 3270gt32b.pcf.gz 3270gt8.pcf.gz \
 	3270h.pcf.gz
 
-all: x3270 $(FONTS)
+all: x3270 $(FONTS) dryrun
 
 LIBDIR = @libdir@
 prefix = @prefix@
@@ -62,7 +62,7 @@ CCOPTIONS = @CCOPTIONS@
 XCPPFLAGS = -I$(THIS) -I$(TOP)/include @XINC@ -DLIBX3270DIR=\"$(LIBX3270DIR)\" @CPPFLAGS@
 CFLAGS = $(CCOPTIONS) $(CDEBUGFLAGS) $(XCPPFLAGS)
 LDFLAGS = @XLIB@ @LDFLAGS@
-LIBS = @LIBS@ -lXaw -lXmu -lXt -lX11
+LIBS = @LIBS@
 
 XVERSION = xversion.c
 version.o: mkversion.sh $(VOBJS) version.txt
@@ -84,6 +84,9 @@ x3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
 
 %.pcf.gz: %.bdf
 	bdftopcf $< | gzip >$@
+
+dryrun: dryrun.in
+	/bin/cp $< $@
 
 install:: x3270
 	[ -d $(DESTDIR)$(BINDIR) ] || \
