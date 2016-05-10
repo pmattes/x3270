@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1994-2009, 2013-2016 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -374,7 +374,9 @@ save_toggles(void)
     int ix;
 
     for (i = 0; i < N_TOGGLES; i++) {
-	if ((int)toggle_names[i].index < 0 || !toggle_changed(i)) {
+	toggle_index_t tix = toggle_names[i].index;
+
+	if (!toggle_changed(tix)) {
 	    continue;
 	}
 
@@ -390,7 +392,7 @@ save_toggles(void)
 		tmp_cmd[j+1] &&
 		!strcmp(tmp_cmd[j+1], toggle_names[i].name)) {
 
-		if (i == SCROLL_BAR || i == TRACING) {
+		if (toggle_names[i].is_alias) {
 		    cmd_delete(j);
 		    cmd_delete(j + 1);
 		} else {
@@ -400,7 +402,7 @@ save_toggles(void)
 	}
 
 	/* Handle aliased switches. */
-	switch (i) {
+	switch (tix) {
 	case SCROLL_BAR:
 	    continue;	/* +sb/-sb done separately */
 	case TRACING:
@@ -420,7 +422,7 @@ save_toggles(void)
 	}
 
 	/* If need be, switch "-set" with "-clear", or append one. */
-	if (toggled(i)) {
+	if (toggled(tix)) {
 	    if (ix && strcmp(tmp_cmd[ix], OptSet)) {
 		cmd_replace(ix, OptSet);
 	    } else if (!ix) {
@@ -652,11 +654,10 @@ save_options(char *n)
     }
 
     /* Save most of the toggles. */
-    for (i = 0; i < N_TOGGLES; i++) {
-	if ((int)toggle_names[i].index < 0 || !toggle_changed(i)) {
-	    continue;
-	}
-	if (i == TRACING || i == SCREEN_TRACE) {
+    for (i = 0; toggle_names[i].name; i++) {
+	toggle_index_t tix = toggle_names[i].index;
+
+	if (toggle_names[i].is_alias || !toggle_changed(tix)) {
 	    continue;
 	}
 	if (!any_toggles) {
@@ -665,7 +666,7 @@ save_options(char *n)
 	}
 	(void) fprintf(f, "%s.%s: %s\n", XtName(toplevel),
 		toggle_names[i].name,
-		toggled(i)? ResTrue: ResFalse);
+		toggled(tix)? ResTrue: ResFalse);
     }
 
     /* Save the keypad state. */
