@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2015 Paul Mattes.
+ * Copyright (c) 2010-2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -978,14 +978,8 @@ menu_init(void)
     }
     options_menu = add_menu("Options");
     for (j = 0; j < OM_COUNT; j++) {
-	toggle_index_t k;
 	char *name;
 
-	for (k = 0; k < N_TOGGLES; k++) {
-	    if (toggle_names[k].index == option_index[j]) {
-		break;
-	    }
-	}
 	name = xs_buffer("%s %s",
 		toggled(option_index[j])? "Disable": "Enable",
 		option_names[j]);
