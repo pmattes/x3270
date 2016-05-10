@@ -654,7 +654,7 @@ x3270/dll-subst.sh
 x3270/documentation-ssl-body.html
 x3270/documentation-ssl-body.tmpl
 x3270/dot.bm
-x3270/dryrun
+x3270/dryrun.in
 x3270/Examples/child_script.bash
 x3270/Examples/child_script.ksh
 x3270/Examples/child_script.sh
