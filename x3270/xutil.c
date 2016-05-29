@@ -212,7 +212,7 @@ to_fn(XtPointer closure, XtIntervalId *id)
 	XtFree((XtPointer)torec);
 
 	/* Call the function. */
-	(*fn)((ioid_t)id);
+	(*fn)((ioid_t)*id);
     }
 }
 
