@@ -3062,7 +3062,7 @@ Wait_action(ia_t ia _is_unused, unsigned argc, const char **argv)
 	    return false;
 	}
     }
-    if (!(CONNECTED || HALF_CONNECTED)) {
+    if (next_state != SS_TIME_WAIT && !(CONNECTED || HALF_CONNECTED)) {
 	popup_an_error("Wait: Not connected");
 	return false;
     }
