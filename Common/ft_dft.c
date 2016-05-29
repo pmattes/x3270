@@ -444,7 +444,7 @@ dft_ascii_read(unsigned char *bufptr, size_t numbytes)
 {
     char inbuf[16];
     int in_ix = 0;
-    char c;
+    int c;
     enum me_fail error;
     ebc_t e;
     int consumed;
