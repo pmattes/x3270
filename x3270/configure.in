@@ -93,6 +93,12 @@ fi
 dnl Check for X
 AC_PATH_X
 if test "$no_x" = "yes"; then AC_MSG_ERROR('Cannot find X utilities or libraries'); fi
+if test -n "$x_includes"
+then	CPPFLAGS="$CPPFLAGS -I$x_includes"
+fi
+if test -n "$x_libraries"
+then	LDFLAGS="$LDFLAGS -L$x_libraries"
+fi
 
 dnl Check for --enable-app-defaults
 AC_ARG_ENABLE(app-defaults,
