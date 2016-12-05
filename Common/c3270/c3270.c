@@ -1805,6 +1805,8 @@ c3270_register(void)
 	{ OptSecure,   OPT_BOOLEAN, true,  ResSecure,
 	    aoffset(secure),
 	    NULL, "Restrict potentially-destructive user actions" },
+	{ OptUtf8,     OPT_BOOLEAN, true,  ResUtf8,      aoffset(utf8),
+	    NULL, "Force local codeset to be UTF-8" },
 #if defined(C3270_80_132) /*[*/
 	{ OptAltScreen,OPT_STRING,  false, ResAltScreen,
 	    aoffset(c3270.altscreen),

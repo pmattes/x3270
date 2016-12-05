@@ -893,6 +893,9 @@ mb_max_len(int len)
  *
  * Returns a UCS-4 character or 0, indicating an error in translation.
  * Also returns the number of characters consumed.
+ *
+ * Can also return 0 and ME_SHORT, which is not strictly an error, but rather
+ * an incomplete sequence.
  */
 ucs4_t
 multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
@@ -900,73 +903,67 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 {
     int nw;
     ucs4_t ucs4;
-#if defined(_WIN32) /*[*/
-    wchar_t wc[3];
-    unsigned i;
-
-    /* Use MultiByteToWideChar() to get from the ANSI codepage to UTF-16. */
-    for (i = 1; i <= mb_len; i++) {
-	nw = MultiByteToWideChar(u_local_cp, MB_ERR_INVALID_CHARS,
-		mb, i, wc, 3);
-	if (nw != 0)
-	    break;
-    }
-    if (i > mb_len) {
-	*errorp = ME_INVALID;
-	return 0;
-    }
-    *consumedp = i;
-    ucs4 = wc[0];
-#elif defined(UNICODE_WCHAR) /*][*/
-    wchar_t wc[3];
-    /* wchar_t's are Unicode. */
 
     if (is_utf8) {
-	int nc;
-
-	/*
-	 * Use utf8_to_unicode() instead of mbtowc(), so we can set is_utf8
-	 * directly and ignore the locale for Tcl.
-	 */
-	nc = utf8_to_unicode(mb, mb_len, &ucs4);
-	if (nc > 0) {
-	    *errorp = ME_NONE;
-	    *consumedp = nc;
-	    return ucs4;
-	} else if (nc == 0) {
-	    *errorp = ME_SHORT;
-	    return 0;
-	} else {
+	/* Translate from UTF-8 to UCS-4. */
+	nw = utf8_to_unicode(mb, mb_len, &ucs4);
+	if (nw < 0) {
 	    *errorp = ME_INVALID;
 	    return 0;
 	}
-    }
-
-    /* mbtowc() will translate to Unicode. */
-    nw = mbtowc(wc, mb, mb_len);
-    if (nw == -1) {
-	if (errno == EILSEQ)
-	    *errorp = ME_INVALID;
-	else
+	if (nw == 0) {
 	    *errorp = ME_SHORT;
+	    return 0;
+	}
+	*consumedp = nw;
+    } else {
+#if defined(_WIN32) /*[*/
+	wchar_t wc[3];
+	unsigned i;
+
+	/* Use MultiByteToWideChar() to get from the ANSI codepage to UTF-16. */
+	for (i = 1; i <= mb_len; i++) {
+	    nw = MultiByteToWideChar(u_local_cp, MB_ERR_INVALID_CHARS,
+		    mb, i, wc, 3);
+	    if (nw != 0)
+		break;
+	}
+	if (i > mb_len) {
+	    *errorp = ME_INVALID;
+	    return 0;
+	}
+	*consumedp = i;
+	ucs4 = wc[0];
+#elif defined(UNICODE_WCHAR) /*][*/
+
+	/* wchar_t's are Unicode. */
+	wchar_t wc[3];
+
+	/* mbtowc() will translate to Unicode. */
+	nw = mbtowc(wc, mb, mb_len);
+	if (nw == -1) {
+	    if (errno == EILSEQ)
+		*errorp = ME_INVALID;
+	    else
+		*errorp = ME_SHORT;
+	    nw = mbtowc(NULL, NULL, 0);
+	    return 0;
+	}
+
+	/*
+	 * Reset the shift state.
+	 * XXX: Doing this will ruin the shift state if this function is called
+	 * repeatedly to process a string.  There should probably be a parameter
+	 * passed in to control whether or not to reset the shift state, or
+	 * perhaps there should be a function to translate a string.
+	 */
+	*consumedp = nw;
 	nw = mbtowc(NULL, NULL, 0);
-	return 0;
-    }
 
-    /*
-     * Reset the shift state.
-     * XXX: Doing this will ruin the shift state if this function is called
-     * repeatedly to process a string.  There should probably be a parameter
-     * passed in to control whether or not to reset the shift state, or
-     * perhaps there should be a function to translate a string.
-     */
-    *consumedp = nw;
-    nw = mbtowc(NULL, NULL, 0);
-
-    ucs4 = wc[0];
+	ucs4 = wc[0];
 #else /*][*/
-    /* wchar_t's have unknown encoding. */
-    if (!is_utf8) {
+
+	/* wchar_t's have unknown encoding. */
 	ici_t inbuf;
 	char *outbuf;
 	size_t inbytesleft, outbytesleft;
@@ -1001,22 +998,9 @@ multibyte_to_unicode(const char *mb, size_t mb_len, int *consumedp,
 
 	/* Translate from UTF-8 to UCS-4. */
 	(void) utf8_to_unicode(utf8buf, sizeof(utf8buf) - outbytesleft, &ucs4);
-    } else {
-	/* Translate from UTF-8 to UCS-4. */
-	nw = utf8_to_unicode(mb, mb_len, &ucs4);
-	if (nw < 0) {
-	    *errorp = ME_INVALID;
-	    return 0;
-	}
-	if (nw == 0) {
-	    *errorp = ME_SHORT;
-	    return 0;
-	}
-	*consumedp = nw;
-    }
 #endif /*]*/
+    }
 
-    /* Translate from UCS4 to EBCDIC. */
     return ucs4;
 }
 
