@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2014, Paul Mattes.
+ * Copyright (c) 1993-2016, Paul Mattes.
  * Copyright (c) 2004, Don Russell.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta,
@@ -41,16 +41,25 @@
 #include "appres.h"
 #include "linemode.h"
 #include "nvt.h"
+#include "unicodec.h"
 #include "utils.h"
 #include "telnet.h"
 
 #define LM_BUFSZ	16384
+
+typedef struct {
+    ucs4_t ucs4;
+    int mb_len;
+    int echo_len;
+    bool dbcs;
+} width_t;
 
 /* Globals */
 
 /* Statics */
 static unsigned char *lbuf = NULL; /* line-mode input buffer */
 static unsigned char *lbptr;
+static width_t *widths = NULL;
 static bool lnext = false;
 static bool backslashed = false;
 static bool t_valid = false;
@@ -73,6 +82,101 @@ static void do_rprnt(char c);
 static void do_eof(char c);
 static void do_eol(char c);
 static void do_lnext(char c);
+
+/**
+ * Expand a character into a displayable string, which means expanding DEL to
+ * "^?" and codes 0x00 through 0x1f to "^X" notation.
+ *
+ * @param[in] c   character to expand
+ *
+ * @return String representation of c.
+ */
+static const char *
+just_ctl_see(int c)
+{
+    static char buf[3];
+    unsigned char uc = c & 0xff;
+
+    if (uc == 0x7f) {
+	return "^?";
+    }
+
+    if (uc < ' ') {
+	buf[0] = '^';
+	buf[1] = uc + '@';
+	buf[2] = '\0';
+    } else {
+	buf[0] = uc;
+	buf[1] = '\0';
+    }
+    return buf;
+}
+
+/**
+ * Translate the input buffer into UCS4 characters and the number of positions
+ * to back up per UCS4 character.
+ *
+ * @return number of UCS4 characters.
+ */
+static int
+expand_lbuf()
+{
+    size_t len = lbptr - lbuf;
+    unsigned char *xbptr = lbuf;
+    int nx = 0;
+
+    if (len == 0) {
+	return 0;
+    }
+    if (widths != NULL) {
+	Free(widths);
+    }
+    widths = (width_t *)Malloc(len * sizeof(width_t));
+
+    while (len) {
+	int consumed;
+	enum me_fail f;
+	ucs4_t u;
+
+	/* Handle nulls separately. */
+	if (*xbptr == '\0') {
+	    widths[nx].ucs4 = 0;
+	    widths[nx].mb_len = 1;
+	    widths[nx].echo_len = 2; /* ^@ */
+	    widths[nx].dbcs = false;
+	    nx++;
+	    len--;
+	    xbptr++;
+	    continue;
+	}
+
+	u = multibyte_to_unicode((char *)xbptr, len, &consumed, &f);
+	if (u == 0) {
+	    /* If we get an error, punt. */
+	    len--;
+	    xbptr++;
+	    continue;
+	}
+
+	widths[nx].ucs4 = u;
+	widths[nx].mb_len = consumed;
+	if (u < ' ' || u == 0x7f) {
+	    widths[nx].echo_len = 2; /* ^X */
+	    widths[nx].dbcs = false;
+	} else if (u >= 0x2e80 && u <= 0xd7ff) {
+	    widths[nx].echo_len = 1; /* DBCS */
+	    widths[nx].dbcs = true;
+	} else {
+	    widths[nx].echo_len = 1;
+	    widths[nx].dbcs = false;
+	}
+	nx++;
+	len -= consumed;
+	xbptr += consumed;
+    }
+
+    return nx;
+}
 
 /*
  * parse_ctlchar
@@ -193,6 +297,12 @@ nvt_process_s(const char *data)
 }
 
 static void
+nvt_backspace(bool dbcs)
+{
+    nvt_process_s(dbcs? "\b\b  \b\b" : "\b \b");
+}
+
+static void
 forward_data(void)
 {
     net_cookedout((char *)lbuf, lbptr - lbuf);
@@ -207,11 +317,7 @@ do_data(char c)
 	if (c == '\r') {
 	    *lbptr++ = '\0';
 	}
-	if (c == '\t') {
-	    nvt_process((unsigned int)c);
-	} else {
-	    nvt_process_s(ctl_see((int)c));
-	}
+	nvt_process_s(just_ctl_see((int)c));
     } else {
 	nvt_process_s("\007");
     }
@@ -243,9 +349,15 @@ do_quit(char c)
     net_break();
 }
 
+/**
+ * Erase a character.
+ *
+ * @param[in] c Input character that triggered the character erase.
+ */
 static void
 do_cerase(char c)
 {
+    int n_ucs4;
     size_t len;
 
     if (backslashed) {
@@ -254,54 +366,75 @@ do_cerase(char c)
 	do_data(c);
 	return;
     }
+
     if (lnext) {
 	do_data(c);
 	return;
     }
-    if (lbptr > lbuf) {
-	len = strlen(ctl_see((int) *--lbptr));
 
-	while (len--) {
-	    nvt_process_s("\b \b");
-	}
+    if (!(n_ucs4 = expand_lbuf())) {
+	return;
+    }
+
+    lbptr -= widths[n_ucs4 - 1].mb_len;
+    len = widths[n_ucs4 - 1].echo_len;
+    while (len--) {
+	nvt_backspace(widths[n_ucs4 - 1].dbcs);
     }
 }
 
+/**
+ * Erase a word.
+ *
+ * @param[in] c Input character that triggered the word erase.
+ */
 static void
 do_werase(char c)
 {
-    int any = 0;
-    size_t len;
+    bool any = false;
+    int n_ucs4;
+    int ix;
 
     if (lnext) {
 	do_data(c);
 	return;
     }
-    while (lbptr > lbuf) {
-	char ch;
 
-	ch = *--lbptr;
+    if (!(n_ucs4 = expand_lbuf())) {
+	return;
+    }
+
+    for (ix = n_ucs4 - 1; ix >= 0; ix--) {
+	ucs4_t ch = widths[ix].ucs4;
+	size_t len;
 
 	if (ch == ' ' || ch == '\t') {
 	    if (any) {
-		++lbptr;
 		break;
 	    }
 	} else {
-	    any = 1;
+	    any = true;
 	}
-	len = strlen(ctl_see((int) ch));
 
+	lbptr -= widths[ix].mb_len;
+	len = widths[ix].echo_len;
 	while (len--) {
-	    nvt_process_s("\b \b");
+	    nvt_backspace(widths[ix].dbcs);
 	}
+
     }
 }
 
+/**
+ * Erase the whole input buffer.
+ *
+ * @param[in] c Input character that triggered the buffer kill.
+ */
 static void
 do_kill(char c)
 {
-    size_t i, len;
+    int n_ucs4;
+    int ix;
 
     if (backslashed) {
 	lbptr--;
@@ -309,32 +442,67 @@ do_kill(char c)
 	do_data(c);
 	return;
     }
+
     if (lnext) {
 	do_data(c);
 	return;
     }
-    while (lbptr > lbuf) {
-	len = strlen(ctl_see((int) *--lbptr));
 
-	for (i = 0; i < len; i++) {
-	    nvt_process_s("\b \b");
+    if (!(n_ucs4 = expand_lbuf())) {
+	return;
+    }
+
+    for (ix = n_ucs4 - 1; ix >= 0; ix--) {
+	int len = widths[ix].echo_len;
+
+	while (len--) {
+	    nvt_backspace(widths[ix].dbcs);
 	}
     }
+
+    lbptr = lbuf;
 }
 
+/**
+ * Reprint the input buffer.
+ *
+ * @param[in] c Input character that triggered the reprint.
+ */
 static void
 do_rprnt(char c)
 {
     unsigned char *p;
+    int n_ucs4;
+    int ix;
 
     if (lnext) {
 	do_data(c);
 	return;
     }
-    nvt_process_s(ctl_see((int) c));
+
+    nvt_process_s(just_ctl_see((int) c));
     nvt_process_s("\r\n");
-    for (p = lbuf; p < lbptr; p++) {
-	nvt_process_s(ctl_see((int) *p));
+
+    if (!(n_ucs4 = expand_lbuf())) {
+	return;
+    }
+
+    p = lbuf;
+    for (ix = 0; ix < n_ucs4; ix++) {
+	ucs4_t ch = widths[ix].ucs4;
+	if (ch < ' ') {
+	    nvt_process((unsigned int)'^');
+	    nvt_process((unsigned int)(ch + '@'));
+	} else if (ch == 0x7f) {
+	    nvt_process_s("^?");
+	} else {
+	    int i;
+
+	    for (i = 0; i < widths[ix].mb_len; i++) {
+	    	nvt_process((unsigned int)(*(p + i)));
+	    }
+	}
+	p += widths[ix].mb_len;
     }
 }
 

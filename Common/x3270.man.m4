@@ -515,6 +515,9 @@ Specifies the user name for RFC 4777 support.
 ifelse(XX_MODE,script,`XX_TP(XX_FB(XX_DASHED(utf8)))
 Forces the local codeset to be UTF-8, ignoring the locale or Windows codepage.
 ')dnl
+ifelse(XX_MODE,console,`XX_TP(XX_FB(XX_DASHED(utf8)))
+Forces the local codeset to be UTF-8, ignoring the locale or Windows codepage.
+')dnl
 XX_TP(XX_FB(XX_DASHED(v)))
 Display the version and build options for XX_FB(XX_PRODUCT) and exit.
 XX_TP(XX_FB(XX_DASHED(verifycert)))

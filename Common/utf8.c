@@ -38,6 +38,11 @@
 char *locale_codeset = NULL;
 bool is_utf8 = false;
 
+#if defined(_WIN32) /*[*/
+#define STR_HELPER(s) #s
+#define CPNAME(x) "CP" STR_HELPER(x)
+#endif /*]*/
+
 /*
  * Save the codeset from the locale, and set globals based on known values.
  */
@@ -57,11 +62,23 @@ set_codeset(char *codeset_name, bool force_utf8)
     }
 
     /*
-     * We're in UTF-8 mode if the codeset looks like 'UTF8'.
+     * We're in UTF-8 mode if the codeset looks like 'UTF8', or on Windows,
+     * if it is codepage 65001.
      */
     is_utf8 |= (!strcasecmp(codeset_name, "utf-8") ||
 		!strcasecmp(codeset_name, "utf8") ||
-		!strcasecmp(codeset_name, "utf_8"));
+		!strcasecmp(codeset_name, "utf_8")
+#if defined(_WIN32) /*[*/
+		|| !strcasecmp(codeset_name, CPNAME(CP_UTF8))
+#endif /*]*/
+		);
+
+#if defined(_WIN32) /*[*/
+    if (is_utf8) {
+	/* Force the name, in case they specified it numerically. */
+	codeset_name = "UTF-8";
+    }
+#endif /*]*/
 
     Replace(locale_codeset, NewString(codeset_name));
 }
