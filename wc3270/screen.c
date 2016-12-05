@@ -1858,7 +1858,7 @@ screen_disp(bool erasing _is_unused)
 
     fa = get_field_attribute(0);
     fa_addr = find_field_attribute(0); /* may be -1, that's okay */
-    a = calc_attrs(0, fa_addr, fa, &a_underlined, &a_blinking);
+    a = calc_attrs(fa_addr, fa_addr, fa, &a_underlined, &a_blinking);
     for (row = 0; row < ROWS; row++) {
 	int baddr;
 
