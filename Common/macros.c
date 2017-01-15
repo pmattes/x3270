@@ -117,7 +117,7 @@ typedef struct sms {
 	SS_WAIT_IFIELD,	/* awaiting completion of Wait(InputField) */
 	SS_WAIT_UNLOCK,	/* awaiting completion of Wait(Unlock) */
 	SS_EXPECTING,	/* awaiting completion of Expect() */
-	SS_CLOSING	/* awaiting completion of Close() */
+	SS_CLOSING	/* awaiting completion of CloseScript() */
     } state;
     enum sms_type {
 	ST_STRING,	/* string */
@@ -1587,6 +1587,11 @@ run_macro(void)
 
     /* Finished with this macro. */
     sms_pop(false);
+
+    /* If the top sms is now in closing state, pop it, too. */
+    if (sms != NULL && sms->state == SS_CLOSING) {
+	sms_pop(false);
+    }
 }
 
 /* Push a macro (macro, command or keymap action) on the stack. */
@@ -2161,8 +2166,9 @@ sms_continue(void)
 	    return;
 
 	case SS_CLOSING:
+	    script_prompt(true);
 	    continuing = false;
-	    return;	/* can't happen, I hope */
+	    return;
 
 	}
 
@@ -3418,20 +3424,21 @@ CloseScript_action(ia_t ia, unsigned argc, const char **argv)
 	return false;
     }
 
-    if (sms != NULL && (sms->type == ST_PEER || sms->type == ST_CHILD)) {
+    if (sms != NULL &&
+	    sms->type == ST_MACRO &&
+	    sms->next != NULL &&
+	    (sms->next->type == ST_PEER || sms->next->type == ST_CHILD)) {
 
 	/* Close this script. */
-	sms->state = SS_CLOSING;
-	script_prompt(true);
+	sms->next->state = SS_CLOSING;
 
 	/* If nonzero status passed, fail the calling script. */
-	if (argc > 0 &&
-	    atoi(argv[0]) != 0 &&
-	    sms->next != NULL) {
+	if (argc > 0 && atoi(argv[0]) != 0) {
 	    sms->next->success = false;
 	    if (sms->is_login) {
 		host_disconnect(true);
 	    }
+	    return false;
 	}
     } else {
 	popup_an_error("CloseScript can only be called from a script");
