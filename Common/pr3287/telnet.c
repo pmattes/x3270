@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015 Paul Mattes.
+ * Copyright (c) 1993-2015, 2017 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -2069,9 +2069,14 @@ pr_ssl_base_init(void)
 		}
 	}
 
+#if !defined(_WIN32) && OPENSSL_VERSION_NUMBER < 0x10100000L /*[*/
 	SSL_load_error_strings();
 	SSL_library_init();
 	ssl_ctx = SSL_CTX_new(SSLv23_method());
+#else /*][*/
+	OPENSSL_init_ssl(0, NULL);
+	ssl_ctx = SSL_CTX_new(TLS_method());
+#endif /*]*/
 	if (ssl_ctx == NULL) {
 		errmsg("SSL_CTX_new failed");
 		goto fail;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 Paul Mattes.
+ * Copyright (c) 2012-2013, 2017 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -30,15 +30,24 @@
 /*
  *	ssl_dll.c
  *		Windows-specific interface to the (possibly missing) OpenSSL
- *		DLLs.
+ *		DLLs. Assumes OpenSSL 1.1 or later.
  */
 
 #include "ssl_dll.h"	/* name translations */
 #include "globals.h"
+#include "utils.h"	/* for xs_buffer */
 
 #if defined(HAVE_LIBSSL) /*[*/
 
 #include <openssl/ssl.h>
+
+#if defined(_WIN64) /*[*/
+# define LIBSSL_NAME "libssl-1_1-x64.dll"
+# define LIBCRYPTO_NAME "libcrypto-1_1-x64.dll"
+#else /*][*/
+# define LIBSSL_NAME "libssl-1_1.dll"
+# define LIBCRYPTO_NAME "libcrypto-1_1.dll"
+#endif /*]*/
 
 const char *ssl_fail_reason = NULL;
 
@@ -48,7 +57,7 @@ typedef enum {
     T_CRYPTO_free,
     T_ERR_error_string,
     T_ERR_get_error,
-    T_SSLv23_method,
+    T_TLS_method,
     T_SSL_connect,
     T_SSL_get_peer_certificate,
     T_SSL_CTX_check_private_key,
@@ -64,8 +73,7 @@ typedef enum {
     T_SSL_CTX_use_PrivateKey_file,
     T_SSL_free,
     T_SSL_get_verify_result,
-    T_SSL_library_init,
-    T_SSL_load_error_strings,
+    T_OPENSSL_init_ssl,
     T_SSL_new,
     T_SSL_read,
     T_SSL_set_fd,
@@ -81,8 +89,9 @@ typedef enum {
     T_X509_get_ext_d2i,
     T_X509_get_subject_name,
     T_X509_verify_cert_error_string,
-    T_sk_num,
-    T_sk_value,
+    T_OPENSSL_sk_num,
+    T_OPENSSL_sk_value,
+    T_SSL_CTX_set_options,
     NUM_DLL_FUNCS
 } ssl_dll_t;
 
@@ -92,7 +101,7 @@ static const char *ssl_dll_name[NUM_DLL_FUNCS] = {
     "CRYPTO_free",
     "ERR_error_string",
     "ERR_get_error",
-    "SSLv23_method",
+    "TLS_method",
     "SSL_connect",
     "SSL_get_peer_certificate",
     "SSL_CTX_check_private_key",
@@ -108,8 +117,7 @@ static const char *ssl_dll_name[NUM_DLL_FUNCS] = {
     "SSL_CTX_use_PrivateKey_file",
     "SSL_free",
     "SSL_get_verify_result",
-    "SSL_library_init",
-    "SSL_load_error_strings",
+    "OPENSSL_init_ssl",
     "SSL_new",
     "SSL_read",
     "SSL_set_fd",
@@ -125,16 +133,18 @@ static const char *ssl_dll_name[NUM_DLL_FUNCS] = {
     "X509_get_ext_d2i",
     "X509_get_subject_name",
     "X509_verify_cert_error_string",
-    "sk_num",
-    "sk_value"
+    "OPENSSL_sk_num",
+    "OPENSSL_sk_value",
+    "SSL_CTX_set_options"
 };
 
 /* Function prototypes. */
-typedef int (*ASN1_STRING_to_UTF8_t)(unsigned char **out, ASN1_STRING *in);
-typedef void (*CRYPTO_free_t)(void *);
+typedef int (*ASN1_STRING_to_UTF8_t)(unsigned char **out,
+	const ASN1_STRING *in);
+typedef void (*CRYPTO_free_t)(void *str, const char *s, int n);
 typedef char *(*ERR_error_string_t)(unsigned long e, char *buf);
 typedef unsigned long (*ERR_get_error_t)(void);
-typedef const SSL_METHOD *(*SSLv23_method_t)(void);
+typedef const SSL_METHOD *(*TLS_method_t)(void);
 typedef int (*SSL_connect_t)(SSL *ssl);
 typedef X509 *(*SSL_get_peer_certificate_t)(const SSL *ssl);
 typedef int (*SSL_CTX_check_private_key_t)(const SSL_CTX *ctx);
@@ -156,7 +166,7 @@ typedef int (*SSL_CTX_use_PrivateKey_file_t)(SSL_CTX *ctx, const char *file,
 	int type);
 typedef void (*SSL_free_t)(SSL *ssl);
 typedef long (*SSL_get_verify_result_t)(const SSL *ssl);
-typedef int (*SSL_library_init_t)(void);
+typedef int (*OPENSSL_init_ssl_t)(uint64_t opts, const OPENSSL_INIT_SETTINGS *settings);
 typedef void (*SSL_load_error_strings_t)(void);
 typedef SSL *(*SSL_new_t)(SSL_CTX *ctx);
 typedef int  (*SSL_read_t)(SSL *ssl,void *buf,int num);
@@ -172,15 +182,18 @@ typedef int (*X509_NAME_get_text_by_NID_t)(X509_NAME *name, int nid,
 	char *buf, int len);
 typedef int (*X509_STORE_CTX_get_error_t)(X509_STORE_CTX *ctx);
 typedef void (*X509_free_t)(X509 *a);
-typedef void *(*X509_get_ext_d2i_t)(X509 *x, int nid, int *crit, int *idx);
-typedef X509_NAME *(*X509_get_subject_name_t)(X509 *a);
+typedef void *(*X509_get_ext_d2i_t)(const X509 *x, int nid, int *crit,
+	int *idx);
+typedef X509_NAME *(*X509_get_subject_name_t)(const X509 *a);
 typedef const char *(*X509_verify_cert_error_string_t)(long n);
-typedef int (*sk_num_t)(const _STACK *);
-typedef void *(*sk_value_t)(const _STACK *, int);
+typedef int (*OPENSSL_sk_num_t)(const _STACK *);
+typedef void *(*OPENSSL_sk_value_t)(const _STACK *, int);
+typedef unsigned long (*SSL_CTX_set_options_t)(SSL_CTX *ctx,
+	unsigned long options);
 
 /* DLL handles. */
-static HMODULE ssleay32_handle = NULL;
-static HMODULE libeay32_handle = NULL;
+static HMODULE ssl_handle = NULL;
+static HMODULE crypto_handle = NULL;
 
 /* Function pointers, resolved from the DLLs. */
 static FARPROC ssl_dll_func[NUM_DLL_FUNCS];
@@ -198,12 +211,12 @@ static int ssl_dll_initted = 0;
 static FARPROC
 get_ssl_t(const char *symbol)
 {
-	FARPROC p;
-
-	p = GetProcAddress(ssleay32_handle, symbol);
-	if (p == NULL)
-		p = GetProcAddress(libeay32_handle, symbol);
-	return p;
+    FARPROC p;
+    p = GetProcAddress(ssl_handle, symbol);
+    if (p == NULL) {
+	p = GetProcAddress(crypto_handle, symbol);
+    }
+    return p;
 }
 
 /*
@@ -228,15 +241,15 @@ ssl_dll_init(void)
 	}
 
 	/* Open the DLLs. */
-	ssleay32_handle = LoadLibrary("ssleay32.dll");
-	if (ssleay32_handle == NULL) {
-		ssl_fail_reason = "Cannot load ssleay32.dll";
+	ssl_handle = LoadLibrary(LIBSSL_NAME);
+	if (ssl_handle == NULL) {
+		ssl_fail_reason = "Cannot load " LIBSSL_NAME;
 		rv = -1;
 		goto done;
 	}
-	libeay32_handle = LoadLibrary("libeay32.dll");
-	if (libeay32_handle == NULL) {
-		ssl_fail_reason = "Cannot load libeay32.dll";
+	crypto_handle = LoadLibrary(LIBCRYPTO_NAME);
+	if (crypto_handle == NULL) {
+		ssl_fail_reason = "Cannot load " LIBCRYPTO_NAME;
 		rv = -1;
 		goto done;
 	}
@@ -251,7 +264,8 @@ ssl_dll_init(void)
 			abort();
 		ssl_dll_func[i] = get_ssl_t(ssl_dll_name[i]);
 		if (ssl_dll_func[i] == NULL) {
-		    ssl_fail_reason = "Cannot resolve symbol(s)";
+		    ssl_fail_reason = xs_buffer("Cannot resolve symbol '%s'",
+			    ssl_dll_name[i]);
 		    rv = -1;
 		    break;
 		}
@@ -266,7 +280,7 @@ ssl_dll_init(void)
 /* OpenSSL functions used by wc370/ws3270/wpr3287. */
 
 int
-ASN1_STRING_to_UTF8(unsigned char **out, ASN1_STRING *in)
+ASN1_STRING_to_UTF8(unsigned char **out, const ASN1_STRING *in)
 {
 	REQUIRE_INIT;
 	return ((ASN1_STRING_to_UTF8_t)
@@ -274,10 +288,10 @@ ASN1_STRING_to_UTF8(unsigned char **out, ASN1_STRING *in)
 }
 
 void
-CRYPTO_free(void *p)
+CRYPTO_free(void *str, const char *s, int n)
 {
 	REQUIRE_INIT;
-	((CRYPTO_free_t)ssl_dll_func[T_CRYPTO_free])(p);
+	((CRYPTO_free_t)ssl_dll_func[T_CRYPTO_free])(str, s, n);
 }
 
 char *
@@ -295,10 +309,10 @@ ERR_get_error(void)
 }
 
 const SSL_METHOD *
-SSLv23_method(void)
+TLS_method(void)
 {
 	REQUIRE_INIT;
-    	return ((SSLv23_method_t)ssl_dll_func[T_SSLv23_method])();
+    	return ((TLS_method_t)ssl_dll_func[T_TLS_method])();
 }
 
 int
@@ -420,17 +434,11 @@ SSL_get_verify_result(const SSL *ssl)
 }
 
 int
-SSL_library_init(void)
+OPENSSL_init_ssl(uint64_t opts, const OPENSSL_INIT_SETTINGS *settings)
 {
 	REQUIRE_INIT;
-	return ((SSL_library_init_t)ssl_dll_func[T_SSL_library_init])();
-}
-
-void
-SSL_load_error_strings(void)
-{
-	REQUIRE_INIT;
-    	((SSL_load_error_strings_t)ssl_dll_func[T_SSL_load_error_strings])();
+	return ((OPENSSL_init_ssl_t)
+		ssl_dll_func[T_OPENSSL_init_ssl])(opts, settings);
 }
 
 SSL *
@@ -523,7 +531,7 @@ X509_free(X509 *a)
 }
 
 void *
-X509_get_ext_d2i(X509 *x, int nid, int *crit, int *idx)
+X509_get_ext_d2i(const X509 *x, int nid, int *crit, int *idx)
 {
 	REQUIRE_INIT;
 	return ((X509_get_ext_d2i_t)
@@ -531,7 +539,7 @@ X509_get_ext_d2i(X509 *x, int nid, int *crit, int *idx)
 }
 
 X509_NAME *
-X509_get_subject_name(X509 *a)
+X509_get_subject_name(const X509 *a)
 {
 	REQUIRE_INIT;
 	return ((X509_get_subject_name_t)
@@ -547,17 +555,25 @@ X509_verify_cert_error_string(long n)
 }
 
 int
-sk_num(const _STACK *s)
+OPENSSL_sk_num(const _STACK *s)
 {
     	REQUIRE_INIT;
-	return ((sk_num_t)ssl_dll_func[T_sk_num])(s);
+	return ((OPENSSL_sk_num_t)ssl_dll_func[T_OPENSSL_sk_num])(s);
 }
 
 void *
-sk_value(const _STACK *s, int i)
+OPENSSL_sk_value(const _STACK *s, int i)
 {
     	REQUIRE_INIT;
-	return ((sk_value_t)ssl_dll_func[T_sk_value])(s, i);
+	return ((OPENSSL_sk_value_t)ssl_dll_func[T_OPENSSL_sk_value])(s, i);
+}
+
+unsigned long
+SSL_CTX_set_options(SSL_CTX *ctx, unsigned long options)
+{
+    	REQUIRE_INIT;
+	return ((SSL_CTX_set_options_t)
+		ssl_dll_func[T_SSL_CTX_set_options])(ctx, options);
 }
 
 #endif /*]*/

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Paul Mattes.
+ * Copyright (c) 2012, 2017 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -43,8 +43,8 @@ extern const char *ssl_fail_reason;
 
 #define ERR_error_string my_ERR_error_string
 #define ERR_get_error my_ERR_get_error
-#define SSLv23_method my_SSLv23_method
 #define SSL_connect my_SSL_connect
+#define TLS_method my_TLS_method
 #define SSL_CTX_check_private_key my_SSL_CTX_check_private_key
 #define SSL_CTX_ctrl my_SSL_CTX_ctrl
 #define SSL_CTX_free my_SSL_CTX_free
@@ -58,8 +58,7 @@ extern const char *ssl_fail_reason;
 #define SSL_CTX_use_PrivateKey_file my_SSL_CTX_use_PrivateKey_file
 #define SSL_free my_SSL_free
 #define SSL_get_verify_result my_SSL_get_verify_result
-#define SSL_library_init my_SSL_library_init
-#define SSL_load_error_strings my_SSL_load_error_strings
+#define OPENSSL_init_ssl my_OPENSSL_init_ssl
 #define SSL_new my_SSL_new
 #define SSL_read my_SSL_read
 #define SSL_set_fd my_SSL_set_fd
@@ -71,3 +70,4 @@ extern const char *ssl_fail_reason;
 #define SSL_write my_SSL_write
 #define X509_STORE_CTX_get_error my_X509_STORE_CTX_get_error
 #define X509_verify_cert_error_string my_X509_verify_cert_error_string
+#define SSL_CTX_set_options my_SSL_CTX_set_options

@@ -1,7 +1,7 @@
 # Common definitions for Windows makefiles.
 #
 # Figure out if they've installed MinGW OpenSSL.
-SSLDIR = /usr/local/OpenSSL-Win32
+SSLDIR = /usr/local/OpenSSL-Win32-1_1_0c
 HAVE_OPENSSL = $(shell [ -d $(SSLDIR) ] && echo yes)
 ifeq ($(HAVE_OPENSSL),yes)
 ifndef NO_SSL
@@ -10,12 +10,14 @@ SSLLIB = -lwsock32 -ladvapi32 -lgdi32 -luser32
 endif
 endif
 
-# Set the MinGW tools prefix based on the WIN64 environment variable.
-# This is a little clumsy for now, but at least it's possible.
+# Set the MinGW tools prefix and the _WIN32/64 symbols based on the WIN64
+# environment variable.
 ifdef WIN64
 GT_PFX = x86_64-w64-mingw32-
+WIN32_FLAGS = -D_WIN32 -D_WIN64
 else
 GT_PFX = i686-w64-mingw32-
+WIN32_FLAGS = -D_WIN32
 endif
 
 NATIVECC = gcc
@@ -31,6 +33,3 @@ NATIVE_SFX = .exe
 else
 NATIVE_SFX =
 endif
-
-# Srt up the common Windows compiler flags
-WIN32_FLAGS = -D_WIN32
