@@ -268,6 +268,7 @@ static int ssl_init(void);
 
 #if defined(HAVE_LIBSSL) /*[*/
 bool ssl_supported = true;
+const char *unsupported_reason = "SSL DLLs not found";
 bool secure_connection = false;
 bool secure_unverified = false;
 char **unverified_reasons = NULL;
@@ -3589,6 +3590,7 @@ ssl_base_init(char *cl_hostname, bool *pending)
 	/* The DLLs may not be there, or may be the wrong ones. */
 	vtrace("SSL DLL init failed: %s\n", ssl_fail_reason);
 	ssl_supported = false;
+	unsupported_reason = ssl_fail_reason;
 	return;
     }
 #endif /*]*/
@@ -3654,11 +3656,19 @@ ssl_base_init(char *cl_hostname, bool *pending)
 	ssl_pending = pending;
     }
 
+#if !defined(_WIN32) && OPENSSL_VERSION_NUMBER < 0x10100000L /*[*/
     SSL_load_error_strings();
     SSL_library_init();
+#else /*][*/
+    OPENSSL_init_ssl(0, NULL);
+#endif /*]*/
 try_again:
     ssl_passwd_gui_reset();
+#if !defined(_WIN32) && OPENSSL_VERSION_NUMBER < 0x10100000L /*[*/
     ssl_ctx = SSL_CTX_new(SSLv23_method());
+#else /*][*/
+    ssl_ctx = SSL_CTX_new(TLS_method());
+#endif /*]*/
     if (ssl_ctx == NULL) {
 	popup_an_error("SSL_CTX_new failed");
 	goto fail;
@@ -4124,7 +4134,7 @@ static int
 ssl_init(void)
 {
     if (!ssl_supported) {
-	popup_an_error("Cannot connect:\nSSL DLLs not found\n");
+	popup_an_error("Cannot connect:\n%s\n", unsupported_reason);
 	return -1;
     }
     if (ssl_ctx == NULL) {
