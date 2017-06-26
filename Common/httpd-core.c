@@ -1189,7 +1189,7 @@ httpd_redirect(httpd_t *h, const char *uri)
 	return httpd_error(h, ERRMODE_NONFATAL, 404, "Document not found.");
     }
 
-    r->location = xs_buffer(r->location, "http://%s%s/", host, uri);
+    r->location = xs_buffer("http://%s%s/", host, uri);
     httpd_error(h, ERRMODE_NONFATAL, 301, "The document has moved "
 	    "<a href=\"http://%s%s/\">here.</a>.", host, uri);
     Free(r->location);
@@ -1419,7 +1419,7 @@ httpd_digest_request(httpd_t *h)
 	    value_len = s - value;
 
 	    /* Trim trailing spaces from the value. */
-	    while (value_len && isspace((unsigned char)s[value_len - 1])) {
+	    while (value_len && isspace((unsigned char)value[value_len - 1])) {
 		value_len--;
 	    }
 	    if (value_len == 0) {
