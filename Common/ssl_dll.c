@@ -72,6 +72,7 @@ typedef enum {
     T_SSL_CTX_use_certificate_file,
     T_SSL_CTX_use_PrivateKey_file,
     T_SSL_free,
+    T_SSL_get_error,
     T_SSL_get_verify_result,
     T_OPENSSL_init_ssl,
     T_SSL_new,
@@ -116,6 +117,7 @@ static const char *ssl_dll_name[NUM_DLL_FUNCS] = {
     "SSL_CTX_use_certificate_file",
     "SSL_CTX_use_PrivateKey_file",
     "SSL_free",
+    "SSL_get_error",
     "SSL_get_verify_result",
     "OPENSSL_init_ssl",
     "SSL_new",
@@ -165,6 +167,7 @@ typedef int (*SSL_CTX_use_certificate_file_t)(SSL_CTX *ctx, const char *file,
 typedef int (*SSL_CTX_use_PrivateKey_file_t)(SSL_CTX *ctx, const char *file,
 	int type);
 typedef void (*SSL_free_t)(SSL *ssl);
+typedef int (*SSL_get_error_t)(const SSL *ssl, int ret);
 typedef long (*SSL_get_verify_result_t)(const SSL *ssl);
 typedef int (*OPENSSL_init_ssl_t)(uint64_t opts, const OPENSSL_INIT_SETTINGS *settings);
 typedef void (*SSL_load_error_strings_t)(void);
@@ -423,6 +426,14 @@ SSL_free(SSL *ssl)
 {
 	REQUIRE_INIT;
 	((SSL_free_t)ssl_dll_func[T_SSL_free])(ssl);
+}
+
+int
+SSL_get_error(const SSL *ssl, int ret)
+{
+    	REQUIRE_INIT;
+	return ((SSL_get_error_t)
+		ssl_dll_func[T_SSL_get_error])(ssl, ret);
 }
 
 long

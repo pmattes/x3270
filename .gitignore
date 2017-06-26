@@ -22,3 +22,4 @@ SSL.html
 *.suo
 version.c
 wversion.c
+.*.swp

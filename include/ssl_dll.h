@@ -57,6 +57,7 @@ extern const char *ssl_fail_reason;
 #define SSL_CTX_use_certificate_file my_SSL_CTX_use_certificate_file
 #define SSL_CTX_use_PrivateKey_file my_SSL_CTX_use_PrivateKey_file
 #define SSL_free my_SSL_free
+#define SSL_get_error my_SSL_get_error
 #define SSL_get_verify_result my_SSL_get_verify_result
 #define OPENSSL_init_ssl my_OPENSSL_init_ssl
 #define SSL_new my_SSL_new
