@@ -82,7 +82,7 @@ sign-files:
 	./readpass
 	@(echo '@echo off'; \
 	 for i in $(SIGNFILES); \
-	    do /bin/echo -E "\"C:\\Program Files\\ksign\\ksigncmd.exe\" /f $(CERT) /p `sed 's/%/%%/' /tmp/pass` $$i"; \
+	    do /bin/echo -E "\"C:\\Program Files\\kSign\\ksigncmd.exe\" /f $(CERT) /p \"`sed 's/%/%%/' /tmp/pass`\" $$i"; \
 	       /bin/echo "if errorlevel 1 ("; \
 	       /bin/echo "    goto :EOF"; \
 	       /bin/echo ")"; \
