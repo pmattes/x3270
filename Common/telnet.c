@@ -991,6 +991,29 @@ net_connected(void)
 			"%s (%ld)%s", X509_verify_cert_error_string(v), v,
 			(v == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN)?
 	       "\nCA certificate needs to be added to the local database": "");
+	    } else {
+		int err = SSL_get_error(ssl_con, rv);
+		char err_buf[120];
+		if (err == SSL_ERROR_SYSCALL) {
+		    /* Something went wrong with the socket. */
+		    unsigned long e;
+
+		    vtrace("SSL error is %d\n", err);
+
+		    e = ERR_get_error();
+		    if (e != 0) {
+			(void) ERR_error_string(e, err_buf);
+		    } else {
+			strcpy(err_buf, "unexpected EOF");
+		    }
+		    vtrace("RCVD SSL_connect SYSCALL error %ld (%s)\n",
+			    e, err_buf);
+		} else {
+		    /* SSL protocol error */
+		    vtrace("RCVD SSL_connect error %d\n", err);
+		    snprintf(err_buf, sizeof(err_buf), "error %d", err);
+		}
+		popup_an_error("SSL_connect:\n%s", err_buf);
 	    }
 
 	    /* No need to trace the error, it was already displayed. */
@@ -1233,8 +1256,9 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 	}
 	for (;;) {
 #endif /*]*/
-	if (sock < 0)
+	if (sock == INVALID_SOCKET) {
 		return;
+	}
 
 #if defined(_WIN32) /*[*/
 	if (HALF_CONNECTED) {
@@ -1257,6 +1281,10 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 				x3270_exit(1);
 			}
 		}
+
+		if (sock == INVALID_SOCKET) {
+		    return;
+		}
 	}
 #endif /*]*/
 
@@ -1273,19 +1301,23 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 		 */
 		if (HALF_CONNECTED &&
 		    (nr = recv(sock, (char *) netrbuf, 1,
-			       MSG_PEEK)) <= 0)
+			       MSG_PEEK)) <= 0) {
 			ignore_ssl = true;
-		else
+		} else {
 			nr = SSL_read(ssl_con, (char *) netrbuf, BUFSZ);
-	} else
+		}
+	} else {
 #else /*][*/
 #endif /*]*/
 #if defined(LOCAL_PROCESS) /*[*/
-	if (local_process)
-		nr = read(sock, (char *) netrbuf, BUFSZ);
-	else
+		if (local_process) {
+			nr = read(sock, (char *) netrbuf, BUFSZ);
+		} else
 #endif /*]*/
-		nr = recv(sock, (char *) netrbuf, BUFSZ, 0);
+		{
+			nr = recv(sock, (char *) netrbuf, BUFSZ, 0);
+		}
+	}
 	vtrace("Host socket read complete nr=%d\n", nr);
 	if (nr < 0) {
 		if (socket_errno() == SE_EWOULDBLOCK) {
@@ -4263,6 +4295,7 @@ continue_tls(unsigned char *sbbuf, int len)
 
     /* Check the host certificate. */
     if (!check_cert_name()) {
+	vtrace("disconnect: check_cert_name failed\n");
 	host_disconnect(true);
 	return;
     }
