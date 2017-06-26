@@ -76,7 +76,7 @@ windows-release: release-files
 
 # Sign the binaries using ksign.
 SIGNFILES = $(shell awk '/Source:.*exe/ { print substr($$2,2,length($$2)-3) }' *.iss.tmpl | sed 's-\\-\\\\-g')
-CERT = z:\\hd\\xfer\\Certificate.p12
+CERT = z:\\hd\\xfer\\Certificate3.p12
 PASS = /p `cat /tmp/pass`
 sign-files:
 	./readpass
