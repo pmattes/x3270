@@ -542,7 +542,6 @@ wc3270/wc3270km.ico
 wc3270/wc3270.rc
 wc3270/wizard.c
 wc3270/wselectc.h
-wc3270/wversion.c
 wc3270/x3270-icon2.bmp
 wc3270/x3270.man.m4
 wc3270/x3270-script.man.m4
