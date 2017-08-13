@@ -1,0 +1,28 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>b3270 stats Indication</title>
+  <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
+</head>
+
+<body>
+<a name="stats"></a><h3>stats Indication</h3>
+<p>Periodic I/O statistics. These will be sent no more than once every two
+seconds, and only if there is a change.</p>
+<table border cols=3 width="75%">
+ <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
+ <tr><td>bytes-received</td><td>yes</td><td>Bytes received on this connection</td></tr>
+ <tr><td>records-received</td><td>yes</td><td>Records received on this connection</td></tr>
+ <tr><td>bytes-sent</td><td>yes</td><td>Bytes sent on this connection</td></tr>
+ <tr><td>records-sent</td><td>yes</td><td>Records send on this connection</td></tr>
+</table>
+
+<p>Example:
+<pre>
+&lt;stats bytes-received="1343" records-received="4" bytes-sent="32" records-sent="0"/&gt;
+</pre></p>
+<hr>
+b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
+</body>
+</html>

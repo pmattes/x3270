@@ -79,12 +79,12 @@ ifdef M1
 endif
 
 # Library ependencies.
-c3270 s3270 tcl3270 x3270 pr3287: unix-lib
-wc3270 ws3270 wpr3287: windows-lib
+c3270 s3270 b3270 tcl3270 x3270 pr3287: unix-lib
+wc3270 ws3270 wb3270 wpr3287: windows-lib
 
 # Individual targets.
 unix-lib: lib3270 lib3270i lib32xx lib3270stubs
-windows-lib: libw3270 libw3270i libw32xx libw3270stubs
+windows-lib: libw3270 libw3270i libw32xx libw3270stubs libexpat
 lib: unix-lib windows-lib
 lib3270:
 	cd lib/3270 && $(MAKE)
@@ -114,10 +114,17 @@ libw3270stubs-32:
 	cd lib/w3270stubs && $(MAKE)
 libw3270stubs-64:
 	cd lib/w3270stubs && $(MAKE) WIN64=1
+libexpat: libexpat-32 libexpat-64
+libexpat-32:
+	cd lib/libexpat && $(MAKE)
+libexpat-64:
+	cd lib/libexpat && $(MAKE) WIN64=1
 c3270: lib3270 lib3270i lib32xx
 	cd c3270 && $(MAKE)
 s3270: lib3270 lib32xx
 	cd s3270 && $(MAKE)
+b3270: lib3270 lib32xx
+	cd b3270 && $(MAKE)
 tcl3270: lib3270 lib32xx
 	cd tcl3270 && $(MAKE)
 x3270: lib3270 lib3270i lib32xx
@@ -134,6 +141,11 @@ ws3270-32: libw3270-32 libw32xx-32
 	cd ws3270 && $(MAKE)
 ws3270-64: libw3270-64 libw32xx-64
 	cd ws3270 && $(MAKE) WIN64=1
+wb3270: wb3270-32 wb3270-64
+wb3270-32: libw3270-32 libw32xx-32
+	cd wb3270 && $(MAKE)
+wb3270-64: libw3270-64 libw32xx-64
+	cd wb3270 && $(MAKE) WIN64=1
 wpr3287: wpr3287-32 wpr3287-64
 wpr3287-32: libw32xx-32
 	cd wpr3287 && $(MAKE)
@@ -142,8 +154,8 @@ wpr3287-64: libw32xx-64
 
 FORCE:
 
-unix: c3270 s3270 tcl3270 x3270 pr3287
-windows: wc3270 ws3270 wpr3287
+unix: c3270 s3270 b3270 tcl3270 x3270 pr3287
+windows: wc3270 ws3270 wb3270 wpr3287
 
 # Installation
 install unix-install: @T_INSTALL@
@@ -153,6 +165,8 @@ c3270-install: c3270
 	cd c3270 && $(MAKE) install
 s3270-install: s3270
 	cd s3270 && $(MAKE) install
+b3270-install: b3270
+	cd b3270 && $(MAKE) install
 tcl3270-install: tcl3270
 	cd tcl3270 && $(MAKE) install
 pr3287-install: pr3287
@@ -166,6 +180,8 @@ c3270-install.man: c3270
 	cd c3270 && $(MAKE) install.man
 s3270-install.man: s3270
 	cd s3270 && $(MAKE) install.man
+b3270-install.man: b3270
+	cd b3270 && $(MAKE) install.man
 tcl3270-install.man: tcl3270
 	cd tcl3270 && $(MAKE) install.man
 pr3287-install.man: pr3287
@@ -174,10 +190,10 @@ pr3287-install.man: pr3287
 # Clean and clobber targets
 clean: @T_CLEAN@
 unix-lib-clean: lib3270-clean lib3270i-clean lib32xx-clean lib3270stubs-clean
-windows-lib-clean: libw3270-clean libw3270i-clean libw32xx-clean libw3270stubs-clean
+windows-lib-clean: libw3270-clean libw3270i-clean libw32xx-clean libw3270stubs-clean libexpat-clean
 lib-clean: unix-lib-clean windows-lib-clean
-unix-clean: x3270-clean c3270-clean s3270-clean tcl3270-clean pr3287-clean unix-lib-clean
-windows-clean: wc3270-clean ws3270-clean wpr3287-clean windows-lib-clean
+unix-clean: x3270-clean c3270-clean s3270-clean b3270-clean tcl3270-clean pr3287-clean unix-lib-clean
+windows-clean: wc3270-clean ws3270-clean wb3270-clean wpr3287-clean windows-lib-clean
 lib3270-clean:
 	cd lib/3270 && $(MAKE) clean
 lib3270i-clean:
@@ -206,12 +222,19 @@ libw3270stubs-clean-32:
 	cd lib/w3270stubs && $(MAKE) clean
 libw3270stubs-clean-64:
 	cd lib/w3270stubs && $(MAKE) clean WIN64=1
+libexpat-clean: libexpat-clean-32 libexpat-clean-64
+libexpat-clean-32:
+	cd lib/libexpat && $(MAKE) clean
+libexpat-clean-64:
+	cd lib/libexpat && $(MAKE) clean WIN64=1
 x3270-clean:
 	cd x3270 && $(MAKE) clean
 c3270-clean:
 	cd c3270 && $(MAKE) clean
 s3270-clean:
 	cd s3270 && $(MAKE) clean
+b3270-clean:
+	cd b3270 && $(MAKE) clean
 tcl3270-clean:
 	cd tcl3270 && $(MAKE) clean
 pr3287-clean:
@@ -226,6 +249,11 @@ ws3270-clean-32:
 	cd ws3270 && $(MAKE) clean
 ws3270-clean-64:
 	cd ws3270 && $(MAKE) clean WIN64=1
+wb3270-clean: wb3270-clean-32 wb3270-clean-64
+wb3270-clean-32:
+	cd wb3270 && $(MAKE) clean
+wb3270-clean-64:
+	cd wb3270 && $(MAKE) clean WIN64=1
 wpr3287-clean: wpr3287-clean-32 wpr3287-clean-64
 wpr3287-clean-32:
 	cd wpr3287 && $(MAKE) clean
@@ -234,10 +262,10 @@ wpr3287-clean-64:
 
 clobber: @T_CLOBBER@
 unix-lib-clobber: lib3270-clobber lib3270i-clobber lib32xx-clobber lib3270stubs-clobber
-windows-lib-clobber: libw3270-clobber libw3270i-clobber libw32xx-clobber libw3270stubs-clobber
+windows-lib-clobber: libw3270-clobber libw3270i-clobber libw32xx-clobber libw3270stubs-clobber libexpat-clobber
 lib-clobber: unix-lib-clobber windows-lib-clobber
-unix-clobber: x3270-clobber c3270-clobber s3270-clobber tcl3270-clobber pr3287-clobber unix-lib-clobber
-windows-clobber: wc3270-clobber ws3270-clobber wpr3287-clobber windows-lib-clobber
+unix-clobber: x3270-clobber c3270-clobber s3270-clobber b3270-clobber tcl3270-clobber pr3287-clobber unix-lib-clobber
+windows-clobber: wc3270-clobber ws3270-clobber wb3270-clobber wpr3287-clobber windows-lib-clobber
 lib3270-clobber:
 	cd lib/3270 && $(MAKE) clobber
 lib3270i-clobber:
@@ -266,12 +294,19 @@ libw3270stubs-clobber-32:
 	cd lib/w3270stubs && $(MAKE) clobber
 libw3270stubs-clobber-64:
 	cd lib/w3270stubs && $(MAKE) clobber WIN64=1
+libexpat-clobber: libexpat-clobber-32 libexpat-clobber-64
+libexpat-clobber-32:
+	cd lib/libexpat && $(MAKE) clobber
+libexpat-clobber-64:
+	cd lib/libexpat && $(MAKE) clobber WIN64=1
 x3270-clobber:
 	cd x3270 && $(MAKE) clobber
 c3270-clobber:
 	cd c3270 && $(MAKE) clobber
 s3270-clobber:
 	cd s3270 && $(MAKE) clobber
+b3270-clobber:
+	cd b3270 && $(MAKE) clobber
 tcl3270-clobber:
 	cd tcl3270 && $(MAKE) clobber
 pr3287-clobber:
@@ -286,6 +321,11 @@ ws3270-clobber-32:
 	cd ws3270 && $(MAKE) clobber
 ws3270-clobber-64:
 	cd ws3270 && $(MAKE) clobber WIN64=1
+wb3270-clobber: wb3270-clobber-32 wb3270-clobber-64
+wb3270-clobber-32:
+	cd wb3270 && $(MAKE) clobber
+wb3270-clobber-64:
+	cd wb3270 && $(MAKE) clobber WIN64=1
 wpr3287-clobber: wpr3287-clobber-32 wpr3287-clobber-64
 wpr3287-clobber-32:
 	cd wpr3287 && $(MAKE) clobber

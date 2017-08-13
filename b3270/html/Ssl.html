@@ -1,0 +1,29 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>b3270 ssl Indication</title>
+  <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
+</head>
+
+<body>
+<a name="ssl"></a><h3>ssl Indication</h3>
+
+<p>Change in SSL state.</p>
+
+<table border cols=3 width="75%">
+ <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
+ <tr><td>secure</td><td>yes</td><td><b>true</b> or <b>false</b>, connection is secure</td></tr>
+ <tr><td>verified</td><td>no</td><td><b>true</b> or <b>false</b>, host certificate is verified</td></tr>
+</table>
+
+<p>The <i>verified</i> attribute is present only if <i>secure</i> is
+<b>true</b>.</p>
+<p>Example:
+<pre>
+&lt;ssl secure="true" verified="false"/&gt;
+</pre></p>
+<hr>
+b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
+</body>
+</html>

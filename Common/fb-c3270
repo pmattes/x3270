@@ -1,5 +1,5 @@
 !
-! Copyright (c) 1995-2015, Paul Mattes.
+! Copyright (c) 1995-2017, Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,7 @@ keymap.base: \n\
         Alt <Key>1: PA(1)\n\
         Alt <Key>2: PA(2)\n\
         Alt <Key>3: PA(3)\n\
-        Alt <Key>^: Key(notsign)\n\
+        Alt <Key>^: Key(notsign,NoFailOnError)\n\
        Ctrl <Key>c: Copy()\n\
         Alt <Key>k: Keypad()\n\
         Alt <Key>K: Keypad()\n\
@@ -71,7 +71,7 @@ keymap.base: \n\
     Shift <Key>F10: PF(22)\n\
     Shift <Key>F11: PF(23)\n\
     Shift <Key>F12: PF(24)\n\
- Shift <Key>ESCAPE: Key(0x1d)\n\
+ Shift <Key>ESCAPE: Key(0x1d,NoFailOnError)\n\
         <Key>PRIOR: Scroll(Backward)\n\
          <Key>NEXT: Scroll(Forward)
 keymap.base.3270: \n\
@@ -80,12 +80,12 @@ keymap.base.3270: \n\
        Alt <Key>A: Attn()\n\
        Alt <Key>c: Clear()\n\
        Alt <Key>C: Clear()\n\
-      Ctrl <Key>d: Dup()\n\
-       Alt <Key>d: Dup()\n\
-       Alt <Key>D: Dup()\n\
-      Ctrl <Key>f: FieldMark()\n\
-       Alt <Key>f: FieldMark()\n\
-       Alt <Key>F: FieldMark()\n\
+      Ctrl <Key>d: Dup(NoFailOnError)\n\
+       Alt <Key>d: Dup(NoFailOnError)\n\
+       Alt <Key>D: Dup(NoFailOnError)\n\
+      Ctrl <Key>f: FieldMark(NoFailOnError)\n\
+       Alt <Key>f: FieldMark(NoFailOnError)\n\
+       Alt <Key>F: FieldMark(NoFailOnError)\n\
       Ctrl <Key>h: Erase()\n\
        Alt <Key>i: Insert()\n\
        Alt <Key>I: Insert()\n\
@@ -119,8 +119,8 @@ x3270.keymap.rctrl.3270: \
 x3270.keymap.base: \n\
             Ctrl<Key>]: Escape()\n\
            <Key>Escape: Escape()\n\
- Ctrl<Key>a Ctrl<Key>a: Key(0x01)\n\
- Ctrl<Key>a Ctrl<Key>]: Key(0x1d)\n\
+ Ctrl<Key>a Ctrl<Key>a: Key(0x01,NoFailOnError)\n\
+ Ctrl<Key>a Ctrl<Key>]: Key(0x1d,NoFailOnError)\n\
      Ctrl<Key>a <Key>c: Clear()\n\
      Ctrl<Key>a <Key>e: Escape()\n\
      Ctrl<Key>a <Key>i: Insert()\n\
@@ -130,7 +130,7 @@ x3270.keymap.base: \n\
      Ctrl<Key>a <Key>m: Compose()\n\
      Ctrl<Key>a <Key>n: Menu()\n\
      Ctrl<Key>a <Key>p: PrintText()\n\
-     Ctrl<Key>a <Key>^: Key(notsign)\n\
+     Ctrl<Key>a <Key>^: Key(notsign,NoFailOnError)\n\
                <Key>DC: Delete()\n\
                <Key>UP: Up()\n\
              <Key>DOWN: Down()\n\
@@ -169,8 +169,8 @@ x3270.keymap.base: \n\
 x3270.keymap.base.3270: \n\
  Ctrl<Key>a <Key>a: Attn()\n\
         Ctrl<Key>c: Clear()\n\
-        Ctrl<Key>d: Dup()\n\
-        Ctrl<Key>f: FieldMark()\n\
+        Ctrl<Key>d: Dup(NoFailOnError)\n\
+        Ctrl<Key>f: FieldMark(NoFailOnError)\n\
         Ctrl<Key>h: Erase()\n\
         Ctrl<Key>i: Tab()\n\
         Ctrl<Key>j: Newline()\n\

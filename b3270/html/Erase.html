@@ -1,0 +1,45 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>b3270 erase Indication</title>
+  <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
+</head>
+
+<body>
+<a name="erase"></a><h3>erase Indication</h3>
+
+<p>Screen was erased and possibly resized.</p>
+
+<table border cols=3 width="75%">
+ <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
+ <tr><td>logical-rows</td><td>no</td><td>Current number of rows</td></tr>
+ <tr><td>logical-cols</td><td>no</td><td>Current number of columns</td></tr>
+ <tr><td>fg</td><td>no</td><td><a href="Colors.html">Foreground color</a> for entire screen</td></tr>
+ <tr><td>bg</td><td>no</td><td><a href="Colors.html">Background color</a> for entire screen</td></tr>
+</table>
+
+<p>The foreground and background colors are present only in color mode.</p>
+<p>A new set of <i>logical-rows</i> and <i>logical-cols</i> values indicates a
+switch between 3270 primary and alternate display modes. (Primary is 24 rows of
+80 columns, alternate may be larger.) Some user interfaces may choose to switch
+window sizes or fonts in response to this switch.</p>
+
+<p>The erased state of a screen not explicitly given by this indication is:
+<ul>
+ <li>Blank</li>
+ <li>No graphic rendition attributes</li>
+ <li>Cursor at 1, 1 (upper left)</li>
+</ul></p>
+
+<p>At start-up, the window is assumed to be full-size (the alternate 3270
+size).</p>
+
+<p>Example:
+<pre>
+&lt;erase/&gt;
+</pre></p>
+<hr>
+b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
+</body>
+</html>

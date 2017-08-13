@@ -102,7 +102,6 @@ Common/lib32xx_files.mk
 Common/libs.mk
 Common/linemode.c
 Common/llist.c
-Common/macros.c
 Common/Malloc.c
 Common/menubar_stubs.c
 Common/mkfb.c
@@ -162,6 +161,7 @@ Common/split_host.c
 Common/ssl_passwd_gui_stubs.c
 Common/status_stubs.c
 Common/tables.c
+Common/task.c
 Common/telnet.c
 Common/telnet_gui_stubs.c
 Common/telnet_sio.c
@@ -231,7 +231,6 @@ include/kybd.h
 include/latin1.h
 include/lazya.h
 include/linemode.h
-include/macros.h
 include/Makefile.aux
 include/menubar.h
 include/nvt_gui.h
@@ -261,6 +260,7 @@ include/ssl_config.h
 include/ssl_passwd_gui.h
 include/status.h
 include/tables.h
+include/task.h
 include/telnet_core.h
 include/telnet_gui.h
 include/telnet.h

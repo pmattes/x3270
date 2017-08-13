@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Paul Mattes.
+ * Copyright (c) 2014-2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,8 +45,8 @@
 
 #include "appres.h"
 #include "lazya.h"
-#include "macros.h"
 #include "popups.h"
+#include "task.h"
 #include "trace.h"
 #include "utils.h"
 #include "varbuf.h"
@@ -179,7 +179,7 @@ hio_socket_input(iosrc_t fd, ioid_t id)
 
     /* Move this session to the front of the list. */
     llist_unlink(&session->link);
-    llist_insert_before(&session->link, sessions.next);
+    LLIST_PREPEND(&session->link, sessions);
 
     session->idle = 0;
 
@@ -306,7 +306,7 @@ hio_connection(iosrc_t fd, ioid_t id)
     /* Set the timeout for the first line of input. */
     session->toid = AddTimeOut(IDLE_MAX * 1000, hio_timeout);
 
-    llist_insert_before(&session->link, sessions.next);
+    LLIST_APPEND(&session->link, sessions);
     n_sessions++;
 }
 
@@ -394,7 +394,7 @@ hio_send(void *mhandle, const char *buf, size_t len)
  * @param[in] len	size of buffer
  */
 static void
-hio_data(sms_cbh handle, const char *buf, size_t len)
+hio_data(task_cbh handle, const char *buf, size_t len)
 {
     session_t *s = handle;
 
@@ -434,25 +434,29 @@ hio_data(sms_cbh handle, const char *buf, size_t len)
  *
  * @param[in] handle	handle
  * @param[in] success	true if command succeeded
- * @param[in] status_buf status line buffer
- * @param[in] status_len size of status line buffer
+ * @param[in] abort	true if aborting
+ *
+ * @return True if the context is complete
  */
-static void
-hio_complete(sms_cbh handle, bool success, const char *status_buf,
-	size_t status_len)
+static bool
+hio_complete(task_cbh handle, bool success, bool abort)
 {
     session_t *s = handle;
+    char *prompt = task_cb_prompt(handle);
 
     /* We're done. */
     s->pending.done = true;
 
     /* Pass the result up to the node. */
     s->pending.callback(s->dhandle, success? SC_SUCCESS: SC_USER_ERROR,
-	    vb_buf(&s->pending.result), vb_len(&s->pending.result), status_buf,
-	    status_len);
+	    vb_buf(&s->pending.result), vb_len(&s->pending.result), prompt,
+	    strlen(prompt));
 
     /* Get ready for the next command. */
     vb_reset(&s->pending.result);
+
+    /* This is always the end of the command. */
+    return true;
 }
 
 /**
@@ -469,7 +473,14 @@ sendto_t
 hio_to3270(const char *cmd, sendto_callback_t *callback, void *dhandle,
 	content_t content_type)
 {
-    static sms_cb_t httpd_cb = { "HTTPD", IA_SCRIPT, hio_data, hio_complete };
+    static tcb_t httpd_cb = {
+	"httpd",
+	IA_SCRIPT,
+	CB_NEW_TASKQ,
+	hio_data,
+	hio_complete,
+	NULL
+    };
     size_t sl;
     session_t *s = httpd_mhandle(dhandle);
 

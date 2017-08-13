@@ -34,12 +34,12 @@
 #include "globals.h"
 
 #include "actions.h"
-#include "macros.h"
 #include "3270ds.h"
 #include "appres.h"
 #include "ckeypad.h"
 #include "cmenubar.h"
 #include "ctlrc.h"
+#include "task.h"
 
 #if !defined(_WIN32) /*[*/
 # if defined(HAVE_NCURSESW_NCURSES_H) /*[*/
@@ -412,7 +412,7 @@ keypad_click(int x, int y)
 	for (i = 0; i < NUM_SENSE; i++) {
 		if (x >= sens[i].ul_x && y >= sens[i].ul_y &&
 		    x <= sens[i].lr_x && y <= sens[i].lr_y) {
-			push_macro(sens[i].callback, false);
+			push_macro(sens[i].callback);
 			break;
 		}
 	}
@@ -442,7 +442,7 @@ keypad_key(int k, ucs4_t u)
 		for (i = 0; i < NUM_SENSE; i++) {
 			if (m.x >= sens[i].ul_x && m.y >= sens[i].ul_y &&
 			    m.x <= sens[i].lr_x && m.y <= sens[i].lr_y) {
-				push_macro(sens[i].callback, false);
+				push_macro(sens[i].callback);
 				break;
 			}
 		}
@@ -478,7 +478,7 @@ keypad_key(int k, ucs4_t u)
 		break;
 
 	case MK_ENTER:
-		push_macro(current_sens->callback, false);
+		push_macro(current_sens->callback);
 		pop_up_keypad(false);
 		break;
 
@@ -486,7 +486,7 @@ keypad_key(int k, ucs4_t u)
 		switch (u) {
 		case '\r':
 		case '\n':
-			push_macro(current_sens->callback, false);
+			push_macro(current_sens->callback);
 			break;
 		default:
 			break;

@@ -68,7 +68,6 @@
 #include "kybd.h"
 #include "lazya.h"
 #include "linemode.h"
-#include "macros.h"
 #include "nvt.h"
 #include "popups.h"
 #include "proxy.h"
@@ -78,6 +77,7 @@
 #include "split_host.h"
 #include "ssl_passwd_gui.h"
 #include "status.h"
+#include "task.h"
 #include "telnet.h"
 #include "telnet_core.h"
 #include "telnet_gui.h"
@@ -112,7 +112,7 @@ int             ns_bsent;
 int             ns_rsent;
 unsigned char  *obuf;		/* 3270 output buffer */
 unsigned char  *obptr = (unsigned char *) NULL;
-int             linemode = 1;
+bool            linemode = true;
 #if defined(LOCAL_PROCESS) /*[*/
 bool		local_process = false;
 #endif /*]*/
@@ -332,7 +332,7 @@ popup_a_sockerr(const char *fmt, ...)
     va_start(args, fmt);
     buffer = vlazyaf(fmt, args);
     va_end(args);
-    popup_an_error("%s: %s", buffer, win32_strerror(socket_errno()));
+    connect_error("%s: %s", buffer, win32_strerror(socket_errno()));
 }
 #else /*][*/
 void
@@ -344,7 +344,7 @@ popup_a_sockerr(const char *fmt, ...)
     va_start(args, fmt);
     buffer = vlazyaf(fmt, args);
     va_end(args);
-    popup_an_errno(errno, "%s", buffer);
+    connect_errno(errno, "%s", buffer);
 }
 #endif /*]*/
 
@@ -352,7 +352,7 @@ popup_a_sockerr(const char *fmt, ...)
 static void
 connect_timed_out(ioid_t id _is_unused)
 {
-    popup_an_error("Host connection timed out");
+    connect_error("Host connection timed out");
     connect_timeout_id = NULL_IOID;
     host_disconnect(true);
 }
@@ -503,6 +503,10 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
     }
 
     linemode_init();
+    ns_brcvd = 0;
+    ns_rrcvd = 0;
+    ns_bsent = 0;
+    ns_rsent = 0;
 
     Replace(hostname, NewString(host));
     net_accept = accept;
@@ -533,7 +537,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 
 	hp = gethostbyname(hn);
 	if (hp == (struct hostent *) 0) {
-	    popup_an_error("Unknown passthru host: %s", hn);
+	    connect_error("Unknown passthru host: %s", hn);
 	    return NC_FAILED;
 	}
 	(void) memmove(passthru_haddr, hp->h_addr, hp->h_length);
@@ -556,7 +560,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	    if (ptr == portname || *ptr != '\0' || lport == 0L ||
 		    lport & ~0xffff) {
 		if (!(sp = getservbyname(portname, "tcp"))) {
-		    popup_an_error("Unknown port number or service: %s",
+		    connect_error("Unknown port number or service: %s",
 			    portname);
 		    return NC_FAILED;
 		}
@@ -593,7 +597,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	rv = resolve_host_and_port(proxy_host, proxy_portname, 0, &proxy_port,
 		&haddr[0].sa, &ha_len[0], &errmsg, NULL);
 	if (RHP_IS_ERROR(rv)) {
-	    popup_an_error("%s", errmsg);
+	    connect_error("%s", errmsg);
 	    return NC_FAILED;
 	}
 	num_ha = 1;
@@ -616,7 +620,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 		rv = resolve_host_and_port(host, portname, i, &current_port,
 			&haddr[i].sa, &ha_len[i], &errmsg, &last);
 		if (RHP_IS_ERROR(rv)) {
-		    popup_an_error("%s", errmsg);
+		    connect_error("%s", errmsg);
 		    return NC_FAILED;
 		}
 		num_ha++;
@@ -639,7 +643,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 
 	switch (forkpty(&amaster, NULL, NULL, &w)) {
 	case -1:	/* failed */
-	    popup_an_errno(errno, "forkpty");
+	    connect_errno(errno, "forkpty");
 	    close_fail;
 	case 0:	/* child */
 	    putenv("TERM=xterm");
@@ -658,7 +662,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls,
 	    sock = amaster;
 	    (void) fcntl(sock, F_SETFD, 1);
 	    connection_complete();
-	    host_in3270(CONNECTED_NVT);
+	    host_in3270(linemode? CONNECTED_NVT: CONNECTED_NVT_CHAR);
 	    break;
 	}
 	*iosrc = sock;
@@ -844,7 +848,7 @@ net_connected(void)
 	rv = sio_negotiate(sio, sock, hostname, &data);
 	if (!rv) {
 	    /* No need to trace the error, it was already displayed. */
-	    popup_an_error("%s", sio_last_error());
+	    connect_error("%s", sio_last_error());
 	    host_disconnect(true);
 	    return;
 	}
@@ -858,6 +862,7 @@ net_connected(void)
 		sio_provider(), session, cert);
 	Free(session);
 	Free(cert);
+	st_changed(ST_SECURE, true);
 
 	/* Tell everyone else again. */
 	host_connected();
@@ -1001,6 +1006,7 @@ net_disconnect(bool including_ssl)
 	sio_close(sio);
 	sio = NULL;
 	secure_connection = false;
+	st_changed(ST_SECURE, false);
     }
     if (CONNECTED) {
 	(void) shutdown(sock, 2);
@@ -1028,13 +1034,13 @@ net_disconnect(bool including_ssl)
     /* If we refused TLS and never entered 3270 mode, say so. */
     if (refused_tls && !any_host_data) {
 	if (!appres.ssl.tls) {
-	    popup_an_error("Connection failed:\n"
+	    connect_error("Connection failed:\n"
 		    "Host requested STARTTLS but STARTTLS disabled");
 	} else if (nested_tls) {
-	    popup_an_error("Connection failed:\n"
+	    connect_error("Connection failed:\n"
 		    "Host requested nested STARTTLS");
 	} else {
-	    popup_an_error("Connection failed:\n"
+	    connect_error("Connection failed:\n"
 		    "Host requested STARTTLS but TLS/SSL not supported");
 	}
     }
@@ -1140,7 +1146,7 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 			return;
 		}
 		if (secure_connection && !ignore_ssl) {
-		    	popup_an_error("%s", sio_last_error());
+		    	connect_error("%s", sio_last_error());
 			host_disconnect(true);
 			return;
 		}
@@ -1209,8 +1215,8 @@ net_input(iosrc_t fd _is_unused, ioid_t id _is_unused)
 		if (local_process) {
 			/* More to do here, probably. */
 			if (cstate == CONNECTED_INITIAL) {
-				/* now can assume NVT mode */
-				host_in3270(CONNECTED_NVT);
+				host_in3270(linemode?
+					CONNECTED_NVT: CONNECTED_NVT_CHAR);
 				hisopts[TELOPT_ECHO] = 1;
 				check_linemode(false);
 				kybdlock_clr(KL_AWAITING_FIRST, "telnet_fsm");
@@ -1378,7 +1384,7 @@ telnet_fsm(unsigned char c)
 	    if (linemode) {
 		linemode_buf_init();
 	    }
-	    host_in3270(CONNECTED_NVT);
+	    host_in3270(linemode? CONNECTED_NVT: CONNECTED_NVT_CHAR);
 	    kybdlock_clr(KL_AWAITING_FIRST, "telnet_fsm");
 	    status_reset();
 	    ps_process();
@@ -1400,7 +1406,6 @@ telnet_fsm(unsigned char c)
 		    nvt_process((unsigned int) '\r');
 		}
 		nvt_process((unsigned int) c);
-		sms_store(c);
 	    }
 	} else {
 	    store3270in(c);
@@ -1425,7 +1430,6 @@ telnet_fsm(unsigned char c)
 		}
 		vtrace("%s", see_chr);
 		nvt_process((unsigned int) c);
-		sms_store(c);
 	    } else {
 		store3270in(c);
 	    }
@@ -1647,7 +1651,7 @@ telnet_fsm(unsigned char c)
 		vtrace("%s %s\n", opt(sbbuf[0]), telquals[sbbuf[1]]);
 		if (lus != NULL && try_lu == NULL) {
 		    /* None of the LUs worked. */
-		    popup_an_error("Cannot connect to specified LU");
+		    connect_error("Cannot connect to specified LU");
 		    return false;
 		}
 
@@ -1658,7 +1662,6 @@ telnet_fsm(unsigned char c)
 		} else {
 		    connected_lu = NULL;
 		}
-		status_lu(connected_lu);
 
 		tb_len = 4 + tt_len + 2;
 		tt_out = Malloc(tb_len + 1);
@@ -1670,6 +1673,8 @@ telnet_fsm(unsigned char c)
 			IAC, SE);
 		net_rawout((unsigned char *)tt_out, tb_len);
 		Free(tt_out);
+
+		status_lu(connected_lu);
 
 		vtrace("SENT %s %s %s %s%s%s %s\n", cmd(SB), opt(TELOPT_TTYPE),
 			telquals[TELQUAL_IS], termtype,
@@ -1886,12 +1891,15 @@ tn3270e_negotiate(void)
 				reported_lu[snlen] = '\0';
 				force_local(reported_lu);
 				connected_lu = reported_lu;
-				status_lu(connected_lu);
 			}
 
 			vtrace("IS %s CONNECT %s SE\n",
 				tnlen? connected_type: "",
 				snlen? connected_lu: "");
+
+			if (snlen) {
+			    status_lu(connected_lu);
+			}
 
 			/* Tell them what we can do. */
 			tn3270e_subneg_send(TN3270E_OP_REQUEST, &e_funcs);
@@ -2507,7 +2515,7 @@ net_rawout(unsigned const char *buf, size_t len)
 			nw = send(sock, (const char *) buf, (int)n2w, 0);
 		if (nw < 0) {
 			if (secure_connection) {
-			    	popup_an_error("%s", sio_last_error());
+			    	connect_error("%s", sio_last_error());
 				host_disconnect(false);
 				return;
 			}
@@ -2598,6 +2606,7 @@ check_in3270(void)
 		"negotiating SSL or proxy",		/* NEGOTIATING */
 		"connected; 3270 state unknown",	/* CONNECTED_INITIAL */
 		"TN3270 NVT",				/* CONNECTED_NVT */
+		"TN3270 NVT charmode",			/* CONNECTED_NVT_CHAR */
 		"TN3270 3270",				/* CONNECTED_3270 */
 		"TN3270E unbound",			/* CONNECTED_UNBOUND */
 		"TN3270E NVT",				/* CONNECTED_E_NVT */
@@ -2632,7 +2641,7 @@ check_in3270(void)
 		/* Nothing has happened, yet. */
 		return;
 	} else if (appres.nvt_mode || HOST_FLAG(ANSI_HOST)) {
-		new_cstate = CONNECTED_NVT;
+		new_cstate = linemode? CONNECTED_NVT: CONNECTED_NVT_CHAR;
 	} else {
 		new_cstate = CONNECTED_INITIAL;
 	}
@@ -2731,7 +2740,7 @@ space3270out(size_t n)
 static void
 check_linemode(bool init)
 {
-    int wasline = linemode;
+    bool wasline = linemode;
 
     /*
      * The next line is a deliberate kluge to effectively ignore the SGA
@@ -2750,6 +2759,9 @@ check_linemode(bool init)
     linemode = !hisopts[TELOPT_ECHO] /* && !hisopts[TELOPT_SGA] */;
 
     if (init || linemode != wasline) {
+	if (cstate == CONNECTED_NVT || cstate == CONNECTED_NVT_CHAR) {
+	    host_in3270(linemode? CONNECTED_NVT: CONNECTED_NVT_CHAR);
+	}
 	st_changed(ST_LINE_MODE, linemode);
 	if (!init) {
 	    vtrace("Operating in %s mode.\n",
@@ -3289,7 +3301,7 @@ non_blocking(bool on)
     }
 
     if ((f = fcntl(sock, F_GETFL, 0)) == -1) {
-	popup_an_errno(errno, "fcntl(F_GETFL)");
+	connect_errno(errno, "fcntl(F_GETFL)");
 	return -1;
     }
     if (on) {
@@ -3298,7 +3310,7 @@ non_blocking(bool on)
 	f &= ~O_NDELAY;
     }
     if (fcntl(sock, F_SETFL, f) < 0) {
-	popup_an_errno(errno, "fcntl(F_SETFL)");
+	connect_errno(errno, "fcntl(F_SETFL)");
 	return -1;
     }
 # endif /*]*/
@@ -3320,7 +3332,7 @@ continue_tls(unsigned char *sbbuf, int len)
     if (len < 2 || sbbuf[1] != TLS_FOLLOWS) {
 	/* Trace the junk. */
 	vtrace("%s ? %s\n", opt(TELOPT_STARTTLS), cmd(SE));
-	popup_an_error("TLS negotiation failure");
+	popup_an_error("TLS negotiation failure"); /* XXX: connect_error? */
 	host_disconnect(true);
 	return;
     }
@@ -3330,7 +3342,7 @@ continue_tls(unsigned char *sbbuf, int len)
 
     /* Negotiate the session. */
     if (!sio_negotiate(sio, sock, hostname, &data)) {
-	popup_an_error("%s", sio_last_error());
+	popup_an_error("%s", sio_last_error()); /* XXX: connect_error? */
 	host_disconnect(true);
 	return;
     }

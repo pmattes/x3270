@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2017 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -51,10 +51,10 @@
 #include "keymap.h"
 #include "keysym2ucs.h"
 #include "kybd.h"
-#include "macros.h"
 #include "popups.h"
 #include "screen.h"
 #include "selectc.h"
+#include "task.h"
 #include "toggles.h"
 #include "trace.h"
 #include "unicodec.h"
@@ -84,7 +84,7 @@ key_ACharacter(char *mb, enum keytype keytype, enum iaction cause)
 		return;
 	}
 
-	key_UCharacter(ucs4, keytype, cause);
+	key_UCharacter(ucs4, keytype, cause, false);
 }
 
 static bool
@@ -383,17 +383,17 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
 	    break;
 #if defined(XK_EuroSign) /*[*/
 	case XK_EuroSign:
-	    run_action("Key", IA_DEFAULT, "currency", NULL);
+	    run_action("Key", IA_DEFAULT, "currency", NoFailOnError);
 	    break;
 #endif /*]*/
 
 #if defined(XK_3270_Duplicate) /*[*/
 	/* Funky 3270 keysyms. */
 	case XK_3270_Duplicate:
-	    run_action("Dup", IA_DEFAULT, NULL, NULL);
+	    run_action("Dup", IA_DEFAULT, NoFailOnError, NULL);
 	    break;
 	case XK_3270_FieldMark:
-	    run_action("FieldMark", IA_DEFAULT, NULL, NULL);
+	    run_action("FieldMark", IA_DEFAULT, NoFailOnError, NULL);
 	    break;
 	case XK_3270_Right2:
 	    run_action("Right2", IA_DEFAULT, NULL, NULL);
@@ -438,55 +438,55 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
 
 	/* Funky APL keysyms. */
 	case XK_downcaret:
-	    run_action("Key", IA_DEFAULT, "apl_downcaret", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_downcaret", NoFailOnError);
 	    break;
 	case XK_upcaret:
-	    run_action("Key", IA_DEFAULT, "apl_upcaret", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_upcaret", NoFailOnError);
 	    break;
 	case XK_overbar:
-	    run_action("Key", IA_DEFAULT, "apl_overbar", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_overbar", NoFailOnError);
 	    break;
 	case XK_downtack:
-	    run_action("Key", IA_DEFAULT, "apl_downtack", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_downtack", NoFailOnError);
 	    break;
 	case XK_upshoe:
-	    run_action("Key", IA_DEFAULT, "apl_upshoe", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_upshoe", NoFailOnError);
 	    break;
 	case XK_downstile:
-	    run_action("Key", IA_DEFAULT, "apl_downstile", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_downstile", NoFailOnError);
 	    break;
 	case XK_underbar:
-	    run_action("Key", IA_DEFAULT, "apl_underbar", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_underbar", NoFailOnError);
 	    break;
 	case XK_jot:
-	    run_action("Key", IA_DEFAULT, "apl_jot", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_jot", NoFailOnError);
 	    break;
 	case XK_quad:
-	    run_action("Key", IA_DEFAULT, "apl_quad", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_quad", NoFailOnError);
 	    break;
 	case XK_uptack:
-	    run_action("Key", IA_DEFAULT, "apl_uptack", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_uptack", NoFailOnError);
 	    break;
 	case XK_circle:
-	    run_action("Key", IA_DEFAULT, "apl_circle", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_circle", NoFailOnError);
 	    break;
 	case XK_upstile:
-	    run_action("Key", IA_DEFAULT, "apl_upstile", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_upstile", NoFailOnError);
 	    break;
 	case XK_downshoe:
-	    run_action("Key", IA_DEFAULT, "apl_downshoe", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_downshoe", NoFailOnError);
 	    break;
 	case XK_rightshoe:
-	    run_action("Key", IA_DEFAULT, "apl_rightshoe", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_rightshoe", NoFailOnError);
 	    break;
 	case XK_leftshoe:
-	    run_action("Key", IA_DEFAULT, "apl_leftshoe", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_leftshoe", NoFailOnError);
 	    break;
 	case XK_lefttack:
-	    run_action("Key", IA_DEFAULT, "apl_lefttack", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_lefttack", NoFailOnError);
 	    break;
 	case XK_righttack:
-	    run_action("Key", IA_DEFAULT, "apl_righttack", NULL);
+	    run_action("Key", IA_DEFAULT, "apl_righttack", NoFailOnError);
 	    break;
 
 	default:
@@ -498,7 +498,7 @@ Default_xaction(Widget w _is_unused, XEvent *event, String *params,
 
 		ucs4 = keysym2ucs(ks);
 		if (ucs4 != (ucs4_t)-1) {
-		    key_UCharacter(ucs4, KT_STD, IA_KEY);
+		    key_UCharacter(ucs4, KT_STD, IA_KEY, false);
 		} else {
 		    vtrace(" Default: dropped (unknown keysym)\n");
 		}
@@ -543,7 +543,6 @@ TemporaryKeymap_action(ia_t ia, unsigned argc, const char **argv)
     if (!temporary_keymap(argv[0])) {
 	popup_an_error("TemporaryKeymap: Can't find %s %s", ResKeymap,
 		argv[0]);
-	cancel_if_idle_command();
 	return false;
     }
     return true;

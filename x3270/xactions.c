@@ -45,11 +45,11 @@
 #include "dialog.h"
 #include "keymap.h"
 #include "lazya.h"
-#include "macros.h"
 #include "popups.h"
 #include "resources.h"
 #include "screen.h"
 #include "selectc.h"
+#include "task.h"
 #include "trace.h"
 #include "utils.h"
 #include "xactions.h"
@@ -644,7 +644,6 @@ xcheck_usage(XtActionProc action, Cardinal nargs, Cardinal nargs_min,
 	popup_an_error("%s requires %d or %d arguments", action_name(action),
 		nargs_min, nargs_max);
     }
-    cancel_if_idle_command();
     return -1;
 }
 

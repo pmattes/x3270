@@ -44,8 +44,8 @@
 
 #include "ctlrc.h"
 #include "host.h"
-#include "macros.h"
 #include "screen.h"
+#include "task.h"
 #include "trace.h"
 #include "utils.h"
 

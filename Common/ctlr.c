@@ -56,7 +56,6 @@
 #include "host.h"
 #include "kybd.h"
 #include "lazya.h"
-#include "macros.h"
 #include "popups.h"
 #include "screen.h"
 #include "scroll.h"
@@ -65,6 +64,7 @@
 #include "sf.h"
 #include "status.h"
 #include "tables.h"
+#include "task.h"
 #include "telnet_core.h"
 #include "trace.h"
 #include "utils.h"
@@ -365,7 +365,6 @@ ctlr_connect(bool ignored _is_unused)
 	defCOLS = MODEL_2_COLS;
 	altROWS = maxROWS;
 	altCOLS = maxCOLS;
-	ctlr_erase(false);
     }
 }
 
@@ -494,8 +493,8 @@ ctlr_erase(bool alt)
 
 	ctlr_clear(true);
 
-	/* Let a script go. */
-	sms_host_output();
+	/* Let a blocked task go. */
+	task_host_output();
 
 	if (alt) {
 	    	newROWS = altROWS;
@@ -1247,6 +1246,8 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 	enum dbcs_why	why = DBCS_FIELD;
 	bool		aborted = false;
 	char		mb[16];
+	bool		insert_cursor = false;
+	int		ic_baddr = 0;
 
 #define END_TEXT0	{ if (previous == TEXT) trace_ds("'"); }
 #define END_TEXT(cmd)	{ END_TEXT0; trace_ds(" %s", cmd); }
@@ -1359,7 +1360,8 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 			if (previous != SBA)
 				trace_ds("%s", rcba(buffer_addr));
 			previous = ORDER;
-			cursor_move(buffer_addr);
+			insert_cursor = true;
+			ic_baddr = buffer_addr;
 			last_cmd = true;
 			last_zpt = false;
 			break;
@@ -1959,6 +1961,9 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 	set_formatted();
 	END_TEXT0;
 	trace_ds("\n");
+	if (insert_cursor) {
+	    cursor_move(ic_baddr);
+	}
 	kybdlock_clr(KL_AWAITING_FIRST, "ctlr_write");
 	if (wcc_keyboard_restore) {
 		aid = AID_NO;
@@ -1978,8 +1983,8 @@ ctlr_write(unsigned char buf[], size_t buflen, bool erase)
 
 	ps_process();
 
-	/* Let a script go. */
-	sms_host_output();
+	/* Let a blocked task go. */
+	task_host_output();
 
 	/* Tell 'em what happened. */
 	return rv;
@@ -2116,8 +2121,8 @@ ctlr_write_sscp_lu(unsigned char buf[], size_t buflen)
 	aid = AID_NO;
 	do_reset(false);
 
-	/* Let a script go. */
-	sms_host_output();
+	/* Let a blocked task go. */
+	task_host_output();
 }
 
 /*
@@ -2405,7 +2410,6 @@ ps_process(void)
 {
 	while (run_ta())
 		;
-	sms_continue();
 
 	/* Process file transfers. */
 	if (ft_state != FT_NONE &&      /* transfer in progress */
@@ -2897,7 +2901,6 @@ ticking_stop(void)
 
     (void) gettimeofday(&t1, (struct timezone *) 0);
     if (mticking) {
-	sms_accumulate_time(&t_start, &t1);
 	mticking = false;
     } else {
 	return;

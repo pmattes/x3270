@@ -70,7 +70,6 @@
 #include "kybd.h"
 #include "lazya.h"
 #include "linemode.h"
-#include "macros.h"
 #include "nvt.h"
 #include "opts.h"
 #include "popups.h"
@@ -82,6 +81,7 @@
 #include "sio.h"
 #include "split_host.h"
 #include "status.h"
+#include "task.h"
 #include "telnet.h"
 #include "telnet_gui.h"
 #include "toggles.h"
@@ -116,6 +116,7 @@
 # define PR3287_NAME "pr3287"
 #endif /*]*/
 
+static void c3270_push_command(char *s);
 static void interact(void);
 static void stop_pager(void);
 
@@ -137,6 +138,8 @@ static bool pager_q = false;
 static int pager_rows = 25;
 static int pager_cols = 80;
 #endif /*]*/
+static bool command_complete = false;
+static bool command_output = false;
 
 bool escape_pending = false;
 bool stop_pending = false;
@@ -258,8 +261,10 @@ main(int argc, char *argv[])
 {
     const char	*cl_hostname = NULL;
 #if !defined(_WIN32) /*[*/
+#if 0
     pid_t	 pid;
     int		 status;
+#endif
 #else /*][*/
     char	*delenv;
 #endif /*]*/
@@ -295,6 +300,7 @@ main(int argc, char *argv[])
      * actions, options and callbacks.
      */
     c3270_register();
+    charset_register();
     ctlr_register();
     ft_register();
     help_register();
@@ -454,14 +460,6 @@ main(int argc, char *argv[])
 	    x3270_exit(0);
 	}
 
-#if !defined(_WIN32) /*[*/
-	if (children && (pid = waitpid(-1, &status, WNOHANG)) > 0) {
-	    pr3287_session_check(pid, status);
-	    --children;
-	}
-#else /*][*/
-	pr3287_session_check();
-#endif /*]*/
 	screen_disp(false);
     }
 }
@@ -625,8 +623,8 @@ interact(void)
 	 * Process the command like a macro, and spin until it
 	 * completes.
 	 */
-	push_command(s);
-	while (sms_active()) {
+	c3270_push_command(s);
+	while (!command_complete) {
 	    (void) process_events(true);
 	}
 
@@ -639,7 +637,7 @@ interact(void)
 #endif /*]*/
 
 	/* If it succeeded, return to the session. */
-	if (!macro_output && CONNECTED) {
+	if (!command_output && CONNECTED) {
 	    break;
 	}
     }
@@ -1521,6 +1519,74 @@ ignore_action(ia_t ia, unsigned argc, const char **argv)
     return true;
 }
 
+/* Command-prompt action support. */
+static void command_data(task_cbh handle, const char *buf, size_t len);
+static bool command_done(task_cbh handle, bool success, bool abort);
+
+/* Callback block for actions. */
+static tcb_t command_cb = {
+    "command",
+    IA_COMMAND,
+    CB_NEW_TASKQ,
+    command_data,
+    command_done,
+    NULL
+};
+
+/**
+ * Callback for data returned to action.
+ *
+ * @param[in] handle	Callback handle
+ * @param[in] buf	Buffer
+ * @param[in] len	Buffer length
+ */
+static void
+command_data(task_cbh handle, const char *buf, size_t len)
+{
+    if (handle != (tcb_t *)&command_cb) {
+	vtrace("command_data: no match\n");
+	return;
+    }
+
+    glue_gui_output(lazyaf("%.*s", (int)len, buf));
+}
+
+/**
+ * Callback for completion of one command executed from a keymap.
+ *
+ * @param[in] handle		Callback handle
+ * @param[in] success		True if child succeeded
+ * @param[in] abort		True if aborting
+ *
+ * @return True if context is complete
+ */
+static bool
+command_done(task_cbh handle, bool success, bool abort)
+{
+    if (handle != (tcb_t *)&command_cb) {
+	vtrace("command_data: no match\n");
+	return true;
+    }
+
+    command_complete = true;
+    return true;
+}
+
+/**
+ * Push a command.
+ *
+ * @param[in] s		Text of action.
+ */
+static void
+c3270_push_command(char *s)
+{
+    command_complete = false;
+    command_output = false;
+
+    /* Push a callback with a macro. */
+    push_cb(s, strlen(s), &command_cb, (task_cbh)&command_cb);
+}
+
 #if !defined(_WIN32) /*[*/
 
 /* Support for c3270 profiles. */
@@ -1772,6 +1838,7 @@ glue_gui_output(const char *s)
 #else /*][*/
     pager_output(s);
 #endif /*]*/
+    command_output = true;
     return true;
 }
 

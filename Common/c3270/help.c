@@ -80,6 +80,8 @@ static struct {
 	{ "BackSpace", NULL, P_3270, "Move cursor left" },
 	{ "BackTab", NULL, P_3270, "Move to previous field" },
 	{ "Bell", NULL, P_SCRIPTING, "Ring the terminal bell" },
+	{ "Charset", "[<charset>]", P_3270,
+	    "Display or change the host code page" },
 	{ "CircumNot", NULL, P_3270,
 	    "Send ~ in NVT mode, notsign (X'5F', U+00AC) in 3270 mode" },
 	{ "Clear", NULL, P_3270, "Send CLEAR AID (clear screen)" },

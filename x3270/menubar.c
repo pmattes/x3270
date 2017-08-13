@@ -57,7 +57,6 @@
 #include "idle_gui.h"
 #include "keymap.h"
 #include "kybd.h"
-#include "macros.h"
 #include "menubar.h"
 #include "popups.h"
 #include "print_screen.h"
@@ -65,8 +64,10 @@
 #include "pr3287_session.h"
 #include "printer_gui.h"
 #include "stmenu.h"
+#include "task.h"
 #include "telnet.h"
 #include "toggles.h"
+#include "unicodec.h"
 #include "utils.h"
 #include "xaa.h"
 #include "xappres.h"
@@ -979,7 +980,7 @@ file_menu_init(bool regen, Dimension x, Dimension y)
     spaced = false;
     script_abort_button = add_menu_itemv("abortScriptOption", file_menu,
 	    script_abort_callback, NULL, &spaced,
-	    XtNsensitive, sms_active(),
+	    XtNsensitive, task_active(),
 	    NULL);
     any |= (script_abort_button != NULL);
 
@@ -1593,19 +1594,8 @@ charsets_init(void)
 static void
 do_newcharset(Widget w _is_unused, XtPointer userdata, XtPointer calldata _is_unused)
 {
-	struct charset *s;
-	int i;
-
-	/* Change the character set. */
-	screen_newcharset((char *)userdata);
-
-	/* Update the menu. */
-	for (i = 0, s = charsets; i < charset_count; i++, s = s->next)
-		XtVaSetValues(charset_widgets[i],
-		    XtNleftBitmap,
-			(strcmp(get_charset_name(), s->charset)) ?
-			    no_diamond : diamond,
-		    NULL);
+    /* Change the character set. */
+    screen_newcharset((char *)userdata);
 }
 
 static Widget keymap_shell = NULL;
@@ -1786,8 +1776,23 @@ create_font_menu(bool regen, bool even_if_unknown)
 static void
 menubar_charset(bool ignored _is_unused)
 {
+    int i;
+    struct charset *s;
+    const char *csname;
+
     if (!xappres.suppress_font_menu) {
 	create_font_menu(false, false);
+    }
+
+    /* Update the charsets menu. */
+    csname = get_charset_name();
+    for (i = 0, s = charsets; i < charset_count; i++, s = s->next) {
+	XtVaSetValues(charset_widgets[i],
+		XtNleftBitmap,
+		(!strcmp(csname, s->charset) ||
+		 charset_matches_alias(s->charset, csname)) ?
+		    diamond : no_diamond,
+		NULL);
     }
 }
 

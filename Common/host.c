@@ -39,10 +39,10 @@
 #include "actions.h"
 #include "host.h"
 #include "host_gui.h"
-#include "macros.h"
 #include "popups.h"
 #include "product.h"
 #include "split_host.h"
+#include "task.h"
 #include "telnet.h"
 #include "telnet_core.h"
 #include "trace.h"
@@ -615,16 +615,10 @@ host_disconnect(bool failed)
 void
 host_in3270(enum cstate new_cstate)
 {
-    bool now3270 = (new_cstate == CONNECTED_3270 ||
-		    new_cstate == CONNECTED_SSCP ||
-		    new_cstate == CONNECTED_TN3270E);
-    bool was3270 = (cstate == CONNECTED_3270 ||
-	    	    cstate == CONNECTED_SSCP ||
-		    cstate == CONNECTED_TN3270E);
-    bool now_nvt = (new_cstate == CONNECTED_NVT ||
-		    new_cstate == CONNECTED_E_NVT);
-    bool was_nvt = (cstate == CONNECTED_NVT ||
-		    cstate == CONNECTED_E_NVT);
+    bool now3270 = cIN_3270(new_cstate);
+    bool was3270 = IN_3270;
+    bool now_nvt = cIN_NVT(new_cstate);
+    bool was_nvt = IN_NVT;
 
     cstate = new_cstate;
     ever_3270 = now3270;
@@ -903,7 +897,7 @@ Connect_action(ia_t ia, unsigned argc, const char **argv)
      * a Connect(), and it would still stall here.
      */
     if (ia != IA_KEYMAP) {
-	sms_connect_wait();
+	task_connect_wait();
     }
     return true;
 }
@@ -936,9 +930,10 @@ Reconnect_action(ia_t ia, unsigned argc, const char **argv)
      * a Reconnect(), and it would still stall here.
      */
     if (ia != IA_KEYMAP) {
-	sms_connect_wait();
+	task_connect_wait();
     }
-    return true;
+
+    return cstate != NOT_CONNECTED;
 }
 
 static bool

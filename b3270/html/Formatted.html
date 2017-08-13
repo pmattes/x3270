@@ -1,0 +1,28 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>b3270 formatted Indication</title>
+  <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
+</head>
+
+<body>
+<a name="charset"></a><h3>formatted Indication</h3>
+
+<p>Indicates that the formatting state of the screen has changed.
+An erased screen is implicitly unformatted. A formatted screen has at least one
+field defined.</p>
+
+<table border cols=3 width="75%">
+ <tr><th>Attribute</th><th>Always present?</th><th>Purpose</th></tr>
+ <tr><td>state</td><td>yes</td><td><b>true</b> or <b>false</b></td></tr>
+</table>
+
+<p>Example:
+<pre>
+&lt;formatted state="true"/&gt;
+</pre></p>
+<hr>
+b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
+</body>
+</html>

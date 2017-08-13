@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2014-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2014-2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,9 +41,9 @@
 #include "ft.h"
 #include "host.h"
 #include "idle.h"
-#include "macros.h"
 #include "popups.h"
 #include "resources.h"
+#include "task.h"
 #include "trace.h"
 #include "utils.h"
 
@@ -70,6 +70,7 @@ static bool idle_randomize = false;
 static bool idle_ticking = false;
 
 static void idle_in3270(bool in3270);
+static void push_idle(char *s);
 
 /**
  * Idle module registration.
@@ -282,4 +283,79 @@ char *
 get_idle_timeout(void)
 {
 	return idle_timeout_string;
+}
+
+/* Action support. */
+static void idle_data(task_cbh handle, const char *buf, size_t len);
+static bool idle_done(task_cbh handle, bool success, bool abort);
+
+/* Callback block for actions. */
+static tcb_t idle_cb = {
+    "idle",
+    IA_IDLE,
+    CB_NEW_TASKQ,
+    idle_data,
+    idle_done,
+    NULL
+};
+static char *idle_result = NULL;
+
+/**
+ * Callback for data returned to idle.
+ *
+ * @param[in] handle	Callback handle
+ * @param[in] buf	Buffer
+ * @param[in] len	Buffer length
+ */
+static void
+idle_data(task_cbh handle, const char *buf, size_t len)
+{
+    if (handle != (tcb_t *)&idle_cb) {
+	vtrace("idle_data: no match\n");
+	return;
+    }
+
+    Replace(idle_result, xs_buffer("%.*s", (int)len, buf));
+}
+
+/**
+ * Callback for completion of one command executed from an idle command .
+ *
+ * @param[in] handle		Callback handle
+ * @param[in] success		True if child succeeded
+ * @param[in] abort		True if aborting
+ *
+ * @return True if context is complete
+ */
+static bool
+idle_done(task_cbh handle, bool success, bool abort)
+{
+    if (handle != (tcb_t *)&idle_cb) {
+	vtrace("idle_data: no match\n");
+	return true;
+    }
+
+    if (!success) {
+	popup_an_error("Idle command failed%s%s",
+		idle_result? ": ": "",
+		idle_result? idle_result: "");
+	cancel_idle_timer();
+    }
+    Replace(idle_result, NULL);
+    return true;
+}
+
+/**
+ * Push an idle command.
+ *
+ * @param[in] s		Text of action.
+ */
+static void
+push_idle(char *s)
+{
+    /* No result yet. */
+    Replace(idle_result, NULL);
+
+    /* Push a callback with a macro. */
+    push_cb(s, strlen(s), &idle_cb, (task_cbh)&idle_cb);
 }

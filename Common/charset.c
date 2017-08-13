@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2016 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -40,6 +40,7 @@
 #include "resources.h"
 #include "appres.h"
 
+#include "actions.h"
 #include "charset.h"
 #include "lazya.h"
 #include "popups.h"
@@ -302,4 +303,59 @@ get_charset_name(void)
 {
     return (charset_name != NULL)? charset_name:
 	((appres.charset != NULL)? appres.charset: "us");
+}
+
+/*
+ * Charset action.
+ */
+bool
+Charset_action(ia_t ia, unsigned argc, const char **argv)
+{
+    enum cs_result result;
+
+    action_debug("Charset", ia, argc, argv);
+    if (check_argc("Charset", argc, 0, 1) < 0) {
+	return false;
+    }
+
+    if (argc == 0) {
+	action_output("%s\n", get_charset_name());
+	return true;
+    }
+
+    result = charset_init(argv[0]);
+    switch (result) {
+    case CS_OKAY:
+	st_changed(ST_CHARSET, true);
+	charset_changed = true;
+	return true;
+    case CS_NOTFOUND:
+	popup_an_error("Cannot find definition of host character "
+		"set \"%s\"", argv[0]);
+	return false;
+    case CS_BAD:
+	popup_an_error("Invalid charset definition for \"%s\"", argv[0]);
+	return false;
+    case CS_PREREQ:
+	popup_an_error("No fonts for host character set \"%s\"", argv[0]);
+	return false;
+    default:
+    case CS_ILLEGAL:
+	/* error already popped up */
+	return false;
+    }
+}
+
+/*
+ * Charset module registration.
+ */
+void
+charset_register(void)
+{
+    static action_table_t charset_actions[] = {
+	{ "Charset",	Charset_action,		ACTION_KE }
+    };
+
+    /* Register the actions. */
+    register_actions(charset_actions, array_count(charset_actions));
 }

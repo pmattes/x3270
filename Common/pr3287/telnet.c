@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2015, 2017 Paul Mattes.
+ * Copyright (c) 1993-2017 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -127,7 +127,7 @@ int             ns_rsent;
 unsigned char  *obuf;		/* 3270 output buffer */
 int             obuf_size = 0;
 unsigned char  *obptr = (unsigned char *) NULL;
-int             linemode = 1;
+bool            linemode = true;
 const char     *termtype = "IBM-3287-1";
 
 

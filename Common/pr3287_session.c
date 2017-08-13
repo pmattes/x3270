@@ -74,6 +74,7 @@ static int      pr3287_pid = -1;
 #else /*][*/
 static HANDLE	pr3287_handle = NULL;
 #endif /*]*/
+static ioid_t	pr3287_id = NULL_IOID;
 static enum {
     P_NONE,		/* no printer session */
     P_DELAY,		/* delay before (re)starting pr3287 */
@@ -110,6 +111,9 @@ static void	pr3287_error(iosrc_t fd, ioid_t id);
 static void	pr3287_otimeout(ioid_t id);
 static void	pr3287_etimeout(ioid_t id);
 static void	pr3287_dump(struct pr3o *p, bool is_err, bool is_dead);
+static void	pr3287_session_check(pid_t pid, int status);
+#else /*][*/
+static void	pr3287_session_check(void);
 #endif /*]*/
 static void	pr3287_host_connect(bool connected _is_unused);
 static void	pr3287_exiting(bool b _is_unused);
@@ -151,7 +155,6 @@ pr3287_reap_now(void)
 	popup_an_errno(errno, "Printer process waitpid() failed");
 	return;
     }
-    --children;
     pr3287_pid = -1;
 #else /*][*/
     if (WaitForSingleObject(pr3287_handle, 2000) == WAIT_TIMEOUT) {
@@ -282,6 +285,35 @@ pr3287_session_start(const char *lu)
 	break;
     }
 }
+
+#if !defined(_WIN32) /*[*/
+/**
+ * Callback for pr3287 session exit.
+ *
+ * @param[in] id	I/O identifier (unused)
+ * @param[in] status	exit status
+ */
+static void
+pr3287_reaped(ioid_t id _is_unused, int status)
+{
+    pr3287_id = NULL_IOID;
+    pr3287_session_check(pr3287_pid, status);
+}
+#else /*][*/
+/**
+ * Callback for pr3287 session exit.
+ *
+ * @param[in] fd	File descriptor (unused)
+ * @param[in] id	I/O identifier (unused)
+ */
+static void
+pr3287_reaped(iosrc_t iosrc _is_unused, ioid_t id _is_unused)
+{
+    RemoveInput(pr3287_id);
+    pr3287_id = NULL_IOID;
+    pr3287_session_check();
+}
+#endif /*]*/
 
 /*
  * Synchronous printer start-up function.
@@ -568,7 +600,7 @@ pr3287_start_now(const char *lu, bool associated)
 	pr3287_stderr.fd = stderr_pipe[0];
 	pr3287_stdout.input_id = AddInput(pr3287_stdout.fd, pr3287_output);
 	pr3287_stderr.input_id = AddInput(pr3287_stderr.fd, pr3287_error);
-	++children;
+	pr3287_id = AddChild(pr3287_pid, pr3287_reaped);
 	break;
     case -1:	/* error */
 	popup_an_errno(errno, "fork()");
@@ -607,6 +639,7 @@ pr3287_start_now(const char *lu, bool associated)
     } else {
 	pr3287_handle = pi.hProcess;
 	CloseHandle(pi.hThread);
+	pr3287_id = AddInput(pr3287_handle, pr3287_reaped);
     }
 #endif /*]*/
 
@@ -900,7 +933,7 @@ pr3287_cleanup_io(void)
  * On Windows, this function is responsible for collecting the status of an
  * exited printer process, if any.
  */
-void
+static void
 pr3287_session_check(
 #if !defined(_WIN32) /*[*/
 	             pid_t pid, int status

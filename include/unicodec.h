@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2009, 2015, 2017 Paul Mattes.
+ * Copyright (c) 2008-2009, 2015-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@ extern bool dbcs_allowed;
 #define EUO_APL_CIRCLED	0x00000010	/* map APL underscored capital letters
 					   to DBCS circled alphabetics */
 
+bool charset_matches_alias(const char *alias, const char *canon);
 ucs4_t ebcdic_to_unicode(ebc_t e, unsigned char cs, unsigned flags);
 ucs4_t ebcdic_base_to_unicode(ebc_t e, unsigned flags);
 ebc_t unicode_to_ebcdic(ucs4_t u);

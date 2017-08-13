@@ -49,10 +49,10 @@
 #include "host.h"
 #include "keymap.h"
 #include "kybd.h"
-#include "macros.h"
 #include "menubar.h"
 #include "popups.h"
 #include "screen.h"
+#include "task.h"
 #include "toggles.h"
 #include "trace.h"
 #include "unicodec.h"
@@ -723,42 +723,40 @@ menu_cursor(int *row, int *col)
 static void
 fm_copyright(void *ignored _is_unused)
 {
-    push_macro("Show(copyright)", false);
-    sms_continue();
+    push_macro("Show(copyright)");
 }
 
 static void
 fm_status(void *ignored _is_unused)
 {
-    push_macro("Show(status)", false);
-    sms_continue();
+    push_macro("Show(status)");
 }
 
 static void
 fm_prompt(void *ignored _is_unused)
 {
-    push_macro("Escape", false);
+    push_macro("Escape");
 }
 
 static void
 fm_print(void *ignored _is_unused)
 {
-    push_macro("PrintText", false);
+    push_macro("PrintText");
 }
 
 static void
 fm_xfer(void *ignored _is_unused)
 {
-    push_macro("Escape() Transfer()", false);
+    push_macro("Escape() Transfer()");
 }
 
 static void
 fm_trace(void *ignored _is_unused)
 {
     if (toggled(TRACING)) {
-	push_macro("Trace(off)", false);
+	push_macro("Trace(off)");
     } else {
-	push_macro("Trace(on)", false);
+	push_macro("Trace(on)");
     }
 }
 
@@ -766,9 +764,9 @@ static void
 fm_screentrace(void *ignored _is_unused)
 {
     if (toggled(SCREEN_TRACE)) {
-	push_macro("ScreenTrace(off)", false);
+	push_macro("ScreenTrace(off)");
     } else {
-	push_macro("ScreenTrace(on)", false);
+	push_macro("ScreenTrace(on)");
     }
 }
 
@@ -776,16 +774,16 @@ static void
 fm_screentrace_printer(void *ignored _is_unused)
 {
     if (toggled(SCREEN_TRACE)) {
-	push_macro("ScreenTrace(off)", false);
+	push_macro("ScreenTrace(off)");
     } else {
-	push_macro("ScreenTrace(on,printer,gdi)", false);
+	push_macro("ScreenTrace(on,printer,gdi)");
     }
 }
 
 static void
 fm_keymap(void *ignored _is_unused)
 {
-    push_macro("Show(keymap)", false);
+    push_macro("Show(keymap)");
 }
 
 #if defined(_WIN32) /*[*/
@@ -805,13 +803,13 @@ fm_wizard(void *session)
 static void
 fm_disconnect(void *ignored _is_unused)
 {
-    push_macro("Disconnect", false);
+    push_macro("Disconnect");
 }
 
 static void
 fm_quit(void *ignored _is_unused)
 {
-    push_macro("Quit", false);
+    push_macro("Quit");
 }
 
 /* File menu. */

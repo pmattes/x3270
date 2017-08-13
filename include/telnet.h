@@ -74,7 +74,7 @@ char *net_proxy_type(void);
 char *net_proxy_host(void);
 char *net_proxy_port(void);
 bool net_bound(void);
-extern int linemode;
+extern bool linemode;
 bool net_secure_connection();
 void net_set_default_termtype(void);
 bool net_secure_unverified(void);

@@ -1,0 +1,147 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>The b3270 Protocol</title>
+  <link href="http://www.w3.org/StyleSheets/Core/Steely" type="text/css" rel="stylesheet">
+</head>
+
+<body>
+<h1>The b3270 Protocol</h1>
+<p>b3270 is a 3270 emulation back-end, designed to allow flexible
+implementation of different user interfaces.</p>
+
+<h2>Basic Operation</h2>
+
+<p>The b3270 process accepts operation requests from the user interface on its
+standard input stream,
+and sends indications on its standard output stream.
+Unlike the s3270 scripting
+protocol, all b3270 operations are asynchronous &#8212; they are executed immediately.
+Emulator state changes, including the results of UI-initiated operations, are
+reported also asynchronously.
+When b3270
+receives an end-of-file indication on its standard input, it will exit.</p>
+
+<p>It is intended that a user interface would create an instance of the b3270
+process with b3270's standard input and output connected to it by pipes or a
+similar mechanism, allowing its operation as a 'captive' process.</p>
+
+<h2>Protocol Description</h2>
+
+<p>b3270 operations and indications are formatted as UTF-8-encoded XML. b3270
+input is a document called <b>ui3270-in</b>. b3270 output is a document called
+<b>ui3270-out</b>. So the input session to b3270 must begin with the
+following:
+<pre>
+ &lt;xml version="1.0" encoding="UTF-8"?&gt;
+ &lt;ui3270-in&gt;
+</pre>
+(The first line is actually optional, but helpful.) It should also end with:
+<pre>
+ &lt;/ui3270-in&gt;
+</pre>
+Similarly, the entire b3270 session output is bracketed by:</p>
+<pre>
+ &lt;xml version="1.0" encoding="UTF-8"?&gt;
+ &lt;ui3270-out&gt;
+</pre>
+and:
+<pre>
+ &lt;/ui3270-out&gt;
+</pre></p>
+<p>White space is allowed around XML elements, but plain text is never used in
+the protocol. All information is conveyed by elements and their attributes.</p>
+
+<p>XML elements sent from the UI to the emulator are referred to as
+<i>operations</i>. XML elements sent from the emulator to the user interface
+are referred to as <i>indications</i>.</p>
+
+<h2>Pass-Through Actions</h2>
+
+<p>b3270 supports <i>pass-through</i> actions, which are
+emulator actions implemented by the user interface. An example of a
+pass-through action could be <b>ChangeKeymap()</b>, used to change the
+keyboard mapping dynamically. The emulator has no knowledge of keymaps, but it
+would be useful to allow this action to appear in scripts, macros and sourced
+files processed by the the emulator.
+Yet b3270 cannot
+anticipate this and every other possible UI operation.</p>
+
+<p>To support such an action, the UI can use the
+<a href="Register.html">register</a> operation at initialization time to inform
+b3270 of actions it would like to
+have passed through to it. When the emulator encounters one of these actions,
+it generates a <a href="Passthru.html">passthru</a> indication to the UI, giving
+the action name, parameters and a unique tag.
+When the UI has processed the action, it uses the
+<a href="Succeed.html">succeed</a> or <a href="Fail.html">fail</a> operation to
+complete the action, giving back the unique tag and optional result text.</p>
+
+<a name="operations"></a><h2>User Interface Operations</h2>
+
+<p>The following operations can be initiated by the user interface.
+<table border cols=3 width="75%"/>
+ <tr>
+  <td><a href="Fail.html">fail</a></td>
+  <td><a href="Register.html">register</a></td>
+  <td><a href="Run.html">run</a></td>
+ </tr>
+ <tr>
+  <td><a href="Succeed.html">succeed</a></td>
+ </tr>
+</table></p>
+
+<a name="indications"></a><h2>Emulator Indications</h2>
+
+<table border cols=3 width="75%">
+ <tr>
+  <td><a href="Attr.html">attr</a></td>
+  <td><a href="Bell.html">bell</a></td>
+  <td><a href="Char.html">char</a></td>
+ </tr>
+ <tr>
+  <td><a href="Charset.html">charset</a></td>
+  <td><a href="Connect-attempt.html">connect-attempt</a></td>
+  <td><a href="Connection.html">connection</a></td>
+ </tr>
+ <tr>
+  <td><a href="Cursor.html">cursor</a></td>
+  <td><a href="Erase.html">erase</a></td>
+  <td><a href="Font.html">font</a></td>
+ </tr>
+ <tr>
+  <td><a href="Formatted.html">formatted</a></td>
+  <td><a href="Ft.html">ft</a></td>
+  <td><a href="Hello.html">hello</a></td>
+ </tr>
+ <tr>
+  <td><a href="Icon-name.html">icon-name</a></td>
+  <td><a href="Model.html">model</a></td>
+  <td><a href="Oia.html">oia</a></td>
+ </tr>
+ <tr>
+  <td><a href="Passthru.html">passthru</a></td>
+  <td><a href="Popup.html">popup</a></td>
+  <td><a href="Ready.html">ready</a></td>
+ </tr>
+ <tr>
+  <td><a href="Row.html">row</a></td>
+  <td><a href="Run-result.html">run-result</a></td>
+  <td><a href="Screen.html">screen</a></td>
+ </tr>
+ <tr>
+  <td><a href="Screen-mode.html">screen-mode</a></td>
+  <td><a href="Ssl.html">ssl</a></td>
+  <td><a href="Stats.html">stats</a></td>
+ </tr>
+ <tr>
+  <td><a href="Toggle.html">toggle</a></td>
+  <td><a href="Ui-error.html">ui-error</a></td>
+  <td><a href="Window-title.html">window-title</a></td>
+ </tr>
+</table>
+<hr>
+b3270: <a href="Protocol.html">Protocol</a> - <a href="Protocol.html#operations">Operations</a> - <a href="Protocol.html#indications">Indications</a>
+</body>
+</html>

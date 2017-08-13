@@ -59,7 +59,7 @@
 #include "idle.h"
 #include "keymap.h"
 #include "kybd.h"
-#include "macros.h"
+#include "lazya.h"
 #include "nvt.h"
 #include "popups.h"
 #include "pr3287_session.h"
@@ -71,6 +71,7 @@
 #include "selectc.h"
 #include "sio.h"
 #include "status.h"
+#include "task.h"
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
@@ -104,7 +105,6 @@ Pixmap          gray;
 XrmDatabase     rdb;
 AppRes		appres;
 xappres_t	xappres;
-int		children = 0;
 bool		exiting = false;
 char           *user_title = NULL;
 
@@ -279,6 +279,7 @@ static String fallbacks[] = {
 };
 
 static void x3270_register(void);
+static void poll_children(void);
 
 /* Find an option in the help list. */
 static struct option_help *
@@ -429,6 +430,7 @@ main(int argc, char *argv[])
      * actions, options and callbacks. These functions have no
      * interdependencies and cannot depend on resource values.
      */
+    charset_register();
     ctlr_register();
     ft_register();
     host_register();
@@ -781,8 +783,6 @@ main(int argc, char *argv[])
     /* Process X events forever. */
     while (1) {
 	XEvent event;
-	pid_t pid;
-	int status;
 
 	while (XtAppPending(appcontext) & (XtIMXEvent | XtIMTimer)) {
 	    if (XtAppPeekEvent(appcontext, &event)) {
@@ -793,10 +793,14 @@ main(int argc, char *argv[])
 	screen_disp(false);
 	XtAppProcessEvent(appcontext, XtIMAll);
 
-	if (children && (pid = waitpid(-1, &status, WNOHANG)) > 0) {
-	    pr3287_session_check(pid, status);
-	    --children;
-	}
+	/* Poll for exited children. */
+	poll_children();
+
+	/* Run tasks. */
+	run_tasks();
+
+	/* Flush the lazy allocation ring. */
+	lazya_flush();
     }
 }
 
@@ -1167,4 +1171,54 @@ copy_xres_to_res_bool(void)
 
     copy_bool(ssl.tls);
     copy_bool(ssl.verify_host_cert);
+}
+
+/* Child exit callbacks. */
+typedef struct child_exit {
+    struct child_exit *next;
+    pid_t pid;
+    childfn_t proc;
+} child_exit_t;
+static child_exit_t *child_exits = NULL;
+
+ioid_t
+AddChild(pid_t pid, childfn_t fn)
+{
+    child_exit_t *cx;
+
+    assert(pid != 0 && pid != -1);
+
+    cx = (child_exit_t *)Malloc(sizeof(child_exit_t));
+    cx->pid = pid;
+    cx->proc = fn;
+    cx->next = child_exits;
+    child_exits = cx;
+    return (ioid_t)cx;
+}
+
+static void
+poll_children(void)
+{
+    pid_t pid;
+    int status = 0;
+    child_exit_t *c;
+    child_exit_t *next = NULL;
+    child_exit_t *prev = NULL;
+
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+	for (c = child_exits; c != NULL; c = next) {
+	    if (c->pid == pid) {
+		(*c->proc)((ioid_t)c, status);
+		next = c->next;
+		if (prev) {
+		    prev->next = next;
+		} else {
+		    child_exits = next;
+		}
+		Free(c);
+	    } else {
+		prev = c;
+	    }
+	}
+    }
 }

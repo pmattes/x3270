@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2016 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2017 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,9 @@ extern unsigned int kybdlock;
 #define KL_SCROLLED		0x0400
 #define KL_OIA_MINUS		0x0800
 
+#define FailOnError "FailOnError"
+#define NoFailOnError "NoFailOnError"
+
 extern unsigned char aid;
 
 void do_reset(bool explicit);
@@ -60,7 +63,8 @@ void kybd_scroll_lock(bool lock);
 bool run_ta(void);
 int state_from_keymap(char keymap[32]);
 void lightpen_select(int baddr);
-void key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause);
+void key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
+	bool fail);
 void kybd_register(void);
 bool Down_action(ia_t ia, unsigned argc, const char **argv);
 bool Left_action(ia_t ia, unsigned argc, const char **argv);

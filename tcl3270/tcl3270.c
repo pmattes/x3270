@@ -72,7 +72,6 @@
 #include "host.h"
 #include "kybd.h"
 #include "lazya.h"
-#include "macros.h"
 #include "nvt.h"
 #include "opts.h"
 #include "popups.h"
@@ -80,6 +79,7 @@
 #include "screen.h"
 #include "selectc.h"
 #include "sio.h"
+#include "task.h"
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
@@ -171,7 +171,6 @@ static bool output_wait_needed = false;
 static char *pending_string = NULL;
 static char *pending_string_ptr = NULL;
 static bool pending_hex = false;
-bool macro_output = false;
 
 /* Is the keyboard is locked due to user input? */
 #define KBWAIT	(kybdlock & (KL_OIA_LOCKED|KL_OIA_TWAIT|KL_DEFERRED_UNLOCK))
@@ -262,6 +261,7 @@ Tcl_AppInit(Tcl_Interp *interp)
      * Call the module registration functions, to build up the tables of
      * actions, options and callbacks.
      */
+    charset_register();
     ctlr_register();
     ft_register();
     host_register();
@@ -457,7 +457,7 @@ tcl3270_main(int argc, const char *argv[])
 	    exit(1);
 	}
 	if (CONNECTED || HALF_CONNECTED) {
-	    sms_connect_wait();
+	    task_connect_wait();
 	    negotiate();
 	}
     }
@@ -697,14 +697,14 @@ negotiate(void)
 
 /* Indicates whether errors should go to stderr, or be returned to tcl. */
 bool
-sms_redirect(void)
+task_redirect(void)
 {
     return in_cmd;
 }
 
 /* Returns an error to tcl. */
 void
-sms_error(const char *s)
+task_error(const char *s)
 {
     Tcl_SetResult(sms_interp, (char *)s, TCL_VOLATILE);
     cmd_ret = TCL_ERROR;
@@ -712,14 +712,7 @@ sms_error(const char *s)
 
 /* For now, a no-op.  Used to implement 'Expect'. */
 void
-sms_store(unsigned char c)
-{
-}
-
-/* Also a no-op. */
-void
-sms_accumulate_time(struct timeval *t0 _is_unused,
-	struct timeval *t1 _is_unused)
+task_store(unsigned char c)
 {
 }
 
@@ -734,14 +727,14 @@ ps_set(char *s, bool is_hex)
 
 /* Signal a new connection. */
 void
-sms_connect_wait(void)
+task_connect_wait(void)
 {
     waiting = AWAITING_CONNECT;
 }
 
 /* Signal host output. */
 void
-sms_host_output(void)
+task_host_output(void)
 {
     /* Release the script, if it is waiting now. */
     switch (waiting) {
@@ -765,9 +758,10 @@ login_macro(char *s)
 {
 }
 
-void
-sms_continue(void)
+bool
+run_tasks(void)
 {
+    return false;
 }
 
 /* Data query actions. */
@@ -1714,7 +1708,7 @@ Query_action(ia_t ia, unsigned argc, const char **argv)
 
 /* Generate a response to a script command. */
 void
-sms_info(const char *fmt, ...)
+task_info(const char *fmt, ...)
 {
     va_list args;
     char *buf;
@@ -1773,12 +1767,6 @@ tc_scatv(const char *s)
     return vb_consume(&r);
 }
 
-/* Dummy version of function in macros.c. */
-void
-cancel_if_idle_command(void)
-{
-}
-
 /* Dummy idle.c function. */
 void
 idle_ft_complete(void)
@@ -1789,6 +1777,77 @@ idle_ft_complete(void)
 void
 idle_ft_start(void)
 {
+}
+
+/* More glue. */
+void
+connect_error(const char *fmt, ...)
+{
+    va_list ap;
+    char *msg;
+
+    va_start(ap, fmt);
+    msg = xs_vbuffer(fmt, ap);
+    va_end(ap);
+    popup_an_error("%s", msg);
+    Free(msg);
+}
+
+void
+connect_errno(int e, const char *fmt, ...)
+{
+    va_list ap;
+    char *msg;
+
+    va_start(ap, fmt);
+    msg = xs_vbuffer(fmt, ap);
+    va_end(ap);
+    popup_an_errno(e, "%s", msg);
+    Free(msg);
+}
+
+bool
+run_action(const char *name, enum iaction cause, const char *parm1,
+	const char *parm2)
+{
+    bool found = true;
+    action_elt_t *e;
+    int count = 0;
+    const char *argv[3];
+
+    /* Look up the action. */
+    found = false;
+    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
+	if (!strcmp(name, e->t.name)) {
+	    found = true;
+	    break;
+	}
+    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
+    if (!found) {
+	popup_an_error("No such action: %s", name);
+	return false;
+    }
+
+    /* Stage the arguments. */
+    if (parm1) {
+	argv[count++] = parm1;
+	if (parm2) {
+	    argv[count++] = parm2;
+	}
+    }
+    argv[count] = NULL;
+
+    /* Run it. */
+    ia_cause = IA_SCRIPT;
+    run_action_entry(e, IA_SCRIPT, count, argv);
+
+    return true;
+}
+
+void
+push_string(char *s, bool is_hex, bool is_paste)
+{
+    /* Do nothing. */
 }
 
 /**

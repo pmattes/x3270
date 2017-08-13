@@ -35,8 +35,8 @@
 #include <X11/StringDefs.h>
 #include <X11/Xaw/Dialog.h>
 
-#include "macros.h"
 #include "popups.h"
+#include "task.h"
 #include "xaa.h"
 #include "xpopups.h"
 
@@ -59,7 +59,7 @@ execute_action_callback(Widget w _is_unused, XtPointer client_data,
     if (!text) {
 	return;
     }
-    push_macro(text, false);
+    push_macro(text);
 }
 
 void

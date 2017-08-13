@@ -34,8 +34,3 @@ void pr3287_session_register(void);
 void pr3287_session_start(const char *lu);
 void pr3287_session_stop(void);
 bool pr3287_session_running(void);
-#if !defined(_WIN32) /*[*/
-void pr3287_session_check(pid_t pid, int status);
-#else /*][*/
-void pr3287_session_check(void);
-#endif /*]*/

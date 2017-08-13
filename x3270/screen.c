@@ -3658,9 +3658,9 @@ default_color_scheme(void)
 {
     static int default_attrib_colors[4] = {
 	GC_NONDEFAULT | HOST_COLOR_GREEN,	/* default */
-	GC_NONDEFAULT | HOST_COLOR_RED,	/* intensified */
+	GC_NONDEFAULT | HOST_COLOR_RED,		/* intensified */
 	GC_NONDEFAULT | HOST_COLOR_BLUE,	/* protected */
-	GC_NONDEFAULT | HOST_COLOR_WHITE	/* protected, intensified */
+	GC_NONDEFAULT | HOST_COLOR_NEUTRAL_WHITE /* protected, intensified */
     };
     int i;
 
@@ -4917,7 +4917,6 @@ screen_newcharset(char *csname)
 	/* Success. */
 	Free(old_charset);
 	st_changed(ST_CHARSET, true);
-	screen_reinit(CHARSET_CHANGE | FONT_CHANGE);
 	charset_changed = true;
 	break;
     case CS_NOTFOUND:
@@ -6338,6 +6337,13 @@ screen_snap_size(void)
     screen_reinit(FONT_CHANGE);
 }
 
+/* State change handler for host character sets. */
+static void
+screen_charset_changed(bool ignored _is_unused)
+{
+    screen_reinit(CHARSET_CHANGE | FONT_CHANGE);
+}
+
 /**
  * Screen module registration.
  */
@@ -6372,4 +6378,5 @@ screen_register(void)
     register_schange(ST_HALF_CONNECT, screen_connect);
     register_schange(ST_CONNECT, screen_connect);
     register_schange(ST_3270_MODE, screen_connect);
+    register_schange(ST_CHARSET, screen_charset_changed);
 }

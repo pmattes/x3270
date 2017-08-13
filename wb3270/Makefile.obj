@@ -1,0 +1,91 @@
+# Copyright (c) 2007-2009, 2013-2016 Paul Mattes.
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Paul Mattes nor his contributors may be used
+#       to endorse or promote products derived from this software without
+#       specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
+# NO EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Makefile for wb3270
+
+# Set SSLDIR, SSLCPP, SSLLIB, GT_PFX, NATIVE_SFX, NATIVECC, CC, WINDRES and
+#  WIN32_FLAGS.
+include winenv.mk
+
+MKFB = mkfb$(NATIVE_SFX)
+
+XCPPFLAGS = $(WIN32_FLAGS) -DWIN32_LEAN_AND_MEAN -I$(THIS) -I$(TOP)/Common/s3270 -I$(TOP)/include -I$(TOP)/Common/libexpat
+CFLAGS = $(EXTRA_FLAGS) -g -Wall -Werror -MMD -MP $(XCPPFLAGS) $(SSLCPP)
+
+OBJ = o
+ifdef WIN64
+HOST = win64
+else
+HOST = win32
+endif
+W = w
+include wb3270_files.mk libs.mk
+
+VOBJS = $(WB3270_OBJECTS) fallbacks.o wb3270res.o
+
+OBJECTS = $(VOBJS) version.o
+LIBS = $(SSLLIB) -lws2_32 -lcomdlg32 -lgdi32 -lwinspool -lcrypt32 -lsecur32
+SHRTLIBS = -lole32 -luuid
+DLLFLAGS = $(EXTRA_FLAGS) -mno-cygwin -shared -Wl,--export-all-symbols -Wl,--enable-auto-import
+
+PROGS = wb3270.exe
+all: $(PROGS)
+
+XVERSION = xversion.c
+version.o: mkversion.sh $(VOBJS) version.txt
+	$(RM) $(XVERSION)
+	sh $< wb3270 $(filter %.txt,$^) >$(XVERSION)
+	$(CC) $(CFLAGS) -c -o $@ $(XVERSION)
+	$(RM) $(XVERSION)
+
+FALLBACKS = fb-common
+fallbacks.c: $(MKFB) $(FALLBACKS)
+	$(RM) $@
+	./$(MKFB) -c -o $@ $(filter-out $(MKFB),$^)
+
+$(MKFB): mkfb.c
+	$(NATIVECC) -DFOR_WIN32 -I$(THIS) -MMD -MP -o $@ $^
+
+wb3270res.o: wb3270.rc wb3270.ico Makefile
+	$(WINDRES) -i $< -o $@
+
+wb3270.exe: $(OBJECTS) Makefile $(DEP3270) $(DEP32XX) $(DEP3270STUBS) $(DEPLIBEXPAT)
+	$(CC) -o wb3270.exe $(CFLAGS) $(OBJECTS) $(LD3270) $(LD32XX) $(LD3270STUBS) $(LDLIBEXPAT) $(LIBS)
+
+x3270if.exe: x3270if.o $(DEP32XX)
+	$(CC) -o $@ $(CFLAGS) x3270if.o $(LD32XX) -lws2_32
+
+wversion.o: mkwversion.sh version.txt
+	sh $< wb3270 $(CC) $(filter %.txt,$^)
+
+clean:
+	rm -f *.o mkfb mkfb.exe fallbacks.c
+
+clobber: clean
+	rm -f $(PROGS) *.d
+
+# Include auto-generated eependencies
+-include $(OBJS:.o=.d) x3270if.d mkfb.d

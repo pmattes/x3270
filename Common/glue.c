@@ -54,7 +54,6 @@
 #include "glue_gui.h"
 #include "host.h"
 #include "kybd.h"
-#include "macros.h"
 #include "nvt.h"
 #include "opts.h"
 #include "product.h"
@@ -62,6 +61,7 @@
 #include "screen.h"
 #include "selectc.h"
 #include "sio.h"
+#include "task.h"
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
@@ -103,7 +103,6 @@ const char     *programname;
 char		full_model_name[13] = "IBM-";
 char	       *model_name = &full_model_name[4];
 AppRes          appres;
-int		children = 0;
 bool		exiting = false;
 char	       *command_string = NULL;
 char	       *profile_name = NULL;
@@ -1411,106 +1410,3 @@ read_resource_file(const char *filename, bool fatal)
 bool visible_control = false;
 
 bool flipped = false;
-
-/* Replacements for functions in popups.c. */
-
-bool error_popup_visible = false;
-
-/* Pop up an error dialog. */
-void
-popup_an_error(const char *fmt, ...)
-{
-    va_list args;
-    char *s;
-
-    va_start(args, fmt);
-    s = xs_vbuffer(fmt, args);
-    va_end(args);
-
-    /* Log to the trace file. */
-    vtrace("%s\n", s);
-
-    if (sms_redirect()) {
-	sms_error(s);
-    } else {
-	screen_suspend();
-	(void) fprintf(stderr, "%s\n", s);
-	fflush(stderr);
-	any_error_output = true;
-	macro_output = true;
-    }
-    Free(s);
-}
-
-/* Pop up an error dialog, based on an error number. */
-void
-popup_an_errno(int errn, const char *fmt, ...)
-{
-    va_list args;
-    char *s;
-
-    va_start(args, fmt);
-    s = xs_vbuffer(fmt, args);
-    va_end(args);
-
-    if (errn > 0) {
-	popup_an_error("%s: %s", s, strerror(errn));
-    } else {
-	popup_an_error("%s", s);
-    }
-    Free(s);
-}
-
-void
-action_output(const char *fmt, ...)
-{
-    va_list args;
-    char *s;
-
-    va_start(args, fmt);
-    s = xs_vbuffer(fmt, args);
-    va_end(args);
-    if (sms_redirect()) {
-	sms_info("%s", s);
-    } else {
-	if (!glue_gui_output(s)) {
-	    (void) printf("%s\n", s);
-	}
-	any_error_output = true;
-	macro_output = true;
-    }
-    Free(s);
-}
-
-void
-popup_printer_output(bool is_err _is_unused, abort_callback_t *a _is_unused,
-	const char *fmt, ...)
-{
-    va_list args;
-    char *m;
-
-    va_start(args, fmt);
-    m = xs_vbuffer(fmt, args);
-    va_end(args);
-    action_output("%s", m);
-    Free(m);
-}
-
-void
-popup_child_output(bool is_err _is_unused, abort_callback_t *a _is_unused,
-	const char *fmt, ...)
-{
-    va_list args;
-    char *m;
-
-    va_start(args, fmt);
-    m = xs_vbuffer(fmt, args);
-    va_end(args);
-    action_output("%s", m);
-    Free(m);
-}
-
-void
-child_popup_init(void)
-{
-}

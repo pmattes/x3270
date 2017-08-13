@@ -43,10 +43,10 @@
 #include "host.h"
 #include "keymap.h"
 #include "lazya.h"
-#include "macros.h"
 #include "popups.h"
 #include "screen.h"
 #include "status.h"
+#include "task.h"
 #include "trace.h"
 #include "utils.h"
 

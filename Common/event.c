@@ -89,7 +89,8 @@ register_schange_ordered(int tx, schange_callback_t *func,
 	}
     } FOREACH_LLIST_END(&st_callbacks[tx], before, st_callback_t *);
 
-    llist_insert_before(&st->list, &st_callbacks[tx]);
+    /* Put it at the end. */
+    LLIST_APPEND(&st->list, st_callbacks[tx]);
 }
 
 /* Register a function interested in a state change. */

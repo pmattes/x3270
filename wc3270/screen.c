@@ -51,12 +51,12 @@
 #include "keymap.h"
 #include "kybd.h"
 #include "lazya.h"
-#include "macros.h"
 #include "popups.h"
 #include "screen.h"
 #include "see.h"
 #include "selectc.h"
 #include "status.h"
+#include "task.h"
 #include "telnet.h"
 #include "trace.h"
 #include "unicodec.h"
@@ -203,6 +203,7 @@ static void relabel(bool ignored);
 static void init_user_colors(void);
 static void init_user_attribute_colors(void);
 static HWND get_console_hwnd(void);
+static void charset_changed(bool ignored);
 
 static HANDLE chandle;	/* console input handle */
 static HANDLE cohandle;	/* console screen buffer handle */
@@ -1238,6 +1239,8 @@ screen_init(void)
     register_schange(ST_CONNECT, relabel);
     register_schange(ST_3270_MODE, relabel);
 
+    register_schange(ST_CHARSET, charset_changed);
+
     /* See about all-bold behavior. */
     if (appres.c3270.all_bold_on) {
 	ab_mode = TS_ON;
@@ -2034,7 +2037,14 @@ screen_disp(bool erasing _is_unused)
     }
     refresh();
 
-    screen_changed = FALSE;
+    screen_changed = false;
+}
+
+static void
+charset_changed(bool ignored _is_unused)
+{
+    screen_changed = true;
+    screen_disp(false);
 }
 
 static const char *
@@ -2561,7 +2571,8 @@ kybd_input2(INPUT_RECORD *ir)
     /* Then any other character. */
     if (ir->Event.KeyEvent.uChar.UnicodeChar) {
 	run_action("Key", IA_DEFAULT,
-		lazyaf("U+%04x", ir->Event.KeyEvent.uChar.UnicodeChar), NULL);
+		lazyaf("U+%04x", ir->Event.KeyEvent.uChar.UnicodeChar),
+		NoFailOnError);
     } else {
 	vtrace(" dropped (no default)\n");
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1999-2009, 2013-2016 Paul Mattes.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,9 +33,12 @@
 #include "glue.h"
 #include "appres.h"
 #include "latin1.h"
+#include "lazya.h"
+#include "task.h"
 #include "trace.h"
 #include "utils.h"
 #if defined(_WIN32) /*[*/
+# include "w3misc.h"
 # include "xio.h"
 #endif /*]*/
 
@@ -44,6 +47,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#if !defined(_WIN32) /*[*/
+# include <sys/wait.h>
+#endif /*]*/
 
 #if defined(SEPARATE_SELECT_H) /*[*/
 # include <sys/select.h>
@@ -612,6 +618,66 @@ RemoveInput(ioid_t id)
     inputs_changed = true;
 }
 
+#if !defined(_WIN32) /*[*/
+/* Child exit events. */ 
+typedef struct child_exit {  
+    struct child_exit *next;
+    pid_t pid;
+    childfn_t proc;
+} child_exit_t;          
+static child_exit_t *child_exits = NULL;
+
+ioid_t
+AddChild(pid_t pid, childfn_t fn)
+{
+    child_exit_t *cx;
+
+    assert(pid != 0 && pid != -1);
+
+    cx = (child_exit_t *)Malloc(sizeof(child_exit_t));
+    cx->pid = pid;
+    cx->proc = fn;
+    cx->next = child_exits;
+    child_exits = cx;
+    return (ioid_t)cx;
+}
+
+/**
+ * Poll for an exited child processes.
+ *
+ * @return true if a waited-for child exited
+ */
+static bool
+poll_children(void)
+{
+    pid_t pid;
+    int status = 0;
+    child_exit_t *c;
+    child_exit_t *next = NULL;
+    child_exit_t *prev = NULL;
+    bool any = false;
+
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+	for (c = child_exits; c != NULL; c = next) {
+	    next = c->next;
+	    if (c->pid == pid) {
+		(*c->proc)((ioid_t)c, status);
+		if (prev) {
+		    prev->next = next;
+		} else {
+		    child_exits = next;
+		}
+		Free(c);
+		any = true;
+	    } else {
+		prev = c;
+	    }
+	}
+    }
+    return any;
+}
+#endif /*]*/
+
 #if defined(_WIN32) /*[*/
 #define MAX_HA	256
 #endif /*]*/
@@ -638,6 +704,7 @@ process_some_events(bool block, bool *processed_any)
     unsigned long long now;
     int i;
 #else /*][*/
+    int ne = 0;
     fd_set rfds, wfds, xfds;
     int ns;
     struct timeval now, twait, *tp;
@@ -679,6 +746,7 @@ process_some_events(bool block, bool *processed_any)
 	    ha[nha++] = ip->source;
 #else /*][*/
 	    FD_SET(ip->source, &rfds);
+	    ne++;
 #endif /*]*/
 	    any_events_pending = true;
 	}
@@ -687,11 +755,13 @@ process_some_events(bool block, bool *processed_any)
 	/* Set pending output event. */
 	if ((unsigned long)ip->condition & InputWriteMask) {
 	    FD_SET(ip->source, &wfds);
+	    ne++;
 	    any_events_pending = true;
 	}
 	/* Set pending exception event. */
 	if ((unsigned long)ip->condition & InputExceptMask) {
 	    FD_SET(ip->source, &xfds);
+	    ne++;
 	    any_events_pending = true;
 	}
 #endif /*]*/
@@ -738,16 +808,50 @@ process_some_events(bool block, bool *processed_any)
 #endif /*]*/
     }
 
+#if !defined(_WIN32) /*[*/
+    /* Poll for children. */
+    if (poll_children()) {
+	return false;
+    }
+#endif /*]*/
+
     /* If there's nothing to do now, we're done. */
     if (!any_events_pending) {
 	return true;
     }
 
     /* Wait for events. */
-    vtrace("Waiting for events\n");
 #if defined(_WIN32) /*[*/
+    if (tmo == INFINITE) {
+	vtrace("Waiting for %d event%s\n",
+		(int)nha,
+		(nha == 1)? "": "s");
+    } else {
+	vtrace("Waiting for %d event%s or %d msec\n",
+		(int)nha,
+		(nha == 1)? "": "s",
+		(int)tmo);
+    }
     ret = WaitForMultipleObjects(nha, ha, FALSE, tmo);
 #else /*][*/
+    if (tp == NULL) {
+	vtrace("Waiting for %d event%s\n",
+		ne,
+		(ne == 1)? "": "s");
+    } else {
+	unsigned msec = (tp->tv_usec + 500) / 1000;
+	unsigned sec = tp->tv_sec;
+
+	/* Check for funky round-up. */
+	if (msec >= 1000) {
+	    sec++;
+	    msec -= 1000;
+	}
+	vtrace("Waiting for %d event%s or %u.%03us\n",
+		ne,
+		(ne == 1)? "": "s",
+		sec, msec);
+    }
     ns = select(FD_SETSIZE, &rfds, &wfds, &xfds, tp);
 #endif /*[*/
 
@@ -756,6 +860,9 @@ process_some_events(bool block, bool *processed_any)
 	if (errno != EINTR) {
 	    xs_warning("process_events: select() failed: %s", strerror(errno));
 	}
+#else /*][*/
+	xs_warning("WaitForMultipleObjects failed: %s",
+		win32_strerror(GetLastError()));
 #endif /*]*/
 	return true;
     }
@@ -844,9 +951,19 @@ process_events(bool block)
 {
     bool processed_any = false;
     bool any_this_time = false;
+    bool done = false;
 
     /* Process events until no more are ready. */
-    while (!process_some_events(block, &any_this_time)) {
+    while (!done) {
+	if (run_tasks()) {
+	    return true;
+	}
+
+	/* Process some events. */
+	done = process_some_events(block, &any_this_time);
+
+	/* Flush the lazy allocator ring. */
+	lazya_flush();
 
 	/* Don't block a second time. */
 	block = false;
@@ -855,5 +972,5 @@ process_events(bool block)
 	processed_any |= any_this_time;
     }
 
-    return processed_any | any_this_time;
+    return processed_any;
 }

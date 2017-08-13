@@ -48,10 +48,10 @@
 
 #include "actions.h"
 #include "host.h"
-#include "macros.h"
 #include "popups.h" /* must come before child_popups.h */
 #include "child_popups.h"
 #include "screen.h"
+#include "task.h"
 #include "trace.h"
 #include "utils.h"
 #include "xio.h"
@@ -1022,8 +1022,8 @@ popup_rop(struct rop *rop, abort_callback_t *a, const char *fmt, va_list args)
 	vtrace("Error: %s\n", buf);
     }
 
-    if (rop->is_error && sms_redirect()) {
-	sms_error(buf);
+    if (rop->is_error && task_redirect()) {
+	task_error(buf);
 	Free(buf);
 	return;
     }
@@ -1118,11 +1118,11 @@ action_output(const char *fmt, ...)
     va_list args;
 
     va_start(args, fmt);
-    if (sms_redirect()) {
+    if (task_redirect()) {
 	char *s;
 
 	s = xs_vbuffer(fmt, args);
-	sms_info("%s", s);
+	task_info("%s", s);
 	Free(s);
     } else {
 	popup_rop(&info_popup, NULL, fmt, args);

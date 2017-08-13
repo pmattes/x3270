@@ -48,11 +48,11 @@
 #include "host.h"
 #include "keymap.h"
 #include "kybd.h"
-#include "macros.h"
 #include "popups.h"
 #include "screen.h"
 #include "see.h"
 #include "status.h"
+#include "task.h"
 #include "telnet.h"
 #include "trace.h"
 #include "unicodec.h"
@@ -1656,7 +1656,7 @@ kybd_input2(int k, ucs4_t ucs4, int alt)
 		char ks[16];
 
 		sprintf(ks, "U+%04x", ucs4);
-		run_action("Key", IA_DEFAULT, ks, NULL);
+		run_action("Key", IA_DEFAULT, NoFailOnError, ks);
 		return;
 	}
 	vtrace(" dropped (no default)\n");

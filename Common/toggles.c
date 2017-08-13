@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1993-2009, 2013-2016 Paul Mattes.
  * Copyright (c) 1990, Jeff Sparkes.
  * Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA
  *  30332.
@@ -45,11 +45,15 @@
 #include "utils.h"
 
 /* Live state of toggles. */
+typedef struct _toggle_upcalls {
+    struct _toggle_upcalls *next; /* next upcall */
+    toggle_upcall_t *upcall;	/* callback */
+    unsigned flags;		/* callback flags */
+} toggle_upcalls_t;
 typedef struct {
     bool changed;		/* has the value changed since init */
     bool supported;		/* is the toggle supported */
-    unsigned flags;		/* miscellaneous flags */
-    toggle_upcall_t *upcall;	/* notify folks it has changed */
+    toggle_upcalls_t *upcalls;	/* flags and callbacks */
 } toggle_t;
 static toggle_t toggle[N_TOGGLES];
 
@@ -84,14 +88,15 @@ static void
 do_toggle_reason(toggle_index_t ix, enum toggle_type reason)
 {
     toggle_t *t = &toggle[ix];
+    toggle_upcalls_t *u;
 
     /*
      * Change the value, call the internal update routine, and reset the
      * menu label(s).
      */
     toggle_toggle(ix);
-    if (t->upcall != NULL) {
-	t->upcall(ix, reason);
+    for (u = t->upcalls; u != NULL; u = u->next) {
+	u->upcall(ix, reason);
     }
     menubar_retoggle(ix);
 }
@@ -117,13 +122,18 @@ initialize_toggles(void)
     toggle_index_t ix;
 
     for (ix = 0; ix < N_TOGGLES; ix++) {
-	if (toggled(ix) && (toggle[ix].flags & TOGGLE_NEED_INIT)) {
-	    /* Make the upcall. */
-	    toggle[ix].upcall(ix, TT_INITIAL);
+	if (toggled(ix)) {
+	    toggle_upcalls_t *u;
 
-	    /* It might have failed. Fix up the menu if it did. */
-	    if (!toggled(ix)) {
-		menubar_retoggle(ix);
+	    for (u = toggle[ix].upcalls; u != NULL; u = u->next) {
+		if (u->flags & TOGGLE_NEED_INIT) {
+		    u->upcall(ix, TT_INITIAL);
+
+		    /* It might have failed. Fix up the menu if it did. */
+		    if (!toggled(ix)) {
+			menubar_retoggle(ix);
+		    }
+		}
 	    }
 	}
     }
@@ -138,9 +148,14 @@ toggle_exiting(bool mode _is_unused)
     toggle_index_t ix;
 
     for (ix = 0; ix < N_TOGGLES; ix++) {
-	if (toggled(ix) && toggle[ix].flags & TOGGLE_NEED_CLEANUP) {
-	    set_toggle(ix, false);
-	    toggle[ix].upcall(ix, TT_FINAL);
+	if (toggled(ix)) {
+	    toggle_upcalls_t *u;
+
+	    for (u = toggle[ix].upcalls; u != NULL; u = u->next) {
+		if (u->flags & TOGGLE_NEED_CLEANUP) {
+		    u->upcall(ix, TT_FINAL);
+		}
+	    }
 	}
     }
 }
@@ -171,17 +186,17 @@ Toggle_action(ia_t ia, unsigned argc, const char **argv)
 
     if (argc == 1) {
 	do_toggle_reason(ix, TT_ACTION);
-    } else if (!strcasecmp(argv[1], "set")) {
+    } else if (!strcasecmp(argv[1], "set") || !strcasecmp(argv[1], "on")) {
 	if (!toggled(ix)) {
 	    do_toggle_reason(ix, TT_ACTION);
 	}
-    } else if (!strcasecmp(argv[1], "clear")) {
+    } else if (!strcasecmp(argv[1], "clear") || !strcasecmp(argv[1], "off")) {
 	if (toggled(ix)) {
 	    do_toggle_reason(ix, TT_ACTION);
 	}
     } else {
-	popup_an_error("Toggle: Unknown keyword '%s' (must be 'set' or "
-		"'clear')", argv[1]);
+	popup_an_error("Toggle: Unknown keyword '%s' (must be 'Set' or "
+		"'Clear')", argv[1]);
 	return false;
     }
     return true;
@@ -290,8 +305,14 @@ register_toggles(toggle_register_t toggles[], unsigned count)
     unsigned i;
 
     for (i = 0; i < count; i++) {
+	toggle_upcalls_t *u;
+
 	toggle[toggles[i].ix].supported = true;
-	toggle[toggles[i].ix].upcall = toggles[i].upcall;
-	toggle[toggles[i].ix].flags = toggles[i].flags;
+
+	u = (toggle_upcalls_t *)Malloc(sizeof(toggle_upcalls_t));
+	u->next = toggle[toggles[i].ix].upcalls;
+	u->upcall = toggles[i].upcall;
+	u->flags = toggles[i].flags;
+	toggle[toggles[i].ix].upcalls = u;
     }
 }

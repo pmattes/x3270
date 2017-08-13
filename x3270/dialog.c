@@ -54,10 +54,10 @@
 #include "ft.h"
 #include "host.h"
 #include "kybd.h"
-#include "macros.h"
 #include "objects.h"
 #include "popups.h"
 #include "telnet.h"
+#include "task.h"
 #include "utils.h"
 #include "xmenubar.h"
 

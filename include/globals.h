@@ -173,7 +173,6 @@ extern const char	*build;
 extern const char	*cyear;
 extern const char	*build_rpq_timestamp;
 extern const char 	*build_rpq_version;
-extern int		children;
 extern char		*connected_lu;
 extern char		*connected_type;
 extern char		*current_host;
@@ -234,7 +233,8 @@ enum cstate {
     NEGOTIATING,	/* SSL/proxy negotiation in progress */
     CONNECTED_INITIAL,	/* connected, no 3270 mode yet */
     CONNECTED_NVT,	/* connected in NVT mode */
-    CONNECTED_3270,	/* connected in old-style 3270 mode */
+    CONNECTED_NVT_CHAR,	/* connected in NVT character-at-a-time mode */
+    CONNECTED_3270,	/* connected in RFC 1576 TN3270 mode */
     CONNECTED_UNBOUND,	/* connected in TN3270E mode, unbound */
     CONNECTED_E_NVT,	/* connected in TN3270E mode, NVT mode */
     CONNECTED_SSCP,	/* connected in TN3270E mode, SSCP-LU mode */
@@ -242,14 +242,27 @@ enum cstate {
 };
 extern enum cstate cstate;
 
-#define PCONNECTED	(cstate > NOT_CONNECTED)
-#define HALF_CONNECTED	(cstate == RESOLVING || cstate == PENDING)
-#define CONNECTED	(cstate >= CONNECTED_INITIAL)
-#define IN_NVT		(cstate == CONNECTED_NVT || cstate == CONNECTED_E_NVT)
-#define IN_3270		(cstate == CONNECTED_3270 || cstate == CONNECTED_TN3270E || cstate == CONNECTED_SSCP)
-#define IN_SSCP		(cstate == CONNECTED_SSCP)
-#define IN_TN3270E	(cstate == CONNECTED_TN3270E)
-#define IN_E		(cstate >= CONNECTED_UNBOUND)
+#define cPCONNECTED(c)	(c >= NOT_CONNECTED)
+#define cHALF_CONNECTED(c) (c == RESOLVING || c == PENDING)
+#define cCONNECTED(c)	(c >= CONNECTED_INITIAL)
+#define cIN_NVT(c)	(c == CONNECTED_NVT || \
+			 c == CONNECTED_NVT_CHAR || \
+			 c == CONNECTED_E_NVT)
+#define cIN_3270(c)	(c == CONNECTED_3270 || \
+			 c == CONNECTED_TN3270E || \
+			 c == CONNECTED_SSCP)
+#define cIN_SSCP(c)	(c == CONNECTED_SSCP)
+#define cIN_TN3270E(c)	(c == CONNECTED_TN3270E)
+#define cIN_E(c)	(c >= CONNECTED_UNBOUND)
+
+#define PCONNECTED	cPCONNECTED(cstate)
+#define HALF_CONNECTED	cHALF_CONNECTED(cstate)
+#define CONNECTED	cCONNECTED(cstate)
+#define IN_NVT		cIN_NVT(cstate)
+#define IN_3270		cIN_3270(cstate)
+#define IN_SSCP		cIN_SSCP(cstate)
+#define IN_TN3270E	cIN_TN3270E(cstate)
+#define IN_E		cIN_E(cstate)
 
 /*   keyboard modifer bitmap */
 #define ShiftKeyDown	0x01

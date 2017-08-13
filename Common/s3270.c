@@ -59,7 +59,6 @@
 #include "httpd-io.h"
 #include "idle.h"
 #include "kybd.h"
-#include "macros.h"
 #include "nvt.h"
 #include "opts.h"
 #include "popups.h"
@@ -68,6 +67,7 @@
 #include "screen.h"
 #include "selectc.h"
 #include "sio.h"
+#include "task.h"
 #include "telnet.h"
 #include "toggles.h"
 #include "trace.h"
@@ -132,6 +132,7 @@ main(int argc, char *argv[])
      * Call the module registration functions, to build up the tables of
      * actions, options and callbacks.
      */
+    charset_register();
     ctlr_register();
     ft_register();
     host_register();
@@ -202,12 +203,6 @@ main(int argc, char *argv[])
     /* Process events forever. */
     while (1) {
 	(void) process_events(true);
-
-#if !defined(_WIN32) /*[*/
-	if (children && waitpid(-1, (int *)0, WNOHANG) > 0) {
-	    --children;
-	}
-#endif /*]*/
     }
 }
 

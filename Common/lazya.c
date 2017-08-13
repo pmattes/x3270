@@ -41,6 +41,7 @@
 
 static char *lazy_ring[LAZY_RING];
 static int lazy_ix = 0;
+static int wraps = 0;
 
 /**
  * Add a buffer to the lazy allocation ring.
@@ -59,6 +60,9 @@ lazya(char *buf)
 
     /* Advance to the next slot. */
     lazy_ix = (lazy_ix + 1) % LAZY_RING;
+    if (!lazy_ix) {
+	wraps++;
+    }
 
     return buf;
 }
@@ -111,9 +115,16 @@ lazya_flush(void)
 	}
 	Replace(lazy_ring[i], NULL);
     }
-    lazy_ix = 0;
 
     if (nf) {
-	vtrace("lazya_flush: flushed %d elements\n", nf);
+	int nf_total = (wraps * LAZY_RING) + nf;
+
+	if (nf_total >= LAZY_RING / 2) {
+	    vtrace("lazya_flush: %d slot%s\n", nf_total,
+		    (nf_total == 1)? "": "s");
+	}
     }
+
+    lazy_ix = 0;
+    wraps = 0;
 }

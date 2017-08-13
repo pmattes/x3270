@@ -40,12 +40,12 @@
 #include "charset.h"
 #include "ctlrc.h"
 #include "host.h"
-#include "macros.h"
 #include "nvt.h"
 #include "nvt_gui.h"
 #include "screen.h"
 #include "scroll.h"
 #include "tables.h"
+#include "task.h"
 #include "telnet.h"
 #include "telnet_core.h"
 #include "trace.h"
@@ -1687,8 +1687,9 @@ nvt_process(unsigned int c)
 	ped[pe++] = c;
     }
 
-    /* Let a script go. */
-    sms_host_output();
+    /* Let a blocked task go. */
+    task_store(c);
+    task_host_output();
 }
 
 void

@@ -706,7 +706,6 @@ start_trace_window(const char *path, int pipefd[])
 	break;
     default:	/* parent */
 	(void) close(pipefd[0]);
-	++children;
 	break;
     case -1:	/* error */
 	popup_an_errno(errno, "fork() failed");
@@ -823,7 +822,9 @@ tracefile_ok(const char *tfn)
 	    if (tracef == NULL) {
 		popup_an_errno(errno, "%s", stfn);
 #if !defined(_WIN32) /*[*/
-		fclose(tracef_pipe);
+		if (tracef_pipe != NULL) {
+		    fclose(tracef_pipe);
+		}
 		(void) close(pipefd[0]);
 		(void) close(pipefd[1]);
 #endif /*]*/

@@ -559,6 +559,21 @@ set_uni(const char *csname, int local_cp _is_unused,
     return rc;
 }
 
+/* See if the given alias matches the given canonical character set name. */
+bool
+charset_matches_alias(const char *alias, const char *canon)
+{
+    int i;
+
+    for (i = 0; cpaliases[i].alias != NULL; i++) {
+	if (!strcmp(alias, cpaliases[i].alias) &&
+	    !strcmp(canon, cpaliases[i].canon)) {
+	    return true;
+	}
+    }
+    return false;
+}
+
 /*
  * Translate an x3270 font line-drawing character (the first two rows of a
  * standard X11 fixed-width font) to Unicode.

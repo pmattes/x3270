@@ -48,9 +48,9 @@
 #include "host.h"
 #include "idle.h"
 #include "kybd.h"
-#include "macros.h"
 #include "popups.h"
 #include "resources.h"
+#include "task.h"
 #include "utils.h"
 #include "varbuf.h"
 
@@ -490,9 +490,6 @@ ft_complete(const char *errmsg)
 	ft_gui_complete_popup(buf);
 	Free(buf);
     }
-
-    /* I hope I can do this unconditionally. */
-    sms_continue();
 }
 
 /* Update the bytes-transferred count on the progress pop-up. */
@@ -984,6 +981,20 @@ Transfer_action(ia_t ia, unsigned argc, const char **argv)
     if (!IN_3270) {
 	popup_an_error("Transfer: Not connected");
 	return false;
+    }
+
+    /* Check for cancel first. */
+    if (argc == 1 && !strcasecmp(argv[0], "Cancel")) {
+	if (ft_state == FT_NONE) {
+	    action_output("No transfer pending.");
+	} else {
+	    if (ft_do_cancel()) {
+		action_output("Canceled.");
+	    } else {
+		action_output("Cancel initiated.");
+	    }
+	}
+	return true;
     }
 
     /* Check for interactive mode. */

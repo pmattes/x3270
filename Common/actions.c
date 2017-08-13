@@ -39,9 +39,9 @@
 
 #include "actions.h"
 #include "lazya.h"
-#include "macros.h"
 #include "popups.h"
 #include "resources.h"
+#include "task.h"
 #include "trace.h"
 #include "utils.h"
 
@@ -54,6 +54,7 @@ const char *ia_name[] = {
     "Macro", "Script", "Peek", "Typeahead", "File transfer", "Command",
     "Keymap", "Idle"
 };
+const char *current_action_name;
 
 typedef struct {
     llist_t list;
@@ -106,7 +107,7 @@ init_suppressed(const char *actions)
 	s->name = (char *)(s + 1);
 	strcpy(s->name, action);
 	llist_init(&s->list);
-	llist_insert_before(&s->list, &suppressed);
+	LLIST_APPEND(&s->list, suppressed);
     }
 }
 
@@ -149,11 +150,13 @@ check_argc(const char *aname, unsigned nargs, unsigned nargs_min,
     if (nargs_min == nargs_max) {
 	popup_an_error("%s requires %d argument%s",
 		aname, nargs_min, nargs_min == 1 ? "" : "s");
-    } else {
+    } else if (nargs_max == nargs_min + 1) {
 	popup_an_error("%s requires %d or %d arguments",
 		aname, nargs_min, nargs_max);
+    } else {
+	popup_an_error("%s requires %d to %d arguments",
+		aname, nargs_min, nargs_max);
     }
-    cancel_if_idle_command();
     return -1;
 }
 
@@ -181,63 +184,6 @@ action_debug(const char *aname, ia_t ia, unsigned argc, const char **argv)
 }
 
 /*
- * Run an emulator action by name, given 0, 1 or 2 parameters.
- */
-bool
-run_action(const char *name, enum iaction cause, const char *parm1,
-	const char *parm2)
-{
-    action_elt_t *e;
-    action_t *action = NULL;
-    unsigned count = 0;
-    const char *parms[2];
-
-    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
-	if (!strcasecmp(e->t.name, name)) {
-	    action = e->t.action;
-	    break;
-	}
-    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
-    if (action == NULL) {
-	return false; /* XXX: And do something? */
-    }
-
-    if (parm1 != NULL) {
-	parms[0] = parm1;
-	count++;
-	if (parm2 != NULL) {
-	    parms[1] = parm2;
-	    count++;
-	}
-    }
-
-    return run_action_entry(e, cause, count, parms);
-}
-
-/*
- * Run an emulator action by name, given an array of parameters.
- */
-bool
-run_action_a(const char *name, enum iaction cause, unsigned count,
-	const char **parms)
-{
-    action_elt_t *e;
-    action_t *action = NULL;
-
-    FOREACH_LLIST(&actions_list, e, action_elt_t *) {
-	if (!strcasecmp(e->t.name, name)) {
-	    action = e->t.action;
-	    break;
-	}
-    } FOREACH_LLIST_END(&actions_list, e, action_elt_t *);
-    if (action == NULL) {
-	return false; /* XXX: And do something? */
-    }
-
-    return run_action_entry(e, cause, count, parms);
-}
-
-/*
  * Run an action by entry.
  * This is where action suppression happens.
  */
@@ -245,13 +191,18 @@ bool
 run_action_entry(action_elt_t *e, enum iaction cause, unsigned count,
 	const char **parms)
 {
+    bool ret;
+
     if (action_suppressed(e->t.name)) {
 	vtrace("%s() [suppressed]\n", e->t.name);
 	return false;
     }
 
     ia_cause = cause;
-    return (*e->t.action)(cause, count, parms);
+    current_action_name = e->t.name;
+    ret = (*e->t.action)(cause, count, parms);
+    current_action_name = NULL;
+    return ret;
 }
 
 /*
@@ -294,8 +245,8 @@ register_actions(action_table_t *new_actions, unsigned count)
 	    /* Insert before found element. */
 	    llist_insert_before(&e->list, &before->list);
 	} else {
-		/* Insert before head (at the end of the list). */
-	    llist_insert_before(&e->list, actions_list.next);
+	    /* Append. */
+	    LLIST_APPEND(&e->list, actions_list);
 	}
 
 	actions_list_count++;

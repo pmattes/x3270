@@ -1,5 +1,5 @@
 !
-! Copyright (c) 1995-2015, Paul Mattes.
+! Copyright (c) 1995-2017, Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -356,10 +356,10 @@ x3270.keymap.sun_k4: \
 	:<Key>KP_Decimal:	Key(.)\n\
 	:<Key>F18:		insert-selection(PRIMARY)\n\
 	:<Key>F19:		SysReq()\n\
-	:<Key>F20:		FieldMark()\n\
+	:<Key>F20:		FieldMark(NoFailOnError)\n\
 	:<Key>F21:		PA(1)\n\
 	:<Key>F22:		PA(2)\n\
-	:<Key>F23:		Dup()\n\
+	:<Key>F23:		Dup(NoFailOnError)\n\
 	:<Key>F24:		Reset()\n\
 	:<Key>F25:		EraseEOF()\n\
 	:<Key>F26:		EraseInput()\n\
@@ -375,9 +375,9 @@ x3270.keymap.sun_k3: \
 	Shift<Key>F23:		PF(24)\n\
 	:Meta<Key>F21:		PA(1)\n\
 	:Meta<Key>F22:		PA(2)\n\
-	:Meta<Key>F23:		Dup()\n\
+	:Meta<Key>F23:		Dup(NoFailOnError)\n\
 	:<Key>F19:		SysReq()\n\
-	:<Key>0x0:		FieldMark()\n\
+	:<Key>0x0:		FieldMark(NoFailOnError)\n\
 	:<Key>F21:		PF(10)\n\
 	:<Key>F22:		PF(11)\n\
 	:<Key>F23:		PF(12)\n\
@@ -390,10 +390,10 @@ x3270.keymap.sun_k3: \
 	:<Key>KP_Enter:		Newline()\n\
 	:<Key>F35:		Delete()\n
 x3270.keymap.ncd: \
-	:<Key>F13:		Dup()\n\
-	:<Key>Linefeed:		Dup()\n\
-	:<Key>F14:		FieldMark()\n\
-	:<Key>Break:		FieldMark()\n\
+	:<Key>F13:		Dup(NoFailOnError)\n\
+	:<Key>Linefeed:		Dup(NoFailOnError)\n\
+	:<Key>F14:		FieldMark(NoFailOnError)\n\
+	:<Key>Break:		FieldMark(NoFailOnError)\n\
 	:<Key>Home:		Home()\n\
 	:<Key>F17:		Home()\n\
 	:<Key>End:		EraseEOF()\n\
@@ -483,8 +483,8 @@ x3270.keymap.hp-pc: \
 	!<Key>Break:		Reset()\n\
 	!Shift<Key>Break:	Attn()\n\
 	!Meta<Key>Break:	SysReq()\n\
-	!<Key>Prior:		Dup()\n\
-	!<Key>Next:		FieldMark()\n\
+	!<Key>Prior:		Dup(NoFailOnError)\n\
+	!<Key>Next:		FieldMark(NoFailOnError)\n\
 	!<Key>Select:		EraseEOF()\n\
 	!Meta<Key>hpInsertChar:	PA(1)\n\
 	!Meta<Key>Home:		PA(2)\n\

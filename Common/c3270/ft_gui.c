@@ -41,9 +41,9 @@
 #include "ft.h"
 #include "ft_private.h"
 #include "icmdc.h"
-#include "macros.h"
 #include "popups.h"
 #include "screen.h"
+#include "task.h"
 #include "utils.h"
 
 #include "ft_gui.h"
@@ -93,10 +93,10 @@ ft_gui_complete_popup(const char *msg)
 #endif /*]*/
     if (ftc->is_interactive) {
 	/*
-	 * We call sms_info here instead of plain printf, so that
+	 * We call task_info here instead of plain printf, so that
 	 * macro_output is set and the user will stay at the c3270> prompt.
 	 */
-	sms_info("%s\n", msg);
+	task_info("%s\n", msg);
     } else if (escaped) {
 	printf("%s\n", msg);
 	fflush(stdout);

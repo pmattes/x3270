@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2009, 2013-2015 Paul Mattes.
+ * Copyright (c) 1995-2009, 2013-2016 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,9 +54,11 @@ void xs_warning(const char *fmt, ...) printflike(1, 2);
 
 typedef void (*iofn_t)(iosrc_t, ioid_t id);
 typedef void (*tofn_t)(ioid_t id);
+typedef void (*childfn_t)(ioid_t id, int status);
 ioid_t AddInput(iosrc_t fd, iofn_t fn);
 ioid_t AddExcept(iosrc_t fd, iofn_t fn);
 ioid_t AddOutput(iosrc_t fd, iofn_t fn);
+ioid_t AddChild(pid_t pid, childfn_t fn);
 void RemoveInput(ioid_t);
 ioid_t AddTimeOut(unsigned long msec, tofn_t);
 void RemoveTimeOut(ioid_t id);
@@ -89,6 +91,9 @@ void llist_unlink(llist_t *element);
     } \
 }
 
+#define LLIST_APPEND(elt, head)	llist_insert_before(elt, &head)
+#define LLIST_PREPEND(elt, head) llist_insert_before(elt, head.next)
+
 /* State changes. */
 #define ST_RESOLVING	1
 #define ST_HALF_CONNECT	2
@@ -100,7 +105,8 @@ void llist_unlink(llist_t *element);
 #define ST_EXITING	8
 #define ST_CHARSET	9
 #define ST_SELECTING	10
-#define N_ST		11
+#define ST_SECURE	11
+#define N_ST		12
 
 #define ORDER_DONTCARE	0xfffe
 #define ORDER_LAST	0xffff
